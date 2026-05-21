@@ -324,8 +324,8 @@ export function CreateSetlistClient() {
       .then((data) => setSongs(data.songs ?? []));
   }, []);
 
-  const addedSlugs = new Set(items.map((i) => i.song.slug));
-  const availableSongs = songs.filter((s) => !addedSlugs.has(s.slug));
+  const addedSlugs = useMemo(() => new Set(items.map((i) => i.song.slug)), [items]);
+  const availableSongs = useMemo(() => songs.filter((s) => !addedSlugs.has(s.slug)), [songs, addedSlugs]);
   const fuse = useMemo(
     () => new Fuse(availableSongs, { keys: ["title", "titlePinyin", "artist"], threshold: 0.4 }),
     [availableSongs]
@@ -414,7 +414,7 @@ export function CreateSetlistClient() {
       router.push(`/setlists/${id}`);
     } catch (err) {
       console.error(err);
-      setError("Erreur lors de la création. Réessaie.");
+      setError(err instanceof Error ? err.message : "Erreur lors de la création. Réessaie.");
       isDraft ? setDraftSaving(false) : setCreating(false);
     }
   }

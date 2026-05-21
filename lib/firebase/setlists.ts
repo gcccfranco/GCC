@@ -67,13 +67,23 @@ export async function getSetlist(id: string): Promise<FSSetlist | null> {
   return { id: snap.id, ...snap.data() } as FSSetlist;
 }
 
+function withTimeout<T>(promise: Promise<T>, ms: number, message: string): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error(message)), ms)
+    ),
+  ]);
+}
+
 export async function createSetlist(
   data: Omit<FSSetlist, "id" | "createdAt">
 ): Promise<string> {
-  const ref = await addDoc(collection(db, "setlists"), {
-    ...data,
-    createdAt: serverTimestamp(),
-  });
+  const ref = await withTimeout(
+    addDoc(collection(db, "setlists"), { ...data, createdAt: serverTimestamp() }),
+    20_000,
+    "Délai dépassé — vérifie ta connexion internet et réessaie."
+  );
   return ref.id;
 }
 
@@ -81,7 +91,11 @@ export async function updateSetlist(
   id: string,
   data: Partial<Omit<FSSetlist, "id" | "createdAt">>
 ): Promise<void> {
-  await updateDoc(doc(db, "setlists", id), data as Record<string, unknown>);
+  await withTimeout(
+    updateDoc(doc(db, "setlists", id), data as Record<string, unknown>),
+    20_000,
+    "Délai dépassé — vérifie ta connexion internet et réessaie."
+  );
 }
 
 export async function deleteSetlist(id: string): Promise<void> {
