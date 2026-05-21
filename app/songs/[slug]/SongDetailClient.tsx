@@ -16,12 +16,14 @@ function extractYouTubeId(url: string): string | null {
 }
 
 function buildDefaultStructure(sections: ReturnType<typeof parseChordPro>["sections"]): SectionItem[] {
-  return sections.map((s, i) => ({
-    uid: `${s.id}-${i}`,
-    sectionId: s.id,
-    name: s.name || s.type,
-    note: "",
-  }));
+  return sections
+    .filter((s) => s.type !== "intro" && s.type !== "bridge")
+    .map((s, i) => ({
+      uid: `${s.id}-${i}`,
+      sectionId: s.id,
+      name: s.name || s.type,
+      note: "",
+    }));
 }
 
 interface SongDetailClientProps {
@@ -43,7 +45,7 @@ export function SongDetailClient({ song }: SongDetailClientProps) {
   const [customize, setCustomize] = useState<CustomizeState>({
     semitones: 0,
     currentKey: originalKey,
-    showChords: true,
+    showChords: false,
     showPinyin: isZh,
     useJianpu: false,
     structure: buildDefaultStructure(ast.sections),
