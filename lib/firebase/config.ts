@@ -1,5 +1,5 @@
 import { initializeApp, getApps } from "firebase/app";
-import { initializeFirestore, getFirestore } from "firebase/firestore";
+import { initializeFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 
 const firebaseConfig = {
@@ -13,8 +13,6 @@ const firebaseConfig = {
 
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 
-// Use long-polling as fallback for mobile networks that block WebSocket/gRPC
-export const db = getApps().length > 1
-  ? getFirestore(app)
-  : initializeFirestore(app, { experimentalAutoDetectLongPolling: true });
+// Force long-polling — mobile networks often block WebSocket/gRPC
+export const db = initializeFirestore(app, { experimentalForceLongPolling: true });
 export const auth = getAuth(app);

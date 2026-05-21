@@ -3,7 +3,7 @@
 // Fix : les réponses redirigées (res.redirected) sont renvoyées via Response.redirect()
 // pour éviter l'erreur "Response served by service worker has redirections" sur Safari/Chrome.
 
-const CACHE = "gcc-louange-v2";
+const CACHE = "gcc-louange-v3";
 
 const PRECACHE = [
   "/songs-index.json",
