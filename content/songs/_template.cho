@@ -1,0 +1,34 @@
+{title: Titre du chant}
+{artist: Auteur / Artiste}
+{key: G}
+{tempo: 75}
+{themes: Adoration}
+{language: fr}
+{youtube: https://youtu.be/...}
+
+{start_of_intro: Intro}
+{end_of_intro}
+
+{start_of_verse: Couplet 1}
+{end_of_verse}
+
+{start_of_chorus: Refrain}
+{end_of_chorus}
+
+{start_of_verse: Couplet 2}
+{end_of_verse}
+
+{start_of_bridge: Pont}
+{end_of_bridge}
+
+
+{title: 标题}
+{title_pinyin: Biāotí}
+{artist: 作者}
+{key: C}
+{language: zh}
+
+{start_of_verse: 主歌/Couplet}
+[C]你好世界   nǐ hǎo shì jiè
+{end_of_verse}
+
