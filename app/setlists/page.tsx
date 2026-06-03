@@ -2,9 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Plus, LogIn, LogOut } from "lucide-react";
+import { Plus } from "lucide-react";
 import { getSetlists, ALL_CATEGORIES, type FSSetlist } from "@/lib/firebase/setlists";
-import { useAuth, logOut } from "@/lib/firebase/auth";
 import { useTranslation } from "react-i18next";
 
 function formatDate(iso: string, language: string): string {
@@ -58,7 +57,6 @@ function SetlistCard({ setlist }: { setlist: FSSetlist }) {
 
 export default function SetlistsPage() {
   const { t } = useTranslation();
-  const { user, loading: authLoading } = useAuth();
   const [setlists, setSetlists] = useState<FSSetlist[]>([]);
   const [loading, setLoading] = useState(true);
   const [categoryFilter, setCategoryFilter] = useState("Toutes");
@@ -122,37 +120,7 @@ export default function SetlistsPage() {
       <div className="max-w-2xl mx-auto px-4 py-6">
         {/* Nav header replacement with mobile create action line */}
         <div className="flex flex-col gap-3 mb-6 sm:flex-row sm:items-center sm:gap-4 justify-between">
-          <div className="flex items-center gap-3 sm:hidden ml-auto">
-            {!authLoading && (user ? (
-              <button onClick={() => logOut()} className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground cursor-pointer">
-                <LogOut className="h-3.5 w-3.5" />
-                {t("common.header.logout")}
-              </button>
-            ) : (
-              <Link href="/login?from=/setlists" className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
-                <LogIn className="h-3.5 w-3.5" />
-                {t("common.header.login")}
-              </Link>
-            ))}
-            <Link href="/setlists/new" className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium">
-              <Plus className="h-4 w-4" />
-              {t("setlists.list.newButton")}
-            </Link>
-          </div>
-
-          {/* Actions desktop */}
-          <div className="hidden sm:flex ml-auto items-center gap-3">
-            {!authLoading && (user ? (
-              <button onClick={() => logOut()} className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground cursor-pointer">
-                <LogOut className="h-3.5 w-3.5" />
-                {t("common.header.logout")}
-              </button>
-            ) : (
-              <Link href="/login?from=/setlists" className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
-                <LogIn className="h-3.5 w-3.5" />
-                {t("common.header.login")}
-              </Link>
-            ))}
+          <div className="ml-auto">
             <Link href="/setlists/new" className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium">
               <Plus className="h-4 w-4" />
               {t("setlists.list.newButton")}
