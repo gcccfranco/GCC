@@ -118,18 +118,8 @@ export default function SetlistsPage() {
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-2xl mx-auto px-4 py-6">
-        {/* Nav header replacement with mobile create action line */}
-        <div className="flex flex-col gap-3 mb-6 sm:flex-row sm:items-center sm:gap-4 justify-between">
-          <div className="ml-auto">
-            <Link href="/setlists/new" className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium">
-              <Plus className="h-4 w-4" />
-              {t("setlists.list.newButton")}
-            </Link>
-          </div>
-        </div>
-
-        {/* Filtre par catégorie */}
-        <div className="flex gap-1.5 flex-wrap mb-5">
+        {/* Filtres + bouton Nouvelle setlist */}
+        <div className="flex gap-1.5 flex-wrap items-center mb-5">
           {["Toutes", ...ALL_CATEGORIES].map((cat) => (
             <button
               key={cat}
@@ -143,6 +133,13 @@ export default function SetlistsPage() {
               {cat === "Toutes" ? t("setlists.list.allCategories") : t("categories." + cat, { defaultValue: cat })}
             </button>
           ))}
+          <Link
+            href="/setlists/new"
+            className="ml-auto flex items-center gap-1.5 h-8 px-3 rounded-[8px] border border-border bg-card text-muted-foreground hover:text-foreground text-[12.5px] font-semibold transition-all duration-150"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            <span>{t("setlists.list.newButton")}</span>
+          </Link>
         </div>
 
         {/* Liste */}
