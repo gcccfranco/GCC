@@ -53,7 +53,6 @@ interface ChordLineProps {
 export function ChordLine({ tokens, showChords = true, fontSize = 0.88 }: ChordLineProps) {
   const segments = toSegments(tokens);
   const hasAnyChord = showChords && segments.some((s) => s.chord !== null);
-  console.log("Segments:", segments);
   return (
     <div
       className="font-sans leading-normal select-text flex flex-wrap items-end"

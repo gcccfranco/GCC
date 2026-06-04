@@ -43,7 +43,7 @@ export function useSetlistDownload({
 
         const { SetlistFullPDF } = await import("@/components/pdf/SetlistFullPDF");
         const blob = await pdf(
-          <SetlistFullPDF setlist={setlist} contents={allContents} language={language} />
+          <SetlistFullPDF setlist={setlist} contents={allContents} />
         ).toBlob();
         triggerDownload(blob, `${setlist.title}-partitions.pdf`);
       }

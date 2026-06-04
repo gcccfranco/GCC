@@ -12,7 +12,7 @@ interface SongContent {
 
 export function SetlistFullPDF({
   setlist,
-  contents,
+  contents
 }: {
   setlist: FSSetlist;
   contents: Record<string, SongContent>;
