@@ -21,7 +21,9 @@ import { useTranslation } from "react-i18next";
 import { formatSectionName } from "@/lib/chordpro/parser";
 import { BugReportButton } from "@/components/layout/AlertButton";
 import type { SectionItem } from "@/types/song";
+
 // --- Types ---
+
 
 export interface CustomizeState {
   semitones: number;
@@ -63,7 +65,7 @@ function SortableRow({
   return (
     <div
       ref={setNodeRef}
-      style={{ transform: CSS.Transform.toString(transform), transition}}
+      style={{ transform: CSS.Transform.toString(transform), transition }}
       className={`flex items-start gap-2 p-2 rounded border ${
         isDragging
           ? "border-primary/50 bg-primary/5 shadow-lg"
@@ -109,7 +111,6 @@ function SortableRow({
 export function CustomizePanel({
   originalKey,
   isZh,
-  hasJianpu,
   sections,
   state,
   onChange,
@@ -121,11 +122,6 @@ export function CustomizePanel({
 
   const sensors = useDefaultSensors();
 
-  function update(patch: Partial<CustomizeState>) {
-    onChange({ ...state, ...patch });
-  }
-
-  // Transposition
   function shiftBy(delta: number) {
     const newSemitones = state.semitones + delta;
     const newKey = getTransposedKey(originalKey, newSemitones);
@@ -137,7 +133,10 @@ export function CustomizePanel({
     update({ semitones: diff, currentKey: key });
   }
 
-  // Structure
+  function update(patch: Partial<CustomizeState>) {
+    onChange({ ...state, ...patch });
+  }
+
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
@@ -171,7 +170,7 @@ export function CustomizePanel({
     onChange({
       semitones: 0,
       currentKey: originalKey,
-      showChords: false,
+      showChords: true,
       showPinyin: isZh,
       useJianpu: false,
       structure: sections.map((s, i) => ({
@@ -240,65 +239,59 @@ export function CustomizePanel({
           
           {/* --- Structure --- */}
           <section>
-            <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2">
+            <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-3">
               {t("customize.panel.structure")}
             </h3>
 
-            {state.useJianpu ? (
-              <p className="text-xs text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950 px-3 py-2 rounded">
-                {t("customize.panel.jianpuStructureWarning")}
-              </p>
-            ) : (
-              <>
-                {/* Sections disponibles à ajouter */}
-                <div className="flex flex-wrap gap-1.5 mb-3">
-                  {sections.map((s) => (
-                    <button
-                      key={s.id}
-                      onClick={() => addSection(s)}
-                      className="flex items-center gap-1 text-xs px-2 py-1 rounded border border-border hover:bg-muted text-foreground transition-colors"
-                    >
-                      <Plus className="h-3 w-3" />
-                      {formatSectionName(s, t)}
-                    </button>
-                  ))}
-                </div>
-
-                {/* Liste drag & drop */}
-                <DndContext
-                  sensors={sensors}
-                  collisionDetection={closestCenter}
-                  onDragEnd={handleDragEnd}
+            {/* Sections disponibles à ajouter */}
+            <div className="flex flex-wrap gap-1.5 mb-3">
+              {sections.map((s) => (
+                <button
+                  key={s.id}
+                  onClick={() => addSection(s)}
+                  className="flex items-center gap-1 text-xs px-2 py-1 rounded border border-border hover:bg-muted text-foreground transition-colors"
                 >
-                  <SortableContext
-                    items={state.structure.map((s) => s.uid)}
-                    strategy={verticalListSortingStrategy}
-                  >
-                    <div className="space-y-1.5">
-                      {state.structure.map((item, i) => {
-                        const section = sections.find((s) => s.id === item.sectionId);
-                        return (
-                          <SortableRow
-                            key={item.uid}
-                            item={item}
-                            section={section}
-                            onRemove={() => removeAt(i)}
-                            onNoteChange={(note) => updateNote(i, note)}
-                          />
-                        );
-                      })}
-                    </div>
-                  </SortableContext>
-                </DndContext>
+                  <Plus className="h-3 w-3" />
+                  {formatSectionName(s, t)}
+                </button>
+              ))}
+            </div>
 
-                {state.structure.length === 0 && (
-                  <p className="text-xs text-muted-foreground text-center py-4">
-                    {t("customize.panel.emptySections")}
-                  </p>
-                )}
-              </>
+            {/* Liste drag & drop */}
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext
+                items={state.structure.map((s) => s.uid)}
+                strategy={verticalListSortingStrategy}
+              >
+                <div className="space-y-1.5">
+                  {state.structure.map((item, i) => {
+                    const section = sections.find((s) => s.id === item.sectionId);
+                    return (
+                      <SortableRow
+                        key={item.uid}
+                        item={item}
+                        section={section}
+                        onRemove={() => removeAt(i)}
+                        onNoteChange={(note) => updateNote(i, note)}
+                      />
+                    );
+                  })}
+                </div>
+              </SortableContext>
+            </DndContext>
+
+            {state.structure.length === 0 && (
+              <p className="text-xs text-muted-foreground text-center py-4">
+                {t("customize.panel.emptySections")}
+              </p>
             )}
           </section>
+
+          {/* --- Signalement --- */}
           <section>
             <BugReportButton song={songTitle} />
           </section>
