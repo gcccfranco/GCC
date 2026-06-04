@@ -77,29 +77,7 @@ export function Navbar() {
             {t("common.header.setlists")}
           </Link>
         </nav>
-        {/* Desktop nav links */}
-        <nav className="hidden sm:flex items-center gap-1 ml-2">
-          <Link
-            href="/songs"
-            className={`px-3 py-[7px] rounded-[9px] text-[13.5px] font-semibold transition-all duration-150 ${
-              isActiveSongs
-                ? "bg-primary/10 text-primary"
-                : "text-muted-foreground hover:text-foreground hover:bg-secondary"
-            }`}
-          >
-            {t("common.header.songs")}
-          </Link>
-          <Link
-            href="/setlists"
-            className={`px-3 py-[7px] rounded-[9px] text-[13.5px] font-semibold transition-all duration-150 ${
-              isActiveSetlists
-                ? "bg-primary/10 text-primary"
-                : "text-muted-foreground hover:text-foreground hover:bg-secondary"
-            }`}
-          >
-            {t("common.header.setlists")}
-          </Link>
-        </nav>
+
 
         {/* Actions — pushed to far right */}
         <div className="ml-auto flex items-center gap-2">
@@ -112,26 +90,8 @@ export function Navbar() {
             <Globe className="h-3.5 w-3.5" />
             <span>{isZh ? "中文" : "FR"}</span>
           </button>
-        {/* Actions — pushed to far right */}
-        <div className="ml-auto flex items-center gap-2">
-          {/* Lang toggle */}
-          <button
-            onClick={toggleLanguage}
-            aria-label={isZh ? "Changer en français" : "切换为中文"}
-            className="h-[34px] min-w-[34px] px-2 rounded-[9px] border border-border bg-card text-muted-foreground hover:text-foreground hover:border-muted-foreground/50 transition-all duration-150 active:scale-[.96] flex items-center justify-center gap-1.5 text-[12.5px] font-semibold cursor-pointer"
-          >
-            <Globe className="h-3.5 w-3.5" />
-            <span>{isZh ? "中文" : "FR"}</span>
-          </button>
 
-          {/* Dark mode toggle */}
-          <button
-            onClick={toggleTheme}
-            aria-label={dark ? "Mode clair" : "Mode sombre"}
-            className="h-[34px] w-[34px] rounded-[9px] border border-border bg-card text-muted-foreground hover:text-foreground hover:border-muted-foreground/50 transition-all duration-150 active:scale-[.96] flex items-center justify-center cursor-pointer"
-          >
-            {dark ? <Sun className="h-[15px] w-[15px]" /> : <Moon className="h-[15px] w-[15px]" />}
-          </button>
+
           {/* Dark mode toggle */}
           <button
             onClick={toggleTheme}
@@ -162,27 +122,7 @@ export function Navbar() {
               </Link>
             )
           )}
-          {/* Auth */}
-          {!authLoading && (
-            user ? (
-              <button
-                onClick={() => logOut()}
-                className="h-[34px] min-w-[34px] px-2 rounded-[9px] border border-border bg-card text-muted-foreground hover:text-foreground hover:border-muted-foreground/50 transition-all duration-150 active:scale-[.96] flex items-center justify-center gap-1.5 text-[12.5px] font-semibold cursor-pointer"
-                title={user.email ?? undefined}
-              >
-                <LogOut className="h-3.5 w-3.5" />
-                <span className="hidden md:inline">{t("common.header.logout")}</span>
-              </button>
-            ) : (
-              <Link
-                href="/login"
-                className="h-[34px] min-w-[34px] px-2 rounded-[9px] border border-border bg-card text-muted-foreground hover:text-foreground hover:border-muted-foreground/50 transition-all duration-150 active:scale-[.96] flex items-center justify-center gap-1.5 text-[12.5px] font-semibold"
-              >
-                <LogIn className="h-3.5 w-3.5" />
-                <span className="hidden md:inline">{t("common.header.login")}</span>
-              </Link>
-            )
-          )}
+
 
           {/* Mobile hamburger */}
           <button
@@ -193,15 +133,7 @@ export function Navbar() {
             {isOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
           </button>
         </div>
-          {/* Mobile hamburger */}
-          <button
-            onClick={() => setIsOpen(!isOpen)}
-            aria-label="Toggle menu"
-            className="sm:hidden h-[34px] w-[34px] rounded-[9px] border border-border bg-card text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors duration-150 flex items-center justify-center cursor-pointer"
-          >
-            {isOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
-          </button>
-        </div>
+          
       </div>
 
       {/* Mobile Menu Panel */}
