@@ -33,6 +33,7 @@ export function Navbar() {
 
   const isActiveSongs = pathname.startsWith("/songs");
   const isActiveSetlists = pathname.startsWith("/setlists");
+  const isActivePlanning = pathname.startsWith("/planning");
 
   return (
     <header className={`fixed top-0 z-50 w-full h-[58px] border-b border-border/50 bg-background/82 backdrop-saturate-[1.2] backdrop-blur-[14px] print:hidden transition-transform duration-300 ${scrollVisible ? "translate-y-0" : "-translate-y-full"}`}>
@@ -75,6 +76,16 @@ export function Navbar() {
             }`}
           >
             {t("common.header.setlists")}
+          </Link>
+          <Link
+            href="/planning"
+            className={`px-3 py-[7px] rounded-[9px] text-[13.5px] font-semibold transition-all duration-150 ${
+              isActivePlanning
+                ? "bg-primary/10 text-primary"
+                : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+            }`}
+          >
+            Planning
           </Link>
         </nav>
 
@@ -159,6 +170,16 @@ export function Navbar() {
               }`}
             >
               {t("common.header.setlists")}
+            </Link>
+            <Link
+              href="/planning"
+              className={`px-3 py-2 rounded-lg text-sm font-semibold transition-colors ${
+                isActivePlanning
+                  ? "bg-primary/10 text-primary"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted"
+              }`}
+            >
+              Planning
             </Link>
           </div>
 
