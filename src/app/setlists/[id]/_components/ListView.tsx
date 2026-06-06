@@ -12,7 +12,6 @@ export function ListView({
   songsMap: Record<string, SongIndexEntry>;
 }) {
   const { t } = useTranslation();
-  console.log('items',items)
   return (
     <ol className="space-y-3">
       {[...items].sort((a, b) => a.position - b.position).map((item, idx) => {

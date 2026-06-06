@@ -73,8 +73,8 @@ export function Navbar() {
           <div className="relative group">
             <button className={`flex w-[96px] items-center gap-1 px-3 py-[7px] rounded-[9px] text-[13.5px] font-semibold transition-all duration-150 cursor-pointer ${
               isActiveLouange
-                ? "bg-primary/10 text-primary text center"
-                : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+                ? "bg-primary/10 text-primary text-center"
+                : "text-muted-foreground hover:text-foreground hover:bg-secondary text-center"
             }`}>
               {t('common.header.louange')}
               <ChevronDown className="h-3 w-3 opacity-60 group-hover:rotate-180 transition-transform duration-150" />

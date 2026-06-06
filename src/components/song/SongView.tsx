@@ -87,7 +87,6 @@ function buildColumns(tokens: Token[], pinyin: string | null): Column[] {
   const cols: Column[] = [];
 
   for (const tok of tokens) {
-    console.log('TOKEN', tok, (tok.type === "chord"))
     if (tok.type === "chord") {
       pendingChord = tok.value;
     } else {

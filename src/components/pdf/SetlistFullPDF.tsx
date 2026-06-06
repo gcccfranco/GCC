@@ -20,7 +20,6 @@ export function SetlistFullPDF({
   const sorted = [...setlist.items]
     .sort((a, b) => a.position - b.position)
     .filter((item) => !!contents[item.songSlug]);
-
   return (
     <Document title={setlist.title}>
       {sorted.map((item, idx) => {
@@ -38,7 +37,7 @@ export function SetlistFullPDF({
             useJianpu={false}
             structureOverride={item.structureOverride}
             sectionNotes={item.sectionNotes ?? {}}
-            footerCenter={setlist.title}
+            footerCenter={`${setlist.title} - ${setlist.leader}`}
           />
         );
       })}

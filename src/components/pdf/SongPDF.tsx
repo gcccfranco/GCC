@@ -450,7 +450,6 @@ export function SongPDFPage({
   const canUseJianpu = isZh && useJianpu;
   const theme = isZh ? RED_THEME : BLUE_THEME;
   const { title, titlePinyin, artist, key, jianpuKey, tempo } = ast.metadata;
-
   const displayKey = canUseJianpu ? (jianpuKey ?? `1=${key}`) : key;
 
   const sections: ChordProSection[] = (!canUseJianpu && structureOverride)
@@ -536,7 +535,7 @@ export function SongPDFPage({
           GCC LOUANGE
         </Text>
         <Text style={[styles.footerText, { fontFamily: isZh ? "KaiTi" : "NotoSans" }]}>
-          {centerLabel}{artist ? `  ·  ${artist}` : ""}
+          {centerLabel}
         </Text>
         <Text
           style={styles.footerText}
