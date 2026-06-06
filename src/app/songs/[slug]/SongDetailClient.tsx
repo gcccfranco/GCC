@@ -67,16 +67,23 @@ interface SongDetailClientProps {
 
     // Structure override : IDs des sections dans l'ordre choisi
     
+    const defaultStructure = useMemo(
+      () => customize.structure.map((s) => s.uid),
+      [customize.structure]
+    );
+
     const structureOverride = searchParams.get("structure")
-      ? JSON.parse(searchParams.get("structure")!):
-      useMemo(
-          () => customize.structure.map((s) => s.uid),
-          [customize.structure]
-        );
-    // Sections Note
-    const sectionsNote = searchParams.get("sectionNotes") ?
-        JSON.parse(searchParams.get("sectionNotes")!):
-        Object.fromEntries(customize.structure.map((s) => [s.uid, s.note]).filter(([, n]) => n))
+      ? JSON.parse(searchParams.get("structure")!)
+      : defaultStructure;
+
+    const defaultSectionsNote = Object.fromEntries(
+      customize.structure.map((s) => [s.uid, s.note]).filter(([, n]) => n)
+    );
+
+    const sectionsNote = searchParams.get("sectionNotes")
+      ? JSON.parse(searchParams.get("sectionNotes")!)
+      : defaultSectionsNote;
+
     async function handleDownload() {
       setDownloading(true);
       try {

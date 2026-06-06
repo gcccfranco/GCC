@@ -1,7 +1,7 @@
 import { getSongSlugs, loadSong } from "@/lib/content/loadSongs";
 import { SongDetailClient } from "./SongDetailClient";
 import { notFound } from "next/navigation";
-
+import { Suspense } from "react"
 export function generateStaticParams() {
   return getSongSlugs().map((slug) => ({ slug }));
 }
@@ -15,7 +15,9 @@ export default async function SongPage({ params }: Props) {
 
   try {
     const song = loadSong(slug);
-    return <SongDetailClient song={song} />;
+    return <Suspense fallback={null}>
+            <SongDetailClient song={song} />
+          </Suspense>
   } catch {
     notFound();
   }
