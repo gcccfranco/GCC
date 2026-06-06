@@ -87,6 +87,7 @@ function buildColumns(tokens: Token[], pinyin: string | null): Column[] {
   const cols: Column[] = [];
 
   for (const tok of tokens) {
+    console.log('TOKEN', tok, (tok.type === "chord"))
     if (tok.type === "chord") {
       pendingChord = tok.value;
     } else {
@@ -127,7 +128,6 @@ function ZhLine({ tokens, pinyin, showChords, showPinyin, chord_font, zh_lyric_f
           : col.chord
           ? `${(col.chord.length + 0.5) * 0.62}em`
           : undefined;
-
         return (
           <span
             key={i}

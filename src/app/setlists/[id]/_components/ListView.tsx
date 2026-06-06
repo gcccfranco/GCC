@@ -12,6 +12,7 @@ export function ListView({
   songsMap: Record<string, SongIndexEntry>;
 }) {
   const { t } = useTranslation();
+  console.log('items',items)
   return (
     <ol className="space-y-3">
       {[...items].sort((a, b) => a.position - b.position).map((item, idx) => {
@@ -25,7 +26,17 @@ export function ListView({
             </span>
             <div className="flex-1 min-w-0">
               <div className="flex items-baseline gap-2 flex-wrap">
-                <Link href={`/songs/${item.songSlug}`}
+                <Link href={{
+                  pathname:`/songs/${item.songSlug}`,
+                  query: {
+                    ...(item.structureOverride && {
+                      structure: JSON.stringify(item.structureOverride),
+                    }),
+                    ...(item.sectionNotes && {
+                      sectionNotes: JSON.stringify(item.sectionNotes),
+                    }),
+                  },
+                }}
                   className="font-semibold text-sm text-foreground hover:text-primary">
                   {song?.title ?? item.songSlug}
                 </Link>
