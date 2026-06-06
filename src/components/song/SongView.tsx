@@ -9,6 +9,7 @@ import { formatSectionName } from "@/lib/chordpro/parser";
 // ---------------------------------------------------------------------------
 // Thèmes et styles de sections
 // ---------------------------------------------------------------------------
+type Seg = { chord: string | null; lyric: string };
 
 const LANG_THEME = {
   fr: {
@@ -114,23 +115,78 @@ interface ZhLineProps {
   zh_lyric_font: ReturnType<typeof localFont>;
 }
 
+function toSegments(tokens: Token[]): Seg[] {
+  const out: Seg[] = [];
+  let i = 0;
+  while (i < tokens.length) {
+    const tok = tokens[i];
+    if (tok.type === "chord") {
+      const chord = tok.value;
+      let lyric = "";
+      i++;
+      while (i < tokens.length && tokens[i].type === "lyric") {
+        lyric += tokens[i].value;
+        i++;
+      }
+      const sp = lyric.search(/\s/);
+      if (sp === -1 || sp === lyric.length - 1) {
+        out.push({ chord, lyric });
+      } else {
+        out.push({ chord, lyric: lyric.slice(0, sp + 1) });
+        lyric.slice(sp + 1).split(/(?<=\s)/).forEach(w => w && out.push({ chord: null, lyric: w }));
+      }
+    } else {
+      tok.value.split(/(?<=\s)/).forEach(w => w && out.push({ chord: null, lyric: w }));
+      i++;
+    }
+  }
+  return out;
+}
+
 function ZhLine({ tokens, pinyin, showChords, showPinyin, chord_font, zh_lyric_font }: ZhLineProps) {
-  const cols = buildColumns(tokens, pinyin);
+  const pyWords = pinyin?.split(/\s+/).filter(Boolean) ?? [];
+  let pIdx = 0;
+
+  type Col = { char: string; chord: string | null; py: string };
+  const cols: Col[] = [];
+
+  for (const seg of toSegments(tokens)) {
+    const chars = [...(showChords ? seg.lyric : (seg.lyric?.trimStart() ?? ""))];
+    if (chars.length === 0) {
+      if (seg.chord) cols.push({ char: " ", chord: seg.chord, py: "" });
+    } else {
+      chars.forEach((ch, ci) => {
+        cols.push({
+          char: ch,
+          chord: ci === 0 ? seg.chord : null,
+          py: isCJK(ch) ? (pyWords[pIdx++] ?? "") : "",
+        });
+      });
+    }
+  }
+
   const hasAnyChord = showChords && cols.some((c) => c.chord !== null);
+
+  const cellMinWidth = (col: Col): string | undefined => {
+    if (isCJK(col.char)) return "1.6em";
+    if (col.chord) return col.chord;
+    return undefined;
+  };
 
   return (
     <div className="flex flex-wrap items-start mb-[3px]" style={{ fontSize: "0.88rem" }}>
       {cols.map((col, i) => {
         if (!showChords && col.char === " " && col.chord !== null) return null;
-        const minWidth = isCJK(col.char)
-          ? "1.6em"
-          : col.chord
-          ? `${(col.chord.length + 0.5) * 0.62}em`
-          : undefined;
+
         return (
           <span
             key={i}
-            style={{ display: "inline-flex", flexDirection: "column", alignItems: "center", minWidth }}
+            style={{
+              display: "inline-flex",
+              flexDirection: "column",
+              alignItems: "center",
+              minWidth: cellMinWidth(col),
+            }}
           >
             {showChords && (
               <span
@@ -148,7 +204,10 @@ function ZhLine({ tokens, pinyin, showChords, showPinyin, chord_font, zh_lyric_f
                 {col.chord ?? "x"}
               </span>
             )}
-            <span className = { `${zh_lyric_font.className} md:text-[1.2em]` } style={{ fontSize: "1.2em", lineHeight: 1.35 }}>
+            <span
+              className={`${zh_lyric_font.className} md:text-[1.2em]`}
+              style={{ fontSize: "1.2em", lineHeight: 1.35 }}
+            >
               {col.char}
             </span>
             {showPinyin && (
