@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-04T12:05:15.290Z",
+  "generatedAt": "2026-06-07T19:39:44.090Z",
   "songs": [
     {
       "slug": "abba-pere",
@@ -3247,42 +3247,6 @@
           "id": "bridge-5",
           "name": "Pont",
           "type": "bridge"
-        }
-      ]
-    },
-    {
-      "slug": "test_jianpu",
-      "title": "恩典之路",
-      "titlePinyin": "Ēn diǎn zhī lù",
-      "artist": "曾祥怡",
-      "language": "zh",
-      "originalKey": "F",
-      "tempo": 72,
-      "themes": [
-        "grace",
-        "foi",
-        "esperance"
-      ],
-      "youtubeUrl": null,
-      "spotifyUrl": null,
-      "appleMusicUrl": null,
-      "hasJianpu": true,
-      "jianpuKey": "1=F",
-      "sections": [
-        {
-          "id": "intro-1",
-          "name": "Intro",
-          "type": "intro"
-        },
-        {
-          "id": "verse-2",
-          "name": "主歌/Couplet",
-          "type": "verse"
-        },
-        {
-          "id": "chorus-3",
-          "name": "副歌/Refrain",
-          "type": "chorus"
         }
       ]
     },

@@ -138,7 +138,19 @@
       "emptySections": "无段落 — 请点击上方按钮添加段落。",
       "songNotePlaceholder": "备注（选填）…",
       "reorderLabel": "拖动排序",
-      "removeLabel": "移除"
+      "removeLabel": "移除",
+      "selectMode": "选择",
+      "cancelSelect": "取消",
+      "mergeButton_one": "合并 {{count}} 首诗歌",
+      "mergeButton_other": "合并 {{count}} 首诗歌",
+      "fusionLabel": "组合",
+      "unfuseButton": "拆分",
+      "fusionExpand": "查看诗歌",
+      "mixedStructureLabel": "混合",
+      "mixedStructureToggle": "混合各诗歌的段落顺序",
+      "mixedStructureTitle": "混合结构",
+      "mixedStructureReset": "重置",
+      "mixedStructureEmpty": "请点击上方按钮添加段落。"
     }
   },
   "customize": {

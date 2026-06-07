@@ -64,11 +64,20 @@ export function SetlistDetailClient() {
   // Load full song content when switching to Partitions view
   const loadContents = useCallback(async (items: SetlistItem[]) => {
     setLoadingContent(true);
-    const missing = items.filter((item) => !contents[item.songSlug]);
+    const slugsToLoad: string[] = [];
+    for (const item of items) {
+      if (item.type === "fusion" && item.fusionSongs) {
+        for (const fs of item.fusionSongs) {
+          if (!contents[fs.songSlug]) slugsToLoad.push(fs.songSlug);
+        }
+      } else if (item.songSlug && !contents[item.songSlug]) {
+        slugsToLoad.push(item.songSlug);
+      }
+    }
     await Promise.all(
-      missing.map(async (item) => {
-        const res = await fetchSongAST(item.songSlug);
-        if (res) setContents((prev) => ({ ...prev, [item.songSlug]: res }));
+      slugsToLoad.map(async (slug) => {
+        const res = await fetchSongAST(slug);
+        if (res) setContents((prev) => ({ ...prev, [slug]: res }));
       })
     );
     setLoadingContent(false);
@@ -98,15 +107,23 @@ export function SetlistDetailClient() {
       } else {
         // Fetch any missing song contents inline (don't depend on React state timing)
         const allContents: Record<string, SongContent> = { ...contents };
+        const slugsToFetch: string[] = [];
+        for (const item of setlist.items) {
+          if (item.type === "fusion" && item.fusionSongs) {
+            for (const fs of item.fusionSongs) {
+              if (!allContents[fs.songSlug]) slugsToFetch.push(fs.songSlug);
+            }
+          } else if (item.songSlug && !allContents[item.songSlug]) {
+            slugsToFetch.push(item.songSlug);
+          }
+        }
         await Promise.all(
-          setlist.items
-            .filter((item) => !allContents[item.songSlug])
-            .map(async (item) => {
-              try {
-                const res = await fetchSongAST(item.songSlug);
-                if (res) allContents[item.songSlug] = res;
-              } catch { /* skip */ }
-            })
+          slugsToFetch.map(async (slug) => {
+            try {
+              const res = await fetchSongAST(slug);
+              if (res) allContents[slug] = res;
+            } catch { /* skip */ }
+          })
         );
         setContents(allContents);
         const { SetlistFullPDF } = await import("@/components/pdf/SetlistFullPDF");

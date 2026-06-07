@@ -5,22 +5,15 @@ import { useRouter, useParams } from "next/navigation";
 import {
   DndContext,
   closestCenter,
-  PointerSensor,
-  TouchSensor,
-  useSensor,
-  useSensors,
   DragEndEvent,
 } from "@dnd-kit/core";
 import {
   SortableContext,
   verticalListSortingStrategy,
-  useSortable,
   arrayMove,
 } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
-import { GripVertical, Trash2, Search, X, AlertTriangle, Plus, ChevronDown, ChevronUp } from "lucide-react";
+import { Search, X, AlertTriangle, Link2 } from "lucide-react";
 import Fuse from "fuse.js";
-import { ALL_KEYS } from "@/lib/transpose";
 import {
   RESTRICTED_CATEGORIES,
   isRestricted,
@@ -29,232 +22,20 @@ import {
 } from "@/lib/firebase/setlists";
 import { useAuth } from "@/lib/firebase/auth";
 import { useTranslation } from "react-i18next";
-import type { SetlistItem } from "@/types/setList";
-import type { SongIndexEntry, SectionSummary } from "@/types/song";
+import type { SongIndexEntry } from "@/types/song";
 import { nextUid } from "@/lib/uid";
-import { type FormItem, type FormSectionItem, makeDefaultSections, buildFormItems } from "@/lib/setlist/formItems";
+import {
+  type FormItem,
+  type FormFusionItem,
+  type FormListItem,
+  type FusionMixedSectionForm,
+  isFormFusion,
+  makeDefaultSections,
+  buildFormItems,
+} from "@/lib/setlist/formItems";
 import { useDefaultSensors } from "@/lib/dnd/sensors";
 import { buildSetlistItems, detectSetlistLanguage } from "@/lib/setlist/buildSetlistItems";
-
-// ─── Section row (sortable, inside a song) ────────────────────────────────────
-
-function SortableSectionRow({
-  item,
-  onRemove,
-  onNoteChange,
-}: {
-  item: FormSectionItem;
-  onRemove: () => void;
-  onNoteChange: (note: string) => void;
-}) {
-  const { t } = useTranslation();
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
-    useSortable({ id: item.uid });
-
-  return (
-    <div
-      ref={setNodeRef}
-      style={{ transform: CSS.Transform.toString(transform), transition, touchAction: "none"  }}
-      className={`flex items-start gap-2 px-2 py-1.5 rounded border text-xs ${
-        isDragging ? "border-primary/40 bg-primary/5 shadow" : "border-border bg-background"
-      }`}
-    >
-      <button
-        {...attributes}
-        {...listeners}
-        type="button"
-        className="mt-0.5 text-muted-foreground cursor-grab active:cursor-grabbing shrink-0"
-      >
-        <GripVertical className="h-3.5 w-3.5" />
-      </button>
-      <div className="flex-1 min-w-0">
-        <div className="font-medium text-foreground">{item.name}</div>
-        <input
-          type="text"
-          placeholder={t("setlists.form.songNotePlaceholder")}
-          value={item.note}
-          onChange={(e) => onNoteChange(e.target.value)}
-          className="mt-1 w-full text-[11px] px-1.5 py-0.5 border border-border rounded bg-muted/50 text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-primary/30"
-        />
-      </div>
-      <button type="button" onClick={onRemove} className="mt-0.5 shrink-0 text-muted-foreground hover:text-destructive">
-        <Trash2 className="h-3.5 w-3.5" />
-      </button>
-    </div>
-  );
-}
-
-// ─── Structure editor ─────────────────────────────────────────────────────────
-
-function SectionStructureEditor({
-  allSections,
-  sectionItems,
-  onChange,
-}: {
-  allSections: SectionSummary[];
-  sectionItems: FormSectionItem[];
-  onChange: (items: FormSectionItem[]) => void;
-}) {
-  const { t } = useTranslation();
-  const sensors = useDefaultSensors();
-  function handleDragEnd(e: DragEndEvent) {
-    const { active, over } = e;
-    if (!over || active.id === over.id) return;
-    const oldIdx = sectionItems.findIndex((s) => s.uid === active.id);
-    const newIdx = sectionItems.findIndex((s) => s.uid === over.id);
-    onChange(arrayMove(sectionItems, oldIdx, newIdx));
-  }
-
-  return (
-    <div className="border-t border-border pt-2 px-3 pb-2 space-y-2">
-      <p className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("setlists.form.structure")}</p>
-      <div className="flex flex-wrap gap-1">
-        {allSections.map((s) => (
-          <button
-            key={s.id}
-            type="button"
-            onClick={() => onChange([...sectionItems, { uid: nextUid(), sectionId: s.id, name: s.name, note: "" }])}
-            className="flex items-center gap-0.5 text-[11px] px-2 py-0.5 rounded border border-border hover:bg-muted text-foreground transition-colors"
-          >
-            <Plus className="h-2.5 w-2.5" />
-            {s.name}
-          </button>
-        ))}
-      </div>
-      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-        <SortableContext items={sectionItems.map((s) => s.uid)} strategy={verticalListSortingStrategy}>
-          <div className="space-y-1">
-            {sectionItems.map((item, idx) => (
-              <SortableSectionRow
-                key={item.uid}
-                item={item}
-                onRemove={() => onChange(sectionItems.filter((_, i) => i !== idx))}
-                onNoteChange={(note) => {
-                  const next = [...sectionItems];
-                  next[idx] = { ...next[idx], note };
-                  onChange(next);
-                }}
-              />
-            ))}
-          </div>
-        </SortableContext>
-      </DndContext>
-      {sectionItems.length === 0 && (
-        <p className="text-[11px] text-muted-foreground text-center py-1">
-          {t("setlists.form.emptySections")}
-        </p>
-      )}
-    </div>
-  );
-}
-
-// ─── Song row (sortable, top-level) ───────────────────────────────────────────
-
-function SongRow({
-  item,
-  onRemove,
-  onKeyChange,
-  onNoteChange,
-  onSectionItemsChange,
-}: {
-  item: FormItem;
-  onRemove: () => void;
-  onKeyChange: (key: string | null) => void;
-  onNoteChange: (note: string) => void;
-  onSectionItemsChange: (items: FormSectionItem[]) => void;
-}) {
-  const { t } = useTranslation();
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
-    useSortable({ id: item.uid });
-  const [showStructure, setShowStructure] = useState(false);
-  const allSections = item.song.sections ?? [];
-  const originalCount = allSections.length;
-  const currentCount = item.sectionItems.length;
-  const isModified =
-    currentCount !== originalCount ||
-    item.sectionItems.some((si, i) => si.sectionId !== allSections[i]?.id);
-
-  return (
-    <div
-      ref={setNodeRef}
-      style={{ transform: CSS.Transform.toString(transform), transition, touchAction: "none"  }}
-      className={`rounded-lg border ${
-        isDragging ? "border-primary/50 bg-primary/5 shadow-md" : "border-border bg-background"
-      }`}
-    >
-      <div className="flex items-start gap-2 p-3">
-        <button
-          {...attributes}
-          {...listeners}
-          type="button"
-          className="mt-0.5 text-muted-foreground cursor-grab active:cursor-grabbing shrink-0"
-        >
-          <GripVertical className="h-4 w-4" />
-        </button>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-sm font-medium text-foreground truncate">{item.song.title}</span>
-            {item.song.titlePinyin && (
-              <span className="text-xs text-muted-foreground">{item.song.titlePinyin}</span>
-            )}
-            {item.song.language === "zh" && (
-              <span className="text-[10px] text-muted-foreground bg-muted px-1 rounded">{t("common.languages.zh")}</span>
-            )}
-          </div>
-          {item.song.artist && <p className="text-xs text-muted-foreground">{item.song.artist}</p>}
-          <input
-            type="text"
-            placeholder={t("setlists.form.songNotePlaceholder")}
-            value={item.notes}
-            onChange={(e) => onNoteChange(e.target.value)}
-            className="mt-1.5 w-full text-xs px-2 py-1 border border-border rounded bg-muted/50 text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-primary/30"
-          />
-        </div>
-        <div className="shrink-0 flex flex-col items-end gap-1.5">
-          <select
-            value={item.keyOverride ?? ""}
-            onChange={(e) => onKeyChange(e.target.value || null)}
-            className="text-xs px-1.5 py-1 border border-border rounded bg-background text-foreground font-mono font-bold focus:outline-none focus:ring-1 focus:ring-primary/30"
-          >
-            <option value="">{t("setlists.form.songOriginalKey", { key: item.song.originalKey })}</option>
-            {ALL_KEYS.map((k) => <option key={k} value={k}>{k}</option>)}
-          </select>
-          {originalCount > 1 && (
-            <button
-              type="button"
-              onClick={() => setShowStructure((v) => !v)}
-              className={`flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded border transition-colors ${
-                isModified
-                  ? "border-primary/30 bg-primary/10 text-primary"
-                  : "border-border text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {showStructure ? <ChevronUp className="h-2.5 w-2.5" /> : <ChevronDown className="h-2.5 w-2.5" />}
-              {t("setlists.form.structure")}
-              {isModified && ` ${currentCount}/${originalCount}`}
-            </button>
-          )}
-        </div>
-        <button
-          type="button"
-          onClick={onRemove}
-          className="mt-0.5 shrink-0 text-muted-foreground hover:text-destructive"
-        >
-          <Trash2 className="h-4 w-4" />
-        </button>
-      </div>
-      {showStructure && originalCount > 1 && (
-        <SectionStructureEditor
-          allSections={allSections}
-          sectionItems={item.sectionItems}
-          onChange={onSectionItemsChange}
-        />
-      )}
-    </div>
-  );
-}
-
-// ─── Main form ─────────────────────────────────────────────────────────────────
+import { SongRow, FusionRow } from "@/components/setlists/SetlistFormRows";
 
 export function EditSetlistClient() {
   const { t } = useTranslation();
@@ -270,11 +51,13 @@ export function EditSetlistClient() {
   const [leader, setLeader] = useState("");
   const [category, setCategory] = useState("");
   const [notes, setNotes] = useState("");
-  const [items, setItems] = useState<FormItem[]>([]);
+  const [items, setItems] = useState<FormListItem[]>([]);
   const [query, setQuery] = useState("");
   const [saving, setSaving] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [error, setError] = useState("");
+  const [selectMode, setSelectMode] = useState(false);
+  const [selectedUids, setSelectedUids] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     Promise.all([
@@ -294,18 +77,36 @@ export function EditSetlistClient() {
     }).finally(() => setLoadingData(false));
   }, [id, router]);
 
-  const addedSlugs = useMemo(() => new Set(items.map((i) => i.song.slug)), [items]);
-  const availableSongs = useMemo(() => songs.filter((s) => !addedSlugs.has(s.slug)), [songs, addedSlugs]);
+  const addedSlugs = useMemo(() => {
+    const slugs = new Set<string>();
+    for (const item of items) {
+      if (isFormFusion(item)) {
+        for (const s of item.songs) slugs.add(s.song.slug);
+      } else {
+        slugs.add(item.song.slug);
+      }
+    }
+    return slugs;
+  }, [items]);
+
+  const availableSongs = useMemo(
+    () => songs.filter((s) => !addedSlugs.has(s.slug)),
+    [songs, addedSlugs]
+  );
   const fuse = useMemo(
     () => new Fuse(availableSongs, { keys: ["title", "titlePinyin", "artist"], threshold: 0.4 }),
     [availableSongs]
   );
   const searchResults = useMemo(
-    () => query.trim() ? fuse.search(query.trim()).map((r) => r.item).slice(0, 6) : availableSongs.slice(0, 6),
+    () =>
+      query.trim()
+        ? fuse.search(query.trim()).map((r) => r.item).slice(0, 6)
+        : availableSongs.slice(0, 6),
     [query, fuse, availableSongs]
   );
 
   const sensors = useDefaultSensors();
+
   function addSong(song: SongIndexEntry) {
     setItems((prev) => [
       ...prev,
@@ -315,7 +116,31 @@ export function EditSetlistClient() {
   }
 
   function patch(uid: string, update: Partial<FormItem>) {
-    setItems((prev) => prev.map((i) => (i.uid === uid ? { ...i, ...update } : i)));
+    setItems((prev) =>
+      prev.map((i) => (i.uid === uid && !isFormFusion(i) ? { ...i, ...update } : i))
+    );
+  }
+
+  function patchFusionSong(fusionUid: string, songUid: string, update: Partial<FormItem>) {
+    setItems((prev) =>
+      prev.map((item) => {
+        if (item.uid !== fusionUid || !isFormFusion(item)) return item;
+        return {
+          ...item,
+          songs: item.songs.map((s) => (s.uid === songUid ? { ...s, ...update } : s)),
+        };
+      })
+    );
+  }
+
+  function patchFusionMixed(fusionUid: string, mixed: FusionMixedSectionForm[] | null) {
+    setItems((prev) =>
+      prev.map((item) =>
+        item.uid === fusionUid && isFormFusion(item)
+          ? { ...item, mixedStructure: mixed }
+          : item
+      )
+    );
   }
 
   function handleDragEnd(e: DragEndEvent) {
@@ -324,6 +149,45 @@ export function EditSetlistClient() {
     const oldIdx = items.findIndex((i) => i.uid === active.id);
     const newIdx = items.findIndex((i) => i.uid === over.id);
     setItems(arrayMove(items, oldIdx, newIdx));
+  }
+
+  function toggleSelectSong(uid: string) {
+    setSelectedUids((prev) => {
+      const next = new Set(prev);
+      if (next.has(uid)) next.delete(uid);
+      else next.add(uid);
+      return next;
+    });
+  }
+
+  function mergeSongs() {
+    const toMerge = items.filter(
+      (i): i is FormItem => !isFormFusion(i) && selectedUids.has(i.uid)
+    );
+    if (toMerge.length < 2) return;
+    const firstIdx = items.findIndex((i) => i.uid === toMerge[0].uid);
+    const fusion: FormFusionItem = { uid: nextUid(), kind: "fusion", songs: toMerge, mixedStructure: null };
+    const remaining = items.filter((i) => !selectedUids.has(i.uid));
+    remaining.splice(firstIdx, 0, fusion);
+    setItems(remaining);
+    setSelectedUids(new Set());
+    setSelectMode(false);
+  }
+
+  function unfuse(fusionUid: string) {
+    setItems((prev) => {
+      const idx = prev.findIndex((i) => i.uid === fusionUid);
+      if (idx === -1) return prev;
+      const fusion = prev[idx] as FormFusionItem;
+      const next = [...prev];
+      next.splice(idx, 1, ...fusion.songs);
+      return next;
+    });
+  }
+
+  function cancelSelectMode() {
+    setSelectMode(false);
+    setSelectedUids(new Set());
   }
 
   async function doUpdate(publishDraft: boolean) {
@@ -340,7 +204,6 @@ export function EditSetlistClient() {
     try {
       const setlistItems = buildSetlistItems(items);
       const language = detectSetlistLanguage(items);
-
       await updateSetlist(id, {
         title: title.trim(),
         leader: leader.trim(),
@@ -350,7 +213,6 @@ export function EditSetlistClient() {
         items: setlistItems,
         isDraft: publishDraft ? false : isDraft,
       });
-
       router.push(`/setlists/${id}`);
     } catch (err) {
       console.error(err);
@@ -366,6 +228,7 @@ export function EditSetlistClient() {
 
   const busy = saving || publishing;
   const needsAuth = category && isRestricted(category) && !user && !authLoading;
+  const selectableItems = items.filter((i): i is FormItem => !isFormFusion(i));
 
   if (loadingData) {
     return (
@@ -473,9 +336,42 @@ export function EditSetlistClient() {
 
         {/* ── Chants ── */}
         <section className="space-y-3">
-          <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-            {t("common.header.songs")}
-          </h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+              {t("common.header.songs")}
+            </h2>
+            {selectableItems.length >= 2 && (
+              selectMode ? (
+                <div className="flex items-center gap-2">
+                  {selectedUids.size >= 2 && (
+                    <button
+                      type="button"
+                      onClick={mergeSongs}
+                      className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition-colors"
+                    >
+                      <Link2 className="h-3 w-3" />
+                      {t("setlists.form.mergeButton", { count: selectedUids.size })}
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={cancelSelectMode}
+                    className="text-xs px-2.5 py-1 rounded-lg border border-border text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {t("setlists.form.cancelSelect")}
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setSelectMode(true)}
+                  className="text-xs px-2.5 py-1 rounded-lg border border-border text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  {t("setlists.form.selectMode")}
+                </button>
+              )
+            )}
+          </div>
 
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
@@ -487,8 +383,11 @@ export function EditSetlistClient() {
               className="w-full pl-9 pr-8 py-2 border border-border rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 text-sm"
             />
             {query && (
-              <button type="button" onClick={() => setQuery("")}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+              <button
+                type="button"
+                onClick={() => setQuery("")}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
                 <X className="h-4 w-4" />
               </button>
             )}
@@ -497,10 +396,16 @@ export function EditSetlistClient() {
           {searchResults.length > 0 && (
             <div className="rounded-lg border border-border divide-y divide-border overflow-hidden">
               {searchResults.map((song) => (
-                <button key={song.slug} type="button" onClick={() => addSong(song)}
-                  className="w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-muted/50 transition-colors">
+                <button
+                  key={song.slug}
+                  type="button"
+                  onClick={() => addSong(song)}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-muted/50 transition-colors"
+                >
                   <span className="text-sm font-medium text-foreground flex-1 truncate">{song.title}</span>
-                  {song.language === "zh" && <span className="text-[10px] text-muted-foreground">{t("common.languages.zh")}</span>}
+                  {song.language === "zh" && (
+                    <span className="text-[10px] text-muted-foreground">{t("common.languages.zh")}</span>
+                  )}
                   <span className="font-mono text-xs text-muted-foreground">{song.originalKey}</span>
                   <span className="text-primary text-xs font-medium">{t("common.buttons.add")}</span>
                 </button>
@@ -518,16 +423,30 @@ export function EditSetlistClient() {
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
               <SortableContext items={items.map((i) => i.uid)} strategy={verticalListSortingStrategy}>
                 <div className="space-y-2">
-                  {items.map((item) => (
-                    <SongRow
-                      key={item.uid}
-                      item={item}
-                      onRemove={() => setItems((prev) => prev.filter((i) => i.uid !== item.uid))}
-                      onKeyChange={(key) => patch(item.uid, { keyOverride: key })}
-                      onNoteChange={(note) => patch(item.uid, { notes: note })}
-                      onSectionItemsChange={(sectionItems) => patch(item.uid, { sectionItems })}
-                    />
-                  ))}
+                  {items.map((item) =>
+                    isFormFusion(item) ? (
+                      <FusionRow
+                        key={item.uid}
+                        item={item}
+                        onUnfuse={() => unfuse(item.uid)}
+                        onRemove={() => setItems((prev) => prev.filter((i) => i.uid !== item.uid))}
+                        onPatchSong={(songUid, update) => patchFusionSong(item.uid, songUid, update)}
+                        onChangeMixed={(mixed) => patchFusionMixed(item.uid, mixed)}
+                      />
+                    ) : (
+                      <SongRow
+                        key={item.uid}
+                        item={item}
+                        selectable={selectMode}
+                        selected={selectedUids.has(item.uid)}
+                        onToggleSelect={() => toggleSelectSong(item.uid)}
+                        onRemove={() => setItems((prev) => prev.filter((i) => i.uid !== item.uid))}
+                        onKeyChange={(key) => patch(item.uid, { keyOverride: key })}
+                        onNoteChange={(note) => patch(item.uid, { notes: note })}
+                        onSectionItemsChange={(sectionItems) => patch(item.uid, { sectionItems })}
+                      />
+                    )
+                  )}
                 </div>
               </SortableContext>
             </DndContext>
@@ -545,7 +464,6 @@ export function EditSetlistClient() {
         )}
 
         <div className="flex gap-2">
-          {/* Valider = publier le brouillon (uniquement si c'est un brouillon) */}
           {isDraft && (
             <button
               type="button"
@@ -556,7 +474,6 @@ export function EditSetlistClient() {
               {publishing ? t("setlists.form.publishing") : t("setlists.form.publishButton")}
             </button>
           )}
-          {/* Enregistrer (brouillon → reste brouillon, publiée → reste publiée) */}
           <button
             type="submit"
             disabled={busy}

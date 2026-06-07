@@ -1,6 +1,19 @@
 import { Language } from "@/types/common";
 
+export type FusionSong = {
+  songSlug: string;
+  keyOverride: string | null;
+  structureOverride: string[] | null;
+  sectionNotes: Record<string, string>;
+};
+
+export type FusionMixedSection = {
+  songSlug: string;
+  sectionId: string;
+};
+
 export type SetlistItem = {
+  type?: "fusion";
   songSlug: string;
   position: number;
   keyOverride: string | null;
@@ -10,6 +23,8 @@ export type SetlistItem = {
   structureOverride: string[] | null;
   sectionNotes: Record<string, string>;
   notes: string;
+  fusionSongs?: FusionSong[];
+  mixedStructure?: FusionMixedSection[] | null;
 };
 
 export type Setlist = {

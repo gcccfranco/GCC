@@ -3,6 +3,7 @@ import type { SongIndexEntry } from "@/types/song";
 import { useTranslation } from "react-i18next";
 import { formatSectionName } from "@/lib/chordpro/parser";
 import Link from "next/link";
+import { Link2 } from "lucide-react";
 
 export function ListView({
   items,
@@ -15,6 +16,52 @@ export function ListView({
   return (
     <ol className="space-y-3">
       {[...items].sort((a, b) => a.position - b.position).map((item, idx) => {
+        // ── Fusion item ──
+        if (item.type === "fusion" && item.fusionSongs) {
+          return (
+            <li key={`fusion-${idx}`} className="flex gap-3 items-start">
+              <span className="shrink-0 w-7 h-7 rounded-full bg-muted flex items-center justify-center text-xs font-bold text-muted-foreground mt-0.5">
+                {item.position}
+              </span>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <Link2 className="h-3.5 w-3.5 text-primary shrink-0" />
+                  <span className="font-semibold text-sm text-foreground">
+                    {item.fusionSongs
+                      .map((fs) => songsMap[fs.songSlug]?.title ?? fs.songSlug)
+                      .join(" / ")}
+                  </span>
+                  <span className="text-[10px] uppercase tracking-wider text-primary font-medium px-1.5 py-0.5 bg-primary/10 rounded">
+                    {t("setlists.form.fusionLabel")}
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1">
+                  {item.fusionSongs.map((fs) => {
+                    const song = songsMap[fs.songSlug];
+                    const displayKey = fs.keyOverride ?? song?.originalKey ?? "?";
+                    const transposed = !!fs.keyOverride && fs.keyOverride !== song?.originalKey;
+                    return (
+                      <span key={fs.songSlug} className="flex items-center gap-1 text-[11px] text-muted-foreground/80">
+                        <Link href={`/songs/${fs.songSlug}`} className="hover:text-primary hover:underline">
+                          {song?.title ?? fs.songSlug}
+                        </Link>
+                        <span className={`font-mono text-[10px] px-1 py-0.5 rounded ${
+                          transposed
+                            ? "bg-primary/10 text-primary border border-primary/20"
+                            : "bg-muted text-foreground"
+                        }`}>
+                          {displayKey}
+                        </span>
+                      </span>
+                    );
+                  })}
+                </div>
+              </div>
+            </li>
+          );
+        }
+
+        // ── Regular song item ──
         const song = songsMap[item.songSlug];
         const displayKey = item.keyOverride ?? song?.originalKey ?? "?";
         const transposed = !!item.keyOverride && item.keyOverride !== song?.originalKey;
