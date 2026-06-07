@@ -140,7 +140,19 @@
       "emptySections": "Aucune section — ajoute en cliquant sur les boutons.",
       "songNotePlaceholder": "Note (optionnel)…",
       "reorderLabel": "Réordonner",
-      "removeLabel": "Retirer"
+      "removeLabel": "Retirer",
+      "selectMode": "Sélectionner",
+      "cancelSelect": "Annuler",
+      "mergeButton_one": "Fusionner {{count}} chant",
+      "mergeButton_other": "Fusionner {{count}} chants",
+      "fusionLabel": "Fusion",
+      "unfuseButton": "Défusionner",
+      "fusionExpand": "Voir les chants",
+      "mixedStructureLabel": "Mélanger",
+      "mixedStructureToggle": "Mélanger les sections des chants",
+      "mixedStructureTitle": "Structure mélangée",
+      "mixedStructureReset": "Réinitialiser",
+      "mixedStructureEmpty": "Ajoute des sections en cliquant sur les boutons ci-dessus."
     }
   },
   "customize": {

@@ -1,4 +1,3 @@
-// lib/setlist/formItems.ts
 import { nextUid } from "@/lib/uid";
 import type { SetlistItem } from "@/types/setList";
 import type { SongIndexEntry, SectionSummary } from "@/types/song";
@@ -18,6 +17,27 @@ export interface FormItem {
   sectionItems: FormSectionItem[];
 }
 
+export interface FusionMixedSectionForm {
+  uid: string;
+  songSlug: string;
+  sectionId: string;
+  sectionName: string;
+  songTitle: string;
+}
+
+export interface FormFusionItem {
+  uid: string;
+  kind: "fusion";
+  songs: FormItem[];
+  mixedStructure: FusionMixedSectionForm[] | null;
+}
+
+export type FormListItem = FormItem | FormFusionItem;
+
+export function isFormFusion(item: FormListItem): item is FormFusionItem {
+  return (item as FormFusionItem).kind === "fusion";
+}
+
 export function makeDefaultSections(sections: SectionSummary[]): FormSectionItem[] {
   return sections.map((s, index) => ({
     uid: `${s.id}-${index}`,
@@ -27,37 +47,70 @@ export function makeDefaultSections(sections: SectionSummary[]): FormSectionItem
   }));
 }
 
+function toFormItem(
+  song: SongIndexEntry,
+  keyOverride: string | null,
+  notes: string,
+  structureOverride: string[] | null,
+  sectionNotes: Record<string, string>
+): FormItem {
+  const allSections = song.sections ?? [];
+  const orderedSections = structureOverride && structureOverride.length > 0
+    ? structureOverride
+        .map((id) => allSections.find((s) => s.id === id))
+        .filter((s): s is SectionSummary => s !== undefined)
+    : allSections;
+  return {
+    uid: nextUid(),
+    song,
+    keyOverride,
+    notes,
+    sectionItems: orderedSections.map((s) => ({
+      uid: nextUid(),
+      sectionId: s.id,
+      name: s.name || s.type,
+      note: sectionNotes?.[s.id] ?? "",
+    })),
+  };
+}
+
 export function buildFormItems(
   items: SetlistItem[],
   songsMap: Record<string, SongIndexEntry>
-): FormItem[] {
+): FormListItem[] {
   return [...items]
     .sort((a, b) => a.position - b.position)
-    .flatMap((item) => {
+    .flatMap((item): FormListItem[] => {
+      if (item.type === "fusion" && item.fusionSongs) {
+        const songs: FormItem[] = item.fusionSongs.flatMap((fs) => {
+          const song = songsMap[fs.songSlug];
+          if (!song) return [];
+          return [toFormItem(song, fs.keyOverride, "", fs.structureOverride, fs.sectionNotes)];
+        });
+        if (songs.length === 0) return [];
+
+        let mixedStructure: FusionMixedSectionForm[] | null = null;
+        if (item.mixedStructure && item.mixedStructure.length > 0) {
+          mixedStructure = item.mixedStructure.flatMap((ms): FusionMixedSectionForm[] => {
+            const song = songsMap[ms.songSlug];
+            if (!song) return [];
+            const section = (song.sections ?? []).find((s) => s.id === ms.sectionId);
+            if (!section) return [];
+            return [{
+              uid: nextUid(),
+              songSlug: ms.songSlug,
+              sectionId: ms.sectionId,
+              sectionName: section.name || section.type,
+              songTitle: song.title,
+            }];
+          });
+        }
+
+        return [{ uid: nextUid(), kind: "fusion", songs, mixedStructure }];
+      }
+
       const song = songsMap[item.songSlug];
       if (!song) return [];
-      const allSections = song.sections ?? [];
-      const orderedSections = item.structureOverride
-        ? item.structureOverride
-            .map((uid) => {
-              const section = allSections.find((s) => s.id === uid.replace(/-\d+$/, ""));
-              return section ? { ...section, uid } : undefined;
-              })
-            .filter((s): s is SectionSummary => s !== undefined)
-        : allSections;
-      const sectionItems: FormSectionItem[] = orderedSections.map((s, index) => ({
-        uid: `${s.id}-${index}`,
-        sectionId: s.id,
-        name: s.name || s.type,
-        note: item.sectionNotes?.[s.uid] ?? "",
-      }));
-      
-      return [{
-        uid: nextUid(),
-        song,
-        keyOverride: item.keyOverride,
-        notes: item.notes,
-        sectionItems,
-      }];
+      return [toFormItem(song, item.keyOverride, item.notes, item.structureOverride, item.sectionNotes)];
     });
 }

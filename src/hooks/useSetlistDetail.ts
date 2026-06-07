@@ -40,7 +40,11 @@ export function useSetlistDetail(id: string) {
   // Chargement du contenu complet pour la vue Partitions
   const loadContents = useCallback(async (items: SetlistItem[]) => {
     setLoadingContent(true);
-    const slugs = items.map((i) => i.songSlug);
+    const slugs = items.flatMap((i) =>
+      i.type === "fusion" && i.fusionSongs
+        ? i.fusionSongs.map((fs) => fs.songSlug)
+        : [i.songSlug]
+    );
     const updated = await fetchMissingSongContents(slugs, contents);
     setContents(updated);
     setLoadingContent(false);

@@ -1,9 +1,11 @@
 import type { SetlistItem } from "@/types/setList";
 import type { SongContent } from "@/lib/utils/fetchSongContent";
-import { SongView } from "@/components/song/SongView";
+import { SongView, SectionView } from "@/components/song/SongView";
 import { useTranslation } from "react-i18next";
 import { transposeAST } from "@/lib/transposeAST";
 import { semitonesTo } from "@/lib/transpose";
+import { Link2 } from "lucide-react";
+import type { ChordProAST } from "@/types/chordPro";
 
 export function PartitionsView({
   items,
@@ -27,6 +29,117 @@ export function PartitionsView({
   return (
     <div className="space-y-10 print:space-y-6">
       {[...items].sort((a, b) => a.position - b.position).map((item, idx) => {
+        // ── Fusion item ──
+        if (item.type === "fusion" && item.fusionSongs) {
+          // Préparer les ASTs transposés par slug
+          const transposedAsts: Record<string, ChordProAST> = {};
+          for (const fs of item.fusionSongs) {
+            const content = contents[fs.songSlug];
+            if (!content) continue;
+            let ast = content.ast;
+            if (fs.keyOverride && fs.keyOverride !== ast.metadata.key) {
+              const semitones = semitonesTo(ast.metadata.key, fs.keyOverride);
+              ast = transposeAST(ast, semitones, fs.keyOverride);
+            }
+            transposedAsts[fs.songSlug] = ast;
+          }
+
+          // ── Structure mélangée ──
+          if (item.mixedStructure && item.mixedStructure.length > 0) {
+            return (
+              <div key={`fusion-${idx}`} className="print:break-before-page first:print:break-before-auto">
+                {/* En-tête fusion */}
+                <div className="flex items-center gap-2 mb-2 print:mb-2 pb-3 border-b border-border">
+                  <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center shrink-0">
+                    {item.position}
+                  </span>
+                  <Link2 className="h-3.5 w-3.5 text-primary shrink-0" />
+                  <div className="flex flex-wrap gap-x-3 gap-y-0.5">
+                    {item.fusionSongs.map((fs) => {
+                      const ast = transposedAsts[fs.songSlug];
+                      if (!ast) return null;
+                      return (
+                        <span key={fs.songSlug} className="text-sm font-bold text-foreground">
+                          {ast.metadata.title}
+                          <span className="ml-1 font-mono text-xs font-normal text-muted-foreground">
+                            {fs.keyOverride ?? ast.metadata.key}
+                          </span>
+                        </span>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Sections en ordre mélangé */}
+                <div className="max-w-2xl print:max-w-none pt-2">
+                  {item.mixedStructure.map((ms, msIdx) => {
+                    const ast = transposedAsts[ms.songSlug];
+                    if (!ast) return null;
+                    const section = ast.sections.find((s) => s.id === ms.sectionId);
+                    if (!section) return null;
+                    const fusionSong = item.fusionSongs!.find((fs) => fs.songSlug === ms.songSlug);
+                    const sectionNote = fusionSong?.sectionNotes?.[ms.sectionId];
+                    const showSongLabel = item.fusionSongs!.length > 1;
+                    return (
+                      <SectionView
+                        key={`${ms.songSlug}-${ms.sectionId}-${msIdx}`}
+                        section={section}
+                        language={ast.metadata.language}
+                        showChords={showChordsGlobal && item.showChords}
+                        showPinyin={ast.metadata.language === "zh"}
+                        useJianpu={false}
+                        note={sectionNote}
+                        songSourceLabel={showSongLabel ? ast.metadata.title : undefined}
+                      />
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          }
+
+          // ── Fusion sans structure mélangée : enchaînement en ordre ──
+          return (
+            <div key={`fusion-${idx}`} className="print:break-before-page first:print:break-before-auto">
+              <div className="flex items-center gap-2 mb-4 print:mb-2">
+                <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center shrink-0">
+                  {item.position}
+                </span>
+                <Link2 className="h-3.5 w-3.5 text-primary shrink-0" />
+                <span className="text-xs text-primary font-medium uppercase tracking-wider">
+                  {t("setlists.form.fusionLabel")}
+                </span>
+              </div>
+              <div className="space-y-8">
+                {item.fusionSongs.map((fs, fsIdx) => {
+                  const ast = transposedAsts[fs.songSlug];
+                  if (!ast) return null;
+                  return (
+                    <div key={fs.songSlug}>
+                      {fsIdx > 0 && (
+                        <div className="flex items-center gap-2 my-6 print:my-3">
+                          <div className="flex-1 border-t border-dashed border-primary/30" />
+                          <Link2 className="h-3 w-3 text-primary/50 shrink-0" />
+                          <div className="flex-1 border-t border-dashed border-primary/30" />
+                        </div>
+                      )}
+                      <SongView
+                        ast={ast}
+                        showChords={showChordsGlobal && item.showChords}
+                        showPinyin={ast.metadata.language === "zh"}
+                        useJianpu={false}
+                        structureOverride={fs.structureOverride}
+                        sectionNotes={fs.sectionNotes ?? {}}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        }
+
+        // ── Chant normal ──
         const content = contents[item.songSlug];
         if (!content) return null;
 
@@ -38,7 +151,6 @@ export function PartitionsView({
 
         return (
           <div key={`${item.songSlug}-${idx}`} className="print:break-before-page first:print:break-before-auto">
-            {/* Numéro de position */}
             <div className="flex items-center gap-2 mb-3 print:mb-2">
               <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center shrink-0">
                 {item.position}

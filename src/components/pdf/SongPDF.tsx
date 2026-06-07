@@ -83,6 +83,11 @@ const PINYIN_SIZE  = 8;
 const JIANPU_SIZE  = 11;
 const CHORD_H      = 16;    // reserved height for chord row
 
+// Approximate character widths for line-break pre-computation (no flexWrap)
+const LYRIC_CHAR_W = 5.5;   // NotoSans 11pt average glyph advance
+const CHORD_CHAR_W = 7.5;   // NotoSans Bold 13pt average glyph advance
+const PAGE_CONTENT_W = 495; // A4 - 2×50pt margins
+
 // ─── Section box type ─────────────────────────────────────────────────────────
 
 type BoxStyle = "filled" | "outline" | "none";
@@ -153,19 +158,30 @@ function toSegments(tokens: Token[]): Seg[] {
 }
 
 // ─── Chord label (root + smaller quality) ────────────────────────────────────
+// Uses View (not Text) for the container so Yoga respects the fixed height.
+// minHeight on <Text> is ignored by react-pdf's text engine — only View height works.
 
 function ChordLabel({ chord, theme }: { chord: string; theme: Theme }) {
   const [root, qual] = chordParts(chord);
   return (
-    <Text style={{ fontFamily: "SpaceGrotesk", fontWeight: 700, color: theme.accent,
-                   fontSize: CHORD_SIZE, lineHeight: 1, minHeight: CHORD_H }}>
-      {root}
-      {qual ? <Text style={{ fontSize: CHORD_Q_SIZE }}>{qual}</Text> : null}
-    </Text>
+    <View style={{ height: CHORD_H, flexDirection: "row", alignItems: "flex-end" }}>
+      <Text style={{ fontFamily: "NotoSans", fontWeight: 700, color: theme.accent,
+                     fontSize: CHORD_SIZE, lineHeight: 1 }}>
+        {root}
+      </Text>
+      {qual ? (
+        <Text style={{ fontFamily: "NotoSans", fontWeight: 700, color: theme.accent,
+                       fontSize: CHORD_Q_SIZE, lineHeight: 1 }}>
+          {qual}
+        </Text>
+      ) : null}
+    </View>
   );
 }
 
 // ─── French line ──────────────────────────────────────────────────────────────
+// Uses explicit line-breaking (no flexWrap) to avoid Yoga's misalignment bug
+// with wrapped flex items. Each visual line renders two flat rows: chord + lyric.
 
 function FrLine({ tokens, showChords, theme }: {
   tokens: Token[];
@@ -173,27 +189,64 @@ function FrLine({ tokens, showChords, theme }: {
   theme: Theme;
 }) {
   const segs = toSegments(tokens);
-  const hasChord = showChords && segs.some(s => s.chord !== null);
   const allEmpty = segs.every(s => !s.lyric?.trim() && !s.chord);
+  if (allEmpty) return <View style={{ height: 6 }} />;
 
-  if (allEmpty && !hasChord) return <View style={{ height: 6 }} />;
+  // Per-segment cell width = max(chord width, lyric width)
+  const cellWidths = segs.map(seg => {
+    const cw = seg.chord ? (seg.chord.length + 0.5) * CHORD_CHAR_W : 0;
+    const lw = [...seg.lyric].length * LYRIC_CHAR_W;
+    return Math.max(cw, lw, 4);
+  });
+
+  // Split segments into visual lines so nothing overflows the page
+  const visualLines: number[][] = [];
+  let lineSegs: number[] = [];
+  let lineW = 0;
+  for (let i = 0; i < segs.length; i++) {
+    if (lineW + cellWidths[i] > PAGE_CONTENT_W && lineSegs.length > 0) {
+      visualLines.push(lineSegs);
+      lineSegs = [i];
+      lineW = cellWidths[i];
+    } else {
+      lineSegs.push(i);
+      lineW += cellWidths[i];
+    }
+  }
+  if (lineSegs.length) visualLines.push(lineSegs);
 
   return (
-    <View style={{ flexDirection: "row", flexWrap: "wrap", alignItems: "flex-end", marginBottom: 1 }}>
-      {segs.map((seg, i) => {
-        const chordLen = seg.chord?.length ?? 0;
-        const lyricLen = [...seg.lyric].length;
-        const minWidth = hasChord && chordLen > lyricLen ? (chordLen + 1.5) * 6 : undefined;
+    <View style={{ marginBottom: 1 }}>
+      {visualLines.map((indices, li) => {
+        const lineHasChord = showChords && indices.some(i => segs[i].chord !== null);
         return (
-          <View key={i} style={[{ flexDirection: "column" }, minWidth ? { minWidth } : {}]}>
-            {showChords && seg.chord
-              ? <ChordLabel chord={seg.chord} theme={theme} />
-              : hasChord
-                ? <Text style={{ fontSize: CHORD_SIZE, minHeight: CHORD_H }}>{""}</Text>
-                : null}
-            <Text style={{ fontSize: LYRIC_FR, color: C.lyric, fontFamily: "Inter", lineHeight: 1.25 }}>
-              {(showChords ? seg.lyric : seg.lyric?.trimStart()) || (seg.chord && showChords ? " " : "")}
-            </Text>
+          <View key={li} style={{ marginBottom: li < visualLines.length - 1 ? 3 : 0 }}>
+            {/* Chord row — only when this visual line has at least one chord */}
+            {lineHasChord && (
+              <View style={{ flexDirection: "row" }}>
+                {indices.map(i => (
+                  <View key={i} style={{ minWidth: cellWidths[i] }}>
+                    {segs[i].chord
+                      ? <ChordLabel chord={segs[i].chord!} theme={theme} />
+                      : <View style={{ height: CHORD_H }} />}
+                  </View>
+                ))}
+              </View>
+            )}
+            {/* Lyric row */}
+            <View style={{ flexDirection: "row" }}>
+              {indices.map(i => {
+                const lyric = (showChords ? segs[i].lyric : segs[i].lyric?.trimStart())
+                  || (segs[i].chord && showChords ? " " : "");
+                return (
+                  <View key={i} style={{ minWidth: cellWidths[i] }}>
+                    <Text style={{ fontSize: LYRIC_FR, color: C.lyric, fontFamily: "NotoSans", lineHeight: 1.25 }}>
+                      {lyric}
+                    </Text>
+                  </View>
+                );
+              })}
+            </View>
           </View>
         );
       })}
@@ -265,13 +318,21 @@ function ZhLine({ tokens, pinyin, showChords, showPinyin, theme }: {
 
 /** Compact chord label for Chinese cell headers (smaller font). */
 function ChordSmall({ chord, theme }: { chord: string | null; theme: Theme }) {
-  if (!chord) return <Text style={{ fontSize: 13, minHeight: 16 }}>{""}</Text>;
+  if (!chord) return <View style={{ height: 16 }} />;
   const [root, qual] = chordParts(chord);
   return (
-    <Text style={{ fontFamily: "SpaceGrotesk", fontWeight: 700, color: theme.accent,
-                   fontSize: 13, minHeight: 16, lineHeight: 1, textAlign: "center" }}>
-      {root}{qual ? <Text style={{ fontSize: 10 }}>{qual}</Text> : null}
-    </Text>
+    <View style={{ height: 16, flexDirection: "row", alignItems: "flex-end", justifyContent: "center" }}>
+      <Text style={{ fontFamily: "NotoSans", fontWeight: 700, color: theme.accent,
+                     fontSize: 13, lineHeight: 1 }}>
+        {root}
+      </Text>
+      {qual ? (
+        <Text style={{ fontFamily: "NotoSans", fontWeight: 700, color: theme.accent,
+                       fontSize: 10, lineHeight: 1 }}>
+          {qual}
+        </Text>
+      ) : null}
+    </View>
   );
 }
 
@@ -474,7 +535,7 @@ export function SongPDFPage({
   const { title, titlePinyin, artist, key, jianpuKey, tempo } = ast.metadata;
   const displayKey = canUseJianpu ? (jianpuKey ?? `1=${key}`) : key;
 
-  const sections: ChordProSection[] = (!canUseJianpu && structureOverride)
+  const sections: ChordProSection[] = (!canUseJianpu && structureOverride && structureOverride.length > 0)
     ? structureOverride
         .map((uid) => {
             const section = ast.sections.find((s) => s.id === uid.replace(/-\d+$/, ""));

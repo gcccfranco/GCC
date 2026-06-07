@@ -238,16 +238,17 @@ function ZhLine({ tokens, pinyin, showChords, showPinyin, chord_font, zh_lyric_f
 // SectionView
 // ---------------------------------------------------------------------------
 
-interface SectionViewProps {
+export interface SectionViewProps {
   section: ChordProSection;
   language: "fr" | "zh";
   showChords: boolean;
   showPinyin: boolean;
   useJianpu: boolean;
-  note: string;
+  note?: string;
+  songSourceLabel?: string;
 }
 
-function SectionView({ section, language, showChords, showPinyin, useJianpu, note }: SectionViewProps) {
+export function SectionView({ section, language, showChords, showPinyin, useJianpu, note, songSourceLabel }: SectionViewProps) {
   const { t, i18n } = useTranslation();
   const isZh = language === "zh";
   const uiIsZh = i18n.language === "zh-CN";
@@ -270,6 +271,11 @@ function SectionView({ section, language, showChords, showPinyin, useJianpu, not
         <span className={`text-[0.75rem] font-bold uppercase tracking-[0.1em] ${uiIsZh ? zh_lyric_font.className : chord_font.className}`}
               style={{ color: "var(--sec-c, #6b7080)" }}>
           {label}
+          {songSourceLabel && (
+            <span className="ml-2 text-[10px] font-normal normal-case tracking-normal" style={{ color: "var(--sec-c, currentColor)", opacity: 0.7 }}>
+              · {songSourceLabel}
+            </span>
+          )}
           {note && (
             <span className="ml-2 normal-case font-normal text-muted-foreground tracking-normal text-xs">
               — {note}
@@ -336,7 +342,7 @@ export function SongView({
   const canUseJianpu = isZh && useJianpu;
   const langAccent = isZh ? "var(--jianpu-color)" : "var(--chord-color)";
   const sections =
-    structureOverride && !canUseJianpu
+    structureOverride && structureOverride.length > 0 && !canUseJianpu
       ? structureOverride
           .map((uid) => {
             const section = ast.sections.find((s) => s.id === uid.replace(/-\d+$/, ""));
