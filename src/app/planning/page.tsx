@@ -151,7 +151,10 @@ export default function PlanningAccueil() {
             {[["中班", eddZb], ["大班", eddDb], ["高班", eddGb]].map(([cls, row]) => (
               <GroupBlock key={cls as string} badge={cls as string}>
                 <InfoRow label="Présidence" value={val((row as string[]|null)?.[1] ?? "")} />
+                <InfoRow label="Suppléant" value={val((row as string[]|null)?.[2] ?? "")} />
                 <InfoRow label="Piano" value={val((row as string[]|null)?.[3] ?? "")} />
+                <InfoRow label="Cajon" value={val((row as string[]|null)?.[4] ?? "")} />
+                <InfoRow label="Guitare" value={val((row as string[]|null)?.[5] ?? "")} />
               </GroupBlock>
             ))}
           </SectionBlock>
