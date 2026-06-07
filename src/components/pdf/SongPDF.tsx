@@ -165,12 +165,12 @@ function ChordLabel({ chord, theme }: { chord: string; theme: Theme }) {
   const [root, qual] = chordParts(chord);
   return (
     <View style={{ height: CHORD_H, flexDirection: "row", alignItems: "flex-end" }}>
-      <Text style={{ fontFamily: "NotoSans", fontWeight: 700, color: theme.accent,
+      <Text style={{ fontFamily: "LiberationSans", fontWeight: 700, color: theme.accent,
                      fontSize: CHORD_SIZE, lineHeight: 1 }}>
         {root}
       </Text>
       {qual ? (
-        <Text style={{ fontFamily: "NotoSans", fontWeight: 700, color: theme.accent,
+        <Text style={{ fontFamily: "LiberationSans", fontWeight: 700, color: theme.accent,
                        fontSize: CHORD_Q_SIZE, lineHeight: 1 }}>
           {qual}
         </Text>
@@ -240,7 +240,7 @@ function FrLine({ tokens, showChords, theme }: {
                   || (segs[i].chord && showChords ? " " : "");
                 return (
                   <View key={i} style={{ minWidth: cellWidths[i] }}>
-                    <Text style={{ fontSize: LYRIC_FR, color: C.lyric, fontFamily: "NotoSans", lineHeight: 1.25 }}>
+                    <Text style={{ fontSize: LYRIC_FR, color: C.lyric, fontFamily: "Inter", lineHeight: 1.25 }}>
                       {lyric}
                     </Text>
                   </View>
@@ -322,12 +322,12 @@ function ChordSmall({ chord, theme }: { chord: string | null; theme: Theme }) {
   const [root, qual] = chordParts(chord);
   return (
     <View style={{ height: 16, flexDirection: "row", alignItems: "flex-end", justifyContent: "center" }}>
-      <Text style={{ fontFamily: "NotoSans", fontWeight: 700, color: theme.accent,
+      <Text style={{ fontFamily: "LiberationSans", fontWeight: 700, color: theme.accent,
                      fontSize: 13, lineHeight: 1 }}>
         {root}
       </Text>
       {qual ? (
-        <Text style={{ fontFamily: "NotoSans", fontWeight: 700, color: theme.accent,
+        <Text style={{ fontFamily: "LiberationSans", fontWeight: 700, color: theme.accent,
                        fontSize: 10, lineHeight: 1 }}>
           {qual}
         </Text>
