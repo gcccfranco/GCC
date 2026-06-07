@@ -84,6 +84,14 @@ interface SongDetailClientProps {
       ? JSON.parse(searchParams.get("sectionNotes")!)
       : defaultSectionsNote;
 
+    useEffect(() => {
+      const songKey = searchParams.get('key')
+        ? JSON.parse(searchParams.get('key')!)
+        : originalKey;
+      
+      setCustomize(prev => ({ ...prev, currentKey: songKey }));
+    }, []); // une seule fois au montage
+
     async function handleDownload() {
       setDownloading(true);
       try {

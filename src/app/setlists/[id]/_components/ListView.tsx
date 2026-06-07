@@ -81,6 +81,9 @@ export function ListView({
                     ...(item.sectionNotes && {
                       sectionNotes: JSON.stringify(item.sectionNotes),
                     }),
+                    ...(item.keyOverride && {
+                      key: JSON.stringify(item.keyOverride)
+                    })
                   },
                 }}
                   className="font-semibold text-sm text-foreground hover:text-primary">
