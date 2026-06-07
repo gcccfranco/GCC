@@ -27,11 +27,17 @@ const LANG_THEME = {
 const FILLED_BOX = new Set(["chorus", "prechorus", "final", "coda"]);
 const OUTLINE_BOX = new Set(["bridge"]);
 
-const KaiTiFont = localFont({ src: "../../../public/fonts/KaiTi.ttf" });
-
-const fr_lyric_font = localFont({src: "../../../public/fonts/inter-latin-ext-400-normal.ttf"});
-const zh_lyric_font = localFont({src: "../../../public/fonts/Han-source.otf"});
-const chord_font = localFont({src: "../../../public/fonts/SpaceMono-Regular.ttf"});
+const KaiTiFont = localFont({
+  src: [{ path: "../../../public/fonts/KaiTi.ttf", weight: "400", style: "normal" }],
+});
+const fr_lyric_font = localFont({ src: "../../../public/fonts/inter-latin-ext-400-normal.ttf" });
+const zh_lyric_font = localFont({ src: "../../../public/fonts/Han-source.otf" });
+const chord_font = localFont({
+  src: [
+    { path: "../../../public/fonts/SpaceGrotesk-Light.ttf", weight: "300" },
+    { path: "../../../public/fonts/SpaceGrotesk-Bold.ttf",  weight: "700" },
+  ],
+});
 
 
 function getSectionStyle(type: string, isZh: boolean): React.CSSProperties {
@@ -169,7 +175,7 @@ function ZhLine({ tokens, pinyin, showChords, showPinyin, chord_font, zh_lyric_f
 
   const cellMinWidth = (col: Col): string | undefined => {
     if (isCJK(col.char)) return "1.6em";
-    if (col.chord) return col.chord;
+    if (col.chord) return `${col.chord.length * 0.75 + 1}em`;
     return undefined;
   };
 
@@ -177,7 +183,6 @@ function ZhLine({ tokens, pinyin, showChords, showPinyin, chord_font, zh_lyric_f
     <div className="flex flex-wrap items-start mb-[3px]" style={{ fontSize: "0.88rem" }}>
       {cols.map((col, i) => {
         if (!showChords && col.char === " " && col.chord !== null) return null;
-
         return (
           <span
             key={i}
@@ -243,13 +248,14 @@ interface SectionViewProps {
 }
 
 function SectionView({ section, language, showChords, showPinyin, useJianpu, note }: SectionViewProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const isZh = language === "zh";
+  const uiIsZh = i18n.language === "zh-CN";
   const label = formatSectionName(section, t);
   return (
     <div className="mb-5 print:mb-4" style={{ breakInside: "avoid", ...getSectionStyle(section.type, isZh) }}>
       {/* Label de section */}
-      <div className="font-section mb-1.5" style={{ display: "flex", alignItems: "center", gap: 9 }}>
+      <div className="mb-1.5" style={{ display: "flex", alignItems: "center", gap: 9 }}>
         <span
           aria-hidden="true"
           style={{
@@ -261,7 +267,8 @@ function SectionView({ section, language, showChords, showPinyin, useJianpu, not
             display: "inline-block",
           }}
         />
-        <span>
+        <span className={`text-[0.75rem] font-bold uppercase tracking-[0.1em] ${uiIsZh ? zh_lyric_font.className : chord_font.className}`}
+              style={{ color: "var(--sec-c, #6b7080)" }}>
           {label}
           {note && (
             <span className="ml-2 normal-case font-normal text-muted-foreground tracking-normal text-xs">
@@ -344,21 +351,23 @@ export function SongView({
       <div className="mb-0 pb-3 print:mb-3 border-b border-border">
         <div className="flex items-start justify-between gap-5">
           <div className="min-w-0">
-            <h1 className={`text-[26px] font-extrabold text-foreground leading-[1.05] tracking-[-0.4px] uppercase ${isZh ? KaiTiFont.className : ""}`}>
+            <h1 className={`text-[26px] font-bold text-foreground leading-[1.05] tracking-[-0.4px] uppercase ${isZh ? KaiTiFont.className : chord_font.className}`}>
               {ast.metadata.title}
             </h1>
             {ast.metadata.titlePinyin && (
-              <p className="text-muted-foreground text-[13px] mt-1 font-medium">
+              <p className={`text-muted-foreground text-[13px] mt-1 ${zh_lyric_font.className}`}>
                 {ast.metadata.titlePinyin}
               </p>
             )}
-            <p className="text-muted-foreground text-[13px] mt-1">{ast.metadata.artist}</p>
+            <p className={`text-muted-foreground text-[13px] mt-1 ${isZh ? zh_lyric_font.className : chord_font.className}`}>
+              {ast.metadata.artist}
+            </p>
           </div>
 
           <div className="flex flex-col items-end gap-2 shrink-0 pt-1">
             {ast.metadata.key && (
               <span
-                className="font-mono font-bold text-[14px] rounded-full px-3 py-[3px] border-[1.5px] leading-none"
+                className={`text-[14px] font-bold rounded-full px-3 py-[3px] border-[1.5px] leading-none ${chord_font.className}`}
                 style={{ color: langAccent, borderColor: langAccent }}
               >
                 {canUseJianpu ? ast.metadata.jianpuKey ?? `1=${ast.metadata.key}` : ast.metadata.key}
@@ -383,13 +392,13 @@ export function SongView({
       {/* Ligne ORDRE */}
       <div className="flex flex-wrap items-baseline gap-x-1 gap-y-0.5 pt-2 pb-3">
         <span
-          className="text-[8px] font-bold tracking-[1.4px] uppercase mr-1.5 shrink-0"
+          className={`text-[8px] font-bold tracking-[1.4px] uppercase mr-1.5 shrink-0 ${chord_font.className}`}
           style={{ color: langAccent }}
         >
           ORDRE
         </span>
         {sections.map((section, i) => (
-          <span key={`ord-${section.id}-${i}`} className="text-[11px] text-muted-foreground">
+          <span key={`ord-${section.id}-${i}`} className={`text-[11px] text-muted-foreground ${isZh ? zh_lyric_font.className : chord_font.className}`}>
             {i > 0 && <span className="mx-0.5 opacity-40">·</span>}
             {formatSectionName(section, t)}
           </span>
