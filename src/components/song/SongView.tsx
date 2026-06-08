@@ -5,6 +5,7 @@ import { JianpuLine } from "@/components/song/JianpuLine";
 import type { ChordProAST, ChordProSection, Token } from "@/types/chordPro";
 import { useTranslation } from "react-i18next";
 import { formatSectionName } from "@/lib/chordpro/parser";
+import { MessageSquare } from "lucide-react";
 
 // ---------------------------------------------------------------------------
 // Thèmes et styles de sections
@@ -235,6 +236,19 @@ function ZhLine({ tokens, pinyin, showChords, showPinyin, chord_font, zh_lyric_f
 }
 
 // ---------------------------------------------------------------------------
+// TransitionNote — bloc affiché entre deux sections
+// ---------------------------------------------------------------------------
+
+export function TransitionNote({ text }: { text: string }) {
+  return (
+    <div className="flex items-start gap-2 my-1 mb-4 px-3 py-2.5 bg-amber-50/70 dark:bg-amber-950/20 border border-dashed border-amber-300/70 dark:border-amber-700/50 rounded-lg print:border-amber-400/50">
+      <MessageSquare className="h-3.5 w-3.5 text-amber-500 dark:text-amber-400 shrink-0 mt-0.5 print:hidden" />
+      <p className="text-sm text-foreground/90 whitespace-pre-wrap leading-relaxed">{text}</p>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // SectionView
 // ---------------------------------------------------------------------------
 
@@ -413,18 +427,21 @@ export function SongView({
 
       {/* Corps */}
       <div>
-        {sections.map((section, i) => (
-          <SectionView
-            key={`${section.id}-${i}`}
-            section={section}
-            language={ast.metadata.language}
-            showChords={showChords}
-            showPinyin={isZh ? showPinyin : false}
-            useJianpu={canUseJianpu}
-            note={sectionNotes[section.uid]}
-          />
-        ))}
-
+        {sections.map((section, i) => {
+          const note = sectionNotes[section.uid];
+          return (
+            <div key={`${section.id}-${i}`}>
+              <SectionView
+                section={section}
+                language={ast.metadata.language}
+                showChords={showChords}
+                showPinyin={isZh ? showPinyin : false}
+                useJianpu={canUseJianpu}
+              />
+              {note && <TransitionNote text={note} />}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
