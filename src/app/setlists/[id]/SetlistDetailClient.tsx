@@ -279,11 +279,6 @@ export function SetlistDetailClient() {
             <div className="flex-1">
               <div className="flex items-center gap-3 flex-wrap">
                 <h1 className="text-2xl font-bold text-foreground">{setlist.title}</h1>
-                {setlist.isDraft && (
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 font-medium border border-amber-200 dark:border-amber-800">
-                    {t("setlists.list.draft")}
-                  </span>
-                )}
               </div>
               <p className="text-muted-foreground capitalize mt-1 text-sm">
                 {formatDate(setlist.date, i18n.language)}

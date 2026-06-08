@@ -10,6 +10,8 @@ export type FusionSong = {
 export type FusionMixedSection = {
   songSlug: string;
   sectionId: string;
+  note?: string;
+  transition?: string;
 };
 
 export type SetlistItem = {

@@ -91,6 +91,7 @@ export function SetlistFullPDF({
             useJianpu={false}
             structureOverride={item.structureOverride}
             sectionNotes={item.sectionNotes ?? {}}
+            sectionTransitions={item.sectionTransitions ?? {}}
             footerCenter={footer}
           />
         ];

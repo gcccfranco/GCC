@@ -9,7 +9,7 @@ import Link from "next/link";
 import { SetlistCard } from "@/components/setlists/SetlistCard";
 import { useSetlistsNavState } from "@/hooks/useSetlistsNavState";
 
-type Tab = "shared" | "mine";
+type Tab = "upcoming" | "archived" | "mine";
 
 export default function SetlistsPage() {
   const { t } = useTranslation();
@@ -17,9 +17,11 @@ export default function SetlistsPage() {
   const [setlists, setSetlists] = useState<FSSetlist[]>([]);
   const [mySetlists, setMySetlists] = useState<FSSetlist[]>([]);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<Tab>("shared");
+  const [tab, setTab] = useState<Tab>("upcoming");
   const [query, setQuery] = useState("");
   const { categoryFilter, setCategoryFilter } = useSetlistsNavState();
+
+  const todayStr = useMemo(() => new Date().toISOString().split("T")[0], []);
 
   useEffect(() => {
     getSetlists()
@@ -32,6 +34,7 @@ export default function SetlistsPage() {
     getMySetlists(user.uid).then(setMySetlists);
   }, [user]);
 
+  // Public setlists filtered by category + search
   const filtered = useMemo(() => {
     let list = categoryFilter === "Toutes"
       ? setlists
@@ -48,41 +51,64 @@ export default function SetlistsPage() {
     return list;
   }, [setlists, categoryFilter, query]);
 
+  const filteredUpcoming = useMemo(
+    () => [...filtered].filter((s) => s.date >= todayStr).sort((a, b) => a.date.localeCompare(b.date)),
+    [filtered, todayStr]
+  );
+
+  const filteredArchived = useMemo(
+    () => [...filtered].filter((s) => s.date < todayStr).sort((a, b) => b.date.localeCompare(a.date)),
+    [filtered, todayStr]
+  );
+
+  // Private setlists filtered by category + search
   const filteredMine = useMemo(() => {
-    if (!query.trim()) return mySetlists;
-    const q = query.trim().toLowerCase();
-    return mySetlists.filter(
-      (s) =>
-        s.title.toLowerCase().includes(q) ||
-        (s.leader ?? "").toLowerCase().includes(q) ||
-        s.date.includes(q)
-    );
-  }, [mySetlists, query]);
+    let list = categoryFilter === "Toutes"
+      ? mySetlists
+      : mySetlists.filter((s) => s.category === categoryFilter);
+    if (query.trim()) {
+      const q = query.trim().toLowerCase();
+      list = list.filter(
+        (s) =>
+          s.title.toLowerCase().includes(q) ||
+          (s.leader ?? "").toLowerCase().includes(q) ||
+          s.date.includes(q)
+      );
+    }
+    return list;
+  }, [mySetlists, categoryFilter, query]);
+
+  const tabBtnClass = (active: boolean, color: "primary" | "violet" = "primary") =>
+    `flex-1 px-4 py-2.5 font-medium transition-colors text-sm ${
+      active
+        ? color === "violet"
+          ? "bg-violet-600 text-white"
+          : "bg-primary text-primary-foreground"
+        : "bg-background text-muted-foreground hover:bg-muted/50"
+    }`;
 
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-4xl mx-auto px-4 pt-6 pb-10">
 
-        {/* ── Onglets (connecté uniquement) ── */}
-        {user && !authLoading && (
-          <div className="flex rounded-xl border border-border overflow-hidden text-sm mb-5">
-            <button
-              onClick={() => setTab("shared")}
-              className={`flex-1 px-4 py-2.5 font-medium transition-colors ${
-                tab === "shared"
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-background text-muted-foreground hover:bg-muted/50"
-              }`}
-            >
-              {t("setlists.list.publicSetlists")}
-            </button>
+        {/* ── Onglets ── */}
+        <div className="flex rounded-xl border border-border overflow-hidden text-sm mb-5">
+          <button
+            onClick={() => setTab("upcoming")}
+            className={tabBtnClass(tab === "upcoming")}
+          >
+            {t("setlists.list.upcoming", { defaultValue: "À venir" })}
+          </button>
+          <button
+            onClick={() => setTab("archived")}
+            className={`${tabBtnClass(tab === "archived")} border-l border-border`}
+          >
+            {t("setlists.list.archived", { defaultValue: "Archives" })}
+          </button>
+          {!authLoading && user && (
             <button
               onClick={() => setTab("mine")}
-              className={`flex-1 px-4 py-2.5 font-medium transition-colors border-l border-border ${
-                tab === "mine"
-                  ? "bg-violet-600 text-white"
-                  : "bg-background text-muted-foreground hover:bg-muted/50"
-              }`}
+              className={`${tabBtnClass(tab === "mine", "violet")} border-l border-border`}
             >
               {t("setlists.list.mySetlists")}
               {mySetlists.length > 0 && (
@@ -95,8 +121,8 @@ export default function SetlistsPage() {
                 </span>
               )}
             </button>
-          </div>
-        )}
+          )}
+        </div>
 
         {/* ── Barre de recherche ── */}
         <div className="relative mb-3">
@@ -121,13 +147,34 @@ export default function SetlistsPage() {
         {/* ── Onglet Mes setlists ── */}
         {tab === "mine" && user && (
           <>
-            <div className="flex justify-end mb-4">
+            <div className="flex items-center gap-2 mb-5">
+              <select
+                value={categoryFilter}
+                onChange={(e) => setCategoryFilter(e.target.value)}
+                className="flex-1 h-9 px-3 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+              >
+                <option value="Toutes">{t("setlists.list.allCategories")}</option>
+                <optgroup label="Réunions principales">
+                  {ALL_CATEGORIES.slice(0, 4).map((cat) => (
+                    <option key={cat} value={cat}>
+                      {t("categories." + cat, { defaultValue: cat })}
+                    </option>
+                  ))}
+                </optgroup>
+                <optgroup label="Groupes">
+                  {ALL_CATEGORIES.slice(4).map((cat) => (
+                    <option key={cat} value={cat}>
+                      {t("categories." + cat, { defaultValue: cat })}
+                    </option>
+                  ))}
+                </optgroup>
+              </select>
               <Link
                 href="/setlists/new"
-                className="flex items-center gap-1.5 h-9 px-4 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
+                className="shrink-0 flex items-center gap-1.5 h-9 px-4 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
               >
                 <Plus className="h-4 w-4" />
-                {t("setlists.list.newButton")}
+                <span className="hidden sm:inline">{t("setlists.list.newButton")}</span>
               </Link>
             </div>
             {filteredMine.length === 0 ? (
@@ -144,8 +191,8 @@ export default function SetlistsPage() {
           </>
         )}
 
-        {/* ── Onglet Setlists partagées ── */}
-        {tab === "shared" && (
+        {/* ── Onglets publics (À venir / Archives) ── */}
+        {(tab === "upcoming" || tab === "archived") && (
           <>
             {/* Filtre catégorie + bouton Nouvelle */}
             <div className="flex items-center gap-2 mb-5">
@@ -184,21 +231,27 @@ export default function SetlistsPage() {
               <div className="text-sm text-muted-foreground text-center py-16">
                 {t("common.loading")}
               </div>
-            ) : filtered.length === 0 ? (
-              <div className="text-sm text-muted-foreground text-center py-16">
-                {query
-                  ? "Aucun résultat pour cette recherche."
-                  : setlists.length === 0
-                  ? t("setlists.list.empty")
-                  : t("setlists.list.emptyCategory")}
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {filtered.map((s) => (
-                  <SetlistCard key={s.id} setlist={s} />
-                ))}
-              </div>
-            )}
+            ) : (() => {
+              const list = tab === "upcoming" ? filteredUpcoming : filteredArchived;
+              if (list.length === 0) {
+                return (
+                  <div className="text-sm text-muted-foreground text-center py-16">
+                    {query
+                      ? "Aucun résultat pour cette recherche."
+                      : tab === "upcoming"
+                      ? "Aucun culte à venir."
+                      : "Aucune archive."}
+                  </div>
+                );
+              }
+              return (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {list.map((s) => (
+                    <SetlistCard key={s.id} setlist={s} />
+                  ))}
+                </div>
+              );
+            })()}
           </>
         )}
       </div>

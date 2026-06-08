@@ -21,11 +21,6 @@ export function SetlistCard({ setlist }: { setlist: FSSetlist }) {
             <span className="text-[10px] px-2 py-0.5 rounded-md bg-muted text-muted-foreground font-medium">
               {t("categories." + setlist.category, { defaultValue: setlist.category })}
             </span>
-            {setlist.isDraft && (
-              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 font-medium border border-amber-200 dark:border-amber-800">
-                {t("setlists.list.draft")}
-              </span>
-            )}
             {setlist.isPrivate && (
               <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400 font-medium border border-violet-200 dark:border-violet-800">
                 {t("setlists.list.private")}

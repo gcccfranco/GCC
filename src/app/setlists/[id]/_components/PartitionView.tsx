@@ -1,6 +1,6 @@
 import type { SetlistItem } from "@/types/setList";
 import type { SongContent } from "@/lib/utils/fetchSongContent";
-import { SongView, SectionView } from "@/components/song/SongView";
+import { SongView, SectionView, TransitionNote } from "@/components/song/SongView";
 import { useTranslation } from "react-i18next";
 import { transposeAST } from "@/lib/transposeAST";
 import { semitonesTo } from "@/lib/transpose";
@@ -97,19 +97,21 @@ export function PartitionsView({
                     const section = ast.sections.find((s) => s.id === ms.sectionId);
                     if (!section) return null;
                     const fusionSong = item.fusionSongs!.find((fs) => fs.songSlug === ms.songSlug);
-                    const sectionNote = fusionSong?.sectionNotes?.[ms.sectionId];
+                    const sectionNote = ms.note ?? fusionSong?.sectionNotes?.[ms.sectionId];
                     const showSongLabel = item.fusionSongs!.length > 1;
                     return (
-                      <SectionView
-                        key={`${ms.songSlug}-${ms.sectionId}-${msIdx}`}
-                        section={section}
-                        language={ast.metadata.language}
-                        showChords={showChordsGlobal && item.showChords}
-                        showPinyin={ast.metadata.language === "zh"}
-                        useJianpu={false}
-                        note={sectionNote}
-                        songSourceLabel={showSongLabel ? ast.metadata.title : undefined}
-                      />
+                      <div key={`${ms.songSlug}-${ms.sectionId}-${msIdx}`}>
+                        <SectionView
+                          section={section}
+                          language={ast.metadata.language}
+                          showChords={showChordsGlobal && item.showChords}
+                          showPinyin={ast.metadata.language === "zh"}
+                          useJianpu={false}
+                          note={sectionNote}
+                          songSourceLabel={showSongLabel ? ast.metadata.title : undefined}
+                        />
+                        {ms.transition && <TransitionNote text={ms.transition} />}
+                      </div>
                     );
                   })}
                 </div>

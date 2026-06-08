@@ -2,14 +2,19 @@ import type { FormItem, FormListItem } from "@/lib/setlist/formItems";
 import { isFormFusion, isFormTransition } from "@/lib/setlist/formItems";
 import type { SetlistItem, FusionSong } from "@/types/setList";
 
-function formItemToFusionSong(item: FormItem, mixedNotes?: Record<string, string>): FusionSong {
+function formItemToFusionSong(item: FormItem): FusionSong {
   const allIds = (item.song.sections ?? []).map((s) => s.id);
   const currentIds = item.sectionItems.map((s) => s.sectionId);
   const structureOverride =
     JSON.stringify(currentIds) === JSON.stringify(allIds) ? null : currentIds;
-  const sectionNotes = mixedNotes ?? Object.fromEntries(
-    item.sectionItems.filter((s) => s.note.trim()).map((s) => [s.sectionId, s.note.trim()])
-  );
+  const sectionNotes: Record<string, string> = {};
+  const occ: Record<string, number> = {};
+  for (const s of item.sectionItems) {
+    const idx = occ[s.sectionId] ?? 0;
+    occ[s.sectionId] = idx + 1;
+    const key = idx === 0 ? s.sectionId : `${s.sectionId}:${idx}`;
+    if (s.note.trim()) sectionNotes[key] = s.note.trim();
+  }
   return {
     songSlug: item.song.slug,
     keyOverride: item.keyOverride,
@@ -36,16 +41,6 @@ export function buildSetlistItems(items: FormListItem[]): SetlistItem[] {
       };
     }
     if (isFormFusion(item)) {
-      // Build per-song notes from mixed rows when active
-      const mixedNotesBySong: Record<string, Record<string, string>> = {};
-      if (item.mixedStructure) {
-        for (const ms of item.mixedStructure) {
-          if (ms.note.trim()) {
-            if (!mixedNotesBySong[ms.songSlug]) mixedNotesBySong[ms.songSlug] = {};
-            mixedNotesBySong[ms.songSlug][ms.sectionId] = ms.note.trim();
-          }
-        }
-      }
       return {
         type: "fusion" as const,
         songSlug: "",
@@ -57,26 +52,29 @@ export function buildSetlistItems(items: FormListItem[]): SetlistItem[] {
         structureOverride: null,
         sectionNotes: {},
         notes: "",
-        fusionSongs: item.songs.map((song) =>
-          formItemToFusionSong(song, item.mixedStructure ? (mixedNotesBySong[song.song.slug] ?? {}) : undefined)
-        ),
+        fusionSongs: item.songs.map((song) => formItemToFusionSong(song)),
         mixedStructure: item.mixedStructure?.map((ms) => ({
           songSlug: ms.songSlug,
           sectionId: ms.sectionId,
+          ...(ms.note?.trim() ? { note: ms.note.trim() } : {}),
+          ...(ms.transition?.trim() ? { transition: ms.transition.trim() } : {}),
         })) ?? null,
       };
     }
     const allIds = (item.song.sections ?? []).map((s) => s.id);
     const currentIds = item.sectionItems.map((s) => s.sectionId);
-    const currentUid = item.sectionItems.map((s) => s.uid);
     const structureOverride =
-      JSON.stringify(currentIds) === JSON.stringify(allIds) ? null : currentUid;
-    const sectionNotes = Object.fromEntries(
-      item.sectionItems.filter((s) => s.note.trim()).map((s) => [s.uid, s.note.trim()])
-    );
-    const sectionTransitions = Object.fromEntries(
-      item.sectionItems.filter((s) => s.transition.trim()).map((s) => [s.uid, s.transition.trim()])
-    );
+      JSON.stringify(currentIds) === JSON.stringify(allIds) ? null : currentIds;
+    const sectionNotes: Record<string, string> = {};
+    const sectionTransitions: Record<string, string> = {};
+    const occ: Record<string, number> = {};
+    for (const s of item.sectionItems) {
+      const idx = occ[s.sectionId] ?? 0;
+      occ[s.sectionId] = idx + 1;
+      const key = idx === 0 ? s.sectionId : `${s.sectionId}:${idx}`;
+      if (s.note.trim()) sectionNotes[key] = s.note.trim();
+      if (s.transition.trim()) sectionTransitions[key] = s.transition.trim();
+    }
     return {
       songSlug: item.song.slug,
       position: idx + 1,

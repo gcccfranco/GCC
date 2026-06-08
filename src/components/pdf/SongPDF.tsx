@@ -394,6 +394,29 @@ function JianpuLine({ tokens, jianpu, pinyin, showChords, showPinyin, theme }: {
 
 // ─── Section ──────────────────────────────────────────────────────────────────
 
+function TransitionPDFBlock({ text }: { text: string }) {
+  const hasCJK = /[一-鿿㐀-䶿]/.test(text);
+  return (
+    <View style={{
+      flexDirection: "row",
+      alignItems: "flex-start",
+      marginTop: -4,
+      marginBottom: 8,
+      paddingHorizontal: 8,
+      paddingVertical: 5,
+      backgroundColor: "#fffbeb",
+      borderWidth: 0.5,
+      borderColor: "#f59e0b",
+      borderStyle: "dashed",
+      borderRadius: 4,
+    }}>
+      <Text style={{ fontSize: 8.5, color: C.lyric, fontFamily: hasCJK ? "SourceHanSansCN" : "SpaceGrotesk", fontWeight: 300 }}>
+        {"→ "}{text}
+      </Text>
+    </View>
+  );
+}
+
 function SectionBlock({ section, isZh, useJianpu, showChords, showPinyin, note, theme, uiLang, sourceLabel, sourceLabelFont }: {
   section: ChordProSection;
   isZh: boolean;
@@ -521,6 +544,7 @@ export interface SongPDFProps {
   useJianpu?: boolean;
   structureOverride?: string[] | null;
   sectionNotes?: Record<string, string>;
+  sectionTransitions?: Record<string, string>;
   /** Optional override for the footer center label (e.g. setlist title). */
   footerCenter?: string;
   language?: string;
@@ -533,6 +557,7 @@ export function SongPDFPage({
   useJianpu = false,
   structureOverride = null,
   sectionNotes = {},
+  sectionTransitions = {},
   footerCenter,
   language = "fr",
 }: SongPDFProps) {
@@ -545,10 +570,7 @@ export function SongPDFPage({
 
   const sections: ChordProSection[] = (!canUseJianpu && structureOverride && structureOverride.length > 0)
     ? structureOverride
-        .map((uid) => {
-            const section = ast.sections.find((s) => s.id === uid.replace(/-\d+$/, ""));
-            return section ? { ...section, uid } : undefined;
-          })
+        .map((id) => ast.sections.find((s) => s.id === id))
         .filter((s): s is ChordProSection => s !== undefined)
     : ast.sections;
 
@@ -607,19 +629,31 @@ export function SongPDFPage({
       <OrdreLine sections={sections} theme={theme} uiLang={uiLang} isZh={isZh} />
 
       {/* ── Sections ── */}
-      {sections.map((section, i) => (
-        <SectionBlock
-          key={`${section.id}-${i}`}
-          section={section}
-          isZh={isZh}
-          useJianpu={canUseJianpu}
-          showChords={showChords}
-          showPinyin={isZh ? showPinyin : false}
-          note={sectionNotes[section.uid]}
-          theme={theme}
-          uiLang={uiLang}
-        />
-      ))}
+      {(() => {
+        const occ: Record<string, number> = {};
+        return sections.flatMap((section, i) => {
+          const idx = occ[section.id] ?? 0;
+          occ[section.id] = idx + 1;
+          const key = idx === 0 ? section.id : `${section.id}:${idx}`;
+          const note = sectionNotes[key] ?? sectionNotes[section.id];
+          const transition = sectionTransitions[key] ?? sectionTransitions[section.id];
+          const items = [
+            <SectionBlock
+              key={`${section.id}-${i}`}
+              section={section}
+              isZh={isZh}
+              useJianpu={canUseJianpu}
+              showChords={showChords}
+              showPinyin={isZh ? showPinyin : false}
+              note={note}
+              theme={theme}
+              uiLang={uiLang}
+            />,
+          ];
+          if (transition) items.push(<TransitionPDFBlock key={`tr-${section.id}-${i}`} text={transition} />);
+          return items;
+        });
+      })()}
 
       {/* ── Footer ── */}
       <View style={styles.footer} fixed>
@@ -654,7 +688,7 @@ export function FusionPDFPage({
   footerCenter,
 }: {
   songs: FusionPDFSong[];
-  mixedStructure: Array<{ songSlug: string; sectionId: string }>;
+  mixedStructure: Array<{ songSlug: string; sectionId: string; note?: string; transition?: string }>;
   showChords: boolean;
   footerCenter?: string;
 }) {
@@ -665,11 +699,11 @@ export function FusionPDFPage({
     if (!song) return [];
     const section = song.ast.sections.find((s) => s.id === ms.sectionId);
     if (!section) return [];
-    const note = song.sectionNotes?.[ms.sectionId];
+    const note = ms.note ?? song.sectionNotes?.[ms.sectionId];
     const isZh = song.ast.metadata.language === "zh";
     const sourceLabel = song.ast.metadata.title;
     const sourceLabelFont = isZh ? "KaiTi" : "SpaceGrotesk";
-    return [{ section: { ...section, uid: ms.sectionId }, note, isZh, theme: isZh ? RED_THEME : BLUE_THEME, sourceLabel, sourceLabelFont }];
+    return [{ section, note, transition: ms.transition, isZh, theme: isZh ? RED_THEME : BLUE_THEME, sourceLabel, sourceLabelFont }];
   });
 
   if (mixedSections.length === 0) return null;
@@ -703,21 +737,25 @@ export function FusionPDFPage({
         <View style={{ height: 0.5, backgroundColor: C.rule, marginTop: 10, marginBottom: 0 }} />
       </View>
 
-      {mixedSections.map(({ section, note, isZh, theme, sourceLabel, sourceLabelFont }, idx) => (
-        <SectionBlock
-          key={`${section.id}-${idx}`}
-          section={section}
-          isZh={isZh}
-          useJianpu={false}
-          showChords={showChords}
-          showPinyin={isZh}
-          note={note}
-          theme={theme}
-          uiLang="fr"
-          sourceLabel={sourceLabel}
-          sourceLabelFont={sourceLabelFont}
-        />
-      ))}
+      {mixedSections.flatMap(({ section, note, transition, isZh, theme, sourceLabel, sourceLabelFont }, idx) => {
+        const items = [
+          <SectionBlock
+            key={`${section.id}-${idx}`}
+            section={section}
+            isZh={isZh}
+            useJianpu={false}
+            showChords={showChords}
+            showPinyin={isZh}
+            note={note}
+            theme={theme}
+            uiLang="fr"
+            sourceLabel={sourceLabel}
+            sourceLabelFont={sourceLabelFont}
+          />,
+        ];
+        if (transition) items.push(<TransitionPDFBlock key={`tr-${idx}`} text={transition} />);
+        return items;
+      })}
 
       <View style={styles.footer} fixed>
         <Text style={[styles.footerText, { fontFamily: "LiberationSans", fontWeight: 700,

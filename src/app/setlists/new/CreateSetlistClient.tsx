@@ -53,7 +53,6 @@ export function CreateSetlistClient() {
   const [query, setQuery] = useState("");
   const [expandedSlug, setExpandedSlug] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
-  const [draftSaving, setDraftSaving] = useState(false);
   const [error, setError] = useState("");
   const [selectMode, setSelectMode] = useState(false);
   const [selectedUids, setSelectedUids] = useState<Set<string>>(new Set());
@@ -87,7 +86,7 @@ export function CreateSetlistClient() {
           language,
           notes: notes.trim(),
           items: setlistItems,
-          isDraft: true,
+          isDraft: false,
           isPrivate,
           ownerId: isPrivate ? (user?.uid ?? null) : null,
         };
@@ -221,7 +220,7 @@ export function CreateSetlistClient() {
   }
 
   // ── Submit ─────────────────────────────────────────────
-  const doCreate = useCallback(async (isDraft: boolean) => {
+  const doCreate = useCallback(async () => {
     setError("");
     if (!title.trim()) { setError(t("setlists.form.titleRequired")); return; }
     if (!leader.trim()) { setError(t("setlists.form.leaderRequired")); return; }
@@ -231,13 +230,13 @@ export function CreateSetlistClient() {
       return;
     }
 
-    isDraft ? setDraftSaving(true) : setCreating(true);
+    setCreating(true);
     try {
       const setlistItems = buildSetlistItems(items);
       const language = detectSetlistLanguage(items);
       const payload = {
         title: title.trim(), leader: leader.trim(), category, date, language,
-        notes: notes.trim(), items: setlistItems, isDraft,
+        notes: notes.trim(), items: setlistItems, isDraft: false,
         isPrivate, ownerId: isPrivate ? (user?.uid ?? null) : null,
       };
       const targetId = autoSaveIdRef.current;
@@ -250,11 +249,11 @@ export function CreateSetlistClient() {
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : t("setlists.form.errorDefault"));
-      isDraft ? setDraftSaving(false) : setCreating(false);
+      setCreating(false);
     }
   }, [title, leader, category, date, notes, isPrivate, items, user, router, t]);
 
-  const busy = creating || draftSaving;
+  const busy = creating;
   const needsAuth = !isPrivate && category && isRestricted(category) && !user && !authLoading;
   const selectableItems = items.filter((i): i is FormItem => !isFormFusion(i) && !isFormTransition(i));
 
@@ -284,15 +283,7 @@ export function CreateSetlistClient() {
         <div className="ml-auto flex items-center gap-2 shrink-0">
           <button
             type="button"
-            onClick={() => doCreate(true)}
-            disabled={busy}
-            className="h-8 px-3 rounded-lg border border-border text-foreground text-xs font-semibold hover:bg-muted transition-colors disabled:opacity-50"
-          >
-            {draftSaving ? t("setlists.form.draftSaving") : t("setlists.form.draftButton")}
-          </button>
-          <button
-            type="button"
-            onClick={() => doCreate(false)}
+            onClick={() => doCreate()}
             disabled={busy}
             className="h-8 px-3 rounded-lg bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50"
           >

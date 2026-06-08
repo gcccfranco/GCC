@@ -25,6 +25,7 @@ export interface FusionMixedSectionForm {
   sectionName: string;
   songTitle: string;
   note: string;
+  transition: string;
 }
 
 export interface FormFusionItem {
@@ -74,18 +75,24 @@ function toFormItem(
         .map((id) => allSections.find((s) => s.id === id))
         .filter((s): s is SectionSummary => s !== undefined)
     : allSections;
+  const occ: Record<string, number> = {};
   return {
     uid: nextUid(),
     song,
     keyOverride,
     notes,
-    sectionItems: orderedSections.map((s) => ({
-      uid: nextUid(),
-      sectionId: s.id,
-      name: s.name || s.type,
-      note: sectionNotes?.[s.id] ?? "",
-      transition: sectionTransitions?.[s.id] ?? "",
-    })),
+    sectionItems: orderedSections.map((s) => {
+      const idx = occ[s.id] ?? 0;
+      occ[s.id] = idx + 1;
+      const key = idx === 0 ? s.id : `${s.id}:${idx}`;
+      return {
+        uid: nextUid(),
+        sectionId: s.id,
+        name: s.name || s.type,
+        note: sectionNotes?.[key] ?? sectionNotes?.[s.id] ?? "",
+        transition: sectionTransitions?.[key] ?? sectionTransitions?.[s.id] ?? "",
+      };
+    }),
   };
 }
 
@@ -121,7 +128,8 @@ export function buildFormItems(
               sectionId: ms.sectionId,
               sectionName: section.name || section.type,
               songTitle: song.title,
-              note: fusionSong?.sectionNotes?.[ms.sectionId] ?? "",
+              note: ms.note ?? fusionSong?.sectionNotes?.[ms.sectionId] ?? "",
+              transition: ms.transition ?? "",
             }];
           });
         }

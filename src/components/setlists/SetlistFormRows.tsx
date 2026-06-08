@@ -185,10 +185,12 @@ function SortableMixedRow({
   item,
   onRemove,
   onNoteChange,
+  onTransitionChange,
 }: {
   item: FusionMixedSectionForm;
   onRemove: () => void;
   onNoteChange: (note: string) => void;
+  onTransitionChange: (transition: string) => void;
 }) {
   const { t } = useTranslation();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
@@ -217,13 +219,25 @@ function SortableMixedRow({
             {item.songTitle}
           </span>
         </div>
-        <input
-          type="text"
-          placeholder={t("setlists.form.songNotePlaceholder")}
-          value={item.note}
-          onChange={(e) => onNoteChange(e.target.value)}
-          className="mt-1 w-full text-[11px] px-1.5 py-0.5 border border-border rounded bg-muted/50 text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-primary/30"
-        />
+        <div className="mt-1 space-y-1">
+          <input
+            type="text"
+            placeholder={t("setlists.form.songNotePlaceholder")}
+            value={item.note}
+            onChange={(e) => onNoteChange(e.target.value)}
+            className="w-full text-[11px] px-1.5 py-0.5 border border-border rounded bg-muted/50 text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-primary/30"
+          />
+          <div className="flex items-center gap-1">
+            <ArrowRight className="h-2.5 w-2.5 text-amber-500 shrink-0" />
+            <input
+              type="text"
+              placeholder={t("setlists.form.transitionPlaceholder", { defaultValue: "Transition après cette section…" })}
+              value={item.transition ?? ""}
+              onChange={(e) => onTransitionChange(e.target.value)}
+              className="w-full text-[11px] px-1.5 py-0.5 border border-dashed border-amber-300/80 dark:border-amber-700/60 rounded bg-amber-50/50 dark:bg-amber-950/10 text-foreground placeholder:text-amber-400/70 dark:placeholder:text-amber-600/60 focus:outline-none focus:ring-1 focus:ring-amber-400/40"
+            />
+          </div>
+        </div>
       </div>
       <button
         type="button"
@@ -267,6 +281,7 @@ function MixedStructureEditor({
         sectionName: si.name,
         songTitle: song.song.title,
         note: si.note,
+        transition: si.transition ?? "",
       },
     ]);
   }
@@ -323,6 +338,11 @@ function MixedStructureEditor({
                 onNoteChange={(note) => {
                   const next = [...mixed];
                   next[idx] = { ...next[idx], note };
+                  onChangeMixed(next);
+                }}
+                onTransitionChange={(transition) => {
+                  const next = [...mixed];
+                  next[idx] = { ...next[idx], transition };
                   onChangeMixed(next);
                 }}
               />
@@ -624,6 +644,7 @@ export function FusionRow({
           sectionName: si.name,
           songTitle: song.song.title,
           note: si.note,
+          transition: si.transition ?? "",
         }))
       );
       onChangeMixed(defaultMixed);

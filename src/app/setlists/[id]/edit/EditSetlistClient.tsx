@@ -47,7 +47,6 @@ export function EditSetlistClient() {
   const { user, loading: authLoading } = useAuth();
 
   const [loadingData, setLoadingData] = useState(true);
-  const [isDraft, setIsDraft] = useState(false);
   const [isPrivate, setIsPrivate] = useState(false);
   const [ownerId, setOwnerId] = useState<string | null>(null);
   const [songs, setSongs] = useState<SongIndexEntry[]>([]);
@@ -59,7 +58,6 @@ export function EditSetlistClient() {
   const [items, setItems] = useState<FormListItem[]>([]);
   const [query, setQuery] = useState("");
   const [saving, setSaving] = useState(false);
-  const [publishing, setPublishing] = useState(false);
   const [error, setError] = useState("");
   const [selectMode, setSelectMode] = useState(false);
   const [selectedUids, setSelectedUids] = useState<Set<string>>(new Set());
@@ -79,7 +77,6 @@ export function EditSetlistClient() {
       setLeader(setlist.leader);
       setCategory(setlist.category);
       setNotes(setlist.notes);
-      setIsDraft(setlist.isDraft ?? false);
       setIsPrivate(setlist.isPrivate ?? false);
       setOwnerId(setlist.ownerId ?? null);
       setItems(buildFormItems(setlist.items, songsMap));
@@ -210,7 +207,7 @@ export function EditSetlistClient() {
     setSelectedUids(new Set());
   }
 
-  async function doUpdate(publishDraft: boolean) {
+  async function doUpdate() {
     setError("");
     if (!title.trim()) { setError(t("setlists.form.titleRequired")); return; }
     if (!leader.trim()) { setError(t("setlists.form.leaderRequired")); return; }
@@ -220,7 +217,7 @@ export function EditSetlistClient() {
       return;
     }
 
-    publishDraft ? setPublishing(true) : setSaving(true);
+    setSaving(true);
     try {
       const setlistItems = buildSetlistItems(items);
       const language = detectSetlistLanguage(items);
@@ -232,7 +229,7 @@ export function EditSetlistClient() {
         language,
         notes: notes.trim(),
         items: setlistItems,
-        isDraft: publishDraft ? false : isDraft,
+        isDraft: false,
         isPrivate,
         ownerId: isPrivate ? (user?.uid ?? ownerId) : null,
       });
@@ -240,16 +237,16 @@ export function EditSetlistClient() {
     } catch (err) {
       console.error(err);
       setError(err instanceof Error ? err.message : t("setlists.form.errorSaveDefault"));
-      publishDraft ? setPublishing(false) : setSaving(false);
+      setSaving(false);
     }
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    await doUpdate(false);
+    await doUpdate();
   }
 
-  const busy = saving || publishing;
+  const busy = saving;
   const needsAuth = !isPrivate && category && isRestricted(category) && !user && !authLoading;
   const selectableItems = items.filter((i): i is FormItem => !isFormFusion(i) && !isFormTransition(i));
 
@@ -268,11 +265,6 @@ export function EditSetlistClient() {
         </a>
         <h1 className="font-semibold text-foreground">
           {t("setlists.form.titleEdit")}
-          {isDraft && (
-            <span className="ml-2 text-xs px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 font-medium border border-amber-200 dark:border-amber-800">
-              {t("setlists.list.draft")}
-            </span>
-          )}
         </h1>
       </div>
 
@@ -574,26 +566,12 @@ export function EditSetlistClient() {
         )}
 
         <div className="flex gap-2">
-          {isDraft && (
-            <button
-              type="button"
-              onClick={() => doUpdate(true)}
-              disabled={busy}
-              className="flex-1 py-2.5 rounded-lg bg-green-600 text-white font-semibold text-sm hover:bg-green-700 transition-colors disabled:opacity-50"
-            >
-              {publishing ? t("setlists.form.publishing") : t("setlists.form.publishButton")}
-            </button>
-          )}
           <button
             type="submit"
             disabled={busy}
-            className={`py-2.5 rounded-lg bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 transition-colors disabled:opacity-50 ${isDraft ? "flex-1" : "w-full"}`}
+            className="w-full py-2.5 rounded-lg bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 transition-colors disabled:opacity-50"
           >
-            {saving
-              ? t("setlists.form.saving")
-              : isDraft
-              ? t("setlists.form.saveDraftButton")
-              : t("setlists.form.saveButton")}
+            {saving ? t("setlists.form.saving") : t("setlists.form.saveButton")}
           </button>
         </div>
       </form>

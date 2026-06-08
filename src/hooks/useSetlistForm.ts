@@ -46,16 +46,16 @@ export function useSetlistForm({
         const currentIds = item.sectionItems.map((s) => s.sectionId);
         const structureOverride =
           JSON.stringify(currentIds) === JSON.stringify(allIds) ? null : currentIds;
-        const sectionNotes = Object.fromEntries(
-          item.sectionItems
-            .filter((s) => s.note.trim())
-            .map((s) => [s.sectionId, s.note.trim()])
-        );
-        const sectionTransitions = Object.fromEntries(
-          item.sectionItems
-            .filter((s) => s.transition?.trim())
-            .map((s) => [s.sectionId, s.transition.trim()])
-        );
+        const sectionNotes: Record<string, string> = {};
+        const sectionTransitions: Record<string, string> = {};
+        const occ: Record<string, number> = {};
+        for (const s of item.sectionItems) {
+          const idx = occ[s.sectionId] ?? 0;
+          occ[s.sectionId] = idx + 1;
+          const key = idx === 0 ? s.sectionId : `${s.sectionId}:${idx}`;
+          if (s.note.trim()) sectionNotes[key] = s.note.trim();
+          if (s.transition?.trim()) sectionTransitions[key] = s.transition.trim();
+        }
         return {
           songSlug: item.song.slug,
           position: idx + 1,
