@@ -20,6 +20,7 @@ import {
   Shuffle,
   RotateCcw,
   MessageSquare,
+  ArrowRight,
 } from "lucide-react";
 import { ALL_KEYS } from "@/lib/transpose";
 import { useTranslation } from "react-i18next";
@@ -34,11 +35,13 @@ export function SortableSectionRow({
   item,
   onRemove,
   onNoteChange,
+  onTransitionChange,
   hideNote,
 }: {
   item: FormSectionItem;
   onRemove: () => void;
   onNoteChange: (note: string) => void;
+  onTransitionChange?: (transition: string) => void;
   hideNote?: boolean;
 }) {
   const { t } = useTranslation();
@@ -64,13 +67,25 @@ export function SortableSectionRow({
       <div className="flex-1 min-w-0">
         <div className="font-medium text-foreground">{item.name}</div>
         {!hideNote && (
-          <input
-            type="text"
-            placeholder={t("setlists.form.songNotePlaceholder")}
-            value={item.note}
-            onChange={(e) => onNoteChange(e.target.value)}
-            className="mt-1 w-full text-[11px] px-1.5 py-0.5 border border-border rounded bg-muted/50 text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-primary/30"
-          />
+          <div className="mt-1 space-y-1">
+            <input
+              type="text"
+              placeholder={t("setlists.form.songNotePlaceholder")}
+              value={item.note}
+              onChange={(e) => onNoteChange(e.target.value)}
+              className="w-full text-[11px] px-1.5 py-0.5 border border-border rounded bg-muted/50 text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-primary/30"
+            />
+            <div className="flex items-center gap-1">
+              <ArrowRight className="h-2.5 w-2.5 text-amber-500 shrink-0" />
+              <input
+                type="text"
+                placeholder={t("setlists.form.transitionPlaceholder", { defaultValue: "Transition après cette section…" })}
+                value={item.transition ?? ""}
+                onChange={(e) => onTransitionChange?.(e.target.value)}
+                className="w-full text-[11px] px-1.5 py-0.5 border border-dashed border-amber-300/80 dark:border-amber-700/60 rounded bg-amber-50/50 dark:bg-amber-950/10 text-foreground placeholder:text-amber-400/70 dark:placeholder:text-amber-600/60 focus:outline-none focus:ring-1 focus:ring-amber-400/40"
+              />
+            </div>
+          </div>
         )}
       </div>
       <button
@@ -121,7 +136,7 @@ export function SectionStructureEditor({
             onClick={() =>
               onChange([
                 ...sectionItems,
-                { uid: nextUid(), sectionId: s.id, name: s.name, note: "" },
+                { uid: nextUid(), sectionId: s.id, name: s.name, note: "", transition: "" },
               ])
             }
             className="flex items-center gap-0.5 text-[11px] px-2 py-0.5 rounded border border-border hover:bg-muted text-foreground transition-colors"
@@ -142,6 +157,11 @@ export function SectionStructureEditor({
                 onNoteChange={(note) => {
                   const next = [...sectionItems];
                   next[idx] = { ...next[idx], note };
+                  onChange(next);
+                }}
+                onTransitionChange={(transition) => {
+                  const next = [...sectionItems];
+                  next[idx] = { ...next[idx], transition };
                   onChange(next);
                 }}
                 hideNote={hideNotes}
