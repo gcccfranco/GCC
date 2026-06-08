@@ -82,9 +82,13 @@
       "title": "GCC Louange",
       "newButton": "Nouvelle",
       "draft": "Brouillon",
+      "private": "Privée",
       "allCategories": "Toutes",
       "empty": "Aucune setlist pour l'instant.",
       "emptyCategory": "Aucune setlist dans cette catégorie.",
+      "emptyPrivate": "Aucune setlist privée pour l'instant.",
+      "mySetlists": "Mes setlists",
+      "publicSetlists": "Setlists partagées",
       "songCounter_one": "{{count}} chant",
       "songCounter_other": "{{count}} chants"
     },
@@ -107,6 +111,7 @@
       "titleEdit": "Modifier la setlist",
       "infoSection": "Informations",
       "titleLabel": "Titre",
+      "dateLabel": "Date de la présidence",
       "titleRequired": "Le titre est obligatoire.",
       "titlePlaceholder": "ex. Culte du 25 mai",
       "leaderLabel": "Présidence",
@@ -152,7 +157,11 @@
       "mixedStructureToggle": "Mélanger les sections des chants",
       "mixedStructureTitle": "Structure mélangée",
       "mixedStructureReset": "Réinitialiser",
-      "mixedStructureEmpty": "Ajoute des sections en cliquant sur les boutons ci-dessus."
+      "mixedStructureEmpty": "Ajoute des sections en cliquant sur les boutons ci-dessus.",
+      "visibilityLabel": "Visibilité",
+      "privateToggle": "Setlist privée (visible uniquement par toi)",
+      "privateLoginRequired": "Connecte-toi pour créer une setlist privée.",
+      "addTransition": "Transition"
     }
   },
   "customize": {

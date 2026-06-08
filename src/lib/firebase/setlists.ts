@@ -39,6 +39,8 @@ export interface FSSetlist {
   createdAt: Timestamp | null;
   items: SetlistItem[];
   isDraft?: boolean;
+  isPrivate?: boolean;
+  ownerId?: string | null;
 }
 
 // ─── Firestore REST API ───────────────────────────────────────────────────────
@@ -148,7 +150,43 @@ export async function getSetlists(): Promise<FSSetlist[]> {
   });
   if (!res.ok) return [];
   const rows = await res.json() as Array<{ document?: RawDoc }>;
-  return rows.filter((r) => r.document).map((r) => fromFsDoc(r.document!));
+  return rows
+    .filter((r) => r.document)
+    .map((r) => fromFsDoc(r.document!))
+    .filter((s) => !s.isPrivate);
+}
+
+export async function getMySetlists(uid: string): Promise<FSSetlist[]> {
+  const headers = await authHeader();
+  // No orderBy to avoid requiring a composite index on (ownerId, createdAt).
+  // Sorting is done client-side instead.
+  const res = await fetch(`${FS_BASE}:runQuery`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...headers },
+    body: JSON.stringify({
+      structuredQuery: {
+        from: [{ collectionId: "setlists" }],
+        where: {
+          fieldFilter: {
+            field: { fieldPath: "ownerId" },
+            op: "EQUAL",
+            value: { stringValue: uid },
+          },
+        },
+      },
+    }),
+  });
+  if (!res.ok) return [];
+  const rows = await res.json() as Array<{ document?: RawDoc }>;
+  return rows
+    .filter((r) => r.document)
+    .map((r) => fromFsDoc(r.document!))
+    .filter((s) => s.isPrivate === true)
+    .sort((a, b) => {
+      const aTs = a.createdAt?.toMillis() ?? 0;
+      const bTs = b.createdAt?.toMillis() ?? 0;
+      return bTs - aTs;
+    });
 }
 
 export async function getSetlist(id: string): Promise<FSSetlist | null> {

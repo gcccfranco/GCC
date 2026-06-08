@@ -12,7 +12,7 @@ import {
   verticalListSortingStrategy,
   arrayMove,
 } from "@dnd-kit/sortable";
-import { Search, X, AlertTriangle, Link2 } from "lucide-react";
+import { Search, X, AlertTriangle, Link2, Lock, Globe, Plus, ChevronDown, ChevronUp } from "lucide-react";
 import Fuse from "fuse.js";
 import {
   RESTRICTED_CATEGORIES,
@@ -48,8 +48,11 @@ export function EditSetlistClient() {
 
   const [loadingData, setLoadingData] = useState(true);
   const [isDraft, setIsDraft] = useState(false);
+  const [isPrivate, setIsPrivate] = useState(false);
+  const [ownerId, setOwnerId] = useState<string | null>(null);
   const [songs, setSongs] = useState<SongIndexEntry[]>([]);
   const [title, setTitle] = useState("");
+  const [date, setDate] = useState("");
   const [leader, setLeader] = useState("");
   const [category, setCategory] = useState("");
   const [notes, setNotes] = useState("");
@@ -60,6 +63,7 @@ export function EditSetlistClient() {
   const [error, setError] = useState("");
   const [selectMode, setSelectMode] = useState(false);
   const [selectedUids, setSelectedUids] = useState<Set<string>>(new Set());
+  const [expandedSlug, setExpandedSlug] = useState<string | null>(null);
 
   useEffect(() => {
     Promise.all([
@@ -71,10 +75,13 @@ export function EditSetlistClient() {
       for (const s of (indexData.songs ?? [])) songsMap[s.slug] = s;
       setSongs(indexData.songs ?? []);
       setTitle(setlist.title);
+      setDate(setlist.date);
       setLeader(setlist.leader);
       setCategory(setlist.category);
       setNotes(setlist.notes);
       setIsDraft(setlist.isDraft ?? false);
+      setIsPrivate(setlist.isPrivate ?? false);
+      setOwnerId(setlist.ownerId ?? null);
       setItems(buildFormItems(setlist.items, songsMap));
     }).finally(() => setLoadingData(false));
   }, [id, router]);
@@ -103,8 +110,8 @@ export function EditSetlistClient() {
   const searchResults = useMemo(
     () =>
       query.trim()
-        ? fuse.search(query.trim()).map((r) => r.item).slice(0, 6)
-        : availableSongs.slice(0, 6),
+        ? fuse.search(query.trim()).map((r) => r.item).slice(0, 20)
+        : availableSongs,
     [query, fuse, availableSongs]
   );
 
@@ -115,7 +122,7 @@ export function EditSetlistClient() {
       ...prev,
       { uid: nextUid(), song, keyOverride: null, notes: "", sectionItems: makeDefaultSections(song.sections ?? []) },
     ]);
-    setQuery("");
+    setExpandedSlug(null);
   }
 
   function addTransition() {
@@ -219,12 +226,15 @@ export function EditSetlistClient() {
       const language = detectSetlistLanguage(items);
       await updateSetlist(id, {
         title: title.trim(),
+        date,
         leader: leader.trim(),
         category,
         language,
         notes: notes.trim(),
         items: setlistItems,
         isDraft: publishDraft ? false : isDraft,
+        isPrivate,
+        ownerId: isPrivate ? (user?.uid ?? ownerId) : null,
       });
       router.push(`/setlists/${id}`);
     } catch (err) {
@@ -240,7 +250,7 @@ export function EditSetlistClient() {
   }
 
   const busy = saving || publishing;
-  const needsAuth = category && isRestricted(category) && !user && !authLoading;
+  const needsAuth = !isPrivate && category && isRestricted(category) && !user && !authLoading;
   const selectableItems = items.filter((i): i is FormItem => !isFormFusion(i) && !isFormTransition(i));
 
   if (loadingData) {
@@ -283,6 +293,18 @@ export function EditSetlistClient() {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 text-sm"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-1">
+              {t("setlists.form.dateLabel")} <span className="text-destructive">*</span>
+            </label>
+            <input
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 text-sm"
             />
           </div>
 
@@ -344,6 +366,43 @@ export function EditSetlistClient() {
               className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 text-sm resize-none"
             />
           </div>
+
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-2">
+              {t("setlists.form.visibilityLabel")}
+            </label>
+            <div className="flex rounded-lg border border-border overflow-hidden text-sm">
+              <button
+                type="button"
+                onClick={() => setIsPrivate(false)}
+                className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 transition-colors ${
+                  !isPrivate
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-background text-muted-foreground hover:bg-muted/50"
+                }`}
+              >
+                <Globe className="h-3.5 w-3.5" />
+                Partagée
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsPrivate(true)}
+                className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 transition-colors border-l border-border ${
+                  isPrivate
+                    ? "bg-violet-600 text-white"
+                    : "bg-background text-muted-foreground hover:bg-muted/50"
+                }`}
+              >
+                <Lock className="h-3.5 w-3.5" />
+                Privée
+              </button>
+            </div>
+            {isPrivate && (
+              <p className="mt-1.5 text-xs text-muted-foreground">
+                {t("setlists.form.privateToggle")}
+              </p>
+            )}
+          </div>
         </section>
 
         {/* ── Chants ── */}
@@ -394,51 +453,74 @@ export function EditSetlistClient() {
             </div>{/* end inner flex */}
           </div>{/* end header row */}
 
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-            <input
-              type="search"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder={t("setlists.form.searchSongsPlaceholder")}
-              className="w-full pl-9 pr-8 py-2 border border-border rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 text-sm"
-            />
-            {query && (
-              <button
-                type="button"
-                onClick={() => setQuery("")}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-              >
-                <X className="h-4 w-4" />
-              </button>
+          <div className="rounded-xl border border-border overflow-hidden">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+              <input
+                type="search"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder={t("setlists.form.searchSongsPlaceholder")}
+                className="w-full pl-9 pr-8 py-2.5 bg-background text-foreground placeholder:text-muted-foreground focus:outline-none text-sm border-b border-border"
+              />
+              {query && (
+                <button
+                  type="button"
+                  onClick={() => setQuery("")}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+
+            {availableSongs.length === 0 ? (
+              <p className="text-xs text-muted-foreground text-center py-4">
+                {t("setlists.form.allSongsAdded")}
+              </p>
+            ) : (
+              <div className="max-h-72 overflow-y-auto divide-y divide-border">
+                {searchResults.map((song) => (
+                  <div key={song.slug}>
+                    <div className="flex items-center gap-2 px-3 py-2.5 hover:bg-muted/40 transition-colors">
+                      <button
+                        type="button"
+                        onClick={() => setExpandedSlug(expandedSlug === song.slug ? null : song.slug)}
+                        className="flex-1 flex items-center gap-2 text-left min-w-0"
+                      >
+                        <span className="text-sm font-medium text-foreground truncate">{song.title}</span>
+                        {song.language === "zh" && (
+                          <span className="shrink-0 text-[10px] text-muted-foreground">{t("common.languages.zh")}</span>
+                        )}
+                        <span className="shrink-0 font-mono text-xs text-muted-foreground">{song.originalKey}</span>
+                        {expandedSlug === song.slug
+                          ? <ChevronUp className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                          : <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                        }
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => addSong(song)}
+                        className="shrink-0 flex items-center gap-1 h-7 px-2.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors text-xs font-semibold"
+                      >
+                        <Plus className="h-3.5 w-3.5" />
+                        {t("common.buttons.add")}
+                      </button>
+                    </div>
+                    {expandedSlug === song.slug && song.sections && song.sections.length > 0 && (
+                      <div className="px-3 pb-2.5 flex flex-wrap gap-1.5 bg-muted/20">
+                        {song.sections.map((s) => (
+                          <span key={s.id} className="text-[10px] px-2 py-0.5 rounded-md bg-muted text-muted-foreground">
+                            {s.name}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
             )}
           </div>
-
-          {searchResults.length > 0 && (
-            <div className="rounded-lg border border-border divide-y divide-border overflow-hidden">
-              {searchResults.map((song) => (
-                <button
-                  key={song.slug}
-                  type="button"
-                  onClick={() => addSong(song)}
-                  className="w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-muted/50 transition-colors"
-                >
-                  <span className="text-sm font-medium text-foreground flex-1 truncate">{song.title}</span>
-                  {song.language === "zh" && (
-                    <span className="text-[10px] text-muted-foreground">{t("common.languages.zh")}</span>
-                  )}
-                  <span className="font-mono text-xs text-muted-foreground">{song.originalKey}</span>
-                  <span className="text-primary text-xs font-medium">{t("common.buttons.add")}</span>
-                </button>
-              ))}
-            </div>
-          )}
-
-          {songs.length > 0 && availableSongs.length === 0 && (
-            <p className="text-xs text-muted-foreground text-center py-2">
-              {t("setlists.form.allSongsAdded")}
-            </p>
-          )}
 
           {items.length > 0 && (
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>

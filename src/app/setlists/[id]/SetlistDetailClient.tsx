@@ -22,7 +22,7 @@ export function SetlistDetailClient() {
   const { t, i18n } = useTranslation();
   const params = useParams();
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const id = params.id as string;
 
   const [setlist, setSetlist] = useState<FSSetlist | null>(null);
@@ -45,9 +45,9 @@ export function SetlistDetailClient() {
     }
     sessionStorage.setItem("lastListPath", window.location.pathname);
   }, []);
-  // Load setlist + songs index
+  // Load setlist + songs index (wait for auth so private setlists get auth headers)
   useEffect(() => {
-    if (!id) return;
+    if (!id || authLoading) return;
     Promise.all([
       getSetlist(id),
       fetch("/songs-index.json").then((r) => r.json()),
@@ -57,7 +57,7 @@ export function SetlistDetailClient() {
       for (const s of index.songs ?? []) map[s.slug] = s;
       setSongsMap(map);
     }).finally(() => setLoadingSetlist(false));
-  }, [id]);
+  }, [id, authLoading]);
 
   // Load full song content when switching to Partitions view
   const loadContents = useCallback(async (items: SetlistItem[]) => {

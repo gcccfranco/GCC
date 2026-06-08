@@ -1,19 +1,20 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
   SortableContext,
   verticalListSortingStrategy,
   arrayMove,
 } from "@dnd-kit/sortable";
-import { Search, X, AlertTriangle, Link2 } from "lucide-react";
+import { Search, X, AlertTriangle, Link2, Lock, Globe, Plus, ChevronDown, ChevronUp, Check } from "lucide-react";
 import Fuse from "fuse.js";
 import {
   ALL_CATEGORIES,
   RESTRICTED_CATEGORIES,
   isRestricted,
   createSetlist,
+  updateSetlist,
 } from "@/lib/firebase/setlists";
 import { useAuth } from "@/lib/firebase/auth";
 import { useTranslation } from "react-i18next";
@@ -21,7 +22,6 @@ import { DndContext, closestCenter, DragEndEvent } from "@dnd-kit/core";
 import {
   type FormItem,
   type FormFusionItem,
-  type FormTransitionItem,
   type FormListItem,
   type FusionMixedSectionForm,
   isFormFusion,
@@ -39,18 +39,31 @@ export function CreateSetlistClient() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
 
+  // ── Form state ──────────────────────────────────────────
   const [songs, setSongs] = useState<SongIndexEntry[]>([]);
   const [title, setTitle] = useState("");
   const [leader, setLeader] = useState("");
   const [category, setCategory] = useState("");
+  const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [notes, setNotes] = useState("");
+  const [isPrivate, setIsPrivate] = useState(false);
   const [items, setItems] = useState<FormListItem[]>([]);
+
+  // ── UI state ────────────────────────────────────────────
   const [query, setQuery] = useState("");
+  const [expandedSlug, setExpandedSlug] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
   const [draftSaving, setDraftSaving] = useState(false);
   const [error, setError] = useState("");
   const [selectMode, setSelectMode] = useState(false);
   const [selectedUids, setSelectedUids] = useState<Set<string>>(new Set());
+
+  // ── Auto-save state ────────────────────────────────────
+  const [autoSaveId, setAutoSaveId] = useState<string | null>(null);
+  const [autoSaving, setAutoSaving] = useState(false);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const autoSaveIdRef = useRef<string | null>(null);
+  autoSaveIdRef.current = autoSaveId;
 
   useEffect(() => {
     fetch("/songs-index.json")
@@ -58,6 +71,43 @@ export function CreateSetlistClient() {
       .then((data) => setSongs(data.songs ?? []));
   }, []);
 
+  // ── Auto-save (debounced 4s) ───────────────────────────
+  useEffect(() => {
+    if (!title.trim() || !category) return;
+    const timer = setTimeout(async () => {
+      setAutoSaving(true);
+      try {
+        const setlistItems = buildSetlistItems(items);
+        const language = detectSetlistLanguage(items);
+        const payload = {
+          title: title.trim(),
+          leader: leader.trim(),
+          category,
+          date,
+          language,
+          notes: notes.trim(),
+          items: setlistItems,
+          isDraft: true,
+          isPrivate,
+          ownerId: isPrivate ? (user?.uid ?? null) : null,
+        };
+        if (autoSaveIdRef.current) {
+          await updateSetlist(autoSaveIdRef.current, payload);
+        } else {
+          const id = await createSetlist(payload);
+          setAutoSaveId(id);
+        }
+        setLastSaved(new Date());
+      } catch {
+        // silently ignore auto-save errors
+      } finally {
+        setAutoSaving(false);
+      }
+    }, 4000);
+    return () => clearTimeout(timer);
+  }, [title, leader, category, date, notes, isPrivate, items, user]);
+
+  // ── Song search ────────────────────────────────────────
   const addedSlugs = useMemo(() => {
     const slugs = new Set<string>();
     for (const item of items) {
@@ -82,25 +132,20 @@ export function CreateSetlistClient() {
   const searchResults = useMemo(
     () =>
       query.trim()
-        ? fuse.search(query.trim()).map((r) => r.item).slice(0, 6)
-        : availableSongs.slice(0, 6),
+        ? fuse.search(query.trim()).map((r) => r.item).slice(0, 20)
+        : availableSongs,
     [query, fuse, availableSongs]
   );
 
   const sensors = useDefaultSensors();
 
+  // ── Song actions ───────────────────────────────────────
   function addSong(song: SongIndexEntry) {
     setItems((prev) => [
       ...prev,
-      {
-        uid: nextUid(),
-        song,
-        keyOverride: null,
-        notes: "",
-        sectionItems: makeDefaultSections(song.sections ?? []),
-      },
+      { uid: nextUid(), song, keyOverride: null, notes: "", sectionItems: makeDefaultSections(song.sections ?? []) },
     ]);
-    setQuery("");
+    setExpandedSlug(null);
   }
 
   function addTransition() {
@@ -108,9 +153,7 @@ export function CreateSetlistClient() {
   }
 
   function patchTransition(uid: string, text: string) {
-    setItems((prev) =>
-      prev.map((i) => (i.uid === uid && isFormTransition(i) ? { ...i, text } : i))
-    );
+    setItems((prev) => prev.map((i) => (i.uid === uid && isFormTransition(i) ? { ...i, text } : i)));
   }
 
   function patch(uid: string, update: Partial<FormItem>) {
@@ -123,10 +166,7 @@ export function CreateSetlistClient() {
     setItems((prev) =>
       prev.map((item) => {
         if (item.uid !== fusionUid || !isFormFusion(item)) return item;
-        return {
-          ...item,
-          songs: item.songs.map((s) => (s.uid === songUid ? { ...s, ...update } : s)),
-        };
+        return { ...item, songs: item.songs.map((s) => (s.uid === songUid ? { ...s, ...update } : s)) };
       })
     );
   }
@@ -134,9 +174,7 @@ export function CreateSetlistClient() {
   function patchFusionMixed(fusionUid: string, mixed: FusionMixedSectionForm[] | null) {
     setItems((prev) =>
       prev.map((item) =>
-        item.uid === fusionUid && isFormFusion(item)
-          ? { ...item, mixedStructure: mixed }
-          : item
+        item.uid === fusionUid && isFormFusion(item) ? { ...item, mixedStructure: mixed } : item
       )
     );
   }
@@ -152,8 +190,7 @@ export function CreateSetlistClient() {
   function toggleSelectSong(uid: string) {
     setSelectedUids((prev) => {
       const next = new Set(prev);
-      if (next.has(uid)) next.delete(uid);
-      else next.add(uid);
+      if (next.has(uid)) next.delete(uid); else next.add(uid);
       return next;
     });
   }
@@ -183,17 +220,13 @@ export function CreateSetlistClient() {
     });
   }
 
-  function cancelSelectMode() {
-    setSelectMode(false);
-    setSelectedUids(new Set());
-  }
-
-  async function doCreate(isDraft: boolean) {
+  // ── Submit ─────────────────────────────────────────────
+  const doCreate = useCallback(async (isDraft: boolean) => {
     setError("");
     if (!title.trim()) { setError(t("setlists.form.titleRequired")); return; }
     if (!leader.trim()) { setError(t("setlists.form.leaderRequired")); return; }
     if (!category) { setError(t("setlists.form.categoryRequired")); return; }
-    if (isRestricted(category) && !user) {
+    if ((isPrivate || isRestricted(category)) && !user) {
       router.push(`/login?from=/setlists/new`);
       return;
     }
@@ -202,113 +235,191 @@ export function CreateSetlistClient() {
     try {
       const setlistItems = buildSetlistItems(items);
       const language = detectSetlistLanguage(items);
-      const id = await createSetlist({
-        title: title.trim(),
-        leader: leader.trim(),
-        category,
-        date: new Date().toISOString().split("T")[0],
-        language,
-        notes: notes.trim(),
-        items: setlistItems,
-        isDraft,
-      });
-      router.push(`/setlists/${id}`);
+      const payload = {
+        title: title.trim(), leader: leader.trim(), category, date, language,
+        notes: notes.trim(), items: setlistItems, isDraft,
+        isPrivate, ownerId: isPrivate ? (user?.uid ?? null) : null,
+      };
+      const targetId = autoSaveIdRef.current;
+      if (targetId) {
+        await updateSetlist(targetId, payload);
+        router.push(`/setlists/${targetId}`);
+      } else {
+        const id = await createSetlist(payload);
+        router.push(`/setlists/${id}`);
+      }
     } catch (err) {
-      console.error(err);
       setError(err instanceof Error ? err.message : t("setlists.form.errorDefault"));
       isDraft ? setDraftSaving(false) : setCreating(false);
     }
-  }
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    await doCreate(false);
-  }
+  }, [title, leader, category, date, notes, isPrivate, items, user, router, t]);
 
   const busy = creating || draftSaving;
-  const needsAuth = category && isRestricted(category) && !user && !authLoading;
+  const needsAuth = !isPrivate && category && isRestricted(category) && !user && !authLoading;
   const selectableItems = items.filter((i): i is FormItem => !isFormFusion(i) && !isFormTransition(i));
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b border-border px-4 py-2 flex items-center gap-3">
-        <a href="/setlists" className="text-sm text-muted-foreground hover:text-foreground">
-          {t("setlists.detail.backToAll")}
+
+      {/* ── Header sticky ── */}
+      <div className="sticky top-[58px] z-10 bg-background/95 backdrop-blur border-b border-border px-4 py-2.5 flex items-center gap-3">
+        <a href="/setlists" className="text-sm text-muted-foreground hover:text-foreground shrink-0">
+          ←
         </a>
-        <h1 className="font-semibold text-foreground">{t("setlists.form.titleNew")}</h1>
+        <span className="font-semibold text-foreground text-sm truncate">
+          {title.trim() || t("setlists.form.titleNew")}
+        </span>
+
+        {/* Auto-save indicator */}
+        <span className="text-[11px] text-muted-foreground shrink-0 hidden sm:flex items-center gap-1">
+          {autoSaving ? (
+            <span className="animate-pulse">Sauvegarde…</span>
+          ) : lastSaved ? (
+            <span className="flex items-center gap-1 text-green-600 dark:text-green-400">
+              <Check className="h-3 w-3" /> Brouillon sauvegardé
+            </span>
+          ) : null}
+        </span>
+
+        <div className="ml-auto flex items-center gap-2 shrink-0">
+          <button
+            type="button"
+            onClick={() => doCreate(true)}
+            disabled={busy}
+            className="h-8 px-3 rounded-lg border border-border text-foreground text-xs font-semibold hover:bg-muted transition-colors disabled:opacity-50"
+          >
+            {draftSaving ? t("setlists.form.draftSaving") : t("setlists.form.draftButton")}
+          </button>
+          <button
+            type="button"
+            onClick={() => doCreate(false)}
+            disabled={busy}
+            className="h-8 px-3 rounded-lg bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50"
+          >
+            {creating ? t("setlists.form.creating") : t("setlists.form.createButton")}
+          </button>
+        </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="max-w-xl mx-auto px-4 py-6 space-y-6">
+      <div className="max-w-2xl mx-auto px-4 py-6 space-y-5">
 
-        {/* ── Info ── */}
-        <section className="space-y-3">
+        {/* ── Carte Informations ── */}
+        <div className="rounded-xl border border-border bg-card p-5 space-y-4">
           <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
             {t("setlists.form.infoSection")}
           </h2>
 
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-1">
-              {t("setlists.form.titleLabel")} <span className="text-destructive">*</span>
-            </label>
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder={t("setlists.form.titlePlaceholder")}
-              className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 text-sm"
-            />
+          {/* Titre + Date */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-medium text-muted-foreground mb-1.5">
+                {t("setlists.form.titleLabel")} <span className="text-destructive">*</span>
+              </label>
+              <input
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder={t("setlists.form.titlePlaceholder")}
+                className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-muted-foreground mb-1.5">
+                {t("setlists.form.dateLabel")} <span className="text-destructive">*</span>
+              </label>
+              <input
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 text-sm"
+              />
+            </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-1">
-              {t("setlists.form.leaderLabel")} <span className="text-destructive">*</span>
-            </label>
-            <input
-              type="text"
-              value={leader}
-              onChange={(e) => setLeader(e.target.value)}
-              placeholder={t("setlists.form.leaderPlaceholder")}
-              className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 text-sm"
-            />
+          {/* Présidence + Catégorie */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-medium text-muted-foreground mb-1.5">
+                {t("setlists.form.leaderLabel")} <span className="text-destructive">*</span>
+              </label>
+              <input
+                type="text"
+                value={leader}
+                onChange={(e) => setLeader(e.target.value)}
+                placeholder={t("setlists.form.leaderPlaceholder")}
+                className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-muted-foreground mb-1.5">
+                {t("setlists.form.categoryLabel")} <span className="text-destructive">*</span>
+              </label>
+              <select
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 text-sm"
+              >
+                <option value="">{t("setlists.form.categoryPlaceholder")}</option>
+                <optgroup label={t("setlists.form.categoryGroupRestricted")}>
+                  {RESTRICTED_CATEGORIES.map((c) => (
+                    <option key={c} value={c}>{t("categories." + c, { defaultValue: c })}</option>
+                  ))}
+                </optgroup>
+                <optgroup label={t("setlists.form.categoryGroupFree")}>
+                  {["Groupe Paix", "Groupe Fidélité", "Groupe Bonté", "中班", "大班", "高班"].map((c) => (
+                    <option key={c} value={c}>{t("categories." + c, { defaultValue: c })}</option>
+                  ))}
+                </optgroup>
+              </select>
+              {needsAuth && (
+                <div className="mt-2 flex items-start gap-2 text-xs text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950 px-3 py-2 rounded-lg border border-amber-200 dark:border-amber-800">
+                  <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                  <span>
+                    {t("setlists.form.categoryRestrictedAuthWarning")}{" "}
+                    <a href="/login?from=/setlists/new" className="underline font-medium">
+                      {t("common.header.login")}
+                    </a>
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
 
+          {/* Visibilité */}
           <div>
-            <label className="block text-sm font-medium text-foreground mb-1">
-              {t("setlists.form.categoryLabel")} <span className="text-destructive">*</span>
+            <label className="block text-xs font-medium text-muted-foreground mb-1.5">
+              {t("setlists.form.visibilityLabel")}
             </label>
-            <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 text-sm"
-            >
-              <option value="">{t("setlists.form.categoryPlaceholder")}</option>
-              <optgroup label={t("setlists.form.categoryGroupRestricted")}>
-                {RESTRICTED_CATEGORIES.map((c) => (
-                  <option key={c} value={c}>{t("categories." + c, { defaultValue: c })}</option>
-                ))}
-              </optgroup>
-              <optgroup label={t("setlists.form.categoryGroupFree")}>
-                {["Groupe Paix", "Groupe Fidélité", "Groupe Bonté", "中班", "大班", "高班"].map((c) => (
-                  <option key={c} value={c}>{t("categories." + c, { defaultValue: c })}</option>
-                ))}
-              </optgroup>
-            </select>
-
-            {needsAuth && (
-              <div className="mt-2 flex items-start gap-2 text-sm text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950 px-3 py-2 rounded-lg border border-amber-200 dark:border-amber-800">
-                <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
-                <span>
-                  {t("setlists.form.categoryRestrictedAuthWarning")}{" "}
-                  <a href={`/login?from=/setlists/new`} className="underline font-medium">
-                    {t("common.header.login")}
-                  </a>
-                </span>
-              </div>
+            <div className="flex rounded-lg border border-border overflow-hidden text-sm">
+              <button
+                type="button"
+                onClick={() => setIsPrivate(false)}
+                className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 transition-colors ${
+                  !isPrivate ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground hover:bg-muted/50"
+                }`}
+              >
+                <Globe className="h-3.5 w-3.5" /> Partagée
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsPrivate(true)}
+                className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 transition-colors border-l border-border ${
+                  isPrivate ? "bg-violet-600 text-white" : "bg-background text-muted-foreground hover:bg-muted/50"
+                }`}
+              >
+                <Lock className="h-3.5 w-3.5" /> Privée
+              </button>
+            </div>
+            {isPrivate && !user && !authLoading && (
+              <p className="mt-1.5 text-xs text-violet-700 dark:text-violet-400">
+                {t("setlists.form.privateLoginRequired")}
+              </p>
             )}
           </div>
 
+          {/* Notes */}
           <div>
-            <label className="block text-sm font-medium text-foreground mb-1">
+            <label className="block text-xs font-medium text-muted-foreground mb-1.5">
               {t("setlists.form.notesLabel")}
             </label>
             <textarea
@@ -319,10 +430,10 @@ export function CreateSetlistClient() {
               className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 text-sm resize-none"
             />
           </div>
-        </section>
+        </div>
 
-        {/* ── Chants ── */}
-        <section className="space-y-3">
+        {/* ── Section Chants ── */}
+        <div className="space-y-3">
           <div className="flex items-center justify-between gap-2">
             <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
               {t("common.header.songs")}
@@ -333,89 +444,114 @@ export function CreateSetlistClient() {
                 onClick={addTransition}
                 className="text-xs px-2.5 py-1 rounded-lg border border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/30 transition-colors"
               >
-                + {t("setlists.form.addTransition", { defaultValue: "Transition" })}
+                + {t("setlists.form.addTransition")}
               </button>
-            {selectableItems.length >= 2 && (
-              selectMode ? (
-                <div className="flex items-center gap-2">
-                  {selectedUids.size >= 2 && (
+              {selectableItems.length >= 2 && (
+                selectMode ? (
+                  <div className="flex items-center gap-2">
+                    {selectedUids.size >= 2 && (
+                      <button
+                        type="button"
+                        onClick={mergeSongs}
+                        className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition-colors"
+                      >
+                        <Link2 className="h-3 w-3" />
+                        {t("setlists.form.mergeButton", { count: selectedUids.size })}
+                      </button>
+                    )}
                     <button
                       type="button"
-                      onClick={mergeSongs}
-                      className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition-colors"
+                      onClick={() => { setSelectMode(false); setSelectedUids(new Set()); }}
+                      className="text-xs px-2.5 py-1 rounded-lg border border-border text-muted-foreground hover:text-foreground transition-colors"
                     >
-                      <Link2 className="h-3 w-3" />
-                      {t("setlists.form.mergeButton", { count: selectedUids.size })}
+                      {t("setlists.form.cancelSelect")}
                     </button>
-                  )}
+                  </div>
+                ) : (
                   <button
                     type="button"
-                    onClick={cancelSelectMode}
+                    onClick={() => setSelectMode(true)}
                     className="text-xs px-2.5 py-1 rounded-lg border border-border text-muted-foreground hover:text-foreground transition-colors"
                   >
-                    {t("setlists.form.cancelSelect")}
+                    {t("setlists.form.selectMode")}
                   </button>
-                </div>
-              ) : (
+                )
+              )}
+            </div>
+          </div>
+
+          {/* Recherche + résultats scrollables */}
+          <div className="rounded-xl border border-border overflow-hidden">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+              <input
+                type="search"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder={t("setlists.form.searchSongsPlaceholder")}
+                className="w-full pl-9 pr-8 py-2.5 bg-background text-foreground placeholder:text-muted-foreground focus:outline-none text-sm border-b border-border"
+              />
+              {query && (
                 <button
                   type="button"
-                  onClick={() => setSelectMode(true)}
-                  className="text-xs px-2.5 py-1 rounded-lg border border-border text-muted-foreground hover:text-foreground transition-colors"
+                  onClick={() => setQuery("")}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                 >
-                  {t("setlists.form.selectMode")}
+                  <X className="h-4 w-4" />
                 </button>
-              )
-            )}
-            </div>{/* end inner flex */}
-          </div>{/* end header row */}
+              )}
+            </div>
 
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-            <input
-              type="search"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder={t("setlists.form.searchSongsPlaceholder")}
-              className="w-full pl-9 pr-8 py-2 border border-border rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 text-sm"
-            />
-            {query && (
-              <button
-                type="button"
-                onClick={() => setQuery("")}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-              >
-                <X className="h-4 w-4" />
-              </button>
+            {availableSongs.length === 0 ? (
+              <p className="text-xs text-muted-foreground text-center py-4">
+                {t("setlists.form.allSongsAdded")}
+              </p>
+            ) : (
+              <div className="max-h-72 overflow-y-auto divide-y divide-border">
+                {searchResults.map((song) => (
+                  <div key={song.slug}>
+                    <div className="flex items-center gap-2 px-3 py-2.5 hover:bg-muted/40 transition-colors">
+                      <button
+                        type="button"
+                        onClick={() => setExpandedSlug(expandedSlug === song.slug ? null : song.slug)}
+                        className="flex-1 flex items-center gap-2 text-left min-w-0"
+                      >
+                        <span className="text-sm font-medium text-foreground truncate">{song.title}</span>
+                        {song.language === "zh" && (
+                          <span className="shrink-0 text-[10px] text-muted-foreground">{t("common.languages.zh")}</span>
+                        )}
+                        <span className="shrink-0 font-mono text-xs text-muted-foreground">{song.originalKey}</span>
+                        {expandedSlug === song.slug
+                          ? <ChevronUp className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                          : <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                        }
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => addSong(song)}
+                        className="shrink-0 flex items-center gap-1 h-7 px-2.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors text-xs font-semibold"
+                      >
+                        <Plus className="h-3.5 w-3.5" />
+                        {t("common.buttons.add")}
+                      </button>
+                    </div>
+                    {expandedSlug === song.slug && song.sections && song.sections.length > 0 && (
+                      <div className="px-3 pb-2.5 flex flex-wrap gap-1.5 bg-muted/20">
+                        {song.sections.map((s) => (
+                          <span key={s.id} className="text-[10px] px-2 py-0.5 rounded-md bg-muted text-muted-foreground">
+                            {s.name}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
             )}
           </div>
 
-          {searchResults.length > 0 && (
-            <div className="rounded-lg border border-border divide-y divide-border overflow-hidden">
-              {searchResults.map((song) => (
-                <button
-                  key={song.slug}
-                  type="button"
-                  onClick={() => addSong(song)}
-                  className="w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-muted/50 transition-colors"
-                >
-                  <span className="text-sm font-medium text-foreground flex-1 truncate">{song.title}</span>
-                  {song.language === "zh" && (
-                    <span className="text-[10px] text-muted-foreground">{t("common.languages.zh")}</span>
-                  )}
-                  <span className="font-mono text-xs text-muted-foreground">{song.originalKey}</span>
-                  <span className="text-primary text-xs font-medium">{t("common.buttons.add")}</span>
-                </button>
-              ))}
-            </div>
-          )}
-
-          {songs.length > 0 && availableSongs.length === 0 && (
-            <p className="text-xs text-muted-foreground text-center py-2">
-              {t("setlists.form.allSongsAdded")}
-            </p>
-          )}
-
-          {items.length > 0 && (
+          {/* Setlist (chants ajoutés) */}
+          {items.length > 0 ? (
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
               <SortableContext items={items.map((i) => i.uid)} strategy={verticalListSortingStrategy}>
                 <div className="space-y-2">
@@ -453,41 +589,17 @@ export function CreateSetlistClient() {
                 </div>
               </SortableContext>
             </DndContext>
-          )}
-
-          {items.length === 0 && (
-            <p className="text-xs text-muted-foreground text-center py-4 border border-dashed border-border rounded-lg">
+          ) : (
+            <p className="text-xs text-muted-foreground text-center py-4 border border-dashed border-border rounded-xl">
               {t("setlists.form.emptySongs")}
             </p>
           )}
-        </section>
+        </div>
 
         {error && (
           <p className="text-sm text-destructive bg-destructive/10 px-3 py-2 rounded-lg">{error}</p>
         )}
-
-        <div className="flex gap-2">
-          {category && isRestricted(category) && (
-            <button
-              type="button"
-              onClick={() => doCreate(true)}
-              disabled={busy}
-              className="flex-1 py-2.5 rounded-lg border border-border text-foreground font-semibold text-sm hover:bg-muted transition-colors disabled:opacity-50"
-            >
-              {draftSaving ? t("setlists.form.draftSaving") : t("setlists.form.draftButton")}
-            </button>
-          )}
-          <button
-            type="submit"
-            disabled={busy}
-            className={`py-2.5 rounded-lg bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 transition-colors disabled:opacity-50 ${
-              category && isRestricted(category) ? "flex-1" : "w-full"
-            }`}
-          >
-            {creating ? t("setlists.form.creating") : t("setlists.form.createButton")}
-          </button>
-        </div>
-      </form>
+      </div>
     </div>
   );
 }

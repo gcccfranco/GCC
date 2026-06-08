@@ -82,9 +82,13 @@
       "title": "GCC 敬拜诗歌",
       "newButton": "新建歌单",
       "draft": "草稿",
+      "private": "私密",
       "allCategories": "全部类型",
       "empty": "目前没有歌单。",
       "emptyCategory": "此类型下没有歌单。",
+      "emptyPrivate": "目前没有私密歌单。",
+      "mySetlists": "我的歌单",
+      "publicSetlists": "共享歌单",
       "songCounter_one": "{{count}} 首诗歌",
       "songCounter_other": "{{count}} 首诗歌"
     },
@@ -107,6 +111,7 @@
       "titleEdit": "编辑歌单",
       "infoSection": "基本信息",
       "titleLabel": "歌单名称",
+      "dateLabel": "领会日期",
       "titleRequired": "歌单名称不能为空。",
       "titlePlaceholder": "例如：5月25日主日崇拜",
       "leaderLabel": "主席",
@@ -152,7 +157,11 @@
       "mixedStructureToggle": "混合各诗歌的段落顺序",
       "mixedStructureTitle": "混合结构",
       "mixedStructureReset": "重置",
-      "mixedStructureEmpty": "请点击上方按钮添加段落。"
+      "mixedStructureEmpty": "请点击上方按钮添加段落。",
+      "visibilityLabel": "可见性",
+      "privateToggle": "私密歌单（仅自己可见）",
+      "privateLoginRequired": "请登录以创建私密歌单。",
+      "addTransition": "过渡"
     }
   },
   "customize": {
