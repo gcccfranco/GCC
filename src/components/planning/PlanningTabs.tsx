@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useScrollDirection } from "@/hooks/useScrollDirection"
+import { useRef, useEffect, useState } from "react"
 
 const TABS = [
   { label: "Accueil", href: "/planning" },
@@ -16,29 +17,53 @@ const TABS = [
 export function PlanningTabs() {
   const pathname = usePathname() || ""
   const scrollVisible = useScrollDirection()
+  const tabRefs = useRef<(HTMLAnchorElement | null)[]>([])
+  const navRef = useRef<HTMLDivElement>(null)
+  const [indicator, setIndicator] = useState({ left: 0, width: 0, ready: false })
+
+  const isTabActive = (href: string) =>
+    href === "/planning"
+      ? pathname === "/planning" || pathname === "/planning/"
+      : pathname.startsWith(href)
+
+  useEffect(() => {
+    const activeIndex = TABS.findIndex((tab) => isTabActive(tab.href))
+    const el = tabRefs.current[activeIndex]
+    if (el) {
+      setIndicator({ left: el.offsetLeft, width: el.offsetWidth, ready: true })
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname])
+
   return (
-    <div className={`{sticky top-[57px] z-40 border-b border-border bg-background/95 backdrop-blur-md print:hidden  ${ scrollVisible ? "translate-y-0" : "-translate-y-[calc(100%+58px)]"}} `}>
+    <div className={`sticky top-[57px] z-40 border-b border-border bg-background/95 backdrop-blur-md print:hidden transition-transform duration-300 ${scrollVisible ? "translate-y-0" : "-translate-y-[calc(100%+58px)]"}`}>
       <div className="max-w-[1080px] mx-auto px-4">
-        <nav className="flex overflow-x-auto gap-0 -mb-px" style={{ scrollbarWidth: "none" }}>
-          {TABS.map(tab => {
-            const isActive = tab.href === "/planning"
-              ? pathname === "/planning" || pathname === "/planning/"
-              : pathname.startsWith(tab.href)
-            return (
-              <Link
-                key={tab.href}
-                href={tab.href}
-                className={`flex-shrink-0 px-4 py-3 text-[12.5px] font-semibold border-b-2 transition-all duration-150 whitespace-nowrap ${
-                  isActive
-                    ? "border-primary text-primary"
-                    : "border-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground/30"
-                }`}
-              >
-                {tab.label}
-              </Link>
-            )
-          })}
-        </nav>
+        <div className="relative">
+          <nav ref={navRef} className="flex overflow-x-auto gap-0" style={{ scrollbarWidth: "none" }}>
+            {TABS.map((tab, i) => {
+              const active = isTabActive(tab.href)
+              return (
+                <Link
+                  key={tab.href}
+                  href={tab.href}
+                  ref={(el) => { tabRefs.current[i] = el }}
+                  className={`flex-shrink-0 px-4 py-3 text-[12.5px] font-semibold transition-colors duration-150 whitespace-nowrap ${
+                    active ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {tab.label}
+                </Link>
+              )
+            })}
+          </nav>
+          {/* Indicateur glissant */}
+          {indicator.ready && (
+            <div
+              className="absolute bottom-0 h-[2px] bg-primary rounded-full transition-all duration-200"
+              style={{ left: indicator.left, width: indicator.width }}
+            />
+          )}
+        </div>
       </div>
     </div>
   )
