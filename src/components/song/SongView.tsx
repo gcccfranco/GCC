@@ -341,6 +341,7 @@ export interface SongViewProps {
   useJianpu?: boolean;
   structureOverride?: string[] | null;
   sectionNotes?: Record<string, string>;
+  sectionTransitions?: Record<string, string>;
 }
 
 export function SongView({
@@ -350,6 +351,7 @@ export function SongView({
   useJianpu = false,
   structureOverride = null,
   sectionNotes = {},
+  sectionTransitions = {},
 }: SongViewProps) {
   const { t } = useTranslation();
   const isZh = ast.metadata.language === "zh";
@@ -429,6 +431,7 @@ export function SongView({
       <div>
         {sections.map((section, i) => {
           const note = sectionNotes[section.uid];
+          const transition = sectionTransitions?.[section.uid];
           return (
             <div key={`${section.id}-${i}`}>
               <SectionView
@@ -437,8 +440,9 @@ export function SongView({
                 showChords={showChords}
                 showPinyin={isZh ? showPinyin : false}
                 useJianpu={canUseJianpu}
+                note={note}
               />
-              {note && <TransitionNote text={note} />}
+              {transition && <TransitionNote text={transition} />}
             </div>
           );
         })}

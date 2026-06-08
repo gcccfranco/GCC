@@ -185,6 +185,7 @@ export function PartitionsView({
               useJianpu={false}
               structureOverride={item.structureOverride}
               sectionNotes={item.sectionNotes ?? {}}
+              sectionTransitions={item.sectionTransitions ?? {}}
             />
           </div>
         );
