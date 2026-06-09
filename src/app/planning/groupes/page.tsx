@@ -1,8 +1,9 @@
 "use client"
 
-import { Fragment, useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 import { FilterButtons } from "@/components/planning/FilterButtons"
-import { currentSundayStr, fdShort, getMois, MOIS, filterByTri, getCurrentTri } from "@/lib/planning/utils"
+import { PlanningTable } from "@/components/planning/PlanningTable"
+import { filterByTri, getCurrentTri } from "@/lib/planning/utils"
 import { PAIX_FALLBACK, FIDELITE_FALLBACK, FIDELITE_MUSIC_FALLBACK, BONTE_FALLBACK } from "@/lib/planning/data"
 import { fetchPaix, fetchFidelite, fetchFideliteMusic, fetchBonte } from "@/lib/planning/sheets"
 
@@ -36,7 +37,6 @@ export default function GroupesPage() {
     ]).finally(() => setLoading(false))
   }, [])
 
-  const sun = currentSundayStr()
   const color = GRP_COLORS[grp]
 
   const data = (() => {
@@ -51,8 +51,6 @@ export default function GroupesPage() {
     if (grp === "fidelite") return ["Date","Présidence","Orateur","Thème","Pianiste"]
     return ["Date","Présidence","Musiciens","Orateur","Thème"]
   })()
-
-  let lastMonth = ""
 
   return (
     <div className="max-w-full space-y-4 mx-auto">
@@ -100,53 +98,7 @@ export default function GroupesPage() {
         Dimanche de la semaine courante
       </div>
 
-      <div className="overflow-x-auto rounded-xl border border-border">
-        <table className="w-full text-sm border-collapse min-w-[480px]">
-          <thead>
-            <tr style={{ background: color }} className="text-white">
-              {cols.map(c => (
-                <th key={c} className="px-3 py-2.5 text-left text-[11px] font-semibold whitespace-nowrap">{c}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {data.length === 0 && (
-              <tr><td colSpan={cols.length} className="px-4 py-8 text-center text-sm text-muted-foreground">Aucune donnée</td></tr>
-            )}
-            {data.map((row) => {
-              const month = MOIS[getMois(row[0]) - 1]
-              const showSep = month !== lastMonth
-              if (showSep) lastMonth = month
-              const isThis = row[0] === sun
-
-              return (
-                <Fragment key={row[0]}>
-                  {showSep && (
-                    <tr style={{ background: `${color}15` }}>
-                      <td colSpan={cols.length} className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider" style={{ color }}>
-                        {month}
-                      </td>
-                    </tr>
-                  )}
-                  <tr
-                    className={`border-t border-border transition-colors ${!isThis ? "hover:bg-secondary/50" : ""}`}
-                    style={isThis ? { background: `${color}1a` } : undefined}
-                  >
-                    <td className="w-[100px] px-3 py-2 font-semibold whitespace-nowrap" style={{ color }}>
-                      <div>{isThis ? (
-                        <span className="inline-block text-[9px] font-bold px-1.5 py-0.5 rounded text-white mt-0.5" style={{ background: color }}>Cette semaine</span>
-                      ) : fdShort(row[0])}</div>
-                    </td>
-                    {row.slice(1).map((cell, ci) => (
-                      <td key={ci} className="px-3 py-2 text-foreground">{cell || "—"}</td>
-                    ))}
-                  </tr>
-                </Fragment>
-              )
-            })}
-          </tbody>
-        </table>
-      </div>
+      <PlanningTable cols={cols} rows={data} color={color} minWidth={480} />
     </div>
   )
 }

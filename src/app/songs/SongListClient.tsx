@@ -20,7 +20,17 @@ export function SongListClient({ songs, themes }: SongListClientProps) {
   const [query, setQuery] = useState("");
   const [langFilter, setLangFilter] = useState<"all" | "fr" | "zh">("all");
   const [themeFilter, setThemeFilter] = useState("");
+  const [sortBy, setSortBy] = useState<"title" | "artist" | "key">("title");
+  const [recentSlugs, setRecentSlugs] = useState<string[]>([]);
   const [isInitialized, setIsInitialized] = useState(false);
+
+  // Récemment consultés (stockés sur l'appareil par la page détail)
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("recentSongs");
+      if (raw) setRecentSlugs(JSON.parse(raw));
+    } catch { /* stockage indisponible */ }
+  }, []);
 
   // Load from URL search params on mount
   useEffect(() => {
@@ -100,9 +110,20 @@ export function SongListClient({ songs, themes }: SongListClientProps) {
   };
 
   const filtered = useMemo(() => {
-    let result = query.trim()
-      ? fuse.search(query.trim()).map((r) => r.item)
-      : [...songs].sort(compareSongTitles);
+    let result: SongIndexEntry[];
+    if (query.trim()) {
+      // Résultats de recherche : ordre de pertinence
+      result = fuse.search(query.trim()).map((r) => r.item);
+    } else {
+      result = [...songs];
+      if (sortBy === "artist") {
+        result.sort((a, b) => (a.artist || "").localeCompare(b.artist || "", "fr") || compareSongTitles(a, b));
+      } else if (sortBy === "key") {
+        result.sort((a, b) => a.originalKey.localeCompare(b.originalKey) || compareSongTitles(a, b));
+      } else {
+        result.sort(compareSongTitles);
+      }
+    }
 
     if (langFilter !== "all") {
       result = result.filter((s) => s.language === langFilter);
@@ -112,7 +133,29 @@ export function SongListClient({ songs, themes }: SongListClientProps) {
     }
 
     return result;
-  }, [query, langFilter, themeFilter, fuse, songs]);
+  }, [query, langFilter, themeFilter, sortBy, fuse, songs]);
+
+  // Récents : slugs → entrées (dans l'ordre de consultation)
+  const recentSongs = useMemo(() => {
+    const map = new Map(songs.map((s) => [s.slug, s]));
+    return recentSlugs.map((slug) => map.get(slug)).filter((s): s is SongIndexEntry => !!s);
+  }, [recentSlugs, songs]);
+
+  // Index A–Z (tri par titre, hors recherche)
+  const letterIndex = useMemo(() => {
+    if (query.trim() || sortBy !== "title") return [];
+    const seen = new Map<string, string>(); // lettre → slug du premier chant
+    for (const song of filtered) {
+      const ch = getSortKey(song).charAt(0).toUpperCase();
+      const letter = ch >= "A" && ch <= "Z" ? ch : "#";
+      if (!seen.has(letter)) seen.set(letter, song.slug);
+    }
+    return [...seen.entries()];
+  }, [filtered, query, sortBy]);
+
+  function scrollToLetter(slug: string) {
+    document.getElementById(`song-li-${slug}`)?.scrollIntoView({ block: "start" });
+  }
 
   const usedThemeSlugs = new Set(songs.flatMap((s) => s.themes));
   const availableThemes = themes.filter((t) => usedThemeSlugs.has(t.slug));
@@ -181,6 +224,20 @@ export function SongListClient({ songs, themes }: SongListClientProps) {
           ))}
         </select>
 
+        {/* Tri (hors recherche) */}
+        {!query.trim() && (
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as "title" | "artist" | "key")}
+            className="h-8 pl-3 pr-7 rounded-[8px] text-[12.5px] font-semibold bg-card text-foreground/80 border border-border focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer appearance-none"
+            style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7079' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`, backgroundRepeat: "no-repeat", backgroundPosition: "right 9px center" }}
+          >
+            <option value="title">{t("songs.list.sortTitle", { defaultValue: "Tri : titre" })}</option>
+            <option value="artist">{t("songs.list.sortArtist", { defaultValue: "Tri : artiste" })}</option>
+            <option value="key">{t("songs.list.sortKey", { defaultValue: "Tri : tonalité" })}</option>
+          </select>
+        )}
+
         {hasFilter && (
           <button
             onClick={reset}
@@ -190,6 +247,30 @@ export function SongListClient({ songs, themes }: SongListClientProps) {
           </button>
         )}
       </div>
+
+      {/* Récemment consultés */}
+      {!hasFilter && recentSongs.length > 0 && (
+        <div className="mb-4">
+          <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-1.5">
+            {t("songs.list.recent", { defaultValue: "Récemment consultés" })}
+          </p>
+          <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
+            {recentSongs.map((song) => (
+              <Link
+                key={song.slug}
+                href={`/songs/${song.slug}`}
+                className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border bg-card text-[12.5px] font-semibold text-foreground hover:border-primary/40 transition-colors"
+              >
+                <span
+                  className="w-1.5 h-1.5 rounded-full shrink-0"
+                  style={{ background: song.language === "zh" ? "var(--jianpu-color)" : "#3f63cf" }}
+                />
+                {song.title}
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Compteur */}
       <p className="text-[12.5px] text-muted-foreground mb-3">
@@ -204,9 +285,9 @@ export function SongListClient({ songs, themes }: SongListClientProps) {
           {t("songs.list.noSongsFound")}
         </p>
       ) : (
-        <ul className="flex flex-col gap-[9px]">
+        <ul className={`flex flex-col gap-[9px] ${letterIndex.length > 1 ? "pr-5" : ""}`}>
           {filtered.map((song) => (
-            <li key={song.slug}>
+            <li key={song.slug} id={`song-li-${song.slug}`} className="scroll-mt-[120px]">
               <Link
                 href={`/songs/${song.slug}`}
                 className="flex overflow-hidden border border-border rounded-xl bg-card hover:border-muted-foreground/40 hover:shadow-[0_4px_14px_rgba(20,22,28,0.08),0_2px_6px_rgba(20,22,28,0.05)] transition-all duration-150 active:scale-[.995]"
@@ -266,6 +347,24 @@ export function SongListClient({ songs, themes }: SongListClientProps) {
             </li>
           ))}
         </ul>
+      )}
+
+      {/* Index A–Z (tri par titre, liste assez longue) */}
+      {letterIndex.length > 1 && filtered.length > 30 && (
+        <nav
+          aria-label="Index alphabétique"
+          className="fixed right-0.5 top-1/2 -translate-y-1/2 z-30 flex flex-col items-center px-0.5 py-1 rounded-full bg-background/70 backdrop-blur-sm"
+        >
+          {letterIndex.map(([letter, slug]) => (
+            <button
+              key={letter}
+              onClick={() => scrollToLetter(slug)}
+              className="w-5 h-[17px] flex items-center justify-center text-[10px] font-bold text-muted-foreground hover:text-primary active:text-primary"
+            >
+              {letter}
+            </button>
+          ))}
+        </nav>
       )}
     </div>
   );
