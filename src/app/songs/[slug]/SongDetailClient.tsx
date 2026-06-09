@@ -58,12 +58,8 @@ interface SongDetailClientProps {
       useJianpu: false,
       structure: buildDefaultStructure(ast.sections),
     });
-    console.log('structure', customize)
     // AST transposé en mémoire — recalculé uniquement si semitones change
-    const displayedAST = useMemo(
-      () => transposeAST(ast, customize.semitones, customize.currentKey),
-      [ast, customize.semitones, customize.currentKey]
-    );
+
 
     // Structure override : IDs des sections dans l'ordre choisi
     
@@ -100,10 +96,16 @@ interface SongDetailClientProps {
       const songKey = searchParams.get('key')
         ? JSON.parse(searchParams.get('key')!)
         : originalKey;
-      
-      setCustomize(prev => ({ ...prev, currentKey: songKey }));
+      const diff = semitonesTo(originalKey, songKey);
+      setCustomize(prev => ({ ...prev, currentKey: songKey, semitones: diff }));
     }, []); // une seule fois au montage
 
+    const displayedAST = useMemo(
+      () => transposeAST(ast, customize.semitones, customize.currentKey),
+      [ast, customize.semitones, customize.currentKey]
+    );
+    console.log('custom', customize)
+    console.log('displayedAST', displayedAST)
     async function handleDownload() {
       setDownloading(true);
       try {
