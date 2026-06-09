@@ -250,7 +250,7 @@ export function SetlistDetailClient() {
                 </button>
               )}
 
-              {/* Mode Performance — action principale en live */}
+              {/* Mode Louange — action principale en live */}
               <button
                 onClick={async () => {
                   if (setlist && Object.keys(contents).length === 0) {
@@ -261,7 +261,7 @@ export function SetlistDetailClient() {
                 className="h-8 px-3 rounded-[8px] bg-primary text-primary-foreground text-[12.5px] font-semibold flex items-center gap-1.5 hover:bg-primary/90 transition-all duration-150"
               >
                 <Play className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Performance</span>
+                <span className="hidden sm:inline">Mode Louange</span>
               </button>
 
               {/* Menu ⋯ : Modifier / PDF / Supprimer */}
@@ -370,7 +370,7 @@ export function SetlistDetailClient() {
         )}
       </div>
 
-      {/* Mode Performance */}
+      {/* Mode Louange */}
       {performanceMode && (
         <PerformanceMode
           items={setlist.items}

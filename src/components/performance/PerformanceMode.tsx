@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { X, ChevronLeft, ChevronRight, Link2, MessageSquare, ListMusic } from "lucide-react";
+import { X, ChevronLeft, ChevronRight, Link2, MessageSquare, ListMusic, Settings, PenLine, Sun, Moon } from "lucide-react";
 import type { PerformanceBlock, SectionBlock, SongHeaderBlock } from "@/lib/performance/blocks";
 import { buildPerformanceBlocks, computePageKey } from "@/lib/performance/blocks";
 import { SectionView, TransitionNote } from "@/components/song/SongView";
@@ -176,6 +176,7 @@ export function PerformanceMode({
   const [annotateMode, setAnnotateMode] = useState(false);
   const [showChrome, setShowChrome] = useState(true);
   const [songListOpen, setSongListOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [pages, setPages] = useState<number[][]>([]);
   const [currentPage, setCurrentPage] = useState(0);
   const [remeasureKey, setRemeasureKey] = useState(0);
@@ -187,6 +188,36 @@ export function PerformanceMode({
       return 1;
     }
   });
+
+  // ── Thème scène (indépendant du thème du site, mémorisé) ──
+  const [stageTheme, setStageTheme] = useState<"light" | "dark">(() => {
+    try {
+      const saved = localStorage.getItem("perf-theme");
+      if (saved === "light" || saved === "dark") return saved;
+    } catch { /* stockage indisponible */ }
+    return typeof document !== "undefined" && document.documentElement.classList.contains("dark")
+      ? "dark"
+      : "light";
+  });
+  const siteWasDark = useRef<boolean | null>(null);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    if (siteWasDark.current === null) siteWasDark.current = root.classList.contains("dark");
+    root.classList.toggle("dark", stageTheme === "dark");
+  }, [stageTheme]);
+
+  // Restaurer le thème du site à la fermeture du mode
+  useEffect(() => () => {
+    if (siteWasDark.current !== null) {
+      document.documentElement.classList.toggle("dark", siteWasDark.current);
+    }
+  }, []);
+
+  const setTheme = useCallback((t: "light" | "dark") => {
+    setStageTheme(t);
+    try { localStorage.setItem("perf-theme", t); } catch { /* ignore */ }
+  }, []);
 
   const blockRefs = useRef<(HTMLDivElement | null)[]>([]);
   const chromeTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -396,6 +427,16 @@ export function PerformanceMode({
     0,
   );
 
+  // Progression dans le chant courant + chant suivant
+  const currentEntry = songEntries[currentSongEntryIdx];
+  const nextEntry = songEntries[currentSongEntryIdx + 1];
+  const songStartPage = currentEntry ? pages.findIndex((p) => p.includes(currentEntry.index)) : -1;
+  const nextSongPage = nextEntry ? pages.findIndex((p) => p.includes(nextEntry.index)) : -1;
+  const songEndPage = nextSongPage > 0 ? nextSongPage - 1 : pages.length - 1;
+  const songPageCount = songStartPage >= 0 ? songEndPage - songStartPage + 1 : 0;
+  const songPageIdx = currentPage - songStartPage;
+  const isLastPageOfSong = pages.length > 0 && currentPage === songEndPage;
+
   return (
     <div
       className="fixed inset-0 z-[9999] bg-background overflow-hidden select-none"
@@ -441,6 +482,20 @@ export function PerformanceMode({
           ))
         )}
       </div>
+
+      {/* ── « Suivant : … » sur la dernière page d'un chant ── */}
+      {isLastPageOfSong && nextEntry && (
+        <div
+          className="absolute bottom-2.5 left-0 right-0 flex justify-center pointer-events-none"
+          style={{ zIndex: 5 }}
+        >
+          <span className="flex items-center gap-1.5 text-xs text-muted-foreground bg-background/85 backdrop-blur px-3 py-1 rounded-full border border-border/60">
+            → Suivant :
+            <span className="font-semibold text-foreground">{nextEntry.block.title}</span>
+            <span className="font-mono">{nextEntry.block.songKey}</span>
+          </span>
+        </div>
+      )}
 
       {/* ── Annotation canvas (above content, below chrome) ── */}
       {annotateMode && (
@@ -516,9 +571,24 @@ export function PerformanceMode({
               </p>
             )}
           </div>
-          <span className="text-xs text-muted-foreground tabular-nums shrink-0">
-            {pages.length > 0 ? `${currentPage + 1} / ${pages.length}` : "—"}
-          </span>
+          <div className="flex flex-col items-end gap-1 shrink-0">
+            {/* Points de progression du chant courant */}
+            {songPageCount > 1 && songPageCount <= 8 && (
+              <div className="flex items-center gap-1" aria-label={`Page ${songPageIdx + 1} sur ${songPageCount} du chant`}>
+                {Array.from({ length: songPageCount }).map((_, i) => (
+                  <span
+                    key={i}
+                    className={`w-1.5 h-1.5 rounded-full transition-colors ${
+                      i === songPageIdx ? "bg-primary" : "bg-muted-foreground/30"
+                    }`}
+                  />
+                ))}
+              </div>
+            )}
+            <span className="text-xs text-muted-foreground tabular-nums">
+              {pages.length > 0 ? `${currentPage + 1} / ${pages.length}` : "—"}
+            </span>
+          </div>
         </div>
 
         {/* Bottom bar */}
@@ -528,118 +598,176 @@ export function PerformanceMode({
           onPointerUp={(e) => e.stopPropagation()}
         >
           {/* Sommaire des chants */}
-          <button
-            onClick={() => setSongListOpen(true)}
-            className="h-8 w-8 flex items-center justify-center rounded-lg border border-border text-muted-foreground hover:text-foreground active:bg-muted"
-            aria-label="Liste des chants"
-          >
+          <IconBtn label="Liste des chants" onClick={() => { setSettingsOpen(false); setSongListOpen(true); }}>
             <ListMusic className="h-4 w-4" />
-          </button>
+          </IconBtn>
 
-          {/* Toggle accords */}
-          <ChromeBtn
-            active={showChords}
-            onClick={() => setShowChords((v) => !v)}
-          >
-            Accords
-          </ChromeBtn>
-
-          {/* Toggle transitions */}
-          <ChromeBtn
-            active={showTransitions}
-            onClick={() => setShowTransitions((v) => !v)}
-          >
-            Transitions
-          </ChromeBtn>
-
-          {/* Annoter (stylet — only shown when logged in) */}
-          {user && (
-            <ChromeBtn
-              active={annotateMode}
-              onClick={() => setAnnotateMode((v) => !v)}
-              accent="amber"
-            >
-              Annoter
-            </ChromeBtn>
-          )}
-
-          {/* Taille du texte */}
-          <div className="flex items-center">
-            <button
-              onClick={() => changeFontScale(-0.1)}
-              disabled={fontScale <= MIN_SCALE}
-              className="h-8 w-8 flex items-center justify-center rounded-l-lg border border-border text-muted-foreground disabled:opacity-30 hover:text-foreground active:bg-muted text-[11px] font-bold"
-              aria-label="Réduire le texte"
-            >
-              A−
-            </button>
-            <button
-              onClick={() => changeFontScale(0.1)}
-              disabled={fontScale >= MAX_SCALE}
-              className="h-8 w-8 flex items-center justify-center rounded-r-lg border border-l-0 border-border text-muted-foreground disabled:opacity-30 hover:text-foreground active:bg-muted text-[13px] font-bold"
-              aria-label="Agrandir le texte"
-            >
-              A+
-            </button>
+          {/* Réglages */}
+          <div className="relative">
+            {settingsOpen && (
+              <div
+                className="fixed inset-0"
+                onPointerDown={(e) => { e.stopPropagation(); setSettingsOpen(false); }}
+              />
+            )}
+            <IconBtn label="Réglages" active={settingsOpen} onClick={() => setSettingsOpen((v) => !v)}>
+              <Settings className="h-4 w-4" />
+            </IconBtn>
+            {settingsOpen && (
+              <div className="absolute bottom-full mb-2 left-0 w-64 bg-card border border-border rounded-xl shadow-lg p-3 space-y-3">
+                <SettingRow label="Accords">
+                  <SwitchBtn on={showChords} onToggle={() => setShowChords((v) => !v)} />
+                </SettingRow>
+                <SettingRow label="Transitions">
+                  <SwitchBtn on={showTransitions} onToggle={() => setShowTransitions((v) => !v)} />
+                </SettingRow>
+                <SettingRow label="Texte">
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => changeFontScale(-0.1)}
+                      disabled={fontScale <= MIN_SCALE}
+                      className="h-7 w-8 flex items-center justify-center rounded-lg border border-border text-muted-foreground disabled:opacity-30 hover:text-foreground text-[11px] font-bold"
+                      aria-label="Réduire le texte"
+                    >
+                      A−
+                    </button>
+                    <span className="text-[11px] text-muted-foreground tabular-nums w-9 text-center">
+                      {Math.round(fontScale * 100)}%
+                    </span>
+                    <button
+                      onClick={() => changeFontScale(0.1)}
+                      disabled={fontScale >= MAX_SCALE}
+                      className="h-7 w-8 flex items-center justify-center rounded-lg border border-border text-muted-foreground disabled:opacity-30 hover:text-foreground text-[13px] font-bold"
+                      aria-label="Agrandir le texte"
+                    >
+                      A+
+                    </button>
+                  </div>
+                </SettingRow>
+                <SettingRow label="Thème">
+                  <div className="flex rounded-lg border border-border overflow-hidden">
+                    <button
+                      onClick={() => setTheme("light")}
+                      className={`h-7 px-2.5 flex items-center gap-1 text-[11px] font-semibold transition-colors ${
+                        stageTheme === "light" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      <Sun className="h-3 w-3" /> Clair
+                    </button>
+                    <button
+                      onClick={() => setTheme("dark")}
+                      className={`h-7 px-2.5 flex items-center gap-1 text-[11px] font-semibold border-l border-border transition-colors ${
+                        stageTheme === "dark" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      <Moon className="h-3 w-3" /> Sombre
+                    </button>
+                  </div>
+                </SettingRow>
+              </div>
+            )}
           </div>
+
+          {/* Annoter (connecté uniquement) */}
+          {user && (
+            <IconBtn
+              label="Annoter"
+              active={annotateMode}
+              accent="amber"
+              onClick={() => { setSettingsOpen(false); setAnnotateMode((v) => !v); }}
+            >
+              <PenLine className="h-4 w-4" />
+            </IconBtn>
+          )}
 
           {/* Spacer + navigation arrows */}
           <div className="ml-auto flex items-center gap-1">
             <button
               onClick={() => goToPage(currentPage - 1, pages.length)}
               disabled={currentPage === 0}
-              className="h-8 w-8 flex items-center justify-center rounded-lg border border-border text-muted-foreground disabled:opacity-30 hover:text-foreground active:bg-muted"
+              className="h-9 w-9 flex items-center justify-center rounded-lg border border-border text-muted-foreground disabled:opacity-30 hover:text-foreground active:bg-muted"
+              aria-label="Page précédente"
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
             <button
               onClick={() => goToPage(currentPage + 1, pages.length)}
               disabled={currentPage >= pages.length - 1}
-              className="h-8 w-8 flex items-center justify-center rounded-lg border border-border text-muted-foreground disabled:opacity-30 hover:text-foreground active:bg-muted"
+              className="h-9 w-9 flex items-center justify-center rounded-lg border border-border text-muted-foreground disabled:opacity-30 hover:text-foreground active:bg-muted"
+              aria-label="Page suivante"
             >
               <ChevronRight className="h-4 w-4" />
             </button>
           </div>
 
           {/* Quitter */}
-          <button
-            onClick={onClose}
-            className="h-8 w-8 flex items-center justify-center rounded-lg border border-border text-muted-foreground hover:text-foreground active:bg-muted"
-          >
+          <IconBtn label="Quitter" onClick={onClose}>
             <X className="h-4 w-4" />
-          </button>
+          </IconBtn>
         </div>
       </div>
     </div>
   );
 }
 
-// ─── Small chrome button ──────────────────────────────────────────────────────
+// ─── Petits composants de la barre ────────────────────────────────────────────
 
-function ChromeBtn({
-  active,
+function IconBtn({
+  label,
+  active = false,
   accent = "primary",
   onClick,
   children,
 }: {
-  active: boolean;
+  label: string;
+  active?: boolean;
   accent?: "primary" | "amber";
   onClick: () => void;
   children: React.ReactNode;
 }) {
   const activeClass =
     accent === "amber"
-      ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-transparent"
+      ? "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-transparent"
       : "bg-primary/10 text-primary border-transparent";
 
   return (
     <button
       onClick={onClick}
-      className={`h-8 px-3 rounded-lg border text-xs font-semibold transition-colors ${
+      aria-label={label}
+      title={label}
+      className={`h-9 w-9 flex items-center justify-center rounded-lg border transition-colors active:bg-muted ${
         active ? activeClass : "border-border text-muted-foreground hover:text-foreground"
       }`}
     >
       {children}
+    </button>
+  );
+}
+
+function SettingRow({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <span className="text-xs font-semibold text-foreground">{label}</span>
+      {children}
+    </div>
+  );
+}
+
+function SwitchBtn({ on, onToggle }: { on: boolean; onToggle: () => void }) {
+  return (
+    <button
+      role="switch"
+      aria-checked={on}
+      onClick={onToggle}
+      className={`relative w-10 h-6 rounded-full transition-colors ${
+        on ? "bg-primary" : "bg-muted-foreground/25"
+      }`}
+    >
+      <span
+        className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all ${
+          on ? "left-[18px]" : "left-0.5"
+        }`}
+      />
     </button>
   );
 }
