@@ -10,6 +10,8 @@ export type FusionSong = {
 export type FusionMixedSection = {
   songSlug: string;
   sectionId: string;
+  note?: string;
+  transition?: string;
 };
 
 export type SetlistItem = {
@@ -22,6 +24,7 @@ export type SetlistItem = {
   useJianpu: boolean;
   structureOverride: string[] | null;
   sectionNotes: Record<string, string>;
+  sectionTransitions?: Record<string, string>;
   notes: string;
   fusionSongs?: FusionSong[];
   mixedStructure?: FusionMixedSection[] | null;

@@ -20,6 +20,7 @@ import {
   Shuffle,
   RotateCcw,
   MessageSquare,
+  ArrowRight,
 } from "lucide-react";
 import { ALL_KEYS } from "@/lib/transpose";
 import { useTranslation } from "react-i18next";
@@ -28,58 +29,160 @@ import { nextUid } from "@/lib/uid";
 import type { FormItem, FormSectionItem, FormFusionItem, FormTransitionItem, FusionMixedSectionForm } from "@/lib/setlist/formItems";
 import type { SectionSummary } from "@/types/song";
 
+// ─── Champs note / transition repliables ─────────────────────────────────────
+
+type AnnotationField = "note" | "transition" | null;
+
+function FieldToggleBtn({
+  kind,
+  filled,
+  active,
+  onClick,
+}: {
+  kind: "note" | "transition";
+  filled: boolean;
+  active: boolean;
+  onClick: () => void;
+}) {
+  const Icon = kind === "note" ? MessageSquare : ArrowRight;
+  const filledClass =
+    kind === "note"
+      ? "bg-primary/10 text-primary"
+      : "bg-amber-500/15 text-amber-600 dark:text-amber-400";
+  const activeRing = kind === "note" ? "ring-1 ring-primary/40" : "ring-1 ring-amber-400/50";
+  return (
+    <button
+      type="button"
+      title={kind === "note" ? "Note" : "Transition"}
+      onClick={onClick}
+      className={`h-7 w-7 flex items-center justify-center rounded-md shrink-0 transition-colors ${
+        filled ? filledClass : "text-muted-foreground/50 hover:text-foreground hover:bg-muted"
+      } ${active ? activeRing : ""}`}
+    >
+      <Icon className="h-3.5 w-3.5" />
+    </button>
+  );
+}
+
+function AnnotationFieldInput({
+  kind,
+  value,
+  onChange,
+  onClose,
+}: {
+  kind: "note" | "transition";
+  value: string;
+  onChange: (v: string) => void;
+  onClose: () => void;
+}) {
+  const { t } = useTranslation();
+  const isNote = kind === "note";
+  return (
+    <div className="px-2 pb-1.5 pl-7">
+      <input
+        autoFocus
+        type="text"
+        placeholder={
+          isNote
+            ? t("setlists.form.songNotePlaceholder")
+            : t("setlists.form.transitionPlaceholder", { defaultValue: "Transition après cette section…" })
+        }
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === "Escape") {
+            e.preventDefault();
+            onClose();
+          }
+        }}
+        className={
+          isNote
+            ? "w-full text-[11px] px-1.5 py-1 border border-border rounded bg-muted/50 text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-primary/30"
+            : "w-full text-[11px] px-1.5 py-1 border border-dashed border-amber-300/80 dark:border-amber-700/60 rounded bg-amber-50/50 dark:bg-amber-950/10 text-foreground placeholder:text-amber-400/70 dark:placeholder:text-amber-600/60 focus:outline-none focus:ring-1 focus:ring-amber-400/40"
+        }
+      />
+    </div>
+  );
+}
+
 // ─── Section row (sortable, inside a song) ────────────────────────────────────
 
 export function SortableSectionRow({
   item,
   onRemove,
   onNoteChange,
+  onTransitionChange,
   hideNote,
 }: {
   item: FormSectionItem;
   onRemove: () => void;
   onNoteChange: (note: string) => void;
+  onTransitionChange?: (transition: string) => void;
   hideNote?: boolean;
 }) {
-  const { t } = useTranslation();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: item.uid });
+  const [expanded, setExpanded] = useState<AnnotationField>(null);
+
   return (
     <div
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition }}
-      className={`flex items-start gap-2 px-2 py-1.5 rounded border text-xs ${
+      className={`rounded border text-xs ${
         isDragging ? "border-primary/40 bg-primary/5 shadow" : "border-border bg-background"
       }`}
     >
-      <button
-        {...attributes}
-        {...listeners}
-        type="button"
-        style={{touchAction: 'none'}}
-        className="mt-0.5 text-muted-foreground cursor-grab active:cursor-grabbing shrink-0"
-      >
-        <GripVertical className="h-3.5 w-3.5" />
-      </button>
-      <div className="flex-1 min-w-0">
-        <div className="font-medium text-foreground">{item.name}</div>
+      <div className="flex items-center gap-2 px-2 py-1.5">
+        <button
+          {...attributes}
+          {...listeners}
+          type="button"
+          style={{ touchAction: "none" }}
+          className="h-7 w-6 flex items-center justify-center -ml-1 text-muted-foreground cursor-grab active:cursor-grabbing shrink-0"
+        >
+          <GripVertical className="h-4 w-4" />
+        </button>
+        <span className="flex-1 min-w-0 font-medium text-foreground truncate">{item.name}</span>
         {!hideNote && (
-          <input
-            type="text"
-            placeholder={t("setlists.form.songNotePlaceholder")}
-            value={item.note}
-            onChange={(e) => onNoteChange(e.target.value)}
-            className="mt-1 w-full text-[11px] px-1.5 py-0.5 border border-border rounded bg-muted/50 text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-primary/30"
-          />
+          <>
+            <FieldToggleBtn
+              kind="note"
+              filled={!!item.note.trim()}
+              active={expanded === "note"}
+              onClick={() => setExpanded(expanded === "note" ? null : "note")}
+            />
+            <FieldToggleBtn
+              kind="transition"
+              filled={!!(item.transition ?? "").trim()}
+              active={expanded === "transition"}
+              onClick={() => setExpanded(expanded === "transition" ? null : "transition")}
+            />
+          </>
         )}
+        <button
+          type="button"
+          onClick={onRemove}
+          className="shrink-0 text-muted-foreground hover:text-destructive"
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+        </button>
       </div>
-      <button
-        type="button"
-        onClick={onRemove}
-        className="mt-0.5 shrink-0 text-muted-foreground hover:text-destructive"
-      >
-        <Trash2 className="h-3.5 w-3.5" />
-      </button>
+      {!hideNote && expanded === "note" && (
+        <AnnotationFieldInput
+          kind="note"
+          value={item.note}
+          onChange={onNoteChange}
+          onClose={() => setExpanded(null)}
+        />
+      )}
+      {!hideNote && expanded === "transition" && (
+        <AnnotationFieldInput
+          kind="transition"
+          value={item.transition ?? ""}
+          onChange={(v) => onTransitionChange?.(v)}
+          onClose={() => setExpanded(null)}
+        />
+      )}
     </div>
   );
 }
@@ -117,12 +220,13 @@ export function SectionStructureEditor({
           <button
             key={s.id}
             type="button"
-            onClick={() =>
+            onClick={() => {
+              const uid = `${s.id}-${Date.now()}${Math.floor(Math.random() * 1000)}`;
               onChange([
                 ...sectionItems,
-                { uid: `${s.id}-${sectionItems.length}`, sectionId: s.id, name: s.name, note: "" },
-              ])
-            }
+                { uid, sectionId: s.id, name: s.name, note: "", transition: "" },
+              ]);
+            }}
             className="flex items-center gap-0.5 text-[11px] px-2 py-0.5 rounded border border-border hover:bg-muted text-foreground transition-colors"
           >
             <Plus className="h-2.5 w-2.5" />
@@ -141,6 +245,11 @@ export function SectionStructureEditor({
                 onNoteChange={(note) => {
                   const next = [...sectionItems];
                   next[idx] = { ...next[idx], note };
+                  onChange(next);
+                }}
+                onTransitionChange={(transition) => {
+                  const next = [...sectionItems];
+                  next[idx] = { ...next[idx], transition };
                   onChange(next);
                 }}
                 hideNote={hideNotes}
@@ -164,54 +273,77 @@ function SortableMixedRow({
   item,
   onRemove,
   onNoteChange,
+  onTransitionChange,
 }: {
   item: FusionMixedSectionForm;
   onRemove: () => void;
   onNoteChange: (note: string) => void;
+  onTransitionChange: (transition: string) => void;
 }) {
-  const { t } = useTranslation();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: item.uid });
+  const [expanded, setExpanded] = useState<AnnotationField>(null);
 
   return (
     <div
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition}}
-      className={`flex items-start gap-2 px-2 py-1.5 rounded border text-xs ${
+      className={`rounded border text-xs ${
         isDragging ? "border-primary/40 bg-primary/5 shadow" : "border-border bg-background"
       }`}
     >
-      <button
-        {...attributes}
-        {...listeners}
-        type="button"
-        style={{touchAction: "none"}}
-        className="mt-1 text-muted-foreground cursor-grab active:cursor-grabbing shrink-0"
-      >
-        <GripVertical className="h-3.5 w-3.5" />
-      </button>
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-1.5">
+      <div className="flex items-center gap-2 px-2 py-1.5">
+        <button
+          {...attributes}
+          {...listeners}
+          type="button"
+          style={{touchAction: "none"}}
+          className="h-7 w-6 flex items-center justify-center -ml-1 text-muted-foreground cursor-grab active:cursor-grabbing shrink-0"
+        >
+          <GripVertical className="h-4 w-4" />
+        </button>
+        <div className="flex-1 min-w-0 flex items-center gap-1.5">
           <span className="font-medium text-foreground truncate">{item.sectionName}</span>
           <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary font-medium truncate max-w-[100px] shrink-0">
             {item.songTitle}
           </span>
         </div>
-        <input
-          type="text"
-          placeholder={t("setlists.form.songNotePlaceholder")}
-          value={item.note}
-          onChange={(e) => onNoteChange(e.target.value)}
-          className="mt-1 w-full text-[11px] px-1.5 py-0.5 border border-border rounded bg-muted/50 text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-primary/30"
+        <FieldToggleBtn
+          kind="note"
+          filled={!!item.note.trim()}
+          active={expanded === "note"}
+          onClick={() => setExpanded(expanded === "note" ? null : "note")}
         />
+        <FieldToggleBtn
+          kind="transition"
+          filled={!!(item.transition ?? "").trim()}
+          active={expanded === "transition"}
+          onClick={() => setExpanded(expanded === "transition" ? null : "transition")}
+        />
+        <button
+          type="button"
+          onClick={onRemove}
+          className="shrink-0 text-muted-foreground hover:text-destructive"
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+        </button>
       </div>
-      <button
-        type="button"
-        onClick={onRemove}
-        className="mt-1 shrink-0 text-muted-foreground hover:text-destructive"
-      >
-        <Trash2 className="h-3.5 w-3.5" />
-      </button>
+      {expanded === "note" && (
+        <AnnotationFieldInput
+          kind="note"
+          value={item.note}
+          onChange={onNoteChange}
+          onClose={() => setExpanded(null)}
+        />
+      )}
+      {expanded === "transition" && (
+        <AnnotationFieldInput
+          kind="transition"
+          value={item.transition ?? ""}
+          onChange={onTransitionChange}
+          onClose={() => setExpanded(null)}
+        />
+      )}
     </div>
   );
 }
@@ -247,6 +379,7 @@ function MixedStructureEditor({
         sectionName: si.name,
         songTitle: song.song.title,
         note: si.note,
+        transition: si.transition ?? "",
       },
     ]);
   }
@@ -303,6 +436,11 @@ function MixedStructureEditor({
                 onNoteChange={(note) => {
                   const next = [...mixed];
                   next[idx] = { ...next[idx], note };
+                  onChangeMixed(next);
+                }}
+                onTransitionChange={(transition) => {
+                  const next = [...mixed];
+                  next[idx] = { ...next[idx], transition };
                   onChangeMixed(next);
                 }}
               />
@@ -603,6 +741,7 @@ export function FusionRow({
           sectionName: si.name,
           songTitle: song.song.title,
           note: si.note,
+          transition: si.transition ?? "",
         }))
       );
       onChangeMixed(defaultMixed);

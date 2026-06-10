@@ -11,35 +11,46 @@ export function SetlistCard({ setlist }: { setlist: FSSetlist }) {
   return (
     <Link
       href={`/setlists/${setlist.id}`}
-      className="block rounded-xl border border-border bg-background hover:bg-muted/40 transition-colors p-4 group"
+      className="flex flex-col justify-between rounded-xl border border-border bg-background hover:bg-muted/30 hover:border-primary/30 transition-all p-4 gap-3 group min-h-[100px]"
     >
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <div className="flex items-center gap-2">
-            <h2 className="text-sm font-semibold text-foreground group-hover:text-primary truncate">
-              {setlist.title}
-            </h2>
-            {setlist.isDraft && (
-              <span className="shrink-0 text-[10px] px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 font-medium border border-amber-200 dark:border-amber-800">
-                {t("setlists.list.draft")}
+      {/* ── Ligne haute ── */}
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0 flex-1">
+          {/* Badges */}
+          <div className="flex flex-wrap items-center gap-1.5 mb-1.5">
+            <span className="text-[10px] px-2 py-0.5 rounded-md bg-muted text-muted-foreground font-medium">
+              {t("categories." + setlist.category, { defaultValue: setlist.category })}
+            </span>
+            {setlist.isPrivate && (
+              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400 font-medium border border-violet-200 dark:border-violet-800">
+                {t("setlists.list.private")}
               </span>
             )}
           </div>
-          <p className="text-xs text-muted-foreground capitalize mt-0.5">
-            {formatDate(setlist.date, i18n.language)}
-          </p>
+
+          {/* Titre */}
+          <h2 className="text-sm font-semibold text-foreground group-hover:text-primary leading-snug">
+            {setlist.title}
+          </h2>
         </div>
+
+        {/* Badge langue */}
         <span className="shrink-0 text-[10px] px-1.5 py-0.5 rounded border border-border text-muted-foreground">
           {t("common.languages." + setlist.language, { defaultValue: setlist.language })}
         </span>
       </div>
 
-      <div className="mt-2 flex flex-wrap gap-2 text-xs text-muted-foreground">
-        <span className="px-2 py-0.5 rounded bg-muted text-foreground text-[10px]">
-          {t("categories." + setlist.category, { defaultValue: setlist.category })}
+      {/* ── Ligne basse ── */}
+      <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
+        <span className="capitalize font-medium text-foreground/70">
+          {formatDate(setlist.date, i18n.language)}
         </span>
-        <span>{t("setlists.list.songCounter", { count: setlist.items.length })}</span>
-        {setlist.leader && <span>— {setlist.leader}</span>}
+        <div className="flex items-center gap-2 shrink-0">
+          <span>{t("setlists.list.songCounter", { count: setlist.items.length })}</span>
+          {setlist.leader && (
+            <span className="text-muted-foreground/60">· {setlist.leader}</span>
+          )}
+        </div>
       </div>
     </Link>
   );

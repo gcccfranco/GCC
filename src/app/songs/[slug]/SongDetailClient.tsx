@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import Link from "next/link";
+import { MoreHorizontal, Download, Play, Music, Music2, Settings } from "lucide-react";
 import { SongView } from "@/components/song/SongView";
 import { CustomizePanel, type CustomizeState } from "@/components/customPanel/CustomizePanel";
 import type { Song } from "@/types/song";
@@ -49,6 +50,16 @@ interface SongDetailClientProps {
       }
     }, [t]);
 
+    // Mémoriser le chant dans les « récemment consultés » (affichés sur /songs)
+    useEffect(() => {
+      try {
+        const raw = localStorage.getItem("recentSongs");
+        const list: string[] = raw ? JSON.parse(raw) : [];
+        const next = [song.slug, ...list.filter((s) => s !== song.slug)].slice(0, 8);
+        localStorage.setItem("recentSongs", JSON.stringify(next));
+      } catch { /* stockage indisponible */ }
+    }, [song.slug]);
+
     const hasJianpu = song.hasJianpu;
     const [customize, setCustomize] = useState<CustomizeState>({
       semitones: 0,
@@ -81,14 +92,16 @@ interface SongDetailClientProps {
       : defaultSectionsNote;
 
     useEffect(() => {
-      const structure: SectionItem[] = structureOverride.map((uid: string) => (
-        {
-          uid: uid,
-          sectionId: uid.replace(/-\d+$/,''),
-          name: ast.sections.find((s) => s.id=== uid.replace(/-\d+$/,''))?.name,
-          note: sectionsNote[uid]
-        }
-      ))
+      const structure: SectionItem[] = structureOverride.map((uid: string, index: number) => {
+        const sectionId = uid.replace(/-\d+$/, "");
+        const cleanUid = uid.match(/-\d+$/) ? uid : `${sectionId}-${index}`;
+        return {
+          uid: cleanUid,
+          sectionId,
+          name: ast.sections.find((s) => s.id === sectionId)?.name,
+          note: sectionsNote[cleanUid] ?? sectionsNote[uid] ?? sectionsNote[sectionId] ?? "",
+        };
+      });
       setCustomize(prev => ({...prev, structure: structure}))
     },[]);
 
@@ -104,6 +117,25 @@ interface SongDetailClientProps {
       () => transposeAST(ast, customize.semitones, customize.currentKey),
       [ast, customize.semitones, customize.currentKey]
     );
+
+    // Menu ⋯ (médias, personnaliser, PDF)
+    const [menuOpen, setMenuOpen] = useState(false);
+    const menuRef = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+      if (!menuOpen) return;
+      const handler = (e: MouseEvent | TouchEvent) => {
+        if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+          setMenuOpen(false);
+        }
+      };
+      document.addEventListener("mousedown", handler);
+      document.addEventListener("touchstart", handler);
+      return () => {
+        document.removeEventListener("mousedown", handler);
+        document.removeEventListener("touchstart", handler);
+      };
+    }, [menuOpen]);
+
     async function handleDownload() {
       setDownloading(true);
       try {
@@ -184,30 +216,11 @@ interface SongDetailClientProps {
               </button>
             </div>
 
-            <div className="ml-auto flex flex-wrap gap-0.5 items-center justify-end">
-              {youtubeId && (
-                <button
-                  onClick={() => setShowVideo((v) => !v)}
-                  className="text-sm text-muted-foreground hover:text-foreground"
-                >
-                  {showVideo ? "✕ " + t("songs.detail.video") : "▶ " + t("songs.detail.video")}
-                </button>
-              )}
-              {song.spotifyUrl && (
-                <a href={song.spotifyUrl} target="_blank" rel="noopener noreferrer"
-                  className="text-sm text-muted-foreground hover:text-foreground" title="Spotify">
-                  ♪ Spotify
-                </a>
-              )}
-              {song.appleMusicUrl && (
-                <a href={song.appleMusicUrl} target="_blank" rel="noopener noreferrer"
-                  className="text-sm text-muted-foreground hover:text-foreground" title="Apple Music">
-                  ♪ Apple Music
-                </a>
-              )}
+            <div className="ml-auto flex gap-1.5 items-center justify-end">
+              {/* Accords */}
               <button
                 onClick={() => setCustomize((c) => ({ ...c, showChords: !c.showChords }))}
-                className={`h-8 px-2.5 rounded-[8px] border text-[12.5px] font-semibold flex items-center gap-0.5 transition-all duration-150 ${
+                className={`h-8 px-2.5 rounded-[8px] border text-[12.5px] font-semibold flex items-center gap-1.5 transition-all duration-150 ${
                       customize.showChords
                         ? "border-transparent bg-primary/10 text-primary"
                         : "border-border bg-card text-muted-foreground hover:text-foreground"
@@ -216,10 +229,12 @@ interface SongDetailClientProps {
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/><path d="M9 18V5l12-2v13"/></svg>
                     <span className="hidden sm:inline">{t("songs.detail.chords") || "Accords"}</span>
               </button>
+
+              {/* Pinyin (chants zh) */}
               {isZh && (
                     <button
                       onClick={() => setCustomize((c) => ({ ...c, showPinyin: !c.showPinyin }))}
-                      className={`h-8 px-2.5 rounded-[8px] border text-[12.5px] font-semibold flex items-center gap-0.5 transition-all duration-150 ${
+                      className={`h-8 px-2.5 rounded-[8px] border text-[12.5px] font-semibold flex items-center gap-1.5 transition-all duration-150 ${
                         customize.showPinyin
                           ? "border-transparent bg-primary/10 text-primary"
                           : "border-border bg-card text-muted-foreground hover:text-foreground"
@@ -229,21 +244,61 @@ interface SongDetailClientProps {
                       <span className="hidden sm:inline">{t("songs.detail.pinyin") || "Pinyin"}</span>
                     </button>
                   )}
-                  <button
-                    onClick={() => setShowPanel(true)}
-                    className="h-8 px-2.5 rounded-[8px] border border-border bg-card text-muted-foreground hover:text-foreground text-[12.5px] font-semibold flex items-center gap-0.5 transition-all duration-150"
-                  >
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
-                    <span className="hidden sm:inline">{t("songs.detail.customize")}</span>
-                  </button>
-              <button
-                onClick={handleDownload}
-                disabled={downloading}
-                className="h-8 px-2.5 rounded-[8px] border border-border bg-card text-muted-foreground hover:text-foreground text-[12.5px] font-semibold flex items-center gap-0.5 transition-all duration-150 disabled:opacity-50"
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14"/></svg>
-                <span className="hidden sm:inline">{downloading ? "…" : t("songs.detail.downloadPdf") || "PDF"}</span>
-              </button>
+
+              {/* Menu ⋯ : médias / personnaliser / PDF */}
+              <div className="relative" ref={menuRef}>
+                <button
+                  onClick={() => setMenuOpen((v) => !v)}
+                  aria-label="Plus d'actions"
+                  className="h-8 w-8 rounded-[8px] border border-border bg-card text-muted-foreground hover:text-foreground flex items-center justify-center transition-all duration-150"
+                >
+                  <MoreHorizontal className="h-4 w-4" />
+                </button>
+                {menuOpen && (
+                  <div className="absolute right-0 top-full mt-1 w-52 bg-card border border-border rounded-xl shadow-lg py-1 z-50">
+                    {youtubeId && (
+                      <button
+                        onClick={() => { setShowVideo((v) => !v); setMenuOpen(false); }}
+                        className="w-full flex items-center gap-2.5 px-3 py-2.5 text-[13px] font-medium text-foreground hover:bg-muted/50 transition-colors text-left"
+                      >
+                        <Play className="h-3.5 w-3.5 text-muted-foreground" />
+                        {showVideo ? "✕ " + t("songs.detail.video") : t("songs.detail.video")}
+                      </button>
+                    )}
+                    {song.spotifyUrl && (
+                      <a href={song.spotifyUrl} target="_blank" rel="noopener noreferrer"
+                        className="w-full flex items-center gap-2.5 px-3 py-2.5 text-[13px] font-medium text-foreground hover:bg-muted/50 transition-colors"
+                      >
+                        <Music className="h-3.5 w-3.5 text-muted-foreground" />
+                        Spotify
+                      </a>
+                    )}
+                    {song.appleMusicUrl && (
+                      <a href={song.appleMusicUrl} target="_blank" rel="noopener noreferrer"
+                        className="w-full flex items-center gap-2.5 px-3 py-2.5 text-[13px] font-medium text-foreground hover:bg-muted/50 transition-colors"
+                      >
+                        <Music2 className="h-3.5 w-3.5 text-muted-foreground" />
+                        Apple Music
+                      </a>
+                    )}
+                    <button
+                      onClick={() => { setShowPanel(true); setMenuOpen(false); }}
+                      className="w-full flex items-center gap-2.5 px-3 py-2.5 text-[13px] font-medium text-foreground hover:bg-muted/50 transition-colors text-left"
+                    >
+                      <Settings className="h-3.5 w-3.5 text-muted-foreground" />
+                      {t("songs.detail.customize")}
+                    </button>
+                    <button
+                      onClick={async () => { setMenuOpen(false); await handleDownload(); }}
+                      disabled={downloading}
+                      className="w-full flex items-center gap-2.5 px-3 py-2.5 text-[13px] font-medium text-foreground hover:bg-muted/50 transition-colors disabled:opacity-50 text-left"
+                    >
+                      <Download className="h-3.5 w-3.5 text-muted-foreground" />
+                      {downloading ? "…" : t("songs.detail.downloadPdf") || "PDF"}
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 

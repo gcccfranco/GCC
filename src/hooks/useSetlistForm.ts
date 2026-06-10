@@ -44,12 +44,14 @@ export function useSetlistForm({
       const setlistItems: SetlistItem[] = items.map((item, idx) => {
         const allIds = (item.song.sections ?? []).map((s) => s.id);
         const currentIds = item.sectionItems.map((s) => s.sectionId);
+        const currentUid = item.sectionItems.map((s) => s.uid);
         const structureOverride =
-          JSON.stringify(currentIds) === JSON.stringify(allIds) ? null : currentIds;
+          JSON.stringify(currentIds) === JSON.stringify(allIds) ? null : currentUid;
         const sectionNotes = Object.fromEntries(
-          item.sectionItems
-            .filter((s) => s.note.trim())
-            .map((s) => [s.sectionId, s.note.trim()])
+          item.sectionItems.filter((s) => s.note.trim()).map((s) => [s.uid, s.note.trim()])
+        );
+        const sectionTransitions = Object.fromEntries(
+          item.sectionItems.filter((s) => s.transition?.trim()).map((s) => [s.uid, s.transition.trim()])
         );
         return {
           songSlug: item.song.slug,
@@ -60,6 +62,7 @@ export function useSetlistForm({
           useJianpu: false,
           structureOverride,
           sectionNotes,
+          sectionTransitions,
           notes: item.notes,
         };
       });

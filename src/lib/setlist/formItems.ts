@@ -1,4 +1,5 @@
 import { nextUid } from "@/lib/uid";
+import { resolveStructureOverride } from "@/lib/chordpro/structure";
 import type { SetlistItem } from "@/types/setList";
 import type { SongIndexEntry, SectionSummary } from "@/types/song";
 
@@ -7,6 +8,7 @@ export interface FormSectionItem {
   sectionId: string;
   name: string;
   note: string;
+  transition: string;
 }
 
 export interface FormItem {
@@ -24,6 +26,7 @@ export interface FusionMixedSectionForm {
   sectionName: string;
   songTitle: string;
   note: string;
+  transition: string;
 }
 
 export interface FormFusionItem {
@@ -55,6 +58,7 @@ export function makeDefaultSections(sections: SectionSummary[]): FormSectionItem
     sectionId: s.id,
     name: s.name,
     note: "",
+    transition: "",
   }));
 }
 
@@ -63,25 +67,32 @@ function toFormItem(
   keyOverride: string | null,
   notes: string,
   structureOverride: string[] | null,
-  sectionNotes: Record<string, string>
+  sectionNotes: Record<string, string>,
+  sectionTransitions: Record<string, string> = {}
 ): FormItem {
   const allSections = song.sections ?? [];
-  const orderedSections = structureOverride && structureOverride.length > 0
-    ? structureOverride
-        .map((id) => allSections.find((s) => s.id === id.replace(/-\d+$/,'')))
-        .filter((s): s is SectionSummary => s !== undefined)
+  const orderedSections: SectionSummary[] = structureOverride && structureOverride.length > 0
+    ? resolveStructureOverride(allSections, structureOverride)
     : allSections;
+  const occ: Record<string, number> = {};
   return {
     uid: nextUid(),
     song,
     keyOverride,
     notes,
-    sectionItems: orderedSections.map((s,index) => ({
-      uid: `${s.id}-${index}`,
-      sectionId: s.id,
-      name: s.name || s.type,
-      note: sectionNotes?.[`${s.id}-${index}`] ?? "",
-    })),
+    sectionItems: orderedSections.map((s, index) => {
+      const uid = s.uid ?? `${s.id}-${index}`;
+      const idx = occ[s.id] ?? 0;
+      occ[s.id] = idx + 1;
+      const key = idx === 0 ? s.id : `${s.id}:${idx}`;
+      return {
+        uid,
+        sectionId: s.id,
+        name: s.name || s.type,
+        note: sectionNotes?.[uid] ?? sectionNotes?.[key] ?? sectionNotes?.[s.id] ?? "",
+        transition: sectionTransitions?.[uid] ?? sectionTransitions?.[key] ?? sectionTransitions?.[s.id] ?? "",
+      };
+    }),
   };
 }
 
@@ -117,7 +128,8 @@ export function buildFormItems(
               sectionId: ms.sectionId,
               sectionName: section.name || section.type,
               songTitle: song.title,
-              note: fusionSong?.sectionNotes?.[ms.sectionId] ?? "",
+              note: ms.note ?? fusionSong?.sectionNotes?.[ms.sectionId] ?? "",
+              transition: ms.transition ?? "",
             }];
           });
         }
@@ -128,6 +140,6 @@ export function buildFormItems(
       const song = songsMap[item.songSlug];
       console.log("items",items)
       if (!song) return [];
-      return [toFormItem(song, item.keyOverride, item.notes, item.structureOverride, item.sectionNotes)];
+      return [toFormItem(song, item.keyOverride, item.notes, item.structureOverride, item.sectionNotes, item.sectionTransitions)];
     });
 }
