@@ -1,198 +1,306 @@
 "use client";
 
-import { forwardRef, useImperativeHandle, useRef, useEffect, useState } from "react";
-import { Pencil, Highlighter, Eraser, Trash2 } from "lucide-react";
+// Annotations vectorielles du Mode Louange.
+// - dessin doigt/stylet/souris (un seul pointeur actif à la fois)
+// - rendu au devicePixelRatio → traits nets, jamais pixelisés
+// - gomme TRAIT par trait, annuler, tailles S/M/L par outil
+// - le parent possède les données (AnnotationData) et les persiste
 
-type Tool = "pencil" | "highlighter" | "eraser";
+import { useRef, useEffect, useState, useCallback } from "react";
+import { Pencil, Highlighter, Eraser, Trash2, Undo2 } from "lucide-react";
+import {
+  type AnnotationData,
+  type Stroke,
+  type StrokeTool,
+  drawStrokes,
+  simplifyStroke,
+  strokeHitTest,
+} from "@/lib/annotations/strokes";
 
 const COLORS = ["#1a1a1a", "#2563eb", "#dc2626", "#16a34a", "#d97706", "#7c3aed", "#ffffff"];
 
-export interface AnnotationCanvasHandle {
-  getDataURL: () => string;
-  loadDataURL: (url: string) => void;
+const SIZES: Record<"pen" | "highlighter" | "eraser", [number, number, number]> = {
+  pen: [2, 3.5, 6],
+  highlighter: [12, 20, 32],
+  eraser: [12, 24, 40],
+};
+
+type Tool = StrokeTool | "eraser";
+
+/** Calque de LECTURE : affiche les traits, sans interaction. */
+export function StrokesLayer({ data }: { data: AnnotationData }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const dpr = window.devicePixelRatio || 1;
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    canvas.width = w * dpr;
+    canvas.height = h * dpr;
+    canvas.style.width = `${w}px`;
+    canvas.style.height = `${h}px`;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    drawStrokes(ctx, data.strokes, {
+      dpr,
+      scaleX: w / (data.w || w),
+      scaleY: h / (data.h || h),
+    });
+  }, [data]);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      className="absolute inset-0 pointer-events-none"
+      style={{ zIndex: 5 }}
+      aria-hidden="true"
+    />
+  );
 }
+
+// ─── Canvas d'édition ─────────────────────────────────────────────────────────
 
 interface Props {
-  onSave?: () => void;
+  data: AnnotationData;
+  onChange: (data: AnnotationData) => void;
 }
 
-export const AnnotationCanvas = forwardRef<AnnotationCanvasHandle, Props>(
-  function AnnotationCanvas({ onSave }, ref) {
-    const canvasRef = useRef<HTMLCanvasElement>(null);
-    const [tool, setTool] = useState<Tool>("pencil");
-    const [color, setColor] = useState(COLORS[0]);
-    const drawing = useRef(false);
-    const lastPos = useRef<{ x: number; y: number } | null>(null);
-    // Un seul trait à la fois : on ignore les pointeurs supplémentaires (paume, 2e doigt)
-    const activePointer = useRef<number | null>(null);
+export function AnnotationCanvas({ data, onChange }: Props) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [tool, setTool] = useState<Tool>("pen");
+  const [color, setColor] = useState(COLORS[0]);
+  const [sizeIdx, setSizeIdx] = useState(1); // S/M/L → 0/1/2
 
-    useImperativeHandle(ref, () => ({
-      getDataURL: () => {
-        const canvas = canvasRef.current;
-        if (!canvas) return "";
-        // Return empty string if canvas is blank (avoid storing empty PNGs)
-        const ctx = canvas.getContext("2d");
-        if (!ctx) return "";
-        const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
-        const hasPixels = data.some((v, i) => i % 4 === 3 && v > 0);
-        return hasPixels ? canvas.toDataURL("image/png") : "";
-      },
-      loadDataURL: (url: string) => {
-        const canvas = canvasRef.current;
-        if (!canvas) return;
-        const ctx = canvas.getContext("2d");
-        if (!ctx) return;
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        if (!url) return;
-        const img = new Image();
-        img.onload = () => ctx.drawImage(img, 0, 0);
-        img.src = url;
-      },
-    }));
+  const activePointer = useRef<number | null>(null);
+  const livePoints = useRef<[number, number][]>([]);
+  const history = useRef<Stroke[][]>([]);
 
-    // Size canvas to viewport on mount and resize
-    useEffect(() => {
-      const resize = () => {
-        const canvas = canvasRef.current;
-        if (!canvas) return;
-        const ctx = canvas.getContext("2d");
-        // Preserve drawing across resize via offscreen copy
-        let imageData: ImageData | null = null;
-        try {
-          imageData = ctx?.getImageData(0, 0, canvas.width, canvas.height) ?? null;
-        } catch { /* ignore */ }
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-        if (imageData) ctx?.putImageData(imageData, 0, 0);
-      };
-      resize();
-      window.addEventListener("resize", resize);
-      return () => window.removeEventListener("resize", resize);
-    }, []);
+  // Échelle viewport actuel ↔ espace d'origine des données
+  const toOrig = useCallback(
+    (x: number, y: number): [number, number] => [
+      x * ((data.w || window.innerWidth) / window.innerWidth),
+      y * ((data.h || window.innerHeight) / window.innerHeight),
+    ],
+    [data.w, data.h],
+  );
 
-    function applyCtxStyle(ctx: CanvasRenderingContext2D) {
-      ctx.lineCap = "round";
-      ctx.lineJoin = "round";
-      if (tool === "eraser") {
-        ctx.globalCompositeOperation = "destination-out";
-        ctx.lineWidth = 28;
-        ctx.globalAlpha = 1;
-      } else if (tool === "highlighter") {
-        ctx.globalCompositeOperation = "source-over";
-        ctx.lineWidth = 20;
-        ctx.strokeStyle = color;
-        ctx.globalAlpha = 0.38;
-      } else {
-        ctx.globalCompositeOperation = "source-over";
-        ctx.lineWidth = 2;
-        ctx.strokeStyle = color;
-        ctx.globalAlpha = 1;
-      }
-    }
+  const redraw = useCallback(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    const dpr = window.devicePixelRatio || 1;
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    drawStrokes(ctx, data.strokes, {
+      dpr,
+      scaleX: w / (data.w || w),
+      scaleY: h / (data.h || h),
+    });
+  }, [data]);
 
-    function onPointerDown(e: React.PointerEvent) {
-      // Doigt, stylet ou souris — mais un seul pointeur actif à la fois
-      if (activePointer.current !== null) return;
-      e.preventDefault();
-      e.stopPropagation();
-      activePointer.current = e.pointerId;
-      drawing.current = true;
-      lastPos.current = { x: e.clientX, y: e.clientY };
-      (e.target as HTMLElement).setPointerCapture(e.pointerId);
-      const ctx = canvasRef.current?.getContext("2d");
-      if (!ctx) return;
-      applyCtxStyle(ctx);
-      ctx.beginPath();
-      ctx.moveTo(e.clientX, e.clientY);
-    }
-
-    function onPointerMove(e: React.PointerEvent) {
-      if (!drawing.current || e.pointerId !== activePointer.current || !lastPos.current) return;
-      e.preventDefault();
-      const ctx = canvasRef.current?.getContext("2d");
-      if (!ctx) return;
-      applyCtxStyle(ctx);
-      ctx.beginPath();
-      ctx.moveTo(lastPos.current.x, lastPos.current.y);
-      ctx.lineTo(e.clientX, e.clientY);
-      ctx.stroke();
-      lastPos.current = { x: e.clientX, y: e.clientY };
-    }
-
-    function onPointerUp(e: React.PointerEvent) {
-      if (e.pointerId !== activePointer.current) return;
-      e.stopPropagation();
-      activePointer.current = null;
-      drawing.current = false;
-      lastPos.current = null;
-      onSave?.();
-    }
-
-    function clearCanvas() {
+  // Dimensionner au devicePixelRatio (et au resize)
+  useEffect(() => {
+    const setup = () => {
       const canvas = canvasRef.current;
       if (!canvas) return;
-      canvas.getContext("2d")?.clearRect(0, 0, canvas.width, canvas.height);
-      onSave?.();
+      const dpr = window.devicePixelRatio || 1;
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      canvas.width = w * dpr;
+      canvas.height = h * dpr;
+      canvas.style.width = `${w}px`;
+      canvas.style.height = `${h}px`;
+      redraw();
+    };
+    setup();
+    window.addEventListener("resize", setup);
+    return () => window.removeEventListener("resize", setup);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => { redraw(); }, [redraw]);
+
+  const pushHistory = () => {
+    history.current.push(data.strokes);
+    if (history.current.length > 30) history.current.shift();
+  };
+
+  const eraseAt = useCallback(
+    (clientX: number, clientY: number) => {
+      const [ox, oy] = toOrig(clientX, clientY);
+      const radius = SIZES.eraser[sizeIdx];
+      const remaining = data.strokes.filter((s) => !strokeHitTest(s, ox, oy, radius));
+      if (remaining.length !== data.strokes.length) {
+        onChange({ ...data, strokes: remaining });
+      }
+    },
+    [data, onChange, sizeIdx, toOrig],
+  );
+
+  // ── Dessin live (segment incrémental, sans re-render React) ──
+  const drawLiveSegment = (x: number, y: number) => {
+    const ctx = canvasRef.current?.getContext("2d");
+    if (!ctx) return;
+    const dpr = window.devicePixelRatio || 1;
+    const pts = livePoints.current;
+    const prev = pts[pts.length - 1];
+    ctx.save();
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.strokeStyle = color;
+    ctx.lineWidth = SIZES[tool === "eraser" ? "pen" : tool][sizeIdx];
+    ctx.globalAlpha = tool === "highlighter" ? 0.35 : 1;
+    ctx.beginPath();
+    ctx.moveTo(prev[0], prev[1]);
+    ctx.lineTo(x, y);
+    ctx.stroke();
+    ctx.restore();
+  };
+
+  function onPointerDown(e: React.PointerEvent) {
+    if (activePointer.current !== null) return;
+    e.preventDefault();
+    e.stopPropagation();
+    activePointer.current = e.pointerId;
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    if (tool === "eraser") {
+      pushHistory();
+      eraseAt(e.clientX, e.clientY);
+      return;
     }
+    livePoints.current = [[e.clientX, e.clientY]];
+  }
 
-    return (
-      <>
-        <canvas
-          ref={canvasRef}
-          className="absolute inset-0 touch-none"
-          style={{ zIndex: 10, cursor: tool === "eraser" ? "cell" : "crosshair" }}
-          onPointerDown={onPointerDown}
-          onPointerMove={onPointerMove}
-          onPointerUp={onPointerUp}
-          onPointerCancel={onPointerUp}
-        />
+  function onPointerMove(e: React.PointerEvent) {
+    if (e.pointerId !== activePointer.current) return;
+    e.preventDefault();
+    if (tool === "eraser") {
+      eraseAt(e.clientX, e.clientY);
+      return;
+    }
+    drawLiveSegment(e.clientX, e.clientY);
+    livePoints.current.push([e.clientX, e.clientY]);
+  }
 
-        {/* Tool panel — right side, vertically centred */}
-        <div
-          className="absolute right-3 top-1/2 -translate-y-1/2 flex flex-col gap-1.5 bg-background/90 backdrop-blur border border-border rounded-xl p-2 shadow-lg"
-          style={{ zIndex: 11 }}
-          // Stop pointer events from bubbling to navigation layer
-          onPointerDown={(e) => e.stopPropagation()}
-          onPointerUp={(e) => e.stopPropagation()}
-        >
-          <ToolBtn active={tool === "pencil"} title="Crayon fin" onClick={() => setTool("pencil")}>
-            <Pencil className="h-4 w-4" />
-          </ToolBtn>
-          <ToolBtn active={tool === "highlighter"} title="Surligneur" onClick={() => setTool("highlighter")}>
-            <Highlighter className="h-4 w-4" />
-          </ToolBtn>
-          <ToolBtn active={tool === "eraser"} title="Gomme" onClick={() => setTool("eraser")}>
-            <Eraser className="h-4 w-4" />
-          </ToolBtn>
+  function onPointerUp(e: React.PointerEvent) {
+    if (e.pointerId !== activePointer.current) return;
+    e.stopPropagation();
+    activePointer.current = null;
+    if (tool === "eraser") return;
+    const pts = livePoints.current;
+    livePoints.current = [];
+    if (pts.length === 0) return;
+    pushHistory();
+    const stroke: Stroke = {
+      tool,
+      size: SIZES[tool][sizeIdx],
+      color,
+      points: simplifyStroke(pts.map(([x, y]) => toOrig(x, y))),
+    };
+    onChange({ ...data, strokes: [...data.strokes, stroke] });
+  }
 
-          <div className="w-full h-px bg-border my-0.5" />
+  function undo() {
+    const prev = history.current.pop();
+    if (prev) onChange({ ...data, strokes: prev });
+  }
 
-          {/* Color swatches */}
-          {COLORS.map((c) => (
-            <button
-              key={c}
-              title={c}
-              onClick={() => { setColor(c); if (tool === "eraser") setTool("pencil"); }}
-              className="w-7 h-7 rounded-full border-2 transition-transform"
+  function clearAll() {
+    if (data.strokes.length === 0) return;
+    pushHistory();
+    onChange({ ...data, strokes: [] });
+  }
+
+  const sizeDot = (i: number) => 4 + i * 3; // Ø du point de l'UI tailles
+
+  return (
+    <>
+      <canvas
+        ref={canvasRef}
+        className="absolute inset-0 touch-none"
+        style={{ zIndex: 10, cursor: tool === "eraser" ? "cell" : "crosshair" }}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerUp}
+      />
+
+      {/* Panneau d'outils — bord droit, centré */}
+      <div
+        className="absolute right-3 top-1/2 -translate-y-1/2 flex flex-col gap-1.5 bg-background/90 backdrop-blur border border-border rounded-xl p-2 shadow-lg max-h-[85vh] overflow-y-auto"
+        style={{ zIndex: 11 }}
+        onPointerDown={(e) => e.stopPropagation()}
+        onPointerUp={(e) => e.stopPropagation()}
+      >
+        <ToolBtn active={tool === "pen"} title="Crayon" onClick={() => setTool("pen")}>
+          <Pencil className="h-4 w-4" />
+        </ToolBtn>
+        <ToolBtn active={tool === "highlighter"} title="Surligneur" onClick={() => setTool("highlighter")}>
+          <Highlighter className="h-4 w-4" />
+        </ToolBtn>
+        <ToolBtn active={tool === "eraser"} title="Gomme (efface un trait)" onClick={() => setTool("eraser")}>
+          <Eraser className="h-4 w-4" />
+        </ToolBtn>
+
+        <div className="w-full h-px bg-border my-0.5" />
+
+        {/* Tailles S / M / L pour l'outil courant */}
+        {([0, 1, 2] as const).map((i) => (
+          <button
+            key={i}
+            title={["Petit", "Moyen", "Grand"][i]}
+            onClick={() => setSizeIdx(i)}
+            className={`w-8 h-7 flex items-center justify-center rounded-lg transition-colors ${
+              sizeIdx === i ? "bg-primary/15" : "hover:bg-muted"
+            }`}
+          >
+            <span
+              className="rounded-full"
               style={{
-                backgroundColor: c,
-                borderColor: color === c ? "var(--primary)" : "var(--border)",
-                transform: color === c ? "scale(1.15)" : "scale(1)",
-                boxShadow: c === "#ffffff" ? "inset 0 0 0 1px var(--border)" : undefined,
+                width: sizeDot(i),
+                height: sizeDot(i),
+                background: sizeIdx === i ? "var(--primary)" : "var(--muted-foreground)",
               }}
             />
-          ))}
+          </button>
+        ))}
 
-          <div className="w-full h-px bg-border my-0.5" />
+        {tool !== "eraser" && (
+          <>
+            <div className="w-full h-px bg-border my-0.5" />
+            {COLORS.map((c) => (
+              <button
+                key={c}
+                title={c}
+                onClick={() => setColor(c)}
+                className="w-7 h-7 rounded-full border-2 transition-transform"
+                style={{
+                  backgroundColor: c,
+                  borderColor: color === c ? "var(--primary)" : "var(--border)",
+                  transform: color === c ? "scale(1.15)" : "scale(1)",
+                  boxShadow: c === "#ffffff" ? "inset 0 0 0 1px var(--border)" : undefined,
+                }}
+              />
+            ))}
+          </>
+        )}
 
-          <ToolBtn active={false} title="Tout effacer" onClick={clearCanvas}>
-            <Trash2 className="h-4 w-4 text-destructive" />
-          </ToolBtn>
-        </div>
-      </>
-    );
-  },
-);
+        <div className="w-full h-px bg-border my-0.5" />
+
+        <ToolBtn active={false} title="Annuler" onClick={undo}>
+          <Undo2 className="h-4 w-4" />
+        </ToolBtn>
+        <ToolBtn active={false} title="Tout effacer" onClick={clearAll}>
+          <Trash2 className="h-4 w-4 text-destructive" />
+        </ToolBtn>
+      </div>
+    </>
+  );
+}
 
 function ToolBtn({
   active,
