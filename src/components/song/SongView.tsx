@@ -40,6 +40,13 @@ const chord_font = localFont({
     { path: "../../../public/fonts/SpaceGrotesk-Bold.ttf",  weight: "700" },
   ],
 });
+// Police des accords des PDF exportés (typographie « pdf » du Mode Louange)
+const liberation_font = localFont({
+  src: [
+    { path: "../../../public/fonts/LiberationSans-Regular.ttf", weight: "400" },
+    { path: "../../../public/fonts/LiberationSans-Bold.ttf", weight: "700" },
+  ],
+});
 
 
 function getSectionStyle(type: string, isZh: boolean): React.CSSProperties {
@@ -121,6 +128,7 @@ interface ZhLineProps {
   showPinyin: boolean;
   chord_font: ReturnType<typeof localFont>;
   zh_lyric_font: ReturnType<typeof localFont>;
+  typography?: "web" | "pdf";
 }
 
 function toSegments(tokens: Token[]): Seg[] {
@@ -151,7 +159,13 @@ function toSegments(tokens: Token[]): Seg[] {
   return out;
 }
 
-function ZhLine({ tokens, pinyin, showChords, showPinyin, chord_font, zh_lyric_font }: ZhLineProps) {
+function ZhLine({ tokens, pinyin, showChords, showPinyin, chord_font, zh_lyric_font, typography = "web" }: ZhLineProps) {
+  // Typographie « pdf » : tailles des PDF exportés (accords 17px, chars 15px, pinyin 10.5px)
+  const isPdfTypo = typography === "pdf";
+  const baseSize = isPdfTypo ? "0.9375rem" : "0.88rem";
+  const chordEm = isPdfTypo ? "1.13em" : "0.9em";
+  const charEm = isPdfTypo ? "1em" : "1.2em";
+  const pinyinEm = isPdfTypo ? "0.7em" : "0.6em";
   const pyWords = pinyin?.split(/\s+/).filter(Boolean) ?? [];
   let pIdx = 0;
 
@@ -182,7 +196,7 @@ function ZhLine({ tokens, pinyin, showChords, showPinyin, chord_font, zh_lyric_f
   };
 
   return (
-    <div className="flex flex-wrap items-start mb-[3px]" style={{ fontSize: "0.88rem" }}>
+    <div className="flex flex-wrap items-start mb-[3px]" style={{ fontSize: baseSize }}>
       {cols.map((col, i) => {
         if (!showChords && col.char === " " && col.chord !== null) return null;
         return (
@@ -199,7 +213,7 @@ function ZhLine({ tokens, pinyin, showChords, showPinyin, chord_font, zh_lyric_f
               <span
                 style={{
                   fontWeight: 700,
-                  fontSize: "0.9em",
+                  fontSize: chordEm,
                   lineHeight: "0.7",
                   minHeight: hasAnyChord ? "1.1em" : undefined,
                   color: "var(--jianpu-color, #b3261d)",
@@ -212,15 +226,15 @@ function ZhLine({ tokens, pinyin, showChords, showPinyin, chord_font, zh_lyric_f
               </span>
             )}
             <span
-              className={`${zh_lyric_font.className} md:text-[1.2em]`}
-              style={{ fontSize: "1.2em", lineHeight: 1.35 }}
+              className={zh_lyric_font.className}
+              style={{ fontSize: charEm, lineHeight: 1.35 }}
             >
               {col.char}
             </span>
             {showPinyin && (
               <span
                 style={{
-                  fontSize: "0.6em",
+                  fontSize: pinyinEm,
                   lineHeight: 1.2,
                   color: "var(--muted-foreground)",
                   whiteSpace: "nowrap",
@@ -261,9 +275,12 @@ export interface SectionViewProps {
   useJianpu: boolean;
   note?: string;
   songSourceLabel?: string;
+  /** « pdf » = typographie des PDF exportés (Mode Louange) ; « web » = défaut. */
+  typography?: "web" | "pdf";
 }
 
-export function SectionView({ section, language, showChords, showPinyin, useJianpu, note, songSourceLabel }: SectionViewProps) {
+export function SectionView({ section, language, showChords, showPinyin, useJianpu, note, songSourceLabel, typography = "web" }: SectionViewProps) {
+  const isPdfTypo = typography === "pdf";
   const { t, i18n } = useTranslation();
   const isZh = language === "zh";
   const uiIsZh = i18n.language === "zh-CN";
@@ -318,13 +335,24 @@ export function SectionView({ section, language, showChords, showPinyin, useJian
                 pinyin={line.pinyin ?? null}
                 showChords={showChords}
                 showPinyin={showPinyin}
-                chord_font={chord_font}
+                chord_font={isPdfTypo ? liberation_font : chord_font}
                 zh_lyric_font={zh_lyric_font}
+                typography={typography}
               />
             );
           }
 
-          return <ChordLine key={i} tokens={line.tokens} showChords={showChords} chord_font={chord_font} fr_lyric_font={fr_lyric_font} />;
+          return (
+            <ChordLine
+              key={i}
+              tokens={line.tokens}
+              showChords={showChords}
+              chord_font={isPdfTypo ? liberation_font : chord_font}
+              fr_lyric_font={fr_lyric_font}
+              fontSize={isPdfTypo ? 0.9375 : undefined}
+              chordEm={isPdfTypo ? 1.13 : undefined}
+            />
+          );
         })}
       </div>
     </div>
