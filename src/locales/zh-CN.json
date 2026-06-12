@@ -7,7 +7,11 @@
       "login": "登录",
       "logout": "登出",
       "planning": "排班表",
-      "louange": "敬拜"
+      "louange": "敬拜",
+      "myServices": "我的服事",
+      "annonces": "公告",
+      "profile": "我的资料",
+      "signup": "注册账号"
     },
     "buttons": {
       "reset": "重置",
@@ -25,7 +29,9 @@
       "fr": "法语",
       "zh": "中文",
       "mixed": "法语 / 中文"
-    }
+    },
+    "moreActions": "更多操作",
+    "retry": "重试"
   },
   "songs": {
     "list": {
@@ -76,7 +82,8 @@
     "submit": "登录",
     "submitLoading": "登录中…",
     "backToSetlists": "← 返回歌单列表",
-    "errorInvalid": "登录凭证错误。请检查电子邮箱和密码。"
+    "errorInvalid": "登录凭证错误。请检查电子邮箱和密码。",
+    "signupLink": "还没有账号？注册"
   },
   "setlists": {
     "list": {
@@ -91,7 +98,9 @@
       "mySetlists": "我的歌单",
       "publicSetlists": "共享歌单",
       "songCounter_one": "{{count}} 首诗歌",
-      "songCounter_other": "{{count}} 首诗歌"
+      "songCounter_other": "{{count}} 首诗歌",
+      "loginRequired": "歌单仅向教会成员开放——请登录查看你服事的歌单。",
+      "profileRequired": "请完善个人资料以查看你服事的歌单。"
     },
     "detail": {
       "backToAll": "←",
@@ -103,9 +112,23 @@
       "deleteYes": "确认删除",
       "deleteCancel": "取消",
       "notFound": "未找到该歌单。",
+      "loginRequired": "请登录查看此歌单。",
+      "noAccess": "你无法访问此歌单——它不属于你的服事范围。",
+      "noEditAccess": "只有歌单创建者和该服事的乐手才能修改此歌单。",
       "back": "← 返回",
       "leaderLabel": "主席：",
-      "loadingCharts": "正在加载歌谱…"
+      "loadingCharts": "正在加载歌谱…",
+      "performanceMode": "敬拜模式",
+      "duplicate": "复制",
+      "duplicateCopySuffix": "（副本）",
+      "share": "分享",
+      "linkCopied": "链接已复制 ✓",
+      "sharePrivateWarning": "私人歌单——仅你自己可见",
+      "canEdit": "可编辑",
+      "readOnly": "只读",
+      "editableBy": "可编辑者：创建者、{{category}}的乐手和管理员",
+      "editableByOwner": "私人——仅创建者可见和编辑",
+      "loadError": "无法加载歌单，请检查网络连接。"
     },
     "form": {
       "titleNew": "新建歌单",
@@ -193,5 +216,102 @@
     "中班": "中班",
     "大班": "大班",
     "高班": "高班"
+  },
+  "performance": {
+    "layout": "排版中…",
+    "next": "下一首：",
+    "songList": "歌曲列表",
+    "settings": "设置",
+    "chords": "和弦",
+    "transitions": "过渡提示",
+    "annotations": "批注",
+    "text": "文字",
+    "textSmaller": "缩小文字",
+    "textLarger": "放大文字",
+    "theme": "主题",
+    "light": "浅色",
+    "dark": "深色",
+    "annotate": "批注",
+    "exit": "退出",
+    "prevPage": "上一页",
+    "nextPage": "下一页",
+    "pageOfSong": "本首第 {{current}} / {{total}} 页",
+    "tools": {
+      "pen": "画笔",
+      "highlighter": "荧光笔",
+      "eraser": "橡皮擦（按笔画擦除）",
+      "small": "小",
+      "medium": "中",
+      "large": "大",
+      "undo": "撤销",
+      "clearAll": "全部清除"
+    }
+  },
+  "notifications": {
+    "title": "通知",
+    "empty": "暂无新内容",
+    "annonce": "新公告",
+    "setlistCreated": "新建歌单",
+    "setlistUpdated": "歌单已更新"
+  },
+  "profile": {
+    "title": "我的资料",
+    "welcome": "欢迎！完善你的资料即可访问你所服事的歌单以及「我的服事」页面。",
+    "save": "保存资料",
+    "saving": "保存中…",
+    "saveError": "保存失败，请重试。",
+    "errorName": "请填写你的名字和姓氏。",
+    "errorLieux": "请注明你服事的地点（至少一个）。",
+    "errorEdd": "请注明你在主日学的角色（乐手或主领）。",
+    "fields": {
+      "firstName": "名字",
+      "firstNamePlaceholder": "例如 Timothée",
+      "lastName": "姓氏",
+      "lastNamePlaceholder": "例如 Chen",
+      "serveQuestion": "你在教会服事吗？如果是，担任：",
+      "serveHint": "不服事则留空。可多选。",
+      "whereServe": "你在哪里服事？",
+      "multipleChoices": "可多选。",
+      "eddCheckbox": "我在主日学（EDD）服事",
+      "musicien": "乐手",
+      "presidence": "主领",
+      "groupeQuestion": "你属于哪个小组？",
+      "none": "无",
+      "groupeMusicien": "我是小组里的乐手",
+      "planningName": "你在排班表中的名字",
+      "planningNameHint": "选择排班表中代表你的名字——用于填充「我的服事」页面。",
+      "notInPlannings": "——我还不在排班表中——",
+      "otherName": "其他（输入我的名字）…",
+      "customNamePlaceholder": "与排班表中完全一致的名字"
+    }
+  },
+  "signup": {
+    "title": "创建账号",
+    "subtitle": "GCC敬拜——仅限教会成员",
+    "steps": {
+      "account": "账号",
+      "identity": "身份",
+      "services": "服事",
+      "groupe": "小组"
+    },
+    "email": "邮箱",
+    "emailPlaceholder": "email@example.com",
+    "password": "密码",
+    "passwordPlaceholder": "至少 6 个字符",
+    "password2": "确认密码",
+    "errorEmail": "请填写邮箱地址。",
+    "errorPasswordLength": "密码至少需要 6 个字符。",
+    "errorPasswordMatch": "两次输入的密码不一致。",
+    "errorEmailInUse": "该邮箱已注册账号。",
+    "errorEmailInvalid": "邮箱地址无效。",
+    "errorGeneric": "创建账号时出错，请重试。",
+    "closedTitle": "注册已关闭",
+    "closedText": "注册已关闭。如需账号请联系 Timothée。",
+    "loginLink": "登录",
+    "back": "返回",
+    "next": "下一步",
+    "create": "创建账号",
+    "creating": "创建中…",
+    "alreadyAccount": "已有账号——去登录"
   }
 }
