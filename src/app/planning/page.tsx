@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
-import { currentSundayStr, fdLong, MOIS, getMois, EDD_PERIODES } from "@/lib/planning/utils"
+import { currentSundayStr, fdLong, MOIS, EDD_PERIODES } from "@/lib/planning/utils"
 import {
   CULTE_FALLBACK, FIDELITE_FALLBACK, FIDELITE_MUSIC_FALLBACK,
   PAIX_FALLBACK, BONTE_FALLBACK, DEJEUNER_FALLBACK, EDD_FALLBACK, CAMP_LOUANGE_FALLBACK
