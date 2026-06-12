@@ -5,6 +5,7 @@ rules_version = '2';
 //
 // Modèle d'accès :
 // - Setlists : lecture réservée aux connectés (le filtrage par service se fait côté client) ;
+//   création : le créateur doit se déclarer propriétaire (ownerId = uid, figé ensuite) ;
 //   modification/suppression réservées au créateur (ownerId), aux musiciens du même service
 //   et aux admins.
 // - Profils (users/{uid}) : chacun écrit le sien ; les admins peuvent corriger tous les profils.
@@ -84,9 +85,22 @@ service cloud.firestore {
 
     match /setlists/{id} {
       allow read: if signedIn();
-      allow create: if signedIn();
-      allow update, delete: if signedIn() && (
-        resource.data.ownerId == request.auth.uid
+      // Création : le créateur doit se déclarer propriétaire (ownerId = uid)
+      allow create: if signedIn()
+        && request.resource.data.get('ownerId', null) == request.auth.uid;
+      // Modification : ownerId ne change jamais ; un musicien du service ne
+      // peut déplacer la setlist que vers une catégorie où il sert aussi.
+      allow update: if signedIn()
+        && request.resource.data.get('ownerId', null) == resource.data.get('ownerId', null)
+        && (
+          resource.data.get('ownerId', '') == request.auth.uid
+          || isAdmin()
+          || (hasProfile() && isMusicienOf(resource.data.category)
+              && (request.resource.data.category == resource.data.category
+                  || isMusicienOf(request.resource.data.category)))
+        );
+      allow delete: if signedIn() && (
+        resource.data.get('ownerId', '') == request.auth.uid
         || isAdmin()
         || (hasProfile() && isMusicienOf(resource.data.category))
       );
