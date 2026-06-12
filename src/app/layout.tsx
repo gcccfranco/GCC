@@ -27,6 +27,7 @@ export const viewport: Viewport = {
   themeColor: "#EA580C",
   width: "device-width",
   initialScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({
@@ -46,7 +47,7 @@ export default function RootLayout({
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <I18nProvider>
             <Navbar />
-            <main className="pt-[58px]">
+            <main className="pt-[var(--nav-h)]">
               <PageTransition>{children}</PageTransition>
             </main>
           </I18nProvider>
