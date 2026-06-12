@@ -16,6 +16,11 @@ const eslintConfig = [
       "react-hooks/refs": "warn",
       "react-hooks/immutability": "warn",
       "react-hooks/error-boundaries": "warn",
+      // `const { chordProSource: _, ...entry }` est l'idiome d'exclusion standard
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        { varsIgnorePattern: "^_", argsIgnorePattern: "^_", ignoreRestSiblings: true },
+      ],
     },
   },
 ];
