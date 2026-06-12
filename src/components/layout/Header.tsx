@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useTranslation } from "react-i18next";
 import { DarkModeToggle } from "@/components/ui/DarkModeToggle";
 import { LanguageToggle } from "@/components/ui/LanguageToggle";
@@ -14,11 +15,11 @@ export function Header({ activeTab }: HeaderProps) {
 
   return (
     <header className="border-b border-border px-4 py-4 flex items-center gap-4">
-      <a href="/songs" className="text-xl font-bold text-foreground hover:opacity-90 transition-opacity">
+      <Link href="/songs" className="text-xl font-bold text-foreground hover:opacity-90 transition-opacity">
         {t("common.header.title")}
-      </a>
+      </Link>
       <nav className="flex gap-1">
-        <a
+        <Link
           href="/songs"
           aria-label={t("common.header.songs")}
           className={`p-2 rounded transition-colors ${
@@ -28,8 +29,8 @@ export function Header({ activeTab }: HeaderProps) {
           }`}
         >
           <Music className="h-5 w-5" />
-        </a>
-        <a
+        </Link>
+        <Link
           href="/setlists"
           aria-label={t("common.header.setlists")}
           className={`p-2 rounded transition-colors ${
@@ -39,7 +40,7 @@ export function Header({ activeTab }: HeaderProps) {
           }`}
         >
           <List className="h-5 w-5" />
-        </a>
+        </Link>
       </nav>
       <div className="ml-auto flex items-center gap-3">
         <LanguageToggle />
