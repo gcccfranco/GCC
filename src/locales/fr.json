@@ -84,7 +84,7 @@
     "passwordPlaceholder": "••••••••",
     "submit": "Se connecter",
     "submitLoading": "Connexion…",
-    "backToSetlists": "← Retour aux setlists",
+    "backToSetlists": "← Revenir aux chants",
     "errorInvalid": "Identifiants incorrects. Vérifie l'email et le mot de passe.",
     "signupLink": "Pas encore de compte ? Créer un compte"
   },
