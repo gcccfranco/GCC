@@ -181,7 +181,7 @@ interface SongDetailClientProps {
             <Button
               asChild
               variant="outline"
-              className="h-11 sm:h-8 px-2.5 rounded-md text-xs font-semibold text-muted-foreground hover:text-foreground mr-1"
+              className="h-9 sm:h-8 px-2.5 rounded-md text-xs font-semibold text-muted-foreground hover:text-foreground mr-1"
             >
               <Link href={backPath}>
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -195,7 +195,7 @@ interface SongDetailClientProps {
               <Button
                 variant="outline"
                 size="icon-lg"
-                className="sm:h-8 sm:w-8 rounded-md text-xs font-bold"
+                className="h-9 w-9 sm:h-8 sm:w-8 rounded-md text-xs font-bold"
                 onClick={() =>
                   setCustomize((c) => {
                     const s = c.semitones - 1;
@@ -213,7 +213,7 @@ interface SongDetailClientProps {
                     return { ...c, semitones: diff, currentKey: key };
                     })
                   }
-                  className="flex-1 h-11 sm:h-8 px-2 border border-border rounded-md bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                  className="flex-1 h-9 sm:h-8 px-2 border border-border rounded-md bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
                 >
                   {ALL_KEYS.map((k) => (
                     <option key={k} value={k}>
@@ -225,7 +225,7 @@ interface SongDetailClientProps {
               <Button
                 variant="outline"
                 size="icon-lg"
-                className="sm:h-8 sm:w-8 rounded-md text-xs font-bold"
+                className="h-9 w-9 sm:h-8 sm:w-8 rounded-md text-xs font-bold"
                 onClick={() =>
                   setCustomize((c) => {
                     const s = c.semitones + 1;
@@ -243,7 +243,7 @@ interface SongDetailClientProps {
                 <Button
                   variant="outline"
                   size="icon-lg"
-                  className="sm:h-8 sm:w-8 rounded-md rounded-r-none border-r-0 text-[11px] font-bold"
+                  className="h-9 w-9 sm:h-8 sm:w-8 rounded-md rounded-r-none border-r-0 text-[11px] font-bold"
                   onClick={() => changeFontScale(-0.1)}
                   disabled={fontScale <= 0.8}
                   aria-label={t("performance.textSmaller")}
@@ -253,7 +253,7 @@ interface SongDetailClientProps {
                 <Button
                   variant="outline"
                   size="icon-lg"
-                  className="sm:h-8 sm:w-8 rounded-md rounded-l-none text-[13px] font-bold"
+                  className="h-9 w-9 sm:h-8 sm:w-8 rounded-md rounded-l-none text-[13px] font-bold"
                   onClick={() => changeFontScale(0.1)}
                   disabled={fontScale >= 1.5}
                   aria-label={t("performance.textLarger")}
@@ -265,7 +265,7 @@ interface SongDetailClientProps {
               {/* Accords */}
               <button
                 onClick={() => setCustomize((c) => ({ ...c, showChords: !c.showChords }))}
-                className={`h-11 sm:h-8 px-2.5 rounded-md border text-xs font-semibold flex items-center gap-1.5 transition-all duration-150 ${
+                className={`h-9 sm:h-8 px-2.5 rounded-md border text-xs font-semibold flex items-center gap-1.5 transition-all duration-150 ${
                       customize.showChords
                         ? "border-transparent bg-primary/10 text-primary"
                         : "border-border bg-card text-muted-foreground hover:text-foreground"
@@ -279,7 +279,7 @@ interface SongDetailClientProps {
               {isZh && (
                     <button
                       onClick={() => setCustomize((c) => ({ ...c, showPinyin: !c.showPinyin }))}
-                      className={`h-11 sm:h-8 px-2.5 rounded-md border text-xs font-semibold flex items-center gap-1.5 transition-all duration-150 ${
+                      className={`h-9 sm:h-8 px-2.5 rounded-md border text-xs font-semibold flex items-center gap-1.5 transition-all duration-150 ${
                         customize.showPinyin
                           ? "border-transparent bg-primary/10 text-primary"
                           : "border-border bg-card text-muted-foreground hover:text-foreground"
@@ -296,7 +296,7 @@ interface SongDetailClientProps {
                   <Button
                     variant="outline"
                     size="icon-lg"
-                    className="sm:h-8 sm:w-8 rounded-md text-muted-foreground"
+                    className="h-9 w-9 sm:h-8 sm:w-8 rounded-md text-muted-foreground"
                     aria-label={t("common.moreActions")}
                   >
                     <MoreHorizontal className="h-4 w-4" />
