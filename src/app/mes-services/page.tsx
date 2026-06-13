@@ -9,6 +9,7 @@ import { getSetlists, type FSSetlist } from "@/lib/firebase/setlists";
 import {
   loadPlanningData,
   findMyServices,
+  normalizeName,
   type PlanningData,
   type ServiceEntry,
 } from "@/lib/planning/names";
@@ -40,7 +41,7 @@ function daysUntil(dateStr: string, todayStr: string): number {
   );
 }
 
-type GroupedEntry = { date: string; service: string; roles: string[]; time?: string; location?: string; setlistDate?: string };
+type GroupedEntry = { date: string; service: string; roles: string[]; time?: string; location?: string; setlistDate?: string; leader?: string };
 
 /** Regroupe les entrées par date+service en fusionnant les rôles. */
 function groupEntries(entries: ServiceEntry[]): GroupedEntry[] {
@@ -51,7 +52,7 @@ function groupEntries(entries: ServiceEntry[]): GroupedEntry[] {
     if (g) {
       if (!g.roles.includes(e.role)) g.roles.push(e.role);
     } else {
-      map.set(key, { date: e.date, service: e.service, roles: [e.role], time: e.time, location: e.location, setlistDate: e.setlistDate });
+      map.set(key, { date: e.date, service: e.service, roles: [e.role], time: e.time, location: e.location, setlistDate: e.setlistDate, leader: e.leader });
     }
   }
   return [...map.values()];
@@ -90,6 +91,11 @@ export default function MesServicesPage() {
   const setlistByKey = useMemo(() => {
     const map = new Map<string, string>();
     for (const s of setlists) {
+      // Clé date+catégorie+président : désambiguïse les séances campus matin/soir
+      // d'un même jour (présidents différents).
+      const keyWithLeader = `${s.date}|${s.category}|${normalizeName(s.leader)}`;
+      if (!map.has(keyWithLeader)) map.set(keyWithLeader, s.id);
+      // Clé date+catégorie : services à une seule setlist par jour (culte, EDD, groupes).
       const key = `${s.date}|${s.category}`;
       if (!map.has(key)) map.set(key, s.id);
     }
@@ -209,7 +215,13 @@ export default function MesServicesPage() {
                   {month.items.map((e) => {
                     const color = serviceColor(e.service);
                     const cat = serviceCategory(e.service);
-                    const setlistId = cat ? setlistByKey.get(`${e.setlistDate ?? e.date}|${cat}`) : undefined;
+                    const lookupDate = e.setlistDate ?? e.date;
+                    // Campus : matin/soir d'un même jour → on cible la setlist du président.
+                    const setlistId = !cat
+                      ? undefined
+                      : cat === "Campus" && e.leader
+                        ? setlistByKey.get(`${lookupDate}|${cat}|${normalizeName(e.leader)}`)
+                        : setlistByKey.get(`${lookupDate}|${cat}`);
                     const dUntil = tab === "upcoming" ? daysUntil(e.date, todayStr) : -1;
                     const thisWeek = dUntil >= 0 && dUntil <= 6;
                     return (
