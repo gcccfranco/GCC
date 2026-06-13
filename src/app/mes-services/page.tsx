@@ -87,20 +87,31 @@ export default function MesServicesPage() {
     getSetlists().then(setSetlists);
   }, [user]);
 
-  // Setlist correspondant à chaque date+catégorie
-  const setlistByKey = useMemo(() => {
-    const map = new Map<string, string>();
+  // Setlists groupées par date+catégorie.
+  const setlistsByDateCat = useMemo(() => {
+    const map = new Map<string, FSSetlist[]>();
     for (const s of setlists) {
-      // Clé date+catégorie+président : désambiguïse les séances campus matin/soir
-      // d'un même jour (présidents différents).
-      const keyWithLeader = `${s.date}|${s.category}|${normalizeName(s.leader)}`;
-      if (!map.has(keyWithLeader)) map.set(keyWithLeader, s.id);
-      // Clé date+catégorie : services à une seule setlist par jour (culte, EDD, groupes).
       const key = `${s.date}|${s.category}`;
-      if (!map.has(key)) map.set(key, s.id);
+      const arr = map.get(key);
+      if (arr) arr.push(s);
+      else map.set(key, [s]);
     }
     return map;
   }, [setlists]);
+
+  // Setlist d'un service : s'il n'y en a qu'une ce jour-là dans la catégorie, on
+  // la lie ; s'il y en a plusieurs (campus matin/soir), on départage par président.
+  const findSetlistId = (date: string, category: string, leader?: string): string | undefined => {
+    const arr = setlistsByDateCat.get(`${date}|${category}`);
+    if (!arr || arr.length === 0) return undefined;
+    if (arr.length === 1) return arr[0].id;
+    if (leader) {
+      const want = normalizeName(leader);
+      const match = arr.find((s) => normalizeName(s.leader) === want);
+      if (match) return match.id;
+    }
+    return undefined; // ambigu sans président correspondant → pas de lien (évite le mauvais)
+  };
 
   const todayStr = useMemo(() => new Date().toISOString().split("T")[0], []);
 
@@ -216,12 +227,7 @@ export default function MesServicesPage() {
                     const color = serviceColor(e.service);
                     const cat = serviceCategory(e.service);
                     const lookupDate = e.setlistDate ?? e.date;
-                    // Campus : matin/soir d'un même jour → on cible la setlist du président.
-                    const setlistId = !cat
-                      ? undefined
-                      : cat === "Campus" && e.leader
-                        ? setlistByKey.get(`${lookupDate}|${cat}|${normalizeName(e.leader)}`)
-                        : setlistByKey.get(`${lookupDate}|${cat}`);
+                    const setlistId = cat ? findSetlistId(lookupDate, cat, e.leader) : undefined;
                     const dUntil = tab === "upcoming" ? daysUntil(e.date, todayStr) : -1;
                     const thisWeek = dUntil >= 0 && dUntil <= 6;
                     return (
