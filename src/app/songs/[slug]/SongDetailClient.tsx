@@ -177,7 +177,7 @@ interface SongDetailClientProps {
       <div className="min-h-screen print:min-h-0 bg-background">
         {/* Barre de contrôles */}
         <div className={`print:hidden fixed left-0 right-0 top-[var(--nav-h)] z-10 bg-background/95 backdrop-blur border-b border-border transition-transform duration-300 ${ scrollVisible ? "translate-y-0" : "-translate-y-[calc(100%+var(--nav-h))]"}`}>
-          <div className = "max-w-3xl mx-auto w-full flex flex-wrap gap-0.5 items-center py-2 px-1">
+          <div className = "max-w-3xl mx-auto w-full flex flex-nowrap gap-0.5 items-center py-2 px-1">
             <Button
               asChild
               variant="outline"
@@ -191,7 +191,7 @@ interface SongDetailClientProps {
               </Link>
             </Button>
             {/* Transposition rapide */}
-            <div className="flex items-center gap-0.5">
+            <div className="flex items-center gap-0.5 flex-1 min-w-0 sm:flex-none">
               <Button
                 variant="outline"
                 size="icon-lg"
@@ -213,7 +213,7 @@ interface SongDetailClientProps {
                     return { ...c, semitones: diff, currentKey: key };
                     })
                   }
-                  className="flex-1 h-9 sm:h-8 px-2 border border-border rounded-md bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                  className="flex-1 min-w-0 h-9 sm:h-8 px-2 border border-border rounded-md bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
                 >
                   {ALL_KEYS.map((k) => (
                     <option key={k} value={k}>
@@ -237,7 +237,7 @@ interface SongDetailClientProps {
               </Button>
             </div>
 
-            <div className="ml-auto flex gap-1.5 items-center justify-end">
+            <div className="ml-auto flex gap-1 sm:gap-1.5 items-center justify-end">
               {/* Taille du texte */}
               <div className="flex items-center">
                 <Button
