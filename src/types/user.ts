@@ -1,16 +1,19 @@
 export const SERVICE_ROLES = ["chanteur", "musicien", "presidence", "regie"] as const;
 export type ServiceRole = (typeof SERVICE_ROLES)[number];
 
-// Rôles « exécutants » : donnent le droit de créer/éditer des setlists du culte
+// Rôles « exécutants » : donnent le droit de créer/éditer des setlists du service
 // où l'on sert. La régie en est exclue (accès en lecture seule aux cultes).
 export const PERFORMER_ROLES: ServiceRole[] = ["chanteur", "musicien", "presidence"];
 
 export const SERVICE_ROLE_LABELS: Record<ServiceRole, string> = {
-  chanteur: "Chanteur",
+  chanteur: "Choriste",
   musicien: "Musicien",
   presidence: "Présidence",
   regie: "Régie",
 };
+
+// Niveau d'accès à une catégorie de setlist, dérivé des rôles (cf. src/lib/access.ts).
+export type AccessLevel = "view" | "create" | "edit";
 
 export const SERVICE_LIEUX = [
   "Culte Francophone",
@@ -33,16 +36,23 @@ export interface UserProfile {
   lastName: string;
   /** Nom tel qu'il apparaît dans les plannings (ex. "David C.") — vide si pas encore dans les plannings */
   planningName: string;
-  /** Rôles de service à l'église (vide si la personne ne sert pas) */
-  roles: ServiceRole[];
-  /** Lieux où la personne sert */
-  lieux: ServiceLieu[];
-  /** Sert à l'École du Dimanche */
-  edd: boolean;
-  eddRoles: EddRole[];
-  groupe: Groupe | null;
-  /** Musicien dans son groupe */
-  groupeMusicien: boolean;
+  /** Rôles de service par catégorie de setlist (Culte Francophone, Campus, Groupe Paix,
+   *  中班…). La présence d'une clé = la personne sert dans cette catégorie ; le tableau
+   *  précise ses rôles (présidence / choriste / musicien / régie). Source unique des
+   *  permissions — le niveau view/create/edit en est dérivé (cf. src/lib/access.ts). */
+  serviceRoles: Record<string, ServiceRole[]>;
   /** Sections où la personne peut publier des annonces — attribué par les admins uniquement */
   annonces: string[];
+}
+
+/** Ancien format de profil (champs roles/lieux/edd/eddRoles/groupe/groupeMusicien,
+ *  avant le 14 juin 2026). Encore lu pour les documents pas réécrits — converti à la
+ *  volée en `serviceRoles` via legacyServiceRoles() (src/lib/access.ts). */
+export interface LegacyServiceProfile {
+  roles?: string[];
+  lieux?: string[];
+  edd?: boolean;
+  eddRoles?: string[];
+  groupe?: string | null;
+  groupeMusicien?: boolean;
 }

@@ -1,6 +1,12 @@
 import { EDD_CLASSES } from "@/lib/planning/utils";
 import type { FSSetlist } from "@/lib/firebase/setlists";
-import { PERFORMER_ROLES, type UserProfile } from "@/types/user";
+import {
+  GROUPES,
+  type AccessLevel,
+  type LegacyServiceProfile,
+  type ServiceRole,
+  type UserProfile,
+} from "@/types/user";
 
 // Comptes administrateurs (doivent aussi figurer dans firestore.rules)
 export const ADMIN_EMAILS = [
@@ -35,29 +41,47 @@ export function canPublishAnnonce(
   return (profile?.annonces ?? []).includes(section);
 }
 
-/** Catégories de setlists visibles selon le profil : lieux de service + classes EDD + groupe.
- *  La régie compte ici : elle voit les setlists des cultes qu'elle sert (lecture seule). */
+const LEVEL_RANK: Record<AccessLevel, number> = { view: 0, create: 1, edit: 2 };
+
+const isGroupeOrEdd = (category: string): boolean =>
+  (GROUPES as readonly string[]).includes(category) ||
+  (EDD_CLASSES as readonly string[]).includes(category);
+
+/** Niveau d'accès d'une personne à une catégorie, dérivé de ses rôles dans cette
+ *  catégorie. Échelon view < create < edit :
+ *   - musicien → edit ;
+ *   - choriste / présidence → create ;
+ *   - sans rôle exécutant : groupe & EDD = membre (create) ; culte = view
+ *     (régie, observateur — le lieu donne la visibilité). */
+export function categoryLevel(category: string, roles: ServiceRole[]): AccessLevel {
+  if (roles.includes("musicien")) return "edit";
+  if (roles.includes("chanteur") || roles.includes("presidence")) return "create";
+  return isGroupeOrEdd(category) ? "create" : "view";
+}
+
+/** Migration : ancien profil (roles/lieux/edd/eddRoles/groupe/groupeMusicien) →
+ *  `serviceRoles` (rôles par catégorie). Utilisé en lecture pour les documents pas
+ *  encore réécrits (cf. fromFsProfile, notify-setlist). Les anciens `roles` étaient
+ *  globaux → reportés sur chaque lieu de service. */
+export function legacyServiceRoles(p: LegacyServiceProfile): Record<string, ServiceRole[]> {
+  const sr: Record<string, ServiceRole[]> = {};
+  const roles = (p.roles ?? []) as ServiceRole[];
+  for (const lieu of p.lieux ?? []) sr[lieu] = [...roles];
+  if (p.edd) for (const cls of EDD_CLASSES) sr[cls] = [...((p.eddRoles ?? []) as ServiceRole[])];
+  if (p.groupe) sr[p.groupe] = p.groupeMusicien ? ["musicien"] : [];
+  return sr;
+}
+
+/** Catégories visibles (la personne y sert, tout niveau) : la régie voit ses cultes en lecture seule. */
 export function visibleCategories(profile: UserProfile): string[] {
-  const cats: string[] = [...profile.lieux];
-  if (profile.edd) cats.push(...EDD_CLASSES);
-  if (profile.groupe) cats.push(profile.groupe);
-  return cats;
+  return Object.keys(profile.serviceRoles);
 }
 
-/** La personne sert-elle comme exécutant (chanteur/musicien/présidence) — par opposition à la régie seule ? */
-function hasPerformerRole(profile: UserProfile): boolean {
-  return profile.roles.some((r) => PERFORMER_ROLES.includes(r));
-}
-
-/** Catégories où la personne peut CRÉER une setlist (≠ visibles).
- *  Cultes : seulement si elle y sert comme exécutant — la régie seule n'y crée rien.
- *  Groupe / EDD : créables dès qu'on en fait partie. */
+/** Catégories où la personne peut CRÉER une setlist (niveau ≥ create — la régie en est exclue). */
 export function creatableCategories(profile: UserProfile): string[] {
-  const cats: string[] = [];
-  if (hasPerformerRole(profile)) cats.push(...profile.lieux);
-  if (profile.edd) cats.push(...EDD_CLASSES);
-  if (profile.groupe) cats.push(profile.groupe);
-  return cats;
+  return Object.keys(profile.serviceRoles).filter(
+    (c) => LEVEL_RANK[categoryLevel(c, profile.serviceRoles[c])] >= LEVEL_RANK.create
+  );
 }
 
 /** Peut-on créer au moins une setlist (bouton « Créer ») ? Admins toujours. */
@@ -91,25 +115,7 @@ export function canSeeSetlist(
   return profile ? visibleCategories(profile).includes(setlist.category) : false;
 }
 
-/** La personne est-elle musicienne dans le service correspondant à cette catégorie ? */
-export function isMusicienOf(profile: UserProfile, category: string): boolean {
-  if (
-    profile.roles.includes("musicien") &&
-    (profile.lieux as readonly string[]).includes(category)
-  ) {
-    return true;
-  }
-  if (
-    profile.edd &&
-    profile.eddRoles.includes("musicien") &&
-    (EDD_CLASSES as readonly string[]).includes(category)
-  ) {
-    return true;
-  }
-  return profile.groupe === category && profile.groupeMusicien;
-}
-
-/** Modification : créateur de la setlist + musiciens du même service (+ admins). */
+/** Modification : créateur de la setlist + niveau « edit » sur la catégorie (musicien) (+ admins). */
 export function canEditSetlist(
   user: AuthUser,
   profile: UserProfile | null,
@@ -118,5 +124,6 @@ export function canEditSetlist(
   if (setlist.ownerId === user.uid) return true;
   if (setlist.isPrivate) return false;
   if (isAdminUser(user)) return true;
-  return profile ? isMusicienOf(profile, setlist.category) : false;
+  const roles = profile?.serviceRoles[setlist.category];
+  return roles ? categoryLevel(setlist.category, roles) === "edit" : false;
 }

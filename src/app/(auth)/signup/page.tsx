@@ -6,7 +6,12 @@ import Link from "next/link";
 import { useTranslation } from "react-i18next";
 import { ArrowLeft, ArrowRight, Check } from "lucide-react";
 import { getRegistrationOpen, signUp, saveProfile } from "@/lib/firebase/users";
-import { loadPlanningData, collectPlanningNames } from "@/lib/planning/names";
+import {
+  loadPlanningData,
+  collectPlanningNames,
+  deriveServiceRolesFromPlanning,
+  type PlanningData,
+} from "@/lib/planning/names";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,14 +19,13 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   IdentityFields,
-  ServiceFields,
-  GroupeFields,
+  ServiceGrid,
   PlanningNameField,
   EMPTY_PROFILE_FORM,
   type ProfileFormValue,
 } from "@/components/auth/ProfileFields";
 
-const STEP_KEYS = ["account", "identity", "services", "groupe"] as const;
+const STEP_KEYS = ["account", "identity", "services"] as const;
 
 export default function SignupPage() {
   const { t } = useTranslation();
@@ -33,14 +37,22 @@ export default function SignupPage() {
   const [password2, setPassword2] = useState("");
   const [form, setForm] = useState<ProfileFormValue>(EMPTY_PROFILE_FORM);
   const [planningNames, setPlanningNames] = useState<string[]>([]);
+  const [planningData, setPlanningData] = useState<PlanningData | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [regOpen, setRegOpen] = useState<boolean | null>(null);
 
   useEffect(() => {
-    loadPlanningData().then((d) => setPlanningNames(collectPlanningNames(d)));
+    loadPlanningData().then((d) => {
+      setPlanningData(d);
+      setPlanningNames(collectPlanningNames(d));
+    });
     getRegistrationOpen().then(setRegOpen);
   }, []);
+
+  const deriveFromPlanning = planningData
+    ? (name: string) => deriveServiceRolesFromPlanning(planningData, name)
+    : undefined;
 
   if (regOpen === null) {
     return (
@@ -73,10 +85,6 @@ export default function SignupPage() {
     }
     if (s === 1) {
       if (!form.firstName.trim() || !form.lastName.trim()) return t("profile.errorName");
-    }
-    if (s === 2) {
-      if (form.roles.length > 0 && form.lieux.length === 0) return t("profile.errorLieux");
-      if (form.edd && form.eddRoles.length === 0) return t("profile.errorEdd");
     }
     return null;
   }
@@ -230,12 +238,15 @@ export default function SignupPage() {
 
             {step === 1 && <IdentityFields value={form} onChange={setForm} />}
 
-            {step === 2 && <ServiceFields value={form} onChange={setForm} />}
-
-            {step === 3 && (
-              <div className="space-y-5">
-                <GroupeFields value={form} onChange={setForm} />
-                <PlanningNameField value={form} onChange={setForm} planningNames={planningNames} />
+            {step === 2 && (
+              <div className="space-y-6">
+                <PlanningNameField
+                  value={form}
+                  onChange={setForm}
+                  planningNames={planningNames}
+                  deriveFromPlanning={deriveFromPlanning}
+                />
+                <ServiceGrid value={form} onChange={setForm} deriveFromPlanning={deriveFromPlanning} />
               </div>
             )}
           </CardContent>

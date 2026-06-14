@@ -8,6 +8,7 @@ import {
   fetchCulte, fetchDejeuner, fetchPaix, fetchFidelite,
   fetchFideliteMusic, fetchBonte, fetchEDD, fetchCampus, inferYear,
 } from "./sheets"
+import type { ServiceRole } from "@/types/user"
 
 export interface PlanningData {
   culte: string[][]
@@ -121,6 +122,57 @@ export function collectPlanningNames(data: PlanningData): string[] {
   for (const s of data.campus) { add(s.ch); add(s.mu); add(s.rg) }
 
   return [...seen.values()].sort((a, b) => a.localeCompare(b, "fr"))
+}
+
+// ─── Dérivation des rôles de service depuis le planning (pré-remplissage profil) ──
+
+// Colonnes « personnes » → ServiceRole (null = présence sans rôle setlist : orateur
+// de groupe = simple membre). Les colonnes culte Orateur/Traduction ne sont pas
+// listées (pas d'accès setlist). Mêmes index que les *_ROLES ci-dessus.
+const CULTE_ROLE_MAP: [number, ServiceRole | null][] = [
+  [1, "presidence"], [2, "chanteur"], [3, "chanteur"], [4, "musicien"],
+  [5, "musicien"], [6, "musicien"], [7, "regie"], [8, "regie"],
+]
+const GROUPE_ROLE_MAP: [number, ServiceRole | null][] = [[1, "presidence"], [2, "musicien"], [3, null]]
+const FIDELITE_ROLE_MAP: [number, ServiceRole | null][] = [[1, "presidence"], [2, null], [4, "musicien"]]
+const FIDELITE_MUSIC_ROLE_MAP: [number, ServiceRole | null][] = [[1, "presidence"], [2, "musicien"], [3, "musicien"], [4, "musicien"]]
+const EDD_ROLE_MAP: [number, ServiceRole | null][] = [[1, "presidence"], [2, null], [3, "musicien"], [4, "musicien"], [5, "musicien"]]
+
+/** Rôles de service par catégorie déduits du planning pour `name` (union sur l'année
+ *  des feuilles chargées). Sert à pré-remplir le profil — l'utilisateur/admin ajuste
+ *  ensuite. Une présence dans une colonne ajoute la catégorie (membership) même sans
+ *  rôle précis (null). Intergroupe/Interfranco absents du planning → non pré-remplis. */
+export function deriveServiceRolesFromPlanning(
+  data: PlanningData,
+  name: string
+): Record<string, ServiceRole[]> {
+  const sr: Record<string, ServiceRole[]> = {}
+  if (!name.trim()) return sr
+  const ensure = (cat: string) => { if (!(cat in sr)) sr[cat] = [] }
+  const addRole = (cat: string, role: ServiceRole | null) => {
+    ensure(cat)
+    if (role && !sr[cat].includes(role)) sr[cat].push(role)
+  }
+  const scan = (rows: string[][], cat: string, cols: [number, ServiceRole | null][]) => {
+    for (const r of rows) for (const [i, role] of cols) if (cellHasName(r[i], name)) addRole(cat, role)
+  }
+
+  scan(data.culte, "Culte Francophone", CULTE_ROLE_MAP)
+  scan(data.paix, "Groupe Paix", GROUPE_ROLE_MAP)
+  scan(data.bonte, "Groupe Bonté", GROUPE_ROLE_MAP)
+  scan(data.fidelite, "Groupe Fidélité", FIDELITE_ROLE_MAP)
+  scan(data.fideliteMusic, "Groupe Fidélité", FIDELITE_MUSIC_ROLE_MAP)
+  for (const pk of EDD_PERIODES) {
+    const classes = data.edd[pk]?.classes ?? {}
+    for (const cls of EDD_CLASSES) scan(classes[cls] ?? [], cls, EDD_ROLE_MAP)
+  }
+  for (const s of data.campus) {
+    if (cellHasName(s.ch, name)) addRole("Campus", "chanteur")
+    if (cellHasName(s.mu, name)) addRole("Campus", "musicien")
+    if (cellHasName(s.rg, name)) addRole("Campus", "regie")
+  }
+
+  return sr
 }
 
 // ─── Mes Services ─────────────────────────────────────────────────────────────

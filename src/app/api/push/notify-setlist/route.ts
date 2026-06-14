@@ -3,8 +3,8 @@ import { adminDb, verifyIdToken } from "@/lib/push/admin";
 import { sendPushToUids } from "@/lib/push/send";
 import { loadPlanningNameIndex, resolveNamesToUids } from "@/lib/push/recipients";
 import { loadPlanningData, culteServantsForDate, LOUANGE_TEAM_ROLES } from "@/lib/planning/names";
-import { ADMIN_EMAILS } from "@/lib/access";
-import { PERFORMER_ROLES } from "@/types/user";
+import { ADMIN_EMAILS, categoryLevel, legacyServiceRoles } from "@/lib/access";
+import type { LegacyServiceProfile, ServiceRole } from "@/types/user";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -74,12 +74,12 @@ export async function POST(req: NextRequest) {
   let isPerformer = false;
   if (!isAdmin && !isOwner) {
     const me = (await db.collection("users").doc(uid).get()).data() as
-      | { roles?: string[]; lieux?: string[] }
+      | (LegacyServiceProfile & { serviceRoles?: Record<string, ServiceRole[]> })
       | undefined;
-    isPerformer =
-      !!me &&
-      (me.roles ?? []).some((r) => (PERFORMER_ROLES as string[]).includes(r)) &&
-      (me.lieux ?? []).includes("Culte Francophone");
+    const serviceRoles = me?.serviceRoles ?? (me ? legacyServiceRoles(me) : {});
+    const rolesAtCulte = serviceRoles["Culte Francophone"];
+    // Exécutant = niveau create/edit sur le Culte Franco (la régie seule en lecture est exclue).
+    isPerformer = !!rolesAtCulte && categoryLevel("Culte Francophone", rolesAtCulte) !== "view";
   }
   if (!isAdmin && !isOwner && !isPerformer) {
     return NextResponse.json({ error: "Action non autorisée" }, { status: 403 });

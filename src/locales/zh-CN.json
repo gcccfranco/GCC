@@ -288,7 +288,13 @@
       "otherName": "其他（输入我的名字）…",
       "customNamePlaceholder": "与排班表中完全一致的名字",
       "searchName": "搜索名字…",
-      "noNameResults": "未找到名字"
+      "noNameResults": "未找到名字",
+      "accessTitle": "你的服侍与岗位",
+      "accessHint": "勾选你服侍的项目并注明岗位。已根据你的名字从排班表预填，可按需调整。",
+      "prefillFromPlanning": "↻ 从排班表填充",
+      "groupCultes": "主日与聚会",
+      "groupGroupes": "家庭小组",
+      "groupEdd": "主日学"
     }
   },
   "signup": {

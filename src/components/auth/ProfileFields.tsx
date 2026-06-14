@@ -4,47 +4,41 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ChevronDown, Search } from "lucide-react";
 import {
-  SERVICE_ROLES,
   SERVICE_ROLE_LABELS,
-  SERVICE_LIEUX,
-  EDD_ROLES,
   GROUPES,
   type ServiceRole,
-  type ServiceLieu,
-  type EddRole,
-  type Groupe,
 } from "@/types/user";
+import { RESTRICTED_CATEGORIES } from "@/lib/firebase/setlists";
+import { EDD_CLASSES } from "@/lib/planning/utils";
 import { categoryColor } from "@/lib/serviceColors";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 
 export interface ProfileFormValue {
   firstName: string;
   lastName: string;
   planningName: string;
-  roles: ServiceRole[];
-  lieux: ServiceLieu[];
-  edd: boolean;
-  eddRoles: EddRole[];
-  groupe: Groupe | null;
-  groupeMusicien: boolean;
+  /** Rôles de service par catégorie — cf. UserProfile.serviceRoles */
+  serviceRoles: Record<string, ServiceRole[]>;
 }
 
 export const EMPTY_PROFILE_FORM: ProfileFormValue = {
   firstName: "",
   lastName: "",
   planningName: "",
-  roles: [],
-  lieux: [],
-  edd: false,
-  eddRoles: [],
-  groupe: null,
-  groupeMusicien: false,
+  serviceRoles: {},
 };
+
+/** Fonction de dérivation des rôles depuis le planning, pour pré-remplir le formulaire. */
+export type DeriveFromPlanning = (name: string) => Record<string, ServiceRole[]>;
 
 function toggle<T>(arr: T[], v: T): T[] {
   return arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v];
+}
+
+/** Libellé affiché d'une catégorie (Interfranco → « Intergroupe francophone »). */
+function categoryLabel(cat: string): string {
+  return cat === "Interfranco" ? "Intergroupe francophone" : cat;
 }
 
 function CheckPill({
@@ -123,112 +117,99 @@ export function IdentityFields({ value, onChange }: SectionProps) {
   );
 }
 
-// ─── Service à l'église (rôles + lieux + EDD) ─────────────────────────────────
+// ─── Rôles de service par catégorie ───────────────────────────────────────────
 
-export function ServiceFields({ value, onChange }: SectionProps) {
+// Catégories regroupées par type, avec les rôles pertinents pour chacune.
+const CATEGORY_GROUPS: { titleKey: string; cats: readonly string[]; roles: ServiceRole[] }[] = [
+  {
+    titleKey: "profile.fields.groupCultes",
+    cats: RESTRICTED_CATEGORIES,
+    roles: ["presidence", "chanteur", "musicien", "regie"],
+  },
+  { titleKey: "profile.fields.groupGroupes", cats: GROUPES, roles: ["presidence", "musicien"] },
+  { titleKey: "profile.fields.groupEdd", cats: EDD_CLASSES, roles: ["presidence", "musicien"] },
+];
+
+export function ServiceGrid({
+  value,
+  onChange,
+  deriveFromPlanning,
+}: SectionProps & { deriveFromPlanning?: DeriveFromPlanning }) {
   const { t } = useTranslation();
-  const set = (patch: Partial<ProfileFormValue>) => onChange({ ...value, ...patch });
+  const sr = value.serviceRoles;
+  const setSr = (next: Record<string, ServiceRole[]>) => onChange({ ...value, serviceRoles: next });
+
+  const toggleCat = (cat: string) => {
+    const next = { ...sr };
+    if (cat in next) delete next[cat];
+    else next[cat] = [];
+    setSr(next);
+  };
+  const toggleRole = (cat: string, role: ServiceRole) => {
+    setSr({ ...sr, [cat]: toggle(sr[cat] ?? [], role) });
+  };
+
   return (
     <div className="space-y-5">
-      <div>
-        <Label className="mb-1 block">{t("profile.fields.serveQuestion")}</Label>
-        <p className="text-xs text-muted-foreground mb-2">{t("profile.fields.serveHint")}</p>
-        <div className="flex flex-wrap gap-2">
-          {SERVICE_ROLES.map((r) => (
-            <CheckPill
-              key={r}
-              checked={value.roles.includes(r)}
-              label={SERVICE_ROLE_LABELS[r]}
-              onToggle={() => {
-                const roles = toggle(value.roles, r);
-                set({ roles, lieux: roles.length ? value.lieux : [] });
-              }}
-            />
-          ))}
-        </div>
-      </div>
-
-      {value.roles.length > 0 && (
+      <div className="flex items-start justify-between gap-3">
         <div>
-          <Label className="mb-1 block">
-            {t("profile.fields.whereServe")} <span className="text-destructive">*</span>
-          </Label>
-          <p className="text-xs text-muted-foreground mb-2">{t("profile.fields.multipleChoices")}</p>
-          <div className="flex flex-wrap gap-2">
-            {SERVICE_LIEUX.map((l) => (
-              <CheckPill
-                key={l}
-                checked={value.lieux.includes(l as ServiceLieu)}
-                label={l === "Interfranco" ? "Intergroupe francophone" : l}
-                color={categoryColor(l)}
-                onToggle={() => set({ lieux: toggle(value.lieux, l as ServiceLieu) })}
-              />
-            ))}
-          </div>
+          <Label className="block">{t("profile.fields.accessTitle")}</Label>
+          <p className="text-xs text-muted-foreground mt-1">{t("profile.fields.accessHint")}</p>
         </div>
-      )}
-
-      <div>
-        <label className="flex items-center gap-2 text-sm font-medium text-foreground cursor-pointer">
-          <Checkbox
-            checked={value.edd}
-            onCheckedChange={(checked) =>
-              set({ edd: checked === true, eddRoles: checked === true ? value.eddRoles : [] })
-            }
-          />
-          {t("profile.fields.eddCheckbox")}
-        </label>
-        {value.edd && (
-          <div className="mt-2 flex flex-wrap gap-2 pl-6">
-            {EDD_ROLES.map((r) => (
-              <CheckPill
-                key={r}
-                checked={value.eddRoles.includes(r)}
-                label={r === "musicien" ? t("profile.fields.musicien") : t("profile.fields.presidence")}
-                color="#3b6d11"
-                onToggle={() => set({ eddRoles: toggle(value.eddRoles, r) })}
-              />
-            ))}
-          </div>
+        {deriveFromPlanning && value.planningName && (
+          <button
+            type="button"
+            onClick={() => setSr(deriveFromPlanning(value.planningName))}
+            className="shrink-0 text-xs font-semibold text-primary hover:underline whitespace-nowrap"
+          >
+            {t("profile.fields.prefillFromPlanning")}
+          </button>
         )}
       </div>
-    </div>
-  );
-}
 
-// ─── Groupe ───────────────────────────────────────────────────────────────────
-
-export function GroupeFields({ value, onChange }: SectionProps) {
-  const { t } = useTranslation();
-  const set = (patch: Partial<ProfileFormValue>) => onChange({ ...value, ...patch });
-  return (
-    <div>
-      <Label className="mb-2 block">{t("profile.fields.groupeQuestion")}</Label>
-      <div className="flex flex-wrap gap-2">
-        <CheckPill
-          checked={value.groupe === null}
-          label={t("profile.fields.none")}
-          onToggle={() => set({ groupe: null, groupeMusicien: false })}
-        />
-        {GROUPES.map((g) => (
-          <CheckPill
-            key={g}
-            checked={value.groupe === g}
-            label={g}
-            color={categoryColor(g)}
-            onToggle={() => set({ groupe: g })}
-          />
-        ))}
-      </div>
-      {value.groupe && (
-        <label className="mt-2 flex items-center gap-2 text-sm text-foreground cursor-pointer">
-          <Checkbox
-            checked={value.groupeMusicien}
-            onCheckedChange={(checked) => set({ groupeMusicien: checked === true })}
-          />
-          {t("profile.fields.groupeMusicien")}
-        </label>
-      )}
+      {CATEGORY_GROUPS.map((g) => (
+        <div key={g.titleKey}>
+          <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-2">
+            {t(g.titleKey)}
+          </p>
+          <div className="space-y-1.5">
+            {g.cats.map((cat) => {
+              const active = cat in sr;
+              const color = categoryColor(cat);
+              return (
+                <div
+                  key={cat}
+                  className={`rounded-lg border ${active ? "border-border bg-muted/30" : "border-border"}`}
+                >
+                  <button
+                    type="button"
+                    onClick={() => toggleCat(cat)}
+                    className="w-full flex items-center justify-between gap-2 px-3 py-2.5 text-left text-sm font-medium"
+                    style={active ? { color } : undefined}
+                  >
+                    <span className={active ? "" : "text-muted-foreground"}>
+                      {active ? "✓ " : ""}{categoryLabel(cat)}
+                    </span>
+                  </button>
+                  {active && (
+                    <div className="flex flex-wrap gap-1.5 px-3 pb-2.5">
+                      {g.roles.map((role) => (
+                        <CheckPill
+                          key={role}
+                          checked={(sr[cat] ?? []).includes(role)}
+                          label={SERVICE_ROLE_LABELS[role]}
+                          color={color}
+                          onToggle={() => toggleRole(cat, role)}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
@@ -236,7 +217,7 @@ export function GroupeFields({ value, onChange }: SectionProps) {
 // ─── Nom de planning ──────────────────────────────────────────────────────────
 
 function normalizeName(s: string): string {
-  return s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+  return s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();
 }
 
 function NameOption({
@@ -271,7 +252,8 @@ export function PlanningNameField({
   value,
   onChange,
   planningNames,
-}: SectionProps & { planningNames: string[] }) {
+  deriveFromPlanning,
+}: SectionProps & { planningNames: string[]; deriveFromPlanning?: DeriveFromPlanning }) {
   const { t } = useTranslation();
   const set = (patch: Partial<ProfileFormValue>) => onChange({ ...value, ...patch });
   const [customName, setCustomName] = useState(false);
@@ -291,7 +273,9 @@ export function PlanningNameField({
   };
   const selectName = (name: string) => {
     setCustomName(false);
-    set({ planningName: name });
+    // Sélectionner un nom du planning pré-remplit les rôles de service ; choisir
+    // « pas dans les plannings » (name vide) ne touche pas aux rôles déjà saisis.
+    set(name && deriveFromPlanning ? { planningName: name, serviceRoles: deriveFromPlanning(name) } : { planningName: name });
     close();
   };
 
@@ -388,13 +372,18 @@ export function ProfileFields({
   value,
   onChange,
   planningNames,
-}: SectionProps & { planningNames: string[] }) {
+  deriveFromPlanning,
+}: SectionProps & { planningNames: string[]; deriveFromPlanning?: DeriveFromPlanning }) {
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <IdentityFields value={value} onChange={onChange} />
-      <ServiceFields value={value} onChange={onChange} />
-      <GroupeFields value={value} onChange={onChange} />
-      <PlanningNameField value={value} onChange={onChange} planningNames={planningNames} />
+      <PlanningNameField
+        value={value}
+        onChange={onChange}
+        planningNames={planningNames}
+        deriveFromPlanning={deriveFromPlanning}
+      />
+      <ServiceGrid value={value} onChange={onChange} deriveFromPlanning={deriveFromPlanning} />
     </div>
   );
 }

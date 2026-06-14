@@ -38,18 +38,20 @@ service cloud.firestore {
       return exists(/databases/$(database)/documents/users/$(request.auth.uid));
     }
 
-    // Musicien du service correspondant à la catégorie de la setlist
+    // Musicien du service correspondant à la catégorie de la setlist.
+    // Format actuel : serviceRoles est une map catégorie → liste de rôles.
+    // Format hérité (avant le 14 juin 2026, profils pas encore réécrits) :
+    // roles/lieux/edd/eddRoles/groupe/groupeMusicien — lu en repli.
     function isMusicienOf(category) {
       let p = profile();
-      return (
-        // Lieux de service (Culte Francophone, Intergroupe, Interfranco, Campus)
-        ("musicien" in p.roles && category in p.lieux)
-        // Classes EDD
-        || (p.edd == true && "musicien" in p.eddRoles
-            && category in ["中班", "大班", "高班"])
-        // Groupe de maison
-        || (p.groupe == category && p.groupeMusicien == true)
-      );
+      return ('serviceRoles' in p)
+        ? ("musicien" in p.serviceRoles.get(category, []))
+        : (
+            ("musicien" in p.get('roles', []) && category in p.get('lieux', []))
+            || (p.get('edd', false) == true && "musicien" in p.get('eddRoles', [])
+                && category in ["中班", "大班", "高班"])
+            || (p.get('groupe', null) == category && p.get('groupeMusicien', false) == true)
+          );
     }
 
     match /users/{uid} {

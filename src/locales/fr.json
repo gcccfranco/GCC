@@ -288,7 +288,13 @@
       "otherName": "Autre (saisir mon nom)…",
       "customNamePlaceholder": "Nom exact tel qu'écrit dans les plannings",
       "searchName": "Rechercher un prénom…",
-      "noNameResults": "Aucun nom trouvé"
+      "noNameResults": "Aucun nom trouvé",
+      "accessTitle": "Tes services et rôles",
+      "accessHint": "Coche les services où tu sers et précise ton rôle. Pré-rempli depuis le planning d'après ton nom — ajuste si besoin.",
+      "prefillFromPlanning": "↻ Depuis le planning",
+      "groupCultes": "Cultes & réunions",
+      "groupGroupes": "Groupes de maison",
+      "groupEdd": "École du Dimanche"
     }
   },
   "signup": {

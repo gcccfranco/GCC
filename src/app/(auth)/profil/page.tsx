@@ -5,7 +5,12 @@ import { useRouter } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import { useProfile, saveProfile } from "@/lib/firebase/users";
 import { canEditProfile } from "@/lib/access";
-import { loadPlanningData, collectPlanningNames } from "@/lib/planning/names";
+import {
+  loadPlanningData,
+  collectPlanningNames,
+  deriveServiceRolesFromPlanning,
+  type PlanningData,
+} from "@/lib/planning/names";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -23,11 +28,15 @@ export default function ProfilPage() {
 
   const [form, setForm] = useState<ProfileFormValue | null>(null);
   const [planningNames, setPlanningNames] = useState<string[]>([]);
+  const [planningData, setPlanningData] = useState<PlanningData | null>(null);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    loadPlanningData().then((d) => setPlanningNames(collectPlanningNames(d)));
+    loadPlanningData().then((d) => {
+      setPlanningData(d);
+      setPlanningNames(collectPlanningNames(d));
+    });
   }, []);
 
   // Redirection si non connecté
@@ -43,12 +52,7 @@ export default function ProfilPage() {
         firstName: profile.firstName,
         lastName: profile.lastName,
         planningName: profile.planningName,
-        roles: profile.roles,
-        lieux: profile.lieux,
-        edd: profile.edd,
-        eddRoles: profile.eddRoles,
-        groupe: profile.groupe,
-        groupeMusicien: profile.groupeMusicien,
+        serviceRoles: profile.serviceRoles,
       });
     } else {
       setForm(EMPTY_PROFILE_FORM);
@@ -69,14 +73,6 @@ export default function ProfilPage() {
     setError("");
     if (!form.firstName.trim() || !form.lastName.trim()) {
       setError(t("profile.errorName"));
-      return;
-    }
-    if (form.roles.length > 0 && form.lieux.length === 0) {
-      setError(t("profile.errorLieux"));
-      return;
-    }
-    if (form.edd && form.eddRoles.length === 0) {
-      setError(t("profile.errorEdd"));
       return;
     }
 
@@ -100,6 +96,9 @@ export default function ProfilPage() {
   }
 
   const canEdit = canEditProfile(user, profile);
+  const deriveFromPlanning = planningData
+    ? (name: string) => deriveServiceRolesFromPlanning(planningData, name)
+    : undefined;
 
   return (
     <div className="min-h-screen bg-background px-4 py-10">
@@ -127,7 +126,12 @@ export default function ProfilPage() {
           <Card>
             <CardContent className="p-5">
               <fieldset disabled={!canEdit} className={!canEdit ? "opacity-60" : undefined}>
-                <ProfileFields value={form} onChange={setForm} planningNames={planningNames} />
+                <ProfileFields
+                  value={form}
+                  onChange={setForm}
+                  planningNames={planningNames}
+                  deriveFromPlanning={deriveFromPlanning}
+                />
               </fieldset>
             </CardContent>
           </Card>

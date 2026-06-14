@@ -5,9 +5,15 @@ import Link from "next/link";
 import { ChevronDown, ChevronUp, Search, ShieldCheck, UserRound, X } from "lucide-react";
 import { useProfile, listProfiles, saveProfile, getRegistrationOpen, setRegistrationOpen } from "@/lib/firebase/users";
 import { isAdminUser } from "@/lib/access";
-import { loadPlanningData, collectPlanningNames } from "@/lib/planning/names";
+import {
+  loadPlanningData,
+  collectPlanningNames,
+  deriveServiceRolesFromPlanning,
+  type PlanningData,
+} from "@/lib/planning/names";
 import { ProfileFields, type ProfileFormValue } from "@/components/auth/ProfileFields";
-import { SERVICE_ROLE_LABELS, SERVICE_LIEUX, GROUPES, type UserProfile } from "@/types/user";
+import { SERVICE_ROLE_LABELS, SERVICE_LIEUX, GROUPES, type ServiceRole, type UserProfile } from "@/types/user";
+import { EDD_CLASSES } from "@/lib/planning/utils";
 import { ANNONCE_SECTIONS } from "@/types/annonce";
 import { categoryColor } from "@/lib/serviceColors";
 import { Button } from "@/components/ui/button";
@@ -19,13 +25,13 @@ function profileToForm(p: UserProfile): ProfileFormValue {
     firstName: p.firstName,
     lastName: p.lastName,
     planningName: p.planningName,
-    roles: p.roles,
-    lieux: p.lieux,
-    edd: p.edd,
-    eddRoles: p.eddRoles,
-    groupe: p.groupe,
-    groupeMusicien: p.groupeMusicien,
+    serviceRoles: p.serviceRoles,
   };
+}
+
+/** Libellé court d'une catégorie pour les pastilles. */
+function catLabel(cat: string): string {
+  return cat === "Culte Francophone" ? "Culte Franco" : cat === "Interfranco" ? "Intergroupe fr." : cat;
 }
 
 function normalize(s: string): string {
@@ -56,6 +62,7 @@ export default function AdminPage() {
   const [profiles, setProfiles] = useState<UserProfile[]>([]);
   const [loadingProfiles, setLoadingProfiles] = useState(true);
   const [planningNames, setPlanningNames] = useState<string[]>([]);
+  const [planningData, setPlanningData] = useState<PlanningData | null>(null);
   const [editingUid, setEditingUid] = useState<string | null>(null);
   const [form, setForm] = useState<ProfileFormValue | null>(null);
   const [annonceRights, setAnnonceRights] = useState<string[]>([]);
@@ -68,8 +75,15 @@ export default function AdminPage() {
     if (!admin) return;
     getRegistrationOpen().then(setRegOpen);
     listProfiles().then(setProfiles).finally(() => setLoadingProfiles(false));
-    loadPlanningData().then((d) => setPlanningNames(collectPlanningNames(d)));
+    loadPlanningData().then((d) => {
+      setPlanningData(d);
+      setPlanningNames(collectPlanningNames(d));
+    });
   }, [admin]);
+
+  const deriveFromPlanning = planningData
+    ? (name: string) => deriveServiceRolesFromPlanning(planningData, name)
+    : undefined;
 
   const displayed = useMemo(() => {
     const q = normalize(query.trim());
@@ -79,21 +93,18 @@ export default function AdminPage() {
         if (!hay.includes(q)) return false;
       }
       if (filter === "Tous") return true;
-      if (filter === "EDD") return p.edd;
-      if (filter === "Ne sert pas") return p.roles.length === 0 && !p.edd && !p.groupeMusicien;
-      if ((GROUPES as readonly string[]).includes(filter)) return p.groupe === filter;
-      return (p.lieux as readonly string[]).includes(filter);
+      if (filter === "EDD") return (EDD_CLASSES as readonly string[]).some((c) => c in p.serviceRoles);
+      if (filter === "Ne sert pas") return Object.keys(p.serviceRoles).length === 0;
+      // Lieux + groupes : la catégorie est une clé de serviceRoles
+      return filter in p.serviceRoles;
     });
   }, [profiles, query, filter]);
 
   const stats = useMemo(() => {
-    const musiciens = profiles.filter(
-      (p) => p.roles.includes("musicien") || p.groupeMusicien || p.eddRoles.includes("musicien")
-    ).length;
-    const chanteurs = profiles.filter((p) => p.roles.includes("chanteur")).length;
-    const presidences = profiles.filter(
-      (p) => p.roles.includes("presidence") || p.eddRoles.includes("presidence")
-    ).length;
+    const allRoles = (p: UserProfile): ServiceRole[] => Object.values(p.serviceRoles).flat();
+    const musiciens = profiles.filter((p) => allRoles(p).includes("musicien")).length;
+    const chanteurs = profiles.filter((p) => allRoles(p).includes("chanteur")).length;
+    const presidences = profiles.filter((p) => allRoles(p).includes("presidence")).length;
     return { musiciens, chanteurs, presidences };
   }, [profiles]);
 
@@ -290,27 +301,16 @@ export default function AdminPage() {
                           {p.planningName ? ` · planning : ${p.planningName}` : ""}
                         </p>
                         <div className="flex flex-wrap gap-1">
-                          {p.roles.map((r) => (
-                            <Pill key={r} label={SERVICE_ROLE_LABELS[r]} />
-                          ))}
-                          {p.lieux.map((l) => (
-                            <Pill key={l} label={l} color={categoryColor(l)} />
-                          ))}
-                          {p.edd && (
+                          {Object.entries(p.serviceRoles).map(([cat, roles]) => (
                             <Pill
-                              label={`EDD${p.eddRoles.includes("musicien") ? " 🎵" : ""}`}
-                              color="#3b6d11"
+                              key={cat}
+                              label={`${catLabel(cat)}${
+                                roles.length ? " · " + roles.map((r) => SERVICE_ROLE_LABELS[r]).join("/") : ""
+                              }`}
+                              color={categoryColor(cat)}
                             />
-                          )}
-                          {p.groupe && (
-                            <Pill
-                              label={`${p.groupe}${p.groupeMusicien ? " 🎵" : ""}`}
-                              color={categoryColor(p.groupe)}
-                            />
-                          )}
-                          {p.roles.length === 0 && !p.edd && !p.groupe && (
-                            <Pill label="Ne sert pas" />
-                          )}
+                          ))}
+                          {Object.keys(p.serviceRoles).length === 0 && <Pill label="Ne sert pas" />}
                         </div>
                       </div>
                       {isEditing ? (
@@ -322,7 +322,12 @@ export default function AdminPage() {
 
                     {isEditing && form && (
                       <div className="border-t border-border px-4 py-4 space-y-4">
-                        <ProfileFields value={form} onChange={setForm} planningNames={planningNames} />
+                        <ProfileFields
+                          value={form}
+                          onChange={setForm}
+                          planningNames={planningNames}
+                          deriveFromPlanning={deriveFromPlanning}
+                        />
 
                         {/* Droits de publication d'annonces — réservé aux admins */}
                         <div className="rounded-lg border border-dashed border-border p-3">
