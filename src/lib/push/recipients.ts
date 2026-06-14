@@ -54,3 +54,22 @@ export async function uidsForCategory(category: string): Promise<string[]> {
   }
   return out;
 }
+
+/** Ensemble des uid servant dans au moins une des `categories` (clés de serviceRoles).
+ *  Sert à valider qu'un expéditeur a le droit de notifier des personnes précises
+ *  (elles doivent appartenir à une catégorie qu'il peut notifier). Lit tous les
+ *  profils une seule fois. Serveur uniquement. */
+export async function uidsForCategories(categories: string[]): Promise<Set<string>> {
+  const wanted = new Set(categories);
+  const out = new Set<string>();
+  if (!wanted.size) return out;
+  const snap = await adminDb().collection("users").get();
+  for (const doc of snap.docs) {
+    const d = doc.data() as LegacyServiceProfile & {
+      serviceRoles?: Record<string, ServiceRole[]>;
+    };
+    const sr = d.serviceRoles ?? legacyServiceRoles(d);
+    if (Object.keys(sr).some((c) => wanted.has(c))) out.add(doc.id);
+  }
+  return out;
+}
