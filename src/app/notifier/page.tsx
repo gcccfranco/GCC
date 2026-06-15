@@ -9,26 +9,30 @@ import { authHeader } from "@/lib/firebase/setlists";
 import type { UserProfile } from "@/types/user";
 import { NOTIFY_ALL, NOTIFY_GROUPS, audienceLabel } from "@/lib/push/audiences";
 
-type Mode = "audience" | "people";
-
 function normalize(s: string): string {
   return s.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
 }
 
-/** Composer une notification manuelle vers une audience (tout le monde / un culte /
- *  un groupe / une classe EDD) ou vers des personnes précises. Réservé aux admins et
- *  aux comptes ayant des droits `notify`. */
+// Au-delà de ce nombre de destinataires (ou « tout le monde »), on demande confirmation.
+const CONFIRM_THRESHOLD = 20;
+
+// Destinations possibles au clic sur la notification (chemins internes sûrs).
+const DESTINATIONS: { value: string; label: string }[] = [
+  { value: "/mes-services", label: "Mes services" },
+  { value: "/planning", label: "Planning" },
+  { value: "/annonces", label: "Annonces" },
+];
+
+/** Composer une notification manuelle. On choisit une audience (tout le monde / un
+ *  culte / un groupe / une classe EDD) ; la liste des personnes de cette audience
+ *  s'affiche, toutes cochées par défaut — on peut en décocher pour ne viser que
+ *  certaines. Réservé aux admins et aux comptes ayant des droits `notify`. */
 export default function NotifierPage() {
   const { user, profile, loading } = useProfile();
   const admin = isAdminUser(user);
   const rights = useMemo(() => profile?.notify ?? [], [profile]);
   const canAll = admin || rights.includes(NOTIFY_ALL);
   const allows = (a: string) => admin || rights.includes(NOTIFY_ALL) || rights.includes(a);
-  // Catégories que l'expéditeur peut cibler (null = toutes — admin ou « tout le monde »).
-  const allowedCats = useMemo<string[] | null>(
-    () => (canAll ? null : rights.filter((r) => r !== NOTIFY_ALL)),
-    [canAll, rights]
-  );
 
   const groups = useMemo(
     () =>
@@ -39,42 +43,57 @@ export default function NotifierPage() {
     [rights, admin] // eslint-disable-line react-hooks/exhaustive-deps
   );
 
-  const [mode, setMode] = useState<Mode>("audience");
   const [audience, setAudience] = useState("");
-  const [title, setTitle] = useState("");
-  const [body, setBody] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [feedback, setFeedback] = useState("");
-
-  // Mode « personnes » : liste des membres ciblables (chargée à la 1ʳᵉ ouverture).
   const [profiles, setProfiles] = useState<UserProfile[] | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [peopleQuery, setPeopleQuery] = useState("");
+  const [title, setTitle] = useState("");
+  const [body, setBody] = useState("");
+  const [dest, setDest] = useState("/mes-services");
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [feedback, setFeedback] = useState("");
 
-  useEffect(() => {
-    if (mode === "people" && profiles === null) {
-      listProfiles().then(setProfiles).catch(() => setProfiles([]));
-    }
-  }, [mode, profiles]);
+  // Personnes de l'audience choisie (tout le monde = tous les profils).
+  const pool = useMemo(() => {
+    if (!profiles || !audience) return [];
+    return audience === NOTIFY_ALL ? profiles : profiles.filter((p) => audience in p.serviceRoles);
+  }, [profiles, audience]);
 
-  const targetable = useMemo(() => {
-    if (!profiles) return [];
-    const list = profiles.filter((p) =>
-      allowedCats === null
-        ? true
-        : Object.keys(p.serviceRoles).some((c) => allowedCats.includes(c))
-    );
+  const shownPool = useMemo(() => {
     const q = normalize(peopleQuery.trim());
     return q
-      ? list.filter((p) => normalize(`${p.firstName} ${p.lastName} ${p.planningName}`).includes(q))
-      : list;
-  }, [profiles, allowedCats, peopleQuery]);
+      ? pool.filter((p) => normalize(`${p.firstName} ${p.lastName} ${p.planningName}`).includes(q))
+      : pool;
+  }, [pool, peopleQuery]);
 
-  const canSend =
-    !!title.trim() &&
-    !!body.trim() &&
-    !busy &&
-    (mode === "audience" ? !!audience : selected.size > 0);
+  // Charge les profils dès qu'une audience est choisie.
+  useEffect(() => {
+    if (audience && profiles === null) {
+      listProfiles().then(setProfiles).catch(() => setProfiles([]));
+    }
+  }, [audience, profiles]);
+
+  // Au changement d'audience (ou au chargement des profils), tout sélectionner.
+  useEffect(() => {
+    if (!profiles || !audience) {
+      setSelected(new Set());
+      return;
+    }
+    const p =
+      audience === NOTIFY_ALL ? profiles : profiles.filter((x) => audience in x.serviceRoles);
+    setSelected(new Set(p.map((x) => x.uid)));
+    setPeopleQuery("");
+  }, [audience, profiles]);
+
+  const allSelected = pool.length > 0 && selected.size === pool.length;
+  const broadcast = audience === NOTIFY_ALL && allSelected;
+  const canSend = !!title.trim() && !!body.trim() && !busy && selected.size > 0;
+  const needsConfirm = broadcast || selected.size > CONFIRM_THRESHOLD;
+  const recipLabel = broadcast ? "tout le monde" : `${selected.size} personne(s)`;
+
+  // Toute édition referme une éventuelle confirmation en attente.
+  useEffect(() => setConfirmOpen(false), [audience, selected, title, body, dest]);
 
   function toggle(uid: string) {
     setSelected((prev) => {
@@ -85,16 +104,24 @@ export default function NotifierPage() {
     });
   }
 
-  async function send() {
+  function attemptSend() {
     if (!canSend) return;
+    if (needsConfirm && !confirmOpen) {
+      setConfirmOpen(true);
+      return;
+    }
+    doSend();
+  }
+
+  async function doSend() {
     setBusy(true);
     setFeedback("");
+    setConfirmOpen(false);
     try {
       const headers = await authHeader();
-      const reqBody =
-        mode === "audience"
-          ? { audience, title: title.trim(), body: body.trim() }
-          : { uids: [...selected], title: title.trim(), body: body.trim() };
+      // « Tout le monde » avec tous cochés → diffusion à tous les abonnés ; sinon, liste d'uids.
+      const base = { title: title.trim(), body: body.trim(), url: dest };
+      const reqBody = broadcast ? { audience: NOTIFY_ALL, ...base } : { uids: [...selected], ...base };
       const res = await fetch("/api/push/notify-audience", {
         method: "POST",
         headers: { "Content-Type": "application/json", ...headers },
@@ -105,7 +132,6 @@ export default function NotifierPage() {
         setFeedback(`Envoyé (${data.sent ?? 0} notification(s)).`);
         setTitle("");
         setBody("");
-        setSelected(new Set());
       } else {
         setFeedback(data.error || "Échec de l'envoi.");
       }
@@ -140,18 +166,6 @@ export default function NotifierPage() {
     );
   }
 
-  const segBtn = (m: Mode, label: string) => (
-    <button
-      type="button"
-      onClick={() => setMode(m)}
-      className={`flex-1 px-3 py-2 text-sm font-semibold transition-colors ${
-        mode === m ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground hover:bg-muted/50"
-      }`}
-    >
-      {label}
-    </button>
-  );
-
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-xl mx-auto px-4 pt-6 pb-10 space-y-5">
@@ -165,45 +179,50 @@ export default function NotifierPage() {
         </p>
 
         <div className="rounded-xl border border-border bg-card p-5 space-y-4">
-          {/* Choix du mode : audience large ou personnes précises */}
-          <div className="flex rounded-xl border border-border overflow-hidden">
-            {segBtn("audience", "Une audience")}
-            <div className="w-px bg-border" />
-            {segBtn("people", "Des personnes")}
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+              Audience
+            </label>
+            <select
+              value={audience}
+              onChange={(e) => setAudience(e.target.value)}
+              className="w-full h-11 px-3 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+            >
+              <option value="">Choisir…</option>
+              {canAll && <option value={NOTIFY_ALL}>{audienceLabel(NOTIFY_ALL)}</option>}
+              {groups.map((g) => (
+                <optgroup key={g.label} label={g.label}>
+                  {g.audiences.map((a) => (
+                    <option key={a} value={a}>
+                      {audienceLabel(a)}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
           </div>
 
-          {mode === "audience" ? (
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-                Audience
-              </label>
-              <select
-                value={audience}
-                onChange={(e) => setAudience(e.target.value)}
-                className="w-full h-11 px-3 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
-              >
-                <option value="">Choisir…</option>
-                {canAll && <option value={NOTIFY_ALL}>{audienceLabel(NOTIFY_ALL)}</option>}
-                {groups.map((g) => (
-                  <optgroup key={g.label} label={g.label}>
-                    {g.audiences.map((a) => (
-                      <option key={a} value={a}>
-                        {audienceLabel(a)}
-                      </option>
-                    ))}
-                  </optgroup>
-                ))}
-              </select>
-            </div>
-          ) : (
+          {/* Personnes de l'audience — toutes cochées par défaut, décochables */}
+          {audience && (
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-                  Personnes
+                  Destinataires
                 </label>
-                {selected.size > 0 && (
-                  <span className="text-xs font-semibold text-primary">{selected.size} sélectionnée(s)</span>
-                )}
+                <div className="flex items-center gap-3">
+                  <span className="text-xs text-muted-foreground">
+                    {selected.size} / {pool.length}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setSelected(allSelected ? new Set() : new Set(pool.map((p) => p.uid)))
+                    }
+                    className="text-xs font-semibold text-primary hover:underline"
+                  >
+                    {allSelected ? "Tout décocher" : "Tout cocher"}
+                  </button>
+                </div>
               </div>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
@@ -211,7 +230,7 @@ export default function NotifierPage() {
                   type="search"
                   value={peopleQuery}
                   onChange={(e) => setPeopleQuery(e.target.value)}
-                  placeholder="Rechercher un membre…"
+                  placeholder="Filtrer la liste…"
                   className="w-full h-10 pl-9 pr-9 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
                 />
                 {peopleQuery && (
@@ -226,10 +245,10 @@ export default function NotifierPage() {
               <div className="max-h-64 overflow-y-auto rounded-xl border border-border divide-y divide-border">
                 {profiles === null ? (
                   <p className="text-sm text-muted-foreground text-center py-6">Chargement…</p>
-                ) : targetable.length === 0 ? (
+                ) : shownPool.length === 0 ? (
                   <p className="text-sm text-muted-foreground text-center py-6">Aucun membre.</p>
                 ) : (
-                  targetable.map((p) => {
+                  shownPool.map((p) => {
                     const checked = selected.has(p.uid);
                     return (
                       <button
@@ -239,7 +258,7 @@ export default function NotifierPage() {
                         className="w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-muted/40"
                       >
                         <span
-                          className={`h-4 w-4 rounded border flex items-center justify-center shrink-0 ${
+                          className={`h-4 w-4 rounded border flex items-center justify-center shrink-0 text-[10px] ${
                             checked ? "bg-primary border-primary text-primary-foreground" : "border-border"
                           }`}
                         >
@@ -291,18 +310,59 @@ export default function NotifierPage() {
             />
           </div>
 
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+              Ouvre au clic
+            </label>
+            <select
+              value={dest}
+              onChange={(e) => setDest(e.target.value)}
+              className="w-full h-11 px-3 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+            >
+              {DESTINATIONS.map((d) => (
+                <option key={d.value} value={d.value}>
+                  {d.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
           {feedback && <p className="text-xs text-muted-foreground">{feedback}</p>}
 
-          <div className="flex justify-end">
-            <button
-              onClick={send}
-              disabled={!canSend}
-              className="inline-flex items-center gap-1.5 h-11 px-5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50"
-            >
-              <Send className="h-4 w-4" />
-              {busy ? "Envoi…" : "Envoyer"}
-            </button>
-          </div>
+          {confirmOpen ? (
+            <div className="rounded-xl border border-primary/40 bg-primary/5 p-3 space-y-3">
+              <p className="text-sm text-foreground">
+                Envoyer cette notification à <span className="font-semibold">{recipLabel}</span> ?
+              </p>
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={() => setConfirmOpen(false)}
+                  className="h-9 px-4 rounded-lg border border-border bg-background text-sm font-semibold text-muted-foreground hover:text-foreground"
+                >
+                  Annuler
+                </button>
+                <button
+                  onClick={doSend}
+                  disabled={busy}
+                  className="inline-flex items-center gap-1.5 h-9 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 disabled:opacity-50"
+                >
+                  <Send className="h-4 w-4" />
+                  {busy ? "Envoi…" : "Confirmer"}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex justify-end">
+              <button
+                onClick={attemptSend}
+                disabled={!canSend}
+                className="inline-flex items-center gap-1.5 h-11 px-5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50"
+              >
+                <Send className="h-4 w-4" />
+                {busy ? "Envoi…" : "Envoyer"}
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -31,19 +31,23 @@ export async function POST(req: NextRequest) {
   }
 
   // 2. Requête
-  const { audience, uids: targetUids, title, body } = (await req.json().catch(() => ({}))) as {
+  const { audience, uids: targetUids, title, body, url } = (await req.json().catch(() => ({}))) as {
     audience?: string;
     uids?: string[];
     title?: string;
     body?: string;
+    url?: string;
   };
   if (!title?.trim() || !body?.trim()) {
     return NextResponse.json({ error: "Titre et message requis" }, { status: 400 });
   }
+  // url : chemin interne sûr uniquement (pas d'URL externe / open redirect).
+  const safeUrl =
+    typeof url === "string" && /^\/[a-zA-Z0-9/_-]*$/.test(url) ? url : "/mes-services";
   const payload = {
     title: title.trim(),
     body: body.trim(),
-    url: "/mes-services",
+    url: safeUrl,
     tag: `manual-${Date.now()}`,
   };
 
