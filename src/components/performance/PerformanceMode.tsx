@@ -80,7 +80,6 @@ function BlockRenderer({
       hideLyrics={hideLyrics}
       note={block.note}
       songSourceLabel={block.songSourceLabel}
-      typography="pdf"
     />
   );
 }
