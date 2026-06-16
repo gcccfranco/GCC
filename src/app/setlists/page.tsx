@@ -8,6 +8,7 @@ import {
   loadPlanningData,
   findMyServices,
   serviceCategory,
+  normalizeName,
   type PlanningData,
 } from "@/lib/planning/names";
 import { useTranslation } from "react-i18next";
@@ -37,12 +38,16 @@ export default function SetlistsPage() {
   }, []);
 
   // Clés `${date}|${catégorie}` des services réels de l'utilisateur (filtre « Mes services »).
+  // Campus : matin et soir d'un même jour partagent date + catégorie "Campus" → on ajoute
+  // le président à la clé pour ne matcher que la séance où l'on sert réellement.
   const myServiceKeys = useMemo(() => {
     const set = new Set<string>();
     if (!planning || !profile?.planningName) return set;
     for (const e of findMyServices(planning, profile.planningName)) {
       const cat = serviceCategory(e.service);
-      if (cat) set.add(`${e.setlistDate ?? e.date}|${cat}`);
+      if (!cat) continue;
+      const date = e.setlistDate ?? e.date;
+      set.add(cat === "Campus" ? `${date}|${cat}|${normalizeName(e.leader ?? "")}` : `${date}|${cat}`);
     }
     return set;
   }, [planning, profile]);
@@ -90,7 +95,13 @@ export default function SetlistsPage() {
       (s) =>
         (myCategories.includes(s.category) || s.ownerId === user?.uid) &&
         matches(s) &&
-        (!useMine || myServiceKeys.has(`${s.date}|${s.category}`) || s.ownerId === user?.uid)
+        (!useMine ||
+          myServiceKeys.has(
+            s.category === "Campus"
+              ? `${s.date}|${s.category}|${normalizeName(s.leader ?? "")}`
+              : `${s.date}|${s.category}`
+          ) ||
+          s.ownerId === user?.uid)
     );
     return tab === "upcoming"
       ? list.filter((s) => s.date >= todayStr).sort((a, b) => a.date.localeCompare(b.date))
