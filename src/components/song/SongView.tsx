@@ -99,6 +99,8 @@ interface ZhLineProps {
   pinyin: string | null;
   showChords: boolean;
   showPinyin: boolean;
+  /** Masque caractères + pinyin tout en gardant la largeur (accords positionnés). */
+  hideLyrics?: boolean;
   chord_font: ReturnType<typeof localFont>;
   zh_lyric_font: ReturnType<typeof localFont>;
   typography?: "web" | "pdf";
@@ -132,7 +134,7 @@ function toSegments(tokens: Token[]): Seg[] {
   return out;
 }
 
-function ZhLine({ tokens, pinyin, showChords, showPinyin, chord_font, zh_lyric_font, typography = "web" }: ZhLineProps) {
+function ZhLine({ tokens, pinyin, showChords, showPinyin, hideLyrics = false, chord_font, zh_lyric_font, typography = "web" }: ZhLineProps) {
   // Typographie « pdf » : tailles des PDF exportés (accords 17px, chars 15px, pinyin 10.5px)
   const isPdfTypo = typography === "pdf";
   const baseSize = isPdfTypo ? "0.9375rem" : "0.88rem";
@@ -200,11 +202,11 @@ function ZhLine({ tokens, pinyin, showChords, showPinyin, chord_font, zh_lyric_f
             )}
             <span
               className={zh_lyric_font.className}
-              style={{ fontSize: charEm, lineHeight: 1.35 }}
+              style={{ fontSize: charEm, lineHeight: 1.35, visibility: hideLyrics ? "hidden" : undefined }}
             >
               {col.char}
             </span>
-            {showPinyin && (
+            {showPinyin && !hideLyrics && (
               <span
                 style={{
                   fontSize: pinyinEm,
@@ -246,13 +248,15 @@ export interface SectionViewProps {
   showChords: boolean;
   showPinyin: boolean;
   useJianpu: boolean;
+  /** Mode Louange : masque les paroles (ossature seule si les accords sont aussi masqués). */
+  hideLyrics?: boolean;
   note?: string;
   songSourceLabel?: string;
   /** « pdf » = typographie des PDF exportés (Mode Louange) ; « web » = défaut. */
   typography?: "web" | "pdf";
 }
 
-export function SectionView({ section, language, showChords, showPinyin, useJianpu, note, songSourceLabel, typography = "web" }: SectionViewProps) {
+export function SectionView({ section, language, showChords, showPinyin, useJianpu, hideLyrics = false, note, songSourceLabel, typography = "web" }: SectionViewProps) {
   const isPdfTypo = typography === "pdf";
   const { t, i18n } = useTranslation();
   const isZh = language === "zh";
@@ -289,45 +293,49 @@ export function SectionView({ section, language, showChords, showPinyin, useJian
         </span>
       </div>
 
-      {/* Lignes */}
-      <div>
-        {section.lines.map((line, i) => {
-          if (line.tokens.length === 0 && !line.jianpu) {
-            return <div key={i} className="h-5" />;
-          }
+      {/* Lignes — corps vide quand paroles ET accords masqués (ossature seule). */}
+      {!(hideLyrics && !showChords) && (
+        <div>
+          {section.lines.map((line, i) => {
+            if (line.tokens.length === 0 && !line.jianpu) {
+              return <div key={i} className="h-5" />;
+            }
 
-          if (isZh && useJianpu) {
-            return <JianpuLine key={i} line={line} showChords={showChords} showPinyin={showPinyin} />;
-          }
+            if (isZh && useJianpu) {
+              return <JianpuLine key={i} line={line} showChords={showChords} showPinyin={showPinyin} />;
+            }
 
-          if (isZh) {
+            if (isZh) {
+              return (
+                <ZhLine
+                  key={i}
+                  tokens={line.tokens}
+                  pinyin={line.pinyin ?? null}
+                  showChords={showChords}
+                  showPinyin={showPinyin}
+                  hideLyrics={hideLyrics}
+                  chord_font={isPdfTypo ? liberation_font : chord_font}
+                  zh_lyric_font={zh_lyric_font}
+                  typography={typography}
+                />
+              );
+            }
+
             return (
-              <ZhLine
+              <ChordLine
                 key={i}
                 tokens={line.tokens}
-                pinyin={line.pinyin ?? null}
                 showChords={showChords}
-                showPinyin={showPinyin}
+                hideLyrics={hideLyrics}
                 chord_font={isPdfTypo ? liberation_font : chord_font}
-                zh_lyric_font={zh_lyric_font}
-                typography={typography}
+                fr_lyric_font={fr_lyric_font}
+                fontSize={isPdfTypo ? 0.9375 : undefined}
+                chordEm={isPdfTypo ? 1.13 : undefined}
               />
             );
-          }
-
-          return (
-            <ChordLine
-              key={i}
-              tokens={line.tokens}
-              showChords={showChords}
-              chord_font={isPdfTypo ? liberation_font : chord_font}
-              fr_lyric_font={fr_lyric_font}
-              fontSize={isPdfTypo ? 0.9375 : undefined}
-              chordEm={isPdfTypo ? 1.13 : undefined}
-            />
-          );
-        })}
-      </div>
+          })}
+        </div>
+      )}
     </div>
   );
 }
