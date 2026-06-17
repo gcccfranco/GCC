@@ -37,9 +37,9 @@ export default function SetlistsPage() {
     loadPlanningData().then(setPlanning);
   }, []);
 
-  // Clés `${date}|${catégorie}` des services réels de l'utilisateur (filtre « Mes services »).
-  // Campus : matin et soir d'un même jour partagent date + catégorie "Campus" → on ajoute
-  // le président à la clé pour ne matcher que la séance où l'on sert réellement.
+  // Clés des services réels de l'utilisateur (filtre « Mes services »). Campus : matin et
+  // soir partagent date + catégorie → clés par moment (setlists récentes) ET par président
+  // (anciennes setlists sans moment) pour ne matcher que la séance où l'on sert réellement.
   const myServiceKeys = useMemo(() => {
     const set = new Set<string>();
     if (!planning || !profile?.planningName) return set;
@@ -47,7 +47,12 @@ export default function SetlistsPage() {
       const cat = serviceCategory(e.service);
       if (!cat) continue;
       const date = e.setlistDate ?? e.date;
-      set.add(cat === "Campus" ? `${date}|${cat}|${normalizeName(e.leader ?? "")}` : `${date}|${cat}`);
+      if (cat === "Campus") {
+        if (e.moment) set.add(`${date}|Campus|m:${e.moment}`);
+        set.add(`${date}|Campus|l:${normalizeName(e.leader ?? "")}`);
+      } else {
+        set.add(`${date}|${cat}`);
+      }
     }
     return set;
   }, [planning, profile]);
@@ -96,11 +101,10 @@ export default function SetlistsPage() {
         (myCategories.includes(s.category) || s.ownerId === user?.uid) &&
         matches(s) &&
         (!useMine ||
-          myServiceKeys.has(
-            s.category === "Campus"
-              ? `${s.date}|${s.category}|${normalizeName(s.leader ?? "")}`
-              : `${s.date}|${s.category}`
-          ) ||
+          (s.category === "Campus"
+            ? (!!s.moment && myServiceKeys.has(`${s.date}|Campus|m:${s.moment}`)) ||
+              myServiceKeys.has(`${s.date}|Campus|l:${normalizeName(s.leader ?? "")}`)
+            : myServiceKeys.has(`${s.date}|${s.category}`)) ||
           s.ownerId === user?.uid)
     );
     return tab === "upcoming"

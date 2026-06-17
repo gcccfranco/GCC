@@ -31,6 +31,9 @@ export interface FSSetlist {
   date: string;
   language: "fr" | "zh" | "mixed";
   notes: string;
+  /** Séance Campus liée — distingue matin/soir d'un même jour pour le matching
+   *  setlist↔service. Absent pour les setlists hors planning / autres catégories. */
+  moment?: "matin" | "soir";
   createdAt: Date | null;
   updatedAt?: Date | null;
   items: SetlistItem[];
@@ -264,6 +267,7 @@ export async function duplicateSetlist(
     leader: source.leader,
     category: source.category,
     date: source.date,
+    moment: source.moment,
     language: source.language,
     notes: source.notes,
     items: source.items,

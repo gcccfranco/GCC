@@ -55,6 +55,7 @@ export async function POST(req: NextRequest) {
     leader?: string;
     category?: string;
     date?: string;
+    moment?: "matin" | "soir";
     ownerId?: string;
     items?: { type?: string }[];
   };
@@ -110,7 +111,8 @@ export async function POST(req: NextRequest) {
   }
 
   // 6. Destinataires : équipe (musiciens, régie, choristes) de service à cette date
-  //    dans la catégorie de la setlist. Campus : départage matin/soir par président.
+  //    dans la catégorie de la setlist. Campus : départage matin/soir par moment
+  //    (setlists récentes liées à la séance), sinon par président (anciennes setlists).
   const dateISO = (sl.date ?? "").slice(0, 10);
   const planning = await loadPlanningData();
   const wantLeader = normalizeName(sl.leader ?? "");
@@ -119,7 +121,8 @@ export async function POST(req: NextRequest) {
       s.category === sl.category &&
       !!s.serviceRole &&
       TEAM_ROLES.includes(s.serviceRole) &&
-      (sl.category !== "Campus" || normalizeName(s.leader) === wantLeader)
+      (sl.category !== "Campus" ||
+        (sl.moment ? s.moment === sl.moment : normalizeName(s.leader) === wantLeader))
   );
   const names = [...new Set(team.map((s) => s.name))];
   const index = await loadPlanningNameIndex();

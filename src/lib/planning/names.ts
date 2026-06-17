@@ -7,6 +7,7 @@ import {
 import {
   fetchCulte, fetchDejeuner, fetchPaix, fetchFidelite,
   fetchFideliteMusic, fetchBonte, fetchEDD, fetchCampus, inferYear,
+  fetchIntergroupe, fetchInterfranco,
 } from "./sheets"
 import type { ServiceRole } from "@/types/user"
 
@@ -19,14 +20,17 @@ export interface PlanningData {
   bonte: string[][]
   edd: EddDataStructure
   campus: CampusSeance[]
+  intergroupe: string[][]
+  interfranco: string[][]
 }
 
 export async function loadPlanningData(): Promise<PlanningData> {
-  const [culte, dejeuner, paix, fidelite, fideliteMusic, bonte, edd, campus] =
+  const [culte, dejeuner, paix, fidelite, fideliteMusic, bonte, edd, campus, intergroupe, interfranco] =
     await Promise.all([
       fetchCulte(), fetchDejeuner(), fetchPaix(), fetchFidelite(),
       fetchFideliteMusic(), fetchBonte(), fetchEDD(),
       fetchCampus().then(c => c.louange).catch(() => [] as CampusSeance[]),
+      fetchIntergroupe(), fetchInterfranco(),
     ])
   return {
     culte: culte.length ? culte : CULTE_FALLBACK,
@@ -37,6 +41,8 @@ export async function loadPlanningData(): Promise<PlanningData> {
     bonte: bonte.length ? bonte : BONTE_FALLBACK,
     edd: Object.values(edd).some(p => Object.values(p.classes).some(r => r.length)) ? edd : EDD_FALLBACK,
     campus: campus.length ? campus : CAMP_LOUANGE_FALLBACK,
+    intergroupe,
+    interfranco,
   }
 }
 
@@ -89,6 +95,16 @@ const GROUPE_ROLES: [number, string][] = [[1, "Présidence"], [2, "Musicien"], [
 const FIDELITE_ROLES: [number, string][] = [[1, "Présidence"], [2, "Orateur"], [4, "Piano"]]
 const FIDELITE_MUSIC_ROLES: [number, string][] = [[1, "Présidence"], [2, "Piano"], [3, "Guitare"], [4, "Batterie"]]
 const EDD_ROLES_COLS: [number, string][] = [[1, "Présidence"], [2, "Suppléant"], [3, "Piano"], [4, "Cajon"], [5, "Guitare"]]
+const INTERGROUPE_ROLES: [number, string][] = [
+  [1, "Présidence"], [2, "Choriste"], [3, "Choriste"], [4, "Choriste"],
+  [5, "Piano"], [6, "Guitare"], [7, "Cajon/Batterie"], [8, "Sono"], [9, "PPT"],
+  [10, "Orateur"], [11, "Traduction"],
+]
+const INTERFRANCO_ROLES: [number, string][] = [
+  [1, "Présidence"], [2, "Choriste"], [3, "Choriste"], [4, "Piano"],
+  [5, "Guitare"], [6, "Cajon/Batterie"], [7, "Sono"], [8, "PPT"],
+  [9, "Orateur"], [10, "Traduction"],
+]
 
 /** Liste alphabétique de tous les noms apparaissant dans les plannings (pour le formulaire d'inscription). */
 export function collectPlanningNames(data: PlanningData): string[] {
@@ -113,7 +129,9 @@ export function collectPlanningNames(data: PlanningData): string[] {
       for (const r of classes[cls] ?? []) for (const [i] of EDD_ROLES_COLS) add(r[i])
     }
   }
-  for (const s of data.campus) { add(s.ch); add(s.mu); add(s.rg) }
+  for (const s of data.campus) { add(s.pres); add(s.ch); add(s.mu); add(s.rg) }
+  for (const r of data.intergroupe) for (const [i] of INTERGROUPE_ROLES) add(r[i])
+  for (const r of data.interfranco) for (const [i] of INTERFRANCO_ROLES) add(r[i])
 
   return [...seen.values()].sort((a, b) => a.localeCompare(b, "fr"))
 }
@@ -131,11 +149,19 @@ const GROUPE_ROLE_MAP: [number, ServiceRole | null][] = [[1, "presidence"], [2, 
 const FIDELITE_ROLE_MAP: [number, ServiceRole | null][] = [[1, "presidence"], [2, null], [4, "musicien"]]
 const FIDELITE_MUSIC_ROLE_MAP: [number, ServiceRole | null][] = [[1, "presidence"], [2, "musicien"], [3, "musicien"], [4, "musicien"]]
 const EDD_ROLE_MAP: [number, ServiceRole | null][] = [[1, "presidence"], [2, null], [3, "musicien"], [4, "musicien"], [5, "musicien"]]
+const INTERGROUPE_ROLE_MAP: [number, ServiceRole | null][] = [
+  [1, "presidence"], [2, "chanteur"], [3, "chanteur"], [4, "chanteur"],
+  [5, "musicien"], [6, "musicien"], [7, "musicien"], [8, "regie"], [9, "regie"],
+]
+const INTERFRANCO_ROLE_MAP: [number, ServiceRole | null][] = [
+  [1, "presidence"], [2, "chanteur"], [3, "chanteur"], [4, "musicien"],
+  [5, "musicien"], [6, "musicien"], [7, "regie"], [8, "regie"],
+]
 
 /** Rôles de service par catégorie déduits du planning pour `name` (union sur l'année
  *  des feuilles chargées). Sert à pré-remplir le profil — l'utilisateur/admin ajuste
  *  ensuite. Une présence dans une colonne ajoute la catégorie (membership) même sans
- *  rôle précis (null). Intergroupe/Interfranco absents du planning → non pré-remplis. */
+ *  rôle précis (null). Intergroupe/Interfranco inclus (feuilles dédiées). */
 export function deriveServiceRolesFromPlanning(
   data: PlanningData,
   name: string
@@ -156,11 +182,14 @@ export function deriveServiceRolesFromPlanning(
   scan(data.bonte, "Groupe Bonté", GROUPE_ROLE_MAP)
   scan(data.fidelite, "Groupe Fidélité", FIDELITE_ROLE_MAP)
   scan(data.fideliteMusic, "Groupe Fidélité", FIDELITE_MUSIC_ROLE_MAP)
+  scan(data.intergroupe, "Intergroupe", INTERGROUPE_ROLE_MAP)
+  scan(data.interfranco, "Interfranco", INTERFRANCO_ROLE_MAP)
   for (const pk of EDD_PERIODES) {
     const classes = data.edd[pk]?.classes ?? {}
     for (const cls of EDD_CLASSES) scan(classes[cls] ?? [], cls, EDD_ROLE_MAP)
   }
   for (const s of data.campus) {
+    if (cellHasName(s.pres, name)) addRole("Campus", "presidence")
     if (cellHasName(s.ch, name)) addRole("Campus", "chanteur")
     if (cellHasName(s.mu, name)) addRole("Campus", "musicien")
     if (cellHasName(s.rg, name)) addRole("Campus", "regie")
@@ -188,6 +217,8 @@ export interface ServiceEntry {
   /** Président de la séance — désambiguïse les setlists campus matin/soir
    *  d'un même jour (même date + catégorie, présidents différents). */
   leader?: string
+  /** Moment de la séance Campus (matin/soir) — clé de matching exact avec la setlist. */
+  moment?: "matin" | "soir"
 }
 
 /** Date d'une séance campus ("12/3 Matin") → ISO, même convention d'année que parseDate. */
@@ -219,6 +250,8 @@ export function findMyServices(data: PlanningData, name: string): ServiceEntry[]
   scan(data.bonte, "Groupe Bonté", GROUPE_ROLES)
   scan(data.fidelite, "Groupe Fidélité", FIDELITE_ROLES)
   scan(data.fideliteMusic, "Groupe Fidélité", FIDELITE_MUSIC_ROLES)
+  scan(data.intergroupe, "Intergroupe", INTERGROUPE_ROLES)
+  scan(data.interfranco, "Interfranco", INTERFRANCO_ROLES)
   for (const pk of EDD_PERIODES) {
     const classes = data.edd[pk]?.classes ?? {}
     for (const cls of EDD_CLASSES) {
@@ -229,18 +262,20 @@ export function findMyServices(data: PlanningData, name: string): ServiceEntry[]
     const dt = campusDate(s.d)
     if (!dt) continue
     const moment = s.d.includes("Soir") ? "Campus (soir)" : "Campus (matin)"
-    // Président de la séance (1ʳᵉ personne de `ch`) : matin et soir d'un même
+    const seanceMoment: "matin" | "soir" = s.d.includes("Soir") ? "soir" : "matin"
+    // Président de la séance (colonne PRESIDENT) : matin et soir d'un même
     // jour ont des présidents différents → sert à retrouver la bonne setlist.
-    const leader = s.ch.split(",")[0]?.trim() || ""
+    const leader = splitNames(s.pres)[0] ?? ""
     const roles: string[] = []
+    if (cellHasName(s.pres, name)) roles.push("Présidence")
     if (cellHasName(s.ch, name)) roles.push("Chant")
     if (cellHasName(s.mu, name)) roles.push("Musicien")
     if (cellHasName(s.rg, name)) roles.push("Régie")
     for (const role of roles) {
-      out.push({ date: dt, service: moment, role, leader })
+      out.push({ date: dt, service: moment, role, leader, moment: seanceMoment })
       // Répétition associée : date / heure / lieu propres, distincts de la séance.
       // setlistDate = date de la séance pour lier la setlist (chants à réviser).
-      if (s.ent) out.push({ date: s.ent, service: "Campus (répét.)", role, time: s.entTime, location: s.entLieu, setlistDate: dt, leader })
+      if (s.ent) out.push({ date: s.ent, service: "Campus (répét.)", role, time: s.entTime, location: s.entLieu, setlistDate: dt, leader, moment: seanceMoment })
     }
   }
 
@@ -254,7 +289,59 @@ export function serviceCategory(service: string): string | null {
   if (service.startsWith("Groupe ")) return service
   if (service.startsWith("EDD ")) return service.slice(4)
   if (service.startsWith("Campus")) return "Campus"
+  if (service === "Intergroupe") return "Intergroupe"
+  if (service === "Interfranco") return "Interfranco"
   return null
+}
+
+// ─── Séances du planning par catégorie (sélecteur de setlist) ──────────────────
+
+export interface SetlistSeance {
+  /** Catégorie de setlist (Culte Francophone, Campus, Groupe Paix, 中班, Intergroupe…) */
+  category: string
+  /** Date ISO YYYY-MM-DD */
+  date: string
+  /** Moment (Campus uniquement) — distingue matin/soir d'un même jour */
+  moment?: "matin" | "soir"
+  /** Président de la séance (graphie planning) */
+  leader: string
+  /** Libellé affichable, ex. "28/07 · Soir · Jonathan Z." ou "13/07 · Paul W." */
+  label: string
+}
+
+/** Toutes les séances du planning, par catégorie de setlist, pour alimenter le
+ *  sélecteur de séance du formulaire. Une entrée par date (Campus : par matin/soir).
+ *  Le président sert de leader ; le moment désambiguïse les séances Campus. */
+export function setlistSeances(data: PlanningData): SetlistSeance[] {
+  const out: SetlistSeance[] = []
+  const fmtDay = (iso: string) => { const p = iso.split("-"); return `${p[2]}/${p[1]}` }
+  const pushRows = (rows: string[][], category: string) => {
+    for (const r of rows) {
+      const date = r[0]
+      if (!date) continue
+      const leader = splitNames(r[1] ?? "")[0] ?? ""
+      out.push({ category, date, leader, label: `${fmtDay(date)}${leader ? " · " + leader : ""}` })
+    }
+  }
+  pushRows(data.culte, "Culte Francophone")
+  pushRows(data.paix, "Groupe Paix")
+  pushRows(data.bonte, "Groupe Bonté")
+  pushRows(data.fidelite, "Groupe Fidélité")
+  pushRows(data.intergroupe, "Intergroupe")
+  pushRows(data.interfranco, "Interfranco")
+  for (const pk of EDD_PERIODES) {
+    const classes = data.edd[pk]?.classes ?? {}
+    for (const cls of EDD_CLASSES) pushRows(classes[cls] ?? [], cls)
+  }
+  for (const s of data.campus) {
+    const date = campusDate(s.d)
+    if (!date) continue
+    const moment: "matin" | "soir" = s.d.includes("Soir") ? "soir" : "matin"
+    const leader = splitNames(s.pres)[0] ?? ""
+    const momentLabel = moment === "soir" ? "Soir" : "Matin"
+    out.push({ category: "Campus", date, moment, leader, label: `${fmtDay(date)} · ${momentLabel}${leader ? " · " + leader : ""}` })
+  }
+  return out.sort((a, b) => a.date.localeCompare(b.date))
 }
 
 // ─── Personnes de service à une date — tous services (côté serveur) ────────────
@@ -262,6 +349,8 @@ export function serviceCategory(service: string): string | null {
 // Colonnes culte pour le ciblage notifications : CULTE_ROLE_MAP + Orateur/Traduction
 // (inclus pour les rappels « tu sers » ; serviceRole null → exclus de « setlist prête »).
 const CULTE_NOTIFY_MAP: [number, ServiceRole | null][] = [...CULTE_ROLE_MAP, [9, null], [10, null]]
+const INTERGROUPE_NOTIFY_MAP: [number, ServiceRole | null][] = [...INTERGROUPE_ROLE_MAP, [10, null], [11, null]]
+const INTERFRANCO_NOTIFY_MAP: [number, ServiceRole | null][] = [...INTERFRANCO_ROLE_MAP, [9, null], [10, null]]
 
 export interface Servant {
   /** Graphie du nom telle qu'écrite dans le planning */
@@ -274,6 +363,8 @@ export interface Servant {
   /** Président de séance (1ʳᵉ personne de la colonne Présidence / du chant campus) —
    *  désambiguïse les séances Campus matin/soir d'un même jour */
   leader: string
+  /** Moment de la séance Campus (matin/soir) — clé de matching exact avec la setlist. */
+  moment?: "matin" | "soir"
 }
 
 /** Toutes les personnes de service à une date ISO donnée, tous services confondus,
@@ -298,6 +389,8 @@ export function servantsForDate(data: PlanningData, dateISO: string): Servant[] 
   scan(data.bonte, "Groupe Bonté", GROUPE_ROLE_MAP)
   scan(data.fidelite, "Groupe Fidélité", FIDELITE_ROLE_MAP)
   scan(data.fideliteMusic, "Groupe Fidélité", FIDELITE_MUSIC_ROLE_MAP)
+  scan(data.intergroupe, "Intergroupe", INTERGROUPE_NOTIFY_MAP)
+  scan(data.interfranco, "Interfranco", INTERFRANCO_NOTIFY_MAP)
   for (const pk of EDD_PERIODES) {
     const classes = data.edd[pk]?.classes ?? {}
     for (const cls of EDD_CLASSES) scan(classes[cls] ?? [], cls, EDD_ROLE_MAP)
@@ -307,13 +400,15 @@ export function servantsForDate(data: PlanningData, dateISO: string): Servant[] 
     if (r[0] !== dateISO) continue
     for (const name of splitNames(r[1] ?? "")) out.push({ name, category: null, serviceRole: null, leader: "" })
   }
-  // Campus : date via le label ; matin/soir distingués par le leader.
+  // Campus : date via le label ; matin/soir distingués par le leader (président).
   for (const s of data.campus) {
     if (campusDate(s.d) !== dateISO) continue
-    const leader = s.ch.split(",")[0]?.trim() || ""
-    for (const name of splitNames(s.ch)) out.push({ name, category: "Campus", serviceRole: "chanteur", leader })
-    for (const name of splitNames(s.mu)) out.push({ name, category: "Campus", serviceRole: "musicien", leader })
-    for (const name of splitNames(s.rg)) out.push({ name, category: "Campus", serviceRole: "regie", leader })
+    const leader = splitNames(s.pres)[0] ?? ""
+    const moment: "matin" | "soir" = s.d.includes("Soir") ? "soir" : "matin"
+    for (const name of splitNames(s.pres)) out.push({ name, category: "Campus", serviceRole: "presidence", leader, moment })
+    for (const name of splitNames(s.ch)) out.push({ name, category: "Campus", serviceRole: "chanteur", leader, moment })
+    for (const name of splitNames(s.mu)) out.push({ name, category: "Campus", serviceRole: "musicien", leader, moment })
+    for (const name of splitNames(s.rg)) out.push({ name, category: "Campus", serviceRole: "regie", leader, moment })
   }
 
   return out
@@ -337,7 +432,7 @@ export function rehearsalsForDate(data: PlanningData, dateISO: string): Rehearsa
     if (s.ent !== dateISO) continue
     const time = s.entTime ?? ""
     const location = s.entLieu ?? ""
-    for (const name of [...splitNames(s.ch), ...splitNames(s.mu), ...splitNames(s.rg)]) {
+    for (const name of [...splitNames(s.pres), ...splitNames(s.ch), ...splitNames(s.mu), ...splitNames(s.rg)]) {
       out.push({ name, time, location })
     }
   }

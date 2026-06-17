@@ -59,6 +59,8 @@ export function getCurrentEddPeriode(): EddPeriode {
 
 export interface CampusSeance {
   d: string
+  /** Président de la séance (colonne PRESIDENT du planning) */
+  pres: string
   ch: string
   mu: string
   rg: string

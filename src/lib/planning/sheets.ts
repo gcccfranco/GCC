@@ -132,6 +132,26 @@ export async function fetchBonte(): Promise<string[][]> {
   return fetchMulti(["Bonté_T1","Bonté _T2","Bonté _T3","Bonté_T4"], 4)
 }
 
+// Intergroupe / Interfranco : 1 séance par trimestre (4 lignes/an). Structure
+// proche du culte. Intergroupe = 3 choristes, Interfranco = 2 choristes.
+export async function fetchIntergroupe(): Promise<string[][]> {
+  const rows = await fetchSheet("Intergroupe")
+  return rows.flatMap(r => {
+    const dt = parseDate(r[0])
+    if (!dt) return []
+    return [[dt, r[1]||"", r[2]||"", r[3]||"", r[4]||"", r[5]||"", r[6]||"", r[7]||"", r[8]||"", r[9]||"", r[10]||"", r[11]||""]]
+  })
+}
+
+export async function fetchInterfranco(): Promise<string[][]> {
+  const rows = await fetchSheet("Interfranco")
+  return rows.flatMap(r => {
+    const dt = parseDate(r[0])
+    if (!dt) return []
+    return [[dt, r[1]||"", r[2]||"", r[3]||"", r[4]||"", r[5]||"", r[6]||"", r[7]||"", r[8]||"", r[9]||"", r[10]||""]]
+  })
+}
+
 export async function fetchEDD(): Promise<EddDataStructure> {
   const rows = await fetchSheet("EDD")
   const res: EddDataStructure = {}
@@ -161,7 +181,8 @@ export async function fetchCampus(): Promise<{ louange: CampusSeance[]; entraine
     if (r[1] !== "Matin" && r[1] !== "Soir") continue
     const parts = r[0].replace(/"+/g,"").split("/")
     const label = (parts[0]||"").replace(/^0/,"") + "/" + parts[1]
-    const ch = [r[2],r[3],r[4]].filter(v => v?.trim()).join(", ")
+    const pres = (r[2] || "").trim()
+    const ch = [r[3],r[4]].filter(v => v?.trim()).join(", ")
     const mu = [r[5]?"Piano: "+r[5]:"", r[6]?"Guitare: "+r[6]:"", r[7]?"Batterie: "+r[7]:""].filter(Boolean).join(", ")
     const rg = [r[8]?"Sono: "+r[8]:"", r[9]?"PPT: "+r[9]:""].filter(Boolean).join(", ")
     // Cellule répétition : "JJ/MM/AAAA[ HH:MM][ Salle…]" → date + heure + lieu
@@ -176,7 +197,7 @@ export async function fetchCampus(): Promise<{ louange: CampusSeance[]; entraine
       }
       entLieu = rest.join(" ").trim()
     }
-    const obj: CampusSeance = { d: `${label} ${r[1]}`, ch, mu, rg, ent, entTime, entLieu, chants: [r[10]||"",r[11]||"",r[12]||"",r[13]||""] }
+    const obj: CampusSeance = { d: `${label} ${r[1]}`, pres, ch, mu, rg, ent, entTime, entLieu, chants: [r[10]||"",r[11]||"",r[12]||"",r[13]||""] }
     louange.push(obj)
     if (ent) entrainement.push(obj)
   }

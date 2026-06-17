@@ -38,6 +38,7 @@ export function EditSetlistClient() {
         date: sl.date,
         leader: sl.leader,
         category: sl.category,
+        moment: sl.moment,
         notes: sl.notes,
         isPrivate: sl.isPrivate ?? false,
         ownerId: sl.ownerId ?? null,

@@ -7,7 +7,7 @@ import {
   CULTE_FALLBACK, FIDELITE_FALLBACK, FIDELITE_MUSIC_FALLBACK,
   PAIX_FALLBACK, BONTE_FALLBACK, DEJEUNER_FALLBACK, EDD_FALLBACK, CAMP_LOUANGE_FALLBACK
 } from "@/lib/planning/data"
-import { fetchCulte, fetchDejeuner, fetchPaix, fetchFidelite, fetchFideliteMusic, fetchBonte, fetchEDD, fetchCampus } from "@/lib/planning/sheets"
+import { fetchCulte, fetchDejeuner, fetchPaix, fetchFidelite, fetchFideliteMusic, fetchBonte, fetchEDD, fetchCampus, fetchIntergroupe, fetchInterfranco } from "@/lib/planning/sheets"
 import type { EddDataStructure, CampusSeance } from "@/lib/planning/utils"
 import { useProfile } from "@/lib/firebase/users"
 import { findMyServices, type PlanningData } from "@/lib/planning/names"
@@ -53,6 +53,8 @@ export default function PlanningAccueil() {
   const [bonte, setBonte] = useState(BONTE_FALLBACK)
   const [edd, setEdd] = useState<EddDataStructure>(EDD_FALLBACK)
   const [campus, setCampus] = useState<CampusSeance[]>(CAMP_LOUANGE_FALLBACK)
+  const [intergroupe, setIntergroupe] = useState<string[][]>([])
+  const [interfranco, setInterfranco] = useState<string[][]>([])
 
   useEffect(() => {
     fetchCulte().then(d => { if (d.length) setCulte(d) })
@@ -63,17 +65,19 @@ export default function PlanningAccueil() {
     fetchBonte().then(d => { if (d.length) setBonte(d) })
     fetchEDD().then(d => setEdd(d))
     fetchCampus().then(({ louange }) => { if (louange.length) setCampus(louange) }).catch(() => {})
+    fetchIntergroupe().then(d => { if (d.length) setIntergroupe(d) })
+    fetchInterfranco().then(d => { if (d.length) setInterfranco(d) })
   }, [])
 
   // Prochain service de la personne connectée (d'après son nom de planning)
   const nextServices = useMemo(() => {
     if (!user || !profile?.planningName) return null
-    const data: PlanningData = { culte, dejeuner: dej, paix, fidelite: fid, fideliteMusic: fidM, bonte, edd, campus }
+    const data: PlanningData = { culte, dejeuner: dej, paix, fidelite: fid, fideliteMusic: fidM, bonte, edd, campus, intergroupe, interfranco }
     const today = new Date().toISOString().split("T")[0]
     const upcoming = findMyServices(data, profile.planningName).filter(e => e.date >= today)
     if (!upcoming.length) return null
     return upcoming.filter(e => e.date === upcoming[0].date)
-  }, [user, profile, culte, dej, paix, fid, fidM, bonte, edd, campus])
+  }, [user, profile, culte, dej, paix, fid, fidM, bonte, edd, campus, intergroupe, interfranco])
 
   const sun = currentSundayStr()
   const sunParts = sun.split("-")

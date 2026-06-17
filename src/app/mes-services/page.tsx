@@ -34,7 +34,7 @@ function daysUntil(dateStr: string, todayStr: string): number {
   );
 }
 
-type GroupedEntry = { date: string; service: string; roles: string[]; time?: string; location?: string; setlistDate?: string; leader?: string };
+type GroupedEntry = { date: string; service: string; roles: string[]; time?: string; location?: string; setlistDate?: string; leader?: string; moment?: "matin" | "soir" };
 
 /** Regroupe les entrées par date+service en fusionnant les rôles. */
 function groupEntries(entries: ServiceEntry[]): GroupedEntry[] {
@@ -45,7 +45,7 @@ function groupEntries(entries: ServiceEntry[]): GroupedEntry[] {
     if (g) {
       if (!g.roles.includes(e.role)) g.roles.push(e.role);
     } else {
-      map.set(key, { date: e.date, service: e.service, roles: [e.role], time: e.time, location: e.location, setlistDate: e.setlistDate, leader: e.leader });
+      map.set(key, { date: e.date, service: e.service, roles: [e.role], time: e.time, location: e.location, setlistDate: e.setlistDate, leader: e.leader, moment: e.moment });
     }
   }
   return [...map.values()];
@@ -96,20 +96,30 @@ export default function MesServicesPage() {
 
   // Setlist d'un service : s'il n'y en a qu'une ce jour-là dans la catégorie, on
   // la lie ; s'il y en a plusieurs (campus matin/soir), on départage par président.
-  const findSetlistId = (date: string, category: string, leader?: string): string | undefined => {
+  const findSetlistId = (date: string, category: string, leader?: string, moment?: "matin" | "soir"): string | undefined => {
     const arr = setlistsByDateCat.get(`${date}|${category}`);
     if (!arr || arr.length === 0) return undefined;
-    // Campus : matin et soir d'un même jour partagent date + catégorie "Campus" et
-    // ne se distinguent que par le président → toujours départager par président,
-    // même s'il n'existe qu'une seule setlist ce jour-là (sinon la séance dont la
-    // setlist n'existe pas encore pointerait par erreur vers celle de l'autre séance).
-    if (category !== "Campus" && arr.length === 1) return arr[0].id;
+    // Campus : matin/soir partagent date + catégorie "Campus" → départage par moment
+    // (setlists récentes liées à la séance), puis par président (anciennes sans moment).
+    if (category === "Campus") {
+      if (moment) {
+        const m = arr.find((s) => s.moment === moment);
+        if (m) return m.id;
+      }
+      if (leader) {
+        const want = normalizeName(leader);
+        const m = arr.find((s) => normalizeName(s.leader) === want);
+        if (m) return m.id;
+      }
+      return undefined; // ambigu → pas de lien (évite le mauvais)
+    }
+    if (arr.length === 1) return arr[0].id;
     if (leader) {
       const want = normalizeName(leader);
       const match = arr.find((s) => normalizeName(s.leader) === want);
       if (match) return match.id;
     }
-    return undefined; // ambigu sans président correspondant → pas de lien (évite le mauvais)
+    return undefined;
   };
 
   const todayStr = useMemo(() => new Date().toISOString().split("T")[0], []);
@@ -228,7 +238,7 @@ export default function MesServicesPage() {
                     const color = serviceColor(e.service);
                     const cat = serviceCategory(e.service);
                     const lookupDate = e.setlistDate ?? e.date;
-                    const setlistId = cat ? findSetlistId(lookupDate, cat, e.leader) : undefined;
+                    const setlistId = cat ? findSetlistId(lookupDate, cat, e.leader, e.moment) : undefined;
                     const dUntil = tab === "upcoming" ? daysUntil(e.date, todayStr) : -1;
                     const thisWeek = dUntil >= 0 && dUntil <= 6;
                     return (

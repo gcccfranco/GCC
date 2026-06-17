@@ -12,6 +12,8 @@ const TABS = [
   { label: "Groupes", href: "/planning/groupes" },
   { label: "EDD", href: "/planning/edd" },
   { label: "Campus", href: "/planning/campus" },
+  { label: "Intergroupe", href: "/planning/intergroupe" },
+  { label: "Interfranco", href: "/planning/interfranco" },
 ]
 
 export function PlanningTabs() {

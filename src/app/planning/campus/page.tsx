@@ -94,10 +94,10 @@ export default function CampusPage() {
                 <div className="grid grid-cols-2 border-b border-border">
                   <div className="px-4 py-3 border-r border-border">
                     <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-2">Présidence &amp; choristes</p>
-                    {choristes[0] && (
-                      <p className="text-sm font-semibold mb-1" style={{ color: COLOR }}>{choristes[0]}</p>
+                    {s.pres && (
+                      <p className="text-sm font-semibold mb-1" style={{ color: COLOR }}>{s.pres}</p>
                     )}
-                    {choristes.slice(1).map(c => <Chip key={c} label={c} />)}
+                    {choristes.map(c => <Chip key={c} label={c} />)}
                   </div>
                   <div className="px-4 py-3">
                     <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-2">Musiciens</p>
