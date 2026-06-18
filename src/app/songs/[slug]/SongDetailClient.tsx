@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
-import { MoreHorizontal, Download, Play, Music, Music2, Settings, AlertCircle, X, Send } from "lucide-react";
+import { MoreHorizontal, Download, Play, X, TriangleAlert , Music, Music2, Settings, AlertCircle, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -304,8 +304,8 @@ interface SongDetailClientProps {
                 <DropdownMenuContent align="end" className="w-52">
                   {youtubeId && (
                     <DropdownMenuItem onClick={() => setShowVideo((v) => !v)}>
-                      <Play className="h-3.5 w-3.5 text-muted-foreground" />
-                      {showVideo ? "✕ " + t("songs.detail.video") : t("songs.detail.video")}
+                      {!showVideo ? <Play className="h-3.5 w-3.5 text-muted-foreground" /> : <X className="h-3.5 w-3.5 text-muted-foreground" />}
+                      {t("songs.detail.video")}
                     </DropdownMenuItem>
                   )}
                   {song.spotifyUrl && (
@@ -333,7 +333,7 @@ interface SongDetailClientProps {
                     {downloading ? "…" : t("songs.detail.downloadPdf") || "PDF"}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick= {() => setShowReport(true)}>
-                    <AlertCircle className='h-3.5 w-3.5 text-muted-foreground'/>
+                    <TriangleAlert className='h-3.5 w-3.5 text-muted-foreground'/>
                     {t('songs.detail.report')}
                   </DropdownMenuItem>
                 </DropdownMenuContent>

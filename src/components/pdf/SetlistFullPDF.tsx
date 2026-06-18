@@ -12,10 +12,12 @@ interface SongContent {
 
 export function SetlistFullPDF({
   setlist,
-  contents
+  contents,
+  showChords
 }: {
   setlist: FSSetlist;
   contents: Record<string, SongContent>;
+  showChords: boolean
 }) {
   const sorted = [...setlist.items].sort((a, b) => a.position - b.position);
   const footer = `${setlist.title} - ${setlist.leader}`;
@@ -55,7 +57,7 @@ export function SetlistFullPDF({
                 key={`fusion-${idx}`}
                 songs={fusionSongsData}
                 mixedStructure={item.mixedStructure}
-                showChords={item.showChords}
+                showChords={showChords}
                 footerCenter={footer}
               />
             ];
@@ -66,7 +68,7 @@ export function SetlistFullPDF({
             <SongPDFPage
               key={`fusion-${idx}-${fs.slug}-${fsIdx}`}
               ast={fs.ast}
-              showChords={item.showChords}
+              showChords={showChords}
               showPinyin={fs.ast.metadata.language === "zh"}
               useJianpu={false}
               structureOverride={item.fusionSongs![fsIdx].structureOverride}
@@ -86,7 +88,7 @@ export function SetlistFullPDF({
           <SongPDFPage
             key={`${item.songSlug}-${idx}`}
             ast={ast}
-            showChords={item.showChords}
+            showChords={showChords}
             showPinyin={item.showPinyin}
             useJianpu={false}
             structureOverride={item.structureOverride}

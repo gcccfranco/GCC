@@ -16,7 +16,7 @@ Font.register({
 });
 Font.register({
   family: "Inter",
-  fonts: [{ src: "/fonts/inter-latin-ext-400-normal.ttf", fontWeight: 400 }],
+  fonts: [{ src: "/fonts/Inter-Regular.ttf", fontWeight: 400 }],
 });
 Font.register({
   family: "LiberationSans",

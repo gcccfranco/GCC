@@ -158,7 +158,7 @@ export function SetlistDetailClient() {
         setContents(allContents);
         const { SetlistFullPDF } = await import("@/components/pdf/SetlistFullPDF");
         const blob = await pdf(
-          <SetlistFullPDF setlist={setlist} contents={allContents} />
+          <SetlistFullPDF setlist={setlist} contents={allContents} showChords={showChords} />
         ).toBlob();
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");

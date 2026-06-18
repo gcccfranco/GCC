@@ -18,7 +18,7 @@ Font.register({
 });
 Font.register({
   family: "Inter",
-  fonts: [{ src: "/fonts/inter-latin-ext-400-normal.ttf", fontWeight: 400 }],
+  fonts: [{ src: "/fonts/Inter-Regular.ttf", fontWeight: 400 }],
 });
 Font.register({
   family: "LiberationSans",
@@ -170,15 +170,17 @@ function ChordLabel({ chord, theme }: { chord: string; theme: Theme }) {
                      fontSize: CHORD_SIZE, lineHeight: 1 }}>
         {root}
       </Text>
-      {qual ? (
-        <Text style={{ fontFamily: "LiberationSans", fontWeight: 700, color: theme.accent,
-                       fontSize: CHORD_Q_SIZE, lineHeight: 1 }}>
-          {qual}
-        </Text>
-      ) : null}
+      
+      <Text style={{ fontFamily: "LiberationSans", fontWeight: 700, color: theme.accent,
+                      fontSize: CHORD_Q_SIZE, lineHeight: 1 }}>
+        {qual ? qual : '\u00A0'}
+      </Text>
+      
     </View>
   );
 }
+
+
 
 // ─── French line ──────────────────────────────────────────────────────────────
 // Uses explicit line-breaking (no flexWrap) to avoid Yoga's misalignment bug
@@ -191,11 +193,11 @@ function FrLine({ tokens, showChords, theme }: {
 }) {
   const segs = toSegments(tokens);
   const allEmpty = segs.every(s => !s.lyric?.trim() && !s.chord);
-  if (allEmpty) return <View style={{ height: 6 }} />;
+  if (allEmpty) return <View style={{ height: 2 }} />;
 
   // Per-segment cell width = max(chord width, lyric width)
   const cellWidths = segs.map(seg => {
-    const cw = seg.chord ? (seg.chord.length + 0.5) * CHORD_CHAR_W : 0;
+    const cw = showChords && seg.chord ? (seg.chord.length + 0.5) * CHORD_CHAR_W : 0;
     const lw = [...seg.lyric].length * LYRIC_CHAR_W;
     return Math.max(cw, lw, 4);
   });
@@ -215,33 +217,35 @@ function FrLine({ tokens, showChords, theme }: {
     }
   }
   if (lineSegs.length) visualLines.push(lineSegs);
-
   return (
     <View style={{ marginBottom: 1 }}>
       {visualLines.map((indices, li) => {
         const lineHasChord = showChords && indices.some(i => segs[i].chord !== null);
         return (
-          <View key={li} style={{ marginBottom: li < visualLines.length - 1 ? 3 : 0 }}>
+          // <View key={li} style={{ marginBottom: li < visualLines.length - 1 ? 3 : 0 }}>
+          <View key={li}>
             {/* Chord row — only when this visual line has at least one chord */}
-            {lineHasChord && (
-              <View style={{ flexDirection: "row" }}>
+            {lineHasChord && showChords && (
+              <View style={{ flexDirection: "row"}}>
                 {indices.map(i => (
-                  <View key={i} style={{ minWidth: cellWidths[i] }}>
+                  <View key={i} style={showChords?{ minWidth: cellWidths[i] }:{}}>
                     {segs[i].chord
                       ? <ChordLabel chord={segs[i].chord!} theme={theme} />
-                      : <View style={{ height: CHORD_H }} />}
+                      : <View style={{ height: CHORD_H }}>
+                        </View>}
                   </View>
                 ))}
               </View>
             )}
             {/* Lyric row */}
-            <View style={{ flexDirection: "row" }}>
+            <View style={{ flexDirection: "row", alignItems: "flex-start"}}>
               {indices.map(i => {
-                const lyric = (showChords ? segs[i].lyric : segs[i].lyric?.trimStart())
-                  || (segs[i].chord && showChords ? " " : "");
+                // console.log("SEG",segs[i])
+                const lyric = (showChords ? segs[i].lyric : segs[i].lyric?.trimStart()) || "\u00A0";
+                console.log('lyric', lyric)
                 return (
-                  <View key={i} style={{ minWidth: cellWidths[i] }}>
-                    <Text style={{ fontSize: LYRIC_FR, color: C.lyric, fontFamily: "Inter", lineHeight: 1.25 }}>
+                  <View key={i} style={showChords?{ minWidth: cellWidths[i]}:{}}>
+                    <Text style={{ fontSize: LYRIC_FR, color: C.lyric, fontFamily: "Inter", fontWeight: 400, lineHeight: 1.25 }}>
                       {lyric}
                     </Text>
                   </View>
