@@ -91,11 +91,11 @@ const PAGE_CONTENT_W = 495; // A4 - 2×50pt margins
 
 // ─── Section box type ─────────────────────────────────────────────────────────
 
-type BoxStyle = "filled" | "outline" | "none";
+type BoxStyle = "filled" | "outline" | "leftbar" | "none";
 
 const SECTION_BOX: Record<string, BoxStyle> = {
   chorus:       "filled",
-  prechorus:    "filled",
+  prechorus:    "leftbar",
   intro:        "none",
   final:        "filled",
   coda:         "filled",
@@ -451,7 +451,13 @@ function SectionBlock({ section, isZh, useJianpu, showChords, showPinyin, note, 
           paddingLeft: 12,
           marginBottom: 10,
         }
-      : { marginBottom: 9 };
+      : boxType === "leftbar"
+        ? {
+            borderLeftWidth: 3, borderLeftColor: theme.accent,
+            paddingLeft: 12,
+            marginBottom: 10,
+          }
+        : { marginBottom: 9 };
 
   return (
     <View style={boxView} wrap={false}>

@@ -26,8 +26,10 @@ const LANG_THEME = {
   },
 } as const;
 
-const FILLED_BOX = new Set(["chorus", "prechorus", "final", "coda"]);
+const FILLED_BOX = new Set(["chorus", "final", "coda"]);
 const OUTLINE_BOX = new Set(["bridge"]);
+// Pré-refrain : barre d'accent à gauche seule (pas de cadre), pour le distinguer du pont.
+const LEFT_BAR = new Set(["prechorus"]);
 
 const KaiTiFont = localFont({
   src: [{ path: "../../../public/fonts/KaiTi.ttf", weight: "400", style: "normal" }],
@@ -79,6 +81,10 @@ function getSectionStyle(type: string, isZh: boolean): React.CSSProperties {
       borderBottom: `0.5px solid ${accent}`,
       borderLeft: `3px solid ${accent}`,
     };
+  }
+
+  if (LEFT_BAR.has(type)) {
+    return { ...base, borderRadius: 0, borderLeft: `3px solid ${accent}` };
   }
 
   // Pas de boîte pour les sections plain (verse, etc.)
