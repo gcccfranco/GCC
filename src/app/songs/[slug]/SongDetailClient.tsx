@@ -347,7 +347,10 @@ interface SongDetailClientProps {
         {/* Contenu */}
         <main
           className="song-zoom px-4 py-6 print:px-0 print:py-2 print:max-w-none max-w-2xl mx-auto overflow-x-auto mt-[48px]"
-          style={{ zoom: fontScale }}
+          style={{ 
+            transform: `scale(${fontScale})`,
+            transformOrigin: 'top', 
+          }}
         >
           <SongView
             ast={displayedAST}
