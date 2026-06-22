@@ -152,6 +152,48 @@ export async function getSetlists(): Promise<FSSetlist[]> {
     .filter((s) => !s.isPrivate && !s.isDraft);
 }
 
+/** Setlists récentes pour le badge de notifications (cloche). Deux requêtes
+ *  mono-champ fusionnées : `createdAt` (toutes les setlists) capte les créations,
+ *  `updatedAt` (présent seulement sur les setlists éditées) capte les mises à
+ *  jour. Si `sinceMs > 0`, ne lit que ce qui est postérieur (incrémental →
+ *  ~0 lecture quand rien de neuf). Chaque requête est mono-champ → pas d'index
+ *  composite requis. */
+export async function getSetlistsSince(sinceMs: number, max: number): Promise<FSSetlist[]> {
+  const headers = await authHeader();
+  const queryByField = async (field: "createdAt" | "updatedAt"): Promise<FSSetlist[]> => {
+    const structuredQuery: Record<string, unknown> = {
+      from: [{ collectionId: "setlists" }],
+      orderBy: [{ field: { fieldPath: field }, direction: "DESCENDING" }],
+      limit: max,
+    };
+    if (sinceMs > 0) {
+      structuredQuery.where = {
+        fieldFilter: {
+          field: { fieldPath: field },
+          op: "GREATER_THAN",
+          value: { timestampValue: new Date(sinceMs).toISOString() },
+        },
+      };
+    }
+    const res = await fetch(`${FS_BASE}:runQuery`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...headers },
+      body: JSON.stringify({ structuredQuery }),
+    });
+    if (!res.ok) return [];
+    const rows = (await res.json()) as Array<{ document?: RawDoc }>;
+    return rows.filter((r) => r.document).map((r) => fromFsDoc(r.document!));
+  };
+
+  const [created, updated] = await Promise.all([
+    queryByField("createdAt"),
+    queryByField("updatedAt"),
+  ]);
+  const byId = new Map<string, FSSetlist>();
+  for (const s of [...created, ...updated]) byId.set(s.id, s);
+  return [...byId.values()].filter((s) => !s.isPrivate && !s.isDraft);
+}
+
 export async function getMySetlists(uid: string): Promise<FSSetlist[]> {
   const headers = await authHeader();
   // No orderBy to avoid requiring a composite index on (ownerId, createdAt).

@@ -57,6 +57,36 @@ export async function getAnnonces(): Promise<Annonce[]> {
   return cache;
 }
 
+/** Annonces récentes pour le badge de notifications (cloche). Si `sinceMs > 0`,
+ *  ne lit que les annonces créées APRÈS ce timestamp (requête incrémentale →
+ *  ~0 lecture quand rien de neuf). N'utilise pas le cache de page `getAnnonces`
+ *  et ne l'invalide pas — c'est un chemin de lecture léger et indépendant. */
+export async function getAnnoncesSince(sinceMs: number, max: number): Promise<Annonce[]> {
+  const headers = await authHeader();
+  const structuredQuery: Record<string, unknown> = {
+    from: [{ collectionId: "annonces" }],
+    orderBy: [{ field: { fieldPath: "createdAt" }, direction: "DESCENDING" }],
+    limit: max,
+  };
+  if (sinceMs > 0) {
+    structuredQuery.where = {
+      fieldFilter: {
+        field: { fieldPath: "createdAt" },
+        op: "GREATER_THAN",
+        value: { timestampValue: new Date(sinceMs).toISOString() },
+      },
+    };
+  }
+  const res = await fetch(`${FS_BASE}:runQuery`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...headers },
+    body: JSON.stringify({ structuredQuery }),
+  });
+  if (!res.ok) return [];
+  const rows = (await res.json()) as Array<{ document?: RawDoc }>;
+  return rows.filter((r) => r.document).map((r) => fromFsAnnonce(r.document!));
+}
+
 export async function createAnnonce(
   data: Omit<Annonce, "id" | "createdAt">
 ): Promise<string> {

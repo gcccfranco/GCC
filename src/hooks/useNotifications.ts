@@ -1,12 +1,18 @@
-import { useState, useEffect, useCallback } from "react";
-import { getAnnonces, invalidateAnnonces } from "@/lib/firebase/annonces";
-import { getSetlists } from "@/lib/firebase/setlists";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { getAnnoncesSince } from "@/lib/firebase/annonces";
+import { getSetlistsSince } from "@/lib/firebase/setlists";
 import { useProfile } from "@/lib/firebase/users";
 import { visibleCategories, isAdminUser } from "@/lib/access";
 
 // Notifications in-app par polling REST (jamais de listener WebChannel).
 // Sources : annonces + setlists des catégories du profil. Le « vu » est
 // par appareil (localStorage), comme le badge annonces historique.
+//
+// Coût Firestore : chaque rafraîchissement est INCRÉMENTAL — il ne lit que ce
+// qui est apparu depuis la dernière fois (`latestTs`), via getAnnoncesSince /
+// getSetlistsSince (where createdAt/updatedAt > since + limit). Au premier
+// chargement on lit un lot borné (limit), ensuite ~0 lecture quand rien de neuf.
+// Le polling est espacé (cf. POLL_INTERVAL_MS) + rafraîchi au retour de focus.
 //
 // N.B. ciblage volontairement différent du push : la cloche montre tout ce que
 // le membre PEUT voir (catégories de son profil), tandis que le push « setlist
@@ -15,7 +21,10 @@ import { visibleCategories, isAdminUser } from "@/lib/access";
 
 export const NOTIFICATIONS_LAST_SEEN_KEY = "notificationsLastSeen";
 
-const POLL_INTERVAL_MS = 60_000;
+// Espacé volontairement : le polling toutes les minutes rescannait les
+// collections entières et faisait exploser les lectures Firestore. Le retour de
+// focus/visibilité rafraîchit en plus, donc une nouveauté reste vite visible.
+const POLL_INTERVAL_MS = 10 * 60_000; // 10 min
 const MAX_ITEMS = 20;
 
 export interface NotificationItem {
@@ -39,25 +48,33 @@ export function useNotifications() {
   const { user, profile } = useProfile();
   const [items, setItems] = useState<NotificationItem[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  // Plus grande date déjà chargée : les requêtes suivantes ne lisent que l'après.
+  const latestTsRef = useRef(0);
+  // Miroir des items courants, pour fusionner sans dépendre du cycle de rendu.
+  const itemsRef = useRef<NotificationItem[]>([]);
 
   const refresh = useCallback(async () => {
     if (!user || document.visibilityState !== "visible") return;
     try {
-      invalidateAnnonces();
-      const [annonces, setlists] = await Promise.all([getAnnonces(), getSetlists()]);
+      const since = latestTsRef.current;
+      const [annonces, setlists] = await Promise.all([
+        getAnnoncesSince(since, MAX_ITEMS),
+        getSetlistsSince(since, MAX_ITEMS),
+      ]);
 
       const admin = isAdminUser(user);
       const cats = profile ? visibleCategories(profile) : [];
 
-      const list: NotificationItem[] = [];
+      // Nouveautés depuis `since` (mêmes filtres qu'avant : pas soi-même, et
+      // seulement les sections/catégories où le membre sert — admins : tout).
+      const fresh: NotificationItem[] = [];
 
       for (const a of annonces) {
-        if (a.authorId === user.uid) continue; // pas de notification pour soi-même
-        // Comme les setlists : seulement les sections où le membre sert (admins : tout).
+        if (a.authorId === user.uid) continue;
         if (!admin && !cats.includes(a.section)) continue;
         const ts = a.createdAt?.getTime() ?? 0;
         if (!ts) continue;
-        list.push({
+        fresh.push({
           id: `annonce-${a.id}`,
           kind: "annonce",
           title: a.title,
@@ -74,7 +91,7 @@ export function useNotifications() {
         const updated = s.updatedAt?.getTime() ?? 0;
         const ts = Math.max(created, updated);
         if (!ts) continue;
-        list.push({
+        fresh.push({
           id: `setlist-${s.id}`,
           kind: updated > created ? "setlist-updated" : "setlist-created",
           title: s.title,
@@ -84,11 +101,18 @@ export function useNotifications() {
         });
       }
 
-      list.sort((a, b) => b.date - a.date);
-      const top = list.slice(0, MAX_ITEMS);
+      // Fusion : items existants + nouveautés ; une setlist mise à jour écrase
+      // son ancienne entrée (même id). Tri décroissant, on garde le top.
+      const byId = new Map<string, NotificationItem>();
+      for (const it of [...itemsRef.current, ...fresh]) byId.set(it.id, it);
+      const merged = [...byId.values()].sort((a, b) => b.date - a.date).slice(0, MAX_ITEMS);
+
+      itemsRef.current = merged;
+      latestTsRef.current = merged.reduce((m, i) => Math.max(m, i.date), latestTsRef.current);
+
       const lastSeen = readLastSeen();
-      setItems(top);
-      setUnreadCount(top.filter((i) => i.date > lastSeen).length);
+      setItems(merged);
+      setUnreadCount(merged.filter((i) => i.date > lastSeen).length);
     } catch {
       /* réseau indisponible — on retentera au prochain tick */
     }
@@ -96,6 +120,8 @@ export function useNotifications() {
 
   useEffect(() => {
     if (!user) {
+      itemsRef.current = [];
+      latestTsRef.current = 0;
       setItems([]);
       setUnreadCount(0);
       return;
