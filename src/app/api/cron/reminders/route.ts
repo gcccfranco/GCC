@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { adminDb } from "@/lib/push/admin";
 import { sendPushToUids } from "@/lib/push/send";
+import { recordNotification } from "@/lib/push/notifications";
 import { loadPlanningNameIndex, resolveNamesToUids, filterUidsByNotifPref } from "@/lib/push/recipients";
 import {
   loadPlanningData,
@@ -101,6 +102,13 @@ export async function GET(req: NextRequest) {
         url: "/mes-services",
         tag: `rappel-${tag}-${date}`,
       });
+      await recordNotification({
+        title: "Rappel de service",
+        body: `Tu sers ${when} (${formatFr(date)}).`,
+        url: "/mes-services",
+        kind: "reminder",
+        recipients: fresh,
+      });
       await markNotified(db, fresh, `rappel-${tag}-${date}`, { tag, date, kind: "service" });
     }
 
@@ -126,6 +134,15 @@ export async function GET(req: NextRequest) {
           });
         })
       );
+      // Entrée de cloche unique pour la fournée (le détail heure/lieu reste dans
+      // le push individuel ; la cloche affiche un libellé générique).
+      await recordNotification({
+        title: "Répétition Campus",
+        body: `Répétition ${when} (${formatFr(date)}).`,
+        url: "/mes-services",
+        kind: "reminder",
+        recipients: rehFresh,
+      });
       await markNotified(db, rehFresh, `repet-${tag}-${date}`, { tag, date, kind: "repet" });
     }
 
