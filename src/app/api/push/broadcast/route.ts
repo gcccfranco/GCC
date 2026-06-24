@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { sendPushToAll } from "@/lib/push/send";
+import { recordNotification } from "@/lib/push/notifications";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -30,6 +31,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "title et body sont requis" }, { status: 400 });
   }
 
-  const result = await sendPushToAll({ title, body, url: url || "/" });
+  const safeUrl = url || "/";
+  const result = await sendPushToAll({ title, body, url: safeUrl });
+  await recordNotification({ title, body, url: safeUrl, kind: "broadcast", everyone: true });
   return NextResponse.json({ ok: true, ...result });
 }
