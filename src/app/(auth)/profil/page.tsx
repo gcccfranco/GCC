@@ -89,8 +89,6 @@ export default function ProfilPage() {
         annonces: profile?.annonces ?? [],
         // Droits d'envoi de notifications : idem, attribués par les admins
         notify: profile?.notify ?? [],
-        // PATCH remplace tout le document : on conserve la date d'inscription
-        createdAt: profile?.createdAt,
       });
       router.push("/setlists");
     } catch {
