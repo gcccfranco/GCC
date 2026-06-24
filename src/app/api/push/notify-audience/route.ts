@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { adminDb, verifyIdToken } from "@/lib/push/admin";
 import { sendPushToUids, sendPushToAll } from "@/lib/push/send";
+import { recordNotification } from "@/lib/push/notifications";
 import { uidsForCategory, uidsForCategories } from "@/lib/push/recipients";
 import { ADMIN_EMAILS } from "@/lib/access";
 import { NOTIFY_ALL, isValidAudience } from "@/lib/push/audiences";
@@ -89,6 +90,13 @@ export async function POST(req: NextRequest) {
       }
     }
     const result = await sendPushToUids(wanted, payload);
+    await recordNotification({
+      title: payload.title,
+      body: payload.body,
+      url: payload.url,
+      kind: "manual",
+      recipients: wanted,
+    });
     await dupRef.set({ at: Date.now(), uid });
     return NextResponse.json({ ok: true, ...result });
   }
@@ -100,10 +108,16 @@ export async function POST(req: NextRequest) {
   if (!isAdmin && !rights.includes(NOTIFY_ALL) && !rights.includes(audience)) {
     return NextResponse.json({ error: "Action non autorisée" }, { status: 403 });
   }
-  const result =
-    audience === NOTIFY_ALL
-      ? await sendPushToAll(payload)
-      : await sendPushToUids(await uidsForCategory(audience), payload);
+  const isAll = audience === NOTIFY_ALL;
+  const catUids = isAll ? [] : await uidsForCategory(audience);
+  const result = isAll ? await sendPushToAll(payload) : await sendPushToUids(catUids, payload);
+  await recordNotification({
+    title: payload.title,
+    body: payload.body,
+    url: payload.url,
+    kind: "manual",
+    ...(isAll ? { everyone: true } : { recipients: catUids }),
+  });
   await dupRef.set({ at: Date.now(), uid });
   return NextResponse.json({ ok: true, ...result });
 }
