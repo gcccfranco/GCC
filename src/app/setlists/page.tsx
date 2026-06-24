@@ -222,7 +222,7 @@ export default function SetlistsPage() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Rechercher par titre, leader, date…"
-              className="w-full pl-9 pr-9 py-2.5 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 text-sm"
+              className="w-full pl-9 pr-9 py-2.5 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 text-sm [&::-webkit-search-cancel-button]:hidden"
             />
             {query && (
               <button

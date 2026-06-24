@@ -689,7 +689,7 @@ export function SetlistForm({ mode, setlistId, songs, initial }: SetlistFormProp
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder={t("setlists.form.searchSongsPlaceholder")}
-                className="w-full pl-9 pr-8 py-2.5 bg-background text-foreground placeholder:text-muted-foreground focus:outline-none text-sm border-b border-border"
+                className="w-full pl-9 pr-8 py-2.5 bg-background text-foreground placeholder:text-muted-foreground focus:outline-none text-sm border-b border-border [&::-webkit-search-cancel-button]:hidden"
               />
               {query && (
                 <button

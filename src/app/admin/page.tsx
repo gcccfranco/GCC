@@ -669,7 +669,7 @@ export default function AdminPage() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Rechercher un membre (nom, email, nom de planning)…"
-                className="h-11 pl-9 pr-9"
+                className="h-11 pl-9 pr-9 [&::-webkit-search-cancel-button]:hidden"
               />
               {query && (
                 <button

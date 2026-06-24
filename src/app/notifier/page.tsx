@@ -265,7 +265,7 @@ export default function NotifierPage() {
                   value={peopleQuery}
                   onChange={(e) => setPeopleQuery(e.target.value)}
                   placeholder="Filtrer la liste…"
-                  className="w-full h-10 pl-9 pr-9 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                  className="w-full h-10 pl-9 pr-9 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 [&::-webkit-search-cancel-button]:hidden"
                 />
                 {peopleQuery && (
                   <button

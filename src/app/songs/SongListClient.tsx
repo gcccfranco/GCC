@@ -170,7 +170,7 @@ export function SongListClient({ songs, themes }: SongListClientProps) {
           placeholder={t("songs.list.searchPlaceholder")}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          className="w-full h-[46px] pl-[42px] pr-10 border border-border rounded-xl bg-card text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary focus:ring-[3px] focus:ring-primary/10 text-[15px] transition-all duration-150"
+          className="w-full h-[46px] pl-[42px] pr-10 border border-border rounded-xl bg-card text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary focus:ring-[3px] focus:ring-primary/10 text-[15px] transition-all duration-150 [&::-webkit-search-cancel-button]:hidden"
         />
         {query && (
           <button
