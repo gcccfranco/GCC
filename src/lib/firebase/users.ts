@@ -35,6 +35,7 @@ function fromFsProfile(raw: RawDoc): UserProfile {
     serviceRoles: (data.serviceRoles as Record<string, ServiceRole[]>) ?? {},
     annonces: (data.annonces as string[]) ?? [],
     notify: (data.notify as string[]) ?? [],
+    createdAt: data.createdAt instanceof Date ? data.createdAt : undefined,
   };
 }
 
@@ -47,13 +48,16 @@ export async function getProfile(uid: string): Promise<UserProfile | null> {
 }
 
 export async function saveProfile(profile: UserProfile): Promise<void> {
-  const { uid, ...data } = profile;
+  const { uid, createdAt, ...data } = profile;
+  // toFsValue ne sait pas sérialiser un Date : on traite createdAt à part.
+  const fields = toFsFields(data as Record<string, unknown>) as Record<string, unknown>;
+  if (createdAt) fields.createdAt = { timestampValue: createdAt.toISOString() };
   const headers = await authHeader();
   // PATCH sans updateMask crée ou remplace le document users/{uid}
   const res = await fetch(`${FS_BASE}/users/${uid}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json", ...headers },
-    body: JSON.stringify({ fields: toFsFields(data as Record<string, unknown>) }),
+    body: JSON.stringify({ fields }),
   });
   await checkRest(res);
   profileCache.set(uid, profile);
