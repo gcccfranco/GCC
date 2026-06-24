@@ -47,8 +47,8 @@ export interface UserProfile {
    *  (catégories culte/groupe/EDD, ou "*" pour tout le monde) — attribué par les
    *  admins uniquement. Cf. src/lib/push/audiences.ts. */
   notify: string[];
-  /** Date d'inscription, écrite à la création du compte. Absent pour les comptes
-   *  créés avant l'ajout de ce champ (juin 2026). */
+  /** Date d'inscription = createTime du document Firestore users/{uid}, en lecture
+   *  seule (jamais persisté comme champ). Renseigné pour tous les profils existants. */
   createdAt?: Date;
 }
 
