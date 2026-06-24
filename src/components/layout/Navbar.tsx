@@ -26,6 +26,9 @@ const NOTIF_KIND_KEYS: Record<NotificationItem["kind"], string> = {
   "annonce": "notifications.annonce",
   "setlist-created": "notifications.setlistCreated",
   "setlist-updated": "notifications.setlistUpdated",
+  "manual": "notifications.manual",
+  "reminder": "notifications.reminder",
+  "broadcast": "notifications.broadcast",
 };
 
 export function Navbar() {
@@ -309,8 +312,12 @@ export function Navbar() {
                             </span>
                             <span className="text-xs text-muted-foreground">
                               {t(NOTIF_KIND_KEYS[n.kind])}
-                              {" · "}
-                              {t("categories." + n.category, { defaultValue: n.category })}
+                              {n.category && (
+                                <>
+                                  {" · "}
+                                  {t("categories." + n.category, { defaultValue: n.category })}
+                                </>
+                              )}
                               {" · "}
                               {new Intl.DateTimeFormat(isZh ? "zh-CN" : "fr-FR", {
                                 day: "numeric",
