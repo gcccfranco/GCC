@@ -262,7 +262,10 @@
     "empty": "Rien de nouveau",
     "annonce": "Nouvelle annonce",
     "setlistCreated": "Setlist créée",
-    "setlistUpdated": "Setlist modifiée"
+    "setlistUpdated": "Setlist modifiée",
+    "manual": "Notification",
+    "reminder": "Rappel",
+    "broadcast": "Diffusion"
   },
   "profile": {
     "title": "Mon profil",
