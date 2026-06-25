@@ -133,6 +133,11 @@ function chordWidthPt(chord: string): number {
 // deux accords successifs ne se touchent jamais.
 const CHORD_GAP = measureChord(" ", CHORD_SIZE);
 
+/** LiberationSans (footers) n'a pas de glyphes CJK → police CJK si le libellé en contient. */
+function footerLabelFont(label: string): string {
+  return /[一-鿿㐀-䶿]/.test(label) ? "SourceHanSansCN" : "LiberationSans";
+}
+
 function sectionName(section: ChordProSection, uiLang: string): string {
   return formatSectionName(section, uiLang === "zh-CN" ? zhTranslations : frTranslations);
 }
@@ -592,8 +597,7 @@ export function SongPDFPage({
   const titleFont = isZh ? "KaiTi" : "SpaceGrotesk";
   const metaFont = isZh ? "SourceHanSansCN" : "SpaceGrotesk";
   const centerLabel = footerCenter ?? title;
-  // LiberationSans n'a pas de glyphes CJK → police CJK si le libellé en contient.
-  const centerLabelFont = /[一-鿿㐀-䶿]/.test(centerLabel) ? "SourceHanSansCN" : "LiberationSans";
+  const centerLabelFont = footerLabelFont(centerLabel);
   return (
     <Page size="A4" style={styles.page}>
 
@@ -726,6 +730,7 @@ export function FusionPDFPage({
   if (mixedSections.length === 0) return null;
 
   const centerLabel = footerCenter ?? songs.map((s) => s.ast.metadata.title).join(" / ");
+  const centerLabelFont = footerLabelFont(centerLabel);
 
   // Build flat list of title parts so each Text gets a key (no Fragment needed)
   const titleParts: { text: string; font: string; bold: boolean; key: string }[] = [];
@@ -779,7 +784,7 @@ export function FusionPDFPage({
                        color: BLUE_THEME.accent, letterSpacing: 1 }]}>
           GCC LOUANGE
         </Text>
-        <Text style={[styles.footerText, { fontFamily: "LiberationSans", fontWeight: 400 }]}>
+        <Text style={[styles.footerText, { fontFamily: centerLabelFont, fontWeight: 400 }]}>
           {centerLabel}
         </Text>
         <Text
@@ -818,7 +823,7 @@ export function TransitionPDFPage({ text, footerCenter }: { text: string; footer
                        color: BLUE_THEME.accent, letterSpacing: 1 }]}>
           GCC LOUANGE
         </Text>
-        <Text style={[styles.footerText, { fontFamily: "LiberationSans", fontWeight: 400 }]}>
+        <Text style={[styles.footerText, { fontFamily: footerLabelFont(footerCenter ?? ""), fontWeight: 400 }]}>
           {footerCenter ?? ""}
         </Text>
         <Text
