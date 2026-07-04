@@ -151,3 +151,4 @@ vite.config.ts.timestamp-*
 .vercel
 graphify-out/
 
+locale/
