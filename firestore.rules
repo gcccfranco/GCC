@@ -6,8 +6,8 @@ rules_version = '2';
 // Modèle d'accès :
 // - Setlists : lecture réservée aux connectés (le filtrage par service se fait côté client) ;
 //   création : le créateur doit se déclarer propriétaire (ownerId = uid, figé ensuite) ;
-//   modification/suppression réservées au créateur (ownerId), aux musiciens du même service
-//   et aux admins.
+//   modification/suppression réservées au créateur (ownerId), aux musiciens et à la
+//   présidence du même service, et aux admins.
 // - Profils (users/{uid}) : chacun crée le sien à l'inscription ; une fois créé,
 //   seuls les admins peuvent le modifier.
 // - config/app : état des inscriptions (registrationOpen), lisible publiquement,
@@ -38,10 +38,12 @@ service cloud.firestore {
       return exists(/databases/$(database)/documents/users/$(request.auth.uid));
     }
 
-    // Musicien du service correspondant à la catégorie de la setlist.
+    // Musicien ou présidence du service correspondant à la catégorie de la setlist
+    // (niveau « edit » — miroir de categoryLevel dans src/lib/access.ts).
     // serviceRoles : map catégorie → liste de rôles ({} par défaut si absent).
-    function isMusicienOf(category) {
-      return "musicien" in profile().get('serviceRoles', {}).get(category, []);
+    function isEditorOf(category) {
+      let roles = profile().get('serviceRoles', {}).get(category, []);
+      return "musicien" in roles || "presidence" in roles;
     }
 
     match /users/{uid} {
@@ -101,21 +103,21 @@ service cloud.firestore {
       // Création : le créateur doit se déclarer propriétaire (ownerId = uid)
       allow create: if signedIn()
         && request.resource.data.get('ownerId', null) == request.auth.uid;
-      // Modification : ownerId ne change jamais ; un musicien du service ne
-      // peut déplacer la setlist que vers une catégorie où il sert aussi.
+      // Modification : ownerId ne change jamais ; un musicien/présidence du service
+      // ne peut déplacer la setlist que vers une catégorie où il sert aussi.
       allow update: if signedIn()
         && request.resource.data.get('ownerId', null) == resource.data.get('ownerId', null)
         && (
           resource.data.get('ownerId', '') == request.auth.uid
           || isAdmin()
-          || (hasProfile() && isMusicienOf(resource.data.category)
+          || (hasProfile() && isEditorOf(resource.data.category)
               && (request.resource.data.category == resource.data.category
-                  || isMusicienOf(request.resource.data.category)))
+                  || isEditorOf(request.resource.data.category)))
         );
       allow delete: if signedIn() && (
         resource.data.get('ownerId', '') == request.auth.uid
         || isAdmin()
-        || (hasProfile() && isMusicienOf(resource.data.category))
+        || (hasProfile() && isEditorOf(resource.data.category))
       );
     }
 

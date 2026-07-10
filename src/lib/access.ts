@@ -48,13 +48,13 @@ const isGroupeOrEdd = (category: string): boolean =>
 
 /** Niveau d'accès d'une personne à une catégorie, dérivé de ses rôles dans cette
  *  catégorie. Échelon view < create < edit :
- *   - musicien → edit ;
- *   - choriste / présidence → create ;
+ *   - musicien / présidence → edit ;
+ *   - choriste → create ;
  *   - sans rôle exécutant : groupe & EDD = membre (create) ; culte = view
  *     (régie, observateur — le lieu donne la visibilité). */
 export function categoryLevel(category: string, roles: ServiceRole[]): AccessLevel {
-  if (roles.includes("musicien")) return "edit";
-  if (roles.includes("chanteur") || roles.includes("presidence")) return "create";
+  if (roles.includes("musicien") || roles.includes("presidence")) return "edit";
+  if (roles.includes("chanteur")) return "create";
   return isGroupeOrEdd(category) ? "create" : "view";
 }
 
@@ -101,7 +101,7 @@ export function canSeeSetlist(
   return profile ? visibleCategories(profile).includes(setlist.category) : false;
 }
 
-/** Modification : créateur de la setlist + niveau « edit » sur la catégorie (musicien) (+ admins). */
+/** Modification : créateur de la setlist + niveau « edit » sur la catégorie (musicien, présidence) (+ admins). */
 export function canEditSetlist(
   user: AuthUser,
   profile: UserProfile | null,

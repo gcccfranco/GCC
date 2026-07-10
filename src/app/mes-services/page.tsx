@@ -36,11 +36,13 @@ function daysUntil(dateStr: string, todayStr: string): number {
 
 type GroupedEntry = { date: string; service: string; roles: string[]; time?: string; location?: string; setlistDate?: string; leader?: string; moment?: "matin" | "soir" };
 
-/** Regroupe les entrées par date+service en fusionnant les rôles. */
+/** Regroupe les entrées par date+service en fusionnant les rôles. La séance cible
+ *  (setlistDate+moment) fait partie de la clé : deux répétitions campus de séances
+ *  différentes le même jour restent deux cartes (heures/lieux distincts). */
 function groupEntries(entries: ServiceEntry[]): GroupedEntry[] {
   const map = new Map<string, GroupedEntry>();
   for (const e of entries) {
-    const key = `${e.date}|${e.service}`;
+    const key = `${e.date}|${e.service}|${e.setlistDate ?? ""}|${e.moment ?? ""}`;
     const g = map.get(key);
     if (g) {
       if (!g.roles.includes(e.role)) g.roles.push(e.role);
@@ -249,7 +251,7 @@ export default function MesServicesPage() {
                     const thisWeek = dUntil >= 0 && dUntil <= 6;
                     return (
                       <div
-                        key={`${e.date}|${e.service}`}
+                        key={`${e.date}|${e.service}|${e.setlistDate ?? ""}|${e.moment ?? ""}`}
                         className={`flex items-center gap-3 rounded-xl border bg-card px-4 py-3 border-l-4 ${
                           thisWeek ? "border-border ring-1 ring-primary/20" : "border-border"
                         }`}

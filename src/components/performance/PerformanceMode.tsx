@@ -53,11 +53,13 @@ function BlockRenderer({
   showChordsGlobal,
   showTransitions,
   hideLyrics,
+  chartStyle,
 }: {
   block: PerformanceBlock;
   showChordsGlobal: boolean;
   showTransitions: boolean;
   hideLyrics: boolean;
+  chartStyle: boolean;
 }) {
   if (block.kind === "song-header") {
     return <SongHeader block={block} />;
@@ -80,6 +82,7 @@ function BlockRenderer({
       hideLyrics={hideLyrics}
       note={block.note}
       songSourceLabel={block.songSourceLabel}
+      chartStyle={chartStyle}
     />
   );
 }
@@ -88,6 +91,7 @@ const langAccent = (language?: "fr" | "zh") =>
   language === "zh" ? "var(--jianpu-color, #b91c1c)" : "var(--chord-color, #2563eb)";
 
 function SongHeader({ block }: { block: SongHeaderBlock }) {
+  const { t } = useTranslation();
   if (block.fusionSongs?.length) {
     return (
       <div className="flex items-start gap-2 mb-3 pb-3 border-b border-border">
@@ -130,10 +134,17 @@ function SongHeader({ block }: { block: SongHeaderBlock }) {
         )}
         <p className="text-xs text-muted-foreground mt-0.5 ml-7">{block.artist}</p>
       </div>
-      <span className="text-sm font-bold font-mono shrink-0 border-2 rounded-full px-2.5 py-0.5 mt-1"
-        style={{ color: langAccent(block.language), borderColor: langAccent(block.language) }}>
-        {block.songKey}
-      </span>
+      <div className="flex items-center gap-1.5 shrink-0 mt-1">
+        {block.capo ? (
+          <span className="text-xs font-bold font-mono border-2 border-border rounded-full px-2.5 py-0.5 text-muted-foreground">
+            {t("performance.capoBadge", { n: block.capo })}
+          </span>
+        ) : null}
+        <span className="text-sm font-bold font-mono border-2 rounded-full px-2.5 py-0.5"
+          style={{ color: langAccent(block.language), borderColor: langAccent(block.language) }}>
+          {block.songKey}
+        </span>
+      </div>
     </div>
   );
 }
@@ -200,6 +211,18 @@ function layoutSong(headerIdx: number | null, body: number[], heights: number[],
 const MIN_SCALE = 0.8;
 const MAX_SCALE = 1.5;
 
+// Presets de rôle : raccourcis vers une combinaison accords/paroles. Mémorisé
+// par appareil ; un réglage manuel des toggles désélectionne le preset.
+type RolePreset = "pianiste" | "guitariste" | "presidence" | "choriste" | "batteur";
+const ROLE_PRESETS: Record<RolePreset, { chords: boolean; hideLyrics: boolean }> = {
+  pianiste: { chords: true, hideLyrics: false },
+  guitariste: { chords: true, hideLyrics: false },
+  presidence: { chords: false, hideLyrics: false },
+  choriste: { chords: false, hideLyrics: false },
+  batteur: { chords: false, hideLyrics: true },
+};
+const ROLE_PRESET_IDS = Object.keys(ROLE_PRESETS) as RolePreset[];
+
 export interface PerformanceModeProps {
   items: SetlistItem[];
   contents: Record<string, SongContent>;
@@ -220,13 +243,45 @@ export function PerformanceMode({
   const { t } = useTranslation();
   const { user } = useAuth();
   const rootRef = useRef<HTMLDivElement>(null);
-  const [showChords, setShowChords] = useState(initialShowChords);
+  const [rolePreset, setRolePreset] = useState<RolePreset | null>(() => {
+    try {
+      const v = localStorage.getItem("perf-role-preset");
+      return v && v in ROLE_PRESETS ? (v as RolePreset) : null;
+    } catch {
+      return null;
+    }
+  });
+  const [showChords, setShowChords] = useState(
+    rolePreset ? ROLE_PRESETS[rolePreset].chords : initialShowChords,
+  );
   const [showTransitions, setShowTransitions] = useState(true);
   const [hideLyrics, setHideLyrics] = useState(() => {
+    if (rolePreset) return ROLE_PRESETS[rolePreset].hideLyrics;
     try {
       return localStorage.getItem("perf-hide-lyrics") === "1";
     } catch {
       return false;
+    }
+  });
+  // Style « chart » : couleurs par type de section + accords neutres (cf. SectionView)
+  const [chartStyle, setChartStyle] = useState(() => {
+    try {
+      return localStorage.getItem("perf-chart-style") === "1";
+    } catch {
+      return false;
+    }
+  });
+  // Capo par chant (slug → frets), mémorisé sur l'appareil. Appliqué aux
+  // accords uniquement quand le preset Guitariste est actif.
+  const [capos, setCapos] = useState<Record<string, number>>(() => {
+    try {
+      const raw: unknown = JSON.parse(localStorage.getItem("perf-capos") ?? "{}");
+      if (typeof raw !== "object" || raw === null) return {};
+      return Object.fromEntries(
+        Object.entries(raw).filter(([, v]) => typeof v === "number" && v >= 1 && v <= 11),
+      ) as Record<string, number>;
+    } catch {
+      return {};
     }
   });
   const [annotateMode, setAnnotateMode] = useState(false);
@@ -284,6 +339,36 @@ export function PerformanceMode({
     try { localStorage.setItem("perf-hide-lyrics", v ? "1" : "0"); } catch { /* ignore */ }
   }, []);
 
+  const toggleChartStyle = useCallback((v: boolean) => {
+    setChartStyle(v);
+    try { localStorage.setItem("perf-chart-style", v ? "1" : "0"); } catch { /* ignore */ }
+  }, []);
+
+  const clearRolePreset = useCallback(() => {
+    setRolePreset(null);
+    try { localStorage.removeItem("perf-role-preset"); } catch { /* ignore */ }
+  }, []);
+
+  const applyRolePreset = useCallback((id: RolePreset) => {
+    const p = ROLE_PRESETS[id];
+    setShowChords(p.chords);
+    toggleHideLyrics(p.hideLyrics);
+    setRolePreset(id);
+    try { localStorage.setItem("perf-role-preset", id); } catch { /* ignore */ }
+  }, [toggleHideLyrics]);
+
+  const capoActive = rolePreset === "guitariste";
+
+  const setCapo = useCallback((slug: string, frets: number) => {
+    setCapos((prev) => {
+      const next = { ...prev };
+      if (frets <= 0) delete next[slug];
+      else next[slug] = Math.min(frets, 11);
+      try { localStorage.setItem("perf-capos", JSON.stringify(next)); } catch { /* ignore */ }
+      return next;
+    });
+  }, []);
+
   // Vue ossature (paroles ET accords masqués) : un chant par page, structure en
   // colonnes adaptatives, texte réduit au besoin pour tout faire tenir.
   const structureMode = hideLyrics && !showChords;
@@ -304,15 +389,16 @@ export function PerformanceMode({
 
   // Build flat block list (memoised — only changes when content changes)
   const blocks = useMemo(
-    () => buildPerformanceBlocks(items, contents, true), // always build with chords=true for stable UIDs
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [items, contents],
+    // always build with chords=true for stable UIDs (le capo ne change ni le
+    // nombre ni l'ordre des blocs : les UIDs restent stables)
+    () => buildPerformanceBlocks(items, contents, true, capoActive ? capos : undefined),
+    [items, contents, capoActive, capos],
   );
 
   // Re-measure when a setting affecting heights changes
   useEffect(() => {
     setRemeasureKey((k) => k + 1);
-  }, [showChords, showTransitions, hideLyrics, fontScale]);
+  }, [showChords, showTransitions, hideLyrics, fontScale, chartStyle]);
 
   // Re-measure on viewport resize / orientation change
   useEffect(() => {
@@ -434,9 +520,25 @@ export function PerformanceMode({
   // ── Annotation persistence ──────────────────────────────────────────────────
 
   const currentPageIndices = pages[currentPage] ?? [];
+  // Sommaire : un en-tête de chant par entrée, avec sa page de départ
+  const songEntries = useMemo(
+    () => blocks.flatMap((b, i) => (b.kind === "song-header" ? [{ block: b, index: i }] : [])),
+    [blocks],
+  );
+  const firstBlockIdx = currentPageIndices[0] ?? 0;
+  const currentSongEntryIdx = songEntries.reduce(
+    (acc, e, i) => (e.index <= firstBlockIdx ? i : acc),
+    0,
+  );
+  const currentEntry = songEntries[currentSongEntryIdx];
+  const nextEntry = songEntries[currentSongEntryIdx + 1];
+  // Capo du chant courant — une page ne chevauche jamais deux chants
+  const currentCapo = capoActive ? capos[currentEntry?.block.songSlug ?? ""] ?? 0 : 0;
   // Les annotations sont liées à la mise en page : accords, transitions et
   // taille de texte font partie de la clé.
-  const layoutSig = `c${showChords ? 1 : 0}t${showTransitions ? 1 : 0}l${hideLyrics ? 1 : 0}z${Math.round(fontScale * 100)}`;
+  // « s1 » / « kN » seulement quand style chart ou capo est actif : les clés
+  // d'annotations existantes (sans ces marqueurs) restent valables sinon.
+  const layoutSig = `c${showChords ? 1 : 0}t${showTransitions ? 1 : 0}l${hideLyrics ? 1 : 0}${chartStyle ? "s1" : ""}${currentCapo ? `k${currentCapo}` : ""}z${Math.round(fontScale * 100)}`;
   const currentPageKey = computePageKey(blocks, currentPageIndices, layoutSig);
 
   // Charger les traits de la page courante (toujours — affichage permanent)
@@ -529,20 +631,7 @@ export function PerformanceMode({
     .map((i) => blocks[i])
     .find((b): b is SectionBlock => b.kind === "section");
 
-  // Sommaire : un en-tête de chant par entrée, avec sa page de départ
-  const songEntries = useMemo(
-    () => blocks.flatMap((b, i) => (b.kind === "song-header" ? [{ block: b, index: i }] : [])),
-    [blocks],
-  );
-  const firstBlockIdx = currentPageIndices[0] ?? 0;
-  const currentSongEntryIdx = songEntries.reduce(
-    (acc, e, i) => (e.index <= firstBlockIdx ? i : acc),
-    0,
-  );
-
   // Progression dans le chant courant + chant suivant
-  const currentEntry = songEntries[currentSongEntryIdx];
-  const nextEntry = songEntries[currentSongEntryIdx + 1];
   const songStartPage = currentEntry ? pages.findIndex((p) => p.includes(currentEntry.index)) : -1;
   const nextSongPage = nextEntry ? pages.findIndex((p) => p.includes(nextEntry.index)) : -1;
   const songEndPage = nextSongPage > 0 ? nextSongPage - 1 : pages.length - 1;
@@ -594,6 +683,7 @@ export function PerformanceMode({
                 showChordsGlobal={showChords}
                 showTransitions={showTransitions}
                 hideLyrics={hideLyrics}
+                chartStyle={chartStyle}
               />
             </div>
           ))}
@@ -630,6 +720,7 @@ export function PerformanceMode({
               showChordsGlobal={showChords}
               showTransitions={showTransitions}
               hideLyrics={hideLyrics}
+              chartStyle={chartStyle}
             />
           );
           return (
@@ -844,14 +935,80 @@ export function PerformanceMode({
             className="w-full max-w-md mx-auto px-4 pt-1 space-y-4"
             style={{ paddingBottom: "calc(1.5rem + env(safe-area-inset-bottom, 0px))" }}
           >
+            <div className="space-y-2">
+              <span className="text-sm font-medium text-foreground">{t("performance.view")}</span>
+              <div className="flex flex-wrap gap-1.5">
+                {ROLE_PRESET_IDS.map((id) => (
+                  <button
+                    key={id}
+                    onClick={() => (rolePreset === id ? clearRolePreset() : applyRolePreset(id))}
+                    className={`h-9 px-3 rounded-lg border text-xs font-semibold transition-colors ${
+                      rolePreset === id
+                        ? "bg-primary text-primary-foreground border-transparent"
+                        : "border-border text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {t(`performance.roles.${id}`)}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {capoActive && currentEntry?.block.songSlug && (
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <span className="text-sm font-medium text-foreground">{t("performance.capo")}</span>
+                  <p className="text-xs text-muted-foreground truncate">{currentEntry.block.title}</p>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Button
+                    variant="outline"
+                    size="icon-lg"
+                    onClick={() => setCapo(currentEntry.block.songSlug!, currentCapo - 1)}
+                    disabled={currentCapo <= 0}
+                    aria-label={t("performance.capoLower")}
+                    className="text-sm font-bold"
+                  >
+                    −
+                  </Button>
+                  <span className="text-xs text-muted-foreground tabular-nums w-10 text-center">
+                    {currentCapo}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="icon-lg"
+                    onClick={() => setCapo(currentEntry.block.songSlug!, currentCapo + 1)}
+                    disabled={currentCapo >= 11}
+                    aria-label={t("performance.capoRaise")}
+                    className="text-sm font-bold"
+                  >
+                    +
+                  </Button>
+                </div>
+              </div>
+            )}
             <SettingRow label={t("performance.chords")}>
-              <Switch checked={showChords} onCheckedChange={setShowChords} />
+              <Switch
+                checked={showChords}
+                onCheckedChange={(v) => {
+                  clearRolePreset();
+                  setShowChords(v);
+                }}
+              />
             </SettingRow>
             <SettingRow label={t("performance.transitions")}>
               <Switch checked={showTransitions} onCheckedChange={setShowTransitions} />
             </SettingRow>
             <SettingRow label={t("performance.hideLyrics")}>
-              <Switch checked={hideLyrics} onCheckedChange={toggleHideLyrics} />
+              <Switch
+                checked={hideLyrics}
+                onCheckedChange={(v) => {
+                  clearRolePreset();
+                  toggleHideLyrics(v);
+                }}
+              />
+            </SettingRow>
+            <SettingRow label={t("performance.chartStyle")}>
+              <Switch checked={chartStyle} onCheckedChange={toggleChartStyle} />
             </SettingRow>
             {user && (
               <SettingRow label={t("performance.annotations")}>

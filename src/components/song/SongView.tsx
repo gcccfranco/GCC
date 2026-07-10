@@ -31,6 +31,32 @@ const OUTLINE_BOX = new Set(["bridge"]);
 // Pré-refrain : barre d'accent à gauche seule (pas de cadre), pour le distinguer du pont.
 const LEFT_BAR = new Set(["prechorus"]);
 
+// Style « chart » (option du Mode Louange) : la couleur suit le TYPE de section
+// (palette --sec-* de globals.css) et non la langue du chant.
+const CHART_TYPE_COLOR: Record<string, string> = {
+  intro: "var(--sec-intro)",
+  verse: "var(--sec-verse)",
+  prechorus: "var(--sec-prechorus)",
+  chorus: "var(--sec-chorus)",
+  final: "var(--sec-chorus)",
+  bridge: "var(--sec-bridge)",
+  outro: "var(--sec-outro)",
+  coda: "var(--sec-coda)",
+};
+
+function getChartSectionStyle(type: string): React.CSSProperties {
+  return {
+    "--sec-c": CHART_TYPE_COLOR[type] ?? "var(--sec-other)",
+    // Accords neutres : surcharge des variables héritées par ChordLine (FR) et ZhLine (ZH).
+    "--chord-color": "hsl(var(--foreground))",
+    "--jianpu-color": "hsl(var(--foreground))",
+    border: "1px solid var(--sec-c)",
+    borderRadius: 10,
+    padding: "10px 16px 12px",
+    marginBottom: 10,
+  } as React.CSSProperties;
+}
+
 const KaiTiFont = localFont({
   src: [{ path: "../../../public/fonts/KaiTi.ttf", weight: "400", style: "normal" }],
 });
@@ -260,16 +286,18 @@ export interface SectionViewProps {
   songSourceLabel?: string;
   /** « pdf » = typographie des PDF exportés (Mode Louange) ; « web » = défaut. */
   typography?: "web" | "pdf";
+  /** Style « chart » : couleur par type de section, cadre gris fin, accords neutres. */
+  chartStyle?: boolean;
 }
 
-export function SectionView({ section, language, showChords, showPinyin, useJianpu, hideLyrics = false, note, songSourceLabel, typography = "web" }: SectionViewProps) {
+export function SectionView({ section, language, showChords, showPinyin, useJianpu, hideLyrics = false, note, songSourceLabel, typography = "web", chartStyle = false }: SectionViewProps) {
   const isPdfTypo = typography === "pdf";
   const { t, i18n } = useTranslation();
   const isZh = language === "zh";
   const uiIsZh = i18n.language === "zh-CN";
   const label = formatSectionName(section, t);
   return (
-    <div className="mb-5 print:mb-4" style={{ breakInside: "avoid", ...getSectionStyle(section.type, isZh) }}>
+    <div className="mb-5 print:mb-4" style={{ breakInside: "avoid", ...(chartStyle ? getChartSectionStyle(section.type) : getSectionStyle(section.type, isZh)) }}>
       {/* Label de section */}
       <div className="mb-1.5" style={{ display: "flex", alignItems: "center", gap: 9 }}>
         <span

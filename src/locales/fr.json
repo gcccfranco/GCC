@@ -117,7 +117,7 @@
       "notFound": "Setlist introuvable.",
       "loginRequired": "Connecte-toi pour voir cette setlist.",
       "noAccess": "Tu n'as pas accès à cette setlist — elle ne fait pas partie de tes services.",
-      "noEditAccess": "Seuls le créateur de la setlist et les musiciens de ce service peuvent la modifier.",
+      "noEditAccess": "Seuls le créateur de la setlist, les musiciens et la présidence de ce service peuvent la modifier.",
       "back": "← Retour",
       "leaderLabel": "Présidence :",
       "loadingCharts": "Chargement des partitions…",
@@ -129,7 +129,7 @@
       "sharePrivateWarning": "Setlist privée — visible uniquement par toi",
       "canEdit": "Vous pouvez modifier",
       "readOnly": "Lecture seule",
-      "editableBy": "Modifiable par : créateur, musiciens de {{category}} et admins",
+      "editableBy": "Modifiable par : créateur, musiciens et présidence de {{category}}, et admins",
       "editableByOwner": "Privée — visible et modifiable uniquement par son créateur",
       "loadError": "Impossible de charger la setlist. Vérifie ta connexion."
     },
@@ -231,9 +231,22 @@
     "next": "Suivant :",
     "songList": "Liste des chants",
     "settings": "Réglages",
+    "view": "Vue",
+    "roles": {
+      "pianiste": "Pianiste",
+      "guitariste": "Guitariste",
+      "presidence": "Présidence",
+      "choriste": "Choriste",
+      "batteur": "Batteur"
+    },
     "chords": "Accords",
+    "capo": "Capo",
+    "capoBadge": "Capo {{n}}",
+    "capoLower": "Baisser le capo",
+    "capoRaise": "Monter le capo",
     "transitions": "Transitions",
     "hideLyrics": "Masquer les paroles",
+    "chartStyle": "Couleurs par section",
     "annotations": "Annotations",
     "text": "Texte",
     "textSmaller": "Réduire le texte",
@@ -403,7 +416,7 @@
           "Ouvre une setlist pour parcourir les chants, lancer le **Mode Louange** ou télécharger un **PDF unique** (page de garde + tous les chants à la suite).",
           "Chaque chant garde sa tonalité, son mode (standard / Jianpu) et ses notes propres au culte.",
           "**Dupliquer** crée ta propre copie d'une setlist ; **Partager** copie son lien.",
-          "Avec le rôle **musicien** (créer et modifier) ou **choriste / présidence** (créer), tu composes les setlists de tes services — voir « Composer une setlist » ci-dessous."
+          "Avec le rôle **musicien / présidence** (créer et modifier) ou **choriste** (créer), tu composes les setlists de tes services — voir « Composer une setlist » ci-dessous."
         ],
         "tip": "Une setlist **privée** n'est visible que de son auteur et des responsables ; un **brouillon** reste caché tant qu'il n'est pas publié."
       },
@@ -466,8 +479,8 @@
         "for": "Selon ton profil",
         "body": "Tes droits dépendent des rôles que les responsables t'attribuent, service par service. Plus de droits débloquent plus d'actions.",
         "points": [
-          "**Choriste / Présidence** : créer des setlists dans leurs services.",
-          "**Musicien** : créer et modifier les setlists de leurs services.",
+          "**Choriste** : créer des setlists dans ses services.",
+          "**Musicien / Présidence** : créer et modifier les setlists de leurs services.",
           "**Régie** : voir en lecture seule les setlists de ses cultes.",
           "**Droit d'annonce ou de notification** : publier des annonces ou envoyer des notifications à une audience, attribué au cas par cas.",
           "**Admins** : espace **Admin** (valider les comptes et les rôles, ouvrir/fermer les inscriptions, traiter les propositions de chants et les signalements) et page **Notifier** (notification manuelle à tout le monde, un culte, un groupe ou une classe)."

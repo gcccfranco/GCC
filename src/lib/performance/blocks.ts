@@ -2,7 +2,7 @@ import type { SetlistItem } from "@/types/setList";
 import type { ChordProSection, ChordProAST } from "@/types/chordPro";
 import type { SongContent } from "@/lib/api/songs";
 import { transposeAST } from "@/lib/transposeAST";
-import { semitonesTo } from "@/lib/transpose";
+import { semitonesTo, getTransposedKey } from "@/lib/transpose";
 import { resolveStructureOverride } from "@/lib/chordpro/structure";
 
 export type SongHeaderBlock = {
@@ -14,6 +14,10 @@ export type SongHeaderBlock = {
   songKey: string;
   position: number;
   language?: "fr" | "zh";
+  /** Slug du chant (absent pour les fusions) — cible du réglage capo */
+  songSlug?: string;
+  /** Capo appliqué (frets) : les accords des sections sont déjà transposés */
+  capo?: number;
   /** Fusion en structure mixte : titres + tonalités des chants fusionnés */
   fusionSongs?: { title: string; key: string; language: "fr" | "zh" }[];
 };
@@ -60,10 +64,17 @@ function resolveSections(ast: ChordProAST, structureOverride: string[] | null): 
   return resolveStructureOverride(ast.sections, structureOverride);
 }
 
+// Capo N = accords affichés N demi-tons sous la tonalité jouée (shapes).
+function applyCapo(ast: ChordProAST, playedKey: string, capo: number): ChordProAST {
+  if (!capo) return ast;
+  return transposeAST(ast, -capo, getTransposedKey(playedKey, -capo));
+}
+
 export function buildPerformanceBlocks(
   items: SetlistItem[],
   contents: Record<string, SongContent>,
   showChordsGlobal: boolean,
+  capos?: Record<string, number>,
 ): PerformanceBlock[] {
   const blocks: PerformanceBlock[] = [];
   let c = 0;
@@ -164,7 +175,11 @@ export function buildPerformanceBlocks(
     // ── Chant normal ──
     const content = contents[item.songSlug];
     if (!content) continue;
-    const ast = getTransposed(content, item.keyOverride);
+    // Tonalité jouée (affichée) — après capo, ast.metadata.key devient la
+    // tonalité des shapes, on fige donc la clé d'affichage ici.
+    const playedKey = item.keyOverride ?? content.ast.metadata.key;
+    const capo = capos?.[item.songSlug] ?? 0;
+    const ast = applyCapo(getTransposed(content, item.keyOverride), playedKey, capo);
     const sections = resolveSections(ast, item.structureOverride);
     blocks.push({
       kind: "song-header",
@@ -172,9 +187,11 @@ export function buildPerformanceBlocks(
       title: ast.metadata.title,
       titlePinyin: ast.metadata.titlePinyin,
       artist: ast.metadata.artist,
-      songKey: item.keyOverride ?? ast.metadata.key,
+      songKey: playedKey,
       position: item.position,
       language: ast.metadata.language,
+      songSlug: item.songSlug,
+      capo: capo || undefined,
     });
     const occ: Record<string, number> = {};
 
@@ -198,7 +215,7 @@ export function buildPerformanceBlocks(
         showPinyin: item.showPinyin,
         note: note || undefined,
         songTitle: ast.metadata.title,
-        songKey: item.keyOverride ?? ast.metadata.key,
+        songKey: playedKey,
       });
       if (transition) blocks.push({ kind: "transition-intra", uid: uid(), text: transition });
     }
