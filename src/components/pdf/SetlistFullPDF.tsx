@@ -4,6 +4,7 @@ import { transposeAST } from "@/lib/transposeAST";
 import { semitonesTo } from "@/lib/transpose";
 import type { FSSetlist } from "@/lib/firebase/setlists";
 import type { ChordProAST } from "@/types/chordPro";
+import { itemAst } from "@/lib/chordpro/itemContent";
 
 interface SongContent {
   slug: string;
@@ -78,8 +79,9 @@ export function SetlistFullPDF({
           ));
         }
 
-        if (!contents[item.songSlug]) return [];
-        let ast = contents[item.songSlug].ast;
+        const baseAst = itemAst(item, contents[item.songSlug]);
+        if (!baseAst) return [];
+        let ast = baseAst;
         if (item.keyOverride && item.keyOverride !== ast.metadata.key) {
           const semitones = semitonesTo(ast.metadata.key, item.keyOverride);
           ast = transposeAST(ast, semitones, item.keyOverride);
