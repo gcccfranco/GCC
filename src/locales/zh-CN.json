@@ -33,7 +33,9 @@
       "mixed": "法语 / 中文"
     },
     "moreActions": "更多操作",
-    "retry": "重试"
+    "retry": "重试",
+    "confirm": "确认",
+    "cancel": "取消"
   },
   "songs": {
     "list": {
@@ -196,6 +198,40 @@
       "privateToggle": "私密歌单（仅自己可见）",
       "privateLoginRequired": "请登录以创建私密歌单。",
       "addTransition": "过渡"
+    },
+    "contentEdit": {
+      "toggle": "调整",
+      "hint": "调整模式：点击一行歌词即可修改和弦或歌词。修改只影响这份敬拜单。",
+      "lineTitle": "修改这一行",
+      "lyricsTitle": "修改歌词",
+      "instrTitle": "间奏行",
+      "instrNewTitle": "新增间奏行",
+      "displayedKey": "显示调性：{{key}}",
+      "editLyrics": "修改歌词",
+      "addInstrumental": "+ 在此行后加间奏行",
+      "deleteLine": "删除此行",
+      "deleteLineConfirm": "从这份敬拜单的版本中删除此行？",
+      "deleteLineYes": "删除",
+      "lyricsRequired": "歌词不能为空。",
+      "annotation": "注释（x2、琶音、仅钢琴…）",
+      "addChord": "和弦",
+      "removeChord": "删除和弦",
+      "instrNeedsChord": "至少添加一个和弦才能确认。",
+      "confirmChord": "确认和弦",
+      "majQuality": "maj",
+      "customQuality": "保留原有类型「{{quality}}」",
+      "bassToggle": "/ 低音",
+      "modifiedBadge": "已修改版本",
+      "revert": "恢复原版",
+      "revertConfirm": "此圣诗在这份敬拜单中的所有和弦与歌词修改都将丢失。",
+      "revertYes": "恢复",
+      "saveError": "保存失败——请重试。",
+      "tapWordHint": "点击单词可选择和弦放置的确切位置。",
+      "spacerKept": "保留空列——选择一个音符即可替换为和弦。",
+      "pinyinMismatch": "注意：{{py}} 个拼音对应 {{zh}} 个汉字——对齐将会错位。",
+      "songLoading": "圣诗加载中——请稍后再试。",
+      "conflict": "敬拜单已被他人修改——请检查后重试。",
+      "emptyColumn": "空列"
     }
   },
   "customize": {
