@@ -4,6 +4,7 @@ import type { SongContent } from "@/lib/api/songs";
 import { transposeAST } from "@/lib/transposeAST";
 import { semitonesTo, getTransposedKey } from "@/lib/transpose";
 import { resolveStructureOverride } from "@/lib/chordpro/structure";
+import { itemAst } from "@/lib/chordpro/itemContent";
 
 export type SongHeaderBlock = {
   kind: "song-header";
@@ -53,8 +54,7 @@ export type PerformanceBlock =
   | TransitionIntraBlock
   | TransitionInterBlock;
 
-function getTransposed(content: SongContent, keyOverride: string | null): ChordProAST {
-  const ast = content.ast;
+function getTransposed(ast: ChordProAST, keyOverride: string | null): ChordProAST {
   if (!keyOverride || keyOverride === ast.metadata.key) return ast;
   return transposeAST(ast, semitonesTo(ast.metadata.key, keyOverride), keyOverride);
 }
@@ -92,7 +92,7 @@ export function buildPerformanceBlocks(
       const asts: Record<string, ChordProAST> = {};
       for (const fs of item.fusionSongs) {
         const content = contents[fs.songSlug];
-        if (content) asts[fs.songSlug] = getTransposed(content, fs.keyOverride);
+        if (content) asts[fs.songSlug] = getTransposed(content.ast, fs.keyOverride);
       }
 
       if (item.mixedStructure?.length) {
@@ -174,12 +174,13 @@ export function buildPerformanceBlocks(
 
     // ── Chant normal ──
     const content = contents[item.songSlug];
-    if (!content) continue;
+    const baseAst = itemAst(item, content);
+    if (!baseAst) continue;
     // Tonalité jouée (affichée) — après capo, ast.metadata.key devient la
     // tonalité des shapes, on fige donc la clé d'affichage ici.
-    const playedKey = item.keyOverride ?? content.ast.metadata.key;
+    const playedKey = item.keyOverride ?? baseAst.metadata.key;
     const capo = capos?.[item.songSlug] ?? 0;
-    const ast = applyCapo(getTransposed(content, item.keyOverride), playedKey, capo);
+    const ast = applyCapo(getTransposed(baseAst, item.keyOverride), playedKey, capo);
     const sections = resolveSections(ast, item.structureOverride);
     blocks.push({
       kind: "song-header",
