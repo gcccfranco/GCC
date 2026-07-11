@@ -10,6 +10,7 @@
     "start": "next start",
     "lint": "eslint .",
     "validate": "tsx scripts/validate-songs.ts",
+    "test:editsource": "tsx scripts/test-editsource.ts",
     "doctor": "npx react-doctor@latest"
   },
   "dependencies": {
