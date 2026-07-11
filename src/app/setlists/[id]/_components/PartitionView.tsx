@@ -1,11 +1,13 @@
+import { useMemo } from "react";
 import type { SetlistItem } from "@/types/setList";
 import type { SongContent } from "@/lib/api/songs";
 import { SongView, SectionView, TransitionNote } from "@/components/song/SongView";
 import { useTranslation } from "react-i18next";
 import { transposeAST } from "@/lib/transposeAST";
 import { semitonesTo } from "@/lib/transpose";
+import { itemAst } from "@/lib/chordpro/itemContent";
 import { Link2, MessageSquare } from "lucide-react";
-import type { ChordProAST } from "@/types/chordPro";
+import type { ChordProAST, ChordProLine } from "@/types/chordPro";
 
 function TransitionBanner({ text }: { text: string }) {
   return (
@@ -25,11 +27,18 @@ export function PartitionsView({
   contents,
   loading,
   showChordsGlobal,
+  editMode = false,
+  onSelectLine,
+  onRevert,
 }: {
   items: SetlistItem[];
   contents: Record<string, SongContent>;
   loading: boolean;
   showChordsGlobal: boolean;
+  /** Mode « adapter le chant » : lignes tappables (hors fusions), rétablir l'original. */
+  editMode?: boolean;
+  onSelectLine?: (itemIndex: number, line: ChordProLine) => void;
+  onRevert?: (itemIndex: number) => void;
 }) {
   const { t } = useTranslation();
   if (loading) {
@@ -41,7 +50,10 @@ export function PartitionsView({
   }
   return (
     <div className="space-y-10 print:space-y-6">
-      {[...items].sort((a, b) => a.position - b.position).map((item, idx) => {
+      {items
+        .map((item, origIndex) => ({ item, origIndex }))
+        .sort((a, b) => a.item.position - b.item.position)
+        .map(({ item, origIndex }, idx) => {
         // ── Transition item ──
         if (item.type === "transition") {
           if (!item.transitionText) return null;
@@ -161,37 +173,87 @@ export function PartitionsView({
         }
 
         // ── Chant normal ──
-        const content = contents[item.songSlug];
-        if (!content) return null;
-
-        let ast = content.ast;
-        if (item.keyOverride && item.keyOverride !== ast.metadata.key) {
-          const semitones = semitonesTo(ast.metadata.key, item.keyOverride);
-          ast = transposeAST(ast, semitones, item.keyOverride);
-        }
-
         return (
-          <div key={`${item.songSlug}-${idx}`} className="print:break-before-page first:print:break-before-auto">
-            <div className="flex items-center gap-2 mb-3 print:mb-2">
-              <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center shrink-0">
-                {item.position}
-              </span>
-              {item.notes && (
-                <span className="text-xs text-muted-foreground italic">{item.notes}</span>
-              )}
-            </div>
-            <SongView
-              ast={ast}
-              showChords={showChordsGlobal && item.showChords}
-              showPinyin={item.showPinyin}
-              useJianpu={false}
-              structureOverride={item.structureOverride}
-              sectionNotes={item.sectionNotes ?? {}}
-              sectionTransitions={item.sectionTransitions ?? {}}
-            />
-          </div>
+          <NormalSongItem
+            key={`${item.songSlug}-${idx}`}
+            item={item}
+            origIndex={origIndex}
+            content={contents[item.songSlug]}
+            showChordsGlobal={showChordsGlobal}
+            editMode={editMode}
+            onSelectLine={onSelectLine}
+            onRevert={onRevert}
+          />
         );
       })}
+    </div>
+  );
+}
+
+function NormalSongItem({
+  item,
+  origIndex,
+  content,
+  showChordsGlobal,
+  editMode,
+  onSelectLine,
+  onRevert,
+}: {
+  item: SetlistItem;
+  origIndex: number;
+  content: SongContent | undefined;
+  showChordsGlobal: boolean;
+  editMode: boolean;
+  onSelectLine?: (itemIndex: number, line: ChordProLine) => void;
+  onRevert?: (itemIndex: number) => void;
+}) {
+  const { t } = useTranslation();
+  // Parse (contentOverride) + transposition mémoïsés : la vue Partitions se
+  // re-rend à chaque toggle de la barre au scroll, inutile de re-parser.
+  const ast = useMemo(() => {
+    const base = itemAst(item, content);
+    if (!base) return undefined;
+    if (item.keyOverride && item.keyOverride !== base.metadata.key) {
+      return transposeAST(base, semitonesTo(base.metadata.key, item.keyOverride), item.keyOverride);
+    }
+    return base;
+  }, [item, content]);
+  if (!ast) return null;
+
+  return (
+    <div className="print:break-before-page first:print:break-before-auto">
+      <div className="flex items-center gap-2 mb-3 print:mb-2 flex-wrap">
+        <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center shrink-0">
+          {item.position}
+        </span>
+        {item.notes && (
+          <span className="text-xs text-muted-foreground italic">{item.notes}</span>
+        )}
+        {item.contentOverride && (
+          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-400 border border-amber-300/60 dark:border-amber-700/50 font-semibold print:hidden">
+            {t("setlists.contentEdit.modifiedBadge", { defaultValue: "Version modifiée" })}
+          </span>
+        )}
+        {editMode && item.contentOverride && (
+          <button
+            type="button"
+            onClick={() => onRevert?.(origIndex)}
+            className="text-[11px] text-muted-foreground underline hover:text-foreground"
+          >
+            {t("setlists.contentEdit.revert", { defaultValue: "Rétablir l'original" })}
+          </button>
+        )}
+      </div>
+      <SongView
+        ast={ast}
+        showChords={showChordsGlobal && item.showChords}
+        showPinyin={item.showPinyin}
+        useJianpu={false}
+        structureOverride={item.structureOverride}
+        sectionNotes={item.sectionNotes ?? {}}
+        sectionTransitions={item.sectionTransitions ?? {}}
+        onLineSelect={editMode ? (line) => onSelectLine?.(origIndex, line) : undefined}
+      />
     </div>
   );
 }
