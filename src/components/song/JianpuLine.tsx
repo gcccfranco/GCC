@@ -61,10 +61,10 @@ export function JianpuLine({ line, showChords = true, showPinyin = true }: Jianp
   });
 
   return (
-    <div className="font-mono my-1 select-text">
+    <div data-copy-line className="font-mono my-1 select-text">
       {/* Chord row: each chord absolutely positioned over its column */}
       {showChords && chords.length > 0 && (
-        <div className="relative" style={{ height: "1.5em" }}>
+        <div data-copy-ignore className="relative" style={{ height: "1.5em" }}>
           {chords.map((c, i) => (
             <span
               key={i}
@@ -86,6 +86,7 @@ export function JianpuLine({ line, showChords = true, showPinyin = true }: Jianp
             style={{ width: cellSize, minWidth: cellSize }}
           >
             <span
+              data-copy-ignore
               className="text-red-700 dark:text-red-400 font-bold text-sm leading-snug"
               style={{ minHeight: "1.2em" }}
             >
@@ -95,7 +96,7 @@ export function JianpuLine({ line, showChords = true, showPinyin = true }: Jianp
               {col.char}
             </span>
             {showPinyin && (
-              <span className="text-muted-foreground leading-snug" style={{ fontSize: "0.65rem" }}>
+              <span data-copy-ignore className="text-muted-foreground leading-snug" style={{ fontSize: "0.65rem" }}>
                 {col.pinyin}
               </span>
             )}
