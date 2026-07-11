@@ -25,6 +25,9 @@ export type SetlistItem = {
   structureOverride: string[] | null;
   sectionNotes: Record<string, string>;
   sectionTransitions?: Record<string, string>;
+  /** Source ChordPro modifié pour cette setlist (accords/paroles adaptés) —
+   *  remplace le contenu du chant original ; null/absent = original. */
+  contentOverride?: string | null;
   notes: string;
   fusionSongs?: FusionSong[];
   mixedStructure?: FusionMixedSection[] | null;
