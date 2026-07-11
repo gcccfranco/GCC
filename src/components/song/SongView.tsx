@@ -2,10 +2,11 @@
 import localFont from "next/font/local";
 import { ChordLine } from "@/components/song/ChordLine";
 import { JianpuLine } from "@/components/song/JianpuLine";
-import type { ChordProAST, ChordProSection, Token } from "@/types/chordPro";
+import type { ChordProAST, ChordProLine, ChordProSection, Token } from "@/types/chordPro";
 import { useTranslation } from "react-i18next";
 import { formatSectionName } from "@/lib/chordpro/parser";
 import { resolveStructureOverride } from "@/lib/chordpro/structure";
+import { handleLyricsCopy } from "@/components/song/copyLyrics";
 import { MessageSquare } from "lucide-react";
 
 // ---------------------------------------------------------------------------
@@ -203,7 +204,7 @@ function ZhLine({ tokens, pinyin, showChords, showPinyin, hideLyrics = false, ch
   };
 
   return (
-    <div className="flex flex-wrap items-start mb-[3px]" style={{ fontSize: baseSize }}>
+    <div data-copy-line className="flex flex-wrap items-start mb-[3px]" style={{ fontSize: baseSize }}>
       {cols.map((col, i) => {
         if (!showChords && col.char === " " && col.chord !== null) return null;
         return (
@@ -218,6 +219,7 @@ function ZhLine({ tokens, pinyin, showChords, showPinyin, hideLyrics = false, ch
           >
             {showChords && (
               <span
+                data-copy-ignore
                 style={{
                   fontWeight: 700,
                   fontSize: chordEm,
@@ -240,6 +242,7 @@ function ZhLine({ tokens, pinyin, showChords, showPinyin, hideLyrics = false, ch
             </span>
             {showPinyin && !hideLyrics && (
               <span
+                data-copy-ignore
                 style={{
                   fontSize: pinyinEm,
                   lineHeight: 1.2,
@@ -288,16 +291,18 @@ export interface SectionViewProps {
   typography?: "web" | "pdf";
   /** Style « chart » : couleur par type de section, cadre gris fin, accords neutres. */
   chartStyle?: boolean;
+  /** Mode édition setlist : rend chaque ligne tappable (ouvre la sheet d'édition). */
+  onLineSelect?: (line: ChordProLine) => void;
 }
 
-export function SectionView({ section, language, showChords, showPinyin, useJianpu, hideLyrics = false, note, songSourceLabel, typography = "web", chartStyle = false }: SectionViewProps) {
+export function SectionView({ section, language, showChords, showPinyin, useJianpu, hideLyrics = false, note, songSourceLabel, typography = "web", chartStyle = false, onLineSelect }: SectionViewProps) {
   const isPdfTypo = typography === "pdf";
   const { t, i18n } = useTranslation();
   const isZh = language === "zh";
   const uiIsZh = i18n.language === "zh-CN";
   const label = formatSectionName(section, t);
   return (
-    <div className="mb-5 print:mb-4" style={{ breakInside: "avoid", ...(chartStyle ? getChartSectionStyle(section.type) : getSectionStyle(section.type, isZh)) }}>
+    <div className="mb-5 print:mb-4" onCopy={handleLyricsCopy} style={{ breakInside: "avoid", ...(chartStyle ? getChartSectionStyle(section.type) : getSectionStyle(section.type, isZh)) }}>
       {/* Label de section */}
       <div className="mb-1.5" style={{ display: "flex", alignItems: "center", gap: 9 }}>
         <span
@@ -332,17 +337,15 @@ export function SectionView({ section, language, showChords, showPinyin, useJian
         <div>
           {section.lines.map((line, i) => {
             if (line.tokens.length === 0 && !line.jianpu) {
-              return <div key={i} className="h-5" />;
+              return <div key={i} data-copy-line className="h-5" />;
             }
 
+            let rendered: React.ReactNode;
             if (isZh && useJianpu) {
-              return <JianpuLine key={i} line={line} showChords={showChords} showPinyin={showPinyin} />;
-            }
-
-            if (isZh) {
-              return (
+              rendered = <JianpuLine line={line} showChords={showChords} showPinyin={showPinyin} />;
+            } else if (isZh) {
+              rendered = (
                 <ZhLine
-                  key={i}
                   tokens={line.tokens}
                   pinyin={line.pinyin ?? null}
                   showChords={showChords}
@@ -353,20 +356,36 @@ export function SectionView({ section, language, showChords, showPinyin, useJian
                   typography={typography}
                 />
               );
+            } else {
+              rendered = (
+                <ChordLine
+                  tokens={line.tokens}
+                  showChords={showChords}
+                  hideLyrics={hideLyrics}
+                  chord_font={isPdfTypo ? liberation_font : chord_font}
+                  fr_lyric_font={fr_lyric_font}
+                  fontSize={isPdfTypo ? 0.9375 : undefined}
+                  chordEm={isPdfTypo ? 1.13 : undefined}
+                />
+              );
             }
 
-            return (
-              <ChordLine
-                key={i}
-                tokens={line.tokens}
-                showChords={showChords}
-                hideLyrics={hideLyrics}
-                chord_font={isPdfTypo ? liberation_font : chord_font}
-                fr_lyric_font={fr_lyric_font}
-                fontSize={isPdfTypo ? 0.9375 : undefined}
-                chordEm={isPdfTypo ? 1.13 : undefined}
-              />
-            );
+            // Mode édition : la ligne devient une cible tactile qui ouvre la sheet.
+            if (onLineSelect && line.srcLine !== undefined) {
+              return (
+                <div
+                  key={i}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => onLineSelect(line)}
+                  onKeyDown={(e) => e.key === "Enter" && onLineSelect(line)}
+                  className="cursor-pointer rounded-md -mx-1.5 px-1.5 border border-dashed border-primary/25 hover:border-primary/60 hover:bg-primary/5 active:bg-primary/10 transition-colors my-0.5 print:border-transparent print:bg-transparent print:mx-0 print:px-0 print:my-0"
+                >
+                  {rendered}
+                </div>
+              );
+            }
+            return <div key={i}>{rendered}</div>;
           })}
         </div>
       )}
@@ -386,6 +405,8 @@ export interface SongViewProps {
   structureOverride?: string[] | null;
   sectionNotes?: Record<string, string>;
   sectionTransitions?: Record<string, string>;
+  /** Mode édition setlist : rend chaque ligne tappable (ouvre la sheet d'édition). */
+  onLineSelect?: (line: ChordProLine) => void;
 }
 
 export function SongView({
@@ -396,6 +417,7 @@ export function SongView({
   structureOverride = null,
   sectionNotes = {},
   sectionTransitions = {},
+  onLineSelect,
 }: SongViewProps) {
   const { t } = useTranslation();
   const isZh = ast.metadata.language === "zh";
@@ -406,7 +428,7 @@ export function SongView({
       ? resolveStructureOverride(ast.sections, structureOverride)
       : ast.sections;
   return (
-    <div className="max-w-2xl print:max-w-none">
+    <div className="max-w-2xl print:max-w-none" onCopy={handleLyricsCopy}>
       {/* En-tête */}
       <div className="mb-0 pb-3 print:mb-3 border-b border-border">
         <div className="flex items-start justify-between gap-5">
@@ -484,6 +506,7 @@ export function SongView({
                   showPinyin={isZh ? showPinyin : false}
                   useJianpu={canUseJianpu}
                   note={note}
+                  onLineSelect={onLineSelect}
                 />
                 {transition && <TransitionNote text={transition} />}
               </div>
