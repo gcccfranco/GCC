@@ -33,7 +33,9 @@
       "mixed": "FR / 中文"
     },
     "moreActions": "Plus d'actions",
-    "retry": "Réessayer"
+    "retry": "Réessayer",
+    "confirm": "Valider",
+    "cancel": "Annuler"
   },
   "songs": {
     "list": {
@@ -196,6 +198,40 @@
       "privateToggle": "Setlist privée (visible uniquement par toi)",
       "privateLoginRequired": "Connecte-toi pour créer une setlist privée.",
       "addTransition": "Transition"
+    },
+    "contentEdit": {
+      "toggle": "Adapter",
+      "hint": "Mode adaptation : touche une ligne pour modifier ses accords ou ses paroles. Les changements ne concernent que cette setlist.",
+      "lineTitle": "Modifier la ligne",
+      "lyricsTitle": "Modifier les paroles",
+      "instrTitle": "Ligne instrumentale",
+      "instrNewTitle": "Nouvelle ligne instrumentale",
+      "displayedKey": "Tonalité affichée : {{key}}",
+      "editLyrics": "Modifier les paroles",
+      "addInstrumental": "+ Ligne instrumentale après",
+      "deleteLine": "Supprimer la ligne",
+      "deleteLineConfirm": "Supprimer cette ligne de la version de la setlist ?",
+      "deleteLineYes": "Supprimer",
+      "lyricsRequired": "Les paroles ne peuvent pas être vides.",
+      "annotation": "Annotation (x2, arpège, piano seul…)",
+      "addChord": "Accord",
+      "removeChord": "Supprimer l'accord",
+      "instrNeedsChord": "Ajoute au moins un accord pour valider.",
+      "confirmChord": "Valider l'accord",
+      "majQuality": "maj",
+      "customQuality": "Qualité « {{quality}} » conservée",
+      "bassToggle": "/ basse",
+      "modifiedBadge": "Version modifiée",
+      "revert": "Rétablir l'original",
+      "revertConfirm": "Toutes les modifications d'accords et de paroles de ce chant pour cette setlist seront perdues.",
+      "revertYes": "Rétablir",
+      "saveError": "Échec de l'enregistrement — réessaie.",
+      "tapWordHint": "Touche un mot pour choisir la lettre exacte où placer l'accord.",
+      "spacerKept": "Colonne vide conservée — choisis une note pour la remplacer par un accord.",
+      "pinyinMismatch": "Attention : {{py}} mot(s) pinyin pour {{zh}} caractère(s) chinois — l'alignement sera décalé.",
+      "songLoading": "Chant en cours de chargement — réessaie dans un instant.",
+      "conflict": "La setlist a été modifiée entre-temps — vérifie puis réessaie.",
+      "emptyColumn": "colonne vide"
     }
   },
   "customize": {
