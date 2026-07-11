@@ -61,6 +61,7 @@ export function ChordLine({ tokens, showChords = true, hideLyrics = false, fontS
   const hasAnyChord = showChords && segments.some((s) => s.chord !== null);
   return (
     <div
+      data-copy-line
       className="font-sans leading-normal select-text flex flex-wrap items-end"
       style={{
         fontSize: `${fontSize}rem`,
@@ -84,6 +85,7 @@ export function ChordLine({ tokens, showChords = true, hideLyrics = false, fontS
           >
             {showChords && seg.chord ? (
               <span
+                data-copy-ignore
                 className={`font-bold font-chord whitespace-nowrap leading-[0.7] ${chord_font?.className}`}
                 // padding-right : écart minimal quand l'accord est plus large
                 // que la parole (fréquent en chinois : accord long sur 1 caractère),
@@ -93,7 +95,7 @@ export function ChordLine({ tokens, showChords = true, hideLyrics = false, fontS
                 {seg.chord}
               </span>
             ) : (
-              hasAnyChord && <span className="leading-[0.7]" style={{ fontSize: `${chordEm}em` }}>&nbsp;</span>
+              hasAnyChord && <span data-copy-ignore className="leading-[0.7]" style={{ fontSize: `${chordEm}em` }}>&nbsp;</span>
             )}
             <span
               className={`text-foreground whitespace-pre ${fr_lyric_font?.className}`}
