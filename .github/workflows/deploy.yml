@@ -31,3 +31,6 @@ jobs:
 
       - name: Validation des chants
         run: npm run validate
+
+      - name: Tests logique d'édition (mode Adapter)
+        run: npm run test:editsource
