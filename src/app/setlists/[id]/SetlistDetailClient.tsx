@@ -23,18 +23,34 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { getSetlist, deleteSetlist, duplicateSetlist, authHeader, type FSSetlist } from "@/lib/firebase/setlists";
+import { getSetlist, deleteSetlist, duplicateSetlist, updateSetlist, authHeader, type FSSetlist } from "@/lib/firebase/setlists";
 import { useProfile } from "@/lib/firebase/users";
 import { canSeeSetlist, canEditSetlist, canDuplicateSetlist } from "@/lib/access";
 import { useTranslation } from "react-i18next";
 import type { SongIndexEntry } from "@/types/song";
 import type { SetlistItem } from "@/types/setList";
+import type { ChordProLine } from "@/types/chordPro";
 import { formatDate } from "@/lib/utils/formatDate";
 import { useScrollDirection } from "@/hooks/useScrollDirection";
 import { ListView } from "./_components/ListView";
 import { PartitionsView } from "./_components/PartitionView";
 import { fetchSongAST, type SongContent} from "@/lib/api/songs";
 import { PerformanceMode } from "@/components/performance/PerformanceMode";
+import { EditLineSheet, type EditLineTarget } from "@/components/setlists/EditLineSheet";
+import { itemAst } from "@/lib/chordpro/itemContent";
+import { semitonesTo } from "@/lib/transpose";
+import {
+  replaceSourceLine,
+  insertSourceLineAfter,
+  deleteSourceLines,
+} from "@/lib/chordpro/editSource";
+
+/** Cible d'édition de ligne + indices source nécessaires à la sauvegarde. */
+type LineEditState = EditLineTarget & {
+  srcLine: number;
+  pinyinSrcLine?: number;
+  jianpuSrcLine?: number;
+};
   
 
 // ─── Main component ───────────────────────────────────────────────────────────
@@ -65,6 +81,11 @@ export function SetlistDetailClient() {
   const [notifying, setNotifying] = useState(false);
   const [loadError, setLoadError] = useState(false);
   const [retryKey, setRetryKey] = useState(0);
+  // Mode « adapter le chant » (accords/paroles par setlist)
+  const [editPartitions, setEditPartitions] = useState(false);
+  const [editTarget, setEditTarget] = useState<LineEditState | null>(null);
+  const [savingLine, setSavingLine] = useState(false);
+  const [confirmRevert, setConfirmRevert] = useState<number | null>(null);
 
   useEffect(() => {
     const saved = sessionStorage.getItem("lastListPath");
@@ -254,6 +275,147 @@ export function SetlistDetailClient() {
     }
   }
 
+  // ── Adapter le chant (accords/paroles par setlist) ──────────────────────────
+
+  /** Source ChordPro de travail d'un item : version modifiée sinon original. */
+  function sourceForItem(item: SetlistItem): string | null {
+    return item.contentOverride ?? contents[item.songSlug]?.source ?? null;
+  }
+
+  function handleSelectLine(itemIndex: number, line: ChordProLine) {
+    if (!setlist || line.srcLine === undefined) return;
+    const item = setlist.items[itemIndex];
+    const source = sourceForItem(item);
+    if (!source) {
+      // Contenu pas encore fetché (vue Partitions en cours de chargement)
+      flashFeedback(
+        t("setlists.contentEdit.songLoading", {
+          defaultValue: "Chant en cours de chargement — réessaie dans un instant.",
+        })
+      );
+      return;
+    }
+    const baseAst = itemAst(item, contents[item.songSlug]);
+    if (!baseAst) return;
+    const origKey = baseAst.metadata.key;
+    setEditTarget({
+      itemIndex,
+      raw: source.split("\n")[line.srcLine] ?? "",
+      pinyin: line.pinyin,
+      language: baseAst.metadata.language === "zh" ? "zh" : "fr",
+      semitones: item.keyOverride ? semitonesTo(origKey, item.keyOverride) : 0,
+      targetKey: item.keyOverride ?? origKey,
+      originalKey: origKey,
+      srcLine: line.srcLine,
+      pinyinSrcLine: line.pinyinSrcLine,
+      jianpuSrcLine: line.jianpuSrcLine,
+    });
+  }
+
+  /** Écrit (override = string) ou retire (override = undefined) la version
+   *  modifiée d'un item, en ré-appliquant sur l'état Firestore le plus frais :
+   *  on n'écrase pas les modifications concurrentes des autres items, et un
+   *  conflit sur le même chant est détecté au lieu d'être écrasé. */
+  async function persistOverride(itemIndex: number, override: string | undefined) {
+    if (!setlist) return;
+    setSavingLine(true);
+    try {
+      let base = setlist;
+      try {
+        const fresh = await getSetlist(id);
+        if (fresh) {
+          const local = setlist.items[itemIndex];
+          const remote = fresh.items[itemIndex];
+          const structureChanged =
+            !remote || remote.songSlug !== local.songSlug || remote.type !== local.type;
+          const overrideChanged =
+            !structureChanged &&
+            (remote.contentOverride ?? null) !== (local.contentOverride ?? null);
+          if (structureChanged || overrideChanged) {
+            setSetlist(fresh);
+            setEditTarget(null);
+            flashFeedback(
+              t("setlists.contentEdit.conflict", {
+                defaultValue: "La setlist a été modifiée entre-temps — vérifie puis réessaie.",
+              })
+            );
+            return;
+          }
+          base = fresh;
+        }
+      } catch {
+        /* hors-ligne / lecture impossible : on tente sur l'état local */
+      }
+      const items = base.items.map((it, i) => {
+        if (i !== itemIndex) return it;
+        const rest = { ...it };
+        if (override === undefined) delete rest.contentOverride;
+        else rest.contentOverride = override;
+        return rest;
+      });
+      await updateSetlist(id, { items });
+      setSetlist({ ...base, items });
+      setEditTarget(null);
+    } catch {
+      flashFeedback(t("setlists.contentEdit.saveError", { defaultValue: "Échec de l'enregistrement — réessaie." }));
+    } finally {
+      setSavingLine(false);
+    }
+  }
+
+  /** Applique un nouveau source complet : no-op si rien n'a changé, retrait
+   *  automatique de l'override s'il redevient identique au chant original. */
+  async function applyNewSource(itemIndex: number, next: string) {
+    if (!setlist) return;
+    const current = sourceForItem(setlist.items[itemIndex]);
+    if (next === current) {
+      setEditTarget(null);
+      return;
+    }
+    const original = contents[setlist.items[itemIndex].songSlug]?.source;
+    await persistOverride(itemIndex, next === original ? undefined : next);
+  }
+
+  async function handleSaveLine(newRaw: string) {
+    if (!setlist || !editTarget) return;
+    const source = sourceForItem(setlist.items[editTarget.itemIndex]);
+    if (!source) return;
+    // Ligne inchangée (y compris pinyin encore sur sa ligne séparée) → no-op.
+    if (newRaw === source.split("\n")[editTarget.srcLine]) {
+      setEditTarget(null);
+      return;
+    }
+    let next = replaceSourceLine(source, editTarget.srcLine, newRaw);
+    // Le pinyin est désormais inline dans la ligne → la ligne séparée disparaît.
+    if (editTarget.pinyinSrcLine !== undefined) {
+      next = deleteSourceLines(next, [editTarget.pinyinSrcLine]);
+    }
+    await applyNewSource(editTarget.itemIndex, next);
+  }
+
+  async function handleInsertAfter(newRaw: string) {
+    if (!setlist || !editTarget) return;
+    const source = sourceForItem(setlist.items[editTarget.itemIndex]);
+    if (!source) return;
+    const at = Math.max(editTarget.srcLine, editTarget.pinyinSrcLine ?? -1);
+    await applyNewSource(editTarget.itemIndex, insertSourceLineAfter(source, at, newRaw));
+  }
+
+  async function handleDeleteLine() {
+    if (!setlist || !editTarget) return;
+    const source = sourceForItem(setlist.items[editTarget.itemIndex]);
+    if (!source) return;
+    const idxs = [editTarget.srcLine];
+    if (editTarget.pinyinSrcLine !== undefined) idxs.push(editTarget.pinyinSrcLine);
+    if (editTarget.jianpuSrcLine !== undefined) idxs.push(editTarget.jianpuSrcLine);
+    await applyNewSource(editTarget.itemIndex, deleteSourceLines(source, idxs));
+  }
+
+  async function handleRevert(itemIndex: number) {
+    setConfirmRevert(null);
+    await persistOverride(itemIndex, undefined);
+  }
+
   if (loadingSetlist) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -352,6 +514,26 @@ export function SetlistDetailClient() {
 
             {/* Actions — poussées à droite */}
             <div className="ml-auto flex items-center gap-1.5 justify-end">
+
+              {/* Adapter le chant (accords/paroles par setlist) — vue partitions */}
+              {view === "partitions" && canEdit && (
+                <button
+                  onClick={() => {
+                    setEditPartitions((e) => !e);
+                    setEditTarget(null);
+                  }}
+                  className={`h-8 px-2.5 rounded-[8px] border text-[12.5px] font-semibold flex items-center gap-1.5 transition-all duration-150 ${
+                    editPartitions
+                      ? "border-transparent bg-primary/10 text-primary"
+                      : "border-border bg-card text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <Pencil className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline">
+                    {t("setlists.contentEdit.toggle", { defaultValue: "Adapter" })}
+                  </span>
+                </button>
+              )}
 
               {/* Accords (pertinent uniquement en vue partitions) */}
               {view === "partitions" && (
@@ -511,12 +693,25 @@ export function SetlistDetailClient() {
         {view === "liste" ? (
           <ListView items={setlist.items} songsMap={songsMap} />
         ) : (
-          <PartitionsView
-            items={setlist.items}
-            contents={contents}
-            loading={loadingContent}
-            showChordsGlobal={showChords}
-          />
+          <>
+            {editPartitions && (
+              <p className="mb-4 text-xs text-muted-foreground bg-primary/5 border border-primary/20 rounded-lg px-3 py-2 print:hidden">
+                {t("setlists.contentEdit.hint", {
+                  defaultValue:
+                    "Mode adaptation : touche une ligne pour modifier ses accords ou ses paroles. Les changements ne concernent que cette setlist.",
+                })}
+              </p>
+            )}
+            <PartitionsView
+              items={setlist.items}
+              contents={contents}
+              loading={loadingContent}
+              showChordsGlobal={showChords}
+              editMode={editPartitions}
+              onSelectLine={handleSelectLine}
+              onRevert={(itemIndex) => setConfirmRevert(itemIndex)}
+            />
+          </>
         )}
       </div>
 
@@ -546,6 +741,42 @@ export function SetlistDetailClient() {
           {shareFeedback}
         </div>
       )}
+
+      {/* Sheet d'édition de ligne (mode adaptation) */}
+      <EditLineSheet
+        target={editTarget}
+        saving={savingLine}
+        onClose={() => setEditTarget(null)}
+        onSaveLine={handleSaveLine}
+        onInsertAfter={handleInsertAfter}
+        onDeleteLine={handleDeleteLine}
+      />
+
+      {/* Confirmation de rétablissement de l'original */}
+      <AlertDialog open={confirmRevert !== null} onOpenChange={(o) => !o && setConfirmRevert(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {t("setlists.contentEdit.revert", { defaultValue: "Rétablir l'original" })}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("setlists.contentEdit.revertConfirm", {
+                defaultValue:
+                  "Toutes les modifications d'accords et de paroles de ce chant pour cette setlist seront perdues.",
+              })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t("common.cancel", { defaultValue: "Annuler" })}</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={savingLine}
+              onClick={() => confirmRevert !== null && handleRevert(confirmRevert)}
+            >
+              {savingLine ? "…" : t("setlists.contentEdit.revertYes", { defaultValue: "Rétablir" })}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Mode Louange */}
       {performanceMode && (
