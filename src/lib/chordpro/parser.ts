@@ -18,7 +18,7 @@ function parseDirective(line: string): { key: string; value: string } | null {
 
 // --- Parsing d'une ligne de paroles avec accords ---
 
-function parseLyricLine(rawLine: string, language: string = "fr"): { tokens: Token[]; pinyin: string | null } {
+export function parseLyricLine(rawLine: string, language: string = "fr"): { tokens: Token[]; pinyin: string | null } {
   // Séparation paroles chinoises / pinyin (2 espaces minimum, uniquement pour zh)
   let pinyinPart: string | null = null;
   let lyricPart = rawLine;
@@ -216,9 +216,11 @@ export function parseChordPro(source: string): ChordProAST {
   const sections: ChordProSection[] = [];
   let currentSection: ChordProSection | null = null;
   let pendingJianpu: string | null = null;
+  let pendingJianpuLine: number | null = null;
   let sectionCounter = 0;
   let uidCounter = 0;
-  for (const rawLine of lines) {
+  for (let lineIdx = 0; lineIdx < lines.length; lineIdx++) {
+    const rawLine = lines[lineIdx];
     const line = rawLine.trimEnd();
 
     // Ligne vide
@@ -263,6 +265,7 @@ export function parseChordPro(source: string): ChordProAST {
       // Directive jianpu (à associer à la prochaine ligne de paroles)
       if (key === "jianpu") {
         pendingJianpu = value;
+        pendingJianpuLine = lineIdx;
         continue;
       }
 
@@ -334,6 +337,7 @@ export function parseChordPro(source: string): ChordProAST {
         prevLine.pinyin === null
       ) {
         prevLine.pinyin = trimmed;
+        prevLine.pinyinSrcLine = lineIdx;
         continue;
       }
 
@@ -343,9 +347,12 @@ export function parseChordPro(source: string): ChordProAST {
         tokens,
         pinyin,
         jianpu: pendingJianpu,
+        srcLine: lineIdx,
+        jianpuSrcLine: pendingJianpu !== null ? pendingJianpuLine ?? undefined : undefined,
       };
       currentSection.lines.push(chordLine);
       pendingJianpu = null;
+      pendingJianpuLine = null;
     }
   }
 
