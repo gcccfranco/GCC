@@ -66,7 +66,7 @@ export default function GuidePage() {
           </header>
 
           {/* Sommaire */}
-          <nav className="rounded-xl border border-border bg-card p-3">
+          <nav className="rounded-xl bg-card shadow-soft p-3">
             <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-2">
               {t("guide.tocTitle")}
             </p>
@@ -99,7 +99,7 @@ export default function GuidePage() {
                 <section
                   key={key}
                   id={key}
-                  className="scroll-mt-[var(--nav-h)] rounded-xl border border-border bg-card p-4 space-y-3"
+                  className="scroll-mt-[var(--nav-h)] rounded-xl bg-card shadow-soft p-4 space-y-3"
                 >
                   <div className="flex flex-wrap items-center gap-2">
                     <h2 className="flex items-center gap-2 text-base font-bold text-foreground">
