@@ -5,15 +5,17 @@ import { usePathname } from "next/navigation"
 import { useScrollDirection } from "@/hooks/useScrollDirection"
 import { useRef, useEffect, useState } from "react"
 
-const TABS = [
+// `color` = couleur de service de la page (mêmes valeurs que le COLOR de
+// chaque page planning) — reprise par l'indicateur d'onglet actif.
+const TABS: { label: string; href: string; color?: string }[] = [
   { label: "Accueil", href: "/planning" },
-  { label: "Culte Franco", href: "/planning/culte" },
-  { label: "Prépa. Table", href: "/planning/table" },
+  { label: "Culte Franco", href: "/planning/culte", color: "#2d5a65" },
+  { label: "Prépa. Table", href: "/planning/table", color: "#c87941" },
   { label: "Groupes", href: "/planning/groupes" },
-  { label: "EDD", href: "/planning/edd" },
-  { label: "Campus", href: "/planning/campus" },
-  { label: "Intergroupe", href: "/planning/intergroupe" },
-  { label: "Interfranco", href: "/planning/interfranco" },
+  { label: "EDD", href: "/planning/edd", color: "#3b6d11" },
+  { label: "Campus", href: "/planning/campus", color: "#2471a3" },
+  { label: "Intergroupe", href: "/planning/intergroupe", color: "#a87b0f" },
+  { label: "Interfranco", href: "/planning/interfranco", color: "#9d3c63" },
 ]
 
 export function PlanningTabs() {
@@ -62,8 +64,14 @@ export function PlanningTabs() {
               page sur téléphone (scroll horizontal). */}
           {indicator.ready && (
             <div
-              className="absolute bottom-0 h-[2px] bg-foreground rounded-full transition-all duration-200"
-              style={{ left: indicator.left, width: indicator.width }}
+              className="absolute bottom-0 h-[2px] rounded-full transition-all duration-200"
+              style={{
+                left: indicator.left,
+                width: indicator.width,
+                background:
+                  TABS.find((tab) => isTabActive(tab.href))?.color ??
+                  "hsl(var(--foreground))",
+              }}
             />
           )}
         </nav>
