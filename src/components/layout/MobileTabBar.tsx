@@ -57,7 +57,7 @@ export function MobileTabBar() {
                 key={href}
                 href={href}
                 className={`flex-1 flex flex-col items-center justify-center gap-0.5 text-[10px] font-semibold transition-colors active:bg-secondary/60 ${
-                  active ? "text-primary" : "text-muted-foreground"
+                  active ? "text-foreground" : "text-muted-foreground"
                 }`}
               >
                 <Icon className="h-[21px] w-[21px]" strokeWidth={active ? 2.2 : 1.9} />
