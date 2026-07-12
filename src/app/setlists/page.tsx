@@ -15,6 +15,7 @@ import { useTranslation } from "react-i18next";
 import { Search, X, Plus, Lock, LogIn, UserPen } from "lucide-react";
 import Link from "next/link";
 import { SetlistCard } from "@/components/setlists/SetlistCard";
+import { PullToRefresh } from "@/components/layout/PullToRefresh";
 import { useSetlistsNavState } from "@/hooks/useSetlistsNavState";
 
 type Tab = "upcoming" | "archived" | "mine";
@@ -182,6 +183,7 @@ export default function SetlistsPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      <PullToRefresh />
       <div className="max-w-4xl mx-auto px-4 pt-6 pb-10">
 
         {/* ── Onglets ── */}
@@ -219,15 +221,17 @@ export default function SetlistsPage() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
             <input
               type="search"
+              enterKeyHint="search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Rechercher par titre, leader, date…"
-              className="w-full pl-9 pr-9 py-2.5 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 text-sm [&::-webkit-search-cancel-button]:hidden"
+              className="w-full pl-9 pr-9 py-2.5 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 text-base sm:text-sm [&::-webkit-search-cancel-button]:hidden"
             />
             {query && (
               <button
                 onClick={() => setQuery("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                aria-label={t("common.buttons.reset")}
+                className="absolute right-1 top-1/2 -translate-y-1/2 p-2 text-muted-foreground hover:text-foreground active:text-foreground"
               >
                 <X className="h-4 w-4" />
               </button>
