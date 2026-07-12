@@ -207,7 +207,7 @@ export function SongListClient({ songs, themes }: SongListClientProps) {
         <select
           value={themeFilter}
           onChange={(e) => setThemeFilter(e.target.value)}
-          className="h-8 pl-3 pr-7 rounded-[8px] text-[12.5px] font-semibold bg-card text-foreground/80 border border-border focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer appearance-none"
+          className="h-8 pl-3 pr-7 rounded-[8px] text-[12.5px] font-semibold bg-card text-foreground/80 border border-border focus:outline-none focus:ring-2 focus:ring-ring/20 cursor-pointer appearance-none"
           style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7079' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`, backgroundRepeat: "no-repeat", backgroundPosition: "right 9px center" }}
         >
           <option value="">{t("songs.list.filterTheme")}</option>
@@ -230,7 +230,7 @@ export function SongListClient({ songs, themes }: SongListClientProps) {
 
       {/* Récemment consultés */}
       {!hasFilter && recentSongs.length > 0 && (
-        <div className="mb-4">
+        <div className={`mb-4 ${letterIndex.length > 1 ? "pr-5" : ""}`}>
           <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-1.5">
             {t("songs.list.recent", { defaultValue: "Récemment consultés" })}
           </p>
@@ -253,7 +253,7 @@ export function SongListClient({ songs, themes }: SongListClientProps) {
       )}
 
       {/* Compteur + proposition de chant */}
-      <div className="flex items-center justify-between gap-3 mb-3">
+      <div className={`flex items-center justify-between gap-3 mb-3 ${letterIndex.length > 1 ? "pr-5" : ""}`}>
         <p className="text-[12.5px] text-muted-foreground">
           {filtered.length === songs.length
             ? t("songs.list.counter", { count: songs.length })
@@ -273,7 +273,7 @@ export function SongListClient({ songs, themes }: SongListClientProps) {
             <li key={song.slug} id={`song-li-${song.slug}`} className="scroll-mt-[120px]">
               <Link
                 href={`/songs/${song.slug}`}
-                className="flex overflow-hidden border border-border rounded-xl bg-card hover:border-muted-foreground/40 hover:shadow-[0_4px_14px_rgba(20,22,28,0.08),0_2px_6px_rgba(20,22,28,0.05)] transition-all duration-150 active:scale-[.995]"
+                className="flex overflow-hidden rounded-xl bg-card shadow-soft hover:shadow-[0_4px_14px_rgba(20,22,28,0.08),0_2px_6px_rgba(20,22,28,0.05)] transition-all duration-150 active:scale-[.995]"
               >
                 {/* Language rail */}
                 <span
