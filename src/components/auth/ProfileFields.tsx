@@ -286,7 +286,7 @@ export function PlanningNameField({
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="w-full h-11 px-3 flex items-center justify-between gap-2 border border-border rounded-lg bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+        className="w-full h-11 px-3 flex items-center justify-between gap-2 border border-border rounded-lg bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring/30"
       >
         <span className={isCustom || value.planningName ? "text-foreground" : "text-muted-foreground"}>
           {triggerLabel}
