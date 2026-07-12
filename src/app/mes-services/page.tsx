@@ -196,7 +196,7 @@ export default function MesServicesPage() {
             <h1 className="text-lg font-bold text-foreground">{t("mesServices.title")}</h1>
           </div>
           {upcomingCount > 0 && (
-            <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-primary/10 text-primary">
+            <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-secondary text-foreground">
               {t("mesServices.upcomingCount", { count: upcomingCount })}
             </span>
           )}
@@ -215,7 +215,7 @@ export default function MesServicesPage() {
               onClick={() => setTab(tb)}
               className={`flex-1 px-3 py-2.5 font-medium transition-colors ${i === 1 ? "border-l border-border" : ""} ${
                 tab === tb
-                  ? "bg-primary text-primary-foreground"
+                  ? "bg-foreground text-background"
                   : "bg-background text-muted-foreground hover:bg-muted/50"
               }`}
             >
