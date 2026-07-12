@@ -68,7 +68,7 @@ export default function CampusPage() {
       )}
 
       {order.map(day => (
-        <div key={day} className="bg-card border border-border rounded-xl overflow-hidden">
+        <div key={day} className="bg-card shadow-soft rounded-xl overflow-hidden">
           <div className="px-4 py-2.5 text-sm font-semibold text-white" style={{ background: COLOR }}>{day}</div>
           {days[day].map((s, i) => {
             const moment = s.d.includes("Matin") ? "Matin" : "Soir"
