@@ -166,7 +166,7 @@ export default function MesServicesPage() {
         <p className="text-sm text-muted-foreground">
           {t("mesServices.loginPrompt")}
         </p>
-        <Link href="/login?from=/mes-services" className="text-sm text-primary hover:underline">
+        <Link href="/login?from=/mes-services" className="text-sm text-foreground underline underline-offset-2 hover:text-muted-foreground">
           {t("mesServices.login")}
         </Link>
       </div>
@@ -180,7 +180,7 @@ export default function MesServicesPage() {
         <p className="text-sm text-muted-foreground max-w-sm">
           {profile ? t("mesServices.chooseName") : t("mesServices.completeProfile")}
         </p>
-        <Link href="/profil" className="text-sm text-primary hover:underline">
+        <Link href="/profil" className="text-sm text-foreground underline underline-offset-2 hover:text-muted-foreground">
           {t("mesServices.myProfile")}
         </Link>
       </div>
