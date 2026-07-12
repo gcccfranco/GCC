@@ -7,10 +7,15 @@ import { cn } from "@/lib/utils"
 
 const Drawer = ({
   shouldScaleBackground = true,
+  // iOS : le repositionnement des champs par vaul casse l'affichage à
+  // l'ouverture du clavier (page blanche, feuille déplacée/déformée) —
+  // on laisse le navigateur faire défiler le champ ciblé lui-même.
+  repositionInputs = false,
   ...props
 }: React.ComponentProps<typeof DrawerPrimitive.Root>) => (
   <DrawerPrimitive.Root
     shouldScaleBackground={shouldScaleBackground}
+    repositionInputs={repositionInputs}
     {...props}
   />
 )
