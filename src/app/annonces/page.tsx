@@ -177,7 +177,7 @@ export default function AnnoncesPage() {
                 onClick={() => setFilter(s)}
                 className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
                   active && !color
-                    ? "bg-primary text-primary-foreground border-transparent"
+                    ? "bg-foreground text-background border-transparent"
                     : active
                     ? "text-white border-transparent"
                     : "bg-card border-border text-muted-foreground hover:text-foreground"
@@ -233,7 +233,7 @@ export default function AnnoncesPage() {
               return (
                 <article
                   key={a.id}
-                  className="rounded-xl border border-border border-l-4 bg-card p-4 space-y-3"
+                  className="rounded-xl border-l-4 bg-card shadow-soft p-4 space-y-3"
                   style={{ borderLeftColor: color }}
                 >
                   {/* En-tête */}
