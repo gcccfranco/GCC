@@ -212,7 +212,7 @@ export default function NotifierPage() {
         {mode === "publish" ? (
           <PublishPlanningPanel isAdmin={admin} notifyRights={rights} />
         ) : (
-        <div className="rounded-xl border border-border bg-card p-5 space-y-4">
+        <div className="rounded-xl bg-card shadow-soft p-5 space-y-4">
           <div className="space-y-1.5">
             <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
               Audience
@@ -220,7 +220,7 @@ export default function NotifierPage() {
             <select
               value={audience}
               onChange={(e) => setAudience(e.target.value)}
-              className="w-full h-11 px-3 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+              className="w-full h-11 px-3 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring/30"
             >
               <option value="">Choisir…</option>
               {canAll && <option value={NOTIFY_ALL}>{audienceLabel(NOTIFY_ALL)}</option>}
@@ -265,7 +265,7 @@ export default function NotifierPage() {
                   value={peopleQuery}
                   onChange={(e) => setPeopleQuery(e.target.value)}
                   placeholder="Filtrer la liste…"
-                  className="w-full h-10 pl-9 pr-9 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 [&::-webkit-search-cancel-button]:hidden"
+                  className="w-full h-10 pl-9 pr-9 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring/30 [&::-webkit-search-cancel-button]:hidden"
                 />
                 {peopleQuery && (
                   <button
@@ -326,7 +326,7 @@ export default function NotifierPage() {
               onChange={(e) => setTitle(e.target.value)}
               maxLength={80}
               placeholder="Ex. Changement de planning"
-              className="w-full h-11 px-3 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+              className="w-full h-11 px-3 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring/30"
             />
           </div>
 
@@ -340,7 +340,7 @@ export default function NotifierPage() {
               maxLength={300}
               rows={3}
               placeholder="Ex. Le planning du Culte a été mis à jour, vérifie tes dates."
-              className="w-full px-3 py-2.5 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none"
+              className="w-full px-3 py-2.5 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring/30 resize-none"
             />
           </div>
 
@@ -351,7 +351,7 @@ export default function NotifierPage() {
             <select
               value={dest}
               onChange={(e) => setDest(e.target.value)}
-              className="w-full h-11 px-3 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+              className="w-full h-11 px-3 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring/30"
             >
               {DESTINATIONS.map((d) => (
                 <option key={d.value} value={d.value}>
