@@ -24,7 +24,7 @@ export function FilterButtons({ options, active, onChange, className, color, unp
             title={unpub ? "Non publié — visible par les responsables uniquement" : undefined}
             className={`relative flex-shrink-0 inline-flex items-center gap-1 px-3 py-2 rounded-full text-xs font-semibold border transition-all duration-150 cursor-pointer after:absolute after:-inset-y-1.5 after:inset-x-0 after:content-[''] ${
               opt === active
-                ? color ? "text-white border-transparent" : "bg-primary border-primary text-primary-foreground"
+                ? color ? "text-white border-transparent" : "bg-foreground border-foreground text-background"
                 : "bg-card border-border text-muted-foreground hover:text-foreground hover:border-muted-foreground/50"
             }`}
             style={opt === active && color ? { background: color, borderColor: color } : undefined}
