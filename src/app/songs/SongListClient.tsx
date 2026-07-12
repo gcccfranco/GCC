@@ -230,7 +230,7 @@ export function SongListClient({ songs, themes }: SongListClientProps) {
 
       {/* Récemment consultés */}
       {!hasFilter && recentSongs.length > 0 && (
-        <div className={`mb-4 ${letterIndex.length > 1 ? "pr-5" : ""}`}>
+        <div className={`mb-4 ${letterIndex.length > 1 ? "pr-7" : ""}`}>
           <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-1.5">
             {t("songs.list.recent", { defaultValue: "Récemment consultés" })}
           </p>
@@ -253,7 +253,7 @@ export function SongListClient({ songs, themes }: SongListClientProps) {
       )}
 
       {/* Compteur + proposition de chant */}
-      <div className={`flex items-center justify-between gap-3 mb-3 ${letterIndex.length > 1 ? "pr-5" : ""}`}>
+      <div className={`flex items-center justify-between gap-3 mb-3 ${letterIndex.length > 1 ? "pr-7" : ""}`}>
         <p className="text-[12.5px] text-muted-foreground">
           {filtered.length === songs.length
             ? t("songs.list.counter", { count: songs.length })
@@ -268,7 +268,7 @@ export function SongListClient({ songs, themes }: SongListClientProps) {
           {t("songs.list.noSongsFound")}
         </p>
       ) : (
-        <ul className={`flex flex-col gap-[9px] ${letterIndex.length > 1 ? "pr-5" : ""}`}>
+        <ul className={`flex flex-col gap-[9px] ${letterIndex.length > 1 ? "pr-7" : ""}`}>
           {filtered.map((song) => (
             <li key={song.slug} id={`song-li-${song.slug}`} className="scroll-mt-[120px]">
               <Link
