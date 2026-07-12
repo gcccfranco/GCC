@@ -22,7 +22,7 @@ export function FilterButtons({ options, active, onChange, className, color, unp
             key={opt}
             onClick={() => onChange(opt)}
             title={unpub ? "Non publié — visible par les responsables uniquement" : undefined}
-            className={`flex-shrink-0 inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all duration-150 cursor-pointer ${
+            className={`relative flex-shrink-0 inline-flex items-center gap-1 px-3 py-2 rounded-full text-xs font-semibold border transition-all duration-150 cursor-pointer after:absolute after:-inset-y-1.5 after:inset-x-0 after:content-[''] ${
               opt === active
                 ? color ? "text-white border-transparent" : "bg-primary border-primary text-primary-foreground"
                 : "bg-card border-border text-muted-foreground hover:text-foreground hover:border-muted-foreground/50"
