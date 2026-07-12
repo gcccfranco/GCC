@@ -253,7 +253,7 @@ export default function MesServicesPage() {
                       <div
                         key={`${e.date}|${e.service}|${e.setlistDate ?? ""}|${e.moment ?? ""}`}
                         className={`flex items-center gap-3 rounded-xl border bg-card px-4 py-3 border-l-4 ${
-                          thisWeek ? "border-border ring-1 ring-primary/20" : "border-border"
+                          thisWeek ? "border-border ring-1 ring-ring/20" : "border-border"
                         }`}
                         style={{ borderLeftColor: color }}
                       >
