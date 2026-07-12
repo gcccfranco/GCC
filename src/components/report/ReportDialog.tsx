@@ -83,7 +83,7 @@ export function ReportDialog({ open, onClose, kind, songSlug, songTitle }: Repor
             </p>
             <Link
               href="/login"
-              className="inline-flex items-center justify-center px-4 py-1.5 text-sm font-medium rounded bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+              className="inline-flex items-center justify-center px-4 py-1.5 text-sm font-medium rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
             >
               Se connecter
             </Link>
@@ -135,7 +135,7 @@ export function ReportDialog({ open, onClose, kind, songSlug, songTitle }: Repor
               <button
                 type="submit"
                 disabled={status === "loading"}
-                className="flex items-center gap-1.5 px-4 py-1.5 text-sm font-medium rounded bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
+                className="flex items-center gap-1.5 px-4 py-1.5 text-sm font-medium rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
               >
                 <Send className="h-3.5 w-3.5" />
                 {status === "loading" ? "Envoi…" : "Envoyer"}
