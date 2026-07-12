@@ -156,7 +156,7 @@ export function Navbar() {
                 href="/planning"
                 className={`w-[80px] px-3 py-[7px] rounded-[9px] text-[13.5px] font-semibold transition-all duration-150 ${
                   isActivePlanning
-                    ? "bg-primary/10 text-primary text-center"
+                    ? "bg-secondary text-foreground text-center"
                     : "text-muted-foreground hover:text-foreground hover:bg-secondary"
                 }`}
               >
@@ -171,7 +171,7 @@ export function Navbar() {
                   onClick={() => setDropdownOpen((v) => !v)}
                   className={`flex w-[96px] items-center gap-1 px-3 py-[7px] rounded-[9px] text-[13.5px] font-semibold transition-all duration-150 cursor-pointer ${
                     isActiveLouange
-                      ? "bg-primary/10 text-primary text-center"
+                      ? "bg-secondary text-foreground text-center"
                       : "text-muted-foreground hover:text-foreground hover:bg-secondary text-center"
                   }`}
                 >
@@ -194,7 +194,7 @@ export function Navbar() {
                       href="/songs"
                       onClick={() => setDropdownOpen(false)}
                       className={`flex items-center px-3 py-2 text-[13px] font-semibold transition-colors ${
-                        isActiveSongs ? "text-primary" : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+                        isActiveSongs ? "text-foreground bg-secondary" : "text-muted-foreground hover:text-foreground hover:bg-secondary"
                       }`}
                     >
                       {t("common.header.songs")}
@@ -203,7 +203,7 @@ export function Navbar() {
                       href="/setlists"
                       onClick={() => setDropdownOpen(false)}
                       className={`flex items-center px-3 py-2 text-[13px] font-semibold transition-colors ${
-                        isActiveSetlists ? "text-primary" : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+                        isActiveSetlists ? "text-foreground bg-secondary" : "text-muted-foreground hover:text-foreground hover:bg-secondary"
                       }`}
                     >
                       {t("common.header.setlists")}
@@ -216,7 +216,7 @@ export function Navbar() {
                 href="/songs"
                 className={`px-3 py-[7px] rounded-[9px] text-[13.5px] font-semibold transition-all duration-150 ${
                   isActiveSongs
-                    ? "bg-primary/10 text-primary"
+                    ? "bg-secondary text-foreground"
                     : "text-muted-foreground hover:text-foreground hover:bg-secondary"
                 }`}
               >
@@ -229,7 +229,7 @@ export function Navbar() {
                 href="/mes-services"
                 className={`px-3 py-[7px] rounded-[9px] text-[13.5px] font-semibold transition-all duration-150 whitespace-nowrap ${
                   isActiveMesServices
-                    ? "bg-primary/10 text-primary"
+                    ? "bg-secondary text-foreground"
                     : "text-muted-foreground hover:text-foreground hover:bg-secondary"
                 }`}
               >
@@ -242,7 +242,7 @@ export function Navbar() {
                 href="/annonces"
                 className={`relative px-3 py-[7px] rounded-[9px] text-[13.5px] font-semibold transition-all duration-150 whitespace-nowrap ${
                   isActiveAnnonces
-                    ? "bg-primary/10 text-primary"
+                    ? "bg-secondary text-foreground"
                     : "text-muted-foreground hover:text-foreground hover:bg-secondary"
                 }`}
               >
@@ -255,7 +255,7 @@ export function Navbar() {
                 href="/notifier"
                 className={`px-3 py-[7px] rounded-[9px] text-[13.5px] font-semibold transition-all duration-150 whitespace-nowrap ${
                   isActiveNotifier
-                    ? "bg-primary/10 text-primary"
+                    ? "bg-secondary text-foreground"
                     : "text-muted-foreground hover:text-foreground hover:bg-secondary"
                 }`}
               >
@@ -268,7 +268,7 @@ export function Navbar() {
                 href="/admin"
                 className={`px-3 py-[7px] rounded-[9px] text-[13.5px] font-semibold transition-all duration-150 whitespace-nowrap ${
                   isActiveAdmin
-                    ? "bg-primary/10 text-primary"
+                    ? "bg-secondary text-foreground"
                     : "text-muted-foreground hover:text-foreground hover:bg-secondary"
                 }`}
               >
@@ -372,7 +372,7 @@ export function Navbar() {
                 aria-label={t("common.header.guide")}
                 className={`hidden lg:flex h-[34px] w-[34px] rounded-[9px] border transition-all duration-150 active:scale-[.96] items-center justify-center ${
                   pathname.startsWith("/guide")
-                    ? "border-primary/40 bg-primary/10 text-primary"
+                    ? "border-border bg-secondary text-foreground"
                     : "border-border bg-card text-muted-foreground hover:text-foreground hover:border-muted-foreground/50"
                 }`}
               >
@@ -387,7 +387,7 @@ export function Navbar() {
                 title={t("common.header.profile")}
                 className={`hidden lg:flex h-[34px] w-[34px] rounded-[9px] border transition-all duration-150 active:scale-[.96] items-center justify-center ${
                   pathname.startsWith("/profil")
-                    ? "border-primary/40 bg-primary/10 text-primary"
+                    ? "border-border bg-secondary text-foreground"
                     : "border-border bg-card text-muted-foreground hover:text-foreground hover:border-muted-foreground/50"
                 }`}
               >
@@ -444,7 +444,7 @@ export function Navbar() {
                   <Link
                     href="/planning"
                     className={`pl-5 pr-3 py-2 rounded-lg text-sm font-semibold transition-colors ${
-                      isActivePlanning ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                      isActivePlanning ? "bg-secondary text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted"
                     }`}
                   >
                     {t("common.header.planning")}
@@ -455,7 +455,7 @@ export function Navbar() {
                 <Link
                   href="/mes-services"
                   className={`pl-5 pr-3 py-2 rounded-lg text-sm font-semibold transition-colors ${
-                    isActiveMesServices ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                    isActiveMesServices ? "bg-secondary text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted"
                   }`}
                 >
                   {t("common.header.myServices")}
@@ -465,7 +465,7 @@ export function Navbar() {
                 <Link
                   href="/annonces"
                   className={`relative flex items-center gap-2 pl-5 pr-3 py-2 rounded-lg text-sm font-semibold transition-colors ${
-                    isActiveAnnonces ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                    isActiveAnnonces ? "bg-secondary text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted"
                   }`}
                 >
                   {t("common.header.annonces")}
@@ -475,7 +475,7 @@ export function Navbar() {
                 <Link
                   href="/notifier"
                   className={`pl-5 pr-3 py-2 rounded-lg text-sm font-semibold transition-colors ${
-                    isActiveNotifier ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                    isActiveNotifier ? "bg-secondary text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted"
                   }`}
                 >
                   Notifier
@@ -485,7 +485,7 @@ export function Navbar() {
                 <Link
                   href="/admin"
                   className={`pl-5 pr-3 py-2 rounded-lg text-sm font-semibold transition-colors ${
-                    isActiveAdmin ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                    isActiveAdmin ? "bg-secondary text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted"
                   }`}
                 >
                   Admin
@@ -497,7 +497,7 @@ export function Navbar() {
               <Link
                 href="/songs"
                 className={`pl-5 pr-3 py-2 rounded-lg text-sm font-semibold transition-colors ${
-                  isActiveSongs ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                  isActiveSongs ? "bg-secondary text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted"
                 }`}
               >
                 {t("common.header.songs")}
@@ -506,7 +506,7 @@ export function Navbar() {
                 <Link
                   href="/setlists"
                   className={`pl-5 pr-3 py-2 rounded-lg text-sm font-semibold transition-colors ${
-                    isActiveSetlists ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                    isActiveSetlists ? "bg-secondary text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted"
                   }`}
                 >
                   {t("common.header.setlists")}
