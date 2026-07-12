@@ -101,7 +101,7 @@ export default function PlanningAccueil() {
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       {/* Intro */}
-      <div className="bg-card border border-border rounded-xl p-5 text-center space-y-2">
+      <div className="bg-card shadow-soft rounded-xl p-5 text-center space-y-2">
         <p className="text-xs text-muted-foreground font-medium italic">Bienvenue</p>
         <h1 className="text-lg font-bold text-foreground">GCC — Planning des services</h1>
         <p className="text-sm text-muted-foreground leading-relaxed">
@@ -131,7 +131,7 @@ export default function PlanningAccueil() {
         <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
           Ce dimanche — {sunLabel}
         </p>
-        <div className="bg-card border border-border rounded-xl overflow-hidden">
+        <div className="bg-card shadow-soft rounded-xl overflow-hidden">
           {/* Culte Franco */}
           <SectionBlock dot="#2d5a65" label="Culte Franco">
             {cRow ? (
@@ -199,7 +199,7 @@ export default function PlanningAccueil() {
       </div>
 
       {/* Verset */}
-      <blockquote className="bg-secondary rounded-xl p-5 border border-border">
+      <blockquote className="bg-secondary rounded-xl p-5">
         <p className="text-sm text-muted-foreground italic leading-relaxed mb-3">
           « Tout ce que vous faites, faites-le de bon cœur, comme pour le Seigneur et non pour des hommes,
           sachant que vous recevrez du Seigneur l&apos;héritage pour récompense. Servez Christ, le Seigneur. »
