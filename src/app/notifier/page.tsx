@@ -166,7 +166,7 @@ export default function NotifierPage() {
           Tu n&apos;as pas l&apos;autorisation d&apos;envoyer des notifications.
         </p>
         {!user && (
-          <Link href="/login?from=/notifier" className="text-sm text-primary hover:underline">
+          <Link href="/login?from=/notifier" className="text-sm text-foreground underline underline-offset-2 hover:text-muted-foreground">
             Se connecter
           </Link>
         )}
@@ -199,7 +199,7 @@ export default function NotifierPage() {
                 onClick={() => setMode(m)}
                 className={`flex-1 h-10 rounded-xl border text-sm font-semibold transition-colors ${
                   mode === m
-                    ? "bg-primary text-primary-foreground border-primary"
+                    ? "bg-foreground text-background border-foreground"
                     : "bg-card border-border text-muted-foreground hover:text-foreground"
                 }`}
               >
@@ -252,7 +252,7 @@ export default function NotifierPage() {
                     onClick={() =>
                       setSelected(allSelected ? new Set() : new Set(pool.map((p) => p.uid)))
                     }
-                    className="text-xs font-semibold text-primary hover:underline"
+                    className="text-xs font-semibold text-foreground underline underline-offset-2 hover:text-muted-foreground"
                   >
                     {allSelected ? "Tout décocher" : "Tout cocher"}
                   </button>
@@ -364,7 +364,7 @@ export default function NotifierPage() {
           {feedback && <p className="text-xs text-muted-foreground">{feedback}</p>}
 
           {confirmOpen ? (
-            <div className="rounded-xl border border-primary/40 bg-primary/5 p-3 space-y-3">
+            <div className="rounded-xl bg-secondary p-3 space-y-3">
               <p className="text-sm text-foreground">
                 Envoyer cette notification à <span className="font-semibold">{recipLabel}</span> ?
               </p>
@@ -390,7 +390,7 @@ export default function NotifierPage() {
               <button
                 onClick={attemptSend}
                 disabled={!canSend}
-                className="inline-flex items-center gap-1.5 h-11 px-5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 h-11 px-5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50"
               >
                 <Send className="h-4 w-4" />
                 {busy ? "Envoi…" : "Envoyer"}
