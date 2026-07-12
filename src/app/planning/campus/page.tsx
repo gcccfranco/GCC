@@ -121,7 +121,7 @@ export default function CampusPage() {
                   <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-2">Chants</p>
                   <div className="space-y-1">
                     {(s.chants.some(c => c?.trim()) ? s.chants : ["","","",""]).map((c, ci) => (
-                      <div key={ci} className={`text-xs px-3 py-1.5 rounded-md border ${c?.trim() ? "border-border bg-card text-foreground font-medium" : "border-dashed border-border text-muted-foreground"}`}>
+                      <div key={ci} className={`text-xs px-3 py-1.5 rounded-lg border ${c?.trim() ? "border-border bg-card text-foreground font-medium" : "border-dashed border-border text-muted-foreground"}`}>
                         {c?.trim() || `Chant ${ci + 1}`}
                       </div>
                     ))}
