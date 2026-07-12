@@ -207,7 +207,7 @@ export function SongListClient({ songs, themes }: SongListClientProps) {
         <select
           value={themeFilter}
           onChange={(e) => setThemeFilter(e.target.value)}
-          className="h-8 pl-3 pr-7 rounded-[8px] text-[12.5px] font-semibold bg-card text-foreground/80 border border-border focus:outline-none focus:ring-2 focus:ring-ring/20 cursor-pointer appearance-none"
+          className="h-8 pl-3 pr-7 rounded-[8px] text-[16px] sm:text-[12.5px] font-semibold bg-card text-foreground/80 border border-border focus:outline-none focus:ring-2 focus:ring-ring/20 cursor-pointer appearance-none"
           style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7079' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`, backgroundRepeat: "no-repeat", backgroundPosition: "right 9px center" }}
         >
           <option value="">{t("songs.list.filterTheme")}</option>
