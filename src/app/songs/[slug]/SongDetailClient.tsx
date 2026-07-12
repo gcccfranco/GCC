@@ -39,6 +39,18 @@ interface SongDetailClientProps {
     const originalKey = ast.metadata.key;
     const youtubeId = song.youtubeUrl ? extractYouTubeId(song.youtubeUrl) : null;
     const scrollVisible = useScrollDirection();
+    // Barre d'outils rappelée d'un tap sur la partition (tablette au pupitre :
+    // éviter de devoir remonter la page pour transposer / zoomer)
+    const [barPinned, setBarPinned] = useState(false);
+    useEffect(() => {
+      if (!barPinned) return;
+      const y0 = window.scrollY;
+      const onScroll = () => {
+        if (Math.abs(window.scrollY - y0) > 60) setBarPinned(false);
+      };
+      window.addEventListener("scroll", onScroll, { passive: true });
+      return () => window.removeEventListener("scroll", onScroll);
+    }, [barPinned]);
     const [showVideo, setShowVideo] = useState(false);
     const [showPanel, setShowPanel] = useState(false);
     const [downloading, setDownloading] = useState(false);
@@ -162,7 +174,7 @@ interface SongDetailClientProps {
     return (
       <div className="min-h-screen print:min-h-0 bg-background" style={{ width: `${100 / fontScale}%` }}>
         {/* Barre de contrôles */}
-        <div className={`print:hidden fixed left-0 right-0 top-[var(--nav-h)] z-10 bg-background/95 backdrop-blur border-b border-border transition-transform duration-300 ${ scrollVisible ? "translate-y-0" : "-translate-y-[calc(100%+var(--nav-h))]"}`}>
+        <div className={`print:hidden fixed left-0 right-0 top-[var(--nav-h)] z-10 bg-background/95 backdrop-blur border-b border-border transition-transform duration-300 ${ scrollVisible || barPinned ? "translate-y-0" : "-translate-y-[calc(100%+var(--nav-h))]"}`}>
           <div className = "max-w-3xl mx-auto w-full flex flex-nowrap gap-0.5 items-center py-2 px-1">
             <Button
               asChild
@@ -344,12 +356,16 @@ interface SongDetailClientProps {
             </div>
           </div>
         )}
-        {/* Contenu */}
+        {/* Contenu — un tap rappelle la barre d'outils (sans gêner la sélection de texte) */}
         <main
           className="song-zoom px-4 py-6 print:px-0 print:py-2 print:max-w-none max-w-2xl mx-auto overflow-x-auto mt-[48px]"
-          style={{ 
+          style={{
             transform: `scale(${fontScale})`,
-            transformOrigin: 'top left  ', 
+            transformOrigin: 'top left  ',
+          }}
+          onClick={() => {
+            if (window.getSelection()?.toString()) return;
+            setBarPinned(true);
           }}
         >
           <SongView
