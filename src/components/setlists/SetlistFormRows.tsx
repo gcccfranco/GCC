@@ -47,9 +47,9 @@ function FieldToggleBtn({
   const Icon = kind === "note" ? MessageSquare : ArrowRight;
   const filledClass =
     kind === "note"
-      ? "bg-primary/10 text-primary"
+      ? "bg-secondary text-foreground"
       : "bg-amber-500/15 text-amber-600 dark:text-amber-400";
-  const activeRing = kind === "note" ? "ring-1 ring-primary/40" : "ring-1 ring-amber-400/50";
+  const activeRing = kind === "note" ? "ring-1 ring-foreground/30" : "ring-1 ring-amber-400/50";
   return (
     <button
       type="button"
@@ -304,7 +304,7 @@ function SortableMixedRow({
         </button>
         <div className="flex-1 min-w-0 flex items-center gap-1.5">
           <span className="font-medium text-foreground truncate">{item.sectionName}</span>
-          <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary font-medium truncate max-w-[100px] shrink-0">
+          <span className="text-[10px] px-1.5 py-0.5 rounded bg-secondary text-foreground font-medium truncate max-w-[100px] shrink-0">
             {item.songTitle}
           </span>
         </div>
@@ -385,9 +385,9 @@ function MixedStructureEditor({
   }
 
   return (
-    <div className="border-t border-primary/20 pt-3 px-3 pb-3 space-y-3">
+    <div className="border-t border-border pt-3 px-3 pb-3 space-y-3">
       <div className="flex items-center justify-between">
-        <p className="text-[10px] uppercase tracking-widest text-primary font-medium">
+        <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-medium">
           {t("setlists.form.mixedStructureTitle")}
         </p>
         <button
@@ -755,7 +755,7 @@ export function FusionRow({
       className={`rounded-lg border-2 ${
         isDragging
           ? "border-primary/60 bg-primary/5 shadow-md"
-          : "border-primary/25 bg-primary/3"
+          : "border-border bg-card"
       }`}
     >
       {/* En-tête de la fusion */}
@@ -770,11 +770,11 @@ export function FusionRow({
           <GripVertical className="h-4 w-4" />
         </button>
 
-        <Link2 className="h-3.5 w-3.5 text-primary shrink-0" />
+        <Link2 className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
 
         <div className="flex-1 min-w-0">
           <span className="text-sm font-semibold text-foreground truncate block">{fusionTitle}</span>
-          <span className="text-[10px] uppercase tracking-wider text-primary font-medium">
+          <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
             {t("setlists.form.fusionLabel")}
           </span>
         </div>
@@ -786,7 +786,7 @@ export function FusionRow({
           title={t("setlists.form.mixedStructureToggle")}
           className={`flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded border transition-colors ${
             hasMixed
-              ? "border-primary/30 bg-primary/10 text-primary"
+              ? "border-foreground/30 bg-secondary text-foreground"
               : "border-border text-muted-foreground hover:text-foreground"
           }`}
         >
@@ -807,7 +807,7 @@ export function FusionRow({
           type="button"
           onClick={onUnfuse}
           title={t("setlists.form.unfuseButton")}
-          className="text-muted-foreground hover:text-primary transition-colors shrink-0"
+          className="text-muted-foreground hover:text-foreground transition-colors shrink-0"
         >
           <Unlink className="h-4 w-4" />
         </button>
