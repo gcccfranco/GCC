@@ -37,7 +37,7 @@ export function PartitionsView({
   showChordsGlobal: boolean;
   /** Mode « adapter le chant » : lignes tappables (hors fusions), rétablir l'original. */
   editMode?: boolean;
-  onSelectLine?: (itemIndex: number, line: ChordProLine) => void;
+  onSelectLine?: (itemIndex: number, line: ChordProLine, sectionUid?: string) => void;
   onRevert?: (itemIndex: number) => void;
 }) {
   const { t } = useTranslation();
@@ -204,7 +204,7 @@ function NormalSongItem({
   content: SongContent | undefined;
   showChordsGlobal: boolean;
   editMode: boolean;
-  onSelectLine?: (itemIndex: number, line: ChordProLine) => void;
+  onSelectLine?: (itemIndex: number, line: ChordProLine, sectionUid?: string) => void;
   onRevert?: (itemIndex: number) => void;
 }) {
   const { t } = useTranslation();
@@ -252,7 +252,7 @@ function NormalSongItem({
         structureOverride={item.structureOverride}
         sectionNotes={item.sectionNotes ?? {}}
         sectionTransitions={item.sectionTransitions ?? {}}
-        onLineSelect={editMode ? (line) => onSelectLine?.(origIndex, line) : undefined}
+        onLineSelect={editMode ? (line, sectionUid) => onSelectLine?.(origIndex, line, sectionUid) : undefined}
       />
     </div>
   );
