@@ -194,7 +194,7 @@ export function SongListClient({ songs, themes }: SongListClientProps) {
               onClick={() => setLangFilter(lang)}
               className={`px-3 py-1.5 rounded-[7px] text-[12.5px] font-semibold transition-all duration-150 cursor-pointer ${
                 langFilter === lang
-                  ? "bg-card text-foreground shadow-sm"
+                  ? "bg-foreground text-background"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
