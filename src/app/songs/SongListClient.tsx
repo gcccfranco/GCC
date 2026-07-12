@@ -171,7 +171,7 @@ export function SongListClient({ songs, themes }: SongListClientProps) {
           placeholder={t("songs.list.searchPlaceholder")}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          className="w-full h-[46px] pl-[42px] pr-10 border border-border rounded-xl bg-card text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary focus:ring-[3px] focus:ring-primary/10 text-[16px] transition-all duration-150 [&::-webkit-search-cancel-button]:hidden"
+          className="w-full h-[46px] pl-[42px] pr-10 border border-border rounded-xl bg-card text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-ring/50 focus:ring-[3px] focus:ring-ring/10 text-[16px] transition-all duration-150 [&::-webkit-search-cancel-button]:hidden"
         />
         {query && (
           <button
@@ -239,7 +239,7 @@ export function SongListClient({ songs, themes }: SongListClientProps) {
               <Link
                 key={song.slug}
                 href={`/songs/${song.slug}`}
-                className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border bg-card text-[12.5px] font-semibold text-foreground hover:border-primary/40 active:bg-secondary transition-colors"
+                className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border bg-card text-[12.5px] font-semibold text-foreground hover:border-muted-foreground/50 active:bg-secondary transition-colors"
               >
                 <span
                   className="w-1.5 h-1.5 rounded-full shrink-0"
@@ -342,7 +342,7 @@ export function SongListClient({ songs, themes }: SongListClientProps) {
             <button
               key={letter}
               onClick={() => scrollToLetter(slug)}
-              className="w-7 h-[17px] flex items-center justify-center text-[10px] font-bold text-muted-foreground hover:text-primary active:text-primary"
+              className="w-7 h-[17px] flex items-center justify-center text-[10px] font-bold text-muted-foreground hover:text-foreground active:text-foreground"
             >
               {letter}
             </button>
