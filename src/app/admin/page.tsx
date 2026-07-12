@@ -330,7 +330,7 @@ export default function AdminPage() {
 
         {/* ── Réception : signalements ── */}
         {tab === "reception" && (
-        <div className="rounded-xl border border-border bg-card p-5 space-y-3">
+        <div className="rounded-xl bg-card shadow-soft p-5 space-y-3">
           <div className="flex items-center justify-between">
             <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
               Signalements
@@ -476,7 +476,7 @@ export default function AdminPage() {
 
         {/* ── Réception : propositions de chants ── */}
         {tab === "reception" && (
-        <div className="rounded-xl border border-border bg-card p-5 space-y-3">
+        <div className="rounded-xl bg-card shadow-soft p-5 space-y-3">
           <div className="flex items-center justify-between">
             <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
               Propositions de chants
@@ -616,7 +616,7 @@ export default function AdminPage() {
 
         {/* ── Inscriptions ── */}
         {tab === "inscriptions" && (
-        <div className="rounded-xl border border-border bg-card p-5 space-y-3">
+        <div className="rounded-xl bg-card shadow-soft p-5 space-y-3">
           <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
             Inscriptions
           </h2>
@@ -649,7 +649,7 @@ export default function AdminPage() {
 
         {/* ── Membres ── */}
         {tab === "membres" && (
-        <div className="rounded-xl border border-border bg-card p-5 space-y-4">
+        <div className="rounded-xl bg-card shadow-soft p-5 space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
               Membres
@@ -870,7 +870,7 @@ export default function AdminPage() {
 
         {/* ── Noms du planning sans compte ── */}
         {tab === "planning" && (
-        <div className="rounded-xl border border-border bg-card p-5 space-y-3">
+        <div className="rounded-xl bg-card shadow-soft p-5 space-y-3">
           <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
             Planning sans compte ({unlinkedNames.length})
           </h2>
