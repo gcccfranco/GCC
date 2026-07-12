@@ -166,7 +166,7 @@ export default function AdminPage() {
         <ShieldCheck className="h-8 w-8 text-muted-foreground" />
         <p className="text-sm text-muted-foreground">Page réservée aux administrateurs.</p>
         {!user && (
-          <Link href="/login?from=/admin" className="text-sm text-primary hover:underline">
+          <Link href="/login?from=/admin" className="text-sm text-foreground underline underline-offset-2 hover:text-muted-foreground">
             Se connecter
           </Link>
         )}
@@ -304,7 +304,7 @@ export default function AdminPage() {
                 onClick={() => setTab(key)}
                 className={`shrink-0 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[13px] font-semibold transition-colors ${
                   active
-                    ? "bg-primary text-primary-foreground"
+                    ? "bg-foreground text-background"
                     : "bg-card border border-border text-muted-foreground hover:text-foreground"
                 }`}
               >
@@ -317,7 +317,7 @@ export default function AdminPage() {
                         ? "bg-white/20 text-white"
                         : always
                         ? "bg-muted text-muted-foreground"
-                        : "bg-primary/10 text-primary"
+                        : "bg-secondary text-foreground"
                     }`}
                   >
                     {count}
@@ -336,7 +336,7 @@ export default function AdminPage() {
               Signalements
             </h2>
             {pendingReports.length > 0 && (
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary/10 text-primary">
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-secondary text-foreground">
                 {pendingReports.length} en attente
               </span>
             )}
@@ -401,7 +401,7 @@ export default function AdminPage() {
                             {r.kind === "song" && r.songSlug && (
                               <Link
                                 href={`/songs/${r.songSlug}`}
-                                className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline"
+                                className="inline-flex items-center gap-1.5 text-xs font-semibold text-foreground underline underline-offset-2 hover:text-muted-foreground"
                               >
                                 <ExternalLink className="h-3 w-3" />
                                 {r.songTitle || "Voir le chant"}
@@ -482,7 +482,7 @@ export default function AdminPage() {
               Propositions de chants
             </h2>
             {pendingProposals.length > 0 && (
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary/10 text-primary">
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-secondary text-foreground">
                 {pendingProposals.length} en attente
               </span>
             )}
@@ -540,7 +540,7 @@ export default function AdminPage() {
                             href={p.youtubeUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline"
+                            className="inline-flex items-center gap-1.5 text-xs font-semibold text-foreground underline underline-offset-2 hover:text-muted-foreground"
                           >
                             <Play className="h-3.5 w-3.5" />
                             YouTube
@@ -551,7 +551,7 @@ export default function AdminPage() {
                               href={p.pdfUrl}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline"
+                              className="inline-flex items-center gap-1.5 text-xs font-semibold text-foreground underline underline-offset-2 hover:text-muted-foreground"
                             >
                               <FileText className="h-3.5 w-3.5" />
                               Partition PDF
@@ -691,7 +691,7 @@ export default function AdminPage() {
                     onClick={() => setFilter(f)}
                     className={`shrink-0 px-2.5 py-1 rounded-full text-[11px] font-semibold border transition-colors ${
                       active && !color
-                        ? "bg-primary text-primary-foreground border-transparent"
+                        ? "bg-foreground text-background border-transparent"
                         : active
                         ? "border-transparent text-white"
                         : "bg-background border-border text-muted-foreground hover:text-foreground"
@@ -711,7 +711,7 @@ export default function AdminPage() {
                   onClick={() => setSort(s)}
                   className={`px-2.5 py-1 rounded-full font-semibold border transition-colors ${
                     sort === s
-                      ? "bg-primary text-primary-foreground border-transparent"
+                      ? "bg-foreground text-background border-transparent"
                       : "bg-background border-border text-muted-foreground hover:text-foreground"
                   }`}
                 >
@@ -737,14 +737,14 @@ export default function AdminPage() {
                       onClick={() => (isEditing ? setEditingUid(null) : startEdit(p))}
                       className="w-full flex items-start gap-3 px-4 py-3 text-left"
                     >
-                      <span className="h-8 w-8 mt-0.5 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center shrink-0 uppercase">
+                      <span className="h-8 w-8 mt-0.5 rounded-full bg-secondary text-foreground text-xs font-bold flex items-center justify-center shrink-0 uppercase">
                         {(p.firstName[0] ?? "") + (p.lastName[0] ?? "") || <UserRound className="h-4 w-4" />}
                       </span>
                       <div className="min-w-0 flex-1 space-y-1">
                         <p className="text-sm font-semibold text-foreground truncate">
                           {p.firstName} {p.lastName}
                           {isAdminUser(p) && (
-                            <span className="ml-2 text-[10px] font-bold text-primary uppercase">admin</span>
+                            <span className="ml-2 text-[10px] font-bold text-muted-foreground uppercase">admin</span>
                           )}
                         </p>
                         <p className="text-xs text-muted-foreground truncate">
@@ -835,7 +835,7 @@ export default function AdminPage() {
                                       ? "bg-background border-border text-muted-foreground hover:text-foreground"
                                       : color
                                       ? ""
-                                      : "bg-primary/10 border-primary text-primary"
+                                      : "bg-secondary border-foreground/30 text-foreground"
                                   }`}
                                   style={checked && color ? { background: `${color}15`, borderColor: color, color } : undefined}
                                 >
