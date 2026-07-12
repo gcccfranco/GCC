@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import { I18nProvider } from "@/lib/I18nProvider";
 import { Navbar } from "@/components/layout/Navbar";
+import { MobileTabBar } from "@/components/layout/MobileTabBar";
 import { PageTransition } from "@/components/layout/PageTransition";
 import "./globals.css";
 
@@ -52,6 +53,7 @@ export default function RootLayout({
             <main className="pt-[var(--nav-h)]">
               <PageTransition>{children}</PageTransition>
             </main>
+            <MobileTabBar />
           </I18nProvider>
         </ThemeProvider>
       </body>
