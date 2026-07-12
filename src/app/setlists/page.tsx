@@ -277,7 +277,7 @@ export default function SetlistsPage() {
             {canCreate && (
               <Link
                 href="/setlists/new"
-                className="shrink-0 flex items-center gap-1.5 h-9 px-4 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
+                className="shrink-0 flex items-center gap-1.5 h-9 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
               >
                 <Plus className="h-4 w-4" />
                 <span className="hidden sm:inline">{t("setlists.list.newButton")}</span>
