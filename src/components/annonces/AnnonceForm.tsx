@@ -126,7 +126,7 @@ export function AnnonceForm({
   }
 
   return (
-    <div className="rounded-xl border border-border bg-card p-5 space-y-4">
+    <div className="rounded-xl bg-card shadow-soft p-5 space-y-4">
       {/* Section + titre */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
