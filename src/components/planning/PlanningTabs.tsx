@@ -49,7 +49,7 @@ export function PlanningTabs() {
                 href={tab.href}
                 ref={(el) => { tabRefs.current[i] = el }}
                 className={`flex-shrink-0 px-4 py-3 text-[12.5px] font-semibold transition-colors duration-150 whitespace-nowrap ${
-                  active ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                  active ? "text-foreground" : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 {tab.label}
@@ -62,7 +62,7 @@ export function PlanningTabs() {
               page sur téléphone (scroll horizontal). */}
           {indicator.ready && (
             <div
-              className="absolute bottom-0 h-[2px] bg-primary rounded-full transition-all duration-200"
+              className="absolute bottom-0 h-[2px] bg-foreground rounded-full transition-all duration-200"
               style={{ left: indicator.left, width: indicator.width }}
             />
           )}
