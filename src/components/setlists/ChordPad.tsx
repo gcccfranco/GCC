@@ -143,7 +143,7 @@ export function ChordPad({
           <button
             type="button"
             className={`h-8 px-2.5 rounded-[8px] border text-[12px] font-semibold ${
-              showBass ? "border-transparent bg-primary/10 text-primary" : "border-border bg-card text-muted-foreground"
+              showBass ? "border-transparent bg-secondary text-foreground" : "border-border bg-card text-muted-foreground"
             }`}
             onClick={() =>
               pick(() => {
