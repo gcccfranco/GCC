@@ -487,7 +487,7 @@ export function SetlistForm({ mode, setlistId, songs, initial }: SetlistFormProp
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder={t("setlists.form.titlePlaceholder")}
-                className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 text-sm"
+                className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/30 text-[16px] sm:text-sm"
               />
             </div>
             <div>
@@ -497,7 +497,7 @@ export function SetlistForm({ mode, setlistId, songs, initial }: SetlistFormProp
               <select
                 value={category}
                 onChange={(e) => onCategoryChange(e.target.value)}
-                className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 text-sm"
+                className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring/30 text-[16px] sm:text-sm"
               >
                 <option value="">{t("setlists.form.categoryPlaceholder")}</option>
                 <optgroup label={t("setlists.form.categoryGroupRestricted")}>
@@ -537,7 +537,7 @@ export function SetlistForm({ mode, setlistId, songs, initial }: SetlistFormProp
                 <select
                   value={leaderOther ? "__other__" : leader}
                   onChange={(e) => onLeaderSelect(e.target.value)}
-                  className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 text-sm"
+                  className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring/30 text-[16px] sm:text-sm"
                 >
                   <option value="">{t("setlists.form.presidencePlaceholder")}</option>
                   {categoryLeaders.map((m) => (
@@ -551,7 +551,7 @@ export function SetlistForm({ mode, setlistId, songs, initial }: SetlistFormProp
                     value={leader}
                     onChange={(e) => setLeader(e.target.value)}
                     placeholder={t("setlists.form.leaderPlaceholder")}
-                    className="mt-2 w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 text-sm"
+                    className="mt-2 w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/30 text-[16px] sm:text-sm"
                   />
                 )}
               </div>
@@ -565,13 +565,13 @@ export function SetlistForm({ mode, setlistId, songs, initial }: SetlistFormProp
                   type="date"
                   value={date}
                   onChange={(e) => onDateChange(e.target.value)}
-                  className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 text-sm"
+                  className="w-full min-w-0 appearance-none px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring/30 text-[16px] sm:text-sm"
                 />
                 {category === "Campus" && (
                   <select
                     value={moment ?? ""}
                     onChange={(e) => setMoment((e.target.value || undefined) as "matin" | "soir" | undefined)}
-                    className="mt-2 w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 text-sm"
+                    className="mt-2 w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring/30 text-[16px] sm:text-sm"
                   >
                     <option value="">—</option>
                     <option value="matin">Matin</option>
@@ -629,7 +629,7 @@ export function SetlistForm({ mode, setlistId, songs, initial }: SetlistFormProp
               onChange={(e) => setNotes(e.target.value)}
               rows={2}
               placeholder={t("setlists.form.notesPlaceholder")}
-              className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 text-sm resize-none"
+              className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/30 text-[16px] sm:text-sm resize-none"
             />
           </div>
         </div>
