@@ -26,11 +26,21 @@ export function useStandaloneScrollLock(open: boolean) {
     body.style.left = "0";
     body.style.right = "0";
     return () => {
+      // Rétracter le clavier AVANT de déverrouiller : sinon WebKit garde la
+      // couche `fixed` décalée de la hauteur du clavier (barre d'onglets qui
+      // « flotte » au milieu de l'écran en PWA).
+      (document.activeElement as HTMLElement | null)?.blur?.();
       body.style.position = prev.position;
       body.style.top = prev.top;
       body.style.left = prev.left;
       body.style.right = prev.right;
       window.scrollTo(0, scrollY);
+      // Après l'animation de rétraction, un micro-scroll force WebKit à
+      // ré-ancrer les éléments fixed sur le viewport.
+      window.setTimeout(() => {
+        window.scrollTo(0, window.scrollY + 1);
+        window.scrollTo(0, Math.max(window.scrollY - 1, 0));
+      }, 450);
     };
   }, [open]);
 }
