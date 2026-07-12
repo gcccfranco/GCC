@@ -206,3 +206,44 @@ export function deleteSourceLines(source: string, indices: number[]): string {
     .filter((_, i) => !toDelete.has(i))
     .join("\n");
 }
+
+/** Duplique à la fin du source le bloc `{start_of_X…}` … `{end_of_X}` de la
+ *  section `sectionId` (format `<type>-<n>`, n = rang du start_of_ dans le
+ *  source — même convention que le parseur). Mode Adapter : quand une section
+ *  est répétée par la structure d'une setlist, l'occurrence éditée doit
+ *  devenir sa propre copie au lieu de modifier toutes les répétitions.
+ *  Les lignes de la copie sont aux index d'origine + `lineOffset`. */
+export function materializeSectionCopy(
+  source: string,
+  sectionId: string
+): { source: string; newSectionId: string; lineOffset: number } | null {
+  const m = sectionId.match(/-(\d+)$/);
+  if (!m) return null;
+  const counter = parseInt(m[1], 10);
+  const lines = source.split("\n");
+  let total = 0;
+  let typeKey = "";
+  let startIdx = -1;
+  let endIdx = -1;
+  for (let i = 0; i < lines.length; i++) {
+    const t = lines[i].trim();
+    const start = t.match(/^\{start_of_([a-z0-9_]+)\s*(?::[^}]*)?\}$/i);
+    if (start) {
+      total++;
+      if (total === counter) {
+        startIdx = i;
+        typeKey = start[1];
+      }
+      continue;
+    }
+    if (startIdx !== -1 && endIdx === -1 && /^\{end_of_/i.test(t)) endIdx = i;
+  }
+  if (startIdx === -1) return null;
+  if (endIdx === -1) endIdx = lines.length - 1;
+  const block = lines.slice(startIdx, endIdx + 1);
+  return {
+    source: [...lines, "", ...block].join("\n"),
+    newSectionId: `${typeKey}-${total + 1}`,
+    lineOffset: lines.length + 1 - startIdx,
+  };
+}
