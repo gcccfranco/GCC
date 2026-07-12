@@ -740,7 +740,21 @@ export function PerformanceMode({
             />
           );
           return (
-            <div style={page.scale < 1 ? { zoom: page.scale } : undefined}>
+            // iOS calcule mal un `zoom` imbriqué dans le `zoom: fontScale` du
+            // conteneur (largeur fausse → colonnes d'ossature coupées à droite
+            // sur tablette). transform + largeur compensée = même géométrie,
+            // sans imbrication de zoom.
+            <div
+              style={
+                page.scale < 1
+                  ? {
+                      transform: `scale(${page.scale})`,
+                      transformOrigin: "top left",
+                      width: `${100 / page.scale}%`,
+                    }
+                  : undefined
+              }
+            >
               {page.header != null && renderBlock(page.header)}
               <div className={multiCol ? "flex items-start gap-x-4" : undefined}>
                 {page.cols.map((colIdxs, ci) => (
