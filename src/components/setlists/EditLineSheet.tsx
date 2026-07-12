@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { ChordPad } from "@/components/setlists/ChordPad";
+import { useStandaloneScrollLock } from "@/hooks/useStandaloneScrollLock";
 import { transposeChord } from "@/lib/transpose";
 import {
   type EditableLine,
@@ -257,6 +258,7 @@ type SheetProps = {
 };
 
 export function EditLineSheet({ target, saving, onClose, onSaveLine, onInsertAfter, onDeleteLine }: SheetProps) {
+  useStandaloneScrollLock(!!target);
   return (
     <Drawer open={!!target} onOpenChange={(o) => !o && onClose()}>
       <DrawerContent className="max-h-[88vh] md:max-w-3xl md:mx-auto">
