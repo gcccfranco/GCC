@@ -24,14 +24,16 @@
     --secondary-foreground: 223 10% 25%;
     --muted: 40 21% 94%;             /* #f4f2ee */
     --muted-foreground: 219 6% 45%;  /* #6b7079 */
-    --accent: 21 93% 46%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 40 21% 94%;            /* gris chaud discret — survol menus (sobre) */
+    --accent-foreground: 223 14% 10%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
-    --border: 38 19% 88%;            /* #e7e3dc */
-    --input: 38 19% 88%;
-    --ring: 21 93% 46%;
+    --border: 45 7% 89%;             /* #e5e4e1 légèrement neutralisé */
+    --input: 45 7% 89%;
+    --ring: 223 14% 10%;             /* focus encre — l'orange reste aux actions */
     --radius: 0.75rem;
+    /* Cartes : ombre douce sans bordure (direction « Sobre sur crème ») */
+    --shadow-soft: 0 1px 2px rgba(23, 20, 15, 0.05), 0 2px 10px rgba(23, 20, 15, 0.07);
 
     /* Semantic music colors */
     --chord-color: #3f63cf;   /* bleu PDF FR */
@@ -63,7 +65,7 @@
   .dark {
     --background: 224 24% 6%;        /* #0c0e13 */
     --foreground: 220 8% 92%;        /* #ecedf0 */
-    --card: 224 18% 10%;             /* #14171e */
+    --card: 220 20% 12%;             /* #181c24 — surface élevée (cartes sans bordure) */
     --card-foreground: 220 8% 92%;
     --popover: 224 18% 10%;
     --popover-foreground: 220 8% 92%;
@@ -77,9 +79,10 @@
     --accent-foreground: 220 8% 92%;
     --destructive: 0 63% 31%;
     --destructive-foreground: 210 40% 98%;
-    --border: 220 16% 18%;           /* #262b35 */
+    --border: 220 16% 18%;           /* #262b35 — inchangé : le mode louange s'appuie dessus */
     --input: 220 16% 18%;
-    --ring: 21 96% 54%;
+    --ring: 220 8% 92%;              /* focus blanc cassé — l'orange reste aux actions */
+    --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.5), 0 3px 12px rgba(0, 0, 0, 0.35);
 
     --chord-color: #8fb0ff;   /* bleu PDF FR dark */
     --jianpu-color: #ff7d72;
@@ -120,6 +123,10 @@
 }
 
 @layer utilities {
+  .shadow-soft {
+    box-shadow: var(--shadow-soft);
+  }
+
   .font-chord {
     color: var(--chord-color);
   }
