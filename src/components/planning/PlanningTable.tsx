@@ -78,12 +78,12 @@ export function PlanningTable({ cols, rows, color, dateBadge, minWidth = 480, gr
             value={name}
             onChange={(e) => updateName(e.target.value)}
             placeholder="Mon prénom…"
-            className="w-full h-8 pl-8 pr-7 rounded-lg border border-border bg-card text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary/20"
+            className="w-full h-10 sm:h-8 pl-8 pr-8 rounded-lg border border-border bg-card text-foreground text-[16px] sm:text-xs focus:outline-none focus:ring-2 focus:ring-primary/20"
           />
           {name && (
             <button
               onClick={() => { updateName(""); setOnlyMine(false) }}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              className="absolute right-0 top-1/2 -translate-y-1/2 p-2.5 text-muted-foreground hover:text-foreground active:text-foreground"
               aria-label="Effacer"
             >
               <X className="h-3 w-3" />
@@ -93,7 +93,7 @@ export function PlanningTable({ cols, rows, color, dateBadge, minWidth = 480, gr
         {hasName && (
           <button
             onClick={() => setOnlyMine((v) => !v)}
-            className={`h-8 px-3 rounded-lg border text-xs font-semibold transition-all duration-150 cursor-pointer ${
+            className={`h-10 sm:h-8 px-3 rounded-lg border text-xs font-semibold transition-all duration-150 cursor-pointer ${
               onlyMine ? "text-white border-transparent" : "bg-card border-border text-muted-foreground hover:text-foreground"
             }`}
             style={onlyMine ? { background: color, borderColor: color } : undefined}
@@ -167,7 +167,7 @@ export function PlanningTable({ cols, rows, color, dateBadge, minWidth = 480, gr
               <button
                 key={g}
                 onClick={() => setMobileGroup(g)}
-                className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all duration-150 cursor-pointer ${
+                className={`relative flex-shrink-0 px-3 py-2 rounded-full text-xs font-semibold border transition-all duration-150 cursor-pointer after:absolute after:-inset-y-1.5 after:inset-x-0 after:content-[''] ${
                   g === activeGroup ? "text-white border-transparent" : "bg-card border-border text-muted-foreground"
                 }`}
                 style={g === activeGroup ? { background: color, borderColor: color } : undefined}
