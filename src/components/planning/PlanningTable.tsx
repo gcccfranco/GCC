@@ -78,7 +78,7 @@ export function PlanningTable({ cols, rows, color, dateBadge, minWidth = 480, gr
             value={name}
             onChange={(e) => updateName(e.target.value)}
             placeholder="Mon prénom…"
-            className="w-full h-10 sm:h-8 pl-8 pr-8 rounded-lg border border-border bg-card text-foreground text-[16px] sm:text-xs focus:outline-none focus:ring-2 focus:ring-primary/20"
+            className="w-full h-10 sm:h-8 pl-8 pr-8 rounded-lg border border-border bg-card text-foreground text-[16px] sm:text-xs focus:outline-none focus:ring-2 focus:ring-ring/20"
           />
           {name && (
             <button
@@ -188,7 +188,7 @@ export function PlanningTable({ cols, rows, color, dateBadge, minWidth = 480, gr
           return (
             <Fragment key={row[0]}>
               <div
-                className="rounded-xl border border-border bg-card overflow-hidden"
+                className="rounded-xl border border-transparent bg-card shadow-soft overflow-hidden"
                 style={{
                   borderColor: isThis ? color : undefined,
                   boxShadow: mine ? `inset 3px 0 0 ${color}` : undefined,
