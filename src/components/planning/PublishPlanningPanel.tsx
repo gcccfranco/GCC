@@ -103,7 +103,7 @@ export function PublishPlanningPanel({
         <select
           value={key}
           onChange={(e) => setKey(e.target.value)}
-          className="w-full h-11 px-3 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+          className="w-full h-11 px-3 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring/30"
         >
           {plannings.map((p) => (
             <option key={p.key} value={p.key}>
