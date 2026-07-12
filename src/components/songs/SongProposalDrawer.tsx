@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useStandaloneScrollLock } from "@/hooks/useStandaloneScrollLock";
 
 function isHttpUrl(s: string): boolean {
   return /^https?:\/\//i.test(s.trim());
@@ -24,6 +25,7 @@ function isHttpUrl(s: string): boolean {
 export function SongProposalDrawer() {
   const { user, profile, loading } = useProfile();
   const [open, setOpen] = useState(false);
+  useStandaloneScrollLock(open);
   const [title, setTitle] = useState("");
   const [youtubeUrl, setYoutubeUrl] = useState("");
   const [pdfUrl, setPdfUrl] = useState("");
