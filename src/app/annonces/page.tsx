@@ -149,7 +149,7 @@ export default function AnnoncesPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-2xl mx-auto px-4 pt-6 pb-10 space-y-4">
+      <div className="max-w-2xl md:max-w-4xl mx-auto px-4 pt-6 pb-10 space-y-4">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <Megaphone className="h-5 w-5 text-primary" />
@@ -208,24 +208,26 @@ export default function AnnoncesPage() {
             Aucune annonce {filter !== "Toutes" ? `pour ${sectionLabel(filter)} ` : ""}pour l&apos;instant.
           </p>
         ) : (
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {displayed.map((a) => {
               const color = categoryColor(a.section);
               const canEdit = a.authorId === user.uid || isAdminUser(user);
               if (editingId === a.id) {
                 return (
-                  <AnnonceForm
-                    key={a.id}
-                    initial={annonceToForm(a)}
-                    allowedSections={
-                      allowedSections.includes(a.section)
-                        ? allowedSections
-                        : [a.section, ...allowedSections]
-                    }
-                    onSubmit={(v) => handleUpdate(a.id, v)}
-                    onCancel={() => setEditingId(null)}
-                    submitLabel="Enregistrer"
-                  />
+                  // Le formulaire d'édition garde toute la largeur en 2 colonnes
+                  <div key={a.id} className="md:col-span-2">
+                    <AnnonceForm
+                      initial={annonceToForm(a)}
+                      allowedSections={
+                        allowedSections.includes(a.section)
+                          ? allowedSections
+                          : [a.section, ...allowedSections]
+                      }
+                      onSubmit={(v) => handleUpdate(a.id, v)}
+                      onCancel={() => setEditingId(null)}
+                      submitLabel="Enregistrer"
+                    />
+                  </div>
                 );
               }
               return (
