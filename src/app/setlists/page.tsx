@@ -124,7 +124,7 @@ export default function SetlistsPage() {
   const tabBtnClass = (active: boolean) =>
     `flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 font-medium transition-colors text-sm ${
       active
-        ? "bg-primary text-primary-foreground"
+        ? "bg-foreground text-background"
         : "bg-background text-muted-foreground hover:bg-muted/50"
     }`;
 
@@ -244,7 +244,7 @@ export default function SetlistsPage() {
               onClick={() => setOnlyMine((v) => !v)}
               className={`inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-semibold border transition-colors ${
                 onlyMine
-                  ? "bg-primary/10 border-primary text-primary"
+                  ? "bg-secondary border-foreground/30 text-foreground"
                   : "bg-background border-border text-muted-foreground hover:text-foreground"
               }`}
             >
@@ -256,7 +256,7 @@ export default function SetlistsPage() {
             <select
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
-              className="flex-1 h-9 px-3 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+              className="flex-1 h-9 px-3 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring/30"
             >
               <option value="Toutes">{t("setlists.list.allCategories")}</option>
               <optgroup label="Réunions principales">
