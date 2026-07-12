@@ -80,7 +80,7 @@ function InsertDot({ onTap, active, small = false }: { onTap: () => void; active
       className={`self-end mb-1 shrink-0 rounded-full border border-dashed flex items-center justify-center transition-colors ${
         small ? "mx-px h-5 w-5" : "mx-0.5 h-6 w-6"
       } ${
-        active ? "border-primary bg-primary/15 text-primary" : "border-border text-muted-foreground/60 hover:text-primary hover:border-primary"
+        active ? "border-foreground bg-secondary text-foreground" : "border-border text-muted-foreground/60 hover:text-foreground hover:border-foreground"
       }`}
     >
       <Plus className={small ? "h-3 w-3" : "h-3.5 w-3.5"} />
@@ -95,7 +95,7 @@ function Chip({ chord, selected, onTap }: { chord: string; selected: boolean; on
       onClick={onTap}
       className={`h-8 px-2 mb-0.5 rounded-[8px] border text-[15px] font-bold whitespace-nowrap transition-colors ${
         selected
-          ? "border-primary bg-primary text-primary-foreground"
+          ? "border-foreground bg-foreground text-background"
           : "border-[color:var(--chord-color,#2563EB)]/40 bg-[color:var(--chord-color,#2563EB)]/10 text-[color:var(--chord-color,#2563EB)]"
       }`}
     >
@@ -174,7 +174,7 @@ function LineCanvas({
         // intra-mot précis, ex. « con+dui+ra »). Re-taper une lettre replie.
         if (expandedWord === wi) {
           return (
-            <span key={wi} className="inline-flex items-end rounded-lg bg-primary/5 ring-1 ring-primary/25 px-0.5">
+            <span key={wi} className="inline-flex items-end rounded-lg bg-secondary/60 ring-1 ring-foreground/20 px-0.5">
               <InsertDot onTap={() => onInsert(w.start)} active={insertOffset === w.start} />
               {[...w.text].map((ch, ci) => {
                 const chips = here.filter((a) => Math.max(a.offset - w.start, 0) === ci);
@@ -224,7 +224,7 @@ function LineCanvas({
                     tabIndex={0}
                     onClick={() => setExpandedWord(wi)}
                     onKeyDown={(e) => e.key === "Enter" && setExpandedWord(wi)}
-                    className="text-[19px] leading-[1.4] whitespace-pre cursor-pointer rounded hover:bg-primary/5 active:bg-primary/10"
+                    className="text-[19px] leading-[1.4] whitespace-pre cursor-pointer rounded hover:bg-secondary/70 active:bg-secondary"
                   >
                     {w.text.slice(b, partEnd)}
                   </span>
@@ -466,7 +466,7 @@ function SheetBody({
                 type="button"
                 onClick={() => setInstrPad(-1)}
                 className={`h-8 px-2.5 rounded-[8px] border border-dashed text-[13px] font-semibold flex items-center gap-1 ${
-                  instrPad === -1 ? "border-primary text-primary" : "border-border text-muted-foreground"
+                  instrPad === -1 ? "border-foreground text-foreground" : "border-border text-muted-foreground"
                 }`}
               >
                 <Plus className="h-3.5 w-3.5" />
