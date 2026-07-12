@@ -86,7 +86,7 @@ export function PublishPlanningPanel({
 
   if (!planning) {
     return (
-      <div className="rounded-xl border border-border bg-card p-5">
+      <div className="rounded-xl bg-card shadow-soft p-5">
         <p className="text-sm text-muted-foreground">
           Tu n&apos;as pas l&apos;autorisation de publier un planning.
         </p>
@@ -95,7 +95,7 @@ export function PublishPlanningPanel({
   }
 
   return (
-    <div className="rounded-xl border border-border bg-card p-5 space-y-4">
+    <div className="rounded-xl bg-card shadow-soft p-5 space-y-4">
       <div className="space-y-1.5">
         <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
           Planning
