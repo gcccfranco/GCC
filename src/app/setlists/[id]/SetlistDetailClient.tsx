@@ -43,6 +43,7 @@ import {
   replaceSourceLine,
   insertSourceLineAfter,
   deleteSourceLines,
+  materializeSectionCopy,
 } from "@/lib/chordpro/editSource";
 
 /** Cible d'édition de ligne + indices source nécessaires à la sauvegarde. */
@@ -50,7 +51,18 @@ type LineEditState = EditLineTarget & {
   srcLine: number;
   pinyinSrcLine?: number;
   jianpuSrcLine?: number;
+  /** Renseignés uniquement si la ligne appartient à une section répétée par la
+   *  structure : l'édition doit alors matérialiser une copie de la section
+   *  pour cette occurrence (sinon toutes les répétitions changeraient). */
+  repeatedSectionId?: string;
+  structIndex?: number;
 };
+
+/** uid d'une entrée de structureOverride, même convention que
+ *  resolveStructureOverride (les entrées legacy sans rang prennent leur index). */
+function structUidAt(ov: string, index: number): string {
+  return /-\d+$/.test(ov) ? ov : `${ov}-${index}`;
+}
   
 
 // ─── Main component ───────────────────────────────────────────────────────────
@@ -282,7 +294,7 @@ export function SetlistDetailClient() {
     return item.contentOverride ?? contents[item.songSlug]?.source ?? null;
   }
 
-  function handleSelectLine(itemIndex: number, line: ChordProLine) {
+  function handleSelectLine(itemIndex: number, line: ChordProLine, sectionUid?: string) {
     if (!setlist || line.srcLine === undefined) return;
     const item = setlist.items[itemIndex];
     const source = sourceForItem(item);
@@ -298,6 +310,26 @@ export function SetlistDetailClient() {
     const baseAst = itemAst(item, contents[item.songSlug]);
     if (!baseAst) return;
     const origKey = baseAst.metadata.key;
+
+    // Section répétée par la structure ? On note l'occurrence tapée pour que
+    // l'édition matérialise une copie au lieu de toucher toutes les répétitions.
+    let repeatedSectionId: string | undefined;
+    let structIndex: number | undefined;
+    const struct = item.structureOverride;
+    if (struct && sectionUid) {
+      const sec = baseAst.sections.find((s) => s.lines.some((l) => l.srcLine === line.srcLine));
+      if (sec) {
+        const refs = struct.filter((ov) => ov === sec.id || ov.replace(/-\d+$/, "") === sec.id);
+        if (refs.length > 1) {
+          const j = struct.findIndex((ov, k) => structUidAt(ov, k) === sectionUid);
+          if (j !== -1) {
+            repeatedSectionId = sec.id;
+            structIndex = j;
+          }
+        }
+      }
+    }
+
     setEditTarget({
       itemIndex,
       raw: source.split("\n")[line.srcLine] ?? "",
@@ -309,6 +341,8 @@ export function SetlistDetailClient() {
       srcLine: line.srcLine,
       pinyinSrcLine: line.pinyinSrcLine,
       jianpuSrcLine: line.jianpuSrcLine,
+      repeatedSectionId,
+      structIndex,
     });
   }
 
@@ -316,7 +350,11 @@ export function SetlistDetailClient() {
    *  modifiée d'un item, en ré-appliquant sur l'état Firestore le plus frais :
    *  on n'écrase pas les modifications concurrentes des autres items, et un
    *  conflit sur le même chant est détecté au lieu d'être écrasé. */
-  async function persistOverride(itemIndex: number, override: string | undefined) {
+  async function persistOverride(
+    itemIndex: number,
+    override: string | undefined,
+    extra?: Partial<SetlistItem>
+  ) {
     if (!setlist) return;
     setSavingLine(true);
     try {
@@ -348,7 +386,7 @@ export function SetlistDetailClient() {
       }
       const items = base.items.map((it, i) => {
         if (i !== itemIndex) return it;
-        const rest = { ...it };
+        const rest = { ...it, ...(extra ?? {}) };
         if (override === undefined) delete rest.contentOverride;
         else rest.contentOverride = override;
         return rest;
@@ -365,15 +403,70 @@ export function SetlistDetailClient() {
 
   /** Applique un nouveau source complet : no-op si rien n'a changé, retrait
    *  automatique de l'override s'il redevient identique au chant original. */
-  async function applyNewSource(itemIndex: number, next: string) {
+  async function applyNewSource(itemIndex: number, next: string, extra?: Partial<SetlistItem>) {
     if (!setlist) return;
     const current = sourceForItem(setlist.items[itemIndex]);
-    if (next === current) {
+    if (next === current && !extra) {
       setEditTarget(null);
       return;
     }
     const original = contents[setlist.items[itemIndex].songSlug]?.source;
-    await persistOverride(itemIndex, next === original ? undefined : next);
+    await persistOverride(itemIndex, next === original ? undefined : next, extra);
+  }
+
+  /** Ligne d'une section répétée par la structure : duplique la section dans
+   *  le source et fait pointer cette occurrence vers la copie, pour que
+   *  l'édition ne touche pas les autres répétitions. Renvoie le source (et les
+   *  index de lignes) sur lesquels appliquer l'édition, plus les champs d'item
+   *  à persister (structure et notes/transitions re-clés). */
+  function materializeIfRepeated(
+    item: SetlistItem,
+    source: string,
+    t: LineEditState
+  ): {
+    source: string;
+    srcLine: number;
+    pinyinSrcLine?: number;
+    jianpuSrcLine?: number;
+    extra?: Partial<SetlistItem>;
+  } {
+    const passthrough = {
+      source,
+      srcLine: t.srcLine,
+      pinyinSrcLine: t.pinyinSrcLine,
+      jianpuSrcLine: t.jianpuSrcLine,
+    };
+    if (t.repeatedSectionId === undefined || t.structIndex === undefined || !item.structureOverride) {
+      return passthrough;
+    }
+    const mat = materializeSectionCopy(source, t.repeatedSectionId);
+    if (!mat) return passthrough;
+    const oldUid = structUidAt(item.structureOverride[t.structIndex], t.structIndex);
+    const newUid = `${mat.newSectionId}-${t.structIndex}`;
+    const structureOverride = item.structureOverride.map((ov, k) =>
+      k === t.structIndex ? newUid : ov
+    );
+    const sectionNotes = { ...item.sectionNotes };
+    if (sectionNotes[oldUid] !== undefined) {
+      sectionNotes[newUid] = sectionNotes[oldUid];
+      delete sectionNotes[oldUid];
+    }
+    const sectionTransitions = item.sectionTransitions ? { ...item.sectionTransitions } : undefined;
+    if (sectionTransitions && sectionTransitions[oldUid] !== undefined) {
+      sectionTransitions[newUid] = sectionTransitions[oldUid];
+      delete sectionTransitions[oldUid];
+    }
+    return {
+      source: mat.source,
+      srcLine: t.srcLine + mat.lineOffset,
+      pinyinSrcLine: t.pinyinSrcLine !== undefined ? t.pinyinSrcLine + mat.lineOffset : undefined,
+      jianpuSrcLine: t.jianpuSrcLine !== undefined ? t.jianpuSrcLine + mat.lineOffset : undefined,
+      extra: {
+        structureOverride,
+        sectionNotes,
+        ...(sectionTransitions ? { sectionTransitions } : {}),
+      },
+    };
   }
 
   async function handleSaveLine(newRaw: string) {
@@ -385,30 +478,33 @@ export function SetlistDetailClient() {
       setEditTarget(null);
       return;
     }
-    let next = replaceSourceLine(source, editTarget.srcLine, newRaw);
+    const m = materializeIfRepeated(setlist.items[editTarget.itemIndex], source, editTarget);
+    let next = replaceSourceLine(m.source, m.srcLine, newRaw);
     // Le pinyin est désormais inline dans la ligne → la ligne séparée disparaît.
-    if (editTarget.pinyinSrcLine !== undefined) {
-      next = deleteSourceLines(next, [editTarget.pinyinSrcLine]);
+    if (m.pinyinSrcLine !== undefined) {
+      next = deleteSourceLines(next, [m.pinyinSrcLine]);
     }
-    await applyNewSource(editTarget.itemIndex, next);
+    await applyNewSource(editTarget.itemIndex, next, m.extra);
   }
 
   async function handleInsertAfter(newRaw: string) {
     if (!setlist || !editTarget) return;
     const source = sourceForItem(setlist.items[editTarget.itemIndex]);
     if (!source) return;
-    const at = Math.max(editTarget.srcLine, editTarget.pinyinSrcLine ?? -1);
-    await applyNewSource(editTarget.itemIndex, insertSourceLineAfter(source, at, newRaw));
+    const m = materializeIfRepeated(setlist.items[editTarget.itemIndex], source, editTarget);
+    const at = Math.max(m.srcLine, m.pinyinSrcLine ?? -1);
+    await applyNewSource(editTarget.itemIndex, insertSourceLineAfter(m.source, at, newRaw), m.extra);
   }
 
   async function handleDeleteLine() {
     if (!setlist || !editTarget) return;
     const source = sourceForItem(setlist.items[editTarget.itemIndex]);
     if (!source) return;
-    const idxs = [editTarget.srcLine];
-    if (editTarget.pinyinSrcLine !== undefined) idxs.push(editTarget.pinyinSrcLine);
-    if (editTarget.jianpuSrcLine !== undefined) idxs.push(editTarget.jianpuSrcLine);
-    await applyNewSource(editTarget.itemIndex, deleteSourceLines(source, idxs));
+    const m = materializeIfRepeated(setlist.items[editTarget.itemIndex], source, editTarget);
+    const idxs = [m.srcLine];
+    if (m.pinyinSrcLine !== undefined) idxs.push(m.pinyinSrcLine);
+    if (m.jianpuSrcLine !== undefined) idxs.push(m.jianpuSrcLine);
+    await applyNewSource(editTarget.itemIndex, deleteSourceLines(m.source, idxs), m.extra);
   }
 
   async function handleRevert(itemIndex: number) {
