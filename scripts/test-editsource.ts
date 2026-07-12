@@ -21,6 +21,7 @@ import {
   replaceSourceLine,
   insertSourceLineAfter,
   deleteSourceLines,
+  materializeSectionCopy,
 } from "../src/lib/chordpro/editSource";
 
 const SONGS = path.join(process.cwd(), "content", "songs");
@@ -197,6 +198,63 @@ console.log(
     }
   }
   console.log("3. Opérations ZH (一生爱你) —", failures, "échec(s) cumulés");
+}
+
+// ─── 4. Matérialisation d'une section répétée (toutes les sections, pas que le refrain) ──
+{
+  const src = [
+    "{title: Test}",
+    "{key: C}",
+    "",
+    "{start_of_verse: Couplet 1}",
+    "[C]Ligne du couplet un",
+    "[G]Deuxième ligne",
+    "{end_of_verse}",
+    "",
+    "{start_of_chorus: Refrain}",
+    "[F]Ligne du refrain",
+    "{end_of_chorus}",
+    "",
+    "{start_of_bridge: Pont}",
+    "[Am]Ligne du pont",
+    "{end_of_bridge}",
+  ].join("\n");
+  const base = parseChordPro(src);
+  // Chaque type de section (couplet, refrain, pont) doit être matérialisable.
+  for (const sec of base.sections) {
+    const mat = materializeSectionCopy(src, sec.id);
+    check(!!mat, `Matérialisation: ${sec.id} duplicable`);
+    if (!mat) continue;
+    const after = parseChordPro(mat.source);
+    check(after.sections.length === base.sections.length + 1, `Matérialisation: ${sec.id} → une section de plus`);
+    const copy = after.sections.find((x) => x.id === mat.newSectionId);
+    check(!!copy, `Matérialisation: ${sec.id} → copie ${mat.newSectionId} présente`);
+    check(
+      !!copy && JSON.stringify(copy.lines.map((l) => l.tokens)) === JSON.stringify(sec.lines.map((l) => l.tokens)),
+      `Matérialisation: ${sec.id} → contenu de la copie identique`
+    );
+    // Les ids des sections existantes ne bougent pas (les structures des autres occurrences restent valides).
+    check(
+      base.sections.every((s0) => after.sections.some((s1) => s1.id === s0.id)),
+      `Matérialisation: ${sec.id} → ids existants stables`
+    );
+    // Les lignes de la copie sont bien à index d'origine + lineOffset.
+    const firstLine = sec.lines.find((l) => l.srcLine !== undefined);
+    const copyFirst = copy?.lines.find((l) => l.srcLine !== undefined);
+    check(
+      !!firstLine && !!copyFirst && copyFirst.srcLine === firstLine.srcLine! + mat.lineOffset,
+      `Matérialisation: ${sec.id} → lineOffset correct`
+    );
+    // L'édition sur la copie ne touche pas l'original.
+    const edited = deleteSourceLines(mat.source, [firstLine!.srcLine! + mat.lineOffset]);
+    const astEdited = parseChordPro(edited);
+    const orig = astEdited.sections.find((x) => x.id === sec.id);
+    check(
+      !!orig && orig.lines.length === sec.lines.length,
+      `Matérialisation: ${sec.id} → suppression sur la copie sans effet sur l'original`
+    );
+  }
+  console.log("4. Matérialisation de sections répétées —", failures, "échec(s) cumulés");
 }
 
 if (failures === 0) {
