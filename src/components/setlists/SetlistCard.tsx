@@ -13,7 +13,7 @@ export function SetlistCard({ setlist }: { setlist: FSSetlist }) {
   return (
     <Link
       href={`/setlists/${setlist.id}`}
-      className="flex flex-col justify-between rounded-xl border border-border border-l-4 bg-background hover:bg-muted/30 hover:border-primary/30 transition-all p-4 gap-3 group min-h-[100px]"
+      className="flex flex-col justify-between rounded-xl border border-border border-l-4 bg-background hover:bg-muted/30 hover:border-primary/30 active:bg-muted/60 transition-all p-4 gap-3 group min-h-[100px]"
       style={{ borderLeftColor: color }}
     >
       {/* ── Ligne haute ── */}
