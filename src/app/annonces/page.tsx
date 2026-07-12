@@ -38,7 +38,7 @@ function Linkified({ text }: { text: string }) {
             href={part}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-primary underline break-all"
+            className="text-foreground underline underline-offset-2 break-all hover:text-muted-foreground"
           >
             {part}
           </a>
@@ -140,7 +140,7 @@ export default function AnnoncesPage() {
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-3 px-4 text-center">
         <Lock className="h-8 w-8 text-muted-foreground" />
         <p className="text-sm text-muted-foreground">Connecte-toi pour voir les annonces.</p>
-        <Link href="/login?from=/annonces" className="text-sm text-primary hover:underline">
+        <Link href="/login?from=/annonces" className="text-sm text-foreground underline underline-offset-2 hover:text-muted-foreground">
           Se connecter
         </Link>
       </div>
