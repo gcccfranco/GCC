@@ -737,7 +737,7 @@ export function SetlistDetailClient() {
 
       {/* Retour visuel du partage (lien copié / setlist privée) */}
       {shareFeedback && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full bg-foreground text-background text-sm shadow-lg">
+        <div className="fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full bg-foreground text-background text-sm shadow-lg">
           {shareFeedback}
         </div>
       )}
