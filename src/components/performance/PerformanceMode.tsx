@@ -425,16 +425,18 @@ export function PerformanceMode({
   useEffect(() => {
     const run = async () => {
       await document.fonts.ready;
-      // py-4 du conteneur de contenu (16px haut + bas, mis à l'échelle par le zoom),
-      // plus une marge de sécurité pour la marge haute du 1er bloc d'une page
-      // (comptée dans le delta du bloc précédent lors de la mesure).
-      const safety = 24 * fontScale;
+      // Budget de hauteur en px CSS NON zoomés (la mesure se fait hors zoom) :
+      // hauteur visible ramenée à l'échelle 1 (÷ fontScale), moins le py-4 du
+      // conteneur (32px) et une marge de sécurité pour la marge haute du 1er
+      // bloc d'une page (comptée dans le delta du bloc précédent à la mesure).
+      const safety = 24;
       // Safe areas (encoche / home indicator) : lues sur la racine (non zoomée),
       // valent 0 hors appareil à encoche → pagination inchangée ailleurs.
       const cs = rootRef.current ? getComputedStyle(rootRef.current) : null;
       const insetTop = cs ? parseFloat(cs.getPropertyValue("--sat")) || 0 : 0;
       const insetBottom = cs ? parseFloat(cs.getPropertyValue("--sab")) || 0 : 0;
-      const viewportH = window.innerHeight - insetTop - insetBottom - 32 * fontScale - safety;
+      const viewportH =
+        (window.innerHeight - insetTop - insetBottom) / fontScale - 32 - safety;
       // Hauteur réellement occupée par chaque bloc, marges verticales comprises :
       // delta entre le haut du bloc et le haut du bloc suivant dans le flux.
       const rects = blocks.map((_, i) => blockRefs.current[i]?.getBoundingClientRect() ?? null);
@@ -458,11 +460,16 @@ export function PerformanceMode({
         });
       } else {
         const breakBefore = new Set(blocks.flatMap((b, i) => (b.kind === "song-header" ? [i] : [])));
-        computed = paginateBlocks(heights, viewportH, breakBefore).map((idxs) => ({
-          header: null,
-          cols: [idxs],
-          scale: 1,
-        }));
+        computed = paginateBlocks(heights, viewportH, breakBefore).map((idxs) => {
+          // Jamais de section coupée : une page qui déborde quand même (bloc
+          // seul plus haut que l'écran) est réduite pour tenir, comme l'ossature.
+          const pageH = idxs.reduce((s, i) => s + heights[i], 0);
+          return {
+            header: null,
+            cols: [idxs],
+            scale: Math.min(1, viewportH / Math.max(1, pageH)),
+          };
+        });
       }
       setLayout(computed);
       setCurrentPage((prev) => Math.min(prev, Math.max(0, computed.length - 1)));
@@ -682,7 +689,10 @@ export function PerformanceMode({
         style={{ opacity: 0, zIndex: -1 }}
         aria-hidden="true"
       >
-        <div style={{ zoom: fontScale, ...contentPadding }}>
+        {/* Mesure HORS zoom : iOS rend des rects faux dans un conteneur zoomé
+            (sections « coupées » en bas de page). On émule la largeur de mise
+            en page du zoom (100%/fontScale) et on pagine en px CSS non zoomés. */}
+        <div style={{ width: `calc(100% / ${fontScale})`, ...contentPadding }}>
           {blocks.map((block, i) => (
             <div
               key={block.uid}
