@@ -12,7 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 
 // Classe des contrôles natifs (select, date) — les champs texte utilisent <Input>
 const inputClass =
-  "w-full h-11 px-3 border border-border rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 text-sm";
+  "w-full h-11 px-3 border border-border rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/30 text-sm";
 
 const MAX_IMAGES = 3;
 // Budget total des images : un document Firestore est limité à 1 Mo
