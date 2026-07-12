@@ -13,7 +13,7 @@ export function SetlistCard({ setlist }: { setlist: FSSetlist }) {
   return (
     <Link
       href={`/setlists/${setlist.id}`}
-      className="flex flex-col justify-between rounded-xl border border-border border-l-4 bg-background hover:bg-muted/30 hover:border-primary/30 active:bg-muted/60 transition-all p-4 gap-3 group min-h-[100px]"
+      className="flex flex-col justify-between rounded-xl border-l-4 bg-card shadow-soft hover:bg-muted/30 active:bg-muted/60 transition-all p-4 gap-3 min-h-[100px]"
       style={{ borderLeftColor: color }}
     >
       {/* ── Ligne haute ── */}
@@ -35,7 +35,7 @@ export function SetlistCard({ setlist }: { setlist: FSSetlist }) {
           </div>
 
           {/* Titre */}
-          <h2 className="text-sm font-semibold text-foreground group-hover:text-primary leading-snug">
+          <h2 className="text-sm font-semibold text-foreground leading-snug">
             {setlist.title}
           </h2>
         </div>
