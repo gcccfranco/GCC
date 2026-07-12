@@ -54,12 +54,14 @@ function BlockRenderer({
   showTransitions,
   hideLyrics,
   chartStyle,
+  showPinyinGlobal,
 }: {
   block: PerformanceBlock;
   showChordsGlobal: boolean;
   showTransitions: boolean;
   hideLyrics: boolean;
   chartStyle: boolean;
+  showPinyinGlobal: boolean;
 }) {
   if (block.kind === "song-header") {
     return <SongHeader block={block} />;
@@ -77,7 +79,7 @@ function BlockRenderer({
       section={block.section}
       language={block.language}
       showChords={block.chordsEnabled && showChordsGlobal}
-      showPinyin={block.showPinyin}
+      showPinyin={block.showPinyin && showPinyinGlobal}
       useJianpu={false}
       hideLyrics={hideLyrics}
       note={block.note}
@@ -271,6 +273,18 @@ export function PerformanceMode({
       return false;
     }
   });
+  // Pinyin (chants zh) : masquable pour qui lit les caractères. Défaut : affiché.
+  const [showPinyin, setShowPinyin] = useState(() => {
+    try {
+      return localStorage.getItem("perf-show-pinyin") !== "0";
+    } catch {
+      return true;
+    }
+  });
+  const toggleShowPinyin = (v: boolean) => {
+    setShowPinyin(v);
+    try { localStorage.setItem("perf-show-pinyin", v ? "1" : "0"); } catch { /* ignore */ }
+  };
   // Capo par chant (slug → frets), mémorisé sur l'appareil. Appliqué aux
   // accords uniquement quand le preset Guitariste est actif.
   const [capos, setCapos] = useState<Record<string, number>>(() => {
@@ -398,7 +412,7 @@ export function PerformanceMode({
   // Re-measure when a setting affecting heights changes
   useEffect(() => {
     setRemeasureKey((k) => k + 1);
-  }, [showChords, showTransitions, hideLyrics, fontScale, chartStyle]);
+  }, [showChords, showTransitions, hideLyrics, fontScale, chartStyle, showPinyin]);
 
   // Re-measure on viewport resize / orientation change
   useEffect(() => {
@@ -684,6 +698,7 @@ export function PerformanceMode({
                 showTransitions={showTransitions}
                 hideLyrics={hideLyrics}
                 chartStyle={chartStyle}
+                showPinyinGlobal={showPinyin}
               />
             </div>
           ))}
@@ -721,6 +736,7 @@ export function PerformanceMode({
               showTransitions={showTransitions}
               hideLyrics={hideLyrics}
               chartStyle={chartStyle}
+              showPinyinGlobal={showPinyin}
             />
           );
           return (
@@ -1007,6 +1023,11 @@ export function PerformanceMode({
                 }}
               />
             </SettingRow>
+            {blocks.some((b) => b.kind === "section" && b.showPinyin) && (
+              <SettingRow label={t("performance.pinyin")}>
+                <Switch checked={showPinyin} onCheckedChange={toggleShowPinyin} />
+              </SettingRow>
+            )}
             <SettingRow label={t("performance.chartStyle")}>
               <Switch checked={chartStyle} onCheckedChange={toggleChartStyle} />
             </SettingRow>
