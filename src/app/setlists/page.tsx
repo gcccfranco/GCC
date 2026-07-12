@@ -225,7 +225,7 @@ export default function SetlistsPage() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Rechercher par titre, leader, date…"
-              className="w-full pl-9 pr-9 py-2.5 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 text-base sm:text-sm [&::-webkit-search-cancel-button]:hidden"
+              className="w-full pl-9 pr-9 py-2.5 rounded-xl border border-border bg-card text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-ring/50 focus:ring-[3px] focus:ring-ring/10 text-[16px] sm:text-sm [&::-webkit-search-cancel-button]:hidden"
             />
             {query && (
               <button
@@ -256,7 +256,7 @@ export default function SetlistsPage() {
             <select
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
-              className="flex-1 h-9 px-3 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring/30"
+              className="flex-1 h-9 px-3 rounded-lg border border-border bg-background text-foreground text-[16px] sm:text-sm focus:outline-none focus:ring-2 focus:ring-ring/30"
             >
               <option value="Toutes">{t("setlists.list.allCategories")}</option>
               <optgroup label="Réunions principales">
