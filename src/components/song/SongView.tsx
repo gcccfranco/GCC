@@ -292,7 +292,7 @@ export interface SectionViewProps {
   /** Style « chart » : couleur par type de section, cadre gris fin, accords neutres. */
   chartStyle?: boolean;
   /** Mode édition setlist : rend chaque ligne tappable (ouvre la sheet d'édition). */
-  onLineSelect?: (line: ChordProLine) => void;
+  onLineSelect?: (line: ChordProLine, sectionUid?: string) => void;
 }
 
 export function SectionView({ section, language, showChords, showPinyin, useJianpu, hideLyrics = false, note, songSourceLabel, typography = "web", chartStyle = false, onLineSelect }: SectionViewProps) {
@@ -377,8 +377,8 @@ export function SectionView({ section, language, showChords, showPinyin, useJian
                   key={i}
                   role="button"
                   tabIndex={0}
-                  onClick={() => onLineSelect(line)}
-                  onKeyDown={(e) => e.key === "Enter" && onLineSelect(line)}
+                  onClick={() => onLineSelect(line, section.uid)}
+                  onKeyDown={(e) => e.key === "Enter" && onLineSelect(line, section.uid)}
                   className="cursor-pointer rounded-md -mx-1.5 px-1.5 border border-dashed border-primary/25 hover:border-primary/60 hover:bg-primary/5 active:bg-primary/10 transition-colors my-0.5 print:border-transparent print:bg-transparent print:mx-0 print:px-0 print:my-0"
                 >
                   {rendered}
@@ -406,7 +406,7 @@ export interface SongViewProps {
   sectionNotes?: Record<string, string>;
   sectionTransitions?: Record<string, string>;
   /** Mode édition setlist : rend chaque ligne tappable (ouvre la sheet d'édition). */
-  onLineSelect?: (line: ChordProLine) => void;
+  onLineSelect?: (line: ChordProLine, sectionUid?: string) => void;
 }
 
 export function SongView({
