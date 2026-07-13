@@ -243,7 +243,7 @@ export function SongListClient({ songs, themes }: SongListClientProps) {
               >
                 <span
                   className="w-1.5 h-1.5 rounded-full shrink-0"
-                  style={{ background: song.language === "zh" ? "var(--jianpu-color)" : "#3f63cf" }}
+                  style={{ background: song.language === "zh" ? "var(--jianpu-color)" : "var(--chord-color)" }}
                 />
                 {song.title}
               </Link>
@@ -278,7 +278,7 @@ export function SongListClient({ songs, themes }: SongListClientProps) {
                 {/* Language rail */}
                 <span
                   className="w-[5px] shrink-0"
-                  style={{ background: song.language === "zh" ? "var(--jianpu-color)" : "#3f63cf" }}
+                  style={{ background: song.language === "zh" ? "var(--jianpu-color)" : "var(--chord-color)" }}
                 />
                 {/* Body */}
                 <span className="flex-1 min-w-0 px-[15px] py-[13px] flex items-center gap-3">
@@ -336,13 +336,14 @@ export function SongListClient({ songs, themes }: SongListClientProps) {
       {letterIndex.length > 1 && filtered.length > 30 && (
         <nav
           aria-label="Index alphabétique"
-          className="fixed right-0.5 top-1/2 -translate-y-1/2 z-30 flex flex-col items-center px-0.5 py-1 rounded-full bg-background/70 backdrop-blur-sm"
+          className="fixed right-0.5 top-1/2 -translate-y-1/2 z-30 flex flex-col items-center px-0.5 py-1 rounded-full bg-background/70 backdrop-blur-sm max-h-[78vh] overflow-y-auto no-scrollbar"
         >
           {letterIndex.map(([letter, slug]) => (
             <button
               key={letter}
               onClick={() => scrollToLetter(slug)}
-              className="w-7 h-[17px] flex items-center justify-center text-[10px] font-bold text-muted-foreground hover:text-foreground active:text-foreground"
+              aria-label={`Aller à ${letter}`}
+              className="w-8 h-6 flex items-center justify-center text-[11px] font-bold text-muted-foreground hover:text-foreground active:text-foreground"
             >
               {letter}
             </button>
