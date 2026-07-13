@@ -22,6 +22,7 @@ import { useScrollDirection } from "@/hooks/useScrollDirection";
 import { ALL_KEYS, semitonesTo, getTransposedKey } from "@/lib/transpose";
 import { useSearchParams } from "next/navigation";
 import type { SectionItem } from "@/types/song";
+import type { SectionNuance } from "@/types/setList";
 import { ReportDialog } from "@/components/report/ReportDialog";
 
 interface SongDetailClientProps {
@@ -112,6 +113,11 @@ function safeParseParam<T>(raw: string | null, fallback: T): T {
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [searchParams, customize.structure]);
 
+    const sectionsNuance = useMemo(
+      () => safeParseParam<Record<string, SectionNuance>>(searchParams.get("sectionNuances"), {}),
+      [searchParams]
+    );
+
     useEffect(() => {
       const structure: SectionItem[] = structureOverride.map((uid: string, index: number) => {
         const sectionId = uid.replace(/-\d+$/, "");
@@ -171,6 +177,7 @@ function safeParseParam<T>(raw: string | null, fallback: T): T {
             useJianpu={customize.useJianpu}
             structureOverride={structureOverride}
             sectionNotes={sectionsNote}
+            sectionNuances={sectionsNuance}
             language={i18n.language}
           />
         ).toBlob();
@@ -407,6 +414,7 @@ function safeParseParam<T>(raw: string | null, fallback: T): T {
             useJianpu={customize.useJianpu}
             structureOverride={structureOverride}
             sectionNotes={sectionsNote}
+            sectionNuances={sectionsNuance}
           />
         </main>
 
