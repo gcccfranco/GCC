@@ -7,6 +7,8 @@ import { resolveStructureOverride } from "@/lib/chordpro/structure";
 import frTranslations from "@/locales/fr.json";
 import zhTranslations from "@/locales/zh-CN.json";
 import { measureLyric, measureChord } from "@/lib/chordpro/measureText";
+import type { SectionNuance } from "@/types/setList";
+import { nuanceLabel, NUANCE_COLOR } from "@/lib/setlist/nuances";
 
 // ─── Fonts ────────────────────────────────────────────────────────────────────
 
@@ -433,13 +435,14 @@ function TransitionPDFBlock({ text }: { text: string }) {
   );
 }
 
-function SectionBlock({ section, isZh, useJianpu, showChords, showPinyin, note, theme, uiLang, sourceLabel, sourceLabelFont }: {
+function SectionBlock({ section, isZh, useJianpu, showChords, showPinyin, note, nuance, theme, uiLang, sourceLabel, sourceLabelFont }: {
   section: ChordProSection;
   isZh: boolean;
   useJianpu: boolean;
   showChords: boolean;
   showPinyin: boolean;
   note?: string;
+  nuance?: SectionNuance;
   theme: Theme;
   uiLang: string;
   sourceLabel?: string;
@@ -499,11 +502,28 @@ function SectionBlock({ section, isZh, useJianpu, showChords, showPinyin, note, 
             </Text>
           ) : null}
         </View>
-        {note ? (
-          <Text style={{ fontSize: 8.5, color: C.subtitle, fontFamily: labelFont, fontWeight: 300 }}>
-            {note}
-          </Text>
-        ) : null}
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+          {nuance?.tags.map((id) => (
+            <Text
+              key={id}
+              style={{ fontSize: 7.5, color: NUANCE_COLOR, fontFamily: "LiberationSans", fontWeight: 700,
+                       borderWidth: 0.5, borderColor: NUANCE_COLOR, borderRadius: 3,
+                       paddingHorizontal: 3, paddingVertical: 1 }}
+            >
+              {nuanceLabel(id)}
+            </Text>
+          ))}
+          {nuance?.note ? (
+            <Text style={{ fontSize: 8, color: NUANCE_COLOR, fontFamily: labelFont, fontWeight: 400 }}>
+              {nuance.note}
+            </Text>
+          ) : null}
+          {note ? (
+            <Text style={{ fontSize: 8.5, color: C.subtitle, fontFamily: labelFont, fontWeight: 300 }}>
+              {note}
+            </Text>
+          ) : null}
+        </View>
       </View>
 
       {/* Lines */}
@@ -567,6 +587,7 @@ export interface SongPDFProps {
   structureOverride?: string[] | null;
   sectionNotes?: Record<string, string>;
   sectionTransitions?: Record<string, string>;
+  sectionNuances?: Record<string, SectionNuance>;
   /** Optional override for the footer center label (e.g. setlist title). */
   footerCenter?: string;
   language?: string;
@@ -580,6 +601,7 @@ export function SongPDFPage({
   structureOverride = null,
   sectionNotes = {},
   sectionTransitions = {},
+  sectionNuances = {},
   footerCenter,
   language = "fr",
 }: SongPDFProps) {
@@ -658,6 +680,7 @@ export function SongPDFPage({
           const key = idx === 0 ? section.id : `${section.id}:${idx}`;
           const note = sectionNotes[section.uid] ?? sectionNotes[key] ?? sectionNotes[section.id];
           const transition = sectionTransitions[section.uid] ?? sectionTransitions[key] ?? sectionTransitions[section.id];
+          const nuance = sectionNuances[section.uid] ?? sectionNuances[key] ?? sectionNuances[section.id];
           const items = [
             <SectionBlock
               key={`${section.uid ?? section.id}-${i}`}
@@ -667,6 +690,7 @@ export function SongPDFPage({
               showChords={showChords}
               showPinyin={isZh ? showPinyin : false}
               note={note}
+              nuance={nuance}
               theme={theme}
               uiLang={uiLang}
             />,
@@ -700,6 +724,7 @@ export interface FusionPDFSong {
   slug: string;
   ast: ChordProAST;
   sectionNotes: Record<string, string>;
+  sectionNuances?: Record<string, SectionNuance>;
 }
 
 export function FusionPDFPage({
@@ -709,7 +734,7 @@ export function FusionPDFPage({
   footerCenter,
 }: {
   songs: FusionPDFSong[];
-  mixedStructure: Array<{ songSlug: string; sectionId: string; note?: string; transition?: string }>;
+  mixedStructure: Array<{ songSlug: string; sectionId: string; note?: string; transition?: string; nuance?: SectionNuance }>;
   showChords: boolean;
   footerCenter?: string;
 }) {
@@ -721,10 +746,11 @@ export function FusionPDFPage({
     const section = song.ast.sections.find((s) => s.id === ms.sectionId);
     if (!section) return [];
     const note = ms.note ?? song.sectionNotes?.[ms.sectionId];
+    const nuance = ms.nuance ?? song.sectionNuances?.[ms.sectionId];
     const isZh = song.ast.metadata.language === "zh";
     const sourceLabel = song.ast.metadata.title;
     const sourceLabelFont = isZh ? "KaiTi" : "SpaceGrotesk";
-    return [{ section, note, transition: ms.transition, isZh, theme: isZh ? RED_THEME : BLUE_THEME, sourceLabel, sourceLabelFont }];
+    return [{ section, note, nuance, transition: ms.transition, isZh, theme: isZh ? RED_THEME : BLUE_THEME, sourceLabel, sourceLabelFont }];
   });
 
   if (mixedSections.length === 0) return null;
@@ -759,7 +785,7 @@ export function FusionPDFPage({
         <View style={{ height: 0.5, backgroundColor: C.rule, marginTop: 10, marginBottom: 0 }} />
       </View>
 
-      {mixedSections.flatMap(({ section, note, transition, isZh, theme, sourceLabel, sourceLabelFont }, idx) => {
+      {mixedSections.flatMap(({ section, note, nuance, transition, isZh, theme, sourceLabel, sourceLabelFont }, idx) => {
         const items = [
           <SectionBlock
             key={`${section.id}-${idx}`}
@@ -769,6 +795,7 @@ export function FusionPDFPage({
             showChords={showChords}
             showPinyin={isZh}
             note={note}
+            nuance={nuance}
             theme={theme}
             uiLang="fr"
             sourceLabel={sourceLabel}
