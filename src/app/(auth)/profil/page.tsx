@@ -90,7 +90,9 @@ export default function ProfilPage() {
         // Droits d'envoi de notifications : idem, attribués par les admins
         notify: profile?.notify ?? [],
       });
-      router.push("/setlists");
+      // Retour à la page d'origine (?from=…) plutôt que /setlists systématique
+      const from = new URLSearchParams(window.location.search).get("from");
+      router.push(from && from.startsWith("/") ? from : "/setlists");
     } catch {
       setError(t("profile.saveError"));
       setSaving(false);
