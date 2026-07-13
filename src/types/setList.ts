@@ -1,10 +1,18 @@
 import { Language } from "@/types/common";
 
+/** Nuance d'une section : étiquettes prédéfinies (voir lib/setlist/nuances.ts)
+ *  + texte libre optionnel en complément. */
+export type SectionNuance = {
+  tags: string[];
+  note?: string;
+};
+
 export type FusionSong = {
   songSlug: string;
   keyOverride: string | null;
   structureOverride: string[] | null;
   sectionNotes: Record<string, string>;
+  sectionNuances?: Record<string, SectionNuance>;
 };
 
 export type FusionMixedSection = {
@@ -12,6 +20,7 @@ export type FusionMixedSection = {
   sectionId: string;
   note?: string;
   transition?: string;
+  nuance?: SectionNuance;
 };
 
 export type SetlistItem = {
@@ -25,6 +34,7 @@ export type SetlistItem = {
   structureOverride: string[] | null;
   sectionNotes: Record<string, string>;
   sectionTransitions?: Record<string, string>;
+  sectionNuances?: Record<string, SectionNuance>;
   /** Source ChordPro modifié pour cette setlist (accords/paroles adaptés) —
    *  remplace le contenu du chant original ; null/absent = original. */
   contentOverride?: string | null;
