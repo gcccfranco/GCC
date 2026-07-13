@@ -716,30 +716,7 @@ export function SetlistDetailClient() {
                 <span className="hidden sm:inline">{t("setlists.detail.performanceMode")}</span>
               </button>
 
-              {/* Prévenir l'équipe — setlist prête (≥ 4 chants) */}
-              {canNotifyTeam && (
-                <button
-                  onClick={() =>
-                    realSongCount < 4
-                      ? flashFeedback(t("setlists.detail.notifyNeedSongs"))
-                      : handleNotifyTeam()
-                  }
-                  disabled={notifying}
-                  title={realSongCount < 4 ? t("setlists.detail.notifyNeedSongs") : undefined}
-                  className={`h-8 px-2.5 rounded-[8px] border border-border bg-card text-[12.5px] font-semibold flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-all duration-150 disabled:opacity-50 ${
-                    realSongCount < 4 ? "opacity-60" : ""
-                  }`}
-                >
-                  <BellRing className="h-3.5 w-3.5" />
-                  <span className="hidden sm:inline">
-                    {notifying
-                      ? "…"
-                      : t("setlists.detail.notifyTeam", { defaultValue: "Prévenir l'équipe" })}
-                  </span>
-                </button>
-              )}
-
-              {/* Menu ⋯ : Modifier / Dupliquer / Partager / PDF / Supprimer */}
+              {/* Menu ⋯ : Modifier / Prévenir l'équipe / Dupliquer / Partager / PDF / Supprimer */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
@@ -758,6 +735,21 @@ export function SetlistDetailClient() {
                         <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
                         {t("setlists.detail.editButton")}
                       </Link>
+                    </DropdownMenuItem>
+                  )}
+                  {canNotifyTeam && (
+                    <DropdownMenuItem
+                      disabled={notifying}
+                      onClick={() =>
+                        realSongCount < 4
+                          ? flashFeedback(t("setlists.detail.notifyNeedSongs"))
+                          : handleNotifyTeam()
+                      }
+                    >
+                      <BellRing className="h-3.5 w-3.5 text-muted-foreground" />
+                      {notifying
+                        ? "…"
+                        : t("setlists.detail.notifyTeam", { defaultValue: "Prévenir l'équipe" })}
                     </DropdownMenuItem>
                   )}
                   {canDuplicate && (
