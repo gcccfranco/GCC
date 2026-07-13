@@ -31,16 +31,18 @@ function parseCSV(txt: string): string[][] {
   return rows
 }
 
-/** Année pour une date JJ/MM sans année : celle (n-1, n, n+1) qui rend la
- *  date la plus proche d'aujourd'hui — les feuilles couvrent l'année en cours,
- *  ce choix reste juste au passage du nouvel an. */
-export function inferYear(day: number, month: number): number {
-  const now = Date.now()
-  const year = new Date().getFullYear()
-  return [year - 1, year, year + 1].reduce((a, b) =>
-    Math.abs(new Date(b, month - 1, day).getTime() - now) <
-    Math.abs(new Date(a, month - 1, day).getTime() - now) ? b : a
-  )
+/** Année pour une date JJ/MM sans année. Les feuilles ne couvrent que l'année
+ *  en cours : on retourne donc l'année civile actuelle par défaut, et on ne
+ *  bascule sur une année adjacente qu'au voisinage du nouvel an — jamais en
+ *  milieu d'année. (L'ancienne heuristique « année la plus proche » projetait
+ *  à tort une date de janvier vue en juillet sur l'année suivante.) */
+export function inferYear(_day: number, month: number): number {
+  const now = new Date()
+  const year = now.getFullYear()
+  const cur = now.getMonth() + 1 // mois courant, 1–12
+  if (cur >= 11 && month <= 2) return year + 1 // fin d'année → dates de début d'année à venir
+  if (cur <= 2 && month >= 11) return year - 1 // début d'année → dates de fin d'année écoulée
+  return year
 }
 
 export function parseDate(s: string): string | null {
