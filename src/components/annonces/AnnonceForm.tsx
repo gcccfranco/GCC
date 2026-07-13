@@ -132,7 +132,7 @@ export function AnnonceForm({
       {/* Section + titre */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
-          <label className="block text-xs font-medium text-muted-foreground mb-1.5">
+          <label className="block text-sm font-medium text-foreground mb-1.5">
             {t("annonces.form.section")} <span className="text-destructive">*</span>
           </label>
           <select
@@ -147,7 +147,7 @@ export function AnnonceForm({
           </select>
         </div>
         <div>
-          <label className="block text-xs font-medium text-muted-foreground mb-1.5">
+          <label className="block text-sm font-medium text-foreground mb-1.5">
             {t("annonces.form.titleLabel")} <span className="text-destructive">*</span>
           </label>
           <Input
@@ -162,7 +162,7 @@ export function AnnonceForm({
 
       {/* Texte */}
       <div>
-        <label className="block text-xs font-medium text-muted-foreground mb-1.5">{t("annonces.form.textLabel")}</label>
+        <label className="block text-sm font-medium text-foreground mb-1.5">{t("annonces.form.textLabel")}</label>
         <Textarea
           value={value.body}
           onChange={(e) => set({ body: e.target.value })}
@@ -174,7 +174,7 @@ export function AnnonceForm({
 
       {/* Liens */}
       <div className="space-y-2">
-        <label className="block text-xs font-medium text-muted-foreground">{t("annonces.form.links")}</label>
+        <label className="block text-sm font-medium text-foreground">{t("annonces.form.links")}</label>
         {value.links.map((l, i) => (
           <div key={i} className="flex items-center gap-2">
             <Input
@@ -221,7 +221,7 @@ export function AnnonceForm({
 
       {/* Images */}
       <div className="space-y-2">
-        <label className="block text-xs font-medium text-muted-foreground">
+        <label className="block text-sm font-medium text-foreground">
           {t("annonces.form.images")} <span className="text-muted-foreground/70">{t("annonces.form.imagesHint", { max: MAX_IMAGES })}</span>
         </label>
         {value.images.length > 0 && (
@@ -274,7 +274,7 @@ export function AnnonceForm({
           {t("annonces.form.pin")}
         </label>
         <div>
-          <label className="block text-xs font-medium text-muted-foreground mb-1.5">
+          <label className="block text-sm font-medium text-foreground mb-1.5">
             {t("annonces.form.expiresLabel")}
           </label>
           <div className="flex items-center gap-2">
