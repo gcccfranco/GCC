@@ -164,7 +164,7 @@ export function ServiceGrid({
 
       {CATEGORY_GROUPS.map((g) => (
         <div key={g.titleKey}>
-          <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-2">
+          <p className="text-xs font-medium text-muted-foreground mb-2">
             {t(g.titleKey)}
           </p>
           <div className="space-y-1.5">
