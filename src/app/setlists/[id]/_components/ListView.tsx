@@ -5,6 +5,26 @@ import { useTranslation } from "react-i18next";
 import { formatSectionName } from "@/lib/chordpro/parser";
 import Link from "next/link";
 import { Link2, MessageSquare, ChevronDown, ChevronUp } from "lucide-react";
+import type { SectionSummary } from "@/types/song";
+
+/** Noms de sections affichables d'un chant, en respectant une éventuelle
+ *  structure réorganisée (structureOverride keyé par uid/id de section). */
+function sectionNamesFor(
+  allSections: SectionSummary[],
+  structureOverride: string[] | null | undefined,
+  t: (key: string, options?: { defaultValue?: string }) => string
+): string[] {
+  if (structureOverride && structureOverride.length > 0) {
+    return structureOverride.map((ov) => {
+      const baseId = ov.replace(/-\d+$/, "");
+      const s = allSections.find((sec) => sec.uid === ov || sec.id === ov || sec.id === baseId);
+      if (s) return formatSectionName(s, t);
+      const type = ov.replace(/(-\d+)+$/, "");
+      return t(`songs.sections.${type}`, { defaultValue: type });
+    });
+  }
+  return allSections.map((s) => formatSectionName(s, t));
+}
 
 export function ListView({
   items,
@@ -16,18 +36,22 @@ export function ListView({
   const { t } = useTranslation();
   return (
     <ol className="space-y-3">
-      {[...items].sort((a, b) => a.position - b.position).map((item, idx) => {
-        // ── Transition item ──
+      {(() => {
+        const sorted = [...items].sort((a, b) => a.position - b.position);
+        return sorted.map((item, idx) => {
+        // ── Transition item ── (non numérotée)
         if (item.type === "transition") {
           return <TransitionListItem key={`transition-${idx}`} item={item} />;
         }
+        // Numéro = nombre de chants (transitions exclues) jusqu'ici inclus.
+        const num = sorted.slice(0, idx + 1).filter((x) => x.type !== "transition").length;
 
         // ── Fusion item ──
         if (item.type === "fusion" && item.fusionSongs) {
           return (
             <li key={`fusion-${idx}`} className="flex gap-3 items-start">
               <span className="shrink-0 w-7 h-7 rounded-full bg-muted flex items-center justify-center text-xs font-bold text-muted-foreground mt-0.5">
-                {item.position}
+                {num}
               </span>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5 flex-wrap">
@@ -41,27 +65,80 @@ export function ListView({
                     {t("setlists.form.fusionLabel")}
                   </span>
                 </div>
-                <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1">
-                  {item.fusionSongs.map((fs) => {
-                    const song = songsMap[fs.songSlug];
-                    const displayKey = fs.keyOverride ?? song?.originalKey ?? "?";
-                    const transposed = !!fs.keyOverride && fs.keyOverride !== song?.originalKey;
-                    return (
-                      <span key={fs.songSlug} className="flex items-center gap-1 text-[11px] text-muted-foreground/80">
-                        <Link href={`/songs/${fs.songSlug}`} className="hover:text-primary hover:underline">
-                          {song?.title ?? fs.songSlug}
-                        </Link>
-                        <span className={`font-mono text-[10px] px-1 py-0.5 rounded ${
-                          transposed
-                            ? "bg-primary/10 text-primary border border-primary/20"
-                            : "bg-muted text-foreground"
-                        }`}>
-                          {displayKey}
-                        </span>
-                      </span>
-                    );
-                  })}
-                </div>
+                {item.mixedStructure && item.mixedStructure.length > 0 ? (
+                  // Structure mélangée : sections dans l'ordre joué, regroupées par chant
+                  // (sinon on ne sait pas de quel chant vient chaque « Couplet »).
+                  <div className="mt-1 space-y-1">
+                    {(() => {
+                      const runs: { slug: string; title: string; names: string[] }[] = [];
+                      const transitions: { name: string; text: string }[] = [];
+                      for (const ms of item.mixedStructure) {
+                        const song = songsMap[ms.songSlug];
+                        const sec = song?.sections?.find((s) => s.id === ms.sectionId || s.uid === ms.sectionId);
+                        const name = sec ? formatSectionName(sec, t) : ms.sectionId;
+                        const title = song?.title ?? ms.songSlug;
+                        const last = runs[runs.length - 1];
+                        if (last && last.slug === ms.songSlug) last.names.push(name);
+                        else runs.push({ slug: ms.songSlug, title, names: [name] });
+                        if (ms.transition) transitions.push({ name, text: ms.transition });
+                      }
+                      return (
+                        <>
+                          <div className="space-y-0.5">
+                            {runs.map((run, i) => (
+                              <p key={i} className="text-[11px] leading-tight">
+                                <span className="font-medium text-muted-foreground/90">{run.title}</span>
+                                <span className="text-muted-foreground/40"> · </span>
+                                <span className="text-muted-foreground/60">{run.names.join(" · ")}</span>
+                              </p>
+                            ))}
+                          </div>
+                          {transitions.length > 0 && (
+                            <ul className="space-y-0.5">
+                              {transitions.map((tr, i) => (
+                                <li key={i} className="text-[11px] text-muted-foreground/60 italic leading-tight flex gap-1">
+                                  <span className="shrink-0 text-muted-foreground/40">↳ {tr.name} :</span>
+                                  <span className="whitespace-pre-wrap">{tr.text}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                        </>
+                      );
+                    })()}
+                  </div>
+                ) : (
+                  // Chaque chant fusionné : titre + tonalité + sa structure
+                  <div className="mt-1 space-y-1">
+                    {item.fusionSongs.map((fs) => {
+                      const song = songsMap[fs.songSlug];
+                      const displayKey = fs.keyOverride ?? song?.originalKey ?? "?";
+                      const transposed = !!fs.keyOverride && fs.keyOverride !== song?.originalKey;
+                      const names = song?.sections ? sectionNamesFor(song.sections, fs.structureOverride, t) : [];
+                      return (
+                        <div key={fs.songSlug}>
+                          <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground/80">
+                            <Link href={`/songs/${fs.songSlug}`} className="hover:text-primary hover:underline">
+                              {song?.title ?? fs.songSlug}
+                            </Link>
+                            <span className={`font-mono text-[10px] px-1 py-0.5 rounded ${
+                              transposed
+                                ? "bg-primary/10 text-primary border border-primary/20"
+                                : "bg-muted text-foreground"
+                            }`}>
+                              {displayKey}
+                            </span>
+                          </div>
+                          {names.length > 0 && (
+                            <p className="text-[11px] text-muted-foreground/60 leading-tight pl-1 mt-0.5">
+                              {names.join(" · ")}
+                            </p>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </li>
           );
@@ -74,7 +151,7 @@ export function ListView({
         return (
           <li key={`${item.songSlug}-${idx}`} className="flex gap-3 items-start">
             <span className="shrink-0 w-7 h-7 rounded-full bg-muted flex items-center justify-center text-xs font-bold text-muted-foreground mt-0.5">
-              {item.position}
+              {num}
             </span>
             <div className="flex-1 min-w-0">
               <div className="flex items-baseline gap-2 flex-wrap">
@@ -86,6 +163,9 @@ export function ListView({
                     }),
                     ...(item.sectionNotes && {
                       sectionNotes: JSON.stringify(item.sectionNotes),
+                    }),
+                    ...(item.sectionNuances && Object.keys(item.sectionNuances).length > 0 && {
+                      sectionNuances: JSON.stringify(item.sectionNuances),
                     }),
                     ...(item.keyOverride && {
                       key: JSON.stringify(item.keyOverride)
@@ -103,7 +183,6 @@ export function ListView({
               {song?.sections && song.sections.length > 0 && (() => {
                 const allSections = song.sections!;
                 const st = item.sectionTransitions ?? {};
-                const occ: Record<string, number> = {};
                 // Chaque section → nom affichable + transition interne éventuelle.
                 const entries: { name: string; transition?: string }[] = item.structureOverride
                   ? item.structureOverride.map((ov) => {
@@ -115,11 +194,11 @@ export function ListView({
                       const type = ov.replace(/(-\d+)+$/, "");
                       return { name: t(`songs.sections.${type}`, { defaultValue: type }), transition: st[ov] };
                     })
-                  : allSections.map((s) => {
-                      const idx = occ[s.id] ?? 0;
-                      occ[s.id] = idx + 1;
-                      const key = idx === 0 ? s.id : `${s.id}:${idx}`;
-                      return { name: formatSectionName(s, t), transition: st[s.uid] ?? st[key] ?? st[s.id] };
+                  : allSections.map((s, i) => {
+                      // La transition est stockée sous la clé `${id}-${index}` (cf.
+                      // makeDefaultSections/buildSetlistItems) = l'uid de section de l'AST.
+                      // L'index JSON n'expose pas ce `uid` → on le reconstruit à partir de l'ordre.
+                      return { name: formatSectionName(s, t), transition: st[`${s.id}-${i}`] ?? st[s.id] };
                     });
                 const transitions = entries.filter((e) => e.transition);
                 return (
@@ -154,7 +233,8 @@ export function ListView({
             </div>
           </li>
         );
-      })}
+        });
+      })()}
     </ol>
   );
 }
