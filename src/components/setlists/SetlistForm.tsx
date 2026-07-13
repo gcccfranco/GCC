@@ -107,6 +107,18 @@ export function SetlistForm({ mode, setlistId, songs, initial }: SetlistFormProp
   const [selectMode, setSelectMode] = useState(false);
   const [selectedUids, setSelectedUids] = useState<Set<string>>(new Set());
 
+  // ── Wizard (formulaire étape par étape) ─────────────────
+  // 0 = Infos · 1 = Chants · 2 = Révision. Navigation libre (stepper cliquable) :
+  // la validation reste au submit final, on ne bloque pas entre étapes.
+  const [step, setStep] = useState(0);
+  const [dir, setDir] = useState<1 | -1>(1); // sens d'animation (1 = avant, -1 = arrière)
+  const goStep = (next: number) => {
+    const clamped = Math.max(0, Math.min(2, next));
+    setDir(clamped >= step ? 1 : -1);
+    setStep(clamped);
+    if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   // ── Auto-save (mode création uniquement) ────────────────
   const [autoSaveId, setAutoSaveId] = useState<string | null>(null);
   const [autoSaving, setAutoSaving] = useState(false);
@@ -468,18 +480,57 @@ export function SetlistForm({ mode, setlistId, songs, initial }: SetlistFormProp
         </div>
       </div>
 
-      <div className="max-w-2xl mx-auto px-4 py-6 space-y-5">
+      {/* ── Stepper (formulaire étape par étape) ── */}
+      <div className="max-w-2xl mx-auto px-4 pt-5">
+        <div className="flex items-center">
+          {[
+            t("setlists.form.stepInfos", { defaultValue: "Infos" }),
+            t("common.header.songs"),
+            t("setlists.form.stepReview", { defaultValue: "Révision" }),
+          ].map((label, i) => (
+            <div key={i} className={`flex items-center ${i < 2 ? "flex-1" : ""}`}>
+              <button
+                type="button"
+                onClick={() => goStep(i)}
+                className="flex flex-col items-center gap-1.5 shrink-0 focus:outline-none"
+              >
+                <span
+                  className={`w-7 h-7 rounded-full grid place-items-center text-xs font-semibold border transition-all duration-200 ${
+                    i === step
+                      ? "border-primary text-primary ring-4 ring-primary/10 scale-105"
+                      : i < step
+                      ? "bg-primary border-primary text-primary-foreground"
+                      : "border-border text-muted-foreground bg-card"
+                  }`}
+                >
+                  {i < step ? <Check className="h-3.5 w-3.5" /> : i + 1}
+                </span>
+                <span className={`text-[11px] font-medium ${i === step ? "text-foreground" : "text-muted-foreground"}`}>
+                  {label}
+                </span>
+              </button>
+              {i < 2 && (
+                <span className="flex-1 h-px mx-2 mb-5 bg-border relative overflow-hidden rounded-full">
+                  <span className={`absolute inset-0 bg-primary origin-left transition-transform duration-200 ${i < step ? "scale-x-100" : "scale-x-0"}`} />
+                </span>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
 
+      <div className="max-w-2xl mx-auto px-4 pt-5 pb-36">
+        <div key={step} className={dir === 1 ? "wiz-fwd" : "wiz-back"}>
+
+        {step === 0 && (
+        <div className="space-y-5">
         {/* ── Carte Informations ── */}
         <div className="rounded-xl bg-card shadow-soft p-5 space-y-4">
-          <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-            {t("setlists.form.infoSection")}
-          </h2>
 
           {/* Titre + Catégorie */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium text-muted-foreground mb-1.5">
+              <label className="block text-sm font-medium text-foreground mb-1.5">
                 {t("setlists.form.titleLabel")} <span className="text-destructive">*</span>
               </label>
               <input
@@ -491,7 +542,7 @@ export function SetlistForm({ mode, setlistId, songs, initial }: SetlistFormProp
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-muted-foreground mb-1.5">
+              <label className="block text-sm font-medium text-foreground mb-1.5">
                 {t("setlists.form.categoryLabel")} <span className="text-destructive">*</span>
               </label>
               <select
@@ -531,7 +582,7 @@ export function SetlistForm({ mode, setlistId, songs, initial }: SetlistFormProp
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {/* Présidence : présidents de séances (noms seuls) */}
               <div>
-                <label className="block text-xs font-medium text-muted-foreground mb-1.5">
+                <label className="block text-sm font-medium text-foreground mb-1.5">
                   {t("setlists.form.leaderLabel")} <span className="text-destructive">*</span>
                 </label>
                 <select
@@ -558,7 +609,7 @@ export function SetlistForm({ mode, setlistId, songs, initial }: SetlistFormProp
 
               {/* Date : saisie manuelle (+ matin/soir pour Campus) */}
               <div>
-                <label className="block text-xs font-medium text-muted-foreground mb-1.5">
+                <label className="block text-sm font-medium text-foreground mb-1.5">
                   {t("setlists.form.dateLabel")} <span className="text-destructive">*</span>
                 </label>
                 <input
@@ -584,7 +635,7 @@ export function SetlistForm({ mode, setlistId, songs, initial }: SetlistFormProp
 
           {/* Visibilité */}
           <div>
-            <label className="block text-xs font-medium text-muted-foreground mb-1.5">
+            <label className="block text-sm font-medium text-foreground mb-1.5">
               {t("setlists.form.visibilityLabel")}
             </label>
             <div className="flex rounded-lg border border-border overflow-hidden text-sm">
@@ -621,7 +672,7 @@ export function SetlistForm({ mode, setlistId, songs, initial }: SetlistFormProp
 
           {/* Notes */}
           <div>
-            <label className="block text-xs font-medium text-muted-foreground mb-1.5">
+            <label className="block text-sm font-medium text-foreground mb-1.5">
               {t("setlists.form.notesLabel")}
             </label>
             <textarea
@@ -633,11 +684,13 @@ export function SetlistForm({ mode, setlistId, songs, initial }: SetlistFormProp
             />
           </div>
         </div>
+        </div>
+        )}
 
-        {/* ── Section Chants ── */}
+        {step === 1 && (
         <div className="space-y-3">
           <div className="flex items-center justify-between gap-2">
-            <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+            <h2 className="text-xs font-medium text-muted-foreground">
               {t("common.header.songs")}
             </h2>
             <div className="flex items-center gap-2">
@@ -797,20 +850,121 @@ export function SetlistForm({ mode, setlistId, songs, initial }: SetlistFormProp
             </p>
           )}
         </div>
-
-        {error && (
-          <p className="text-sm text-destructive bg-destructive/10 px-3 py-2 rounded-lg">{error}</p>
         )}
 
-        {/* Bouton bas de page (pratique sur mobile après un long formulaire) */}
-        <button
-          type="button"
-          onClick={() => doSubmit()}
-          disabled={busy}
-          className="w-full py-2.5 rounded-lg bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 transition-colors disabled:opacity-50"
+        {step === 2 && (
+        <div className="space-y-4">
+          {/* Récapitulatif des informations */}
+          <div className="rounded-xl bg-card shadow-soft px-5 divide-y divide-border">
+            {[
+              { k: t("setlists.form.titleLabel"), v: title.trim() || "—" },
+              { k: t("setlists.form.categoryLabel"), v: category ? t("categories." + category, { defaultValue: category }) : "—" },
+              { k: t("setlists.form.leaderLabel"), v: leader.trim() || "—" },
+              {
+                k: t("setlists.form.dateLabel"),
+                v: date
+                  ? new Date(date + "T00:00:00").toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short" })
+                    + (category === "Campus" && moment ? (moment === "soir" ? " · Soir" : " · Matin") : "")
+                  : "—",
+              },
+              { k: t("setlists.form.visibilityLabel"), v: isPrivate ? "Privée" : "Partagée" },
+            ].map((r) => (
+              <div key={r.k} className="flex justify-between gap-3 py-2.5 text-sm">
+                <span className="text-muted-foreground shrink-0">{r.k}</span>
+                <span className="font-medium text-right">{r.v}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Récapitulatif des chants */}
+          <p className="text-xs font-medium text-muted-foreground px-1">
+            {t("common.header.songs")} · {items.length}
+          </p>
+          {items.length > 0 ? (
+            <div className="rounded-xl bg-card shadow-soft px-5">
+              {items.map((item, idx) => {
+                const pos = idx + 1;
+                if (isFormTransition(item)) {
+                  return (
+                    <div key={item.uid} className="flex items-center gap-2.5 py-2 text-sm border-b border-border/60 last:border-0">
+                      <span className="w-5 h-5 shrink-0" />
+                      <span className="flex-1 min-w-0 truncate italic text-amber-700 dark:text-amber-400">
+                        {item.text.trim() || t("setlists.form.addTransition")}
+                      </span>
+                    </div>
+                  );
+                }
+                const isFus = isFormFusion(item);
+                const label = isFus
+                  ? item.songs.map((s) => s.song.title).join(" + ")
+                  : item.song.title;
+                const songKey = isFus ? null : (item.keyOverride ?? item.song.originalKey);
+                const hasNuance = isFus
+                  ? item.songs.some((s) => s.sectionItems.some((si) => si.nuanceTags.length > 0 || si.nuanceNote.trim()))
+                  : item.sectionItems.some((si) => si.nuanceTags.length > 0 || si.nuanceNote.trim());
+                return (
+                  <div key={item.uid} className="flex items-center gap-2.5 py-2 text-sm border-b border-border/60 last:border-0">
+                    <span className="w-5 h-5 rounded-full bg-secondary text-muted-foreground text-[11px] font-bold grid place-items-center shrink-0">{pos}</span>
+                    <span className="flex-1 min-w-0 truncate">{label}</span>
+                    {hasNuance && (
+                      <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-violet-100 text-violet-700 dark:bg-violet-500/20 dark:text-violet-300 shrink-0">
+                        nuances
+                      </span>
+                    )}
+                    {songKey && <span className="font-mono text-xs text-muted-foreground shrink-0">{songKey}</span>}
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="text-xs text-muted-foreground text-center py-4 border border-dashed border-border rounded-xl">
+              {t("setlists.form.emptySongs")}
+            </p>
+          )}
+        </div>
+        )}
+
+        </div>
+
+        {error && (
+          <p className="text-sm text-destructive bg-destructive/10 px-3 py-2 rounded-lg mt-4">{error}</p>
+        )}
+      </div>
+
+      {/* ── Barre d'action du wizard ── */}
+      <div className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-background/95 backdrop-blur">
+        <div
+          className="max-w-2xl mx-auto px-4 py-3 flex items-center gap-3"
+          style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}
         >
-          {submitLabel}
-        </button>
+          {step > 0 && (
+            <button
+              type="button"
+              onClick={() => goStep(step - 1)}
+              className="h-11 px-4 rounded-lg border border-border text-muted-foreground hover:text-foreground text-sm font-semibold transition-colors"
+            >
+              ← {t("common.buttons.back", { defaultValue: "Retour" })}
+            </button>
+          )}
+          {step < 2 ? (
+            <button
+              type="button"
+              onClick={() => goStep(step + 1)}
+              className="flex-1 h-11 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
+            >
+              {t("common.buttons.next", { defaultValue: "Suivant" })} →
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => doSubmit()}
+              disabled={busy}
+              className="flex-1 h-11 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50"
+            >
+              {submitLabel}
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );
