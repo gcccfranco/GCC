@@ -14,6 +14,7 @@
       "profile": "我的资料",
       "signup": "注册账号",
       "guide": "使用指南",
+      "nouveautes": "更新动态",
       "notify": "通知",
       "admin": "管理"
     },
@@ -52,6 +53,16 @@
       "title": "页面不存在",
       "body": "该页面不存在或已被移动。",
       "cta": "查看诗歌"
+    }
+  },
+  "nouveautes": {
+    "title": "更新动态",
+    "subtitle": "本站最新的改进与修复。",
+    "empty": "暂无内容。",
+    "categories": {
+      "added": "新增",
+      "fixed": "修复",
+      "improved": "改进"
     }
   },
   "songs": {
@@ -142,6 +153,7 @@
       "backToAll": "←",
       "tabList": "曲目列表",
       "tabCharts": "歌谱预览",
+      "pinyin": "拼音",
       "editButton": "编辑",
       "deleteButton": "删除",
       "deleteConfirm": "确认删除？",
