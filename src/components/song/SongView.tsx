@@ -58,11 +58,15 @@ function getChartSectionStyle(type: string): React.CSSProperties {
   } as React.CSSProperties;
 }
 
+// Polices CJK volumineuses (KaiTi ~11 Mo, Han-source ~8 Mo) : preload désactivé
+// pour ne pas les précharger sur toute page rendant une partition (y compris
+// les chants FR). Elles se chargent à la demande quand un chant zh s'affiche.
 const KaiTiFont = localFont({
   src: [{ path: "../../../public/fonts/KaiTi.ttf", weight: "400", style: "normal" }],
+  preload: false,
 });
 const fr_lyric_font = localFont({ src: "../../../public/fonts/inter-latin-ext-400-normal.ttf" });
-const zh_lyric_font = localFont({ src: "../../../public/fonts/Han-source.otf" });
+const zh_lyric_font = localFont({ src: "../../../public/fonts/Han-source.otf", preload: false });
 const chord_font = localFont({
   src: [
     { path: "../../../public/fonts/SpaceGrotesk-Light.ttf", weight: "300" },
