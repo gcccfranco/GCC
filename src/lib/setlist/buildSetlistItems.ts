@@ -1,6 +1,19 @@
-import type { FormItem, FormListItem } from "@/lib/setlist/formItems";
+import type { FormItem, FormListItem, FormSectionItem } from "@/lib/setlist/formItems";
 import { isFormFusion, isFormTransition } from "@/lib/setlist/formItems";
-import type { SetlistItem, FusionSong } from "@/types/setList";
+import type { SetlistItem, FusionSong, SectionNuance } from "@/types/setList";
+
+/** Sérialise les nuances non vides des sections, keyées par uid. */
+function buildSectionNuances(
+  sectionItems: FormSectionItem[]
+): Record<string, SectionNuance> {
+  const entries = sectionItems.flatMap((s): [string, SectionNuance][] => {
+    const tags = s.nuanceTags ?? [];
+    const note = s.nuanceNote?.trim() ?? "";
+    if (tags.length === 0 && !note) return [];
+    return [[s.uid, { tags, ...(note ? { note } : {}) }]];
+  });
+  return Object.fromEntries(entries);
+}
 
 function formItemToFusionSong(item: FormItem): FusionSong {
   const allIds = (item.song.sections ?? []).map((s) => s.id);
@@ -11,11 +24,13 @@ function formItemToFusionSong(item: FormItem): FusionSong {
   const sectionNotes = Object.fromEntries(
     item.sectionItems.filter((s) => s.note.trim()).map((s) => [s.uid, s.note.trim()])
   );
+  const sectionNuances = buildSectionNuances(item.sectionItems);
   return {
     songSlug: item.song.slug,
     keyOverride: item.keyOverride,
     structureOverride,
     sectionNotes,
+    ...(Object.keys(sectionNuances).length > 0 ? { sectionNuances } : {}),
   };
 }
 
@@ -49,12 +64,18 @@ export function buildSetlistItems(items: FormListItem[]): SetlistItem[] {
         sectionNotes: {},
         notes: "",
         fusionSongs: item.songs.map((song) => formItemToFusionSong(song)),
-        mixedStructure: item.mixedStructure?.map((ms) => ({
-          songSlug: ms.songSlug,
-          sectionId: ms.sectionId,
-          ...(ms.note?.trim() ? { note: ms.note.trim() } : {}),
-          ...(ms.transition?.trim() ? { transition: ms.transition.trim() } : {}),
-        })) ?? null,
+        mixedStructure: item.mixedStructure?.map((ms) => {
+          const nuanceTags = ms.nuanceTags ?? [];
+          const nuanceNote = ms.nuanceNote?.trim() ?? "";
+          const hasNuance = nuanceTags.length > 0 || nuanceNote;
+          return {
+            songSlug: ms.songSlug,
+            sectionId: ms.sectionId,
+            ...(ms.note?.trim() ? { note: ms.note.trim() } : {}),
+            ...(ms.transition?.trim() ? { transition: ms.transition.trim() } : {}),
+            ...(hasNuance ? { nuance: { tags: nuanceTags, ...(nuanceNote ? { note: nuanceNote } : {}) } } : {}),
+          };
+        }) ?? null,
       };
     }
     const allIds = (item.song.sections ?? []).map((s) => s.id);
@@ -68,6 +89,7 @@ export function buildSetlistItems(items: FormListItem[]): SetlistItem[] {
     const sectionTransitions = Object.fromEntries(
       item.sectionItems.filter((s) => s.transition.trim()).map((s) => [s.uid, s.transition.trim()])
     );
+    const sectionNuances = buildSectionNuances(item.sectionItems);
     return {
       songSlug: item.song.slug,
       position: idx + 1,
@@ -78,6 +100,7 @@ export function buildSetlistItems(items: FormListItem[]): SetlistItem[] {
       structureOverride,
       sectionNotes,
       sectionTransitions,
+      ...(Object.keys(sectionNuances).length > 0 ? { sectionNuances } : {}),
       notes: item.notes,
     };
   });
