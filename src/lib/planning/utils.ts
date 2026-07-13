@@ -38,6 +38,19 @@ export function fdLong(dateStr: string) {
   return `${parseInt(dd)} ${MOIS[parseInt(mm)-1]}`
 }
 
+/** Nom du mois (1–12) localisé selon la langue de l'interface. */
+export function moisName(m1: number, lang: string) {
+  return new Date(2000, m1 - 1, 1).toLocaleDateString(lang === "zh-CN" ? "zh-CN" : "fr-FR", { month: "long" })
+}
+
+/** « 5 juillet » / « 7月5日 » selon la langue. */
+export function fdLongL(dateStr: string, lang: string) {
+  const [, mm, dd] = dateStr.split("-")
+  return lang === "zh-CN"
+    ? `${parseInt(mm)}月${parseInt(dd)}日`
+    : `${parseInt(dd)} ${moisName(parseInt(mm), "fr")}`
+}
+
 export function currentSundayStr() {
   const d = new Date()
   const day = d.getDay()

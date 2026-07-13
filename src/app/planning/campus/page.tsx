@@ -1,12 +1,14 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useTranslation } from "react-i18next"
 import { CAMP_LOUANGE_FALLBACK, CAMP_ENT_FALLBACK } from "@/lib/planning/data"
 import { fetchCampus } from "@/lib/planning/sheets"
 import type { CampusSeance } from "@/lib/planning/utils"
-import { fdLong } from "@/lib/planning/utils"
+import { fdLongL } from "@/lib/planning/utils"
+import { PLANNING_COLORS } from "@/lib/serviceColors"
 
-const COLOR = "#2471a3"
+const COLOR = PLANNING_COLORS.campus
 
 type CampusSub = "louange" | "entrainement"
 
@@ -26,6 +28,7 @@ function Chip({ label }: { label: string }) {
 }
 
 export default function CampusPage() {
+  const { t, i18n } = useTranslation()
   const [louange, setLouange] = useState<CampusSeance[]>(CAMP_LOUANGE_FALLBACK)
   const [entrainement, setEntrainement] = useState<CampusSeance[]>(CAMP_ENT_FALLBACK)
   const [sub, setSub] = useState<CampusSub>("louange")
@@ -44,8 +47,8 @@ export default function CampusPage() {
   return (
     <div className="max-w-2xl space-y-4 mx-auto">
       <div className="flex flex-wrap gap-3 items-center justify-between">
-        <h2 className="text-base font-bold text-foreground">Campus</h2>
-        {loading && <span className="text-xs text-muted-foreground">Chargement…</span>}
+        <h2 className="text-base font-bold text-foreground">{t("planning.pages.campus")}</h2>
+        {loading && <span className="text-xs text-muted-foreground">{t("common.loading")}</span>}
       </div>
 
       <div className="flex gap-2">
@@ -58,21 +61,21 @@ export default function CampusPage() {
             }`}
             style={sub === s ? { background: COLOR, borderColor: COLOR } : undefined}
           >
-            {s === "louange" ? "Louange" : "Répétition"}
+            {s === "louange" ? t("planning.campus.louange") : t("planning.campus.repetition")}
           </button>
         ))}
       </div>
 
       {order.length === 0 && (
-        <div className="text-center py-12 text-sm text-muted-foreground">Aucune séance</div>
+        <div className="text-center py-12 text-sm text-muted-foreground">{t("planning.campus.noSeance")}</div>
       )}
 
       {order.map(day => (
         <div key={day} className="bg-card shadow-soft rounded-xl overflow-hidden">
           <div className="px-4 py-2.5 text-sm font-semibold text-white" style={{ background: COLOR }}>{day}</div>
           {days[day].map((s, i) => {
-            const moment = s.d.includes("Matin") ? "Matin" : "Soir"
-            const isSoir = moment === "Soir"
+            const isSoir = !s.d.includes("Matin")
+            const moment = isSoir ? t("planning.campus.evening") : t("planning.campus.morning")
             const choristes = s.ch.split(",").map(c => c.trim()).filter(Boolean)
             const musiciens = s.mu.split(",").map(m => m.trim()).filter(Boolean)
             const regie = s.rg.split(",").map(r => r.trim()).filter(Boolean)
@@ -81,9 +84,9 @@ export default function CampusPage() {
               <div key={i} className="border-t border-border">
                 {sub === "entrainement" && s.ent && (
                   <div className="px-4 py-2 text-xs font-semibold text-white" style={{ background: COLOR }}>
-                    Répétition : <span className="font-normal">
-                      {fdLong(s.ent)}
-                      {s.entTime ? ` à ${s.entTime}` : ""}
+                    {t("planning.campus.repetitionLabel")} <span className="font-normal">
+                      {fdLongL(s.ent, i18n.language)}
+                      {s.entTime ? ` ${t("planning.campus.atTime", { time: s.entTime })}` : ""}
                       {s.entLieu ? ` — ${s.entLieu}` : ""}
                     </span>
                   </div>
@@ -93,14 +96,14 @@ export default function CampusPage() {
                 </div>
                 <div className="grid grid-cols-2 border-b border-border">
                   <div className="px-4 py-3 border-r border-border">
-                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-2">Présidence &amp; choristes</p>
+                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-2">{t("planning.campus.presChoristes")}</p>
                     {s.pres && (
                       <p className="text-sm font-semibold mb-1" style={{ color: COLOR }}>{s.pres}</p>
                     )}
                     {choristes.map(c => <Chip key={c} label={c} />)}
                   </div>
                   <div className="px-4 py-3">
-                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-2">Musiciens</p>
+                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-2">{t("planning.campus.musiciens")}</p>
                     {musiciens.map(m => <Chip key={m} label={m} />)}
                   </div>
                 </div>
@@ -118,11 +121,11 @@ export default function CampusPage() {
                   </div>
                 )}
                 <div className="px-4 py-3 bg-secondary/30">
-                  <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-2">Chants</p>
+                  <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-2">{t("planning.campus.chants")}</p>
                   <div className="space-y-1">
                     {(s.chants.some(c => c?.trim()) ? s.chants : ["","","",""]).map((c, ci) => (
                       <div key={ci} className={`text-xs px-3 py-1.5 rounded-lg border ${c?.trim() ? "border-border bg-card text-foreground font-medium" : "border-dashed border-border text-muted-foreground"}`}>
-                        {c?.trim() || `Chant ${ci + 1}`}
+                        {c?.trim() || t("planning.campus.chantN", { n: ci + 1 })}
                       </div>
                     ))}
                   </div>

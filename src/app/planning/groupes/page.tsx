@@ -1,13 +1,16 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useTranslation } from "react-i18next"
 import { FilterButtons } from "@/components/planning/FilterButtons"
 import { PlanningTable } from "@/components/planning/PlanningTable"
+import { StaleBanner } from "@/components/planning/StaleBanner"
 import { filterByTri, getCurrentTri } from "@/lib/planning/utils"
 import { PAIX_FALLBACK, FIDELITE_FALLBACK, FIDELITE_MUSIC_FALLBACK, BONTE_FALLBACK } from "@/lib/planning/data"
 import { fetchPaix, fetchFidelite, fetchFideliteMusic, fetchBonte } from "@/lib/planning/sheets"
 import { useProfile } from "@/lib/firebase/users"
 import { isAdminUser } from "@/lib/access"
+import { PLANNING_COLORS } from "@/lib/serviceColors"
 import {
   PUBLISHABLE_PLANNINGS,
   canPublishPlanning,
@@ -20,32 +23,37 @@ type Groupe = "paix" | "fidelite" | "bonte"
 type FidSub = "groupe" | "musiciens"
 
 const GRP_COLORS: Record<Groupe, string> = {
-  paix:     "#6b4a8e",
-  fidelite: "#a03030",
-  bonte:    "#8b4a2e",
+  paix:     PLANNING_COLORS.paix,
+  fidelite: PLANNING_COLORS.fidelite,
+  bonte:    PLANNING_COLORS.bonte,
 }
 
 const GRP_INACTIVE = "bg-card text-muted-foreground border-border hover:text-foreground"
 
 export default function GroupesPage() {
+  const { t } = useTranslation()
   const { user, profile } = useProfile()
   const [paix, setPaix] = useState(PAIX_FALLBACK)
   const [fid, setFid] = useState(FIDELITE_FALLBACK)
   const [fidM, setFidM] = useState(FIDELITE_MUSIC_FALLBACK)
   const [bonte, setBonte] = useState(BONTE_FALLBACK)
   const [loading, setLoading] = useState(true)
+  const [stale, setStale] = useState(false)
   const [grp, setGrp] = useState<Groupe>("paix")
   const [fidSub, setFidSub] = useState<FidSub>("groupe")
   const [tri, setTri] = useState(getCurrentTri())
   const [pubByGrp, setPubByGrp] = useState<Record<string, string[]>>({})
 
   useEffect(() => {
-    Promise.all([
+    Promise.allSettled([
       fetchPaix().then(d => { if (d.length) setPaix(d) }),
       fetchFidelite().then(d => { if (d.length) setFid(d) }),
       fetchFideliteMusic().then(d => { if (d.length) setFidM(d) }),
       fetchBonte().then(d => { if (d.length) setBonte(d) }),
-    ]).finally(() => setLoading(false))
+    ]).then(results => {
+      setStale(results.some(r => r.status === "rejected"))
+      setLoading(false)
+    })
   }, [])
 
   useEffect(() => {
@@ -75,17 +83,19 @@ export default function GroupesPage() {
   })()
 
   const cols = (() => {
-    if (grp === "fidelite" && fidSub === "musiciens") return ["Date","Présidence","Piano","Guitare","Batterie"]
-    if (grp === "fidelite") return ["Date","Présidence","Orateur","Thème","Pianiste"]
-    return ["Date","Présidence","Musiciens","Orateur","Thème"]
+    if (grp === "fidelite" && fidSub === "musiciens") return [t("planning.roles.date"), t("planning.roles.presidence"), t("planning.roles.piano"), t("planning.roles.guitare"), t("planning.roles.batterie")]
+    if (grp === "fidelite") return [t("planning.roles.date"), t("planning.roles.presidence"), t("planning.roles.orateur"), t("planning.roles.theme"), t("planning.roles.pianiste")]
+    return [t("planning.roles.date"), t("planning.roles.presidence"), t("planning.roles.musiciens"), t("planning.roles.orateur"), t("planning.roles.theme")]
   })()
 
   return (
     <div className="max-w-full space-y-4 mx-auto">
       <div className="flex flex-wrap gap-3 items-center justify-between">
-        <h2 className="text-base font-bold text-foreground">Groupes</h2>
-        {loading && <span className="text-xs text-muted-foreground">Chargement…</span>}
+        <h2 className="text-base font-bold text-foreground">{t("planning.pages.groupes")}</h2>
+        {loading && <span className="text-xs text-muted-foreground">{t("common.loading")}</span>}
       </div>
+
+      <StaleBanner show={stale} />
 
       <div className="flex gap-2">
         {(["paix","fidelite","bonte"] as Groupe[]).map(g => (
@@ -95,7 +105,7 @@ export default function GroupesPage() {
             className={`flex-1 py-2 px-3 rounded-xl border text-xs font-semibold transition-all duration-150 cursor-pointer ${grp === g ? "text-white border-transparent" : GRP_INACTIVE}`}
             style={grp === g ? { background: GRP_COLORS[g], borderColor: GRP_COLORS[g] } : undefined}
           >
-            {g === "fidelite" ? "Fidélité" : g.charAt(0).toUpperCase() + g.slice(1)}
+            {t(`planning.groupes.${g}`)}
           </button>
         ))}
       </div>
@@ -113,7 +123,7 @@ export default function GroupesPage() {
               }`}
               style={fidSub === sub ? { background: `${color}15`, borderColor: color, color } : undefined}
             >
-              {sub === "groupe" ? "Planning groupe" : "Planning musiciens 🎵"}
+              {sub === "groupe" ? t("planning.groupes.planningGroupe") : t("planning.groupes.planningMusiciens")}
             </button>
           ))}
         </div>
@@ -123,7 +133,7 @@ export default function GroupesPage() {
 
       <div className="flex items-center gap-2 text-xs text-muted-foreground">
         <div className="w-3 h-3 rounded-sm" style={{ background: `${color}26`, border: `1px solid ${color}4d` }} />
-        Dimanche de la semaine courante
+        {t("planning.legendCurrentSunday")}
       </div>
 
       <PlanningTable cols={cols} rows={data} color={color} minWidth={480} />

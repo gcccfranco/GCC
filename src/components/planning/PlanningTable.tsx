@@ -2,7 +2,9 @@
 
 import { Fragment, useEffect, useState, type ReactNode } from "react"
 import { User, X } from "lucide-react"
-import { currentSundayStr, fdShort, getAnnee, getMois, MOIS } from "@/lib/planning/utils"
+import { useTranslation } from "react-i18next"
+import { currentSundayStr, fdShort, getAnnee, getMois, moisName } from "@/lib/planning/utils"
+import { useProfile } from "@/lib/firebase/users"
 
 export interface PlanningTableProps {
   /** cols[0] est la colonne date */
@@ -23,21 +25,26 @@ export interface PlanningTableProps {
  * cellules correspondantes, avec filtre « Mes dates ».
  */
 export function PlanningTable({ cols, rows, color, dateBadge, minWidth = 480, groupBy = "month" }: PlanningTableProps) {
+  const { t, i18n } = useTranslation()
+  const { profile } = useProfile()
   const sun = currentSundayStr()
   const [name, setName] = useState("")
   const [onlyMine, setOnlyMine] = useState(false)
   const [mobileGroup, setMobileGroup] = useState<number | null>(null)
 
-  // Clé de regroupement (mois ou année) + libellé associé
+  // Clé de regroupement (mois ou année) + libellé associé (mois localisé)
   const groupKey = (dateStr: string) => (groupBy === "year" ? getAnnee(dateStr) : getMois(dateStr))
-  const groupLabel = (key: number) => (groupBy === "year" ? String(key) : MOIS[key - 1])
+  const groupLabel = (key: number) => (groupBy === "year" ? String(key) : moisName(key, i18n.language))
 
+  // Prénom : mémorisé sur l'appareil, prérempli depuis le profil connecté
+  // (l'app connaît déjà le nom de planning — inutile de le redemander).
   useEffect(() => {
     try {
       const saved = localStorage.getItem("planningName")
-      if (saved) setName(saved)
+      if (saved) { setName(saved); return }
     } catch { /* stockage indisponible */ }
-  }, [])
+    if (profile?.planningName) setName(profile.planningName)
+  }, [profile])
 
   function updateName(v: string) {
     setName(v)
@@ -77,14 +84,14 @@ export function PlanningTable({ cols, rows, color, dateBadge, minWidth = 480, gr
             type="text"
             value={name}
             onChange={(e) => updateName(e.target.value)}
-            placeholder="Mon prénom…"
+            placeholder={t("planning.table.myName")}
             className="w-full h-10 sm:h-8 pl-8 pr-8 rounded-lg border border-border bg-card text-foreground text-[16px] sm:text-xs focus:outline-none focus:ring-2 focus:ring-ring/20"
           />
           {name && (
             <button
               onClick={() => { updateName(""); setOnlyMine(false) }}
               className="absolute right-0 top-1/2 -translate-y-1/2 p-2.5 text-muted-foreground hover:text-foreground active:text-foreground"
-              aria-label="Effacer"
+              aria-label={t("planning.table.clear")}
             >
               <X className="h-3 w-3" />
             </button>
@@ -98,7 +105,7 @@ export function PlanningTable({ cols, rows, color, dateBadge, minWidth = 480, gr
             }`}
             style={onlyMine ? { background: color, borderColor: color } : undefined}
           >
-            Mes dates
+            {t("planning.table.myDates")}
           </button>
         )}
       </div>
@@ -115,7 +122,7 @@ export function PlanningTable({ cols, rows, color, dateBadge, minWidth = 480, gr
           </thead>
           <tbody>
             {displayed.length === 0 && (
-              <tr><td colSpan={cols.length} className="px-4 py-8 text-center text-sm text-muted-foreground">Aucune donnée</td></tr>
+              <tr><td colSpan={cols.length} className="px-4 py-8 text-center text-sm text-muted-foreground">{t("planning.table.noData")}</td></tr>
             )}
             {withSep.map(({ row, sep }) => {
               const isThis = row[0] === sun
@@ -138,7 +145,7 @@ export function PlanningTable({ cols, rows, color, dateBadge, minWidth = 480, gr
                   >
                     <td className="w-[100px] px-3 py-2 font-semibold whitespace-nowrap" style={{ color }}>
                       <div>{isThis ? (
-                        <span className="inline-block text-[9px] font-bold px-1.5 py-0.5 rounded text-white mt-0.5" style={{ background: color }}>Cette semaine</span>
+                        <span className="inline-block text-[9px] font-bold px-1.5 py-0.5 rounded text-white mt-0.5" style={{ background: color }}>{t("planning.table.thisWeek")}</span>
                       ) : fdShort(row[0])}</div>
                       {dateBadge?.(row, rows)}
                     </td>

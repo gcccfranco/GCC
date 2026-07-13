@@ -2,23 +2,26 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useTranslation } from "react-i18next"
 import { useScrollDirection } from "@/hooks/useScrollDirection"
 import { useRef, useEffect, useState } from "react"
+import { PLANNING_COLORS } from "@/lib/serviceColors"
 
-// `color` = couleur de service de la page (mêmes valeurs que le COLOR de
-// chaque page planning) — reprise par l'indicateur d'onglet actif.
-const TABS: { label: string; href: string; color?: string }[] = [
-  { label: "Accueil", href: "/planning" },
-  { label: "Culte Franco", href: "/planning/culte", color: "#2d5a65" },
-  { label: "Prépa. Table", href: "/planning/table", color: "#c87941" },
-  { label: "Groupes", href: "/planning/groupes" },
-  { label: "EDD", href: "/planning/edd", color: "#3b6d11" },
-  { label: "Campus", href: "/planning/campus", color: "#2471a3" },
-  { label: "Intergroupe", href: "/planning/intergroupe", color: "#a87b0f" },
-  { label: "Interfranco", href: "/planning/interfranco", color: "#9d3c63" },
+// `key` = clé i18n (planning.tabs.*), `color` = couleur de service reprise par
+// l'indicateur d'onglet actif (source unique : PLANNING_COLORS).
+const TABS: { key: string; href: string; color?: string }[] = [
+  { key: "accueil", href: "/planning" },
+  { key: "culte", href: "/planning/culte", color: PLANNING_COLORS.culte },
+  { key: "table", href: "/planning/table", color: PLANNING_COLORS.table },
+  { key: "groupes", href: "/planning/groupes" },
+  { key: "edd", href: "/planning/edd", color: PLANNING_COLORS.edd },
+  { key: "campus", href: "/planning/campus", color: PLANNING_COLORS.campus },
+  { key: "intergroupe", href: "/planning/intergroupe", color: PLANNING_COLORS.intergroupe },
+  { key: "interfranco", href: "/planning/interfranco", color: PLANNING_COLORS.interfranco },
 ]
 
 export function PlanningTabs() {
+  const { t } = useTranslation()
   const pathname = usePathname() || ""
   const scrollVisible = useScrollDirection()
   const tabRefs = useRef<(HTMLAnchorElement | null)[]>([])
@@ -35,6 +38,9 @@ export function PlanningTabs() {
     const el = tabRefs.current[activeIndex]
     if (el) {
       setIndicator({ left: el.offsetLeft, width: el.offsetWidth, ready: true })
+      // Amène l'onglet actif dans le champ visible (sinon, arriver sur
+      // Interfranco laissait l'onglet actif hors écran, sans indice de scroll).
+      el.scrollIntoView({ inline: "center", block: "nearest" })
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname])
@@ -54,7 +60,7 @@ export function PlanningTabs() {
                   active ? "text-foreground" : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                {tab.label}
+                {t(`planning.tabs.${tab.key}`)}
               </Link>
             )
           })}

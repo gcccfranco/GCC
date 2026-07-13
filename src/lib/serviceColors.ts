@@ -1,6 +1,21 @@
 // Couleurs des services — alignées sur les pages planning
 // (culte, campus, EDD, table, groupes) pour une identité visuelle cohérente.
 
+// Couleurs des pages/onglets de planning — source unique, réutilisée par les
+// pages planning et la barre d'onglets (évite les redéclarations `COLOR` en
+// dur qui divergeaient). Valeurs gelées (contrainte refonte 2026).
+export const PLANNING_COLORS = {
+  culte: "#2d5a65",
+  table: "#c87941",
+  edd: "#3b6d11",
+  campus: "#2471a3",
+  intergroupe: "#a87b0f",
+  interfranco: "#9d3c63",
+  paix: "#6b4a8e",
+  fidelite: "#a03030",
+  bonte: "#8b4a2e",
+} as const;
+
 export const CATEGORY_COLORS: Record<string, string> = {
   "Culte Francophone": "#2d5a65",
   "Intergroupe": "#a87b0f",

@@ -1,15 +1,19 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useTranslation } from "react-i18next"
 import { PlanningTable } from "@/components/planning/PlanningTable"
-import { getCurrentEddPeriode, EDD_PERIODES, EDD_PERIODES_LABELS, EDD_CLASSES } from "@/lib/planning/utils"
+import { getCurrentEddPeriode, EDD_PERIODES, EDD_CLASSES } from "@/lib/planning/utils"
 import { EDD_FALLBACK } from "@/lib/planning/data"
 import { fetchEDD } from "@/lib/planning/sheets"
+import { PLANNING_COLORS } from "@/lib/serviceColors"
 import type { EddDataStructure, EddPeriode, EddClasse } from "@/lib/planning/utils"
 
-const COLOR = "#3b6d11"
+const COLOR = PLANNING_COLORS.edd
+const PERIODE_KEYS = ["p1", "p2", "p3", "p4", "p5", "p6"] as const
 
 export default function EddPage() {
+  const { t } = useTranslation()
   const [eddData, setEddData] = useState<EddDataStructure>(EDD_FALLBACK)
   const [periode, setPeriode] = useState<EddPeriode>(getCurrentEddPeriode())
   const [classe, setClasse] = useState<EddClasse>("中班")
@@ -24,8 +28,8 @@ export default function EddPage() {
   return (
     <div className="max-w-full space-y-4 mx-auto">
       <div className="flex flex-wrap gap-3 items-center justify-between">
-        <h2 className="text-base font-bold text-foreground">EDD — École du Dimanche</h2>
-        {loading && <span className="text-xs text-muted-foreground">Chargement…</span>}
+        <h2 className="text-base font-bold text-foreground">{t("planning.pages.edd")}</h2>
+        {loading && <span className="text-xs text-muted-foreground">{t("common.loading")}</span>}
       </div>
 
       <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
@@ -38,7 +42,7 @@ export default function EddPage() {
             }`}
             style={p === periode ? { background: COLOR, borderColor: COLOR } : {}}
           >
-            {EDD_PERIODES_LABELS[i]}
+            {t(`planning.edd.${PERIODE_KEYS[i]}`)}
           </button>
         ))}
       </div>
@@ -60,11 +64,11 @@ export default function EddPage() {
 
       <div className="flex items-center gap-2 text-xs text-muted-foreground">
         <div className="w-3 h-3 rounded-sm" style={{ background: `${COLOR}26`, border: `1px solid ${COLOR}4d` }} />
-        Dimanche de la semaine courante
+        {t("planning.legendCurrentSunday")}
       </div>
 
       <PlanningTable
-        cols={["Date","Présidence","Suppléant","Piano","Cajon","Guitare"]}
+        cols={[t("planning.roles.date"), t("planning.roles.presidence"), t("planning.roles.suppleant"), t("planning.roles.piano"), t("planning.roles.cajon"), t("planning.roles.guitare")]}
         rows={rows}
         color={COLOR}
         minWidth={480}
