@@ -214,7 +214,7 @@ export default function NotifierPage() {
         ) : (
         <div className="rounded-xl bg-card shadow-soft p-5 space-y-4">
           <div className="space-y-1.5">
-            <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+            <label className="text-sm font-medium text-foreground">
               Audience
             </label>
             <select
@@ -240,7 +240,7 @@ export default function NotifierPage() {
           {audience && (
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                <label className="text-sm font-medium text-foreground">
                   Destinataires
                 </label>
                 <div className="flex items-center gap-3">
@@ -317,7 +317,7 @@ export default function NotifierPage() {
           )}
 
           <div className="space-y-1.5">
-            <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+            <label className="text-sm font-medium text-foreground">
               Titre
             </label>
             <input
@@ -331,7 +331,7 @@ export default function NotifierPage() {
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+            <label className="text-sm font-medium text-foreground">
               Message
             </label>
             <textarea
@@ -345,7 +345,7 @@ export default function NotifierPage() {
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+            <label className="text-sm font-medium text-foreground">
               Ouvre au clic
             </label>
             <select
@@ -364,7 +364,7 @@ export default function NotifierPage() {
           {feedback && <p className="text-xs text-muted-foreground">{feedback}</p>}
 
           {confirmOpen ? (
-            <div className="rounded-xl bg-secondary p-3 space-y-3">
+            <div className="rounded-lg border border-border p-3 space-y-3">
               <p className="text-sm text-foreground">
                 Envoyer cette notification à <span className="font-semibold">{recipLabel}</span> ?
               </p>
