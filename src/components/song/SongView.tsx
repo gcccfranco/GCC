@@ -8,6 +8,8 @@ import { formatSectionName } from "@/lib/chordpro/parser";
 import { resolveStructureOverride } from "@/lib/chordpro/structure";
 import { handleLyricsCopy } from "@/components/song/copyLyrics";
 import { MessageSquare } from "lucide-react";
+import type { SectionNuance } from "@/types/setList";
+import { nuanceLabel, nuanceFull } from "@/lib/setlist/nuances";
 
 // ---------------------------------------------------------------------------
 // Thèmes et styles de sections
@@ -291,6 +293,29 @@ export function TransitionNote({ text }: { text: string }) {
 // SectionView
 // ---------------------------------------------------------------------------
 
+/** Badge de nuances (dynamiques + expression voulues par la présidence). */
+export function NuanceBadge({ nuance }: { nuance?: SectionNuance }) {
+  if (!nuance || (nuance.tags.length === 0 && !nuance.note)) return null;
+  return (
+    <span className="inline-flex flex-wrap items-center gap-1 align-middle">
+      {nuance.tags.map((id) => (
+        <span
+          key={id}
+          title={nuanceFull(id)}
+          className="text-[10px] font-semibold leading-none normal-case tracking-normal px-1.5 py-0.5 rounded bg-violet-100 text-violet-700 dark:bg-violet-500/20 dark:text-violet-300"
+        >
+          {nuanceLabel(id)}
+        </span>
+      ))}
+      {nuance.note && (
+        <span className="text-[11px] normal-case font-normal tracking-normal text-violet-700 dark:text-violet-300">
+          {nuance.note}
+        </span>
+      )}
+    </span>
+  );
+}
+
 export interface SectionViewProps {
   section: ChordProSection;
   language: "fr" | "zh";
@@ -300,6 +325,7 @@ export interface SectionViewProps {
   /** Mode Louange : masque les paroles (ossature seule si les accords sont aussi masqués). */
   hideLyrics?: boolean;
   note?: string;
+  nuance?: SectionNuance;
   songSourceLabel?: string;
   /** « pdf » = typographie des PDF exportés (Mode Louange) ; « web » = défaut. */
   typography?: "web" | "pdf";
@@ -309,7 +335,7 @@ export interface SectionViewProps {
   onLineSelect?: (line: ChordProLine, sectionUid?: string) => void;
 }
 
-export function SectionView({ section, language, showChords, showPinyin, useJianpu, hideLyrics = false, note, songSourceLabel, typography = "web", chartStyle = false, onLineSelect }: SectionViewProps) {
+export function SectionView({ section, language, showChords, showPinyin, useJianpu, hideLyrics = false, note, nuance, songSourceLabel, typography = "web", chartStyle = false, onLineSelect }: SectionViewProps) {
   const isPdfTypo = typography === "pdf";
   const { t, i18n } = useTranslation();
   const isZh = language === "zh";
@@ -341,6 +367,11 @@ export function SectionView({ section, language, showChords, showPinyin, useJian
           {note && (
             <span className="ml-2 normal-case font-normal text-muted-foreground tracking-normal text-xs">
               — {note}
+            </span>
+          )}
+          {nuance && (nuance.tags.length > 0 || nuance.note) && (
+            <span className="ml-2">
+              <NuanceBadge nuance={nuance} />
             </span>
           )}
         </span>
@@ -419,6 +450,7 @@ export interface SongViewProps {
   structureOverride?: string[] | null;
   sectionNotes?: Record<string, string>;
   sectionTransitions?: Record<string, string>;
+  sectionNuances?: Record<string, SectionNuance>;
   /** Mode édition setlist : rend chaque ligne tappable (ouvre la sheet d'édition). */
   onLineSelect?: (line: ChordProLine, sectionUid?: string) => void;
 }
@@ -431,6 +463,7 @@ export function SongView({
   structureOverride = null,
   sectionNotes = {},
   sectionTransitions = {},
+  sectionNuances = {},
   onLineSelect,
 }: SongViewProps) {
   const { t } = useTranslation();
@@ -511,6 +544,7 @@ export function SongView({
             const key = idx === 0 ? section.id : `${section.id}:${idx}`;
             const note = sectionNotes[section.uid] ?? sectionNotes[key] ?? sectionNotes[section.id] ?? "";
             const transition = sectionTransitions?.[section.uid] ?? sectionTransitions?.[key] ?? sectionTransitions?.[section.id] ?? "";
+            const nuance = sectionNuances[section.uid] ?? sectionNuances[key] ?? sectionNuances[section.id];
             return (
               <div key={`${section.uid ?? section.id}-${i}`}>
                 <SectionView
@@ -520,6 +554,7 @@ export function SongView({
                   showPinyin={isZh ? showPinyin : false}
                   useJianpu={canUseJianpu}
                   note={note}
+                  nuance={nuance}
                   onLineSelect={onLineSelect}
                 />
                 {transition && <TransitionNote text={transition} />}
