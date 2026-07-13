@@ -641,9 +641,8 @@ export function SetlistDetailClient() {
               </button>
             </div>
 
-            {/* Actions — sur mobile : propre ligne pleine largeur alignée à gauche
-                (2 lignes nettes) ; sur desktop : poussées à droite sur la même ligne. */}
-            <div className="w-full sm:w-auto sm:ml-auto flex flex-wrap items-center gap-1.5">
+            {/* Actions — poussées à droite, sur la même ligne */}
+            <div className="ml-auto flex items-center gap-1.5">
 
               {/* Adapter le chant (accords/paroles par setlist) — vue partitions */}
               {view === "partitions" && canEdit && (
