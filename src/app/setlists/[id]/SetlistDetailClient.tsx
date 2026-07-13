@@ -482,6 +482,11 @@ export function SetlistDetailClient() {
       sectionTransitions[newUid] = sectionTransitions[oldUid];
       delete sectionTransitions[oldUid];
     }
+    const sectionNuances = item.sectionNuances ? { ...item.sectionNuances } : undefined;
+    if (sectionNuances && sectionNuances[oldUid] !== undefined) {
+      sectionNuances[newUid] = sectionNuances[oldUid];
+      delete sectionNuances[oldUid];
+    }
     return {
       source: mat.source,
       srcLine: t.srcLine + mat.lineOffset,
@@ -491,6 +496,7 @@ export function SetlistDetailClient() {
         structureOverride,
         sectionNotes,
         ...(sectionTransitions ? { sectionTransitions } : {}),
+        ...(sectionNuances ? { sectionNuances } : {}),
       },
     };
   }
