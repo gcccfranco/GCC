@@ -217,6 +217,7 @@
       "structure": "Structure",
       "emptySections": "Aucune section — ajoute en cliquant sur les boutons.",
       "songNotePlaceholder": "Note (optionnel)…",
+      "nuanceNotePlaceholder": "Précision libre…",
       "reorderLabel": "Réordonner",
       "removeLabel": "Retirer",
       "selectMode": "Sélectionner",
