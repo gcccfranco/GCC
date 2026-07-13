@@ -27,6 +27,7 @@ export function PartitionsView({
   contents,
   loading,
   showChordsGlobal,
+  showPinyinGlobal,
   editMode = false,
   onSelectLine,
   onRevert,
@@ -35,6 +36,7 @@ export function PartitionsView({
   contents: Record<string, SongContent>;
   loading: boolean;
   showChordsGlobal: boolean;
+  showPinyinGlobal: boolean;
   /** Mode « adapter le chant » : lignes tappables (hors fusions), rétablir l'original. */
   editMode?: boolean;
   onSelectLine?: (itemIndex: number, line: ChordProLine, sectionUid?: string) => void;
@@ -117,7 +119,7 @@ export function PartitionsView({
                           section={section}
                           language={ast.metadata.language}
                           showChords={showChordsGlobal && item.showChords}
-                          showPinyin={ast.metadata.language === "zh"}
+                          showPinyin={showPinyinGlobal && ast.metadata.language === "zh"}
                           useJianpu={false}
                           note={sectionNote}
                           songSourceLabel={showSongLabel ? ast.metadata.title : undefined}
@@ -159,7 +161,7 @@ export function PartitionsView({
                       <SongView
                         ast={ast}
                         showChords={showChordsGlobal && item.showChords}
-                        showPinyin={ast.metadata.language === "zh"}
+                        showPinyin={showPinyinGlobal && ast.metadata.language === "zh"}
                         useJianpu={false}
                         structureOverride={fs.structureOverride}
                         sectionNotes={fs.sectionNotes ?? {}}
@@ -180,6 +182,7 @@ export function PartitionsView({
             origIndex={origIndex}
             content={contents[item.songSlug]}
             showChordsGlobal={showChordsGlobal}
+            showPinyinGlobal={showPinyinGlobal}
             editMode={editMode}
             onSelectLine={onSelectLine}
             onRevert={onRevert}
@@ -195,6 +198,7 @@ function NormalSongItem({
   origIndex,
   content,
   showChordsGlobal,
+  showPinyinGlobal,
   editMode,
   onSelectLine,
   onRevert,
@@ -203,6 +207,7 @@ function NormalSongItem({
   origIndex: number;
   content: SongContent | undefined;
   showChordsGlobal: boolean;
+  showPinyinGlobal: boolean;
   editMode: boolean;
   onSelectLine?: (itemIndex: number, line: ChordProLine, sectionUid?: string) => void;
   onRevert?: (itemIndex: number) => void;
@@ -247,7 +252,7 @@ function NormalSongItem({
       <SongView
         ast={ast}
         showChords={showChordsGlobal && item.showChords}
-        showPinyin={item.showPinyin}
+        showPinyin={showPinyinGlobal && item.showPinyin}
         useJianpu={false}
         structureOverride={item.structureOverride}
         sectionNotes={item.sectionNotes ?? {}}
