@@ -52,7 +52,7 @@ export function SetlistCard({ setlist }: { setlist: FSSetlist }) {
           {formatDate(setlist.date, i18n.language)}
         </span>
         <div className="flex items-center gap-2 shrink-0">
-          <span>{t("setlists.list.songCounter", { count: setlist.items.length })}</span>
+          <span>{t("setlists.list.songCounter", { count: setlist.items.filter((i) => i.type !== "transition").length })}</span>
           {setlist.leader && (
             <span className="text-muted-foreground/60">· {setlist.leader}</span>
           )}
