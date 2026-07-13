@@ -166,6 +166,25 @@
   }
 }
 
+/* ── Wizard éditeur de setlist : transition d'étape ── */
+@keyframes wiz-in-fwd {
+  from { opacity: 0; transform: translateX(16px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes wiz-in-back {
+  from { opacity: 0; transform: translateX(-16px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes wiz-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.wiz-fwd  { animation: wiz-in-fwd 220ms cubic-bezier(0.22, 0.61, 0.36, 1); }
+.wiz-back { animation: wiz-in-back 220ms cubic-bezier(0.22, 0.61, 0.36, 1); }
+@media (prefers-reduced-motion: reduce) {
+  .wiz-fwd, .wiz-back { animation: wiz-fade 160ms ease; }
+}
+
 @media print {
   @page {
     margin: 1.5cm 2cm;
