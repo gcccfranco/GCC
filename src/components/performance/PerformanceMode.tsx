@@ -83,6 +83,7 @@ function BlockRenderer({
       useJianpu={false}
       hideLyrics={hideLyrics}
       note={block.note}
+      nuance={block.nuance}
       songSourceLabel={block.songSourceLabel}
       chartStyle={chartStyle}
     />
