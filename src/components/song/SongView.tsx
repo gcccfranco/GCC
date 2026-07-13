@@ -208,7 +208,17 @@ function ZhLine({ tokens, pinyin, showChords, showPinyin, hideLyrics = false, ch
   };
 
   return (
-    <div data-copy-line className="flex flex-wrap items-start mb-[3px]" style={{ fontSize: baseSize }}>
+    <div
+      data-copy-line
+      className="flex flex-wrap items-start mb-[3px]"
+      style={{
+        fontSize: baseSize,
+        // Air au-dessus de la ligne quand elle porte des accords : sinon
+        // l'accord (haut de colonne) vient « manger » le pinyin de la ligne
+        // précédente (bas de colonne).
+        marginTop: hasAnyChord ? (isPdfTypo ? "0.2em" : "0.35em") : undefined,
+      }}
+    >
       {cols.map((col, i) => {
         if (!showChords && col.char === " " && col.chord !== null) return null;
         return (
