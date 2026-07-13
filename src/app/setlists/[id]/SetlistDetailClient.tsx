@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { Trash2, List, Music, Pencil, Play, MoreHorizontal, Download, Copy, Share2, BellRing } from "lucide-react";
+import { Trash2, List, Music, Pencil, SlidersHorizontal, Languages, Play, MoreHorizontal, Download, Copy, Share2, BellRing } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -96,6 +96,8 @@ export function SetlistDetailClient() {
   const [loadingSetlist, setLoadingSetlist] = useState(true);
   const [loadingContent, setLoadingContent] = useState(false);
   const [showChords, setShowChords] = useState(true);
+  // Affichage du pinyin en vue partitions — préférence persistée (par appareil).
+  const [showPinyin, setShowPinyin] = useState(true);
   const [view, setView] = useState<"liste" | "partitions">("liste");
   const [deleting, setDeleting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -119,6 +121,17 @@ export function SetlistDetailClient() {
     }
     sessionStorage.setItem("lastListPath", window.location.pathname);
   }, []);
+  // Restaure la préférence d'affichage du pinyin (masqué si "0").
+  useEffect(() => {
+    setShowPinyin(localStorage.getItem("gcc.showPinyin") !== "0");
+  }, []);
+  function togglePinyin() {
+    setShowPinyin((v) => {
+      const next = !v;
+      try { localStorage.setItem("gcc.showPinyin", next ? "1" : "0"); } catch { /* stockage indisponible */ }
+      return next;
+    });
+  }
   // Load setlist + songs index (wait for auth so private setlists get auth headers)
   useEffect(() => {
     if (!id || authLoading) return;
@@ -581,6 +594,12 @@ export function SetlistDetailClient() {
   // contenant au moins 4 vrais chants (hors transitions). Toutes catégories.
   const realSongCount = setlist.items.filter((i) => i.type !== "transition").length;
   const canNotifyTeam = canEdit;
+  // Le toggle pinyin n'a de sens que si la setlist contient au moins un chant zh.
+  const hasZhSong = setlist.items.some(
+    (i) =>
+      songsMap[i.songSlug]?.language === "zh" ||
+      i.fusionSongs?.some((fs) => songsMap[fs.songSlug]?.language === "zh")
+  );
   return (
     <div className="min-h-screen bg-background">
       {/* Top bar — même style que SongDetailClient */}
@@ -638,7 +657,7 @@ export function SetlistDetailClient() {
                       : "border-border bg-card text-muted-foreground hover:text-foreground"
                   }`}
                 >
-                  <Pencil className="h-3.5 w-3.5" />
+                  <SlidersHorizontal className="h-3.5 w-3.5" />
                   <span className="hidden sm:inline">
                     {t("setlists.contentEdit.toggle", { defaultValue: "Adapter" })}
                   </span>
@@ -657,6 +676,21 @@ export function SetlistDetailClient() {
                 >
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/><path d="M9 18V5l12-2v13"/></svg>
                   <span className="hidden sm:inline">{t("songs.detail.chords")}</span>
+                </button>
+              )}
+
+              {/* Pinyin (chants zh, vue partitions) — préférence persistée */}
+              {view === "partitions" && hasZhSong && (
+                <button
+                  onClick={togglePinyin}
+                  className={`h-8 px-2.5 rounded-[8px] border text-[12.5px] font-semibold flex items-center gap-1.5 transition-all duration-150 ${
+                    showPinyin
+                      ? "border-transparent bg-primary/10 text-primary"
+                      : "border-border bg-card text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <Languages className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline">{t("setlists.detail.pinyin", { defaultValue: "Pinyin" })}</span>
                 </button>
               )}
 
@@ -822,6 +856,7 @@ export function SetlistDetailClient() {
               contents={contents}
               loading={loadingContent}
               showChordsGlobal={showChords}
+              showPinyinGlobal={showPinyin}
               editMode={editPartitions}
               onSelectLine={handleSelectLine}
               onRevert={(itemIndex) => setConfirmRevert(itemIndex)}
