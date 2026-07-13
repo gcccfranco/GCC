@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { Trash2, List, Music, Pencil, Play, MoreHorizontal, Download, Copy, Share2, BellRing } from "lucide-react";
@@ -78,6 +78,19 @@ export function SetlistDetailClient() {
   const [backPath, setBackPath] = useState("/setlists");
 
   const scrollVisible = useScrollDirection();
+  // La barre d'outils peut passer sur deux lignes (flex-wrap) : sa hauteur
+  // réelle est mesurée pour que le contenu ne finisse jamais dessous.
+  const toolbarRef = useRef<HTMLDivElement>(null);
+  const [toolbarH, setToolbarH] = useState(54);
+  useEffect(() => {
+    const el = toolbarRef.current;
+    if (!el) return;
+    const update = () => setToolbarH(el.offsetHeight);
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [setlist]); // la barre n'existe qu'une fois la setlist chargée
   const [songsMap, setSongsMap] = useState<Record<string, SongIndexEntry>>({});
   const [contents, setContents] = useState<Record<string, SongContent>>({});
   const [loadingSetlist, setLoadingSetlist] = useState(true);
@@ -571,18 +584,19 @@ export function SetlistDetailClient() {
   return (
     <div className="min-h-screen bg-background">
       {/* Top bar — même style que SongDetailClient */}
-      <div className={`print:hidden fixed left-0 right-0 top-[var(--nav-h)] z-10 bg-background/95 backdrop-blur border-b border-border transition-transform duration-300 ${ scrollVisible ? "translate-y-0" : "-translate-y-[calc(100%+var(--nav-h))]"}`}>
+      <div ref={toolbarRef} className={`print:hidden fixed left-0 right-0 top-[var(--nav-h)] z-10 bg-background/95 backdrop-blur border-b border-border transition-transform duration-300 ${ scrollVisible ? "translate-y-0" : "-translate-y-[calc(100%+var(--nav-h))]"}`}>
         <div className="max-w-[1080px] mx-auto px-4">
           <div className="flex items-center gap-2 py-[9px] flex-wrap">
 
             {/* ← Retour */}
-            <Link href={backPath} className="text-[13px] font-semibold text-muted-foreground hover:text-foreground flex items-center gap-1 mr-1">
-              <button className="h-8 px-2.5 rounded-[8px] border border-border bg-card text-muted-foreground hover:text-foreground text-[12.5px] font-semibold flex items-center gap-0.5 transition-all duration-150">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M19 12H5m6-7l-7 7 7 7" />
-                </svg>
-                <span className="hidden sm:inline">{t("songs.detail.backToAll")}</span>
-              </button>
+            <Link
+              href={backPath}
+              className="h-8 px-2.5 mr-1 rounded-[8px] border border-border bg-card text-muted-foreground hover:text-foreground text-[12.5px] font-semibold flex items-center gap-0.5 transition-all duration-150"
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M19 12H5m6-7l-7 7 7 7" />
+              </svg>
+              <span className="hidden sm:inline">{t("songs.detail.backToAll")}</span>
             </Link>
 
             {/* Vue toggle — pill identique au transpose pill */}
@@ -655,9 +669,10 @@ export function SetlistDetailClient() {
                   try {
                     document.documentElement.requestFullscreen({ navigationUI: "hide" }).catch(() => {});
                   } catch { /* non supporté */ }
-                  if (setlist && Object.keys(contents).length === 0) {
-                    await loadContents(setlist.items);
-                  }
+                  // Toujours (re)charger : loadContents ne fetch que les chants
+                  // manquants. Sans ça, un chargement partiel de la vue Partitions
+                  // faisait entrer en mode Louange avec des chants absents.
+                  if (setlist) await loadContents(setlist.items);
                   setPerformanceMode(true);
                 }}
                 className="h-8 px-3 rounded-[8px] bg-primary text-primary-foreground text-[12.5px] font-semibold flex items-center gap-1.5 hover:bg-primary/90 transition-all duration-150"
@@ -669,16 +684,16 @@ export function SetlistDetailClient() {
               {/* Prévenir l'équipe — setlist prête (≥ 4 chants) */}
               {canNotifyTeam && (
                 <button
-                  onClick={handleNotifyTeam}
-                  disabled={notifying || realSongCount < 4}
-                  title={
+                  onClick={() =>
                     realSongCount < 4
-                      ? t("setlists.detail.notifyNeedSongs", {
-                          defaultValue: "Ajoute au moins 4 chants pour prévenir l'équipe.",
-                        })
-                      : undefined
+                      ? flashFeedback(t("setlists.detail.notifyNeedSongs"))
+                      : handleNotifyTeam()
                   }
-                  className="h-8 px-2.5 rounded-[8px] border border-border bg-card text-[12.5px] font-semibold flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-all duration-150 disabled:opacity-50"
+                  disabled={notifying}
+                  title={realSongCount < 4 ? t("setlists.detail.notifyNeedSongs") : undefined}
+                  className={`h-8 px-2.5 rounded-[8px] border border-border bg-card text-[12.5px] font-semibold flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-all duration-150 disabled:opacity-50 ${
+                    realSongCount < 4 ? "opacity-60" : ""
+                  }`}
                 >
                   <BellRing className="h-3.5 w-3.5" />
                   <span className="hidden sm:inline">
@@ -743,7 +758,7 @@ export function SetlistDetailClient() {
         </div>
       </div>
 
-      <div className="max-w-2xl mx-auto px-4 py-8 print:px-0 print:py-4 mt-[54px]">
+      <div className="max-w-2xl mx-auto px-4 py-8 print:px-0 print:py-4" style={{ marginTop: toolbarH }}>
         {/* Header setlist */}
         <div className="mb-8 pb-5 border-b border-border print:mb-4">
           <div className="flex items-start gap-3">
@@ -786,7 +801,11 @@ export function SetlistDetailClient() {
         </div>
 
         {/* Contenu selon la vue */}
-        {view === "liste" ? (
+        {setlist.items.length === 0 ? (
+          <p className="text-center py-16 text-sm text-muted-foreground border border-dashed border-border rounded-xl">
+            {t("setlists.detail.emptyItems")}
+          </p>
+        ) : view === "liste" ? (
           <ListView items={setlist.items} songsMap={songsMap} />
         ) : (
           <>

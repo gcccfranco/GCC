@@ -18,19 +18,18 @@ import { SetlistCard } from "@/components/setlists/SetlistCard";
 import { PullToRefresh } from "@/components/layout/PullToRefresh";
 import { useSetlistsNavState } from "@/hooks/useSetlistsNavState";
 
-type Tab = "upcoming" | "archived" | "mine";
-
 export default function SetlistsPage() {
   const { t } = useTranslation();
   const { user, profile, loading: authLoading } = useProfile();
   const [setlists, setSetlists] = useState<FSSetlist[]>([]);
   const [mySetlists, setMySetlists] = useState<FSSetlist[]>([]);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<Tab>("upcoming");
-  const [query, setQuery] = useState("");
-  const [onlyMine, setOnlyMine] = useState(true);
+  const [loadingMine, setLoadingMine] = useState(true);
   const [planning, setPlanning] = useState<PlanningData | null>(null);
-  const { categoryFilter, setCategoryFilter } = useSetlistsNavState();
+  // Onglet, recherche, catégorie : dans l'URL (retour navigateur fidèle).
+  // « Mes services » : mémorisé sur l'appareil (coché par défaut).
+  const { categoryFilter, setCategoryFilter, tab, setTab, query, setQuery, onlyMine, setOnlyMine } =
+    useSetlistsNavState();
 
   const todayStr = useMemo(() => new Date().toISOString().split("T")[0], []);
 
@@ -77,8 +76,9 @@ export default function SetlistsPage() {
   }, [user, authLoading]);
 
   useEffect(() => {
-    if (!user) { setMySetlists([]); return; }
-    getMySetlists(user.uid).then(setMySetlists);
+    if (!user) { setMySetlists([]); setLoadingMine(false); return; }
+    setLoadingMine(true);
+    getMySetlists(user.uid).then(setMySetlists).finally(() => setLoadingMine(false));
   }, [user]);
 
   // Filtre commun : catégorie + recherche
@@ -114,12 +114,12 @@ export default function SetlistsPage() {
   }, [tab, setlists, mySetlists, matches, todayStr, myCategories, user, onlyMine, profile, myServiceKeys]);
 
   const emptyMessage = query
-    ? "Aucun résultat pour cette recherche."
+    ? t("setlists.list.emptySearch")
     : tab === "mine"
     ? t("setlists.list.emptyPrivate")
     : tab === "upcoming"
-    ? "Aucun culte à venir."
-    : "Aucune archive.";
+    ? t("setlists.list.emptyUpcoming")
+    : t("setlists.list.emptyArchived");
 
   const tabBtnClass = (active: boolean) =>
     `flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 font-medium transition-colors text-sm ${
@@ -171,7 +171,7 @@ export default function SetlistsPage() {
           <UserPen className="h-8 w-8 mx-auto text-muted-foreground" />
           <p className="text-sm text-muted-foreground">{t("setlists.list.profileRequired")}</p>
           <Link
-            href="/profil"
+            href="/profil?from=/setlists"
             className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
           >
             {t("common.header.profile")}
@@ -224,7 +224,7 @@ export default function SetlistsPage() {
               enterKeyHint="search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Rechercher par titre, leader, date…"
+              placeholder={t("setlists.list.searchPlaceholder")}
               className="w-full pl-9 pr-9 py-2.5 rounded-xl border border-border bg-card text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-ring/50 focus:ring-[3px] focus:ring-ring/10 text-[16px] sm:text-sm [&::-webkit-search-cancel-button]:hidden"
             />
             {query && (
@@ -241,6 +241,7 @@ export default function SetlistsPage() {
           {profile?.planningName && tab !== "mine" && (
             <button
               type="button"
+              aria-pressed={onlyMine}
               onClick={() => setOnlyMine((v) => !v)}
               className={`inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-semibold border transition-colors ${
                 onlyMine
@@ -248,7 +249,7 @@ export default function SetlistsPage() {
                   : "bg-background border-border text-muted-foreground hover:text-foreground"
               }`}
             >
-              {onlyMine ? "✓ Mes services" : "Mes services"}
+              {onlyMine ? `✓ ${t("setlists.list.myServicesFilter")}` : t("setlists.list.myServicesFilter")}
             </button>
           )}
 
@@ -259,14 +260,14 @@ export default function SetlistsPage() {
               className="flex-1 h-9 px-3 rounded-lg border border-border bg-background text-foreground text-[16px] sm:text-sm focus:outline-none focus:ring-2 focus:ring-ring/30"
             >
               <option value="Toutes">{t("setlists.list.allCategories")}</option>
-              <optgroup label="Réunions principales">
+              <optgroup label={t("setlists.list.mainMeetings")}>
                 {ALL_CATEGORIES.slice(0, 4).filter((cat) => myCategories.includes(cat)).map((cat) => (
                   <option key={cat} value={cat}>
                     {t("categories." + cat, { defaultValue: cat })}
                   </option>
                 ))}
               </optgroup>
-              <optgroup label="Groupes">
+              <optgroup label={t("setlists.list.groupsLabel")}>
                 {ALL_CATEGORIES.slice(4).filter((cat) => myCategories.includes(cat)).map((cat) => (
                   <option key={cat} value={cat}>
                     {t("categories." + cat, { defaultValue: cat })}
@@ -287,7 +288,7 @@ export default function SetlistsPage() {
         </div>
 
         {/* ── Contenu ── */}
-        {loading && tab !== "mine" ? (
+        {(tab === "mine" ? loadingMine : loading) ? (
           <div className="text-sm text-muted-foreground text-center py-16">
             {t("common.loading")}
           </div>
