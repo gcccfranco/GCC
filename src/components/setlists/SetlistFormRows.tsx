@@ -21,6 +21,7 @@ import {
   RotateCcw,
   MessageSquare,
   ArrowRight,
+  SlidersHorizontal,
 } from "lucide-react";
 import { ALL_KEYS } from "@/lib/transpose";
 import { useTranslation } from "react-i18next";
@@ -28,10 +29,17 @@ import { useDefaultSensors } from "@/lib/dnd/sensors";
 import { nextUid } from "@/lib/uid";
 import type { FormItem, FormSectionItem, FormFusionItem, FormTransitionItem, FusionMixedSectionForm } from "@/lib/setlist/formItems";
 import type { SectionSummary } from "@/types/song";
+import { NUANCES, nuanceFull } from "@/lib/setlist/nuances";
 
-// ─── Champs note / transition repliables ─────────────────────────────────────
+// ─── Champs note / transition / nuance repliables ────────────────────────────
 
-type AnnotationField = "note" | "transition" | null;
+type AnnotationField = "note" | "transition" | "nuance" | null;
+
+const FIELD_STYLE = {
+  note: { Icon: MessageSquare, filled: "bg-secondary text-foreground", ring: "ring-1 ring-foreground/30", title: "Note" },
+  transition: { Icon: ArrowRight, filled: "bg-amber-500/15 text-amber-600 dark:text-amber-400", ring: "ring-1 ring-amber-400/50", title: "Transition" },
+  nuance: { Icon: SlidersHorizontal, filled: "bg-violet-500/15 text-violet-600 dark:text-violet-400", ring: "ring-1 ring-violet-400/50", title: "Nuance" },
+} as const;
 
 function FieldToggleBtn({
   kind,
@@ -39,28 +47,71 @@ function FieldToggleBtn({
   active,
   onClick,
 }: {
-  kind: "note" | "transition";
+  kind: "note" | "transition" | "nuance";
   filled: boolean;
   active: boolean;
   onClick: () => void;
 }) {
-  const Icon = kind === "note" ? MessageSquare : ArrowRight;
-  const filledClass =
-    kind === "note"
-      ? "bg-secondary text-foreground"
-      : "bg-amber-500/15 text-amber-600 dark:text-amber-400";
-  const activeRing = kind === "note" ? "ring-1 ring-foreground/30" : "ring-1 ring-amber-400/50";
+  const { Icon, filled: filledClass, ring, title } = FIELD_STYLE[kind];
   return (
     <button
       type="button"
-      title={kind === "note" ? "Note" : "Transition"}
+      title={title}
       onClick={onClick}
       className={`h-7 w-7 flex items-center justify-center rounded-md shrink-0 transition-colors ${
         filled ? filledClass : "text-muted-foreground/50 hover:text-foreground hover:bg-muted"
-      } ${active ? activeRing : ""}`}
+      } ${active ? ring : ""}`}
     >
       <Icon className="h-3.5 w-3.5" />
     </button>
+  );
+}
+
+/** Éditeur de nuance : étiquettes prédéfinies (violet) + texte libre. */
+function NuanceFieldInput({
+  tags,
+  note,
+  onTagsChange,
+  onNoteChange,
+}: {
+  tags: string[];
+  note: string;
+  onTagsChange: (tags: string[]) => void;
+  onNoteChange: (note: string) => void;
+}) {
+  const { t } = useTranslation();
+  const toggle = (id: string) =>
+    onTagsChange(tags.includes(id) ? tags.filter((x) => x !== id) : [...tags, id]);
+  return (
+    <div className="px-2 pb-2 pl-7 space-y-1.5">
+      <div className="flex flex-wrap gap-1">
+        {NUANCES.map((n) => {
+          const on = tags.includes(n.id);
+          return (
+            <button
+              key={n.id}
+              type="button"
+              title={nuanceFull(n.id)}
+              onClick={() => toggle(n.id)}
+              className={`text-[11px] px-1.5 py-0.5 rounded border transition-colors ${
+                on
+                  ? "border-violet-400 bg-violet-100 text-violet-700 dark:bg-violet-500/20 dark:text-violet-300 dark:border-violet-500/50 font-semibold"
+                  : "border-border text-muted-foreground hover:text-foreground hover:bg-muted"
+              }`}
+            >
+              {n.label}
+            </button>
+          );
+        })}
+      </div>
+      <input
+        type="text"
+        placeholder={t("setlists.form.nuanceNotePlaceholder", { defaultValue: "Précision libre…" })}
+        value={note}
+        onChange={(e) => onNoteChange(e.target.value)}
+        className="w-full text-[11px] px-1.5 py-1 border border-violet-300/70 dark:border-violet-700/60 rounded bg-violet-50/50 dark:bg-violet-950/10 text-foreground placeholder:text-violet-400/70 dark:placeholder:text-violet-600/60 focus:outline-none focus:ring-1 focus:ring-violet-400/40"
+      />
+    </div>
   );
 }
 
@@ -112,12 +163,16 @@ export function SortableSectionRow({
   onRemove,
   onNoteChange,
   onTransitionChange,
+  onNuanceTagsChange,
+  onNuanceNoteChange,
   hideNote,
 }: {
   item: FormSectionItem;
   onRemove: () => void;
   onNoteChange: (note: string) => void;
   onTransitionChange?: (transition: string) => void;
+  onNuanceTagsChange?: (tags: string[]) => void;
+  onNuanceNoteChange?: (note: string) => void;
   hideNote?: boolean;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
@@ -152,6 +207,12 @@ export function SortableSectionRow({
               onClick={() => setExpanded(expanded === "note" ? null : "note")}
             />
             <FieldToggleBtn
+              kind="nuance"
+              filled={item.nuanceTags.length > 0 || !!item.nuanceNote.trim()}
+              active={expanded === "nuance"}
+              onClick={() => setExpanded(expanded === "nuance" ? null : "nuance")}
+            />
+            <FieldToggleBtn
               kind="transition"
               filled={!!(item.transition ?? "").trim()}
               active={expanded === "transition"}
@@ -173,6 +234,14 @@ export function SortableSectionRow({
           value={item.note}
           onChange={onNoteChange}
           onClose={() => setExpanded(null)}
+        />
+      )}
+      {!hideNote && expanded === "nuance" && (
+        <NuanceFieldInput
+          tags={item.nuanceTags}
+          note={item.nuanceNote}
+          onTagsChange={(tags) => onNuanceTagsChange?.(tags)}
+          onNoteChange={(note) => onNuanceNoteChange?.(note)}
         />
       )}
       {!hideNote && expanded === "transition" && (
@@ -224,7 +293,7 @@ export function SectionStructureEditor({
               const uid = `${s.id}-${Date.now()}${Math.floor(Math.random() * 1000)}`;
               onChange([
                 ...sectionItems,
-                { uid, sectionId: s.id, name: s.name, note: "", transition: "" },
+                { uid, sectionId: s.id, name: s.name, note: "", transition: "", nuanceTags: [], nuanceNote: "" },
               ]);
             }}
             className="flex items-center gap-0.5 text-[11px] px-2 py-0.5 rounded border border-border hover:bg-muted text-foreground transition-colors"
@@ -252,6 +321,16 @@ export function SectionStructureEditor({
                   next[idx] = { ...next[idx], transition };
                   onChange(next);
                 }}
+                onNuanceTagsChange={(nuanceTags) => {
+                  const next = [...sectionItems];
+                  next[idx] = { ...next[idx], nuanceTags };
+                  onChange(next);
+                }}
+                onNuanceNoteChange={(nuanceNote) => {
+                  const next = [...sectionItems];
+                  next[idx] = { ...next[idx], nuanceNote };
+                  onChange(next);
+                }}
                 hideNote={hideNotes}
               />
             ))}
@@ -274,11 +353,15 @@ function SortableMixedRow({
   onRemove,
   onNoteChange,
   onTransitionChange,
+  onNuanceTagsChange,
+  onNuanceNoteChange,
 }: {
   item: FusionMixedSectionForm;
   onRemove: () => void;
   onNoteChange: (note: string) => void;
   onTransitionChange: (transition: string) => void;
+  onNuanceTagsChange: (tags: string[]) => void;
+  onNuanceNoteChange: (note: string) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: item.uid });
@@ -315,6 +398,12 @@ function SortableMixedRow({
           onClick={() => setExpanded(expanded === "note" ? null : "note")}
         />
         <FieldToggleBtn
+          kind="nuance"
+          filled={item.nuanceTags.length > 0 || !!item.nuanceNote.trim()}
+          active={expanded === "nuance"}
+          onClick={() => setExpanded(expanded === "nuance" ? null : "nuance")}
+        />
+        <FieldToggleBtn
           kind="transition"
           filled={!!(item.transition ?? "").trim()}
           active={expanded === "transition"}
@@ -334,6 +423,14 @@ function SortableMixedRow({
           value={item.note}
           onChange={onNoteChange}
           onClose={() => setExpanded(null)}
+        />
+      )}
+      {expanded === "nuance" && (
+        <NuanceFieldInput
+          tags={item.nuanceTags}
+          note={item.nuanceNote}
+          onTagsChange={onNuanceTagsChange}
+          onNoteChange={onNuanceNoteChange}
         />
       )}
       {expanded === "transition" && (
@@ -380,6 +477,8 @@ function MixedStructureEditor({
         songTitle: song.song.title,
         note: si.note,
         transition: si.transition ?? "",
+        nuanceTags: si.nuanceTags ?? [],
+        nuanceNote: si.nuanceNote ?? "",
       },
     ]);
   }
@@ -441,6 +540,16 @@ function MixedStructureEditor({
                 onTransitionChange={(transition) => {
                   const next = [...mixed];
                   next[idx] = { ...next[idx], transition };
+                  onChangeMixed(next);
+                }}
+                onNuanceTagsChange={(nuanceTags) => {
+                  const next = [...mixed];
+                  next[idx] = { ...next[idx], nuanceTags };
+                  onChangeMixed(next);
+                }}
+                onNuanceNoteChange={(nuanceNote) => {
+                  const next = [...mixed];
+                  next[idx] = { ...next[idx], nuanceNote };
                   onChangeMixed(next);
                 }}
               />
@@ -604,6 +713,48 @@ export function SongRow({
   );
 }
 
+// ─── Ligne note/nuance d'une section (carte fusion, sans structure mixte) ─────
+
+function FusionSectionNoteRow({
+  item,
+  onPatch,
+}: {
+  item: FormSectionItem;
+  onPatch: (patch: Partial<FormSectionItem>) => void;
+}) {
+  const { t } = useTranslation();
+  const [showNuance, setShowNuance] = useState(false);
+  const hasNuance = item.nuanceTags.length > 0 || !!item.nuanceNote.trim();
+  return (
+    <div className="rounded border border-transparent">
+      <div className="flex items-center gap-2">
+        <span className="text-[10px] text-muted-foreground w-20 shrink-0 truncate">{item.name}</span>
+        <input
+          type="text"
+          placeholder={t("setlists.form.songNotePlaceholder")}
+          value={item.note}
+          onChange={(e) => onPatch({ note: e.target.value })}
+          className="flex-1 text-[11px] px-1.5 py-0.5 border border-border rounded bg-muted/50 text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-primary/30"
+        />
+        <FieldToggleBtn
+          kind="nuance"
+          filled={hasNuance}
+          active={showNuance}
+          onClick={() => setShowNuance((v) => !v)}
+        />
+      </div>
+      {showNuance && (
+        <NuanceFieldInput
+          tags={item.nuanceTags}
+          note={item.nuanceNote}
+          onTagsChange={(nuanceTags) => onPatch({ nuanceTags })}
+          onNoteChange={(nuanceNote) => onPatch({ nuanceNote })}
+        />
+      )}
+    </div>
+  );
+}
+
 // ─── Song card inside a fusion (not sortable at top level) ────────────────────
 
 function FusionSongCard({
@@ -669,24 +820,19 @@ function FusionSongCard({
         </div>
       </div>
 
-      {/* Notes par section et structure — masqués si structure mélangée active */}
+      {/* Notes/nuances par section et structure — masqués si structure mélangée active */}
       {!hasMixed && item.sectionItems.length > 0 && (
         <div className="border-t border-border px-2.5 pb-2 pt-1.5 space-y-1">
           {item.sectionItems.map((si, idx) => (
-            <div key={si.uid} className="flex items-center gap-2">
-              <span className="text-[10px] text-muted-foreground w-20 shrink-0 truncate">{si.name}</span>
-              <input
-                type="text"
-                placeholder={t("setlists.form.songNotePlaceholder")}
-                value={si.note}
-                onChange={(e) => {
-                  const next = [...item.sectionItems];
-                  next[idx] = { ...next[idx], note: e.target.value };
-                  onSectionItemsChange(next);
-                }}
-                className="flex-1 text-[11px] px-1.5 py-0.5 border border-border rounded bg-muted/50 text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-primary/30"
-              />
-            </div>
+            <FusionSectionNoteRow
+              key={si.uid}
+              item={si}
+              onPatch={(patch) => {
+                const next = [...item.sectionItems];
+                next[idx] = { ...next[idx], ...patch };
+                onSectionItemsChange(next);
+              }}
+            />
           ))}
         </div>
       )}
@@ -740,6 +886,8 @@ export function FusionRow({
           songTitle: song.song.title,
           note: si.note,
           transition: si.transition ?? "",
+          nuanceTags: si.nuanceTags ?? [],
+          nuanceNote: si.nuanceNote ?? "",
         }))
       );
       onChangeMixed(defaultMixed);
