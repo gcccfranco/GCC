@@ -217,6 +217,7 @@
       "structure": "结构",
       "emptySections": "无段落 — 请点击上方按钮添加段落。",
       "songNotePlaceholder": "备注（选填）…",
+      "nuanceNotePlaceholder": "补充说明…",
       "reorderLabel": "拖动排序",
       "removeLabel": "移除",
       "selectMode": "选择",
