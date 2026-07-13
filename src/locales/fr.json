@@ -13,7 +13,9 @@
       "annonces": "Annonces",
       "profile": "Mon profil",
       "signup": "Créer un compte",
-      "guide": "Guide d'utilisation"
+      "guide": "Guide d'utilisation",
+      "notify": "Notifier",
+      "admin": "Admin"
     },
     "buttons": {
       "reset": "Réinitialiser",
@@ -35,7 +37,22 @@
     "moreActions": "Plus d'actions",
     "retry": "Réessayer",
     "confirm": "Valider",
-    "cancel": "Annuler"
+    "cancel": "Annuler",
+    "report": "Signaler un problème",
+    "pull": {
+      "release": "Relâcher pour actualiser",
+      "refreshing": "Actualisation…"
+    },
+    "errorPage": {
+      "title": "Une erreur est survenue",
+      "body": "Recharge la page — si le problème persiste, signale-le via le menu.",
+      "reload": "Recharger la page"
+    },
+    "notFound": {
+      "title": "Page introuvable",
+      "body": "Cette page n'existe pas ou a été déplacée.",
+      "cta": "Voir les chants"
+    }
   },
   "songs": {
     "list": {
@@ -88,7 +105,12 @@
     "submitLoading": "Connexion…",
     "backToSetlists": "← Revenir aux chants",
     "errorInvalid": "Identifiants incorrects. Vérifie l'email et le mot de passe.",
-    "signupLink": "Pas encore de compte ? Créer un compte"
+    "signupLink": "Pas encore de compte ? Créer un compte",
+    "forgotPassword": "Mot de passe oublié ?",
+    "resetNeedEmail": "Saisis d'abord ton email ci-dessus.",
+    "resetSent": "Email de réinitialisation envoyé — vérifie ta boîte mail (et les spams).",
+    "resetError": "Envoi impossible — vérifie l'adresse et réessaie.",
+    "errorNetwork": "Problème de réseau — vérifie ta connexion et réessaie."
   },
   "setlists": {
     "list": {
@@ -105,7 +127,16 @@
       "songCounter_one": "{{count}} chant",
       "songCounter_other": "{{count}} chants",
       "loginRequired": "Les setlists sont réservées aux membres — connecte-toi pour voir celles de tes services.",
-      "profileRequired": "Complète ton profil pour voir les setlists de tes services."
+      "profileRequired": "Complète ton profil pour voir les setlists de tes services.",
+      "upcoming": "À venir",
+      "archived": "Archives",
+      "emptySearch": "Aucun résultat pour cette recherche.",
+      "emptyUpcoming": "Aucun culte à venir.",
+      "emptyArchived": "Aucune archive.",
+      "searchPlaceholder": "Rechercher par titre, leader, date…",
+      "myServicesFilter": "Mes services",
+      "mainMeetings": "Réunions principales",
+      "groupsLabel": "Groupes"
     },
     "detail": {
       "backToAll": "←",
@@ -133,7 +164,12 @@
       "readOnly": "Lecture seule",
       "editableBy": "Modifiable par : créateur, musiciens et présidence de {{category}}, et admins",
       "editableByOwner": "Privée — visible et modifiable uniquement par son créateur",
-      "loadError": "Impossible de charger la setlist. Vérifie ta connexion."
+      "loadError": "Impossible de charger la setlist. Vérifie ta connexion.",
+      "notifyTeam": "Prévenir l'équipe",
+      "notifySent": "Équipe prévenue ({{count}} notifications envoyées).",
+      "notifyError": "Échec de l'envoi.",
+      "notifyNeedSongs": "Ajoute au moins 4 chants pour prévenir l'équipe.",
+      "emptyItems": "Aucun chant dans cette setlist pour l'instant."
     },
     "form": {
       "titleNew": "Nouvelle setlist",
@@ -197,7 +233,8 @@
       "visibilityLabel": "Visibilité",
       "privateToggle": "Setlist privée (visible uniquement par toi)",
       "privateLoginRequired": "Connecte-toi pour créer une setlist privée.",
-      "addTransition": "Transition"
+      "addTransition": "Transition",
+      "transitionLabel": "Transition"
     },
     "contentEdit": {
       "toggle": "Adapter",
@@ -534,6 +571,144 @@
           "Une fois complété, le profil n'est modifiable que par un responsable : signale-lui toute erreur."
         ]
       }
+    }
+  },
+  "annonces": {
+    "title": "Annonces",
+    "loginPrompt": "Connecte-toi pour voir les annonces.",
+    "login": "Se connecter",
+    "new": "Nouvelle annonce",
+    "all": "Toutes",
+    "pinned": "Épinglée",
+    "edit": "Modifier",
+    "delete": "Supprimer",
+    "deleteYes": "Oui",
+    "deleteNo": "Non",
+    "empty": "Aucune annonce pour l'instant.",
+    "emptyFor": "Aucune annonce pour {{section}} pour l'instant.",
+    "visibleUntil": "visible jusqu'au {{date}}",
+    "publish": "Publier l'annonce",
+    "save": "Enregistrer",
+    "closeLightbox": "Fermer",
+    "form": {
+      "section": "Section",
+      "titleLabel": "Titre",
+      "titlePlaceholder": "ex. Répétition exceptionnelle samedi",
+      "textLabel": "Texte",
+      "textPlaceholder": "Le contenu de l'annonce… (les liens collés ici seront cliquables)",
+      "links": "Liens",
+      "addLink": "Ajouter un lien",
+      "linkLabelPlaceholder": "Libellé (ex. Formulaire d'inscription)",
+      "linkRemove": "Retirer le lien",
+      "images": "Images",
+      "imagesHint": "(max {{max}}, compressées automatiquement)",
+      "addImage": "Ajouter une image",
+      "compressing": "Compression…",
+      "removeImage": "Retirer l'image",
+      "pin": "Épingler en haut de la liste",
+      "expiresLabel": "Disparaît après le (optionnel)",
+      "removeExpiry": "Retirer la date d'expiration",
+      "cancel": "Annuler",
+      "saving": "Enregistrement…",
+      "errorTitle": "Donne un titre à l'annonce.",
+      "errorEmpty": "L'annonce est vide — ajoute du texte ou une image.",
+      "errorLink": "Le lien « {{url}} » doit commencer par http:// ou https://",
+      "errorImages": "Limite d'images atteinte pour cette annonce (poids total).",
+      "errorImageAdd": "Erreur lors de l'ajout de l'image.",
+      "errorSave": "Erreur lors de l'enregistrement."
+    }
+  },
+  "planning": {
+    "welcome": "Bienvenue",
+    "title": "GCC — Planning des services",
+    "subtitle": "Centralisez et consultez en temps réel tous les plannings des services.",
+    "nextService": "Ton prochain service",
+    "seeAllServices": "Voir tous mes services →",
+    "thisSunday": "Ce dimanche — {{date}}",
+    "dataPending": "Données à venir",
+    "staleData": "Planning en ligne inaccessible — données locales, possiblement périmées.",
+    "legendCurrentSunday": "Dimanche de la semaine courante",
+    "sainteCene": "Sainte Cène",
+    "unpublishedTooltip": "Non publié — visible par les responsables uniquement",
+    "tabs": {
+      "accueil": "Accueil",
+      "culte": "Culte Franco",
+      "table": "Prépa. Table",
+      "groupes": "Groupes",
+      "edd": "EDD",
+      "campus": "Campus",
+      "intergroupe": "Intergroupe",
+      "interfranco": "Interfranco"
+    },
+    "roles": {
+      "date": "Date",
+      "presidence": "Présidence",
+      "choristes": "Choristes",
+      "choriste1": "Choriste 1",
+      "choriste2": "Choriste 2",
+      "choriste3": "Choriste 3",
+      "piano": "Piano",
+      "guitare": "Guitare",
+      "batterie": "Batterie",
+      "sono": "Sono",
+      "sonoLive": "Sono+Live",
+      "ppt": "PPT",
+      "orateur": "Orateur",
+      "trad": "Trad.",
+      "musiciens": "Musiciens",
+      "suppleant": "Suppléant",
+      "cajon": "Cajon",
+      "cajonBatt": "Cajon/Batt.",
+      "theme": "Thème",
+      "pianiste": "Pianiste"
+    },
+    "table": {
+      "myName": "Mon prénom…",
+      "myDates": "Mes dates",
+      "noData": "Aucune donnée",
+      "thisWeek": "Cette semaine",
+      "clear": "Effacer"
+    },
+    "pages": {
+      "culte": "Culte Franco",
+      "table": "Prépa. Table du Seigneur",
+      "groupes": "Groupes",
+      "edd": "EDD — École du Dimanche",
+      "campus": "Campus",
+      "intergroupe": "Intergroupe",
+      "interfranco": "Interfranco"
+    },
+    "groupes": {
+      "paix": "Paix",
+      "fidelite": "Fidélité",
+      "bonte": "Bonté",
+      "planningGroupe": "Planning groupe",
+      "planningMusiciens": "Planning musiciens 🎵"
+    },
+    "edd": {
+      "p1": "Janv–Fév",
+      "p2": "Mars–Avr",
+      "p3": "Mai–Jun",
+      "p4": "Juil–Aoû",
+      "p5": "Sep–Oct",
+      "p6": "Nov–Déc"
+    },
+    "campus": {
+      "louange": "Louange",
+      "repetition": "Répétition",
+      "repetitionLabel": "Répétition :",
+      "atTime": "à {{time}}",
+      "noSeance": "Aucune séance",
+      "morning": "Matin",
+      "evening": "Soir",
+      "presChoristes": "Présidence & choristes",
+      "musiciens": "Musiciens",
+      "chants": "Chants",
+      "chantN": "Chant {{n}}"
+    },
+    "verse": {
+      "text": "« Tout ce que vous faites, faites-le de bon cœur, comme pour le Seigneur et non pour des hommes, sachant que vous recevrez du Seigneur l'héritage pour récompense. Servez Christ, le Seigneur. »",
+      "ref": "— Colossiens 3 : 23-24"
     }
   }
 }

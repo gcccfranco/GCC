@@ -13,7 +13,9 @@
       "annonces": "公告",
       "profile": "我的资料",
       "signup": "注册账号",
-      "guide": "使用指南"
+      "guide": "使用指南",
+      "notify": "通知",
+      "admin": "管理"
     },
     "buttons": {
       "reset": "重置",
@@ -35,7 +37,22 @@
     "moreActions": "更多操作",
     "retry": "重试",
     "confirm": "确认",
-    "cancel": "取消"
+    "cancel": "取消",
+    "report": "报告问题",
+    "pull": {
+      "release": "松开以刷新",
+      "refreshing": "正在刷新…"
+    },
+    "errorPage": {
+      "title": "出错了",
+      "body": "请重新加载页面——如果问题仍然存在，请通过菜单报告。",
+      "reload": "重新加载页面"
+    },
+    "notFound": {
+      "title": "页面不存在",
+      "body": "该页面不存在或已被移动。",
+      "cta": "查看诗歌"
+    }
   },
   "songs": {
     "list": {
@@ -88,7 +105,12 @@
     "submitLoading": "登录中…",
     "backToSetlists": "← 返回歌曲列表",
     "errorInvalid": "登录凭证错误。请检查电子邮箱和密码。",
-    "signupLink": "还没有账号？注册"
+    "signupLink": "还没有账号？注册",
+    "forgotPassword": "忘记密码？",
+    "resetNeedEmail": "请先在上方输入你的邮箱。",
+    "resetSent": "重置邮件已发送——请查收邮箱（包括垃圾邮件）。",
+    "resetError": "发送失败——请检查邮箱地址后重试。",
+    "errorNetwork": "网络出错——请检查网络后重试。"
   },
   "setlists": {
     "list": {
@@ -105,7 +127,16 @@
       "songCounter_one": "{{count}} 首诗歌",
       "songCounter_other": "{{count}} 首诗歌",
       "loginRequired": "歌单仅向教会成员开放——请登录查看你服事的歌单。",
-      "profileRequired": "请完善个人资料以查看你服事的歌单。"
+      "profileRequired": "请完善个人资料以查看你服事的歌单。",
+      "upcoming": "即将到来",
+      "archived": "历史",
+      "emptySearch": "没有找到相关结果。",
+      "emptyUpcoming": "暂无即将到来的崇拜。",
+      "emptyArchived": "暂无历史记录。",
+      "searchPlaceholder": "按标题、带领人或日期搜索…",
+      "myServicesFilter": "我的服侍",
+      "mainMeetings": "主要聚会",
+      "groupsLabel": "团契小组"
     },
     "detail": {
       "backToAll": "←",
@@ -133,7 +164,12 @@
       "readOnly": "只读",
       "editableBy": "可编辑者：创建者、{{category}}的乐手／主领和管理员",
       "editableByOwner": "私人——仅创建者可见和编辑",
-      "loadError": "无法加载歌单，请检查网络连接。"
+      "loadError": "无法加载歌单，请检查网络连接。",
+      "notifyTeam": "通知团队",
+      "notifySent": "已通知团队（发送了 {{count}} 条通知）。",
+      "notifyError": "发送失败。",
+      "notifyNeedSongs": "歌单至少需要 4 首诗歌才能通知团队。",
+      "emptyItems": "这份歌单暂时还没有诗歌。"
     },
     "form": {
       "titleNew": "新建歌单",
@@ -197,7 +233,8 @@
       "visibilityLabel": "可见性",
       "privateToggle": "私密歌单（仅自己可见）",
       "privateLoginRequired": "请登录以创建私密歌单。",
-      "addTransition": "过渡"
+      "addTransition": "过渡",
+      "transitionLabel": "过渡"
     },
     "contentEdit": {
       "toggle": "调整",
@@ -534,6 +571,144 @@
           "资料一旦完善，只有负责人可以修改：如有错误请告知他们。"
         ]
       }
+    }
+  },
+  "annonces": {
+    "title": "公告",
+    "loginPrompt": "请登录后查看公告。",
+    "login": "登录",
+    "new": "发布公告",
+    "all": "全部",
+    "pinned": "置顶",
+    "edit": "编辑",
+    "delete": "删除",
+    "deleteYes": "是",
+    "deleteNo": "否",
+    "empty": "暂时没有公告。",
+    "emptyFor": "{{section}}暂时没有公告。",
+    "visibleUntil": "显示至 {{date}}",
+    "publish": "发布公告",
+    "save": "保存",
+    "closeLightbox": "关闭",
+    "form": {
+      "section": "版块",
+      "titleLabel": "标题",
+      "titlePlaceholder": "例如：周六临时排练",
+      "textLabel": "内容",
+      "textPlaceholder": "公告内容…（粘贴的链接可以点击）",
+      "links": "链接",
+      "addLink": "添加链接",
+      "linkLabelPlaceholder": "名称（例如：报名表）",
+      "linkRemove": "移除链接",
+      "images": "图片",
+      "imagesHint": "（最多 {{max}} 张，自动压缩）",
+      "addImage": "添加图片",
+      "compressing": "压缩中…",
+      "removeImage": "移除图片",
+      "pin": "置顶显示",
+      "expiresLabel": "过期日期（可选）",
+      "removeExpiry": "移除过期日期",
+      "cancel": "取消",
+      "saving": "保存中…",
+      "errorTitle": "请给公告填写标题。",
+      "errorEmpty": "公告内容为空——请添加文字或图片。",
+      "errorLink": "链接“{{url}}”必须以 http:// 或 https:// 开头",
+      "errorImages": "图片总大小已达上限。",
+      "errorImageAdd": "添加图片时出错。",
+      "errorSave": "保存时出错。"
+    }
+  },
+  "planning": {
+    "welcome": "欢迎",
+    "title": "GCC — 服侍安排表",
+    "subtitle": "在这里集中查看各项服侍的最新安排。",
+    "nextService": "你的下一次服侍",
+    "seeAllServices": "查看我的所有服侍 →",
+    "thisSunday": "本主日 — {{date}}",
+    "dataPending": "数据待更新",
+    "staleData": "无法获取在线安排——当前为本地数据，可能已过期。",
+    "legendCurrentSunday": "本周主日",
+    "sainteCene": "圣餐",
+    "unpublishedTooltip": "尚未发布——仅负责人可见",
+    "tabs": {
+      "accueil": "首页",
+      "culte": "法语崇拜",
+      "table": "圣餐预备",
+      "groupes": "团契",
+      "edd": "主日学",
+      "campus": "夏令营",
+      "intergroupe": "联合聚会",
+      "interfranco": "法语团契聚会"
+    },
+    "roles": {
+      "date": "日期",
+      "presidence": "司会",
+      "choristes": "和声",
+      "choriste1": "和声 1",
+      "choriste2": "和声 2",
+      "choriste3": "和声 3",
+      "piano": "钢琴",
+      "guitare": "吉他",
+      "batterie": "架子鼓",
+      "sono": "音控",
+      "sonoLive": "音控+直播",
+      "ppt": "投影",
+      "orateur": "讲员",
+      "trad": "翻译",
+      "musiciens": "乐手",
+      "suppleant": "替补",
+      "cajon": "箱鼓",
+      "cajonBatt": "箱鼓/鼓",
+      "theme": "主题",
+      "pianiste": "钢琴"
+    },
+    "table": {
+      "myName": "我的名字…",
+      "myDates": "我的日期",
+      "noData": "暂无数据",
+      "thisWeek": "本周",
+      "clear": "清除"
+    },
+    "pages": {
+      "culte": "法语崇拜",
+      "table": "圣餐预备",
+      "groupes": "团契",
+      "edd": "主日学",
+      "campus": "夏令营",
+      "intergroupe": "联合聚会",
+      "interfranco": "法语团契聚会"
+    },
+    "groupes": {
+      "paix": "和平",
+      "fidelite": "信实",
+      "bonte": "良善",
+      "planningGroupe": "团契安排",
+      "planningMusiciens": "乐手安排 🎵"
+    },
+    "edd": {
+      "p1": "1–2月",
+      "p2": "3–4月",
+      "p3": "5–6月",
+      "p4": "7–8月",
+      "p5": "9–10月",
+      "p6": "11–12月"
+    },
+    "campus": {
+      "louange": "敬拜",
+      "repetition": "排练",
+      "repetitionLabel": "排练：",
+      "atTime": "{{time}}",
+      "noSeance": "暂无场次",
+      "morning": "上午",
+      "evening": "晚上",
+      "presChoristes": "司会与和声",
+      "musiciens": "乐手",
+      "chants": "诗歌",
+      "chantN": "诗歌 {{n}}"
+    },
+    "verse": {
+      "text": "「无论做什么，都要从心里做，像是给主做的，不是给人做的，因为你们知道从主那里必得着基业为赏赐。你们所侍奉的乃是主基督。」",
+      "ref": "— 歌罗西书 3:23-24"
     }
   }
 }
