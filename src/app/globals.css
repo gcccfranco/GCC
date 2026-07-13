@@ -5,6 +5,14 @@
 @layer utilities {
   .no-scrollbar::-webkit-scrollbar { display: none; }
   .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+  /* Masqué uniquement sur un vrai poste desktop (pointeur fin = souris ET écran
+     large). Une tablette tactile en paysage (≥1024px mais pointeur grossier)
+     n'est PAS masquée → elle garde la nav à portée de pouce, contrairement à
+     `lg:hidden` qui coupait dès 1024px quel que soit l'appareil. */
+  @media (pointer: fine) and (min-width: 1024px) {
+    .hide-on-desktop { display: none !important; }
+  }
 }
 
 @layer base {

@@ -15,8 +15,10 @@ const TABS = [
 ];
 
 /**
- * Barre d'onglets fixée en bas d'écran (mobile uniquement) : met les 4
- * destinations quotidiennes à portée de pouce. Membres connectés seulement —
+ * Barre d'onglets fixée en bas d'écran : met les 4 destinations quotidiennes à
+ * portée de pouce. Visible sur tout appareil tactile (téléphone ET tablette, y
+ * compris iPad en paysage ≥1024px) ; masquée seulement sur un poste desktop
+ * (souris + grand écran, via `.hide-on-desktop`). Membres connectés seulement —
  * le menu hamburger reste pour les pages secondaires. Masquée en plein écran
  * (vue partition / pupitre) pour ne jamais recouvrir une partition ; le mode
  * louange (z-9999) passe par-dessus de toute façon.
@@ -41,10 +43,10 @@ export function MobileTabBar() {
   return (
     <>
       {/* Cale en flux : le contenu ne finit pas caché derrière la barre */}
-      <div aria-hidden className="lg:hidden h-[calc(56px+env(safe-area-inset-bottom))] print:hidden" />
+      <div aria-hidden className="hide-on-desktop h-[calc(56px+env(safe-area-inset-bottom))] print:hidden" />
       <nav
         aria-label="Navigation principale"
-        className="lg:hidden print:hidden fixed bottom-0 inset-x-0 z-40 border-t border-border bg-background/95 backdrop-blur-md pb-[env(safe-area-inset-bottom)]"
+        className="hide-on-desktop print:hidden fixed bottom-0 inset-x-0 z-40 border-t border-border bg-background/95 backdrop-blur-md pb-[env(safe-area-inset-bottom)]"
       >
         <div className="flex h-[56px]">
           {TABS.map(({ href, key, Icon }) => {
