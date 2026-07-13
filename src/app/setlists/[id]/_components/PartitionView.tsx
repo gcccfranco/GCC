@@ -112,6 +112,7 @@ export function PartitionsView({
                     if (!section) return null;
                     const fusionSong = item.fusionSongs!.find((fs) => fs.songSlug === ms.songSlug);
                     const sectionNote = ms.note ?? fusionSong?.sectionNotes?.[ms.sectionId];
+                    const sectionNuance = ms.nuance ?? fusionSong?.sectionNuances?.[ms.sectionId];
                     const showSongLabel = item.fusionSongs!.length > 1;
                     return (
                       <div key={`${ms.songSlug}-${ms.sectionId}-${msIdx}`}>
@@ -122,6 +123,7 @@ export function PartitionsView({
                           showPinyin={showPinyinGlobal && ast.metadata.language === "zh"}
                           useJianpu={false}
                           note={sectionNote}
+                          nuance={sectionNuance}
                           songSourceLabel={showSongLabel ? ast.metadata.title : undefined}
                         />
                         {ms.transition && <TransitionNote text={ms.transition} />}
@@ -165,6 +167,7 @@ export function PartitionsView({
                         useJianpu={false}
                         structureOverride={fs.structureOverride}
                         sectionNotes={fs.sectionNotes ?? {}}
+                        sectionNuances={fs.sectionNuances ?? {}}
                       />
                     </div>
                   );
@@ -257,6 +260,7 @@ function NormalSongItem({
         structureOverride={item.structureOverride}
         sectionNotes={item.sectionNotes ?? {}}
         sectionTransitions={item.sectionTransitions ?? {}}
+        sectionNuances={item.sectionNuances ?? {}}
         onLineSelect={editMode ? (line, sectionUid) => onSelectLine?.(origIndex, line, sectionUid) : undefined}
       />
     </div>
