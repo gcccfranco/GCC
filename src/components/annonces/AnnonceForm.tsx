@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { ImagePlus, Link2, Pin, Trash2, X } from "lucide-react";
 import { ANNONCE_SECTIONS, type Annonce, type AnnonceLink, type AnnonceSection } from "@/types/annonce";
 import { compressImage } from "@/lib/utils/compressImage";
@@ -54,6 +55,7 @@ export function AnnonceForm({
   onCancel: () => void;
   submitLabel: string;
 }) {
+  const { t } = useTranslation();
   const [value, setValue] = useState<AnnonceFormValue>(
     initial ?? {
       section: allowedSections[0],
@@ -82,14 +84,14 @@ export function AnnonceForm({
         const compressed = await compressImage(file);
         const total = next.reduce((n, i) => n + i.length, 0) + compressed.length;
         if (total > MAX_TOTAL_CHARS) {
-          setError("Limite d'images atteinte pour cette annonce (poids total).");
+          setError(t("annonces.form.errorImages"));
           break;
         }
         next.push(compressed);
       }
       set({ images: next });
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Erreur lors de l'ajout de l'image.");
+      setError(e instanceof Error ? e.message : t("annonces.form.errorImageAdd"));
     } finally {
       setCompressing(false);
     }
@@ -97,14 +99,14 @@ export function AnnonceForm({
 
   async function handleSubmit() {
     setError("");
-    if (!value.title.trim()) { setError("Donne un titre à l'annonce."); return; }
+    if (!value.title.trim()) { setError(t("annonces.form.errorTitle")); return; }
     if (!value.body.trim() && value.images.length === 0) {
-      setError("L'annonce est vide — ajoute du texte ou une image.");
+      setError(t("annonces.form.errorEmpty"));
       return;
     }
     for (const l of value.links) {
       if (l.url.trim() && !/^https?:\/\//i.test(l.url.trim())) {
-        setError(`Le lien « ${l.url} » doit commencer par http:// ou https://`);
+        setError(t("annonces.form.errorLink", { url: l.url }));
         return;
       }
     }
@@ -120,7 +122,7 @@ export function AnnonceForm({
         expiresAt: value.expiresAt || null,
       });
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Erreur lors de l'enregistrement.");
+      setError(e instanceof Error ? e.message : t("annonces.form.errorSave"));
       setSaving(false);
     }
   }
@@ -131,7 +133,7 @@ export function AnnonceForm({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
           <label className="block text-xs font-medium text-muted-foreground mb-1.5">
-            Section <span className="text-destructive">*</span>
+            {t("annonces.form.section")} <span className="text-destructive">*</span>
           </label>
           <select
             value={value.section}
@@ -140,19 +142,19 @@ export function AnnonceForm({
             style={{ borderLeftWidth: 4, borderLeftColor: categoryColor(value.section) }}
           >
             {ANNONCE_SECTIONS.filter((s) => allowedSections.includes(s)).map((s) => (
-              <option key={s} value={s}>{categoryLabel(s)}</option>
+              <option key={s} value={s}>{t("categories." + s, { defaultValue: categoryLabel(s) })}</option>
             ))}
           </select>
         </div>
         <div>
           <label className="block text-xs font-medium text-muted-foreground mb-1.5">
-            Titre <span className="text-destructive">*</span>
+            {t("annonces.form.titleLabel")} <span className="text-destructive">*</span>
           </label>
           <Input
             type="text"
             value={value.title}
             onChange={(e) => set({ title: e.target.value })}
-            placeholder="ex. Répétition exceptionnelle samedi"
+            placeholder={t("annonces.form.titlePlaceholder")}
             className="h-11"
           />
         </div>
@@ -160,19 +162,19 @@ export function AnnonceForm({
 
       {/* Texte */}
       <div>
-        <label className="block text-xs font-medium text-muted-foreground mb-1.5">Texte</label>
+        <label className="block text-xs font-medium text-muted-foreground mb-1.5">{t("annonces.form.textLabel")}</label>
         <Textarea
           value={value.body}
           onChange={(e) => set({ body: e.target.value })}
           rows={4}
-          placeholder="Le contenu de l'annonce… (les liens collés ici seront cliquables)"
+          placeholder={t("annonces.form.textPlaceholder")}
           className="resize-y"
         />
       </div>
 
       {/* Liens */}
       <div className="space-y-2">
-        <label className="block text-xs font-medium text-muted-foreground">Liens</label>
+        <label className="block text-xs font-medium text-muted-foreground">{t("annonces.form.links")}</label>
         {value.links.map((l, i) => (
           <div key={i} className="flex items-center gap-2">
             <Input
@@ -183,7 +185,7 @@ export function AnnonceForm({
                 links[i] = { ...links[i], label: e.target.value };
                 set({ links });
               }}
-              placeholder="Libellé (ex. Formulaire d'inscription)"
+              placeholder={t("annonces.form.linkLabelPlaceholder")}
               className="h-11 flex-1"
             />
             <Input
@@ -201,7 +203,7 @@ export function AnnonceForm({
               type="button"
               onClick={() => set({ links: value.links.filter((_, j) => j !== i) })}
               className="shrink-0 h-11 w-11 rounded-lg border border-border text-muted-foreground hover:text-destructive flex items-center justify-center"
-              aria-label="Retirer le lien"
+              aria-label={t("annonces.form.linkRemove")}
             >
               <X className="h-3.5 w-3.5" />
             </button>
@@ -213,14 +215,14 @@ export function AnnonceForm({
           className="flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline"
         >
           <Link2 className="h-3.5 w-3.5" />
-          Ajouter un lien
+          {t("annonces.form.addLink")}
         </button>
       </div>
 
       {/* Images */}
       <div className="space-y-2">
         <label className="block text-xs font-medium text-muted-foreground">
-          Images <span className="text-muted-foreground/70">(max {MAX_IMAGES}, compressées automatiquement)</span>
+          {t("annonces.form.images")} <span className="text-muted-foreground/70">{t("annonces.form.imagesHint", { max: MAX_IMAGES })}</span>
         </label>
         {value.images.length > 0 && (
           <div className="flex flex-wrap gap-2">
@@ -229,14 +231,15 @@ export function AnnonceForm({
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={img}
-                  alt={`Image ${i + 1}`}
+                  alt={`${i + 1}`}
+                  loading="lazy"
                   className="h-20 w-20 object-cover rounded-lg border border-border"
                 />
                 <button
                   type="button"
                   onClick={() => set({ images: value.images.filter((_, j) => j !== i) })}
                   className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-destructive text-white flex items-center justify-center shadow"
-                  aria-label="Retirer l'image"
+                  aria-label={t("annonces.form.removeImage")}
                 >
                   <X className="h-3 w-3" />
                 </button>
@@ -247,7 +250,7 @@ export function AnnonceForm({
         {value.images.length < MAX_IMAGES && (
           <label className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline cursor-pointer">
             <ImagePlus className="h-3.5 w-3.5" />
-            {compressing ? "Compression…" : "Ajouter une image"}
+            {compressing ? t("annonces.form.compressing") : t("annonces.form.addImage")}
             <input
               type="file"
               accept="image/*"
@@ -268,11 +271,11 @@ export function AnnonceForm({
             onCheckedChange={(checked) => set({ pinned: checked === true })}
           />
           <Pin className="h-3.5 w-3.5 text-muted-foreground" />
-          Épingler en haut de la liste
+          {t("annonces.form.pin")}
         </label>
         <div>
           <label className="block text-xs font-medium text-muted-foreground mb-1.5">
-            Disparaît après le (optionnel)
+            {t("annonces.form.expiresLabel")}
           </label>
           <div className="flex items-center gap-2">
             <input
@@ -286,7 +289,7 @@ export function AnnonceForm({
                 type="button"
                 onClick={() => set({ expiresAt: null })}
                 className="shrink-0 h-11 w-11 rounded-lg border border-border text-muted-foreground hover:text-foreground flex items-center justify-center"
-                aria-label="Retirer la date d'expiration"
+                aria-label={t("annonces.form.removeExpiry")}
               >
                 <Trash2 className="h-3.5 w-3.5" />
               </button>
@@ -301,10 +304,10 @@ export function AnnonceForm({
 
       <div className="flex items-center justify-end gap-2">
         <Button type="button" variant="outline" onClick={onCancel} className="h-11">
-          Annuler
+          {t("annonces.form.cancel")}
         </Button>
         <Button type="button" onClick={handleSubmit} disabled={saving || compressing} className="h-11">
-          {saving ? "Enregistrement…" : submitLabel}
+          {saving ? t("annonces.form.saving") : submitLabel}
         </Button>
       </div>
     </div>

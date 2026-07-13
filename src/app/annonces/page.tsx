@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import { Lock, Megaphone, Pencil, Pin, Plus, Trash2, X } from "lucide-react";
 import { useProfile } from "@/lib/firebase/users";
 import { getAnnonces, createAnnonce, updateAnnonce, deleteAnnonce, ANNONCES_LAST_SEEN_KEY } from "@/lib/firebase/annonces";
@@ -11,15 +13,16 @@ import { ANNONCE_SECTIONS, type Annonce, type AnnonceSection } from "@/types/ann
 import { categoryColor, categoryLabel } from "@/lib/serviceColors";
 import { AnnonceForm, annonceToForm, type AnnonceFormValue } from "@/components/annonces/AnnonceForm";
 
-// Libellé de section pour les annonces : abréviation commune + on retire le
+// Libellé de section pour les annonces : catégorie traduite + on retire le
 // préfixe « Groupe » (contexte annonces où la catégorie suffit).
-function sectionLabel(s: string): string {
-  return categoryLabel(s).replace("Groupe ", "");
+function sectionLabel(s: string, t: TFunction): string {
+  const label = t("categories." + s, { defaultValue: categoryLabel(s) });
+  return label.replace("Groupe ", "");
 }
 
-function formatCreatedAt(a: Annonce): string {
+function formatCreatedAt(a: Annonce, lang: string): string {
   if (!a.createdAt) return "";
-  return a.createdAt.toLocaleDateString("fr-FR", {
+  return a.createdAt.toLocaleDateString(lang === "zh-CN" ? "zh-CN" : "fr-FR", {
     day: "numeric",
     month: "long",
     year: "numeric",
@@ -51,6 +54,7 @@ function Linkified({ text }: { text: string }) {
 }
 
 export default function AnnoncesPage() {
+  const { t, i18n } = useTranslation();
   const { user, profile, loading: authLoading } = useProfile();
   const [annonces, setAnnonces] = useState<Annonce[]>([]);
   const [loading, setLoading] = useState(true);
@@ -60,15 +64,17 @@ export default function AnnoncesPage() {
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [lightbox, setLightbox] = useState<string | null>(null);
 
-  // Marque les annonces comme vues (badge « non lu » de la Navbar)
-  useEffect(() => {
-    localStorage.setItem(ANNONCES_LAST_SEEN_KEY, String(Date.now()));
-  }, [annonces]);
-
   useEffect(() => {
     if (authLoading) return;
     if (!user) { setLoading(false); return; }
-    getAnnonces().then(setAnnonces).finally(() => setLoading(false));
+    getAnnonces()
+      .then((list) => {
+        setAnnonces(list);
+        // Marque comme vues (badge « non lu » Navbar) une fois RÉELLEMENT
+        // chargées — pas au montage, sinon un simple passage marquait tout lu.
+        localStorage.setItem(ANNONCES_LAST_SEEN_KEY, String(Date.now()));
+      })
+      .finally(() => setLoading(false));
   }, [user, authLoading]);
 
   const todayStr = useMemo(() => new Date().toISOString().split("T")[0], []);
@@ -130,7 +136,7 @@ export default function AnnoncesPage() {
   if (authLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-sm text-muted-foreground">Chargement…</p>
+        <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
       </div>
     );
   }
@@ -139,9 +145,9 @@ export default function AnnoncesPage() {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-3 px-4 text-center">
         <Lock className="h-8 w-8 text-muted-foreground" />
-        <p className="text-sm text-muted-foreground">Connecte-toi pour voir les annonces.</p>
+        <p className="text-sm text-muted-foreground">{t("annonces.loginPrompt")}</p>
         <Link href="/login?from=/annonces" className="text-sm text-foreground underline underline-offset-2 hover:text-muted-foreground">
-          Se connecter
+          {t("annonces.login")}
         </Link>
       </div>
     );
@@ -153,7 +159,7 @@ export default function AnnoncesPage() {
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <Megaphone className="h-5 w-5 text-primary" />
-            <h1 className="text-lg font-bold text-foreground">Annonces</h1>
+            <h1 className="text-lg font-bold text-foreground">{t("annonces.title")}</h1>
           </div>
           {allowedSections.length > 0 && !creating && (
             <button
@@ -161,7 +167,7 @@ export default function AnnoncesPage() {
               className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
             >
               <Plus className="h-4 w-4" />
-              Nouvelle annonce
+              {t("annonces.new")}
             </button>
           )}
         </div>
@@ -184,7 +190,7 @@ export default function AnnoncesPage() {
                 }`}
                 style={active && color ? { background: color } : undefined}
               >
-                {s === "Toutes" ? "Toutes" : sectionLabel(s)}
+                {s === "Toutes" ? t("annonces.all") : sectionLabel(s, t)}
               </button>
             );
           })}
@@ -196,16 +202,18 @@ export default function AnnoncesPage() {
             allowedSections={allowedSections}
             onSubmit={handleCreate}
             onCancel={() => setCreating(false)}
-            submitLabel="Publier l'annonce"
+            submitLabel={t("annonces.publish")}
           />
         )}
 
         {/* Liste */}
         {loading ? (
-          <p className="text-sm text-muted-foreground text-center py-16">Chargement…</p>
+          <p className="text-sm text-muted-foreground text-center py-16">{t("common.loading")}</p>
         ) : displayed.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-16 border border-dashed border-border rounded-xl">
-            Aucune annonce {filter !== "Toutes" ? `pour ${sectionLabel(filter)} ` : ""}pour l&apos;instant.
+            {filter === "Toutes"
+              ? t("annonces.empty")
+              : t("annonces.emptyFor", { section: sectionLabel(filter, t) })}
           </p>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -225,7 +233,7 @@ export default function AnnoncesPage() {
                       }
                       onSubmit={(v) => handleUpdate(a.id, v)}
                       onCancel={() => setEditingId(null)}
-                      submitLabel="Enregistrer"
+                      submitLabel={t("annonces.save")}
                     />
                   </div>
                 );
@@ -244,12 +252,12 @@ export default function AnnoncesPage() {
                           className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
                           style={{ background: `${color}15`, color, border: `1px solid ${color}4d` }}
                         >
-                          {sectionLabel(a.section)}
+                          {sectionLabel(a.section, t)}
                         </span>
                         {a.pinned && (
                           <span className="flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
                             <Pin className="h-2.5 w-2.5" />
-                            Épinglée
+                            {t("annonces.pinned")}
                           </span>
                         )}
                       </div>
@@ -260,7 +268,7 @@ export default function AnnoncesPage() {
                         <button
                           onClick={() => { setEditingId(a.id); setCreating(false); }}
                           className="h-7 w-7 rounded-lg border border-border text-muted-foreground hover:text-foreground flex items-center justify-center"
-                          aria-label="Modifier"
+                          aria-label={t("annonces.edit")}
                         >
                           <Pencil className="h-3.5 w-3.5" />
                         </button>
@@ -270,20 +278,20 @@ export default function AnnoncesPage() {
                               onClick={() => handleDelete(a.id)}
                               className="h-7 px-2 rounded-lg bg-destructive text-white text-xs font-semibold"
                             >
-                              Oui
+                              {t("annonces.deleteYes")}
                             </button>
                             <button
                               onClick={() => setConfirmDeleteId(null)}
                               className="h-7 px-2 rounded-lg border border-border text-xs text-muted-foreground"
                             >
-                              Non
+                              {t("annonces.deleteNo")}
                             </button>
                           </>
                         ) : (
                           <button
                             onClick={() => setConfirmDeleteId(a.id)}
                             className="h-7 w-7 rounded-lg border border-border text-muted-foreground hover:text-destructive flex items-center justify-center"
-                            aria-label="Supprimer"
+                            aria-label={t("annonces.delete")}
                           >
                             <Trash2 className="h-3.5 w-3.5" />
                           </button>
@@ -324,7 +332,8 @@ export default function AnnoncesPage() {
                         <img
                           key={i}
                           src={img}
-                          alt={`${a.title} — image ${i + 1}`}
+                          alt={`${a.title} — ${i + 1}`}
+                          loading="lazy"
                           onClick={() => setLightbox(img)}
                           className="h-28 w-28 sm:h-36 sm:w-36 object-cover rounded-lg border border-border cursor-zoom-in hover:opacity-90 transition-opacity"
                         />
@@ -335,10 +344,10 @@ export default function AnnoncesPage() {
                   {/* Pied */}
                   <p className="text-xs text-muted-foreground">
                     {a.authorName && <span className="font-medium">{a.authorName}</span>}
-                    {a.authorName && formatCreatedAt(a) && " · "}
-                    {formatCreatedAt(a)}
+                    {a.authorName && formatCreatedAt(a, i18n.language) && " · "}
+                    {formatCreatedAt(a, i18n.language)}
                     {a.expiresAt && (
-                      <span className="text-muted-foreground/70"> · visible jusqu&apos;au {a.expiresAt.split("-").reverse().join("/")}</span>
+                      <span className="text-muted-foreground/70"> · {t("annonces.visibleUntil", { date: a.expiresAt.split("-").reverse().join("/") })}</span>
                     )}
                   </p>
                 </article>
@@ -358,7 +367,7 @@ export default function AnnoncesPage() {
           <img src={lightbox} alt="" className="max-h-[90vh] max-w-full rounded-lg" />
           <button
             className="absolute top-4 right-4 h-9 w-9 rounded-full bg-white/10 text-white flex items-center justify-center"
-            aria-label="Fermer"
+            aria-label={t("annonces.closeLightbox")}
           >
             <X className="h-5 w-5" />
           </button>

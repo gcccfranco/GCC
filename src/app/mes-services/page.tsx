@@ -14,16 +14,21 @@ import {
   type PlanningData,
   type ServiceEntry,
 } from "@/lib/planning/names";
-import { MOIS, JOURC } from "@/lib/planning/utils";
+import { MOIS } from "@/lib/planning/utils";
 import { serviceColor } from "@/lib/serviceColors";
 import { PushPrompt } from "@/components/push/PushPrompt";
 
 type Tab = "upcoming" | "past";
 
-function fdJour(dateStr: string): string {
+/** « mer. 15 juil. » / « 7月15日 周三 » selon la langue. */
+function fdJour(dateStr: string, lang: string): string {
   const [y, m, d] = dateStr.split("-").map(Number);
   const date = new Date(y, m - 1, d);
-  return `${JOURC[date.getDay()]} ${d} ${MOIS[m - 1].toLowerCase()}`;
+  return date.toLocaleDateString(lang === "zh-CN" ? "zh-CN" : "fr-FR", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+  });
 }
 
 function daysUntil(dateStr: string, todayStr: string): number {
@@ -53,12 +58,12 @@ function groupEntries(entries: ServiceEntry[]): GroupedEntry[] {
   return [...map.values()];
 }
 
-/** Regroupe par mois ("Juin 2026") en conservant l'ordre. */
-function groupByMonth(entries: GroupedEntry[]): { label: string; items: GroupedEntry[] }[] {
+/** Regroupe par mois ("Juin 2026" / "2026年6月") en conservant l'ordre. */
+function groupByMonth(entries: GroupedEntry[], lang: string): { label: string; items: GroupedEntry[] }[] {
   const out: { label: string; items: GroupedEntry[] }[] = [];
   for (const e of entries) {
     const [y, m] = e.date.split("-").map(Number);
-    const label = `${MOIS[m - 1]} ${y}`;
+    const label = lang === "zh-CN" ? `${y}年${m}月` : `${MOIS[m - 1]} ${y}`;
     const last = out[out.length - 1];
     if (last && last.label === label) last.items.push(e);
     else out.push({ label, items: [e] });
@@ -67,7 +72,7 @@ function groupByMonth(entries: GroupedEntry[]): { label: string; items: GroupedE
 }
 
 export default function MesServicesPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { user, profile, loading: authLoading } = useProfile();
   const [data, setData] = useState<PlanningData | null>(null);
   const [setlists, setSetlists] = useState<FSSetlist[]>([]);
@@ -145,7 +150,7 @@ export default function MesServicesPage() {
     [entries, tab, todayStr]
   );
 
-  const months = useMemo(() => groupByMonth(shown), [shown]);
+  const months = useMemo(() => groupByMonth(shown, i18n.language), [shown, i18n.language]);
   const upcomingCount = useMemo(
     () => entries.filter((e) => e.date >= todayStr).length,
     [entries, todayStr]
@@ -260,7 +265,7 @@ export default function MesServicesPage() {
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2 flex-wrap">
                             <p className="text-sm font-semibold text-foreground capitalize">
-                              {fdJour(e.date)}
+                              {fdJour(e.date, i18n.language)}
                             </p>
                             {dUntil === 0 && (
                               <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground uppercase">
