@@ -35,6 +35,17 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  // Tient l'attribut lang du <html> synchronisé avec la langue active :
+  // accessibilité (lecteurs d'écran) et choix des glyphes han par le navigateur.
+  useEffect(() => {
+    const apply = (lng: string) => {
+      document.documentElement.lang = lng === "zh-CN" ? "zh-CN" : "fr";
+    };
+    apply(i18n.language);
+    i18n.on("languageChanged", apply);
+    return () => { i18n.off("languageChanged", apply); };
+  }, []);
+
   return <>{children}</>;
 }
 export default i18n;

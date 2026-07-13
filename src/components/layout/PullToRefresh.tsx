@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { RefreshCw } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 /**
  * Tirer-vers-le-bas pour actualiser (téléphone/tablette, utile surtout en PWA
@@ -11,6 +12,7 @@ import { RefreshCw } from "lucide-react";
  * À monter uniquement sur les pages de données (planning, setlists).
  */
 export function PullToRefresh() {
+  const { t } = useTranslation();
   const [state, setState] = useState<"idle" | "armed" | "refreshing">("idle");
   const startY = useRef<number | null>(null);
 
@@ -54,7 +56,7 @@ export function PullToRefresh() {
   return (
     <div className="fixed top-[calc(var(--nav-h)+10px)] left-1/2 -translate-x-1/2 z-40 flex items-center gap-2 px-3.5 py-2 rounded-full bg-foreground text-background text-xs font-semibold shadow-lg print:hidden">
       <RefreshCw className={`h-3.5 w-3.5 ${state === "refreshing" ? "animate-spin" : ""}`} />
-      {state === "refreshing" ? "Actualisation…" : "Relâcher pour actualiser"}
+      {state === "refreshing" ? t("common.pull.refreshing") : t("common.pull.release")}
     </div>
   );
 }

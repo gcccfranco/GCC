@@ -166,9 +166,10 @@ export function Navbar() {
 
             {/* Louange : menu déroulant (connecté) ou lien direct vers les chants (visiteur) */}
             {!authLoading && user ? (
-              <div className="relative group" ref={dropdownRef}>
+              <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setDropdownOpen((v) => !v)}
+                  aria-expanded={dropdownOpen}
                   className={`flex w-[96px] items-center gap-1 px-3 py-[7px] rounded-[9px] text-[13.5px] font-semibold transition-all duration-150 cursor-pointer ${
                     isActiveLouange
                       ? "bg-secondary text-foreground text-center"
@@ -178,7 +179,7 @@ export function Navbar() {
                   {t("common.header.louange")}
                   <ChevronDown
                     className={`h-3 w-3 opacity-60 transition-transform duration-150 ${
-                      dropdownOpen ? "rotate-180" : "group-hover:rotate-180"
+                      dropdownOpen ? "rotate-180" : ""
                     }`}
                   />
                 </button>
@@ -186,7 +187,7 @@ export function Navbar() {
                   className={`absolute left-0 top-full pt-1 z-50 transition-all duration-150 ${
                     dropdownOpen
                       ? "opacity-100 visible translate-y-0"
-                      : "opacity-0 invisible -translate-y-1 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0"
+                      : "opacity-0 invisible -translate-y-1"
                   }`}
                 >
                   <div className="bg-card border border-border rounded-xl shadow-lg py-1 min-w-[140px]">
@@ -259,7 +260,7 @@ export function Navbar() {
                     : "text-muted-foreground hover:text-foreground hover:bg-secondary"
                 }`}
               >
-                Notifier
+                {t("common.header.notify")}
               </Link>
             )}
 
@@ -272,7 +273,7 @@ export function Navbar() {
                     : "text-muted-foreground hover:text-foreground hover:bg-secondary"
                 }`}
               >
-                Admin
+                {t("common.header.admin")}
               </Link>
             )}
           </nav>
@@ -356,8 +357,8 @@ export function Navbar() {
             {!authLoading && user && (
               <button
                 onClick={() => setReportOpen(true)}
-                title="Signaler un problème"
-                aria-label="Signaler un problème"
+                title={t("common.report")}
+                aria-label={t("common.report")}
                 className="hidden lg:flex h-[34px] w-[34px] rounded-[9px] border border-border bg-card text-muted-foreground hover:text-foreground hover:border-muted-foreground/50 transition-all duration-150 active:scale-[.96] items-center justify-center cursor-pointer"
               >
                 <TriangleAlert className="h-[15px] w-[15px]" />
@@ -478,7 +479,7 @@ export function Navbar() {
                     isActiveNotifier ? "bg-secondary text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted"
                   }`}
                 >
-                  Notifier
+                  {t("common.header.notify")}
                 </Link>
               )}
               {!authLoading && admin && (
@@ -488,7 +489,7 @@ export function Navbar() {
                     isActiveAdmin ? "bg-secondary text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted"
                   }`}
                 >
-                  Admin
+                  {t("common.header.admin")}
                 </Link>
               )}
               <span className="px-3 pt-2 pb-0.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
@@ -548,7 +549,7 @@ export function Navbar() {
                       className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg border border-border bg-background hover:bg-muted text-foreground text-sm font-semibold transition-all duration-200 cursor-pointer"
                     >
                       <TriangleAlert className="h-4 w-4" />
-                      Signaler un problème
+                      {t("common.report")}
                     </button>
                     <Link
                       href="/guide"
