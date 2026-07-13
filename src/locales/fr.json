@@ -14,6 +14,7 @@
       "profile": "Mon profil",
       "signup": "Créer un compte",
       "guide": "Guide d'utilisation",
+      "nouveautes": "Nouveautés",
       "notify": "Notifier",
       "admin": "Admin"
     },
@@ -52,6 +53,16 @@
       "title": "Page introuvable",
       "body": "Cette page n'existe pas ou a été déplacée.",
       "cta": "Voir les chants"
+    }
+  },
+  "nouveautes": {
+    "title": "Nouveautés",
+    "subtitle": "Les dernières améliorations et corrections du site.",
+    "empty": "Rien pour le moment.",
+    "categories": {
+      "added": "Ajouté",
+      "fixed": "Corrigé",
+      "improved": "Amélioré"
     }
   },
   "songs": {
@@ -142,6 +153,7 @@
       "backToAll": "←",
       "tabList": "Liste",
       "tabCharts": "Partitions",
+      "pinyin": "Pinyin",
       "editButton": "Modifier",
       "deleteButton": "Supprimer",
       "deleteConfirm": "Confirmer ?",
