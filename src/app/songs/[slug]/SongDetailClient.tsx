@@ -14,8 +14,6 @@ import { SongView } from "@/components/song/SongView";
 import { CustomizePanel, type CustomizeState } from "@/components/customPanel/CustomizePanel";
 import type { Song } from "@/types/song";
 import { useTranslation } from "react-i18next";
-import { pdf } from "@react-pdf/renderer";
-import { SongPDF } from "@/components/pdf/SongPDF";
 import { extractYouTubeId } from "@/lib/youtube/youtube";
 import { buildDefaultStructure } from "@/lib/chordpro/structure";
 import { parseChordPro } from "@/lib/chordpro/parser";
@@ -28,6 +26,17 @@ import { ReportDialog } from "@/components/report/ReportDialog";
 
 interface SongDetailClientProps {
   song: Song;
+}
+
+/** Parse un paramètre d'URL JSON sans jamais lever : les liens partagés
+ *  peuvent arriver tronqués (WhatsApp/WeChat) — on retombe sur le défaut. */
+function safeParseParam<T>(raw: string | null, fallback: T): T {
+  if (!raw) return fallback;
+  try {
+    return JSON.parse(raw) as T;
+  } catch {
+    return fallback;
+  }
 }
 
 
@@ -90,17 +99,18 @@ interface SongDetailClientProps {
       [customize.structure]
     );
 
-    const structureOverride = searchParams.get("structure")
-      ? JSON.parse(searchParams.get("structure")!)
-      : defaultStructure;
-
-    const defaultSectionsNote = Object.fromEntries(
-      customize.structure.map((s) => [s.uid, s.note]).filter(([, n]) => n)
+    const structureOverride = useMemo(
+      () => safeParseParam<string[]>(searchParams.get("structure"), defaultStructure),
+      [searchParams, defaultStructure]
     );
 
-    const sectionsNote = searchParams.get("sectionNotes")
-      ? JSON.parse(searchParams.get("sectionNotes")!)
-      : defaultSectionsNote;
+    const sectionsNote = useMemo(() => {
+      const defaultSectionsNote = Object.fromEntries(
+        customize.structure.map((s) => [s.uid, s.note]).filter(([, n]) => n)
+      );
+      return safeParseParam<Record<string, string>>(searchParams.get("sectionNotes"), defaultSectionsNote);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [searchParams, customize.structure]);
 
     useEffect(() => {
       const structure: SectionItem[] = structureOverride.map((uid: string, index: number) => {
@@ -109,7 +119,7 @@ interface SongDetailClientProps {
         return {
           uid: cleanUid,
           sectionId,
-          name: ast.sections.find((s) => s.id === sectionId)?.name,
+          name: ast.sections.find((s) => s.id === sectionId)?.name ?? "",
           note: sectionsNote[cleanUid] ?? sectionsNote[uid] ?? sectionsNote[sectionId] ?? "",
         };
       });
@@ -117,9 +127,7 @@ interface SongDetailClientProps {
     },[]);
 
     useEffect(() => {
-      const songKey = searchParams.get('key')
-        ? JSON.parse(searchParams.get('key')!)
-        : originalKey;
+      const songKey = safeParseParam<string>(searchParams.get("key"), originalKey);
       const diff = semitonesTo(originalKey, songKey);
       setCustomize(prev => ({ ...prev, currentKey: songKey, semitones: diff }));
     }, []); // une seule fois au montage
@@ -149,6 +157,12 @@ interface SongDetailClientProps {
     async function handleDownload() {
       setDownloading(true);
       try {
+        // Chargés à la demande : @react-pdf/renderer est lourd et ne doit pas
+        // peser sur le bundle de la fiche chant (cf. SetlistDetailClient).
+        const [{ pdf }, { SongPDF }] = await Promise.all([
+          import("@react-pdf/renderer"),
+          import("@/components/pdf/SongPDF"),
+        ]);
         const blob = await pdf(
           <SongPDF
             ast={displayedAST}
@@ -233,6 +247,24 @@ interface SongDetailClientProps {
               >
                 +
               </Button>
+              {/* Retour à la tonalité d'origine d'un tap (visible si transposé) */}
+              {customize.semitones !== 0 && (
+                <Button
+                  variant="outline"
+                  size="icon-lg"
+                  className="h-9 w-9 sm:h-8 sm:w-8 rounded-md text-muted-foreground"
+                  aria-label={t("customize.panel.keyOriginal")}
+                  title={t("customize.panel.keyOriginal")}
+                  onClick={() =>
+                    setCustomize((c) => ({ ...c, semitones: 0, currentKey: originalKey }))
+                  }
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                    <path d="M3 3v5h5" />
+                  </svg>
+                </Button>
+              )}
             </div>
 
             <div className="ml-auto flex gap-1 sm:gap-1.5 items-center justify-end">
