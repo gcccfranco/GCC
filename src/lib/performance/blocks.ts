@@ -1,4 +1,4 @@
-import type { SetlistItem } from "@/types/setList";
+import type { SetlistItem, SectionNuance } from "@/types/setList";
 import type { ChordProSection, ChordProAST } from "@/types/chordPro";
 import type { SongContent } from "@/lib/api/songs";
 import { transposeAST } from "@/lib/transposeAST";
@@ -31,6 +31,7 @@ export type SectionBlock = {
   chordsEnabled: boolean;
   showPinyin: boolean;
   note?: string;
+  nuance?: SectionNuance;
   songTitle: string;
   songKey: string;
   songSourceLabel?: string;
@@ -132,6 +133,7 @@ export function buildPerformanceBlocks(
             chordsEnabled: showChordsGlobal && item.showChords,
             showPinyin: ast.metadata.language === "zh",
             note: ms.note ?? fs?.sectionNotes?.[ms.sectionId],
+            nuance: ms.nuance ?? fs?.sectionNuances?.[ms.sectionId],
             songTitle: ast.metadata.title,
             songKey: fs?.keyOverride ?? ast.metadata.key,
             songSourceLabel: multiSong ? ast.metadata.title : undefined,
@@ -163,6 +165,7 @@ export function buildPerformanceBlocks(
               chordsEnabled: showChordsGlobal && item.showChords,
               showPinyin: ast.metadata.language === "zh",
               note: fs.sectionNotes?.[sec.uid] ?? fs.sectionNotes?.[sec.id],
+              nuance: fs.sectionNuances?.[sec.uid] ?? fs.sectionNuances?.[sec.id],
               songTitle: ast.metadata.title,
               songKey: fs.keyOverride ?? ast.metadata.key,
             });
@@ -207,6 +210,10 @@ export function buildPerformanceBlocks(
         item.sectionTransitions?.[occKey] ??
         item.sectionTransitions?.[sec.id] ??
         "";
+      const nuance =
+        item.sectionNuances?.[sec.uid] ??
+        item.sectionNuances?.[occKey] ??
+        item.sectionNuances?.[sec.id];
       blocks.push({
         kind: "section",
         uid: uid(),
@@ -215,6 +222,7 @@ export function buildPerformanceBlocks(
         chordsEnabled: showChordsGlobal && item.showChords,
         showPinyin: item.showPinyin,
         note: note || undefined,
+        nuance,
         songTitle: ast.metadata.title,
         songKey: playedKey,
       });
