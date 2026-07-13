@@ -24,7 +24,7 @@ npx tsc --noEmit     # Vérification TypeScript (c'est ce que fait la CI)
 - **Confidentialité (choix assumé)** : les rules autorisent `read: if signedIn()` sur **toutes** les setlists et tous les profils. Le filtrage `isPrivate` / visibilité par service (`canSeeSetlist`, `src/lib/access.ts`) est **côté client uniquement** — un membre connecté peut techniquement lire en REST une setlist privée ou un profil. Acceptable pour un outil interne de confiance ; ne pas re-signaler comme faille sans nouvelle demande de durcissement.
 - **Routes API** : `/api/song/[slug]` (contenu d'un chant), `/api/report` (signalement par email via Resend — env `RESEND_API_KEY`, `MAIL_TO`, `EMAIL_FROM` sur Vercel)
 - **Planning** : Google Sheet public lu en CSV (`src/lib/planning/sheets.ts`) + données statiques (`data.ts`)
-- **PWA** : service worker `public/sw.js` (cache-first assets, stale-while-revalidate pages, API exclue)
+- **PWA** : service worker `public/sw.js` — push + cache hors-ligne. Cache versionné (`gcc-louange-vN`, purgé à l'activation). Stratégies : HTML **network-first** (le déploiement en ligne gagne toujours → pas de page périmée), `/_next/static/*` **cache-first** (content-hashé, immuable), polices + `songs-index.json` + `/api/song/*` **stale-while-revalidate**, reste réseau-seul. Firestore/Sheets/YouTube (autres origines) jamais mis en cache.
 - **Hébergement** : Vercel. La CI GitHub (`.github/workflows/deploy.yml`) fait typecheck + validate.
 
 ## Formats importants
