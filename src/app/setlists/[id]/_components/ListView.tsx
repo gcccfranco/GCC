@@ -101,16 +101,43 @@ export function ListView({
               </div>
               {song?.artist && <p className="text-xs text-muted-foreground">{song.artist}</p>}
               {song?.sections && song.sections.length > 0 && (() => {
-                const names = item.structureOverride
-                  ? item.structureOverride.map((id) => {
-                      const s = song.sections!.find((sec) => sec.id === id.replace(/-\d+$/,''));
-                      return s ? formatSectionName(s, t) : id;
+                const allSections = song.sections!;
+                const st = item.sectionTransitions ?? {};
+                const occ: Record<string, number> = {};
+                // Chaque section → nom affichable + transition interne éventuelle.
+                const entries: { name: string; transition?: string }[] = item.structureOverride
+                  ? item.structureOverride.map((ov) => {
+                      const baseId = ov.replace(/-\d+$/, "");
+                      const s = allSections.find((sec) => sec.uid === ov || sec.id === ov || sec.id === baseId);
+                      if (s) return { name: formatSectionName(s, t), transition: st[ov] ?? st[s.id] };
+                      // Section non résolue (ex. copie « Mode Adapter » absente de
+                      // l'index) : traduire le type plutôt que montrer l'uid brut.
+                      const type = ov.replace(/(-\d+)+$/, "");
+                      return { name: t(`songs.sections.${type}`, { defaultValue: type }), transition: st[ov] };
                     })
-                  : song.sections.map((s) => formatSectionName(s, t));
+                  : allSections.map((s) => {
+                      const idx = occ[s.id] ?? 0;
+                      occ[s.id] = idx + 1;
+                      const key = idx === 0 ? s.id : `${s.id}:${idx}`;
+                      return { name: formatSectionName(s, t), transition: st[s.uid] ?? st[key] ?? st[s.id] };
+                    });
+                const transitions = entries.filter((e) => e.transition);
                 return (
-                  <p className="text-[11px] text-muted-foreground/70 mt-0.5 leading-tight">
-                    {names.join(" · ")}
-                  </p>
+                  <>
+                    <p className="text-[11px] text-muted-foreground/70 mt-0.5 leading-tight">
+                      {entries.map((e) => e.name).join(" · ")}
+                    </p>
+                    {transitions.length > 0 && (
+                      <ul className="mt-1 space-y-0.5">
+                        {transitions.map((e, i) => (
+                          <li key={i} className="text-[11px] text-muted-foreground/60 italic leading-tight flex gap-1">
+                            <span className="shrink-0 text-muted-foreground/40">↳ {e.name} :</span>
+                            <span className="whitespace-pre-wrap">{e.transition}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </>
                 );
               })()}
               {item.notes && <p className="text-xs text-muted-foreground italic mt-0.5">{item.notes}</p>}
