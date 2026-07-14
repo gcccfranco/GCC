@@ -7,6 +7,17 @@ import Link from "next/link";
 import { Link2, MessageSquare, ChevronDown, ChevronUp } from "lucide-react";
 import type { SectionSummary } from "@/types/song";
 
+/** Palette rotative pour relier chaque transition à son occurrence dans le fil :
+ *  la section colorée et sa note en dessous partagent la même couleur. */
+const TRANSITION_COLORS = [
+  "text-amber-600 dark:text-amber-400",
+  "text-violet-600 dark:text-violet-400",
+  "text-emerald-600 dark:text-emerald-400",
+  "text-rose-600 dark:text-rose-400",
+  "text-sky-600 dark:text-sky-400",
+  "text-fuchsia-600 dark:text-fuchsia-400",
+];
+
 /** Noms de sections affichables d'un chant, en respectant une éventuelle
  *  structure réorganisée (structureOverride keyé par uid/id de section). */
 function sectionNamesFor(
@@ -70,17 +81,22 @@ export function ListView({
                   // (sinon on ne sait pas de quel chant vient chaque « Couplet »).
                   <div className="mt-1 space-y-1">
                     {(() => {
-                      const runs: { slug: string; title: string; names: string[] }[] = [];
-                      const transitions: { name: string; text: string }[] = [];
+                      const runs: { slug: string; title: string; names: { name: string; color?: string }[] }[] = [];
+                      const transitions: { name: string; text: string; color: string }[] = [];
+                      let tci = 0;
                       for (const ms of item.mixedStructure) {
                         const song = songsMap[ms.songSlug];
                         const sec = song?.sections?.find((s) => s.id === ms.sectionId || s.uid === ms.sectionId);
                         const name = sec ? formatSectionName(sec, t) : ms.sectionId;
                         const title = song?.title ?? ms.songSlug;
+                        const color = ms.transition
+                          ? TRANSITION_COLORS[tci++ % TRANSITION_COLORS.length]
+                          : undefined;
+                        const entry = { name, color };
                         const last = runs[runs.length - 1];
-                        if (last && last.slug === ms.songSlug) last.names.push(name);
-                        else runs.push({ slug: ms.songSlug, title, names: [name] });
-                        if (ms.transition) transitions.push({ name, text: ms.transition });
+                        if (last && last.slug === ms.songSlug) last.names.push(entry);
+                        else runs.push({ slug: ms.songSlug, title, names: [entry] });
+                        if (ms.transition) transitions.push({ name, text: ms.transition, color: color! });
                       }
                       return (
                         <>
@@ -89,7 +105,16 @@ export function ListView({
                               <p key={i} className="text-[11px] leading-tight">
                                 <span className="font-medium text-muted-foreground/90">{run.title}</span>
                                 <span className="text-muted-foreground/40"> · </span>
-                                <span className="text-muted-foreground/60">{run.names.join(" · ")}</span>
+                                <span className="text-muted-foreground/60">
+                                  {run.names.map((n, j) => (
+                                    <span key={j}>
+                                      {j > 0 && " · "}
+                                      <span className={n.color ? `${n.color} font-medium` : undefined}>
+                                        {n.name}
+                                      </span>
+                                    </span>
+                                  ))}
+                                </span>
                               </p>
                             ))}
                           </div>
@@ -97,7 +122,7 @@ export function ListView({
                             <ul className="space-y-0.5">
                               {transitions.map((tr, i) => (
                                 <li key={i} className="text-[11px] text-muted-foreground/60 italic leading-tight flex gap-1">
-                                  <span className="shrink-0 text-muted-foreground/40">↳ {tr.name} :</span>
+                                  <span className={`shrink-0 ${tr.color}`}>↳ {tr.name} :</span>
                                   <span className="whitespace-pre-wrap">{tr.text}</span>
                                 </li>
                               ))}
@@ -200,17 +225,31 @@ export function ListView({
                       // L'index JSON n'expose pas ce `uid` → on le reconstruit à partir de l'ordre.
                       return { name: formatSectionName(s, t), transition: st[`${s.id}-${i}`] ?? st[s.id] };
                     });
-                const transitions = entries.filter((e) => e.transition);
+                // Une couleur distincte par transition, dans l'ordre du fil.
+                let tci = 0;
+                const colored = entries.map((e) =>
+                  e.transition
+                    ? { ...e, color: TRANSITION_COLORS[tci++ % TRANSITION_COLORS.length] }
+                    : { ...e, color: undefined as string | undefined }
+                );
+                const transitions = colored.filter((e) => e.transition);
                 return (
                   <>
                     <p className="text-[11px] text-muted-foreground/70 mt-0.5 leading-tight">
-                      {entries.map((e) => e.name).join(" · ")}
+                      {colored.map((e, i) => (
+                        <span key={i}>
+                          {i > 0 && <span className="text-muted-foreground/40"> · </span>}
+                          <span className={e.color ? `${e.color} font-medium` : undefined}>
+                            {e.name}
+                          </span>
+                        </span>
+                      ))}
                     </p>
                     {transitions.length > 0 && (
                       <ul className="mt-1 space-y-0.5">
                         {transitions.map((e, i) => (
                           <li key={i} className="text-[11px] text-muted-foreground/60 italic leading-tight flex gap-1">
-                            <span className="shrink-0 text-muted-foreground/40">↳ {e.name} :</span>
+                            <span className={`shrink-0 ${e.color}`}>↳ {e.name} :</span>
                             <span className="whitespace-pre-wrap">{e.transition}</span>
                           </li>
                         ))}
