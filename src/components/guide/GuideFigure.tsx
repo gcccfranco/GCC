@@ -46,7 +46,7 @@ function Shapes({ items }: { items: Annotation[] }) {
       <g
         fill="none"
         stroke="#fff"
-        strokeWidth={2.6}
+        strokeWidth={1.8}
         strokeLinecap="round"
         vectorEffect="non-scaling-stroke"
         opacity={0.85}
@@ -57,7 +57,7 @@ function Shapes({ items }: { items: Annotation[] }) {
       <g
         fill="none"
         stroke={INK}
-        strokeWidth={1.4}
+        strokeWidth={0.9}
         strokeLinecap="round"
         vectorEffect="non-scaling-stroke"
       >
