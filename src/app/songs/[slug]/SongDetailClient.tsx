@@ -6,10 +6,12 @@ import { MoreHorizontal, Download, Play, X, TriangleAlert , Music, Music2, Setti
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
+  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { getChartStylePref, setChartStylePref } from "@/lib/chartStylePref";
 import { SongView } from "@/components/song/SongView";
 import { CustomizePanel, type CustomizeState } from "@/components/customPanel/CustomizePanel";
 import type { Song } from "@/types/song";
@@ -158,6 +160,15 @@ function safeParseParam<T>(raw: string | null, fallback: T): T {
         try { localStorage.setItem("song-font-scale", String(next)); } catch { /* privé */ }
         return next;
       });
+    };
+
+    // Couleurs par section — préférence par appareil partagée avec le mode
+    // louange ; chargée après montage (même raison d'hydratation que fontScale).
+    const [chartStyle, setChartStyle] = useState(true);
+    useEffect(() => setChartStyle(getChartStylePref()), []);
+    const toggleChartStyle = (v: boolean) => {
+      setChartStyle(v);
+      setChartStylePref(v);
     };
 
     async function handleDownload() {
@@ -362,6 +373,13 @@ function safeParseParam<T>(raw: string | null, fallback: T): T {
                       </a>
                     </DropdownMenuItem>
                   )}
+                  <DropdownMenuCheckboxItem
+                    checked={chartStyle}
+                    onCheckedChange={toggleChartStyle}
+                    onSelect={(e) => e.preventDefault()}
+                  >
+                    {t("performance.chartStyle")}
+                  </DropdownMenuCheckboxItem>
                   <DropdownMenuItem onClick={() => setShowPanel(true)}>
                     <Settings className="h-3.5 w-3.5 text-muted-foreground" />
                     {t("songs.detail.customize")}
@@ -415,6 +433,7 @@ function safeParseParam<T>(raw: string | null, fallback: T): T {
             structureOverride={structureOverride}
             sectionNotes={sectionsNote}
             sectionNuances={sectionsNuance}
+            chartStyle={chartStyle}
           />
         </main>
 
