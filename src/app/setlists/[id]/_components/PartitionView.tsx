@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { SetlistItem } from "@/types/setList";
 import type { SongContent } from "@/lib/api/songs";
 import { SongView, SectionView, TransitionNote } from "@/components/song/SongView";
@@ -7,6 +7,7 @@ import { transposeAST } from "@/lib/transposeAST";
 import { semitonesTo } from "@/lib/transpose";
 import { itemAst } from "@/lib/chordpro/itemContent";
 import { Link2, MessageSquare } from "lucide-react";
+import { getChartStylePref } from "@/lib/chartStylePref";
 import type { ChordProAST, ChordProLine } from "@/types/chordPro";
 
 function TransitionBanner({ text }: { text: string }) {
@@ -43,6 +44,10 @@ export function PartitionsView({
   onRevert?: (itemIndex: number) => void;
 }) {
   const { t } = useTranslation();
+  // Couleurs par section — préférence par appareil partagée (fiche chant,
+  // mode louange) ; chargée après montage pour éviter un écart d'hydratation.
+  const [chartStyle, setChartStyle] = useState(true);
+  useEffect(() => setChartStyle(getChartStylePref()), []);
   if (loading) {
     return (
       <div className="text-sm text-muted-foreground text-center py-16">
@@ -125,6 +130,7 @@ export function PartitionsView({
                           note={sectionNote}
                           nuance={sectionNuance}
                           songSourceLabel={showSongLabel ? ast.metadata.title : undefined}
+                          chartStyle={chartStyle}
                         />
                         {ms.transition && <TransitionNote text={ms.transition} />}
                       </div>
@@ -168,6 +174,7 @@ export function PartitionsView({
                         structureOverride={fs.structureOverride}
                         sectionNotes={fs.sectionNotes ?? {}}
                         sectionNuances={fs.sectionNuances ?? {}}
+                        chartStyle={chartStyle}
                       />
                     </div>
                   );
@@ -187,6 +194,7 @@ export function PartitionsView({
             showChordsGlobal={showChordsGlobal}
             showPinyinGlobal={showPinyinGlobal}
             editMode={editMode}
+            chartStyle={chartStyle}
             onSelectLine={onSelectLine}
             onRevert={onRevert}
           />
@@ -203,6 +211,7 @@ function NormalSongItem({
   showChordsGlobal,
   showPinyinGlobal,
   editMode,
+  chartStyle,
   onSelectLine,
   onRevert,
 }: {
@@ -212,6 +221,7 @@ function NormalSongItem({
   showChordsGlobal: boolean;
   showPinyinGlobal: boolean;
   editMode: boolean;
+  chartStyle: boolean;
   onSelectLine?: (itemIndex: number, line: ChordProLine, sectionUid?: string) => void;
   onRevert?: (itemIndex: number) => void;
 }) {
@@ -261,6 +271,7 @@ function NormalSongItem({
         sectionNotes={item.sectionNotes ?? {}}
         sectionTransitions={item.sectionTransitions ?? {}}
         sectionNuances={item.sectionNuances ?? {}}
+        chartStyle={chartStyle}
         onLineSelect={editMode ? (line, sectionUid) => onSelectLine?.(origIndex, line, sectionUid) : undefined}
       />
     </div>
