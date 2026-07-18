@@ -16,8 +16,10 @@ import {
   ShieldCheck,
   UserCog,
   Lightbulb,
+  PlayCircle,
 } from "lucide-react";
 import { RequireAuth } from "@/components/auth/RequireAuth";
+import { useOnboarding } from "@/components/onboarding/OnboardingProvider";
 
 const SECTIONS = [
   { key: "songs", Icon: Music },
@@ -52,17 +54,27 @@ function RichText({ text }: { text: string }) {
 
 export default function GuidePage() {
   const { t } = useTranslation();
+  const { openTour } = useOnboarding();
 
   return (
     <RequireAuth>
       <div className="min-h-screen bg-background">
         <div className="max-w-2xl mx-auto px-4 pt-6 pb-16 space-y-6">
-          <header className="space-y-1.5">
-            <div className="flex items-center gap-2">
-              <BookOpen className="h-5 w-5 text-primary" />
-              <h1 className="text-lg font-bold text-foreground">{t("guide.title")}</h1>
+          <header className="space-y-3">
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-2">
+                <BookOpen className="h-5 w-5 text-primary" />
+                <h1 className="text-lg font-bold text-foreground">{t("guide.title")}</h1>
+              </div>
+              <p className="text-sm text-muted-foreground">{t("guide.subtitle")}</p>
             </div>
-            <p className="text-sm text-muted-foreground">{t("guide.subtitle")}</p>
+            <button
+              onClick={openTour}
+              className="inline-flex items-center gap-2 rounded-lg bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground transition-all hover:bg-primary/90 active:scale-[.97] cursor-pointer"
+            >
+              <PlayCircle className="h-4 w-4" />
+              {t("onboarding.replay")}
+            </button>
           </header>
 
           {/* Sommaire */}
