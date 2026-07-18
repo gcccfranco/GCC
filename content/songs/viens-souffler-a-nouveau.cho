@@ -4,7 +4,6 @@
 {themes: Saint-Esprit, Adoration}
 
 {start_of_intro: Intro}
-F / C / I G / Am / I F / C / I G / / / I
 [F][ ][C][ ][G][ ][Am][ ][F][ ][C][ ][G]
 {end_of_intro}
 
@@ -25,10 +24,8 @@ Les [G]braises du ré[Am]veil attisées
 Le doux parfum des [Am]cieux
 Déverse Ton Es[C]prit
 Déverse Ton Es[G]prit
-[ ]Oh oh ohhhh
+Oh oh ohhhh
 {end_of_chorus}
-
-
 
 {start_of_verse: Couplet 3}
 [F]Nos cœurs marqués d'une [C]sainte crainte
@@ -37,7 +34,7 @@ Déverse Ton Es[G]prit
 {end_of_verse}
 
 {start_of_verse: Couplet 4}
- [F]Donc, nous l'Église [C]de la Terre
+[F]Donc, nous l'Église [C]de la Terre
 [G]Rayonnant Ta [Am]lumière
 [F]Pour Ton retour et [C]Ton règne, nous [G]prions
 {end_of_verse}
@@ -53,12 +50,12 @@ Déverse Ton Es[C]prit
 Déverse Ton Es[G]prit
 {end_of_chorus}
 
-{start_of_chorus: Refrain Post}
+{start_of_postchorus: Post Refrain }
 Oui déverse[C/E]ton Esprit ([F]déverse Ton Esprit)
 Déverse [G]Ton Esprit ([Am]déverse Ton Esprit)
 Déverse [G/B]Ton Esprit ([C]déverse Ton Esprit)
 Déverse [C/E]Ton Esprit[F]
-{end_of_chorus}
+{end_of_postchorus}
 
 {start_of_bridge: Pont}
 [F]Que tous les rachetés
