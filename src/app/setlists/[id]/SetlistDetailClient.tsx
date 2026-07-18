@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
+  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
@@ -34,6 +35,7 @@ import { formatDate } from "@/lib/utils/formatDate";
 import { useScrollDirection } from "@/hooks/useScrollDirection";
 import { ListView } from "./_components/ListView";
 import { PartitionsView } from "./_components/PartitionView";
+import { getChartStylePref, setChartStylePref } from "@/lib/chartStylePref";
 import { fetchSongAST, type SongContent} from "@/lib/api/songs";
 import { PerformanceMode } from "@/components/performance/PerformanceMode";
 import { EditLineSheet, type EditLineTarget } from "@/components/setlists/EditLineSheet";
@@ -98,6 +100,8 @@ export function SetlistDetailClient() {
   const [showChords, setShowChords] = useState(true);
   // Affichage du pinyin en vue partitions — préférence persistée (par appareil).
   const [showPinyin, setShowPinyin] = useState(true);
+  // Couleurs par section — préférence par appareil partagée (fiche chant, mode louange).
+  const [chartStyle, setChartStyle] = useState(true);
   const [view, setView] = useState<"liste" | "partitions">("liste");
   const [deleting, setDeleting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -124,7 +128,12 @@ export function SetlistDetailClient() {
   // Restaure la préférence d'affichage du pinyin (masqué si "0").
   useEffect(() => {
     setShowPinyin(localStorage.getItem("gcc.showPinyin") !== "0");
+    setChartStyle(getChartStylePref());
   }, []);
+  const toggleChartStyle = (v: boolean) => {
+    setChartStyle(v);
+    setChartStylePref(v);
+  };
   function togglePinyin() {
     setShowPinyin((v) => {
       const next = !v;
@@ -734,6 +743,18 @@ export function SetlistDetailClient() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
+                  {view === "partitions" && (
+                    <>
+                      <DropdownMenuCheckboxItem
+                        checked={chartStyle}
+                        onCheckedChange={toggleChartStyle}
+                        onSelect={(e) => e.preventDefault()}
+                      >
+                        {t("performance.chartStyle")}
+                      </DropdownMenuCheckboxItem>
+                      <DropdownMenuSeparator />
+                    </>
+                  )}
                   {canEdit && (
                     <DropdownMenuItem asChild>
                       <Link href={`/setlists/${id}/edit`}>
@@ -855,6 +876,7 @@ export function SetlistDetailClient() {
               loading={loadingContent}
               showChordsGlobal={showChords}
               showPinyinGlobal={showPinyin}
+              chartStyle={chartStyle}
               editMode={editPartitions}
               onSelectLine={handleSelectLine}
               onRevert={(itemIndex) => setConfirmRevert(itemIndex)}
