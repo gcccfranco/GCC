@@ -446,224 +446,6 @@
     "emptyPast": "Aucun service passé trouvé.",
     "setlist": "Setlist"
   },
-  "onboarding": {
-    "title": "Bienvenue sur GCC Louange",
-    "next": "Suivant",
-    "prev": "Précédent",
-    "skip": "Passer",
-    "done": "Terminer",
-    "step": "Étape {{n}} / {{total}}",
-    "replay": "Revoir le guide",
-    "placeholder": "Aperçu à venir",
-    "steps": {
-      "welcome": {
-        "title": "Bienvenue 👋",
-        "body": "En quelques écrans, découvre comment trouver un chant, préparer un culte et rester au courant. Tu pourras revoir ce guide à tout moment."
-      },
-      "songs": {
-        "title": "Trouver un chant",
-        "body": "L'onglet **Louange** ouvre la liste des chants — accessible même sans compte.",
-        "points": [
-          "Cherche par titre, par **pinyin** (chants chinois) ou par artiste.",
-          "La pastille de couleur à gauche indique la langue : **bleu = français**, **rouge = chinois**.",
-          "Les filtres limitent l'affichage à une langue ou à un thème.",
-          "Tes derniers chants ouverts apparaissent sous « Récemment consultés ».",
-          "Un chant manque ? **Proposer un nouveau chant** l'envoie aux responsables."
-        ],
-        "labels": {
-          "tab": "Onglet Louange",
-          "search": "Recherche",
-          "dot": "Langue du chant"
-        }
-      },
-      "song": {
-        "title": "Ouvrir un chant",
-        "body": "Un chant affiche sa partition, ses liens d'écoute et ses outils.",
-        "points": [
-          "Écoute-le via le **lien YouTube**.",
-          "**Personnaliser** adapte la partition à tes besoins (écran suivant).",
-          "Repéré une erreur ? Tu peux la **signaler** en un clic."
-        ],
-        "labels": {
-          "customize": "Personnaliser",
-          "links": "Lien YouTube"
-        }
-      },
-      "customize": {
-        "title": "Transposer et personnaliser",
-        "body": "Tes réglages servent aussi au **PDF** et au **Mode Louange**.",
-        "points": [
-          "Transpose dans une autre tonalité (boutons − / + ou choix direct).",
-          "Affiche ou masque les **accords**, et le **pinyin** pour les chants chinois.",
-          "Réorganise, ajoute ou masque des **sections**, et règle la taille du texte.",
-          "**Réinitialiser** revient à la version d'origine."
-        ],
-        "labels": {
-          "transpose": "Tonalité",
-          "toggles": "Accords / pinyin",
-          "sections": "Sections"
-        }
-      },
-      "performance": {
-        "title": "Le Mode Louange",
-        "body": "Le chant en plein écran, page par page, pour jouer sans distraction.",
-        "points": [
-          "Balaye ou utilise les flèches pour changer de page.",
-          "Le **crayon**, le surligneur et la gomme écrivent sur la partition.",
-          "Tes **annotations** sont gardées sur ton compte et réapparaissent.",
-          "**Vues par rôle** : l'affichage s'adapte à ton instrument en un geste — **Pianiste**, **Guitariste** (avec capo), **Présidence**, **Choriste** ou **Batteur**.",
-          "Ajuste la taille du texte et affiche/masque les accords depuis le mode."
-        ],
-        "labels": {
-          "annotate": "Annoter",
-          "swipe": "Changer de page"
-        }
-      },
-      "planning": {
-        "title": "Le planning",
-        "body": "L'onglet **Planning** montre les services de l'église.",
-        "points": [
-          "Cultes, Campus, Intergroupe, Interfranco…",
-          "Les **couleurs** distinguent les types de service.",
-          "Quand une setlist existe pour un service, un lien direct y mène."
-        ],
-        "labels": {
-          "tab": "Onglet Planning",
-          "colors": "Types de service"
-        }
-      },
-      "services": {
-        "title": "Mes Services",
-        "body": "**Mes Services** ne garde que les dates où **tu** es prévu.",
-        "points": [
-          "Renseigne ton **nom de planning** dans ton profil pour qu'il se remplisse.",
-          "Un lien mène directement à la setlist de ton service, si elle existe."
-        ],
-        "labels": {
-          "tab": "Onglet Mes Services"
-        }
-      },
-      "setlists": {
-        "title": "Les setlists",
-        "body": "Une setlist regroupe les chants d'un culte ou d'une réunion.",
-        "points": [
-          "Ouvre-la pour lancer le **Mode Louange** ou télécharger un **PDF unique**.",
-          "Chaque chant garde sa tonalité et ses notes propres au culte.",
-          "**Dupliquer** crée ta copie ; **Partager** copie le lien.",
-          "Une setlist **privée** ou en **brouillon** reste cachée des autres."
-        ],
-        "labels": {
-          "open": "Ouvrir une setlist",
-          "pdf": "PDF complet"
-        }
-      },
-      "composeInfos": {
-        "title": "Composer : les infos",
-        "body": "Si tu peux créer une setlist, l'éditeur commence par le cadre du culte.",
-        "points": [
-          "Donne un **titre** et choisis la **séance** (depuis le planning ou à la main).",
-          "Indique la **présidence**.",
-          "Ajoute des **notes générales** (thème, contexte)."
-        ],
-        "labels": {
-          "seance": "Séance & présidence"
-        }
-      },
-      "composeSongs": {
-        "title": "Composer : les chants",
-        "body": "Ajoute les chants, puis mets-les dans l'ordre.",
-        "points": [
-          "**Ajoute** des chants via la recherche.",
-          "**Réordonne-les** par glisser-déposer.",
-          "Règle par chant : tonalité, accords, pinyin et **structure**.",
-          "**Adapter** : modifie les **accords** ou les **paroles** d'un chant — ces changements ne concernent que cette setlist."
-        ],
-        "labels": {
-          "add": "Ajouter un chant",
-          "reorder": "Glisser pour réordonner"
-        }
-      },
-      "composeAdvanced": {
-        "title": "Composer : transitions & fusions",
-        "body": "L'éditeur va bien plus loin qu'une simple liste.",
-        "points": [
-          "**Notes à trois niveaux** : la setlist, un chant, une section précise.",
-          "**Nuances par section** : pose une dynamique ou une indication (pp, mf, crescendo, a cappella…) sur une section.",
-          "**Transitions** : note une modulation, un enchaînement ou un silence après une section.",
-          "**Fusion (medley)** : enchaîne plusieurs chants ; **Mélanger les sections** les entrelace.",
-          "**Brouillon** : enregistre pour finir plus tard, invisible des autres."
-        ],
-        "labels": {
-          "transitions": "Transitions",
-          "merge": "Fusion / medley"
-        }
-      },
-      "annonces": {
-        "title": "Annonces",
-        "body": "L'onglet **Annonces** rassemble les infos de l'équipe.",
-        "points": [
-          "Répétitions, consignes, infos de groupe ou de classe EDD.",
-          "Les annonces **épinglées** restent en haut ; les liens sont cliquables.",
-          "La publication dépend de tes droits."
-        ],
-        "labels": {
-          "tab": "Onglet Annonces",
-          "pinned": "Épinglées en haut"
-        }
-      },
-      "notifications": {
-        "title": "Reste au courant",
-        "body": "Active les **notifications** depuis ton profil.",
-        "points": [
-          "Sois prévenu d'un **nouveau service** ou d'une **setlist prête**.",
-          "Sur **iPhone/iPad**, ajoute d'abord le site à l'écran d'accueil.",
-          "Sur **Android**, l'option est disponible directement."
-        ],
-        "labels": {
-          "toggle": "Interrupteur notifications"
-        }
-      },
-      "notifier": {
-        "title": "Envoyer une notification",
-        "body": "L'onglet **Notifier** prévient les bonnes personnes.",
-        "points": [
-          "Choisis l'**audience** (ton service, ton groupe, ta classe EDD).",
-          "Rédige le message : il part en notification push."
-        ],
-        "labels": {
-          "audience": "Choisir l'audience"
-        }
-      },
-      "admin": {
-        "title": "Administration",
-        "body": "La console **Admin** pilote le site.",
-        "points": [
-          "Gère les **comptes** et leurs **rôles**.",
-          "Ouvre ou ferme les **inscriptions**.",
-          "Règle les paramètres généraux."
-        ],
-        "labels": {
-          "manage": "Comptes & rôles"
-        }
-      },
-      "profile": {
-        "title": "Ton profil",
-        "body": "Ton **profil** conditionne ce que tu vois et ce que tu reçois.",
-        "points": [
-          "Choisis ton **nom de planning** (indispensable pour Mes Services).",
-          "Renseigne tes **lieux de service**.",
-          "Règle tes **préférences de notification**."
-        ],
-        "labels": {
-          "planningName": "Nom de planning"
-        }
-      },
-      "finish": {
-        "title": "C'est parti 🎵",
-        "body": "Tu as l'essentiel ! Retrouve ce guide à tout moment via l'icône 📖 en haut, puis le bouton **Revoir le guide**. Bon service !"
-      }
-    }
-  },
   "guide": {
     "title": "Guide d'utilisation",
     "subtitle": "Tout ce qu'il faut savoir pour utiliser le site GCC Louange.",
@@ -699,7 +481,8 @@
           "L'outil d'annotation (crayon, surligneur, gomme) écrit directement sur la partition.",
           "Choisis l'outil, l'épaisseur (les cases montrent l'épaisseur réelle du trait) et la couleur.",
           "Tes annotations sont enregistrées sur ton compte et réapparaissent à la même mise en page.",
-          "Ajuste la **taille du texte** et **affiche/masque les accords** directement depuis le mode."
+          "Ajuste la **taille du texte** et **affiche/masque les accords** directement depuis le mode.",
+          "**Vues par rôle** : l'affichage s'adapte à ton instrument en un geste — **Pianiste**, **Guitariste** (avec capo), **Présidence**, **Choriste** ou **Batteur**."
         ]
       },
       "setlists": {
@@ -722,7 +505,9 @@
           "**Informations** : titre, **séance** (choisie dans le planning ou saisie à la main), **présidence**, et des **notes** générales (thème, contexte).",
           "**Ajoute des chants** via la recherche, puis **réordonne-les** par glisser-déposer.",
           "**Réglages par chant** : tonalité, accords, pinyin, mode standard / Jianpu, et structure (sections jouées et leur ordre).",
+          "**Adapter** : modifie les **accords** ou les **paroles** d'un chant — ces changements ne concernent que cette setlist.",
           "**Notes à trois niveaux** : note de la setlist, note d'un chant, et note d'une section précise.",
+          "**Nuances par section** : pose une dynamique ou une indication (pp, mf, crescendo, a cappella…) sur une section.",
           "**Transitions** : ajoute un texte « transition après cette section » pour noter une modulation, un enchaînement, un silence…",
           "**Fusion de chants (medley)** : sélectionne plusieurs chants puis **Fusionner** pour les enchaîner d'un bloc ; **Mélanger les sections** entrelace leurs couplets/refrains, et **Défusionner** les sépare à nouveau.",
           "**Brouillon** : enregistre en brouillon pour finir plus tard — invisible des autres tant qu'il n'est pas publié."
@@ -790,6 +575,82 @@
           "Le bouton **lune / soleil** bascule entre thème clair et sombre.",
           "Une fois complété, le profil n'est modifiable que par un responsable : signale-lui toute erreur."
         ]
+      }
+    },
+    "captures": {
+      "songs": {
+        "labels": {
+          "tab": "Onglet Louange",
+          "search": "Recherche",
+          "dot": "Langue du chant"
+        }
+      },
+      "song": {
+        "labels": {
+          "customize": "Personnaliser"
+        }
+      },
+      "customize": {
+        "labels": {
+          "transpose": "Tonalité",
+          "sections": "Sections"
+        }
+      },
+      "performance": {
+        "labels": {
+          "annotate": "Annoter",
+          "swipe": "Changer de page"
+        }
+      },
+      "setlists": {
+        "labels": {
+          "open": "Ouvrir une setlist"
+        }
+      },
+      "composeInfos": {
+        "caption": "Étape 1 — le cadre du culte (titre, catégorie, visibilité)"
+      },
+      "composeSongs": {
+        "caption": "Étape 2 — ajouter et ordonner les chants",
+        "labels": {
+          "add": "Ajouter un chant"
+        }
+      },
+      "composeAdvanced": {
+        "caption": "Réglages par chant : tonalité, structure, fusion",
+        "labels": {
+          "merge": "Fusion / medley"
+        }
+      },
+      "planning": {
+        "labels": {
+          "colors": "Types de service"
+        }
+      },
+      "services": {
+        "labels": {
+          "tab": "Onglet Mes Services"
+        }
+      },
+      "annonces": {
+        "labels": {
+          "tab": "Onglet Annonces"
+        }
+      },
+      "notifications": {
+        "labels": {
+          "toggle": "Interrupteur notifications"
+        }
+      },
+      "admin": {
+        "labels": {
+          "manage": "Comptes & rôles"
+        }
+      },
+      "profile": {
+        "labels": {
+          "planningName": "Nom de planning"
+        }
       }
     }
   },
