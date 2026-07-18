@@ -96,6 +96,7 @@ type BoxStyle = "filled" | "outline" | "leftbar" | "none";
 const SECTION_BOX: Record<string, BoxStyle> = {
   chorus:       "filled",
   prechorus:    "leftbar",
+  postchorus:   "filled",
   intro:        "none",
   final:        "filled",
   coda:         "filled",
