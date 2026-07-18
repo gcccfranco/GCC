@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import type { SetlistItem } from "@/types/setList";
 import type { SongContent } from "@/lib/api/songs";
 import { SongView, SectionView, TransitionNote } from "@/components/song/SongView";
@@ -7,7 +7,6 @@ import { transposeAST } from "@/lib/transposeAST";
 import { semitonesTo } from "@/lib/transpose";
 import { itemAst } from "@/lib/chordpro/itemContent";
 import { Link2, MessageSquare } from "lucide-react";
-import { getChartStylePref } from "@/lib/chartStylePref";
 import type { ChordProAST, ChordProLine } from "@/types/chordPro";
 
 function TransitionBanner({ text }: { text: string }) {
@@ -29,6 +28,7 @@ export function PartitionsView({
   loading,
   showChordsGlobal,
   showPinyinGlobal,
+  chartStyle,
   editMode = false,
   onSelectLine,
   onRevert,
@@ -38,16 +38,14 @@ export function PartitionsView({
   loading: boolean;
   showChordsGlobal: boolean;
   showPinyinGlobal: boolean;
+  /** Couleurs par section — préférence par appareil, pilotée par la page. */
+  chartStyle: boolean;
   /** Mode « adapter le chant » : lignes tappables (hors fusions), rétablir l'original. */
   editMode?: boolean;
   onSelectLine?: (itemIndex: number, line: ChordProLine, sectionUid?: string) => void;
   onRevert?: (itemIndex: number) => void;
 }) {
   const { t } = useTranslation();
-  // Couleurs par section — préférence par appareil partagée (fiche chant,
-  // mode louange) ; chargée après montage pour éviter un écart d'hydratation.
-  const [chartStyle, setChartStyle] = useState(true);
-  useEffect(() => setChartStyle(getChartStylePref()), []);
   if (loading) {
     return (
       <div className="text-sm text-muted-foreground text-center py-16">
