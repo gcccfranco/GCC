@@ -29,7 +29,7 @@ const LANG_THEME = {
   },
 } as const;
 
-const FILLED_BOX = new Set(["chorus", "final", "coda"]);
+const FILLED_BOX = new Set(["chorus", "postchorus", "final", "coda"]);
 const OUTLINE_BOX = new Set(["bridge"]);
 // Pré-refrain : barre d'accent à gauche seule (pas de cadre), pour le distinguer du pont.
 const LEFT_BAR = new Set(["prechorus"]);
@@ -41,6 +41,7 @@ const CHART_TYPE_COLOR: Record<string, string> = {
   verse: "var(--sec-verse)",
   prechorus: "var(--sec-prechorus)",
   chorus: "var(--sec-chorus)",
+  postchorus: "var(--sec-chorus)",
   final: "var(--sec-chorus)",
   bridge: "var(--sec-bridge)",
   outro: "var(--sec-outro)",
@@ -451,6 +452,8 @@ export interface SongViewProps {
   sectionNotes?: Record<string, string>;
   sectionTransitions?: Record<string, string>;
   sectionNuances?: Record<string, SectionNuance>;
+  /** Style « chart » : couleurs par type de section + accords neutres. */
+  chartStyle?: boolean;
   /** Mode édition setlist : rend chaque ligne tappable (ouvre la sheet d'édition). */
   onLineSelect?: (line: ChordProLine, sectionUid?: string) => void;
 }
@@ -464,6 +467,7 @@ export function SongView({
   sectionNotes = {},
   sectionTransitions = {},
   sectionNuances = {},
+  chartStyle = false,
   onLineSelect,
 }: SongViewProps) {
   const { t } = useTranslation();
@@ -555,6 +559,7 @@ export function SongView({
                   useJianpu={canUseJianpu}
                   note={note}
                   nuance={nuance}
+                  chartStyle={chartStyle}
                   onLineSelect={onLineSelect}
                 />
                 {transition && <TransitionNote text={transition} />}
