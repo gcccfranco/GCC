@@ -17,6 +17,7 @@ import { SectionView, TransitionNote } from "@/components/song/SongView";
 import { AnnotationCanvas, StrokesLayer } from "./AnnotationCanvas";
 import { type AnnotationData, serializeAnnotations, deserializeAnnotations } from "@/lib/annotations/strokes";
 import { loadAnnotation, saveAnnotation } from "@/lib/firebase/annotations";
+import { getChartStylePref, setChartStylePref } from "@/lib/chartStylePref";
 import { useAuth } from "@/lib/firebase/auth";
 import type { SetlistItem } from "@/types/setList";
 import type { SongContent } from "@/lib/api/songs";
@@ -266,14 +267,10 @@ export function PerformanceMode({
       return false;
     }
   });
-  // Style « chart » : couleurs par type de section + accords neutres (cf. SectionView)
-  const [chartStyle, setChartStyle] = useState(() => {
-    try {
-      return localStorage.getItem("perf-chart-style") === "1";
-    } catch {
-      return false;
-    }
-  });
+  // Style « chart » : couleurs par type de section + accords neutres (cf.
+  // SectionView). Préférence par appareil partagée avec la fiche chant et la
+  // vue setlist (chartStylePref).
+  const [chartStyle, setChartStyle] = useState(() => getChartStylePref());
   // Pinyin (chants zh) : masquable pour qui lit les caractères. Défaut : affiché.
   const [showPinyin, setShowPinyin] = useState(() => {
     try {
@@ -356,7 +353,7 @@ export function PerformanceMode({
 
   const toggleChartStyle = useCallback((v: boolean) => {
     setChartStyle(v);
-    try { localStorage.setItem("perf-chart-style", v ? "1" : "0"); } catch { /* ignore */ }
+    setChartStylePref(v);
   }, []);
 
   const clearRolePreset = useCallback(() => {
