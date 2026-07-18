@@ -5,7 +5,6 @@ import { I18nProvider } from "@/lib/I18nProvider";
 import { Navbar } from "@/components/layout/Navbar";
 import { MobileTabBar } from "@/components/layout/MobileTabBar";
 import { PageTransition } from "@/components/layout/PageTransition";
-import { OnboardingProvider } from "@/components/onboarding/OnboardingProvider";
 import "./globals.css";
 
 const inter = Inter({
@@ -50,13 +49,11 @@ export default function RootLayout({
       <body className={`${inter.variable} font-sans antialiased min-h-screen bg-background`}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <I18nProvider>
-            <OnboardingProvider>
-              <Navbar />
-              <main className="pt-[var(--nav-h)]">
-                <PageTransition>{children}</PageTransition>
-              </main>
-              <MobileTabBar />
-            </OnboardingProvider>
+            <Navbar />
+            <main className="pt-[var(--nav-h)]">
+              <PageTransition>{children}</PageTransition>
+            </main>
+            <MobileTabBar />
           </I18nProvider>
         </ThemeProvider>
       </body>
