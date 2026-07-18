@@ -26,7 +26,7 @@ export type ChordProLine = {
 };
 
 export type ChordProSection = {
-  type: "verse" | "chorus" | "bridge" | "intro" | "outro" | "prechorus" | "other";
+  type: "verse" | "chorus" | "bridge" | "intro" | "outro" | "prechorus" | "postchorus" | "other";
   id: string;
   name: string;
   number?: string;
