@@ -160,6 +160,13 @@ service cloud.firestore {
       allow write: if signedIn() && request.auth.uid == uid;
     }
 
+    // Drapeau « guide de bienvenue déjà vu » — doc auto-géré par l'intéressé
+    // (le profil users/{uid} est verrouillé en écriture).
+    match /onboarding/{uid} {
+      allow read: if signedIn() && request.auth.uid == uid;
+      allow write: if signedIn() && request.auth.uid == uid;
+    }
+
     match /config/app {
       // La page d'inscription lit registrationOpen sans être connectée
       allow read: if true;
