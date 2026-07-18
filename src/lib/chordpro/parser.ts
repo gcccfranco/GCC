@@ -67,6 +67,8 @@ const SECTION_TYPE_MAP: Record<string, ChordProSection["type"]> = {
   outro: "outro",
   prechorus: "prechorus",
   pre_chorus: "prechorus",
+  postchorus: "postchorus",
+  post_chorus: "postchorus",
   tab: "other",
   grid: "other",
 };
@@ -108,6 +110,9 @@ export function parseSectionHeader(typeKey: string, value: string) {
   if (type === "other" || type === "verse") {
     if (lowerLabel.includes("couplet") || lowerLabel.includes("verse") || lowerLabel.includes("主歌")) {
       type = "verse";
+    // Post-refrain avant refrain : « post-refrain » contient « refrain »
+    } else if (lowerLabel.includes("post-refrain") || lowerLabel.includes("post-chorus") || lowerLabel.includes("postchorus") || lowerLabel.includes("后副歌")) {
+      type = "postchorus";
     } else if (lowerLabel.includes("refrain") || lowerLabel.includes("chorus") || lowerLabel.includes("副歌")) {
       type = "chorus";
     } else if (lowerLabel.includes("pont") || lowerLabel.includes("bridge") || lowerLabel.includes("桥段")) {
@@ -176,6 +181,7 @@ export function formatSectionName(
     else if (cleanName === "intro" || cleanName === "前奏") lookupKey = "intro";
     else if (cleanName === "outro" || cleanName === "尾声" || cleanName === "ending") lookupKey = "outro";
     else if (cleanName === "pre-chorus" || cleanName === "prechorus" || cleanName === "pré-refrain" || cleanName === "副歌前奏") lookupKey = "prechorus";
+    else if (cleanName === "post-chorus" || cleanName === "postchorus" || cleanName === "post-refrain" || cleanName === "后副歌") lookupKey = "postchorus";
     else if (cleanName === "coda") lookupKey = "coda";
     else if (cleanName === "tag") lookupKey = "tag";
     else if (cleanName === "interlude" || cleanName === "inter" || cleanName === "间奏") lookupKey = "interlude";
