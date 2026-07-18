@@ -28,6 +28,11 @@ export const viewport: Viewport = {
   themeColor: "#EA580C",
   width: "device-width",
   initialScale: 1,
+  // Pinch-zoom désactivé : sur iOS, un zoom pincé décroche les éléments
+  // position:fixed (la barre d'onglets se retrouve au milieu de l'écran).
+  // L'app a ses propres contrôles A−/A+ pour la taille du texte.
+  maximumScale: 1,
+  userScalable: false,
   viewportFit: "cover",
 };
 
