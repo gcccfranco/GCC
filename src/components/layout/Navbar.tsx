@@ -408,10 +408,10 @@ export function Navbar() {
               ) : (
                 <Link
                   href="/login"
-                  className="hidden lg:flex h-[34px] min-w-[34px] px-2 rounded-[9px] border border-border bg-card text-muted-foreground hover:text-foreground hover:border-muted-foreground/50 transition-all duration-150 active:scale-[.96] items-center justify-center gap-1.5 text-[12.5px] font-semibold"
+                  className="flex h-[34px] px-3 rounded-[9px] bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-150 active:scale-[.96] items-center justify-center gap-1.5 text-[12.5px] font-semibold"
                 >
                   <LogIn className="h-3.5 w-3.5" />
-                  <span className="hidden md:inline">{t("common.header.login")}</span>
+                  <span className="hidden sm:inline">{t("common.header.login")}</span>
                 </Link>
               )
             )}
