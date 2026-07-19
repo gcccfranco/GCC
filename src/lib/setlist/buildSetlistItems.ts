@@ -90,6 +90,9 @@ export function buildSetlistItems(items: FormListItem[]): SetlistItem[] {
       item.sectionItems.filter((s) => s.transition.trim()).map((s) => [s.uid, s.transition.trim()])
     );
     const sectionNuances = buildSectionNuances(item.sectionItems);
+    const sectionKeys = Object.fromEntries(
+      item.sectionItems.filter((s) => s.keyChange?.trim()).map((s) => [s.uid, s.keyChange.trim()])
+    );
     return {
       songSlug: item.song.slug,
       position: idx + 1,
@@ -101,6 +104,7 @@ export function buildSetlistItems(items: FormListItem[]): SetlistItem[] {
       sectionNotes,
       sectionTransitions,
       ...(Object.keys(sectionNuances).length > 0 ? { sectionNuances } : {}),
+      ...(Object.keys(sectionKeys).length > 0 ? { sectionKeys } : {}),
       notes: item.notes,
     };
   });
