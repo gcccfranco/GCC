@@ -392,6 +392,7 @@ export function PerformanceMode({
   );
 
   const blockRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const measureInnerRef = useRef<HTMLDivElement | null>(null);
   const chromeTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const tapStart = useRef<{ x: number; y: number; time: number } | null>(null);
 
@@ -424,18 +425,17 @@ export function PerformanceMode({
   useEffect(() => {
     const run = async () => {
       await document.fonts.ready;
-      // Budget de hauteur en px CSS NON zoomés (la mesure se fait hors zoom) :
-      // hauteur visible ramenée à l'échelle 1 (÷ fontScale), moins le py-4 du
-      // conteneur (32px) et une marge de sécurité pour la marge haute du 1er
-      // bloc d'une page (comptée dans le delta du bloc précédent à la mesure).
+      // Budget de hauteur en px CSS à l'échelle 1 (la mesure se fait hors
+      // échelle) : hauteur visible ÷ fontScale, moins les paddings RÉELS du
+      // conteneur de mesure (py-4 + safe areas), et une marge de sécurité pour
+      // la marge haute du 1er bloc d'une page. Les paddings sont lus calculés
+      // (px résolus) : fiable sur tout appareil, contrairement au parseFloat
+      // d'une variable CSS env() dont la résolution dépend du navigateur.
       const safety = 24;
-      // Safe areas (encoche / home indicator) : lues sur la racine (non zoomée),
-      // valent 0 hors appareil à encoche → pagination inchangée ailleurs.
-      const cs = rootRef.current ? getComputedStyle(rootRef.current) : null;
-      const insetTop = cs ? parseFloat(cs.getPropertyValue("--sat")) || 0 : 0;
-      const insetBottom = cs ? parseFloat(cs.getPropertyValue("--sab")) || 0 : 0;
-      const viewportH =
-        (window.innerHeight - insetTop - insetBottom) / fontScale - 32 - safety;
+      const mcs = measureInnerRef.current ? getComputedStyle(measureInnerRef.current) : null;
+      const padTop = mcs ? parseFloat(mcs.paddingTop) || 0 : 16;
+      const padBottom = mcs ? parseFloat(mcs.paddingBottom) || 0 : 16;
+      const viewportH = window.innerHeight / fontScale - padTop - padBottom - safety;
       // Hauteur réellement occupée par chaque bloc, marges verticales comprises :
       // delta entre le haut du bloc et le haut du bloc suivant dans le flux.
       const rects = blocks.map((_, i) => blockRefs.current[i]?.getBoundingClientRect() ?? null);
@@ -659,9 +659,10 @@ export function PerformanceMode({
   const songPageIdx = currentPage - songStartPage;
   const isLastPageOfSong = pages.length > 0 && currentPage === songEndPage;
 
-  // Padding interne des conteneurs zoomés : px-6 py-4 + safe areas.
-  // Les insets sont divisés par le zoom pour rester exacts en pixels physiques
-  // (16px + inset une fois multipliés par fontScale) — 0 hors encoche.
+  // Padding interne des conteneurs mis à l'échelle : px-6 py-4 + safe areas.
+  // Les insets sont divisés par le facteur d'échelle pour rester exacts en
+  // pixels physiques (16px + inset une fois multipliés par fontScale) — 0 hors
+  // encoche.
   const contentPadding: React.CSSProperties = {
     paddingTop: `calc(1rem + var(--sat, 0px) / ${fontScale})`,
     paddingBottom: `calc(1rem + var(--sab, 0px) / ${fontScale})`,
@@ -688,10 +689,10 @@ export function PerformanceMode({
         style={{ opacity: 0, zIndex: -1 }}
         aria-hidden="true"
       >
-        {/* Mesure HORS zoom : iOS rend des rects faux dans un conteneur zoomé
-            (sections « coupées » en bas de page). On émule la largeur de mise
-            en page du zoom (100%/fontScale) et on pagine en px CSS non zoomés. */}
-        <div style={{ width: `calc(100% / ${fontScale})`, ...contentPadding }}>
+        {/* Mesure à l'échelle 1, à la largeur de mise en page du contenu
+            (100%/fontScale) : mêmes conditions de layout que le rendu (qui est
+            agrandi par transform, sans reflow) → hauteurs exactes au pixel. */}
+        <div ref={measureInnerRef} style={{ width: `calc(100% / ${fontScale})`, ...contentPadding }}>
           {blocks.map((block, i) => (
             <div
               key={block.uid}
@@ -715,18 +716,24 @@ export function PerformanceMode({
       </div>
 
       {/* ── Content area ── */}
-      {/* La loupe (transform: scale + translate) agrandit le texte SANS re-paginer,
-          en miroir exact du canvas d'annotation. Origine haut-gauche = (0,0) du
-          viewport, comme le calcul du canvas. transform plutôt que zoom : iOS gère
-          mal `zoom` (cf. fix fiche chant) et on veut le débordement + déplacement. */}
+      {/* Taille de police via transform: scale + largeur/hauteur compensées,
+          PAS `zoom` : zoom re-calcule la mise en page avec des arrondis propres
+          au moteur (WebKit surtout) → retours à la ligne différents de la
+          mesure → sections coupées en bas de page. transform ne re-met pas en
+          page : le rendu est l'agrandissement exact du layout mesuré, sur tout
+          appareil. La loupe d'annotation (translate + scale) se compose avec le
+          même facteur, en miroir exact du canvas d'annotation (origine (0,0)). */}
       <div
-        className="absolute inset-0 overflow-hidden"
+        className="absolute top-0 left-0 overflow-hidden"
         style={{
           zIndex: 1,
-          zoom: fontScale,
+          width: `${100 / fontScale}%`,
+          height: `${100 / fontScale}%`,
+          transform: `scale(${fontScale})`,
+          transformOrigin: "top left",
           ...contentPadding,
           ...(annotateMode && annotZoom !== 1
-            ? { transform: `translate(${annotPan.x}px, ${annotPan.y}px) scale(${annotZoom})`, transformOrigin: "top left" }
+            ? { transform: `translate(${annotPan.x}px, ${annotPan.y}px) scale(${annotZoom * fontScale})` }
             : null),
         }}
       >
@@ -749,10 +756,9 @@ export function PerformanceMode({
             />
           );
           return (
-            // iOS calcule mal un `zoom` imbriqué dans le `zoom: fontScale` du
-            // conteneur (largeur fausse → colonnes d'ossature coupées à droite
-            // sur tablette). transform + largeur compensée = même géométrie,
-            // sans imbrication de zoom.
+            // Réduction d'une page trop haute : transform + largeur compensée,
+            // comme le conteneur parent (jamais `zoom` — arrondis de mise en
+            // page non déterministes, cf. commentaire du conteneur).
             <div
               style={
                 page.scale < 1
