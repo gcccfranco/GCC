@@ -365,13 +365,22 @@ export function SetlistDetailClient() {
       }
     }
 
+    // Section modulée (升调) : la sheet affiche et re-stocke les accords dans
+    // la tonalité de la section, pas celle de l'item.
+    const displayKey =
+      (sectionUid
+        ? item.sectionKeys?.[sectionUid] ?? item.sectionKeys?.[sectionUid.replace(/-\d+$/, "")]
+        : undefined) ??
+      item.keyOverride ??
+      origKey;
+
     setEditTarget({
       itemIndex,
       raw: source.split("\n")[line.srcLine] ?? "",
       pinyin: line.pinyin,
       language: baseAst.metadata.language === "zh" ? "zh" : "fr",
-      semitones: item.keyOverride ? semitonesTo(origKey, item.keyOverride) : 0,
-      targetKey: item.keyOverride ?? origKey,
+      semitones: semitonesTo(origKey, displayKey),
+      targetKey: displayKey,
       originalKey: origKey,
       srcLine: line.srcLine,
       pinyinSrcLine: line.pinyinSrcLine,
@@ -496,6 +505,11 @@ export function SetlistDetailClient() {
       sectionNuances[newUid] = sectionNuances[oldUid];
       delete sectionNuances[oldUid];
     }
+    const sectionKeys = item.sectionKeys ? { ...item.sectionKeys } : undefined;
+    if (sectionKeys && sectionKeys[oldUid] !== undefined) {
+      sectionKeys[newUid] = sectionKeys[oldUid];
+      delete sectionKeys[oldUid];
+    }
     return {
       source: mat.source,
       srcLine: t.srcLine + mat.lineOffset,
@@ -506,6 +520,7 @@ export function SetlistDetailClient() {
         sectionNotes,
         ...(sectionTransitions ? { sectionTransitions } : {}),
         ...(sectionNuances ? { sectionNuances } : {}),
+        ...(sectionKeys ? { sectionKeys } : {}),
       },
     };
   }
