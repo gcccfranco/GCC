@@ -11,6 +11,8 @@ export interface FormSectionItem {
   transition: string;
   nuanceTags: string[];
   nuanceNote: string;
+  /** Modulation (升调) : tonalité cible de cette section, "" = aucune. */
+  keyChange: string;
 }
 
 export interface FormItem {
@@ -65,6 +67,7 @@ export function makeDefaultSections(sections: SectionSummary[]): FormSectionItem
     transition: "",
     nuanceTags: [],
     nuanceNote: "",
+    keyChange: "",
   }));
 }
 
@@ -85,7 +88,8 @@ function toFormItem(
   structureOverride: string[] | null,
   sectionNotes: Record<string, string>,
   sectionTransitions: Record<string, string> = {},
-  sectionNuances: Record<string, SectionNuance> = {}
+  sectionNuances: Record<string, SectionNuance> = {},
+  sectionKeys: Record<string, string> = {}
 ): FormItem {
   const allSections = song.sections ?? [];
   const orderedSections: SectionSummary[] = structureOverride && structureOverride.length > 0
@@ -111,6 +115,7 @@ function toFormItem(
         transition: sectionTransitions?.[uid] ?? sectionTransitions?.[key] ?? sectionTransitions?.[s.id] ?? "",
         nuanceTags: nuance?.tags ?? [],
         nuanceNote: nuance?.note ?? "",
+        keyChange: sectionKeys?.[uid] ?? sectionKeys?.[key] ?? sectionKeys?.[s.id] ?? "",
       };
     }),
   };
@@ -162,6 +167,6 @@ export function buildFormItems(
 
       const song = songsMap[item.songSlug];
       if (!song) return [];
-      return [toFormItem(song, item.keyOverride, item.notes, item.structureOverride, item.sectionNotes, item.sectionTransitions, item.sectionNuances)];
+      return [toFormItem(song, item.keyOverride, item.notes, item.structureOverride, item.sectionNotes, item.sectionTransitions, item.sectionNuances, item.sectionKeys)];
     });
 }
