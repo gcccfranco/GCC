@@ -4,6 +4,8 @@ import {
 import type { ChordProAST, ChordProSection, Token } from "@/types/chordPro";
 import { formatSectionName } from "@/lib/chordpro/parser";
 import { resolveStructureOverride } from "@/lib/chordpro/structure";
+import { semitonesTo } from "@/lib/transpose";
+import { transposeSection } from "@/lib/transposeAST";
 import frTranslations from "@/locales/fr.json";
 import zhTranslations from "@/locales/zh-CN.json";
 import { measureLyric, measureChord } from "@/lib/chordpro/measureText";
@@ -436,7 +438,7 @@ function TransitionPDFBlock({ text }: { text: string }) {
   );
 }
 
-function SectionBlock({ section, isZh, useJianpu, showChords, showPinyin, note, nuance, theme, uiLang, sourceLabel, sourceLabelFont }: {
+function SectionBlock({ section, isZh, useJianpu, showChords, showPinyin, note, nuance, keyChange, theme, uiLang, sourceLabel, sourceLabelFont }: {
   section: ChordProSection;
   isZh: boolean;
   useJianpu: boolean;
@@ -444,6 +446,8 @@ function SectionBlock({ section, isZh, useJianpu, showChords, showPinyin, note, 
   showPinyin: boolean;
   note?: string;
   nuance?: SectionNuance;
+  /** Modulation (升调) : tonalité cible affichée à côté du label. */
+  keyChange?: string;
   theme: Theme;
   uiLang: string;
   sourceLabel?: string;
@@ -496,6 +500,12 @@ function SectionBlock({ section, isZh, useJianpu, showChords, showPinyin, note, 
                          letterSpacing: 1.4 }}>
             {label}
           </Text>
+          {keyChange ? (
+            <Text style={{ fontSize: 8, fontWeight: 700, color: theme.accent,
+                           fontFamily: uiLang === "zh-CN" ? "SourceHanSansCN" : "SpaceGrotesk" }}>
+              {uiLang === "zh-CN" ? `升调（${keyChange}）` : `Modulation (${keyChange})`}
+            </Text>
+          ) : null}
           {sourceLabel ? (
             <Text style={{ fontSize: 7.5, color: C.subtitle, fontFamily: sourceLabelFont ?? "SpaceGrotesk",
                            fontWeight: 300 }}>
@@ -589,6 +599,8 @@ export interface SongPDFProps {
   sectionNotes?: Record<string, string>;
   sectionTransitions?: Record<string, string>;
   sectionNuances?: Record<string, SectionNuance>;
+  /** Modulation (升调) par section : uid → tonalité cible d'affichage. */
+  sectionKeys?: Record<string, string>;
   /** Optional override for the footer center label (e.g. setlist title). */
   footerCenter?: string;
   language?: string;
@@ -603,6 +615,7 @@ export function SongPDFPage({
   sectionNotes = {},
   sectionTransitions = {},
   sectionNuances = {},
+  sectionKeys = {},
   footerCenter,
   language = "fr",
 }: SongPDFProps) {
@@ -682,16 +695,23 @@ export function SongPDFPage({
           const note = sectionNotes[section.uid] ?? sectionNotes[key] ?? sectionNotes[section.id];
           const transition = sectionTransitions[section.uid] ?? sectionTransitions[key] ?? sectionTransitions[section.id];
           const nuance = sectionNuances[section.uid] ?? sectionNuances[key] ?? sectionNuances[section.id];
+          // Modulation (升调) : la section s'affiche transposée dans sa tonalité cible.
+          const targetKey = sectionKeys[section.uid] ?? sectionKeys[key] ?? sectionKeys[section.id];
+          const keyChange = targetKey && targetKey !== ast.metadata.key ? targetKey : undefined;
+          const shownSection = keyChange && ast.metadata.key
+            ? transposeSection(section, semitonesTo(ast.metadata.key, keyChange), keyChange)
+            : section;
           const items = [
             <SectionBlock
               key={`${section.uid ?? section.id}-${i}`}
-              section={section}
+              section={shownSection}
               isZh={isZh}
               useJianpu={canUseJianpu}
               showChords={showChords}
               showPinyin={isZh ? showPinyin : false}
               note={note}
               nuance={nuance}
+              keyChange={keyChange}
               theme={theme}
               uiLang={uiLang}
             />,
