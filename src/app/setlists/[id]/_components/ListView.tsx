@@ -18,23 +18,27 @@ const TRANSITION_COLORS = [
   "text-fuchsia-600 dark:text-fuchsia-400",
 ];
 
-/** Noms de sections affichables d'un chant, en respectant une éventuelle
- *  structure réorganisée (structureOverride keyé par uid/id de section). */
+/** Noms de sections affichables d'un chant (+ modulation éventuelle), en
+ *  respectant une éventuelle structure réorganisée (keyée par uid/id). */
 function sectionNamesFor(
   allSections: SectionSummary[],
   structureOverride: string[] | null | undefined,
-  t: (key: string, options?: { defaultValue?: string }) => string
-): string[] {
+  t: (key: string, options?: { defaultValue?: string }) => string,
+  sectionKeys: Record<string, string> = {}
+): { name: string; keyChange?: string }[] {
   if (structureOverride && structureOverride.length > 0) {
     return structureOverride.map((ov) => {
       const baseId = ov.replace(/-\d+$/, "");
       const s = allSections.find((sec) => sec.uid === ov || sec.id === ov || sec.id === baseId);
-      if (s) return formatSectionName(s, t);
+      if (s) return { name: formatSectionName(s, t), keyChange: sectionKeys[ov] ?? sectionKeys[s.id] };
       const type = ov.replace(/(-\d+)+$/, "");
-      return t(`songs.sections.${type}`, { defaultValue: type });
+      return { name: t(`songs.sections.${type}`, { defaultValue: type }), keyChange: sectionKeys[ov] };
     });
   }
-  return allSections.map((s) => formatSectionName(s, t));
+  return allSections.map((s, i) => ({
+    name: formatSectionName(s, t),
+    keyChange: sectionKeys[`${s.id}-${i}`] ?? sectionKeys[s.id],
+  }));
 }
 
 export function ListView({
@@ -81,7 +85,7 @@ export function ListView({
                   // (sinon on ne sait pas de quel chant vient chaque « Couplet »).
                   <div className="mt-1 space-y-1">
                     {(() => {
-                      const runs: { slug: string; title: string; names: { name: string; color?: string }[] }[] = [];
+                      const runs: { slug: string; title: string; names: { name: string; color?: string; keyChange?: string }[] }[] = [];
                       const transitions: { name: string; text: string; color: string }[] = [];
                       let tci = 0;
                       for (const ms of item.mixedStructure) {
@@ -92,7 +96,8 @@ export function ListView({
                         const color = ms.transition
                           ? TRANSITION_COLORS[tci++ % TRANSITION_COLORS.length]
                           : undefined;
-                        const entry = { name, color };
+                        const fusionSong = item.fusionSongs!.find((fs) => fs.songSlug === ms.songSlug);
+                        const entry = { name, color, keyChange: ms.keyChange ?? fusionSong?.sectionKeys?.[ms.sectionId] };
                         const last = runs[runs.length - 1];
                         if (last && last.slug === ms.songSlug) last.names.push(entry);
                         else runs.push({ slug: ms.songSlug, title, names: [entry] });
@@ -112,6 +117,11 @@ export function ListView({
                                       <span className={n.color ? `${n.color} font-medium` : undefined}>
                                         {n.name}
                                       </span>
+                                      {n.keyChange && (
+                                        <span className="ml-0.5 font-semibold text-emerald-600 dark:text-emerald-400">
+                                          ↗{n.keyChange}
+                                        </span>
+                                      )}
                                     </span>
                                   ))}
                                 </span>
@@ -139,7 +149,7 @@ export function ListView({
                       const song = songsMap[fs.songSlug];
                       const displayKey = fs.keyOverride ?? song?.originalKey ?? "?";
                       const transposed = !!fs.keyOverride && fs.keyOverride !== song?.originalKey;
-                      const names = song?.sections ? sectionNamesFor(song.sections, fs.structureOverride, t) : [];
+                      const names = song?.sections ? sectionNamesFor(song.sections, fs.structureOverride, t, fs.sectionKeys) : [];
                       return (
                         <div key={fs.songSlug}>
                           <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground/80">
@@ -156,7 +166,17 @@ export function ListView({
                           </div>
                           {names.length > 0 && (
                             <p className="text-[11px] text-muted-foreground/60 leading-tight pl-1 mt-0.5">
-                              {names.join(" · ")}
+                              {names.map((n, i) => (
+                                <span key={i}>
+                                  {i > 0 && " · "}
+                                  {n.name}
+                                  {n.keyChange && (
+                                    <span className="ml-0.5 font-semibold text-emerald-600 dark:text-emerald-400">
+                                      ↗{n.keyChange}
+                                    </span>
+                                  )}
+                                </span>
+                              ))}
                             </p>
                           )}
                         </div>
