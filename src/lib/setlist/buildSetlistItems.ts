@@ -25,12 +25,16 @@ function formItemToFusionSong(item: FormItem): FusionSong {
     item.sectionItems.filter((s) => s.note.trim()).map((s) => [s.uid, s.note.trim()])
   );
   const sectionNuances = buildSectionNuances(item.sectionItems);
+  const sectionKeys = Object.fromEntries(
+    item.sectionItems.filter((s) => s.keyChange?.trim()).map((s) => [s.uid, s.keyChange.trim()])
+  );
   return {
     songSlug: item.song.slug,
     keyOverride: item.keyOverride,
     structureOverride,
     sectionNotes,
     ...(Object.keys(sectionNuances).length > 0 ? { sectionNuances } : {}),
+    ...(Object.keys(sectionKeys).length > 0 ? { sectionKeys } : {}),
   };
 }
 
@@ -74,6 +78,7 @@ export function buildSetlistItems(items: FormListItem[]): SetlistItem[] {
             ...(ms.note?.trim() ? { note: ms.note.trim() } : {}),
             ...(ms.transition?.trim() ? { transition: ms.transition.trim() } : {}),
             ...(hasNuance ? { nuance: { tags: nuanceTags, ...(nuanceNote ? { note: nuanceNote } : {}) } } : {}),
+            ...(ms.keyChange?.trim() ? { keyChange: ms.keyChange.trim() } : {}),
           };
         }) ?? null,
       };
