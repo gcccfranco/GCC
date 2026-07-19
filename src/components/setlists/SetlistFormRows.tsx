@@ -412,6 +412,7 @@ function SortableMixedRow({
   onTransitionChange,
   onNuanceTagsChange,
   onNuanceNoteChange,
+  onKeyChangeChange,
 }: {
   item: FusionMixedSectionForm;
   onRemove: () => void;
@@ -419,6 +420,7 @@ function SortableMixedRow({
   onTransitionChange: (transition: string) => void;
   onNuanceTagsChange: (tags: string[]) => void;
   onNuanceNoteChange: (note: string) => void;
+  onKeyChangeChange: (key: string) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: item.uid });
@@ -466,6 +468,12 @@ function SortableMixedRow({
           active={expanded === "transition"}
           onClick={() => setExpanded(expanded === "transition" ? null : "transition")}
         />
+        <FieldToggleBtn
+          kind="keyChange"
+          filled={!!(item.keyChange ?? "").trim()}
+          active={expanded === "keyChange"}
+          onClick={() => setExpanded(expanded === "keyChange" ? null : "keyChange")}
+        />
         <button
           type="button"
           onClick={onRemove}
@@ -497,6 +505,9 @@ function SortableMixedRow({
           onChange={onTransitionChange}
           onClose={() => setExpanded(null)}
         />
+      )}
+      {expanded === "keyChange" && (
+        <KeyChangeFieldInput value={item.keyChange ?? ""} onChange={onKeyChangeChange} />
       )}
     </div>
   );
@@ -536,6 +547,7 @@ function MixedStructureEditor({
         transition: si.transition ?? "",
         nuanceTags: si.nuanceTags ?? [],
         nuanceNote: si.nuanceNote ?? "",
+        keyChange: si.keyChange ?? "",
       },
     ]);
   }
@@ -607,6 +619,11 @@ function MixedStructureEditor({
                 onNuanceNoteChange={(nuanceNote) => {
                   const next = [...mixed];
                   next[idx] = { ...next[idx], nuanceNote };
+                  onChangeMixed(next);
+                }}
+                onKeyChangeChange={(keyChange) => {
+                  const next = [...mixed];
+                  next[idx] = { ...next[idx], keyChange };
                   onChangeMixed(next);
                 }}
               />
@@ -780,7 +797,7 @@ function FusionSectionNoteRow({
   onPatch: (patch: Partial<FormSectionItem>) => void;
 }) {
   const { t } = useTranslation();
-  const [showNuance, setShowNuance] = useState(false);
+  const [expanded, setExpanded] = useState<"nuance" | "keyChange" | null>(null);
   const hasNuance = item.nuanceTags.length > 0 || !!item.nuanceNote.trim();
   return (
     <div className="rounded border border-transparent">
@@ -796,16 +813,28 @@ function FusionSectionNoteRow({
         <FieldToggleBtn
           kind="nuance"
           filled={hasNuance}
-          active={showNuance}
-          onClick={() => setShowNuance((v) => !v)}
+          active={expanded === "nuance"}
+          onClick={() => setExpanded(expanded === "nuance" ? null : "nuance")}
+        />
+        <FieldToggleBtn
+          kind="keyChange"
+          filled={!!(item.keyChange ?? "").trim()}
+          active={expanded === "keyChange"}
+          onClick={() => setExpanded(expanded === "keyChange" ? null : "keyChange")}
         />
       </div>
-      {showNuance && (
+      {expanded === "nuance" && (
         <NuanceFieldInput
           tags={item.nuanceTags}
           note={item.nuanceNote}
           onTagsChange={(nuanceTags) => onPatch({ nuanceTags })}
           onNoteChange={(nuanceNote) => onPatch({ nuanceNote })}
+        />
+      )}
+      {expanded === "keyChange" && (
+        <KeyChangeFieldInput
+          value={item.keyChange ?? ""}
+          onChange={(keyChange) => onPatch({ keyChange })}
         />
       )}
     </div>
@@ -942,6 +971,7 @@ export function FusionRow({
           sectionName: si.name,
           songTitle: song.song.title,
           note: si.note,
+          keyChange: si.keyChange ?? "",
           transition: si.transition ?? "",
           nuanceTags: si.nuanceTags ?? [],
           nuanceNote: si.nuanceNote ?? "",
