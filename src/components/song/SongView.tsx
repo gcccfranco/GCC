@@ -6,6 +6,8 @@ import type { ChordProAST, ChordProLine, ChordProSection, Token } from "@/types/
 import { useTranslation } from "react-i18next";
 import { formatSectionName } from "@/lib/chordpro/parser";
 import { resolveStructureOverride } from "@/lib/chordpro/structure";
+import { semitonesTo } from "@/lib/transpose";
+import { transposeSection } from "@/lib/transposeAST";
 import { handleLyricsCopy } from "@/components/song/copyLyrics";
 import { MessageSquare } from "lucide-react";
 import type { SectionNuance } from "@/types/setList";
@@ -327,6 +329,8 @@ export interface SectionViewProps {
   hideLyrics?: boolean;
   note?: string;
   nuance?: SectionNuance;
+  /** Modulation (升调) : tonalité cible affichée en badge à côté du label. */
+  keyChange?: string;
   songSourceLabel?: string;
   /** « pdf » = typographie des PDF exportés (Mode Louange) ; « web » = défaut. */
   typography?: "web" | "pdf";
@@ -336,7 +340,7 @@ export interface SectionViewProps {
   onLineSelect?: (line: ChordProLine, sectionUid?: string) => void;
 }
 
-export function SectionView({ section, language, showChords, showPinyin, useJianpu, hideLyrics = false, note, nuance, songSourceLabel, typography = "web", chartStyle = false, onLineSelect }: SectionViewProps) {
+export function SectionView({ section, language, showChords, showPinyin, useJianpu, hideLyrics = false, note, nuance, keyChange, songSourceLabel, typography = "web", chartStyle = false, onLineSelect }: SectionViewProps) {
   const isPdfTypo = typography === "pdf";
   const { t, i18n } = useTranslation();
   const isZh = language === "zh";
@@ -360,6 +364,11 @@ export function SectionView({ section, language, showChords, showPinyin, useJian
         <span className={`text-[0.75rem] font-bold uppercase tracking-[0.1em] ${uiIsZh ? zh_lyric_font.className : chord_font.className}`}
               style={{ color: "var(--sec-c, #6b7080)" }}>
           {label}
+          {keyChange && (
+            <span className="ml-2 normal-case tracking-normal text-xs font-bold" style={{ color: "var(--sec-c, currentColor)" }}>
+              {t("setlists.detail.sectionKeyChange", { defaultValue: "升调 ({{key}})", key: keyChange })}
+            </span>
+          )}
           {songSourceLabel && (
             <span className="ml-2 text-[10px] font-normal normal-case tracking-normal" style={{ color: "var(--sec-c, currentColor)", opacity: 0.7 }}>
               · {songSourceLabel}
@@ -452,6 +461,8 @@ export interface SongViewProps {
   sectionNotes?: Record<string, string>;
   sectionTransitions?: Record<string, string>;
   sectionNuances?: Record<string, SectionNuance>;
+  /** Modulation (升调) par section : uid → tonalité cible d'affichage. */
+  sectionKeys?: Record<string, string>;
   /** Style « chart » : couleurs par type de section + accords neutres. */
   chartStyle?: boolean;
   /** Mode édition setlist : rend chaque ligne tappable (ouvre la sheet d'édition). */
@@ -467,6 +478,7 @@ export function SongView({
   sectionNotes = {},
   sectionTransitions = {},
   sectionNuances = {},
+  sectionKeys = {},
   chartStyle = false,
   onLineSelect,
 }: SongViewProps) {
@@ -549,16 +561,23 @@ export function SongView({
             const note = sectionNotes[section.uid] ?? sectionNotes[key] ?? sectionNotes[section.id] ?? "";
             const transition = sectionTransitions?.[section.uid] ?? sectionTransitions?.[key] ?? sectionTransitions?.[section.id] ?? "";
             const nuance = sectionNuances[section.uid] ?? sectionNuances[key] ?? sectionNuances[section.id];
+            // Modulation (升调) : la section s'affiche transposée dans sa tonalité cible.
+            const targetKey = sectionKeys[section.uid] ?? sectionKeys[key] ?? sectionKeys[section.id];
+            const keyChange = targetKey && targetKey !== ast.metadata.key ? targetKey : undefined;
+            const shownSection = keyChange && ast.metadata.key
+              ? transposeSection(section, semitonesTo(ast.metadata.key, keyChange), keyChange)
+              : section;
             return (
               <div key={`${section.uid ?? section.id}-${i}`}>
                 <SectionView
-                  section={section}
+                  section={shownSection}
                   language={ast.metadata.language}
                   showChords={showChords}
                   showPinyin={isZh ? showPinyin : false}
                   useJianpu={canUseJianpu}
                   note={note}
                   nuance={nuance}
+                  keyChange={keyChange}
                   chartStyle={chartStyle}
                   onLineSelect={onLineSelect}
                 />
