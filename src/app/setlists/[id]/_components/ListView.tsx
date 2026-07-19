@@ -208,22 +208,23 @@ export function ListView({
               {song?.sections && song.sections.length > 0 && (() => {
                 const allSections = song.sections!;
                 const st = item.sectionTransitions ?? {};
+                const sk = item.sectionKeys ?? {};
                 // Chaque section → nom affichable + transition interne éventuelle.
-                const entries: { name: string; transition?: string }[] = item.structureOverride
+                const entries: { name: string; transition?: string; keyChange?: string }[] = item.structureOverride
                   ? item.structureOverride.map((ov) => {
                       const baseId = ov.replace(/-\d+$/, "");
                       const s = allSections.find((sec) => sec.uid === ov || sec.id === ov || sec.id === baseId);
-                      if (s) return { name: formatSectionName(s, t), transition: st[ov] ?? st[s.id] };
+                      if (s) return { name: formatSectionName(s, t), transition: st[ov] ?? st[s.id], keyChange: sk[ov] ?? sk[s.id] };
                       // Section non résolue (ex. copie « Mode Adapter » absente de
                       // l'index) : traduire le type plutôt que montrer l'uid brut.
                       const type = ov.replace(/(-\d+)+$/, "");
-                      return { name: t(`songs.sections.${type}`, { defaultValue: type }), transition: st[ov] };
+                      return { name: t(`songs.sections.${type}`, { defaultValue: type }), transition: st[ov], keyChange: sk[ov] };
                     })
                   : allSections.map((s, i) => {
                       // La transition est stockée sous la clé `${id}-${index}` (cf.
                       // makeDefaultSections/buildSetlistItems) = l'uid de section de l'AST.
                       // L'index JSON n'expose pas ce `uid` → on le reconstruit à partir de l'ordre.
-                      return { name: formatSectionName(s, t), transition: st[`${s.id}-${i}`] ?? st[s.id] };
+                      return { name: formatSectionName(s, t), transition: st[`${s.id}-${i}`] ?? st[s.id], keyChange: sk[`${s.id}-${i}`] ?? sk[s.id] };
                     });
                 // Une couleur distincte par transition, dans l'ordre du fil.
                 let tci = 0;
@@ -242,6 +243,11 @@ export function ListView({
                           <span className={e.color ? `${e.color} font-medium` : undefined}>
                             {e.name}
                           </span>
+                          {e.keyChange && (
+                            <span className="ml-0.5 font-semibold text-emerald-600 dark:text-emerald-400">
+                              ↗{e.keyChange}
+                            </span>
+                          )}
                         </span>
                       ))}
                     </p>
