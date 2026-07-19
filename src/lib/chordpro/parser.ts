@@ -24,11 +24,21 @@ export function parseLyricLine(rawLine: string, language: string = "fr"): { toke
   let lyricPart = rawLine;
 
   if (language === "zh") {
-    const pinyinMatch = rawLine.match(/^(.*?)\s{2,}(.+)$/);
-    // Le second groupe ne doit pas contenir de caractères chinois ni de crochets d'accords
-    if (pinyinMatch && !hasChinese(pinyinMatch[2]) && !pinyinMatch[2].includes('[')) {
-      lyricPart = pinyinMatch[1];
-      pinyinPart = pinyinMatch[2].trim() || null;
+    // Coupure sur une séquence de 2+ espaces dont la droite ne contient ni
+    // caractère chinois ni crochet d'accord. On essaie chaque séquence de
+    // gauche à droite et on garde la PREMIÈRE valide : une ligne peut contenir
+    // des doubles espaces internes (colonnes d'accords, ex. `。  [A7]`) avant
+    // le vrai séparateur — abandonner sur la première coupure invalide
+    // laisserait le pinyin collé aux paroles.
+    const gaps = /\s{2,}/g;
+    let gap: RegExpExecArray | null;
+    while ((gap = gaps.exec(rawLine)) !== null) {
+      const tail = rawLine.slice(gap.index + gap[0].length);
+      if (tail && !hasChinese(tail) && !tail.includes("[")) {
+        lyricPart = rawLine.slice(0, gap.index);
+        pinyinPart = tail.trim() || null;
+        break;
+      }
     }
   }
 
