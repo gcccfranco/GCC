@@ -269,6 +269,7 @@ function NormalSongItem({
         sectionNotes={item.sectionNotes ?? {}}
         sectionTransitions={item.sectionTransitions ?? {}}
         sectionNuances={item.sectionNuances ?? {}}
+        sectionKeys={item.sectionKeys ?? {}}
         chartStyle={chartStyle}
         onLineSelect={editMode ? (line, sectionUid) => onSelectLine?.(origIndex, line, sectionUid) : undefined}
       />
