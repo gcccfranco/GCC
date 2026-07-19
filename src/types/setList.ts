@@ -13,6 +13,8 @@ export type FusionSong = {
   structureOverride: string[] | null;
   sectionNotes: Record<string, string>;
   sectionNuances?: Record<string, SectionNuance>;
+  /** Modulation (升调) par section : uid de section → tonalité cible. */
+  sectionKeys?: Record<string, string>;
 };
 
 export type FusionMixedSection = {
@@ -21,6 +23,8 @@ export type FusionMixedSection = {
   note?: string;
   transition?: string;
   nuance?: SectionNuance;
+  /** Modulation (升调) : tonalité cible de cette occurrence de section. */
+  keyChange?: string;
 };
 
 export type SetlistItem = {
