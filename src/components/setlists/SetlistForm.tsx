@@ -932,7 +932,10 @@ export function SetlistForm({ mode, setlistId, songs, initial }: SetlistFormProp
       </div>
 
       {/* ── Barre d'action du wizard ── */}
-      <div className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-background/95 backdrop-blur">
+      {/* z-50 : passe DEVANT la barre d'onglets mobile (z-40, fixed bottom-0
+          elle aussi) — sinon le bouton « Suivant » est caché derrière. Fond
+          opaque pour que les onglets ne transparaissent pas. */}
+      <div className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-background">
         <div
           className="max-w-2xl mx-auto px-4 py-3 flex items-center gap-3"
           style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}
