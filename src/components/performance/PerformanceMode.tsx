@@ -85,6 +85,7 @@ function BlockRenderer({
       hideLyrics={hideLyrics}
       note={block.note}
       nuance={block.nuance}
+      keyChange={block.keyChange}
       songSourceLabel={block.songSourceLabel}
       chartStyle={chartStyle}
     />
