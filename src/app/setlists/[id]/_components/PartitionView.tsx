@@ -3,7 +3,7 @@ import type { SetlistItem } from "@/types/setList";
 import type { SongContent } from "@/lib/api/songs";
 import { SongView, SectionView, TransitionNote } from "@/components/song/SongView";
 import { useTranslation } from "react-i18next";
-import { transposeAST } from "@/lib/transposeAST";
+import { transposeAST, transposeSection } from "@/lib/transposeAST";
 import { semitonesTo } from "@/lib/transpose";
 import { itemAst } from "@/lib/chordpro/itemContent";
 import { Link2, MessageSquare } from "lucide-react";
@@ -117,16 +117,23 @@ export function PartitionsView({
                     const sectionNote = ms.note ?? fusionSong?.sectionNotes?.[ms.sectionId];
                     const sectionNuance = ms.nuance ?? fusionSong?.sectionNuances?.[ms.sectionId];
                     const showSongLabel = item.fusionSongs!.length > 1;
+                    // Modulation (升调) : section transposée dans sa tonalité cible.
+                    const targetKey = ms.keyChange ?? fusionSong?.sectionKeys?.[ms.sectionId];
+                    const keyChange = targetKey && targetKey !== ast.metadata.key ? targetKey : undefined;
+                    const shownSection = keyChange && ast.metadata.key
+                      ? transposeSection(section, semitonesTo(ast.metadata.key, keyChange), keyChange)
+                      : section;
                     return (
                       <div key={`${ms.songSlug}-${ms.sectionId}-${msIdx}`}>
                         <SectionView
-                          section={section}
+                          section={shownSection}
                           language={ast.metadata.language}
                           showChords={showChordsGlobal && item.showChords}
                           showPinyin={showPinyinGlobal && ast.metadata.language === "zh"}
                           useJianpu={false}
                           note={sectionNote}
                           nuance={sectionNuance}
+                          keyChange={keyChange}
                           songSourceLabel={showSongLabel ? ast.metadata.title : undefined}
                           chartStyle={chartStyle}
                         />
@@ -172,6 +179,7 @@ export function PartitionsView({
                         structureOverride={fs.structureOverride}
                         sectionNotes={fs.sectionNotes ?? {}}
                         sectionNuances={fs.sectionNuances ?? {}}
+                        sectionKeys={fs.sectionKeys ?? {}}
                         chartStyle={chartStyle}
                       />
                     </div>
