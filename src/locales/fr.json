@@ -171,7 +171,8 @@
       "notifySent": "Équipe prévenue ({{count}} notifications envoyées).",
       "notifyError": "Échec de l'envoi.",
       "notifyNeedSongs": "Ajoute au moins 4 chants pour prévenir l'équipe.",
-      "emptyItems": "Aucun chant dans cette setlist pour l'instant."
+      "emptyItems": "Aucun chant dans cette setlist pour l'instant.",
+      "sectionKeyChange": "Modulation ({{key}})"
     },
     "form": {
       "titleNew": "Nouvelle setlist",
@@ -237,7 +238,8 @@
       "privateToggle": "Setlist privée (visible uniquement par toi)",
       "privateLoginRequired": "Connecte-toi pour créer une setlist privée.",
       "addTransition": "Transition",
-      "transitionLabel": "Transition"
+      "transitionLabel": "Transition",
+      "keyChangeHint": "La section s'affichera transposée dans cette tonalité (retape pour retirer)."
     },
     "contentEdit": {
       "toggle": "Adapter",

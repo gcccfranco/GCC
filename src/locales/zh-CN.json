@@ -171,7 +171,8 @@
       "notifySent": "已通知团队（发送了 {{count}} 条通知）。",
       "notifyError": "发送失败。",
       "notifyNeedSongs": "歌单至少需要 4 首诗歌才能通知团队。",
-      "emptyItems": "这份歌单暂时还没有诗歌。"
+      "emptyItems": "这份歌单暂时还没有诗歌。",
+      "sectionKeyChange": "升调（{{key}}）"
     },
     "form": {
       "titleNew": "新建歌单",
@@ -237,7 +238,8 @@
       "privateToggle": "私密歌单（仅自己可见）",
       "privateLoginRequired": "请登录以创建私密歌单。",
       "addTransition": "过渡",
-      "transitionLabel": "过渡"
+      "transitionLabel": "过渡",
+      "keyChangeHint": "该段落将转调显示为所选调（再次点击可取消）。"
     },
     "contentEdit": {
       "toggle": "调整",
