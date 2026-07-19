@@ -127,17 +127,24 @@ export function buildPerformanceBlocks(
           const section = ast.sections.find((s) => s.uid === ms.sectionId || s.id === ms.sectionId);
           if (!section) continue;
           const fs = item.fusionSongs.find((f) => f.songSlug === ms.songSlug);
+          const fusionKey = fs?.keyOverride ?? ast.metadata.key;
+          // Modulation (升调) : section transposée dans sa tonalité cible.
+          const msTarget = ms.keyChange ?? fs?.sectionKeys?.[ms.sectionId];
+          const msKeyChange = msTarget && msTarget !== fusionKey ? msTarget : undefined;
           blocks.push({
             kind: "section",
             uid: uid(),
-            section,
+            section: msKeyChange
+              ? transposeSection(section, semitonesTo(fusionKey, msKeyChange), msKeyChange)
+              : section,
             language: ast.metadata.language,
             chordsEnabled: showChordsGlobal && item.showChords,
             showPinyin: ast.metadata.language === "zh",
             note: ms.note ?? fs?.sectionNotes?.[ms.sectionId],
             nuance: ms.nuance ?? fs?.sectionNuances?.[ms.sectionId],
+            keyChange: msKeyChange,
             songTitle: ast.metadata.title,
-            songKey: fs?.keyOverride ?? ast.metadata.key,
+            songKey: fusionKey,
             songSourceLabel: multiSong ? ast.metadata.title : undefined,
           });
           if (ms.transition) blocks.push({ kind: "transition-intra", uid: uid(), text: ms.transition });
@@ -159,17 +166,24 @@ export function buildPerformanceBlocks(
             language: ast.metadata.language,
           });
           for (const sec of resolveSections(ast, fs.structureOverride)) {
+            const fusionKey = fs.keyOverride ?? ast.metadata.key;
+            // Modulation (升调) : section transposée dans sa tonalité cible.
+            const target = fs.sectionKeys?.[sec.uid] ?? fs.sectionKeys?.[sec.id];
+            const secKeyChange = target && target !== fusionKey ? target : undefined;
             blocks.push({
               kind: "section",
               uid: uid(),
-              section: sec,
+              section: secKeyChange
+                ? transposeSection(sec, semitonesTo(fusionKey, secKeyChange), secKeyChange)
+                : sec,
               language: ast.metadata.language,
               chordsEnabled: showChordsGlobal && item.showChords,
               showPinyin: ast.metadata.language === "zh",
               note: fs.sectionNotes?.[sec.uid] ?? fs.sectionNotes?.[sec.id],
               nuance: fs.sectionNuances?.[sec.uid] ?? fs.sectionNuances?.[sec.id],
+              keyChange: secKeyChange,
               songTitle: ast.metadata.title,
-              songKey: fs.keyOverride ?? ast.metadata.key,
+              songKey: fusionKey,
             });
           }
         }
