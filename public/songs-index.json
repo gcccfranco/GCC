@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-13T20:39:56.676Z",
+  "generatedAt": "2026-07-19T09:29:33.814Z",
   "songs": [
     {
       "slug": "abba-pere",
@@ -7595,12 +7595,17 @@
           "number": "1"
         },
         {
-          "id": "chorus-2",
+          "id": "prechorus-2",
+          "name": "Pré-Refrain",
+          "type": "prechorus"
+        },
+        {
+          "id": "chorus-3",
           "name": "Refrain",
           "type": "chorus"
         },
         {
-          "id": "verse-3",
+          "id": "verse-4",
           "name": "Couplet 2",
           "type": "verse",
           "number": "2"
@@ -11573,9 +11578,9 @@
           "number": "2"
         },
         {
-          "id": "chorus-5",
+          "id": "postchorus-5",
           "name": "Post-Refrain",
-          "type": "chorus"
+          "type": "postchorus"
         },
         {
           "id": "bridge-6",
@@ -11986,9 +11991,9 @@
           "number": "2"
         },
         {
-          "id": "chorus-8",
-          "name": "Refrain Post",
-          "type": "chorus"
+          "id": "postchorus-8",
+          "name": "Post-Refrain",
+          "type": "postchorus"
         },
         {
           "id": "bridge-9",
