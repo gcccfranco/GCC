@@ -1,7 +1,7 @@
 import type { SetlistItem, SectionNuance } from "@/types/setList";
 import type { ChordProSection, ChordProAST } from "@/types/chordPro";
 import type { SongContent } from "@/lib/api/songs";
-import { transposeAST } from "@/lib/transposeAST";
+import { transposeAST, transposeSection } from "@/lib/transposeAST";
 import { semitonesTo, getTransposedKey } from "@/lib/transpose";
 import { resolveStructureOverride } from "@/lib/chordpro/structure";
 import { itemAst } from "@/lib/chordpro/itemContent";
@@ -32,6 +32,8 @@ export type SectionBlock = {
   showPinyin: boolean;
   note?: string;
   nuance?: SectionNuance;
+  /** Modulation (升调) : tonalité cible de cette section (tonalité jouée). */
+  keyChange?: string;
   songTitle: string;
   songKey: string;
   songSourceLabel?: string;
@@ -214,15 +216,29 @@ export function buildPerformanceBlocks(
         item.sectionNuances?.[sec.uid] ??
         item.sectionNuances?.[occKey] ??
         item.sectionNuances?.[sec.id];
+      // Modulation (升调) : section transposée dans sa tonalité cible. Avec un
+      // capo, les accords de l'AST sont en tonalité de shapes → même écart de
+      // demi-tons, mais l'orthographe suit la tonalité cible décalée du capo.
+      const targetKey =
+        item.sectionKeys?.[sec.uid] ?? item.sectionKeys?.[occKey] ?? item.sectionKeys?.[sec.id];
+      const keyChange = targetKey && targetKey !== playedKey ? targetKey : undefined;
+      const shownSec = keyChange
+        ? transposeSection(
+            sec,
+            semitonesTo(playedKey, keyChange),
+            capo ? getTransposedKey(keyChange, -capo) : keyChange
+          )
+        : sec;
       blocks.push({
         kind: "section",
         uid: uid(),
-        section: sec,
+        section: shownSec,
         language: ast.metadata.language,
         chordsEnabled: showChordsGlobal && item.showChords,
         showPinyin: item.showPinyin,
         note: note || undefined,
         nuance,
+        keyChange,
         songTitle: ast.metadata.title,
         songKey: playedKey,
       });
