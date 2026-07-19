@@ -22,6 +22,7 @@ import {
   MessageSquare,
   ArrowRight,
   SlidersHorizontal,
+  ArrowUpNarrowWide,
 } from "lucide-react";
 import { ALL_KEYS } from "@/lib/transpose";
 import { useTranslation } from "react-i18next";
@@ -33,12 +34,13 @@ import { NUANCES, nuanceFull } from "@/lib/setlist/nuances";
 
 // ─── Champs note / transition / nuance repliables ────────────────────────────
 
-type AnnotationField = "note" | "transition" | "nuance" | null;
+type AnnotationField = "note" | "transition" | "nuance" | "keyChange" | null;
 
 const FIELD_STYLE = {
   note: { Icon: MessageSquare, filled: "bg-secondary text-foreground", ring: "ring-1 ring-foreground/30", title: "Note" },
   transition: { Icon: ArrowRight, filled: "bg-amber-500/15 text-amber-600 dark:text-amber-400", ring: "ring-1 ring-amber-400/50", title: "Transition" },
   nuance: { Icon: SlidersHorizontal, filled: "bg-violet-500/15 text-violet-600 dark:text-violet-400", ring: "ring-1 ring-violet-400/50", title: "Nuance" },
+  keyChange: { Icon: ArrowUpNarrowWide, filled: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400", ring: "ring-1 ring-emerald-400/50", title: "Modulation (升调)" },
 } as const;
 
 function FieldToggleBtn({
@@ -47,7 +49,7 @@ function FieldToggleBtn({
   active,
   onClick,
 }: {
-  kind: "note" | "transition" | "nuance";
+  kind: "note" | "transition" | "nuance" | "keyChange";
   filled: boolean;
   active: boolean;
   onClick: () => void;
@@ -115,6 +117,42 @@ function NuanceFieldInput({
   );
 }
 
+/** Sélecteur de modulation (升调) : tonalité cible de la section, vide = aucune. */
+function KeyChangeFieldInput({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (key: string) => void;
+}) {
+  const { t } = useTranslation();
+  return (
+    <div className="px-2 pb-2 pl-7 space-y-1.5">
+      <div className="flex flex-wrap gap-1">
+        {ALL_KEYS.map((k) => (
+          <button
+            key={k}
+            type="button"
+            onClick={() => onChange(value === k ? "" : k)}
+            className={`text-[11px] min-w-7 px-1 py-0.5 rounded border font-semibold transition-colors ${
+              value === k
+                ? "border-emerald-400 bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300 dark:border-emerald-500/50"
+                : "border-border text-muted-foreground hover:text-foreground hover:bg-muted"
+            }`}
+          >
+            {k}
+          </button>
+        ))}
+      </div>
+      <p className="text-[10px] text-muted-foreground">
+        {t("setlists.form.keyChangeHint", {
+          defaultValue: "La section s'affichera transposée dans cette tonalité (retape pour retirer).",
+        })}
+      </p>
+    </div>
+  );
+}
+
 function AnnotationFieldInput({
   kind,
   value,
@@ -165,6 +203,7 @@ export function SortableSectionRow({
   onTransitionChange,
   onNuanceTagsChange,
   onNuanceNoteChange,
+  onKeyChangeChange,
   hideNote,
 }: {
   item: FormSectionItem;
@@ -173,6 +212,7 @@ export function SortableSectionRow({
   onTransitionChange?: (transition: string) => void;
   onNuanceTagsChange?: (tags: string[]) => void;
   onNuanceNoteChange?: (note: string) => void;
+  onKeyChangeChange?: (key: string) => void;
   hideNote?: boolean;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
@@ -218,6 +258,12 @@ export function SortableSectionRow({
               active={expanded === "transition"}
               onClick={() => setExpanded(expanded === "transition" ? null : "transition")}
             />
+            <FieldToggleBtn
+              kind="keyChange"
+              filled={!!(item.keyChange ?? "").trim()}
+              active={expanded === "keyChange"}
+              onClick={() => setExpanded(expanded === "keyChange" ? null : "keyChange")}
+            />
           </>
         )}
         <button
@@ -250,6 +296,12 @@ export function SortableSectionRow({
           value={item.transition ?? ""}
           onChange={(v) => onTransitionChange?.(v)}
           onClose={() => setExpanded(null)}
+        />
+      )}
+      {!hideNote && expanded === "keyChange" && (
+        <KeyChangeFieldInput
+          value={item.keyChange ?? ""}
+          onChange={(k) => onKeyChangeChange?.(k)}
         />
       )}
     </div>
@@ -293,7 +345,7 @@ export function SectionStructureEditor({
               const uid = `${s.id}-${Date.now()}${Math.floor(Math.random() * 1000)}`;
               onChange([
                 ...sectionItems,
-                { uid, sectionId: s.id, name: s.name, note: "", transition: "", nuanceTags: [], nuanceNote: "" },
+                { uid, sectionId: s.id, name: s.name, note: "", transition: "", nuanceTags: [], nuanceNote: "", keyChange: "" },
               ]);
             }}
             className="flex items-center gap-0.5 text-[11px] px-2 py-0.5 rounded border border-border hover:bg-muted text-foreground transition-colors"
@@ -329,6 +381,11 @@ export function SectionStructureEditor({
                 onNuanceNoteChange={(nuanceNote) => {
                   const next = [...sectionItems];
                   next[idx] = { ...next[idx], nuanceNote };
+                  onChange(next);
+                }}
+                onKeyChangeChange={(keyChange) => {
+                  const next = [...sectionItems];
+                  next[idx] = { ...next[idx], keyChange };
                   onChange(next);
                 }}
                 hideNote={hideNotes}
