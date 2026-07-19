@@ -33,6 +33,8 @@ export interface FusionMixedSectionForm {
   transition: string;
   nuanceTags: string[];
   nuanceNote: string;
+  /** Modulation (升调) : tonalité cible de cette section, "" = aucune. */
+  keyChange: string;
 }
 
 export interface FormFusionItem {
@@ -135,7 +137,7 @@ export function buildFormItems(
         const songs: FormItem[] = item.fusionSongs.flatMap((fs) => {
           const song = songsMap[fs.songSlug];
           if (!song) return [];
-          return [toFormItem(song, fs.keyOverride, "", fs.structureOverride, fs.sectionNotes, {}, fs.sectionNuances)];
+          return [toFormItem(song, fs.keyOverride, "", fs.structureOverride, fs.sectionNotes, {}, fs.sectionNuances, fs.sectionKeys)];
         });
         if (songs.length === 0) return [];
 
@@ -158,6 +160,7 @@ export function buildFormItems(
               transition: ms.transition ?? "",
               nuanceTags: nuance?.tags ?? [],
               nuanceNote: nuance?.note ?? "",
+              keyChange: ms.keyChange ?? fusionSong?.sectionKeys?.[ms.sectionId] ?? "",
             }];
           });
         }
