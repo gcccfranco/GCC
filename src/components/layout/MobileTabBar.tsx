@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import { CalendarDays, Music, ListMusic, UserRound } from "lucide-react";
 import { useAuth } from "@/lib/firebase/auth";
+import { useScrollDirection } from "@/hooks/useScrollDirection";
 
 const TABS = [
   { href: "/planning", key: "common.header.planning", Icon: CalendarDays },
@@ -29,6 +30,9 @@ export function MobileTabBar() {
   const { user, loading } = useAuth();
   const [mounted, setMounted] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
+  // Comme la navbar du haut : masquée au scroll vers le bas, réaffichée dès
+  // qu'on remonte — plus d'espace de lecture pendant la navigation.
+  const scrollVisible = useScrollDirection();
 
   useEffect(() => setMounted(true), []);
 
@@ -46,7 +50,9 @@ export function MobileTabBar() {
       <div aria-hidden className="hide-on-desktop h-[calc(56px+env(safe-area-inset-bottom))] print:hidden" />
       <nav
         aria-label="Navigation principale"
-        className="hide-on-desktop print:hidden fixed bottom-0 inset-x-0 z-40 border-t border-border bg-background/95 backdrop-blur-md pb-[env(safe-area-inset-bottom)]"
+        className={`hide-on-desktop print:hidden fixed bottom-0 inset-x-0 z-40 border-t border-border bg-background/95 backdrop-blur-md pb-[env(safe-area-inset-bottom)] transition-transform duration-300 ${
+          scrollVisible ? "translate-y-0" : "translate-y-full"
+        }`}
       >
         <div className="flex h-[56px]">
           {TABS.map(({ href, key, Icon }) => {
