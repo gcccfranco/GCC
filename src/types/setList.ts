@@ -35,6 +35,10 @@ export type SetlistItem = {
   sectionNotes: Record<string, string>;
   sectionTransitions?: Record<string, string>;
   sectionNuances?: Record<string, SectionNuance>;
+  /** Modulation (升调) par section : uid de section → tonalité cible.
+   *  La section s'affiche transposée dans cette tonalité au lieu de la
+   *  tonalité de l'item (keyOverride ou tonalité d'origine). */
+  sectionKeys?: Record<string, string>;
   /** Source ChordPro modifié pour cette setlist (accords/paroles adaptés) —
    *  remplace le contenu du chant original ; null/absent = original. */
   contentOverride?: string | null;
