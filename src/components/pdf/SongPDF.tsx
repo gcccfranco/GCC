@@ -746,6 +746,8 @@ export interface FusionPDFSong {
   ast: ChordProAST;
   sectionNotes: Record<string, string>;
   sectionNuances?: Record<string, SectionNuance>;
+  /** Modulation (升调) par section : uid → tonalité cible d'affichage. */
+  sectionKeys?: Record<string, string>;
 }
 
 export function FusionPDFPage({
@@ -755,7 +757,7 @@ export function FusionPDFPage({
   footerCenter,
 }: {
   songs: FusionPDFSong[];
-  mixedStructure: Array<{ songSlug: string; sectionId: string; note?: string; transition?: string; nuance?: SectionNuance }>;
+  mixedStructure: Array<{ songSlug: string; sectionId: string; note?: string; transition?: string; nuance?: SectionNuance; keyChange?: string }>;
   showChords: boolean;
   footerCenter?: string;
 }) {
@@ -771,7 +773,13 @@ export function FusionPDFPage({
     const isZh = song.ast.metadata.language === "zh";
     const sourceLabel = song.ast.metadata.title;
     const sourceLabelFont = isZh ? "KaiTi" : "SpaceGrotesk";
-    return [{ section, note, nuance, transition: ms.transition, isZh, theme: isZh ? RED_THEME : BLUE_THEME, sourceLabel, sourceLabelFont }];
+    // Modulation (升调) : section transposée dans sa tonalité cible.
+    const targetKey = ms.keyChange ?? song.sectionKeys?.[ms.sectionId];
+    const keyChange = targetKey && targetKey !== song.ast.metadata.key ? targetKey : undefined;
+    const shownSection = keyChange && song.ast.metadata.key
+      ? transposeSection(section, semitonesTo(song.ast.metadata.key, keyChange), keyChange)
+      : section;
+    return [{ section: shownSection, note, nuance, keyChange, transition: ms.transition, isZh, theme: isZh ? RED_THEME : BLUE_THEME, sourceLabel, sourceLabelFont }];
   });
 
   if (mixedSections.length === 0) return null;
@@ -806,7 +814,7 @@ export function FusionPDFPage({
         <View style={{ height: 0.5, backgroundColor: C.rule, marginTop: 10, marginBottom: 0 }} />
       </View>
 
-      {mixedSections.flatMap(({ section, note, nuance, transition, isZh, theme, sourceLabel, sourceLabelFont }, idx) => {
+      {mixedSections.flatMap(({ section, note, nuance, keyChange, transition, isZh, theme, sourceLabel, sourceLabelFont }, idx) => {
         const items = [
           <SectionBlock
             key={`${section.id}-${idx}`}
@@ -817,6 +825,7 @@ export function FusionPDFPage({
             showPinyin={isZh}
             note={note}
             nuance={nuance}
+            keyChange={keyChange}
             theme={theme}
             uiLang="fr"
             sourceLabel={sourceLabel}
