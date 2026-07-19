@@ -46,7 +46,7 @@ export function SetlistFullPDF({
                 const semitones = semitonesTo(ast.metadata.key, fs.keyOverride);
                 ast = transposeAST(ast, semitones, fs.keyOverride);
               }
-              return { slug: fs.songSlug, ast, sectionNotes: fs.sectionNotes ?? {}, sectionNuances: fs.sectionNuances ?? {} };
+              return { slug: fs.songSlug, ast, sectionNotes: fs.sectionNotes ?? {}, sectionNuances: fs.sectionNuances ?? {}, sectionKeys: fs.sectionKeys ?? {} };
             });
 
           if (fusionSongsData.length === 0) return [];
@@ -75,6 +75,7 @@ export function SetlistFullPDF({
               structureOverride={item.fusionSongs![fsIdx].structureOverride}
               sectionNotes={fs.sectionNotes}
               sectionNuances={fs.sectionNuances}
+              sectionKeys={fs.sectionKeys}
               footerCenter={footer}
             />
           ));
