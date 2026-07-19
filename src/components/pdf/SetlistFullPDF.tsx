@@ -98,6 +98,7 @@ export function SetlistFullPDF({
             sectionNotes={item.sectionNotes ?? {}}
             sectionTransitions={item.sectionTransitions ?? {}}
             sectionNuances={item.sectionNuances ?? {}}
+            sectionKeys={item.sectionKeys ?? {}}
             footerCenter={footer}
           />
         ];
