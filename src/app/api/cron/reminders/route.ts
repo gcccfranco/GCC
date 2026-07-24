@@ -3,6 +3,7 @@ import { adminDb } from "@/lib/push/admin";
 import { sendPushToUids } from "@/lib/push/send";
 import { recordNotification } from "@/lib/push/notifications";
 import { loadPlanningNameIndex, resolveNamesToUids, filterUidsByNotifPref } from "@/lib/push/recipients";
+import { notifyEntrainement } from "@/lib/push/entrainements";
 import {
   loadPlanningData,
   servantsForDate,
@@ -149,5 +150,9 @@ export async function GET(req: NextRequest) {
     summary[tag] = { date, service: fresh.length, repet: rehFresh.length };
   }
 
-  return NextResponse.json({ ok: true, summary });
+  // Entraînement de la séance Campus du SOIR même (16h) — greffé ici car le plan
+  // Hobby limite le projet à 2 crons. Le volet « matin » a le sien (19h Paris).
+  const entrainementSoir = await notifyEntrainement("soir");
+
+  return NextResponse.json({ ok: true, summary, entrainementSoir });
 }
