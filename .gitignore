@@ -152,3 +152,5 @@ vite.config.ts.timestamp-*
 graphify-out/
 
 locale/
+# Images de contrôle générées par scripts/jianpu/debug-render.py
+scripts/jianpu/debug/
