@@ -1,0 +1,746 @@
+[
+ {
+  "slug": "一切歌颂赞美",
+  "titre": "一切歌颂赞美",
+  "cle_cho": "E",
+  "pdf": "一切歌颂赞美.pdf"
+ },
+ {
+  "slug": "一切都更新",
+  "titre": "一切都更新",
+  "cle_cho": "C",
+  "pdf": "一切都更新.pdf"
+ },
+ {
+  "slug": "一同齐声宣扬",
+  "titre": "一同齐声宣扬",
+  "cle_cho": "A",
+  "pdf": "一同齐声宣扬.pdf"
+ },
+ {
+  "slug": "一生敬拜你",
+  "titre": "一生敬拜你",
+  "cle_cho": "C",
+  "pdf": "一生敬拜你.pdf"
+ },
+ {
+  "slug": "一生爱你",
+  "titre": "一生爱你",
+  "cle_cho": "E",
+  "pdf": "一生爱你 D.pdf"
+ },
+ {
+  "slug": "一生跟随",
+  "titre": "一生跟随",
+  "cle_cho": "F",
+  "pdf": "一生跟随 F.pdf"
+ },
+ {
+  "slug": "一粒麦子",
+  "titre": "一粒麦子",
+  "cle_cho": "F",
+  "pdf": "一粒麦子.pdf"
+ },
+ {
+  "slug": "一颗谦卑的心",
+  "titre": "一颗谦卑的心",
+  "cle_cho": "D",
+  "pdf": "一颗谦卑的心.pdf"
+ },
+ {
+  "slug": "不停赞美",
+  "titre": "不停赞美",
+  "cle_cho": "D",
+  "pdf": "不停赞美.pdf"
+ },
+ {
+  "slug": "丰盛的应许",
+  "titre": "丰盛的应许",
+  "cle_cho": "F",
+  "pdf": "丰盛的应许 (F).pdf"
+ },
+ {
+  "slug": "为我而来",
+  "titre": "为我而来",
+  "cle_cho": "C",
+  "pdf": "为我而来 2.pdf"
+ },
+ {
+  "slug": "为爱而生",
+  "titre": "为爱而生",
+  "cle_cho": "E",
+  "pdf": "为爱而生 D.pdf"
+ },
+ {
+  "slug": "主的喜乐是我力量",
+  "titre": "主的喜乐是我力量",
+  "cle_cho": "E",
+  "pdf": "主的喜乐是我力量.pdf"
+ },
+ {
+  "slug": "云上太阳",
+  "titre": "云上太阳",
+  "cle_cho": "D",
+  "pdf": "云上太阳.pdf"
+ },
+ {
+  "slug": "从心合一",
+  "titre": "从心合一",
+  "cle_cho": "D",
+  "pdf": "从心合一 D.pdf"
+ },
+ {
+  "slug": "伯利恒的喜讯",
+  "titre": "伯利恒的喜讯",
+  "cle_cho": "Eb",
+  "pdf": "伯利恒的喜讯.pdf"
+ },
+ {
+  "slug": "住在你里面",
+  "titre": "住在你里面",
+  "cle_cho": "D",
+  "pdf": "住在你里面.pdf"
+ },
+ {
+  "slug": "何等恩典",
+  "titre": "何等恩典",
+  "cle_cho": "G",
+  "pdf": "何等恩典 G.pdf"
+ },
+ {
+  "slug": "你们要赞美耶和华",
+  "titre": "你们要赞美耶和华",
+  "cle_cho": "F",
+  "pdf": "你们要赞美耶和华.pdf"
+ },
+ {
+  "slug": "你坐着为王",
+  "titre": "你坐着为王",
+  "cle_cho": "F",
+  "pdf": "你坐着为王.pdf"
+ },
+ {
+  "slug": "你恩典不离开",
+  "titre": "你恩典不离开",
+  "cle_cho": "E",
+  "pdf": "你恩典不离开.pdf"
+ },
+ {
+  "slug": "你是我的一切",
+  "titre": "你是我的一切",
+  "cle_cho": "D",
+  "pdf": "你是我的一切 E.pdf"
+ },
+ {
+  "slug": "你是配的",
+  "titre": "你是配的",
+  "cle_cho": "F",
+  "pdf": "你是配的 （F）.pdf"
+ },
+ {
+  "slug": "你的同在",
+  "titre": "你的同在",
+  "cle_cho": "D",
+  "pdf": "你的同在.pdf"
+ },
+ {
+  "slug": "你的爱不离不弃",
+  "titre": "你的爱不离不弃",
+  "cle_cho": "A",
+  "pdf": "你的爱不离不弃.pdf"
+ },
+ {
+  "slug": "使命",
+  "titre": "使命",
+  "cle_cho": "A",
+  "pdf": "使命 A.pdf"
+ },
+ {
+  "slug": "信实的神",
+  "titre": "信实的神",
+  "cle_cho": "F",
+  "pdf": "信实的神.pdf"
+ },
+ {
+  "slug": "充满在这里",
+  "titre": "充满在这里",
+  "cle_cho": "A",
+  "pdf": "充满在这里 （C）.pdf"
+ },
+ {
+  "slug": "全新的你",
+  "titre": "全新的你",
+  "cle_cho": "C",
+  "pdf": "全新的你.pdf"
+ },
+ {
+  "slug": "全然向你",
+  "titre": "全然向你",
+  "cle_cho": "D",
+  "pdf": "全然向你.pdf"
+ },
+ {
+  "slug": "再一次",
+  "titre": "再一次",
+  "cle_cho": "G",
+  "pdf": "再一次 F.pdf"
+ },
+ {
+  "slug": "再次将我更新",
+  "titre": "再次将我更新",
+  "cle_cho": "A",
+  "pdf": "再次将我更新.pdf"
+ },
+ {
+  "slug": "到各山岭去传扬",
+  "titre": "到各山岭去传扬",
+  "cle_cho": "G",
+  "pdf": "到各山岭去传扬 (G).pdf"
+ },
+ {
+  "slug": "十字架是我的荣耀",
+  "titre": "十字架是我的荣耀",
+  "cle_cho": "F",
+  "pdf": "十字架是我的荣耀.pdf"
+ },
+ {
+  "slug": "十字架的传达者",
+  "titre": "十字架的传达者",
+  "cle_cho": "D",
+  "pdf": "十字架的传达者.pdf"
+ },
+ {
+  "slug": "十架的大能",
+  "titre": "十架的大能",
+  "cle_cho": "A",
+  "pdf": "十架的大能 G-A.pdf"
+ },
+ {
+  "slug": "十架的爱",
+  "titre": "十架的爱",
+  "cle_cho": "D",
+  "pdf": "十架的爱.pdf"
+ },
+ {
+  "slug": "叫我抬起头的神",
+  "titre": "叫我抬起头的神",
+  "cle_cho": "E",
+  "pdf": "叫我抬起头的神.pdf"
+ },
+ {
+  "slug": "和散那",
+  "titre": "和散那",
+  "cle_cho": "F",
+  "pdf": "和散那.pdf"
+ },
+ {
+  "slug": "唯独依靠你",
+  "titre": "唯独依靠你",
+  "cle_cho": "E",
+  "pdf": "唯独依靠你.pdf"
+ },
+ {
+  "slug": "因着十架爱",
+  "titre": "因着十架爱",
+  "cle_cho": "F",
+  "pdf": "因着十架爱.pdf"
+ },
+ {
+  "slug": "围绕我",
+  "titre": "围绕我",
+  "cle_cho": "F",
+  "pdf": "围绕我.pdf"
+ },
+ {
+  "slug": "圣灵的江河",
+  "titre": "圣灵的江河",
+  "cle_cho": "F",
+  "pdf": "圣灵的江河.pdf"
+ },
+ {
+  "slug": "在这里",
+  "titre": "在这里",
+  "cle_cho": "F",
+  "pdf": "在这里.pdf"
+ },
+ {
+  "slug": "坐在宝座上圣洁羔羊",
+  "titre": "坐在宝座上圣洁羔羊",
+  "cle_cho": "C",
+  "pdf": "坐在宝座上圣洁羔羊.pdf"
+ },
+ {
+  "slug": "复兴的火",
+  "titre": "复兴的火",
+  "cle_cho": "C",
+  "pdf": "复兴的火.pdf"
+ },
+ {
+  "slug": "大声敬拜",
+  "titre": "大声敬拜",
+  "cle_cho": "G",
+  "pdf": "大声敬拜 （G).pdf"
+ },
+ {
+  "slug": "奇异恩典",
+  "titre": "奇异恩典",
+  "cle_cho": "E",
+  "pdf": "奇异恩典.pdf"
+ },
+ {
+  "slug": "奔跑不放弃",
+  "titre": "奔跑不放弃",
+  "cle_cho": "E",
+  "pdf": "奔跑不放弃.pdf"
+ },
+ {
+  "slug": "好喜欢与你在一起",
+  "titre": "好喜欢与你在一起",
+  "cle_cho": "Bb",
+  "pdf": "好喜欢与你在一起 C.pdf"
+ },
+ {
+  "slug": "如果你想知道",
+  "titre": "如果你想知道",
+  "cle_cho": "G",
+  "pdf": "如果你想知道.pdf"
+ },
+ {
+  "slug": "如鹰展翅上腾",
+  "titre": "如鹰展翅上腾",
+  "cle_cho": "G",
+  "pdf": "如鹰展翅上腾.pdf"
+ },
+ {
+  "slug": "尽情地微笑",
+  "titre": "尽情地微笑",
+  "cle_cho": "D",
+  "pdf": " 尽情地微笑.pdf"
+ },
+ {
+  "slug": "尽情的敬拜",
+  "titre": "尽情的敬拜",
+  "cle_cho": "A",
+  "pdf": "尽情的敬拜.pdf"
+ },
+ {
+  "slug": "差遣我",
+  "titre": "差遣我",
+  "cle_cho": "G",
+  "pdf": "差遣我.pdf"
+ },
+ {
+  "slug": "常常喜乐",
+  "titre": "常常喜乐",
+  "cle_cho": "G",
+  "pdf": "常常喜乐 G.pdf"
+ },
+ {
+  "slug": "想起你",
+  "titre": "想起你",
+  "cle_cho": "A",
+  "pdf": "想起你.pdf"
+ },
+ {
+  "slug": "愿为主闪亮",
+  "titre": "愿为主闪亮",
+  "cle_cho": "D",
+  "pdf": "愿为主闪亮.pdf"
+ },
+ {
+  "slug": "我们呼求",
+  "titre": "我们呼求",
+  "cle_cho": "A",
+  "pdf": "我们呼求.pdf"
+ },
+ {
+  "slug": "我们成为一家人",
+  "titre": "我们成为一家人",
+  "cle_cho": "Bb",
+  "pdf": "我们成为一家人.pdf"
+ },
+ {
+  "slug": "我们是光明之子",
+  "titre": "我们是光明之子",
+  "cle_cho": "E",
+  "pdf": "我们是光明之子.pdf"
+ },
+ {
+  "slug": "我们欢迎君王降临",
+  "titre": "我们欢迎君王降临",
+  "cle_cho": "F",
+  "pdf": "我们欢迎君王降临.pdf"
+ },
+ {
+  "slug": "我们的神",
+  "titre": "我们的神",
+  "cle_cho": "G",
+  "pdf": "我们的神.pdf"
+ },
+ {
+  "slug": "我们高举耶稣的名",
+  "titre": "我们高举耶稣的名",
+  "cle_cho": "D",
+  "pdf": "我们高举耶稣的名.pdf"
+ },
+ {
+  "slug": "我在这里敬拜",
+  "titre": "我在这里敬拜",
+  "cle_cho": "D",
+  "pdf": "我在这里敬拜.pdf"
+ },
+ {
+  "slug": "我安然居住",
+  "titre": "我安然居住",
+  "cle_cho": "G",
+  "pdf": "我安然居住.pdf"
+ },
+ {
+  "slug": "我已得自由",
+  "titre": "我已得自由",
+  "cle_cho": "C",
+  "pdf": "我已得自由 C.pdf"
+ },
+ {
+  "slug": "我心坚定与你",
+  "titre": "我心坚定与你",
+  "cle_cho": "A",
+  "pdf": "我心坚定与你.pdf"
+ },
+ {
+  "slug": "我愿为你去",
+  "titre": "我愿为你去",
+  "cle_cho": "D",
+  "pdf": "我愿为你去 - D.pdf"
+ },
+ {
+  "slug": "我的家要荣耀主",
+  "titre": "我的家要荣耀主",
+  "cle_cho": "D",
+  "pdf": "我的家要荣耀主.pdf"
+ },
+ {
+  "slug": "我的救赎者活着",
+  "titre": "我的救赎者活着",
+  "cle_cho": "A",
+  "pdf": "我的救赎者活着.pdf"
+ },
+ {
+  "slug": "我相信",
+  "titre": "我相信",
+  "cle_cho": "F",
+  "pdf": "我相信 （F).pdf"
+ },
+ {
+  "slug": "我能给你什么",
+  "titre": "我能给你什么",
+  "cle_cho": "F",
+  "pdf": "我能给你什么 F.pdf"
+ },
+ {
+  "slug": "我要全心赞美",
+  "titre": "我要全心赞美",
+  "cle_cho": "F",
+  "pdf": "我要全心赞美 2.pdf"
+ },
+ {
+  "slug": "我要爱慕你",
+  "titre": "我要爱慕你",
+  "cle_cho": "E",
+  "pdf": "我要爱慕你.pdf"
+ },
+ {
+  "slug": "所有的荣耀归于你",
+  "titre": "所有的荣耀归于你",
+  "cle_cho": "F",
+  "pdf": "所有的荣耀归于你F.pdf"
+ },
+ {
+  "slug": "把冷漠变成爱",
+  "titre": "把冷漠变成爱",
+  "cle_cho": "D",
+  "pdf": "把冷漠变成爱.pdf"
+ },
+ {
+  "slug": "拣选",
+  "titre": "拣选",
+  "cle_cho": "F",
+  "pdf": "拣选 F.pdf"
+ },
+ {
+  "slug": "握住幸福",
+  "titre": "握住幸福",
+  "cle_cho": "G",
+  "pdf": "握住幸福 （G）.pdf"
+ },
+ {
+  "slug": "握手",
+  "titre": "握手",
+  "cle_cho": "D",
+  "pdf": "握手 D.pdf"
+ },
+ {
+  "slug": "敬拜的心",
+  "titre": "敬拜的心",
+  "cle_cho": "F",
+  "pdf": "敬拜的心 E.pdf"
+ },
+ {
+  "slug": "无价至宝",
+  "titre": "无价至宝",
+  "cle_cho": "A",
+  "pdf": "无价至宝.pdf"
+ },
+ {
+  "slug": "旷野中唯一的力量",
+  "titre": "旷野中唯一的力量",
+  "cle_cho": "F",
+  "pdf": "旷野中唯一的力量.pdf"
+ },
+ {
+  "slug": "明亮晨星",
+  "titre": "明亮晨星",
+  "cle_cho": "F",
+  "pdf": "明亮晨星.pdf"
+ },
+ {
+  "slug": "是为了爱",
+  "titre": "是为了爱",
+  "cle_cho": "F",
+  "pdf": "是为了爱.pdf"
+ },
+ {
+  "slug": "是耶稣的名",
+  "titre": "是耶稣的名",
+  "cle_cho": "E",
+  "pdf": "是耶稣的名 G.pdf"
+ },
+ {
+  "slug": "最美的礼物",
+  "titre": "最美的礼物",
+  "cle_cho": "C",
+  "pdf": "最美的礼物.pdf"
+ },
+ {
+  "slug": "有你同行",
+  "titre": "有你同行",
+  "cle_cho": "D",
+  "pdf": "有你同行.pdf"
+ },
+ {
+  "slug": "每一天我需要你",
+  "titre": "每一天我需要你",
+  "cle_cho": "C",
+  "pdf": "每一天我需要你 (C).pdf"
+ },
+ {
+  "slug": "永恒唯一的盼望",
+  "titre": "永恒唯一的盼望",
+  "cle_cho": "F",
+  "pdf": "永恒唯一的盼望 (D).pdf"
+ },
+ {
+  "slug": "永活盼望",
+  "titre": "永活盼望",
+  "cle_cho": "D",
+  "pdf": "永活盼望 （D）.pdf"
+ },
+ {
+  "slug": "求主充满我",
+  "titre": "求主充满我",
+  "cle_cho": "D",
+  "pdf": "求主充满我.pdf"
+ },
+ {
+  "slug": "求充满这地",
+  "titre": "求充满这地",
+  "cle_cho": "E",
+  "pdf": "求充满这地 .pdf"
+ },
+ {
+  "slug": "深刻的爱",
+  "titre": "深刻的爱",
+  "cle_cho": "C",
+  "pdf": "深刻的爱.pdf"
+ },
+ {
+  "slug": "深深爱你",
+  "titre": "深深爱你",
+  "cle_cho": "E",
+  "pdf": "深深爱你.pdf"
+ },
+ {
+  "slug": "爱使我们勇敢",
+  "titre": "爱使我们勇敢",
+  "cle_cho": "G",
+  "pdf": "爱使我们勇敢 + 我们爱 （G）.pdf"
+ },
+ {
+  "slug": "爱可以再更多一点点",
+  "titre": "爱可以再更多一点点",
+  "cle_cho": "D",
+  "pdf": "爱可以再更多一点点.pdf"
+ },
+ {
+  "slug": "爱的彰显",
+  "titre": "爱的彰显",
+  "cle_cho": "G",
+  "pdf": "爱的彰显 - G.pdf"
+ },
+ {
+  "slug": "爱赢了",
+  "titre": "爱赢了",
+  "cle_cho": "A",
+  "pdf": "爱赢了.pdf"
+ },
+ {
+  "slug": "爱我愿意",
+  "titre": "爱，我愿意",
+  "cle_cho": "D",
+  "pdf": "爱，我愿意.pdf"
+ },
+ {
+  "slug": "献上尊荣",
+  "titre": "献上尊荣",
+  "cle_cho": "F",
+  "pdf": "献上尊荣.pdf"
+ },
+ {
+  "slug": "看见复兴",
+  "titre": "看见复兴",
+  "cle_cho": "A",
+  "pdf": "看见复兴.pdf"
+ },
+ {
+  "slug": "神羔羊配得",
+  "titre": "神羔羊配得",
+  "cle_cho": "G",
+  "pdf": "神羔羊配得 (G).pdf"
+ },
+ {
+  "slug": "祷告",
+  "titre": "祷告",
+  "cle_cho": "E",
+  "pdf": "祷告 E.pdf"
+ },
+ {
+  "slug": "给梦想一双翅膀",
+  "titre": "给梦想一双翅膀",
+  "cle_cho": "G",
+  "pdf": "给梦想一双翅膀.pdf"
+ },
+ {
+  "slug": "耶和华是应当称颂的",
+  "titre": "耶和华是应当称颂的",
+  "cle_cho": "F",
+  "pdf": "耶和华是应当称颂的.pdf"
+ },
+ {
+  "slug": "耶和华行了大事",
+  "titre": "耶和华行了大事",
+  "cle_cho": "Bb",
+  "pdf": "耶和华行了大事.pdf"
+ },
+ {
+  "slug": "耶稣的名",
+  "titre": "耶稣的名",
+  "cle_cho": "A",
+  "pdf": "耶稣的名.pdf"
+ },
+ {
+  "slug": "能不能",
+  "titre": "能不能",
+  "cle_cho": "G",
+  "pdf": "能不能 (G).pdf"
+ },
+ {
+  "slug": "脚步",
+  "titre": "脚步",
+  "cle_cho": "C",
+  "pdf": "脚步.pdf"
+ },
+ {
+  "slug": "若有人在基督里",
+  "titre": "若有人在基督里",
+  "cle_cho": "D",
+  "pdf": "若有人在基督里.pdf"
+ },
+ {
+  "slug": "荣耀的呼召",
+  "titre": "荣耀的呼召",
+  "cle_cho": "F",
+  "pdf": "荣耀的呼召 F.pdf"
+ },
+ {
+  "slug": "认识你真好",
+  "titre": "认识你真好",
+  "cle_cho": "G",
+  "pdf": "认识你真好.pdf"
+ },
+ {
+  "slug": "让爱走动",
+  "titre": "让爱走动",
+  "cle_cho": "G",
+  "pdf": "让爱走动 (G).pdf"
+ },
+ {
+  "slug": "让赞美飞扬",
+  "titre": "让赞美飞扬",
+  "cle_cho": "G",
+  "pdf": "让赞美飞扬 (G).pdf"
+ },
+ {
+  "slug": "赞美之泉",
+  "titre": "赞美之泉",
+  "cle_cho": "D",
+  "pdf": "赞美之泉.pdf"
+ },
+ {
+  "slug": "这一生最美的祝福",
+  "titre": "这一生最美的祝福",
+  "cle_cho": "D",
+  "pdf": "这一生最美的祝福 （D）.pdf"
+ },
+ {
+  "slug": "这是耶和华所定的日子",
+  "titre": "这是耶和华所定的日子",
+  "cle_cho": "E",
+  "pdf": "这是耶和华所定的日子 (D).pdf"
+ },
+ {
+  "slug": "这条路上我们一起走",
+  "titre": "这条路上我们一起走",
+  "cle_cho": "D",
+  "pdf": "这条路上我们一起走 - D.pdf"
+ },
+ {
+  "slug": "这里有神的同在",
+  "titre": "这里有神的同在",
+  "cle_cho": "F",
+  "pdf": "这里有神的同在.pdf"
+ },
+ {
+  "slug": "这里有荣耀",
+  "titre": "这里有荣耀",
+  "cle_cho": "G",
+  "pdf": "这里有荣耀.pdf"
+ },
+ {
+  "slug": "遇见你",
+  "titre": "遇见你",
+  "cle_cho": "D",
+  "pdf": "遇见你.pdf"
+ },
+ {
+  "slug": "香膏的玉瓶",
+  "titre": "香膏的玉瓶",
+  "cle_cho": "G",
+  "pdf": "香膏的玉瓶.pdf"
+ },
+ {
+  "slug": "齐来赞美",
+  "titre": "齐来赞美",
+  "cle_cho": "F",
+  "pdf": "齐来赞美.pdf"
+ }
+]
