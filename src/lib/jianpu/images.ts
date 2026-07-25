@@ -23,8 +23,8 @@ export function jianpuImageUrl(file: string): string {
 
 /** Partition 简谱 d'un chant, ou null s'il n'en a pas. `undefined` tant que
  *  le manifeste n'est pas chargé (permet de ne pas faire clignoter le bouton). */
-export function useJianpuScore(slug: string | null | undefined) {
-  const [manifest, setManifest] = useState<JianpuManifest | null>(null);
+export function useJianpuManifest(): JianpuManifest | undefined {
+  const [manifest, setManifest] = useState<JianpuManifest | undefined>(undefined);
 
   useEffect(() => {
     let alive = true;
@@ -36,6 +36,11 @@ export function useJianpuScore(slug: string | null | undefined) {
     };
   }, []);
 
+  return manifest;
+}
+
+export function useJianpuScore(slug: string | null | undefined) {
+  const manifest = useJianpuManifest();
   if (!manifest) return undefined;
   return slug ? (manifest[slug] ?? null) : null;
 }
