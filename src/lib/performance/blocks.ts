@@ -5,6 +5,7 @@ import { transposeAST, transposeSection } from "@/lib/transposeAST";
 import { semitonesTo, getTransposedKey } from "@/lib/transpose";
 import { resolveStructureOverride } from "@/lib/chordpro/structure";
 import { itemAst } from "@/lib/chordpro/itemContent";
+import type { JianpuEntry, JianpuManifest } from "@/lib/jianpu/images";
 
 export type SongHeaderBlock = {
   kind: "song-header";
@@ -51,9 +52,17 @@ export type TransitionInterBlock = {
   text: string;
 };
 
+export type JianpuSheetBlock = {
+  kind: "jianpu-sheet";
+  uid: string;
+  entry: JianpuEntry;
+  songTitle: string;
+};
+
 export type PerformanceBlock =
   | SongHeaderBlock
   | SectionBlock
+  | JianpuSheetBlock
   | TransitionIntraBlock
   | TransitionInterBlock;
 
@@ -78,6 +87,7 @@ export function buildPerformanceBlocks(
   contents: Record<string, SongContent>,
   showChordsGlobal: boolean,
   capos?: Record<string, number>,
+  jianpuSheets?: JianpuManifest,
 ): PerformanceBlock[] {
   const blocks: PerformanceBlock[] = [];
   let c = 0;
@@ -213,6 +223,20 @@ export function buildPerformanceBlocks(
       songSlug: item.songSlug,
       capo: capo || undefined,
     });
+    // ── Partition 简谱 : la page entière remplace les sections ──
+    // La structure de l'item reste décrite (elle sert à la liste de la
+    // setlist) mais ne découpe pas la partition, qui est un scan indivisible.
+    const sheet = item.jianpuSheet ? jianpuSheets?.[item.songSlug] : undefined;
+    if (sheet) {
+      blocks.push({
+        kind: "jianpu-sheet",
+        uid: uid(),
+        entry: sheet,
+        songTitle: ast.metadata.title,
+      });
+      continue;
+    }
+
     const occ: Record<string, number> = {};
 
     for (const sec of sections) {
