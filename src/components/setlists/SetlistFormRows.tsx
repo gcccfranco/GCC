@@ -28,6 +28,7 @@ import { ALL_KEYS } from "@/lib/transpose";
 import { useTranslation } from "react-i18next";
 import { useDefaultSensors } from "@/lib/dnd/sensors";
 import { nextUid } from "@/lib/uid";
+import { useJianpuScore } from "@/lib/jianpu/images";
 import type { FormItem, FormSectionItem, FormFusionItem, FormTransitionItem, FusionMixedSectionForm } from "@/lib/setlist/formItems";
 import type { SectionSummary } from "@/types/song";
 import { NUANCES, nuanceFull } from "@/lib/setlist/nuances";
@@ -652,6 +653,7 @@ export function SongRow({
   onKeyChange,
   onNoteChange,
   onSectionItemsChange,
+  onJianpuSheetChange,
 }: {
   item: FormItem;
   selectable?: boolean;
@@ -661,8 +663,10 @@ export function SongRow({
   onKeyChange: (key: string | null) => void;
   onNoteChange: (note: string) => void;
   onSectionItemsChange: (items: FormSectionItem[]) => void;
+  onJianpuSheetChange: (on: boolean) => void;
 }) {
   const { t } = useTranslation();
+  const jianpuScore = useJianpuScore(item.song.slug);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: item.uid });
   const [showStructure, setShowStructure] = useState(false);
@@ -748,6 +752,23 @@ export function SongRow({
               <option key={k} value={k}>{k}</option>
             ))}
           </select>
+          {jianpuScore && (
+            <button
+              type="button"
+              onClick={() => onJianpuSheetChange(!item.jianpuSheet)}
+              title={t("setlists.form.jianpuSheetHint", {
+                defaultValue: "Jouer ce chant sur sa partition 简谱",
+              })}
+              className={`flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded border transition-colors ${
+                item.jianpuSheet
+                  ? "border-primary/30 bg-primary/10 text-primary"
+                  : "border-border text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <span className="font-bold">谱</span>
+              简谱
+            </button>
+          )}
           {originalCount > 1 && (
             <button
               type="button"
