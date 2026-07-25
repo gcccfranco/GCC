@@ -105,6 +105,7 @@ export function buildSetlistItems(items: FormListItem[]): SetlistItem[] {
       showChords: true,
       showPinyin: item.song.language === "zh",
       useJianpu: false,
+      ...(item.jianpuSheet ? { jianpuSheet: true } : {}),
       structureOverride,
       sectionNotes,
       sectionTransitions,
