@@ -47,25 +47,28 @@ progression de la couverture.
 
 8 chants couvrant les deux familles de gravure rencontrées :
 
-| Chant | Gravure | Accords | Statut vérité terrain |
+| Chant | Gravure | Accords | Vérité terrain |
 |---|---|---|---|
-| 何等恩典 | aérée | courts (C, G, G/B) | à établir |
+| 何等恩典 | aérée | courts (C, G, G/B) | **établie** (18 rangées) |
 | 齐来赞美 | aérée | courts | à établir |
 | 主的喜乐是我力量 | aérée | moyens | à établir |
 | 我心坚定与你 | aérée, **2 rangées d'accords** | courts | à établir |
 | 爱赢了 | serrée | longs (Dmaj9, Esus4) | à établir |
-| 你是配得 | serrée | longs | à établir |
 | 献上尊荣 | serrée | moyens | à établir |
 | 你们要赞美耶和华 | **sans accords imprimés** | — | à établir |
+
+`你是配得` retiré du jeu : le slug réel est `你是配的` (coquille dans le
+`{title:}` du `.cho`). À corriger séparément, hors de cette boucle.
 
 Le dernier est un cas limite volontaire : le classifieur ne doit inventer
 aucune rangée d'accords là où il n'y en a pas.
 
 ## Métriques
 
-| Itération | Rangées classées | Étiquettes appariées | Chants résolus /124 |
+| Itération | Rangées d'accords trouvées (jeu de contrôle) | Étiquettes appariées | Chants résolus /124 |
 |---|---|---|---|
-| 0 (départ) | — | — | 0 |
+| 0 (départ) | 0 / 7 chants | — | 0 |
+| 1 | **4 / 7 chants** (gravure aérée uniquement) | pas de matcher | 0 |
 
 ## Journal
 
@@ -75,3 +78,33 @@ Découpage en rangées opérationnel sur les deux gravures
 signature des amas dépend de la longueur des noms d'accords et ne se
 transpose pas (何等恩典 largeur médiane 29–50 ; 爱赢了 88–90). Pas encore
 de vérité terrain, pas encore de matcher.
+
+### Itération 1 — classification par géométrie invariante
+
+Vérité terrain établie à l'œil sur 何等恩典 (18 rangées). Les features
+mesurées séparent nettement les trois natures :
+
+| Nature | ratio (largeur amas / hauteur) | run_frac |
+|---|---|---|
+| chiffres | 0,24–0,32 | 0,036–0,068 |
+| paroles | 0,97–1,00 (hanzi carrés) | ~0,020 |
+| accords | 1,04–1,92 | 0,009 |
+
+Les seuils de départ étaient très mal placés (`numbers_run_frac` 0,06 alors
+que les vraies valeurs vont de 0,036 à 0,068 ; `lyric_ratio_min` 0,55 qui
+happait des rangées de chiffres). Remplacés par les valeurs mesurées, dans
+`classifier.json`.
+
+**Résultat.** 何等恩典 classé **18/18** contre la vérité terrain. Rangées
+d'accords désormais trouvées sur 4 des 7 chants du jeu — mais uniquement
+sur la gravure aérée (齐来赞美 6, 主的喜乐是我力量 4, 我心坚定与你 5).
+
+**Ce qui résiste.** La gravure serrée échoue toujours : 爱赢了 donne
+**0 rangée d'accords** et 25 rangées « ? », 献上尊荣 n'en donne qu'une.
+Le cas piège 你们要赞美耶和华 (sans accords imprimés) est passé de 4
+fausses rangées à 1 — mieux, mais toujours un faux positif.
+
+**Prochaine itération.** Établir la vérité terrain sur 爱赢了 (lecture à
+l'œil des rangées) et comprendre pourquoi ses rangées d'accords tombent en
+« ? » : soit le ratio sort de la fourchette, soit `chord_max_height_frac`
+(0,85) est trop strict quand la rangée de chiffres est basse.
