@@ -1,0 +1,9 @@
+{
+  "numbers_ratio_max": 0.50,
+  "lyric_ratio_min": 0.85,
+  "lyric_ratio_max": 1.15,
+  "lyric_min_clusters": 12,
+  "chord_max_run_frac": 0.015,
+  "chord_max_height_frac": 0.85,
+  "min_row_height": 10
+}
