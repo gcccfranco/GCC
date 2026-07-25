@@ -838,6 +838,7 @@ export function SetlistForm({ mode, setlistId, songs, initial }: SetlistFormProp
                         onKeyChange={(key) => patch(item.uid, { keyOverride: key })}
                         onNoteChange={(note) => patch(item.uid, { notes: note })}
                         onSectionItemsChange={(sectionItems) => patch(item.uid, { sectionItems })}
+                        onJianpuSheetChange={(jianpuSheet) => patch(item.uid, { jianpuSheet })}
                       />
                     )
                   )}
