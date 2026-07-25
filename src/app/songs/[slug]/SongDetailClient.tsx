@@ -13,6 +13,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { getChartStylePref, setChartStylePref } from "@/lib/chartStylePref";
 import { SongView } from "@/components/song/SongView";
+import { JianpuSheet } from "@/components/jianpu/JianpuSheet";
+import { useJianpuScore } from "@/lib/jianpu/images";
 import { CustomizePanel, type CustomizeState } from "@/components/customPanel/CustomizePanel";
 import type { Song } from "@/types/song";
 import { useTranslation } from "react-i18next";
@@ -48,6 +50,9 @@ function safeParseParam<T>(raw: string | null, fallback: T): T {
     const { t, i18n } = useTranslation();
     const ast = useMemo(() => parseChordPro(song.chordProSource), [song.chordProSource]);
     const isZh = song.language === "zh";
+    // Partition 简谱 en image (scan d'origine) — absente pour la plupart des chants
+    const jianpuScore = useJianpuScore(song.slug);
+    const [showScore, setShowScore] = useState(false);
     const originalKey = ast.metadata.key;
     const youtubeId = song.youtubeUrl ? extractYouTubeId(song.youtubeUrl) : null;
     const scrollVisible = useScrollDirection();
@@ -338,6 +343,21 @@ function safeParseParam<T>(raw: string | null, fallback: T): T {
                     </button>
                   )}
 
+              {/* Partition 简谱 (chants zh qui en ont une) */}
+              {jianpuScore && (
+                <button
+                  onClick={() => setShowScore((v) => !v)}
+                  className={`h-9 sm:h-8 px-2.5 rounded-md border text-xs font-semibold flex items-center gap-1.5 transition-all duration-150 ${
+                    showScore
+                      ? "border-transparent bg-primary/10 text-primary"
+                      : "border-border bg-card text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <span className="font-bold">谱</span>
+                  <span className="hidden sm:inline">简谱</span>
+                </button>
+              )}
+
               {/* Menu ⋯ : médias / personnaliser / PDF */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -425,16 +445,20 @@ function safeParseParam<T>(raw: string | null, fallback: T): T {
             setBarPinned(true);
           }}
         >
-          <SongView
-            ast={displayedAST}
-            showChords={customize.showChords}
-            showPinyin={customize.showPinyin}
-            useJianpu={customize.useJianpu}
-            structureOverride={structureOverride}
-            sectionNotes={sectionsNote}
-            sectionNuances={sectionsNuance}
-            chartStyle={chartStyle}
-          />
+          {showScore && jianpuScore ? (
+            <JianpuSheet entry={jianpuScore} title={song.title} />
+          ) : (
+            <SongView
+              ast={displayedAST}
+              showChords={customize.showChords}
+              showPinyin={customize.showPinyin}
+              useJianpu={customize.useJianpu}
+              structureOverride={structureOverride}
+              sectionNotes={sectionsNote}
+              sectionNuances={sectionsNuance}
+              chartStyle={chartStyle}
+            />
+          )}
         </main>
 
         {/* Panneau de personnalisation */}
