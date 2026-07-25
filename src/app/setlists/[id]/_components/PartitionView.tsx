@@ -2,6 +2,8 @@ import { useMemo } from "react";
 import type { SetlistItem } from "@/types/setList";
 import type { SongContent } from "@/lib/api/songs";
 import { SongView, SectionView, TransitionNote } from "@/components/song/SongView";
+import { JianpuSheet } from "@/components/jianpu/JianpuSheet";
+import { useJianpuScore } from "@/lib/jianpu/images";
 import { useTranslation } from "react-i18next";
 import { transposeAST, transposeSection } from "@/lib/transposeAST";
 import { semitonesTo } from "@/lib/transpose";
@@ -242,6 +244,8 @@ function NormalSongItem({
     }
     return base;
   }, [item, content]);
+  // Partition 简谱 choisie pour cet item : le scan remplace les paroles.
+  const jianpuScore = useJianpuScore(item.jianpuSheet ? item.songSlug : null);
   if (!ast) return null;
 
   return (
@@ -268,6 +272,9 @@ function NormalSongItem({
           </button>
         )}
       </div>
+      {jianpuScore ? (
+        <JianpuSheet entry={jianpuScore} title={ast.metadata.title} />
+      ) : (
       <SongView
         ast={ast}
         showChords={showChordsGlobal && item.showChords}
@@ -281,6 +288,7 @@ function NormalSongItem({
         chartStyle={chartStyle}
         onLineSelect={editMode ? (line, sectionUid) => onSelectLine?.(origIndex, line, sectionUid) : undefined}
       />
+      )}
     </div>
   );
 }
