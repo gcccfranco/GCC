@@ -13,6 +13,8 @@ import {
 } from "@/components/ui/drawer";
 import type { PerformanceBlock, SectionBlock, SongHeaderBlock } from "@/lib/performance/blocks";
 import { buildPerformanceBlocks, computePageKey } from "@/lib/performance/blocks";
+import { useJianpuManifest } from "@/lib/jianpu/images";
+import { JianpuSheet } from "@/components/jianpu/JianpuSheet";
 import { SectionView, TransitionNote } from "@/components/song/SongView";
 import { AnnotationCanvas, StrokesLayer } from "./AnnotationCanvas";
 import { type AnnotationData, serializeAnnotations, deserializeAnnotations } from "@/lib/annotations/strokes";
@@ -74,6 +76,9 @@ function BlockRenderer({
   if (block.kind === "transition-inter") {
     if (!showTransitions) return null;
     return <TransitionBanner text={block.text} />;
+  }
+  if (block.kind === "jianpu-sheet") {
+    return <JianpuSheet entry={block.entry} title={block.songTitle} />;
   }
   return (
     <SectionView
@@ -402,11 +407,12 @@ export function PerformanceMode({
   const [showAnnotations, setShowAnnotations] = useState(true);
 
   // Build flat block list (memoised — only changes when content changes)
+  const jianpuManifest = useJianpuManifest();
   const blocks = useMemo(
     // always build with chords=true for stable UIDs (le capo ne change ni le
     // nombre ni l'ordre des blocs : les UIDs restent stables)
-    () => buildPerformanceBlocks(items, contents, true, capoActive ? capos : undefined),
-    [items, contents, capoActive, capos],
+    () => buildPerformanceBlocks(items, contents, true, capoActive ? capos : undefined, jianpuManifest),
+    [items, contents, capoActive, capos, jianpuManifest],
   );
 
   // Re-measure when a setting affecting heights changes
