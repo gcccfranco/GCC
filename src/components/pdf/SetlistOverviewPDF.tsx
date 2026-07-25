@@ -16,7 +16,7 @@ Font.register({
 });
 Font.register({
   family: "Inter",
-  fonts: [{ src: "/fonts/inter-latin-ext-400-normal.ttf", fontWeight: 400 }],
+  fonts: [{ src: "/fonts/Inter-Regular.ttf", fontWeight: 400 }],
 });
 Font.register({
   family: "LiberationSans",
@@ -61,10 +61,17 @@ export function SetlistOverviewPDF({
   language?: string;
 }) {
   const isUiZh = language === "zh-CN";
+  // Titre de setlist en chinois → police CJK (SpaceGrotesk/LiberationSans n'ont pas de glyphes CJK).
+  const titleIsZh = /[一-鿿㐀-䶿]/.test(setlist.title);
   const sorted = [...setlist.items].sort((a, b) => a.position - b.position);
-  const locales: Record<string, any> = isUiZh ? zhTranslations : frTranslations;
+  const locales = (isUiZh ? zhTranslations : frTranslations) as {
+    common?: { header?: { songs?: string } };
+    categories?: Record<string, string>;
+  };
   const songsLabel = locales.common?.header?.songs ?? "Chants";
   const labelFont = isUiZh ? "SourceHanSansCN" : "SpaceGrotesk";
+  // Champs libres (leader / notes) parfois en chinois → police CJK au besoin.
+  const metaFont = (txt: string) => (/[一-鿿㐀-䶿]/.test(txt) ? "SourceHanSansCN" : labelFont);
 
   return (
     <Document title={setlist.title}>
@@ -72,7 +79,7 @@ export function SetlistOverviewPDF({
         {/* En-tête */}
         <View style={s.header}>
           <Text style={{ fontSize: 20, fontWeight: 700, color: BLACK, marginBottom: 3,
-                         fontFamily: "SpaceGrotesk" }}>
+                         fontFamily: titleIsZh ? "KaiTi" : "SpaceGrotesk" }}>
             {setlist.title}
           </Text>
           <Text style={{ fontSize: 10, color: GRAY, fontFamily: labelFont, fontWeight: 300, marginBottom: 2 }}>
@@ -83,10 +90,10 @@ export function SetlistOverviewPDF({
               {locales.categories?.[setlist.category] ?? setlist.category}
             </Text>
             {setlist.leader ? (
-              <Text style={{ fontSize: 9, color: GRAY, fontFamily: labelFont, fontWeight: 300 }}>— {setlist.leader}</Text>
+              <Text style={{ fontSize: 9, color: GRAY, fontFamily: metaFont(setlist.leader), fontWeight: 300 }}>— {setlist.leader}</Text>
             ) : null}
             {setlist.notes ? (
-              <Text style={{ fontSize: 9, color: GRAY, fontFamily: labelFont, fontWeight: 300 }}>{setlist.notes}</Text>
+              <Text style={{ fontSize: 9, color: GRAY, fontFamily: metaFont(setlist.notes), fontWeight: 300 }}>{setlist.notes}</Text>
             ) : null}
           </View>
         </View>
@@ -138,7 +145,7 @@ export function SetlistOverviewPDF({
         {/* Pied de page */}
         <View style={s.footer} fixed>
           <Text style={[s.footerText, { fontWeight: 700, color: ORANGE, letterSpacing: 1 }]}>GCC LOUANGE</Text>
-          <Text style={[s.footerText, { fontWeight: 400 }]}>{setlist.title}</Text>
+          <Text style={[s.footerText, { fontWeight: 400, fontFamily: titleIsZh ? "SourceHanSansCN" : "LiberationSans" }]}>{setlist.title}</Text>
           <Text
             style={[s.footerText, { fontWeight: 400 }]}
             render={({ pageNumber, totalPages }) => `Page ${pageNumber} / ${totalPages}`}

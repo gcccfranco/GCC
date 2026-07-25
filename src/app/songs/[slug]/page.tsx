@@ -15,9 +15,17 @@ export default async function SongPage({ params }: Props) {
 
   try {
     const song = loadSong(slug);
-    return <Suspense fallback={null}>
-            <SongDetailClient song={song} />
-          </Suspense>
+    return (
+      <Suspense
+        fallback={
+          <div className="min-h-screen bg-background flex items-center justify-center">
+            <p className="text-sm text-muted-foreground">…</p>
+          </div>
+        }
+      >
+        <SongDetailClient song={song} />
+      </Suspense>
+    );
   } catch {
     notFound();
   }

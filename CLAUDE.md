@@ -4,24 +4,32 @@ Site de partitions de louange pour l'église GCC. Spec complète dans `cahier-de
 Specs de fonctionnalités en attente : `docs/` (ex. `docs/spec-ajouter-un-chant.md`).
 
 ## Stack
-Next.js 15 (static export) · TypeScript · Tailwind CSS + shadcn/ui · GitHub Pages
+Next.js 16 (App Router) · TypeScript · Tailwind CSS + shadcn/ui · Firebase Auth + Firestore · Resend (emails) · Vercel
 
 ## Commandes
 ```bash
 npm run dev          # Serveur de développement
-npm run build        # build:index + next build (export statique)
+npm run build        # build:index + next build
 npm run build:index  # Parse content/songs/*.cho → public/songs-index.json
-npm run validate     # Lint des fichiers .cho et .json
+npm run validate     # Valide les fichiers .cho (métadonnées, parsing)
+npm run lint         # ESLint (flat config, eslint.config.mjs)
+npx tsc --noEmit     # Vérification TypeScript (c'est ce que fait la CI)
 ```
 
 ## Architecture clé
-- **Contenu** : fichiers `.cho` (ChordPro) dans `content/songs/`, setlists JSON dans `content/setlists/`
-- **Index** : `scripts/build-index.ts` → `public/songs-index.json` (généré au build, utilisé côté client)
-- **Pas de backend** : tout tourne dans le navigateur (transposition, PDF, recherche)
-- **Hébergement** : GitHub Pages via GitHub Actions (`.github/workflows/deploy.yml`)
+- **Chants** : fichiers `.cho` (ChordPro) dans `content/songs/`, parsés au build → `public/songs-index.json` (utilisé côté client pour liste/recherche)
+- **Setlists, profils, annonces** : Firestore — voir `src/lib/firebase/`
+- **Firestore = API REST uniquement** (`fetch` + token Firebase Auth). Jamais le SDK WebChannel côté navigateur (bloqué sur certains réseaux). Seul `firebase/auth` est utilisé du SDK.
+- **Comptes & rôles** : profils dans `users/{uid}` (rôles, lieux de service, EDD, groupe). Permissions client dans `src/lib/access.ts`, miroir serveur dans `firestore.rules`.
+- **`firestore.rules`** : versionné ici mais doit être **publié manuellement dans la console Firebase** pour prendre effet. La liste des admins doit rester synchronisée avec `ADMIN_EMAILS` dans `src/lib/access.ts`.
+- **Confidentialité (choix assumé)** : les rules autorisent `read: if signedIn()` sur **toutes** les setlists et tous les profils. Le filtrage `isPrivate` / visibilité par service (`canSeeSetlist`, `src/lib/access.ts`) est **côté client uniquement** — un membre connecté peut techniquement lire en REST une setlist privée ou un profil. Acceptable pour un outil interne de confiance ; ne pas re-signaler comme faille sans nouvelle demande de durcissement.
+- **Routes API** : `/api/song/[slug]` (contenu d'un chant), `/api/report` (signalement par email via Resend — env `RESEND_API_KEY`, `MAIL_TO`, `EMAIL_FROM` sur Vercel)
+- **Planning** : Google Sheet public lu en CSV (`src/lib/planning/sheets.ts`) + données statiques (`data.ts`)
+- **PWA** : service worker `public/sw.js` — push + cache hors-ligne. Cache versionné (`gcc-louange-vN`, purgé à l'activation). Stratégies : HTML **network-first** (le déploiement en ligne gagne toujours → pas de page périmée), `/_next/static/*` **cache-first** (content-hashé, immuable), polices + `songs-index.json` + `/api/song/*` **stale-while-revalidate**, reste réseau-seul. Firestore/Sheets/YouTube (autres origines) jamais mis en cache.
+- **Hébergement** : Vercel. La CI GitHub (`.github/workflows/deploy.yml`) fait typecheck + validate.
 
 ## Formats importants
-- ChordPro : `[accord]paroles` dans les lignes, `{directive: valeur}` en en-tête
+- ChordPro : `[accord]paroles` dans les lignes, `{directive: valeur}` en en-tête — guidelines détaillées dans `CHORDPRO_GUIDELINES.md`
 - Chinois : `[C]caractères   pinyin` (3 espaces min entre chars et pinyin)
 - Jianpu simple : `{jianpu: 3 3 5 6 5}` sur la ligne juste au-dessus des paroles
 - Partition 简谱 complète : bloc `{start_of_jianpu}…{end_of_jianpu}` (syntaxe
@@ -33,13 +41,10 @@ npm run validate     # Lint des fichiers .cho et .json
 - Sections : `#EA580C` (orange)
 - Jianpu : `#B91C1C` (rouge foncé)
 
-## Setlists
-Tout le monde peut créer des setlists (pas seulement les responsables) en éditant les JSON dans `content/setlists/`.
-
 ## Règles
 - Commits séparés par fichier (best practice de ce projet)
 - Tester sur au moins 1 chant FR + 1 chant ZH avant de valider une étape
-- Pas de mini-éditeur web en v1 (content-as-code uniquement)
+- Toute modif des permissions doit être faite en double : `src/lib/access.ts` (client) **et** `firestore.rules` (serveur)
 
 ## Comportement (guidelines Karpathy)
 

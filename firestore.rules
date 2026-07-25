@@ -1,0 +1,179 @@
+rules_version = '2';
+
+// Règles de sécurité Firestore — à publier dans la console Firebase :
+// https://console.firebase.google.com/project/gcclouange/firestore/rules
+//
+// Modèle d'accès :
+// - Setlists : lecture réservée aux connectés (le filtrage par service se fait côté client) ;
+//   création : le créateur doit se déclarer propriétaire (ownerId = uid, figé ensuite) ;
+//   modification/suppression réservées au créateur (ownerId), aux musiciens et à la
+//   présidence du même service, et aux admins.
+// - Profils (users/{uid}) : chacun crée le sien à l'inscription ; une fois créé,
+//   seuls les admins peuvent le modifier.
+// - config/app : état des inscriptions (registrationOpen), lisible publiquement,
+//   modifiable par les admins depuis la page /admin.
+//
+// La liste des admins doit rester synchronisée avec ADMIN_EMAILS dans src/lib/access.ts.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return signedIn() && request.auth.token.email in [
+        'tc328829@gmail.com',
+        'gcccfranco@gmail.com',
+        'david.code999@gmail.com'
+      ];
+    }
+
+    function profile() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function hasProfile() {
+      return exists(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    // Musicien ou présidence du service correspondant à la catégorie de la setlist
+    // (niveau « edit » — miroir de categoryLevel dans src/lib/access.ts).
+    // serviceRoles : map catégorie → liste de rôles ({} par défaut si absent).
+    function isEditorOf(category) {
+      let roles = profile().get('serviceRoles', {}).get(category, []);
+      return "musicien" in roles || "presidence" in roles;
+    }
+
+    match /users/{uid} {
+      // Lecture par tout connecté (les règles setlists et le client lisent les profils)
+      allow read: if signedIn();
+      // Création (première complétion) : l'intéressé crée son propre profil sans
+      // s'attribuer de droits d'annonces ni de notifications ; les admins peuvent
+      // créer n'importe quel profil.
+      allow create: if signedIn() && (
+        isAdmin()
+        || (request.auth.uid == uid
+            && request.resource.data.get('annonces', []) == []
+            && request.resource.data.get('notify', []) == [])
+      );
+      // Une fois le profil créé, seuls les admins peuvent le modifier.
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    match /annonces/{id} {
+      allow read: if signedIn();
+      // Publication : admins + membres dont le profil liste la section dans `annonces`
+      allow create: if signedIn() && (
+        isAdmin()
+        || (hasProfile()
+            && request.resource.data.section in profile().get('annonces', [])
+            && request.resource.data.authorId == request.auth.uid)
+      );
+      // Modification/suppression : auteur + admins
+      allow update, delete: if signedIn() && (
+        isAdmin() || resource.data.authorId == request.auth.uid
+      );
+    }
+
+    // Propositions de chants envoyées par les membres (inbox de modération /admin).
+    match /songProposals/{id} {
+      // Lecture réservée aux admins.
+      allow read: if isAdmin();
+      // Tout membre connecté peut proposer ; il se déclare auteur, statut « pending ».
+      allow create: if signedIn()
+        && request.resource.data.authorId == request.auth.uid
+        && request.resource.data.status == 'pending';
+      // Tri / suppression réservés aux admins.
+      allow update, delete: if isAdmin();
+    }
+
+    // Signalements (problèmes chant / site) envoyés par les membres connectés.
+    // Écriture côté serveur uniquement (Admin SDK, /api/report) afin de notifier
+    // les admins dans la foulée → création client interdite.
+    match /reports/{id} {
+      allow read, update, delete: if isAdmin();
+      allow create: if false;
+    }
+
+    match /setlists/{id} {
+      allow read: if signedIn();
+      // Création : le créateur doit se déclarer propriétaire (ownerId = uid)
+      allow create: if signedIn()
+        && request.resource.data.get('ownerId', null) == request.auth.uid;
+      // Modification : ownerId ne change jamais ; un musicien/présidence du service
+      // ne peut déplacer la setlist que vers une catégorie où il sert aussi.
+      allow update: if signedIn()
+        && request.resource.data.get('ownerId', null) == resource.data.get('ownerId', null)
+        && (
+          resource.data.get('ownerId', '') == request.auth.uid
+          || isAdmin()
+          || (hasProfile() && isEditorOf(resource.data.category)
+              && (request.resource.data.category == resource.data.category
+                  || isEditorOf(request.resource.data.category)))
+        );
+      allow delete: if signedIn() && (
+        resource.data.get('ownerId', '') == request.auth.uid
+        || isAdmin()
+        || (hasProfile() && isEditorOf(resource.data.category))
+      );
+    }
+
+    // Annotations dessinées en Mode Louange (personnelles).
+    // L'id du document est préfixé par l'uid du propriétaire :
+    // {uid}__{setlistId}__{pageKey} — voir src/lib/firebase/annotations.ts.
+    match /annotations/{id} {
+      allow read, write: if signedIn() && id.split('__')[0] == request.auth.uid;
+    }
+
+    // Abonnements push (un document par appareil).
+    // L'id est préfixé par l'uid du propriétaire : {uid}__{hashEndpoint}
+    // — voir src/lib/push/client.ts. Chacun ne gère que ses propres appareils ;
+    // le serveur (Firebase Admin) lit tous les abonnements pour envoyer.
+    match /pushSubscriptions/{id} {
+      allow read, write: if signedIn() && id.split('__')[0] == request.auth.uid;
+    }
+
+    // Journal des notifications envoyées (idempotence des rappels + anti-spam
+    // setlist/annonce). Écrit/lu uniquement par le serveur via Firebase Admin, qui
+    // contourne ces règles — interdit à tout client.
+    match /notifLog/{id} {
+      allow read, write: if false;
+    }
+
+    // Notifications « cloche » : une entrée par push ponctuel (manuel, rappel,
+    // diffusion), générée côté serveur (Admin SDK). Lecture par tout membre
+    // connecté — le ciblage par destinataire (champ `recipients` / `everyone`)
+    // est appliqué côté client (cf. useNotifications), cohérent avec le modèle de
+    // confidentialité assumé du projet. Écriture réservée au serveur.
+    match /notifications/{id} {
+      allow read: if signedIn();
+      allow write: if false;
+    }
+
+    // Préférences de notification par type (un doc par membre, id = uid) : chacun
+    // gère les siennes ; le serveur (Admin) les lit pour filtrer les envois auto.
+    match /notifPrefs/{uid} {
+      allow read: if signedIn();
+      allow write: if signedIn() && request.auth.uid == uid;
+    }
+
+    match /config/app {
+      // La page d'inscription lit registrationOpen sans être connectée
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Publication des plannings par trimestre : un doc par planning+année
+    // (planningReleases/{key}_{year}, champ published[]). Lisible publiquement —
+    // les pages planning, consultées sans compte, masquent les trimestres non
+    // publiés. Écriture réservée au serveur (Admin SDK, /api/planning/release),
+    // qui vérifie les droits de publication → interdite à tout client.
+    match /planningReleases/{id} {
+      allow read: if true;
+      allow write: if false;
+    }
+  }
+}

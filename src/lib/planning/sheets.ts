@@ -31,6 +31,20 @@ function parseCSV(txt: string): string[][] {
   return rows
 }
 
+/** Année pour une date JJ/MM sans année. Les feuilles ne couvrent que l'année
+ *  en cours : on retourne donc l'année civile actuelle par défaut, et on ne
+ *  bascule sur une année adjacente qu'au voisinage du nouvel an — jamais en
+ *  milieu d'année. (L'ancienne heuristique « année la plus proche » projetait
+ *  à tort une date de janvier vue en juillet sur l'année suivante.) */
+export function inferYear(_day: number, month: number): number {
+  const now = new Date()
+  const year = now.getFullYear()
+  const cur = now.getMonth() + 1 // mois courant, 1–12
+  if (cur >= 11 && month <= 2) return year + 1 // fin d'année → dates de début d'année à venir
+  if (cur <= 2 && month >= 11) return year - 1 // début d'année → dates de fin d'année écoulée
+  return year
+}
+
 export function parseDate(s: string): string | null {
   if (!s) return null
   s = s.replace(/"+/g, "").trim()
@@ -43,16 +57,28 @@ export function parseDate(s: string): string | null {
   if (m3) return `20${m3[3]}-${m3[2].padStart(2,"0")}-${m3[1].padStart(2,"0")}`
   // DD/MM sans année — format utilisé par la plupart des feuilles (Culte, Groupes, Déjeuner…)
   const m4 = s.match(/^(\d{1,2})\/(\d{1,2})$/)
-  if (m4) return `2026-${m4[2].padStart(2,"0")}-${m4[1].padStart(2,"0")}`
+  if (m4) return `${inferYear(+m4[1], +m4[2])}-${m4[2].padStart(2,"0")}-${m4[1].padStart(2,"0")}`
   return null
 }
 
+// Cache mémoire court des CSV récupérés. Les pages planning sont des composants
+// client : sans ça, chaque montage / navigation entre onglets re-télécharge les
+// ~10 feuilles. Vidé au rechargement complet de la page (et par instance serveur).
+const SHEET_TTL_MS = 5 * 60_000
+const sheetCache = new Map<string, { at: number; rows: string[][] }>()
+
 async function fetchSheet(sheet: string): Promise<string[][]> {
+  const hit = sheetCache.get(sheet)
+  if (hit && Date.now() - hit.at < SHEET_TTL_MS) return hit.rows
   try {
     const res = await fetch(csvUrl(sheet), { cache: "no-store" })
-    return parseCSV(await res.text())
+    const rows = parseCSV(await res.text())
+    sheetCache.set(sheet, { at: Date.now(), rows })
+    return rows
   } catch {
-    return []
+    // Échec réseau : on réutilise le dernier cache si on en a un, sinon vide
+    // (loadPlanningData basculera alors sur les données de secours statiques).
+    return hit?.rows ?? []
   }
 }
 
@@ -120,6 +146,26 @@ export async function fetchBonte(): Promise<string[][]> {
   return fetchMulti(["Bonté_T1","Bonté _T2","Bonté _T3","Bonté_T4"], 4)
 }
 
+// Intergroupe / Interfranco : 1 séance par trimestre (4 lignes/an). Structure
+// proche du culte. Intergroupe = 3 choristes, Interfranco = 2 choristes.
+export async function fetchIntergroupe(): Promise<string[][]> {
+  const rows = await fetchSheet("Intergroupe")
+  return rows.flatMap(r => {
+    const dt = parseDate(r[0])
+    if (!dt) return []
+    return [[dt, r[1]||"", r[2]||"", r[3]||"", r[4]||"", r[5]||"", r[6]||"", r[7]||"", r[8]||"", r[9]||"", r[10]||"", r[11]||""]]
+  })
+}
+
+export async function fetchInterfranco(): Promise<string[][]> {
+  const rows = await fetchSheet("Interfranco")
+  return rows.flatMap(r => {
+    const dt = parseDate(r[0])
+    if (!dt) return []
+    return [[dt, r[1]||"", r[2]||"", r[3]||"", r[4]||"", r[5]||"", r[6]||"", r[7]||"", r[8]||"", r[9]||"", r[10]||""]]
+  })
+}
+
 export async function fetchEDD(): Promise<EddDataStructure> {
   const rows = await fetchSheet("EDD")
   const res: EddDataStructure = {}
@@ -142,23 +188,37 @@ export async function fetchEDD(): Promise<EddDataStructure> {
 
 export async function fetchCampus(): Promise<{ louange: CampusSeance[]; entrainement: CampusSeance[] }> {
   const rows = await fetchSheet("Campus_Louange")
-  const louange: CampusSeance[] = []
-  const entrainement: CampusSeance[] = []
+  const seances: { key: string; obj: CampusSeance }[] = []
   for (const r of rows) {
     if (!r[0] || !r[1]) continue
     if (r[1] !== "Matin" && r[1] !== "Soir") continue
     const parts = r[0].replace(/"+/g,"").split("/")
     const label = (parts[0]||"").replace(/^0/,"") + "/" + parts[1]
-    const ch = [r[2],r[3],r[4]].filter(v => v?.trim()).join(", ")
+    const pres = (r[2] || "").trim()
+    const ch = [r[3],r[4]].filter(v => v?.trim()).join(", ")
     const mu = [r[5]?"Piano: "+r[5]:"", r[6]?"Guitare: "+r[6]:"", r[7]?"Batterie: "+r[7]:""].filter(Boolean).join(", ")
     const rg = [r[8]?"Sono: "+r[8]:"", r[9]?"PPT: "+r[9]:""].filter(Boolean).join(", ")
+    // Cellule répétition : "JJ/MM/AAAA[ HH:MM][ Salle…]" → date + heure + lieu
     const rawEnt = (r[14]||"").trim()
-    const ent = rawEnt ? parseDate(rawEnt.split(" ")[0]) || "" : ""
-    const obj: CampusSeance = { d: `${label} ${r[1]}`, ch, mu, rg, ent, chants: [r[10]||"",r[11]||"",r[12]||"",r[13]||""] }
-    louange.push(obj)
-    if (ent) entrainement.push(obj)
+    let ent = "", entTime = "", entLieu = ""
+    if (rawEnt) {
+      const toks = rawEnt.split(/\s+/)
+      ent = parseDate(toks[0]) || ""
+      const rest = toks.slice(1)
+      if (rest[0] && /^\d{1,2}[:hH]\d{2}$/.test(rest[0])) {
+        entTime = rest.shift()!.replace(/[hH]/, ":")
+      }
+      entLieu = rest.join(" ").trim()
+    }
+    const obj: CampusSeance = { d: `${label} ${r[1]}`, pres, ch, mu, rg, ent, entTime, entLieu, chants: [r[10]||"",r[11]||"",r[12]||"",r[13]||""] }
+    // Tri chronologique : date ISO de la séance + matin avant soir. La chaîne
+    // d'affichage "JJ/MM" ne se trie pas correctement (ex. "10/6" avant "2/6").
+    const key = `${parseDate(r[0]) ?? ""} ${r[1] === "Soir" ? "1" : "0"}`
+    seances.push({ key, obj })
   }
-  louange.sort((a,b) => a.d < b.d ? -1 : 1)
-  entrainement.sort((a,b) => a.d < b.d ? -1 : 1)
-  return { louange, entrainement }
+  seances.sort((a, b) => (a.key < b.key ? -1 : a.key > b.key ? 1 : 0))
+  return {
+    louange: seances.map((s) => s.obj),
+    entrainement: seances.filter((s) => s.obj.ent).map((s) => s.obj),
+  }
 }

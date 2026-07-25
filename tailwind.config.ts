@@ -1,7 +1,12 @@
 import type { Config } from "tailwindcss";
+import tailwindcssAnimate from "tailwindcss-animate";
 
 const config: Config = {
   darkMode: ["class"],
+  // Les variantes `hover:` ne s'appliquent que sur un appareil réellement
+  // capable de survol (souris) — évite le « hover collant » sur tactile
+  // (téléphone/tablette) où l'état de survol restait figé après un tap.
+  future: { hoverOnlyWhenSupported: true },
   content: [
     "./src/app/**/*.{ts,tsx}",
     "./src/components/**/*.{ts,tsx}",
@@ -77,7 +82,7 @@ const config: Config = {
       },
     },
   },
-  plugins: [],
+  plugins: [tailwindcssAnimate],
 };
 
 export default config;

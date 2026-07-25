@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import {
   DndContext,
   closestCenter,
@@ -15,11 +14,9 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { X, GripVertical, Plus, Trash2, RotateCcw } from "lucide-react";
-import { ALL_KEYS, semitonesTo, getTransposedKey } from "@/lib/transpose";
 import type { ChordProSection } from "@/types/chordPro";
 import { useTranslation } from "react-i18next";
 import { formatSectionName } from "@/lib/chordpro/parser";
-import { BugReportButton } from "@/components/layout/AlertButton";
 import type { SectionItem } from "@/types/song";
 
 // --- Types ---
@@ -37,12 +34,10 @@ export interface CustomizeState {
 interface CustomizePanelProps {
   originalKey: string;
   isZh: boolean;
-  hasJianpu: boolean;
   sections: ChordProSection[];
   state: CustomizeState;
   onChange: (s: CustomizeState) => void;
   onClose: () => void;
-  songTitle: string;
 }
 
 // --- Sortable row ---
@@ -115,10 +110,8 @@ export function CustomizePanel({
   state,
   onChange,
   onClose,
-  songTitle,
 }: CustomizePanelProps) {
   const { t } = useTranslation();
-  const [instanceCounter, setInstanceCounter] = useState(100);
 
   const sensors = useDefaultSensors();
 
@@ -243,10 +236,6 @@ export function CustomizePanel({
             )}
           </section>
 
-          {/* --- Signalement --- */}
-          <section>
-            <BugReportButton song={songTitle} />
-          </section>
         </div>
 
         {/* Footer */}

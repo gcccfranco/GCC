@@ -18,17 +18,27 @@ function parseDirective(line: string): { key: string; value: string } | null {
 
 // --- Parsing d'une ligne de paroles avec accords ---
 
-function parseLyricLine(rawLine: string, language: string = "fr"): { tokens: Token[]; pinyin: string | null } {
+export function parseLyricLine(rawLine: string, language: string = "fr"): { tokens: Token[]; pinyin: string | null } {
   // Séparation paroles chinoises / pinyin (2 espaces minimum, uniquement pour zh)
   let pinyinPart: string | null = null;
   let lyricPart = rawLine;
 
   if (language === "zh") {
-    const pinyinMatch = rawLine.match(/^(.*?)\s{2,}(.+)$/);
-    // Le second groupe ne doit pas contenir de caractères chinois ni de crochets d'accords
-    if (pinyinMatch && !hasChinese(pinyinMatch[2]) && !pinyinMatch[2].includes('[')) {
-      lyricPart = pinyinMatch[1];
-      pinyinPart = pinyinMatch[2].trim() || null;
+    // Coupure sur une séquence de 2+ espaces dont la droite ne contient ni
+    // caractère chinois ni crochet d'accord. On essaie chaque séquence de
+    // gauche à droite et on garde la PREMIÈRE valide : une ligne peut contenir
+    // des doubles espaces internes (colonnes d'accords, ex. `。  [A7]`) avant
+    // le vrai séparateur — abandonner sur la première coupure invalide
+    // laisserait le pinyin collé aux paroles.
+    const gaps = /\s{2,}/g;
+    let gap: RegExpExecArray | null;
+    while ((gap = gaps.exec(rawLine)) !== null) {
+      const tail = rawLine.slice(gap.index + gap[0].length);
+      if (tail && !hasChinese(tail) && !tail.includes("[")) {
+        lyricPart = rawLine.slice(0, gap.index);
+        pinyinPart = tail.trim() || null;
+        break;
+      }
     }
   }
 
@@ -67,6 +77,8 @@ const SECTION_TYPE_MAP: Record<string, ChordProSection["type"]> = {
   outro: "outro",
   prechorus: "prechorus",
   pre_chorus: "prechorus",
+  postchorus: "postchorus",
+  post_chorus: "postchorus",
   tab: "other",
   grid: "other",
 };
@@ -108,6 +120,9 @@ export function parseSectionHeader(typeKey: string, value: string) {
   if (type === "other" || type === "verse") {
     if (lowerLabel.includes("couplet") || lowerLabel.includes("verse") || lowerLabel.includes("主歌")) {
       type = "verse";
+    // Post-refrain avant refrain : « post-refrain » contient « refrain »
+    } else if (lowerLabel.includes("post-refrain") || lowerLabel.includes("post-chorus") || lowerLabel.includes("postchorus") || lowerLabel.includes("后副歌")) {
+      type = "postchorus";
     } else if (lowerLabel.includes("refrain") || lowerLabel.includes("chorus") || lowerLabel.includes("副歌")) {
       type = "chorus";
     } else if (lowerLabel.includes("pont") || lowerLabel.includes("bridge") || lowerLabel.includes("桥段")) {
@@ -140,17 +155,17 @@ export function parseSectionHeader(typeKey: string, value: string) {
 
 export function formatSectionName(
   section: { type: string; name?: string; number?: string; suffix?: string },
-  tOrTranslations: ((key: string, options?: any) => string) | Record<string, any>
+  tOrTranslations: ((key: string, options?: { defaultValue?: string }) => string) | Record<string, unknown>
 ): string {
   const getTranslation = (key: string, fallback: string): string => {
     if (typeof tOrTranslations === "function") {
       return tOrTranslations(key, { defaultValue: fallback });
     }
     const parts = key.split(".");
-    let current: any = tOrTranslations;
+    let current: unknown = tOrTranslations;
     for (const part of parts) {
       if (current && typeof current === "object" && part in current) {
-        current = current[part];
+        current = (current as Record<string, unknown>)[part];
       } else {
         return fallback;
       }
@@ -176,6 +191,7 @@ export function formatSectionName(
     else if (cleanName === "intro" || cleanName === "前奏") lookupKey = "intro";
     else if (cleanName === "outro" || cleanName === "尾声" || cleanName === "ending") lookupKey = "outro";
     else if (cleanName === "pre-chorus" || cleanName === "prechorus" || cleanName === "pré-refrain" || cleanName === "副歌前奏") lookupKey = "prechorus";
+    else if (cleanName === "post-chorus" || cleanName === "postchorus" || cleanName === "post-refrain" || cleanName === "后副歌") lookupKey = "postchorus";
     else if (cleanName === "coda") lookupKey = "coda";
     else if (cleanName === "tag") lookupKey = "tag";
     else if (cleanName === "interlude" || cleanName === "inter" || cleanName === "间奏") lookupKey = "interlude";
@@ -217,12 +233,14 @@ export function parseChordPro(source: string): ChordProAST {
   const sections: ChordProSection[] = [];
   let currentSection: ChordProSection | null = null;
   let pendingJianpu: string | null = null;
+  let pendingJianpuLine: number | null = null;
   let sectionCounter = 0;
   let uidCounter = 0;
   // Capture brute du bloc partition 简谱 (hors parsing de sections)
   let inJianpuScore = false;
   const jianpuScoreLines: string[] = [];
-  for (const rawLine of lines) {
+  for (let lineIdx = 0; lineIdx < lines.length; lineIdx++) {
+    const rawLine = lines[lineIdx];
     const line = rawLine.trimEnd();
 
     if (inJianpuScore) {
@@ -281,6 +299,7 @@ export function parseChordPro(source: string): ChordProAST {
       // Directive jianpu (à associer à la prochaine ligne de paroles)
       if (key === "jianpu") {
         pendingJianpu = value;
+        pendingJianpuLine = lineIdx;
         continue;
       }
 
@@ -352,6 +371,7 @@ export function parseChordPro(source: string): ChordProAST {
         prevLine.pinyin === null
       ) {
         prevLine.pinyin = trimmed;
+        prevLine.pinyinSrcLine = lineIdx;
         continue;
       }
 
@@ -361,9 +381,12 @@ export function parseChordPro(source: string): ChordProAST {
         tokens,
         pinyin,
         jianpu: pendingJianpu,
+        srcLine: lineIdx,
+        jianpuSrcLine: pendingJianpu !== null ? pendingJianpuLine ?? undefined : undefined,
       };
       currentSection.lines.push(chordLine);
       pendingJianpu = null;
+      pendingJianpuLine = null;
     }
   }
 

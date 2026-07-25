@@ -4,8 +4,13 @@ import {
 import type { ChordProAST, ChordProSection, Token } from "@/types/chordPro";
 import { formatSectionName } from "@/lib/chordpro/parser";
 import { resolveStructureOverride } from "@/lib/chordpro/structure";
+import { semitonesTo } from "@/lib/transpose";
+import { transposeSection } from "@/lib/transposeAST";
 import frTranslations from "@/locales/fr.json";
 import zhTranslations from "@/locales/zh-CN.json";
+import { measureLyric, measureChord } from "@/lib/chordpro/measureText";
+import type { SectionNuance } from "@/types/setList";
+import { nuanceLabel, NUANCE_COLOR } from "@/lib/setlist/nuances";
 
 // ─── Fonts ────────────────────────────────────────────────────────────────────
 
@@ -18,7 +23,7 @@ Font.register({
 });
 Font.register({
   family: "Inter",
-  fonts: [{ src: "/fonts/inter-latin-ext-400-normal.ttf", fontWeight: 400 }],
+  fonts: [{ src: "/fonts/Inter-Regular.ttf", fontWeight: 400 }],
 });
 Font.register({
   family: "LiberationSans",
@@ -84,18 +89,16 @@ const PINYIN_SIZE  = 8;
 const JIANPU_SIZE  = 11;
 const CHORD_H      = 16;    // reserved height for chord row
 
-// Approximate character widths for line-break pre-computation (no flexWrap)
-const LYRIC_CHAR_W = 5.5;   // NotoSans 11pt average glyph advance
-const CHORD_CHAR_W = 7.5;   // NotoSans Bold 13pt average glyph advance
 const PAGE_CONTENT_W = 495; // A4 - 2×50pt margins
 
 // ─── Section box type ─────────────────────────────────────────────────────────
 
-type BoxStyle = "filled" | "outline" | "none";
+type BoxStyle = "filled" | "outline" | "leftbar" | "none";
 
 const SECTION_BOX: Record<string, BoxStyle> = {
   chorus:       "filled",
-  prechorus:    "filled",
+  prechorus:    "leftbar",
+  postchorus:   "filled",
   intro:        "none",
   final:        "filled",
   coda:         "filled",
@@ -122,6 +125,22 @@ function chordParts(chord: string): [string, string] {
   const m = chord.match(/^([A-G][b#]?)(.*)$/);
   if (!m) return [chord, ""];
   return [m[1], m[2]];
+}
+
+/** Largeur rendue (pt) d'un accord : racine @CHORD_SIZE + qualité @CHORD_Q_SIZE,
+ *  exactement comme <ChordLabel> le dessine. */
+function chordWidthPt(chord: string): number {
+  const [root, qual] = chordParts(chord);
+  return measureChord(root, CHORD_SIZE) + measureChord(qual, CHORD_Q_SIZE);
+}
+
+// Écart minimal après un accord (≈ le padding-right 0.5em du rendu web) pour que
+// deux accords successifs ne se touchent jamais.
+const CHORD_GAP = measureChord(" ", CHORD_SIZE);
+
+/** LiberationSans (footers) n'a pas de glyphes CJK → police CJK si le libellé en contient. */
+function footerLabelFont(label: string): string {
+  return /[一-鿿㐀-䶿]/.test(label) ? "SourceHanSansCN" : "LiberationSans";
 }
 
 function sectionName(section: ChordProSection, uiLang: string): string {
@@ -166,19 +185,21 @@ function ChordLabel({ chord, theme }: { chord: string; theme: Theme }) {
   const [root, qual] = chordParts(chord);
   return (
     <View style={{ height: CHORD_H, flexDirection: "row", alignItems: "flex-end" }}>
-      <Text style={{ fontFamily: "LiberationSans", fontWeight: 700, color: theme.accent,
+      <Text style={{ fontFamily: "SpaceGrotesk", fontWeight: 700, color: theme.accent,
                      fontSize: CHORD_SIZE, lineHeight: 1 }}>
         {root}
       </Text>
-      {qual ? (
-        <Text style={{ fontFamily: "LiberationSans", fontWeight: 700, color: theme.accent,
-                       fontSize: CHORD_Q_SIZE, lineHeight: 1 }}>
-          {qual}
-        </Text>
-      ) : null}
+      
+      <Text style={{ fontFamily: "SpaceGrotesk", fontWeight: 700, color: theme.accent,
+                      fontSize: CHORD_Q_SIZE, lineHeight: 1 }}>
+        {qual ? qual : '\u00A0'}
+      </Text>
+      
     </View>
   );
 }
+
+
 
 // ─── French line ──────────────────────────────────────────────────────────────
 // Uses explicit line-breaking (no flexWrap) to avoid Yoga's misalignment bug
@@ -191,12 +212,13 @@ function FrLine({ tokens, showChords, theme }: {
 }) {
   const segs = toSegments(tokens);
   const allEmpty = segs.every(s => !s.lyric?.trim() && !s.chord);
-  if (allEmpty) return <View style={{ height: 6 }} />;
+  if (allEmpty) return <View style={{ height: 2 }} />;
 
-  // Per-segment cell width = max(chord width, lyric width)
+  // Largeur de cellule = max(largeur accord, largeur parole), MESURÉES (mêmes
+  // métriques que le rendu réel) — plus de devinette nbChars × constante.
   const cellWidths = segs.map(seg => {
-    const cw = seg.chord ? (seg.chord.length + 0.5) * CHORD_CHAR_W : 0;
-    const lw = [...seg.lyric].length * LYRIC_CHAR_W;
+    const cw = showChords && seg.chord ? chordWidthPt(seg.chord) + CHORD_GAP : 0;
+    const lw = measureLyric(seg.lyric, LYRIC_FR);
     return Math.max(cw, lw, 4);
   });
 
@@ -215,33 +237,33 @@ function FrLine({ tokens, showChords, theme }: {
     }
   }
   if (lineSegs.length) visualLines.push(lineSegs);
-
   return (
     <View style={{ marginBottom: 1 }}>
       {visualLines.map((indices, li) => {
         const lineHasChord = showChords && indices.some(i => segs[i].chord !== null);
         return (
-          <View key={li} style={{ marginBottom: li < visualLines.length - 1 ? 3 : 0 }}>
+          // <View key={li} style={{ marginBottom: li < visualLines.length - 1 ? 3 : 0 }}>
+          <View key={li}>
             {/* Chord row — only when this visual line has at least one chord */}
-            {lineHasChord && (
-              <View style={{ flexDirection: "row" }}>
+            {lineHasChord && showChords && (
+              <View style={{ flexDirection: "row"}}>
                 {indices.map(i => (
-                  <View key={i} style={{ minWidth: cellWidths[i] }}>
+                  <View key={i} style={showChords?{ minWidth: cellWidths[i] }:{}}>
                     {segs[i].chord
                       ? <ChordLabel chord={segs[i].chord!} theme={theme} />
-                      : <View style={{ height: CHORD_H }} />}
+                      : <View style={{ height: CHORD_H }}>
+                        </View>}
                   </View>
                 ))}
               </View>
             )}
             {/* Lyric row */}
-            <View style={{ flexDirection: "row" }}>
+            <View style={{ flexDirection: "row", alignItems: "flex-start"}}>
               {indices.map(i => {
-                const lyric = (showChords ? segs[i].lyric : segs[i].lyric?.trimStart())
-                  || (segs[i].chord && showChords ? " " : "");
+                const lyric = (showChords ? segs[i].lyric : segs[i].lyric?.trimStart()) || "\u00A0";
                 return (
-                  <View key={i} style={{ minWidth: cellWidths[i] }}>
-                    <Text style={{ fontSize: LYRIC_FR, color: C.lyric, fontFamily: "Inter", lineHeight: 1.25 }}>
+                  <View key={i} style={showChords?{ minWidth: cellWidths[i]}:{}}>
+                    <Text style={{ fontSize: LYRIC_FR, color: C.lyric, fontFamily: "Inter", fontWeight: 400, lineHeight: 1.25 }}>
                       {lyric}
                     </Text>
                   </View>
@@ -256,16 +278,6 @@ function FrLine({ tokens, showChords, theme }: {
 }
 
 // ─── Chinese line (chord / char / pinyin) ────────────────────────────────────
-
-const ZH_CELL_BASE = 16;  // minimum column width
-const ZH_CHAR_W   = 7.5;  // approx pt per root char at CHORD_SIZE
-const ZH_QUAL_W   = 5.8;  // approx pt per quality char
-
-/** Estimated rendered width of a chord in a ZH column (pt). */
-function chordPtWidth(chord: string): number {
-  const [root, qual] = chordParts(chord);
-  return root.length * ZH_CHAR_W + qual.length * ZH_QUAL_W + 2;
-}
 
 function ZhLine({ tokens, pinyin, showChords, showPinyin, theme }: {
   tokens: Token[];
@@ -283,7 +295,7 @@ function ZhLine({ tokens, pinyin, showChords, showPinyin, theme }: {
   for (const seg of toSegments(tokens)) {
     const chars = [...(showChords ? seg.lyric : (seg.lyric?.trimStart() ?? ""))];
     if (chars.length === 0) {
-      if (seg.chord) cols.push({ char: " ", chord: seg.chord, py: "" });
+      if (seg.chord && showChords) cols.push({ char: " ", chord: seg.chord, py: "" });
     } else {
       chars.forEach((ch, ci) => {
         cols.push({ char: ch, chord: ci === 0 ? seg.chord : null, py: isCJK(ch) ? (pyWords[pIdx++] ?? "") : "" });
@@ -291,16 +303,24 @@ function ZhLine({ tokens, pinyin, showChords, showPinyin, theme }: {
     }
   }
 
-  // Largeur de cellule basée sur le chord et le type de caractère
+  // Largeur de cellule. Pour une colonne SANS caractère chinois (accord seul, p.ex.
+  // suite « F#dim9 Dm7 Dm7(b5)/G »), on reproduit la réserve aérée du web
+  // ((longueur·0.75 + 1)em ; ZH_CHORD_EM calé sur CJK 1.6em ↔ 16pt) pour ne pas
+  // tasser les accords. Sous un caractère chinois : plancher 16, on s'élargit à
+  // l'accord mesuré s'il est plus large.
+  const ZH_CHORD_EM = 10;
   const cellWidth = (chord: string | null, charIsCJK: boolean): number => {
-    const fromChord = chord ? (chord.length + 1.5) * 6 : 0;
+    const measured = chord ? chordWidthPt(chord) + CHORD_GAP : 0;
+    const fromChord = !charIsCJK && chord
+      ? Math.max((chord.length * 0.75 + 1) * ZH_CHORD_EM, measured)
+      : measured;
     const fromChar = charIsCJK ? 16 : 8;
     return Math.max(fromChar, fromChord, 16);
   };
-
   return (
     <View style={{ flexDirection: "row", flexWrap: "wrap", alignItems: "flex-end", marginBottom: 2 }}>
       {cols.map((col, i) => (
+        
         <View key={i} style={{ minWidth: cellWidth(col.chord, isCJK(col.char)), flexDirection: "column", alignItems: "center" }}>
           <ChordSmall chord={showChords ? col.chord : null} theme={theme} />
           <Text style={{ fontSize: LYRIC_ZH, color: C.lyric, fontFamily: "SourceHanSansCN", fontWeight: 300, textAlign: "center" }}>
@@ -323,12 +343,12 @@ function ChordSmall({ chord, theme }: { chord: string | null; theme: Theme }) {
   const [root, qual] = chordParts(chord);
   return (
     <View style={{ height: 16, flexDirection: "row", alignItems: "flex-end", justifyContent: "center" }}>
-      <Text style={{ fontFamily: "LiberationSans", fontWeight: 700, color: theme.accent,
+      <Text style={{ fontFamily: "SpaceGrotesk", fontWeight: 700, color: theme.accent,
                      fontSize: 13, lineHeight: 1 }}>
         {root}
       </Text>
       {qual ? (
-        <Text style={{ fontFamily: "LiberationSans", fontWeight: 700, color: theme.accent,
+        <Text style={{ fontFamily: "SpaceGrotesk", fontWeight: 700, color: theme.accent,
                        fontSize: 10, lineHeight: 1 }}>
           {qual}
         </Text>
@@ -418,13 +438,16 @@ function TransitionPDFBlock({ text }: { text: string }) {
   );
 }
 
-function SectionBlock({ section, isZh, useJianpu, showChords, showPinyin, note, theme, uiLang, sourceLabel, sourceLabelFont }: {
+function SectionBlock({ section, isZh, useJianpu, showChords, showPinyin, note, nuance, keyChange, theme, uiLang, sourceLabel, sourceLabelFont }: {
   section: ChordProSection;
   isZh: boolean;
   useJianpu: boolean;
   showChords: boolean;
   showPinyin: boolean;
   note?: string;
+  nuance?: SectionNuance;
+  /** Modulation (升调) : tonalité cible affichée à côté du label. */
+  keyChange?: string;
   theme: Theme;
   uiLang: string;
   sourceLabel?: string;
@@ -458,7 +481,13 @@ function SectionBlock({ section, isZh, useJianpu, showChords, showPinyin, note, 
           paddingLeft: 12,
           marginBottom: 10,
         }
-      : { marginBottom: 9 };
+      : boxType === "leftbar"
+        ? {
+            borderLeftWidth: 3, borderLeftColor: theme.accent,
+            paddingLeft: 12,
+            marginBottom: 10,
+          }
+        : { marginBottom: 9 };
 
   return (
     <View style={boxView} wrap={false}>
@@ -471,6 +500,12 @@ function SectionBlock({ section, isZh, useJianpu, showChords, showPinyin, note, 
                          letterSpacing: 1.4 }}>
             {label}
           </Text>
+          {keyChange ? (
+            <Text style={{ fontSize: 8, fontWeight: 700, color: theme.accent,
+                           fontFamily: uiLang === "zh-CN" ? "SourceHanSansCN" : "SpaceGrotesk" }}>
+              {uiLang === "zh-CN" ? `升调（${keyChange}）` : `Modulation (${keyChange})`}
+            </Text>
+          ) : null}
           {sourceLabel ? (
             <Text style={{ fontSize: 7.5, color: C.subtitle, fontFamily: sourceLabelFont ?? "SpaceGrotesk",
                            fontWeight: 300 }}>
@@ -478,11 +513,28 @@ function SectionBlock({ section, isZh, useJianpu, showChords, showPinyin, note, 
             </Text>
           ) : null}
         </View>
-        {note ? (
-          <Text style={{ fontSize: 8.5, color: C.subtitle, fontFamily: labelFont, fontWeight: 300 }}>
-            {note}
-          </Text>
-        ) : null}
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+          {nuance?.tags.map((id) => (
+            <Text
+              key={id}
+              style={{ fontSize: 7.5, color: NUANCE_COLOR, fontFamily: "LiberationSans", fontWeight: 700,
+                       borderWidth: 0.5, borderColor: NUANCE_COLOR, borderRadius: 3,
+                       paddingHorizontal: 3, paddingVertical: 1 }}
+            >
+              {nuanceLabel(id)}
+            </Text>
+          ))}
+          {nuance?.note ? (
+            <Text style={{ fontSize: 8, color: NUANCE_COLOR, fontFamily: labelFont, fontWeight: 400 }}>
+              {nuance.note}
+            </Text>
+          ) : null}
+          {note ? (
+            <Text style={{ fontSize: 8.5, color: C.subtitle, fontFamily: labelFont, fontWeight: 300 }}>
+              {note}
+            </Text>
+          ) : null}
+        </View>
       </View>
 
       {/* Lines */}
@@ -546,6 +598,9 @@ export interface SongPDFProps {
   structureOverride?: string[] | null;
   sectionNotes?: Record<string, string>;
   sectionTransitions?: Record<string, string>;
+  sectionNuances?: Record<string, SectionNuance>;
+  /** Modulation (升调) par section : uid → tonalité cible d'affichage. */
+  sectionKeys?: Record<string, string>;
   /** Optional override for the footer center label (e.g. setlist title). */
   footerCenter?: string;
   language?: string;
@@ -559,6 +614,8 @@ export function SongPDFPage({
   structureOverride = null,
   sectionNotes = {},
   sectionTransitions = {},
+  sectionNuances = {},
+  sectionKeys = {},
   footerCenter,
   language = "fr",
 }: SongPDFProps) {
@@ -576,6 +633,7 @@ export function SongPDFPage({
   const titleFont = isZh ? "KaiTi" : "SpaceGrotesk";
   const metaFont = isZh ? "SourceHanSansCN" : "SpaceGrotesk";
   const centerLabel = footerCenter ?? title;
+  const centerLabelFont = footerLabelFont(centerLabel);
   return (
     <Page size="A4" style={styles.page}>
 
@@ -636,15 +694,24 @@ export function SongPDFPage({
           const key = idx === 0 ? section.id : `${section.id}:${idx}`;
           const note = sectionNotes[section.uid] ?? sectionNotes[key] ?? sectionNotes[section.id];
           const transition = sectionTransitions[section.uid] ?? sectionTransitions[key] ?? sectionTransitions[section.id];
+          const nuance = sectionNuances[section.uid] ?? sectionNuances[key] ?? sectionNuances[section.id];
+          // Modulation (升调) : la section s'affiche transposée dans sa tonalité cible.
+          const targetKey = sectionKeys[section.uid] ?? sectionKeys[key] ?? sectionKeys[section.id];
+          const keyChange = targetKey && targetKey !== ast.metadata.key ? targetKey : undefined;
+          const shownSection = keyChange && ast.metadata.key
+            ? transposeSection(section, semitonesTo(ast.metadata.key, keyChange), keyChange)
+            : section;
           const items = [
             <SectionBlock
               key={`${section.uid ?? section.id}-${i}`}
-              section={section}
+              section={shownSection}
               isZh={isZh}
               useJianpu={canUseJianpu}
               showChords={showChords}
               showPinyin={isZh ? showPinyin : false}
               note={note}
+              nuance={nuance}
+              keyChange={keyChange}
               theme={theme}
               uiLang={uiLang}
             />,
@@ -660,7 +727,7 @@ export function SongPDFPage({
                        color: theme.accent, letterSpacing: 1 }]}>
           GCC LOUANGE
         </Text>
-        <Text style={[styles.footerText, { fontFamily: "LiberationSans", fontWeight: 400 }]}>
+        <Text style={[styles.footerText, { fontFamily: centerLabelFont, fontWeight: 400 }]}>
           {centerLabel}
         </Text>
         <Text
@@ -678,6 +745,9 @@ export interface FusionPDFSong {
   slug: string;
   ast: ChordProAST;
   sectionNotes: Record<string, string>;
+  sectionNuances?: Record<string, SectionNuance>;
+  /** Modulation (升调) par section : uid → tonalité cible d'affichage. */
+  sectionKeys?: Record<string, string>;
 }
 
 export function FusionPDFPage({
@@ -687,7 +757,7 @@ export function FusionPDFPage({
   footerCenter,
 }: {
   songs: FusionPDFSong[];
-  mixedStructure: Array<{ songSlug: string; sectionId: string; note?: string; transition?: string }>;
+  mixedStructure: Array<{ songSlug: string; sectionId: string; note?: string; transition?: string; nuance?: SectionNuance; keyChange?: string }>;
   showChords: boolean;
   footerCenter?: string;
 }) {
@@ -699,15 +769,23 @@ export function FusionPDFPage({
     const section = song.ast.sections.find((s) => s.id === ms.sectionId);
     if (!section) return [];
     const note = ms.note ?? song.sectionNotes?.[ms.sectionId];
+    const nuance = ms.nuance ?? song.sectionNuances?.[ms.sectionId];
     const isZh = song.ast.metadata.language === "zh";
     const sourceLabel = song.ast.metadata.title;
     const sourceLabelFont = isZh ? "KaiTi" : "SpaceGrotesk";
-    return [{ section, note, transition: ms.transition, isZh, theme: isZh ? RED_THEME : BLUE_THEME, sourceLabel, sourceLabelFont }];
+    // Modulation (升调) : section transposée dans sa tonalité cible.
+    const targetKey = ms.keyChange ?? song.sectionKeys?.[ms.sectionId];
+    const keyChange = targetKey && targetKey !== song.ast.metadata.key ? targetKey : undefined;
+    const shownSection = keyChange && song.ast.metadata.key
+      ? transposeSection(section, semitonesTo(song.ast.metadata.key, keyChange), keyChange)
+      : section;
+    return [{ section: shownSection, note, nuance, keyChange, transition: ms.transition, isZh, theme: isZh ? RED_THEME : BLUE_THEME, sourceLabel, sourceLabelFont }];
   });
 
   if (mixedSections.length === 0) return null;
 
   const centerLabel = footerCenter ?? songs.map((s) => s.ast.metadata.title).join(" / ");
+  const centerLabelFont = footerLabelFont(centerLabel);
 
   // Build flat list of title parts so each Text gets a key (no Fragment needed)
   const titleParts: { text: string; font: string; bold: boolean; key: string }[] = [];
@@ -736,7 +814,7 @@ export function FusionPDFPage({
         <View style={{ height: 0.5, backgroundColor: C.rule, marginTop: 10, marginBottom: 0 }} />
       </View>
 
-      {mixedSections.flatMap(({ section, note, transition, isZh, theme, sourceLabel, sourceLabelFont }, idx) => {
+      {mixedSections.flatMap(({ section, note, nuance, keyChange, transition, isZh, theme, sourceLabel, sourceLabelFont }, idx) => {
         const items = [
           <SectionBlock
             key={`${section.id}-${idx}`}
@@ -746,6 +824,8 @@ export function FusionPDFPage({
             showChords={showChords}
             showPinyin={isZh}
             note={note}
+            nuance={nuance}
+            keyChange={keyChange}
             theme={theme}
             uiLang="fr"
             sourceLabel={sourceLabel}
@@ -761,7 +841,7 @@ export function FusionPDFPage({
                        color: BLUE_THEME.accent, letterSpacing: 1 }]}>
           GCC LOUANGE
         </Text>
-        <Text style={[styles.footerText, { fontFamily: "LiberationSans", fontWeight: 400 }]}>
+        <Text style={[styles.footerText, { fontFamily: centerLabelFont, fontWeight: 400 }]}>
           {centerLabel}
         </Text>
         <Text
@@ -800,7 +880,7 @@ export function TransitionPDFPage({ text, footerCenter }: { text: string; footer
                        color: BLUE_THEME.accent, letterSpacing: 1 }]}>
           GCC LOUANGE
         </Text>
-        <Text style={[styles.footerText, { fontFamily: "LiberationSans", fontWeight: 400 }]}>
+        <Text style={[styles.footerText, { fontFamily: footerLabelFont(footerCenter ?? ""), fontWeight: 400 }]}>
           {footerCenter ?? ""}
         </Text>
         <Text

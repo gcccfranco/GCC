@@ -1,5 +1,4 @@
 export const MOIS = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"]
-export const MOISC = ["jan","fév","mar","avr","mai","jun","jul","aoû","sep","oct","nov","déc"]
 export const JOURC = ["dim","lun","mar","mer","jeu","ven","sam"]
 
 export const EDD_PERIODES = ["P1_JanFev","P2_MarAvr","P3_MaiJun","P4_JulAou","P5_SepOct","P6_NovDec"] as const
@@ -12,6 +11,8 @@ export type EddClasse = typeof EDD_CLASSES[number]
 function pad(n: number) { return String(n).padStart(2, "0") }
 
 export function getMois(dateStr: string) { return parseInt(dateStr.split("-")[1]) }
+
+export function getAnnee(dateStr: string) { return parseInt(dateStr.split("-")[0]) }
 
 export function getTri(dateStr: string) {
   const m = getMois(dateStr)
@@ -37,6 +38,19 @@ export function fdLong(dateStr: string) {
   return `${parseInt(dd)} ${MOIS[parseInt(mm)-1]}`
 }
 
+/** Nom du mois (1–12) localisé selon la langue de l'interface. */
+export function moisName(m1: number, lang: string) {
+  return new Date(2000, m1 - 1, 1).toLocaleDateString(lang === "zh-CN" ? "zh-CN" : "fr-FR", { month: "long" })
+}
+
+/** « 5 juillet » / « 7月5日 » selon la langue. */
+export function fdLongL(dateStr: string, lang: string) {
+  const [, mm, dd] = dateStr.split("-")
+  return lang === "zh-CN"
+    ? `${parseInt(mm)}月${parseInt(dd)}日`
+    : `${parseInt(dd)} ${moisName(parseInt(mm), "fr")}`
+}
+
 export function currentSundayStr() {
   const d = new Date()
   const day = d.getDay()
@@ -60,10 +74,17 @@ export function getCurrentEddPeriode(): EddPeriode {
 
 export interface CampusSeance {
   d: string
+  /** Président de la séance (colonne PRESIDENT du planning) */
+  pres: string
   ch: string
   mu: string
   rg: string
+  /** Date de répétition (ISO YYYY-MM-DD), "" si pas de répétition */
   ent: string
+  /** Heure de répétition (ex. "17:00"), si renseignée dans le planning */
+  entTime?: string
+  /** Salle de répétition (ex. "Grande Salle", "Salle Bonté"), si renseignée */
+  entLieu?: string
   chants: string[]
 }
 

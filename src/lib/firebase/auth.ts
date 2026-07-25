@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import {
   onAuthStateChanged,
+  sendPasswordResetEmail,
   signInWithEmailAndPassword,
   signOut,
   type User,
@@ -23,10 +24,15 @@ export function useAuth() {
   return { user, loading };
 }
 
-export async function signIn(email: string, password: string): Promise<void> {
-  await signInWithEmailAndPassword(auth, email, password);
+export async function signIn(email: string, password: string): Promise<User> {
+  const cred = await signInWithEmailAndPassword(auth, email, password);
+  return cred.user;
 }
 
 export async function logOut(): Promise<void> {
   await signOut(auth);
+}
+
+export async function resetPassword(email: string): Promise<void> {
+  await sendPasswordResetEmail(auth, email);
 }

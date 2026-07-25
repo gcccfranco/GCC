@@ -1,6 +1,6 @@
 import { nextUid } from "@/lib/uid";
 import { resolveStructureOverride } from "@/lib/chordpro/structure";
-import type { SetlistItem } from "@/types/setList";
+import type { SetlistItem, SectionNuance } from "@/types/setList";
 import type { SongIndexEntry, SectionSummary } from "@/types/song";
 
 export interface FormSectionItem {
@@ -9,6 +9,10 @@ export interface FormSectionItem {
   name: string;
   note: string;
   transition: string;
+  nuanceTags: string[];
+  nuanceNote: string;
+  /** Modulation (升调) : tonalité cible de cette section, "" = aucune. */
+  keyChange: string;
 }
 
 export interface FormItem {
@@ -27,6 +31,10 @@ export interface FusionMixedSectionForm {
   songTitle: string;
   note: string;
   transition: string;
+  nuanceTags: string[];
+  nuanceNote: string;
+  /** Modulation (升调) : tonalité cible de cette section, "" = aucune. */
+  keyChange: string;
 }
 
 export interface FormFusionItem {
@@ -59,7 +67,20 @@ export function makeDefaultSections(sections: SectionSummary[]): FormSectionItem
     name: s.name,
     note: "",
     transition: "",
+    nuanceTags: [],
+    nuanceNote: "",
+    keyChange: "",
   }));
+}
+
+/** Résout la nuance d'une section depuis un Record keyé par uid/clé/id. */
+function resolveNuance(
+  nuances: Record<string, SectionNuance> | undefined,
+  uid: string,
+  key: string,
+  id: string
+): SectionNuance | undefined {
+  return nuances?.[uid] ?? nuances?.[key] ?? nuances?.[id];
 }
 
 function toFormItem(
@@ -68,7 +89,9 @@ function toFormItem(
   notes: string,
   structureOverride: string[] | null,
   sectionNotes: Record<string, string>,
-  sectionTransitions: Record<string, string> = {}
+  sectionTransitions: Record<string, string> = {},
+  sectionNuances: Record<string, SectionNuance> = {},
+  sectionKeys: Record<string, string> = {}
 ): FormItem {
   const allSections = song.sections ?? [];
   const orderedSections: SectionSummary[] = structureOverride && structureOverride.length > 0
@@ -85,12 +108,16 @@ function toFormItem(
       const idx = occ[s.id] ?? 0;
       occ[s.id] = idx + 1;
       const key = idx === 0 ? s.id : `${s.id}:${idx}`;
+      const nuance = resolveNuance(sectionNuances, uid, key, s.id);
       return {
         uid,
         sectionId: s.id,
         name: s.name || s.type,
         note: sectionNotes?.[uid] ?? sectionNotes?.[key] ?? sectionNotes?.[s.id] ?? "",
         transition: sectionTransitions?.[uid] ?? sectionTransitions?.[key] ?? sectionTransitions?.[s.id] ?? "",
+        nuanceTags: nuance?.tags ?? [],
+        nuanceNote: nuance?.note ?? "",
+        keyChange: sectionKeys?.[uid] ?? sectionKeys?.[key] ?? sectionKeys?.[s.id] ?? "",
       };
     }),
   };
@@ -110,7 +137,7 @@ export function buildFormItems(
         const songs: FormItem[] = item.fusionSongs.flatMap((fs) => {
           const song = songsMap[fs.songSlug];
           if (!song) return [];
-          return [toFormItem(song, fs.keyOverride, "", fs.structureOverride, fs.sectionNotes)];
+          return [toFormItem(song, fs.keyOverride, "", fs.structureOverride, fs.sectionNotes, {}, fs.sectionNuances, fs.sectionKeys)];
         });
         if (songs.length === 0) return [];
 
@@ -122,6 +149,7 @@ export function buildFormItems(
             const section = (song.sections ?? []).find((s) => s.id === ms.sectionId);
             if (!section) return [];
             const fusionSong = item.fusionSongs!.find((fs) => fs.songSlug === ms.songSlug);
+            const nuance = ms.nuance ?? fusionSong?.sectionNuances?.[ms.sectionId];
             return [{
               uid: nextUid(),
               songSlug: ms.songSlug,
@@ -130,6 +158,9 @@ export function buildFormItems(
               songTitle: song.title,
               note: ms.note ?? fusionSong?.sectionNotes?.[ms.sectionId] ?? "",
               transition: ms.transition ?? "",
+              nuanceTags: nuance?.tags ?? [],
+              nuanceNote: nuance?.note ?? "",
+              keyChange: ms.keyChange ?? fusionSong?.sectionKeys?.[ms.sectionId] ?? "",
             }];
           });
         }
@@ -139,6 +170,6 @@ export function buildFormItems(
 
       const song = songsMap[item.songSlug];
       if (!song) return [];
-      return [toFormItem(song, item.keyOverride, item.notes, item.structureOverride, item.sectionNotes, item.sectionTransitions)];
+      return [toFormItem(song, item.keyOverride, item.notes, item.structureOverride, item.sectionNotes, item.sectionTransitions, item.sectionNuances, item.sectionKeys)];
     });
 }

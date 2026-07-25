@@ -17,10 +17,16 @@ export type ChordProLine = {
   tokens: Token[];
   pinyin: string | null;
   jianpu: string | null;
+  /** Index (0-based) de la ligne dans le source ChordPro — pour l'édition par setlist. */
+  srcLine?: number;
+  /** Index de la ligne pinyin séparée absorbée par cette ligne (zh), si distincte. */
+  pinyinSrcLine?: number;
+  /** Index de la ligne {jianpu:…} associée, si présente. */
+  jianpuSrcLine?: number;
 };
 
 export type ChordProSection = {
-  type: "verse" | "chorus" | "bridge" | "intro" | "outro" | "prechorus" | "other";
+  type: "verse" | "chorus" | "bridge" | "intro" | "outro" | "prechorus" | "postchorus" | "other";
   id: string;
   name: string;
   number?: string;

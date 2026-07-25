@@ -8,6 +8,11 @@ const EXTRAS: Record<string, number> = { "E#": 5, "Fb": 4, "B#": 0, "Cb": 11 };
 // Keys that prefer flats
 const FLAT_KEYS = new Set(["F", "Bb", "Eb", "Ab", "Db", "Gb", "Cb", "Fb"]);
 
+// Degrés chromatiques épelés en bémol même dans une tonalité « à dièses » :
+// b3 (ex. Bb en Sol) et b6 (ex. Eb en Sol) — accords empruntés au mineur
+// parallèle, jamais écrits A#/D# en pratique.
+const FLAT_DEGREES = new Set([3, 8]);
+
 function noteToIndex(note: string): number {
   const i = SHARPS.indexOf(note);
   if (i !== -1) return i;
@@ -17,9 +22,11 @@ function noteToIndex(note: string): number {
   return -1;
 }
 
-function indexToNote(index: number, useFlatKey: boolean): string {
+function indexToNote(index: number, useFlatKey: boolean, tonicIdx = -1): string {
   const i = ((index % 12) + 12) % 12;
-  return useFlatKey ? FLATS[i] : SHARPS[i];
+  if (useFlatKey) return FLATS[i];
+  if (tonicIdx !== -1 && FLAT_DEGREES.has((i - tonicIdx + 12) % 12)) return FLATS[i];
+  return SHARPS[i];
 }
 
 /**
@@ -31,29 +38,26 @@ export function transposeChord(chord: string, semitones: number, targetKey: stri
   if (semitones === 0) return chord;
 
   const useFlatKey = FLAT_KEYS.has(targetKey);
+  const tonicIdx = noteToIndex(targetKey);
 
   // Parse root (1-2 chars) + quality + optional slash bass "/X"
-  const match = chord.match(/^([A-G][#b]?)(.*?)(?:\/([A-G][#b]?))?$/);
+  const match = chord.match(/^(\(?)([A-G][#b]?)(.*?)(?:\/([A-G][#b]?))?(\)?)$/);
   if (!match) return chord;
 
-  const [, root, quality, bass] = match;
+  const [, leftSlash,root, quality, bass, rightSlash] = match;
 
   const rootIdx = noteToIndex(root);
   if (rootIdx === -1) return chord;
 
-  const newRoot = indexToNote(rootIdx + semitones, useFlatKey);
+  const newRoot = indexToNote(rootIdx + semitones, useFlatKey, tonicIdx);
+  // La basse suit l'orthographe de la fondamentale si celle-ci est bémolisée
+  // (Eb7/Bb, pas Eb7/A#) ; sinon préférence de la tonalité, sans la règle des
+  // degrés — B/D# doit rester D#, pas Eb.
   const newBass = bass
-    ? "/" + indexToNote(noteToIndex(bass) + semitones, useFlatKey)
+    ? "/" + indexToNote(noteToIndex(bass) + semitones, useFlatKey || newRoot.endsWith("b"))
     : "";
 
-  return newRoot + quality + newBass;
-}
-
-/**
- * Transpose a key name by `semitones`.
- */
-export function transposeKey(key: string, semitones: number): string {
-  return transposeChord(key, semitones, "");
+  return leftSlash + newRoot + quality + newBass + rightSlash;
 }
 
 /**
@@ -76,7 +80,7 @@ export const ALL_KEYS = [
 ];
 
 /**
- * Compute semitone offset to go from `fromKey` to `toKey` (shortest path, -6..+5).
+ * Compute semitone offset to go from `fromKey` to `toKey` (shortest path, -5..+6).
  */
 export function semitonesTo(fromKey: string, toKey: string): number {
   const from = noteToIndex(fromKey);

@@ -4,6 +4,7 @@ import { transposeAST } from "@/lib/transposeAST";
 import { semitonesTo } from "@/lib/transpose";
 import type { FSSetlist } from "@/lib/firebase/setlists";
 import type { ChordProAST } from "@/types/chordPro";
+import { itemAst } from "@/lib/chordpro/itemContent";
 
 interface SongContent {
   slug: string;
@@ -12,10 +13,12 @@ interface SongContent {
 
 export function SetlistFullPDF({
   setlist,
-  contents
+  contents,
+  showChords
 }: {
   setlist: FSSetlist;
   contents: Record<string, SongContent>;
+  showChords: boolean
 }) {
   const sorted = [...setlist.items].sort((a, b) => a.position - b.position);
   const footer = `${setlist.title} - ${setlist.leader}`;
@@ -43,7 +46,7 @@ export function SetlistFullPDF({
                 const semitones = semitonesTo(ast.metadata.key, fs.keyOverride);
                 ast = transposeAST(ast, semitones, fs.keyOverride);
               }
-              return { slug: fs.songSlug, ast, sectionNotes: fs.sectionNotes ?? {} };
+              return { slug: fs.songSlug, ast, sectionNotes: fs.sectionNotes ?? {}, sectionNuances: fs.sectionNuances ?? {}, sectionKeys: fs.sectionKeys ?? {} };
             });
 
           if (fusionSongsData.length === 0) return [];
@@ -55,7 +58,7 @@ export function SetlistFullPDF({
                 key={`fusion-${idx}`}
                 songs={fusionSongsData}
                 mixedStructure={item.mixedStructure}
-                showChords={item.showChords}
+                showChords={showChords}
                 footerCenter={footer}
               />
             ];
@@ -66,18 +69,21 @@ export function SetlistFullPDF({
             <SongPDFPage
               key={`fusion-${idx}-${fs.slug}-${fsIdx}`}
               ast={fs.ast}
-              showChords={item.showChords}
+              showChords={showChords}
               showPinyin={fs.ast.metadata.language === "zh"}
               useJianpu={false}
               structureOverride={item.fusionSongs![fsIdx].structureOverride}
               sectionNotes={fs.sectionNotes}
+              sectionNuances={fs.sectionNuances}
+              sectionKeys={fs.sectionKeys}
               footerCenter={footer}
             />
           ));
         }
 
-        if (!contents[item.songSlug]) return [];
-        let ast = contents[item.songSlug].ast;
+        const baseAst = itemAst(item, contents[item.songSlug]);
+        if (!baseAst) return [];
+        let ast = baseAst;
         if (item.keyOverride && item.keyOverride !== ast.metadata.key) {
           const semitones = semitonesTo(ast.metadata.key, item.keyOverride);
           ast = transposeAST(ast, semitones, item.keyOverride);
@@ -86,12 +92,14 @@ export function SetlistFullPDF({
           <SongPDFPage
             key={`${item.songSlug}-${idx}`}
             ast={ast}
-            showChords={item.showChords}
+            showChords={showChords}
             showPinyin={item.showPinyin}
             useJianpu={false}
             structureOverride={item.structureOverride}
             sectionNotes={item.sectionNotes ?? {}}
             sectionTransitions={item.sectionTransitions ?? {}}
+            sectionNuances={item.sectionNuances ?? {}}
+            sectionKeys={item.sectionKeys ?? {}}
             footerCenter={footer}
           />
         ];

@@ -1,16 +1,26 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { X, ChevronLeft, ChevronRight, Link2, MessageSquare, ListMusic, Settings, PenLine, Sun, Moon } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
 import type { PerformanceBlock, SectionBlock, SongHeaderBlock } from "@/lib/performance/blocks";
 import { buildPerformanceBlocks, computePageKey } from "@/lib/performance/blocks";
-import { JianpuScore } from "@/components/jianpu/JianpuScore";
 import { SectionView, TransitionNote } from "@/components/song/SongView";
-import { AnnotationCanvas, type AnnotationCanvasHandle } from "./AnnotationCanvas";
+import { AnnotationCanvas, StrokesLayer } from "./AnnotationCanvas";
+import { type AnnotationData, serializeAnnotations, deserializeAnnotations } from "@/lib/annotations/strokes";
 import { loadAnnotation, saveAnnotation } from "@/lib/firebase/annotations";
+import { getChartStylePref, setChartStylePref } from "@/lib/chartStylePref";
 import { useAuth } from "@/lib/firebase/auth";
 import type { SetlistItem } from "@/types/setList";
-import type { SongContent } from "@/lib/utils/fetchSongContent";
+import type { SongContent } from "@/lib/api/songs";
 
 // ─── TransitionBanner (local copy — same style as PartitionView) ──────────────
 
@@ -43,10 +53,16 @@ function BlockRenderer({
   block,
   showChordsGlobal,
   showTransitions,
+  hideLyrics,
+  chartStyle,
+  showPinyinGlobal,
 }: {
   block: PerformanceBlock;
   showChordsGlobal: boolean;
   showTransitions: boolean;
+  hideLyrics: boolean;
+  chartStyle: boolean;
+  showPinyinGlobal: boolean;
 }) {
   if (block.kind === "song-header") {
     return <SongHeader block={block} />;
@@ -59,30 +75,19 @@ function BlockRenderer({
     if (!showTransitions) return null;
     return <TransitionBanner text={block.text} />;
   }
-  if (block.kind === "jianpu-section") {
-    return (
-      <div className="mb-3">
-        <JianpuScore
-          raw={block.raw}
-          sectionRange={[block.sectionIndex, block.sectionIndex + 1]}
-          hideHeader={!block.isFirst}
-          targetKey={block.targetKey}
-          semitones={block.semitones}
-          showChords={showChordsGlobal}
-          showPinyin
-        />
-      </div>
-    );
-  }
   return (
     <SectionView
       section={block.section}
       language={block.language}
       showChords={block.chordsEnabled && showChordsGlobal}
-      showPinyin={block.showPinyin}
+      showPinyin={block.showPinyin && showPinyinGlobal}
       useJianpu={false}
+      hideLyrics={hideLyrics}
       note={block.note}
+      nuance={block.nuance}
+      keyChange={block.keyChange}
       songSourceLabel={block.songSourceLabel}
+      chartStyle={chartStyle}
     />
   );
 }
@@ -91,6 +96,7 @@ const langAccent = (language?: "fr" | "zh") =>
   language === "zh" ? "var(--jianpu-color, #b91c1c)" : "var(--chord-color, #2563eb)";
 
 function SongHeader({ block }: { block: SongHeaderBlock }) {
+  const { t } = useTranslation();
   if (block.fusionSongs?.length) {
     return (
       <div className="flex items-start gap-2 mb-3 pb-3 border-b border-border">
@@ -133,26 +139,37 @@ function SongHeader({ block }: { block: SongHeaderBlock }) {
         )}
         <p className="text-xs text-muted-foreground mt-0.5 ml-7">{block.artist}</p>
       </div>
-      <span className="text-sm font-bold font-mono shrink-0 border-2 rounded-full px-2.5 py-0.5 mt-1"
-        style={{ color: langAccent(block.language), borderColor: langAccent(block.language) }}>
-        {block.songKey}
-      </span>
+      <div className="flex items-center gap-1.5 shrink-0 mt-1">
+        {block.capo ? (
+          <span className="text-xs font-bold font-mono border-2 border-border rounded-full px-2.5 py-0.5 text-muted-foreground">
+            {t("performance.capoBadge", { n: block.capo })}
+          </span>
+        ) : null}
+        <span className="text-sm font-bold font-mono border-2 rounded-full px-2.5 py-0.5"
+          style={{ color: langAccent(block.language), borderColor: langAccent(block.language) }}>
+          {block.songKey}
+        </span>
+      </div>
     </div>
   );
 }
 
-// ─── Greedy pagination ────────────────────────────────────────────────────────
+// ─── Pagination ───────────────────────────────────────────────────────────────
 
-// Chaque chant commence sur une nouvelle page (breakBefore = indices des
-// en-têtes de chant) ; à l'intérieur d'un chant, remplissage glouton.
+// Une page de rendu : en-tête de chant éventuel (pleine largeur), une ou deux
+// colonnes de blocs, et un facteur d'échelle ≤ 1 (ajustement automatique pour
+// faire tenir toute la structure d'un chant sur sa page en mode ossature).
+type PerfPage = { header: number | null; cols: number[][]; scale: number };
+
+// Mode normal : une colonne par page. Chaque chant commence sur une nouvelle page
+// (breakBefore = en-têtes de chant) ; à l'intérieur d'un chant, remplissage glouton.
 function paginateBlocks(heights: number[], viewportH: number, breakBefore: Set<number>): number[][] {
   const pages: number[][] = [];
   let current: number[] = [];
   let used = 0;
   for (let i = 0; i < heights.length; i++) {
     const h = heights[i];
-    const mustBreak = breakBefore.has(i) && current.length > 0;
-    if (mustBreak || (current.length > 0 && used + h > viewportH)) {
+    if ((breakBefore.has(i) && current.length > 0) || (current.length > 0 && used + h > viewportH)) {
       pages.push(current);
       current = [];
       used = 0;
@@ -164,10 +181,52 @@ function paginateBlocks(heights: number[], viewportH: number, breakBefore: Set<n
   return pages.length > 0 ? pages : [[]];
 }
 
+// Mode ossature : UN CHANT PAR PAGE. L'en-tête occupe la pleine largeur ; les
+// sections (libellés + notes/transitions) sont disposées en 1 colonne si elles
+// tiennent, sinon en 2 colonnes équilibrées lues colonne par colonne (↓ gauche
+// puis ↓ droite). Si même 2 colonnes débordent, on réduit le texte (scale < 1)
+// pour que toute la structure tienne sur la page.
+function layoutSong(headerIdx: number | null, body: number[], heights: number[], viewportH: number): PerfPage {
+  const sum = (arr: number[]) => arr.reduce((s, i) => s + heights[i], 0);
+  const headerH = headerIdx != null ? heights[headerIdx] : 0;
+  const bodyTotal = sum(body);
+  const fit = (contentH: number) => Math.min(1, viewportH / Math.max(1, headerH + contentH));
+
+  // 1 colonne si peu de sections ou si tout tient en hauteur.
+  if (body.length <= 1 || bodyTotal <= viewportH - headerH) {
+    return { header: headerIdx, cols: [body], scale: fit(bodyTotal) };
+  }
+
+  // 2 colonnes : coupure équilibrée minimisant la hauteur de la plus haute colonne.
+  let best = { k: 1, maxH: Infinity };
+  for (let k = 1; k < body.length; k++) {
+    const left = sum(body.slice(0, k));
+    const maxH = Math.max(left, bodyTotal - left);
+    if (maxH < best.maxH) best = { k, maxH };
+  }
+  return {
+    header: headerIdx,
+    cols: [body.slice(0, best.k), body.slice(best.k)],
+    scale: fit(best.maxH),
+  };
+}
+
 // ─── Main component ───────────────────────────────────────────────────────────
 
 const MIN_SCALE = 0.8;
 const MAX_SCALE = 1.5;
+
+// Presets de rôle : raccourcis vers une combinaison accords/paroles. Mémorisé
+// par appareil ; un réglage manuel des toggles désélectionne le preset.
+type RolePreset = "pianiste" | "guitariste" | "presidence" | "choriste" | "batteur";
+const ROLE_PRESETS: Record<RolePreset, { chords: boolean; hideLyrics: boolean }> = {
+  pianiste: { chords: true, hideLyrics: false },
+  guitariste: { chords: true, hideLyrics: false },
+  presidence: { chords: false, hideLyrics: false },
+  choriste: { chords: false, hideLyrics: false },
+  batteur: { chords: false, hideLyrics: true },
+};
+const ROLE_PRESET_IDS = Object.keys(ROLE_PRESETS) as RolePreset[];
 
 export interface PerformanceModeProps {
   items: SetlistItem[];
@@ -186,15 +245,67 @@ export function PerformanceMode({
   setlistTitle,
   onClose,
 }: PerformanceModeProps) {
+  const { t } = useTranslation();
   const { user } = useAuth();
-  const [showChords, setShowChords] = useState(initialShowChords);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const [rolePreset, setRolePreset] = useState<RolePreset | null>(() => {
+    try {
+      const v = localStorage.getItem("perf-role-preset");
+      return v && v in ROLE_PRESETS ? (v as RolePreset) : null;
+    } catch {
+      return null;
+    }
+  });
+  const [showChords, setShowChords] = useState(
+    rolePreset ? ROLE_PRESETS[rolePreset].chords : initialShowChords,
+  );
   const [showTransitions, setShowTransitions] = useState(true);
-  const [showJianpuScore, setShowJianpuScore] = useState(false);
+  const [hideLyrics, setHideLyrics] = useState(() => {
+    if (rolePreset) return ROLE_PRESETS[rolePreset].hideLyrics;
+    try {
+      return localStorage.getItem("perf-hide-lyrics") === "1";
+    } catch {
+      return false;
+    }
+  });
+  // Style « chart » : couleurs par type de section + accords neutres (cf.
+  // SectionView). Préférence par appareil partagée avec la fiche chant et la
+  // vue setlist (chartStylePref).
+  const [chartStyle, setChartStyle] = useState(() => getChartStylePref());
+  // Pinyin (chants zh) : masquable pour qui lit les caractères. Défaut : affiché.
+  const [showPinyin, setShowPinyin] = useState(() => {
+    try {
+      return localStorage.getItem("perf-show-pinyin") !== "0";
+    } catch {
+      return true;
+    }
+  });
+  const toggleShowPinyin = (v: boolean) => {
+    setShowPinyin(v);
+    try { localStorage.setItem("perf-show-pinyin", v ? "1" : "0"); } catch { /* ignore */ }
+  };
+  // Capo par chant (slug → frets), mémorisé sur l'appareil. Appliqué aux
+  // accords uniquement quand le preset Guitariste est actif.
+  const [capos, setCapos] = useState<Record<string, number>>(() => {
+    try {
+      const raw: unknown = JSON.parse(localStorage.getItem("perf-capos") ?? "{}");
+      if (typeof raw !== "object" || raw === null) return {};
+      return Object.fromEntries(
+        Object.entries(raw).filter(([, v]) => typeof v === "number" && v >= 1 && v <= 11),
+      ) as Record<string, number>;
+    } catch {
+      return {};
+    }
+  });
   const [annotateMode, setAnnotateMode] = useState(false);
+  // Loupe du mode annotation : grossissement (≠ taille du texte, ne re-pagine pas)
+  // + déplacement. Possédée ici car elle agrandit aussi le texte (transform CSS).
+  const [annotZoom, setAnnotZoom] = useState(1);
+  const [annotPan, setAnnotPan] = useState({ x: 0, y: 0 });
   const [showChrome, setShowChrome] = useState(true);
   const [songListOpen, setSongListOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [pages, setPages] = useState<number[][]>([]);
+  const [layout, setLayout] = useState<PerfPage[]>([]);
   const [currentPage, setCurrentPage] = useState(0);
   const [remeasureKey, setRemeasureKey] = useState(0);
   const [fontScale, setFontScale] = useState(() => {
@@ -236,29 +347,72 @@ export function PerformanceMode({
     try { localStorage.setItem("perf-theme", t); } catch { /* ignore */ }
   }, []);
 
+  const toggleHideLyrics = useCallback((v: boolean) => {
+    setHideLyrics(v);
+    try { localStorage.setItem("perf-hide-lyrics", v ? "1" : "0"); } catch { /* ignore */ }
+  }, []);
+
+  const toggleChartStyle = useCallback((v: boolean) => {
+    setChartStyle(v);
+    setChartStylePref(v);
+  }, []);
+
+  const clearRolePreset = useCallback(() => {
+    setRolePreset(null);
+    try { localStorage.removeItem("perf-role-preset"); } catch { /* ignore */ }
+  }, []);
+
+  const applyRolePreset = useCallback((id: RolePreset) => {
+    const p = ROLE_PRESETS[id];
+    setShowChords(p.chords);
+    toggleHideLyrics(p.hideLyrics);
+    setRolePreset(id);
+    try { localStorage.setItem("perf-role-preset", id); } catch { /* ignore */ }
+  }, [toggleHideLyrics]);
+
+  const capoActive = rolePreset === "guitariste";
+
+  const setCapo = useCallback((slug: string, frets: number) => {
+    setCapos((prev) => {
+      const next = { ...prev };
+      if (frets <= 0) delete next[slug];
+      else next[slug] = Math.min(frets, 11);
+      try { localStorage.setItem("perf-capos", JSON.stringify(next)); } catch { /* ignore */ }
+      return next;
+    });
+  }, []);
+
+  // Vue ossature (paroles ET accords masqués) : un chant par page, structure en
+  // colonnes adaptatives, texte réduit au besoin pour tout faire tenir.
+  const structureMode = hideLyrics && !showChords;
+  // Indices à plat par page (navigation, sommaire, clé d'annotations).
+  const pages = useMemo(
+    () => layout.map((p) => (p.header != null ? [p.header, ...p.cols.flat()] : p.cols.flat())),
+    [layout],
+  );
+
   const blockRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const measureInnerRef = useRef<HTMLDivElement | null>(null);
   const chromeTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const tapStart = useRef<{ x: number; y: number; time: number } | null>(null);
-  const canvasRef = useRef<AnnotationCanvasHandle | null>(null);
-  const prevPageKey = useRef<string>("");
+
+  // Annotations vectorielles de la page courante (toujours chargées, pas
+  // seulement en mode annotation) + visibilité (œil dans les réglages)
+  const [pageAnnotations, setPageAnnotations] = useState<AnnotationData | null>(null);
+  const [showAnnotations, setShowAnnotations] = useState(true);
 
   // Build flat block list (memoised — only changes when content changes)
   const blocks = useMemo(
-    () => buildPerformanceBlocks(items, contents, true, showJianpuScore), // always build with chords=true for stable UIDs
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [items, contents, showJianpuScore],
-  );
-
-  // Au moins un chant de la setlist a-t-il une partition 简谱 ?
-  const anyJianpuScore = useMemo(
-    () => Object.values(contents).some((c) => !!c.ast.metadata.jianpuScore),
-    [contents],
+    // always build with chords=true for stable UIDs (le capo ne change ni le
+    // nombre ni l'ordre des blocs : les UIDs restent stables)
+    () => buildPerformanceBlocks(items, contents, true, capoActive ? capos : undefined),
+    [items, contents, capoActive, capos],
   );
 
   // Re-measure when a setting affecting heights changes
   useEffect(() => {
     setRemeasureKey((k) => k + 1);
-  }, [showChords, showTransitions, fontScale]);
+  }, [showChords, showTransitions, hideLyrics, fontScale, chartStyle, showPinyin]);
 
   // Re-measure on viewport resize / orientation change
   useEffect(() => {
@@ -271,11 +425,17 @@ export function PerformanceMode({
   useEffect(() => {
     const run = async () => {
       await document.fonts.ready;
-      // py-4 du conteneur de contenu (16px haut + bas, mis à l'échelle par le zoom),
-      // plus une marge de sécurité pour la marge haute du 1er bloc d'une page
-      // (comptée dans le delta du bloc précédent lors de la mesure).
-      const safety = 24 * fontScale;
-      const viewportH = window.innerHeight - 32 * fontScale - safety;
+      // Budget de hauteur en px CSS à l'échelle 1 (la mesure se fait hors
+      // échelle) : hauteur visible ÷ fontScale, moins les paddings RÉELS du
+      // conteneur de mesure (py-4 + safe areas), et une marge de sécurité pour
+      // la marge haute du 1er bloc d'une page. Les paddings sont lus calculés
+      // (px résolus) : fiable sur tout appareil, contrairement au parseFloat
+      // d'une variable CSS env() dont la résolution dépend du navigateur.
+      const safety = 24;
+      const mcs = measureInnerRef.current ? getComputedStyle(measureInnerRef.current) : null;
+      const padTop = mcs ? parseFloat(mcs.paddingTop) || 0 : 16;
+      const padBottom = mcs ? parseFloat(mcs.paddingBottom) || 0 : 16;
+      const viewportH = window.innerHeight / fontScale - padTop - padBottom - safety;
       // Hauteur réellement occupée par chaque bloc, marges verticales comprises :
       // delta entre le haut du bloc et le haut du bloc suivant dans le flux.
       const rects = blocks.map((_, i) => blockRefs.current[i]?.getBoundingClientRect() ?? null);
@@ -284,15 +444,37 @@ export function PerformanceMode({
         const next = rects[i + 1];
         return next ? Math.max(0, next.top - r.top) : r.height;
       });
-      const breakBefore = new Set(
-        blocks.flatMap((b, i) => (b.kind === "song-header" ? [i] : [])),
-      );
-      const computed = paginateBlocks(heights, viewportH, breakBefore);
-      setPages(computed);
+      let computed: PerfPage[];
+      if (structureMode) {
+        // Un chant par page : on regroupe l'en-tête et ses sections, puis layoutSong.
+        const groups: number[][] = [];
+        blocks.forEach((b, i) => {
+          if (b.kind === "song-header" || groups.length === 0) groups.push([]);
+          groups[groups.length - 1].push(i);
+        });
+        computed = groups.map((group) => {
+          const headerIdx = blocks[group[0]].kind === "song-header" ? group[0] : null;
+          const body = headerIdx != null ? group.slice(1) : group;
+          return layoutSong(headerIdx, body, heights, viewportH);
+        });
+      } else {
+        const breakBefore = new Set(blocks.flatMap((b, i) => (b.kind === "song-header" ? [i] : [])));
+        computed = paginateBlocks(heights, viewportH, breakBefore).map((idxs) => {
+          // Jamais de section coupée : une page qui déborde quand même (bloc
+          // seul plus haut que l'écran) est réduite pour tenir, comme l'ossature.
+          const pageH = idxs.reduce((s, i) => s + heights[i], 0);
+          return {
+            header: null,
+            cols: [idxs],
+            scale: Math.min(1, viewportH / Math.max(1, pageH)),
+          };
+        });
+      }
+      setLayout(computed);
       setCurrentPage((prev) => Math.min(prev, Math.max(0, computed.length - 1)));
     };
     run();
-  }, [blocks, remeasureKey, fontScale]);
+  }, [blocks, remeasureKey, fontScale, structureMode]);
 
   const changeFontScale = useCallback((delta: number) => {
     setFontScale((s) => {
@@ -348,44 +530,69 @@ export function PerformanceMode({
     }
   }, [annotateMode, showChromeWithTimer]);
 
+  // Loupe : retour à 100 % à chaque changement de page et à l'entrée/sortie du
+  // mode annotation (vue prévisible, on ne reste pas zoomé sur la page suivante).
+  useEffect(() => {
+    setAnnotZoom(1);
+    setAnnotPan({ x: 0, y: 0 });
+  }, [currentPage, annotateMode]);
+
   // ── Annotation persistence ──────────────────────────────────────────────────
 
   const currentPageIndices = pages[currentPage] ?? [];
-  // Les annotations sont liées à la mise en page : accords, transitions,
-  // partition et taille de texte font partie de la clé.
-  const layoutSig = `c${showChords ? 1 : 0}t${showTransitions ? 1 : 0}j${showJianpuScore ? 1 : 0}z${Math.round(fontScale * 100)}`;
+  // Sommaire : un en-tête de chant par entrée, avec sa page de départ
+  const songEntries = useMemo(
+    () => blocks.flatMap((b, i) => (b.kind === "song-header" ? [{ block: b, index: i }] : [])),
+    [blocks],
+  );
+  const firstBlockIdx = currentPageIndices[0] ?? 0;
+  const currentSongEntryIdx = songEntries.reduce(
+    (acc, e, i) => (e.index <= firstBlockIdx ? i : acc),
+    0,
+  );
+  const currentEntry = songEntries[currentSongEntryIdx];
+  const nextEntry = songEntries[currentSongEntryIdx + 1];
+  // Capo du chant courant — une page ne chevauche jamais deux chants
+  const currentCapo = capoActive ? capos[currentEntry?.block.songSlug ?? ""] ?? 0 : 0;
+  // Les annotations sont liées à la mise en page : accords, transitions et
+  // taille de texte font partie de la clé.
+  // « s1 » / « kN » seulement quand style chart ou capo est actif : les clés
+  // d'annotations existantes (sans ces marqueurs) restent valables sinon.
+  const layoutSig = `c${showChords ? 1 : 0}t${showTransitions ? 1 : 0}l${hideLyrics ? 1 : 0}${chartStyle ? "s1" : ""}${currentCapo ? `k${currentCapo}` : ""}z${Math.round(fontScale * 100)}`;
   const currentPageKey = computePageKey(blocks, currentPageIndices, layoutSig);
 
-  const saveAnnotations = useCallback(async (pgKey: string) => {
-    if (!user || !pgKey || !canvasRef.current) return;
-    const data = canvasRef.current.getDataURL();
-    await saveAnnotation(user.uid, setlistId, pgKey, data);
-  }, [user, setlistId]);
-
-  // Load annotations when entering annotate mode or changing page
+  // Charger les traits de la page courante (toujours — affichage permanent)
   useEffect(() => {
-    if (!annotateMode || !user || !currentPageKey) return;
-    // Small timeout ensures canvas is mounted and ref is set
-    const t = setTimeout(async () => {
-      const data = await loadAnnotation(user.uid, setlistId, currentPageKey);
-      canvasRef.current?.loadDataURL(data ?? "");
-    }, 50);
-    return () => clearTimeout(t);
-  }, [annotateMode, user, setlistId, currentPageKey]);
+    if (!user || !currentPageKey) { setPageAnnotations(null); return; }
+    let stale = false;
+    setPageAnnotations(null);
+    loadAnnotation(user.uid, setlistId, currentPageKey).then((raw) => {
+      if (stale) return;
+      const parsed = raw ? deserializeAnnotations(raw) : null;
+      setPageAnnotations(
+        parsed ?? { w: window.innerWidth, h: window.innerHeight, strokes: [] },
+      );
+    });
+    return () => { stale = true; };
+  }, [user, setlistId, currentPageKey]);
+
+  // Chaque modification (trait fini, gomme, annuler) est sauvegardée aussitôt
+  const handleAnnotationsChange = useCallback(
+    (data: AnnotationData) => {
+      setPageAnnotations(data);
+      if (user && currentPageKey) {
+        saveAnnotation(user.uid, setlistId, currentPageKey, serializeAnnotations(data));
+      }
+    },
+    [user, setlistId, currentPageKey],
+  );
 
   // ── Navigation ──────────────────────────────────────────────────────────────
 
-  const goToPage = useCallback(async (p: number, pgCount: number) => {
+  const goToPage = useCallback((p: number, pgCount: number) => {
     if (p < 0 || p >= pgCount) return;
-    // Save annotations for current page before leaving
-    const key = prevPageKey.current;
-    if (key) saveAnnotations(key);
     setCurrentPage(p);
-  }, [saveAnnotations]);
-
-  useEffect(() => {
-    prevPageKey.current = currentPageKey;
-  });
+  }, []);
 
   // Keyboard navigation (flèches, PageUp/Down — pédales Bluetooth, Échap pour quitter)
   useEffect(() => {
@@ -398,12 +605,17 @@ export function PerformanceMode({
         e.preventDefault();
         goToPage(currentPage + 1, pages.length);
       } else if (e.key === "Escape") {
+        if (settingsOpen || songListOpen) {
+          setSettingsOpen(false);
+          setSongListOpen(false);
+          return;
+        }
         onClose();
       }
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [currentPage, pages.length, goToPage, onClose]);
+  }, [currentPage, pages.length, goToPage, onClose, settingsOpen, songListOpen]);
 
   // Touch/pointer tap handling
   const handlePointerDown = useCallback((e: React.PointerEvent) => {
@@ -439,20 +651,7 @@ export function PerformanceMode({
     .map((i) => blocks[i])
     .find((b): b is SectionBlock => b.kind === "section");
 
-  // Sommaire : un en-tête de chant par entrée, avec sa page de départ
-  const songEntries = useMemo(
-    () => blocks.flatMap((b, i) => (b.kind === "song-header" ? [{ block: b, index: i }] : [])),
-    [blocks],
-  );
-  const firstBlockIdx = currentPageIndices[0] ?? 0;
-  const currentSongEntryIdx = songEntries.reduce(
-    (acc, e, i) => (e.index <= firstBlockIdx ? i : acc),
-    0,
-  );
-
   // Progression dans le chant courant + chant suivant
-  const currentEntry = songEntries[currentSongEntryIdx];
-  const nextEntry = songEntries[currentSongEntryIdx + 1];
   const songStartPage = currentEntry ? pages.findIndex((p) => p.includes(currentEntry.index)) : -1;
   const nextSongPage = nextEntry ? pages.findIndex((p) => p.includes(nextEntry.index)) : -1;
   const songEndPage = nextSongPage > 0 ? nextSongPage - 1 : pages.length - 1;
@@ -460,9 +659,27 @@ export function PerformanceMode({
   const songPageIdx = currentPage - songStartPage;
   const isLastPageOfSong = pages.length > 0 && currentPage === songEndPage;
 
+  // Padding interne des conteneurs mis à l'échelle : px-6 py-4 + safe areas.
+  // Les insets sont divisés par le facteur d'échelle pour rester exacts en
+  // pixels physiques (16px + inset une fois multipliés par fontScale) — 0 hors
+  // encoche.
+  const contentPadding: React.CSSProperties = {
+    paddingTop: `calc(1rem + var(--sat, 0px) / ${fontScale})`,
+    paddingBottom: `calc(1rem + var(--sab, 0px) / ${fontScale})`,
+    paddingLeft: `calc(1.5rem + var(--sal, 0px) / ${fontScale})`,
+    paddingRight: `calc(1.5rem + var(--sar, 0px) / ${fontScale})`,
+  };
+
   return (
     <div
+      ref={rootRef}
       className="fixed inset-0 z-[9999] bg-background overflow-hidden select-none"
+      style={{
+        "--sat": "env(safe-area-inset-top, 0px)",
+        "--sab": "env(safe-area-inset-bottom, 0px)",
+        "--sal": "env(safe-area-inset-left, 0px)",
+        "--sar": "env(safe-area-inset-right, 0px)",
+      } as React.CSSProperties}
       onPointerDown={handlePointerDown}
       onPointerUp={handlePointerUp}
     >
@@ -472,16 +689,26 @@ export function PerformanceMode({
         style={{ opacity: 0, zIndex: -1 }}
         aria-hidden="true"
       >
-        <div className="px-6 py-4" style={{ zoom: fontScale }}>
+        {/* Mesure à l'échelle 1, à la largeur de mise en page du contenu
+            (100%/fontScale) : mêmes conditions de layout que le rendu (qui est
+            agrandi par transform, sans reflow) → hauteurs exactes au pixel. */}
+        <div ref={measureInnerRef} style={{ width: `calc(100% / ${fontScale})`, ...contentPadding }}>
           {blocks.map((block, i) => (
             <div
               key={block.uid}
               ref={(el) => { blockRefs.current[i] = el; }}
+              // En ossature, les sections sont mesurées à la largeur d'une colonne
+              // (hauteur exacte si elles passent en 2 colonnes) ; l'en-tête, lui,
+              // occupe toujours la pleine largeur.
+              style={structureMode && block.kind !== "song-header" ? { width: "calc(50% - 0.5rem)" } : undefined}
             >
               <BlockRenderer
                 block={block}
                 showChordsGlobal={showChords}
                 showTransitions={showTransitions}
+                hideLyrics={hideLyrics}
+                chartStyle={chartStyle}
+                showPinyinGlobal={showPinyin}
               />
             </div>
           ))}
@@ -489,42 +716,98 @@ export function PerformanceMode({
       </div>
 
       {/* ── Content area ── */}
-      <div className="absolute inset-0 overflow-hidden px-6 py-4" style={{ zIndex: 1, zoom: fontScale }}>
-        {pages.length === 0 ? (
+      {/* Taille de police via transform: scale + largeur/hauteur compensées,
+          PAS `zoom` : zoom re-calcule la mise en page avec des arrondis propres
+          au moteur (WebKit surtout) → retours à la ligne différents de la
+          mesure → sections coupées en bas de page. transform ne re-met pas en
+          page : le rendu est l'agrandissement exact du layout mesuré, sur tout
+          appareil. La loupe d'annotation (translate + scale) se compose avec le
+          même facteur, en miroir exact du canvas d'annotation (origine (0,0)). */}
+      <div
+        className="absolute top-0 left-0 overflow-hidden"
+        style={{
+          zIndex: 1,
+          width: `${100 / fontScale}%`,
+          height: `${100 / fontScale}%`,
+          transform: `scale(${fontScale})`,
+          transformOrigin: "top left",
+          ...contentPadding,
+          ...(annotateMode && annotZoom !== 1
+            ? { transform: `translate(${annotPan.x}px, ${annotPan.y}px) scale(${annotZoom * fontScale})` }
+            : null),
+        }}
+      >
+        {pages.length === 0 || !layout[currentPage] ? (
           <div className="h-full flex items-center justify-center">
-            <p className="text-sm text-muted-foreground animate-pulse">Mise en page…</p>
+            <p className="text-sm text-muted-foreground animate-pulse">{t("performance.layout")}</p>
           </div>
-        ) : (
-          currentPageIndices.map((i) => (
+        ) : (() => {
+          const page = layout[currentPage];
+          const multiCol = page.cols.length > 1;
+          const renderBlock = (i: number) => (
             <BlockRenderer
               key={blocks[i].uid}
               block={blocks[i]}
               showChordsGlobal={showChords}
               showTransitions={showTransitions}
+              hideLyrics={hideLyrics}
+              chartStyle={chartStyle}
+              showPinyinGlobal={showPinyin}
             />
-          ))
-        )}
+          );
+          return (
+            // Réduction d'une page trop haute : transform + largeur compensée,
+            // comme le conteneur parent (jamais `zoom` — arrondis de mise en
+            // page non déterministes, cf. commentaire du conteneur).
+            <div
+              style={
+                page.scale < 1
+                  ? {
+                      transform: `scale(${page.scale})`,
+                      transformOrigin: "top left",
+                      width: `${100 / page.scale}%`,
+                    }
+                  : undefined
+              }
+            >
+              {page.header != null && renderBlock(page.header)}
+              <div className={multiCol ? "flex items-start gap-x-4" : undefined}>
+                {page.cols.map((colIdxs, ci) => (
+                  <div key={ci} className={multiCol ? "flex-1 min-w-0" : undefined}>
+                    {colIdxs.map(renderBlock)}
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })()}
       </div>
 
       {/* ── « Suivant : … » sur la dernière page d'un chant ── */}
       {isLastPageOfSong && nextEntry && (
         <div
-          className="absolute bottom-2.5 left-0 right-0 flex justify-center pointer-events-none"
-          style={{ zIndex: 5 }}
+          className="absolute left-0 right-0 flex justify-center pointer-events-none"
+          style={{ zIndex: 5, bottom: "calc(0.625rem + var(--sab, 0px))" }}
         >
           <span className="flex items-center gap-1.5 text-xs text-muted-foreground bg-background/85 backdrop-blur px-3 py-1 rounded-full border border-border/60">
-            → Suivant :
+            → {t("performance.next")}
             <span className="font-semibold text-foreground">{nextEntry.block.title}</span>
             <span className="font-mono">{nextEntry.block.songKey}</span>
           </span>
         </div>
       )}
 
-      {/* ── Annotation canvas (above content, below chrome) ── */}
-      {annotateMode && (
+      {/* ── Annotations : calque de lecture permanent + canvas d'édition ── */}
+      {showAnnotations && !annotateMode && pageAnnotations && pageAnnotations.strokes.length > 0 && (
+        <StrokesLayer data={pageAnnotations} />
+      )}
+      {annotateMode && pageAnnotations && (
         <AnnotationCanvas
-          ref={canvasRef}
-          onSave={() => saveAnnotations(currentPageKey)}
+          data={pageAnnotations}
+          onChange={handleAnnotationsChange}
+          zoom={annotZoom}
+          pan={annotPan}
+          onZoomPanChange={(z, p) => { setAnnotZoom(z); setAnnotPan(p); }}
         />
       )}
 
@@ -537,7 +820,10 @@ export function PerformanceMode({
           onPointerUp={(e) => e.stopPropagation()}
         >
           <div className="absolute inset-0 bg-black/30" onClick={() => setSongListOpen(false)} />
-          <div className="absolute left-0 top-0 bottom-0 w-72 max-w-[80vw] bg-background border-r border-border shadow-xl overflow-y-auto py-3 animate-in slide-in-from-left duration-200">
+          <div
+            className="absolute left-0 top-0 bottom-0 w-72 max-w-[80vw] bg-background border-r border-border shadow-xl overflow-y-auto py-3 animate-in slide-in-from-left duration-200"
+            style={{ paddingTop: "calc(0.75rem + var(--sat, 0px))", paddingLeft: "var(--sal, 0px)" }}
+          >
             <p className="px-4 pb-2 text-xs font-bold uppercase tracking-widest text-muted-foreground truncate">
               {setlistTitle}
             </p>
@@ -581,6 +867,11 @@ export function PerformanceMode({
         {/* Top bar */}
         <div
           className="absolute top-0 left-0 right-0 pointer-events-auto bg-background/90 backdrop-blur-md border-b border-border px-4 py-3 flex items-center gap-3"
+          style={{
+            paddingTop: "calc(0.75rem + var(--sat, 0px))",
+            paddingLeft: "calc(1rem + var(--sal, 0px))",
+            paddingRight: "calc(1rem + var(--sar, 0px))",
+          }}
           onPointerDown={(e) => e.stopPropagation()}
           onPointerUp={(e) => e.stopPropagation()}
         >
@@ -597,7 +888,7 @@ export function PerformanceMode({
           <div className="flex flex-col items-end gap-1 shrink-0">
             {/* Points de progression du chant courant */}
             {songPageCount > 1 && songPageCount <= 8 && (
-              <div className="flex items-center gap-1" aria-label={`Page ${songPageIdx + 1} sur ${songPageCount} du chant`}>
+              <div className="flex items-center gap-1" aria-label={t("performance.pageOfSong", { current: songPageIdx + 1, total: songPageCount })}>
                 {Array.from({ length: songPageCount }).map((_, i) => (
                   <span
                     key={i}
@@ -617,94 +908,33 @@ export function PerformanceMode({
         {/* Bottom bar */}
         <div
           className="absolute bottom-0 left-0 right-0 pointer-events-auto bg-background/90 backdrop-blur-md border-t border-border px-3 py-2.5 flex items-center gap-1.5 flex-wrap"
+          style={{
+            paddingBottom: "calc(0.625rem + var(--sab, 0px))",
+            paddingLeft: "calc(0.75rem + var(--sal, 0px))",
+            paddingRight: "calc(0.75rem + var(--sar, 0px))",
+          }}
           onPointerDown={(e) => e.stopPropagation()}
           onPointerUp={(e) => e.stopPropagation()}
         >
           {/* Sommaire des chants */}
-          <IconBtn label="Liste des chants" onClick={() => { setSettingsOpen(false); setSongListOpen(true); }}>
-            <ListMusic className="h-4 w-4" />
+          <IconBtn label={t("performance.songList")} onClick={() => { setSettingsOpen(false); setSongListOpen(true); }}>
+            <ListMusic className="h-5 w-5" />
           </IconBtn>
 
           {/* Réglages */}
-          <div className="relative">
-            {settingsOpen && (
-              <div
-                className="fixed inset-0"
-                onPointerDown={(e) => { e.stopPropagation(); setSettingsOpen(false); }}
-              />
-            )}
-            <IconBtn label="Réglages" active={settingsOpen} onClick={() => setSettingsOpen((v) => !v)}>
-              <Settings className="h-4 w-4" />
-            </IconBtn>
-            {settingsOpen && (
-              <div className="absolute bottom-full mb-2 left-0 w-64 bg-card border border-border rounded-xl shadow-lg p-3 space-y-3">
-                <SettingRow label="Accords">
-                  <SwitchBtn on={showChords} onToggle={() => setShowChords((v) => !v)} />
-                </SettingRow>
-                <SettingRow label="Transitions">
-                  <SwitchBtn on={showTransitions} onToggle={() => setShowTransitions((v) => !v)} />
-                </SettingRow>
-                {anyJianpuScore && (
-                  <SettingRow label="Partition 简谱">
-                    <SwitchBtn on={showJianpuScore} onToggle={() => setShowJianpuScore((v) => !v)} />
-                  </SettingRow>
-                )}
-                <SettingRow label="Texte">
-                  <div className="flex items-center gap-1.5">
-                    <button
-                      onClick={() => changeFontScale(-0.1)}
-                      disabled={fontScale <= MIN_SCALE}
-                      className="h-7 w-8 flex items-center justify-center rounded-lg border border-border text-muted-foreground disabled:opacity-30 hover:text-foreground text-[11px] font-bold"
-                      aria-label="Réduire le texte"
-                    >
-                      A−
-                    </button>
-                    <span className="text-[11px] text-muted-foreground tabular-nums w-9 text-center">
-                      {Math.round(fontScale * 100)}%
-                    </span>
-                    <button
-                      onClick={() => changeFontScale(0.1)}
-                      disabled={fontScale >= MAX_SCALE}
-                      className="h-7 w-8 flex items-center justify-center rounded-lg border border-border text-muted-foreground disabled:opacity-30 hover:text-foreground text-[13px] font-bold"
-                      aria-label="Agrandir le texte"
-                    >
-                      A+
-                    </button>
-                  </div>
-                </SettingRow>
-                <SettingRow label="Thème">
-                  <div className="flex rounded-lg border border-border overflow-hidden">
-                    <button
-                      onClick={() => setTheme("light")}
-                      className={`h-7 px-2.5 flex items-center gap-1 text-[11px] font-semibold transition-colors ${
-                        stageTheme === "light" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
-                      }`}
-                    >
-                      <Sun className="h-3 w-3" /> Clair
-                    </button>
-                    <button
-                      onClick={() => setTheme("dark")}
-                      className={`h-7 px-2.5 flex items-center gap-1 text-[11px] font-semibold border-l border-border transition-colors ${
-                        stageTheme === "dark" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
-                      }`}
-                    >
-                      <Moon className="h-3 w-3" /> Sombre
-                    </button>
-                  </div>
-                </SettingRow>
-              </div>
-            )}
-          </div>
+          <IconBtn label={t("performance.settings")} active={settingsOpen} onClick={() => setSettingsOpen(true)}>
+            <Settings className="h-5 w-5" />
+          </IconBtn>
 
           {/* Annoter (connecté uniquement) */}
           {user && (
             <IconBtn
-              label="Annoter"
+              label={t("performance.annotate")}
               active={annotateMode}
               accent="amber"
               onClick={() => { setSettingsOpen(false); setAnnotateMode((v) => !v); }}
             >
-              <PenLine className="h-4 w-4" />
+              <PenLine className="h-5 w-5" />
             </IconBtn>
           )}
 
@@ -713,27 +943,178 @@ export function PerformanceMode({
             <button
               onClick={() => goToPage(currentPage - 1, pages.length)}
               disabled={currentPage === 0}
-              className="h-9 w-9 flex items-center justify-center rounded-lg border border-border text-muted-foreground disabled:opacity-30 hover:text-foreground active:bg-muted"
-              aria-label="Page précédente"
+              className="h-11 w-11 flex items-center justify-center rounded-lg border border-border text-muted-foreground disabled:opacity-30 hover:text-foreground active:bg-muted"
+              aria-label={t("performance.prevPage")}
             >
-              <ChevronLeft className="h-4 w-4" />
+              <ChevronLeft className="h-5 w-5" />
             </button>
             <button
               onClick={() => goToPage(currentPage + 1, pages.length)}
               disabled={currentPage >= pages.length - 1}
-              className="h-9 w-9 flex items-center justify-center rounded-lg border border-border text-muted-foreground disabled:opacity-30 hover:text-foreground active:bg-muted"
-              aria-label="Page suivante"
+              className="h-11 w-11 flex items-center justify-center rounded-lg border border-border text-muted-foreground disabled:opacity-30 hover:text-foreground active:bg-muted"
+              aria-label={t("performance.nextPage")}
             >
-              <ChevronRight className="h-4 w-4" />
+              <ChevronRight className="h-5 w-5" />
             </button>
           </div>
 
           {/* Quitter */}
-          <IconBtn label="Quitter" onClick={onClose}>
-            <X className="h-4 w-4" />
+          <IconBtn label={t("performance.exit")} onClick={onClose}>
+            <X className="h-5 w-5" />
           </IconBtn>
         </div>
       </div>
+
+      {/* ── Réglages : bottom-sheet (au-dessus du z-9999 du mode) ── */}
+      <Drawer open={settingsOpen} onOpenChange={setSettingsOpen}>
+        <DrawerContent
+          className="z-[10000]"
+          overlayClassName="z-[10000] bg-black/40"
+          onPointerDown={(e) => e.stopPropagation()}
+          onPointerUp={(e) => e.stopPropagation()}
+        >
+          <DrawerHeader className="pb-1">
+            <DrawerTitle>{t("performance.settings")}</DrawerTitle>
+          </DrawerHeader>
+          <div
+            className="w-full max-w-md mx-auto px-4 pt-1 space-y-4"
+            style={{ paddingBottom: "calc(1.5rem + env(safe-area-inset-bottom, 0px))" }}
+          >
+            <div className="space-y-2">
+              <span className="text-sm font-medium text-foreground">{t("performance.view")}</span>
+              <div className="flex flex-wrap gap-1.5">
+                {ROLE_PRESET_IDS.map((id) => (
+                  <button
+                    key={id}
+                    onClick={() => (rolePreset === id ? clearRolePreset() : applyRolePreset(id))}
+                    className={`h-9 px-3 rounded-lg border text-xs font-semibold transition-colors ${
+                      rolePreset === id
+                        ? "bg-primary text-primary-foreground border-transparent"
+                        : "border-border text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {t(`performance.roles.${id}`)}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {capoActive && currentEntry?.block.songSlug && (
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <span className="text-sm font-medium text-foreground">{t("performance.capo")}</span>
+                  <p className="text-xs text-muted-foreground truncate">{currentEntry.block.title}</p>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Button
+                    variant="outline"
+                    size="icon-lg"
+                    onClick={() => setCapo(currentEntry.block.songSlug!, currentCapo - 1)}
+                    disabled={currentCapo <= 0}
+                    aria-label={t("performance.capoLower")}
+                    className="text-sm font-bold"
+                  >
+                    −
+                  </Button>
+                  <span className="text-xs text-muted-foreground tabular-nums w-10 text-center">
+                    {currentCapo}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="icon-lg"
+                    onClick={() => setCapo(currentEntry.block.songSlug!, currentCapo + 1)}
+                    disabled={currentCapo >= 11}
+                    aria-label={t("performance.capoRaise")}
+                    className="text-sm font-bold"
+                  >
+                    +
+                  </Button>
+                </div>
+              </div>
+            )}
+            <SettingRow label={t("performance.chords")}>
+              <Switch
+                checked={showChords}
+                onCheckedChange={(v) => {
+                  clearRolePreset();
+                  setShowChords(v);
+                }}
+              />
+            </SettingRow>
+            <SettingRow label={t("performance.transitions")}>
+              <Switch checked={showTransitions} onCheckedChange={setShowTransitions} />
+            </SettingRow>
+            <SettingRow label={t("performance.hideLyrics")}>
+              <Switch
+                checked={hideLyrics}
+                onCheckedChange={(v) => {
+                  clearRolePreset();
+                  toggleHideLyrics(v);
+                }}
+              />
+            </SettingRow>
+            {blocks.some((b) => b.kind === "section" && b.showPinyin) && (
+              <SettingRow label={t("performance.pinyin")}>
+                <Switch checked={showPinyin} onCheckedChange={toggleShowPinyin} />
+              </SettingRow>
+            )}
+            <SettingRow label={t("performance.chartStyle")}>
+              <Switch checked={chartStyle} onCheckedChange={toggleChartStyle} />
+            </SettingRow>
+            {user && (
+              <SettingRow label={t("performance.annotations")}>
+                <Switch checked={showAnnotations} onCheckedChange={setShowAnnotations} />
+              </SettingRow>
+            )}
+            <SettingRow label={t("performance.text")}>
+              <div className="flex items-center gap-1.5">
+                <Button
+                  variant="outline"
+                  size="icon-lg"
+                  onClick={() => changeFontScale(-0.1)}
+                  disabled={fontScale <= MIN_SCALE}
+                  aria-label={t("performance.textSmaller")}
+                  className="text-xs font-bold"
+                >
+                  A−
+                </Button>
+                <span className="text-xs text-muted-foreground tabular-nums w-10 text-center">
+                  {Math.round(fontScale * 100)}%
+                </span>
+                <Button
+                  variant="outline"
+                  size="icon-lg"
+                  onClick={() => changeFontScale(0.1)}
+                  disabled={fontScale >= MAX_SCALE}
+                  aria-label={t("performance.textLarger")}
+                  className="text-sm font-bold"
+                >
+                  A+
+                </Button>
+              </div>
+            </SettingRow>
+            <SettingRow label={t("performance.theme")}>
+              <div className="flex rounded-lg border border-border overflow-hidden">
+                <button
+                  onClick={() => setTheme("light")}
+                  className={`h-11 px-4 flex items-center gap-1.5 text-xs font-semibold transition-colors ${
+                    stageTheme === "light" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <Sun className="h-3.5 w-3.5" /> {t("performance.light")}
+                </button>
+                <button
+                  onClick={() => setTheme("dark")}
+                  className={`h-11 px-4 flex items-center gap-1.5 text-xs font-semibold border-l border-border transition-colors ${
+                    stageTheme === "dark" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <Moon className="h-3.5 w-3.5" /> {t("performance.dark")}
+                </button>
+              </div>
+            </SettingRow>
+          </div>
+        </DrawerContent>
+      </Drawer>
     </div>
   );
 }
@@ -763,7 +1144,7 @@ function IconBtn({
       onClick={onClick}
       aria-label={label}
       title={label}
-      className={`h-9 w-9 flex items-center justify-center rounded-lg border transition-colors active:bg-muted ${
+      className={`h-11 w-11 flex items-center justify-center rounded-lg border transition-colors active:bg-muted ${
         active ? activeClass : "border-border text-muted-foreground hover:text-foreground"
       }`}
     >
@@ -775,27 +1156,8 @@ function IconBtn({
 function SettingRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex items-center justify-between gap-3">
-      <span className="text-xs font-semibold text-foreground">{label}</span>
+      <span className="text-sm font-medium text-foreground">{label}</span>
       {children}
     </div>
-  );
-}
-
-function SwitchBtn({ on, onToggle }: { on: boolean; onToggle: () => void }) {
-  return (
-    <button
-      role="switch"
-      aria-checked={on}
-      onClick={onToggle}
-      className={`relative w-10 h-6 rounded-full transition-colors ${
-        on ? "bg-primary" : "bg-muted-foreground/25"
-      }`}
-    >
-      <span
-        className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all ${
-          on ? "left-[18px]" : "left-0.5"
-        }`}
-      />
-    </button>
   );
 }

@@ -1,10 +1,10 @@
-import type { SetlistItem } from "@/types/setList";
+import type { SetlistItem, SectionNuance } from "@/types/setList";
 import type { ChordProSection, ChordProAST } from "@/types/chordPro";
-import type { SongContent } from "@/lib/utils/fetchSongContent";
-import { transposeAST } from "@/lib/transposeAST";
-import { semitonesTo } from "@/lib/transpose";
+import type { SongContent } from "@/lib/api/songs";
+import { transposeAST, transposeSection } from "@/lib/transposeAST";
+import { semitonesTo, getTransposedKey } from "@/lib/transpose";
 import { resolveStructureOverride } from "@/lib/chordpro/structure";
-import { parseJianpu } from "@/lib/jianpu/parseJianpu";
+import { itemAst } from "@/lib/chordpro/itemContent";
 
 export type SongHeaderBlock = {
   kind: "song-header";
@@ -15,6 +15,10 @@ export type SongHeaderBlock = {
   songKey: string;
   position: number;
   language?: "fr" | "zh";
+  /** Slug du chant (absent pour les fusions) — cible du réglage capo */
+  songSlug?: string;
+  /** Capo appliqué (frets) : les accords des sections sont déjà transposés */
+  capo?: number;
   /** Fusion en structure mixte : titres + tonalités des chants fusionnés */
   fusionSongs?: { title: string; key: string; language: "fr" | "zh" }[];
 };
@@ -27,6 +31,9 @@ export type SectionBlock = {
   chordsEnabled: boolean;
   showPinyin: boolean;
   note?: string;
+  nuance?: SectionNuance;
+  /** Modulation (升调) : tonalité cible de cette section (tonalité jouée). */
+  keyChange?: string;
   songTitle: string;
   songKey: string;
   songSourceLabel?: string;
@@ -44,27 +51,13 @@ export type TransitionInterBlock = {
   text: string;
 };
 
-export type JianpuSectionBlock = {
-  kind: "jianpu-section";
-  uid: string;
-  raw: string;             // bloc jianpu complet du chant
-  sectionIndex: number;    // section de la partition à rendre
-  isFirst: boolean;        // affiche l'en-tête 1=X sur la première
-  targetKey: string;
-  semitones: number;
-  songTitle: string;
-  songKey: string;
-};
-
 export type PerformanceBlock =
   | SongHeaderBlock
   | SectionBlock
   | TransitionIntraBlock
-  | TransitionInterBlock
-  | JianpuSectionBlock;
+  | TransitionInterBlock;
 
-function getTransposed(content: SongContent, keyOverride: string | null): ChordProAST {
-  const ast = content.ast;
+function getTransposed(ast: ChordProAST, keyOverride: string | null): ChordProAST {
   if (!keyOverride || keyOverride === ast.metadata.key) return ast;
   return transposeAST(ast, semitonesTo(ast.metadata.key, keyOverride), keyOverride);
 }
@@ -74,11 +67,17 @@ function resolveSections(ast: ChordProAST, structureOverride: string[] | null): 
   return resolveStructureOverride(ast.sections, structureOverride);
 }
 
+// Capo N = accords affichés N demi-tons sous la tonalité jouée (shapes).
+function applyCapo(ast: ChordProAST, playedKey: string, capo: number): ChordProAST {
+  if (!capo) return ast;
+  return transposeAST(ast, -capo, getTransposedKey(playedKey, -capo));
+}
+
 export function buildPerformanceBlocks(
   items: SetlistItem[],
   contents: Record<string, SongContent>,
   showChordsGlobal: boolean,
-  useJianpuScore = false,
+  capos?: Record<string, number>,
 ): PerformanceBlock[] {
   const blocks: PerformanceBlock[] = [];
   let c = 0;
@@ -95,8 +94,8 @@ export function buildPerformanceBlocks(
     if (item.type === "fusion" && item.fusionSongs) {
       const asts: Record<string, ChordProAST> = {};
       for (const fs of item.fusionSongs) {
-        const c = contents[fs.songSlug];
-        if (c) asts[fs.songSlug] = getTransposed(c, fs.keyOverride);
+        const content = contents[fs.songSlug];
+        if (content) asts[fs.songSlug] = getTransposed(content.ast, fs.keyOverride);
       }
 
       if (item.mixedStructure?.length) {
@@ -128,16 +127,24 @@ export function buildPerformanceBlocks(
           const section = ast.sections.find((s) => s.uid === ms.sectionId || s.id === ms.sectionId);
           if (!section) continue;
           const fs = item.fusionSongs.find((f) => f.songSlug === ms.songSlug);
+          const fusionKey = fs?.keyOverride ?? ast.metadata.key;
+          // Modulation (升调) : section transposée dans sa tonalité cible.
+          const msTarget = ms.keyChange ?? fs?.sectionKeys?.[ms.sectionId];
+          const msKeyChange = msTarget && msTarget !== fusionKey ? msTarget : undefined;
           blocks.push({
             kind: "section",
             uid: uid(),
-            section,
+            section: msKeyChange
+              ? transposeSection(section, semitonesTo(fusionKey, msKeyChange), msKeyChange)
+              : section,
             language: ast.metadata.language,
             chordsEnabled: showChordsGlobal && item.showChords,
             showPinyin: ast.metadata.language === "zh",
             note: ms.note ?? fs?.sectionNotes?.[ms.sectionId],
+            nuance: ms.nuance ?? fs?.sectionNuances?.[ms.sectionId],
+            keyChange: msKeyChange,
             songTitle: ast.metadata.title,
-            songKey: fs?.keyOverride ?? ast.metadata.key,
+            songKey: fusionKey,
             songSourceLabel: multiSong ? ast.metadata.title : undefined,
           });
           if (ms.transition) blocks.push({ kind: "transition-intra", uid: uid(), text: ms.transition });
@@ -159,16 +166,24 @@ export function buildPerformanceBlocks(
             language: ast.metadata.language,
           });
           for (const sec of resolveSections(ast, fs.structureOverride)) {
+            const fusionKey = fs.keyOverride ?? ast.metadata.key;
+            // Modulation (升调) : section transposée dans sa tonalité cible.
+            const target = fs.sectionKeys?.[sec.uid] ?? fs.sectionKeys?.[sec.id];
+            const secKeyChange = target && target !== fusionKey ? target : undefined;
             blocks.push({
               kind: "section",
               uid: uid(),
-              section: sec,
+              section: secKeyChange
+                ? transposeSection(sec, semitonesTo(fusionKey, secKeyChange), secKeyChange)
+                : sec,
               language: ast.metadata.language,
               chordsEnabled: showChordsGlobal && item.showChords,
               showPinyin: ast.metadata.language === "zh",
               note: fs.sectionNotes?.[sec.uid] ?? fs.sectionNotes?.[sec.id],
+              nuance: fs.sectionNuances?.[sec.uid] ?? fs.sectionNuances?.[sec.id],
+              keyChange: secKeyChange,
               songTitle: ast.metadata.title,
-              songKey: fs.keyOverride ?? ast.metadata.key,
+              songKey: fusionKey,
             });
           }
         }
@@ -178,8 +193,13 @@ export function buildPerformanceBlocks(
 
     // ── Chant normal ──
     const content = contents[item.songSlug];
-    if (!content) continue;
-    const ast = getTransposed(content, item.keyOverride);
+    const baseAst = itemAst(item, content);
+    if (!baseAst) continue;
+    // Tonalité jouée (affichée) — après capo, ast.metadata.key devient la
+    // tonalité des shapes, on fige donc la clé d'affichage ici.
+    const playedKey = item.keyOverride ?? baseAst.metadata.key;
+    const capo = capos?.[item.songSlug] ?? 0;
+    const ast = applyCapo(getTransposed(baseAst, item.keyOverride), playedKey, capo);
     const sections = resolveSections(ast, item.structureOverride);
     blocks.push({
       kind: "song-header",
@@ -187,32 +207,12 @@ export function buildPerformanceBlocks(
       title: ast.metadata.title,
       titlePinyin: ast.metadata.titlePinyin,
       artist: ast.metadata.artist,
-      songKey: item.keyOverride ?? ast.metadata.key,
+      songKey: playedKey,
       position: item.position,
       language: ast.metadata.language,
+      songSlug: item.songSlug,
+      capo: capo || undefined,
     });
-
-    // ── Partition 简谱 à la place des paroles si demandé et disponible ──
-    const scoreRaw = content.ast.metadata.jianpuScore;
-    if (useJianpuScore && scoreRaw) {
-      const score = parseJianpu(scoreRaw);
-      const semis = item.keyOverride ? semitonesTo(content.ast.metadata.key, item.keyOverride) : 0;
-      const targetKey = item.keyOverride ?? score.key;
-      for (let si = 0; si < score.sections.length; si++) {
-        blocks.push({
-          kind: "jianpu-section",
-          uid: uid(),
-          raw: scoreRaw,
-          sectionIndex: si,
-          isFirst: si === 0,
-          targetKey,
-          semitones: semis,
-          songTitle: content.ast.metadata.title,
-          songKey: targetKey,
-        });
-      }
-      continue;
-    }
     const occ: Record<string, number> = {};
 
     for (const sec of sections) {
@@ -226,16 +226,35 @@ export function buildPerformanceBlocks(
         item.sectionTransitions?.[occKey] ??
         item.sectionTransitions?.[sec.id] ??
         "";
+      const nuance =
+        item.sectionNuances?.[sec.uid] ??
+        item.sectionNuances?.[occKey] ??
+        item.sectionNuances?.[sec.id];
+      // Modulation (升调) : section transposée dans sa tonalité cible. Avec un
+      // capo, les accords de l'AST sont en tonalité de shapes → même écart de
+      // demi-tons, mais l'orthographe suit la tonalité cible décalée du capo.
+      const targetKey =
+        item.sectionKeys?.[sec.uid] ?? item.sectionKeys?.[occKey] ?? item.sectionKeys?.[sec.id];
+      const keyChange = targetKey && targetKey !== playedKey ? targetKey : undefined;
+      const shownSec = keyChange
+        ? transposeSection(
+            sec,
+            semitonesTo(playedKey, keyChange),
+            capo ? getTransposedKey(keyChange, -capo) : keyChange
+          )
+        : sec;
       blocks.push({
         kind: "section",
         uid: uid(),
-        section: sec,
+        section: shownSec,
         language: ast.metadata.language,
         chordsEnabled: showChordsGlobal && item.showChords,
         showPinyin: item.showPinyin,
         note: note || undefined,
+        nuance,
+        keyChange,
         songTitle: ast.metadata.title,
-        songKey: item.keyOverride ?? ast.metadata.key,
+        songKey: playedKey,
       });
       if (transition) blocks.push({ kind: "transition-intra", uid: uid(), text: transition });
     }
@@ -251,13 +270,12 @@ export function computePageKey(
 ): string {
   const uids = indices
     .map((i) => blocks[i])
-    .flatMap((b) => {
-      if (b.kind === "section") return [b.section.uid];
-      if (b.kind === "jianpu-section") return [`jp:${b.songTitle}:${b.sectionIndex}`];
-      return [];
-    });
+    .filter((b): b is SectionBlock => b.kind === "section")
+    .map((b) => b.section.uid);
   let h = 0;
-  const str = uids.join(",");
+  // Repli sur les indices quand la page n'a aucune section (page 100 % transitions) :
+  // évite que toutes ces pages partagent la clé "0" (annotations mélangées).
+  const str = uids.length ? uids.join(",") : `idx:${indices.join(",")}`;
   for (let i = 0; i < str.length; i++) {
     h = (Math.imul(31, h) + str.charCodeAt(i)) | 0;
   }

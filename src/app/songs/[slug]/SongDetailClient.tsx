@@ -1,16 +1,21 @@
 "use client";
 
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
-import { MoreHorizontal, Download, Play, Music, Music2, Settings } from "lucide-react";
-import { SongView, SongHeaderCard } from "@/components/song/SongView";
-import { JianpuScore } from "@/components/jianpu/JianpuScore";
-import { parseJianpu } from "@/lib/jianpu/parseJianpu";
+import { MoreHorizontal, Download, Play, X, TriangleAlert , Music, Music2, Settings } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { getChartStylePref, setChartStylePref } from "@/lib/chartStylePref";
+import { SongView } from "@/components/song/SongView";
 import { CustomizePanel, type CustomizeState } from "@/components/customPanel/CustomizePanel";
 import type { Song } from "@/types/song";
 import { useTranslation } from "react-i18next";
-import { pdf } from "@react-pdf/renderer";
-import { SongPDF } from "@/components/pdf/SongPDF";
 import { extractYouTubeId } from "@/lib/youtube/youtube";
 import { buildDefaultStructure } from "@/lib/chordpro/structure";
 import { parseChordPro } from "@/lib/chordpro/parser";
@@ -19,8 +24,22 @@ import { useScrollDirection } from "@/hooks/useScrollDirection";
 import { ALL_KEYS, semitonesTo, getTransposedKey } from "@/lib/transpose";
 import { useSearchParams } from "next/navigation";
 import type { SectionItem } from "@/types/song";
+import type { SectionNuance } from "@/types/setList";
+import { ReportDialog } from "@/components/report/ReportDialog";
+
 interface SongDetailClientProps {
   song: Song;
+}
+
+/** Parse un paramètre d'URL JSON sans jamais lever : les liens partagés
+ *  peuvent arriver tronqués (WhatsApp/WeChat) — on retombe sur le défaut. */
+function safeParseParam<T>(raw: string | null, fallback: T): T {
+  if (!raw) return fallback;
+  try {
+    return JSON.parse(raw) as T;
+  } catch {
+    return fallback;
+  }
 }
 
 
@@ -32,31 +51,28 @@ interface SongDetailClientProps {
     const originalKey = ast.metadata.key;
     const youtubeId = song.youtubeUrl ? extractYouTubeId(song.youtubeUrl) : null;
     const scrollVisible = useScrollDirection();
+    // Barre d'outils rappelée d'un tap sur la partition (tablette au pupitre :
+    // éviter de devoir remonter la page pour transposer / zoomer)
+    const [barPinned, setBarPinned] = useState(false);
+    useEffect(() => {
+      if (!barPinned) return;
+      const y0 = window.scrollY;
+      const onScroll = () => {
+        if (Math.abs(window.scrollY - y0) > 60) setBarPinned(false);
+      };
+      window.addEventListener("scroll", onScroll, { passive: true });
+      return () => window.removeEventListener("scroll", onScroll);
+    }, [barPinned]);
     const [showVideo, setShowVideo] = useState(false);
     const [showPanel, setShowPanel] = useState(false);
-    const [showScore, setShowScore] = useState(false);
-    const hasJianpuScore = !!ast.metadata.jianpuScore;
-    const jianpuTime = useMemo(
-      () => (ast.metadata.jianpuScore ? parseJianpu(ast.metadata.jianpuScore).time ?? null : null),
-      [ast.metadata.jianpuScore]
-    );
     const [downloading, setDownloading] = useState(false);
     const [backPath, setBackPath] = useState("/songs");
-    const [backLabel, setBackLabel] = useState("");
+    const [showReport, setShowReport] = useState(false);
     const searchParams = useSearchParams();
     useEffect(() => {
       const saved = sessionStorage.getItem("lastListPath");
-      if (saved) {
-        setBackPath(saved);
-        if (saved.startsWith("/setlists/")) {
-          setBackLabel(t("setlists.detail.back"));
-        } else {
-          setBackLabel(t("songs.detail.backToAll"));
-        }
-      } else {
-        setBackLabel(t("songs.detail.backToAll"));
-      }
-    }, [t]);
+      if (saved) setBackPath(saved);
+    }, []);
 
     // Mémoriser le chant dans les « récemment consultés » (affichés sur /songs)
     useEffect(() => {
@@ -68,7 +84,6 @@ interface SongDetailClientProps {
       } catch { /* stockage indisponible */ }
     }, [song.slug]);
 
-    const hasJianpu = song.hasJianpu;
     const [customize, setCustomize] = useState<CustomizeState>({
       semitones: 0,
       currentKey: originalKey,
@@ -87,17 +102,23 @@ interface SongDetailClientProps {
       [customize.structure]
     );
 
-    const structureOverride = searchParams.get("structure")
-      ? JSON.parse(searchParams.get("structure")!)
-      : defaultStructure;
-
-    const defaultSectionsNote = Object.fromEntries(
-      customize.structure.map((s) => [s.uid, s.note]).filter(([, n]) => n)
+    const structureOverride = useMemo(
+      () => safeParseParam<string[]>(searchParams.get("structure"), defaultStructure),
+      [searchParams, defaultStructure]
     );
 
-    const sectionsNote = searchParams.get("sectionNotes")
-      ? JSON.parse(searchParams.get("sectionNotes")!)
-      : defaultSectionsNote;
+    const sectionsNote = useMemo(() => {
+      const defaultSectionsNote = Object.fromEntries(
+        customize.structure.map((s) => [s.uid, s.note]).filter(([, n]) => n)
+      );
+      return safeParseParam<Record<string, string>>(searchParams.get("sectionNotes"), defaultSectionsNote);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [searchParams, customize.structure]);
+
+    const sectionsNuance = useMemo(
+      () => safeParseParam<Record<string, SectionNuance>>(searchParams.get("sectionNuances"), {}),
+      [searchParams]
+    );
 
     useEffect(() => {
       const structure: SectionItem[] = structureOverride.map((uid: string, index: number) => {
@@ -106,7 +127,7 @@ interface SongDetailClientProps {
         return {
           uid: cleanUid,
           sectionId,
-          name: ast.sections.find((s) => s.id === sectionId)?.name,
+          name: ast.sections.find((s) => s.id === sectionId)?.name ?? "",
           note: sectionsNote[cleanUid] ?? sectionsNote[uid] ?? sectionsNote[sectionId] ?? "",
         };
       });
@@ -114,9 +135,7 @@ interface SongDetailClientProps {
     },[]);
 
     useEffect(() => {
-      const songKey = searchParams.get('key')
-        ? JSON.parse(searchParams.get('key')!)
-        : originalKey;
+      const songKey = safeParseParam<string>(searchParams.get("key"), originalKey);
       const diff = semitonesTo(originalKey, songKey);
       setCustomize(prev => ({ ...prev, currentKey: songKey, semitones: diff }));
     }, []); // une seule fois au montage
@@ -126,27 +145,41 @@ interface SongDetailClientProps {
       [ast, customize.semitones, customize.currentKey]
     );
 
-    // Menu ⋯ (médias, personnaliser, PDF)
-    const [menuOpen, setMenuOpen] = useState(false);
-    const menuRef = useRef<HTMLDivElement>(null);
+    // Taille de texte (zoom, persistée) — chargée après montage pour éviter
+    // un écart d'hydratation (le composant est rendu côté serveur).
+    const [fontScale, setFontScale] = useState(1);
     useEffect(() => {
-      if (!menuOpen) return;
-      const handler = (e: MouseEvent | TouchEvent) => {
-        if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-          setMenuOpen(false);
-        }
-      };
-      document.addEventListener("mousedown", handler);
-      document.addEventListener("touchstart", handler);
-      return () => {
-        document.removeEventListener("mousedown", handler);
-        document.removeEventListener("touchstart", handler);
-      };
-    }, [menuOpen]);
+      try {
+        const v = parseFloat(localStorage.getItem("song-font-scale") ?? "1");
+        if (v >= 0.8 && v <= 1.5) setFontScale(v);
+      } catch { /* stockage indisponible */ }
+    }, []);
+    const changeFontScale = (delta: number) => {
+      setFontScale((s) => {
+        const next = Math.min(1.5, Math.max(0.8, Math.round((s + delta) * 10) / 10));
+        try { localStorage.setItem("song-font-scale", String(next)); } catch { /* privé */ }
+        return next;
+      });
+    };
+
+    // Couleurs par section — préférence par appareil partagée avec le mode
+    // louange ; chargée après montage (même raison d'hydratation que fontScale).
+    const [chartStyle, setChartStyle] = useState(true);
+    useEffect(() => setChartStyle(getChartStylePref()), []);
+    const toggleChartStyle = (v: boolean) => {
+      setChartStyle(v);
+      setChartStylePref(v);
+    };
 
     async function handleDownload() {
       setDownloading(true);
       try {
+        // Chargés à la demande : @react-pdf/renderer est lourd et ne doit pas
+        // peser sur le bundle de la fiche chant (cf. SetlistDetailClient).
+        const [{ pdf }, { SongPDF }] = await Promise.all([
+          import("@react-pdf/renderer"),
+          import("@/components/pdf/SongPDF"),
+        ]);
         const blob = await pdf(
           <SongPDF
             ast={displayedAST}
@@ -155,6 +188,7 @@ interface SongDetailClientProps {
             useJianpu={customize.useJianpu}
             structureOverride={structureOverride}
             sectionNotes={sectionsNote}
+            sectionNuances={sectionsNuance}
             language={i18n.language}
           />
         ).toBlob();
@@ -168,32 +202,39 @@ interface SongDetailClientProps {
         setDownloading(false);
       }
     }
+
     return (
-      <div className="min-h-screen print:min-h-0 bg-background">
+      <div className="min-h-screen print:min-h-0 bg-background" style={{ width: `${100 / fontScale}%` }}>
         {/* Barre de contrôles */}
-        <div className={`print:hidden fixed left-0 right-0 top-[58px] z-10 bg-background/95 backdrop-blur border-b border-border transition-transform duration-300 ${ scrollVisible ? "translate-y-0" : "-translate-y-[calc(100%+58px)]"}`}>
-          <div className = "max-w-3xl mx-auto w-full flex flex-wrap gap-0.5 items-center py-2 px-1">
-            <Link href={backPath} className="text-sm text-muted-foreground hover:text-foreground mr-1">
-              <button className="h-8 px-2.5 rounded-[8px] border border-border bg-card text-muted-foreground hover:text-foreground text-[12.5px] font-semibold flex items-center gap-0.5 transition-all duration-150">
+        <div className={`print:hidden fixed left-0 right-0 top-[var(--nav-h)] z-10 bg-background/95 backdrop-blur border-b border-border transition-transform duration-300 ${ scrollVisible || barPinned ? "translate-y-0" : "-translate-y-[calc(100%+var(--nav-h))]"}`}>
+          <div className = "max-w-3xl mx-auto w-full flex flex-nowrap gap-0.5 items-center py-2 px-1">
+            <Button
+              asChild
+              variant="outline"
+              className="h-9 sm:h-8 px-2.5 rounded-md text-xs font-semibold text-muted-foreground hover:text-foreground mr-1"
+            >
+              <Link href={backPath}>
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M19 12H5m6-7l-7 7 7 7" />
                 </svg>
                 <span className="hidden sm:inline">{t("songs.detail.backToAll")}</span>
-              </button>
-            </Link>
+              </Link>
+            </Button>
             {/* Transposition rapide */}
-            <div className="flex items-center">
-              <button
+            <div className="flex items-center gap-0.5 flex-1 min-w-0 sm:flex-none">
+              <Button
+                variant="outline"
+                size="icon-lg"
+                className="h-9 w-9 sm:h-8 sm:w-8 rounded-md text-xs font-bold"
                 onClick={() =>
                   setCustomize((c) => {
                     const s = c.semitones - 1;
                     return { ...c, semitones: s, currentKey: getTransposedKey(originalKey, s) };
                   })
                 }
-                className="w-8 h-8 rounded border border-border text-xs font-bold hover:bg-muted flex items-center justify-center"
               >
                 −
-              </button>
+              </Button>
                 <select
                   value={customize.currentKey}
                   onChange={(e) => setCustomize((c) => {
@@ -202,7 +243,7 @@ interface SongDetailClientProps {
                     return { ...c, semitones: diff, currentKey: key };
                     })
                   }
-                  className="flex-1 px-2 py-1.5 border border-border rounded bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                  className="flex-1 min-w-0 h-9 sm:h-8 px-2 border border-border rounded-md bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
                 >
                   {ALL_KEYS.map((k) => (
                     <option key={k} value={k}>
@@ -211,24 +252,68 @@ interface SongDetailClientProps {
                     </option>
                   ))}
                 </select>
-              <button
+              <Button
+                variant="outline"
+                size="icon-lg"
+                className="h-9 w-9 sm:h-8 sm:w-8 rounded-md text-xs font-bold"
                 onClick={() =>
                   setCustomize((c) => {
                     const s = c.semitones + 1;
                     return { ...c, semitones: s, currentKey: getTransposedKey(originalKey, s) };
                   })
                 }
-                className="w-8 h-8 rounded border border-border text-xs font-bold hover:bg-muted flex items-center justify-center"
               >
                 +
-              </button>
+              </Button>
+              {/* Retour à la tonalité d'origine d'un tap (visible si transposé) */}
+              {customize.semitones !== 0 && (
+                <Button
+                  variant="outline"
+                  size="icon-lg"
+                  className="h-9 w-9 sm:h-8 sm:w-8 rounded-md text-muted-foreground"
+                  aria-label={t("customize.panel.keyOriginal")}
+                  title={t("customize.panel.keyOriginal")}
+                  onClick={() =>
+                    setCustomize((c) => ({ ...c, semitones: 0, currentKey: originalKey }))
+                  }
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                    <path d="M3 3v5h5" />
+                  </svg>
+                </Button>
+              )}
             </div>
 
-            <div className="ml-auto flex gap-1.5 items-center justify-end">
+            <div className="ml-auto flex gap-1 sm:gap-1.5 items-center justify-end">
+              {/* Taille du texte */}
+              <div className="flex items-center">
+                <Button
+                  variant="outline"
+                  size="icon-lg"
+                  className="h-9 w-9 sm:h-8 sm:w-8 rounded-md rounded-r-none border-r-0 text-[11px] font-bold"
+                  onClick={() => changeFontScale(-0.1)}
+                  disabled={fontScale <= 0.8}
+                  aria-label={t("performance.textSmaller")}
+                >
+                  A−
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon-lg"
+                  className="h-9 w-9 sm:h-8 sm:w-8 rounded-md rounded-l-none text-[13px] font-bold"
+                  onClick={() => changeFontScale(0.1)}
+                  disabled={fontScale >= 1.5}
+                  aria-label={t("performance.textLarger")}
+                >
+                  A+
+                </Button>
+              </div>
+
               {/* Accords */}
               <button
                 onClick={() => setCustomize((c) => ({ ...c, showChords: !c.showChords }))}
-                className={`h-8 px-2.5 rounded-[8px] border text-[12.5px] font-semibold flex items-center gap-1.5 transition-all duration-150 ${
+                className={`h-9 sm:h-8 px-2.5 rounded-md border text-xs font-semibold flex items-center gap-1.5 transition-all duration-150 ${
                       customize.showChords
                         ? "border-transparent bg-primary/10 text-primary"
                         : "border-border bg-card text-muted-foreground hover:text-foreground"
@@ -238,26 +323,11 @@ interface SongDetailClientProps {
                     <span className="hidden sm:inline">{t("songs.detail.chords") || "Accords"}</span>
               </button>
 
-              {/* Partition 简谱 */}
-              {hasJianpuScore && (
-                <button
-                  onClick={() => setShowScore((v) => !v)}
-                  className={`h-8 px-2.5 rounded-[8px] border text-[12.5px] font-semibold flex items-center gap-1.5 transition-all duration-150 ${
-                    showScore
-                      ? "border-transparent bg-primary/10 text-primary"
-                      : "border-border bg-card text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  <span className="font-bold">谱</span>
-                  <span className="hidden sm:inline">简谱</span>
-                </button>
-              )}
-
               {/* Pinyin (chants zh) */}
               {isZh && (
                     <button
                       onClick={() => setCustomize((c) => ({ ...c, showPinyin: !c.showPinyin }))}
-                      className={`h-8 px-2.5 rounded-[8px] border text-[12.5px] font-semibold flex items-center gap-1.5 transition-all duration-150 ${
+                      className={`h-9 sm:h-8 px-2.5 rounded-md border text-xs font-semibold flex items-center gap-1.5 transition-all duration-150 ${
                         customize.showPinyin
                           ? "border-transparent bg-primary/10 text-primary"
                           : "border-border bg-card text-muted-foreground hover:text-foreground"
@@ -269,65 +339,69 @@ interface SongDetailClientProps {
                   )}
 
               {/* Menu ⋯ : médias / personnaliser / PDF */}
-              <div className="relative" ref={menuRef}>
-                <button
-                  onClick={() => setMenuOpen((v) => !v)}
-                  aria-label="Plus d'actions"
-                  className="h-8 w-8 rounded-[8px] border border-border bg-card text-muted-foreground hover:text-foreground flex items-center justify-center transition-all duration-150"
-                >
-                  <MoreHorizontal className="h-4 w-4" />
-                </button>
-                {menuOpen && (
-                  <div className="absolute right-0 top-full mt-1 w-52 bg-card border border-border rounded-xl shadow-lg py-1 z-50">
-                    {youtubeId && (
-                      <button
-                        onClick={() => { setShowVideo((v) => !v); setMenuOpen(false); }}
-                        className="w-full flex items-center gap-2.5 px-3 py-2.5 text-[13px] font-medium text-foreground hover:bg-muted/50 transition-colors text-left"
-                      >
-                        <Play className="h-3.5 w-3.5 text-muted-foreground" />
-                        {showVideo ? "✕ " + t("songs.detail.video") : t("songs.detail.video")}
-                      </button>
-                    )}
-                    {song.spotifyUrl && (
-                      <a href={song.spotifyUrl} target="_blank" rel="noopener noreferrer"
-                        className="w-full flex items-center gap-2.5 px-3 py-2.5 text-[13px] font-medium text-foreground hover:bg-muted/50 transition-colors"
-                      >
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon-lg"
+                    className="h-9 w-9 sm:h-8 sm:w-8 rounded-md text-muted-foreground"
+                    aria-label={t("common.moreActions")}
+                  >
+                    <MoreHorizontal className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-52">
+                  {youtubeId && (
+                    <DropdownMenuItem onClick={() => setShowVideo((v) => !v)}>
+                      {!showVideo ? <Play className="h-3.5 w-3.5 text-muted-foreground" /> : <X className="h-3.5 w-3.5 text-muted-foreground" />}
+                      {t("songs.detail.video")}
+                    </DropdownMenuItem>
+                  )}
+                  {song.spotifyUrl && (
+                    <DropdownMenuItem asChild>
+                      <a href={song.spotifyUrl} target="_blank" rel="noopener noreferrer">
                         <Music className="h-3.5 w-3.5 text-muted-foreground" />
                         Spotify
                       </a>
-                    )}
-                    {song.appleMusicUrl && (
-                      <a href={song.appleMusicUrl} target="_blank" rel="noopener noreferrer"
-                        className="w-full flex items-center gap-2.5 px-3 py-2.5 text-[13px] font-medium text-foreground hover:bg-muted/50 transition-colors"
-                      >
+                    </DropdownMenuItem>
+                  )}
+                  {song.appleMusicUrl && (
+                    <DropdownMenuItem asChild>
+                      <a href={song.appleMusicUrl} target="_blank" rel="noopener noreferrer">
                         <Music2 className="h-3.5 w-3.5 text-muted-foreground" />
                         Apple Music
                       </a>
-                    )}
-                    <button
-                      onClick={() => { setShowPanel(true); setMenuOpen(false); }}
-                      className="w-full flex items-center gap-2.5 px-3 py-2.5 text-[13px] font-medium text-foreground hover:bg-muted/50 transition-colors text-left"
-                    >
-                      <Settings className="h-3.5 w-3.5 text-muted-foreground" />
-                      {t("songs.detail.customize")}
-                    </button>
-                    <button
-                      onClick={async () => { setMenuOpen(false); await handleDownload(); }}
-                      disabled={downloading}
-                      className="w-full flex items-center gap-2.5 px-3 py-2.5 text-[13px] font-medium text-foreground hover:bg-muted/50 transition-colors disabled:opacity-50 text-left"
-                    >
-                      <Download className="h-3.5 w-3.5 text-muted-foreground" />
-                      {downloading ? "…" : t("songs.detail.downloadPdf") || "PDF"}
-                    </button>
-                  </div>
-                )}
-              </div>
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuCheckboxItem
+                    checked={chartStyle}
+                    onCheckedChange={toggleChartStyle}
+                    onSelect={(e) => e.preventDefault()}
+                  >
+                    {t("performance.chartStyle")}
+                  </DropdownMenuCheckboxItem>
+                  <DropdownMenuItem onClick={() => setShowPanel(true)}>
+                    <Settings className="h-3.5 w-3.5 text-muted-foreground" />
+                    {t("songs.detail.customize")}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem disabled={downloading} onClick={() => handleDownload()}>
+                    <Download className="h-3.5 w-3.5 text-muted-foreground" />
+                    {downloading ? "…" : t("songs.detail.downloadPdf") || "PDF"}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick= {() => setShowReport(true)}>
+                    <TriangleAlert className='h-3.5 w-3.5 text-muted-foreground'/>
+                    {t('songs.detail.report')}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
 
           {/* Embed YouTube */}
-          {youtubeId && showVideo && (
-            <div className="print:hidden border-b border-border bg-black/5 px-4 py-3 flex justify-center">
+          
+        </div>
+        {youtubeId && showVideo && (
+            <div className="print:hidden border-b border-border bg-black/5 px-4 py-3 flex justify-center mt-[82px]">
               <div className="w-full max-w-xl aspect-video">
                 <iframe
                   src={`https://www.youtube.com/embed/${youtubeId}`}
@@ -339,42 +413,28 @@ interface SongDetailClientProps {
             </div>
           </div>
         )}
-        </div>
-        {/* Contenu */}
-        <main className="px-4 py-6 print:px-0 print:py-2 print:max-w-none max-w-2xl mx-auto overflow-x-auto mt-[48px]">
-          {showScore && hasJianpuScore ? (
-            <div className="max-w-2xl print:max-w-none">
-              {/* Même en-tête que la vue chant */}
-              <SongHeaderCard
-                title={song.title}
-                titlePinyin={ast.metadata.titlePinyin}
-                artist={ast.metadata.artist}
-                isZh={isZh}
-                keyLabel={`1=${customize.currentKey}`}
-                tempo={ast.metadata.tempo}
-                timeSignature={jianpuTime}
-              />
-              <div className="pt-4">
-                <JianpuScore
-                  raw={ast.metadata.jianpuScore!}
-                  hideHeader
-                  targetKey={customize.currentKey}
-                  semitones={customize.semitones}
-                  showChords={customize.showChords}
-                  showPinyin={customize.showPinyin}
-                />
-              </div>
-            </div>
-          ) : (
-            <SongView
-              ast={displayedAST}
-              showChords={customize.showChords}
-              showPinyin={customize.showPinyin}
-              useJianpu={customize.useJianpu}
-              structureOverride={structureOverride}
-              sectionNotes={sectionsNote}
-            />
-          )}
+        {/* Contenu — un tap rappelle la barre d'outils (sans gêner la sélection de texte) */}
+        <main
+          className="song-zoom px-4 py-6 print:px-0 print:py-2 print:max-w-none max-w-2xl mx-auto overflow-x-auto mt-[48px]"
+          style={{
+            transform: `scale(${fontScale})`,
+            transformOrigin: 'top left  ',
+          }}
+          onClick={() => {
+            if (window.getSelection()?.toString()) return;
+            setBarPinned(true);
+          }}
+        >
+          <SongView
+            ast={displayedAST}
+            showChords={customize.showChords}
+            showPinyin={customize.showPinyin}
+            useJianpu={customize.useJianpu}
+            structureOverride={structureOverride}
+            sectionNotes={sectionsNote}
+            sectionNuances={sectionsNuance}
+            chartStyle={chartStyle}
+          />
         </main>
 
         {/* Panneau de personnalisation */}
@@ -382,14 +442,21 @@ interface SongDetailClientProps {
           <CustomizePanel
             originalKey={originalKey}
             isZh={isZh}
-            hasJianpu={hasJianpu}
             sections={ast.sections}
             state={customize}
             onChange={setCustomize}
             onClose={() => setShowPanel(false)}
-            songTitle={song.title}
           />
         )}
+        
+        {/* Signalement */}
+        <ReportDialog
+          open={showReport}
+          onClose={() => setShowReport(false)}
+          kind="song"
+          songSlug={song.slug}
+          songTitle={song.title}
+        />
 
     </div>
     );

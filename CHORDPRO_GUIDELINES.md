@@ -128,6 +128,7 @@ Pour enrichir la partition tout en guidant au mieux l'instrumentiste, utiliser l
 * **Vérification de la structure du chant :** Toujours vérifier la structure officielle des paroles et de la musique pour découper le fichier en strophes musicales réelles.
   * *Découpage des Couplets :* Si le couplet contient plusieurs strophes distinctes (ex: Verset 1 et Verset 2), les séparer en `{start_of_verse: 主歌1/Couplet1}` et `{start_of_verse: 主歌2/Couplet2}`.
   * *Découpage des Refrains :* Si le refrain a deux parties ou une suite spécifique, le diviser en `{start_of_chorus: 副歌1/Refrain1}` et `{start_of_chorus: 副歌2/Refrain2}`.
+  * *Post-refrain :* Si une section distincte suit le refrain (réponse, ostinato, « Refrain Post »), utiliser `{start_of_postchorus: Post-Refrain}` … `{end_of_postchorus}` plutôt qu'un second `start_of_chorus`. Le type est affiché « Post-refrain » (zh : 后副歌) et rendu comme un refrain (cadre plein).
 * **Parallélisme des Strophes :** S'assurer que les couplets successifs partagent le même découpage de lignes (line breaks) pour un parallélisme visuel et rythmique parfait.
 * **Division des Sections Répétitives :** Si un Refrain ou un Pont se répète avec des variations de fin ou des accords d'anacrouse différents, les scinder en sections distinctes :
   * `{start_of_chorus: 副歌1/Refrain1}`

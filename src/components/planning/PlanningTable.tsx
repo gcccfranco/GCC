@@ -2,7 +2,9 @@
 
 import { Fragment, useEffect, useState, type ReactNode } from "react"
 import { User, X } from "lucide-react"
-import { currentSundayStr, fdShort, getMois, MOIS } from "@/lib/planning/utils"
+import { useTranslation } from "react-i18next"
+import { currentSundayStr, fdShort, getAnnee, getMois, moisName } from "@/lib/planning/utils"
+import { useProfile } from "@/lib/firebase/users"
 
 export interface PlanningTableProps {
   /** cols[0] est la colonne date */
@@ -13,6 +15,8 @@ export interface PlanningTableProps {
   /** Badge optionnel à côté de la date (ex. Sainte Cène) */
   dateBadge?: (row: string[], allRows: string[][]) => ReactNode
   minWidth?: number
+  /** Regroupement (séparateurs desktop + puces mobile). Défaut : par mois */
+  groupBy?: "month" | "year"
 }
 
 /**
@@ -20,17 +24,27 @@ export interface PlanningTableProps {
  * mobile. Champ « mon prénom » (mémorisé sur l'appareil) qui surligne les
  * cellules correspondantes, avec filtre « Mes dates ».
  */
-export function PlanningTable({ cols, rows, color, dateBadge, minWidth = 480 }: PlanningTableProps) {
+export function PlanningTable({ cols, rows, color, dateBadge, minWidth = 480, groupBy = "month" }: PlanningTableProps) {
+  const { t, i18n } = useTranslation()
+  const { profile } = useProfile()
   const sun = currentSundayStr()
   const [name, setName] = useState("")
   const [onlyMine, setOnlyMine] = useState(false)
+  const [mobileGroup, setMobileGroup] = useState<number | null>(null)
 
+  // Clé de regroupement (mois ou année) + libellé associé (mois localisé)
+  const groupKey = (dateStr: string) => (groupBy === "year" ? getAnnee(dateStr) : getMois(dateStr))
+  const groupLabel = (key: number) => (groupBy === "year" ? String(key) : moisName(key, i18n.language))
+
+  // Prénom : mémorisé sur l'appareil, prérempli depuis le profil connecté
+  // (l'app connaît déjà le nom de planning — inutile de le redemander).
   useEffect(() => {
     try {
       const saved = localStorage.getItem("planningName")
-      if (saved) setName(saved)
+      if (saved) { setName(saved); return }
     } catch { /* stockage indisponible */ }
-  }, [])
+    if (profile?.planningName) setName(profile.planningName)
+  }, [profile])
 
   function updateName(v: string) {
     setName(v)
@@ -44,14 +58,21 @@ export function PlanningTable({ cols, rows, color, dateBadge, minWidth = 480 }: 
 
   const displayed = onlyMine && hasName ? rows.filter(matchRow) : rows
 
-  // Séparateurs de mois calculés une fois (utilisés par la table et les cartes)
+  // Séparateurs (table desktop) : par mois ou par année
   const withSep: { row: string[]; sep: string | null }[] = []
-  let lm = ""
+  let lk: number | null = null
   for (const row of displayed) {
-    const month = MOIS[getMois(row[0]) - 1]
-    withSep.push({ row, sep: month !== lm ? month : null })
-    lm = month
+    const key = groupKey(row[0])
+    withSep.push({ row, sep: key !== lk ? groupLabel(key) : null })
+    lk = key
   }
+
+  // ── Mobile : affichage par groupe (puces, comme les trimestres) ──
+  const groupsInRows = [...new Set(rows.map((r) => groupKey(r[0])))]
+  const currentKey = groupBy === "year" ? new Date().getFullYear() : new Date().getMonth() + 1
+  const defaultGroup = groupsInRows.includes(currentKey) ? currentKey : groupsInRows[0]
+  const activeGroup = mobileGroup !== null && groupsInRows.includes(mobileGroup) ? mobileGroup : defaultGroup
+  const mobileRows = displayed.filter((r) => groupKey(r[0]) === activeGroup)
 
   return (
     <div className="space-y-3">
@@ -63,14 +84,14 @@ export function PlanningTable({ cols, rows, color, dateBadge, minWidth = 480 }: 
             type="text"
             value={name}
             onChange={(e) => updateName(e.target.value)}
-            placeholder="Mon prénom…"
-            className="w-full h-8 pl-8 pr-7 rounded-lg border border-border bg-card text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary/20"
+            placeholder={t("planning.table.myName")}
+            className="w-full h-10 sm:h-8 pl-8 pr-8 rounded-lg border border-border bg-card text-foreground text-[16px] sm:text-xs focus:outline-none focus:ring-2 focus:ring-ring/20"
           />
           {name && (
             <button
               onClick={() => { updateName(""); setOnlyMine(false) }}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-              aria-label="Effacer"
+              className="absolute right-0 top-1/2 -translate-y-1/2 p-2.5 text-muted-foreground hover:text-foreground active:text-foreground"
+              aria-label={t("planning.table.clear")}
             >
               <X className="h-3 w-3" />
             </button>
@@ -79,12 +100,12 @@ export function PlanningTable({ cols, rows, color, dateBadge, minWidth = 480 }: 
         {hasName && (
           <button
             onClick={() => setOnlyMine((v) => !v)}
-            className={`h-8 px-3 rounded-lg border text-xs font-semibold transition-all duration-150 cursor-pointer ${
+            className={`h-10 sm:h-8 px-3 rounded-lg border text-xs font-semibold transition-all duration-150 cursor-pointer ${
               onlyMine ? "text-white border-transparent" : "bg-card border-border text-muted-foreground hover:text-foreground"
             }`}
             style={onlyMine ? { background: color, borderColor: color } : undefined}
           >
-            Mes dates
+            {t("planning.table.myDates")}
           </button>
         )}
       </div>
@@ -101,7 +122,7 @@ export function PlanningTable({ cols, rows, color, dateBadge, minWidth = 480 }: 
           </thead>
           <tbody>
             {displayed.length === 0 && (
-              <tr><td colSpan={cols.length} className="px-4 py-8 text-center text-sm text-muted-foreground">Aucune donnée</td></tr>
+              <tr><td colSpan={cols.length} className="px-4 py-8 text-center text-sm text-muted-foreground">{t("planning.table.noData")}</td></tr>
             )}
             {withSep.map(({ row, sep }) => {
               const isThis = row[0] === sun
@@ -124,7 +145,7 @@ export function PlanningTable({ cols, rows, color, dateBadge, minWidth = 480 }: 
                   >
                     <td className="w-[100px] px-3 py-2 font-semibold whitespace-nowrap" style={{ color }}>
                       <div>{isThis ? (
-                        <span className="inline-block text-[9px] font-bold px-1.5 py-0.5 rounded text-white mt-0.5" style={{ background: color }}>Cette semaine</span>
+                        <span className="inline-block text-[9px] font-bold px-1.5 py-0.5 rounded text-white mt-0.5" style={{ background: color }}>{t("planning.table.thisWeek")}</span>
                       ) : fdShort(row[0])}</div>
                       {dateBadge?.(row, rows)}
                     </td>
@@ -145,25 +166,36 @@ export function PlanningTable({ cols, rows, color, dateBadge, minWidth = 480 }: 
         </table>
       </div>
 
-      {/* ── Cartes par date (téléphone) ── */}
+      {/* ── Cartes par date (téléphone) — un mois à la fois ── */}
       <div className="sm:hidden space-y-2.5">
-        {displayed.length === 0 && (
+        {groupsInRows.length > 1 && (
+          <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
+            {groupsInRows.map((g) => (
+              <button
+                key={g}
+                onClick={() => setMobileGroup(g)}
+                className={`relative flex-shrink-0 px-3 py-2 rounded-full text-xs font-semibold border transition-all duration-150 cursor-pointer after:absolute after:-inset-y-1.5 after:inset-x-0 after:content-[''] ${
+                  g === activeGroup ? "text-white border-transparent" : "bg-card border-border text-muted-foreground"
+                }`}
+                style={g === activeGroup ? { background: color, borderColor: color } : undefined}
+              >
+                {groupLabel(g)}
+              </button>
+            ))}
+          </div>
+        )}
+        {mobileRows.length === 0 && (
           <p className="px-4 py-8 text-center text-sm text-muted-foreground border border-dashed border-border rounded-xl">
             Aucune donnée
           </p>
         )}
-        {withSep.map(({ row, sep }) => {
+        {mobileRows.map((row) => {
           const isThis = row[0] === sun
           const mine = matchRow(row)
           return (
             <Fragment key={row[0]}>
-              {sep && (
-                <p className="text-[10px] font-bold uppercase tracking-wider pt-2" style={{ color }}>
-                  {sep}
-                </p>
-              )}
               <div
-                className="rounded-xl border border-border bg-card overflow-hidden"
+                className="rounded-xl border border-transparent bg-card shadow-soft overflow-hidden"
                 style={{
                   borderColor: isThis ? color : undefined,
                   boxShadow: mine ? `inset 3px 0 0 ${color}` : undefined,

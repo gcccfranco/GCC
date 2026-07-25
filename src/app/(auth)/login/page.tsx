@@ -1,9 +1,23 @@
 "use client";
 
 import { useState, Suspense } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { signIn } from "@/lib/firebase/auth";
+import { signIn, resetPassword } from "@/lib/firebase/auth";
+import { getProfile } from "@/lib/firebase/users";
 import { useTranslation } from "react-i18next";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 function LoginForm() {
   const { t } = useTranslation();
@@ -14,84 +28,112 @@ function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [info, setInfo] = useState("");
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+    setInfo("");
     setLoading(true);
     try {
-      await signIn(email, password);
-      router.push(from);
-    } catch {
-      setError(t("login.errorInvalid"));
+      const user = await signIn(email, password);
+      // Comptes existants : profil à compléter à la connexion
+      const profile = await getProfile(user.uid);
+      router.push(profile ? from : "/profil");
+    } catch (err) {
+      // Erreur réseau ≠ identifiants invalides : ne pas accuser l'utilisateur à tort
+      const code = (err as { code?: string })?.code;
+      setError(code === "auth/network-request-failed" ? t("login.errorNetwork") : t("login.errorInvalid"));
     } finally {
       setLoading(false);
     }
   }
 
+  async function handleForgotPassword() {
+    setError("");
+    setInfo("");
+    if (!email.trim()) {
+      setError(t("login.resetNeedEmail"));
+      return;
+    }
+    try {
+      await resetPassword(email.trim());
+      setInfo(t("login.resetSent"));
+    } catch {
+      setError(t("login.resetError"));
+    }
+  }
+
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4">
-      <div className="w-full max-w-sm">
-        <div className="mb-8 text-center">
-          <h1 className="text-xl font-bold text-foreground">{t("login.title")}</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            {t("login.subtitle")}
-          </p>
-        </div>
+      <Card className="w-full max-w-sm">
+        <CardHeader className="text-center">
+          <CardTitle className="text-xl">{t("login.title")}</CardTitle>
+          <CardDescription>{t("login.subtitle")}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="login-email">{t("login.emailLabel")}</Label>
+              <Input
+                id="login-email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                autoComplete="email"
+                className="h-11"
+                placeholder={t("login.emailPlaceholder")}
+              />
+            </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-1">
-              {t("login.emailLabel")}
-            </label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              autoComplete="email"
-              className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 text-sm"
-              placeholder={t("login.emailPlaceholder")}
-            />
-          </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="login-password">{t("login.passwordLabel")}</Label>
+              <Input
+                id="login-password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                autoComplete="current-password"
+                className="h-11"
+                placeholder={t("login.passwordPlaceholder")}
+              />
+            </div>
 
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-1">
-              {t("login.passwordLabel")}
-            </label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              autoComplete="current-password"
-              className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 text-sm"
-              placeholder={t("login.passwordPlaceholder")}
-            />
-          </div>
+            {error && (
+              <Alert variant="destructive">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+            {info && (
+              <Alert>
+                <AlertDescription>{info}</AlertDescription>
+              </Alert>
+            )}
 
-          {error && (
-            <p className="text-sm text-destructive bg-destructive/10 px-3 py-2 rounded">
-              {error}
-            </p>
-          )}
-
+            <Button type="submit" disabled={loading} className="w-full h-11">
+              {loading ? t("login.submitLoading") : t("login.submit")}
+            </Button>
+          </form>
+        </CardContent>
+        <CardFooter className="flex-col gap-2">
           <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-2 rounded-lg bg-primary text-primary-foreground font-medium text-sm hover:bg-primary/90 transition-colors disabled:opacity-50"
+            type="button"
+            onClick={handleForgotPassword}
+            className="text-sm text-muted-foreground hover:text-foreground underline underline-offset-2 block cursor-pointer"
           >
-            {loading ? t("login.submitLoading") : t("login.submit")}
+            {t("login.forgotPassword")}
           </button>
-        </form>
-
-        <div className="mt-6 text-center">
-          <a href="/setlists" className="text-sm text-muted-foreground hover:text-foreground">
+          <Link href="/signup" className="text-sm text-primary hover:underline block">
+            {t("login.signupLink")}
+          </Link>
+          <Link href="/setlists" className="text-sm text-muted-foreground hover:text-foreground block">
             {t("login.backToSetlists")}
-          </a>
-        </div>
-      </div>
+          </Link>
+        </CardFooter>
+      </Card>
     </div>
   );
 }

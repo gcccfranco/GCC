@@ -7,7 +7,15 @@
       "login": "Connexion",
       "logout": "Déconnexion",
       "louange": "Louange",
-      "planning": "Planning"
+      "planning": "Planning",
+      "myServices": "Mes Services",
+      "service": "Service",
+      "annonces": "Annonces",
+      "profile": "Mon profil",
+      "signup": "Créer un compte",
+      "guide": "Guide d'utilisation",
+      "notify": "Notifier",
+      "admin": "Admin"
     },
     "buttons": {
       "reset": "Réinitialiser",
@@ -25,6 +33,25 @@
       "fr": "Français",
       "zh": "中文",
       "mixed": "FR / 中文"
+    },
+    "moreActions": "Plus d'actions",
+    "retry": "Réessayer",
+    "confirm": "Valider",
+    "cancel": "Annuler",
+    "report": "Signaler un problème",
+    "pull": {
+      "release": "Relâcher pour actualiser",
+      "refreshing": "Actualisation…"
+    },
+    "errorPage": {
+      "title": "Une erreur est survenue",
+      "body": "Recharge la page — si le problème persiste, signale-le via le menu.",
+      "reload": "Recharger la page"
+    },
+    "notFound": {
+      "title": "Page introuvable",
+      "body": "Cette page n'existe pas ou a été déplacée.",
+      "cta": "Voir les chants"
     }
   },
   "songs": {
@@ -39,9 +66,6 @@
       "counterFiltered_one": "{{filteredCount}} résultat sur {{totalCount}}",
       "counterFiltered_other": "{{filteredCount}} résultats sur {{totalCount}}",
       "allLanguages": "Tous",
-      "sortTitle": "Tri : titre",
-      "sortArtist": "Tri : artiste",
-      "sortKey": "Tri : tonalité",
       "recent": "Récemment consultés"
     },
     "detail": {
@@ -50,7 +74,8 @@
       "pinyin": "Pinyin",
       "video": "Vidéo",
       "customize": "Personnaliser",
-      "downloadPdf": "PDF"
+      "downloadPdf": "PDF",
+      "report": "Signalement"
     },
     "view": {
       "jianpuWarning": "La structure n'est pas modifiable en mode 简谱 (chant affiché dans son intégralité)."
@@ -62,6 +87,7 @@
       "intro": "Intro",
       "outro": "Outro",
       "prechorus": "Pré-refrain",
+      "postchorus": "Post-refrain",
       "other": "Section",
       "tag": "Tag",
       "interlude": "Interlude",
@@ -78,8 +104,14 @@
     "passwordPlaceholder": "••••••••",
     "submit": "Se connecter",
     "submitLoading": "Connexion…",
-    "backToSetlists": "← Retour aux setlists",
-    "errorInvalid": "Identifiants incorrects. Vérifie l'email et le mot de passe."
+    "backToSetlists": "← Revenir aux chants",
+    "errorInvalid": "Identifiants incorrects. Vérifie l'email et le mot de passe.",
+    "signupLink": "Pas encore de compte ? Créer un compte",
+    "forgotPassword": "Mot de passe oublié ?",
+    "resetNeedEmail": "Saisis d'abord ton email ci-dessus.",
+    "resetSent": "Email de réinitialisation envoyé — vérifie ta boîte mail (et les spams).",
+    "resetError": "Envoi impossible — vérifie l'adresse et réessaie.",
+    "errorNetwork": "Problème de réseau — vérifie ta connexion et réessaie."
   },
   "setlists": {
     "list": {
@@ -94,21 +126,53 @@
       "mySetlists": "Mes setlists",
       "publicSetlists": "Setlists partagées",
       "songCounter_one": "{{count}} chant",
-      "songCounter_other": "{{count}} chants"
+      "songCounter_other": "{{count}} chants",
+      "loginRequired": "Les setlists sont réservées aux membres — connecte-toi pour voir celles de tes services.",
+      "profileRequired": "Complète ton profil pour voir les setlists de tes services.",
+      "upcoming": "À venir",
+      "archived": "Archives",
+      "emptySearch": "Aucun résultat pour cette recherche.",
+      "emptyUpcoming": "Aucun culte à venir.",
+      "emptyArchived": "Aucune archive.",
+      "searchPlaceholder": "Rechercher par titre, leader, date…",
+      "myServicesFilter": "Mes services",
+      "mainMeetings": "Réunions principales",
+      "groupsLabel": "Groupes"
     },
     "detail": {
       "backToAll": "←",
       "tabList": "Liste",
       "tabCharts": "Partitions",
+      "pinyin": "Pinyin",
       "editButton": "Modifier",
       "deleteButton": "Supprimer",
       "deleteConfirm": "Confirmer ?",
       "deleteYes": "Oui, supprimer",
       "deleteCancel": "Annuler",
       "notFound": "Setlist introuvable.",
+      "loginRequired": "Connecte-toi pour voir cette setlist.",
+      "noAccess": "Tu n'as pas accès à cette setlist — elle ne fait pas partie de tes services.",
+      "noEditAccess": "Seuls le créateur de la setlist, les musiciens et la présidence de ce service peuvent la modifier.",
       "back": "← Retour",
       "leaderLabel": "Présidence :",
-      "loadingCharts": "Chargement des partitions…"
+      "loadingCharts": "Chargement des partitions…",
+      "performanceMode": "Mode Louange",
+      "duplicate": "Dupliquer",
+      "duplicateCopySuffix": "(copie)",
+      "share": "Partager",
+      "linkCopied": "Lien copié ✓",
+      "sharePrivateWarning": "Setlist privée — visible uniquement par toi",
+      "canEdit": "Vous pouvez modifier",
+      "readOnly": "Lecture seule",
+      "editableBy": "Modifiable par : créateur, musiciens et présidence de {{category}}, et admins",
+      "editableByOwner": "Privée — visible et modifiable uniquement par son créateur",
+      "loadError": "Impossible de charger la setlist. Vérifie ta connexion.",
+      "notifyTeam": "Prévenir l'équipe",
+      "notifySent": "Équipe prévenue ({{count}} notifications envoyées).",
+      "notifyError": "Échec de l'envoi.",
+      "notifyNeedSongs": "Ajoute au moins 4 chants pour prévenir l'équipe.",
+      "emptyItems": "Aucun chant dans cette setlist pour l'instant.",
+      "sectionKeyChange": "Modulation ({{key}})"
     },
     "form": {
       "titleNew": "Nouvelle setlist",
@@ -125,6 +189,12 @@
       "categoryLabel": "Catégorie",
       "categoryRequired": "Choisis une catégorie.",
       "categoryPlaceholder": "Choisir une catégorie…",
+      "seanceLabel": "Séance",
+      "seancePlaceholder": "Choisir une séance…",
+      "seanceManual": "Séance hors planning (saisie manuelle)",
+      "seanceRequired": "Choisis une séance.",
+      "presidencePlaceholder": "Choisir une présidence…",
+      "presidenceOther": "Autre (saisie manuelle)",
       "categoryGroupRestricted": "Réunions principales (connexion requise)",
       "categoryGroupFree": "Groupes",
       "categoryRestrictedAuthWarning": "Cette catégorie nécessite une connexion.",
@@ -149,6 +219,7 @@
       "structure": "Structure",
       "emptySections": "Aucune section — ajoute en cliquant sur les boutons.",
       "songNotePlaceholder": "Note (optionnel)…",
+      "nuanceNotePlaceholder": "Précision libre…",
       "reorderLabel": "Réordonner",
       "removeLabel": "Retirer",
       "selectMode": "Sélectionner",
@@ -166,7 +237,43 @@
       "visibilityLabel": "Visibilité",
       "privateToggle": "Setlist privée (visible uniquement par toi)",
       "privateLoginRequired": "Connecte-toi pour créer une setlist privée.",
-      "addTransition": "Transition"
+      "addTransition": "Transition",
+      "transitionLabel": "Transition",
+      "keyChangeHint": "La section s'affichera transposée dans cette tonalité (retape pour retirer)."
+    },
+    "contentEdit": {
+      "toggle": "Adapter",
+      "hint": "Mode adaptation : touche une ligne pour modifier ses accords ou ses paroles. Les changements ne concernent que cette setlist.",
+      "lineTitle": "Modifier la ligne",
+      "lyricsTitle": "Modifier les paroles",
+      "instrTitle": "Ligne instrumentale",
+      "instrNewTitle": "Nouvelle ligne instrumentale",
+      "displayedKey": "Tonalité affichée : {{key}}",
+      "editLyrics": "Modifier les paroles",
+      "addInstrumental": "+ Ligne instrumentale après",
+      "deleteLine": "Supprimer la ligne",
+      "deleteLineConfirm": "Supprimer cette ligne de la version de la setlist ?",
+      "deleteLineYes": "Supprimer",
+      "lyricsRequired": "Les paroles ne peuvent pas être vides.",
+      "annotation": "Annotation (x2, arpège, piano seul…)",
+      "addChord": "Accord",
+      "removeChord": "Supprimer l'accord",
+      "instrNeedsChord": "Ajoute au moins un accord pour valider.",
+      "confirmChord": "Valider l'accord",
+      "majQuality": "maj",
+      "customQuality": "Qualité « {{quality}} » conservée",
+      "bassToggle": "/ basse",
+      "modifiedBadge": "Version modifiée",
+      "revert": "Rétablir l'original",
+      "revertConfirm": "Toutes les modifications d'accords et de paroles de ce chant pour cette setlist seront perdues.",
+      "revertYes": "Rétablir",
+      "saveError": "Échec de l'enregistrement — réessaie.",
+      "tapWordHint": "Touche un mot pour choisir la lettre exacte où placer l'accord.",
+      "spacerKept": "Colonne vide conservée — choisis une note pour la remplacer par un accord.",
+      "pinyinMismatch": "Attention : {{py}} mot(s) pinyin pour {{zh}} caractère(s) chinois — l'alignement sera décalé.",
+      "songLoading": "Chant en cours de chargement — réessaie dans un instant.",
+      "conflict": "La setlist a été modifiée entre-temps — vérifie puis réessaie.",
+      "emptyColumn": "colonne vide"
     }
   },
   "customize": {
@@ -196,5 +303,496 @@
     "中班": "Zhong Ban (中班)",
     "大班": "Da Ban (大班)",
     "高班": "Gao Ban (高班)"
+  },
+  "performance": {
+    "layout": "Mise en page…",
+    "next": "Suivant :",
+    "songList": "Liste des chants",
+    "settings": "Réglages",
+    "view": "Vue",
+    "roles": {
+      "pianiste": "Pianiste",
+      "guitariste": "Guitariste",
+      "presidence": "Présidence",
+      "choriste": "Choriste",
+      "batteur": "Batteur"
+    },
+    "chords": "Accords",
+    "capo": "Capo",
+    "capoBadge": "Capo {{n}}",
+    "capoLower": "Baisser le capo",
+    "capoRaise": "Monter le capo",
+    "transitions": "Transitions",
+    "hideLyrics": "Masquer les paroles",
+    "pinyin": "Pinyin",
+    "chartStyle": "Couleurs par section",
+    "annotations": "Annotations",
+    "text": "Texte",
+    "textSmaller": "Réduire le texte",
+    "textLarger": "Agrandir le texte",
+    "theme": "Thème",
+    "light": "Clair",
+    "dark": "Sombre",
+    "annotate": "Annoter",
+    "exit": "Quitter",
+    "prevPage": "Page précédente",
+    "nextPage": "Page suivante",
+    "pageOfSong": "Page {{current}} sur {{total}} du chant",
+    "tools": {
+      "pen": "Crayon",
+      "highlighter": "Surligneur",
+      "eraser": "Gomme (efface un trait)",
+      "small": "Petit",
+      "medium": "Moyen",
+      "large": "Grand",
+      "undo": "Annuler",
+      "clearAll": "Tout effacer",
+      "zoomIn": "Zoomer",
+      "zoomOut": "Dézoomer",
+      "resetZoom": "Revenir à 100 %"
+    }
+  },
+  "notifications": {
+    "title": "Notifications",
+    "empty": "Rien de nouveau",
+    "annonce": "Nouvelle annonce",
+    "setlistCreated": "Setlist créée",
+    "setlistUpdated": "Setlist modifiée",
+    "manual": "Notification",
+    "reminder": "Rappel",
+    "broadcast": "Diffusion"
+  },
+  "profile": {
+    "title": "Mon profil",
+    "welcome": "Bienvenue ! Complète ton profil pour accéder aux setlists de tes services et à l'onglet « Mes Services ».",
+    "locked": "Ton profil est complété. Pour le modifier, contacte un administrateur.",
+    "save": "Enregistrer mon profil",
+    "saving": "Enregistrement…",
+    "saveError": "Erreur lors de l'enregistrement. Réessaie.",
+    "errorName": "Renseigne ton prénom et ton nom.",
+    "errorLieux": "Indique où tu sers (au moins un lieu).",
+    "errorEdd": "Indique ton rôle à l'EDD (musicien ou présidence).",
+    "fields": {
+      "firstName": "Prénom",
+      "firstNamePlaceholder": "ex. Timothée",
+      "lastName": "Nom",
+      "lastNamePlaceholder": "ex. Chen",
+      "serveQuestion": "Sers-tu à l'église ? Si oui, en tant que :",
+      "serveHint": "Laisse vide si tu ne sers pas. Plusieurs choix possibles.",
+      "whereServe": "Où sers-tu ?",
+      "multipleChoices": "Plusieurs choix possibles.",
+      "eddCheckbox": "Je sers à l'EDD (École du Dimanche)",
+      "musicien": "Musicien",
+      "presidence": "Présidence",
+      "groupeQuestion": "Tu fais partie de quel groupe ?",
+      "none": "Aucun",
+      "groupeMusicien": "Je suis musicien dans mon groupe",
+      "planningName": "Ton nom dans les plannings",
+      "planningNameHint": "Choisis le nom qui te désigne dans les plannings — il sert à remplir l'onglet « Mes Services ».",
+      "notInPlannings": "— Je ne suis pas encore dans les plannings —",
+      "otherName": "Autre (saisir mon nom)…",
+      "customNamePlaceholder": "Nom exact tel qu'écrit dans les plannings",
+      "searchName": "Rechercher un prénom…",
+      "noNameResults": "Aucun nom trouvé",
+      "accessTitle": "Tes services et rôles",
+      "accessHint": "Coche les services où tu sers et précise ton rôle. Pré-rempli depuis le planning d'après ton nom — ajuste si besoin.",
+      "prefillFromPlanning": "↻ Depuis le planning",
+      "groupCultes": "Cultes & réunions",
+      "groupGroupes": "Groupes de maison",
+      "groupEdd": "École du Dimanche"
+    }
+  },
+  "signup": {
+    "title": "Créer un compte",
+    "subtitle": "GCC Louange — réservé aux membres de l'église",
+    "steps": {
+      "account": "Compte",
+      "identity": "Identité",
+      "services": "Services",
+      "groupe": "Groupe"
+    },
+    "email": "Email",
+    "emailPlaceholder": "email@example.com",
+    "password": "Mot de passe",
+    "passwordPlaceholder": "6 caractères minimum",
+    "password2": "Confirmer le mot de passe",
+    "errorEmail": "Renseigne ton adresse email.",
+    "errorPasswordLength": "Le mot de passe doit faire au moins 6 caractères.",
+    "errorPasswordMatch": "Les deux mots de passe ne correspondent pas.",
+    "errorEmailInUse": "Un compte existe déjà avec cet email.",
+    "errorEmailInvalid": "Adresse email invalide.",
+    "errorGeneric": "Erreur lors de la création du compte. Réessaie.",
+    "closedTitle": "Inscriptions fermées",
+    "closedText": "Les inscriptions ne sont plus ouvertes. Contacte Timothée si tu as besoin d'un compte.",
+    "loginLink": "Se connecter",
+    "back": "Retour",
+    "next": "Suivant",
+    "create": "Créer mon compte",
+    "creating": "Création du compte…",
+    "alreadyAccount": "J'ai déjà un compte — me connecter"
+  },
+  "mesServices": {
+    "title": "Mes Services",
+    "loading": "Chargement…",
+    "loginPrompt": "Connecte-toi pour voir tes prochains services.",
+    "login": "Se connecter",
+    "completeProfile": "Complète ton profil pour voir tes services ici.",
+    "chooseName": "Choisis ton nom de planning dans ton profil pour voir tes services ici.",
+    "myProfile": "Mon profil",
+    "upcomingCount": "{{count}} à venir",
+    "subtitle": "Les dates où {{name}} apparaît dans les plannings.",
+    "tabUpcoming": "À venir",
+    "tabPast": "Passés",
+    "today": "Aujourd'hui",
+    "inDays": "dans {{count}} j",
+    "emptyUpcoming": "Aucun service à venir — profite du repos 🙂",
+    "emptyPast": "Aucun service passé trouvé.",
+    "setlist": "Setlist"
+  },
+  "guide": {
+    "title": "Guide d'utilisation",
+    "subtitle": "Tout ce qu'il faut savoir pour utiliser le site GCC Louange.",
+    "tocTitle": "Sur cette page",
+    "sections": {
+      "songs": {
+        "title": "Trouver et lire un chant",
+        "body": "L'onglet **Louange** ouvre la liste des chants. Cherche par titre, par pinyin (chants chinois) ou par artiste, puis ouvre un chant pour voir la partition, ses liens (YouTube, Spotify…) et les outils.",
+        "points": [
+          "Les filtres limitent l'affichage à une langue ou à un thème précis.",
+          "La pastille de couleur à gauche indique la langue : bleu = français, rouge = chinois.",
+          "Tes derniers chants ouverts apparaissent en haut, sous « Récemment consultés ».",
+          "Un chant manque ? Le bouton **Proposer un nouveau chant** l'envoie aux responsables."
+        ]
+      },
+      "customize": {
+        "title": "Transposer et personnaliser",
+        "body": "Sur un chant, le bouton **Personnaliser** adapte la partition à tes besoins. Tes réglages servent aussi au PDF et au Mode Louange.",
+        "points": [
+          "Transpose dans une autre tonalité (boutons − / + ou choix direct).",
+          "Affiche ou masque les accords, et le pinyin pour les chants chinois.",
+          "Bascule en notation Jianpu (简谱) quand elle existe.",
+          "Réorganise, ajoute ou masque des sections, et règle la taille du texte.",
+          "**Réinitialiser** revient à la version d'origine."
+        ],
+        "tip": "En mode Jianpu, la structure n'est pas modifiable : le chant s'exporte tel quel, dans l'ordre original."
+      },
+      "performance": {
+        "title": "Le Mode Louange",
+        "body": "Le **Mode Louange** affiche le chant en plein écran, page par page, pour jouer sans distraction.",
+        "points": [
+          "Balaye ou utilise les flèches pour changer de page.",
+          "L'outil d'annotation (crayon, surligneur, gomme) écrit directement sur la partition.",
+          "Choisis l'outil, l'épaisseur (les cases montrent l'épaisseur réelle du trait) et la couleur.",
+          "Tes annotations sont enregistrées sur ton compte et réapparaissent à la même mise en page.",
+          "Ajuste la **taille du texte** et **affiche/masque les accords** directement depuis le mode.",
+          "**Vues par rôle** : l'affichage s'adapte à ton instrument en un geste — **Pianiste**, **Guitariste** (avec capo), **Présidence**, **Choriste** ou **Batteur**."
+        ]
+      },
+      "setlists": {
+        "title": "Les setlists",
+        "for": "Lecture pour tous · création selon tes droits",
+        "body": "Une setlist regroupe les chants d'un culte ou d'une réunion. Tu vois celles des services auxquels ton profil donne accès.",
+        "points": [
+          "Ouvre une setlist pour parcourir les chants, lancer le **Mode Louange** ou télécharger un **PDF unique** (page de garde + tous les chants à la suite).",
+          "Chaque chant garde sa tonalité, son mode (standard / Jianpu) et ses notes propres au culte.",
+          "**Dupliquer** crée ta propre copie d'une setlist ; **Partager** copie son lien.",
+          "Avec le rôle **musicien / présidence** (créer et modifier) ou **choriste** (créer), tu composes les setlists de tes services — voir « Composer une setlist » ci-dessous."
+        ],
+        "tip": "Une setlist **privée** n'est visible que de son auteur et des responsables ; un **brouillon** reste caché tant qu'il n'est pas publié."
+      },
+      "compose": {
+        "title": "Composer une setlist",
+        "for": "Selon tes droits (musicien / présidence)",
+        "body": "Si tu peux créer ou modifier une setlist, l'éditeur va bien plus loin qu'une simple liste de chants.",
+        "points": [
+          "**Informations** : titre, **séance** (choisie dans le planning ou saisie à la main), **présidence**, et des **notes** générales (thème, contexte).",
+          "**Ajoute des chants** via la recherche, puis **réordonne-les** par glisser-déposer.",
+          "**Réglages par chant** : tonalité, accords, pinyin, mode standard / Jianpu, et structure (sections jouées et leur ordre).",
+          "**Adapter** : modifie les **accords** ou les **paroles** d'un chant — ces changements ne concernent que cette setlist.",
+          "**Notes à trois niveaux** : note de la setlist, note d'un chant, et note d'une section précise.",
+          "**Nuances par section** : pose une dynamique ou une indication (pp, mf, crescendo, a cappella…) sur une section.",
+          "**Transitions** : ajoute un texte « transition après cette section » pour noter une modulation, un enchaînement, un silence…",
+          "**Fusion de chants (medley)** : sélectionne plusieurs chants puis **Fusionner** pour les enchaîner d'un bloc ; **Mélanger les sections** entrelace leurs couplets/refrains, et **Défusionner** les sépare à nouveau.",
+          "**Brouillon** : enregistre en brouillon pour finir plus tard — invisible des autres tant qu'il n'est pas publié."
+        ],
+        "tip": "Tous ces réglages (tonalité, structure, notes, transitions, fusion) se retrouvent à l'identique dans le PDF de la setlist et dans le Mode Louange."
+      },
+      "planning": {
+        "title": "Planning et Mes Services",
+        "body": "L'onglet **Planning** montre les plannings de service de l'église (cultes, Campus, Intergroupe, Interfranco). L'onglet **Mes Services** ne garde que les dates où tu es prévu.",
+        "points": [
+          "Pour que Mes Services fonctionne, choisis ton **nom de planning** dans ton profil.",
+          "Quand une setlist existe pour un de tes services, un lien direct y mène.",
+          "Les couleurs distinguent les types de service."
+        ]
+      },
+      "annonces": {
+        "title": "Annonces",
+        "for": "Lecture pour tous · publication selon tes droits",
+        "body": "L'onglet **Annonces** rassemble les infos de l'équipe : répétitions, consignes, infos de groupe ou de classe EDD.",
+        "points": [
+          "Les annonces épinglées restent en haut ; les liens sont cliquables.",
+          "Elles sont classées par section (culte, groupe, EDD).",
+          "Si un responsable t'a donné le droit sur une section, tu peux y publier, modifier ou supprimer une annonce."
+        ],
+        "tip": "Une nouvelle annonce peut aussi déclencher une notification (voir ci-dessous)."
+      },
+      "notifications": {
+        "title": "Notifications et rappels",
+        "body": "La **cloche** en haut affiche les nouveautés. Sur mobile, tu peux aussi recevoir des **notifications push**, même site fermé.",
+        "points": [
+          "Active-les depuis ton **profil**, avec l'interrupteur Notifications.",
+          "Trois types, activables séparément : **Rappels de service** (à J-7, J-3 et J-1, plus les répétitions Campus), **Setlist prête** et **Annonces**.",
+          "Sur iPhone, installe d'abord le site sur l'écran d'accueil (PWA) pour activer le push."
+        ],
+        "tip": "Les responsables peuvent aussi t'envoyer une notification ciblée (voir Rôles et responsables)."
+      },
+      "report": {
+        "title": "Signaler un problème",
+        "body": "Une erreur dans un chant (parole, accord, tonalité…) ou un souci sur le site ? Signale-le : ça part directement aux responsables.",
+        "points": [
+          "Sur un chant : le bouton **Signaler** ouvre un court formulaire (résumé + détails).",
+          "Pour le site en général : l'icône de signalement dans la barre du haut.",
+          "Donne un résumé clair et, si possible, ce qu'il faudrait corriger."
+        ]
+      },
+      "roles": {
+        "title": "Rôles et responsables",
+        "for": "Selon ton profil",
+        "body": "Tes droits dépendent des rôles que les responsables t'attribuent, service par service. Plus de droits débloquent plus d'actions.",
+        "points": [
+          "**Choriste** : créer des setlists dans ses services.",
+          "**Musicien / Présidence** : créer et modifier les setlists de leurs services.",
+          "**Régie** : voir en lecture seule les setlists de ses cultes.",
+          "**Droit d'annonce ou de notification** : publier des annonces ou envoyer des notifications à une audience, attribué au cas par cas.",
+          "**Admins** : espace **Admin** (valider les comptes et les rôles, ouvrir/fermer les inscriptions, traiter les propositions de chants et les signalements) et page **Notifier** (notification manuelle à tout le monde, un culte, un groupe ou une classe)."
+        ],
+        "tip": "Tu ne vois ces outils que si tu en as les droits."
+      },
+      "account": {
+        "title": "Compte, langue et thème",
+        "body": "Complète ton **profil** pour débloquer Mes Services et les setlists de tes services.",
+        "points": [
+          "Renseigne prénom, nom, lieux et rôles de service, et ton nom de planning.",
+          "Le bouton **中文 / FR** change la langue de toute l'interface.",
+          "Le bouton **lune / soleil** bascule entre thème clair et sombre.",
+          "Une fois complété, le profil n'est modifiable que par un responsable : signale-lui toute erreur."
+        ]
+      }
+    },
+    "captures": {
+      "songs": {
+        "labels": {
+          "tab": "Onglet Louange",
+          "search": "Recherche",
+          "dot": "Langue du chant"
+        }
+      },
+      "song": {
+        "labels": {
+          "customize": "Personnaliser"
+        }
+      },
+      "customize": {
+        "labels": {
+          "transpose": "Tonalité",
+          "sections": "Sections"
+        }
+      },
+      "performance": {
+        "labels": {
+          "annotate": "Annoter",
+          "swipe": "Changer de page"
+        }
+      },
+      "setlists": {
+        "labels": {
+          "open": "Ouvrir une setlist"
+        }
+      },
+      "composeInfos": {
+        "caption": "Étape 1 — le cadre du culte (titre, catégorie, visibilité)"
+      },
+      "composeSongs": {
+        "caption": "Étape 2 — ajouter et ordonner les chants",
+        "labels": {
+          "add": "Ajouter un chant"
+        }
+      },
+      "composeAdvanced": {
+        "caption": "Réglages par chant : tonalité, structure, fusion",
+        "labels": {
+          "merge": "Fusion / medley"
+        }
+      },
+      "planning": {
+        "labels": {
+          "colors": "Types de service"
+        }
+      },
+      "services": {
+        "labels": {
+          "tab": "Onglet Mes Services"
+        }
+      },
+      "annonces": {
+        "labels": {
+          "tab": "Onglet Annonces"
+        }
+      },
+      "notifications": {
+        "labels": {
+          "toggle": "Interrupteur notifications"
+        }
+      },
+      "admin": {
+        "labels": {
+          "manage": "Comptes & rôles"
+        }
+      },
+      "profile": {
+        "labels": {
+          "planningName": "Nom de planning"
+        }
+      }
+    }
+  },
+  "annonces": {
+    "title": "Annonces",
+    "loginPrompt": "Connecte-toi pour voir les annonces.",
+    "login": "Se connecter",
+    "new": "Nouvelle annonce",
+    "all": "Toutes",
+    "pinned": "Épinglée",
+    "edit": "Modifier",
+    "delete": "Supprimer",
+    "deleteYes": "Oui",
+    "deleteNo": "Non",
+    "empty": "Aucune annonce pour l'instant.",
+    "emptyFor": "Aucune annonce pour {{section}} pour l'instant.",
+    "visibleUntil": "visible jusqu'au {{date}}",
+    "publish": "Publier l'annonce",
+    "save": "Enregistrer",
+    "closeLightbox": "Fermer",
+    "form": {
+      "section": "Section",
+      "titleLabel": "Titre",
+      "titlePlaceholder": "ex. Répétition exceptionnelle samedi",
+      "textLabel": "Texte",
+      "textPlaceholder": "Le contenu de l'annonce… (les liens collés ici seront cliquables)",
+      "links": "Liens",
+      "addLink": "Ajouter un lien",
+      "linkLabelPlaceholder": "Libellé (ex. Formulaire d'inscription)",
+      "linkRemove": "Retirer le lien",
+      "images": "Images",
+      "imagesHint": "(max {{max}}, compressées automatiquement)",
+      "addImage": "Ajouter une image",
+      "compressing": "Compression…",
+      "removeImage": "Retirer l'image",
+      "pin": "Épingler en haut de la liste",
+      "expiresLabel": "Disparaît après le (optionnel)",
+      "removeExpiry": "Retirer la date d'expiration",
+      "cancel": "Annuler",
+      "saving": "Enregistrement…",
+      "errorTitle": "Donne un titre à l'annonce.",
+      "errorEmpty": "L'annonce est vide — ajoute du texte ou une image.",
+      "errorLink": "Le lien « {{url}} » doit commencer par http:// ou https://",
+      "errorImages": "Limite d'images atteinte pour cette annonce (poids total).",
+      "errorImageAdd": "Erreur lors de l'ajout de l'image.",
+      "errorSave": "Erreur lors de l'enregistrement."
+    }
+  },
+  "planning": {
+    "welcome": "Bienvenue",
+    "title": "GCC — Planning des services",
+    "subtitle": "Centralisez et consultez en temps réel tous les plannings des services.",
+    "nextService": "Ton prochain service",
+    "seeAllServices": "Voir tous mes services →",
+    "thisSunday": "Ce dimanche — {{date}}",
+    "dataPending": "Données à venir",
+    "staleData": "Planning en ligne inaccessible — données locales, possiblement périmées.",
+    "legendCurrentSunday": "Dimanche de la semaine courante",
+    "sainteCene": "Sainte Cène",
+    "unpublishedTooltip": "Non publié — visible par les responsables uniquement",
+    "tabs": {
+      "accueil": "Accueil",
+      "culte": "Culte Franco",
+      "table": "Prépa. Table",
+      "groupes": "Groupes",
+      "edd": "EDD",
+      "campus": "Campus",
+      "intergroupe": "Intergroupe",
+      "interfranco": "Interfranco"
+    },
+    "roles": {
+      "date": "Date",
+      "presidence": "Présidence",
+      "choristes": "Choristes",
+      "choriste1": "Choriste 1",
+      "choriste2": "Choriste 2",
+      "choriste3": "Choriste 3",
+      "piano": "Piano",
+      "guitare": "Guitare",
+      "batterie": "Batterie",
+      "sono": "Sono",
+      "sonoLive": "Sono+Live",
+      "ppt": "PPT",
+      "orateur": "Orateur",
+      "trad": "Trad.",
+      "musiciens": "Musiciens",
+      "suppleant": "Suppléant",
+      "cajon": "Cajon",
+      "cajonBatt": "Cajon/Batt.",
+      "theme": "Thème",
+      "pianiste": "Pianiste"
+    },
+    "table": {
+      "myName": "Mon prénom…",
+      "myDates": "Mes dates",
+      "noData": "Aucune donnée",
+      "thisWeek": "Cette semaine",
+      "clear": "Effacer"
+    },
+    "pages": {
+      "culte": "Culte Franco",
+      "table": "Prépa. Table du Seigneur",
+      "groupes": "Groupes",
+      "edd": "EDD — École du Dimanche",
+      "campus": "Campus",
+      "intergroupe": "Intergroupe",
+      "interfranco": "Interfranco"
+    },
+    "groupes": {
+      "paix": "Paix",
+      "fidelite": "Fidélité",
+      "bonte": "Bonté",
+      "planningGroupe": "Planning groupe",
+      "planningMusiciens": "Planning musiciens 🎵"
+    },
+    "edd": {
+      "p1": "Janv–Fév",
+      "p2": "Mars–Avr",
+      "p3": "Mai–Jun",
+      "p4": "Juil–Aoû",
+      "p5": "Sep–Oct",
+      "p6": "Nov–Déc"
+    },
+    "campus": {
+      "louange": "Louange",
+      "repetition": "Répétition",
+      "repetitionLabel": "Répétition :",
+      "atTime": "à {{time}}",
+      "noSeance": "Aucune séance",
+      "morning": "Matin",
+      "evening": "Soir",
+      "presChoristes": "Présidence & choristes",
+      "musiciens": "Musiciens",
+      "chants": "Chants",
+      "chantN": "Chant {{n}}"
+    },
+    "verse": {
+      "text": "« Tout ce que vous faites, faites-le de bon cœur, comme pour le Seigneur et non pour des hommes, sachant que vous recevrez du Seigneur l'héritage pour récompense. Servez Christ, le Seigneur. »",
+      "ref": "— Colossiens 3 : 23-24"
+    }
   }
 }

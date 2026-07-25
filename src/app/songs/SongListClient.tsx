@@ -6,6 +6,7 @@ import Fuse from "fuse.js";
 import { Search, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type { SongIndexEntry, Theme } from "@/types/song";
+import { SongProposalDrawer } from "@/components/songs/SongProposalDrawer";
 
 interface SongListClientProps {
   songs: SongIndexEntry[];
@@ -20,7 +21,6 @@ export function SongListClient({ songs, themes }: SongListClientProps) {
   const [query, setQuery] = useState("");
   const [langFilter, setLangFilter] = useState<"all" | "fr" | "zh">("all");
   const [themeFilter, setThemeFilter] = useState("");
-  const [sortBy, setSortBy] = useState<"title" | "artist" | "key">("title");
   const [recentSlugs, setRecentSlugs] = useState<string[]>([]);
   const [isInitialized, setIsInitialized] = useState(false);
 
@@ -115,14 +115,7 @@ export function SongListClient({ songs, themes }: SongListClientProps) {
       // Résultats de recherche : ordre de pertinence
       result = fuse.search(query.trim()).map((r) => r.item);
     } else {
-      result = [...songs];
-      if (sortBy === "artist") {
-        result.sort((a, b) => (a.artist || "").localeCompare(b.artist || "", "fr") || compareSongTitles(a, b));
-      } else if (sortBy === "key") {
-        result.sort((a, b) => a.originalKey.localeCompare(b.originalKey) || compareSongTitles(a, b));
-      } else {
-        result.sort(compareSongTitles);
-      }
+      result = [...songs].sort(compareSongTitles);
     }
 
     if (langFilter !== "all") {
@@ -133,7 +126,7 @@ export function SongListClient({ songs, themes }: SongListClientProps) {
     }
 
     return result;
-  }, [query, langFilter, themeFilter, sortBy, fuse, songs]);
+  }, [query, langFilter, themeFilter, fuse, songs]);
 
   // Récents : slugs → entrées (dans l'ordre de consultation)
   const recentSongs = useMemo(() => {
@@ -141,9 +134,9 @@ export function SongListClient({ songs, themes }: SongListClientProps) {
     return recentSlugs.map((slug) => map.get(slug)).filter((s): s is SongIndexEntry => !!s);
   }, [recentSlugs, songs]);
 
-  // Index A–Z (tri par titre, hors recherche)
+  // Index A–Z (hors recherche)
   const letterIndex = useMemo(() => {
-    if (query.trim() || sortBy !== "title") return [];
+    if (query.trim()) return [];
     const seen = new Map<string, string>(); // lettre → slug du premier chant
     for (const song of filtered) {
       const ch = getSortKey(song).charAt(0).toUpperCase();
@@ -151,7 +144,7 @@ export function SongListClient({ songs, themes }: SongListClientProps) {
       if (!seen.has(letter)) seen.set(letter, song.slug);
     }
     return [...seen.entries()];
-  }, [filtered, query, sortBy]);
+  }, [filtered, query]);
 
   function scrollToLetter(slug: string) {
     document.getElementById(`song-li-${slug}`)?.scrollIntoView({ block: "start" });
@@ -174,16 +167,17 @@ export function SongListClient({ songs, themes }: SongListClientProps) {
         <Search className="absolute left-[14px] top-1/2 -translate-y-1/2 h-[18px] w-[18px] text-muted-foreground/70 pointer-events-none" />
         <input
           type="search"
+          enterKeyHint="search"
           placeholder={t("songs.list.searchPlaceholder")}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          className="w-full h-[46px] pl-[42px] pr-10 border border-border rounded-xl bg-card text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary focus:ring-[3px] focus:ring-primary/10 text-[15px] transition-all duration-150"
+          className="w-full h-[46px] pl-[42px] pr-10 border border-border rounded-xl bg-card text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-ring/50 focus:ring-[3px] focus:ring-ring/10 text-[16px] transition-all duration-150 [&::-webkit-search-cancel-button]:hidden"
         />
         {query && (
           <button
             onClick={() => setQuery("")}
             aria-label={t("songs.list.clearSearch")}
-            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1.5 rounded-md hover:bg-secondary transition-colors"
+            className="absolute right-1.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-2.5 rounded-md hover:bg-secondary active:bg-secondary transition-colors"
           >
             <X className="h-4 w-4" />
           </button>
@@ -200,7 +194,7 @@ export function SongListClient({ songs, themes }: SongListClientProps) {
               onClick={() => setLangFilter(lang)}
               className={`px-3 py-1.5 rounded-[7px] text-[12.5px] font-semibold transition-all duration-150 cursor-pointer ${
                 langFilter === lang
-                  ? "bg-card text-foreground shadow-sm"
+                  ? "bg-foreground text-background"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
@@ -213,7 +207,7 @@ export function SongListClient({ songs, themes }: SongListClientProps) {
         <select
           value={themeFilter}
           onChange={(e) => setThemeFilter(e.target.value)}
-          className="h-8 pl-3 pr-7 rounded-[8px] text-[12.5px] font-semibold bg-card text-foreground/80 border border-border focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer appearance-none"
+          className="h-8 pl-3 pr-7 rounded-[8px] text-[16px] sm:text-[12.5px] font-semibold bg-card text-foreground/80 border border-border focus:outline-none focus:ring-2 focus:ring-ring/20 cursor-pointer appearance-none"
           style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7079' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`, backgroundRepeat: "no-repeat", backgroundPosition: "right 9px center" }}
         >
           <option value="">{t("songs.list.filterTheme")}</option>
@@ -223,20 +217,6 @@ export function SongListClient({ songs, themes }: SongListClientProps) {
             </option>
           ))}
         </select>
-
-        {/* Tri (hors recherche) */}
-        {!query.trim() && (
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as "title" | "artist" | "key")}
-            className="h-8 pl-3 pr-7 rounded-[8px] text-[12.5px] font-semibold bg-card text-foreground/80 border border-border focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer appearance-none"
-            style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7079' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`, backgroundRepeat: "no-repeat", backgroundPosition: "right 9px center" }}
-          >
-            <option value="title">{t("songs.list.sortTitle", { defaultValue: "Tri : titre" })}</option>
-            <option value="artist">{t("songs.list.sortArtist", { defaultValue: "Tri : artiste" })}</option>
-            <option value="key">{t("songs.list.sortKey", { defaultValue: "Tri : tonalité" })}</option>
-          </select>
-        )}
 
         {hasFilter && (
           <button
@@ -250,7 +230,7 @@ export function SongListClient({ songs, themes }: SongListClientProps) {
 
       {/* Récemment consultés */}
       {!hasFilter && recentSongs.length > 0 && (
-        <div className="mb-4">
+        <div className={`mb-4 ${letterIndex.length > 1 ? "pr-7" : ""}`}>
           <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-1.5">
             {t("songs.list.recent", { defaultValue: "Récemment consultés" })}
           </p>
@@ -259,11 +239,11 @@ export function SongListClient({ songs, themes }: SongListClientProps) {
               <Link
                 key={song.slug}
                 href={`/songs/${song.slug}`}
-                className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border bg-card text-[12.5px] font-semibold text-foreground hover:border-primary/40 transition-colors"
+                className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border bg-card text-[12.5px] font-semibold text-foreground hover:border-muted-foreground/50 active:bg-secondary transition-colors"
               >
                 <span
                   className="w-1.5 h-1.5 rounded-full shrink-0"
-                  style={{ background: song.language === "zh" ? "var(--jianpu-color)" : "#3f63cf" }}
+                  style={{ background: song.language === "zh" ? "var(--jianpu-color)" : "var(--chord-color)" }}
                 />
                 {song.title}
               </Link>
@@ -272,12 +252,15 @@ export function SongListClient({ songs, themes }: SongListClientProps) {
         </div>
       )}
 
-      {/* Compteur */}
-      <p className="text-[12.5px] text-muted-foreground mb-3">
-        {filtered.length === songs.length
-          ? t("songs.list.counter", { count: songs.length })
-          : t("songs.list.counterFiltered", { count: filtered.length, filteredCount: filtered.length, totalCount: songs.length })}
-      </p>
+      {/* Compteur + proposition de chant */}
+      <div className={`flex items-center justify-between gap-3 mb-3 ${letterIndex.length > 1 ? "pr-7" : ""}`}>
+        <p className="text-[12.5px] text-muted-foreground">
+          {filtered.length === songs.length
+            ? t("songs.list.counter", { count: songs.length })
+            : t("songs.list.counterFiltered", { count: filtered.length, filteredCount: filtered.length, totalCount: songs.length })}
+        </p>
+        <SongProposalDrawer />
+      </div>
 
       {/* Liste */}
       {filtered.length === 0 ? (
@@ -285,17 +268,17 @@ export function SongListClient({ songs, themes }: SongListClientProps) {
           {t("songs.list.noSongsFound")}
         </p>
       ) : (
-        <ul className={`flex flex-col gap-[9px] ${letterIndex.length > 1 ? "pr-5" : ""}`}>
+        <ul className={`flex flex-col gap-[9px] ${letterIndex.length > 1 ? "pr-7" : ""}`}>
           {filtered.map((song) => (
             <li key={song.slug} id={`song-li-${song.slug}`} className="scroll-mt-[120px]">
               <Link
                 href={`/songs/${song.slug}`}
-                className="flex overflow-hidden border border-border rounded-xl bg-card hover:border-muted-foreground/40 hover:shadow-[0_4px_14px_rgba(20,22,28,0.08),0_2px_6px_rgba(20,22,28,0.05)] transition-all duration-150 active:scale-[.995]"
+                className="flex overflow-hidden rounded-xl bg-card shadow-soft hover:shadow-[0_4px_14px_rgba(20,22,28,0.08),0_2px_6px_rgba(20,22,28,0.05)] transition-all duration-150 active:scale-[.995]"
               >
                 {/* Language rail */}
                 <span
                   className="w-[5px] shrink-0"
-                  style={{ background: song.language === "zh" ? "var(--jianpu-color)" : "#3f63cf" }}
+                  style={{ background: song.language === "zh" ? "var(--jianpu-color)" : "var(--chord-color)" }}
                 />
                 {/* Body */}
                 <span className="flex-1 min-w-0 px-[15px] py-[13px] flex items-center gap-3">
@@ -353,13 +336,14 @@ export function SongListClient({ songs, themes }: SongListClientProps) {
       {letterIndex.length > 1 && filtered.length > 30 && (
         <nav
           aria-label="Index alphabétique"
-          className="fixed right-0.5 top-1/2 -translate-y-1/2 z-30 flex flex-col items-center px-0.5 py-1 rounded-full bg-background/70 backdrop-blur-sm"
+          className="fixed right-0.5 top-1/2 -translate-y-1/2 z-30 flex flex-col items-center px-0.5 py-1 rounded-full bg-background/70 backdrop-blur-sm max-h-[78vh] overflow-y-auto no-scrollbar"
         >
           {letterIndex.map(([letter, slug]) => (
             <button
               key={letter}
               onClick={() => scrollToLetter(slug)}
-              className="w-5 h-[17px] flex items-center justify-center text-[10px] font-bold text-muted-foreground hover:text-primary active:text-primary"
+              aria-label={`Aller à ${letter}`}
+              className="w-8 h-6 flex items-center justify-center text-[11px] font-bold text-muted-foreground hover:text-foreground active:text-foreground"
             >
               {letter}
             </button>
