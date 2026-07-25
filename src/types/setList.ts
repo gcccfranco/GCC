@@ -35,6 +35,11 @@ export type SetlistItem = {
   showChords: boolean;
   showPinyin: boolean;
   useJianpu: boolean;
+  /** Affiche la partition 简谱 (image du scan d'origine) au lieu des paroles.
+   *  N'a d'effet que si le chant a une partition dans public/jianpu/.
+   *  `structureOverride` continue de décrire la structure pour la liste de la
+   *  setlist, mais ne modifie pas la partition : l'image est affichée entière. */
+  jianpuSheet?: boolean;
   structureOverride: string[] | null;
   sectionNotes: Record<string, string>;
   sectionTransitions?: Record<string, string>;
