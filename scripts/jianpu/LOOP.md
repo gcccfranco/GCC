@@ -31,12 +31,27 @@ rangées d'accords.
 
 1. Lancer le pipeline sur le jeu de contrôle (puis sur les 124).
 2. Calculer les métriques ci-dessous.
-3. Produire une planche-contact de ce qui coince :
-   - rangées dont la classification est incertaine ;
-   - étiquettes d'accords non appariées.
+3. **Contrôle visuel — obligatoire, jamais sautable :**
+   ```bash
+   python3 scripts/jianpu/debug-render.py
+   ```
+   Puis **regarder `debug/_planche.png`**, qui tient les deux modes
+   d'erreur :
+   - **A — déclarées accords.** Toute rangée qui n'en est pas est un faux
+     positif : des accords seraient redessinés au mauvais endroit.
+   - **B — candidates ratées.** Toute rangée `?` juste au-dessus des
+     chiffres. Les vraies rangées d'accords qui s'y trouvent sont les
+     manques du classifieur.
 4. Lire la planche, nommer les inconnues, ajuster les paramètres.
 5. Écrire les nouveaux templates dans `templates/`, les seuils dans
    `classifier.json`, et mettre à jour le journal ci-dessous.
+
+**Une itération ne peut pas être déclarée en progrès sur les seuls
+chiffres.** Le journal doit dire ce que l'œil a vu et que la métrique
+ratait — l'itération 1 affichait 18/18 alors que l'en-tête était mal
+classé et qu'une ligne d'intro entière était perdue, simplement parce que
+la vérité terrain ne couvrait pas ces rangées. Une métrique ne mesure que
+ce qu'on a déjà pensé à regarder.
 
 ## Critère d'arrêt
 
@@ -108,3 +123,28 @@ fausses rangées à 1 — mieux, mais toujours un faux positif.
 l'œil des rangées) et comprendre pourquoi ses rangées d'accords tombent en
 « ? » : soit le ratio sort de la fourchette, soit `chord_max_height_frac`
 (0,85) est trop strict quand la rangée de chiffres est basse.
+
+### Itération 1b — contrôle visuel ajouté, cause de l'échec identifiée
+
+Ajout de `debug-render.py --sheet` → `debug/_planche.png`, et du contrôle
+visuel comme étape obligatoire de la boucle (voir ci-dessus).
+
+La planche a immédiatement donné ce que les chiffres cachaient. Section A :
+23 rangées déclarées accords, quasiment toutes justes — la précision est
+bonne. Section B : parmi les 14 candidates, **six vraies rangées d'accords
+manquées** (`Emaj7 Amaj7 Emaj7`, `B7 B7 Emaj7`, `D F#m E D A F#m E`,
+`F#m D A/C# Bm7 D/E A`, `Asus4 A D.S. Asus4 A Dmaj9 Esus4`,
+`F C/E Dm Gm Bb/C`).
+
+**Cause unique, et elle est bête.** Leurs `ratio` valent 1,93 · 18,72 ·
+2,35 · 3,07. Ces rangées portent des **arcs de liaison** qui traversent la
+bande d'accords. L'arc produit un long segment continu d'encre : le test
+`chord_max_run_frac` (0,015), censé détecter l'absence de ligature, rejette
+donc la rangée. Et l'arc soude les amas entre eux, d'où le ratio qui
+explose.
+
+Autrement dit : **je testais l'absence de ligature, mais un arc de liaison
+ressemble à une ligature.** C'est ce qui fait échouer toute la gravure
+serrée. Correctif à tenter : mesurer l'épaisseur du trait (une ligature est
+épaisse et horizontale, un arc est fin et courbe), ou ignorer les segments
+de 1 à 2 pixels d'épaisseur dans le calcul de `run_frac`.
