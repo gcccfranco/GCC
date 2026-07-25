@@ -21,6 +21,10 @@ export interface FormItem {
   keyOverride: string | null;
   notes: string;
   sectionItems: FormSectionItem[];
+  /** Jouer ce chant sur sa partition 简谱 plutôt que sur les paroles.
+   *  La structure définie ci-dessus reste affichée dans la setlist, mais ne
+   *  découpe pas la partition (le scan est indivisible). */
+  jianpuSheet?: boolean;
 }
 
 export interface FusionMixedSectionForm {
@@ -91,7 +95,8 @@ function toFormItem(
   sectionNotes: Record<string, string>,
   sectionTransitions: Record<string, string> = {},
   sectionNuances: Record<string, SectionNuance> = {},
-  sectionKeys: Record<string, string> = {}
+  sectionKeys: Record<string, string> = {},
+  jianpuSheet = false
 ): FormItem {
   const allSections = song.sections ?? [];
   const orderedSections: SectionSummary[] = structureOverride && structureOverride.length > 0
@@ -103,6 +108,7 @@ function toFormItem(
     song,
     keyOverride,
     notes,
+    ...(jianpuSheet ? { jianpuSheet: true } : {}),
     sectionItems: orderedSections.map((s, index) => {
       const uid = s.uid ?? `${s.id}-${index}`;
       const idx = occ[s.id] ?? 0;
@@ -170,6 +176,6 @@ export function buildFormItems(
 
       const song = songsMap[item.songSlug];
       if (!song) return [];
-      return [toFormItem(song, item.keyOverride, item.notes, item.structureOverride, item.sectionNotes, item.sectionTransitions, item.sectionNuances, item.sectionKeys)];
+      return [toFormItem(song, item.keyOverride, item.notes, item.structureOverride, item.sectionNotes, item.sectionTransitions, item.sectionNuances, item.sectionKeys, item.jianpuSheet)];
     });
 }
