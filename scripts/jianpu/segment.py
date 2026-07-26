@@ -38,6 +38,22 @@ def load(path):
     return a, (a < INK_THRESHOLD)
 
 
+def thicken(ink, k=3):
+    """Ne garde que l'encre présente sur k lignes consécutives.
+
+    Un **arc de liaison** est un trait fin (1-2 px) ; une **ligature** de
+    croches est épaisse. Les arcs traversent la bande d'accords et
+    imitaient donc une ligature, ce qui faisait rejeter la rangée — et,
+    en soudant les étiquettes entre elles, faisait exploser leur nombre
+    d'amas (une seule au lieu de cinq sur 爱赢了). Filtrer sur l'épaisseur
+    règle les deux symptômes d'un coup.
+    """
+    out = ink.copy()
+    for d in range(1, k):
+        out &= np.roll(ink, d, axis=0) | np.roll(ink, -d, axis=0)
+    return out
+
+
 def raw_bands(ink, width, height, min_ink):
     """Bandes horizontales contenant de l'encre, seuil absolu."""
     profile = ink.sum(axis=1)
@@ -82,7 +98,7 @@ def rows(path, tall=80):
     return a, ink, width, out
 
 
-def column_clusters(ink, top, bottom, gap=10):
+def column_clusters(ink, top, bottom, gap=14):
     """Amas de colonnes encrées séparés par un blanc >= gap.
 
     Sur une rangée d'accords, un amas = une étiquette (« G/B », « A/C# ») :
