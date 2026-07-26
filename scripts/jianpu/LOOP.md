@@ -202,3 +202,32 @@ d'accords appartient à un **système** : elle est suivie de chiffres *et* de
 paroles. Une rangée de métadonnées est au-dessus du premier système. Vérifier
 le triplet complet (accords → chiffres → paroles) plutôt que la seule paire
 devrait écarter les deux cas sans réglage.
+
+### Itération 4 — l'intro manquante, et l'invariant de mise en page
+
+Signalé à l'usage : sur 何等恩典 transposé en A, les six systèmes suivaient
+mais **la ligne d'intro restait en G, C, G**. Diagnostic : sa rangée
+musicale est faite de barres obliques (`// // //`), dont le ratio vaut 0,59
+— juste au-dessus de `numbers_ratio_max` (0,50). Elle n'était donc pas
+reconnue comme rangée musicale, et les accords au-dessus n'étaient jamais
+promus. Seuil porté à **0,65** : les obliques sont plus larges que des
+chiffres mais plus étroites que des hanzi (0,85+), la marge tient.
+
+**Gains.** Intro détectée. 爱赢了 passe de 2 à 5 rangées (22 → 40
+étiquettes), 何等恩典 de 6 à 7 (43 → 46), toujours 18/18.
+
+**Régression vue sur la planche.** Le seuil relevé a fait apparaître deux
+nouveaux faux positifs de métadonnées, en plus de celui déjà connu :
+`赞美之泉《赞美中信心不断升起》(2022)` et `♩=66 Let love win (2012, IHOP)`.
+La précision baissait pendant que le rappel montait — invisible sur un
+total.
+
+**Correctif : un invariant de gravure, pas un seuil.** Aucun système ne
+commence dans le bandeau de titre. `min_top_frac` (0,08) rejette tout
+candidat accords situé dans le haut de page. Résultat exact : les trois
+faux positifs retirés (8, 8 et 5 étiquettes), **rien d'autre perdu**,
+intro conservée, 18/18 maintenu.
+
+C'est la piste notée à l'itération 3 — structurelle plutôt que métrique —
+et elle a tenu, là où le test « la rangée contient-elle des hanzi » avait
+échoué.
