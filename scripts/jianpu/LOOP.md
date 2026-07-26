@@ -179,3 +179,26 @@ sortent des fourchettes.
 au-dessus du premier système et contiennent des hanzi. Un test « la rangée
 contient-elle des caractères CJK ? » les élimine sans toucher aux vraies
 rangées d'accords, qui sont en caractères latins uniquement.
+
+### Itération 3 — tentative sur les métadonnées, résultat négatif
+
+Test envisagé : une rangée de métadonnées contient des hanzi (amas carrés et
+denses), une vraie rangée d'accords est en caractères latins seulement.
+Mesuré sur les deux faux positifs connus :
+
+| Rangée | amas carrés denses |
+|---|---|
+| 你们要赞美耶和华 y=17 (métadonnées) | **60 %** — détectable |
+| 齐来赞美 y=92 (métadonnées) | **0 %** — non détectable |
+| rangées d'accords réelles | 0 à 20 % |
+
+Le test n'attrape que la moitié des cas. Sur `齐来赞美 y=92`, le symbole ♩
+gonfle la hauteur de la rangée, si bien que les hanzi n'y sont plus carrés
+relativement à elle. Seuil non retenu : le faire passer demanderait de le
+caler sur ce cas précis, donc de surajuster.
+
+**Piste pour la suite, structurelle plutôt que métrique.** Une rangée
+d'accords appartient à un **système** : elle est suivie de chiffres *et* de
+paroles. Une rangée de métadonnées est au-dessus du premier système. Vérifier
+le triplet complet (accords → chiffres → paroles) plutôt que la seule paire
+devrait écarter les deux cas sans réglage.
