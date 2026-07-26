@@ -84,6 +84,7 @@ aucune rangée d'accords là où il n'y en a pas.
 |---|---|---|---|
 | 0 (départ) | 0 / 7 chants | — | 0 |
 | 1 | **4 / 7 chants** (gravure aérée uniquement) | pas de matcher | 0 |
+| 2 | **6 / 6 chants** avec accords · A=29 dont 1 faux positif · B=8 ratées | pas de matcher | 0 |
 
 ## Journal
 
@@ -148,3 +149,33 @@ ressemble à une ligature.** C'est ce qui fait échouer toute la gravure
 serrée. Correctif à tenter : mesurer l'épaisseur du trait (une ligature est
 épaisse et horizontale, un arc est fin et courbe), ou ignorer les segments
 de 1 à 2 pixels d'épaisseur dans le calcul de `run_frac`.
+
+### Itération 2 — les arcs de liaison filtrés par l'épaisseur
+
+Correctif appliqué (`segment.thicken`) : ne mesurer que l'encre présente sur
+3 lignes consécutives. Un arc de liaison est fin (1-2 px), une ligature de
+croches est épaisse — filtrer sur l'épaisseur règle les deux symptômes d'un
+coup, le faux `run_frac` et la soudure des étiquettes. Écart de fusion des
+amas porté de 10 à 14, calé contre la vérité terrain (8/9 rangées au bon
+compte, contre 2/9 à écart 10).
+
+**Gains.** 爱赢了 passe de 0 à 2 rangées d'accords, 献上尊荣 de 1 à 2,
+我心坚定与你 de 5 à 7, 主的喜乐是我力量 de 4 à 5. 何等恩典 reste à 18/18 :
+pas de régression. Toutes les rangées d'accords détectées portent maintenant
+170 étiquettes contre 120.
+
+**Ce que la planche a montré et que les chiffres cachaient.** B passe de 14 à
+8 candidates ratées — vrai progrès. Mais A monte de 23 à 29 et contient un
+**faux positif franc** : la rangée `♩=146 赞美之泉《从心合一》(2013)` de
+齐来赞美, qui est une ligne de métadonnées. On y écrirait des accords
+par-dessus le titre de l'album. Un compte global en hausse aurait fait passer
+ça pour une amélioration nette.
+
+Quatre vraies rangées restent manquées, dont `Dmaj9 E C#m7 F#m7` et
+`Asus4 A D.S. Asus4 A Dmaj9 Esus4` sur 爱赢了 — leurs ratios (2,26 et 3,03)
+sortent des fourchettes.
+
+**Prochaine itération.** Écarter les rangées de métadonnées : elles sont
+au-dessus du premier système et contiennent des hanzi. Un test « la rangée
+contient-elle des caractères CJK ? » les élimine sans toucher aux vraies
+rangées d'accords, qui sont en caractères latins uniquement.
