@@ -276,7 +276,8 @@ function NormalSongItem({
         <JianpuSheet
           entry={jianpuScore}
           title={ast.metadata.title}
-          transposedTo={item.keyOverride && item.keyOverride !== ast.metadata.key ? item.keyOverride : null}
+          slug={item.songSlug}
+          playedKey={item.keyOverride && item.keyOverride !== ast.metadata.key ? item.keyOverride : null}
         />
       ) : (
       <SongView

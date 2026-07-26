@@ -78,7 +78,14 @@ function BlockRenderer({
     return <TransitionBanner text={block.text} />;
   }
   if (block.kind === "jianpu-sheet") {
-    return <JianpuSheet entry={block.entry} title={block.songTitle} />;
+    return (
+      <JianpuSheet
+        entry={block.entry}
+        title={block.songTitle}
+        slug={block.songSlug}
+        playedKey={block.playedKey}
+      />
+    );
   }
   return (
     <SectionView

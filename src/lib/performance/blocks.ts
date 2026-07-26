@@ -57,6 +57,10 @@ export type JianpuSheetBlock = {
   uid: string;
   entry: JianpuEntry;
   songTitle: string;
+  songSlug: string;
+  /** Tonalité jouée, si elle diffère de celle du chant : le calque
+   *  d'accords s'y transpose. */
+  playedKey: string | null;
 };
 
 export type PerformanceBlock =
@@ -233,6 +237,8 @@ export function buildPerformanceBlocks(
         uid: uid(),
         entry: sheet,
         songTitle: ast.metadata.title,
+        songSlug: item.songSlug,
+        playedKey: playedKey !== baseAst.metadata.key ? playedKey : null,
       });
       continue;
     }
