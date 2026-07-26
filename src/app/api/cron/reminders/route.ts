@@ -16,7 +16,7 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
 // Rappels — exécuté chaque jour par Vercel Cron (cf. vercel.json).
-// - Service (tous services) : rappel à J-7, J-3 puis J-1.
+// - Service (tous services sauf Campus) : rappel à J-7, J-3 puis J-1.
 // - Répétition Campus : mêmes échéances, message avec heure + lieu.
 // Idempotent : un document notifLog par (échéance, date, uid) évite tout doublon.
 
@@ -91,8 +91,17 @@ export async function GET(req: NextRequest) {
     const date = isoInDays(days);
     const when = whenLabel(tag);
 
-    // ── Rappels de service (tous services) ──
-    const names = [...new Set(servantsForDate(planning, date).map((s) => s.name))];
+    // ── Rappels de service (tous services sauf Campus) ──
+    // Campus exclu : pendant la semaine du campus on sert tous les jours, le
+    // « tu sers demain » est du bruit. Les rappels de répétition/entraînement
+    // ci-dessous suffisent.
+    const names = [
+      ...new Set(
+        servantsForDate(planning, date)
+          .filter((s) => s.category !== "Campus")
+          .map((s) => s.name)
+      ),
+    ];
     const { uids } = resolveNamesToUids(names, index);
     const prefUids = await filterUidsByNotifPref(uids, "reminders");
     const fresh = await freshUids(db, prefUids, `rappel-${tag}-${date}`);
