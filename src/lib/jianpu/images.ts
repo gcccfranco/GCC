@@ -14,6 +14,12 @@ export type JianpuChords = {
   printedKey: string;
   w: number;
   h: number;
+  /** Hauteur de texte commune à tout le chant : la bande détectée varie
+   *  selon les glyphes de la rangée, la prendre par rangée donnait des
+   *  accords de tailles différentes sur la même page. */
+  labelH: number;
+  /** Cadre du libellé « 1=X », à réécrire dans la tonalité jouée. */
+  keyLabel?: { x: number; y: number; w: number; h: number };
   labels: JianpuChordLabel[];
 };
 export type JianpuChordsManifest = Record<string, JianpuChords>;

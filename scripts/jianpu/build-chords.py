@@ -68,12 +68,24 @@ def build(slug: str, gold: dict):
 
     with Image.open(path) as im:
         w, h = im.size
-    return {
+
+    # Une seule taille de texte pour tout le chant. La hauteur de bande
+    # varie selon les glyphes présents (une rangée sans jambage est
+    # détectée plus fine), donc la prendre par rangée donnait des accords
+    # de tailles différentes sur la même page.
+    heights = sorted(l["h"] for l in labels)
+    label_h = heights[len(heights) // 2]
+
+    entry = {
         "printedKey": gold["printed_key"],
         "w": w,
         "h": h,
+        "labelH": label_h,
         "labels": labels,
-    }, f"{len(labels)}/{expected} étiquettes"
+    }
+    if gold.get("key_label"):
+        entry["keyLabel"] = gold["key_label"]
+    return entry, f"{len(labels)}/{expected} étiquettes, hauteur {label_h}px"
 
 
 def main() -> int:

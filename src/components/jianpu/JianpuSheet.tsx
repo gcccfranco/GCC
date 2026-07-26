@@ -79,6 +79,22 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey }: 
               même endroit. Tout est en % pour suivre l'échelle de l'image. */}
           {overlayOn && i === 0 && chords && (
             <div className="pointer-events-none absolute inset-0" aria-hidden>
+              {chords.keyLabel && (
+                <span
+                  className="absolute flex items-end whitespace-nowrap bg-white text-black dark:bg-neutral-900 dark:text-neutral-100"
+                  style={{
+                    left: `${(chords.keyLabel.x / chords.w) * 100}%`,
+                    top: `${((chords.keyLabel.y - 4) / chords.h) * 100}%`,
+                    height: `${((chords.keyLabel.h + 6) / chords.h) * 100}%`,
+                    minWidth: `${(chords.keyLabel.w / chords.w) * 100}%`,
+                    fontSize: `${(chords.keyLabel.h / chords.w) * 100}cqw`,
+                    lineHeight: 1,
+                    fontFamily: "Times New Roman, Georgia, serif",
+                  }}
+                >
+                  1={playedKey ?? chords.printedKey}
+                </span>
+              )}
               {chords.labels.map((l, n) => (
                 <span
                   key={n}
@@ -88,7 +104,7 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey }: 
                     top: `${((l.y - 6) / chords.h) * 100}%`,
                     height: `${((l.h + 8) / chords.h) * 100}%`,
                     minWidth: `${(l.w / chords.w) * 100}%`,
-                    fontSize: `${(l.h / chords.w) * 100}cqw`,
+                    fontSize: `${(chords.labelH / chords.w) * 100}cqw`,
                     lineHeight: 1,
                     fontFamily: "Times New Roman, Georgia, serif",
                   }}
