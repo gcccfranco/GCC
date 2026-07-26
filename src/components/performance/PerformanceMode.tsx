@@ -11,7 +11,7 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
-import type { PerformanceBlock, SectionBlock, SongHeaderBlock } from "@/lib/performance/blocks";
+import type { PerformanceBlock, SectionBlock, JianpuSheetBlock, SongHeaderBlock } from "@/lib/performance/blocks";
 import { buildPerformanceBlocks, computePageKey } from "@/lib/performance/blocks";
 import { useJianpuManifest } from "@/lib/jianpu/images";
 import { JianpuSheet } from "@/components/jianpu/JianpuSheet";
@@ -660,9 +660,14 @@ export function PerformanceMode({
   }, [currentPage, pages.length, showChrome, goToPage, showChromeWithTimer]);
 
   // Current page song info for chrome
+  // Un chant joué sur sa partition 简谱 n'a pas de bloc « section » : la barre
+  // tire alors son titre et sa tonalité du bloc partition.
   const currentSong = currentPageIndices
     .map((i) => blocks[i])
-    .find((b): b is SectionBlock => b.kind === "section");
+    .find(
+      (b): b is SectionBlock | JianpuSheetBlock =>
+        b?.kind === "section" || b?.kind === "jianpu-sheet",
+    );
 
   // Progression dans le chant courant + chant suivant
   const songStartPage = currentEntry ? pages.findIndex((p) => p.includes(currentEntry.index)) : -1;
@@ -757,17 +762,25 @@ export function PerformanceMode({
         ) : (() => {
           const page = layout[currentPage];
           const multiCol = page.cols.length > 1;
-          const renderBlock = (i: number) => (
-            <BlockRenderer
-              key={blocks[i].uid}
-              block={blocks[i]}
-              showChordsGlobal={showChords}
-              showTransitions={showTransitions}
-              hideLyrics={hideLyrics}
-              chartStyle={chartStyle}
-              showPinyinGlobal={showPinyin}
-            />
-          );
+          // `blocks` peut se reconstruire sous la mise en page : le manifeste
+          // 简谱 arrive en asynchrone et un chant joué sur sa partition passe
+          // de N sections à un seul bloc. Le temps que la pagination se
+          // recalcule, `pages` porte encore des indices trop grands.
+          const renderBlock = (i: number) => {
+            const block = blocks[i];
+            if (!block) return null;
+            return (
+              <BlockRenderer
+                key={block.uid}
+                block={block}
+                showChordsGlobal={showChords}
+                showTransitions={showTransitions}
+                hideLyrics={hideLyrics}
+                chartStyle={chartStyle}
+                showPinyinGlobal={showPinyin}
+              />
+            );
+          };
           return (
             // Réduction d'une page trop haute : transform + largeur compensée,
             // comme le conteneur parent (jamais `zoom` — arrondis de mise en

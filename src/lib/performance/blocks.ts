@@ -58,6 +58,8 @@ export type JianpuSheetBlock = {
   entry: JianpuEntry;
   songTitle: string;
   songSlug: string;
+  /** Tonalité affichée dans la barre du Mode Louange. */
+  songKey: string;
   /** Tonalité jouée, si elle diffère de celle du chant : le calque
    *  d'accords s'y transpose. */
   playedKey: string | null;
@@ -238,6 +240,7 @@ export function buildPerformanceBlocks(
         entry: sheet,
         songTitle: ast.metadata.title,
         songSlug: item.songSlug,
+        songKey: playedKey,
         playedKey: playedKey !== baseAst.metadata.key ? playedKey : null,
       });
       continue;
