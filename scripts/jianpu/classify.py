@@ -23,7 +23,7 @@ import os
 
 import numpy as np
 
-from segment import column_clusters, rows
+from segment import column_clusters, rows, thicken
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 PARAMS_PATH = os.path.join(HERE, "classifier.json")
@@ -67,6 +67,9 @@ def _longest_run(ink, top, bottom):
 
 
 def row_features(ink, width, top, bottom):
+    """Toutes les mesures se font sur l'encre épaisse (voir `thicken`) :
+    les arcs de liaison sont fins et fausseraient aussi bien le comptage
+    des étiquettes que la détection de ligature."""
     clusters = column_clusters(ink, top, bottom)
     widths = np.array([c[1] - c[0] + 1 for c in clusters]) if clusters else np.array([0])
     height = bottom - top + 1
@@ -85,7 +88,8 @@ def row_features(ink, width, top, bottom):
 def classify(path, params=None):
     p = params or load_params()
     _a, ink, width, rr = rows(path)
-    feats = [row_features(ink, width, t, b) for (t, b) in rr]
+    solid = thicken(ink, p.get("thicken_k", 3))
+    feats = [row_features(solid, width, t, b) for (t, b) in rr]
 
     kinds = []
     for f in feats:
