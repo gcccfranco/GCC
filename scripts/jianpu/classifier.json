@@ -1,5 +1,5 @@
 {
-  "numbers_ratio_max": 0.5,
+  "numbers_ratio_max": 0.65,
   "lyric_ratio_min": 0.85,
   "lyric_ratio_max": 1.15,
   "lyric_min_clusters": 12,
@@ -7,5 +7,6 @@
   "chord_max_height_frac": 0.85,
   "min_row_height": 10,
   "thicken_k": 3,
-  "cluster_gap": 14
+  "cluster_gap": 14,
+  "min_top_frac": 0.08
 }

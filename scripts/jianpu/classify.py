@@ -45,6 +45,11 @@ DEFAULTS = {
     "chord_max_height_frac": 0.85,
     # un trait isolé (barre, ligature orpheline) n'est pas une rangée
     "min_row_height": 10,
+    # Aucun système ne commence dans le bandeau de titre : tout candidat
+    # accords situé dans le haut de page est une ligne de métadonnées
+    # (titre, album, tempo, crédits). Invariant de gravure, pas un seuil
+    # calé sur un fichier.
+    "min_top_frac": 0.08,
 }
 
 
@@ -87,7 +92,8 @@ def row_features(ink, width, top, bottom):
 
 def classify(path, params=None):
     p = params or load_params()
-    _a, ink, width, rr = rows(path)
+    a, ink, width, rr = rows(path)
+    page_h = a.shape[0]
     solid = thicken(ink, p.get("thicken_k", 3))
     feats = [row_features(solid, width, t, b) for (t, b) in rr]
 
@@ -117,6 +123,7 @@ def classify(path, params=None):
             if (
                 feats[j]["run_frac"] <= p["chord_max_run_frac"]
                 and feats[j]["height"] <= p["chord_max_height_frac"] * feats[i]["height"]
+                and feats[j]["top"] >= p["min_top_frac"] * page_h
             ):
                 kinds[j] = "chords"
 
