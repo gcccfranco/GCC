@@ -446,7 +446,11 @@ function safeParseParam<T>(raw: string | null, fallback: T): T {
           }}
         >
           {showScore && jianpuScore ? (
-            <JianpuSheet entry={jianpuScore} title={song.title} />
+            <JianpuSheet
+              entry={jianpuScore}
+              title={song.title}
+              transposedTo={customize.currentKey !== originalKey ? customize.currentKey : null}
+            />
           ) : (
             <SongView
               ast={displayedAST}

@@ -273,7 +273,11 @@ function NormalSongItem({
         )}
       </div>
       {jianpuScore ? (
-        <JianpuSheet entry={jianpuScore} title={ast.metadata.title} />
+        <JianpuSheet
+          entry={jianpuScore}
+          title={ast.metadata.title}
+          transposedTo={item.keyOverride && item.keyOverride !== ast.metadata.key ? item.keyOverride : null}
+        />
       ) : (
       <SongView
         ast={ast}
