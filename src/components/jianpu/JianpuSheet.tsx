@@ -11,17 +11,29 @@ type JianpuSheetProps = {
    *  défilement (Mode Louange sur tablette). `flow` : largeur pleine, la
    *  page défile normalement (page chant). */
   layout?: "fit" | "flow";
+  /** Tonalité affichée, si elle diffère de celle du chant. Les chiffres du
+   *  简谱 restent justes (ils sont invariants par transposition) mais les
+   *  accords imprimés sur le scan, eux, ne suivent pas : il faut le dire. */
+  transposedTo?: string | null;
 };
 
 /** Partition 简谱 en image. Les chiffres, durées, points d'octave et
  *  liaisons viennent du scan d'origine : ils sont justes par construction
  *  et le restent dans toutes les tonalités (le 简谱 est invariant par
  *  transposition). Seuls les accords et le pinyin sont redessinés. */
-export function JianpuSheet({ entry, title, layout = "flow" }: JianpuSheetProps) {
+export function JianpuSheet({ entry, title, layout = "flow", transposedTo }: JianpuSheetProps) {
   const fit = layout === "fit";
 
   return (
     <div className={fit ? "flex h-full w-full flex-col items-center justify-center gap-2" : "flex flex-col items-center gap-6"}>
+      {transposedTo && (
+        <div className="w-full max-w-2xl rounded-lg border border-amber-300/70 bg-amber-50/90 px-3 py-2 text-xs text-amber-900 dark:border-amber-700/50 dark:bg-amber-950/30 dark:text-amber-300">
+          <span className="font-semibold">Jouer en {transposedTo}.</span>{" "}
+          Les chiffres du 简谱 restent justes dans toutes les tonalités, mais les
+          accords imprimés sur la partition sont ceux d&apos;origine et ne suivent
+          pas la transposition.
+        </div>
+      )}
       {entry.pages.map((page, i) => (
         <div
           key={page.file}
