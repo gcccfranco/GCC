@@ -1,0 +1,50 @@
+{
+ "slug": "主的喜乐是我力量",
+ "printed_key": "E",
+ "source": "lu à l'œil sur debug/_lecture.png (itération 6) ; null = amas qui n'est pas une étiquette",
+ "chord_rows": [
+  {
+   "top": 907,
+   "chords": [
+    "E/G#",
+    "F#m"
+   ]
+  },
+  {
+   "top": 1375,
+   "chords": [
+    "Aadd2",
+    "B7",
+    "Emaj7"
+   ]
+  },
+  {
+   "top": 1606,
+   "chords": [
+    "Aadd2",
+    "B7",
+    "F#m",
+    "B7",
+    "G#m"
+   ]
+  },
+  {
+   "top": 1841,
+   "chords": [
+    "C#m",
+    "Aadd2",
+    "E/G#",
+    "Aadd2"
+   ]
+  },
+  {
+   "top": 2081,
+   "chords": [
+    "E/G#",
+    "F#m",
+    "B7",
+    "E"
+   ]
+  }
+ ]
+}

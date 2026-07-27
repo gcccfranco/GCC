@@ -1,0 +1,38 @@
+{
+ "slug": "齐来赞美",
+ "printed_key": "F",
+ "source": "lu à l'œil sur debug/_lecture.png (itération 6) ; null = amas qui n'est pas une étiquette",
+ "chord_rows": [
+  {
+   "top": 498,
+   "chords": [
+    "F",
+    "Bb"
+   ]
+  },
+  {
+   "top": 1182,
+   "chords": [
+    "Bb",
+    "C",
+    "F"
+   ]
+  },
+  {
+   "top": 1513,
+   "chords": [
+    null,
+    "F",
+    "Bb"
+   ]
+  },
+  {
+   "top": 2091,
+   "chords": [
+    "Bb",
+    "C",
+    "F"
+   ]
+  }
+ ]
+}

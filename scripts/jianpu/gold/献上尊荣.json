@@ -1,0 +1,26 @@
+{
+ "slug": "献上尊荣",
+ "printed_key": "F",
+ "source": "lu à l'œil sur debug/_lecture.png (itération 6) ; null = amas qui n'est pas une étiquette",
+ "chord_rows": [
+  {
+   "top": 832,
+   "chords": [
+    null,
+    "F",
+    "Dm",
+    "Gm",
+    "Bb/C",
+    "C"
+   ]
+  },
+  {
+   "top": 1596,
+   "chords": [
+    "Dm",
+    "Bb/D",
+    "C/E"
+   ]
+  }
+ ]
+}

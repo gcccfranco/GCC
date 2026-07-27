@@ -1,0 +1,62 @@
+{
+ "slug": "爱赢了",
+ "printed_key": "A",
+ "source": "lu à l'œil sur debug/_lecture.png (itération 6) ; null = amas qui n'est pas une étiquette",
+ "chord_rows": [
+  {
+   "top": 554,
+   "chords": [
+    "A",
+    "Dmaj9",
+    "Esus4",
+    "C#m7",
+    "F#m7"
+   ]
+  },
+  {
+   "top": 1099,
+   "chords": [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "top": 1315,
+   "chords": [
+    null,
+    "Asus4",
+    "A",
+    null,
+    "Asus4",
+    "A",
+    null,
+    "Dmaj9",
+    "Esus4"
+   ]
+  },
+  {
+   "top": 1561,
+   "chords": [
+    "C#m7",
+    "F#m7",
+    "Dmaj9",
+    "Esus4"
+   ]
+  }
+ ]
+}

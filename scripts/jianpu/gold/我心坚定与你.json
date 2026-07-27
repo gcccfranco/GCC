@@ -1,0 +1,80 @@
+{
+ "slug": "我心坚定与你",
+ "printed_key": "A",
+ "source": "lu à l'œil sur debug/_lecture.png (itération 6) ; null = amas qui n'est pas une étiquette",
+ "chord_rows": [
+  {
+   "top": 218,
+   "chords": [
+    "D/F#",
+    "E/G#",
+    "A",
+    "D/F#",
+    "E/G#",
+    "D/A",
+    "D/F#",
+    "E/G#",
+    "D/A",
+    "A"
+   ]
+  },
+  {
+   "top": 351,
+   "chords": [
+    "D/F#",
+    "E/G#",
+    "A",
+    "D/F#",
+    "E/G#",
+    "A",
+    "D/F#",
+    "E/G#"
+   ]
+  },
+  {
+   "top": 549,
+   "chords": [
+    "A",
+    "D/F#",
+    "E/G#",
+    "A",
+    "D/F#",
+    "E/G#"
+   ]
+  },
+  {
+   "top": 948,
+   "chords": [
+    "D",
+    "F#m",
+    "E",
+    "D",
+    "A",
+    "F#m",
+    "E"
+   ]
+  },
+  {
+   "top": 1217,
+   "chords": [
+    "D",
+    "Esus4",
+    null,
+    "A",
+    "E/G#",
+    "F#m"
+   ]
+  },
+  {
+   "top": 1777,
+   "chords": [
+    "F#m",
+    "D",
+    "A/C#",
+    "Bm7",
+    "D/E",
+    "A"
+   ]
+  }
+ ]
+}
