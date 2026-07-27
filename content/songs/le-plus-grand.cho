@@ -1,12 +1,13 @@
 {title: Le plus Grand}
 {key: C}
+{tempo: 85}
 {language: fr}
 {artist: Mirella}
 {youtube: https://www.youtube.com/watch?v=96kPoqLLYeg}
 {themes: Adoration, Sainteté}
 
 {start_of_intro: Intro}
-[F] [Am] [Gsus4] (x3)
+[F] [Am] [Gsus4]
 {end_of_intro}
 
 {start_of_verse: Couplet 1}
