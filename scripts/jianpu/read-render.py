@@ -26,7 +26,7 @@ import sys
 import numpy as np
 from PIL import Image, ImageDraw
 
-from match import GOLD_SET, MIN_SCORE, read
+from match import GOLD_SET, keep, read
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, "debug")
@@ -52,23 +52,24 @@ def sheet(slugs: list[str]) -> str:
     for slug, f, row in tiles:
         dr.text((6, y + 14), f"{slug} y={f['top']}", fill=(120, 120, 120))
         x = GUTTER
-        for (x0, x1), chord, score in row:
+        for (x0, x1), chord, score, unanimous in row:
             total += 1
-            if score >= MIN_SCORE:
+            if keep(score, unanimous):
                 kept += 1
             tile = _tile(slug, f, x0, x1)
             if x + tile.width + 70 > WIDTH:
                 break
             out.paste(tile, (x, y))
-            color = KEPT if score >= MIN_SCORE else DROPPED
-            dr.text((x, y + CELL_H + 2), f"{chord} {score:+.2f}", fill=color)
+            color = KEPT if keep(score, unanimous) else DROPPED
+            mark = "" if unanimous else " !"
+            dr.text((x, y + CELL_H + 2), f"{chord} {score:+.2f}{mark}", fill=color)
             x += tile.width + 22
         y += CELL_H + 34
 
     os.makedirs(OUT, exist_ok=True)
     dest = os.path.join(OUT, "_lecture.png")
     out.save(dest)
-    print(f"\n  lecture → debug/_lecture.png   {kept}/{total} amas retenus (seuil {MIN_SCORE:+.2f})")
+    print(f"\n  lecture → debug/_lecture.png   {kept}/{total} amas retenus")
     return dest
 
 

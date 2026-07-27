@@ -9,20 +9,25 @@ candidats — un problème incomparablement plus facile, et qui n'exige aucune
 bibliothèque de gabarits constituée à la main : les candidats se *rendent*
 avec une police système.
 
-Deux mesures suffisent à les séparer :
+Trois mesures les séparent :
 
 - **la corrélation** de l'imagette réduite à une grille 32×32 (aplatie, sans
   respect de la chasse) — elle distingue les lettres seules, G contre C ;
 - **le rapport largeur/hauteur** — il distingue les étiquettes de longueurs
   différentes (« A » 17 px contre « Dsus4 » 76 px) et ne dépend pas de la
-  fonte.
+  fonte ;
+- **la corrélation de la moitié gauche seule** — ce qui sépare `D/F#` de
+  `E/G#`, ou `C#m7` de `F#m7`, c'est la lettre de tête, et elle ne pèse
+  qu'un cinquième d'une imagette écrasée.
 
-Le score qui en sort sert aussi d'**oracle** : sur le jeu de contrôle, les
-vraies étiquettes ne descendent pas sous +0,16 et les amas parasites
-(crochets de reprise, D.S., segno, arcs de liaison, 【Chorus】) ne montent pas
-au-dessus de −0,04. Un amas sous le seuil n'est pas une étiquette — c'est ce
-qui permet de garder une rangée dont le découpage a ramassé des marques qui
-ne sont pas des accords.
+**Identifier et faire confiance sont deux décisions distinctes.** La moitié
+gauche dit *quel* accord ; elle ne peut pas dire si c'en est un, parce qu'un
+amas parasite a lui aussi une moitié gauche qui ressemble à quelque chose.
+La confiance se lit donc sur la corrélation pleine seule, où les vraies
+étiquettes et les amas parasites (crochets de reprise, D.S., segno, arcs de
+liaison, 【Chorus】) restent séparés. Un amas sous le seuil n'est pas une
+étiquette — c'est ce qui permet de garder une rangée dont le découpage a
+ramassé des marques qui ne sont pas des accords.
 
 Usage (depuis scripts/jianpu/) :
     python3 match.py                  # le jeu de contrôle
@@ -45,23 +50,44 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 IMAGES = os.path.join(HERE, "..", "..", "public", "jianpu")
 SONGS = os.path.join(HERE, "..", "..", "content", "songs")
 
-# Fonte de rendu des gabarits. Mesurée contre la vérité terrain : Helvetica
-# Neue 45/46 sur 何等恩典 (gravure aérée) et 6/9 sur 爱赢了 (gravure serrée),
-# devant Helvetica 44/46 · 5/9, Arial 41/46 · 5/9, Times 34/46 · 4/9.
-# Choisir la fonte *par partition* ferait mieux (Verdana lit 7/9 sur 爱赢了)
-# mais aucun critère automatique testé ne sait la désigner — voir LOOP.md,
-# itération 5.
+# Fonte de référence : Helvetica Neue lit 45/46 la vérité terrain de
+# 何等恩典, devant Helvetica 44/46, Arial 41/46, Times 34/46.
 FONT = "/System/Library/Fonts/HelveticaNeue.ttc"
 FONT_SIZE = 64
+
+# Les autres fontes ne servent pas à lire mais à **contrôler la lecture**.
+# Aucun score n'est comparable d'une fonte à l'autre (Times a la meilleure
+# médiane et la pire exactitude), mais l'*accord* retenu l'est : une
+# étiquette sur laquelle plusieurs fontes tombent d'accord est juste, une
+# étiquette sur laquelle elles divergent est celle qui se trompe. C'est le
+# seul indicateur de justesse disponible sans vérité terrain — et il est
+# nécessaire, parce que le *score* n'en est pas un : sur 全然向你, trois « Bm »
+# lus « Em » notaient +0,68 à +0,74, aussi haut que les lectures justes.
+#
+# Times est écarté du jury : c'est la seule serif du lot, elle lit 34/46 la
+# vérité terrain là où les autres sont à 41-45, et l'exiger fait tomber la
+# couverture de 85 à 61 sans retirer une seule erreur.
+JURY = [
+    "/System/Library/Fonts/Supplemental/Arial.ttf",
+    "/System/Library/Fonts/Supplemental/Verdana.ttf",
+    "/System/Library/Fonts/Helvetica.ttc",
+]
 
 GRID = 32
 # Poids du rapport de chasse devant la corrélation. Plat de 1 à 4 contre la
 # vérité terrain, il s'effondre à 8.
 RATIO_WEIGHT = 2.0
 
-# Seuil de rejet, placé dans l'intervalle vide entre les vraies étiquettes
-# (min +0,16) et les amas parasites (max −0,04).
-MIN_SCORE = 0.10
+# Moitié gauche de l'étiquette, et son poids. Balayés contre la vérité
+# terrain : l'optimum est plat autour de 0,50 / 1,5.
+HEAD_FRAC = 0.50
+HEAD_WEIGHT = 1.5
+
+# Seuil de rejet, sur la corrélation pleine seule. Le plus haut amas
+# parasite du jeu de contrôle est à +0,27 — un seul, dans la bande d'arcs de
+# 爱赢了 y=1099. La marge est donc mince : ce seuil est calé contre un unique
+# contre-exemple, et un corpus plus large le fera sans doute bouger.
+MIN_SCORE = 0.28
 
 SHARP = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
 FLAT = ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"]
@@ -110,12 +136,16 @@ def transpose(chord: str, semitones: int = 0) -> list[str]:
     return sorted(f"{r}{suffix}/{b}" for r in roots for b in {SHARP[j], FLAT[j]})
 
 
+PAREN_RE = re.compile(r"^([A-G][#b♯♭]?)(add\d+|sus\d+)$")
+
+
 def spellings(label: str) -> list[str]:
     """Variantes typographiques d'une même étiquette.
 
     Les recueils chinois écrivent le bémol **devant** la lettre (« ♭B » pour
     Bb) et gravent les altérations avec les signes musicaux plutôt qu'avec
-    « # » et « b ».
+    « # » et « b ». Les enrichissements se mettent aussi entre parenthèses
+    (« A(add2) » pour Aadd2).
     """
     out = [label]
     if "#" in label:
@@ -123,41 +153,70 @@ def spellings(label: str) -> list[str]:
     if "b" in label:
         out.append(re.sub(r"([A-G])b", r"♭\1", label))
         out.append(re.sub(r"([A-G])b", r"\1♭", label))
-    return out
+    return [v for base in out for v in dict.fromkeys((base, PAREN_RE.sub(r"\1(\2)", base)))]
 
 
-def signature(bitmap: np.ndarray) -> tuple[np.ndarray, float]:
-    """Vecteur de corrélation normalisé + rapport largeur/hauteur."""
+def signature(bitmap: np.ndarray) -> tuple[np.ndarray, np.ndarray, float]:
+    """Corrélation pleine, corrélation de la moitié gauche, chasse."""
+    head = bitmap[:, : max(1, int(round(bitmap.shape[1] * HEAD_FRAC)))]
+    return _grid(bitmap), _grid(head), bitmap.shape[1] / max(bitmap.shape[0], 1)
+
+
+def _grid(bitmap: np.ndarray) -> np.ndarray:
     im = Image.fromarray((bitmap * 255).astype(np.uint8)).resize((GRID, GRID), Image.LANCZOS)
     v = np.asarray(im, np.float32).ravel()
     v -= v.mean()
     n = float(np.linalg.norm(v))
-    return (v / n if n else v), bitmap.shape[1] / max(bitmap.shape[0], 1)
+    return v / n if n else v
 
 
-def _render(text: str, font: ImageFont.FreeTypeFont) -> np.ndarray | None:
-    im = Image.new("L", (FONT_SIZE * 10, FONT_SIZE * 3), 0)
-    ImageDraw.Draw(im).text((FONT_SIZE, FONT_SIZE // 2), text, fill=255, font=font)
-    a = np.asarray(im) > 100
+def _trim(a: np.ndarray) -> np.ndarray | None:
     if not a.any():
         return None
     ys, xs = np.where(a.any(1))[0], np.where(a.any(0))[0]
     return a[ys[0] : ys[-1] + 1, xs[0] : xs[-1] + 1]
 
 
+SUP_RE = re.compile(r"^(.*?)(\(.*\)|\d+)$")
+
+
+def _render(text: str, font, small, superscript: bool) -> np.ndarray | None:
+    """Grave l'étiquette, à plat ou avec l'enrichissement en exposant.
+
+    Les deux gravures existent dans le corpus — 何等恩典 écrit « D7 » sur la
+    ligne, 主的喜乐是我力量 écrit « B » avec un 7 surélevé. On propose les
+    deux au gabarit, c'est l'image qui tranche.
+    """
+    im = Image.new("L", (FONT_SIZE * 10, FONT_SIZE * 3), 0)
+    dr = ImageDraw.Draw(im)
+    if not superscript:
+        dr.text((FONT_SIZE, FONT_SIZE), text, fill=255, font=font, anchor="ls")
+    else:
+        m = SUP_RE.match(text)
+        if not m or not m.group(1):
+            return None
+        base, sup = m.groups()
+        dr.text((FONT_SIZE, FONT_SIZE), base, fill=255, font=font, anchor="ls")
+        x = FONT_SIZE + dr.textlength(base, font=font)
+        dr.text((x, FONT_SIZE - int(FONT_SIZE * 0.38)), sup, fill=255, font=small, anchor="ls")
+    return _trim(np.asarray(im) > 100)
+
+
 def build_templates(vocab: list[str], semitones: int = 0, font_path: str = FONT) -> dict[str, list]:
     font = ImageFont.truetype(font_path, FONT_SIZE)
+    small = ImageFont.truetype(font_path, int(FONT_SIZE * 0.62))
     out: dict[str, list] = {}
     for chord in vocab:
         sigs = []
         for variant in transpose(chord, semitones):
             for text in spellings(variant):
-                bitmap = _render(text, font)
-                if bitmap is None:
-                    continue
-                vec, ratio = signature(bitmap)
-                if vec.any() and ratio > 0:
-                    sigs.append((vec, ratio))
+                for superscript in (False, True):
+                    bitmap = _render(text, font, small, superscript)
+                    if bitmap is None:
+                        continue
+                    full, head, ratio = signature(bitmap)
+                    if full.any() and ratio > 0:
+                        sigs.append((full, head, ratio))
         if sigs:
             out[chord] = sigs
     return out
@@ -183,14 +242,21 @@ def crop_labels(slug: str):
 
 
 def best_match(sig, templates) -> tuple[float, str | None]:
-    vec, ratio = sig
-    best: tuple[float, str | None] = (-9.0, None)
+    """Accord retenu, et la confiance qu'on lui accorde.
+
+    L'accord est choisi sur le score complet (moitié gauche comprise) ; la
+    confiance rendue est celle du gabarit retenu **sans** la moitié gauche.
+    Mélanger les deux ferait remonter les amas parasites au-dessus du seuil.
+    """
+    full, head, ratio = sig
+    best_pick = (-9.0, None, -9.0)
     for chord, variants in templates.items():
-        for tvec, tratio in variants:
-            score = float(tvec @ vec) - RATIO_WEIGHT * abs(np.log(tratio / ratio))
-            if score > best[0]:
-                best = (score, chord)
-    return best
+        for tfull, thead, tratio in variants:
+            plain = float(tfull @ full) - RATIO_WEIGHT * abs(np.log(tratio / ratio))
+            score = plain + HEAD_WEIGHT * float(thead @ head)
+            if score > best_pick[0]:
+                best_pick = (score, chord, plain)
+    return best_pick[2], best_pick[1]
 
 
 def read(slug: str, semitones: int = 0):
@@ -201,15 +267,21 @@ def read(slug: str, semitones: int = 0):
     leur `.cho`). Le déduire automatiquement en essayant les 12 décalages ne
     marche pas — voir LOOP.md, itération 5.
 
-    Retourne la liste des rangées `(features, [((x0, x1), accord, score)])`.
+    Retourne la liste des rangées
+    `(features, [((x0, x1), accord, score, unanime)])`, où `unanime` dit si
+    les fontes du jury lisent toutes le même accord.
     """
-    templates = build_templates(vocabulary(slug), semitones)
+    vocab = vocabulary(slug)
+    reference = build_templates(vocab, semitones)
+    jury = [build_templates(vocab, semitones, path) for path in JURY if os.path.exists(path)]
     out = []
     for f, cells in crop_labels(slug):
         row = []
         for pos, bitmap in cells:
-            score, chord = best_match(signature(bitmap), templates)
-            row.append((pos, chord, score))
+            sig = signature(bitmap)
+            score, chord = best_match(sig, reference)
+            unanimous = all(best_match(sig, t)[1] == chord for t in jury)
+            row.append((pos, chord, score, unanimous))
         out.append((f, row))
     return out
 
@@ -225,16 +297,21 @@ GOLD_SET = [
 ]
 
 
+def keep(score: float, unanimous: bool) -> bool:
+    """Une étiquette n'est publiable que sûre **et** unanime."""
+    return score >= MIN_SCORE and unanimous
+
+
 def report(slug: str) -> None:
     rows = read(slug)
     if not rows:
         print(f"  {slug:16} aucune rangée d'accords")
         return
     total = sum(len(r) for _f, r in rows)
-    kept = sum(1 for _f, r in rows for _p, _c, s in r if s >= MIN_SCORE)
+    kept = sum(1 for _f, r in rows for _p, _c, s, u in r if keep(s, u))
     print(f"  {slug:16} {kept:3}/{total:3} amas retenus")
     for f, row in rows:
-        marks = " ".join(c if s >= MIN_SCORE else "·" for _p, c, s in row)
+        marks = " ".join(c if keep(s, u) else "·" for _p, c, s, u in row)
         print(f"      y={f['top']:5}  {marks}")
 
 
