@@ -58,8 +58,24 @@ mais faux » — que seul l'œil voit (mode C ci-dessous).
      l'accord retenu n'est pas celui qui est imprimé. C'est le seul cas où
      l'on écrit un **faux accord** sur la partition ; les compteurs le
      comptent comme une réussite.
-4. Lire la planche, nommer les inconnues, ajuster les paramètres.
-5. Écrire les seuils dans `classifier.json`, les paramètres de lecture dans
+
+4. **Contrôle du calque par transposition**, sur tout chant publié :
+   ```bash
+   python3 scripts/jianpu/compare-render.py <slug>
+   ```
+   La partition est rendue **transposée d'un demi-ton**, tonalité où aucun
+   accord ne garde son nom, et empilée sous l'originale. **Tout accord
+   identique en haut et en bas est un accord manqué.** Aucune connaissance
+   musicale n'est nécessaire : il suffit de comparer deux lignes.
+
+   C'est le seul contrôle qui voie le mode **D — rangée entièrement
+   manquée**, que ni la planche ni les compteurs n'attrapent, parce qu'une
+   rangée jamais détectée n'apparaît dans aucun dénominateur. Sur une page
+   transposée elle reste écrite dans l'ancienne tonalité, à côté d'accords
+   transposés : la page mélange deux tonalités, ce qui est **pire que de
+   n'avoir aucun calque**.
+5. Lire les planches, nommer les inconnues, ajuster les paramètres.
+6. Écrire les seuils dans `classifier.json`, les paramètres de lecture dans
    `match.py`, et mettre à jour le journal ci-dessous.
 
 **Une itération ne peut pas être déclarée en progrès sur les seuls
@@ -108,6 +124,7 @@ rangées les tronque.
 | 3 | inchangé (test négatif) | pas de matcher | 0 |
 | 4 | A=29 · B=16 dont **7 vraies ratées** | pas de matcher | 0 |
 | 5 | inchangé (A=29 · B=16) | **108 / 167 amas retenus, dont 97 justes** · 0 parasite gardé | 5 /124 entièrement appariés (2547/3554 amas, 72 %) |
+| 6 | inchangé | 85 / 144 étiquettes · **0 mal lue, 0 parasite** | **3 /124 calques publiés** (contrôlés par transposition) |
 
 ## Journal
 
@@ -322,3 +339,67 @@ seules — ou comparer à taille réelle plutôt qu'après écrasement. Reste au
 la typographie à exposants (`A⁽ᵃᵈᵈ²⁾`, `B⁷`, `Emaj⁷`), qui met
 主的喜乐是我力量 à 4 lectures justes sur 8 retenues : les gabarits sont
 rendus à plat, il faudrait les graver en deux passes.
+
+### Itération 6 — le mode C réduit, et un quatrième mode découvert
+
+Point de départ : le mode C (étiquette mal lue mais gardée) valait **12** sur
+le jeu de contrôle, et `build-chords.py` dépendait encore de listes d'accords
+écrites à la main.
+
+**Vérité terrain établie sur tout le jeu de contrôle**, ce que LOOP.md
+réclamait depuis l'itération 1 : 108 étiquettes et 23 amas parasites, ces
+derniers marqués `null` dans `gold/`. C'est ce qui a rendu `evaluate.py`
+possible, et donc le mode C mesurable au lieu d'être seulement visible.
+
+**Ce qui fait baisser le mode C.** Les confusions étaient toutes des sosies
+de même chasse — `D/F#` lu `E/G#`, `C#m7` lu `F#m7`, `Dmaj9` lu `Asus4`. Ce
+qui les sépare est la **lettre de tête**, qui ne pèse qu'un cinquième d'une
+imagette écrasée en 32×32. Ajouter la corrélation de la moitié gauche fait
+passer la lecture de 111 à 124 étiquettes justes sur 144.
+
+Mais **le même terme fait remonter les amas parasites au-dessus du seuil** :
+l'intervalle vide qui les séparait des vraies étiquettes se referme (justes
+≥ −0,28 contre parasites ≤ +0,47). D'où la séparation des deux décisions :
+la moitié gauche dit *quel* accord, la corrélation pleine seule dit si on y
+croit. Un amas parasite a lui aussi une moitié gauche qui ressemble à
+quelque chose ; il n'a pas de corrélation pleine.
+
+Ajoutées aussi les gravures à exposants (`A(add2)`, `B⁷`, `Emaj⁷`), qui
+faisaient chuter 主的喜乐是我力量 : 3 lectures justes → 8.
+
+**Le score n'est pas un indicateur de justesse — l'accord des fontes en est
+un.** Sur 全然向你, trois `Bm` lus `Em` notaient +0,68 à +0,74, aussi haut
+que les lectures justes : aucun seuil ne pouvait les écarter. En revanche
+les fontes se contredisent exactement là où la lecture se trompe. Mesuré sur
+huit partitions : les étiquettes unanimes sont justes 68 fois sur 68, et
+toutes les erreurs sont chez les divergentes. Une étiquette n'est donc
+publiée que **sûre et unanime**. Résultat : **mode C à 0**, parasites à 0,
+au prix de la couverture (95 → 85 étiquettes justes retenues).
+
+**Le quatrième mode, et c'est l'utilisateur qui l'a fait apparaître.** Sa
+proposition : rendre le chant transposé et regarder si tous les accords
+changent. C'est ce que fait `compare-render.py`, et ça a immédiatement
+montré ce qu'aucune métrique ne voyait — une **rangée entièrement manquée**
+n'est dans aucun dénominateur, donc un chant peut afficher « 19/19
+étiquettes, 100 % » et avoir deux systèmes entiers jamais détectés. C'était
+le cas de 全然向你. Transposé, il aurait affiché quatre rangées dans
+l'ancienne tonalité à côté de cinq dans la nouvelle : **une page dans deux
+tonalités, pire que pas de calque du tout.**
+
+Le même contrôle a disqualifié 爱赢了, publié depuis la vérité terrain — la
+vérité terrain n'immunise pas, puisqu'elle ne couvre que les rangées que le
+classifieur avait trouvées. D'où le verrou de complétude, qui vaut pour les
+deux voies de publication : aucune rangée candidate ne doit rester non lue.
+
+**Résultat net.** `build-chords.py` ne dépend plus de listes écrites à la
+main (`match.py` lit ; `gold/` ne sert plus qu'à certifier et à donner la
+tonalité imprimée). 21 chants passaient le seuil de couverture avant le
+contrôle par transposition ; **3 le passent après**, et ces trois-là sont
+justes. Le compte a baissé, la confiance a monté — et c'est le compte
+d'avant qui était faux.
+
+**Où est le travail restant, chiffré.** Sur les 121 chants non publiés :
+**86 sont bloqués par des rangées candidates non lues** (médiane 2 par
+chant) et 35 par une lecture incomplète. Le goulot est donc revenu à la
+classification des rangées — le mode B des itérations 1 à 4 — mais avec
+cette fois une conséquence produit nette, et un contrôle qui la voit.
