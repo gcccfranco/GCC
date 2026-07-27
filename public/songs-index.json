@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-25T22:04:41.992Z",
+  "generatedAt": "2026-07-27T09:04:20.225Z",
   "songs": [
     {
       "slug": "abba-pere",
@@ -381,7 +381,7 @@
       "artist": "Chris Tomlin",
       "language": "fr",
       "originalKey": "C#",
-      "tempo": null,
+      "tempo": 72,
       "themes": [
         "adoration",
         "saintete"
@@ -2902,7 +2902,7 @@
       "artist": "Horizon Louange",
       "language": "fr",
       "originalKey": "G#",
-      "tempo": null,
+      "tempo": 125,
       "themes": [
         "adoration",
         "saintete"
@@ -3765,7 +3765,7 @@
       "artist": "Hillsong",
       "language": "fr",
       "originalKey": "C",
-      "tempo": null,
+      "tempo": 72,
       "themes": [
         "adoration",
         "croix",
@@ -5084,7 +5084,7 @@
       "artist": "Impact",
       "language": "fr",
       "originalKey": "C",
-      "tempo": null,
+      "tempo": 94,
       "themes": [
         "consecration",
         "engagement",
@@ -6207,7 +6207,7 @@
       "artist": "Mirella",
       "language": "fr",
       "originalKey": "C",
-      "tempo": null,
+      "tempo": 85,
       "themes": [
         "adoration",
         "saintete"
@@ -6296,7 +6296,7 @@
       "artist": "Dan Luiten & Jérémie Poulet",
       "language": "fr",
       "originalKey": "G",
-      "tempo": null,
+      "tempo": 71,
       "themes": [
         "grace",
         "salut",
@@ -6423,7 +6423,7 @@
       "artist": "Glorious",
       "language": "fr",
       "originalKey": "G",
-      "tempo": null,
+      "tempo": 124,
       "themes": [
         "adoration",
         "engagement",
