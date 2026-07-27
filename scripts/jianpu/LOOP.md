@@ -1,9 +1,12 @@
 # Boucle — reconnaissance des accords 简谱
 
 État persistant de la boucle d'ajustement. **Ce fichier est l'artefact
-principal** : il porte le protocole, les métriques et le journal. Les deux
-autres artefacts sont `classifier.json` (paramètres de classification des
-rangées) et `templates/` (bitmaps d'étiquettes d'accords).
+principal** : il porte le protocole, les métriques et le journal. L'autre
+artefact est `classifier.json` (paramètres de classification des rangées).
+
+Le `templates/` prévu au départ — une bibliothèque de bitmaps d'étiquettes
+constituée à la main — n'existe pas et n'existera pas : les gabarits sont
+rendus à la volée depuis le vocabulaire du `.cho` (itération 5).
 
 ## Objectif
 
@@ -27,24 +30,37 @@ mesurable sans appréciation.
 Un chant est *résolu* quand les deux conditions tiennent sur toutes ses
 rangées d'accords.
 
+Depuis l'itération 5, la seconde condition est **vraie par construction** :
+le matcher ne choisit que dans le vocabulaire du `.cho`. Elle ne mesure donc
+plus rien, et l'erreur qu'elle attrapait s'est déplacée vers « accord valide
+mais faux » — que seul l'œil voit (mode C ci-dessous).
+
 ## Une itération
 
 1. Lancer le pipeline sur le jeu de contrôle (puis sur les 124).
 2. Calculer les métriques ci-dessous.
 3. **Contrôle visuel — obligatoire, jamais sautable :**
    ```bash
-   python3 scripts/jianpu/debug-render.py
+   python3 scripts/jianpu/debug-render.py   # où l'on croit voir des accords
+   python3 scripts/jianpu/read-render.py    # ce qu'on y lit
    ```
    Puis **regarder `debug/_planche.png`**, qui tient les deux modes
-   d'erreur :
+   d'erreur du classifieur :
    - **A — déclarées accords.** Toute rangée qui n'en est pas est un faux
      positif : des accords seraient redessinés au mauvais endroit.
    - **B — candidates ratées.** Toute rangée `?` juste au-dessus des
      chiffres. Les vraies rangées d'accords qui s'y trouvent sont les
      manques du classifieur.
+
+   Puis **regarder `debug/_lecture.png`**, qui tient le troisième mode,
+   apparu avec le matcher (itération 5) et invisible sur la planche :
+   - **C — mal lue mais gardée.** Une étiquette au-dessus du seuil dont
+     l'accord retenu n'est pas celui qui est imprimé. C'est le seul cas où
+     l'on écrit un **faux accord** sur la partition ; les compteurs le
+     comptent comme une réussite.
 4. Lire la planche, nommer les inconnues, ajuster les paramètres.
-5. Écrire les nouveaux templates dans `templates/`, les seuils dans
-   `classifier.json`, et mettre à jour le journal ci-dessous.
+5. Écrire les seuils dans `classifier.json`, les paramètres de lecture dans
+   `match.py`, et mettre à jour le journal ci-dessous.
 
 **Une itération ne peut pas être déclarée en progrès sur les seuls
 chiffres.** Le journal doit dire ce que l'œil a vu et que la métrique
@@ -70,13 +86,17 @@ progression de la couverture.
 | 我心坚定与你 | aérée, **2 rangées d'accords** | courts | à établir |
 | 爱赢了 | serrée | longs (Dmaj9, Esus4) | à établir |
 | 献上尊荣 | serrée | moyens | à établir |
-| 你们要赞美耶和华 | **sans accords imprimés** | — | à établir |
+| 你们要赞美耶和华 | hymnaire, étiquettes minuscules (14 px) | courts | à établir |
 
 `你是配得` retiré du jeu : le slug réel est `你是配的` (coquille dans le
 `{title:}` du `.cho`). À corriger séparément, hors de cette boucle.
 
-Le dernier est un cas limite volontaire : le classifieur ne doit inventer
-aucune rangée d'accords là où il n'y en a pas.
+Le dernier avait été retenu comme cas limite « sans accords imprimés », et
+la rangée qu'on y trouvait comptée comme faux positif pendant quatre
+itérations. **C'est faux** : la planche de lecture montre `C F F ♭B C7` bien
+imprimés au-dessus des chiffres (itération 5). Il reste utile au jeu, mais
+pour une autre raison : ses étiquettes sont si petites que le découpage en
+rangées les tronque.
 
 ## Métriques
 
@@ -85,6 +105,9 @@ aucune rangée d'accords là où il n'y en a pas.
 | 0 (départ) | 0 / 7 chants | — | 0 |
 | 1 | **4 / 7 chants** (gravure aérée uniquement) | pas de matcher | 0 |
 | 2 | **6 / 6 chants** avec accords · A=29 dont 1 faux positif · B=8 ratées | pas de matcher | 0 |
+| 3 | inchangé (test négatif) | pas de matcher | 0 |
+| 4 | A=29 · B=16 dont **7 vraies ratées** | pas de matcher | 0 |
+| 5 | inchangé (A=29 · B=16) | **108 / 167 amas retenus, dont 97 justes** · 0 parasite gardé | 5 /124 entièrement appariés (2547/3554 amas, 72 %) |
 
 ## Journal
 
@@ -231,3 +254,71 @@ intro conservée, 18/18 maintenu.
 C'est la piste notée à l'itération 3 — structurelle plutôt que métrique —
 et elle a tenu, là où le test « la rangée contient-elle des hanzi » avait
 échoué.
+
+### Itération 5 — le matcher, par vocabulaire fermé
+
+Quatre itérations avaient poli la classification des rangées ; la colonne
+« étiquettes appariées » était restée vide, donc la colonne « chants
+résolus » aussi, et un seul chant sur 124 avait un calque (celui dont la
+vérité terrain était écrite à la main). C'est cette colonne-là qui bloquait.
+
+**L'idée qui débloque : lire un accord n'est pas de l'OCR.** Le vocabulaire
+du chant est déjà connu — il est dans son `.cho`, et il tient en 3 à 13
+étiquettes. Choisir parmi dix candidats ne demande aucune bibliothèque de
+gabarits constituée à la main : les candidats se *rendent* avec une police
+système. `match.py` fait ça, avec deux mesures — corrélation d'une imagette
+32×32 et rapport largeur/hauteur (la chasse est très stable : « G/B » vaut
+49-50 px sur ses neuf occurrences, « Dsus4 » 75-77).
+
+Mesuré contre la vérité terrain de 何等恩典 : **45/46** en Helvetica Neue.
+Les erreurs restantes sont des sosies de même chasse (`A/C#` contre `G/D`).
+
+**Le score sert d'oracle, et l'écart est franc.** Vraies étiquettes : jamais
+sous **+0,16**. Amas parasites (arcs de liaison, crochets de reprise, D.S.,
+segno, 【Chorus】) : jamais au-dessus de **−0,04**. Seuil posé au milieu du
+vide, à +0,10. Conséquence immédiate et non cherchée : le faux positif de
+爱赢了 y=1099 — une bande d'arcs et de petits chiffres d'annotation, prise
+pour une rangée d'accords — voit **ses 17 amas rejetés d'un bloc**. Le
+matcher corrige de lui-même une erreur que le classifieur ne sait pas
+éviter, et il ferait de même pour les crochets de reprise qui faussaient le
+compte d'étiquettes de 爱赢了 y=1315.
+
+**Ce que la planche de lecture a montré et que les compteurs cachaient.**
+Sur 167 amas du jeu de contrôle, 108 sont retenus — mais **11 sont mal lus
+et retenus quand même**, avec des erreurs systématiques : `D/F#` lu `E/G#`
+sur toute une partition, `Dmaj9` lu `Asus4` sur les trois rangées de 爱赢了,
+`F♯m` lu `C#m`. Ce mode d'erreur est nouveau et c'est le pire des trois :
+une étiquette rejetée ne fait rien, une étiquette mal lue **écrit un faux
+accord sur la partition**. Aucun compteur ne le voit, parce que fermer le
+vocabulaire rend la seconde condition de l'oracle — « l'accord lu appartient
+au vocabulaire du `.cho` » — vraie par construction. D'où le mode C ajouté
+au protocole.
+
+**Deux résultats négatifs, notés pour ne pas les refaire.**
+
+1. *Déduire la tonalité imprimée en essayant les 12 transpositions.* Les
+   32 partitions gravées dans une autre tonalité que leur `.cho` auraient
+   été traitées sans intervention. Mais le score n'est pas comparable d'un
+   jeu de gabarits à l'autre : sur 何等恩典 le maximum tombe à +10 demi-tons.
+   Le critère « meilleure marge entre premier et second » échoue pareil
+   (+10 encore). Une transposition fausse produit un vocabulaire *plus
+   séparable*, pas moins.
+2. *Choisir la fonte automatiquement.* Même cause : Times a la **meilleure**
+   médiane de score (0,70 contre 0,57) et la **pire** exactitude (34/46
+   contre 44/46) — ses empattements, une fois l'imagette écrasée en 32×32,
+   corrèlent avec tout. Un ensemble multi-fontes ne fait pas mieux qu'Helvetica
+   Neue seul. Fonte fixée, donc, alors que choisir par partition gagnerait
+   (Verdana lit 7/9 sur 爱赢了 contre 6/9).
+
+**Sur les 124.** 2547/3554 amas retenus (72 %), 5 partitions entièrement
+appariées, 6 sans aucune rangée d'accords détectée. Le chiffre est à lire
+comme un plancher : il compte des amas retenus, pas des accords justes.
+
+**Prochaine itération.** Faire baisser le mode C, qui est maintenant le
+risque principal. Les trois confusions observées sont des sosies de même
+chasse ; la corrélation 32×32 écrase précisément ce qui les sépare (la
+lettre initiale). Piste : marquer chaque amas par ses colonnes de gauche
+seules — ou comparer à taille réelle plutôt qu'après écrasement. Reste aussi
+la typographie à exposants (`A⁽ᵃᵈᵈ²⁾`, `B⁷`, `Emaj⁷`), qui met
+主的喜乐是我力量 à 4 lectures justes sur 8 retenues : les gabarits sont
+rendus à plat, il faudrait les graver en deux passes.
