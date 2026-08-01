@@ -794,5 +794,402 @@
       "text": "「无论做什么，都要从心里做，像是给主做的，不是给人做的，因为你们知道从主那里必得着基业为赏赐。你们所侍奉的乃是主基督。」",
       "ref": "— 歌罗西书 3:23-24"
     }
+  },
+  "survey": {
+    "title": "你对网站的意见",
+    "intro": "告诉我们：什么好用、什么不方便、还缺什么。问卷比较详细，但与你无关的问题会自动跳过。",
+    "loginRequired": "请先登录再填写问卷。",
+    "optional": "（选填）",
+    "multiHint": "可多选",
+    "stepOf": "第 {{step}} / {{total}} 步",
+    "previous": "上一步",
+    "next": "下一步",
+    "submit": "提交问卷",
+    "submitting": "保存中…",
+    "edit": "修改我的回答",
+    "resumed": "已恢复你上次未完成的回答，可以接着填。",
+    "autosave": "每一步的回答都会自动保存。",
+    "thanksTitle": "谢谢！",
+    "thanksBody": "你的回答已保存，随时可以修改。",
+    "error": "保存失败。请检查网络连接（以及 Firestore 规则是否已发布）。",
+    "errorRequired": "请回答标有星号的问题。",
+    "identityNotice": "以 {{name}} 的名义提交。",
+    "s": {
+      "usage": {
+        "title": "你的使用情况",
+        "hint": "先了解一下你怎么使用这个网站。"
+      },
+      "general": {
+        "title": "总体印象",
+        "hint": "几下点选，说说你的整体感受。"
+      },
+      "songs": {
+        "title": "诗歌",
+        "hint": "关于查看诗歌库。"
+      },
+      "setlists": {
+        "title": "诗歌单",
+        "hint": "为某次聚会准备的诗歌列表。"
+      },
+      "performance": {
+        "title": "敬拜模式",
+        "hint": "排练或聚会时的全屏显示。"
+      },
+      "planning": {
+        "title": "服事表与我的服事",
+        "hint": "谁在什么时候服事，以及你接下来的服事。"
+      },
+      "annonces": {
+        "title": "通知与推送",
+        "hint": "发布的信息和你收到的推送通知。"
+      },
+      "misc": {
+        "title": "上手情况",
+        "hint": "刚开始使用、求助方式和语言。"
+      },
+      "improve": {
+        "title": "需要改进的地方",
+        "hint": "最重要的部分：请畅所欲言。"
+      }
+    },
+    "q": {
+      "frequency": {
+        "label": "你多久使用一次这个网站？",
+        "opt": {
+          "daily": "几乎每天",
+          "weekly": "每周",
+          "sometimes": "偶尔",
+          "rarely": "很少",
+          "first": "这是我第一次用"
+        }
+      },
+      "device": {
+        "label": "你用哪些设备访问？",
+        "opt": {
+          "phone": "手机",
+          "tablet": "平板",
+          "computer": "电脑",
+          "paper": "我把谱子打印出来"
+        }
+      },
+      "context": {
+        "label": "你在什么情况下使用？",
+        "opt": {
+          "prepare": "在家准备",
+          "rehearsal": "排练时",
+          "service": "聚会／崇拜当中",
+          "learn": "学一首新诗歌",
+          "planning": "查看谁在什么时候服事"
+        }
+      },
+      "used": {
+        "label": "你会用网站的哪些部分？",
+        "opt": {
+          "songs": "诗歌",
+          "setlists": "诗歌单",
+          "performance": "敬拜模式",
+          "planning": "服事表",
+          "mesServices": "我的服事",
+          "annonces": "通知公告",
+          "notifications": "推送通知",
+          "guide": "使用指南"
+        }
+      },
+      "language": {
+        "label": "你使用网站时用哪种语言？",
+        "opt": {
+          "fr": "法语",
+          "zh": "中文",
+          "both": "两种都用"
+        }
+      },
+      "overall": {
+        "label": "总体来说，你给这个网站打几分？",
+        "low": "不理想",
+        "high": "非常好"
+      },
+      "ease": {
+        "label": "找到你要的内容容易吗？",
+        "low": "常常找不到",
+        "high": "很容易"
+      },
+      "speed": {
+        "label": "网站打开速度快吗？",
+        "low": "很慢",
+        "high": "秒开"
+      },
+      "readability": {
+        "label": "显示是否清楚易读（字号、和弦、对比度）？",
+        "low": "很难看清",
+        "high": "非常清楚"
+      },
+      "reliability": {
+        "label": "你会遇到故障或打不开的页面吗？",
+        "opt": {
+          "never": "从不",
+          "rare": "很少",
+          "often": "经常",
+          "always": "几乎每次"
+        }
+      },
+      "mobile": {
+        "label": "在手机上，网站运行得…",
+        "opt": {
+          "great": "很流畅",
+          "ok": "还可以",
+          "problems": "不好（卡顿、故障、显示问题）",
+          "notUsed": "我不用手机看"
+        }
+      },
+      "beforeAfter": {
+        "label": "和以前相比（纸质、PDF、微信群），这个网站…",
+        "opt": {
+          "better": "好很多",
+          "same": "差不多",
+          "worse": "反而不方便",
+          "dontKnow": "我没经历过以前"
+        }
+      },
+      "recommend": {
+        "label": "你会把这个网站推荐给团队里的其他人吗？",
+        "opt": {
+          "yes": "会，毫不犹豫",
+          "maybe": "也许",
+          "no": "不会"
+        }
+      },
+      "songsSearch": {
+        "label": "找到某一首诗歌（搜索、筛选）…",
+        "low": "很麻烦",
+        "high": "马上就找到"
+      },
+      "songsDisplay": {
+        "label": "诗歌页面（歌词＋和弦）的显示…",
+        "low": "很混乱",
+        "high": "非常清楚"
+      },
+      "songsFeatures": {
+        "label": "在诗歌页面你会用哪些功能？",
+        "opt": {
+          "transpose": "转调",
+          "capo": "变调夹",
+          "hideChords": "隐藏和弦",
+          "pinyin": "拼音",
+          "jianpu": "简谱",
+          "pdf": "下载 PDF",
+          "video": "视频链接",
+          "customize": "自定义显示"
+        }
+      },
+      "jianpu": {
+        "label": "简谱对你有用吗？",
+        "opt": {
+          "essential": "非常需要",
+          "useful": "偶尔有用",
+          "notUsed": "我不用",
+          "dontKnow": "我不知道有这个功能"
+        }
+      },
+      "songsErrors": {
+        "label": "你发现过错误吗（和弦、歌词、拼音）？",
+        "opt": {
+          "never": "从没有",
+          "sometimes": "有几处",
+          "often": "经常"
+        }
+      },
+      "songsErrorsDetail": {
+        "label": "是哪些？（如果记得，请写下诗歌名）",
+        "placeholder": "例如：《你信实无比》副歌的和弦位置不对。"
+      },
+      "songsMissing": {
+        "label": "诗歌库里还缺哪些诗歌？",
+        "placeholder": "写歌名，或 YouTube 链接。"
+      },
+      "setlistsRole": {
+        "label": "对于诗歌单，你是…",
+        "opt": {
+          "read": "只查看",
+          "create": "会自己建",
+          "both": "两者都有"
+        }
+      },
+      "setlistsFind": {
+        "label": "找到需要的那份诗歌单…",
+        "low": "很麻烦",
+        "high": "马上就找到"
+      },
+      "setlistsCreate": {
+        "label": "新建或修改一份诗歌单…",
+        "low": "很费劲",
+        "high": "非常简单"
+      },
+      "setlistsFeatures": {
+        "label": "你会用诗歌单的哪些功能？",
+        "opt": {
+          "adapt": "调整某首诗歌的内容",
+          "duplicate": "复制诗歌单",
+          "pdf": "导出 PDF",
+          "share": "用链接分享",
+          "draft": "草稿",
+          "notify": "通知团队",
+          "private": "私密诗歌单"
+        }
+      },
+      "setlistsIssues": {
+        "label": "诗歌单有哪些地方让你不方便？",
+        "placeholder": "例如：找不到以前的、诗歌顺序…"
+      },
+      "performanceWhen": {
+        "label": "你什么时候用敬拜模式？",
+        "opt": {
+          "rehearsal": "排练时",
+          "service": "聚会／崇拜当中",
+          "personal": "自己练习时"
+        }
+      },
+      "performanceRating": {
+        "label": "总体来说，敬拜模式…",
+        "low": "没法用",
+        "high": "很完美"
+      },
+      "performanceFeatures": {
+        "label": "你会用敬拜模式的哪些功能？",
+        "opt": {
+          "annotations": "手写标注",
+          "capo": "变调夹",
+          "textSize": "字号调整",
+          "dark": "深色模式",
+          "hideLyrics": "隐藏歌词",
+          "roles": "按角色显示",
+          "pinyin": "拼音",
+          "chartStyle": "段落配色"
+        }
+      },
+      "performanceIssues": {
+        "label": "敬拜模式有哪些地方让你不方便？",
+        "placeholder": "例如：翻页、亮度、滚动…"
+      },
+      "planningRating": {
+        "label": "服事表是否清楚易读？",
+        "low": "看不明白",
+        "high": "非常清楚"
+      },
+      "planningTrust": {
+        "label": "服事表的信息是最新的吗？",
+        "opt": {
+          "always": "一直是",
+          "mostly": "大部分时候是",
+          "outdated": "经常过时",
+          "dontKnow": "不清楚"
+        }
+      },
+      "mesServicesRating": {
+        "label": "「我的服事」页面（你接下来的服事）…",
+        "low": "用处不大",
+        "high": "非常有用"
+      },
+      "planningIssues": {
+        "label": "服事表还缺什么，或者哪里不方便？",
+        "placeholder": "例如：时间、地点、换人…"
+      },
+      "annoncesRating": {
+        "label": "通知公告对你有用吗？",
+        "low": "没什么用",
+        "high": "非常有用"
+      },
+      "notifVolume": {
+        "label": "你收到的推送通知数量…",
+        "opt": {
+          "tooMany": "太多了",
+          "right": "刚刚好",
+          "tooFew": "太少了",
+          "none": "我一条都没收到"
+        }
+      },
+      "notifTypes": {
+        "label": "你真正想收到哪些通知？",
+        "opt": {
+          "setlist": "诗歌单准备好或有改动",
+          "annonce": "新的通知公告",
+          "reminder": "服事前的提醒",
+          "manual": "临时消息"
+        }
+      },
+      "notifIssues": {
+        "label": "推送通知有什么问题吗？",
+        "placeholder": "例如：iPhone 上收不到…"
+      },
+      "onboarding": {
+        "label": "刚开始时，弄懂网站怎么用…",
+        "opt": {
+          "easy": "很容易",
+          "ok": "有点摸不着头脑",
+          "hard": "很困难"
+        }
+      },
+      "accountEase": {
+        "label": "注册账号和登录…",
+        "opt": {
+          "easy": "很容易",
+          "ok": "有点摸不着头脑",
+          "hard": "很困难"
+        }
+      },
+      "guideUseful": {
+        "label": "使用指南对你有帮助吗？",
+        "opt": {
+          "yes": "有",
+          "partly": "有一部分",
+          "notRead": "我没看过",
+          "notFound": "我不知道有这个"
+        }
+      },
+      "help": {
+        "label": "在网站上卡住时，你会怎么做？",
+        "opt": {
+          "ask": "问别人",
+          "guide": "去看使用指南",
+          "report": "用「反馈问题」",
+          "giveUp": "就放弃了"
+        }
+      },
+      "translationQuality": {
+        "label": "中文翻译的质量…",
+        "low": "经常不准确",
+        "high": "非常到位"
+      },
+      "liked": {
+        "label": "哪些功能对你最有帮助，或者用得最顺手？",
+        "placeholder": "例如：转调、平板上的敬拜模式…"
+      },
+      "problems": {
+        "label": "哪些地方让你不方便、变慢或者出问题？",
+        "placeholder": "尽量写清楚：哪个页面、哪首诗歌、用什么设备。"
+      },
+      "wanted": {
+        "label": "你希望增加哪些功能？",
+        "opt": {
+          "jianpu": "更多诗歌配简谱",
+          "audio": "每首诗歌有录音",
+          "metronome": "节拍器／诗歌速度",
+          "tuner": "调音器",
+          "history": "查看某首诗歌上次是什么时候唱的",
+          "notes": "在诗歌上写个人笔记",
+          "translations": "更多中法对照翻译",
+          "moreSongs": "增加更多诗歌",
+          "offline": "离线也能稳定查看",
+          "print": "打印效果更好"
+        }
+      },
+      "priority": {
+        "label": "如果只能改进一件事，你希望是什么？",
+        "placeholder": "这是对我们最有帮助的一题。"
+      },
+      "ideas": {
+        "label": "还有别的想说的吗？",
+        "placeholder": "什么都欢迎。"
+      }
+    }
   }
 }
