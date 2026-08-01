@@ -241,7 +241,7 @@ def crop_labels(slug: str):
     return rows
 
 
-def best_match(sig, templates) -> tuple[float, str | None]:
+def best_match(sig, templates, width_factor: float = 1.0) -> tuple[float, str | None]:
     """Accord retenu, et la confiance qu'on lui accorde.
 
     L'accord est choisi sur le score complet (moitié gauche comprise) ; la
@@ -249,6 +249,7 @@ def best_match(sig, templates) -> tuple[float, str | None]:
     Mélanger les deux ferait remonter les amas parasites au-dessus du seuil.
     """
     full, head, ratio = sig
+    ratio *= width_factor
     best_pick = (-9.0, None, -9.0)
     for chord, variants in templates.items():
         for tfull, thead, tratio in variants:
@@ -257,6 +258,33 @@ def best_match(sig, templates) -> tuple[float, str | None]:
             if score > best_pick[0]:
                 best_pick = (score, chord, plain)
     return best_pick[2], best_pick[1]
+
+
+def width_factor(sigs, templates) -> float:
+    """Chasse de la partition, rapportée à celle des gabarits.
+
+    Les gravures ne sont pas toutes aussi étroites : sur 我心坚定与你 le
+    gabarit est 1,14 fois plus large que le scan, et la pénalité de chasse
+    ampute alors toute la partition de 0,20 point — assez pour faire tomber
+    des lectures pourtant justes sous le seuil.
+
+    Le facteur est **global à la page**, donc estimable sur ses propres
+    étiquettes : on apparie une première fois sans correction et on prend la
+    **médiane** des écarts, qui encaisse sans broncher les amas mal
+    appariés.
+    """
+    factors = []
+    for full, head, ratio in sigs:
+        best = (-9.0, None)
+        for variants in templates.values():
+            for tfull, thead, tratio in variants:
+                score = (float(tfull @ full) - RATIO_WEIGHT * abs(np.log(tratio / ratio))
+                         + HEAD_WEIGHT * float(thead @ head))
+                if score > best[0]:
+                    best = (score, tratio / ratio)
+        if best[1]:
+            factors.append(best[1])
+    return float(np.median(factors)) if factors else 1.0
 
 
 def read(slug: str, semitones: int = 0):
@@ -272,15 +300,22 @@ def read(slug: str, semitones: int = 0):
     les fontes du jury lisent toutes le même accord.
     """
     vocab = vocabulary(slug)
-    reference = build_templates(vocab, semitones)
-    jury = [build_templates(vocab, semitones, path) for path in JURY if os.path.exists(path)]
+    banks = [build_templates(vocab, semitones)]
+    banks += [build_templates(vocab, semitones, path) for path in JURY if os.path.exists(path)]
+
+    rows = [(f, [(pos, signature(bitmap)) for pos, bitmap in cells]) for f, cells in crop_labels(slug)]
+    sigs = [sig for _f, cells in rows for _pos, sig in cells]
+    factors = [width_factor(sigs, bank) for bank in banks]
+
     out = []
-    for f, cells in crop_labels(slug):
+    for f, cells in rows:
         row = []
-        for pos, bitmap in cells:
-            sig = signature(bitmap)
-            score, chord = best_match(sig, reference)
-            unanimous = all(best_match(sig, t)[1] == chord for t in jury)
+        for pos, sig in cells:
+            score, chord = best_match(sig, banks[0], factors[0])
+            unanimous = all(
+                best_match(sig, bank, k)[1] == chord
+                for bank, k in zip(banks[1:], factors[1:])
+            )
             row.append((pos, chord, score, unanimous))
         out.append((f, row))
     return out
