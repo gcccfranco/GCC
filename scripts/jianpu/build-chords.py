@@ -133,21 +133,36 @@ def _from_gold(slug: str, gold: dict):
     return labels, (f"{len(labels)} étiquettes (vérité terrain)" if labels else "aucune rangée alignée")
 
 
-def _from_reading(slug: str):
-    """Publie la lecture automatique, mais seulement si elle est complète."""
+def _from_reading(slug: str, gold: dict):
+    """Publie la lecture automatique, complétée des corrections, et
+    seulement si elle est complète.
+
+    Transcrire une partition entière à la main coûte cher ; relire les trois
+    amas que le matcher rate coûte trois coups d'œil. `gold/<slug>.json`
+    porte donc un dictionnaire `corrections`, indexé par la position exacte
+    de l'amas (`"y,x"`), qui ne sert qu'à combler les trous — jamais à
+    contredire une lecture retenue, sans quoi on ne saurait plus ce qui a
+    été vérifié.
+    """
+    fixes = gold.get("corrections", {})
     rows = read(slug)
     total = sum(len(r) for _f, r in rows)
     if not total:
         return [], "aucune rangée d'accords"
-    labels = [
-        _box(f, x0, x1, chord)
-        for f, row in rows
-        for (x0, x1), chord, score, unanimous in row
-        if keep(score, unanimous)
-    ]
-    if len(labels) < total:
-        return [], f"lecture incomplète : {len(labels)}/{total} étiquettes"
-    return labels, f"{len(labels)} étiquettes (lecture)"
+    labels = []
+    missing = 0
+    for f, row in rows:
+        for (x0, x1), chord, score, unanimous in row:
+            if keep(score, unanimous):
+                labels.append(_box(f, x0, x1, chord))
+            elif f"{f['top']},{x0}" in fixes:
+                labels.append(_box(f, x0, x1, fixes[f"{f['top']},{x0}"]))
+            else:
+                missing += 1
+    if missing:
+        return [], f"lecture incomplète : {missing} amas non lu(s) sur {total}"
+    fixed = len(fixes)
+    return labels, f"{len(labels)} étiquettes (lecture" + (f", {fixed} corrigée(s))" if fixed else ")")
 
 
 def build(slug: str):
@@ -160,6 +175,17 @@ def build(slug: str):
     printed_key = gold.get("printed_key") or cho_key(slug)
     if not printed_key:
         return None, "tonalité inconnue"
+
+    # **Rien ne publie sans qu'un humain ait regardé la page transposée
+    # dans le navigateur.** Ce n'est pas une précaution : tous les calques
+    # publiés par la seule machine se sont révélés faux (齐来赞美 mélangeait
+    # F et G, 能不能 avait dix accords hors calque, 到各山岭去传扬 avait une
+    # rangée gravée à deux hauteurs, donc coupée en deux bandes dont l'une
+    # fusionnait avec les chiffres). Le contrôle automatique `stray_chords`
+    # hérite de la faiblesse du matcher : il ne peut pas signaler un accord
+    # qu'il ne sait pas lire. Il pré-filtre, il ne certifie pas.
+    if not gold.get("verified"):
+        return None, "pas encore vérifié dans le navigateur"
 
     # Trois choses suivent la transposition sur une page 简谱 : les accords,
     # le libellé « 1=X » et le pinyin. Sans le cadre du libellé, une page
@@ -174,7 +200,7 @@ def build(slug: str):
     if gold.get("chord_rows"):
         labels, note = _from_gold(slug, gold)
     else:
-        labels, note = _from_reading(slug)
+        labels, note = _from_reading(slug, gold)
     if not labels:
         return None, note
 

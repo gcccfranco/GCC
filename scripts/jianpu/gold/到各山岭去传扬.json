@@ -1,0 +1,16 @@
+{
+ "slug": "到各山岭去传扬",
+ "printed_key": "G",
+ "source": "cadre 1=X et corrections d'amas lus à l'œil (itération 9)",
+ "key_label": {
+  "x": 19,
+  "y": 220,
+  "w": 80,
+  "h": 26
+ },
+ "corrections": {
+  "344,80": "G",
+  "717,105": "G",
+  "1163,662": "C"
+ }
+}

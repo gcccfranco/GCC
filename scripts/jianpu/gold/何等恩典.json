@@ -1,94 +1,95 @@
 {
-  "slug": "何等恩典",
-  "printed_key": "G",
-  "source": "lu à l'œil sur debug/_planche.png (itération 1b) ; intro ajoutée après détection du seuil obliques",
-  "chord_rows": [
-    {
-      "top": 434,
-      "chords": [
-        "G",
-        "C",
-        "G"
-      ]
-    },
-    {
-      "top": 631,
-      "chords": [
-        "C",
-        "G",
-        "G/B",
-        "C",
-        "G/B",
-        "C",
-        "G/B",
-        "A",
-        "A/C#",
-        "D7"
-      ]
-    },
-    {
-      "top": 928,
-      "chords": [
-        "G",
-        "G/B",
-        "C",
-        "G/B",
-        "Am",
-        "D7",
-        "G",
-        "Dsus4"
-      ]
-    },
-    {
-      "top": 1216,
-      "chords": [
-        "G",
-        "G/B",
-        "C",
-        "G/B",
-        "Am",
-        "A/C#",
-        "Dsus4",
-        "D"
-      ]
-    },
-    {
-      "top": 1508,
-      "chords": [
-        "G/B",
-        "G7",
-        "C",
-        "G#dim",
-        "G/D",
-        "Dsus4",
-        "G"
-      ]
-    },
-    {
-      "top": 1798,
-      "chords": [
-        "G",
-        "C",
-        "A/C#",
-        "C/D",
-        "D7"
-      ]
-    },
-    {
-      "top": 2095,
-      "chords": [
-        "G/B",
-        "C",
-        "G/D",
-        "D7",
-        "G"
-      ]
-    }
-  ],
-  "key_label": {
-    "x": 39,
-    "y": 262,
-    "w": 73,
-    "h": 45
+ "slug": "何等恩典",
+ "printed_key": "G",
+ "source": "lu à l'œil sur debug/_planche.png (itération 1b) ; intro ajoutée après détection du seuil obliques",
+ "chord_rows": [
+  {
+   "top": 434,
+   "chords": [
+    "G",
+    "C",
+    "G"
+   ]
+  },
+  {
+   "top": 631,
+   "chords": [
+    "C",
+    "G",
+    "G/B",
+    "C",
+    "G/B",
+    "C",
+    "G/B",
+    "A",
+    "A/C#",
+    "D7"
+   ]
+  },
+  {
+   "top": 928,
+   "chords": [
+    "G",
+    "G/B",
+    "C",
+    "G/B",
+    "Am",
+    "D7",
+    "G",
+    "Dsus4"
+   ]
+  },
+  {
+   "top": 1216,
+   "chords": [
+    "G",
+    "G/B",
+    "C",
+    "G/B",
+    "Am",
+    "A/C#",
+    "Dsus4",
+    "D"
+   ]
+  },
+  {
+   "top": 1508,
+   "chords": [
+    "G/B",
+    "G7",
+    "C",
+    "G#dim",
+    "G/D",
+    "Dsus4",
+    "G"
+   ]
+  },
+  {
+   "top": 1798,
+   "chords": [
+    "G",
+    "C",
+    "A/C#",
+    "C/D",
+    "D7"
+   ]
+  },
+  {
+   "top": 2095,
+   "chords": [
+    "G/B",
+    "C",
+    "G/D",
+    "D7",
+    "G"
+   ]
   }
+ ],
+ "key_label": {
+  "x": 39,
+  "y": 262,
+  "w": 73,
+  "h": 45
+ },
+ "verified": "transposé G→A dans Chrome, thèmes clair et sombre : 46 accords + 1=A, aucun résidu (itération 8)"
 }
