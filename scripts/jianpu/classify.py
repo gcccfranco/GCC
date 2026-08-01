@@ -40,6 +40,9 @@ DEFAULTS = {
     "lyric_min_clusters": 12,
     # un trait isolé (barre, ligature orpheline) n'est pas une rangée
     "min_row_height": 10,
+    # deux rangées de chiffres qui se suivent : si la première est plus
+    # basse que cette part de la seconde, c'est une rangée d'accords courts
+    "short_row_frac": 0.60,
     # Aucun système ne commence dans le bandeau de titre : tout candidat
     # accords situé dans le haut de page est une ligne de métadonnées
     # (titre, album, tempo, crédits). Invariant de gravure, pas un seuil
@@ -106,13 +109,27 @@ def classify(path, params=None):
     # vient plus d'ici : depuis que `match.py` lit les étiquettes, une
     # rangée qui n'en est pas produit des amas que rien n'apparie. Le
     # classifieur propose, le matcher dispose.
+    #
+    # Une rangée d'accords **courts** (« C », « F ») est prise pour des
+    # chiffres : ses amas sont étroits devant la hauteur de rangée, donc son
+    # ratio passe sous `numbers_ratio_max`. Elle devenait alors invisible à
+    # la fois à la promotion et au contrôle de complétude — c'est ainsi que
+    # 齐来赞美 a été publié en mélangeant deux tonalités (itération 8). Une
+    # vraie rangée de chiffres est haute : elle porte les points d'octave et
+    # les ligatures. Deux rangées de chiffres qui se suivent, dont la
+    # première est nettement plus basse, sont donc des accords puis des
+    # chiffres.
     for i, kind in enumerate(kinds):
         if kind != "numbers":
             continue
         j = i - 1
         while j >= 0 and kinds[j] == "noise":
             j -= 1
-        if j >= 0 and kinds[j] == "?" and feats[j]["top"] >= p["min_top_frac"] * page_h:
+        if j < 0 or feats[j]["top"] < p["min_top_frac"] * page_h:
+            continue
+        if kinds[j] == "?":
+            kinds[j] = "chords"
+        elif kinds[j] == "numbers" and feats[j]["height"] < p["short_row_frac"] * feats[i]["height"]:
             kinds[j] = "chords"
 
     return ink, width, feats, kinds
