@@ -1,13 +1,21 @@
 {
  "slug": "齐来赞美",
  "printed_key": "F",
- "source": "lu à l'œil sur debug/_lecture.png (itération 6) ; null = amas qui n'est pas une étiquette",
+ "source": "lu à l'œil sur debug/_qi-rows.png (itérations 6 et 8)",
  "chord_rows": [
   {
    "top": 498,
    "chords": [
     "F",
     "Bb"
+   ]
+  },
+  {
+   "top": 840,
+   "chords": [
+    "C",
+    "F",
+    "F"
    ]
   },
   {
@@ -27,6 +35,14 @@
    ]
   },
   {
+   "top": 1807,
+   "chords": [
+    "C",
+    "F",
+    "F"
+   ]
+  },
+  {
    "top": 2091,
    "chords": [
     "Bb",
@@ -34,5 +50,11 @@
     "F"
    ]
   }
- ]
+ ],
+ "key_label": {
+  "x": 6,
+  "y": 199,
+  "w": 134,
+  "h": 51
+ }
 }
