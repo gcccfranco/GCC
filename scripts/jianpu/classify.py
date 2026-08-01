@@ -29,8 +29,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 PARAMS_PATH = os.path.join(HERE, "classifier.json")
 
 # Seuils mesurés sur la vérité terrain (voir LOOP.md, itération 1).
-# Sur 何等恩典 : chiffres ratio 0,24-0,32 · paroles 0,97-1,00 · accords 1,04-1,92,
-# et run_frac accords 0,009 contre 0,036-0,068 pour les chiffres.
+# Sur 何等恩典 : chiffres ratio 0,24-0,32 · paroles 0,97-1,00 · accords 1,04-1,92.
 DEFAULTS = {
     # chiffres : amas étroits devant une rangée haute (les chiffres sont
     # espacés et la rangée porte les ligatures)
@@ -39,10 +38,6 @@ DEFAULTS = {
     "lyric_ratio_min": 0.85,
     "lyric_ratio_max": 1.15,
     "lyric_min_clusters": 12,
-    # accords : aucun long segment continu (pas de ligature)
-    "chord_max_run_frac": 0.015,
-    # une rangée d'accords reste fine devant la rangée de chiffres
-    "chord_max_height_frac": 0.85,
     # un trait isolé (barre, ligature orpheline) n'est pas une rangée
     "min_row_height": 10,
     # Aucun système ne commence dans le bandeau de titre : tout candidat
@@ -60,21 +55,10 @@ def load_params():
     return dict(DEFAULTS)
 
 
-def _longest_run(ink, top, bottom):
-    best = 0
-    for y in range(top, bottom + 1):
-        run = 0
-        for v in ink[y]:
-            run = run + 1 if v else 0
-            if run > best:
-                best = run
-    return best
-
-
 def row_features(ink, width, top, bottom):
     """Toutes les mesures se font sur l'encre épaisse (voir `thicken`) :
-    les arcs de liaison sont fins et fausseraient aussi bien le comptage
-    des étiquettes que la détection de ligature."""
+    les arcs de liaison sont fins et fausseraient le comptage des
+    étiquettes."""
     clusters = column_clusters(ink, top, bottom)
     widths = np.array([c[1] - c[0] + 1 for c in clusters]) if clusters else np.array([0])
     height = bottom - top + 1
@@ -85,7 +69,6 @@ def row_features(ink, width, top, bottom):
         "n_clusters": len(clusters),
         "w_median": float(np.median(widths)),
         "ratio": float(np.median(widths)) / max(height, 1),
-        "run_frac": _longest_run(ink, top, bottom) / width,
         "clusters": clusters,
     }
 
@@ -111,20 +94,25 @@ def classify(path, params=None):
         else:
             kinds.append("?")
 
-    # Accords : la rangée utile qui précède une rangée de chiffres, sans
-    # ligature et nettement plus fine qu'elle.
+    # Accords : la rangée utile qui précède une rangée de chiffres, hors du
+    # bandeau de titre. Rien de plus.
+    #
+    # Deux tests supplémentaires filtraient ici — « pas de long segment
+    # continu » et « nettement plus fine que la rangée de chiffres ». Ils
+    # rejetaient **172 vraies rangées d'accords** sur le corpus (90 par la
+    # hauteur, 60 par le segment, 22 par les deux) : un crochet de reprise
+    # est un long segment, et une rangée de chiffres sans point d'octave est
+    # basse. Ils ont été retirés à l'itération 7, parce que la précision ne
+    # vient plus d'ici : depuis que `match.py` lit les étiquettes, une
+    # rangée qui n'en est pas produit des amas que rien n'apparie. Le
+    # classifieur propose, le matcher dispose.
     for i, kind in enumerate(kinds):
         if kind != "numbers":
             continue
         j = i - 1
         while j >= 0 and kinds[j] == "noise":
             j -= 1
-        if j >= 0 and kinds[j] == "?":
-            if (
-                feats[j]["run_frac"] <= p["chord_max_run_frac"]
-                and feats[j]["height"] <= p["chord_max_height_frac"] * feats[i]["height"]
-                and feats[j]["top"] >= p["min_top_frac"] * page_h
-            ):
-                kinds[j] = "chords"
+        if j >= 0 and kinds[j] == "?" and feats[j]["top"] >= p["min_top_frac"] * page_h:
+            kinds[j] = "chords"
 
     return ink, width, feats, kinds
