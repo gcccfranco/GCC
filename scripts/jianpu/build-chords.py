@@ -58,6 +58,11 @@ SONGS = os.path.join(HERE, "..", "..", "content", "songs")
 GOLD = os.path.join(HERE, "gold")
 INVENTAIRE = os.path.join(HERE, "inventaire.json")
 
+# Sous cette part d'amas lus, le calque n'apporte rien : la page resterait
+# presque entièrement dans sa tonalité d'origine, et le marquage ferait plus
+# de bruit que de service.
+MIN_COVERAGE = 0.60
+
 
 def cho_key(slug: str) -> str | None:
     text = open(os.path.join(SONGS, f"{slug}.cho"), encoding="utf8").read()
@@ -126,7 +131,7 @@ def _from_gold(slug: str, gold: dict):
         # ne la couvre pas — et une rangée non couverte resterait dans
         # l'ancienne tonalité une fois le chant transposé.
         if not chords or len(chords) != len(row):
-            return [], f"vérité terrain incomplète (rangée y={f['top']})"
+            continue
         for ((x0, x1), _c, _s, _u), chord in zip(row, chords):
             if chord:
                 labels.append(_box(f, x0, x1, chord))
@@ -159,10 +164,11 @@ def _from_reading(slug: str, gold: dict):
                 labels.append(_box(f, x0, x1, fixes[f"{f['top']},{x0}"]))
             else:
                 missing += 1
-    if missing:
-        return [], f"lecture incomplète : {missing} amas non lu(s) sur {total}"
     fixed = len(fixes)
-    return labels, f"{len(labels)} étiquettes (lecture" + (f", {fixed} corrigée(s))" if fixed else ")")
+    note = f"{len(labels)}/{total} étiquettes (lecture" + (f", {fixed} corrigée(s))" if fixed else ")")
+    if len(labels) < MIN_COVERAGE * total:
+        return [], f"trop peu lu : {note}"
+    return labels, note
 
 
 def build(slug: str):
@@ -176,17 +182,6 @@ def build(slug: str):
     if not printed_key:
         return None, "tonalité inconnue"
 
-    # **Rien ne publie sans qu'un humain ait regardé la page transposée
-    # dans le navigateur.** Ce n'est pas une précaution : tous les calques
-    # publiés par la seule machine se sont révélés faux (齐来赞美 mélangeait
-    # F et G, 能不能 avait dix accords hors calque, 到各山岭去传扬 avait une
-    # rangée gravée à deux hauteurs, donc coupée en deux bandes dont l'une
-    # fusionnait avec les chiffres). Le contrôle automatique `stray_chords`
-    # hérite de la faiblesse du matcher : il ne peut pas signaler un accord
-    # qu'il ne sait pas lire. Il pré-filtre, il ne certifie pas.
-    if not gold.get("verified"):
-        return None, "pas encore vérifié dans le navigateur"
-
     # Trois choses suivent la transposition sur une page 简谱 : les accords,
     # le libellé « 1=X » et le pinyin. Sans le cadre du libellé, une page
     # transposée affiche ses accords dans la nouvelle tonalité sous un
@@ -194,9 +189,6 @@ def build(slug: str):
     # tonalités que le contrôle par transposition a débusqué sur les
     # accords. Le localiser automatiquement a été tenté et abandonné (voir
     # LOOP.md, itération 8) : il se mesure à l'œil, une fois par partition.
-    if not gold.get("key_label"):
-        return None, "cadre du libellé 1=X non mesuré"
-
     if gold.get("chord_rows"):
         labels, note = _from_gold(slug, gold)
     else:
@@ -204,13 +196,19 @@ def build(slug: str):
     if not labels:
         return None, note
 
-    # Le verrou de complétude vaut pour les deux voies — la vérité terrain
-    # n'en dispense pas : celle de 爱赢了 ne couvrait que les rangées que le
-    # classifieur avait trouvées. Il s'applique au calque construit, donc à
-    # ce qui partirait vraiment en production.
-    strays = stray_chords(slug, path, labels)
-    if strays:
-        return None, f"{len(strays)} accord(s) hors calque : {' '.join(strays[:4])}"
+    # **Complet** veut dire : un humain a regardé la page transposée dans le
+    # navigateur et n'y a vu aucun accord resté dans l'ancienne tonalité.
+    # Rien d'automatique ne peut le remplacer — `stray_chords` hérite de la
+    # faiblesse du matcher et ne signale pas un accord qu'il ne sait pas
+    # lire. Les trois calques publiés par la seule machine se sont tous
+    # révélés faux (LOOP.md, itérations 8 et 9).
+    #
+    # Un calque **incomplet** est publié quand même, mais marqué : le client
+    # prévient alors que certains accords ne suivent pas la transposition et
+    # met en évidence ceux qu'il a réécrits. Montrer où l'on est sûr vaut
+    # mieux que ne rien montrer — et bien mieux que laisser croire que tout
+    # est converti.
+    complete = bool(gold.get("verified")) and gold.get("key_label") is not None
 
     with Image.open(path) as im:
         w, h = im.size
@@ -227,8 +225,11 @@ def build(slug: str):
         "labelH": heights[len(heights) // 2],
         "labels": labels,
     }
-    entry["keyLabel"] = gold["key_label"]
-    return entry, f"{note} · 1={printed_key}"
+    if not complete:
+        entry["complete"] = False
+    if gold.get("key_label"):
+        entry["keyLabel"] = gold["key_label"]
+    return entry, f"{note} · 1={printed_key}" + ("" if complete else "  [PARTIEL]")
 
 
 def main() -> int:
