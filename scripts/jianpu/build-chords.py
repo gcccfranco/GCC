@@ -43,10 +43,14 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+import numpy as np  # noqa: E402
 from PIL import Image  # noqa: E402
 
 from classify import classify, load_params  # noqa: E402
-from match import keep, read  # noqa: E402
+from match import (  # noqa: E402
+    JURY, MIN_SCORE, best_match, build_templates, keep, read, signature, vocabulary,
+)
+from segment import INK_THRESHOLD  # noqa: E402
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 IMAGES = os.path.join(HERE, "..", "..", "public", "jianpu")
@@ -61,28 +65,48 @@ def cho_key(slug: str) -> str | None:
     return m.group(1).strip() if m else None
 
 
-def orphan_rows(path: str) -> int:
-    """Rangées qui pourraient porter des accords et que le classifieur a
-    laissées en « ? ».
+def stray_chords(slug: str, path: str, labels: list[dict]) -> list[str]:
+    """Accords imprimés que le calque ne couvre pas, cherchés sur **toute**
+    la page.
 
-    Une seule suffit à disqualifier la partition : c'est peut-être un
-    système entier dont les accords ne seraient pas transposés. Les rangées
-    du bandeau de titre sont exclues, par le même invariant de mise en page
-    que le classifieur (`min_top_frac`).
+    Le contrôle précédent comptait les rangées que le classifieur avait
+    laissées en « ? » — donc il reposait sur la classification qu'il était
+    censé vérifier. Trois fois de suite, une rangée d'accords a échappé aux
+    deux : typée `numbers` parce que ses étiquettes étaient courtes, puis
+    non promue parce que la rangée de chiffres qui la suivait était elle
+    aussi mal typée. À chaque fois, la partition partait en production en
+    mélangeant deux tonalités.
+
+    Le contrôle est donc refait sans le classifieur : on apparie **tous**
+    les amas de la page au vocabulaire du `.cho`. Un amas qui ressemble à un
+    accord du chant, hors des rangées publiées, est un accord qui resterait
+    dans l'ancienne tonalité. Les chiffres et les hanzi n'apparient rien —
+    c'est ce que quatre itérations de mise au point du matcher ont établi.
     """
+    covered = {(l["y"], l["x"]) for l in labels}
+    ink = np.asarray(Image.open(path).convert("L")) < INK_THRESHOLD
     _ink, _w, feats, kinds = classify(path)
     page_h = max(f["bottom"] for f in feats) if feats else 0
     floor = load_params()["min_top_frac"] * page_h
-    count = 0
-    for i, (f, kind) in enumerate(zip(feats, kinds)):
-        if kind != "?" or f["top"] < floor:
+    templates = build_templates(vocabulary(slug))
+    jury = [build_templates(vocabulary(slug), 0, p) for p in JURY if os.path.exists(p)]
+
+    out = []
+    for f in feats:
+        if f["top"] < floor:
             continue
-        j = i + 1
-        while j < len(kinds) and kinds[j] == "noise":
-            j += 1
-        if j < len(kinds) and kinds[j] == "numbers":
-            count += 1
-    return count
+        for x0, x1 in f["clusters"]:
+            if (f["top"], x0) in covered:
+                continue
+            sub = ink[f["top"] : f["bottom"] + 1, x0 : x1 + 1]
+            ys, xs = np.where(sub.any(1))[0], np.where(sub.any(0))[0]
+            if not len(ys) or not len(xs):
+                continue
+            sig = signature(sub[ys[0] : ys[-1] + 1, xs[0] : xs[-1] + 1])
+            score, chord = best_match(sig, templates)
+            if score >= MIN_SCORE and all(best_match(sig, t)[1] == chord for t in jury):
+                out.append(f"{chord}@y{f['top']}")
+    return out
 
 
 def _box(f, x0: int, x1: int, chord: str) -> dict:
@@ -137,13 +161,15 @@ def build(slug: str):
     if not printed_key:
         return None, "tonalité inconnue"
 
-    # Le verrou de complétude vaut pour les deux voies. La vérité terrain
-    # n'en dispense pas : celle de 爱赢了 ne couvre que les rangées que le
-    # classifieur avait trouvées, et le contrôle par transposition montre
-    # que la page afficherait alors 3 rangées en A# et 4 restées en A.
-    orphans = orphan_rows(path)
-    if orphans:
-        return None, f"{orphans} rangée(s) candidate(s) non lue(s)"
+    # Trois choses suivent la transposition sur une page 简谱 : les accords,
+    # le libellé « 1=X » et le pinyin. Sans le cadre du libellé, une page
+    # transposée affiche ses accords dans la nouvelle tonalité sous un
+    # « 1=F » resté dans l'ancienne — exactement le défaut de page à deux
+    # tonalités que le contrôle par transposition a débusqué sur les
+    # accords. Le localiser automatiquement a été tenté et abandonné (voir
+    # LOOP.md, itération 8) : il se mesure à l'œil, une fois par partition.
+    if not gold.get("key_label"):
+        return None, "cadre du libellé 1=X non mesuré"
 
     if gold.get("chord_rows"):
         labels, note = _from_gold(slug, gold)
@@ -151,6 +177,14 @@ def build(slug: str):
         labels, note = _from_reading(slug)
     if not labels:
         return None, note
+
+    # Le verrou de complétude vaut pour les deux voies — la vérité terrain
+    # n'en dispense pas : celle de 爱赢了 ne couvrait que les rangées que le
+    # classifieur avait trouvées. Il s'applique au calque construit, donc à
+    # ce qui partirait vraiment en production.
+    strays = stray_chords(slug, path, labels)
+    if strays:
+        return None, f"{len(strays)} accord(s) hors calque : {' '.join(strays[:4])}"
 
     with Image.open(path) as im:
         w, h = im.size
@@ -167,8 +201,7 @@ def build(slug: str):
         "labelH": heights[len(heights) // 2],
         "labels": labels,
     }
-    if gold.get("key_label"):
-        entry["keyLabel"] = gold["key_label"]
+    entry["keyLabel"] = gold["key_label"]
     return entry, f"{note} · 1={printed_key}"
 
 
