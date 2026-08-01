@@ -76,17 +76,23 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey }: 
           />
 
           {/* Calque : masque l'accord d'origine, réécrit le transposé au
-              même endroit. Tout est en % pour suivre l'échelle de l'image. */}
+              même endroit. Tout est en % pour suivre l'échelle de l'image.
+
+              Le masque est `bg-black` en thème sombre, pas `bg-neutral-900` :
+              le scan est retourné par `dark:invert`, donc son papier blanc
+              devient du noir **pur**. Toute autre teinte fait apparaître un
+              pavé gris autour de chaque accord — invisible sur les rendus de
+              contrôle en Python, qui travaillent sur l'image d'origine. */}
           {overlayOn && i === 0 && chords && (
             <div className="pointer-events-none absolute inset-0" aria-hidden>
               {chords.keyLabel && (
                 <span
-                  className="absolute flex items-end whitespace-nowrap bg-white text-black dark:bg-neutral-900 dark:text-neutral-100"
+                  className="absolute flex items-end whitespace-nowrap bg-white text-black dark:bg-black dark:text-neutral-100"
                   style={{
-                    left: `${(chords.keyLabel.x / chords.w) * 100}%`,
+                    left: `${((chords.keyLabel.x - 3) / chords.w) * 100}%`,
                     top: `${((chords.keyLabel.y - 4) / chords.h) * 100}%`,
                     height: `${((chords.keyLabel.h + 6) / chords.h) * 100}%`,
-                    minWidth: `${(chords.keyLabel.w / chords.w) * 100}%`,
+                    minWidth: `${((chords.keyLabel.w + 7) / chords.w) * 100}%`,
                     fontSize: `${(chords.keyLabel.h / chords.w) * 100}cqw`,
                     lineHeight: 1,
                     fontFamily: "Times New Roman, Georgia, serif",
@@ -98,12 +104,16 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey }: 
               {chords.labels.map((l, n) => (
                 <span
                   key={n}
-                  className="absolute flex items-end whitespace-nowrap bg-white text-black dark:bg-neutral-900 dark:text-neutral-100"
+                  className="absolute flex items-end whitespace-nowrap bg-white text-black dark:bg-black dark:text-neutral-100"
                   style={{
-                    left: `${(l.x / chords.w) * 100}%`,
+                    // Le masque déborde de l'amas détecté : le crénage et
+                    // l'anticrénelage du glyphe d'origine dépassent de deux
+                    // ou trois pixels, et ce qui dépasse reste visible à
+                    // côté de l'accord réécrit.
+                    left: `${((l.x - 3) / chords.w) * 100}%`,
                     top: `${((l.y - 6) / chords.h) * 100}%`,
                     height: `${((l.h + 8) / chords.h) * 100}%`,
-                    minWidth: `${(l.w / chords.w) * 100}%`,
+                    minWidth: `${((l.w + 7) / chords.w) * 100}%`,
                     fontSize: `${(chords.labelH / chords.w) * 100}cqw`,
                     lineHeight: 1,
                     fontFamily: "Times New Roman, Georgia, serif",
