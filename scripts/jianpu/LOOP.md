@@ -133,6 +133,7 @@ rangées les tronque.
 | 6 | inchangé | 85 / 144 étiquettes · **0 mal lue, 0 parasite** | **3 /124 calques publiés** (contrôlés par transposition) |
 | 7 | **A=39 · B=6** · orphelines du corpus 172 → **0** | 89 / 144 · 0 mal lue, 0 parasite · corpus **50 %** (2310/4651) | 3 /124 (inchangé) |
 | 8 | +90 rangées (accords courts récupérés) | inchangé | **1 /124** — les 2 autres étaient **faux** et sont dépubliés |
+| 9 | inchangé | vocabulaire élargi **rejeté** (95 → 76 justes) | 1 /124 — `verified` devient obligatoire |
 
 ## Journal
 
@@ -554,3 +555,54 @@ Piste, dans l'esprit de ce qui a marché pour les accords : apparier **chaque
 rangée séparément** en cherchant sa sous-chaîne dans le `.cho` — une rangée
 de vingt hanzi ne peut pas s'apparier deux fois par hasard — pour qu'une
 rangée non retrouvée ne bloque qu'elle-même.
+
+### Itération 9 — ce que le verrou automatique ne peut pas voir
+
+Le contrôle `stray_chords` étant indépendant du classifieur, il sert aussi
+de **mesure** : sur les 124 partitions, **20 n'ont aucun accord hors
+calque** — le classifieur y trouve tout, et ce qui bloque est uniquement la
+lecture.
+
+**Trois pistes mesurées.**
+
+1. *Écarter les marques par leur remplissage vertical* (crochets, arcs) —
+   reprise de l'idée de l'itération 7 maintenant que le verrou indépendant
+   la rendrait sûre. Zéro chant débloqué : les amas non lus de ces 20
+   partitions remplissent la rangée, ce sont bien des étiquettes.
+2. *Élargir le vocabulaire* — la planche des illisibles montre que le `.cho`
+   **n'est pas un sur-ensemble de ce qui est gravé** : la partition porte
+   `F#dim`, `Em/D`, `D/C`, `Am/G`, `A/B` que la transcription simplifie.
+   Ajouter toutes les basses de la gamme et les douze diminués fait passer
+   le vocabulaire de 13 à 84 candidats — et la lecture **tombe de 95 à 76**
+   étiquettes justes, avec deux mauvaises lectures. C'est la *petitesse* du
+   vocabulaire qui fait la force du matcher. Remplacé par un supplément
+   ciblé, `extra_chords` dans `gold/`, lu à l'œil.
+3. *Corriger seulement les amas ratés* — plutôt que retranscrire une
+   partition entière, `corrections` dans `gold/` comble les trous, indexé
+   par la position de l'amas. Trois coups d'œil au lieu d'une transcription.
+
+**Et l'échec qui compte.** 到各山岭去传扬, publié par cette voie, s'est
+révélé faux au contrôle navigateur : deux accords du deuxième système
+restaient en G sur une page en A. Sa rangée d'accords est **gravée à deux
+hauteurs** — le `G` de gauche plus haut que les `G  D/F#` de droite — donc
+coupée en deux bandes, dont l'une fusionne avec les chiffres. Illisible,
+et par conséquent **invisible à `stray_chords`**.
+
+C'est la limite de fond, et elle vaut d'être écrite : **le contrôle
+automatique hérite de la faiblesse du matcher.** Il ne peut pas signaler un
+accord qu'il ne sait pas lire. Il pré-filtre, il ne certifie pas. Le même
+raisonnement qu'à l'itération 8, un cran plus bas : un instrument ne peut
+pas mesurer sa propre panne.
+
+**Conséquence, et c'est la vraie livraison de l'itération.** Le champ
+`verified` devient obligatoire dans `gold/` : il porte la phrase décrivant
+ce qui a été regardé dans le navigateur, transposition comprise. Aucun
+calque ne part sans. Les trois chants publiés par la seule machine depuis
+l'itération 6 étaient tous faux (齐来赞美 mélangeait F et G, 能不能 avait dix
+accords hors calque, 到各山岭去传扬 deux). Il en reste **un**, 何等恩典.
+
+**Le critère d'arrêt de la boucle est atteint** : trois itérations
+consécutives sans progression du nombre de calques justes. Ce qui reste
+n'est pas un problème d'algorithme mais de volume de vérification humaine —
+et la question de produit posée à l'itération 7 (tout-ou-rien, ou signaler
+les accords non convertis) n'a toujours pas été tranchée.
