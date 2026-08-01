@@ -606,3 +606,34 @@ consécutives sans progression du nombre de calques justes. Ce qui reste
 n'est pas un problème d'algorithme mais de volume de vérification humaine —
 et la question de produit posée à l'itération 7 (tout-ou-rien, ou signaler
 les accords non convertis) n'a toujours pas été tranchée.
+
+### Après la boucle — publier l'incertitude plutôt que la cacher
+
+Le critère d'arrêt étant atteint, la sortie n'est pas algorithmique mais de
+produit. Des deux options posées à l'itération 9, c'est la seconde qui est
+retenue : **le client dit ce qu'il n'a pas su convertir.**
+
+`chords.json` porte désormais `complete: false` sur les calques non
+certifiés. Le client affiche alors un bandeau — « Seuls les accords en bleu
+ont été transposés, les autres sont ceux d'origine (F), comme l'indication
+1=F en haut de page » — et **met les accords réécrits en bleu**. Le musicien
+voit d'un coup d'œil où il peut se fier au calque et où il doit lire la
+tonalité imprimée.
+
+**50 partitions sur 124 ont un calque**, contre 1. Une seule est certifiée
+(何等恩典, vérifiée à l'œil sur la page transposée) et s'affiche sans
+bandeau ni couleur ; les 49 autres sont marquées. Le plancher de publication
+est fixé à 60 % d'amas lus : en dessous, la page resterait presque
+entièrement dans sa tonalité d'origine et le marquage ferait plus de bruit
+que de service.
+
+Ce n'est pas un renoncement au « zéro erreur » mais son application : une
+erreur, c'est **affirmer** faussement. Montrer une conversion partielle en
+disant qu'elle est partielle n'affirme rien de faux. Ce qui reste interdit,
+et le reste, c'est de publier une page qui a l'air entièrement convertie
+sans l'être — c'est précisément ce que faisaient les trois calques retirés
+aux itérations 8 et 9.
+
+La certification garde tout son sens : elle se gagne partition par
+partition, en lisant les rangées ratées et en regardant la page transposée
+dans le navigateur. Chaque chant certifié perd son bandeau.
