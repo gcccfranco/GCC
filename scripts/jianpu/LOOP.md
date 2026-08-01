@@ -132,6 +132,7 @@ rangées les tronque.
 | 5 | inchangé (A=29 · B=16) | **108 / 167 amas retenus, dont 97 justes** · 0 parasite gardé | 5 /124 entièrement appariés (2547/3554 amas, 72 %) |
 | 6 | inchangé | 85 / 144 étiquettes · **0 mal lue, 0 parasite** | **3 /124 calques publiés** (contrôlés par transposition) |
 | 7 | **A=39 · B=6** · orphelines du corpus 172 → **0** | 89 / 144 · 0 mal lue, 0 parasite · corpus **50 %** (2310/4651) | 3 /124 (inchangé) |
+| 8 | +90 rangées (accords courts récupérés) | inchangé | **1 /124** — les 2 autres étaient **faux** et sont dépubliés |
 
 ## Journal
 
@@ -488,3 +489,68 @@ soit on continue jusqu'à lire des partitions entières, soit le client
 **signale visuellement les accords non convertis** (grisés, ou barrés) et
 publie alors les calques partiels, ce qui rendrait exploitables les dizaines
 de chants lus à 80-90 %.
+
+### Itération 8 — le verrou se vérifiait lui-même
+
+Demande de l'utilisateur : ce qui doit suivre la transposition, c'est **les
+accords, le libellé « 1=X » et le pinyin**. Et : *zéro erreur*. Plus :
+vérifier dans le vrai navigateur.
+
+**Le navigateur a montré deux défauts que les planches Python ne pouvaient
+pas voir**, puisqu'elles travaillent sur l'image d'origine et non sur la
+page. En thème sombre le scan passe par `dark:invert`, donc son papier blanc
+devient du noir **pur**, alors que le masque était en `neutral-900` :
+32 723 pixels de pavé gris autour des accords. Et le masque faisait
+exactement la largeur de l'amas, laissant dépasser le crénage du glyphe
+d'origine. Les deux corrigés dans `JianpuSheet.tsx`.
+
+**Le libellé « 1=X » manquait sur 2 des 3 chants publiés.** Transposés, ils
+affichaient donc leurs accords dans la nouvelle tonalité sous une tonalité
+imprimée restée dans l'ancienne. Le localiser automatiquement a été tenté et
+**abandonné** : on sait déjà ce qui est écrit (la tonalité du `.cho`), il n'y
+a qu'à trouver où — mais la corrélation ne dépasse pas +0,49 sur le corpus,
+et le vrai libellé de 何等恩典 n'entre même pas dans les quatre premiers
+candidats, derrière des blocs de crédits en hanzi. Il se mesure donc à l'œil,
+une fois par partition, et **son absence interdit la publication**.
+
+**Le vrai enseignement de l'itération.** 齐来赞美 était publié en mélangeant
+deux tonalités, et *trois* contrôles successifs ne l'avaient pas vu :
+
+1. une rangée d'accords **courts** (« C », « F ») a un ratio de 0,48 à 0,54,
+   sous `numbers_ratio_max` — elle est donc typée `numbers`, invisible à la
+   promotion **et** au comptage des orphelines ;
+2. corrigé par une règle de hauteur (deux rangées de chiffres qui se
+   suivent, la première nettement plus basse = des accords), il restait
+   encore une rangée manquée — cette fois parce que la rangée de *chiffres*
+   qui la suivait était elle-même mal typée, ce qui cassait l'adjacence.
+
+La cause commune est structurelle et vaut d'être nommée : **le verrou de
+complétude était construit sur la classification qu'il était censé
+vérifier.** Il ne pouvait pas voir une rangée que le classifieur avait
+ratée, puisqu'il ne regardait que ce que le classifieur lui montrait.
+
+**Le verrou est donc refait sans le classifieur.** `stray_chords` apparie
+**tous** les amas de la page au vocabulaire du `.cho` ; tout amas qui
+ressemble à un accord du chant et n'est pas couvert par le calque interdit
+la publication. C'est indépendant du typage des rangées, et ça repose sur la
+seule chose que quatre itérations ont solidement établie — les chiffres et
+les hanzi n'apparient rien.
+
+Verdict immédiat : **2 des 3 chants publiés étaient faux** (`Bb@y293` sur
+齐来赞美, dix accords hors calque sur 能不能). Il en reste **un**, 何等恩典,
+vérifié dans Chrome en clair et en sombre, transposé de G en A : les 46
+accords et le libellé changent, rien ne subsiste.
+
+Le compte baisse encore, de 3 à 1. C'est le bon sens de variation : les
+deux qui partent étaient des erreurs en production.
+
+**Pinyin — exploré, pas livré.** La découpe par caractère est fiable (chaque
+hanzi isolé, la ponctuation aussi, largeur ≈ hauteur de rangée) et les
+rangées de l'image sont un **flux continu** du texte du `.cho`. Mais sur les
+124 partitions le compte ne tombe juste que 7 fois : le `.cho` écrit le chant
+en entier, la gravure ne porte les paroles qu'une fois sous la musique. Ce
+n'est donc pas un problème de segmentation mais d'alignement de sections.
+Piste, dans l'esprit de ce qui a marché pour les accords : apparier **chaque
+rangée séparément** en cherchant sa sous-chaîne dans le `.cho` — une rangée
+de vingt hanzi ne peut pas s'apparier deux fois par hasard — pour qu'une
+rangée non retrouvée ne bloque qu'elle-même.
