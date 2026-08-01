@@ -794,5 +794,402 @@
       "text": "« Tout ce que vous faites, faites-le de bon cœur, comme pour le Seigneur et non pour des hommes, sachant que vous recevrez du Seigneur l'héritage pour récompense. Servez Christ, le Seigneur. »",
       "ref": "— Colossiens 3 : 23-24"
     }
+  },
+  "survey": {
+    "title": "Ton avis sur le site",
+    "intro": "Dis-nous ce qui te sert, ce qui te gêne et ce qui te manque. Le questionnaire est détaillé, mais les questions qui ne te concernent pas sont automatiquement sautées.",
+    "loginRequired": "Connecte-toi pour répondre au questionnaire.",
+    "optional": "(facultatif)",
+    "multiHint": "Plusieurs réponses possibles",
+    "stepOf": "Étape {{step}} / {{total}}",
+    "previous": "Précédent",
+    "next": "Suivant",
+    "submit": "Envoyer mes réponses",
+    "submitting": "Enregistrement…",
+    "edit": "Modifier mes réponses",
+    "resumed": "On a repris ta réponse en cours — tu peux la compléter.",
+    "autosave": "Tes réponses sont enregistrées à chaque étape.",
+    "thanksTitle": "Merci !",
+    "thanksBody": "Tes réponses sont bien enregistrées. Tu peux les modifier quand tu veux.",
+    "error": "Enregistrement impossible. Vérifie ta connexion (et que les règles Firestore sont publiées).",
+    "errorRequired": "Merci de répondre aux questions marquées d'une étoile.",
+    "identityNotice": "Envoyé au nom de {{name}}.",
+    "s": {
+      "usage": {
+        "title": "Toi et ton usage",
+        "hint": "Pour situer ta façon d'utiliser le site."
+      },
+      "general": {
+        "title": "Impression générale",
+        "hint": "Ton ressenti global, en quelques touches."
+      },
+      "songs": {
+        "title": "Les chants",
+        "hint": "La consultation du répertoire."
+      },
+      "setlists": {
+        "title": "Les setlists",
+        "hint": "Les listes de chants préparées pour un service."
+      },
+      "performance": {
+        "title": "Le Mode Louange",
+        "hint": "L'affichage plein écran pendant la répétition ou le service."
+      },
+      "planning": {
+        "title": "Planning & Mes services",
+        "hint": "Qui sert quand, et tes prochains services."
+      },
+      "annonces": {
+        "title": "Annonces & notifications",
+        "hint": "Les infos publiées et les notifications reçues."
+      },
+      "misc": {
+        "title": "Prise en main",
+        "hint": "Les premiers pas, l'aide et la langue."
+      },
+      "improve": {
+        "title": "Ce qu'il faut améliorer",
+        "hint": "Le plus important : dis-nous tout."
+      }
+    },
+    "q": {
+      "frequency": {
+        "label": "À quelle fréquence utilises-tu le site ?",
+        "opt": {
+          "daily": "Presque tous les jours",
+          "weekly": "Chaque semaine",
+          "sometimes": "De temps en temps",
+          "rarely": "Rarement",
+          "first": "C'est ma première fois"
+        }
+      },
+      "device": {
+        "label": "Sur quel(s) appareil(s) l'utilises-tu ?",
+        "opt": {
+          "phone": "Téléphone",
+          "tablet": "Tablette",
+          "computer": "Ordinateur",
+          "paper": "J'imprime les partitions"
+        }
+      },
+      "context": {
+        "label": "Dans quelles situations t'en sers-tu ?",
+        "opt": {
+          "prepare": "Préparer chez moi",
+          "rehearsal": "En répétition",
+          "service": "Pendant le culte / la réunion",
+          "learn": "Apprendre un nouveau chant",
+          "planning": "Voir qui sert quand"
+        }
+      },
+      "used": {
+        "label": "Quelles parties du site utilises-tu ?",
+        "opt": {
+          "songs": "Les chants",
+          "setlists": "Les setlists",
+          "performance": "Le Mode Louange",
+          "planning": "Le planning",
+          "mesServices": "Mes services",
+          "annonces": "Les annonces",
+          "notifications": "Les notifications",
+          "guide": "Le guide d'utilisation"
+        }
+      },
+      "language": {
+        "label": "Tu utilises le site en…",
+        "opt": {
+          "fr": "Français",
+          "zh": "中文",
+          "both": "Les deux"
+        }
+      },
+      "overall": {
+        "label": "Globalement, quelle note donnes-tu au site ?",
+        "low": "Décevant",
+        "high": "Excellent"
+      },
+      "ease": {
+        "label": "Est-ce facile de trouver ce que tu cherches ?",
+        "low": "Je me perds",
+        "high": "Très facile"
+      },
+      "speed": {
+        "label": "Le site est-il rapide à charger ?",
+        "low": "Très lent",
+        "high": "Instantané"
+      },
+      "readability": {
+        "label": "L'affichage est-il lisible (taille du texte, accords, contraste) ?",
+        "low": "Difficile à lire",
+        "high": "Parfaitement lisible"
+      },
+      "reliability": {
+        "label": "T'arrive-t-il de tomber sur un bug ou une page qui ne charge pas ?",
+        "opt": {
+          "never": "Jamais",
+          "rare": "Rarement",
+          "often": "Souvent",
+          "always": "Presque à chaque fois"
+        }
+      },
+      "mobile": {
+        "label": "Sur ton téléphone, le site fonctionne…",
+        "opt": {
+          "great": "Très bien",
+          "ok": "Correctement",
+          "problems": "Mal (lenteurs, bugs, affichage)",
+          "notUsed": "Je ne l'utilise pas sur téléphone"
+        }
+      },
+      "beforeAfter": {
+        "label": "Par rapport à avant (papier, PDF, WhatsApp), le site c'est…",
+        "opt": {
+          "better": "Nettement mieux",
+          "same": "Pareil",
+          "worse": "Moins pratique",
+          "dontKnow": "Je n'ai pas connu l'avant"
+        }
+      },
+      "recommend": {
+        "label": "Recommanderais-tu le site à quelqu'un de l'équipe ?",
+        "opt": {
+          "yes": "Oui, sans hésiter",
+          "maybe": "Peut-être",
+          "no": "Non"
+        }
+      },
+      "songsSearch": {
+        "label": "Trouver un chant précis (recherche, filtres) c'est…",
+        "low": "Compliqué",
+        "high": "Immédiat"
+      },
+      "songsDisplay": {
+        "label": "L'affichage d'un chant (paroles + accords) est…",
+        "low": "Confus",
+        "high": "Très clair"
+      },
+      "songsFeatures": {
+        "label": "Quelles fonctions utilises-tu sur un chant ?",
+        "opt": {
+          "transpose": "La transposition (changer de ton)",
+          "capo": "Le capo",
+          "hideChords": "Masquer les accords",
+          "pinyin": "Le pinyin",
+          "jianpu": "Le 简谱",
+          "pdf": "Le téléchargement PDF",
+          "video": "Le lien vidéo",
+          "customize": "Personnaliser l'affichage"
+        }
+      },
+      "jianpu": {
+        "label": "Le 简谱 (notation par chiffres) te sert-il ?",
+        "opt": {
+          "essential": "Indispensable",
+          "useful": "Utile de temps en temps",
+          "notUsed": "Je ne m'en sers pas",
+          "dontKnow": "Je ne savais pas que ça existait"
+        }
+      },
+      "songsErrors": {
+        "label": "As-tu déjà trouvé des erreurs (accords, paroles, pinyin) ?",
+        "opt": {
+          "never": "Jamais",
+          "sometimes": "Quelques-unes",
+          "often": "Souvent"
+        }
+      },
+      "songsErrorsDetail": {
+        "label": "Lesquelles ? (les chants concernés, si tu t'en souviens)",
+        "placeholder": "ex. « Tu es fidèle » : l'accord du refrain ne tombe pas au bon endroit."
+      },
+      "songsMissing": {
+        "label": "Quels chants manquent au répertoire ?",
+        "placeholder": "Titres, ou liens YouTube."
+      },
+      "setlistsRole": {
+        "label": "Les setlists, tu…",
+        "opt": {
+          "read": "Tu les consultes",
+          "create": "Tu en crées",
+          "both": "Les deux"
+        }
+      },
+      "setlistsFind": {
+        "label": "Retrouver la bonne setlist c'est…",
+        "low": "Compliqué",
+        "high": "Immédiat"
+      },
+      "setlistsCreate": {
+        "label": "Créer ou modifier une setlist c'est…",
+        "low": "Pénible",
+        "high": "Très simple"
+      },
+      "setlistsFeatures": {
+        "label": "Quelles fonctions utilises-tu sur une setlist ?",
+        "opt": {
+          "adapt": "Adapter le contenu d'un chant",
+          "duplicate": "Dupliquer une setlist",
+          "pdf": "L'export PDF",
+          "share": "Le partage par lien",
+          "draft": "Le brouillon",
+          "notify": "Prévenir l'équipe",
+          "private": "Les setlists privées"
+        }
+      },
+      "setlistsIssues": {
+        "label": "Qu'est-ce qui te gêne dans les setlists ?",
+        "placeholder": "ex. je ne retrouve pas les anciennes, l'ordre des chants…"
+      },
+      "performanceWhen": {
+        "label": "Quand utilises-tu le Mode Louange ?",
+        "opt": {
+          "rehearsal": "En répétition",
+          "service": "Pendant le culte / la réunion",
+          "personal": "Pour m'entraîner seul"
+        }
+      },
+      "performanceRating": {
+        "label": "Le Mode Louange, globalement…",
+        "low": "Inutilisable",
+        "high": "Parfait"
+      },
+      "performanceFeatures": {
+        "label": "Quelles fonctions du Mode Louange utilises-tu ?",
+        "opt": {
+          "annotations": "Les annotations (dessin)",
+          "capo": "Le capo",
+          "textSize": "La taille du texte",
+          "dark": "Le mode sombre",
+          "hideLyrics": "Masquer les paroles",
+          "roles": "L'affichage par rôle",
+          "pinyin": "Le pinyin",
+          "chartStyle": "Les couleurs par section"
+        }
+      },
+      "performanceIssues": {
+        "label": "Qu'est-ce qui te gêne en Mode Louange ?",
+        "placeholder": "ex. tourner les pages, la luminosité, le défilement…"
+      },
+      "planningRating": {
+        "label": "Le planning est-il clair et facile à lire ?",
+        "low": "Illisible",
+        "high": "Très clair"
+      },
+      "planningTrust": {
+        "label": "Les infos du planning sont-elles à jour ?",
+        "opt": {
+          "always": "Toujours",
+          "mostly": "La plupart du temps",
+          "outdated": "Souvent périmées",
+          "dontKnow": "Je ne sais pas"
+        }
+      },
+      "mesServicesRating": {
+        "label": "La page « Mes services » (tes prochains services) est…",
+        "low": "Peu utile",
+        "high": "Très utile"
+      },
+      "planningIssues": {
+        "label": "Qu'est-ce qui manque ou te gêne dans le planning ?",
+        "placeholder": "ex. les horaires, les lieux, les remplacements…"
+      },
+      "annoncesRating": {
+        "label": "Les annonces te sont-elles utiles ?",
+        "low": "Pas utiles",
+        "high": "Très utiles"
+      },
+      "notifVolume": {
+        "label": "Le nombre de notifications que tu reçois est…",
+        "opt": {
+          "tooMany": "Trop élevé",
+          "right": "Juste ce qu'il faut",
+          "tooFew": "Pas assez",
+          "none": "Je n'en reçois aucune"
+        }
+      },
+      "notifTypes": {
+        "label": "Quelles notifications veux-tu vraiment recevoir ?",
+        "opt": {
+          "setlist": "Setlist prête ou modifiée",
+          "annonce": "Nouvelle annonce",
+          "reminder": "Rappel avant un service",
+          "manual": "Messages ponctuels"
+        }
+      },
+      "notifIssues": {
+        "label": "Un souci avec les notifications ?",
+        "placeholder": "ex. je ne les reçois pas sur iPhone…"
+      },
+      "onboarding": {
+        "label": "Au début, comprendre comment le site marche a été…",
+        "opt": {
+          "easy": "Facile",
+          "ok": "Un peu déroutant",
+          "hard": "Compliqué"
+        }
+      },
+      "accountEase": {
+        "label": "Créer ton compte et te connecter a été…",
+        "opt": {
+          "easy": "Facile",
+          "ok": "Un peu déroutant",
+          "hard": "Compliqué"
+        }
+      },
+      "guideUseful": {
+        "label": "Le guide d'utilisation t'a-t-il aidé ?",
+        "opt": {
+          "yes": "Oui",
+          "partly": "En partie",
+          "notRead": "Je ne l'ai pas lu",
+          "notFound": "Je ne savais pas qu'il existait"
+        }
+      },
+      "help": {
+        "label": "Quand tu bloques sur le site, tu fais quoi ?",
+        "opt": {
+          "ask": "Je demande à quelqu'un",
+          "guide": "Je vais voir le guide",
+          "report": "J'utilise « Signaler un problème »",
+          "giveUp": "Je laisse tomber"
+        }
+      },
+      "translationQuality": {
+        "label": "La traduction en 中文 est…",
+        "low": "Souvent fausse",
+        "high": "Impeccable"
+      },
+      "liked": {
+        "label": "Qu'est-ce qui te sert le plus, ou marche vraiment bien ?",
+        "placeholder": "ex. la transposition, le Mode Louange sur tablette…"
+      },
+      "problems": {
+        "label": "Qu'est-ce qui te gêne, te ralentit ou ne marche pas bien ?",
+        "placeholder": "Sois précis si tu peux : quelle page, quel chant, sur quel appareil."
+      },
+      "wanted": {
+        "label": "Quelles fonctionnalités aimerais-tu voir arriver ?",
+        "opt": {
+          "jianpu": "Le 简谱 sur plus de chants",
+          "audio": "Un enregistrement audio par chant",
+          "metronome": "Un métronome / le tempo des chants",
+          "tuner": "Un accordeur",
+          "history": "Savoir quand un chant a été chanté la dernière fois",
+          "notes": "Des notes personnelles sur un chant",
+          "translations": "Plus de traductions français ↔ 中文",
+          "moreSongs": "Plus de chants au répertoire",
+          "offline": "Une consultation hors connexion plus fiable",
+          "print": "Une impression plus propre"
+        }
+      },
+      "priority": {
+        "label": "S'il ne fallait améliorer qu'UNE seule chose, ce serait quoi ?",
+        "placeholder": "C'est la réponse la plus utile pour nous."
+      },
+      "ideas": {
+        "label": "Autre chose à nous dire ?",
+        "placeholder": "Tout est bienvenu."
+      }
+    }
   }
 }
