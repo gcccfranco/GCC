@@ -37,6 +37,11 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey }: 
     chords && playedKey ? semitonesTo(chords.printedKey, playedKey) : 0;
   const overlayOn = Boolean(chords && playedKey);
   const staleChords = Boolean(playedKey && !chords);
+  // Calque partiel : une partie des accords n'a pas été relevée et reste
+  // donc dans la tonalité imprimée. On le dit, et on met en évidence ceux
+  // qui ont été réécrits — montrer où l'on est sûr vaut mieux que laisser
+  // croire que toute la page est convertie.
+  const partial = Boolean(overlayOn && chords?.complete === false);
 
   return (
     <div className={fit ? "flex h-full w-full flex-col items-center justify-center gap-2" : "flex flex-col items-center gap-6"}>
@@ -46,6 +51,18 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey }: 
           Les chiffres du 简谱 restent justes dans toutes les tonalités, mais les
           accords imprimés sur cette partition sont ceux d&apos;origine et ne
           suivent pas la transposition.
+        </div>
+      )}
+
+      {partial && (
+        <div className="w-full max-w-2xl rounded-lg border border-amber-300/70 bg-amber-50/90 px-3 py-2 text-xs text-amber-900 dark:border-amber-700/50 dark:bg-amber-950/30 dark:text-amber-300">
+          <span className="font-semibold">Jouer en {playedKey}.</span>{" "}
+          Seuls les accords{" "}
+          <span className="font-semibold text-blue-700 dark:text-blue-400">en bleu</span>{" "}
+          ont été transposés. Les autres sont ceux d&apos;origine
+          {chords?.printedKey ? ` (${chords.printedKey})` : ""}
+          {chords?.keyLabel ? "" : `, comme l’indication « 1=${chords?.printedKey} » en haut de page`}{" "}
+          et ne suivent pas la transposition — les chiffres, eux, restent justes.
         </div>
       )}
 
@@ -104,7 +121,12 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey }: 
               {chords.labels.map((l, n) => (
                 <span
                   key={n}
-                  className="absolute flex items-end whitespace-nowrap bg-white text-black dark:bg-black dark:text-neutral-100"
+                  className={
+                    "absolute flex items-end whitespace-nowrap bg-white dark:bg-black " +
+                    (partial
+                      ? "text-blue-700 dark:text-blue-400"
+                      : "text-black dark:text-neutral-100")
+                  }
                   style={{
                     // Le masque déborde de l'amas détecté : le crénage et
                     // l'anticrénelage du glyphe d'origine dépassent de deux

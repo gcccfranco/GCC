@@ -21,6 +21,11 @@ export type JianpuChords = {
   /** Cadre du libellé « 1=X », à réécrire dans la tonalité jouée. */
   keyLabel?: { x: number; y: number; w: number; h: number };
   labels: JianpuChordLabel[];
+  /** Absent = calque complet, vérifié à l'œil sur la page transposée.
+   *  `false` = certains accords de la partition n'ont pas été relevés et
+   *  resteront donc dans la tonalité d'origine. Le client doit alors le dire
+   *  et montrer lesquels il a réécrits. */
+  complete?: boolean;
 };
 export type JianpuChordsManifest = Record<string, JianpuChords>;
 
