@@ -17,9 +17,15 @@ transposition) ; seuls les accords sont remplacés.
 ## Pourquoi une boucle
 
 Ce qui itère n'est pas le modèle mais **les artefacts** : les paramètres du
-classifieur et la bibliothèque de templates. Ils persistent sur le disque et
+classifieur et la vérité terrain. Ils persistent sur le disque et
 grossissent à chaque tour. L'oracle est mécanique, donc le progrès est
 mesurable sans appréciation.
+
+**Où vit la précision.** Jusqu'à l'itération 4 elle vivait dans le
+classifieur, qui refusait toute rangée douteuse. Depuis que `match.py` lit
+les étiquettes, elle vit dans le matcher : une rangée qui n'est pas des
+accords produit des amas que rien n'apparie. Le classifieur peut donc être
+permissif — **il propose, le matcher dispose** (itération 7).
 
 ## Oracle (double, mécanique)
 
@@ -125,6 +131,7 @@ rangées les tronque.
 | 4 | A=29 · B=16 dont **7 vraies ratées** | pas de matcher | 0 |
 | 5 | inchangé (A=29 · B=16) | **108 / 167 amas retenus, dont 97 justes** · 0 parasite gardé | 5 /124 entièrement appariés (2547/3554 amas, 72 %) |
 | 6 | inchangé | 85 / 144 étiquettes · **0 mal lue, 0 parasite** | **3 /124 calques publiés** (contrôlés par transposition) |
+| 7 | **A=39 · B=6** · orphelines du corpus 172 → **0** | 89 / 144 · 0 mal lue, 0 parasite · corpus **50 %** (2310/4651) | 3 /124 (inchangé) |
 
 ## Journal
 
@@ -403,3 +410,81 @@ d'avant qui était faux.
 chant) et 35 par une lecture incomplète. Le goulot est donc revenu à la
 classification des rangées — le mode B des itérations 1 à 4 — mais avec
 cette fois une conséquence produit nette, et un contrôle qui la voit.
+
+### Itération 7 — le classifieur propose, le matcher dispose
+
+Cible annoncée à l'itération 6 : les 86 chants bloqués par des rangées
+candidates non lues.
+
+**Ce que la planche des orphelines a montré.** 172 rangées sur le corpus,
+dont un échantillon de 40 rendu à l'œil : **environ 34 sur 40 sont de vraies
+rangées d'accords**. Ce n'était donc pas un problème de cas limites mais un
+défaut de rappel massif. Deux tests les rejetaient, et les compteurs disent
+lequel : **90 par la hauteur** (`chord_max_height_frac`, « une rangée
+d'accords reste fine devant la rangée de chiffres » — faux : la médiane des
+rejetées est à 1,29 fois la hauteur des chiffres, parce qu'une rangée de
+chiffres sans point d'octave est basse), **60 par le long segment continu**
+(`chord_max_run_frac` à 0,015, alors que la médiane des rejetées est 0,023 —
+un arc de liaison, un crochet de reprise, un trait de *D.S.* en produisent),
+22 par les deux.
+
+**Les deux tests ont été retirés, pas relâchés.** Ils datent d'une époque où
+la précision venait du classifieur. Elle vient maintenant du matcher : une
+rangée qui n'est pas des accords donne des amas que rien n'apparie. Le
+classifieur n'a plus qu'une règle, positionnelle : *la rangée utile qui
+précède une rangée de chiffres, hors du bandeau de titre*.
+
+Résultat : rangées orphelines du corpus **172 → 0** par construction,
+rangées d'accords +33 %, amas 3554 → 4651. Sur la planche, A passe de 29 à
+39 et B de 16 à 6 — et **les six qui restent sont toutes des titres ou des
+crédits**, plus une seule vraie ratée.
+
+**Ce que la planche a montré et que le compteur ne dit pas** : deux rangées
+de **paroles** sont maintenant déclarées accords (『赐我 气息…』 et
+『我们要赞美耶和华…』), plus une ligne de métadonnées de 献上尊荣 qui passe
+tout juste sous `min_top_frac`. Elles ne peuvent pas salir la partition — le
+matcher n'apparie aucun hanzi — mais elles **bloquent la publication**,
+puisqu'une rangée non lue disqualifie le chant. Le compromis est donc réel
+et il fallait le nommer.
+
+**Calibration de chasse, le seul gain de lecture de l'itération.** En
+décomposant le score, la corrélation des lectures justes rejetées est bonne
+(médiane +0,68 sur 我心坚定与你) mais la **pénalité de chasse** leur retire
+0,20 point : le gabarit y est 1,14 fois plus large que le scan. C'est un
+facteur *global à la page* — les gravures ne sont pas toutes aussi étroites
+— donc estimable sur les propres étiquettes de la partition, à la médiane
+des écarts. Lecture 85 → 89 sur le jeu de contrôle, corpus 44 % → 50 %,
+sans un seul faux ni parasite en plus. 齐来赞美 devient complet.
+
+**Quatre pistes mesurées et abandonnées**, pour ne pas les refaire :
+
+1. *Baisser `MIN_SCORE`* — de +0,28 à 0,00 ne gagne que 6 étiquettes et
+   ramène 3 parasites. Le seuil n'est pas le goulot.
+2. *Seuil relatif à la partition* (le score médian va de +0,56 à −0,53 d'une
+   page à l'autre, donc l'idée était tentante) — 85 → 88 étiquettes, mais
+   une mal lue et un parasite reviennent.
+3. *Choisir la fonte de référence par partition*, cette fois avec un critère
+   qui vise directement l'objectif (le nombre d'étiquettes publiables) et
+   non plus le score médian de l'itération 5 — **101 → 102 étiquettes**, et
+   un parasite. La fonte n'est pas le goulot non plus.
+4. *Filtrer les marques par leur remplissage vertical* — l'amas d'un crochet
+   ou d'un arc n'occupe que 38 % de la hauteur de rangée, contre 100 % pour
+   une étiquette ; à 0,5 le test désigne 15 parasites sur 23 **sans perdre
+   une seule étiquette**. Bon signal, mais inutile ici : le simuler sur le
+   corpus ne fait passer que 2 chants au lieu de 3, parce que 108 chants ont
+   encore 6 amas illisibles ou plus. Ce ne sont pas les marques qui bloquent.
+
+**Le compte de calques publiés ne bouge pas : 3.** Il faut le dire
+franchement. La lecture progresse (44 → 50 % du corpus) mais la publication
+est tout-ou-rien par partition, et 50 % de lecture ne publie rien. Le vrai
+état des lieux : 1 chant entièrement lu, 1 à un ou deux amas près, 7 à cinq
+près, **89 à plus de dix**.
+
+**Prochaine itération — la question à trancher est de produit, pas de
+technique.** Le tout-ou-rien vient de l'itération 6 et il est juste : une
+page à moitié transposée ment. Mais il rend le progrès invisible jusqu'au
+dernier amas. Deux sorties possibles, et c'est à l'utilisateur de choisir :
+soit on continue jusqu'à lire des partitions entières, soit le client
+**signale visuellement les accords non convertis** (grisés, ou barrés) et
+publie alors les calques partiels, ce qui rendrait exploitables les dizaines
+de chants lus à 80-90 %.
