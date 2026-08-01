@@ -98,9 +98,11 @@ def _from_gold(slug: str, gold: dict):
         chords = by_top.get(f["top"])
         # Un écart de compte veut dire que le découpage a bougé depuis que
         # la vérité terrain a été écrite : on poserait les accords les uns
-        # sur les autres.
+        # sur les autres. Une rangée absente veut dire que la vérité terrain
+        # ne la couvre pas — et une rangée non couverte resterait dans
+        # l'ancienne tonalité une fois le chant transposé.
         if not chords or len(chords) != len(row):
-            continue
+            return [], f"vérité terrain incomplète (rangée y={f['top']})"
         for ((x0, x1), _c, _s, _u), chord in zip(row, chords):
             if chord:
                 labels.append(_box(f, x0, x1, chord))
