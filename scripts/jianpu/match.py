@@ -36,6 +36,7 @@ Usage (depuis scripts/jianpu/) :
 
 from __future__ import annotations
 
+import json
 import os
 import re
 import sys
@@ -101,6 +102,17 @@ def vocabulary(slug: str) -> list[str]:
     Le filtre par `CHORD_RE` écarte les libellés de section
     (`[副歌/Refrain]`) et les espaceurs (`[ ]`), qui partagent la syntaxe des
     accords.
+
+    Le `.cho` n'est pas toujours un sur-ensemble de ce qui est gravé : la
+    partition porte des accords de passage (`F#dim`, `Em/D`, `Am/G`) que la
+    transcription ChordPro simplifie. `gold/<slug>.json` peut donc ajouter
+    ces étiquettes-là dans `extra_chords`, **une par une et lues à l'œil**.
+
+    Élargir le vocabulaire par une règle générale — toutes les basses de la
+    gamme, tous les accords diminués — a été mesuré et rejeté : de 13 à 84
+    candidats, la lecture tombe de 95 à 76 étiquettes justes et deux
+    mauvaises lectures apparaissent. C'est la **petitesse** du vocabulaire
+    qui fait la force du matcher (LOOP.md, itération 9).
     """
     text = open(os.path.join(SONGS, f"{slug}.cho"), encoding="utf8").read()
     out: list[str] = []
@@ -108,6 +120,11 @@ def vocabulary(slug: str) -> list[str]:
         token = token.strip()
         if CHORD_RE.match(token) and token.strip("()") not in out:
             out.append(token.strip("()"))
+    gold = os.path.join(HERE, "gold", f"{slug}.json")
+    if os.path.exists(gold):
+        for chord in json.load(open(gold, encoding="utf8")).get("extra_chords", []):
+            if chord not in out:
+                out.append(chord)
     return out
 
 
