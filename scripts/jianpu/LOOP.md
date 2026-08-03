@@ -98,7 +98,7 @@ progression de la couverture.
 
 ## Jeu de contrôle
 
-8 chants couvrant les deux familles de gravure rencontrées :
+7 chants couvrant les deux familles de gravure rencontrées :
 
 | Chant | Gravure | Accords | Vérité terrain |
 |---|---|---|---|
@@ -132,7 +132,7 @@ rangées les tronque.
 | 5 | inchangé (A=29 · B=16) | **108 / 167 amas retenus, dont 97 justes** · 0 parasite gardé | 5 /124 entièrement appariés (2547/3554 amas, 72 %) |
 | 6 | inchangé | 85 / 144 étiquettes · **0 mal lue, 0 parasite** | **3 /124 calques publiés** (contrôlés par transposition) |
 | 7 | **A=39 · B=6** · orphelines du corpus 172 → **0** | 89 / 144 · 0 mal lue, 0 parasite · corpus **50 %** (2310/4651) | 3 /124 (inchangé) |
-| 8 | +90 rangées (accords courts récupérés) | inchangé | **1 /124** — les 2 autres étaient **faux** et sont dépubliés |
+| 8 | +90 rangées (accords courts récupérés) · planche **A=45 · B=5** (les 5 : titres et crédits) | inchangé | **1 /124** — les 2 autres étaient **faux** et sont dépubliés |
 | 9 | inchangé | vocabulaire élargi **rejeté** (95 → 76 justes) | 1 /124 — `verified` devient obligatoire |
 
 ## Journal
@@ -626,6 +626,17 @@ bandeau ni couleur ; les 49 autres sont marquées. Le plancher de publication
 est fixé à 60 % d'amas lus : en dessous, la page resterait presque
 entièrement dans sa tonalité d'origine et le marquage ferait plus de bruit
 que de service.
+
+Deux conséquences à garder en tête. `stray_chords` n'est **plus appelé
+nulle part** : le verrou tout-ou-rien de l'itération 8 n'a plus d'objet
+puisque l'incomplétude est publiée et dite ; la fonction reste dans
+`build-chords.py` comme documentation du contrôle, mais la mesure « N
+partitions sans accord hors calque » de l'itération 9 n'est plus branchée.
+Et le plancher de 60 % se calcule sur les amas **détectés**, pas sur la
+page : 能不能 affiche « 3/3 étiquettes » alors que sa page porte une
+dizaine d'accords que le classifieur ne voit pas. Le bandeau rend ça
+honnête — seuls les accords en bleu sont garantis — mais le chiffre de
+couverture peut flatter.
 
 Ce n'est pas un renoncement au « zéro erreur » mais son application : une
 erreur, c'est **affirmer** faussement. Montrer une conversion partielle en
