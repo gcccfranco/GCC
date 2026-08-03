@@ -134,6 +134,7 @@ rangées les tronque.
 | 7 | **A=39 · B=6** · orphelines du corpus 172 → **0** | 89 / 144 · 0 mal lue, 0 parasite · corpus **50 %** (2310/4651) | 3 /124 (inchangé) |
 | 8 | +90 rangées (accords courts récupérés) · planche **A=45 · B=5** (les 5 : titres et crédits) | inchangé | **1 /124** — les 2 autres étaient **faux** et sont dépubliés |
 | 9 | inchangé | vocabulaire élargi **rejeté** (95 → 76 justes) | 1 /124 — `verified` devient obligatoire |
+| 10 | +151 étiquettes lues à l'œil (1199 → 1344 publiées) | repêchage automatique **rejeté** (3 gardes, tous percés) | **2 /124 certifiés** (能不能, au navigateur) |
 
 ## Journal
 
@@ -648,3 +649,66 @@ aux itérations 8 et 9.
 La certification garde tout son sens : elle se gagne partition par
 partition, en lisant les rangées ratées et en regardant la page transposée
 dans le navigateur. Chaque chant certifié perd son bandeau.
+
+### Itération 10 — l'automate propose, l'œil dispose
+
+Reprise de la boucle sur demande : viser des calques fiables à 100 %, en
+vérifiant « par tous les moyens », navigateur et captures compris.
+
+**Le repêchage automatique, essayé et enterré.** L'état des lieux montrait
+que le matcher savait déjà lire des accords que le classifieur n'avait
+jamais mis en rangée (les 10 « hors calque » de 能不能). Les publier
+directement a été tenté avec trois garde-fous successifs, et chacun a été
+percé par le contrôle visuel :
+
+1. *Sans garde* : un 6 de mélodie avec son octave lu « C » (+0,30) et
+   réécrit « C# » **par-dessus la note**. Les chiffres apparient.
+2. *Adjacence à une rangée de chiffres* : casse sur les pages où la mélodie
+   est typée `?` (ligatures épaisses → ratio haut), soit précisément les
+   pages à repêcher.
+3. *Triple garde (score ≥ +0,42 · ≥ 2 par rangée · rangée ≤ 1,5 ×
+   hauteur d'étiquette)* : élimine 100 % des faux connus… sauf un « C » à
+   +0,42 dans une rangée qui n'en contient pas (明亮晨星), vu à l'œil seul.
+
+La moisson de la planche des candidats vaut d'être gravée : le libellé
+« 1=D » se lit « D » à **+0,70** ; un G/B se lit « Bm » à **+0,73, jury
+unanime** ; des paroles anglaises donnent F#m à +0,39, des hanzi F à
++0,47, des chiffres G à +0,49. **« Les chiffres et les hanzi n'apparient
+rien » — vrai dans les rangées calibrées, faux à l'échelle de la page.**
+Ni score, ni unanimité, ni géométrie ne séparent : seule la structure
+d'une rangée déjà classée le faisait, et hors de ces rangées il n'y a que
+l'œil.
+
+**Le circuit retenu.** `propose-extra.py` applique le triple garde comme
+*pré-filtre de volume* et émet un zoom par étiquette (l'amas encadré, la
+lecture à côté). Les zooms sont lus un à un ; les approuvés sont recopiés
+dans `gold/<slug>.json` sous `extra_labels`, et `build-chords.py` publie
+cette liste gelée — rien d'automatique n'atteint plus le calque. Résultat
+de la première passe : **139 zooms lus, 139 justes**, plus 12 étiquettes
+isolées ou illisibles certifiées à la main (dont `(C/G)` entre
+parenthèses, `D/G`, `D/C`, et le `F Bb C F` de 齐来赞美 que l'automate
+n'a jamais su lire). 1199 → 1344 étiquettes publiées, 23 chants
+améliorés, sans une seule écriture non vue.
+
+**La vérification navigateur est outillée** (`puppeteer-core` + Chrome
+headless, clair et sombre, tonalité transposée par l'URL) — et sa première
+sortie a immédiatement montré deux défauts qu'aucun contrôle Python ne
+pouvait voir sur 能不能 :
+
+- une **parenthèse fermante orpheline** à côté du `(D/A)` réécrit — la
+  `）` était un amas séparé, hors du masque ;
+- **tout un système resté dans l'ancienne tonalité** : sa rangée d'accords
+  est *fusionnée* dans la rangée de mélodie (h = 144, typée `numbers`),
+  invisible au classifieur, au matcher, à `stray_chords` **et** à
+  `compare-render`, qui ne bande pas les rangées `numbers`. C'est le mode
+  de 到各山岭去传扬, pris ici en flagrant délit — par la capture seule.
+
+Les deux corrigés (masque élargi ; bande fusionnée découpée à la main,
+cinq accords lus à l'œil), `compare-render` bande maintenant toute rangée
+où le calque publie, et `overlay.py` transpose les accords entre
+parenthèses comme le client sait déjà le faire.
+
+**能不能 est certifié** — deuxième calque après 何等恩典 : page relue en
+capture Chrome dans les deux thèmes, transposée G→A, 21 étiquettes toutes
+retournées, `1=A`, rien d'ancien. Le compte certifié passe à **2/124**,
+et la voie est répétable : zooms → gold → captures → `verified`.
