@@ -62,6 +62,11 @@ CHORD_RE = re.compile(r"^([A-G][#b]?)(.*)$")
 
 
 def transpose_chord(chord: str, semitones: int, target_key: str) -> str:
+    # Accord entre parenthèses (optionnel sur la gravure) : transposer le
+    # contenu, garder les parenthèses — même comportement que le client
+    # (`transposeChord`, src/lib/transpose.ts).
+    if chord.startswith("(") and chord.endswith(")"):
+        return "(" + transpose_chord(chord[1:-1], semitones, target_key) + ")"
     if "/" in chord:
         left, right = chord.split("/", 1)
         return f"{transpose_chord(left, semitones, target_key)}/{transpose_note(right, semitones, target_key)}"
