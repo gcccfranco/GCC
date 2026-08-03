@@ -56,7 +56,7 @@ def sheet(slug: str) -> str:
     raw = Image.open(os.path.join(IMAGES, f"{slug}-p1.webp")).convert("RGB")
     moved = Image.open(os.path.join(OUT, f"{slug}-{target}.png")).convert("RGB")
 
-    bands = _bands(slug)
+    bands = _bands(slug, entry)
     strips = []
     for top, bottom in bands:
         for image in (raw, moved):
@@ -94,13 +94,18 @@ def _half_step(key: str) -> str:
     return SHARP[(note_index(key) + 1) % 12]
 
 
-def _bands(slug: str) -> list[tuple[int, int]]:
+def _bands(slug: str, entry: dict) -> list[tuple[int, int]]:
     """Toutes les rangées susceptibles de porter des accords.
 
     Pas seulement celles où le calque a posé quelque chose : une rangée que
     le classifieur a laissée en « ? » juste au-dessus des chiffres est
     justement celle qu'il faut montrer, puisque c'est là que se cachent les
     accords entièrement manqués.
+
+    Et pas seulement celles du classifieur : depuis le repêchage hors
+    rangées (itération 10), le calque pose des accords là où le classifieur
+    n'a rien vu. Toute rangée où `chords.json` publie une étiquette doit
+    passer sous l'œil, sinon les repêchées échappent au contrôle.
     """
     _ink, _w, feats, kinds = classify(os.path.join(IMAGES, f"{slug}-p1.webp"))
     page_h = max(f["bottom"] for f in feats) if feats else 0
@@ -115,7 +120,16 @@ def _bands(slug: str) -> list[tuple[int, int]]:
                 j += 1
             if j < len(kinds) and kinds[j] == "numbers":
                 out.append((f["top"], f["bottom"]))
-    return out
+    for l in entry["labels"]:
+        out.append((l["y"], l["y"] + l["h"] - 1))
+    out.sort()
+    merged: list[tuple[int, int]] = []
+    for top, bottom in out:
+        if merged and top <= merged[-1][1] + 4:
+            merged[-1] = (merged[-1][0], max(merged[-1][1], bottom))
+        else:
+            merged.append((top, bottom))
+    return merged
 
 
 if __name__ == "__main__":
