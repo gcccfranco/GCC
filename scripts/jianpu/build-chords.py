@@ -70,7 +70,7 @@ def cho_key(slug: str) -> str | None:
     return m.group(1).strip() if m else None
 
 
-def stray_chords(slug: str, path: str, labels: list[dict]) -> list[str]:
+def stray_chords(slug: str, path: str, labels: list[dict]) -> list[dict]:
     """Accords imprimés que le calque ne couvre pas, cherchés sur **toute**
     la page.
 
@@ -87,6 +87,13 @@ def stray_chords(slug: str, path: str, labels: list[dict]) -> list[str]:
     accord du chant, hors des rangées publiées, est un accord qui resterait
     dans l'ancienne tonalité. Les chiffres et les hanzi n'apparient rien —
     c'est ce que quatre itérations de mise au point du matcher ont établi.
+
+    Le repêchage automatique de ce que cette fonction trouve a été essayé à
+    l'itération 10 et **rejeté** : le contrôle visuel a montré des chiffres
+    de mélodie lus « G » à +0,49, un libellé « 1=D » lu « D » à +0,70, un
+    « Bm » unanime à +0,73 posé sur un G/B. Ce qu'elle trouve passe par
+    `propose-extra.py`, une lecture à l'œil, puis `extra_labels` dans
+    `gold/` — jamais directement au calque.
     """
     covered = {(l["y"], l["x"]) for l in labels}
     ink = np.asarray(Image.open(path).convert("L")) < INK_THRESHOLD
@@ -110,7 +117,7 @@ def stray_chords(slug: str, path: str, labels: list[dict]) -> list[str]:
             sig = signature(sub[ys[0] : ys[-1] + 1, xs[0] : xs[-1] + 1])
             score, chord = best_match(sig, templates)
             if score >= MIN_SCORE and all(best_match(sig, t)[1] == chord for t in jury):
-                out.append(f"{chord}@y{f['top']}")
+                out.append(_box(f, x0, x1, chord))
     return out
 
 
@@ -195,6 +202,15 @@ def build(slug: str):
         labels, note = _from_reading(slug, gold)
     if not labels:
         return None, note
+
+    # Étiquettes hors rangées, **lues à l'œil** (itération 10) : proposées
+    # par `propose-extra.py`, vérifiées zoom par zoom, puis recopiées dans
+    # `gold/<slug>.json` sous `extra_labels`. Le repêchage sans yeux a été
+    # essayé et rejeté — voir `stray_chords` et LOOP.md.
+    extra = gold.get("extra_labels", [])
+    if extra:
+        labels = labels + [{k: l[k] for k in ("x", "y", "w", "h", "c")} for l in extra]
+        note += f" · +{len(extra)} hors rangées (lues à l'œil)"
 
     # **Complet** veut dire : un humain a regardé la page transposée dans le
     # navigateur et n'y a vu aucun accord resté dans l'ancienne tonalité.
