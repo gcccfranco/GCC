@@ -12,5 +12,22 @@
   "344,80": "G",
   "717,105": "G",
   "1163,662": "C"
- }
+ },
+ "extra_labels": [
+  {
+   "x": 849,
+   "y": 752,
+   "w": 20,
+   "h": 31,
+   "c": "G"
+  },
+  {
+   "x": 1194,
+   "y": 752,
+   "w": 70,
+   "h": 31,
+   "c": "D/F#"
+  }
+ ],
+ "extra_verified": "rangée gravée à deux hauteurs disséquée à la main (G et D/F# plus bas que le G de gauche), zooms relus, 2026-08-04"
 }
