@@ -135,6 +135,7 @@ rangées les tronque.
 | 8 | +90 rangées (accords courts récupérés) · planche **A=45 · B=5** (les 5 : titres et crédits) | inchangé | **1 /124** — les 2 autres étaient **faux** et sont dépubliés |
 | 9 | inchangé | vocabulaire élargi **rejeté** (95 → 76 justes) | 1 /124 — `verified` devient obligatoire |
 | 10 | +151 étiquettes lues à l'œil (1199 → 1344 publiées) | repêchage automatique **rejeté** (3 gardes, tous percés) | **2 /124 certifiés** (能不能, au navigateur) |
+| 11 | 到各山岭去传扬 complété (rangée à deux hauteurs) | 44 cadres 1=X transcrits sur grille : **12+ faux au rendu fidèle → lot retiré** (stash) | **3 /124 certifiés** (齐来赞美) |
 
 ## Journal
 
@@ -712,3 +713,42 @@ parenthèses comme le client sait déjà le faire.
 capture Chrome dans les deux thèmes, transposée G→A, 21 étiquettes toutes
 retournées, `1=A`, rien d'ancien. Le compte certifié passe à **2/124**,
 et la voie est répétable : zooms → gold → captures → `verified`.
+
+### Itération 11 — un troisième certifié, et un lot retiré à temps
+
+**齐来赞美 est certifié** (3ᵉ) : transposition F→G propre sur les 7 bandes
+du compare, captures Chrome clair/sombre, 20 accords tous retournés,
+voltas et ligne d'album intacts. **到各山岭去传扬 est complété** — le `G`
+et le `D/F#` de sa rangée gravée à deux hauteurs (la cause de sa
+dépublication à l'itération 9) sont disséqués à la main et au calque.
+
+**Deux questions de produit découvertes, à trancher avant de certifier
+les chants concernés :**
+
+1. *Le titre qui annonce la tonalité.* 到各山岭去传扬 imprime
+   « （G调） » dans son titre : transposée en A, la page garde un titre
+   qui dit G. Masquer la mention comme on masque « 1=X », ou l'accepter
+   comme information d'édition ?
+2. *Les pages à capo.* 十架的爱 imprime `1=F` en tête… et ses accords
+   gravés sont des formes de ré (D/F#, G, Bm — vérifiés au zoom), .cho en
+   D : arrangement guitare capo 3. Réécrire « 1=A » quand on joue en A
+   serait faux (le A est une forme, pas la hauteur sonnante). Quelle
+   sémantique pour le libellé sur ces pages ?
+
+**Le lot des cadres 1=X, tenté en série et retiré.** 44 cadres transcrits
+à l'œil sur planches quadrillées, cohérence lettre imprimée ↔
+`printedKey` vérifiée (44/44 — seule exception : 十架的爱, le cas capo
+ci-dessus). Mais le rendu de contrôle — `overlay.py`, qui dessine
+désormais le libellé comme le client — a montré **plus d'une douzaine de
+cadres faux** : « 4/4 » rogné (la fraction était plus proche que la
+grille ne le laissait lire), « 1= » d'origine qui dépasse à gauche,
+et des cadres posés sur la mauvaise ligne. La transcription de
+coordonnées sur grille ne tient pas à cette échelle. Lot entier mis de
+côté (stash `keylabels-brouillon-44-cadres`), rien de publié — c'est le
+même réflexe qu'aux itérations 8 et 9 : le compte qui monte n'a aucune
+valeur si le contrôle ne passe pas.
+
+**Piste pour le prochain lot** : mesurer les cadres automatiquement —
+dans la bande du libellé, la fraction 4/4 se distingue par sa hauteur
+(double de celle des lettres) ; un bbox des amas *hors fraction* donnerait
+des cadres exacts, à valider ensuite sur le rendu fidèle, page par page.
