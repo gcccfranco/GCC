@@ -87,5 +87,6 @@
    "c": "F"
   }
  ],
- "extra_verified": "chaque étiquette relue sur zoom (propose-extra + planches), 2026-08-04"
+ "extra_verified": "chaque étiquette relue sur zoom (propose-extra + planches), 2026-08-04",
+ "verified": "transposé F→G dans Chrome headless (captures relues par Claude), thèmes clair et sombre : 20 accords + 1=G, rangée y=293 lue à l'œil comprise, aucun accord resté en F — 2026-08-04"
 }
