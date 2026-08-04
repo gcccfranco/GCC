@@ -116,6 +116,20 @@ def render(slug: str, target_key: str, diag: bool = False) -> str:
         if diag:
             dr.rectangle([x0 - 3, y0 - 3, x1 + 3, y1 + 3], outline=(37, 99, 235), width=1)
 
+    # Le libellé « 1=X » suit la transposition, comme chez le client
+    # (JianpuSheet). Sans lui, le rendu de contrôle validait les accords
+    # mais laissait le cadre du libellé invisible — on ne pouvait pas voir
+    # un cadre mal mesuré avant le navigateur.
+    kl = entry.get("keyLabel")
+    if kl:
+        x0, y0 = kl["x"], kl["y"]
+        x1, y1 = x0 + kl["w"] - 1, y0 + kl["h"] - 1
+        dr.rectangle([x0 - 3, y0 - 4, x1 + 4, y1 + 2], fill=(255, 255, 255))
+        dr.text((x0, y1), f"1={target_key}",
+                font=load_font(int(kl["h"] * 1.1)), fill=(0, 0, 0), anchor="ls")
+        if diag:
+            dr.rectangle([x0 - 3, y0 - 4, x1 + 4, y1 + 2], outline=(220, 38, 38), width=1)
+
     os.makedirs(OUT, exist_ok=True)
     dest = os.path.join(OUT, f"{slug}-{target_key}.png")
     im.save(dest)
