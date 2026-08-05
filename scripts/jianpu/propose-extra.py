@@ -65,25 +65,61 @@ def propose(slug: str, entry: dict) -> list[dict]:
 
     out = []
     for f in feats:
-        if f["top"] < floor or f["height"] > MAX_H_RATIO * entry["labelH"]:
+        if f["top"] < floor:
             continue
+        # Rangée haute : elle mêle des accords et de la musique (ligatures,
+        # arcs, chiffres). On ne la saute plus — c'est exactement le cas de
+        # 不停赞美, dont un système entier est resté dans l'ancienne tonalité
+        # parce que sa rangée d'accords portait aussi des ligatures et se
+        # retrouvait typée `numbers`, invisible partout (itération 13). On
+        # cale alors chaque étiquette sur **le bloc d'encre supérieur de ses
+        # propres colonnes** : le haut d'une rangée n'est pas le haut de ses
+        # lettres, et une boîte héritée des bornes de la rangée mange le
+        # haut des chiffres.
+        tall = f["height"] > MAX_H_RATIO * entry["labelH"]
         row = []
         for x0, x1 in f["clusters"]:
             if (f["top"], x0) in covered:
                 continue
-            sub = ink[f["top"] : f["bottom"] + 1, x0 : x1 + 1]
+            top, bottom = f["top"], f["bottom"]
+            if tall:
+                band = _top_block(ink, top, bottom, x0, x1, entry["labelH"])
+                if band is None:
+                    continue
+                top, bottom = band
+            sub = ink[top : bottom + 1, x0 : x1 + 1]
             ys, xs = np.where(sub.any(1))[0], np.where(sub.any(0))[0]
             if not len(ys) or not len(xs):
                 continue
             sig = signature(sub[ys[0] : ys[-1] + 1, xs[0] : xs[-1] + 1])
             score, chord = best_match(sig, templates)
             if score >= SAFE_SCORE and all(best_match(sig, t)[1] == chord for t in jury):
-                row.append({"x": int(x0), "y": int(f["top"]), "w": int(x1 - x0 + 1),
-                            "h": int(f["bottom"] - f["top"] + 1), "c": chord,
+                row.append({"x": int(x0), "y": int(top), "w": int(x1 - x0 + 1),
+                            "h": int(bottom - top + 1), "c": chord,
                             "score": round(float(score), 2)})
         if len(row) >= MIN_ROW_MATCHES:
             out.extend(row)
     return out
+
+
+def _top_block(ink, top: int, bottom: int, x0: int, x1: int, label_h: int):
+    """Premier bloc d'encre continu des colonnes `x0..x1`, s'il a la taille
+    d'une étiquette. Rend `None` si le bloc déborde — l'amas est alors de la
+    musique, pas un accord."""
+    prof = ink[top : bottom + 1, x0 : x1 + 1].any(axis=1)
+    ys = np.where(prof)[0]
+    if not len(ys):
+        return None
+    start = ys[0]
+    end = start
+    for y in ys[1:]:
+        if y - end > 2:
+            break
+        end = y
+    h = end - start + 1
+    if not (0.6 * label_h <= h <= 1.6 * label_h):
+        return None
+    return top + start, top + end
 
 
 def main() -> int:
