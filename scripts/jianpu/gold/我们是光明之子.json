@@ -30,5 +30,12 @@
    "c": "A"
   }
  ],
- "extra_verified": "chaque étiquette relue sur zoom (propose-extra + planches), 2026-08-04"
+ "extra_verified": "chaque étiquette relue sur zoom (propose-extra + planches), 2026-08-04",
+ "key_label": {
+  "x": 15,
+  "y": 206,
+  "w": 76,
+  "h": 25
+ },
+ "key_label_verified": "mesure measure-keylabel (vote 1= + lettre attendue), zoom relu à l’œil, 2026-08-05"
 }
