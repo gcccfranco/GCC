@@ -228,6 +228,12 @@
 "一生爱你": {
 "complete": false,
 "h": 2014,
+"keyLabel": {
+"h": 24,
+"w": 72,
+"x": 15,
+"y": 194
+},
 "labelH": 23,
 "labels": [
 {
@@ -391,6 +397,12 @@
 "一颗谦卑的心": {
 "complete": false,
 "h": 2100,
+"keyLabel": {
+"h": 27,
+"w": 88,
+"x": 15,
+"y": 207
+},
 "labelH": 33,
 "labels": [
 {
@@ -596,6 +608,12 @@
 "不停赞美": {
 "complete": false,
 "h": 2353,
+"keyLabel": {
+"h": 28,
+"w": 91,
+"x": 6,
+"y": 160
+},
 "labelH": 28,
 "labels": [
 {
@@ -738,6 +756,12 @@
 "丰盛的应许": {
 "complete": false,
 "h": 2088,
+"keyLabel": {
+"h": 24,
+"w": 72,
+"x": 15,
+"y": 199
+},
 "labelH": 27,
 "labels": [
 {
@@ -1628,6 +1652,12 @@
 "你坐着为王": {
 "complete": false,
 "h": 2014,
+"keyLabel": {
+"h": 24,
+"w": 72,
+"x": 15,
+"y": 145
+},
 "labelH": 25,
 "labels": [
 {
@@ -1756,6 +1786,12 @@
 "使命": {
 "complete": false,
 "h": 2015,
+"keyLabel": {
+"h": 23,
+"w": 72,
+"x": 15,
+"y": 153
+},
 "labelH": 22,
 "labels": [
 {
@@ -1996,6 +2032,12 @@
 "信实的神": {
 "complete": false,
 "h": 2139,
+"keyLabel": {
+"h": 25,
+"w": 75,
+"x": 15,
+"y": 206
+},
 "labelH": 33,
 "labels": [
 {
@@ -2173,6 +2215,12 @@
 "全新的你": {
 "complete": false,
 "h": 2353,
+"keyLabel": {
+"h": 27,
+"w": 83,
+"x": 6,
+"y": 162
+},
 "labelH": 27,
 "labels": [
 {
@@ -2364,6 +2412,12 @@
 "再次将我更新": {
 "complete": false,
 "h": 2215,
+"keyLabel": {
+"h": 25,
+"w": 82,
+"x": 17,
+"y": 155
+},
 "labelH": 24,
 "labels": [
 {
@@ -3318,6 +3372,12 @@
 "和散那": {
 "complete": false,
 "h": 2295,
+"keyLabel": {
+"h": 31,
+"w": 104,
+"x": 10,
+"y": 199
+},
 "labelH": 30,
 "labels": [
 {
@@ -3996,6 +4056,12 @@
 "如果你想知道": {
 "complete": false,
 "h": 2015,
+"keyLabel": {
+"h": 24,
+"w": 77,
+"x": 15,
+"y": 195
+},
 "labelH": 30,
 "labels": [
 {
@@ -4236,6 +4302,12 @@
 "想起你": {
 "complete": false,
 "h": 2353,
+"keyLabel": {
+"h": 27,
+"w": 90,
+"x": 6,
+"y": 160
+},
 "labelH": 33,
 "labels": [
 {
@@ -4639,6 +4711,12 @@
 "我们是光明之子": {
 "complete": false,
 "h": 2139,
+"keyLabel": {
+"h": 25,
+"w": 76,
+"x": 15,
+"y": 206
+},
 "labelH": 28,
 "labels": [
 {
@@ -5331,6 +5409,12 @@
 "我心坚定与你": {
 "complete": false,
 "h": 1948,
+"keyLabel": {
+"h": 22,
+"w": 72,
+"x": 15,
+"y": 146
+},
 "labelH": 27,
 "labels": [
 {
@@ -5683,6 +5767,12 @@
 "我愿为你去": {
 "complete": false,
 "h": 2353,
+"keyLabel": {
+"h": 26,
+"w": 85,
+"x": 6,
+"y": 162
+},
 "labelH": 27,
 "labels": [
 {
@@ -6298,6 +6388,12 @@
 "把冷漠变成爱": {
 "complete": false,
 "h": 2014,
+"keyLabel": {
+"h": 23,
+"w": 77,
+"x": 15,
+"y": 145
+},
 "labelH": 23,
 "labels": [
 {
@@ -6440,6 +6536,12 @@
 "拣选": {
 "complete": false,
 "h": 2014,
+"keyLabel": {
+"h": 22,
+"w": 67,
+"x": 15,
+"y": 191
+},
 "labelH": 24,
 "labels": [
 {
@@ -6815,6 +6917,12 @@
 "明亮晨星": {
 "complete": false,
 "h": 2079,
+"keyLabel": {
+"h": 23,
+"w": 73,
+"x": 14,
+"y": 154
+},
 "labelH": 23,
 "labels": [
 {
@@ -7041,6 +7149,12 @@
 "是为了爱": {
 "complete": false,
 "h": 2015,
+"keyLabel": {
+"h": 22,
+"w": 67,
+"x": 15,
+"y": 197
+},
 "labelH": 28,
 "labels": [
 {
@@ -7232,6 +7346,12 @@
 "永活盼望": {
 "complete": false,
 "h": 1923,
+"keyLabel": {
+"h": 21,
+"w": 68,
+"x": 15,
+"y": 120
+},
 "labelH": 21,
 "labels": [
 {
@@ -8008,6 +8128,12 @@
 "爱我愿意": {
 "complete": false,
 "h": 2353,
+"keyLabel": {
+"h": 26,
+"w": 85,
+"x": 6,
+"y": 159
+},
 "labelH": 24,
 "labels": [
 {
@@ -8241,6 +8367,12 @@
 "爱赢了": {
 "complete": false,
 "h": 2349,
+"keyLabel": {
+"h": 27,
+"w": 85,
+"x": 6,
+"y": 237
+},
 "labelH": 27,
 "labels": [
 {
@@ -9131,6 +9263,12 @@
 "让赞美飞扬": {
 "complete": false,
 "h": 2015,
+"keyLabel": {
+"h": 22,
+"w": 72,
+"x": 15,
+"y": 197
+},
 "labelH": 29,
 "labels": [
 {
@@ -9543,6 +9681,12 @@
 "这里有神的同在": {
 "complete": false,
 "h": 2353,
+"keyLabel": {
+"h": 26,
+"w": 79,
+"x": 6,
+"y": 148
+},
 "labelH": 25,
 "labels": [
 {
