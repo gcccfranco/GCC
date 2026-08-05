@@ -137,6 +137,7 @@ rangées les tronque.
 | 10 | +151 étiquettes lues à l'œil (1199 → 1344 publiées) | repêchage automatique **rejeté** (3 gardes, tous percés) | **2 /124 certifiés** (能不能, au navigateur) |
 | 11 | 到各山岭去传扬 complété (rangée à deux hauteurs) | 44 cadres 1=X transcrits sur grille : **12+ faux au rendu fidèle → lot retiré** (stash) | **3 /124 certifiés** (齐来赞美) |
 | 12 | corpus **125** (+哦十字架, un 简谱 égaré parmi les 五线谱) | **24 cadres 1=X mesurés par vote du matcher**, relus, validés au rendu fidèle · 22 restent (tempo fusionné, hymnaire, capo) | 3 /125 |
+| 13 | inchangé | +13 étiquettes à l'œil (爱我愿意, 不停赞美) | **5 /125 certifiés** (爱我愿意, 不停赞美) |
 
 ## Journal
 
@@ -779,3 +780,35 @@ Au passage, le tri des PDF des 63 chants sans 简谱 (détection de
 portées + planches relues) a montré que « 哦 十字架.pdf » était un 简谱
 mal rangé : il rejoint le corpus, qui passe à **125**. 49 chants n'ont
 qu'un 五线谱, 13 n'ont rien — liste transmise pour obtenir les 简谱.
+
+### Itération 13 — deux certifiés, et trois pièges nommés
+
+**爱我愿意** (4ᵉ) et **不停赞美** (5ᵉ) certifiés. Chacun a livré un piège.
+
+**1. Le compare ment par omission, la capture navigateur non.** Sur
+不停赞美 les six amas non couverts étaient tous des arcs de liaison, et
+`compare-render` montrait sept bandes toutes transposées : tout disait
+« complet ». La capture navigateur a montré un système entier — `Em A D
+G` — **en noir au milieu des bleus**, resté en D. Sa rangée est typée
+`numbers` (elle contient les accords *et* des ligatures, h=61 contre 65
+pour la vraie rangée de chiffres : la règle `short_row_frac` de
+l'itération 8 ne se déclenche pas), donc invisible au classifieur, au
+matcher **et** aux bandes du compare. La couleur du calque partiel est
+devenue un instrument de contrôle : *ce qui n'est pas bleu n'est pas
+converti*, et l'œil le voit d'un coup sur la page entière.
+
+**2. Le haut d'une rangée n'est pas le haut de ses lettres.** Posées à
+`y=888` (le `top` de la rangée), les quatre étiquettes ajoutées ont
+d'abord laissé un liseré, puis — en allongeant la boîte — **mangé le haut
+des chiffres**. Les lettres vivent en réalité à 902–930 : le reste de la
+bande, ce sont les ligatures. Il faut mesurer le profil d'encre *des
+colonnes de l'amas*, pas hériter des bornes de la rangée. Corrigé, la
+comparaison original/rendu est propre au pixel.
+
+**3. Les accords à alternative ne se transposent pas.** 你坐着为王 grave
+`F(或Am)`, `Bb(或Gm)`, `C(或Am)` — « 或 » = « ou ». Le modèle « une
+étiquette = un accord » ne sait pas les rendre : `transposeChord` sur
+« F(或Am) » ne transposerait que le F. Les découper échoue aussi (l'arc
+de liaison soude, le hanzi colle aux lettres). Le chant reste **partiel**,
+et c'est le bon résultat : le bandeau dit exactement ce qui est vrai.
+À trancher plus tard, avec la question du titre « （G调） » et le cas capo.
