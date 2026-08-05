@@ -82,6 +82,20 @@
    "c": "Dmaj9"
   },
   {
+   "x": 281,
+   "y": 1069,
+   "w": 88,
+   "h": 27,
+   "c": "Esus4"
+  },
+  {
+   "x": 1255,
+   "y": 1069,
+   "w": 88,
+   "h": 27,
+   "c": "Esus4"
+  },
+  {
    "x": 58,
    "y": 1806,
    "w": 94,
@@ -131,7 +145,7 @@
    "c": "A"
   }
  ],
- "extra_verified": "chaque étiquette relue sur zoom (propose-extra + planches), 2026-08-04",
+ "extra_verified": "zooms propose-extra relus un à un, rangées hautes calées sur le bloc d’encre des colonnes, 2026-08-05",
  "key_label": {
   "x": 6,
   "y": 237,

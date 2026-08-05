@@ -2,6 +2,20 @@
  "slug": "全新的你",
  "extra_labels": [
   {
+   "x": 363,
+   "y": 223,
+   "w": 49,
+   "h": 32,
+   "c": "C/E"
+  },
+  {
+   "x": 934,
+   "y": 223,
+   "w": 49,
+   "h": 32,
+   "c": "C/E"
+  },
+  {
    "x": 28,
    "y": 256,
    "w": 54,
@@ -35,14 +49,71 @@
    "w": 48,
    "h": 25,
    "c": "Dm"
+  },
+  {
+   "x": 1455,
+   "y": 256,
+   "w": 20,
+   "h": 25,
+   "c": "G"
+  },
+  {
+   "x": 1321,
+   "y": 1161,
+   "w": 55,
+   "h": 32,
+   "c": "G/B"
+  },
+  {
+   "x": 736,
+   "y": 1164,
+   "w": 19,
+   "h": 25,
+   "c": "G"
+  },
+  {
+   "x": 353,
+   "y": 1472,
+   "w": 55,
+   "h": 29,
+   "c": "C/G"
+  },
+  {
+   "x": 1267,
+   "y": 1759,
+   "w": 55,
+   "h": 29,
+   "c": "C/G"
+  },
+  {
+   "x": 674,
+   "y": 1761,
+   "w": 55,
+   "h": 30,
+   "c": "G/B"
+  },
+  {
+   "x": 44,
+   "y": 2049,
+   "w": 22,
+   "h": 24,
+   "c": "F"
+  },
+  {
+   "x": 955,
+   "y": 2049,
+   "w": 40,
+   "h": 24,
+   "c": "G7"
   }
  ],
- "extra_verified": "chaque étiquette relue sur zoom (propose-extra + planches), 2026-08-04",
+ "extra_verified": "zooms relus ; les deux C/G soudés à un arc de liaison mesurés à part (bloc supérieur des colonnes de la lettre, arc préservé), 2026-08-05",
  "key_label": {
   "x": 6,
   "y": 162,
   "w": 83,
   "h": 27
  },
- "key_label_verified": "mesure measure-keylabel (vote 1= + lettre attendue), zoom relu à l’œil, 2026-08-05"
+ "key_label_verified": "mesure measure-keylabel (vote 1= + lettre attendue), zoom relu à l’œil, 2026-08-05",
+ "verified": "transposé C→D dans Chrome headless (captures relues), thèmes clair et sombre : 36 accords + 1=D, les deux C/G soudés aux arcs et le G de fin de 1re ligne compris, aucun accord resté en C — 2026-08-05"
 }

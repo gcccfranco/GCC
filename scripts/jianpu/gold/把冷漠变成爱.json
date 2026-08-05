@@ -6,5 +6,78 @@
   "w": 77,
   "h": 23
  },
- "key_label_verified": "mesure measure-keylabel (vote 1= + lettre attendue), zoom relu à l’œil, 2026-08-05"
+ "key_label_verified": "mesure measure-keylabel (vote 1= + lettre attendue), zoom relu à l’œil, 2026-08-05",
+ "extra_labels": [
+  {
+   "x": 372,
+   "y": 858,
+   "w": 37,
+   "h": 23,
+   "c": "A7"
+  },
+  {
+   "x": 759,
+   "y": 858,
+   "w": 18,
+   "h": 23,
+   "c": "D"
+  },
+  {
+   "x": 1052,
+   "y": 858,
+   "w": 36,
+   "h": 23,
+   "c": "A7"
+  },
+  {
+   "x": 44,
+   "y": 1294,
+   "w": 42,
+   "h": 24,
+   "c": "Em"
+  },
+  {
+   "x": 442,
+   "y": 1294,
+   "w": 37,
+   "h": 24,
+   "c": "A7"
+  },
+  {
+   "x": 813,
+   "y": 1294,
+   "w": 18,
+   "h": 24,
+   "c": "D"
+  },
+  {
+   "x": 1077,
+   "y": 1294,
+   "w": 36,
+   "h": 24,
+   "c": "D7"
+  },
+  {
+   "x": 52,
+   "y": 1731,
+   "w": 18,
+   "h": 23,
+   "c": "D"
+  },
+  {
+   "x": 378,
+   "y": 1731,
+   "w": 37,
+   "h": 23,
+   "c": "A7"
+  },
+  {
+   "x": 767,
+   "y": 1731,
+   "w": 18,
+   "h": 23,
+   "c": "D"
+  }
+ ],
+ "extra_verified": "zooms propose-extra relus un à un, rangées hautes calées sur le bloc d’encre des colonnes, 2026-08-05"
 }
