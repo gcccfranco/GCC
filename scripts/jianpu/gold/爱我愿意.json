@@ -2,6 +2,20 @@
  "slug": "爱我愿意",
  "extra_labels": [
   {
+   "x": 357,
+   "y": 243,
+   "w": 64,
+   "h": 25,
+   "c": "Bm7"
+  },
+  {
+   "x": 1274,
+   "y": 541,
+   "w": 65,
+   "h": 25,
+   "c": "Bm7"
+  },
+  {
    "x": 49,
    "y": 1138,
    "w": 38,
@@ -35,14 +49,64 @@
    "w": 20,
    "h": 24,
    "c": "G"
+  },
+  {
+   "x": 1039,
+   "y": 1435,
+   "w": 65,
+   "h": 25,
+   "c": "Bm7"
+  },
+  {
+   "x": 674,
+   "y": 1734,
+   "w": 65,
+   "h": 24,
+   "c": "Bm7"
+  },
+  {
+   "x": 695,
+   "y": 2002,
+   "w": 75,
+   "h": 32,
+   "c": "(Em7"
+  },
+  {
+   "x": 847,
+   "y": 2002,
+   "w": 70,
+   "h": 32,
+   "c": "D/F#"
+  },
+  {
+   "x": 1004,
+   "y": 2002,
+   "w": 19,
+   "h": 32,
+   "c": "G"
+  },
+  {
+   "x": 1147,
+   "y": 2002,
+   "w": 49,
+   "h": 32,
+   "c": "A7)"
+  },
+  {
+   "x": 553,
+   "y": 2069,
+   "w": 65,
+   "h": 24,
+   "c": "Bm7"
   }
  ],
- "extra_verified": "chaque étiquette relue sur zoom (propose-extra + planches), 2026-08-04",
+ "extra_verified": "zooms relus un à un (139 lot + 9 individuels : 5 Bm7 refusés par le jury, rangée parenthésée) ; arcs de liaison y=1164 rejetés, 2026-08-05",
  "key_label": {
   "x": 6,
   "y": 159,
   "w": 85,
   "h": 26
  },
- "key_label_verified": "mesure measure-keylabel (vote 1= + lettre attendue), zoom relu à l’œil, 2026-08-05"
+ "key_label_verified": "mesure measure-keylabel (vote 1= + lettre attendue), zoom relu à l’œil, 2026-08-05",
+ "verified": "transposé D→E dans Chrome headless (captures relues), thèmes clair et sombre : 41 accords + 1=E + rangée parenthésée (F#m7 E/G# A B7), aucun accord resté en D — 2026-08-05"
 }
