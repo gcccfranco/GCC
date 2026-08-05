@@ -136,6 +136,7 @@ rangées les tronque.
 | 9 | inchangé | vocabulaire élargi **rejeté** (95 → 76 justes) | 1 /124 — `verified` devient obligatoire |
 | 10 | +151 étiquettes lues à l'œil (1199 → 1344 publiées) | repêchage automatique **rejeté** (3 gardes, tous percés) | **2 /124 certifiés** (能不能, au navigateur) |
 | 11 | 到各山岭去传扬 complété (rangée à deux hauteurs) | 44 cadres 1=X transcrits sur grille : **12+ faux au rendu fidèle → lot retiré** (stash) | **3 /124 certifiés** (齐来赞美) |
+| 12 | corpus **125** (+哦十字架, un 简谱 égaré parmi les 五线谱) | **24 cadres 1=X mesurés par vote du matcher**, relus, validés au rendu fidèle · 22 restent (tempo fusionné, hymnaire, capo) | 3 /125 |
 
 ## Journal
 
@@ -752,3 +753,29 @@ valeur si le contrôle ne passe pas.
 dans la bande du libellé, la fraction 4/4 se distingue par sa hauteur
 (double de celle des lettres) ; un bbox des amas *hors fraction* donnerait
 des cadres exacts, à valider ensuite sur le rendu fidèle, page par page.
+
+### Itération 12 — les cadres 1=X mesurés par le vote du matcher
+
+La piste de l'itération 11 tenait, à condition d'y ajouter ce que la
+boucle sait déjà faire : **voter avec ce qu'on connaît**. La lettre du
+libellé est le `printedKey` ; `measure-keylabel.py` confronte donc l'amas
+d'après le « = » à la lettre attendue *contre* des chiffres (la ligne de
+tempo « ♩=NN », même silhouette, perd ce vote), exige que le premier amas
+ressemble à « 1= » (sans quoi une rangée d'accords contenant la lettre
+gagnerait — vu à +0,77), et rend un gabarit « 1=X » entier pour les
+gravures fusionnées. La fraction s'exclut par sa hauteur, comme prévu.
+
+Résultat : **24 cadres justes sur 46** — corr > 0 et boîte étroite
+valent acceptation, chaque zoom relu à l'œil, puis le rendu fidèle
+(overlay transposé d'un demi-ton) vérifié un à un : 4/4 et notes
+d'édition intacts partout. Un seul ajustement (和散那 : le F d'origine
+débordait de 12 px, plus une descente de scan sous la boîte). Contrôle
+navigateur sur 爱我愿意 en E. Les 22 échecs sont tous *expliqués* :
+libellé fusionné avec la ligne de tempo sur la même bande, hymnaire
+gravé « F=1 » (ordre inversé !), pages à photo, et le cas capo 十架的爱
+— traitement individuel à venir.
+
+Au passage, le tri des PDF des 63 chants sans 简谱 (détection de
+portées + planches relues) a montré que « 哦 十字架.pdf » était un 简谱
+mal rangé : il rejoint le corpus, qui passe à **125**. 49 chants n'ont
+qu'un 五线谱, 13 n'ont rien — liste transmise pour obtenir les 简谱.
