@@ -62,11 +62,18 @@ CHORD_RE = re.compile(r"^([A-G][#b]?)(.*)$")
 
 
 def transpose_chord(chord: str, semitones: int, target_key: str) -> str:
-    # Accord entre parenthèses (optionnel sur la gravure) : transposer le
-    # contenu, garder les parenthèses — même comportement que le client
-    # (`transposeChord`, src/lib/transpose.ts).
-    if chord.startswith("(") and chord.endswith(")"):
-        return "(" + transpose_chord(chord[1:-1], semitones, target_key) + ")"
+    # Parenthèses (accord optionnel sur la gravure) : transposer le contenu,
+    # garder les parenthèses. Elles arrivent **dépareillées** quand une
+    # rangée entière est parenthésée — « (Em7 … A7) » se découpe en amas, et
+    # le premier porte la parenthèse ouvrante seule. Le client le gère déjà
+    # (`transposeChord`, src/lib/transpose.ts) ; sans ça, le rendu de
+    # contrôle laissait cet accord dans l'ancienne tonalité alors que la
+    # page en production était juste — un faux positif du contrôle, aussi
+    # coûteux qu'un vrai défaut manqué.
+    if chord.startswith("("):
+        return "(" + transpose_chord(chord[1:], semitones, target_key)
+    if chord.endswith(")"):
+        return transpose_chord(chord[:-1], semitones, target_key) + ")"
     if "/" in chord:
         left, right = chord.split("/", 1)
         return f"{transpose_chord(left, semitones, target_key)}/{transpose_note(right, semitones, target_key)}"
