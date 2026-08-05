@@ -138,6 +138,7 @@ rangées les tronque.
 | 11 | 到各山岭去传扬 complété (rangée à deux hauteurs) | 44 cadres 1=X transcrits sur grille : **12+ faux au rendu fidèle → lot retiré** (stash) | **3 /124 certifiés** (齐来赞美) |
 | 12 | corpus **125** (+哦十字架, un 简谱 égaré parmi les 五线谱) | **24 cadres 1=X mesurés par vote du matcher**, relus, validés au rendu fidèle · 22 restent (tempo fusionné, hymnaire, capo) | 3 /125 |
 | 13 | inchangé | +13 étiquettes à l'œil (爱我愿意, 不停赞美) | **5 /125 certifiés** (爱我愿意, 不停赞美) |
+| 14 | rangées mêlées ouvertes au matcher (+32 candidates) | +31 étiquettes relues | **6 /125 certifiés** (全新的你) |
 
 ## Journal
 
@@ -812,3 +813,29 @@ comparaison original/rendu est propre au pixel.
 de liaison soude, le hanzi colle aux lettres). Le chant reste **partiel**,
 et c'est le bon résultat : le bandeau dit exactement ce qui est vrai.
 À trancher plus tard, avec la question du titre « （G调） » et le cas capo.
+
+### Itération 14 — le piège de l'itération 13, outillé
+
+Plutôt que d'attendre la capture navigateur pour découvrir chaque rangée
+mêlée, `propose-extra.py` ne les saute plus : la borne de hauteur qui
+écartait les rangées « trop hautes pour être des accords » sert
+maintenant à *changer de méthode* — dans une rangée haute, chaque
+étiquette est cadrée sur **le bloc d'encre supérieur de ses propres
+colonnes**. C'est la leçon 2 de l'itération 13 transformée en règle.
+
+32 candidates sur le corpus, toutes relues : 23 gardées, et trois motifs
+d'écart nommés au passage — un doublon (l'amas déjà publié n'est pas
+reconnu comme couvert quand sa boîte a été recalée), un cadre vide sur
+爱赢了 (le texte est *sous* la boîte), des boîtes décalées sur 永活盼望.
+Les trois se voient d'un coup d'œil sur le zoom ; aucun n'aurait été
+détecté par un score.
+
+**全新的你 certifié** (6ᵉ). Il a fallu huit étiquettes de plus, mesurées à
+la main, dont deux `C/G` **soudés à un arc de liaison** : l'amas fait 226
+px de large et englobe l'arc, alors que la lettre n'en fait que 55. Cadrer
+sur l'amas aurait effacé l'arc — c'est-à-dire de la musique. Cadrer sur le
+bloc supérieur des colonnes de la lettre seule règle les deux à la fois.
+Et un `G` de fin de première ligne, invisible au matcher, que seule la
+couleur du calque partiel a dénoncé sur la capture : *ce qui n'est pas
+bleu n'est pas converti*.
+
