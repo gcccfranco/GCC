@@ -193,6 +193,7 @@ export function ListView({
         const song = songsMap[item.songSlug];
         const displayKey = item.keyOverride ?? song?.originalKey ?? "?";
         const transposed = !!item.keyOverride && item.keyOverride !== song?.originalKey;
+        console.log("sectionKeysSent",item.sectionKeys)
         return (
           <li key={`${item.songSlug}-${idx}`} className="flex gap-3 items-start">
             <span className="shrink-0 w-7 h-7 rounded-full bg-muted flex items-center justify-center text-xs font-bold text-muted-foreground mt-0.5">
@@ -214,6 +215,9 @@ export function ListView({
                     }),
                     ...(item.keyOverride && {
                       key: JSON.stringify(item.keyOverride)
+                    }),
+                    ...(item.sectionKeys && {
+                      sectionKeys: JSON.stringify(item.sectionKeys)
                     })
                   },
                 }}
