@@ -135,13 +135,13 @@ export function parseSectionHeader(typeKey: string, value: string) {
       type = "prechorus";
     } else if (lowerLabel.includes("tag")) {
       type = "other";
-      suffix = suffix ? `TAG ${suffix}` : "TAG";
+      // suffix = suffix ? `TAG ${suffix}` : "TAG";
     } else if (lowerLabel.includes("interlude") || lowerLabel.includes("inter") || lowerLabel.includes("间奏")) {
       type = "other";
-      suffix = suffix ? `Interlude ${suffix}` : "Interlude";
+      // suffix = suffix ? `Interlude ${suffix}` : "Interlude";
     } else if (lowerLabel.includes("solo") || lowerLabel.includes("instrumental")) {
       type = "other";
-      suffix = suffix ? `Instrumental ${suffix}` : "Instrumental";
+      // suffix = suffix ? `Instrumental ${suffix}` : "Instrumental";
     }
   }
 
