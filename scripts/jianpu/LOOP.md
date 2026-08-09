@@ -158,6 +158,7 @@ rangées les tronque.
 | 17 | garde « deux par rangée » levé : **21 → 188 propositions**, 173 vraies | +12 étiquettes relues, dont 6 que le matcher lisait faux | 9 /125 · **une page à deux tonalités** découverte |
 | 18 | — | — | **11 /125 certifiés** (永活盼望, 到各山岭去传扬) · `titleKey` |
 | 19 | jeu de contrôle élargi à une 3ᵉ gravure (永恒唯一的盼望, 29 étiquettes) : **116/179** contre 107 sous l'ancienne fonte unique | fonte de page : sur la nouvelle famille, **12 → 21 justes**, 0 FAUX | 11 /125 · **calques publiés 50 → 67** |
+| 20 | 112/179 · **FAUX = 0** tenu · cas durs 218 → 223 identifiées | la vérité terrain devient un **veto** sur le choix de fonte | **12 /125 certifiés** (一颗谦卑的心) · calques **67 → 78**, 2024 → 2349 étiquettes |
 
 ## Journal
 
@@ -1191,3 +1192,85 @@ La première n'a pas de solution automatique et ces pages devront être lues
 entièrement à la main. La seconde est un problème de **segmentation**, pas
 de lecture — c'est le goulot que l'itération 16 avait déjà nommé, et il
 reste le prochain.
+
+### Itération 20 — le classement mentait, et la vérité terrain devient un veto
+
+**Le cadre « 1=X » avalait la fraction.** L'échelle qui sépare la lettre du
+chiffrage `4/4` était la médiane des hauteurs de *toute la bande* — donc de
+tout ce qui traîne à droite sur la même ligne. Sur 尽情地微笑, l'annotation
+« [共8张：原版/简版…] » monte cette médiane de 26 à 34 ; la fraction (51 px)
+passe alors sous le seuil de 1,6× et **entre dans le cadre**. Masquer ce
+cadre efface le chiffrage de la mesure. L'échelle est maintenant celle de
+la lettre appariée, et le cadre proposé retombe exactement sur la mesure
+faite à la main. Les onze cadres déjà certifiés ont été vérifiés : aucun
+n'est touché.
+
+**Le classement par couverture met en tête les pages dont on ignore le plus
+de choses.** 尽情地微笑 affichait 49/52 — le meilleur du corpus, et *chaque
+étiquette détectée y était lue juste*. L'audit de page y a trouvé **trois
+rangées entières invisibles**, une typée `numbers`, deux typées `?` : une
+rangée d'intro, et une rangée dans une **seconde tonalité** (`Bb F/A A Dm
+Gm C`, le +3 de la rangée publiée — la page imprime deux jeux d'accords,
+comme l'annonce son « [共8张… C/D调…] »). Une rangée jamais détectée n'entre
+dans aucun dénominateur : la couverture ne pouvait pas la voir.
+
+`worklist.py` cherche donc ce que la couverture ne peut pas voir — dans les
+rangées typées autrement que `chords`, il apparie les amas au vocabulaire.
+Une rangée de chiffres ou de hanzi n'apparie rien ; une rangée qui apparie
+massivement est une rangée d'accords manquée. Verdict : **9 chants prêts,
+17 avec au moins une rangée cachée**, sur 56 non certifiés.
+
+**一颗谦卑的心 certifié (12ᵉ).** 42 accords, 8 tranches relues, aucun laissé
+en D. Une étiquette sortait « Bm9 » à -0,01 là où la page imprime `D/F#` :
+le score n'est toujours pas la vérité.
+
+**Le défaut n'est pas un choix prudent.** 握手 se lit **26/26** sous
+verdana-bold, et restait pourtant sur helvetica-neue parce qu'un rival la
+lisait 24/26 — la marge exigée punissait les pages *faciles*. Sous ce
+défaut, ses trois `Bm` sortaient `Em` à +0,69, unanimes. Ne rien écrire ne
+veut pas dire s'abstenir : cela veut dire garder la gravure d'un seul chant
+de 2026. La marge ne garde donc plus que la **tonalité**, où une erreur
+transpose toute la page ; la fonte prend toujours la meilleure.
+
+**Et c'est là que la mesure a mordu.** Le premier essai — prendre partout
+la fonte qui couvre le plus — a fait apparaître **le premier accord faux
+retenu depuis l'itération 6** : sur 我心坚定与你, un `D/A` lu `D/E` à +0,48,
+unanime. La page est gravée en maigre ; la couverture y avait élu une
+grasse, parce que cette page porte **deux tonalités** et que sa seconde
+rangée n'est lisible sous aucun gabarit — la couverture y est du bruit.
+
+Trois règles ont été essayées et mesurées :
+
+| règle de choix de la fonte | contrôle | cas durs retenus | calques |
+|---|---|---|---|
+| couverture seule | 124 justes, **1 FAUX** | 191 | 73 |
+| vérité terrain au classement | 113, 0 FAUX | 178 | 73 · **5 calques perdus** |
+| **vérité en veto, couverture au classement** | 112, **0 FAUX** | 194 | **78 · aucun perdu** |
+
+La deuxième échoue pour une raison qui vaut d'être écrite : beaucoup de
+pages n'ont **qu'une à quatre** étiquettes lues à la main, et une fonte qui
+lit juste cette seule étiquette sortait en tête en ratant tout le reste.
+*Un jeu de vérité minuscule ne peut pas classer ; il peut interdire.* La
+vérité terrain oppose donc son veto — une fonte qui retient un accord faux
+là où l'œil a déjà lu est écartée quoi qu'elle fasse d'autre — et la
+couverture départage les survivants.
+
+**Résultat.** Calques **67 → 78 sur 125**, 2024 → **2349** étiquettes
+publiées, **aucun calque perdu**, aucun des douze certifiés touché.
+Le contrôle perd 4 justes (主的喜乐是我力量 7 → 4, 献上尊荣 5 → 4) : le veto
+est conservateur sur les pages où il a beaucoup de vérité et peu de
+couverture. C'est le prix assumé de FAUX = 0.
+
+**Ce qui bloque maintenant, et qui n'est plus technique.** Deux familles ne
+franchiront pas la certification sans décision :
+
+- les pages à **deux tonalités** (我心坚定与你, 尽情地微笑, 求充满这地…) — la
+  politique de l'itération 18 dit « ne pas publier la seconde rangée »,
+  donc ces pages restent partielles **par construction**, quel que soit le
+  progrès du matcher ;
+- les accords **manuscrits** (从心合一, 无价至宝) — aucun gabarit rendu ne les
+  lira jamais.
+
+Le reste — les 17 chants à rangée cachée — est un problème de
+**segmentation**, et c'est le prochain goulot, déjà nommé aux itérations
+15 et 16.
