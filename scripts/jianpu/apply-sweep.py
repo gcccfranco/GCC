@@ -41,6 +41,7 @@ _spec = importlib.util.spec_from_file_location("sweep_key", os.path.join(HERE, "
 _sweep = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(_sweep)
 MIN_SHARE, MIN_MARGIN = _sweep.MIN_SHARE, _sweep.MIN_MARGIN
+MIN_FACE_SHARE = _sweep.MIN_FACE_SHARE
 
 
 def main() -> int:
@@ -49,7 +50,8 @@ def main() -> int:
 
     written = skipped = 0
     for r in rows:
-        if r["share"] < MIN_SHARE or r["margin"] < MIN_MARGIN:
+        sure_key = r["share"] >= MIN_SHARE and r["margin"] >= MIN_MARGIN
+        if r["share"] < MIN_FACE_SHARE and not sure_key:
             continue
         path = os.path.join(GOLD, f"{r['slug']}.json")
         gold = json.load(open(path, encoding="utf8")) if os.path.exists(path) else {"slug": r["slug"]}
@@ -59,10 +61,10 @@ def main() -> int:
 
         changes = []
         current = gold.get("face", DEFAULT_FACE)
-        if current != r["face"]:
+        if r["share"] >= MIN_FACE_SHARE and current != r["face"]:
             changes.append(f"face {current} → {r['face']}")
             gold["face"] = r["face"]
-        if r["semitones"] and gold.get("printed_key") != r["printed_key"]:
+        if sure_key and r["semitones"] and gold.get("printed_key") != r["printed_key"]:
             changes.append(f"1={gold.get('printed_key') or r['cho_key']} → 1={r['printed_key']}")
             gold["printed_key"] = r["printed_key"]
         if not changes:
