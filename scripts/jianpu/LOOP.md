@@ -139,6 +139,7 @@ rangées les tronque.
 | 12 | corpus **125** (+哦十字架, un 简谱 égaré parmi les 五线谱) | **24 cadres 1=X mesurés par vote du matcher**, relus, validés au rendu fidèle · 22 restent (tempo fusionné, hymnaire, capo) | 3 /125 |
 | 13 | inchangé | +13 étiquettes à l'œil (爱我愿意, 不停赞美) | **5 /125 certifiés** (爱我愿意, 不停赞美) |
 | 14 | rangées mêlées ouvertes au matcher (+32 candidates) | +31 étiquettes relues | **6 /125 certifiés** (全新的你) |
+| 15 | **3 rangées entières manquées** trouvées sur 3 pages auditées (mode D) | +40 étiquettes relues (`--all` : le pré-filtre levé) | **9 /125 certifiés** (把冷漠变成爱, 是为了爱, 拣选) |
 
 ## Journal
 
@@ -839,3 +840,62 @@ Et un `G` de fin de première ligne, invisible au matcher, que seule la
 couleur du calque partiel a dénoncé sur la capture : *ce qui n'est pas
 bleu n'est pas converti*.
 
+### Itération 15 — la page entière relue sans navigateur
+
+Le contrôle décisif des itérations 13 et 14 était la **capture
+navigateur** : elle seule montrait la page en entier, donc elle seule
+voyait les rangées jamais détectées. Elle coûtait un serveur, Chrome
+headless et une manipulation d'URL. `audit-page.py` fait la même chose en
+Python : la page est découpée en tranches de 300 px qui se recouvrent,
+chacune posée sous la même tranche du rendu fidèle transposé, cadres de
+contrôle activés. **Un accord sans cadre n'est pas converti** — et
+l'alignement vertical des deux tranches donne le mode C par-dessus le
+marché.
+
+Trois pages auditées, **trois rangées entières manquées** trouvées, sur
+des chants dont les compteurs disaient 79 % et 76 % :
+
+- 是为了爱, y=751 : le segno et 【Chorus】 étirent la bande à 43 px ;
+- 是为了爱, y=1737 : « D.S. al Fine » fait de même ;
+- 拣选, y=247 : la première rangée de la page, trois amas seulement sur
+  1300 px de large.
+
+**Le motif se nomme enfin.** Ce que le classifieur rate, ce ne sont pas
+des accords difficiles à lire — ce sont des rangées dont la *silhouette*
+n'est pas celle d'une rangée d'accords : trop clairsemée, ou étirée par un
+glyphe étranger (segno, 【Chorus】, D.S. al Fine). Les accords eux-mêmes s'y
+lisent très bien une fois la bande cadrée à la main. Et aucune métrique ne
+les voit, puisqu'une rangée jamais détectée n'entre dans aucun
+dénominateur — c'est le mode D, trois fois de suite.
+
+**`propose-extra --all`.** Le pré-filtre par score existe pour limiter le
+volume quand on ratisse le corpus ; sur un chant qu'on certifie il devient
+une gêne, car il tait précisément les amas que le matcher ne sait pas
+lire. Les six accords à basse étrangère de 是为了爱 (Bb/F, Bb/D, C/E, F/C)
+se lisent à +0,03 ou moins : invisibles au pré-filtre, évidents au zoom.
+`--all` rend tout ce qui n'est pas couvert dans les rangées où le calque
+publie déjà.
+
+**把冷漠变成爱 (7ᵉ), 是为了爱 (8ᵉ), 拣选 (9ᵉ) certifiés.** Le premier
+attendait sa relecture depuis l'itération 14 ; elle a été refaite
+entièrement plutôt que reprise sur parole.
+
+**Deux chants butent sur des questions de produit déjà ouvertes**, et
+c'est le bon résultat — ils restent partiels et le bandeau dit vrai :
+
+- 使命 grave `F#m或A` : accord à alternative, comme 你坐着为王
+  (itération 13) ;
+- 永活盼望 a ses 53 accords couverts et justes, mais son **titre** imprime
+  « （D调） », qui reste en D sur une page rendue en D#. Le même chant
+  porte aussi « [ 原调Eb。… ] » — et la distinction est nette :
+  **« （D调） » décrit cette page-ci et devrait suivre la transposition ;
+  « 原调Eb » décrit la source et doit rester tel quel.** C'est la question
+  posée à l'itération 11 sur 到各山岭去传扬, désormais posée avec sa
+  réponse probable.
+
+**Où en est le corpus** (mesuré, pas estimé) : 125 chants, 50 calques,
+9 certifiés. Des 41 calques non certifiés, **19 ont déjà leur cadre 1=X**
+— ce sont les moins chers. Les 75 sans calque sont tous sous le plancher
+de 60 % : 56 entre 30 et 59 %, 19 sous 30 %, et **2 193 étiquettes y
+restent à lire à l'œil**, sans compter les rangées jamais détectées que
+seul l'audit révèle.
