@@ -20,6 +20,11 @@ export type JianpuChords = {
   labelH: number;
   /** Cadre du libellé « 1=X », à réécrire dans la tonalité jouée. */
   keyLabel?: { x: number; y: number; w: number; h: number };
+  /** Cadre de la tonalité répétée dans le titre — « （D调） ». Elle décrit
+   *  *cette page*, donc elle suit la transposition comme « 1=X ». À ne pas
+   *  confondre avec « 原调Eb », qui décrit la tonalité de la *source* et
+   *  reste tel quel : les deux cohabitent sur 永活盼望. */
+  titleKey?: { x: number; y: number; w: number; h: number };
   labels: JianpuChordLabel[];
   /** Absent = calque complet, vérifié à l'œil sur la page transposée.
    *  `false` = certains accords de la partition n'ont pas été relevés et
