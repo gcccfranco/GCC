@@ -110,6 +110,10 @@ export function buildSetlistItems(items: FormListItem[]): SetlistItem[] {
       sectionTransitions,
       ...(Object.keys(sectionNuances).length > 0 ? { sectionNuances } : {}),
       ...(Object.keys(sectionKeys).length > 0 ? { sectionKeys } : {}),
+      // Version adaptée du chant (mode Adapter) : reconduite telle quelle, le
+      // formulaire ne touche qu'à la structure et aux réglages par section.
+      ...(item.contentOverride ? { contentOverride: item.contentOverride } : {}),
+      ...(item.sectionOrigins ? { sectionOrigins: item.sectionOrigins } : {}),
       notes: item.notes,
     };
   });
