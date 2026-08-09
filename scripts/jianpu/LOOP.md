@@ -155,6 +155,7 @@ rangées les tronque.
 | 14 | rangées mêlées ouvertes au matcher (+32 candidates) | +31 étiquettes relues | **6 /125 certifiés** (全新的你) |
 | 15 | **3 rangées entières manquées** trouvées sur 3 pages auditées (mode D) | +40 étiquettes relues (`--all` : le pré-filtre levé) | **9 /125 certifiés** (把冷漠变成爱, 是为了爱, 拣选) |
 | 16 | jeu de test élargi : **232 étiquettes de cas durs** (les `extra_labels`) | approche du `/` et poids de la basse **tous deux rejetés** (95 → 95) | 9 /125 · les 9 sont **gelés** |
+| 17 | garde « deux par rangée » levé : **21 → 188 propositions**, 173 vraies | +12 étiquettes relues, dont 6 que le matcher lisait faux | 9 /125 · **一颗 page à deux tonalités** découverte |
 
 ## Journal
 
@@ -973,3 +974,68 @@ en étendant `propose-extra` aux rangées où le calque ne publie rien
 encore, avec le cadrage sur le bloc d'encre supérieur des colonnes. La
 sécurité reste la même qu'à l'itération 10 : l'automate propose, l'œil
 dispose — un zoom relu coûte infiniment moins qu'une tranche d'audit.
+
+### Itération 17 — le garde qui étranglait, et une page à deux tonalités
+
+L'itération 16 avait nommé le goulot : le matcher lit très bien (92 % des
+cas durs sans barre oblique) mais **on ne lui présente pas les boîtes**.
+La cause tenait en une ligne, et pas celle qu'on croyait.
+
+**`MIN_ROW_MATCHES = 2`.** La règle « au moins deux lectures sûres dans la
+rangée » vient du triple garde de l'itération 10, quand les étiquettes
+repêchées partaient **directement au calque**. Depuis cette même
+itération, rien n'atteint le calque sans un zoom relu : le garde
+protégeait d'un risque qui n'existe plus. Ce qu'il faisait encore, c'était
+cacher les accords **isolés** — c'est-à-dire exactement les rangées du
+mode D, celles qu'on ne trouvait qu'en auditant la page entière.
+
+Levé, à seuil et jury inchangés : **21 propositions sur tout le corpus →
+188**, dont 173 correspondent à des étiquettes qu'il avait fallu aller
+chercher à la main. Le seuil, lui, a été balayé contre ces mêmes 232
+étiquettes : 0,42 rend 75 % du gisement à 92 % de précision ; 0,30 ajoute
+11 étiquettes pour 59 zooms ; 0,20, 8 pour 119. On reste à 0,42.
+
+**Deux sources de bruit supprimées.** Le test « déjà couvert » comparait
+`(y, x)` à l'exact : il suffisait qu'une boîte ait été recalée — resserrée
+sur l'encre, ou cadrée sur le bloc supérieur — pour que l'étiquette déjà
+publiée revienne comme si elle manquait. C'est le doublon de l'itération
+14, et il faisait pire que perdre du temps : il invitait à publier deux
+fois le même accord, l'un sur l'autre. Il teste maintenant le
+recouvrement. Le cadre « 1=X » rejoint aussi ce qui est connu. Bilan : 40
+propositions brutes → 18, dont 15 vraies étiquettes.
+
+Bon signe au passage : **plus aucune proposition sur les neuf chants
+certifiés.** L'audit visuel disait « tout est couvert », l'automate le
+recoupe.
+
+**12 étiquettes publiées, et six d'entre elles étaient lues faux** entre
++0,43 et +0,73 (G#m lu C#m, A7 lu Bb, G lu C, Am lu Bm). Relues au zoom
+×7. La leçon de l'itération 10 ne s'use pas : le score n'est pas la
+vérité.
+
+**La découverte de l'itération : 我心坚定与你 est une page à deux
+tonalités.** Le jeu de contrôle le décrit depuis l'itération 0 comme
+« aérée, 2 rangées d'accords » — personne n'avait regardé *ce que dit* la
+seconde rangée. Elle est en **do majeur** (`C G/B Am`, `F C/E Dm G C
+G/B`), posée au-dessus d'une rangée en **la** (`A E/G# F#m`), sur la même
+ligne de chiffres, sous un en-tête qui annonce `1=A`. Le format existe
+ailleurs : `使命` imprime `[共3张：A、Bb、C调]`, « 3 versions : A, Bb, C ».
+
+Trois conséquences, dont une immédiate :
+
+1. **Ne pas publier la rangée en C.** Transposer ses accords de
+   l'intervalle de la page suppose répondu ce qui ne l'est pas — la
+   seconde rangée est-elle un jeu d'accords *sonnants* (elle suit alors la
+   transposition) ou des *formes* à jouer au capo (elle ne la suit pas) ?
+   C'est la question capo de l'itération 11, sous un autre visage.
+2. Le calque publié sur ce chant **mélange déjà deux tonalités dans une
+   même rangée** : `D→D#` et `Bm→Cm` convertis, `A/C#`, `E`, `E/G#`
+   laissés en A. C'est dans la politique de l'itération 9 — le chant est
+   marqué partiel, le bandeau ne ment pas, les convertis sont en bleu —
+   mais c'est le cas le plus laid rencontré jusqu'ici.
+3. **Le modèle « une page = une tonalité » est faux**, et il est câblé
+   dans `printedKey`. Aucun chant à deux rangées ne pourra être certifié
+   avant que la question soit tranchée.
+
+Les six propositions écartées reviendront à chaque passe : rien ne note
+les refus. À faire quand le volume le justifiera, pas avant.
