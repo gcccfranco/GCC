@@ -1,4 +1,21 @@
 {
  "slug": "尽情地微笑",
- "face": "verdana-bold"
+ "face": "verdana-bold",
+ "extra_labels": [
+  {
+   "x": 236,
+   "y": 1305,
+   "w": 70,
+   "h": 25,
+   "c": "D/F#"
+  }
+ ],
+ "extra_verified": "relue au zoom sur _extra-1.png (itération 20) : D/F# imprimé, lu juste mais sous le seuil. Les deux autres propositions sont 【Verse】 et 【Chorus】, écartées.",
+ "key_label": {
+  "x": 8,
+  "y": 140,
+  "w": 86,
+  "h": 27
+ },
+ "key_label_verified": "mesuré à l'œil sur la page (itération 20) : « 1= D » seul. measure-keylabel proposait w=146, qui avalait la fraction 4/4 (blocs d'encre 120-153) — masquer le cadre l'aurait effacée."
 }
