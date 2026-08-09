@@ -29,7 +29,8 @@ import numpy as np
 from PIL import Image
 
 from match import (
-    GOLD_SET, best_match, build_templates, keep, read, signature, vocabulary,
+    GOLD_SET, best_match, face_bank, keep, read, signature, song_face,
+    song_semitones, vocabulary,
 )
 from segment import INK_THRESHOLD
 
@@ -91,7 +92,7 @@ def hand_read():
         if not labels or not os.path.exists(image):
             continue
         ink = np.asarray(Image.open(image).convert("L")) < INK_THRESHOLD
-        templates = build_templates(vocabulary(slug))
+        templates = face_bank(vocabulary(slug), song_semitones(slug), song_face(slug))
         for l in labels:
             sub = ink[l["y"] : l["y"] + l["h"], l["x"] : l["x"] + l["w"]]
             ys, xs = np.where(sub.any(1))[0], np.where(sub.any(0))[0]
