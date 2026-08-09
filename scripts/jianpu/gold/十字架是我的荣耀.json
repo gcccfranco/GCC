@@ -21,7 +21,14 @@
    "w": 57,
    "h": 28,
    "c": "Gm"
+  },
+  {
+   "x": 256,
+   "y": 1972,
+   "w": 44,
+   "h": 36,
+   "c": "A7"
   }
  ],
- "extra_verified": "zooms propose-extra relus un à un, rangées hautes calées sur le bloc d’encre des colonnes, 2026-08-05"
+ "extra_verified": "zooms propose-extra relus un à un, rangées hautes calées sur le bloc d’encre des colonnes, 2026-08-05 · propositions propose-extra relues au zoom (itération 17, garde « deux par rangée » levé) ; six lues faux par le matcher entre +0,43 et +0,73 et relues au zoom ×7 — 2026-08-09"
 }

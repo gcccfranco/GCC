@@ -143,9 +143,16 @@
    "w": 21,
    "h": 27,
    "c": "A"
+  },
+  {
+   "x": 300,
+   "y": 800,
+   "w": 88,
+   "h": 27,
+   "c": "Esus4"
   }
  ],
- "extra_verified": "zooms propose-extra relus un à un, rangées hautes calées sur le bloc d’encre des colonnes, 2026-08-05",
+ "extra_verified": "zooms propose-extra relus un à un, rangées hautes calées sur le bloc d’encre des colonnes, 2026-08-05 · propositions propose-extra relues au zoom (itération 17, garde « deux par rangée » levé) ; six lues faux par le matcher entre +0,43 et +0,73 et relues au zoom ×7 — 2026-08-09",
  "key_label": {
   "x": 6,
   "y": 237,

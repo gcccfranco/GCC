@@ -6,5 +6,22 @@
   "w": 79,
   "h": 26
  },
- "key_label_verified": "mesure measure-keylabel (vote 1= + lettre attendue), zoom relu à l’œil, 2026-08-05"
+ "key_label_verified": "mesure measure-keylabel (vote 1= + lettre attendue), zoom relu à l’œil, 2026-08-05",
+ "extra_labels": [
+  {
+   "x": 1478,
+   "y": 1535,
+   "w": 48,
+   "h": 25,
+   "c": "C/E"
+  },
+  {
+   "x": 1488,
+   "y": 1800,
+   "w": 49,
+   "h": 25,
+   "c": "C/E"
+  }
+ ],
+ "extra_verified": "propositions propose-extra relues au zoom (itération 17, garde « deux par rangée » levé) ; six lues faux par le matcher entre +0,43 et +0,73 et relues au zoom ×7 — 2026-08-09"
 }
