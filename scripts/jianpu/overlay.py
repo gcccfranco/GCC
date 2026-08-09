@@ -39,8 +39,18 @@ FONT_CANDIDATES = [
 ]
 
 
-def load_font(size: int):
-    for path in FONT_CANDIDATES:
+# Le libellé du titre porte des hanzi (« （D调） ») et des parenthèses pleine
+# chasse. Times New Roman ne les couvre pas : sans fonte chinoise le rendu
+# de contrôle affiche des tofus, et un contrôle illisible ne contrôle rien.
+CJK_CANDIDATES = [
+    "/System/Library/Fonts/Hiragino Sans GB.ttc",
+    "/System/Library/Fonts/STHeiti Medium.ttc",
+    "/System/Library/Fonts/Supplemental/Songti.ttc",
+]
+
+
+def load_font(size: int, cjk: bool = False):
+    for path in (CJK_CANDIDATES if cjk else []) + FONT_CANDIDATES:
         if os.path.exists(path):
             return ImageFont.truetype(path, size)
     return ImageFont.load_default()
@@ -136,6 +146,18 @@ def render(slug: str, target_key: str, diag: bool = False) -> str:
                 font=load_font(int(kl["h"] * 1.1)), fill=(0, 0, 0), anchor="ls")
         if diag:
             dr.rectangle([x0 - 3, y0 - 4, x1 + 4, y1 + 2], outline=(220, 38, 38), width=1)
+
+    # La tonalité répétée dans le titre — « （D调） » — décrit cette page-ci
+    # et suit donc la transposition, au même titre que « 1=X ».
+    tk = entry.get("titleKey")
+    if tk:
+        x0, y0 = tk["x"], tk["y"]
+        x1, y1 = x0 + tk["w"] - 1, y0 + tk["h"] - 1
+        dr.rectangle([x0 - 3, y0 - 4, x1 + 4, y1 + 3], fill=(255, 255, 255))
+        dr.text((x0, y1), f"（{target_key}调）",
+                font=load_font(int(tk["h"] * 0.78), cjk=True), fill=(0, 0, 0), anchor="ls")
+        if diag:
+            dr.rectangle([x0 - 3, y0 - 4, x1 + 4, y1 + 3], outline=(220, 38, 38), width=1)
 
     os.makedirs(OUT, exist_ok=True)
     dest = os.path.join(OUT, f"{slug}-{target_key}.png")
