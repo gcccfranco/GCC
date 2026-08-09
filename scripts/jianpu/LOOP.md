@@ -156,6 +156,8 @@ rangées les tronque.
 | 15 | **3 rangées entières manquées** trouvées sur 3 pages auditées (mode D) | +40 étiquettes relues (`--all` : le pré-filtre levé) | **9 /125 certifiés** (把冷漠变成爱, 是为了爱, 拣选) |
 | 16 | jeu de test élargi : **232 étiquettes de cas durs** (les `extra_labels`) | approche du `/` et poids de la basse **tous deux rejetés** (95 → 95) | 9 /125 · les 9 sont **gelés** |
 | 17 | garde « deux par rangée » levé : **21 → 188 propositions**, 173 vraies | +12 étiquettes relues, dont 6 que le matcher lisait faux | 9 /125 · **une page à deux tonalités** découverte |
+| 18 | — | — | **11 /125 certifiés** (永活盼望, 到各山岭去传扬) · `titleKey` |
+| 19 | jeu de contrôle élargi à une 3ᵉ gravure (永恒唯一的盼望, 29 étiquettes) : **116/179** contre 107 sous l'ancienne fonte unique | fonte de page : sur la nouvelle famille, **12 → 21 justes**, 0 FAUX | 11 /125 · **calques publiés 50 → 67** |
 
 ## Journal
 
@@ -1093,3 +1095,99 @@ donc son « zéro trouvé » ne prouvait rien. Ce qui reste est solide sans
 être automatique : **`audit-page` montre la page entière**, donc tout
 second marqueur apparaîtra à la certification. Aucun sur les six pages
 auditées jusqu'ici.
+
+### Itération 19 — la fonte était une variable, et personne ne le savait
+
+Les 75 chants sans calque échouaient **tous** pour le même motif, `trop peu
+lu`, et certains lisaient 0/37, 2/52, 3/96. Un tel plancher ne ressemble pas
+à un matcher qui peine : il ressemble à un vocabulaire qui ne correspond à
+rien. La première hypothèse était donc la tonalité — `build-chords` répète
+depuis le début que 32 des 124 partitions ne sont pas gravées dans celle de
+leur `.cho`.
+
+**Balayée, et réfutée.** Sur les pires cas, aucune des douze transpositions
+ne lit mieux que zéro : 4/96, 4/65, 0/37. La tonalité n'était pas le sujet.
+
+**Ce que la planche a montré à la place.** 永恒唯一的盼望 imprime
+`E C#m F#m B G#m` — de l'E majeur parfaitement lisible — et le matcher y
+lisait `F, Gm/F, Bb/D`. Les fautes n'étaient pas quelconques : `B` lu `E`,
+`G#m` lu `C#m`, `C#m` lu `F#m`, **toutes des confusions de lettre
+initiale**. La page est gravée dans une bold linéale large ; le gabarit,
+lui, est en Helvetica Neue maigre, et à 32×32 les pleins gras ne se
+séparent plus.
+
+Mesuré contre une vérité terrain lue à l'œil (29 étiquettes) :
+
+| gabarit | identifiées | retenues justes | retenues **fausses** |
+|---|---|---|---|
+| Helvetica Neue (la constante) | 20/29 | 15 | **7** |
+| Helvetica Bold | 26/29 | 20 | 3 |
+| Verdana Bold | **29/29** | **28** | **0** |
+
+**Pourquoi les deux questions se tenaient.** Sous une fonte qui ne colle
+pas, le balayage de tonalité ne décide rien : `+11` gagnait d'un point sur
+`+9`, dans le bruit, et l'on concluait que la tonalité était bonne. Sous la
+bonne fonte, `+11` gagne 28 contre 22. **Une mesure faite avec le mauvais
+gabarit ne mesure rien** — c'est l'itération 1, sous un autre visage. C'est
+aussi pourquoi le « ça ne marche pas » de l'itération 5 sur la déduction
+automatique de tonalité était juste *et* trompeur : il était vrai à fonte
+fixée.
+
+`sweep-key.py` balaye donc les deux ensemble, 7 fontes × 12 demi-tons, et
+ne propose un couple que s'il lit ≥ 55 % de la page **et** distance le
+suivant de 12 points. Il ne publie rien : `apply-sweep.py` écrit `face` et
+`printed_key` dans `gold/`, et la planche de lecture tranche.
+
+**Trois choses réparées en chemin, toutes de la même nature — un paramètre
+de page traité comme une constante de corpus :**
+
+1. `read()` n'appliquait **jamais** l'écart de tonalité. `printed_key`
+   existait, mais ne servait qu'au client : une page gravée ailleurs que
+   son `.cho` ne pouvait pas être lue, quoi qu'on écrive dans la vérité
+   terrain.
+2. Le **jury** était toujours composé de trois maigres. Sur une page
+   grasse, il se trompe de la même façon que la référence — l'unanimité
+   dit alors « sûr » sur une faute partagée. Il suit maintenant la famille.
+3. `evaluate.py`, `propose-extra.py` et `stray_chords` construisaient leurs
+   gabarits avec la fonte par défaut. Le jeu de test des cas durs se
+   mesurait donc lui-même au mauvais gabarit.
+
+**Une troisième famille, trouvée en regardant.** 最美的礼物 est gravée en
+**serif**, et ses lectures justes étaient rejetées faute d'unanimité — le
+jury n'ayant que des linéales. Times avait pourtant été écartée à
+l'itération 5 au seul motif qu'elle perdait sur 何等恩典 : une famille jugée
+sur une page qui n'est pas la sienne, exactement l'erreur de la fonte de
+référence. Les familles sont maintenant trois — linéale, grasse, serif —
+chacune avec son jury.
+
+**Ce que le jeu de test n'a pas pu dire, et pourquoi.** Sur les 244
+étiquettes de cas durs, le changement ne bouge rien (218 identifiées avant
+et après, 201 → 199 retenues). Ce n'est pas un démenti : **19 de ces 244
+seulement (8 %) sont sur une page dont la fonte a changé.** Ces étiquettes
+viennent des pages que le matcher lisait déjà à moitié — donc des pages
+déjà dans la bonne fonte. C'est le biais de sélection de l'itération 16,
+au même endroit : *un jeu de test constitué des ratés d'un système ne peut
+pas mesurer ce que ce système ne voyait pas du tout.* D'où l'entrée de
+永恒唯一的盼望 dans le jeu de contrôle, avec ses 29 étiquettes lues à l'œil :
+116/179 sous la fonte de page, **107/179** sous l'ancienne constante.
+
+**Résultat.** Les calques publiés passent de **50 à 67 sur 125**. Aucun
+perdu, aucun des onze certifiés touché — le gel de l'itération 16 a fait
+exactement son travail : la refonte du matcher n'a pas pu les atteindre.
+Neuf calques existants gagnent des étiquettes (一颗谦卑的心 28 → 36,
+如果你想知道 33 → 41, 信实的神 24 → 30).
+
+**Ce qui reste, et qui ne se résoudra pas par la fonte.** Le balayage
+laisse 58 chants sous ses seuils. Les planches en montrent au moins deux
+familles pour lesquelles aucun gabarit rendu ne marchera :
+
+- les accords **manuscrits** (从心合一, 无价至宝) — annotés à la main sur le
+  scan ;
+- les accords **collés aux chiffres**, en petit corps avec le bémol en
+  exposant (伯利恒的喜讯 : `E♭ A♭ B♭` posés sur la rangée de mélodie), que le
+  découpage en rangées ne sépare pas.
+
+La première n'a pas de solution automatique et ces pages devront être lues
+entièrement à la main. La seconde est un problème de **segmentation**, pas
+de lecture — c'est le goulot que l'itération 16 avait déjà nommé, et il
+reste le prochain.
