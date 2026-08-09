@@ -16,9 +16,19 @@ humain lit les zooms et recopie les étiquettes approuvées dans
 `gold/<slug>.json` sous `extra_labels` — c'est cette liste-là, et rien
 d'automatique, que `build-chords.py` publie.
 
+Le pré-filtre est fait pour *limiter le volume* quand on ratisse le
+corpus. Sur un chant qu'on est en train de certifier, il devient une gêne :
+il tait précisément les amas que le matcher ne sait pas lire, qui sont
+justement ceux qu'il reste à lire. `--all` le désactive et rend **tout ce
+qui n'est pas encore couvert** dans les rangées où le calque publie déjà,
+score ou pas. Ce que `--all` ne montre pas, ce sont les rangées jamais
+détectées (mode D) : celles-là se voient sur `audit-page.py`, et se
+mesurent ensuite à la main.
+
 Usage (depuis GCCLouange/) :
     python3 scripts/jianpu/propose-extra.py            # tout le corpus
     python3 scripts/jianpu/propose-extra.py <slug>     # un chant
+    python3 scripts/jianpu/propose-extra.py <slug> --all   # + le reste à lire
 
 Sortie : scripts/jianpu/debug/_extra-<n>.png (zooms)
          scripts/jianpu/debug/_extra-proposals.json (boîtes exactes)
@@ -53,9 +63,13 @@ MAX_H_RATIO = 1.5
 MIN_ROW_MATCHES = 2
 
 
-def propose(slug: str, entry: dict) -> list[dict]:
+def propose(slug: str, entry: dict, everything: bool = False) -> list[dict]:
     path = os.path.join(IMAGES, f"{slug}-p1.webp")
     covered = {(l["y"], l["x"]) for l in entry["labels"]}
+    # En mode `--all`, on ne garde que les rangées où le calque a déjà posé
+    # quelque chose. Sans cette borne, toute la page entre : hanzi, chiffres,
+    # crédits — de quoi noyer les quelques amas qui comptent.
+    published = {l["y"] for l in entry["labels"]}
     ink = np.asarray(Image.open(path).convert("L")) < INK_THRESHOLD
     _ink, _w, feats, kinds = classify(path)
     page_h = max(f["bottom"] for f in feats) if feats else 0
@@ -76,6 +90,8 @@ def propose(slug: str, entry: dict) -> list[dict]:
         # propres colonnes** : le haut d'une rangée n'est pas le haut de ses
         # lettres, et une boîte héritée des bornes de la rangée mange le
         # haut des chiffres.
+        if everything and f["top"] not in published:
+            continue
         tall = f["height"] > MAX_H_RATIO * entry["labelH"]
         row = []
         for x0, x1 in f["clusters"]:
@@ -93,11 +109,12 @@ def propose(slug: str, entry: dict) -> list[dict]:
                 continue
             sig = signature(sub[ys[0] : ys[-1] + 1, xs[0] : xs[-1] + 1])
             score, chord = best_match(sig, templates)
-            if score >= SAFE_SCORE and all(best_match(sig, t)[1] == chord for t in jury):
+            if everything or (score >= SAFE_SCORE
+                              and all(best_match(sig, t)[1] == chord for t in jury)):
                 row.append({"x": int(x0), "y": int(top), "w": int(x1 - x0 + 1),
                             "h": int(bottom - top + 1), "c": chord,
                             "score": round(float(score), 2)})
-        if len(row) >= MIN_ROW_MATCHES:
+        if everything or len(row) >= MIN_ROW_MATCHES:
             out.extend(row)
     return out
 
@@ -124,12 +141,16 @@ def _top_block(ink, top: int, bottom: int, x0: int, x1: int, label_h: int):
 
 def main() -> int:
     chords = json.load(open(os.path.join(IMAGES, "chords.json"), encoding="utf8"))
-    only = sys.argv[1] if len(sys.argv) > 1 else None
+    args = [a for a in sys.argv[1:] if not a.startswith("--")]
+    everything = "--all" in sys.argv
+    only = args[0] if args else None
+    if everything and not only:
+        raise SystemExit("--all se lance sur un chant : propose-extra.py <slug> --all")
     proposals = {}
     for slug, entry in sorted(chords.items()):
         if only and slug != only:
             continue
-        rows = propose(slug, entry)
+        rows = propose(slug, entry, everything)
         if rows:
             proposals[slug] = rows
             print(f"  {slug:16} {len(rows)} étiquette(s) proposée(s)")
