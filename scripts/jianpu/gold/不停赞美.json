@@ -94,5 +94,168 @@
   "h": 28
  },
  "key_label_verified": "mesure measure-keylabel (vote 1= + lettre attendue), zoom relu à l’œil, 2026-08-05",
- "verified": "transposé D→F dans Chrome headless (captures relues), thèmes clair et sombre : 23 accords + 1=F, rangée y=902 (typée numbers, invisible au compare) comprise, aucun accord resté en D — 2026-08-05"
+ "verified": "transposé D→F dans Chrome headless (captures relues), thèmes clair et sombre : 23 accords + 1=F, rangée y=902 (typée numbers, invisible au compare) comprise, aucun accord resté en D — 2026-08-05",
+ "frozen_labels": [
+  {
+   "x": 43,
+   "y": 261,
+   "w": 21,
+   "h": 28,
+   "c": "D"
+  },
+  {
+   "x": 555,
+   "y": 261,
+   "w": 22,
+   "h": 28,
+   "c": "G"
+  },
+  {
+   "x": 1068,
+   "y": 261,
+   "w": 22,
+   "h": 28,
+   "c": "A"
+  },
+  {
+   "x": 42,
+   "y": 582,
+   "w": 21,
+   "h": 27,
+   "c": "D"
+  },
+  {
+   "x": 532,
+   "y": 582,
+   "w": 21,
+   "h": 27,
+   "c": "D"
+  },
+  {
+   "x": 1091,
+   "y": 582,
+   "w": 22,
+   "h": 27,
+   "c": "G"
+  },
+  {
+   "x": 37,
+   "y": 1223,
+   "w": 22,
+   "h": 28,
+   "c": "A"
+  },
+  {
+   "x": 349,
+   "y": 1223,
+   "w": 22,
+   "h": 28,
+   "c": "G"
+  },
+  {
+   "x": 665,
+   "y": 1223,
+   "w": 22,
+   "h": 28,
+   "c": "A"
+  },
+  {
+   "x": 976,
+   "y": 1223,
+   "w": 23,
+   "h": 28,
+   "c": "G"
+  },
+  {
+   "x": 1292,
+   "y": 1223,
+   "w": 22,
+   "h": 28,
+   "c": "A"
+  },
+  {
+   "x": 38,
+   "y": 902,
+   "w": 48,
+   "h": 29,
+   "c": "Em"
+  },
+  {
+   "x": 404,
+   "y": 902,
+   "w": 22,
+   "h": 29,
+   "c": "A"
+  },
+  {
+   "x": 698,
+   "y": 902,
+   "w": 22,
+   "h": 29,
+   "c": "D"
+  },
+  {
+   "x": 1250,
+   "y": 902,
+   "w": 22,
+   "h": 29,
+   "c": "G"
+  },
+  {
+   "x": 42,
+   "y": 1544,
+   "w": 21,
+   "h": 28,
+   "c": "D"
+  },
+  {
+   "x": 581,
+   "y": 1544,
+   "w": 49,
+   "h": 28,
+   "c": "Em"
+  },
+  {
+   "x": 961,
+   "y": 1544,
+   "w": 22,
+   "h": 28,
+   "c": "A"
+  },
+  {
+   "x": 1313,
+   "y": 1544,
+   "w": 48,
+   "h": 28,
+   "c": "Em"
+  },
+  {
+   "x": 43,
+   "y": 1865,
+   "w": 22,
+   "h": 28,
+   "c": "A"
+  },
+  {
+   "x": 399,
+   "y": 1865,
+   "w": 49,
+   "h": 28,
+   "c": "Em"
+  },
+  {
+   "x": 718,
+   "y": 1865,
+   "w": 23,
+   "h": 28,
+   "c": "A"
+  },
+  {
+   "x": 1027,
+   "y": 1865,
+   "w": 21,
+   "h": 28,
+   "c": "D"
+  }
+ ]
 }

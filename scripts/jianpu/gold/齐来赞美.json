@@ -88,5 +88,147 @@
   }
  ],
  "extra_verified": "chaque étiquette relue sur zoom (propose-extra + planches), 2026-08-04",
- "verified": "transposé F→G dans Chrome headless (captures relues par Claude), thèmes clair et sombre : 20 accords + 1=G, rangée y=293 lue à l'œil comprise, aucun accord resté en F — 2026-08-04"
+ "verified": "transposé F→G dans Chrome headless (captures relues par Claude), thèmes clair et sombre : 20 accords + 1=G, rangée y=293 lue à l'œil comprise, aucun accord resté en F — 2026-08-04",
+ "frozen_labels": [
+  {
+   "x": 179,
+   "y": 498,
+   "w": 13,
+   "h": 25,
+   "c": "F"
+  },
+  {
+   "x": 888,
+   "y": 498,
+   "w": 36,
+   "h": 25,
+   "c": "Bb"
+  },
+  {
+   "x": 37,
+   "y": 840,
+   "w": 17,
+   "h": 25,
+   "c": "C"
+  },
+  {
+   "x": 647,
+   "y": 840,
+   "w": 12,
+   "h": 25,
+   "c": "F"
+  },
+  {
+   "x": 1042,
+   "y": 840,
+   "w": 12,
+   "h": 25,
+   "c": "F"
+  },
+  {
+   "x": 34,
+   "y": 1182,
+   "w": 35,
+   "h": 24,
+   "c": "Bb"
+  },
+  {
+   "x": 680,
+   "y": 1182,
+   "w": 18,
+   "h": 24,
+   "c": "C"
+  },
+  {
+   "x": 1364,
+   "y": 1182,
+   "w": 12,
+   "h": 24,
+   "c": "F"
+  },
+  {
+   "x": 388,
+   "y": 1513,
+   "w": 13,
+   "h": 34,
+   "c": "F"
+  },
+  {
+   "x": 980,
+   "y": 1513,
+   "w": 36,
+   "h": 34,
+   "c": "Bb"
+  },
+  {
+   "x": 50,
+   "y": 1807,
+   "w": 17,
+   "h": 24,
+   "c": "C"
+  },
+  {
+   "x": 680,
+   "y": 1807,
+   "w": 12,
+   "h": 24,
+   "c": "F"
+  },
+  {
+   "x": 1210,
+   "y": 1807,
+   "w": 13,
+   "h": 24,
+   "c": "F"
+  },
+  {
+   "x": 256,
+   "y": 2091,
+   "w": 35,
+   "h": 25,
+   "c": "Bb"
+  },
+  {
+   "x": 846,
+   "y": 2091,
+   "w": 17,
+   "h": 25,
+   "c": "C"
+  },
+  {
+   "x": 1448,
+   "y": 2091,
+   "w": 12,
+   "h": 25,
+   "c": "F"
+  },
+  {
+   "x": 58,
+   "y": 293,
+   "w": 12,
+   "h": 29,
+   "c": "F"
+  },
+  {
+   "x": 386,
+   "y": 293,
+   "w": 35,
+   "h": 29,
+   "c": "Bb"
+  },
+  {
+   "x": 729,
+   "y": 293,
+   "w": 17,
+   "h": 29,
+   "c": "C"
+  },
+  {
+   "x": 1116,
+   "y": 293,
+   "w": 12,
+   "h": 29,
+   "c": "F"
+  }
+ ]
 }

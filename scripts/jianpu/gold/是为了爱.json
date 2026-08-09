@@ -136,5 +136,315 @@
   }
  ],
  "verified": "audit-page F→F#, les 8 tranches de la page relues avec cadres de contrôle : les 44 accords sont encadrés, aucun accord laissé dans l’ancienne tonalité, lecture exacte contre le scan amas par amas. 1=F# suit ; 【Chorus】, le segno, « D.S. al Fine » et « Fine » sont intacts — 2026-08-09",
- "extra_verified": "reste lu au zoom (propose-extra --all) : les six accords à basse étrangère que le matcher lit à +0,03 ou moins — 【Bridge】 écarté, ce n’est pas un accord. Plus deux rangées entières manquées, vues sur audit-page et mesurées à la main (y=751 : le segno et 【Chorus】 étirent la bande à 43 px, elle tombe en `numbers` ; y=1737 : idem avec « D.S. al Fine ») — boîtes calées sur l’union de l’encre des lettres seules, 2026-08-09"
+ "extra_verified": "reste lu au zoom (propose-extra --all) : les six accords à basse étrangère que le matcher lit à +0,03 ou moins — 【Bridge】 écarté, ce n’est pas un accord. Plus deux rangées entières manquées, vues sur audit-page et mesurées à la main (y=751 : le segno et 【Chorus】 étirent la bande à 43 px, elle tombe en `numbers` ; y=1737 : idem avec « D.S. al Fine ») — boîtes calées sur l’union de l’encre des lettres seules, 2026-08-09",
+ "frozen_labels": [
+  {
+   "x": 45,
+   "y": 260,
+   "w": 12,
+   "h": 28,
+   "c": "F"
+  },
+  {
+   "x": 381,
+   "y": 260,
+   "w": 12,
+   "h": 28,
+   "c": "F"
+  },
+  {
+   "x": 765,
+   "y": 260,
+   "w": 11,
+   "h": 28,
+   "c": "F"
+  },
+  {
+   "x": 1009,
+   "y": 260,
+   "w": 32,
+   "h": 28,
+   "c": "Bb"
+  },
+  {
+   "x": 1239,
+   "y": 260,
+   "w": 11,
+   "h": 28,
+   "c": "F"
+  },
+  {
+   "x": 43,
+   "y": 508,
+   "w": 44,
+   "h": 22,
+   "c": "Dm"
+  },
+  {
+   "x": 327,
+   "y": 508,
+   "w": 45,
+   "h": 22,
+   "c": "Gm"
+  },
+  {
+   "x": 550,
+   "y": 508,
+   "w": 32,
+   "h": 22,
+   "c": "C7"
+  },
+  {
+   "x": 713,
+   "y": 508,
+   "w": 11,
+   "h": 22,
+   "c": "F"
+  },
+  {
+   "x": 990,
+   "y": 508,
+   "w": 33,
+   "h": 22,
+   "c": "Bb"
+  },
+  {
+   "x": 1220,
+   "y": 508,
+   "w": 11,
+   "h": 22,
+   "c": "F"
+  },
+  {
+   "x": 55,
+   "y": 997,
+   "w": 12,
+   "h": 30,
+   "c": "F"
+  },
+  {
+   "x": 264,
+   "y": 997,
+   "w": 15,
+   "h": 30,
+   "c": "C"
+  },
+  {
+   "x": 600,
+   "y": 997,
+   "w": 12,
+   "h": 30,
+   "c": "F"
+  },
+  {
+   "x": 739,
+   "y": 997,
+   "w": 32,
+   "h": 30,
+   "c": "Bb"
+  },
+  {
+   "x": 1181,
+   "y": 997,
+   "w": 15,
+   "h": 30,
+   "c": "C"
+  },
+  {
+   "x": 44,
+   "y": 1244,
+   "w": 44,
+   "h": 28,
+   "c": "Dm"
+  },
+  {
+   "x": 353,
+   "y": 1244,
+   "w": 32,
+   "h": 28,
+   "c": "Bb"
+  },
+  {
+   "x": 582,
+   "y": 1244,
+   "w": 45,
+   "h": 28,
+   "c": "F/A"
+  },
+  {
+   "x": 767,
+   "y": 1244,
+   "w": 33,
+   "h": 28,
+   "c": "Bb"
+  },
+  {
+   "x": 954,
+   "y": 1244,
+   "w": 15,
+   "h": 28,
+   "c": "C"
+  },
+  {
+   "x": 1197,
+   "y": 1244,
+   "w": 11,
+   "h": 28,
+   "c": "F"
+  },
+  {
+   "x": 167,
+   "y": 1484,
+   "w": 11,
+   "h": 30,
+   "c": "F"
+  },
+  {
+   "x": 475,
+   "y": 1484,
+   "w": 32,
+   "h": 30,
+   "c": "Bb"
+  },
+  {
+   "x": 789,
+   "y": 1484,
+   "w": 11,
+   "h": 30,
+   "c": "F"
+  },
+  {
+   "x": 1071,
+   "y": 1484,
+   "w": 15,
+   "h": 30,
+   "c": "C"
+  },
+  {
+   "x": 205,
+   "y": 260,
+   "w": 61,
+   "h": 28,
+   "c": "Bb/F"
+  },
+  {
+   "x": 541,
+   "y": 260,
+   "w": 61,
+   "h": 28,
+   "c": "Bb/F"
+  },
+  {
+   "x": 383,
+   "y": 997,
+   "w": 67,
+   "h": 30,
+   "c": "Bb/D"
+  },
+  {
+   "x": 485,
+   "y": 997,
+   "w": 45,
+   "h": 30,
+   "c": "C/E"
+  },
+  {
+   "x": 988,
+   "y": 997,
+   "w": 43,
+   "h": 30,
+   "c": "F/C"
+  },
+  {
+   "x": 165,
+   "y": 1244,
+   "w": 43,
+   "h": 28,
+   "c": "F/C"
+  },
+  {
+   "x": 55,
+   "y": 751,
+   "w": 11,
+   "h": 29,
+   "c": "F"
+  },
+  {
+   "x": 277,
+   "y": 751,
+   "w": 15,
+   "h": 29,
+   "c": "C"
+  },
+  {
+   "x": 526,
+   "y": 751,
+   "w": 11,
+   "h": 29,
+   "c": "F"
+  },
+  {
+   "x": 767,
+   "y": 751,
+   "w": 67,
+   "h": 29,
+   "c": "Bb/D"
+  },
+  {
+   "x": 869,
+   "y": 751,
+   "w": 45,
+   "h": 29,
+   "c": "C/E"
+  },
+  {
+   "x": 992,
+   "y": 751,
+   "w": 12,
+   "h": 29,
+   "c": "F"
+  },
+  {
+   "x": 1126,
+   "y": 751,
+   "w": 32,
+   "h": 29,
+   "c": "Bb"
+  },
+  {
+   "x": 50,
+   "y": 1737,
+   "w": 11,
+   "h": 23,
+   "c": "F"
+  },
+  {
+   "x": 327,
+   "y": 1737,
+   "w": 32,
+   "h": 23,
+   "c": "Bb"
+  },
+  {
+   "x": 626,
+   "y": 1737,
+   "w": 11,
+   "h": 23,
+   "c": "F"
+  },
+  {
+   "x": 804,
+   "y": 1737,
+   "w": 16,
+   "h": 23,
+   "c": "C"
+  },
+  {
+   "x": 1046,
+   "y": 1737,
+   "w": 11,
+   "h": 23,
+   "c": "F"
+  }
+ ]
 }
