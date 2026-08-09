@@ -258,6 +258,14 @@ def build(slug: str):
         entry["complete"] = False
     if gold.get("key_label"):
         entry["keyLabel"] = gold["key_label"]
+    # Certaines gravures répètent la tonalité **dans le titre** :
+    # « 永活盼望（李伟版）（D调） ». Cette mention-là décrit *cette page*, donc
+    # elle suit la transposition, exactement comme « 1=X ». À ne pas
+    # confondre avec « 原调Eb » (la tonalité de la *source*), qui décrit
+    # l'œuvre et doit rester telle quelle — les deux cohabitent sur
+    # 永活盼望, et c'est ce qui rendait la question épineuse.
+    if gold.get("title_key"):
+        entry["titleKey"] = gold["title_key"]
     return entry, f"{note} · 1={printed_key}" + ("" if complete else "  [PARTIEL]")
 
 
