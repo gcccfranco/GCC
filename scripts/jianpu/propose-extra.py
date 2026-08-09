@@ -57,15 +57,39 @@ OUT = os.path.join(HERE, "debug")
 
 # Sous ce score, on a observé des faux (hanzi à +0,41, chiffres à +0,34).
 # Au-dessus aussi (+0,73 !) — d'où la lecture à l'œil ; le seuil ne sert
-# qu'à limiter le volume à relire.
+# qu'à limiter le volume à relire. Balayé contre les 232 étiquettes déjà
+# lues à la main (itération 17) : à 0,42 avec jury unanime, 75 % d'entre
+# elles ressortent pour 188 zooms à relire, et 92 % de ces zooms sont de
+# vraies étiquettes. Descendre à 0,30 ajoute 11 étiquettes pour 59 zooms de
+# plus ; à 0,20, 8 de plus pour 119 zooms. Le rendement s'effondre, on
+# reste à 0,42.
 SAFE_SCORE = 0.42
 MAX_H_RATIO = 1.5
-MIN_ROW_MATCHES = 2
+
+
+def _overlaps(box, labels) -> bool:
+    """L'amas recouvre-t-il une étiquette déjà publiée ?
+
+    Le test était `(y, x)` à l'exact. Il suffisait alors qu'une boîte ait
+    été recalée — resserrée sur l'encre, ou cadrée sur le bloc supérieur
+    d'une rangée haute — pour que l'étiquette déjà publiée soit reproposée
+    comme si elle manquait. C'est le doublon repéré à l'itération 14, et il
+    fait pire que perdre du temps : il invite à publier deux fois le même
+    accord, l'un par-dessus l'autre.
+    """
+    x0, y0, x1, y1 = box
+    for l in labels:
+        if x0 <= l["x"] + l["w"] - 1 and l["x"] <= x1 and y0 <= l["y"] + l["h"] - 1 and l["y"] <= y1:
+            return True
+    return False
 
 
 def propose(slug: str, entry: dict, everything: bool = False) -> list[dict]:
     path = os.path.join(IMAGES, f"{slug}-p1.webp")
-    covered = {(l["y"], l["x"]) for l in entry["labels"]}
+    # Le cadre « 1=X » compte parmi ce qui est déjà connu : sa lettre est un
+    # nom d'accord, elle s'apparie donc très bien (« 1=D » lu « D » à +0,70,
+    # itération 10) et revenait à chaque passe.
+    known = entry["labels"] + ([entry["keyLabel"]] if entry.get("keyLabel") else [])
     # En mode `--all`, on ne garde que les rangées où le calque a déjà posé
     # quelque chose. Sans cette borne, toute la page entre : hanzi, chiffres,
     # crédits — de quoi noyer les quelques amas qui comptent.
@@ -95,14 +119,14 @@ def propose(slug: str, entry: dict, everything: bool = False) -> list[dict]:
         tall = f["height"] > MAX_H_RATIO * entry["labelH"]
         row = []
         for x0, x1 in f["clusters"]:
-            if (f["top"], x0) in covered:
-                continue
             top, bottom = f["top"], f["bottom"]
             if tall:
                 band = _top_block(ink, top, bottom, x0, x1, entry["labelH"])
                 if band is None:
                     continue
                 top, bottom = band
+            if _overlaps((x0, top, x1, bottom), known):
+                continue
             sub = ink[top : bottom + 1, x0 : x1 + 1]
             ys, xs = np.where(sub.any(1))[0], np.where(sub.any(0))[0]
             if not len(ys) or not len(xs):
@@ -114,8 +138,16 @@ def propose(slug: str, entry: dict, everything: bool = False) -> list[dict]:
                 row.append({"x": int(x0), "y": int(top), "w": int(x1 - x0 + 1),
                             "h": int(bottom - top + 1), "c": chord,
                             "score": round(float(score), 2)})
-        if everything or len(row) >= MIN_ROW_MATCHES:
-            out.extend(row)
+        # Il y avait ici une règle « au moins deux lectures sûres dans la
+        # rangée », héritée du triple garde de l'itération 10. Elle protégeait
+        # une **publication automatique** qui n'existe plus : depuis cette
+        # même itération, rien n'atteint le calque sans être passé par un
+        # zoom relu. Ce qu'elle faisait encore, c'était cacher les accords
+        # isolés — c'est-à-dire précisément les rangées du mode D, celles
+        # qu'on ne trouvait qu'en auditant la page entière. Elle étranglait
+        # tout : 21 propositions sur le corpus, contre 188 sans elle, dont
+        # 173 sont des étiquettes qu'il a fallu aller chercher à la main.
+        out.extend(row)
     return out
 
 
