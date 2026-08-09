@@ -118,6 +118,21 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey }: 
                   1={playedKey ?? chords.printedKey}
                 </span>
               )}
+              {chords.titleKey && (
+                <span
+                  className="absolute flex items-end whitespace-nowrap bg-white font-bold text-black dark:bg-black dark:text-neutral-100"
+                  style={{
+                    left: `${((chords.titleKey.x - 3) / chords.w) * 100}%`,
+                    top: `${((chords.titleKey.y - 4) / chords.h) * 100}%`,
+                    height: `${((chords.titleKey.h + 7) / chords.h) * 100}%`,
+                    minWidth: `${((chords.titleKey.w + 7) / chords.w) * 100}%`,
+                    fontSize: `${((chords.titleKey.h * 0.78) / chords.w) * 100}cqw`,
+                    lineHeight: 1,
+                  }}
+                >
+                  （{playedKey ?? chords.printedKey}调）
+                </span>
+              )}
               {chords.labels.map((l, n) => (
                 <span
                   key={n}
