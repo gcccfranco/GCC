@@ -154,6 +154,7 @@ rangées les tronque.
 | 13 | inchangé | +13 étiquettes à l'œil (爱我愿意, 不停赞美) | **5 /125 certifiés** (爱我愿意, 不停赞美) |
 | 14 | rangées mêlées ouvertes au matcher (+32 candidates) | +31 étiquettes relues | **6 /125 certifiés** (全新的你) |
 | 15 | **3 rangées entières manquées** trouvées sur 3 pages auditées (mode D) | +40 étiquettes relues (`--all` : le pré-filtre levé) | **9 /125 certifiés** (把冷漠变成爱, 是为了爱, 拣选) |
+| 16 | jeu de test élargi : **232 étiquettes de cas durs** (les `extra_labels`) | approche du `/` et poids de la basse **tous deux rejetés** (95 → 95) | 9 /125 · les 9 sont **gelés** |
 
 ## Journal
 
@@ -913,3 +914,62 @@ c'est le bon résultat — ils restent partiels et le bandeau dit vrai :
 de 60 % : 56 entre 30 et 59 %, 19 sous 30 %, et **2 193 étiquettes y
 restent à lire à l'œil**, sans compter les rangées jamais détectées que
 seul l'audit révèle.
+
+### Itération 16 — deux correctifs mesurés, deux rejetés, et le vrai goulot nommé
+
+**Le gel d'abord.** Sept des neuf calques certifiés étaient construits par
+`match.py` : n'importe quelle retouche du matcher les changeait
+silencieusement, et la phrase `verified` — qui dit ce qu'un humain a
+regardé — décrivait donc une cible mouvante. `freeze.py` recopie les
+étiquettes publiées dans la vérité terrain au moment de la certification.
+`chords.json` est identique au bit près avant et après : le gel ne change
+rien de ce qui est publié, il le met hors d'atteinte. **Ce qui est
+certifié le reste, et le matcher redevient libre d'évoluer** — sans quoi
+chaque nouveau certifié rendait plus cher tout progrès sur la lecture.
+
+**Le jeu de test doublé.** Les `chord_rows` sont un échantillon
+représentatif : ils contiennent surtout ce que le matcher sait déjà lire,
+donc ils ne bougent pas quand on améliore les cas durs. Les `extra_labels`
+sont l'inverse — ce sont les étiquettes qu'il a ratées et qu'un humain est
+allé chercher au zoom. Boîte *et* accord y sont connus : **232 étiquettes
+de test gratuites, biaisées vers les cas durs**. `evaluate.py` y sépare
+deux décisions qui n'ont pas le même coût : *identifier* (le bon accord
+sort-il en tête ?) et *oser* (passe-t-il le seuil ?).
+
+**L'hypothèse, et sa réfutation.** Les accords à barre oblique sont
+mesurablement les plus mauvais — 62 % identifiés et **40 % retenus**,
+contre 96 % et 92 % pour le reste des cas durs. La cause se voit à l'œil :
+le graveur serre la barre, Helvetica Neue l'aère, et à même hauteur le
+gabarit « Bb/F » est 27 % plus large que le scan. `RATIO_WEIGHT` en fait
+une demi-unité de pénalité — assez pour couler `G/B`, pourtant **identifié
+rang 1 sur 8** et rejeté au seul motif du seuil.
+
+Le correctif — proposer aussi des gabarits à barre resserrée, comme on
+propose déjà dièse et bémol — a été balayé de 0,7 à 0,0 : **95 → 94, 97,
+93, 93**. Rien qui sorte du bruit. La raison est rétrospectivement
+évidente : resserrer la barre profite **autant au mauvais accord qu'au
+bon**, `F/A` rétréci reste devant `F/C` rétréci. La pénalité était réelle
+et ne décidait de rien.
+
+Seconde hypothèse, tirée des fautes elles-mêmes (`F/C→F/A`, `D/G→D/C`) :
+ce qui se trompe est toujours **la basse**, à droite de la barre, alors
+que le score pondère la moitié *gauche*. Ajouter une corrélation de la
+moitié droite : **209 → 209, 209, 210** pour un FAUX de plus. Rejetée
+aussi. Les deux lots sont revenus en arrière, rien de spéculatif n'est
+resté dans `match.py`.
+
+**Ce que la mesure a montré à la place, et qui vaut mieux que le
+correctif.** Sur les 232 cas durs, **176 des 192 sans barre oblique sont
+déjà lus juste et retenus — 92 %**. Ces étiquettes ont pourtant toutes dû
+être lues à la main. Ce n'est donc pas que le matcher ne sait pas les
+lire : **c'est qu'on ne les lui a jamais présentées.** Le goulot n'est pas
+la lecture, c'est la détection de rangées et le cadrage des boîtes — ce
+que l'itération 15 avait déjà vu de l'autre bout, avec ses trois rangées
+entièrement manquées.
+
+La conséquence pour la suite est nette : le travail à faire n'est pas
+d'affiner le matcher mais de **lui donner plus de boîtes serrées à lire**,
+en étendant `propose-extra` aux rangées où le calque ne publie rien
+encore, avec le cadrage sur le bloc d'encre supérieur des colonnes. La
+sécurité reste la même qu'à l'itération 10 : l'automate propose, l'œil
+dispose — un zoom relu coûte infiniment moins qu'une tranche d'audit.
