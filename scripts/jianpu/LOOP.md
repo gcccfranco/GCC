@@ -155,7 +155,7 @@ rangées les tronque.
 | 14 | rangées mêlées ouvertes au matcher (+32 candidates) | +31 étiquettes relues | **6 /125 certifiés** (全新的你) |
 | 15 | **3 rangées entières manquées** trouvées sur 3 pages auditées (mode D) | +40 étiquettes relues (`--all` : le pré-filtre levé) | **9 /125 certifiés** (把冷漠变成爱, 是为了爱, 拣选) |
 | 16 | jeu de test élargi : **232 étiquettes de cas durs** (les `extra_labels`) | approche du `/` et poids de la basse **tous deux rejetés** (95 → 95) | 9 /125 · les 9 sont **gelés** |
-| 17 | garde « deux par rangée » levé : **21 → 188 propositions**, 173 vraies | +12 étiquettes relues, dont 6 que le matcher lisait faux | 9 /125 · **一颗 page à deux tonalités** découverte |
+| 17 | garde « deux par rangée » levé : **21 → 188 propositions**, 173 vraies | +12 étiquettes relues, dont 6 que le matcher lisait faux | 9 /125 · **une page à deux tonalités** découverte |
 
 ## Journal
 
@@ -1039,3 +1039,57 @@ Trois conséquences, dont une immédiate :
 
 Les six propositions écartées reviendront à chaque passe : rien ne note
 les refus. À faire quand le volume le justifiera, pas avant.
+
+### Itération 18 — les quatre questions de produit, tranchées
+
+Elles traînaient depuis les itérations 11, 13 et 17 et bloquaient des
+chants entiers. Décisions de Timothée, appliquées :
+
+| question | décision | effet |
+|---|---|---|
+| tonalité dans le **titre** | on fait la distinction | `titleKey` implémenté |
+| pages à **capo** | traiter comme s'il n'y en avait pas | aucun code — c'est déjà le comportement ; 十架的爱 débloqué |
+| accords à **alternative** (`或`) | laisser | ces chants restent partiels, le bandeau dit vrai |
+| pages à **deux tonalités** | laisser | seconde rangée non publiée |
+
+**`titleKey`.** Certaines gravures répètent la tonalité dans le titre :
+« 永活盼望（李伟版）（D调） ». Transposée, la page affichait ses accords et
+son « 1=X » dans la nouvelle tonalité sous un titre resté dans l'ancienne
+— l'incohérence à deux tonalités que le calque est censé supprimer. La
+distinction retenue est nette et se vérifie sur les deux chants
+concernés :
+
+- **« （D调） » décrit *cette page*** → suit la transposition ;
+- **« 原调Eb » décrit la *source*** → reste tel quel (永活盼望 porte les
+  deux) ;
+- **« [共5张：D/E/F/G/A调] » décrit la *collection*** → reste tel quel
+  (到各山岭去传扬).
+
+Même mécanisme que `keyLabel` : un cadre mesuré à l'œil dans `gold/`, un
+span masqué côté client, et le rendu de contrôle qui suit. Un piège au
+passage : `overlay.py` chargeait Times New Roman, qui ne couvre ni les
+hanzi ni les parenthèses pleine chasse — le premier rendu affichait
+« □D#□ □ ». **Un contrôle illisible ne contrôle rien**, d'où la liste de
+fontes CJK.
+
+**永活盼望 (10ᵉ) et 到各山岭去传扬 (11ᵉ) certifiés.** Le premier attendait
+depuis l'itération 17 avec ses 53 accords déjà justes, le second depuis
+l'itération 11.
+
+**Une question de musique, posée par Timothée, et qui méritait sa
+réponse.** Si un chant module — base en G, pont en A — et qu'on monte la
+base en A, le pont passe-t-il en B ou reste-t-il en A ? **Il passe en B** :
+transposer décale toute la pièce d'un intervalle constant, et une
+modulation est une *relation* (« au pont, ça monte d'un ton »), pas une
+tonalité absolue. S'il restait en A, le pont se retrouverait dans la même
+tonalité que les couplets et la modulation disparaîtrait. C'est déjà ce
+que fait le calque, qui applique un seul intervalle à toute la page.
+
+Mais la question découvre un trou : une page qui module **réimprime un
+second « 1=X »** au point de modulation, et `keyLabel` est *un seul*
+cadre. Un détecteur de « 1= » hors en-tête a été écrit et **jeté** — il
+note les vrais libellés d'en-tête à +0,28 alors qu'il filtrait à +0,55,
+donc son « zéro trouvé » ne prouvait rien. Ce qui reste est solide sans
+être automatique : **`audit-page` montre la page entière**, donc tout
+second marqueur apparaîtra à la certification. Aucun sur les six pages
+auditées jusqu'ici.
