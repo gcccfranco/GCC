@@ -44,5 +44,6 @@
   "w": 76,
   "h": 25
  },
- "key_label_verified": "mesure measure-keylabel (vote 1= + lettre attendue), zoom relu à l’œil, 2026-08-05"
+ "key_label_verified": "mesure measure-keylabel (vote 1= + lettre attendue), zoom relu à l’œil, 2026-08-05",
+ "face": "helvetica-neue"
 }
