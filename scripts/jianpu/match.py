@@ -469,6 +469,68 @@ def keep(score: float, unanimous: bool) -> bool:
     return score >= MIN_SCORE and unanimous
 
 
+# Une rangée est déclarée étrangère quand un **autre** intervalle la lit
+# franchement mieux que celui de la page.
+#
+# Le test naïf — « mal lue à la tonalité de la page » — ne marche pas, et
+# c'est tout le piège de cette chaîne : le vocabulaire est *fermé*, donc le
+# matcher trouve toujours quelque chose. La rangée en mi de 有你同行 se lit
+# 75 % avec le vocabulaire en ré ; c'est précisément pour cela qu'elle
+# publiait de faux accords. Ce n'est pas l'échec qui la trahit, c'est
+# l'écart : 100 % à +2 contre 75 % à 0.
+FOREIGN_HIT = 0.70
+FOREIGN_MARGIN = 0.20
+FOREIGN_MIN_ROW = 4
+
+
+def foreign_rows(slug: str) -> dict[int, int]:
+    """Rangées gravées dans une **autre tonalité** que celle de la page.
+
+    Deux formats les produisent, et le corpus contient les deux :
+
+    - la **modulation** — 有你同行 commence en ré (`D Bm G A`) et finit en mi
+      (`C#m A E B`, `G#m C#m A B E`) sans réimprimer de « 1=X » ;
+    - les **rangées empilées** — 尽情地微笑 imprime deux jeux d'accords sur la
+      même ligne de mélodie, l'un trois demi-tons au-dessus de l'autre.
+
+    Les ignorer ne coûtait pas seulement de la couverture : le matcher, à
+    qui l'on impose le vocabulaire de la page, **retient de faux accords**.
+    有你同行 publiait `F#m A D` là où la page imprime `C#m A E`, unanimes et
+    au-dessus du seuil. C'est le pire cas possible — un accord faux écrit
+    sur la partition, qu'aucun compteur ne signale puisqu'il compte comme
+    une réussite.
+
+    On les repère et on ne les publie pas. Rendre ces pages *justes* est
+    une autre affaire : il y faut une tonalité par section, et un calque
+    qui sait en porter plusieurs.
+    """
+    vocab = vocabulary(slug)
+    if not vocab:
+        return {}
+    base = song_semitones(slug)
+    face = song_face(slug)
+    rows = [(f, [signature(b) for _p, b in cells]) for f, cells in crop_labels(slug)]
+    rows = [(f, sigs) for f, sigs in rows if len(sigs) >= FOREIGN_MIN_ROW]
+    if not rows:
+        return {}
+    every = [s for _f, sigs in rows for s in sigs]
+    factor = width_factor(every, face_bank(vocab, base, face))
+
+    banks = {d: face_bank(vocab, (base + d) % 12, face) for d in range(12)}
+    out = {}
+    for f, sigs in rows:
+        hits = {
+            d: sum(1 for s in sigs if best_match(s, bank, factor)[0] >= MIN_SCORE) / len(sigs)
+            for d, bank in banks.items()
+        }
+        d_best = max((d for d in hits if d), key=lambda d: hits[d])
+        # L'epsilon n'est pas cosmétique : 1,0 - 0,8 vaut 0,199… en binaire,
+        # et la rangée en mi de 有你同行 (5 amas) tombait juste sous la barre.
+        if hits[d_best] >= FOREIGN_HIT and hits[d_best] - hits[0] >= FOREIGN_MARGIN - 1e-9:
+            out[f["top"]] = d_best
+    return out
+
+
 def report(slug: str) -> None:
     rows = read(slug)
     if not rows:
