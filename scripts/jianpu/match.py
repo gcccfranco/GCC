@@ -56,6 +56,36 @@ SONGS = os.path.join(HERE, "..", "..", "content", "songs")
 FONT = "/System/Library/Fonts/HelveticaNeue.ttc"
 FONT_SIZE = 64
 
+# …mais cette élection s'est faite sur **une** gravure, et le corpus en
+# contient plusieurs. 永恒唯一的盼望 est gravée dans une bold linéale large :
+# Helvetica Neue y identifie 20 étiquettes sur 29 et en **retient 7
+# fausses**, quand Verdana Bold en identifie 29 sur 29 et n'en retient
+# aucune. Les fautes n'étaient pas quelconques — B lu E, G#m lu C#m, C#m lu
+# F#m — toutes des confusions de *lettre initiale* entre pleins gras que le
+# gabarit maigre ne sépare pas.
+#
+# La fonte est donc une propriété de **page**, au même titre que la
+# tonalité imprimée, et se note comme elle dans `gold/<slug>.json`, sous
+# `face`. `sweep-key.py` propose le couple, l'œil tranche sur la planche de
+# lecture.
+# Une troisième famille est apparue en regardant les planches : 最美的礼物
+# est gravée dans une **serif**, et ses lectures justes étaient rejetées
+# faute d'unanimité — le jury n'ayant que des linéales. Times avait
+# pourtant été écartée à l'itération 5, sur le seul motif qu'elle perdait
+# sur 何等恩典. C'est la même erreur que la fonte de référence, au même
+# endroit : une famille jugée sur une page qui n'est pas la sienne.
+SUP = "/System/Library/Fonts/Supplemental/"
+FACES: dict[str, tuple[str, int, str]] = {
+    "helvetica-neue": ("/System/Library/Fonts/HelveticaNeue.ttc", 0, "lineale"),
+    "helvetica-bold": ("/System/Library/Fonts/Helvetica.ttc", 1, "grasse"),
+    "verdana-bold": (SUP + "Verdana Bold.ttf", 0, "grasse"),
+    "din-bold": (SUP + "DIN Alternate Bold.ttf", 0, "grasse"),
+    "times": (SUP + "Times New Roman.ttf", 0, "serif"),
+    "times-bold": (SUP + "Times New Roman Bold.ttf", 0, "serif"),
+    "georgia": (SUP + "Georgia.ttf", 0, "serif"),
+}
+DEFAULT_FACE = "helvetica-neue"
+
 # Les autres fontes ne servent pas à lire mais à **contrôler la lecture**.
 # Aucun score n'est comparable d'une fonte à l'autre (Times a la meilleure
 # médiane et la pire exactitude), mais l'*accord* retenu l'est : une
@@ -65,14 +95,35 @@ FONT_SIZE = 64
 # nécessaire, parce que le *score* n'en est pas un : sur 全然向你, trois « Bm »
 # lus « Em » notaient +0,68 à +0,74, aussi haut que les lectures justes.
 #
-# Times est écarté du jury : c'est la seule serif du lot, elle lit 34/46 la
-# vérité terrain là où les autres sont à 41-45, et l'exiger fait tomber la
-# couverture de 85 à 61 sans retirer une seule erreur.
+# Times est écarté du jury **des linéales** : elle y lit 34/46 la vérité
+# terrain là où les autres sont à 41-45, et l'exiger fait tomber la
+# couverture de 85 à 61 sans retirer une seule erreur. Cela ne dit rien de
+# ce qu'elle vaut sur une page gravée en serif — voir `FACES`.
 JURY = [
     "/System/Library/Fonts/Supplemental/Arial.ttf",
     "/System/Library/Fonts/Supplemental/Verdana.ttf",
     "/System/Library/Fonts/Helvetica.ttc",
 ]
+
+# Le jury suit la **famille** de la fonte de référence. Juger une page
+# grasse avec trois maigres, c'est demander l'unanimité à des gabarits qui
+# se trompent tous de la même façon : l'unanimité dirait alors « sûr » sur
+# une faute partagée, ce qui est pire que pas de jury du tout. Et sur
+# 最美的礼物, gravée en serif, le jury linéal rejetait des lectures justes —
+# le jury coûtait de la couverture sans rien attraper.
+JURIES: dict[str, list[tuple[str, int]]] = {
+    "lineale": [(p, 0) for p in JURY],
+    "grasse": [
+        (SUP + "Arial Bold.ttf", 0),
+        (SUP + "Tahoma Bold.ttf", 0),
+        ("/System/Library/Fonts/Helvetica.ttc", 1),
+    ],
+    "serif": [
+        (SUP + "Georgia.ttf", 0),
+        (SUP + "Times New Roman.ttf", 0),
+        (SUP + "Times New Roman Bold.ttf", 0),
+    ],
+}
 
 GRID = 32
 # Poids du rapport de chasse devant la corrélation. Plat de 1 à 4 contre la
@@ -219,9 +270,11 @@ def _render(text: str, font, small, superscript: bool) -> np.ndarray | None:
     return _trim(np.asarray(im) > 100)
 
 
-def build_templates(vocab: list[str], semitones: int = 0, font_path: str = FONT) -> dict[str, list]:
-    font = ImageFont.truetype(font_path, FONT_SIZE)
-    small = ImageFont.truetype(font_path, int(FONT_SIZE * 0.62))
+def build_templates(
+    vocab: list[str], semitones: int = 0, font_path: str = FONT, index: int = 0
+) -> dict[str, list]:
+    font = ImageFont.truetype(font_path, FONT_SIZE, index=index)
+    small = ImageFont.truetype(font_path, int(FONT_SIZE * 0.62), index=index)
     out: dict[str, list] = {}
     for chord in vocab:
         sigs = []
@@ -237,6 +290,52 @@ def build_templates(vocab: list[str], semitones: int = 0, font_path: str = FONT)
         if sigs:
             out[chord] = sigs
     return out
+
+
+def face_bank(vocab: list[str], semitones: int, face: str) -> dict[str, list]:
+    path, index, _family = FACES[face]
+    return build_templates(vocab, semitones, path, index)
+
+
+def song_face(slug: str) -> str:
+    """Fonte de gravure de la page, lue dans la vérité terrain.
+
+    Absente, on garde Helvetica Neue : c'est la gravure de tout ce qui a
+    été mesuré jusqu'à l'itération 18, et les onze calques certifiés sont
+    gelés — rien de ce qui est publié ne dépend plus de ce choix.
+    """
+    path = os.path.join(HERE, "gold", f"{slug}.json")
+    if not os.path.exists(path):
+        return DEFAULT_FACE
+    face = json.load(open(path, encoding="utf8")).get("face")
+    return face if face in FACES else DEFAULT_FACE
+
+
+def song_semitones(slug: str) -> int:
+    """Écart entre la tonalité du `.cho` et celle **gravée** sur la page.
+
+    `printed_key` existait déjà, mais ne servait qu'au client : la lecture,
+    elle, se faisait toujours à zéro. Une page gravée dans une autre
+    tonalité que son `.cho` ne pouvait donc pas être lue du tout, quoi
+    qu'on écrive dans la vérité terrain — les gabarits portaient des noms
+    que la page n'affiche nulle part. C'est la moitié de ce qui bloquait
+    les 75 chants sans calque.
+    """
+    path = os.path.join(HERE, "gold", f"{slug}.json")
+    if not os.path.exists(path):
+        return 0
+    printed = json.load(open(path, encoding="utf8")).get("printed_key")
+    if not printed:
+        return 0
+    text = open(os.path.join(SONGS, f"{slug}.cho"), encoding="utf8").read()
+    m = re.search(r"\{key:\s*([^}]+)\}", text)
+    if not m:
+        return 0
+    return (note_index(printed) - note_index(m.group(1).strip())) % 12
+
+
+def jury_faces(face: str) -> list[tuple[str, int]]:
+    return JURIES[FACES[face][2]]
 
 
 def crop_labels(slug: str):
@@ -304,21 +403,32 @@ def width_factor(sigs, templates) -> float:
     return float(np.median(factors)) if factors else 1.0
 
 
-def read(slug: str, semitones: int = 0):
+def read(slug: str, semitones: int | None = None):
     """Lit toutes les étiquettes d'un chant.
 
     `semitones` est l'écart entre la tonalité du `.cho` et celle **imprimée**
     sur la partition (32 des 124 partitions ne sont pas dans la tonalité de
-    leur `.cho`). Le déduire automatiquement en essayant les 12 décalages ne
-    marche pas — voir LOOP.md, itération 5.
+    leur `.cho`). Laissé à `None`, il est pris dans `printed_key` de la
+    vérité terrain. Le déduire tout seul en essayant les 12 décalages ne
+    marchait pas à l'itération 5 — mais c'était sous une fonte qui ne
+    collait pas à la page, et un balayage fait avec le mauvais gabarit ne
+    mesure rien : `sweep-key.py` balaye désormais les deux ensemble et
+    propose le couple, que l'œil confirme.
 
     Retourne la liste des rangées
     `(features, [((x0, x1), accord, score, unanime)])`, où `unanime` dit si
     les fontes du jury lisent toutes le même accord.
     """
     vocab = vocabulary(slug)
-    banks = [build_templates(vocab, semitones)]
-    banks += [build_templates(vocab, semitones, path) for path in JURY if os.path.exists(path)]
+    if semitones is None:
+        semitones = song_semitones(slug)
+    face = song_face(slug)
+    banks = [face_bank(vocab, semitones, face)]
+    banks += [
+        build_templates(vocab, semitones, path, index)
+        for path, index in jury_faces(face)
+        if os.path.exists(path)
+    ]
 
     rows = [(f, [(pos, signature(bitmap)) for pos, bitmap in cells]) for f, cells in crop_labels(slug)]
     sigs = [sig for _f, cells in rows for _pos, sig in cells]
@@ -346,6 +456,11 @@ GOLD_SET = [
     "爱赢了",
     "献上尊荣",
     "你们要赞美耶和华",
+    # Famille « bold linéale », entrée à l'itération 19. Les sept premiers
+    # sont tous gravés dans des maigres, et c'est ce qui rendait la fonte
+    # invisible comme variable : le jeu de contrôle ne contenait qu'une
+    # seule graisse, donc aucune mesure ne pouvait la mettre en cause.
+    "永恒唯一的盼望",
 ]
 
 
