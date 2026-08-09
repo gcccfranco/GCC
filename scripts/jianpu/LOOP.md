@@ -159,6 +159,7 @@ rangées les tronque.
 | 18 | — | — | **11 /125 certifiés** (永活盼望, 到各山岭去传扬) · `titleKey` |
 | 19 | jeu de contrôle élargi à une 3ᵉ gravure (永恒唯一的盼望, 29 étiquettes) : **116/179** contre 107 sous l'ancienne fonte unique | fonte de page : sur la nouvelle famille, **12 → 21 justes**, 0 FAUX | 11 /125 · **calques publiés 50 → 67** |
 | 20 | 112/179 · **FAUX = 0** tenu · cas durs 218 → 223 identifiées | la vérité terrain devient un **veto** sur le choix de fonte | **12 /125 certifiés** (一颗谦卑的心) · calques **67 → 78**, 2024 → 2349 étiquettes |
+| 21 | 1 modulation et 5 pages à rangées empilées trouvées par leur **contenu** | rangées en tonalité étrangère écartées de la publication | 12 /125 · calques 78 → 77 (有你同行 **cesse de publier de faux accords**) |
 
 ## Journal
 
@@ -1274,3 +1275,71 @@ franchiront pas la certification sans décision :
 Le reste — les 17 chants à rangée cachée — est un problème de
 **segmentation**, et c'est le prochain goulot, déjà nommé aux itérations
 15 et 16.
+
+### Itération 21 — les pages qui changent de tonalité publiaient des accords faux
+
+Question posée par Timothée : les chants à deux tonalités doivent pouvoir
+se transposer **section par section**, avec deux commandes indépendantes.
+Avant de bâtir, il fallait savoir si ces chants existent.
+
+**Le détecteur de marqueur, refait et calibré — puis mis en défaut.**
+L'itération 18 avait écrit un détecteur de second « 1=X » et l'avait jeté,
+faute de savoir ce qu'il valait. Calibré cette fois sur les 29 cadres déjà
+mesurés à l'œil, le verdict est net : les vrais libellés d'en-tête notent
+**+0,17 à +0,50, médiane +0,27**, quand l'ancien filtrait à **+0,55** —
+au-dessus de *tous* ses positifs connus. Son « zéro trouvé » ne pouvait
+rien dire. *Un détecteur qui ne retrouve pas ses propres positifs ne mesure
+rien.*
+
+Refait, il ratisse les 125 pages et sort 10 candidats — **tous faux**, tous
+des chiffres de mélodie soulignés (`5 5 5 4`, `6 1 1 6 5`) dont le
+soulignement imite le « = ». Conclusion tentante : le corpus ne module pas.
+
+**Elle était fausse, et l'erreur valait la leçon.** 有你同行 commence en ré
+(`1= D`, puis `D Bm G A`, `D A/C# Bm Em`) et **finit en mi** (`C#m A E B`,
+`G#m C#m A B E`). Elle module — sans réimprimer le moindre « 1=X ». Le
+marqueur n'est donc pas le bon signe : il faut chercher dans **le contenu
+des accords**, pas dans la typographie.
+
+`find-two-key.py` cherche, pour chaque rangée, l'intervalle qui la lit le
+mieux. Le profil sépare les deux formats d'un coup d'œil :
+
+- **queue contiguë** → modulation : 有你同行 lit `+0, +0, +2, +2` ;
+- **alternance** → deux jeux d'accords empilés sur la même ligne de
+  mélodie : 尽情地微笑 lit `+3, +0, +3, +0, +3, +0, +3, +0`.
+
+Bilan sur les 78 pages publiées : **1 modulation** (有你同行, ré → mi) et
+**5 pages à rangées empilées** (我相信, 我们的神, 我们高举耶稣的名, 尽情地微笑,
+我心坚定与你).
+
+**Et surtout : ces pages publiaient de faux accords.** 有你同行 sortait
+`F#m A D` là où la page imprime `C#m A E` — au-dessus du seuil, **unanimes
+au jury**. La cause est structurelle et retourne la force du système contre
+lui : le vocabulaire est *fermé*, donc le matcher trouve toujours quelque
+chose. Une rangée en mi lue avec un vocabulaire en ré ne produit pas un
+échec visible, elle produit un **résultat confiant et faux** — le mode C,
+que ni la couverture ni le jury n'attrapent puisqu'il compte comme une
+réussite.
+
+C'est aussi pourquoi le test naïf ne marche pas : la rangée en mi se lit
+**75 %** avec le vocabulaire en ré. Ce n'est pas l'échec qui la trahit,
+c'est l'**écart** — 100 % à +2 contre 75 % à 0. `foreign_rows` écarte donc
+une rangée quand un autre intervalle la lit franchement mieux, et
+`build-chords` ne publie plus rien de ces rangées-là.
+
+有你同行 tombe alors sous `MIN_COVERAGE` et **cesse d'être publiée**. Les
+calques passent de 78 à 77 : une page de moins, mais une page qui mentait.
+Aucun des douze certifiés n'est touché — vérifié rangée par rangée, le
+garde ne se déclenche sur aucun.
+
+Un détail qui n'en est pas un : le seuil est à 0,20 et l'écart valait
+`1,0 - 0,8`, soit **0,199…** en binaire. Sans epsilon, la seconde rangée de
+有你同行 passait au travers. Le garde est calé à 0,20 parce que 0,15 fait
+mordre 一颗谦卑的心, page auditée tranche par tranche et sûrement en ré.
+
+**Ce qu'il reste à faire pour la fonctionnalité demandée.** Le calque ne
+porte qu'une `printedKey` par chant. Rendre ces six pages justes suppose
+une tonalité **par section**, un cadre « 1=X » par section, et deux
+commandes côté client. Le garde de cette itération est la moitié
+défensive du travail ; la moitié constructive reste à faire, et elle a
+maintenant six cas réels pour la guider.
