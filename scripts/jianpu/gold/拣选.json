@@ -1,10 +1,84 @@
 {
  "slug": "拣选",
+ "verified": "audit-page F→F#, les 8 tranches de la page relues avec cadres de contrôle : les 38 accords sont encadrés, aucun accord laissé en F, lecture exacte contre le scan (Am7 A7 Dm Bdim7 Dm7 F+/C# compris). 1=F# suit, 【Chorus】 et le 4/4 intacts — 2026-08-09",
  "key_label": {
   "x": 15,
   "y": 191,
   "w": 67,
   "h": 22
  },
- "key_label_verified": "mesure measure-keylabel (vote 1= + lettre attendue), zoom relu à l’œil, 2026-08-05"
+ "key_label_verified": "mesure measure-keylabel (vote 1= + lettre attendue), zoom relu à l’œil, 2026-08-05",
+ "extra_labels": [
+  {
+   "x": 46,
+   "y": 839,
+   "w": 44,
+   "h": 32,
+   "c": "F/C"
+  },
+  {
+   "x": 255,
+   "y": 839,
+   "w": 62,
+   "h": 32,
+   "c": "Gm7"
+  },
+  {
+   "x": 758,
+   "y": 839,
+   "w": 10,
+   "h": 32,
+   "c": "F"
+  },
+  {
+   "x": 617,
+   "y": 1068,
+   "w": 44,
+   "h": 29,
+   "c": "F/C"
+  },
+  {
+   "x": 262,
+   "y": 1514,
+   "w": 45,
+   "h": 29,
+   "c": "F/A"
+  },
+  {
+   "x": 1223,
+   "y": 1514,
+   "w": 78,
+   "h": 29,
+   "c": "F+/C#"
+  },
+  {
+   "x": 151,
+   "y": 1738,
+   "w": 43,
+   "h": 24,
+   "c": "F/C"
+  },
+  {
+   "x": 42,
+   "y": 247,
+   "w": 11,
+   "h": 22,
+   "c": "F"
+  },
+  {
+   "x": 475,
+   "y": 247,
+   "w": 33,
+   "h": 22,
+   "c": "Bb"
+  },
+  {
+   "x": 926,
+   "y": 247,
+   "w": 11,
+   "h": 22,
+   "c": "F"
+  }
+ ],
+ "extra_verified": "reste lu au zoom (propose-extra --all) : sept accords, dont six à basse étrangère que le matcher lit à +0,08 ou moins — 【Chorus】 écarté, ce n’est pas un accord. Plus la première rangée d'accords (y=247, F Bb F), entièrement manquée et vue sur audit-page : trois amas seulement sur toute la largeur, elle tombe en `numbers` — 2026-08-09"
 }
