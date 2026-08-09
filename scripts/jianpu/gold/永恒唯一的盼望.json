@@ -1,0 +1,75 @@
+{
+ "slug": "永恒唯一的盼望",
+ "face": "verdana-bold",
+ "printed_key": "E",
+ "source": "lu à l'œil sur debug/_lecture.png (itération 19) ; null = amas qui n'est pas une étiquette. Page gravée en E, .cho en F : le premier chant de la famille « bold linéale » entré dans le jeu de contrôle.",
+ "chord_rows": [
+  {
+   "top": 219,
+   "chords": [
+    null
+   ]
+  },
+  {
+   "top": 440,
+   "chords": [
+    "F",
+    "Dm",
+    "Gm",
+    "C",
+    "Am"
+   ]
+  },
+  {
+   "top": 703,
+   "chords": [
+    "Dm",
+    "Gm",
+    "C",
+    "F",
+    "Dm"
+   ]
+  },
+  {
+   "top": 965,
+   "chords": [
+    "Gm",
+    "C",
+    "Am",
+    "Dm",
+    "Gm"
+   ]
+  },
+  {
+   "top": 1217,
+   "chords": [
+    "C",
+    null,
+    "F",
+    "C/E",
+    "Bb/D",
+    null,
+    "Gm"
+   ]
+  },
+  {
+   "top": 1489,
+   "chords": [
+    "Gm/F",
+    "C",
+    "Am",
+    "Dm"
+   ]
+  },
+  {
+   "top": 1752,
+   "chords": [
+    "A",
+    "Dm",
+    "Gm",
+    "Bb/C",
+    "F"
+   ]
+  }
+ ]
+}
