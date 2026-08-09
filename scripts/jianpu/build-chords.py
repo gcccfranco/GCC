@@ -48,8 +48,8 @@ from PIL import Image  # noqa: E402
 
 from classify import classify, load_params  # noqa: E402
 from match import (  # noqa: E402
-    MIN_SCORE, best_match, build_templates, face_bank, jury_faces, keep, read,
-    signature, song_face, song_semitones, vocabulary,
+    MIN_SCORE, best_match, build_templates, face_bank, foreign_rows, jury_faces,
+    keep, read, signature, song_face, song_semitones, vocabulary,
 )
 from segment import INK_THRESHOLD  # noqa: E402
 
@@ -166,9 +166,22 @@ def _from_reading(slug: str, gold: dict):
     total = sum(len(r) for _f, r in rows)
     if not total:
         return [], "aucune rangée d'accords"
+
+    # Une rangée gravée dans une autre tonalité que la page — modulation ou
+    # second jeu d'accords empilé — n'est pas seulement illisible : le
+    # matcher, contraint au vocabulaire de la page, y **retient de faux
+    # accords**. 有你同行 publiait `F#m A D` là où la page imprime `C#m A E`,
+    # unanimes et au-dessus du seuil. On ne publie donc rien de ces
+    # rangées-là ; elles comptent comme manquantes, ce qui fait tomber la
+    # page en partiel, ou hors publication si elle en est pleine.
+    foreign = foreign_rows(slug)
+
     labels = []
     missing = 0
     for f, row in rows:
+        if f["top"] in foreign:
+            missing += len(row)
+            continue
         for (x0, x1), chord, score, unanimous in row:
             if keep(score, unanimous):
                 labels.append(_box(f, x0, x1, chord))
@@ -178,6 +191,8 @@ def _from_reading(slug: str, gold: dict):
                 missing += 1
     fixed = len(fixes)
     note = f"{len(labels)}/{total} étiquettes (lecture" + (f", {fixed} corrigée(s))" if fixed else ")")
+    if foreign:
+        note += f" · {len(foreign)} rangée(s) en autre tonalité écartée(s)"
     if len(labels) < MIN_COVERAGE * total:
         return [], f"trop peu lu : {note}"
     return labels, note
