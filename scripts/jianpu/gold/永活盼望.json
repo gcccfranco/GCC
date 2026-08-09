@@ -6,5 +6,43 @@
   "w": 68,
   "h": 21
  },
- "key_label_verified": "mesure measure-keylabel (vote 1= + lettre attendue), zoom relu à l’œil, 2026-08-05"
+ "key_label_verified": "mesure measure-keylabel (vote 1= + lettre attendue), zoom relu à l’œil, 2026-08-05",
+ "extra_labels": [
+  {
+   "x": 1094,
+   "y": 1545,
+   "w": 61,
+   "h": 24,
+   "c": "A/C#"
+  },
+  {
+   "x": 43,
+   "y": 1750,
+   "w": 47,
+   "h": 27,
+   "c": "G/B"
+  },
+  {
+   "x": 324,
+   "y": 1736,
+   "w": 16,
+   "h": 20,
+   "c": "D"
+  },
+  {
+   "x": 609,
+   "y": 1736,
+   "w": 55,
+   "h": 20,
+   "c": "Bm7"
+  },
+  {
+   "x": 706,
+   "y": 1736,
+   "w": 47,
+   "h": 24,
+   "c": "D/A"
+  }
+ ],
+ "extra_verified": "reste lu au zoom (propose-extra --all) : cinq accords. Les quatre étiquettes restantes ne sont pas des accords — 【Chorus】, 【Verse】, （反复时高八度）, « To Chorus ». Deux boîtes (D, Bm7) traînaient 20 à 30 px de blanc à gauche, recalées sur l’encre — 2026-08-09"
 }
