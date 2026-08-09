@@ -74,14 +74,28 @@ mais faux » — que seul l'œil voit (mode C ci-dessous).
    identique en haut et en bas est un accord manqué.** Aucune connaissance
    musicale n'est nécessaire : il suffit de comparer deux lignes.
 
-   C'est le seul contrôle qui voie le mode **D — rangée entièrement
-   manquée**, que ni la planche ni les compteurs n'attrapent, parce qu'une
-   rangée jamais détectée n'apparaît dans aucun dénominateur. Sur une page
+   Attention : `compare-render` **ne montre que les bandes** où le calque
+   publie ou bien où le classifieur a hésité. Il ment donc par omission, et
+   c'est ainsi qu'un système entier est resté en D sur 不停赞美
+   (itération 13).
+
+5. **Audit de la page entière**, avant toute certification :
+   ```bash
+   python3 scripts/jianpu/audit-page.py <slug>
+   ```
+   Tranches de 300 px qui se recouvrent, original au-dessus, rendu fidèle
+   transposé dessous, cadres de contrôle activés. C'est le seul contrôle
+   qui voie le mode **D — rangée entièrement manquée**, que ni la planche,
+   ni les compteurs, ni `compare-render` n'attrapent, parce qu'une rangée
+   jamais détectée n'apparaît dans aucun dénominateur. Sur une page
    transposée elle reste écrite dans l'ancienne tonalité, à côté d'accords
    transposés : la page mélange deux tonalités, ce qui est **pire que de
-   n'avoir aucun calque**.
-5. Lire les planches, nommer les inconnues, ajuster les paramètres.
-6. Écrire les seuils dans `classifier.json`, les paramètres de lecture dans
+   n'avoir aucun calque**. **Un accord sans cadre n'est pas converti.**
+
+   Ce qu'il reste à lire dans les rangées déjà connues se sort à côté avec
+   `propose-extra.py <slug> --all`, pré-filtre par score levé.
+6. Lire les planches, nommer les inconnues, ajuster les paramètres.
+7. Écrire les seuils dans `classifier.json`, les paramètres de lecture dans
    `match.py`, et mettre à jour le journal ci-dessous.
 
 **Une itération ne peut pas être déclarée en progrès sur les seuls
