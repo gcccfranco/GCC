@@ -141,13 +141,23 @@ def measure(slug: str, printed_key: str):
             score = s_letter
         if best is None or score > best["score"]:
             # cadre : du 1er amas jusqu'au dernier amas « lettre » avant la
-            # fraction (hauteur ≥ 1,6 × médiane) ou un grand trou (≥ 90 px)
+            # fraction (hauteur ≥ 1,6 × celle de la lettre) ou un grand
+            # trou (≥ 90 px).
+            #
+            # L'échelle de référence est la **lettre appariée**, pas la
+            # médiane de la bande : celle-ci inclut tout ce qui traîne à
+            # droite sur la même ligne — sur 尽情地微笑, l'annotation
+            # « [共8张：原版/简版…] » monte la médiane de 26 à 34, la fraction
+            # 4/4 (51 px) passe alors sous le seuil et **entre dans le
+            # cadre**. Masquer un cadre qui contient la fraction efface le
+            # chiffrage de la mesure.
+            ref_h = heights[cand[0]] if cand else med_h
             xs0, ys0, xe, ye = tights[0][0], tights[0][1], t[2], t[3]
             for j in range(1, len(cl)):
                 tj = tights[j]
                 if tj is None:
                     continue
-                if heights[j] >= 1.6 * med_h or tj[0] - xe > 90:
+                if heights[j] >= 1.6 * ref_h or tj[0] - xe > 90:
                     break
                 xe, ye = max(xe, tj[2]), max(ye, tj[3])
                 ys0 = min(ys0, tj[1])
