@@ -196,21 +196,34 @@ def build(slug: str):
     # tonalités que le contrôle par transposition a débusqué sur les
     # accords. Le localiser automatiquement a été tenté et abandonné (voir
     # LOOP.md, itération 8) : il se mesure à l'œil, une fois par partition.
-    if gold.get("chord_rows"):
-        labels, note = _from_gold(slug, gold)
+    # **Un calque certifié est gelé.** `verified` dit ce qu'un humain a
+    # regardé sur la page transposée ; tant que les étiquettes sont
+    # recalculées à chaque build, cette phrase décrit une cible mouvante —
+    # n'importe quelle retouche de `match.py` change silencieusement une
+    # page déjà certifiée, et personne ne le voit. `freeze.py` recopie donc
+    # les étiquettes publiées dans `gold/<slug>.json` au moment de la
+    # certification, et c'est cette liste-là, pure donnée, qui repart. Le
+    # matcher redevient libre d'évoluer.
+    if gold.get("frozen_labels"):
+        labels = [{k: l[k] for k in ("x", "y", "w", "h", "c")} for l in gold["frozen_labels"]]
+        note = f"{len(labels)} étiquettes (gelées à la certification)"
     else:
-        labels, note = _from_reading(slug, gold)
-    if not labels:
-        return None, note
+        if gold.get("chord_rows"):
+            labels, note = _from_gold(slug, gold)
+        else:
+            labels, note = _from_reading(slug, gold)
+        if not labels:
+            return None, note
 
-    # Étiquettes hors rangées, **lues à l'œil** (itération 10) : proposées
-    # par `propose-extra.py`, vérifiées zoom par zoom, puis recopiées dans
-    # `gold/<slug>.json` sous `extra_labels`. Le repêchage sans yeux a été
-    # essayé et rejeté — voir `stray_chords` et LOOP.md.
-    extra = gold.get("extra_labels", [])
-    if extra:
-        labels = labels + [{k: l[k] for k in ("x", "y", "w", "h", "c")} for l in extra]
-        note += f" · +{len(extra)} hors rangées (lues à l'œil)"
+        # Étiquettes hors rangées, **lues à l'œil** (itération 10) :
+        # proposées par `propose-extra.py`, vérifiées zoom par zoom, puis
+        # recopiées dans `gold/<slug>.json` sous `extra_labels`. Le
+        # repêchage sans yeux a été essayé et rejeté — voir `stray_chords`
+        # et LOOP.md.
+        extra = gold.get("extra_labels", [])
+        if extra:
+            labels = labels + [{k: l[k] for k in ("x", "y", "w", "h", "c")} for l in extra]
+            note += f" · +{len(extra)} hors rangées (lues à l'œil)"
 
     # **Complet** veut dire : un humain a regardé la page transposée dans le
     # navigateur et n'y a vu aucun accord resté dans l'ancienne tonalité.
