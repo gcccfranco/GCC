@@ -47,7 +47,8 @@ from PIL import Image, ImageDraw  # noqa: E402
 
 from classify import classify, load_params  # noqa: E402
 from match import (  # noqa: E402
-    JURY, MIN_SCORE, best_match, build_templates, signature, vocabulary,
+    MIN_SCORE, best_match, build_templates, face_bank, jury_faces, signature,
+    song_face, song_semitones, vocabulary,
 )
 from segment import INK_THRESHOLD  # noqa: E402
 
@@ -98,8 +99,12 @@ def propose(slug: str, entry: dict, everything: bool = False) -> list[dict]:
     _ink, _w, feats, kinds = classify(path)
     page_h = max(f["bottom"] for f in feats) if feats else 0
     floor = load_params()["min_top_frac"] * page_h
-    templates = build_templates(vocabulary(slug))
-    jury = [build_templates(vocabulary(slug), 0, p) for p in JURY if os.path.exists(p)]
+    # Les gabarits suivent la fonte et la tonalité de **cette page** :
+    # les mesurer sous la fonte d'une autre gravure ne mesure rien.
+    face, semitones = song_face(slug), song_semitones(slug)
+    templates = face_bank(vocabulary(slug), semitones, face)
+    jury = [build_templates(vocabulary(slug), semitones, p, i)
+            for p, i in jury_faces(face) if os.path.exists(p)]
 
     out = []
     for f in feats:
