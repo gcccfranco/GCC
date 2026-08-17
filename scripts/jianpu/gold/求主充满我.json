@@ -30,5 +30,9 @@
    "c": "D"
   }
  ],
- "extra_verified": "chaque étiquette relue sur zoom (propose-extra + planches), 2026-08-04"
+ "extra_verified": "chaque étiquette relue sur zoom (propose-extra + planches), 2026-08-04",
+ "not_labels": [
+  "236,719"
+ ],
+ "not_labels_verified": "amas écartés à l'œil, 2026-08-18 (itération 25) : arcs de liaison et titre anglais retenus comme accords"
 }

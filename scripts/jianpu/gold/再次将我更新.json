@@ -80,5 +80,10 @@
   "h": 25
  },
  "key_label_verified": "mesure measure-keylabel (vote 1= + lettre attendue), zoom relu à l’œil, 2026-08-05",
- "face": "verdana-bold"
+ "face": "verdana-bold",
+ "not_labels": [
+  "1571,1214",
+  "871,1143"
+ ],
+ "not_labels_verified": "amas écartés à l'œil, 2026-08-18 (itération 25) : arcs de liaison et titre anglais retenus comme accords"
 }
