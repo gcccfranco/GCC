@@ -164,6 +164,7 @@ rangées les tronque.
 | 23 | planche A=45 → 49 (4 faux positifs qui ne publient rien) · contrôle 112/179, **FAUX = 0** tenu | rangée de mélodie reconnue au **nombre d'amas** · 5 faux accords corrigés par le veto de la vérité terrain | 12 /125 · calques 78 → **79**, 2438 → **2525** étiquettes · rangées cachées **11 → 7** |
 | 24 | contrôle 112/179, **FAUX = 0** tenu · `dissent.py` classe les étiquettes publiées par le désaccord entre fontes | **8 faux accords trouvés** sur 29 contestées, tous invisibles aux compteurs · 12 étiquettes versées en vérité terrain | 12 /125 · calques 79 → **78** (唯独依靠你 dépublié), 2525 → **2500** étiquettes |
 | 25 | contrôle 112/179, **FAUX = 0** tenu · `dissent.py --isolated` classe les étiquettes **seules dans leur rangée** | **3 parasites publiés** trouvés sur 36 zooms (2 arcs de liaison, 1 titre anglais) · `not_labels` les retire | 12 /125 · calques **78** inchangés, 2500 → **2497** étiquettes |
+| 26 | contrôle 112/179, **FAUX = 0** tenu | 22 amas relus sur les pages au ras du plancher · le veto de fonte voit enfin les `corrections` | 12 /125 · calques 78 → **81**, 2497 → **2559** étiquettes |
 
 ## Journal
 
@@ -1702,3 +1703,53 @@ jugé une fois ne se re-signale plus.
 **réglées** pour les cas vus ; le mécanisme existe désormais pour les
 suivants. Restent les 7 rangées cachées (itération 23) et 唯独依靠你, qui ne
 reviendra que par transcription complète.
+
+### Itération 26 — les pages qui manquent le plancher d'un cheveu
+
+Les itérations 24 et 25 chassaient les défauts de ce qui est **publié**.
+Celle-ci regarde ailleurs : les **47 pages sans aucun calque**. Rangées par
+ce qui leur manque pour franchir les 60 %, la moitié en est à portée de
+main — cinq pages à **une seule étiquette** près, sept autres à deux ou
+trois. Une page publiée à 58 % ne publie *rien* ; trois étiquettes relues la
+font basculer. C'est le meilleur rendement disponible.
+
+Trois pages traitées, trois calques : **78 → 81**, 2497 → **2559**
+étiquettes, aucun perdu, les douze certifiés identiques au bit près.
+
+| page | avant | après |
+|---|---|---|
+| 云上太阳 | 17/30 (57 %) | **28/29** |
+| 给梦想一双翅膀 | 13/22 (59 %) | **21/22** |
+| 这条路上我们一起走 | 11/19 (58 %) | **13/15** |
+
+Ce que les zooms ont montré, et qu'aucun seuil n'aurait donné : la plupart
+des amas rejetés sont des étiquettes **entre parenthèses** — `(A/C#)`,
+`(D/A)` — que le matcher note +0,19 ou moins parce que les parenthèses
+gonflent la boîte. Le vocabulaire les contient pourtant, et gold sait déjà
+les écrire depuis l'itération 10 (`(C/G)`).
+
+**Le veto de fonte ignorait la vérité terrain la plus récente.** `sweep-key`
+ne lisait que `extra_labels` et `chord_rows` — pas `corrections`. Or depuis
+l'itération 24 c'est là que va l'essentiel de ce qui est relu à l'œil : neuf
+corrections venaient d'être versées sur 给梦想一双翅膀, et la page publiait
+quand même un `C` là où elle imprime `G`, à +0,48, jury unanime. Le veto
+branché sur les corrections, la page élit helvetica-bold et le faux accord
+devient juste. *Une vérité terrain que le veto ne lit pas ne protège
+personne.*
+
+**Et une faute que j'ai commise, corrigée dans la même itération.** J'avais
+marqué `not_labels` deux crochets de reprise de 这条路上我们一起走. Le
+contrôle par transposition a montré qu'ils sont **soudés à de vrais
+accords** — `Em E7 A7` sur la même barre horizontale, un seul amas. La page
+affichait alors 13/13, soit 100 %, tout en laissant trois accords dans
+l'ancienne tonalité à côté d'accords transposés : le mode D, recréé à la
+main, et **maquillé en couverture parfaite**.
+
+D'où la règle, désormais écrite dans le fichier : *`not_labels` veut dire
+« il n'y a pas d'accord ici », jamais « je ne sais pas le lire »*. Un amas
+illisible **manque** ; il n'est pas absent. Les deux crochets retirés, la
+page retombe à 13/15 — 87 %, honnête, et toujours publiée.
+
+**Ce qui reste.** 44 pages sans calque, dont une douzaine à moins de cinq
+étiquettes du plancher : le même geste les convertira. Puis les 7 rangées
+cachées (itération 23) et 唯独依靠你.
