@@ -97,11 +97,18 @@ def truth(slug: str) -> list[tuple[dict, str]]:
     """
     path = os.path.join(HERE, "gold", f"{slug}.json")
     if not os.path.exists(path):
-        return {}, []
+        return {}, [], {}
     gold = json.load(open(path, encoding="utf8"))
     boxes = [(l, l["c"]) for l in gold.get("extra_labels", []) if l.get("c")]
     rows = {r["top"]: r["chords"] for r in gold.get("chord_rows", [])}
-    return rows, boxes
+    # `corrections` est de la vérité terrain au même titre que le reste : ce
+    # sont des étiquettes lues au zoom, une par une. Le veto les ignorait —
+    # il ne regardait que `extra_labels` et `chord_rows` — si bien que la
+    # fonte pouvait être élue contre des lectures déjà faites à l'œil. Sur
+    # 给梦想一双翅膀 neuf corrections venaient d'être versées, et la page
+    # publiait quand même un « C » là où elle imprime « G » (itération 26).
+    fixes = {k: c for k, c in gold.get("corrections", {}).items() if c}
+    return rows, boxes, fixes
 
 
 def sweep(slug: str) -> dict | None:
@@ -114,7 +121,7 @@ def sweep(slug: str) -> dict | None:
     if not total:
         return None
 
-    known_rows, known_boxes = truth(slug)
+    known_rows, known_boxes, known_fixes = truth(slug)
     ink = np.asarray(Image.open(os.path.join(IMAGES, f"{slug}-p1.webp")).convert("L")) < INK_THRESHOLD
     known_sigs = []
     for box, chord in known_boxes:
@@ -128,9 +135,15 @@ def sweep(slug: str) -> dict | None:
     # plutôt que d'apparier de travers.
     for f, cells in rows:
         chords = known_rows.get(f["top"])
-        if not chords or len(chords) != len(cells):
-            continue
-        for (_pos, sig), chord in zip(cells, chords):
+        if chords and len(chords) == len(cells):
+            for (_pos, sig), chord in zip(cells, chords):
+                if chord:
+                    known_sigs.append((sig, chord))
+        # Les corrections sont repérées par la position exacte de l'amas,
+        # comme dans `build-chords`, donc elles survivent à un redécoupage
+        # partiel de la rangée.
+        for (x0, _x1), sig in cells:
+            chord = known_fixes.get(f"{f['top']},{x0}")
             if chord:
                 known_sigs.append((sig, chord))
 
