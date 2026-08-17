@@ -160,6 +160,7 @@ rangées les tronque.
 | 19 | jeu de contrôle élargi à une 3ᵉ gravure (永恒唯一的盼望, 29 étiquettes) : **116/179** contre 107 sous l'ancienne fonte unique | fonte de page : sur la nouvelle famille, **12 → 21 justes**, 0 FAUX | 11 /125 · **calques publiés 50 → 67** |
 | 20 | 112/179 · **FAUX = 0** tenu · cas durs 218 → 223 identifiées | la vérité terrain devient un **veto** sur le choix de fonte | **12 /125 certifiés** (一颗谦卑的心) · calques **67 → 78**, 2024 → 2349 étiquettes |
 | 21 | 1 modulation et 5 pages à rangées empilées trouvées par leur **contenu** | rangées en tonalité étrangère écartées de la publication | 12 /125 · calques 78 → 77 (有你同行 **cesse de publier de faux accords**) |
+| 22 | planche inchangée (A=45 · B=5) · contrôle 112/179, **FAUX = 0** tenu | 19 rangées d'accords rendues visibles · 327 candidates proposées, **38 confirmées** | 12 /125 · calques 77 → **78**, 2313 → **2438** étiquettes · rangées cachées **23 → 11** |
 
 ## Journal
 
@@ -1343,3 +1344,123 @@ une tonalité **par section**, un cadre « 1=X » par section, et deux
 commandes côté client. Le garde de cette itération est la moitié
 défensive du travail ; la moitié constructive reste à faire, et elle a
 maintenant six cas réels pour la guider.
+
+### Itération 22 — l'écharde qui volait la promotion
+
+Le goulot nommé aux itérations 15, 16 et 20 était la **segmentation** : 23
+chants portaient au moins une rangée d'accords qu'aucun contrôle ne voyait.
+Cette itération va chercher la cause au lieu de compter les symptômes.
+
+**Le motif, mesuré et non deviné.** Un diagnostic a rangé les 35 rangées
+cachées par la raison exacte de leur non-promotion. Il ne restait presque
+rien de la cause supposée (« silhouette clairsemée, glyphe étranger ») :
+
+| motif | rangées |
+|---|---|
+| la rangée suivante est déjà `chords` | **19** |
+| la rangée suivante est typée `?` | 10 |
+| la rangée suivante est typée `lyrics` | 3 |
+| typée chiffres, pas assez basse | 2 |
+| typée paroles | 1 |
+
+Les dix-neuf premières racontent toutes la même histoire. La promotion est
+positionnelle — est `chords` la rangée utile qui précède une rangée de
+chiffres — et entre les accords et les chiffres s'intercale souvent une
+**écharde** : un arc de liaison, un crochet de reprise « 1. 2. », un trait
+de renvoi. Le découpage en fait une bande à part entière ; comme c'est elle
+qui touche les chiffres, c'est **elle** qui était promue. La vraie rangée
+d'accords restait en `?` juste au-dessus, invisible au matcher, au calque et
+à tous les contrôles. Sur 想起你, `Bm Esus4 E D E/D A/C# D Bm Esus4 E` était
+perdue au profit d'une bande de 11 px ; sur 明亮晨星, au profit du crochet
+`1. 2.` (h=13, ratio 75).
+
+La mesure confirme la lecture : sur ces 19 bandes promues, **16 apparient 0
+à 2 amas** quand la rangée qu'elles masquent en apparie 4/4 à 10/10.
+
+**La hauteur ne peut pas trancher, et c'est un résultat.** L'écharde est
+basse : le réflexe est de la reconnaître à sa hauteur, rapportée à la rangée
+de chiffres qu'elle précède. Sur les 477 rangées promues du corpus, la
+séparation semblait franche — sous 0,25, elles sont 33 et **une seule**
+apparie quoi que ce soit. Le seuil a pourtant été rejeté au premier essai :
+il efface la rangée `C F F ♭B C7` de 你们要赞美耶和华, gravure hymnaire dont
+les étiquettes font 14 px, soit **0,17** de sa rangée de chiffres — plus bas
+que presque toutes les échardes. Aucune des deux références essayées (la
+rangée voisine, la médiane de la page) ne sépare :
+
+| référence | échardes (max) | vraies rangées (min) |
+|---|---|---|
+| h / rangée de chiffres voisine | 0,433 | 0,230 |
+| h / médiane des rangées de chiffres | 0,296 | 0,165 |
+
+*Une liaison et les étiquettes minuscules d'un hymnaire ont la même taille.*
+Et la métrique mentait dans le sens agréable : en effaçant cette rangée, le
+`manqué` du jeu de contrôle tombait de 67 à 62 — la page n'avait pas
+progressé, elle avait quitté le dénominateur.
+
+**Promouvoir aussi, sans trancher : essayé, mesuré, insuffisant.** Puisque
+la géométrie ne sépare pas, la doctrine de l'itération 7 s'impose — le
+classifieur propose, le matcher dispose — et la bande du dessus est promue
+*en plus* de l'écharde. Le contrôle a immédiatement chiffré le défaut :
+**77 calques tombent à 45**, 2313 étiquettes à 1475. La couverture est un
+*rapport* : ajouter des rangées que le matcher ne lit pas fait passer les
+pages sous `MIN_COVERAGE`. Autrement dit, **le classifieur aveugle gonflait
+la couverture**, et ces 32 pages ne publiaient que parce qu'on ignorait ce
+qu'elles contenaient.
+
+**Ce qui marche : proposer d'un côté, confirmer de l'autre.** Le classifieur
+sort la bande du dessus en `chords?` — une proposition, pas une décision — et
+`confirm_candidates` (match.py) la retient si **70 %** de ses amas
+s'apparient au vocabulaire de la page. Le seuil n'est pas nouveau : c'est
+celui avec lequel `worklist.py` débusque les rangées cachées depuis
+l'itération 20. Sur le corpus, **327 rangées proposées, 38 confirmées** —
+le matcher en écarte 289, dont toutes les rangées de paroles.
+
+| | calques | étiquettes | contrôle | rangées cachées |
+|---|---|---|---|---|
+| avant | 77 | 2313 | 112/179, FAUX=0 | 23 |
+| promotion sèche | **45** | 1475 | 107/179, FAUX=0 | — |
+| **proposition + confirmation** | **78** | **2438** | 112/179, FAUX=0 | **11** |
+
+Aucun calque perdu, 一粒麦子 gagné, **+125 étiquettes**, et les douze
+certifiés sont **identiques au bit près** (vérifié, pas supposé). Quatorze
+pages gagnent des étiquettes, et ce sont exactement les pages à rangée
+cachée : 唯独依靠你 +13, 再次将我更新 +12, 一生跟随 +11, 想起你 +9,
+这里有荣耀 +9.
+
+**Le contrôle par transposition, sur cinq des quatorze.** 想起你 : la rangée
+autrefois invisible sort `Cm Fsus4 F D# … A#/D D# Cm Fsus4 F` — 8 justes, 1
+manquée, 0 fausse. 再次将我更新 : **13 sur 13** justes. 这里有荣耀 : 9 sur 9.
+一生跟随 : 11 justes, 1 manquée. 唯独依靠你 : 12 justes et **un accord
+faux** — la page imprime `C#m7`, le calque écrit `F#m7`, à +0,57, **jury
+unanime**. C'est le mode C, et ni le score ni l'unanimité ne le signalent ;
+seul l'œil l'a vu, sur la ligne du haut du compare.
+
+**Un défaut plus ancien, découvert au passage.** L'écharde ne se contentait
+pas de voler la promotion : elle **publie**. 再次将我更新 écrit un « F7 »
+par-dessus les chiffres de la mélodie, 唯独依靠你 un « F# » à +0,45 jury
+unanime. Ces faux accords sont là **depuis avant cette itération** et aucun
+compteur ne les avait jamais montrés — ils comptent comme des réussites.
+
+Les écarter par le même test de vocabulaire a été essayé et **rejeté par la
+vérité terrain** : à 0,34 d'appariement minimum, le dénominateur du contrôle
+tombe de 179 à 146 et 主的喜乐是我力量 perd une rangée de 12 étiquettes
+attestées. *Le test qui confirme une rangée douteuse ne peut pas servir à en
+rejeter une établie* : une vraie rangée mal lue est précisément le cas que
+la boucle existe pour améliorer. La leçon de l'itération 20 se répète — la
+vérité terrain oppose son veto.
+
+**Ce qui reste ouvert.**
+
+1. **Le `C#m7` de 唯独依靠你.** Le mécanisme `corrections` de
+   `build-chords.py` refuse par construction de contredire une lecture
+   retenue — sans quoi on ne saurait plus ce qui a été vérifié. Cette page
+   ne peut donc pas être certifiée avant que sa rangée y=531 soit lue à
+   l'œil et versée en vérité terrain.
+2. **Les échardes qui publient.** Défaut réel, chiffré, sans correctif
+   mesuré : ni la hauteur ni l'appariement ne les isolent sans emporter de
+   vraies rangées.
+3. **Les 11 rangées encore cachées**, dont les 10 du motif « la suivante est
+   typée `?` » — la rangée de mélodie y passe pour autre chose parce que ses
+   ligatures épaissies poussent son ratio au-dessus de `numbers_ratio_max`
+   (脚步 : 0,81 contre 0,65). C'est le même goulot de segmentation, pris par
+   l'autre bout, et c'est le prochain.
