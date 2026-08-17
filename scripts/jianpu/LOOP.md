@@ -162,6 +162,7 @@ rangées les tronque.
 | 21 | 1 modulation et 5 pages à rangées empilées trouvées par leur **contenu** | rangées en tonalité étrangère écartées de la publication | 12 /125 · calques 78 → 77 (有你同行 **cesse de publier de faux accords**) |
 | 22 | planche inchangée (A=45 · B=5) · contrôle 112/179, **FAUX = 0** tenu | 19 rangées d'accords rendues visibles · 327 candidates proposées, **38 confirmées** | 12 /125 · calques 77 → **78**, 2313 → **2438** étiquettes · rangées cachées **23 → 11** |
 | 23 | planche A=45 → 49 (4 faux positifs qui ne publient rien) · contrôle 112/179, **FAUX = 0** tenu | rangée de mélodie reconnue au **nombre d'amas** · 5 faux accords corrigés par le veto de la vérité terrain | 12 /125 · calques 78 → **79**, 2438 → **2525** étiquettes · rangées cachées **11 → 7** |
+| 24 | contrôle 112/179, **FAUX = 0** tenu · `dissent.py` classe les étiquettes publiées par le désaccord entre fontes | **8 faux accords trouvés** sur 29 contestées, tous invisibles aux compteurs · 12 étiquettes versées en vérité terrain | 12 /125 · calques 79 → **78** (唯独依靠你 dépublié), 2525 → **2500** étiquettes |
 
 ## Journal
 
@@ -1548,3 +1549,97 @@ en trois familles, toutes déjà nommées : 3 sous une rangée typée `lyrics`
 rangée candidate écartée, 2 typées `numbers` sans être assez basses pour la
 règle des accords courts. S'y ajoutent les deux défauts de l'itération 22,
 inchangés : le `C#m7` lu `F#m7` de 唯独依靠你, et les échardes qui publient.
+
+### Itération 24 — chercher le mode C au lieu de l'attendre
+
+Deux itérations de suite, l'accord faux a été trouvé **par hasard** : en
+regardant un compare rendu pour une autre raison. C'est le seul défaut qui
+abîme la partition, et le seul qu'aucun compteur ne voit — il compte comme
+une réussite. Cette itération arrête d'attendre qu'il se montre.
+
+**Pourquoi le jury ne suffit pas.** Il ne convoque que la **famille** de la
+fonte élue (itération 19, à bon droit : un jury linéal rejetait les lectures
+justes d'une page serif). Mais l'inverse est vrai aussi : trois grasses
+jugeant une page grasse se trompent **ensemble**, et l'unanimité certifie
+alors la faute. C'est exactement ainsi que 唯独依靠你 publiait `F#m7` là où
+la page imprime `C#m7`, à +0,57, jury unanime.
+
+**Deux façons de deviner la fonte d'après l'image, mesurées et rejetées.**
+Si l'on savait reconnaître la graisse d'une gravure, on cesserait de l'élire
+à l'aveugle. Oracle : les 12 calques certifiés, dont la fonte est sûre.
+
+| mesure | certifiés d'accord |
+|---|---|
+| part d'encre dans la boîte de l'étiquette | 6 / 12 |
+| épaisseur médiane des fûts, en part de hauteur | **2 / 12** |
+
+Et les familles se recouvrent : épaisseur médiane 0,148 pour les linéales,
+**0,143** pour les grasses. À 20-30 px de hauteur d'étiquette, sur des scans
+recompressés, *la graisse ne survit pas à la numérisation*. L'apparence ne
+dira pas la fonte ; seule la lecture le peut.
+
+**Ce qui marche : convoquer tout le banc et classer le désaccord.**
+`dissent.py` fait lire chaque étiquette **publiée** par les sept fontes,
+hors famille comprise, et ne décide rien — il classe par nombre de
+dissidents et sort le zoom à côté. Sur le corpus : **29 étiquettes
+contestées** par au moins 4 fontes sur 6. Toutes relues à l'œil :
+
+| page | publié | imprimé | verdict |
+|---|---|---|---|
+| 最美的礼物 (×5) | `G` | `C` | **faux** |
+| 我已得自由 (×2) | `F` | `E` | **faux** |
+| 旷野中唯一的力量 | `F/C` | `C/D` | **faux** |
+| 一生跟随 (×8) | `Dm` | `Dm` | juste |
+| les 13 autres | — | — | juste |
+
+**Huit faux accords**, dont aucun n'avait jamais été signalé par quoi que ce
+soit. Le taux de fausse alerte est élevé (21 sur 29) et c'est très bien : le
+détecteur propose, l'œil dispose, et 29 zooms se lisent en quelques minutes.
+
+**Les trois causes sont trois maladies différentes**, et c'est le second
+enseignement — « le calque publie faux » n'est pas un diagnostic :
+
+1. **最美的礼物** — la fonte élue (helvetica-bold) confond `C` et `G`. Les
+   cinq `C` relus, le veto écarte la grasse, helvetica-neue prend la page :
+   43 → **46** étiquettes, 0 fausse.
+2. **我已得自由** — même famille de faute (`E` lu `F`), même remède : la page
+   n'avait aucune fonte notée, helvetica-bold l'emporte sous veto. 47 → **49**.
+3. **旷野中唯一的力量** — `C/D` **n'est pas dans le vocabulaire** : le `.cho`
+   simplifie l'accord de passage. Le vocabulaire étant fermé, *aucune fonte
+   ne pouvait lire juste* — toutes tombaient sur `F/C`, le plus proche
+   candidat. `extra_chords` règle ce cas-là, et lui seul : l'étiquette passe
+   de `F/C` à `C/D` à +0,62.
+
+**Le plancher de couverture a failli tout emporter.** Une fois les fontes
+fautives écartées, les trois pages tombaient **juste sous** les 60 % — 59,7 %
+pour 最美的礼物 — et perdaient leur calque. Mesuré face par face avec
+`read()` lui-même, le choix était nu : *publier avec des accords faux, ou ne
+pas publier*. Les étiquettes relues à l'œil ne sont pourtant pas des
+contradictions mais des **trous** (lues juste, rejetées faute d'unanimité) :
+c'est exactement ce que `corrections` couvre depuis l'itération 10. Versées
+comme telles, les trois pages repassent le plancher.
+
+**Résultat.** Calques 79 → **78**, étiquettes 2525 → **2500**, contrôle
+112/179 **FAUX = 0**, douze certifiés identiques au bit près. Le contrôle par
+transposition de 最美的礼物 ne laisse plus un seul accord faux.
+
+**唯独依靠你 cesse d'être publiée**, et c'est la bonne issue. Mesure faite,
+la seule fonte qui passe le plancher est celle qui retient le `C#m7` faux ;
+la seule fonte propre (din-bold) lit 58,3 %, et ses deux meilleures rangées
+tombent alors sous le seuil de confirmation de l'itération 22. Une page de
+moins, mais une page qui mentait — comme 有你同行 à l'itération 21.
+
+**Un correctif essayé et rejeté au passage.** `sweep-key` classe les
+survivants du veto par ce qu'ils *identifient*, alors que la publication
+exige en plus l'unanimité. Les faire classer par ce qui se publie
+vraiment semblait s'imposer — et sur 最美的礼物, din-bold paraissait alors
+publier 43 contre 39. C'était **une erreur de ma mesure** : j'avais partagé
+la chasse de la fonte élue avec les jurés, quand `read()` en calcule une par
+juré. Corrigée, la différence s'évanouit et le classement ne change plus
+rien nulle part. Le correctif est retiré — *un changement sans gain mesuré
+n'entre pas.*
+
+**Ce qui reste ouvert.** Les échardes qui publient (itération 22) ; les
+7 rangées cachées (itération 23) ; et désormais **唯独依靠你**, qui ne
+reviendra que par la transcription complète de ses rangées en vérité
+terrain — la voie de certification, pas celle du matcher.
