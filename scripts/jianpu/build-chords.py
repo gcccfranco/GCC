@@ -160,8 +160,20 @@ def _from_reading(slug: str, gold: dict):
     de l'amas (`"y,x"`), qui ne sert qu'à combler les trous — jamais à
     contredire une lecture retenue, sans quoi on ne saurait plus ce qui a
     été vérifié.
+
+    `not_labels` en est le pendant, et il manquait : un amas qui **n'est pas
+    une étiquette** et que le matcher retient quand même. Le seuil n'y peut
+    rien — un arc de liaison sort `E7` à +0,41 et le mot « Fill » d'un titre
+    anglais sort `Em` à +0,54, tous deux au-dessus de la barre. La voie de
+    transcription complète marquait déjà ces amas d'un `null` dans
+    `chord_rows` ; la voie de lecture n'avait pas son équivalent, si bien que
+    la seule façon de retirer un parasite vu à l'œil était de dépublier la
+    page. Les amas ainsi marqués ne comptent pas non plus comme manquants :
+    ils ne sont pas des étiquettes, donc ils n'ont pas à peser sur la
+    couverture.
     """
     fixes = gold.get("corrections", {})
+    blanks = set(gold.get("not_labels", []))
     rows = read(slug)
     total = sum(len(r) for _f, r in rows)
     if not total:
@@ -183,14 +195,19 @@ def _from_reading(slug: str, gold: dict):
             missing += len(row)
             continue
         for (x0, x1), chord, score, unanimous in row:
-            if keep(score, unanimous):
+            key = f"{f['top']},{x0}"
+            if key in blanks:
+                total -= 1
+            elif keep(score, unanimous):
                 labels.append(_box(f, x0, x1, chord))
-            elif f"{f['top']},{x0}" in fixes:
-                labels.append(_box(f, x0, x1, fixes[f"{f['top']},{x0}"]))
+            elif key in fixes:
+                labels.append(_box(f, x0, x1, fixes[key]))
             else:
                 missing += 1
     fixed = len(fixes)
     note = f"{len(labels)}/{total} étiquettes (lecture" + (f", {fixed} corrigée(s))" if fixed else ")")
+    if blanks:
+        note += f" · {len(blanks)} amas écarté(s) à l'œil"
     if foreign:
         note += f" · {len(foreign)} rangée(s) en autre tonalité écartée(s)"
     if len(labels) < MIN_COVERAGE * total:
