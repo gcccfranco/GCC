@@ -7,5 +7,6 @@
   "thicken_k": 3,
   "cluster_gap": 14,
   "min_top_frac": 0.08,
-  "short_row_frac": 0.6
+  "short_row_frac": 0.6,
+  "melody_min_clusters": 15
 }
