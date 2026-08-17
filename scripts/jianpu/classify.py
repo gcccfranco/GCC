@@ -132,4 +132,35 @@ def classify(path, params=None):
         elif kinds[j] == "numbers" and feats[j]["height"] < p["short_row_frac"] * feats[i]["height"]:
             kinds[j] = "chords"
 
+    # Entre les accords et les chiffres s'intercale souvent une **écharde** —
+    # un arc de liaison, un crochet de reprise « 1. 2. », un trait de renvoi.
+    # Le découpage en fait une bande à part, et comme c'est elle qui touche la
+    # rangée de chiffres, c'est **elle** qui est promue : la vraie rangée
+    # d'accords reste en « ? » juste au-dessus, invisible au matcher comme au
+    # contrôle. Dix-neuf rangées du corpus étaient perdues ainsi.
+    #
+    # La hauteur ne permet pas de trancher, et c'est mesuré (itération 22) :
+    # les échardes vont de 0,14 à 0,30 de la rangée de chiffres, mais la vraie
+    # rangée d'accords de 你们要赞美耶和华 — gravure hymnaire, étiquettes de
+    # 14 px — vaut 0,17. Aucun seuil ne sépare une liaison des étiquettes
+    # minuscules d'un hymnaire.
+    #
+    # Donc on ne tranche pas ici : la bande du dessus sort **candidate**
+    # (`chords?`), et c'est le matcher qui confirme — le classifieur propose,
+    # le matcher dispose (itération 7). Les promouvoir directement a été
+    # essayé et mesuré : 77 calques tombaient à 45, parce que la couverture
+    # est un *rapport* et que ces pages portent aussi des bandes qui ne sont
+    # pas des accords. Voir `confirm_candidates` dans match.py.
+    for i, kind in list(enumerate(kinds)):
+        if kind != "chords":
+            continue
+        j = i - 1
+        while j >= 0 and kinds[j] == "noise":
+            j -= 1
+        if j < 0 or kinds[j] != "?":
+            continue
+        if feats[j]["top"] < p["min_top_frac"] * page_h:
+            continue
+        kinds[j] = "chords?"
+
     return ink, width, feats, kinds
