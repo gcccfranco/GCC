@@ -23,9 +23,12 @@ from __future__ import annotations
 import os
 import sys
 
+import numpy as np
 from PIL import Image, ImageDraw
 
 from classify import classify
+from match import confirm_candidates
+from segment import INK_THRESHOLD
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 IMAGES = os.path.join(HERE, "..", "..", "public", "jianpu")
@@ -43,6 +46,8 @@ GOLD = [
 
 COLORS = {
     "chords": (37, 99, 235),
+    # proposée par le classifieur, tranchée par le matcher (itération 22)
+    "chords?": (124, 58, 237),
     "numbers": (185, 28, 28),
     "lyrics": (22, 128, 60),
     "?": (150, 150, 150),
@@ -66,14 +71,14 @@ def render(slug: str) -> str | None:
         color = COLORS.get(kind, (0, 0, 0))
         dr.rectangle([2, f["top"], width - 3, f["bottom"]], outline=color, width=2)
         dr.text((6, max(0, f["top"] - 12)), kind, fill=color)
-        if kind == "chords":
+        if kind in ("chords", "chords?"):
             for x0, x1 in f["clusters"]:
                 dr.rectangle([x0 - 2, f["top"] - 2, x1 + 2, f["bottom"] + 2], outline=color, width=1)
 
     os.makedirs(OUT, exist_ok=True)
     dest = os.path.join(OUT, f"{slug}.png")
     im.save(dest)
-    labels = sum(f["n_clusters"] for f, k in zip(feats, kinds) if k == "chords")
+    labels = sum(f["n_clusters"] for f, k in zip(feats, kinds) if k in ("chords", "chords?"))
     print(f"  {slug:16} accords={counts.get('chords', 0):2} étiquettes={labels:3} → debug/{slug}.png")
     return dest
 
@@ -108,8 +113,15 @@ def sheet(slugs):
             continue
         _ink, width, feats, kinds = classify(path)
         im = Image.open(path).convert("RGB")
+        # Une rangée seulement *proposée* (`chords?`) ne publie rien tant que
+        # le matcher ne l'a pas confirmée : 327 proposées sur le corpus, 38
+        # confirmées (itération 22). Les afficher toutes noierait la planche
+        # sous 289 faux positifs qui n'en sont pas — la planche montre ce qui
+        # atteint le calque, sinon elle ne contrôle plus rien.
+        ink = np.asarray(im.convert("L")) < INK_THRESHOLD
+        ok = confirm_candidates(slug, ink, feats, kinds) if "chords?" in kinds else {}
         for i, (f, kind) in enumerate(zip(feats, kinds)):
-            if kind == "chords":
+            if kind == "chords" or (kind == "chords?" and ok.get(f["top"])):
                 claimed.append((slug, f, _strip(im, f["top"], f["bottom"], width)))
             elif kind == "?":
                 j = i + 1
