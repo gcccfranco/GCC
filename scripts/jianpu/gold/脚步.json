@@ -42,8 +42,43 @@
    "w": 26,
    "h": 28,
    "c": "G"
+  },
+  {
+   "x": 20,
+   "y": 176,
+   "w": 25,
+   "h": 37,
+   "c": "C"
+  },
+  {
+   "x": 20,
+   "y": 391,
+   "w": 25,
+   "h": 40,
+   "c": "C"
+  },
+  {
+   "x": 20,
+   "y": 614,
+   "w": 25,
+   "h": 28,
+   "c": "C"
+  },
+  {
+   "x": 20,
+   "y": 1050,
+   "w": 25,
+   "h": 28,
+   "c": "C"
+  },
+  {
+   "x": 1324,
+   "y": 1268,
+   "w": 25,
+   "h": 28,
+   "c": "C"
   }
  ],
- "extra_verified": "chaque étiquette relue sur zoom (propose-extra + planches), 2026-08-04",
- "face": "verdana-bold"
+ "extra_verified": "chaque étiquette relue sur zoom (propose-extra + planches), 2026-08-04 ; +5 « C » de début de rangée relus au zoom, 2026-08-17 (itération 23)",
+ "face": "helvetica-neue"
 }
