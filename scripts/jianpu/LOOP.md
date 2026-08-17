@@ -161,6 +161,7 @@ rangées les tronque.
 | 20 | 112/179 · **FAUX = 0** tenu · cas durs 218 → 223 identifiées | la vérité terrain devient un **veto** sur le choix de fonte | **12 /125 certifiés** (一颗谦卑的心) · calques **67 → 78**, 2024 → 2349 étiquettes |
 | 21 | 1 modulation et 5 pages à rangées empilées trouvées par leur **contenu** | rangées en tonalité étrangère écartées de la publication | 12 /125 · calques 78 → 77 (有你同行 **cesse de publier de faux accords**) |
 | 22 | planche inchangée (A=45 · B=5) · contrôle 112/179, **FAUX = 0** tenu | 19 rangées d'accords rendues visibles · 327 candidates proposées, **38 confirmées** | 12 /125 · calques 77 → **78**, 2313 → **2438** étiquettes · rangées cachées **23 → 11** |
+| 23 | planche A=45 → 49 (4 faux positifs qui ne publient rien) · contrôle 112/179, **FAUX = 0** tenu | rangée de mélodie reconnue au **nombre d'amas** · 5 faux accords corrigés par le veto de la vérité terrain | 12 /125 · calques 78 → **79**, 2438 → **2525** étiquettes · rangées cachées **11 → 7** |
 
 ## Journal
 
@@ -1464,3 +1465,86 @@ vérité terrain oppose son veto.
    ligatures épaissies poussent son ratio au-dessus de `numbers_ratio_max`
    (脚步 : 0,81 contre 0,65). C'est le même goulot de segmentation, pris par
    l'autre bout, et c'est le prochain.
+
+### Itération 23 — la mélodie que le classifieur ne reconnaissait plus
+
+L'itération 22 laissait 16 rangées cachées, dont **8 sous le même motif** :
+la rangée d'accords est bien là, mais la rangée de **mélodie** qui la suit
+est typée `?` au lieu de `numbers`. Or la promotion exige une rangée de
+chiffres en dessous — sans elle, rien n'est promu.
+
+**Pourquoi une mélodie cesse d'être reconnue.** `numbers_ratio_max` vaut
+0,65 : est « chiffres » une rangée dont la largeur médiane des amas ne
+dépasse pas 65 % de sa hauteur. Mais les **ligatures soudent les chiffres**
+entre eux, et un groupe de croches devient un seul amas large : sur 脚步 la
+médiane monte à 0,81, sur 圣灵的江河 à 0,76. La rangée tombe en `?`, le
+classifieur ne voit plus de système, et la rangée d'accords au-dessus reste
+invisible.
+
+**Ce qui la trahit n'est pas sa largeur mais son nombre d'amas.** Une
+mélodie en porte une vingtaine, une rangée d'accords une poignée :
+
+| nature | nombre d'amas médian |
+|---|---|
+| `numbers` | 25 |
+| `?` | 6 |
+
+D'où `melody_min_clusters` : sous `lyric_ratio_min` — pour ne pas happer
+les paroles, qui sont des carrés pleins à ratio ~1 — une rangée d'au moins
+**15 amas** est une mélodie. Le seuil a été balayé (15, 20, 25) : le jeu de
+contrôle ne bouge à aucune valeur, **dénominateur compris**, et 15 publie
+13 étiquettes de plus que 20.
+
+**Résultat.** Calques 78 → **79**, étiquettes 2438 → **2525**, rangées
+cachées **11 → 7**, aucun calque perdu, les douze certifiés identiques au
+bit près. Sept pages gagnent : 脚步 +11, 住在你里面 +8, 哦十字架 +7,
+圣灵的江河 +6, 赞美之泉 +4, 叫我抬起头的神 +2, 我们欢迎君王降临 +2.
+
+**Et le contrôle visuel a mordu, encore.** Sur 脚步, les rangées retrouvées
+sortaient justes — mais **cinq « C » de début de rangée sortaient « G »**,
+à +0,56, jury unanime. Le zoom ne laisse aucun doute : ce sont cinq `C`
+parfaitement nets, ni rognés ni collés au bord.
+
+La cause n'est pas dans cette itération, elle y est seulement **révélée**.
+La page était élue en `verdana-bold`, et c'est la seule fonte du banc qui
+s'y trompe :
+
+| fonte | ce qu'elle lit là où la page imprime `C` | couverture |
+|---|---|---|
+| helvetica-neue | **C** (+0,84) | 25/77 |
+| din-bold | **C** (+0,76) | 25/77 |
+| helvetica-bold | **C** (+0,73) | 25/77 |
+| verdana-bold | **G** (+0,56) | 25/77 |
+
+Quatre fontes à *couverture strictement égale*, et le classement en avait
+retenu celle qui se trompe. Le veto de l'itération 20 n'a pas failli : il
+n'avait simplement **rien à dire ici**, les six étiquettes lues à l'œil de
+脚步 ne couvrant aucun début de rangée. *Un veto ne protège que là où
+l'œil est déjà passé.*
+
+Les cinq `C` ont donc été relus au zoom et versés en vérité terrain.
+`sweep-key` réélit alors **helvetica-neue** (25/29, marge +66 %), et les
+cinq faux accords deviennent justes. C'est le circuit de l'itération 10
+dans les deux sens : l'œil comble un trou, et le trou comblé corrige une
+décision automatique prise ailleurs.
+
+**Contrôle par transposition, six pages relues** — 脚步, 住在你里面,
+圣灵的江河, 赞美之泉, 哦十字架, et les gagnantes de l'itération 22 :
+toutes les conversions justes, **aucun accord faux**. Ce qui reste non
+converti est du manque, pas de l'erreur (les `B♭` restent le trou connu).
+
+**Ce que la planche montre et qu'il faut noter.** A passe de 45 à 49 : la
+mélodie mieux reconnue, la promotion s'applique aussi là où un système
+**n'a pas** de rangée d'accords, et c'est alors la rangée de paroles du
+système précédent qui est promue (`赐我 气息，毫无保留…`). Ces quatre
+rangées **ne publient rien** — vérifié page par page — parce que le
+matcher n'y apparie rien. Le classifieur reste permissif et le matcher
+dispose (itération 7) ; il faut seulement savoir que le compteur A n'est
+plus un compteur de faux positifs dangereux.
+
+**Ce qui reste ouvert.** Les 7 dernières rangées cachées se répartissent
+en trois familles, toutes déjà nommées : 3 sous une rangée typée `lyrics`
+(la mélodie y passe pour des paroles — même cause, autre seuil), 2 sous une
+rangée candidate écartée, 2 typées `numbers` sans être assez basses pour la
+règle des accords courts. S'y ajoutent les deux défauts de l'itération 22,
+inchangés : le `C#m7` lu `F#m7` de 唯独依靠你, et les échardes qui publient.
