@@ -338,14 +338,68 @@ def jury_faces(face: str) -> list[tuple[str, int]]:
     return JURIES[FACES[face][2]]
 
 
+# Une rangée candidate (`chords?`) est retenue si cette part de ses amas
+# s'apparie au vocabulaire de la page. Valeur reprise de `worklist.py`, où
+# elle a servi à débusquer les rangées cachées de l'itération 20 : les
+# rangées de chiffres et de hanzi tombent très bas, ce qui rend le test
+# utilisable. En dessous de CANDIDATE_MIN amas, on ne conclut pas.
+CANDIDATE_HIT = 0.70
+CANDIDATE_MIN = 3
+
+
+def confirm_candidates(slug, ink, feats, kinds):
+    """Confirme ou écarte les rangées que le classifieur a dites candidates.
+
+    Le classifieur propose la bande posée juste au-dessus d'une rangée
+    d'accords : sur les pages où une **écharde** (liaison, crochet de
+    reprise) s'est intercalée entre les accords et les chiffres, c'est là que
+    se trouve la vraie rangée. Mais la même bande porte ailleurs tout autre
+    chose, et les promouvoir toutes fait chuter la couverture — donc les
+    calques — de 77 à 45 (itération 22). Le vocabulaire tranche : une rangée
+    d'accords s'y apparie massivement, une bande de tempo ou de crédits non.
+    """
+    vocab = vocabulary(slug)
+    if not vocab:
+        return {}
+    bank = face_bank(vocab, song_semitones(slug), song_face(slug))
+
+    def sigs_of(f):
+        out = []
+        for x0, x1 in f["clusters"]:
+            sub = ink[f["top"] : f["bottom"] + 1, x0 : x1 + 1]
+            ys, xs = np.where(sub.any(1))[0], np.where(sub.any(0))[0]
+            if len(ys) and len(xs):
+                out.append(signature(sub[ys[0] : ys[-1] + 1, xs[0] : xs[-1] + 1]))
+        return out
+
+    # La chasse s'estime sur les rangées sûres, jamais sur les candidates.
+    refs = [s for f, k in zip(feats, kinds) if k == "chords" for s in sigs_of(f)]
+    factor = width_factor(refs, bank) if refs else 1.0
+
+    out = {}
+    for f, k in zip(feats, kinds):
+        if k != "chords?":
+            continue
+        sigs = sigs_of(f)
+        if len(sigs) < CANDIDATE_MIN:
+            out[f["top"]] = False
+            continue
+        hits = sum(1 for s in sigs if best_match(s, bank, factor)[0] >= MIN_SCORE)
+        out[f["top"]] = hits / len(sigs) >= CANDIDATE_HIT
+    return out
+
+
 def crop_labels(slug: str):
     """Imagettes des étiquettes, telles que le classifieur les a découpées."""
     path = os.path.join(IMAGES, f"{slug}-p1.webp")
     ink = np.asarray(Image.open(path).convert("L")) < INK_THRESHOLD
     _ink, _w, feats, kinds = classify(path)
+    ok = confirm_candidates(slug, ink, feats, kinds)
     rows = []
     for f, kind in zip(feats, kinds):
-        if kind != "chords":
+        if kind == "chords?" and not ok.get(f["top"]):
+            continue
+        if kind not in ("chords", "chords?"):
             continue
         cells = []
         for x0, x1 in f["clusters"]:
