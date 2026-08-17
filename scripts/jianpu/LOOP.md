@@ -163,6 +163,7 @@ rangées les tronque.
 | 22 | planche inchangée (A=45 · B=5) · contrôle 112/179, **FAUX = 0** tenu | 19 rangées d'accords rendues visibles · 327 candidates proposées, **38 confirmées** | 12 /125 · calques 77 → **78**, 2313 → **2438** étiquettes · rangées cachées **23 → 11** |
 | 23 | planche A=45 → 49 (4 faux positifs qui ne publient rien) · contrôle 112/179, **FAUX = 0** tenu | rangée de mélodie reconnue au **nombre d'amas** · 5 faux accords corrigés par le veto de la vérité terrain | 12 /125 · calques 78 → **79**, 2438 → **2525** étiquettes · rangées cachées **11 → 7** |
 | 24 | contrôle 112/179, **FAUX = 0** tenu · `dissent.py` classe les étiquettes publiées par le désaccord entre fontes | **8 faux accords trouvés** sur 29 contestées, tous invisibles aux compteurs · 12 étiquettes versées en vérité terrain | 12 /125 · calques 79 → **78** (唯独依靠你 dépublié), 2525 → **2500** étiquettes |
+| 25 | contrôle 112/179, **FAUX = 0** tenu · `dissent.py --isolated` classe les étiquettes **seules dans leur rangée** | **3 parasites publiés** trouvés sur 36 zooms (2 arcs de liaison, 1 titre anglais) · `not_labels` les retire | 12 /125 · calques **78** inchangés, 2500 → **2497** étiquettes |
 
 ## Journal
 
@@ -1643,3 +1644,61 @@ n'entre pas.*
 7 rangées cachées (itération 23) ; et désormais **唯独依靠你**, qui ne
 reviendra que par la transcription complète de ses rangées en vérité
 terrain — la voie de certification, pas celle du matcher.
+
+### Itération 25 — le défaut que le désaccord ne peut pas voir
+
+`dissent.py` (itération 24) classe les étiquettes publiées par le désaccord
+entre fontes. Il a trouvé huit accords faux, mais il est **aveugle à toute
+une famille** : devant un arc de liaison, les sept fontes tombent d'accord
+sur la même absurdité. Le désaccord est nul, donc le détecteur se tait. Or
+c'est exactement le défaut nommé à l'itération 22 et resté ouvert depuis :
+les **échardes qui publient**.
+
+**Le signe est ailleurs : le parasite est seul.** Une vraie rangée d'accords
+en publie plusieurs ; une écharde en publie **un**, tiré d'une liaison ou
+d'un crochet de reprise. `--isolated` classe donc les étiquettes publiées
+seules — ou par deux — dans une rangée qui compte au moins trois amas.
+72 sur le corpus, 36 relues au zoom, **3 parasites** :
+
+| page | publié | ce que c'est vraiment |
+|---|---|---|
+| 再次将我更新 y=1571 | `F#m/E` (+0,30) | un **arc de liaison**, bande de 11 px |
+| 再次将我更新 y=871 | `E7` (+0,41) | un **arc de liaison**, bande de 10 px |
+| 求主充满我 y=236 | `Em` (+0,54) | le mot « **Fill** » du titre anglais |
+
+Les trois étaient au sommet du classement ; les rangs 14 à 36 sont tous
+justes. Le tri fonctionne, et c'est ce qui rend l'inspection tenable.
+
+**Ce qui manquait n'était pas un seuil mais un geste.** Aucune barre ne
+sépare ces trois-là : un arc sort `E7` à +0,41, « Fill » sort `Em` à +0,54,
+au-dessus du seuil, et l'itération 22 avait déjà mesuré qu'on ne peut pas
+les reconnaître à leur hauteur sans emporter les étiquettes minuscules d'un
+hymnaire. La voie de transcription complète savait pourtant les nommer
+depuis longtemps — un `null` dans `chord_rows`. La voie de **lecture**, elle,
+n'avait pas son équivalent : on pouvait combler un trou (`corrections`) mais
+pas retirer un intrus, si bien que la seule façon d'ôter un parasite vu à
+l'œil était de **dépublier la page entière**.
+
+`not_labels` comble ce manque : une liste de positions `"y,x"` que l'œil a
+vues et déclarées non-étiquettes. Elles ne comptent pas non plus comme
+manquantes — elles ne sont pas des accords, donc elles n'ont pas à peser sur
+la couverture. Les trois parasites disparaissent, **aucun calque n'est
+perdu**, 2500 → 2497 étiquettes.
+
+**Une fausse alerte qui valait un correctif d'outil.** 永恒唯一的盼望 publie
+`C` là où le zoom montre clairement un `B` — j'ai cru tenir un neuvième
+accord faux. C'est **juste** : le `.cho` est en fa, la page est gravée en mi,
+et le calque publie les noms du `.cho` que le client transpose. *Le zoom
+montre le glyphe imprimé, pas le nom publié*, et les deux diffèrent sur les
+32 pages qui ne sont pas dans la tonalité de leur `.cho`. La légende porte
+maintenant les deux (`publie C = « B » imprimé`) — sans quoi l'inspection à
+l'œil condamne des étiquettes correctes, ce qui est le pire service qu'un
+détecteur puisse rendre.
+
+Le détecteur saute par ailleurs ce que `not_labels` a déjà écarté : un amas
+jugé une fois ne se re-signale plus.
+
+**Où en sont les trois défauts ouverts.** Les échardes qui publient sont
+**réglées** pour les cas vus ; le mécanisme existe désormais pour les
+suivants. Restent les 7 rangées cachées (itération 23) et 唯独依靠你, qui ne
+reviendra que par transcription complète.
