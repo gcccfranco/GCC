@@ -112,7 +112,7 @@ def _bands(slug: str, entry: dict) -> list[tuple[int, int]]:
     floor = load_params()["min_top_frac"] * page_h
     out = []
     for i, (f, kind) in enumerate(zip(feats, kinds)):
-        if kind == "chords":
+        if kind in ("chords", "chords?"):
             out.append((f["top"], f["bottom"]))
         elif kind == "?" and f["top"] >= floor:
             j = i + 1
