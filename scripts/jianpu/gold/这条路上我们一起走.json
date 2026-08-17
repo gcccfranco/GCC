@@ -1,4 +1,16 @@
 {
  "slug": "这条路上我们一起走",
- "face": "verdana-bold"
+ "face": "verdana-bold",
+ "corrections": {
+  "272,891": "Bm",
+  "969,512": "Bm"
+ },
+ "not_labels": [
+  "1004,488",
+  "1004,1026",
+  "1004,1284",
+  "1004,1175"
+ ],
+ "corrections_verified": "amas relus au zoom, 2026-08-18 (itération 26, pages au ras du plancher)",
+ "not_labels_verified": "amas sans accord : un chiffre de mélodie et trois arcs de liaison. Les crochets de reprise soudés à des accords en sont exclus — ils portent Em/E7/A7, donc ils manquent, ils ne sont pas absents."
 }

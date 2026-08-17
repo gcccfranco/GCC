@@ -1,4 +1,21 @@
 {
  "slug": "云上太阳",
- "face": "verdana-bold"
+ "face": "verdana-bold",
+ "corrections": {
+  "1473,422": "Bm",
+  "327,394": "Bm",
+  "1076,398": "Bm",
+  "1076,167": "(A/C#)",
+  "696,247": "(A/C#)",
+  "327,249": "(A/C#)",
+  "1473,190": "(A/C#)",
+  "696,596": "(D/A)",
+  "327,596": "(D/A)",
+  "1076,528": "(D/A)",
+  "1473,585": "G"
+ },
+ "not_labels": [
+  "696,1292"
+ ],
+ "corrections_verified": "amas relus au zoom, 2026-08-18 (itération 26, pages au ras du plancher)"
 }

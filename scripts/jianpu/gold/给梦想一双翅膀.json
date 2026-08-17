@@ -1,4 +1,16 @@
 {
  "slug": "给梦想一双翅膀",
- "face": "times-bold"
+ "face": "helvetica-bold",
+ "corrections": {
+  "584,26": "G",
+  "911,415": "G",
+  "256,182": "G",
+  "584,329": "C",
+  "1587,1002": "D",
+  "256,692": "C/G",
+  "911,32": "D",
+  "584,605": "D/C",
+  "911,512": "D/F#"
+ },
+ "corrections_verified": "amas relus au zoom, 2026-08-18 (itération 26, pages au ras du plancher)"
 }
