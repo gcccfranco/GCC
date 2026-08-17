@@ -34,6 +34,15 @@ DEFAULTS = {
     # chiffres : amas étroits devant une rangée haute (les chiffres sont
     # espacés et la rangée porte les ligatures)
     "numbers_ratio_max": 0.50,
+    # Une rangée de mélodie dont les ligatures soudent les chiffres a des
+    # amas larges : son ratio passe au-dessus de `numbers_ratio_max` et elle
+    # tombe en « ? ». Le classifieur ne voit alors plus de rangée de chiffres
+    # et ne promeut plus rien au-dessus — huit rangées d'accords du corpus
+    # étaient perdues ainsi (itération 23). Ce qui la trahit n'est pas sa
+    # largeur mais son **nombre d'amas** : une mélodie en porte vingt, une
+    # rangée d'accords une poignée. Sous `lyric_ratio_min`, pour ne pas
+    # happer les paroles, qui sont des carrés pleins.
+    "melody_min_clusters": 999,
     # paroles : les hanzi sont des carrés pleins, ratio ~1 et nombreux
     "lyric_ratio_min": 0.85,
     "lyric_ratio_max": 1.15,
@@ -88,6 +97,11 @@ def classify(path, params=None):
         if f["height"] < p["min_row_height"]:
             kinds.append("noise")
         elif f["ratio"] <= p["numbers_ratio_max"]:
+            kinds.append("numbers")
+        elif (
+            f["ratio"] < p["lyric_ratio_min"]
+            and f["n_clusters"] >= p["melody_min_clusters"]
+        ):
             kinds.append("numbers")
         elif (
             p["lyric_ratio_min"] <= f["ratio"] <= p["lyric_ratio_max"]
