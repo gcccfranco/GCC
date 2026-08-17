@@ -78,7 +78,10 @@ def hidden_rows(slug: str) -> list[tuple[int, str, int, int]]:
 
     out = []
     for f, k in zip(feats, kinds):
-        if k == "chords":
+        # `chords?` est une rangée que le classifieur a proposée et que le
+        # matcher tranche (itération 22) : elle est déjà dans le circuit,
+        # donc elle n'est pas cachée.
+        if k in ("chords", "chords?"):
             continue
         hits = tot = 0
         for x0, x1 in f["clusters"]:
