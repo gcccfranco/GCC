@@ -1,4 +1,45 @@
 {
  "slug": "最美的礼物",
- "face": "helvetica-bold"
+ "face": "helvetica-neue",
+ "extra_labels": [
+  {
+   "x": 1173,
+   "y": 892,
+   "w": 19,
+   "h": 22,
+   "c": "C"
+  },
+  {
+   "x": 344,
+   "y": 1151,
+   "w": 19,
+   "h": 22,
+   "c": "C"
+  },
+  {
+   "x": 1288,
+   "y": 1151,
+   "w": 19,
+   "h": 22,
+   "c": "C"
+  },
+  {
+   "x": 21,
+   "y": 1673,
+   "w": 19,
+   "h": 23,
+   "c": "C"
+  },
+  {
+   "x": 765,
+   "y": 1927,
+   "w": 19,
+   "h": 33,
+   "c": "C"
+  }
+ ],
+ "extra_verified": "5 étiquette(s) contestée(s) relue(s) au zoom, 2026-08-17 (itération 24, dissent.py)",
+ "corrections": {
+  "1151,344": "C"
+ }
 }

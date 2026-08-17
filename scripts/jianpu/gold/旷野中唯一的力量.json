@@ -1,4 +1,20 @@
 {
  "slug": "旷野中唯一的力量",
- "face": "verdana-bold"
+ "face": "verdana-bold",
+ "extra_labels": [
+  {
+   "x": 1115,
+   "y": 1770,
+   "w": 46,
+   "h": 28,
+   "c": "C/D"
+  }
+ ],
+ "extra_verified": "1 étiquette(s) contestée(s) relue(s) au zoom, 2026-08-17 (itération 24, dissent.py)",
+ "extra_chords": [
+  "C/D"
+ ],
+ "corrections": {
+  "1770,1115": "C/D"
+ }
 }

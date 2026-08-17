@@ -1,4 +1,36 @@
 {
  "slug": "唯独依靠你",
- "face": "verdana-bold"
+ "face": "din-bold",
+ "extra_labels": [
+  {
+   "x": 753,
+   "y": 190,
+   "w": 74,
+   "h": 28,
+   "c": "Bsus4"
+  },
+  {
+   "x": 1156,
+   "y": 190,
+   "w": 72,
+   "h": 28,
+   "c": "Am/E"
+  },
+  {
+   "x": 59,
+   "y": 531,
+   "w": 74,
+   "h": 28,
+   "c": "C#m7"
+  },
+  {
+   "x": 739,
+   "y": 531,
+   "w": 71,
+   "h": 28,
+   "c": "F#m7"
+  }
+ ],
+ "extra_verified": "4 étiquettes relues au zoom, 2026-08-17 (itération 24) : le C#m7 de y=531 sortait F#m7",
+ "corrections": {}
 }
