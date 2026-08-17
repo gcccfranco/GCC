@@ -25,9 +25,27 @@ sur ces scans, à 20-30 px de hauteur d'étiquette, la graisse ne survit pas
 à la numérisation. L'apparence ne dira pas la fonte ; seule la lecture le
 peut.
 
+Un second soupçon, d'une autre nature (itération 25). Le désaccord entre
+fontes ne voit pas les **parasites** — un amas qui n'est pas une étiquette
+du tout. Devant un arc de liaison, les sept fontes tombent d'accord sur la
+même absurdité, donc le désaccord est nul. Ce qui les trahit est ailleurs :
+un parasite est **seul** dans sa rangée. Une vraie rangée d'accords en
+publie plusieurs ; une écharde en publie un, tiré d'une liaison ou d'un
+crochet de reprise. `--isolated` classe donc les étiquettes publiées seules
+(ou par deux) dans une rangée qui compte au moins trois amas. Sur 36 zooms
+relus : deux arcs de liaison publiés comme accords sur 再次将我更新, et le
+mot « Fill » du titre anglais de 求主充满我 publié `Em`.
+
+**Le zoom montre le glyphe imprimé, pas le nom publié.** Les deux diffèrent
+dès que la page n'est pas gravée dans la tonalité de son `.cho` : sur
+永恒唯一的盼望 (`.cho` en fa, page en mi) le calque publie `C` là où la page
+imprime `B`, et c'est **juste**. La légende porte donc les deux, sans quoi
+l'œil condamne des étiquettes correctes — je m'y suis laissé prendre.
+
 Usage (depuis GCCLouange/) :
     python3 scripts/jianpu/dissent.py            # tout le corpus publié
     python3 scripts/jianpu/dissent.py <slug>…    # des chants précis
+    python3 scripts/jianpu/dissent.py --isolated # les parasites
 
 Sortie : scripts/jianpu/debug/_dissent.png (les zooms, les pires d'abord)
 """
@@ -45,7 +63,7 @@ from PIL import Image, ImageDraw  # noqa: E402
 
 from match import (  # noqa: E402
     FACES, best_match, crop_labels, face_bank, keep, read, signature,
-    song_face, song_semitones, vocabulary, width_factor,
+    song_face, song_semitones, transpose, vocabulary, width_factor,
 )
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -55,6 +73,11 @@ OUT = os.path.join(HERE, "debug")
 
 # Au-delà de ce nombre de fontes dissidentes, l'étiquette mérite le zoom.
 SUSPECT_MIN = 4
+
+# Une rangée qui ne publie pas plus que ça, alors qu'elle compte au moins
+# ISOLATED_CLUSTERS amas, publie probablement un parasite.
+ISOLATED_MAX = 2
+ISOLATED_CLUSTERS = 3
 
 
 def dissent(slug: str):
@@ -96,9 +119,27 @@ def dissent(slug: str):
                 out.append({
                     "slug": slug, "y": f["top"], "x": x0,
                     "box": (x0, f["top"], x1, f["bottom"]),
-                    "lu": chord, "score": score, "dissidents": n,
-                    "autres": against,
+                    "lu": chord, "score": score, "rang": n,
+                    "motif": f"{n}/6 lisent {', '.join(against[:3])}",
                 })
+    return out
+
+
+def isolated(slug: str):
+    """Étiquettes publiées seules dans leur rangée — les parasites probables."""
+    out = []
+    for f, row in read(slug):
+        kept = [(p, c, sc) for p, c, sc, u in row if keep(sc, u)]
+        if len(row) < ISOLATED_CLUSTERS or not (1 <= len(kept) <= ISOLATED_MAX):
+            continue
+        for (x0, x1), chord, score in kept:
+            out.append({
+                "slug": slug, "y": f["top"], "x": x0,
+                "box": (x0, f["top"], x1, f["bottom"]),
+                "lu": chord, "score": score,
+                "rang": len(row) - len(kept),
+                "motif": f"seule {len(kept)} sur {len(row)} amas de la rangee",
+            })
     return out
 
 
@@ -128,11 +169,11 @@ def sheet(items, path):
         im.paste(crop, (left, y))
         dr.text((pad, y + 2),
                 f"{it['slug']}  y={it['y']} x={it['x']}", fill=(0, 0, 0))
+        printed = it.get("imprime")
+        shown = f"PUBLIE {it['lu']}" + (f"  = « {printed} » imprime" if printed else "")
         dr.text((pad, y + 16),
-                f"PUBLIE {it['lu']}  ({it['score']:+.2f})", fill=(185, 28, 28))
-        dr.text((pad, y + 30),
-                f"{it['dissidents']}/6 lisent {', '.join(it['autres'][:3])}",
-                fill=(37, 99, 235))
+                f"{shown}  ({it['score']:+.2f})", fill=(185, 28, 28))
+        dr.text((pad, y + 30), it["motif"], fill=(37, 99, 235))
         y += crop.height + pad
     os.makedirs(OUT, exist_ok=True)
     im.save(path)
@@ -140,29 +181,39 @@ def sheet(items, path):
 
 
 def main() -> int:
+    args = [a for a in sys.argv[1:] if a != "--isolated"]
+    hunt = isolated if "--isolated" in sys.argv[1:] else dissent
     chords = json.load(open(os.path.join(IMAGES, "chords.json"), encoding="utf8"))
-    slugs = sys.argv[1:] or sorted(chords)
+    slugs = args or sorted(chords)
     found = []
     for slug in slugs:
         if slug not in chords:
             continue
         gp = os.path.join(GOLD, f"{slug}.json")
         gold = json.load(open(gp, encoding="utf8")) if os.path.exists(gp) else {}
-        items = dissent(slug)
         # Un calque gelé ne dépend plus du matcher : le signaler n'aiderait pas.
-        tag = " [CERTIFIÉ]" if gold.get("verified") else ""
+        if gold.get("verified"):
+            continue
+        items = hunt(slug)
+        # Un amas que l'œil a déjà écarté ne se re-signale pas.
+        blanks = set(gold.get("not_labels", []))
+        items = [i for i in items if f"{i['y']},{i['x']}" not in blanks]
+        # Ce que la page **imprime** n'est pas ce que le calque publie dès
+        # qu'elle est gravée dans une autre tonalité que son `.cho`.
+        semi = song_semitones(slug)
+        for it in items:
+            spellings = transpose(it["lu"], semi)
+            it["imprime"] = spellings[0] if semi and spellings else None
         if items:
-            print(f"  {slug:<18} {len(items):3} étiquette(s) contestée(s){tag}",
-                  flush=True)
-        found += [i for i in items if not gold.get("verified")]
+            print(f"  {slug:<18} {len(items):3} étiquette(s) suspecte(s)", flush=True)
+        found += items
 
-    found.sort(key=lambda i: (-i["dissidents"], i["score"]))
-    print(f"\n{len(found)} étiquette(s) publiée(s) contestée(s) par "
-          f"≥{SUSPECT_MIN} fontes sur 6")
+    found.sort(key=lambda i: (-i["rang"], i["score"]))
+    print(f"\n{len(found)} étiquette(s) publiée(s) suspecte(s)")
     for it in found[:25]:
+        printed = f" = « {it['imprime']} » imprimé" if it.get("imprime") else ""
         print(f"  {it['slug']:<18} y={it['y']:<5} x={it['x']:<5} "
-              f"publie {it['lu']:<7} ({it['score']:+.2f})  "
-              f"{it['dissidents']}/6 → {', '.join(it['autres'][:3])}")
+              f"publie {it['lu']:<7}{printed} ({it['score']:+.2f})  {it['motif']}")
     p = sheet(found[:40], os.path.join(OUT, "_dissent.png"))
     if p:
         print(f"\n  zooms → {os.path.relpath(p, os.path.join(HERE, '..', '..'))}")
