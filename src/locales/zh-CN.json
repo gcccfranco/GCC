@@ -239,7 +239,9 @@
       "privateLoginRequired": "请登录以创建私密歌单。",
       "addTransition": "过渡",
       "transitionLabel": "过渡",
-      "keyChangeHint": "该段落将转调显示为所选调（再次点击可取消）。"
+      "keyChangeHint": "该段落将转调显示为所选调（再次点击可取消）。",
+      "jianpuSheet": "简谱",
+      "jianpuSheetHint": "以简谱演奏这首歌"
     },
     "contentEdit": {
       "toggle": "调整",
@@ -273,7 +275,8 @@
       "pinyinMismatch": "注意：{{py}} 个拼音对应 {{zh}} 个汉字——对齐将会错位。",
       "songLoading": "圣诗加载中——请稍后再试。",
       "conflict": "敬拜单已被他人修改——请检查后重试。",
-      "emptyColumn": "空列"
+      "emptyColumn": "空列",
+      "modifiedHidden": "简谱已覆盖修改内容"
     }
   },
   "customize": {
@@ -326,6 +329,12 @@
     "hideLyrics": "隐藏歌词",
     "pinyin": "拼音",
     "chartStyle": "段落配色",
+    "jianpuSheet": "简谱",
+    "jianpuPref": {
+      "auto": "按负责人设置",
+      "always": "总是使用",
+      "never": "不使用"
+    },
     "annotations": "批注",
     "text": "文字",
     "textSmaller": "缩小文字",

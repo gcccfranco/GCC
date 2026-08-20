@@ -239,7 +239,9 @@
       "privateLoginRequired": "Connecte-toi pour créer une setlist privée.",
       "addTransition": "Transition",
       "transitionLabel": "Transition",
-      "keyChangeHint": "La section s'affichera transposée dans cette tonalité (retape pour retirer)."
+      "keyChangeHint": "La section s'affichera transposée dans cette tonalité (retape pour retirer).",
+      "jianpuSheet": "简谱",
+      "jianpuSheetHint": "Jouer ce chant sur sa partition 简谱"
     },
     "contentEdit": {
       "toggle": "Adapter",
@@ -273,7 +275,8 @@
       "pinyinMismatch": "Attention : {{py}} mot(s) pinyin pour {{zh}} caractère(s) chinois — l'alignement sera décalé.",
       "songLoading": "Chant en cours de chargement — réessaie dans un instant.",
       "conflict": "La setlist a été modifiée entre-temps — vérifie puis réessaie.",
-      "emptyColumn": "colonne vide"
+      "emptyColumn": "colonne vide",
+      "modifiedHidden": "Adaptation masquée par le 简谱"
     }
   },
   "customize": {
@@ -326,6 +329,12 @@
     "hideLyrics": "Masquer les paroles",
     "pinyin": "Pinyin",
     "chartStyle": "Couleurs par section",
+    "jianpuSheet": "Partition 简谱",
+    "jianpuPref": {
+      "auto": "Choix du responsable",
+      "always": "Toujours",
+      "never": "Jamais"
+    },
     "annotations": "Annotations",
     "text": "Texte",
     "textSmaller": "Réduire le texte",

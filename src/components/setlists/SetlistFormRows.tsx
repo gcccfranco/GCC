@@ -756,9 +756,7 @@ export function SongRow({
             <button
               type="button"
               onClick={() => onJianpuSheetChange(!item.jianpuSheet)}
-              title={t("setlists.form.jianpuSheetHint", {
-                defaultValue: "Jouer ce chant sur sa partition 简谱",
-              })}
+              title={t("setlists.form.jianpuSheetHint")}
               className={`flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded border transition-colors ${
                 item.jianpuSheet
                   ? "border-primary/30 bg-primary/10 text-primary"
@@ -766,7 +764,7 @@ export function SongRow({
               }`}
             >
               <span className="font-bold">谱</span>
-              简谱
+              {t("setlists.form.jianpuSheet")}
             </button>
           )}
           {originalCount > 1 && (
