@@ -165,6 +165,8 @@ rangées les tronque.
 | 24 | contrôle 112/179, **FAUX = 0** tenu · `dissent.py` classe les étiquettes publiées par le désaccord entre fontes | **8 faux accords trouvés** sur 29 contestées, tous invisibles aux compteurs · 12 étiquettes versées en vérité terrain | 12 /125 · calques 79 → **78** (唯独依靠你 dépublié), 2525 → **2500** étiquettes |
 | 25 | contrôle 112/179, **FAUX = 0** tenu · `dissent.py --isolated` classe les étiquettes **seules dans leur rangée** | **3 parasites publiés** trouvés sur 36 zooms (2 arcs de liaison, 1 titre anglais) · `not_labels` les retire | 12 /125 · calques **78** inchangés, 2500 → **2497** étiquettes |
 | 26 | contrôle 112/179, **FAUX = 0** tenu | 22 amas relus sur les pages au ras du plancher · le veto de fonte voit enfin les `corrections` | 12 /125 · calques 78 → **81**, 2497 → **2559** étiquettes |
+| 27 | contrôle 112/179, **FAUX = 0** tenu | 25 amas relus · `not_rows` retire une rangée de paroles promue à tort | 12 /125 · calques 81 → **84**, 2559 → **2683** étiquettes |
+| 28 | corpus **127** (+2 partitions fournies) · planche A=7 · B=0 sur les deux | 40 amas relus · `mask_rows` masque les rangées de **capo** | 12 /127 · calques 84 → **86**, 2683 → **2801** étiquettes |
 
 ## Journal
 
@@ -1753,3 +1755,94 @@ page retombe à 13/15 — 87 %, honnête, et toujours publiée.
 **Ce qui reste.** 44 pages sans calque, dont une douzaine à moins de cinq
 étiquettes du plancher : le même geste les convertira. Puis les 7 rangées
 cachées (itération 23) et 唯独依靠你.
+
+### Itération 27 — une rangée de paroles gonflait le dénominateur
+
+Suite directe de l'itération 26 : trois pages de plus, prises dans la même
+file de celles qui manquent le plancher d'un cheveu.
+
+| page | avant | après |
+|---|---|---|
+| 大声敬拜 | 25/44 (57 %) | **26/34** |
+| 握住幸福 | 37/64 (58 %) | **49/64** |
+| 我的家要荣耀主 | 35/68 (51 %) | **49/68** |
+
+Sur 握住幸福 et 我的家要荣耀主 il n'a rien fallu d'autre que des yeux :
+douze amas relus au zoom chacun, tous des accords à barre oblique
+(`G/D`, `C/D`, `Cm6/D`, `Em/B`, `Bm/A`, `B/D#`) que le matcher note bas.
+
+**大声敬拜 était un cas différent, et il a demandé un geste nouveau.** La
+page restait à 57 % alors que ses accords étaient presque tous lus. Le
+dénominateur portait dix amas de trop : le classifieur avait promu une
+**rangée de paroles entière** en rangée d'accords — celle du système
+précédent, comme il arrive quand un système n'a pas d'accords imprimés
+(défaut connu depuis l'itération 23). Elle ne publiait rien, mais elle
+pesait, et elle seule maintenait la page sous la barre.
+
+Séparer ces rangées par la géométrie a été **mesuré et rejeté** : abaisser
+`lyric_min_clusters` à 10 coûte 43 étiquettes publiées ailleurs, dont huit
+sur un chant certifié. Le réglage global paie donc le cas particulier au
+prix fort. `not_rows` fait le contraire : c'est l'œil qui désigne la
+rangée, une à la fois, et l'on note ce qu'il a vu. La page passe à 76 %.
+
+*Une couverture n'est pas seulement ce que l'on publie ; c'est un rapport,
+et son dénominateur est aussi une hypothèse.*
+
+### Itération 28 — masquer, quand on ne peut pas transposer
+
+Deux partitions fournies pour être mises en ligne :
+**赞美中信心不断升起** (赞美之泉, 1=C) et **主我献上生命给你**
+(约书亚乐团 / Don Moen, 1=F). Corpus 125 → **127**.
+
+Le second n'existait pas du tout sur le site : son `.cho` a été écrit
+depuis le scan par la méthode pixel du skill `chord-placement` (bandes,
+amas, appariement accord → syllabe par distance), avec les mélismes notés
+`[X][ ]` comme le fait déjà 我安然居住.
+
+**赞美中信心不断升起 : deux familles d'échec, opposées.** Les huit `C`
+seuls sont les étiquettes les **moins** bien notées de la page (+0,32 à
++0,41) — une lettre unique a une boîte étroite, et le score s'en ressent.
+Les neuf `G` sont les **mieux** notées (+0,70 à +0,80) et pourtant les
+seules refusées : `keep` exige `score ≥ MIN_SCORE` **et** l'unanimité du
+jury, et sur cette gravure les sept fontes lisent ce glyphe autrement.
+*Aucun score ne rachète un jury divisé* — c'est voulu (l'unanimité est ce
+qui tient FAUX = 0 depuis l'itération 20), mais il faut savoir que cela
+coûte une page entière : 74 % au lieu de 100 %. Les dix-sept relus, la
+page est à **38/38**.
+
+**主我献上生命给你 imprime deux rangées d'accords par système** — les
+positions de capo (`E A/E B/E F#m/E…`) au-dessus des accords réels
+(`F Bb/F C/F Gm/F…`), sous un « 1=F ». C'est le cas laissé de côté le
+09/08 ; Timothée a tranché le 20/08 : **masquer la rangée de capo, publier
+la rangée réelle.**
+
+Et `foreign_rows` ne pouvait pas s'en charger, pour une raison de
+structure et non de réglage : le classifieur laisse ces rangées en
+`chords?` **parce qu'elles sont suivies d'une rangée d'accords, pas de
+chiffres**. Elles n'entrent donc jamais dans `read()` — et ce que `read()`
+ignore, `foreign_rows` ignore aussi, puisqu'il travaille sur les mêmes
+rangées. Le détecteur de tonalité étrangère est aveugle exactement là où
+la tonalité étrangère est la plus régulière.
+
+`mask_rows` comble ce trou : une liste de `top` de rangées que l'œil a
+désignées, publiées comme des étiquettes **sans texte** — le cadre masque,
+rien ne s'écrit. Elles ne pèsent pas sur la couverture : on n'a pas
+prétendu les lire. Cinq rangées, 40 amas masqués.
+
+**Ce que l'audit a montré et qu'aucun compteur n'aurait donné.** À 38/39 la
+page semblait finie. Le seul amas manquant, `1945,1018`, **soudait
+`Bb/F` et `F`** — 12 px les séparent. Une `correction` n'y aurait écrit
+qu'un accord des deux, et l'autre serait resté en fa au milieu d'accords
+en fa# : le mode D, fabriqué à la main, sur une page par ailleurs
+impeccable. Deux `extra_labels` mesurées au zoom (x=1019-1083 et
+x=1096-1107) séparent les deux. *Un amas n'est pas une étiquette — c'est
+une hypothèse sur le nombre d'étiquettes.*
+
+Les deux `1=X` ont été mesurés à la main : `measure-keylabel` ne propose
+rien sur ces pages, le libellé étant collé au chiffrage de mesure et, pour
+l'une, à « （注意XM7=Xmaj7） », pour l'autre à « [共2页] ».
+
+**Ce qui reste sur ces deux pages.** Ni l'une ni l'autre n'est certifiée :
+le contrôle navigateur (thèmes clair et sombre) n'a pas été fait, et
+c'est lui qui manque pour écrire `verified` puis geler. Et
+赞美中信心不断升起 annonce « [共2页] » — seule la page 1 a été fournie.
