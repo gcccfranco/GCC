@@ -293,8 +293,12 @@ def build(slug: str):
     # On les **masque** — un cadre sans texte, posé comme les autres — et
     # elles ne pèsent pas sur la couverture : on n'a pas prétendu les lire.
     # C'est l'œil qui les désigne, une rangée à la fois, comme `not_rows`.
+    # Une fois la page gelée, `frozen_labels` **est** le calque publié, masques
+    # compris (freeze.py recopie tout `labels`). Les reposer ici les
+    # dupliquerait — deux cadres identiques l'un sur l'autre, invisibles à
+    # l'œil et faux dans les données.
     masked = {int(y) for y in gold.get("mask_rows", [])}
-    if masked:
+    if masked and not gold.get("frozen_labels"):
         _i, _w, feats, _k = classify(path)
         found = {f["top"]: f for f in feats if f["top"] in masked}
         for top in sorted(masked - set(found)):
