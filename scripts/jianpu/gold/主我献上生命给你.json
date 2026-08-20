@@ -1,0 +1,70 @@
+{
+ "slug": "主我献上生命给你",
+ "mask_rows": [
+  240,
+  653,
+  1096,
+  1464,
+  1867
+ ],
+ "mask_rows_verified": "les 5 rangées de positions de capo (E A/E B/E F#m/E… gravées au-dessus de F Bb/F C/F Gm/F…), relues sur debug/主我献上生命给你.png — 2026-08-20",
+ "not_rows": [
+  788,
+  1997
+ ],
+ "not_rows_verified": "y=788 : points d'octave et barres de mesure du système 2 ; y=1997 : crochets de reprise 1./2. et les notes 5 3 de la voix supérieure — aucun accord dans ni l'une ni l'autre — 2026-08-20",
+ "corrections": {
+  "317,422": "Bb/F",
+  "317,794": "C/F",
+  "317,1210": "Gm/F",
+  "317,1462": "C/E",
+  "730,360": "Bb2",
+  "730,1117": "Bb",
+  "730,1350": "Gm7/C",
+  "1162,1108": "Bb",
+  "1162,1318": "BbM7/C",
+  "1162,1466": "C",
+  "1541,960": "F/A",
+  "1541,1089": "Bb",
+  "1541,1290": "BbM7/C",
+  "1541,1435": "A7/C#",
+  "1945,212": "Am7/C",
+  "1945,558": "BbM7/C",
+  "1945,702": "Gm/C",
+  "1945,940": "C/F",
+  "1945,1174": "C/F",
+  "1945,1253": "Bb/F",
+  "730,719": "Gm7",
+  "730,912": "F/A",
+  "1541,803": "Gm9"
+ },
+ "corrections_verified": "les 5 rangées F relues au pixel (bandes, amas, zooms) pendant la transcription du .cho — 2026-08-20. L'amas 1945,1018 reste manquant : il soude Bb/F et F en un seul amas, et une correction n'y écrirait qu'un des deux accords.",
+ "not_labels": [
+  "1162,140"
+ ],
+ "not_labels_verified": "1162,140 = le libellé 【Chorus】, pas un accord — 2026-08-20",
+ "key_label": {
+  "x": 14,
+  "y": 165,
+  "w": 77,
+  "h": 25
+ },
+ "key_label_verified": "mesuré à la main : measure-keylabel ne propose rien sur cette page, le « 1= F » étant suivi du chiffrage 4/4 et de « （注意XM7=Xmaj7） » dans la même bande. Amas « 1= » x=14-48 et « F » x=78-90, y=165-189 ; le cadre s'arrête à x=95, bien avant le 4/4 (x=122) — 2026-08-20",
+ "extra_labels": [
+  {
+   "x": 1019,
+   "y": 1945,
+   "w": 65,
+   "h": 32,
+   "c": "Bb/F"
+  },
+  {
+   "x": 1096,
+   "y": 1945,
+   "w": 12,
+   "h": 32,
+   "c": "F"
+  }
+ ],
+ "extra_verified": "l'amas 1945,1018 soude « Bb/F F » en un seul bloc (les deux étiquettes ne sont séparées que de 12 px) : une correction n'y écrirait qu'un accord et l'autre resterait en fa au milieu d'accords transposés. Sous-amas mesurés à l'œil au zoom, x=1019-1083 et x=1096-1107 — 2026-08-20"
+}
