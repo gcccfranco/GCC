@@ -11,6 +11,9 @@ import {
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -36,6 +39,8 @@ import { useScrollDirection } from "@/hooks/useScrollDirection";
 import { ListView } from "./_components/ListView";
 import { PartitionsView } from "./_components/PartitionView";
 import { getChartStylePref, setChartStylePref } from "@/lib/chartStylePref";
+import { jianpuPngDataUrl, loadJianpuChords, loadJianpuManifest, useJianpuManifest } from "@/lib/jianpu/images";
+import { getJianpuPref, setJianpuPref, sheetEnabled, type JianpuPref } from "@/lib/jianpu/preference";
 import { fetchSongAST, type SongContent} from "@/lib/api/songs";
 import { PerformanceMode } from "@/components/performance/PerformanceMode";
 import { EditLineSheet, type EditLineTarget } from "@/components/setlists/EditLineSheet";
@@ -97,6 +102,9 @@ export function SetlistDetailClient() {
   const [showPinyin, setShowPinyin] = useState(true);
   // Couleurs par section — préférence par appareil partagée (fiche chant, mode louange).
   const [chartStyle, setChartStyle] = useState(true);
+  // Partition 简谱 : suivre le choix du responsable, l'imposer, ou l'ignorer —
+  // par appareil, comme en mode louange.
+  const [jianpuPref, setJianpuPrefState] = useState<JianpuPref>("auto");
   const [view, setView] = useState<"liste" | "partitions">("liste");
   const [deleting, setDeleting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -124,11 +132,21 @@ export function SetlistDetailClient() {
   useEffect(() => {
     setShowPinyin(localStorage.getItem("gcc.showPinyin") !== "0");
     setChartStyle(getChartStylePref());
+    setJianpuPrefState(getJianpuPref());
   }, []);
   const toggleChartStyle = (v: boolean) => {
     setChartStyle(v);
     setChartStylePref(v);
   };
+  const changeJianpuPref = (v: JianpuPref) => {
+    setJianpuPrefState(v);
+    setJianpuPref(v);
+  };
+  // Le réglage 简谱 n'apparaît que si un chant de la setlist a un scan.
+  const jianpuManifest = useJianpuManifest();
+  const hasJianpuSheets = (setlist?.items ?? []).some(
+    (it) => it.songSlug && jianpuManifest?.[it.songSlug],
+  );
   function togglePinyin() {
     setShowPinyin((v) => {
       const next = !v;
@@ -220,8 +238,32 @@ export function SetlistDetailClient() {
         );
         setContents(allContents);
         const { SetlistFullPDF } = await import("@/components/pdf/SetlistFullPDF");
+        // Le rendu PDF n'exécute pas d'effets : les manifestes 简谱 doivent
+        // être résolus avant l'appel.
+        const [sheets, sheetChords] = await Promise.all([loadJianpuManifest(), loadJianpuChords()]);
+        // Ré-encodage PNG des seules pages réellement imprimées.
+        const sheetFiles = setlist.items.flatMap((it) =>
+          sheetEnabled(jianpuPref, it.jianpuSheet)
+            ? (sheets[it.songSlug]?.pages ?? []).map((p) => p.file)
+            : [],
+        );
+        const sheetImages: Record<string, string> = {};
+        await Promise.all(
+          sheetFiles.map(async (file) => {
+            const url = await jianpuPngDataUrl(file);
+            if (url) sheetImages[file] = url;
+          }),
+        );
         const blob = await pdf(
-          <SetlistFullPDF setlist={setlist} contents={allContents} showChords={showChords} />
+          <SetlistFullPDF
+            setlist={setlist}
+            contents={allContents}
+            showChords={showChords}
+            jianpuSheets={sheets}
+            jianpuChords={sheetChords}
+            jianpuImages={sheetImages}
+            jianpuPref={jianpuPref}
+          />
         ).toBlob();
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
@@ -769,6 +811,28 @@ export function SetlistDetailClient() {
                       >
                         {t("performance.chartStyle")}
                       </DropdownMenuCheckboxItem>
+                      {hasJianpuSheets && (
+                        <>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
+                            {t("performance.jianpuSheet")}
+                          </DropdownMenuLabel>
+                          <DropdownMenuRadioGroup
+                            value={jianpuPref}
+                            onValueChange={(v) => changeJianpuPref(v as JianpuPref)}
+                          >
+                            {(["auto", "always", "never"] as const).map((v) => (
+                              <DropdownMenuRadioItem
+                                key={v}
+                                value={v}
+                                onSelect={(e) => e.preventDefault()}
+                              >
+                                {t(`performance.jianpuPref.${v}`)}
+                              </DropdownMenuRadioItem>
+                            ))}
+                          </DropdownMenuRadioGroup>
+                        </>
+                      )}
                       <DropdownMenuSeparator />
                     </>
                   )}
@@ -876,7 +940,7 @@ export function SetlistDetailClient() {
             {t("setlists.detail.emptyItems")}
           </p>
         ) : view === "liste" ? (
-          <ListView items={setlist.items} songsMap={songsMap} />
+          <ListView items={setlist.items} songsMap={songsMap} jianpuPref={jianpuPref} />
         ) : (
           <>
             {editPartitions && (
@@ -894,6 +958,7 @@ export function SetlistDetailClient() {
               showChordsGlobal={showChords}
               showPinyinGlobal={showPinyin}
               chartStyle={chartStyle}
+              jianpuPref={jianpuPref}
               editMode={editPartitions}
               onSelectLine={handleSelectLine}
               onRevert={(itemIndex) => setConfirmRevert(itemIndex)}
