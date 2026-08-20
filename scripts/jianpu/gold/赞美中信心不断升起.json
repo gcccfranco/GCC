@@ -1,0 +1,34 @@
+{
+ "slug": "赞美中信心不断升起",
+ "corrections": {
+  "320,53": "C",
+  "320,1426": "C",
+  "532,202": "C",
+  "532,1266": "C",
+  "821,498": "C",
+  "821,1299": "C",
+  "1688,74": "C",
+  "1977,1160": "C",
+  "320,244": "G",
+  "320,1312": "G",
+  "532,547": "G",
+  "532,1036": "G",
+  "821,1067": "G",
+  "1105,660": "G",
+  "1399,1221": "G",
+  "1688,458": "G",
+  "1977,940": "G"
+ },
+ "corrections_verified": "deux familles, toutes deux relues sur debug/赞美中信心不断升起.png — 2026-08-20. (1) les 8 « C » seuls, mal notés (+0,32 à +0,41) parce que la boîte d'une lettre unique est étroite. (2) les 9 « G », qui sont au contraire les étiquettes les MIEUX notées de la page (+0,70 à +0,80) et les seules refusées : `keep` exige l'unanimité du jury de fontes, et sur cette gravure les sept fontes lisent ce glyphe différemment. Le score ne peut pas racheter un jury divisé.",
+ "not_labels": [
+  "1105,165"
+ ],
+ "not_labels_verified": "1105,165 = le libellé 【Chorus】, pas un accord (lu Dm à -1,54) — 2026-08-20",
+ "key_label": {
+  "x": 19,
+  "y": 217,
+  "w": 81,
+  "h": 26
+ },
+ "key_label_verified": "amas « 1= » x=19-53 et « C » x=82-99, y=217-242 ; le cadre s'arrête à x=107, avant le chiffrage 4/4 (x=127) et le « [共2页] » (x=195) — 2026-08-20"
+}
