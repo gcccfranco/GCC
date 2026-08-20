@@ -166,7 +166,7 @@ rangées les tronque.
 | 25 | contrôle 112/179, **FAUX = 0** tenu · `dissent.py --isolated` classe les étiquettes **seules dans leur rangée** | **3 parasites publiés** trouvés sur 36 zooms (2 arcs de liaison, 1 titre anglais) · `not_labels` les retire | 12 /125 · calques **78** inchangés, 2500 → **2497** étiquettes |
 | 26 | contrôle 112/179, **FAUX = 0** tenu | 22 amas relus sur les pages au ras du plancher · le veto de fonte voit enfin les `corrections` | 12 /125 · calques 78 → **81**, 2497 → **2559** étiquettes |
 | 27 | contrôle 112/179, **FAUX = 0** tenu | 25 amas relus · `not_rows` retire une rangée de paroles promue à tort | 12 /125 · calques 81 → **84**, 2559 → **2683** étiquettes |
-| 28 | corpus **127** (+2 partitions fournies) · planche A=7 · B=0 sur les deux | 40 amas relus · `mask_rows` masque les rangées de **capo** | 12 /127 · calques 84 → **86**, 2683 → **2801** étiquettes |
+| 28 | corpus **127** (+2 partitions fournies) · planche A=7 · B=0 sur les deux | 40 amas relus · `mask_rows` masque les rangées de **capo** | **14 /127 certifiés** · calques 84 → **86**, 2683 → **2801** étiquettes |
 
 ## Journal
 
@@ -1842,7 +1842,22 @@ Les deux `1=X` ont été mesurés à la main : `measure-keylabel` ne propose
 rien sur ces pages, le libellé étant collé au chiffrage de mesure et, pour
 l'une, à « （注意XM7=Xmaj7） », pour l'autre à « [共2页] ».
 
-**Ce qui reste sur ces deux pages.** Ni l'une ni l'autre n'est certifiée :
-le contrôle navigateur (thèmes clair et sombre) n'a pas été fait, et
-c'est lui qui manque pour écrire `verified` puis geler. Et
-赞美中信心不断升起 annonce « [共2页] » — seule la page 1 a été fournie.
+**Les deux pages sont certifiées** (12 → **14 /127**). Contrôle navigateur
+fait sur les deux, en thèmes clair et sombre : Chrome headless piloté en
+CDP par le `WebSocket` natif de Node 24, avec le `Page.reload{ignoreCache}`
+sans lequel la seconde capture est servie du cache et sort identique au bit
+près. Les rangées de capo disparaissent proprement — fond **noir pur** en
+thème sombre, aucun pavé gris, le défaut de l'itération du 01/08 ne
+revient pas par les masques. Puis gelées : 80 et 38 étiquettes.
+
+**Le gel et le masque devaient être accordés.** `freeze.py` recopie tout
+`labels`, masques compris ; les reposer au build suivant les aurait
+dupliqués — deux cadres identiques l'un sur l'autre, invisibles à l'œil et
+faux dans les données. `mask_rows` ne s'applique donc pas quand la page est
+gelée : le calque gelé *est* le calque publié.
+
+**Ce qui reste.** Une réserve cosmétique sur 主我献上生命给你 : au système
+5, « C#/F# » et « B/F# » se touchent, les noms transposés étant plus larges
+que ceux gravés — lisible, mais serré, et c'est une propriété générale du
+calque, pas de cette page. Et 赞美中信心不断升起 annonce « [共2页] » :
+seule la page 1 a été fournie.
