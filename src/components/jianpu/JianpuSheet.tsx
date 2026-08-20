@@ -3,7 +3,7 @@
 import Image from "next/image";
 import type { JianpuEntry } from "@/lib/jianpu/images";
 import { jianpuImageUrl, useJianpuChords } from "@/lib/jianpu/images";
-import { semitonesTo, transposeChord } from "@/lib/transpose";
+import { getTransposedKey, semitonesTo, transposeChord } from "@/lib/transpose";
 
 type JianpuSheetProps = {
   entry: JianpuEntry;
@@ -17,6 +17,13 @@ type JianpuSheetProps = {
   /** Tonalité à jouer. Si le chant a un calque, les accords sont réécrits
    *  dedans ; sinon un bandeau prévient que ceux du scan ne suivent pas. */
   playedKey?: string | null;
+  /** Capo (frets) : les accords du calque passent en positions, comme les
+   *  grilles ChordPro du Mode Louange. Le « 1=X » et la tonalité du titre
+   *  décrivent le son produit et ne bougent donc pas. */
+  capo?: number;
+  /** N'afficher que cette page du scan. Le Mode Louange donne une page
+   *  d'écran par page de partition ; ailleurs, tout le scan défile. */
+  pageIndex?: number;
 };
 
 /** Partition 简谱 en image. Les chiffres, durées, points d'octave et
@@ -27,14 +34,22 @@ type JianpuSheetProps = {
  *  Le calque est en HTML positionné en pourcentage de l'image, pas en
  *  PNG pré-rendu : 124 chants × 12 tonalités serait intenable, et la
  *  transposition doit rester instantanée. */
-export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey }: JianpuSheetProps) {
+export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey, capo = 0, pageIndex }: JianpuSheetProps) {
   const fit = layout === "fit";
   const chords = useJianpuChords(slug);
+  // Une seule page en Mode Louange, tout le scan ailleurs. L'index d'origine
+  // est conservé : le calque ne concerne que la première page du scan.
+  const shownPages = pageIndex == null ? entry.pages : entry.pages.slice(pageIndex, pageIndex + 1);
+  const firstShown = pageIndex ?? 0;
 
   // Le décalage se calcule depuis la tonalité IMPRIMÉE sur le PDF, pas
   // depuis celle du .cho : 32 chants ont un 简谱 dans une autre tonalité.
   const semitones =
     chords && playedKey ? semitonesTo(chords.printedKey, playedKey) : 0;
+  // Capo : les accords descendent d'autant de demi-tons et s'orthographient
+  // dans la tonalité des positions, pas dans celle qui sonne.
+  const chordSemitones = semitones - capo;
+  const chordKey = getTransposedKey(playedKey ?? chords?.printedKey ?? "C", -capo);
   const overlayOn = Boolean(chords && playedKey);
   const staleChords = Boolean(playedKey && !chords);
   // Calque partiel : une partie des accords n'a pas été relevée et reste
@@ -66,13 +81,31 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey }: 
         </div>
       )}
 
-      {entry.pages.map((page, i) => (
+      {/* `fit` : la zone restante devient un conteneur de taille, ce qui permet
+          de borner la page en hauteur (100cqh) autant qu'en largeur (100%).
+          Borner la seule hauteur suffisait pour un scan portrait, mais un scan
+          large débordait alors des deux côtés. */}
+      <div
+        className={fit ? "flex min-h-0 w-full flex-1 items-center justify-center" : "contents"}
+        style={fit ? { containerType: "size" } : undefined}
+      >
+      {shownPages.map((page, n) => {
+        const i = firstShown + n;
+        return (
         <div
           key={page.file}
-          className={fit ? "relative min-h-0 flex-1" : "relative w-full"}
-          // `containerType` permet d'exprimer la taille du texte du calque en
-          // cqw : il suit alors l'échelle de l'image sans mesure JS.
-          style={{ containerType: "inline-size", ...(fit ? { aspectRatio: `${page.w} / ${page.h}` } : {}) }}
+          className={fit ? "relative mx-auto" : "relative w-full"}
+          // `containerType: inline-size` permet d'exprimer la taille du texte du
+          // calque en cqw : il suit l'échelle de l'image sans mesure JS.
+          style={{
+            containerType: "inline-size",
+            ...(fit
+              ? {
+                  aspectRatio: `${page.w} / ${page.h}`,
+                  width: `min(100%, calc(100cqh * ${page.w} / ${page.h}))`,
+                }
+              : {}),
+          }}
         >
           <Image
             src={jianpuImageUrl(page.file)}
@@ -83,7 +116,7 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey }: 
             }
             width={page.w}
             height={page.h}
-            priority={i === 0}
+            priority={n === 0}
             className={
               fit
                 ? "h-full w-full object-contain dark:invert dark:hue-rotate-180"
@@ -156,13 +189,15 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey }: 
                     fontFamily: "Times New Roman, Georgia, serif",
                   }}
                 >
-                  {transposeChord(l.c, semitones, playedKey ?? chords.printedKey)}
+                  {transposeChord(l.c, chordSemitones, chordKey)}
                 </span>
               ))}
             </div>
           )}
         </div>
-      ))}
+        );
+      })}
+      </div>
     </div>
   );
 }
