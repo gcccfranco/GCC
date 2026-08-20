@@ -14,6 +14,7 @@ import {
 import type { PerformanceBlock, SectionBlock, JianpuSheetBlock, SongHeaderBlock } from "@/lib/performance/blocks";
 import { buildPerformanceBlocks, computePageKey } from "@/lib/performance/blocks";
 import { useJianpuManifest } from "@/lib/jianpu/images";
+import { getJianpuPref, setJianpuPref, type JianpuPref } from "@/lib/jianpu/preference";
 import { JianpuSheet } from "@/components/jianpu/JianpuSheet";
 import { SectionView, TransitionNote } from "@/components/song/SongView";
 import { AnnotationCanvas, StrokesLayer } from "./AnnotationCanvas";
@@ -58,6 +59,7 @@ function BlockRenderer({
   hideLyrics,
   chartStyle,
   showPinyinGlobal,
+  fit = false,
 }: {
   block: PerformanceBlock;
   showChordsGlobal: boolean;
@@ -65,6 +67,8 @@ function BlockRenderer({
   hideLyrics: boolean;
   chartStyle: boolean;
   showPinyinGlobal: boolean;
+  /** Page 简谱 : le scan se met à l'échelle de la hauteur disponible. */
+  fit?: boolean;
 }) {
   if (block.kind === "song-header") {
     return <SongHeader block={block} />;
@@ -84,6 +88,9 @@ function BlockRenderer({
         title={block.songTitle}
         slug={block.songSlug}
         playedKey={block.playedKey}
+        capo={block.capo}
+        pageIndex={block.pageIndex}
+        layout={fit ? "fit" : "flow"}
       />
     );
   }
@@ -171,15 +178,17 @@ function SongHeader({ block }: { block: SongHeaderBlock }) {
 // Une page de rendu : en-tête de chant éventuel (pleine largeur), une ou deux
 // colonnes de blocs, et un facteur d'échelle ≤ 1 (ajustement automatique pour
 // faire tenir toute la structure d'un chant sur sa page en mode ossature).
-type PerfPage = { header: number | null; cols: number[][]; scale: number };
+// `fit` : page occupée par une partition 简谱, qui se met à l'échelle de la
+// hauteur disponible au lieu d'être paginée (une image ne se coupe pas).
+type PerfPage = { header: number | null; cols: number[][]; scale: number; fit?: boolean };
 
 // Mode normal : une colonne par page. Chaque chant commence sur une nouvelle page
 // (breakBefore = en-têtes de chant) ; à l'intérieur d'un chant, remplissage glouton.
-function paginateBlocks(heights: number[], viewportH: number, breakBefore: Set<number>): number[][] {
+function paginateBlocks(idxs: number[], heights: number[], viewportH: number, breakBefore: Set<number>): number[][] {
   const pages: number[][] = [];
   let current: number[] = [];
   let used = 0;
-  for (let i = 0; i < heights.length; i++) {
+  for (const i of idxs) {
     const h = heights[i];
     if ((breakBefore.has(i) && current.length > 0) || (current.length > 0 && used + h > viewportH)) {
       pages.push(current);
@@ -191,6 +200,35 @@ function paginateBlocks(heights: number[], viewportH: number, breakBefore: Set<n
   }
   if (current.length > 0) pages.push(current);
   return pages.length > 0 ? pages : [[]];
+}
+
+// Une page de scan 简谱 = une page d'écran, avec l'en-tête du chant s'il la
+// précède immédiatement. Le reste des blocs est paginé normalement autour.
+function splitSheetPages(
+  idxs: number[],
+  kindOf: (i: number) => PerformanceBlock["kind"] | undefined,
+  paginate: (flow: number[]) => PerfPage[],
+): PerfPage[] {
+  const out: PerfPage[] = [];
+  let flow: number[] = [];
+  const flush = () => {
+    if (flow.length > 0) out.push(...paginate(flow));
+    flow = [];
+  };
+  for (const i of idxs) {
+    if (kindOf(i) !== "jianpu-sheet") {
+      flow.push(i);
+      continue;
+    }
+    // L'en-tête juste avant la partition part avec elle : titre et tonalité
+    // en haut, scan en dessous.
+    const last = flow[flow.length - 1];
+    const header = last !== undefined && kindOf(last) === "song-header" ? flow.pop()! : null;
+    flush();
+    out.push({ header, cols: [[i]], scale: 1, fit: true });
+  }
+  flush();
+  return out;
 }
 
 // Mode ossature : UN CHANT PAR PAGE. L'en-tête occupe la pleine largeur ; les
@@ -369,6 +407,15 @@ export function PerformanceMode({
     setChartStylePref(v);
   }, []);
 
+  // Partition 简谱 : suivre le choix du responsable, l'imposer, ou l'ignorer.
+  // Par appareil — le pianiste lit le scan pendant que le guitariste lit la
+  // grille, sur la même setlist.
+  const [jianpuPref, setJianpuPrefState] = useState<JianpuPref>(() => getJianpuPref());
+  const changeJianpuPref = useCallback((v: JianpuPref) => {
+    setJianpuPrefState(v);
+    setJianpuPref(v);
+  }, []);
+
   const clearRolePreset = useCallback(() => {
     setRolePreset(null);
     try { localStorage.removeItem("perf-role-preset"); } catch { /* ignore */ }
@@ -415,11 +462,16 @@ export function PerformanceMode({
 
   // Build flat block list (memoised — only changes when content changes)
   const jianpuManifest = useJianpuManifest();
+  // Le réglage 简谱 n'apparaît que si un chant de la setlist a un scan.
+  const hasJianpuSheets = useMemo(
+    () => items.some((it) => it.songSlug && jianpuManifest?.[it.songSlug]),
+    [items, jianpuManifest],
+  );
   const blocks = useMemo(
     // always build with chords=true for stable UIDs (le capo ne change ni le
     // nombre ni l'ordre des blocs : les UIDs restent stables)
-    () => buildPerformanceBlocks(items, contents, true, capoActive ? capos : undefined, jianpuManifest),
-    [items, contents, capoActive, capos, jianpuManifest],
+    () => buildPerformanceBlocks(items, contents, true, capoActive ? capos : undefined, jianpuManifest, jianpuPref),
+    [items, contents, capoActive, capos, jianpuManifest, jianpuPref],
   );
 
   // Re-measure when a setting affecting heights changes
@@ -457,31 +509,39 @@ export function PerformanceMode({
         const next = rects[i + 1];
         return next ? Math.max(0, next.top - r.top) : r.height;
       });
+      const kindOf = (i: number) => blocks[i]?.kind;
+      const all = blocks.map((_, i) => i);
       let computed: PerfPage[];
       if (structureMode) {
         // Un chant par page : on regroupe l'en-tête et ses sections, puis layoutSong.
+        // Un chant joué sur son 简谱 n'a pas de section à mettre en ossature :
+        // sa partition occupe la page, comme en mode normal.
         const groups: number[][] = [];
         blocks.forEach((b, i) => {
           if (b.kind === "song-header" || groups.length === 0) groups.push([]);
           groups[groups.length - 1].push(i);
         });
-        computed = groups.map((group) => {
-          const headerIdx = blocks[group[0]].kind === "song-header" ? group[0] : null;
-          const body = headerIdx != null ? group.slice(1) : group;
-          return layoutSong(headerIdx, body, heights, viewportH);
-        });
+        computed = groups.flatMap((group) =>
+          splitSheetPages(group, kindOf, (flow) => {
+            const headerIdx = blocks[flow[0]].kind === "song-header" ? flow[0] : null;
+            const body = headerIdx != null ? flow.slice(1) : flow;
+            return [layoutSong(headerIdx, body, heights, viewportH)];
+          }),
+        );
       } else {
         const breakBefore = new Set(blocks.flatMap((b, i) => (b.kind === "song-header" ? [i] : [])));
-        computed = paginateBlocks(heights, viewportH, breakBefore).map((idxs) => {
+        computed = splitSheetPages(all, kindOf, (flow) =>
+          paginateBlocks(flow, heights, viewportH, breakBefore).map((idxs) => {
           // Jamais de section coupée : une page qui déborde quand même (bloc
           // seul plus haut que l'écran) est réduite pour tenir, comme l'ossature.
-          const pageH = idxs.reduce((s, i) => s + heights[i], 0);
-          return {
-            header: null,
-            cols: [idxs],
-            scale: Math.min(1, viewportH / Math.max(1, pageH)),
-          };
-        });
+            const pageH = idxs.reduce((s, i) => s + heights[i], 0);
+            return {
+              header: null,
+              cols: [idxs],
+              scale: Math.min(1, viewportH / Math.max(1, pageH)),
+            };
+          }),
+        );
       }
       setLayout(computed);
       setCurrentPage((prev) => Math.min(prev, Math.max(0, computed.length - 1)));
@@ -766,7 +826,7 @@ export function PerformanceMode({
           // 简谱 arrive en asynchrone et un chant joué sur sa partition passe
           // de N sections à un seul bloc. Le temps que la pagination se
           // recalcule, `pages` porte encore des indices trop grands.
-          const renderBlock = (i: number) => {
+          const renderBlock = (i: number, fit = false) => {
             const block = blocks[i];
             if (!block) return null;
             return (
@@ -778,9 +838,20 @@ export function PerformanceMode({
                 hideLyrics={hideLyrics}
                 chartStyle={chartStyle}
                 showPinyinGlobal={showPinyin}
+                fit={fit}
               />
             );
           };
+          // Page 简谱 : en-tête en haut, scan à l'échelle de la hauteur qui
+          // reste. Pas de pagination — un scan ne se coupe pas en deux.
+          if (page.fit) {
+            return (
+              <div className="flex h-full flex-col">
+                {page.header != null && <div className="shrink-0">{renderBlock(page.header)}</div>}
+                <div className="min-h-0 flex-1">{renderBlock(page.cols[0][0], true)}</div>
+              </div>
+            );
+          }
           return (
             // Réduction d'une page trop haute : transform + largeur compensée,
             // comme le conteneur parent (jamais `zoom` — arrondis de mise en
@@ -800,7 +871,7 @@ export function PerformanceMode({
               <div className={multiCol ? "flex items-start gap-x-4" : undefined}>
                 {page.cols.map((colIdxs, ci) => (
                   <div key={ci} className={multiCol ? "flex-1 min-w-0" : undefined}>
-                    {colIdxs.map(renderBlock)}
+                    {colIdxs.map((i) => renderBlock(i))}
                   </div>
                 ))}
               </div>
@@ -1086,6 +1157,26 @@ export function PerformanceMode({
             <SettingRow label={t("performance.chartStyle")}>
               <Switch checked={chartStyle} onCheckedChange={toggleChartStyle} />
             </SettingRow>
+            {hasJianpuSheets && (
+              <SettingRow label={t("performance.jianpuSheet")}>
+                <div className="flex rounded-md border border-border overflow-hidden">
+                  {(["auto", "always", "never"] as const).map((v) => (
+                    <button
+                      key={v}
+                      type="button"
+                      onClick={() => changeJianpuPref(v)}
+                      className={`px-2.5 py-1 text-xs font-semibold transition-colors ${
+                        jianpuPref === v
+                          ? "bg-primary/10 text-primary"
+                          : "text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      {t(`performance.jianpuPref.${v}`)}
+                    </button>
+                  ))}
+                </div>
+              </SettingRow>
+            )}
             {user && (
               <SettingRow label={t("performance.annotations")}>
                 <Switch checked={showAnnotations} onCheckedChange={setShowAnnotations} />
