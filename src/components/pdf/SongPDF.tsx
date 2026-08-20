@@ -1,15 +1,16 @@
 import {
-  Document, Page, Text, View, StyleSheet, Font,
+  Document, Page, Text, View, StyleSheet, Font, Image,
 } from "@react-pdf/renderer";
 import type { ChordProAST, ChordProSection, Token } from "@/types/chordPro";
 import { formatSectionName } from "@/lib/chordpro/parser";
 import { resolveStructureOverride } from "@/lib/chordpro/structure";
-import { semitonesTo } from "@/lib/transpose";
+import { semitonesTo, transposeChord } from "@/lib/transpose";
 import { transposeSection } from "@/lib/transposeAST";
 import frTranslations from "@/locales/fr.json";
 import zhTranslations from "@/locales/zh-CN.json";
 import { measureLyric, measureChord } from "@/lib/chordpro/measureText";
 import type { SectionNuance } from "@/types/setList";
+import type { JianpuChords, JianpuPage } from "@/lib/jianpu/images";
 import { nuanceLabel, NUANCE_COLOR } from "@/lib/setlist/nuances";
 
 // ─── Fonts ────────────────────────────────────────────────────────────────────
@@ -934,3 +935,182 @@ const styles = StyleSheet.create({
     fontFamily: "LiberationSans",
   },
 });
+
+// ─── Page partition 简谱 (scan) ───────────────────────────────────────────────
+
+// Cadre disponible pour le scan : A4 moins les marges de `styles.page`, moins
+// la bande du pied de page. L'image s'y met à l'échelle en conservant son
+// ratio — jamais rognée, jamais étirée.
+const SHEET_BOX_W = 595.28 - 2 * 50;
+const SHEET_BOX_H = 841.89 - 36 - 46 - 20;
+
+/** Une page de scan 简谱, avec le calque d'accords transposé redessiné par
+ *  dessus (mêmes coordonnées que le calque web, converties en points). */
+export function JianpuPDFPage({
+  src,
+  page,
+  chords,
+  title,
+  titlePinyin,
+  playedKey,
+  headerHeight = 0,
+  footerCenter,
+}: {
+  src: string;
+  page: JianpuPage;
+  chords?: JianpuChords | null;
+  title: string;
+  titlePinyin?: string | null;
+  /** Tonalité jouée, si elle diffère de celle imprimée sur le scan. */
+  playedKey?: string | null;
+  /** Hauteur réservée à l'en-tête (0 = page suivante d'un scan multi-pages). */
+  headerHeight?: number;
+  footerCenter?: string;
+}) {
+  const availH = SHEET_BOX_H - headerHeight;
+  const k = Math.min(SHEET_BOX_W / page.w, availH / page.h);
+  const imgW = page.w * k;
+  const imgH = page.h * k;
+  // Le calque est relevé sur une image d'une autre définition que le scan
+  // affiché : tout est ramené à l'échelle du rendu.
+  const ck = chords ? imgW / chords.w : 0;
+  const overlayOn = Boolean(chords && playedKey);
+  const partial = Boolean(overlayOn && chords?.complete === false);
+  const semitones = chords && playedKey ? semitonesTo(chords.printedKey, playedKey) : 0;
+  const chordColor = partial ? "#2563eb" : "#000";
+  const centerLabel = footerCenter ?? title;
+
+  return (
+    <Page size="A4" style={styles.page}>
+      {headerHeight > 0 && (
+        <View style={styles.header}>
+          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" }}>
+            <View style={{ flex: 1, marginRight: 16 }}>
+              <Text style={{ fontSize: 20, fontWeight: 700, color: C.title, fontFamily: "KaiTi", lineHeight: 1.1 }}>
+                {title}
+              </Text>
+              {titlePinyin && (
+                <Text style={{ fontSize: 10, color: C.subtitle, fontFamily: "SourceHanSansCN", fontWeight: 300 }}>
+                  {titlePinyin}
+                </Text>
+              )}
+            </View>
+            {playedKey && (
+              <View style={{ borderWidth: 1.5, borderColor: RED_THEME.accent, borderRadius: 20,
+                             paddingHorizontal: 12, paddingVertical: 4 }}>
+                <Text style={{ fontFamily: "SpaceGrotesk", fontWeight: 700, fontSize: 12, color: RED_THEME.accent }}>
+                  {playedKey}
+                </Text>
+              </View>
+            )}
+          </View>
+          <View style={{ height: 0.5, backgroundColor: C.rule, marginTop: 8 }} />
+        </View>
+      )}
+
+      <View style={{ alignItems: "center", marginTop: headerHeight > 0 ? 10 : 0 }}>
+        <View style={{ width: imgW, height: imgH, position: "relative" }}>
+          <Image src={src} style={{ width: imgW, height: imgH }} />
+
+          {/* Calque : le pavé blanc masque l'accord d'origine, le texte le
+              réécrit au même endroit. Seule la 1re page du scan est relevée. */}
+          {overlayOn && chords && (
+            <>
+              {chords.keyLabel && (
+                <SheetLabel box={chords.keyLabel} k={ck} h={chords.labelH} color="#000">
+                  {`1=${playedKey}`}
+                </SheetLabel>
+              )}
+              {chords.titleKey && (
+                <SheetLabel box={chords.titleKey} k={ck} h={chords.titleKey.h * 0.78} color="#000" font="SourceHanSansCN">
+                  {`（${playedKey}调）`}
+                </SheetLabel>
+              )}
+              {chords.labels.map((l, i) => (
+                <SheetLabel key={i} box={l} k={ck} h={chords.labelH} color={chordColor}>
+                  {transposeChord(l.c, semitones, playedKey!)}
+                </SheetLabel>
+              ))}
+            </>
+          )}
+        </View>
+
+        {partial && (
+          <Text style={{ fontSize: 8, color: C.subtitle, fontFamily: "LiberationSans", marginTop: 6 }}>
+            {`Jouer en ${playedKey} — seuls les accords en bleu ont été transposés ; les autres sont ceux d'origine (${chords?.printedKey}).`}
+          </Text>
+        )}
+        {playedKey && !chords && (
+          <Text style={{ fontSize: 8, color: C.subtitle, fontFamily: "LiberationSans", marginTop: 6 }}>
+            {`Jouer en ${playedKey} — les chiffres restent justes, mais les accords imprimés sur ce scan sont ceux d'origine.`}
+          </Text>
+        )}
+      </View>
+
+      <View style={styles.footer} fixed>
+        <Text style={[styles.footerText, { fontFamily: "LiberationSans", fontWeight: 700,
+                       color: RED_THEME.accent, letterSpacing: 1 }]}>
+          GCC LOUANGE
+        </Text>
+        <Text style={[styles.footerText, { fontFamily: footerLabelFont(centerLabel), fontWeight: 400 }]}>
+          {centerLabel}
+        </Text>
+        <Text
+          style={[styles.footerText, { fontFamily: "LiberationSans", fontWeight: 400 }]}
+          render={({ pageNumber, totalPages }) => `Page ${pageNumber} / ${totalPages}`}
+        />
+      </View>
+    </Page>
+  );
+}
+
+/** Un accord réécrit sur le scan : pavé blanc + texte, aux coordonnées du
+ *  calque (pixels image) converties en points. Les débords repris du rendu
+ *  web (−3/−6 px, +7/+8 px) couvrent le crénage du glyphe d'origine.
+ *
+ *  Le texte est posé à côté du pavé, sans largeur imposée : dans une View de
+ *  largeur fixe, react-pdf tronque un libellé plus large que son cadre (le
+ *  rendu web, lui, déborde grâce à `minWidth` + `nowrap`). */
+function SheetLabel({
+  box, k, h, color, font = "Times-Roman", children,
+}: {
+  box: { x: number; y: number; w: number; h: number };
+  k: number;
+  h: number;
+  color: string;
+  font?: string;
+  children: string;
+}) {
+  const left = (box.x - 3) * k;
+  const top = (box.y - 6) * k;
+  const boxH = (box.h + 8) * k;
+  const fontSize = h * k;
+  return (
+    <>
+      <View
+        style={{
+          position: "absolute",
+          left,
+          top,
+          width: (box.w + 7) * k,
+          height: boxH,
+          backgroundColor: "#fff",
+        }}
+      />
+      <Text
+        style={{
+          position: "absolute",
+          left,
+          // Aligné sur le bas du cadre, comme le `items-end` du calque web.
+          top: top + boxH - fontSize,
+          fontSize,
+          color,
+          fontFamily: font,
+          lineHeight: 1,
+        }}
+      >
+        {children}
+      </Text>
+    </>
+  );
+}
