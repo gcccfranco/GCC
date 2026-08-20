@@ -4,6 +4,7 @@ import type { SongContent } from "@/lib/api/songs";
 import { SongView, SectionView, TransitionNote } from "@/components/song/SongView";
 import { JianpuSheet } from "@/components/jianpu/JianpuSheet";
 import { useJianpuScore } from "@/lib/jianpu/images";
+import { sheetEnabled, type JianpuPref } from "@/lib/jianpu/preference";
 import { useTranslation } from "react-i18next";
 import { transposeAST, transposeSection } from "@/lib/transposeAST";
 import { semitonesTo } from "@/lib/transpose";
@@ -31,6 +32,7 @@ export function PartitionsView({
   showChordsGlobal,
   showPinyinGlobal,
   chartStyle,
+  jianpuPref,
   editMode = false,
   onSelectLine,
   onRevert,
@@ -42,6 +44,8 @@ export function PartitionsView({
   showPinyinGlobal: boolean;
   /** Couleurs par section — préférence par appareil, pilotée par la page. */
   chartStyle: boolean;
+  /** Partition 简谱 : suivre le choix du responsable, l'imposer, ou l'ignorer. */
+  jianpuPref: JianpuPref;
   /** Mode « adapter le chant » : lignes tappables (hors fusions), rétablir l'original. */
   editMode?: boolean;
   onSelectLine?: (itemIndex: number, line: ChordProLine, sectionUid?: string) => void;
@@ -203,6 +207,7 @@ export function PartitionsView({
             showPinyinGlobal={showPinyinGlobal}
             editMode={editMode}
             chartStyle={chartStyle}
+            jianpuPref={jianpuPref}
             onSelectLine={onSelectLine}
             onRevert={onRevert}
           />
@@ -220,6 +225,7 @@ function NormalSongItem({
   showPinyinGlobal,
   editMode,
   chartStyle,
+  jianpuPref,
   onSelectLine,
   onRevert,
 }: {
@@ -230,6 +236,7 @@ function NormalSongItem({
   showPinyinGlobal: boolean;
   editMode: boolean;
   chartStyle: boolean;
+  jianpuPref: JianpuPref;
   onSelectLine?: (itemIndex: number, line: ChordProLine, sectionUid?: string) => void;
   onRevert?: (itemIndex: number) => void;
 }) {
@@ -245,7 +252,7 @@ function NormalSongItem({
     return base;
   }, [item, content]);
   // Partition 简谱 choisie pour cet item : le scan remplace les paroles.
-  const jianpuScore = useJianpuScore(item.jianpuSheet ? item.songSlug : null);
+  const jianpuScore = useJianpuScore(sheetEnabled(jianpuPref, item.jianpuSheet) ? item.songSlug : null);
   if (!ast) return null;
 
   return (
@@ -257,9 +264,19 @@ function NormalSongItem({
         {item.notes && (
           <span className="text-xs text-muted-foreground italic">{item.notes}</span>
         )}
+        {jianpuScore && (
+          <span className="text-[10px] px-1.5 py-0.5 rounded-full border border-primary/30 bg-primary/10 text-primary font-semibold print:hidden">
+            谱 简谱
+          </span>
+        )}
+        {/* L'adaptation porte sur les paroles ChordPro : elle n'est pas visible
+            tant que la partition 简谱 remplace le chant. Le dire, plutôt que
+            d'afficher « Version modifiée » sur un scan intact. */}
         {item.contentOverride && (
           <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-400 border border-amber-300/60 dark:border-amber-700/50 font-semibold print:hidden">
-            {t("setlists.contentEdit.modifiedBadge", { defaultValue: "Version modifiée" })}
+            {jianpuScore
+              ? t("setlists.contentEdit.modifiedHidden")
+              : t("setlists.contentEdit.modifiedBadge", { defaultValue: "Version modifiée" })}
           </span>
         )}
         {editMode && item.contentOverride && (
