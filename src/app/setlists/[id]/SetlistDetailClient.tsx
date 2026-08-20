@@ -47,6 +47,7 @@ import {
   deleteSourceLines,
   materializeSectionCopy,
 } from "@/lib/chordpro/editSource";
+import { structUidAt, revertSectionOrigins } from "@/lib/setlist/sectionOrigins";
 
 /** Cible d'édition de ligne + indices source nécessaires à la sauvegarde. */
 type LineEditState = EditLineTarget & {
@@ -60,12 +61,6 @@ type LineEditState = EditLineTarget & {
   structIndex?: number;
 };
 
-/** uid d'une entrée de structureOverride, même convention que
- *  resolveStructureOverride (les entrées legacy sans rang prennent leur index). */
-function structUidAt(ov: string, index: number): string {
-  return /-\d+$/.test(ov) ? ov : `${ov}-${index}`;
-}
-  
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
@@ -521,6 +516,9 @@ export function SetlistDetailClient() {
         ...(sectionTransitions ? { sectionTransitions } : {}),
         ...(sectionNuances ? { sectionNuances } : {}),
         ...(sectionKeys ? { sectionKeys } : {}),
+        // Provenance de la copie : « Rétablir l'original » s'en sert pour
+        // ramener cette occurrence sur la section du chant.
+        sectionOrigins: { ...item.sectionOrigins, [mat.newSectionId]: t.repeatedSectionId },
       },
     };
   }
@@ -565,7 +563,11 @@ export function SetlistDetailClient() {
 
   async function handleRevert(itemIndex: number) {
     setConfirmRevert(null);
-    await persistOverride(itemIndex, undefined);
+    if (!setlist) return;
+    // Les sections matérialisées disparaissent avec le contenu adapté : la
+    // structure doit repointer vers les sections d'origine, sinon les
+    // occurrences modifiées sortent de la setlist.
+    await persistOverride(itemIndex, undefined, revertSectionOrigins(setlist.items[itemIndex]));
   }
 
   if (loadingSetlist) {

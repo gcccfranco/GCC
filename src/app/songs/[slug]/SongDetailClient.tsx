@@ -125,6 +125,10 @@ function safeParseParam<T>(raw: string | null, fallback: T): T {
       [searchParams]
     );
 
+    const sectionsKeys = useMemo(
+      () => safeParseParam<Record<string, string>>(searchParams.get('sectionKeys'), {}),
+      [searchParams]
+    )
     useEffect(() => {
       const structure: SectionItem[] = structureOverride.map((uid: string, index: number) => {
         const sectionId = uid.replace(/-\d+$/, "");
@@ -461,6 +465,7 @@ function safeParseParam<T>(raw: string | null, fallback: T): T {
               structureOverride={structureOverride}
               sectionNotes={sectionsNote}
               sectionNuances={sectionsNuance}
+              sectionKeys={sectionsKeys}
               chartStyle={chartStyle}
             />
           )}

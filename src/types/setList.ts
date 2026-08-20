@@ -51,6 +51,11 @@ export type SetlistItem = {
   /** Source ChordPro modifié pour cette setlist (accords/paroles adaptés) —
    *  remplace le contenu du chant original ; null/absent = original. */
   contentOverride?: string | null;
+  /** Sections matérialisées par le mode Adapter (copie d'une section répétée
+   *  pour n'en modifier qu'une occurrence) : id de la copie → id de la section
+   *  d'origine. Permet à « Rétablir l'original » de re-pointer la structure
+   *  vers les sections du chant au lieu de les perdre. */
+  sectionOrigins?: Record<string, string>;
   notes: string;
   fusionSongs?: FusionSong[];
   mixedStructure?: FusionMixedSection[] | null;

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-20T19:37:48.041Z",
+  "generatedAt": "2026-08-20T23:01:57.993Z",
   "songs": [
     {
       "slug": "abba-pere",
@@ -893,8 +893,7 @@
         {
           "id": "verse-3",
           "name": "Interlude",
-          "type": "other",
-          "suffix": "Interlude"
+          "type": "other"
         },
         {
           "id": "verse-4",
@@ -917,8 +916,7 @@
         {
           "id": "verse-7",
           "name": "Instrumental",
-          "type": "other",
-          "suffix": "Instrumental"
+          "type": "other"
         },
         {
           "id": "bridge-8",
@@ -1872,8 +1870,7 @@
         {
           "id": "instrumental-5",
           "name": "Instrumental",
-          "type": "other",
-          "suffix": "Instrumental"
+          "type": "other"
         },
         {
           "id": "verse-6",
@@ -5490,8 +5487,7 @@
         {
           "id": "verse-5",
           "name": "Interlude",
-          "type": "other",
-          "suffix": "Interlude"
+          "type": "other"
         },
         {
           "id": "verse-6",
@@ -5637,8 +5633,7 @@
         {
           "id": "grid-5",
           "name": "Tag",
-          "type": "other",
-          "suffix": "TAG"
+          "type": "other"
         }
       ]
     },
@@ -6067,8 +6062,7 @@
         {
           "id": "verse-7",
           "name": "TAG",
-          "type": "other",
-          "suffix": "TAG"
+          "type": "other"
         },
         {
           "id": "bridge-8",
@@ -11132,7 +11126,13 @@
           "type": "chorus"
         },
         {
-          "id": "bridge-4",
+          "id": "verse-4",
+          "name": "Couplet 2",
+          "type": "verse",
+          "number": "2"
+        },
+        {
+          "id": "bridge-5",
           "name": "Pont",
           "type": "bridge"
         }
@@ -11247,8 +11247,7 @@
         {
           "id": "final-9",
           "name": "Tag",
-          "type": "other",
-          "suffix": "TAG"
+          "type": "other"
         }
       ]
     },
@@ -11378,12 +11377,17 @@
           "type": "verse"
         },
         {
-          "id": "bridge-3",
+          "id": "chorus-3",
+          "name": "Refrain",
+          "type": "chorus"
+        },
+        {
+          "id": "bridge-4",
           "name": "Pont",
           "type": "bridge"
         },
         {
-          "id": "final-4",
+          "id": "final-5",
           "name": "Final",
           "type": "other"
         }
@@ -11437,8 +11441,7 @@
         {
           "id": "verse-6",
           "name": "TAG",
-          "type": "other",
-          "suffix": "TAG"
+          "type": "other"
         }
       ]
     },
@@ -11907,7 +11910,7 @@
       "titlePinyin": null,
       "artist": "Patricia Morgan & Dave Bankhead",
       "language": "fr",
-      "originalKey": "C",
+      "originalKey": "G",
       "tempo": null,
       "themes": [
         "adoration",

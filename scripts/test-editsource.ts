@@ -23,6 +23,12 @@ import {
   deleteSourceLines,
   materializeSectionCopy,
 } from "../src/lib/chordpro/editSource";
+import { revertSectionOrigins } from "../src/lib/setlist/sectionOrigins";
+import { resolveStructureOverride } from "../src/lib/chordpro/structure";
+import { buildFormItems } from "../src/lib/setlist/formItems";
+import { buildSetlistItems } from "../src/lib/setlist/buildSetlistItems";
+import type { SetlistItem } from "../src/types/setList";
+import type { SongIndexEntry } from "../src/types/song";
 
 const SONGS = path.join(process.cwd(), "content", "songs");
 let failures = 0;
@@ -255,6 +261,133 @@ console.log(
     );
   }
   console.log("4. Matérialisation de sections répétées —", failures, "échec(s) cumulés");
+}
+
+// ─── 5. Rétablir l'original : la structure repointe vers les sections du chant ──
+{
+  const src = [
+    "{title: Test}",
+    "{key: C}",
+    "",
+    "{start_of_verse: Couplet 1}",
+    "[C]Ligne du couplet un",
+    "{end_of_verse}",
+    "",
+    "{start_of_chorus: Refrain}",
+    "[F]Ligne du refrain",
+    "{end_of_chorus}",
+    "",
+    "{start_of_bridge: Pont}",
+    "[Am]Ligne du pont",
+    "{end_of_bridge}",
+  ].join("\n");
+  const base = parseChordPro(src);
+  const chorus = base.sections.find((s) => s.id === "chorus-2")!;
+  const mat = materializeSectionCopy(src, chorus.id)!;
+
+  // Refrain joué deux fois, la 2e occurrence a été adaptée → matérialisée.
+  const item: SetlistItem = {
+    songSlug: "test",
+    position: 1,
+    keyOverride: null,
+    showChords: true,
+    showPinyin: false,
+    useJianpu: false,
+    structureOverride: ["verse-1-0", "chorus-2-1", "bridge-3-2", `${mat.newSectionId}-3`],
+    sectionNotes: { [`${mat.newSectionId}-3`]: "a cappella" },
+    sectionKeys: { [`${mat.newSectionId}-3`]: "D" },
+    sectionOrigins: { [mat.newSectionId]: chorus.id },
+    contentOverride: mat.source,
+    notes: "",
+  };
+
+  // Sans rétablissement, la 4e occurrence n'existe plus dans le chant d'origine.
+  check(
+    resolveStructureOverride(base.sections, item.structureOverride!).length === 3,
+    "Rétablir: la copie est bien perdue sans re-pointage (le bug)"
+  );
+
+  const rev = revertSectionOrigins(item);
+  check(rev.structureOverride?.[3] === `${chorus.id}-3`, `Rétablir: copie → origine (${rev.structureOverride?.[3]})`);
+  check(
+    JSON.stringify(rev.structureOverride?.slice(0, 3)) ===
+      JSON.stringify(item.structureOverride!.slice(0, 3)),
+    "Rétablir: les autres occurrences ne bougent pas"
+  );
+  check(rev.sectionNotes?.[`${chorus.id}-3`] === "a cappella", "Rétablir: note de section re-clée");
+  check(rev.sectionKeys?.[`${chorus.id}-3`] === "D", "Rétablir: modulation re-clée");
+  check(Object.keys(rev.sectionOrigins ?? {}).length === 0, "Rétablir: provenances vidées");
+  check(
+    resolveStructureOverride(base.sections, rev.structureOverride!).length === 4,
+    "Rétablir: les 4 occurrences se résolvent sur le chant d'origine"
+  );
+
+  // Copie d'une copie : la chaîne remonte jusqu'à la section du chant.
+  const chained = revertSectionOrigins({
+    ...item,
+    structureOverride: ["chorus-5-0"],
+    sectionOrigins: { "chorus-5": "chorus-4", "chorus-4": chorus.id },
+  });
+  check(chained.structureOverride?.[0] === `${chorus.id}-0`, "Rétablir: copie d'une copie remonte à l'origine");
+
+  // Item sans matérialisation : rien à réécrire.
+  check(
+    Object.keys(revertSectionOrigins({ ...item, sectionOrigins: undefined })).length === 0,
+    "Rétablir: aucun champ réécrit sans section matérialisée"
+  );
+  console.log("5. Rétablir l'original —", failures, "échec(s) cumulés");
+}
+
+// ─── 6. L'éditeur de setlist conserve la version adaptée ──
+{
+  const src = fs.readFileSync(path.join(SONGS, "a-la-croix.cho"), "utf8");
+  const ast = parseChordPro(src);
+  const song: SongIndexEntry = {
+    slug: "a-la-croix",
+    title: ast.metadata.title,
+    titlePinyin: null,
+    artist: ast.metadata.artist,
+    language: "fr",
+    originalKey: ast.metadata.key,
+    tempo: null,
+    themes: [],
+    youtubeUrl: null,
+    spotifyUrl: null,
+    appleMusicUrl: null,
+    hasJianpu: false,
+    jianpuKey: null,
+    // Même forme que songs-index.json (pas d'uid).
+    sections: ast.sections.map((s) => ({ id: s.id, name: s.name || s.type, type: s.type })) as SongIndexEntry["sections"],
+  };
+  const repeated = ast.sections[1];
+  const mat = materializeSectionCopy(src, repeated.id)!;
+  const item: SetlistItem = {
+    songSlug: song.slug,
+    position: 1,
+    keyOverride: "D",
+    showChords: true,
+    showPinyin: false,
+    useJianpu: false,
+    structureOverride: [...ast.sections.map((s, i) => `${s.id}-${i}`), `${mat.newSectionId}-${ast.sections.length}`],
+    sectionNotes: { [`${mat.newSectionId}-${ast.sections.length}`]: "reprise" },
+    sectionOrigins: { [mat.newSectionId]: repeated.id },
+    contentOverride: mat.source,
+    notes: "",
+  };
+
+  // Aller-retour éditeur (chargement du formulaire puis enregistrement).
+  const [saved] = buildSetlistItems(buildFormItems([item], { [song.slug]: song }));
+  check(saved.contentOverride === item.contentOverride, "Éditeur: version adaptée conservée");
+  check(
+    JSON.stringify(saved.sectionOrigins) === JSON.stringify(item.sectionOrigins),
+    "Éditeur: provenances des sections conservées"
+  );
+  check(
+    JSON.stringify(saved.structureOverride) === JSON.stringify(item.structureOverride),
+    `Éditeur: structure conservée (dont la section matérialisée) → ${JSON.stringify(saved.structureOverride)}`
+  );
+  check(saved.sectionNotes[`${mat.newSectionId}-${ast.sections.length}`] === "reprise", "Éditeur: note de la section matérialisée conservée");
+  console.log("6. Éditeur de setlist (mode Adapter) —", failures, "échec(s) cumulés");
 }
 
 if (failures === 0) {

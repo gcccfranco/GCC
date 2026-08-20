@@ -98,6 +98,17 @@ service cloud.firestore {
       allow create: if false;
     }
 
+    // Questionnaire de satisfaction (page /questionnaire) : un document par membre,
+    // dont l'id est son uid → une seule réponse par personne, qu'il peut relire et
+    // modifier. Dépouillement (liste complète) et suppression réservés aux admins.
+    match /surveyResponses/{uid} {
+      allow read: if isAdmin() || (signedIn() && request.auth.uid == uid);
+      allow create, update: if signedIn()
+        && request.auth.uid == uid
+        && request.resource.data.uid == uid;
+      allow delete: if isAdmin();
+    }
+
     match /setlists/{id} {
       allow read: if signedIn();
       // Création : le créateur doit se déclarer propriétaire (ownerId = uid)

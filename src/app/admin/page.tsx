@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { CalendarDays, CheckCircle2, ChevronDown, ChevronUp, DoorOpen, ExternalLink, FileText, Inbox, Play, Search, ShieldCheck, Trash2, UserRound, Users, X, type LucideIcon } from "lucide-react";
+import { CalendarDays, CheckCircle2, ChevronDown, ChevronUp, DoorOpen, ExternalLink, FileText, Inbox, MessageSquareHeart, Play, Search, ShieldCheck, Trash2, UserRound, Users, X, type LucideIcon } from "lucide-react";
 import { useProfile, listProfiles, saveProfile, getRegistrationOpen, setRegistrationOpen } from "@/lib/firebase/users";
 import { getSongProposals, setProposalStatus, deleteSongProposal } from "@/lib/firebase/songProposals";
 import type { SongProposal } from "@/types/songProposal";
@@ -16,6 +16,7 @@ import {
   type PlanningData,
 } from "@/lib/planning/names";
 import { ProfileFields, type ProfileFormValue } from "@/components/auth/ProfileFields";
+import { SurveyResults } from "@/components/admin/SurveyResults";
 import { SERVICE_ROLE_LABELS, SERVICE_LIEUX, GROUPES, type ServiceRole, type UserProfile } from "@/types/user";
 import { EDD_CLASSES } from "@/lib/planning/utils";
 import { ANNONCE_SECTIONS } from "@/types/annonce";
@@ -59,7 +60,7 @@ function isRecent(d?: Date): boolean {
   return !!d && Date.now() - d.getTime() < NEW_DAYS * 86_400_000;
 }
 
-type AdminTab = "reception" | "membres" | "inscriptions" | "planning";
+type AdminTab = "reception" | "membres" | "inscriptions" | "planning" | "questionnaire";
 
 export default function AdminPage() {
   const { user, loading } = useProfile();
@@ -277,6 +278,7 @@ export default function AdminPage() {
     { key: "membres", label: "Membres", Icon: Users, count: profiles.length, always: true },
     { key: "inscriptions", label: "Inscriptions", Icon: DoorOpen },
     { key: "planning", label: "Planning", Icon: CalendarDays, count: unlinkedNames.length },
+    { key: "questionnaire", label: "Questionnaire", Icon: MessageSquareHeart },
   ];
 
   return (
@@ -898,6 +900,9 @@ export default function AdminPage() {
           )}
         </div>
         )}
+
+        {/* ── Questionnaire ── */}
+        {tab === "questionnaire" && <SurveyResults />}
       </div>
     </div>
   );

@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useTranslation } from "react-i18next";
-import { Menu, X, Sun, Moon, Globe, LogIn, LogOut, ChevronDown, UserRound, Bell, BookOpen, TriangleAlert } from "lucide-react";
+import { Menu, X, Sun, Moon, Globe, LogIn, LogOut, ChevronDown, UserRound, Bell, BookOpen, MessageSquareHeart, TriangleAlert } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useAuth, logOut } from "@/lib/firebase/auth";
 import { useProfile } from "@/lib/firebase/users";
@@ -381,6 +381,22 @@ export function Navbar() {
               </Link>
             )}
 
+            {/* Questionnaire de satisfaction — accès discret */}
+            {!authLoading && user && (
+              <Link
+                href="/questionnaire"
+                title={t("survey.title")}
+                aria-label={t("survey.title")}
+                className={`hidden lg:flex h-[34px] w-[34px] rounded-[9px] border transition-all duration-150 active:scale-[.96] items-center justify-center ${
+                  pathname.startsWith("/questionnaire")
+                    ? "border-border bg-secondary text-foreground"
+                    : "border-border bg-card text-muted-foreground hover:text-foreground hover:border-muted-foreground/50"
+                }`}
+              >
+                <MessageSquareHeart className="h-[15px] w-[15px]" />
+              </Link>
+            )}
+
             {/* Auth */}
             {!authLoading && user && (
               <Link
@@ -557,6 +573,13 @@ export function Navbar() {
                     >
                       <BookOpen className="h-4 w-4" />
                       {t("common.header.guide")}
+                    </Link>
+                    <Link
+                      href="/questionnaire"
+                      className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg border border-border bg-background hover:bg-muted text-foreground text-sm font-semibold transition-all duration-200"
+                    >
+                      <MessageSquareHeart className="h-4 w-4" />
+                      {t("survey.title")}
                     </Link>
                     <Link
                       href="/profil"
