@@ -6,6 +6,8 @@ import { formatSectionName } from "@/lib/chordpro/parser";
 import Link from "next/link";
 import { Link2, MessageSquare, ChevronDown, ChevronUp } from "lucide-react";
 import type { SectionSummary } from "@/types/song";
+import { useJianpuManifest } from "@/lib/jianpu/images";
+import { sheetEnabled, type JianpuPref } from "@/lib/jianpu/preference";
 
 /** Palette rotative pour relier chaque transition à son occurrence dans le fil :
  *  la section colorée et sa note en dessous partagent la même couleur. */
@@ -44,11 +46,17 @@ function sectionNamesFor(
 export function ListView({
   items,
   songsMap,
+  jianpuPref,
 }: {
   items: SetlistItem[];
   songsMap: Record<string, SongIndexEntry>;
+  /** Partition 简谱 : suivre le choix du responsable, l'imposer, ou l'ignorer. */
+  jianpuPref: JianpuPref;
 }) {
   const { t } = useTranslation();
+  // Repère « ce chant se lit sur son 简谱 » — même résolution que la vue
+  // Partitions, pour que la liste dise ce qui sera réellement affiché.
+  const jianpuManifest = useJianpuManifest();
   return (
     <ol className="space-y-3">
       {(() => {
@@ -226,6 +234,14 @@ export function ListView({
                 </Link>
                 {song?.titlePinyin && (
                   <span className="text-xs text-muted-foreground">{song.titlePinyin}</span>
+                )}
+                {sheetEnabled(jianpuPref, item.jianpuSheet) && jianpuManifest?.[item.songSlug] && (
+                  <span
+                    className="text-[10px] px-1.5 py-0.5 rounded-full border border-primary/30 bg-primary/10 text-primary font-semibold"
+                    title={t("setlists.form.jianpuSheetHint")}
+                  >
+                    谱 简谱
+                  </span>
                 )}
               </div>
               {song?.artist && <p className="text-xs text-muted-foreground">{song.artist}</p>}
