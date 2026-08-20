@@ -1,4 +1,12 @@
 {
  "slug": "大声敬拜",
- "face": "verdana-bold"
+ "face": "verdana-bold",
+ "corrections": {
+  "182,847": "D"
+ },
+ "not_rows": [
+  535
+ ],
+ "not_rows_verified": "rangée de paroles promue à tort : hanzi uniquement, aucun accord",
+ "corrections_verified": "amas relus au zoom, 2026-08-18 (itération 27, pages au ras du plancher)"
 }

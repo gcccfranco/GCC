@@ -1,4 +1,19 @@
 {
  "slug": "握住幸福",
- "face": "verdana-bold"
+ "face": "verdana-bold",
+ "corrections": {
+  "1503,554": "G/D",
+  "184,45": "Gadd2",
+  "1771,559": "G/D",
+  "543,395": "C/D",
+  "1771,1037": "C/D",
+  "1567,433": "G/D",
+  "1567,1193": "Cm6/D",
+  "1567,1129": "C/D",
+  "543,151": "Fmaj9",
+  "1256,817": "C/D",
+  "1256,362": "G/D",
+  "1022,584": "A/C#"
+ },
+ "corrections_verified": "amas relus au zoom, 2026-08-18 (itération 27, pages au ras du plancher)"
 }
