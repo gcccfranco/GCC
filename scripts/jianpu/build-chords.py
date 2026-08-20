@@ -174,6 +174,16 @@ def _from_reading(slug: str, gold: dict):
     """
     fixes = gold.get("corrections", {})
     blanks = set(gold.get("not_labels", []))
+    # `not_rows` est le même geste à l'échelle de la rangée : le classifieur
+    # promeut parfois une rangée de **paroles** entière (celle du système
+    # précédent, quand un système n'a pas d'accords — voir itération 23).
+    # Elle ne publie rien, mais ses dix hanzi gonflent le dénominateur et
+    # maintiennent la page sous le plancher : 大声敬拜 restait à 57 % pour
+    # cette seule raison. La séparer par la géométrie a été mesuré et
+    # rejeté — abaisser `lyric_min_clusters` à 10 coûte 43 étiquettes
+    # publiées, dont 8 sur un chant certifié. C'est donc l'œil qui tranche,
+    # une rangée à la fois, et l'on note ce qu'il a vu.
+    dead_rows = {int(y) for y in gold.get("not_rows", [])}
     rows = read(slug)
     total = sum(len(r) for _f, r in rows)
     if not total:
@@ -191,6 +201,9 @@ def _from_reading(slug: str, gold: dict):
     labels = []
     missing = 0
     for f, row in rows:
+        if f["top"] in dead_rows:
+            total -= len(row)
+            continue
         if f["top"] in foreign:
             missing += len(row)
             continue
@@ -208,6 +221,8 @@ def _from_reading(slug: str, gold: dict):
     note = f"{len(labels)}/{total} étiquettes (lecture" + (f", {fixed} corrigée(s))" if fixed else ")")
     if blanks:
         note += f" · {len(blanks)} amas écarté(s) à l'œil"
+    if dead_rows:
+        note += f" · {len(dead_rows)} rangée(s) sans accord écartée(s)"
     if foreign:
         note += f" · {len(foreign)} rangée(s) en autre tonalité écartée(s)"
     if len(labels) < MIN_COVERAGE * total:
@@ -262,6 +277,32 @@ def build(slug: str):
             labels = labels + [{k: l[k] for k in ("x", "y", "w", "h", "c")} for l in extra]
             note += f" · +{len(extra)} hors rangées (lues à l'œil)"
 
+    # `mask_rows` — une rangée d'accords gravée dans une **autre tonalité**
+    # que la page : les positions de capo que certaines gravures impriment
+    # au-dessus des accords réels (主我献上生命给你 imprime E, A/E, B/E…
+    # au-dessus de F, Bb/F, C/F…, sous un « 1=F »).
+    #
+    # `foreign_rows` ne les voit pas, et ce n'est pas un réglage à corriger :
+    # le classifieur les laisse en `chords?` parce qu'elles sont suivies
+    # d'une **rangée d'accords**, pas de chiffres. Elles n'entrent donc
+    # jamais dans `read()`, et ce que `read()` ignore, `foreign_rows` ignore
+    # aussi. Les laisser telles quelles est le pire cas possible : la page
+    # transposée mêlerait deux tonalités, ce que l'itération 15 a nommé
+    # mode D.
+    #
+    # On les **masque** — un cadre sans texte, posé comme les autres — et
+    # elles ne pèsent pas sur la couverture : on n'a pas prétendu les lire.
+    # C'est l'œil qui les désigne, une rangée à la fois, comme `not_rows`.
+    masked = {int(y) for y in gold.get("mask_rows", [])}
+    if masked:
+        _i, _w, feats, _k = classify(path)
+        found = {f["top"]: f for f in feats if f["top"] in masked}
+        for top in sorted(masked - set(found)):
+            print(f"    ! {slug} : mask_rows y={top} ne correspond à aucune rangée", file=sys.stderr)
+        for f in found.values():
+            labels += [_box(f, x0, x1, "") for x0, x1 in f["clusters"]]
+        note += f" · {len(found)} rangée(s) en autre tonalité masquée(s)"
+
     # **Complet** veut dire : un humain a regardé la page transposée dans le
     # navigateur et n'y a vu aucun accord resté dans l'ancienne tonalité.
     # Rien d'automatique ne peut le remplacer — `stray_chords` hérite de la
@@ -283,7 +324,7 @@ def build(slug: str):
     # varie selon les glyphes présents (une rangée sans jambage est
     # détectée plus fine), donc la prendre par rangée donnait des accords
     # de tailles différentes sur la même page.
-    heights = sorted(l["h"] for l in labels)
+    heights = sorted(l["h"] for l in labels if l["c"])
     entry = {
         "printedKey": printed_key,
         "w": w,
