@@ -1,5 +1,7 @@
 import { Document } from "@react-pdf/renderer";
-import { SongPDFPage, FusionPDFPage, TransitionPDFPage, type FusionPDFSong } from "@/components/pdf/SongPDF";
+import { SongPDFPage, FusionPDFPage, TransitionPDFPage, JianpuPDFPage, type FusionPDFSong } from "@/components/pdf/SongPDF";
+import { type JianpuChordsManifest, type JianpuManifest } from "@/lib/jianpu/images";
+import { sheetEnabled, type JianpuPref } from "@/lib/jianpu/preference";
 import { transposeAST } from "@/lib/transposeAST";
 import { semitonesTo } from "@/lib/transpose";
 import type { FSSetlist } from "@/lib/firebase/setlists";
@@ -14,11 +16,23 @@ interface SongContent {
 export function SetlistFullPDF({
   setlist,
   contents,
-  showChords
+  showChords,
+  jianpuSheets,
+  jianpuChords,
+  jianpuImages,
+  jianpuPref = "auto",
 }: {
   setlist: FSSetlist;
   contents: Record<string, SongContent>;
-  showChords: boolean
+  showChords: boolean;
+  /** Manifestes 简谱 — chargés avant l'appel : le rendu PDF n'exécute pas
+   *  d'effets, ils ne peuvent donc pas venir d'un hook. */
+  jianpuSheets?: JianpuManifest;
+  jianpuChords?: JianpuChordsManifest;
+  /** Pages de scan ré-encodées en PNG (data URL), par nom de fichier :
+   *  react-pdf ne lit pas le WebP dans lequel les scans sont servis. */
+  jianpuImages?: Record<string, string>;
+  jianpuPref?: JianpuPref;
 }) {
   const sorted = [...setlist.items].sort((a, b) => a.position - b.position);
   const footer = `${setlist.title} - ${setlist.leader}`;
@@ -88,6 +102,32 @@ export function SetlistFullPDF({
           const semitones = semitonesTo(ast.metadata.key, item.keyOverride);
           ast = transposeAST(ast, semitones, item.keyOverride);
         }
+        // ── Partition 简谱 : le scan remplace les paroles, une page par page ──
+        const sheet = sheetEnabled(jianpuPref, item.jianpuSheet)
+          ? jianpuSheets?.[item.songSlug]
+          : undefined;
+        // Une page de scan qui n'a pas pu être ré-encodée ferait un trou dans
+        // la partition : dans ce cas le chant repart sur ses paroles.
+        const sheetSrcs = sheet?.pages.map((p) => jianpuImages?.[p.file]);
+        if (sheet && sheetSrcs?.every(Boolean)) {
+          const playedKey =
+            item.keyOverride && item.keyOverride !== baseAst.metadata.key ? item.keyOverride : null;
+          return sheet.pages.map((page, pageIdx) => (
+            <JianpuPDFPage
+              key={`${item.songSlug}-${idx}-jianpu-${pageIdx}`}
+              src={sheetSrcs![pageIdx]!}
+              page={page}
+              // Le calque n'est relevé que sur la première page du scan.
+              chords={pageIdx === 0 ? jianpuChords?.[item.songSlug] : null}
+              title={ast.metadata.title}
+              titlePinyin={ast.metadata.titlePinyin}
+              playedKey={playedKey}
+              headerHeight={pageIdx === 0 ? 56 : 0}
+              footerCenter={footer}
+            />
+          ));
+        }
+
         return [
           <SongPDFPage
             key={`${item.songSlug}-${idx}`}
