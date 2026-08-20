@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-27T09:04:20.225Z",
+  "generatedAt": "2026-08-20T19:37:48.041Z",
   "songs": [
     {
       "slug": "abba-pere",
@@ -15234,6 +15234,49 @@
           "id": "chorus-2",
           "name": "副歌/Refrain",
           "type": "chorus"
+        }
+      ]
+    },
+    {
+      "slug": "主我献上生命给你",
+      "title": "主我献上生命给你",
+      "titlePinyin": "Zhǔ wǒ xiàn shàng shēng mìng gěi nǐ",
+      "artist": "约书亚乐团",
+      "language": "zh",
+      "originalKey": "F",
+      "tempo": 78,
+      "themes": [
+        "奉献",
+        "委身",
+        "敬拜"
+      ],
+      "youtubeUrl": null,
+      "spotifyUrl": null,
+      "appleMusicUrl": null,
+      "hasJianpu": false,
+      "jianpuKey": null,
+      "sections": [
+        {
+          "id": "verse-1",
+          "name": "主歌 1/Couplet 1",
+          "type": "verse",
+          "number": "1"
+        },
+        {
+          "id": "verse-2",
+          "name": "主歌 2/Couplet 2",
+          "type": "verse",
+          "number": "2"
+        },
+        {
+          "id": "chorus-3",
+          "name": "副歌/Refrain",
+          "type": "chorus"
+        },
+        {
+          "id": "outro-4",
+          "name": "结尾/Outro",
+          "type": "outro"
         }
       ]
     },
