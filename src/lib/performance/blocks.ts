@@ -6,6 +6,7 @@ import { semitonesTo, getTransposedKey } from "@/lib/transpose";
 import { resolveStructureOverride } from "@/lib/chordpro/structure";
 import { itemAst } from "@/lib/chordpro/itemContent";
 import type { JianpuEntry, JianpuManifest } from "@/lib/jianpu/images";
+import { sheetEnabled, type JianpuPref } from "@/lib/jianpu/preference";
 
 export type SongHeaderBlock = {
   kind: "song-header";
@@ -63,6 +64,11 @@ export type JianpuSheetBlock = {
   /** Tonalité jouée, si elle diffère de celle du chant : le calque
    *  d'accords s'y transpose. */
   playedKey: string | null;
+  /** Page du scan rendue par ce bloc : une page de partition = une page
+   *  d'écran, un scan de deux pages en occupe donc deux. */
+  pageIndex: number;
+  /** Capo du chant : le calque affiche alors les positions. */
+  capo?: number;
 };
 
 export type PerformanceBlock =
@@ -94,8 +100,12 @@ export function buildPerformanceBlocks(
   showChordsGlobal: boolean,
   capos?: Record<string, number>,
   jianpuSheets?: JianpuManifest,
+  jianpuPref: JianpuPref = "auto",
 ): PerformanceBlock[] {
   const blocks: PerformanceBlock[] = [];
+  // Le responsable coche le 简谱 par chant ; la préférence de l'appareil peut
+  // le suivre, l'imposer partout, ou ne jamais l'utiliser.
+  const wantsSheet = (item: SetlistItem) => sheetEnabled(jianpuPref, item.jianpuSheet);
   let c = 0;
   const uid = () => `pb-${c++}`;
 
@@ -232,16 +242,24 @@ export function buildPerformanceBlocks(
     // ── Partition 简谱 : la page entière remplace les sections ──
     // La structure de l'item reste décrite (elle sert à la liste de la
     // setlist) mais ne découpe pas la partition, qui est un scan indivisible.
-    const sheet = item.jianpuSheet ? jianpuSheets?.[item.songSlug] : undefined;
+    const sheet = wantsSheet(item) ? jianpuSheets?.[item.songSlug] : undefined;
     if (sheet) {
-      blocks.push({
-        kind: "jianpu-sheet",
-        uid: uid(),
-        entry: sheet,
-        songTitle: ast.metadata.title,
-        songSlug: item.songSlug,
-        songKey: playedKey,
-        playedKey: playedKey !== baseAst.metadata.key ? playedKey : null,
+      // Avec un capo, la tonalité jouée est passée même si elle est celle du
+      // chant : le calque doit descendre les accords en positions.
+      const overlayKey =
+        playedKey !== baseAst.metadata.key || capo ? playedKey : null;
+      sheet.pages.forEach((_, pageIndex) => {
+        blocks.push({
+          kind: "jianpu-sheet",
+          uid: uid(),
+          entry: sheet,
+          pageIndex,
+          songTitle: ast.metadata.title,
+          songSlug: item.songSlug,
+          songKey: playedKey,
+          playedKey: overlayKey,
+          capo: capo || undefined,
+        });
       });
       continue;
     }
