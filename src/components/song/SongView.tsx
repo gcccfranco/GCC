@@ -38,7 +38,7 @@ const LEFT_BAR = new Set(["prechorus"]);
 
 // Style « chart » (option du Mode Louange) : la couleur suit le TYPE de section
 // (palette --sec-* de globals.css) et non la langue du chant.
-const CHART_TYPE_COLOR: Record<string, string> = {
+export const CHART_TYPE_COLOR: Record<string, string> = {
   intro: "var(--sec-intro)",
   verse: "var(--sec-verse)",
   prechorus: "var(--sec-prechorus)",
