@@ -7,6 +7,7 @@ import { resolveStructureOverride } from "@/lib/chordpro/structure";
 import { itemAst } from "@/lib/chordpro/itemContent";
 import type { JianpuEntry, JianpuManifest } from "@/lib/jianpu/images";
 import { sheetEnabled, type JianpuPref } from "@/lib/jianpu/preference";
+import { resolveSectionOccurrences, type SectionOccurrence } from "@/lib/setlist/sectionSteps";
 
 export type SongHeaderBlock = {
   kind: "song-header";
@@ -69,6 +70,11 @@ export type JianpuSheetBlock = {
   pageIndex: number;
   /** Capo du chant : le calque affiche alors les positions. */
   capo?: number;
+  /** Rang du chant dans la setlist, repris par le bandeau de structure. */
+  position: number;
+  /** Structure jouée : le scan ne la porte pas (il ignore l'ordre et les
+   *  reprises décidés pour ce dimanche), le bandeau au-dessus l'affiche. */
+  steps: SectionOccurrence[];
 };
 
 export type PerformanceBlock =
@@ -242,6 +248,7 @@ export function buildPerformanceBlocks(
     // ── Partition 简谱 : la page entière remplace les sections ──
     // La structure de l'item reste décrite (elle sert à la liste de la
     // setlist) mais ne découpe pas la partition, qui est un scan indivisible.
+    const occurrences = resolveSectionOccurrences(sections, item);
     const sheet = wantsSheet(item) ? jianpuSheets?.[item.songSlug] : undefined;
     if (sheet) {
       // Avec un capo, la tonalité jouée est passée même si elle est celle du
@@ -259,33 +266,20 @@ export function buildPerformanceBlocks(
           songKey: playedKey,
           playedKey: overlayKey,
           capo: capo || undefined,
+          position: item.position,
+          // Une modulation vers la tonalité déjà jouée n'en est pas une.
+          steps: occurrences.map((o) =>
+            o.targetKey && o.targetKey !== playedKey ? o : { ...o, targetKey: undefined },
+          ),
         });
       });
       continue;
     }
 
-    const occ: Record<string, number> = {};
-
-    for (const sec of sections) {
-      const i = occ[sec.id] ?? 0;
-      occ[sec.id] = i + 1;
-      const occKey = i === 0 ? sec.id : `${sec.id}:${i}`;
-      const note =
-        item.sectionNotes?.[sec.uid] ?? item.sectionNotes?.[occKey] ?? item.sectionNotes?.[sec.id] ?? "";
-      const transition =
-        item.sectionTransitions?.[sec.uid] ??
-        item.sectionTransitions?.[occKey] ??
-        item.sectionTransitions?.[sec.id] ??
-        "";
-      const nuance =
-        item.sectionNuances?.[sec.uid] ??
-        item.sectionNuances?.[occKey] ??
-        item.sectionNuances?.[sec.id];
+    for (const { section: sec, note, transition, nuance, targetKey } of occurrences) {
       // Modulation (升调) : section transposée dans sa tonalité cible. Avec un
       // capo, les accords de l'AST sont en tonalité de shapes → même écart de
       // demi-tons, mais l'orthographe suit la tonalité cible décalée du capo.
-      const targetKey =
-        item.sectionKeys?.[sec.uid] ?? item.sectionKeys?.[occKey] ?? item.sectionKeys?.[sec.id];
       const keyChange = targetKey && targetKey !== playedKey ? targetKey : undefined;
       const shownSec = keyChange
         ? transposeSection(
