@@ -16,6 +16,7 @@ import { buildPerformanceBlocks, computePageKey } from "@/lib/performance/blocks
 import { useJianpuManifest } from "@/lib/jianpu/images";
 import { getJianpuPref, setJianpuPref, type JianpuPref } from "@/lib/jianpu/preference";
 import { JianpuSheet } from "@/components/jianpu/JianpuSheet";
+import { JianpuStructureStrip } from "@/components/jianpu/JianpuStructureStrip";
 import { SectionView, TransitionNote } from "@/components/song/SongView";
 import { AnnotationCanvas, StrokesLayer } from "./AnnotationCanvas";
 import { type AnnotationData, serializeAnnotations, deserializeAnnotations } from "@/lib/annotations/strokes";
@@ -220,8 +221,10 @@ function splitSheetPages(
       flow.push(i);
       continue;
     }
-    // L'en-tête juste avant la partition part avec elle : titre et tonalité
-    // en haut, scan en dessous.
+    // L'en-tête juste avant la partition part avec elle. Il n'est pas rendu
+    // (le scan porte déjà titre, auteur et tonalité) mais reste rattaché à la
+    // page : le sommaire, la progression dans le chant et le panneau capo
+    // repèrent le chant courant par l'indice de son en-tête.
     const last = flow[flow.length - 1];
     const header = last !== undefined && kindOf(last) === "song-header" ? flow.pop()! : null;
     flush();
@@ -747,6 +750,21 @@ export function PerformanceMode({
     paddingLeft: `calc(1.5rem + var(--sal, 0px) / ${fontScale})`,
     paddingRight: `calc(1.5rem + var(--sar, 0px) / ${fontScale})`,
   };
+  // Page 简谱 : marges resserrées. Le scan est déjà recadré au plus juste et se
+  // met à l'échelle de la place disponible — chaque pixel de marge est un pixel
+  // de partition en moins. Seul le conteneur de rendu change : la mesure garde
+  // le padding de référence, sinon la largeur de mise en page des blocs
+  // dépendrait de la page affichée et les hauteurs mesurées bougeraient à
+  // chaque passage sur une partition.
+  const fitPage = layout[currentPage]?.fit ?? false;
+  const renderPadding: React.CSSProperties = fitPage
+    ? {
+        paddingTop: `calc(0.25rem + var(--sat, 0px) / ${fontScale})`,
+        paddingBottom: `calc(0.25rem + var(--sab, 0px) / ${fontScale})`,
+        paddingLeft: `calc(0.25rem + var(--sal, 0px) / ${fontScale})`,
+        paddingRight: `calc(0.25rem + var(--sar, 0px) / ${fontScale})`,
+      }
+    : contentPadding;
 
   return (
     <div
@@ -809,7 +827,7 @@ export function PerformanceMode({
           height: `${100 / fontScale}%`,
           transform: `scale(${fontScale})`,
           transformOrigin: "top left",
-          ...contentPadding,
+          ...renderPadding,
           ...(annotateMode && annotZoom !== 1
             ? { transform: `translate(${annotPan.x}px, ${annotPan.y}px) scale(${annotZoom * fontScale})` }
             : null),
@@ -842,12 +860,27 @@ export function PerformanceMode({
               />
             );
           };
-          // Page 简谱 : en-tête en haut, scan à l'échelle de la hauteur qui
-          // reste. Pas de pagination — un scan ne se coupe pas en deux.
+          // Page 简谱 : bandeau de structure en haut, scan à l'échelle de la
+          // hauteur qui reste. Pas de pagination — un scan ne se coupe pas en
+          // deux. L'en-tête de chant n'est pas rendu : tout ce qu'il porte est
+          // déjà imprimé sur le scan, et les 200 px qu'il coûtait devenaient
+          // des marges blanches sur les côtés (la page est contrainte par sa
+          // hauteur). Le bandeau reprend ce que le scan ne peut pas savoir :
+          // l'ordre des sections voulu pour ce dimanche.
           if (page.fit) {
+            const sheet = blocks[page.cols[0][0]];
             return (
               <div className="flex h-full flex-col">
-                {page.header != null && <div className="shrink-0">{renderBlock(page.header)}</div>}
+                {sheet?.kind === "jianpu-sheet" && (
+                  <div className="shrink-0">
+                    <JianpuStructureStrip
+                      position={sheet.position}
+                      steps={sheet.steps}
+                      capo={sheet.capo}
+                      className="mb-1.5"
+                    />
+                  </div>
+                )}
                 <div className="min-h-0 flex-1">{renderBlock(page.cols[0][0], true)}</div>
               </div>
             );
