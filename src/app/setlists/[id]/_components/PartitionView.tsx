@@ -3,6 +3,9 @@ import type { SetlistItem } from "@/types/setList";
 import type { SongContent } from "@/lib/api/songs";
 import { SongView, SectionView, TransitionNote } from "@/components/song/SongView";
 import { JianpuSheet } from "@/components/jianpu/JianpuSheet";
+import { JianpuStructureStrip } from "@/components/jianpu/JianpuStructureStrip";
+import { resolveSectionOccurrences } from "@/lib/setlist/sectionSteps";
+import { resolveStructureOverride } from "@/lib/chordpro/structure";
 import { useJianpuScore } from "@/lib/jianpu/images";
 import { sheetEnabled, type JianpuPref } from "@/lib/jianpu/preference";
 import { useTranslation } from "react-i18next";
@@ -255,40 +258,60 @@ function NormalSongItem({
   const jianpuScore = useJianpuScore(sheetEnabled(jianpuPref, item.jianpuSheet) ? item.songSlug : null);
   if (!ast) return null;
 
+  // Partition 简谱 : le scan porte déjà titre, auteur et tonalité. À la place,
+  // la structure jouée — qu'un scan ne peut pas connaître.
+  const steps = jianpuScore
+    ? resolveSectionOccurrences(
+        item.structureOverride?.length
+          ? resolveStructureOverride(ast.sections, item.structureOverride)
+          : ast.sections,
+        item,
+      )
+    : [];
+
+  // Badges d'état : ils ne sont pas dans le scan et suivent donc l'item, que
+  // le chant s'affiche en paroles ou en partition.
+  const badges = (
+    <>
+      {item.notes && (
+        <span className="text-xs text-muted-foreground italic">{item.notes}</span>
+      )}
+      {/* L'adaptation porte sur les paroles ChordPro : elle n'est pas visible
+          tant que la partition 简谱 remplace le chant. Le dire, plutôt que
+          d'afficher « Version modifiée » sur un scan intact. */}
+      {item.contentOverride && (
+        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-400 border border-amber-300/60 dark:border-amber-700/50 font-semibold print:hidden">
+          {jianpuScore
+            ? t("setlists.contentEdit.modifiedHidden")
+            : t("setlists.contentEdit.modifiedBadge", { defaultValue: "Version modifiée" })}
+        </span>
+      )}
+      {editMode && item.contentOverride && (
+        <button
+          type="button"
+          onClick={() => onRevert?.(origIndex)}
+          className="text-[11px] text-muted-foreground underline hover:text-foreground"
+        >
+          {t("setlists.contentEdit.revert", { defaultValue: "Rétablir l'original" })}
+        </button>
+      )}
+    </>
+  );
+
   return (
     <div className="print:break-before-page first:print:break-before-auto">
-      <div className="flex items-center gap-2 mb-3 print:mb-2 flex-wrap">
-        <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center shrink-0">
-          {item.position}
-        </span>
-        {item.notes && (
-          <span className="text-xs text-muted-foreground italic">{item.notes}</span>
-        )}
-        {jianpuScore && (
-          <span className="text-[10px] px-1.5 py-0.5 rounded-full border border-primary/30 bg-primary/10 text-primary font-semibold print:hidden">
-            谱 简谱
+      {jianpuScore ? (
+        <JianpuStructureStrip position={item.position} steps={steps} className="mb-3 print:mb-2">
+          {badges}
+        </JianpuStructureStrip>
+      ) : (
+        <div className="flex items-center gap-2 mb-3 print:mb-2 flex-wrap">
+          <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center shrink-0">
+            {item.position}
           </span>
-        )}
-        {/* L'adaptation porte sur les paroles ChordPro : elle n'est pas visible
-            tant que la partition 简谱 remplace le chant. Le dire, plutôt que
-            d'afficher « Version modifiée » sur un scan intact. */}
-        {item.contentOverride && (
-          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-400 border border-amber-300/60 dark:border-amber-700/50 font-semibold print:hidden">
-            {jianpuScore
-              ? t("setlists.contentEdit.modifiedHidden")
-              : t("setlists.contentEdit.modifiedBadge", { defaultValue: "Version modifiée" })}
-          </span>
-        )}
-        {editMode && item.contentOverride && (
-          <button
-            type="button"
-            onClick={() => onRevert?.(origIndex)}
-            className="text-[11px] text-muted-foreground underline hover:text-foreground"
-          >
-            {t("setlists.contentEdit.revert", { defaultValue: "Rétablir l'original" })}
-          </button>
-        )}
-      </div>
+          {badges}
+        </div>
+      )}
       {jianpuScore ? (
         <JianpuSheet
           entry={jianpuScore}
