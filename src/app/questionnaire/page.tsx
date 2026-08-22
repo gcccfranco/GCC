@@ -9,7 +9,7 @@ import { getMySurveyResponse, saveSurveyResponse } from "@/lib/firebase/survey";
 import {
   RATING_MAX,
   visibleQuestions,
-  visibleSections,
+  visibleSteps,
   type SurveyAnswer,
   type SurveyAnswers,
   type SurveyQuestion,
@@ -37,23 +37,24 @@ function QuestionField({
   const { t } = useTranslation();
 
   return (
-    <div className="rounded-xl bg-card shadow-soft p-5 space-y-3">
-      <div>
-        <p className="text-sm font-semibold text-foreground">
-          {t(`survey.q.${q.id}.label`)}
-          {q.required ? (
-            <span className="text-destructive"> *</span>
-          ) : (
-            <span className="text-muted-foreground/70 font-normal"> {t("survey.optional")}</span>
-          )}
-        </p>
-        {q.type === "multi" && (
-          <p className="text-xs text-muted-foreground mt-0.5">{t("survey.multiHint")}</p>
+    <div className="space-y-2">
+      <p className="text-sm font-semibold text-foreground leading-snug">
+        {t(`survey.q.${q.id}.label`)}
+        {q.required ? (
+          <span className="text-destructive"> *</span>
+        ) : (
+          <span className="text-muted-foreground/70 font-normal"> {t("survey.optional")}</span>
         )}
-      </div>
+        {q.type === "multi" && (
+          <span className="text-muted-foreground/70 font-normal">
+            {" · "}
+            {t("survey.multiHint")}
+          </span>
+        )}
+      </p>
 
       {q.type === "rating" && (
-        <div className="space-y-1.5">
+        <div className="space-y-1">
           <div className="flex gap-1.5">
             {Array.from({ length: RATING_MAX }, (_, i) => i + 1).map((n) => {
               const active = typeof value === "number" && n <= value;
@@ -63,10 +64,10 @@ function QuestionField({
                   type="button"
                   onClick={() => onChange(n)}
                   aria-label={`${n}/${RATING_MAX}`}
-                  className="h-11 w-11 rounded-lg border border-border bg-background flex items-center justify-center transition-colors hover:border-muted-foreground/50"
+                  className="h-10 w-10 rounded-lg border border-border bg-background flex items-center justify-center transition-colors hover:border-muted-foreground/50"
                 >
                   <Star
-                    className={`h-5 w-5 ${
+                    className={`h-[18px] w-[18px] ${
                       active ? "fill-amber-400 text-amber-400" : "text-muted-foreground"
                     }`}
                   />
@@ -74,7 +75,7 @@ function QuestionField({
               );
             })}
           </div>
-          <div className="flex justify-between text-[11px] text-muted-foreground max-w-[248px]">
+          <div className="flex justify-between text-[11px] text-muted-foreground max-w-[224px]">
             <span>{t(`survey.q.${q.id}.low`)}</span>
             <span>{t(`survey.q.${q.id}.high`)}</span>
           </div>
@@ -82,7 +83,7 @@ function QuestionField({
       )}
 
       {(q.type === "choice" || q.type === "multi") && (
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-1.5">
           {(q.options ?? []).map((opt) => {
             const checked =
               q.type === "multi"
@@ -104,7 +105,7 @@ function QuestionField({
                       : [...current, opt]
                   );
                 }}
-                className={`px-3.5 py-2 rounded-lg border text-[13px] font-semibold transition-colors ${
+                className={`px-3 py-1.5 rounded-lg border text-[13px] font-semibold transition-colors ${
                   checked
                     ? "border-primary bg-primary/10 text-primary"
                     : "bg-background border-border text-muted-foreground hover:text-foreground"
@@ -123,7 +124,7 @@ function QuestionField({
           value={typeof value === "string" ? value : ""}
           onChange={(e) => onChange(e.target.value)}
           placeholder={t(`survey.q.${q.id}.placeholder`)}
-          rows={4}
+          rows={2}
         />
       )}
     </div>
@@ -158,14 +159,19 @@ export default function QuestionnairePage() {
   }, [user]);
 
   // Les sections hors sujet sautent : quelqu'un qui ne coche pas « Mode Louange »
-  // ne voit jamais l'étape correspondante.
-  const sections = useMemo(() => visibleSections(answers), [answers]);
-  const current = sections[Math.min(step, sections.length - 1)];
-  const questions = useMemo(
-    () => (current ? visibleQuestions(current.id, answers) : []),
+  // ne voit jamais le bloc correspondant (et l'étape disparaît s'il ne reste rien).
+  const steps = useMemo(() => visibleSteps(answers), [answers]);
+  const current = steps[Math.min(step, steps.length - 1)];
+  const groups = useMemo(
+    () =>
+      (current?.sections ?? []).map((s) => ({
+        id: s.id,
+        questions: visibleQuestions(s.id, answers),
+      })),
     [current, answers]
   );
-  const isLast = step >= sections.length - 1;
+  const questions = useMemo(() => groups.flatMap((g) => g.questions), [groups]);
+  const isLast = step >= steps.length - 1;
 
   if (loading || (user && loadingAnswers)) {
     return (
@@ -258,12 +264,12 @@ export default function QuestionnairePage() {
     );
   }
 
-  const progress = sections.length > 1 ? (step / (sections.length - 1)) * 100 : 100;
+  const progress = steps.length > 1 ? (step / (steps.length - 1)) * 100 : 100;
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-2xl mx-auto px-4 pt-6 pb-10 space-y-5">
-        <div className="space-y-1.5">
+      <div className="max-w-2xl mx-auto px-4 pt-6 pb-10 space-y-4">
+        <div className="space-y-1">
           <div className="flex items-center gap-2">
             <MessageSquareHeart className="h-5 w-5 text-primary" />
             <h1 className="text-lg font-bold text-foreground">{t("survey.title")}</h1>
@@ -278,13 +284,13 @@ export default function QuestionnairePage() {
         )}
 
         {/* Progression */}
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           <div className="flex items-baseline justify-between gap-2">
             <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-              {t(`survey.s.${current.id}.title`)}
+              {t(`survey.steps.${current.id}`)}
             </p>
             <span className="text-[11px] text-muted-foreground shrink-0 tabular-nums">
-              {t("survey.stepOf", { step: step + 1, total: sections.length })}
+              {t("survey.stepOf", { step: step + 1, total: steps.length })}
             </span>
           </div>
           <div className="h-1.5 rounded-full bg-secondary overflow-hidden">
@@ -293,7 +299,6 @@ export default function QuestionnairePage() {
               style={{ width: `${progress}%` }}
             />
           </div>
-          <p className="text-xs text-muted-foreground">{t(`survey.s.${current.id}.hint`)}</p>
         </div>
 
         {error && (
@@ -302,14 +307,29 @@ export default function QuestionnairePage() {
           </Alert>
         )}
 
-        {questions.map((q) => (
-          <QuestionField
-            key={q.id}
-            q={q}
-            value={answers[q.id]}
-            onChange={(value) => setAnswers((prev) => ({ ...prev, [q.id]: value }))}
-          />
-        ))}
+        {/* Une carte par étape, un bloc par section : moins de scroll qu'une carte par question. */}
+        <div className="rounded-xl bg-card shadow-soft divide-y divide-border">
+          {groups.map((group) => (
+            <div key={group.id} className="p-4 space-y-4">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-widest text-primary">
+                  {t(`survey.s.${group.id}.title`)}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {t(`survey.s.${group.id}.hint`)}
+                </p>
+              </div>
+              {group.questions.map((q) => (
+                <QuestionField
+                  key={q.id}
+                  q={q}
+                  value={answers[q.id]}
+                  onChange={(value) => setAnswers((prev) => ({ ...prev, [q.id]: value }))}
+                />
+              ))}
+            </div>
+          ))}
+        </div>
 
         <div className="flex items-center justify-between gap-3">
           <Button
