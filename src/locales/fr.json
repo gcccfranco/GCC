@@ -823,6 +823,12 @@
     "error": "Enregistrement impossible. Vérifie ta connexion (et que les règles Firestore sont publiées).",
     "errorRequired": "Merci de répondre aux questions marquées d'une étoile.",
     "identityNotice": "Envoyé au nom de {{name}}.",
+    "steps": {
+      "you": "Toi et le site",
+      "features": "Les fonctionnalités",
+      "infos": "Infos & prise en main",
+      "improve": "Ce qu'il faut améliorer"
+    },
     "s": {
       "usage": {
         "title": "Toi et ton usage",
