@@ -823,6 +823,12 @@
     "error": "保存失败。请检查网络连接（以及 Firestore 规则是否已发布）。",
     "errorRequired": "请回答标有星号的问题。",
     "identityNotice": "以 {{name}} 的名义提交。",
+    "steps": {
+      "you": "你与网站",
+      "features": "各项功能",
+      "infos": "信息与上手",
+      "improve": "需要改进的地方"
+    },
     "s": {
       "usage": {
         "title": "你的使用情况",
