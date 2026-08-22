@@ -4,9 +4,10 @@
 // placeholder, low/high), pour que la page de saisie et la vue admin restent
 // génériques et bilingues.
 //
-// Le questionnaire est long : il est découpé en sections (une étape par section)
-// et les sections/questions hors sujet sont masquées via `dependsOn` — quelqu'un
-// qui ne crée jamais de setlist ne voit pas les questions de création.
+// Le questionnaire est long : il est découpé en sections regroupées en quelques
+// étapes (`SURVEY_STEPS`) et les sections/questions hors sujet sont masquées via
+// `dependsOn` — quelqu'un qui ne crée jamais de setlist ne voit pas les questions
+// de création.
 
 export type SurveyQuestionType = "rating" | "choice" | "multi" | "text";
 
@@ -19,6 +20,12 @@ export interface SurveyCondition {
 export interface SurveySection {
   id: string;
   dependsOn?: SurveyCondition;
+}
+
+/** Une étape du formulaire = plusieurs sections, pour limiter le nombre de clics. */
+export interface SurveyStep {
+  id: string;
+  sections: string[];
 }
 
 export interface SurveyQuestion {
@@ -44,6 +51,14 @@ export const SURVEY_SECTIONS: SurveySection[] = [
   { id: "annonces", dependsOn: { question: "used", anyOf: ["annonces", "notifications"] } },
   { id: "misc" },
   { id: "improve" },
+];
+
+/** Regroupement des sections en étapes (titres : `survey.steps.<id>`). */
+export const SURVEY_STEPS: SurveyStep[] = [
+  { id: "you", sections: ["usage", "general"] },
+  { id: "features", sections: ["songs", "setlists", "performance"] },
+  { id: "infos", sections: ["planning", "annonces", "misc"] },
+  { id: "improve", sections: ["improve"] },
 ];
 
 export const SURVEY_QUESTIONS: SurveyQuestion[] = [
@@ -318,6 +333,17 @@ export function visibleSections(answers: SurveyAnswers): SurveySection[] {
   return SURVEY_SECTIONS.filter(
     (s) => conditionMet(s.dependsOn, answers) && visibleQuestions(s.id, answers).length > 0
   );
+}
+
+/** Étapes à parcourir, avec pour chacune ses sections encore pertinentes. */
+export function visibleSteps(
+  answers: SurveyAnswers
+): { id: string; sections: SurveySection[] }[] {
+  const visible = visibleSections(answers);
+  return SURVEY_STEPS.map((step) => ({
+    id: step.id,
+    sections: visible.filter((s) => step.sections.includes(s.id)),
+  })).filter((step) => step.sections.length > 0);
 }
 
 export interface SurveyResponse {
