@@ -5,6 +5,28 @@ import type { JianpuEntry } from "@/lib/jianpu/images";
 import { jianpuImageUrl, useJianpuChords } from "@/lib/jianpu/images";
 import { getTransposedKey, semitonesTo, transposeChord } from "@/lib/transpose";
 
+/** Les étiquettes du scan sont mesurées en **hauteur d'encre** (le haut d'une
+ *  capitale au-dessus de la ligne de base), pas en corps de fonte. Passer
+ *  `labelH` tel quel en `font-size` donnait donc des accords réécrits ~30 %
+ *  plus petits que ceux gravés à côté. On divise par la hauteur de capitale
+ *  de la fonte pour retrouver la taille imprimée. */
+const CAP_HEIGHT = 0.714;
+/** Part du corps sous la ligne de base dans la boîte de ligne à
+ *  `line-height: 1` (ascendante 0,952 / descendante 0,213 → demi-interligne
+ *  négatif). Le texte est collé en bas de sa boîte : c'est donc cette valeur
+ *  qui pose la ligne de base. */
+const LINE_BOX_DROP = 0.13;
+/** Descendante réelle de la fonte. Le fond blanc doit descendre jusque-là,
+ *  sinon la jambe du « j » de `Dmaj9` (ou une parenthèse) dépasse du masque et
+ *  retombe sur la partition. L'écart avec `LINE_BOX_DROP` est repris en marge
+ *  basse, pour que le fond descende sans entraîner le texte avec lui. */
+const DESCENDER = 0.22;
+/** Les accords gravés sont en **sans-serif grasse** sur 82 des 87 pages dont
+ *  la fonte a été identifiée (verdana-bold, helvetica-bold, helvetica-neue,
+ *  din-bold ; cinq pages seulement en times). Le calque les réécrivait en
+ *  Times New Roman — la fonte la plus éloignée du corpus. */
+const CHORD_FONT = '"Helvetica Neue", Helvetica, Arial, sans-serif';
+
 type JianpuSheetProps = {
   entry: JianpuEntry;
   title: string;
@@ -50,6 +72,7 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey, ca
   // dans la tonalité des positions, pas dans celle qui sonne.
   const chordSemitones = semitones - capo;
   const chordKey = getTransposedKey(playedKey ?? chords?.printedKey ?? "C", -capo);
+  const chordFontPx = chords ? chords.labelH / CAP_HEIGHT : 0;
   const overlayOn = Boolean(chords && playedKey);
   const staleChords = Boolean(playedKey && !chords);
   // Calque partiel : une partie des accords n'a pas été relevée et reste
@@ -182,11 +205,16 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey, ca
                     // côté de l'accord réécrit.
                     left: `${((l.x - 3) / chords.w) * 100}%`,
                     top: `${((l.y - 6) / chords.h) * 100}%`,
-                    height: `${((l.h + 8) / chords.h) * 100}%`,
+                    // Le fond blanc descend de la descendante entière ; la
+                    // marge basse rend au texte les 0,09 em de trop, pour que
+                    // la ligne de base retombe sur celle du texte gravé.
+                    height: `${((l.h + 6 + DESCENDER * chordFontPx) / chords.h) * 100}%`,
+                    paddingBottom: `${DESCENDER - LINE_BOX_DROP}em`,
                     minWidth: `${((l.w + 7) / chords.w) * 100}%`,
-                    fontSize: `${(chords.labelH / chords.w) * 100}cqw`,
+                    fontSize: `${(chordFontPx / chords.w) * 100}cqw`,
+                    fontWeight: 700,
                     lineHeight: 1,
-                    fontFamily: "Times New Roman, Georgia, serif",
+                    fontFamily: CHORD_FONT,
                   }}
                 >
                   {transposeChord(l.c, chordSemitones, chordKey)}
