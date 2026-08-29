@@ -1,0 +1,221 @@
+{
+ "slug": "围绕我",
+ "face": "verdana-bold",
+ "corrections": {
+  "502,560": "C/E",
+  "763,45": "Am"
+ },
+ "corrections_verified": "deux amas relus au zoom : le « C/E » de y=502 que le matcher rendait « Gm », et le « Am » de y=763 qu'il rendait « Dm ». Itération 33 (2026-08-24)",
+ "not_labels": [
+  "763,193",
+  "763,243",
+  "763,749",
+  "1020,1174"
+ ],
+ "not_labels_verified": "amas sans accord : trois fragments d'arc de liaison dans la rangée y=763, et le titre 【Chorus】 de y=1020. Itération 33 (2026-08-24)",
+ "not_rows": [
+  1057,
+  1326,
+  1589
+ ],
+ "not_rows_verified": "trois rangées qui ne sont **que** des arcs de liaison et des ligatures de mélodie : douze amas, aucun accord, promues « chords » par le classifieur et gonflant le dénominateur de 43 à rien. Rendues sur planche, itération 33 (2026-08-24)",
+ "key_label": {
+  "x": 6,
+  "y": 220,
+  "w": 85,
+  "h": 28
+ },
+ "key_label_verified": "mesure à la main, bande bornée à gauche de la fraction 4/4 : trois amas « 1 », « = », « F », lettre confrontée à printedKey. Itération 33 (2026-08-24)",
+ "verified": "audit-page F→F#, page entière relue en 9 tranches. Deux corrections (un « C/E » lu « Gm », un « Am » lu « Dm ») et surtout **trois rangées qui ne sont que des arcs de liaison**, écartées : elles portaient douze amas et maintenaient à elles seules la page sous le plancher — la page ne publiait rien. Cadre 1=F# mesuré à la main. Tous les accords en fa convertis — itération 33, 2026-08-24",
+ "frozen_labels": [
+  {
+   "x": 44,
+   "y": 277,
+   "w": 14,
+   "h": 36,
+   "c": "F"
+  },
+  {
+   "x": 424,
+   "y": 277,
+   "w": 111,
+   "h": 36,
+   "c": "Bbm/F"
+  },
+  {
+   "x": 833,
+   "y": 277,
+   "w": 14,
+   "h": 36,
+   "c": "F"
+  },
+  {
+   "x": 1213,
+   "y": 277,
+   "w": 112,
+   "h": 36,
+   "c": "Bbm/F"
+  },
+  {
+   "x": 61,
+   "y": 502,
+   "w": 14,
+   "h": 28,
+   "c": "F"
+  },
+  {
+   "x": 560,
+   "y": 502,
+   "w": 57,
+   "h": 28,
+   "c": "C/E"
+  },
+  {
+   "x": 1036,
+   "y": 502,
+   "w": 55,
+   "h": 28,
+   "c": "Dm"
+  },
+  {
+   "x": 45,
+   "y": 763,
+   "w": 111,
+   "h": 48,
+   "c": "Am"
+  },
+  {
+   "x": 579,
+   "y": 763,
+   "w": 41,
+   "h": 48,
+   "c": "Bb"
+  },
+  {
+   "x": 1085,
+   "y": 763,
+   "w": 57,
+   "h": 48,
+   "c": "F/A"
+  },
+  {
+   "x": 41,
+   "y": 1020,
+   "w": 58,
+   "h": 36,
+   "c": "Gm"
+  },
+  {
+   "x": 545,
+   "y": 1020,
+   "w": 41,
+   "h": 36,
+   "c": "Bb"
+  },
+  {
+   "x": 997,
+   "y": 1020,
+   "w": 20,
+   "h": 36,
+   "c": "C"
+  },
+  {
+   "x": 1405,
+   "y": 1020,
+   "w": 42,
+   "h": 36,
+   "c": "Bb"
+  },
+  {
+   "x": 39,
+   "y": 1290,
+   "w": 58,
+   "h": 28,
+   "c": "F/A"
+  },
+  {
+   "x": 285,
+   "y": 1290,
+   "w": 56,
+   "h": 28,
+   "c": "Am"
+  },
+  {
+   "x": 524,
+   "y": 1290,
+   "w": 56,
+   "h": 28,
+   "c": "Dm"
+  },
+  {
+   "x": 758,
+   "y": 1290,
+   "w": 58,
+   "h": 28,
+   "c": "Gm"
+  },
+  {
+   "x": 1004,
+   "y": 1290,
+   "w": 20,
+   "h": 28,
+   "c": "C"
+  },
+  {
+   "x": 1262,
+   "y": 1290,
+   "w": 14,
+   "h": 28,
+   "c": "F"
+  },
+  {
+   "x": 35,
+   "y": 1551,
+   "w": 41,
+   "h": 30,
+   "c": "Bb"
+  },
+  {
+   "x": 230,
+   "y": 1551,
+   "w": 57,
+   "h": 30,
+   "c": "F/A"
+  },
+  {
+   "x": 460,
+   "y": 1551,
+   "w": 55,
+   "h": 30,
+   "c": "Am"
+  },
+  {
+   "x": 700,
+   "y": 1551,
+   "w": 54,
+   "h": 30,
+   "c": "Dm"
+  },
+  {
+   "x": 915,
+   "y": 1551,
+   "w": 57,
+   "h": 30,
+   "c": "Gm"
+  },
+  {
+   "x": 1160,
+   "y": 1551,
+   "w": 20,
+   "h": 30,
+   "c": "C"
+  },
+  {
+   "x": 1411,
+   "y": 1551,
+   "w": 14,
+   "h": 30,
+   "c": "F"
+  }
+ ]
+}

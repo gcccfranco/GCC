@@ -71,5 +71,12 @@
     "F"
    ]
   }
- ]
+ ],
+ "key_label": {
+  "x": 15,
+  "y": 150,
+  "w": 64,
+  "h": 21
+ },
+ "key_label_verified": "mesure measure-keylabel (vote 1= + lettre attendue), zoom relu à l’œil sur planche de lot, lettre confrontée à printedKey, 2026-08-22"
 }

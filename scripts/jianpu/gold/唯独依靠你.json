@@ -29,8 +29,459 @@
    "w": 71,
    "h": 28,
    "c": "F#m7"
+  },
+  {
+   "x": 54,
+   "y": 190,
+   "w": 16,
+   "h": 25,
+   "c": "E"
+  },
+  {
+   "x": 443,
+   "y": 187,
+   "w": 50,
+   "h": 33,
+   "c": "A/E"
+  },
+  {
+   "x": 937,
+   "y": 190,
+   "w": 36,
+   "h": 25,
+   "c": "B7"
+  },
+  {
+   "x": 1308,
+   "y": 190,
+   "w": 16,
+   "h": 25,
+   "c": "E"
+  },
+  {
+   "x": 237,
+   "y": 528,
+   "w": 48,
+   "h": 33,
+   "c": "E/B"
+  },
+  {
+   "x": 463,
+   "y": 528,
+   "w": 81,
+   "h": 33,
+   "c": "F#/A#"
+  },
+  {
+   "x": 1141,
+   "y": 531,
+   "w": 18,
+   "h": 25,
+   "c": "B"
+  },
+  {
+   "x": 58,
+   "y": 1890,
+   "w": 16,
+   "h": 26,
+   "c": "E"
+  },
+  {
+   "x": 284,
+   "y": 1889,
+   "w": 66,
+   "h": 27,
+   "c": "G#m"
+  },
+  {
+   "x": 452,
+   "y": 1889,
+   "w": 63,
+   "h": 27,
+   "c": "C#m"
+  },
+  {
+   "x": 587,
+   "y": 1887,
+   "w": 68,
+   "h": 33,
+   "c": "E/G#"
+  },
+  {
+   "x": 811,
+   "y": 1890,
+   "w": 16,
+   "h": 26,
+   "c": "E"
+  },
+  {
+   "x": 995,
+   "y": 1890,
+   "w": 18,
+   "h": 26,
+   "c": "B"
+  },
+  {
+   "x": 1172,
+   "y": 1889,
+   "w": 37,
+   "h": 27,
+   "c": "C#"
   }
  ],
- "extra_verified": "4 étiquettes relues au zoom, 2026-08-17 (itération 24) : le C#m7 de y=531 sortait F#m7",
- "corrections": {}
+ "extra_verified": "4 étiquettes relues au zoom, 2026-08-17 (itération 24) : le C#m7 de y=531 sortait F#m7 · quatorze amas relus au zoom ×4. Sept viennent des deux rangées « [第一行] » (y=190, y=531) — cette gravure imprime **deux harmonisations par système**, une par couplet, et le classifieur ne promeut que la seconde ; l'itération 24 n'en avait lu que quatre, la page en laissait sept en mi. Sept autres viennent de la rangée y=1891, **jamais détectée** : elle est typée `numbers` parce que le crochet de reprise « ⌐2 » et la ligature de la mélodie l'accompagnent. Boîtes bornées au-dessus de la ligature. Itération 33 (2026-08-24)",
+ "corrections": {
+  "257,232": "E/G#",
+  "257,755": "Bsus4",
+  "257,939": "B/D#",
+  "866,439": "B/D#",
+  "866,865": "A/C#",
+  "866,1172": "E/B",
+  "1423,425": "E/G#",
+  "1652,400": "E/G#"
+ },
+ "corrections_verified": "huit amas relus au zoom ×4 : six lus juste mais rejetés (E/G#, Bsus4, B/D#, A/C#, E/B — les barres obliques et les sus4 gonflent la boîte et écrasent le score), et un **faux** — le B/D# de y=257 x=939 que le matcher rendait E/G#, la confusion déjà nommée à l'itération 24. Itération 33 (2026-08-24)",
+ "not_labels": [
+  "257,96",
+  "257,161",
+  "866,133",
+  "1172,1244",
+  "1208,29",
+  "1208,483",
+  "1652,736",
+  "1652,1422"
+ ],
+ "not_labels_verified": "amas sans accord : « [第 » et « 行] » de l'annotation « [第一行] », les titres 【Chorus】 et 【Bridge】, et quatre **crochets de reprise** « ⌐1 » / « ⌐2 ». Le premier (y=1208, x=29) était **publié** — « F# » à +0,32, jury unanime, sur un crochet : un faux accord que rien ne signalait. Relus au zoom ×4 — itération 33 (2026-08-24)",
+ "key_label": {
+  "x": 14,
+  "y": 133,
+  "w": 73,
+  "h": 24
+ },
+ "key_label_verified": "mesure à la main, bande bornée à gauche de la fraction 4/4 : trois amas « 1 », « = », « E », lettre confrontée à printedKey. Itération 33 (2026-08-24)",
+ "verified": "audit-page E→F, page entière relue en 9 tranches. La gravure imprime **deux harmonisations par système** — « [第一行] » et « [第二行] » — et le classifieur ne promeut que la seconde : les deux rangées « 第一行 » (y=190, y=531) et la rangée finale y=1891, typée `numbers` à cause du crochet de reprise et de la ligature, ont été lues à l'œil. Huit corrections, dont un B/D# que le matcher rendait E/G#, et huit amas écartés (annotations, titres, crochets) dont un qui **publiait** un faux « F# ». Cadre 1=F mesuré à la main. Reste tel quel le « [升至F#调] » de la fin — une consigne de modulation, que le modèle « un cadre » ne sait pas suivre, comme le « [回来后G调] » de 我相信 — itération 33, 2026-08-24",
+ "frozen_labels": [
+  {
+   "x": 56,
+   "y": 257,
+   "w": 11,
+   "h": 29,
+   "c": "E"
+  },
+  {
+   "x": 232,
+   "y": 257,
+   "w": 64,
+   "h": 29,
+   "c": "E/G#"
+  },
+  {
+   "x": 446,
+   "y": 257,
+   "w": 86,
+   "h": 29,
+   "c": "Amaj7"
+  },
+  {
+   "x": 755,
+   "y": 257,
+   "w": 74,
+   "h": 29,
+   "c": "Bsus4"
+  },
+  {
+   "x": 939,
+   "y": 257,
+   "w": 66,
+   "h": 29,
+   "c": "B/D#"
+  },
+  {
+   "x": 1161,
+   "y": 257,
+   "w": 73,
+   "h": 29,
+   "c": "Esus4"
+  },
+  {
+   "x": 1309,
+   "y": 257,
+   "w": 12,
+   "h": 29,
+   "c": "E"
+  },
+  {
+   "x": 64,
+   "y": 600,
+   "w": 11,
+   "h": 22,
+   "c": "E"
+  },
+  {
+   "x": 470,
+   "y": 600,
+   "w": 29,
+   "h": 22,
+   "c": "F#"
+  },
+  {
+   "x": 741,
+   "y": 600,
+   "w": 18,
+   "h": 22,
+   "c": "A"
+  },
+  {
+   "x": 1143,
+   "y": 600,
+   "w": 14,
+   "h": 22,
+   "c": "B"
+  },
+  {
+   "x": 85,
+   "y": 866,
+   "w": 12,
+   "h": 41,
+   "c": "E"
+  },
+  {
+   "x": 439,
+   "y": 866,
+   "w": 64,
+   "h": 41,
+   "c": "B/D#"
+  },
+  {
+   "x": 865,
+   "y": 866,
+   "w": 64,
+   "h": 41,
+   "c": "A/C#"
+  },
+  {
+   "x": 1172,
+   "y": 866,
+   "w": 44,
+   "h": 41,
+   "c": "E/B"
+  },
+  {
+   "x": 59,
+   "y": 1172,
+   "w": 17,
+   "h": 29,
+   "c": "A"
+  },
+  {
+   "x": 526,
+   "y": 1172,
+   "w": 55,
+   "h": 29,
+   "c": "F#m"
+  },
+  {
+   "x": 669,
+   "y": 1172,
+   "w": 17,
+   "h": 29,
+   "c": "A"
+  },
+  {
+   "x": 802,
+   "y": 1172,
+   "w": 44,
+   "h": 29,
+   "c": "Am"
+  },
+  {
+   "x": 1017,
+   "y": 1172,
+   "w": 11,
+   "h": 29,
+   "c": "E"
+  },
+  {
+   "x": 87,
+   "y": 1423,
+   "w": 59,
+   "h": 22,
+   "c": "C#m"
+  },
+  {
+   "x": 425,
+   "y": 1423,
+   "w": 63,
+   "h": 22,
+   "c": "E/G#"
+  },
+  {
+   "x": 813,
+   "y": 1423,
+   "w": 12,
+   "h": 22,
+   "c": "E"
+  },
+  {
+   "x": 1112,
+   "y": 1423,
+   "w": 62,
+   "h": 22,
+   "c": "G#m"
+  },
+  {
+   "x": 62,
+   "y": 1652,
+   "w": 59,
+   "h": 23,
+   "c": "C#m"
+  },
+  {
+   "x": 400,
+   "y": 1652,
+   "w": 63,
+   "h": 23,
+   "c": "E/G#"
+  },
+  {
+   "x": 793,
+   "y": 1652,
+   "w": 12,
+   "h": 23,
+   "c": "E"
+  },
+  {
+   "x": 1094,
+   "y": 1652,
+   "w": 61,
+   "h": 23,
+   "c": "G#m"
+  },
+  {
+   "x": 753,
+   "y": 190,
+   "w": 74,
+   "h": 28,
+   "c": "Bsus4"
+  },
+  {
+   "x": 1156,
+   "y": 190,
+   "w": 72,
+   "h": 28,
+   "c": "Am/E"
+  },
+  {
+   "x": 59,
+   "y": 531,
+   "w": 74,
+   "h": 28,
+   "c": "C#m7"
+  },
+  {
+   "x": 739,
+   "y": 531,
+   "w": 71,
+   "h": 28,
+   "c": "F#m7"
+  },
+  {
+   "x": 54,
+   "y": 190,
+   "w": 16,
+   "h": 25,
+   "c": "E"
+  },
+  {
+   "x": 443,
+   "y": 187,
+   "w": 50,
+   "h": 33,
+   "c": "A/E"
+  },
+  {
+   "x": 937,
+   "y": 190,
+   "w": 36,
+   "h": 25,
+   "c": "B7"
+  },
+  {
+   "x": 1308,
+   "y": 190,
+   "w": 16,
+   "h": 25,
+   "c": "E"
+  },
+  {
+   "x": 237,
+   "y": 528,
+   "w": 48,
+   "h": 33,
+   "c": "E/B"
+  },
+  {
+   "x": 463,
+   "y": 528,
+   "w": 81,
+   "h": 33,
+   "c": "F#/A#"
+  },
+  {
+   "x": 1141,
+   "y": 531,
+   "w": 18,
+   "h": 25,
+   "c": "B"
+  },
+  {
+   "x": 58,
+   "y": 1890,
+   "w": 16,
+   "h": 26,
+   "c": "E"
+  },
+  {
+   "x": 284,
+   "y": 1889,
+   "w": 66,
+   "h": 27,
+   "c": "G#m"
+  },
+  {
+   "x": 452,
+   "y": 1889,
+   "w": 63,
+   "h": 27,
+   "c": "C#m"
+  },
+  {
+   "x": 587,
+   "y": 1887,
+   "w": 68,
+   "h": 33,
+   "c": "E/G#"
+  },
+  {
+   "x": 811,
+   "y": 1890,
+   "w": 16,
+   "h": 26,
+   "c": "E"
+  },
+  {
+   "x": 995,
+   "y": 1890,
+   "w": 18,
+   "h": 26,
+   "c": "B"
+  },
+  {
+   "x": 1172,
+   "y": 1889,
+   "w": 37,
+   "h": 27,
+   "c": "C#"
+  }
+ ]
 }

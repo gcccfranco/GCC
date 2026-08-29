@@ -1,4 +1,99 @@
 {
- "slug": "一粒麦子",
- "face": "verdana-bold"
+  "slug": "一粒麦子",
+  "face": "verdana-bold",
+  "extra_labels": [
+    {
+      "x": 328,
+      "y": 528,
+      "w": 48,
+      "h": 24,
+      "c": "C/E"
+    },
+    {
+      "x": 29,
+      "y": 1754,
+      "w": 75,
+      "h": 25,
+      "c": "Gm"
+    },
+    {
+      "x": 336,
+      "y": 1754,
+      "w": 17,
+      "h": 25,
+      "c": "C"
+    },
+    {
+      "x": 651,
+      "y": 1754,
+      "w": 12,
+      "h": 24,
+      "c": "F"
+    },
+    {
+      "x": 70,
+      "y": 2036,
+      "w": 17,
+      "h": 41,
+      "c": "C"
+    },
+    {
+      "x": 373,
+      "y": 2036,
+      "w": 12,
+      "h": 41,
+      "c": "F"
+    },
+    {
+      "x": 464,
+      "y": 2036,
+      "w": 71,
+      "h": 41,
+      "c": "(C/E)"
+    },
+    {
+      "x": 588,
+      "y": 2036,
+      "w": 48,
+      "h": 41,
+      "c": "Dm"
+    },
+    {
+      "x": 859,
+      "y": 2036,
+      "w": 50,
+      "h": 41,
+      "c": "Gm"
+    },
+    {
+      "x": 1095,
+      "y": 2036,
+      "w": 17,
+      "h": 41,
+      "c": "C"
+    },
+    {
+      "x": 1015,
+      "y": 1085,
+      "w": 139,
+      "h": 33,
+      "c": "Gm代替Bb]"
+    },
+    {
+      "x": 1251,
+      "y": 1085,
+      "w": 70,
+      "h": 33,
+      "c": "[Gm]"
+    }
+  ],
+  "extra_verified": "zooms relus à l’œil sur planche de lot (propose-extra --all --hidden), 2026-08-25 (itération 33)",
+  "extra_composites_verified": "étiquettes composites (或 / 代替 / 先…后 / groupe entre parenthèses), lues à l’œil sur planche de lot et écrites telles qu’imprimées ; `transpose_label` réécrit la ligne entière. 2026-08-25 (itération 34)",
+  "key_label": {
+    "x": 6,
+    "y": 145,
+    "w": 79,
+    "h": 26
+  },
+  "key_label_verified": "mesure measure-keylabel (ancrage sur le « = », cadre = voisin gauche…voisin droit), zoom relu à l’œil sur planche de lot, lettre gravée confrontée à printedKey, 2026-08-26 (itération 35)"
 }

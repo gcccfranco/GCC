@@ -7,5 +7,194 @@
   "h": 22
  },
  "key_label_verified": "mesure measure-keylabel (vote 1= + lettre attendue), zoom relu à l’œil, 2026-08-05",
- "face": "verdana-bold"
+ "face": "verdana-bold",
+ "extra_labels": [
+  {
+   "x": 503,
+   "y": 1464,
+   "w": 17,
+   "h": 29,
+   "c": "D"
+  },
+  {
+   "x": 1000,
+   "y": 1704,
+   "w": 18,
+   "h": 29,
+   "c": "G"
+  },
+  {
+   "x": 37,
+   "y": 979,
+   "w": 106,
+   "h": 30,
+   "c": "G或G/B"
+  }
+ ],
+ "extra_verified": "zooms relus à l’œil sur planche de lot (propose-extra --all multi-chants), 2026-08-25 (itération 33)",
+ "extra_composites_verified": "étiquettes composites (或 / 代替 / 先…后 / groupe entre parenthèses), lues à l’œil sur planche de lot et écrites telles qu’imprimées ; `transpose_label` réécrit la ligne entière. 2026-08-25 (itération 34)",
+ "verified": "audit-page G→G# relu tranche par tranche : les six rangées d’accords et le cadre 1=G sont convertis, aucun accord sans cadre. L’étiquette composite « G或G/B » devient « G#或G#/C » — première page où `transpose_label` réécrit la ligne entière. 2026-08-25 (itération 34)",
+ "frozen_labels": [
+  {
+   "x": 57,
+   "y": 341,
+   "w": 18,
+   "h": 30,
+   "c": "G"
+  },
+  {
+   "x": 342,
+   "y": 341,
+   "w": 39,
+   "h": 30,
+   "c": "Em"
+  },
+  {
+   "x": 639,
+   "y": 341,
+   "w": 15,
+   "h": 30,
+   "c": "C"
+  },
+  {
+   "x": 930,
+   "y": 341,
+   "w": 17,
+   "h": 30,
+   "c": "D"
+  },
+  {
+   "x": 123,
+   "y": 500,
+   "w": 18,
+   "h": 22,
+   "c": "G"
+  },
+  {
+   "x": 617,
+   "y": 500,
+   "w": 17,
+   "h": 22,
+   "c": "G"
+  },
+  {
+   "x": 857,
+   "y": 500,
+   "w": 44,
+   "h": 22,
+   "c": "Am"
+  },
+  {
+   "x": 306,
+   "y": 741,
+   "w": 16,
+   "h": 22,
+   "c": "D"
+  },
+  {
+   "x": 576,
+   "y": 741,
+   "w": 18,
+   "h": 22,
+   "c": "G"
+  },
+  {
+   "x": 820,
+   "y": 741,
+   "w": 18,
+   "h": 22,
+   "c": "G"
+  },
+  {
+   "x": 345,
+   "y": 979,
+   "w": 16,
+   "h": 30,
+   "c": "C"
+  },
+  {
+   "x": 580,
+   "y": 979,
+   "w": 44,
+   "h": 30,
+   "c": "Am"
+  },
+  {
+   "x": 1135,
+   "y": 979,
+   "w": 17,
+   "h": 30,
+   "c": "D"
+  },
+  {
+   "x": 349,
+   "y": 1223,
+   "w": 18,
+   "h": 28,
+   "c": "G"
+  },
+  {
+   "x": 854,
+   "y": 1223,
+   "w": 39,
+   "h": 28,
+   "c": "Em"
+  },
+  {
+   "x": 43,
+   "y": 1464,
+   "w": 15,
+   "h": 29,
+   "c": "C"
+  },
+  {
+   "x": 876,
+   "y": 1464,
+   "w": 18,
+   "h": 29,
+   "c": "G"
+  },
+  {
+   "x": 37,
+   "y": 1704,
+   "w": 39,
+   "h": 29,
+   "c": "Em"
+  },
+  {
+   "x": 549,
+   "y": 1704,
+   "w": 15,
+   "h": 29,
+   "c": "C"
+  },
+  {
+   "x": 818,
+   "y": 1704,
+   "w": 17,
+   "h": 29,
+   "c": "D"
+  },
+  {
+   "x": 503,
+   "y": 1464,
+   "w": 17,
+   "h": 29,
+   "c": "D"
+  },
+  {
+   "x": 1000,
+   "y": 1704,
+   "w": 18,
+   "h": 29,
+   "c": "G"
+  },
+  {
+   "x": 37,
+   "y": 979,
+   "w": 106,
+   "h": 30,
+   "c": "G或G/B"
+  }
+ ]
 }

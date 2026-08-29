@@ -1,4 +1,252 @@
 {
  "slug": "你恩典不离开",
- "face": "verdana-bold"
+ "face": "verdana-bold",
+ "key_label": {
+  "x": 6,
+  "y": 218,
+  "w": 85,
+  "h": 28
+ },
+ "key_label_verified": "mesure measure-keylabel (vote 1= + lettre attendue), zoom relu à l’œil sur planche de lot, lettre confrontée à printedKey, 2026-08-22",
+ "extra_labels": [
+  {
+   "x": 305,
+   "y": 377,
+   "w": 83,
+   "h": 28,
+   "c": "B/D#"
+  },
+  {
+   "x": 848,
+   "y": 377,
+   "w": 78,
+   "h": 28,
+   "c": "G#m"
+  },
+  {
+   "x": 1000,
+   "y": 377,
+   "w": 74,
+   "h": 28,
+   "c": "C#m"
+  },
+  {
+   "x": 611,
+   "y": 758,
+   "w": 83,
+   "h": 32,
+   "c": "B/D#"
+  },
+  {
+   "x": 161,
+   "y": 1146,
+   "w": 78,
+   "h": 29,
+   "c": "B/D#"
+  },
+  {
+   "x": 677,
+   "y": 1146,
+   "w": 73,
+   "h": 29,
+   "c": "G#m"
+  },
+  {
+   "x": 804,
+   "y": 1146,
+   "w": 70,
+   "h": 29,
+   "c": "C#m"
+  }
+ ],
+ "extra_verified": "zooms propose-extra --all relus un à un, boîtes mesurées au pixel quand l'amas était un fragment ou une soudure (itération 29, certification en lot) — 2026-08-22",
+ "not_labels": [
+  "1416,748"
+ ],
+ "not_labels_verified": "amas sans accord : titres de section 【】/« To Chorus », chiffres de crochet de reprise et arcs de liaison — relus au zoom, itération 29 (2026-08-22)",
+ "verified": "audit-page E→F, page entière relue en 9 tranches : 26 accords encadrés (dont les 7 relus à l'œil, deux B/D# que le matcher lisait E/G#), 【Chorus】 écarté, cadre 1=F. Aucun accord resté en mi — itération 29, 2026-08-22",
+ "frozen_labels": [
+  {
+   "x": 163,
+   "y": 377,
+   "w": 16,
+   "h": 28,
+   "c": "E"
+  },
+  {
+   "x": 491,
+   "y": 377,
+   "w": 73,
+   "h": 28,
+   "c": "C#m"
+  },
+  {
+   "x": 1284,
+   "y": 377,
+   "w": 69,
+   "h": 28,
+   "c": "F#m"
+  },
+  {
+   "x": 1407,
+   "y": 377,
+   "w": 18,
+   "h": 28,
+   "c": "B"
+  },
+  {
+   "x": 44,
+   "y": 748,
+   "w": 22,
+   "h": 42,
+   "c": "A"
+  },
+  {
+   "x": 503,
+   "y": 748,
+   "w": 15,
+   "h": 42,
+   "c": "E"
+  },
+  {
+   "x": 727,
+   "y": 748,
+   "w": 73,
+   "h": 42,
+   "c": "C#m"
+  },
+  {
+   "x": 906,
+   "y": 748,
+   "w": 69,
+   "h": 42,
+   "c": "F#m"
+  },
+  {
+   "x": 1287,
+   "y": 748,
+   "w": 19,
+   "h": 42,
+   "c": "B"
+  },
+  {
+   "x": 50,
+   "y": 1146,
+   "w": 15,
+   "h": 29,
+   "c": "E"
+  },
+  {
+   "x": 370,
+   "y": 1146,
+   "w": 73,
+   "h": 29,
+   "c": "C#m"
+  },
+  {
+   "x": 1017,
+   "y": 1146,
+   "w": 68,
+   "h": 29,
+   "c": "F#m"
+  },
+  {
+   "x": 1144,
+   "y": 1146,
+   "w": 40,
+   "h": 29,
+   "c": "B7"
+  },
+  {
+   "x": 1356,
+   "y": 1146,
+   "w": 22,
+   "h": 29,
+   "c": "A"
+  },
+  {
+   "x": 264,
+   "y": 1529,
+   "w": 81,
+   "h": 35,
+   "c": "E/G#"
+  },
+  {
+   "x": 501,
+   "y": 1529,
+   "w": 73,
+   "h": 35,
+   "c": "C#m"
+  },
+  {
+   "x": 733,
+   "y": 1529,
+   "w": 92,
+   "h": 35,
+   "c": "F#m7"
+  },
+  {
+   "x": 998,
+   "y": 1529,
+   "w": 62,
+   "h": 35,
+   "c": "A/B"
+  },
+  {
+   "x": 1309,
+   "y": 1529,
+   "w": 15,
+   "h": 35,
+   "c": "E"
+  },
+  {
+   "x": 305,
+   "y": 377,
+   "w": 83,
+   "h": 28,
+   "c": "B/D#"
+  },
+  {
+   "x": 848,
+   "y": 377,
+   "w": 78,
+   "h": 28,
+   "c": "G#m"
+  },
+  {
+   "x": 1000,
+   "y": 377,
+   "w": 74,
+   "h": 28,
+   "c": "C#m"
+  },
+  {
+   "x": 611,
+   "y": 758,
+   "w": 83,
+   "h": 32,
+   "c": "B/D#"
+  },
+  {
+   "x": 161,
+   "y": 1146,
+   "w": 78,
+   "h": 29,
+   "c": "B/D#"
+  },
+  {
+   "x": 677,
+   "y": 1146,
+   "w": 73,
+   "h": 29,
+   "c": "G#m"
+  },
+  {
+   "x": 804,
+   "y": 1146,
+   "w": 70,
+   "h": 29,
+   "c": "C#m"
+  }
+ ]
 }

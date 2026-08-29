@@ -1,4 +1,11 @@
 {
  "slug": "这里有荣耀",
- "face": "helvetica-bold"
+ "face": "helvetica-bold",
+ "key_label": {
+  "x": 6,
+  "y": 213,
+  "w": 85,
+  "h": 27
+ },
+ "key_label_verified": "mesure measure-keylabel (vote 1= + lettre attendue), zoom relu à l’œil sur planche de lot, lettre confrontée à printedKey, 2026-08-22"
 }

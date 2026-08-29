@@ -28,8 +28,50 @@
    "w": 46,
    "h": 36,
    "c": "Em"
+  },
+  {
+   "x": 660,
+   "y": 516,
+   "w": 58,
+   "h": 24,
+   "c": "D/A"
+  },
+  {
+   "x": 917,
+   "y": 516,
+   "w": 23,
+   "h": 24,
+   "c": "G"
+  },
+  {
+   "x": 1121,
+   "y": 516,
+   "w": 27,
+   "h": 24,
+   "c": "A7"
+  },
+  {
+   "x": 372,
+   "y": 1088,
+   "w": 31,
+   "h": 36,
+   "c": "A7"
+  },
+  {
+   "x": 1106,
+   "y": 1088,
+   "w": 34,
+   "h": 36,
+   "c": "A7"
+  },
+  {
+   "x": 1324,
+   "y": 1088,
+   "w": 20,
+   "h": 36,
+   "c": "D"
   }
  ],
- "extra_verified": "chaque étiquette relue sur zoom (propose-extra + planches), 2026-08-04",
+ "extra_verified": "zooms relus à l’œil sur planche de lot (propose-extra --all multi-chants), 2026-08-25 (itération 33)",
  "face": "helvetica-bold"
 }

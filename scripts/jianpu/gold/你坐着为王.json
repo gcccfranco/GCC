@@ -7,5 +7,172 @@
   "h": 24
  },
  "key_label_verified": "mesure measure-keylabel (vote 1= + lettre attendue), zoom relu à l’œil, 2026-08-05",
- "face": "verdana-bold"
+ "face": "verdana-bold",
+ "extra_labels": [
+  {
+   "x": 456,
+   "y": 1532,
+   "w": 145,
+   "h": 33,
+   "c": "Bb(或Gm)"
+  },
+  {
+   "x": 726,
+   "y": 1532,
+   "w": 124,
+   "h": 33,
+   "c": "C(或Am)"
+  },
+  {
+   "x": 46,
+   "y": 1532,
+   "w": 119,
+   "h": 43,
+   "c": "F(或Am)"
+  }
+ ],
+ "extra_composites_verified": "étiquettes composites (或 / 代替 / 先…后 / groupe entre parenthèses), lues à l’œil sur planche de lot et écrites telles qu’imprimées ; `transpose_label` réécrit la ligne entière. 2026-08-25 (itération 34)",
+ "verified": "audit-page F→F# relu sur les huit tranches : toutes les rangées d’accords et le cadre 1=F sont convertis. Les trois alternatives « F(或Am) », « Bb(或Gm) », « C(或Am) » deviennent « F#(或A#m) », « B(或G#m) », « C#(或A#m) ». La mention « （括号里的和弦是灵栖清泉著） » est un crédit, sans accord. 2026-08-25 (itération 34)",
+ "frozen_labels": [
+  {
+   "x": 262,
+   "y": 326,
+   "w": 47,
+   "h": 24,
+   "c": "Dm"
+  },
+  {
+   "x": 633,
+   "y": 326,
+   "w": 35,
+   "h": 24,
+   "c": "Bb"
+  },
+  {
+   "x": 1004,
+   "y": 326,
+   "w": 12,
+   "h": 24,
+   "c": "F"
+  },
+  {
+   "x": 50,
+   "y": 629,
+   "w": 16,
+   "h": 23,
+   "c": "C"
+  },
+  {
+   "x": 371,
+   "y": 629,
+   "w": 46,
+   "h": 23,
+   "c": "Dm"
+  },
+  {
+   "x": 715,
+   "y": 629,
+   "w": 34,
+   "h": 23,
+   "c": "Bb"
+  },
+  {
+   "x": 1044,
+   "y": 629,
+   "w": 12,
+   "h": 23,
+   "c": "F"
+  },
+  {
+   "x": 1175,
+   "y": 629,
+   "w": 16,
+   "h": 23,
+   "c": "C"
+  },
+  {
+   "x": 50,
+   "y": 925,
+   "w": 46,
+   "h": 30,
+   "c": "Dm"
+  },
+  {
+   "x": 497,
+   "y": 925,
+   "w": 12,
+   "h": 30,
+   "c": "F"
+  },
+  {
+   "x": 936,
+   "y": 925,
+   "w": 16,
+   "h": 30,
+   "c": "C"
+  },
+  {
+   "x": 50,
+   "y": 1234,
+   "w": 34,
+   "h": 25,
+   "c": "Bb"
+  },
+  {
+   "x": 258,
+   "y": 1234,
+   "w": 17,
+   "h": 25,
+   "c": "C"
+  },
+  {
+   "x": 518,
+   "y": 1234,
+   "w": 12,
+   "h": 25,
+   "c": "F"
+  },
+  {
+   "x": 943,
+   "y": 1234,
+   "w": 34,
+   "h": 25,
+   "c": "Bb"
+  },
+  {
+   "x": 220,
+   "y": 1532,
+   "w": 47,
+   "h": 43,
+   "c": "Dm"
+  },
+  {
+   "x": 983,
+   "y": 1532,
+   "w": 45,
+   "h": 43,
+   "c": "Dm"
+  },
+  {
+   "x": 456,
+   "y": 1532,
+   "w": 145,
+   "h": 33,
+   "c": "Bb(或Gm)"
+  },
+  {
+   "x": 726,
+   "y": 1532,
+   "w": 124,
+   "h": 33,
+   "c": "C(或Am)"
+  },
+  {
+   "x": 46,
+   "y": 1532,
+   "w": 119,
+   "h": 43,
+   "c": "F(或Am)"
+  }
+ ]
 }

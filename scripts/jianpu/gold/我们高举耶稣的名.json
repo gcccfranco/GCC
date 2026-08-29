@@ -21,15 +21,353 @@
    "w": 16,
    "h": 21,
    "c": "A"
+  }
+ ],
+ "extra_verified": "chaque étiquette relue sur zoom (propose-extra + planches), 2026-08-04 · propositions propose-extra relues au zoom (itération 17, garde « deux par rangée » levé) ; six lues faux par le matcher entre +0,43 et +0,73 et relues au zoom ×7 — 2026-08-09 · retiré les étiquettes tombant dans une rangée en tonalité étrangère désormais masquée : elles lisaient juste, mais ne transposaient qu'une partie de leur rangée — itération 31 (2026-08-22)",
+ "face": "helvetica-neue",
+ "key_label": {
+  "x": 17,
+  "y": 195,
+  "w": 73,
+  "h": 22
+ },
+ "key_label_verified": "mesure measure-keylabel (vote 1= + lettre attendue), zoom relu à l’œil sur planche de lot, lettre confrontée à printedKey, 2026-08-22",
+ "mask_rows": [
+  893,
+  1165,
+  1674
+ ],
+ "mask_rows_verified": "1=D · trois rangées gravées en **mi** au-dessus des rangées réelles en ré (y=955, y=1226, y=1734). La page l'écrit en toutes lettres à la fin du système y=1462 : « 升调用上层和弦 » — pour monter la tonalité, prendre les accords de la rangée du haut. y=893 (3 amas) et y=1165 (0,67) passaient sous les seuils de publication de foreign_rows ; le mode --large de foreign-scan les sort. Itération 31 (2026-08-22)",
+ "not_labels": [
+  "1224,624",
+  "1168,1462",
+  "1259,1462",
+  "1197,1734"
+ ],
+ "not_labels_verified": "amas sans accord : titres 【Chorus】【Bridge】【Pre-Chorus】, « To Chorus », indications de jeu (（琶音）,（先低后高）), barre de mesure, chiffrage, et l'annotation « 升调用上层和弦 » — relus au zoom, itération 31 (2026-08-22)",
+ "verified": "audit-page D→D#, page entière relue en 8 tranches. La page imprime **deux jeux d'accords par système** et le dit en toutes lettres : « 原曲G调升A调，建议会众D调升E调 » en en-tête, « 升调用上层和弦 » au système y=1462. Les trois rangées en **mi** (y=893, 1165, 1674) sont masquées — la dernière publiait une étiquette qui laissait sa rangée transposée à moitié. Tous les accords en ré convertis, cadre 1=D#. Les mentions de tonalité de l'en-tête décrivent la source et restent — itération 31, 2026-08-22",
+ "frozen_labels": [
+  {
+   "x": 57,
+   "y": 276,
+   "w": 59,
+   "h": 23,
+   "c": "D/F#"
+  },
+  {
+   "x": 392,
+   "y": 276,
+   "w": 17,
+   "h": 23,
+   "c": "G"
+  },
+  {
+   "x": 717,
+   "y": 276,
+   "w": 57,
+   "h": 23,
+   "c": "D/F#"
+  },
+  {
+   "x": 1053,
+   "y": 276,
+   "w": 16,
+   "h": 23,
+   "c": "D"
+  },
+  {
+   "x": 86,
+   "y": 422,
+   "w": 58,
+   "h": 24,
+   "c": "D/F#"
+  },
+  {
+   "x": 435,
+   "y": 422,
+   "w": 16,
+   "h": 24,
+   "c": "G"
+  },
+  {
+   "x": 730,
+   "y": 422,
+   "w": 58,
+   "h": 24,
+   "c": "D/F#"
+  },
+  {
+   "x": 1078,
+   "y": 422,
+   "w": 17,
+   "h": 24,
+   "c": "A"
+  },
+  {
+   "x": 54,
+   "y": 624,
+   "w": 58,
+   "h": 31,
+   "c": "D/F#"
+  },
+  {
+   "x": 337,
+   "y": 624,
+   "w": 17,
+   "h": 31,
+   "c": "G"
+  },
+  {
+   "x": 597,
+   "y": 624,
+   "w": 16,
+   "h": 31,
+   "c": "A"
+  },
+  {
+   "x": 879,
+   "y": 624,
+   "w": 16,
+   "h": 31,
+   "c": "D"
+  },
+  {
+   "x": 1115,
+   "y": 624,
+   "w": 16,
+   "h": 31,
+   "c": "D"
+  },
+  {
+   "x": 72,
+   "y": 955,
+   "w": 16,
+   "h": 21,
+   "c": "G"
+  },
+  {
+   "x": 542,
+   "y": 955,
+   "w": 16,
+   "h": 21,
+   "c": "D"
+  },
+  {
+   "x": 925,
+   "y": 955,
+   "w": 17,
+   "h": 21,
+   "c": "G"
+  },
+  {
+   "x": 68,
+   "y": 1226,
+   "w": 15,
+   "h": 21,
+   "c": "D"
+  },
+  {
+   "x": 189,
+   "y": 1226,
+   "w": 60,
+   "h": 21,
+   "c": "A/C#"
+  },
+  {
+   "x": 371,
+   "y": 1226,
+   "w": 38,
+   "h": 21,
+   "c": "Bm"
+  },
+  {
+   "x": 749,
+   "y": 1226,
+   "w": 17,
+   "h": 21,
+   "c": "G"
+  },
+  {
+   "x": 1062,
+   "y": 1226,
+   "w": 16,
+   "h": 21,
+   "c": "D"
+  },
+  {
+   "x": 1197,
+   "y": 1226,
+   "w": 16,
+   "h": 21,
+   "c": "A"
+  },
+  {
+   "x": 61,
+   "y": 1462,
+   "w": 16,
+   "h": 23,
+   "c": "D"
+  },
+  {
+   "x": 301,
+   "y": 1462,
+   "w": 16,
+   "h": 23,
+   "c": "D"
+  },
+  {
+   "x": 587,
+   "y": 1462,
+   "w": 16,
+   "h": 23,
+   "c": "G"
+  },
+  {
+   "x": 828,
+   "y": 1462,
+   "w": 16,
+   "h": 23,
+   "c": "D"
+  },
+  {
+   "x": 1114,
+   "y": 1462,
+   "w": 16,
+   "h": 23,
+   "c": "A"
+  },
+  {
+   "x": 67,
+   "y": 1734,
+   "w": 16,
+   "h": 23,
+   "c": "D"
+  },
+  {
+   "x": 388,
+   "y": 1734,
+   "w": 17,
+   "h": 23,
+   "c": "G"
+  },
+  {
+   "x": 719,
+   "y": 1734,
+   "w": 16,
+   "h": 23,
+   "c": "D"
+  },
+  {
+   "x": 858,
+   "y": 1734,
+   "w": 17,
+   "h": 23,
+   "c": "A"
+  },
+  {
+   "x": 1046,
+   "y": 1734,
+   "w": 15,
+   "h": 23,
+   "c": "D"
+  },
+  {
+   "x": 72,
+   "y": 893,
+   "w": 16,
+   "h": 20,
+   "c": ""
+  },
+  {
+   "x": 544,
+   "y": 893,
+   "w": 11,
+   "h": 20,
+   "c": ""
+  },
+  {
+   "x": 926,
+   "y": 893,
+   "w": 16,
+   "h": 20,
+   "c": ""
+  },
+  {
+   "x": 70,
+   "y": 1165,
+   "w": 10,
+   "h": 21,
+   "c": ""
+  },
+  {
+   "x": 187,
+   "y": 1165,
+   "w": 61,
+   "h": 21,
+   "c": ""
+  },
+  {
+   "x": 364,
+   "y": 1165,
+   "w": 56,
+   "h": 21,
+   "c": ""
+  },
+  {
+   "x": 750,
+   "y": 1165,
+   "w": 16,
+   "h": 21,
+   "c": ""
+  },
+  {
+   "x": 1064,
+   "y": 1165,
+   "w": 10,
+   "h": 21,
+   "c": ""
+  },
+  {
+   "x": 1199,
+   "y": 1165,
+   "w": 13,
+   "h": 21,
+   "c": ""
+  },
+  {
+   "x": 69,
+   "y": 1674,
+   "w": 9,
+   "h": 20,
+   "c": ""
   },
   {
    "x": 388,
    "y": 1674,
    "w": 17,
    "h": 20,
-   "c": "A"
+   "c": ""
+  },
+  {
+   "x": 721,
+   "y": 1674,
+   "w": 9,
+   "h": 20,
+   "c": ""
+  },
+  {
+   "x": 860,
+   "y": 1674,
+   "w": 14,
+   "h": 20,
+   "c": ""
+  },
+  {
+   "x": 1048,
+   "y": 1674,
+   "w": 10,
+   "h": 20,
+   "c": ""
   }
- ],
- "extra_verified": "chaque étiquette relue sur zoom (propose-extra + planches), 2026-08-04 · propositions propose-extra relues au zoom (itération 17, garde « deux par rangée » levé) ; six lues faux par le matcher entre +0,43 et +0,73 et relues au zoom ×7 — 2026-08-09",
- "face": "helvetica-neue"
+ ]
 }

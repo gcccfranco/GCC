@@ -2,18 +2,320 @@
  "slug": "明亮晨星",
  "extra_labels": [
   {
-   "x": 51,
-   "y": 1317,
-   "w": 38,
-   "h": 20,
+   "x": 50,
+   "y": 1401,
+   "w": 44,
+   "h": 23,
+   "c": "Gm"
+  },
+  {
+   "x": 558,
+   "y": 1401,
+   "w": 45,
+   "h": 23,
+   "c": "Gm"
+  },
+  {
+   "x": 1046,
+   "y": 1401,
+   "w": 12,
+   "h": 23,
+   "c": "F"
+  },
+  {
+   "x": 817,
+   "y": 746,
+   "w": 47,
+   "h": 33,
+   "c": "F/C"
+  },
+  {
+   "x": 1051,
+   "y": 749,
+   "w": 16,
+   "h": 26,
+   "c": "F"
+  },
+  {
+   "x": 811,
+   "y": 1396,
+   "w": 47,
+   "h": 34,
+   "c": "F/C"
+  },
+  {
+   "x": 333,
+   "y": 1870,
+   "w": 20,
+   "h": 27,
+   "c": "C"
+  },
+  {
+   "x": 1029,
+   "y": 1870,
+   "w": 19,
+   "h": 27,
+   "c": "C"
+  }
+ ],
+ "extra_verified": "chaque étiquette relue sur zoom (propose-extra + planches), 2026-08-04 · propositions propose-extra relues au zoom (itération 17, garde « deux par rangée » levé) ; six lues faux par le matcher entre +0,43 et +0,73 et relues au zoom ×7 — 2026-08-09 · retiré les étiquettes tombant dans une rangée en tonalité étrangère désormais masquée : elles lisaient juste, mais ne transposaient qu'une partie de leur rangée — itération 31 (2026-08-22) · propose-extra --all après masquage des rangées étrangères : 37 amas relus au zoom. Deux amas soudés séparés (« D/F# Em7 », « Dm G) ») et quatre « F » rendus à leur largeur — le pré-filtre les livrait à 4 px. Boîtes par bloc d'encre, marge de 2 px — itération 31 (2026-08-22) · les deux « C » du dernier système (y=1872), rangée `chords?` à 2 amas que confirm_candidates ne promeut pas — trouvés par audit-page, itération 31 (2026-08-22)",
+ "key_label": {
+  "x": 14,
+  "y": 154,
+  "w": 73,
+  "h": 23
+ },
+ "key_label_verified": "mesure measure-keylabel (vote 1= + lettre attendue), zoom relu à l’œil, 2026-08-05",
+ "face": "verdana-bold",
+ "mask_rows": [
+  972,
+  1317
+ ],
+ "mask_rows_verified": "1=F · deux rangées gravées en **sol** au-dessus des rangées réelles en fa (y=1054, y=1401). Le calque publiait dedans (« G », « Am ») — accords faux. foreign-scan (+2 demi-tons), paires relues côte à côte — itération 31 (2026-08-22)",
+ "not_labels": [
+  "158,1054",
+  "178,1627"
+ ],
+ "not_labels_verified": "amas sans accord : titres 【Chorus】【Bridge】【Pre-Chorus】, « To Chorus », indications de jeu (（琶音）,（先低后高）), barre de mesure, chiffrage, et l'annotation « 升调用上层和弦 » — relus au zoom, itération 31 (2026-08-22)",
+ "verified": "audit-page F→F#, page entière relue en 8 tranches, deux passes. Deux rangées gravées en **sol** (y=972, y=1317) masquées — elles publiaient « G » et deux « Am », qui ne transposaient qu'une partie de leur rangée. Puis les deux « C » du dernier système (y=1872), rangée `chords?` à 2 amas que confirm_candidates ne promeut pas. Tous les accords en fa convertis, cadre 1=F# — itération 31, 2026-08-22",
+ "frozen_labels": [
+  {
+   "x": 63,
+   "y": 216,
+   "w": 11,
+   "h": 23,
+   "c": "F"
+  },
+  {
+   "x": 341,
+   "y": 216,
+   "w": 15,
+   "h": 23,
+   "c": "C"
+  },
+  {
+   "x": 611,
+   "y": 216,
+   "w": 43,
+   "h": 23,
+   "c": "Dm"
+  },
+  {
+   "x": 890,
+   "y": 216,
+   "w": 43,
+   "h": 23,
    "c": "Am"
   },
   {
-   "x": 559,
-   "y": 1317,
-   "w": 39,
-   "h": 20,
+   "x": 1163,
+   "y": 216,
+   "w": 32,
+   "h": 23,
+   "c": "Bb"
+  },
+  {
+   "x": 62,
+   "y": 355,
+   "w": 15,
+   "h": 23,
+   "c": "C"
+  },
+  {
+   "x": 335,
+   "y": 355,
+   "w": 34,
+   "h": 23,
+   "c": "Db"
+  },
+  {
+   "x": 634,
+   "y": 355,
+   "w": 31,
+   "h": 23,
+   "c": "Eb"
+  },
+  {
+   "x": 915,
+   "y": 355,
+   "w": 11,
+   "h": 23,
+   "c": "F"
+  },
+  {
+   "x": 89,
+   "y": 500,
+   "w": 12,
+   "h": 22,
+   "c": "F"
+  },
+  {
+   "x": 330,
+   "y": 500,
+   "w": 15,
+   "h": 22,
+   "c": "C"
+  },
+  {
+   "x": 531,
+   "y": 500,
+   "w": 42,
+   "h": 22,
+   "c": "Dm"
+  },
+  {
+   "x": 801,
+   "y": 500,
+   "w": 44,
+   "h": 22,
    "c": "Am"
+  },
+  {
+   "x": 1007,
+   "y": 500,
+   "w": 32,
+   "h": 22,
+   "c": "Bb"
+  },
+  {
+   "x": 1258,
+   "y": 500,
+   "w": 11,
+   "h": 22,
+   "c": "F"
+  },
+  {
+   "x": 50,
+   "y": 750,
+   "w": 45,
+   "h": 23,
+   "c": "Gm"
+  },
+  {
+   "x": 344,
+   "y": 750,
+   "w": 15,
+   "h": 23,
+   "c": "C"
+  },
+  {
+   "x": 562,
+   "y": 750,
+   "w": 45,
+   "h": 23,
+   "c": "Gm"
+  },
+  {
+   "x": 926,
+   "y": 750,
+   "w": 16,
+   "h": 23,
+   "c": "C"
+  },
+  {
+   "x": 88,
+   "y": 1054,
+   "w": 11,
+   "h": 34,
+   "c": "F"
+  },
+  {
+   "x": 536,
+   "y": 1054,
+   "w": 44,
+   "h": 34,
+   "c": "Dm"
+  },
+  {
+   "x": 764,
+   "y": 1054,
+   "w": 44,
+   "h": 34,
+   "c": "Am"
+  },
+  {
+   "x": 995,
+   "y": 1054,
+   "w": 32,
+   "h": 34,
+   "c": "Bb"
+  },
+  {
+   "x": 1225,
+   "y": 1054,
+   "w": 44,
+   "h": 34,
+   "c": "F/A"
+  },
+  {
+   "x": 50,
+   "y": 1401,
+   "w": 44,
+   "h": 23,
+   "c": "Gm"
+  },
+  {
+   "x": 279,
+   "y": 1401,
+   "w": 15,
+   "h": 23,
+   "c": "C"
+  },
+  {
+   "x": 558,
+   "y": 1401,
+   "w": 45,
+   "h": 23,
+   "c": "Gm"
+  },
+  {
+   "x": 920,
+   "y": 1401,
+   "w": 16,
+   "h": 23,
+   "c": "C"
+  },
+  {
+   "x": 1046,
+   "y": 1401,
+   "w": 12,
+   "h": 23,
+   "c": "F"
+  },
+  {
+   "x": 86,
+   "y": 1627,
+   "w": 33,
+   "h": 29,
+   "c": "Bb"
+  },
+  {
+   "x": 368,
+   "y": 1627,
+   "w": 11,
+   "h": 29,
+   "c": "F"
+  },
+  {
+   "x": 611,
+   "y": 1627,
+   "w": 31,
+   "h": 29,
+   "c": "Bb"
+  },
+  {
+   "x": 916,
+   "y": 1627,
+   "w": 11,
+   "h": 29,
+   "c": "F"
+  },
+  {
+   "x": 1159,
+   "y": 1627,
+   "w": 32,
+   "h": 29,
+   "c": "Bb"
   },
   {
    "x": 50,
@@ -37,20 +339,123 @@
    "c": "F"
   },
   {
+   "x": 817,
+   "y": 746,
+   "w": 47,
+   "h": 33,
+   "c": "F/C"
+  },
+  {
+   "x": 1051,
+   "y": 749,
+   "w": 16,
+   "h": 26,
+   "c": "F"
+  },
+  {
+   "x": 811,
+   "y": 1396,
+   "w": 47,
+   "h": 34,
+   "c": "F/C"
+  },
+  {
+   "x": 333,
+   "y": 1870,
+   "w": 20,
+   "h": 27,
+   "c": "C"
+  },
+  {
+   "x": 1029,
+   "y": 1870,
+   "w": 19,
+   "h": 27,
+   "c": "C"
+  },
+  {
    "x": 86,
    "y": 972,
    "w": 16,
    "h": 26,
-   "c": "G"
+   "c": ""
+  },
+  {
+   "x": 311,
+   "y": 972,
+   "w": 130,
+   "h": 26,
+   "c": ""
+  },
+  {
+   "x": 538,
+   "y": 972,
+   "w": 34,
+   "h": 26,
+   "c": ""
+  },
+  {
+   "x": 767,
+   "y": 972,
+   "w": 36,
+   "h": 26,
+   "c": ""
+  },
+  {
+   "x": 1000,
+   "y": 972,
+   "w": 13,
+   "h": 26,
+   "c": ""
+  },
+  {
+   "x": 1221,
+   "y": 972,
+   "w": 44,
+   "h": 26,
+   "c": ""
+  },
+  {
+   "x": 51,
+   "y": 1317,
+   "w": 38,
+   "h": 20,
+   "c": ""
+  },
+  {
+   "x": 280,
+   "y": 1317,
+   "w": 15,
+   "h": 20,
+   "c": ""
+  },
+  {
+   "x": 559,
+   "y": 1317,
+   "w": 39,
+   "h": 20,
+   "c": ""
+  },
+  {
+   "x": 809,
+   "y": 1317,
+   "w": 47,
+   "h": 20,
+   "c": ""
+  },
+  {
+   "x": 922,
+   "y": 1317,
+   "w": 14,
+   "h": 20,
+   "c": ""
+  },
+  {
+   "x": 1043,
+   "y": 1317,
+   "w": 16,
+   "h": 20,
+   "c": ""
   }
- ],
- "extra_verified": "chaque étiquette relue sur zoom (propose-extra + planches), 2026-08-04 · propositions propose-extra relues au zoom (itération 17, garde « deux par rangée » levé) ; six lues faux par le matcher entre +0,43 et +0,73 et relues au zoom ×7 — 2026-08-09",
- "key_label": {
-  "x": 14,
-  "y": 154,
-  "w": 73,
-  "h": 23
- },
- "key_label_verified": "mesure measure-keylabel (vote 1= + lettre attendue), zoom relu à l’œil, 2026-08-05",
- "face": "verdana-bold"
+ ]
 }

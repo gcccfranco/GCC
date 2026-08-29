@@ -1,4 +1,238 @@
 {
  "slug": "奇异恩典",
- "face": "verdana-bold"
+ "face": "verdana-bold",
+ "key_label": {
+  "x": 15,
+  "y": 262,
+  "w": 72,
+  "h": 23
+ },
+ "key_label_verified": "mesure measure-keylabel (vote 1= + lettre attendue), zoom relu à l’œil sur planche de lot, lettre confrontée à printedKey, 2026-08-22",
+ "not_labels": [
+  "122,388"
+ ],
+ "not_labels_verified": "amas sans accord : titres de section 【】/« To Chorus », chiffres de crochet de reprise et arcs de liaison — relus au zoom, itération 29 (2026-08-22)",
+ "extra_labels": [
+  {
+   "x": 688,
+   "y": 824,
+   "w": 77,
+   "h": 31,
+   "c": "(E/G#"
+  },
+  {
+   "x": 863,
+   "y": 827,
+   "w": 56,
+   "h": 22,
+   "c": "F#m"
+  },
+  {
+   "x": 1024,
+   "y": 825,
+   "w": 42,
+   "h": 30,
+   "c": "B7)"
+  }
+ ],
+ "extra_verified": "rangée d'harmonisation alternative entre parenthèses (y=824), restée en mi à côté d'accords en fa — mode D trouvé par audit-page, glyphes mesurés au pixel, itération 29 (2026-08-22)",
+ "verified": "audit-page E→F, page entière relue en 8 tranches, puis re-relue après correctif : la rangée d'harmonisation alternative « (E/G# F#m B7) » (y=824) restait en mi et publie désormais « (F/A Gm C7) ». Tous les accords encadrés, cadre 1=F — itération 29, 2026-08-22",
+ "frozen_labels": [
+  {
+   "x": 227,
+   "y": 388,
+   "w": 31,
+   "h": 31,
+   "c": "E2"
+  },
+  {
+   "x": 561,
+   "y": 388,
+   "w": 50,
+   "h": 31,
+   "c": "A/E"
+  },
+  {
+   "x": 743,
+   "y": 388,
+   "w": 31,
+   "h": 31,
+   "c": "E2"
+  },
+  {
+   "x": 896,
+   "y": 388,
+   "w": 12,
+   "h": 31,
+   "c": "E"
+  },
+  {
+   "x": 1190,
+   "y": 388,
+   "w": 47,
+   "h": 31,
+   "c": "B/E"
+  },
+  {
+   "x": 168,
+   "y": 865,
+   "w": 31,
+   "h": 31,
+   "c": "E2"
+  },
+  {
+   "x": 364,
+   "y": 865,
+   "w": 88,
+   "h": 31,
+   "c": "E2/G#"
+  },
+  {
+   "x": 527,
+   "y": 865,
+   "w": 37,
+   "h": 31,
+   "c": "A2"
+  },
+  {
+   "x": 699,
+   "y": 865,
+   "w": 31,
+   "h": 31,
+   "c": "E2"
+  },
+  {
+   "x": 867,
+   "y": 865,
+   "w": 31,
+   "h": 31,
+   "c": "E2"
+  },
+  {
+   "x": 1025,
+   "y": 865,
+   "w": 47,
+   "h": 31,
+   "c": "B/E"
+  },
+  {
+   "x": 1200,
+   "y": 865,
+   "w": 31,
+   "h": 31,
+   "c": "E2"
+  },
+  {
+   "x": 1275,
+   "y": 865,
+   "w": 49,
+   "h": 31,
+   "c": "A/E"
+  },
+  {
+   "x": 39,
+   "y": 1380,
+   "w": 13,
+   "h": 31,
+   "c": "E"
+  },
+  {
+   "x": 168,
+   "y": 1380,
+   "w": 67,
+   "h": 31,
+   "c": "E/G#"
+  },
+  {
+   "x": 270,
+   "y": 1380,
+   "w": 36,
+   "h": 31,
+   "c": "A2"
+  },
+  {
+   "x": 622,
+   "y": 1380,
+   "w": 86,
+   "h": 31,
+   "c": "E2/G#"
+  },
+  {
+   "x": 907,
+   "y": 1380,
+   "w": 69,
+   "h": 31,
+   "c": "A/C#"
+  },
+  {
+   "x": 1264,
+   "y": 1380,
+   "w": 13,
+   "h": 31,
+   "c": "E"
+  },
+  {
+   "x": 19,
+   "y": 1679,
+   "w": 69,
+   "h": 31,
+   "c": "E/G#"
+  },
+  {
+   "x": 233,
+   "y": 1679,
+   "w": 35,
+   "h": 31,
+   "c": "A2"
+  },
+  {
+   "x": 544,
+   "y": 1679,
+   "w": 87,
+   "h": 31,
+   "c": "E2/G#"
+  },
+  {
+   "x": 891,
+   "y": 1679,
+   "w": 58,
+   "h": 31,
+   "c": "F#m"
+  },
+  {
+   "x": 985,
+   "y": 1679,
+   "w": 82,
+   "h": 31,
+   "c": "Bsus4"
+  },
+  {
+   "x": 1246,
+   "y": 1679,
+   "w": 12,
+   "h": 31,
+   "c": "E"
+  },
+  {
+   "x": 688,
+   "y": 824,
+   "w": 77,
+   "h": 31,
+   "c": "(E/G#"
+  },
+  {
+   "x": 863,
+   "y": 827,
+   "w": 56,
+   "h": 22,
+   "c": "F#m"
+  },
+  {
+   "x": 1024,
+   "y": 825,
+   "w": 42,
+   "h": 30,
+   "c": "B7)"
+  }
+ ]
 }

@@ -9,13 +9,357 @@
  "key_label_verified": "mesure measure-keylabel (vote 1= + lettre attendue), zoom relu à l’œil, 2026-08-05",
  "extra_labels": [
   {
+   "x": 138,
+   "y": 270,
+   "w": 16,
+   "h": 26,
+   "c": "F"
+  },
+  {
+   "x": 486,
+   "y": 267,
+   "w": 65,
+   "h": 33,
+   "c": "Bb/F"
+  },
+  {
+   "x": 690,
+   "y": 270,
+   "w": 15,
+   "h": 26,
+   "c": "F"
+  },
+  {
+   "x": 1032,
+   "y": 267,
+   "w": 48,
+   "h": 33,
+   "c": "C/F"
+  },
+  {
+   "x": 332,
+   "y": 1024,
+   "w": 49,
+   "h": 34,
+   "c": "C/E"
+  },
+  {
+   "x": 719,
+   "y": 1303,
+   "w": 103,
+   "h": 32,
+   "c": "(Em7b5"
+  },
+  {
+   "x": 1223,
+   "y": 1303,
+   "w": 55,
+   "h": 32,
+   "c": "Cm)"
+  },
+  {
+   "x": 747,
+   "y": 1367,
+   "w": 50,
+   "h": 33,
+   "c": "C/E"
+  },
+  {
+   "x": 604,
+   "y": 1687,
+   "w": 47,
+   "h": 22,
+   "c": "Gm"
+  }
+ ],
+ "extra_verified": "propositions propose-extra relues au zoom (itération 17, garde « deux par rangée » levé) ; six lues faux par le matcher entre +0,43 et +0,73 et relues au zoom ×7 — 2026-08-09 · vocabulaire élargi (extra_chords), puis propose-extra --all : neuf amas relus au zoom — quatre de la rangée d'introduction (F, Bb/F, F, C/F), deux « C/E » que le matcher lisait « C/F » et « Cm », la paire parenthésée « (Em7b5 … Cm) », et un « Gm » soudé à une liaison, borné au glyphe. Le « Dm » de y=1305 retiré : le matcher le lit maintenant, l'étiquette faisait doublon. Itération 32 (2026-08-24)",
+ "face": "verdana-bold",
+ "extra_chords": [
+  "C/F",
+  "Bb/F",
+  "Em7b5",
+  "A7",
+  "Cm"
+ ],
+ "not_labels": [
+  "700,1202"
+ ],
+ "not_labels_verified": "amas sans accord : le titre 【Chorus】, lu « Em7b5 » à +0,09 — itération 32 (2026-08-24)",
+ "extra_chords_verified": "cinq accords gravés absents du `.cho` — C/F, Bb/F, Em7b5, A7, Cm. Le vocabulaire étant fermé, aucune fonte ne pouvait les lire : ils sortaient sur le candidat le plus proche. Chacun relu au zoom avant d'entrer. Itération 32 (2026-08-24)",
+ "verified": "audit-page F→F#, page entière relue en 8 tranches. Cinq accords absents du `.cho` versés en extra_chords (C/F, Bb/F, Em7b5, A7, Cm), puis neuf amas relus à l'œil — dont la rangée d'introduction, deux « C/E » lus faux, la paire parenthésée « (Em7b5 … Cm) » et un « Gm » soudé à une liaison. Tous les accords en fa convertis, cadre 1=F# — itération 32, 2026-08-24",
+ "frozen_labels": [
+  {
+   "x": 324,
+   "y": 269,
+   "w": 43,
+   "h": 29,
+   "c": "C/F"
+  },
+  {
+   "x": 849,
+   "y": 269,
+   "w": 11,
+   "h": 29,
+   "c": "F"
+  },
+  {
+   "x": 1195,
+   "y": 269,
+   "w": 33,
+   "h": 29,
+   "c": "Bb"
+  },
+  {
+   "x": 157,
+   "y": 451,
+   "w": 11,
+   "h": 23,
+   "c": "F"
+  },
+  {
+   "x": 468,
+   "y": 451,
+   "w": 62,
+   "h": 23,
+   "c": "Am7"
+  },
+  {
+   "x": 755,
+   "y": 451,
+   "w": 33,
+   "h": 23,
+   "c": "Bb"
+  },
+  {
+   "x": 860,
+   "y": 451,
+   "w": 45,
+   "h": 23,
+   "c": "Gm"
+  },
+  {
+   "x": 1083,
+   "y": 451,
+   "w": 16,
+   "h": 23,
+   "c": "C"
+  },
+  {
+   "x": 63,
+   "y": 700,
+   "w": 12,
+   "h": 35,
+   "c": "F"
+  },
+  {
+   "x": 382,
+   "y": 700,
+   "w": 62,
+   "h": 35,
+   "c": "Am7"
+  },
+  {
+   "x": 687,
+   "y": 700,
+   "w": 32,
+   "h": 35,
+   "c": "Bb"
+  },
+  {
+   "x": 829,
+   "y": 700,
+   "w": 16,
+   "h": 35,
+   "c": "C"
+  },
+  {
+   "x": 1082,
+   "y": 700,
+   "w": 11,
+   "h": 35,
+   "c": "F"
+  },
+  {
+   "x": 89,
+   "y": 1028,
+   "w": 11,
+   "h": 28,
+   "c": "F"
+  },
+  {
+   "x": 524,
+   "y": 1028,
+   "w": 44,
+   "h": 28,
+   "c": "Dm"
+  },
+  {
+   "x": 778,
+   "y": 1028,
+   "w": 44,
+   "h": 28,
+   "c": "Am"
+  },
+  {
+   "x": 924,
+   "y": 1028,
+   "w": 33,
+   "h": 28,
+   "c": "Bb"
+  },
+  {
+   "x": 1154,
+   "y": 1028,
+   "w": 45,
+   "h": 28,
+   "c": "F/A"
+  },
+  {
+   "x": 838,
+   "y": 1305,
+   "w": 33,
+   "h": 27,
+   "c": "A7"
+  },
+  {
    "x": 970,
    "y": 1305,
    "w": 42,
    "h": 27,
    "c": "Dm"
+  },
+  {
+   "x": 41,
+   "y": 1371,
+   "w": 45,
+   "h": 23,
+   "c": "Gm"
+  },
+  {
+   "x": 306,
+   "y": 1371,
+   "w": 15,
+   "h": 23,
+   "c": "C"
+  },
+  {
+   "x": 505,
+   "y": 1371,
+   "w": 10,
+   "h": 23,
+   "c": "F"
+  },
+  {
+   "x": 971,
+   "y": 1371,
+   "w": 43,
+   "h": 23,
+   "c": "Dm"
+  },
+  {
+   "x": 1224,
+   "y": 1371,
+   "w": 44,
+   "h": 23,
+   "c": "Am"
+  },
+  {
+   "x": 42,
+   "y": 1687,
+   "w": 33,
+   "h": 27,
+   "c": "Bb"
+  },
+  {
+   "x": 293,
+   "y": 1687,
+   "w": 45,
+   "h": 27,
+   "c": "F/A"
+  },
+  {
+   "x": 455,
+   "y": 1687,
+   "w": 44,
+   "h": 27,
+   "c": "Dm"
+  },
+  {
+   "x": 855,
+   "y": 1687,
+   "w": 15,
+   "h": 27,
+   "c": "C"
+  },
+  {
+   "x": 1132,
+   "y": 1687,
+   "w": 11,
+   "h": 27,
+   "c": "F"
+  },
+  {
+   "x": 138,
+   "y": 270,
+   "w": 16,
+   "h": 26,
+   "c": "F"
+  },
+  {
+   "x": 486,
+   "y": 267,
+   "w": 65,
+   "h": 33,
+   "c": "Bb/F"
+  },
+  {
+   "x": 690,
+   "y": 270,
+   "w": 15,
+   "h": 26,
+   "c": "F"
+  },
+  {
+   "x": 1032,
+   "y": 267,
+   "w": 48,
+   "h": 33,
+   "c": "C/F"
+  },
+  {
+   "x": 332,
+   "y": 1024,
+   "w": 49,
+   "h": 34,
+   "c": "C/E"
+  },
+  {
+   "x": 719,
+   "y": 1303,
+   "w": 103,
+   "h": 32,
+   "c": "(Em7b5"
+  },
+  {
+   "x": 1223,
+   "y": 1303,
+   "w": 55,
+   "h": 32,
+   "c": "Cm)"
+  },
+  {
+   "x": 747,
+   "y": 1367,
+   "w": 50,
+   "h": 33,
+   "c": "C/E"
+  },
+  {
+   "x": 604,
+   "y": 1687,
+   "w": 47,
+   "h": 22,
+   "c": "Gm"
   }
- ],
- "extra_verified": "propositions propose-extra relues au zoom (itération 17, garde « deux par rangée » levé) ; six lues faux par le matcher entre +0,43 et +0,73 et relues au zoom ×7 — 2026-08-09",
- "face": "verdana-bold"
+ ]
 }

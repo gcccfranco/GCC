@@ -1,4 +1,489 @@
 {
  "slug": "我相信",
- "face": "verdana-bold"
+ "face": "verdana-bold",
+ "mask_rows": [
+  883,
+  1166
+ ],
+ "mask_rows_verified": "1=F · deux rangées gravées en **sol** au-dessus des rangées réelles en fa (y=964, y=1234). foreign-scan (+2 demi-tons), paires relues côte à côte — itération 31 (2026-08-22)",
+ "extra_labels": [
+  {
+   "x": 246,
+   "y": 961,
+   "w": 61,
+   "h": 31,
+   "c": "Bb/F"
+  },
+  {
+   "x": 49,
+   "y": 1242,
+   "w": 59,
+   "h": 32,
+   "c": "Bb/F"
+  },
+  {
+   "x": 1222,
+   "y": 683,
+   "w": 15,
+   "h": 24,
+   "c": "F"
+  },
+  {
+   "x": 686,
+   "y": 1245,
+   "w": 15,
+   "h": 24,
+   "c": "F"
+  },
+  {
+   "x": 45,
+   "y": 1727,
+   "w": 46,
+   "h": 30,
+   "c": "Gm"
+  },
+  {
+   "x": 429,
+   "y": 1727,
+   "w": 18,
+   "h": 30,
+   "c": "C"
+  },
+  {
+   "x": 642,
+   "y": 1727,
+   "w": 46,
+   "h": 30,
+   "c": "Gm"
+  },
+  {
+   "x": 931,
+   "y": 1727,
+   "w": 64,
+   "h": 30,
+   "c": "Bb/C"
+  },
+  {
+   "x": 1121,
+   "y": 1727,
+   "w": 69,
+   "h": 32,
+   "c": ""
+  },
+  {
+   "x": 1219,
+   "y": 614,
+   "w": 21,
+   "h": 26,
+   "c": ""
+  }
+ ],
+ "extra_verified": "propose-extra --all après masquage des rangées étrangères : 37 amas relus au zoom. Deux amas soudés séparés (« D/F# Em7 », « Dm G) ») et quatre « F » rendus à leur largeur — le pré-filtre les livrait à 4 px. Boîtes par bloc d'encre, marge de 2 px — itération 31 (2026-08-22) · dernière rangée d'accords (y=1731), typée `chords?` et jamais promue. Son cinquième amas, « (C/D) », est surmonté de 「(若升调)」 — « si l'on monte la tonalité » : c'est la version **en sol** de Bb/C, donc de la matière en tonalité étrangère isolée dans une vraie rangée. Publié comme étiquette **sans texte** (masque à la main, même forme que mask_rows) — itération 31 (2026-08-22) · le « G » isolé de y=616 (x=1221), sous 「[回来后G调]」 : c'est le **premier** amas de la rangée en sol du refrain, seul sur sa ligne donc jamais promu en rangée. Il double le « F » qui est juste dessous (y=685). Masqué comme le « (C/D) » — itération 31 (2026-08-23)",
+ "not_labels": [
+  "1050,672",
+  "985,1234"
+ ],
+ "not_labels_verified": "amas sans accord : titres 【Chorus】【Bridge】【Pre-Chorus】, « To Chorus », indications de jeu (（琶音）,（先低后高）), barre de mesure, chiffrage, et l'annotation « 升调用上层和弦 » — relus au zoom, itération 31 (2026-08-22)",
+ "key_label": {
+  "x": 15,
+  "y": 184,
+  "w": 67,
+  "h": 23
+ },
+ "key_label_verified": "mesure à la main : measure-keylabel ne proposait rien. Le « [原曲升至G调] » au-dessus décrit la **source** (« l'original monté en sol ») et reste tel quel, comme « 原调Eb » — décision du 09/08. Zoom ×2,2 — itération 31 (2026-08-22)",
+ "verified": "audit-page F→F#, page entière relue en 8 tranches. La page imprime **deux jeux d'accords** et le dit deux fois : « [回来后G调] » au refrain (à la reprise, tonalité de sol) et « (若升调) » à la fin. Les deux rangées en **sol** (y=883, y=1166) sont masquées, ainsi que les deux amas isolés de cette seconde tonalité — le « G » de y=616, premier de sa rangée et seul sur sa ligne, et le « (C/D) » de y=1731. Tous les accords en fa convertis, cadre 1=F#. Le « [原曲升至G调] » de l'en-tête décrit la source et reste — itération 31, 2026-08-23",
+ "frozen_labels": [
+  {
+   "x": 62,
+   "y": 230,
+   "w": 10,
+   "h": 44,
+   "c": "F"
+  },
+  {
+   "x": 205,
+   "y": 230,
+   "w": 40,
+   "h": 44,
+   "c": "C/E"
+  },
+  {
+   "x": 372,
+   "y": 230,
+   "w": 40,
+   "h": 44,
+   "c": "Dm"
+  },
+  {
+   "x": 522,
+   "y": 230,
+   "w": 41,
+   "h": 44,
+   "c": "C/E"
+  },
+  {
+   "x": 705,
+   "y": 230,
+   "w": 10,
+   "h": 44,
+   "c": "F"
+  },
+  {
+   "x": 846,
+   "y": 230,
+   "w": 41,
+   "h": 44,
+   "c": "C/E"
+  },
+  {
+   "x": 1019,
+   "y": 230,
+   "w": 29,
+   "h": 44,
+   "c": "Bb"
+  },
+  {
+   "x": 59,
+   "y": 434,
+   "w": 10,
+   "h": 24,
+   "c": "F"
+  },
+  {
+   "x": 375,
+   "y": 434,
+   "w": 40,
+   "h": 24,
+   "c": "C/E"
+  },
+  {
+   "x": 641,
+   "y": 434,
+   "w": 62,
+   "h": 24,
+   "c": "Bb/D"
+  },
+  {
+   "x": 771,
+   "y": 434,
+   "w": 14,
+   "h": 24,
+   "c": "C"
+  },
+  {
+   "x": 974,
+   "y": 434,
+   "w": 10,
+   "h": 24,
+   "c": "F"
+  },
+  {
+   "x": 1227,
+   "y": 434,
+   "w": 30,
+   "h": 24,
+   "c": "Bb"
+  },
+  {
+   "x": 48,
+   "y": 672,
+   "w": 61,
+   "h": 37,
+   "c": "C/Bb"
+  },
+  {
+   "x": 246,
+   "y": 672,
+   "w": 41,
+   "h": 37,
+   "c": "Am"
+  },
+  {
+   "x": 331,
+   "y": 672,
+   "w": 41,
+   "h": 37,
+   "c": "Dm"
+  },
+  {
+   "x": 492,
+   "y": 672,
+   "w": 42,
+   "h": 37,
+   "c": "Gm"
+  },
+  {
+   "x": 610,
+   "y": 672,
+   "w": 47,
+   "h": 37,
+   "c": "G/B"
+  },
+  {
+   "x": 817,
+   "y": 672,
+   "w": 14,
+   "h": 37,
+   "c": "C"
+  },
+  {
+   "x": 380,
+   "y": 964,
+   "w": 10,
+   "h": 26,
+   "c": "F"
+  },
+  {
+   "x": 496,
+   "y": 964,
+   "w": 41,
+   "h": 26,
+   "c": "Dm"
+  },
+  {
+   "x": 665,
+   "y": 964,
+   "w": 30,
+   "h": 26,
+   "c": "Bb"
+  },
+  {
+   "x": 806,
+   "y": 964,
+   "w": 14,
+   "h": 26,
+   "c": "C"
+  },
+  {
+   "x": 1044,
+   "y": 964,
+   "w": 41,
+   "h": 26,
+   "c": "Dm"
+  },
+  {
+   "x": 1167,
+   "y": 964,
+   "w": 42,
+   "h": 26,
+   "c": "C/E"
+  },
+  {
+   "x": 182,
+   "y": 1234,
+   "w": 9,
+   "h": 34,
+   "c": "F"
+  },
+  {
+   "x": 352,
+   "y": 1234,
+   "w": 30,
+   "h": 34,
+   "c": "Bb"
+  },
+  {
+   "x": 527,
+   "y": 1234,
+   "w": 14,
+   "h": 34,
+   "c": "C"
+  },
+  {
+   "x": 1123,
+   "y": 1234,
+   "w": 30,
+   "h": 34,
+   "c": "Bb"
+  },
+  {
+   "x": 59,
+   "y": 1451,
+   "w": 42,
+   "h": 26,
+   "c": "F/A"
+  },
+  {
+   "x": 280,
+   "y": 1451,
+   "w": 32,
+   "h": 26,
+   "c": "A7"
+  },
+  {
+   "x": 531,
+   "y": 1451,
+   "w": 41,
+   "h": 26,
+   "c": "Dm"
+  },
+  {
+   "x": 803,
+   "y": 1451,
+   "w": 30,
+   "h": 26,
+   "c": "Bb"
+  },
+  {
+   "x": 1061,
+   "y": 1451,
+   "w": 42,
+   "h": 26,
+   "c": "F/A"
+  },
+  {
+   "x": 246,
+   "y": 961,
+   "w": 61,
+   "h": 31,
+   "c": "Bb/F"
+  },
+  {
+   "x": 49,
+   "y": 1242,
+   "w": 59,
+   "h": 32,
+   "c": "Bb/F"
+  },
+  {
+   "x": 1222,
+   "y": 683,
+   "w": 15,
+   "h": 24,
+   "c": "F"
+  },
+  {
+   "x": 686,
+   "y": 1245,
+   "w": 15,
+   "h": 24,
+   "c": "F"
+  },
+  {
+   "x": 45,
+   "y": 1727,
+   "w": 46,
+   "h": 30,
+   "c": "Gm"
+  },
+  {
+   "x": 429,
+   "y": 1727,
+   "w": 18,
+   "h": 30,
+   "c": "C"
+  },
+  {
+   "x": 642,
+   "y": 1727,
+   "w": 46,
+   "h": 30,
+   "c": "Gm"
+  },
+  {
+   "x": 931,
+   "y": 1727,
+   "w": 64,
+   "h": 30,
+   "c": "Bb/C"
+  },
+  {
+   "x": 1121,
+   "y": 1727,
+   "w": 69,
+   "h": 32,
+   "c": ""
+  },
+  {
+   "x": 1219,
+   "y": 614,
+   "w": 21,
+   "h": 26,
+   "c": ""
+  },
+  {
+   "x": 247,
+   "y": 883,
+   "w": 46,
+   "h": 26,
+   "c": ""
+  },
+  {
+   "x": 376,
+   "y": 883,
+   "w": 17,
+   "h": 26,
+   "c": ""
+  },
+  {
+   "x": 498,
+   "y": 883,
+   "w": 37,
+   "h": 26,
+   "c": ""
+  },
+  {
+   "x": 667,
+   "y": 883,
+   "w": 14,
+   "h": 26,
+   "c": ""
+  },
+  {
+   "x": 806,
+   "y": 883,
+   "w": 16,
+   "h": 26,
+   "c": ""
+  },
+  {
+   "x": 1046,
+   "y": 883,
+   "w": 36,
+   "h": 26,
+   "c": ""
+  },
+  {
+   "x": 1169,
+   "y": 883,
+   "w": 59,
+   "h": 26,
+   "c": ""
+  },
+  {
+   "x": 53,
+   "y": 1166,
+   "w": 46,
+   "h": 21,
+   "c": ""
+  },
+  {
+   "x": 179,
+   "y": 1166,
+   "w": 16,
+   "h": 21,
+   "c": ""
+  },
+  {
+   "x": 354,
+   "y": 1166,
+   "w": 14,
+   "h": 21,
+   "c": ""
+  },
+  {
+   "x": 527,
+   "y": 1166,
+   "w": 16,
+   "h": 21,
+   "c": ""
+  },
+  {
+   "x": 684,
+   "y": 1166,
+   "w": 17,
+   "h": 21,
+   "c": ""
+  }
+ ]
 }

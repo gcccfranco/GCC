@@ -1,4 +1,360 @@
 {
  "slug": "耶和华是应当称颂的",
- "face": "verdana-bold"
+ "face": "verdana-bold",
+ "key_label": {
+  "x": 15,
+  "y": 146,
+  "w": 67,
+  "h": 22
+ },
+ "key_label_verified": "mesure measure-keylabel (vote 1= + lettre attendue), zoom relu à l’œil sur planche de lot, lettre confrontée à printedKey, 2026-08-22",
+ "extra_labels": [
+  {
+   "x": 1086,
+   "y": 611,
+   "w": 41,
+   "h": 26,
+   "c": "C/E"
+  },
+  {
+   "x": 1216,
+   "y": 613,
+   "w": 67,
+   "h": 24,
+   "c": "(A/C#)"
+  },
+  {
+   "x": 356,
+   "y": 811,
+   "w": 47,
+   "h": 17,
+   "c": "Cm7"
+  },
+  {
+   "x": 518,
+   "y": 811,
+   "w": 9,
+   "h": 17,
+   "c": "F"
+  }
+ ],
+ "extra_verified": "zooms propose-extra --all relus un à un, boîtes mesurées au pixel quand l'amas était un fragment ou une soudure (itération 29, certification en lot) — 2026-08-22 · paire parenthésée « ( Cm7  F ) » (y=811) restée en fa, trouvée par audit-page ; boîtes posées sur les seuls noms, les parenthèses gravées restent — itération 29 (2026-08-22)",
+ "not_labels": [
+  "733,607",
+  "176,1377",
+  "179,1528",
+  "1207,1760"
+ ],
+ "not_labels_verified": "amas sans accord : titres de section 【】/« To Chorus », chiffres de crochet de reprise et arcs de liaison — relus au zoom, itération 29 (2026-08-22)",
+ "title_key": {
+  "x": 880,
+  "y": 17,
+  "w": 156,
+  "h": 59
+ },
+ "title_key_verified": "mention « （F调） » du titre, mesurée sur l’encre (ligne de titre isolée du sous-titre par le profil de lignes) et relue au zoom ×3 ; elle décrit cette page et suit la transposition. Le « [共2张：F调、音频版(F->G)] » décrit la collection et reste — itération 29 (2026-08-22)",
+ "verified": "audit-page F→F#, page entière relue en 8 tranches, puis re-relue après correctif : la paire parenthésée « ( Cm7  F ) » (y=811) restait en fa, et le « （F调） » du titre ne suivait pas la transposition (title_key posé, il affiche （F#调）). Le « [共2张：F调、音频版(F->G)] » décrit la collection et reste tel quel. Tous les accords encadrés, cadre 1=F# — itération 29, 2026-08-22",
+ "frozen_labels": [
+  {
+   "x": 40,
+   "y": 236,
+   "w": 11,
+   "h": 26,
+   "c": "F"
+  },
+  {
+   "x": 203,
+   "y": 236,
+   "w": 41,
+   "h": 26,
+   "c": "C/E"
+  },
+  {
+   "x": 377,
+   "y": 236,
+   "w": 40,
+   "h": 26,
+   "c": "Dm"
+  },
+  {
+   "x": 548,
+   "y": 236,
+   "w": 40,
+   "h": 26,
+   "c": "Am"
+  },
+  {
+   "x": 723,
+   "y": 236,
+   "w": 30,
+   "h": 26,
+   "c": "Bb"
+  },
+  {
+   "x": 894,
+   "y": 236,
+   "w": 42,
+   "h": 26,
+   "c": "F/A"
+  },
+  {
+   "x": 1065,
+   "y": 236,
+   "w": 42,
+   "h": 26,
+   "c": "Gm"
+  },
+  {
+   "x": 1245,
+   "y": 236,
+   "w": 14,
+   "h": 26,
+   "c": "C"
+  },
+  {
+   "x": 75,
+   "y": 391,
+   "w": 10,
+   "h": 25,
+   "c": "F"
+  },
+  {
+   "x": 285,
+   "y": 391,
+   "w": 40,
+   "h": 25,
+   "c": "C/E"
+  },
+  {
+   "x": 461,
+   "y": 391,
+   "w": 41,
+   "h": 25,
+   "c": "Dm"
+  },
+  {
+   "x": 709,
+   "y": 391,
+   "w": 41,
+   "h": 25,
+   "c": "Am"
+  },
+  {
+   "x": 887,
+   "y": 391,
+   "w": 30,
+   "h": 25,
+   "c": "Bb"
+  },
+  {
+   "x": 1133,
+   "y": 391,
+   "w": 42,
+   "h": 25,
+   "c": "F/A"
+  },
+  {
+   "x": 42,
+   "y": 607,
+   "w": 42,
+   "h": 30,
+   "c": "Gm"
+  },
+  {
+   "x": 482,
+   "y": 607,
+   "w": 14,
+   "h": 30,
+   "c": "C"
+  },
+  {
+   "x": 877,
+   "y": 607,
+   "w": 11,
+   "h": 30,
+   "c": "F"
+  },
+  {
+   "x": 59,
+   "y": 881,
+   "w": 40,
+   "h": 21,
+   "c": "Dm"
+  },
+  {
+   "x": 354,
+   "y": 881,
+   "w": 41,
+   "h": 21,
+   "c": "Am"
+  },
+  {
+   "x": 700,
+   "y": 881,
+   "w": 30,
+   "h": 21,
+   "c": "Bb"
+  },
+  {
+   "x": 1036,
+   "y": 881,
+   "w": 42,
+   "h": 21,
+   "c": "F/A"
+  },
+  {
+   "x": 49,
+   "y": 1144,
+   "w": 29,
+   "h": 21,
+   "c": "Eb"
+  },
+  {
+   "x": 307,
+   "y": 1144,
+   "w": 15,
+   "h": 21,
+   "c": "C"
+  },
+  {
+   "x": 543,
+   "y": 1144,
+   "w": 29,
+   "h": 21,
+   "c": "Eb"
+  },
+  {
+   "x": 840,
+   "y": 1144,
+   "w": 15,
+   "h": 21,
+   "c": "C"
+  },
+  {
+   "x": 1199,
+   "y": 1144,
+   "w": 10,
+   "h": 21,
+   "c": "F"
+  },
+  {
+   "x": 86,
+   "y": 1377,
+   "w": 41,
+   "h": 29,
+   "c": "Dm"
+  },
+  {
+   "x": 413,
+   "y": 1377,
+   "w": 17,
+   "h": 29,
+   "c": "G"
+  },
+  {
+   "x": 732,
+   "y": 1377,
+   "w": 30,
+   "h": 29,
+   "c": "Bb"
+  },
+  {
+   "x": 1026,
+   "y": 1377,
+   "w": 42,
+   "h": 29,
+   "c": "Gm"
+  },
+  {
+   "x": 1175,
+   "y": 1377,
+   "w": 41,
+   "h": 29,
+   "c": "Am"
+  },
+  {
+   "x": 85,
+   "y": 1528,
+   "w": 41,
+   "h": 31,
+   "c": "Dm"
+  },
+  {
+   "x": 427,
+   "y": 1528,
+   "w": 16,
+   "h": 31,
+   "c": "G"
+  },
+  {
+   "x": 732,
+   "y": 1528,
+   "w": 30,
+   "h": 31,
+   "c": "Bb"
+  },
+  {
+   "x": 1067,
+   "y": 1528,
+   "w": 42,
+   "h": 31,
+   "c": "F/A"
+  },
+  {
+   "x": 49,
+   "y": 1760,
+   "w": 41,
+   "h": 28,
+   "c": "Dm"
+  },
+  {
+   "x": 355,
+   "y": 1760,
+   "w": 17,
+   "h": 28,
+   "c": "G"
+  },
+  {
+   "x": 609,
+   "y": 1760,
+   "w": 30,
+   "h": 28,
+   "c": "Bb"
+  },
+  {
+   "x": 1149,
+   "y": 1760,
+   "w": 14,
+   "h": 28,
+   "c": "C"
+  },
+  {
+   "x": 1086,
+   "y": 611,
+   "w": 41,
+   "h": 26,
+   "c": "C/E"
+  },
+  {
+   "x": 1216,
+   "y": 613,
+   "w": 67,
+   "h": 24,
+   "c": "(A/C#)"
+  },
+  {
+   "x": 356,
+   "y": 811,
+   "w": 47,
+   "h": 17,
+   "c": "Cm7"
+  },
+  {
+   "x": 518,
+   "y": 811,
+   "w": 9,
+   "h": 17,
+   "c": "F"
+  }
+ ]
 }

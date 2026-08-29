@@ -12,5 +12,263 @@
   "1004,1175"
  ],
  "corrections_verified": "amas relus au zoom, 2026-08-18 (itération 26, pages au ras du plancher)",
- "not_labels_verified": "amas sans accord : un chiffre de mélodie et trois arcs de liaison. Les crochets de reprise soudés à des accords en sont exclus — ils portent Em/E7/A7, donc ils manquent, ils ne sont pas absents."
+ "not_labels_verified": "amas sans accord : un chiffre de mélodie et trois arcs de liaison. Les crochets de reprise soudés à des accords en sont exclus — ils portent Em/E7/A7, donc ils manquent, ils ne sont pas absents.",
+ "key_label": {
+  "x": 6,
+  "y": 146,
+  "w": 91,
+  "h": 28
+ },
+ "key_label_verified": "mesure measure-keylabel (vote 1= + lettre attendue), zoom relu à l’œil sur planche de lot, lettre confrontée à printedKey, 2026-08-22",
+ "extra_labels": [
+  {
+   "x": 822,
+   "y": 1380,
+   "w": 49,
+   "h": 28,
+   "c": "Em"
+  },
+  {
+   "x": 999,
+   "y": 1380,
+   "w": 37,
+   "h": 28,
+   "c": "E7"
+  },
+  {
+   "x": 1221,
+   "y": 1380,
+   "w": 42,
+   "h": 28,
+   "c": "A7"
+  },
+  {
+   "x": 65,
+   "y": 1727,
+   "w": 49,
+   "h": 28,
+   "c": "Em"
+  },
+  {
+   "x": 250,
+   "y": 1727,
+   "w": 43,
+   "h": 28,
+   "c": "A7"
+  },
+  {
+   "x": 500,
+   "y": 1727,
+   "w": 21,
+   "h": 28,
+   "c": "D"
+  },
+  {
+   "x": 37,
+   "y": 622,
+   "w": 69,
+   "h": 28,
+   "c": "F#m"
+  },
+  {
+   "x": 442,
+   "y": 621,
+   "w": 23,
+   "h": 29,
+   "c": "G"
+  },
+  {
+   "x": 749,
+   "y": 622,
+   "w": 49,
+   "h": 28,
+   "c": "Em"
+  },
+  {
+   "x": 997,
+   "y": 622,
+   "w": 37,
+   "h": 28,
+   "c": "E7"
+  },
+  {
+   "x": 1247,
+   "y": 587,
+   "w": 44,
+   "h": 28,
+   "c": "A7"
+  }
+ ],
+ "extra_verified": "zooms propose-extra --all relus un à un, boîtes mesurées au pixel quand l'amas était un fragment ou une soudure (itération 29, certification en lot) — 2026-08-22 · rangée entière jamais détectée (y=622, F#m G Em E7 + A7 décalé) trouvée par audit-page — mode D, invisible à la couverture ; glyphes mesurés au pixel, itération 29 (2026-08-22)",
+ "verified": "audit-page D→D#, page entière relue en 9 tranches, puis re-relue après correctif : la rangée y=622 (F#m G Em E7 + A7 décalé) n'avait jamais été détectée — mode D, invisible à la couverture qui affichait 13/15. Les Em/E7/A7/D soudés aux crochets de reprise 1./2. sont désormais posés sur boîtes serrées. Tous les accords encadrés, cadre 1=D# — itération 29, 2026-08-22",
+ "frozen_labels": [
+  {
+   "x": 186,
+   "y": 272,
+   "w": 21,
+   "h": 34,
+   "c": "D"
+  },
+  {
+   "x": 577,
+   "y": 272,
+   "w": 83,
+   "h": 34,
+   "c": "A/C#"
+  },
+  {
+   "x": 891,
+   "y": 272,
+   "w": 51,
+   "h": 34,
+   "c": "Bm"
+  },
+  {
+   "x": 1302,
+   "y": 272,
+   "w": 63,
+   "h": 34,
+   "c": "D/A"
+  },
+  {
+   "x": 69,
+   "y": 969,
+   "w": 21,
+   "h": 27,
+   "c": "D"
+  },
+  {
+   "x": 512,
+   "y": 969,
+   "w": 51,
+   "h": 27,
+   "c": "Bm"
+  },
+  {
+   "x": 788,
+   "y": 969,
+   "w": 22,
+   "h": 27,
+   "c": "G"
+  },
+  {
+   "x": 1217,
+   "y": 969,
+   "w": 69,
+   "h": 27,
+   "c": "F#m"
+  },
+  {
+   "x": 41,
+   "y": 1380,
+   "w": 22,
+   "h": 27,
+   "c": "G"
+  },
+  {
+   "x": 497,
+   "y": 1380,
+   "w": 49,
+   "h": 27,
+   "c": "Em"
+  },
+  {
+   "x": 859,
+   "y": 1727,
+   "w": 49,
+   "h": 28,
+   "c": "Em"
+  },
+  {
+   "x": 1059,
+   "y": 1727,
+   "w": 22,
+   "h": 28,
+   "c": "A"
+  },
+  {
+   "x": 1283,
+   "y": 1727,
+   "w": 21,
+   "h": 28,
+   "c": "D"
+  },
+  {
+   "x": 822,
+   "y": 1380,
+   "w": 49,
+   "h": 28,
+   "c": "Em"
+  },
+  {
+   "x": 999,
+   "y": 1380,
+   "w": 37,
+   "h": 28,
+   "c": "E7"
+  },
+  {
+   "x": 1221,
+   "y": 1380,
+   "w": 42,
+   "h": 28,
+   "c": "A7"
+  },
+  {
+   "x": 65,
+   "y": 1727,
+   "w": 49,
+   "h": 28,
+   "c": "Em"
+  },
+  {
+   "x": 250,
+   "y": 1727,
+   "w": 43,
+   "h": 28,
+   "c": "A7"
+  },
+  {
+   "x": 500,
+   "y": 1727,
+   "w": 21,
+   "h": 28,
+   "c": "D"
+  },
+  {
+   "x": 37,
+   "y": 622,
+   "w": 69,
+   "h": 28,
+   "c": "F#m"
+  },
+  {
+   "x": 442,
+   "y": 621,
+   "w": 23,
+   "h": 29,
+   "c": "G"
+  },
+  {
+   "x": 749,
+   "y": 622,
+   "w": 49,
+   "h": 28,
+   "c": "Em"
+  },
+  {
+   "x": 997,
+   "y": 622,
+   "w": 37,
+   "h": 28,
+   "c": "E7"
+  },
+  {
+   "x": 1247,
+   "y": 587,
+   "w": 44,
+   "h": 28,
+   "c": "A7"
+  }
+ ]
 }

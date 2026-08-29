@@ -1,21 +1,28 @@
 {
- "slug": "叫我抬起头的神",
- "extra_labels": [
-  {
-   "x": 40,
-   "y": 552,
-   "w": 12,
-   "h": 21,
-   "c": "A"
+  "slug": "叫我抬起头的神",
+  "extra_labels": [
+    {
+      "x": 40,
+      "y": 552,
+      "w": 12,
+      "h": 21,
+      "c": "A"
+    },
+    {
+      "x": 962,
+      "y": 552,
+      "w": 12,
+      "h": 21,
+      "c": "B"
+    }
+  ],
+  "extra_verified": "chaque étiquette relue sur zoom (propose-extra + planches), 2026-08-04",
+  "face": "helvetica-neue",
+  "key_label": {
+    "x": 58,
+    "y": 240,
+    "w": 62,
+    "h": 23
   },
-  {
-   "x": 962,
-   "y": 552,
-   "w": 12,
-   "h": 21,
-   "c": "B"
-  }
- ],
- "extra_verified": "chaque étiquette relue sur zoom (propose-extra + planches), 2026-08-04",
- "face": "helvetica-neue"
+  "key_label_verified": "mesure measure-keylabel (ancrage sur le « = », cadre = voisin gauche…voisin droit), zoom relu à l’œil sur planche de lot, lettre gravée confrontée à printedKey, 2026-08-26 (itération 35)"
 }

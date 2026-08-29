@@ -1,5 +1,82 @@
 {
  "slug": "好喜欢与你在一起",
  "face": "verdana-bold",
- "printed_key": "C"
+ "printed_key": "C",
+ "key_label": {
+  "x": 18,
+  "y": 209,
+  "w": 75,
+  "h": 24
+ },
+ "key_label_verified": "mesure measure-keylabel (vote 1= + lettre attendue), zoom relu à l’œil sur planche de lot, lettre confrontée à printedKey, 2026-08-22",
+ "extra_chords": [
+  "G7"
+ ],
+ "extra_labels": [
+  {
+   "x": 181,
+   "y": 272,
+   "w": 46,
+   "h": 29,
+   "c": "F/Eb"
+  },
+  {
+   "x": 421,
+   "y": 272,
+   "w": 44,
+   "h": 29,
+   "c": "Bb/D"
+  },
+  {
+   "x": 874,
+   "y": 272,
+   "w": 44,
+   "h": 29,
+   "c": "Bb/D"
+  },
+  {
+   "x": 72,
+   "y": 763,
+   "w": 44,
+   "h": 22,
+   "c": "Bb/D"
+  },
+  {
+   "x": 83,
+   "y": 984,
+   "w": 48,
+   "h": 39,
+   "c": "Bb/F"
+  },
+  {
+   "x": 565,
+   "y": 984,
+   "w": 18,
+   "h": 39,
+   "c": "F"
+  },
+  {
+   "x": 1025,
+   "y": 984,
+   "w": 15,
+   "h": 39,
+   "c": "Bb"
+  },
+  {
+   "x": 621,
+   "y": 1217,
+   "w": 47,
+   "h": 27,
+   "c": "F/Eb"
+  },
+  {
+   "x": 1135,
+   "y": 491,
+   "w": 163,
+   "h": 26,
+   "c": "先Eb后Edim"
+  }
+ ],
+ "extra_verified": "zooms relus à l’œil sur planche de lot (propose-extra --all --hidden), 2026-08-25 (itération 33)",
+ "extra_composites_verified": "étiquettes composites (或 / 代替 / 先…后 / groupe entre parenthèses), lues à l’œil sur planche de lot et écrites telles qu’imprimées ; `transpose_label` réécrit la ligne entière. 2026-08-25 (itération 34)"
 }

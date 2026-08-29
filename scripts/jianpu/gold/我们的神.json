@@ -1,4 +1,162 @@
 {
  "slug": "我们的神",
- "face": "verdana-bold"
+ "face": "verdana-bold",
+ "key_label": {
+  "x": 14,
+  "y": 153,
+  "w": 77,
+  "h": 24
+ },
+ "key_label_verified": "mesure measure-keylabel (vote 1= + lettre attendue), zoom relu à l’œil sur planche de lot, lettre confrontée à printedKey, 2026-08-22",
+ "extra_labels": [
+  {
+   "x": 36,
+   "y": 218,
+   "w": 18,
+   "h": 22,
+   "c": "G"
+  },
+  {
+   "x": 433,
+   "y": 218,
+   "w": 39,
+   "h": 22,
+   "c": "Em"
+  },
+  {
+   "x": 842,
+   "y": 218,
+   "w": 16,
+   "h": 22,
+   "c": "C"
+  },
+  {
+   "x": 1245,
+   "y": 218,
+   "w": 16,
+   "h": 22,
+   "c": "D"
+  },
+  {
+   "x": 629,
+   "y": 352,
+   "w": 62,
+   "h": 30,
+   "c": "D/F#"
+  },
+  {
+   "x": 671,
+   "y": 905,
+   "w": 62,
+   "h": 29,
+   "c": "D/F#"
+  },
+  {
+   "x": 983,
+   "y": 905,
+   "w": 52,
+   "h": 29,
+   "c": "G/D"
+  },
+  {
+   "x": 574,
+   "y": 1199,
+   "w": 62,
+   "h": 29,
+   "c": "D/F#"
+  },
+  {
+   "x": 921,
+   "y": 1199,
+   "w": 52,
+   "h": 30,
+   "c": "G/D"
+  },
+  {
+   "x": 1167,
+   "y": 1674,
+   "w": 61,
+   "h": 30,
+   "c": "D/F#"
+  },
+  {
+   "x": 66,
+   "y": 1886,
+   "w": 22,
+   "h": 26,
+   "c": "C"
+  },
+  {
+   "x": 342,
+   "y": 1867,
+   "w": 22,
+   "h": 26,
+   "c": "D"
+  },
+  {
+   "x": 663,
+   "y": 1867,
+   "w": 86,
+   "h": 26,
+   "c": "Dsus4"
+  },
+  {
+   "x": 1118,
+   "y": 1887,
+   "w": 19,
+   "h": 25,
+   "c": "E"
+  },
+  {
+   "x": 1176,
+   "y": 1454,
+   "w": 105,
+   "h": 41,
+   "c": "G或G/B"
+  },
+  {
+   "x": 561,
+   "y": 747,
+   "w": 61,
+   "h": 31,
+   "c": "[ F#m"
+  },
+  {
+   "x": 673,
+   "y": 747,
+   "w": 55,
+   "h": 31,
+   "c": "E/G#"
+  },
+  {
+   "x": 884,
+   "y": 747,
+   "w": 42,
+   "h": 31,
+   "c": "D/A"
+  },
+  {
+   "x": 982,
+   "y": 747,
+   "w": 70,
+   "h": 31,
+   "c": "A/C# ]"
+  }
+ ],
+ "extra_verified": "rangées d'accords entières que le classifieur avait rangées ailleurs (`?`, `lyrics`, `numbers`) : repérées par `worklist.hidden_rows`, lues sur planche de rangées, boîtes mesurées par bloc d'encre (bande élargie de 16 px pour ne pas couper les hampes des ♭ et ♯) — itération 30, 2026-08-22 · second passage propose-extra --all après publication des rangées cachées : 40 amas relus au zoom, dont 8 que le matcher lisait faux (A/D pris pour A/C#, G/D pour G/B, C# pour D, F#m pour C#). Boîtes recalculées par bloc d'encre — itération 30, 2026-08-22 · dernière rangée d'accords de la page, jamais détectée par le classifieur — trouvée par audit-page. Amas soudés au trait des crochets de reprise séparés au profil de colonnes, boîtes élargies de 3 px pour couvrir hampes de ♭ et exposants — itération 30 (2026-08-22)",
+ "mask_rows": [
+  815,
+  1108,
+  1393
+ ],
+ "mask_rows_verified": "les 3 rangées d'une version en la gravée au-dessus des rangées réelles en sol, sous un « 1=G » (A E/G# F#m A/E D A/C# contre Dsus4 D G D/F# Em G/D C G/B) — paires relues côte à côte, itération 30 (2026-08-22)",
+ "not_labels": [
+  "392,891",
+  "720,1454",
+  "392,891",
+  "720,1454"
+ ],
+ "not_labels_verified": "amas sans accord : titres de section 【Verse】【Chorus】【Bridge】, chiffres de crochet de reprise, un segno — relus au zoom, itération 30 (2026-08-22) · amas sans accord : titres 【Chorus】【Bridge】【Pre-Chorus】, « To Chorus », indications de jeu (（琶音）,（先低后高）), barre de mesure, chiffrage, et l'annotation « 升调用上层和弦 » — relus au zoom, itération 31 (2026-08-22)",
+ "extra_composites_verified": "étiquettes composites (或 / 代替 / 先…后 / groupe entre parenthèses), lues à l’œil sur planche de lot et écrites telles qu’imprimées ; `transpose_label` réécrit la ligne entière. 2026-08-25 (itération 34)",
+ "extra_lastchorus_verified": "rangée « [最后一遍副歌] [ F#m E/G# D/A A/C# ] » y=747, typée `?` par le classifieur donc jamais lue : elle restait entière dans l’ancienne tonalité. Les quatre accords lus à l’œil ; l’annotation en hanzi n’est pas cadrée. 2026-08-26 (itération 34)"
 }

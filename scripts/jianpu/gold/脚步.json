@@ -1,84 +1,91 @@
 {
- "slug": "脚步",
- "extra_labels": [
-  {
-   "x": 418,
-   "y": 614,
-   "w": 56,
-   "h": 28,
-   "c": "Am"
+  "slug": "脚步",
+  "extra_labels": [
+    {
+      "x": 418,
+      "y": 614,
+      "w": 56,
+      "h": 28,
+      "c": "Am"
+    },
+    {
+      "x": 846,
+      "y": 614,
+      "w": 19,
+      "h": 28,
+      "c": "F"
+    },
+    {
+      "x": 1296,
+      "y": 614,
+      "w": 26,
+      "h": 28,
+      "c": "G"
+    },
+    {
+      "x": 418,
+      "y": 1050,
+      "w": 56,
+      "h": 28,
+      "c": "Am"
+    },
+    {
+      "x": 846,
+      "y": 1050,
+      "w": 19,
+      "h": 28,
+      "c": "F"
+    },
+    {
+      "x": 1296,
+      "y": 1050,
+      "w": 26,
+      "h": 28,
+      "c": "G"
+    },
+    {
+      "x": 20,
+      "y": 176,
+      "w": 25,
+      "h": 37,
+      "c": "C"
+    },
+    {
+      "x": 20,
+      "y": 391,
+      "w": 25,
+      "h": 40,
+      "c": "C"
+    },
+    {
+      "x": 20,
+      "y": 614,
+      "w": 25,
+      "h": 28,
+      "c": "C"
+    },
+    {
+      "x": 20,
+      "y": 1050,
+      "w": 25,
+      "h": 28,
+      "c": "C"
+    },
+    {
+      "x": 1324,
+      "y": 1268,
+      "w": 25,
+      "h": 28,
+      "c": "C"
+    }
+  ],
+  "extra_verified": "chaque étiquette relue sur zoom (propose-extra + planches), 2026-08-04 ; +5 « C » de début de rangée relus au zoom, 2026-08-17 (itération 23)",
+  "face": "helvetica-neue",
+  "key_label": {
+    "x": 20,
+    "y": 85,
+    "w": 85,
+    "h": 32
   },
-  {
-   "x": 846,
-   "y": 614,
-   "w": 19,
-   "h": 28,
-   "c": "F"
-  },
-  {
-   "x": 1296,
-   "y": 614,
-   "w": 26,
-   "h": 28,
-   "c": "G"
-  },
-  {
-   "x": 418,
-   "y": 1050,
-   "w": 56,
-   "h": 28,
-   "c": "Am"
-  },
-  {
-   "x": 846,
-   "y": 1050,
-   "w": 19,
-   "h": 28,
-   "c": "F"
-  },
-  {
-   "x": 1296,
-   "y": 1050,
-   "w": 26,
-   "h": 28,
-   "c": "G"
-  },
-  {
-   "x": 20,
-   "y": 176,
-   "w": 25,
-   "h": 37,
-   "c": "C"
-  },
-  {
-   "x": 20,
-   "y": 391,
-   "w": 25,
-   "h": 40,
-   "c": "C"
-  },
-  {
-   "x": 20,
-   "y": 614,
-   "w": 25,
-   "h": 28,
-   "c": "C"
-  },
-  {
-   "x": 20,
-   "y": 1050,
-   "w": 25,
-   "h": 28,
-   "c": "C"
-  },
-  {
-   "x": 1324,
-   "y": 1268,
-   "w": 25,
-   "h": 28,
-   "c": "C"
-  }
- ],
- "extra_verified": "chaque étiquette relue sur zoom (propose-extra + planches), 2026-08-04 ; +5 « C » de début de rangée relus au zoom, 2026-08-17 (itération 23)",
- "face": "helvetica-neue"
+  "key_label_verified": "mesure measure-keylabel (ancrage sur le « = », cadre = voisin gauche…voisin droit), zoom relu à l’œil sur planche de lot, lettre gravée confrontée à printedKey, 2026-08-26 (itération 35)"
 }

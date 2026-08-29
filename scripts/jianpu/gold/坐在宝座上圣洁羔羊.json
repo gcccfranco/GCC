@@ -1,4 +1,11 @@
 {
  "slug": "坐在宝座上圣洁羔羊",
- "face": "verdana-bold"
+ "face": "verdana-bold",
+ "key_label": {
+  "x": 15,
+  "y": 197,
+  "w": 71,
+  "h": 22
+ },
+ "key_label_verified": "mesure measure-keylabel (vote 1= + lettre attendue), zoom relu à l’œil sur planche de lot, lettre confrontée à printedKey, 2026-08-22"
 }

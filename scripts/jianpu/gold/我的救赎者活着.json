@@ -42,8 +42,466 @@
    "w": 41,
    "h": 23,
    "c": "Bm"
+  },
+  {
+   "x": 14,
+   "y": 1156,
+   "w": 19,
+   "h": 23,
+   "c": "D"
+  },
+  {
+   "x": 297,
+   "y": 1156,
+   "w": 17,
+   "h": 23,
+   "c": "A"
+  },
+  {
+   "x": 417,
+   "y": 1146,
+   "w": 55,
+   "h": 33,
+   "c": "F#m"
+  },
+  {
+   "x": 562,
+   "y": 1156,
+   "w": 41,
+   "h": 23,
+   "c": "Bm"
+  },
+  {
+   "x": 749,
+   "y": 1155,
+   "w": 17,
+   "h": 24,
+   "c": "E"
+  },
+  {
+   "x": 918,
+   "y": 1154,
+   "w": 18,
+   "h": 23,
+   "c": "A"
+  },
+  {
+   "x": 1125,
+   "y": 1155,
+   "w": 22,
+   "h": 24,
+   "c": "G"
+  },
+  {
+   "x": 1216,
+   "y": 1155,
+   "w": 17,
+   "h": 24,
+   "c": "E"
+  },
+  {
+   "x": 689,
+   "y": 682,
+   "w": 42,
+   "h": 24,
+   "c": "Bm"
+  },
+  {
+   "x": 412,
+   "y": 1624,
+   "w": 34,
+   "h": 33,
+   "c": "C#"
+  },
+  {
+   "x": 467,
+   "y": 1624,
+   "w": 66,
+   "h": 33,
+   "c": "C#/F"
+  },
+  {
+   "x": 551,
+   "y": 1624,
+   "w": 55,
+   "h": 33,
+   "c": "F#m"
+  },
+  {
+   "x": 743,
+   "y": 1634,
+   "w": 41,
+   "h": 23,
+   "c": "Bm"
+  },
+  {
+   "x": 450,
+   "y": 2098,
+   "w": 34,
+   "h": 33,
+   "c": "C#"
+  },
+  {
+   "x": 516,
+   "y": 2098,
+   "w": 67,
+   "h": 33,
+   "c": "C#/F"
+  },
+  {
+   "x": 613,
+   "y": 2098,
+   "w": 56,
+   "h": 33,
+   "c": "F#m"
   }
  ],
- "extra_verified": "zooms propose-extra relus un à un, rangées hautes calées sur le bloc d’encre des colonnes, 2026-08-05",
- "face": "helvetica-bold"
+ "extra_verified": "zooms propose-extra relus un à un, rangées hautes calées sur le bloc d’encre des colonnes, 2026-08-05 · rangées d'accords entières que le classifieur avait rangées ailleurs (`?`, `lyrics`, `numbers`) : repérées par `worklist.hidden_rows`, lues sur planche de rangées, boîtes mesurées par bloc d'encre (bande élargie de 16 px pour ne pas couper les hampes des ♭ et ♯) — itération 30, 2026-08-22 · second passage propose-extra --all après publication des rangées cachées : 40 amas relus au zoom, dont 8 que le matcher lisait faux (A/D pris pour A/C#, G/D pour G/B, C# pour D, F#m pour C#). Boîtes recalculées par bloc d'encre — itération 30, 2026-08-22",
+ "face": "helvetica-bold",
+ "key_label": {
+  "x": 34,
+  "y": 275,
+  "w": 73,
+  "h": 27
+ },
+ "key_label_verified": "mesure à la main : measure-keylabel proposait la ligne « ♩=NN », de même silhouette. Bande bornée pour exclure la fraction 4/4, relue au zoom ×4 — itération 30 (2026-08-22)",
+ "verified": "audit-page A→A#, page entière relue en 9 tranches. Rangée y=1154 typée `numbers` (D A F#m Bm E A G E) et huit amas relus dont quatre que le matcher lisait faux (C# pris pour D, F#m pour C#). Cadre 1=A mesuré à la main — measure-keylabel proposait la ligne « ♩=88 ». Tous les accords encadrés — itération 30, 2026-08-22",
+ "frozen_labels": [
+  {
+   "x": 133,
+   "y": 444,
+   "w": 18,
+   "h": 26,
+   "c": "A"
+  },
+  {
+   "x": 410,
+   "y": 444,
+   "w": 66,
+   "h": 26,
+   "c": "E/G#"
+  },
+  {
+   "x": 822,
+   "y": 444,
+   "w": 19,
+   "h": 26,
+   "c": "D"
+  },
+  {
+   "x": 1139,
+   "y": 444,
+   "w": 18,
+   "h": 26,
+   "c": "A"
+  },
+  {
+   "x": 13,
+   "y": 680,
+   "w": 19,
+   "h": 26,
+   "c": "D"
+  },
+  {
+   "x": 359,
+   "y": 680,
+   "w": 18,
+   "h": 26,
+   "c": "A"
+  },
+  {
+   "x": 511,
+   "y": 680,
+   "w": 56,
+   "h": 26,
+   "c": "F#m"
+  },
+  {
+   "x": 1112,
+   "y": 680,
+   "w": 16,
+   "h": 26,
+   "c": "E"
+  },
+  {
+   "x": 12,
+   "y": 920,
+   "w": 18,
+   "h": 26,
+   "c": "A"
+  },
+  {
+   "x": 318,
+   "y": 920,
+   "w": 66,
+   "h": 26,
+   "c": "E/G#"
+  },
+  {
+   "x": 760,
+   "y": 920,
+   "w": 19,
+   "h": 26,
+   "c": "D"
+  },
+  {
+   "x": 1107,
+   "y": 920,
+   "w": 18,
+   "h": 26,
+   "c": "A"
+  },
+  {
+   "x": 12,
+   "y": 1394,
+   "w": 17,
+   "h": 26,
+   "c": "A"
+  },
+  {
+   "x": 440,
+   "y": 1394,
+   "w": 66,
+   "h": 26,
+   "c": "E/G#"
+  },
+  {
+   "x": 753,
+   "y": 1394,
+   "w": 19,
+   "h": 26,
+   "c": "D"
+  },
+  {
+   "x": 1163,
+   "y": 1394,
+   "w": 17,
+   "h": 26,
+   "c": "A"
+  },
+  {
+   "x": 12,
+   "y": 1626,
+   "w": 19,
+   "h": 31,
+   "c": "D"
+  },
+  {
+   "x": 1097,
+   "y": 1626,
+   "w": 16,
+   "h": 31,
+   "c": "E"
+  },
+  {
+   "x": 12,
+   "y": 1867,
+   "w": 18,
+   "h": 26,
+   "c": "A"
+  },
+  {
+   "x": 440,
+   "y": 1867,
+   "w": 66,
+   "h": 26,
+   "c": "E/G#"
+  },
+  {
+   "x": 753,
+   "y": 1867,
+   "w": 19,
+   "h": 26,
+   "c": "D"
+  },
+  {
+   "x": 1163,
+   "y": 1867,
+   "w": 18,
+   "h": 26,
+   "c": "A"
+  },
+  {
+   "x": 13,
+   "y": 2099,
+   "w": 19,
+   "h": 32,
+   "c": "D"
+  },
+  {
+   "x": 824,
+   "y": 2099,
+   "w": 41,
+   "h": 32,
+   "c": "Bm"
+  },
+  {
+   "x": 1041,
+   "y": 2099,
+   "w": 16,
+   "h": 32,
+   "c": "E"
+  },
+  {
+   "x": 1217,
+   "y": 2099,
+   "w": 17,
+   "h": 32,
+   "c": "A"
+  },
+  {
+   "x": 918,
+   "y": 1154,
+   "w": 18,
+   "h": 23,
+   "c": "A"
+  },
+  {
+   "x": 749,
+   "y": 1155,
+   "w": 17,
+   "h": 24,
+   "c": "E"
+  },
+  {
+   "x": 1125,
+   "y": 1155,
+   "w": 22,
+   "h": 24,
+   "c": "G"
+  },
+  {
+   "x": 1216,
+   "y": 1155,
+   "w": 17,
+   "h": 24,
+   "c": "E"
+  },
+  {
+   "x": 14,
+   "y": 1156,
+   "w": 19,
+   "h": 23,
+   "c": "D"
+  },
+  {
+   "x": 562,
+   "y": 1156,
+   "w": 41,
+   "h": 23,
+   "c": "Bm"
+  },
+  {
+   "x": 14,
+   "y": 1156,
+   "w": 19,
+   "h": 23,
+   "c": "D"
+  },
+  {
+   "x": 297,
+   "y": 1156,
+   "w": 17,
+   "h": 23,
+   "c": "A"
+  },
+  {
+   "x": 417,
+   "y": 1146,
+   "w": 55,
+   "h": 33,
+   "c": "F#m"
+  },
+  {
+   "x": 562,
+   "y": 1156,
+   "w": 41,
+   "h": 23,
+   "c": "Bm"
+  },
+  {
+   "x": 749,
+   "y": 1155,
+   "w": 17,
+   "h": 24,
+   "c": "E"
+  },
+  {
+   "x": 918,
+   "y": 1154,
+   "w": 18,
+   "h": 23,
+   "c": "A"
+  },
+  {
+   "x": 1125,
+   "y": 1155,
+   "w": 22,
+   "h": 24,
+   "c": "G"
+  },
+  {
+   "x": 1216,
+   "y": 1155,
+   "w": 17,
+   "h": 24,
+   "c": "E"
+  },
+  {
+   "x": 689,
+   "y": 682,
+   "w": 42,
+   "h": 24,
+   "c": "Bm"
+  },
+  {
+   "x": 412,
+   "y": 1624,
+   "w": 34,
+   "h": 33,
+   "c": "C#"
+  },
+  {
+   "x": 467,
+   "y": 1624,
+   "w": 66,
+   "h": 33,
+   "c": "C#/F"
+  },
+  {
+   "x": 551,
+   "y": 1624,
+   "w": 55,
+   "h": 33,
+   "c": "F#m"
+  },
+  {
+   "x": 743,
+   "y": 1634,
+   "w": 41,
+   "h": 23,
+   "c": "Bm"
+  },
+  {
+   "x": 450,
+   "y": 2098,
+   "w": 34,
+   "h": 33,
+   "c": "C#"
+  },
+  {
+   "x": 516,
+   "y": 2098,
+   "w": 67,
+   "h": 33,
+   "c": "C#/F"
+  },
+  {
+   "x": 613,
+   "y": 2098,
+   "w": 56,
+   "h": 33,
+   "c": "F#m"
+  }
+ ]
 }

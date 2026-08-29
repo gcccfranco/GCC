@@ -8,13 +8,142 @@
    "w": 46,
    "h": 28,
    "c": "C/D"
+  },
+  {
+   "x": 1274,
+   "y": 339,
+   "w": 60,
+   "h": 30,
+   "c": "(F/A)"
+  },
+  {
+   "x": 730,
+   "y": 539,
+   "w": 62,
+   "h": 25,
+   "c": "Gm7"
+  },
+  {
+   "x": 1107,
+   "y": 537,
+   "w": 64,
+   "h": 32,
+   "c": "Bb/C"
+  },
+  {
+   "x": 310,
+   "y": 815,
+   "w": 15,
+   "h": 24,
+   "c": "F"
+  },
+  {
+   "x": 55,
+   "y": 1095,
+   "w": 63,
+   "h": 25,
+   "c": "Gm7"
+  },
+  {
+   "x": 1085,
+   "y": 1093,
+   "w": 83,
+   "h": 33,
+   "c": "(A/C#)"
+  },
+  {
+   "x": 48,
+   "y": 1371,
+   "w": 63,
+   "h": 25,
+   "c": "Gm7"
+  },
+  {
+   "x": 202,
+   "y": 1370,
+   "w": 50,
+   "h": 29,
+   "c": "(Bb)"
+  },
+  {
+   "x": 308,
+   "y": 1368,
+   "w": 64,
+   "h": 32,
+   "c": "Bb/C"
+  },
+  {
+   "x": 526,
+   "y": 1569,
+   "w": 62,
+   "h": 25,
+   "c": "Gm7"
+  },
+  {
+   "x": 895,
+   "y": 1567,
+   "w": 65,
+   "h": 31,
+   "c": "A/C#"
+  },
+  {
+   "x": 614,
+   "y": 1765,
+   "w": 51,
+   "h": 32,
+   "c": "G/B"
+  },
+  {
+   "x": 1113,
+   "y": 155,
+   "w": 64,
+   "h": 32,
+   "c": "Bb/C"
+  },
+  {
+   "x": 414,
+   "y": 807,
+   "w": 148,
+   "h": 29,
+   "c": "先C/E后Am"
+  },
+  {
+   "x": 650,
+   "y": 1093,
+   "w": 231,
+   "h": 29,
+   "c": "先C/Bb后Bbm/Db"
   }
  ],
- "extra_verified": "1 étiquette(s) contestée(s) relue(s) au zoom, 2026-08-17 (itération 24, dissent.py)",
+ "extra_verified": "1 étiquette(s) contestée(s) relue(s) au zoom, 2026-08-17 (itération 24, dissent.py) · propose-extra --all après masquage des rangées étrangères : 37 amas relus au zoom. Deux amas soudés séparés (« D/F# Em7 », « Dm G) ») et quatre « F » rendus à leur largeur — le pré-filtre les livrait à 4 px. Boîtes par bloc d'encre, marge de 2 px — itération 31 (2026-08-22) · le « Bb/C » de y=157, posé au-dessus du chiffrage arpégé « 1 5 4 1 » de l'introduction et rangé en `numbers` : il n'était ni publié ni masqué, donc resté en fa sur la page transposée. Trouvé à l'audit — itération 31 (2026-08-23)",
  "extra_chords": [
   "C/D"
  ],
  "corrections": {
   "1770,1115": "C/D"
- }
+ },
+ "key_label": {
+  "x": 15,
+  "y": 146,
+  "w": 67,
+  "h": 22
+ },
+ "key_label_verified": "mesure measure-keylabel (vote 1= + lettre attendue), zoom relu à l’œil sur planche de lot, lettre confrontée à printedKey, 2026-08-22",
+ "mask_rows": [
+  727,
+  1007,
+  1285
+ ],
+ "mask_rows_verified": "1=F · deux rangées gravées en **sol** au-dessus des rangées réelles en fa (y=807, y=1363). y=1285 (Am7 C/D G, 3 amas) passait sous FOREIGN_MIN_ROW. Itération 31 (2026-08-22) · y=1007 (Am7 D C 先A/C#后D/C再Cm/Eb 先G/D后Bm B/D# Em (G/D)), troisième rangée en sol : foreign-scan ne la voit pas parce que ses deux amas « 先…后… » ne s'apparient à rien et font tomber le taux sous FOREIGN_HIT. Trouvée à l'audit — itération 31 (2026-08-23)",
+ "not_labels": [
+  "1117,205",
+  "1164,205",
+  "1225,525",
+  "60,807",
+  "143,807",
+  "886,1363",
+  "1207,1770"
+ ],
+ "not_labels_verified": "amas sans accord : titres 【Chorus】【Bridge】【Pre-Chorus】, « To Chorus », indications de jeu (（琶音）,（先低后高）), barre de mesure, chiffrage, et l'annotation « 升调用上层和弦 » — relus au zoom, itération 31 (2026-08-22)",
+ "extra_composites_verified": "étiquettes composites (或 / 代替 / 先…后 / groupe entre parenthèses), lues à l’œil sur planche de lot et écrites telles qu’imprimées ; `transpose_label` réécrit la ligne entière. 2026-08-25 (itération 34)"
 }

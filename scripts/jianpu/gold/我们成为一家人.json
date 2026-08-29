@@ -1,4 +1,260 @@
 {
  "slug": "我们成为一家人",
- "face": "verdana-bold"
+ "face": "verdana-bold",
+ "key_label": {
+  "x": 17,
+  "y": 158,
+  "w": 79,
+  "h": 25
+ },
+ "key_label_verified": "mesure à la main : measure-keylabel proposait une rangée entière (corrélation négative sur la lettre attendue). Bande bornée à gauche de la fraction 4/4, bloc d'encre relevé au profil de colonnes — trois amas, « 1 », « = », la lettre. Lettre confrontée à printedKey. Itération 32 (2026-08-23) · zoom ×5, « 1= ♭B ». Le bémol est un **exposant** posé 5 px au-dessus de la lettre : l'inclure dans le cadre porte sa hauteur de 25 à 55 px, et la hauteur du cadre *est* le corps de la fonte — le « 1=X » réécrit serait deux fois trop gros. Le cadre tient donc la seule ligne de texte, et le bémol est effacé à part par une étiquette au texte vide, comme un mask_rows.",
+ "extra_labels": [
+  {
+   "x": 64,
+   "y": 128,
+   "w": 11,
+   "h": 26,
+   "c": ""
+  },
+  {
+   "x": 1137,
+   "y": 785,
+   "w": 109,
+   "h": 36,
+   "c": "Ebmaj7"
+  },
+  {
+   "x": 767,
+   "y": 1117,
+   "w": 72,
+   "h": 28,
+   "c": "Gm7"
+  },
+  {
+   "x": 861,
+   "y": 1446,
+   "w": 110,
+   "h": 36,
+   "c": "Ebmaj7"
+  },
+  {
+   "x": 367,
+   "y": 1778,
+   "w": 71,
+   "h": 28,
+   "c": "Gm7"
+  },
+  {
+   "x": 65,
+   "y": 1115,
+   "w": 116,
+   "h": 30,
+   "c": "F或F/Eb"
+  },
+  {
+   "x": 1184,
+   "y": 1445,
+   "w": 116,
+   "h": 34,
+   "c": "F或F/Eb"
+  }
+ ],
+ "extra_verified": "le bémol exposant de « 1= ♭B » (x=64, y=128), masqué pour que le libellé transposé ne garde pas un ♭ orphelin au-dessus — itération 32 (2026-08-23) · quatre amas qu'aucune rangée ne publiait — deux « Ebmaj7 » (lus juste à +0,32, sous le seuil) et deux « Gm7 » (+0,58 et +0,54, mais seuls de leur rangée à manquer). Relus au zoom, boîtes reprises au bloc d'encre — le « j » d'Ebmaj7 descend sous la ligne de base. Itération 32 (2026-08-23)",
+ "not_labels": [
+  "778,895"
+ ],
+ "not_labels_verified": "amas sans accord : le titre 【Chorus】, lu « Fsus4 » à +0,31 — itération 32 (2026-08-23)",
+ "extra_composites_verified": "les deux « F或F/Eb » lus à l’œil sur planche de lot ; `transpose_label` réécrit la ligne entière. 2026-08-25 (itération 34)",
+ "verified": "audit-page Bb→B relu sur les neuf tranches : toutes les rangées d’accords et le cadre 1=♭B (bémol exposant effacé à part) sont convertis. Les deux « F或F/Eb » deviennent « F#或F#/E ». « [另有一张A调] » décrit une autre édition et reste hors calque. 2026-08-26 (itération 34)",
+ "frozen_labels": [
+  {
+   "x": 52,
+   "y": 243,
+   "w": 34,
+   "h": 25,
+   "c": "Bb"
+  },
+  {
+   "x": 461,
+   "y": 243,
+   "w": 35,
+   "h": 25,
+   "c": "Bb"
+  },
+  {
+   "x": 781,
+   "y": 243,
+   "w": 48,
+   "h": 25,
+   "c": "Gm"
+  },
+  {
+   "x": 1100,
+   "y": 243,
+   "w": 79,
+   "h": 25,
+   "c": "Fsus4"
+  },
+  {
+   "x": 57,
+   "y": 515,
+   "w": 34,
+   "h": 25,
+   "c": "Bb"
+  },
+  {
+   "x": 358,
+   "y": 515,
+   "w": 34,
+   "h": 25,
+   "c": "Bb"
+  },
+  {
+   "x": 776,
+   "y": 515,
+   "w": 34,
+   "h": 25,
+   "c": "Bb"
+  },
+  {
+   "x": 1122,
+   "y": 515,
+   "w": 48,
+   "h": 25,
+   "c": "Gm"
+  },
+  {
+   "x": 53,
+   "y": 778,
+   "w": 46,
+   "h": 35,
+   "c": "Dm"
+  },
+  {
+   "x": 358,
+   "y": 778,
+   "w": 63,
+   "h": 35,
+   "c": "Cm7"
+  },
+  {
+   "x": 494,
+   "y": 778,
+   "w": 12,
+   "h": 35,
+   "c": "F"
+  },
+  {
+   "x": 639,
+   "y": 778,
+   "w": 35,
+   "h": 35,
+   "c": "Bb"
+  },
+  {
+   "x": 406,
+   "y": 1115,
+   "w": 65,
+   "h": 30,
+   "c": "Dm7"
+  },
+  {
+   "x": 1130,
+   "y": 1115,
+   "w": 64,
+   "h": 30,
+   "c": "Cm7"
+  },
+  {
+   "x": 60,
+   "y": 1445,
+   "w": 12,
+   "h": 34,
+   "c": "F"
+  },
+  {
+   "x": 343,
+   "y": 1445,
+   "w": 34,
+   "h": 34,
+   "c": "Bb"
+  },
+  {
+   "x": 53,
+   "y": 1780,
+   "w": 65,
+   "h": 24,
+   "c": "Dm7"
+  },
+  {
+   "x": 635,
+   "y": 1780,
+   "w": 63,
+   "h": 24,
+   "c": "Cm7"
+  },
+  {
+   "x": 923,
+   "y": 1780,
+   "w": 12,
+   "h": 24,
+   "c": "F"
+  },
+  {
+   "x": 1202,
+   "y": 1780,
+   "w": 34,
+   "h": 24,
+   "c": "Bb"
+  },
+  {
+   "x": 64,
+   "y": 128,
+   "w": 11,
+   "h": 26,
+   "c": ""
+  },
+  {
+   "x": 1137,
+   "y": 785,
+   "w": 109,
+   "h": 36,
+   "c": "Ebmaj7"
+  },
+  {
+   "x": 767,
+   "y": 1117,
+   "w": 72,
+   "h": 28,
+   "c": "Gm7"
+  },
+  {
+   "x": 861,
+   "y": 1446,
+   "w": 110,
+   "h": 36,
+   "c": "Ebmaj7"
+  },
+  {
+   "x": 367,
+   "y": 1778,
+   "w": 71,
+   "h": 28,
+   "c": "Gm7"
+  },
+  {
+   "x": 65,
+   "y": 1115,
+   "w": 116,
+   "h": 30,
+   "c": "F或F/Eb"
+  },
+  {
+   "x": 1184,
+   "y": 1445,
+   "w": 116,
+   "h": 34,
+   "c": "F或F/Eb"
+  }
+ ]
 }

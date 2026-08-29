@@ -21,9 +21,100 @@
    "w": 50,
    "h": 33,
    "c": "Dm"
+  },
+  {
+   "x": 43,
+   "y": 321,
+   "w": 13,
+   "h": 25,
+   "c": "F"
+  },
+  {
+   "x": 152,
+   "y": 318,
+   "w": 50,
+   "h": 33,
+   "c": "C/E"
+  },
+  {
+   "x": 288,
+   "y": 321,
+   "w": 49,
+   "h": 25,
+   "c": "Dm"
+  },
+  {
+   "x": 407,
+   "y": 319,
+   "w": 36,
+   "h": 27,
+   "c": "Bb"
+  },
+  {
+   "x": 554,
+   "y": 321,
+   "w": 12,
+   "h": 25,
+   "c": "F"
+  },
+  {
+   "x": 639,
+   "y": 317,
+   "w": 51,
+   "h": 34,
+   "c": "C/E"
+  },
+  {
+   "x": 776,
+   "y": 321,
+   "w": 49,
+   "h": 25,
+   "c": "Dm"
+  },
+  {
+   "x": 894,
+   "y": 319,
+   "w": 37,
+   "h": 27,
+   "c": "Bb"
+  },
+  {
+   "x": 1058,
+   "y": 321,
+   "w": 13,
+   "h": 25,
+   "c": "F"
+  },
+  {
+   "x": 1145,
+   "y": 318,
+   "w": 50,
+   "h": 33,
+   "c": "C/E"
+  },
+  {
+   "x": 1280,
+   "y": 321,
+   "w": 50,
+   "h": 25,
+   "c": "Dm"
+  },
+  {
+   "x": 1398,
+   "y": 319,
+   "w": 36,
+   "h": 32,
+   "c": "Bb"
+  },
+  {
+   "x": 1196,
+   "y": 1174,
+   "w": 50,
+   "h": 33,
+   "c": "C/E"
   }
  ],
- "extra_verified": "chaque étiquette relue sur zoom (propose-extra + planches), 2026-08-04",
+ "extra_verified": "chaque étiquette relue sur zoom (propose-extra + planches), 2026-08-04 · rangées d'accords entières que le classifieur avait rangées ailleurs (`?`, `lyrics`, `numbers`) : repérées par `worklist.hidden_rows`, lues sur planche de rangées, boîtes mesurées par bloc d'encre (bande élargie de 16 px pour ne pas couper les hampes des ♭ et ♯) — itération 30, 2026-08-22 · second passage propose-extra --all après publication des rangées cachées : 40 amas relus au zoom, dont 8 que le matcher lisait faux (A/D pris pour A/C#, G/D pour G/B, C# pour D, F#m pour C#). Boîtes recalculées par bloc d'encre — itération 30, 2026-08-22",
  "key_label": {
   "x": 15,
   "y": 206,
@@ -31,5 +122,315 @@
   "h": 25
  },
  "key_label_verified": "mesure measure-keylabel (vote 1= + lettre attendue), zoom relu à l’œil, 2026-08-05",
- "face": "verdana-bold"
+ "face": "verdana-bold",
+ "not_labels": [
+  "515,318",
+  "1006,318",
+  "749,1167"
+ ],
+ "not_labels_verified": "amas sans accord : titres de section 【Verse】【Chorus】【Bridge】, chiffres de crochet de reprise, un segno — relus au zoom, itération 30 (2026-08-22)",
+ "verified": "audit-page F→F#, page entière relue en 9 tranches. La rangée y=318, typée `lyrics`, portait douze accords (F C/E Dm Bb × 3) coupés par le trait des crochets 1./2. — boîtes posées sur les seuls glyphes. Tous les accords encadrés, cadre 1=F# — itération 30, 2026-08-22",
+ "frozen_labels": [
+  {
+   "x": 298,
+   "y": 552,
+   "w": 13,
+   "h": 33,
+   "c": "F"
+  },
+  {
+   "x": 475,
+   "y": 552,
+   "w": 50,
+   "h": 33,
+   "c": "C/E"
+  },
+  {
+   "x": 682,
+   "y": 552,
+   "w": 49,
+   "h": 33,
+   "c": "Dm"
+  },
+  {
+   "x": 1067,
+   "y": 552,
+   "w": 37,
+   "h": 33,
+   "c": "Bb"
+  },
+  {
+   "x": 1252,
+   "y": 552,
+   "w": 51,
+   "h": 33,
+   "c": "F/A"
+  },
+  {
+   "x": 78,
+   "y": 863,
+   "w": 17,
+   "h": 33,
+   "c": "C"
+  },
+  {
+   "x": 565,
+   "y": 863,
+   "w": 13,
+   "h": 33,
+   "c": "F"
+  },
+  {
+   "x": 784,
+   "y": 863,
+   "w": 50,
+   "h": 33,
+   "c": "C/E"
+  },
+  {
+   "x": 1039,
+   "y": 863,
+   "w": 48,
+   "h": 33,
+   "c": "Dm"
+  },
+  {
+   "x": 1239,
+   "y": 863,
+   "w": 49,
+   "h": 33,
+   "c": "F/C"
+  },
+  {
+   "x": 49,
+   "y": 1167,
+   "w": 37,
+   "h": 35,
+   "c": "Bb"
+  },
+  {
+   "x": 290,
+   "y": 1167,
+   "w": 18,
+   "h": 35,
+   "c": "C"
+  },
+  {
+   "x": 556,
+   "y": 1167,
+   "w": 12,
+   "h": 35,
+   "c": "F"
+  },
+  {
+   "x": 919,
+   "y": 1167,
+   "w": 12,
+   "h": 35,
+   "c": "F"
+  },
+  {
+   "x": 50,
+   "y": 1485,
+   "w": 49,
+   "h": 33,
+   "c": "Dm"
+  },
+  {
+   "x": 283,
+   "y": 1485,
+   "w": 50,
+   "h": 33,
+   "c": "F/C"
+  },
+  {
+   "x": 484,
+   "y": 1485,
+   "w": 37,
+   "h": 33,
+   "c": "Bb"
+  },
+  {
+   "x": 770,
+   "y": 1485,
+   "w": 51,
+   "h": 33,
+   "c": "F/A"
+  },
+  {
+   "x": 1017,
+   "y": 1485,
+   "w": 51,
+   "h": 33,
+   "c": "Gm"
+  },
+  {
+   "x": 1263,
+   "y": 1485,
+   "w": 18,
+   "h": 33,
+   "c": "C"
+  },
+  {
+   "x": 51,
+   "y": 1797,
+   "w": 12,
+   "h": 33,
+   "c": "F"
+  },
+  {
+   "x": 285,
+   "y": 1797,
+   "w": 51,
+   "h": 33,
+   "c": "C/E"
+  },
+  {
+   "x": 465,
+   "y": 1797,
+   "w": 49,
+   "h": 33,
+   "c": "Dm"
+  },
+  {
+   "x": 662,
+   "y": 1797,
+   "w": 49,
+   "h": 33,
+   "c": "F/C"
+  },
+  {
+   "x": 783,
+   "y": 1797,
+   "w": 37,
+   "h": 33,
+   "c": "Bb"
+  },
+  {
+   "x": 1016,
+   "y": 1797,
+   "w": 18,
+   "h": 33,
+   "c": "C"
+  },
+  {
+   "x": 1230,
+   "y": 1797,
+   "w": 13,
+   "h": 33,
+   "c": "F"
+  },
+  {
+   "x": 288,
+   "y": 318,
+   "w": 49,
+   "h": 33,
+   "c": "Dm"
+  },
+  {
+   "x": 776,
+   "y": 318,
+   "w": 49,
+   "h": 33,
+   "c": "Dm"
+  },
+  {
+   "x": 1280,
+   "y": 318,
+   "w": 50,
+   "h": 33,
+   "c": "Dm"
+  },
+  {
+   "x": 43,
+   "y": 321,
+   "w": 13,
+   "h": 25,
+   "c": "F"
+  },
+  {
+   "x": 152,
+   "y": 318,
+   "w": 50,
+   "h": 33,
+   "c": "C/E"
+  },
+  {
+   "x": 288,
+   "y": 321,
+   "w": 49,
+   "h": 25,
+   "c": "Dm"
+  },
+  {
+   "x": 407,
+   "y": 319,
+   "w": 36,
+   "h": 27,
+   "c": "Bb"
+  },
+  {
+   "x": 554,
+   "y": 321,
+   "w": 12,
+   "h": 25,
+   "c": "F"
+  },
+  {
+   "x": 639,
+   "y": 317,
+   "w": 51,
+   "h": 34,
+   "c": "C/E"
+  },
+  {
+   "x": 776,
+   "y": 321,
+   "w": 49,
+   "h": 25,
+   "c": "Dm"
+  },
+  {
+   "x": 894,
+   "y": 319,
+   "w": 37,
+   "h": 27,
+   "c": "Bb"
+  },
+  {
+   "x": 1058,
+   "y": 321,
+   "w": 13,
+   "h": 25,
+   "c": "F"
+  },
+  {
+   "x": 1145,
+   "y": 318,
+   "w": 50,
+   "h": 33,
+   "c": "C/E"
+  },
+  {
+   "x": 1280,
+   "y": 321,
+   "w": 50,
+   "h": 25,
+   "c": "Dm"
+  },
+  {
+   "x": 1398,
+   "y": 319,
+   "w": 36,
+   "h": 32,
+   "c": "Bb"
+  },
+  {
+   "x": 1196,
+   "y": 1174,
+   "w": 50,
+   "h": 33,
+   "c": "C/E"
+  }
+ ]
 }

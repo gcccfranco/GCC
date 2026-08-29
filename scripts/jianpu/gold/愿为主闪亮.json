@@ -1,4 +1,11 @@
 {
  "slug": "愿为主闪亮",
- "face": "verdana-bold"
+ "face": "verdana-bold",
+ "key_label": {
+  "x": 6,
+  "y": 163,
+  "w": 85,
+  "h": 26
+ },
+ "key_label_verified": "mesure measure-keylabel (vote 1= + lettre attendue), zoom relu à l’œil sur planche de lot, lettre confrontée à printedKey, 2026-08-22"
 }

@@ -1,56 +1,162 @@
 {
- "slug": "十架的爱",
- "extra_labels": [
-  {
-   "x": 194,
-   "y": 434,
-   "w": 16,
-   "h": 26,
-   "c": "G"
-  },
-  {
-   "x": 342,
-   "y": 434,
-   "w": 34,
-   "h": 26,
-   "c": "Bm"
-  },
-  {
-   "x": 944,
-   "y": 434,
-   "w": 15,
-   "h": 26,
-   "c": "G"
-  },
-  {
-   "x": 1092,
-   "y": 434,
-   "w": 33,
-   "h": 26,
-   "c": "Bm"
-  },
-  {
-   "x": 33,
-   "y": 856,
-   "w": 19,
-   "h": 29,
-   "c": "G"
-  },
-  {
-   "x": 297,
-   "y": 856,
-   "w": 40,
-   "h": 29,
-   "c": "Bm"
-  },
-  {
-   "x": 1210,
-   "y": 856,
-   "w": 19,
-   "h": 29,
-   "c": "G"
-  }
- ],
- "extra_verified": "chaque étiquette relue sur zoom (propose-extra + planches), 2026-08-04",
- "face": "helvetica-bold"
+  "slug": "十架的爱",
+  "extra_labels": [
+    {
+      "x": 194,
+      "y": 434,
+      "w": 16,
+      "h": 26,
+      "c": "G"
+    },
+    {
+      "x": 342,
+      "y": 434,
+      "w": 34,
+      "h": 26,
+      "c": "Bm"
+    },
+    {
+      "x": 944,
+      "y": 434,
+      "w": 15,
+      "h": 26,
+      "c": "G"
+    },
+    {
+      "x": 1092,
+      "y": 434,
+      "w": 33,
+      "h": 26,
+      "c": "Bm"
+    },
+    {
+      "x": 33,
+      "y": 856,
+      "w": 19,
+      "h": 29,
+      "c": "G"
+    },
+    {
+      "x": 297,
+      "y": 856,
+      "w": 40,
+      "h": 29,
+      "c": "Bm"
+    },
+    {
+      "x": 1210,
+      "y": 856,
+      "w": 19,
+      "h": 29,
+      "c": "G"
+    },
+    {
+      "x": 28,
+      "y": 434,
+      "w": 48,
+      "h": 26,
+      "c": "D/F#"
+    },
+    {
+      "x": 559,
+      "y": 434,
+      "w": 52,
+      "h": 26,
+      "c": "A/C#"
+    },
+    {
+      "x": 777,
+      "y": 434,
+      "w": 49,
+      "h": 26,
+      "c": "D/F#"
+    },
+    {
+      "x": 1308,
+      "y": 434,
+      "w": 54,
+      "h": 26,
+      "c": "A/C#"
+    },
+    {
+      "x": 22,
+      "y": 612,
+      "w": 60,
+      "h": 29,
+      "c": "D/F#"
+    },
+    {
+      "x": 880,
+      "y": 612,
+      "w": 66,
+      "h": 29,
+      "c": "A/C#"
+    },
+    {
+      "x": 1119,
+      "y": 612,
+      "w": 63,
+      "h": 29,
+      "c": "D/F#"
+    },
+    {
+      "x": 582,
+      "y": 856,
+      "w": 66,
+      "h": 29,
+      "c": "A/C#"
+    },
+    {
+      "x": 815,
+      "y": 856,
+      "w": 62,
+      "h": 29,
+      "c": "D/F#"
+    },
+    {
+      "x": 437,
+      "y": 1100,
+      "w": 66,
+      "h": 30,
+      "c": "A/C#"
+    },
+    {
+      "x": 733,
+      "y": 1100,
+      "w": 63,
+      "h": 30,
+      "c": "D/F#"
+    },
+    {
+      "x": 283,
+      "y": 1596,
+      "w": 43,
+      "h": 25,
+      "c": "Am"
+    },
+    {
+      "x": 846,
+      "y": 1596,
+      "w": 62,
+      "h": 25,
+      "c": "D/F#"
+    },
+    {
+      "x": 1137,
+      "y": 1596,
+      "w": 51,
+      "h": 25,
+      "c": "Em11"
+    },
+    {
+      "x": 323,
+      "y": 2084,
+      "w": 62,
+      "h": 24,
+      "c": "D/F#"
+    }
+  ],
+  "extra_verified": "zooms relus à l’œil sur planche de lot (propose-extra --all --hidden), 2026-08-25 (itération 33)",
+  "face": "helvetica-bold",
+  "key_label_verified": "cadre mesuré (x=54, y=271, w=69, h=27) mais **volontairement non publié** : la page grave « 1=F » alors que printedKey vaut D (la tonalité du .cho, celle des accords imprimés — D/F#, G, Bm — qui sont des positions de capo 3). Le client écrit « 1=<tonalité jouée> » dans le cadre : le poser ici remplacerait un « 1=F » juste par un « 1=D » faux, et les chiffres de toute la page se liraient trois demi-tons à côté. Il manque un champ distinct pour le do gravé. 2026-08-26 (itération 35)"
 }

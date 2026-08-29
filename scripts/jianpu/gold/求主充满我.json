@@ -1,38 +1,45 @@
 {
- "slug": "求主充满我",
- "extra_labels": [
-  {
-   "x": 17,
-   "y": 1342,
-   "w": 19,
-   "h": 27,
-   "c": "D"
+  "slug": "求主充满我",
+  "extra_labels": [
+    {
+      "x": 17,
+      "y": 1342,
+      "w": 19,
+      "h": 27,
+      "c": "D"
+    },
+    {
+      "x": 310,
+      "y": 1342,
+      "w": 56,
+      "h": 27,
+      "c": "G/B"
+    },
+    {
+      "x": 598,
+      "y": 1342,
+      "w": 21,
+      "h": 27,
+      "c": "G"
+    },
+    {
+      "x": 1207,
+      "y": 1342,
+      "w": 19,
+      "h": 27,
+      "c": "D"
+    }
+  ],
+  "extra_verified": "chaque étiquette relue sur zoom (propose-extra + planches), 2026-08-04",
+  "not_labels": [
+    "236,719"
+  ],
+  "not_labels_verified": "amas écartés à l'œil, 2026-08-18 (itération 25) : arcs de liaison et titre anglais retenus comme accords",
+  "key_label": {
+    "x": 38,
+    "y": 274,
+    "w": 73,
+    "h": 27
   },
-  {
-   "x": 310,
-   "y": 1342,
-   "w": 56,
-   "h": 27,
-   "c": "G/B"
-  },
-  {
-   "x": 598,
-   "y": 1342,
-   "w": 21,
-   "h": 27,
-   "c": "G"
-  },
-  {
-   "x": 1207,
-   "y": 1342,
-   "w": 19,
-   "h": 27,
-   "c": "D"
-  }
- ],
- "extra_verified": "chaque étiquette relue sur zoom (propose-extra + planches), 2026-08-04",
- "not_labels": [
-  "236,719"
- ],
- "not_labels_verified": "amas écartés à l'œil, 2026-08-18 (itération 25) : arcs de liaison et titre anglais retenus comme accords"
+  "key_label_verified": "mesure measure-keylabel (ancrage sur le « = », cadre = voisin gauche…voisin droit), zoom relu à l’œil sur planche de lot, lettre gravée confrontée à printedKey, 2026-08-26 (itération 35)"
 }

@@ -1,4 +1,154 @@
 {
  "slug": "这是耶和华所定的日子",
- "face": "verdana-bold"
+ "face": "verdana-bold",
+ "not_rows": [
+  196
+ ],
+ "not_rows_verified": "la rangée de crédits « 原调Eb。对应关系：E-Eb，A-Ab，B-Bb，E/G#-Eb/G » et « Les Garrett 词曲 » : huit amas, aucun accord — le matcher lit « E/G# » partout parce que la ligne *contient* des noms d'accords, en tant que **texte**. Itération 33 (2026-08-24)",
+ "extra_labels": [
+  {
+   "x": 66,
+   "y": 332,
+   "w": 16,
+   "h": 26,
+   "c": "E"
+  },
+  {
+   "x": 974,
+   "y": 332,
+   "w": 18,
+   "h": 26,
+   "c": "B"
+  },
+  {
+   "x": 456,
+   "y": 674,
+   "w": 19,
+   "h": 26,
+   "c": "B"
+  },
+  {
+   "x": 57,
+   "y": 1358,
+   "w": 16,
+   "h": 26,
+   "c": "E"
+  },
+  {
+   "x": 465,
+   "y": 1358,
+   "w": 23,
+   "h": 26,
+   "c": "A"
+  },
+  {
+   "x": 973,
+   "y": 1358,
+   "w": 16,
+   "h": 26,
+   "c": "E"
+  }
+ ],
+ "extra_verified": "six accords de trois rangées que le classifieur range en `numbers` (y=334, y=676, y=1360) : deux ou trois amas seulement par rangée, largement espacés, la géométrie ne les distingue pas d'une rangée de chiffres. Trouvés à l'audit, relus au zoom ×4 — itération 33 (2026-08-24)",
+ "key_label": {
+  "x": 16,
+  "y": 153,
+  "w": 72,
+  "h": 24
+ },
+ "key_label_verified": "mesure à la main, bande bornée à gauche de la fraction 4/4 : trois amas « 1 », « = », « E ». Itération 33 (2026-08-24)",
+ "verified": "audit-page E→F, page entière relue en 8 tranches. Trois rangées d'accords sur cinq étaient rangées en `numbers` — deux ou trois amas très espacés, que la géométrie ne distingue pas d'une rangée de chiffres : leurs six accords sont publiés à la main. La rangée de crédits « 原调Eb。对应关系… » est écartée (`not_rows`) et **reste telle quelle** : elle décrit la source, décision du 09/08. Tous les accords en mi convertis, cadre 1=F mesuré à la main — itération 33, 2026-08-24",
+ "frozen_labels": [
+  {
+   "x": 59,
+   "y": 1018,
+   "w": 12,
+   "h": 22,
+   "c": "E"
+  },
+  {
+   "x": 483,
+   "y": 1018,
+   "w": 64,
+   "h": 22,
+   "c": "E/G#"
+  },
+  {
+   "x": 890,
+   "y": 1018,
+   "w": 18,
+   "h": 22,
+   "c": "A"
+  },
+  {
+   "x": 54,
+   "y": 1702,
+   "w": 12,
+   "h": 22,
+   "c": "E"
+  },
+  {
+   "x": 796,
+   "y": 1702,
+   "w": 12,
+   "h": 22,
+   "c": "E"
+  },
+  {
+   "x": 921,
+   "y": 1702,
+   "w": 31,
+   "h": 22,
+   "c": "B7"
+  },
+  {
+   "x": 1090,
+   "y": 1702,
+   "w": 12,
+   "h": 22,
+   "c": "E"
+  },
+  {
+   "x": 66,
+   "y": 332,
+   "w": 16,
+   "h": 26,
+   "c": "E"
+  },
+  {
+   "x": 974,
+   "y": 332,
+   "w": 18,
+   "h": 26,
+   "c": "B"
+  },
+  {
+   "x": 456,
+   "y": 674,
+   "w": 19,
+   "h": 26,
+   "c": "B"
+  },
+  {
+   "x": 57,
+   "y": 1358,
+   "w": 16,
+   "h": 26,
+   "c": "E"
+  },
+  {
+   "x": 465,
+   "y": 1358,
+   "w": 23,
+   "h": 26,
+   "c": "A"
+  },
+  {
+   "x": 973,
+   "y": 1358,
+   "w": 16,
+   "h": 26,
+   "c": "E"
+  }
+ ]
 }

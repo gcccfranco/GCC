@@ -1,24 +1,25 @@
 {
-  "slug": "我安然居住",
-  "face": "verdana-bold",
-  "extra_chords": [
-    "F/G"
+  "slug": "在这里",
+  "mask_rows": [
+    684,
+    1190
   ],
+  "mask_rows_verified": "1=F · deux rangées gravées en **sol** au-dessus des rangées réelles en fa (y=744, y=1260). Trouvées par foreign-scan --large, paires relues côte à côte. Itération 31 (2026-08-22)",
   "extra_labels": [
     {
-      "x": 788,
-      "y": 1187,
-      "w": 127,
-      "h": 30,
-      "c": "Am(maj7)"
+      "x": 1033,
+      "y": 1864,
+      "w": 98,
+      "h": 26,
+      "c": "【升G调】"
     }
   ],
   "extra_composites_verified": "étiquettes composites (或 / 代替 / 先…后 / groupe entre parenthèses), lues à l’œil sur planche de lot et écrites telles qu’imprimées ; `transpose_label` réécrit la ligne entière. 2026-08-25 (itération 34)",
   "key_label": {
     "x": 15,
-    "y": 134,
-    "w": 77,
-    "h": 24
+    "y": 247,
+    "w": 67,
+    "h": 22
   },
   "key_label_verified": "mesure measure-keylabel (ancrage sur le « = », cadre = voisin gauche…voisin droit), zoom relu à l’œil sur planche de lot, lettre gravée confrontée à printedKey, 2026-08-26 (itération 35)"
 }

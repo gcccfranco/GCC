@@ -1,4 +1,459 @@
 {
  "slug": "尽情的敬拜",
- "face": "verdana-bold"
+ "face": "verdana-bold",
+ "key_label": {
+  "x": 6,
+  "y": 160,
+  "w": 90,
+  "h": 28
+ },
+ "key_label_verified": "mesure measure-keylabel (vote 1= + lettre attendue), zoom relu à l’œil sur planche de lot, lettre confrontée à printedKey, 2026-08-22",
+ "extra_labels": [
+  {
+   "x": 402,
+   "y": 1622,
+   "w": 109,
+   "h": 35,
+   "c": "Bm7/A"
+  },
+  {
+   "x": 1039,
+   "y": 2023,
+   "w": 42,
+   "h": 26,
+   "c": "E"
+  },
+  {
+   "x": 1160,
+   "y": 2023,
+   "w": 21,
+   "h": 26,
+   "c": "A"
+  },
+  {
+   "x": 74,
+   "y": 1207,
+   "w": 88,
+   "h": 26,
+   "c": "Esus4"
+  },
+  {
+   "x": 563,
+   "y": 1207,
+   "w": 20,
+   "h": 26,
+   "c": "D"
+  },
+  {
+   "x": 810,
+   "y": 1203,
+   "w": 78,
+   "h": 36,
+   "c": "B/D#"
+  },
+  {
+   "x": 1115,
+   "y": 1229,
+   "w": 33,
+   "h": 26,
+   "c": "E7"
+  },
+  {
+   "x": 1318,
+   "y": 1225,
+   "w": 73,
+   "h": 35,
+   "c": "D/F#"
+  },
+  {
+   "x": 1449,
+   "y": 1225,
+   "w": 75,
+   "h": 35,
+   "c": "E/G#"
+  }
+ ],
+ "extra_verified": "zooms propose-extra --all relus un à un, boîtes mesurées au pixel quand l'amas était un fragment ou une soudure (itération 29, certification en lot) — 2026-08-22 · rangée réelle y=1207 (Esus4 D B/D# E7 D/F# E/G#) jamais publiée alors que sa jumelle capo l'était : système entier en deux tonalités. Boîtes coupées au profil de lignes pour ne pas manger le crochet de reprise — itération 29 (2026-08-22)",
+ "not_labels": [
+  "1095,750",
+  "685,2022",
+  "1222,2022",
+  "1312,2022"
+ ],
+ "not_labels_verified": "amas sans accord : titres de section 【】/« To Chorus », chiffres de crochet de reprise et arcs de liaison — relus au zoom, itération 29 (2026-08-22)",
+ "mask_rows": [
+  208,
+  669,
+  1126,
+  1542,
+  1942
+ ],
+ "mask_rows_verified": "les 5 rangées de positions de capo (G Am7 D7 / G D/F# Em Am7 Cmaj7 / Dsus4 C A/C# D7 C/E D/F# / G Am7/G D7/F# C/D G D/F# / Em Am7 C C/D D G), gravées au-dessus des rangées réelles en la sous un « 1=A » — chaque paire relue côte à côte sur planche de rangées, itération 29 (2026-08-22)",
+ "verified": "audit-page A→A#, page entière relue en 9 tranches, puis re-relue après correctif. Deux défauts : les 5 rangées de positions de capo en sol, désormais masquées, et le système y=1207 (Esus4 D B/D# E7 D/F# E/G#) qui n'était pas publié alors que sa jumelle capo l'était. Chaque paire de rangées relue côte à côte ; tous les accords en la sont convertis, cadre 1=A# — itération 29, 2026-08-22",
+ "frozen_labels": [
+  {
+   "x": 233,
+   "y": 288,
+   "w": 21,
+   "h": 26,
+   "c": "A"
+  },
+  {
+   "x": 704,
+   "y": 288,
+   "w": 70,
+   "h": 26,
+   "c": "Bm7"
+  },
+  {
+   "x": 1131,
+   "y": 288,
+   "w": 34,
+   "h": 26,
+   "c": "E7"
+  },
+  {
+   "x": 54,
+   "y": 750,
+   "w": 21,
+   "h": 33,
+   "c": "A"
+  },
+  {
+   "x": 167,
+   "y": 750,
+   "w": 76,
+   "h": 33,
+   "c": "E/G#"
+  },
+  {
+   "x": 381,
+   "y": 750,
+   "w": 65,
+   "h": 33,
+   "c": "F#m"
+  },
+  {
+   "x": 702,
+   "y": 750,
+   "w": 69,
+   "h": 33,
+   "c": "Bm7"
+  },
+  {
+   "x": 1132,
+   "y": 750,
+   "w": 101,
+   "h": 33,
+   "c": "Dmaj7"
+  },
+  {
+   "x": 46,
+   "y": 1622,
+   "w": 21,
+   "h": 35,
+   "c": "A"
+  },
+  {
+   "x": 770,
+   "y": 1622,
+   "w": 95,
+   "h": 35,
+   "c": "E7/G#"
+  },
+  {
+   "x": 928,
+   "y": 1622,
+   "w": 54,
+   "h": 35,
+   "c": "D/E"
+  },
+  {
+   "x": 1192,
+   "y": 1622,
+   "w": 21,
+   "h": 35,
+   "c": "A"
+  },
+  {
+   "x": 1333,
+   "y": 1622,
+   "w": 75,
+   "h": 35,
+   "c": "E/G#"
+  },
+  {
+   "x": 41,
+   "y": 2022,
+   "w": 66,
+   "h": 45,
+   "c": "F#m"
+  },
+  {
+   "x": 416,
+   "y": 2022,
+   "w": 69,
+   "h": 45,
+   "c": "Bm7"
+  },
+  {
+   "x": 780,
+   "y": 2022,
+   "w": 20,
+   "h": 45,
+   "c": "D"
+  },
+  {
+   "x": 936,
+   "y": 2022,
+   "w": 54,
+   "h": 45,
+   "c": "D/E"
+  },
+  {
+   "x": 402,
+   "y": 1622,
+   "w": 109,
+   "h": 35,
+   "c": "Bm7/A"
+  },
+  {
+   "x": 1039,
+   "y": 2023,
+   "w": 42,
+   "h": 26,
+   "c": "E"
+  },
+  {
+   "x": 1160,
+   "y": 2023,
+   "w": 21,
+   "h": 26,
+   "c": "A"
+  },
+  {
+   "x": 74,
+   "y": 1207,
+   "w": 88,
+   "h": 26,
+   "c": "Esus4"
+  },
+  {
+   "x": 563,
+   "y": 1207,
+   "w": 20,
+   "h": 26,
+   "c": "D"
+  },
+  {
+   "x": 810,
+   "y": 1203,
+   "w": 78,
+   "h": 36,
+   "c": "B/D#"
+  },
+  {
+   "x": 1115,
+   "y": 1229,
+   "w": 33,
+   "h": 26,
+   "c": "E7"
+  },
+  {
+   "x": 1318,
+   "y": 1225,
+   "w": 73,
+   "h": 35,
+   "c": "D/F#"
+  },
+  {
+   "x": 1449,
+   "y": 1225,
+   "w": 75,
+   "h": 35,
+   "c": "E/G#"
+  },
+  {
+   "x": 232,
+   "y": 208,
+   "w": 21,
+   "h": 26,
+   "c": ""
+  },
+  {
+   "x": 701,
+   "y": 208,
+   "w": 74,
+   "h": 26,
+   "c": ""
+  },
+  {
+   "x": 1130,
+   "y": 208,
+   "w": 40,
+   "h": 26,
+   "c": ""
+  },
+  {
+   "x": 53,
+   "y": 669,
+   "w": 21,
+   "h": 32,
+   "c": ""
+  },
+  {
+   "x": 168,
+   "y": 669,
+   "w": 75,
+   "h": 32,
+   "c": ""
+  },
+  {
+   "x": 380,
+   "y": 669,
+   "w": 47,
+   "h": 32,
+   "c": ""
+  },
+  {
+   "x": 698,
+   "y": 669,
+   "w": 74,
+   "h": 32,
+   "c": ""
+  },
+  {
+   "x": 1130,
+   "y": 669,
+   "w": 100,
+   "h": 32,
+   "c": ""
+  },
+  {
+   "x": 71,
+   "y": 1126,
+   "w": 94,
+   "h": 50,
+   "c": ""
+  },
+  {
+   "x": 563,
+   "y": 1126,
+   "w": 18,
+   "h": 50,
+   "c": ""
+  },
+  {
+   "x": 808,
+   "y": 1126,
+   "w": 79,
+   "h": 50,
+   "c": ""
+  },
+  {
+   "x": 1114,
+   "y": 1126,
+   "w": 41,
+   "h": 50,
+   "c": ""
+  },
+  {
+   "x": 1316,
+   "y": 1126,
+   "w": 53,
+   "h": 50,
+   "c": ""
+  },
+  {
+   "x": 1448,
+   "y": 1126,
+   "w": 75,
+   "h": 50,
+   "c": ""
+  },
+  {
+   "x": 45,
+   "y": 1542,
+   "w": 21,
+   "h": 35,
+   "c": ""
+  },
+  {
+   "x": 400,
+   "y": 1542,
+   "w": 114,
+   "h": 35,
+   "c": ""
+  },
+  {
+   "x": 767,
+   "y": 1542,
+   "w": 96,
+   "h": 35,
+   "c": ""
+  },
+  {
+   "x": 923,
+   "y": 1542,
+   "w": 59,
+   "h": 35,
+   "c": ""
+  },
+  {
+   "x": 1192,
+   "y": 1542,
+   "w": 21,
+   "h": 35,
+   "c": ""
+  },
+  {
+   "x": 1332,
+   "y": 1542,
+   "w": 76,
+   "h": 35,
+   "c": ""
+  },
+  {
+   "x": 45,
+   "y": 1942,
+   "w": 46,
+   "h": 27,
+   "c": ""
+  },
+  {
+   "x": 412,
+   "y": 1942,
+   "w": 74,
+   "h": 27,
+   "c": ""
+  },
+  {
+   "x": 780,
+   "y": 1942,
+   "w": 18,
+   "h": 27,
+   "c": ""
+  },
+  {
+   "x": 931,
+   "y": 1942,
+   "w": 58,
+   "h": 27,
+   "c": ""
+  },
+  {
+   "x": 1037,
+   "y": 1942,
+   "w": 20,
+   "h": 27,
+   "c": ""
+  },
+  {
+   "x": 1159,
+   "y": 1942,
+   "w": 21,
+   "h": 27,
+   "c": ""
+  }
+ ]
 }

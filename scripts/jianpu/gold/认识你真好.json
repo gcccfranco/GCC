@@ -1,0 +1,22 @@
+{
+  "slug": "认识你真好",
+  "corrections": {
+    "297,171": "G",
+    "1354,691": "G",
+    "1683,1075": "G",
+    "2013,1332": "G"
+  },
+  "corrections_verified": "quatre « G » relus au zoom ×4 : trois lus juste mais rejetés faute d'unanimité, un lu « C » à +0,44. Itération 33 (2026-08-24)",
+  "not_rows": [
+    656,
+    994
+  ],
+  "not_rows_verified": "deux rangées qui ne sont que des arcs de liaison et des barres de mesure — seize amas, aucun accord, tous lus entre −0,20 et −3,92. Elles maintenaient la page sous le plancher. Itération 33 (2026-08-24)",
+  "key_label": {
+    "x": 6,
+    "y": 195,
+    "w": 90,
+    "h": 29
+  },
+  "key_label_verified": "mesure measure-keylabel (ancrage sur le « = », cadre = voisin gauche…voisin droit), zoom relu à l’œil sur planche de lot, lettre gravée confrontée à printedKey, 2026-08-26 (itération 35)"
+}

@@ -1,4 +1,220 @@
 {
  "slug": "握手",
- "face": "verdana-bold"
+ "face": "verdana-bold",
+ "key_label": {
+  "x": 17,
+  "y": 134,
+  "w": 76,
+  "h": 24
+ },
+ "key_label_verified": "mesure à la main : measure-keylabel proposait une rangée entière (corrélation négative sur la lettre attendue). Bande bornée à gauche de la fraction 4/4, bloc d'encre relevé au profil de colonnes — trois amas, « 1 », « = », la lettre. Lettre confrontée à printedKey. Itération 32 (2026-08-23) · zoom ×5, « 1= D »",
+ "extra_labels": [
+  {
+   "x": 472,
+   "y": 169,
+   "w": 40,
+   "h": 22,
+   "c": "Bm"
+  },
+  {
+   "x": 377,
+   "y": 1052,
+   "w": 41,
+   "h": 22,
+   "c": "Bm"
+  },
+  {
+   "x": 382,
+   "y": 1346,
+   "w": 41,
+   "h": 23,
+   "c": "Bm"
+  }
+ ],
+ "extra_verified": "les trois « Bm » que le matcher lit juste mais sous le seuil (0,38 · 0,40 · 0,29) — relus au zoom sur `_extra-1.png`, trouvés d'abord à l'audit (quatre rangées sur sept publiaient leur Bm, trois non). Itération 32 (2026-08-23)",
+ "verified": "audit-page D→D#, page entière relue en 8 tranches. Sept rangées d'accords, toutes converties ; les trois « Bm » que le seuil laissait passer sont publiés à la main. Cadre 1=D# mesuré à la main — itération 32, 2026-08-23",
+ "frozen_labels": [
+  {
+   "x": 167,
+   "y": 169,
+   "w": 17,
+   "h": 22,
+   "c": "D"
+  },
+  {
+   "x": 770,
+   "y": 169,
+   "w": 18,
+   "h": 22,
+   "c": "G"
+  },
+  {
+   "x": 1080,
+   "y": 169,
+   "w": 18,
+   "h": 22,
+   "c": "A"
+  },
+  {
+   "x": 53,
+   "y": 463,
+   "w": 17,
+   "h": 22,
+   "c": "D"
+  },
+  {
+   "x": 388,
+   "y": 463,
+   "w": 42,
+   "h": 22,
+   "c": "Bm"
+  },
+  {
+   "x": 714,
+   "y": 463,
+   "w": 39,
+   "h": 22,
+   "c": "Em"
+  },
+  {
+   "x": 1049,
+   "y": 463,
+   "w": 18,
+   "h": 22,
+   "c": "A"
+  },
+  {
+   "x": 53,
+   "y": 758,
+   "w": 17,
+   "h": 22,
+   "c": "D"
+  },
+  {
+   "x": 379,
+   "y": 758,
+   "w": 41,
+   "h": 22,
+   "c": "Bm"
+  },
+  {
+   "x": 712,
+   "y": 758,
+   "w": 18,
+   "h": 22,
+   "c": "G"
+  },
+  {
+   "x": 1045,
+   "y": 758,
+   "w": 18,
+   "h": 22,
+   "c": "A"
+  },
+  {
+   "x": 51,
+   "y": 1052,
+   "w": 17,
+   "h": 22,
+   "c": "D"
+  },
+  {
+   "x": 681,
+   "y": 1052,
+   "w": 40,
+   "h": 22,
+   "c": "Em"
+  },
+  {
+   "x": 849,
+   "y": 1052,
+   "w": 18,
+   "h": 22,
+   "c": "A"
+  },
+  {
+   "x": 1070,
+   "y": 1052,
+   "w": 17,
+   "h": 22,
+   "c": "D"
+  },
+  {
+   "x": 53,
+   "y": 1346,
+   "w": 17,
+   "h": 23,
+   "c": "D"
+  },
+  {
+   "x": 722,
+   "y": 1346,
+   "w": 18,
+   "h": 23,
+   "c": "G"
+  },
+  {
+   "x": 1044,
+   "y": 1346,
+   "w": 18,
+   "h": 23,
+   "c": "A"
+  },
+  {
+   "x": 54,
+   "y": 1641,
+   "w": 17,
+   "h": 22,
+   "c": "D"
+  },
+  {
+   "x": 450,
+   "y": 1641,
+   "w": 42,
+   "h": 22,
+   "c": "Bm"
+  },
+  {
+   "x": 797,
+   "y": 1641,
+   "w": 18,
+   "h": 22,
+   "c": "G"
+  },
+  {
+   "x": 943,
+   "y": 1641,
+   "w": 18,
+   "h": 22,
+   "c": "A"
+  },
+  {
+   "x": 1127,
+   "y": 1641,
+   "w": 18,
+   "h": 22,
+   "c": "D"
+  },
+  {
+   "x": 472,
+   "y": 169,
+   "w": 40,
+   "h": 22,
+   "c": "Bm"
+  },
+  {
+   "x": 377,
+   "y": 1052,
+   "w": 41,
+   "h": 22,
+   "c": "Bm"
+  },
+  {
+   "x": 382,
+   "y": 1346,
+   "w": 41,
+   "h": 23,
+   "c": "Bm"
+  }
+ ]
 }

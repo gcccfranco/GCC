@@ -1,4 +1,21 @@
 {
  "slug": "爱的彰显",
- "face": "helvetica-bold"
+ "face": "helvetica-bold",
+ "key_label": {
+  "x": 15,
+  "y": 203,
+  "w": 68,
+  "h": 21
+ },
+ "key_label_verified": "mesure measure-keylabel (vote 1= + lettre attendue), zoom relu à l’œil sur planche de lot, lettre confrontée à printedKey, 2026-08-22",
+ "extra_labels": [
+  {
+   "x": 543,
+   "y": 1480,
+   "w": 38,
+   "h": 21,
+   "c": "Bm"
+  }
+ ],
+ "extra_verified": "zooms relus à l’œil sur planche de lot (propose-extra --all multi-chants), 2026-08-25 (itération 33)"
 }

@@ -28,8 +28,443 @@
    "w": 44,
    "h": 36,
    "c": "A7"
+  },
+  {
+   "x": 43,
+   "y": 650,
+   "w": 19,
+   "h": 32,
+   "c": "F"
+  },
+  {
+   "x": 417,
+   "y": 648,
+   "w": 45,
+   "h": 34,
+   "c": "Bb"
+  },
+  {
+   "x": 660,
+   "y": 647,
+   "w": 60,
+   "h": 40,
+   "c": "F/A"
+  },
+  {
+   "x": 788,
+   "y": 648,
+   "w": 45,
+   "h": 34,
+   "c": "Bb"
+  },
+  {
+   "x": 905,
+   "y": 647,
+   "w": 61,
+   "h": 40,
+   "c": "F/A"
+  },
+  {
+   "x": 1095,
+   "y": 650,
+   "w": 24,
+   "h": 32,
+   "c": "C"
+  },
+  {
+   "x": 1452,
+   "y": 629,
+   "w": 18,
+   "h": 31,
+   "c": "F"
+  },
+  {
+   "x": 25,
+   "y": 1026,
+   "w": 109,
+   "h": 42,
+   "c": "(Bb/C)"
+  },
+  {
+   "x": 854,
+   "y": 1657,
+   "w": 82,
+   "h": 32,
+   "c": "Am7"
+  },
+  {
+   "x": 1065,
+   "y": 1658,
+   "w": 81,
+   "h": 31,
+   "c": "Dm7"
+  },
+  {
+   "x": 1283,
+   "y": 1657,
+   "w": 84,
+   "h": 32,
+   "c": "Gm7"
+  },
+  {
+   "x": 656,
+   "y": 1970,
+   "w": 113,
+   "h": 41,
+   "c": "(Bdim)"
   }
  ],
- "extra_verified": "zooms propose-extra relus un à un, rangées hautes calées sur le bloc d’encre des colonnes, 2026-08-05 · propositions propose-extra relues au zoom (itération 17, garde « deux par rangée » levé) ; six lues faux par le matcher entre +0,43 et +0,73 et relues au zoom ×7 — 2026-08-09",
- "face": "helvetica-bold"
+ "extra_verified": "zooms propose-extra relus un à un, rangées hautes calées sur le bloc d’encre des colonnes, 2026-08-05 · propositions propose-extra relues au zoom (itération 17, garde « deux par rangée » levé) ; six lues faux par le matcher entre +0,43 et +0,73 et relues au zoom ×7 — 2026-08-09 · douze amas relus au zoom : une rangée d'accords presque entière (F Bb F/A Bb F/A C, le matcher entre +0,03 et +0,26) et cinq accords **hors du vocabulaire du `.cho`** — (Bb/C), Am7, Dm7, Gm7, (Bdim) — que le matcher lisait tous « Bb/C » faute de candidat. Le « F » du crochet de reprise 2 est mesuré sur une bande bornée au-dessus du trait horizontal, qui le touche. Itération 32 (2026-08-24)",
+ "face": "helvetica-bold",
+ "key_label": {
+  "x": 7,
+  "y": 96,
+  "w": 84,
+  "h": 28
+ },
+ "key_label_verified": "mesure à la main : measure-keylabel proposait une rangée entière (corrélation négative sur la lettre attendue). Bande bornée à gauche de la fraction 4/4, bloc d'encre relevé au profil de colonnes — trois amas, « 1 », « = », la lettre. Lettre confrontée à printedKey. Itération 32 (2026-08-24) · zoom ×5, « 1= F »",
+ "extra_chords": [
+  "F/C",
+  "C7"
+ ],
+ "extra_chords_verified": "« F/C » et « C7 » manquaient au vocabulaire du `.cho` : le matcher, enfermé, publiait « F/A » et « G7 » — deux **faux accords** unanimes, au-dessus du seuil, invisibles à tout compteur. Les deux amas relus au zoom ×5, versés en extra_chords ; la lecture passe à F/C et C7 et **rien d'autre ne bouge** sur la page. Itération 32 (2026-08-24)",
+ "verified": "audit-page F→F#, page entière relue en 9 tranches. Cadre 1=F# mesuré à la main (measure-keylabel proposait la rangée entière). Une rangée d'accords presque entière et cinq accords hors vocabulaire publiés à l'œil ; deux faux accords — F/A pour F/C, G7 pour C7 — corrigés par extra_chords. Tous les accords en fa convertis — itération 32, 2026-08-24",
+ "frozen_labels": [
+  {
+   "x": 48,
+   "y": 271,
+   "w": 14,
+   "h": 35,
+   "c": "F"
+  },
+  {
+   "x": 270,
+   "y": 271,
+   "w": 55,
+   "h": 35,
+   "c": "Am"
+  },
+  {
+   "x": 433,
+   "y": 271,
+   "w": 40,
+   "h": 35,
+   "c": "Bb"
+  },
+  {
+   "x": 679,
+   "y": 271,
+   "w": 55,
+   "h": 35,
+   "c": "F/A"
+  },
+  {
+   "x": 824,
+   "y": 271,
+   "w": 41,
+   "h": 35,
+   "c": "Bb"
+  },
+  {
+   "x": 1058,
+   "y": 271,
+   "w": 56,
+   "h": 35,
+   "c": "F/A"
+  },
+  {
+   "x": 1216,
+   "y": 271,
+   "w": 45,
+   "h": 35,
+   "c": "G7"
+  },
+  {
+   "x": 1458,
+   "y": 271,
+   "w": 20,
+   "h": 35,
+   "c": "C"
+  },
+  {
+   "x": 186,
+   "y": 1028,
+   "w": 14,
+   "h": 37,
+   "c": "F"
+  },
+  {
+   "x": 552,
+   "y": 1028,
+   "w": 40,
+   "h": 37,
+   "c": "Bb"
+  },
+  {
+   "x": 714,
+   "y": 1028,
+   "w": 56,
+   "h": 37,
+   "c": "F/A"
+  },
+  {
+   "x": 953,
+   "y": 1028,
+   "w": 41,
+   "h": 37,
+   "c": "Bb"
+  },
+  {
+   "x": 1042,
+   "y": 1028,
+   "w": 56,
+   "h": 37,
+   "c": "F/A"
+  },
+  {
+   "x": 1146,
+   "y": 1028,
+   "w": 57,
+   "h": 37,
+   "c": "Gm"
+  },
+  {
+   "x": 1333,
+   "y": 1028,
+   "w": 63,
+   "h": 37,
+   "c": "G/B"
+  },
+  {
+   "x": 1509,
+   "y": 1028,
+   "w": 20,
+   "h": 37,
+   "c": "C"
+  },
+  {
+   "x": 178,
+   "y": 1343,
+   "w": 15,
+   "h": 35,
+   "c": "F"
+  },
+  {
+   "x": 506,
+   "y": 1343,
+   "w": 41,
+   "h": 35,
+   "c": "Bb"
+  },
+  {
+   "x": 659,
+   "y": 1343,
+   "w": 57,
+   "h": 35,
+   "c": "F/A"
+  },
+  {
+   "x": 888,
+   "y": 1343,
+   "w": 41,
+   "h": 35,
+   "c": "Bb"
+  },
+  {
+   "x": 966,
+   "y": 1343,
+   "w": 56,
+   "h": 35,
+   "c": "F/A"
+  },
+  {
+   "x": 1061,
+   "y": 1343,
+   "w": 56,
+   "h": 35,
+   "c": "Gm"
+  },
+  {
+   "x": 1186,
+   "y": 1343,
+   "w": 19,
+   "h": 35,
+   "c": "C"
+  },
+  {
+   "x": 1324,
+   "y": 1343,
+   "w": 14,
+   "h": 35,
+   "c": "F"
+  },
+  {
+   "x": 131,
+   "y": 1659,
+   "w": 14,
+   "h": 28,
+   "c": "F"
+  },
+  {
+   "x": 490,
+   "y": 1659,
+   "w": 41,
+   "h": 28,
+   "c": "Bb"
+  },
+  {
+   "x": 1455,
+   "y": 1659,
+   "w": 20,
+   "h": 28,
+   "c": "C"
+  },
+  {
+   "x": 59,
+   "y": 1972,
+   "w": 14,
+   "h": 36,
+   "c": "F"
+  },
+  {
+   "x": 477,
+   "y": 1972,
+   "w": 41,
+   "h": 36,
+   "c": "Bb"
+  },
+  {
+   "x": 848,
+   "y": 1972,
+   "w": 54,
+   "h": 36,
+   "c": "F/C"
+  },
+  {
+   "x": 1274,
+   "y": 1972,
+   "w": 41,
+   "h": 36,
+   "c": "C7"
+  },
+  {
+   "x": 1445,
+   "y": 1972,
+   "w": 14,
+   "h": 36,
+   "c": "F"
+  },
+  {
+   "x": 1233,
+   "y": 631,
+   "w": 14,
+   "h": 27,
+   "c": "F"
+  },
+  {
+   "x": 267,
+   "y": 652,
+   "w": 56,
+   "h": 28,
+   "c": "Am"
+  },
+  {
+   "x": 1011,
+   "y": 652,
+   "w": 57,
+   "h": 28,
+   "c": "Gm"
+  },
+  {
+   "x": 256,
+   "y": 1972,
+   "w": 44,
+   "h": 36,
+   "c": "A7"
+  },
+  {
+   "x": 43,
+   "y": 650,
+   "w": 19,
+   "h": 32,
+   "c": "F"
+  },
+  {
+   "x": 417,
+   "y": 648,
+   "w": 45,
+   "h": 34,
+   "c": "Bb"
+  },
+  {
+   "x": 660,
+   "y": 647,
+   "w": 60,
+   "h": 40,
+   "c": "F/A"
+  },
+  {
+   "x": 788,
+   "y": 648,
+   "w": 45,
+   "h": 34,
+   "c": "Bb"
+  },
+  {
+   "x": 905,
+   "y": 647,
+   "w": 61,
+   "h": 40,
+   "c": "F/A"
+  },
+  {
+   "x": 1095,
+   "y": 650,
+   "w": 24,
+   "h": 32,
+   "c": "C"
+  },
+  {
+   "x": 1452,
+   "y": 629,
+   "w": 18,
+   "h": 31,
+   "c": "F"
+  },
+  {
+   "x": 25,
+   "y": 1026,
+   "w": 109,
+   "h": 42,
+   "c": "(Bb/C)"
+  },
+  {
+   "x": 854,
+   "y": 1657,
+   "w": 82,
+   "h": 32,
+   "c": "Am7"
+  },
+  {
+   "x": 1065,
+   "y": 1658,
+   "w": 81,
+   "h": 31,
+   "c": "Dm7"
+  },
+  {
+   "x": 1283,
+   "y": 1657,
+   "w": 84,
+   "h": 32,
+   "c": "Gm7"
+  },
+  {
+   "x": 656,
+   "y": 1970,
+   "w": 113,
+   "h": 41,
+   "c": "(Bdim)"
+  }
+ ]
 }

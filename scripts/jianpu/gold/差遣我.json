@@ -1,4 +1,11 @@
 {
  "slug": "差遣我",
- "face": "verdana-bold"
+ "face": "verdana-bold",
+ "key_label": {
+  "x": 15,
+  "y": 176,
+  "w": 77,
+  "h": 24
+ },
+ "key_label_verified": "mesure measure-keylabel (vote 1= + lettre attendue), zoom relu à l’œil sur planche de lot, lettre confrontée à printedKey, 2026-08-22"
 }

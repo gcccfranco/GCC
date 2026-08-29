@@ -93,8 +93,414 @@
    "w": 17,
    "h": 26,
    "c": "F"
+  },
+  {
+   "x": 30,
+   "y": 594,
+   "w": 17,
+   "h": 25,
+   "c": "F"
+  },
+  {
+   "x": 302,
+   "y": 593,
+   "w": 61,
+   "h": 27,
+   "c": "C/E"
+  },
+  {
+   "x": 415,
+   "y": 594,
+   "w": 52,
+   "h": 25,
+   "c": "Dm"
+  },
+  {
+   "x": 740,
+   "y": 594,
+   "w": 54,
+   "h": 26,
+   "c": "Gm"
+  },
+  {
+   "x": 879,
+   "y": 577,
+   "w": 68,
+   "h": 43,
+   "c": "Bb/C"
+  },
+  {
+   "x": 1113,
+   "y": 594,
+   "w": 17,
+   "h": 25,
+   "c": "F"
+  },
+  {
+   "x": 1163,
+   "y": 577,
+   "w": 70,
+   "h": 43,
+   "c": "Bb/C"
+  },
+  {
+   "x": 23,
+   "y": 1326,
+   "w": 36,
+   "h": 44,
+   "c": "Bb"
+  },
+  {
+   "x": 445,
+   "y": 1326,
+   "w": 79,
+   "h": 44,
+   "c": "C/Bb"
+  },
+  {
+   "x": 873,
+   "y": 1333,
+   "w": 84,
+   "h": 38,
+   "c": "A/C#"
+  },
+  {
+   "x": 298,
+   "y": 342,
+   "w": 62,
+   "h": 27,
+   "c": "C/E"
+  },
+  {
+   "x": 412,
+   "y": 343,
+   "w": 55,
+   "h": 26,
+   "c": "Dm"
+  },
+  {
+   "x": 677,
+   "y": 325,
+   "w": 37,
+   "h": 44,
+   "c": "Bb"
+  },
+  {
+   "x": 1058,
+   "y": 325,
+   "w": 74,
+   "h": 44,
+   "c": "Bb/C"
+  },
+  {
+   "x": 884,
+   "y": 1081,
+   "w": 72,
+   "h": 42,
+   "c": "Bb/C"
+  },
+  {
+   "x": 20,
+   "y": 1830,
+   "w": 43,
+   "h": 48,
+   "c": "Eb"
+  },
+  {
+   "x": 413,
+   "y": 1830,
+   "w": 82,
+   "h": 48,
+   "c": "Bb/D"
+  },
+  {
+   "x": 697,
+   "y": 1830,
+   "w": 85,
+   "h": 48,
+   "c": "Bb/C"
+  },
+  {
+   "x": 979,
+   "y": 1844,
+   "w": 64,
+   "h": 34,
+   "c": "C7"
   }
  ],
- "extra_verified": "chaque étiquette relue sur zoom (propose-extra + planches), 2026-08-04",
- "face": "times"
+ "extra_verified": "chaque étiquette relue sur zoom (propose-extra + planches), 2026-08-04 · rangées d'accords entières que le classifieur avait rangées ailleurs (`?`, `lyrics`, `numbers`) : repérées par `worklist.hidden_rows`, lues sur planche de rangées, boîtes mesurées par bloc d'encre (bande élargie de 16 px pour ne pas couper les hampes des ♭ et ♯) — itération 30, 2026-08-22 · second passage propose-extra --all après publication des rangées cachées : 40 amas relus au zoom, dont 8 que le matcher lisait faux (A/D pris pour A/C#, G/D pour G/B, C# pour D, F#m pour C#). Boîtes recalculées par bloc d'encre — itération 30, 2026-08-22 · dernière rangée d'accords de la page, jamais détectée par le classifieur — trouvée par audit-page. Amas soudés au trait des crochets de reprise séparés au profil de colonnes, boîtes élargies de 3 px pour couvrir hampes de ♭ et exposants — itération 30 (2026-08-22)",
+ "face": "times",
+ "not_labels": [
+  "16,832"
+ ],
+ "not_labels_verified": "amas sans accord : titres de section 【Verse】【Chorus】【Bridge】, chiffres de crochet de reprise, un segno — relus au zoom, itération 30 (2026-08-22)",
+ "key_label": {
+  "x": 34,
+  "y": 209,
+  "w": 84,
+  "h": 31
+ },
+ "key_label_verified": "mesure à la main : measure-keylabel proposait une rangée de chiffres. Bande bornée pour exclure la fraction 4/4, relue au zoom ×4 — itération 30 (2026-08-22)",
+ "verified": "audit-page F→F#, page entière relue en 9 tranches, deux passes. La page se lit par `chord_rows` (vérité terrain) et ne publiait que 8 étiquettes : la rangée y=593 et la **dernière** rangée de la page (y=1834, Eb Bb/D Bb/C C7, dont deux accords soudés au trait de liaison) manquaient, plus cinq amas relus. Cadre 1=F mesuré à la main. Tous les accords encadrés — itération 30, 2026-08-22",
+ "frozen_labels": [
+  {
+   "x": 60,
+   "y": 832,
+   "w": 17,
+   "h": 38,
+   "c": "F"
+  },
+  {
+   "x": 332,
+   "y": 832,
+   "w": 52,
+   "h": 38,
+   "c": "Dm"
+  },
+  {
+   "x": 665,
+   "y": 832,
+   "w": 54,
+   "h": 38,
+   "c": "Gm"
+  },
+  {
+   "x": 986,
+   "y": 832,
+   "w": 69,
+   "h": 38,
+   "c": "Bb/C"
+  },
+  {
+   "x": 1144,
+   "y": 832,
+   "w": 23,
+   "h": 38,
+   "c": "C"
+  },
+  {
+   "x": 18,
+   "y": 1596,
+   "w": 53,
+   "h": 27,
+   "c": "Dm"
+  },
+  {
+   "x": 436,
+   "y": 1596,
+   "w": 72,
+   "h": 27,
+   "c": "Bb/D"
+  },
+  {
+   "x": 886,
+   "y": 1596,
+   "w": 62,
+   "h": 27,
+   "c": "C/E"
+  },
+  {
+   "x": 30,
+   "y": 326,
+   "w": 17,
+   "h": 43,
+   "c": "F"
+  },
+  {
+   "x": 1230,
+   "y": 326,
+   "w": 23,
+   "h": 43,
+   "c": "C"
+  },
+  {
+   "x": 30,
+   "y": 593,
+   "w": 17,
+   "h": 27,
+   "c": "F"
+  },
+  {
+   "x": 415,
+   "y": 593,
+   "w": 52,
+   "h": 27,
+   "c": "Dm"
+  },
+  {
+   "x": 740,
+   "y": 593,
+   "w": 54,
+   "h": 27,
+   "c": "Gm"
+  },
+  {
+   "x": 1113,
+   "y": 593,
+   "w": 17,
+   "h": 27,
+   "c": "F"
+  },
+  {
+   "x": 33,
+   "y": 1097,
+   "w": 17,
+   "h": 26,
+   "c": "F"
+  },
+  {
+   "x": 314,
+   "y": 1097,
+   "w": 52,
+   "h": 26,
+   "c": "Dm"
+  },
+  {
+   "x": 662,
+   "y": 1097,
+   "w": 55,
+   "h": 26,
+   "c": "Gm"
+  },
+  {
+   "x": 1088,
+   "y": 1097,
+   "w": 17,
+   "h": 26,
+   "c": "F"
+  },
+  {
+   "x": 30,
+   "y": 594,
+   "w": 17,
+   "h": 25,
+   "c": "F"
+  },
+  {
+   "x": 302,
+   "y": 593,
+   "w": 61,
+   "h": 27,
+   "c": "C/E"
+  },
+  {
+   "x": 415,
+   "y": 594,
+   "w": 52,
+   "h": 25,
+   "c": "Dm"
+  },
+  {
+   "x": 740,
+   "y": 594,
+   "w": 54,
+   "h": 26,
+   "c": "Gm"
+  },
+  {
+   "x": 879,
+   "y": 577,
+   "w": 68,
+   "h": 43,
+   "c": "Bb/C"
+  },
+  {
+   "x": 1113,
+   "y": 594,
+   "w": 17,
+   "h": 25,
+   "c": "F"
+  },
+  {
+   "x": 1163,
+   "y": 577,
+   "w": 70,
+   "h": 43,
+   "c": "Bb/C"
+  },
+  {
+   "x": 23,
+   "y": 1326,
+   "w": 36,
+   "h": 44,
+   "c": "Bb"
+  },
+  {
+   "x": 445,
+   "y": 1326,
+   "w": 79,
+   "h": 44,
+   "c": "C/Bb"
+  },
+  {
+   "x": 873,
+   "y": 1333,
+   "w": 84,
+   "h": 38,
+   "c": "A/C#"
+  },
+  {
+   "x": 298,
+   "y": 342,
+   "w": 62,
+   "h": 27,
+   "c": "C/E"
+  },
+  {
+   "x": 412,
+   "y": 343,
+   "w": 55,
+   "h": 26,
+   "c": "Dm"
+  },
+  {
+   "x": 677,
+   "y": 325,
+   "w": 37,
+   "h": 44,
+   "c": "Bb"
+  },
+  {
+   "x": 1058,
+   "y": 325,
+   "w": 74,
+   "h": 44,
+   "c": "Bb/C"
+  },
+  {
+   "x": 884,
+   "y": 1081,
+   "w": 72,
+   "h": 42,
+   "c": "Bb/C"
+  },
+  {
+   "x": 20,
+   "y": 1830,
+   "w": 43,
+   "h": 48,
+   "c": "Eb"
+  },
+  {
+   "x": 413,
+   "y": 1830,
+   "w": 82,
+   "h": 48,
+   "c": "Bb/D"
+  },
+  {
+   "x": 697,
+   "y": 1830,
+   "w": 85,
+   "h": 48,
+   "c": "Bb/C"
+  },
+  {
+   "x": 979,
+   "y": 1844,
+   "w": 64,
+   "h": 34,
+   "c": "C7"
+  }
+ ]
 }
