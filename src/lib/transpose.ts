@@ -61,6 +61,76 @@ export function transposeChord(chord: string, semitones: number, targetKey: stri
 }
 
 /**
+ * Séparateurs d'une étiquette : tout ce qui n'est pas ASCII (les hanzi
+ * « 或 », « 代替 », « 先 »/« 后 », les crochets pleine chasse 【 】), les
+ * blancs, et la barre de mesure.
+ */
+const LABEL_SPLIT = /([^\x00-\x7F]+|[\s|]+)/;
+
+/**
+ * Ce qui a *la forme* d'un accord, testé sur le jeton entier.
+ *
+ * Volontairement plus strict que `transposeChord`, qui accepte n'importe
+ * quoi derrière la fondamentale. Ici on découpe une ligne de texte : il
+ * faut pouvoir dire « ce jeton n'est pas un accord » et le laisser tel
+ * quel, sinon le « D » de « D.S. al Fine » partirait en « D# ».
+ */
+const CHORD_TOKEN =
+  /^\(?[A-G][#b]?(?:maj|min|sus|add|dim|aug|alt|M|m|Δ|ø|°|\+|-)*\d*(?:[b#]\d+)?(?:\([b#]?\d+\))?(?:sus\d?|add\d?)?(?:\/[A-G][#b]?)?\)?$/;
+
+/** Parenthèses et crochets qui décorent un jeton sans en faire partie. */
+const EDGE_BRACKETS = /^([()[\]]*)(.*?)([()[\]]*)$/;
+
+function transposeRun(run: string, semitones: number, targetKey: string): string {
+  if (!run) return run;
+  if (CHORD_TOKEN.test(run)) return transposeChord(run, semitones, targetKey);
+  // Parenthèse orpheline collée au jeton : « Dm( » de « Dm(或Bb) ». On ne
+  // la pèle qu'en second recours, sinon « Adim(9) » — dont la parenthèse
+  // *fait* partie de l'accord — se ferait amputer.
+  const m = run.match(EDGE_BRACKETS);
+  if (m) {
+    const [, lead, core, tail] = m;
+    if (core && CHORD_TOKEN.test(core)) {
+      return lead + transposeChord(core, semitones, targetKey) + tail;
+    }
+  }
+  return run;
+}
+
+/**
+ * Transpose une **étiquette entière** : une ligne de texte qui contient des
+ * accords, et pas seulement un accord isolé.
+ *
+ * Le modèle « une étiquette = un accord » ne savait pas rendre ce que les
+ * gravures écrivent vraiment : `F或F/Eb` (« F ou F/Eb »), `Gm代替Bb`
+ * (« Gm à la place de Bb »), `先F后F#dim` (« d'abord F puis F#dim »), un
+ * groupe entre parenthèses `(F C/E D)` noyé dans une ligne de paroles, ou
+ * une ligne d'intro entière `【前奏 | G D/F# | … | D】`. Ces étiquettes-là
+ * restaient dans l'ancienne tonalité à côté d'accords transposés — une
+ * page à deux tonalités, ce qui est pire que pas de calque du tout.
+ *
+ * Découper l'image de l'amas ne marche pas (l'arc de liaison soude les
+ * glyphes, le hanzi colle aux lettres) : on réécrit **le texte entier**,
+ * jeton par jeton, en laissant verbatim tout ce qui n'est pas un accord.
+ *
+ * Une étiquette sans séparateur repasse telle quelle par `transposeChord` :
+ * les milliers d'étiquettes déjà publiées gardent exactement le rendu
+ * qu'elles avaient, y compris les formes que la grammaire stricte ci-dessus
+ * refuserait (`Am(maj7`).
+ *
+ * Doit rester le miroir exact de `transpose_label` dans
+ * `scripts/jianpu/overlay.py`, qui rend le contrôle hors navigateur.
+ */
+export function transposeLabel(text: string, semitones: number, targetKey: string): string {
+  if (semitones === 0) return text;
+  const parts = text.split(LABEL_SPLIT);
+  if (parts.length === 1) return transposeChord(text, semitones, targetKey);
+  return parts
+    .map((part, i) => (i % 2 === 1 ? part : transposeRun(part, semitones, targetKey)))
+    .join("");
+}
+
+/**
  * Return the target key after transposition, with proper enharmonic.
  */
 export function getTransposedKey(originalKey: string, semitones: number): string {
