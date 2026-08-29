@@ -93,9 +93,51 @@ mais faux » — que seul l'œil voit (mode C ci-dessous).
    n'avoir aucun calque**. **Un accord sans cadre n'est pas converti.**
 
    Ce qu'il reste à lire dans les rangées déjà connues se sort à côté avec
-   `propose-extra.py <slug> --all`, pré-filtre par score levé.
-6. Lire les planches, nommer les inconnues, ajuster les paramètres.
-7. Écrire les seuils dans `classifier.json`, les paramètres de lecture dans
+   `propose-extra.py <slug>… --all`, pré-filtre par score levé — plusieurs
+   chants par passe depuis l'itération 33, et `--hidden` pour ouvrir en plus
+   les rangées que le classifieur a rangées ailleurs (mode D).
+
+   `propose-extra.py --wide` (itération 34) ratisse le corpus entier et ne
+   garde que les amas d'au moins quatre hauteurs d'étiquette : les **étiquettes
+   composites** (`F或F/Eb`, `Gm代替Bb`, `先F后F#dim`, un groupe entre
+   parenthèses, une ligne d'intro). Depuis que `transpose_label` réécrit la
+   ligne entière, ce sont des étiquettes comme les autres — et les laisser est
+   ce qui reste de pire, puisqu'elles maintiennent la page à deux tonalités.
+6. **Accords gravés hors du `.cho`** (itération 33) :
+   ```bash
+   python3 scripts/jianpu/propose-chords.py              # amas non couverts
+   python3 scripts/jianpu/propose-chords.py --published  # étiquettes publiées
+   ```
+   Le vocabulaire fermé ne se contente pas de ne rien lire : il publie le
+   plus proche. Le script rejoue la lecture contre un vocabulaire ouvert et
+   propose les accords manquants, que l'œil confirme avant `extra_chords`.
+   Il **ne remplace pas l'audit** : sur 握住幸福 il a manqué les deux faux
+   accords que l'audit a vus.
+7. **Rangées gravées dans une autre tonalité** (itération 31) :
+   ```bash
+   python3 scripts/jianpu/foreign-scan.py --large --planche
+   ```
+   Le test de `foreign_rows` appliqué à **toutes** les rangées du
+   classifieur, et pas aux seules rangées lues — une rangée en tonalité
+   étrangère est justement celle que le classifieur n'ose pas promouvoir.
+   `--large` relâche les seuils, qui sont réglés pour la publication et non
+   pour la revue. Les rangées retenues se recopient en `mask_rows`, après
+   avoir rendu la rangée et sa jumelle **côte à côte** : sans ça on masque
+   la mauvaise.
+8. **Cadre « 1=X »** (itération 35), sans lequel une page ne peut pas être
+   complète :
+   ```bash
+   python3 scripts/jianpu/measure-keylabel.py                  # les publiés sans cadre
+   python3 scripts/jianpu/measure-keylabel.py --pick <slug>=<n>
+   ```
+   Le détecteur s'ancre sur le glyphe `=` — deux barres jumelles isolées —
+   et propose **toutes** les candidates, ligne de tempo `♩=NN` comprise :
+   c'est l'œil qui élit, sur la planche. Ne jamais poser un cadre sans avoir
+   confronté la **lettre gravée** à `printedKey` : sur 十架的爱 la page
+   imprime `1=F` sous un `printedKey` de `D`, et poser le cadre y écrirait
+   une clé de lecture fausse pour toute la page.
+9. Lire les planches, nommer les inconnues, ajuster les paramètres.
+10. Écrire les seuils dans `classifier.json`, les paramètres de lecture dans
    `match.py`, et mettre à jour le journal ci-dessous.
 
 **Une itération ne peut pas être déclarée en progrès sur les seuls
@@ -140,6 +182,7 @@ rangées les tronque.
 |---|---|---|---|
 | 0 (départ) | 0 / 7 chants | — | 0 |
 | 1 | **4 / 7 chants** (gravure aérée uniquement) | pas de matcher | 0 |
+| 1b | contrôle visuel ajouté (`_planche.png`) · A=23 déclarées accords, quasi toutes justes · **B=14 candidates dont 6 vraies rangées manquées** — cause unique : les arcs de liaison, pris pour des ligatures | pas de matcher | 0 |
 | 2 | **6 / 6 chants** avec accords · A=29 dont 1 faux positif · B=8 ratées | pas de matcher | 0 |
 | 3 | inchangé (test négatif) | pas de matcher | 0 |
 | 4 | A=29 · B=16 dont **7 vraies ratées** | pas de matcher | 0 |
@@ -167,6 +210,14 @@ rangées les tronque.
 | 26 | contrôle 112/179, **FAUX = 0** tenu | 22 amas relus sur les pages au ras du plancher · le veto de fonte voit enfin les `corrections` | 12 /125 · calques 78 → **81**, 2497 → **2559** étiquettes |
 | 27 | contrôle 112/179, **FAUX = 0** tenu | 25 amas relus · `not_rows` retire une rangée de paroles promue à tort | 12 /125 · calques 81 → **84**, 2559 → **2683** étiquettes |
 | 28 | corpus **127** (+2 partitions fournies) · planche A=7 · B=0 sur les deux | 40 amas relus · `mask_rows` masque les rangées de **capo** | **14 /127 certifiés** · calques 84 → **86**, 2683 → **2801** étiquettes |
+| 29 | 55 cadres « 1=X » proposés d'un coup, **24 retenus** en 6 planches de lot | **5 pages sur 6 cachaient un défaut que la couverture ne voit pas** : 2 rangées entières jamais détectées, 1 rangée alternative parenthésée, 5 rangées de capo, 1 paire parenthésée | **20 /127 certifiés** · calques 86 (inchangé), 2801 → **2865** étiquettes · cadres 1=X 31 → **55** |
+| 30 | les 8 pages « 1 rangée cachée » de `worklist` traitées en lot · 31 rangées non publiées rendues sur 2 planches | **11 rangées d'accords entières récupérées** (dont la 1ʳᵉ et la dernière d'une page) · 7 rangées d'une **seconde tonalité** masquées · 40 amas relus, 8 lus faux par le matcher | **27 /127 certifiés** · calques 86 (inchangé), 2865 → **3034** étiquettes · cadres 1=X 55 → **59** |
+| 31 | `foreign-scan.py` applique le test de tonalité étrangère à **toutes** les rangées du classifieur, pas aux seules rangées lues · **15 rangées** sorties sur 6 pages, toutes vraies · 1 faux positif (une alternative parenthésée) | contrôle 112/179, **FAUX = 0** tenu · une rangée masquée **s'empilait** sur les `extra_labels` posées à la main au lieu de les annuler — 4 étiquettes dans ce cas, rangée transposée à moitié | **31 /127 certifiés** · calques 86 (inchangé), 3034 → **3158** étiquettes · cadres 1=X 59 → **60** |
+| 32 | contrôle 112/179, **FAUX = 0** tenu · la file « PRÊT » est **vidée** : les trois qui restent sont toutes bloquées par un accord à alternative (`或`) | **le vocabulaire fermé publiait de faux accords** — F/A pour F/C, G7 pour C7, unanimes et au-dessus du seuil ; `extra_chords` les corrige sans rien déplacer d'autre · 3 cadres « 1=X » mesurés à la main, dont un bémol **exposant** | **34 /127 certifiés** · calques 86 (inchangé), 3158 → **3188** étiquettes · cadres 1=X 60 → **63** |
+| 33 | **la file « PRÊT » n'était pas vide, le compteur était aveugle** : `worklist` mesurait le matcher et non le calque, donc une page réparée à la main restait « 10 à relire » pour toujours — 3 prêts affichés, **18 réels** · le test de rangée cachée laissait passer 3 rangées entières sur une page notée « 22/22, 100 %, PRÊT » | `propose-chords.py` cherche les accords gravés **hors du `.cho`** sur tout le corpus, dans les amas non couverts et (mode `--published`) sous les étiquettes déjà publiées · 34 amas relus, 3 faux accords trouvés — mais **pas les deux que l'audit a trouvés** sur 握住幸福 | **38 /127 certifiés** (让爱走动) · calques 91, 3323 → **3412** étiquettes · cadres 1=X 67 (inchangé) — les écarts avec la ligne 32 (86 calques, 3188 étiquettes, 34 certifiés) viennent du travail fait **après** la rédaction de ce journal-là : six pages de vérité terrain de plus |
+| 34 | le modèle « une étiquette = un accord » levé : `transpose_label` réécrit **la ligne entière**, jeton par jeton · `propose-extra --wide` sort les étiquettes composites du corpus (90 amas, 44 pages) · mode D retrouvé sur **5 des 6 pages certifiées** | **le calque publiait dans la tonalité du `.cho` et non dans celle gravée** — 65 accords faux sur les 2 pages où les deux diffèrent, chacun juste dans sa propre convention · contrôle 112/179, **FAUX = 0** tenu | **44 /127 certifiés** (让赞美飞扬, 因着十架爱, 云上太阳, 使命, 你坐着为王, 我们成为一家人) · calques 91 (inchangé), 3412 → **3450** étiquettes · cadres 1=X 67 (inchangé) |
+| 35 | **22 des 24 cadres « 1=X » proposés étaient faux**, et la cause n'était pas le score : le filtre de hauteur des bandes **supprimait la bonne candidate** sur les gravures serrées, et l'argmax sans plancher rendait quand même une boîte · le détecteur s'ancre maintenant sur le glyphe `=`, sans découpage préalable — **20 libellés lus sur 24 pages**, tous relus à l'œil | audit des 67 cadres publiés : **齐来赞美 (certifiée) masquait sa fraction 4/4** depuis l'itération 11 · 十架的爱 grave `1=F` sous un `printedKey` de `D` — le do du 简谱 et la tonalité des accords ne coïncident pas toujours, cadre écarté | 44 /127 (inchangé) · calques 91 (inchangé), 3450 étiquettes (inchangé) · cadres 1=X **67 → 86** · file « PRÊT » bloquée par un cadre : **8 → 1** |
+| 36 | **deux pages demandées en priorité, prises de bout en bout** : 我们呼求 n'avait aucun calque (24/49 lus, sous le plancher de 60 %) et 我能给你什么 était à 31/48 · sur chacune, la rangée entière manquée (mode D) était une rangée que le classifieur avait rangée en « ? » ou « chords? » — 2ᵉ ligne d'intro pour l'une, **alternatives parenthésées** « ( Em7b5   A7 ) » et « (C/Bb) » pour l'autre | un **mode C** trouvé à l'audit et non par les compteurs : 我能给你什么 publiait `F7` là où la page grave `G7`, à +0,32, retenu et unanime · un défaut de rendu que ni la planche ni les compteurs ne voient : **le fond opaque d'une étiquette rogne sa voisine** quand le nom cible est plus large que le gravé — « A#7/F G#/A# » sortait « A#7/ G#/. », deux basses perdues ; l'étiquette composite le règle | **46 /127 certifiés** (我们呼求, 我能给你什么) · calques 91 → **92**, 3450 → **3517** étiquettes · cadres 1=X 86 → **87** · 1 mention « （X调） » de titre de plus |
 
 ## Journal
 
@@ -1861,3 +1912,766 @@ gelée : le calque gelé *est* le calque publié.
 que ceux gravés — lisible, mais serré, et c'est une propriété générale du
 calque, pas de cette page. Et 赞美中信心不断升起 annonce « [共2页] » :
 seule la page 1 a été fournie.
+
+### Itération 29 — certifier en lot, et ce que la file « PRÊT » cachait
+
+Itération d'**accélération** : les précédentes traitaient trois pages en
+lisant des amas un par un. Le calcul, lui, ne coûte rien —
+`worklist.py` classe les 127 chants en **9 secondes**, un audit de page
+complet sort en **0,2 s**. Tout le temps passe dans *mes* lectures d'image.
+La seule accélération réelle est donc de **grouper** : un lot de pages par
+itération, et les planches lues **en parallèle** au lieu d'une par tour.
+
+**Les cadres « 1=X » d'abord, tous ensemble.** `measure-keylabel.py` sans
+argument propose les 55 cadres manquants du corpus sur 6 planches ; les six
+planches lues d'un coup, **24 cadres** sont retenus et 31 rejetés — des
+« ♩=NN » (même silhouette), des rangées de paroles et des rangées d'accords
+que la boîte avait happées. Chaque lettre lue a ensuite été confrontée à
+`printedKey` : **24 accords sur 24**. Cadres publiés : 31 → **55**.
+
+**Puis l'audit des pages que `worklist` dit « PRÊT ».** Douze l'étaient ;
+使命 et 你坐着为王 restent écartées (accords à alternative `F#m或A`,
+décision du 09/08) et 丰盛的应许 est reportée — sa page imprime `C/F`,
+`Bb/F`, `Em7b5`, `A7`, `Cm`, **absents du vocabulaire de son `.cho`** : c'est
+un cas `extra_chords`, pas une lecture. Restaient six pages.
+
+**Cinq sur six cachaient un défaut, et aucun compteur ne le voyait.**
+
+| page | ce que l'audit a montré |
+|---|---|
+| 一生爱你 | rien — propre du premier coup, 30 accords |
+| 你恩典不离开 | rien — mais 2 des 7 amas relus étaient lus `E/G#` par le matcher là où la page imprime `B/D#` |
+| 奇异恩典 | une **rangée d'harmonisation alternative** entre parenthèses, `(E/G#  F#m  B7)`, restée en mi |
+| 这条路上我们一起走 | une **rangée entière jamais détectée** (`F#m G Em E7` + un `A7` décalé d'une ligne) |
+| 尽情的敬拜 | **5 rangées de capo** en sol *et* un système dont la rangée réelle n'était pas publiée alors que sa jumelle capo l'était |
+| 耶和华是应当称颂的 | une paire parenthésée `( Cm7  F )` restée en fa, et le « （F调） » du titre qui ne suivait pas la transposition |
+
+**Le motif commun est la rangée « en plus ».** Une gravure qui imprime deux
+informations harmoniques par système — l'alternative entre parenthèses, la
+position de capo, la reprise `1./2.` — produit une rangée que le classifieur
+range ailleurs. Elle n'entre alors dans **aucun dénominateur** : la page
+affiche une couverture flatteuse (13/15 sur 这条路上我们一起走) tout en
+laissant une rangée entière dans l'ancienne tonalité. `worklist` la déclare
+« PRÊT » précisément parce qu'il ne la voit pas. *Une page « prête » n'est
+qu'une page dont on ignore encore ce qu'on ignore.*
+
+**Sur 尽情的敬拜, les deux moitiés du problème étaient dans la même page.**
+Cinq systèmes impriment une rangée capo en sol au-dessus de la rangée réelle
+en la, sous un « 1=A ». Quatre ont vu leur rangée réelle publiée et leur
+rangée capo laissée telle quelle ; le cinquième (y=1207) a eu l'inverse — sa
+rangée capo publiée et sa rangée réelle ignorée. Rangées appariées deux à
+deux sur une planche, `mask_rows` sur les cinq rangées en sol, six
+`extra_labels` sur la rangée réelle manquante.
+
+**Un amas soudé n'est pas une boîte.** Sur 这条路上我们一起走, `Em`, `E7`,
+`A7` et `D` sont soudés au **trait horizontal des crochets de reprise** :
+l'amas mesure 787 px de large. Le publier tel quel effacerait la moitié du
+crochet. Les boîtes ont été coupées au **profil de colonnes** — ne garder que
+les colonnes plus hautes qu'un simple trait sépare le glyphe de la ligne qui
+le traverse. Même geste vertical sur 尽情的敬拜 (profil de lignes) pour ne
+pas manger le crochet sous `Esus4`.
+
+**Et une leçon de méthode sur les parenthèses.** `overlay.transpose_chord`
+gère déjà les parenthèses **dépareillées** — `(E/G#` seul, `B7)` seul — parce
+qu'une rangée entièrement parenthésée se découpe en amas. Là où l'amas
+sépare proprement la parenthèse du nom (`( Cm7  F )` sur 耶和华), mieux vaut
+poser la boîte sur le **seul nom** et laisser la parenthèse gravée : moins de
+pixels masqués, rien à reconstruire. Réserve : `F` transposé en `F#` est plus
+large que le `F` gravé et passe par-dessus la parenthèse fermante. C'est la
+propriété générale du calque déjà notée à l'itération 28, pas un défaut de
+cette page.
+
+**Bilan.** **14 → 20 certifiés** sur 127, 2801 → **2865** étiquettes,
+86 calques (inchangé — cette itération corrige et certifie, elle n'ouvre pas
+de page neuve). Les six sont gelées. `npx tsc --noEmit` et `npm run validate`
+passent.
+
+**Ce qui reste.** 丰盛的应许 en attente d'`extra_chords`. Les 6 pages
+« 1 rangée cachée » de `worklist` (信实的神, 如鹰展翅上腾, 尽情地微笑,
+住在你里面, 我们的神, 我的救赎者活着, 给梦想一双翅膀, 献上尊荣) sont
+maintenant la file la plus rentable : elles portent le même défaut, et
+l'itération vient de montrer comment le lire. Puis les ~40 pages sans calque.
+
+### Itération 30 — la rangée que le classifieur range ailleurs
+
+L'itération 29 avait laissé une file nommée : les 8 pages que `worklist.py`
+marque « 1 rangée cachée ». Elles portent toutes le même défaut, et
+`hidden_rows()` sait déjà le nommer — il cherche, dans les rangées typées
+**autrement que `chords`**, celles dont les amas s'apparient massivement au
+vocabulaire. Neuf rangées sont sorties. **Les neuf étaient de vraies rangées
+d'accords.**
+
+**Rendre d'abord, décider ensuite.** Plutôt que de traiter page par page,
+les 31 rangées non publiées des 8 pages ont été rendues sur **deux planches**,
+cadres d'amas activés. Une lecture, et le tri se fait tout seul : rangées
+d'accords à publier, textes de tempo (« ♩=88 渴慕、呼求地 »), en-têtes,
+chiffres de mélodie, et — la surprise — **rangées gravées dans une autre
+tonalité**.
+
+**Deux pages impriment deux tonalités par système.** 尽情地微笑 (1=D) porte
+quatre rangées en **fa** au-dessus de ses rangées en ré ; 我们的神 (1=G) trois
+rangées en **la** au-dessus de ses rangées en sol, annoncées 【最后一遍副歌】.
+Le contrôle décisif a été de rendre les **paires** côte à côte : la rangée
+publiée et sa jumelle, l'une sous l'autre. Sans ça on masque la mauvaise.
+`mask_rows` — écrit à l'itération 28 pour les positions de capo — s'applique
+tel quel : son commentaire dit « une rangée d'accords gravée dans une **autre
+tonalité** que la page », ce qui est exactement le cas.
+
+**Le pire endroit pour une rangée manquée, c'est le bord de la page.** Sur
+尽情地微笑 la rangée manquante était la **toute première** ; sur 献上尊荣 la
+**dernière**. Ni l'une ni l'autre n'a de voisine au-dessus pour donner le
+contexte au classifieur, et ce sont les tranches d'audit qu'on regarde le
+moins — la 1 parce qu'elle est pleine de titre, la dernière parce qu'elle est
+à moitié vide. Les regarder quand même est tout l'intérêt d'`audit-page`.
+
+**Deux passes valent mieux qu'une.** Publier la rangée cachée ne suffit pas :
+sur 住在你里面 l'audit a montré, *après* le correctif, une dizaine d'accords
+sans cadre dans des rangées pourtant détectées. Un second `propose-extra
+--all` les a tous sortis. Ordre qui marche : rangées cachées → rebuild →
+`propose-extra --all` → rebuild → audit. Sur les 40 amas relus, **8 étaient
+lus faux** par le matcher (`A/D` pris pour `A/C#`, `G/D` pour `G/B`, `C#`
+pour `D`, `F#m` pour `C#`).
+
+**Mesurer une boîte : la bande de mesure doit avoir du blanc des deux côtés.**
+Trois fois de suite les boîtes ont coupé la hampe d'un `♭` ou d'un `♯`, parce
+que le bloc d'encre touchait le bord de la bande. Une assertion (`le bloc ne
+doit toucher aucun bord`) l'attrape immédiatement. Le découpage par **blocs
+séparés de lignes blanches** garde la hampe fine, là où le seuil d'épaisseur
+la jette ; le découpage par **colonnes plus hautes qu'un trait** sépare un
+`Em` du crochet de reprise qui le traverse. Les deux servent, sur des axes
+différents.
+
+**Cinq cadres « 1=X » de plus, mesurés à la main.** `measure-keylabel`
+proposait pour ces pages la ligne « ♩=NN » ou une rangée d'accords — même
+silhouette. Une bande bornée à droite pour exclure la fraction 4/4, un zoom
+×4, et c'est réglé.
+
+**Bilan.** **20 → 27 certifiés** sur 127, 2865 → **3034** étiquettes,
+cadres 1=X 55 → **59**. Les sept sont gelées. `npx tsc --noEmit` et
+`npm run validate` passent.
+
+**我们的神 reste PARTIEL, et c'est la bonne réponse.** Trois raisons, toutes
+connues : un `G或G/B` (accord à alternative, décision du 09/08 : laisser) ; un
+**second « 1= A » imprimé dans la portée** pour le dernier refrain, que
+`keyLabel` — un seul cadre — ne sait pas suivre (trou identifié à
+l'itération 18, ici rencontré pour de bon) ; et la question ouverte ci-dessous.
+Sa rangée finale manquée a quand même été publiée : une page partielle n'a pas
+le droit de mélanger deux tonalités.
+
+**Question pour Timothée.** Le 09/08 la consigne sur les pages à deux
+tonalités était « laisser » ; le 20/08, sur les rangées de capo, « masquer ».
+尽情地微笑 et 我们的神 tombent entre les deux : ce sont des versions dans une
+autre tonalité, pas des positions de capo. J'ai **masqué**, parce que laisser
+une rangée en fa à côté d'accords en ré est le mode D, que la boucle nomme
+« pire que de n'avoir aucun calque ». Si tu préfères qu'on les laisse visibles,
+il suffit de retirer `mask_rows` de ces deux `gold/` — mais alors les deux
+pages ne peuvent plus être certifiées.
+
+**Ce qui reste.** `worklist` ne signale plus qu'**une** rangée cachée sur tout
+le corpus. Six pages « PRÊT » attendent (dont 丰盛的应许, en attente
+d'`extra_chords`, et 十字架是我的荣耀 / 我们成为一家人 / 握手 dont le cadre
+1=X est à mesurer à la main). Puis les ~40 pages sans calque.
+
+### Itération 31 — la seconde tonalité, cherchée mécaniquement
+
+L'itération 30 avait trouvé sept rangées gravées dans une autre tonalité en
+rendant les rangées jumelles côte à côte et en les lisant. Le test, lui,
+existait déjà : `foreign_rows` (itération 21) balaie les douze transpositions
+du vocabulaire et retient la rangée qui s'apparie nettement mieux ailleurs
+que dans la tonalité de la page. Mais il ne voyait que les rangées que
+`read()` produit — `chords`, plus les `chords?` confirmées. **Or une rangée
+en tonalité étrangère est précisément celle que le classifieur n'ose pas
+promouvoir** : elle reste en `chords?`, en `?`, en `lyrics` ou en `numbers`,
+et elle échappe au détecteur exactement là où elle est la plus régulière.
+
+`foreign-scan.py` applique le même test à **toutes** les rangées du
+classifieur. Il ne modifie rien : il propose, l'œil dispose. **15 rangées
+sorties sur 6 pages, toutes vraies**, avec l'intervalle en prime.
+
+**Les seuils de publication ne sont pas les seuils de revue.** `FOREIGN_HIT`
+et `FOREIGN_MIN_ROW` sont réglés pour la publication, où une rangée écartée à
+tort coûte de la couverture. Pour une revue à l'œil c'est l'inverse : on veut
+tout voir, quitte à rejeter. 我们高举耶稣的名 cachait trois rangées en mi et
+le seuil de publication n'en voyait qu'une — l'une a 3 amas pour un minimum
+de 4, l'autre s'apparie à 0,67 pour une barre à 0,70. Deux ratés de justesse,
+sur une page qui écrit pourtant en toutes lettres « 升调用上层和弦 »
+(« pour monter la tonalité, prenez les accords de la rangée du haut »). D'où
+`--large`, qui relâche les deux seuils pour la seule revue.
+
+**Ces pages le disent en toutes lettres, et c'est une convention de maison.**
+« 升调用上层和弦 » (我们高举耶稣的名), « [回来后G调] » et « (若升调) »
+(我相信), « 原曲G调升A调，建议会众D调升E调 » (我们高举耶稣的名 encore) : la
+gravure 赞美之泉 empile régulièrement une seconde piste harmonique un ton
+au-dessus, pour l'assemblée qui monte la tonalité. Ce n'est pas un accident
+de mise en page, c'est un genre — ce qui explique qu'on le rencontre sept
+fois en deux itérations.
+
+**Le défaut que le masque a révélé.** `mask_rows` posait ses cadres de masque
+**par-dessus** les étiquettes qu'une itération précédente avait placées à la
+main dans la même rangée, au lieu de les annuler. Le masque et l'étiquette
+s'empilaient : la rangée se retrouvait transposée à moitié — le mode D, mais
+*à l'intérieur d'une seule rangée*, ce qu'aucun compteur ne regarde. Quatre
+`extra_labels` étaient dans ce cas (明亮晨星 publiait « G » et deux « Am »
+dans une rangée en sol). Une rangée masquée ne publie plus rien, ce qu'on y
+avait posé à la main compris.
+
+**La seconde tonalité n'arrive pas toujours en rangée.** Sur 我相信, deux
+amas isolés en portaient : le « G » de y=616, **premier** de sa rangée mais
+seul sur sa ligne — donc jamais promu en rangée, donc invisible à tout ce qui
+raisonne par rangée — et le « (C/D) » de y=1731, surmonté de « (若升调) » et
+mêlé à une vraie rangée en fa. Tous deux masqués à la main, même forme qu'un
+`mask_rows` : une étiquette au texte vide, qui efface sans réécrire.
+
+**Un faux positif, et il est instructif.** Sur 握住幸福, `foreign-scan`
+donnait y=722 à +1 demi-ton. La rangée est « (D  D/F#) … (G/D  C#m7b5) » :
+une harmonisation alternative entre parenthèses, **dans la tonalité de la
+page**. Elle s'apparie mieux à +1 par accident de vocabulaire, pas par
+tonalité. Publiée telle quelle, parenthèses comprises — `transpose_chord` les
+gère dépareillées depuis l'itération 29. Le matcher, lui, lisait
+« C#m7b5) » → « Cm6/D » : `evaluate.py` le range parmi ses 17 cas durs lus
+faux. C'est bien l'œil qui devait trancher. Et pour qu'une proposition
+tranchée ne revienne pas à chaque tour, `foreign-scan` écarte désormais les
+rangées **où le calque publie déjà** : la publication est une décision, au
+même titre que `mask_rows`.
+
+**Ce que l'audit trouve encore et qu'aucun scan ne voit.** Sur
+旷野中唯一的力量, deux choses :
+
+- un « Bb/C » d'introduction posé au-dessus du chiffrage arpégé « 1 5 4 1 »,
+  rangé en `numbers` par le classifieur : ni publié, ni masqué, donc resté en
+  fa sur la page transposée ;
+- une **troisième** rangée en sol (y=1007) que `foreign-scan` ne sort pas,
+  parce que ses deux amas « 先A/C#后D/C再Cm/Eb » et « 先G/D后Bm » ne
+  s'apparient à rien et font tomber le taux sous `FOREIGN_HIT`.
+
+*Le scan trouve les rangées régulières ; l'œil trouve celles que l'annotation
+rend irrégulières.* La leçon est la même qu'à l'itération 29 sur `worklist` :
+un outil ne signale que ce qu'il a été écrit pour voir.
+
+**旷野中唯一的力量 reste PARTIEL, et c'est la bonne réponse.** Deux raisons,
+toutes deux déjà tranchées : « 先C/E后Am » (« d'abord C/E puis Am ») est le
+cas « 或 » du 09/08 — le modèle « une étiquette = un accord » ne sait pas le
+rendre, on laisse, le bandeau dit vrai ; et un second « 1= G » imprimé dans
+la portée pour la reprise, que `keyLabel` — un seul cadre — ne sait pas
+suivre (trou nommé à l'itération 18, rencontré sur 我们的神 à l'itération 30,
+rencontré ici pour la troisième fois). Ses rangées en sol sont quand même
+masquées et son « Bb/C » publié : **une page partielle n'a pas le droit de
+mélanger deux tonalités**.
+
+**Bilan.** **27 → 31 certifiés** sur 127 (我们高举耶稣的名, 我心坚定与你,
+明亮晨星, 我相信), 3034 → **3158** étiquettes, cadres 1=X 59 → **60**. Les
+quatre sont gelées. Contrôle 112/179, FAUX = 0 tenu. `npx tsc --noEmit` et
+`npm run validate` passent.
+
+**Ce qui reste.** `foreign-scan` ne signale plus rien sur le corpus ; en
+`--large` il ne reste qu'un candidat, 这一生最美的祝福 y=387, et c'est un
+faux positif — « Gmaj7 … D/A … Gmaj7 » est en ré comme la page. Mais cette
+rangée-là n'est **pas publiée** : c'est une rangée d'accords cachée de plus,
+que ni `worklist` ni les compteurs ne signalent, et une piste pour la
+prochaine itération. 在这里
+(2 rangées masquées, 24 amas à relire), 我们的神 et 旷野中唯一的力量 restent
+partielles pour des raisons nommées. Six pages « PRÊT » attendent (dont
+丰盛的应许, en attente d'`extra_chords`, et 十字架是我的荣耀 /
+我们成为一家人 / 握手 dont le cadre 1=X est à mesurer à la main). Puis les
+~40 pages sans calque.
+
+### Itération 32 — le vocabulaire fermé, et le cadre qu'aucun outil ne mesure
+
+Trois pages attendaient depuis l'itération 29 avec la même mention :
+« PRÊT (cadre 1=X à mesurer à la main) ». `measure-keylabel.py` s'appuie sur
+deux ancres — la lettre attendue et la fraction 4/4 qui borne le cadre à
+droite — et sur ces trois pages **les deux lâchent** : il propose la rangée
+entière (684, 335, 474 px de large) avec une corrélation *négative* sur la
+lettre. La mesure à la main est alors mécanique : une bande bornée à gauche
+de la fraction, un profil de colonnes, trois amas — « 1 », « = », la lettre —
+et la lettre confrontée à `printedKey`. Trois cadres, trois lettres justes.
+
+**Le bémol exposant, et ce qu'il apprend du modèle « une boîte ».**
+我们成为一家人 grave « 1= ♭B » à la chinoise, le bémol **au-dessus** de la
+lettre, 5 px plus haut que le texte. L'englober dans le cadre porte sa
+hauteur de 25 à 55 px — et la hauteur du cadre *est* le corps de la fonte,
+chez `overlay.py` (`h * 1,1`) comme chez le client (`fontSize: h/w cqw`). Le
+« 1=X » réécrit serait deux fois trop gros. Le cadre tient donc la seule
+ligne de texte, et le bémol est effacé à part par une **étiquette au texte
+vide** — le même geste que `mask_rows`, employé pour la troisième fois
+(rangée étrangère, amas étranger isolé, et maintenant accident
+typographique). *Un modèle à une boîte ne peut pas décrire un glyphe qui
+sort de la boîte ; il faut alors un second geste, pas un cadre plus grand.*
+
+**Le vocabulaire fermé ne se contente pas de ne rien lire : il publie faux.**
+C'est la trouvaille de l'itération. Sur 十字架是我的荣耀, la dernière rangée
+imprime « F/C » et « C7 » — **absents du `.cho` **. Le matcher, contraint au
+vocabulaire de la page, a rendu le candidat le plus proche : « F/A » et
+« G7 ». Unanimes, au-dessus du seuil, comptés comme des réussites. Aucun
+compteur ne pouvait les voir — c'est le mode C, et il a fallu l'audit.
+`extra_chords` règle exactement ce cas (itération 26, le `C/D` de
+旷野中唯一的力量) : les deux accords versés, la lecture passe à F/C et C7 et
+**rien d'autre ne bouge** sur la page — vérifié en diffant les 32 étiquettes
+avant/après.
+
+丰盛的应许 était la même maladie, en plus grand : cinq accords gravés hors
+vocabulaire (C/F, Bb/F, Em7b5, A7, Cm). C'est la page que l'itération 29
+avait reportée en disant « c'est un cas `extra_chords`, pas une lecture ».
+Une fois le vocabulaire ouvert, `propose-extra --all` sort neuf amas de plus,
+dont deux « C/E » que le matcher rendait « C/F » et « Cm ». *Élargir le
+vocabulaire ne remplace pas la relecture — il la rend possible.*
+
+**Encore un amas soudé, encore le même remède.** Le « Gm » de 丰盛的应许
+touche la liaison qui passe dessous : aucune ligne blanche ne les sépare, et
+l'assertion « le bloc ne doit toucher aucun bord » refuse la mesure. La carte
+d'encre en ASCII montre la frontière à l'œil nu — le glyphe occupe les lignes
+1687-1709, la liaison entre par la droite à 1708 et descend vers la gauche.
+Boîte bornée au glyphe ; il reste une entaille de huit pixels dans la
+liaison, à comparer avec un accord resté en fa.
+
+**Trois pages certifiées, et la file « PRÊT » est vide.** 握手 (trois « Bm »
+que le seuil laissait passer, à 0,38, 0,40 et 0,29), 十字架是我的荣耀 et
+丰盛的应许. Ce qui reste dans la file — 你坐着为王, 使命, 我们成为一家人 —
+est **entièrement** bloqué par la même chose : un accord à alternative
+(`F(或Am)`, `F#m或A`, `F或F/Eb`), décision du 09/08 « laisser ». Le coût de
+cette décision est maintenant chiffré : **trois pages complètes par
+ailleurs** ne peuvent pas être certifiées, plus 旷野中唯一的力量 et
+我们的神 qui butent aussi dessus.
+
+**Bilan.** **31 → 34 certifiés** sur 127, 3158 → **3188** étiquettes, cadres
+1=X 60 → **63**. Les trois sont gelées. Contrôle 112/179, FAUX = 0 tenu.
+`npx tsc --noEmit` et `npm run validate` passent.
+
+**Ce qui reste.** Plus aucune page « PRÊT » qui ne soit bloquée par `或`.
+Le front se déplace donc vers les **41 pages sans calque** et les 52 pages
+partielles. Et une question pour Timothée, chiffrée cette fois : voir
+ci-dessous.
+
+**Question pour Timothée — les accords à alternative (`或`).** Le 09/08 la
+décision était « laisser », et elle était juste : le modèle « une étiquette =
+un accord » ne savait pas les rendre. Mais ce n'est plus tout à fait vrai —
+il ne s'agit pas de découper l'amas (ce qui échoue toujours : l'arc de
+liaison soude, le hanzi colle aux lettres) mais de **réécrire l'étiquette
+entière**, « F或F/Eb » → « F#或F#/E », en coupant le texte sur le 或. Cela
+demande la même retouche des deux côtés — `transpose_chord` (Python) et
+`transposeChord` (`src/lib/transpose.ts`) — et une fonte capable de tracer un
+hanzi dans une étiquette d'accord, ce qu'`overlay.py` sait déjà faire pour
+`titleKey`. Coût actuel de « laisser » : cinq pages qui ne peuvent pas être
+certifiées. Je n'ai rien touché — c'est une décision de produit, pas de
+boucle.
+
+### Itération 33 — le compteur ne comptait pas le calque
+
+**Ce qui a débloqué l'itération n'est pas une lecture, c'est un compteur.**
+`worklist.py` classait les pages sur `read()` + `keep()` — la sortie brute
+du matcher. Les `extra_labels` relues à l'œil, les `corrections`, les
+`not_labels` : rien de tout cela n'entrait dans son calcul. Une page qu'on
+venait de compléter à la main continuait donc d'afficher « 10 à relire »,
+indéfiniment. Le lot de six pages traité en début d'itération — vingt-cinq
+amas relus, versés en `extra_labels`, publiés — **n'a pas déplacé une seule
+ligne du classement**. C'est ce qui rendait la file « PRÊT » vide à
+l'itération 32 : non pas faute de travail fait, mais parce que la métrique
+ne savait pas le voir. Le compte se fait maintenant contre `chords.json`,
+c'est-à-dire contre ce que le calque publie vraiment : **3 prêts affichés
+deviennent 18**.
+
+*C'est la troisième fois que cette boucle rencontre le même défaut sous un
+autre visage* (itération 1 : la vérité terrain ne couvrait pas les rangées
+ratées ; itération 15 : une rangée jamais détectée n'entre dans aucun
+dénominateur ; ici : ce qu'un humain ajoute n'entre dans aucun numérateur).
+
+**Et le verdict « PRÊT » ne valait rien sans son garde-fou.** 让爱走动
+affichait 22/22, 100 %, PRÊT. L'audit de page a montré **trois rangées
+d'accords entières** jamais converties : la page transposée mêlait deux
+tonalités sur cinq systèmes. Le test de rangée cachée existait pourtant —
+il demandait que 70 % des amas de la rangée s'apparient au vocabulaire, et
+les trois rangées sortaient à 2/4, 3/5 et 4/9. *Une rangée d'accords ne
+s'apparie pas mieux que ça quand elle porte un `Bdim/F`, un `D7` à exposant
+et un `Cm/D` — c'est-à-dire précisément quand on a besoin du test.*
+
+Descendre la part à 0,40 seul rendrait le test bavard. Le second garde est
+le **nombre d'amas**, comme à l'itération 23 : une rangée de chiffres de
+cette page en compte une trentaine, une rangée d'accords cinq. Sur le
+corpus entier, les deux gardes ensemble sortent **10 rangées sur 7 pages**,
+toutes vraies. Et `hidden_rows` regarde désormais le calque : une rangée
+que les `extra_labels` couvrent déjà n'est plus « cachée », sans quoi une
+page réparée reste marquée pour toujours.
+
+**Trois outils élargis, pour que l'œil voie plus par planche.**
+`propose-extra.py` accepte plusieurs chants (une planche de vingt zooms se
+lit d'un regard, qu'elle vienne d'une page ou de six) et un mode
+`--hidden`, qui ouvre les rangées que le classifieur a rangées ailleurs —
+la seule voie vers les pages marquées « rangée cachée ». C'est par là que
+les onze rangées de 让爱走动, 十架的爱, 我们是光明之子, 一粒麦子, 大声敬拜 et
+好喜欢与你在一起 sont rentrées : **68 étiquettes relues**, dont 20 que le
+matcher lisait faux.
+
+**`propose-chords.py` : chercher l'accord absent du `.cho`, mécaniquement.**
+L'itération 32 avait trouvé à la main, page par page, que le vocabulaire
+fermé ne se contente pas de ne rien lire — il **publie le plus proche**.
+Le script rejoue la lecture contre un vocabulaire ouvert (alphabet de
+degrés relevé sur tout le corpus, plus les suffixes de la page à tous les
+degrés) et signale les amas que l'ouverture lit franchement mieux. Sur les
+amas non couverts : 17 propositions, 4 vraies (`Asus4`, `G7`, `F/G`,
+`Gmaj7`). En mode `--published`, contre les étiquettes déjà posées : 34
+propositions, 3 vraies (为我而来 publiait `Dm7` pour un `Am7` gravé,
+爱可以再更多一点点 `Em9` pour `Em7`).
+
+**Et voici ce qu'il faut en dire honnêtement : il n'a pas trouvé les deux
+faux accords que l'audit a trouvés.** Sur 握住幸福, la page imprime
+`(F#m7b5` et `Fm7`, absents du `.cho` ; le calque publiait `C#m7b5` et
+`Em7`, unanimes, au-dessus du seuil. Le mode `--published` les a manqués —
+le premier parce que l'ouverture lit `F#dim` plutôt que `F#m7b5`, le second
+par la chasse de page. *L'outil réduit le champ ; il ne remplace pas
+l'audit.* Et l'audit reste le seul à voir le mode D.
+
+**Le prix d'un vocabulaire élargi, chiffré.** Verser `F#m7b5` et `Fm7` dans
+`extra_chords` corrige les deux faux accords — et fait **tomber sept
+étiquettes justes** sous le seuil, les `Em7` et `C#m7b5` voisins devenant
+ambigus. Les sept se remettent à la main en une planche. C'est le coût réel
+de l'ouverture, et il se paie une fois : deux faux accords retirés contre
+sept zooms.
+
+**La fonte du cadre « 1=X » était restée à la valeur par défaut.**
+`measure-keylabel.py` rendait ses gabarits dans la fonte par défaut, pas
+dans celle de la page — la variable que l'itération 19 avait nommée, jamais
+appliquée ici. Les vingt-quatre cadres proposés sortaient **tous** avec une
+corrélation négative. Corrigé, deux seulement remontent au-dessus de zéro.
+Ce n'était donc pas la seule cause : le cadre « 1=X » reste une mesure à la
+main, comme à l'itération 32.
+
+**Bilan.** **37 → 38 certifiés** sur 127 (让爱走动), 3323 → **3412**
+étiquettes. La file « PRÊT » passe de 3 à **18**, et ce chiffre-là est le
+vrai résultat de l'itération : ce qui reste à faire est maintenant visible.
+`npx tsc --noEmit` et `npm run validate` passent.
+
+**Ce qui reste, et ce qui bloque.** Sur les 18 prêts, l'audit de 云上太阳 et
+de 握住幸福 montre que « prêt » veut dire « bon à auditer », pas « fini » :
+云上太阳 cache une rangée d'alternatives parenthésée et un `D/A或D/F#` ;
+握住幸福 cache la ligne 【前奏 | G D/F# | …】, noyée dans une rangée d'en-tête
+de 147 px que le découpage ne sépare pas.
+
+**Question pour Timothée — les accords à alternative (`或`), le coût a
+triplé.** L'itération 32 chiffrait « laisser » à cinq pages. Avec la file
+« PRÊT » enfin lisible, on en voit la vraie taille : 你坐着为王, 使命,
+我们成为一家人, 我们的神, 云上太阳, 因着十架爱 et 让赞美飞扬 impriment toutes
+un `或` (ou un `代替`) dans une rangée d'accords, et aucune ne peut être
+certifiée tant qu'il reste dans l'ancienne tonalité — une page à deux
+tonalités est pire que pas de calque du tout. **Sept pages prêtes par
+ailleurs.** La retouche est la même qu'annoncée : couper le texte de
+l'étiquette sur le 或 et transposer les deux moitiés, dans `transpose_chord`
+(Python) et `transposeChord` (`src/lib/transpose.ts`). Je n'ai toujours
+rien touché — c'est une décision de produit.
+
+### Itération 34 — une étiquette n'est pas un accord, c'est une ligne de texte
+
+**Le blocage n'était pas une lecture, c'était un modèle.** Depuis le 09/08 les
+accords à alternative — `F或F/Eb`, « F ou F/Eb » — étaient laissés de côté, et
+la raison tenait en une phrase : le calque savait rendre *un accord*, pas *une
+étiquette qui en contient deux*. L'itération 32 chiffrait le coût à cinq pages,
+l'itération 33 à sept. Décision de produit prise ici : **réécrire**, pas
+masquer.
+
+Le retournement est de formuler autrement ce qu'est une étiquette. Non pas « un
+accord », mais **une ligne de texte qui contient des accords**. Le transposeur
+devient alors un réécriveur : il découpe sur les séparateurs (tout ce qui n'est
+pas ASCII — 或, 代替, 先, 后, 【 】 — plus les blancs et la barre de mesure),
+teste chaque jeton, transpose ceux qui ont la forme d'un accord et laisse le
+reste **verbatim**.
+
+Ainsi posé, `或` cesse d'être un cas particulier. La même fonction couvre d'un
+coup les cinq formes que le corpus imprime :
+
+| Gravure | Sens | Rendu (+1 demi-ton) |
+|---|---|---|
+| `F或F/Eb` | « F ou F/Eb » | `F#或F#/E` |
+| `Gm代替Bb` | « Gm à la place de Bb » | `G#m代替B` |
+| `先F后F#dim` | « d'abord F puis F#dim » | `先F#后Gdim` |
+| `(F C/E D)` | groupe noyé dans une ligne de paroles | `(F# C#/F D#)` |
+| `【前奏 \| G D/F# \| … \| D】` | ligne d'intro entière | `【前奏 \| G# D#/G \| … \| D#】` |
+
+*On ne découpe jamais l'image de l'amas* — l'arc de liaison soude les glyphes,
+le hanzi colle aux lettres, et quatre itérations ont établi que ça ne marche
+pas. On réécrit le texte.
+
+**Les deux gardes qui rendent la chose sûre.** Une étiquette **sans séparateur**
+repasse telle quelle par l'ancien chemin : les 3 400 étiquettes déjà publiées
+gardent un rendu identique octet pour octet, y compris les formes qu'une
+grammaire stricte refuserait (`Am(maj7`). Et le test de jeton est
+*volontairement plus strict* que `transpose_chord`, qui accepte n'importe quoi
+derrière la fondamentale — sans quoi le « D » de `D.S. al Fine` partirait en
+« D# ». `To Chorus`, `Fine` et `【Chorus】` restent verbatim.
+
+La parenthèse orpheline demande un troisième soin : `Dm(` (moitié gauche de
+`Dm(或Bb)`) doit être pelée, `Adim(9)` ne doit pas l'être. On ne pèle donc
+qu'**en second recours**, après avoir essayé le jeton entier.
+
+Les deux implémentations — `transposeLabel` dans `src/lib/transpose.ts`,
+`transpose_label` dans `scripts/jianpu/overlay.py` — donnent le même résultat
+sur les vingt-quatre chaînes du corpus, vérifié côte à côte. Elles doivent
+bouger ensemble, comme `access.ts` et `firestore.rules`.
+
+**Et la fonte, encore.** Un accord peut désormais porter un hanzi. `overlay.py`
+bascule sur la fonte chinoise quand le texte n'est pas ASCII — sinon le
+contrôle affiche des tofus, et un contrôle illisible ne contrôle rien. Côté
+client, la pile de fontes gagne PingFang / Hiragino / YaHei : sans elles le
+repli dépend du système, et le hanzi peut tomber dans une fonte à empattements
+au milieu d'une linéale.
+
+**Trouver les composites mécaniquement.** `propose-extra.py --wide` ne garde que
+les amas d'au moins quatre hauteurs d'étiquette : un `Dm(或Bb)` en fait onze, un
+accord long comme `C#m7b5` en fait trois. Sur le corpus : **90 amas sur 44
+pages**, dont une vingtaine de vraies étiquettes composites — le reste étant des
+【Chorus】, des `To Chorus` et des crédits, que le réécriveur laisserait de toute
+façon intacts.
+
+*Le seuil n'est pas un oracle.* Le `F(或Am)` de 你坐着为王 fait 119 px pour un
+plancher à 132 : il est passé sous le filet, et c'est l'audit de page qui l'a
+trouvé. Le balayage réduit le champ ; il ne remplace pas l'audit.
+
+**La trouvaille de l'itération : le calque nommait les accords dans la mauvaise
+tonalité.** `gold/` nomme comme le `.cho` — c'est ce que rend le matcher, qui
+choisit dans le vocabulaire du `.cho` — tandis que `printedKey` est la tonalité
+**gravée**, celle dont le client part pour transposer. Sur les 2 pages où les
+deux diffèrent, les conventions se croisaient : 好喜欢与你在一起 publiait `F/Eb`
+là où la page imprime `G/F`, et **son calque entier sortait deux demi-tons trop
+bas** — 36 accords faux, plus 29 sur 永恒唯一的盼望.
+
+Aucun compteur ne pouvait le voir, et c'est ce qui rend le défaut intéressant :
+**chaque étiquette était juste dans sa propre convention.** La couverture était
+bonne, le contrôle 112/179 intact, `FAUX = 0` tenu. Seule la page rendue
+transposée, posée sous l'originale, montrait une ligne entière décalée d'un ton.
+La conversion se fait maintenant à la frontière, dans `build-chords` : une seule
+convention dans `gold/` (celle du `.cho`, la même qu'`extra_chords`), une seule
+dans `chords.json` (celle de la page). Les étiquettes **gelées** en sont
+exemptes — `freeze.py` recopie ce que le calque publiait, donc elles sont déjà
+dans la tonalité gravée.
+
+**Ce que l'audit a attrapé et que la main avait écrit faux.** Sur 使命, une
+étiquette a été versée en recopiant la **lecture du matcher** (`C#m`) au lieu du
+**texte imprimé** (`(A/C#)`). La page transposée a montré `Dm` là où `(A#/D)`
+devait être. *Le zoom dit ce qui est gravé ; la proposition dit ce que la
+machine croit. Recopier la seconde, c'est écrire un mode C à la main.*
+
+**Le mode D était sur cinq des six pages certifiées** — exactement la leçon de
+l'itération 29, et elle ne s'use pas :
+
+| Page | Ce que l'audit a montré |
+|---|---|
+| 使命 | une rangée d'alternatives `(G#m7b5 C#7b9) (D#m7b5)` + 4 étiquettes de rangée |
+| 云上太阳 | la rangée parenthésée `(G#m7b5 D/A Asus4 A7)`, entière, jamais détectée |
+| 你坐着为王 | un troisième `或` sous le seuil de `--wide` |
+| 我们成为一家人 | les deux `F或F/Eb` — tombés de ma propre liste entre la planche et l'écriture |
+| 我们的神 | `[最后一遍副歌] [ F#m E/G# D/A A/C# ]`, rangée typée `?` donc jamais lue |
+
+**Bilan.** **38 → 44 certifiés** sur 127 : 让赞美飞扬, 因着十架爱, 云上太阳, 使命,
+你坐着为王 et 我们成为一家人. 3412 → **3450** étiquettes.
+
+*Et une correction à porter aux itérations 32 et 33*, qui écrivaient que ces
+pages étaient « **entièrement** bloquées » par le `或`. C'était faux, et le
+tableau ci-dessus le montre : quatre d'entre elles cachaient aussi une rangée
+entière jamais détectée. Le `或` était le blocage **visible** — celui qu'on
+pouvait nommer sans ouvrir la page. Les autres n'apparaissaient qu'à l'audit,
+une fois le `或` levé et la page enfin auditable. *Un blocage nommé en cache
+souvent un autre, non nommé, qu'il empêchait de rencontrer.*
+
+Contrôle 112/179, FAUX = 0 tenu. `npx tsc --noEmit` et `npm run validate`
+passent.
+
+**Ce qui reste.**
+
+我们的神 est **en cours, non certifiée** : les quatre étiquettes de la rangée
+`[最后一遍副歌]` sont posées et les tranches 1 à 4 relues, pas les suivantes. La
+page reste `[PARTIEL]`, donc rien de faux n'est publié comme sûr.
+
+**Une dette nommée : les pages gelées portent aussi des composites.** 明亮晨星
+grave `先C后C/E`, 我相信 grave `[回来后G调]`. Elles sont gelées, donc leur calque
+ne bouge pas et rien de faux n'est publié aujourd'hui — mais leur page
+transposée garde ces mentions dans l'ancienne tonalité. Les dégeler et les
+relire est un lot à part entière.
+
+**Et une proposition d'outil, pour la prochaine fois.** L'audit de page rend
+huit ou neuf tranches et demande de lire la page entière pour y trouver deux
+défauts. Or « un accord sans cadre » est **mécanique** — c'est un amas d'encre
+dans une rangée d'accords que le calque ne couvre pas, et `worklist.remaining`
+sait déjà le calculer depuis l'itération 33. `audit-page.py` devrait ne rendre
+que **les tranches qui contiennent un suspect** et lister les autres en une
+ligne. Sur 我们的神 cela aurait fait 1 tranche au lieu de 9. C'est le même geste
+que partout ailleurs dans cette boucle : l'outil réduit le champ, l'œil tranche
+— mais sur ce qui reste, pas sur tout.
+
+### Itération 35 — la bonne réponse n'était pas sur le bulletin
+
+**Le cadre « 1=X » bloquait huit pages prêtes, et on croyait que c'était un
+problème de score.** L'itération 33 l'avait noté sans creuser : les
+vingt-quatre cadres proposés sortaient presque tous en corrélation négative,
+la fonte a été corrigée, deux seulement sont remontés au-dessus de zéro, et
+la conclusion tirée fut « le cadre reste une mesure à la main ». Le contrôle
+visuel dit autre chose. Sur les vingt-quatre : **deux justes, vingt-deux
+faux** — six rangées d'accords, sept rangées de chiffres, quatre lignes de
+paroles, cinq lignes de tempo. Et le seul vraiment lisible des deux
+(`F=1 4/4` sur 你们要赞美耶和华) notait **−1,52** : il aurait été rejeté par
+n'importe quel plancher. Le mieux classé, à +0,21, était une rangée
+d'accords.
+
+Trois défauts s'additionnaient, et le troisième cachait les deux premiers :
+
+- **le filtre de hauteur supprimait la bonne bande.** Le découpage ne gardait
+  que les bandes de 18 à 95 px. Sur les gravures serrées, le libellé se colle
+  au bloc de sous-titre au-dessus et tout part ensemble : 165 px sur
+  一切歌颂赞美, 136 sur 脚步, 132 sur 你们要赞美耶和华. La bande contenant la
+  réponse n'était pas mal notée — **elle n'était pas candidate** ;
+- **aucun plancher.** L'argmax rendait une boîte pour chaque page, y compris
+  celles dont toutes les candidates étaient à jeter. *Un score qu'on ne
+  confronte jamais à un plancher n'est pas une mesure, c'est un classement* —
+  et classer ne sert à rien quand la bonne réponse a été retirée du scrutin ;
+- **le vote portait sur la lettre attendue**, c'est-à-dire sur exactement ce
+  dont une rangée d'accords est faite. `D/F#` contient un `D` ; il gagnait le
+  vote de `printedKey = D`. L'oracle confirmait le parasite.
+
+**Ce qu'on ancre maintenant : le glyphe `=`.** C'est le seul invariant du
+libellé — deux barres horizontales de même chasse, empilées, isolées
+au-dessus et au-dessous. Il se cherche sur l'encre brute, sans découpage
+préalable, donc aucun filtre ne peut le faire disparaître ; et le cadre est
+ensuite l'étendue « voisin de gauche … voisin de droite » sur la même ligne,
+ce qui donne `1=F` **sans la fraction 4/4**. La ligne de tempo `♩=NN` porte le
+même `=` et sort donc aussi : on ne la filtre pas, elle va sur la planche
+comme les autres et l'œil tranche en un regard. *L'automate propose toutes
+les candidates ; c'est l'œil qui en élit une* — l'ancienne version élisait
+elle-même et ne laissait à l'œil qu'un vote de ratification.
+
+**Et l'écart toléré se mesure sur la ligne, pas sur le `=`.** Premier jet :
+14 libellés sur 24 pages. Les manques avaient une cause commune et nette —
+un `=` fait 10 px quand sa ligne en fait 26, et les gravures écrivent
+volontiers `1=  G` avec trente pixels de blanc avant la lettre. Calé sur la
+hauteur du `=`, l'écart admis valait 22 px : la lettre tombait hors de
+portée et le libellé était rejeté **faute de voisin**, alors que son `=`
+avait bien été trouvé. Recalé sur la hauteur du « 1 », il récupère
+一切歌颂赞美, 大声敬拜, 我安然居住, 认识你真好, et deux pages qui ne
+rendaient **aucune** candidate — 一粒麦子 et 在这里 : **20 sur 24**.
+
+**L'audit des 67 cadres déjà publiés, et ce qu'il a trouvé.** Chaque cadre
+recadré et posé sur une planche, la lettre gravée confrontée à `printedKey`.
+Soixante-cinq sont justes. Un ne l'est pas, et il est en production depuis
+l'itération 11 : sur **齐来赞美 — page certifiée** — le cadre mesurait
+134 × 51 px et englobait la fraction **4/4**, que le masque effaçait de la
+page. Le rendu transposé le montre sans discussion : chiffrage de mesure
+disparu, et le libellé écrit au double de sa taille puisque le client tire la
+taille du texte de la hauteur du cadre. Mesuré sur l'encre — « 1 » x=6-20,
+« = » x=25-40, « F » x=71-84, la fraction commence à x=117 — le cadre juste
+fait 79 × 26. *Aucun compteur ne pouvait le voir : un cadre est juste ou faux,
+il n'entre dans aucun rapport.*
+
+*Une correction de méthode, sur laquelle je me suis moi-même trompé en
+cours d'audit.* Sur 我们成为一家人, la planche montrait le bémol exposant de
+« 1= ♭B » hors du cadre, et j'ai cru à un second défaut du même genre. Il
+n'en était rien : l'itération 34 l'avait déjà masqué à part, par une
+`extra_labels` à texte vide, et le `verified` de la page le dit. **Ma planche
+recadrait le scan, pas le calque** — elle ne pouvait donc pas montrer un
+défaut corrigé comme corrigé. Auditer l'original pour juger le rendu est une
+faute de mesure ; c'est `compare-render` et `audit-page` qui superposent les
+deux, et c'est pour ça qu'ils existent.
+
+**La trouvaille de l'itération : `printedKey` porte deux sens qui ne
+coïncident pas toujours.** Sur 十架的爱, la page grave **`1=F`** — le nouveau
+détecteur le lit, la planche le confirme — tandis que `printedKey` vaut `D`,
+la tonalité du `.cho` et celle des accords imprimés (`D/F#`, `G`, `Bm`, qui
+sont des positions de capo 3). Les deux sont justes, chacun dans son registre :
+`D` est la tonalité des **accords**, `F` est le **do du 简谱**. Mais le client
+écrit `1=<tonalité jouée>` dans le cadre, en partant de `printedKey` : poser
+un cadre ici remplacerait un `1=F` juste par un `1=D` faux, et **les chiffres
+de toute la page se liraient trois demi-tons à côté**. C'est pire qu'un accord
+faux — un accord faux se corrige à l'oreille, une clé de lecture fausse
+invalide la page entière.
+
+Le cadre de 十架的爱 est donc mesuré et **volontairement non publié**, la
+raison écrite dans son `gold/`. Et `worklist` sait désormais distinguer un
+cadre *écarté* d'un cadre *à mesurer* : sans ça il le redemanderait à chaque
+tour — le défaut exact de l'itération 33, où la file ne voyait pas le travail
+déjà fait.
+
+**Bilan.** Cadres « 1=X » **67 → 86**, dont un repris. Le blocage « cadre à
+mesurer » de la file « PRÊT » passe de **8 pages à 1** (赞美之泉, dont le
+libellé n'est toujours pas trouvé). Certifiés **44 sur 127** et 3450
+étiquettes, tous deux inchangés : un cadre ne certifie rien, il lève un
+verrou. `npx tsc --noEmit` et `npm run validate` passent.
+
+**Ce qui reste, nommé.** Quatre pages sur vingt-quatre n'ont toujours pas de
+libellé lu : 一生跟随, 你们要赞美耶和华, 哦十字架 et 赞美之泉. Une cause
+identifiée — le `=` **italique** de `F=1` (barres obliques, ordre inversé) sur
+你们要赞美耶和华 ; sur les trois autres, seule la ligne de tempo sort, donc le
+libellé est hors de la fenêtre haut-gauche ou sa gravure ne donne pas deux
+barres jumelles. Aucune ne demande un meilleur score ; toutes demandent que la
+candidate existe.
+
+**Question pour Timothée — faut-il un champ pour le do gravé ?** Une seule
+page est concernée aujourd'hui (十架的爱), et je n'ai touché à rien. Le
+correctif tient en un champ optionnel dans `gold/` (`printed_do`, par défaut
+égal à `printed_key`) que `build-chords` publierait à côté de `printedKey`,
+et une ligne dans `JianpuSheet.tsx` pour que le libellé transpose **le do**
+et non la tonalité des accords. Le même champ réparerait aussi la phrase de
+repli du client, qui affirme aujourd'hui « comme l'indication « 1=D » en haut
+de page » sur une page qui imprime `1=F`. *Une page pour l'instant — mais
+c'est la seule dont on ait lu le libellé et confronté la lettre ; les 43
+pages sans cadre n'ont jamais été regardées sous cet angle.*
+
+### Itération 36 — deux pages de bout en bout, et la voisine qui rogne
+
+Demande directe : faire le 简谱 de 我们呼求 et 我能给你什么, PDF fournis. Les
+deux scans étaient déjà au corpus ; ce qui manquait était le calque.
+
+**Ce que les compteurs disaient.** 我们呼求 : 24 amas lus sur 49, soit 49 %,
+sous le plancher de `MIN_COVERAGE` — donc **aucun calque publié**, donc
+invisible à `worklist` et à `propose-extra`, qui partent tous deux de
+`chords.json`. Une page sans calque n'a pas de file d'attente : elle n'existe
+pour aucun outil de la boucle. 我能给你什么 : 31/48, « 17 à relire ».
+
+**Ce que l'œil a vu, et que les compteurs ne pouvaient pas voir.**
+
+- **Mode D, une rangée par page.** Sur 我们呼求, la **2ᵉ ligne d'intro**
+  (`F#m Bm E/G# D A`) est classée « ? » : ses étiquettes sont plus petites
+  que celles des couplets et la rangée est haute de 19 px. Sur
+  我能给你什么, deux rangées manquées, toutes deux des **alternatives
+  parenthésées** — « ( Em7b5   A7 ) » sous le premier système et « (C/Bb) »
+  sous le refrain — classées « chords? » parce qu'aucune rangée de chiffres
+  ne les suit. Ce sont des accords à jouer, pas des annotations : les
+  laisser gravés maintenait les deux pages à deux tonalités.
+
+- **Mode C, sur une lecture retenue.** 我能给你什么 publiait `F7` à +0,32,
+  unanime, là où la page grave `G7` (y=1466, x=1174). Ni le score ni le jury
+  ne le signalaient ; seule la tranche d'audit, `G7` en haut et `F#7` en bas,
+  le montre. `corrections` ne pouvait pas le réparer — il ne comble que les
+  trous — il a fallu `not_labels` puis une étiquette reposée à la main.
+
+- **Un mode nouveau : la voisine qui rogne.** Les deux pages ont des groupes
+  d'accords serrés (`A7/E G/A A7 D`, `Csus4 Bb/D C/E`, `( Em7b5   A7 )`).
+  Une fois transposés, les noms cibles sont plus larges que les gravés, et
+  **le fond opaque de l'étiquette suivante recouvre la fin de la
+  précédente** : « A#7/F G#/A# A#7 D# » sortait « A#7/ G#/. A#D# » — deux
+  basses perdues, alors que chaque étiquette est juste, publiée, encadrée et
+  comptée comme réussite. Aucune métrique ne l'attrape : les compteurs
+  comptent des étiquettes, pas des pixels visibles. L'**étiquette composite**
+  de l'itération 34, qui existait pour les `或` et les groupes parenthésés,
+  est le remède : un seul fond, un seul texte, rien qui recouvre rien.
+
+- **La boîte de rangée efface la musique.** Le dernier système de
+  我能给你什么 mêle deux niveaux d'écriture (`Csus4 Bb/D C/E` et `Gm7 F/A`
+  au-dessus des crochets de reprise ⌐1/⌐2, `Bbm C7 F` en dessous) et les
+  crochets eux-mêmes : le découpage soude « Csus4 Bb/D C/E + ⌐1 + Gm7 » en
+  un amas de 383 px et ne retient du `F` final qu'un éclat de 3 px. Publier
+  avec la boîte de rangée (h=48) aurait **effacé les crochets de reprise**.
+  La rangée est donc écartée par `not_rows` et ses huit accords reposés à la
+  main, boîte par boîte, sur les profils d'encre.
+
+**Bilan.** 我们呼求 : 41/41 lus (19 corrigés), 7 étiquettes posées à la main,
+cadre `1=A` mesuré, 48 étiquettes gelées. 我能给你什么 : 40/40 lus (12
+corrigés), 10 posées à la main, cadre `1=F` déjà là, mention « （F调） » du
+titre ajoutée en `title_key`, 50 étiquettes gelées. Certifiés **44 → 46 sur
+127**, calques **91 → 92**, étiquettes **3450 → 3517**. Les deux pages ont été
+auditées entièrement (9 et 8 tranches), un demi-ton au-dessus.
+
+**Ce qui reste, nommé.** `labelH` est la médiane des **hauteurs de rangée**,
+et une rangée vaut le haut du glyphe le plus haut. Sur 我们呼求, dont la
+gravure met le ♯ en **exposant** au-dessus de la lettre, la rangée fait 29 px
+quand la capitale n'en fait que 19 : le calque réécrit donc les accords
+environ 50 % trop gros. Le rendu reste juste et lisible — c'est ce que fait
+tout le corpus, 云上太阳 (certifiée) est à +39 % — mais c'est aussi ce qui
+rapproche les étiquettes et provoque le rognage ci-dessus. Mesurer `labelH`
+sur la **hauteur de capitale** plutôt que sur la boîte de rangée le
+corrigerait partout d'un coup ; je n'y ai pas touché, ça déplacerait 92
+calques dont 46 certifiés.
