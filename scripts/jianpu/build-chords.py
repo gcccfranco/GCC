@@ -51,6 +51,7 @@ from match import (  # noqa: E402
     MIN_SCORE, best_match, build_templates, face_bank, foreign_rows, jury_faces,
     keep, read, signature, song_face, song_semitones, vocabulary,
 )
+from overlay import transpose_label  # noqa: E402
 from segment import INK_THRESHOLD  # noqa: E402
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -303,6 +304,14 @@ def build(slug: str):
         found = {f["top"]: f for f in feats if f["top"] in masked}
         for top in sorted(masked - set(found)):
             print(f"    ! {slug} : mask_rows y={top} ne correspond à aucune rangée", file=sys.stderr)
+        # Une rangée masquée ne publie rien, y compris ce qu'une itération
+        # précédente y avait posé à la main : sans ce filtre le masque
+        # s'**empile** sur l'étiquette au lieu de l'annuler, et la rangée se
+        # retrouve transposée à moitié — le mode D, à l'intérieur d'une seule
+        # rangée. Quatre `extra_labels` étaient dans ce cas (itération 31).
+        spans = [(f["top"], f["top"] + f["height"]) for f in found.values()]
+        labels = [l for l in labels
+                  if not any(a <= l["y"] <= b for a, b in spans)]
         for f in found.values():
             labels += [_box(f, x0, x1, "") for x0, x1 in f["clusters"]]
         note += f" · {len(found)} rangée(s) en autre tonalité masquée(s)"
@@ -320,6 +329,28 @@ def build(slug: str):
     # mieux que ne rien montrer — et bien mieux que laisser croire que tout
     # est converti.
     complete = bool(gold.get("verified")) and gold.get("key_label") is not None
+
+    # **La vérité terrain nomme les accords comme le `.cho`, le calque comme
+    # la page.** Le matcher choisit dans le vocabulaire du `.cho` et rend
+    # donc un nom du `.cho` ; `printedKey`, lui, est la tonalité **gravée**,
+    # et c'est d'elle que le client part pour transposer. Sur les 2 pages
+    # dont le 简谱 n'est pas dans la tonalité de son `.cho`, les deux
+    # conventions se croisaient : 好喜欢与你在一起 publiait `F/Eb` là où la page
+    # imprime `G/F`, et son calque entier sortait **deux demi-tons trop
+    # bas** — 36 accords faux, que rien ne signalait puisque chaque
+    # étiquette était, dans sa propre convention, juste.
+    #
+    # La conversion se fait ici, à la frontière : une seule convention dans
+    # `gold/` (celle du `.cho`, la même que `extra_chords`), une seule dans
+    # `chords.json` (celle de la page). Les étiquettes **gelées** en sont
+    # exemptes : `freeze.py` recopie ce que le calque publiait, donc elles
+    # sont déjà dans la tonalité gravée.
+    shift = song_semitones(slug)
+    if shift and not gold.get("frozen_labels"):
+        labels = [
+            {**l, "c": transpose_label(l["c"], shift, printed_key) if l["c"] else l["c"]}
+            for l in labels
+        ]
 
     with Image.open(path) as im:
         w, h = im.size
