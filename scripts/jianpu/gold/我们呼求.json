@@ -1,0 +1,438 @@
+{
+ "slug": "我们呼求",
+ "extra_chords": [
+  "A7/E"
+ ],
+ "extra_chords_verified": "A7/E est gravé deux fois (rangées y=1514 et y=1914) et absent du .cho, qui n'écrit que [A7] et [G/A] à cet endroit. Lu à l'œil sur crop 2x. 2026-08-29",
+ "corrections": {
+  "383,576": "E/G#",
+  "383,1059": "E/G#",
+  "617,423": "E/G#",
+  "617,664": "D/F#",
+  "617,858": "D/E",
+  "820,415": "C#m",
+  "820,544": "F#m",
+  "1020,423": "E/G#",
+  "1020,664": "D/F#",
+  "1268,405": "C#m",
+  "1268,529": "F#m",
+  "1514,275": "C#m",
+  "1514,551": "F#m",
+  "1712,17": "A/C#",
+  "1712,121": "F#m",
+  "1712,981": "C#m",
+  "1914,16": "F#m",
+  "1914,664": "A/C#",
+  "1914,785": "F#"
+ },
+ "corrections_verified": "les amas que le matcher rejette dans les rangées lues, relus un à un sur les rangées d'accords agrandies 2× (debug/_rows_a.png, _rows_b.png). Les amas retenus par le matcher ont été confrontés aux mêmes crops : tous justes, aucun mode C. 2026-08-29",
+ "extra_labels": [
+  {
+   "x": 19,
+   "y": 505,
+   "w": 39,
+   "h": 19,
+   "c": "F#m"
+  },
+  {
+   "x": 236,
+   "y": 505,
+   "w": 30,
+   "h": 19,
+   "c": "Bm"
+  },
+  {
+   "x": 557,
+   "y": 505,
+   "w": 41,
+   "h": 19,
+   "c": "E/G#"
+  },
+  {
+   "x": 785,
+   "y": 505,
+   "w": 13,
+   "h": 19,
+   "c": "D"
+  },
+  {
+   "x": 1046,
+   "y": 505,
+   "w": 12,
+   "h": 19,
+   "c": "A"
+  },
+  {
+   "x": 776,
+   "y": 1514,
+   "w": 217,
+   "h": 24,
+   "c": "A7/E G/A A7 D"
+  },
+  {
+   "x": 221,
+   "y": 1914,
+   "w": 200,
+   "h": 30,
+   "c": "A7/E G/A A7 D"
+  }
+ ],
+ "extra_verified": "rangée d'accords ENTIÈREMENT manquée (mode D) : la 2ᵉ ligne d'intro, typée « ? » par le classifieur, donc absente de read(). Ses cinq étiquettes F#m Bm E/G# D A relevées à la main sur crop 2× (debug/_crop505.png) ; le 6ᵉ amas de la rangée (x=389-400) est un point d'octave, pas une étiquette. S'y ajoutent les deux étiquettes composites « A7/E G/A A7 D » (voir not_labels). 2026-08-29",
+ "key_label": {
+  "x": 48,
+  "y": 240,
+  "w": 62,
+  "h": 23
+ },
+ "key_label_verified": "mesure measure-keylabel (candidate #1, glyphe « = »), zoom relu sur debug/_kl-1.png ; la lettre gravée A est bien celle de printedKey. Le cadre exclut la fraction 4/4. 2026-08-29",
+ "verified": "audit-page 我们呼求 (A → A#), 9 tranches relues une à une : les 54 étiquettes de la page sont toutes encadrées et toutes transposées — aucun accord sans cadre, aucune rangée restée en A. Les 25 corrections et les 5 étiquettes de la rangée d'intro manquée ont été confrontées à l'original tranche par tranche. Le cadre « 1=A » suit (1=A#), la fraction 4/4 reste intacte. Les quatre étiquettes serrées « A7/E G/A A7 D » (rangées y=1514 et y=1914) sont posées en une seule étiquette composite : séparées, elles se rognaient l'une l'autre au rendu transposé. 2026-08-29",
+ "not_labels": [
+  "1514,776",
+  "1514,859",
+  "1514,925",
+  "1514,976",
+  "1914,221",
+  "1914,296",
+  "1914,354",
+  "1914,404"
+ ],
+ "not_labels_verified": "les deux groupes serrés « A7/E G/A A7 D » (fins des rangées y=1514 et y=1914) sont retirés amas par amas et reposés en ÉTIQUETTE COMPOSITE unique dans extra_labels. Posés séparément, le fond opaque de l'étiquette suivante rognait la précédente au rendu transposé — « A#7/F G#/A# A#7 D# » sortait « A#7/ G#/. A#D# », deux basses perdues — les noms cibles étant plus larges que les gravés. Ce ne sont donc pas des non-étiquettes : ce sont des étiquettes republiées autrement. 2026-08-29",
+ "frozen_labels": [
+  {
+   "x": 189,
+   "y": 383,
+   "w": 14,
+   "h": 17,
+   "c": "D"
+  },
+  {
+   "x": 576,
+   "y": 383,
+   "w": 41,
+   "h": 17,
+   "c": "E/G#"
+  },
+  {
+   "x": 876,
+   "y": 383,
+   "w": 11,
+   "h": 17,
+   "c": "A"
+  },
+  {
+   "x": 1059,
+   "y": 383,
+   "w": 41,
+   "h": 17,
+   "c": "E/G#"
+  },
+  {
+   "x": 30,
+   "y": 617,
+   "w": 15,
+   "h": 29,
+   "c": "A"
+  },
+  {
+   "x": 423,
+   "y": 617,
+   "w": 53,
+   "h": 29,
+   "c": "E/G#"
+  },
+  {
+   "x": 664,
+   "y": 617,
+   "w": 54,
+   "h": 29,
+   "c": "D/F#"
+  },
+  {
+   "x": 858,
+   "y": 617,
+   "w": 42,
+   "h": 29,
+   "c": "D/E"
+  },
+  {
+   "x": 1073,
+   "y": 617,
+   "w": 15,
+   "h": 29,
+   "c": "A"
+  },
+  {
+   "x": 29,
+   "y": 820,
+   "w": 16,
+   "h": 29,
+   "c": "D"
+  },
+  {
+   "x": 415,
+   "y": 820,
+   "w": 54,
+   "h": 29,
+   "c": "C#m"
+  },
+  {
+   "x": 544,
+   "y": 820,
+   "w": 49,
+   "h": 29,
+   "c": "F#m"
+  },
+  {
+   "x": 670,
+   "y": 820,
+   "w": 37,
+   "h": 29,
+   "c": "Bm"
+  },
+  {
+   "x": 875,
+   "y": 820,
+   "w": 14,
+   "h": 29,
+   "c": "B"
+  },
+  {
+   "x": 1074,
+   "y": 820,
+   "w": 13,
+   "h": 29,
+   "c": "E"
+  },
+  {
+   "x": 30,
+   "y": 1020,
+   "w": 15,
+   "h": 29,
+   "c": "A"
+  },
+  {
+   "x": 423,
+   "y": 1020,
+   "w": 53,
+   "h": 29,
+   "c": "E/G#"
+  },
+  {
+   "x": 664,
+   "y": 1020,
+   "w": 54,
+   "h": 29,
+   "c": "D/F#"
+  },
+  {
+   "x": 858,
+   "y": 1020,
+   "w": 42,
+   "h": 29,
+   "c": "D/E"
+  },
+  {
+   "x": 1073,
+   "y": 1020,
+   "w": 15,
+   "h": 29,
+   "c": "A"
+  },
+  {
+   "x": 29,
+   "y": 1268,
+   "w": 16,
+   "h": 23,
+   "c": "D"
+  },
+  {
+   "x": 405,
+   "y": 1268,
+   "w": 55,
+   "h": 23,
+   "c": "C#m"
+  },
+  {
+   "x": 529,
+   "y": 1268,
+   "w": 48,
+   "h": 23,
+   "c": "F#m"
+  },
+  {
+   "x": 667,
+   "y": 1268,
+   "w": 14,
+   "h": 23,
+   "c": "B"
+  },
+  {
+   "x": 984,
+   "y": 1268,
+   "w": 13,
+   "h": 23,
+   "c": "E"
+  },
+  {
+   "x": 31,
+   "y": 1514,
+   "w": 15,
+   "h": 24,
+   "c": "A"
+  },
+  {
+   "x": 275,
+   "y": 1514,
+   "w": 55,
+   "h": 24,
+   "c": "C#m"
+  },
+  {
+   "x": 551,
+   "y": 1514,
+   "w": 48,
+   "h": 24,
+   "c": "F#m"
+  },
+  {
+   "x": 17,
+   "y": 1712,
+   "w": 57,
+   "h": 30,
+   "c": "A/C#"
+  },
+  {
+   "x": 121,
+   "y": 1712,
+   "w": 48,
+   "h": 30,
+   "c": "F#m"
+  },
+  {
+   "x": 248,
+   "y": 1712,
+   "w": 14,
+   "h": 30,
+   "c": "B"
+  },
+  {
+   "x": 489,
+   "y": 1712,
+   "w": 17,
+   "h": 30,
+   "c": "G"
+  },
+  {
+   "x": 569,
+   "y": 1712,
+   "w": 13,
+   "h": 30,
+   "c": "E"
+  },
+  {
+   "x": 751,
+   "y": 1712,
+   "w": 15,
+   "h": 30,
+   "c": "A"
+  },
+  {
+   "x": 981,
+   "y": 1712,
+   "w": 54,
+   "h": 30,
+   "c": "C#m"
+  },
+  {
+   "x": 16,
+   "y": 1914,
+   "w": 49,
+   "h": 30,
+   "c": "F#m"
+  },
+  {
+   "x": 664,
+   "y": 1914,
+   "w": 57,
+   "h": 30,
+   "c": "A/C#"
+  },
+  {
+   "x": 785,
+   "y": 1914,
+   "w": 24,
+   "h": 30,
+   "c": "F#"
+  },
+  {
+   "x": 868,
+   "y": 1914,
+   "w": 36,
+   "h": 30,
+   "c": "Bm"
+  },
+  {
+   "x": 975,
+   "y": 1914,
+   "w": 62,
+   "h": 30,
+   "c": "Esus4"
+  },
+  {
+   "x": 1107,
+   "y": 1914,
+   "w": 16,
+   "h": 30,
+   "c": "A"
+  },
+  {
+   "x": 19,
+   "y": 505,
+   "w": 39,
+   "h": 19,
+   "c": "F#m"
+  },
+  {
+   "x": 236,
+   "y": 505,
+   "w": 30,
+   "h": 19,
+   "c": "Bm"
+  },
+  {
+   "x": 557,
+   "y": 505,
+   "w": 41,
+   "h": 19,
+   "c": "E/G#"
+  },
+  {
+   "x": 785,
+   "y": 505,
+   "w": 13,
+   "h": 19,
+   "c": "D"
+  },
+  {
+   "x": 1046,
+   "y": 505,
+   "w": 12,
+   "h": 19,
+   "c": "A"
+  },
+  {
+   "x": 776,
+   "y": 1514,
+   "w": 217,
+   "h": 24,
+   "c": "A7/E G/A A7 D"
+  },
+  {
+   "x": 221,
+   "y": 1914,
+   "w": 200,
+   "h": 30,
+   "c": "A7/E G/A A7 D"
+  }
+ ]
+}

@@ -1,4 +1,469 @@
 {
  "slug": "我能给你什么",
- "face": "verdana-bold"
+ "face": "verdana-bold",
+ "key_label": {
+  "x": 15,
+  "y": 147,
+  "w": 67,
+  "h": 22
+ },
+ "key_label_verified": "mesure measure-keylabel (vote 1= + lettre attendue), zoom relu à l’œil sur planche de lot, lettre confrontée à printedKey, 2026-08-22",
+ "extra_labels": [
+  {
+   "x": 328,
+   "y": 372,
+   "w": 150,
+   "h": 18,
+   "c": "( Em7b5   A7 )"
+  },
+  {
+   "x": 278,
+   "y": 1417,
+   "w": 67,
+   "h": 21,
+   "c": "(C/Bb)"
+  },
+  {
+   "x": 907,
+   "y": 1466,
+   "w": 92,
+   "h": 21,
+   "c": "G7sus4"
+  },
+  {
+   "x": 1174,
+   "y": 1466,
+   "w": 34,
+   "h": 21,
+   "c": "G7"
+  },
+  {
+   "x": 50,
+   "y": 1745,
+   "w": 222,
+   "h": 23,
+   "c": "Csus4 Bb/D C/E"
+  },
+  {
+   "x": 610,
+   "y": 1745,
+   "w": 42,
+   "h": 23,
+   "c": "F/A"
+  },
+  {
+   "x": 357,
+   "y": 1747,
+   "w": 59,
+   "h": 21,
+   "c": "Gm7"
+  },
+  {
+   "x": 837,
+   "y": 1764,
+   "w": 55,
+   "h": 22,
+   "c": "Bbm"
+  },
+  {
+   "x": 1009,
+   "y": 1765,
+   "w": 31,
+   "h": 20,
+   "c": "C7"
+  },
+  {
+   "x": 1152,
+   "y": 1766,
+   "w": 10,
+   "h": 19,
+   "c": "F"
+  }
+ ],
+ "corrections": {
+  "238,163": "Bb2",
+  "238,802": "Gm7",
+  "238,1083": "Bbm",
+  "440,80": "F",
+  "440,352": "C/E",
+  "702,272": "C/D",
+  "702,956": "Bb/C",
+  "934,266": "C/D",
+  "934,1147": "Bb/C",
+  "1167,436": "C/E",
+  "1167,639": "C#dim",
+  "1466,285": "Bbm"
+ },
+ "corrections_verified": "les 12 amas rejetés des rangées lues, relus un à un sur la planche de lecture (debug/_lecture.png) et sur la page entière agrandie. 2026-08-29",
+ "not_labels": [
+  "1167,168",
+  "1466,886",
+  "1466,1174"
+ ],
+ "not_labels_verified": "1167,168 = 【Chorus】, un titre de section, pas un accord (le matcher y lisait Bbm/Db à -0,00). 1466,886 = l'amas soude le crochet de reprise ⌐1 et l'étiquette G7sus4 ; il est reposé à la main sur la seule étiquette (voir extra_labels), sans quoi le masque effacerait le crochet. 1466,1174 = MODE C : la page grave G7, le matcher lisait F7 à +0,32 et le publiait ; l'amas est reposé à la main avec le bon nom et la bonne boîte. 2026-08-29",
+ "not_rows": [
+  "1745"
+ ],
+ "not_rows_verified": "la rangée du dernier système mêle deux niveaux d'écriture (Csus4 Bb/D C/E et Gm7 F/A au-dessus des crochets ⌐1/⌐2, Bbm C7 F en dessous) et les deux crochets eux-mêmes : le découpage soude « Csus4 Bb/D C/E + ⌐1 + Gm7 » en un seul amas de 383 px et ne retient du F final qu'un éclat de 3 px. Publier avec la boîte de rangée (h=48) effacerait les crochets de reprise. Les huit accords sont donc reposés à la main, boîte par boîte, dans extra_labels. 2026-08-29",
+ "extra_verified": "12 étiquettes mesurées à la main sur les profils d'encre de la page, puis relues sur crops 1,9× (debug/_rows_c.png) et au rendu fidèle transposé. Elles couvrent les deux rangées ENTIÈREMENT manquées (mode D) — les alternatives parenthésées « ( Em7b5   A7 ) » (y=372) et « (C/Bb) » (y=1417), toutes deux classées « chords? » donc absentes de read() — plus les deux étiquettes hautes de y=1466 et les six de y=1745. Deux groupes serrés sont posés en ÉTIQUETTE COMPOSITE unique — « ( Em7b5   A7 ) » et « Csus4 Bb/D C/E » : posés séparément, le fond opaque de l'étiquette suivante rognait la précédente au rendu transposé (le « 5 » de Fm7b5, le « 4 » de C#sus4 disparaissaient), les noms cibles étant plus larges que les gravés. 2026-08-29",
+ "title_key": {
+  "x": 795,
+  "y": 17,
+  "w": 146,
+  "h": 60
+ },
+ "title_key_verified": "mention « （F调） » du titre, mesurée sur l'encre (amas x=795-940, y=17-76) et relue au zoom. Elle décrit CETTE page et suit donc la transposition, contrairement à « [共3张：F(原调)/D调、级数] » de la ligne suivante, qui décrit le recueil et reste tel quel. 2026-08-29",
+ "verified": "audit-page 我能给你什么 (F → F#), 8 tranches relues une à une : les 50 étiquettes de la page sont toutes encadrées et toutes transposées — aucun accord sans cadre, aucune rangée restée en F. Deux rangées entièrement manquées (mode D) ont été récupérées — les alternatives parenthésées « ( Em7b5   A7 ) » et « (C/Bb) » — et un faux accord (mode C) corrigé : le matcher publiait F7 là où la page grave G7 (y=1466, x=1174). Les crochets de reprise ⌐1 et ⌐2 des deux derniers systèmes restent intacts, ce que la boîte de rangée aurait effacé. Le cadre « 1=F » suit (1=F#), la mention « （F调） » du titre aussi ; « [共3张：F(原调)/D调、级数] » décrit le recueil et reste tel quel. 2026-08-29",
+ "frozen_labels": [
+  {
+   "x": 163,
+   "y": 238,
+   "w": 46,
+   "h": 27,
+   "c": "Bb2"
+  },
+  {
+   "x": 292,
+   "y": 238,
+   "w": 105,
+   "h": 27,
+   "c": "Bbm/Db"
+  },
+  {
+   "x": 489,
+   "y": 238,
+   "w": 41,
+   "h": 27,
+   "c": "F/C"
+  },
+  {
+   "x": 614,
+   "y": 238,
+   "w": 46,
+   "h": 27,
+   "c": "C/D"
+  },
+  {
+   "x": 692,
+   "y": 238,
+   "w": 57,
+   "h": 27,
+   "c": "Dm7"
+  },
+  {
+   "x": 802,
+   "y": 238,
+   "w": 59,
+   "h": 27,
+   "c": "Gm7"
+  },
+  {
+   "x": 931,
+   "y": 238,
+   "w": 42,
+   "h": 27,
+   "c": "F/A"
+  },
+  {
+   "x": 1083,
+   "y": 238,
+   "w": 55,
+   "h": 27,
+   "c": "Bbm"
+  },
+  {
+   "x": 1222,
+   "y": 238,
+   "w": 14,
+   "h": 27,
+   "c": "C"
+  },
+  {
+   "x": 80,
+   "y": 440,
+   "w": 9,
+   "h": 26,
+   "c": "F"
+  },
+  {
+   "x": 352,
+   "y": 440,
+   "w": 40,
+   "h": 26,
+   "c": "C/E"
+  },
+  {
+   "x": 566,
+   "y": 440,
+   "w": 57,
+   "h": 26,
+   "c": "Dm7"
+  },
+  {
+   "x": 849,
+   "y": 440,
+   "w": 55,
+   "h": 26,
+   "c": "Cm7"
+  },
+  {
+   "x": 926,
+   "y": 440,
+   "w": 27,
+   "h": 26,
+   "c": "F7"
+  },
+  {
+   "x": 1057,
+   "y": 440,
+   "w": 30,
+   "h": 26,
+   "c": "Bb"
+  },
+  {
+   "x": 1214,
+   "y": 440,
+   "w": 104,
+   "h": 26,
+   "c": "Bbm/Db"
+  },
+  {
+   "x": 65,
+   "y": 702,
+   "w": 42,
+   "h": 27,
+   "c": "F/A"
+  },
+  {
+   "x": 272,
+   "y": 702,
+   "w": 47,
+   "h": 27,
+   "c": "C/D"
+  },
+  {
+   "x": 352,
+   "y": 702,
+   "w": 58,
+   "h": 27,
+   "c": "Dm7"
+  },
+  {
+   "x": 451,
+   "y": 702,
+   "w": 59,
+   "h": 27,
+   "c": "Gm9"
+  },
+  {
+   "x": 956,
+   "y": 702,
+   "w": 59,
+   "h": 27,
+   "c": "Bb/C"
+  },
+  {
+   "x": 1100,
+   "y": 702,
+   "w": 63,
+   "h": 27,
+   "c": "C7b9"
+  },
+  {
+   "x": 65,
+   "y": 934,
+   "w": 40,
+   "h": 27,
+   "c": "F/C"
+  },
+  {
+   "x": 266,
+   "y": 934,
+   "w": 46,
+   "h": 27,
+   "c": "C/D"
+  },
+  {
+   "x": 344,
+   "y": 934,
+   "w": 57,
+   "h": 27,
+   "c": "Dm7"
+  },
+  {
+   "x": 502,
+   "y": 934,
+   "w": 91,
+   "h": 27,
+   "c": "G7sus4"
+  },
+  {
+   "x": 767,
+   "y": 934,
+   "w": 34,
+   "h": 27,
+   "c": "G7"
+  },
+  {
+   "x": 990,
+   "y": 934,
+   "w": 72,
+   "h": 27,
+   "c": "Csus4"
+  },
+  {
+   "x": 1147,
+   "y": 934,
+   "w": 60,
+   "h": 27,
+   "c": "Bb/C"
+  },
+  {
+   "x": 92,
+   "y": 1167,
+   "w": 9,
+   "h": 32,
+   "c": "F"
+  },
+  {
+   "x": 436,
+   "y": 1167,
+   "w": 40,
+   "h": 32,
+   "c": "C/E"
+  },
+  {
+   "x": 639,
+   "y": 1167,
+   "w": 80,
+   "h": 32,
+   "c": "C#dim"
+  },
+  {
+   "x": 756,
+   "y": 1167,
+   "w": 58,
+   "h": 32,
+   "c": "Dm7"
+  },
+  {
+   "x": 1109,
+   "y": 1167,
+   "w": 56,
+   "h": 32,
+   "c": "Cm7"
+  },
+  {
+   "x": 1231,
+   "y": 1167,
+   "w": 27,
+   "h": 32,
+   "c": "F7"
+  },
+  {
+   "x": 64,
+   "y": 1466,
+   "w": 30,
+   "h": 43,
+   "c": "Bb"
+  },
+  {
+   "x": 285,
+   "y": 1466,
+   "w": 55,
+   "h": 43,
+   "c": "Bbm"
+  },
+  {
+   "x": 470,
+   "y": 1466,
+   "w": 32,
+   "h": 43,
+   "c": "A7"
+  },
+  {
+   "x": 564,
+   "y": 1466,
+   "w": 60,
+   "h": 43,
+   "c": "A/C#"
+  },
+  {
+   "x": 692,
+   "y": 1466,
+   "w": 58,
+   "h": 43,
+   "c": "Dm7"
+  },
+  {
+   "x": 328,
+   "y": 372,
+   "w": 150,
+   "h": 18,
+   "c": "( Em7b5   A7 )"
+  },
+  {
+   "x": 278,
+   "y": 1417,
+   "w": 67,
+   "h": 21,
+   "c": "(C/Bb)"
+  },
+  {
+   "x": 907,
+   "y": 1466,
+   "w": 92,
+   "h": 21,
+   "c": "G7sus4"
+  },
+  {
+   "x": 1174,
+   "y": 1466,
+   "w": 34,
+   "h": 21,
+   "c": "G7"
+  },
+  {
+   "x": 50,
+   "y": 1745,
+   "w": 222,
+   "h": 23,
+   "c": "Csus4 Bb/D C/E"
+  },
+  {
+   "x": 610,
+   "y": 1745,
+   "w": 42,
+   "h": 23,
+   "c": "F/A"
+  },
+  {
+   "x": 357,
+   "y": 1747,
+   "w": 59,
+   "h": 21,
+   "c": "Gm7"
+  },
+  {
+   "x": 837,
+   "y": 1764,
+   "w": 55,
+   "h": 22,
+   "c": "Bbm"
+  },
+  {
+   "x": 1009,
+   "y": 1765,
+   "w": 31,
+   "h": 20,
+   "c": "C7"
+  },
+  {
+   "x": 1152,
+   "y": 1766,
+   "w": 10,
+   "h": 19,
+   "c": "F"
+  }
+ ]
 }
