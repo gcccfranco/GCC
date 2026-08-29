@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-20T23:01:57.993Z",
+  "generatedAt": "2026-08-29T22:15:41.669Z",
   "songs": [
     {
       "slug": "abba-pere",
@@ -220,9 +220,9 @@
           "type": "verse"
         },
         {
-          "id": "verse-2",
+          "id": "prechorus-2",
           "name": "前副歌/Pré-Refrain",
-          "type": "chorus"
+          "type": "prechorus"
         },
         {
           "id": "chorus-3",
@@ -5844,30 +5844,24 @@
           "number": "2"
         },
         {
-          "id": "verse-4",
-          "name": "Couplet 1",
-          "type": "verse",
-          "number": "1"
-        },
-        {
-          "id": "chorus-5",
+          "id": "chorus-4",
           "name": "Refrain 2",
           "type": "chorus",
           "number": "2"
         },
         {
-          "id": "bridge-6",
+          "id": "bridge-5",
           "name": "Pont",
           "type": "bridge"
         },
         {
-          "id": "verse-7",
+          "id": "verse-6",
           "name": "Couplet 3",
           "type": "verse",
           "number": "3"
         },
         {
-          "id": "chorus-8",
+          "id": "chorus-7",
           "name": "Refrain 3",
           "type": "chorus",
           "number": "3"
@@ -7647,7 +7641,7 @@
       "titlePinyin": null,
       "artist": "Maxime Jean-Louis, David Roys-Dossou & Victor Mitraud",
       "language": "fr",
-      "originalKey": "C#m",
+      "originalKey": "E",
       "tempo": 133,
       "themes": [
         "foi",
@@ -8690,7 +8684,7 @@
       "titlePinyin": null,
       "artist": "Wayne Perrin & Cathy Perrin",
       "language": "fr",
-      "originalKey": "D",
+      "originalKey": "C",
       "tempo": null,
       "themes": [
         "adoration",
@@ -11940,7 +11934,7 @@
       "titlePinyin": null,
       "artist": "Inconnu",
       "language": "fr",
-      "originalKey": "F",
+      "originalKey": "C",
       "tempo": null,
       "themes": [
         "saint-esprit",
@@ -12086,6 +12080,12 @@
           "id": "chorus-3",
           "name": "Refrain",
           "type": "chorus"
+        },
+        {
+          "id": "verse-4",
+          "name": "Couplet 2",
+          "type": "verse",
+          "number": "2"
         },
         {
           "id": "bridge-5",
