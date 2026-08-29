@@ -29,6 +29,30 @@ Usage (depuis GCCLouange/) :
     python3 scripts/jianpu/propose-extra.py            # tout le corpus
     python3 scripts/jianpu/propose-extra.py <slug>     # un chant
     python3 scripts/jianpu/propose-extra.py <slug> --all   # + le reste à lire
+    python3 scripts/jianpu/propose-extra.py <slug> <slug> … --all   # un lot
+    python3 scripts/jianpu/propose-extra.py <slug> … --all --hidden # + rangées cachées
+    python3 scripts/jianpu/propose-extra.py --wide                  # étiquettes composites
+
+`--wide` ne garde que les amas **larges** — au moins quatre fois la hauteur
+d'étiquette de la page. Ce sont les étiquettes composites : `F或F/Eb`,
+`Gm代替Bb`, `先F后F#dim`, un groupe `(F C/E D)`, une ligne d'intro entière.
+Elles ont été rejetées planche après planche tant que le calque ne savait
+pas les rendre ; depuis que `transpose_label` réécrit la ligne entière
+(itération 34), ce sont des étiquettes comme les autres — et les laisser
+est ce qui reste de pire, puisqu'elles maintiennent la page à deux
+tonalités.
+
+`--hidden` ouvre en plus les rangées que `worklist.hidden_rows` désigne :
+des rangées d'accords que le classifieur a rangées ailleurs, donc absentes
+de `published`, donc invisibles à `--all`. C'est le mode D, et c'est la
+seule voie vers la certification des pages que la file signale « rangée(s)
+cachée(s) ».
+
+`--all` accepte **plusieurs chants** depuis l'itération 33. Le coût d'une
+itération n'est pas le calcul — onze secondes pour tout le corpus — mais le
+nombre d'allers-retours vers l'œil : une planche de vingt zooms se lit d'un
+regard, qu'elle vienne d'une page ou de six. Les traiter un slug à la fois
+multipliait les planches à moitié vides.
 
 Sortie : scripts/jianpu/debug/_extra-<n>.png (zooms)
          scripts/jianpu/debug/_extra-proposals.json (boîtes exactes)
@@ -51,6 +75,7 @@ from match import (  # noqa: E402
     song_face, song_semitones, vocabulary,
 )
 from segment import INK_THRESHOLD  # noqa: E402
+from worklist import hidden_rows  # noqa: E402
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 IMAGES = os.path.join(HERE, "..", "..", "public", "jianpu")
@@ -66,6 +91,11 @@ OUT = os.path.join(HERE, "debug")
 # reste à 0,42.
 SAFE_SCORE = 0.42
 MAX_H_RATIO = 1.5
+
+# Un amas au moins aussi large que quatre hauteurs d'étiquette n'est plus un
+# accord : c'est une étiquette composite. Un `Dm(或Bb)` fait onze hauteurs,
+# un accord long comme `C#m7b5` en fait trois.
+WIDE_RATIO = 4.0
 
 
 def _overlaps(box, labels) -> bool:
@@ -85,7 +115,8 @@ def _overlaps(box, labels) -> bool:
     return False
 
 
-def propose(slug: str, entry: dict, everything: bool = False) -> list[dict]:
+def propose(slug: str, entry: dict, everything: bool = False,
+            hidden: set[int] | None = None) -> list[dict]:
     path = os.path.join(IMAGES, f"{slug}-p1.webp")
     # Le cadre « 1=X » compte parmi ce qui est déjà connu : sa lettre est un
     # nom d'accord, elle s'apparie donc très bien (« 1=D » lu « D » à +0,70,
@@ -94,7 +125,7 @@ def propose(slug: str, entry: dict, everything: bool = False) -> list[dict]:
     # En mode `--all`, on ne garde que les rangées où le calque a déjà posé
     # quelque chose. Sans cette borne, toute la page entre : hanzi, chiffres,
     # crédits — de quoi noyer les quelques amas qui comptent.
-    published = {l["y"] for l in entry["labels"]}
+    published = {l["y"] for l in entry["labels"]} | (hidden or set())
     ink = np.asarray(Image.open(path).convert("L")) < INK_THRESHOLD
     _ink, _w, feats, kinds = classify(path)
     page_h = max(f["bottom"] for f in feats) if feats else 0
@@ -179,15 +210,26 @@ def _top_block(ink, top: int, bottom: int, x0: int, x1: int, label_h: int):
 def main() -> int:
     chords = json.load(open(os.path.join(IMAGES, "chords.json"), encoding="utf8"))
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
-    everything = "--all" in sys.argv
-    only = args[0] if args else None
-    if everything and not only:
-        raise SystemExit("--all se lance sur un chant : propose-extra.py <slug> --all")
+    wide_only = "--wide" in sys.argv
+    # `--wide` ratisse tout le corpus : le pré-filtre par score ne peut rien
+    # dire d'une étiquette composite, qui ne s'apparie à aucun gabarit par
+    # construction. Il implique donc `--all` et `--hidden`.
+    everything = "--all" in sys.argv or wide_only
+    with_hidden = "--hidden" in sys.argv or wide_only
+    only = set(args)
+    if everything and not only and not wide_only:
+        raise SystemExit("--all se lance sur des chants : propose-extra.py <slug>… --all")
+    unknown = only - set(chords)
+    if unknown:
+        raise SystemExit("chant sans calque : " + ", ".join(sorted(unknown)))
     proposals = {}
     for slug, entry in sorted(chords.items()):
-        if only and slug != only:
+        if only and slug not in only:
             continue
-        rows = propose(slug, entry, everything)
+        hidden = {y for y, *_ in hidden_rows(slug)} if with_hidden else None
+        rows = propose(slug, entry, everything, hidden)
+        if wide_only:
+            rows = [l for l in rows if l["w"] >= WIDE_RATIO * entry["labelH"]]
         if rows:
             proposals[slug] = rows
             print(f"  {slug:16} {len(rows)} étiquette(s) proposée(s)")
