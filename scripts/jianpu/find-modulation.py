@@ -27,7 +27,6 @@ Sortie : scripts/jianpu/debug/_modulation-N.png
 from __future__ import annotations
 
 import glob
-import importlib.util
 import json
 import os
 import sys
@@ -45,17 +44,58 @@ IMAGES = os.path.join(HERE, "..", "..", "public", "jianpu")
 GOLD = os.path.join(HERE, "gold")
 OUT = os.path.join(HERE, "debug")
 
-_spec = importlib.util.spec_from_file_location("mk", os.path.join(HERE, "measure-keylabel.py"))
-_mk = importlib.util.module_from_spec(_spec)
-_spec.loader.exec_module(_mk)
-
 # Le libellé d'en-tête vit dans le haut de page ; une modulation, non. On
 # ratisse donc **toute** la hauteur, sauf la bande d'en-tête déjà couverte.
 HEADER_FRAC = 0.30
 
 
+# Découpage en bandes puis en amas. Ces trois-là venaient de
+# `measure-keylabel.py`, qui les a abandonnés à l'itération 35 : son
+# détecteur s'ancre désormais sur le glyphe « = » et n'a plus besoin de
+# découper la page — c'est même le filtre de hauteur ci-dessous qui lui
+# supprimait ses bonnes candidates. Ce script-ci, qui ratisse la page
+# entière à la recherche d'un second libellé, en a toujours l'usage ; ils
+# vivent donc ici, chez leur seul utilisateur.
+def _bands(ink):
+    """Bandes horizontales d'encre."""
+    rows_ = ink.any(axis=1)
+    bands, cur = [], None
+    for y, has in enumerate(rows_):
+        if has:
+            cur = [y, y] if cur is None else [cur[0], y]
+        elif cur and y - cur[1] > 4:
+            bands.append(tuple(cur))
+            cur = None
+    if cur:
+        bands.append(tuple(cur))
+    return [(a, b) for a, b in bands if 18 <= b - a <= 95]
+
+
+def _clusters(ink, y0, y1, gap=18):
+    cols = ink[y0:y1 + 1].any(axis=0)
+    out, x = [], 0
+    W = len(cols)
+    while x < W:
+        if cols[x]:
+            s = x
+            while x < W and (cols[x] or (x + gap < W and cols[x:x + gap].any())):
+                x += 1
+            out.append((s, x - 1))
+        else:
+            x += 1
+    return out
+
+
+def _tight(ink, y0, y1, x0, x1):
+    sub = ink[y0:y1 + 1, x0:x1 + 1]
+    ys, xs = np.where(sub.any(1))[0], np.where(sub.any(0))[0]
+    if not len(ys) or not len(xs):
+        return None
+    return (x0 + xs[0], y0 + ys[0], x0 + xs[-1], y0 + ys[-1])
+
+
 def one_eq_score(ink, y0, y1, x0, x1, tmpl) -> float:
-    t = _mk._tight(ink, y0, y1, x0, x1)
+    t = _tight(ink, y0, y1, x0, x1)
     if t is None or t[2] - t[0] < 8:
         return -9.0
     sub = ink[t[1]:t[3] + 1, t[0]:t[2] + 1]
@@ -77,7 +117,7 @@ def calibrate() -> list[float]:
         ink = np.asarray(Image.open(img).convert("L")) < INK_THRESHOLD
         # le « 1= » est le premier amas du cadre
         band = ink[kl["y"]:kl["y"] + kl["h"], kl["x"]:kl["x"] + kl["w"]]
-        cl = _mk._clusters(band, 0, band.shape[0] - 1)
+        cl = _clusters(band, 0, band.shape[0] - 1)
         if not cl:
             continue
         s = one_eq_score(ink, kl["y"], kl["y"] + kl["h"] - 1,
@@ -92,10 +132,10 @@ def scan(slug: str, floor: float, tmpl) -> list[dict]:
     ink = np.asarray(Image.open(path).convert("L")) < INK_THRESHOLD
     H, _W = ink.shape
     hits = []
-    for y0, y1 in _mk._bands(ink):
+    for y0, y1 in _bands(ink):
         if y1 < H * HEADER_FRAC:
             continue
-        cl = _mk._clusters(ink, y0, y1)
+        cl = _clusters(ink, y0, y1)
         for x0, x1 in cl[:3]:
             s = one_eq_score(ink, y0, y1, x0, x1, tmpl)
             if s >= floor:
