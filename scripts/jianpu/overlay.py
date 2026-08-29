@@ -94,6 +94,73 @@ def transpose_chord(chord: str, semitones: int, target_key: str) -> str:
     return transpose_note(root, semitones, target_key) + suffix
 
 
+# Séparateurs d'une étiquette : tout ce qui n'est pas ASCII (les hanzi
+# « 或 », « 代替 », « 先 »/« 后 », les crochets pleine chasse 【 】), les blancs
+# et la barre de mesure.
+LABEL_SPLIT = re.compile(r"([^\x00-\x7f]+|[\s|]+)")
+
+# Ce qui a *la forme* d'un accord, testé sur le jeton entier. Volontairement
+# plus strict que `transpose_chord`, qui accepte n'importe quoi derrière la
+# fondamentale : ici on découpe une ligne de texte, et il faut pouvoir dire
+# « ce jeton n'est pas un accord » — sans quoi le « D » de « D.S. al Fine »
+# partirait en « D# ».
+CHORD_TOKEN = re.compile(
+    r"^\(?[A-G][#b]?(?:maj|min|sus|add|dim|aug|alt|M|m|Δ|ø|°|\+|-)*\d*"
+    r"(?:[b#]\d+)?(?:\([b#]?\d+\))?(?:sus\d?|add\d?)?(?:/[A-G][#b]?)?\)?$"
+)
+
+# Parenthèses et crochets qui décorent un jeton sans en faire partie.
+EDGE_BRACKETS = re.compile(r"^([()\[\]]*)(.*?)([()\[\]]*)$")
+
+
+def _transpose_run(run: str, semitones: int, target_key: str) -> str:
+    if not run:
+        return run
+    if CHORD_TOKEN.match(run):
+        return transpose_chord(run, semitones, target_key)
+    # Parenthèse orpheline collée au jeton : le « Dm( » de « Dm(或Bb) ». On
+    # ne la pèle qu'en second recours, sinon « Adim(9) » — dont la
+    # parenthèse *fait* partie de l'accord — se ferait amputer.
+    m = EDGE_BRACKETS.match(run)
+    if m:
+        lead, core, tail = m.groups()
+        if core and CHORD_TOKEN.match(core):
+            return lead + transpose_chord(core, semitones, target_key) + tail
+    return run
+
+
+def transpose_label(text: str, semitones: int, target_key: str) -> str:
+    """Transpose une **étiquette entière** : une ligne de texte qui contient
+    des accords, et pas seulement un accord isolé.
+
+    Le modèle « une étiquette = un accord » ne savait pas rendre ce que les
+    gravures écrivent vraiment : `F或F/Eb`, `Gm代替Bb`, `先F后F#dim`, un
+    groupe `(F C/E D)` noyé dans une ligne de paroles, une ligne d'intro
+    entière `【前奏 | G D/F# | … | D】`. Ces étiquettes-là restaient dans
+    l'ancienne tonalité à côté d'accords transposés — une page à deux
+    tonalités, ce qui est pire que pas de calque du tout.
+
+    Découper l'image de l'amas ne marche pas (l'arc de liaison soude les
+    glyphes, le hanzi colle aux lettres) : on réécrit **le texte entier**,
+    jeton par jeton, en laissant verbatim ce qui n'est pas un accord.
+
+    Une étiquette sans séparateur repasse telle quelle par
+    `transpose_chord` : les milliers d'étiquettes déjà publiées gardent
+    exactement le rendu qu'elles avaient, y compris les formes que la
+    grammaire stricte refuserait (`Am(maj7`).
+
+    Miroir exact de `transposeLabel` dans `src/lib/transpose.ts`. Les deux
+    doivent bouger ensemble, comme `access.ts` et `firestore.rules`.
+    """
+    parts = LABEL_SPLIT.split(text)
+    if len(parts) == 1:
+        return transpose_chord(text, semitones, target_key)
+    return "".join(
+        part if i % 2 else _transpose_run(part, semitones, target_key)
+        for i, part in enumerate(parts)
+    )
+
+
 def render(slug: str, target_key: str, diag: bool = False) -> str:
     """Rend le calque **tel que le client le rendra**.
 
@@ -115,6 +182,11 @@ def render(slug: str, target_key: str, diag: bool = False) -> str:
     # qu'environ 70 %. Pour retrouver l'oeil de l'original il faut donc
     # demander nettement plus que la hauteur de rangée.
     font = load_font(int(entry["labelH"] * 1.35))
+    # Une étiquette qui porte un hanzi (« F或F/Eb », « Gm代替Bb ») ne se
+    # trace pas dans Times New Roman : le contrôle afficherait des tofus, et
+    # un contrôle illisible ne contrôle rien. Même raison que pour le
+    # libellé de titre, même fonte de repli.
+    font_cjk = load_font(int(entry["labelH"] * 1.35), cjk=True)
     for label in entry["labels"]:
         x0, y0 = label["x"], label["y"]
         x1, y1 = x0 + label["w"] - 1, y0 + label["h"] - 1
@@ -123,10 +195,11 @@ def render(slug: str, target_key: str, diag: bool = False) -> str:
         # par le haut, alors que sous la rangée commencent les chiffres.
         dr.rectangle([x0 - 3, y0 - 9, x1 + 4, y1 + 2], fill=(255, 255, 255))
         # Calage sur la ligne de base, pas sur le haut du cadre.
+        text = transpose_label(label["c"], semitones, target_key)
         dr.text(
             (x0, y1),
-            transpose_chord(label["c"], semitones, target_key),
-            font=font,
+            text,
+            font=font_cjk if any(ord(ch) > 127 for ch in text) else font,
             fill=(0, 0, 0),
             anchor="ls",
         )
