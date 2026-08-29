@@ -3,7 +3,7 @@
 import Image from "next/image";
 import type { JianpuEntry } from "@/lib/jianpu/images";
 import { jianpuImageUrl, useJianpuChords } from "@/lib/jianpu/images";
-import { getTransposedKey, semitonesTo, transposeChord } from "@/lib/transpose";
+import { getTransposedKey, semitonesTo, transposeLabel } from "@/lib/transpose";
 
 /** Les étiquettes du scan sont mesurées en **hauteur d'encre** (le haut d'une
  *  capitale au-dessus de la ligne de base), pas en corps de fonte. Passer
@@ -24,8 +24,15 @@ const DESCENDER = 0.22;
 /** Les accords gravés sont en **sans-serif grasse** sur 82 des 87 pages dont
  *  la fonte a été identifiée (verdana-bold, helvetica-bold, helvetica-neue,
  *  din-bold ; cinq pages seulement en times). Le calque les réécrivait en
- *  Times New Roman — la fonte la plus éloignée du corpus. */
-const CHORD_FONT = '"Helvetica Neue", Helvetica, Arial, sans-serif';
+ *  Times New Roman — la fonte la plus éloignée du corpus.
+ *
+ *  Les familles chinoises ferment la pile : depuis que le calque réécrit
+ *  l'étiquette **entière** (`transposeLabel`), un accord peut porter un
+ *  hanzi — « F或F/Eb », « Gm代替Bb ». Sans elles, le repli dépend du système
+ *  et le hanzi peut tomber dans une fonte à empattements au milieu d'une
+ *  linéale. */
+const CHORD_FONT =
+  '"Helvetica Neue", Helvetica, Arial, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif';
 
 type JianpuSheetProps = {
   entry: JianpuEntry;
@@ -217,7 +224,7 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey, ca
                     fontFamily: CHORD_FONT,
                   }}
                 >
-                  {transposeChord(l.c, chordSemitones, chordKey)}
+                  {transposeLabel(l.c, chordSemitones, chordKey)}
                 </span>
               ))}
             </div>
