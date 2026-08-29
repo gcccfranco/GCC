@@ -154,3 +154,6 @@ graphify-out/
 locale/
 # Images de contrôle générées par scripts/jianpu/debug-render.py
 scripts/jianpu/debug/
+
+# réglages Claude Code personnels (chemins absolus de cette machine)
+.claude/settings.local.json
