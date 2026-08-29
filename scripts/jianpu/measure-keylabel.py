@@ -2,24 +2,51 @@
 """Mesure les cadres « 1=X » pour lecture à l'œil.
 
 Le lot transcrit à la main sur planches quadrillées a été retiré (LOOP.md,
-itération 11) : 12+ cadres faux au rendu fidèle. Ici la mesure est
-automatique et s'appuie sur deux choses sûres :
+itération 11) : 12+ cadres faux au rendu fidèle. La mesure est donc
+automatique, et l'œil approuve — mais encore faut-il que la bonne réponse
+soit sur le bulletin.
 
-- **la lettre est connue** (`printedKey` du calque) : parmi les lignes
-  candidates du haut de page (« 1=X », mais aussi « ♩=NN » qui a la même
-  silhouette), on garde celle dont l'amas qui suit le « = » ressemble le
-  plus à la lettre attendue — le vote du matcher, comme pour les accords ;
-- **la fraction 4/4 se repère à sa hauteur** (double de celle des lettres) :
-  elle borne le cadre à droite, sans jamais y entrer.
+**Ce qu'elle était, et pourquoi elle ne marchait pas** (itération 35). La
+version précédente découpait le haut de page en *bandes* horizontales, n'en
+gardait que celles de 18 à 95 px, puis élisait la meilleure au score. Trois
+défauts s'additionnaient :
 
-Rien n'est écrit dans `gold/` : le script émet des zooms cadrés
-(`debug/_kl-N.png`) et les boîtes (`debug/_keylabel-proposals.json`).
-Un humain lit les zooms et recopie les cadres approuvés — même circuit
-que `propose-extra.py`.
+- le filtre de hauteur **supprimait la bonne bande** sur les gravures
+  serrées, où le libellé se colle au bloc de sous-titre : sur 一切歌颂赞美,
+  脚步 et 你们要赞美耶和华, tout le bloc faisait 125 à 165 px et partait
+  ensemble ;
+- il n'y avait **aucun plancher** : l'argmax rendait toujours une boîte,
+  même quand aucune candidate ne pouvait être le libellé ;
+- le vote portait sur la **lettre attendue**, or une rangée d'accords est
+  faite exactement de ces lettres-là — c'est elle qui gagnait.
+
+Sur les 24 cadres proposés à l'itération 33, **22 étaient faux** (rangées
+d'accords, rangées de chiffres, lignes de paroles, lignes de tempo) et le
+seul bon sortait avec une corrélation négative. Un score qu'on ne confronte
+jamais à un plancher n'est pas une mesure, c'est un classement — et
+classer ne sert à rien quand la bonne réponse a été retirée du scrutin.
+
+**Ce qu'elle est.** On n'ancre plus sur une bande mais sur le **glyphe
+« = »**, seul invariant du libellé : deux barres horizontales de même
+chasse, empilées, isolées au-dessus et au-dessous. Il se trouve sans
+découpage préalable, donc aucun filtre ne peut le faire disparaître. Le
+cadre est ensuite l'étendue « voisin de gauche … voisin de droite » sur la
+même ligne — ce qui donne « 1=F » sans la fraction 4/4, dont le masque
+effacerait le chiffrage de la mesure (c'est ce qui était publié sur
+齐来赞美 depuis l'itération 11 : cadre de 134×51 px, fraction comprise).
+
+La ligne de tempo « ♩=NN » porte le même « = » et sort donc aussi. On ne la
+filtre pas : **toutes** les candidates vont sur la planche, et l'œil tranche
+en un regard — un « ♩ » ne ressemble pas à un « 1 », et « =140 » pas à
+« =F ». Le vote lettre/chiffre est imprimé pour guider la lecture, jamais
+pour décider : c'est ce qu'il décidait qui a produit les 22 cadres faux.
+
+Rien n'est écrit dans `gold/` sans `--pick`.
 
 Usage (depuis GCCLouange/) :
-    python3 scripts/jianpu/measure-keylabel.py           # tous les publiés sans cadre
-    python3 scripts/jianpu/measure-keylabel.py <slug>
+    python3 scripts/jianpu/measure-keylabel.py            # tous les publiés sans cadre
+    python3 scripts/jianpu/measure-keylabel.py <slug>…
+    python3 scripts/jianpu/measure-keylabel.py --pick <slug>=<n> …   # écrit le cadre n
 """
 
 from __future__ import annotations
@@ -33,7 +60,9 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import numpy as np  # noqa: E402
 from PIL import Image, ImageDraw  # noqa: E402
 
-from match import best_match, build_templates, signature  # noqa: E402
+from match import (  # noqa: E402
+    FACES, best_match, build_templates, signature, song_face,
+)
 from segment import INK_THRESHOLD  # noqa: E402
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -43,184 +72,250 @@ OUT = os.path.join(HERE, "debug")
 
 TOP_FRAC = 0.30    # le libellé vit dans le haut de page
 LEFT_FRAC = 0.45   # et à gauche
-MARGIN_X = 140     # la ligne commence près de la marge
+EQ_MAX_X = 380     # ... et le « = » n'est jamais loin de la marge
+
+LETTERS = ["C", "D", "E", "F", "G", "A", "B"]
+DIGITS = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
 
 
-def _bands(ink):
-    """Bandes horizontales d'encre dans la fenêtre haut-gauche."""
-    rows = ink.any(axis=1)
-    bands, cur = [], None
-    for y, has in enumerate(rows):
-        if has:
-            cur = [y, y] if cur is None else [cur[0], y]
-        elif cur and y - cur[1] > 4:
-            bands.append(tuple(cur))
-            cur = None
-    if cur:
-        bands.append(tuple(cur))
-    return [(a, b) for a, b in bands if 18 <= b - a <= 95]
+def _hbars(win, max_x=EQ_MAX_X, lo=7, hi=48, maxthick=6):
+    """Barres horizontales : un run de largeur [lo,hi] empilé sur ≤ maxthick lignes."""
+    H = win.shape[0]
+    runs = {}
+    for y in range(H):
+        row = win[y, :max_x]
+        if not row.any():
+            continue
+        idx = np.flatnonzero(np.diff(np.concatenate(([0], row.view(np.int8), [0]))))
+        segs = [(idx[i], idx[i + 1] - 1) for i in range(0, len(idx), 2)]
+        keep = [(a, b) for a, b in segs if lo <= b - a + 1 <= hi]
+        if keep:
+            runs[y] = keep
+    bars, used = [], set()
+    for y in sorted(runs):
+        for a, b in runs[y]:
+            if (y, a, b) in used:
+                continue
+            ys, x0, x1 = [y], a, b
+            yy = y + 1
+            while yy in runs and len(ys) < maxthick:
+                over = [(c, d) for c, d in runs[yy]
+                        if min(b, d) - max(a, c) + 1 >= 0.7 * (b - a + 1)]
+                if not over:
+                    break
+                c, d = over[0]
+                used.add((yy, c, d))
+                ys.append(yy)
+                x0, x1 = min(x0, c), max(x1, d)
+                yy += 1
+            bars.append((ys[0], ys[-1], x0, x1))
+    return bars
 
 
-def _clusters(ink, y0, y1, gap=18):
-    cols = ink[y0:y1 + 1].any(axis=0)
-    out, x = [], 0
-    W = len(cols)
-    while x < W:
-        if cols[x]:
-            s = x
-            while x < W and (cols[x] or (x + gap < W and cols[x:x + gap].any())):
-                x += 1
-            out.append((s, x - 1))
-        else:
-            x += 1
+def equals(win):
+    """Les « = » de la fenêtre : deux barres jumelles, isolées."""
+    bars = _hbars(win)
+    out = []
+    for t1, b1, x10, x11 in bars:
+        for t2, b2, x20, x21 in bars:
+            gap = t2 - b1 - 1
+            if not (2 <= gap <= 10):
+                continue
+            w1, w2 = x11 - x10 + 1, x21 - x20 + 1
+            if abs(w1 - w2) > 0.35 * max(w1, w2):
+                continue
+            if abs(x10 - x20) > 0.35 * max(w1, w2):
+                continue
+            y0, y1 = t1, b2
+            x0, x1 = min(x10, x20), max(x11, x21)
+            h = y1 - y0 + 1
+            if not (0.7 <= (x1 - x0 + 1) / h <= 3.2):
+                continue
+            # Un « = » n'a rien juste au-dessus ni juste au-dessous. Sans ce
+            # test, deux ligatures empilées sous un chiffre en sont un.
+            if win[max(0, y0 - 3):y0, x0:x1 + 1].any():
+                continue
+            if win[y1 + 1:y1 + 4, x0:x1 + 1].any():
+                continue
+            out.append((int(x0), int(y0), int(x1 - x0 + 1), int(h)))
+    return sorted(set(out), key=lambda e: (e[1], e[0]))
+
+
+def _neighbour(win, eq, side, gapmax=None):
+    """Amas voisin du « = » sur la même ligne, ou None s'il n'y a rien.
+
+    `gapmax` se mesure sur la **hauteur de ligne**, pas sur celle du « = ».
+    Un « = » fait 10 px quand sa ligne en fait 26, et les gravures écrivent
+    volontiers « 1=  G » avec 30 px de blanc avant la lettre : calé sur le
+    « = », l'écart toléré valait 22 px et la lettre tombait hors de portée.
+    Le libellé était alors rejeté faute de voisin — sur 大声敬拜, 我安然居住
+    et 认识你真好, dont le « = » avait pourtant été trouvé.
+    """
+    x, y, w, h = eq
+    y0 = max(0, int(y - 2.2 * h))
+    y1 = min(win.shape[0] - 1, int(y + 2.2 * h))
+    band = win[y0:y1 + 1]
+    cols = band.any(axis=0)
+    gapmax = int(gapmax if gapmax is not None else 2.2 * h)
+    if side == "L":
+        i = x - 1
+        while i >= 0 and not cols[i]:
+            if x - i > gapmax:
+                return None
+            i -= 1
+        if i < 0:
+            return None
+        end = i
+        while i >= 0 and (cols[i] or (i - 3 >= 0 and cols[max(0, i - 3):i].any())):
+            i -= 1
+        start = i + 1
+    else:
+        i = x + w
+        while i < len(cols) and not cols[i]:
+            if i - (x + w) > gapmax:
+                return None
+            i += 1
+        if i >= len(cols):
+            return None
+        start = i
+        while i < len(cols) and (cols[i] or cols[i:min(len(cols), i + 4)].any()):
+            i += 1
+        end = i - 1
+    sub = band[:, start:end + 1]
+    ys = np.flatnonzero(sub.any(axis=1))
+    if not len(ys):
+        return None
+    return (start, y0 + int(ys[0]), end, y0 + int(ys[-1]))
+
+
+def candidates(slug: str):
+    """Toutes les candidates de la page, sans en élire aucune."""
+    path = os.path.join(IMAGES, f"{slug}-p1.webp")
+    ink = np.asarray(Image.open(path).convert("L")) < INK_THRESHOLD
+    H, W = ink.shape
+    win = ink[: int(H * TOP_FRAC), : int(W * LEFT_FRAC)]
+
+    # Les gabarits suivent la **fonte de la page** — la leçon de
+    # l'itération 19, que l'ancienne version avait fini par appliquer et
+    # qui reste vraie ici : sous la fonte par défaut, tout sort en négatif.
+    font_path, index, _family = FACES[song_face(slug)]
+    t_let = build_templates(LETTERS, 0, font_path, index)
+    t_dig = build_templates(DIGITS, 0, font_path, index)
+
+    out = []
+    for eq in equals(win):
+        left = _neighbour(win, eq, "L")
+        if left is None:
+            continue
+        # La hauteur du « 1 » donne la hauteur de ligne, donc l'écart que le
+        # blanc avant la lettre peut atteindre.
+        line_h = max(left[3] - left[1] + 1, eq[3])
+        right = _neighbour(win, eq, "R", gapmax=1.6 * line_h)
+        if right is None:
+            continue
+        sub = win[right[1]:right[3] + 1, right[0]:right[2] + 1]
+        if sub.size == 0:
+            continue
+        sig = signature(sub)
+        s_let, letter = best_match(sig, t_let)
+        s_dig, _ = best_match(sig, t_dig)
+        top = min(left[1], right[1], eq[1])
+        bottom = max(left[3], right[3], eq[1] + eq[3] - 1)
+        out.append({
+            "box": {"x": int(left[0]), "y": int(top),
+                    "w": int(right[2] - left[0] + 1), "h": int(bottom - top + 1)},
+            "lettre": letter,
+            "vote": round(float(s_let - s_dig), 2),
+        })
     return out
 
 
-def _tight(ink, y0, y1, x0, x1):
-    sub = ink[y0:y1 + 1, x0:x1 + 1]
-    ys, xs = np.where(sub.any(1))[0], np.where(sub.any(0))[0]
-    if not len(ys) or not len(xs):
-        return None
-    return (x0 + xs[0], y0 + ys[0], x0 + xs[-1], y0 + ys[-1])
+def _planches(rows):
+    """Une vignette par candidate, numérotée pour que l'œil désigne."""
+    cells = []
+    for slug, n, r in rows:
+        b = r["box"]
+        img = Image.open(os.path.join(IMAGES, f"{slug}-p1.webp")).convert("RGB")
+        x0, y0 = max(0, b["x"] - 25), max(0, b["y"] - 22)
+        x1 = min(img.width, b["x"] + b["w"] + 240)
+        y1 = min(img.height, b["y"] + b["h"] + 22)
+        crop = img.crop((x0, y0, x1, y1))
+        Z = max(1.0, 120.0 / max(1, crop.height))
+        crop = crop.resize((int(crop.width * Z), int(crop.height * Z)), Image.LANCZOS)
+        d = ImageDraw.Draw(crop)
+        d.rectangle([(b["x"] - x0) * Z, (b["y"] - y0) * Z,
+                     (b["x"] + b["w"] - x0) * Z, (b["y"] + b["h"] - y0) * Z],
+                    outline=(220, 38, 38), width=2)
+        head = Image.new("RGB", (max(crop.width, 520), 20), (37, 99, 235))
+        ImageDraw.Draw(head).text(
+            (6, 4), f"{slug}#{n}  {b}  droite≈{r['lettre']} (lettre-chiffre {r['vote']:+.2f})",
+            fill=(255, 255, 255))
+        cells.append((head, crop))
+    os.makedirs(OUT, exist_ok=True)
+    PER, n = 12, 0
+    for p in range(0, len(cells), PER):
+        batch = cells[p:p + PER]
+        W = max(max(h.width, c.width) for h, c in batch)
+        H = sum(h.height + c.height + 5 for h, c in batch)
+        page = Image.new("RGB", (W, H), "white")
+        y = 0
+        for h, c in batch:
+            page.paste(h, (0, y)); y += h.height
+            page.paste(c, (0, y)); y += c.height + 5
+        n = p // PER + 1
+        page.save(os.path.join(OUT, f"_kl-{n}.png"))
+    return n
 
 
-def measure(slug: str, printed_key: str):
-    path = os.path.join(IMAGES, f"{slug}-p1.webp")
-    ink_full = np.asarray(Image.open(path).convert("L")) < INK_THRESHOLD
-    H, W = ink_full.shape
-    win = ink_full[: int(H * TOP_FRAC), : int(W * LEFT_FRAC)]
-
-    letter = printed_key[0]
-    tmpl_letter = build_templates([letter])
-    tmpl_fused = build_templates([f"1={letter}"])
-    tmpl_oneeq = build_templates(["1="])
-    tmpl_digits = build_templates(["6", "1", "4", "2", "7", "9"])
-
-    best = None
-    for y0, y1 in _bands(win):
-        cl = _clusters(win, y0, y1)
-        if not cl or cl[0][0] > MARGIN_X:
+def _pick(specs: list[str]) -> int:
+    """Écrit dans `gold/` le cadre désigné : <slug>=<n>."""
+    for spec in specs:
+        slug, _, num = spec.partition("=")
+        cands = candidates(slug)
+        n = int(num)
+        if not (1 <= n <= len(cands)):
+            print(f"  ! {slug} : candidate {n} inexistante ({len(cands)} proposée(s))",
+                  file=sys.stderr)
             continue
-        heights = []
-        tights = []
-        for x0, x1 in cl:
-            t = _tight(win, y0, y1, x0, x1)
-            tights.append(t)
-            heights.append(t[3] - t[1] + 1 if t else 0)
-        med_h = float(np.median([h for h in heights if h])) or 1.0
-        # Deux gravures : « 1= X » en amas séparés (l'amas d'après le « = »
-        # se confronte à la lettre attendue contre des chiffres — la ligne
-        # de tempo « ♩=NN » perd ce vote), ou « 1=X » fusionné en un seul
-        # amas (on confronte l'amas entier au gabarit de la chaîne).
-        cand = None
-        for i in range(1, min(4, len(cl))):
-            t = tights[i]
-            if t and (t[2] - t[0]) >= 8 and heights[i] < 1.6 * med_h:
-                cand = (i, t)
-                break
-        if cand:
-            i, t = cand
-            sub = win[t[1]: t[3] + 1, t[0]: t[2] + 1]
-            sig = signature(sub)
-            s_letter, _ = best_match(sig, tmpl_letter)
-            s_digit, _ = best_match(sig, tmpl_digits)
-            # Une rangée d'accords qui contient la lettre attendue gagnerait
-            # le vote de la lettre seule : le premier amas doit aussi
-            # ressembler à « 1= » — c'est lui qui signe la ligne du libellé.
-            t0 = tights[0]
-            sig0 = signature(win[t0[1]: t0[3] + 1, t0[0]: t0[2] + 1])
-            s_oneeq, _ = best_match(sig0, tmpl_oneeq)
-            score = s_oneeq + (s_letter - s_digit)
-        else:
-            t = tights[0]
-            if t is None or not (50 <= t[2] - t[0] <= 190):
-                continue
-            sub = win[t[1]: t[3] + 1, t[0]: t[2] + 1]
-            sig = signature(sub)
-            s_letter, _ = best_match(sig, tmpl_fused)
-            score = s_letter
-        if best is None or score > best["score"]:
-            # cadre : du 1er amas jusqu'au dernier amas « lettre » avant la
-            # fraction (hauteur ≥ 1,6 × celle de la lettre) ou un grand
-            # trou (≥ 90 px).
-            #
-            # L'échelle de référence est la **lettre appariée**, pas la
-            # médiane de la bande : celle-ci inclut tout ce qui traîne à
-            # droite sur la même ligne — sur 尽情地微笑, l'annotation
-            # « [共8张：原版/简版…] » monte la médiane de 26 à 34, la fraction
-            # 4/4 (51 px) passe alors sous le seuil et **entre dans le
-            # cadre**. Masquer un cadre qui contient la fraction efface le
-            # chiffrage de la mesure.
-            ref_h = heights[cand[0]] if cand else med_h
-            xs0, ys0, xe, ye = tights[0][0], tights[0][1], t[2], t[3]
-            for j in range(1, len(cl)):
-                tj = tights[j]
-                if tj is None:
-                    continue
-                if heights[j] >= 1.6 * ref_h or tj[0] - xe > 90:
-                    break
-                xe, ye = max(xe, tj[2]), max(ye, tj[3])
-                ys0 = min(ys0, tj[1])
-            best = {"score": score, "s_letter": round(float(s_letter), 2),
-                    "box": {"x": int(xs0), "y": int(ys0),
-                            "w": int(xe - xs0 + 1), "h": int(ye - ys0 + 1)}}
-    return best
+        path = os.path.join(GOLD, f"{slug}.json")
+        gold = json.load(open(path, encoding="utf8")) if os.path.exists(path) else {"slug": slug}
+        gold["key_label"] = cands[n - 1]["box"]
+        gold["key_label_verified"] = (
+            "mesure measure-keylabel (ancrage sur le « = », cadre = voisin gauche…voisin "
+            "droit), zoom relu à l’œil sur planche de lot, lettre gravée confrontée à "
+            "printedKey, 2026-08-26 (itération 35)")
+        json.dump(gold, open(path, "w", encoding="utf8"), ensure_ascii=False, indent=2)
+        open(path, "a").write("\n")
+        print(f"  ✓ {slug} ← {cands[n-1]['box']}")
+    return 0
 
 
 def main() -> int:
+    args = sys.argv[1:]
+    if args and args[0] == "--pick":
+        return _pick(args[1:])
+
     chords = json.load(open(os.path.join(IMAGES, "chords.json"), encoding="utf8"))
-    only = sys.argv[1] if len(sys.argv) > 1 else None
-    proposals = {}
+    only = set(args)
+    rows = []
     for slug, entry in sorted(chords.items()):
-        if only and slug != only:
+        if only and slug not in only:
             continue
         gp = os.path.join(GOLD, f"{slug}.json")
         gold = json.load(open(gp, encoding="utf8")) if os.path.exists(gp) else {}
         if not only and gold.get("key_label"):
             continue
-        r = measure(slug, entry["printedKey"])
-        if r:
-            proposals[slug] = r
-            print(f"  {slug:16} boîte {r['box']}  lettre {entry['printedKey']} corr {r['s_letter']:+.2f}")
-        else:
+        cands = candidates(slug)
+        if not cands:
             print(f"  {slug:16} AUCUNE candidate")
-
-    os.makedirs(OUT, exist_ok=True)
-    json.dump(proposals, open(os.path.join(OUT, "_keylabel-proposals.json"), "w", encoding="utf8"),
-              ensure_ascii=False, indent=0)
-
-    # zooms cadrés pour lecture
-    cells = []
-    for slug, r in proposals.items():
-        b = r["box"]
-        img = Image.open(os.path.join(IMAGES, f"{slug}-p1.webp")).convert("RGB")
-        cx0, cy0 = max(0, b["x"] - 30), max(0, b["y"] - 25)
-        cx1, cy1 = min(img.width, b["x"] + b["w"] + 260), b["y"] + b["h"] + 25
-        crop = img.crop((cx0, cy0, cx1, cy1))
-        Z = 1.6
-        crop = crop.resize((int(crop.width * Z), int(crop.height * Z)), Image.LANCZOS)
-        d = ImageDraw.Draw(crop)
-        d.rectangle([(b["x"] - cx0) * Z, (b["y"] - cy0) * Z,
-                     (b["x"] + b["w"] - cx0) * Z, (b["y"] + b["h"] - cy0) * Z],
-                    outline=(220, 38, 38), width=2)
-        head = Image.new("RGB", (crop.width, 18), (37, 99, 235))
-        ImageDraw.Draw(head).text((6, 3), f"{slug} {r['box']}", fill=(255, 255, 255))
-        cells.append((head, crop))
-
-    PER = 10
-    n = 0
-    for p in range(0, len(cells), PER):
-        batch = cells[p:p + PER]
-        Wp = max(h.width for h, _ in batch)
-        Hp = sum(h.height + c.height + 4 for h, c in batch)
-        page = Image.new("RGB", (Wp, Hp), "white")
-        y = 0
-        for h, c in batch:
-            page.paste(h, (0, y)); y += h.height
-            page.paste(c, (0, y)); y += c.height + 4
-        n = p // PER + 1
-        page.save(os.path.join(OUT, f"_kl-{n}.png"))
-    print(f"✓ {len(proposals)} cadre(s) proposé(s) → debug/_kl-1..{n}.png + _keylabel-proposals.json")
+            continue
+        for i, r in enumerate(cands, 1):
+            rows.append((slug, i, r))
+            print(f"  {slug:16} #{i}  {r['box']}  droite≈{r['lettre']} "
+                  f"(lettre-chiffre {r['vote']:+.2f})   attendu 1={entry['printedKey']}")
+    n = _planches(rows)
+    print(f"✓ {len(rows)} candidate(s) sur {len({s for s, _, _ in rows})} chant(s) "
+          f"→ debug/_kl-1..{n}.png")
     return 0
 
 
