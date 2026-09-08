@@ -74,9 +74,17 @@ const LABEL_SPLIT = /([^\x00-\x7F]+|[\s|]+)/;
  * quoi derrière la fondamentale. Ici on découpe une ligne de texte : il
  * faut pouvoir dire « ce jeton n'est pas un accord » et le laisser tel
  * quel, sinon le « D » de « D.S. al Fine » partirait en « D# ».
+ *
+ * Deux formes s'y ajoutent depuis l'itération 37 : l'enrichissement entre
+ * parenthèses qui commence par une lettre (`Am(maj7)`, que `Adim(9)` faisait
+ * passer mais pas lui), et la **basse seule** (`/F`), que les gravures
+ * écrivent pour une ligne de basse descendante — « D/F#  /F  B/D# ». Les deux
+ * restaient verbatim au milieu d'une étiquette dont le reste était transposé.
+ * Mesuré sur les 3 544 étiquettes publiées, aux douze transpositions : aucune
+ * ne change.
  */
 const CHORD_TOKEN =
-  /^\(?[A-G][#b]?(?:maj|min|sus|add|dim|aug|alt|M|m|Δ|ø|°|\+|-)*\d*(?:[b#]\d+)?(?:\([b#]?\d+\))?(?:sus\d?|add\d?)?(?:\/[A-G][#b]?)?\)?$/;
+  /^(?:\(?[A-G][#b]?(?:maj|min|sus|add|dim|aug|alt|M|m|Δ|ø|°|\+|-)*\d*(?:[b#]\d+)?(?:\((?:maj|min|add|sus|dim|aug)?[b#]?\d+\))?(?:sus\d?|add\d?)?(?:\/[A-G][#b]?)?|\/[A-G][#b]?)\)?$/;
 
 /** Parenthèses et crochets qui décorent un jeton sans en faire partie. */
 const EDGE_BRACKETS = /^([()[\]]*)(.*?)([()[\]]*)$/;
@@ -116,7 +124,12 @@ function transposeRun(run: string, semitones: number, targetKey: string): string
  * Une étiquette sans séparateur repasse telle quelle par `transposeChord` :
  * les milliers d'étiquettes déjà publiées gardent exactement le rendu
  * qu'elles avaient, y compris les formes que la grammaire stricte ci-dessus
- * refuserait (`Am(maj7`).
+ * refuserait (`Am(maj7`). Elle ne passait donc **pas** par les crochets de
+ * bord de `transposeRun`, et un accord de remplacement écrit entre crochets
+ * — `[Gm]`, sur 一粒麦子 — ressortait verbatim au milieu d'une rangée
+ * transposée (itération 43). On ne pèle qu'en **second recours**, quand
+ * `transposeChord` a rendu le texte inchangé : à un décalage non nul, un
+ * accord qu'il a su lire change toujours de nom, donc l'égalité vaut échec.
  *
  * Doit rester le miroir exact de `transpose_label` dans
  * `scripts/jianpu/overlay.py`, qui rend le contrôle hors navigateur.
@@ -124,7 +137,15 @@ function transposeRun(run: string, semitones: number, targetKey: string): string
 export function transposeLabel(text: string, semitones: number, targetKey: string): string {
   if (semitones === 0) return text;
   const parts = text.split(LABEL_SPLIT);
-  if (parts.length === 1) return transposeChord(text, semitones, targetKey);
+  if (parts.length === 1) {
+    const direct = transposeChord(text, semitones, targetKey);
+    if (direct !== text) return direct;
+    const m = text.match(EDGE_BRACKETS);
+    if (m && m[2] && CHORD_TOKEN.test(m[2])) {
+      return m[1] + transposeChord(m[2], semitones, targetKey) + m[3];
+    }
+    return text;
+  }
   return parts
     .map((part, i) => (i % 2 === 1 ? part : transposeRun(part, semitones, targetKey)))
     .join("");
