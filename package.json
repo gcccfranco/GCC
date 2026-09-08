@@ -10,6 +10,9 @@
     "start": "next start",
     "lint": "eslint .",
     "validate": "tsx scripts/validate-songs.ts",
+    "test": "playwright test",
+    "test:ui": "playwright test --ui",
+    "jianpu:audit": "tsx scripts/jianpu/audit-browser.ts",
     "test:editsource": "tsx scripts/test-editsource.ts",
     "doctor": "npx react-doctor@latest"
   },
@@ -44,6 +47,7 @@
     "web-push": "^3.6.7"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
