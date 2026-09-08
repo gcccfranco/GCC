@@ -42,7 +42,8 @@ pas les rendre ; depuis que `transpose_label` réécrit la ligne entière
 est ce qui reste de pire, puisqu'elles maintiennent la page à deux
 tonalités.
 
-`--hidden` ouvre en plus les rangées que `worklist.hidden_rows` désigne :
+`--hidden` ouvre en plus les rangées que `worklist.hidden_rows` **et**
+`worklist.welded_rows` désignent :
 des rangées d'accords que le classifieur a rangées ailleurs, donc absentes
 de `published`, donc invisibles à `--all`. C'est le mode D, et c'est la
 seule voie vers la certification des pages que la file signale « rangée(s)
@@ -75,7 +76,30 @@ from match import (  # noqa: E402
     song_face, song_semitones, vocabulary,
 )
 from segment import INK_THRESHOLD  # noqa: E402
-from worklist import hidden_rows  # noqa: E402
+from worklist import hidden_rows, welded_rows  # noqa: E402
+
+
+def calque_provisoire(slug: str):
+    """Le calque qu'une page **aurait** si elle passait le plancher.
+
+    Une page sous les 60 % n'est pas dans `chords.json`, et c'est de là que
+    cet outil part. Les pages qui ont le plus besoin d'yeux étaient donc
+    justement celles qu'il refusait — « chant sans calque », et rien pour
+    y entrer (itération 48). On reconstruit ici ce que `build-chords`
+    aurait publié sans ses deux refus, qui sont des règles de *publication*
+    et non de *travail*.
+
+    `build-chords.py` porte un tiret : il ne s'importe pas par son nom.
+    """
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location(
+        "build_chords", os.path.join(HERE, "build-chords.py"))
+    bc = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(bc)
+    bc.PROVISOIRE = True
+    entry, _note = bc.build(slug)
+    return entry
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 IMAGES = os.path.join(HERE, "..", "..", "public", "jianpu")
@@ -96,6 +120,15 @@ MAX_H_RATIO = 1.5
 # accord : c'est une étiquette composite. Un `Dm(或Bb)` fait onze hauteurs,
 # un accord long comme `C#m7b5` en fait trois.
 WIDE_RATIO = 4.0
+#: Un amas soudé par un **filet horizontal** — le trait d'un crochet de reprise
+#: qui court d'un bout à l'autre du système — n'est pas une étiquette : sur
+#: 爱赢了 il en réunit quatre (« Asus4 A Asus4 A ») dans un amas de 993 px.
+#: `column_clusters` ne peut pas le voir, elle teste la présence d'encre
+#: (`any`) et le filet en met dans **toutes** les colonnes. On le reconnaît à
+#: ce que la moitié au moins de ses colonnes ne portent qu'une épaisseur de
+#: trait, et on le recoupe sur les colonnes plus hautes que ça (itération 42).
+WELD_RATIO = 6.0
+WELD_RULE_FRAC = 0.5
 
 
 def _overlaps(box, labels) -> bool:
@@ -113,6 +146,18 @@ def _overlaps(box, labels) -> bool:
         if x0 <= l["x"] + l["w"] - 1 and l["x"] <= x1 and y0 <= l["y"] + l["h"] - 1 and l["y"] <= y1:
             return True
     return False
+
+
+def _row_published(f: dict, labels: list[dict], hidden: set[int]) -> bool:
+    """La rangée porte-t-elle déjà une étiquette du calque ?
+
+    Par **recouvrement vertical**, jamais par égalité de `top` : le `y` d'une
+    étiquette est le haut de son encre, celui de la rangée le haut de la
+    bande, et les deux ne coïncident que sur les gravures aérées.
+    """
+    if f["top"] in hidden:
+        return True
+    return any(l["y"] <= f["bottom"] and f["top"] <= l["y"] + l["h"] - 1 for l in labels)
 
 
 def propose(slug: str, entry: dict, everything: bool = False,
@@ -150,11 +195,25 @@ def propose(slug: str, entry: dict, everything: bool = False,
         # propres colonnes** : le haut d'une rangée n'est pas le haut de ses
         # lettres, et une boîte héritée des bornes de la rangée mange le
         # haut des chiffres.
-        if everything and f["top"] not in published:
+        # Le test était `f["top"] in published`, une **égalité exacte** entre
+        # le haut de la rangée et le `y` d'une étiquette. Or le `y` d'une
+        # étiquette n'est pas le haut de sa rangée dès que le découpage la
+        # recale (`_top_block`) ou coupe la rangée en deux bandes — les
+        # gravures qui posent leurs accords parmi les crochets de reprise et
+        # les arcs le font systématiquement. La rangée entière devenait alors
+        # **invisible à `--all`**, avec ses étiquettes publiées dedans : sur
+        # 爱赢了, cinq rangées sur douze, et 71 amas jamais proposés
+        # (itération 42). C'est mot pour mot le doublon de l'itération 14,
+        # dont le test `(y, x)` exact avait été remplacé par un recouvrement.
+        if everything and not _row_published(f, entry["labels"], published):
             continue
         tall = f["height"] > MAX_H_RATIO * entry["labelH"]
         row = []
+        amas = []
         for x0, x1 in f["clusters"]:
+            coupe = _split_welded(ink, f["top"], f["bottom"], x0, x1, entry["labelH"])
+            amas.extend(coupe or [(x0, x1)])
+        for x0, x1 in amas:
             top, bottom = f["top"], f["bottom"]
             if tall:
                 band = _top_block(ink, top, bottom, x0, x1, entry["labelH"])
@@ -185,6 +244,43 @@ def propose(slug: str, entry: dict, everything: bool = False,
         # 173 sont des étiquettes qu'il a fallu aller chercher à la main.
         out.extend(row)
     return out
+
+
+def _split_welded(ink, top: int, bottom: int, x0: int, x1: int, label_h: int):
+    """Recoupe un amas que traverse un filet horizontal, ou rend `None`.
+
+    Le filet (crochet de reprise, ligne de renvoi) fait deux ou trois pixels
+    d'épaisseur et court sur toute la largeur ; les lettres en font quinze ou
+    vingt. Compter la **hauteur** d'encre de chaque colonne au lieu de sa
+    présence sépare donc les deux sans rien connaître de la gravure.
+
+    N'agit que sur les amas franchement trop larges pour une étiquette, et
+    seulement si le filet est vraiment là — sinon une étiquette composite
+    (`先F后F#dim`, un groupe entre parenthèses) serait coupée en morceaux.
+    """
+    if x1 - x0 + 1 <= WELD_RATIO * label_h:
+        return None
+    haut = ink[top : bottom + 1, x0 : x1 + 1].sum(axis=0)
+    plein = haut[haut > 0]
+    if not len(plein):
+        return None
+    filet = int(plein.min())
+    if filet > max(3, round(0.15 * label_h)):
+        return None
+    if (haut <= filet).mean() < WELD_RULE_FRAC:
+        return None
+    out, start, last = [], None, None
+    for i, v in enumerate(haut > filet):
+        if v:
+            if start is None:
+                start = i
+            last = i
+        elif start is not None and i - last >= 14:
+            out.append((x0 + start, x0 + last))
+            start = None
+    if start is not None:
+        out.append((x0 + start, x0 + last))
+    return out if len(out) > 1 else None
 
 
 def _top_block(ink, top: int, bottom: int, x0: int, x1: int, label_h: int):
@@ -219,14 +315,23 @@ def main() -> int:
     only = set(args)
     if everything and not only and not wide_only:
         raise SystemExit("--all se lance sur des chants : propose-extra.py <slug>… --all")
-    unknown = only - set(chords)
-    if unknown:
-        raise SystemExit("chant sans calque : " + ", ".join(sorted(unknown)))
+    for slug in sorted(only - set(chords)):
+        entry = calque_provisoire(slug)
+        if entry is None:
+            raise SystemExit(f"{slug} : ni calque ni lecture exploitable")
+        chords[slug] = entry
+        print(f"  {slug:16} calque provisoire ({len(entry['labels'])} étiquettes)")
     proposals = {}
     for slug, entry in sorted(chords.items()):
         if only and slug not in only:
             continue
-        hidden = {y for y, *_ in hidden_rows(slug)} if with_hidden else None
+        # Une rangée **soudée** n'a pas de bande à elle : ce qu'on ouvre
+        # est la bande qui la porte, et `_top_block` y recale chaque
+        # étiquette sur le bloc d'encre supérieur de ses colonnes — c'est
+        # exactement la forme d'une rangée d'accords posée sur ses
+        # chiffres (itération 39).
+        hidden = ({y for y, *_ in hidden_rows(slug)}
+                  | {bande for bande, *_ in welded_rows(slug, entry)}) if with_hidden else None
         rows = propose(slug, entry, everything, hidden)
         if wide_only:
             rows = [l for l in rows if l["w"] >= WIDE_RATIO * entry["labelH"]]
