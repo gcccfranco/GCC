@@ -157,3 +157,9 @@ scripts/jianpu/debug/
 
 # réglages Claude Code personnels (chemins absolus de cette machine)
 .claude/settings.local.json
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
