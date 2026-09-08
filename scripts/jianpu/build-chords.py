@@ -65,6 +65,16 @@ INVENTAIRE = os.path.join(HERE, "inventaire.json")
 # de bruit que de service.
 MIN_COVERAGE = 0.60
 
+# Calque **provisoire** : on construit les étiquettes sans les deux refus qui
+# empêchent de publier — le plancher de couverture et la garde de mode D.
+#
+# Ces deux refus sont justes pour *publier* et désastreux pour *travailler* :
+# une page sous le plancher n'entre pas dans `chords.json`, et `propose-extra`,
+# la planche d'audit et `dissent` lisent tous `chords.json`. Les 36 pages qui
+# en ont le plus besoin n'avaient donc **aucun outil** — c'est encore une fois
+# une mesure qui ne voit pas le travail qui reste (itérations 33, 37, 48).
+PROVISOIRE = False
+
 
 def cho_key(slug: str) -> str | None:
     text = open(os.path.join(SONGS, f"{slug}.cho"), encoding="utf8").read()
@@ -158,9 +168,24 @@ def _from_reading(slug: str, gold: dict):
     Transcrire une partition entière à la main coûte cher ; relire les trois
     amas que le matcher rate coûte trois coups d'œil. `gold/<slug>.json`
     porte donc un dictionnaire `corrections`, indexé par la position exacte
-    de l'amas (`"y,x"`), qui ne sert qu'à combler les trous — jamais à
-    contredire une lecture retenue, sans quoi on ne saurait plus ce qui a
-    été vérifié.
+    de l'amas (`"y,x"`), et **c'est lui qui tranche** : il est lu avant
+    `keep()`, pas après.
+
+    Il était lu après, et ne pouvait donc que combler les trous — jamais
+    contredire une lecture retenue. C'était un raisonnement de provenance :
+    ne pas mélanger ce qui a été vu avec ce qui a été deviné. Mais il
+    laissait le seul mode d'erreur qui écrit un **faux accord** sur la page
+    — le mode C, retenu et faux — sans aucun recours : sur 十字架的传达者,
+    cinq `Gmaj7` et `Dmaj7` publiaient `F#m7` à +0,42 et unanimes, et écrire
+    la correction n'y changeait rien (itération 46). Le seul contournement
+    était `not_labels` + `extra_labels`, qui fait la même chose en trois
+    champs et perd le lien avec la position lue.
+
+    Une correction est le verdict de l'œil au zoom ; une lecture retenue est
+    un score de gabarit. Quand les deux se contredisent, c'est l'œil qui a
+    raison. Le renversement ne change rien au corpus du jour — aucune
+    correction n'y contredisait de lecture retenue, personne n'en ayant
+    jamais écrit d'inerte.
 
     `not_labels` en est le pendant, et il manquait : un amas qui **n'est pas
     une étiquette** et que le matcher retient quand même. Le seuil n'y peut
@@ -212,10 +237,10 @@ def _from_reading(slug: str, gold: dict):
             key = f"{f['top']},{x0}"
             if key in blanks:
                 total -= 1
-            elif keep(score, unanimous):
-                labels.append(_box(f, x0, x1, chord))
             elif key in fixes:
                 labels.append(_box(f, x0, x1, fixes[key]))
+            elif keep(score, unanimous):
+                labels.append(_box(f, x0, x1, chord))
             else:
                 missing += 1
     fixed = len(fixes)
@@ -226,9 +251,231 @@ def _from_reading(slug: str, gold: dict):
         note += f" · {len(dead_rows)} rangée(s) sans accord écartée(s)"
     if foreign:
         note += f" · {len(foreign)} rangée(s) en autre tonalité écartée(s)"
-    if len(labels) < MIN_COVERAGE * total:
+    if not PROVISOIRE and len(labels) < MIN_COVERAGE * total:
         return [], f"trop peu lu : {note}"
     return labels, note
+
+
+def ink_band(page: np.ndarray, l: dict) -> tuple[int, int, int]:
+    """Bande de lignes où l'encre de cette étiquette-là est dense, et sa
+    hauteur. Sert deux fois : à mesurer le corps de la page, et à savoir sur
+    quelles lignes chercher le voisin de droite."""
+    y0, y1 = max(0, l["y"] - 10), min(page.shape[0], l["y"] + l["h"] + 10)
+    x0, x1 = max(0, l["x"] - 2), min(page.shape[1], l["x"] + l["w"] + 2)
+    prof = (page[y0:y1, x0:x1] < INK_THRESHOLD).sum(axis=1)
+    if not prof.size or prof.max() == 0:
+        return y0, y1, 0
+    dense = prof >= 0.15 * prof.max()
+    best = run = fin = 0
+    for i, d in enumerate(dense):
+        run = run + 1 if d else 0
+        if run > best:
+            best, fin = run, i
+    return y0 + fin - best + 1, y0 + fin + 1, best
+
+
+def right_space(page: np.ndarray, labels: list[dict], label_h: int) -> None:
+    """Pose `sp` : la largeur que l'étiquette peut occuper avant de heurter
+    l'encre gravée à sa droite, en pixels image, depuis le bord gauche du
+    fond (`x - 3`).
+
+    Un nom transposé est souvent plus long que le gravé — `F/A` devient
+    `Gb/Bb` — et le fond opaque, ancré à gauche, s'élargit alors sur ce qui
+    est imprimé à côté. Ce qu'il efface n'est pas toujours un accord : sur
+    让爱走动 ce sont les **barres verticales** de la ligne d'intro
+    « G | Fadd2 | C/E | Cm/Eb », que le rendu donnait `Ab| Gbadd2Db/FDbm/E`
+    (itération 38). Regarder les seules étiquettes voisines ne les verrait
+    pas ; on regarde donc l'encre.
+
+    La recherche couvre exactement la bande que le fond opaque efface —
+    `y - 6` à `y + h + descendante`, comme le client la pose. La restreindre
+    aux lignes d'encre denses laissait passer ce qui est gravé un peu plus
+    haut ou plus bas dans la même bande : une liaison, un point d'octave.
+    """
+    H, W = page.shape
+    desc = int(round(0.22 * (label_h / 0.714)))
+    for l in labels:
+        fond = int(round(0.22 * ((l.get("fh") or label_h) / 0.714))) if l.get("fh") else desc
+        y0, y1 = max(0, l["y"] - 6), min(H, l["y"] + l["h"] + fond)
+        if y1 <= y0:
+            y0, y1 = max(0, l["y"]), min(H, l["y"] + max(1, l["h"]))
+        # +2 px : l'anticrénelage du glyphe déborde de la boîte détectée.
+        start = min(W, l["x"] + l["w"] + 2)
+        cols = (page[y0:y1, start:] < INK_THRESHOLD).any(axis=0)
+        prochain = W if not cols.any() else start + int(cols.argmax())
+        l["sp"] = max(l["w"] + 7, prochain - 2 - (l["x"] - 3))
+
+
+# Le client peint le fond opaque à partir de `y - 6` : six pixels de marge
+# pour le crénage et l'anticrénelage du gravé. Au-delà, ce qui dépasse reste
+# visible.
+MARGE_HAUTE = 6
+# Une hampe d'altération est **fine** : deux ou trois colonnes sur une
+# étiquette qui en fait trente. Un filigrane, un arc de liaison ou la rangée
+# du dessus barbouillent large. Sur les 75 dépassements du corpus, les deux
+# familles ne se touchent pas — 0,09 de largeur relative au pire pour les
+# hampes, 0,27 au mieux pour le reste.
+HAMPE_LARGEUR = 0.20
+
+
+def haut_grave(page: np.ndarray, labels: list[dict], label_h: int) -> None:
+    """Remonte le haut de la boîte jusqu'à l'**altération en exposant**.
+
+    Certaines gravures écrivent le bémol au-dessus et à droite de la lettre,
+    en petit : « B♭ », « B♭/C ». La hampe de ce bémol monte bien plus haut
+    que la capitale, donc plus haut que la bande de rangée d'où sort la
+    boîte. Le nom réécrit couvre les lettres et **laisse la hampe** : sur
+    圣灵的江河, certifiée, un trait vertical de treize pixels survivait
+    au-dessus de chaque « B/Db », et se lisait comme le bémol qu'il est —
+    la page affichait donc `B♭/Db` là où le calque écrit `B/Db`
+    (itération 44).
+
+    Aucun contrôle ne le voyait : le balayage ne mesure l'encre couverte
+    qu'à **droite** du gravé, la planche d'audit encadre l'étiquette sans
+    rien dire de ce qui dépasse par le haut, et les compteurs ne comptent
+    que des accords. C'est le contrôle « la boîte fait-elle la hauteur du
+    gravé ? » laissé ouvert à l'itération 42.
+
+    On ne remonte que sur une **hampe** — une trace fine et contiguë à
+    l'encre de l'étiquette — et jamais plus haut qu'un corps de page : sinon
+    on avalerait le filigrane de 到各山岭去传扬 ou l'arc de liaison de la
+    rangée voisine. Le bas ne bouge pas : le texte est aligné dessus.
+    """
+    H, W = page.shape
+    for l in labels:
+        if not (l.get("c") or "").strip():
+            continue                      # un masque n'a rien à recouvrir
+        x0, x1 = max(0, l["x"]), min(W, l["x"] + l["w"])
+        y0 = l["y"]
+        haut = max(0, y0 - label_h)
+        bande = (page[haut:y0, x0:x1] < INK_THRESHOLD)
+        if not bande.size:
+            continue
+        # La trace doit tenir à l'encre de l'étiquette : sans cette amorce,
+        # n'importe quel trait fin passant au-dessus — un arc de liaison qui
+        # frôle la bande — remonterait la boîte sur toute sa longueur.
+        if not (page[y0 : y0 + 3, x0:x1] < INK_THRESHOLD).any():
+            continue
+        j = y0 - haut
+        while j > 0 and bande[j - 1].any():
+            j -= 1
+        depasse = (y0 - haut) - j
+        if depasse <= MARGE_HAUTE:
+            continue
+        if bande[j:].sum(axis=1).max() > max(4, HAMPE_LARGEUR * l["w"]):
+            continue                      # large : filigrane, arc, voisine
+        monte = depasse - 4               # deux pixels de marge sous les six
+        l["y"] -= monte
+        l["h"] += monte
+
+
+def text_height(page: np.ndarray, labels: list[dict]) -> int:
+    """Hauteur du texte gravé, **mesurée sur les pixels** de la page.
+
+    Une seule taille de texte pour tout le chant : la prendre par rangée
+    donnait des accords de tailles différentes sur la même page.
+
+    Ce qu'on ne peut pas prendre, c'est la hauteur des boîtes `h`. Elle vaut
+    tantôt la grappe d'encre, tantôt la bande de rangée entière, et dans les
+    deux cas elle absorbe ce qui touche l'accord — une liaison, un point
+    d'octave. Sur 让爱走动 le *même* accord « G » est relevé entre 23 et
+    39 px ; sur 主我献上生命给你 toutes les boîtes valent 31 alors que le
+    texte en fait 24. La médiane de ces hauteurs écrivait donc la page
+    jusqu'à 1,4× trop grand, et c'est ce qui faisait déborder les étiquettes
+    sur leurs voisines (itération 38).
+
+    On mesure à la place, dans chaque boîte, la plus longue bande de lignes
+    dont l'encre atteint 15 % de la ligne la plus noire : les lettres
+    passent, une liaison — fine et peu dense — non. Le 3ᵉ quartile de ces
+    mesures est la hauteur de capitale de la page. Le résultat est stable :
+    entre 8 % et 25 % de seuil, et entre la médiane et le 9ᵉ décile, il ne
+    bouge pas d'un pixel sur les pages de contrôle.
+    """
+    caps = [ink_band(page, l)[2] for l in labels if l["c"].strip()]
+    caps = [c for c in caps if c]
+    heights = sorted(l["h"] for l in labels if l["c"])
+    boite = heights[len(heights) // 2]
+    if not caps:
+        return boite
+    caps.sort()
+    mesure = int(round(caps[min(len(caps) - 1, int(0.75 * (len(caps) - 1) + 0.5))]))
+    # La mesure ne peut pas dépasser la boîte : au-delà, elle a débordé sur
+    # la rangée voisine. C'est le cas des gravures d'hymnaire, dont les
+    # étiquettes sont si petites (14 px) que le découpage en rangées les
+    # tronque — la bande dense trouvée là est celle des chiffres en dessous.
+    return min(mesure, boite)
+
+
+def un_seul_releve(labels: list[dict]) -> list[dict]:
+    """Un amas d'encre, une étiquette : deux boîtes qui se recouvrent sont
+    **deux relevés du même gravé**, pas deux accords.
+
+    L'invariant vient de la page, pas d'un seuil : une gravure sépare ses
+    étiquettes, et les boîtes sortent des amas de colonnes, donc deux
+    étiquettes gravées ne se chevauchent jamais. Mesuré sur le corpus, le
+    compte des paires qui se recouvrent est le même — 14 — que l'on demande
+    un pixel commun ou cinq : il n'y a pas de cas limite à arbitrer.
+
+    Le filtre ne portait que sur la boîte **exacte** (itération 38), et il
+    laissait donc passer les deux formes que prend le double relevé :
+
+    - la **même rangée relue** à quelques pixels près, sur 4 pages — le
+      second se dessine sur le premier, donc l'œil ne voit rien, mais les
+      deux fonds opaques faussent toute mesure de recouvrement ;
+    - l'accord isolé **resté sous le composite** qui l'a remplacé
+      (itération 34) : `Em7` sous `Em7 Dm G)` sur 握住幸福, `Am7` et
+      `Am(maj7)` sous `Am7  Am(maj7)` sur 我安然居住. Là c'est le texte
+      lui-même qui est écrit deux fois, l'un par-dessus l'autre.
+
+    Le relevé qui couvre le plus d'encre gagne : le composite l'emporte sur
+    l'accord isolé. À largeur égale, la boîte la plus **basse** — la plus
+    haute a happé ce qui touchait l'étiquette, une liaison ou un point
+    d'octave, et son fond opaque effacerait d'autant plus (itération 38).
+    """
+    perdants: set[int] = set()
+    for i in range(len(labels)):
+        for j in range(i + 1, len(labels)):
+            a, b = labels[i], labels[j]
+            if min(a["x"] + a["w"], b["x"] + b["w"]) <= max(a["x"], b["x"]):
+                continue
+            if min(a["y"] + a["h"], b["y"] + b["h"]) <= max(a["y"], b["y"]):
+                continue
+            perdants.add(j if (a["w"], -a["h"]) >= (b["w"], -b["h"]) else i)
+    return [l for n, l in enumerate(labels) if n not in perdants]
+
+
+def mode_d(slug: str, entry: dict) -> str:
+    """Ce que les trois chasses du mode D trouvent encore sur cette page.
+
+    Une rangée d'accords que le découpage n'isole pas ne publie rien, mais
+    **ne coûte rien non plus au dénominateur** : elle n'entre dans aucun
+    compteur, donc rien n'empêche la page de franchir le plancher de 60 %
+    sans elle. La page paraît alors publiable et sort en deux tonalités —
+    ses rangées vues transposées, la rangée manquée restée dans l'ancienne.
+    C'est **pire que pas de calque du tout**, et c'est arrivé deux fois de
+    suite : 十字架的传达者 à l'itération 46, 奔跑不放弃 à la 47, toutes deux
+    poussées au-dessus du plancher par un progrès du matcher, toutes deux
+    avec leurs rangées cachées à bord.
+
+    Le progrès d'un outil sort des pages de sous le plancher, et le plancher
+    ne sait rien de ce qu'elles cachent. Il fallait donc le lui apprendre :
+    `worklist.py` le mesurait déjà, mais il n'était qu'un tableau de bord,
+    lu après coup par un humain — deux fois trop tard.
+
+    Les pages **gelées** en sont exemptes : leur calque a été relu à l'œil
+    sur planche d'audit, ce qui est un contrôle plus fort que ces trois-là.
+    """
+    import worklist  # importé ici : il tire l'image de la page, on ne le paie
+                     # que pour les pages qui iraient effectivement publier
+
+    trouvailles = []
+    for nom, chasse in (("cachée(s)", worklist.hidden_rows),
+                        ("soudée(s)", worklist.welded_rows),
+                        ("orpheline(s)", worklist.orphan_rows)):
+        n = len(chasse(slug, entry))
+        if n:
+            trouvailles.append(f"{n} rangée(s) {nom}")
+    return " · ".join(trouvailles)
 
 
 def build(slug: str):
@@ -238,6 +485,23 @@ def build(slug: str):
 
     gold_path = os.path.join(GOLD, f"{slug}.json")
     gold = json.load(open(gold_path, encoding="utf8")) if os.path.exists(gold_path) else {}
+    # Page **retenue à l'étude** : elle passe les gardes mécaniques mais l'œil
+    # a vu qu'elle ne doit pas encore paraître.
+    #
+    # Jusqu'ici il n'y avait pas de façon de dire cela. Les trois gardes —
+    # le plancher de couverture, le mode D, la certification — décrivent ce
+    # que la machine sait ; aucune ne décrit ce que l'œil a compris et que la
+    # machine ne peut pas voir. 在这里 empile deux jeux d'accords par système
+    # (positions de capo en ré au-dessus des accords réels en fa) et module
+    # en 【升G调】 sur sa dernière rangée : le calque y lit assez pour passer
+    # le plancher, et publierait une page à deux tonalités — ce que la boucle
+    # tient depuis l'itération 15 pour pire que pas de calque du tout. Elle
+    # n'était retenue que par accident, parce qu'une rangée cachée déclenchait
+    # le mode D ; un réglage du matcher a suffi à lever l'accident
+    # (itération 50).
+    if gold.get("en_chantier"):
+        return None, f"retenue à l'étude : {gold['en_chantier']} — non publiée"
+
     printed_key = gold.get("printed_key") or cho_key(slug)
     if not printed_key:
         return None, "tonalité inconnue"
@@ -258,7 +522,10 @@ def build(slug: str):
     # certification, et c'est cette liste-là, pure donnée, qui repart. Le
     # matcher redevient libre d'évoluer.
     if gold.get("frozen_labels"):
-        labels = [{k: l[k] for k in ("x", "y", "w", "h", "c")} for l in gold["frozen_labels"]]
+        # `fh` (le corps propre à une étiquette) doit survivre au gel : sans lui
+        # une ligne d'intro gelée reprend le corps de la page et déborde.
+        keys = ("x", "y", "w", "h", "c", "fh")
+        labels = [{k: l[k] for k in keys if k in l} for l in gold["frozen_labels"]]
         note = f"{len(labels)} étiquettes (gelées à la certification)"
     else:
         if gold.get("chord_rows"):
@@ -275,8 +542,19 @@ def build(slug: str):
         # et LOOP.md.
         extra = gold.get("extra_labels", [])
         if extra:
-            labels = labels + [{k: l[k] for k in ("x", "y", "w", "h", "c")} for l in extra]
+            # `fh` est facultatif : la hauteur d'étiquette **de cette
+            # étiquette-là**, quand elle n'est pas celle de la page. Une
+            # ligne d'intro (`【前奏 | G D/F# | … | D】`) est gravée nettement
+            # plus petite que les accords des couplets ; réécrite au corps de
+            # la page elle déborde sur les crédits. `labelH` reste le défaut,
+            # donc les 3 500 étiquettes déjà publiées ne bougent pas.
+            keys = ("x", "y", "w", "h", "c", "fh")
+            labels = labels + [{k: l[k] for k in keys if k in l} for l in extra]
             note += f" · +{len(extra)} hors rangées (lues à l'œil)"
+
+        reste = "" if PROVISOIRE else mode_d(slug, {"labels": labels})
+        if reste:
+            return None, f"{note} · {reste} — non publiée"
 
     # `mask_rows` — une rangée d'accords gravée dans une **autre tonalité**
     # que la page : les positions de capo que certaines gravures impriment
@@ -352,25 +630,46 @@ def build(slug: str):
             for l in labels
         ]
 
+    labels = un_seul_releve(labels)
+
     with Image.open(path) as im:
         w, h = im.size
+        page = np.asarray(im.convert("L"))
+    label_h = text_height(page, labels)
+    right_space(page, labels, label_h)
+    # En dernier : `text_height` plafonne sa mesure sur `h` et `right_space`
+    # cherche le voisin dans la bande `y`…`y+h`. Remonter le haut avant l'un
+    # ou l'autre changerait ce qu'ils mesurent.
+    haut_grave(page, labels, label_h)
 
-    # Une seule taille de texte pour tout le chant. La hauteur de bande
-    # varie selon les glyphes présents (une rangée sans jambage est
-    # détectée plus fine), donc la prendre par rangée donnait des accords
-    # de tailles différentes sur la même page.
-    heights = sorted(l["h"] for l in labels if l["c"])
     entry = {
         "printedKey": printed_key,
         "w": w,
         "h": h,
-        "labelH": heights[len(heights) // 2],
+        "labelH": label_h,
         "labels": labels,
     }
     if not complete:
         entry["complete"] = False
     if gold.get("key_label"):
-        entry["keyLabel"] = gold["key_label"]
+        # `c`, le **texte gravé** du libellé de tonalité, quand il ne s'écrit
+        # pas « 1=X » : la lettre seule (« D 4/4 »), l'ordre inverse
+        # (« F=1 », hymnaire), ou un « 1=F » posé au-dessus d'accords en D
+        # (positions de capo). Sans lui le client écrit « 1=<tonalité jouée> »,
+        # ce qui est faux dès que la lettre gravée n'est pas celle des accords.
+        # Comme les étiquettes, il est écrit dans la convention du `.cho` et
+        # passe ici dans celle de la page.
+        kl = dict(gold["key_label"])
+        if shift and kl.get("c"):
+            kl["c"] = transpose_label(kl["c"], shift, printed_key)
+        # `sp` comme pour les étiquettes : le cadre est rendu au corps du
+        # gravé depuis l'itération 41, et « 1=Ab » y est plus large que
+        # « 1=F » — sans cette mesure il efface le chiffrage « 4/4 » qui le
+        # suit (3 pages sur 87 au balayage).
+        mesure = {**kl, "fh": kl["h"]}
+        right_space(page, [mesure], label_h)
+        kl["sp"] = mesure["sp"]
+        entry["keyLabel"] = kl
     # Certaines gravures répètent la tonalité **dans le titre** :
     # « 永活盼望（李伟版）（D调） ». Cette mention-là décrit *cette page*, donc
     # elle suit la transposition, exactement comme « 1=X ». À ne pas
@@ -391,6 +690,11 @@ def main() -> int:
         if entry:
             out[slug] = entry
             print(f"  {slug:16} {note}")
+        elif note.endswith("non publiée"):
+            # Une page **retenue** se dit, sinon la garde du mode D ne fait
+            # que déplacer le silence : la page disparaîtrait du calque sans
+            # que rien n'apprenne pourquoi.
+            print(f"  {slug:16} ⚠ {note}")
 
     dest = os.path.join(IMAGES, "chords.json")
     with open(dest, "w", encoding="utf8") as fh:
