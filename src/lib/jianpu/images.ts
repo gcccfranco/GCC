@@ -7,8 +7,19 @@ export type JianpuEntry = { pages: JianpuPage[]; source: string };
 export type JianpuManifest = Record<string, JianpuEntry>;
 
 /** Une étiquette d'accord repérée sur le scan : position en pixels image
- *  et accord d'origine. Le calque masque puis réécrit transposé. */
-export type JianpuChordLabel = { x: number; y: number; w: number; h: number; c: string };
+ *  et accord d'origine. Le calque masque puis réécrit transposé.
+ *
+ *  `fh` est la hauteur de texte de **cette étiquette-là**, quand elle n'est
+ *  pas celle de la page : une ligne d'intro (`【前奏 | G D/F# | … | D】`) est
+ *  gravée nettement plus petite que les accords des couplets, et réécrite au
+ *  corps de la page elle déborde sur les crédits. Absente, `labelH` sert. */
+/** `sp` : largeur que l'étiquette peut occuper, depuis le bord gauche de son
+ *  fond, avant de heurter l'encre gravée à sa droite. Un nom transposé est
+ *  souvent plus long que le gravé (`F/A` → `Gb/Bb`) et le fond opaque, ancré
+ *  à gauche, effaçait alors ce qui est imprimé à côté — les barres d'une
+ *  ligne d'intro, un 【尾句】, l'accord suivant. Mesuré sur les pixels du
+ *  scan par `build-chords.py`. */
+export type JianpuChordLabel = { x: number; y: number; w: number; h: number; c: string; fh?: number; sp?: number };
 export type JianpuChords = {
   /** Tonalité imprimée sur le PDF — pas forcément celle du .cho. */
   printedKey: string;
@@ -18,8 +29,15 @@ export type JianpuChords = {
    *  selon les glyphes de la rangée, la prendre par rangée donnait des
    *  accords de tailles différentes sur la même page. */
   labelH: number;
-  /** Cadre du libellé « 1=X », à réécrire dans la tonalité jouée. */
-  keyLabel?: { x: number; y: number; w: number; h: number };
+  /** Cadre du libellé de tonalité de l'en-tête, à réécrire dans la tonalité
+   *  jouée. `c` porte le **texte gravé** quand il ne s'écrit pas « 1=X » :
+   *  « D 4/4 » (la lettre seule), « F=1 » (l'ordre inverse, hymnaire), ou un
+   *  « 1=F » dont la lettre n'est pas celle des accords — 十架的爱 grave
+   *  « 1=F » au-dessus d'accords en D, qui sont des positions de capo 3.
+   *  Présent, il est transposé comme une étiquette : le décalage des accords
+   *  s'applique à la lettre gravée, et le reste de la ligne est laissé
+   *  verbatim. Absent, le client écrit « 1=<tonalité jouée> ». */
+  keyLabel?: { x: number; y: number; w: number; h: number; c?: string; sp?: number };
   /** Cadre de la tonalité répétée dans le titre — « （D调） ». Elle décrit
    *  *cette page*, donc elle suit la transposition comme « 1=X ». À ne pas
    *  confondre avec « 原调Eb », qui décrit la tonalité de la *source* et
