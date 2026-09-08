@@ -33,6 +33,47 @@ const DESCENDER = 0.22;
  *  linéale. */
 const CHORD_FONT =
   '"Helvetica Neue", Helvetica, Arial, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif';
+/** Le libellé de tonalité, lui, est gravé en romaine sur presque toute la
+ *  collection — c'est une mention d'appareil, pas un accord. */
+const KEY_FONT = '"Times New Roman", Georgia, serif';
+/** Sous ce facteur, un accord devient moins lisible qu'il n'est gênant : on
+ *  préfère alors le laisser déborder de la place mesurée. */
+const MIN_SHRINK = 0.8;
+
+/** Largeur du texte pour un corps de 1 px, mesurée dans un canvas. On ne
+ *  mesure pas dans le DOM : tout le calque est exprimé en pixels image puis
+ *  mis à l'échelle en `cqw`, donc une largeur relative suffit et ne dépend
+ *  pas de la taille à laquelle la page est affichée. */
+const chordWidths = new Map<string, number>();
+let measureCtx: CanvasRenderingContext2D | null | undefined;
+
+function unitWidth(text: string, font: string): number {
+  const cle = `${font}|${text}`;
+  const known = chordWidths.get(cle);
+  if (known !== undefined) return known;
+  if (typeof document === "undefined") return 0;
+  measureCtx ??= document.createElement("canvas").getContext("2d");
+  if (!measureCtx) return 0;
+  measureCtx.font = `700 100px ${font}`;
+  const w = measureCtx.measureText(text).width / 100;
+  chordWidths.set(cle, w);
+  return w;
+}
+
+/** Corps réduit pour que l'étiquette tienne dans la place que la gravure lui
+ *  laisse (`sp`). Sans `sp` — donnée d'avant la mesure — rien ne change. */
+function fitFont(
+  text: string,
+  fontPx: number,
+  sp: number | undefined,
+  font = CHORD_FONT,
+  plancher = MIN_SHRINK
+): number {
+  if (!sp) return fontPx;
+  const unit = unitWidth(text, font);
+  if (!unit || unit * fontPx <= sp) return fontPx;
+  return Math.max(fontPx * plancher, sp / unit);
+}
 
 type JianpuSheetProps = {
   entry: JianpuEntry;
@@ -124,6 +165,7 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey, ca
         return (
         <div
           key={page.file}
+          data-jianpu-page={i}
           className={fit ? "relative mx-auto" : "relative w-full"}
           // `containerType: inline-size` permet d'exprimer la taille du texte du
           // calque en cqw : il suit l'échelle de l'image sans mesure JS.
@@ -165,22 +207,49 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey, ca
               contrôle en Python, qui travaillent sur l'image d'origine. */}
           {overlayOn && i === 0 && chords && (
             <div className="pointer-events-none absolute inset-0" aria-hidden>
-              {chords.keyLabel && (
+              {chords.keyLabel && (() => {
+                const kl = chords.keyLabel!;
+                const keyShown = kl.c
+                  ? transposeLabel(kl.c, chordSemitones, chordKey)
+                  : `1=${playedKey ?? chords.printedKey}`;
+                // `h` est la hauteur de **capitale** du libellé gravé, pas un
+                // corps : le prendre pour tel rendait le cadre 0,71× trop
+                // petit sur les 87 pages qui en portent un — la leçon de
+                // l'itération 38 (« le corps se mesure, il ne se devine
+                // pas ») que le cadre n'avait jamais reçue. Rendu au bon
+                // corps il heurte le chiffrage voisin sur 3 pages, d'où le
+                // même rétrécissement que les étiquettes, mesuré dans **sa**
+                // fonte : celle des accords, plus large, le réduirait pour
+                // rien.
+                // Sans plancher, contrairement aux accords : le cadre est
+                // seul en haut de page, et le rétrécir reste lisible, alors
+                // que le chiffrage « 4/4 » qu'il efface en débordant est une
+                // information perdue — c'est le défaut qu'on avait dû
+                // réparer sur 齐来赞美 (itération 35).
+                const keyFontPx = fitFont(keyShown, kl.h / CAP_HEIGHT, kl.sp, KEY_FONT, 0);
+                return (
                 <span
+                  // Le cadre de tonalité porte un fond opaque comme les
+                  // étiquettes, mais il n'avait pas leur marqueur : ni le
+                  // balayage géométrique ni les cadres rouges de la planche
+                  // ne le voyaient (itération 41). Marqueur distinct, pour
+                  // que le banc de transposition, lui, garde son périmètre.
+                  data-jianpu-keylabel={kl.c ?? ""}
                   className="absolute flex items-end whitespace-nowrap bg-white text-black dark:bg-black dark:text-neutral-100"
                   style={{
-                    left: `${((chords.keyLabel.x - 3) / chords.w) * 100}%`,
-                    top: `${((chords.keyLabel.y - 4) / chords.h) * 100}%`,
-                    height: `${((chords.keyLabel.h + 6) / chords.h) * 100}%`,
-                    minWidth: `${((chords.keyLabel.w + 7) / chords.w) * 100}%`,
-                    fontSize: `${(chords.keyLabel.h / chords.w) * 100}cqw`,
+                    left: `${((kl.x - 3) / chords.w) * 100}%`,
+                    top: `${((kl.y - 4) / chords.h) * 100}%`,
+                    height: `${((kl.h + 6) / chords.h) * 100}%`,
+                    minWidth: `${((kl.w + 7) / chords.w) * 100}%`,
+                    fontSize: `${(keyFontPx / chords.w) * 100}cqw`,
                     lineHeight: 1,
-                    fontFamily: "Times New Roman, Georgia, serif",
+                    fontFamily: KEY_FONT,
                   }}
                 >
-                  1={playedKey ?? chords.printedKey}
+                  {keyShown}
                 </span>
-              )}
+                );
+              })()}
               {chords.titleKey && (
                 <span
                   className="absolute flex items-end whitespace-nowrap bg-white font-bold text-black dark:bg-black dark:text-neutral-100"
@@ -196,9 +265,17 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey, ca
                   （{playedKey ?? chords.printedKey}调）
                 </span>
               )}
-              {chords.labels.map((l, n) => (
+              {chords.labels.map((l, n) => {
+                // `fh` : le corps propre à l'étiquette, quand elle n'est pas
+                // gravée au corps de la page (ligne d'intro, mention entre
+                // parenthèses). Absent, c'est `labelH` — donc rien ne bouge
+                // pour les étiquettes déjà publiées.
+                const shown = transposeLabel(l.c, chordSemitones, chordKey);
+                const fontPx = fitFont(shown, l.fh ? l.fh / CAP_HEIGHT : chordFontPx, l.sp);
+                return (
                 <span
                   key={n}
+                  data-jianpu-label={l.c}
                   className={
                     "absolute flex items-end whitespace-nowrap bg-white dark:bg-black " +
                     (partial
@@ -215,18 +292,19 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey, ca
                     // Le fond blanc descend de la descendante entière ; la
                     // marge basse rend au texte les 0,09 em de trop, pour que
                     // la ligne de base retombe sur celle du texte gravé.
-                    height: `${((l.h + 6 + DESCENDER * chordFontPx) / chords.h) * 100}%`,
+                    height: `${((l.h + 6 + DESCENDER * fontPx) / chords.h) * 100}%`,
                     paddingBottom: `${DESCENDER - LINE_BOX_DROP}em`,
                     minWidth: `${((l.w + 7) / chords.w) * 100}%`,
-                    fontSize: `${(chordFontPx / chords.w) * 100}cqw`,
+                    fontSize: `${(fontPx / chords.w) * 100}cqw`,
                     fontWeight: 700,
                     lineHeight: 1,
                     fontFamily: CHORD_FONT,
                   }}
                 >
-                  {transposeLabel(l.c, chordSemitones, chordKey)}
+                  {shown}
                 </span>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
