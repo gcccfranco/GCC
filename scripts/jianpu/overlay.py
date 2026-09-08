@@ -104,9 +104,20 @@ LABEL_SPLIT = re.compile(r"([^\x00-\x7f]+|[\s|]+)")
 # fondamentale : ici on découpe une ligne de texte, et il faut pouvoir dire
 # « ce jeton n'est pas un accord » — sans quoi le « D » de « D.S. al Fine »
 # partirait en « D# ».
+#
+# L'enrichissement entre parenthèses accepte une lettre : `Adim(9)` passait,
+# `Am(maj7)` non — et restait donc verbatim dès qu'il partageait une étiquette
+# avec un autre accord. Vérifié sur les 3 544 étiquettes publiées, aux douze
+# transpositions : la grammaire élargie n'en change **aucune** (itération 37).
 CHORD_TOKEN = re.compile(
-    r"^\(?[A-G][#b]?(?:maj|min|sus|add|dim|aug|alt|M|m|Δ|ø|°|\+|-)*\d*"
-    r"(?:[b#]\d+)?(?:\([b#]?\d+\))?(?:sus\d?|add\d?)?(?:/[A-G][#b]?)?\)?$"
+    r"^(?:\(?[A-G][#b]?(?:maj|min|sus|add|dim|aug|alt|M|m|Δ|ø|°|\+|-)*\d*"
+    r"(?:[b#]\d+)?(?:\((?:maj|min|add|sus|dim|aug)?[b#]?\d+\))?(?:sus\d?|add\d?)?"
+    r"(?:/[A-G][#b]?)?"
+    # Une **basse seule** : les gravures écrivent une ligne de basse
+    # descendante en ne répétant pas l'accord — « D/F#  /F  B/D# ». Sans
+    # cette branche, le « /F » restait dans l'ancienne tonalité au milieu
+    # d'une étiquette dont le reste était transposé (itération 37).
+    r"|/[A-G][#b]?)\)?$"
 )
 
 # Parenthèses et crochets qui décorent un jeton sans en faire partie.
@@ -147,14 +158,28 @@ def transpose_label(text: str, semitones: int, target_key: str) -> str:
     Une étiquette sans séparateur repasse telle quelle par
     `transpose_chord` : les milliers d'étiquettes déjà publiées gardent
     exactement le rendu qu'elles avaient, y compris les formes que la
-    grammaire stricte refuserait (`Am(maj7`).
+    grammaire stricte refuserait (`Am(maj7`). Elle ne passait donc **pas**
+    par les crochets de bord de `_transpose_run`, et un accord de
+    remplacement écrit entre crochets — `[Gm]`, sur 一粒麦子 — ressortait
+    verbatim au milieu d'une rangée transposée (itération 43). On ne pèle
+    qu'en **second recours**, quand `transpose_chord` a rendu le texte
+    inchangé : à un décalage non nul, un accord qu'il a su lire change
+    toujours de nom, donc l'égalité vaut échec.
 
     Miroir exact de `transposeLabel` dans `src/lib/transpose.ts`. Les deux
     doivent bouger ensemble, comme `access.ts` et `firestore.rules`.
     """
     parts = LABEL_SPLIT.split(text)
     if len(parts) == 1:
-        return transpose_chord(text, semitones, target_key)
+        direct = transpose_chord(text, semitones, target_key)
+        if direct != text:
+            return direct
+        m = EDGE_BRACKETS.match(text)
+        if m:
+            lead, core, tail = m.groups()
+            if core and CHORD_TOKEN.match(core):
+                return lead + transpose_chord(core, semitones, target_key) + tail
+        return text
     return "".join(
         part if i % 2 else _transpose_run(part, semitones, target_key)
         for i, part in enumerate(parts)
@@ -196,10 +221,15 @@ def render(slug: str, target_key: str, diag: bool = False) -> str:
         dr.rectangle([x0 - 3, y0 - 9, x1 + 4, y1 + 2], fill=(255, 255, 255))
         # Calage sur la ligne de base, pas sur le haut du cadre.
         text = transpose_label(label["c"], semitones, target_key)
+        # `fh` : le corps propre à cette étiquette, quand elle n'est pas
+        # gravée au corps de la page. Sans lui, une ligne d'intro réécrite
+        # au corps des couplets déborde sur les crédits.
+        own = label.get("fh")
+        pair = (load_font(int(own * 1.35)), load_font(int(own * 1.35), cjk=True)) if own else (font, font_cjk)
         dr.text(
             (x0, y1),
             text,
-            font=font_cjk if any(ord(ch) > 127 for ch in text) else font,
+            font=pair[1] if any(ord(ch) > 127 for ch in text) else pair[0],
             fill=(0, 0, 0),
             anchor="ls",
         )
