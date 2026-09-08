@@ -32,7 +32,8 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 IMAGES = os.path.join(HERE, "..", "..", "public", "jianpu")
 GOLD = os.path.join(HERE, "gold")
 
-KEYS = ("x", "y", "w", "h", "c")
+# `fh` n'est présent que sur les étiquettes qui portent leur propre corps.
+KEYS = ("x", "y", "w", "h", "c", "fh")
 
 
 def freeze(slug: str, entry: dict) -> str:
@@ -45,7 +46,7 @@ def freeze(slug: str, entry: dict) -> str:
     if gold.get("frozen_labels"):
         return "déjà gelé"
 
-    gold["frozen_labels"] = [{k: l[k] for k in KEYS} for l in entry["labels"]]
+    gold["frozen_labels"] = [{k: l[k] for k in KEYS if k in l} for l in entry["labels"]]
     with open(path, "w", encoding="utf8") as fh:
         json.dump(gold, fh, ensure_ascii=False, indent=1)
     return f"{len(gold['frozen_labels'])} étiquettes gelées"
