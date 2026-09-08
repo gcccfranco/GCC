@@ -247,41 +247,218 @@ def _trim(a: np.ndarray) -> np.ndarray | None:
 
 SUP_RE = re.compile(r"^(.*?)(\(.*\)|\d+)$")
 
+# Une altération qui suit une lettre de note. C'est la seule position où
+# elle peut être gravée en exposant : le bémol antéposé des recueils chinois
+# (« ♭B ») est sur la ligne, pas au-dessus.
+ACCIDENTAL_RE = re.compile(r"(?<=[A-G])([#b♯♭])")
 
-def _render(text: str, font, small, superscript: bool) -> np.ndarray | None:
-    """Grave l'étiquette, à plat ou avec l'enrichissement en exposant.
+# Hauteur et corps des morceaux surélevés, en fraction du corps de ligne.
+#
+# Le chiffrage (« D⁷ ») et l'altération (« B/D♯ ») ne se gravent pas pareil,
+# et c'est ce qui a fait échouer le premier essai (itération 46) : le
+# gabarit à altération surélevée, dessiné avec la géométrie du chiffrage —
+# 0,62 de corps —, gagnait 20 amas et en perdait 13. Balayé sur les 2311
+# étiquettes de vérité terrain, ce couple-là est le **plus mauvais coin de
+# la grille** (+4) ; le corpus veut une altération à peu près de la taille
+# de la lettre, seulement remontée (+22). Le maximum brut est ailleurs
+# (0,24 / 0,88, +26) mais ses voisins tombent à +14 : c'est du bruit, et on
+# ne le suit pas.
+RISE = 0.38
+SMALL = 0.62
+ACC_RISE = 0.36
+ACC_SMALL = 1.0
 
-    Les deux gravures existent dans le corpus — 何等恩典 écrit « D7 » sur la
-    ligne, 主的喜乐是我力量 écrit « B » avec un 7 surélevé. On propose les
-    deux au gabarit, c'est l'image qui tranche.
+
+def _tail_sup(segments: list) -> list | None:
+    """Le dernier morceau — chiffrage ou parenthèse — passé en exposant."""
+    text, raised = segments[-1]
+    if raised:
+        return None
+    m = SUP_RE.match(text)
+    if not m or not m.group(1):
+        return None
+    return segments[:-1] + [(m.group(1), 0), (m.group(2), 1)]
+
+
+def _sup_accidentals(segments: list) -> list | None:
+    """Chaque altération relevée au-dessus de la ligne.
+
+    Trois des quatre pages relues à l'itération 45 gravent ainsi — « B/D♯ »
+    porte son dièse à hauteur d'exposant — et c'est le seul motif où le
+    matcher se trompait plus souvent qu'il ne réussissait : neuf des
+    quatorze amas de 叫我抬起头的神 étaient lus faux, `E/G#` pour `B/D#`.
+    Le gabarit ne le proposait pas : l'exposant ne s'appliquait qu'au
+    chiffrage final, jamais à l'altération.
     """
+    out, changed = [], False
+    for text, raised in segments:
+        if raised:
+            out.append((text, raised))
+            continue
+        parts = ACCIDENTAL_RE.split(text)
+        for i, part in enumerate(parts):
+            if not part:
+                continue
+            out.append((part, 2 if i % 2 else 0))
+            changed = changed or bool(i % 2)
+    return out if changed else None
+
+
+def _gravures(text: str, risers: bool = True) -> list:
+    """Toutes les gravures plausibles de l'étiquette, en morceaux
+    `(texte, surélevé)`. On les propose toutes au gabarit, c'est l'image qui
+    tranche — 何等恩典 écrit « D7 » sur la ligne, 主的喜乐是我力量 écrit
+    « B » avec un 7 surélevé, 叫我抬起头的神 écrit « B/D » avec un ♯ surélevé.
+    """
+    out = [[(text, 0)]]
+    for build in (_tail_sup, _sup_accidentals) if risers else (_tail_sup,):
+        for segments in list(out):
+            grave = build(segments)
+            if grave and grave not in out:
+                out.append(grave)
+    return out
+
+
+def _runs(text: str, primary: tuple[str, int], fallback: tuple[str, int]):
+    """Le texte découpé en suites de caractères que la **même** fonte dessine.
+
+    Une gravure réelle fait exactement cela : le graveur compose ses lettres
+    dans sa fonte de texte et va chercher le bémol dans une fonte qui en a
+    un. Le rendu suivait l'autre voie — tout dans la fonte de la page — et
+    rendait donc un rectangle vide à la place du signe (voir `drawable`).
+    """
+    out, current = [], None
+    for char in text:
+        which = primary if drawable(*primary, char) else fallback
+        if current and current[0] is which:
+            current[1].append(char)
+        else:
+            current = (which, [char])
+            out.append(current)
+    return [(which, "".join(chars)) for which, chars in out]
+
+
+def _render(segments: list, fonts: dict) -> np.ndarray | None:
     im = Image.new("L", (FONT_SIZE * 10, FONT_SIZE * 3), 0)
     dr = ImageDraw.Draw(im)
-    if not superscript:
-        dr.text((FONT_SIZE, FONT_SIZE), text, fill=255, font=font, anchor="ls")
-    else:
-        m = SUP_RE.match(text)
-        if not m or not m.group(1):
-            return None
-        base, sup = m.groups()
-        dr.text((FONT_SIZE, FONT_SIZE), base, fill=255, font=font, anchor="ls")
-        x = FONT_SIZE + dr.textlength(base, font=font)
-        dr.text((x, FONT_SIZE - int(FONT_SIZE * 0.38)), sup, fill=255, font=small, anchor="ls")
+    x = float(FONT_SIZE)
+    for text, kind in segments:
+        primary, fallback, size, rise = fonts[kind]
+        for which, run in _runs(text, primary, fallback):
+            font = _sized(which[0], which[1], size)
+            dr.text((x, FONT_SIZE - rise), run, fill=255, font=font, anchor="ls")
+            x += dr.textlength(run, font=font)
     return _trim(np.asarray(im) > 100)
 
 
+# Gravures d'une étiquette **flanquée de sa parenthèse**. Le découpage
+# soude la parenthèse au nom — « (C », « D/F#) », « ( Em7b5 » — et la
+# signature ne ressemble alors plus à aucun gabarit : une rangée
+# d'alternatives n'apparie rien, donc aucun test ne la voit. C'est le point
+# aveugle qui a rendu les rangées parenthésées des itérations 29, 34, 36 et
+# 37 trouvables à l'œil seulement.
+PAREN_WRAPS = ("({})", "({}", "{})", "( {}", "{} )")
+
+
+#: Fonte de recours pour les signes qu'une gravure emploie et qu'une fonte de
+#: texte n'a pas — le bémol et le dièse musicaux. Une par famille, pour que le
+#: signe reste du même dessin que les lettres qui l'entourent.
+FALLBACK = {
+    "lineale": (SUP + "Arial Unicode.ttf", 0),
+    "grasse": (SUP + "Arial Unicode.ttf", 0),
+    "serif": (SUP + "STIXGeneral.otf", 0),
+}
+
+def _family_of(font_path: str, index: int) -> str:
+    """Famille d'une fonte, de référence comme de jury.
+
+    Elle ne sert qu'à choisir le recours : un signe emprunté à une linéale au
+    milieu d'un mot à empattements se voit, et fausserait la comparaison
+    autant que le rectangle qu'il remplace.
+    """
+    for path, i, family in FACES.values():
+        if (path, i) == (font_path, index):
+            return family
+    for family, jury in JURIES.items():
+        if (font_path, index) in jury:
+            return family
+    return "lineale"
+
+
+_SIZED: dict[tuple[str, int, int], ImageFont.FreeTypeFont] = {}
+
+
+def _sized(path: str, index: int, size: int) -> ImageFont.FreeTypeFont:
+    key = (path, index, size)
+    if key not in _SIZED:
+        _SIZED[key] = ImageFont.truetype(path, max(1, size), index=index)
+    return _SIZED[key]
+
+
+_DRAWABLE: dict[tuple[str, int, str], bool] = {}
+
+
+def drawable(font_path: str, index: int, text: str) -> bool:
+    """La fonte sait-elle dessiner **tous** les caractères de ce texte ?
+
+    Sinon FreeType rend le `.notdef` — le rectangle vide, « tofu » —, et ce
+    rectangle devient un gabarit comme un autre : une grosse tache d'encre
+    pleine, qui s'apparie à peu près à tout et qui ne ressemble à rien de ce
+    que la page grave.
+
+    Le cas n'est pas marginal, c'est le cas central : sur les sept fontes de
+    `FACES` et les six du jury, **une seule dessine le bémol musical**
+    (U+266D) et quatre le dièse (U+266F). Or `spellings()` propose « ♭B » et
+    « B♭ » depuis l'itération 5, précisément pour lire les recueils chinois
+    qui écrivent le bémol devant la lettre : ces gabarits-là n'ont jamais été
+    autre chose que des rectangles. L'inégalité de couverture faisait pire
+    que du bruit — `helvetica-neue` lisait un vrai dièse là où deux de ses
+    trois jurés lisaient un tofu, donc la rangée était juste **et** rejetée
+    faute d'unanimité (祷告, 44 amas au seuil et 23 publiés).
+
+    Sert à choisir, caractère par caractère, entre la fonte de la page et la
+    fonte de recours — voir `_render`.
+    """
+    for char in set(text):
+        if char.isascii():
+            continue
+        key = (font_path, index, char)
+        if key not in _DRAWABLE:
+            font = ImageFont.truetype(font_path, FONT_SIZE, index=index)
+            im = Image.new("L", (FONT_SIZE * 3, FONT_SIZE * 3), 0)
+            ImageDraw.Draw(im).text((FONT_SIZE, FONT_SIZE * 2), char, fill=255,
+                                    font=font, anchor="ls")
+            glyph = _trim(np.asarray(im) > 100)
+            im = Image.new("L", (FONT_SIZE * 3, FONT_SIZE * 3), 0)
+            ImageDraw.Draw(im).text((FONT_SIZE, FONT_SIZE * 2), "￿", fill=255,
+                                    font=font, anchor="ls")
+            notdef = _trim(np.asarray(im) > 100)
+            _DRAWABLE[key] = glyph is not None and not (
+                notdef is not None and glyph.shape == notdef.shape and (glyph == notdef).all()
+            )
+        if not _DRAWABLE[key]:
+            return False
+    return True
+
+
 def build_templates(
-    vocab: list[str], semitones: int = 0, font_path: str = FONT, index: int = 0
+    vocab: list[str], semitones: int = 0, font_path: str = FONT, index: int = 0,
+    wraps: tuple[str, ...] = ("{}",), risers: bool = True,
 ) -> dict[str, list]:
-    font = ImageFont.truetype(font_path, FONT_SIZE, index=index)
-    small = ImageFont.truetype(font_path, int(FONT_SIZE * 0.62), index=index)
+    primary = (font_path, index)
+    fallback = FALLBACK[_family_of(font_path, index)]
+    fonts = {
+        0: (primary, fallback, int(FONT_SIZE), 0),
+        1: (primary, fallback, int(FONT_SIZE * SMALL), int(FONT_SIZE * RISE)),
+        2: (primary, fallback, int(FONT_SIZE * ACC_SMALL), int(FONT_SIZE * ACC_RISE)),
+    }
     out: dict[str, list] = {}
     for chord in vocab:
         sigs = []
         for variant in transpose(chord, semitones):
-            for text in spellings(variant):
-                for superscript in (False, True):
-                    bitmap = _render(text, font, small, superscript)
+            for text in (w.format(t) for t in spellings(variant) for w in wraps):
+                for segments in _gravures(text, risers):
+                    bitmap = _render(segments, fonts)
                     if bitmap is None:
                         continue
                     full, head, ratio = signature(bitmap)
@@ -295,6 +472,19 @@ def build_templates(
 def face_bank(vocab: list[str], semitones: int, face: str) -> dict[str, list]:
     path, index, _family = FACES[face]
     return build_templates(vocab, semitones, path, index)
+
+
+def detector_bank(vocab: list[str], semitones: int, face: str) -> dict[str, list]:
+    """Le banc de `face_bank`, plus chaque accord flanqué de sa parenthèse.
+
+    **Il ne sert qu'à détecter, jamais à publier.** Un faux positif y coûte
+    une planche à regarder ; une rangée d'alternatives manquée coûte une page
+    à deux tonalités, qui est pire que pas de calque du tout. Les deux
+    erreurs n'ont pas le même prix, donc les deux bancs n'ont pas le même
+    réglage — c'est la seule raison pour laquelle il y en a deux.
+    """
+    path, index, _family = FACES[face]
+    return build_templates(vocab, semitones, path, index, wraps=("{}",) + PAREN_WRAPS)
 
 
 def song_face(slug: str) -> str:
@@ -389,8 +579,72 @@ def confirm_candidates(slug, ink, feats, kinds):
     return out
 
 
+# Part de la hauteur de bande dont on accepte de déborder pour récupérer
+# l'encre d'une étiquette que le découpage coupe. Le chiffrage surélevé
+# (« Gmaj⁷ ») et la hampe d'un bémol montent au-dessus du haut de bande, et
+# la bande, elle, est taillée sur la masse d'encre de la rangée.
+GROW = 0.30
+# Encre minimale d'une ligne récupérée, en part de la largeur de l'amas.
+#
+# Toute l'encre qui dépasse n'est pas bonne à prendre — la **barre oblique**
+# de « C/G » monte au-dessus des lettres sur 全新的你, et les gabarits n'en
+# ont pas de si haute. Mais le plancher qui l'écarterait (0,04 et au-delà)
+# coûte bien plus qu'il ne rapporte : balayé sur la vérité terrain, il fait
+# retomber les amas durs de 225 à 211 et **remonte le mode C de 3 à 8**.
+# Il ne reste donc de ce plancher que ce qui est gratuit : rejeter la ligne
+# d'un ou deux pixels isolés, qui n'est le glyphe de personne.
+GROW_MIN_INK = 0.02
+# Déborder par le **bas** est ce qui compte, et c'est l'inverse de ce qu'on
+# croit en regardant la page. Le raisonnement naturel — « ce qui distingue un
+# accord, c'est le chiffrage surélevé, donc c'est en haut que la bande
+# coupe » — est faux : par le haut seul, la vérité terrain ne bouge presque
+# pas (205/261 contre 203 sans rien, mode C toujours à 8) ; par les deux,
+# elle passe à 225 et le mode C tombe à 3. Ce que la bande ampute, ce sont
+# les **jambages** — le « j » de `Gmaj7` et de `Dmaj7`, dont la queue tombe
+# sous la ligne de base. Un « Gmaj7 » sans sa queue de j a `F#m7` pour plus
+# proche voisin, à +0,42 et unanime.
+GROW_BAS = True
+
+
+def _grow(ink, top: int, bottom: int, x0: int, x1: int) -> tuple[int, int]:
+    """Rend les bornes verticales de l'étiquette, débordement compris.
+
+    On part des bornes de la bande et l'on **suit l'encre** : tant que la
+    ligne juste au-dessus (ou au-dessous) porte de l'encre dans les colonnes
+    de l'amas, elle appartient au même glyphe et on la prend. La première
+    ligne blanche arrête tout, ce qui empêche d'avaler la rangée voisine ;
+    et `GROW` borne la course, pour le cas d'une page si dense qu'il n'y a
+    aucune ligne blanche entre deux rangées.
+    """
+    marge = max(2, int(round((bottom - top + 1) * GROW)))
+    col = ink[:, x0 : x1 + 1]
+    plancher = max(1.0, GROW_MIN_INK * (x1 - x0 + 1))
+    haut, bas = top, bottom
+    while haut > 0 and top - haut < marge and col[haut - 1].sum() >= plancher:
+        haut -= 1
+    while (GROW_BAS and bas + 1 < ink.shape[0] and bas - bottom < marge
+           and col[bas + 1].sum() >= plancher):
+        bas += 1
+    return haut, bas
+
+
 def crop_labels(slug: str):
-    """Imagettes des étiquettes, telles que le classifieur les a découpées."""
+    """Imagettes des étiquettes, telles que le classifieur les a découpées —
+    **plus ce que le découpage leur coupait**.
+
+    La bande d'une rangée est taillée sur sa **masse** d'encre, donc sur le
+    corps des lettres : ce qui dépasse — la queue du « j » de `Gmaj7`, le
+    haut d'un chiffrage surélevé, les deux bouts d'une barre oblique — se
+    fait trancher. Le matcher recevait alors des mots amputés : un `Gmaj7`
+    sans sa queue de j a `F#m7` pour plus proche voisin, à +0,42 et
+    unanime. **Cinq des huit seuls accords faux publiés du corpus venaient
+    de là** (itération 47).
+
+    C'est le même défaut que `haut_grave` (itération 44) corrigeait sur la
+    boîte **publiée** : la découverte n'avait pas été portée jusqu'au
+    découpage qui nourrit la lecture, si bien qu'on dessinait au bon endroit
+    ce qu'on avait mal lu.
+    """
     path = os.path.join(IMAGES, f"{slug}-p1.webp")
     ink = np.asarray(Image.open(path).convert("L")) < INK_THRESHOLD
     _ink, _w, feats, kinds = classify(path)
@@ -403,7 +657,8 @@ def crop_labels(slug: str):
             continue
         cells = []
         for x0, x1 in f["clusters"]:
-            sub = ink[f["top"] : f["bottom"] + 1, x0 : x1 + 1]
+            haut, bas = _grow(ink, f["top"], f["bottom"], x0, x1)
+            sub = ink[haut : bas + 1, x0 : x1 + 1]
             ys, xs = np.where(sub.any(1))[0], np.where(sub.any(0))[0]
             if len(ys) and len(xs):
                 cells.append(((x0, x1), sub[ys[0] : ys[-1] + 1, xs[0] : xs[-1] + 1]))
