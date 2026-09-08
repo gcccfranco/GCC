@@ -4216,3 +4216,88 @@ préexistants, 0 erreur). Banc du matcher regelé à 260/303 durs · 85 publiabl
   `extra_label` comme un accord ordinaire.
 - **La planche d'audit se lit deux fois et se voit une fois** — inchangé depuis
   l'itération 45, et cette itération en donne le pire exemple.
+
+### Itération 51 — un `git checkout` sur un fichier jamais commité
+
+Cette itération n'a pas produit de calque. Elle a réparé une perte, et ce qu'elle
+apprend tient à la façon dont la perte est arrivée.
+
+**Ce qui s'est passé.** En cherchant la quatrième façon pour une rangée de
+disparaître (itération 50), j'ai modifié `worklist.py`, mesuré que le changement
+était **inerte**, et voulu l'annuler par `git checkout scripts/jianpu/worklist.py`.
+Le fichier portait le travail non commité des itérations 39 à 48 —
+`welded_rows`, `orphan_rows`, `suspects`, `_Bench`, `_vetoed`, la passe
+`--certifiées`. Git a restitué la version du dépôt et détruit le reste. Aucune
+copie n'a survécu : stash, blobs pendants (`git fsck`), autres clones, historique
+de l'éditeur, instantanés APFS, Time Machine (aucune destination), iCloud (le
+Bureau *est* l'iCloud Drive, et la version annulée y était déjà synchronisée).
+
+Quatre scripts en dépendaient : `propose-extra` et `audit-page` ne s'importaient
+plus, `build-chords.mode_d` aurait planté sur la première page non gelée à
+franchir le plancher, et `worklist` avait perdu deux de ses trois chasses.
+`chords.json`, lui, était intact au bit près — les 97 calques publiés ne
+dépendent d'aucun de ces outils.
+
+**Ce qui a permis la reconstruction.** Trois traces, et aucune n'est le code :
+
+- le **cache AST de graphify** garde la structure du fichier perdu — noms,
+  ordre, bornes de lignes, première ligne de chaque docstring. Il dit
+  exactement ce qu'il y avait et où, sans en dire le contenu ;
+- **`LOOP.md` décrit chaque chasse** avec assez de précision pour la réécrire :
+  la fenêtre de la hauteur d'une rangée promenée de quatre en quatre pixels,
+  la part comptée sur ce qui n'est pas déjà publié, la règle du tout ou rien,
+  le plancher de taille des amas ;
+- le texte intégral de `hidden_rows` et `_overlaps`, relu en séance.
+
+*Le journal a servi de sauvegarde du code.* Ce n'était pas son objet, et c'est
+la meilleure justification qu'il ait reçue.
+
+**Ce qui ne se reconstruit pas.** Les seuils. `HIDDEN_MIN_HEIGHT` a été
+**remesuré** sur les 562 rangées d'accords publiantes des 97 pages certifiées :
+la plus basse fait 10 px, le premier centile 18 ; le plancher se pose à 10. Il
+est marqué comme remesuré dans le fichier, parce qu'un seuil redérivé n'est pas
+un seuil retrouvé.
+
+**Et un seuil qui ne peut pas exister.** `welded_rows` reconstruit signalait
+d'abord treize pages certifiées, toutes des rangées de 简谱 : les « 0 » de
+我们高举耶稣的名 s'apparient **16/16**, un zéro ayant le dessin d'un C ou d'un D.
+La garde manquante est celle que l'itération 45 nommait déjà — « `welded_rows`
+partage ces gardes » — le **plafond du nombre d'amas** : une rangée de chiffres
+en compte une trentaine, une rangée d'accords cinq. Elle ramène à quatre
+fenêtres.
+
+Ces quatre-là ont été rendues et regardées : le titre de 何等恩典, trois
+tranches de rangées de chiffres. Fausses. Mais la tentation de les écarter par
+un seuil de part se heurte à une mesure : en masquant les rangées vraies que
+l'itération 39 avait trouvées, la fenêtre les retrouve à **4/5** sur 全新的你 et
+à **2/4** sur 我们欢迎君王降临 — or le titre de 何等恩典 sort lui aussi à
+**2/4**. *La part ne sépare pas les deux populations.* On ne l'a donc pas
+réglée ; les quatre fenêtres sont passées en `not_rows`, qui est le champ prévu
+pour « l'œil a déjà tranché », et l'invariant des itérations 45 à 50 —
+zéro rangée cachée, soudée ou orpheline sur les pages certifiées — tient de
+nouveau.
+
+**Bilan.** Aucun changement de données : `chords.json` identique au bit près,
+97 calques, 97 certifiés, 3 987 étiquettes. Les **389 tests Playwright**
+passent, ainsi que `npx tsc --noEmit` et `npm run lint`. `suspects` recense
+114 amas sur 33 pages (199 sur 91 calques à l'itération 48 : les itérations 49
+et 50 en ont relu cent vingt à l'œil).
+
+**Ce qui reste, nommé.**
+
+- **`welded_rows` est plus bavard que l'original.** Quatre faux positifs
+  neutralisés par `not_rows` au lieu de zéro par construction. La différence
+  n'est pas mesurable — l'original est perdu — mais elle est réelle et elle est
+  écrite ici.
+- **Le travail non commité est le seul point de défaillance unique de cette
+  boucle.** Quarante itérations vivaient dans l'arbre de travail. Elles sont
+  commitées depuis (branche `jianpu/iterations-37-50`, un commit par fichier).
+- **38 pages sans calque**, inchangé : cette itération n'a ouvert aucune page.
+- **La rangée détectée mais muette n'a toujours pas d'outil**, et l'itération
+  a montré pourquoi elle n'en aura pas de ce côté-ci : toutes les chasses
+  reposent sur « la bande s'apparie-t-elle au vocabulaire ? », et une rangée
+  muette est celle où l'appariement échoue. Le recensement structurel des
+  rangées typées `chords` qui ne publient rien donne **41 rangées sur les 97
+  calques, toutes du bruit** (arcs, barres de croches, points d'octave,
+  paroles, un titre anglais) — regardées une par une sur planche. C'est donc
+  un contrôle qui se fait à l'œil, une fois par balayage, pas un filtre.
