@@ -1,10 +1,325 @@
 {
-  "slug": "荣耀的呼召",
-  "key_label": {
-    "x": 33,
-    "y": 209,
-    "w": 84,
-    "h": 31
+ "slug": "荣耀的呼召",
+ "key_label": {
+  "x": 33,
+  "y": 209,
+  "w": 84,
+  "h": 31
+ },
+ "key_label_verified": "mesure measure-keylabel (ancrage sur le « = », cadre = voisin gauche…voisin droit), zoom relu à l’œil sur planche de lot, lettre gravée confrontée à printedKey, 2026-08-26 (itération 35)",
+ "corrections": {
+  "612,863": "Bb/C",
+  "879,147": "C/E",
+  "879,687": "Bb",
+  "1164,115": "C/E",
+  "1164,819": "Bb/C",
+  "1438,805": "Bb/C"
+ },
+ "corrections_verified": "six amas laissés entre −0,08 et +0,75 par le matcher, même gravure à bémol exposant — relus au zoom sur planche de lot (propose-extra --all --hidden), 2026-09-05 (itération 44)",
+ "not_labels": [
+  "1712,1116",
+  "879,15"
+ ],
+ "not_labels_verified": "le segno 𝄋 (879,15) et le « D.S. al Fine » (1712,1116), gravés sur la rangée d'accords elle-même — relus au zoom, 2026-09-05 (itération 44)",
+ "not_rows": [
+  209
+ ],
+ "not_rows_verified": "le **bloc de titre** (y=209) : « 1=F », le chiffrage 4/4, « Glorious Calling », l'indication ♩=66 et la signature « 曾祥怡 词/曲 » — bandes rendues à l'œil, 2026-09-05 (itération 44)",
+ "verified": "transposé F→F# dans Chrome headless (npm run jianpu:audit, 7 tranches relues) : 42 accords sur les six rangées, tous encadrés, plus le cadre « 1=F » → « 1=F# » · même gravure à bémol exposant que 我要全心赞美, mêmes hampes couvertes · le bloc de titre typé `chords` écarté en `not_rows`, le segno 𝄋 et le « D.S. al Fine » laissés intacts · 2026-09-05 (itération 44)",
+ "frozen_labels": [
+  {
+   "x": 149,
+   "y": 334,
+   "w": 15,
+   "h": 30,
+   "c": "F"
   },
-  "key_label_verified": "mesure measure-keylabel (ancrage sur le « = », cadre = voisin gauche…voisin droit), zoom relu à l’œil sur planche de lot, lettre gravée confrontée à printedKey, 2026-08-26 (itération 35)"
+  {
+   "x": 242,
+   "y": 324,
+   "w": 35,
+   "h": 40,
+   "c": "Bb"
+  },
+  {
+   "x": 462,
+   "y": 334,
+   "w": 51,
+   "h": 30,
+   "c": "Am"
+  },
+  {
+   "x": 557,
+   "y": 334,
+   "w": 51,
+   "h": 30,
+   "c": "Dm"
+  },
+  {
+   "x": 741,
+   "y": 324,
+   "w": 34,
+   "h": 40,
+   "c": "Bb"
+  },
+  {
+   "x": 838,
+   "y": 334,
+   "w": 23,
+   "h": 30,
+   "c": "G"
+  },
+  {
+   "x": 1034,
+   "y": 334,
+   "w": 88,
+   "h": 30,
+   "c": "Csus4"
+  },
+  {
+   "x": 1162,
+   "y": 334,
+   "w": 22,
+   "h": 30,
+   "c": "C"
+  },
+  {
+   "x": 29,
+   "y": 612,
+   "w": 16,
+   "h": 27,
+   "c": "F"
+  },
+  {
+   "x": 121,
+   "y": 612,
+   "w": 76,
+   "h": 27,
+   "c": "Edim"
+  },
+  {
+   "x": 356,
+   "y": 612,
+   "w": 21,
+   "h": 27,
+   "c": "A"
+  },
+  {
+   "x": 449,
+   "y": 612,
+   "w": 50,
+   "h": 27,
+   "c": "Dm"
+  },
+  {
+   "x": 624,
+   "y": 612,
+   "w": 53,
+   "h": 27,
+   "c": "Gm"
+  },
+  {
+   "x": 863,
+   "y": 599,
+   "w": 70,
+   "h": 40,
+   "c": "Bb/C"
+  },
+  {
+   "x": 1099,
+   "y": 612,
+   "w": 16,
+   "h": 27,
+   "c": "F"
+  },
+  {
+   "x": 1164,
+   "y": 599,
+   "w": 70,
+   "h": 40,
+   "c": "Bb/C"
+  },
+  {
+   "x": 56,
+   "y": 879,
+   "w": 16,
+   "h": 36,
+   "c": "F"
+  },
+  {
+   "x": 147,
+   "y": 879,
+   "w": 55,
+   "h": 36,
+   "c": "C/E"
+  },
+  {
+   "x": 391,
+   "y": 879,
+   "w": 51,
+   "h": 36,
+   "c": "Dm"
+  },
+  {
+   "x": 687,
+   "y": 874,
+   "w": 35,
+   "h": 41,
+   "c": "Bb"
+  },
+  {
+   "x": 782,
+   "y": 879,
+   "w": 53,
+   "h": 36,
+   "c": "Gm"
+  },
+  {
+   "x": 1018,
+   "y": 879,
+   "w": 88,
+   "h": 36,
+   "c": "Csus4"
+  },
+  {
+   "x": 1154,
+   "y": 879,
+   "w": 22,
+   "h": 36,
+   "c": "C"
+  },
+  {
+   "x": 28,
+   "y": 1164,
+   "w": 16,
+   "h": 26,
+   "c": "F"
+  },
+  {
+   "x": 115,
+   "y": 1164,
+   "w": 55,
+   "h": 26,
+   "c": "C/E"
+  },
+  {
+   "x": 375,
+   "y": 1164,
+   "w": 21,
+   "h": 26,
+   "c": "A"
+  },
+  {
+   "x": 470,
+   "y": 1164,
+   "w": 50,
+   "h": 26,
+   "c": "Dm"
+  },
+  {
+   "x": 662,
+   "y": 1164,
+   "w": 54,
+   "h": 26,
+   "c": "Gm"
+  },
+  {
+   "x": 819,
+   "y": 1149,
+   "w": 70,
+   "h": 41,
+   "c": "Bb/C"
+  },
+  {
+   "x": 1087,
+   "y": 1164,
+   "w": 16,
+   "h": 26,
+   "c": "F"
+  },
+  {
+   "x": 22,
+   "y": 1424,
+   "w": 34,
+   "h": 40,
+   "c": "Bb"
+  },
+  {
+   "x": 339,
+   "y": 1438,
+   "w": 52,
+   "h": 26,
+   "c": "Am"
+  },
+  {
+   "x": 487,
+   "y": 1438,
+   "w": 51,
+   "h": 26,
+   "c": "Dm"
+  },
+  {
+   "x": 662,
+   "y": 1438,
+   "w": 54,
+   "h": 26,
+   "c": "Gm"
+  },
+  {
+   "x": 805,
+   "y": 1424,
+   "w": 70,
+   "h": 40,
+   "c": "Bb/C"
+  },
+  {
+   "x": 1010,
+   "y": 1438,
+   "w": 16,
+   "h": 26,
+   "c": "F"
+  },
+  {
+   "x": 23,
+   "y": 1698,
+   "w": 34,
+   "h": 46,
+   "c": "Bb"
+  },
+  {
+   "x": 328,
+   "y": 1712,
+   "w": 51,
+   "h": 32,
+   "c": "Am"
+  },
+  {
+   "x": 476,
+   "y": 1712,
+   "w": 51,
+   "h": 32,
+   "c": "Dm"
+  },
+  {
+   "x": 644,
+   "y": 1712,
+   "w": 53,
+   "h": 32,
+   "c": "Gm"
+  },
+  {
+   "x": 785,
+   "y": 1698,
+   "w": 70,
+   "h": 46,
+   "c": "Bb/C"
+  },
+  {
+   "x": 977,
+   "y": 1712,
+   "w": 16,
+   "h": 32,
+   "c": "F"
+  }
+ ]
 }

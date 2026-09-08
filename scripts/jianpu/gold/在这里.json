@@ -1,25 +1,28 @@
 {
-  "slug": "在这里",
-  "mask_rows": [
-    684,
-    1190
-  ],
-  "mask_rows_verified": "1=F · deux rangées gravées en **sol** au-dessus des rangées réelles en fa (y=744, y=1260). Trouvées par foreign-scan --large, paires relues côte à côte. Itération 31 (2026-08-22)",
-  "extra_labels": [
-    {
-      "x": 1033,
-      "y": 1864,
-      "w": 98,
-      "h": 26,
-      "c": "【升G调】"
-    }
-  ],
-  "extra_composites_verified": "étiquettes composites (或 / 代替 / 先…后 / groupe entre parenthèses), lues à l’œil sur planche de lot et écrites telles qu’imprimées ; `transpose_label` réécrit la ligne entière. 2026-08-25 (itération 34)",
-  "key_label": {
-    "x": 15,
-    "y": 247,
-    "w": 67,
-    "h": 22
-  },
-  "key_label_verified": "mesure measure-keylabel (ancrage sur le « = », cadre = voisin gauche…voisin droit), zoom relu à l’œil sur planche de lot, lettre gravée confrontée à printedKey, 2026-08-26 (itération 35)"
+ "slug": "在这里",
+ "mask_rows": [
+  684,
+  1190
+ ],
+ "mask_rows_verified": "1=F · deux rangées gravées en **sol** au-dessus des rangées réelles en fa (y=744, y=1260). Trouvées par foreign-scan --large, paires relues côte à côte. Itération 31 (2026-08-22)",
+ "extra_labels": [
+  {
+   "x": 1033,
+   "y": 1864,
+   "w": 98,
+   "h": 26,
+   "c": "【升G调】"
+  }
+ ],
+ "extra_composites_verified": "étiquettes composites (或 / 代替 / 先…后 / groupe entre parenthèses), lues à l’œil sur planche de lot et écrites telles qu’imprimées ; `transpose_label` réécrit la ligne entière. 2026-08-25 (itération 34)",
+ "key_label": {
+  "x": 15,
+  "y": 247,
+  "w": 67,
+  "h": 22
+ },
+ "key_label_verified": "mesure measure-keylabel (ancrage sur le « = », cadre = voisin gauche…voisin droit), zoom relu à l’œil sur planche de lot, lettre gravée confrontée à printedKey, 2026-08-26 (itération 35)",
+ "face": "verdana-bold",
+ "face_verified": "balayage de fonte croisé : sweep-key.py (veto + marge) et le compteur de couverture de build-chords désignent la même fonte, à tonalité inchangée — 2026-09-08 (itération 50). À confirmer par la planche d'audit avant certification.",
+ "en_chantier": "deux jeux d'accords empilés par système (capo en ré au-dessus des accords réels en fa, deux rangées déjà en mask_rows) et un 【升G调】 sur la dernière rangée ; 13 amas restent à relire, dont trois (A, A/C#, D à y≈1875) dont on ne sait pas encore s'ils appartiennent à la rangée de capo ou aux accords joués. À traiter avec la question des pages à deux tonalités, pas comme une page ordinaire (itérations 48, 49, 50)"
 }

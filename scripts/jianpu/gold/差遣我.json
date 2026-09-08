@@ -7,5 +7,279 @@
   "w": 77,
   "h": 24
  },
- "key_label_verified": "mesure measure-keylabel (vote 1= + lettre attendue), zoom relu à l’œil sur planche de lot, lettre confrontée à printedKey, 2026-08-22"
+ "key_label_verified": "mesure measure-keylabel (vote 1= + lettre attendue), zoom relu à l’œil sur planche de lot, lettre confrontée à printedKey, 2026-08-22",
+ "corrections": {
+  "266,238": "D/F#",
+  "266,672": "Bm/D",
+  "266,953": "Am/G",
+  "549,243": "D/F#",
+  "549,680": "Bm/D",
+  "549,979": "Am/G",
+  "831,319": "Em/D",
+  "831,949": "Em/D",
+  "1105,516": "Em/D#",
+  "1105,803": "Em/D",
+  "1396,1122": "Em/D#",
+  "1680,66": "Em/D"
+ },
+ "corrections_verified": "les douze amas restants relus au zoom sur planche propose-extra --all --hidden, 2026-09-06 (itération 48). Tous étaient **lus juste** et rejetés par le seuil : ce sont les accords à basse (`D/F#`, `Bm/D`, `Am/G`, `Em/D`, `Em/D#`), dont la barre oblique coûte assez de chasse pour passer sous la barre.",
+ "not_labels": [
+  "1105,71"
+ ],
+ "not_labels_verified": "« 【Chorus】 » — marque de section posée sur la rangée d'accords, à la hauteur des accords. Lue `C#m7b5` à +0,16. 2026-09-06 (itération 48)",
+ "verified": "transposé G→Ab dans Chrome headless (npm run jianpu:audit, 6 tranches relues) : 36 accords sur les six rangées, tous encadrés de rouge, aucun cadre orange, plus le cadre « 1= G » → « 1=Ab » · les douze amas restants étaient tous **lus juste** et rejetés par le seuil — des accords à basse (`D/F#`, `Bm/D`, `Am/G`, `Em/D`, `Em/D#`) · « 【Chorus】 » écarté en not_labels · page ouverte par le plancher de taille de `suspects` (itération 48), qui comptait ses trois barres de mesure de 2 × 10 px comme des accords à relire · 2026-09-06 (itération 48)",
+ "frozen_labels": [
+  {
+   "x": 49,
+   "y": 266,
+   "w": 18,
+   "h": 29,
+   "c": "G"
+  },
+  {
+   "x": 238,
+   "y": 266,
+   "w": 62,
+   "h": 29,
+   "c": "D/F#"
+  },
+  {
+   "x": 442,
+   "y": 266,
+   "w": 39,
+   "h": 29,
+   "c": "Em"
+  },
+  {
+   "x": 672,
+   "y": 266,
+   "w": 77,
+   "h": 29,
+   "c": "Bm/D"
+  },
+  {
+   "x": 792,
+   "y": 266,
+   "w": 44,
+   "h": 29,
+   "c": "Am"
+  },
+  {
+   "x": 953,
+   "y": 266,
+   "w": 79,
+   "h": 29,
+   "c": "Am/G"
+  },
+  {
+   "x": 1170,
+   "y": 266,
+   "w": 17,
+   "h": 29,
+   "c": "D"
+  },
+  {
+   "x": 52,
+   "y": 549,
+   "w": 18,
+   "h": 28,
+   "c": "G"
+  },
+  {
+   "x": 243,
+   "y": 549,
+   "w": 62,
+   "h": 28,
+   "c": "D/F#"
+  },
+  {
+   "x": 449,
+   "y": 549,
+   "w": 39,
+   "h": 28,
+   "c": "Em"
+  },
+  {
+   "x": 680,
+   "y": 549,
+   "w": 76,
+   "h": 28,
+   "c": "Bm/D"
+  },
+  {
+   "x": 813,
+   "y": 549,
+   "w": 44,
+   "h": 28,
+   "c": "Am"
+  },
+  {
+   "x": 979,
+   "y": 549,
+   "w": 79,
+   "h": 28,
+   "c": "Am/G"
+  },
+  {
+   "x": 1193,
+   "y": 549,
+   "w": 31,
+   "h": 28,
+   "c": "B7"
+  },
+  {
+   "x": 160,
+   "y": 831,
+   "w": 39,
+   "h": 29,
+   "c": "Em"
+  },
+  {
+   "x": 319,
+   "y": 831,
+   "w": 74,
+   "h": 29,
+   "c": "Em/D"
+  },
+  {
+   "x": 538,
+   "y": 831,
+   "w": 18,
+   "h": 29,
+   "c": "A"
+  },
+  {
+   "x": 790,
+   "y": 831,
+   "w": 39,
+   "h": 29,
+   "c": "Em"
+  },
+  {
+   "x": 949,
+   "y": 831,
+   "w": 74,
+   "h": 29,
+   "c": "Em/D"
+  },
+  {
+   "x": 1167,
+   "y": 831,
+   "w": 84,
+   "h": 29,
+   "c": "Cmaj7"
+  },
+  {
+   "x": 1302,
+   "y": 831,
+   "w": 17,
+   "h": 29,
+   "c": "D"
+  },
+  {
+   "x": 275,
+   "y": 1105,
+   "w": 39,
+   "h": 37,
+   "c": "Em"
+  },
+  {
+   "x": 516,
+   "y": 1105,
+   "w": 90,
+   "h": 37,
+   "c": "Em/D#"
+  },
+  {
+   "x": 803,
+   "y": 1105,
+   "w": 74,
+   "h": 37,
+   "c": "Em/D"
+  },
+  {
+   "x": 1084,
+   "y": 1105,
+   "w": 111,
+   "h": 37,
+   "c": "C#m7b5"
+  },
+  {
+   "x": 74,
+   "y": 1396,
+   "w": 15,
+   "h": 28,
+   "c": "C"
+  },
+  {
+   "x": 226,
+   "y": 1396,
+   "w": 51,
+   "h": 28,
+   "c": "G/B"
+  },
+  {
+   "x": 475,
+   "y": 1396,
+   "w": 43,
+   "h": 28,
+   "c": "Am"
+  },
+  {
+   "x": 666,
+   "y": 1396,
+   "w": 17,
+   "h": 28,
+   "c": "D"
+  },
+  {
+   "x": 917,
+   "y": 1396,
+   "w": 39,
+   "h": 28,
+   "c": "Em"
+  },
+  {
+   "x": 1122,
+   "y": 1396,
+   "w": 91,
+   "h": 28,
+   "c": "Em/D#"
+  },
+  {
+   "x": 66,
+   "y": 1680,
+   "w": 74,
+   "h": 23,
+   "c": "Em/D"
+  },
+  {
+   "x": 311,
+   "y": 1680,
+   "w": 111,
+   "h": 23,
+   "c": "C#m7b5"
+  },
+  {
+   "x": 584,
+   "y": 1680,
+   "w": 16,
+   "h": 23,
+   "c": "C"
+  },
+  {
+   "x": 746,
+   "y": 1680,
+   "w": 17,
+   "h": 23,
+   "c": "D"
+  },
+  {
+   "x": 1023,
+   "y": 1680,
+   "w": 18,
+   "h": 23,
+   "c": "G"
+  }
+ ]
 }

@@ -1,162 +1,492 @@
 {
-  "slug": "十架的爱",
-  "extra_labels": [
-    {
-      "x": 194,
-      "y": 434,
-      "w": 16,
-      "h": 26,
-      "c": "G"
-    },
-    {
-      "x": 342,
-      "y": 434,
-      "w": 34,
-      "h": 26,
-      "c": "Bm"
-    },
-    {
-      "x": 944,
-      "y": 434,
-      "w": 15,
-      "h": 26,
-      "c": "G"
-    },
-    {
-      "x": 1092,
-      "y": 434,
-      "w": 33,
-      "h": 26,
-      "c": "Bm"
-    },
-    {
-      "x": 33,
-      "y": 856,
-      "w": 19,
-      "h": 29,
-      "c": "G"
-    },
-    {
-      "x": 297,
-      "y": 856,
-      "w": 40,
-      "h": 29,
-      "c": "Bm"
-    },
-    {
-      "x": 1210,
-      "y": 856,
-      "w": 19,
-      "h": 29,
-      "c": "G"
-    },
-    {
-      "x": 28,
-      "y": 434,
-      "w": 48,
-      "h": 26,
-      "c": "D/F#"
-    },
-    {
-      "x": 559,
-      "y": 434,
-      "w": 52,
-      "h": 26,
-      "c": "A/C#"
-    },
-    {
-      "x": 777,
-      "y": 434,
-      "w": 49,
-      "h": 26,
-      "c": "D/F#"
-    },
-    {
-      "x": 1308,
-      "y": 434,
-      "w": 54,
-      "h": 26,
-      "c": "A/C#"
-    },
-    {
-      "x": 22,
-      "y": 612,
-      "w": 60,
-      "h": 29,
-      "c": "D/F#"
-    },
-    {
-      "x": 880,
-      "y": 612,
-      "w": 66,
-      "h": 29,
-      "c": "A/C#"
-    },
-    {
-      "x": 1119,
-      "y": 612,
-      "w": 63,
-      "h": 29,
-      "c": "D/F#"
-    },
-    {
-      "x": 582,
-      "y": 856,
-      "w": 66,
-      "h": 29,
-      "c": "A/C#"
-    },
-    {
-      "x": 815,
-      "y": 856,
-      "w": 62,
-      "h": 29,
-      "c": "D/F#"
-    },
-    {
-      "x": 437,
-      "y": 1100,
-      "w": 66,
-      "h": 30,
-      "c": "A/C#"
-    },
-    {
-      "x": 733,
-      "y": 1100,
-      "w": 63,
-      "h": 30,
-      "c": "D/F#"
-    },
-    {
-      "x": 283,
-      "y": 1596,
-      "w": 43,
-      "h": 25,
-      "c": "Am"
-    },
-    {
-      "x": 846,
-      "y": 1596,
-      "w": 62,
-      "h": 25,
-      "c": "D/F#"
-    },
-    {
-      "x": 1137,
-      "y": 1596,
-      "w": 51,
-      "h": 25,
-      "c": "Em11"
-    },
-    {
-      "x": 323,
-      "y": 2084,
-      "w": 62,
-      "h": 24,
-      "c": "D/F#"
-    }
-  ],
-  "extra_verified": "zooms relus à l’œil sur planche de lot (propose-extra --all --hidden), 2026-08-25 (itération 33)",
-  "face": "helvetica-bold",
-  "key_label_verified": "cadre mesuré (x=54, y=271, w=69, h=27) mais **volontairement non publié** : la page grave « 1=F » alors que printedKey vaut D (la tonalité du .cho, celle des accords imprimés — D/F#, G, Bm — qui sont des positions de capo 3). Le client écrit « 1=<tonalité jouée> » dans le cadre : le poser ici remplacerait un « 1=F » juste par un « 1=D » faux, et les chiffres de toute la page se liraient trois demi-tons à côté. Il manque un champ distinct pour le do gravé. 2026-08-26 (itération 35)"
+ "slug": "十架的爱",
+ "extra_labels": [
+  {
+   "x": 194,
+   "y": 434,
+   "w": 16,
+   "h": 26,
+   "c": "G"
+  },
+  {
+   "x": 342,
+   "y": 434,
+   "w": 34,
+   "h": 26,
+   "c": "Bm"
+  },
+  {
+   "x": 944,
+   "y": 434,
+   "w": 15,
+   "h": 26,
+   "c": "G"
+  },
+  {
+   "x": 1092,
+   "y": 434,
+   "w": 33,
+   "h": 26,
+   "c": "Bm"
+  },
+  {
+   "x": 33,
+   "y": 856,
+   "w": 19,
+   "h": 29,
+   "c": "G"
+  },
+  {
+   "x": 297,
+   "y": 856,
+   "w": 40,
+   "h": 29,
+   "c": "Bm"
+  },
+  {
+   "x": 1210,
+   "y": 856,
+   "w": 19,
+   "h": 29,
+   "c": "G"
+  },
+  {
+   "x": 28,
+   "y": 434,
+   "w": 48,
+   "h": 26,
+   "c": "D/F#"
+  },
+  {
+   "x": 559,
+   "y": 434,
+   "w": 52,
+   "h": 26,
+   "c": "A/C#"
+  },
+  {
+   "x": 777,
+   "y": 434,
+   "w": 49,
+   "h": 26,
+   "c": "D/F#"
+  },
+  {
+   "x": 1308,
+   "y": 434,
+   "w": 54,
+   "h": 26,
+   "c": "A/C#"
+  },
+  {
+   "x": 22,
+   "y": 612,
+   "w": 60,
+   "h": 29,
+   "c": "D/F#"
+  },
+  {
+   "x": 880,
+   "y": 612,
+   "w": 66,
+   "h": 29,
+   "c": "A/C#"
+  },
+  {
+   "x": 1119,
+   "y": 612,
+   "w": 63,
+   "h": 29,
+   "c": "D/F#"
+  },
+  {
+   "x": 582,
+   "y": 856,
+   "w": 66,
+   "h": 29,
+   "c": "A/C#"
+  },
+  {
+   "x": 815,
+   "y": 856,
+   "w": 62,
+   "h": 29,
+   "c": "D/F#"
+  },
+  {
+   "x": 437,
+   "y": 1100,
+   "w": 66,
+   "h": 30,
+   "c": "A/C#"
+  },
+  {
+   "x": 733,
+   "y": 1100,
+   "w": 63,
+   "h": 30,
+   "c": "D/F#"
+  },
+  {
+   "x": 283,
+   "y": 1596,
+   "w": 43,
+   "h": 25,
+   "c": "Am"
+  },
+  {
+   "x": 846,
+   "y": 1596,
+   "w": 62,
+   "h": 25,
+   "c": "D/F#"
+  },
+  {
+   "x": 1137,
+   "y": 1596,
+   "w": 51,
+   "h": 25,
+   "c": "Em11"
+  },
+  {
+   "x": 323,
+   "y": 2084,
+   "w": 62,
+   "h": 24,
+   "c": "D/F#"
+  }
+ ],
+ "extra_verified": "zooms relus à l’œil sur planche de lot (propose-extra --all --hidden), 2026-08-25 (itération 33) · itération 40 : « Em11 » relevé 51 px de large alors que le gravé en fait 69 — le second « 1 » tombait hors du masque et serait resté imprimé à côté du nom réécrit. Même boîte, plus large : le filtre de doublons (itération 39) garde le relevé le plus large — 2026-08-30",
+ "face": "helvetica-bold",
+ "key_label_verified": "cadre mesuré (x=54, y=271, w=69, h=27) mais **volontairement non publié** : la page grave « 1=F » alors que printedKey vaut D (la tonalité du .cho, celle des accords imprimés — D/F#, G, Bm — qui sont des positions de capo 3). Le client écrit « 1=<tonalité jouée> » dans le cadre : le poser ici remplacerait un « 1=F » juste par un « 1=D » faux, et les chiffres de toute la page se liraient trois demi-tons à côté. Il manque un champ distinct pour le do gravé. 2026-08-26 (itération 35) · itération 41 : le cadre est finalement publié, non comme `key_label` mais comme **étiquette composite** « 1= F » (l'espace compte) — `transposeLabel` réécrit le seul jeton qui est un accord et laisse « 1= » verbatim, donc le do gravé suit le même décalage que les accords (D→Eb ⇒ 1= Gb) au lieu d'être remplacé par la tonalité jouée. C'est le « champ distinct pour le do gravé » qui manquait, obtenu sans code de rendu (mécanisme de l'itération 40).",
+ "not_labels": [
+  "894,1170",
+  "894,979"
+ ],
+ "not_labels_verified": "deux arcs de liaison seuls dans leur amas — 2026-08-30 (itération 40)",
+ "verified": "transposé D→Eb dans Chrome headless (npm run jianpu:audit, 7 tranches relues + thème sombre) : 45 accords, dont A13, G/A, Em11 (boîte élargie à 69 px, itération 40) et F#m, plus le libellé de tête « 1=F » → « 1= Gb », publié par le champ `c` de `key_label` (itération 41) ; aucun accord resté en D, aucun sans cadre, la fraction 4/4 et les arcs de liaison intacts (zoom-browser sur le cadre). song_semitones = 0. — 2026-09-02 (itération 41)",
+ "key_label": {
+  "x": 54,
+  "y": 271,
+  "w": 69,
+  "h": 27,
+  "c": "1= F"
+ },
+ "frozen_labels": [
+  {
+   "x": 363,
+   "y": 612,
+   "w": 19,
+   "h": 29,
+   "c": "G"
+  },
+  {
+   "x": 520,
+   "y": 612,
+   "w": 41,
+   "h": 29,
+   "c": "Bm"
+  },
+  {
+   "x": 25,
+   "y": 1100,
+   "w": 41,
+   "h": 30,
+   "c": "Bm"
+  },
+  {
+   "x": 1163,
+   "y": 1100,
+   "w": 19,
+   "h": 30,
+   "c": "G"
+  },
+  {
+   "x": 24,
+   "y": 1352,
+   "w": 41,
+   "h": 24,
+   "c": "Bm"
+  },
+  {
+   "x": 229,
+   "y": 1352,
+   "w": 51,
+   "h": 24,
+   "c": "A13"
+  },
+  {
+   "x": 392,
+   "y": 1352,
+   "w": 18,
+   "h": 24,
+   "c": "D"
+  },
+  {
+   "x": 547,
+   "y": 1352,
+   "w": 50,
+   "h": 24,
+   "c": "G/A"
+  },
+  {
+   "x": 888,
+   "y": 1352,
+   "w": 19,
+   "h": 24,
+   "c": "D"
+  },
+  {
+   "x": 1174,
+   "y": 1352,
+   "w": 55,
+   "h": 24,
+   "c": "F#m"
+  },
+  {
+   "x": 24,
+   "y": 1596,
+   "w": 41,
+   "h": 25,
+   "c": "Bm"
+  },
+  {
+   "x": 368,
+   "y": 1596,
+   "w": 34,
+   "h": 25,
+   "c": "D7"
+  },
+  {
+   "x": 601,
+   "y": 1596,
+   "w": 20,
+   "h": 25,
+   "c": "G"
+  },
+  {
+   "x": 17,
+   "y": 1841,
+   "w": 50,
+   "h": 23,
+   "c": "G/A"
+  },
+  {
+   "x": 326,
+   "y": 1841,
+   "w": 19,
+   "h": 23,
+   "c": "D"
+  },
+  {
+   "x": 596,
+   "y": 1841,
+   "w": 54,
+   "h": 23,
+   "c": "F#m"
+  },
+  {
+   "x": 812,
+   "y": 1841,
+   "w": 41,
+   "h": 23,
+   "c": "Bm"
+  },
+  {
+   "x": 1154,
+   "y": 1841,
+   "w": 43,
+   "h": 23,
+   "c": "Am"
+  },
+  {
+   "x": 1230,
+   "y": 1841,
+   "w": 34,
+   "h": 23,
+   "c": "D7"
+  },
+  {
+   "x": 33,
+   "y": 2084,
+   "w": 19,
+   "h": 24,
+   "c": "G"
+  },
+  {
+   "x": 605,
+   "y": 2084,
+   "w": 68,
+   "h": 24,
+   "c": "Em11"
+  },
+  {
+   "x": 935,
+   "y": 2084,
+   "w": 50,
+   "h": 24,
+   "c": "G/A"
+  },
+  {
+   "x": 1250,
+   "y": 2084,
+   "w": 18,
+   "h": 24,
+   "c": "D"
+  },
+  {
+   "x": 194,
+   "y": 434,
+   "w": 16,
+   "h": 26,
+   "c": "G"
+  },
+  {
+   "x": 342,
+   "y": 434,
+   "w": 34,
+   "h": 26,
+   "c": "Bm"
+  },
+  {
+   "x": 944,
+   "y": 434,
+   "w": 15,
+   "h": 26,
+   "c": "G"
+  },
+  {
+   "x": 1092,
+   "y": 434,
+   "w": 33,
+   "h": 26,
+   "c": "Bm"
+  },
+  {
+   "x": 33,
+   "y": 856,
+   "w": 19,
+   "h": 29,
+   "c": "G"
+  },
+  {
+   "x": 297,
+   "y": 856,
+   "w": 40,
+   "h": 29,
+   "c": "Bm"
+  },
+  {
+   "x": 1210,
+   "y": 856,
+   "w": 19,
+   "h": 29,
+   "c": "G"
+  },
+  {
+   "x": 28,
+   "y": 434,
+   "w": 48,
+   "h": 26,
+   "c": "D/F#"
+  },
+  {
+   "x": 559,
+   "y": 434,
+   "w": 52,
+   "h": 26,
+   "c": "A/C#"
+  },
+  {
+   "x": 777,
+   "y": 434,
+   "w": 49,
+   "h": 26,
+   "c": "D/F#"
+  },
+  {
+   "x": 1308,
+   "y": 434,
+   "w": 54,
+   "h": 26,
+   "c": "A/C#"
+  },
+  {
+   "x": 22,
+   "y": 612,
+   "w": 60,
+   "h": 29,
+   "c": "D/F#"
+  },
+  {
+   "x": 880,
+   "y": 612,
+   "w": 66,
+   "h": 29,
+   "c": "A/C#"
+  },
+  {
+   "x": 1119,
+   "y": 612,
+   "w": 63,
+   "h": 29,
+   "c": "D/F#"
+  },
+  {
+   "x": 582,
+   "y": 856,
+   "w": 66,
+   "h": 29,
+   "c": "A/C#"
+  },
+  {
+   "x": 815,
+   "y": 856,
+   "w": 62,
+   "h": 29,
+   "c": "D/F#"
+  },
+  {
+   "x": 437,
+   "y": 1100,
+   "w": 66,
+   "h": 30,
+   "c": "A/C#"
+  },
+  {
+   "x": 733,
+   "y": 1100,
+   "w": 63,
+   "h": 30,
+   "c": "D/F#"
+  },
+  {
+   "x": 283,
+   "y": 1596,
+   "w": 43,
+   "h": 25,
+   "c": "Am"
+  },
+  {
+   "x": 846,
+   "y": 1596,
+   "w": 62,
+   "h": 25,
+   "c": "D/F#"
+  },
+  {
+   "x": 1137,
+   "y": 1596,
+   "w": 51,
+   "h": 25,
+   "c": "Em11"
+  },
+  {
+   "x": 323,
+   "y": 2084,
+   "w": 62,
+   "h": 24,
+   "c": "D/F#"
+  }
+ ]
 }

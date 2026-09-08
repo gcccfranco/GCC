@@ -1,58 +1,362 @@
 {
-  "slug": "大声敬拜",
-  "face": "verdana-bold",
-  "corrections": {
-    "182,847": "D"
+ "slug": "大声敬拜",
+ "face": "verdana-bold",
+ "corrections": {
+  "182,847": "D"
+ },
+ "not_rows": [
+  535
+ ],
+ "not_rows_verified": "rangée de paroles promue à tort : hanzi uniquement, aucun accord",
+ "corrections_verified": "amas relus au zoom, 2026-08-18 (itération 27, pages au ras du plancher)",
+ "extra_labels": [
+  {
+   "x": 313,
+   "y": 1501,
+   "w": 40,
+   "h": 21,
+   "c": "Am"
   },
-  "not_rows": [
-    535
-  ],
-  "not_rows_verified": "rangée de paroles promue à tort : hanzi uniquement, aucun accord",
-  "corrections_verified": "amas relus au zoom, 2026-08-18 (itération 27, pages au ras du plancher)",
-  "extra_labels": [
-    {
-      "x": 313,
-      "y": 1501,
-      "w": 40,
-      "h": 21,
-      "c": "Am"
-    },
-    {
-      "x": 589,
-      "y": 1499,
-      "w": 47,
-      "h": 27,
-      "c": "G/B"
-    },
-    {
-      "x": 853,
-      "y": 1501,
-      "w": 14,
-      "h": 21,
-      "c": "C"
-    },
-    {
-      "x": 1126,
-      "y": 1501,
-      "w": 15,
-      "h": 21,
-      "c": "D"
-    },
-    {
-      "x": 655,
-      "y": 1280,
-      "w": 116,
-      "h": 23,
-      "c": "（结尾时F）"
-    }
-  ],
-  "extra_verified": "zooms relus à l’œil sur planche de lot (propose-extra --all --hidden), 2026-08-25 (itération 33)",
-  "extra_composites_verified": "étiquettes composites (或 / 代替 / 先…后 / groupe entre parenthèses), lues à l’œil sur planche de lot et écrites telles qu’imprimées ; `transpose_label` réécrit la ligne entière. 2026-08-25 (itération 34)",
-  "key_label": {
-    "x": 15,
-    "y": 146,
-    "w": 72,
-    "h": 22
+  {
+   "x": 589,
+   "y": 1499,
+   "w": 47,
+   "h": 27,
+   "c": "G/B"
   },
-  "key_label_verified": "mesure measure-keylabel (ancrage sur le « = », cadre = voisin gauche…voisin droit), zoom relu à l’œil sur planche de lot, lettre gravée confrontée à printedKey, 2026-08-26 (itération 35)"
+  {
+   "x": 853,
+   "y": 1501,
+   "w": 14,
+   "h": 21,
+   "c": "C"
+  },
+  {
+   "x": 1126,
+   "y": 1501,
+   "w": 15,
+   "h": 21,
+   "c": "D"
+  },
+  {
+   "x": 655,
+   "y": 1280,
+   "w": 116,
+   "h": 23,
+   "c": "（结尾时F）"
+  },
+  {
+   "x": 57,
+   "y": 604,
+   "w": 17,
+   "h": 21,
+   "c": "G"
+  },
+  {
+   "x": 293,
+   "y": 604,
+   "w": 37,
+   "h": 21,
+   "c": "Em"
+  },
+  {
+   "x": 554,
+   "y": 585,
+   "w": 16,
+   "h": 21,
+   "c": "D"
+  },
+  {
+   "x": 822,
+   "y": 585,
+   "w": 16,
+   "h": 21,
+   "c": "D"
+  },
+  {
+   "x": 1130,
+   "y": 182,
+   "w": 16,
+   "h": 21,
+   "c": "D"
+  },
+  {
+   "x": 62,
+   "y": 1483,
+   "w": 13,
+   "h": 21,
+   "c": "D"
+  }
+ ],
+ "extra_verified": "zooms relus à l’œil sur planche de lot (propose-extra --all --hidden), 2026-08-25 (itération 33) · itération 39 : la rangée soudée à ses chiffres (G Em D D, y=585-604) ouverte par `welded_rows`, plus le second D de la rangée 182 et le D de 【Bridge】 (y=1483) — zooms et coupes du scan relus, 2026-08-30",
+ "extra_composites_verified": "étiquettes composites (或 / 代替 / 先…后 / groupe entre parenthèses), lues à l’œil sur planche de lot et écrites telles qu’imprimées ; `transpose_label` réécrit la ligne entière. 2026-08-25 (itération 34)",
+ "key_label": {
+  "x": 15,
+  "y": 146,
+  "w": 72,
+  "h": 22
+ },
+ "key_label_verified": "mesure measure-keylabel (ancrage sur le « = », cadre = voisin gauche…voisin droit), zoom relu à l’œil sur planche de lot, lettre gravée confrontée à printedKey, 2026-08-26 (itération 35)",
+ "verified": "transposé G→Ab dans Chrome headless (npm run jianpu:audit, 6 tranches relues, thèmes clair et sombre) : 37 accords + 1=Ab, la rangée soudée à ses chiffres (G Em D D, y=585-604) et （结尾时F） compris, aucun accord resté en G, crochets de reprise et 【Bridge】 préservés — 2026-08-30 (itération 39)",
+ "frozen_labels": [
+  {
+   "x": 73,
+   "y": 182,
+   "w": 14,
+   "h": 45,
+   "c": "C"
+  },
+  {
+   "x": 356,
+   "y": 182,
+   "w": 17,
+   "h": 45,
+   "c": "G"
+  },
+  {
+   "x": 581,
+   "y": 182,
+   "w": 36,
+   "h": 45,
+   "c": "Em"
+  },
+  {
+   "x": 847,
+   "y": 182,
+   "w": 44,
+   "h": 45,
+   "c": "D"
+  },
+  {
+   "x": 88,
+   "y": 359,
+   "w": 14,
+   "h": 21,
+   "c": "C"
+  },
+  {
+   "x": 344,
+   "y": 359,
+   "w": 17,
+   "h": 21,
+   "c": "G"
+  },
+  {
+   "x": 591,
+   "y": 359,
+   "w": 36,
+   "h": 21,
+   "c": "Em"
+  },
+  {
+   "x": 862,
+   "y": 359,
+   "w": 15,
+   "h": 21,
+   "c": "D"
+  },
+  {
+   "x": 1120,
+   "y": 359,
+   "w": 14,
+   "h": 21,
+   "c": "C"
+  },
+  {
+   "x": 88,
+   "y": 843,
+   "w": 15,
+   "h": 20,
+   "c": "C"
+  },
+  {
+   "x": 393,
+   "y": 843,
+   "w": 16,
+   "h": 20,
+   "c": "G"
+  },
+  {
+   "x": 720,
+   "y": 843,
+   "w": 37,
+   "h": 20,
+   "c": "Em"
+  },
+  {
+   "x": 1045,
+   "y": 843,
+   "w": 16,
+   "h": 20,
+   "c": "D"
+  },
+  {
+   "x": 66,
+   "y": 1078,
+   "w": 15,
+   "h": 21,
+   "c": "C"
+  },
+  {
+   "x": 382,
+   "y": 1078,
+   "w": 17,
+   "h": 21,
+   "c": "G"
+  },
+  {
+   "x": 698,
+   "y": 1078,
+   "w": 37,
+   "h": 21,
+   "c": "Em"
+  },
+  {
+   "x": 1020,
+   "y": 1078,
+   "w": 16,
+   "h": 21,
+   "c": "D"
+  },
+  {
+   "x": 60,
+   "y": 1280,
+   "w": 15,
+   "h": 23,
+   "c": "C"
+  },
+  {
+   "x": 340,
+   "y": 1280,
+   "w": 17,
+   "h": 23,
+   "c": "G"
+  },
+  {
+   "x": 593,
+   "y": 1280,
+   "w": 36,
+   "h": 23,
+   "c": "Em"
+  },
+  {
+   "x": 871,
+   "y": 1280,
+   "w": 16,
+   "h": 23,
+   "c": "D"
+  },
+  {
+   "x": 1126,
+   "y": 1280,
+   "w": 14,
+   "h": 23,
+   "c": "C"
+  },
+  {
+   "x": 60,
+   "y": 1692,
+   "w": 41,
+   "h": 27,
+   "c": "Am"
+  },
+  {
+   "x": 400,
+   "y": 1692,
+   "w": 47,
+   "h": 27,
+   "c": "G/B"
+  },
+  {
+   "x": 721,
+   "y": 1692,
+   "w": 15,
+   "h": 27,
+   "c": "C"
+  },
+  {
+   "x": 1061,
+   "y": 1692,
+   "w": 15,
+   "h": 27,
+   "c": "D"
+  },
+  {
+   "x": 313,
+   "y": 1501,
+   "w": 40,
+   "h": 21,
+   "c": "Am"
+  },
+  {
+   "x": 589,
+   "y": 1499,
+   "w": 47,
+   "h": 27,
+   "c": "G/B"
+  },
+  {
+   "x": 853,
+   "y": 1501,
+   "w": 14,
+   "h": 21,
+   "c": "C"
+  },
+  {
+   "x": 1126,
+   "y": 1501,
+   "w": 15,
+   "h": 21,
+   "c": "D"
+  },
+  {
+   "x": 655,
+   "y": 1280,
+   "w": 116,
+   "h": 23,
+   "c": "（结尾时F）"
+  },
+  {
+   "x": 57,
+   "y": 604,
+   "w": 17,
+   "h": 21,
+   "c": "G"
+  },
+  {
+   "x": 293,
+   "y": 604,
+   "w": 37,
+   "h": 21,
+   "c": "Em"
+  },
+  {
+   "x": 554,
+   "y": 585,
+   "w": 16,
+   "h": 21,
+   "c": "D"
+  },
+  {
+   "x": 822,
+   "y": 585,
+   "w": 16,
+   "h": 21,
+   "c": "D"
+  },
+  {
+   "x": 1130,
+   "y": 182,
+   "w": 16,
+   "h": 21,
+   "c": "D"
+  },
+  {
+   "x": 62,
+   "y": 1483,
+   "w": 13,
+   "h": 21,
+   "c": "D"
+  }
+ ]
 }

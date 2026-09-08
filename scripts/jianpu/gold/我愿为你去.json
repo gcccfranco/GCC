@@ -49,9 +49,23 @@
    "w": 19,
    "h": 24,
    "c": "D"
+  },
+  {
+   "x": 63,
+   "y": 901,
+   "w": 19,
+   "h": 24,
+   "c": "D"
+  },
+  {
+   "x": 460,
+   "y": 901,
+   "w": 18,
+   "h": 24,
+   "c": "D"
   }
  ],
- "extra_verified": "chaque étiquette relue sur zoom (propose-extra + planches), 2026-08-04",
+ "extra_verified": "chaque étiquette relue sur zoom (propose-extra + planches), 2026-08-04 · deux accords de plus, 2026-09-05 (itération 43) : les deux `D` que le filet du crochet de reprise enferme avec les coins ⌐1 / ⌐2 dans un amas soudé de 783 px (y=878), séparés par `_split_welded`",
  "key_label": {
   "x": 6,
   "y": 162,
@@ -59,5 +73,370 @@
   "h": 26
  },
  "key_label_verified": "mesure measure-keylabel (vote 1= + lettre attendue), zoom relu à l’œil, 2026-08-05",
- "face": "verdana-bold"
+ "face": "verdana-bold",
+ "corrections": {
+  "201,1002": "Bm/A",
+  "201,1414": "D/F#",
+  "1188,1020": "D/F#",
+  "1763,1471": "D7/F#",
+  "878,1385": "Bm/A"
+ },
+ "corrections_verified": "cinq amas relus au zoom sur planche de lot (propose-extra --all --hidden), 2026-09-05 (itération 43) · dont un **mode C** : la page grave `D7/F#` (1763,1471) là où le matcher lit `D/F#` à +0,36 — accord du vocabulaire, au-dessus du seuil, et faux",
+ "not_labels": [
+  "1763,174",
+  "2064,1377",
+  "2064,1447",
+  "878,21"
+ ],
+ "not_labels_verified": "le titre de section 【Bridge】 (1763,174) et le « D.S. al Fine » coupé en deux (2064,1377 et 2064,1447), gravés sur la rangée d'accords elle-même · et l'amas soudé de 783 px (878,21), dont les deux accords sont publiés en `extra_labels`. 2026-09-05 (itération 43)",
+ "not_rows": [
+  1500
+ ],
+ "not_rows_verified": "la rangée des **crochets de reprise** ⌐1 / ⌐2 (y=1500), sous la rangée d'accords y=1465 : coins de crochet, points de reprise et barre finale — bandes rendues à l'œil, 2026-09-05 (itération 43)",
+ "verified": "transposé D→Eb dans Chrome headless (npm run jianpu:audit, 7 tranches relues) : 47 accords sur les sept rangées, tous encadrés, plus le cadre « 1= D » → « 1=Eb » · les deux `D` que le filet du crochet de reprise soudait en un amas de 783 px sont convertis, et le `D7/F#` que le matcher lisait `D/F#` à +0,36 ressort bien `Eb7/G` · 【Bridge】, 【Chorus】, le segno et « D.S. al Fine » laissés intacts · 2026-09-05 (itération 43)",
+ "frozen_labels": [
+  {
+   "x": 458,
+   "y": 201,
+   "w": 19,
+   "h": 32,
+   "c": "D"
+  },
+  {
+   "x": 657,
+   "y": 201,
+   "w": 72,
+   "h": 32,
+   "c": "A/C#"
+  },
+  {
+   "x": 843,
+   "y": 201,
+   "w": 45,
+   "h": 32,
+   "c": "Bm"
+  },
+  {
+   "x": 1002,
+   "y": 201,
+   "w": 83,
+   "h": 32,
+   "c": "Bm/A"
+  },
+  {
+   "x": 1212,
+   "y": 201,
+   "w": 19,
+   "h": 32,
+   "c": "G"
+  },
+  {
+   "x": 1414,
+   "y": 201,
+   "w": 69,
+   "h": 32,
+   "c": "D/F#"
+  },
+  {
+   "x": 42,
+   "y": 550,
+   "w": 63,
+   "h": 27,
+   "c": "Em7"
+  },
+  {
+   "x": 205,
+   "y": 550,
+   "w": 38,
+   "h": 27,
+   "c": "A7"
+  },
+  {
+   "x": 421,
+   "y": 550,
+   "w": 19,
+   "h": 27,
+   "c": "D"
+  },
+  {
+   "x": 623,
+   "y": 550,
+   "w": 104,
+   "h": 27,
+   "c": "F#7/C#"
+  },
+  {
+   "x": 815,
+   "y": 550,
+   "w": 44,
+   "h": 27,
+   "c": "Bm"
+  },
+  {
+   "x": 986,
+   "y": 550,
+   "w": 82,
+   "h": 27,
+   "c": "Bm/A"
+  },
+  {
+   "x": 1220,
+   "y": 550,
+   "w": 20,
+   "h": 27,
+   "c": "G"
+  },
+  {
+   "x": 1372,
+   "y": 550,
+   "w": 38,
+   "h": 27,
+   "c": "A7"
+  },
+  {
+   "x": 846,
+   "y": 878,
+   "w": 19,
+   "h": 57,
+   "c": "D"
+  },
+  {
+   "x": 995,
+   "y": 878,
+   "w": 86,
+   "h": 57,
+   "c": "F#/C#"
+  },
+  {
+   "x": 1232,
+   "y": 878,
+   "w": 46,
+   "h": 57,
+   "c": "Bm"
+  },
+  {
+   "x": 1385,
+   "y": 878,
+   "w": 82,
+   "h": 57,
+   "c": "Bm/A"
+  },
+  {
+   "x": 45,
+   "y": 1188,
+   "w": 20,
+   "h": 32,
+   "c": "G"
+  },
+  {
+   "x": 197,
+   "y": 1188,
+   "w": 70,
+   "h": 32,
+   "c": "D/F#"
+  },
+  {
+   "x": 430,
+   "y": 1188,
+   "w": 64,
+   "h": 32,
+   "c": "Em7"
+  },
+  {
+   "x": 590,
+   "y": 1188,
+   "w": 38,
+   "h": 32,
+   "c": "A7"
+  },
+  {
+   "x": 813,
+   "y": 1188,
+   "w": 19,
+   "h": 32,
+   "c": "G"
+  },
+  {
+   "x": 1020,
+   "y": 1188,
+   "w": 70,
+   "h": 32,
+   "c": "D/F#"
+  },
+  {
+   "x": 1212,
+   "y": 1188,
+   "w": 72,
+   "h": 32,
+   "c": "A/C#"
+  },
+  {
+   "x": 1421,
+   "y": 1188,
+   "w": 46,
+   "h": 32,
+   "c": "Bm"
+  },
+  {
+   "x": 51,
+   "y": 1465,
+   "w": 20,
+   "h": 24,
+   "c": "G"
+  },
+  {
+   "x": 245,
+   "y": 1465,
+   "w": 63,
+   "h": 24,
+   "c": "Em7"
+  },
+  {
+   "x": 478,
+   "y": 1465,
+   "w": 87,
+   "h": 24,
+   "c": "Asus4"
+  },
+  {
+   "x": 610,
+   "y": 1465,
+   "w": 39,
+   "h": 24,
+   "c": "A7"
+  },
+  {
+   "x": 840,
+   "y": 1465,
+   "w": 62,
+   "h": 24,
+   "c": "Em7"
+  },
+  {
+   "x": 1043,
+   "y": 1465,
+   "w": 19,
+   "h": 24,
+   "c": "A"
+  },
+  {
+   "x": 1299,
+   "y": 1465,
+   "w": 19,
+   "h": 24,
+   "c": "D"
+  },
+  {
+   "x": 56,
+   "y": 1763,
+   "w": 18,
+   "h": 35,
+   "c": "D"
+  },
+  {
+   "x": 378,
+   "y": 1763,
+   "w": 19,
+   "h": 35,
+   "c": "D"
+  },
+  {
+   "x": 496,
+   "y": 1763,
+   "w": 20,
+   "h": 35,
+   "c": "A"
+  },
+  {
+   "x": 642,
+   "y": 1763,
+   "w": 44,
+   "h": 35,
+   "c": "Bm"
+  },
+  {
+   "x": 989,
+   "y": 1763,
+   "w": 20,
+   "h": 35,
+   "c": "G"
+  },
+  {
+   "x": 1110,
+   "y": 1763,
+   "w": 19,
+   "h": 35,
+   "c": "D"
+  },
+  {
+   "x": 1264,
+   "y": 1763,
+   "w": 20,
+   "h": 35,
+   "c": "A"
+  },
+  {
+   "x": 1471,
+   "y": 1763,
+   "w": 89,
+   "h": 35,
+   "c": "D7/F#"
+  },
+  {
+   "x": 59,
+   "y": 2064,
+   "w": 20,
+   "h": 26,
+   "c": "G"
+  },
+  {
+   "x": 248,
+   "y": 2064,
+   "w": 19,
+   "h": 26,
+   "c": "A"
+  },
+  {
+   "x": 457,
+   "y": 2064,
+   "w": 44,
+   "h": 26,
+   "c": "Bm"
+  },
+  {
+   "x": 846,
+   "y": 2064,
+   "w": 63,
+   "h": 26,
+   "c": "Em7"
+  },
+  {
+   "x": 1010,
+   "y": 2064,
+   "w": 33,
+   "h": 26,
+   "c": "E7"
+  },
+  {
+   "x": 1230,
+   "y": 2064,
+   "w": 20,
+   "h": 26,
+   "c": "A"
+  },
+  {
+   "x": 63,
+   "y": 901,
+   "w": 19,
+   "h": 24,
+   "c": "D"
+  },
+  {
+   "x": 460,
+   "y": 901,
+   "w": 18,
+   "h": 24,
+   "c": "D"
+  }
+ ]
 }

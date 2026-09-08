@@ -1,28 +1,314 @@
 {
-  "slug": "叫我抬起头的神",
-  "extra_labels": [
-    {
-      "x": 40,
-      "y": 552,
-      "w": 12,
-      "h": 21,
-      "c": "A"
-    },
-    {
-      "x": 962,
-      "y": 552,
-      "w": 12,
-      "h": 21,
-      "c": "B"
-    }
-  ],
-  "extra_verified": "chaque étiquette relue sur zoom (propose-extra + planches), 2026-08-04",
-  "face": "helvetica-neue",
-  "key_label": {
-    "x": 58,
-    "y": 240,
-    "w": 62,
-    "h": 23
+ "slug": "叫我抬起头的神",
+ "extra_labels": [
+  {
+   "x": 40,
+   "y": 552,
+   "w": 12,
+   "h": 21,
+   "c": "A"
   },
-  "key_label_verified": "mesure measure-keylabel (ancrage sur le « = », cadre = voisin gauche…voisin droit), zoom relu à l’œil sur planche de lot, lettre gravée confrontée à printedKey, 2026-08-26 (itération 35)"
+  {
+   "x": 962,
+   "y": 552,
+   "w": 12,
+   "h": 21,
+   "c": "B"
+  }
+ ],
+ "extra_verified": "chaque étiquette relue sur zoom (propose-extra + planches), 2026-08-04",
+ "face": "helvetica-neue",
+ "key_label": {
+  "x": 58,
+  "y": 240,
+  "w": 62,
+  "h": 23
+ },
+ "key_label_verified": "mesure measure-keylabel (ancrage sur le « = », cadre = voisin gauche…voisin droit), zoom relu à l’œil sur planche de lot, lettre gravée confrontée à printedKey, 2026-08-26 (itération 35)",
+ "corrections": {
+  "394,344": "B/D#",
+  "394,640": "C#m7",
+  "552,347": "E/G#",
+  "552,660": "F#m7",
+  "713,303": "B/D#",
+  "713,515": "C#m7",
+  "955,28": "E/G#",
+  "955,238": "F#m7",
+  "955,1017": "B/D#",
+  "1199,17": "C#m7",
+  "1199,700": "E/G#",
+  "1199,860": "F#m7",
+  "1441,528": "B/D#",
+  "1441,792": "C#m7"
+ },
+ "corrections_verified": "quatorze amas relus au zoom sur planche de lot (propose-extra --all --hidden), 2026-09-05 (itération 45) · page à **dièses en exposant** (`B/D♯`, `C♯m7`, `E/G♯`, `F♯m7`), où le matcher se trompe massivement : neuf des quatorze étaient lus faux — `E/G#` pour `B/D#`, `E/B` pour `E/G#`, `E/G#` pour `F#m7` — tous sous le seuil, donc aucun n'était publié, mais le vocabulaire fermé n'aurait rien empêché s'ils l'avaient franchi",
+ "verified": "transposé E→F dans Chrome headless (npm run jianpu:audit, 7 tranches relues) : 40 accords sur les sept rangées, tous encadrés, plus le cadre « 1=E » → « 1=F » · page à **dièses en exposant** (`B/D♯`, `C♯m7`, `E/G♯`, `F♯m7`) où le matcher se trompe massivement — neuf des quatorze amas relus étaient lus faux, tous sous le seuil · 2026-09-05 (itération 45)",
+ "frozen_labels": [
+  {
+   "x": 48,
+   "y": 394,
+   "w": 9,
+   "h": 19,
+   "c": "E"
+  },
+  {
+   "x": 344,
+   "y": 394,
+   "w": 46,
+   "h": 19,
+   "c": "B/D#"
+  },
+  {
+   "x": 640,
+   "y": 394,
+   "w": 55,
+   "h": 19,
+   "c": "C#m7"
+  },
+  {
+   "x": 964,
+   "y": 394,
+   "w": 31,
+   "h": 19,
+   "c": "E/B"
+  },
+  {
+   "x": 40,
+   "y": 552,
+   "w": 12,
+   "h": 21,
+   "c": "A"
+  },
+  {
+   "x": 347,
+   "y": 552,
+   "w": 43,
+   "h": 21,
+   "c": "E/G#"
+  },
+  {
+   "x": 660,
+   "y": 552,
+   "w": 52,
+   "h": 21,
+   "c": "F#m7"
+  },
+  {
+   "x": 962,
+   "y": 552,
+   "w": 12,
+   "h": 21,
+   "c": "B"
+  },
+  {
+   "x": 42,
+   "y": 713,
+   "w": 13,
+   "h": 27,
+   "c": "E"
+  },
+  {
+   "x": 303,
+   "y": 713,
+   "w": 57,
+   "h": 27,
+   "c": "B/D#"
+  },
+  {
+   "x": 515,
+   "y": 713,
+   "w": 69,
+   "h": 27,
+   "c": "C#m7"
+  },
+  {
+   "x": 829,
+   "y": 713,
+   "w": 39,
+   "h": 27,
+   "c": "E/B"
+  },
+  {
+   "x": 1005,
+   "y": 713,
+   "w": 14,
+   "h": 27,
+   "c": "A"
+  },
+  {
+   "x": 28,
+   "y": 955,
+   "w": 55,
+   "h": 28,
+   "c": "E/G#"
+  },
+  {
+   "x": 238,
+   "y": 955,
+   "w": 63,
+   "h": 28,
+   "c": "F#m7"
+  },
+  {
+   "x": 540,
+   "y": 955,
+   "w": 14,
+   "h": 28,
+   "c": "B"
+  },
+  {
+   "x": 735,
+   "y": 955,
+   "w": 12,
+   "h": 28,
+   "c": "E"
+  },
+  {
+   "x": 1017,
+   "y": 955,
+   "w": 56,
+   "h": 28,
+   "c": "B/D#"
+  },
+  {
+   "x": 17,
+   "y": 1199,
+   "w": 69,
+   "h": 27,
+   "c": "C#m7"
+  },
+  {
+   "x": 298,
+   "y": 1199,
+   "w": 40,
+   "h": 27,
+   "c": "E/B"
+  },
+  {
+   "x": 448,
+   "y": 1199,
+   "w": 15,
+   "h": 27,
+   "c": "A"
+  },
+  {
+   "x": 700,
+   "y": 1199,
+   "w": 54,
+   "h": 27,
+   "c": "E/G#"
+  },
+  {
+   "x": 860,
+   "y": 1199,
+   "w": 63,
+   "h": 27,
+   "c": "F#m7"
+  },
+  {
+   "x": 1008,
+   "y": 1199,
+   "w": 14,
+   "h": 27,
+   "c": "B"
+  },
+  {
+   "x": 1104,
+   "y": 1199,
+   "w": 12,
+   "h": 27,
+   "c": "E"
+  },
+  {
+   "x": 26,
+   "y": 1441,
+   "w": 45,
+   "h": 26,
+   "c": "A/B"
+  },
+  {
+   "x": 269,
+   "y": 1441,
+   "w": 12,
+   "h": 26,
+   "c": "E"
+  },
+  {
+   "x": 528,
+   "y": 1441,
+   "w": 56,
+   "h": 26,
+   "c": "B/D#"
+  },
+  {
+   "x": 792,
+   "y": 1441,
+   "w": 69,
+   "h": 26,
+   "c": "C#m7"
+  },
+  {
+   "x": 1085,
+   "y": 1441,
+   "w": 39,
+   "h": 26,
+   "c": "E/B"
+  },
+  {
+   "x": 42,
+   "y": 1689,
+   "w": 15,
+   "h": 21,
+   "c": "A"
+  },
+  {
+   "x": 315,
+   "y": 1689,
+   "w": 14,
+   "h": 21,
+   "c": "B"
+  },
+  {
+   "x": 484,
+   "y": 1689,
+   "w": 12,
+   "h": 21,
+   "c": "E"
+  },
+  {
+   "x": 790,
+   "y": 1689,
+   "w": 69,
+   "h": 21,
+   "c": "C#m7"
+  },
+  {
+   "x": 15,
+   "y": 1930,
+   "w": 70,
+   "h": 21,
+   "c": "G#m7"
+  },
+  {
+   "x": 558,
+   "y": 1930,
+   "w": 15,
+   "h": 21,
+   "c": "A"
+  },
+  {
+   "x": 855,
+   "y": 1930,
+   "w": 14,
+   "h": 21,
+   "c": "B"
+  },
+  {
+   "x": 1094,
+   "y": 1930,
+   "w": 13,
+   "h": 21,
+   "c": "E"
+  }
+ ]
 }

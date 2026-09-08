@@ -1,91 +1,276 @@
 {
-  "slug": "脚步",
-  "extra_labels": [
-    {
-      "x": 418,
-      "y": 614,
-      "w": 56,
-      "h": 28,
-      "c": "Am"
-    },
-    {
-      "x": 846,
-      "y": 614,
-      "w": 19,
-      "h": 28,
-      "c": "F"
-    },
-    {
-      "x": 1296,
-      "y": 614,
-      "w": 26,
-      "h": 28,
-      "c": "G"
-    },
-    {
-      "x": 418,
-      "y": 1050,
-      "w": 56,
-      "h": 28,
-      "c": "Am"
-    },
-    {
-      "x": 846,
-      "y": 1050,
-      "w": 19,
-      "h": 28,
-      "c": "F"
-    },
-    {
-      "x": 1296,
-      "y": 1050,
-      "w": 26,
-      "h": 28,
-      "c": "G"
-    },
-    {
-      "x": 20,
-      "y": 176,
-      "w": 25,
-      "h": 37,
-      "c": "C"
-    },
-    {
-      "x": 20,
-      "y": 391,
-      "w": 25,
-      "h": 40,
-      "c": "C"
-    },
-    {
-      "x": 20,
-      "y": 614,
-      "w": 25,
-      "h": 28,
-      "c": "C"
-    },
-    {
-      "x": 20,
-      "y": 1050,
-      "w": 25,
-      "h": 28,
-      "c": "C"
-    },
-    {
-      "x": 1324,
-      "y": 1268,
-      "w": 25,
-      "h": 28,
-      "c": "C"
-    }
-  ],
-  "extra_verified": "chaque étiquette relue sur zoom (propose-extra + planches), 2026-08-04 ; +5 « C » de début de rangée relus au zoom, 2026-08-17 (itération 23)",
-  "face": "helvetica-neue",
-  "key_label": {
-    "x": 20,
-    "y": 85,
-    "w": 85,
-    "h": 32
+ "slug": "脚步",
+ "extra_labels": [
+  {
+   "x": 418,
+   "y": 614,
+   "w": 56,
+   "h": 28,
+   "c": "Am"
   },
-  "key_label_verified": "mesure measure-keylabel (ancrage sur le « = », cadre = voisin gauche…voisin droit), zoom relu à l’œil sur planche de lot, lettre gravée confrontée à printedKey, 2026-08-26 (itération 35)"
+  {
+   "x": 846,
+   "y": 614,
+   "w": 19,
+   "h": 28,
+   "c": "F"
+  },
+  {
+   "x": 1296,
+   "y": 614,
+   "w": 26,
+   "h": 28,
+   "c": "G"
+  },
+  {
+   "x": 418,
+   "y": 1050,
+   "w": 56,
+   "h": 28,
+   "c": "Am"
+  },
+  {
+   "x": 846,
+   "y": 1050,
+   "w": 19,
+   "h": 28,
+   "c": "F"
+  },
+  {
+   "x": 1296,
+   "y": 1050,
+   "w": 26,
+   "h": 28,
+   "c": "G"
+  },
+  {
+   "x": 20,
+   "y": 176,
+   "w": 25,
+   "h": 37,
+   "c": "C"
+  },
+  {
+   "x": 20,
+   "y": 391,
+   "w": 25,
+   "h": 40,
+   "c": "C"
+  },
+  {
+   "x": 20,
+   "y": 614,
+   "w": 25,
+   "h": 28,
+   "c": "C"
+  },
+  {
+   "x": 20,
+   "y": 1050,
+   "w": 25,
+   "h": 28,
+   "c": "C"
+  },
+  {
+   "x": 1324,
+   "y": 1268,
+   "w": 25,
+   "h": 28,
+   "c": "C"
+  }
+ ],
+ "extra_verified": "chaque étiquette relue sur zoom (propose-extra + planches), 2026-08-04 ; +5 « C » de début de rangée relus au zoom, 2026-08-17 (itération 23)",
+ "face": "helvetica-neue",
+ "key_label": {
+  "x": 20,
+  "y": 85,
+  "w": 85,
+  "h": 32
+ },
+ "key_label_verified": "mesure measure-keylabel (ancrage sur le « = », cadre = voisin gauche…voisin droit), zoom relu à l’œil sur planche de lot, lettre gravée confrontée à printedKey, 2026-08-26 (itération 35)",
+ "not_labels": [
+  "176,224",
+  "176,678",
+  "391,221",
+  "391,662"
+ ],
+ "not_labels_verified": "quatre arcs de liaison seuls dans leur amas, relus au zoom — aucun n'est une étiquette, 2026-08-30 (itération 40)",
+ "verified": "transposé C→C# dans Chrome headless (npm run jianpu:audit, 4 tranches relues, thèmes clair et sombre) : 25 accords sur 8 rangées, aucun resté en C, cadre 1=C# juste, les quatre arcs de liaison seuls dans leur amas laissés intacts, aucun débordement ni encre gravée couverte au balayage — 2026-08-30 (itération 40)",
+ "frozen_labels": [
+  {
+   "x": 453,
+   "y": 176,
+   "w": 73,
+   "h": 37,
+   "c": "Am7"
+  },
+  {
+   "x": 862,
+   "y": 176,
+   "w": 73,
+   "h": 37,
+   "c": "Dm7"
+  },
+  {
+   "x": 1287,
+   "y": 176,
+   "w": 26,
+   "h": 37,
+   "c": "G"
+  },
+  {
+   "x": 437,
+   "y": 391,
+   "w": 73,
+   "h": 40,
+   "c": "Am7"
+  },
+  {
+   "x": 854,
+   "y": 391,
+   "w": 73,
+   "h": 40,
+   "c": "Dm7"
+  },
+  {
+   "x": 1265,
+   "y": 391,
+   "w": 27,
+   "h": 40,
+   "c": "G"
+  },
+  {
+   "x": 418,
+   "y": 614,
+   "w": 56,
+   "h": 28,
+   "c": "Am"
+  },
+  {
+   "x": 846,
+   "y": 614,
+   "w": 19,
+   "h": 28,
+   "c": "F"
+  },
+  {
+   "x": 1296,
+   "y": 614,
+   "w": 26,
+   "h": 28,
+   "c": "G"
+  },
+  {
+   "x": 21,
+   "y": 835,
+   "w": 22,
+   "h": 28,
+   "c": "E"
+  },
+  {
+   "x": 439,
+   "y": 835,
+   "w": 57,
+   "h": 28,
+   "c": "Am"
+  },
+  {
+   "x": 875,
+   "y": 835,
+   "w": 56,
+   "h": 28,
+   "c": "Dm"
+  },
+  {
+   "x": 1270,
+   "y": 835,
+   "w": 27,
+   "h": 28,
+   "c": "G"
+  },
+  {
+   "x": 418,
+   "y": 1050,
+   "w": 56,
+   "h": 28,
+   "c": "Am"
+  },
+  {
+   "x": 846,
+   "y": 1050,
+   "w": 19,
+   "h": 28,
+   "c": "F"
+  },
+  {
+   "x": 1296,
+   "y": 1050,
+   "w": 26,
+   "h": 28,
+   "c": "G"
+  },
+  {
+   "x": 21,
+   "y": 1268,
+   "w": 22,
+   "h": 28,
+   "c": "E"
+  },
+  {
+   "x": 450,
+   "y": 1268,
+   "w": 56,
+   "h": 28,
+   "c": "Am"
+  },
+  {
+   "x": 899,
+   "y": 1268,
+   "w": 56,
+   "h": 28,
+   "c": "Dm"
+  },
+  {
+   "x": 1151,
+   "y": 1268,
+   "w": 27,
+   "h": 28,
+   "c": "G"
+  },
+  {
+   "x": 20,
+   "y": 176,
+   "w": 25,
+   "h": 37,
+   "c": "C"
+  },
+  {
+   "x": 20,
+   "y": 391,
+   "w": 25,
+   "h": 40,
+   "c": "C"
+  },
+  {
+   "x": 20,
+   "y": 614,
+   "w": 25,
+   "h": 28,
+   "c": "C"
+  },
+  {
+   "x": 20,
+   "y": 1050,
+   "w": 25,
+   "h": 28,
+   "c": "C"
+  },
+  {
+   "x": 1324,
+   "y": 1268,
+   "w": 25,
+   "h": 28,
+   "c": "C"
+  }
+ ]
 }

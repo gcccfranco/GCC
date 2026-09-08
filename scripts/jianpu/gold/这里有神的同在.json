@@ -24,5 +24,286 @@
   }
  ],
  "extra_verified": "propositions propose-extra relues au zoom (itération 17, garde « deux par rangée » levé) ; six lues faux par le matcher entre +0,43 et +0,73 et relues au zoom ×7 — 2026-08-09",
- "face": "helvetica-neue"
+ "face": "helvetica-neue",
+ "corrections": {
+  "1262,1488": "C/E"
+ },
+ "corrections_verified": "un amas laissé à −0,00 par le matcher, relu au zoom sur planche de lot (propose-extra --all --hidden), 2026-09-05 (itération 43)",
+ "not_labels": [
+  "1262,137"
+ ],
+ "not_labels_verified": "le titre de section gravé 【Chorus】 (1262,137), lu `Dm` à −1,33, sur la rangée d'accords elle-même — relu au zoom, 2026-09-05 (itération 43)",
+ "not_rows": [
+  518
+ ],
+ "not_rows_verified": "la rangée de **chiffres** et de barres de mesure du deuxième système (y=518) : huit amas, dont quatre barres de 2 px — bandes rendues à l'œil, 2026-09-05 (itération 43)",
+ "verified": "transposé F→F# dans Chrome headless (npm run jianpu:audit, 7 tranches relues) : 36 accords sur les sept rangées, tous encadrés, plus le cadre « 1= F » → « 1=F# » · le titre de section gravé 【Chorus】, posé sur la rangée d'accords elle-même, laissé intact · 2026-09-05 (itération 43)",
+ "frozen_labels": [
+  {
+   "x": 61,
+   "y": 209,
+   "w": 13,
+   "h": 25,
+   "c": "F"
+  },
+  {
+   "x": 455,
+   "y": 209,
+   "w": 48,
+   "h": 25,
+   "c": "Dm"
+  },
+  {
+   "x": 829,
+   "y": 209,
+   "w": 35,
+   "h": 25,
+   "c": "Bb"
+  },
+  {
+   "x": 1246,
+   "y": 209,
+   "w": 17,
+   "h": 25,
+   "c": "C"
+  },
+  {
+   "x": 51,
+   "y": 474,
+   "w": 12,
+   "h": 25,
+   "c": "F"
+  },
+  {
+   "x": 442,
+   "y": 474,
+   "w": 48,
+   "h": 25,
+   "c": "Dm"
+  },
+  {
+   "x": 805,
+   "y": 474,
+   "w": 36,
+   "h": 25,
+   "c": "Bb"
+  },
+  {
+   "x": 1243,
+   "y": 474,
+   "w": 17,
+   "h": 25,
+   "c": "C"
+  },
+  {
+   "x": 50,
+   "y": 740,
+   "w": 12,
+   "h": 24,
+   "c": "F"
+  },
+  {
+   "x": 436,
+   "y": 740,
+   "w": 48,
+   "h": 24,
+   "c": "Dm"
+  },
+  {
+   "x": 805,
+   "y": 740,
+   "w": 36,
+   "h": 24,
+   "c": "Bb"
+  },
+  {
+   "x": 1002,
+   "y": 740,
+   "w": 17,
+   "h": 24,
+   "c": "C"
+  },
+  {
+   "x": 1249,
+   "y": 740,
+   "w": 12,
+   "h": 24,
+   "c": "F"
+  },
+  {
+   "x": 40,
+   "y": 1004,
+   "w": 48,
+   "h": 25,
+   "c": "Dm"
+  },
+  {
+   "x": 450,
+   "y": 1004,
+   "w": 50,
+   "h": 25,
+   "c": "Gm"
+  },
+  {
+   "x": 826,
+   "y": 1004,
+   "w": 36,
+   "h": 25,
+   "c": "Bb"
+  },
+  {
+   "x": 1233,
+   "y": 1004,
+   "w": 18,
+   "h": 25,
+   "c": "C"
+  },
+  {
+   "x": 88,
+   "y": 1262,
+   "w": 12,
+   "h": 32,
+   "c": "F"
+  },
+  {
+   "x": 449,
+   "y": 1262,
+   "w": 48,
+   "h": 32,
+   "c": "Dm"
+  },
+  {
+   "x": 843,
+   "y": 1262,
+   "w": 36,
+   "h": 32,
+   "c": "Bb"
+  },
+  {
+   "x": 1024,
+   "y": 1262,
+   "w": 17,
+   "h": 32,
+   "c": "C"
+  },
+  {
+   "x": 1239,
+   "y": 1262,
+   "w": 12,
+   "h": 32,
+   "c": "F"
+  },
+  {
+   "x": 1488,
+   "y": 1262,
+   "w": 49,
+   "h": 32,
+   "c": "C/E"
+  },
+  {
+   "x": 40,
+   "y": 1535,
+   "w": 48,
+   "h": 25,
+   "c": "Dm"
+  },
+  {
+   "x": 415,
+   "y": 1535,
+   "w": 50,
+   "h": 25,
+   "c": "Gm"
+  },
+  {
+   "x": 806,
+   "y": 1535,
+   "w": 48,
+   "h": 25,
+   "c": "Am"
+  },
+  {
+   "x": 1216,
+   "y": 1535,
+   "w": 48,
+   "h": 25,
+   "c": "Dm"
+  },
+  {
+   "x": 53,
+   "y": 1800,
+   "w": 12,
+   "h": 25,
+   "c": "F"
+  },
+  {
+   "x": 478,
+   "y": 1800,
+   "w": 48,
+   "h": 25,
+   "c": "Dm"
+  },
+  {
+   "x": 852,
+   "y": 1800,
+   "w": 35,
+   "h": 25,
+   "c": "Bb"
+  },
+  {
+   "x": 1030,
+   "y": 1800,
+   "w": 17,
+   "h": 25,
+   "c": "C"
+  },
+  {
+   "x": 1243,
+   "y": 1800,
+   "w": 13,
+   "h": 25,
+   "c": "F"
+  },
+  {
+   "x": 40,
+   "y": 2066,
+   "w": 48,
+   "h": 24,
+   "c": "Dm"
+  },
+  {
+   "x": 404,
+   "y": 2066,
+   "w": 50,
+   "h": 24,
+   "c": "Gm"
+  },
+  {
+   "x": 792,
+   "y": 2066,
+   "w": 48,
+   "h": 24,
+   "c": "Am"
+  },
+  {
+   "x": 1214,
+   "y": 2066,
+   "w": 48,
+   "h": 24,
+   "c": "Dm"
+  },
+  {
+   "x": 1478,
+   "y": 1535,
+   "w": 48,
+   "h": 25,
+   "c": "C/E"
+  },
+  {
+   "x": 1488,
+   "y": 1800,
+   "w": 49,
+   "h": 25,
+   "c": "C/E"
+  }
+ ]
 }

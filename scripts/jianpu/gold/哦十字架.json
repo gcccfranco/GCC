@@ -1,4 +1,258 @@
 {
  "slug": "哦十字架",
- "face": "times-bold"
+ "face": "times-bold",
+ "extra_labels": [],
+ "key_label_verified": "la candidate de measure-keylabel (x=82 y=241 w=122 h=41) était la ligne de tempo ♩=100. Boîte d'encre du « 1=F » relevée x=88 y=185 w=77 h=34 (le « 4/4 » commence à x=191), publiée en étiquette composite « 1= F ». 2026-09-02 (itération 41)",
+ "key_label": {
+  "x": 88,
+  "y": 185,
+  "w": 77,
+  "h": 34,
+  "c": "1= F"
+ },
+ "corrections": {
+  "722,440": "Bb",
+  "722,887": "F",
+  "1113,403": "Bb",
+  "1378,412": "Bb",
+  "1674,220": "C/E",
+  "1674,561": "Bb",
+  "1674,1183": "Bb",
+  "1955,223": "C/E",
+  "1955,585": "Bb",
+  "1955,1235": "Bb"
+ },
+ "corrections_verified": "dix amas relus au zoom sur planche de lot (propose-extra --all --hidden), 2026-09-05 (itération 45) · sept `B♭` à bémol **exposant**, laissés entre −0,25 et +0,04",
+ "not_rows": [
+  1143,
+  1428
+ ],
+ "not_rows_verified": "deux rangées de **chiffres** (y=1143 et y=1428) typées `chords`, dont les amas les plus larges sont des groupes sous ligature — bandes rendues à l'œil, 2026-09-05 (itération 45)",
+ "verified": "transposé F→F# dans Chrome headless (npm run jianpu:audit, 7 tranches relues) : 32 accords sur les six rangées, tous encadrés, plus le cadre « 1=F » → « 1= Gb » · gravure à **bémol exposant** (« B♭ ») : les sept `Bb` étaient laissés entre −0,25 et +0,04 · deux rangées de chiffres écartées en `not_rows` · 2026-09-05 (itération 45)",
+ "frozen_labels": [
+  {
+   "x": 73,
+   "y": 343,
+   "w": 23,
+   "h": 29,
+   "c": "F"
+  },
+  {
+   "x": 440,
+   "y": 343,
+   "w": 85,
+   "h": 29,
+   "c": "Bb/F"
+  },
+  {
+   "x": 769,
+   "y": 343,
+   "w": 23,
+   "h": 29,
+   "c": "F"
+  },
+  {
+   "x": 1156,
+   "y": 343,
+   "w": 27,
+   "h": 29,
+   "c": "C"
+  },
+  {
+   "x": 74,
+   "y": 722,
+   "w": 22,
+   "h": 28,
+   "c": "F"
+  },
+  {
+   "x": 440,
+   "y": 722,
+   "w": 40,
+   "h": 28,
+   "c": "Bb"
+  },
+  {
+   "x": 887,
+   "y": 722,
+   "w": 23,
+   "h": 28,
+   "c": "F"
+  },
+  {
+   "x": 971,
+   "y": 722,
+   "w": 27,
+   "h": 28,
+   "c": "C"
+  },
+  {
+   "x": 1182,
+   "y": 722,
+   "w": 22,
+   "h": 28,
+   "c": "F"
+  },
+  {
+   "x": 78,
+   "y": 1113,
+   "w": 22,
+   "h": 29,
+   "c": "F"
+  },
+  {
+   "x": 403,
+   "y": 1113,
+   "w": 41,
+   "h": 29,
+   "c": "Bb"
+  },
+  {
+   "x": 748,
+   "y": 1113,
+   "w": 26,
+   "h": 29,
+   "c": "C"
+  },
+  {
+   "x": 1139,
+   "y": 1113,
+   "w": 23,
+   "h": 29,
+   "c": "F"
+  },
+  {
+   "x": 74,
+   "y": 1378,
+   "w": 74,
+   "h": 34,
+   "c": "F/A"
+  },
+  {
+   "x": 412,
+   "y": 1378,
+   "w": 41,
+   "h": 34,
+   "c": "Bb"
+  },
+  {
+   "x": 717,
+   "y": 1378,
+   "w": 70,
+   "h": 34,
+   "c": "F/C"
+  },
+  {
+   "x": 870,
+   "y": 1378,
+   "w": 28,
+   "h": 34,
+   "c": "C"
+  },
+  {
+   "x": 1182,
+   "y": 1378,
+   "w": 22,
+   "h": 34,
+   "c": "F"
+  },
+  {
+   "x": 76,
+   "y": 1674,
+   "w": 22,
+   "h": 30,
+   "c": "F"
+  },
+  {
+   "x": 220,
+   "y": 1674,
+   "w": 73,
+   "h": 30,
+   "c": "C/E"
+  },
+  {
+   "x": 417,
+   "y": 1674,
+   "w": 59,
+   "h": 30,
+   "c": "Dm"
+  },
+  {
+   "x": 561,
+   "y": 1674,
+   "w": 40,
+   "h": 30,
+   "c": "Bb"
+  },
+  {
+   "x": 847,
+   "y": 1674,
+   "w": 22,
+   "h": 30,
+   "c": "F"
+  },
+  {
+   "x": 992,
+   "y": 1674,
+   "w": 27,
+   "h": 30,
+   "c": "C"
+  },
+  {
+   "x": 1183,
+   "y": 1674,
+   "w": 41,
+   "h": 30,
+   "c": "Bb"
+  },
+  {
+   "x": 80,
+   "y": 1955,
+   "w": 21,
+   "h": 29,
+   "c": "F"
+  },
+  {
+   "x": 223,
+   "y": 1955,
+   "w": 73,
+   "h": 29,
+   "c": "C/E"
+  },
+  {
+   "x": 419,
+   "y": 1955,
+   "w": 60,
+   "h": 29,
+   "c": "Dm"
+  },
+  {
+   "x": 585,
+   "y": 1955,
+   "w": 41,
+   "h": 29,
+   "c": "Bb"
+  },
+  {
+   "x": 879,
+   "y": 1955,
+   "w": 23,
+   "h": 29,
+   "c": "F"
+  },
+  {
+   "x": 1024,
+   "y": 1955,
+   "w": 27,
+   "h": 29,
+   "c": "C"
+  },
+  {
+   "x": 1235,
+   "y": 1955,
+   "w": 41,
+   "h": 29,
+   "c": "Bb"
+  }
+ ]
 }

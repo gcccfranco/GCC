@@ -1,10 +1,263 @@
 {
-  "slug": "我要全心赞美",
-  "key_label": {
-    "x": 54,
-    "y": 271,
-    "w": 69,
-    "h": 27
+ "slug": "我要全心赞美",
+ "key_label": {
+  "x": 54,
+  "y": 271,
+  "w": 69,
+  "h": 27
+ },
+ "key_label_verified": "mesure measure-keylabel (ancrage sur le « = », cadre = voisin gauche…voisin droit), zoom relu à l’œil sur planche de lot, lettre gravée confrontée à printedKey, 2026-08-26 (itération 35)",
+ "corrections": {
+  "453,757": "Bb",
+  "630,629": "Bbmaj7",
+  "911,8": "Gm/F",
+  "911,323": "Bb/C",
+  "1199,8": "Bbmaj7",
+  "1199,1117": "Bb/C",
+  "1484,888": "C/E",
+  "1484,1003": "A/C#",
+  "1778,37": "Bb",
+  "2063,237": "C/E",
+  "2063,379": "A/C#",
+  "2063,991": "Bb/C"
+ },
+ "corrections_verified": "douze amas laissés entre −0,31 et +0,66 par le matcher · cette gravure écrit le bémol **en exposant** (« B♭ »), dont la hampe monte au-dessus de la bande de rangée — relus au zoom sur planche de lot (propose-extra --all --hidden), 2026-09-05 (itération 44)",
+ "not_labels": [
+  "453,1230"
+ ],
+ "not_labels_verified": "un **arc de liaison** seul dans sa boîte (453,1230), lu `Bbmaj7` à −0,20 — relus au zoom, 2026-09-05 (itération 44)",
+ "verified": "transposé F→F# dans Chrome headless (npm run jianpu:audit, 6 tranches relues) : 33 accords sur les sept rangées, tous encadrés, plus le cadre « 1=F » → « 1=F# » · gravure à **bémol exposant** (« B♭ », « B♭maj7 », « B♭/C ») : la hampe du bémol monte au-dessus de la bande de rangée et restait visible sous le nom réécrit — `haut_grave` remonte la boîte, `B♭maj7` sort bien `Bmaj7` et non `B♭maj7` · 2026-09-05 (itération 44)",
+ "frozen_labels": [
+  {
+   "x": 101,
+   "y": 453,
+   "w": 11,
+   "h": 22,
+   "c": "F"
   },
-  "key_label_verified": "mesure measure-keylabel (ancrage sur le « = », cadre = voisin gauche…voisin droit), zoom relu à l’œil sur planche de lot, lettre gravée confrontée à printedKey, 2026-08-26 (itération 35)"
+  {
+   "x": 416,
+   "y": 453,
+   "w": 35,
+   "h": 22,
+   "c": "F/A"
+  },
+  {
+   "x": 757,
+   "y": 446,
+   "w": 23,
+   "h": 29,
+   "c": "Bb"
+  },
+  {
+   "x": 1081,
+   "y": 446,
+   "w": 22,
+   "h": 29,
+   "c": "Bb"
+  },
+  {
+   "x": 37,
+   "y": 630,
+   "w": 13,
+   "h": 22,
+   "c": "F"
+  },
+  {
+   "x": 321,
+   "y": 630,
+   "w": 43,
+   "h": 22,
+   "c": "F/A"
+  },
+  {
+   "x": 629,
+   "y": 620,
+   "w": 91,
+   "h": 32,
+   "c": "Bbmaj7"
+  },
+  {
+   "x": 1110,
+   "y": 630,
+   "w": 45,
+   "h": 22,
+   "c": "Gm"
+  },
+  {
+   "x": 8,
+   "y": 911,
+   "w": 71,
+   "h": 23,
+   "c": "Gm/F"
+  },
+  {
+   "x": 323,
+   "y": 902,
+   "w": 56,
+   "h": 32,
+   "c": "Bb/C"
+  },
+  {
+   "x": 649,
+   "y": 911,
+   "w": 35,
+   "h": 23,
+   "c": "C7"
+  },
+  {
+   "x": 848,
+   "y": 911,
+   "w": 13,
+   "h": 23,
+   "c": "F"
+  },
+  {
+   "x": 1123,
+   "y": 911,
+   "w": 43,
+   "h": 23,
+   "c": "F/A"
+  },
+  {
+   "x": 8,
+   "y": 1191,
+   "w": 91,
+   "h": 31,
+   "c": "Bbmaj7"
+  },
+  {
+   "x": 489,
+   "y": 1199,
+   "w": 45,
+   "h": 23,
+   "c": "Gm"
+  },
+  {
+   "x": 793,
+   "y": 1199,
+   "w": 71,
+   "h": 23,
+   "c": "Gm/F"
+  },
+  {
+   "x": 1117,
+   "y": 1189,
+   "w": 56,
+   "h": 33,
+   "c": "Bb/C"
+  },
+  {
+   "x": 1363,
+   "y": 1199,
+   "w": 35,
+   "h": 23,
+   "c": "C7"
+  },
+  {
+   "x": 341,
+   "y": 1484,
+   "w": 13,
+   "h": 26,
+   "c": "F"
+  },
+  {
+   "x": 888,
+   "y": 1484,
+   "w": 48,
+   "h": 26,
+   "c": "C/E"
+  },
+  {
+   "x": 1003,
+   "y": 1480,
+   "w": 64,
+   "h": 30,
+   "c": "A/C#"
+  },
+  {
+   "x": 1095,
+   "y": 1484,
+   "w": 42,
+   "h": 26,
+   "c": "Dm"
+  },
+  {
+   "x": 37,
+   "y": 1767,
+   "w": 28,
+   "h": 33,
+   "c": "Bb"
+  },
+  {
+   "x": 331,
+   "y": 1778,
+   "w": 45,
+   "h": 22,
+   "c": "Gm"
+  },
+  {
+   "x": 602,
+   "y": 1768,
+   "w": 56,
+   "h": 32,
+   "c": "Bb/C"
+  },
+  {
+   "x": 839,
+   "y": 1778,
+   "w": 35,
+   "h": 22,
+   "c": "C7"
+  },
+  {
+   "x": 1198,
+   "y": 1778,
+   "w": 13,
+   "h": 22,
+   "c": "F"
+  },
+  {
+   "x": 237,
+   "y": 2063,
+   "w": 48,
+   "h": 26,
+   "c": "C/E"
+  },
+  {
+   "x": 379,
+   "y": 2058,
+   "w": 63,
+   "h": 31,
+   "c": "A/C#"
+  },
+  {
+   "x": 497,
+   "y": 2063,
+   "w": 43,
+   "h": 26,
+   "c": "Dm"
+  },
+  {
+   "x": 730,
+   "y": 2063,
+   "w": 45,
+   "h": 26,
+   "c": "Gm"
+  },
+  {
+   "x": 991,
+   "y": 2057,
+   "w": 56,
+   "h": 32,
+   "c": "Bb/C"
+  },
+  {
+   "x": 1284,
+   "y": 2063,
+   "w": 13,
+   "h": 26,
+   "c": "F"
+  }
+ ]
 }

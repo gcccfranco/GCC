@@ -7,5 +7,285 @@
   "h": 31
  },
  "key_label_verified": "mesure measure-keylabel (vote 1= + lettre attendue), zoom relu à l’œil, 2026-08-05",
- "face": "verdana-bold"
+ "face": "verdana-bold",
+ "not_rows": [
+  195
+ ],
+ "not_rows_verified": "la rangée d'**en-tête** (y=195), typée `chords` : le chiffrage 4/4, l'annotation « 敬拜专辑版共1张：F调] » coupée en quatre, deux barres de 3 px et la signature « 游智婷 曲 ». Elle publiait un `F` — celui du « 1=F » — **sous le cadre de tonalité lui-même**. Bande rendue à l'œil, 2026-09-05 (itération 44)",
+ "corrections": {
+  "468,814": "(A7b9)",
+  "734,1326": "(A7b9)"
+ },
+ "corrections_verified": "deux `(A7b9)` entre parenthèses, laissés à +0,02 et +0,06 par le matcher — relus au zoom sur planche de lot (propose-extra --all --hidden), 2026-09-05 (itération 44)",
+ "not_labels": [
+  "1261,194",
+  "1798,460",
+  "2082,1426"
+ ],
+ "not_labels_verified": "les titres de section 【Chorus】 (1261,194) et 【Bridge】 (1798,460) et le renvoi « To Chorus » (2082,1426), gravés sur la rangée d'accords elle-même — relus au zoom, 2026-09-05 (itération 44)",
+ "extra_labels": [
+  {
+   "x": 72,
+   "y": 274,
+   "w": 13,
+   "h": 24,
+   "c": "F"
+  }
+ ],
+ "extra_verified": "le `F` du **premier système** (72,274), seul accord de sa rangée : treize pixels de large sur vingt-quatre de haut, dans un vide de 90 px entre deux bandes. Le classifieur n'en fait aucune bande — trop peu d'encre — donc ni `hidden_rows` ni `welded_rows` ne peuvent le voir, et il n'entre dans aucun dénominateur : la page affichait « 35/35, 100 % » sans lui. Trouvé à l'audit navigateur, mesuré sur l'encre, 2026-09-05 (itération 44)",
+ "verified": "transposé F→F# dans Chrome headless (npm run jianpu:audit, 7 tranches relues) : 36 accords sur les sept rangées, tous encadrés, plus le cadre « 1= F » → « 1=F# » · le `F` du premier système, seul accord de sa rangée et jamais isolé par le classifieur, est converti ; le `F` que la rangée d'en-tête publiait **sous le cadre de tonalité** a disparu avec elle · 【Chorus】, 【Bridge】, le segno et « To Chorus » laissés intacts · 2026-09-05 (itération 44)",
+ "frozen_labels": [
+  {
+   "x": 616,
+   "y": 468,
+   "w": 13,
+   "h": 24,
+   "c": "F"
+  },
+  {
+   "x": 814,
+   "y": 468,
+   "w": 90,
+   "h": 24,
+   "c": "(A7b9)"
+  },
+  {
+   "x": 1116,
+   "y": 468,
+   "w": 48,
+   "h": 24,
+   "c": "Dm"
+  },
+  {
+   "x": 81,
+   "y": 734,
+   "w": 36,
+   "h": 30,
+   "c": "Bb"
+  },
+  {
+   "x": 288,
+   "y": 734,
+   "w": 50,
+   "h": 30,
+   "c": "F/A"
+  },
+  {
+   "x": 521,
+   "y": 734,
+   "w": 50,
+   "h": 30,
+   "c": "Gm"
+  },
+  {
+   "x": 809,
+   "y": 734,
+   "w": 17,
+   "h": 30,
+   "c": "C"
+  },
+  {
+   "x": 1128,
+   "y": 734,
+   "w": 13,
+   "h": 30,
+   "c": "F"
+  },
+  {
+   "x": 1326,
+   "y": 734,
+   "w": 90,
+   "h": 30,
+   "c": "(A7b9)"
+  },
+  {
+   "x": 75,
+   "y": 1002,
+   "w": 49,
+   "h": 27,
+   "c": "Dm"
+  },
+  {
+   "x": 287,
+   "y": 1002,
+   "w": 103,
+   "h": 27,
+   "c": "Bm7b5"
+  },
+  {
+   "x": 570,
+   "y": 1002,
+   "w": 48,
+   "h": 27,
+   "c": "F/C"
+  },
+  {
+   "x": 807,
+   "y": 1002,
+   "w": 71,
+   "h": 27,
+   "c": "Bb/C"
+  },
+  {
+   "x": 1129,
+   "y": 1002,
+   "w": 13,
+   "h": 27,
+   "c": "F"
+  },
+  {
+   "x": 100,
+   "y": 1261,
+   "w": 13,
+   "h": 35,
+   "c": "F"
+  },
+  {
+   "x": 458,
+   "y": 1261,
+   "w": 48,
+   "h": 35,
+   "c": "Am"
+  },
+  {
+   "x": 831,
+   "y": 1261,
+   "w": 36,
+   "h": 35,
+   "c": "Bb"
+  },
+  {
+   "x": 999,
+   "y": 1261,
+   "w": 50,
+   "h": 35,
+   "c": "F/A"
+  },
+  {
+   "x": 1226,
+   "y": 1261,
+   "w": 51,
+   "h": 35,
+   "c": "Gm"
+  },
+  {
+   "x": 1401,
+   "y": 1261,
+   "w": 18,
+   "h": 35,
+   "c": "C"
+  },
+  {
+   "x": 71,
+   "y": 1536,
+   "w": 12,
+   "h": 29,
+   "c": "F"
+  },
+  {
+   "x": 434,
+   "y": 1536,
+   "w": 48,
+   "h": 29,
+   "c": "Am"
+  },
+  {
+   "x": 817,
+   "y": 1536,
+   "w": 35,
+   "h": 29,
+   "c": "Bb"
+  },
+  {
+   "x": 977,
+   "y": 1536,
+   "w": 50,
+   "h": 29,
+   "c": "F/A"
+  },
+  {
+   "x": 1193,
+   "y": 1536,
+   "w": 50,
+   "h": 29,
+   "c": "Gm"
+  },
+  {
+   "x": 1376,
+   "y": 1536,
+   "w": 71,
+   "h": 29,
+   "c": "Bb/C"
+  },
+  {
+   "x": 69,
+   "y": 1798,
+   "w": 12,
+   "h": 33,
+   "c": "F"
+  },
+  {
+   "x": 367,
+   "y": 1798,
+   "w": 35,
+   "h": 33,
+   "c": "Bb"
+  },
+  {
+   "x": 681,
+   "y": 1798,
+   "w": 50,
+   "h": 33,
+   "c": "F/A"
+  },
+  {
+   "x": 1001,
+   "y": 1798,
+   "w": 36,
+   "h": 33,
+   "c": "Bb"
+  },
+  {
+   "x": 1310,
+   "y": 1798,
+   "w": 49,
+   "h": 33,
+   "c": "Dm"
+  },
+  {
+   "x": 68,
+   "y": 2082,
+   "w": 36,
+   "h": 30,
+   "c": "Bb"
+  },
+  {
+   "x": 441,
+   "y": 2082,
+   "w": 50,
+   "h": 30,
+   "c": "F/A"
+  },
+  {
+   "x": 821,
+   "y": 2082,
+   "w": 35,
+   "h": 30,
+   "c": "Bb"
+  },
+  {
+   "x": 1208,
+   "y": 2082,
+   "w": 17,
+   "h": 30,
+   "c": "C"
+  },
+  {
+   "x": 72,
+   "y": 274,
+   "w": 13,
+   "h": 24,
+   "c": "F"
+  }
+ ]
 }

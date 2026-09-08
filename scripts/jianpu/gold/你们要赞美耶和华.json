@@ -1,18 +1,236 @@
 {
  "slug": "你们要赞美耶和华",
  "printed_key": "F",
- "source": "lu à l'œil sur debug/_lecture.png (itération 6) ; null = amas qui n'est pas une étiquette",
- "chord_rows": [
+ "face": "verdana-bold",
+ "extra_labels": [
   {
-   "top": 806,
-   "chords": [
-    "C",
-    "F",
-    "F",
-    "Bb",
-    "C7"
-   ]
+   "x": 1108,
+   "y": 180,
+   "w": 21,
+   "h": 37,
+   "c": "F"
+  },
+  {
+   "x": 34,
+   "y": 468,
+   "w": 32,
+   "h": 37,
+   "c": "Bb"
+  },
+  {
+   "x": 373,
+   "y": 476,
+   "w": 19,
+   "h": 37,
+   "c": "C"
+  },
+  {
+   "x": 820,
+   "y": 481,
+   "w": 16,
+   "h": 35,
+   "c": "F"
+  },
+  {
+   "x": 1160,
+   "y": 483,
+   "w": 15,
+   "h": 37,
+   "c": "F"
+  },
+  {
+   "x": 1401,
+   "y": 484,
+   "w": 35,
+   "h": 33,
+   "c": "Bb"
+  },
+  {
+   "x": 431,
+   "y": 1082,
+   "w": 20,
+   "h": 37,
+   "c": "F"
+  },
+  {
+   "x": 239,
+   "y": 798,
+   "w": 21,
+   "h": 33,
+   "c": "C"
+  },
+  {
+   "x": 482,
+   "y": 798,
+   "w": 19,
+   "h": 35,
+   "c": "F"
+  },
+  {
+   "x": 854,
+   "y": 800,
+   "w": 19,
+   "h": 36,
+   "c": "F"
+  },
+  {
+   "x": 1105,
+   "y": 799,
+   "w": 33,
+   "h": 40,
+   "c": "Bb"
+  },
+  {
+   "x": 1484,
+   "y": 805,
+   "w": 40,
+   "h": 38,
+   "c": "C7"
   }
  ],
- "face": "verdana-bold"
+ "key_label_verified": "la page hymnaire écrit la tonalité **à l'envers** : « F=1 », lettre d'abord. measure-keylabel s'ancre sur le « = » mais exige un « 1 » à sa gauche (itération 40, pour écarter ♩=NN) : il ne pouvait donc rien voir ici — AUCUNE candidate. Écrite verbatim en extra_label, « F=1 » est un seul jeton dont la grammaire d'accord lit la fondamentale F et garde « =1 » en suffixe : transposeLabel rend « Gb=1 » sans espace ajouté. Boîte x=23 y=43 w=70 h=27 (le « 4/4 » commence à x=178). 2026-09-02 (itération 41)",
+ "key_label": {
+  "x": 23,
+  "y": 43,
+  "w": 70,
+  "h": 27,
+  "c": "F=1"
+ },
+ "chord_rows_retire": "la transcription de l'itération 6 ne couvrait qu'une rangée sur trois (806) et la voie « vérité terrain » ignore `corrections` / `not_rows` / `not_labels` : la page publiait 5 étiquettes sur 18 et laissait deux rangées entières en F. Contenu retiré : [{\"top\": 806, \"chords\": [\"C\", \"F\", \"F\", \"Bb\", \"C7\"]}] — 2026-09-02 (itération 42)",
+ "corrections": {
+  "167,54": "F",
+  "167,333": "Bb",
+  "167,659": "C",
+  "167,1303": "F",
+  "806,239": "C",
+  "806,482": "F",
+  "806,856": "F",
+  "806,1105": "Bb",
+  "806,1485": "C7"
+ },
+ "corrections_verified": "les deux rangées d'accords que le classifieur trouve. Le matcher n'y garde rien — 14 à 18 px de haut, la gravure hymnaire du jeu de contrôle : ses neuf lectures vont de −0,65 à +0,12, unanimes et toutes sous le seuil, et deux sont fausses (le « ♭B » à bémol **exposant** lu C, le « F » sous sa liaison lu Bb). Relues au zoom, 2026-09-02 (itération 42)",
+ "extra_verified": "la **rangée d'accords soudée au système** (y≈468-505 : ♭B C F F ♭B), que le découpage range dans la bande `numbers` du deuxième système et que ni `hidden_rows` ni `welded_rows` ne voient ; le « F » final du quatrième système, seul dans une bande typée « ? » ; et les deux « F » posés **sous leur liaison**, dont l'amas fait 100 px pour une lettre de 21. Boîtes prises sur le bas de chaque lettre, là où aucune liaison ne court, puis relues une à une au zoom ×4. 2026-09-02 (itération 42) · **la rangée 806 relevée une seconde fois** : le classifieur ne lui donne qu'une bande de 14 px là où les lettres en font 37, si bien que ses cinq amas sont des *fragments* (le « C » sort à 6 px de large) et que le fond opaque laissait dépasser le bas du gravé. Les cinq boîtes d'encre entières sont écrites ici ; le filtre de doublons (itération 39) garde le relevé le plus large, donc celles-ci, et les `corrections` de la même rangée continuent de la compter comme lue.",
+ "not_labels": [
+  "167,1029"
+ ],
+ "not_labels_verified": "l'amas de 99 px qui soude la liaison au « F » de la rangée 167 : l'amas n'est pas une étiquette, la lettre qu'il contient l'est et paraît en `extra_labels`. 2026-09-02 (itération 42)",
+ "not_rows": [
+  384
+ ],
+ "not_rows_verified": "la deuxième ligne de **paroles** du premier système, promue `chords` : huit amas de hanzi de 100 à 272 px, qui pesaient huit des dix-huit amas du dénominateur. 2026-09-02 (itération 42)",
+ "verified": "transposé F→F# dans Chrome headless (npm run jianpu:audit, 4 tranches relues) : les 16 accords des quatre systèmes, dont les quatre « ♭B » à bémol **exposant** rendus « B », les trois « F » posés sous leur liaison (la liaison reste entière) et le cadre de tête « F=1 » → « Gb=1 » ; aucun accord resté en F, aucun sans cadre. C'est la gravure hymnaire du jeu de contrôle — étiquettes de 37 px de haut mais de 15 à 20 px de large — dont le matcher ne garde aucune lecture : la page est entièrement en `corrections` et `extra_labels`. song_semitones = 0. — 2026-09-02 (itération 42)",
+ "frozen_labels": [
+  {
+   "x": 54,
+   "y": 167,
+   "w": 18,
+   "h": 44,
+   "c": "F"
+  },
+  {
+   "x": 333,
+   "y": 167,
+   "w": 34,
+   "h": 44,
+   "c": "Bb"
+  },
+  {
+   "x": 659,
+   "y": 167,
+   "w": 20,
+   "h": 44,
+   "c": "C"
+  },
+  {
+   "x": 1303,
+   "y": 167,
+   "w": 18,
+   "h": 44,
+   "c": "F"
+  },
+  {
+   "x": 1108,
+   "y": 180,
+   "w": 21,
+   "h": 37,
+   "c": "F"
+  },
+  {
+   "x": 34,
+   "y": 468,
+   "w": 32,
+   "h": 37,
+   "c": "Bb"
+  },
+  {
+   "x": 373,
+   "y": 476,
+   "w": 19,
+   "h": 37,
+   "c": "C"
+  },
+  {
+   "x": 820,
+   "y": 481,
+   "w": 16,
+   "h": 35,
+   "c": "F"
+  },
+  {
+   "x": 1160,
+   "y": 483,
+   "w": 15,
+   "h": 37,
+   "c": "F"
+  },
+  {
+   "x": 1401,
+   "y": 484,
+   "w": 35,
+   "h": 33,
+   "c": "Bb"
+  },
+  {
+   "x": 431,
+   "y": 1082,
+   "w": 20,
+   "h": 37,
+   "c": "F"
+  },
+  {
+   "x": 239,
+   "y": 798,
+   "w": 21,
+   "h": 33,
+   "c": "C"
+  },
+  {
+   "x": 482,
+   "y": 798,
+   "w": 19,
+   "h": 35,
+   "c": "F"
+  },
+  {
+   "x": 854,
+   "y": 800,
+   "w": 19,
+   "h": 36,
+   "c": "F"
+  },
+  {
+   "x": 1105,
+   "y": 799,
+   "w": 33,
+   "h": 40,
+   "c": "Bb"
+  },
+  {
+   "x": 1484,
+   "y": 805,
+   "w": 40,
+   "h": 38,
+   "c": "C7"
+  }
+ ]
 }

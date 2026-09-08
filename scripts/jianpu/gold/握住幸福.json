@@ -32,34 +32,6 @@
    "c": "D/F#"
   },
   {
-   "x": 662,
-   "y": 784,
-   "w": 64,
-   "h": 32,
-   "c": "D/F#"
-  },
-  {
-   "x": 733,
-   "y": 787,
-   "w": 57,
-   "h": 25,
-   "c": "Em7"
-  },
-  {
-   "x": 351,
-   "y": 1209,
-   "w": 41,
-   "h": 23,
-   "c": "Dm"
-  },
-  {
-   "x": 397,
-   "y": 1208,
-   "w": 29,
-   "h": 29,
-   "c": "G)"
-  },
-  {
    "x": 40,
    "y": 1272,
    "w": 62,
@@ -86,13 +58,6 @@
    "w": 40,
    "h": 29,
    "c": "(B7"
-  },
-  {
-   "x": 1204,
-   "y": 1500,
-   "w": 27,
-   "h": 30,
-   "c": "D)"
   },
   {
    "x": 142,
@@ -184,18 +149,573 @@
    "w": 53,
    "h": 27,
    "c": "Em7"
+  },
+  {
+   "x": 192,
+   "y": 966,
+   "w": 95,
+   "h": 24,
+   "c": "C#m7b5"
+  },
+  {
+   "x": 374,
+   "y": 966,
+   "w": 53,
+   "h": 24,
+   "c": "Am7"
+  },
+  {
+   "x": 583,
+   "y": 966,
+   "w": 67,
+   "h": 24,
+   "c": "Am/G"
+  },
+  {
+   "x": 177,
+   "y": 133,
+   "w": 702,
+   "h": 28,
+   "c": "【前奏 | G  D/F# | Dm/F   Esus4  E7| Am7  Adim(9) | C/D | D】",
+   "fh": 17
+  },
+  {
+   "x": 539,
+   "y": 787,
+   "w": 251,
+   "h": 26,
+   "c": "Gsus4 G D/F# Em7"
+  },
+  {
+   "x": 828,
+   "y": 966,
+   "w": 137,
+   "h": 24,
+   "c": "Cm6/Eb  D)"
+  },
+  {
+   "x": 838,
+   "y": 1022,
+   "w": 120,
+   "h": 32,
+   "c": "Dsus4  D"
+  },
+  {
+   "x": 288,
+   "y": 1210,
+   "w": 136,
+   "h": 22,
+   "c": "Em7 Dm G)"
+  },
+  {
+   "x": 1135,
+   "y": 1503,
+   "w": 94,
+   "h": 24,
+   "c": "Fm7  D)"
+  },
+  {
+   "x": 1129,
+   "y": 1567,
+   "w": 152,
+   "h": 27,
+   "c": "C/D Cm6/D"
+  },
+  {
+   "x": 1128,
+   "y": 1455,
+   "w": 104,
+   "h": 24,
+   "c": "(F  C/E  D)",
+   "fh": 17
+  },
+  {
+   "x": 684,
+   "y": 1771,
+   "w": 104,
+   "h": 26,
+   "c": "C#m7b5"
   }
  ],
- "extra_verified": "zooms relus à l’œil, 2026-08-25 (itération 33) : les sept étiquettes que l’ouverture du vocabulaire a fait tomber sous le seuil, remises à la main",
+ "extra_verified": "zooms relus à l’œil, 2026-08-25 (itération 33) : les sept étiquettes que l’ouverture du vocabulaire a fait tomber sous le seuil, remises à la main · itération 37 (2026-08-30) : la rangée y=966, « ( C#m7b5  Am7  Am/G  Cm6/Eb  D) », entièrement manquée (mode D) — typée « chords? » puis écartée par le matcher, elle ne tombait dans aucun dénominateur et la page affichait 94 % PRÊT. Cinq accords lus au zoom ×2 ; la parenthèse ouvrante isolée (x=42) est laissée telle quelle, elle ne porte pas de tonalité. La **ligne d'intro entière** (y=133, x=177…878) était elle aussi manquée : le découpage la noie dans la bande d'en-tête typée « numbers », donc aucun test ne l'atteint — ni la couverture, ni les rangées cachées, ni les suspects. Posée en étiquette composite, mesurée sur le profil d'encre. L'annotation « [另有一张F调] » reste **verbatim** : elle désigne une autre partition, qui ne se transpose pas avec celle-ci. Elle porte un `fh` de 17 (contre `labelH` = 27) : la ligne d'intro est gravée à peu près aux deux tiers du corps des accords, et réécrite au corps de la page elle déborde sur les crédits. Corps calé en rendant le texte **d'origine** à plusieurs corps et en retenant celui qui retrouve la largeur gravée (702 px). Un quatrième groupe parenthésé, « (F  C/E  D) », est **noyé dans une ligne de paroles** (y=1455, à droite de « 住。 ») : la rangée est typée « lyrics », donc aucun test de la boucle ne l'atteint. Gravé plus petit que les accords, il porte lui aussi un `fh` (17). **Un mode C**, trouvé à l'audit et non par les compteurs : la page grave « C#m7b5 » en y=1771 x=684 et le calque y publiait « F#m7b5 » — le mot ajouté au vocabulaire à l'itération 33 pour le « (F#m7b5 » de y=1210, que le matcher a ensuite préféré ici. Retenue, unanime, comptée comme réussite ; seule la page transposée la montre (« Gm7b5 » au lieu de « Dm7b5 »). `corrections` ne peut rien — il ne comble que les trous — d'où `not_labels` puis étiquette reposée.",
  "not_labels": [
-  "1004,1022"
+  "1022,1004",
+  "815,532",
+  "815,1204",
+  "1256,1339",
+  "787,539",
+  "787,631",
+  "787,664",
+  "815,724",
+  "1022,838",
+  "1022,942",
+  "1210,288",
+  "1210,353",
+  "1503,1135",
+  "1503,1206",
+  "1567,1129",
+  "1567,1193",
+  "1771,684"
  ],
- "not_labels_verified": "amas sans accord : titres 【Chorus】【Bridge】【Pre-Chorus】, « To Chorus », indications de jeu (（琶音）,（先低后高）), barre de mesure, chiffrage, et l'annotation « 升调用上层和弦 » — relus au zoom, itération 31 (2026-08-22)",
+ "not_labels_verified": "amas sans accord : titres 【Chorus】【Bridge】【Pre-Chorus】, « To Chorus », indications de jeu (（琶音）,（先低后高）), barre de mesure, chiffrage, et l'annotation « 升调用上层和弦 » — relus au zoom, itération 31 (2026-08-22) · itération 37 (2026-08-30) : les clés de ce fichier étaient écrites « x,y » alors que le code les lit « y,x » (`build-chords`, `worklist`, `dissent`) — elles n'écartaient donc rien. Remises dans le bon ordre ; aucune n'était publiée, donc aucun accord n'a bougé. · itération 37 : trois barres de mesure isolées (1 à 2 px) prises pour des amas, relues au zoom ×3. · itération 37 : les trois amas de « Gsus4 G D/F# Em7 » (y=787) sont retirés de la lecture au profit d'une seule étiquette composite — posés séparément, les noms cibles se rognaient l'un l'autre (« G#sus4 G# D#/G Fm7 » sortait « G#sus G D#/( Fm7 »). Même geste au « Dsus4  D » de y=1022 et au « Cm6/Eb  D) » de y=966 : réunis en une étiquette, ils cessent de se rogner. Et au « Em7 Dm G) » de y=1210, où le rognage effaçait le « m » de « D#m » — un accord faux, pas seulement illisible. Idem pour « Fm7  D) » (y=1503) et « C/D Cm6/D » (y=1567).",
  "extra_chords": [
   "F#m7b5",
   "Fm7",
   "Am/G",
   "Cm6/Eb"
  ],
- "extra_chords_verified": "accords gravés hors du `.cho`, lus à l’œil sur zoom ; le vocabulaire fermé publiait le plus proche à leur place. 2026-08-25 (itération 33)"
+ "extra_chords_verified": "accords gravés hors du `.cho`, lus à l’œil sur zoom ; le vocabulaire fermé publiait le plus proche à leur place. 2026-08-25 (itération 33)",
+ "verified": "page auditée entièrement (8 tranches, G → G#, 2026-08-30, itération 37). Quatre familles de défauts levées : la rangée d'alternatives y=966, la ligne d'intro 【前奏 | … 】 et le groupe « (F  C/E  D) » noyé dans les paroles, tous jamais détectés (mode D) ; six groupes serrés réunis en étiquettes composites, parce que le fond opaque de la voisine rognait le nom précédent — au point d'effacer le « m » de « D#m » ; et un « F#m7b5 » publié là où la page grave « C#m7b5 » (mode C). Aucun accord sans cadre à la relecture.",
+ "frozen_labels": [
+  {
+   "x": 45,
+   "y": 184,
+   "w": 82,
+   "h": 22,
+   "c": "Gadd2"
+  },
+  {
+   "x": 482,
+   "y": 184,
+   "w": 57,
+   "h": 22,
+   "c": "Am7"
+  },
+  {
+   "x": 867,
+   "y": 184,
+   "w": 73,
+   "h": 22,
+   "c": "Dsus4"
+  },
+  {
+   "x": 39,
+   "y": 365,
+   "w": 74,
+   "h": 21,
+   "c": "Gsus4"
+  },
+  {
+   "x": 278,
+   "y": 365,
+   "w": 17,
+   "h": 21,
+   "c": "G"
+  },
+  {
+   "x": 843,
+   "y": 365,
+   "w": 73,
+   "h": 21,
+   "c": "Asus4"
+  },
+  {
+   "x": 1076,
+   "y": 365,
+   "w": 32,
+   "h": 21,
+   "c": "A7"
+  },
+  {
+   "x": 1219,
+   "y": 365,
+   "w": 57,
+   "h": 21,
+   "c": "Am7"
+  },
+  {
+   "x": 151,
+   "y": 543,
+   "w": 75,
+   "h": 26,
+   "c": "Fmaj9"
+  },
+  {
+   "x": 395,
+   "y": 543,
+   "w": 46,
+   "h": 26,
+   "c": "C/D"
+  },
+  {
+   "x": 576,
+   "y": 543,
+   "w": 81,
+   "h": 26,
+   "c": "Gadd2"
+  },
+  {
+   "x": 1033,
+   "y": 543,
+   "w": 46,
+   "h": 26,
+   "c": "C/G"
+  },
+  {
+   "x": 39,
+   "y": 787,
+   "w": 59,
+   "h": 26,
+   "c": "D/F#"
+  },
+  {
+   "x": 300,
+   "y": 787,
+   "w": 16,
+   "h": 26,
+   "c": "D"
+  },
+  {
+   "x": 1219,
+   "y": 787,
+   "w": 74,
+   "h": 26,
+   "c": "Asus4"
+  },
+  {
+   "x": 194,
+   "y": 1022,
+   "w": 32,
+   "h": 32,
+   "c": "A7"
+  },
+  {
+   "x": 374,
+   "y": 1022,
+   "w": 58,
+   "h": 32,
+   "c": "Am7"
+  },
+  {
+   "x": 584,
+   "y": 1022,
+   "w": 61,
+   "h": 32,
+   "c": "A/C#"
+  },
+  {
+   "x": 1140,
+   "y": 1022,
+   "w": 16,
+   "h": 32,
+   "c": "G"
+  },
+  {
+   "x": 167,
+   "y": 1210,
+   "w": 27,
+   "h": 22,
+   "c": "B7"
+  },
+  {
+   "x": 362,
+   "y": 1256,
+   "w": 49,
+   "h": 54,
+   "c": "G/D"
+  },
+  {
+   "x": 574,
+   "y": 1256,
+   "w": 79,
+   "h": 54,
+   "c": "Cadd2"
+  },
+  {
+   "x": 817,
+   "y": 1256,
+   "w": 47,
+   "h": 54,
+   "c": "C/D"
+  },
+  {
+   "x": 1067,
+   "y": 1256,
+   "w": 81,
+   "h": 54,
+   "c": "Gadd2"
+  },
+  {
+   "x": 554,
+   "y": 1503,
+   "w": 45,
+   "h": 24,
+   "c": "G/D"
+  },
+  {
+   "x": 711,
+   "y": 1503,
+   "w": 72,
+   "h": 24,
+   "c": "Cadd2"
+  },
+  {
+   "x": 945,
+   "y": 1503,
+   "w": 52,
+   "h": 24,
+   "c": "Am7"
+  },
+  {
+   "x": 433,
+   "y": 1567,
+   "w": 49,
+   "h": 27,
+   "c": "G/D"
+  },
+  {
+   "x": 711,
+   "y": 1567,
+   "w": 57,
+   "h": 27,
+   "c": "Am7"
+  },
+  {
+   "x": 46,
+   "y": 1771,
+   "w": 29,
+   "h": 27,
+   "c": "B7"
+  },
+  {
+   "x": 559,
+   "y": 1771,
+   "w": 50,
+   "h": 27,
+   "c": "G/D"
+  },
+  {
+   "x": 840,
+   "y": 1771,
+   "w": 58,
+   "h": 27,
+   "c": "Am7"
+  },
+  {
+   "x": 1037,
+   "y": 1771,
+   "w": 46,
+   "h": 27,
+   "c": "C/D"
+  },
+  {
+   "x": 1228,
+   "y": 1771,
+   "w": 16,
+   "h": 27,
+   "c": "G"
+  },
+  {
+   "x": 1114,
+   "y": 181,
+   "w": 62,
+   "h": 31,
+   "c": "D/F#"
+  },
+  {
+   "x": 40,
+   "y": 1272,
+   "w": 62,
+   "h": 32,
+   "c": "D/F#"
+  },
+  {
+   "x": 291,
+   "y": 1275,
+   "w": 57,
+   "h": 24,
+   "c": "Em7"
+  },
+  {
+   "x": 1234,
+   "y": 1254,
+   "w": 33,
+   "h": 25,
+   "c": "B7"
+  },
+  {
+   "x": 30,
+   "y": 1501,
+   "w": 40,
+   "h": 29,
+   "c": "(B7"
+  },
+  {
+   "x": 142,
+   "y": 1565,
+   "w": 64,
+   "h": 31,
+   "c": "B/D#"
+  },
+  {
+   "x": 293,
+   "y": 1768,
+   "w": 65,
+   "h": 32,
+   "c": "B/D#"
+  },
+  {
+   "x": 35,
+   "y": 720,
+   "w": 29,
+   "h": 29,
+   "c": "(D"
+  },
+  {
+   "x": 297,
+   "y": 719,
+   "w": 66,
+   "h": 30,
+   "c": "D/F#)"
+  },
+  {
+   "x": 974,
+   "y": 719,
+   "w": 58,
+   "h": 30,
+   "c": "(G/D"
+  },
+  {
+   "x": 1215,
+   "y": 720,
+   "w": 108,
+   "h": 29,
+   "c": "C#m7b5)"
+  },
+  {
+   "x": 357,
+   "y": 365,
+   "w": 53,
+   "h": 21,
+   "c": "Em7"
+  },
+  {
+   "x": 35,
+   "y": 1210,
+   "w": 101,
+   "h": 22,
+   "c": "(F#m7b5"
+  },
+  {
+   "x": 288,
+   "y": 1210,
+   "w": 48,
+   "h": 22,
+   "c": "Em7"
+  },
+  {
+   "x": 300,
+   "y": 1503,
+   "w": 48,
+   "h": 24,
+   "c": "Em7"
+  },
+  {
+   "x": 299,
+   "y": 1567,
+   "w": 53,
+   "h": 27,
+   "c": "Em7"
+  },
+  {
+   "x": 555,
+   "y": 1567,
+   "w": 105,
+   "h": 27,
+   "c": "C#m7b5"
+  },
+  {
+   "x": 430,
+   "y": 1771,
+   "w": 53,
+   "h": 27,
+   "c": "Em7"
+  },
+  {
+   "x": 192,
+   "y": 966,
+   "w": 95,
+   "h": 24,
+   "c": "C#m7b5"
+  },
+  {
+   "x": 374,
+   "y": 966,
+   "w": 53,
+   "h": 24,
+   "c": "Am7"
+  },
+  {
+   "x": 583,
+   "y": 966,
+   "w": 67,
+   "h": 24,
+   "c": "Am/G"
+  },
+  {
+   "x": 177,
+   "y": 133,
+   "w": 702,
+   "h": 28,
+   "c": "【前奏 | G  D/F# | Dm/F   Esus4  E7| Am7  Adim(9) | C/D | D】",
+   "fh": 17
+  },
+  {
+   "x": 539,
+   "y": 787,
+   "w": 251,
+   "h": 26,
+   "c": "Gsus4 G D/F# Em7"
+  },
+  {
+   "x": 828,
+   "y": 966,
+   "w": 137,
+   "h": 24,
+   "c": "Cm6/Eb  D)"
+  },
+  {
+   "x": 838,
+   "y": 1022,
+   "w": 120,
+   "h": 32,
+   "c": "Dsus4  D"
+  },
+  {
+   "x": 288,
+   "y": 1210,
+   "w": 136,
+   "h": 22,
+   "c": "Em7 Dm G)"
+  },
+  {
+   "x": 1135,
+   "y": 1503,
+   "w": 94,
+   "h": 24,
+   "c": "Fm7  D)"
+  },
+  {
+   "x": 1129,
+   "y": 1567,
+   "w": 152,
+   "h": 27,
+   "c": "C/D Cm6/D"
+  },
+  {
+   "x": 1128,
+   "y": 1455,
+   "w": 104,
+   "h": 24,
+   "c": "(F  C/E  D)",
+   "fh": 17
+  },
+  {
+   "x": 684,
+   "y": 1771,
+   "w": 104,
+   "h": 26,
+   "c": "C#m7b5"
+  }
+ ]
 }

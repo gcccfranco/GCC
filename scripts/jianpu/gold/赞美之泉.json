@@ -73,5 +73,205 @@
   }
  ],
  "extra_verified": "zooms relus à l’œil sur planche de lot (propose-extra --all multi-chants), 2026-08-25 (itération 33)",
- "face": "helvetica-bold"
+ "face": "helvetica-bold",
+ "not_labels": [
+  "1157,622",
+  "516,1190",
+  "648,806",
+  "648,998"
+ ],
+ "not_labels_verified": "trois fragments de chiffres tronqués par le découpage et un arc de liaison — aucun n'est une étiquette, 2026-08-30 (itération 40)",
+ "key_label_verified": "la page n'écrit pas « 1=X » mais la **lettre seule** à côté du chiffrage : « D 4/4 » en tête à gauche. `measure-keylabel`, ancré sur le glyphe « = » (itération 35), ne peut donc rien y voir — sa seule candidate était un morceau de la ligne de paroles 从天父而来的. La lettre est publiée en `extra_labels` (boîte d'encre mesurée x=62 y=140 w=49 h=43, le « 4/4 » commence à x=145) : c'est un jeton d'accord ordinaire, donc `transposeLabel` la réécrit avec le même décalage que les accords. 2026-09-02 (itération 41)",
+ "verified": "transposé D→Eb dans Chrome headless (npm run jianpu:audit, 4 tranches relues) : les 26 accords des trois rangées, les A⁷ à 7 en exposant lus A7, et la **lettre de tonalité de tête** — la page écrit « D 4/4 », sans « 1= » — réécrite « Eb » par le champ `c` de `key_label` ; aucun accord resté en D, aucun sans cadre, le chiffrage 4/4 et le crochet de triolet intacts. song_semitones = 0. — 2026-09-02 (itération 41)",
+ "key_label": {
+  "x": 62,
+  "y": 140,
+  "w": 49,
+  "h": 43,
+  "c": "D"
+ },
+ "frozen_labels": [
+  {
+   "x": 38,
+   "y": 229,
+   "w": 21,
+   "h": 24,
+   "c": "D"
+  },
+  {
+   "x": 159,
+   "y": 229,
+   "w": 75,
+   "h": 24,
+   "c": "A/C#"
+  },
+  {
+   "x": 431,
+   "y": 229,
+   "w": 49,
+   "h": 24,
+   "c": "Bm"
+  },
+  {
+   "x": 618,
+   "y": 229,
+   "w": 57,
+   "h": 24,
+   "c": "D/A"
+  },
+  {
+   "x": 863,
+   "y": 229,
+   "w": 23,
+   "h": 24,
+   "c": "G"
+  },
+  {
+   "x": 1005,
+   "y": 229,
+   "w": 70,
+   "h": 24,
+   "c": "D/F#"
+  },
+  {
+   "x": 1274,
+   "y": 229,
+   "w": 47,
+   "h": 24,
+   "c": "Em"
+  },
+  {
+   "x": 1447,
+   "y": 229,
+   "w": 30,
+   "h": 24,
+   "c": "A7"
+  },
+  {
+   "x": 38,
+   "y": 516,
+   "w": 21,
+   "h": 24,
+   "c": "D"
+  },
+  {
+   "x": 187,
+   "y": 516,
+   "w": 73,
+   "h": 24,
+   "c": "A/C#"
+  },
+  {
+   "x": 468,
+   "y": 516,
+   "w": 47,
+   "h": 24,
+   "c": "Bm"
+  },
+  {
+   "x": 1366,
+   "y": 516,
+   "w": 20,
+   "h": 24,
+   "c": "D"
+  },
+  {
+   "x": 221,
+   "y": 802,
+   "w": 21,
+   "h": 25,
+   "c": "D"
+  },
+  {
+   "x": 572,
+   "y": 802,
+   "w": 65,
+   "h": 25,
+   "c": "F#m"
+  },
+  {
+   "x": 1003,
+   "y": 802,
+   "w": 22,
+   "h": 25,
+   "c": "G"
+  },
+  {
+   "x": 1367,
+   "y": 802,
+   "w": 20,
+   "h": 25,
+   "c": "D"
+  },
+  {
+   "x": 196,
+   "y": 1088,
+   "w": 23,
+   "h": 36,
+   "c": "G"
+  },
+  {
+   "x": 591,
+   "y": 1088,
+   "w": 64,
+   "h": 36,
+   "c": "F#m"
+  },
+  {
+   "x": 719,
+   "y": 1088,
+   "w": 49,
+   "h": 36,
+   "c": "Bm"
+  },
+  {
+   "x": 933,
+   "y": 1088,
+   "w": 46,
+   "h": 36,
+   "c": "Em"
+  },
+  {
+   "x": 660,
+   "y": 516,
+   "w": 58,
+   "h": 24,
+   "c": "D/A"
+  },
+  {
+   "x": 917,
+   "y": 516,
+   "w": 23,
+   "h": 24,
+   "c": "G"
+  },
+  {
+   "x": 1121,
+   "y": 516,
+   "w": 27,
+   "h": 24,
+   "c": "A7"
+  },
+  {
+   "x": 372,
+   "y": 1088,
+   "w": 31,
+   "h": 36,
+   "c": "A7"
+  },
+  {
+   "x": 1106,
+   "y": 1088,
+   "w": 34,
+   "h": 36,
+   "c": "A7"
+  },
+  {
+   "x": 1324,
+   "y": 1088,
+   "w": 20,
+   "h": 36,
+   "c": "D"
+  }
+ ]
 }

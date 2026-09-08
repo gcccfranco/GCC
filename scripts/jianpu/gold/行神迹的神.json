@@ -1,0 +1,214 @@
+{
+ "slug": "行神迹的神",
+ "face": "times-bold",
+ "face_verified": "balayage de fonte croisé : sweep-key.py (veto + marge) et le compteur de couverture de build-chords désignent la même fonte, à tonalité inchangée — 2026-09-08 (itération 50). À confirmer par la planche d'audit avant certification.",
+ "extra_labels": [
+  {
+   "x": 80,
+   "y": 347,
+   "w": 17,
+   "h": 25,
+   "c": "F"
+  },
+  {
+   "x": 103,
+   "y": 1021,
+   "w": 22,
+   "h": 26,
+   "c": "C"
+  },
+  {
+   "x": 659,
+   "y": 1021,
+   "w": 17,
+   "h": 26,
+   "c": "F"
+  },
+  {
+   "x": 817,
+   "y": 1021,
+   "w": 62,
+   "h": 26,
+   "c": "C/E"
+  },
+  {
+   "x": 1054,
+   "y": 1021,
+   "w": 53,
+   "h": 26,
+   "c": "Dm"
+  },
+  {
+   "x": 328,
+   "y": 1579,
+   "w": 63,
+   "h": 26,
+   "c": "C/E"
+  }
+ ],
+ "extra_verified": "6 amas relus sur planche de zooms ; deux « F » que le matcher lisait « C » — 2026-09-08 (itération 50)",
+ "key_label": {
+  "x": 83,
+  "y": 211,
+  "w": 84,
+  "h": 31
+ },
+ "key_label_verified": "mesuré par measure-keylabel.py (ancrage sur le « = »), zoom relu à l'œil sur planche de lot, lettre gravée confrontée à printedKey — 2026-09-08 (itération 50). Candidates écartées : la ligne de tempo ♩=80 / ♩=60, le « Capo=1 » de la mention en crochets, et une rangée de chiffres soulignés sur 耶稣我的耶稣.",
+ "verified": "transposé F→F# dans Chrome headless (npm run jianpu:audit, 6 tranches relues, thème clair) : 22 accords sur 6 rangées, aucun resté en fa — la fonte de la page est **times-bold** (gravure à empattements), désignée par sweep-key.py et par le compteur de couverture, ce qui fait passer la lecture de 50 % à 62 % ; la rangée y=1021, que le classifieur typait « ? », a été lue à l'œil (deux « F » que le matcher rendait « C ») · cadre 1=F# juste, la carte de structure « C1 C2 R C1 C2 R R R R », ♩=158 et les crochets de reprise laissés tels quels — 2026-09-08 (itération 50)",
+ "frozen_labels": [
+  {
+   "x": 727,
+   "y": 347,
+   "w": 53,
+   "h": 25,
+   "c": "Dm"
+  },
+  {
+   "x": 71,
+   "y": 670,
+   "w": 36,
+   "h": 41,
+   "c": "Bb"
+  },
+  {
+   "x": 728,
+   "y": 685,
+   "w": 23,
+   "h": 26,
+   "c": "C"
+  },
+  {
+   "x": 62,
+   "y": 1299,
+   "w": 59,
+   "h": 26,
+   "c": "F/C"
+  },
+  {
+   "x": 380,
+   "y": 1285,
+   "w": 37,
+   "h": 40,
+   "c": "Bb"
+  },
+  {
+   "x": 648,
+   "y": 1299,
+   "w": 61,
+   "h": 26,
+   "c": "F/A"
+  },
+  {
+   "x": 853,
+   "y": 1299,
+   "w": 55,
+   "h": 26,
+   "c": "Gm"
+  },
+  {
+   "x": 1177,
+   "y": 1299,
+   "w": 22,
+   "h": 26,
+   "c": "C"
+  },
+  {
+   "x": 77,
+   "y": 1579,
+   "w": 18,
+   "h": 26,
+   "c": "F"
+  },
+  {
+   "x": 630,
+   "y": 1579,
+   "w": 54,
+   "h": 26,
+   "c": "Dm"
+  },
+  {
+   "x": 1034,
+   "y": 1579,
+   "w": 59,
+   "h": 26,
+   "c": "F/C"
+  },
+  {
+   "x": 70,
+   "y": 1840,
+   "w": 38,
+   "h": 41,
+   "c": "Bb"
+  },
+  {
+   "x": 367,
+   "y": 1855,
+   "w": 62,
+   "h": 26,
+   "c": "F/A"
+  },
+  {
+   "x": 615,
+   "y": 1855,
+   "w": 56,
+   "h": 26,
+   "c": "Gm"
+  },
+  {
+   "x": 887,
+   "y": 1855,
+   "w": 23,
+   "h": 26,
+   "c": "C"
+  },
+  {
+   "x": 1175,
+   "y": 1855,
+   "w": 19,
+   "h": 26,
+   "c": "F"
+  },
+  {
+   "x": 80,
+   "y": 347,
+   "w": 17,
+   "h": 25,
+   "c": "F"
+  },
+  {
+   "x": 103,
+   "y": 1021,
+   "w": 22,
+   "h": 26,
+   "c": "C"
+  },
+  {
+   "x": 659,
+   "y": 1021,
+   "w": 17,
+   "h": 26,
+   "c": "F"
+  },
+  {
+   "x": 817,
+   "y": 1021,
+   "w": 62,
+   "h": 26,
+   "c": "C/E"
+  },
+  {
+   "x": 1054,
+   "y": 1021,
+   "w": 53,
+   "h": 26,
+   "c": "Dm"
+  },
+  {
+   "x": 328,
+   "y": 1579,
+   "w": 63,
+   "h": 26,
+   "c": "C/E"
+  }
+ ]
+}

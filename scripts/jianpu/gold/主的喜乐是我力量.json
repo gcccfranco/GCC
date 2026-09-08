@@ -1,58 +1,307 @@
 {
-  "slug": "主的喜乐是我力量",
-  "printed_key": "E",
-  "source": "lu à l'œil sur debug/_lecture.png (itération 6) ; null = amas qui n'est pas une étiquette",
-  "chord_rows": [
-    {
-      "top": 907,
-      "chords": [
-        "E/G#",
-        "F#m"
-      ]
-    },
-    {
-      "top": 1375,
-      "chords": [
-        "Aadd2",
-        "B7",
-        "Emaj7"
-      ]
-    },
-    {
-      "top": 1606,
-      "chords": [
-        "Aadd2",
-        "B7",
-        "F#m",
-        "B7",
-        "G#m"
-      ]
-    },
-    {
-      "top": 1841,
-      "chords": [
-        "C#m",
-        "Aadd2",
-        "E/G#",
-        "Aadd2"
-      ]
-    },
-    {
-      "top": 2081,
-      "chords": [
-        "E/G#",
-        "F#m",
-        "B7",
-        "E"
-      ]
-    }
-  ],
-  "face": "times-bold",
-  "key_label": {
-    "x": 51,
-    "y": 272,
-    "w": 70,
-    "h": 26
+ "slug": "主的喜乐是我力量",
+ "printed_key": "E",
+ "source": "lu à l'œil sur debug/_lecture.png (itération 6) ; null = amas qui n'est pas une étiquette",
+ "chord_rows": [
+  {
+   "top": 907,
+   "chords": [
+    "E/G#",
+    "F#m"
+   ]
   },
-  "key_label_verified": "mesure measure-keylabel (ancrage sur le « = », cadre = voisin gauche…voisin droit), zoom relu à l’œil sur planche de lot, lettre gravée confrontée à printedKey, 2026-08-26 (itération 35)"
+  {
+   "top": 1375,
+   "chords": [
+    "Aadd2",
+    "B7",
+    "Emaj7"
+   ]
+  },
+  {
+   "top": 1606,
+   "chords": [
+    "Aadd2",
+    "B7",
+    "F#m",
+    "B7",
+    "G#m"
+   ]
+  },
+  {
+   "top": 1841,
+   "chords": [
+    "C#m",
+    "Aadd2",
+    "E/G#",
+    "Aadd2"
+   ]
+  },
+  {
+   "top": 2081,
+   "chords": [
+    "E/G#",
+    "F#m",
+    "B7",
+    "E"
+   ]
+  }
+ ],
+ "face": "times-bold",
+ "key_label": {
+  "x": 51,
+  "y": 272,
+  "w": 70,
+  "h": 26
+ },
+ "key_label_verified": "mesure measure-keylabel (ancrage sur le « = », cadre = voisin gauche…voisin droit), zoom relu à l’œil sur planche de lot, lettre gravée confrontée à printedKey, 2026-08-26 (itération 35)",
+ "extra_labels": [
+  {
+   "x": 15,
+   "y": 438,
+   "w": 79,
+   "h": 27,
+   "c": "Emaj7"
+  },
+  {
+   "x": 661,
+   "y": 438,
+   "w": 86,
+   "h": 27,
+   "c": "Amaj7"
+  },
+  {
+   "x": 1063,
+   "y": 438,
+   "w": 79,
+   "h": 27,
+   "c": "Emaj7"
+  },
+  {
+   "x": 26,
+   "y": 1149,
+   "w": 33,
+   "h": 26,
+   "c": "B7"
+  },
+  {
+   "x": 445,
+   "y": 1149,
+   "w": 34,
+   "h": 26,
+   "c": "B7"
+  },
+  {
+   "x": 936,
+   "y": 1142,
+   "w": 79,
+   "h": 33,
+   "c": "Emaj7"
+  },
+  {
+   "x": 345,
+   "y": 672,
+   "w": 35,
+   "h": 23,
+   "c": "B7"
+  },
+  {
+   "x": 762,
+   "y": 669,
+   "w": 98,
+   "h": 25,
+   "c": "Aadd2"
+  }
+ ],
+ "extra_verified": "itération 40 : la **première** rangée d'accords (y=438, « Emaj7  Amaj7  Emaj7 ») et la rangée des reprises (y=1130, « B7 | B7 | Emaj7 » sous les crochets 1. et 2.) n'étaient pas lues — la première parce que ses trois étiquettes portent un 7 en exposant collé à un arc de liaison, la seconde parce que le crochet de reprise et son numéro soudent l'amas. Boîtes mesurées au profil d'encre ligne par ligne, arrêtées à la ligne de base et avant le « 1. » / « 2. » qu'un masque effacerait — 2026-08-30 · itération 40 : une **rangée soudée** de plus, invisible à `welded_rows` parce qu'elle ne porte que deux accords — « B7 » et « A(add2) », noyés dans la bande y=672-774 typée `numbers` (103 px de haut). La part d'appariement ne peut rien pour une rangée de deux : c'est la planche navigateur qui l'a montrée, deux accords sans cadre au milieu d'une page convertie — 2026-08-30 · « A(add2) » écrit « Aadd2 », l’orthographe que le reste de la page publie déjà (chord_rows) : deux graphies du même accord sur une page se lisent comme deux accords.",
+ "not_labels": [
+  "438,1378",
+  "438,314"
+ ],
+ "not_labels_verified": "deux fragments d'arc de liaison de la rangée y=438 — 2026-08-30 (itération 40)",
+ "verified": "transposé E→F dans Chrome headless (npm run jianpu:audit, 3 tranches relues, thèmes clair et sombre) : 24 accords sur 8 rangées, aucun resté en E, y compris la première rangée (y=438, « Emaj7 Amaj7 Emaj7 », 7 en exposant collé à un arc), la rangée **soudée** de deux accords (y=672, « B7 » et « A(add2) », noyés dans une bande typée numbers) et la rangée des reprises (y=1130, « B7 | B7 | Emaj7 ») dont les crochets 1. et 2. restent intacts ; cadre 1=F juste, ligne ♩=138 laissée telle quelle — 2026-08-30 (itération 40)",
+ "frozen_labels": [
+  {
+   "x": 18,
+   "y": 907,
+   "w": 65,
+   "h": 27,
+   "c": "E/G#"
+  },
+  {
+   "x": 718,
+   "y": 907,
+   "w": 55,
+   "h": 27,
+   "c": "F#m"
+  },
+  {
+   "x": 18,
+   "y": 1375,
+   "w": 97,
+   "h": 27,
+   "c": "Aadd2"
+  },
+  {
+   "x": 437,
+   "y": 1375,
+   "w": 32,
+   "h": 27,
+   "c": "B7"
+  },
+  {
+   "x": 801,
+   "y": 1375,
+   "w": 76,
+   "h": 27,
+   "c": "Emaj7"
+  },
+  {
+   "x": 17,
+   "y": 1606,
+   "w": 99,
+   "h": 31,
+   "c": "Aadd2"
+  },
+  {
+   "x": 375,
+   "y": 1606,
+   "w": 32,
+   "h": 31,
+   "c": "B7"
+  },
+  {
+   "x": 578,
+   "y": 1606,
+   "w": 55,
+   "h": 31,
+   "c": "F#m"
+  },
+  {
+   "x": 896,
+   "y": 1606,
+   "w": 32,
+   "h": 31,
+   "c": "B7"
+  },
+  {
+   "x": 1107,
+   "y": 1606,
+   "w": 63,
+   "h": 31,
+   "c": "G#m"
+  },
+  {
+   "x": 15,
+   "y": 1841,
+   "w": 58,
+   "h": 31,
+   "c": "C#m"
+  },
+  {
+   "x": 352,
+   "y": 1841,
+   "w": 99,
+   "h": 31,
+   "c": "Aadd2"
+  },
+  {
+   "x": 719,
+   "y": 1841,
+   "w": 66,
+   "h": 31,
+   "c": "E/G#"
+  },
+  {
+   "x": 1046,
+   "y": 1841,
+   "w": 98,
+   "h": 31,
+   "c": "Aadd2"
+  },
+  {
+   "x": 18,
+   "y": 2081,
+   "w": 65,
+   "h": 27,
+   "c": "E/G#"
+  },
+  {
+   "x": 396,
+   "y": 2081,
+   "w": 55,
+   "h": 27,
+   "c": "F#m"
+  },
+  {
+   "x": 795,
+   "y": 2081,
+   "w": 32,
+   "h": 27,
+   "c": "B7"
+  },
+  {
+   "x": 1186,
+   "y": 2081,
+   "w": 16,
+   "h": 27,
+   "c": "E"
+  },
+  {
+   "x": 15,
+   "y": 438,
+   "w": 79,
+   "h": 27,
+   "c": "Emaj7"
+  },
+  {
+   "x": 661,
+   "y": 438,
+   "w": 86,
+   "h": 27,
+   "c": "Amaj7"
+  },
+  {
+   "x": 1063,
+   "y": 438,
+   "w": 79,
+   "h": 27,
+   "c": "Emaj7"
+  },
+  {
+   "x": 26,
+   "y": 1149,
+   "w": 33,
+   "h": 26,
+   "c": "B7"
+  },
+  {
+   "x": 445,
+   "y": 1149,
+   "w": 34,
+   "h": 26,
+   "c": "B7"
+  },
+  {
+   "x": 936,
+   "y": 1142,
+   "w": 79,
+   "h": 33,
+   "c": "Emaj7"
+  },
+  {
+   "x": 345,
+   "y": 672,
+   "w": 35,
+   "h": 23,
+   "c": "B7"
+  },
+  {
+   "x": 762,
+   "y": 669,
+   "w": 98,
+   "h": 25,
+   "c": "Aadd2"
+  }
+ ]
 }

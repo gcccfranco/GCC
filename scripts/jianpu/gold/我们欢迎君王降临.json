@@ -1,35 +1,478 @@
 {
-  "slug": "我们欢迎君王降临",
-  "extra_labels": [
-    {
-      "x": 627,
-      "y": 1224,
-      "w": 41,
-      "h": 22,
-      "c": "Am"
-    },
-    {
-      "x": 862,
-      "y": 1224,
-      "w": 18,
-      "h": 22,
-      "c": "A"
-    },
-    {
-      "x": 34,
-      "y": 1895,
-      "w": 14,
-      "h": 21,
-      "c": "F"
-    }
-  ],
-  "extra_verified": "chaque étiquette relue sur zoom (propose-extra + planches), 2026-08-04 · propositions propose-extra relues au zoom (itération 17, garde « deux par rangée » levé) ; six lues faux par le matcher entre +0,43 et +0,73 et relues au zoom ×7 — 2026-08-09",
-  "face": "helvetica-neue",
-  "key_label": {
-    "x": 37,
-    "y": 214,
-    "w": 61,
-    "h": 24
+ "slug": "我们欢迎君王降临",
+ "extra_labels": [
+  {
+   "x": 627,
+   "y": 1224,
+   "w": 41,
+   "h": 22,
+   "c": "Am"
   },
-  "key_label_verified": "mesure measure-keylabel (ancrage sur le « = », cadre = voisin gauche…voisin droit), zoom relu à l’œil sur planche de lot, lettre gravée confrontée à printedKey, 2026-08-26 (itération 35)"
+  {
+   "x": 862,
+   "y": 1224,
+   "w": 18,
+   "h": 22,
+   "c": "A"
+  },
+  {
+   "x": 34,
+   "y": 1895,
+   "w": 14,
+   "h": 21,
+   "c": "F"
+  },
+  {
+   "x": 625,
+   "y": 320,
+   "w": 28,
+   "h": 33,
+   "c": "Bb"
+  },
+  {
+   "x": 31,
+   "y": 543,
+   "w": 29,
+   "h": 34,
+   "c": "Bb"
+  },
+  {
+   "x": 174,
+   "y": 543,
+   "w": 58,
+   "h": 34,
+   "c": "C/Bb"
+  },
+  {
+   "x": 812,
+   "y": 543,
+   "w": 57,
+   "h": 34,
+   "c": "Bb/C"
+  },
+  {
+   "x": 1045,
+   "y": 543,
+   "w": 57,
+   "h": 34,
+   "c": "Bb/C"
+  },
+  {
+   "x": 56,
+   "y": 779,
+   "w": 15,
+   "h": 22,
+   "c": "F"
+  },
+  {
+   "x": 334,
+   "y": 779,
+   "w": 56,
+   "h": 22,
+   "c": "C/E"
+  },
+  {
+   "x": 649,
+   "y": 779,
+   "w": 42,
+   "h": 22,
+   "c": "Am"
+  },
+  {
+   "x": 947,
+   "y": 779,
+   "w": 56,
+   "h": 22,
+   "c": "Dm"
+  },
+  {
+   "x": 31,
+   "y": 995,
+   "w": 29,
+   "h": 26,
+   "c": "Bb"
+  },
+  {
+   "x": 201,
+   "y": 995,
+   "w": 58,
+   "h": 27,
+   "c": "C/Bb"
+  },
+  {
+   "x": 34,
+   "y": 1224,
+   "w": 16,
+   "h": 22,
+   "c": "F"
+  },
+  {
+   "x": 321,
+   "y": 1224,
+   "w": 46,
+   "h": 22,
+   "c": "C/E"
+  },
+  {
+   "x": 947,
+   "y": 1224,
+   "w": 56,
+   "h": 22,
+   "c": "Dm"
+  },
+  {
+   "x": 847,
+   "y": 1435,
+   "w": 57,
+   "h": 33,
+   "c": "Bb/C"
+  },
+  {
+   "x": 262,
+   "y": 1895,
+   "w": 41,
+   "h": 21,
+   "c": "Dm"
+  },
+  {
+   "x": 509,
+   "y": 1884,
+   "w": 28,
+   "h": 32,
+   "c": "Bb"
+  },
+  {
+   "x": 784,
+   "y": 1884,
+   "w": 57,
+   "h": 32,
+   "c": "Bb/C"
+  }
+ ],
+ "extra_verified": "chaque étiquette relue sur zoom (propose-extra + planches), 2026-08-04 · propositions propose-extra relues au zoom (itération 17, garde « deux par rangée » levé) ; six lues faux par le matcher entre +0,43 et +0,73 et relues au zoom ×7 — 2026-08-09 · itération 40 : passe de lecture complète de la page — 18 étiquettes mesurées au pixel sur le scan (boîtes d'encre) et relues au zoom, dont les deux rangées **soudées** à leurs chiffres (y=779 « F C/E Am Dm », bande typée lyrics ; y=1884-1916 « Dm Bb Bb/C », bande typée chords mais haute de 98 px) et toutes les basses en B♭ que le matcher n'appariait pas — 2026-08-30",
+ "face": "helvetica-neue",
+ "key_label": {
+  "x": 37,
+  "y": 214,
+  "w": 61,
+  "h": 24
+ },
+ "key_label_verified": "mesure measure-keylabel (ancrage sur le « = », cadre = voisin gauche…voisin droit), zoom relu à l’œil sur planche de lot, lettre gravée confrontée à printedKey, 2026-08-26 (itération 35)",
+ "not_labels": [
+  "1001,1238",
+  "543,1232",
+  "543,1252"
+ ],
+ "not_labels_verified": "zooms relus : trois fragments d’arc de liaison au bord droit des rangées 543 et 1001, aucun n’est une étiquette — 2026-08-30 (itération 40)",
+ "verified": "transposé F→F# dans Chrome headless (npm run jianpu:audit, 7 tranches relues, thèmes clair et sombre) : 44 accords sur 7 rangées, dont les deux rangées **soudées** à leurs chiffres (y=779 « 𝄋 F C/E Am Dm », bande typée lyrics ; y=1884-1916 « F Dm B♭ B♭/C », bande de 98 px) — aucun accord resté en F, segno 𝄋, D.S., Fine et le cadre 1=F# préservés, aucun débordement ni encre gravée couverte au balayage — 2026-08-30 (itération 40)",
+ "frozen_labels": [
+  {
+   "x": 36,
+   "y": 333,
+   "w": 12,
+   "h": 20,
+   "c": "F"
+  },
+  {
+   "x": 401,
+   "y": 333,
+   "w": 41,
+   "h": 20,
+   "c": "Dm"
+  },
+  {
+   "x": 1008,
+   "y": 333,
+   "w": 18,
+   "h": 20,
+   "c": "C"
+  },
+  {
+   "x": 335,
+   "y": 543,
+   "w": 41,
+   "h": 34,
+   "c": "Am"
+  },
+  {
+   "x": 493,
+   "y": 543,
+   "w": 41,
+   "h": 34,
+   "c": "Dm"
+  },
+  {
+   "x": 616,
+   "y": 543,
+   "w": 43,
+   "h": 34,
+   "c": "Gm"
+  },
+  {
+   "x": 956,
+   "y": 543,
+   "w": 13,
+   "h": 34,
+   "c": "F"
+  },
+  {
+   "x": 355,
+   "y": 1001,
+   "w": 41,
+   "h": 22,
+   "c": "Am"
+  },
+  {
+   "x": 479,
+   "y": 1001,
+   "w": 17,
+   "h": 22,
+   "c": "D"
+  },
+  {
+   "x": 581,
+   "y": 1001,
+   "w": 44,
+   "h": 22,
+   "c": "Gm"
+  },
+  {
+   "x": 1000,
+   "y": 1001,
+   "w": 18,
+   "h": 22,
+   "c": "C"
+  },
+  {
+   "x": 1068,
+   "y": 1001,
+   "w": 56,
+   "h": 22,
+   "c": "Bb/C"
+  },
+  {
+   "x": 627,
+   "y": 1224,
+   "w": 41,
+   "h": 22,
+   "c": "Am"
+  },
+  {
+   "x": 862,
+   "y": 1224,
+   "w": 18,
+   "h": 22,
+   "c": "A"
+  },
+  {
+   "x": 31,
+   "y": 1447,
+   "w": 28,
+   "h": 21,
+   "c": "Bb"
+  },
+  {
+   "x": 211,
+   "y": 1447,
+   "w": 58,
+   "h": 21,
+   "c": "C/Bb"
+  },
+  {
+   "x": 375,
+   "y": 1447,
+   "w": 40,
+   "h": 21,
+   "c": "Am"
+  },
+  {
+   "x": 510,
+   "y": 1447,
+   "w": 17,
+   "h": 21,
+   "c": "D"
+  },
+  {
+   "x": 624,
+   "y": 1447,
+   "w": 44,
+   "h": 21,
+   "c": "Gm"
+  },
+  {
+   "x": 1063,
+   "y": 1447,
+   "w": 12,
+   "h": 21,
+   "c": "F"
+  },
+  {
+   "x": 34,
+   "y": 1670,
+   "w": 14,
+   "h": 21,
+   "c": "F"
+  },
+  {
+   "x": 329,
+   "y": 1670,
+   "w": 41,
+   "h": 21,
+   "c": "Dm"
+  },
+  {
+   "x": 649,
+   "y": 1670,
+   "w": 28,
+   "h": 21,
+   "c": "Bb"
+  },
+  {
+   "x": 946,
+   "y": 1670,
+   "w": 56,
+   "h": 21,
+   "c": "Bb/C"
+  },
+  {
+   "x": 1155,
+   "y": 1670,
+   "w": 18,
+   "h": 21,
+   "c": "C"
+  },
+  {
+   "x": 34,
+   "y": 1895,
+   "w": 14,
+   "h": 21,
+   "c": "F"
+  },
+  {
+   "x": 625,
+   "y": 320,
+   "w": 28,
+   "h": 33,
+   "c": "Bb"
+  },
+  {
+   "x": 31,
+   "y": 543,
+   "w": 29,
+   "h": 34,
+   "c": "Bb"
+  },
+  {
+   "x": 174,
+   "y": 543,
+   "w": 58,
+   "h": 34,
+   "c": "C/Bb"
+  },
+  {
+   "x": 812,
+   "y": 543,
+   "w": 57,
+   "h": 34,
+   "c": "Bb/C"
+  },
+  {
+   "x": 1045,
+   "y": 543,
+   "w": 57,
+   "h": 34,
+   "c": "Bb/C"
+  },
+  {
+   "x": 56,
+   "y": 779,
+   "w": 15,
+   "h": 22,
+   "c": "F"
+  },
+  {
+   "x": 334,
+   "y": 779,
+   "w": 56,
+   "h": 22,
+   "c": "C/E"
+  },
+  {
+   "x": 649,
+   "y": 779,
+   "w": 42,
+   "h": 22,
+   "c": "Am"
+  },
+  {
+   "x": 947,
+   "y": 779,
+   "w": 56,
+   "h": 22,
+   "c": "Dm"
+  },
+  {
+   "x": 31,
+   "y": 995,
+   "w": 29,
+   "h": 26,
+   "c": "Bb"
+  },
+  {
+   "x": 201,
+   "y": 995,
+   "w": 58,
+   "h": 27,
+   "c": "C/Bb"
+  },
+  {
+   "x": 34,
+   "y": 1224,
+   "w": 16,
+   "h": 22,
+   "c": "F"
+  },
+  {
+   "x": 321,
+   "y": 1224,
+   "w": 46,
+   "h": 22,
+   "c": "C/E"
+  },
+  {
+   "x": 947,
+   "y": 1224,
+   "w": 56,
+   "h": 22,
+   "c": "Dm"
+  },
+  {
+   "x": 847,
+   "y": 1435,
+   "w": 57,
+   "h": 33,
+   "c": "Bb/C"
+  },
+  {
+   "x": 262,
+   "y": 1895,
+   "w": 41,
+   "h": 21,
+   "c": "Dm"
+  },
+  {
+   "x": 509,
+   "y": 1884,
+   "w": 28,
+   "h": 32,
+   "c": "Bb"
+  },
+  {
+   "x": 784,
+   "y": 1884,
+   "w": 57,
+   "h": 32,
+   "c": "Bb/C"
+  }
+ ]
 }

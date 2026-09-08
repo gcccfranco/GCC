@@ -1,0 +1,444 @@
+{
+ "slug": "若有人在基督里",
+ "extra_labels": [
+  {
+   "x": 1150,
+   "y": 824,
+   "w": 102,
+   "h": 21,
+   "c": "Em7 D/F#"
+  },
+  {
+   "x": 639,
+   "y": 1014,
+   "w": 44,
+   "h": 25,
+   "c": "Em7"
+  },
+  {
+   "x": 698,
+   "y": 1014,
+   "w": 45,
+   "h": 25,
+   "c": "(C)"
+  },
+  {
+   "x": 46,
+   "y": 1214,
+   "w": 16,
+   "h": 25,
+   "c": "G"
+  },
+  {
+   "x": 247,
+   "y": 1408,
+   "w": 105,
+   "h": 23,
+   "c": "Em7 D/F#"
+  },
+  {
+   "x": 26,
+   "y": 1795,
+   "w": 42,
+   "h": 20,
+   "c": "Em7"
+  },
+  {
+   "x": 344,
+   "y": 1798,
+   "w": 16,
+   "h": 17,
+   "c": "D"
+  },
+  {
+   "x": 478,
+   "y": 1795,
+   "w": 53,
+   "h": 20,
+   "c": "Em7"
+  },
+  {
+   "x": 551,
+   "y": 1790,
+   "w": 48,
+   "h": 25,
+   "c": "D/F#"
+  },
+  {
+   "x": 615,
+   "y": 1795,
+   "w": 45,
+   "h": 20,
+   "c": "Em7"
+  },
+  {
+   "x": 942,
+   "y": 1798,
+   "w": 15,
+   "h": 17,
+   "c": "D"
+  },
+  {
+   "x": 1069,
+   "y": 1789,
+   "w": 103,
+   "h": 26,
+   "c": "Em7 D/F#"
+  }
+ ],
+ "extra_verified": "6 amas proposés par propose-extra --all --hidden, relus au zoom : 2 composites « Em7 D/F# », 1 « Em7 », 1 « (C) », 1 « G » collé au segno (boîte resserrée sur l'encre du G), 1 arc de liaison écarté en not_labels — 2026-09-09 (itération 50) · rangée y=1787 (dernier système) relue en entier au zoom, amas par amas : Em7 · D · Em7 · D/F# · Em7 · D · « Em7 D/F# » ; le « 3 » de 1.2.3., le filet du crochet de 4e fin et le « D.S. » écartés en not_labels",
+ "not_labels": [
+  "1603,502",
+  "1787,85",
+  "1787,607",
+  "1787,1209",
+  "1603,1241"
+ ],
+ "not_labels_verified": "arc de liaison sous la rangée, vu au zoom sur _extra-1.png — 2026-09-09 (itération 50) · 1787,85 = le « 3 » de « 1.2.3. » · 1787,607 = le filet du crochet de 4e fin · 1787,1209 = « D.S. », un renvoi et non un accord · 1603,1241 = le haut d'un arc de liaison, publié « Asus4 » sur une boîte de 16 px — la planche d'audit ne l'a pas trahi (je l'ai lu comme l'accord de la rangée gravée), c'est le test de débordement qui l'a attrapé : « Bbsus4 » sortait de 20 px hors de la page",
+ "key_label": {
+  "x": 36,
+  "y": 151,
+  "w": 64,
+  "h": 23
+ },
+ "key_label_verified": "mesure measure-keylabel (ancrage sur le « = », cadre = voisin gauche…voisin droit), zoom relu à l’œil sur planche de lot, lettre gravée confrontée à printedKey, 2026-08-26 (itération 35)",
+ "verified": "transposé D→Eb dans Chrome headless (planche npm run jianpu:audit, 7 tranches relues par Claude) : 48 accords + 1=D→1=Eb, tous encadrés, aucun accord resté en D. La dernière rangée (y=1787) était un mode D entier — typée `chords` par le classifieur mais sans un seul amas retenu, donc absente du calque et invisible à propose-extra dans ses deux modes ; relue amas par amas au zoom. 𝄋, crochets de reprise « 1.2.3. » / « 4. » et « D.S. » préservés (boîtes resserrées sur l'encre des accords). Un « Asus4 » publié sur le haut d'un arc de liaison (y=1603 x=1241, boîte de 16 px) a échappé à la planche et n'a été pris que par le test de débordement Playwright. — 2026-09-09 (itération 50)",
+ "frozen_labels": [
+  {
+   "x": 34,
+   "y": 289,
+   "w": 45,
+   "h": 18,
+   "c": "Bm7"
+  },
+  {
+   "x": 416,
+   "y": 289,
+   "w": 16,
+   "h": 18,
+   "c": "G"
+  },
+  {
+   "x": 646,
+   "y": 289,
+   "w": 15,
+   "h": 18,
+   "c": "D"
+  },
+  {
+   "x": 1017,
+   "y": 289,
+   "w": 15,
+   "h": 18,
+   "c": "A"
+  },
+  {
+   "x": 18,
+   "y": 433,
+   "w": 45,
+   "h": 25,
+   "c": "Bm7"
+  },
+  {
+   "x": 170,
+   "y": 433,
+   "w": 54,
+   "h": 25,
+   "c": "A/C#"
+  },
+  {
+   "x": 351,
+   "y": 433,
+   "w": 16,
+   "h": 25,
+   "c": "D"
+  },
+  {
+   "x": 660,
+   "y": 433,
+   "w": 48,
+   "h": 25,
+   "c": "D/F#"
+  },
+  {
+   "x": 975,
+   "y": 433,
+   "w": 61,
+   "h": 25,
+   "c": "Gadd9"
+  },
+  {
+   "x": 18,
+   "y": 626,
+   "w": 45,
+   "h": 25,
+   "c": "Bm7"
+  },
+  {
+   "x": 166,
+   "y": 626,
+   "w": 54,
+   "h": 25,
+   "c": "A/C#"
+  },
+  {
+   "x": 329,
+   "y": 626,
+   "w": 16,
+   "h": 25,
+   "c": "D"
+  },
+  {
+   "x": 467,
+   "y": 626,
+   "w": 16,
+   "h": 25,
+   "c": "G"
+  },
+  {
+   "x": 556,
+   "y": 626,
+   "w": 48,
+   "h": 25,
+   "c": "D/F#"
+  },
+  {
+   "x": 659,
+   "y": 626,
+   "w": 44,
+   "h": 25,
+   "c": "Em7"
+  },
+  {
+   "x": 1077,
+   "y": 626,
+   "w": 59,
+   "h": 25,
+   "c": "Asus4"
+  },
+  {
+   "x": 1175,
+   "y": 626,
+   "w": 14,
+   "h": 25,
+   "c": "A"
+  },
+  {
+   "x": 27,
+   "y": 824,
+   "w": 16,
+   "h": 21,
+   "c": "G"
+  },
+  {
+   "x": 433,
+   "y": 824,
+   "w": 47,
+   "h": 21,
+   "c": "D/F#"
+  },
+  {
+   "x": 642,
+   "y": 824,
+   "w": 44,
+   "h": 21,
+   "c": "Em7"
+  },
+  {
+   "x": 844,
+   "y": 824,
+   "w": 41,
+   "h": 21,
+   "c": "G/A"
+  },
+  {
+   "x": 1069,
+   "y": 824,
+   "w": 15,
+   "h": 21,
+   "c": "D"
+  },
+  {
+   "x": 27,
+   "y": 1014,
+   "w": 16,
+   "h": 25,
+   "c": "G"
+  },
+  {
+   "x": 393,
+   "y": 1014,
+   "w": 48,
+   "h": 25,
+   "c": "D/F#"
+  },
+  {
+   "x": 1005,
+   "y": 1014,
+   "w": 60,
+   "h": 25,
+   "c": "Asus4"
+  },
+  {
+   "x": 1092,
+   "y": 1014,
+   "w": 13,
+   "h": 25,
+   "c": "A"
+  },
+  {
+   "x": 1122,
+   "y": 1014,
+   "w": 48,
+   "h": 25,
+   "c": "D/F#"
+  },
+  {
+   "x": 491,
+   "y": 1214,
+   "w": 48,
+   "h": 25,
+   "c": "D/F#"
+  },
+  {
+   "x": 898,
+   "y": 1214,
+   "w": 44,
+   "h": 25,
+   "c": "Em7"
+  },
+  {
+   "x": 28,
+   "y": 1408,
+   "w": 16,
+   "h": 23,
+   "c": "D"
+  },
+  {
+   "x": 458,
+   "y": 1408,
+   "w": 16,
+   "h": 23,
+   "c": "G"
+  },
+  {
+   "x": 877,
+   "y": 1408,
+   "w": 48,
+   "h": 23,
+   "c": "D/F#"
+  },
+  {
+   "x": 20,
+   "y": 1603,
+   "w": 44,
+   "h": 26,
+   "c": "Em7"
+  },
+  {
+   "x": 346,
+   "y": 1603,
+   "w": 16,
+   "h": 26,
+   "c": "D"
+  },
+  {
+   "x": 656,
+   "y": 1603,
+   "w": 16,
+   "h": 26,
+   "c": "G"
+  },
+  {
+   "x": 898,
+   "y": 1603,
+   "w": 48,
+   "h": 26,
+   "c": "D/F#"
+  },
+  {
+   "x": 1150,
+   "y": 824,
+   "w": 102,
+   "h": 21,
+   "c": "Em7 D/F#"
+  },
+  {
+   "x": 639,
+   "y": 1014,
+   "w": 44,
+   "h": 25,
+   "c": "Em7"
+  },
+  {
+   "x": 698,
+   "y": 1014,
+   "w": 45,
+   "h": 25,
+   "c": "(C)"
+  },
+  {
+   "x": 46,
+   "y": 1214,
+   "w": 16,
+   "h": 25,
+   "c": "G"
+  },
+  {
+   "x": 247,
+   "y": 1408,
+   "w": 105,
+   "h": 23,
+   "c": "Em7 D/F#"
+  },
+  {
+   "x": 26,
+   "y": 1795,
+   "w": 42,
+   "h": 20,
+   "c": "Em7"
+  },
+  {
+   "x": 344,
+   "y": 1798,
+   "w": 16,
+   "h": 17,
+   "c": "D"
+  },
+  {
+   "x": 478,
+   "y": 1795,
+   "w": 53,
+   "h": 20,
+   "c": "Em7"
+  },
+  {
+   "x": 551,
+   "y": 1790,
+   "w": 48,
+   "h": 25,
+   "c": "D/F#"
+  },
+  {
+   "x": 615,
+   "y": 1795,
+   "w": 45,
+   "h": 20,
+   "c": "Em7"
+  },
+  {
+   "x": 942,
+   "y": 1798,
+   "w": 15,
+   "h": 17,
+   "c": "D"
+  },
+  {
+   "x": 1069,
+   "y": 1789,
+   "w": 103,
+   "h": 26,
+   "c": "Em7 D/F#"
+  }
+ ]
+}

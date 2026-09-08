@@ -113,9 +113,17 @@
    "w": 231,
    "h": 29,
    "c": "先C/Bb后Bbm/Db"
+  },
+  {
+   "x": 1007,
+   "y": 1828,
+   "w": 72,
+   "h": 34,
+   "c": "1= G",
+   "fh": 24
   }
  ],
- "extra_verified": "1 étiquette(s) contestée(s) relue(s) au zoom, 2026-08-17 (itération 24, dissent.py) · propose-extra --all après masquage des rangées étrangères : 37 amas relus au zoom. Deux amas soudés séparés (« D/F# Em7 », « Dm G) ») et quatre « F » rendus à leur largeur — le pré-filtre les livrait à 4 px. Boîtes par bloc d'encre, marge de 2 px — itération 31 (2026-08-22) · le « Bb/C » de y=157, posé au-dessus du chiffrage arpégé « 1 5 4 1 » de l'introduction et rangé en `numbers` : il n'était ni publié ni masqué, donc resté en fa sur la page transposée. Trouvé à l'audit — itération 31 (2026-08-23)",
+ "extra_verified": "1 étiquette(s) contestée(s) relue(s) au zoom, 2026-08-17 (itération 24, dissent.py) · propose-extra --all après masquage des rangées étrangères : 37 amas relus au zoom. Deux amas soudés séparés (« D/F# Em7 », « Dm G) ») et quatre « F » rendus à leur largeur — le pré-filtre les livrait à 4 px. Boîtes par bloc d'encre, marge de 2 px — itération 31 (2026-08-22) · le « Bb/C » de y=157, posé au-dessus du chiffrage arpégé « 1 5 4 1 » de l'introduction et rangé en `numbers` : il n'était ni publié ni masqué, donc resté en fa sur la page transposée. Trouvé à l'audit — itération 31 (2026-08-23) · itération 40 : « 1= G » **gravé dans la portée** (x=1007, y=1828), au changement de tonalité du dernier refrain — second cadre que `keyLabel` ne sait pas porter ; écrit en étiquette composite pour que `transposeLabel` réécrive le seul jeton « G ». 2026-08-30",
  "extra_chords": [
   "C/D"
  ],
@@ -136,14 +144,516 @@
  ],
  "mask_rows_verified": "1=F · deux rangées gravées en **sol** au-dessus des rangées réelles en fa (y=807, y=1363). y=1285 (Am7 C/D G, 3 amas) passait sous FOREIGN_MIN_ROW. Itération 31 (2026-08-22) · y=1007 (Am7 D C 先A/C#后D/C再Cm/Eb 先G/D后Bm B/D# Em (G/D)), troisième rangée en sol : foreign-scan ne la voit pas parce que ses deux amas « 先…后… » ne s'apparient à rien et font tomber le taux sous FOREIGN_HIT. Trouvée à l'audit — itération 31 (2026-08-23)",
  "not_labels": [
-  "1117,205",
-  "1164,205",
-  "1225,525",
-  "60,807",
-  "143,807",
-  "886,1363",
-  "1207,1770"
+  "1363,886",
+  "1770,1207",
+  "205,1117",
+  "205,1164",
+  "210,1164",
+  "525,1225",
+  "807,143",
+  "807,60"
  ],
- "not_labels_verified": "amas sans accord : titres 【Chorus】【Bridge】【Pre-Chorus】, « To Chorus », indications de jeu (（琶音）,（先低后高）), barre de mesure, chiffrage, et l'annotation « 升调用上层和弦 » — relus au zoom, itération 31 (2026-08-22)",
- "extra_composites_verified": "étiquettes composites (或 / 代替 / 先…后 / groupe entre parenthèses), lues à l’œil sur planche de lot et écrites telles qu’imprimées ; `transpose_label` réécrit la ligne entière. 2026-08-25 (itération 34)"
+ "not_labels_verified": "amas sans accord : titres 【Chorus】【Bridge】【Pre-Chorus】, « To Chorus », indications de jeu (（琶音）,（先低后高）), barre de mesure, chiffrage, et l'annotation « 升调用上层和弦 » — relus au zoom, itération 31 (2026-08-22) · itération 37 (2026-08-30) : les clés de ce fichier étaient écrites « x,y » alors que le code les lit « y,x » (`build-chords`, `worklist`, `dissent`) — elles n'écartaient donc rien. Remises dans le bon ordre ; aucune n'était publiée, donc aucun accord n'a bougé. · cinq annotations d'exécution ou de section relues au zoom — （琶音）, （先低后高）, 【Chorus】, 【Bridge】, « To Chorus » : aucune n'est un accord — 2026-08-30 (itération 40)",
+ "extra_composites_verified": "étiquettes composites (或 / 代替 / 先…后 / groupe entre parenthèses), lues à l’œil sur planche de lot et écrites telles qu’imprimées ; `transpose_label` réécrit la ligne entière. 2026-08-25 (itération 34)",
+ "verified": "transposé F→F# dans Chrome headless (npm run jianpu:audit, 4 tranches relues, thèmes clair et sombre) : 54 accords sur 9 rangées, aucun resté en F, les 3 rangées de capo (en G) masquées, les étiquettes composites « 先C/E后Am », « 先A/C#后D/C再Cm/Eb », « 先G/D后Bm », « 先C/Bb后Bbm/Db » réécrites en entier, et le second cadre de tonalité **gravé dans la portée** « 1= G » (dernier refrain) rendu « 1= Ab » — zoom navigateur confirmant que les deux barres de mesure voisines restent entières (fh ramené à 24) ; （琶音）, （先低后高）, 【Chorus】, 【Bridge】, Fine et To Chorus laissés tels quels — 2026-08-30 (itération 40)",
+ "frozen_labels": [
+  {
+   "x": 56,
+   "y": 205,
+   "w": 10,
+   "h": 33,
+   "c": "F"
+  },
+  {
+   "x": 162,
+   "y": 205,
+   "w": 41,
+   "h": 33,
+   "c": "C/E"
+  },
+  {
+   "x": 312,
+   "y": 205,
+   "w": 41,
+   "h": 33,
+   "c": "Dm"
+  },
+  {
+   "x": 418,
+   "y": 205,
+   "w": 56,
+   "h": 33,
+   "c": "Cm7"
+  },
+  {
+   "x": 493,
+   "y": 205,
+   "w": 26,
+   "h": 33,
+   "c": "F7"
+  },
+  {
+   "x": 561,
+   "y": 205,
+   "w": 94,
+   "h": 33,
+   "c": "Bbmaj9"
+  },
+  {
+   "x": 680,
+   "y": 205,
+   "w": 42,
+   "h": 33,
+   "c": "F/A"
+  },
+  {
+   "x": 850,
+   "y": 205,
+   "w": 42,
+   "h": 33,
+   "c": "Gm"
+  },
+  {
+   "x": 976,
+   "y": 205,
+   "w": 71,
+   "h": 33,
+   "c": "Csus4"
+  },
+  {
+   "x": 90,
+   "y": 342,
+   "w": 10,
+   "h": 24,
+   "c": "F"
+  },
+  {
+   "x": 416,
+   "y": 342,
+   "w": 41,
+   "h": 24,
+   "c": "Am"
+  },
+  {
+   "x": 710,
+   "y": 342,
+   "w": 41,
+   "h": 24,
+   "c": "Dm"
+  },
+  {
+   "x": 1044,
+   "y": 342,
+   "w": 56,
+   "h": 24,
+   "c": "Cm7"
+  },
+  {
+   "x": 1227,
+   "y": 342,
+   "w": 10,
+   "h": 24,
+   "c": "F"
+  },
+  {
+   "x": 58,
+   "y": 525,
+   "w": 30,
+   "h": 46,
+   "c": "Bb"
+  },
+  {
+   "x": 184,
+   "y": 525,
+   "w": 61,
+   "h": 46,
+   "c": "C/Bb"
+  },
+  {
+   "x": 388,
+   "y": 525,
+   "w": 41,
+   "h": 46,
+   "c": "Am"
+  },
+  {
+   "x": 542,
+   "y": 525,
+   "w": 41,
+   "h": 46,
+   "c": "Dm"
+  },
+  {
+   "x": 640,
+   "y": 807,
+   "w": 41,
+   "h": 36,
+   "c": "Dm"
+  },
+  {
+   "x": 824,
+   "y": 807,
+   "w": 41,
+   "h": 36,
+   "c": "F/C"
+  },
+  {
+   "x": 950,
+   "y": 807,
+   "w": 30,
+   "h": 36,
+   "c": "Bb"
+  },
+  {
+   "x": 1153,
+   "y": 807,
+   "w": 42,
+   "h": 36,
+   "c": "F/A"
+  },
+  {
+   "x": 243,
+   "y": 1093,
+   "w": 15,
+   "h": 30,
+   "c": "C"
+  },
+  {
+   "x": 410,
+   "y": 1093,
+   "w": 30,
+   "h": 30,
+   "c": "Bb"
+  },
+  {
+   "x": 923,
+   "y": 1093,
+   "w": 41,
+   "h": 30,
+   "c": "Am"
+  },
+  {
+   "x": 1186,
+   "y": 1093,
+   "w": 40,
+   "h": 30,
+   "c": "Dm"
+  },
+  {
+   "x": 545,
+   "y": 1363,
+   "w": 10,
+   "h": 34,
+   "c": "F"
+  },
+  {
+   "x": 1019,
+   "y": 1363,
+   "w": 41,
+   "h": 34,
+   "c": "Dm"
+  },
+  {
+   "x": 49,
+   "y": 1571,
+   "w": 41,
+   "h": 21,
+   "c": "Am"
+  },
+  {
+   "x": 363,
+   "y": 1571,
+   "w": 30,
+   "h": 21,
+   "c": "Bb"
+  },
+  {
+   "x": 741,
+   "y": 1571,
+   "w": 15,
+   "h": 21,
+   "c": "C"
+  },
+  {
+   "x": 1013,
+   "y": 1571,
+   "w": 41,
+   "h": 21,
+   "c": "Dm"
+  },
+  {
+   "x": 52,
+   "y": 1770,
+   "w": 41,
+   "h": 28,
+   "c": "Am"
+  },
+  {
+   "x": 351,
+   "y": 1770,
+   "w": 30,
+   "h": 28,
+   "c": "Bb"
+  },
+  {
+   "x": 527,
+   "y": 1770,
+   "w": 42,
+   "h": 28,
+   "c": "Gm"
+  },
+  {
+   "x": 733,
+   "y": 1770,
+   "w": 60,
+   "h": 28,
+   "c": "Bb/C"
+  },
+  {
+   "x": 1115,
+   "y": 1770,
+   "w": 46,
+   "h": 28,
+   "c": "C/D"
+  },
+  {
+   "x": 1274,
+   "y": 339,
+   "w": 60,
+   "h": 30,
+   "c": "(F/A)"
+  },
+  {
+   "x": 730,
+   "y": 539,
+   "w": 62,
+   "h": 25,
+   "c": "Gm7"
+  },
+  {
+   "x": 1107,
+   "y": 537,
+   "w": 64,
+   "h": 32,
+   "c": "Bb/C"
+  },
+  {
+   "x": 310,
+   "y": 815,
+   "w": 15,
+   "h": 24,
+   "c": "F"
+  },
+  {
+   "x": 55,
+   "y": 1095,
+   "w": 63,
+   "h": 25,
+   "c": "Gm7"
+  },
+  {
+   "x": 1085,
+   "y": 1093,
+   "w": 83,
+   "h": 33,
+   "c": "(A/C#)"
+  },
+  {
+   "x": 48,
+   "y": 1371,
+   "w": 63,
+   "h": 25,
+   "c": "Gm7"
+  },
+  {
+   "x": 202,
+   "y": 1370,
+   "w": 50,
+   "h": 29,
+   "c": "(Bb)"
+  },
+  {
+   "x": 308,
+   "y": 1368,
+   "w": 64,
+   "h": 32,
+   "c": "Bb/C"
+  },
+  {
+   "x": 526,
+   "y": 1569,
+   "w": 62,
+   "h": 25,
+   "c": "Gm7"
+  },
+  {
+   "x": 895,
+   "y": 1567,
+   "w": 65,
+   "h": 31,
+   "c": "A/C#"
+  },
+  {
+   "x": 614,
+   "y": 1765,
+   "w": 51,
+   "h": 32,
+   "c": "G/B"
+  },
+  {
+   "x": 1113,
+   "y": 155,
+   "w": 64,
+   "h": 32,
+   "c": "Bb/C"
+  },
+  {
+   "x": 414,
+   "y": 807,
+   "w": 148,
+   "h": 29,
+   "c": "先C/E后Am"
+  },
+  {
+   "x": 650,
+   "y": 1093,
+   "w": 231,
+   "h": 29,
+   "c": "先C/Bb后Bbm/Db"
+  },
+  {
+   "x": 1007,
+   "y": 1828,
+   "w": 72,
+   "h": 34,
+   "c": "1= G",
+   "fh": 24
+  },
+  {
+   "x": 308,
+   "y": 727,
+   "w": 17,
+   "h": 26,
+   "c": ""
+  },
+  {
+   "x": 416,
+   "y": 727,
+   "w": 59,
+   "h": 26,
+   "c": ""
+  },
+  {
+   "x": 642,
+   "y": 727,
+   "w": 36,
+   "h": 26,
+   "c": ""
+  },
+  {
+   "x": 816,
+   "y": 727,
+   "w": 51,
+   "h": 26,
+   "c": ""
+  },
+  {
+   "x": 882,
+   "y": 727,
+   "w": 30,
+   "h": 26,
+   "c": ""
+  },
+  {
+   "x": 952,
+   "y": 727,
+   "w": 15,
+   "h": 26,
+   "c": ""
+  },
+  {
+   "x": 1151,
+   "y": 727,
+   "w": 46,
+   "h": 26,
+   "c": ""
+  },
+  {
+   "x": 56,
+   "y": 1007,
+   "w": 58,
+   "h": 28,
+   "c": ""
+  },
+  {
+   "x": 243,
+   "y": 1007,
+   "w": 16,
+   "h": 28,
+   "c": ""
+  },
+  {
+   "x": 412,
+   "y": 1007,
+   "w": 14,
+   "h": 28,
+   "c": ""
+  },
+  {
+   "x": 631,
+   "y": 1007,
+   "w": 254,
+   "h": 28,
+   "c": ""
+  },
+  {
+   "x": 922,
+   "y": 1007,
+   "w": 132,
+   "h": 28,
+   "c": ""
+  },
+  {
+   "x": 1095,
+   "y": 1007,
+   "w": 60,
+   "h": 28,
+   "c": ""
+  },
+  {
+   "x": 1187,
+   "y": 1007,
+   "w": 37,
+   "h": 28,
+   "c": ""
+  },
+  {
+   "x": 1266,
+   "y": 1007,
+   "w": 68,
+   "h": 28,
+   "c": ""
+  },
+  {
+   "x": 49,
+   "y": 1285,
+   "w": 58,
+   "h": 21,
+   "c": ""
+  },
+  {
+   "x": 309,
+   "y": 1285,
+   "w": 46,
+   "h": 21,
+   "c": ""
+  },
+  {
+   "x": 541,
+   "y": 1285,
+   "w": 17,
+   "h": 21,
+   "c": ""
+  }
+ ]
 }

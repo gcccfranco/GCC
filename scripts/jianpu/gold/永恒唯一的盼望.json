@@ -78,5 +78,232 @@
   "w": 64,
   "h": 21
  },
- "key_label_verified": "mesure measure-keylabel (vote 1= + lettre attendue), zoom relu à l’œil sur planche de lot, lettre confrontée à printedKey, 2026-08-22"
+ "key_label_verified": "mesure measure-keylabel (vote 1= + lettre attendue), zoom relu à l’œil sur planche de lot, lettre confrontée à printedKey, 2026-08-22",
+ "extra_labels": [
+  {
+   "x": 975,
+   "y": 1224,
+   "w": 57,
+   "h": 28,
+   "c": "D/F#"
+  }
+ ],
+ "extra_verified": "itération 40 : « C#/F » gravé (y=1224, x=975) entre A/C# et F#m, le fa tenant lieu de mi♯ — c'est le V6 de F#m, hors du vocabulaire du .cho, donc jamais lisible par le matcher. Écrit ici « D/F# » : `gold/` est dans la convention du **.cho** (F), pas dans celle de la page (E), et build-chords applique le décalage à la frontière. Zoom relu à l'œil et rendu confronté au gravé sur planche navigateur — 2026-08-30",
+ "not_labels": [
+  "1217,118"
+ ],
+ "not_labels_verified": "« 【Chorus】 » : une mention de section, pas un accord — 2026-08-30 (itération 40)",
+ "verified": "transposé E→F# dans Chrome headless (npm run jianpu:audit, 4 tranches relues, thèmes clair et sombre) : 30 accords sur 7 rangées, aucun resté en E, y compris « C#/F » (le fa tenant lieu de mi♯) qui sort en Eb/G, cadre 1=F# juste, 【Chorus】, le « W » de l'ostinato et la mention « [另有一张原调F调] » (qui décrit la source) laissés tels quels — page gravée en E sous un .cho en F, les deux conventions confrontées sur la planche — 2026-08-30 (itération 40)",
+ "frozen_labels": [
+  {
+   "x": 74,
+   "y": 440,
+   "w": 10,
+   "h": 21,
+   "c": "E"
+  },
+  {
+   "x": 342,
+   "y": 440,
+   "w": 55,
+   "h": 21,
+   "c": "C#m"
+  },
+  {
+   "x": 571,
+   "y": 440,
+   "w": 52,
+   "h": 21,
+   "c": "F#m"
+  },
+  {
+   "x": 856,
+   "y": 440,
+   "w": 13,
+   "h": 21,
+   "c": "B"
+  },
+  {
+   "x": 1092,
+   "y": 440,
+   "w": 58,
+   "h": 21,
+   "c": "G#m"
+  },
+  {
+   "x": 49,
+   "y": 703,
+   "w": 55,
+   "h": 20,
+   "c": "C#m"
+  },
+  {
+   "x": 336,
+   "y": 703,
+   "w": 51,
+   "h": 20,
+   "c": "F#m"
+  },
+  {
+   "x": 609,
+   "y": 703,
+   "w": 14,
+   "h": 20,
+   "c": "B"
+  },
+  {
+   "x": 854,
+   "y": 703,
+   "w": 10,
+   "h": 20,
+   "c": "E"
+  },
+  {
+   "x": 1127,
+   "y": 703,
+   "w": 56,
+   "h": 20,
+   "c": "C#m"
+  },
+  {
+   "x": 40,
+   "y": 965,
+   "w": 51,
+   "h": 21,
+   "c": "F#m"
+  },
+  {
+   "x": 330,
+   "y": 965,
+   "w": 13,
+   "h": 21,
+   "c": "B"
+  },
+  {
+   "x": 582,
+   "y": 965,
+   "w": 58,
+   "h": 21,
+   "c": "G#m"
+  },
+  {
+   "x": 868,
+   "y": 965,
+   "w": 55,
+   "h": 21,
+   "c": "C#m"
+  },
+  {
+   "x": 1122,
+   "y": 965,
+   "w": 52,
+   "h": 21,
+   "c": "F#m"
+  },
+  {
+   "x": 65,
+   "y": 1217,
+   "w": 13,
+   "h": 35,
+   "c": "B"
+  },
+  {
+   "x": 297,
+   "y": 1217,
+   "w": 11,
+   "h": 35,
+   "c": "E"
+  },
+  {
+   "x": 548,
+   "y": 1217,
+   "w": 62,
+   "h": 35,
+   "c": "B/D#"
+  },
+  {
+   "x": 788,
+   "y": 1217,
+   "w": 62,
+   "h": 35,
+   "c": "A/C#"
+  },
+  {
+   "x": 1217,
+   "y": 1217,
+   "w": 51,
+   "h": 35,
+   "c": "F#m"
+  },
+  {
+   "x": 155,
+   "y": 1489,
+   "w": 78,
+   "h": 21,
+   "c": "F#m/E"
+  },
+  {
+   "x": 420,
+   "y": 1489,
+   "w": 13,
+   "h": 21,
+   "c": "B"
+  },
+  {
+   "x": 868,
+   "y": 1489,
+   "w": 58,
+   "h": 21,
+   "c": "G#m"
+  },
+  {
+   "x": 1126,
+   "y": 1489,
+   "w": 55,
+   "h": 21,
+   "c": "C#m"
+  },
+  {
+   "x": 43,
+   "y": 1752,
+   "w": 33,
+   "h": 21,
+   "c": "G#"
+  },
+  {
+   "x": 282,
+   "y": 1752,
+   "w": 55,
+   "h": 21,
+   "c": "C#m"
+  },
+  {
+   "x": 507,
+   "y": 1752,
+   "w": 52,
+   "h": 21,
+   "c": "F#m"
+  },
+  {
+   "x": 729,
+   "y": 1752,
+   "w": 45,
+   "h": 21,
+   "c": "A/B"
+  },
+  {
+   "x": 982,
+   "y": 1752,
+   "w": 10,
+   "h": 21,
+   "c": "E"
+  },
+  {
+   "x": 975,
+   "y": 1224,
+   "w": 57,
+   "h": 28,
+   "c": "C#/F"
+  }
+ ]
 }

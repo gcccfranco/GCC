@@ -105,9 +105,30 @@
    "w": 40,
    "h": 24,
    "c": "G7"
+  },
+  {
+   "x": 364,
+   "y": 2049,
+   "w": 50,
+   "h": 24,
+   "c": "C/E"
+  },
+  {
+   "x": 697,
+   "y": 2049,
+   "w": 48,
+   "h": 24,
+   "c": "Dm"
+  },
+  {
+   "x": 1338,
+   "y": 2049,
+   "w": 18,
+   "h": 24,
+   "c": "C"
   }
  ],
- "extra_verified": "zooms relus ; les deux C/G soudés à un arc de liaison mesurés à part (bloc supérieur des colonnes de la lettre, arc préservé), 2026-08-05",
+ "extra_verified": "zooms relus ; les deux C/G soudés à un arc de liaison mesurés à part (bloc supérieur des colonnes de la lettre, arc préservé), 2026-08-05 · itération 39 : C/E, Dm et C de la dernière rangée (y=2049), soudée à ses chiffres et jamais détectée — zooms relus, 2026-08-30",
  "key_label": {
   "x": 6,
   "y": 162,
@@ -115,7 +136,7 @@
   "h": 27
  },
  "key_label_verified": "mesure measure-keylabel (vote 1= + lettre attendue), zoom relu à l’œil, 2026-08-05",
- "verified": "transposé C→D dans Chrome headless (captures relues), thèmes clair et sombre : 36 accords + 1=D, les deux C/G soudés aux arcs et le G de fin de 1re ligne compris, aucun accord resté en C — 2026-08-05",
+ "verified": "transposé C→D dans Chrome headless (captures relues), thèmes clair et sombre : 36 accords + 1=D, les deux C/G soudés aux arcs et le G de fin de 1re ligne compris, aucun accord resté en C — 2026-08-05 · re-audité itération 39 : la dernière rangée (y=2049) était soudée à ses chiffres et publiait 2 accords sur 5 — C/E, Dm et C ajoutés, page relue au navigateur, 39 accords, aucun resté en C — 2026-08-30",
  "frozen_labels": [
   {
    "x": 181,
@@ -368,6 +389,27 @@
    "w": 40,
    "h": 24,
    "c": "G7"
+  },
+  {
+   "x": 364,
+   "y": 2049,
+   "w": 50,
+   "h": 24,
+   "c": "C/E"
+  },
+  {
+   "x": 697,
+   "y": 2049,
+   "w": 48,
+   "h": 24,
+   "c": "Dm"
+  },
+  {
+   "x": 1338,
+   "y": 2049,
+   "w": 18,
+   "h": 24,
+   "c": "C"
   }
  ]
 }

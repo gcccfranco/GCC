@@ -1,14 +1,271 @@
 {
-  "slug": "这一生最美的祝福",
-  "extra_chords": [
-    "Asus4",
-    "Gmaj7"
-  ],
-  "key_label": {
-    "x": 56,
-    "y": 240,
-    "w": 64,
-    "h": 23
+ "slug": "这一生最美的祝福",
+ "extra_chords": [
+  "Asus4",
+  "Gmaj7"
+ ],
+ "key_label": {
+  "x": 56,
+  "y": 240,
+  "w": 64,
+  "h": 23
+ },
+ "key_label_verified": "mesure measure-keylabel (ancrage sur le « = », cadre = voisin gauche…voisin droit), zoom relu à l’œil sur planche de lot, lettre gravée confrontée à printedKey, 2026-08-26 (itération 35)",
+ "extra_labels": [
+  {
+   "x": 252,
+   "y": 387,
+   "w": 73,
+   "h": 28,
+   "c": "Gmaj7"
   },
-  "key_label_verified": "mesure measure-keylabel (ancrage sur le « = », cadre = voisin gauche…voisin droit), zoom relu à l’œil sur planche de lot, lettre gravée confrontée à printedKey, 2026-08-26 (itération 35)"
+  {
+   "x": 598,
+   "y": 390,
+   "w": 49,
+   "h": 25,
+   "c": "D/A"
+  },
+  {
+   "x": 907,
+   "y": 387,
+   "w": 73,
+   "h": 28,
+   "c": "Gmaj7"
+  },
+  {
+   "x": 15,
+   "y": 534,
+   "w": 67,
+   "h": 35,
+   "c": "Asus4"
+  },
+  {
+   "x": 151,
+   "y": 538,
+   "w": 19,
+   "h": 31,
+   "c": "A"
+  },
+  {
+   "x": 764,
+   "y": 1825,
+   "w": 45,
+   "h": 23,
+   "c": "D/A"
+  }
+ ],
+ "verified": "transposé D→Eb dans Chrome headless (npm run jianpu:audit, 7 tranches relues, thème clair) : 30 accords sur 6 rangées gravées, aucun resté en D — la **rangée d'intro entière** (Gmaj7 · D/A · Gmaj7, jamais isolée par le découpage : mode D), le Asus4 et le A de la 1ʳᵉ rangée chantée et le D/A de la dernière ont été mesurés à la main, ajoutés en extra_labels et revus au rendu ; cadre 1=Eb juste, le titre anglais, ♩=70 et 温馨有盼望地 laissés tels quels — 2026-09-06 (itération 49)",
+ "frozen_labels": [
+  {
+   "x": 340,
+   "y": 537,
+   "w": 17,
+   "h": 32,
+   "c": "D"
+  },
+  {
+   "x": 804,
+   "y": 537,
+   "w": 36,
+   "h": 32,
+   "c": "Bm"
+  },
+  {
+   "x": 34,
+   "y": 790,
+   "w": 19,
+   "h": 23,
+   "c": "G"
+  },
+  {
+   "x": 226,
+   "y": 790,
+   "w": 57,
+   "h": 23,
+   "c": "D/F#"
+  },
+  {
+   "x": 435,
+   "y": 790,
+   "w": 36,
+   "h": 23,
+   "c": "Em"
+  },
+  {
+   "x": 725,
+   "y": 790,
+   "w": 16,
+   "h": 23,
+   "c": "A"
+  },
+  {
+   "x": 868,
+   "y": 790,
+   "w": 17,
+   "h": 23,
+   "c": "D"
+  },
+  {
+   "x": 27,
+   "y": 1049,
+   "w": 36,
+   "h": 21,
+   "c": "Bm"
+  },
+  {
+   "x": 520,
+   "y": 1049,
+   "w": 18,
+   "h": 21,
+   "c": "G"
+  },
+  {
+   "x": 797,
+   "y": 1049,
+   "w": 15,
+   "h": 21,
+   "c": "A"
+  },
+  {
+   "x": 1048,
+   "y": 1049,
+   "w": 17,
+   "h": 21,
+   "c": "D"
+  },
+  {
+   "x": 37,
+   "y": 1310,
+   "w": 17,
+   "h": 20,
+   "c": "D"
+  },
+  {
+   "x": 455,
+   "y": 1310,
+   "w": 36,
+   "h": 20,
+   "c": "Bm"
+  },
+  {
+   "x": 660,
+   "y": 1310,
+   "w": 19,
+   "h": 20,
+   "c": "G"
+  },
+  {
+   "x": 1083,
+   "y": 1310,
+   "w": 15,
+   "h": 20,
+   "c": "A"
+  },
+  {
+   "x": 37,
+   "y": 1568,
+   "w": 17,
+   "h": 21,
+   "c": "D"
+  },
+  {
+   "x": 449,
+   "y": 1568,
+   "w": 36,
+   "h": 21,
+   "c": "Bm"
+  },
+  {
+   "x": 628,
+   "y": 1568,
+   "w": 19,
+   "h": 21,
+   "c": "G"
+  },
+  {
+   "x": 1036,
+   "y": 1568,
+   "w": 15,
+   "h": 21,
+   "c": "A"
+  },
+  {
+   "x": 36,
+   "y": 1825,
+   "w": 17,
+   "h": 23,
+   "c": "D"
+  },
+  {
+   "x": 427,
+   "y": 1825,
+   "w": 37,
+   "h": 23,
+   "c": "Bm"
+  },
+  {
+   "x": 588,
+   "y": 1825,
+   "w": 80,
+   "h": 23,
+   "c": "Bm/G#"
+  },
+  {
+   "x": 911,
+   "y": 1825,
+   "w": 49,
+   "h": 23,
+   "c": "G/A"
+  },
+  {
+   "x": 1126,
+   "y": 1825,
+   "w": 16,
+   "h": 23,
+   "c": "D"
+  },
+  {
+   "x": 252,
+   "y": 387,
+   "w": 73,
+   "h": 28,
+   "c": "Gmaj7"
+  },
+  {
+   "x": 598,
+   "y": 390,
+   "w": 49,
+   "h": 25,
+   "c": "D/A"
+  },
+  {
+   "x": 907,
+   "y": 387,
+   "w": 73,
+   "h": 28,
+   "c": "Gmaj7"
+  },
+  {
+   "x": 15,
+   "y": 534,
+   "w": 67,
+   "h": 35,
+   "c": "Asus4"
+  },
+  {
+   "x": 151,
+   "y": 538,
+   "w": 19,
+   "h": 31,
+   "c": "A"
+  },
+  {
+   "x": 764,
+   "y": 1825,
+   "w": 45,
+   "h": 23,
+   "c": "D/A"
+  }
+ ]
 }

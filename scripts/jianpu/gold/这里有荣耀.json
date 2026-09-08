@@ -7,5 +7,249 @@
   "w": 85,
   "h": 27
  },
- "key_label_verified": "mesure measure-keylabel (vote 1= + lettre attendue), zoom relu à l’œil sur planche de lot, lettre confrontée à printedKey, 2026-08-22"
+ "key_label_verified": "mesure measure-keylabel (vote 1= + lettre attendue), zoom relu à l’œil sur planche de lot, lettre confrontée à printedKey, 2026-08-22",
+ "not_labels": [
+  "1379,828"
+ ],
+ "not_labels_verified": "le titre de section gravé 【Chorus】 (1379,828), lu `Am` à −1,42, posé sur la rangée d'accords elle-même — relu au zoom, 2026-09-05 (itération 45)",
+ "not_rows": [
+  346,
+  1146,
+  2088
+ ],
+ "not_rows_verified": "la **seconde voix** du premier système (y=346 : cette gravure superpose deux lignes de chiffres), la rangée de chiffres du système y=1110 (y=1146), et les coins de **crochet de reprise** ⌐1 / ⌐2 du dernier système (y=2088) — bandes rendues à l'œil, 2026-09-05 (itération 45)",
+ "verified": "transposé G→Ab dans Chrome headless (npm run jianpu:audit, 7 tranches relues) : 33 accords sur les six rangées, tous encadrés, plus le cadre « 1= G » → « 1=Ab » · trois bandes typées `chords` écartées en `not_rows` — la **seconde voix** du premier système (cette gravure superpose deux lignes de chiffres), une rangée de chiffres et les coins de crochet ⌐1 / ⌐2 · 【Chorus】 laissé intact · 2026-09-05 (itération 45)",
+ "frozen_labels": [
+  {
+   "x": 60,
+   "y": 297,
+   "w": 19,
+   "h": 25,
+   "c": "G"
+  },
+  {
+   "x": 441,
+   "y": 297,
+   "w": 17,
+   "h": 25,
+   "c": "C"
+  },
+  {
+   "x": 818,
+   "y": 297,
+   "w": 20,
+   "h": 25,
+   "c": "G"
+  },
+  {
+   "x": 1199,
+   "y": 297,
+   "w": 18,
+   "h": 25,
+   "c": "C"
+  },
+  {
+   "x": 41,
+   "y": 539,
+   "w": 20,
+   "h": 24,
+   "c": "G"
+  },
+  {
+   "x": 342,
+   "y": 539,
+   "w": 55,
+   "h": 24,
+   "c": "G/B"
+  },
+  {
+   "x": 680,
+   "y": 539,
+   "w": 18,
+   "h": 24,
+   "c": "C"
+  },
+  {
+   "x": 1020,
+   "y": 539,
+   "w": 20,
+   "h": 24,
+   "c": "G"
+  },
+  {
+   "x": 1300,
+   "y": 539,
+   "w": 20,
+   "h": 24,
+   "c": "G"
+  },
+  {
+   "x": 32,
+   "y": 823,
+   "w": 56,
+   "h": 24,
+   "c": "G/B"
+  },
+  {
+   "x": 351,
+   "y": 823,
+   "w": 48,
+   "h": 24,
+   "c": "Am"
+  },
+  {
+   "x": 734,
+   "y": 823,
+   "w": 19,
+   "h": 24,
+   "c": "D"
+  },
+  {
+   "x": 993,
+   "y": 823,
+   "w": 20,
+   "h": 24,
+   "c": "G"
+  },
+  {
+   "x": 1281,
+   "y": 823,
+   "w": 55,
+   "h": 24,
+   "c": "G/B"
+  },
+  {
+   "x": 48,
+   "y": 1107,
+   "w": 17,
+   "h": 25,
+   "c": "C"
+  },
+  {
+   "x": 481,
+   "y": 1107,
+   "w": 20,
+   "h": 25,
+   "c": "G"
+  },
+  {
+   "x": 850,
+   "y": 1107,
+   "w": 20,
+   "h": 25,
+   "c": "G"
+  },
+  {
+   "x": 1234,
+   "y": 1107,
+   "w": 55,
+   "h": 25,
+   "c": "G/B"
+  },
+  {
+   "x": 31,
+   "y": 1379,
+   "w": 48,
+   "h": 37,
+   "c": "Am"
+  },
+  {
+   "x": 250,
+   "y": 1379,
+   "w": 18,
+   "h": 37,
+   "c": "D"
+  },
+  {
+   "x": 479,
+   "y": 1379,
+   "w": 20,
+   "h": 37,
+   "c": "G"
+  },
+  {
+   "x": 1019,
+   "y": 1379,
+   "w": 17,
+   "h": 37,
+   "c": "C"
+  },
+  {
+   "x": 1308,
+   "y": 1379,
+   "w": 55,
+   "h": 37,
+   "c": "G/B"
+  },
+  {
+   "x": 36,
+   "y": 1733,
+   "w": 49,
+   "h": 24,
+   "c": "Am"
+  },
+  {
+   "x": 255,
+   "y": 1733,
+   "w": 19,
+   "h": 24,
+   "c": "D"
+  },
+  {
+   "x": 499,
+   "y": 1733,
+   "w": 20,
+   "h": 24,
+   "c": "G"
+  },
+  {
+   "x": 877,
+   "y": 1733,
+   "w": 17,
+   "h": 24,
+   "c": "C"
+  },
+  {
+   "x": 1245,
+   "y": 1733,
+   "w": 55,
+   "h": 24,
+   "c": "G/B"
+  },
+  {
+   "x": 40,
+   "y": 2053,
+   "w": 49,
+   "h": 24,
+   "c": "Am"
+  },
+  {
+   "x": 379,
+   "y": 2053,
+   "w": 18,
+   "h": 24,
+   "c": "D"
+  },
+  {
+   "x": 701,
+   "y": 2053,
+   "w": 48,
+   "h": 24,
+   "c": "Am"
+  },
+  {
+   "x": 1010,
+   "y": 2053,
+   "w": 19,
+   "h": 24,
+   "c": "D"
+  },
+  {
+   "x": 1340,
+   "y": 2053,
+   "w": 20,
+   "h": 24,
+   "c": "G"
+  }
+ ]
 }

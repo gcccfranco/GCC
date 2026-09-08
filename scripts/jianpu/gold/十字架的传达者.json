@@ -1,4 +1,430 @@
 {
  "slug": "十字架的传达者",
- "face": "din-bold"
+ "face": "din-bold",
+ "corrections": {
+  "433,1049": "Gmaj7",
+  "729,13": "Dmaj7",
+  "729,349": "Gmaj7",
+  "1039,253": "Gmaj7",
+  "1039,1043": "Gmaj7",
+  "1039,1260": "A7",
+  "1336,171": "D/F#",
+  "1920,458": "G/A",
+  "1920,1039": "Em7",
+  "2212,28": "A7"
+ },
+ "corrections_verified": "page relue rangée par rangée sur zooms du scan (7 rangées d'accords), 2026-09-05 (itération 46). Cinq des dix corrigent un **faux accord publié** : `Gmaj7` et `Dmaj7` sortaient `F#m7` à +0,42…+0,46 et unanimes, donc retenus — c'est le mode C, et il n'était corrigeable qu'en renversant l'ordre corrections/keep() dans build-chords.",
+ "not_labels": [
+  "1336,1082",
+  "2212,207",
+  "729,1477"
+ ],
+ "not_rows": [
+  "769"
+ ],
+ "extra_labels": [
+  {
+   "x": 161,
+   "y": 433,
+   "w": 100,
+   "h": 37,
+   "c": "Gmaj7"
+  },
+  {
+   "x": 21,
+   "y": 1638,
+   "w": 49,
+   "h": 24,
+   "c": "Bm"
+  },
+  {
+   "x": 134,
+   "y": 1636,
+   "w": 60,
+   "h": 27,
+   "c": "D/A"
+  },
+  {
+   "x": 270,
+   "y": 1637,
+   "w": 23,
+   "h": 26,
+   "c": "G"
+  },
+  {
+   "x": 471,
+   "y": 1636,
+   "w": 65,
+   "h": 27,
+   "c": "G/A"
+  },
+  {
+   "x": 659,
+   "y": 1633,
+   "w": 67,
+   "h": 29,
+   "c": "Bm7"
+  },
+  {
+   "x": 882,
+   "y": 1626,
+   "w": 80,
+   "h": 36,
+   "c": "F#m7"
+  },
+  {
+   "x": 1065,
+   "y": 1633,
+   "w": 65,
+   "h": 29,
+   "c": "Em7"
+  },
+  {
+   "x": 1269,
+   "y": 1633,
+   "w": 40,
+   "h": 29,
+   "c": "A7"
+  },
+  {
+   "x": 407,
+   "y": 2217,
+   "w": 54,
+   "h": 25,
+   "c": "Bm"
+  }
+ ],
+ "extra_verified": "rangée y=1633 relue en entier sur zoom du scan — huit accords, jamais isolés par le découpage (mode D) · le « Gmaj7 » soudé au segno (y=433) et le « Bm » soudé à « D.S.al.Coda ⊕ » (y=2212) mesurés colonne par colonne · 2026-09-05 (itération 46)",
+ "key_label": {
+  "x": 36,
+  "y": 290,
+  "w": 87,
+  "h": 32
+ },
+ "key_label_verified": "mesuré à la main : measure-keylabel ne propose sur cette page que la **ligne de tempo** ♩=65 (y=378), le piège nommé à l'itération 41. Le vrai cadre est au-dessus, colonnes d'encre « 1 » (36-45), « = » (58-85), « D » (93-122), le 4/4 laissé dehors. Lettre gravée D = printedKey D, donc pas de `c`. 2026-09-05 (itération 46)",
+ "verified": "transposé D→Eb dans Chrome headless (npm run jianpu:audit, 7 tranches relues) : 46 accords sur les sept rangées, tous encadrés de rouge, aucun cadre orange, plus le cadre « 1=D » → « 1=Eb » · la page portait les trois défauts à la fois : la rangée y=1633 jamais isolée (mode D, huit accords), cinq `Gmaj7`/`Dmaj7` publiés `F#m7` au-dessus du seuil et unanimes (mode C), et trois amas où un signe est soudé à un accord — le segno devant « Gmaj7 » (y=433) et « D.S.al.Coda ⊕ » devant « Bm » (y=2212) · le signe de coda seul (y=729) et un arc de liaison (y=1336) écartés en not_labels, la bande d'arcs y=769 en not_rows · 2026-09-05 (itération 46)",
+ "frozen_labels": [
+  {
+   "x": 629,
+   "y": 429,
+   "w": 80,
+   "h": 36,
+   "c": "F#m7"
+  },
+  {
+   "x": 837,
+   "y": 433,
+   "w": 68,
+   "h": 32,
+   "c": "Bm7"
+  },
+  {
+   "x": 1049,
+   "y": 433,
+   "w": 100,
+   "h": 32,
+   "c": "Gmaj7"
+  },
+  {
+   "x": 1236,
+   "y": 433,
+   "w": 41,
+   "h": 32,
+   "c": "A7"
+  },
+  {
+   "x": 13,
+   "y": 729,
+   "w": 98,
+   "h": 39,
+   "c": "Dmaj7"
+  },
+  {
+   "x": 237,
+   "y": 729,
+   "w": 73,
+   "h": 39,
+   "c": "D/F#"
+  },
+  {
+   "x": 349,
+   "y": 729,
+   "w": 100,
+   "h": 39,
+   "c": "Gmaj7"
+  },
+  {
+   "x": 767,
+   "y": 729,
+   "w": 80,
+   "h": 39,
+   "c": "F#m7"
+  },
+  {
+   "x": 956,
+   "y": 729,
+   "w": 67,
+   "h": 39,
+   "c": "Bm7"
+  },
+  {
+   "x": 1149,
+   "y": 729,
+   "w": 65,
+   "h": 39,
+   "c": "Em7"
+  },
+  {
+   "x": 1295,
+   "y": 729,
+   "w": 80,
+   "h": 39,
+   "c": "F#m7"
+  },
+  {
+   "x": 19,
+   "y": 1039,
+   "w": 49,
+   "h": 31,
+   "c": "Bm"
+  },
+  {
+   "x": 253,
+   "y": 1039,
+   "w": 101,
+   "h": 31,
+   "c": "Gmaj7"
+  },
+  {
+   "x": 686,
+   "y": 1035,
+   "w": 80,
+   "h": 35,
+   "c": "F#m7"
+  },
+  {
+   "x": 873,
+   "y": 1039,
+   "w": 67,
+   "h": 31,
+   "c": "Bm7"
+  },
+  {
+   "x": 1043,
+   "y": 1039,
+   "w": 100,
+   "h": 31,
+   "c": "Gmaj7"
+  },
+  {
+   "x": 1260,
+   "y": 1039,
+   "w": 40,
+   "h": 31,
+   "c": "A7"
+  },
+  {
+   "x": 13,
+   "y": 1336,
+   "w": 99,
+   "h": 46,
+   "c": "Dmaj7"
+  },
+  {
+   "x": 171,
+   "y": 1336,
+   "w": 73,
+   "h": 46,
+   "c": "D/F#"
+  },
+  {
+   "x": 284,
+   "y": 1336,
+   "w": 100,
+   "h": 46,
+   "c": "Gmaj7"
+  },
+  {
+   "x": 726,
+   "y": 1336,
+   "w": 81,
+   "h": 46,
+   "c": "F#m7"
+  },
+  {
+   "x": 972,
+   "y": 1336,
+   "w": 68,
+   "h": 46,
+   "c": "Bm7"
+  },
+  {
+   "x": 1152,
+   "y": 1336,
+   "w": 66,
+   "h": 46,
+   "c": "Em7"
+  },
+  {
+   "x": 1294,
+   "y": 1336,
+   "w": 81,
+   "h": 46,
+   "c": "F#m7"
+  },
+  {
+   "x": 13,
+   "y": 1920,
+   "w": 98,
+   "h": 45,
+   "c": "Dmaj7"
+  },
+  {
+   "x": 148,
+   "y": 1920,
+   "w": 74,
+   "h": 45,
+   "c": "D/F#"
+  },
+  {
+   "x": 292,
+   "y": 1920,
+   "w": 24,
+   "h": 45,
+   "c": "G"
+  },
+  {
+   "x": 458,
+   "y": 1920,
+   "w": 65,
+   "h": 45,
+   "c": "G/A"
+  },
+  {
+   "x": 654,
+   "y": 1920,
+   "w": 68,
+   "h": 45,
+   "c": "Bm7"
+  },
+  {
+   "x": 842,
+   "y": 1920,
+   "w": 79,
+   "h": 45,
+   "c": "F#m7"
+  },
+  {
+   "x": 1039,
+   "y": 1920,
+   "w": 80,
+   "h": 45,
+   "c": "Em7"
+  },
+  {
+   "x": 28,
+   "y": 2212,
+   "w": 40,
+   "h": 42,
+   "c": "A7"
+  },
+  {
+   "x": 612,
+   "y": 2212,
+   "w": 60,
+   "h": 42,
+   "c": "D/A"
+  },
+  {
+   "x": 739,
+   "y": 2212,
+   "w": 100,
+   "h": 42,
+   "c": "Gmaj7"
+  },
+  {
+   "x": 996,
+   "y": 2209,
+   "w": 80,
+   "h": 45,
+   "c": "F#m7"
+  },
+  {
+   "x": 1260,
+   "y": 2212,
+   "w": 49,
+   "h": 42,
+   "c": "Bm"
+  },
+  {
+   "x": 161,
+   "y": 433,
+   "w": 100,
+   "h": 37,
+   "c": "Gmaj7"
+  },
+  {
+   "x": 21,
+   "y": 1638,
+   "w": 49,
+   "h": 24,
+   "c": "Bm"
+  },
+  {
+   "x": 134,
+   "y": 1636,
+   "w": 60,
+   "h": 27,
+   "c": "D/A"
+  },
+  {
+   "x": 270,
+   "y": 1637,
+   "w": 23,
+   "h": 26,
+   "c": "G"
+  },
+  {
+   "x": 471,
+   "y": 1636,
+   "w": 65,
+   "h": 27,
+   "c": "G/A"
+  },
+  {
+   "x": 659,
+   "y": 1633,
+   "w": 67,
+   "h": 29,
+   "c": "Bm7"
+  },
+  {
+   "x": 882,
+   "y": 1626,
+   "w": 80,
+   "h": 36,
+   "c": "F#m7"
+  },
+  {
+   "x": 1065,
+   "y": 1633,
+   "w": 65,
+   "h": 29,
+   "c": "Em7"
+  },
+  {
+   "x": 1269,
+   "y": 1633,
+   "w": 40,
+   "h": 29,
+   "c": "A7"
+  },
+  {
+   "x": 407,
+   "y": 2217,
+   "w": 54,
+   "h": 25,
+   "c": "Bm"
+  }
+ ]
 }

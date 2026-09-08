@@ -15,7 +15,249 @@
    "w": 38,
    "h": 21,
    "c": "Bm"
+  },
+  {
+   "x": 82,
+   "y": 963,
+   "w": 16,
+   "h": 21,
+   "c": "D"
+  },
+  {
+   "x": 556,
+   "y": 963,
+   "w": 16,
+   "h": 21,
+   "c": "D"
+  },
+  {
+   "x": 968,
+   "y": 981,
+   "w": 16,
+   "h": 22,
+   "c": "C"
+  },
+  {
+   "x": 1157,
+   "y": 981,
+   "w": 17,
+   "h": 22,
+   "c": "D"
   }
  ],
- "extra_verified": "zooms relus à l’œil sur planche de lot (propose-extra --all multi-chants), 2026-08-25 (itération 33)"
+ "extra_verified": "zooms relus à l’œil sur planche de lot (propose-extra --all multi-chants), 2026-08-25 (itération 33) · itération 40 : la rangée **soudée** à ses chiffres (bande y=963-1007 typée numbers) — « D … D … 【Chorus】 … C … D », les quatre accords mesurés au pixel sur le scan et relus au zoom, 【Chorus】 laissé (ce n'est pas un accord) — 2026-08-30",
+ "not_rows": [
+  1313
+ ],
+ "not_rows_verified": "rangée de **liaisons** promue à tort : la bande y=1313-1325 (13 px de haut) ne porte que les arcs du système, aucun accord — relue au scan, 2026-08-30 (itération 40)",
+ "not_labels": [
+  "1671,162"
+ ],
+ "not_labels_verified": "« 【Bridge】 » : une mention de section, pas un accord — 2026-08-30 (itération 40)",
+ "verified": "transposé G→Ab dans Chrome headless (npm run jianpu:audit, 6 tranches relues, thèmes clair et sombre) : 29 accords sur 5 rangées, dont la rangée **soudée** à ses chiffres (y=963-1002 « D … D … C … D », bande typée numbers) — aucun accord resté en G, 【Chorus】, 【Bridge】, Fine et les mentions « （G原调） » et « 原调G » (qui décrivent la source, pas cette page) laissés tels quels, cadre 1=Ab juste — 2026-08-30 (itération 40)",
+ "frozen_labels": [
+  {
+   "x": 62,
+   "y": 259,
+   "w": 17,
+   "h": 21,
+   "c": "G"
+  },
+  {
+   "x": 343,
+   "y": 259,
+   "w": 47,
+   "h": 21,
+   "c": "D/A"
+  },
+  {
+   "x": 651,
+   "y": 259,
+   "w": 14,
+   "h": 21,
+   "c": "C"
+  },
+  {
+   "x": 975,
+   "y": 259,
+   "w": 58,
+   "h": 21,
+   "c": "Dsus"
+  },
+  {
+   "x": 1158,
+   "y": 259,
+   "w": 16,
+   "h": 21,
+   "c": "D"
+  },
+  {
+   "x": 147,
+   "y": 531,
+   "w": 17,
+   "h": 21,
+   "c": "G"
+  },
+  {
+   "x": 567,
+   "y": 531,
+   "w": 16,
+   "h": 21,
+   "c": "D"
+  },
+  {
+   "x": 986,
+   "y": 531,
+   "w": 14,
+   "h": 21,
+   "c": "C"
+  },
+  {
+   "x": 71,
+   "y": 1279,
+   "w": 16,
+   "h": 21,
+   "c": "G"
+  },
+  {
+   "x": 512,
+   "y": 1279,
+   "w": 15,
+   "h": 21,
+   "c": "C"
+  },
+  {
+   "x": 715,
+   "y": 1279,
+   "w": 16,
+   "h": 21,
+   "c": "D"
+  },
+  {
+   "x": 957,
+   "y": 1279,
+   "w": 17,
+   "h": 21,
+   "c": "G"
+  },
+  {
+   "x": 59,
+   "y": 1480,
+   "w": 15,
+   "h": 21,
+   "c": "C"
+  },
+  {
+   "x": 207,
+   "y": 1480,
+   "w": 16,
+   "h": 21,
+   "c": "D"
+  },
+  {
+   "x": 394,
+   "y": 1480,
+   "w": 37,
+   "h": 21,
+   "c": "Em"
+  },
+  {
+   "x": 741,
+   "y": 1480,
+   "w": 14,
+   "h": 21,
+   "c": "C"
+  },
+  {
+   "x": 918,
+   "y": 1480,
+   "w": 16,
+   "h": 21,
+   "c": "D"
+  },
+  {
+   "x": 1092,
+   "y": 1480,
+   "w": 17,
+   "h": 21,
+   "c": "G"
+  },
+  {
+   "x": 86,
+   "y": 1671,
+   "w": 15,
+   "h": 30,
+   "c": "C"
+  },
+  {
+   "x": 442,
+   "y": 1671,
+   "w": 16,
+   "h": 30,
+   "c": "D"
+  },
+  {
+   "x": 733,
+   "y": 1671,
+   "w": 17,
+   "h": 30,
+   "c": "G"
+  },
+  {
+   "x": 863,
+   "y": 1671,
+   "w": 59,
+   "h": 30,
+   "c": "D/F#"
+  },
+  {
+   "x": 1041,
+   "y": 1671,
+   "w": 37,
+   "h": 30,
+   "c": "Em"
+  },
+  {
+   "x": 1177,
+   "y": 1671,
+   "w": 39,
+   "h": 30,
+   "c": "Bm"
+  },
+  {
+   "x": 543,
+   "y": 1480,
+   "w": 38,
+   "h": 21,
+   "c": "Bm"
+  },
+  {
+   "x": 82,
+   "y": 963,
+   "w": 16,
+   "h": 21,
+   "c": "D"
+  },
+  {
+   "x": 556,
+   "y": 963,
+   "w": 16,
+   "h": 21,
+   "c": "D"
+  },
+  {
+   "x": 968,
+   "y": 981,
+   "w": 16,
+   "h": 22,
+   "c": "C"
+  },
+  {
+   "x": 1157,
+   "y": 981,
+   "w": 17,
+   "h": 22,
+   "c": "D"
+  }
+ ]
 }

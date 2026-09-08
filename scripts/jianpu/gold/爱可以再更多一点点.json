@@ -1,14 +1,437 @@
 {
-  "slug": "爱可以再更多一点点",
-  "extra_chords": [
-    "Em7"
-  ],
-  "extra_chords_verified": "accords gravés hors du `.cho`, lus à l’œil sur zoom ; le vocabulaire fermé publiait le plus proche à leur place. 2026-08-25 (itération 33)",
-  "key_label": {
-    "x": 61,
-    "y": 240,
-    "w": 63,
-    "h": 23
+ "slug": "爱可以再更多一点点",
+ "extra_chords": [
+  "A7b9",
+  "Em7",
+  "Gmaj7/A"
+ ],
+ "extra_chords_verified": "accords gravés hors du `.cho`, lus à l'œil sur zoom ; le vocabulaire fermé publiait le plus proche à leur place. 2026-08-25 (itération 33) · `Gmaj7/A` et `A7b9` ajoutés le 2026-09-06 (itération 47) : la rangée y=396 les grave « Gmaj7/A » et « A7(♭9) », et le vocabulaire fermé y lisait `D/F#` deux fois. Une fois au vocabulaire, le matcher les retrouve seul (+0,04 et −0,03) — sous le seuil, donc versés en corrections.",
+ "key_label": {
+  "x": 61,
+  "y": 240,
+  "w": 63,
+  "h": 23
+ },
+ "key_label_verified": "mesure measure-keylabel (ancrage sur le « = », cadre = voisin gauche…voisin droit), zoom relu à l’œil sur planche de lot, lettre gravée confrontée à printedKey, 2026-08-26 (itération 35)",
+ "corrections": {
+  "396,960": "Gmaj7/A",
+  "396,1088": "A7b9",
+  "557,730": "D/A",
+  "557,1075": "D/F#",
+  "785,1129": "D/A",
+  "1017,220": "D/F#",
+  "1476,561": "D/A",
+  "1476,862": "D/F#",
+  "1701,513": "D/A",
+  "1936,122": "A/G"
+ },
+ "corrections_verified": "les onze amas restants relus au zoom sur planche propose-extra --all --hidden, 2026-09-06 (itération 47). Neuf sont des accords à barre oblique que le seuil rejetait ; deux sont gravés hors du `.cho` (voir extra_chords). Le onzième, « D/F♯ » de la rangée y=1701, est traversé de part en part par une longue barre horizontale qui soude son amas sur 128 px : il passe en extra_label, mesuré sur la hauteur d'encre des colonnes (les fûts font 19 à 27 px, la barre 3).",
+ "not_labels": [
+  "1701,795"
+ ],
+ "extra_labels": [
+  {
+   "x": 815,
+   "y": 1699,
+   "w": 53,
+   "h": 29,
+   "c": "D/F#"
+  }
+ ],
+ "extra_verified": "« D/F♯ » de la rangée y=1701, soudé à la barre horizontale qui le traverse : le découpage en fait un amas de 128 px, dont le profil de hauteur d'encre isole les fûts (D en 815-817, la barre oblique en 845-847, le dièse en 861-866) de la barre (3 px partout). 2026-09-06 (itération 47)",
+ "verified": "transposé D→Eb dans Chrome headless (npm run jianpu:audit, 7 tranches relues) : 56 accords sur les huit rangées, tous encadrés de rouge, aucun cadre orange, plus le cadre « 1=D » → « 1=Eb » · balayage géométrique (sweep-browser) sans défaut mesurable · la page grave deux accords hors de son `.cho` — « Gmaj7/A » et « A7(♭9) » — que le vocabulaire fermé lisait `D/F#` ; ajoutés en extra_chords, le matcher les retrouve seul · le « D/F♯ » de la rangée y=1701 est traversé par une longue barre horizontale qui soude son amas sur 128 px : écarté en not_labels, republié en extra_label mesuré au profil de hauteur d'encre · 2026-09-06 (itération 47)",
+ "frozen_labels": [
+  {
+   "x": 83,
+   "y": 396,
+   "w": 62,
+   "h": 19,
+   "c": "Gmaj7"
   },
-  "key_label_verified": "mesure measure-keylabel (ancrage sur le « = », cadre = voisin gauche…voisin droit), zoom relu à l’œil sur planche de lot, lettre gravée confrontée à printedKey, 2026-08-26 (itération 35)"
+  {
+   "x": 212,
+   "y": 396,
+   "w": 36,
+   "h": 19,
+   "c": "A/G"
+  },
+  {
+   "x": 401,
+   "y": 396,
+   "w": 39,
+   "h": 19,
+   "c": "F#m"
+  },
+  {
+   "x": 585,
+   "y": 396,
+   "w": 30,
+   "h": 19,
+   "c": "Bm"
+  },
+  {
+   "x": 701,
+   "y": 396,
+   "w": 40,
+   "h": 19,
+   "c": "Em7"
+  },
+  {
+   "x": 960,
+   "y": 396,
+   "w": 82,
+   "h": 19,
+   "c": "Gmaj7/A"
+  },
+  {
+   "x": 1088,
+   "y": 393,
+   "w": 66,
+   "h": 22,
+   "c": "A7b9"
+  },
+  {
+   "x": 45,
+   "y": 557,
+   "w": 16,
+   "h": 24,
+   "c": "D"
+  },
+  {
+   "x": 254,
+   "y": 557,
+   "w": 58,
+   "h": 24,
+   "c": "A/C#"
+  },
+  {
+   "x": 500,
+   "y": 557,
+   "w": 36,
+   "h": 24,
+   "c": "Bm"
+  },
+  {
+   "x": 730,
+   "y": 557,
+   "w": 44,
+   "h": 24,
+   "c": "D/A"
+  },
+  {
+   "x": 857,
+   "y": 557,
+   "w": 17,
+   "h": 24,
+   "c": "G"
+  },
+  {
+   "x": 1075,
+   "y": 557,
+   "w": 52,
+   "h": 24,
+   "c": "D/F#"
+  },
+  {
+   "x": 25,
+   "y": 785,
+   "w": 50,
+   "h": 23,
+   "c": "Em9"
+  },
+  {
+   "x": 289,
+   "y": 785,
+   "w": 15,
+   "h": 23,
+   "c": "A"
+  },
+  {
+   "x": 413,
+   "y": 785,
+   "w": 17,
+   "h": 23,
+   "c": "D"
+  },
+  {
+   "x": 630,
+   "y": 782,
+   "w": 58,
+   "h": 26,
+   "c": "A/C#"
+  },
+  {
+   "x": 892,
+   "y": 785,
+   "w": 36,
+   "h": 23,
+   "c": "Bm"
+  },
+  {
+   "x": 1129,
+   "y": 785,
+   "w": 44,
+   "h": 23,
+   "c": "D/A"
+  },
+  {
+   "x": 42,
+   "y": 1017,
+   "w": 17,
+   "h": 22,
+   "c": "G"
+  },
+  {
+   "x": 220,
+   "y": 1017,
+   "w": 52,
+   "h": 22,
+   "c": "D/F#"
+  },
+  {
+   "x": 311,
+   "y": 1017,
+   "w": 36,
+   "h": 22,
+   "c": "Bm"
+  },
+  {
+   "x": 409,
+   "y": 1017,
+   "w": 50,
+   "h": 22,
+   "c": "Em9"
+  },
+  {
+   "x": 565,
+   "y": 1017,
+   "w": 45,
+   "h": 22,
+   "c": "G/A"
+  },
+  {
+   "x": 722,
+   "y": 1017,
+   "w": 17,
+   "h": 22,
+   "c": "D"
+  },
+  {
+   "x": 932,
+   "y": 1017,
+   "w": 37,
+   "h": 22,
+   "c": "Bm"
+  },
+  {
+   "x": 1040,
+   "y": 1017,
+   "w": 48,
+   "h": 22,
+   "c": "F#m"
+  },
+  {
+   "x": 42,
+   "y": 1248,
+   "w": 17,
+   "h": 22,
+   "c": "G"
+  },
+  {
+   "x": 275,
+   "y": 1248,
+   "w": 17,
+   "h": 22,
+   "c": "D"
+  },
+  {
+   "x": 391,
+   "y": 1248,
+   "w": 36,
+   "h": 22,
+   "c": "Bm"
+  },
+  {
+   "x": 503,
+   "y": 1245,
+   "w": 48,
+   "h": 25,
+   "c": "F#m"
+  },
+  {
+   "x": 786,
+   "y": 1248,
+   "w": 17,
+   "h": 22,
+   "c": "G"
+  },
+  {
+   "x": 1058,
+   "y": 1248,
+   "w": 15,
+   "h": 22,
+   "c": "A"
+  },
+  {
+   "x": 44,
+   "y": 1476,
+   "w": 17,
+   "h": 22,
+   "c": "D"
+  },
+  {
+   "x": 113,
+   "y": 1473,
+   "w": 56,
+   "h": 25,
+   "c": "A/C#"
+  },
+  {
+   "x": 355,
+   "y": 1476,
+   "w": 36,
+   "h": 22,
+   "c": "Bm"
+  },
+  {
+   "x": 561,
+   "y": 1476,
+   "w": 44,
+   "h": 22,
+   "c": "D/A"
+  },
+  {
+   "x": 695,
+   "y": 1476,
+   "w": 16,
+   "h": 22,
+   "c": "G"
+  },
+  {
+   "x": 862,
+   "y": 1476,
+   "w": 54,
+   "h": 22,
+   "c": "D/F#"
+  },
+  {
+   "x": 991,
+   "y": 1476,
+   "w": 34,
+   "h": 22,
+   "c": "Em"
+  },
+  {
+   "x": 1182,
+   "y": 1476,
+   "w": 15,
+   "h": 22,
+   "c": "A"
+  },
+  {
+   "x": 44,
+   "y": 1701,
+   "w": 17,
+   "h": 28,
+   "c": "D"
+  },
+  {
+   "x": 97,
+   "y": 1701,
+   "w": 58,
+   "h": 28,
+   "c": "A/C#"
+  },
+  {
+   "x": 325,
+   "y": 1701,
+   "w": 36,
+   "h": 28,
+   "c": "Bm"
+  },
+  {
+   "x": 513,
+   "y": 1701,
+   "w": 44,
+   "h": 28,
+   "c": "D/A"
+  },
+  {
+   "x": 629,
+   "y": 1701,
+   "w": 17,
+   "h": 28,
+   "c": "G"
+  },
+  {
+   "x": 1002,
+   "y": 1701,
+   "w": 34,
+   "h": 28,
+   "c": "Em"
+  },
+  {
+   "x": 1182,
+   "y": 1701,
+   "w": 15,
+   "h": 28,
+   "c": "A"
+  },
+  {
+   "x": 14,
+   "y": 1936,
+   "w": 76,
+   "h": 21,
+   "c": "Gmaj7"
+  },
+  {
+   "x": 122,
+   "y": 1936,
+   "w": 45,
+   "h": 21,
+   "c": "A/G"
+  },
+  {
+   "x": 352,
+   "y": 1933,
+   "w": 48,
+   "h": 24,
+   "c": "F#m"
+  },
+  {
+   "x": 483,
+   "y": 1936,
+   "w": 37,
+   "h": 21,
+   "c": "Bm"
+  },
+  {
+   "x": 587,
+   "y": 1936,
+   "w": 35,
+   "h": 21,
+   "c": "Em"
+  },
+  {
+   "x": 805,
+   "y": 1936,
+   "w": 44,
+   "h": 21,
+   "c": "G/A"
+  },
+  {
+   "x": 1138,
+   "y": 1936,
+   "w": 16,
+   "h": 21,
+   "c": "D"
+  },
+  {
+   "x": 815,
+   "y": 1699,
+   "w": 53,
+   "h": 29,
+   "c": "D/F#"
+  }
+ ]
 }

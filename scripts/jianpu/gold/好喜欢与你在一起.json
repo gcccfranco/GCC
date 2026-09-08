@@ -78,5 +78,277 @@
   }
  ],
  "extra_verified": "zooms relus à l’œil sur planche de lot (propose-extra --all --hidden), 2026-08-25 (itération 33)",
- "extra_composites_verified": "étiquettes composites (或 / 代替 / 先…后 / groupe entre parenthèses), lues à l’œil sur planche de lot et écrites telles qu’imprimées ; `transpose_label` réécrit la ligne entière. 2026-08-25 (itération 34)"
+ "extra_composites_verified": "étiquettes composites (或 / 代替 / 先…后 / groupe entre parenthèses), lues à l’œil sur planche de lot et écrites telles qu’imprimées ; `transpose_label` réécrit la ligne entière. 2026-08-25 (itération 34)",
+ "not_labels": [
+  "1217,128",
+  "308,1110",
+  "308,1134",
+  "308,202",
+  "308,219",
+  "308,559",
+  "308,581"
+ ],
+ "not_labels_verified": "six fragments d'arcs de liaison de la rangée y=308 et la mention 【Chorus】 — 2026-08-30 (itération 40)",
+ "verified": "transposé C→C# dans Chrome headless (npm run jianpu:audit, 7 tranches relues + thème sombre) : 37 accords et le cadre 1=C#, la ligne composite « 先F后F#dim », les deux crochets de reprise (C/E…G et C/G…C) et E/G#→F/A compris ; aucun accord resté en C, aucun accord sans cadre, aucune barre de mesure ni arc recouvert. Décalage song_semitones = 2 vérifié avant lecture (page gravée en C, .cho en Bb) — 2026-09-02 (itération 41)",
+ "frozen_labels": [
+  {
+   "x": 61,
+   "y": 272,
+   "w": 11,
+   "h": 29,
+   "c": "F"
+  },
+  {
+   "x": 578,
+   "y": 272,
+   "w": 34,
+   "h": 29,
+   "c": "A7"
+  },
+  {
+   "x": 794,
+   "y": 272,
+   "w": 43,
+   "h": 29,
+   "c": "Dm"
+  },
+  {
+   "x": 984,
+   "y": 272,
+   "w": 10,
+   "h": 29,
+   "c": "F"
+  },
+  {
+   "x": 1040,
+   "y": 272,
+   "w": 81,
+   "h": 29,
+   "c": "F#dim"
+  },
+  {
+   "x": 1178,
+   "y": 272,
+   "w": 17,
+   "h": 29,
+   "c": "G"
+  },
+  {
+   "x": 103,
+   "y": 491,
+   "w": 15,
+   "h": 29,
+   "c": "C"
+  },
+  {
+   "x": 465,
+   "y": 491,
+   "w": 33,
+   "h": 29,
+   "c": "C7"
+  },
+  {
+   "x": 799,
+   "y": 491,
+   "w": 11,
+   "h": 29,
+   "c": "F"
+  },
+  {
+   "x": 404,
+   "y": 763,
+   "w": 44,
+   "h": 22,
+   "c": "Am"
+  },
+  {
+   "x": 738,
+   "y": 763,
+   "w": 43,
+   "h": 22,
+   "c": "Dm"
+  },
+  {
+   "x": 1116,
+   "y": 763,
+   "w": 17,
+   "h": 22,
+   "c": "G"
+  },
+  {
+   "x": 345,
+   "y": 1217,
+   "w": 11,
+   "h": 27,
+   "c": "F"
+  },
+  {
+   "x": 878,
+   "y": 1217,
+   "w": 39,
+   "h": 27,
+   "c": "Em"
+  },
+  {
+   "x": 1198,
+   "y": 1217,
+   "w": 44,
+   "h": 27,
+   "c": "Am"
+  },
+  {
+   "x": 69,
+   "y": 1443,
+   "w": 43,
+   "h": 22,
+   "c": "Dm"
+  },
+  {
+   "x": 429,
+   "y": 1443,
+   "w": 18,
+   "h": 22,
+   "c": "G"
+  },
+  {
+   "x": 770,
+   "y": 1443,
+   "w": 15,
+   "h": 22,
+   "c": "C"
+  },
+  {
+   "x": 1104,
+   "y": 1443,
+   "w": 32,
+   "h": 22,
+   "c": "C7"
+  },
+  {
+   "x": 76,
+   "y": 1662,
+   "w": 11,
+   "h": 28,
+   "c": "F"
+  },
+  {
+   "x": 412,
+   "y": 1662,
+   "w": 47,
+   "h": 28,
+   "c": "G/F"
+  },
+  {
+   "x": 742,
+   "y": 1662,
+   "w": 39,
+   "h": 28,
+   "c": "Em"
+  },
+  {
+   "x": 911,
+   "y": 1662,
+   "w": 63,
+   "h": 28,
+   "c": "E/G#"
+  },
+  {
+   "x": 1111,
+   "y": 1662,
+   "w": 43,
+   "h": 28,
+   "c": "Am"
+  },
+  {
+   "x": 81,
+   "y": 1885,
+   "w": 44,
+   "h": 23,
+   "c": "Dm"
+  },
+  {
+   "x": 552,
+   "y": 1885,
+   "w": 45,
+   "h": 23,
+   "c": "F/G"
+  },
+  {
+   "x": 774,
+   "y": 1885,
+   "w": 18,
+   "h": 23,
+   "c": "G"
+  },
+  {
+   "x": 1014,
+   "y": 1885,
+   "w": 15,
+   "h": 23,
+   "c": "C"
+  },
+  {
+   "x": 181,
+   "y": 272,
+   "w": 46,
+   "h": 29,
+   "c": "G/F"
+  },
+  {
+   "x": 421,
+   "y": 272,
+   "w": 44,
+   "h": 29,
+   "c": "C/E"
+  },
+  {
+   "x": 874,
+   "y": 272,
+   "w": 44,
+   "h": 29,
+   "c": "C/E"
+  },
+  {
+   "x": 72,
+   "y": 763,
+   "w": 44,
+   "h": 22,
+   "c": "C/E"
+  },
+  {
+   "x": 83,
+   "y": 984,
+   "w": 48,
+   "h": 39,
+   "c": "C/G"
+  },
+  {
+   "x": 565,
+   "y": 984,
+   "w": 18,
+   "h": 39,
+   "c": "G"
+  },
+  {
+   "x": 1025,
+   "y": 984,
+   "w": 15,
+   "h": 39,
+   "c": "C"
+  },
+  {
+   "x": 621,
+   "y": 1217,
+   "w": 47,
+   "h": 27,
+   "c": "G/F"
+  },
+  {
+   "x": 1135,
+   "y": 491,
+   "w": 163,
+   "h": 26,
+   "c": "先F后F#dim"
+  }
+ ]
 }

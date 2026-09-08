@@ -1,45 +1,272 @@
 {
-  "slug": "求主充满我",
-  "extra_labels": [
-    {
-      "x": 17,
-      "y": 1342,
-      "w": 19,
-      "h": 27,
-      "c": "D"
-    },
-    {
-      "x": 310,
-      "y": 1342,
-      "w": 56,
-      "h": 27,
-      "c": "G/B"
-    },
-    {
-      "x": 598,
-      "y": 1342,
-      "w": 21,
-      "h": 27,
-      "c": "G"
-    },
-    {
-      "x": 1207,
-      "y": 1342,
-      "w": 19,
-      "h": 27,
-      "c": "D"
-    }
-  ],
-  "extra_verified": "chaque étiquette relue sur zoom (propose-extra + planches), 2026-08-04",
-  "not_labels": [
-    "236,719"
-  ],
-  "not_labels_verified": "amas écartés à l'œil, 2026-08-18 (itération 25) : arcs de liaison et titre anglais retenus comme accords",
-  "key_label": {
-    "x": 38,
-    "y": 274,
-    "w": 73,
-    "h": 27
+ "slug": "求主充满我",
+ "extra_labels": [
+  {
+   "x": 17,
+   "y": 1342,
+   "w": 19,
+   "h": 27,
+   "c": "D"
   },
-  "key_label_verified": "mesure measure-keylabel (ancrage sur le « = », cadre = voisin gauche…voisin droit), zoom relu à l’œil sur planche de lot, lettre gravée confrontée à printedKey, 2026-08-26 (itération 35)"
+  {
+   "x": 310,
+   "y": 1342,
+   "w": 56,
+   "h": 27,
+   "c": "G/B"
+  },
+  {
+   "x": 598,
+   "y": 1342,
+   "w": 21,
+   "h": 27,
+   "c": "G"
+  },
+  {
+   "x": 1207,
+   "y": 1342,
+   "w": 19,
+   "h": 27,
+   "c": "D"
+  }
+ ],
+ "extra_verified": "chaque étiquette relue sur zoom (propose-extra + planches), 2026-08-04",
+ "not_labels": [
+  "236,719"
+ ],
+ "not_labels_verified": "amas écartés à l'œil, 2026-08-18 (itération 25) : arcs de liaison et titre anglais retenus comme accords",
+ "key_label": {
+  "x": 38,
+  "y": 274,
+  "w": 73,
+  "h": 27
+ },
+ "key_label_verified": "mesure measure-keylabel (ancrage sur le « = », cadre = voisin gauche…voisin droit), zoom relu à l’œil sur planche de lot, lettre gravée confrontée à printedKey, 2026-08-26 (itération 35)",
+ "corrections": {
+  "442,1305": "A7",
+  "742,1007": "A7",
+  "1042,533": "D/A",
+  "1042,1228": "A7",
+  "1342,460": "D/A",
+  "1342,1067": "A7"
+ },
+ "corrections_verified": "six amas que le matcher trouve mais laisse sous le seuil (+0,06 à +0,65), relus au zoom sur planche de lot (propose-extra --all --hidden), 2026-09-05 (itération 43)",
+ "not_rows": [
+  236,
+  1372
+ ],
+ "not_rows_verified": "le bloc de **titre** (y=236 : « Come and Fill Me Up » et la référence biblique) et la rangée de **chiffres** du dernier système (y=1372) — bandes rendues à l'œil, 2026-09-05 (itération 43)",
+ "verified": "transposé D→Eb dans Chrome headless (npm run jianpu:audit, 5 tranches relues) : 30 accords sur les cinq rangées, tous encadrés, plus le cadre « 1=D » → « 1=Eb » · le bloc de titre (« Come and Fill Me Up » et la référence biblique) et la rangée de chiffres du dernier système, tous deux typés `chords`, écartés en `not_rows` · 2026-09-05 (itération 43)",
+ "frozen_labels": [
+  {
+   "x": 18,
+   "y": 442,
+   "w": 19,
+   "h": 27,
+   "c": "D"
+  },
+  {
+   "x": 206,
+   "y": 442,
+   "w": 65,
+   "h": 27,
+   "c": "A/C#"
+  },
+  {
+   "x": 477,
+   "y": 442,
+   "w": 42,
+   "h": 27,
+   "c": "Bm"
+  },
+  {
+   "x": 869,
+   "y": 442,
+   "w": 21,
+   "h": 27,
+   "c": "G"
+  },
+  {
+   "x": 1033,
+   "y": 442,
+   "w": 17,
+   "h": 27,
+   "c": "A"
+  },
+  {
+   "x": 1193,
+   "y": 442,
+   "w": 19,
+   "h": 27,
+   "c": "D"
+  },
+  {
+   "x": 1305,
+   "y": 442,
+   "w": 35,
+   "h": 27,
+   "c": "A7"
+  },
+  {
+   "x": 17,
+   "y": 742,
+   "w": 19,
+   "h": 27,
+   "c": "D"
+  },
+  {
+   "x": 190,
+   "y": 742,
+   "w": 65,
+   "h": 27,
+   "c": "A/C#"
+  },
+  {
+   "x": 457,
+   "y": 742,
+   "w": 41,
+   "h": 27,
+   "c": "Bm"
+  },
+  {
+   "x": 850,
+   "y": 742,
+   "w": 21,
+   "h": 27,
+   "c": "G"
+  },
+  {
+   "x": 1007,
+   "y": 742,
+   "w": 35,
+   "h": 27,
+   "c": "A7"
+  },
+  {
+   "x": 1166,
+   "y": 742,
+   "w": 19,
+   "h": 27,
+   "c": "D"
+  },
+  {
+   "x": 17,
+   "y": 1042,
+   "w": 19,
+   "h": 27,
+   "c": "D"
+  },
+  {
+   "x": 163,
+   "y": 1042,
+   "w": 65,
+   "h": 27,
+   "c": "A/C#"
+  },
+  {
+   "x": 359,
+   "y": 1042,
+   "w": 57,
+   "h": 27,
+   "c": "G/B"
+  },
+  {
+   "x": 533,
+   "y": 1042,
+   "w": 52,
+   "h": 27,
+   "c": "D/A"
+  },
+  {
+   "x": 698,
+   "y": 1042,
+   "w": 21,
+   "h": 27,
+   "c": "G"
+  },
+  {
+   "x": 908,
+   "y": 1042,
+   "w": 65,
+   "h": 27,
+   "c": "D/F#"
+  },
+  {
+   "x": 1102,
+   "y": 1042,
+   "w": 17,
+   "h": 27,
+   "c": "E"
+  },
+  {
+   "x": 1228,
+   "y": 1042,
+   "w": 35,
+   "h": 27,
+   "c": "A7"
+  },
+  {
+   "x": 17,
+   "y": 1342,
+   "w": 19,
+   "h": 27,
+   "c": "D"
+  },
+  {
+   "x": 141,
+   "y": 1342,
+   "w": 65,
+   "h": 27,
+   "c": "A/C#"
+  },
+  {
+   "x": 310,
+   "y": 1342,
+   "w": 56,
+   "h": 27,
+   "c": "G/B"
+  },
+  {
+   "x": 460,
+   "y": 1342,
+   "w": 51,
+   "h": 27,
+   "c": "D/A"
+  },
+  {
+   "x": 598,
+   "y": 1342,
+   "w": 21,
+   "h": 27,
+   "c": "G"
+  },
+  {
+   "x": 796,
+   "y": 1342,
+   "w": 65,
+   "h": 27,
+   "c": "D/F#"
+  },
+  {
+   "x": 950,
+   "y": 1342,
+   "w": 41,
+   "h": 27,
+   "c": "Em"
+  },
+  {
+   "x": 1067,
+   "y": 1342,
+   "w": 34,
+   "h": 27,
+   "c": "A7"
+  },
+  {
+   "x": 1207,
+   "y": 1342,
+   "w": 19,
+   "h": 27,
+   "c": "D"
+  }
+ ]
 }

@@ -1,99 +1,357 @@
 {
-  "slug": "一粒麦子",
-  "face": "verdana-bold",
-  "extra_labels": [
-    {
-      "x": 328,
-      "y": 528,
-      "w": 48,
-      "h": 24,
-      "c": "C/E"
-    },
-    {
-      "x": 29,
-      "y": 1754,
-      "w": 75,
-      "h": 25,
-      "c": "Gm"
-    },
-    {
-      "x": 336,
-      "y": 1754,
-      "w": 17,
-      "h": 25,
-      "c": "C"
-    },
-    {
-      "x": 651,
-      "y": 1754,
-      "w": 12,
-      "h": 24,
-      "c": "F"
-    },
-    {
-      "x": 70,
-      "y": 2036,
-      "w": 17,
-      "h": 41,
-      "c": "C"
-    },
-    {
-      "x": 373,
-      "y": 2036,
-      "w": 12,
-      "h": 41,
-      "c": "F"
-    },
-    {
-      "x": 464,
-      "y": 2036,
-      "w": 71,
-      "h": 41,
-      "c": "(C/E)"
-    },
-    {
-      "x": 588,
-      "y": 2036,
-      "w": 48,
-      "h": 41,
-      "c": "Dm"
-    },
-    {
-      "x": 859,
-      "y": 2036,
-      "w": 50,
-      "h": 41,
-      "c": "Gm"
-    },
-    {
-      "x": 1095,
-      "y": 2036,
-      "w": 17,
-      "h": 41,
-      "c": "C"
-    },
-    {
-      "x": 1015,
-      "y": 1085,
-      "w": 139,
-      "h": 33,
-      "c": "Gm代替Bb]"
-    },
-    {
-      "x": 1251,
-      "y": 1085,
-      "w": 70,
-      "h": 33,
-      "c": "[Gm]"
-    }
-  ],
-  "extra_verified": "zooms relus à l’œil sur planche de lot (propose-extra --all --hidden), 2026-08-25 (itération 33)",
-  "extra_composites_verified": "étiquettes composites (或 / 代替 / 先…后 / groupe entre parenthèses), lues à l’œil sur planche de lot et écrites telles qu’imprimées ; `transpose_label` réécrit la ligne entière. 2026-08-25 (itération 34)",
-  "key_label": {
-    "x": 6,
-    "y": 145,
-    "w": 79,
-    "h": 26
+ "slug": "一粒麦子",
+ "face": "verdana-bold",
+ "extra_labels": [
+  {
+   "x": 328,
+   "y": 528,
+   "w": 48,
+   "h": 24,
+   "c": "C/E"
   },
-  "key_label_verified": "mesure measure-keylabel (ancrage sur le « = », cadre = voisin gauche…voisin droit), zoom relu à l’œil sur planche de lot, lettre gravée confrontée à printedKey, 2026-08-26 (itération 35)"
+  {
+   "x": 29,
+   "y": 1754,
+   "w": 75,
+   "h": 25,
+   "c": "Gm"
+  },
+  {
+   "x": 336,
+   "y": 1754,
+   "w": 17,
+   "h": 25,
+   "c": "C"
+  },
+  {
+   "x": 651,
+   "y": 1754,
+   "w": 12,
+   "h": 24,
+   "c": "F"
+  },
+  {
+   "x": 70,
+   "y": 2036,
+   "w": 17,
+   "h": 41,
+   "c": "C"
+  },
+  {
+   "x": 373,
+   "y": 2036,
+   "w": 12,
+   "h": 41,
+   "c": "F"
+  },
+  {
+   "x": 464,
+   "y": 2036,
+   "w": 71,
+   "h": 41,
+   "c": "(C/E)"
+  },
+  {
+   "x": 588,
+   "y": 2036,
+   "w": 48,
+   "h": 41,
+   "c": "Dm"
+  },
+  {
+   "x": 859,
+   "y": 2036,
+   "w": 50,
+   "h": 41,
+   "c": "Gm"
+  },
+  {
+   "x": 1095,
+   "y": 2036,
+   "w": 17,
+   "h": 41,
+   "c": "C"
+  },
+  {
+   "x": 1015,
+   "y": 1085,
+   "w": 139,
+   "h": 33,
+   "c": "Gm代替Bb]"
+  },
+  {
+   "x": 1251,
+   "y": 1085,
+   "w": 70,
+   "h": 33,
+   "c": "[Gm]"
+  }
+ ],
+ "extra_verified": "zooms relus à l’œil sur planche de lot (propose-extra --all --hidden), 2026-08-25 (itération 33)",
+ "extra_composites_verified": "étiquettes composites (或 / 代替 / 先…后 / groupe entre parenthèses), lues à l’œil sur planche de lot et écrites telles qu’imprimées ; `transpose_label` réécrit la ligne entière. 2026-08-25 (itération 34)",
+ "key_label": {
+  "x": 6,
+  "y": 145,
+  "w": 79,
+  "h": 26
+ },
+ "key_label_verified": "mesure measure-keylabel (ancrage sur le « = », cadre = voisin gauche…voisin droit), zoom relu à l’œil sur planche de lot, lettre gravée confrontée à printedKey, 2026-08-26 (itération 35)",
+ "not_labels": [
+  "1744,914",
+  "788,1143",
+  "788,1328"
+ ],
+ "not_labels_verified": "amas relus au zoom sur planche de lot (propose-extra --all --hidden), 2026-09-05 (itération 43) : le segno 𝄋 (788,1143) et les titres de section gravés 【Chorus】 (788,1328) et 【Bridge】 (1744,914), que cette gravure imprime sur la rangée d'accords elle-même",
+ "not_rows": [
+  298
+ ],
+ "not_rows_verified": "la rangée de **chiffres** du premier système (y=298) typée `chords` : six amas dont trois barres de mesure de 2 px — bandes rendues à l'œil, 2026-09-05 (itération 43)",
+ "verified": "transposé F→F# dans Chrome headless (npm run jianpu:audit, 7 tranches relues) : 35 accords sur les six rangées, tous encadrés, plus le cadre « 1= F » → « 1=F# » · l'accord de remplacement entre crochets `[Gm]` sortait verbatim au milieu d'une rangée transposée — corrigé dans `transposeLabel` et son miroir `transpose_label`, il rend maintenant `[Abm]` · le segno, 【Chorus】, 【Bridge】 et « D.S. al Fine » laissés intacts · 2026-09-05 (itération 43)",
+ "frozen_labels": [
+  {
+   "x": 51,
+   "y": 253,
+   "w": 47,
+   "h": 24,
+   "c": "Dm"
+  },
+  {
+   "x": 537,
+   "y": 253,
+   "w": 49,
+   "h": 24,
+   "c": "Am"
+  },
+  {
+   "x": 1092,
+   "y": 253,
+   "w": 36,
+   "h": 24,
+   "c": "Bb"
+  },
+  {
+   "x": 69,
+   "y": 528,
+   "w": 13,
+   "h": 24,
+   "c": "F"
+  },
+  {
+   "x": 536,
+   "y": 528,
+   "w": 48,
+   "h": 24,
+   "c": "Dm"
+  },
+  {
+   "x": 1038,
+   "y": 528,
+   "w": 48,
+   "h": 24,
+   "c": "Am"
+  },
+  {
+   "x": 56,
+   "y": 788,
+   "w": 35,
+   "h": 42,
+   "c": "Bb"
+  },
+  {
+   "x": 294,
+   "y": 788,
+   "w": 50,
+   "h": 42,
+   "c": "F/A"
+  },
+  {
+   "x": 561,
+   "y": 788,
+   "w": 69,
+   "h": 42,
+   "c": "Gm7"
+  },
+  {
+   "x": 828,
+   "y": 788,
+   "w": 17,
+   "h": 42,
+   "c": "C"
+  },
+  {
+   "x": 1261,
+   "y": 788,
+   "w": 12,
+   "h": 42,
+   "c": "F"
+  },
+  {
+   "x": 56,
+   "y": 1085,
+   "w": 48,
+   "h": 33,
+   "c": "C/E"
+  },
+  {
+   "x": 423,
+   "y": 1085,
+   "w": 48,
+   "h": 33,
+   "c": "Dm"
+  },
+  {
+   "x": 824,
+   "y": 1085,
+   "w": 85,
+   "h": 33,
+   "c": "Am/C"
+  },
+  {
+   "x": 1193,
+   "y": 1085,
+   "w": 36,
+   "h": 33,
+   "c": "Bb"
+  },
+  {
+   "x": 1391,
+   "y": 1085,
+   "w": 18,
+   "h": 33,
+   "c": "C"
+  },
+  {
+   "x": 59,
+   "y": 1411,
+   "w": 49,
+   "h": 25,
+   "c": "Am"
+  },
+  {
+   "x": 291,
+   "y": 1411,
+   "w": 48,
+   "h": 25,
+   "c": "Dm"
+  },
+  {
+   "x": 529,
+   "y": 1411,
+   "w": 50,
+   "h": 25,
+   "c": "Gm"
+  },
+  {
+   "x": 1127,
+   "y": 1411,
+   "w": 85,
+   "h": 25,
+   "c": "Csus4"
+  },
+  {
+   "x": 1358,
+   "y": 1411,
+   "w": 17,
+   "h": 25,
+   "c": "C"
+  },
+  {
+   "x": 1093,
+   "y": 1744,
+   "w": 48,
+   "h": 58,
+   "c": "Dm"
+  },
+  {
+   "x": 1371,
+   "y": 1744,
+   "w": 50,
+   "h": 58,
+   "c": "Gm"
+  },
+  {
+   "x": 328,
+   "y": 528,
+   "w": 48,
+   "h": 24,
+   "c": "C/E"
+  },
+  {
+   "x": 29,
+   "y": 1754,
+   "w": 75,
+   "h": 25,
+   "c": "Gm"
+  },
+  {
+   "x": 336,
+   "y": 1754,
+   "w": 17,
+   "h": 25,
+   "c": "C"
+  },
+  {
+   "x": 651,
+   "y": 1754,
+   "w": 12,
+   "h": 24,
+   "c": "F"
+  },
+  {
+   "x": 70,
+   "y": 2036,
+   "w": 17,
+   "h": 41,
+   "c": "C"
+  },
+  {
+   "x": 373,
+   "y": 2036,
+   "w": 12,
+   "h": 41,
+   "c": "F"
+  },
+  {
+   "x": 464,
+   "y": 2036,
+   "w": 71,
+   "h": 41,
+   "c": "(C/E)"
+  },
+  {
+   "x": 588,
+   "y": 2036,
+   "w": 48,
+   "h": 41,
+   "c": "Dm"
+  },
+  {
+   "x": 859,
+   "y": 2036,
+   "w": 50,
+   "h": 41,
+   "c": "Gm"
+  },
+  {
+   "x": 1095,
+   "y": 2036,
+   "w": 17,
+   "h": 41,
+   "c": "C"
+  },
+  {
+   "x": 1015,
+   "y": 1085,
+   "w": 139,
+   "h": 33,
+   "c": "Gm代替Bb]"
+  },
+  {
+   "x": 1251,
+   "y": 1085,
+   "w": 70,
+   "h": 33,
+   "c": "[Gm]"
+  }
+ ]
 }

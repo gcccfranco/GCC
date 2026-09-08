@@ -1,71 +1,125 @@
 {
  "slug": "爱赢了",
  "printed_key": "A",
- "source": "lu à l'œil sur debug/_lecture.png (itération 6) ; null = amas qui n'est pas une étiquette",
- "chord_rows": [
+ "extra_labels": [
   {
-   "top": 554,
-   "chords": [
-    "A",
-    "Dmaj9",
-    "Esus4",
-    "C#m7",
-    "F#m7"
-   ]
+   "x": 621,
+   "y": 800,
+   "w": 95,
+   "h": 27,
+   "c": "Asus4"
   },
   {
-   "top": 1099,
-   "chords": [
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null
-   ]
+   "x": 864,
+   "y": 800,
+   "w": 22,
+   "h": 26,
+   "c": "A"
   },
   {
-   "top": 1315,
-   "chords": [
-    null,
-    "Asus4",
-    "A",
-    null,
-    "Asus4",
-    "A",
-    null,
-    "Dmaj9",
-    "Esus4"
-   ]
+   "x": 1112,
+   "y": 800,
+   "w": 96,
+   "h": 27,
+   "c": "Asus4"
   },
   {
-   "top": 1561,
-   "chords": [
-    "C#m7",
-    "F#m7",
-    "Dmaj9",
-    "Esus4"
-   ]
+   "x": 1355,
+   "y": 800,
+   "w": 22,
+   "h": 26,
+   "c": "A"
+  },
+  {
+   "x": 762,
+   "y": 1039,
+   "w": 87,
+   "h": 26,
+   "c": "F#m7"
+  },
+  {
+   "x": 577,
+   "y": 1069,
+   "w": 91,
+   "h": 27,
+   "c": "C#m7"
+  },
+  {
+   "x": 545,
+   "y": 1806,
+   "w": 91,
+   "h": 27,
+   "c": "Asus4"
   }
  ],
- "extra_labels": [
+ "extra_verified": "sept accords enfermés dans des amas **soudés** : le filet du crochet de reprise réunit « Asus4 A Asus4 A » en un amas de 993 px (y=800), l'arc de liaison relie C#m7 et F#m7 par le bas (y=1039, 272 px), et le signe de coda ⊕ colle à l'Asus4 qui le suit (y=1806). Boîtes d'encre mesurées une à une, zooms relus, 2026-09-02 (itération 42)",
+ "key_label": {
+  "x": 6,
+  "y": 237,
+  "w": 85,
+  "h": 27
+ },
+ "key_label_verified": "mesure measure-keylabel (vote 1= + lettre attendue), zoom relu à l’œil, 2026-08-05",
+ "face": "din-bold",
+ "corrections": {
+  "304,259": "E",
+  "304,563": "C#m7",
+  "304,1292": "E",
+  "800,54": "Dmaj9",
+  "1039,106": "Dmaj9",
+  "1039,1080": "Dmaj9",
+  "1806,1113": "Dmaj9",
+  "2052,67": "C#m7",
+  "2052,589": "Dmaj9",
+  "554,580": "Dmaj9",
+  "554,1090": "C#m7",
+  "1315,1026": "Dmaj9",
+  "1561,71": "C#m7",
+  "1561,826": "Dmaj9"
+ },
+ "corrections_verified": "neuf amas que le matcher trouve mais laisse sous le seuil ou sans unanimité, relus au zoom sur planche (propose-extra --all), 2026-09-02 (itération 42) · cinq amas de plus, ceux que la voie « vérité terrain » publiait avant son retrait : la transcription de l'itération 6 les nommait, la planche de l'itération 42 les confirme (rangées 554, 1315 et 1561). Le matcher les lit tous « C#m7 » entre +0,04 et +0,76 sans unanimité — cette gravure met le jury en désaccord sur les noms longs.",
+ "not_labels": [
+  "304,1549",
+  "800,580",
+  "1039,37",
+  "1039,577",
+  "1039,866",
+  "1315,42",
+  "1315,526",
+  "1315,993",
+  "1806,400",
+  "1806,494"
+ ],
+ "not_labels_verified": "les **marques de navigation**, que cette gravure imprime sur la rangée d'accords elle-même : signe de coda ⊕ (×2), segno 𝄋, « D.S. », les coins de crochet de reprise ⌐1 / ⌐2, une barre de mesure, et la parenthèse « 官方谱是低音) ». S'y ajoutent les trois amas soudés dont les accords sont republiés en `extra_labels` : l'amas n'est pas une étiquette, ce qu'il contient l'est. 2026-09-02 (itération 42)",
+ "not_rows": [
+  1099,
+  1385,
+  2090
+ ],
+ "not_rows_verified": "trois bandes typées `chords` qui n'en sont pas : deux rangées d'**arcs de liaison et de points d'octave** (y=1099, 17 amas ; y=2090, 11 amas) et une rangée de **chiffres** (y=1385, 24 amas). À elles trois elles pesaient 52 des 99 amas du dénominateur — c'est-à-dire les trois quarts des « 71 à relire » de la file. 2026-09-02 (itération 42)",
+ "chord_rows_retire": "la transcription de l'itération 6 ne couvrait que 4 rangées sur 11 (554, 1099 tout en `null`, 1315, 1561) et la voie « vérité terrain » **ignore** `corrections`, `not_rows` et `not_labels` : elle publiait 15 étiquettes et laissait six rangées entières dans la tonalité d'origine. Elle est remplacée par la voie de lecture, qui couvre la page. Contenu retiré : [{\"top\": 554, \"chords\": [\"A\", \"Dmaj9\", \"Esus4\", \"C#m7\", \"F#m7\"]}, {\"top\": 1099, \"chords\": [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null]}, {\"top\": 1315, \"chords\": [null, \"Asus4\", \"A\", null, \"Asus4\", \"A\", null, \"Dmaj9\", \"Esus4\"]}, {\"top\": 1561, \"chords\": [\"C#m7\", \"F#m7\", \"Dmaj9\", \"Esus4\"]}] — 2026-09-02 (itération 42)",
+ "verified": "transposé A→Bb dans Chrome headless (npm run jianpu:audit, 7 tranches relues + thème sombre) : 44 accords sur les huit rangées, dont les quatre enfermés dans l'amas de 993 px du crochet de reprise (Asus4 A Asus4 A), le couple C#m7 / F#m7 relié par son arc, et l'Asus4 collé au signe de coda ; aucun accord resté en A, aucun sans cadre. Les **marques de navigation** — ⊕, 𝄋, D.S., les coins ⌐1 / ⌐2 — restent intactes. Deux « A » réécrits « Bb » débordent de 10 px sur le filet du crochet, qui reste lisible de part et d'autre : compromis assumé, comme le Bbmaj7 de 主的喜乐是我力量 (itération 40). song_semitones = 0. — 2026-09-02 (itération 42)",
+ "frozen_labels": [
   {
    "x": 73,
    "y": 304,
    "w": 101,
    "h": 38,
    "c": "Dmaj9"
+  },
+  {
+   "x": 259,
+   "y": 304,
+   "w": 14,
+   "h": 38,
+   "c": "E"
+  },
+  {
+   "x": 563,
+   "y": 304,
+   "w": 90,
+   "h": 38,
+   "c": "C#m7"
   },
   {
    "x": 741,
@@ -82,17 +136,157 @@
    "c": "Dmaj9"
   },
   {
-   "x": 281,
-   "y": 1069,
+   "x": 1292,
+   "y": 304,
+   "w": 14,
+   "h": 38,
+   "c": "E"
+  },
+  {
+   "x": 53,
+   "y": 554,
+   "w": 21,
+   "h": 27,
+   "c": "A"
+  },
+  {
+   "x": 580,
+   "y": 554,
+   "w": 102,
+   "h": 27,
+   "c": "Dmaj9"
+  },
+  {
+   "x": 769,
+   "y": 554,
    "w": 88,
    "h": 27,
    "c": "Esus4"
   },
   {
-   "x": 1255,
-   "y": 1069,
+   "x": 1090,
+   "y": 554,
+   "w": 90,
+   "h": 27,
+   "c": "C#m7"
+  },
+  {
+   "x": 1281,
+   "y": 554,
+   "w": 85,
+   "h": 27,
+   "c": "F#m7"
+  },
+  {
+   "x": 54,
+   "y": 800,
+   "w": 102,
+   "h": 27,
+   "c": "Dmaj9"
+  },
+  {
+   "x": 300,
+   "y": 800,
    "w": 88,
    "h": 27,
+   "c": "Esus4"
+  },
+  {
+   "x": 106,
+   "y": 1039,
+   "w": 101,
+   "h": 57,
+   "c": "Dmaj9"
+  },
+  {
+   "x": 281,
+   "y": 1039,
+   "w": 88,
+   "h": 57,
+   "c": "Esus4"
+  },
+  {
+   "x": 1080,
+   "y": 1039,
+   "w": 101,
+   "h": 57,
+   "c": "Dmaj9"
+  },
+  {
+   "x": 1255,
+   "y": 1039,
+   "w": 88,
+   "h": 57,
+   "c": "Esus4"
+  },
+  {
+   "x": 76,
+   "y": 1315,
+   "w": 95,
+   "h": 26,
+   "c": "Asus4"
+  },
+  {
+   "x": 244,
+   "y": 1315,
+   "w": 21,
+   "h": 26,
+   "c": "A"
+  },
+  {
+   "x": 571,
+   "y": 1315,
+   "w": 95,
+   "h": 26,
+   "c": "Asus4"
+  },
+  {
+   "x": 739,
+   "y": 1315,
+   "w": 21,
+   "h": 26,
+   "c": "A"
+  },
+  {
+   "x": 1026,
+   "y": 1315,
+   "w": 101,
+   "h": 26,
+   "c": "Dmaj9"
+  },
+  {
+   "x": 1256,
+   "y": 1315,
+   "w": 89,
+   "h": 26,
+   "c": "Esus4"
+  },
+  {
+   "x": 71,
+   "y": 1561,
+   "w": 90,
+   "h": 26,
+   "c": "C#m7"
+  },
+  {
+   "x": 379,
+   "y": 1561,
+   "w": 86,
+   "h": 26,
+   "c": "F#m7"
+  },
+  {
+   "x": 826,
+   "y": 1561,
+   "w": 101,
+   "h": 26,
+   "c": "Dmaj9"
+  },
+  {
+   "x": 1132,
+   "y": 1561,
+   "w": 88,
+   "h": 26,
    "c": "Esus4"
   },
   {
@@ -117,6 +311,13 @@
    "c": "A"
   },
   {
+   "x": 1113,
+   "y": 1806,
+   "w": 101,
+   "h": 29,
+   "c": "Dmaj9"
+  },
+  {
    "x": 1266,
    "y": 1806,
    "w": 88,
@@ -124,11 +325,25 @@
    "c": "Esus4"
   },
   {
+   "x": 67,
+   "y": 2052,
+   "w": 90,
+   "h": 27,
+   "c": "C#m7"
+  },
+  {
    "x": 213,
    "y": 2052,
    "w": 86,
    "h": 27,
    "c": "F#m7"
+  },
+  {
+   "x": 589,
+   "y": 2052,
+   "w": 101,
+   "h": 27,
+   "c": "Dmaj9"
   },
   {
    "x": 753,
@@ -145,20 +360,53 @@
    "c": "A"
   },
   {
-   "x": 300,
+   "x": 621,
    "y": 800,
-   "w": 88,
+   "w": 95,
    "h": 27,
-   "c": "Esus4"
+   "c": "Asus4"
+  },
+  {
+   "x": 864,
+   "y": 800,
+   "w": 22,
+   "h": 26,
+   "c": "A"
+  },
+  {
+   "x": 1112,
+   "y": 800,
+   "w": 96,
+   "h": 27,
+   "c": "Asus4"
+  },
+  {
+   "x": 1355,
+   "y": 800,
+   "w": 22,
+   "h": 26,
+   "c": "A"
+  },
+  {
+   "x": 762,
+   "y": 1039,
+   "w": 87,
+   "h": 26,
+   "c": "F#m7"
+  },
+  {
+   "x": 577,
+   "y": 1069,
+   "w": 91,
+   "h": 27,
+   "c": "C#m7"
+  },
+  {
+   "x": 545,
+   "y": 1806,
+   "w": 91,
+   "h": 27,
+   "c": "Asus4"
   }
- ],
- "extra_verified": "zooms propose-extra relus un à un, rangées hautes calées sur le bloc d’encre des colonnes, 2026-08-05 · propositions propose-extra relues au zoom (itération 17, garde « deux par rangée » levé) ; six lues faux par le matcher entre +0,43 et +0,73 et relues au zoom ×7 — 2026-08-09",
- "key_label": {
-  "x": 6,
-  "y": 237,
-  "w": 85,
-  "h": 27
- },
- "key_label_verified": "mesure measure-keylabel (vote 1= + lettre attendue), zoom relu à l’œil, 2026-08-05",
- "face": "din-bold"
+ ]
 }

@@ -1,24 +1,601 @@
 {
-  "slug": "我安然居住",
-  "face": "verdana-bold",
-  "extra_chords": [
-    "F/G"
-  ],
-  "extra_labels": [
-    {
-      "x": 788,
-      "y": 1187,
-      "w": 127,
-      "h": 30,
-      "c": "Am(maj7)"
-    }
-  ],
-  "extra_composites_verified": "étiquettes composites (或 / 代替 / 先…后 / groupe entre parenthèses), lues à l’œil sur planche de lot et écrites telles qu’imprimées ; `transpose_label` réécrit la ligne entière. 2026-08-25 (itération 34)",
-  "key_label": {
-    "x": 15,
-    "y": 134,
-    "w": 77,
-    "h": 24
+ "slug": "我安然居住",
+ "face": "verdana-bold",
+ "extra_chords": [
+  "F/G"
+ ],
+ "extra_labels": [
+  {
+   "x": 788,
+   "y": 1187,
+   "w": 127,
+   "h": 30,
+   "c": "Am(maj7)"
   },
-  "key_label_verified": "mesure measure-keylabel (ancrage sur le « = », cadre = voisin gauche…voisin droit), zoom relu à l’œil sur planche de lot, lettre gravée confrontée à printedKey, 2026-08-26 (itération 35)"
+  {
+   "x": 771,
+   "y": 196,
+   "w": 59,
+   "h": 28,
+   "c": "Bm7"
+  },
+  {
+   "x": 1128,
+   "y": 434,
+   "w": 59,
+   "h": 28,
+   "c": "Bm7"
+  },
+  {
+   "x": 1124,
+   "y": 670,
+   "w": 58,
+   "h": 28,
+   "c": "Bm7"
+  },
+  {
+   "x": 295,
+   "y": 952,
+   "w": 62,
+   "h": 25,
+   "c": "D/F#"
+  },
+  {
+   "x": 623,
+   "y": 952,
+   "w": 58,
+   "h": 25,
+   "c": "Bm7"
+  },
+  {
+   "x": 491,
+   "y": 1187,
+   "w": 105,
+   "h": 28,
+   "c": "C#m7b5"
+  },
+  {
+   "x": 56,
+   "y": 1614,
+   "w": 33,
+   "h": 28,
+   "c": "G2"
+  },
+  {
+   "x": 744,
+   "y": 1614,
+   "w": 58,
+   "h": 28,
+   "c": "Am7"
+  },
+  {
+   "x": 903,
+   "y": 1614,
+   "w": 47,
+   "h": 28,
+   "c": "C/D"
+  },
+  {
+   "x": 291,
+   "y": 1733,
+   "w": 65,
+   "h": 30,
+   "c": "B/D#"
+  },
+  {
+   "x": 1131,
+   "y": 877,
+   "w": 65,
+   "h": 29,
+   "c": "(C/D)"
+  },
+  {
+   "x": 53,
+   "y": 1310,
+   "w": 18,
+   "h": 23,
+   "c": "G"
+  },
+  {
+   "x": 151,
+   "y": 1307,
+   "w": 65,
+   "h": 30,
+   "c": "D/F#"
+  },
+  {
+   "x": 360,
+   "y": 1310,
+   "w": 58,
+   "h": 22,
+   "c": "Em7"
+  },
+  {
+   "x": 703,
+   "y": 1308,
+   "w": 220,
+   "h": 30,
+   "c": "Am7  Am(maj7)"
+  },
+  {
+   "x": 1032,
+   "y": 1293,
+   "w": 50,
+   "h": 22,
+   "c": "C/D"
+  },
+  {
+   "x": 1111,
+   "y": 1537,
+   "w": 52,
+   "h": 20,
+   "c": "Em7"
+  },
+  {
+   "x": 1201,
+   "y": 1535,
+   "w": 81,
+   "h": 22,
+   "c": "A9b13"
+  },
+  {
+   "x": 662,
+   "y": 670,
+   "w": 161,
+   "h": 28,
+   "c": "C/D  B/D#"
+  },
+  {
+   "x": 150,
+   "y": 1187,
+   "w": 189,
+   "h": 28,
+   "c": "D/F# /F B/D#"
+  },
+  {
+   "x": 703,
+   "y": 1187,
+   "w": 212,
+   "h": 28,
+   "c": "Am7  Am(maj7)"
+  },
+  {
+   "x": 1028,
+   "y": 1187,
+   "w": 266,
+   "h": 28,
+   "c": "C/D D/E Eb/F F/G"
+  },
+  {
+   "x": 182,
+   "y": 1614,
+   "w": 170,
+   "h": 28,
+   "c": "B7(#9) B/D#"
+  },
+  {
+   "x": 415,
+   "y": 1614,
+   "w": 282,
+   "h": 28,
+   "c": "Em7 /Eb /D C#m7b5"
+  },
+  {
+   "x": 1110,
+   "y": 1614,
+   "w": 220,
+   "h": 28,
+   "c": "Em7 G/D C#m7b5",
+   "fh": 22
+  }
+ ],
+ "extra_composites_verified": "étiquettes composites (或 / 代替 / 先…后 / groupe entre parenthèses), lues à l’œil sur planche de lot et écrites telles qu’imprimées ; `transpose_label` réécrit la ligne entière. 2026-08-25 (itération 34)",
+ "key_label": {
+  "x": 15,
+  "y": 134,
+  "w": 77,
+  "h": 24
+ },
+ "key_label_verified": "mesure measure-keylabel (ancrage sur le « = », cadre = voisin gauche…voisin droit), zoom relu à l’œil sur planche de lot, lettre gravée confrontée à printedKey, 2026-08-26 (itération 35)",
+ "not_labels": [
+  "952,1221",
+  "1733,599",
+  "1767,458",
+  "1767,476",
+  "1614,1001",
+  "670,662",
+  "670,758",
+  "1187,1251"
+ ],
+ "not_labels_verified": "amas sans accord relus au zoom (itération 37, 2026-08-30) : 【Chorus】, 【尾句】, [尾句1], et deux barres de mesure de 1 px sous la rangée y=1614.",
+ "extra_verified": "itération 37 (2026-08-30) : 25 étiquettes lues au zoom ×1,5, rangée par rangée. La rangée y=1614 était **entièrement manquée** (mode D) — typée « chords? » puis écartée par le matcher, elle n'entrait dans aucun dénominateur. Les autres sont des amas que le matcher voyait mais ne retenait pas, dont sept « Bm7 » et « D/F# » à plus de +0,40. Les basses seules — « /F », « /Eb », « /D » — sont écrites telles quelles : `transpose_label` les réécrit correctement (« /F » → « /F# »). Trois rangées d'accords supplémentaires étaient **entièrement manquées** : le « (C/D) » de y=877, la rangée « G D/F# Em7 Am7 Am(maj7) C/D » noyée dans un bandeau typé « numbers » (y≈1310), et le « [尾句2] Em7 A9b13 » de y=1537, typé « ? ». Sept groupes serrés sont réunis en étiquettes composites, sans quoi la voisine rognait la précédente. La dernière (« Em7 G/D C#m7b5 ») porte un `fh` de 22 : à `labelH` = 28 elle sortait de la page.",
+ "verified": "page auditée entièrement (8 tranches, G → G#, 2026-08-30, itération 37) : 58 étiquettes, toutes encadrées et transposées, aucun accord sans cadre. La rangée y=1614 et trois autres, jamais détectées, sont converties ; les basses seules (« /F », « /Eb », « /D ») aussi, une fois la grammaire de jeton élargie.",
+ "frozen_labels": [
+  {
+   "x": 200,
+   "y": 196,
+   "w": 18,
+   "h": 28,
+   "c": "G"
+  },
+  {
+   "x": 376,
+   "y": 196,
+   "w": 62,
+   "h": 28,
+   "c": "D/F#"
+  },
+  {
+   "x": 591,
+   "y": 196,
+   "w": 57,
+   "h": 28,
+   "c": "Em7"
+  },
+  {
+   "x": 986,
+   "y": 196,
+   "w": 31,
+   "h": 28,
+   "c": "C2"
+  },
+  {
+   "x": 1165,
+   "y": 196,
+   "w": 50,
+   "h": 28,
+   "c": "G/B"
+  },
+  {
+   "x": 57,
+   "y": 434,
+   "w": 61,
+   "h": 28,
+   "c": "Am7"
+  },
+  {
+   "x": 257,
+   "y": 434,
+   "w": 50,
+   "h": 28,
+   "c": "C/D"
+  },
+  {
+   "x": 500,
+   "y": 434,
+   "w": 35,
+   "h": 28,
+   "c": "G2"
+  },
+  {
+   "x": 685,
+   "y": 434,
+   "w": 63,
+   "h": 28,
+   "c": "D/F#"
+  },
+  {
+   "x": 928,
+   "y": 434,
+   "w": 57,
+   "h": 28,
+   "c": "Em7"
+  },
+  {
+   "x": 59,
+   "y": 670,
+   "w": 31,
+   "h": 28,
+   "c": "C2"
+  },
+  {
+   "x": 262,
+   "y": 670,
+   "w": 51,
+   "h": 28,
+   "c": "G/B"
+  },
+  {
+   "x": 472,
+   "y": 670,
+   "w": 62,
+   "h": 28,
+   "c": "Am7"
+  },
+  {
+   "x": 921,
+   "y": 670,
+   "w": 57,
+   "h": 28,
+   "c": "Em7"
+  },
+  {
+   "x": 51,
+   "y": 952,
+   "w": 31,
+   "h": 25,
+   "c": "C2"
+  },
+  {
+   "x": 235,
+   "y": 952,
+   "w": 18,
+   "h": 25,
+   "c": "G"
+  },
+  {
+   "x": 443,
+   "y": 952,
+   "w": 57,
+   "h": 25,
+   "c": "Em7"
+  },
+  {
+   "x": 797,
+   "y": 952,
+   "w": 62,
+   "h": 25,
+   "c": "Am7"
+  },
+  {
+   "x": 957,
+   "y": 952,
+   "w": 77,
+   "h": 25,
+   "c": "Dsus4"
+  },
+  {
+   "x": 1143,
+   "y": 952,
+   "w": 17,
+   "h": 25,
+   "c": "D"
+  },
+  {
+   "x": 51,
+   "y": 1187,
+   "w": 33,
+   "h": 28,
+   "c": "G2"
+  },
+  {
+   "x": 361,
+   "y": 1187,
+   "w": 54,
+   "h": 28,
+   "c": "Em7"
+  },
+  {
+   "x": 703,
+   "y": 1187,
+   "w": 59,
+   "h": 28,
+   "c": "Am7"
+  },
+  {
+   "x": 58,
+   "y": 1733,
+   "w": 18,
+   "h": 30,
+   "c": "G"
+  },
+  {
+   "x": 185,
+   "y": 1733,
+   "w": 31,
+   "h": 30,
+   "c": "B7"
+  },
+  {
+   "x": 420,
+   "y": 1733,
+   "w": 57,
+   "h": 30,
+   "c": "Em7"
+  },
+  {
+   "x": 744,
+   "y": 1733,
+   "w": 61,
+   "h": 30,
+   "c": "Am7"
+  },
+  {
+   "x": 904,
+   "y": 1733,
+   "w": 50,
+   "h": 30,
+   "c": "C/D"
+  },
+  {
+   "x": 1132,
+   "y": 1733,
+   "w": 18,
+   "h": 30,
+   "c": "G"
+  },
+  {
+   "x": 788,
+   "y": 1187,
+   "w": 127,
+   "h": 30,
+   "c": "Am(maj7)"
+  },
+  {
+   "x": 771,
+   "y": 196,
+   "w": 59,
+   "h": 28,
+   "c": "Bm7"
+  },
+  {
+   "x": 1128,
+   "y": 434,
+   "w": 59,
+   "h": 28,
+   "c": "Bm7"
+  },
+  {
+   "x": 1124,
+   "y": 670,
+   "w": 58,
+   "h": 28,
+   "c": "Bm7"
+  },
+  {
+   "x": 295,
+   "y": 952,
+   "w": 62,
+   "h": 25,
+   "c": "D/F#"
+  },
+  {
+   "x": 623,
+   "y": 952,
+   "w": 58,
+   "h": 25,
+   "c": "Bm7"
+  },
+  {
+   "x": 491,
+   "y": 1187,
+   "w": 105,
+   "h": 28,
+   "c": "C#m7b5"
+  },
+  {
+   "x": 56,
+   "y": 1614,
+   "w": 33,
+   "h": 28,
+   "c": "G2"
+  },
+  {
+   "x": 744,
+   "y": 1614,
+   "w": 58,
+   "h": 28,
+   "c": "Am7"
+  },
+  {
+   "x": 903,
+   "y": 1614,
+   "w": 47,
+   "h": 28,
+   "c": "C/D"
+  },
+  {
+   "x": 291,
+   "y": 1733,
+   "w": 65,
+   "h": 30,
+   "c": "B/D#"
+  },
+  {
+   "x": 1131,
+   "y": 877,
+   "w": 65,
+   "h": 29,
+   "c": "(C/D)"
+  },
+  {
+   "x": 53,
+   "y": 1310,
+   "w": 18,
+   "h": 23,
+   "c": "G"
+  },
+  {
+   "x": 151,
+   "y": 1307,
+   "w": 65,
+   "h": 30,
+   "c": "D/F#"
+  },
+  {
+   "x": 360,
+   "y": 1310,
+   "w": 58,
+   "h": 22,
+   "c": "Em7"
+  },
+  {
+   "x": 703,
+   "y": 1308,
+   "w": 220,
+   "h": 30,
+   "c": "Am7  Am(maj7)"
+  },
+  {
+   "x": 1032,
+   "y": 1293,
+   "w": 50,
+   "h": 22,
+   "c": "C/D"
+  },
+  {
+   "x": 1111,
+   "y": 1537,
+   "w": 52,
+   "h": 20,
+   "c": "Em7"
+  },
+  {
+   "x": 1201,
+   "y": 1535,
+   "w": 81,
+   "h": 22,
+   "c": "A9b13"
+  },
+  {
+   "x": 662,
+   "y": 670,
+   "w": 161,
+   "h": 28,
+   "c": "C/D  B/D#"
+  },
+  {
+   "x": 150,
+   "y": 1187,
+   "w": 189,
+   "h": 28,
+   "c": "D/F# /F B/D#"
+  },
+  {
+   "x": 703,
+   "y": 1187,
+   "w": 212,
+   "h": 28,
+   "c": "Am7  Am(maj7)"
+  },
+  {
+   "x": 1028,
+   "y": 1187,
+   "w": 266,
+   "h": 28,
+   "c": "C/D D/E Eb/F F/G"
+  },
+  {
+   "x": 182,
+   "y": 1614,
+   "w": 170,
+   "h": 28,
+   "c": "B7(#9) B/D#"
+  },
+  {
+   "x": 415,
+   "y": 1614,
+   "w": 282,
+   "h": 28,
+   "c": "Em7 /Eb /D C#m7b5"
+  },
+  {
+   "x": 1110,
+   "y": 1614,
+   "w": 220,
+   "h": 28,
+   "c": "Em7 G/D C#m7b5",
+   "fh": 22
+  }
+ ]
 }

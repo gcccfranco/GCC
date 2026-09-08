@@ -1,0 +1,354 @@
+{
+ "slug": "耶稣万名之上的名",
+ "face": "verdana-bold",
+ "face_verified": "balayage de fonte croisé : sweep-key.py (veto + marge) et le compteur de couverture de build-chords désignent la même fonte, à tonalité inchangée — 2026-09-08 (itération 50). À confirmer par la planche d'audit avant certification.",
+ "extra_labels": [
+  {
+   "x": 519,
+   "y": 1061,
+   "w": 80,
+   "h": 22,
+   "c": "G#m7"
+  },
+  {
+   "x": 90,
+   "y": 1356,
+   "w": 10,
+   "h": 19,
+   "c": "E"
+  },
+  {
+   "x": 342,
+   "y": 1356,
+   "w": 11,
+   "h": 19,
+   "c": "E"
+  },
+  {
+   "x": 851,
+   "y": 1376,
+   "w": 15,
+   "h": 22,
+   "c": "C"
+  },
+  {
+   "x": 986,
+   "y": 1376,
+   "w": 17,
+   "h": 22,
+   "c": "D"
+  },
+  {
+   "x": 1230,
+   "y": 1376,
+   "w": 18,
+   "h": 22,
+   "c": "G"
+  },
+  {
+   "x": 72,
+   "y": 1868,
+   "w": 83,
+   "h": 25,
+   "c": "B7/D#"
+  },
+  {
+   "x": 300,
+   "y": 1871,
+   "w": 39,
+   "h": 22,
+   "c": "Em"
+  },
+  {
+   "x": 509,
+   "y": 1871,
+   "w": 61,
+   "h": 22,
+   "c": "Am7"
+  },
+  {
+   "x": 986,
+   "y": 1871,
+   "w": 31,
+   "h": 22,
+   "c": "B7"
+  },
+  {
+   "x": 551,
+   "y": 1440,
+   "w": 77,
+   "h": 31,
+   "c": "1= G",
+   "fh": 30
+  }
+ ],
+ "extra_verified": "26 amas relus sur planche de zooms ; 16 écartés (en-tête 1=E 4/4 [这张是Capo=1], 【Chorus】, 【Bridge】, arcs, barres, triolets « 3 », D.S. al Fine) · les deux « E » des crochets de reprise remesurés sur les pixels (la boîte proposée tombait à gauche du glyphe) — 2026-09-08 (itération 50) · le **second cadre de tonalité** « [1= G] », gravé au milieu du système où le Bridge module (itération 40) : sans lui la page transposée annonçait 1=F en tête et 1=G au milieu. Recopié avec son espace — « 1= G » — pour que transposeLabel réécrive le jeton, et à son corps propre (fh=30) — 2026-09-08 (itération 50)",
+ "not_rows": [
+  191,
+  1660
+ ],
+ "not_rows_verified": "y=191 : l'en-tête « 1= E 4/4 [这张是Capo=1] », dont le « E » et le « 4 » s'apparient au vocabulaire · y=1660 : une rangée entière d'**ornements** — arcs de liaison, barres de mesure et deux chiffres de triolet « 3 » — que le classifieur type rangée d'accords ; un seul amas y passait le seuil et publiait un « B7/D# » de 15 px de large sur un triolet, visible à l'audit et sur aucun compteur — 2026-09-08 (itération 50)",
+ "key_label": {
+  "x": 24,
+  "y": 204,
+  "w": 72,
+  "h": 24
+ },
+ "key_label_verified": "mesuré par measure-keylabel.py (ancrage sur le « = »), zoom relu à l'œil sur planche de lot, lettre gravée confrontée à printedKey — 2026-09-08 (itération 50). Candidates écartées : la ligne de tempo ♩=80 / ♩=60, le « Capo=1 » de la mention en crochets, et une rangée de chiffres soulignés sur 耶稣我的耶稣.",
+ "verified": "transposé E→F dans Chrome headless (npm run jianpu:audit, 7 tranches relues deux fois, thème clair) : 36 accords sur 6 rangées, aucun resté en mi — deux défauts trouvés à l'audit et par lui seul : le **second cadre « [1= G] »** gravé au milieu du système où le Bridge module (la page annonçait 1=F en tête et 1=G au milieu), et un **« B7/D# » de 15 px publié sur un chiffre de triolet**, seul amas d'une rangée entière d'arcs et de barres que le classifieur typait « accords » · fonte verdana-bold (sweep-key + couverture) · cadre 1=F juste, 【Chorus】, 【Bridge】, Fine, D.S. al Fine, les crochets ⌐1.3/⌐2 et la mention [另有一张原调F调，这张是Capo=1] laissés tels quels — 2026-09-08 (itération 50)",
+ "frozen_labels": [
+  {
+   "x": 73,
+   "y": 265,
+   "w": 11,
+   "h": 23,
+   "c": "E"
+  },
+  {
+   "x": 433,
+   "y": 265,
+   "w": 66,
+   "h": 23,
+   "c": "B/D#"
+  },
+  {
+   "x": 765,
+   "y": 265,
+   "w": 76,
+   "h": 23,
+   "c": "C#m7"
+  },
+  {
+   "x": 1133,
+   "y": 265,
+   "w": 80,
+   "h": 23,
+   "c": "G#m7"
+  },
+  {
+   "x": 58,
+   "y": 513,
+   "w": 18,
+   "h": 23,
+   "c": "A"
+  },
+  {
+   "x": 238,
+   "y": 513,
+   "w": 32,
+   "h": 23,
+   "c": "B7"
+  },
+  {
+   "x": 425,
+   "y": 513,
+   "w": 80,
+   "h": 23,
+   "c": "G#m7"
+  },
+  {
+   "x": 611,
+   "y": 513,
+   "w": 76,
+   "h": 23,
+   "c": "C#m7"
+  },
+  {
+   "x": 809,
+   "y": 513,
+   "w": 18,
+   "h": 23,
+   "c": "A"
+  },
+  {
+   "x": 946,
+   "y": 513,
+   "w": 96,
+   "h": 23,
+   "c": "F#9/A#"
+  },
+  {
+   "x": 1173,
+   "y": 513,
+   "w": 14,
+   "h": 23,
+   "c": "B"
+  },
+  {
+   "x": 160,
+   "y": 746,
+   "w": 11,
+   "h": 44,
+   "c": "E"
+  },
+  {
+   "x": 501,
+   "y": 746,
+   "w": 65,
+   "h": 44,
+   "c": "B/D#"
+  },
+  {
+   "x": 807,
+   "y": 746,
+   "w": 76,
+   "h": 44,
+   "c": "C#m7"
+  },
+  {
+   "x": 1159,
+   "y": 746,
+   "w": 35,
+   "h": 44,
+   "c": "G#"
+  },
+  {
+   "x": 63,
+   "y": 1061,
+   "w": 17,
+   "h": 22,
+   "c": "A"
+  },
+  {
+   "x": 283,
+   "y": 1061,
+   "w": 32,
+   "h": 22,
+   "c": "B7"
+  },
+  {
+   "x": 747,
+   "y": 1061,
+   "w": 76,
+   "h": 22,
+   "c": "C#m7"
+  },
+  {
+   "x": 991,
+   "y": 1061,
+   "w": 18,
+   "h": 22,
+   "c": "A"
+  },
+  {
+   "x": 1210,
+   "y": 1061,
+   "w": 31,
+   "h": 22,
+   "c": "B7"
+  },
+  {
+   "x": 202,
+   "y": 1623,
+   "w": 62,
+   "h": 22,
+   "c": "Am7"
+  },
+  {
+   "x": 394,
+   "y": 1623,
+   "w": 32,
+   "h": 22,
+   "c": "B7"
+  },
+  {
+   "x": 668,
+   "y": 1623,
+   "w": 12,
+   "h": 22,
+   "c": "E"
+  },
+  {
+   "x": 1043,
+   "y": 1623,
+   "w": 16,
+   "h": 22,
+   "c": "C"
+  },
+  {
+   "x": 1269,
+   "y": 1623,
+   "w": 17,
+   "h": 22,
+   "c": "D"
+  },
+  {
+   "x": 519,
+   "y": 1061,
+   "w": 80,
+   "h": 22,
+   "c": "G#m7"
+  },
+  {
+   "x": 90,
+   "y": 1356,
+   "w": 10,
+   "h": 19,
+   "c": "E"
+  },
+  {
+   "x": 342,
+   "y": 1356,
+   "w": 11,
+   "h": 19,
+   "c": "E"
+  },
+  {
+   "x": 851,
+   "y": 1376,
+   "w": 15,
+   "h": 22,
+   "c": "C"
+  },
+  {
+   "x": 986,
+   "y": 1376,
+   "w": 17,
+   "h": 22,
+   "c": "D"
+  },
+  {
+   "x": 1230,
+   "y": 1376,
+   "w": 18,
+   "h": 22,
+   "c": "G"
+  },
+  {
+   "x": 72,
+   "y": 1868,
+   "w": 83,
+   "h": 25,
+   "c": "B7/D#"
+  },
+  {
+   "x": 300,
+   "y": 1871,
+   "w": 39,
+   "h": 22,
+   "c": "Em"
+  },
+  {
+   "x": 509,
+   "y": 1871,
+   "w": 61,
+   "h": 22,
+   "c": "Am7"
+  },
+  {
+   "x": 986,
+   "y": 1871,
+   "w": 31,
+   "h": 22,
+   "c": "B7"
+  },
+  {
+   "x": 551,
+   "y": 1440,
+   "w": 77,
+   "h": 31,
+   "c": "1= G",
+   "fh": 30
+  }
+ ]
+}

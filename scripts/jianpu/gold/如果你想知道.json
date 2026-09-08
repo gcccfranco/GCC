@@ -7,5 +7,401 @@
   "h": 24
  },
  "key_label_verified": "mesure measure-keylabel (vote 1= + lettre attendue), zoom relu à l’œil, 2026-08-05",
- "face": "verdana-bold"
+ "face": "verdana-bold",
+ "extra_chords": [
+  "G/B"
+ ],
+ "extra_chords_verified": "« G/B » est gravé (y=454, x=434) et absent du `.cho`, qui simplifie en `G` : le vocabulaire fermé le lisait `Em` à +0,21. Lu à l'œil sur zoom, 2026-09-05 (itération 44)",
+ "corrections": {
+  "272,288": "D/F#",
+  "454,434": "G/B",
+  "1406,444": "(D/F#)",
+  "1689,448": "(D/F#)",
+  "272,590": "G/D",
+  "731,639": "G/D",
+  "1069,611": "G/D"
+ },
+ "corrections_verified": "sept amas sous le seuil, relus au zoom sur planche de lot (propose-extra --all --hidden), 2026-09-05 (itération 44) · dont deux `(D/F#)` entre parenthèses, le `G/B` gravé hors du `.cho`, et **trois `G/D` que l'ouverture du vocabulaire a fait tomber** : une fois `G/B` admis, le matcher les lit `G/B` entre +0,08 et +0,18, sous le seuil, et cesse de les publier — l'élargissement du vocabulaire coûte, exactement comme à l'itération 9",
+ "not_rows": [
+  489,
+  1360
+ ],
+ "not_rows_verified": "la rangée de **chiffres** et de points d'octave du premier système (y=489, huit amas de 2 à 15 px) et la bande du titre de section 【Chorus】 (y=1360), un amas unique de 121 px — bandes rendues à l'œil, 2026-09-05 (itération 44)",
+ "extra_labels": [
+  {
+   "x": 321,
+   "y": 1029,
+   "w": 41,
+   "h": 31,
+   "c": "(D)"
+  },
+  {
+   "x": 600,
+   "y": 1028,
+   "w": 74,
+   "h": 32,
+   "c": "(G/B)"
+  },
+  {
+   "x": 339,
+   "y": 692,
+   "w": 39,
+   "h": 31,
+   "c": "(D)"
+  },
+  {
+   "x": 628,
+   "y": 692,
+   "w": 74,
+   "h": 31,
+   "c": "(G/B)"
+  }
+ ],
+ "extra_verified": "la **rangée d'alternatives** du système y=1069 : la page porte deux jeux d'accords, celui de l'album pour enfants entre parenthèses **au-dessus** de l'autre — « 后面所有上层()里的和弦也是该版本 », dit-elle en toutes lettres. Le classifieur la range en `chords?` et le matcher n'en garde rien ; elle n'apparaît donc dans aucun dénominateur, et la page affichait « 45/45, 100 % » en laissant `(D)` et `(G/B)` en sol au milieu d'un système en la bémol. La page en porte **deux** : celle du système y=1069, trouvée à l'audit navigateur (itération 44), et celle du système y=731, qui était sur la même planche — tranche 3 — et que l'œil a lue sans la voir. C'est `hidden_rows`, son plancher descendu de 3 amas à 2 avec la règle du tout ou rien, qui l'a nommée le lendemain (itération 45). Mesurées sur l'encre, 2026-09-05",
+ "verified": "transposé G→Ab dans Chrome headless (npm run jianpu:audit, 7 tranches relues) : 47 accords, tous encadrés, plus le cadre « 1= G » → « 1=Ab » · la **rangée d'alternatives** du système y=1069, celle de la version pour enfants gravée entre parenthèses au-dessus de l'autre, est convertie elle aussi — `(D)` → `(Eb)` et `(G/B)` → `(Ab/C)` · la page grave `G/B` **et** trois `G/D` : le premier a fallu l'ajouter au vocabulaire, les trois autres les épingler en `corrections` · 2026-09-05 (itération 44)",
+ "frozen_labels": [
+  {
+   "x": 125,
+   "y": 272,
+   "w": 19,
+   "h": 30,
+   "c": "G"
+  },
+  {
+   "x": 288,
+   "y": 272,
+   "w": 66,
+   "h": 30,
+   "c": "D/F#"
+  },
+  {
+   "x": 438,
+   "y": 272,
+   "w": 42,
+   "h": 30,
+   "c": "Em"
+  },
+  {
+   "x": 590,
+   "y": 272,
+   "w": 56,
+   "h": 30,
+   "c": "G/D"
+  },
+  {
+   "x": 758,
+   "y": 272,
+   "w": 16,
+   "h": 30,
+   "c": "C"
+  },
+  {
+   "x": 919,
+   "y": 272,
+   "w": 36,
+   "h": 30,
+   "c": "D7"
+  },
+  {
+   "x": 1118,
+   "y": 272,
+   "w": 19,
+   "h": 30,
+   "c": "G"
+  },
+  {
+   "x": 69,
+   "y": 454,
+   "w": 19,
+   "h": 24,
+   "c": "G"
+  },
+  {
+   "x": 188,
+   "y": 454,
+   "w": 18,
+   "h": 24,
+   "c": "D"
+  },
+  {
+   "x": 318,
+   "y": 454,
+   "w": 41,
+   "h": 24,
+   "c": "Em"
+  },
+  {
+   "x": 434,
+   "y": 454,
+   "w": 53,
+   "h": 24,
+   "c": "G/B"
+  },
+  {
+   "x": 576,
+   "y": 454,
+   "w": 17,
+   "h": 24,
+   "c": "C"
+  },
+  {
+   "x": 694,
+   "y": 454,
+   "w": 18,
+   "h": 24,
+   "c": "D"
+  },
+  {
+   "x": 841,
+   "y": 454,
+   "w": 18,
+   "h": 24,
+   "c": "G"
+  },
+  {
+   "x": 1162,
+   "y": 454,
+   "w": 19,
+   "h": 24,
+   "c": "G"
+  },
+  {
+   "x": 171,
+   "y": 731,
+   "w": 19,
+   "h": 31,
+   "c": "G"
+  },
+  {
+   "x": 343,
+   "y": 731,
+   "w": 67,
+   "h": 31,
+   "c": "D/F#"
+  },
+  {
+   "x": 482,
+   "y": 731,
+   "w": 42,
+   "h": 31,
+   "c": "Em"
+  },
+  {
+   "x": 639,
+   "y": 731,
+   "w": 56,
+   "h": 31,
+   "c": "G/D"
+  },
+  {
+   "x": 789,
+   "y": 731,
+   "w": 16,
+   "h": 31,
+   "c": "C"
+  },
+  {
+   "x": 970,
+   "y": 731,
+   "w": 35,
+   "h": 31,
+   "c": "D7"
+  },
+  {
+   "x": 1193,
+   "y": 731,
+   "w": 19,
+   "h": 31,
+   "c": "G"
+  },
+  {
+   "x": 158,
+   "y": 1069,
+   "w": 19,
+   "h": 30,
+   "c": "G"
+  },
+  {
+   "x": 325,
+   "y": 1069,
+   "w": 67,
+   "h": 30,
+   "c": "D/F#"
+  },
+  {
+   "x": 456,
+   "y": 1069,
+   "w": 42,
+   "h": 30,
+   "c": "Em"
+  },
+  {
+   "x": 611,
+   "y": 1069,
+   "w": 56,
+   "h": 30,
+   "c": "G/D"
+  },
+  {
+   "x": 752,
+   "y": 1069,
+   "w": 17,
+   "h": 30,
+   "c": "C"
+  },
+  {
+   "x": 928,
+   "y": 1069,
+   "w": 36,
+   "h": 30,
+   "c": "D7"
+  },
+  {
+   "x": 1149,
+   "y": 1069,
+   "w": 19,
+   "h": 30,
+   "c": "G"
+  },
+  {
+   "x": 49,
+   "y": 1406,
+   "w": 17,
+   "h": 31,
+   "c": "C"
+  },
+  {
+   "x": 213,
+   "y": 1406,
+   "w": 18,
+   "h": 31,
+   "c": "D"
+  },
+  {
+   "x": 351,
+   "y": 1406,
+   "w": 19,
+   "h": 31,
+   "c": "G"
+  },
+  {
+   "x": 444,
+   "y": 1406,
+   "w": 88,
+   "h": 31,
+   "c": "(D/F#)"
+  },
+  {
+   "x": 563,
+   "y": 1406,
+   "w": 41,
+   "h": 31,
+   "c": "Em"
+  },
+  {
+   "x": 702,
+   "y": 1406,
+   "w": 66,
+   "h": 31,
+   "c": "Am7"
+  },
+  {
+   "x": 899,
+   "y": 1406,
+   "w": 18,
+   "h": 31,
+   "c": "D"
+  },
+  {
+   "x": 1118,
+   "y": 1406,
+   "w": 19,
+   "h": 31,
+   "c": "G"
+  },
+  {
+   "x": 50,
+   "y": 1689,
+   "w": 16,
+   "h": 30,
+   "c": "C"
+  },
+  {
+   "x": 214,
+   "y": 1689,
+   "w": 18,
+   "h": 30,
+   "c": "D"
+  },
+  {
+   "x": 355,
+   "y": 1689,
+   "w": 19,
+   "h": 30,
+   "c": "G"
+  },
+  {
+   "x": 448,
+   "y": 1689,
+   "w": 88,
+   "h": 30,
+   "c": "(D/F#)"
+  },
+  {
+   "x": 567,
+   "y": 1689,
+   "w": 42,
+   "h": 30,
+   "c": "Em"
+  },
+  {
+   "x": 710,
+   "y": 1689,
+   "w": 66,
+   "h": 30,
+   "c": "Am7"
+  },
+  {
+   "x": 908,
+   "y": 1689,
+   "w": 18,
+   "h": 30,
+   "c": "D"
+  },
+  {
+   "x": 1105,
+   "y": 1689,
+   "w": 18,
+   "h": 30,
+   "c": "G"
+  },
+  {
+   "x": 321,
+   "y": 1029,
+   "w": 41,
+   "h": 31,
+   "c": "(D)"
+  },
+  {
+   "x": 600,
+   "y": 1028,
+   "w": 74,
+   "h": 32,
+   "c": "(G/B)"
+  },
+  {
+   "x": 339,
+   "y": 692,
+   "w": 39,
+   "h": 31,
+   "c": "(D)"
+  },
+  {
+   "x": 628,
+   "y": 692,
+   "w": 74,
+   "h": 31,
+   "c": "(G/B)"
+  }
+ ]
 }

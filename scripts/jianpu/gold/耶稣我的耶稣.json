@@ -1,0 +1,533 @@
+{
+ "slug": "耶稣我的耶稣",
+ "face": "verdana-bold",
+ "face_verified": "balayage de fonte croisé : sweep-key.py (veto + marge) et le compteur de couverture de build-chords désignent la même fonte, à tonalité inchangée — 2026-09-08 (itération 50). À confirmer par la planche d'audit avant certification.",
+ "extra_labels": [
+  {
+   "x": 309,
+   "y": 249,
+   "w": 74,
+   "h": 32,
+   "c": "(D/E)"
+  },
+  {
+   "x": 525,
+   "y": 478,
+   "w": 72,
+   "h": 26,
+   "c": "A/C#"
+  },
+  {
+   "x": 1287,
+   "y": 478,
+   "w": 56,
+   "h": 26,
+   "c": "D/A"
+  },
+  {
+   "x": 84,
+   "y": 781,
+   "w": 117,
+   "h": 31,
+   "c": "D/G或G"
+  },
+  {
+   "x": 93,
+   "y": 1427,
+   "w": 13,
+   "h": 31,
+   "c": "E"
+  },
+  {
+   "x": 338,
+   "y": 1427,
+   "w": 88,
+   "h": 31,
+   "c": "(E/F#)"
+  },
+  {
+   "x": 479,
+   "y": 1427,
+   "w": 89,
+   "h": 31,
+   "c": "G#m7"
+  },
+  {
+   "x": 647,
+   "y": 1427,
+   "w": 85,
+   "h": 31,
+   "c": "C#m7"
+  },
+  {
+   "x": 856,
+   "y": 1427,
+   "w": 81,
+   "h": 31,
+   "c": "F#m7"
+  },
+  {
+   "x": 1025,
+   "y": 1427,
+   "w": 50,
+   "h": 31,
+   "c": "F#7"
+  },
+  {
+   "x": 1241,
+   "y": 1427,
+   "w": 35,
+   "h": 31,
+   "c": "B7"
+  },
+  {
+   "x": 343,
+   "y": 1572,
+   "w": 74,
+   "h": 34,
+   "c": "(D/E)"
+  },
+  {
+   "x": 652,
+   "y": 1576,
+   "w": 64,
+   "h": 24,
+   "c": "Bm7"
+  },
+  {
+   "x": 1236,
+   "y": 1576,
+   "w": 38,
+   "h": 24,
+   "c": "A7"
+  },
+  {
+   "x": 67,
+   "y": 1912,
+   "w": 13,
+   "h": 32,
+   "c": "E"
+  },
+  {
+   "x": 312,
+   "y": 1912,
+   "w": 87,
+   "h": 32,
+   "c": "(E/F#)"
+  },
+  {
+   "x": 453,
+   "y": 1912,
+   "w": 88,
+   "h": 32,
+   "c": "G#m7"
+  },
+  {
+   "x": 620,
+   "y": 1912,
+   "w": 84,
+   "h": 32,
+   "c": "C#m7"
+  },
+  {
+   "x": 823,
+   "y": 1912,
+   "w": 80,
+   "h": 32,
+   "c": "F#m7"
+  },
+  {
+   "x": 1013,
+   "y": 1912,
+   "w": 35,
+   "h": 32,
+   "c": "B7"
+  },
+  {
+   "x": 1242,
+   "y": 1912,
+   "w": 13,
+   "h": 32,
+   "c": "E"
+  },
+  {
+   "x": 316,
+   "y": 2059,
+   "w": 75,
+   "h": 31,
+   "c": "(D/E)"
+  },
+  {
+   "x": 624,
+   "y": 2059,
+   "w": 65,
+   "h": 31,
+   "c": "Bm7"
+  }
+ ],
+ "extra_verified": "24 amas relus sur planche de zooms ; la page **module d'un ton au dernier refrain** — elle grave E, (E/F#), G#m7, C#m7, F#7, B7, hors du vocabulaire du .cho (en ré), ce qui explique la couverture basse : le matcher ne pouvait que rendre le plus proche voisin. Recopiés tels qu'imprimés, la transposition étant uniforme sur la page. 【Chorus】 écarté — 2026-09-08 (itération 50)",
+ "not_rows": [
+  141
+ ],
+ "not_rows_verified": "rangée y=141 : l'en-tête « 1= D 4/4 … 游智婷 词曲 » — le « D » et le « 4 » s'apparient au vocabulaire, ce ne sont pas des accords ; le cadre 1=D se pose en key_label — 2026-09-08 (itération 50)",
+ "key_label": {
+  "x": 6,
+  "y": 162,
+  "w": 85,
+  "h": 26
+ },
+ "key_label_verified": "mesuré par measure-keylabel.py (ancrage sur le « = »), zoom relu à l'œil sur planche de lot, lettre gravée confrontée à printedKey — 2026-09-08 (itération 50). Candidates écartées : la ligne de tempo ♩=80 / ♩=60, le « Capo=1 » de la mention en crochets, et une rangée de chiffres soulignés sur 耶稣我的耶稣.",
+ "verified": "transposé D→Eb dans Chrome headless (npm run jianpu:audit, 7 tranches relues, thème clair) : 50 accords sur 8 rangées, aucun resté en ré — la page **module d'un ton au dernier refrain** et grave alors E, (E/F#), G#m7, C#m7, F#m7, F#7, B7, tous hors du vocabulaire du .cho : le matcher ne pouvait que rendre le plus proche voisin, d'où une couverture de 73 % qui cachait deux rangées entières. Les 23 étiquettes ont été recopiées telles qu'imprimées et se transposent avec le reste. « D/G或G » rend « Eb/Ab或Ab », le 或 conservé · fonte verdana-bold (sweep-key + couverture) · cadre 1=Eb juste, 【Chorus】 et l'en-tête laissés tels quels — 2026-09-08 (itération 50)",
+ "frozen_labels": [
+  {
+   "x": 68,
+   "y": 249,
+   "w": 19,
+   "h": 32,
+   "c": "D"
+  },
+  {
+   "x": 447,
+   "y": 249,
+   "w": 61,
+   "h": 32,
+   "c": "F#m"
+  },
+  {
+   "x": 620,
+   "y": 249,
+   "w": 45,
+   "h": 32,
+   "c": "Bm"
+  },
+  {
+   "x": 824,
+   "y": 249,
+   "w": 64,
+   "h": 32,
+   "c": "Em7"
+  },
+  {
+   "x": 997,
+   "y": 249,
+   "w": 38,
+   "h": 32,
+   "c": "A7"
+  },
+  {
+   "x": 1232,
+   "y": 249,
+   "w": 19,
+   "h": 32,
+   "c": "D"
+  },
+  {
+   "x": 119,
+   "y": 478,
+   "w": 18,
+   "h": 26,
+   "c": "D"
+  },
+  {
+   "x": 921,
+   "y": 478,
+   "w": 45,
+   "h": 26,
+   "c": "Bm"
+  },
+  {
+   "x": 496,
+   "y": 781,
+   "w": 68,
+   "h": 31,
+   "c": "D/F#"
+  },
+  {
+   "x": 881,
+   "y": 781,
+   "w": 63,
+   "h": 31,
+   "c": "Em7"
+  },
+  {
+   "x": 1245,
+   "y": 781,
+   "w": 20,
+   "h": 31,
+   "c": "A"
+  },
+  {
+   "x": 59,
+   "y": 1090,
+   "w": 20,
+   "h": 25,
+   "c": "G"
+  },
+  {
+   "x": 226,
+   "y": 1090,
+   "w": 69,
+   "h": 25,
+   "c": "D/F#"
+  },
+  {
+   "x": 420,
+   "y": 1090,
+   "w": 31,
+   "h": 25,
+   "c": "F#"
+  },
+  {
+   "x": 593,
+   "y": 1090,
+   "w": 44,
+   "h": 25,
+   "c": "Bm"
+  },
+  {
+   "x": 824,
+   "y": 1090,
+   "w": 63,
+   "h": 25,
+   "c": "Em7"
+  },
+  {
+   "x": 987,
+   "y": 1090,
+   "w": 39,
+   "h": 25,
+   "c": "A7"
+  },
+  {
+   "x": 1271,
+   "y": 1090,
+   "w": 19,
+   "h": 25,
+   "c": "D"
+  },
+  {
+   "x": 91,
+   "y": 1561,
+   "w": 18,
+   "h": 55,
+   "c": "D"
+  },
+  {
+   "x": 484,
+   "y": 1561,
+   "w": 81,
+   "h": 55,
+   "c": "F#m7"
+  },
+  {
+   "x": 858,
+   "y": 1561,
+   "w": 63,
+   "h": 55,
+   "c": "Em7"
+  },
+  {
+   "x": 1025,
+   "y": 1561,
+   "w": 32,
+   "h": 55,
+   "c": "E7"
+  },
+  {
+   "x": 65,
+   "y": 2059,
+   "w": 19,
+   "h": 31,
+   "c": "D"
+  },
+  {
+   "x": 457,
+   "y": 2059,
+   "w": 80,
+   "h": 31,
+   "c": "F#m7"
+  },
+  {
+   "x": 824,
+   "y": 2059,
+   "w": 63,
+   "h": 31,
+   "c": "Em7"
+  },
+  {
+   "x": 1008,
+   "y": 2059,
+   "w": 37,
+   "h": 31,
+   "c": "A7"
+  },
+  {
+   "x": 1240,
+   "y": 2059,
+   "w": 18,
+   "h": 31,
+   "c": "D"
+  },
+  {
+   "x": 309,
+   "y": 249,
+   "w": 74,
+   "h": 32,
+   "c": "(D/E)"
+  },
+  {
+   "x": 525,
+   "y": 478,
+   "w": 72,
+   "h": 26,
+   "c": "A/C#"
+  },
+  {
+   "x": 1287,
+   "y": 478,
+   "w": 56,
+   "h": 26,
+   "c": "D/A"
+  },
+  {
+   "x": 84,
+   "y": 781,
+   "w": 117,
+   "h": 31,
+   "c": "D/G或G"
+  },
+  {
+   "x": 93,
+   "y": 1427,
+   "w": 13,
+   "h": 31,
+   "c": "E"
+  },
+  {
+   "x": 338,
+   "y": 1427,
+   "w": 88,
+   "h": 31,
+   "c": "(E/F#)"
+  },
+  {
+   "x": 479,
+   "y": 1427,
+   "w": 89,
+   "h": 31,
+   "c": "G#m7"
+  },
+  {
+   "x": 647,
+   "y": 1427,
+   "w": 85,
+   "h": 31,
+   "c": "C#m7"
+  },
+  {
+   "x": 856,
+   "y": 1427,
+   "w": 81,
+   "h": 31,
+   "c": "F#m7"
+  },
+  {
+   "x": 1025,
+   "y": 1427,
+   "w": 50,
+   "h": 31,
+   "c": "F#7"
+  },
+  {
+   "x": 1241,
+   "y": 1427,
+   "w": 35,
+   "h": 31,
+   "c": "B7"
+  },
+  {
+   "x": 343,
+   "y": 1572,
+   "w": 74,
+   "h": 34,
+   "c": "(D/E)"
+  },
+  {
+   "x": 652,
+   "y": 1576,
+   "w": 64,
+   "h": 24,
+   "c": "Bm7"
+  },
+  {
+   "x": 1236,
+   "y": 1576,
+   "w": 38,
+   "h": 24,
+   "c": "A7"
+  },
+  {
+   "x": 67,
+   "y": 1912,
+   "w": 13,
+   "h": 32,
+   "c": "E"
+  },
+  {
+   "x": 312,
+   "y": 1912,
+   "w": 87,
+   "h": 32,
+   "c": "(E/F#)"
+  },
+  {
+   "x": 453,
+   "y": 1912,
+   "w": 88,
+   "h": 32,
+   "c": "G#m7"
+  },
+  {
+   "x": 620,
+   "y": 1912,
+   "w": 84,
+   "h": 32,
+   "c": "C#m7"
+  },
+  {
+   "x": 823,
+   "y": 1912,
+   "w": 80,
+   "h": 32,
+   "c": "F#m7"
+  },
+  {
+   "x": 1013,
+   "y": 1912,
+   "w": 35,
+   "h": 32,
+   "c": "B7"
+  },
+  {
+   "x": 1242,
+   "y": 1912,
+   "w": 13,
+   "h": 32,
+   "c": "E"
+  },
+  {
+   "x": 316,
+   "y": 2059,
+   "w": 75,
+   "h": 31,
+   "c": "(D/E)"
+  },
+  {
+   "x": 624,
+   "y": 2059,
+   "w": 65,
+   "h": 31,
+   "c": "Bm7"
+  }
+ ]
+}

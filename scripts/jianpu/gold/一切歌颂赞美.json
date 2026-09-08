@@ -1,35 +1,407 @@
 {
-  "slug": "一切歌颂赞美",
-  "extra_labels": [
-    {
-      "x": 372,
-      "y": 2065,
-      "w": 48,
-      "h": 24,
-      "c": "Am"
-    },
-    {
-      "x": 47,
-      "y": 632,
-      "w": 65,
-      "h": 24,
-      "c": "C#m"
-    },
-    {
-      "x": 1236,
-      "y": 632,
-      "w": 71,
-      "h": 24,
-      "c": "E/G#"
-    }
-  ],
-  "extra_verified": "zooms relus à l’œil sur planche de lot (propose-extra --all multi-chants), 2026-08-25 (itération 33)",
-  "face": "helvetica-neue",
-  "key_label": {
-    "x": 6,
-    "y": 200,
-    "w": 80,
-    "h": 26
+ "slug": "一切歌颂赞美",
+ "extra_labels": [
+  {
+   "x": 372,
+   "y": 2065,
+   "w": 48,
+   "h": 24,
+   "c": "Am"
   },
-  "key_label_verified": "mesure measure-keylabel (ancrage sur le « = », cadre = voisin gauche…voisin droit), zoom relu à l’œil sur planche de lot, lettre gravée confrontée à printedKey, 2026-08-26 (itération 35)"
+  {
+   "x": 47,
+   "y": 632,
+   "w": 65,
+   "h": 24,
+   "c": "C#m"
+  },
+  {
+   "x": 1236,
+   "y": 632,
+   "w": 71,
+   "h": 24,
+   "c": "E/G#"
+  },
+  {
+   "x": 590,
+   "y": 932,
+   "w": 26,
+   "h": 33,
+   "c": "(E"
+  },
+  {
+   "x": 680,
+   "y": 934,
+   "w": 64,
+   "h": 25,
+   "c": "C#m"
+  },
+  {
+   "x": 949,
+   "y": 932,
+   "w": 45,
+   "h": 33,
+   "c": "B7)"
+  },
+  {
+   "x": 704,
+   "y": 1996,
+   "w": 25,
+   "h": 33,
+   "c": "(E"
+  },
+  {
+   "x": 1124,
+   "y": 1996,
+   "w": 46,
+   "h": 33,
+   "c": "B7)"
+  },
+  {
+   "x": 342,
+   "y": 230,
+   "w": 90,
+   "h": 32,
+   "c": "(G#m)"
+  },
+  {
+   "x": 352,
+   "y": 563,
+   "w": 42,
+   "h": 33,
+   "c": "(D)"
+  },
+  {
+   "x": 43,
+   "y": 1625,
+   "w": 72,
+   "h": 34,
+   "c": "(E/B)"
+  },
+  {
+   "x": 517,
+   "y": 1626,
+   "w": 41,
+   "h": 33,
+   "c": "(D)"
+  }
+ ],
+ "extra_verified": "zooms relus à l’œil sur planche de lot (propose-extra --all multi-chants), 2026-08-25 (itération 33) · itération 40 : les deux groupes **entre parenthèses** « (E  C#m  F#m  B7) » (y=934 et y=1998) — seul le F#m du milieu était apparié, les trois autres jetons portant une parenthèse collée à la lettre. `transposeLabel` les réécrit tels quels (« (E » → « (F »). Boîtes mesurées au pixel, zooms relus — 2026-08-30 · itération 40 : les deux **alternatives entre parenthèses** posées au-dessus des rangées — « (G#m) » (y=230) et « (D) » (y=563) — restaient en E au milieu d'une page passée en F. Elles sont seules dans leur bande, donc hors de toute rangée d'accords : ni la couverture ni la file ne les comptaient. Deux autres à la troisième tranche : « (E/B) » et « (D) » (y=1625).",
+ "face": "helvetica-neue",
+ "key_label": {
+  "x": 6,
+  "y": 200,
+  "w": 80,
+  "h": 26
+ },
+ "key_label_verified": "mesure measure-keylabel (ancrage sur le « = », cadre = voisin gauche…voisin droit), zoom relu à l’œil sur planche de lot, lettre gravée confrontée à printedKey, 2026-08-26 (itération 35)",
+ "not_labels": [
+  "1361,633",
+  "1693,1429"
+ ],
+ "not_labels_verified": "« 【1】 » et « 【2】 » : des renvois de reprise, pas des accords — 2026-08-30 (itération 40)",
+ "verified": "transposé E→F dans Chrome headless (npm run jianpu:audit, 3 tranches relues, thèmes clair et sombre) : 43 accords sur 8 rangées, aucun resté en E — y compris les quatre **alternatives entre parenthèses** posées seules au-dessus d'une rangée (« (G#m) », « (D) » ×2, « (E/B) ») et les deux groupes « (E C#m F#m B7) », dont la parenthèse est collée à la lettre ; cadre 1=F juste, 【Chorus】, 【1】, 【2】, （第2.5拍）, （速度92或145） et （【1】【2】两种拍子均可） laissés tels quels — 2026-08-30 (itération 40)",
+ "frozen_labels": [
+  {
+   "x": 51,
+   "y": 299,
+   "w": 13,
+   "h": 24,
+   "c": "E"
+  },
+  {
+   "x": 364,
+   "y": 299,
+   "w": 16,
+   "h": 24,
+   "c": "B"
+  },
+  {
+   "x": 701,
+   "y": 299,
+   "w": 20,
+   "h": 24,
+   "c": "A"
+  },
+  {
+   "x": 1015,
+   "y": 299,
+   "w": 13,
+   "h": 24,
+   "c": "E"
+  },
+  {
+   "x": 1297,
+   "y": 299,
+   "w": 12,
+   "h": 24,
+   "c": "E"
+  },
+  {
+   "x": 358,
+   "y": 632,
+   "w": 60,
+   "h": 24,
+   "c": "F#m"
+  },
+  {
+   "x": 646,
+   "y": 632,
+   "w": 16,
+   "h": 24,
+   "c": "B"
+  },
+  {
+   "x": 926,
+   "y": 632,
+   "w": 14,
+   "h": 24,
+   "c": "E"
+  },
+  {
+   "x": 840,
+   "y": 934,
+   "w": 60,
+   "h": 26,
+   "c": "F#m"
+  },
+  {
+   "x": 53,
+   "y": 1001,
+   "w": 20,
+   "h": 25,
+   "c": "A"
+  },
+  {
+   "x": 346,
+   "y": 1001,
+   "w": 13,
+   "h": 25,
+   "c": "E"
+  },
+  {
+   "x": 600,
+   "y": 1001,
+   "w": 13,
+   "h": 25,
+   "c": "E"
+  },
+  {
+   "x": 849,
+   "y": 1001,
+   "w": 16,
+   "h": 25,
+   "c": "B"
+  },
+  {
+   "x": 1117,
+   "y": 1001,
+   "w": 13,
+   "h": 25,
+   "c": "E"
+  },
+  {
+   "x": 1345,
+   "y": 1001,
+   "w": 54,
+   "h": 25,
+   "c": "A/B"
+  },
+  {
+   "x": 93,
+   "y": 1361,
+   "w": 13,
+   "h": 27,
+   "c": "E"
+  },
+  {
+   "x": 456,
+   "y": 1361,
+   "w": 70,
+   "h": 27,
+   "c": "E/G#"
+  },
+  {
+   "x": 858,
+   "y": 1361,
+   "w": 20,
+   "h": 27,
+   "c": "A"
+  },
+  {
+   "x": 1226,
+   "y": 1361,
+   "w": 49,
+   "h": 27,
+   "c": "Am"
+  },
+  {
+   "x": 55,
+   "y": 1693,
+   "w": 13,
+   "h": 28,
+   "c": "E"
+  },
+  {
+   "x": 268,
+   "y": 1693,
+   "w": 65,
+   "h": 28,
+   "c": "C#m"
+  },
+  {
+   "x": 522,
+   "y": 1693,
+   "w": 62,
+   "h": 28,
+   "c": "F#m"
+  },
+  {
+   "x": 759,
+   "y": 1693,
+   "w": 16,
+   "h": 28,
+   "c": "B"
+  },
+  {
+   "x": 991,
+   "y": 1693,
+   "w": 13,
+   "h": 28,
+   "c": "E"
+  },
+  {
+   "x": 1272,
+   "y": 1693,
+   "w": 71,
+   "h": 28,
+   "c": "E/G#"
+  },
+  {
+   "x": 815,
+   "y": 1998,
+   "w": 65,
+   "h": 28,
+   "c": "C#m"
+  },
+  {
+   "x": 996,
+   "y": 1998,
+   "w": 61,
+   "h": 28,
+   "c": "F#m"
+  },
+  {
+   "x": 49,
+   "y": 2065,
+   "w": 20,
+   "h": 24,
+   "c": "A"
+  },
+  {
+   "x": 714,
+   "y": 2065,
+   "w": 14,
+   "h": 24,
+   "c": "E"
+  },
+  {
+   "x": 1006,
+   "y": 2065,
+   "w": 15,
+   "h": 24,
+   "c": "B"
+  },
+  {
+   "x": 1311,
+   "y": 2065,
+   "w": 13,
+   "h": 24,
+   "c": "E"
+  },
+  {
+   "x": 372,
+   "y": 2065,
+   "w": 48,
+   "h": 24,
+   "c": "Am"
+  },
+  {
+   "x": 47,
+   "y": 632,
+   "w": 65,
+   "h": 24,
+   "c": "C#m"
+  },
+  {
+   "x": 1236,
+   "y": 632,
+   "w": 71,
+   "h": 24,
+   "c": "E/G#"
+  },
+  {
+   "x": 590,
+   "y": 932,
+   "w": 26,
+   "h": 33,
+   "c": "(E"
+  },
+  {
+   "x": 680,
+   "y": 934,
+   "w": 64,
+   "h": 25,
+   "c": "C#m"
+  },
+  {
+   "x": 949,
+   "y": 932,
+   "w": 45,
+   "h": 33,
+   "c": "B7)"
+  },
+  {
+   "x": 704,
+   "y": 1996,
+   "w": 25,
+   "h": 33,
+   "c": "(E"
+  },
+  {
+   "x": 1124,
+   "y": 1996,
+   "w": 46,
+   "h": 33,
+   "c": "B7)"
+  },
+  {
+   "x": 342,
+   "y": 230,
+   "w": 90,
+   "h": 32,
+   "c": "(G#m)"
+  },
+  {
+   "x": 352,
+   "y": 563,
+   "w": 42,
+   "h": 33,
+   "c": "(D)"
+  },
+  {
+   "x": 43,
+   "y": 1625,
+   "w": 72,
+   "h": 34,
+   "c": "(E/B)"
+  },
+  {
+   "x": 517,
+   "y": 1626,
+   "w": 41,
+   "h": 33,
+   "c": "(D)"
+  }
+ ]
 }

@@ -1,22 +1,259 @@
 {
-  "slug": "认识你真好",
-  "corrections": {
-    "297,171": "G",
-    "1354,691": "G",
-    "1683,1075": "G",
-    "2013,1332": "G"
+ "slug": "认识你真好",
+ "corrections": {
+  "297,171": "G",
+  "1354,691": "G",
+  "1683,1075": "G",
+  "2013,1332": "G"
+ },
+ "corrections_verified": "quatre « G » relus au zoom ×4 : trois lus juste mais rejetés faute d'unanimité, un lu « C » à +0,44. Itération 33 (2026-08-24)",
+ "not_rows": [
+  656,
+  994
+ ],
+ "not_rows_verified": "deux rangées qui ne sont que des arcs de liaison et des barres de mesure — seize amas, aucun accord, tous lus entre −0,20 et −3,92. Elles maintenaient la page sous le plancher. Itération 33 (2026-08-24)",
+ "key_label": {
+  "x": 6,
+  "y": 195,
+  "w": 90,
+  "h": 29
+ },
+ "key_label_verified": "mesure measure-keylabel (ancrage sur le « = », cadre = voisin gauche…voisin droit), zoom relu à l’œil sur planche de lot, lettre gravée confrontée à printedKey, 2026-08-26 (itération 35)",
+ "extra_labels": [
+  {
+   "x": 511,
+   "y": 892,
+   "w": 41,
+   "h": 33,
+   "c": "(C)"
   },
-  "corrections_verified": "quatre « G » relus au zoom ×4 : trois lus juste mais rejetés faute d'unanimité, un lu « C » à +0,44. Itération 33 (2026-08-24)",
-  "not_rows": [
-    656,
-    994
-  ],
-  "not_rows_verified": "deux rangées qui ne sont que des arcs de liaison et des barres de mesure — seize amas, aucun accord, tous lus entre −0,20 et −3,92. Elles maintenaient la page sous le plancher. Itération 33 (2026-08-24)",
-  "key_label": {
-    "x": 6,
-    "y": 195,
-    "w": 90,
-    "h": 29
+  {
+   "x": 368,
+   "y": 1208,
+   "w": 292,
+   "h": 33,
+   "c": "(C  D  C/E D/F#)"
   },
-  "key_label_verified": "mesure measure-keylabel (ancrage sur le « = », cadre = voisin gauche…voisin droit), zoom relu à l’œil sur planche de lot, lettre gravée confrontée à printedKey, 2026-08-26 (itération 35)"
+  {
+   "x": 350,
+   "y": 1282,
+   "w": 266,
+   "h": 38,
+   "c": "(Am G/B C D)"
+  }
+ ],
+ "extra_labels_verified": "trois rangées d'alternatives parenthésées, entièrement manquées (mode D) : « (C) » seule au-dessus du 2ᵉ système, « (C  D  C/E  D/F#) » et « (Am  G/B  C  D) » avant le refrain. Le classifieur les typait « chords? » puis le matcher les écartait — elles ne tombaient donc dans aucun dénominateur, et la page affichait « 27/27, 100 %, PRÊT ». Lues au zoom ×3. Les deux groupes sont posés en étiquette **composite** (une boîte, un fond, un texte) : posés amas par amas, les noms cibles plus larges se rognaient l'un l'autre — « C#/F D#/G) » sortait « C#/FD#/G) ». Itération 37 (2026-08-30)",
+ "verified": "page auditée entièrement (9 tranches, G → G#, 2026-08-30, itération 37) : 30 accords, tous encadrés et tous transposés, aucun accord sans cadre. Les trois rangées d'alternatives parenthésées, que la page ignorait jusqu'ici, sont converties ; les deux groupes sont rendus en étiquette composite, relus sans rognage. Cadre « 1=G » posé sans englober la fraction 4/4.",
+ "frozen_labels": [
+  {
+   "x": 171,
+   "y": 297,
+   "w": 22,
+   "h": 28,
+   "c": "G"
+  },
+  {
+   "x": 616,
+   "y": 297,
+   "w": 77,
+   "h": 28,
+   "c": "Am7"
+  },
+  {
+   "x": 1156,
+   "y": 297,
+   "w": 63,
+   "h": 28,
+   "c": "G/B"
+  },
+  {
+   "x": 52,
+   "y": 627,
+   "w": 20,
+   "h": 28,
+   "c": "C"
+  },
+  {
+   "x": 252,
+   "y": 627,
+   "w": 21,
+   "h": 28,
+   "c": "D"
+  },
+  {
+   "x": 508,
+   "y": 627,
+   "w": 23,
+   "h": 28,
+   "c": "G"
+  },
+  {
+   "x": 1029,
+   "y": 627,
+   "w": 78,
+   "h": 28,
+   "c": "Am7"
+  },
+  {
+   "x": 37,
+   "y": 956,
+   "w": 63,
+   "h": 28,
+   "c": "G/B"
+  },
+  {
+   "x": 513,
+   "y": 956,
+   "w": 78,
+   "h": 28,
+   "c": "Am7"
+  },
+  {
+   "x": 640,
+   "y": 956,
+   "w": 43,
+   "h": 28,
+   "c": "D7"
+  },
+  {
+   "x": 849,
+   "y": 956,
+   "w": 49,
+   "h": 28,
+   "c": "Em"
+  },
+  {
+   "x": 1189,
+   "y": 956,
+   "w": 74,
+   "h": 28,
+   "c": "Bm7"
+  },
+  {
+   "x": 56,
+   "y": 1354,
+   "w": 20,
+   "h": 28,
+   "c": "C"
+  },
+  {
+   "x": 207,
+   "y": 1354,
+   "w": 21,
+   "h": 28,
+   "c": "D"
+  },
+  {
+   "x": 372,
+   "y": 1354,
+   "w": 78,
+   "h": 28,
+   "c": "Am7"
+  },
+  {
+   "x": 515,
+   "y": 1354,
+   "w": 42,
+   "h": 28,
+   "c": "D7"
+  },
+  {
+   "x": 691,
+   "y": 1354,
+   "w": 22,
+   "h": 28,
+   "c": "G"
+  },
+  {
+   "x": 1099,
+   "y": 1354,
+   "w": 49,
+   "h": 28,
+   "c": "Em"
+  },
+  {
+   "x": 43,
+   "y": 1683,
+   "w": 78,
+   "h": 28,
+   "c": "Am7"
+  },
+  {
+   "x": 548,
+   "y": 1683,
+   "w": 21,
+   "h": 28,
+   "c": "D"
+  },
+  {
+   "x": 745,
+   "y": 1683,
+   "w": 43,
+   "h": 28,
+   "c": "D7"
+  },
+  {
+   "x": 1075,
+   "y": 1683,
+   "w": 22,
+   "h": 28,
+   "c": "G"
+  },
+  {
+   "x": 38,
+   "y": 2013,
+   "w": 48,
+   "h": 28,
+   "c": "Em"
+  },
+  {
+   "x": 540,
+   "y": 2013,
+   "w": 55,
+   "h": 28,
+   "c": "Am"
+  },
+  {
+   "x": 972,
+   "y": 2013,
+   "w": 21,
+   "h": 28,
+   "c": "D"
+  },
+  {
+   "x": 1117,
+   "y": 2013,
+   "w": 43,
+   "h": 28,
+   "c": "D7"
+  },
+  {
+   "x": 1332,
+   "y": 2013,
+   "w": 22,
+   "h": 28,
+   "c": "G"
+  },
+  {
+   "x": 511,
+   "y": 892,
+   "w": 41,
+   "h": 33,
+   "c": "(C)"
+  },
+  {
+   "x": 368,
+   "y": 1208,
+   "w": 292,
+   "h": 33,
+   "c": "(C  D  C/E D/F#)"
+  },
+  {
+   "x": 350,
+   "y": 1282,
+   "w": 266,
+   "h": 38,
+   "c": "(Am G/B C D)"
+  }
+ ]
 }
