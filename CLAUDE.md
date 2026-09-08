@@ -16,6 +16,27 @@ npm run lint         # ESLint (flat config, eslint.config.mjs)
 npx tsc --noEmit     # Vérification TypeScript (c'est ce que fait la CI)
 ```
 
+## Tests — Playwright
+```bash
+npm test                          # suite Playwright (tests/), démarre next dev sur :3100
+npm test -- --ui                  # mode interactif
+PW_SLUGS=all npm test             # les 80 partitions 简谱 certifiées (~2 min)
+npm run jianpu:audit <slug>       # planche d'audit visuel d'une 简谱, dans le navigateur
+```
+**Tout test passe par Playwright, y compris la vérification à l'œil des
+简谱** : la planche `npm run jianpu:audit <slug>` rend la page transposée
+telle que le navigateur l'affiche (tranches qui se recouvrent, gravé
+au-dessus, rendu dessous, cadre rouge sur chaque accord converti) et sort des
+PNG dans `scripts/jianpu/debug/` — à *regarder*, jamais à croire sur parole.
+Les rendus PIL de `scripts/jianpu/*.py` restent des dépannages hors ligne :
+ils ne voient pas le composant réel. Détail du protocole dans
+`scripts/jianpu/LOOP.md`.
+
+- `tests/helpers/jianpu.ts` : ouvrir un chant, afficher sa 简谱, lire le calque.
+- La page chant lit ses paramètres d'URL en **JSON** : `?key=%22F%22`, pas `?key=F`.
+- Viser `localhost` et non `127.0.0.1` : `next dev` bloque ses ressources en
+  cross-origin et la page arrive **non hydratée** — visible mais morte.
+
 ## Architecture clé
 - **Chants** : fichiers `.cho` (ChordPro) dans `content/songs/`, parsés au build → `public/songs-index.json` (utilisé côté client pour liste/recherche)
 - **Setlists, profils, annonces** : Firestore — voir `src/lib/firebase/`
