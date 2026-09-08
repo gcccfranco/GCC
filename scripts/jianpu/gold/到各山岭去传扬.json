@@ -116,5 +116,10 @@
    "h": 31,
    "c": "D/F#"
   }
- ]
+ ],
+ "not_rows": [
+  755,
+  1202
+ ],
+ "not_rows_verified": "faux positifs de welded_rows relus sur planche à l'itération 51 : la fenêtre s'arrête sur une rangée de 简谱 ou sur le titre, dont les glyphes s'apparient aux lettres d'accord (un « 0 » a le dessin d'un C). Aucune n'est une rangée d'accords."
 }
