@@ -4,7 +4,7 @@ import {
 import type { ChordProAST, ChordProSection, Token } from "@/types/chordPro";
 import { formatSectionName } from "@/lib/chordpro/parser";
 import { resolveStructureOverride } from "@/lib/chordpro/structure";
-import { semitonesTo, transposeChord } from "@/lib/transpose";
+import { semitonesTo, transposeChord, transposeLabel } from "@/lib/transpose";
 import { transposeSection } from "@/lib/transposeAST";
 import frTranslations from "@/locales/fr.json";
 import zhTranslations from "@/locales/zh-CN.json";
@@ -1018,7 +1018,13 @@ export function JianpuPDFPage({
             <>
               {chords.keyLabel && (
                 <SheetLabel box={chords.keyLabel} k={ck} h={chords.labelH} color="#000">
-                  {`1=${playedKey}`}
+                  {/* `c` : le texte gravé, quand la page n'écrit pas « 1=X »
+                      (la lettre seule, l'ordre inverse, ou un « 1=F » posé
+                      au-dessus d'accords en D). Transposé comme une étiquette,
+                      pas remplacé par la tonalité jouée. */}
+                  {chords.keyLabel.c
+                    ? transposeLabel(chords.keyLabel.c, semitones, playedKey!)
+                    : `1=${playedKey}`}
                 </SheetLabel>
               )}
               {chords.titleKey && (
@@ -1026,9 +1032,17 @@ export function JianpuPDFPage({
                   {`（${playedKey}调）`}
                 </SheetLabel>
               )}
+              {/* `transposeLabel`, pas `transposeChord` : depuis l'itération 34
+                  une étiquette peut porter une ligne entière (`(Am G/B C D)`,
+                  `【前奏 | G D/F# | … | D】`). `transposeChord` la rendait
+                  verbatim — la page PDF gardait ces mentions dans l'ancienne
+                  tonalité. Une étiquette sans séparateur repasse par le même
+                  chemin qu'avant, donc rien d'autre ne bouge.
+                  `fh` : le corps propre à l'étiquette, quand il n'est pas
+                  celui de la page. */}
               {chords.labels.map((l, i) => (
-                <SheetLabel key={i} box={l} k={ck} h={chords.labelH} color={chordColor}>
-                  {transposeChord(l.c, semitones, playedKey!)}
+                <SheetLabel key={i} box={l} k={ck} h={l.fh ?? chords.labelH} color={chordColor}>
+                  {transposeLabel(l.c, semitones, playedKey!)}
                 </SheetLabel>
               ))}
             </>
