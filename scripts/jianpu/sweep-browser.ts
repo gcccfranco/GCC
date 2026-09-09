@@ -10,18 +10,29 @@
  *   - **encre couverte** : le fond opaque déborde de l'encre qu'il masque et
  *     recouvre ce qui est gravé à côté — une parole, un 【尾句】, un chiffre.
  *     Mesuré sur les pixels du scan, pas sur les boîtes : c'est le seul moyen
- *     de savoir s'il y avait vraiment quelque chose dessous.
+ *     de savoir s'il y avait vraiment quelque chose dessous ;
+ *   - **tronqué** : ce qui reste **lisible** de l'accord réécrit une fois le
+ *     fond du voisin posé par-dessus. Le chevauchement dit que deux boîtes se
+ *     touchent ; il ne dit pas ce qu'un lecteur voit. « Gb/Bb » rogné donne
+ *     « Gb/B », qui est un accord — juste, propre, et faux. C'est le mode C
+ *     du rendu, et aucun compteur ne le voyait (itération 56).
  *
  * Qu'une étiquette soit plus large que le gravé n'est PAS un défaut : « C »
  * devient « Db ». Ce qui compte est ce qu'elle efface en s'élargissant.
  *
- * Usage : npx tsx scripts/jianpu/sweep-browser.ts [--all] [--json]
+ * `--keys` reprend la seule mesure du **tronqué** aux douze tonalités : la
+ * longueur d'un nom d'accord change avec la tonalité, donc une page propre
+ * au demi-ton au-dessus peut rogner trois degrés plus loin. Les trois autres
+ * défauts restent mesurés à la tonalité d'audit, qui les expose déjà tous.
+ *
+ * Usage : npx tsx scripts/jianpu/sweep-browser.ts [--all] [--keys] [--json]
  */
 
 import { chromium } from "@playwright/test";
 import { BASE_URL } from "../../playwright.config";
-import { auditKey, certifiedSlugs, loadChords, openSheet, overlayLabels } from "../../tests/helpers/jianpu";
+import { auditKey, certifiedSlugs, loadChords, openSheet, overlayLabels, troncatures } from "../../tests/helpers/jianpu";
 import { ensureServer } from "./dev-server";
+import { ALL_KEYS, CHORD_TOKEN } from "../../src/lib/transpose";
 
 type Box = { left: number; top: number; width: number; height: number };
 type Page = {
@@ -30,6 +41,7 @@ type Page = {
   horsPage?: string[];
   chevauchements?: string[];
   couvert?: string[];
+  tronques?: string[];
   erreur?: string;
 };
 
@@ -99,6 +111,7 @@ async function encreCouverte(page: import("@playwright/test").Page) {
 async function main() {
   const chords = loadChords();
   const slugs = process.argv.includes("--all") ? Object.keys(chords).sort() : certifiedSlugs();
+  const toutesTonalites = process.argv.includes("--keys");
   const server = await ensureServer();
   const browser = await chromium.launch();
   const rapport: Page[] = [];
@@ -129,7 +142,25 @@ async function main() {
         (e) => `${e.printed} → ${e.shown} · ${e.encre} px d'encre sur ${e.largeur} px de débord`
       );
 
-      rapport.push({ slug, etiquettes: labels.length, horsPage, chevauchements, couvert });
+      // Un accord tronqué **qui reste un accord** est le seul de ces défauts
+      // qui écrit du faux : les autres se voient. On le dit donc à part.
+      const dit = (k: string, t: { printed: string; shown: string; visible: string; perdu: number }) =>
+        `${k}  ${t.printed} → ${t.shown} affiche « ${t.visible} »` +
+        (CHORD_TOKEN.test(t.visible) ? "  ⚠ se lit comme un accord" : ` (−${t.perdu} px)`);
+      // Le sélecteur de la page, pas une navigation : recharger le chant
+      // douze fois recharge un scan de 1 à 2 Mo à chaque fois, et le calque
+      // est de toute façon recalculé à chaque changement de tonalité.
+      const coupes: string[] = [];
+      const selecteur = page.locator("select").first();
+      for (const k of toutesTonalites ? ALL_KEYS : [auditKey(slug, c.printedKey)]) {
+        if (toutesTonalites) {
+          await selecteur.selectOption(k);
+          await page.evaluate(() => new Promise(requestAnimationFrame));
+        }
+        for (const t of await troncatures(page)) coupes.push(dit(k, t));
+      }
+
+      rapport.push({ slug, etiquettes: labels.length, horsPage, chevauchements, couvert, tronques: coupes });
     } catch (e) {
       rapport.push({ slug, erreur: String(e).split("\n")[0] });
     }
@@ -149,6 +180,7 @@ async function main() {
       ...(r.horsPage ?? []).map((s) => `hors-page      ${s}`),
       ...(r.chevauchements ?? []).map((s) => `chevauchement  ${s}`),
       ...(r.couvert ?? []).map((s) => `encre couverte ${s}`),
+      ...(r.tronques ?? []).map((s) => `tronqué        ${s}`),
     ];
     if (!pb.length) continue;
     sales++;
