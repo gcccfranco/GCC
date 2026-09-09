@@ -51,7 +51,7 @@ from match import (  # noqa: E402
     MIN_SCORE, best_match, build_templates, face_bank, foreign_rows, jury_faces,
     keep, read, signature, song_face, song_semitones, vocabulary,
 )
-from overlay import transpose_label  # noqa: E402
+from overlay import FLAT, FLAT_KEYS, SHARP, note_index, transpose_label  # noqa: E402
 from segment import INK_THRESHOLD  # noqa: E402
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -64,6 +64,17 @@ INVENTAIRE = os.path.join(HERE, "inventaire.json")
 # presque entièrement dans sa tonalité d'origine, et le marquage ferait plus
 # de bruit que de service.
 MIN_COVERAGE = 0.60
+
+#: Les clés d'une étiquette publiée. `fh` n'est présent que sur celles qui
+#: portent leur propre corps, `sp` est mesuré à la fin de `build`, `alt` et
+#: `opt` sur celles d'une rangée gravée dans une autre tonalité.
+#:
+#: **Une seule définition, et `freeze.py` la lit ici.** Elle était recopiée à
+#: quatre endroits — trois dans ce fichier, un dans `freeze.py` — et
+#: l'itération 54 a ajouté `alt`/`opt` à deux d'entre eux : la page gelait
+#: en perdant sa seconde tonalité, en silence. C'est mot pour mot la leçon
+#: de l'itération 52 sur la géométrie des gabarits.
+LABEL_KEYS = ("x", "y", "w", "h", "c", "fh", "alt", "opt")
 
 # Calque **provisoire** : on construit les étiquettes sans les deux refus qui
 # empêchent de publier — le plancher de couverture et la garde de mode D.
@@ -135,6 +146,17 @@ def stray_chords(slug: str, path: str, labels: list[dict]) -> list[dict]:
             if score >= MIN_SCORE and all(best_match(sig, t)[1] == chord for t in jury):
                 out.append(_box(f, x0, x1, chord))
     return out
+
+
+def alt_key(printed_key: str, alt: int) -> str:
+    """Tonalité d'**orthographe** d'une rangée gravée `alt` demi-tons plus
+    haut que la page. Le décalage appliqué reste celui de la page : les deux
+    jeux d'accords montent ensemble, et seule leur écriture diffère."""
+    i = note_index(printed_key)
+    if i < 0 or not alt:
+        return printed_key
+    j = (i + alt) % 12
+    return FLAT[j] if FLAT[j] in FLAT_KEYS else SHARP[j]
 
 
 def _box(f, x0: int, x1: int, chord: str) -> dict:
@@ -210,6 +232,13 @@ def _from_reading(slug: str, gold: dict):
     # publiées, dont 8 sur un chant certifié. C'est donc l'œil qui tranche,
     # une rangée à la fois, et l'on note ce qu'il a vu.
     dead_rows = {int(y) for y in gold.get("not_rows", [])}
+    # `mask_rows` — une rangée gravée dans une autre tonalité — ne pèse pas
+    # sur la couverture : « on n'a pas prétendu les lire ». C'était vrai
+    # tant qu'elles étaient toutes typées `chords?`, donc absentes de
+    # `read()`. 在这里 en a une typée `chords` : ses trois amas gonflaient le
+    # dénominateur, et le matcher y publiait deux faux accords (C pour G,
+    # F/A pour Em) que le masque effaçait ensuite sans que rien ne le dise.
+    dead_rows |= {int(y) for y in gold.get("mask_rows", [])}
     rows = read(slug)
     total = sum(len(r) for _f, r in rows)
     if not total:
@@ -223,6 +252,13 @@ def _from_reading(slug: str, gold: dict):
     # rangées-là ; elles comptent comme manquantes, ce qui fait tomber la
     # page en partiel, ou hors publication si elle en est pleine.
     foreign = foreign_rows(slug)
+    # Une rangée étrangère **déjà lue à l'œil** (`alt_labels`) n'est plus
+    # manquante : elle est publiée, simplement pas par le matcher. La
+    # compter manquante était la garde qui tenait 有你同行 hors du calque à
+    # 47 % alors que la page se lit à 65 % — et cette garde-là n'avait plus
+    # d'objet une fois la rangée transcrite.
+    lues = [(int(l["y"]), int(l["y"]) + int(l["h"]) - 1)
+            for l in gold.get("alt_labels", [])]
 
     labels = []
     missing = 0
@@ -231,7 +267,10 @@ def _from_reading(slug: str, gold: dict):
             total -= len(row)
             continue
         if f["top"] in foreign:
-            missing += len(row)
+            if any(a <= f["bottom"] and f["top"] <= b for a, b in lues):
+                total -= len(row)
+            else:
+                missing += len(row)
             continue
         for (x0, x1), chord, score, unanimous in row:
             key = f"{f['top']},{x0}"
@@ -499,7 +538,11 @@ def build(slug: str):
     # n'était retenue que par accident, parce qu'une rangée cachée déclenchait
     # le mode D ; un réglage du matcher a suffi à lever l'accident
     # (itération 50).
-    if gold.get("en_chantier"):
+    # `PROVISOIRE` : comme le plancher et le mode D, c'est une règle de
+    # **publication**, pas de travail. Une page retenue à l'étude est
+    # justement celle qu'il faut ouvrir, et `propose-extra` n'y avait aucun
+    # accès — « ni calque ni lecture exploitable » (itération 54).
+    if gold.get("en_chantier") and not PROVISOIRE:
         return None, f"retenue à l'étude : {gold['en_chantier']} — non publiée"
 
     printed_key = gold.get("printed_key") or cho_key(slug)
@@ -524,8 +567,7 @@ def build(slug: str):
     if gold.get("frozen_labels"):
         # `fh` (le corps propre à une étiquette) doit survivre au gel : sans lui
         # une ligne d'intro gelée reprend le corps de la page et déborde.
-        keys = ("x", "y", "w", "h", "c", "fh")
-        labels = [{k: l[k] for k in keys if k in l} for l in gold["frozen_labels"]]
+        labels = [{k: l[k] for k in LABEL_KEYS if k in l} for l in gold["frozen_labels"]]
         note = f"{len(labels)} étiquettes (gelées à la certification)"
     else:
         if gold.get("chord_rows"):
@@ -548,8 +590,7 @@ def build(slug: str):
             # plus petite que les accords des couplets ; réécrite au corps de
             # la page elle déborde sur les crédits. `labelH` reste le défaut,
             # donc les 3 500 étiquettes déjà publiées ne bougent pas.
-            keys = ("x", "y", "w", "h", "c", "fh")
-            labels = labels + [{k: l[k] for k in keys if k in l} for l in extra]
+            labels = labels + [{k: l[k] for k in LABEL_KEYS if k in l} for l in extra]
             note += f" · +{len(extra)} hors rangées (lues à l'œil)"
 
         reste = "" if PROVISOIRE else mode_d(slug, {"labels": labels})
@@ -590,9 +631,41 @@ def build(slug: str):
         spans = [(f["top"], f["top"] + f["height"]) for f in found.values()]
         labels = [l for l in labels
                   if not any(a <= l["y"] <= b for a, b in spans)]
-        for f in found.values():
+        # Une rangée que `alt_labels` couvre n'a pas besoin de masque : ses
+        # propres étiquettes recouvrent la même encre, et poser les deux
+        # empilerait un pavé blanc muet sur un accord lisible.
+        # Par **recouvrement vertical**, jamais par égalité de haut : le
+        # découpage coupe parfois une rangée au milieu de ses lettres — la
+        # bande y=1441 de 在这里 ne fait que 11 px pour un « G » qui en fait
+        # 22 —, et la boîte de l'étiquette part alors du haut de l'encre,
+        # au-dessus du haut de la bande.
+        spans_alt = [(int(l["y"]), int(l["y"]) + int(l["h"]) - 1)
+                     for l in gold.get("alt_labels", [])]
+        muettes = [f for f in found.values()
+                   if not any(a <= f["top"] + f["height"] and f["top"] <= b
+                              for a, b in spans_alt)]
+        for f in muettes:
             labels += [_box(f, x0, x1, "") for x0, x1 in f["clusters"]]
-        note += f" · {len(found)} rangée(s) en autre tonalité masquée(s)"
+        note += f" · {len(found)} rangée(s) en autre tonalité"
+        if muettes:
+            note += f", dont {len(muettes)} masquée(s)"
+
+    # **Les rangées en autre tonalité, lues.** Un masque dit « il y a ici des
+    # accords que je ne publie pas » ; il jette ce que la gravure porte.
+    # `alt_labels` le garde : même géométrie qu'un masque, mais avec l'accord
+    # et le nombre de demi-tons qui séparent sa tonalité de celle de la page.
+    #
+    # `opt` distingue les deux familles, et c'est le client qui en tire le
+    # sélecteur de tonalité. Une rangée **empilée** — les positions de capo
+    # qu'une gravure imprime au-dessus des accords réels — est une lecture
+    # *alternative* de la même musique : la montrer sans le dire ferait une
+    # page à deux tonalités, elle est donc masquée par défaut. Une
+    # **modulation** est une suite, pas une alternative : elle s'affiche
+    # toujours, dans sa propre orthographe.
+    alt = gold.get("alt_labels", [])
+    if alt and not gold.get("frozen_labels"):
+        labels = labels + [{k: l[k] for k in LABEL_KEYS if k in l} for l in alt]
+        note += f" · +{len(alt)} en autre tonalité (lues à l'œil)"
 
     # **Complet** veut dire : un humain a regardé la page transposée dans le
     # navigateur et n'y a vu aucun accord resté dans l'ancienne tonalité.
@@ -626,7 +699,8 @@ def build(slug: str):
     shift = song_semitones(slug)
     if shift and not gold.get("frozen_labels"):
         labels = [
-            {**l, "c": transpose_label(l["c"], shift, printed_key) if l["c"] else l["c"]}
+            {**l, "c": transpose_label(l["c"], shift, alt_key(printed_key, l.get("alt", 0)))
+                  if l["c"] else l["c"]}
             for l in labels
         ]
 
