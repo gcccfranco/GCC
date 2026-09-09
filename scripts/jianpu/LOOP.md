@@ -4560,3 +4560,140 @@ tests Playwright** passent, ainsi que `npx tsc --noEmit`, `npm run validate`
   terrain mesure.
 - **La rangée détectée mais muette** (50, 51) et **l'alternative parenthésée
   solitaire** (49) n'ont toujours pas d'outil.
+
+### Itération 54 — la rangée muette, et le sélecteur de tonalité
+
+Deux choses, et la seconde n'était pas au programme : l'outil que les
+itérations 50, 51 et 53 réclamaient sans jamais l'écrire, et — parce que cet
+outil a trouvé ce qu'il cherchait — une réponse à la question des **pages à
+deux tonalités**, ouverte depuis l'itération 21.
+
+**La rangée muette.** `propose-extra --all` ne rendait que les rangées où le
+calque publie déjà. Une rangée que le classifieur type `chords` et dont le
+calque ne publie **rien** n'apparaissait donc nulle part : ni dans `--all`,
+ni dans `--hidden` (elle n'est pas cachée : le classifieur l'a bien typée),
+ni dans `worklist` (elle n'est pas soudée : le découpage l'a bien isolée).
+C'est le mode D vu de l'intérieur, et le seul endroit du dispositif où il ne
+coûte rien de regarder — le verdict du classifieur borne la liste, les hanzi
+et les chiffres n'y entrent pas.
+
+**Le résultat est d'abord négatif, et il vaut d'être mesuré.** Sur les 97
+pages certifiées, 50 rangées muettes qu'aucune déclaration de `gold/`
+n'explique — réparties sur 31 pages, quand `worklist --certifiées` en
+annonce zéro. Toutes regardées, une par une, sur planche : **aucune n'est
+une rangée d'accords manquée.** Ce sont des slivers de quelques pixels
+portant le haut des arcs de liaison et les chiffres de crochets de reprise,
+le cadre « 1=X 4/4 », des marqueurs 【Verse】/【Chorus】, des annotations
+chinoises entre parenthèses (« （改用儿童专辑…前奏） »), des lignes de
+paroles promues, et le sous-titre anglais de 这一生最美的祝福. Une quatrième
+forme de mode D est donc écartée du corpus publié.
+
+**Sur les 34 pages sans calque, 95 rangées muettes, et là elles parlent.**
+De vraies rangées d'accords que rien n'avait proposées (复兴的火 en a deux,
+十架的大能, 我的生命献给你 avec ses accords tout entre parenthèses, 再一次
+au-dessus de ses barres de rythme), les rangées **manuscrites** de 从心合一
+— l'outil les isole proprement, ce qui rend enfin sa transcription
+adressable —, et des lignes de paroles à écarter en `not_rows`, qui
+allègent le dénominateur (深刻的爱 : 33/63 → 63 %).
+
+**Et une troisième page à deux tonalités.** 我要爱慕你 empile trois rangées
+`E/G# (G#/C) C#m7 F#m7 Bsus4 B E` sous `F/A (A/C#) Dm7 Gm7 Csus4 C F`.
+Personne ne l'avait vue : ces rangées-là sont typées `chords?`, donc
+absentes de `read()`, donc invisibles à `foreign_rows` — exactement le
+raisonnement que `mask_rows` porte en commentaire depuis l'itération 31,
+appliqué à une page que personne n'avait relue.
+
+**Le sélecteur de tonalité.** La question posée était : faut-il masquer ces
+rangées, ou apprendre au calque à porter plusieurs tonalités ? La réponse
+retenue est **ni l'un ni l'autre seul — c'est au lecteur de choisir.** Le
+calque publie les deux jeux, et un bouton dit lequel il montre : « F# seul »
+(défaut) masque la seconde tonalité comme `mask_rows` le faisait, « F# et
+Ab » l'écrit, transposée du **même intervalle** que la page.
+
+Trois pièces, et une seule idée : `alt`, le nombre de demi-tons entre la
+tonalité d'une étiquette et celle de la page, ne change **que
+l'orthographe**. Les deux jeux montent ensemble — une rangée de capo reste
+une rangée de capo dans toutes les tonalités. `opt` dit qu'une étiquette est
+une lecture *alternative* de la même musique, donc masquable ; une
+modulation, elle, est une suite et s'afficherait toujours.
+
+**Un masque jetait ce que la gravure porte.** `mask_rows` publiait des
+boîtes blanches vides : la rangée disparaissait, et avec elle l'information.
+`alt_labels` garde la même géométrie et y met l'accord. Sur 在这里 le
+matcher publiait en plus **deux faux accords** dans la rangée de capo (C
+pour G, F/A pour Em) que le masque effaçait ensuite sans que rien ne le
+dise — et ses trois amas gonflaient le dénominateur, `mask_rows` étant censé
+ne pas peser sur la couverture. C'était vrai tant que ces rangées étaient
+toutes typées `chords?` ; celle de 在这里 est typée `chords`.
+
+**在这里 est certifiée, et la note qui la retenait était fausse.** Elle
+disait « capo en ré empilé sur des accords en fa » ; la page est en **fa**
+avec un second jeu en **sol** (+2), ce que `mask_rows_verified` avait
+correctement relevé à l'itération 31. Et `mask_rows` n'en listait que deux
+sur quatre : 937 et 1441 manquaient, toutes deux typées `chords?`, toutes
+deux trouvées par la rangée muette. 41/41 étiquettes lues, 16 en autre
+tonalité, planche navigateur sur les 7 tranches : aucun accord ne reste en
+fa. Corpus 135, calques **97 → 98**, tous certifiés.
+
+**Trois pièges de plomberie, dont deux auraient publié du faux en silence.**
+
+*Le gel jetait `alt` et `opt`.* `freeze.py` recopie les clés d'une étiquette
+depuis une liste — et `build-chords.py` en portait **trois autres copies**.
+L'itération 54 en a mis à jour deux : la page gelait en perdant sa seconde
+tonalité, ses accords de capo redevenant des accords de la page. C'est mot
+pour mot la leçon de l'itération 52 sur la géométrie des gabarits, et cette
+fois la liste vit en un seul endroit (`LABEL_KEYS`), que `freeze.py` va lire.
+
+*La bande de 11 px.* Le découpage coupe parfois une rangée au milieu de ses
+lettres : la bande y=1441 fait 11 px pour un « G » qui en fait 22. Cadrée
+sur la bande, l'étiquette sortait à demi-corps. Les tests de couverture
+comparaient un **haut de bande** à un **haut d'encre** — le doublon de
+l'itération 14 sous un troisième visage ; ils comparent maintenant des
+recouvrements.
+
+*Deux « F » pris pour des barres de mesure.* La planche de zoom de
+`propose-extra` cadre l'amas au plus serré : sur ces deux-là le découpage ne
+retient que 4 et 3 colonnes d'encre, et le zoom montrait une barre verticale
+avec un « F » *à côté*. C'est la rangée entière, rendue au 1,6×, qui a
+tranché. **Un zoom trop serré ment sur ce qu'il cadre** — et le compteur ne
+le dit pas, puisqu'il ne compte que ce qui a été proposé.
+
+**Et un oracle qui ne pouvait pas voir la nouveauté.** Le banc tenait « une
+étiquette écrite qui sort vide » pour un accord disparu. Une lecture
+alternative masquée en est une, légitimement. Plutôt que d'assouplir la
+règle, on a marqué l'étiquette (`data-jianpu-opt`) et **ajouté l'oracle
+inverse** : sélecteur allumé, la seconde tonalité doit être écrite, non
+vide, et montée du même demi-ton que la page — comparé en **hauteurs** et
+non en noms, « C# » et « Db » étant la même note. Un test de plus qui, seul,
+attrape la perte de `alt` au gel.
+
+**Bilan.** Corpus 135, calques **97 → 98**, certifiés **97 → 98**, étiquettes
+3 987 → **4 045**, dont 16 en seconde tonalité. **394 tests Playwright**
+passent (389 avant), ainsi que `npx tsc --noEmit`, `npm run validate` (370
+chants) et `npm run lint` (49 avertissements préexistants, 0 erreur). Aucune
+autre page de `chords.json` ne bouge.
+
+**Ce qui reste, nommé.**
+
+- **有你同行 et 我要爱慕你 attendent leur `alt_labels`.** Le mécanisme est
+  là et 在这里 le prouve ; il leur faut la lecture à l'œil de leurs rangées
+  étrangères. 有你同行 lit `C#m A E B` et `G#m C#m A B E` juste à d=+2, mais
+  sa rangée y=1410 **change de tonalité en son milieu** — les trois premiers
+  amas en ré, les trois derniers en mi. `alt` étant porté par l'étiquette et
+  non par la rangée, la donnée sait déjà le dire ; le relevé, lui, reste à
+  faire.
+- **La modulation n'est pas une alternative.** `opt` distingue les deux, mais
+  aucune page ne l'exerce encore : le « D » qui suit le 【升G调】 de 在这里 a
+  été écrit `opt` avec le reste du jeu en sol, par cohérence de sélecteur.
+  Une vraie modulation — une section entière qui se suit — devra s'écrire
+  sans `opt`, et rien ne l'a encore vérifiée.
+- **82 rangées muettes des pages sans calque n'ont pas été cataloguées.**
+  Les 13 des pages les plus proches du plancher et les 35 d'un premier lot
+  l'ont été ; le relevé complet reste à faire, et c'est lui qui dira
+  lesquelles de ces 34 pages franchissent le plancher.
+- **Le PDF n'a pas le sélecteur.** Il imprime la tonalité jouée seule, donc
+  les lectures alternatives y restent des masques. Une page imprimée perd
+  ainsi ce que l'écran sait montrer.
+- **La fonte s'élit à l'œil** (50, 52, 53), **10 pages sans `gold/`**, **祷告
+  reste une anomalie ouverte**, et **l'alternative parenthésée solitaire**
+  (49) n'a toujours pas d'outil.
