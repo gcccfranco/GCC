@@ -1,28 +1,532 @@
 {
-  "slug": "我已得自由",
-  "extra_labels": [
-    {
-      "x": 1071,
-      "y": 730,
-      "w": 12,
-      "h": 22,
-      "c": "E"
-    },
-    {
-      "x": 364,
-      "y": 1542,
-      "w": 12,
-      "h": 19,
-      "c": "E"
-    }
-  ],
-  "extra_verified": "2 étiquette(s) contestée(s) relue(s) au zoom, 2026-08-17 (itération 24, dissent.py)",
-  "face": "helvetica-bold",
-  "key_label": {
-    "x": 50,
-    "y": 240,
-    "w": 62,
-    "h": 23
+ "slug": "我已得自由",
+ "corrections": {
+  "401,260": "G/B",
+  "401,611": "G/B",
+  "401,963": "G/B",
+  "526,109": "G/B",
+  "526,532": "F/C",
+  "526,958": "G/C",
+  "526,1086": "C",
+  "730,21": "F/C",
+  "730,238": "G/B",
+  "730,1071": "E",
+  "932,27": "Am",
+  "932,539": "C",
+  "932,999": "G/B",
+  "1136,135": "C/G",
+  "1136,467": "C/E",
+  "1338,15": "G/B",
+  "1338,366": "C/G",
+  "1338,699": "C/E",
+  "1542,364": "E",
+  "1542,1053": "C",
+  "1746,536": "C/E",
+  "1746,1040": "C"
+ },
+ "corrections_verified": "les 9 rangées rendues entières au 1,6× et lues tranche par tranche (itération 56) ; les deux `extra_labels` de l'itération 24 (730,1071 et 1542,364) sont devenues des corrections — elles étaient dans des rangées lues, donc elles pesaient sur le dénominateur sans jamais y compter",
+ "extra_labels": [
+  {
+   "x": 856,
+   "y": 932,
+   "w": 18,
+   "h": 19,
+   "c": "C"
+  }
+ ],
+ "extra_verified": "le « C » gravé contre le segno de la rangée y=932 : le découpage les réunit dans un seul amas (825-872), et corriger l'amas entier aurait posé un fond opaque sur le segno. L'amas part donc en `not_labels` et la lettre revient sur sa propre boîte d'encre (856-873, 932-950), relevée au profil de colonnes — le geste de l'itération 55 pour le « E » soudé au crochet de 2ᵉ fin. Vu d'abord sur la planche navigateur, pas sur les rendus de rangée : la tranche coupait exactement là (itération 56)",
+ "not_labels": [
+  "526,650",
+  "526,680",
+  "526,705",
+  "730,1243",
+  "932,245",
+  "932,825",
+  "932,1233",
+  "1136,1244",
+  "1948,470",
+  "1948,950",
+  "1948,1124"
+ ],
+ "not_labels_verified": "amas qui ne sont pas des étiquettes, vus sur les mêmes rendus de rangée : les trois hampes du crochet de triolet y=526, quatre arcs de liaison (730,1243 · 932,245 · 932,1233 · 1136,1244), l'amas segno + « C » 932,825 (la lettre revient en `extra_labels`), les deux hampes de triolet y=1948 et le « D.S. al Fine » 1948,1124",
+ "face": "helvetica-bold",
+ "key_label": {
+  "x": 50,
+  "y": 240,
+  "w": 62,
+  "h": 23
+ },
+ "key_label_verified": "mesure measure-keylabel (ancrage sur le « = », cadre = voisin gauche…voisin droit), zoom relu à l’œil sur planche de lot, lettre gravée confrontée à printedKey, 2026-08-26 (itération 35)",
+ "verified": "planche navigateur C→Db relue sur les sept tranches : les neuf rangées d'accords et le cadre 1=C sont convertis, y compris le « C » gravé contre le segno. Aucun accord ne reste en do. 2026-09-10 (itération 56)",
+ "frozen_labels": [
+  {
+   "x": 37,
+   "y": 401,
+   "w": 13,
+   "h": 16,
+   "c": "C"
   },
-  "key_label_verified": "mesure measure-keylabel (ancrage sur le « = », cadre = voisin gauche…voisin droit), zoom relu à l’œil sur planche de lot, lettre gravée confrontée à printedKey, 2026-08-26 (itération 35)"
+  {
+   "x": 206,
+   "y": 401,
+   "w": 32,
+   "h": 16,
+   "c": "F/A"
+  },
+  {
+   "x": 260,
+   "y": 401,
+   "w": 37,
+   "h": 16,
+   "c": "G/B"
+  },
+  {
+   "x": 389,
+   "y": 401,
+   "w": 13,
+   "h": 16,
+   "c": "C"
+  },
+  {
+   "x": 558,
+   "y": 401,
+   "w": 32,
+   "h": 16,
+   "c": "F/A"
+  },
+  {
+   "x": 611,
+   "y": 401,
+   "w": 37,
+   "h": 16,
+   "c": "G/B"
+  },
+  {
+   "x": 745,
+   "y": 401,
+   "w": 13,
+   "h": 16,
+   "c": "C"
+  },
+  {
+   "x": 909,
+   "y": 401,
+   "w": 31,
+   "h": 16,
+   "c": "F/A"
+  },
+  {
+   "x": 963,
+   "y": 401,
+   "w": 36,
+   "h": 16,
+   "c": "G/B"
+  },
+  {
+   "x": 1096,
+   "y": 401,
+   "w": 13,
+   "h": 16,
+   "c": "C"
+  },
+  {
+   "x": 22,
+   "y": 526,
+   "w": 32,
+   "h": 24,
+   "c": "F/A"
+  },
+  {
+   "x": 109,
+   "y": 526,
+   "w": 37,
+   "h": 24,
+   "c": "G/B"
+  },
+  {
+   "x": 322,
+   "y": 526,
+   "w": 16,
+   "h": 24,
+   "c": "C"
+  },
+  {
+   "x": 532,
+   "y": 526,
+   "w": 38,
+   "h": 24,
+   "c": "F/C"
+  },
+  {
+   "x": 766,
+   "y": 526,
+   "w": 16,
+   "h": 24,
+   "c": "C"
+  },
+  {
+   "x": 889,
+   "y": 526,
+   "w": 38,
+   "h": 24,
+   "c": "F/C"
+  },
+  {
+   "x": 958,
+   "y": 526,
+   "w": 43,
+   "h": 24,
+   "c": "G/C"
+  },
+  {
+   "x": 1086,
+   "y": 526,
+   "w": 17,
+   "h": 24,
+   "c": "C"
+  },
+  {
+   "x": 21,
+   "y": 730,
+   "w": 38,
+   "h": 22,
+   "c": "F/C"
+  },
+  {
+   "x": 238,
+   "y": 730,
+   "w": 44,
+   "h": 22,
+   "c": "G/B"
+  },
+  {
+   "x": 342,
+   "y": 730,
+   "w": 38,
+   "h": 22,
+   "c": "F/A"
+  },
+  {
+   "x": 398,
+   "y": 730,
+   "w": 17,
+   "h": 22,
+   "c": "G"
+  },
+  {
+   "x": 596,
+   "y": 730,
+   "w": 38,
+   "h": 22,
+   "c": "Dm"
+  },
+  {
+   "x": 837,
+   "y": 730,
+   "w": 17,
+   "h": 22,
+   "c": "G"
+  },
+  {
+   "x": 1071,
+   "y": 730,
+   "w": 12,
+   "h": 22,
+   "c": "E"
+  },
+  {
+   "x": 27,
+   "y": 932,
+   "w": 38,
+   "h": 34,
+   "c": "Am"
+  },
+  {
+   "x": 180,
+   "y": 932,
+   "w": 38,
+   "h": 34,
+   "c": "Dm"
+  },
+  {
+   "x": 356,
+   "y": 932,
+   "w": 39,
+   "h": 34,
+   "c": "F/G"
+  },
+  {
+   "x": 539,
+   "y": 932,
+   "w": 16,
+   "h": 34,
+   "c": "C"
+  },
+  {
+   "x": 999,
+   "y": 932,
+   "w": 60,
+   "h": 34,
+   "c": "G/B"
+  },
+  {
+   "x": 21,
+   "y": 1136,
+   "w": 38,
+   "h": 23,
+   "c": "F/A"
+  },
+  {
+   "x": 135,
+   "y": 1136,
+   "w": 44,
+   "h": 23,
+   "c": "C/G"
+  },
+  {
+   "x": 317,
+   "y": 1136,
+   "w": 12,
+   "h": 23,
+   "c": "F"
+  },
+  {
+   "x": 467,
+   "y": 1136,
+   "w": 48,
+   "h": 23,
+   "c": "C/E"
+  },
+  {
+   "x": 657,
+   "y": 1136,
+   "w": 37,
+   "h": 23,
+   "c": "Dm"
+  },
+  {
+   "x": 914,
+   "y": 1136,
+   "w": 17,
+   "h": 23,
+   "c": "G"
+  },
+  {
+   "x": 1098,
+   "y": 1136,
+   "w": 16,
+   "h": 23,
+   "c": "C"
+  },
+  {
+   "x": 15,
+   "y": 1338,
+   "w": 44,
+   "h": 22,
+   "c": "G/B"
+  },
+  {
+   "x": 256,
+   "y": 1338,
+   "w": 38,
+   "h": 22,
+   "c": "F/A"
+  },
+  {
+   "x": 366,
+   "y": 1338,
+   "w": 45,
+   "h": 22,
+   "c": "C/G"
+  },
+  {
+   "x": 548,
+   "y": 1338,
+   "w": 11,
+   "h": 22,
+   "c": "F"
+  },
+  {
+   "x": 699,
+   "y": 1338,
+   "w": 47,
+   "h": 22,
+   "c": "C/E"
+  },
+  {
+   "x": 885,
+   "y": 1338,
+   "w": 38,
+   "h": 22,
+   "c": "Dm"
+  },
+  {
+   "x": 1142,
+   "y": 1338,
+   "w": 17,
+   "h": 22,
+   "c": "G"
+  },
+  {
+   "x": 21,
+   "y": 1542,
+   "w": 38,
+   "h": 19,
+   "c": "Dm"
+  },
+  {
+   "x": 239,
+   "y": 1542,
+   "w": 17,
+   "h": 19,
+   "c": "G"
+  },
+  {
+   "x": 364,
+   "y": 1542,
+   "w": 12,
+   "h": 19,
+   "c": "E"
+  },
+  {
+   "x": 556,
+   "y": 1542,
+   "w": 39,
+   "h": 19,
+   "c": "Am"
+  },
+  {
+   "x": 725,
+   "y": 1542,
+   "w": 38,
+   "h": 19,
+   "c": "Dm"
+  },
+  {
+   "x": 886,
+   "y": 1542,
+   "w": 39,
+   "h": 19,
+   "c": "F/G"
+  },
+  {
+   "x": 1053,
+   "y": 1542,
+   "w": 16,
+   "h": 19,
+   "c": "C"
+  },
+  {
+   "x": 35,
+   "y": 1746,
+   "w": 12,
+   "h": 19,
+   "c": "F"
+  },
+  {
+   "x": 232,
+   "y": 1746,
+   "w": 17,
+   "h": 19,
+   "c": "G"
+  },
+  {
+   "x": 337,
+   "y": 1746,
+   "w": 39,
+   "h": 19,
+   "c": "Am"
+  },
+  {
+   "x": 536,
+   "y": 1746,
+   "w": 42,
+   "h": 19,
+   "c": "C/E"
+  },
+  {
+   "x": 669,
+   "y": 1746,
+   "w": 12,
+   "h": 19,
+   "c": "F"
+  },
+  {
+   "x": 863,
+   "y": 1746,
+   "w": 17,
+   "h": 19,
+   "c": "G"
+  },
+  {
+   "x": 1040,
+   "y": 1746,
+   "w": 16,
+   "h": 19,
+   "c": "C"
+  },
+  {
+   "x": 37,
+   "y": 1948,
+   "w": 11,
+   "h": 19,
+   "c": "F"
+  },
+  {
+   "x": 217,
+   "y": 1948,
+   "w": 17,
+   "h": 19,
+   "c": "G"
+  },
+  {
+   "x": 331,
+   "y": 1948,
+   "w": 35,
+   "h": 19,
+   "c": "Em"
+  },
+  {
+   "x": 425,
+   "y": 1948,
+   "w": 12,
+   "h": 19,
+   "c": "E"
+  },
+  {
+   "x": 536,
+   "y": 1948,
+   "w": 39,
+   "h": 19,
+   "c": "Am"
+  },
+  {
+   "x": 635,
+   "y": 1948,
+   "w": 38,
+   "h": 19,
+   "c": "Dm"
+  },
+  {
+   "x": 835,
+   "y": 1948,
+   "w": 16,
+   "h": 19,
+   "c": "D"
+  },
+  {
+   "x": 1022,
+   "y": 1948,
+   "w": 17,
+   "h": 19,
+   "c": "G"
+  },
+  {
+   "x": 856,
+   "y": 932,
+   "w": 18,
+   "h": 19,
+   "c": "C"
+  }
+ ]
 }
