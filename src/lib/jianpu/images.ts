@@ -19,7 +19,24 @@ export type JianpuManifest = Record<string, JianpuEntry>;
  *  à gauche, effaçait alors ce qui est imprimé à côté — les barres d'une
  *  ligne d'intro, un 【尾句】, l'accord suivant. Mesuré sur les pixels du
  *  scan par `build-chords.py`. */
-export type JianpuChordLabel = { x: number; y: number; w: number; h: number; c: string; fh?: number; sp?: number };
+/** `alt` : demi-tons entre la tonalité de **cette étiquette** et celle de la
+ *  page. Certaines gravures portent deux jeux d'accords — des positions de
+ *  capo empilées au-dessus des accords réels (在这里 : ré au-dessus de fa),
+ *  ou une section qui module sans réimprimer de « 1=X » (有你同行 : ré → mi).
+ *  Le décalage appliqué reste celui de la page — les deux jeux montent
+ *  ensemble ; `alt` ne change que **l'orthographe**, pour que la rangée de
+ *  capo reste une rangée de capo dans toutes les tonalités.
+ *
+ *  `opt` : cette étiquette est une **lecture alternative** de la même
+ *  musique, pas une suite. Elle est masquée par défaut — une page qui
+ *  afficherait les deux jeux sans le dire est une page à deux tonalités,
+ *  ce que la boucle tient pour pire que pas de calque — et le sélecteur de
+ *  tonalité la révèle. Une étiquette dont le `c` est vide reste un simple
+ *  masque : la rangée est repérée mais pas encore lue. */
+export type JianpuChordLabel = {
+  x: number; y: number; w: number; h: number; c: string;
+  fh?: number; sp?: number; alt?: number; opt?: boolean;
+};
 export type JianpuChords = {
   /** Tonalité imprimée sur le PDF — pas forcément celle du .cho. */
   printedKey: string;
