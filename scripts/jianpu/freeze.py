@@ -24,6 +24,7 @@ Usage (depuis GCCLouange/) :
 
 from __future__ import annotations
 
+import functools
 import json
 import os
 import sys
@@ -32,8 +33,23 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 IMAGES = os.path.join(HERE, "..", "..", "public", "jianpu")
 GOLD = os.path.join(HERE, "gold")
 
-# `fh` n'est présent que sur les étiquettes qui portent leur propre corps.
-KEYS = ("x", "y", "w", "h", "c", "fh")
+@functools.lru_cache(maxsize=1)
+def _label_keys() -> tuple[str, ...]:
+    """Les clés d'une étiquette, **lues chez `build-chords`**.
+
+    Elles y étaient recopiées, et l'oubli ne cassait rien de visible : la
+    page gelait, et ses accords en autre tonalité redevenaient en silence
+    des accords de la tonalité de la page — un calque à deux tonalités,
+    exactement ce que la boucle tient pour pire que rien (itération 54).
+    `build-chords.py` porte un tiret : il ne s'importe pas par son nom.
+    """
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location(
+        "build_chords", os.path.join(HERE, "build-chords.py"))
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod.LABEL_KEYS
 
 
 def freeze(slug: str, entry: dict) -> str:
@@ -46,7 +62,7 @@ def freeze(slug: str, entry: dict) -> str:
     if gold.get("frozen_labels"):
         return "déjà gelé"
 
-    gold["frozen_labels"] = [{k: l[k] for k in KEYS if k in l} for l in entry["labels"]]
+    gold["frozen_labels"] = [{k: l[k] for k in _label_keys() if k in l} for l in entry["labels"]]
     with open(path, "w", encoding="utf8") as fh:
         json.dump(gold, fh, ensure_ascii=False, indent=1)
     return f"{len(gold['frozen_labels'])} étiquettes gelées"
