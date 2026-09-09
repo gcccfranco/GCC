@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Image from "next/image";
 import type { JianpuEntry } from "@/lib/jianpu/images";
 import { jianpuImageUrl, useJianpuChords } from "@/lib/jianpu/images";
@@ -59,6 +59,36 @@ function unitWidth(text: string, font: string): number {
   const w = measureCtx.measureText(text).width / 100;
   chordWidths.set(cle, w);
   return w;
+}
+
+/** Place qu'un voisin **du calque** laisse à une étiquette, en pixels image.
+ *
+ *  `sp` mesure l'encre du **scan** : ce qu'une étiquette efface en débordant.
+ *  Le déborder y est assumé depuis l'itération 38 — sous 0,80× un accord
+ *  devient moins lisible qu'il n'est gênant. Cette place-ci est autre chose :
+ *  les fonds sont opaques et les `<span>` se peignent dans l'ordre du DOM,
+ *  donc le voisin de droite **efface la fin de l'accord**, et ce qui reste
+ *  peut se lire comme un autre accord — « Gb/Bb » affiché « Gb/B ». Ici le
+ *  débordement ne coûte pas de l'encre gravée, il coûte l'accord lui-même :
+ *  il n'y a donc pas de plancher (itération 56).
+ *
+ *  Le repère est le bord gauche des boîtes (`x - 3` pour toutes), d'où la
+ *  simple différence des `x`. */
+function voisinCalque(
+  boites: { x: number; y: number; h: number }[],
+  i: number
+): number | undefined {
+  const l = boites[i];
+  let libre: number | undefined;
+  for (let j = i + 1; j < boites.length; j++) {
+    const o = boites[j];
+    if (o.x <= l.x) continue;
+    // Recouvrement vertical, jamais égalité de haut : le découpage coupe
+    // parfois une rangée au milieu de ses lettres (itération 54).
+    if (Math.min(l.y + l.h, o.y + o.h) <= Math.max(l.y, o.y)) continue;
+    if (libre === undefined || o.x - l.x < libre) libre = o.x - l.x;
+  }
+  return libre;
 }
 
 /** Corps réduit pour que l'étiquette tienne dans la place que la gravure lui
@@ -122,6 +152,33 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey, ca
   const chordSemitones = semitones - capo;
   const chordKey = getTransposedKey(playedKey ?? chords?.printedKey ?? "C", -capo);
   const chordFontPx = chords ? chords.labelH / CAP_HEIGHT : 0;
+  // **L'ordre de peinture du calque.** Les fonds sont opaques : ce qui se
+  // dessine après efface la fin de ce qui précède. Trois rangs, et le
+  // premier est une règle, pas un détail de rendu — un **masque** (boîte
+  // sans accord) efface le *gravé*, jamais ce que le calque écrit. Sur
+  // 我们成为一家人 le masque du bémol exposant de « 1= ♭B » recouvrait la
+  // lettre réécrite : la page affichait « 1= » tout court, dans onze
+  // tonalités sur douze (itération 56). C'est la règle de l'itération 54 —
+  // « poser les deux empilerait un pavé blanc muet sur un accord lisible » —
+  // portée sur l'ordre plutôt que sur le contenu.
+  //
+  // Entre le cadre « 1=X » et les accords, rien ne change : un accord publié
+  // sous le cadre continue de se dessiner par-dessus lui (itération 44).
+  const { boites, rangDe, rangCadre } = useMemo(() => {
+    if (!chords) return { boites: [], rangDe: [] as number[], rangCadre: -1 };
+    // `source` : −1 pour le cadre « 1=X », l'index de l'étiquette sinon.
+    const ordre = [
+      ...chords.labels.map((l, n) => ({ l, n, rang: l.c.trim() ? 1 : 0 })),
+      ...(chords.keyLabel ? [{ l: chords.keyLabel, n: -1, rang: 1 }] : []),
+    ].sort((a, b) => a.rang - b.rang || a.n - b.n);
+    const rangDe: number[] = new Array(chords.labels.length);
+    let rangCadre = -1;
+    ordre.forEach((o, i) => {
+      if (o.n < 0) rangCadre = i;
+      else rangDe[o.n] = i;
+    });
+    return { boites: ordre.map(({ l }) => ({ x: l.x, y: l.y, h: l.h })), rangDe, rangCadre };
+  }, [chords]);
   const overlayOn = Boolean(chords && playedKey);
   const staleChords = Boolean(playedKey && !chords);
   // Calque partiel : une partie des accords n'a pas été relevée et reste
@@ -275,7 +332,10 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey, ca
                 // que le chiffrage « 4/4 » qu'il efface en débordant est une
                 // information perdue — c'est le défaut qu'on avait dû
                 // réparer sur 齐来赞美 (itération 35).
-                const keyFontPx = fitFont(keyShown, kl.h / CAP_HEIGHT, kl.sp, KEY_FONT, 0);
+                const keyFontPx = Math.min(
+                  fitFont(keyShown, kl.h / CAP_HEIGHT, kl.sp, KEY_FONT, 0),
+                  fitFont(keyShown, kl.h / CAP_HEIGHT, voisinCalque(boites, rangCadre), KEY_FONT, 0)
+                );
                 return (
                 <span
                   // Le cadre de tonalité porte un fond opaque comme les
@@ -293,6 +353,7 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey, ca
                     fontSize: `${(keyFontPx / chords.w) * 100}cqw`,
                     lineHeight: 1,
                     fontFamily: KEY_FONT,
+                    zIndex: 1,
                   }}
                 >
                   {keyShown}
@@ -330,7 +391,11 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey, ca
                 const shown = hidden
                   ? ""
                   : transposeLabel(l.c, chordSemitones, altSpellingKey(chordKey, l.alt ?? 0));
-                const fontPx = fitFont(shown, l.fh ? l.fh / CAP_HEIGHT : chordFontPx, l.sp);
+                const corps = l.fh ? l.fh / CAP_HEIGHT : chordFontPx;
+                const fontPx = Math.min(
+                  fitFont(shown, corps, l.sp),
+                  fitFont(shown, corps, voisinCalque(boites, rangDe[n]), CHORD_FONT, 0)
+                );
                 return (
                 <span
                   key={n}
@@ -363,6 +428,11 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey, ca
                     fontSize: `${(fontPx / chords.w) * 100}cqw`,
                     fontWeight: 700,
                     lineHeight: 1,
+                    // Le rang de peinture : les masques dessous, tout ce qui
+                    // porte un accord dessus. L'ordre du DOM ne suffit pas —
+                    // le cadre « 1=X » est rendu avant la liste, et un masque
+                    // de la liste passait donc par-dessus lui.
+                    zIndex: l.c.trim() ? 1 : 0,
                     fontFamily: CHORD_FONT,
                   }}
                 >
