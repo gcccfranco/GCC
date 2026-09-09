@@ -152,6 +152,38 @@ export function transposeLabel(text: string, semitones: number, targetKey: strin
 }
 
 /**
+ * Tonalité d'**orthographe** d'une section gravée `alt` demi-tons au-dessus
+ * de la page : une rangée de positions de capo, un second jeu d'accords, une
+ * modulation. Le décalage appliqué reste celui de la page — les deux jeux
+ * montent ensemble — et seule leur écriture diffère.
+ *
+ * `getTransposedKey` y répond presque toujours juste, parce que sa
+ * préférence pour les bémols est en réalité celle du **moindre nombre
+ * d'altérations** : Db (5♭) contre C# (7♯), Eb (3♭) contre D# (9♯), Ab (4♭)
+ * contre G# (8♯), Bb (2♭) contre A# (10♯). Le compte tranche, et il
+ * tranche du même côté quelle que soit la page.
+ *
+ * Il reste **un** degré où il ne tranche pas : F# et Gb font six altérations
+ * chacun. `getTransposedKey` y répondait Gb quelle que soit la page, si bien
+ * qu'une page en mi — tout en dièses — affichait sa section transposée en
+ * Gb / Db / Ebm / Bbm juste sous des accords en G#m / C#m (itération 55, vu
+ * sur 有你同行 rendu en mi). À égalité d'altérations, c'est donc la page qui
+ * dit de quel côté on lit.
+ *
+ * Ailleurs le compte garde le dernier mot, et c'est délibéré : contraindre
+ * la section à la famille de la page rendrait « Ab » en « G# » sur une page
+ * en sol et « Bb » en « A# » sur une page en la — mesuré, et pire que le
+ * défaut qu'on corrige.
+ */
+export function altSpellingKey(pageKey: string, alt: number): string {
+  if (!alt) return pageKey;
+  const key = getTransposedKey(pageKey, alt);
+  // Le triton depuis do : le seul degré où F# et Gb se valent.
+  if (noteToIndex(key) !== 6) return key;
+  return FLAT_KEYS.has(pageKey) || pageKey.includes("b") ? "Gb" : "F#";
+}
+
+/**
  * Return the target key after transposition, with proper enharmonic.
  */
 export function getTransposedKey(originalKey: string, semitones: number): string {
