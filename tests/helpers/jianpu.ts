@@ -122,6 +122,67 @@ export async function overlayLabels(
   }, { i: pageIndex, avecCadre: opts.avecCadre === true });
 }
 
+/** Ce qui reste **lisible** de chaque étiquette une fois posés les fonds
+ *  opaques qui se dessinent après elle.
+ *
+ *  Le test de chevauchement compare des boîtes : il dit que deux étiquettes
+ *  se touchent, jamais de combien ni ce qu'il en reste à lire. Or le fond
+ *  d'une étiquette est opaque et les `<span>` se peignent dans l'ordre du
+ *  DOM : le voisin de droite **efface** la fin de son gauche. Ce qui subsiste
+ *  se lit sans rien signaler — « Gb/Bb » devient « Gb/B », qui est un accord.
+ *
+ *  Le préfixe visible est mesuré au `measureText` du navigateur, avec la
+ *  fonte réellement calculée sur l'élément : c'est la seule mesure qui vaut,
+ *  les corps étant rétrécis étiquette par étiquette (`sp`, itération 38).
+ */
+export async function troncatures(page: Page) {
+  return page.evaluate(() => {
+    const host = document.querySelector('[data-jianpu-page="0"]')!;
+    // L'ordre de peinture, pas l'ordre du DOM : un masque porte `z-index: 0`
+    // pour passer sous tout ce qui écrit un accord, cadre « 1=X » compris
+    // (itération 56). À rang égal, le document tranche.
+    const spans = Array.from(
+      host.querySelectorAll<HTMLElement>("[data-jianpu-label],[data-jianpu-keylabel]")
+    )
+      .map((el, n) => ({ el, n, z: Number(getComputedStyle(el).zIndex) || 0 }))
+      .sort((a, b) => a.z - b.z || a.n - b.n)
+      .map(({ el }) => el);
+    const rects = spans.map((el) => el.getBoundingClientRect());
+    const ctx = document.createElement("canvas").getContext("2d")!;
+    const out: { printed: string; shown: string; visible: string; perdu: number }[] = [];
+    for (let i = 0; i < spans.length; i++) {
+      const texte = (spans[i].textContent ?? "").trim();
+      if (!texte) continue;
+      const r = rects[i];
+      // Seuls les voisins **plus loin dans le DOM** se dessinent par-dessus.
+      let coupe = r.right;
+      for (let j = i + 1; j < spans.length; j++) {
+        const o = rects[j];
+        if (Math.min(r.bottom, o.bottom) - Math.max(r.top, o.top) <= 1) continue;
+        if (o.left <= r.left || o.left >= coupe) continue;
+        coupe = o.left;
+      }
+      if (coupe >= r.right - 0.5) continue;
+      const cs = getComputedStyle(spans[i]);
+      ctx.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+      const dispo = coupe - r.left;
+      let visible = "";
+      for (let k = 1; k <= texte.length; k++) {
+        if (ctx.measureText(texte.slice(0, k)).width > dispo) break;
+        visible = texte.slice(0, k);
+      }
+      if (visible !== texte)
+        out.push({
+          printed: spans[i].dataset.jianpuLabel ?? "",
+          shown: texte,
+          visible,
+          perdu: Math.round(r.right - coupe),
+        });
+    }
+    return out;
+  });
+}
+
 const SHARP = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"];
 const ALIAS: Record<string, string> = { Db: "C#", "D#": "Eb", Gb: "F#", "G#": "Ab", "A#": "Bb" };
 
