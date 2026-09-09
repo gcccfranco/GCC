@@ -4,7 +4,10 @@ import type { Locator, Page } from "@playwright/test";
 
 const ROOT = path.resolve(__dirname, "..", "..");
 
-export type ChordLabel = { x: number; y: number; w: number; h: number; c: string; fh?: number };
+export type ChordLabel = {
+  x: number; y: number; w: number; h: number; c: string;
+  fh?: number; alt?: number; opt?: boolean;
+};
 export type Chords = {
   printedKey: string;
   w: number;
@@ -103,6 +106,12 @@ export async function overlayLabels(
       return {
         printed: el.dataset.jianpuLabel ?? "",
         shown: (el.textContent ?? "").trim(),
+        // `alt` : demi-tons entre la tonalité de l'étiquette et celle de la
+        // page. `opt` : « hidden » quand le sélecteur de tonalité la masque,
+        // « shown » quand il la montre, absent si l'étiquette n'est pas une
+        // lecture alternative.
+        alt: el.dataset.jianpuAlt ? Number(el.dataset.jianpuAlt) : undefined,
+        opt: el.dataset.jianpuOpt,
         left: r.left - box.left,
         top: r.top - box.top,
         width: r.width,
@@ -115,6 +124,17 @@ export async function overlayLabels(
 
 const SHARP = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"];
 const ALIAS: Record<string, string> = { Db: "C#", "D#": "Eb", Gb: "F#", "G#": "Ab", "A#": "Bb" };
+
+/** Hauteur d'une note, en demi-tons depuis do. Table indépendante de
+ *  `src/lib/transpose.ts`, comme `halfStepUp` : un attendu calculé avec le
+ *  code testé ne teste rien. Sert à comparer deux noms **sans** trancher
+ *  l'orthographe — « C# » et « Db » sont la même hauteur, et le choix entre
+ *  les deux appartient à la tonalité visée. */
+export function pitchClass(note: string): number {
+  const i = SHARP.indexOf(ALIAS[note] ?? note);
+  if (i < 0) throw new Error(`note inconnue : ${note}`);
+  return i;
+}
 
 /** Le demi-ton au-dessus : la tonalité où **aucun** accord ne garde son nom.
  *  Table indépendante de `src/lib/transpose.ts` — un test qui calcule son
