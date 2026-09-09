@@ -164,11 +164,16 @@ export function transposeLabel(text: string, semitones: number, targetKey: strin
  * tranche du même côté quelle que soit la page.
  *
  * Il reste **un** degré où il ne tranche pas : F# et Gb font six altérations
- * chacun. `getTransposedKey` y répondait Gb quelle que soit la page, si bien
- * qu'une page en mi — tout en dièses — affichait sa section transposée en
- * Gb / Db / Ebm / Bbm juste sous des accords en G#m / C#m (itération 55, vu
- * sur 有你同行 rendu en mi). À égalité d'altérations, c'est donc la page qui
- * dit de quel côté on lit.
+ * chacun. `getTransposedKey` y répond **F#**, l'usage des grilles ; mais une
+ * page en sol bémol, tout en bémols, y veut Gb. À égalité d'altérations,
+ * c'est donc la page qui dit de quel côté on lit — dans un sens comme dans
+ * l'autre.
+ *
+ * C'est ce défaut-là qui a fait écrire cette fonction (itération 55) : la
+ * réponse était alors Gb quelle que soit la page, et 有你同行 rendu en mi —
+ * tout en dièses — affichait sa modulation en Gb / Db / Ebm / Bbm juste sous
+ * des accords en G#m / C#m. Le défaut symétrique existe toujours, d'où le
+ * garde-fou.
  *
  * Ailleurs le compte garde le dernier mot, et c'est délibéré : contraindre
  * la section à la famille de la page rendrait « Ab » en « G# » sur une page
@@ -190,17 +195,56 @@ export function getTransposedKey(originalKey: string, semitones: number): string
   const idx = noteToIndex(originalKey);
   if (idx === -1) return originalKey;
   const newIdx = ((idx + semitones) % 12 + 12) % 12;
+  // Au triton, le compte des altérations ne tranche pas — F# et Gb en font six
+  // chacune — et l'usage des grilles dit F#. La réponse était Gb, seul nom que
+  // `ALL_KEYS` ne porte plus : les boutons − / + rendaient alors une valeur
+  // absente du sélecteur, qui s'affichait vide.
+  if (newIdx === 6) return "F#";
   const sharpVersion = SHARPS[newIdx];
   const flatVersion  = FLATS[newIdx];
   const key = FLAT_KEYS.has(flatVersion) ? flatVersion : sharpVersion;
   return key;
 }
 
-/** All keys in display order for the selector */
+/**
+ * Les douze tonalités du sélecteur, dans l'écriture qu'un musicien attend sur
+ * une **grille d'accords**.
+ *
+ * La liste en portait dix-neuf : les douze hauteurs, plus les deux noms de
+ * chaque hauteur ambiguë, plus `E#` et `Fb`. Or sept de ces noms ne sont pas
+ * des tonalités qu'on écrit : `D#` (9 dièses), `A#` (10), `G#` (8), `E#` (11),
+ * `Fb` (8 bémols). Le critère est le **nombre d'altérations**, le même qui
+ * décide de l'orthographe des accords : Db (5♭) contre C# (7♯), Eb (3♭) contre
+ * D# (9♯), Ab (4♭) contre G# (8♯), Bb (2♭) contre A# (10♯). Une seule hauteur
+ * reste à égalité — fa♯ et sol♭ font six altérations chacune — et l'usage des
+ * grilles y dit **F#**.
+ *
+ * Une tonalité déjà choisie qui s'écrit autrement ne disparaît pas pour
+ * autant : c'est le rôle de `keyOptions`.
+ */
 export const ALL_KEYS = [
-  "C", "C#", "Db", "D", "D#", "Eb", "E", "E#", "Fb", "F", "F#", "Gb",
-  "G", "G#", "Ab", "A", "A#", "Bb", "B",
+  "C", "Db", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B",
 ];
+
+/**
+ * Les douze, plus la tonalité déjà en place quand elle s'écrit autrement.
+ *
+ * Un `<select>` dont la valeur n'est dans aucune option s'affiche **vide**, et
+ * un chant gravé en `C#` ou une setlist dont quelqu'un a choisi `Gb` perdrait
+ * silencieusement sa tonalité à l'écran. Le corpus en compte : `a-jamais-tu-es-saint`
+ * est en `C#`, `dieu-sauveur` en `G#`, et deux chants sont en `Am` — un nom que
+ * la liste n'a jamais porté.
+ *
+ * Le nom reçu est inséré devant l'entrée de **même hauteur**, pour que l'ordre
+ * reste chromatique et que les deux orthographes soient voisines. Un nom dont
+ * la hauteur est inconnue (`Am`) va en fin de liste.
+ */
+export function keyOptions(current?: string | null): string[] {
+  if (!current || ALL_KEYS.includes(current)) return ALL_KEYS;
+  const i = ALL_KEYS.findIndex((k) => noteToIndex(k) === noteToIndex(current));
+  if (i === -1) return [...ALL_KEYS, current];
+  return [...ALL_KEYS.slice(0, i), current, ...ALL_KEYS.slice(i)];
+}
 
 /**
  * Compute semitone offset to go from `fromKey` to `toKey` (shortest path, -5..+6).
