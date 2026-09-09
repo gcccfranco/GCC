@@ -24,7 +24,7 @@ import {
   SlidersHorizontal,
   ArrowUpNarrowWide,
 } from "lucide-react";
-import { ALL_KEYS } from "@/lib/transpose";
+import { keyOptions } from "@/lib/transpose";
 import { useTranslation } from "react-i18next";
 import { useDefaultSensors } from "@/lib/dnd/sensors";
 import { nextUid } from "@/lib/uid";
@@ -130,7 +130,7 @@ function KeyChangeFieldInput({
   return (
     <div className="px-2 pb-2 pl-7 space-y-1.5">
       <div className="flex flex-wrap gap-1">
-        {ALL_KEYS.map((k) => (
+        {keyOptions(value).map((k) => (
           <button
             key={k}
             type="button"
@@ -748,7 +748,7 @@ export function SongRow({
             className="text-xs px-1.5 py-1 border border-border rounded bg-background text-foreground font-mono font-bold focus:outline-none focus:ring-1 focus:ring-primary/30"
           >
             <option value="">{t("setlists.form.songOriginalKey", { key: item.song.originalKey })}</option>
-            {ALL_KEYS.map((k) => (
+            {keyOptions(item.keyOverride).map((k) => (
               <option key={k} value={k}>{k}</option>
             ))}
           </select>
@@ -903,7 +903,7 @@ function FusionSongCard({
             className="text-xs px-1.5 py-0.5 border border-border rounded bg-background text-foreground font-mono font-bold focus:outline-none focus:ring-1 focus:ring-primary/30"
           >
             <option value="">{t("setlists.form.songOriginalKey", { key: item.song.originalKey })}</option>
-            {ALL_KEYS.map((k) => (
+            {keyOptions(item.keyOverride).map((k) => (
               <option key={k} value={k}>{k}</option>
             ))}
           </select>
