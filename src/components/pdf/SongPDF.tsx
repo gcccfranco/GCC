@@ -4,7 +4,7 @@ import {
 import type { ChordProAST, ChordProSection, Token } from "@/types/chordPro";
 import { formatSectionName } from "@/lib/chordpro/parser";
 import { resolveStructureOverride } from "@/lib/chordpro/structure";
-import { semitonesTo, transposeChord, transposeLabel } from "@/lib/transpose";
+import { getTransposedKey, semitonesTo, transposeChord, transposeLabel } from "@/lib/transpose";
 import { transposeSection } from "@/lib/transposeAST";
 import frTranslations from "@/locales/fr.json";
 import zhTranslations from "@/locales/zh-CN.json";
@@ -1040,9 +1040,22 @@ export function JianpuPDFPage({
                   chemin qu'avant, donc rien d'autre ne bouge.
                   `fh` : le corps propre à l'étiquette, quand il n'est pas
                   celui de la page. */}
+              {/* `opt` : une **lecture alternative** de la même musique — les
+                  positions de capo que certaines gravures empilent au-dessus
+                  des accords réels. Le PDF n'a pas le sélecteur de la page
+                  web : il imprime la tonalité jouée seule, donc ces
+                  étiquettes-là restent des masques. `alt` donne la tonalité
+                  d'orthographe des rangées qui, elles, se suivent (une
+                  modulation) : le décalage reste celui de la page. */}
               {chords.labels.map((l, i) => (
                 <SheetLabel key={i} box={l} k={ck} h={l.fh ?? chords.labelH} color={chordColor}>
-                  {transposeLabel(l.c, semitones, playedKey!)}
+                  {l.opt
+                    ? ""
+                    : transposeLabel(
+                        l.c,
+                        semitones,
+                        l.alt ? getTransposedKey(playedKey!, l.alt) : playedKey!
+                      )}
                 </SheetLabel>
               ))}
             </>
