@@ -4791,7 +4791,20 @@ côté on lit. `altSpellingKey` fait ça, en trois lignes.
 
 `getTransposedKey` est laissé intact : il nomme aussi la tonalité du chant,
 le capo et les blocs du mode louange, et l'égalité au triton n'y a pas
-forcément la même réponse. Le miroir Python (`alt_key`) suit ; il ne change
+forcément la même réponse.
+
+*(Suite, le même jour.)* Il ne l'est pas resté. Le sélecteur de tonalité a été
+ramené aux **douze écritures conventionnelles** — `C Db D Eb E F F# G Ab A Bb B`,
+au lieu des dix-neuf noms qu'il portait, `E#` et `Fb` compris — et le même
+compte d'altérations y désigne `F#` au triton. `getTransposedKey` devait donc
+nommer pareil, sans quoi les boutons − / + rendaient un nom que la liste
+n'offre plus. `altSpellingKey` garde tout son rôle, dans l'autre sens : une
+page en **sol bémol** veut sa section en Gb, pas en F#. Effet visible sur les
+calques : une page rendue au triton passe de `Gb Abm Bbm B Db Ebm` — avec ce
+`B` isolé au milieu des bémols, qui était `Cb` — à `F# G#m A#m B C# D#m`, d'une
+seule famille.
+
+Le miroir Python (`alt_key`) suit ; il ne change
 aucun calque aujourd'hui — les trois pages à section en autre tonalité sont
 toutes à décalage nul — mais il devait rester juste pour la prochaine.
 
