@@ -155,6 +155,43 @@ test.describe("partition 简谱", () => {
     });
   }
 
+  // **La section transposée s'écrit du côté de la page.** `alt` ne change que
+  // l'orthographe, et l'orthographe se choisit au moindre nombre
+  // d'altérations — sauf au triton, où F# et Gb en font six chacun. Là, le
+  // compte ne dit rien, et il répondait Gb quelle que soit la page : 有你同行
+  // rendu en mi affichait sa modulation en Gb / Db / Ebm / Bbm sous des
+  // accords en G#m / C#m (itération 55).
+  //
+  // L'oracle est le rapport de familles, pas une liste de noms : sur une page
+  // sans bémol, aucune étiquette réécrite ne doit en porter un. Il ne vaut
+  // qu'aux tonalités où le triton est en jeu, donc on les nomme — **mi** pour
+  // les deux pages à section +2, seule tonalité de page dont le degré +2
+  // tombe sur F#/Gb. Ailleurs (« Db » sur une page en si) le compte des
+  // altérations tranche, et il tranche pour le bémol : ce n'est pas ce
+  // qu'on teste ici.
+  //
+  // Le sélecteur, quand il existe, doit être allumé : une lecture *masquée*
+  // sort vide, et une page dont on ne montre rien passerait le test sans
+  // rien vérifier — c'est ce que faisait cette boucle à sa première écriture.
+  for (const slug of ["有你同行", "在这里"]) {
+    const alts = chords[slug]?.labels.filter((l) => l.alt) ?? [];
+    test(`${slug} — en E, la section en autre tonalité s'écrit en dièses`, async ({ page }) => {
+      test.skip(!alts.some((l) => l.alt === 2), `${slug} n'a pas de section à +2`);
+      await openSheet(page, slug, { key: "E" });
+      const bouton = page.locator('[data-jianpu-altkey="on"]');
+      if (await bouton.count()) await bouton.click();
+      const { labels } = await overlayLabels(page);
+      const écrits = labels.filter((l) => l.alt === 2 && l.shown !== "");
+      expect(écrits.length, "aucune étiquette de section rendue").toBe(
+        alts.filter((l) => l.alt === 2).length
+      );
+      expect(
+        écrits.filter((l) => l.shown.includes("b")).map((l) => `${l.printed} → ${l.shown}`),
+        "bémol sur une page en dièses"
+      ).toEqual([]);
+    });
+  }
+
   test("un chant sans calque prévient que ses accords ne suivent pas", async ({ page }) => {
     const slug = slugsWithoutOverlay()[0];
     test.skip(!slug, "tous les chants ont un calque");
