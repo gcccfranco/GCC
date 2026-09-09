@@ -23,7 +23,7 @@ import { buildDefaultStructure } from "@/lib/chordpro/structure";
 import { parseChordPro } from "@/lib/chordpro/parser";
 import { transposeAST } from "@/lib/transposeAST";
 import { useScrollDirection } from "@/hooks/useScrollDirection";
-import { ALL_KEYS, semitonesTo, getTransposedKey } from "@/lib/transpose";
+import { keyOptions, semitonesTo, getTransposedKey } from "@/lib/transpose";
 import { useSearchParams } from "next/navigation";
 import type { SectionItem } from "@/types/song";
 import type { SectionNuance } from "@/types/setList";
@@ -254,7 +254,7 @@ function safeParseParam<T>(raw: string | null, fallback: T): T {
                   }
                   className="flex-1 min-w-0 h-9 sm:h-8 px-2 border border-border rounded-md bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
                 >
-                  {ALL_KEYS.map((k) => (
+                  {keyOptions(customize.currentKey).map((k) => (
                     <option key={k} value={k}>
                       {k}
                       {k === originalKey ? " " + t("customize.panel.keyOriginal") : ""}
