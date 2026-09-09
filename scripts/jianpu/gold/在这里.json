@@ -2,9 +2,11 @@
  "slug": "在这里",
  "mask_rows": [
   684,
-  1190
+  937,
+  1190,
+  1441
  ],
- "mask_rows_verified": "1=F · deux rangées gravées en **sol** au-dessus des rangées réelles en fa (y=744, y=1260). Trouvées par foreign-scan --large, paires relues côte à côte. Itération 31 (2026-08-22)",
+ "mask_rows_verified": "1=F · quatre rangées gravées en **sol** au-dessus des rangées réelles en fa (y=744, 1007, 1260, 1480). Deux d'entre elles (937, 1441) manquaient au relevé de l'itération 31 : le classifieur les range en `chords?`, donc ni `read()` ni `foreign_rows` ne les voient. Trouvées par la rangée muette (itération 54).",
  "extra_labels": [
   {
    "x": 1033,
@@ -24,5 +26,615 @@
  "key_label_verified": "mesure measure-keylabel (ancrage sur le « = », cadre = voisin gauche…voisin droit), zoom relu à l’œil sur planche de lot, lettre gravée confrontée à printedKey, 2026-08-26 (itération 35)",
  "face": "verdana-bold",
  "face_verified": "balayage de fonte croisé : sweep-key.py (veto + marge) et le compteur de couverture de build-chords désignent la même fonte, à tonalité inchangée — 2026-09-08 (itération 50). À confirmer par la planche d'audit avant certification.",
- "en_chantier": "deux jeux d'accords empilés par système (capo en ré au-dessus des accords réels en fa, deux rangées déjà en mask_rows) et un 【升G调】 sur la dernière rangée ; 13 amas restent à relire, dont trois (A, A/C#, D à y≈1875) dont on ne sait pas encore s'ils appartiennent à la rangée de capo ou aux accords joués. À traiter avec la question des pages à deux tonalités, pas comme une page ordinaire (itérations 48, 49, 50)"
+ "alt_labels": [
+  {
+   "x": 921,
+   "y": 684,
+   "w": 17,
+   "h": 21,
+   "c": "G",
+   "alt": 2,
+   "opt": true
+  },
+  {
+   "x": 1122,
+   "y": 684,
+   "w": 37,
+   "h": 21,
+   "c": "Em",
+   "alt": 2,
+   "opt": true
+  },
+  {
+   "x": 49,
+   "y": 937,
+   "w": 14,
+   "h": 21,
+   "c": "C",
+   "alt": 2,
+   "opt": true
+  },
+  {
+   "x": 292,
+   "y": 937,
+   "w": 16,
+   "h": 21,
+   "c": "D",
+   "alt": 2,
+   "opt": true
+  },
+  {
+   "x": 495,
+   "y": 937,
+   "w": 16,
+   "h": 21,
+   "c": "G",
+   "alt": 2,
+   "opt": true
+  },
+  {
+   "x": 695,
+   "y": 937,
+   "w": 37,
+   "h": 21,
+   "c": "Em",
+   "alt": 2,
+   "opt": true
+  },
+  {
+   "x": 942,
+   "y": 937,
+   "w": 15,
+   "h": 21,
+   "c": "C",
+   "alt": 2,
+   "opt": true
+  },
+  {
+   "x": 1192,
+   "y": 937,
+   "w": 16,
+   "h": 21,
+   "c": "D",
+   "alt": 2,
+   "opt": true
+  },
+  {
+   "x": 50,
+   "y": 1190,
+   "w": 15,
+   "h": 21,
+   "c": "C",
+   "alt": 2,
+   "opt": true
+  },
+  {
+   "x": 296,
+   "y": 1190,
+   "w": 45,
+   "h": 21,
+   "c": "D/C",
+   "alt": 2,
+   "opt": true
+  },
+  {
+   "x": 532,
+   "y": 1190,
+   "w": 38,
+   "h": 21,
+   "c": "Bm",
+   "alt": 2,
+   "opt": true
+  },
+  {
+   "x": 720,
+   "y": 1190,
+   "w": 36,
+   "h": 21,
+   "c": "Em",
+   "alt": 2,
+   "opt": true
+  },
+  {
+   "x": 905,
+   "y": 1190,
+   "w": 15,
+   "h": 21,
+   "c": "C",
+   "alt": 2,
+   "opt": true
+  },
+  {
+   "x": 1139,
+   "y": 1190,
+   "w": 16,
+   "h": 21,
+   "c": "D",
+   "alt": 2,
+   "opt": true
+  },
+  {
+   "x": 53,
+   "y": 1431,
+   "w": 18,
+   "h": 22,
+   "c": "G",
+   "alt": 2,
+   "opt": true
+  },
+  {
+   "x": 1159,
+   "y": 1875,
+   "w": 16,
+   "h": 20,
+   "c": "D",
+   "alt": 2,
+   "opt": true
+  }
+ ],
+ "alt_labels_verified": "lues à l'œil sur planche de zoom, dans la tonalité **gravée** (sol, +2 demi-tons sur la page en fa) ; 4 des 15 propositions du matcher étaient fausses — confusion C ↔ G à ce corps. `opt` : rangées **empilées** sur la même musique, donc masquées par défaut et révélées par le sélecteur de tonalité. 2026-09-09 (itération 54)",
+ "corrections": {
+  "1864,50": "A",
+  "1864,176": "A/C#",
+  "744,543": "F",
+  "744,925": "F"
+ },
+ "corrections_verified": "A et A/C# de la dernière rangée, hors du vocabulaire du `.cho` ; et les deux « F » de la rangée du 【Chorus】, dont le découpage ne retient que 4 et 3 colonnes d'encre — la planche de zoom de `propose-extra --all` les cadrait si serré que je les avais d'abord pris pour des barres de mesure, la rangée entière au 1,6× les montre. 2026-09-09 (itération 54)",
+ "not_labels": [
+  "309,1467",
+  "503,1467",
+  "744,1467",
+  "1007,1467",
+  "1260,1467",
+  "1480,1467",
+  "1681,1467",
+  "1864,1467",
+  "1480,286",
+  "744,746",
+  "1864,1210",
+  "1864,1033",
+  "1864,1159"
+ ],
+ "not_labels_verified": "relus un à un sur la planche de zoom de `propose-extra --all` (17 amas). 2026-09-09 (itération 54)",
+ "verified": "planche navigateur `npm run jianpu:audit 在这里` (F → F#), 7 tranches : tout accord gravé est encadré et converti, aucun ne reste en fa. Les quatre rangées gravées en **sol** sont masquées dans « F# seul » et rendues 2 demi-tons au-dessus dans « F# et Ab » — capture `_sel-在这里-on.png`. La page n'est plus `en_chantier` : le sélecteur de tonalité répond à la question qui la retenait. 2026-09-09 (itération 54)",
+ "frozen_labels": [
+  {
+   "x": 52,
+   "y": 309,
+   "w": 10,
+   "h": 22,
+   "c": "F"
+  },
+  {
+   "x": 474,
+   "y": 309,
+   "w": 40,
+   "h": 22,
+   "c": "Dm"
+  },
+  {
+   "x": 905,
+   "y": 309,
+   "w": 30,
+   "h": 22,
+   "c": "Bb"
+  },
+  {
+   "x": 1136,
+   "y": 309,
+   "w": 41,
+   "h": 22,
+   "c": "F/A"
+  },
+  {
+   "x": 47,
+   "y": 503,
+   "w": 43,
+   "h": 21,
+   "c": "Gm"
+  },
+  {
+   "x": 252,
+   "y": 503,
+   "w": 14,
+   "h": 21,
+   "c": "C"
+  },
+  {
+   "x": 461,
+   "y": 503,
+   "w": 10,
+   "h": 21,
+   "c": "F"
+  },
+  {
+   "x": 886,
+   "y": 503,
+   "w": 41,
+   "h": 21,
+   "c": "Dm"
+  },
+  {
+   "x": 45,
+   "y": 744,
+   "w": 30,
+   "h": 35,
+   "c": "Bb"
+  },
+  {
+   "x": 296,
+   "y": 744,
+   "w": 15,
+   "h": 35,
+   "c": "C"
+  },
+  {
+   "x": 543,
+   "y": 744,
+   "w": 4,
+   "h": 35,
+   "c": "F"
+  },
+  {
+   "x": 925,
+   "y": 744,
+   "w": 3,
+   "h": 35,
+   "c": "F"
+  },
+  {
+   "x": 1120,
+   "y": 744,
+   "w": 41,
+   "h": 35,
+   "c": "Dm"
+  },
+  {
+   "x": 45,
+   "y": 1007,
+   "w": 30,
+   "h": 22,
+   "c": "Bb"
+  },
+  {
+   "x": 292,
+   "y": 1007,
+   "w": 14,
+   "h": 22,
+   "c": "C"
+  },
+  {
+   "x": 498,
+   "y": 1007,
+   "w": 11,
+   "h": 22,
+   "c": "F"
+  },
+  {
+   "x": 694,
+   "y": 1007,
+   "w": 40,
+   "h": 22,
+   "c": "Dm"
+  },
+  {
+   "x": 938,
+   "y": 1007,
+   "w": 30,
+   "h": 22,
+   "c": "Bb"
+  },
+  {
+   "x": 1191,
+   "y": 1007,
+   "w": 15,
+   "h": 22,
+   "c": "C"
+  },
+  {
+   "x": 46,
+   "y": 1260,
+   "w": 30,
+   "h": 22,
+   "c": "Bb"
+  },
+  {
+   "x": 295,
+   "y": 1260,
+   "w": 60,
+   "h": 22,
+   "c": "C/Bb"
+  },
+  {
+   "x": 529,
+   "y": 1260,
+   "w": 41,
+   "h": 22,
+   "c": "Am"
+  },
+  {
+   "x": 718,
+   "y": 1260,
+   "w": 40,
+   "h": 22,
+   "c": "Dm"
+  },
+  {
+   "x": 901,
+   "y": 1260,
+   "w": 30,
+   "h": 22,
+   "c": "Bb"
+  },
+  {
+   "x": 1139,
+   "y": 1260,
+   "w": 14,
+   "h": 22,
+   "c": "C"
+  },
+  {
+   "x": 56,
+   "y": 1480,
+   "w": 11,
+   "h": 31,
+   "c": "F"
+  },
+  {
+   "x": 432,
+   "y": 1480,
+   "w": 30,
+   "h": 31,
+   "c": "Bb"
+  },
+  {
+   "x": 684,
+   "y": 1480,
+   "w": 61,
+   "h": 31,
+   "c": "C/Bb"
+  },
+  {
+   "x": 897,
+   "y": 1480,
+   "w": 40,
+   "h": 31,
+   "c": "Am"
+  },
+  {
+   "x": 1152,
+   "y": 1480,
+   "w": 41,
+   "h": 31,
+   "c": "Dm"
+  },
+  {
+   "x": 46,
+   "y": 1681,
+   "w": 30,
+   "h": 22,
+   "c": "Bb"
+  },
+  {
+   "x": 304,
+   "y": 1681,
+   "w": 14,
+   "h": 22,
+   "c": "C"
+  },
+  {
+   "x": 541,
+   "y": 1681,
+   "w": 10,
+   "h": 22,
+   "c": "F"
+  },
+  {
+   "x": 902,
+   "y": 1681,
+   "w": 30,
+   "h": 22,
+   "c": "Bb"
+  },
+  {
+   "x": 1153,
+   "y": 1681,
+   "w": 60,
+   "h": 22,
+   "c": "C/Bb"
+  },
+  {
+   "x": 50,
+   "y": 1864,
+   "w": 17,
+   "h": 37,
+   "c": "A"
+  },
+  {
+   "x": 176,
+   "y": 1864,
+   "w": 61,
+   "h": 37,
+   "c": "A/C#"
+  },
+  {
+   "x": 292,
+   "y": 1864,
+   "w": 41,
+   "h": 37,
+   "c": "Dm"
+  },
+  {
+   "x": 497,
+   "y": 1864,
+   "w": 29,
+   "h": 37,
+   "c": "Eb"
+  },
+  {
+   "x": 742,
+   "y": 1864,
+   "w": 63,
+   "h": 37,
+   "c": "Bb/D"
+  },
+  {
+   "x": 980,
+   "y": 1864,
+   "w": 14,
+   "h": 37,
+   "c": "C"
+  },
+  {
+   "x": 1033,
+   "y": 1864,
+   "w": 98,
+   "h": 26,
+   "c": "【升G调】"
+  },
+  {
+   "x": 921,
+   "y": 684,
+   "w": 17,
+   "h": 21,
+   "c": "G",
+   "alt": 2,
+   "opt": true
+  },
+  {
+   "x": 1122,
+   "y": 684,
+   "w": 37,
+   "h": 21,
+   "c": "Em",
+   "alt": 2,
+   "opt": true
+  },
+  {
+   "x": 49,
+   "y": 937,
+   "w": 14,
+   "h": 21,
+   "c": "C",
+   "alt": 2,
+   "opt": true
+  },
+  {
+   "x": 292,
+   "y": 937,
+   "w": 16,
+   "h": 21,
+   "c": "D",
+   "alt": 2,
+   "opt": true
+  },
+  {
+   "x": 495,
+   "y": 937,
+   "w": 16,
+   "h": 21,
+   "c": "G",
+   "alt": 2,
+   "opt": true
+  },
+  {
+   "x": 695,
+   "y": 937,
+   "w": 37,
+   "h": 21,
+   "c": "Em",
+   "alt": 2,
+   "opt": true
+  },
+  {
+   "x": 942,
+   "y": 937,
+   "w": 15,
+   "h": 21,
+   "c": "C",
+   "alt": 2,
+   "opt": true
+  },
+  {
+   "x": 1192,
+   "y": 937,
+   "w": 16,
+   "h": 21,
+   "c": "D",
+   "alt": 2,
+   "opt": true
+  },
+  {
+   "x": 50,
+   "y": 1190,
+   "w": 15,
+   "h": 21,
+   "c": "C",
+   "alt": 2,
+   "opt": true
+  },
+  {
+   "x": 296,
+   "y": 1190,
+   "w": 45,
+   "h": 21,
+   "c": "D/C",
+   "alt": 2,
+   "opt": true
+  },
+  {
+   "x": 532,
+   "y": 1190,
+   "w": 38,
+   "h": 21,
+   "c": "Bm",
+   "alt": 2,
+   "opt": true
+  },
+  {
+   "x": 720,
+   "y": 1190,
+   "w": 36,
+   "h": 21,
+   "c": "Em",
+   "alt": 2,
+   "opt": true
+  },
+  {
+   "x": 905,
+   "y": 1190,
+   "w": 15,
+   "h": 21,
+   "c": "C",
+   "alt": 2,
+   "opt": true
+  },
+  {
+   "x": 1139,
+   "y": 1190,
+   "w": 16,
+   "h": 21,
+   "c": "D",
+   "alt": 2,
+   "opt": true
+  },
+  {
+   "x": 53,
+   "y": 1431,
+   "w": 18,
+   "h": 22,
+   "c": "G",
+   "alt": 2,
+   "opt": true
+  },
+  {
+   "x": 1159,
+   "y": 1875,
+   "w": 16,
+   "h": 20,
+   "c": "D",
+   "alt": 2,
+   "opt": true
+  }
+ ]
 }
