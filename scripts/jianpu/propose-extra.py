@@ -20,10 +20,17 @@ Le pré-filtre est fait pour *limiter le volume* quand on ratisse le
 corpus. Sur un chant qu'on est en train de certifier, il devient une gêne :
 il tait précisément les amas que le matcher ne sait pas lire, qui sont
 justement ceux qu'il reste à lire. `--all` le désactive et rend **tout ce
-qui n'est pas encore couvert** dans les rangées où le calque publie déjà,
-score ou pas. Ce que `--all` ne montre pas, ce sont les rangées jamais
-détectées (mode D) : celles-là se voient sur `audit-page.py`, et se
-mesurent ensuite à la main.
+qui n'est pas encore couvert** : les rangées où le calque publie déjà,
+score ou pas, et depuis l'itération 54 les rangées que le classifieur type
+`chords` et dont le calque ne publie **rien** — la *rangée muette*. Ni
+cachée ni soudée, elle échappait à `worklist` comme à `--all`, et il en
+restait 39 sur 31 des 97 pages certifiées. Sont écartées les rangées dont
+la question est déjà tranchée : `not_rows`, `mask_rows` et les rangées en
+tonalité étrangère.
+
+Ce que `--all` ne montre toujours pas, ce sont les rangées **jamais
+typées `chords`** — cachées ailleurs ou soudées à leurs chiffres : celles-là
+passent par `--hidden`, par `worklist` et par `audit-page.py`.
 
 Usage (depuis GCCLouange/) :
     python3 scripts/jianpu/propose-extra.py            # tout le corpus
@@ -72,8 +79,8 @@ from PIL import Image, ImageDraw  # noqa: E402
 
 from classify import classify, load_params  # noqa: E402
 from match import (  # noqa: E402
-    MIN_SCORE, best_match, build_templates, face_bank, jury_faces, signature,
-    song_face, song_semitones, vocabulary,
+    MIN_SCORE, best_match, build_templates, face_bank, foreign_rows, jury_faces,
+    signature, song_face, song_semitones, vocabulary,
 )
 from segment import INK_THRESHOLD  # noqa: E402
 from worklist import hidden_rows, welded_rows  # noqa: E402
@@ -160,6 +167,25 @@ def _row_published(f: dict, labels: list[dict], hidden: set[int]) -> bool:
     return any(l["y"] <= f["bottom"] and f["top"] <= l["y"] + l["h"] - 1 for l in labels)
 
 
+def _repondues(slug: str) -> set[int]:
+    """Rangées dont la question est déjà tranchée, et qu'il ne faut donc pas
+    reposer à l'œil : celles que la vérité terrain déclare sans accord
+    (`not_rows`) ou gravées dans une autre tonalité (`mask_rows`), et celles
+    que `foreign_rows` trouve mécaniquement.
+
+    Sans ce filtre, ouvrir les rangées muettes reviendrait à redemander une
+    réponse déjà donnée — et, sur les pages à deux tonalités, à proposer de
+    publier précisément ce que la garde retient.
+    """
+    out = set()
+    path = os.path.join(HERE, "gold", f"{slug}.json")
+    if os.path.exists(path):
+        gold = json.load(open(path, encoding="utf8"))
+        out |= {int(y) for y in gold.get("not_rows", [])}
+        out |= {int(y) for y in gold.get("mask_rows", [])}
+    return out | set(foreign_rows(slug))
+
+
 def propose(slug: str, entry: dict, everything: bool = False,
             hidden: set[int] | None = None) -> list[dict]:
     path = os.path.join(IMAGES, f"{slug}-p1.webp")
@@ -182,8 +208,9 @@ def propose(slug: str, entry: dict, everything: bool = False,
     jury = [build_templates(vocabulary(slug), semitones, p, i)
             for p, i in jury_faces(face) if os.path.exists(p)]
 
+    repondues = _repondues(slug) if everything else set()
     out = []
-    for f in feats:
+    for f, kind in zip(feats, kinds):
         if f["top"] < floor:
             continue
         # Rangée haute : elle mêle des accords et de la musique (ligatures,
@@ -206,7 +233,19 @@ def propose(slug: str, entry: dict, everything: bool = False,
         # (itération 42). C'est mot pour mot le doublon de l'itération 14,
         # dont le test `(y, x)` exact avait été remplacé par un recouvrement.
         if everything and not _row_published(f, entry["labels"], published):
-            continue
+            # **La rangée muette** (itérations 50, 51, 53). La borne
+            # ci-dessus — « seulement là où le calque publie déjà » — tait
+            # aussi les rangées que le classifieur type `chords` et dont le
+            # calque ne publie **rien**. Elles ne sont ni cachées (le
+            # classifieur les a bien typées) ni soudées (le découpage les a
+            # bien isolées) : `worklist` n'en voit aucune, et sur les 97
+            # pages certifiées il en restait 39, réparties sur 31 pages.
+            # C'est le mode D vu de l'intérieur, et le seul endroit du
+            # dispositif où il ne coûte rien de regarder : le verdict du
+            # classifieur borne la liste, les hanzi et les chiffres n'y
+            # entrent pas.
+            if kind != "chords" or f["top"] in repondues:
+                continue
         tall = f["height"] > MAX_H_RATIO * entry["labelH"]
         row = []
         amas = []
