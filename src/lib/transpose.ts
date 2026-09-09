@@ -82,8 +82,13 @@ const LABEL_SPLIT = /([^\x00-\x7F]+|[\s|]+)/;
  * restaient verbatim au milieu d'une étiquette dont le reste était transposé.
  * Mesuré sur les 3 544 étiquettes publiées, aux douze transpositions : aucune
  * ne change.
+ *
+ * Exporté pour `sweep-browser.ts` : quand le fond opaque d'un voisin rogne un
+ * accord réécrit, ce qui reste à l'écran peut se lire comme un **autre**
+ * accord (« Gb/Bb » coupé en « Gb/B »). Le dire demande la notion d'accord
+ * de l'application, pas une copie qui divergera.
  */
-const CHORD_TOKEN =
+export const CHORD_TOKEN =
   /^(?:\(?[A-G][#b]?(?:maj|min|sus|add|dim|aug|alt|M|m|Δ|ø|°|\+|-)*\d*(?:[b#]\d+)?(?:\((?:maj|min|add|sus|dim|aug)?[b#]?\d+\))?(?:sus\d?|add\d?)?(?:\/[A-G][#b]?)?|\/[A-G][#b]?)\)?$/;
 
 /** Parenthèses et crochets qui décorent un jeton sans en faire partie. */
