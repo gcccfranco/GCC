@@ -268,6 +268,29 @@ SMALL = 0.62
 ACC_RISE = 0.36
 ACC_SMALL = 1.0
 
+# Le signe d'altération **assis sur la ligne**, troisième façon de le graver
+# et la seule que le gabarit n'offrait pas (itération 52).
+#
+# Mesuré sur le plus large amas de 祷告 — « E/G♯ », gravure à empattements —
+# en fraction de la hauteur des lettres :
+#
+#                      hauteur du ♯   dépasse au-dessus   descend sous la ligne
+#     gravé                  1,31            0,35                 −0,04
+#     genre 0 (times)        1,18            0,05                 +0,15
+#     genre 2 (times)        1,09            0,45                 −0,37
+#
+# Le signe gravé a donc à peu près la **taille naturelle** du glyphe musical
+# — ce n'est pas la taille qui manque —, mais il **repose sur la ligne**,
+# quand Times le laisse pendre en dessous et que la variante surélevée le
+# hisse deux fois trop haut. Le genre 3 ne change donc pas le corps : il
+# remonte le glyphe de son propre débord sous la ligne de pied.
+#
+# Ce débord se **mesure** glyphe par glyphe plutôt que de se tabuler : « ♯ »
+# est un glyphe musical, dessiné à une échelle propre à chaque fonte, et une
+# constante juste pour Times serait fausse pour STIXGeneral — c'est l'erreur
+# que l'itération 46 a payée quatre itérations sur la géométrie de l'exposant.
+ACC_ON_LINE = 3
+
 
 def _tail_sup(segments: list) -> list | None:
     """Le dernier morceau — chiffrage ou parenthèse — passé en exposant."""
@@ -304,6 +327,26 @@ def _sup_accidentals(segments: list) -> list | None:
     return out if changed else None
 
 
+def _line_accidentals(segments: list) -> list | None:
+    """Chaque altération ramenée à hauteur de capitale, sur la ligne.
+
+    Même découpage que `_sup_accidentals`, autre genre : c'est le signe
+    gravé comme une lettre et non comme un exposant.
+    """
+    out, changed = [], False
+    for text, raised in segments:
+        if raised:
+            out.append((text, raised))
+            continue
+        parts = ACCIDENTAL_RE.split(text)
+        for i, part in enumerate(parts):
+            if not part:
+                continue
+            out.append((part, ACC_ON_LINE if i % 2 else 0))
+            changed = changed or bool(i % 2)
+    return out if changed else None
+
+
 def _gravures(text: str, risers: bool = True) -> list:
     """Toutes les gravures plausibles de l'étiquette, en morceaux
     `(texte, surélevé)`. On les propose toutes au gabarit, c'est l'image qui
@@ -311,7 +354,8 @@ def _gravures(text: str, risers: bool = True) -> list:
     « B » avec un 7 surélevé, 叫我抬起头的神 écrit « B/D » avec un ♯ surélevé.
     """
     out = [[(text, 0)]]
-    for build in (_tail_sup, _sup_accidentals) if risers else (_tail_sup,):
+    builds = (_tail_sup, _sup_accidentals, _line_accidentals) if risers else (_tail_sup,)
+    for build in builds:
         for segments in list(out):
             grave = build(segments)
             if grave and grave not in out:
@@ -338,6 +382,24 @@ def _runs(text: str, primary: tuple[str, int], fallback: tuple[str, int]):
     return [(which, "".join(chars)) for which, chars in out]
 
 
+_DESCENT: dict[tuple[str, int, str], int] = {}
+
+
+def _on_line_rise(path: str, index: int, text: str) -> int:
+    """De combien remonter `text` pour poser son encre sur la ligne.
+
+    `getbbox(..., anchor="ls")` rend la boîte d'encre par rapport à la ligne
+    de pied ; son bas positif est le débord sous la ligne. On remonte
+    d'autant, et de rien quand le glyphe repose déjà dessus — le genre 3 est
+    alors le genre 0 et ne coûte qu'un gabarit en double.
+    """
+    key = (path, index, text)
+    if key not in _DESCENT:
+        below = _sized(path, index, FONT_SIZE).getbbox(text, anchor="ls")[3]
+        _DESCENT[key] = max(0, below)
+    return _DESCENT[key]
+
+
 def _render(segments: list, fonts: dict) -> np.ndarray | None:
     im = Image.new("L", (FONT_SIZE * 10, FONT_SIZE * 3), 0)
     dr = ImageDraw.Draw(im)
@@ -345,6 +407,8 @@ def _render(segments: list, fonts: dict) -> np.ndarray | None:
     for text, kind in segments:
         primary, fallback, size, rise = fonts[kind]
         for which, run in _runs(text, primary, fallback):
+            if kind == ACC_ON_LINE:
+                rise = _on_line_rise(which[0], which[1], run)
             font = _sized(which[0], which[1], size)
             dr.text((x, FONT_SIZE - rise), run, fill=255, font=font, anchor="ls")
             x += dr.textlength(run, font=font)
@@ -451,6 +515,8 @@ def build_templates(
         0: (primary, fallback, int(FONT_SIZE), 0),
         1: (primary, fallback, int(FONT_SIZE * SMALL), int(FONT_SIZE * RISE)),
         2: (primary, fallback, int(FONT_SIZE * ACC_SMALL), int(FONT_SIZE * ACC_RISE)),
+        # Corps et déport mesurés dans `_render`, glyphe par glyphe.
+        ACC_ON_LINE: (primary, fallback, int(FONT_SIZE), 0),
     }
     out: dict[str, list] = {}
     for chord in vocab:
