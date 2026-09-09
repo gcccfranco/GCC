@@ -1,4 +1,486 @@
 {
  "slug": "有你同行",
- "face": "din-bold"
+ "face": "din-bold",
+ "key_label": {
+  "x": 14,
+  "y": 202,
+  "w": 77,
+  "h": 24
+ },
+ "key_label_verified": "mesure measure-keylabel, candidate 2 sur 2 (la 1re est la ligne de tempo ♩=65) ; la page grave « 1= D » et printedKey vaut D. Elle grave **un second** cadre, « 1= E », au milieu du système y=1448 — hors de portée de measure-keylabel, qui ne regarde que le haut de page : il est posé en `extra_labels`. 2026-09-09 (itération 55)",
+ "not_rows": [
+  844
+ ],
+ "not_rows_verified": "y=844 : une rangée de **paroles** promue par le classifieur — « 将爱完全，让我心一无畏 », dont les sept amas de hanzi sortaient A/C#, A, F#m, F#m, Asus4, A et F#m, cinq au-dessus du seuil. 2026-09-09 (itération 55)",
+ "not_labels": [
+  "259,951",
+  "259,1234",
+  "925,26",
+  "925,371",
+  "925,586",
+  "1410,309",
+  "1410,579"
+ ],
+ "not_labels_verified": "cinq coins de crochets de reprise — le « ⌐1 » et le « ⌐2 » des systèmes y=259, y=925 et y=1410 — lus D, Bm, D, F#m et Bm, quatre d'entre eux au-dessus du seuil ; et le marqueur « 【Chorus】 » du système y=925 (amas de 115 px), lu F#m à -0,03 et retenu. 2026-09-09 (itération 55)",
+ "alt_labels": [
+  {
+   "x": 43,
+   "y": 1410,
+   "w": 39,
+   "h": 29,
+   "c": "Em"
+  },
+  {
+   "x": 344,
+   "y": 1410,
+   "w": 17,
+   "h": 29,
+   "c": "A"
+  },
+  {
+   "x": 620,
+   "y": 1410,
+   "w": 18,
+   "h": 29,
+   "c": "A"
+  },
+  {
+   "x": 834,
+   "y": 1410,
+   "w": 14,
+   "h": 29,
+   "c": "B",
+   "alt": 2
+  },
+  {
+   "x": 1042,
+   "y": 1410,
+   "w": 12,
+   "h": 29,
+   "c": "E",
+   "alt": 2
+  },
+  {
+   "x": 1217,
+   "y": 1410,
+   "w": 64,
+   "h": 29,
+   "c": "B/D#",
+   "alt": 2
+  },
+  {
+   "x": 47,
+   "y": 1644,
+   "w": 58,
+   "h": 22,
+   "c": "C#m",
+   "alt": 2
+  },
+  {
+   "x": 498,
+   "y": 1644,
+   "w": 17,
+   "h": 22,
+   "c": "A",
+   "alt": 2
+  },
+  {
+   "x": 744,
+   "y": 1644,
+   "w": 11,
+   "h": 22,
+   "c": "E",
+   "alt": 2
+  },
+  {
+   "x": 1018,
+   "y": 1644,
+   "w": 15,
+   "h": 22,
+   "c": "B",
+   "alt": 2
+  },
+  {
+   "x": 45,
+   "y": 1878,
+   "w": 62,
+   "h": 22,
+   "c": "G#m",
+   "alt": 2
+  },
+  {
+   "x": 478,
+   "y": 1878,
+   "w": 58,
+   "h": 22,
+   "c": "C#m",
+   "alt": 2
+  },
+  {
+   "x": 809,
+   "y": 1878,
+   "w": 18,
+   "h": 22,
+   "c": "A",
+   "alt": 2
+  },
+  {
+   "x": 956,
+   "y": 1878,
+   "w": 15,
+   "h": 22,
+   "c": "B",
+   "alt": 2
+  },
+  {
+   "x": 1194,
+   "y": 1878,
+   "w": 11,
+   "h": 22,
+   "c": "E",
+   "alt": 2
+  }
+ ],
+ "alt_labels_verified": "**une modulation, pas une alternative** — le premier cas du corpus, et celui que l'itération 54 laissait ouvert. Le chant monte en **mi** (+2) au milieu du système y=1410 et y reste jusqu'à la fin : la page le dit elle-même en gravant un second « 1= E » dans la rangée de chiffres, à la mesure exacte où les accords changent. Une modulation est une *suite*, pas une lecture parallèle de la même musique : aucune de ces étiquettes ne porte `opt`, donc aucune n'est masquable et le sélecteur de tonalité n'apparaît pas.\n\nLes trois rangées passent par `alt_labels` parce que `foreign_rows` les écarte en bloc — et c'est justement pour ces rangées-là que la garde existe : le vocabulaire fermé du `.cho`, qui ne connaît que le ré, y publiait « F#m A D » là où la page imprime « C#m A E » (itération 21). y=1410 est écartée entière alors que sa première moitié est en ré : ses trois premières étiquettes sont donc relues ici aussi, sans `alt`. Lues à l'œil sur rendus de rangée à 2×. 2026-09-09 (itération 55)",
+ "extra_labels": [
+  {
+   "x": 720,
+   "y": 1477,
+   "w": 75,
+   "h": 30,
+   "c": "1= E",
+   "fh": 30,
+   "alt": 2
+  }
+ ],
+ "extra_composites_verified": "le **second cadre « 1= X »** de la page (itération 40) : gravé au milieu du système y=1448, entre deux barres de mesure, à la mesure où le morceau monte en mi. `measure-keylabel` ne le voit pas (il n'ancre qu'en haut de page à gauche) et `chords.json` ne tient qu'un `keyLabel` par page. Recopié tel qu'imprimé, **l'espace compris** : sans lui `transposeLabel` ne verrait qu'un jeton et ne réécrirait rien. `fh`=30, le corps de la rangée de chiffres et non celui des accords. 2026-09-09 (itération 55)",
+ "corrections": {
+  "422,424": "A/C#"
+ },
+ "corrections_verified": "la seule du chant : « A/C# » du système y=422, que le matcher lit juste et à l'unanimité mais à +0,24, sous le seuil. Relue au rendu de rangée. 2026-09-09 (itération 55)",
+ "verified": "planche navigateur `npm run jianpu:audit`, 7 tranches, page rendue en mi bémol (D → Eb) : les 28 étiquettes lues, les 15 relues des rangées modulées et le second cadre « 1= E » portent toutes leur cadre, et aucun accord ne reste en ré ni en mi. Les crochets de reprise gardent leurs « ⌐1 » / « ⌐2 », le « 【Chorus】 » et la rangée de paroles y=844 sont intacts. Aucune étiquette ne porte `opt`, donc le sélecteur de tonalité n'apparaît pas — une modulation se suit, elle ne se choisit pas. 2026-09-09 (itération 55)",
+ "frozen_labels": [
+  {
+   "x": 77,
+   "y": 259,
+   "w": 17,
+   "h": 29,
+   "c": "D"
+  },
+  {
+   "x": 366,
+   "y": 259,
+   "w": 41,
+   "h": 29,
+   "c": "Bm"
+  },
+  {
+   "x": 682,
+   "y": 259,
+   "w": 18,
+   "h": 29,
+   "c": "G"
+  },
+  {
+   "x": 987,
+   "y": 259,
+   "w": 18,
+   "h": 29,
+   "c": "A"
+  },
+  {
+   "x": 1276,
+   "y": 259,
+   "w": 17,
+   "h": 29,
+   "c": "A"
+  },
+  {
+   "x": 230,
+   "y": 422,
+   "w": 17,
+   "h": 22,
+   "c": "D"
+  },
+  {
+   "x": 424,
+   "y": 422,
+   "w": 64,
+   "h": 22,
+   "c": "A/C#"
+  },
+  {
+   "x": 668,
+   "y": 422,
+   "w": 41,
+   "h": 22,
+   "c": "Bm"
+  },
+  {
+   "x": 1011,
+   "y": 422,
+   "w": 39,
+   "h": 22,
+   "c": "Em"
+  },
+  {
+   "x": 44,
+   "y": 656,
+   "w": 77,
+   "h": 22,
+   "c": "Asus4"
+  },
+  {
+   "x": 150,
+   "y": 656,
+   "w": 18,
+   "h": 22,
+   "c": "A"
+  },
+  {
+   "x": 350,
+   "y": 656,
+   "w": 55,
+   "h": 22,
+   "c": "F#m"
+  },
+  {
+   "x": 775,
+   "y": 656,
+   "w": 41,
+   "h": 22,
+   "c": "Bm"
+  },
+  {
+   "x": 1078,
+   "y": 656,
+   "w": 38,
+   "h": 22,
+   "c": "Em"
+  },
+  {
+   "x": 1223,
+   "y": 656,
+   "w": 17,
+   "h": 22,
+   "c": "A"
+  },
+  {
+   "x": 59,
+   "y": 925,
+   "w": 17,
+   "h": 46,
+   "c": "D"
+  },
+  {
+   "x": 414,
+   "y": 925,
+   "w": 17,
+   "h": 46,
+   "c": "D"
+  },
+  {
+   "x": 744,
+   "y": 925,
+   "w": 17,
+   "h": 46,
+   "c": "G"
+  },
+  {
+   "x": 907,
+   "y": 925,
+   "w": 18,
+   "h": 46,
+   "c": "A"
+  },
+  {
+   "x": 1050,
+   "y": 925,
+   "w": 55,
+   "h": 46,
+   "c": "F#m"
+  },
+  {
+   "x": 1264,
+   "y": 925,
+   "w": 41,
+   "h": 46,
+   "c": "Bm"
+  },
+  {
+   "x": 48,
+   "y": 1175,
+   "w": 18,
+   "h": 23,
+   "c": "G"
+  },
+  {
+   "x": 214,
+   "y": 1175,
+   "w": 17,
+   "h": 23,
+   "c": "A"
+  },
+  {
+   "x": 375,
+   "y": 1175,
+   "w": 17,
+   "h": 23,
+   "c": "D"
+  },
+  {
+   "x": 781,
+   "y": 1175,
+   "w": 18,
+   "h": 23,
+   "c": "G"
+  },
+  {
+   "x": 939,
+   "y": 1175,
+   "w": 17,
+   "h": 23,
+   "c": "A"
+  },
+  {
+   "x": 1115,
+   "y": 1175,
+   "w": 55,
+   "h": 23,
+   "c": "F#m"
+  },
+  {
+   "x": 1272,
+   "y": 1175,
+   "w": 41,
+   "h": 23,
+   "c": "Bm"
+  },
+  {
+   "x": 720,
+   "y": 1477,
+   "w": 75,
+   "h": 30,
+   "c": "1= E",
+   "fh": 30,
+   "alt": 2
+  },
+  {
+   "x": 43,
+   "y": 1410,
+   "w": 39,
+   "h": 29,
+   "c": "Em"
+  },
+  {
+   "x": 344,
+   "y": 1410,
+   "w": 17,
+   "h": 29,
+   "c": "A"
+  },
+  {
+   "x": 620,
+   "y": 1410,
+   "w": 18,
+   "h": 29,
+   "c": "A"
+  },
+  {
+   "x": 834,
+   "y": 1410,
+   "w": 14,
+   "h": 29,
+   "c": "B",
+   "alt": 2
+  },
+  {
+   "x": 1042,
+   "y": 1410,
+   "w": 12,
+   "h": 29,
+   "c": "E",
+   "alt": 2
+  },
+  {
+   "x": 1217,
+   "y": 1410,
+   "w": 64,
+   "h": 29,
+   "c": "B/D#",
+   "alt": 2
+  },
+  {
+   "x": 47,
+   "y": 1644,
+   "w": 58,
+   "h": 22,
+   "c": "C#m",
+   "alt": 2
+  },
+  {
+   "x": 498,
+   "y": 1644,
+   "w": 17,
+   "h": 22,
+   "c": "A",
+   "alt": 2
+  },
+  {
+   "x": 744,
+   "y": 1644,
+   "w": 11,
+   "h": 22,
+   "c": "E",
+   "alt": 2
+  },
+  {
+   "x": 1018,
+   "y": 1644,
+   "w": 15,
+   "h": 22,
+   "c": "B",
+   "alt": 2
+  },
+  {
+   "x": 45,
+   "y": 1878,
+   "w": 62,
+   "h": 22,
+   "c": "G#m",
+   "alt": 2
+  },
+  {
+   "x": 478,
+   "y": 1878,
+   "w": 58,
+   "h": 22,
+   "c": "C#m",
+   "alt": 2
+  },
+  {
+   "x": 809,
+   "y": 1878,
+   "w": 18,
+   "h": 22,
+   "c": "A",
+   "alt": 2
+  },
+  {
+   "x": 956,
+   "y": 1878,
+   "w": 15,
+   "h": 22,
+   "c": "B",
+   "alt": 2
+  },
+  {
+   "x": 1194,
+   "y": 1878,
+   "w": 11,
+   "h": 22,
+   "c": "E",
+   "alt": 2
+  }
+ ]
 }
