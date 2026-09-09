@@ -10,6 +10,7 @@ import {
   partialSlugs,
   slugsWithoutOverlay,
   songKey,
+  troncatures,
 } from "./helpers/jianpu";
 
 /** Échantillon testé. `PW_SLUGS="a,b"` pour cibler un chant précis ;
@@ -80,6 +81,19 @@ test.describe("partition 简谱", () => {
         (l) => l.left < -2 || l.left + l.width > image!.width + 2 || l.top < -2 || l.top + l.height > image!.height + 2
       );
       expect(debord.map((l) => `${l.printed} (+${Math.round(l.left + l.width - image!.width)} px)`)).toEqual([]);
+    });
+
+    // Le fond d'une étiquette est opaque : celle qui se peint après efface la
+    // fin de celle d'avant, et ce qui reste peut se lire comme un **autre**
+    // accord — « Gb/Bb » affiché « Gb/B ». Le test de chevauchement du
+    // balayage disait que deux boîtes se touchent ; il ne disait pas ce qu'un
+    // lecteur voit, et 31 étiquettes du corpus étaient dans ce cas
+    // (itération 56).
+    test(`${slug} — aucune étiquette n'est rognée par sa voisine`, async ({ page }) => {
+      await openSheet(page, slug, { key: target });
+      expect(
+        (await troncatures(page)).map((t) => `${t.shown} affiché « ${t.visible} »`)
+      ).toEqual([]);
     });
 
     test(`${slug} — calque complet, donc pas de bandeau d'avertissement`, async ({ page }) => {
