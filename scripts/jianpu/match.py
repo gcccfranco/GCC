@@ -505,19 +505,32 @@ def drawable(font_path: str, index: int, text: str) -> bool:
     return True
 
 
+def render_fonts(font_path: str, index: int) -> dict:
+    """Corps et déport de chaque genre de morceau, pour une fonte.
+
+    Une seule définition, parce qu'elle en avait deux : `face-plate.py`
+    recopiait celle-ci sous un commentaire qui disait pourtant « même
+    géométrie que `build_templates` — montrer un gabarit dessiné autrement
+    que celui qui a servi à lire ferait comparer à l'œil autre chose que ce
+    que le matcher a comparé ». La règle était juste, rien ne la tenait, et
+    le genre 3 de l'itération 52 n'est arrivé que dans une des deux copies.
+    """
+    primary = (font_path, index)
+    fallback = FALLBACK[_family_of(font_path, index)]
+    return {
+        0: (primary, fallback, int(FONT_SIZE), 0),
+        1: (primary, fallback, int(FONT_SIZE * SMALL), int(FONT_SIZE * RISE)),
+        2: (primary, fallback, int(FONT_SIZE * ACC_SMALL), int(FONT_SIZE * ACC_RISE)),
+        # Le déport est mesuré dans `_render`, glyphe par glyphe.
+        ACC_ON_LINE: (primary, fallback, int(FONT_SIZE), 0),
+    }
+
+
 def build_templates(
     vocab: list[str], semitones: int = 0, font_path: str = FONT, index: int = 0,
     wraps: tuple[str, ...] = ("{}",), risers: bool = True,
 ) -> dict[str, list]:
-    primary = (font_path, index)
-    fallback = FALLBACK[_family_of(font_path, index)]
-    fonts = {
-        0: (primary, fallback, int(FONT_SIZE), 0),
-        1: (primary, fallback, int(FONT_SIZE * SMALL), int(FONT_SIZE * RISE)),
-        2: (primary, fallback, int(FONT_SIZE * ACC_SMALL), int(FONT_SIZE * ACC_RISE)),
-        # Corps et déport mesurés dans `_render`, glyphe par glyphe.
-        ACC_ON_LINE: (primary, fallback, int(FONT_SIZE), 0),
-    }
+    fonts = render_fonts(font_path, index)
     out: dict[str, list] = {}
     for chord in vocab:
         sigs = []
