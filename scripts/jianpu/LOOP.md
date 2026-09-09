@@ -348,6 +348,8 @@ rangées les tronque.
 
 | 52 | **la famille ne suffit pas** : contraindre l'électeur automatique à la famille que l'œil a vue ne récupère que 39 des 131 publiables du libre mais paye 5 de ses 13 erreurs — 8 publiables par erreur contre 10, un rapport *pire* que celui qu'on corrigeait · l'itération 50 écrivait que les 38 pages sans calque portent toutes une fonte élue : **12 n'ont aucun `gold/`** et tombent sur la valeur par défaut, et ce sont les pires du classement · l'élection serif de 祷告 (itération 50) **n'a jamais été écrite** dans son `gold/` | **une troisième géométrie d'altération**, que rien ne proposait : mesuré sur le gravé de 祷告, le ♯ fait 1,31 fois la hauteur des lettres et **repose sur la ligne** — Times le laisse pendre 0,15 dessous, la variante surélevée le hisse 0,45 au-dessus. Ce n'est pas le corps qui manquait, c'est l'assise · deux géométries posées de tête et corrigées par la mesure (hauteur de capitale : fausse ; signe du déport : inversé) · la planche montrait les amas les plus **larges**, donc les arcs et les paroles sur les pages illisibles — 10 colonnes sur 10 en chinois sur 伯利恒的喜讯 ; le tri géométrique n'en voyait que 10 %, le score les sépare | calques **97 inchangés**, `chords.json` identique au bit près · banc **260 → 264** durs · **85 → 87** publiables · **3006/3155 → 3019/3158** gelés (le dénominateur monte : la détection gagne 3 amas) · 11 amas gagnent en justesse, 1 perd · sur les 97 certifiées **2618 → 2633 publiables à FAUX inchangé (9)** — premier réglage depuis l'itération 47 qui gagne sans payer en mode C · 再一次 : 3 colonnes d'accords sur 9 → **9 sur 9** · banc Playwright **389 tests**, tous verts |
 
+| 53 | **la fonte ne se lit pas dans la lecture** : cinq électeurs de plus mesurés et rejetés · la *ressemblance des distributions* au `.cho` est le compteur déguisé (corrélation de rang **+0,96**, même fonte élue sur 79 % des pages) · la *dispersion de la chasse*, jetée par la médiane de `width_factor`, porte un vrai signal (rang médian **2 sur 7**, hasard 4) mais n'est qu'à moitié indépendante (+0,61) et coûte 6,7 publiables par erreur · la *confirmation croisée hors famille* : 2720 publiables, **16 FAUX** contre 2633/**9** pour l'œil · le *désaccord au niveau de la page* échoue à plat — 最美的礼物 et 一生跟随 portent 10 des 22 erreurs avec un désaccord de 0,20 et 0,16 contre **0,19 de médiane sur les pages saines** · les *serif chinoises* (Songti, STSong) gagnent sur 1 page sur 6 | **la seule règle qui marche est circulaire** : entre la fonte couvrante et celle de l'œil, 1109 étiquettes lues pareil dont **1 fausse**, et 12 en désaccord (1,1 %) qui portent 9 des erreurs — mais le second lecteur y est *la bonne fonte*, et remplacé par une autre le test retombe à 16 FAUX · **correction à l'itération 50** : sur les 6 pages serif à vérité terrain, la famille serif est la meilleure sur 2, à égalité sur 2 et **la pire sur 2** — le verdict de famille de la planche est juste une fois sur deux, et « sans appel » était de trop | aucun calque nouveau · calques **97**, `chords.json` identique au bit près, banc inchangé (264/303 · 87 · 3019/3158) · **2 fontes écrites** (亲眼看见你 din-bold, 求充满这地 verdana-bold), les seules où planche et compteur s'accordent · banc Playwright **389 tests**, tous verts |
+
 ## Journal
 
 ### Itération 0 — mise en place
@@ -4443,3 +4445,118 @@ durs · 87 publiables · 3019/3158 gelés**.
   le dépôt ne garde pas.
 - **La rangée détectée mais muette n'a toujours pas d'outil** (itérations 50,
   51), et **l'alternative parenthésée solitaire** non plus (49).
+
+### Itération 53 — la fonte ne se lit pas dans la lecture
+
+L'itération 52 s'arrêtait sur un aveu : « je n'ai pas de règle pour arbitrer »
+quand l'œil et le compteur se contredisent sur la fonte. Cette itération a
+cherché cette règle systématiquement. **Elle n'existe pas**, et il vaut mieux
+l'avoir mesuré que supposé.
+
+**Cinq candidats de plus, tous rejetés, chacun pour sa raison.**
+
+*La ressemblance des distributions.* Le matcher connaît le **vocabulaire** du
+`.cho` — il ne choisit que dedans — mais ignore la **fréquence** de chaque
+accord. Un chant grave à peu près la même distribution sur sa partition que
+dans sa transcription : voilà une information que le matcher n'utilise pas,
+donc un arbitre non circulaire. Elle retrouve la fonte de `gold/` sur **54 %**
+des 97 pages, contre 48 % pour le simple compteur d'étiquettes. Le gain est un
+mirage : les deux électeurs désignent la même fonte sur **79 %** des pages, et
+la corrélation de rang entre cosinus et couverture est de **+0,96**. C'est le
+compteur déguisé — chaque lecture juste de plus rapproche mécaniquement la
+distribution de la vérité, si bien que la métrique ne sépare pas « lit les bons
+accords » de « lit plus d'accords ».
+
+*La dispersion de la chasse.* `width_factor` apparie chaque amas, calcule les
+écarts `tratio/ratio` et en prend la **médiane** — « elle encaisse sans broncher
+les amas mal appariés ». La dispersion autour de cette médiane est jetée, et
+c'est là que devrait vivre le signal : sous la bonne fonte tous les amas se
+mettent à l'échelle du même facteur, sous la mauvaise chacun se met à la sienne.
+Mesurée sur **tous** les amas — donc sur le même échantillon pour les sept
+fontes, ce qui l'affranchit de la couverture par construction. Elle porte
+vraiment de l'information : la fonte de `gold/` sort au **rang médian 2 sur 7**
+quand le hasard donne 4, et en tête sur 34 % des pages. Mais elle n'est
+qu'à moitié indépendante (+0,61 avec la couverture), et combinée à elle par
+somme des rangs elle donne **2673 publiables pour 15 FAUX** — +40 publiables
+pour +6 erreurs, soit 6,7 pour 1, *pire rapport que le compteur brut*.
+
+*La confirmation croisée, au niveau de l'amas.* Publier ce que la fonte
+couvrante lit, **à condition** qu'une fonte d'une autre famille lise la même
+chose : 2720 publiables, **16 FAUX**, contre 2633 / **9** pour l'œil. Encore de
+la couverture achetée avec du mode C.
+
+*Le désaccord au niveau de la page.* Puisque les erreurs ne sont pas dispersées
+mais **groupées par page** — 22 accords faux portés par 10 pages sur 93, dont 15
+sur quatre pages —, une erreur de fonte devrait se trahir par un taux de
+désaccord anormal sur toute la page. Elle ne se trahit pas : 最美的礼物 et
+一生跟随, qui portent **dix des vingt-deux erreurs**, ont un désaccord moyen de
+**0,20 et 0,16 contre une médiane de 0,19 sur les pages sans faute**. C'est
+l'itération 47 sous un nouveau visage — *un jury de variantes d'un même modèle
+ne voit pas l'erreur du modèle* —, et cette fois à l'échelle de la page.
+
+*La serif chinoise.* Ces recueils sont composés en Chine ou à Taïwan : leurs
+lettres latines pourraient venir de la fonte de texte han (Songti, STSong),
+serif mais aux proportions d'un caractère chinois, et aucune fonte CJK n'avait
+jamais été proposée au banc. Sur les six pages à gravure serif dont la vérité
+terrain existe, les trois Songti gagnent sur **une** (一生跟随, 33/33 contre
+32/32 pour `times-bold`) et perdent sur cinq. Trois fontes de plus au banc ne se
+paient pas d'une étiquette.
+
+**La seule chose qui marche est circulaire.** Sur les 46 pages certifiées où la
+fonte couvrante diffère de celle de l'œil, on peut séparer les étiquettes que
+les deux publient :
+
+| | étiquettes | fausses |
+|---|---|---|
+| les deux lisent **le même** accord | 1109 | **1** |
+| les deux lisent **des accords différents** | 12 | 9 (couvrante) + 3 (œil) |
+
+Deux gravures différentes qui donnent la même réponse ne se trompent
+pratiquement jamais, et **tout le risque tient dans 1,1 % des étiquettes**,
+repérables mécaniquement. Mais le second lecteur y est *la bonne fonte* : c'est
+elle qui rend l'accord probant. Remplacée par n'importe quelle autre fonte, la
+règle retombe à 16 FAUX. **On ne peut se servir de ce test qu'une fois la
+question résolue.**
+
+**Et une correction à la doctrine de l'itération 50.** Elle écrivait de la
+planche de 祷告 : « sans appel, la page est gravée en serif ». La page est bien
+serif — mais sur les six pages à gravure serif dont la vérité terrain existe,
+la famille serif est **la meilleure sur deux** (一生跟随 31/31, 哦十字架 29/29
+pour `georgia`), à égalité ou en retrait sur deux, et **la pire sur deux** :
+主的喜乐是我力量 (`times-bold` 4/7, trois faux, quand `helvetica-bold` fait
+11/13) et 祷告 elle-même (`times` 11/15 quatre faux, quand `din-bold` fait
+**32/32**), et cela **après** la correction de géométrie de l'itération 52, qui
+visait précisément ce dièse-là. *Le verdict de famille de la planche est juste
+une fois sur deux.* Il reste le meilleur instrument dont on dispose, mais il
+n'est pas sans appel, et 祷告 est une anomalie ouverte : une gravure serif que
+seule une grasse condensée lit sans faute.
+
+**Ce que l'itération a écrit.** Deux fontes seulement, celles où la planche et
+le compteur s'accordent — 亲眼看见你 en `din-bold` (quatre fontes lisent 21/44,
+donc le compteur ne départage pas ; ce qui tranche est que din-bold lit « Bm7 »
+juste là où helvetica lit « Em7 ») et 求充满这地 en `verdana-bold` (5/5 juste à
++0,18…+0,45, quand `helvetica-bold`, mieux notée à +0,71, n'en lit que 2/5).
+Sur les autres pages regardées, la planche dit serif et le compteur dit
+linéale ; après la mesure ci-dessus, écrire l'une ou l'autre serait un pari, et
+un pari ne s'écrit pas dans `gold/`.
+
+**Bilan.** Aucun calque nouveau : corpus 135, calques **97**, certifiés **97**,
+étiquettes 3 987, cadres 97 — `chords.json` identique au bit près, banc du
+matcher inchangé (264/303 durs · 87 publiables · 3019/3158 gelés). Les **389
+tests Playwright** passent, ainsi que `npx tsc --noEmit`, `npm run validate`
+(370 chants) et `npm run lint` (49 avertissements préexistants, 0 erreur).
+
+**Ce qui reste, nommé.**
+
+- **La fonte s'élit à l'œil, et rien ne la remplacera.** Sept électeurs
+  automatiques et deux schémas de confirmation ont été mesurés et rejetés
+  (itérations 50, 52, 53). Ne pas en reproposer sans une idée qui ne soit pas
+  une mesure de couverture déguisée.
+- **10 pages sans `gold/`**, sur les 12 de l'itération 52. Les huit qui restent
+  sont celles où la planche et le compteur se contredisent.
+- **祷告 est une anomalie ouverte** : gravure serif, lue sans faute par
+  `din-bold` seule. Son `gold/` n'a toujours pas de `face` — et lui en écrire
+  une demanderait de choisir entre ce que l'œil voit et ce que la vérité
+  terrain mesure.
+- **La rangée détectée mais muette** (50, 51) et **l'alternative parenthésée
+  solitaire** (49) n'ont toujours pas d'outil.
