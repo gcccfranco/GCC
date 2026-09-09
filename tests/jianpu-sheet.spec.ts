@@ -3,6 +3,7 @@ import {
   auditKey,
   certifiedSlugs,
   halfStepUp,
+  pitchClass,
   loadChords,
   openSheet,
   overlayLabels,
@@ -60,8 +61,13 @@ test.describe("partition 简谱", () => {
       ).toEqual([]);
 
       // Une étiquette écrite qui sort vide masque le gravé sans rien mettre
-      // à la place : l'accord disparaît de la page.
-      expect(ecrites.filter((l) => l.shown === "").map((l) => l.printed)).toEqual([]);
+      // à la place : l'accord disparaît de la page. Sauf celles que le
+      // **sélecteur de tonalité** masque à dessein : une rangée gravée dans
+      // une autre tonalité que la page (positions de capo, second jeu
+      // d'accords) n'est montrée que si on la demande.
+      expect(
+        ecrites.filter((l) => l.shown === "" && l.opt !== "hidden").map((l) => l.printed)
+      ).toEqual([]);
     });
 
     test(`${slug} — aucune étiquette ne déborde de la page`, async ({ page }) => {
@@ -102,6 +108,50 @@ test.describe("partition 简谱", () => {
         "étiquettes non transposées"
       ).toEqual([]);
       expect(ecrites.filter((l) => l.shown === "").map((l) => l.printed)).toEqual([]);
+    });
+  }
+
+  // **Le sélecteur de tonalité.** Une page qui porte deux jeux d'accords
+  // (positions de capo empilées, second jeu pour la reprise) les publie tous
+  // les deux et masque le second par défaut : l'oracle ci-dessus vérifie
+  // qu'il est bien masqué, celui-ci qu'il est bien **écrit** quand on le
+  // demande. Sans lui, une donnée `alt` cassée — perdue au gel, mal
+  // orthographiée — ne se verrait que sur une capture.
+  for (const slug of picked.filter((s) => chords[s]?.labels.some((l) => l.opt && l.c))) {
+    const printed = chords[slug].printedKey;
+    const target = auditKey(slug, printed);
+    const attendus = chords[slug].labels.filter((l) => l.opt && l.c).length;
+
+    test(`${slug} — le sélecteur écrit la seconde tonalité`, async ({ page }) => {
+      await openSheet(page, slug, { key: target });
+      await page.locator('[data-jianpu-altkey="on"]').click();
+      const { labels } = await overlayLabels(page);
+      const alternatives = labels.filter((l) => l.opt === "shown");
+      expect(alternatives.length).toBe(attendus);
+
+      // Même oracle que pour les accords de la page : au demi-ton au-dessus,
+      // aucun nom ne se conserve, et aucune étiquette ne doit sortir vide.
+      expect(alternatives.filter((l) => l.shown === "").map((l) => l.printed)).toEqual([]);
+      expect(
+        alternatives.filter((l) => l.shown === l.printed).map((l) => l.printed),
+        "seconde tonalité non transposée"
+      ).toEqual([]);
+
+      // `alt` ne doit changer que l'**orthographe** : les deux jeux montent
+      // du même intervalle. On compare donc les **hauteurs**, pas les noms —
+      // « C# » et « Db » sont la même note, et c'est la tonalité visée qui
+      // choisit. La table de `pitchClass` est indépendante du code testé,
+      // donc l'attendu ne se calcule pas avec ce qu'il vérifie.
+      if (target === halfStepUp(printed)) {
+        const fondamentale = (c: string) => c.match(/^\(?([A-G][#b]?)/)?.[1];
+        const faux = alternatives.filter((l) => {
+          const avant = fondamentale(l.printed);
+          const apres = fondamentale(l.shown);
+          if (!avant || !apres) return Boolean(avant) !== Boolean(apres);
+          return pitchClass(apres) !== (pitchClass(avant) + 1) % 12;
+        });
+        expect(faux.map((l) => `${l.printed} → ${l.shown}`)).toEqual([]);
+      }
     });
   }
 
