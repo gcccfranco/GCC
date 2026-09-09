@@ -69,6 +69,12 @@ OUT = os.path.join(HERE, "debug")
 #: Nombre d'amas montrés. Au-delà la planche ne tient plus à l'écran, et la
 #: fonte se voit sur les premiers : ce sont les mêmes lettres partout.
 SAMPLE = 9
+
+#: Score en deçà duquel un amas passe en fin de file — pas exclu, pour qu'une
+#: page que rien ne lit ait quand même une planche, mais montré en dernier.
+#: Volontairement bien plus bas que `MIN_SCORE` (0,28) : on ne cherche pas ici
+#: ce qui est publiable, seulement ce qui a la forme d'une étiquette.
+PLATE_MIN_SCORE = 0.0
 #: Hauteur à laquelle tout est ramené — gravé comme gabarit. Sans elle on
 #: compare une gravure de 24 px à un gabarit de 64, et c'est la taille qu'on
 #: regarde au lieu du dessin.
@@ -96,18 +102,14 @@ def _bitmap_bank(vocab: list[str], semitones: int, face: str) -> dict[str, list]
     de l'accord du `.cho` est « E/Ab », qui n'a pas un glyphe en commun avec
     lui.
     """
-    from match import FALLBACK, transpose
+    from match import render_fonts, transpose
 
-    path, index, family = FACES[face]
-    # Même géométrie **et même recours** que `build_templates` : montrer un
-    # gabarit dessiné autrement que celui qui a servi à lire ferait comparer à
-    # l'œil autre chose que ce que le matcher a comparé.
-    primary, fallback = (path, index), FALLBACK[family]
-    fonts = {
-        0: (primary, fallback, int(FONT_SIZE), 0),
-        1: (primary, fallback, int(FONT_SIZE * SMALL), int(FONT_SIZE * RISE)),
-        2: (primary, fallback, int(FONT_SIZE * ACC_SMALL), int(FONT_SIZE * ACC_RISE)),
-    }
+    path, index, _family = FACES[face]
+    # Même géométrie **et même recours** que `build_templates`, et désormais
+    # la même définition : montrer un gabarit dessiné autrement que celui qui
+    # a servi à lire ferait comparer à l'œil autre chose que ce que le
+    # matcher a comparé.
+    fonts = render_fonts(path, index)
     out: dict[str, list] = {}
     for chord in vocab:
         variants = []
@@ -155,30 +157,52 @@ def plate(slug: str) -> str | None:
         return None
     sigs = [signature(b) for _t, _x, b in cells]
 
-    # Les plus larges d'abord : ce sont elles qui séparent les fontes.
-    picked = sorted(cells, key=lambda c: -c[2].shape[1])[:SAMPLE]
-    picked_sigs = [signature(b) for _t, _x, b in picked]
-
-    lines = []
+    # Toute la page lue sous les sept fontes, **avant** de choisir ce qu'on
+    # montre : la sélection a besoin des scores, et le compteur de
+    # publiables les demandait déjà.
+    banks, reads = {}, {}
     for name in FACES:
         bank = face_bank(vocab, semitones, name)
         factor = width_factor(sigs, bank)
-        shown = _bitmap_bank(vocab, semitones, name)
         jurys = [build_templates(vocab, semitones, p, i)
                  for p, i in jury_faces(name) if os.path.exists(p)]
         jury_k = [width_factor(sigs, b) for b in jurys]
-        read = []
-        for sig in picked_sigs:
-            score, chord = best_match(sig, bank, factor)
-            unanimous = all(best_match(sig, b, k)[1] == chord for b, k in zip(jurys, jury_k))
-            read.append((chord, score, unanimous, _won(sig, shown, factor)[2]))
-        # Ce que la fonte publierait sur la page entière : le chiffre qui
-        # accompagne la ligne, jamais celui qui décide.
-        publiables = 0
+        banks[name] = (bank, factor)
+        out = []
         for sig in sigs:
             score, chord = best_match(sig, bank, factor)
             unanimous = all(best_match(sig, b, k)[1] == chord for b, k in zip(jurys, jury_k))
-            publiables += keep(score, unanimous)
+            out.append((chord, score, unanimous))
+        reads[name] = out
+
+    # **Ce qu'aucune fonte ne sait lire n'est pas une étiquette.** La
+    # planche montrait les amas les plus larges, et sur une page que le
+    # matcher ne lit pas — celles pour qui elle est faite — les plus larges
+    # sont les arcs de liaison, les crochets de reprise et les paroles :
+    # 10 colonnes sur 10 en caractères chinois sur 伯利恒的喜讯, 7 sur 10
+    # sur 是你的爱, 6 sur 9 en arcs sur 再一次 (itération 52). La planche
+    # était donc la plus muette exactement là où elle servait.
+    #
+    # Le tri géométrique ne les sépare pas : une suite de caractères chinois
+    # a le rapport largeur/hauteur d'un accord (le premier test n'en voyait
+    # que 10 %, et zéro sur 伯利恒的喜讯). Le score, lui, les sépare — un arc
+    # ou une parole ne corrèle avec aucun gabarit d'aucune fonte.
+    best_of = [max(reads[n][i][1] for n in FACES) for i in range(len(cells))]
+    order = sorted(range(len(cells)),
+                   key=lambda i: (best_of[i] < PLATE_MIN_SCORE, -cells[i][2].shape[1]))
+    keep_i = order[:SAMPLE]
+    picked = [cells[i] for i in keep_i]
+    picked_sigs = [sigs[i] for i in keep_i]
+
+    lines = []
+    for name in FACES:
+        bank, factor = banks[name]
+        shown = _bitmap_bank(vocab, semitones, name)
+        read = [reads[name][i][:2] + (reads[name][i][2], _won(sigs[i], shown, factor)[2])
+                for i in keep_i]
+        # Ce que la fonte publierait sur la page entière : le chiffre qui
+        # accompagne la ligne, jamais celui qui décide.
+        publiables = sum(keep(sc, un) for _c, sc, un in reads[name])
         lines.append((name, read, publiables))
 
     ui = ImageFont.truetype(UI, 15)
