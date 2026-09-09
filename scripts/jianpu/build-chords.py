@@ -151,11 +151,26 @@ def stray_chords(slug: str, path: str, labels: list[dict]) -> list[dict]:
 def alt_key(printed_key: str, alt: int) -> str:
     """Tonalité d'**orthographe** d'une rangée gravée `alt` demi-tons plus
     haut que la page. Le décalage appliqué reste celui de la page : les deux
-    jeux d'accords montent ensemble, et seule leur écriture diffère."""
+    jeux d'accords montent ensemble, et seule leur écriture diffère.
+
+    La préférence pour les bémols est celle du **moindre nombre
+    d'altérations** — Db (5♭) contre C# (7♯), Eb (3♭) contre D# (9♯), Ab (4♭)
+    contre G# (8♯), Bb (2♭) contre A# (10♯) —, et elle tranche du même côté
+    quelle que soit la page. Sauf au triton, où F# et Gb en font six chacun :
+    là le compte ne dit rien, et c'est la page qui dit de quel côté on lit
+    (itération 55). Ailleurs le compte garde le dernier mot — contraindre la
+    section à la famille de la page rendrait « Ab » en « G# » sur une page en
+    sol, ce qui est pire que le défaut corrigé.
+
+    Doit rester le miroir exact d'`altSpellingKey` dans `src/lib/transpose.ts`,
+    qui fait le rendu réel.
+    """
     i = note_index(printed_key)
     if i < 0 or not alt:
         return printed_key
     j = (i + alt) % 12
+    if j == 6:  # le triton depuis do : le seul degré où F# et Gb se valent
+        return "Gb" if printed_key in FLAT_KEYS or "b" in printed_key else "F#"
     return FLAT[j] if FLAT[j] in FLAT_KEYS else SHARP[j]
 
 
