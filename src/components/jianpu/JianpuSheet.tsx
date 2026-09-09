@@ -4,7 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import type { JianpuEntry } from "@/lib/jianpu/images";
 import { jianpuImageUrl, useJianpuChords } from "@/lib/jianpu/images";
-import { getTransposedKey, semitonesTo, transposeLabel } from "@/lib/transpose";
+import { altSpellingKey, getTransposedKey, semitonesTo, transposeLabel } from "@/lib/transpose";
 
 /** Les étiquettes du scan sont mesurées en **hauteur d'encre** (le haut d'une
  *  capitale au-dessus de la ligne de base), pas en corps de fonte. Passer
@@ -147,7 +147,7 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey, ca
   // demandé. Au-delà d'une alternative, on ne les nomme pas.
   const sounding = playedKey ?? chords?.printedKey ?? "C";
   const altKeyName =
-    altKeys.length === 1 ? getTransposedKey(sounding, altKeys[0]) : null;
+    altKeys.length === 1 ? altSpellingKey(sounding, altKeys[0]) : null;
 
   return (
     <div className={fit ? "flex h-full w-full flex-col items-center justify-center gap-2" : "flex flex-col items-center gap-6"}>
@@ -329,7 +329,7 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey, ca
                 // capo en ré reste écrite en ré au-dessus d'accords en fa.
                 const shown = hidden
                   ? ""
-                  : transposeLabel(l.c, chordSemitones, l.alt ? getTransposedKey(chordKey, l.alt) : chordKey);
+                  : transposeLabel(l.c, chordSemitones, altSpellingKey(chordKey, l.alt ?? 0));
                 const fontPx = fitFont(shown, l.fh ? l.fh / CAP_HEIGHT : chordFontPx, l.sp);
                 return (
                 <span
