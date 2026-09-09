@@ -349,6 +349,8 @@ rangées les tronque.
 | 52 | **la famille ne suffit pas** : contraindre l'électeur automatique à la famille que l'œil a vue ne récupère que 39 des 131 publiables du libre mais paye 5 de ses 13 erreurs — 8 publiables par erreur contre 10, un rapport *pire* que celui qu'on corrigeait · l'itération 50 écrivait que les 38 pages sans calque portent toutes une fonte élue : **12 n'ont aucun `gold/`** et tombent sur la valeur par défaut, et ce sont les pires du classement · l'élection serif de 祷告 (itération 50) **n'a jamais été écrite** dans son `gold/` | **une troisième géométrie d'altération**, que rien ne proposait : mesuré sur le gravé de 祷告, le ♯ fait 1,31 fois la hauteur des lettres et **repose sur la ligne** — Times le laisse pendre 0,15 dessous, la variante surélevée le hisse 0,45 au-dessus. Ce n'est pas le corps qui manquait, c'est l'assise · deux géométries posées de tête et corrigées par la mesure (hauteur de capitale : fausse ; signe du déport : inversé) · la planche montrait les amas les plus **larges**, donc les arcs et les paroles sur les pages illisibles — 10 colonnes sur 10 en chinois sur 伯利恒的喜讯 ; le tri géométrique n'en voyait que 10 %, le score les sépare | calques **97 inchangés**, `chords.json` identique au bit près · banc **260 → 264** durs · **85 → 87** publiables · **3006/3155 → 3019/3158** gelés (le dénominateur monte : la détection gagne 3 amas) · 11 amas gagnent en justesse, 1 perd · sur les 97 certifiées **2618 → 2633 publiables à FAUX inchangé (9)** — premier réglage depuis l'itération 47 qui gagne sans payer en mode C · 再一次 : 3 colonnes d'accords sur 9 → **9 sur 9** · banc Playwright **389 tests**, tous verts |
 
 | 53 | **la fonte ne se lit pas dans la lecture** : cinq électeurs de plus mesurés et rejetés · la *ressemblance des distributions* au `.cho` est le compteur déguisé (corrélation de rang **+0,96**, même fonte élue sur 79 % des pages) · la *dispersion de la chasse*, jetée par la médiane de `width_factor`, porte un vrai signal (rang médian **2 sur 7**, hasard 4) mais n'est qu'à moitié indépendante (+0,61) et coûte 6,7 publiables par erreur · la *confirmation croisée hors famille* : 2720 publiables, **16 FAUX** contre 2633/**9** pour l'œil · le *désaccord au niveau de la page* échoue à plat — 最美的礼物 et 一生跟随 portent 10 des 22 erreurs avec un désaccord de 0,20 et 0,16 contre **0,19 de médiane sur les pages saines** · les *serif chinoises* (Songti, STSong) gagnent sur 1 page sur 6 | **la seule règle qui marche est circulaire** : entre la fonte couvrante et celle de l'œil, 1109 étiquettes lues pareil dont **1 fausse**, et 12 en désaccord (1,1 %) qui portent 9 des erreurs — mais le second lecteur y est *la bonne fonte*, et remplacé par une autre le test retombe à 16 FAUX · **correction à l'itération 50** : sur les 6 pages serif à vérité terrain, la famille serif est la meilleure sur 2, à égalité sur 2 et **la pire sur 2** — le verdict de famille de la planche est juste une fois sur deux, et « sans appel » était de trop | aucun calque nouveau · calques **97**, `chords.json` identique au bit près, banc inchangé (264/303 · 87 · 3019/3158) · **2 fontes écrites** (亲眼看见你 din-bold, 求充满这地 verdana-bold), les seules où planche et compteur s'accordent · banc Playwright **389 tests**, tous verts |
+| 54 | *(ligne absente à l'époque, transcrite ici depuis le journal de l'itération)* — la **rangée muette** entre dans `propose-extra --all` : typée `chords`, ne publiant rien, invisible à `worklist` comme à `--hidden` · 50 sur les 97 certifiées, **aucune n'était une rangée d'accords manquée** ; 95 sur les 34 sans calque, et là elles parlent | le **sélecteur de tonalité** : `alt` (demi-tons entre l'étiquette et la page, orthographe seule) et `opt` (lecture *alternative*, donc masquable) · le gel jetait `alt` — trois copies de la liste des clés, une seule désormais (`LABEL_KEYS`) | corpus 135, calques **97 → 98** (在这里), étiquettes 3 987 → **4 045** dont 16 en seconde tonalité · **394 tests** Playwright |
+| 55 | **deux pages à deux tonalités, certifiées** · 我要爱慕你 : trois rangées gravées en **fa** au-dessus de ses accords en mi, que *rien* ne voyait — ni `read()`, ni `foreign_rows`, ni les trois chasses de `worklist`, ni la rangée muette (le découpage ne les isole jamais) ; trouvées au profil d'encre, ligne à ligne · 有你同行 : la **première vraie modulation** (+2 au milieu d'une rangée), avec son second cadre « 1= E » gravé dans la rangée de chiffres — `alt` **sans** `opt`, donc pas de sélecteur | **`alt` n'est pas inerte, et il pouvait nuire** : 24 des 143 rendus de 有你同行 changent selon qu'on le lit, et à **2 tonalités sur 11 il rendait la section moins lisible que pas d'`alt` du tout** — page en mi, tout en dièses, section en Gb / Db / Ebm / Bbm sous des G#m / C#m · la préférence pour les bémols de `getTransposedKey` est celle du **moindre nombre d'altérations**, qui tranche partout **sauf au triton** (F# et Gb en font six chacun) : `altSpellingKey` y tranche par la page · **le réflexe était faux** — contraindre la section à la famille de la page rend « Ab » en « G# » et « Bb » en « A# », mesuré avant d'écrire | corpus 135, calques **98 → 100**, tous certifiés · étiquettes 4 045 → **4 141**, dont **46** portant `alt` et 33 `opt` · cadres 1=X **100** · banc du matcher inchangé (0 amas bougé) · **405 tests** Playwright (394 avant), `npx tsc --noEmit`, `npm run validate` (370 chants), `npm run lint` (49 avertissements préexistants, 0 erreur) |
 
 ## Journal
 
@@ -4694,6 +4696,142 @@ autre page de `chords.json` ne bouge.
 - **Le PDF n'a pas le sélecteur.** Il imprime la tonalité jouée seule, donc
   les lectures alternatives y restent des masques. Une page imprimée perd
   ainsi ce que l'écran sait montrer.
+- **La fonte s'élit à l'œil** (50, 52, 53), **10 pages sans `gold/`**, **祷告
+  reste une anomalie ouverte**, et **l'alternative parenthésée solitaire**
+  (49) n'a toujours pas d'outil.
+
+### Itération 55 — deux pages à deux tonalités, et l'égalité au triton
+
+L'itération 54 finissait sur une liste. Les deux premiers points en sortent
+certifiés — et le second a ouvert un défaut que personne ne cherchait.
+
+**我要爱慕你 : trois rangées que rien ne voyait.** La page grave son refrain
+sur **deux rangées** — les accords en mi, et au-dessus les mêmes en fa, pour
+la reprise montée d'un ton. Elle le dit elle-même en clair, à droite du
+dernier système : « (升调时第三拍进'我心满溢') », « quand on monte le ton,
+entrer sur le 3ᵉ temps ».
+
+Ces trois rangées-là échappaient à **tout** le dispositif : le découpage ne
+les isole jamais, donc elles n'entrent pas dans `read()`, donc ni
+`foreign_rows` ni les trois chasses de `worklist` ne les atteignent — et la
+rangée muette de l'itération 54 ne les voit pas non plus, puisqu'elle part
+du verdict du classifieur et qu'il n'y a pas de verdict. Aucun outil ne les
+proposait ; elles ont été trouvées en lisant le **profil d'encre** de la
+page, ligne par ligne, entre les rangées connues. C'est le mode D dans sa
+forme la plus nue, et le seul instrument qui l'attrape est celui qui ne
+présuppose rien.
+
+La preuve croisée du +1 est dans la gravure : le 2ᵉ système écrit
+« (Eb/F  F/A) » au-dessus de « (D/E  E/G#) », ce que `transpose_label(…, +1)`
+rend au caractère près.
+
+Trois des neuf corrections de cette page étaient du **mode C** — retenues et
+fausses : un « C#m7 » lu F#m7, et les deux groupes parenthésés
+« (D/E   E/G#) » et « (G#/C) » lus Bsus4. Aucun compteur ne les signalait :
+ils comptaient trois réussites.
+
+**Deux étiquettes reposées à la main**, pour ce que la géométrie de l'amas
+ne sait pas dire. Le « E » du crochet de 2ᵉ fin est soudé au « ⌐2 » dans un
+seul amas : corrigé tel quel, son fond opaque aurait effacé le crochet. Il
+part donc en `not_labels`, et revient en `extra_labels` sur la boîte d'encre
+de la lettre seule. Même geste pour « (B/D#，仅第一次) », gravé dans une bande
+que le découpage n'attribue à aucune rangée.
+
+**有你同行 : la première vraie modulation.** L'itération 54 écrivait : « une
+vraie modulation — une section entière qui se suit — devra s'écrire sans
+`opt`, et rien ne l'a encore vérifiée ». C'est fait. Le chant monte en **mi**
+(+2) au milieu du système y=1410 et y reste jusqu'à la fin.
+
+La page l'annonce, et à l'endroit exact : elle grave un **second cadre
+« 1= E »** dans la **rangée de chiffres**, à la mesure où les accords
+changent. C'est le cadre de l'itération 40, celui que `measure-keylabel` ne
+peut pas voir parce qu'il n'ancre qu'en haut de page à gauche. Il n'est pas
+sorti d'`inline-key.py` non plus — il est sorti d'un zoom sur l'endroit où
+les accords cessaient d'être en ré.
+
+y=1410 est la première rangée du corpus qui **change de tonalité en son
+milieu** : trois accords en ré, trois en mi. La donnée savait déjà le dire —
+`alt` est porté par l'étiquette, pas par la rangée (itération 54) — et il
+n'a rien fallu ajouter. Mais toute la rangée passe par `alt_labels`, y
+compris sa moitié en ré : `foreign_rows` l'écarte **en bloc**, et c'est
+justement pour elle que la garde existe, puisque le vocabulaire fermé y
+publiait « F#m A D » pour « C#m A E » (itération 21).
+
+Le sélecteur de tonalité **n'apparaît pas** sur cette page, et c'est le
+verdict : `altKeys` se calcule sur `l.opt && l.c`, une modulation se suit, on
+ne la choisit pas.
+
+**Et là, une question qu'on croyait rhétorique.** `alt` ne change que
+l'orthographe — donc, s'était-on dit, presque rien. Deux pages en mi bémol,
+deux pages en fa, les mêmes noms des deux côtés : autant dire inerte. La
+phrase était écrite avant d'être vérifiée.
+
+Mesuré : **24 des 143 rendus** des étiquettes `alt` de 有你同行 changent selon
+qu'on lit `alt` ou non. Et à **2 tonalités sur 11, `alt` rendait la page
+moins lisible que pas d'`alt` du tout** — la page rendue en **mi**, tout en
+dièses, affichait sa modulation en `Gb Db Ebm Bbm` juste sous des accords en
+`G#m C#m F#m`. Regardé à l'écran, c'est immédiat ; sur la table de chiffres,
+ça n'était qu'une colonne d'écarts.
+
+**Le réflexe était faux, et il a été mesuré avant d'être écrit.** La
+correction qui vient à l'esprit — « que la section prenne la famille
+d'altérations de la page » — a été essayée sur les trois pages et les douze
+tonalités : elle rend « Ab » en « G# » sur une page en sol et « Bb » en
+« A# » sur une page en la, soit 4 tonalités sur 12 dégradées pour en réparer
+2. Elle est plus mauvaise que le défaut.
+
+La vraie règle était sous les yeux depuis le début, mal nommée. La
+« préférence pour les bémols » de `getTransposedKey` est en fait celle du
+**moindre nombre d'altérations** : Db (5♭) contre C# (7♯), Eb (3♭) contre
+D# (9♯), Ab (4♭) contre G# (8♯), Bb (2♭) contre A# (10♯). Le compte tranche,
+et du même côté quelle que soit la page — voilà pourquoi la contraindre est
+une faute. Il reste **un** degré où il ne tranche pas : F# et Gb font six
+altérations chacun. À égalité, et seulement là, c'est la page qui dit de quel
+côté on lit. `altSpellingKey` fait ça, en trois lignes.
+
+`getTransposedKey` est laissé intact : il nomme aussi la tonalité du chant,
+le capo et les blocs du mode louange, et l'égalité au triton n'y a pas
+forcément la même réponse. Le miroir Python (`alt_key`) suit ; il ne change
+aucun calque aujourd'hui — les trois pages à section en autre tonalité sont
+toutes à décalage nul — mais il devait rester juste pour la prochaine.
+
+**Le premier oracle écrit pour ce défaut ne regardait rien.** « Sur une page
+en dièses, aucune étiquette réécrite ne porte de bémol » : vrai, testé, vert
+avant comme après le correctif sur 在这里. Ses lectures alternatives sont
+`opt`, donc **masquées par défaut**, donc rendues vides — le filtre les
+écartait toutes et le test passait sur l'ensemble vide. Il allume maintenant
+le sélecteur quand il existe et compare le **compte** des étiquettes rendues
+à celui du calque. C'est la leçon de l'itération 54 sur l'oracle qui ne
+pouvait pas voir la nouveauté, reprise par l'autre bout : un oracle qui ne
+peut pas échouer ne mesure rien, et il faut le lui faire échouer une fois
+pour le savoir. Les deux versions ont été passées sans le correctif : la
+première, verte ; la seconde, rouge sur les deux pages.
+
+**Bilan.** Corpus 135, calques **98 → 100**, tous certifiés. Étiquettes
+4 045 → **4 141**, dont 46 portant `alt` et 33 `opt`. Cadres « 1=X » **100**.
+Banc du matcher inchangé (272/316 durs, 87 publiables, 3 120/3 276 gelés,
+**0 amas dont la lecture a bougé** — rien n'a été touché au matcher). **405
+tests Playwright** (394 avant), `npx tsc --noEmit`, `npm run validate`
+(370 chants) et `npm run lint` (49 avertissements préexistants, 0 erreur).
+`chords.json` ne bouge sur aucune autre page.
+
+**Ce qui reste, nommé.**
+
+- **`C#/F` devrait s'écrire `C#/E#`.** Une page rendue en fa dièse écrit sa
+  basse `F` : `transposeChord` sort du tableau `SHARPS`, où E# n'existe pas
+  (il n'est qu'en lecture, dans `EXTRAS`). Ce n'est pas propre à `alt` — c'est
+  vrai de tout accord transposé dans une tonalité à sept dièses — et ça touche
+  toute l'appli, pas seulement le calque. Non corrigé ici.
+- **Le `.cho` de 有你同行 ne porte pas la modulation.** Son texte s'arrête au
+  refrain en ré ; la page ajoute une reprise du couplet un ton plus haut, sur
+  les mêmes paroles. C'est une reprise d'exécution, pas du contenu manquant —
+  mais la feuille d'accords, elle, reste en ré de bout en bout.
+- **Les 82 rangées muettes des pages sans calque** ne sont toujours pas
+  cataloguées (itération 54) ; deux des pages nommées là-bas sont maintenant
+  certifiées, les 32 autres attendent.
+- **Le PDF n'a pas le sélecteur** — il imprime la tonalité jouée seule, donc
+  les lectures alternatives y restent des masques. Il suit en revanche la
+  même règle d'orthographe depuis cette itération.
 - **La fonte s'élit à l'œil** (50, 52, 53), **10 pages sans `gold/`**, **祷告
   reste une anomalie ouverte**, et **l'alternative parenthésée solitaire**
   (49) n'a toujours pas d'outil.
