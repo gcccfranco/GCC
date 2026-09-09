@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import type { JianpuEntry } from "@/lib/jianpu/images";
 import { jianpuImageUrl, useJianpuChords } from "@/lib/jianpu/images";
@@ -128,6 +129,25 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey, ca
   // qui ont été réécrits — montrer où l'on est sûr vaut mieux que laisser
   // croire que toute la page est convertie.
   const partial = Boolean(overlayOn && chords?.complete === false);
+  // **Le sélecteur de tonalité.** Certaines gravures portent deux jeux
+  // d'accords pour la même musique : des positions de capo empilées
+  // au-dessus des accords réels. Les publier tous les deux ferait une page
+  // à deux tonalités ; n'en publier qu'un jetterait ce que la gravure dit.
+  // On publie donc les deux et l'on demande — la lecture alternative est
+  // masquée par défaut, et ce bouton la montre.
+  const altKeys = chords
+    ? [...new Set(chords.labels.filter((l) => l.opt && l.c).map((l) => l.alt ?? 0))]
+    : [];
+  const [showAlt, setShowAlt] = useState(false);
+  const selector = overlayOn && altKeys.length > 0;
+  // Les deux tonalités **jouées**, pour que le bouton dise ce qu'il montre
+  // plutôt que « l'autre ». On les nomme depuis la tonalité choisie et non
+  // depuis `chordKey`, qui est celle des *positions* : avec un capo les
+  // deux montent du même intervalle, et c'est le son que l'utilisateur a
+  // demandé. Au-delà d'une alternative, on ne les nomme pas.
+  const sounding = playedKey ?? chords?.printedKey ?? "C";
+  const altKeyName =
+    altKeys.length === 1 ? getTransposedKey(sounding, altKeys[0]) : null;
 
   return (
     <div className={fit ? "flex h-full w-full flex-col items-center justify-center gap-2" : "flex flex-col items-center gap-6"}>
@@ -149,6 +169,35 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey, ca
           {chords?.printedKey ? ` (${chords.printedKey})` : ""}
           {chords?.keyLabel ? "" : `, comme l’indication « 1=${chords?.printedKey} » en haut de page`}{" "}
           et ne suivent pas la transposition — les chiffres, eux, restent justes.
+        </div>
+      )}
+
+      {selector && (
+        <div className="flex w-full max-w-2xl items-center justify-center gap-2 text-xs">
+          <span className="text-neutral-500 dark:text-neutral-400">Accords :</span>
+          <div className="inline-flex overflow-hidden rounded-full border border-neutral-300 dark:border-neutral-700">
+            {[false, true].map((v) => (
+              <button
+                key={String(v)}
+                type="button"
+                data-jianpu-altkey={v ? "on" : "off"}
+                aria-pressed={showAlt === v}
+                onClick={() => setShowAlt(v)}
+                className={
+                  "px-3 py-1 font-medium transition-colors " +
+                  (showAlt === v
+                    ? "bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-900"
+                    : "text-neutral-600 hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-neutral-800")
+                }
+              >
+                {v
+                  ? altKeyName
+                    ? `${sounding} et ${altKeyName}`
+                    : "Toutes les tonalités"
+                  : `${sounding} seul`}
+              </button>
+            ))}
+          </div>
         </div>
       )}
 
@@ -270,12 +319,28 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey, ca
                 // gravée au corps de la page (ligne d'intro, mention entre
                 // parenthèses). Absent, c'est `labelH` — donc rien ne bouge
                 // pour les étiquettes déjà publiées.
-                const shown = transposeLabel(l.c, chordSemitones, chordKey);
+                // Une lecture alternative que l'on n'a pas demandée reste un
+                // masque : la boîte blanche couvre l'accord gravé, mais rien
+                // n'est réécrit. C'est exactement ce que `mask_rows` faisait
+                // avant que le calque sache porter les deux jeux.
+                const hidden = Boolean(l.opt) && !showAlt;
+                // `alt` ne change pas le décalage — les deux jeux montent
+                // ensemble — mais la tonalité d'orthographe : une rangée de
+                // capo en ré reste écrite en ré au-dessus d'accords en fa.
+                const shown = hidden
+                  ? ""
+                  : transposeLabel(l.c, chordSemitones, l.alt ? getTransposedKey(chordKey, l.alt) : chordKey);
                 const fontPx = fitFont(shown, l.fh ? l.fh / CAP_HEIGHT : chordFontPx, l.sp);
                 return (
                 <span
                   key={n}
                   data-jianpu-label={l.c}
+                  // L'oracle de transposition tient une étiquette écrite qui
+                  // sort vide pour un accord disparu. Une lecture alternative
+                  // masquée par le sélecteur en est une, et légitimement :
+                  // sans ce marqueur le banc ne peut pas les distinguer.
+                  data-jianpu-alt={l.alt ?? undefined}
+                  data-jianpu-opt={l.opt ? (showAlt ? "shown" : "hidden") : undefined}
                   className={
                     "absolute flex items-end whitespace-nowrap bg-white dark:bg-black " +
                     (partial
