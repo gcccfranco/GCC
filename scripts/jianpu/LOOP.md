@@ -4815,13 +4815,17 @@ tests Playwright** (394 avant), `npx tsc --noEmit`, `npm run validate`
 (370 chants) et `npm run lint` (49 avertissements préexistants, 0 erreur).
 `chords.json` ne bouge sur aucune autre page.
 
+**Une chose qui n'est pas à corriger.** Une page rendue en fa dièse écrit sa
+basse `C#/F` là où la théorie de fa dièse majeur dit `C#/E#` — `transposeChord`
+sort du tableau `SHARPS`, où E# n'existe qu'en lecture (`EXTRAS`). C'était
+noté ici comme une limite ; c'en est une de la gravure classique, pas de la
+**grille d'accords**, qui est ce que ce site imprime. Sur une feuille
+d'accords la basse d'un renversement se note au nom le plus simple, et `C#/F`
+est ce qu'un musicien y attend (décision de Timothée, 09/09/2026). Ne pas y
+toucher, et ne pas le re-signaler.
+
 **Ce qui reste, nommé.**
 
-- **`C#/F` devrait s'écrire `C#/E#`.** Une page rendue en fa dièse écrit sa
-  basse `F` : `transposeChord` sort du tableau `SHARPS`, où E# n'existe pas
-  (il n'est qu'en lecture, dans `EXTRAS`). Ce n'est pas propre à `alt` — c'est
-  vrai de tout accord transposé dans une tonalité à sept dièses — et ça touche
-  toute l'appli, pas seulement le calque. Non corrigé ici.
 - **Le `.cho` de 有你同行 ne porte pas la modulation.** Son texte s'arrête au
   refrain en ré ; la page ajoute une reprise du couplet un ton plus haut, sur
   les mêmes paroles. C'est une reprise d'exécution, pas du contenu manquant —
