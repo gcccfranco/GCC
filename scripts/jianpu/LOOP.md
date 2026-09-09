@@ -343,7 +343,10 @@ rangées les tronque.
 | 47 | **le banc mesurait dans la mauvaise convention** : `corrections` nomme comme le `.cho`, `frozen_labels` comme la page — 40 des 63 « lectures retenues et fausses » n'étaient que ce décalage (le piège de l'itération 34, reparu dans l'outil fait pour le mesurer) · comparaison par **hauteurs** et non par chaînes | **les trois signaux d'incertitude échouent** : score 1/8, marge 2/8 (193 justes à relire), désaccord des 7 fontes 3/8 (514 justes) — six des huit fausses ont une marge supérieure à la médiane des justes, trois sont unanimes sur les sept fontes. *Un jury de variantes d'un même modèle ne voit pas l'erreur du modèle.* · la vraie cause : le découpage **ampute les jambages** — `Gmaj7` sans la queue de son « j » a `F#m7` pour plus proche voisin · le débordement se fait dans les **deux** sens, et c'est le bas qui apporte tout (par le haut seul : rien) · garde de mode D dans `build-chords` | **79 /127 certifiés** (爱可以再更多一点点) · banc 197 → **234** durs lus, 37 → **76** publiables, mode C **8 → 3** (0,15 %) · calques 93 → **91** (奔跑不放弃 retenue par la garde, 2 pages sous le plancher) · étiquettes 3590, cadres 91 · banc Playwright **329 tests** |
 | 48 | **les pages sous le plancher n'avaient aucun outil** — `propose-extra`, la planche d'audit et `dissent` lisent tous `chords.json`, où une page sous les 60 % n'est pas : les 36 pages qui ont le plus besoin d'yeux étaient celles que l'outillage refusait (3ᵉ fois de cette forme, cf. 33 et 37) · `build-chords` construit un calque **provisoire**, sans le plancher ni la garde de mode D | **38 % de la file « à relire » n'étaient pas des accords** : une barre de mesure fait 2 × 10 px et il y en a une par mesure — 319 amas → **199** sur les 91 calques, les 12 plus gros écartés rendus et regardés (12 arcs, 0 accord) · plancher à 5 × 11, sous la plus petite étiquette réelle (9 × 13 sur 3 174) · **deux réglages de chasse mesurés et rejetés** (chasse sur le corps : publiables 76 → 104 mais exactitude 234 → 213 ; meilleure de deux coupes : +1 mode C) — tous deux augmentent la *confiance*, et la confiance n'était pas ce qui était cassé (itération 47) | **80 /127 certifiés** (差遣我, douze amas tous lus juste et rejetés par le seuil) · calques 91, étiquettes 3602, cadres 91 · la file « PRÊT » passe de 0 à **5** sans qu'aucun travail ait été fait dessus — le compteur a cessé de compter des barres de mesure |
 
+
 | 49 | **la file s'est vidée pour de bon** : les 11 pages qui avaient un calque non certifié ont été prises en une seule passe — `propose-extra --all --hidden` sur le lot (118 amas, 6 planches de zooms), écriture des `extra_labels`, **puis** l'audit navigateur, au lieu d'un audit avant *et* après par page ; le second aller-retour ne servait qu'à revoir ce qu'on venait d'écrire | **l'alternative parenthésée seule au-dessus de sa rangée n'a aucun outil** : 坐在宝座上圣洁羔羊 en porte quatre — (Gm7) ×2, (G/B ) ×2 — dans des bandes que le classifieur ne type pas `chords`, à 1 amas par bande, donc sous le plancher de `hidden_rows` (2 amas appariés depuis l'itération 45) et hors de `welded_rows` (qui fouille une bande *trop haute*) · seul l'audit les voit · **un accord peut être cité dans une phrase** : 神羔羊配得 écrit « （还有两个空小节 D7 G） » au corps du texte, deux accords vrais que `fh` rend à leur taille · **un amas peut être plus petit que 5 px** : le premier `F` de 你是配的 sort sur 4 px et celui de 坐在宝座上圣洁羔羊 sur 3, tous deux écartés par le plancher de l'itération 48 | **91 /127 certifiés** (再次将我更新, 愿为主闪亮, 我们是光明之子, 这一生最美的祝福, 一生敬拜你, 为我而来, 你是配的, 坐在宝座上圣洁羔羊, 想起你, 最美的礼物, 神羔羊配得) — **les 91 calques publiés sont tous certifiés et tous complets**, la file est vide et le restera : il n'y a plus de page à certifier qui ait un calque · étiquettes 3602 → **3712**, cadres 91 · banc Playwright **365 tests**, tous verts · un mode D entier retrouvé à l'audit sur 这一生最美的祝福 (la rangée d'intro Gmaj7 · D/A · Gmaj7, jamais isolée par le découpage) |
+
+| 52 | **la famille ne suffit pas** : contraindre l'électeur automatique à la famille que l'œil a vue ne récupère que 39 des 131 publiables du libre mais paye 5 de ses 13 erreurs — 8 publiables par erreur contre 10, un rapport *pire* que celui qu'on corrigeait · l'itération 50 écrivait que les 38 pages sans calque portent toutes une fonte élue : **12 n'ont aucun `gold/`** et tombent sur la valeur par défaut, et ce sont les pires du classement · l'élection serif de 祷告 (itération 50) **n'a jamais été écrite** dans son `gold/` | **une troisième géométrie d'altération**, que rien ne proposait : mesuré sur le gravé de 祷告, le ♯ fait 1,31 fois la hauteur des lettres et **repose sur la ligne** — Times le laisse pendre 0,15 dessous, la variante surélevée le hisse 0,45 au-dessus. Ce n'est pas le corps qui manquait, c'est l'assise · deux géométries posées de tête et corrigées par la mesure (hauteur de capitale : fausse ; signe du déport : inversé) · la planche montrait les amas les plus **larges**, donc les arcs et les paroles sur les pages illisibles — 10 colonnes sur 10 en chinois sur 伯利恒的喜讯 ; le tri géométrique n'en voyait que 10 %, le score les sépare | calques **97 inchangés**, `chords.json` identique au bit près · banc **260 → 264** durs · **85 → 87** publiables · **3006/3155 → 3019/3158** gelés (le dénominateur monte : la détection gagne 3 amas) · 11 amas gagnent en justesse, 1 perd · sur les 97 certifiées **2618 → 2633 publiables à FAUX inchangé (9)** — premier réglage depuis l'itération 47 qui gagne sans payer en mode C · 再一次 : 3 colonnes d'accords sur 9 → **9 sur 9** · banc Playwright **389 tests**, tous verts |
 
 ## Journal
 
@@ -4301,3 +4304,142 @@ et 50 en ont relu cent vingt à l'œil).
   calques, toutes du bruit** (arcs, barres de croches, points d'octave,
   paroles, un titre anglais) — regardées une par une sur planche. C'est donc
   un contrôle qui se fait à l'œil, une fois par balayage, pas un filtre.
+
+### Itération 52 — l'élection de la fonte, et une géométrie que rien ne proposait
+
+L'itération 50 laissait un régime nommé : « `face-plate.py` n'a servi qu'à deux
+pages ; les 38 restantes portent une fonte que personne n'a regardée, et la
+mesure dit ce que cela coûte. » Cette itération l'a suivi, et il a livré autre
+chose que ce qu'il annonçait.
+
+**Le relevé contredit d'abord la phrase qui l'ouvrait.** L'itération 50 écrit
+que les 38 pages sans calque « portent **toutes** une fonte élue par
+`sweep-key` ». Elles sont **douze à n'avoir aucun fichier `gold/`** — ni fonte,
+ni tonalité imprimée. Elles ne portent pas une mauvaise élection : elles n'ont
+jamais été balayées, et tombent sur la valeur par défaut (`helvetica-neue`,
+décalage 0). Ce sont aussi les pires du classement — 0 %, 2 %, 4 %, 5 %, 8 %,
+14 %, 17 %. Le diagnostic de l'itération 50 portait sur une population qui
+n'existait pas telle qu'elle la décrivait.
+
+**Et la fonte élue à l'itération 50 n'a jamais été écrite.** Le journal dit de
+祷告 : « la planche est sans appel, la page est gravée en serif ». Son `gold/`
+n'a pas de champ `face`. La page lit aujourd'hui sous la valeur par défaut. Ce
+qui l'a sauvée n'était pas l'élection — c'étaient ses 45 étiquettes écrites à
+la main.
+
+**Première hypothèse, mesurée et rejetée.** L'œil est bon pour la famille
+(serif / linéale / grasse), le compteur suffirait à l'intérieur d'une famille —
+`times` contre `times-bold` est un choix entre deux squelettes identiques. Les
+trois électeurs, sur les 97 pages certifiées, contre `frozen_labels` :
+
+| électeur | publiables | justes | **FAUX** |
+|---|---|---|---|
+| la fonte de `gold/` (l'œil) | 2618 | 2609 | **9** |
+| la mieux au seuil, 7 fontes | 2749 | 2727 | **22** |
+| la mieux au seuil, **dans la famille** de l'œil | 2657 | 2643 | **14** |
+
+Contraindre l'électeur à la famille que l'œil a vue ne rend pas l'élection
+automatique sûre : elle la rend seulement plus petite. (c) ne récupère que 39
+des 131 publiables de (b) mais paye 5 de ses 13 erreurs — **8 publiables par
+erreur contre 10, donc un rapport pire que celui qu'on voulait corriger.**
+L'œil n'élit pas une famille, il élit une fonte, et le choix résiduel à
+l'intérieur d'une famille coûte le même taux de mode C que le choix entre
+familles. C'est le cinquième réglage de suite qui achète de la couverture avec
+du mode C (itérations 48, 50 × 4, 52).
+
+**Deuxième hypothèse, fausse elle aussi, et c'est elle qui a payé.** Le
+compteur n'élit **jamais** une serif, sur aucune des douze, pas même sur les
+pages que l'œil lit sans hésiter comme serif. J'en ai conclu que les gabarits
+serif étaient handicapés. Le test loyal — les 5 pages certifiées dont l'œil a
+élu une serif — dit le contraire : les serif y **gagnent** (一生跟随 31/31
+contre 29/34 et 5 faux pour `helvetica-bold` ; 哦十字架 29/29 pour `georgia`).
+Les 58 % de justesse brute des serif sur le corpus entier ne mesuraient que
+« mauvaise fonte sur mauvaise page ». *Une famille jugée sur un corpus qui ne
+lui appartient pas ne peut que perdre.*
+
+**Mais le chemin a trouvé la vraie chose.** En cherchant pourquoi `times` lisait
+mal une page manifestement serif, j'ai mesuré le plus large amas de 祷告 —
+« E/G♯ » — au lieu de le regarder, en fraction de la hauteur des lettres :
+
+| | hauteur du ♯ | dépasse au-dessus | descend sous la ligne |
+|---|---|---|---|
+| gravé | 1,31 | 0,35 | −0,04 |
+| genre 0 (`times`) | 1,18 | 0,05 | +0,15 |
+| genre 2 (surélevé) | 1,09 | 0,45 | −0,37 |
+
+Le signe gravé a donc **déjà la bonne taille** — ce n'est pas le corps qui
+manque — mais il **repose sur la ligne**, quand Times le laisse pendre en
+dessous et que la variante surélevée le hisse deux fois trop haut. Il y avait
+deux géométries d'altération depuis l'itération 46 ; il en manquait une
+troisième, et c'est celle que les recueils à empattements emploient. Le genre 3
+garde le corps et remonte le glyphe de son **propre** débord sous la ligne de
+pied, mesuré glyphe par glyphe : un « ♯ » est un glyphe musical, dessiné à une
+échelle propre à chaque fonte, et une constante juste pour Times serait fausse
+pour STIXGeneral — l'erreur que l'itération 46 a payée quatre itérations sur la
+géométrie de l'exposant.
+
+Deux fois de suite j'ai posé la géométrie de tête et deux fois la mesure l'a
+corrigée : d'abord une altération ramenée à hauteur de capitale (fausse : le
+signe gravé fait 1,31 capitale), puis le signe du déport, inversé, qui la
+faisait pendre 10 px plus bas. **Ce que l'œil appelle « sur la ligne » ne se
+transcrit pas en code sans mesurer les deux bouts.**
+
+Au banc : **260 → 264 durs lus**, **85 → 87 publiables**, **3006/3155 →
+3019/3158 gelés** — le dénominateur monte aussi, donc la **détection** y gagne
+trois amas, pas seulement la lecture. Onze amas gagnent en justesse, un seul
+perd : un « C » que le découpage ampute de son ouverture, l'anneau presque
+fermé de l'itération 47, défaut du découpage et non du gabarit. Sur les 97
+pages certifiées, **2618 → 2633 publiables à FAUX inchangé (9)**. C'est le
+premier réglage depuis l'itération 47 qui gagne de la couverture **sans** payer
+en mode C, et c'est parce qu'il ne touche ni au seuil, ni au jury, ni au
+vocabulaire : il rend le gabarit plus fidèle. *La confiance n'était pas ce qui
+était cassé* (itération 48) — la fidélité, si.
+
+**La planche était muette là où elle servait.** Elle montrait les amas les plus
+**larges**. Sur une page que le matcher ne lit pas — celles pour qui elle est
+faite — les plus larges sont les arcs de liaison, les crochets de reprise et les
+paroles : **10 colonnes sur 10** en caractères chinois sur 伯利恒的喜讯, 7 sur
+10 sur 是你的爱, 6 sur 9 en arcs et crochets sur 再一次. Le tri géométrique ne
+les sépare pas, et mon premier test l'a cru : une suite de caractères chinois a
+le rapport largeur/hauteur d'un accord, et il n'en voyait que 10 % — **zéro sur
+la page qui n'a que du chinois**. Encore une métrique qui ne mesure que ce
+qu'on a pensé à regarder, attrapée cette fois avant d'être publiée. Le score,
+lui, les sépare : un arc ne corrèle avec aucun gabarit d'aucune fonte. 再一次
+passe de 3 colonnes d'accords sur 9 à **9 sur 9**, et sa gravure devient enfin
+lisible.
+
+**Un invariant écrit et non tenu.** `face-plate.py` recopiait le dictionnaire
+de géométries de `build_templates` sous un commentaire qui énonçait pourtant la
+règle : « montrer un gabarit dessiné autrement que celui qui a servi à lire
+ferait comparer à l'œil autre chose que ce que le matcher a comparé ». Rien ne
+la tenait, et le genre 3 n'est arrivé que dans une des deux copies — la planche
+a planté sur un genre qu'elle ne connaissait pas. `render_fonts()` porte
+désormais la définition et les deux appelants la lisent. *Un commentaire qui
+dit « ces deux choses doivent rester égales » est le signe qu'elles ne le
+resteront pas.*
+
+**Bilan.** Aucun calque nouveau : corpus **135**, calques **97**, certifiés
+**97**, étiquettes **3 987**, cadres 97 — `chords.json` identique au bit près,
+les 97 calques étant gelés. Les **389 tests Playwright** passent, ainsi que
+`npx tsc --noEmit`, `npm run validate` (370 chants) et `npm run lint` (49
+avertissements préexistants, 0 erreur). Banc du matcher regelé à **264/303
+durs · 87 publiables · 3019/3158 gelés**.
+
+**Ce qui reste, nommé.**
+
+- **12 pages n'ont toujours pas de `gold/`.** Le balayage a été lancé et ses
+  couples (fonte, tonalité) sont mesurés, mais aucun n'est écrit : sur les
+  quatre pages où l'œil et le compteur se contredisent, c'est l'œil qui a eu
+  tort la seule fois où la vérité terrain a pu trancher (祷告), et je n'ai pas
+  de règle pour arbitrer. Écrire une fonte que l'œil dément ou l'inverse
+  demande une mesure que ces pages, sans vérité terrain, ne peuvent pas fournir.
+- **Aucune des 38 ne franchit le plancher**, même après le gain du gabarit. La
+  meilleure, 有你同行 (65 %), est retenue par trois rangées en tonalité
+  étrangère qui la ramènent à 47 % — c'est la garde voulue, pas un défaut :
+  elle relève de la question des pages à deux tonalités, avec 在这里.
+- **La référence du banc vit dans `scripts/jianpu/debug/`, qui est gitignoré.**
+  Elle se regèle, donc sa perte ne détruit rien — mais elle est la seule trace
+  de la ligne de base, et l'itération 51 a montré ce que coûte un artefact que
+  le dépôt ne garde pas.
+- **La rangée détectée mais muette n'a toujours pas d'outil** (itérations 50,
+  51), et **l'alternative parenthésée solitaire** non plus (49).
