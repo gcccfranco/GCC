@@ -1,0 +1,437 @@
+{
+ "slug": "再一次",
+ "face": "times",
+ "face_verified": "planche d'élection (itération 57) : la page est gravée en **serif régulier** — empattements fins, contraste net entre pleins et déliés sur le « C/D » zoomé ×8. `times-bold` est plus grasse, les quatre linéales n'ont pas d'empattements. helvetica-neue (le défaut) publiait 27/55 contre 14/55 à times : encore le compte au seuil contre le dessin.",
+ "corrections": {
+  "353,83": "G",
+  "353,648": "C/G",
+  "520,391": "G",
+  "520,676": "D/G",
+  "520,965": "C/G",
+  "700,27": "G",
+  "700,927": "A",
+  "879,30": "D",
+  "879,310": "G",
+  "879,624": "D/G",
+  "879,937": "C/G",
+  "1055,27": "G",
+  "1055,399": "D",
+  "1055,642": "Em",
+  "1055,879": "C/D",
+  "1231,244": "G",
+  "1231,760": "C",
+  "1231,873": "D",
+  "1231,1054": "G",
+  "1451,28": "C",
+  "1451,143": "D",
+  "1451,317": "B",
+  "1451,996": "F",
+  "1451,1108": "D",
+  "1668,27": "G",
+  "1668,792": "D",
+  "1668,1002": "G",
+  "1885,28": "C",
+  "1885,147": "D",
+  "1885,367": "B",
+  "1885,499": "Em",
+  "1885,859": "C/D",
+  "1885,1023": "G",
+  "1885,680": "Am"
+ },
+ "corrections_verified": "les neuf rangées rendues entières au 2,4× en deux tranches qui se recouvrent, lues une à une (itération 57). **Quatre corrections sont du mode C** — des accords retenus et faux, que les compteurs comptaient comme des réussites : 353,83 · 1055,27 · 1668,27 publiaient « C » sur un « G » gravé, et 879,30 publiait « G » sur un « D ». En serif, le G et le C partagent leur panse ; c'est la planche de rangée qui les sépare, pas le score (0,60 à 0,69).",
+ "not_labels": [
+  "520,14",
+  "520,1219",
+  "1055,1082",
+  "1451,624",
+  "1885,760",
+  "1885,804",
+  "353,929",
+  "520,424",
+  "879,344",
+  "879,1106",
+  "1885,62"
+ ],
+ "not_labels_verified": "six amas qui portent autre chose qu'un accord, ou un accord **soudé** à un trait que le fond opaque effacerait : le crochet de 2ᵉ fin avec son « 2. » (520,14), deux bouts d'arc (520,1219 · 1885,804), le « 3 » d'un triolet de 3 px (1885,760), et deux étiquettes collées à leur crochet de triolet — « G » (1055,1082) et « Am » (1451,624), reposées en `extra_labels` sur leur seule encre de lettre, le geste de l'itération 55. S'y ajoutent le **crochet de 1ʳᵉ fin entier** (353,929 — 329 px de large, le « 1. » et le « G » dedans) et quatre arcs de liaison, tous regardés au zoom.",
+ "extra_labels": [
+  {
+   "x": 945,
+   "y": 381,
+   "w": 14,
+   "h": 16,
+   "c": "G",
+   "fh": 16
+  },
+  {
+   "x": 31,
+   "y": 526,
+   "w": 14,
+   "h": 15,
+   "c": "G",
+   "fh": 15
+  },
+  {
+   "x": 1082,
+   "y": 1056,
+   "w": 17,
+   "h": 19,
+   "c": "G"
+  },
+  {
+   "x": 622,
+   "y": 1451,
+   "w": 41,
+   "h": 19,
+   "c": "Am"
+  }
+ ],
+ "extra_verified": "cinq étiquettes que la lecture ne pouvait pas rendre. **Deux « G » gravés sous les crochets de reprise** (1ʳᵉ et 2ᵉ fin) : le découpage les soude au chiffre du crochet et à sa barre, et ils sont gravés plus petits que la page — d'où `fh`. **Un « G » et deux « Am » collés à leur crochet de triolet** : le trait part de la base de la lettre, si bien qu'aucun amas ne sépare les deux ; celui de y=1885 a bien un amas (1885,680) mais il n'était proposé nulle part, et c'est la planche de rangée qui l'a montré ; il se corrige donc en place. Les boîtes sont mesurées sur l'encre de la lettre seule, colonne par colonne, pour que le fond opaque n'efface pas le crochet.",
+ "key_label": {
+  "x": 47,
+  "y": 240,
+  "w": 62,
+  "h": 23
+ },
+ "key_label_verified": "candidate #1 de measure-keylabel (x=47 y=240 w=62 h=23) : « 1=G » à gauche du chiffrage 4/4, lettre gravée **G** = printedKey G. La candidate #2 était la ligne de tempo ♩=125 — itération 57.",
+ "verified": "planche navigateur G→Ab relue sur les sept tranches (itération 57) : les neuf rangées, les deux « G » des crochets de reprise (réécrits en petit corps, crochet intact), le « G » et les deux « Am » collés à leur crochet de triolet (le « ——3—— » reste gravé à droite de l'accord réécrit) et le cadre « 1=G ». Aucun accord ne reste en sol, et les quatre modes C sont corrigés — les trois « G » sortent Ab et non Db, le « D » sort Eb.",
+ "frozen_labels": [
+  {
+   "x": 83,
+   "y": 353,
+   "w": 13,
+   "h": 44,
+   "c": "G"
+  },
+  {
+   "x": 361,
+   "y": 353,
+   "w": 36,
+   "h": 44,
+   "c": "D/G"
+  },
+  {
+   "x": 648,
+   "y": 353,
+   "w": 35,
+   "h": 44,
+   "c": "C/G"
+  },
+  {
+   "x": 391,
+   "y": 520,
+   "w": 17,
+   "h": 34,
+   "c": "G"
+  },
+  {
+   "x": 676,
+   "y": 520,
+   "w": 54,
+   "h": 34,
+   "c": "D/G"
+  },
+  {
+   "x": 965,
+   "y": 520,
+   "w": 45,
+   "h": 34,
+   "c": "C/G"
+  },
+  {
+   "x": 27,
+   "y": 700,
+   "w": 16,
+   "h": 19,
+   "c": "G"
+  },
+  {
+   "x": 288,
+   "y": 700,
+   "w": 16,
+   "h": 19,
+   "c": "C"
+  },
+  {
+   "x": 654,
+   "y": 700,
+   "w": 43,
+   "h": 19,
+   "c": "G/B"
+  },
+  {
+   "x": 927,
+   "y": 700,
+   "w": 15,
+   "h": 19,
+   "c": "A"
+  },
+  {
+   "x": 30,
+   "y": 879,
+   "w": 17,
+   "h": 29,
+   "c": "D"
+  },
+  {
+   "x": 310,
+   "y": 879,
+   "w": 17,
+   "h": 29,
+   "c": "G"
+  },
+  {
+   "x": 624,
+   "y": 879,
+   "w": 55,
+   "h": 29,
+   "c": "D/G"
+  },
+  {
+   "x": 937,
+   "y": 879,
+   "w": 44,
+   "h": 29,
+   "c": "C/G"
+  },
+  {
+   "x": 27,
+   "y": 1055,
+   "w": 17,
+   "h": 20,
+   "c": "G"
+  },
+  {
+   "x": 257,
+   "y": 1055,
+   "w": 17,
+   "h": 20,
+   "c": "C"
+  },
+  {
+   "x": 399,
+   "y": 1055,
+   "w": 16,
+   "h": 20,
+   "c": "D"
+  },
+  {
+   "x": 528,
+   "y": 1055,
+   "w": 36,
+   "h": 20,
+   "c": "Bm"
+  },
+  {
+   "x": 642,
+   "y": 1055,
+   "w": 35,
+   "h": 20,
+   "c": "Em"
+  },
+  {
+   "x": 796,
+   "y": 1055,
+   "w": 39,
+   "h": 20,
+   "c": "Am"
+  },
+  {
+   "x": 879,
+   "y": 1055,
+   "w": 46,
+   "h": 20,
+   "c": "C/D"
+  },
+  {
+   "x": 244,
+   "y": 1231,
+   "w": 17,
+   "h": 19,
+   "c": "G"
+  },
+  {
+   "x": 478,
+   "y": 1231,
+   "w": 44,
+   "h": 19,
+   "c": "D/G"
+  },
+  {
+   "x": 760,
+   "y": 1231,
+   "w": 16,
+   "h": 19,
+   "c": "C"
+  },
+  {
+   "x": 873,
+   "y": 1231,
+   "w": 16,
+   "h": 19,
+   "c": "D"
+  },
+  {
+   "x": 1054,
+   "y": 1231,
+   "w": 17,
+   "h": 19,
+   "c": "G"
+  },
+  {
+   "x": 28,
+   "y": 1451,
+   "w": 16,
+   "h": 20,
+   "c": "C"
+  },
+  {
+   "x": 143,
+   "y": 1451,
+   "w": 16,
+   "h": 20,
+   "c": "D"
+  },
+  {
+   "x": 317,
+   "y": 1451,
+   "w": 15,
+   "h": 20,
+   "c": "B"
+  },
+  {
+   "x": 447,
+   "y": 1451,
+   "w": 35,
+   "h": 20,
+   "c": "Em"
+  },
+  {
+   "x": 996,
+   "y": 1451,
+   "w": 11,
+   "h": 20,
+   "c": "F"
+  },
+  {
+   "x": 1108,
+   "y": 1451,
+   "w": 16,
+   "h": 20,
+   "c": "D"
+  },
+  {
+   "x": 27,
+   "y": 1668,
+   "w": 17,
+   "h": 19,
+   "c": "G"
+  },
+  {
+   "x": 317,
+   "y": 1668,
+   "w": 45,
+   "h": 19,
+   "c": "D/G"
+  },
+  {
+   "x": 651,
+   "y": 1668,
+   "w": 16,
+   "h": 19,
+   "c": "C"
+  },
+  {
+   "x": 792,
+   "y": 1668,
+   "w": 16,
+   "h": 19,
+   "c": "D"
+  },
+  {
+   "x": 1002,
+   "y": 1668,
+   "w": 17,
+   "h": 19,
+   "c": "G"
+  },
+  {
+   "x": 28,
+   "y": 1885,
+   "w": 16,
+   "h": 32,
+   "c": "C"
+  },
+  {
+   "x": 147,
+   "y": 1885,
+   "w": 38,
+   "h": 32,
+   "c": "D"
+  },
+  {
+   "x": 367,
+   "y": 1885,
+   "w": 14,
+   "h": 32,
+   "c": "B"
+  },
+  {
+   "x": 499,
+   "y": 1885,
+   "w": 34,
+   "h": 32,
+   "c": "Em"
+  },
+  {
+   "x": 680,
+   "y": 1885,
+   "w": 39,
+   "h": 32,
+   "c": "Am"
+  },
+  {
+   "x": 859,
+   "y": 1885,
+   "w": 46,
+   "h": 32,
+   "c": "C/D"
+  },
+  {
+   "x": 1023,
+   "y": 1885,
+   "w": 17,
+   "h": 32,
+   "c": "G"
+  },
+  {
+   "x": 945,
+   "y": 381,
+   "w": 14,
+   "h": 16,
+   "c": "G",
+   "fh": 16
+  },
+  {
+   "x": 31,
+   "y": 526,
+   "w": 14,
+   "h": 15,
+   "c": "G",
+   "fh": 15
+  },
+  {
+   "x": 1082,
+   "y": 1056,
+   "w": 17,
+   "h": 19,
+   "c": "G"
+  },
+  {
+   "x": 622,
+   "y": 1451,
+   "w": 41,
+   "h": 19,
+   "c": "Am"
+  }
+ ]
+}
