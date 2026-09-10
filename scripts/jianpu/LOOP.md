@@ -5169,3 +5169,92 @@ l'œil retient lit moins, et lit juste.
   et **l'alternative parenthésée solitaire** (49) n'a toujours pas d'outil.
 - **Les tonalités mineures du transpositeur** attendent leur spec
   (`docs/spec-tonalites-mineures.md`).
+
+### Itération 58 — la convention du `.cho` sur une page qui n'est pas dans sa tonalité, et deux pages qui ne doivent pas paraître
+
+Trois pages certifiées, deux retenues, une commencée. Ce qu'elles apprennent
+tient en trois points, et deux d'entre eux sont des refus de publier.
+
+**La conversion de convention, appliquée pour de bon.** 敬拜的心 est gravée
+en **mi** quand son `.cho` est en **fa**. La règle existe depuis
+l'itération 40 — *tout ce qui s'écrit dans `gold/` est dans la convention du
+`.cho`* — mais aucune page ne l'avait exercée sur ses vingt-trois lectures
+d'un coup. Un helper fait l'aller-retour `transpose_label(±11)` avant chaque
+écriture, et les quatorze noms rencontrés tombent tous dans le vocabulaire
+du `.cho` : la conversion se vérifie donc elle-même, et **c'est la preuve de
+la tonalité gravée**.
+
+Sur la même page, **deux étiquettes que la gravure a oublié de transposer** :
+« Bb/C » deux fois là où toute la page écrit « A/B ». C'est le IV/V, juste en
+fa, resté tel quel quand la planche est passée de fa à mi. Écrites « Bb/C »
+dans `gold/`, elles se publient « A/B » — le calque répare la coquille au
+lieu de la propager. Un accord gravé peut donc être faux *dans sa propre
+page*, et c'est encore le mode C, cette fois du côté du graveur.
+
+**Une page qui porte une portée à cinq lignes ne doit pas recevoir de
+calque.** 你的爱不离不弃 est lue et complète (32/32 + 7) et ne paraît pas :
+elle grave un système classique sous chaque ligne de chiffres, et elle est
+**seule du corpus** dans ce cas — mesuré sur les 135 pages, cinq lignes
+couvrant 96 % de la largeur, six fois. Le 简谱 est invariant par
+transposition, la portée ne l'est pas : calque posé, la page afficherait des
+accords en si bémol au-dessus d'une portée en la, armure comprise. C'est la
+cousine de la page à deux tonalités, mais la question est de **produit** —
+les chiffres et les accords sont justes, seule l'aide secondaire ne suit
+pas —, donc `en_chantier` la retient en attendant l'arbitrage.
+
+**Et une quatrième page à deux jeux d'accords.** 所有的荣耀归于你 porte
+**deux rangées par système**, celle du haut en mi (positions de capo), celle
+du bas en fa. Le calque provisoire y publiait déjà faux : « Bbmaj7/F » écrit
+par-dessus « Amaj7/E », le vocabulaire fermé qui publie le plus proche
+(itérations 21 et 31), et `foreign_rows` n'en écartait que trois sur six. Son
+relevé `alt_labels` reste à faire ; rien n'est publié en attendant.
+
+**Ce que les pages certifiées ont appris.**
+
+*敬拜的心* (42 % → 42/42 + 1). Ci-dessus, plus **deux modes C** (« F#m7 »
+publié sur un « C#m7 » gravé) et **quatre bandes de hampes** posées sous
+chaque rangée d'accords, typées accords : treize amas au dénominateur.
+
+*香膏的玉瓶* (38 % → 16/16 + 11). **Les trois premières rangées d'accords de
+la page n'entraient dans aucun dénominateur** — le classifieur ne les type
+pas `chords` —, et trois bandes de sommets d'arcs y étaient promues à leur
+place. Un amas de **498 px** portait le crochet de 1ʳᵉ fin entier avec ses
+deux « Cmaj7 » ; les accords reviennent sur leur seule encre. Et une
+composite de plus, « D (后几次Bm) ».
+
+*耶和华行了大事* (20/55, laissée en cours). Sa fonte est acquise, et elle
+laisse une leçon d'outil : **`propose-extra --hidden` ne rend pas une rangée
+cachée entière**, seulement les amas que le matcher y apparie — deux sur dix
+sur sa rangée y=1358. Une rangée cachée se mesure donc à l'encre, comme une
+rangée sans bande.
+
+**La fonte, encore.** Sept pages ouvertes depuis l'itération 57, **dix
+fontes infirmées sur douze**, toujours dans le même sens : la page est plus
+fine, ou plus serif, que ce que le compteur au seuil propose. Le zoom ×5 sur
+les trois plus larges étiquettes d'une page suffit à trancher, et il coûte
+quelques secondes — c'est devenu le premier geste.
+
+**Bilan.** Corpus 135, calques **114 → 116**, tous certifiés et tous
+complets. Étiquettes 4 800 → **4 870**, cadres « 1=X » **116**. **590 tests
+Playwright** (580 avant), `npx tsc --noEmit`, `npm run validate` (370
+chants), `npm run lint` (49 avertissements préexistants, 0 erreur).
+`bandes.py --certifiées` : 2 bandes sur 116 pages, les deux faux positifs
+connus. Banc du matcher regelé à 430/596 durs · 87 publiables ·
+3 646/3 919 gelés.
+
+**Ce qui reste, nommé.**
+
+- **19 pages sans calque**, plus les deux retenues à l'étude.
+- **你的爱不离不弃 attend un arbitrage** : publie-t-on un calque sur une page
+  qui porte aussi une portée à cinq lignes ?
+- **所有的荣耀归于你 attend son relevé `alt_labels`** (deux jeux d'accords).
+- **`propose-extra --hidden` ne rend pas une rangée cachée entière**
+  (itération 58) — noté, pas corrigé.
+- **`bandes.py` ne voit pas une bande d'annotations** dont les amas latins
+  sont noyés dans les hanzi (itération 57).
+- **Les fichiers « … 2.json » et « … 2.webp »** traînent toujours,
+  non versionnés, et `bench-match.py` les prend pour des chants.
+- **Le `.cho` de 给梦想一双翅膀 porte quatre `[ ]` vides**, **le PDF n'a pas le
+  sélecteur**, **10 pages sans `gold/`**, **祷告 reste une anomalie ouverte**,
+  **l'alternative parenthésée solitaire** (49) n'a pas d'outil, et **les
+  tonalités mineures** attendent leur spec.
