@@ -1,5 +1,6 @@
 {
  "slug": "所有的荣耀归于你",
- "face": "helvetica-bold",
- "face_verified": "balayage de fonte croisé : sweep-key.py (veto + marge) et le compteur de couverture de build-chords désignent la même fonte, à tonalité inchangée — 2026-09-08 (itération 50). À confirmer par la planche d'audit avant certification."
+ "face": "helvetica-neue",
+ "face_verified": "zoom ×5 sur les deux « Bbmaj7/F » de la page (itération 58) : linéale **régulière**, traits fins et uniformes. helvetica-bold, la fonte élue au seuil, est nettement plus grasse.",
+ "en_chantier": "**page à deux jeux d'accords**, la quatrième du corpus après 在这里, 我要爱慕你 et 有你同行. Chaque système en porte deux rangées : celle du haut en **mi** (E, Amaj7/E), celle du bas en **fa** (F, Bbmaj7/F, la tonalité du `.cho`). La première est une rangée de **positions de capo**, la seconde les accords réels.\n\nLe calque provisoire y publie déjà **faux** : sur la rangée capo de y=891 il écrit « Bbmaj7/F » et « F » par-dessus « Amaj7/E » et « E » — le vocabulaire fermé qui publie le plus proche (itérations 21 et 31). `foreign_rows` en écarte trois sur six.\n\nElle demande donc le traitement `alt_labels` de l'itération 54 : les rangées capo en `alt` = −1 et `opt`, les rangées réelles en `corrections`. C'est un relevé complet, une quarantaine d'étiquettes, laissé à l'itération suivante. Rien n'est publié en attendant."
 }
