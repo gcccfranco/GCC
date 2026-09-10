@@ -2,5 +2,771 @@
  "slug": "所有的荣耀归于你",
  "face": "helvetica-neue",
  "face_verified": "zoom ×5 sur les deux « Bbmaj7/F » de la page (itération 58) : linéale **régulière**, traits fins et uniformes. helvetica-bold, la fonte élue au seuil, est nettement plus grasse.",
- "en_chantier": "**page à deux jeux d'accords**, la quatrième du corpus après 在这里, 我要爱慕你 et 有你同行. Chaque système en porte deux rangées : celle du haut en **mi** (E, Amaj7/E), celle du bas en **fa** (F, Bbmaj7/F, la tonalité du `.cho`). La première est une rangée de **positions de capo**, la seconde les accords réels.\n\nLe calque provisoire y publie déjà **faux** : sur la rangée capo de y=891 il écrit « Bbmaj7/F » et « F » par-dessus « Amaj7/E » et « E » — le vocabulaire fermé qui publie le plus proche (itérations 21 et 31). `foreign_rows` en écarte trois sur six.\n\nElle demande donc le traitement `alt_labels` de l'itération 54 : les rangées capo en `alt` = −1 et `opt`, les rangées réelles en `corrections`. C'est un relevé complet, une quarantaine d'étiquettes, laissé à l'itération suivante. Rien n'est publié en attendant."
+ "corrections": {
+  "993,58": "Bbmaj7/F",
+  "993,1079": "Bbmaj7/F"
+ },
+ "corrections_verified": "rangée réelle du troisième système relue sur la planche annotée (itération 59) : deux « Bbmaj7/F » justes que le jury refusait. Les quatorze lectures retenues des rangées réelles (1334, 1692, 2040 et le « F » de 993) sont justes.",
+ "not_labels": [
+  "1334,926"
+ ],
+ "not_labels_verified": "le 【Chorus】 posé sur la rangée réelle du quatrième système, entre « F » et « Bb ».",
+ "not_rows": [
+  409,
+  688,
+  1034,
+  1377,
+  1724
+ ],
+ "not_rows_verified": "les chiffres de l'introduction, gravés **en colonnes** (3/5/3/1), dont la bande du haut était promue rangée d'accords (409) ; et quatre bandes d'arcs de liaison et de triolet sous les rangées réelles (688, 1034, 1377, 1724). Trente-deux amas au dénominateur, aucun accord.",
+ "mask_rows": [
+  222,
+  544,
+  891,
+  1241,
+  1590,
+  1938
+ ],
+ "mask_rows_verified": "1=F · les six rangées gravées en **mi** (positions de capo 1) au-dessus des rangées réelles en fa. 544 est typée `numbers` et la garde de mode D la voyait deux fois, cachée et soudée ; 891 est typée `chords?` et confirmée : c'est là que le calque provisoire publiait « Bbmaj7/F » et « F » par-dessus « Amaj7/E » et « E » (itération 58). Le masque ne pose rien là où `alt_labels` couvre — il déclare la rangée, comme sur 在这里 et 无价至宝 (itération 59).",
+ "extra_labels": [
+  {
+   "x": 92,
+   "y": 315,
+   "w": 14,
+   "h": 26,
+   "c": "F"
+  },
+  {
+   "x": 462,
+   "y": 312,
+   "w": 155,
+   "h": 36,
+   "c": "Bbmaj7/F"
+  },
+  {
+   "x": 844,
+   "y": 315,
+   "w": 14,
+   "h": 26,
+   "c": "F"
+  },
+  {
+   "x": 1213,
+   "y": 312,
+   "w": 156,
+   "h": 36,
+   "c": "Bbmaj7/F"
+  },
+  {
+   "x": 62,
+   "y": 647,
+   "w": 14,
+   "h": 25,
+   "c": "F"
+  },
+  {
+   "x": 527,
+   "y": 645,
+   "w": 153,
+   "h": 34,
+   "c": "Bbmaj7/F"
+  },
+  {
+   "x": 1011,
+   "y": 647,
+   "w": 14,
+   "h": 25,
+   "c": "F"
+  }
+ ],
+ "extra_verified": "les rangées réelles des **deux premiers systèmes** (y=312, typée `?`, et y=645, jamais isolée par le découpage) : sept accords hors de tout dénominateur. Boîtes mesurées au profil de colonnes.",
+ "alt_labels": [
+  {
+   "x": 91,
+   "y": 225,
+   "w": 15,
+   "h": 26,
+   "c": "E",
+   "alt": -1,
+   "opt": true
+  },
+  {
+   "x": 456,
+   "y": 221,
+   "w": 139,
+   "h": 37,
+   "c": "Amaj7/E",
+   "alt": -1,
+   "opt": true
+  },
+  {
+   "x": 843,
+   "y": 225,
+   "w": 15,
+   "h": 26,
+   "c": "E",
+   "alt": -1,
+   "opt": true
+  },
+  {
+   "x": 1207,
+   "y": 221,
+   "w": 139,
+   "h": 37,
+   "c": "Amaj7/E",
+   "alt": -1,
+   "opt": true
+  },
+  {
+   "x": 62,
+   "y": 545,
+   "w": 14,
+   "h": 26,
+   "c": "E",
+   "alt": -1,
+   "opt": true
+  },
+  {
+   "x": 522,
+   "y": 543,
+   "w": 139,
+   "h": 35,
+   "c": "Amaj7/E",
+   "alt": -1,
+   "opt": true
+  },
+  {
+   "x": 1010,
+   "y": 545,
+   "w": 15,
+   "h": 26,
+   "c": "E",
+   "alt": -1,
+   "opt": true
+  },
+  {
+   "x": 54,
+   "y": 890,
+   "w": 139,
+   "h": 36,
+   "c": "Amaj7/E",
+   "alt": -1,
+   "opt": true
+  },
+  {
+   "x": 562,
+   "y": 893,
+   "w": 15,
+   "h": 26,
+   "c": "E",
+   "alt": -1,
+   "opt": true
+  },
+  {
+   "x": 1075,
+   "y": 890,
+   "w": 138,
+   "h": 36,
+   "c": "Amaj7/E",
+   "alt": -1,
+   "opt": true
+  },
+  {
+   "x": 57,
+   "y": 1241,
+   "w": 66,
+   "h": 26,
+   "c": "F#m",
+   "alt": -1,
+   "opt": true
+  },
+  {
+   "x": 335,
+   "y": 1241,
+   "w": 37,
+   "h": 26,
+   "c": "B7",
+   "alt": -1,
+   "opt": true
+  },
+  {
+   "x": 683,
+   "y": 1241,
+   "w": 15,
+   "h": 26,
+   "c": "E",
+   "alt": -1,
+   "opt": true
+  },
+  {
+   "x": 1178,
+   "y": 1241,
+   "w": 22,
+   "h": 26,
+   "c": "A",
+   "alt": -1,
+   "opt": true
+  },
+  {
+   "x": 1390,
+   "y": 1241,
+   "w": 15,
+   "h": 26,
+   "c": "E",
+   "alt": -1,
+   "opt": true
+  },
+  {
+   "x": 81,
+   "y": 1590,
+   "w": 18,
+   "h": 26,
+   "c": "B",
+   "alt": -1,
+   "opt": true
+  },
+  {
+   "x": 309,
+   "y": 1590,
+   "w": 70,
+   "h": 26,
+   "c": "C#m",
+   "alt": -1,
+   "opt": true
+  },
+  {
+   "x": 555,
+   "y": 1590,
+   "w": 22,
+   "h": 26,
+   "c": "A",
+   "alt": -1,
+   "opt": true
+  },
+  {
+   "x": 765,
+   "y": 1590,
+   "w": 17,
+   "h": 26,
+   "c": "B",
+   "alt": -1,
+   "opt": true
+  },
+  {
+   "x": 1114,
+   "y": 1590,
+   "w": 15,
+   "h": 26,
+   "c": "E",
+   "alt": -1,
+   "opt": true
+  },
+  {
+   "x": 60,
+   "y": 1938,
+   "w": 22,
+   "h": 26,
+   "c": "A",
+   "alt": -1,
+   "opt": true
+  },
+  {
+   "x": 228,
+   "y": 1938,
+   "w": 15,
+   "h": 26,
+   "c": "E",
+   "alt": -1,
+   "opt": true
+  },
+  {
+   "x": 410,
+   "y": 1938,
+   "w": 17,
+   "h": 26,
+   "c": "B",
+   "alt": -1,
+   "opt": true
+  },
+  {
+   "x": 594,
+   "y": 1938,
+   "w": 70,
+   "h": 26,
+   "c": "C#m",
+   "alt": -1,
+   "opt": true
+  },
+  {
+   "x": 789,
+   "y": 1938,
+   "w": 22,
+   "h": 26,
+   "c": "A",
+   "alt": -1,
+   "opt": true
+  },
+  {
+   "x": 1016,
+   "y": 1938,
+   "w": 17,
+   "h": 26,
+   "c": "B",
+   "alt": -1,
+   "opt": true
+  },
+  {
+   "x": 1276,
+   "y": 1938,
+   "w": 15,
+   "h": 26,
+   "c": "E",
+   "alt": -1,
+   "opt": true
+  }
+ ],
+ "alt_labels_verified": "les six rangées du haut, **positions de capo en mi**, lues à l'œil sur la page entière et mesurées au profil d'encre (itération 59) : 27 étiquettes, une par accord réel. `alt` = −1, `opt` : empilées sur la même musique, masquées par défaut et révélées par le sélecteur. La page est dans la tonalité de son `.cho` (fa), donc écrites telles que gravées.",
+ "en_chantier_leve": "retenue à l'itération 58 en attendant ce relevé : « page à deux jeux d'accords, la quatrième du corpus après 在这里, 我要爱慕你 et 有你同行. » Levée à l'itération 59, le sélecteur de tonalité répondant à la question qui la retenait.",
+ "key_label": {
+  "x": 6,
+  "y": 159,
+  "w": 84,
+  "h": 28
+ },
+ "key_label_verified": "candidate #2 (x=6 y=159 w=84 h=28) : la page grave « 1= F », lettre égale au printedKey F. La candidate #1 était la ligne de tempo ♩=67 — itération 59.",
+ "verified": "planche navigateur F→F# relue sur les sept tranches **dans les deux états du sélecteur** (itération 59, `audit-browser --alt`) : « F# seul » réécrit les six rangées réelles — dont les deux premières, que le découpage n'isolait pas — et masque les six rangées capo ; « F# et F » écrit en plus les positions de capo en fa (E→F, Amaj7/E→Bbmaj7/F). Aucun accord ne reste en fa ni en mi ; le 【Chorus】 et les chiffres empilés de l'introduction restent gravés. `grille.py` : 0 ; `bandes.py` : 0 ; balayage et `--keys` : aucun défaut.",
+ "frozen_labels": [
+  {
+   "x": 58,
+   "y": 993,
+   "w": 153,
+   "h": 35,
+   "c": "Bbmaj7/F"
+  },
+  {
+   "x": 563,
+   "y": 993,
+   "w": 13,
+   "h": 35,
+   "c": "F"
+  },
+  {
+   "x": 1079,
+   "y": 993,
+   "w": 153,
+   "h": 35,
+   "c": "Bbmaj7/F"
+  },
+  {
+   "x": 57,
+   "y": 1334,
+   "w": 53,
+   "h": 36,
+   "c": "Gm"
+  },
+  {
+   "x": 331,
+   "y": 1334,
+   "w": 39,
+   "h": 36,
+   "c": "C7"
+  },
+  {
+   "x": 684,
+   "y": 1334,
+   "w": 13,
+   "h": 36,
+   "c": "F"
+  },
+  {
+   "x": 1175,
+   "y": 1334,
+   "w": 38,
+   "h": 36,
+   "c": "Bb"
+  },
+  {
+   "x": 1391,
+   "y": 1334,
+   "w": 13,
+   "h": 36,
+   "c": "F"
+  },
+  {
+   "x": 80,
+   "y": 1692,
+   "w": 19,
+   "h": 26,
+   "c": "C"
+  },
+  {
+   "x": 313,
+   "y": 1692,
+   "w": 51,
+   "h": 26,
+   "c": "Dm"
+  },
+  {
+   "x": 552,
+   "y": 1692,
+   "w": 39,
+   "h": 26,
+   "c": "Bb"
+  },
+  {
+   "x": 763,
+   "y": 1692,
+   "w": 19,
+   "h": 26,
+   "c": "C"
+  },
+  {
+   "x": 1115,
+   "y": 1692,
+   "w": 14,
+   "h": 26,
+   "c": "F"
+  },
+  {
+   "x": 57,
+   "y": 2040,
+   "w": 38,
+   "h": 26,
+   "c": "Bb"
+  },
+  {
+   "x": 229,
+   "y": 2040,
+   "w": 13,
+   "h": 26,
+   "c": "F"
+  },
+  {
+   "x": 409,
+   "y": 2040,
+   "w": 19,
+   "h": 26,
+   "c": "C"
+  },
+  {
+   "x": 597,
+   "y": 2040,
+   "w": 51,
+   "h": 26,
+   "c": "Dm"
+  },
+  {
+   "x": 786,
+   "y": 2040,
+   "w": 38,
+   "h": 26,
+   "c": "Bb"
+  },
+  {
+   "x": 1015,
+   "y": 2040,
+   "w": 18,
+   "h": 26,
+   "c": "C"
+  },
+  {
+   "x": 1277,
+   "y": 2040,
+   "w": 13,
+   "h": 26,
+   "c": "F"
+  },
+  {
+   "x": 92,
+   "y": 315,
+   "w": 14,
+   "h": 26,
+   "c": "F"
+  },
+  {
+   "x": 462,
+   "y": 312,
+   "w": 155,
+   "h": 36,
+   "c": "Bbmaj7/F"
+  },
+  {
+   "x": 844,
+   "y": 315,
+   "w": 14,
+   "h": 26,
+   "c": "F"
+  },
+  {
+   "x": 1213,
+   "y": 312,
+   "w": 156,
+   "h": 36,
+   "c": "Bbmaj7/F"
+  },
+  {
+   "x": 62,
+   "y": 647,
+   "w": 14,
+   "h": 25,
+   "c": "F"
+  },
+  {
+   "x": 527,
+   "y": 645,
+   "w": 153,
+   "h": 34,
+   "c": "Bbmaj7/F"
+  },
+  {
+   "x": 1011,
+   "y": 647,
+   "w": 14,
+   "h": 25,
+   "c": "F"
+  },
+  {
+   "x": 91,
+   "y": 225,
+   "w": 15,
+   "h": 26,
+   "c": "E",
+   "alt": -1,
+   "opt": true
+  },
+  {
+   "x": 456,
+   "y": 221,
+   "w": 139,
+   "h": 37,
+   "c": "Amaj7/E",
+   "alt": -1,
+   "opt": true
+  },
+  {
+   "x": 843,
+   "y": 225,
+   "w": 15,
+   "h": 26,
+   "c": "E",
+   "alt": -1,
+   "opt": true
+  },
+  {
+   "x": 1207,
+   "y": 221,
+   "w": 139,
+   "h": 37,
+   "c": "Amaj7/E",
+   "alt": -1,
+   "opt": true
+  },
+  {
+   "x": 62,
+   "y": 545,
+   "w": 14,
+   "h": 26,
+   "c": "E",
+   "alt": -1,
+   "opt": true
+  },
+  {
+   "x": 522,
+   "y": 543,
+   "w": 139,
+   "h": 35,
+   "c": "Amaj7/E",
+   "alt": -1,
+   "opt": true
+  },
+  {
+   "x": 1010,
+   "y": 545,
+   "w": 15,
+   "h": 26,
+   "c": "E",
+   "alt": -1,
+   "opt": true
+  },
+  {
+   "x": 54,
+   "y": 890,
+   "w": 139,
+   "h": 36,
+   "c": "Amaj7/E",
+   "alt": -1,
+   "opt": true
+  },
+  {
+   "x": 562,
+   "y": 893,
+   "w": 15,
+   "h": 26,
+   "c": "E",
+   "alt": -1,
+   "opt": true
+  },
+  {
+   "x": 1075,
+   "y": 890,
+   "w": 138,
+   "h": 36,
+   "c": "Amaj7/E",
+   "alt": -1,
+   "opt": true
+  },
+  {
+   "x": 57,
+   "y": 1241,
+   "w": 66,
+   "h": 26,
+   "c": "F#m",
+   "alt": -1,
+   "opt": true
+  },
+  {
+   "x": 335,
+   "y": 1241,
+   "w": 37,
+   "h": 26,
+   "c": "B7",
+   "alt": -1,
+   "opt": true
+  },
+  {
+   "x": 683,
+   "y": 1241,
+   "w": 15,
+   "h": 26,
+   "c": "E",
+   "alt": -1,
+   "opt": true
+  },
+  {
+   "x": 1178,
+   "y": 1241,
+   "w": 22,
+   "h": 26,
+   "c": "A",
+   "alt": -1,
+   "opt": true
+  },
+  {
+   "x": 1390,
+   "y": 1241,
+   "w": 15,
+   "h": 26,
+   "c": "E",
+   "alt": -1,
+   "opt": true
+  },
+  {
+   "x": 81,
+   "y": 1590,
+   "w": 18,
+   "h": 26,
+   "c": "B",
+   "alt": -1,
+   "opt": true
+  },
+  {
+   "x": 309,
+   "y": 1590,
+   "w": 70,
+   "h": 26,
+   "c": "C#m",
+   "alt": -1,
+   "opt": true
+  },
+  {
+   "x": 555,
+   "y": 1590,
+   "w": 22,
+   "h": 26,
+   "c": "A",
+   "alt": -1,
+   "opt": true
+  },
+  {
+   "x": 765,
+   "y": 1590,
+   "w": 17,
+   "h": 26,
+   "c": "B",
+   "alt": -1,
+   "opt": true
+  },
+  {
+   "x": 1114,
+   "y": 1590,
+   "w": 15,
+   "h": 26,
+   "c": "E",
+   "alt": -1,
+   "opt": true
+  },
+  {
+   "x": 60,
+   "y": 1938,
+   "w": 22,
+   "h": 26,
+   "c": "A",
+   "alt": -1,
+   "opt": true
+  },
+  {
+   "x": 228,
+   "y": 1938,
+   "w": 15,
+   "h": 26,
+   "c": "E",
+   "alt": -1,
+   "opt": true
+  },
+  {
+   "x": 410,
+   "y": 1938,
+   "w": 17,
+   "h": 26,
+   "c": "B",
+   "alt": -1,
+   "opt": true
+  },
+  {
+   "x": 594,
+   "y": 1938,
+   "w": 70,
+   "h": 26,
+   "c": "C#m",
+   "alt": -1,
+   "opt": true
+  },
+  {
+   "x": 789,
+   "y": 1938,
+   "w": 22,
+   "h": 26,
+   "c": "A",
+   "alt": -1,
+   "opt": true
+  },
+  {
+   "x": 1016,
+   "y": 1938,
+   "w": 17,
+   "h": 26,
+   "c": "B",
+   "alt": -1,
+   "opt": true
+  },
+  {
+   "x": 1276,
+   "y": 1938,
+   "w": 15,
+   "h": 26,
+   "c": "E",
+   "alt": -1,
+   "opt": true
+  }
+ ]
 }
