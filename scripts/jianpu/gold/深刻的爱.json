@@ -1,5 +1,488 @@
 {
  "slug": "深刻的爱",
+ "corrections": {
+  "251,1050": "G/B",
+  "485,19": "C",
+  "485,1140": "C/E",
+  "722,51": "F",
+  "722,434": "Em",
+  "722,800": "Dm",
+  "998,260": "C/E",
+  "1509,151": "G/B",
+  "1509,441": "C/G",
+  "1509,764": "C/E",
+  "1509,1164": "G",
+  "1743,151": "G/B",
+  "1743,441": "C/G",
+  "1743,763": "C/E"
+ },
+ "corrections_verified": "les sept rangées rendues entières au 1,6× en tranches qui se recouvrent, lues une à une. 2026-09-10 (itération 56)",
+ "not_rows": [
+  1151
+ ],
+ "not_rows_verified": "y=1151 est une **ligne de paroles** promue par le classifieur : ses onze amas sont des hanzi (爱。耶 稣 的 爱 … 一 直 都 存 在), pas des accords. Ses onze amas gonflaient le dénominateur et maintenaient la page sous le plancher — c'est le cas nommé à l'itération 54 (33/63 → 63 %)",
+ "not_labels": [
+  "722,295",
+  "722,943",
+  "722,1118",
+  "722,1201",
+  "998,1240"
+ ],
+ "not_labels_verified": "une paire de points d'octave et quatre arcs de liaison, sur les mêmes rendus de rangée",
  "face": "helvetica-neue",
- "face_verified": "balayage de fonte croisé : sweep-key.py (veto + marge) et le compteur de couverture de build-chords désignent la même fonte, à tonalité inchangée — 2026-09-08 (itération 50). À confirmer par la planche d'audit avant certification."
+ "face_verified": "balayage de fonte croisé : sweep-key.py (veto + marge) et le compteur de couverture de build-chords désignent la même fonte, à tonalité inchangée — 2026-09-08 (itération 50). À confirmer par la planche d'audit avant certification.",
+ "extra_labels": [
+  {
+   "x": 15,
+   "y": 1275,
+   "w": 44,
+   "h": 22,
+   "c": "Dm"
+  },
+  {
+   "x": 116,
+   "y": 1275,
+   "w": 46,
+   "h": 22,
+   "c": "F/G"
+  },
+  {
+   "x": 373,
+   "y": 1275,
+   "w": 18,
+   "h": 22,
+   "c": "C"
+  },
+  {
+   "x": 460,
+   "y": 1275,
+   "w": 45,
+   "h": 22,
+   "c": "Dm"
+  },
+  {
+   "x": 555,
+   "y": 1275,
+   "w": 46,
+   "h": 22,
+   "c": "C/E"
+  },
+  {
+   "x": 712,
+   "y": 1275,
+   "w": 44,
+   "h": 22,
+   "c": "Dm"
+  },
+  {
+   "x": 808,
+   "y": 1275,
+   "w": 46,
+   "h": 22,
+   "c": "F/G"
+  },
+  {
+   "x": 1049,
+   "y": 1275,
+   "w": 15,
+   "h": 22,
+   "c": "C"
+  }
+ ],
+ "extra_verified": "**une rangée d'accords entière soudée à ses crochets de reprise** : y≈1275, Dm F/G C Dm C/E ⌐2.Dm F/G C. `welded_rows` la signale à y=1275 avec 4 amas appariés sur 10 — les six autres sont les crochets ⌐1. et ⌐2., la double barre de reprise et les arcs, qui se mêlent aux lettres dans les mêmes colonnes. Les huit boîtes ont été relevées **au profil d'encre**, ligne par ligne, sur la seule bande des lettres (1275-1296) : les amas de colonnes ne les séparent pas. Bande relue entière au 1,6× d'un bout à l'autre de la page. 2026-09-10 (itération 56)",
+ "key_label": {
+  "x": 38,
+  "y": 126,
+  "w": 62,
+  "h": 24
+ },
+ "key_label_verified": "mesure measure-keylabel (ancrage sur le « = », cadre = voisin gauche…voisin droit), zoom relu à l’œil sur planche de lot, lettre gravée confrontée à printedKey, 2026-08-26 (itération 35)",
+ "verified": "planche navigateur C→C# relue sur les sept tranches : les six rangées d'accords, la rangée soudée aux crochets de reprise (y≈1275) et le cadre 1=C sont convertis. Aucun accord ne reste en do. 2026-09-10 (itération 56)",
+ "frozen_labels": [
+  {
+   "x": 27,
+   "y": 251,
+   "w": 18,
+   "h": 24,
+   "c": "C"
+  },
+  {
+   "x": 186,
+   "y": 251,
+   "w": 42,
+   "h": 24,
+   "c": "F/A"
+  },
+  {
+   "x": 352,
+   "y": 251,
+   "w": 50,
+   "h": 24,
+   "c": "G/B"
+  },
+  {
+   "x": 446,
+   "y": 247,
+   "w": 82,
+   "h": 28,
+   "c": "G#dim"
+  },
+  {
+   "x": 663,
+   "y": 251,
+   "w": 42,
+   "h": 24,
+   "c": "Am"
+  },
+  {
+   "x": 836,
+   "y": 251,
+   "w": 42,
+   "h": 24,
+   "c": "Dm"
+  },
+  {
+   "x": 1016,
+   "y": 251,
+   "w": 20,
+   "h": 24,
+   "c": "G"
+  },
+  {
+   "x": 1050,
+   "y": 251,
+   "w": 49,
+   "h": 24,
+   "c": "G/B"
+  },
+  {
+   "x": 19,
+   "y": 485,
+   "w": 27,
+   "h": 24,
+   "c": "C"
+  },
+  {
+   "x": 221,
+   "y": 485,
+   "w": 13,
+   "h": 24,
+   "c": "F"
+  },
+  {
+   "x": 366,
+   "y": 485,
+   "w": 42,
+   "h": 24,
+   "c": "Am"
+  },
+  {
+   "x": 483,
+   "y": 482,
+   "w": 56,
+   "h": 27,
+   "c": "D/F#"
+  },
+  {
+   "x": 613,
+   "y": 485,
+   "w": 42,
+   "h": 24,
+   "c": "Dm"
+  },
+  {
+   "x": 799,
+   "y": 485,
+   "w": 43,
+   "h": 24,
+   "c": "F/G"
+  },
+  {
+   "x": 1006,
+   "y": 485,
+   "w": 18,
+   "h": 24,
+   "c": "C"
+  },
+  {
+   "x": 1064,
+   "y": 485,
+   "w": 42,
+   "h": 24,
+   "c": "Dm"
+  },
+  {
+   "x": 1140,
+   "y": 485,
+   "w": 46,
+   "h": 24,
+   "c": "C/E"
+  },
+  {
+   "x": 51,
+   "y": 722,
+   "w": 27,
+   "h": 30,
+   "c": "F"
+  },
+  {
+   "x": 168,
+   "y": 722,
+   "w": 47,
+   "h": 30,
+   "c": "G/F"
+  },
+  {
+   "x": 434,
+   "y": 722,
+   "w": 52,
+   "h": 30,
+   "c": "Em"
+  },
+  {
+   "x": 569,
+   "y": 722,
+   "w": 42,
+   "h": 30,
+   "c": "Am"
+  },
+  {
+   "x": 800,
+   "y": 722,
+   "w": 106,
+   "h": 30,
+   "c": "Dm"
+  },
+  {
+   "x": 991,
+   "y": 722,
+   "w": 43,
+   "h": 30,
+   "c": "F/G"
+  },
+  {
+   "x": 27,
+   "y": 998,
+   "w": 18,
+   "h": 21,
+   "c": "C"
+  },
+  {
+   "x": 152,
+   "y": 998,
+   "w": 42,
+   "h": 21,
+   "c": "Dm"
+  },
+  {
+   "x": 260,
+   "y": 998,
+   "w": 46,
+   "h": 21,
+   "c": "C/E"
+  },
+  {
+   "x": 429,
+   "y": 998,
+   "w": 13,
+   "h": 21,
+   "c": "F"
+  },
+  {
+   "x": 544,
+   "y": 998,
+   "w": 46,
+   "h": 21,
+   "c": "G/F"
+  },
+  {
+   "x": 840,
+   "y": 998,
+   "w": 38,
+   "h": 21,
+   "c": "Em"
+  },
+  {
+   "x": 1043,
+   "y": 998,
+   "w": 43,
+   "h": 21,
+   "c": "Am"
+  },
+  {
+   "x": 27,
+   "y": 1509,
+   "w": 18,
+   "h": 22,
+   "c": "C"
+  },
+  {
+   "x": 151,
+   "y": 1509,
+   "w": 50,
+   "h": 22,
+   "c": "G/B"
+  },
+  {
+   "x": 276,
+   "y": 1509,
+   "w": 42,
+   "h": 22,
+   "c": "Am"
+  },
+  {
+   "x": 441,
+   "y": 1509,
+   "w": 49,
+   "h": 22,
+   "c": "C/G"
+  },
+  {
+   "x": 612,
+   "y": 1509,
+   "w": 13,
+   "h": 22,
+   "c": "F"
+  },
+  {
+   "x": 764,
+   "y": 1509,
+   "w": 46,
+   "h": 22,
+   "c": "C/E"
+  },
+  {
+   "x": 945,
+   "y": 1509,
+   "w": 42,
+   "h": 22,
+   "c": "Dm"
+  },
+  {
+   "x": 1164,
+   "y": 1509,
+   "w": 19,
+   "h": 22,
+   "c": "G"
+  },
+  {
+   "x": 27,
+   "y": 1743,
+   "w": 18,
+   "h": 21,
+   "c": "C"
+  },
+  {
+   "x": 151,
+   "y": 1743,
+   "w": 50,
+   "h": 21,
+   "c": "G/B"
+  },
+  {
+   "x": 273,
+   "y": 1743,
+   "w": 43,
+   "h": 21,
+   "c": "Am"
+  },
+  {
+   "x": 441,
+   "y": 1743,
+   "w": 49,
+   "h": 21,
+   "c": "C/G"
+  },
+  {
+   "x": 612,
+   "y": 1743,
+   "w": 13,
+   "h": 21,
+   "c": "F"
+  },
+  {
+   "x": 763,
+   "y": 1743,
+   "w": 46,
+   "h": 21,
+   "c": "C/E"
+  },
+  {
+   "x": 945,
+   "y": 1743,
+   "w": 42,
+   "h": 21,
+   "c": "Dm"
+  },
+  {
+   "x": 1072,
+   "y": 1743,
+   "w": 19,
+   "h": 21,
+   "c": "G"
+  },
+  {
+   "x": 1161,
+   "y": 1743,
+   "w": 19,
+   "h": 21,
+   "c": "C"
+  },
+  {
+   "x": 15,
+   "y": 1275,
+   "w": 44,
+   "h": 22,
+   "c": "Dm"
+  },
+  {
+   "x": 116,
+   "y": 1275,
+   "w": 46,
+   "h": 22,
+   "c": "F/G"
+  },
+  {
+   "x": 373,
+   "y": 1275,
+   "w": 18,
+   "h": 22,
+   "c": "C"
+  },
+  {
+   "x": 460,
+   "y": 1275,
+   "w": 45,
+   "h": 22,
+   "c": "Dm"
+  },
+  {
+   "x": 555,
+   "y": 1275,
+   "w": 46,
+   "h": 22,
+   "c": "C/E"
+  },
+  {
+   "x": 712,
+   "y": 1275,
+   "w": 44,
+   "h": 22,
+   "c": "Dm"
+  },
+  {
+   "x": 808,
+   "y": 1275,
+   "w": 46,
+   "h": 22,
+   "c": "F/G"
+  },
+  {
+   "x": 1049,
+   "y": 1275,
+   "w": 15,
+   "h": 22,
+   "c": "C"
+  }
+ ]
 }
