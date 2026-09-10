@@ -1,4 +1,342 @@
 {
  "slug": "复兴的火",
- "face": "verdana-bold"
+ "corrections": {
+  "330,486": "Dm(b5)/C",
+  "555,485": "G/B",
+  "555,756": "F/A",
+  "1096,60": "F",
+  "1324,840": "F/A",
+  "1549,61": "F",
+  "1549,924": "C",
+  "1764,48": "F/A",
+  "1764,513": "F",
+  "1764,955": "C"
+ },
+ "corrections_verified": "les neuf rangées rendues entières au 1,6× en tranches qui se recouvrent, lues une à une. `Dm(b5)/C` n'est pas dans le vocabulaire du `.cho` — la gravure l'écrit, le calque le publie. 2026-09-10 (itération 56)",
+ "not_rows": [
+  225,
+  362
+ ],
+ "not_rows_verified": "ni y=225 ni y=362 ne sont des rangées d'accords : leurs onze amas sont des chiffres à point d'octave, des hampes et des arcs. Vues entières au 1,6× (itération 56)",
+ "not_labels": [
+  "330,884",
+  "1324,365"
+ ],
+ "not_labels_verified": "un tronçon de ligature et le titre 【Chorus】",
+ "face": "verdana-bold",
+ "key_label": {
+  "x": 69,
+  "y": 169,
+  "w": 16,
+  "h": 23,
+  "c": "C"
+ },
+ "key_label_verified": "**la lettre seule**, pas « 1=X ». `measure-keylabel` proposait x=15 w=47, qui s'arrête après le « = » : il avait pris pour voisin de droite le « C » de x=47-61, qui n'est pas la lettre du cadre mais **le premier accord de la rangée du haut** — il est 18 px plus bas et de la taille des autres accords (h=22), là où la lettre du cadre (x=69-84) est centrée sur le « = ». Couvrir les deux d'un seul cadre aurait effacé l'accord ; on ne couvre donc que la lettre, et le « 1= » gravé reste tel quel. Profil d'encre ligne à ligne sur la bande 160-215, zoom relu à l'œil. 2026-09-10 (itération 56)",
+ "extra_labels": [
+  {
+   "x": 47,
+   "y": 189,
+   "w": 15,
+   "h": 22,
+   "c": "C"
+  },
+  {
+   "x": 242,
+   "y": 189,
+   "w": 15,
+   "h": 22,
+   "c": "C"
+  },
+  {
+   "x": 437,
+   "y": 189,
+   "w": 15,
+   "h": 21,
+   "c": "C"
+  },
+  {
+   "x": 634,
+   "y": 189,
+   "w": 15,
+   "h": 22,
+   "c": "C"
+  },
+  {
+   "x": 873,
+   "y": 157,
+   "w": 124,
+   "h": 28,
+   "c": "Dm(b5)/C"
+  }
+ ],
+ "extra_verified": "**la rangée d'accords du premier système, que rien ne voyait.** Le découpage n'en isole aucune bande : ce qu'il retient à y=225 sont les tirets et les points d'octave des chiffres, 36 px plus bas. Les cinq étiquettes — C C C C et Dm(b5)/C, ce dernier gravé 32 px plus haut au-dessus de sa voix — sont sorties de la **planche navigateur**, où elles restaient en do sur une page rendue en do dièse. Boîtes relevées au profil d'encre. 2026-09-10 (itération 56)",
+ "verified": "planche navigateur C→C# relue sur les sept tranches : les sept rangées d'accords, la rangée du premier système que le découpage n'isole pas (y≈189) et le cadre de tonalité sont convertis. Aucun accord ne reste en do. 2026-09-10 (itération 56)",
+ "frozen_labels": [
+  {
+   "x": 486,
+   "y": 330,
+   "w": 124,
+   "h": 28,
+   "c": "Dm(b5)/C"
+  },
+  {
+   "x": 179,
+   "y": 555,
+   "w": 14,
+   "h": 27,
+   "c": "C"
+  },
+  {
+   "x": 485,
+   "y": 555,
+   "w": 47,
+   "h": 27,
+   "c": "G/B"
+  },
+  {
+   "x": 756,
+   "y": 555,
+   "w": 42,
+   "h": 27,
+   "c": "F/A"
+  },
+  {
+   "x": 1109,
+   "y": 555,
+   "w": 45,
+   "h": 27,
+   "c": "C/G"
+  },
+  {
+   "x": 70,
+   "y": 842,
+   "w": 10,
+   "h": 21,
+   "c": "F"
+  },
+  {
+   "x": 399,
+   "y": 842,
+   "w": 41,
+   "h": 21,
+   "c": "C/E"
+  },
+  {
+   "x": 519,
+   "y": 842,
+   "w": 42,
+   "h": 21,
+   "c": "Am"
+  },
+  {
+   "x": 664,
+   "y": 842,
+   "w": 41,
+   "h": 21,
+   "c": "Dm"
+  },
+  {
+   "x": 1054,
+   "y": 842,
+   "w": 17,
+   "h": 21,
+   "c": "G"
+  },
+  {
+   "x": 60,
+   "y": 1096,
+   "w": 8,
+   "h": 27,
+   "c": "F"
+  },
+  {
+   "x": 365,
+   "y": 1096,
+   "w": 41,
+   "h": 27,
+   "c": "C/E"
+  },
+  {
+   "x": 466,
+   "y": 1096,
+   "w": 41,
+   "h": 27,
+   "c": "Am"
+  },
+  {
+   "x": 610,
+   "y": 1096,
+   "w": 41,
+   "h": 27,
+   "c": "Dm"
+  },
+  {
+   "x": 911,
+   "y": 1096,
+   "w": 42,
+   "h": 27,
+   "c": "F/G"
+  },
+  {
+   "x": 1167,
+   "y": 1096,
+   "w": 14,
+   "h": 27,
+   "c": "C"
+  },
+  {
+   "x": 62,
+   "y": 1324,
+   "w": 17,
+   "h": 35,
+   "c": "G"
+  },
+  {
+   "x": 325,
+   "y": 1324,
+   "w": 14,
+   "h": 35,
+   "c": "C"
+  },
+  {
+   "x": 585,
+   "y": 1324,
+   "w": 47,
+   "h": 35,
+   "c": "G/B"
+  },
+  {
+   "x": 840,
+   "y": 1324,
+   "w": 42,
+   "h": 35,
+   "c": "F/A"
+  },
+  {
+   "x": 1116,
+   "y": 1324,
+   "w": 45,
+   "h": 35,
+   "c": "C/G"
+  },
+  {
+   "x": 61,
+   "y": 1549,
+   "w": 4,
+   "h": 25,
+   "c": "F"
+  },
+  {
+   "x": 278,
+   "y": 1549,
+   "w": 41,
+   "h": 25,
+   "c": "C/E"
+  },
+  {
+   "x": 496,
+   "y": 1549,
+   "w": 30,
+   "h": 25,
+   "c": "Bb"
+  },
+  {
+   "x": 708,
+   "y": 1549,
+   "w": 17,
+   "h": 25,
+   "c": "G"
+  },
+  {
+   "x": 924,
+   "y": 1549,
+   "w": 15,
+   "h": 25,
+   "c": "C"
+  },
+  {
+   "x": 1154,
+   "y": 1549,
+   "w": 46,
+   "h": 25,
+   "c": "G/B"
+  },
+  {
+   "x": 48,
+   "y": 1764,
+   "w": 42,
+   "h": 37,
+   "c": "F/A"
+  },
+  {
+   "x": 290,
+   "y": 1764,
+   "w": 46,
+   "h": 37,
+   "c": "C/G"
+  },
+  {
+   "x": 513,
+   "y": 1764,
+   "w": 8,
+   "h": 37,
+   "c": "F"
+  },
+  {
+   "x": 736,
+   "y": 1764,
+   "w": 43,
+   "h": 37,
+   "c": "F/G"
+  },
+  {
+   "x": 833,
+   "y": 1764,
+   "w": 16,
+   "h": 37,
+   "c": "G"
+  },
+  {
+   "x": 955,
+   "y": 1764,
+   "w": 14,
+   "h": 37,
+   "c": "C"
+  },
+  {
+   "x": 47,
+   "y": 189,
+   "w": 15,
+   "h": 22,
+   "c": "C"
+  },
+  {
+   "x": 242,
+   "y": 189,
+   "w": 15,
+   "h": 22,
+   "c": "C"
+  },
+  {
+   "x": 437,
+   "y": 189,
+   "w": 15,
+   "h": 21,
+   "c": "C"
+  },
+  {
+   "x": 634,
+   "y": 189,
+   "w": 15,
+   "h": 22,
+   "c": "C"
+  },
+  {
+   "x": 873,
+   "y": 157,
+   "w": 124,
+   "h": 28,
+   "c": "Dm(b5)/C"
+  }
+ ]
 }
