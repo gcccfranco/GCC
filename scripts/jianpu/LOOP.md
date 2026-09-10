@@ -5222,11 +5222,17 @@ place. Un amas de **498 px** portait le crochet de 1ʳᵉ fin entier avec ses
 deux « Cmaj7 » ; les accords reviennent sur leur seule encre. Et une
 composite de plus, « D (后几次Bm) ».
 
-*耶和华行了大事* (20/55, laissée en cours). Sa fonte est acquise, et elle
-laisse une leçon d'outil : **`propose-extra --hidden` ne rend pas une rangée
-cachée entière**, seulement les amas que le matcher y apparie — deux sur dix
-sur sa rangée y=1358. Une rangée cachée se mesure donc à l'encre, comme une
-rangée sans bande.
+*耶和华行了大事* (36 % → 29/29 + 30). **Quatre rangées d'accords entières
+que le classifieur ne type pas `chords`** — y=1358, 1574, 1793, 1995 —, soit
+vingt-cinq accords hors de tout dénominateur ; et quatre bandes sans lettre
+promues à leur place, vingt-cinq amas dedans. La page paraissait à 36 % en
+ignorant la moitié de ce qu'elle grave.
+
+Elle laisse une leçon d'outil : **`propose-extra --hidden` ne rend pas une
+rangée cachée entière**, seulement les amas que le matcher y apparie — deux
+sur dix sur y=1358. Une rangée cachée se mesure donc à l'encre, comme une
+rangée sans bande. Son cadre est un « 1 = ♭B » à **bémol antéposé**
+(itération 32).
 
 **La fonte, encore.** Sept pages ouvertes depuis l'itération 57, **dix
 fontes infirmées sur douze**, toujours dans le même sens : la page est plus
@@ -5234,17 +5240,16 @@ fine, ou plus serif, que ce que le compteur au seuil propose. Le zoom ×5 sur
 les trois plus larges étiquettes d'une page suffit à trancher, et il coûte
 quelques secondes — c'est devenu le premier geste.
 
-**Bilan.** Corpus 135, calques **114 → 116**, tous certifiés et tous
-complets. Étiquettes 4 800 → **4 870**, cadres « 1=X » **116**. **590 tests
+**Bilan.** Corpus 135, calques **114 → 117**, tous certifiés et tous
+complets. Étiquettes 4 800 → **4 929**, cadres « 1=X » **117**. **595 tests
 Playwright** (580 avant), `npx tsc --noEmit`, `npm run validate` (370
 chants), `npm run lint` (49 avertissements préexistants, 0 erreur).
-`bandes.py --certifiées` : 2 bandes sur 116 pages, les deux faux positifs
-connus. Banc du matcher regelé à 430/596 durs · 87 publiables ·
-3 646/3 919 gelés.
+`bandes.py --certifiées` : 2 bandes, les deux faux positifs connus.
+`worklist --certifiées` : 0 rangée perdue.
 
 **Ce qui reste, nommé.**
 
-- **19 pages sans calque**, plus les deux retenues à l'étude.
+- **18 pages sans calque**, plus les deux retenues à l'étude.
 - **你的爱不离不弃 est tranchée et ne paraîtra pas** : *on ne publie pas de
   calque sur une page qui porte aussi une portée à cinq lignes* (décision de
   Timothée, 10/09/2026). La règle vaut pour toute page à portée qui
