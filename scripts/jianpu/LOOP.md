@@ -5029,3 +5029,130 @@ préexistants, 0 erreur).
 - **Les tonalités mineures du transpositeur** attendent leur spec
   (`docs/spec-tonalites-mineures.md`), mise de côté le temps de finir les
   calques.
+
+### Itération 57 — la rangée qu'aucune bande ne porte, et la fonte qu'on croyait grasse
+
+Sept pages ouvertes, de 50 % à 44 %, et deux choses apprises qui valent
+au-delà d'elles.
+
+**Une cinquième façon pour une rangée de disparaître.** 我的生命献给你
+affichait 46 % en ignorant **deux rangées d'accords entières**, vingt-quatre
+accords : le découpage ne leur donne aucune bande, aucun amas, aucun verdict.
+Les trois chasses de `worklist` partent toutes d'une bande — cachée, soudée,
+orpheline — et la rangée muette de l'itération 54 part du verdict du
+classifieur. Une rangée que rien n'a jamais isolée échappe aux cinq, et
+n'entre dans aucun dénominateur : la page paraît complète sans elle.
+
+C'est la forme trouvée à la main deux fois déjà (我要爱慕你 à l'itération 55,
+复兴的火 à la 56). `bandes.py` en fait un instrument, et il part de ce qui ne
+présuppose rien : le **profil d'encre de la page**, toutes ses bandes
+horizontales, celles que le calque couvre et les autres.
+
+**Rendre les bandes nues ne sert à rien** — il y en a 2 085 sur les 112 pages
+certifiées, une par ligne de chiffres et par ligne de paroles, et la rangée
+manquée s'y noie. On leur applique donc le test des trois chasses,
+appariement au vocabulaire du `.cho`. **Sur la bande entière il ne trouve
+toujours rien**, et c'est `welded_rows` (itération 39) qui donne la réponse :
+une bande d'accords descend jusqu'au haut des chiffres de son système, chaque
+amas porte les deux, aucun gabarit ne colle. La bande entière donnait 2/6 et
+3/9 ; sa fenêtre haute, de la hauteur d'une rangée d'accords, donne 3/5 et
+6/7.
+
+L'oracle a été **fait échouer avant d'être cru** : sur 我的生命献给你 privée
+de ses deux rangées il les rend toutes les deux, et rien sur la page réparée.
+Sur les 114 certifiées il sort **2 bandes**, le titre de 何等恩典 et une ligne
+de chiffres de 尽情的敬拜. Aucune rangée manquée dans le corpus publié.
+
+Ce qu'il ne voit pas se dit aussi : sur 常常喜乐, les deux annotations
+« （原版是Am） » ne s'apparient pas — deux amas latins noyés dans les hanzi de
+leur bande.
+
+**La planche d'audit avait laissé passer une des deux.** y=340 occupait le
+bas d'une tranche, juste sous la rangée que je venais de vérifier. « La
+planche se lit deux fois et se voit une fois » (itération 45) vaut aussi pour
+les bordures de tranche.
+
+**Cinq fontes élues au seuil, cinq fois infirmées.** Les sept pages portaient
+toutes une fonte choisie par `sweep-key` sur le seul compte d'amas au seuil.
+Cinq étaient fausses, et toujours dans le même sens : **la page est plus fine
+que ce que le compteur propose**. 充满在这里 gravait une linéale régulière
+sous verdana-bold (43/86 contre 36/86) ; 在你宝座前 et 再一次 sont en serif —
+la première écrit ses altérations avec le vrai signe musical ♯ posé sur la
+ligne de base, et `times`, seule fonte à ce dessin, est celle qui publie le
+moins (19/54 contre 27/54).
+
+**Et la planche d'élection ment sur la graisse.** Sur 一同齐声宣扬 elle montre
+un « F#m » franchement gras ; au zoom ×7 sur l'encre, les traits sont fins.
+Elle agrandit un très petit bitmap, ce qui épaissit tout. Le zoom sur une
+étiquette large de la page tranche mieux qu'elle.
+
+**Ce que les sept pages ont appris, une par une.**
+
+*充满在这里* (50 % → 67/67). Une **ligne de paroles** promue, quatorze hanzi
+qui tenaient la page sous le plancher à eux seuls. Un amas de **2 px** — le
+retour du crochet de 1ʳᵉ fin — que `propose-extra` ne montre pas (plancher
+5 × 11) mais que le dénominateur compte. Et le titre grave « （A调） », qui
+décrit cette page-là et suit la transposition, quand le sous-titre
+« [共4张：A(原调)/Bb/B调…] » décrit le recueil et reste tel quel.
+
+*在你宝座前* (50 % → 43/43). L'intro grave ses huit accords **en colonnes**
+(1/5/3/1) ; la bande des « 1 » du haut était promue rangée d'accords. Trois
+amas de 2 px, les chiffres 3 des triolets posés sur leur arc.
+
+*再一次* (49 % → 44/44 + 4). **Quatre modes C** : trois « G » gravés publiés
+« C », un « D » publié « G », tous entre +0,29 et +0,69. En serif le G et le
+C partagent leur panse ; c'est la planche de rangée qui les sépare, pas le
+score. Cinq étiquettes soudées à un trait — deux « G » sous les chiffres des
+crochets de reprise, gravés plus petits que la page (`fh`), un « G » et deux
+« Am » dont le crochet de triolet part de la base de la lettre.
+
+*亲眼看见你* (48 % → 27/27). **Un seul nom d'accord la tenait sous le
+plancher** : ses six « Bm7 », que le matcher lit pourtant à +0,62 à +0,81 et
+que le jury retenait, un juré divergeant à chaque fois. Deux rangées de
+**barres de mesure** typées accords pesaient seize amas.
+
+*我的生命献给你* (46 % → 33/33 + 29). Ci-dessus, plus trois accords soudés à
+un signe — le segno, deux ⊕ — reposés sur l'encre de leur seule lettre.
+
+*一同齐声宣扬* (44 % → 20/20 + 3). Six « [*] », un renvoi de note que la page
+explique en clair à côté de son cadre, gravés dans les rangées d'accords et
+lus « C# ». Une rangée soudée aux crochets de reprise dont le « E » est
+**traversé** par le trait : treize pixels de trait disparaissent sous
+l'étiquette réécrite, et c'est le moindre mal.
+
+*常常喜乐* (44 % → 29/29 + 2). **Le cadre « 1= G 4/4 » comptait comme une
+rangée d'accords**, et la rangée des points d'octave en pesait vingt-et-un ;
+à eux deux, la moitié du dénominateur. Deux modes C sur les chiffres « 1 »
+des crochets, publiés « D » à +0,65. Et deux annotations que rien ne
+proposait — « （原版是Am） », *la version d'origine a Am* —, accords dans la
+tonalité de cette page que `transpose_label` réécrit en découpant sur les
+hanzi.
+
+**Bilan.** Corpus 135, calques **107 → 114**, tous certifiés et tous
+complets. Étiquettes 4 499 → **4 800**, cadres « 1=X » **114**. **580 tests
+Playwright** (545 avant), `npx tsc --noEmit`, `npm run validate` (370 chants)
+et `npm run lint` (49 avertissements préexistants, 0 erreur). Banc du matcher
+regelé à 405/547 durs · 87 publiables · 3 608/3 862 gelés : les 20 amas
+perdus appartiennent tous aux trois pages dont la fonte a changé, aucune page
+tierce n'a bougé — et ils sont désormais écrits en `corrections`, lus à
+l'œil. C'est l'échange de l'itération 50, payé volontairement : la fonte que
+l'œil retient lit moins, et lit juste.
+
+**Ce qui reste, nommé.**
+
+- **21 pages sans calque**, de 41 % à 0 %.
+- **Des fichiers « … 2.json » et « … 2.webp » traînent dans le dépôt**, non
+  versionnés, doublons iCloud de `gold/`, de `public/jianpu/` et de
+  `scripts/jianpu/` : `bench-match.py` les prend pour des chants et les
+  déclare illisibles. Signalé, pas supprimé.
+- **`bandes.py` ne voit pas une bande d'annotations** dont les amas latins
+  sont noyés dans les hanzi (常常喜乐). Ces étiquettes-là ne sortent que de la
+  planche d'audit.
+- **Les 82 rangées muettes des pages sans calque** ne sont toujours pas
+  cataloguées (itération 54) ; sur les sept pages prises ici, `propose-extra
+  --all --hidden` n'en a rendu aucune qui soit une rangée manquée.
+- **Le `.cho` de 给梦想一双翅膀 porte quatre `[ ]` vides**, **le PDF n'a pas le
+  sélecteur**, **10 pages sans `gold/`**, **祷告 reste une anomalie ouverte**,
+  et **l'alternative parenthésée solitaire** (49) n'a toujours pas d'outil.
+- **Les tonalités mineures du transpositeur** attendent leur spec
+  (`docs/spec-tonalites-mineures.md`).
