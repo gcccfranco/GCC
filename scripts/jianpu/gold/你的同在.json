@@ -1,5 +1,369 @@
 {
  "slug": "你的同在",
+ "corrections": {
+  "359,37": "D",
+  "359,225": "Bm",
+  "359,309": "C#m7(b5)",
+  "359,826": "E7",
+  "359,985": "A7",
+  "520,32": "D",
+  "520,217": "Bm",
+  "520,298": "C#m7(b5)",
+  "520,652": "Bm",
+  "520,792": "E7",
+  "520,972": "A7",
+  "682,165": "Bm",
+  "682,836": "F#m7",
+  "965,971": "A11",
+  "1250,494": "A11",
+  "1250,953": "F#m",
+  "1532,1036": "A",
+  "1810,161": "Bm",
+  "1810,269": "C#m7(b5)",
+  "1810,528": "F#m",
+  "1810,896": "E7",
+  "1810,1017": "Asus4"
+ },
+ "corrections_verified": "les sept rangées rendues entières au 1,6× en tranches qui se recouvrent, lues une à une, puis **la lecture entière confrontée à la grille du `.cho`** : ce chant écrit ses accords en clair et dans l'ordre de la page (46 attendus, 46 amas), ce qui donne un oracle mécanique du mode C. 2026-09-10 (itération 56).\nTrois lectures étaient **retenues et fausses** : 359,826 et 1810,896 publiaient « B7 » (+0,39 et +0,41) sur des « E7 » gravés, et 520,972 « A11 » (+0,33) sur un « A7 ». Aucun compteur ne les voyait — le vocabulaire de la page porte les quatre noms — et l'œil sur les annotations du rendu de rangée en a laissé passer deux sur trois.",
+ "not_labels": [
+  "359,88",
+  "520,70",
+  "520,859",
+  "520,898"
+ ],
+ "not_labels_verified": "trois arcs de liaison (359,88 · 520,70 · 520,898) et la hampe du crochet de triolet 520,859, vus sur les mêmes rendus de rangée",
  "face": "helvetica-bold",
- "face_verified": "balayage de fonte croisé : sweep-key.py (veto + marge) et le compteur de couverture de build-chords désignent la même fonte, à tonalité inchangée — 2026-09-08 (itération 50). À confirmer par la planche d'audit avant certification."
+ "face_verified": "balayage de fonte croisé : sweep-key.py (veto + marge) et le compteur de couverture de build-chords désignent la même fonte, à tonalité inchangée — 2026-09-08 (itération 50). À confirmer par la planche d'audit avant certification.",
+ "key_label": {
+  "x": 49,
+  "y": 240,
+  "w": 63,
+  "h": 23
+ },
+ "key_label_verified": "mesure measure-keylabel (ancrage sur le « = », cadre = voisin gauche…voisin droit), zoom relu à l’œil sur planche de lot, lettre gravée confrontée à printedKey, 2026-08-26 (itération 35)",
+ "verified": "planche navigateur D→Eb relue sur les sept tranches : les sept rangées d'accords et le cadre 1=D sont convertis, aucun accord ne reste en ré. La fonte (helvetica-bold) est confirmée par la planche, comme `face_verified` le demandait. 2026-09-10 (itération 56)",
+ "frozen_labels": [
+  {
+   "x": 37,
+   "y": 359,
+   "w": 15,
+   "h": 34,
+   "c": "D"
+  },
+  {
+   "x": 225,
+   "y": 359,
+   "w": 32,
+   "h": 34,
+   "c": "Bm"
+  },
+  {
+   "x": 309,
+   "y": 359,
+   "w": 95,
+   "h": 34,
+   "c": "C#m7(b5)"
+  },
+  {
+   "x": 505,
+   "y": 359,
+   "w": 36,
+   "h": 34,
+   "c": "F#7"
+  },
+  {
+   "x": 664,
+   "y": 359,
+   "w": 44,
+   "h": 34,
+   "c": "Bm7"
+  },
+  {
+   "x": 826,
+   "y": 359,
+   "w": 25,
+   "h": 34,
+   "c": "E7"
+  },
+  {
+   "x": 985,
+   "y": 359,
+   "w": 27,
+   "h": 34,
+   "c": "A7"
+  },
+  {
+   "x": 32,
+   "y": 520,
+   "w": 14,
+   "h": 34,
+   "c": "D"
+  },
+  {
+   "x": 217,
+   "y": 520,
+   "w": 32,
+   "h": 34,
+   "c": "Bm"
+  },
+  {
+   "x": 298,
+   "y": 520,
+   "w": 95,
+   "h": 34,
+   "c": "C#m7(b5)"
+  },
+  {
+   "x": 496,
+   "y": 520,
+   "w": 35,
+   "h": 34,
+   "c": "F#7"
+  },
+  {
+   "x": 652,
+   "y": 520,
+   "w": 32,
+   "h": 34,
+   "c": "Bm"
+  },
+  {
+   "x": 792,
+   "y": 520,
+   "w": 29,
+   "h": 34,
+   "c": "E7"
+  },
+  {
+   "x": 972,
+   "y": 520,
+   "w": 27,
+   "h": 34,
+   "c": "A7"
+  },
+  {
+   "x": 31,
+   "y": 682,
+   "w": 17,
+   "h": 24,
+   "c": "D"
+  },
+  {
+   "x": 165,
+   "y": 682,
+   "w": 36,
+   "h": 24,
+   "c": "Bm"
+  },
+  {
+   "x": 430,
+   "y": 682,
+   "w": 50,
+   "h": 24,
+   "c": "Em7"
+  },
+  {
+   "x": 578,
+   "y": 682,
+   "w": 41,
+   "h": 24,
+   "c": "A11"
+  },
+  {
+   "x": 836,
+   "y": 682,
+   "w": 63,
+   "h": 24,
+   "c": "F#m7"
+  },
+  {
+   "x": 996,
+   "y": 682,
+   "w": 28,
+   "h": 24,
+   "c": "B7"
+  },
+  {
+   "x": 20,
+   "y": 965,
+   "w": 35,
+   "h": 24,
+   "c": "Em"
+  },
+  {
+   "x": 181,
+   "y": 965,
+   "w": 16,
+   "h": 24,
+   "c": "A"
+  },
+  {
+   "x": 336,
+   "y": 965,
+   "w": 17,
+   "h": 24,
+   "c": "D"
+  },
+  {
+   "x": 503,
+   "y": 965,
+   "w": 36,
+   "h": 24,
+   "c": "Bm"
+  },
+  {
+   "x": 788,
+   "y": 965,
+   "w": 50,
+   "h": 24,
+   "c": "Em7"
+  },
+  {
+   "x": 971,
+   "y": 965,
+   "w": 40,
+   "h": 24,
+   "c": "A11"
+  },
+  {
+   "x": 20,
+   "y": 1250,
+   "w": 62,
+   "h": 24,
+   "c": "F#m7"
+  },
+  {
+   "x": 170,
+   "y": 1250,
+   "w": 50,
+   "h": 24,
+   "c": "Bm7"
+  },
+  {
+   "x": 349,
+   "y": 1250,
+   "w": 50,
+   "h": 24,
+   "c": "Em7"
+  },
+  {
+   "x": 494,
+   "y": 1250,
+   "w": 41,
+   "h": 24,
+   "c": "A11"
+  },
+  {
+   "x": 655,
+   "y": 1250,
+   "w": 17,
+   "h": 24,
+   "c": "D"
+  },
+  {
+   "x": 953,
+   "y": 1250,
+   "w": 49,
+   "h": 24,
+   "c": "F#m"
+  },
+  {
+   "x": 1107,
+   "y": 1250,
+   "w": 50,
+   "h": 24,
+   "c": "Bm7"
+  },
+  {
+   "x": 20,
+   "y": 1532,
+   "w": 49,
+   "h": 23,
+   "c": "Em7"
+  },
+  {
+   "x": 233,
+   "y": 1532,
+   "w": 15,
+   "h": 23,
+   "c": "A"
+  },
+  {
+   "x": 430,
+   "y": 1532,
+   "w": 62,
+   "h": 23,
+   "c": "F#m7"
+  },
+  {
+   "x": 624,
+   "y": 1532,
+   "w": 28,
+   "h": 23,
+   "c": "B7"
+  },
+  {
+   "x": 872,
+   "y": 1532,
+   "w": 50,
+   "h": 23,
+   "c": "Em7"
+  },
+  {
+   "x": 1036,
+   "y": 1532,
+   "w": 14,
+   "h": 23,
+   "c": "A"
+  },
+  {
+   "x": 31,
+   "y": 1810,
+   "w": 17,
+   "h": 28,
+   "c": "D"
+  },
+  {
+   "x": 161,
+   "y": 1810,
+   "w": 36,
+   "h": 28,
+   "c": "Bm"
+  },
+  {
+   "x": 269,
+   "y": 1810,
+   "w": 109,
+   "h": 28,
+   "c": "C#m7(b5)"
+  },
+  {
+   "x": 528,
+   "y": 1810,
+   "w": 49,
+   "h": 28,
+   "c": "F#m"
+  },
+  {
+   "x": 673,
+   "y": 1810,
+   "w": 50,
+   "h": 28,
+   "c": "Bm7"
+  },
+  {
+   "x": 896,
+   "y": 1810,
+   "w": 28,
+   "h": 28,
+   "c": "E7"
+  },
+  {
+   "x": 1017,
+   "y": 1810,
+   "w": 63,
+   "h": 28,
+   "c": "Asus4"
+  }
+ ]
 }
