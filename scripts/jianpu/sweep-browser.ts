@@ -25,7 +25,7 @@
  * au demi-ton au-dessus peut rogner trois degrés plus loin. Les trois autres
  * défauts restent mesurés à la tonalité d'audit, qui les expose déjà tous.
  *
- * Usage : npx tsx scripts/jianpu/sweep-browser.ts [--all] [--keys] [--json]
+ * Usage : npx tsx scripts/jianpu/sweep-browser.ts [<slug>…] [--all] [--keys] [--json]
  */
 
 import { chromium } from "@playwright/test";
@@ -110,7 +110,11 @@ async function encreCouverte(page: import("@playwright/test").Page) {
 
 async function main() {
   const chords = loadChords();
-  const slugs = process.argv.includes("--all") ? Object.keys(chords).sort() : certifiedSlugs();
+  // Des slugs nommés : le lot en cours, **avant** sa certification — sans eux
+  // le balayage ne voyait une page qu'une fois certifiée (itération 59).
+  const nommes = process.argv.slice(2).filter((a) => !a.startsWith("--"));
+  const slugs = nommes.length ? nommes
+    : process.argv.includes("--all") ? Object.keys(chords).sort() : certifiedSlugs();
   const toutesTonalites = process.argv.includes("--keys");
   const server = await ensureServer();
   const browser = await chromium.launch();
