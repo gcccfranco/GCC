@@ -1,0 +1,353 @@
+{
+ "slug": "在你宝座前",
+ "face": "times",
+ "face_verified": "planche d'élection (itération 57) : la page est gravée en **serif** et écrit ses altérations avec le vrai signe musical ♯ posé sur la ligne de base — « A/G♯ », « E/G♯ », « A/C♯ ». `times` a ce dessin au caractère près ; `times-bold` est plus grasse que la page, et les quatre linéales écrivent un « # » en exposant. helvetica-neue, la fonte par défaut, publiait 27/54 contre 19/54 à times : c'est le compte au seuil, pas le dessin.",
+ "corrections": {
+  "427,44": "A",
+  "427,201": "A/G#",
+  "427,547": "A/E",
+  "427,735": "A",
+  "427,888": "A/G#",
+  "427,1240": "A/E",
+  "684,23": "A",
+  "684,280": "E/G#",
+  "684,541": "D/F#",
+  "684,860": "E/G#",
+  "1188,280": "E/G#",
+  "1188,541": "D/F#",
+  "1188,861": "E/G#",
+  "1188,1162": "D",
+  "1441,958": "E",
+  "1683,23": "A",
+  "1683,511": "F#m",
+  "1683,787": "A/E",
+  "1683,1202": "A/C#",
+  "1932,536": "A",
+  "1932,759": "A/G#",
+  "1932,1269": "A/E",
+  "2180,785": "E",
+  "2180,1098": "A"
+ },
+ "corrections_verified": "les neuf rangées rendues entières au 2,4× en deux tranches qui se recouvrent, lues une à une (itération 57). La rangée d'intro (y=427) était **entière** à lire : le matcher n'y retenait que ses deux « F#m ». Il lit « E/G# » pour les six « A/G♯ » et « A/E » de cette rangée — la gravure serif pose son dièse musical sur la ligne de base, pas en exposant — mais aucune ne passait le seuil.",
+ "not_labels": [
+  "1932,185",
+  "2180,678",
+  "2180,993"
+ ],
+ "not_labels_verified": "trois amas de **2 px** de large : le chiffre 3 des triolets, posé sur son arc au-dessus de la portée. Ils tiennent dans la bande des accords et comptaient au dénominateur.",
+ "not_rows": [
+  499
+ ],
+ "not_rows_verified": "y=499 n'est pas une rangée d'accords : c'est la **rangée des chiffres** de l'intro, dont les huit accords sont gravés en colonnes (1/5/3/1). Ses huit amas sont les « 1 » du haut de chaque colonne.",
+ "key_label": {
+  "x": 43,
+  "y": 273,
+  "w": 71,
+  "h": 27
+ },
+ "key_label_verified": "candidate #1 de measure-keylabel (x=43 y=273 w=71 h=27) : la page grave « 1=A » à gauche du chiffrage 4/4, et la lettre gravée **A** est celle des accords (printedKey A). La candidate #2 était la ligne de tempo ♩=146 — itération 57.",
+ "verified": "planche navigateur A→Bb relue sur les sept tranches (itération 57) : les huit rangées d'accords, l'intro à accords empilés (Bb Bb/A Gm Bb/F ×2) et le cadre « 1=A » sont tous encadrés et réécrits ; aucun accord ne reste en la. Les trois chiffres de triolet restent gravés, comme voulu.",
+ "frozen_labels": [
+  {
+   "x": 44,
+   "y": 427,
+   "w": 14,
+   "h": 27,
+   "c": "A"
+  },
+  {
+   "x": 201,
+   "y": 427,
+   "w": 59,
+   "h": 27,
+   "c": "A/G#"
+  },
+  {
+   "x": 377,
+   "y": 427,
+   "w": 49,
+   "h": 27,
+   "c": "F#m"
+  },
+  {
+   "x": 547,
+   "y": 427,
+   "w": 43,
+   "h": 27,
+   "c": "A/E"
+  },
+  {
+   "x": 735,
+   "y": 427,
+   "w": 14,
+   "h": 27,
+   "c": "A"
+  },
+  {
+   "x": 888,
+   "y": 427,
+   "w": 60,
+   "h": 27,
+   "c": "A/G#"
+  },
+  {
+   "x": 1066,
+   "y": 427,
+   "w": 48,
+   "h": 27,
+   "c": "F#m"
+  },
+  {
+   "x": 1240,
+   "y": 427,
+   "w": 43,
+   "h": 27,
+   "c": "A/E"
+  },
+  {
+   "x": 23,
+   "y": 684,
+   "w": 17,
+   "h": 32,
+   "c": "A"
+  },
+  {
+   "x": 280,
+   "y": 684,
+   "w": 66,
+   "h": 32,
+   "c": "E/G#"
+  },
+  {
+   "x": 541,
+   "y": 684,
+   "w": 64,
+   "h": 32,
+   "c": "D/F#"
+  },
+  {
+   "x": 860,
+   "y": 684,
+   "w": 66,
+   "h": 32,
+   "c": "E/G#"
+  },
+  {
+   "x": 1161,
+   "y": 684,
+   "w": 19,
+   "h": 32,
+   "c": "D"
+  },
+  {
+   "x": 6,
+   "y": 944,
+   "w": 65,
+   "h": 29,
+   "c": "A/C#"
+  },
+  {
+   "x": 358,
+   "y": 947,
+   "w": 19,
+   "h": 26,
+   "c": "D"
+  },
+  {
+   "x": 612,
+   "y": 947,
+   "w": 40,
+   "h": 26,
+   "c": "Bm"
+  },
+  {
+   "x": 1009,
+   "y": 947,
+   "w": 16,
+   "h": 26,
+   "c": "E"
+  },
+  {
+   "x": 23,
+   "y": 1188,
+   "w": 17,
+   "h": 31,
+   "c": "A"
+  },
+  {
+   "x": 280,
+   "y": 1188,
+   "w": 66,
+   "h": 31,
+   "c": "E/G#"
+  },
+  {
+   "x": 541,
+   "y": 1188,
+   "w": 64,
+   "h": 31,
+   "c": "D/F#"
+  },
+  {
+   "x": 861,
+   "y": 1188,
+   "w": 65,
+   "h": 31,
+   "c": "E/G#"
+  },
+  {
+   "x": 1162,
+   "y": 1188,
+   "w": 18,
+   "h": 31,
+   "c": "D"
+  },
+  {
+   "x": 6,
+   "y": 1438,
+   "w": 65,
+   "h": 29,
+   "c": "A/C#"
+  },
+  {
+   "x": 349,
+   "y": 1441,
+   "w": 19,
+   "h": 26,
+   "c": "D"
+  },
+  {
+   "x": 580,
+   "y": 1441,
+   "w": 41,
+   "h": 26,
+   "c": "Bm"
+  },
+  {
+   "x": 958,
+   "y": 1441,
+   "w": 16,
+   "h": 26,
+   "c": "E"
+  },
+  {
+   "x": 23,
+   "y": 1683,
+   "w": 16,
+   "h": 31,
+   "c": "A"
+  },
+  {
+   "x": 257,
+   "y": 1683,
+   "w": 69,
+   "h": 31,
+   "c": "A/G#"
+  },
+  {
+   "x": 511,
+   "y": 1683,
+   "w": 54,
+   "h": 31,
+   "c": "F#m"
+  },
+  {
+   "x": 787,
+   "y": 1683,
+   "w": 49,
+   "h": 31,
+   "c": "A/E"
+  },
+  {
+   "x": 964,
+   "y": 1683,
+   "w": 19,
+   "h": 31,
+   "c": "D"
+  },
+  {
+   "x": 1202,
+   "y": 1683,
+   "w": 64,
+   "h": 31,
+   "c": "A/C#"
+  },
+  {
+   "x": 10,
+   "y": 1932,
+   "w": 40,
+   "h": 27,
+   "c": "Bm"
+  },
+  {
+   "x": 286,
+   "y": 1932,
+   "w": 16,
+   "h": 27,
+   "c": "E"
+  },
+  {
+   "x": 536,
+   "y": 1932,
+   "w": 16,
+   "h": 27,
+   "c": "A"
+  },
+  {
+   "x": 759,
+   "y": 1932,
+   "w": 68,
+   "h": 27,
+   "c": "A/G#"
+  },
+  {
+   "x": 1004,
+   "y": 1932,
+   "w": 55,
+   "h": 27,
+   "c": "F#m"
+  },
+  {
+   "x": 1269,
+   "y": 1932,
+   "w": 50,
+   "h": 27,
+   "c": "A/E"
+  },
+  {
+   "x": 23,
+   "y": 2180,
+   "w": 19,
+   "h": 26,
+   "c": "D"
+  },
+  {
+   "x": 264,
+   "y": 2177,
+   "w": 65,
+   "h": 29,
+   "c": "A/C#"
+  },
+  {
+   "x": 492,
+   "y": 2180,
+   "w": 41,
+   "h": 26,
+   "c": "Bm"
+  },
+  {
+   "x": 785,
+   "y": 2180,
+   "w": 15,
+   "h": 26,
+   "c": "E"
+  },
+  {
+   "x": 1098,
+   "y": 2180,
+   "w": 17,
+   "h": 26,
+   "c": "A"
+  }
+ ]
+}
