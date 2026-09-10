@@ -134,6 +134,19 @@ mais faux » — que seul l'œil voit (mode C ci-dessous).
    (retirer `chord_rows`, en garder le contenu en clair dans
    `chord_rows_retire`), puis combler par `corrections`.
 
+5ter. **La rangée qu'aucune bande ne porte** (itération 57), la cinquième
+   façon de disparaître — après cachée, soudée, orpheline et muette :
+   ```bash
+   python3 scripts/jianpu/bandes.py <slug>        # planche des bandes nues
+   python3 scripts/jianpu/bandes.py --certifiées  # tout le corpus
+   ```
+   Il part du **profil d'encre** de la page et non du découpage, donc il ne
+   présuppose rien — c'est le seul contrôle qui voie une rangée que rien n'a
+   jamais isolée, et qui ne pèse donc sur aucun dénominateur. Le test du
+   matcher porte sur la **fenêtre haute** de la bande, de la hauteur d'une
+   rangée d'accords : sur la bande entière, qui descend jusqu'aux chiffres,
+   rien ne s'apparie. Il reste aveugle à une bande dont les amas latins sont
+   noyés dans les hanzi (les « （原版是Am） » de 常常喜乐).
 6. **Accords gravés hors du `.cho`** (itération 33) :
    ```bash
    python3 scripts/jianpu/propose-chords.py              # amas non couverts
