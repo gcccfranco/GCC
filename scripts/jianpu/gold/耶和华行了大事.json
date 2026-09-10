@@ -1,0 +1,6 @@
+{
+ "slug": "耶和华行了大事",
+ "face": "times",
+ "face_verified": "zoom ×5 sur « B♭ », « F/A » et « Gm » (itération 58) : **serif**, empattements nets, et le bémol est le vrai signe musical **surélevé**. helvetica-neue, la fonte par défaut, écrit un « b » de bas de casse sur la ligne.",
+ "note_travail": "commencée à l'itération 58, laissée en cours. La fonte est élue (serif, bémol musical surélevé) ; ce qui reste est un relevé à l'œil de **deux rangées entières hors lecture** (y=1358 et y=1574, dix-huit accords mesurés sur l'encre) plus les rangées 2032 et 2223. `propose-extra --hidden` n'en rend que deux amas sur dix pour y=1358 : une rangée cachée n'est pas rendue entière par le mode `--hidden`, seulement les amas que le matcher y apparie. Rien n'est publié en attendant — la page est sous le plancher."
+}
