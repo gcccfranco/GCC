@@ -5245,8 +5245,12 @@ connus. Banc du matcher regelé à 430/596 durs · 87 publiables ·
 **Ce qui reste, nommé.**
 
 - **19 pages sans calque**, plus les deux retenues à l'étude.
-- **你的爱不离不弃 attend un arbitrage** : publie-t-on un calque sur une page
-  qui porte aussi une portée à cinq lignes ?
+- **你的爱不离不弃 est tranchée et ne paraîtra pas** : *on ne publie pas de
+  calque sur une page qui porte aussi une portée à cinq lignes* (décision de
+  Timothée, 10/09/2026). La règle vaut pour toute page à portée qui
+  arriverait plus tard ; celle-ci est la seule du corpus. Sa lecture est
+  conservée et n'est pas à refaire — ne pas la re-signaler comme « à
+  ouvrir ».
 - **所有的荣耀归于你 attend son relevé `alt_labels`** (deux jeux d'accords).
 - **`propose-extra --hidden` ne rend pas une rangée cachée entière**
   (itération 58) — noté, pas corrigé.
