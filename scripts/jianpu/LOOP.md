@@ -365,6 +365,7 @@ rangées les tronque.
 | 54 | *(ligne absente à l'époque, transcrite ici depuis le journal de l'itération)* — la **rangée muette** entre dans `propose-extra --all` : typée `chords`, ne publiant rien, invisible à `worklist` comme à `--hidden` · 50 sur les 97 certifiées, **aucune n'était une rangée d'accords manquée** ; 95 sur les 34 sans calque, et là elles parlent | le **sélecteur de tonalité** : `alt` (demi-tons entre l'étiquette et la page, orthographe seule) et `opt` (lecture *alternative*, donc masquable) · le gel jetait `alt` — trois copies de la liste des clés, une seule désormais (`LABEL_KEYS`) | corpus 135, calques **97 → 98** (在这里), étiquettes 3 987 → **4 045** dont 16 en seconde tonalité · **394 tests** Playwright |
 | 55 | **deux pages à deux tonalités, certifiées** · 我要爱慕你 : trois rangées gravées en **fa** au-dessus de ses accords en mi, que *rien* ne voyait — ni `read()`, ni `foreign_rows`, ni les trois chasses de `worklist`, ni la rangée muette (le découpage ne les isole jamais) ; trouvées au profil d'encre, ligne à ligne · 有你同行 : la **première vraie modulation** (+2 au milieu d'une rangée), avec son second cadre « 1= E » gravé dans la rangée de chiffres — `alt` **sans** `opt`, donc pas de sélecteur | **`alt` n'est pas inerte, et il pouvait nuire** : 24 des 143 rendus de 有你同行 changent selon qu'on le lit, et à **2 tonalités sur 11 il rendait la section moins lisible que pas d'`alt` du tout** — page en mi, tout en dièses, section en Gb / Db / Ebm / Bbm sous des G#m / C#m · la préférence pour les bémols de `getTransposedKey` est celle du **moindre nombre d'altérations**, qui tranche partout **sauf au triton** (F# et Gb en font six chacun) : `altSpellingKey` y tranche par la page · **le réflexe était faux** — contraindre la section à la famille de la page rend « Ab » en « G# » et « Bb » en « A# », mesuré avant d'écrire | corpus 135, calques **98 → 100**, tous certifiés · étiquettes 4 045 → **4 141**, dont **46** portant `alt` et 33 `opt` · cadres 1=X **100** · banc du matcher inchangé (0 amas bougé) · **405 tests** Playwright (394 avant), `npx tsc --noEmit`, `npm run validate` (370 chants), `npm run lint` (49 avertissements préexistants, 0 erreur) |
 | 56 | **une étiquette rognée par sa voisine écrit un autre accord** : les fonds sont opaques et les `<span>` se peignent dans l'ordre, donc la voisine de droite efface la fin — « Gb/Bb » affiché **« Gb/B »**, propre, lisible et faux. Le test de chevauchement (itération 38) comparait des **boîtes** ; il ne disait pas ce qu'un lecteur voit, et sur 最美的礼物 trois de ses chevauchements ne rognent rien du tout · nouveau défaut mesuré, **tronqué**, avec sa forme dangereuse à part (le préfixe est encore un accord) · `--keys` reprend la mesure aux **douze tonalités**, par le sélecteur de la page et non par une navigation | **le `.cho` comme oracle du mode C** (`grille.py`) : source indépendante, alignée par `difflib`, on ne retient que la **substitution isolée** entre trois accords identiques de chaque côté — 7 signalements sur 103 calques, tous des `.cho` moins précis que la gravure · sur 你的同在 avant certification elle sort **trois lectures retenues et fausses** (deux « B7 » sur des « E7 », un « A11 » sur un « A7 ») que l'œil avait laissées passer sur les rendus de rangée · **un masque n'efface que le gravé** : rang de peinture explicite, les boîtes sans accord dessous — le masque du bémol exposant de 我们成为一家人 recouvrait sa lettre réécrite, « 1= » tout court, onze tonalités sur douze | corpus 135, calques **100 → 107**, tous certifiés et tous complets · étiquettes 4 141 → **4 499** · **étiquettes rognées 42 → 0** sur 107 calques × 12 tonalités, dont 31 qui se lisaient comme un autre accord · **545 tests** Playwright (405 avant), `npx tsc --noEmit`, `npm run validate` (370 chants), `npm run lint` (49 avertissements préexistants, 0 erreur) |
+| 59 | **une correction prend la hauteur de sa bande** : quand la bande descend jusqu'aux arcs (42 à 48 px contre 25 à 30), l'accord corrigé tombe une demi-ligne sous ses voisins posés en boîte serrée — vu à la planche navigateur seule, sur trois pages · le dénominateur, encore : en-têtes, arcs et chiffres empilés promus, rangées d'accords entières jamais isolées | **les deux pages à deux jeux** : 无价至宝 (sib, capo en la, `.cho` écrit sur la rangée capo → shift +1 et aller-retour `transpose_label` sur chaque nom) et 所有的荣耀归于你 (fa, capo en mi) · `mode_d` ne voit pas les `alt_labels` → `mask_rows`, modèle de 在这里 · `audit-browser --alt` relit la seconde tonalité, que la planche n'avait jamais montrée | corpus 135, calques **117 → 121**, tous certifiés et complets · étiquettes 4 929 → **5 142**, dont 106 `alt` et 93 `opt` · cadres 121 · **617 tests** Playwright, `tsc`, `validate` |
 
 ## Journal
 
@@ -5267,3 +5268,98 @@ chants), `npm run lint` (49 avertissements préexistants, 0 erreur).
   sélecteur**, **10 pages sans `gold/`**, **祷告 reste une anomalie ouverte**,
   **l'alternative parenthésée solitaire** (49) n'a pas d'outil, et **les
   tonalités mineures** attendent leur spec.
+
+### Itération 59 — une correction prend la hauteur de sa bande, et les deux pages à deux jeux qui attendaient
+
+Quatre pages certifiées : les trois mieux lues de la file (每一天我需要你 et
+耶稣的名 à 34 %, 无价至宝 à 30 %) et 所有的荣耀归于你, retenue à
+l'itération 58 en attendant son relevé `alt_labels`. Aucune n'était difficile
+à *lire* ; toutes étaient fausses dans leur **dénominateur**.
+
+**Le goulot, encore, n'était pas la lecture.** Sur 每一天我需要你, changer de
+fonte ne change rien (22/64 en linéale, 21/64 en serif) : la page paraissait
+à 34 % parce que l'en-tête « 1=C 4/4 · I Need You · 曾祥怡词 » et une bande
+d'arcs pesaient dix-huit amas, et que **sa première rangée d'accords**, typée
+`?`, n'en pesait aucun. Même dessin sur les trois autres : rangées d'accords
+entières jamais isolées ou non confirmées (耶稣的名 : l'introduction et
+y=1040 ; 所有的荣耀归于你 : les deux premières rangées réelles), bandes de
+chiffres, d'arcs ou de chiffres empilés promues à leur place.
+
+**Une correction prend la hauteur de sa bande.** C'est la leçon de
+l'itération, et seule la planche navigateur l'a montrée. `_box` pose une
+correction sur `top…bottom` de la rangée, et le client aligne le texte au
+**bas** de la boîte (`items-end`). Quand une bande descend jusqu'aux arcs de
+triolet — 48 px sur 每一天我需要你 contre 25 à 30 ailleurs, 42 px sur la
+dernière rangée de 耶稣的名, 35 et 42 px sur deux rangées de 无价至宝 —, les
+accords corrigés tombent une demi-ligne sous leurs voisins posés en
+`extra_labels` serrées. Aucun compteur ne le voit : tout est encadré, tout
+est converti, rien ne déborde. Remède par page : reposer la rangée entière
+sur son encre (`not_labels` + `extra_labels`). Une rangée toute en
+corrections reste cohérente avec elle-même (无价至宝 y=674, 38 px) ; c'est
+le **mélange** qui se voit. Pas encore outillé — un balayage de la dispersion
+des lignes de base par rangée le mesurerait.
+
+**Les deux pages à deux jeux d'accords.** 无价至宝 grave « 1= ♭B » au-dessus
+d'accords réels en si bémol et de positions de capo en la ; son `.cho` est
+écrit en la, **sur la rangée capo**. Toute sa vérité terrain est donc
+décalée (`printed_key` Bb, shift +1) : les accords réels s'écrivent avec les
+noms de la rangée du haut, les positions de capo un demi-ton plus bas
+(« A » gravé s'écrit « Ab », `alt` −1). Chaque nom passe par un aller-retour
+`transpose_label` ; un seul revient à l'enharmonie près, « D7/F# » publié
+« D7/Gb » — c'est ce que la vue ChordPro du même chant écrit en si bémol, la
+convention de grille (« C#/F et non C#/E# »). 耶稣的名 fait de même avec
+« C♯/F » → « D/Gb ». 所有的荣耀归于你, dans la tonalité de son `.cho`,
+s'écrit telle que gravée : 27 positions de capo pour 27 accords réels.
+
+Deux choses que ces pages ont apprises de l'outillage :
+
+- **La garde de mode D ne voit pas les `alt_labels`** : `mode_d` est appelé
+  avant leur ajout, donc une rangée capo que `hidden_rows` ou `welded_rows`
+  reconnaît retient la page (4 rangées sur 无价至宝, 1 cachée et soudée sur
+  所有的荣耀归于你). Le modèle de 在这里 s'applique : déclarer la rangée en
+  `mask_rows`, qui ne pose rien là où `alt_labels` couvre. Noté, pas
+  corrigé — le contournement est une donnée juste (ce sont bien des rangées
+  en autre tonalité).
+- **La planche d'audit ne voyait jamais la seconde tonalité** : elle capture
+  le défaut, où la rangée alternative n'est qu'un masque vide.
+  `audit-browser --alt` ouvre le sélecteur avant la capture ; les deux pages
+  ont été relues dans les deux états. Et `sweep-browser` accepte désormais
+  des slugs nommés : il ne mesurait une page qu'une fois certifiée.
+
+**Le cadre au bémol exposant**, deuxième du corpus après 我们成为一家人
+(itération 32) : un cadre haut de 62 px pour couvrir le ♭ aurait rendu
+« 1=C » deux fois trop grand, un cadre à la hauteur des lettres laissait un
+♭ orphelin qui se serait lu « 1=♭C ». Même geste qu'alors : cadre sur les
+lettres, masque vide sur le bémol. Le balayage signale leur chevauchement
+(« 1=B ∩ ∅ ») sur les deux pages — bénin, le masque est peint dessous depuis
+l'itération 56 : **faux positif connu du balayage**.
+
+**La fonte, encore trois fois infirmée**, toujours dans le même sens :
+helvetica-neue → times (每一天我需要你), helvetica-bold → times (耶稣的名, dont
+le dièse est le vrai ♯ musical), verdana-bold → helvetica-neue (无价至宝, une
+linéale régulière). Treize sur quinze depuis l'itération 57.
+
+**Bilan.** Corpus 135, calques **117 → 121**, tous certifiés et tous
+complets. Étiquettes 4 929 → **5 142**, dont **106** portant `alt` et **93**
+`opt` ; cadres « 1=X » **121**. **617 tests Playwright** (595 avant),
+`npx tsc --noEmit`, `npm run validate` (370 chants). `worklist --certifiées` :
+0 rangée perdue ; `bandes.py`, `grille.py` et `sweep-browser --keys` propres
+sur les quatre pages (hors le faux positif du cadre et 11 px de filet de
+crochet sous « F#7 » sur 无价至宝, un accord posé *sur* un filet, comme
+一同齐声宣扬).
+
+**Ce qui reste, nommé.**
+
+- **14 pages sans calque** : 13 sous le plancher, de 27 % à 0 % (是耶稣的名, 我在这里敬拜, 深深爱你,
+  是你的爱, 耶稣耶稣, 看见复兴, 遇见你, 求充满这地, 十架的大能, 你是我的一切,
+  从心合一, 一切都更新, 伯利恒的喜讯), plus 你的爱不离不弃, tranchée
+  (portée à cinq lignes, ne paraît pas).
+- **Le mélange correction / boîte serrée dans une rangée haute** n'a pas de
+  détecteur (ci-dessus).
+- **`mode_d` ne compte pas les `alt_labels`** ; le balayage prend le masque
+  vide sous un cadre pour un chevauchement.
+- Toujours ouverts : `propose-extra --hidden` ne rend pas une rangée cachée
+  entière (58), `bandes.py` aveugle aux annotations noyées dans les hanzi
+  (57), les fichiers « … 2.json », le `.cho` de 给梦想一双翅膀, le PDF sans
+  sélecteur, 祷告, l'alternative parenthésée solitaire, les tonalités
+  mineures.
