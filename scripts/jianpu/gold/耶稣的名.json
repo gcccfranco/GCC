@@ -1,4 +1,549 @@
 {
  "slug": "耶稣的名",
- "face": "helvetica-bold"
+ "face": "times",
+ "face_verified": "planche de la page entière (itération 59) : **serif**, empattements sur « Bm11 », « D/E » et « Esus4 », et le dièse est le vrai signe musical ♯, surélevé (« C♯m », « F♯m7 ») — le dessin de Times. helvetica-bold, la fonte du compteur, retenait plus (32/93 contre 13/78) parce qu'elle confirme deux rangées `chords?` de plus ; la lecture, elle, est à relire partout.",
+ "corrections": {
+  "599,18": "Bm7",
+  "599,236": "Bm7",
+  "599,480": "A",
+  "599,947": "A",
+  "756,715": "Bm7",
+  "756,920": "D/E",
+  "1341,348": "F#m7",
+  "1579,137": "D/E",
+  "1579,294": "C#/F",
+  "1579,435": "F#m",
+  "1579,817": "D/E",
+  "1834,401": "D/A",
+  "1834,788": "E"
+ },
+ "corrections_verified": "les rangées rendues entières, amas encadrés avec leur lecture (itération 59). Aucun mode C retenu en times : les dix-sept lectures retenues sont justes, les corrections sont des lectures refusées par le jury ou lues dans le mauvais accord (« D/E » lu `F#m`, « D/A » lu `C#m`).",
+ "not_labels": [
+  "756,208",
+  "756,275",
+  "2124,217",
+  "2124,582",
+  "2124,1003",
+  "2124,1254",
+  "2124,7",
+  "2124,392",
+  "2124,739",
+  "2124,899",
+  "2124,1166"
+ ],
+ "not_labels_verified": "« Bm11 » coupé en deux amas au dernier « 1 » (756,208 et 275) — reposé entier en `extra_labels` ; deux arcs de liaison (2124,217 et 1003) ; « B/D♯ » soudé à l'arc qui passe sous lui (2124,582), reposé sur sa seule encre ; et le *D.S. al Fine* (2124,1254). Et les cinq accords justes de la dernière rangée (2124,7/392/739/899/1166) : sa bande fait 42 px (arcs compris) contre 17 à 30 ailleurs, une correction en prend toute la hauteur et la planche navigateur les montrait rendus sous « B/D♯ », posé en boîte serrée. Reposés en `extra_labels` sur leur encre.",
+ "not_rows": [
+  359,
+  490,
+  1078,
+  1099
+ ],
+ "not_rows_verified": "la ligne de tempo « ♩=77 热情敬拜地 » (359), la bande des arcs sous la première rangée d'accords (490), et deux bandes de la rangée de **chiffres** du quatrième système, segno et arcs compris (1078, 1099) — quarante-trois amas au dénominateur, aucun accord.",
+ "extra_labels": [
+  {
+   "x": 46,
+   "y": 466,
+   "w": 16,
+   "h": 17,
+   "c": "A",
+   "fh": 17
+  },
+  {
+   "x": 120,
+   "y": 466,
+   "w": 58,
+   "h": 17,
+   "c": "Bm11",
+   "fh": 17
+  },
+  {
+   "x": 297,
+   "y": 458,
+   "w": 49,
+   "h": 26,
+   "c": "C#m",
+   "fh": 17
+  },
+  {
+   "x": 509,
+   "y": 466,
+   "w": 48,
+   "h": 17,
+   "c": "Bm7",
+   "fh": 17
+  },
+  {
+   "x": 613,
+   "y": 465,
+   "w": 40,
+   "h": 18,
+   "c": "D/E",
+   "fh": 17
+  },
+  {
+   "x": 742,
+   "y": 466,
+   "w": 16,
+   "h": 17,
+   "c": "A",
+   "fh": 17
+  },
+  {
+   "x": 949,
+   "y": 466,
+   "w": 16,
+   "h": 17,
+   "c": "A",
+   "fh": 17
+  },
+  {
+   "x": 1029,
+   "y": 466,
+   "w": 59,
+   "h": 17,
+   "c": "Bm11",
+   "fh": 17
+  },
+  {
+   "x": 1146,
+   "y": 458,
+   "w": 49,
+   "h": 26,
+   "c": "C#m",
+   "fh": 17
+  },
+  {
+   "x": 206,
+   "y": 758,
+   "w": 74,
+   "h": 21,
+   "c": "Bm11"
+  },
+  {
+   "x": 8,
+   "y": 1040,
+   "w": 67,
+   "h": 31,
+   "c": "A/C#"
+  },
+  {
+   "x": 215,
+   "y": 1050,
+   "w": 20,
+   "h": 21,
+   "c": "D"
+  },
+  {
+   "x": 381,
+   "y": 1040,
+   "w": 64,
+   "h": 31,
+   "c": "C#/F"
+  },
+  {
+   "x": 600,
+   "y": 1040,
+   "w": 74,
+   "h": 31,
+   "c": "F#m7"
+  },
+  {
+   "x": 738,
+   "y": 1040,
+   "w": 65,
+   "h": 31,
+   "c": "B/D#"
+  },
+  {
+   "x": 1096,
+   "y": 1050,
+   "w": 75,
+   "h": 21,
+   "c": "Esus4"
+  },
+  {
+   "x": 602,
+   "y": 2120,
+   "w": 67,
+   "h": 28,
+   "c": "B/D#"
+  },
+  {
+   "x": 5,
+   "y": 2116,
+   "w": 68,
+   "h": 33,
+   "c": "A/C#"
+  },
+  {
+   "x": 390,
+   "y": 2127,
+   "w": 21,
+   "h": 21,
+   "c": "D"
+  },
+  {
+   "x": 737,
+   "y": 2126,
+   "w": 51,
+   "h": 22,
+   "c": "A/E"
+  },
+  {
+   "x": 897,
+   "y": 2126,
+   "w": 51,
+   "h": 22,
+   "c": "D/E"
+  },
+  {
+   "x": 1163,
+   "y": 2127,
+   "w": 22,
+   "h": 21,
+   "c": "A"
+  }
+ ],
+ "extra_verified": "**deux rangées d'accords entières que la lecture en times ne confirme pas** — l'introduction y=462 (« A Bm11 C♯m Bm7 D/E A A Bm11 C♯m », gravée plus petite que les couplets) et y=1040 (« A/C♯ D C♯/F F♯m7 B/D♯ Esus4 ») —, quinze accords hors de tout dénominateur ; plus « Bm11 » reposé entier et « B/D♯ » décollé de son arc. Boîtes mesurées au profil de colonnes. L'introduction porte `fh` = 17 : ses lettres font 17 px contre 22 aux couplets, et réécrite au corps de la page elle touchait l'arc qui passe sous « A Bm11 ».",
+ "key_label": {
+  "x": 49,
+  "y": 272,
+  "w": 71,
+  "h": 27
+ },
+ "key_label_verified": "candidate #1 (x=49 y=272 w=71 h=27) : la page grave « 1=A », lettre égale au printedKey A. La candidate #2 était la ligne de tempo ♩=77 — itération 59.",
+ "verified": "planche navigateur A→Bb relue sur les sept tranches (itération 59) : les dix rangées d'accords — dont l'introduction y=462 et la rangée y=1040, que la lecture en times ne confirme pas — et le cadre « 1=A » sont tous encadrés et réécrits ; aucun accord ne reste en la. L'introduction, gravée plus petite, porte `fh` = 17 et ne touche plus son arc ; la dernière rangée (bande de 42 px) est reposée sur son encre. « C♯/F » se publie « D/Gb » en si bémol, comme la vue ChordPro du même chant. Le segno, le *Fine* et le *D.S. al Fine* restent gravés. `grille.py` : 0 ; `bandes.py` : 0 ; balayage et `--keys` : aucun défaut.",
+ "frozen_labels": [
+  {
+   "x": 18,
+   "y": 599,
+   "w": 48,
+   "h": 18,
+   "c": "Bm7"
+  },
+  {
+   "x": 236,
+   "y": 599,
+   "w": 47,
+   "h": 18,
+   "c": "Bm7"
+  },
+  {
+   "x": 480,
+   "y": 599,
+   "w": 14,
+   "h": 18,
+   "c": "A"
+  },
+  {
+   "x": 947,
+   "y": 599,
+   "w": 14,
+   "h": 18,
+   "c": "A"
+  },
+  {
+   "x": 32,
+   "y": 756,
+   "w": 17,
+   "h": 23,
+   "c": "A"
+  },
+  {
+   "x": 452,
+   "y": 751,
+   "w": 62,
+   "h": 28,
+   "c": "C#m"
+  },
+  {
+   "x": 715,
+   "y": 756,
+   "w": 58,
+   "h": 23,
+   "c": "Bm7"
+  },
+  {
+   "x": 920,
+   "y": 756,
+   "w": 47,
+   "h": 23,
+   "c": "D/E"
+  },
+  {
+   "x": 1177,
+   "y": 756,
+   "w": 17,
+   "h": 23,
+   "c": "A"
+  },
+  {
+   "x": 29,
+   "y": 1341,
+   "w": 17,
+   "h": 24,
+   "c": "A"
+  },
+  {
+   "x": 348,
+   "y": 1337,
+   "w": 72,
+   "h": 28,
+   "c": "F#m7"
+  },
+  {
+   "x": 726,
+   "y": 1341,
+   "w": 18,
+   "h": 24,
+   "c": "D"
+  },
+  {
+   "x": 1124,
+   "y": 1341,
+   "w": 15,
+   "h": 24,
+   "c": "E"
+  },
+  {
+   "x": 19,
+   "y": 1579,
+   "w": 41,
+   "h": 31,
+   "c": "Bm"
+  },
+  {
+   "x": 137,
+   "y": 1579,
+   "w": 47,
+   "h": 31,
+   "c": "D/E"
+  },
+  {
+   "x": 294,
+   "y": 1579,
+   "w": 65,
+   "h": 31,
+   "c": "C#/F"
+  },
+  {
+   "x": 435,
+   "y": 1579,
+   "w": 54,
+   "h": 31,
+   "c": "F#m"
+  },
+  {
+   "x": 601,
+   "y": 1579,
+   "w": 42,
+   "h": 31,
+   "c": "Bm"
+  },
+  {
+   "x": 817,
+   "y": 1579,
+   "w": 48,
+   "h": 31,
+   "c": "D/E"
+  },
+  {
+   "x": 1048,
+   "y": 1579,
+   "w": 17,
+   "h": 31,
+   "c": "A"
+  },
+  {
+   "x": 65,
+   "y": 1834,
+   "w": 17,
+   "h": 21,
+   "c": "A"
+  },
+  {
+   "x": 401,
+   "y": 1834,
+   "w": 50,
+   "h": 21,
+   "c": "D/A"
+  },
+  {
+   "x": 788,
+   "y": 1834,
+   "w": 14,
+   "h": 21,
+   "c": "E"
+  },
+  {
+   "x": 1181,
+   "y": 1834,
+   "w": 17,
+   "h": 21,
+   "c": "A"
+  },
+  {
+   "x": 46,
+   "y": 466,
+   "w": 16,
+   "h": 17,
+   "c": "A",
+   "fh": 17
+  },
+  {
+   "x": 120,
+   "y": 466,
+   "w": 58,
+   "h": 17,
+   "c": "Bm11",
+   "fh": 17
+  },
+  {
+   "x": 297,
+   "y": 458,
+   "w": 49,
+   "h": 26,
+   "c": "C#m",
+   "fh": 17
+  },
+  {
+   "x": 509,
+   "y": 466,
+   "w": 48,
+   "h": 17,
+   "c": "Bm7",
+   "fh": 17
+  },
+  {
+   "x": 613,
+   "y": 465,
+   "w": 40,
+   "h": 18,
+   "c": "D/E",
+   "fh": 17
+  },
+  {
+   "x": 742,
+   "y": 466,
+   "w": 16,
+   "h": 17,
+   "c": "A",
+   "fh": 17
+  },
+  {
+   "x": 949,
+   "y": 466,
+   "w": 16,
+   "h": 17,
+   "c": "A",
+   "fh": 17
+  },
+  {
+   "x": 1029,
+   "y": 466,
+   "w": 59,
+   "h": 17,
+   "c": "Bm11",
+   "fh": 17
+  },
+  {
+   "x": 1146,
+   "y": 458,
+   "w": 49,
+   "h": 26,
+   "c": "C#m",
+   "fh": 17
+  },
+  {
+   "x": 206,
+   "y": 758,
+   "w": 74,
+   "h": 21,
+   "c": "Bm11"
+  },
+  {
+   "x": 8,
+   "y": 1040,
+   "w": 67,
+   "h": 31,
+   "c": "A/C#"
+  },
+  {
+   "x": 215,
+   "y": 1050,
+   "w": 20,
+   "h": 21,
+   "c": "D"
+  },
+  {
+   "x": 381,
+   "y": 1040,
+   "w": 64,
+   "h": 31,
+   "c": "C#/F"
+  },
+  {
+   "x": 600,
+   "y": 1040,
+   "w": 74,
+   "h": 31,
+   "c": "F#m7"
+  },
+  {
+   "x": 738,
+   "y": 1040,
+   "w": 65,
+   "h": 31,
+   "c": "B/D#"
+  },
+  {
+   "x": 1096,
+   "y": 1050,
+   "w": 75,
+   "h": 21,
+   "c": "Esus4"
+  },
+  {
+   "x": 602,
+   "y": 2120,
+   "w": 67,
+   "h": 28,
+   "c": "B/D#"
+  },
+  {
+   "x": 5,
+   "y": 2116,
+   "w": 68,
+   "h": 33,
+   "c": "A/C#"
+  },
+  {
+   "x": 390,
+   "y": 2127,
+   "w": 21,
+   "h": 21,
+   "c": "D"
+  },
+  {
+   "x": 737,
+   "y": 2126,
+   "w": 51,
+   "h": 22,
+   "c": "A/E"
+  },
+  {
+   "x": 897,
+   "y": 2126,
+   "w": 51,
+   "h": 22,
+   "c": "D/E"
+  },
+  {
+   "x": 1163,
+   "y": 2127,
+   "w": 22,
+   "h": 21,
+   "c": "A"
+  }
+ ]
 }
