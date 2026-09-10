@@ -1,0 +1,99 @@
+{
+ "slug": "你的爱不离不弃",
+ "face": "times",
+ "face_verified": "zoom ×5 sur le « F♯m » de la page (itération 58) : **serif**, empattements nets sur le F et sur les jambages du m, dièse musical surélevé. helvetica-neue, la fonte par défaut, n'a rien de ce dessin.",
+ "corrections": {
+  "583,210": "A/E",
+  "583,307": "F#m",
+  "583,697": "D",
+  "885,138": "D",
+  "885,357": "E",
+  "885,556": "F#m",
+  "885,714": "C#m",
+  "885,827": "F#m",
+  "1188,138": "E",
+  "1188,339": "F#m",
+  "1188,602": "C#m",
+  "1494,134": "B7",
+  "1494,400": "E",
+  "1494,603": "A",
+  "1494,808": "E",
+  "1494,1005": "F#m",
+  "1789,117": "C#m",
+  "1789,461": "A",
+  "1789,593": "B7",
+  "1789,719": "E",
+  "1789,984": "C#m",
+  "1789,1108": "F#m"
+ },
+ "corrections_verified": "les huit rangées rendues entières au 2,4× (itération 58). Sous `times` la page se lit juste mais bas — « E » à −0,07, « A » à −0,01 —, et les deux « B7 » sortaient « C# », leur 7 en exposant n'étant pas vu.",
+ "not_labels": [
+  "242,38",
+  "1494,1195"
+ ],
+ "not_labels_verified": "la ligne de tempo « ♩=82 », isolée dans une bande à elle et typée rangée d'accords, et un sommet d'arc de liaison.",
+ "not_rows": [
+  1524
+ ],
+ "not_rows_verified": "y=1524 est la rangée des **chiffres** du dernier système — numéro de mesure ㉓ compris — promue rangée d'accords : vingt-sept amas au dénominateur, presque la moitié.",
+ "extra_labels": [
+  {
+   "x": 238,
+   "y": 281,
+   "w": 48,
+   "h": 28,
+   "c": "F#m"
+  },
+  {
+   "x": 437,
+   "y": 289,
+   "w": 18,
+   "h": 20,
+   "c": "D"
+  },
+  {
+   "x": 589,
+   "y": 289,
+   "w": 14,
+   "h": 20,
+   "c": "E"
+  },
+  {
+   "x": 771,
+   "y": 289,
+   "w": 16,
+   "h": 20,
+   "c": "A"
+  },
+  {
+   "x": 830,
+   "y": 281,
+   "w": 31,
+   "h": 28,
+   "c": "C#"
+  },
+  {
+   "x": 934,
+   "y": 281,
+   "w": 48,
+   "h": 28,
+   "c": "F#m"
+  },
+  {
+   "x": 1131,
+   "y": 289,
+   "w": 17,
+   "h": 20,
+   "c": "D"
+  }
+ ],
+ "extra_verified": "la **première rangée d'accords de la page**, celle qui partage sa bande avec le cadre « 1 = A 4/4 » : le classifieur ne la type pas `chords`, elle n'entre donc dans aucun dénominateur et rien ne la proposait. Sept accords, F#m D E A C# F#m D.",
+ "key_label": {
+  "x": 40,
+  "y": 335,
+  "w": 75,
+  "h": 23
+ },
+ "key_label_verified": "mesuré à la main sur l'encre (x 40→114, y 335→357). `measure-keylabel` ne le propose pas : il ne rendait que la ligne de tempo ♩=82, parce que le cadre de cette page n'est **pas au-dessus de la portée** mais **dans la rangée des chiffres**, sur la même ligne que le chiffrage 4/4 et les premiers degrés. La lettre gravée **A** est bien celle des accords. Itération 58.",
+ "en_chantier": "la page porte une **portée à cinq lignes** sous chaque système, seule du corpus dans ce cas (détecté sur les 135 pages : cinq lignes horizontales couvrant 96 % de la largeur, espacées de 14 px, six fois). Le 简谱 est invariant par transposition, la portée ne l'est pas : calque posé, la page afficherait des accords en si bémol au-dessus d'une portée gravée en la, armure à trois dièses comprise. C'est une page à deux notations, cousine de la page à deux tonalités que la boucle refuse depuis l'itération 15 — mais la question est de produit, pas de lecture : les chiffres et les accords sont justes, seule l'aide secondaire ne suit pas. En attente d'arbitrage ; la lecture est faite et complète (32/32 + 7), il n'y a que `en_chantier` à retirer."
+}
