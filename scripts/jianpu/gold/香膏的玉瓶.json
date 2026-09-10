@@ -1,5 +1,305 @@
 {
  "slug": "香膏的玉瓶",
- "face": "verdana-bold",
- "face_verified": "balayage de fonte croisé : sweep-key.py (veto + marge) et le compteur de couverture de build-chords désignent la même fonte, à tonalité inchangée — 2026-09-08 (itération 50). À confirmer par la planche d'audit avant certification."
+ "face": "helvetica-neue",
+ "face_verified": "zoom ×5 sur les « Cmaj7 » de la page (itération 58) : linéale **régulière**. verdana-bold, la fonte élue au seuil, est plus grasse et plus large.",
+ "corrections": {
+  "1252,41": "G/B",
+  "1252,1203": "D/F#",
+  "1529,345": "Bm7/D",
+  "1795,36": "Bm7/D",
+  "2042,471": "D (后几次Bm)"
+ },
+ "corrections_verified": "les dix rangées rendues entières au 2,4× (itération 58). « D (后几次Bm) » — *D, et Bm les fois suivantes* — est une étiquette composite : `transpose_label` découpe sur les hanzi et réécrit les deux accords, le D et le Bm.",
+ "not_labels": [
+  "1252,1423",
+  "1795,664",
+  "2042,130",
+  "2042,276"
+ ],
+ "not_labels_verified": "le titre 【Chorus】, les deux moitiés de 【Ending，多次反复】, et l'amas de **498 px** de y=1795 : le crochet de 1ʳᵉ fin entier, ses deux « Cmaj7 » compris — ils reviennent en `extra_labels` sur leur seule encre de lettre, sans quoi le fond opaque effacerait le trait du crochet sur toute sa longueur.",
+ "not_rows": [
+  329,
+  654,
+  978
+ ],
+ "not_rows_verified": "trois bandes de sommets d'arcs et de hampes, une par système du premier tiers de la page, typées rangées d'accords : vingt amas au dénominateur, aucune lettre.",
+ "extra_labels": [
+  {
+   "x": 50,
+   "y": 288,
+   "w": 93,
+   "h": 29,
+   "c": "Cmaj7"
+  },
+  {
+   "x": 566,
+   "y": 288,
+   "w": 19,
+   "h": 29,
+   "c": "G"
+  },
+  {
+   "x": 1086,
+   "y": 288,
+   "w": 103,
+   "h": 29,
+   "c": "Bm7/D"
+  },
+  {
+   "x": 42,
+   "y": 613,
+   "w": 62,
+   "h": 29,
+   "c": "Em7"
+  },
+  {
+   "x": 609,
+   "y": 613,
+   "w": 93,
+   "h": 29,
+   "c": "Cmaj7"
+  },
+  {
+   "x": 1104,
+   "y": 613,
+   "w": 55,
+   "h": 29,
+   "c": "G/B"
+  },
+  {
+   "x": 55,
+   "y": 937,
+   "w": 102,
+   "h": 30,
+   "c": "Bm7/D"
+  },
+  {
+   "x": 604,
+   "y": 937,
+   "w": 63,
+   "h": 25,
+   "c": "Em7"
+  },
+  {
+   "x": 1167,
+   "y": 937,
+   "w": 92,
+   "h": 31,
+   "c": "Cmaj7"
+  },
+  {
+   "x": 690,
+   "y": 1795,
+   "w": 130,
+   "h": 27,
+   "c": "Cmaj7"
+  },
+  {
+   "x": 1075,
+   "y": 1795,
+   "w": 125,
+   "h": 27,
+   "c": "Cmaj7"
+  }
+ ],
+ "extra_verified": "**les trois premières rangées d'accords de la page** (y=288, 613, 937), que le classifieur ne type pas `chords` : elles n'entrent dans aucun dénominateur, et c'est la planche de rangée qui les a montrées. S'y ajoutent les deux « Cmaj7 » posés sur les crochets de 1ʳᵉ et 2ᵉ fin, mesurés sur l'encre de la lettre seule.",
+ "key_label": {
+  "x": 5,
+  "y": 219,
+  "w": 85,
+  "h": 27
+ },
+ "key_label_verified": "candidate #2 (x=5 y=219 w=85 h=27) : « 1=  G » à gauche du chiffrage 4/4, lettre gravée **G** = printedKey G. La candidate #1 était la ligne de tempo ♩=77 — itération 58.",
+ "verified": "planche navigateur G→Ab relue sur les sept tranches (itération 58) : les sept rangées d'accords — dont les trois premières, que le classifieur ne type pas `chords` — les deux « Cmaj7 » posés sur les crochets de reprise et le cadre « 1= G » sont tous encadrés et réécrits ; aucun accord ne reste en sol. « D (后几次Bm) » sort « Eb (后几次Cm) », les deux accords transposés et le texte chinois intact ; les traits de crochet restent lisibles.",
+ "frozen_labels": [
+  {
+   "x": 41,
+   "y": 1252,
+   "w": 55,
+   "h": 39,
+   "c": "G/B"
+  },
+  {
+   "x": 438,
+   "y": 1252,
+   "w": 92,
+   "h": 39,
+   "c": "Cmaj7"
+  },
+  {
+   "x": 817,
+   "y": 1252,
+   "w": 62,
+   "h": 39,
+   "c": "Em7"
+  },
+  {
+   "x": 1203,
+   "y": 1252,
+   "w": 69,
+   "h": 39,
+   "c": "D/F#"
+  },
+  {
+   "x": 77,
+   "y": 1529,
+   "w": 19,
+   "h": 25,
+   "c": "G"
+  },
+  {
+   "x": 345,
+   "y": 1529,
+   "w": 103,
+   "h": 25,
+   "c": "Bm7/D"
+  },
+  {
+   "x": 686,
+   "y": 1529,
+   "w": 62,
+   "h": 25,
+   "c": "Em7"
+  },
+  {
+   "x": 965,
+   "y": 1529,
+   "w": 92,
+   "h": 25,
+   "c": "Cmaj7"
+  },
+  {
+   "x": 1313,
+   "y": 1529,
+   "w": 19,
+   "h": 25,
+   "c": "G"
+  },
+  {
+   "x": 36,
+   "y": 1795,
+   "w": 103,
+   "h": 32,
+   "c": "Bm7/D"
+  },
+  {
+   "x": 336,
+   "y": 1795,
+   "w": 63,
+   "h": 32,
+   "c": "Em7"
+  },
+  {
+   "x": 1387,
+   "y": 1795,
+   "w": 20,
+   "h": 32,
+   "c": "G"
+  },
+  {
+   "x": 78,
+   "y": 2042,
+   "w": 20,
+   "h": 51,
+   "c": "G"
+  },
+  {
+   "x": 471,
+   "y": 2042,
+   "w": 213,
+   "h": 51,
+   "c": "D (后几次Bm)"
+  },
+  {
+   "x": 871,
+   "y": 2042,
+   "w": 62,
+   "h": 51,
+   "c": "Em7"
+  },
+  {
+   "x": 1253,
+   "y": 2042,
+   "w": 93,
+   "h": 51,
+   "c": "Cmaj7"
+  },
+  {
+   "x": 50,
+   "y": 288,
+   "w": 93,
+   "h": 29,
+   "c": "Cmaj7"
+  },
+  {
+   "x": 566,
+   "y": 288,
+   "w": 19,
+   "h": 29,
+   "c": "G"
+  },
+  {
+   "x": 1086,
+   "y": 288,
+   "w": 103,
+   "h": 29,
+   "c": "Bm7/D"
+  },
+  {
+   "x": 42,
+   "y": 613,
+   "w": 62,
+   "h": 29,
+   "c": "Em7"
+  },
+  {
+   "x": 609,
+   "y": 613,
+   "w": 93,
+   "h": 29,
+   "c": "Cmaj7"
+  },
+  {
+   "x": 1104,
+   "y": 613,
+   "w": 55,
+   "h": 29,
+   "c": "G/B"
+  },
+  {
+   "x": 55,
+   "y": 937,
+   "w": 102,
+   "h": 30,
+   "c": "Bm7/D"
+  },
+  {
+   "x": 604,
+   "y": 937,
+   "w": 63,
+   "h": 25,
+   "c": "Em7"
+  },
+  {
+   "x": 1167,
+   "y": 937,
+   "w": 92,
+   "h": 31,
+   "c": "Cmaj7"
+  },
+  {
+   "x": 690,
+   "y": 1795,
+   "w": 130,
+   "h": 27,
+   "c": "Cmaj7"
+  },
+  {
+   "x": 1075,
+   "y": 1795,
+   "w": 125,
+   "h": 27,
+   "c": "Cmaj7"
+  }
+ ]
 }
