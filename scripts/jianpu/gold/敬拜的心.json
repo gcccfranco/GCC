@@ -1,5 +1,368 @@
 {
  "slug": "敬拜的心",
- "face": "verdana-bold",
- "printed_key": "E"
+ "face": "helvetica-neue",
+ "printed_key": "E",
+ "face_verified": "zoom ×5 sur les trois plus larges étiquettes de la page — « D#m7b5 » deux fois, « G#m7 » (itération 58) : linéale **régulière**, traits fins et uniformes, dièse sur la ligne de base. verdana-bold, la fonte élue au seuil, est plus grasse et plus large.",
+ "corrections": {
+  "263,538": "Dm7",
+  "263,995": "Bb/F",
+  "263,1254": "Bb/C",
+  "526,559": "Dm7",
+  "526,1180": "Bb/C",
+  "785,307": "Eb/F",
+  "785,723": "C/Bb",
+  "785,986": "Am7",
+  "785,1225": "Dm7",
+  "1048,48": "Cm7",
+  "1048,323": "Eb/F",
+  "1048,861": "F/A",
+  "1310,45": "C/Bb",
+  "1310,303": "Am7",
+  "1310,539": "Dm7",
+  "1310,920": "Bb/C",
+  "1571,302": "C/Bb",
+  "1571,524": "Am7",
+  "1571,777": "Dm7",
+  "1571,1200": "Bb/C",
+  "1821,82": "Eb/F",
+  "1821,713": "Eb/F",
+  "1821,1250": "Eb/F"
+ },
+ "corrections_verified": "les onze rangées rendues entières au 2,4× (itération 58). **La page est gravée en mi, son `.cho` est en fa** : tout ce qui est écrit ici est dans la convention du `.cho` (itération 40) — le « C#m7 » gravé s'écrit « Dm7 », le « B/A » s'écrit « C/Bb ». Chaque lecture a été passée par l'aller-retour `transpose_label(±11)` avant d'être écrite, et les quatorze noms rencontrés tombent tous dans le vocabulaire du `.cho` — ce qui confirme du même coup la tonalité gravée.\n\n**Deux modes C** : 785,1225 et 1310,539 publiaient « F#m7 » sur un « C#m7 » gravé.\n\n**Et deux étiquettes que la gravure a oubliées de transposer.** 526,1180 et 1571,1200 gravent « Bb/C » là où toute la page écrit « A/B » — c'est le IV/V, juste en **fa**, resté tel quel quand la planche est passée de fa à mi. Écrites « Bb/C » ici, elles se publient « A/B » : le calque répare la coquille au lieu de la propager, et la page cesse d'être à deux tonalités.",
+ "not_labels": [
+  "785,441",
+  "1821,1363",
+  "1821,40",
+  "1821,658",
+  "1821,1427"
+ ],
+ "not_labels_verified": "le **segno** de y=785, soudé au « A2 » qui le suit — l'accord est reposé en `extra_labels` sur sa seule encre —, et le renvoi *D.S.* de la dernière rangée. S'y ajoutent les chiffres « 1 » et « 2 » des crochets de reprise de la dernière rangée, et un fragment de 2 px de leur retour vertical.",
+ "not_rows": [
+  569,
+  830,
+  1092,
+  1354
+ ],
+ "not_rows_verified": "quatre bandes de **hampes et de sommets d'arcs**, isolées juste sous chaque rangée d'accords et typées accords : treize amas au dénominateur, aucune lettre.",
+ "extra_labels": [
+  {
+   "x": 482,
+   "y": 789,
+   "w": 36,
+   "h": 23,
+   "c": "Bb2"
+  }
+ ],
+ "extra_verified": "le « A2 » gravé à droite du segno de y=785 (« Bb2 » dans la convention du `.cho`) : son amas porte les deux, et corriger l'amas entier poserait un fond opaque sur le segno — le geste de l'itération 56.",
+ "key_label": {
+  "x": 14,
+  "y": 195,
+  "w": 73,
+  "h": 24
+ },
+ "key_label_verified": "candidate #1 (x=14 y=195 w=73 h=24) : « 1=  E » à gauche du chiffrage 4/4, lettre gravée **E** = printedKey E. La candidate #2 était le « Gb » de « （原调Gb） », *tonalité d'origine* — celle-là décrit l'œuvre et non cette page, elle reste telle quelle (la distinction de l'itération 34, 永活盼望). Itération 58.",
+ "verified": "planche navigateur E→F# relue sur les sept tranches (itération 58) : les sept rangées d'accords et le cadre « 1= E » sont tous encadrés et réécrits, aucun accord ne reste en mi. Les deux « Bb/C » oubliés par la gravure sortent « B/C# », au rang du IV/V de la page, et non « C/D ». Le segno, le 【Chorus】, le 【Bridge】, les *D.S.*, le *Fine* et la mention « （原调Gb） » restent gravés.",
+ "frozen_labels": [
+  {
+   "x": 51,
+   "y": 263,
+   "w": 13,
+   "h": 30,
+   "c": "E"
+  },
+  {
+   "x": 269,
+   "y": 263,
+   "w": 120,
+   "h": 30,
+   "c": "D#m7b5"
+  },
+  {
+   "x": 409,
+   "y": 263,
+   "w": 37,
+   "h": 30,
+   "c": "G#"
+  },
+  {
+   "x": 538,
+   "y": 263,
+   "w": 82,
+   "h": 30,
+   "c": "C#m7"
+  },
+  {
+   "x": 771,
+   "y": 263,
+   "w": 77,
+   "h": 30,
+   "c": "F#m7"
+  },
+  {
+   "x": 995,
+   "y": 263,
+   "w": 50,
+   "h": 30,
+   "c": "A/E"
+  },
+  {
+   "x": 1254,
+   "y": 263,
+   "w": 53,
+   "h": 30,
+   "c": "A/B"
+  },
+  {
+   "x": 56,
+   "y": 526,
+   "w": 12,
+   "h": 25,
+   "c": "E"
+  },
+  {
+   "x": 282,
+   "y": 526,
+   "w": 120,
+   "h": 25,
+   "c": "D#m7b5"
+  },
+  {
+   "x": 423,
+   "y": 526,
+   "w": 38,
+   "h": 25,
+   "c": "G#"
+  },
+  {
+   "x": 559,
+   "y": 526,
+   "w": 81,
+   "h": 25,
+   "c": "C#m7"
+  },
+  {
+   "x": 946,
+   "y": 526,
+   "w": 77,
+   "h": 25,
+   "c": "F#m7"
+  },
+  {
+   "x": 1180,
+   "y": 526,
+   "w": 68,
+   "h": 25,
+   "c": "A/B"
+  },
+  {
+   "x": 56,
+   "y": 785,
+   "w": 79,
+   "h": 37,
+   "c": "Esus4"
+  },
+  {
+   "x": 209,
+   "y": 785,
+   "w": 12,
+   "h": 37,
+   "c": "E"
+  },
+  {
+   "x": 307,
+   "y": 785,
+   "w": 50,
+   "h": 37,
+   "c": "D/E"
+  },
+  {
+   "x": 723,
+   "y": 785,
+   "w": 51,
+   "h": 37,
+   "c": "B/A"
+  },
+  {
+   "x": 986,
+   "y": 785,
+   "w": 85,
+   "h": 37,
+   "c": "G#m7"
+  },
+  {
+   "x": 1225,
+   "y": 785,
+   "w": 81,
+   "h": 37,
+   "c": "C#m7"
+  },
+  {
+   "x": 48,
+   "y": 1048,
+   "w": 63,
+   "h": 30,
+   "c": "Bm7"
+  },
+  {
+   "x": 323,
+   "y": 1048,
+   "w": 49,
+   "h": 30,
+   "c": "D/E"
+  },
+  {
+   "x": 589,
+   "y": 1048,
+   "w": 77,
+   "h": 30,
+   "c": "F#m7"
+  },
+  {
+   "x": 861,
+   "y": 1048,
+   "w": 67,
+   "h": 30,
+   "c": "E/G#"
+  },
+  {
+   "x": 1154,
+   "y": 1048,
+   "w": 35,
+   "h": 30,
+   "c": "A2"
+  },
+  {
+   "x": 45,
+   "y": 1310,
+   "w": 50,
+   "h": 30,
+   "c": "B/A"
+  },
+  {
+   "x": 303,
+   "y": 1310,
+   "w": 85,
+   "h": 30,
+   "c": "G#m7"
+  },
+  {
+   "x": 539,
+   "y": 1310,
+   "w": 82,
+   "h": 30,
+   "c": "C#m7"
+  },
+  {
+   "x": 677,
+   "y": 1310,
+   "w": 77,
+   "h": 30,
+   "c": "F#m7"
+  },
+  {
+   "x": 920,
+   "y": 1310,
+   "w": 53,
+   "h": 30,
+   "c": "A/B"
+  },
+  {
+   "x": 1191,
+   "y": 1310,
+   "w": 80,
+   "h": 30,
+   "c": "Esus4"
+  },
+  {
+   "x": 1310,
+   "y": 1310,
+   "w": 13,
+   "h": 30,
+   "c": "E"
+  },
+  {
+   "x": 77,
+   "y": 1571,
+   "w": 36,
+   "h": 31,
+   "c": "A2"
+  },
+  {
+   "x": 302,
+   "y": 1571,
+   "w": 51,
+   "h": 31,
+   "c": "B/A"
+  },
+  {
+   "x": 524,
+   "y": 1571,
+   "w": 85,
+   "h": 31,
+   "c": "G#m7"
+  },
+  {
+   "x": 777,
+   "y": 1571,
+   "w": 81,
+   "h": 31,
+   "c": "C#m7"
+  },
+  {
+   "x": 996,
+   "y": 1571,
+   "w": 77,
+   "h": 31,
+   "c": "F#m7"
+  },
+  {
+   "x": 1200,
+   "y": 1571,
+   "w": 68,
+   "h": 31,
+   "c": "A/B"
+  },
+  {
+   "x": 82,
+   "y": 1821,
+   "w": 50,
+   "h": 46,
+   "c": "D/E"
+  },
+  {
+   "x": 391,
+   "y": 1821,
+   "w": 14,
+   "h": 46,
+   "c": "E"
+  },
+  {
+   "x": 713,
+   "y": 1821,
+   "w": 50,
+   "h": 46,
+   "c": "D/E"
+  },
+  {
+   "x": 1022,
+   "y": 1821,
+   "w": 14,
+   "h": 46,
+   "c": "E"
+  },
+  {
+   "x": 1250,
+   "y": 1821,
+   "w": 50,
+   "h": 46,
+   "c": "D/E"
+  },
+  {
+   "x": 482,
+   "y": 789,
+   "w": 36,
+   "h": 23,
+   "c": "A2"
+  }
+ ]
 }
