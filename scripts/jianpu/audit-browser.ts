@@ -45,11 +45,16 @@ function flag(name: string, fallback: number): number {
 const args = process.argv.slice(2).filter((a) => !a.startsWith("--"));
 const slug = args[0];
 if (!slug) {
-  console.error("usage : npx tsx scripts/jianpu/audit-browser.ts <slug> [tonalité] [--page=0] [--slice=380] [--width=1400] [--dark] [--no-frames]");
+  console.error("usage : npx tsx scripts/jianpu/audit-browser.ts <slug> [tonalité] [--page=0] [--slice=380] [--width=1400] [--dark] [--no-frames] [--alt]");
   process.exit(1);
 }
 const dark = process.argv.includes("--dark");
 const frames = !process.argv.includes("--no-frames");
+// `--alt` ouvre le **sélecteur de tonalité** avant la capture : sans lui, une
+// page à deux jeux d'accords n'est auditée que sur son défaut, où la rangée
+// alternative n'est qu'un masque vide — ce qu'elle écrit une fois demandée
+// n'était vu par aucune planche (itération 59).
+const alt = process.argv.includes("--alt");
 const pageIndex = flag("page", 0);
 const sliceH = flag("slice", 380);
 const overlap = flag("overlap", 60);
@@ -69,6 +74,7 @@ async function shoot(browser: Browser, key?: string): Promise<Buffer> {
   });
   const page: Page = await context.newPage();
   const sheets = await openSheet(page, slug, { key, dark });
+  if (alt && key) await page.locator('[data-jianpu-altkey="on"]').click();
   if (frames && key) {
     // « Un accord sans cadre n'est pas converti » — le cadre de contrôle de
     // l'audit Python, posé ici par le navigateur lui-même.
@@ -158,7 +164,7 @@ async function planche(browser: Browser, before: Buffer, after: Buffer) {
   fs.mkdirSync(OUT_DIR, { recursive: true });
   const slices = page.locator(".slice");
   for (let i = 0; i < count; i++) {
-    const file = path.join(OUT_DIR, `_pw-${slug}-${i + 1}.png`);
+    const file = path.join(OUT_DIR, `_pw-${slug}${alt ? "-alt" : ""}-${i + 1}.png`);
     await slices.nth(i).screenshot({ path: file });
     console.log(file);
   }
