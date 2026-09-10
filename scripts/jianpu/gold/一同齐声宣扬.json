@@ -1,4 +1,220 @@
 {
  "slug": "一同齐声宣扬",
- "face": "verdana-bold"
+ "face": "helvetica-neue",
+ "face_verified": "zoom ×7 sur le « F#m » et les deux « D/A » de la page (itération 57) : linéale **régulière**, traits fins, « m » à épaules arrondies. La planche d'élection les montre gras, mais c'est l'agrandissement d'un très petit bitmap qui épaissit — le zoom sur l'encre tranche. verdana-bold (19/36 contre 18/36) ne gagnait qu'un amas.",
+ "corrections": {
+  "253,432": "D/A",
+  "253,618": "D/A"
+ },
+ "corrections_verified": "les sept rangées rendues entières au 2,4× (itération 57). Toute la page se lit juste ; seuls les deux « D/A » du premier système restaient sous le seuil.",
+ "not_labels": [
+  "253,1109",
+  "468,309",
+  "468,831",
+  "703,38",
+  "703,582",
+  "703,1106",
+  "1753,32",
+  "1753,407"
+ ],
+ "not_labels_verified": "six « [*] » — un renvoi de note gravé dans les rangées d'accords, que le matcher lit « C# » — et les chiffres 1. et 2. des deux crochets de reprise.",
+ "not_rows": [
+  383
+ ],
+ "not_rows_verified": "y=383 est une ligne de paroles : ses deux amas sont des 耶.",
+ "extra_labels": [
+  {
+   "x": 46,
+   "y": 940,
+   "w": 17,
+   "h": 21,
+   "c": "D"
+  },
+  {
+   "x": 554,
+   "y": 939,
+   "w": 18,
+   "h": 22,
+   "c": "A"
+  },
+  {
+   "x": 1129,
+   "y": 940,
+   "w": 13,
+   "h": 21,
+   "c": "E"
+  }
+ ],
+ "extra_verified": "la rangée d'accords **soudée aux crochets de reprise** à y≈940 (D, A, E) — `welded_rows` la signale, et c'est la garde du mode D qui a refusé de publier la page sans elle. Ses trois accords partagent la bande avec les deux « [*] », les chiffres 1. et 2. des crochets et le 【Chorus】 ; le « E » est même **traversé** par le trait du crochet de 2ᵉ fin, dont treize pixels disparaissent sous l'étiquette. Un accord resté en mi sur une page transposée coûte plus cher (itération 15). Boîtes mesurées au-dessus du trait, colonne par colonne.",
+ "key_label": {
+  "x": 15,
+  "y": 196,
+  "w": 72,
+  "h": 22
+ },
+ "key_label_verified": "candidate #2 (x=15 y=196 w=72 h=22) : « 1=  A » à gauche du chiffrage 4/4, lettre gravée **A** = printedKey A. La page explique juste après ce que sont ses « [*] » : « （[*]是第二遍…） ». La candidate #1 était la ligne de tempo ♩=126 — itération 57.",
+ "verified": "planche navigateur A→Bb relue sur les sept tranches (itération 57) : les huit rangées d'accords — dont celle qui est soudée aux crochets de reprise — et le cadre « 1=  A » sont tous encadrés et réécrits ; aucun accord ne reste en la. Les six « [*] », les chiffres des crochets et le 【Chorus】 restent gravés, et le trait des crochets reste lisible de part et d'autre des trois accords qu'il porte.",
+ "frozen_labels": [
+  {
+   "x": 66,
+   "y": 253,
+   "w": 18,
+   "h": 30,
+   "c": "A"
+  },
+  {
+   "x": 251,
+   "y": 253,
+   "w": 18,
+   "h": 30,
+   "c": "A"
+  },
+  {
+   "x": 432,
+   "y": 253,
+   "w": 51,
+   "h": 30,
+   "c": "D/A"
+  },
+  {
+   "x": 618,
+   "y": 253,
+   "w": 51,
+   "h": 30,
+   "c": "D/A"
+  },
+  {
+   "x": 860,
+   "y": 253,
+   "w": 17,
+   "h": 30,
+   "c": "A"
+  },
+  {
+   "x": 58,
+   "y": 468,
+   "w": 11,
+   "h": 29,
+   "c": "E"
+  },
+  {
+   "x": 578,
+   "y": 468,
+   "w": 17,
+   "h": 29,
+   "c": "D"
+  },
+  {
+   "x": 1095,
+   "y": 468,
+   "w": 18,
+   "h": 29,
+   "c": "A"
+  },
+  {
+   "x": 327,
+   "y": 703,
+   "w": 18,
+   "h": 29,
+   "c": "A"
+  },
+  {
+   "x": 855,
+   "y": 703,
+   "w": 12,
+   "h": 29,
+   "c": "E"
+  },
+  {
+   "x": 77,
+   "y": 1174,
+   "w": 18,
+   "h": 22,
+   "c": "A"
+  },
+  {
+   "x": 741,
+   "y": 1174,
+   "w": 17,
+   "h": 22,
+   "c": "D"
+  },
+  {
+   "x": 1047,
+   "y": 1174,
+   "w": 18,
+   "h": 22,
+   "c": "A"
+  },
+  {
+   "x": 55,
+   "y": 1464,
+   "w": 17,
+   "h": 22,
+   "c": "D"
+  },
+  {
+   "x": 509,
+   "y": 1464,
+   "w": 31,
+   "h": 22,
+   "c": "C#"
+  },
+  {
+   "x": 730,
+   "y": 1464,
+   "w": 54,
+   "h": 22,
+   "c": "F#m"
+  },
+  {
+   "x": 972,
+   "y": 1464,
+   "w": 17,
+   "h": 22,
+   "c": "D"
+  },
+  {
+   "x": 69,
+   "y": 1753,
+   "w": 13,
+   "h": 26,
+   "c": "E"
+  },
+  {
+   "x": 505,
+   "y": 1753,
+   "w": 12,
+   "h": 26,
+   "c": "E"
+  },
+  {
+   "x": 987,
+   "y": 1753,
+   "w": 18,
+   "h": 26,
+   "c": "A"
+  },
+  {
+   "x": 46,
+   "y": 940,
+   "w": 17,
+   "h": 21,
+   "c": "D"
+  },
+  {
+   "x": 554,
+   "y": 939,
+   "w": 18,
+   "h": 22,
+   "c": "A"
+  },
+  {
+   "x": 1129,
+   "y": 940,
+   "w": 13,
+   "h": 21,
+   "c": "E"
+  }
+ ]
 }
