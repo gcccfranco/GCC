@@ -1,4 +1,328 @@
 {
  "slug": "全然向你",
- "face": "verdana-bold"
+ "corrections": {
+  "600,421": "Bm"
+ },
+ "corrections_verified": "les neuf rangées rendues entières au 1,6× en tranches qui se recouvrent, lues une à une. 2026-09-10 (itération 56)",
+ "not_rows": [
+  384,
+  1392
+ ],
+ "not_rows_verified": "ni y=384 ni y=1392 ne sont des rangées d'accords : leurs seize amas sont des barres de mesure, des arcs de liaison et un point d'octave — pas une lettre. Vues entières au 1,6× (itération 56)",
+ "not_labels": [
+  "1342,136",
+  "1342,218",
+  "1342,288",
+  "1342,367",
+  "1342,593"
+ ],
+ "not_labels_verified": "trois tronçons du long arc de liaison, une barre de mesure et le titre de section 【Chorus】, sur le même rendu de rangée",
+ "face": "verdana-bold",
+ "extra_labels": [
+  {
+   "x": 254,
+   "y": 181,
+   "w": 20,
+   "h": 25,
+   "c": "G"
+  },
+  {
+   "x": 608,
+   "y": 181,
+   "w": 70,
+   "h": 25,
+   "c": "D/F#"
+  },
+  {
+   "x": 973,
+   "y": 181,
+   "w": 43,
+   "h": 25,
+   "c": "Em"
+  },
+  {
+   "x": 1127,
+   "y": 181,
+   "w": 39,
+   "h": 25,
+   "c": "A7"
+  },
+  {
+   "x": 1332,
+   "y": 181,
+   "w": 19,
+   "h": 25,
+   "c": "D"
+  },
+  {
+   "x": 39,
+   "y": 1850,
+   "w": 38,
+   "h": 24,
+   "c": "A7"
+  },
+  {
+   "x": 846,
+   "y": 1850,
+   "w": 20,
+   "h": 24,
+   "c": "G"
+  },
+  {
+   "x": 1228,
+   "y": 1850,
+   "w": 38,
+   "h": 24,
+   "c": "A7"
+  }
+ ],
+ "extra_verified": "**deux rangées d'accords entières que le découpage n'isole jamais.** L'intro y≈181 — G D/F# Em A7 D, ce que le `.cho` écrit ligne 9 — que `hidden_rows` type `numbers` (y=148) et que `welded_rows` retrouve (y=180) ; et y=1850 — A7 G A7 —, soudée elle aussi. Les deux bandes relues entières au 1,6× d'un bout à l'autre de la page, pas seulement aux amas proposés. Boîtes relevées au profil d'encre sur la bande des lettres. 2026-09-10 (itération 56)",
+ "key_label": {
+  "x": 6,
+  "y": 148,
+  "w": 85,
+  "h": 26
+ },
+ "key_label_verified": "mesure measure-keylabel (ancrage sur le « = », cadre = voisin gauche…voisin droit), zoom relu à l’œil sur planche de lot, lettre gravée confrontée à printedKey, 2026-08-26 (itération 35)",
+ "verified": "planche navigateur D→Eb relue sur les sept tranches : les sept rangées d'accords, les deux rangées soudées (l'intro y≈181 et y=1850) et le cadre 1=D sont convertis. Aucun accord ne reste en ré. 2026-09-10 (itération 56)",
+ "frozen_labels": [
+  {
+   "x": 138,
+   "y": 351,
+   "w": 19,
+   "h": 24,
+   "c": "D"
+  },
+  {
+   "x": 496,
+   "y": 351,
+   "w": 45,
+   "h": 24,
+   "c": "Bm"
+  },
+  {
+   "x": 883,
+   "y": 351,
+   "w": 20,
+   "h": 24,
+   "c": "G"
+  },
+  {
+   "x": 1253,
+   "y": 351,
+   "w": 38,
+   "h": 24,
+   "c": "A7"
+  },
+  {
+   "x": 47,
+   "y": 600,
+   "w": 19,
+   "h": 25,
+   "c": "D"
+  },
+  {
+   "x": 421,
+   "y": 600,
+   "w": 45,
+   "h": 25,
+   "c": "Bm"
+  },
+  {
+   "x": 826,
+   "y": 600,
+   "w": 20,
+   "h": 25,
+   "c": "G"
+  },
+  {
+   "x": 1213,
+   "y": 600,
+   "w": 38,
+   "h": 25,
+   "c": "A7"
+  },
+  {
+   "x": 38,
+   "y": 851,
+   "w": 61,
+   "h": 24,
+   "c": "F#m"
+  },
+  {
+   "x": 432,
+   "y": 851,
+   "w": 64,
+   "h": 24,
+   "c": "Bm7"
+  },
+  {
+   "x": 836,
+   "y": 851,
+   "w": 19,
+   "h": 24,
+   "c": "G"
+  },
+  {
+   "x": 1210,
+   "y": 851,
+   "w": 38,
+   "h": 24,
+   "c": "A7"
+  },
+  {
+   "x": 40,
+   "y": 1100,
+   "w": 61,
+   "h": 24,
+   "c": "F#m"
+  },
+  {
+   "x": 449,
+   "y": 1100,
+   "w": 65,
+   "h": 24,
+   "c": "Bm7"
+  },
+  {
+   "x": 835,
+   "y": 1100,
+   "w": 20,
+   "h": 24,
+   "c": "G"
+  },
+  {
+   "x": 40,
+   "y": 1342,
+   "w": 37,
+   "h": 44,
+   "c": "A7"
+  },
+  {
+   "x": 846,
+   "y": 1342,
+   "w": 20,
+   "h": 44,
+   "c": "G"
+  },
+  {
+   "x": 1228,
+   "y": 1342,
+   "w": 38,
+   "h": 44,
+   "c": "A7"
+  },
+  {
+   "x": 40,
+   "y": 1600,
+   "w": 61,
+   "h": 24,
+   "c": "F#m"
+  },
+  {
+   "x": 462,
+   "y": 1600,
+   "w": 45,
+   "h": 24,
+   "c": "Bm"
+  },
+  {
+   "x": 855,
+   "y": 1600,
+   "w": 43,
+   "h": 24,
+   "c": "Em"
+  },
+  {
+   "x": 34,
+   "y": 2100,
+   "w": 61,
+   "h": 24,
+   "c": "F#m"
+  },
+  {
+   "x": 438,
+   "y": 2100,
+   "w": 45,
+   "h": 24,
+   "c": "Bm"
+  },
+  {
+   "x": 746,
+   "y": 2100,
+   "w": 43,
+   "h": 24,
+   "c": "Em"
+  },
+  {
+   "x": 1036,
+   "y": 2100,
+   "w": 37,
+   "h": 24,
+   "c": "A7"
+  },
+  {
+   "x": 1340,
+   "y": 2100,
+   "w": 18,
+   "h": 24,
+   "c": "D"
+  },
+  {
+   "x": 254,
+   "y": 181,
+   "w": 20,
+   "h": 25,
+   "c": "G"
+  },
+  {
+   "x": 608,
+   "y": 181,
+   "w": 70,
+   "h": 25,
+   "c": "D/F#"
+  },
+  {
+   "x": 973,
+   "y": 181,
+   "w": 43,
+   "h": 25,
+   "c": "Em"
+  },
+  {
+   "x": 1127,
+   "y": 181,
+   "w": 39,
+   "h": 25,
+   "c": "A7"
+  },
+  {
+   "x": 1332,
+   "y": 181,
+   "w": 19,
+   "h": 25,
+   "c": "D"
+  },
+  {
+   "x": 39,
+   "y": 1850,
+   "w": 38,
+   "h": 24,
+   "c": "A7"
+  },
+  {
+   "x": 846,
+   "y": 1850,
+   "w": 20,
+   "h": 24,
+   "c": "G"
+  },
+  {
+   "x": 1228,
+   "y": 1850,
+   "w": 38,
+   "h": 24,
+   "c": "A7"
+  }
+ ]
 }
