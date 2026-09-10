@@ -351,7 +351,7 @@ rangées les tronque.
 | 53 | **la fonte ne se lit pas dans la lecture** : cinq électeurs de plus mesurés et rejetés · la *ressemblance des distributions* au `.cho` est le compteur déguisé (corrélation de rang **+0,96**, même fonte élue sur 79 % des pages) · la *dispersion de la chasse*, jetée par la médiane de `width_factor`, porte un vrai signal (rang médian **2 sur 7**, hasard 4) mais n'est qu'à moitié indépendante (+0,61) et coûte 6,7 publiables par erreur · la *confirmation croisée hors famille* : 2720 publiables, **16 FAUX** contre 2633/**9** pour l'œil · le *désaccord au niveau de la page* échoue à plat — 最美的礼物 et 一生跟随 portent 10 des 22 erreurs avec un désaccord de 0,20 et 0,16 contre **0,19 de médiane sur les pages saines** · les *serif chinoises* (Songti, STSong) gagnent sur 1 page sur 6 | **la seule règle qui marche est circulaire** : entre la fonte couvrante et celle de l'œil, 1109 étiquettes lues pareil dont **1 fausse**, et 12 en désaccord (1,1 %) qui portent 9 des erreurs — mais le second lecteur y est *la bonne fonte*, et remplacé par une autre le test retombe à 16 FAUX · **correction à l'itération 50** : sur les 6 pages serif à vérité terrain, la famille serif est la meilleure sur 2, à égalité sur 2 et **la pire sur 2** — le verdict de famille de la planche est juste une fois sur deux, et « sans appel » était de trop | aucun calque nouveau · calques **97**, `chords.json` identique au bit près, banc inchangé (264/303 · 87 · 3019/3158) · **2 fontes écrites** (亲眼看见你 din-bold, 求充满这地 verdana-bold), les seules où planche et compteur s'accordent · banc Playwright **389 tests**, tous verts |
 | 54 | *(ligne absente à l'époque, transcrite ici depuis le journal de l'itération)* — la **rangée muette** entre dans `propose-extra --all` : typée `chords`, ne publiant rien, invisible à `worklist` comme à `--hidden` · 50 sur les 97 certifiées, **aucune n'était une rangée d'accords manquée** ; 95 sur les 34 sans calque, et là elles parlent | le **sélecteur de tonalité** : `alt` (demi-tons entre l'étiquette et la page, orthographe seule) et `opt` (lecture *alternative*, donc masquable) · le gel jetait `alt` — trois copies de la liste des clés, une seule désormais (`LABEL_KEYS`) | corpus 135, calques **97 → 98** (在这里), étiquettes 3 987 → **4 045** dont 16 en seconde tonalité · **394 tests** Playwright |
 | 55 | **deux pages à deux tonalités, certifiées** · 我要爱慕你 : trois rangées gravées en **fa** au-dessus de ses accords en mi, que *rien* ne voyait — ni `read()`, ni `foreign_rows`, ni les trois chasses de `worklist`, ni la rangée muette (le découpage ne les isole jamais) ; trouvées au profil d'encre, ligne à ligne · 有你同行 : la **première vraie modulation** (+2 au milieu d'une rangée), avec son second cadre « 1= E » gravé dans la rangée de chiffres — `alt` **sans** `opt`, donc pas de sélecteur | **`alt` n'est pas inerte, et il pouvait nuire** : 24 des 143 rendus de 有你同行 changent selon qu'on le lit, et à **2 tonalités sur 11 il rendait la section moins lisible que pas d'`alt` du tout** — page en mi, tout en dièses, section en Gb / Db / Ebm / Bbm sous des G#m / C#m · la préférence pour les bémols de `getTransposedKey` est celle du **moindre nombre d'altérations**, qui tranche partout **sauf au triton** (F# et Gb en font six chacun) : `altSpellingKey` y tranche par la page · **le réflexe était faux** — contraindre la section à la famille de la page rend « Ab » en « G# » et « Bb » en « A# », mesuré avant d'écrire | corpus 135, calques **98 → 100**, tous certifiés · étiquettes 4 045 → **4 141**, dont **46** portant `alt` et 33 `opt` · cadres 1=X **100** · banc du matcher inchangé (0 amas bougé) · **405 tests** Playwright (394 avant), `npx tsc --noEmit`, `npm run validate` (370 chants), `npm run lint` (49 avertissements préexistants, 0 erreur) |
-| 56 | **une étiquette rognée par sa voisine écrit un autre accord** : les fonds sont opaques et les `<span>` se peignent dans l'ordre, donc la voisine de droite efface la fin — « Gb/Bb » affiché **« Gb/B »**, propre, lisible et faux. Le test de chevauchement (itération 38) comparait des **boîtes** ; il ne disait pas ce qu'un lecteur voit, et sur 最美的礼物 trois de ses chevauchements ne rognent rien du tout · nouveau défaut mesuré, **tronqué**, avec sa forme dangereuse à part (le préfixe est encore un accord) · `--keys` reprend la mesure aux **douze tonalités**, par le sélecteur de la page et non par une navigation | **le `.cho` comme oracle du mode C** (`grille.py`) : source indépendante, alignée par `difflib`, on ne retient que la **substitution isolée** entre trois accords identiques de chaque côté — 7 signalements sur 103 calques, tous des `.cho` moins précis que la gravure · sur 你的同在 avant certification elle sort **trois lectures retenues et fausses** (deux « B7 » sur des « E7 », un « A11 » sur un « A7 ») que l'œil avait laissées passer sur les rendus de rangée · **un masque n'efface que le gravé** : rang de peinture explicite, les boîtes sans accord dessous — le masque du bémol exposant de 我们成为一家人 recouvrait sa lettre réécrite, « 1= » tout court, onze tonalités sur douze | corpus 135, calques **100 → 103**, tous certifiés (我已得自由, 你的同在, 爱使我们勇敢) · étiquettes 4 141 → **4 307** · **étiquettes rognées 42 → 0** sur 101 calques × 12 tonalités, dont 31 qui se lisaient comme un autre accord · **515 tests** Playwright (405 avant), `npx tsc --noEmit`, `npm run validate` (370 chants), `npm run lint` (49 avertissements préexistants, 0 erreur) |
+| 56 | **une étiquette rognée par sa voisine écrit un autre accord** : les fonds sont opaques et les `<span>` se peignent dans l'ordre, donc la voisine de droite efface la fin — « Gb/Bb » affiché **« Gb/B »**, propre, lisible et faux. Le test de chevauchement (itération 38) comparait des **boîtes** ; il ne disait pas ce qu'un lecteur voit, et sur 最美的礼物 trois de ses chevauchements ne rognent rien du tout · nouveau défaut mesuré, **tronqué**, avec sa forme dangereuse à part (le préfixe est encore un accord) · `--keys` reprend la mesure aux **douze tonalités**, par le sélecteur de la page et non par une navigation | **le `.cho` comme oracle du mode C** (`grille.py`) : source indépendante, alignée par `difflib`, on ne retient que la **substitution isolée** entre trois accords identiques de chaque côté — 7 signalements sur 103 calques, tous des `.cho` moins précis que la gravure · sur 你的同在 avant certification elle sort **trois lectures retenues et fausses** (deux « B7 » sur des « E7 », un « A11 » sur un « A7 ») que l'œil avait laissées passer sur les rendus de rangée · **un masque n'efface que le gravé** : rang de peinture explicite, les boîtes sans accord dessous — le masque du bémol exposant de 我们成为一家人 recouvrait sa lettre réécrite, « 1= » tout court, onze tonalités sur douze | corpus 135, calques **100 → 107**, tous certifiés et tous complets · étiquettes 4 141 → **4 499** · **étiquettes rognées 42 → 0** sur 107 calques × 12 tonalités, dont 31 qui se lisaient comme un autre accord · **530 tests** Playwright (405 avant), `npx tsc --noEmit`, `npm run validate` (370 chants), `npm run lint` (49 avertissements préexistants, 0 erreur) |
 
 ## Journal
 
@@ -4960,25 +4960,67 @@ ne les voit — `orphan_rows` comprise —, et le découpage ne retient sous eux
 que les points d'octave et un « 5 ». Ils sont sortis de la planche, restés en
 sol sur une page rendue en la bémol.
 
-**Bilan.** Corpus 135, calques **100 → 103**, tous certifiés et tous
+**Trois pages de plus, et trois formes de plus du même défaut.**
+
+*全然向你* (53 % → 26/26 + 8). Deux des neuf bandes ne portent aucune lettre
+— barres de mesure, arcs, un point d'octave — et partent en `not_rows`. Et
+**deux** rangées d'accords soudées : l'intro (G D/F# Em A7 D, ce que le `.cho`
+écrit ligne 9) et une rangée de fin.
+
+*为爱而生* (53 % → 65/65). Un **filet de bord de scan** à x=1467 sur une page
+large de 1468 traverse les dix rangées et se retrouve dans chacune ; la
+dernière bande ne porte que lui. Aucun compteur ne distingue cet amas-là
+d'une étiquette — il faut le regarder. La gravure écrit par ailleurs ses
+basses avec un dièse (`B/D#`, `E/G#`, `G#/C`) et le matcher les rate huit
+fois sur huit.
+
+*深刻的爱* (52 % → 47/47 + 8). Une **ligne de paroles** promue (onze hanzi qui
+gonflaient le dénominateur et tenaient la page sous le plancher à eux seuls),
+et une rangée soudée à ses **crochets de reprise** : ⌐1., ⌐2., la double
+barre et les arcs partagent les colonnes des lettres, si bien qu'aucun amas
+ne s'apparie proprement. Les huit boîtes sont relevées au profil d'encre sur
+la seule bande des lettres.
+
+*复兴的火* (50 % → 33/33 + 5). La forme la plus nue : **une rangée d'accords
+que le découpage n'isole nulle part**. Ce qu'il retient du premier système,
+c'est une bande de tirets et de points d'octave 36 px plus bas ; les cinq
+accords, eux, n'ont pas de bande. Je les ai écartés une première fois en
+lisant cette bande-là — elle était bien vide d'accords, ce n'était simplement
+pas la bonne bande. La planche navigateur les a montrés, restés en do sur une
+page rendue en do dièse.
+
+Et sur la même page, **le cadre de tonalité n'est pas ce qu'il paraît** :
+`measure-keylabel` s'arrêtait après le « = » parce qu'il avait pris pour
+voisin de droite un « C » qui n'est pas la lettre du cadre mais le **premier
+accord** de cette rangée invisible — 18 px plus bas, de la taille des autres
+accords, là où la lettre du cadre est centrée sur le « = ». Un cadre couvrant
+les deux aurait effacé l'accord. Le cadre ne prend donc que la lettre (`c`),
+et le « 1= » gravé reste tel quel.
+
+**Bilan.** Corpus 135, calques **100 → 107**, tous certifiés et tous
 complets — aucune page n'affiche plus d'accords en bleu. Étiquettes
-4 141 → **4 307**. Étiquettes rognées **42 → 0** sur 101 calques × 12
-tonalités. **515 tests Playwright** (405 avant), `npx tsc --noEmit`,
+4 141 → **4 499**. Étiquettes rognées **42 → 0** sur 107 calques × 12
+tonalités. **530 tests Playwright** (405 avant), `npx tsc --noEmit`,
 `npm run validate` (370 chants) et `npm run lint` (49 avertissements
 préexistants, 0 erreur).
 
 **Ce qui reste, nommé.**
 
-- **32 pages sans calque**, de 53 % à 0 %. Les trois prises ici ont demandé
-  entre neuf et onze rangées lues à l'œil ; c'est le coût, et il ne baisse
-  pas.
+- **28 pages sans calque**, de 50 % à 0 %. Les sept prises ici ont demandé
+  entre sept et dix rangées lues à l'œil chacune ; c'est le coût, et il ne
+  baisse pas.
 - **Les 82 rangées muettes des pages sans calque** ne sont toujours pas
-  cataloguées (itération 54). Sur les trois pages prises ici, `propose-extra
+  cataloguées (itération 54). Sur les sept pages prises ici, `propose-extra
   --all --hidden` n'en a rendu aucune qui soit une rangée d'accords manquée —
   ce sont les chasses de `worklist` et la planche qui ont tout trouvé.
-- **`orphan_rows` ne voit pas un accord posé sur un empilement à voix.** Le
-  cas de 爱使我们勇敢 est le second accord orphelin du corpus (和散那,
-  itération 44) et le premier que la chasse écrite pour eux ne trouve pas.
+- **Les trois chasses du mode D ne voient pas une rangée sans bande.** Deux
+  cas ici : les deux accords orphelins de 爱使我们勇敢 posés sur un empilement
+  à trois voix, et la rangée entière de 复兴的火. `orphan_rows` (itération 44)
+  a été écrite pour un accord seul *dans* un système ; elle ne cherche pas
+  au-dessus d'un empilement, et rien ne cherche une rangée qui n'a produit
+  aucune bande. Dans les deux cas, seule la planche les a vus — et le
+  plancher de couverture les ignorait, puisqu'une rangée jamais détectée
+  n'entre dans aucun dénominateur.
 - **Le `.cho` de 给梦想一双翅膀 porte quatre `[ ]` vides**, posés comme
   espaceurs de syllabe. Signalé, pas corrigé.
 - **Le PDF n'a pas le sélecteur**, **la fonte s'élit à l'œil** (50, 52, 53),
