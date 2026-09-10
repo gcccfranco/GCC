@@ -1,5 +1,691 @@
 {
  "slug": "我的生命献给你",
- "face": "verdana-bold",
- "face_verified": "balayage de fonte croisé : sweep-key.py (veto + marge) et le compteur de couverture de build-chords désignent la même fonte, à tonalité inchangée — 2026-09-08 (itération 50). À confirmer par la planche d'audit avant certification."
+ "face": "helvetica-neue",
+ "face_verified": "planche d'élection + zoom ×6 sur les trois plus larges étiquettes de la page (itération 57) : « Esus4 » et « E/G# » sont gravés en linéale **régulière**, traits fins et uniformes, dièse **sur la ligne de base**. verdana-bold, que sweep-key proposait sur le compte au seuil (27/59 contre 20/59), est très grasse et met son dièse en exposant. La note de balayage croisé de l'itération 50 disait « à confirmer par la planche d'audit » : c'est fait, et elle est infirmée.",
+ "corrections": {
+  "193,988": "A/C#",
+  "193,1187": "Bm",
+  "193,1406": "D/E",
+  "193,1505": "E",
+  "494,340": "E/G#",
+  "494,1075": "D/E",
+  "494,1407": "A/C#",
+  "728,203": "D/E",
+  "728,544": "E/G#",
+  "946,727": "E/G#",
+  "1177,721": "E/G#",
+  "1177,1341": "D/E",
+  "2108,1184": "D/E"
+ },
+ "corrections_verified": "les dix rangées rendues entières au 2,4× en deux tranches qui se recouvrent, lues une à une (itération 57). Sous helvetica-neue le matcher lit juste mais trop bas : « D/E » à −0,44, « A/C# » à −0,05, « Bm » à −0,05 — aucune n'était publiée.",
+ "not_labels": [
+  "193,450",
+  "494,41",
+  "946,109",
+  "946,406",
+  "1177,1066",
+  "1177,1479",
+  "2108,509",
+  "193,220",
+  "193,236",
+  "193,416",
+  "494,555",
+  "2108,670"
+ ],
+ "not_labels_verified": "les titres de section 【Verse】 et 【Chorus】, le renvoi *To Chorus*, deux barres de mesure de 9 px, et **deux accords soudés** à un signe que le fond opaque effacerait : le « F#m » de y=193 collé à son arc de liaison, et le « A » de y=946 collé au **segno** — tous deux reposés en `extra_labels` sur l'encre de la lettre seule, le geste de l'itération 56. S'y ajoutent un fragment d'arc de 2 px, une barre de mesure de 10 px, le premier « E/G# » de la page — dont l'amas déborde de 7 px sur l'arc voisin, d'où la reprise en `extra_labels` — et les deux amas « ⊕ F#m » où le signe de coda et l'accord ne font qu'un.",
+ "not_rows": [
+  1455,
+  1569
+ ],
+ "not_rows_verified": "y=1455 ne porte que le « 3 » du premier temps, trois sommets d'arcs et le « 2 » du crochet de 2ᵉ fin ; y=1569 est une ligne d'**annotations** — « 结束句 D.C. al Coda », 【间奏1，回Verse】, 【间奏2，进Bridge】 — et deux hanzi de paroles. Quatorze amas au dénominateur, aucun accord.",
+ "extra_labels": [
+  {
+   "x": 243,
+   "y": 190,
+   "w": 72,
+   "h": 25,
+   "c": "E/G#"
+  },
+  {
+   "x": 470,
+   "y": 193,
+   "w": 61,
+   "h": 25,
+   "c": "F#m"
+  },
+  {
+   "x": 609,
+   "y": 506,
+   "w": 60,
+   "h": 24,
+   "c": "F#m"
+  },
+  {
+   "x": 451,
+   "y": 954,
+   "w": 20,
+   "h": 24,
+   "c": "A"
+  },
+  {
+   "x": 49,
+   "y": 1407,
+   "w": 20,
+   "h": 24,
+   "c": "A"
+  },
+  {
+   "x": 192,
+   "y": 1406,
+   "w": 71,
+   "h": 25,
+   "c": "E/G#"
+  },
+  {
+   "x": 354,
+   "y": 1407,
+   "w": 60,
+   "h": 24,
+   "c": "F#m"
+  },
+  {
+   "x": 571,
+   "y": 1407,
+   "w": 18,
+   "h": 24,
+   "c": "D"
+  },
+  {
+   "x": 871,
+   "y": 1407,
+   "w": 13,
+   "h": 24,
+   "c": "E"
+  },
+  {
+   "x": 1171,
+   "y": 1407,
+   "w": 18,
+   "h": 24,
+   "c": "D"
+  },
+  {
+   "x": 1388,
+   "y": 1407,
+   "w": 13,
+   "h": 24,
+   "c": "E"
+  },
+  {
+   "x": 42,
+   "y": 1656,
+   "w": 19,
+   "h": 24,
+   "c": "D"
+  },
+  {
+   "x": 240,
+   "y": 1656,
+   "w": 13,
+   "h": 24,
+   "c": "E"
+  },
+  {
+   "x": 515,
+   "y": 1656,
+   "w": 19,
+   "h": 24,
+   "c": "D"
+  },
+  {
+   "x": 885,
+   "y": 1646,
+   "w": 51,
+   "h": 29,
+   "c": "E/D"
+  },
+  {
+   "x": 1209,
+   "y": 1646,
+   "w": 65,
+   "h": 24,
+   "c": "C#m"
+  },
+  {
+   "x": 727,
+   "y": 2120,
+   "w": 60,
+   "h": 24,
+   "c": "F#m"
+  },
+  {
+   "x": 55,
+   "y": 343,
+   "w": 20,
+   "h": 25,
+   "c": "A"
+  },
+  {
+   "x": 257,
+   "y": 340,
+   "w": 71,
+   "h": 28,
+   "c": "E/G#"
+  },
+  {
+   "x": 496,
+   "y": 343,
+   "w": 61,
+   "h": 25,
+   "c": "F#m"
+  },
+  {
+   "x": 881,
+   "y": 357,
+   "w": 18,
+   "h": 23,
+   "c": "D"
+  },
+  {
+   "x": 1329,
+   "y": 356,
+   "w": 13,
+   "h": 24,
+   "c": "E"
+  },
+  {
+   "x": 47,
+   "y": 1885,
+   "w": 60,
+   "h": 24,
+   "c": "F#m"
+  },
+  {
+   "x": 174,
+   "y": 1882,
+   "w": 71,
+   "h": 28,
+   "c": "E/G#"
+  },
+  {
+   "x": 271,
+   "y": 1885,
+   "w": 20,
+   "h": 24,
+   "c": "A"
+  },
+  {
+   "x": 325,
+   "y": 1882,
+   "w": 73,
+   "h": 28,
+   "c": "A/C#"
+  },
+  {
+   "x": 460,
+   "y": 1885,
+   "w": 18,
+   "h": 24,
+   "c": "D"
+  },
+  {
+   "x": 852,
+   "y": 1892,
+   "w": 51,
+   "h": 33,
+   "c": "E/D"
+  },
+  {
+   "x": 1219,
+   "y": 1895,
+   "w": 19,
+   "h": 25,
+   "c": "G"
+  }
+ ],
+ "extra_verified": "dix-sept étiquettes hors des rangées lues. **Deux rangées entières que le découpage n'isole pas** : celle du crochet de 1ʳᵉ fin (y=1406, sept accords posés sur le trait du crochet) et celle du 【Bridge】 (y=1646, cinq accords mêlés au titre de section) — aucune n'entre dans `read()`, donc aucune ne pesait au dénominateur, et c'est la planche de rangée qui les a montrées. **Trois accords que le découpage soude à un signe** : le « F#m » et le « A » repris de `not_labels`, et les deux « F#m » gravés à droite d'un ⊕ (y=506, y=2120), jamais proposés. Et le premier « E/G# » de la page (y=190), sans amas d'aucune sorte. Boîtes mesurées colonne par colonne sur l'encre de la lettre. **Deux rangées d'accords entières que rien ne voyait** s'y ajoutent, y=340 (A E/G# F#m D E) et y=1882 (F#m E/G# A A/C# D E/D G) : ni le découpage, ni les trois chasses du mode D, ni la rangée muette ne les atteignent. Elles sont sorties du **profil d'encre de la page** — toutes les bandes horizontales rendues côte à côte, celles que le calque couvre et celles qu'il ne couvre pas —, et la première m'avait échappé sur la planche d'audit, où elle occupait le bas d'une tranche.",
+ "key_label": {
+  "x": 6,
+  "y": 137,
+  "w": 85,
+  "h": 26
+ },
+ "key_label_verified": "candidate #2 (x=6 y=137 w=85 h=26) : « 1=  A » à gauche du chiffrage 4/4, lettre gravée **A** = printedKey A. #1 était la ligne de tempo ♩=66, #3 et #4 le « E/G# » du premier système, dont le « / » a le profil d'un « = » penché — itération 57.",
+ "verified": "planche navigateur A→Bb relue sur les sept tranches, deux fois (itération 57) : les douze rangées d'accords — dont les quatre que le découpage n'isole pas (y=340, y=1406, y=1646, y=1882) — et le cadre « 1= A » sont tous encadrés et réécrits ; aucun accord ne reste en la. Le segno, les deux ⊕ et les titres de section restent gravés, l'accord réécrit à côté d'eux.",
+ "frozen_labels": [
+  {
+   "x": 52,
+   "y": 193,
+   "w": 20,
+   "h": 49,
+   "c": "A"
+  },
+  {
+   "x": 832,
+   "y": 193,
+   "w": 19,
+   "h": 49,
+   "c": "D"
+  },
+  {
+   "x": 988,
+   "y": 193,
+   "w": 99,
+   "h": 49,
+   "c": "A/C#"
+  },
+  {
+   "x": 1187,
+   "y": 193,
+   "w": 104,
+   "h": 49,
+   "c": "Bm"
+  },
+  {
+   "x": 1406,
+   "y": 193,
+   "w": 51,
+   "h": 49,
+   "c": "D/E"
+  },
+  {
+   "x": 1505,
+   "y": 193,
+   "w": 13,
+   "h": 49,
+   "c": "E"
+  },
+  {
+   "x": 193,
+   "y": 494,
+   "w": 20,
+   "h": 41,
+   "c": "A"
+  },
+  {
+   "x": 340,
+   "y": 494,
+   "w": 71,
+   "h": 41,
+   "c": "E/G#"
+  },
+  {
+   "x": 940,
+   "y": 494,
+   "w": 19,
+   "h": 41,
+   "c": "D"
+  },
+  {
+   "x": 1075,
+   "y": 494,
+   "w": 51,
+   "h": 41,
+   "c": "D/E"
+  },
+  {
+   "x": 1271,
+   "y": 494,
+   "w": 20,
+   "h": 41,
+   "c": "A"
+  },
+  {
+   "x": 1407,
+   "y": 494,
+   "w": 72,
+   "h": 41,
+   "c": "A/C#"
+  },
+  {
+   "x": 44,
+   "y": 728,
+   "w": 18,
+   "h": 27,
+   "c": "D"
+  },
+  {
+   "x": 203,
+   "y": 728,
+   "w": 51,
+   "h": 27,
+   "c": "D/E"
+  },
+  {
+   "x": 483,
+   "y": 728,
+   "w": 20,
+   "h": 27,
+   "c": "A"
+  },
+  {
+   "x": 544,
+   "y": 728,
+   "w": 72,
+   "h": 27,
+   "c": "E/G#"
+  },
+  {
+   "x": 647,
+   "y": 728,
+   "w": 61,
+   "h": 27,
+   "c": "F#m"
+  },
+  {
+   "x": 853,
+   "y": 728,
+   "w": 44,
+   "h": 27,
+   "c": "Bm"
+  },
+  {
+   "x": 1273,
+   "y": 728,
+   "w": 83,
+   "h": 27,
+   "c": "Esus4"
+  },
+  {
+   "x": 42,
+   "y": 946,
+   "w": 13,
+   "h": 32,
+   "c": "E"
+  },
+  {
+   "x": 727,
+   "y": 946,
+   "w": 71,
+   "h": 32,
+   "c": "E/G#"
+  },
+  {
+   "x": 845,
+   "y": 946,
+   "w": 61,
+   "h": 32,
+   "c": "F#m"
+  },
+  {
+   "x": 1200,
+   "y": 946,
+   "w": 19,
+   "h": 32,
+   "c": "D"
+  },
+  {
+   "x": 45,
+   "y": 1177,
+   "w": 13,
+   "h": 34,
+   "c": "E"
+  },
+  {
+   "x": 444,
+   "y": 1177,
+   "w": 20,
+   "h": 34,
+   "c": "A"
+  },
+  {
+   "x": 721,
+   "y": 1177,
+   "w": 70,
+   "h": 34,
+   "c": "E/G#"
+  },
+  {
+   "x": 840,
+   "y": 1177,
+   "w": 60,
+   "h": 34,
+   "c": "F#m"
+  },
+  {
+   "x": 1198,
+   "y": 1177,
+   "w": 19,
+   "h": 34,
+   "c": "D"
+  },
+  {
+   "x": 1341,
+   "y": 1177,
+   "w": 51,
+   "h": 34,
+   "c": "D/E"
+  },
+  {
+   "x": 47,
+   "y": 2108,
+   "w": 14,
+   "h": 39,
+   "c": "E"
+  },
+  {
+   "x": 1068,
+   "y": 2108,
+   "w": 19,
+   "h": 39,
+   "c": "D"
+  },
+  {
+   "x": 1184,
+   "y": 2108,
+   "w": 51,
+   "h": 39,
+   "c": "D/E"
+  },
+  {
+   "x": 1350,
+   "y": 2108,
+   "w": 20,
+   "h": 39,
+   "c": "A"
+  },
+  {
+   "x": 243,
+   "y": 190,
+   "w": 72,
+   "h": 25,
+   "c": "E/G#"
+  },
+  {
+   "x": 470,
+   "y": 193,
+   "w": 61,
+   "h": 25,
+   "c": "F#m"
+  },
+  {
+   "x": 609,
+   "y": 506,
+   "w": 60,
+   "h": 24,
+   "c": "F#m"
+  },
+  {
+   "x": 451,
+   "y": 954,
+   "w": 20,
+   "h": 24,
+   "c": "A"
+  },
+  {
+   "x": 49,
+   "y": 1407,
+   "w": 20,
+   "h": 24,
+   "c": "A"
+  },
+  {
+   "x": 192,
+   "y": 1406,
+   "w": 71,
+   "h": 25,
+   "c": "E/G#"
+  },
+  {
+   "x": 354,
+   "y": 1407,
+   "w": 60,
+   "h": 24,
+   "c": "F#m"
+  },
+  {
+   "x": 571,
+   "y": 1407,
+   "w": 18,
+   "h": 24,
+   "c": "D"
+  },
+  {
+   "x": 871,
+   "y": 1407,
+   "w": 13,
+   "h": 24,
+   "c": "E"
+  },
+  {
+   "x": 1171,
+   "y": 1407,
+   "w": 18,
+   "h": 24,
+   "c": "D"
+  },
+  {
+   "x": 1388,
+   "y": 1407,
+   "w": 13,
+   "h": 24,
+   "c": "E"
+  },
+  {
+   "x": 42,
+   "y": 1656,
+   "w": 19,
+   "h": 24,
+   "c": "D"
+  },
+  {
+   "x": 240,
+   "y": 1656,
+   "w": 13,
+   "h": 24,
+   "c": "E"
+  },
+  {
+   "x": 515,
+   "y": 1656,
+   "w": 19,
+   "h": 24,
+   "c": "D"
+  },
+  {
+   "x": 885,
+   "y": 1646,
+   "w": 51,
+   "h": 29,
+   "c": "E/D"
+  },
+  {
+   "x": 1209,
+   "y": 1646,
+   "w": 65,
+   "h": 24,
+   "c": "C#m"
+  },
+  {
+   "x": 727,
+   "y": 2120,
+   "w": 60,
+   "h": 24,
+   "c": "F#m"
+  },
+  {
+   "x": 55,
+   "y": 343,
+   "w": 20,
+   "h": 25,
+   "c": "A"
+  },
+  {
+   "x": 257,
+   "y": 340,
+   "w": 71,
+   "h": 28,
+   "c": "E/G#"
+  },
+  {
+   "x": 496,
+   "y": 343,
+   "w": 61,
+   "h": 25,
+   "c": "F#m"
+  },
+  {
+   "x": 881,
+   "y": 357,
+   "w": 18,
+   "h": 23,
+   "c": "D"
+  },
+  {
+   "x": 1329,
+   "y": 356,
+   "w": 13,
+   "h": 24,
+   "c": "E"
+  },
+  {
+   "x": 47,
+   "y": 1885,
+   "w": 60,
+   "h": 24,
+   "c": "F#m"
+  },
+  {
+   "x": 174,
+   "y": 1882,
+   "w": 71,
+   "h": 28,
+   "c": "E/G#"
+  },
+  {
+   "x": 271,
+   "y": 1885,
+   "w": 20,
+   "h": 24,
+   "c": "A"
+  },
+  {
+   "x": 325,
+   "y": 1882,
+   "w": 73,
+   "h": 28,
+   "c": "A/C#"
+  },
+  {
+   "x": 460,
+   "y": 1885,
+   "w": 18,
+   "h": 24,
+   "c": "D"
+  },
+  {
+   "x": 852,
+   "y": 1892,
+   "w": 51,
+   "h": 33,
+   "c": "E/D"
+  },
+  {
+   "x": 1219,
+   "y": 1895,
+   "w": 19,
+   "h": 25,
+   "c": "G"
+  }
+ ]
 }
