@@ -1,4 +1,282 @@
 {
  "slug": "常常喜乐",
- "face": "verdana-bold"
+ "face": "helvetica-neue",
+ "face_verified": "zoom ×7 sur les deux « Am7/G » de la page (itération 57) : linéale **régulière**, traits fins et uniformes, « 7 » sans barre. verdana-bold, la fonte élue au seuil, est nettement plus grasse et plus large.",
+ "corrections": {
+  "254,43": "G",
+  "254,321": "C",
+  "254,493": "G",
+  "254,598": "C",
+  "254,888": "G/B",
+  "254,1079": "C",
+  "569,1072": "C",
+  "808,626": "D",
+  "808,794": "D7",
+  "808,1111": "G",
+  "1051,174": "(D/F#)",
+  "1287,41": "Am7/G",
+  "1287,1078": "G",
+  "1518,175": "(D/F#)",
+  "1753,37": "Am7/G",
+  "1753,969": "G"
+ },
+ "corrections_verified": "les dix rangées rendues entières au 2,4× (itération 57). Les deux « (D/F#) » sont gravés **entre parenthèses** et se recopient tels quels : `transpose_label` réécrit la ligne entière depuis l'itération 34.",
+ "not_labels": [
+  "194,16",
+  "194,73",
+  "194,121",
+  "254,1045",
+  "606,39",
+  "606,1031",
+  "808,880"
+ ],
+ "not_labels_verified": "le cadre « 1= G 4/4 » lui-même, découpé en trois amas et typé rangée d'accords — c'est `key_label` qui le porte, pas une étiquette —, le titre 【Chorus】, le « 2 » d'un crochet de reprise, et **deux modes C** : les chiffres « 1 » des crochets de 1ʳᵉ fin (254,1045 et 606,39), publiés « D » à +0,65 et lus comme des accords par le matcher.",
+ "not_rows": [
+  1333
+ ],
+ "not_rows_verified": "y=1333 n'est pas une rangée d'accords : ses vingt-et-un amas sont les **points d'octave** et les barres de mesure posés au-dessus des chiffres. À eux seuls ils faisaient plus du tiers du dénominateur.",
+ "key_label": {
+  "x": 15,
+  "y": 194,
+  "w": 77,
+  "h": 24
+ },
+ "key_label_verified": "candidate #2 (x=15 y=194 w=77 h=24) : « 1=  G » à gauche du chiffrage 4/4, lettre gravée **G** = printedKey G. #1 était la ligne de tempo ♩=130, #3 la lettre avec le chiffrage — itération 57.",
+ "extra_labels": [
+  {
+   "x": 44,
+   "y": 515,
+   "w": 163,
+   "h": 28,
+   "c": "（原版是Am）"
+  },
+  {
+   "x": 328,
+   "y": 515,
+   "w": 161,
+   "h": 28,
+   "c": "（原版是Em）"
+  }
+ ],
+ "extra_verified": "les deux annotations gravées au-dessus du refrain — « （原版是Am） » et « （原版是Em） », *la version d'origine a Am / Em* — qui commentent les Em et Am de la rangée du dessous. Ce sont des accords **dans la tonalité de cette page**, pas la tonalité d'une source : les laisser en sol laisserait la page à deux tonalités (itération 49, 神羔羊配得). `transpose_label` découpe sur les hanzi et ne réécrit que le jeton latin — « （原版是Bbm） » au demi-ton. Aucun outil ne les proposait : leur bande ne porte que ces deux amas, noyés dans les hanzi, et le test de `bandes.py` ne s'y apparie pas.",
+ "verified": "planche navigateur G→Ab relue sur les sept tranches (itération 57) : les huit rangées d'accords, les deux « (D/F#) » parenthésés, les deux annotations « （原版是Am/Em） » et le cadre « 1= G » sont tous encadrés et réécrits ; aucun accord ne reste en sol. Les chiffres « 1 » des crochets de 1ʳᵉ fin, que le calque publiait « D », sont redevenus des chiffres.",
+ "frozen_labels": [
+  {
+   "x": 43,
+   "y": 254,
+   "w": 18,
+   "h": 26,
+   "c": "G"
+  },
+  {
+   "x": 321,
+   "y": 254,
+   "w": 15,
+   "h": 26,
+   "c": "C"
+  },
+  {
+   "x": 493,
+   "y": 254,
+   "w": 18,
+   "h": 26,
+   "c": "G"
+  },
+  {
+   "x": 598,
+   "y": 254,
+   "w": 15,
+   "h": 26,
+   "c": "C"
+  },
+  {
+   "x": 888,
+   "y": 254,
+   "w": 50,
+   "h": 26,
+   "c": "G/B"
+  },
+  {
+   "x": 1079,
+   "y": 254,
+   "w": 16,
+   "h": 26,
+   "c": "C"
+  },
+  {
+   "x": 60,
+   "y": 569,
+   "w": 40,
+   "h": 22,
+   "c": "Em"
+  },
+  {
+   "x": 342,
+   "y": 569,
+   "w": 44,
+   "h": 22,
+   "c": "Am"
+  },
+  {
+   "x": 656,
+   "y": 569,
+   "w": 34,
+   "h": 22,
+   "c": "D7"
+  },
+  {
+   "x": 1072,
+   "y": 569,
+   "w": 16,
+   "h": 22,
+   "c": "C"
+  },
+  {
+   "x": 39,
+   "y": 808,
+   "w": 57,
+   "h": 48,
+   "c": "Em7"
+  },
+  {
+   "x": 317,
+   "y": 808,
+   "w": 44,
+   "h": 48,
+   "c": "Am"
+  },
+  {
+   "x": 626,
+   "y": 808,
+   "w": 16,
+   "h": 48,
+   "c": "D"
+  },
+  {
+   "x": 794,
+   "y": 808,
+   "w": 34,
+   "h": 48,
+   "c": "D7"
+  },
+  {
+   "x": 1111,
+   "y": 808,
+   "w": 18,
+   "h": 48,
+   "c": "G"
+  },
+  {
+   "x": 174,
+   "y": 1051,
+   "w": 84,
+   "h": 29,
+   "c": "(D/F#)"
+  },
+  {
+   "x": 398,
+   "y": 1051,
+   "w": 39,
+   "h": 29,
+   "c": "Em"
+  },
+  {
+   "x": 1002,
+   "y": 1051,
+   "w": 44,
+   "h": 29,
+   "c": "Am"
+  },
+  {
+   "x": 41,
+   "y": 1287,
+   "w": 96,
+   "h": 22,
+   "c": "Am7/G"
+  },
+  {
+   "x": 415,
+   "y": 1287,
+   "w": 11,
+   "h": 22,
+   "c": "F"
+  },
+  {
+   "x": 733,
+   "y": 1287,
+   "w": 34,
+   "h": 22,
+   "c": "D7"
+  },
+  {
+   "x": 1078,
+   "y": 1287,
+   "w": 18,
+   "h": 22,
+   "c": "G"
+  },
+  {
+   "x": 175,
+   "y": 1518,
+   "w": 84,
+   "h": 29,
+   "c": "(D/F#)"
+  },
+  {
+   "x": 400,
+   "y": 1518,
+   "w": 38,
+   "h": 29,
+   "c": "Em"
+  },
+  {
+   "x": 1001,
+   "y": 1518,
+   "w": 44,
+   "h": 29,
+   "c": "Am"
+  },
+  {
+   "x": 37,
+   "y": 1753,
+   "w": 96,
+   "h": 23,
+   "c": "Am7/G"
+  },
+  {
+   "x": 393,
+   "y": 1753,
+   "w": 11,
+   "h": 23,
+   "c": "F"
+  },
+  {
+   "x": 701,
+   "y": 1753,
+   "w": 35,
+   "h": 23,
+   "c": "D7"
+  },
+  {
+   "x": 969,
+   "y": 1753,
+   "w": 18,
+   "h": 23,
+   "c": "G"
+  },
+  {
+   "x": 44,
+   "y": 515,
+   "w": 163,
+   "h": 28,
+   "c": "（原版是Am）"
+  },
+  {
+   "x": 328,
+   "y": 515,
+   "w": 161,
+   "h": 28,
+   "c": "（原版是Em）"
+  }
+ ]
 }
