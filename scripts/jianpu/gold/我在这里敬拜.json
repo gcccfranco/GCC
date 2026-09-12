@@ -1,5 +1,536 @@
 {
  "slug": "我在这里敬拜",
  "face": "verdana-bold",
- "face_verified": "balayage de fonte croisé : sweep-key.py (veto + marge) et le compteur de couverture de build-chords désignent la même fonte, à tonalité inchangée — 2026-09-08 (itération 50). À confirmer par la planche d'audit avant certification."
+ "face_verified": "mesurée en accords justes sur les amas que `read()` rend, la page une fois transcrite (protocole 9ter, itération 62) : verdana-bold 10 justes / 1 faux (un « Dmaj7 » sur un fragment d'arc, y=263), helvetica-neue 7 / 2 (le « 1 » des crochets de 1ʳᵉ fin lu « D »), helvetica-bold 7 / 1, din-bold 4 / 0, georgia 3 / 0, times et times-bold 0. Le faux de verdana-bold est dans une rangée reposée à la main : il ne publie rien.",
+ "corrections": {
+  "856,60": "Em9",
+  "856,405": "G/A",
+  "856,805": "Em7",
+  "856,1142": "Asus4",
+  "856,1356": "A7",
+  "856,1447": "G/A",
+  "2038,76": "Em9",
+  "2038,431": "G/A",
+  "2038,749": "Em9",
+  "2038,1102": "Asus4",
+  "2038,1349": "A"
+ },
+ "corrections_verified": "y=856 et y=2038 sont les deux seules rangées que le découpage isole proprement (bandes de 27 et 28 px sur des lettres de 26) : elles restent à la lecture, entièrement en corrections. Leurs autres amas sont les chiffres « 1 » / « 2 » des crochets de reprise et un bout de filet.",
+ "not_labels": [
+  "263,109",
+  "263,167",
+  "263,205",
+  "263,369",
+  "263,643",
+  "263,748",
+  "263,912",
+  "263,1135",
+  "263,1403",
+  "511,17",
+  "511,221",
+  "511,364",
+  "511,505",
+  "511,657",
+  "511,859",
+  "511,992",
+  "511,1291",
+  "511,1429",
+  "856,22",
+  "856,752",
+  "856,1252",
+  "856,1300",
+  "2038,37",
+  "2038,696"
+ ],
+ "not_labels_verified": "y=263 (49 px) et y=511 (63 px) mêlent les étiquettes, les arcs qui leur sont soudés et 【Verse】 / « (先低后高) » — un « Gmaj7 » y fait 119 px : leurs accords sont reposés sur leur encre en `extra_labels`. Les amas écartés de y=856 et y=2038 sont les chiffres des crochets de 1ʳᵉ et 2ᵉ fin.",
+ "not_rows": [
+  1306,
+  2068
+ ],
+ "not_rows_verified": "y=1306 est la seconde ligne de paroles du refrain (« 敬 拜，献 上 »), typée accords ; y=2068 une bande de 11 px de sommets d'arcs.",
+ "extra_labels": [
+  {
+   "x": 107,
+   "y": 271,
+   "w": 22,
+   "h": 29,
+   "c": "D"
+  },
+  {
+   "x": 367,
+   "y": 271,
+   "w": 99,
+   "h": 36,
+   "c": "Gmaj7"
+  },
+  {
+   "x": 641,
+   "y": 271,
+   "w": 59,
+   "h": 29,
+   "c": "A13"
+  },
+  {
+   "x": 910,
+   "y": 271,
+   "w": 99,
+   "h": 36,
+   "c": "Gmaj7"
+  },
+  {
+   "x": 1401,
+   "y": 274,
+   "w": 24,
+   "h": 29,
+   "c": "D"
+  },
+  {
+   "x": 20,
+   "y": 531,
+   "w": 119,
+   "h": 37,
+   "c": "(Dmaj7)"
+  },
+  {
+   "x": 219,
+   "y": 530,
+   "w": 95,
+   "h": 37,
+   "c": "(A/C#)"
+  },
+  {
+   "x": 362,
+   "y": 532,
+   "w": 73,
+   "h": 30,
+   "c": "Bm7"
+  },
+  {
+   "x": 677,
+   "y": 530,
+   "w": 147,
+   "h": 37,
+   "c": "(Bmadd9)"
+  },
+  {
+   "x": 857,
+   "y": 530,
+   "w": 81,
+   "h": 37,
+   "c": "(D/A)"
+  },
+  {
+   "x": 990,
+   "y": 532,
+   "w": 98,
+   "h": 36,
+   "c": "Gmaj7"
+  },
+  {
+   "x": 1289,
+   "y": 529,
+   "w": 79,
+   "h": 38,
+   "c": "D/F#"
+  },
+  {
+   "x": 80,
+   "y": 1112,
+   "w": 24,
+   "h": 30,
+   "c": "D"
+  },
+  {
+   "x": 419,
+   "y": 1109,
+   "w": 75,
+   "h": 34,
+   "c": "(/C#)"
+  },
+  {
+   "x": 518,
+   "y": 1112,
+   "w": 69,
+   "h": 30,
+   "c": "Bm"
+  },
+  {
+   "x": 900,
+   "y": 1109,
+   "w": 58,
+   "h": 34,
+   "c": "(/A)"
+  },
+  {
+   "x": 1010,
+   "y": 1112,
+   "w": 52,
+   "h": 30,
+   "c": "Bm"
+  },
+  {
+   "x": 1500,
+   "y": 1109,
+   "w": 59,
+   "h": 34,
+   "c": "(/A)"
+  },
+  {
+   "x": 56,
+   "y": 1393,
+   "w": 25,
+   "h": 30,
+   "c": "G"
+  },
+  {
+   "x": 346,
+   "y": 1390,
+   "w": 79,
+   "h": 38,
+   "c": "D/F#"
+  },
+  {
+   "x": 641,
+   "y": 1393,
+   "w": 50,
+   "h": 30,
+   "c": "Em"
+  },
+  {
+   "x": 1001,
+   "y": 1390,
+   "w": 68,
+   "h": 38,
+   "c": "G/A"
+  },
+  {
+   "x": 1233,
+   "y": 1393,
+   "w": 93,
+   "h": 30,
+   "c": "Asus4"
+  },
+  {
+   "x": 1380,
+   "y": 1393,
+   "w": 26,
+   "h": 30,
+   "c": "A"
+  },
+  {
+   "x": 87,
+   "y": 1715,
+   "w": 24,
+   "h": 30,
+   "c": "D"
+  },
+  {
+   "x": 429,
+   "y": 1713,
+   "w": 142,
+   "h": 36,
+   "c": "A/C# Bm"
+  },
+  {
+   "x": 885,
+   "y": 1713,
+   "w": 121,
+   "h": 36,
+   "c": "D/A G"
+  },
+  {
+   "x": 1287,
+   "y": 1712,
+   "w": 79,
+   "h": 37,
+   "c": "D/F#"
+  }
+ ],
+ "transcription": "relevée à l'œil — sept systèmes, 41 accords plus le cadre. S1 : D Gmaj7 A13 Gmaj7 · D. S2 : (Dmaj7) (A/C#) Bm7 (Bmadd9) (D/A) Gmaj7 D/F#. S3 : ⌐1 Em9 G/A ⌐2 Em7 Asus4 A7 G/A. S4 : D (/C#) ⌐1 Bm (/A) ⌐2 Bm (/A). S5 : G D/F# Em ⌐1 G/A ⌐2 Asus4 A. S6 : D A/C# Bm D/A G D/F#. S7 : ⌐1 Em9 G/A ⌐2 Em9 Asus4 A.",
+ "hors_cho": "la page est gravée en ré comme son `.cho` (« 1= D », décalage nul) : les noms s'écrivent tels que gravés. Les accords entre parenthèses sont facultatifs — la page le dit elle-même, « 所有括号里的和弦有时加，有时不加 » — et se publient avec leurs parenthèses. Les trois basses seules « (/C#) », « (/A) » ne se transposaient pas avant l'itération 62 (`transposeChord` exigeait une fondamentale) : c'est ce correctif qui rend la page publiable.",
+ "hidden_rows_note": "y=1381 (S5) et y=1715 (S6) sont typées `numbers` et portent chacune six accords, et la ligne d'accords de S4 est dans une bande typée paroles (y=1101) : aucune n'entre dans `read()`, leurs quinze étiquettes sont posées en `extra_labels`.",
+ "composites": "« A/C# Bm » et « D/A G » (S6, 18 et 41 px d'écart) sont publiés d'un bloc : en deux boîtes la planche navigateur montrait « Bb/DCm » et « Eb/BbAb », collés.",
+ "key_label": {
+  "x": 8,
+  "y": 215,
+  "w": 95,
+  "h": 32
+ },
+ "key_label_verified": "cadre relevé au profil d'encre : « 1= D » sur x 10-100, y 217-244 ; le chiffrage 4/4 commence à x=134. Pas de `c` : la lettre gravée est celle des accords.",
+ "verified": "planche navigateur D→Eb relue sur les sept tranches (itération 62) : les 39 étiquettes (41 accords) et le cadre sont encadrés en rouge et réécrits, aucun cadre orange, aucun accord resté en ré. Les parenthèses suivent : « (Dmaj7) » → « (Ebmaj7) », « (/C#) » → « (/D) », « (/A) » → « (/Bb) ». Réserves vues et acceptées : les filets des crochets de 1ʳᵉ et 2ᵉ fin passent au ras du haut des lettres et sont masqués sous l'étiquette réécrite ; les arcs soudés aux étiquettes perdent le bout qui touche la lettre ; « (Eb/Bb) » arrive au contact d'« Abmaj7 » sans le rogner (S2). `sweep-browser --keys` : aucun tronqué aux douze tonalités ; trois « encre couverte » à la tonalité d'audit, les trois « G/A » → « Ab/Bb » (S3, S5, S7) dont le fond, plus large, passe sur le filet du crochet de reprise et le bout d'arc voisins — vu au zoom de la planche, aucun chiffre, barre ni parole touché. Accepté.",
+ "frozen_labels": [
+  {
+   "x": 60,
+   "y": 856,
+   "w": 68,
+   "h": 28,
+   "c": "Em9"
+  },
+  {
+   "x": 405,
+   "y": 856,
+   "w": 61,
+   "h": 28,
+   "c": "G/A"
+  },
+  {
+   "x": 805,
+   "y": 856,
+   "w": 67,
+   "h": 28,
+   "c": "Em7"
+  },
+  {
+   "x": 1142,
+   "y": 856,
+   "w": 94,
+   "h": 28,
+   "c": "Asus4"
+  },
+  {
+   "x": 1356,
+   "y": 856,
+   "w": 41,
+   "h": 28,
+   "c": "A7"
+  },
+  {
+   "x": 1447,
+   "y": 856,
+   "w": 62,
+   "h": 28,
+   "c": "G/A"
+  },
+  {
+   "x": 76,
+   "y": 2038,
+   "w": 67,
+   "h": 27,
+   "c": "Em9"
+  },
+  {
+   "x": 431,
+   "y": 2038,
+   "w": 61,
+   "h": 27,
+   "c": "G/A"
+  },
+  {
+   "x": 749,
+   "y": 2038,
+   "w": 68,
+   "h": 27,
+   "c": "Em9"
+  },
+  {
+   "x": 1102,
+   "y": 2038,
+   "w": 95,
+   "h": 27,
+   "c": "Asus4"
+  },
+  {
+   "x": 1349,
+   "y": 2038,
+   "w": 21,
+   "h": 27,
+   "c": "A"
+  },
+  {
+   "x": 107,
+   "y": 271,
+   "w": 22,
+   "h": 29,
+   "c": "D"
+  },
+  {
+   "x": 367,
+   "y": 271,
+   "w": 99,
+   "h": 36,
+   "c": "Gmaj7"
+  },
+  {
+   "x": 641,
+   "y": 271,
+   "w": 59,
+   "h": 29,
+   "c": "A13"
+  },
+  {
+   "x": 910,
+   "y": 271,
+   "w": 99,
+   "h": 36,
+   "c": "Gmaj7"
+  },
+  {
+   "x": 1401,
+   "y": 274,
+   "w": 24,
+   "h": 29,
+   "c": "D"
+  },
+  {
+   "x": 20,
+   "y": 531,
+   "w": 119,
+   "h": 37,
+   "c": "(Dmaj7)"
+  },
+  {
+   "x": 219,
+   "y": 530,
+   "w": 95,
+   "h": 37,
+   "c": "(A/C#)"
+  },
+  {
+   "x": 362,
+   "y": 532,
+   "w": 73,
+   "h": 30,
+   "c": "Bm7"
+  },
+  {
+   "x": 677,
+   "y": 530,
+   "w": 147,
+   "h": 37,
+   "c": "(Bmadd9)"
+  },
+  {
+   "x": 857,
+   "y": 530,
+   "w": 81,
+   "h": 37,
+   "c": "(D/A)"
+  },
+  {
+   "x": 990,
+   "y": 532,
+   "w": 98,
+   "h": 36,
+   "c": "Gmaj7"
+  },
+  {
+   "x": 1289,
+   "y": 529,
+   "w": 79,
+   "h": 38,
+   "c": "D/F#"
+  },
+  {
+   "x": 80,
+   "y": 1112,
+   "w": 24,
+   "h": 30,
+   "c": "D"
+  },
+  {
+   "x": 419,
+   "y": 1109,
+   "w": 75,
+   "h": 34,
+   "c": "(/C#)"
+  },
+  {
+   "x": 518,
+   "y": 1112,
+   "w": 69,
+   "h": 30,
+   "c": "Bm"
+  },
+  {
+   "x": 900,
+   "y": 1109,
+   "w": 58,
+   "h": 34,
+   "c": "(/A)"
+  },
+  {
+   "x": 1010,
+   "y": 1112,
+   "w": 52,
+   "h": 30,
+   "c": "Bm"
+  },
+  {
+   "x": 1500,
+   "y": 1109,
+   "w": 59,
+   "h": 34,
+   "c": "(/A)"
+  },
+  {
+   "x": 56,
+   "y": 1393,
+   "w": 25,
+   "h": 30,
+   "c": "G"
+  },
+  {
+   "x": 346,
+   "y": 1390,
+   "w": 79,
+   "h": 38,
+   "c": "D/F#"
+  },
+  {
+   "x": 641,
+   "y": 1393,
+   "w": 50,
+   "h": 30,
+   "c": "Em"
+  },
+  {
+   "x": 1001,
+   "y": 1390,
+   "w": 68,
+   "h": 38,
+   "c": "G/A"
+  },
+  {
+   "x": 1233,
+   "y": 1393,
+   "w": 93,
+   "h": 30,
+   "c": "Asus4"
+  },
+  {
+   "x": 1380,
+   "y": 1393,
+   "w": 26,
+   "h": 30,
+   "c": "A"
+  },
+  {
+   "x": 87,
+   "y": 1715,
+   "w": 24,
+   "h": 30,
+   "c": "D"
+  },
+  {
+   "x": 429,
+   "y": 1713,
+   "w": 142,
+   "h": 36,
+   "c": "A/C# Bm"
+  },
+  {
+   "x": 885,
+   "y": 1713,
+   "w": 121,
+   "h": 36,
+   "c": "D/A G"
+  },
+  {
+   "x": 1287,
+   "y": 1712,
+   "w": 79,
+   "h": 37,
+   "c": "D/F#"
+  }
+ ]
 }
