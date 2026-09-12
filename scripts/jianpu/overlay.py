@@ -124,11 +124,34 @@ CHORD_TOKEN = re.compile(
 EDGE_BRACKETS = re.compile(r"^([()\[\]]*)(.*?)([()\[\]]*)$")
 
 
+# Une parenthèse ouvrante suivie d'une note ou d'une basse seule commence un
+# **autre** accord : « B/D#(G#) », « C(/B) ». Les enrichissements qui font
+# partie de l'accord s'ouvrent sur une minuscule, un chiffre ou une altération
+# (`Am(maj7)`, `Adim(9)`, `C7(#9)`) et n'y répondent pas.
+PAREN_CHORD = re.compile(r"(?=\(/?[A-G])")
+
+
+def _transpose_paren_group(run: str, semitones: int, target_key: str):
+    """« B/D#(G#) », gravé sans blanc : lu comme un seul accord, il rendait
+    « C/D#(G#) » côté client — à moitié transposé, et plausible — et faisait
+    lever `transpose_chord` ici (itération 62). On découpe devant chaque
+    parenthèse d'accord, et on ne rend le découpage que si **chaque** morceau
+    a été réécrit ; sinon `None`, et l'étiquette suit le chemin d'avant."""
+    pieces = [p for p in PAREN_CHORD.split(run) if p]
+    if len(pieces) < 2:
+        return None
+    out = [_transpose_run(p, semitones, target_key) for p in pieces]
+    return "".join(out) if all(o != p for o, p in zip(out, pieces)) else None
+
+
 def _transpose_run(run: str, semitones: int, target_key: str) -> str:
     if not run:
         return run
     if CHORD_TOKEN.match(run):
         return transpose_chord(run, semitones, target_key)
+    group = _transpose_paren_group(run, semitones, target_key)
+    if group is not None:
+        return group
     # Parenthèse orpheline collée au jeton : le « Dm( » de « Dm(或Bb) ». On
     # ne la pèle qu'en second recours, sinon « Adim(9) » — dont la
     # parenthèse *fait* partie de l'accord — se ferait amputer.
@@ -171,6 +194,9 @@ def transpose_label(text: str, semitones: int, target_key: str) -> str:
     """
     parts = LABEL_SPLIT.split(text)
     if len(parts) == 1:
+        group = _transpose_paren_group(text, semitones, target_key)
+        if group is not None:
+            return group
         direct = transpose_chord(text, semitones, target_key)
         if direct != text:
             return direct
