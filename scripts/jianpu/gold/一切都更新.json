@@ -1,0 +1,384 @@
+{
+ "slug": "一切都更新",
+ "face": "verdana-bold",
+ "face_verified": "mesurée en accords justes contre la page transcrite (protocole 9ter). Six des huit rangées d'accords étant cachées, il ne reste que cinq accords lisibles par la machine : verdana-bold en lit 3 sans aucun faux, quand helvetica-bold, din-bold et times en lisent 3 pour 1 faux et times-bold 2 pour 3 faux. La gravure est une linéale, ce que la planche confirme.",
+ "corrections": {
+  "1346,44": "Fmaj7",
+  "1860,899": "（进尾句时Am7）"
+ },
+ "not_labels": [
+  "1346,24",
+  "1346,496",
+  "1346,513",
+  "1346,587",
+  "1346,603",
+  "1346,676",
+  "1346,692",
+  "1346,775",
+  "1346,1188",
+  "1346,1277",
+  "1346,1293",
+  "1346,1367",
+  "1346,1384",
+  "1860,22",
+  "1860,614",
+  "1860,677",
+  "1860,803",
+  "1860,1190",
+  "1860,1354"
+ ],
+ "not_rows": [
+  205,
+  568,
+  857,
+  1249,
+  1538,
+  1985,
+  2142
+ ],
+ "extra_labels": [
+  {
+   "x": 846,
+   "y": 239,
+   "w": 230,
+   "h": 46,
+   "c": "G/C或Cmaj7"
+  },
+  {
+   "x": 187,
+   "y": 246,
+   "w": 23,
+   "h": 30,
+   "c": "C"
+  },
+  {
+   "x": 37,
+   "y": 535,
+   "w": 78,
+   "h": 30,
+   "c": "Am7"
+  },
+  {
+   "x": 822,
+   "y": 535,
+   "w": 18,
+   "h": 30,
+   "c": "F"
+  },
+  {
+   "x": 1186,
+   "y": 535,
+   "w": 29,
+   "h": 30,
+   "c": "F"
+  },
+  {
+   "x": 44,
+   "y": 824,
+   "w": 31,
+   "h": 30,
+   "c": "F"
+  },
+  {
+   "x": 388,
+   "y": 824,
+   "w": 77,
+   "h": 30,
+   "c": "Dm7"
+  },
+  {
+   "x": 862,
+   "y": 824,
+   "w": 78,
+   "h": 30,
+   "c": "Am7"
+  },
+  {
+   "x": 1366,
+   "y": 824,
+   "w": 77,
+   "h": 30,
+   "c": "Dm7"
+  },
+  {
+   "x": 310,
+   "y": 1055,
+   "w": 25,
+   "h": 31,
+   "c": "G"
+  },
+  {
+   "x": 936,
+   "y": 1055,
+   "w": 37,
+   "h": 30,
+   "c": "C"
+  },
+  {
+   "x": 825,
+   "y": 1344,
+   "w": 78,
+   "h": 38,
+   "c": "Am7"
+  },
+  {
+   "x": 45,
+   "y": 1634,
+   "w": 82,
+   "h": 30,
+   "c": "Dm7"
+  },
+  {
+   "x": 426,
+   "y": 1634,
+   "w": 109,
+   "h": 45,
+   "c": "Gsus4"
+  },
+  {
+   "x": 848,
+   "y": 1634,
+   "w": 83,
+   "h": 37,
+   "c": "Am7"
+  },
+  {
+   "x": 45,
+   "y": 1866,
+   "w": 84,
+   "h": 30,
+   "c": "Dm7"
+  },
+  {
+   "x": 42,
+   "y": 2097,
+   "w": 17,
+   "h": 30,
+   "c": "F"
+  },
+  {
+   "x": 366,
+   "y": 2097,
+   "w": 91,
+   "h": 38,
+   "c": "Em7"
+  },
+  {
+   "x": 736,
+   "y": 2097,
+   "w": 83,
+   "h": 37,
+   "c": "Dm7"
+  },
+  {
+   "x": 989,
+   "y": 2097,
+   "w": 101,
+   "h": 30,
+   "c": "Gsus4"
+  },
+  {
+   "x": 1338,
+   "y": 2097,
+   "w": 30,
+   "h": 37,
+   "c": "C"
+  }
+ ],
+ "key_label": {
+  "x": 4,
+  "y": 218,
+  "w": 88,
+  "h": 30
+ },
+ "key_label_verified": "cadre relevé au profil d'encre : « 1= » (6-40) et « C » (70-88) sur 220-245. Le chiffrage 4/4 commence à x=123 et le premier accord — un « C » lui aussi — à x=159 : le cadre s'arrête avant les deux. Pas de `c` : la lettre gravée est la tonalité des accords.",
+ "transcription": "relevée à l'œil — huit systèmes, 25 accords. S1 : C, G/C或Cmaj7. S2 : Am7 F F. S3 : F Dm7 Am7 Dm7. S4 : G C. S5 : Fmaj7 Am7. S6 : Dm7 Gsus4 Am7. S7 : Dm7 G C（进尾句时Am7） Gsus4. S8 : F Em7 Dm7 Gsus4 C.",
+ "rangees_cachees": "six des huit rangées d'accords échappent à `read()` : y=220, 537, 1043, 1636 et 2099 sont typées `numbers`, y=812 reste en `chords?` non confirmé. Leurs dix-neuf étiquettes sont posées en `extra_labels`. Seules y=1346 et y=1860 sont lues. À l'inverse sept rangées sont promues `chords` à tort — le « 4 » du chiffrage, quatre rangées d'arcs de liaison, deux de paroles et la rangée de chiffres du dernier système : `not_rows`.",
+ "composites": "deux étiquettes portent du chinois : « G/C或Cmaj7 » (或 = « ou ») et « C（进尾句时Am7） » (« Am7 en entrant dans la coda »). `transposeLabel` découpe sur les runs non-ASCII, donc les deux accords de chaque étiquette sont réécrits : « Ab/Db或Dbmaj7 », « Db（进尾句时Bbm7） ». Le second est publié en deux étiquettes, le découpage ayant séparé le « C » de sa parenthèse.",
+ "crochets": "les étiquettes des reprises 1./2. sont **posées sur le filet du crochet**, qui leur traverse le haut des lettres. La boîte est resserrée sur les lettres seules — elle efface donc 70 à 100 px de filet, ce qui est ce que la gravure montre déjà — et laisse le petit chiffre 1 ou 2 du crochet intact.",
+ "verified": "planche navigateur C→C# relue sur les sept tranches (itération 61) : les 26 étiquettes des huit systèmes sont encadrées et réécrites, aucun accord ne reste en do, et « 1= C » devient « 1=C# ». Les deux composites chinoises passent entières — « Ab/Db或Dbmaj7 » et « Db（进尾句时Bbm7） ». Les crochets de reprise gardent leur petit chiffre 1 ou 2 et leur filet reprend de part et d'autre de chaque étiquette. 【Pre-Chorus】, 【Chorus】, 【尾句】, « D.C. or To Chorus » et « Fine » sont laissés intacts.",
+ "frozen_labels": [
+  {
+   "x": 44,
+   "y": 1346,
+   "w": 100,
+   "h": 34,
+   "c": "Fmaj7"
+  },
+  {
+   "x": 449,
+   "y": 1860,
+   "w": 21,
+   "h": 35,
+   "c": "G"
+  },
+  {
+   "x": 857,
+   "y": 1860,
+   "w": 18,
+   "h": 35,
+   "c": "C"
+  },
+  {
+   "x": 899,
+   "y": 1860,
+   "w": 239,
+   "h": 35,
+   "c": "（进尾句时Am7）"
+  },
+  {
+   "x": 1222,
+   "y": 1860,
+   "w": 95,
+   "h": 35,
+   "c": "Gsus4"
+  },
+  {
+   "x": 846,
+   "y": 239,
+   "w": 230,
+   "h": 46,
+   "c": "G/C或Cmaj7"
+  },
+  {
+   "x": 187,
+   "y": 246,
+   "w": 23,
+   "h": 30,
+   "c": "C"
+  },
+  {
+   "x": 37,
+   "y": 535,
+   "w": 78,
+   "h": 30,
+   "c": "Am7"
+  },
+  {
+   "x": 822,
+   "y": 535,
+   "w": 18,
+   "h": 30,
+   "c": "F"
+  },
+  {
+   "x": 1186,
+   "y": 535,
+   "w": 29,
+   "h": 30,
+   "c": "F"
+  },
+  {
+   "x": 44,
+   "y": 824,
+   "w": 31,
+   "h": 30,
+   "c": "F"
+  },
+  {
+   "x": 388,
+   "y": 824,
+   "w": 77,
+   "h": 30,
+   "c": "Dm7"
+  },
+  {
+   "x": 862,
+   "y": 824,
+   "w": 78,
+   "h": 30,
+   "c": "Am7"
+  },
+  {
+   "x": 1366,
+   "y": 824,
+   "w": 77,
+   "h": 30,
+   "c": "Dm7"
+  },
+  {
+   "x": 310,
+   "y": 1055,
+   "w": 25,
+   "h": 31,
+   "c": "G"
+  },
+  {
+   "x": 936,
+   "y": 1055,
+   "w": 37,
+   "h": 30,
+   "c": "C"
+  },
+  {
+   "x": 825,
+   "y": 1344,
+   "w": 78,
+   "h": 38,
+   "c": "Am7"
+  },
+  {
+   "x": 45,
+   "y": 1634,
+   "w": 82,
+   "h": 30,
+   "c": "Dm7"
+  },
+  {
+   "x": 426,
+   "y": 1634,
+   "w": 109,
+   "h": 45,
+   "c": "Gsus4"
+  },
+  {
+   "x": 848,
+   "y": 1634,
+   "w": 83,
+   "h": 37,
+   "c": "Am7"
+  },
+  {
+   "x": 45,
+   "y": 1866,
+   "w": 84,
+   "h": 30,
+   "c": "Dm7"
+  },
+  {
+   "x": 42,
+   "y": 2097,
+   "w": 17,
+   "h": 30,
+   "c": "F"
+  },
+  {
+   "x": 366,
+   "y": 2097,
+   "w": 91,
+   "h": 38,
+   "c": "Em7"
+  },
+  {
+   "x": 736,
+   "y": 2097,
+   "w": 83,
+   "h": 37,
+   "c": "Dm7"
+  },
+  {
+   "x": 989,
+   "y": 2097,
+   "w": 101,
+   "h": 30,
+   "c": "Gsus4"
+  },
+  {
+   "x": 1338,
+   "y": 2097,
+   "w": 30,
+   "h": 37,
+   "c": "C"
+  }
+ ]
+}
