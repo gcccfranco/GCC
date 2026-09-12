@@ -5532,3 +5532,90 @@ sur les cinq pages.
   `bandes.py` aveugle aux annotations noyées dans les hanzi (57), les fichiers
   « … 2.json », le `.cho` de 给梦想一双翅膀, le PDF sans sélecteur, l'alternative
   parenthésée solitaire, les tonalités mineures.
+
+### Itération 61 — la barre de mesure tenait quatre rangées soudées
+
+伯利恒的喜讯 certifiée, 126 → 127 calques. Elle lisait **0/37**, la pire du
+corpus, et l'itération 60 la rangeait avec les cinq autres pages « sans
+difficulté nouvelle repérée, seulement du travail ». C'était faux : sa
+difficulté n'était ni la tonalité, ni la fonte, ni le dénominateur, mais le
+**découpage en rangées**, qui n'avait encore jamais été mis en cause.
+
+**Ce que la page montrait.** Ses quatre rangées d'accords n'existaient pour
+personne. Le classifieur rendait douze bandes, dont quatre hautes de 100 px
+typées `numbers` — chacune portant *à la fois* les accords et les chiffres —
+et quatre rangées de paroles promues `chords`, qui fournissaient à elles
+seules 33 des 37 amas du dénominateur. Le matcher travaillait donc
+exclusivement sur des hanzi, et sa couverture nulle était le bon résultat
+pour la mauvaise question.
+
+**Pourquoi le creux ne se voyait pas.** `split_band` recoupe une bande haute
+sur ses creux, avec un plancher relatif. Entre la rangée d'accords et ses
+chiffres, le profil d'encre ne descend jamais sous 15 px : cinq **barres de
+mesure** de 3 à 4 px le traversent de part en part. Une barre enjambe la
+frontière par construction — elle ne dit rien de l'endroit où une rangée
+s'arrête. C'est exactement ce que `thicken` fait déjà pour l'**arc de
+liaison**, trait fin horizontal qui imitait une ligature depuis l'itération 3 ;
+il manquait son pendant vertical. `unbarred` est cette ouverture horizontale :
+un trait plus étroit que 5 px disparaît entier.
+
+**Deux erreurs en route, et la seconde est la leçon.**
+
+L'érosion de `thicken` ne convient pas ici : `out &= roll(d) | roll(-d)` garde
+les **deux bords** d'un trait de 4 px — un pixel de bord a toujours de l'encre
+à distance d, du côté du trait — et laissait 2 px par barre, assez pour combler
+le silence. Il fallait une vraie ouverture morphologique.
+
+Surtout : la première version *découpait la bande avant* d'appliquer le
+plancher. Elle marchait sur la page visée et **détruisait 180 étiquettes
+ailleurs** — 27 pages, 圣灵的江河 de 36/36 à 28/36, 脚步 de 25/25 à 17/25. Deux
+causes distinctes, toutes deux invisibles sur la planche d'une seule page :
+
+1. les bornes des morceaux bougeaient de quelques pixels, et **les clés
+   `"y,x"` des vérités terrain sont indexées sur le haut de rangée** ;
+2. l'encre des silences eux-mêmes était **jetée** — 24 lignes en tête de la
+   rangée d'accords de 圣灵的江河 —, parce qu'une rangée d'étiquettes fines est
+   effacée par l'ouverture et passe alors pour un silence.
+
+La forme retenue ne peut plus faire ni l'un ni l'autre : le découpage
+d'origine rend les morceaux, **puis** chaque silence long qui tombe à
+l'*intérieur* d'un morceau le fend en deux, et seulement si les deux côtés
+restent assez hauts. Aucun pixel gardé n'est perdu, aucun haut de morceau ne
+bouge, et le plancher se calcule une fois sur la bande entière — le recalculer
+par tronçon déplaçait déjà les bornes de 充满在这里 (1395 → 1393, neuf
+étiquettes gelées à côté). Un garde-fou complète : une coupe doit être creuse
+**aussi dans l'encre vraie**, mesurée non en quantité mais en **étalement** —
+2,2 à 3,7 % des colonnes dans les quatre silences de la page, 10 à 16 % dans
+ses rangées d'accords, 39 à 50 % dans ses rangées de chiffres.
+
+**Le contrôle qui tranche n'est aucun de ceux du protocole.** Ni la planche, ni
+`bench-match`, ni les compteurs n'ont vu la casse : le banc du matcher affichait
+70,6 % avant et 70,7 % après, à dénominateur réduit de 36 — un rapport plat qui
+masquait 180 amas disparus. Ce qui l'a vue, c'est un décompte écrit pour
+l'occasion : *combien de `frozen_labels` retombent encore sur un amas détecté*,
+page par page, avant contre après. Il faut le refaire à chaque retouche du
+découpage. Et la garantie finale est plus simple encore : **`chords.json`
+reconstruit est identique octet pour octet** — les 126 pages publiées sont
+toutes gelées, donc aucune ne dépend plus du découpage. C'est le gel de
+l'itération 44 qui rend cette chirurgie possible.
+
+**La page, une fois ses rangées isolées.** 18 amas au lieu de 37, dont 16
+accords et 2 arcs nus. La fonte se mesure alors comme au 9ter : din-bold lit 4
+des 16 accords justes, times-bold 3, les cinq autres 2 — et *aucune fonte ne
+publie de faux accord*, la page ne risquant que le silence. Six étiquettes sont
+**soudées à un arc** : la boîte de l'amas fait 66 à 81 px là où l'étiquette en
+fait 28, et la repeindre effacerait l'arc. On les écarte en `not_labels` puis on
+les republie en `extra_labels` à leur taille vraie, mesurée en séparant les
+**composantes connexes** de l'amas — l'arc est la plus large, l'étiquette est le
+reste. La planche navigateur Eb→E confirme les seize étiquettes encadrées, le
+cadre « 1=♭E » devenu « 1=E », et les six arcs toujours dessinés à côté de leur
+accord réécrit.
+
+**Ce que cela change pour les cinq autres pages du lot.** Rien
+automatiquement : 求充满这地, 遇见你, 是你的爱, 深深爱你 et 一切都更新 ne sont pas
+soudées par leurs barres. Leurs rangées d'accords *sont* détectées ; ce sont
+leurs **amas** qui sont soudés — aux crochets de reprise (『⌐2Dm7』), aux
+annotations chinoises entre parenthèses (『C（进尾句时Am7）』), aux arcs. Le
+balayage des sept fontes y plafonne à 15 % (10/74, 10/62, 10/61). La soudure
+change d'échelle : elle n'est plus entre rangées mais **dans** l'amas, et
+`cluster_gap` est le paramètre qui la tient.
