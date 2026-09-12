@@ -1,4 +1,522 @@
 {
  "slug": "十架的大能",
- "face": "verdana-bold"
+ "face": "verdana-bold",
+ "printed_key": "Bb",
+ "not_rows": [
+  252,
+  379,
+  1001,
+  1524
+ ],
+ "corrections": {
+  "207,282": "E/G#",
+  "207,383": "D/F#",
+  "207,931": "A/C#",
+  "1766,228": "E/G#",
+  "1766,407": "D/F#",
+  "1766,563": "A/E"
+ },
+ "extra_labels": [
+  {
+   "x": 68,
+   "y": 408,
+   "w": 31,
+   "h": 27,
+   "c": "A"
+  },
+  {
+   "x": 218,
+   "y": 407,
+   "w": 42,
+   "h": 28,
+   "c": "E/G#"
+  },
+  {
+   "x": 391,
+   "y": 410,
+   "w": 43,
+   "h": 25,
+   "c": "F#m"
+  },
+  {
+   "x": 723,
+   "y": 410,
+   "w": 39,
+   "h": 25,
+   "c": "Bm"
+  },
+  {
+   "x": 1058,
+   "y": 410,
+   "w": 11,
+   "h": 25,
+   "c": "E"
+  },
+  {
+   "x": 60,
+   "y": 1086,
+   "w": 40,
+   "h": 26,
+   "c": "Bm"
+  },
+  {
+   "x": 240,
+   "y": 1086,
+   "w": 11,
+   "h": 26,
+   "c": "E"
+  },
+  {
+   "x": 309,
+   "y": 1085,
+   "w": 69,
+   "h": 27,
+   "c": "(E/D)"
+  },
+  {
+   "x": 436,
+   "y": 1070,
+   "w": 41,
+   "h": 21,
+   "c": "C#m"
+  },
+  {
+   "x": 562,
+   "y": 1070,
+   "w": 43,
+   "h": 21,
+   "c": "F#m"
+  },
+  {
+   "x": 750,
+   "y": 1070,
+   "w": 39,
+   "h": 21,
+   "c": "Bm"
+  },
+  {
+   "x": 1049,
+   "y": 1070,
+   "w": 12,
+   "h": 21,
+   "c": "E"
+  },
+  {
+   "x": 82,
+   "y": 1565,
+   "w": 31,
+   "h": 27,
+   "c": "A"
+  },
+  {
+   "x": 200,
+   "y": 1564,
+   "w": 43,
+   "h": 28,
+   "c": "E/G#"
+  },
+  {
+   "x": 336,
+   "y": 1567,
+   "w": 43,
+   "h": 25,
+   "c": "F#m"
+  },
+  {
+   "x": 576,
+   "y": 1567,
+   "w": 40,
+   "h": 25,
+   "c": "Bm"
+  },
+  {
+   "x": 694,
+   "y": 1564,
+   "w": 63,
+   "h": 28,
+   "c": "A/C#"
+  },
+  {
+   "x": 836,
+   "y": 1550,
+   "w": 12,
+   "h": 21,
+   "c": "E"
+  },
+  {
+   "x": 1090,
+   "y": 1550,
+   "w": 11,
+   "h": 21,
+   "c": "E"
+  },
+  {
+   "x": 57,
+   "y": 143,
+   "w": 10,
+   "h": 22,
+   "c": ""
+  }
+ ],
+ "not_labels": [
+  "610,1231",
+  "1766,129",
+  "1766,1210"
+ ],
+ "not_rows_verified": "y=252 : les deux chiffres pointés du 1er système · y=1001 : une rangée de paroles promue `chords` (13 hanzi) · y=1524 : le seul 【Bridge】, publié « Fsus4 » · y=379 : la bande, typée `numbers`, porte la 2ᵉ rangée d'accords, publiée ici en `extra_labels` ; le veto n'est là que pour empêcher la garde de mode D de se redéclencher sur les deux « 各 » restés dans la bande (2 amas sur 2 appariés, donc seuil à 1,0). Voir itération 60 : une rangée soudée réparée à la main rallume l'alarme sur ses restes.",
+ "key_label": {
+  "x": 15,
+  "y": 170,
+  "w": 71,
+  "h": 23
+ },
+ "key_label_verified": "mesuré au profil d'encre (itération 60) : la page grave « 1= ♭B », bémol antéposé en exposant (x=57, y=143, 10 × 22), lettres « 1= B » sur y=170–192. La candidate #2 de `measure-keylabel` (x=15, w=51, h=34) s'arrêtait avant le « B », et sa #1 était la ligne de tempo ♩=66. Le cadre prend la hauteur des lettres ; le bémol est masqué à part, sans texte — même geste que 无价至宝 et 我们成为一家人. La lettre gravée ♭B est bien celle des accords (printedKey Bb), le capo n'apparaît pas sur cette page.",
+ "printed_key_verified": "la page grave sa tonalité deux fois : titre « 十架的大能（Bb调）» et cadre « 1= ♭B », quand le .cho est en la. L'en-tête le confirme : « [共6张：A/Bb/B/C调…原调A->B->C] » — c'est la planche en si bémol d'un jeu de six. Sans ce champ la page lisait 4/42 (itération 60).",
+ "face_verified": "mesurée contre la transcription complète de la page (48 étiquettes relevées à l'œil, itération 60) : verdana-bold 23 justes / 0 faux, din-bold 16, helvetica-neue 14, helvetica-bold 13, les serif de 4 à 6. Aucune fonte ne produit de faux ici, la question ne porte donc que sur ce qui est lu — et la linéale grasse large lit le plus. L'élection automatique avait raison, comme sur 你是我的一切.",
+ "verified": "planche navigateur Bb→B relue sur les sept tranches (itération 60) : les huit rangées d'accords sont encadrées et réécrites, 48 étiquettes, aucun accord ne reste en si bémol. **Trois rangées entières manquaient** et aucune n'était visible du calque : la 2ᵉ (y≈407) et la 5ᵉ (y≈1070) soudées à leur bande de chiffres, la 7ᵉ (y≈1564) typée `chords?` et jamais promue — 19 étiquettes posées à la main. Quatre rangées promues à tort sont écartées (deux chiffres pointés y=252, une rangée de paroles y=1001, le 【Bridge】 y=1524 qui publiait un faux « Fsus4 »), et trois amas de texte le sont un à un (【Chorus】, 【Tag】, « To Chorus »). Les six accords que le matcher lisait juste mais sous le seuil passent en corrections. Chaque rangée est posée sur la ligne de base de son groupe — les accords des crochets 1./2. gardent la leur, plus haute. Le cadre « 1= ♭B » est rendu « 1=B », bémol masqué à part. 【Bridge】, 【Tag】, « To Chorus » et « Fine » restent gravés. `bandes.py` : 0 ; `grille.py` : 0.",
+ "frozen_labels": [
+  {
+   "x": 58,
+   "y": 207,
+   "w": 31,
+   "h": 28,
+   "c": "Bb"
+  },
+  {
+   "x": 282,
+   "y": 207,
+   "w": 42,
+   "h": 28,
+   "c": "F/A"
+  },
+  {
+   "x": 383,
+   "y": 207,
+   "w": 60,
+   "h": 28,
+   "c": "Eb/G"
+  },
+  {
+   "x": 707,
+   "y": 207,
+   "w": 31,
+   "h": 28,
+   "c": "Bb"
+  },
+  {
+   "x": 931,
+   "y": 207,
+   "w": 62,
+   "h": 28,
+   "c": "Bb/D"
+  },
+  {
+   "x": 1052,
+   "y": 207,
+   "w": 44,
+   "h": 28,
+   "c": "Eb2"
+  },
+  {
+   "x": 56,
+   "y": 610,
+   "w": 41,
+   "h": 28,
+   "c": "Dm"
+  },
+  {
+   "x": 320,
+   "y": 610,
+   "w": 42,
+   "h": 28,
+   "c": "Gm"
+  },
+  {
+   "x": 562,
+   "y": 610,
+   "w": 39,
+   "h": 28,
+   "c": "Cm"
+  },
+  {
+   "x": 878,
+   "y": 610,
+   "w": 67,
+   "h": 28,
+   "c": "Fsus4"
+  },
+  {
+   "x": 1104,
+   "y": 610,
+   "w": 10,
+   "h": 28,
+   "c": "F"
+  },
+  {
+   "x": 90,
+   "y": 824,
+   "w": 30,
+   "h": 22,
+   "c": "Bb"
+  },
+  {
+   "x": 303,
+   "y": 824,
+   "w": 42,
+   "h": 22,
+   "c": "F/A"
+  },
+  {
+   "x": 420,
+   "y": 824,
+   "w": 42,
+   "h": 22,
+   "c": "Gm"
+  },
+  {
+   "x": 731,
+   "y": 824,
+   "w": 28,
+   "h": 22,
+   "c": "Eb"
+  },
+  {
+   "x": 867,
+   "y": 824,
+   "w": 10,
+   "h": 22,
+   "c": "F"
+  },
+  {
+   "x": 1069,
+   "y": 824,
+   "w": 31,
+   "h": 22,
+   "c": "Bb"
+  },
+  {
+   "x": 62,
+   "y": 1332,
+   "w": 40,
+   "h": 21,
+   "c": "Dm"
+  },
+  {
+   "x": 214,
+   "y": 1332,
+   "w": 43,
+   "h": 21,
+   "c": "Gm"
+  },
+  {
+   "x": 395,
+   "y": 1332,
+   "w": 39,
+   "h": 21,
+   "c": "Cm"
+  },
+  {
+   "x": 585,
+   "y": 1332,
+   "w": 10,
+   "h": 21,
+   "c": "F"
+  },
+  {
+   "x": 817,
+   "y": 1332,
+   "w": 30,
+   "h": 21,
+   "c": "Bb"
+  },
+  {
+   "x": 72,
+   "y": 1766,
+   "w": 30,
+   "h": 36,
+   "c": "Bb"
+  },
+  {
+   "x": 228,
+   "y": 1766,
+   "w": 42,
+   "h": 36,
+   "c": "F/A"
+  },
+  {
+   "x": 407,
+   "y": 1766,
+   "w": 60,
+   "h": 36,
+   "c": "Eb/G"
+  },
+  {
+   "x": 563,
+   "y": 1766,
+   "w": 56,
+   "h": 36,
+   "c": "Bb/F"
+  },
+  {
+   "x": 703,
+   "y": 1766,
+   "w": 29,
+   "h": 36,
+   "c": "Eb"
+  },
+  {
+   "x": 920,
+   "y": 1766,
+   "w": 10,
+   "h": 36,
+   "c": "F"
+  },
+  {
+   "x": 1142,
+   "y": 1766,
+   "w": 30,
+   "h": 36,
+   "c": "Bb"
+  },
+  {
+   "x": 68,
+   "y": 408,
+   "w": 31,
+   "h": 27,
+   "c": "Bb"
+  },
+  {
+   "x": 218,
+   "y": 407,
+   "w": 42,
+   "h": 28,
+   "c": "F/A"
+  },
+  {
+   "x": 391,
+   "y": 410,
+   "w": 43,
+   "h": 25,
+   "c": "Gm"
+  },
+  {
+   "x": 723,
+   "y": 410,
+   "w": 39,
+   "h": 25,
+   "c": "Cm"
+  },
+  {
+   "x": 1058,
+   "y": 410,
+   "w": 11,
+   "h": 25,
+   "c": "F"
+  },
+  {
+   "x": 60,
+   "y": 1086,
+   "w": 40,
+   "h": 26,
+   "c": "Cm"
+  },
+  {
+   "x": 240,
+   "y": 1086,
+   "w": 11,
+   "h": 26,
+   "c": "F"
+  },
+  {
+   "x": 309,
+   "y": 1085,
+   "w": 69,
+   "h": 27,
+   "c": "(F/Eb)"
+  },
+  {
+   "x": 436,
+   "y": 1070,
+   "w": 41,
+   "h": 21,
+   "c": "Dm"
+  },
+  {
+   "x": 562,
+   "y": 1070,
+   "w": 43,
+   "h": 21,
+   "c": "Gm"
+  },
+  {
+   "x": 750,
+   "y": 1070,
+   "w": 39,
+   "h": 21,
+   "c": "Cm"
+  },
+  {
+   "x": 1049,
+   "y": 1070,
+   "w": 12,
+   "h": 21,
+   "c": "F"
+  },
+  {
+   "x": 82,
+   "y": 1565,
+   "w": 31,
+   "h": 27,
+   "c": "Bb"
+  },
+  {
+   "x": 200,
+   "y": 1564,
+   "w": 43,
+   "h": 28,
+   "c": "F/A"
+  },
+  {
+   "x": 336,
+   "y": 1567,
+   "w": 43,
+   "h": 25,
+   "c": "Gm"
+  },
+  {
+   "x": 576,
+   "y": 1567,
+   "w": 40,
+   "h": 25,
+   "c": "Cm"
+  },
+  {
+   "x": 694,
+   "y": 1564,
+   "w": 63,
+   "h": 28,
+   "c": "Bb/D"
+  },
+  {
+   "x": 836,
+   "y": 1550,
+   "w": 12,
+   "h": 21,
+   "c": "F"
+  },
+  {
+   "x": 1090,
+   "y": 1550,
+   "w": 11,
+   "h": 21,
+   "c": "F"
+  },
+  {
+   "x": 57,
+   "y": 143,
+   "w": 10,
+   "h": 22,
+   "c": ""
+  }
+ ]
 }
