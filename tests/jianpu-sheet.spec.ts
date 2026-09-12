@@ -71,9 +71,10 @@ test.describe("partition 简谱", () => {
       // « B/D#(G#) » rendu « C/D#(G#) », « D/F# /F B/D# » rendu
       // « Eb/G /F C/E » — elles ont changé, et elles sont fausses
       // (itération 62). Chaque note, fondamentale comme basse, doit monter
-      // de l'intervalle.
+      // de l'intervalle. Une étiquette sortie vide — la seconde tonalité que
+      // le sélecteur masque — relève du contrôle suivant, pas de celui-ci.
       const ecart = (pitchClass(target) - pitchClass(printed) + 12) % 12;
-      const moitie = ecrites.filter((l) => {
+      const moitie = ecrites.filter((l) => l.shown !== "").filter((l) => {
         const avant = notes(l.printed);
         const apres = notes(l.shown);
         return (
