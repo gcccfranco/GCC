@@ -5619,3 +5619,75 @@ annotations chinoises entre parenthèses (『C（进尾句时Am7）』), aux arc
 balayage des sept fontes y plafonne à 15 % (10/74, 10/62, 10/61). La soudure
 change d'échelle : elle n'est plus entre rangées mais **dans** l'amas, et
 `cluster_gap` est le paramètre qui la tient.
+
+### Itération 61 (suite) — les cinq autres pages, et la boîte qui tombe à côté
+
+Les six du lot sont certifiées : 伯利恒的喜讯 (16 étiquettes), 遇见你 (51),
+深深爱你 (34), 是你的爱 (29), 一切都更新 (26), 求充满这地 (46). 126 → 132
+calques. L'itération 60 les rangeait comme « aucune difficulté nouvelle
+repérée, seulement du travail » ; il y en avait trois, et aucune n'était
+celle qu'on attendait.
+
+**Ce n'était pas la fonte.** 遇见你 est gravée dans une **monospace serif**,
+famille que le banc n'a pas. On a ajouté Courier New, Andale Mono, PT Mono et
+American Typewriter aux sept : toutes plafonnent à 10/61, exactement comme
+din-bold. La fonte n'était pas le verrou — les arcs de liaison soudés aux
+étiquettes l'étaient. Le réflexe « couverture basse ⇒ essayer une fonte »
+avait déjà coûté une itération à l'itération 60 (la tonalité était écrite sur
+la page) ; il en a re-coûté une ici.
+
+**Le dénominateur, sixième itération de suite.** Sur les cinq pages, la moitié
+des rangées d'accords n'entrent pas dans `read()` : 3 sur 8 pour 遇见你, 2 sur
+5 pour 深深爱你, **6 sur 8** pour 一切都更新, **6 sur 9** pour 求充满这地.
+Typées `numbers`, `lyrics`, ou laissées en `chords?` non confirmé, elles ne
+pèsent sur aucun compteur — et symétriquement des rangées de paroles, de
+crédits, de filets de crochet et même *le « 4 » du chiffrage* sont promues
+`chords`. « 2/96 » sur 一切都更新 ne mesurait donc à peu près rien.
+
+**La difficulté vraiment nouvelle : la boîte qui tombe à côté.** Sur
+求充满这地, les étiquettes d'une même rangée **ne sont pas à la même hauteur** :
+celles posées sur un crochet de reprise sont gravées 20 à 30 px plus haut que
+leurs voisines. Une boîte mesurée sur la bande de la rangée — ce que fait
+`_box`, et ce que faisait le relevé à la main — ne prend alors que le sommet
+des chiffres du dessous : sept étiquettes du système 6 se sont affichées
+*au-dessus* de leur gravé, qui restait parfaitement lisible dessous. Aucun
+compteur ne l'a vu, aucun test non plus (l'étiquette est publiée, réécrite, et
+ne déborde de rien) : **seule la planche navigateur**. Le relevé se fait
+désormais sur le **segment vertical propre** à chaque étiquette, pas sur la
+bande de sa rangée.
+
+Trois autres pièges de boîte, tous vus sur planche et jamais par un compteur :
+
+- **la minuscule sacrifiée.** Séparer l'arc de l'étiquette par composantes
+  connexes marche en écartant ce qui est trop bas pour une capitale — et
+  écarte du même coup le « m » de « C#m ». Sur 深深爱你 les étiquettes
+  s'affichaient « Dm » suivi du « m » gravé. Le seuil est passé de 0,45 à 0,60
+  de la hauteur, et là où il n'y a pas d'arc on prend la bbox simple.
+- **le voisin qui rogne.** Deux boîtes adjacentes suffisent : sur 遇见你,
+  « Dsus4 » et « D » côte à côte, le fond opaque du second mangeait le « 4 » du
+  premier une fois transposé en « Ebsus4 ». C'est le **banc** qui l'a vu, pas
+  l'œil — la planche montrait les deux étiquettes réécrites. On publie une
+  **composite** « Dsus4 D » que `transposeLabel` réécrit d'un bloc.
+- **le dièse qui dépasse.** Une hampe de dièse monte 2 à 9 px au-dessus de la
+  bande de sa rangée. Sous les 6 px que `haut_grave` tolère, la boîte publiée
+  ne la couvre pas — et sur 深深爱你 comme sur 是你的爱 ces pointes-là se sont
+  fait compter comme une **rangée orpheline**, ce qui bloquait la publication.
+
+**L'espace avant la parenthèse.** 是你的爱 grave l'accord de la seconde strophe
+entre parenthèses (« B/D#(G#) »). Sans espace, `transposeLabel` ne découpe pas
+et rend « C/D#(G#) » : à moitié transposé, et *plausible*. C'est le même défaut
+que le « 1=F » de l'itération 35, mais ici il produit un accord faux au lieu
+d'un accord intact. La gravure met un blanc là ; on le garde, et « C/E (A) »
+sort juste. Même mécanique pour les composites chinoises de 一切都更新
+(« G/C或Cmaj7 », « C（进尾句时Am7） »), que `LABEL_SPLIT` découpe sur les runs
+non-ASCII.
+
+**Un accord gravé hors du `.cho`.** 求充满这地 imprime « C#m » sans septième à
+deux endroits ; son `.cho` n'a que « C#m7 ». Le vocabulaire fermé ne pouvait
+donc publier là qu'un accord faux — c'est le cas que `propose-chords.py`
+cherche, trouvé ici par la transcription.
+
+**Ce qui reste : deux pages sans calque** — 从心合一 (gravure manuscrite, aucune
+script au banc) et 我在这里敬拜 (étiquettes soudées aux arcs sur 119 px, dix
+accords entre parenthèses facultatifs, deux basses seules) — plus
+你的爱不离不弃, tranchée.
