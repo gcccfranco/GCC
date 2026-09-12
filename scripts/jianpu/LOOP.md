@@ -5691,3 +5691,121 @@ cherche, trouvé ici par la transcription.
 script au banc) et 我在这里敬拜 (étiquettes soudées aux arcs sur 119 px, dix
 accords entre parenthèses facultatifs, deux basses seules) — plus
 你的爱不离不弃, tranchée.
+
+### Itération 62 — l'accord transposé à moitié, et les deux dernières pages
+
+从心合一 et 我在这里敬拜 certifiées, 132 → 134 calques. Il ne reste aucune
+page sans calque en dehors de 你的爱不离不弃, tranchée à nouveau par Timothée
+le 12/09/2026 : c'est une page à portée, elle ne reçoit pas de calque.
+
+**Le piège de l'itération 61 n'était pas une consigne de saisie, c'était un
+défaut.** « B/D#(G#) » gravé sans blanc rendait « C/D#(G#) » : sans
+séparateur, l'étiquette entière passe par `transposeChord`, dont le motif
+`(.*?)` avale « /D#(G# » comme une qualité et ne transpose que la
+fondamentale. L'itération 61 l'avait contourné en écrivant un blanc dans
+`gold/`. Timothée a demandé qu'on le corrige : une parenthèse ouvrante suivie
+d'une note ou d'une basse seule commence désormais un **autre** accord
+(`PAREN_CHORD`), et le découpage n'est rendu que si chaque morceau a été
+réécrit. Les enrichissements qui font partie de l'accord — `Am(maj7)`,
+`Adim(9)`, `C7(#9)` — s'ouvrent sur une minuscule, un chiffre ou une
+altération et n'y répondent pas. Côté Python, la même étiquette faisait
+**lever** `transpose_chord` (« note inconnue : D#(G# »).
+
+**En cherchant, un second défaut, publié celui-là.** La basse seule « /F »,
+que `CHORD_TOKEN` reconnaît depuis l'itération 37, n'était **jamais
+transposée côté client** : `transposeChord` exige une fondamentale et
+rendait le jeton verbatim. Le miroir Python la savait transposer, donc
+aucun contrôle hors navigateur ne pouvait le voir. 我安然居住, certifiée,
+affichait en production « Eb/G /F C/E » et « Fm7 /Eb /D Dm7b5 » : deux
+lignes de basse restées dans l'ancienne tonalité au milieu d'étiquettes
+transposées. Mesuré aux douze transpositions sur les 5 647 étiquettes
+publiées : **22 rendus changent, exactement ces deux étiquettes × 11**.
+
+**Pourquoi le banc ne l'avait pas vu.** Son oracle compare l'étiquette
+entière au gravé : « Eb/G /F C/E » n'est pas égal à « D/F# /F B/D# », donc
+« transposée ». Une étiquette à moitié réécrite passe. L'oracle compare
+maintenant les **notes**, fondamentales et basses, une à une, contre
+l'intervalle attendu (table de hauteurs indépendante du code testé). Il
+échoue sur l'ancien `transpose.ts` (les deux étiquettes de 我安然居住) et
+passe sur le nouveau ; hors navigateur, sur tout le corpus : 2 fautes avant,
+0 après.
+
+**从心合一 : on a changé de page, pas de méthode.** L'ancien scan était une
+copie en ré aux accords **manuscrits** — le blocage nommé à l'itération 60.
+Timothée a fourni la gravure typographiée d'origine, en fa ; elle était déjà
+dans `Partitions/` sous un nom trompeur, « 从心合一 (D).pdf », avec un scan
+embarqué de 2896 × 4096, trois fois la définition de l'image jointe (à qui
+le PDF ne retire que la mention « [这是原版，另简版E和F调] »). Rendue par la
+chaîne de `build-images`, pour ce seul slug.
+
+La page est plus riche que son `.cho` — Bbmaj9, Gm9, Csus4, Bbm, Cm, Ab, Eb,
+Db, Bm7b5, « /C », deux jeux de reprise entre parenthèses — et une seule de
+ses rangées d'accords est isolée proprement par le découpage : elle reste à
+la lecture, le reste est relevé sur l'encre propre de chaque étiquette.
+Deux étiquettes que rien ne propose : l'**interlude de l'en-tête**
+(« Bbmaj9 C/Bb|…|Csus4 C|) », une ligne entière) et « Gm F/A Bb) », des
+accords **noyés dans l'annotation de la ligne de paroles** « (*处第2拍三连音…) ».
+
+Deux leçons de rendu, vues chacune par un seul contrôle :
+
+- **Le corps d'une étiquette `fh` se mesure sur la gravure, pas sur la
+  boîte.** À fh 22, « Gm F/A Bb) » réécrit « G#m F#/A# B) » heurte le
+  plancher de rétrécissement (`MIN_SHRINK` 0,8) et **efface le « 从 »** des
+  paroles qui suit ; mesuré à 15 px de capitale, il tient. Vu à la planche
+  navigateur seule.
+- **L'ordre de peinture de deux étiquettes superposées.** Les deux groupes
+  de reprise sont gravés 7 px l'un sous l'autre ; le fond opaque déborde de
+  6 px au-dessus de l'encre. Peint après, le groupe du dessous rognait le
+  bas de celui du dessus — le **banc** l'a vu, pas la planche. Peint avant,
+  c'est le fond du dessus qui passe sur une marge vide.
+
+**我在这里敬拜 : les trois blocages nommés à l'itération 60, levés.** Les
+étiquettes soudées aux arcs (119 px pour « Gmaj7 ») sont reposées sur leur
+encre ; les quatre accords facultatifs entre parenthèses (et non dix, comme
+le disait l'itération 60) se publient avec leurs parenthèses ; et les trois
+basses seules « (/C#) », « (/A) » — que
+`transpose_label` « n'avait jamais eu à traiter » — se transposent grâce au
+correctif ci-dessus. Deux paires trop serrées (« A/C# Bm », « D/A G »)
+sortaient collées à la planche, « Bb/DCm » : publiées en composites.
+
+**Fonte, au 9ter.** 从心合一 : verdana-bold 17 justes / 0 faux, din-bold
+14 / 1. 我在这里敬拜 : verdana-bold 10 / 1 (un « Dmaj7 » sur un fragment d'arc,
+dans une rangée reposée à la main), helvetica-neue 7 / 2 (le « 1 » des
+crochets de 1ʳᵉ fin lu « D »). Pour ces deux pages presque entièrement
+relevées à la main, la fonte ne décide que de quelques amas.
+
+**Réserves du balayage, vues et acceptées.** `sweep-browser --keys` : aucun
+tronqué aux douze tonalités sur les deux pages. Un chevauchement sur
+从心合一 (les deux groupes de reprise, marge sans encre) ; trois « encre
+couverte » sur 我在这里敬拜, les « G/A » → « Ab/Bb » dont le fond passe sur
+le filet du crochet de reprise voisin — au zoom, aucun chiffre, barre ni
+parole touché.
+
+**Et la liste des chants sans 简谱.** 53 chants chinois du site ne sont pas
+dans l'inventaire : **48 n'ont que du 五线谱** (vérifié page par page, au
+détecteur de portées à 150 dpi et seuil 200, puis en planche-contact — la
+photocopie sombre de 我需要有你在我生命中 échappe au détecteur), 3 n'ont
+qu'une grille d'accords en texte (祢是唯一, 圣诞节耶稣为你而来, 谢谢你) et 2
+n'ont aucun PDF (我选择喜乐, 谢谢你成为我的家). Liste remise à Timothée pour
+qu'il fournisse les 简谱.
+
+**Bilan.** Corpus 135, calques **132 → 134**, tous certifiés, complets et
+gelés ; le seul chant sans calque est 你的爱不离不弃, par décision.
+**682 tests Playwright** (672 avant). Le premier passage du banc complet en a
+fait échouer quatre, les quatre pages à deux jeux : le nouvel oracle comptait
+les étiquettes que le sélecteur **masque** (texte vide), qui relèvent du
+contrôle voisin. Filtrées, 682/682. `npx tsc --noEmit`, `npm run validate` (370 chants), `npm run lint`
+(49 avertissements préexistants, 0 erreur). `bandes.py` propre sur les deux
+pages ; `worklist --certifiées` : 0 rangée perdue ; `chords.json` reconstruit
+identique après chaque gel.
+
+**Ce qui reste, nommé.**
+
+- **Les 53 chants sans 简谱**, en attente des partitions de Timothée.
+- Toujours ouverts : le mélange correction / boîte serrée dans une rangée
+  haute n'a pas de détecteur (59), `mode_d` ne compte pas les `alt_labels`
+  (59), `welded_rows` se rallume sur les restes d'une rangée réparée (60),
+  `propose-extra --hidden` ne rend pas une rangée cachée entière (58),
+  `bandes.py` aveugle aux annotations noyées dans les hanzi (57), les fichiers
+  « … 2.json », le `.cho` de 给梦想一双翅膀, le PDF sans sélecteur,
+  l'alternative parenthésée solitaire, les tonalités mineures.
