@@ -1,5 +1,548 @@
 {
  "slug": "遇见你",
- "face": "verdana-bold",
- "face_verified": "balayage de fonte croisé : sweep-key.py (veto + marge) et le compteur de couverture de build-chords désignent la même fonte, à tonalité inchangée — 2026-09-08 (itération 50). À confirmer par la planche d'audit avant certification."
+ "face": "din-bold",
+ "face_verified": "mesurée en accords justes contre la page transcrite (protocole 9ter) : din-bold lit 10 des 33 accords des cinq rangées typées `chords`, helvetica-bold 7, times-bold 5, verdana-bold 4, helvetica-neue 3, times et georgia 1. Aucune fonte ne publie de faux accord. La gravure est une **monospace serif** que le banc n'a pas : Courier New, Andale Mono, PT Mono et American Typewriter ont été essayées en plus des sept — elles plafonnent à 10/61 comme din-bold, sans jamais la dépasser. Ce n'est donc pas la fonte qui bloque cette page, ce sont les arcs de liaison soudés aux étiquettes.",
+ "corrections": {
+  "421,187": "Em7",
+  "421,310": "A/C#",
+  "421,610": "Bm7",
+  "421,945": "Em7",
+  "421,1100": "A",
+  "592,465": "A/C#",
+  "592,687": "Bm7",
+  "592,1214": "G",
+  "769,70": "Em7",
+  "769,199": "A/C#",
+  "769,562": "Bm7",
+  "769,1111": "A",
+  "1128,228": "A7sus4",
+  "1128,382": "Bm7",
+  "1128,805": "Em7",
+  "1128,1228": "A",
+  "1128,1327": "A7sus4",
+  "1498,69": "G",
+  "1498,220": "A7sus4",
+  "1498,377": "Bm7",
+  "1498,654": "Gmaj7",
+  "1498,867": "Em7",
+  "1498,1041": "A7sus4"
+ },
+ "not_labels": [
+  "421,1054",
+  "421,1069",
+  "592,1173",
+  "592,1292",
+  "769,381",
+  "769,762",
+  "769,1068",
+  "769,1159",
+  "769,1357",
+  "1128,196",
+  "1128,566",
+  "1128,927",
+  "1128,964",
+  "1128,1209"
+ ],
+ "not_rows": [
+  199,
+  1233
+ ],
+ "extra_labels": [
+  {
+   "x": 218,
+   "y": 253,
+   "w": 19,
+   "h": 26,
+   "c": "D"
+  },
+  {
+   "x": 824,
+   "y": 253,
+   "w": 51,
+   "h": 26,
+   "c": "Bm7"
+  },
+  {
+   "x": 1318,
+   "y": 253,
+   "w": 48,
+   "h": 28,
+   "c": "G"
+  },
+  {
+   "x": 626,
+   "y": 259,
+   "w": 73,
+   "h": 28,
+   "c": "A/C#"
+  },
+  {
+   "x": 456,
+   "y": 941,
+   "w": 51,
+   "h": 26,
+   "c": "Bm7"
+  },
+  {
+   "x": 687,
+   "y": 941,
+   "w": 83,
+   "h": 30,
+   "c": "Gmaj7"
+  },
+  {
+   "x": 992,
+   "y": 941,
+   "w": 20,
+   "h": 26,
+   "c": "A"
+  },
+  {
+   "x": 1247,
+   "y": 941,
+   "w": 19,
+   "h": 26,
+   "c": "D"
+  },
+  {
+   "x": 1307,
+   "y": 941,
+   "w": 72,
+   "h": 30,
+   "c": "D/F#"
+  },
+  {
+   "x": 200,
+   "y": 947,
+   "w": 73,
+   "h": 30,
+   "c": "A/C#"
+  },
+  {
+   "x": 13,
+   "y": 956,
+   "w": 89,
+   "h": 23,
+   "c": "Dsus4 D"
+  },
+  {
+   "x": 451,
+   "y": 1314,
+   "w": 52,
+   "h": 26,
+   "c": "Bm7"
+  },
+  {
+   "x": 683,
+   "y": 1314,
+   "w": 85,
+   "h": 31,
+   "c": "Gmaj7"
+  },
+  {
+   "x": 989,
+   "y": 1314,
+   "w": 20,
+   "h": 26,
+   "c": "A"
+  },
+  {
+   "x": 1245,
+   "y": 1314,
+   "w": 19,
+   "h": 26,
+   "c": "D"
+  },
+  {
+   "x": 1313,
+   "y": 1314,
+   "w": 72,
+   "h": 31,
+   "c": "D/F#"
+  },
+  {
+   "x": 198,
+   "y": 1318,
+   "w": 73,
+   "h": 31,
+   "c": "A/C#"
+  },
+  {
+   "x": 14,
+   "y": 1335,
+   "w": 86,
+   "h": 23,
+   "c": "Dsus4 D"
+  }
+ ],
+ "key_label": {
+  "x": 21,
+  "y": 107,
+  "w": 70,
+  "h": 29
+ },
+ "key_label_verified": "cadre relevé au profil d'encre : « 1 » (23-30), « = » (39-60), « D » (66-88) sur 109-133 ; le chiffrage 4/4 commence à x=121 et le tempo ♩=70 à x=172, tous deux hors du cadre. Pas de `c` : la lettre gravée est bien la tonalité des accords.",
+ "transcription": "relevée à l'œil sur la page entière — huit systèmes, 53 accords. Couplet (systèmes 1 et 3) : D | A/C# | Bm7 | G. Systèmes 2 et 4 : Em7 A/C# F#m7 Bm7 Gmaj7 Em7 A. Systèmes 5 et 7 : Dsus4 D | A/C# | Bm7 | Gmaj7 | A | D | D/F#. Système 6 : G A7sus4 Bm7 Gmaj7 Em7 Gmaj7 A A7sus4. Système 8 : G A7sus4 Bm7 Gmaj7 Em7 A7sus4 D.",
+ "rangees_cachees": "trois des huit rangées d'accords ne sont pas typées `chords` et n'entrent donc dans aucun compteur ni dans `read()` : y=247 et y=1316 sont typées `numbers`, y=943 est typée `lyrics`. Leurs vingt étiquettes sont posées en `extra_labels`, boîtes mesurées en séparant les composantes connexes et en écartant celles dont le haut est trop bas pour une capitale — c'est ainsi qu'on retire l'arc collé au « G » de y=247. Les rangées y=199 (bandeau d'album) et y=1233 (paroles) sont au contraire typées `chords` à tort : `not_rows`.",
+ "soudures": "« Dsus4 D » des systèmes 5 et 7 est un seul amas pour deux accords, et deux boîtes voisines ne conviennent pas : le fond opaque de la seconde rogne la première, « Ebsus4 » s'affichant « Ebsus » une fois transposé (le banc l'a attrapé, pas l'œil). On publie donc **une étiquette composite** par rangée, « Dsus4 D », que `transposeLabel` réécrit en entier.",
+ "verified": "planche navigateur D→Eb relue sur les cinq tranches (itération 61) : les 51 étiquettes des huit systèmes sont encadrées et réécrites, aucun accord ne reste en ré, et « 1=D » devient « 1=Eb ». Les trois rangées cachées (y=247 et y=1316 typées `numbers`, y=943 typée `lyrics`) publient bien leurs dix-huit étiquettes. Les deux composites « Dsus4 D » deviennent « Ebsus4 Eb » d'un seul tenant. Le mot « Chorus » et le bandeau d'album sont laissés intacts, et les arcs de liaison restent dessinés à côté des accords réécrits.",
+ "frozen_labels": [
+  {
+   "x": 187,
+   "y": 421,
+   "w": 45,
+   "h": 28,
+   "c": "Em7"
+  },
+  {
+   "x": 310,
+   "y": 421,
+   "w": 93,
+   "h": 28,
+   "c": "A/C#"
+  },
+  {
+   "x": 475,
+   "y": 421,
+   "w": 62,
+   "h": 28,
+   "c": "F#m7"
+  },
+  {
+   "x": 610,
+   "y": 421,
+   "w": 79,
+   "h": 28,
+   "c": "Bm7"
+  },
+  {
+   "x": 809,
+   "y": 421,
+   "w": 79,
+   "h": 28,
+   "c": "Gmaj7"
+  },
+  {
+   "x": 945,
+   "y": 421,
+   "w": 46,
+   "h": 28,
+   "c": "Em7"
+  },
+  {
+   "x": 1100,
+   "y": 421,
+   "w": 25,
+   "h": 28,
+   "c": "A"
+  },
+  {
+   "x": 41,
+   "y": 592,
+   "w": 14,
+   "h": 27,
+   "c": "D"
+  },
+  {
+   "x": 465,
+   "y": 592,
+   "w": 66,
+   "h": 27,
+   "c": "A/C#"
+  },
+  {
+   "x": 687,
+   "y": 592,
+   "w": 45,
+   "h": 27,
+   "c": "Bm7"
+  },
+  {
+   "x": 1214,
+   "y": 592,
+   "w": 29,
+   "h": 27,
+   "c": "G"
+  },
+  {
+   "x": 70,
+   "y": 769,
+   "w": 45,
+   "h": 29,
+   "c": "Em7"
+  },
+  {
+   "x": 199,
+   "y": 769,
+   "w": 106,
+   "h": 29,
+   "c": "A/C#"
+  },
+  {
+   "x": 401,
+   "y": 769,
+   "w": 62,
+   "h": 29,
+   "c": "F#m7"
+  },
+  {
+   "x": 562,
+   "y": 769,
+   "w": 77,
+   "h": 29,
+   "c": "Bm7"
+  },
+  {
+   "x": 782,
+   "y": 769,
+   "w": 79,
+   "h": 29,
+   "c": "Gmaj7"
+  },
+  {
+   "x": 942,
+   "y": 769,
+   "w": 45,
+   "h": 29,
+   "c": "Em7"
+  },
+  {
+   "x": 1111,
+   "y": 769,
+   "w": 34,
+   "h": 29,
+   "c": "A"
+  },
+  {
+   "x": 34,
+   "y": 1128,
+   "w": 14,
+   "h": 28,
+   "c": "G"
+  },
+  {
+   "x": 228,
+   "y": 1128,
+   "w": 94,
+   "h": 28,
+   "c": "A7sus4"
+  },
+  {
+   "x": 382,
+   "y": 1128,
+   "w": 46,
+   "h": 28,
+   "c": "Bm7"
+  },
+  {
+   "x": 599,
+   "y": 1128,
+   "w": 82,
+   "h": 28,
+   "c": "Gmaj7"
+  },
+  {
+   "x": 805,
+   "y": 1128,
+   "w": 100,
+   "h": 28,
+   "c": "Em7"
+  },
+  {
+   "x": 988,
+   "y": 1128,
+   "w": 80,
+   "h": 28,
+   "c": "Gmaj7"
+  },
+  {
+   "x": 1228,
+   "y": 1128,
+   "w": 48,
+   "h": 28,
+   "c": "A"
+  },
+  {
+   "x": 1327,
+   "y": 1128,
+   "w": 90,
+   "h": 28,
+   "c": "A7sus4"
+  },
+  {
+   "x": 69,
+   "y": 1498,
+   "w": 13,
+   "h": 26,
+   "c": "G"
+  },
+  {
+   "x": 220,
+   "y": 1498,
+   "w": 89,
+   "h": 26,
+   "c": "A7sus4"
+  },
+  {
+   "x": 377,
+   "y": 1498,
+   "w": 46,
+   "h": 26,
+   "c": "Bm7"
+  },
+  {
+   "x": 654,
+   "y": 1498,
+   "w": 79,
+   "h": 26,
+   "c": "Gmaj7"
+  },
+  {
+   "x": 867,
+   "y": 1498,
+   "w": 45,
+   "h": 26,
+   "c": "Em7"
+  },
+  {
+   "x": 1041,
+   "y": 1498,
+   "w": 90,
+   "h": 26,
+   "c": "A7sus4"
+  },
+  {
+   "x": 1273,
+   "y": 1498,
+   "w": 14,
+   "h": 26,
+   "c": "D"
+  },
+  {
+   "x": 218,
+   "y": 253,
+   "w": 19,
+   "h": 26,
+   "c": "D"
+  },
+  {
+   "x": 824,
+   "y": 253,
+   "w": 51,
+   "h": 26,
+   "c": "Bm7"
+  },
+  {
+   "x": 1318,
+   "y": 253,
+   "w": 48,
+   "h": 28,
+   "c": "G"
+  },
+  {
+   "x": 626,
+   "y": 259,
+   "w": 73,
+   "h": 28,
+   "c": "A/C#"
+  },
+  {
+   "x": 456,
+   "y": 941,
+   "w": 51,
+   "h": 26,
+   "c": "Bm7"
+  },
+  {
+   "x": 687,
+   "y": 941,
+   "w": 83,
+   "h": 30,
+   "c": "Gmaj7"
+  },
+  {
+   "x": 992,
+   "y": 941,
+   "w": 20,
+   "h": 26,
+   "c": "A"
+  },
+  {
+   "x": 1247,
+   "y": 941,
+   "w": 19,
+   "h": 26,
+   "c": "D"
+  },
+  {
+   "x": 1307,
+   "y": 941,
+   "w": 72,
+   "h": 30,
+   "c": "D/F#"
+  },
+  {
+   "x": 200,
+   "y": 947,
+   "w": 73,
+   "h": 30,
+   "c": "A/C#"
+  },
+  {
+   "x": 13,
+   "y": 956,
+   "w": 89,
+   "h": 23,
+   "c": "Dsus4 D"
+  },
+  {
+   "x": 451,
+   "y": 1314,
+   "w": 52,
+   "h": 26,
+   "c": "Bm7"
+  },
+  {
+   "x": 683,
+   "y": 1314,
+   "w": 85,
+   "h": 31,
+   "c": "Gmaj7"
+  },
+  {
+   "x": 989,
+   "y": 1314,
+   "w": 20,
+   "h": 26,
+   "c": "A"
+  },
+  {
+   "x": 1245,
+   "y": 1314,
+   "w": 19,
+   "h": 26,
+   "c": "D"
+  },
+  {
+   "x": 1313,
+   "y": 1314,
+   "w": 72,
+   "h": 31,
+   "c": "D/F#"
+  },
+  {
+   "x": 198,
+   "y": 1318,
+   "w": 73,
+   "h": 31,
+   "c": "A/C#"
+  },
+  {
+   "x": 14,
+   "y": 1335,
+   "w": 86,
+   "h": 23,
+   "c": "Dsus4 D"
+  }
+ ]
 }
