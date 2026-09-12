@@ -524,7 +524,7 @@
   "h": 26
  },
  "key_label_verified": "cadre relevé au profil d'encre : « 1= » (15-44) et « F » (71-81) sur 147-168 ; le chiffrage 4/4 commence à x=110, hors du cadre. Pas de `c` : la lettre gravée est celle des accords.",
- "verified": "planche navigateur F→F# relue sur les sept tranches (itération 62) : les 71 étiquettes et le cadre sont encadrés en rouge et réécrits, aucun cadre orange, aucun accord resté en fa. « Bbm » → « Bm », « Dm7 /C Bm7b5 » → « D#m7 /C# Cm7b5 », les reprises « (Bb/F F/C) » → « (B/F# F#/C#) », l'interlude entier converti. Réserves vues et acceptées : l'arc gravé qui traverse « (Db Ab » est masqué sous les deux étiquettes réécrites et reste visible de part et d'autre ; les « F » isolés collés au segno et à 【Chorus】 sont rendus « F# » au corps réduit, lisibles.",
+ "verified": "planche navigateur F→F# relue sur les sept tranches (itération 62) : les 71 étiquettes et le cadre sont encadrés en rouge et réécrits, aucun cadre orange, aucun accord resté en fa. « Bbm » → « Bm », « Dm7 /C Bm7b5 » → « D#m7 /C# Cm7b5 », les reprises « (Bb/F F/C) » → « (B/F# F#/C#) », l'interlude entier converti. Réserves vues et acceptées : l'arc gravé qui traverse « (Db Ab » est masqué sous les deux étiquettes réécrites et reste visible de part et d'autre ; les « F » isolés collés au segno et à 【Chorus】 sont rendus « F# » au corps réduit, lisibles. `sweep-browser --keys` : aucun tronqué aux douze tonalités ; un « chevauchement » entre « (Bb/F F/C) » et « (Bb F/A Gm7) », gravés 7 px l'un sous l'autre — c'est la marge de 6 px du fond, sans encre, et le test de rognage passe. Accepté.",
  "frozen_labels": [
   {
    "x": 51,
