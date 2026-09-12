@@ -1,0 +1,324 @@
+{
+ "slug": "是你的爱",
+ "face": "helvetica-bold",
+ "face_verified": "mesurée en accords justes contre la page transcrite (protocole 9ter) : helvetica-bold lit 10 des 29 accords, helvetica-neue 9, din-bold 8, verdana-bold 6, times 4, times-bold 3, georgia 2. Elle publie trois faux (mode C), tous corrigés : 401,1252 gravé G#m lu F#m (+0.52) · 625,707 gravé G#m lu F#m (+0.42) · 1834,6 gravé G#m lu F#m (+0.51).",
+ "corrections": {
+  "401,489": "C#m",
+  "401,1252": "G#m",
+  "625,707": "G#m",
+  "625,936": "C#m",
+  "840,305": "B",
+  "840,1023": "B",
+  "1062,63": "E",
+  "1062,612": "C#m",
+  "1339,11": "E/G#",
+  "1606,275": "E/G#",
+  "1834,6": "G#m",
+  "1834,922": "E/G#"
+ },
+ "not_labels": [
+  "625,466",
+  "625,848",
+  "625,1275",
+  "840,23",
+  "840,50",
+  "840,705",
+  "840,736",
+  "1062,21",
+  "1062,269",
+  "1062,412",
+  "1062,845",
+  "1339,158",
+  "1339,629",
+  "1339,772",
+  "1339,1112",
+  "1339,1390",
+  "1606,14",
+  "1606,561",
+  "1606,1132",
+  "1834,111",
+  "1834,217",
+  "1834,679",
+  "1834,1174",
+  "2056,253",
+  "2056,526",
+  "2056,601",
+  "2056,891",
+  "2056,1218"
+ ],
+ "not_rows": [
+  226,
+  338,
+  755,
+  977,
+  1282
+ ],
+ "extra_labels": [
+  {
+   "x": 493,
+   "y": 633,
+   "w": 26,
+   "h": 27,
+   "c": "B"
+  },
+  {
+   "x": 265,
+   "y": 1060,
+   "w": 153,
+   "h": 40,
+   "c": "B/D# (G#)"
+  },
+  {
+   "x": 840,
+   "y": 1060,
+   "w": 171,
+   "h": 40,
+   "c": "E/G# (G#m)"
+  },
+  {
+   "x": 1136,
+   "y": 1345,
+   "w": 29,
+   "h": 28,
+   "c": "A"
+  },
+  {
+   "x": 663,
+   "y": 1346,
+   "w": 25,
+   "h": 27,
+   "c": "B"
+  },
+  {
+   "x": 552,
+   "y": 2054,
+   "w": 25,
+   "h": 28,
+   "c": "B"
+  },
+  {
+   "x": 1247,
+   "y": 2054,
+   "w": 23,
+   "h": 28,
+   "c": "E"
+  }
+ ],
+ "key_label": {
+  "x": 36,
+  "y": 265,
+  "w": 74,
+  "h": 30
+ },
+ "key_label_verified": "cadre relevé au profil d'encre : « 1 » (38-45), « = » (56-78), « E » (86-107) sur 267-292 ; le chiffrage 4/4 commence à x=132, hors du cadre. Pas de `c` : la lettre gravée est la tonalité des accords.",
+ "transcription": "relevée à l'œil — huit systèmes, 29 accords. S1 : E C#m A E G#m. S2 : F#m B G#m C#m A. S3 (les deux fins de reprise) : B, B. S4 : E, B/D# (G#), C#m, E/G# (G#m), A. S5 : E/G# F#m B A. S6 : E/G# F#m. S7 : G#m A E/G#. S8 : D B E.",
+ "composites": "deux étiquettes portent l'accord de la seconde strophe entre parenthèses — la page le dit en bas : « 【注】括号里为第二段歌词所用和弦 ». **L'espace avant la parenthèse est indispensable** : `transposeLabel` découpe sur les blancs, et « B/D#(G#) » sans espace ressort « C/D#(G#) » — à moitié transposé et parfaitement plausible, le pire des rendus. Avec l'espace : « C/E (A) ». La gravure met bien un blanc là ; on le garde.",
+ "soudures": "sept amas mêlent l'étiquette à autre chose et sont republiés en `extra_labels` à leur taille vraie : quatre « B »/« E » soudés à leur arc de liaison (l'arc est la composante dont le haut passe sous la lettre), le « A » collé au signe de coda ⊕ en y=1339, et les deux composites dont la parenthèse fermante tombait hors de l'amas. Le segno ※, le ⊕, les crochets de reprise 1./2. et les arcs nus sont des `not_labels`.",
+ "not_rows_verified": "y=1282 n'est pas une rangée mais le **vide** entre les paroles et la rangée d'accords du système 5. Les deux amas de 8 px que la chasse aux orphelines y trouve — x=68-75 et x=335-342 — sont les pointes des dièses de « E/G# » et « F#m » (y=1339), déjà publiés : leur hampe monte 3 px au-dessus de la bande de leur rangée, sous les 6 px que `haut_grave` tolère, si bien que la boîte publiée ne les couvre pas et que la chasse les prend pour une rangée à elle seule. Toutes les étiquettes à dièse de la page dépassent ainsi de 2 à 9 px.",
+ "verified": "planche navigateur E→F relue sur les sept tranches (itération 61) : les 29 étiquettes des huit systèmes sont encadrées et réécrites, aucun accord ne reste en mi, et « 1=E » devient « 1=F ». Les deux composites deviennent « C/E (A) » et « F/A (Am) », les deux parties transposées. Les trois « G#m » que helvetica-bold lisait « F#m » sortent bien en « Am ». Segno ※, coda ⊕, crochets de reprise 1./2., « D.S.al.Coda », « Fine » et les arcs de liaison sont laissés intacts. Aucun moignon de dièse visible au-dessus des étiquettes réécrites.",
+ "frozen_labels": [
+  {
+   "x": 65,
+   "y": 401,
+   "w": 16,
+   "h": 34,
+   "c": "E"
+  },
+  {
+   "x": 489,
+   "y": 401,
+   "w": 63,
+   "h": 34,
+   "c": "C#m"
+  },
+  {
+   "x": 670,
+   "y": 401,
+   "w": 19,
+   "h": 34,
+   "c": "A"
+  },
+  {
+   "x": 829,
+   "y": 401,
+   "w": 16,
+   "h": 34,
+   "c": "E"
+  },
+  {
+   "x": 1252,
+   "y": 401,
+   "w": 66,
+   "h": 34,
+   "c": "G#m"
+  },
+  {
+   "x": 244,
+   "y": 625,
+   "w": 57,
+   "h": 38,
+   "c": "F#m"
+  },
+  {
+   "x": 707,
+   "y": 625,
+   "w": 65,
+   "h": 38,
+   "c": "G#m"
+  },
+  {
+   "x": 936,
+   "y": 625,
+   "w": 68,
+   "h": 38,
+   "c": "C#m"
+  },
+  {
+   "x": 1201,
+   "y": 625,
+   "w": 19,
+   "h": 38,
+   "c": "A"
+  },
+  {
+   "x": 305,
+   "y": 840,
+   "w": 19,
+   "h": 34,
+   "c": "B"
+  },
+  {
+   "x": 1023,
+   "y": 840,
+   "w": 18,
+   "h": 34,
+   "c": "B"
+  },
+  {
+   "x": 63,
+   "y": 1062,
+   "w": 17,
+   "h": 36,
+   "c": "E"
+  },
+  {
+   "x": 612,
+   "y": 1062,
+   "w": 64,
+   "h": 36,
+   "c": "C#m"
+  },
+  {
+   "x": 1210,
+   "y": 1062,
+   "w": 19,
+   "h": 36,
+   "c": "A"
+  },
+  {
+   "x": 11,
+   "y": 1339,
+   "w": 67,
+   "h": 40,
+   "c": "E/G#"
+  },
+  {
+   "x": 315,
+   "y": 1339,
+   "w": 57,
+   "h": 40,
+   "c": "F#m"
+  },
+  {
+   "x": 275,
+   "y": 1606,
+   "w": 67,
+   "h": 43,
+   "c": "E/G#"
+  },
+  {
+   "x": 848,
+   "y": 1606,
+   "w": 57,
+   "h": 43,
+   "c": "F#m"
+  },
+  {
+   "x": 6,
+   "y": 1829,
+   "w": 66,
+   "h": 41,
+   "c": "G#m"
+  },
+  {
+   "x": 446,
+   "y": 1834,
+   "w": 20,
+   "h": 36,
+   "c": "A"
+  },
+  {
+   "x": 922,
+   "y": 1829,
+   "w": 67,
+   "h": 41,
+   "c": "E/G#"
+  },
+  {
+   "x": 28,
+   "y": 2056,
+   "w": 22,
+   "h": 35,
+   "c": "D"
+  },
+  {
+   "x": 493,
+   "y": 633,
+   "w": 26,
+   "h": 27,
+   "c": "B"
+  },
+  {
+   "x": 265,
+   "y": 1060,
+   "w": 153,
+   "h": 40,
+   "c": "B/D# (G#)"
+  },
+  {
+   "x": 840,
+   "y": 1060,
+   "w": 171,
+   "h": 40,
+   "c": "E/G# (G#m)"
+  },
+  {
+   "x": 1136,
+   "y": 1345,
+   "w": 29,
+   "h": 28,
+   "c": "A"
+  },
+  {
+   "x": 663,
+   "y": 1346,
+   "w": 25,
+   "h": 27,
+   "c": "B"
+  },
+  {
+   "x": 552,
+   "y": 2054,
+   "w": 25,
+   "h": 28,
+   "c": "B"
+  },
+  {
+   "x": 1247,
+   "y": 2054,
+   "w": 23,
+   "h": 28,
+   "c": "E"
+  }
+ ]
+}
