@@ -54,6 +54,36 @@ def thicken(ink, k=3):
     return out
 
 
+def unbarred(ink, min_width=5):
+    """Encre débarrassée des traits verticaux fins — les barres de mesure.
+
+    Pendant vertical de `thicken`. Une barre de mesure court du haut du
+    système jusque sous les chiffres : elle traverse donc le creux qui
+    sépare la rangée d'accords de la rangée de chiffres et l'empêche de
+    descendre au silence. Sur 伯利恒的喜讯 le profil n'y tombe jamais sous
+    15 px — cinq barres de 3 à 4 px —, `split_band` ne recoupe rien, et les
+    quatre rangées d'accords de la page restent soudées à leurs chiffres,
+    invisibles au classifieur comme au matcher (0/37 lus).
+
+    Une barre ne dit rien de la frontière entre deux rangées : elle les
+    enjambe par construction. On la retire du **profil de découpage**
+    seulement — l'encre vraie, celle que lisent les amas, n'est pas touchée.
+
+    C'est une *ouverture* horizontale, pas l'érosion de `thicken` : celle-ci
+    garde les deux bords d'un trait de 4 px (un pixel de bord a toujours de
+    l'encre à distance d, du côté du trait) et laissait donc 2 px par barre,
+    assez pour combler le silence. Ici un run plus étroit que `min_width`
+    disparaît entier, et un run plus large survit entier.
+    """
+    starts = ink.copy()
+    for d in range(1, min_width):
+        starts &= np.roll(ink, -d, axis=1)
+    out = starts.copy()
+    for d in range(1, min_width):
+        out |= np.roll(starts, d, axis=1)
+    return out & ink
+
+
 def raw_bands(ink, width, height, min_ink):
     """Bandes horizontales contenant de l'encre, seuil absolu."""
     profile = ink.sum(axis=1)
@@ -70,11 +100,46 @@ def raw_bands(ink, width, height, min_ink):
     return out
 
 
-def split_band(ink, width, top, bottom, min_h=12):
-    """Recoupe une bande sur ses creux internes (plancher relatif à sa densité)."""
+# Un silence dans le profil vaut frontière à partir de cette longueur ;
+# plus court, c'est un blanc entre deux lettres. Mesurés sur 伯利恒的喜讯 :
+# les creux internes à une rangée d'accords y font 1 à 5 lignes, le vide
+# qui la sépare de ses chiffres en fait 13.
+GAP_MIN = 10
+
+# Une coupe doit être creuse **aussi dans l'encre vraie**, et ce qui l'y
+# distingue n'est pas la quantité d'encre mais son étalement : ce qui
+# traverse un silence, ce sont des barres de mesure — une poignée de
+# colonnes étroites —, jamais des étiquettes. Mesuré sur 伯利恒的喜讯 :
+# 2,2 à 3,7 % des colonnes dans les quatre silences, 10 à 16 % dans les
+# quatre rangées d'accords, 39 à 50 % dans les rangées de chiffres.
+#
+# Sans ce garde-fou, une rangée que l'ouverture efface — des étiquettes
+# toutes fines — passerait pour un silence et serait découpée puis rognée,
+# c'est-à-dire perdue. Avec lui, l'ouverture ne peut qu'échouer à trouver
+# une coupe : la bande reste soudée, comme avant, et rien ne disparaît.
+CUT_COL_FRAC = 0.07
+
+
+def _floor(ink, width, top, bottom):
+    """Plancher relatif à la densité de la bande."""
     cov = ink[top : bottom + 1].sum(axis=1) / width
     positive = cov[cov > 0]
-    floor = max(0.006, 0.22 * float(np.median(positive))) if positive.size else 0.006
+    return max(0.006, 0.22 * float(np.median(positive))) if positive.size else 0.006
+
+
+def _by_floor(ink, width, top, bottom, min_h, floor=None):
+    """Découpage d'origine, au plancher relatif.
+
+    `floor` se calcule sur la **bande entière** et se passe aux tronçons :
+    le recalculer par tronçon déplacerait leurs bornes, alors qu'une coupe
+    nouvelle ne doit que tronquer. Sur 充满在这里 la bande 1392-1493 rendait
+    (1395, 1414) ; recoupée avec son propre plancher elle rendait
+    (1393, 1429), et les neuf étiquettes gelées à y=1395 ne retombaient
+    plus sur leur rangée.
+    """
+    cov = ink[top : bottom + 1].sum(axis=1) / width
+    if floor is None:
+        floor = _floor(ink, width, top, bottom)
     pieces, cur = [], None
     for i, c in enumerate(cov):
         if c > floor:
@@ -85,16 +150,86 @@ def split_band(ink, width, top, bottom, min_h=12):
             cur = None
     if cur and cur[1] - cur[0] + 1 >= min_h:
         pieces.append((top + cur[0], top + cur[1]))
-    return pieces or [(top, bottom)]
+    return pieces
+
+
+def _silences(ink, profile, width, top, bottom):
+    """Frontières internes : les silences longs du profil sans barres.
+
+    Le plancher relatif de `_by_floor` cherche un creux *profond*. Il bute
+    sur deux choses à la fois : les barres de mesure, qui remplissent le
+    creux (voir `unbarred`), et la rangée d'accords elle-même, dont le
+    profil oscille jusqu'à zéro — quatre étiquettes sur 1389 px de large,
+    l'encre tombe entre les lettres aussi bas qu'entre les rangées. Aucun
+    seuil de profondeur ne sépare ces deux blancs-là ; leur **longueur**,
+    si.
+    """
+    quiet = profile[top : bottom + 1].sum(axis=1) <= max(2, 0.006 * width)
+    runs, cur = [], None
+    for i, q in enumerate(quiet):
+        if q:
+            cur = [i, i] if cur is None else [cur[0], i]
+        else:
+            if cur and cur[1] - cur[0] + 1 >= GAP_MIN:
+                runs.append(tuple(cur))
+            cur = None
+    if cur and cur[1] - cur[0] + 1 >= GAP_MIN:
+        runs.append(tuple(cur))
+    return [(top + a, top + b) for a, b in runs
+            if ink[top + a : top + b + 1].any(axis=0).sum() <= CUT_COL_FRAC * width]
+
+
+def split_band(ink, width, top, bottom, min_h=12, profile=None):
+    """Recoupe une bande haute en rangées.
+
+    Deux passes, et la seconde ne fait que **fendre** ce que la première a
+    trouvé : le découpage d'origine (`_by_floor`) rend les morceaux, puis
+    chaque silence long (`_silences`) qui tombe à l'*intérieur* d'un
+    morceau le coupe en deux. Un silence qui déborde d'un morceau, ou qui
+    laisserait un côté plus court que `min_h`, est ignoré.
+
+    Cette forme-là est sûre par construction : aucun pixel que l'ancien
+    découpage gardait n'est perdu, et aucun haut de morceau ne bouge — ce
+    qui compte, les clés `"y,x"` des vérités terrain étant indexées sur le
+    haut de rangée. La première version, qui découpait la bande *avant*
+    d'appliquer le plancher, effaçait au contraire l'encre des silences
+    eux-mêmes : 24 lignes perdues en tête de la rangée d'accords de
+    圣灵的江河, 8 étiquettes gelées sur 36 qui ne retombaient plus dessus.
+    """
+    floor = _floor(ink, width, top, bottom)
+    pieces = _by_floor(ink, width, top, bottom, min_h, floor)
+    if profile is None:
+        return pieces or [(top, bottom)]
+
+    trous = _silences(ink, profile, width, top, bottom)
+    out = []
+    for a, b in pieces:
+        courant = [(a, b)]
+        for t0, t1 in trous:
+            suite = []
+            for p0, p1 in courant:
+                gauche, droite = t0 - p0, p1 - t1
+                if p0 < t0 and t1 < p1 and gauche >= min_h and droite >= min_h:
+                    suite += [(p0, t0 - 1), (t1 + 1, p1)]
+                else:
+                    suite.append((p0, p1))
+            courant = suite
+        out += courant
+    return out or [(top, bottom)]
 
 
 def rows(path, tall=80):
     """Rangées de la partition, bandes hautes recoupées."""
     a, ink = load(path)
     height, width = a.shape
+    # Les bandes se **trouvent** sur l'encre vraie et se **recoupent** sur
+    # l'encre sans barres de mesure : une barre enjambe le creux qu'on
+    # cherche, elle n'a pas voix au découpage.
+    profile = unbarred(ink)
     out = []
     for top, bottom in raw_bands(ink, width, height, width * 0.004):
-        out.extend(split_band(ink, width, top, bottom) if bottom - top + 1 > tall else [(top, bottom)])
+        out.extend(split_band(ink, width, top, bottom, profile=profile)
+                   if bottom - top + 1 > tall else [(top, bottom)])
     return a, ink, width, out
 
 
