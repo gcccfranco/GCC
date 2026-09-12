@@ -1,5 +1,620 @@
 {
  "slug": "求充满这地",
- "face": "verdana-bold",
- "face_verified": "planche d'élection (itération 53) : gravure en linéale grasse large. Sur les cinq amas d'accords de la planche, verdana-bold lit 5/5 juste (+0,18 à +0,45) quand helvetica-bold, mieux notée (+0,71), n'en lit que 2/5 — le score élevé y désigne la mauvaise fonte. Le compteur la place aussi en tête (4/52). À confirmer par la planche d'audit avant certification."
+ "face": "din-bold",
+ "face_verified": "mesurée en accords justes contre la page transcrite (protocole 9ter). Six des neuf rangées d'accords étant hors de `read()`, il ne reste que dix accords lisibles par la machine : din-bold en lit 4, helvetica-bold 3, helvetica-neue et verdana-bold 2, georgia 0, times et times-bold 0 pour 1 faux. Aucun faux avec din-bold.",
+ "corrections": {
+  "426,527": "B/A",
+  "426,793": "G#m7",
+  "426,917": "C#m7",
+  "1674,536": "G#m7",
+  "1674,652": "C#m",
+  "1674,733": "E/B"
+ },
+ "not_labels": [
+  "426,1119",
+  "1873,15",
+  "1873,186",
+  "1873,1090",
+  "1873,1128",
+  "1873,1307",
+  "1873,1492",
+  "1873,1573"
+ ],
+ "not_rows": [
+  745,
+  1229,
+  1493,
+  2012,
+  2037
+ ],
+ "extra_labels": [
+  {
+   "x": 264,
+   "y": 164,
+   "w": 94,
+   "h": 30,
+   "c": "Eadd2"
+  },
+  {
+   "x": 673,
+   "y": 165,
+   "w": 92,
+   "h": 29,
+   "c": "G#m7"
+  },
+  {
+   "x": 979,
+   "y": 165,
+   "w": 89,
+   "h": 29,
+   "c": "C#m7"
+  },
+  {
+   "x": 1447,
+   "y": 165,
+   "w": 92,
+   "h": 29,
+   "c": "G#m7"
+  },
+  {
+   "x": 1136,
+   "y": 424,
+   "w": 83,
+   "h": 28,
+   "c": "F#m7"
+  },
+  {
+   "x": 1337,
+   "y": 424,
+   "w": 57,
+   "h": 33,
+   "c": "A/E"
+  },
+  {
+   "x": 196,
+   "y": 703,
+   "w": 59,
+   "h": 36,
+   "c": "A/B"
+  },
+  {
+   "x": 711,
+   "y": 703,
+   "w": 76,
+   "h": 36,
+   "c": "E/G#"
+  },
+  {
+   "x": 1277,
+   "y": 703,
+   "w": 91,
+   "h": 36,
+   "c": "F#/A#"
+  },
+  {
+   "x": 56,
+   "y": 706,
+   "w": 23,
+   "h": 28,
+   "c": "D"
+  },
+  {
+   "x": 451,
+   "y": 706,
+   "w": 84,
+   "h": 28,
+   "c": "F#m7"
+  },
+  {
+   "x": 982,
+   "y": 706,
+   "w": 25,
+   "h": 28,
+   "c": "A"
+  },
+  {
+   "x": 42,
+   "y": 933,
+   "w": 59,
+   "h": 36,
+   "c": "A/B"
+  },
+  {
+   "x": 701,
+   "y": 936,
+   "w": 18,
+   "h": 28,
+   "c": "E"
+  },
+  {
+   "x": 1191,
+   "y": 936,
+   "w": 99,
+   "h": 42,
+   "c": "G#m7"
+  },
+  {
+   "x": 564,
+   "y": 1177,
+   "w": 93,
+   "h": 28,
+   "c": "G#m7"
+  },
+  {
+   "x": 54,
+   "y": 1201,
+   "w": 89,
+   "h": 28,
+   "c": "C#m7"
+  },
+  {
+   "x": 1040,
+   "y": 1201,
+   "w": 21,
+   "h": 28,
+   "c": "A"
+  },
+  {
+   "x": 833,
+   "y": 1437,
+   "w": 20,
+   "h": 29,
+   "c": "B"
+  },
+  {
+   "x": 1205,
+   "y": 1437,
+   "w": 69,
+   "h": 29,
+   "c": "Bm7"
+  },
+  {
+   "x": 1359,
+   "y": 1437,
+   "w": 37,
+   "h": 29,
+   "c": "E7"
+  },
+  {
+   "x": 438,
+   "y": 1444,
+   "w": 85,
+   "h": 28,
+   "c": "F#m7"
+  },
+  {
+   "x": 276,
+   "y": 1462,
+   "w": 53,
+   "h": 37,
+   "c": "E/B"
+  },
+  {
+   "x": 47,
+   "y": 1465,
+   "w": 93,
+   "h": 32,
+   "c": "G#m7"
+  },
+  {
+   "x": 183,
+   "y": 1465,
+   "w": 69,
+   "h": 29,
+   "c": "C#m"
+  },
+  {
+   "x": 368,
+   "y": 1869,
+   "w": 58,
+   "h": 37,
+   "c": "B/A"
+  },
+  {
+   "x": 1346,
+   "y": 1869,
+   "w": 57,
+   "h": 37,
+   "c": "B/A"
+  },
+  {
+   "x": 670,
+   "y": 1872,
+   "w": 92,
+   "h": 29,
+   "c": "G#m7"
+  },
+  {
+   "x": 1053,
+   "y": 1873,
+   "w": 25,
+   "h": 28,
+   "c": "A"
+  },
+  {
+   "x": 38,
+   "y": 1894,
+   "w": 77,
+   "h": 44,
+   "c": "E (A)"
+  },
+  {
+   "x": 37,
+   "y": 2079,
+   "w": 93,
+   "h": 29,
+   "c": "G#m7"
+  },
+  {
+   "x": 1331,
+   "y": 2100,
+   "w": 60,
+   "h": 45,
+   "c": "D/E"
+  },
+  {
+   "x": 364,
+   "y": 2103,
+   "w": 98,
+   "h": 29,
+   "c": "C#m7"
+  },
+  {
+   "x": 608,
+   "y": 2103,
+   "w": 85,
+   "h": 29,
+   "c": "F#m7"
+  },
+  {
+   "x": 954,
+   "y": 2103,
+   "w": 89,
+   "h": 29,
+   "c": "Bsus4"
+  },
+  {
+   "x": 1183,
+   "y": 2103,
+   "w": 18,
+   "h": 29,
+   "c": "E"
+  }
+ ],
+ "key_label": {
+  "x": 4,
+  "y": 157,
+  "w": 84,
+  "h": 30
+ },
+ "key_label_verified": "cadre relevé au profil d'encre : « 1= » (6-40) et « E » (71-85) sur 159-184. Le chiffrage 4/4 est à x=123 et le premier accord Eadd2 à x=266, tous deux hors du cadre. Pas de `c` : l'en-tête annonce « [共3张：E/F/G调，原调E→F] » — la page qu'on tient est bien la planche en mi, celle du `.cho`.",
+ "transcription": "relevée à l'œil — neuf systèmes, 46 accords. S1 : Eadd2 G#m7 C#m7 G#m7. S2 : A B/A G#m7 C#m7 F#m7 A/E. S3 : D A/B F#m7 E/G# A F#/A#. S4 : A/B E G#m7. S5 : C#m7 G#m7 A. S6 : G#m7 C#m E/B F#m7 B Bm7 E7. S7 : A G#m7 C#m E/B F#m7 B. S8 : E (A), B/A G#m7 A B/A. S9 : G#m7 C#m7 F#m7 Bsus4 E D/E.",
+ "hors_cho": "« C#m » (systèmes 6 et 7) est gravé sans septième et **n'existe pas dans le `.cho`**, qui n'a que « C#m7 » : le vocabulaire fermé ne pouvait donc que publier un accord faux à cet endroit. Les deux sont posés à la main.",
+ "rangees_cachees": "six des neuf rangées d'accords n'entrent pas dans `read()` : y=159 est typée `?` (elle porte aussi le cadre « 1= E »), y=934 et y=2081 sont typées `numbers`, y=705, y=1179 et y=1440 restent en `chords?` non confirmé. Leurs trente-six étiquettes sont posées en `extra_labels`. Cinq rangées sont promues `chords` à tort — deux de filets de crochet, deux d'arcs et une de paroles : `not_rows`.",
+ "crochets": "les filets des crochets de reprise passent sous ou à travers les étiquettes selon les systèmes. Surtout, **les étiquettes d'une même rangée ne sont pas à la même hauteur** : celles posées sur un crochet sont gravées 20 à 30 px plus haut que leurs voisines. Une boîte mesurée sur la bande de la rangée entière tombe donc à côté — sur 求充满这地 elle ne prenait que le sommet des chiffres du dessous, et sept étiquettes du système 6 s'affichaient au-dessus de leur gravé, qui restait lisible. Chaque boîte est mesurée sur le **segment vertical propre** à son étiquette.",
+ "verified": "planche navigateur E→F relue sur les sept tranches (itération 61) : les 46 étiquettes des neuf systèmes sont encadrées et réécrites, aucun accord ne reste en mi, et « 1= E » devient « 1=F ». « E (A) » devient « F (Bb) », les deux parties transposées. Les deux « C#m » sans septième, absents du `.cho`, sortent bien en « Dm ». Segno, coda ⊕, crochets de reprise et leurs filets, 【Bridge】, 【Chorus】, (跳到Coda处), [重复2房子], « Fine » et « To Chorus » sont laissés intacts. Un premier jet plaçait sept étiquettes du système 6 au-dessus de leur gravé, qui restait lisible dessous : la planche l'a montré, les boîtes ont été reprises sur le segment vertical propre à chaque étiquette.",
+ "frozen_labels": [
+  {
+   "x": 258,
+   "y": 426,
+   "w": 20,
+   "h": 48,
+   "c": "A"
+  },
+  {
+   "x": 527,
+   "y": 426,
+   "w": 53,
+   "h": 48,
+   "c": "B/A"
+  },
+  {
+   "x": 793,
+   "y": 426,
+   "w": 88,
+   "h": 48,
+   "c": "G#m7"
+  },
+  {
+   "x": 917,
+   "y": 426,
+   "w": 85,
+   "h": 48,
+   "c": "C#m7"
+  },
+  {
+   "x": 45,
+   "y": 1674,
+   "w": 19,
+   "h": 25,
+   "c": "A"
+  },
+  {
+   "x": 536,
+   "y": 1674,
+   "w": 88,
+   "h": 25,
+   "c": "G#m7"
+  },
+  {
+   "x": 652,
+   "y": 1674,
+   "w": 65,
+   "h": 25,
+   "c": "C#m"
+  },
+  {
+   "x": 733,
+   "y": 1674,
+   "w": 49,
+   "h": 25,
+   "c": "E/B"
+  },
+  {
+   "x": 886,
+   "y": 1674,
+   "w": 81,
+   "h": 25,
+   "c": "F#m7"
+  },
+  {
+   "x": 1261,
+   "y": 1674,
+   "w": 16,
+   "h": 25,
+   "c": "B"
+  },
+  {
+   "x": 264,
+   "y": 164,
+   "w": 94,
+   "h": 30,
+   "c": "Eadd2"
+  },
+  {
+   "x": 673,
+   "y": 165,
+   "w": 92,
+   "h": 29,
+   "c": "G#m7"
+  },
+  {
+   "x": 979,
+   "y": 165,
+   "w": 89,
+   "h": 29,
+   "c": "C#m7"
+  },
+  {
+   "x": 1447,
+   "y": 165,
+   "w": 92,
+   "h": 29,
+   "c": "G#m7"
+  },
+  {
+   "x": 1136,
+   "y": 424,
+   "w": 83,
+   "h": 28,
+   "c": "F#m7"
+  },
+  {
+   "x": 1337,
+   "y": 424,
+   "w": 57,
+   "h": 33,
+   "c": "A/E"
+  },
+  {
+   "x": 196,
+   "y": 703,
+   "w": 59,
+   "h": 36,
+   "c": "A/B"
+  },
+  {
+   "x": 711,
+   "y": 703,
+   "w": 76,
+   "h": 36,
+   "c": "E/G#"
+  },
+  {
+   "x": 1277,
+   "y": 703,
+   "w": 91,
+   "h": 36,
+   "c": "F#/A#"
+  },
+  {
+   "x": 56,
+   "y": 706,
+   "w": 23,
+   "h": 28,
+   "c": "D"
+  },
+  {
+   "x": 451,
+   "y": 706,
+   "w": 84,
+   "h": 28,
+   "c": "F#m7"
+  },
+  {
+   "x": 982,
+   "y": 706,
+   "w": 25,
+   "h": 28,
+   "c": "A"
+  },
+  {
+   "x": 42,
+   "y": 933,
+   "w": 59,
+   "h": 36,
+   "c": "A/B"
+  },
+  {
+   "x": 701,
+   "y": 936,
+   "w": 18,
+   "h": 28,
+   "c": "E"
+  },
+  {
+   "x": 1191,
+   "y": 936,
+   "w": 99,
+   "h": 42,
+   "c": "G#m7"
+  },
+  {
+   "x": 564,
+   "y": 1177,
+   "w": 93,
+   "h": 28,
+   "c": "G#m7"
+  },
+  {
+   "x": 54,
+   "y": 1201,
+   "w": 89,
+   "h": 28,
+   "c": "C#m7"
+  },
+  {
+   "x": 1040,
+   "y": 1201,
+   "w": 21,
+   "h": 28,
+   "c": "A"
+  },
+  {
+   "x": 833,
+   "y": 1437,
+   "w": 20,
+   "h": 29,
+   "c": "B"
+  },
+  {
+   "x": 1205,
+   "y": 1437,
+   "w": 69,
+   "h": 29,
+   "c": "Bm7"
+  },
+  {
+   "x": 1359,
+   "y": 1437,
+   "w": 37,
+   "h": 29,
+   "c": "E7"
+  },
+  {
+   "x": 438,
+   "y": 1444,
+   "w": 85,
+   "h": 28,
+   "c": "F#m7"
+  },
+  {
+   "x": 276,
+   "y": 1462,
+   "w": 53,
+   "h": 37,
+   "c": "E/B"
+  },
+  {
+   "x": 47,
+   "y": 1465,
+   "w": 93,
+   "h": 32,
+   "c": "G#m7"
+  },
+  {
+   "x": 183,
+   "y": 1465,
+   "w": 69,
+   "h": 29,
+   "c": "C#m"
+  },
+  {
+   "x": 368,
+   "y": 1869,
+   "w": 58,
+   "h": 37,
+   "c": "B/A"
+  },
+  {
+   "x": 1346,
+   "y": 1869,
+   "w": 57,
+   "h": 37,
+   "c": "B/A"
+  },
+  {
+   "x": 670,
+   "y": 1872,
+   "w": 92,
+   "h": 29,
+   "c": "G#m7"
+  },
+  {
+   "x": 1053,
+   "y": 1873,
+   "w": 25,
+   "h": 28,
+   "c": "A"
+  },
+  {
+   "x": 38,
+   "y": 1894,
+   "w": 77,
+   "h": 44,
+   "c": "E (A)"
+  },
+  {
+   "x": 37,
+   "y": 2079,
+   "w": 93,
+   "h": 29,
+   "c": "G#m7"
+  },
+  {
+   "x": 1331,
+   "y": 2100,
+   "w": 60,
+   "h": 45,
+   "c": "D/E"
+  },
+  {
+   "x": 364,
+   "y": 2103,
+   "w": 98,
+   "h": 29,
+   "c": "C#m7"
+  },
+  {
+   "x": 608,
+   "y": 2103,
+   "w": 85,
+   "h": 29,
+   "c": "F#m7"
+  },
+  {
+   "x": 954,
+   "y": 2103,
+   "w": 89,
+   "h": 29,
+   "c": "Bsus4"
+  },
+  {
+   "x": 1183,
+   "y": 2103,
+   "w": 18,
+   "h": 29,
+   "c": "E"
+  }
+ ]
 }
