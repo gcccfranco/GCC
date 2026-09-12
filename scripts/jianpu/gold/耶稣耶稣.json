@@ -1,0 +1,489 @@
+{
+ "slug": "耶稣耶稣",
+ "face": "georgia",
+ "not_rows": [
+  1193,
+  1306,
+  1752
+ ],
+ "corrections": {
+  "295,73": "C",
+  "295,1093": "C/E",
+  "584,75": "C/E",
+  "584,1201": "G/B",
+  "870,461": "A/C#",
+  "1988,255": "F#dim",
+  "1988,472": "C/G",
+  "1988,535": "E/G#",
+  "1988,611": "Am",
+  "1152,541": "G/B"
+ },
+ "extra_labels": [
+  {
+   "x": 80,
+   "y": 1425,
+   "w": 25,
+   "h": 27,
+   "c": "C"
+  },
+  {
+   "x": 360,
+   "y": 1423,
+   "w": 22,
+   "h": 28,
+   "c": "F"
+  },
+  {
+   "x": 511,
+   "y": 1422,
+   "w": 109,
+   "h": 32,
+   "c": "F#dim"
+  },
+  {
+   "x": 687,
+   "y": 1421,
+   "w": 42,
+   "h": 33,
+   "c": "C/G"
+  },
+  {
+   "x": 744,
+   "y": 1417,
+   "w": 52,
+   "h": 37,
+   "c": "E/G#"
+  },
+  {
+   "x": 812,
+   "y": 1422,
+   "w": 32,
+   "h": 27,
+   "c": "Am"
+  },
+  {
+   "x": 994,
+   "y": 1420,
+   "w": 62,
+   "h": 28,
+   "c": "Dm"
+  },
+  {
+   "x": 1103,
+   "y": 1419,
+   "w": 29,
+   "h": 28,
+   "c": "D"
+  },
+  {
+   "x": 1240,
+   "y": 1419,
+   "w": 30,
+   "h": 27,
+   "c": "G"
+  },
+  {
+   "x": 79,
+   "y": 1716,
+   "w": 25,
+   "h": 27,
+   "c": "C"
+  },
+  {
+   "x": 191,
+   "y": 1713,
+   "w": 76,
+   "h": 34,
+   "c": "G/B"
+  },
+  {
+   "x": 419,
+   "y": 1715,
+   "w": 62,
+   "h": 28,
+   "c": "Am"
+  },
+  {
+   "x": 759,
+   "y": 1713,
+   "w": 22,
+   "h": 29,
+   "c": "F"
+  },
+  {
+   "x": 931,
+   "y": 1713,
+   "w": 30,
+   "h": 28,
+   "c": "G"
+  },
+  {
+   "x": 1215,
+   "y": 1713,
+   "w": 26,
+   "h": 27,
+   "c": "C"
+  }
+ ],
+ "key_label": {
+  "x": 84,
+  "y": 164,
+  "w": 84,
+  "h": 34
+ },
+ "key_label_verified": "mesuré à la main au profil d'encre (itération 60) : `measure-keylabel` ne propose **aucune** candidate sur cette page — son ancrage sur deux barres jumelles isolées ne trouve rien dans un « 1=C » gravé en serif, où le « = » touche le « 1 » et le « C ». Les colonnes d'encre donnent 84…167 pour « 1=C » et 195… pour le « 4/4 » qui suit. La lettre gravée C est bien celle des accords.",
+ "face_verified": "planche de fonte et mesure contre les 28 étiquettes des quatre rangées que le classifieur isole (itération 60) : georgia et helvetica-bold lisent 27 des 28 accords justes, times-bold 26, times 26, din-bold et verdana-bold moins ; aucune ne retient de faux accord. La gravure est une **serif grasse** — empattements francs sur « C », « G/B », « F♯dim », et le « 4 » de « Gsus⁴ » en exposant. georgia est retenue : c'est la mieux mesurée de la famille que la planche montre. helvetica-bold ferait le même score sans être de la bonne famille ; times-bold est de la bonne famille et lit un accord de moins.",
+ "verified": "planche navigateur C→C# relue sur les sept tranches (itération 60) : les sept rangées d'accords sont encadrées et réécrites, 50 étiquettes, aucun accord ne reste en do. Trois rangées de fragments — la ligne de crochets de triolet y=1193, une bande de chiffres y=1306, une autre y=1752 — pesaient 26 des 54 amas ; deux rangées d'accords typées `chords?` (y=1152, y=1713) et une **soudée** à sa bande de chiffres (y=1418, typée `numbers`) n'en pesaient aucun. Le cadre « 1=C » est mesuré à la main : `measure-keylabel` ne propose rien sur une gravure serif où le « = » touche ses voisins. Les crochets de triolet, fondus à l'encre des étiquettes « G/B » et « F♯dim », restent gravés : les boîtes s'arrêtent au bas des lettres. **Réserve, vue et acceptée** : le trio condensé « C/G E/G# Am », gravé à mi-largeur au milieu des rangées 5 et 7, devient « Db/Ab F/A Bbm » — trois noms plus longs dans la même place. Le client rétrécit (`sp`) : « Db/Ab » sort minuscule et les deux autres se touchent. Tout est converti et rien n'est masqué, mais ce trio se lit mal. `bandes.py` : 0 ; `grille.py` : 0.",
+ "frozen_labels": [
+  {
+   "x": 73,
+   "y": 295,
+   "w": 27,
+   "h": 36,
+   "c": "C"
+  },
+  {
+   "x": 393,
+   "y": 295,
+   "w": 79,
+   "h": 36,
+   "c": "G/B"
+  },
+  {
+   "x": 706,
+   "y": 295,
+   "w": 63,
+   "h": 36,
+   "c": "Am"
+  },
+  {
+   "x": 984,
+   "y": 295,
+   "w": 22,
+   "h": 36,
+   "c": "F"
+  },
+  {
+   "x": 1093,
+   "y": 295,
+   "w": 75,
+   "h": 36,
+   "c": "C/E"
+  },
+  {
+   "x": 1255,
+   "y": 295,
+   "w": 63,
+   "h": 36,
+   "c": "Dm"
+  },
+  {
+   "x": 75,
+   "y": 584,
+   "w": 75,
+   "h": 33,
+   "c": "C/E"
+  },
+  {
+   "x": 340,
+   "y": 584,
+   "w": 24,
+   "h": 33,
+   "c": "F"
+  },
+  {
+   "x": 450,
+   "y": 584,
+   "w": 109,
+   "h": 33,
+   "c": "F#dim"
+  },
+  {
+   "x": 605,
+   "y": 584,
+   "w": 102,
+   "h": 33,
+   "c": "Gsus4"
+  },
+  {
+   "x": 878,
+   "y": 584,
+   "w": 27,
+   "h": 33,
+   "c": "C"
+  },
+  {
+   "x": 1201,
+   "y": 584,
+   "w": 75,
+   "h": 33,
+   "c": "G/B"
+  },
+  {
+   "x": 78,
+   "y": 870,
+   "w": 62,
+   "h": 38,
+   "c": "Am"
+  },
+  {
+   "x": 185,
+   "y": 870,
+   "w": 80,
+   "h": 38,
+   "c": "C/G"
+  },
+  {
+   "x": 351,
+   "y": 870,
+   "w": 23,
+   "h": 38,
+   "c": "F"
+  },
+  {
+   "x": 461,
+   "y": 870,
+   "w": 97,
+   "h": 38,
+   "c": "A/C#"
+  },
+  {
+   "x": 624,
+   "y": 870,
+   "w": 63,
+   "h": 38,
+   "c": "Dm"
+  },
+  {
+   "x": 921,
+   "y": 870,
+   "w": 75,
+   "h": 38,
+   "c": "C/E"
+  },
+  {
+   "x": 1209,
+   "y": 870,
+   "w": 23,
+   "h": 38,
+   "c": "F"
+  },
+  {
+   "x": 1318,
+   "y": 870,
+   "w": 30,
+   "h": 38,
+   "c": "G"
+  },
+  {
+   "x": 70,
+   "y": 1152,
+   "w": 26,
+   "h": 34,
+   "c": "C"
+  },
+  {
+   "x": 183,
+   "y": 1152,
+   "w": 76,
+   "h": 34,
+   "c": "F/G"
+  },
+  {
+   "x": 428,
+   "y": 1152,
+   "w": 26,
+   "h": 34,
+   "c": "C"
+  },
+  {
+   "x": 541,
+   "y": 1152,
+   "w": 87,
+   "h": 34,
+   "c": "G/B"
+  },
+  {
+   "x": 770,
+   "y": 1152,
+   "w": 64,
+   "h": 34,
+   "c": "Am"
+  },
+  {
+   "x": 1131,
+   "y": 1152,
+   "w": 24,
+   "h": 34,
+   "c": "F"
+  },
+  {
+   "x": 1304,
+   "y": 1152,
+   "w": 31,
+   "h": 34,
+   "c": "G"
+  },
+  {
+   "x": 84,
+   "y": 1988,
+   "w": 23,
+   "h": 33,
+   "c": "F"
+  },
+  {
+   "x": 255,
+   "y": 1988,
+   "w": 109,
+   "h": 33,
+   "c": "F#dim"
+  },
+  {
+   "x": 472,
+   "y": 1988,
+   "w": 47,
+   "h": 33,
+   "c": "C/G"
+  },
+  {
+   "x": 535,
+   "y": 1988,
+   "w": 61,
+   "h": 33,
+   "c": "E/G#"
+  },
+  {
+   "x": 611,
+   "y": 1988,
+   "w": 39,
+   "h": 33,
+   "c": "Am"
+  },
+  {
+   "x": 904,
+   "y": 1988,
+   "w": 24,
+   "h": 33,
+   "c": "F"
+  },
+  {
+   "x": 1077,
+   "y": 1988,
+   "w": 77,
+   "h": 33,
+   "c": "F/G"
+  },
+  {
+   "x": 1261,
+   "y": 1988,
+   "w": 27,
+   "h": 33,
+   "c": "C"
+  },
+  {
+   "x": 80,
+   "y": 1425,
+   "w": 25,
+   "h": 27,
+   "c": "C"
+  },
+  {
+   "x": 360,
+   "y": 1423,
+   "w": 22,
+   "h": 28,
+   "c": "F"
+  },
+  {
+   "x": 511,
+   "y": 1422,
+   "w": 109,
+   "h": 32,
+   "c": "F#dim"
+  },
+  {
+   "x": 687,
+   "y": 1421,
+   "w": 42,
+   "h": 33,
+   "c": "C/G"
+  },
+  {
+   "x": 744,
+   "y": 1417,
+   "w": 52,
+   "h": 37,
+   "c": "E/G#"
+  },
+  {
+   "x": 812,
+   "y": 1422,
+   "w": 32,
+   "h": 27,
+   "c": "Am"
+  },
+  {
+   "x": 994,
+   "y": 1420,
+   "w": 62,
+   "h": 28,
+   "c": "Dm"
+  },
+  {
+   "x": 1103,
+   "y": 1419,
+   "w": 29,
+   "h": 28,
+   "c": "D"
+  },
+  {
+   "x": 1240,
+   "y": 1419,
+   "w": 30,
+   "h": 27,
+   "c": "G"
+  },
+  {
+   "x": 79,
+   "y": 1716,
+   "w": 25,
+   "h": 27,
+   "c": "C"
+  },
+  {
+   "x": 191,
+   "y": 1713,
+   "w": 76,
+   "h": 34,
+   "c": "G/B"
+  },
+  {
+   "x": 419,
+   "y": 1715,
+   "w": 62,
+   "h": 28,
+   "c": "Am"
+  },
+  {
+   "x": 759,
+   "y": 1713,
+   "w": 22,
+   "h": 29,
+   "c": "F"
+  },
+  {
+   "x": 931,
+   "y": 1713,
+   "w": 30,
+   "h": 28,
+   "c": "G"
+  },
+  {
+   "x": 1215,
+   "y": 1713,
+   "w": 26,
+   "h": 27,
+   "c": "C"
+  }
+ ]
+}
