@@ -1,4 +1,201 @@
 {
  "slug": "是耶稣的名",
- "face": "verdana-bold"
+ "face": "verdana-bold",
+ "printed_key": "G",
+ "not_rows": [
+  789,
+  1215
+ ],
+ "not_labels": [
+  "344,169",
+  "868,92",
+  "1293,148",
+  "1718,139",
+  "1718,1207"
+ ],
+ "corrections": {
+  "1718,411": "E/G#"
+ },
+ "extra_labels": [
+  {
+   "x": 57,
+   "y": 205,
+   "w": 17,
+   "h": 22,
+   "c": "E"
+  },
+  {
+   "x": 381,
+   "y": 206,
+   "w": 16,
+   "h": 21,
+   "c": "B"
+  },
+  {
+   "x": 697,
+   "y": 206,
+   "w": 36,
+   "h": 21,
+   "c": "C#m"
+  },
+  {
+   "x": 1026,
+   "y": 205,
+   "w": 14,
+   "h": 22,
+   "c": "A"
+  }
+ ],
+ "key_label": {
+  "x": 15,
+  "y": 145,
+  "w": 72,
+  "h": 23
+ },
+ "key_label_verified": "mesure measure-keylabel (ancrage sur le « = », cadre = voisin gauche…voisin droit), zoom relu à l’œil sur planche de lot, lettre gravée confrontée à printedKey, 2026-08-26 (itération 35)",
+ "printed_key_verified": "titre « 是耶稣的名（G调）» et cadre « 1=  G », quand le .cho est en mi ; l'en-tête le redit — « [共4张：G(原调)/F/E调、级数] », donc la planche en sol d'un jeu de quatre, et le .cho suit la version en mi. Sans ce champ la page lisait 10/37 (itération 60).",
+ "face_verified": "mesurée contre la transcription complète (20 étiquettes, itération 60) : les trois linéales grasses — helvetica-bold, verdana-bold, din-bold — sont à égalité, 15 justes et 0 faux chacune ; helvetica-neue 8 ; les trois serif lisent « G » pour « C » trois fois. La famille est tranchée (linéale grasse), le choix dans la famille ne l'est pas — verdana-bold est conservée faute de départage, et rien ne dépend de ce choix ici.",
+ "verified": "planche navigateur G→Ab relue sur les sept tranches (itération 60) : les huit rangées d'accords sont encadrées et réécrites, 20 étiquettes, aucun accord ne reste en sol. La **première rangée** (y=205) était typée `?` et jamais promue — quatre accords posés à la main. Deux rangées de paroles promues `chords` (y=789 et y=1215, 16 amas à elles deux) tenaient la page à 27 % d'un dénominateur de 37 dont 20 seulement sont des accords. Cinq amas de texte sont écartés un à un — 【Verse】, 【Chorus】, 【Bridge】, « [音频从这里开始] » et « To Chorus » — et « G/B », lu juste mais sous le seuil, passe en correction. Tous ces repères restent gravés, ainsi que « Fine ». `bandes.py` : 0 ; `grille.py` : 0.",
+ "frozen_labels": [
+  {
+   "x": 95,
+   "y": 344,
+   "w": 17,
+   "h": 28,
+   "c": "G"
+  },
+  {
+   "x": 731,
+   "y": 344,
+   "w": 37,
+   "h": 28,
+   "c": "Em"
+  },
+  {
+   "x": 57,
+   "y": 613,
+   "w": 14,
+   "h": 21,
+   "c": "C"
+  },
+  {
+   "x": 636,
+   "y": 613,
+   "w": 16,
+   "h": 21,
+   "c": "D"
+  },
+  {
+   "x": 413,
+   "y": 868,
+   "w": 17,
+   "h": 28,
+   "c": "G"
+  },
+  {
+   "x": 1071,
+   "y": 868,
+   "w": 16,
+   "h": 28,
+   "c": "D"
+  },
+  {
+   "x": 345,
+   "y": 1088,
+   "w": 37,
+   "h": 20,
+   "c": "Em"
+  },
+  {
+   "x": 918,
+   "y": 1088,
+   "w": 15,
+   "h": 20,
+   "c": "C"
+  },
+  {
+   "x": 84,
+   "y": 1293,
+   "w": 17,
+   "h": 28,
+   "c": "G"
+  },
+  {
+   "x": 718,
+   "y": 1293,
+   "w": 16,
+   "h": 28,
+   "c": "D"
+  },
+  {
+   "x": 59,
+   "y": 1514,
+   "w": 37,
+   "h": 20,
+   "c": "Em"
+  },
+  {
+   "x": 736,
+   "y": 1514,
+   "w": 14,
+   "h": 20,
+   "c": "C"
+  },
+  {
+   "x": 75,
+   "y": 1718,
+   "w": 14,
+   "h": 32,
+   "c": "C"
+  },
+  {
+   "x": 411,
+   "y": 1718,
+   "w": 47,
+   "h": 32,
+   "c": "G/B"
+  },
+  {
+   "x": 708,
+   "y": 1718,
+   "w": 40,
+   "h": 32,
+   "c": "Am"
+  },
+  {
+   "x": 1064,
+   "y": 1718,
+   "w": 15,
+   "h": 32,
+   "c": "D"
+  },
+  {
+   "x": 57,
+   "y": 205,
+   "w": 17,
+   "h": 22,
+   "c": "G"
+  },
+  {
+   "x": 381,
+   "y": 206,
+   "w": 16,
+   "h": 21,
+   "c": "D"
+  },
+  {
+   "x": 697,
+   "y": 206,
+   "w": 36,
+   "h": 21,
+   "c": "Em"
+  },
+  {
+   "x": 1026,
+   "y": 205,
+   "w": 14,
+   "h": 22,
+   "c": "C"
+  }
+ ]
 }
