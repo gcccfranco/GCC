@@ -40,6 +40,16 @@ export function transposeChord(chord: string, semitones: number, targetKey: stri
   const useFlatKey = FLAT_KEYS.has(targetKey);
   const tonicIdx = noteToIndex(targetKey);
 
+  // Basse seule « /F » : `CHORD_TOKEN` la reconnaît depuis l'itération 37,
+  // mais le motif ci-dessous exige une fondamentale et la rendait verbatim —
+  // « D/F# /F B/D# » de 我安然居住 publiait son « /F » dans l'ancienne
+  // tonalité (itération 62).
+  const bassOnly = chord.match(/^\/([A-G][#b]?)$/);
+  if (bassOnly) {
+    const idx = noteToIndex(bassOnly[1]);
+    return idx === -1 ? chord : "/" + indexToNote(idx + semitones, useFlatKey);
+  }
+
   // Parse root (1-2 chars) + quality + optional slash bass "/X"
   const match = chord.match(/^(\(?)([A-G][#b]?)(.*?)(?:\/([A-G][#b]?))?(\)?)$/);
   if (!match) return chord;
@@ -94,9 +104,33 @@ export const CHORD_TOKEN =
 /** Parenthèses et crochets qui décorent un jeton sans en faire partie. */
 const EDGE_BRACKETS = /^([()[\]]*)(.*?)([()[\]]*)$/;
 
+/**
+ * Une parenthèse ouvrante suivie d'une note ou d'une basse seule commence un
+ * **autre** accord : « B/D#(G#) », « C(/B) ». Les enrichissements qui font
+ * partie de l'accord s'ouvrent sur une minuscule, un chiffre ou une
+ * altération (`Am(maj7)`, `Adim(9)`, `C7(#9)`) et n'y répondent pas.
+ */
+const PAREN_CHORD = /(?=\(\/?[A-G])/;
+
+/**
+ * « B/D#(G#) », gravé sans blanc : `transposeChord` lisait « /D#(G# » comme
+ * une qualité et rendait « C/D#(G#) » — à moitié transposé, et plausible
+ * (itération 62). On découpe devant chaque parenthèse d'accord, et on ne
+ * rend le découpage que si **chaque** morceau a été réécrit ; sinon `null`,
+ * et l'étiquette suit le chemin d'avant.
+ */
+function transposeParenGroup(run: string, semitones: number, targetKey: string): string | null {
+  const pieces = run.split(PAREN_CHORD).filter(Boolean);
+  if (pieces.length < 2) return null;
+  const out = pieces.map((p) => transposeRun(p, semitones, targetKey));
+  return out.every((o, i) => o !== pieces[i]) ? out.join("") : null;
+}
+
 function transposeRun(run: string, semitones: number, targetKey: string): string {
   if (!run) return run;
   if (CHORD_TOKEN.test(run)) return transposeChord(run, semitones, targetKey);
+  const group = transposeParenGroup(run, semitones, targetKey);
+  if (group !== null) return group;
   // Parenthèse orpheline collée au jeton : « Dm( » de « Dm(或Bb) ». On ne
   // la pèle qu'en second recours, sinon « Adim(9) » — dont la parenthèse
   // *fait* partie de l'accord — se ferait amputer.
@@ -143,6 +177,8 @@ export function transposeLabel(text: string, semitones: number, targetKey: strin
   if (semitones === 0) return text;
   const parts = text.split(LABEL_SPLIT);
   if (parts.length === 1) {
+    const group = transposeParenGroup(text, semitones, targetKey);
+    if (group !== null) return group;
     const direct = transposeChord(text, semitones, targetKey);
     if (direct !== text) return direct;
     const m = text.match(EDGE_BRACKETS);
