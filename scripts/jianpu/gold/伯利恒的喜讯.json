@@ -1,0 +1,191 @@
+{
+ "slug": "伯利恒的喜讯",
+ "face": "din-bold",
+ "face_verified": "mesurée en accords justes contre la page transcrite (protocole 9ter), une fois les quatre rangées enfin isolées : din-bold lit 4 des 16 accords, times-bold 3, les cinq autres fontes 2. Aucune fonte ne publie de faux accord ici — la page ne risque que le silence, pas l'erreur.",
+ "corrections": {
+  "356,478": "Ab",
+  "356,1120": "Bb",
+  "585,707": "Bb",
+  "820,40": "Eb",
+  "1051,39": "Eb",
+  "1051,735": "Bb"
+ },
+ "not_labels": [
+  "356,665",
+  "585,955",
+  "585,374",
+  "585,1034",
+  "820,318",
+  "820,997",
+  "1051,335",
+  "1051,997"
+ ],
+ "extra_labels": [
+  {
+   "x": 410,
+   "y": 584,
+   "w": 32,
+   "h": 41,
+   "c": "Ab"
+  },
+  {
+   "x": 1071,
+   "y": 580,
+   "w": 33,
+   "h": 47,
+   "c": "Eb"
+  },
+  {
+   "x": 369,
+   "y": 817,
+   "w": 32,
+   "h": 42,
+   "c": "Ab"
+  },
+  {
+   "x": 1047,
+   "y": 819,
+   "w": 33,
+   "h": 44,
+   "c": "Eb"
+  },
+  {
+   "x": 382,
+   "y": 1049,
+   "w": 31,
+   "h": 44,
+   "c": "Ab"
+  },
+  {
+   "x": 1047,
+   "y": 1046,
+   "w": 33,
+   "h": 46,
+   "c": "Eb"
+  }
+ ],
+ "key_label": {
+  "x": 29,
+  "y": 262,
+  "w": 97,
+  "h": 47
+ },
+ "key_label_verified": "cadre relevé au profil d'encre : « 1 » (31-40), « = » (54-74), « ♭ » (87-96), « E » (103-123) sur 264-306 ; le chiffrage 4/4 commence à x=145, hors du cadre. Pas de `c` : la lettre gravée (♭E) est bien la tonalité des accords, le client peut écrire « 1=<tonalité jouée> ».",
+ "transcription": "relevée à l'œil sur la page entière : quatre systèmes, quatre étiquettes chacun. Systèmes 2, 3 et 4 : E♭ A♭ B♭ E♭. Système 1 : E♭ A♭ E♭ B♭ — c'est le seul où le troisième accord est E♭ et le quatrième B♭. La page grave le bémol en exposant après la lettre (E♭), et son cadre en préfixe (1=♭E).",
+ "soudures": "six étiquettes sont soudées à un arc de liaison par le découpage : la boîte de l'amas fait alors 66 à 81 px et la repeindre effacerait l'arc. Elles sont écartées en not_labels puis republiées en extra_labels à leur taille vraie (27-29 px), mesurée en séparant les composantes connexes de l'amas — l'arc est la plus large, l'étiquette est le reste. Deux autres amas ne sont *que* des arcs (358,665 et 587,955) et ne publient rien.",
+ "verified": "planche navigateur Eb→E relue sur les quatre tranches (itération 61) : les seize étiquettes des quatre systèmes sont encadrées et réécrites — E A E B au premier système, E A B E aux trois autres —, aucun accord ne reste en mi bémol, et le cadre « 1=♭E » devient « 1=E ». Les six arcs de liaison soudés aux étiquettes sont toujours dessinés à côté de l'accord réécrit : les boîtes republiées en extra_labels ne mordent pas dessus. Les deux amas qui ne sont que des arcs ne publient rien.",
+ "frozen_labels": [
+  {
+   "x": 140,
+   "y": 356,
+   "w": 29,
+   "h": 42,
+   "c": "Eb"
+  },
+  {
+   "x": 478,
+   "y": 356,
+   "w": 29,
+   "h": 42,
+   "c": "Ab"
+  },
+  {
+   "x": 816,
+   "y": 356,
+   "w": 30,
+   "h": 42,
+   "c": "Eb"
+  },
+  {
+   "x": 1120,
+   "y": 356,
+   "w": 30,
+   "h": 42,
+   "c": "Bb"
+  },
+  {
+   "x": 37,
+   "y": 585,
+   "w": 34,
+   "h": 47,
+   "c": "Eb"
+  },
+  {
+   "x": 707,
+   "y": 585,
+   "w": 30,
+   "h": 47,
+   "c": "Bb"
+  },
+  {
+   "x": 40,
+   "y": 820,
+   "w": 29,
+   "h": 45,
+   "c": "Eb"
+  },
+  {
+   "x": 728,
+   "y": 820,
+   "w": 32,
+   "h": 45,
+   "c": "Bb"
+  },
+  {
+   "x": 39,
+   "y": 1051,
+   "w": 30,
+   "h": 46,
+   "c": "Eb"
+  },
+  {
+   "x": 735,
+   "y": 1051,
+   "w": 29,
+   "h": 46,
+   "c": "Bb"
+  },
+  {
+   "x": 410,
+   "y": 584,
+   "w": 32,
+   "h": 41,
+   "c": "Ab"
+  },
+  {
+   "x": 1071,
+   "y": 580,
+   "w": 33,
+   "h": 47,
+   "c": "Eb"
+  },
+  {
+   "x": 369,
+   "y": 817,
+   "w": 32,
+   "h": 42,
+   "c": "Ab"
+  },
+  {
+   "x": 1047,
+   "y": 819,
+   "w": 33,
+   "h": 44,
+   "c": "Eb"
+  },
+  {
+   "x": 382,
+   "y": 1049,
+   "w": 31,
+   "h": 44,
+   "c": "Ab"
+  },
+  {
+   "x": 1047,
+   "y": 1046,
+   "w": 33,
+   "h": 46,
+   "c": "Eb"
+  }
+ ]
+}
