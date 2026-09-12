@@ -29,6 +29,12 @@ const partiels = tout
     ? asked.filter((s) => chords[s]?.complete === false)
     : [];
 
+/** Les notes d'une étiquette, fondamentales et basses, dans l'ordre. Une
+ *  lettre suivie d'une autre lettre qui ne fait pas un accord (« Fine »,
+ *  « CODA », « Bridge ») ou d'un point (« D.S. ») n'en est pas une. */
+const NOTE = /(?<![A-Za-z#])([A-G][#b]?)(?=$|[^A-Za-z.]|m|M|maj|sus|add|dim|aug)/g;
+const notes = (s: string) => [...s.matchAll(NOTE)].map((m) => m[1]);
+
 test.describe("partition 简谱", () => {
   for (const slug of picked) {
     const printed = chords[slug].printedKey;
@@ -59,6 +65,25 @@ test.describe("partition 简谱", () => {
       expect(
         inchangees.map((l) => l.printed),
         "étiquettes non transposées"
+      ).toEqual([]);
+
+      // L'égalité ne voit pas une étiquette transposée **à moitié** :
+      // « B/D#(G#) » rendu « C/D#(G#) », « D/F# /F B/D# » rendu
+      // « Eb/G /F C/E » — elles ont changé, et elles sont fausses
+      // (itération 62). Chaque note, fondamentale comme basse, doit monter
+      // de l'intervalle.
+      const ecart = (pitchClass(target) - pitchClass(printed) + 12) % 12;
+      const moitie = ecrites.filter((l) => {
+        const avant = notes(l.printed);
+        const apres = notes(l.shown);
+        return (
+          avant.length !== apres.length ||
+          avant.some((n, i) => (pitchClass(n) + ecart) % 12 !== pitchClass(apres[i]))
+        );
+      });
+      expect(
+        moitie.map((l) => `${l.printed} → ${l.shown}`),
+        "étiquettes transposées à moitié"
       ).toEqual([]);
 
       // Une étiquette écrite qui sort vide masque le gravé sans rien mettre
