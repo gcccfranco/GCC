@@ -1,4 +1,236 @@
 {
  "slug": "看见复兴",
- "face": "verdana-bold"
+ "face": "din-bold",
+ "not_rows": [
+  872,
+  1148,
+  1722,
+  2081
+ ],
+ "corrections": {
+  "1679,748": "E/G#"
+ },
+ "extra_labels": [
+  {
+   "x": 343,
+   "y": 840,
+   "w": 20,
+   "h": 27,
+   "c": "D"
+  },
+  {
+   "x": 1039,
+   "y": 840,
+   "w": 14,
+   "h": 27,
+   "c": "E"
+  },
+  {
+   "x": 91,
+   "y": 1120,
+   "w": 21,
+   "h": 32,
+   "c": "A"
+  },
+  {
+   "x": 900,
+   "y": 1116,
+   "w": 59,
+   "h": 36,
+   "c": "D/A"
+  },
+  {
+   "x": 54,
+   "y": 2038,
+   "w": 21,
+   "h": 27,
+   "c": "G"
+  },
+  {
+   "x": 349,
+   "y": 2038,
+   "w": 14,
+   "h": 27,
+   "c": "E"
+  },
+  {
+   "x": 840,
+   "y": 2038,
+   "w": 14,
+   "h": 27,
+   "c": "E"
+  },
+  {
+   "x": 1124,
+   "y": 2038,
+   "w": 21,
+   "h": 27,
+   "c": "A"
+  }
+ ],
+ "key_label": {
+  "x": 6,
+  "y": 218,
+  "w": 90,
+  "h": 27
+ },
+ "key_label_verified": "mesure measure-keylabel (ancrage sur le « = », cadre = voisin gauche…voisin droit), zoom relu à l’œil sur planche de lot, lettre gravée confrontée à printedKey, 2026-08-26 (itération 35)",
+ "face_verified": "mesurée contre la transcription complète (22 étiquettes, itération 60) : din-bold 9 justes / 0 faux et 0 manqué, helvetica-neue 8, helvetica-bold 5, **verdana-bold 3** — or verdana-bold était la fonte écrite par le balayage. Aucune serif ne lit quoi que ce soit. Le passage à din-bold fait confirmer la rangée y=1679 par le matcher lui-même : six étiquettes qu'il fallait poser à la main sortent du calque et redeviennent de la lecture. C'est la treizième fois sur seize depuis l'itération 57 que l'élection automatique est infirmée.",
+ "verified": "planche navigateur A→Bb relue sur les sept tranches (itération 60) : les sept rangées d'accords sont encadrées et réécrites, 22 étiquettes, aucun accord ne reste en la. Le dénominateur était faux de bout en bout : sur 24 amas comptés, 16 venaient de quatre rangées qui ne portent aucun accord — fragments de chiffres (y=872, y=1148, y=1722) et le filet du crochet de reprise, un amas de 797 px de large, à y=2081. Quatre vraies rangées, elles, étaient typées `chords?` et ne pesaient rien : y=841, y=1120, y=1679 et y=2039. La page affichait donc « 3/24 » là où elle est à 22 accords sur 22. 【Chorus】 et les crochets 1./2. restent gravés. `bandes.py` : 0 ; `grille.py` : 0.",
+ "frozen_labels": [
+  {
+   "x": 45,
+   "y": 280,
+   "w": 22,
+   "h": 27,
+   "c": "A"
+  },
+  {
+   "x": 585,
+   "y": 280,
+   "w": 66,
+   "h": 27,
+   "c": "F#m"
+  },
+  {
+   "x": 1063,
+   "y": 280,
+   "w": 20,
+   "h": 27,
+   "c": "D"
+  },
+  {
+   "x": 50,
+   "y": 560,
+   "w": 35,
+   "h": 27,
+   "c": "E7"
+  },
+  {
+   "x": 647,
+   "y": 560,
+   "w": 22,
+   "h": 27,
+   "c": "A"
+  },
+  {
+   "x": 1307,
+   "y": 560,
+   "w": 66,
+   "h": 27,
+   "c": "F#m"
+  },
+  {
+   "x": 49,
+   "y": 1400,
+   "w": 21,
+   "h": 26,
+   "c": "A"
+  },
+  {
+   "x": 875,
+   "y": 1400,
+   "w": 14,
+   "h": 26,
+   "c": "E"
+  },
+  {
+   "x": 46,
+   "y": 1679,
+   "w": 20,
+   "h": 27,
+   "c": "D"
+  },
+  {
+   "x": 362,
+   "y": 1679,
+   "w": 51,
+   "h": 27,
+   "c": "Dm"
+  },
+  {
+   "x": 656,
+   "y": 1679,
+   "w": 22,
+   "h": 27,
+   "c": "A"
+  },
+  {
+   "x": 748,
+   "y": 1679,
+   "w": 75,
+   "h": 27,
+   "c": "E/G#"
+  },
+  {
+   "x": 893,
+   "y": 1679,
+   "w": 65,
+   "h": 27,
+   "c": "F#m"
+  },
+  {
+   "x": 1315,
+   "y": 1679,
+   "w": 48,
+   "h": 27,
+   "c": "Bm"
+  },
+  {
+   "x": 343,
+   "y": 840,
+   "w": 20,
+   "h": 27,
+   "c": "D"
+  },
+  {
+   "x": 1039,
+   "y": 840,
+   "w": 14,
+   "h": 27,
+   "c": "E"
+  },
+  {
+   "x": 91,
+   "y": 1120,
+   "w": 21,
+   "h": 32,
+   "c": "A"
+  },
+  {
+   "x": 900,
+   "y": 1116,
+   "w": 59,
+   "h": 36,
+   "c": "D/A"
+  },
+  {
+   "x": 54,
+   "y": 2038,
+   "w": 21,
+   "h": 27,
+   "c": "G"
+  },
+  {
+   "x": 349,
+   "y": 2038,
+   "w": 14,
+   "h": 27,
+   "c": "E"
+  },
+  {
+   "x": 840,
+   "y": 2038,
+   "w": 14,
+   "h": 27,
+   "c": "E"
+  },
+  {
+   "x": 1124,
+   "y": 2038,
+   "w": 21,
+   "h": 27,
+   "c": "A"
+  }
+ ]
 }
