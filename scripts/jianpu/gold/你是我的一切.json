@@ -1,4 +1,321 @@
 {
  "slug": "你是我的一切",
- "face": "verdana-bold"
+ "face": "verdana-bold",
+ "printed_key": "E",
+ "not_rows": [
+  964,
+  1380,
+  1692
+ ],
+ "corrections": {
+  "1478,1338": "A/C#"
+ },
+ "extra_labels": [
+  {
+   "x": 317,
+   "y": 356,
+   "w": 72,
+   "h": 32,
+   "c": "A/C#"
+  },
+  {
+   "x": 967,
+   "y": 356,
+   "w": 94,
+   "h": 32,
+   "c": "(D/F#)"
+  },
+  {
+   "x": 805,
+   "y": 917,
+   "w": 72,
+   "h": 32,
+   "c": "A/C#"
+  },
+  {
+   "x": 1457,
+   "y": 917,
+   "w": 94,
+   "h": 32,
+   "c": "(D/F#)"
+  },
+  {
+   "x": 60,
+   "y": 2038,
+   "w": 65,
+   "h": 34,
+   "c": "Bm"
+  },
+  {
+   "x": 216,
+   "y": 2038,
+   "w": 71,
+   "h": 34,
+   "c": "D/F#"
+  },
+  {
+   "x": 464,
+   "y": 2038,
+   "w": 20,
+   "h": 34,
+   "c": "G"
+  },
+  {
+   "x": 624,
+   "y": 2038,
+   "w": 48,
+   "h": 34,
+   "c": "D/A"
+  },
+  {
+   "x": 720,
+   "y": 2038,
+   "w": 16,
+   "h": 34,
+   "c": "A"
+  },
+  {
+   "x": 836,
+   "y": 2024,
+   "w": 13,
+   "h": 24,
+   "c": "D"
+  },
+  {
+   "x": 1007,
+   "y": 2024,
+   "w": 34,
+   "h": 24,
+   "c": "A7"
+  },
+  {
+   "x": 1242,
+   "y": 2024,
+   "w": 13,
+   "h": 24,
+   "c": "D"
+  }
+ ],
+ "key_label": {
+  "x": 6,
+  "y": 148,
+  "w": 80,
+  "h": 26
+ },
+ "key_label_verified": "mesure measure-keylabel (ancrage sur le « = », cadre = voisin gauche…voisin droit), zoom relu à l’œil sur planche de lot, lettre gravée confrontée à printedKey, 2026-08-26 (itération 35)",
+ "printed_key_verified": "la page grave sa propre tonalité : titre « 你是我的一切（E调）» et cadre « 1=  E », quand le .cho est en ré. Sans ce champ le vocabulaire était transposé de deux demi-tons et la page lisait 1/39 (itération 60). Le balayage conjoint fonte/tonalité proposait bien E (+2) à 54 %, mais dans le bruit — la page, elle, le dit en toutes lettres.",
+ "face_verified": "planche de fonte relue, puis mesurée contre la transcription complète de la page (30 étiquettes relevées à l'œil, itération 60) : verdana-bold 17 justes / 1 faux, helvetica-neue 12 / 0, helvetica-bold et din-bold 12 / 2, les serif de 0 à 4. La linéale grasse est bien celle de la gravure, et son seul faux — « B/D# » lu « E/G# » — est repris en correction. Contrairement aux trois pages de l'itération 59, l'élection automatique avait raison ici : ce qui bloquait la page était la tonalité.",
+ "verified": "planche navigateur E→F relue sur les sept tranches (itération 60) : les quatre rangées d'accords — dont la dernière, soudée aux chiffres et jamais isolée par le découpage — et le cadre « 1= E » sont tous encadrés et réécrits ; aucun accord ne reste en mi. Les deux étiquettes parenthésées « (E/G#) » se publient « (F/A) », parenthèses comprises. Trois rangées promues à tort — la bande d'arcs de liaison y=964 (9 amas), le 【Chorus】 y=1380 et une rangée de paroles y=1692 (7 amas) — sont écartées : elles pesaient 17 des 39 amas du dénominateur et maintenaient la page à 46 % d'un total qui n'existait pas. La dernière rangée est posée sur une ligne de base commune (bas 2072), les deux accords des crochets de fin gardant la leur, plus haute (bas 2048) — le défaut de mélange de l'itération 59 évité d'avance. Les arcs, le 【Chorus】 et les crochets 1./2. restent gravés.",
+ "frozen_labels": [
+  {
+   "x": 66,
+   "y": 356,
+   "w": 13,
+   "h": 32,
+   "c": "E"
+  },
+  {
+   "x": 593,
+   "y": 356,
+   "w": 64,
+   "h": 32,
+   "c": "C#m"
+  },
+  {
+   "x": 853,
+   "y": 356,
+   "w": 49,
+   "h": 32,
+   "c": "E/B"
+  },
+  {
+   "x": 1136,
+   "y": 356,
+   "w": 20,
+   "h": 32,
+   "c": "A"
+  },
+  {
+   "x": 1391,
+   "y": 356,
+   "w": 48,
+   "h": 32,
+   "c": "E/B"
+  },
+  {
+   "x": 1496,
+   "y": 356,
+   "w": 16,
+   "h": 32,
+   "c": "B"
+  },
+  {
+   "x": 83,
+   "y": 917,
+   "w": 13,
+   "h": 32,
+   "c": "E"
+  },
+  {
+   "x": 326,
+   "y": 917,
+   "w": 35,
+   "h": 32,
+   "c": "B7"
+  },
+  {
+   "x": 554,
+   "y": 917,
+   "w": 13,
+   "h": 32,
+   "c": "E"
+  },
+  {
+   "x": 1081,
+   "y": 917,
+   "w": 65,
+   "h": 32,
+   "c": "C#m"
+  },
+  {
+   "x": 1343,
+   "y": 917,
+   "w": 49,
+   "h": 32,
+   "c": "E/B"
+  },
+  {
+   "x": 84,
+   "y": 1478,
+   "w": 20,
+   "h": 31,
+   "c": "A"
+  },
+  {
+   "x": 387,
+   "y": 1478,
+   "w": 49,
+   "h": 31,
+   "c": "E/B"
+  },
+  {
+   "x": 505,
+   "y": 1478,
+   "w": 16,
+   "h": 31,
+   "c": "B"
+  },
+  {
+   "x": 647,
+   "y": 1478,
+   "w": 12,
+   "h": 31,
+   "c": "E"
+  },
+  {
+   "x": 855,
+   "y": 1478,
+   "w": 54,
+   "h": 31,
+   "c": "A/B"
+  },
+  {
+   "x": 1128,
+   "y": 1478,
+   "w": 12,
+   "h": 31,
+   "c": "E"
+  },
+  {
+   "x": 1338,
+   "y": 1478,
+   "w": 71,
+   "h": 31,
+   "c": "B/D#"
+  },
+  {
+   "x": 317,
+   "y": 356,
+   "w": 72,
+   "h": 32,
+   "c": "B/D#"
+  },
+  {
+   "x": 967,
+   "y": 356,
+   "w": 94,
+   "h": 32,
+   "c": "(E/G#)"
+  },
+  {
+   "x": 805,
+   "y": 917,
+   "w": 72,
+   "h": 32,
+   "c": "B/D#"
+  },
+  {
+   "x": 1457,
+   "y": 917,
+   "w": 94,
+   "h": 32,
+   "c": "(E/G#)"
+  },
+  {
+   "x": 60,
+   "y": 2038,
+   "w": 65,
+   "h": 34,
+   "c": "C#m"
+  },
+  {
+   "x": 216,
+   "y": 2038,
+   "w": 71,
+   "h": 34,
+   "c": "E/G#"
+  },
+  {
+   "x": 464,
+   "y": 2038,
+   "w": 20,
+   "h": 34,
+   "c": "A"
+  },
+  {
+   "x": 624,
+   "y": 2038,
+   "w": 48,
+   "h": 34,
+   "c": "E/B"
+  },
+  {
+   "x": 720,
+   "y": 2038,
+   "w": 16,
+   "h": 34,
+   "c": "B"
+  },
+  {
+   "x": 836,
+   "y": 2024,
+   "w": 13,
+   "h": 24,
+   "c": "E"
+  },
+  {
+   "x": 1007,
+   "y": 2024,
+   "w": 34,
+   "h": 24,
+   "c": "B7"
+  },
+  {
+   "x": 1242,
+   "y": 2024,
+   "w": 13,
+   "h": 24,
+   "c": "E"
+  }
+ ]
 }
