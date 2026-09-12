@@ -1,0 +1,398 @@
+{
+ "slug": "深深爱你",
+ "face": "helvetica-bold",
+ "face_verified": "mesurée en accords justes contre la page transcrite (protocole 9ter) : helvetica-bold lit 9 des 20 accords des trois rangées typées `chords`, din-bold 6, helvetica-neue et verdana-bold 5, times-bold 3, times 2, georgia 1. C'est la seule des sept à publier un **faux** — « C#m » lu « F#m » à +0,40 en y=649,1069, un mode C franc. On la garde quand même : la correction est écrite, et c'est précisément le recours prévu contre le mode C. din-bold, sans faux, coûterait trois accords lus de plus à corriger à la main.",
+ "corrections": {
+  "381,547": "Amaj7",
+  "381,669": "A6",
+  "649,18": "Emaj7",
+  "649,106": "Bm7",
+  "649,330": "Amaj7",
+  "912,22": "F#m",
+  "912,257": "F#9",
+  "912,468": "B9sus4",
+  "912,1023": "B/D#"
+ },
+ "not_labels": [
+  "649,436",
+  "649,505",
+  "649,559",
+  "649,791",
+  "649,895",
+  "649,963",
+  "649,1017",
+  "649,1069",
+  "912,739",
+  "912,1119"
+ ],
+ "not_rows": [
+  207,
+  1069,
+  1331
+ ],
+ "extra_labels": [
+  {
+   "x": 789,
+   "y": 643,
+   "w": 61,
+   "h": 32,
+   "c": "G#m"
+  },
+  {
+   "x": 1067,
+   "y": 643,
+   "w": 57,
+   "h": 32,
+   "c": "C#m"
+  },
+  {
+   "x": 18,
+   "y": 1173,
+   "w": 57,
+   "h": 28,
+   "c": "C#m"
+  },
+  {
+   "x": 358,
+   "y": 1173,
+   "w": 64,
+   "h": 28,
+   "c": "E/G#"
+  },
+  {
+   "x": 637,
+   "y": 1173,
+   "w": 48,
+   "h": 28,
+   "c": "F#7"
+  },
+  {
+   "x": 891,
+   "y": 1173,
+   "w": 84,
+   "h": 28,
+   "c": "B9sus4"
+  },
+  {
+   "x": 1037,
+   "y": 1176,
+   "w": 21,
+   "h": 25,
+   "c": "B"
+  },
+  {
+   "x": 186,
+   "y": 1177,
+   "w": 23,
+   "h": 24,
+   "c": "A"
+  },
+  {
+   "x": 183,
+   "y": 1434,
+   "w": 63,
+   "h": 28,
+   "c": "B/D#"
+  },
+  {
+   "x": 423,
+   "y": 1434,
+   "w": 56,
+   "h": 28,
+   "c": "C#m"
+  },
+  {
+   "x": 37,
+   "y": 1437,
+   "w": 21,
+   "h": 25,
+   "c": "E"
+  },
+  {
+   "x": 770,
+   "y": 1437,
+   "w": 49,
+   "h": 25,
+   "c": "E/B"
+  },
+  {
+   "x": 917,
+   "y": 1437,
+   "w": 51,
+   "h": 25,
+   "c": "A/B"
+  },
+  {
+   "x": 984,
+   "y": 1437,
+   "w": 22,
+   "h": 25,
+   "c": "B"
+  },
+  {
+   "x": 1081,
+   "y": 1437,
+   "w": 21,
+   "h": 25,
+   "c": "E"
+  },
+  {
+   "x": 604,
+   "y": 1438,
+   "w": 22,
+   "h": 24,
+   "c": "A"
+  }
+ ],
+ "key_label": {
+  "x": 46,
+  "y": 238,
+  "w": 66,
+  "h": 27
+ },
+ "key_label_verified": "cadre relevé au profil d'encre : « 1 » (48-55), « = » (65-84), « E » (91-110) sur 240-262 ; le chiffrage 4/4 commence à x=132, hors du cadre. Pas de `c` : la lettre gravée est la tonalité des accords.",
+ "transcription": "relevée à l'œil — cinq systèmes, 34 accords. S1 : E E/G# Amaj7 A6 E/G# F#m7 B13. S2 : Emaj7 Bm7 E7 Amaj7 B/A G#m C#m. S3 : F#m F#9 B9sus4 B7 E B/D#. S4 : C#m A E/G# F#7 B9sus4 B. S5 : E B/D# C#m A E/B A/B B E. La gravure met le chiffrage en exposant (Amaj⁷, B¹³, B⁹sus⁴).",
+ "rangees_cachees": "les rangées d'accords des systèmes 4 (y=1175) et 5 (y=1436) sont typées `numbers` et n'entrent ni dans `read()` ni dans aucun compteur : leurs quatorze étiquettes sont posées en `extra_labels`. À l'inverse le sous-titre « Deeply In Love » (y=207) et deux lignes de paroles anglaises (y=1069, y=1331) sont promus `chords` — `not_rows`. Les crochets de triolet « 3 » des systèmes 2 et 3 sont des `not_labels`.",
+ "soudures": "« G#m » (y=649, x=791) et « C#m » (y=649, x=1069) portent un dièse dont le haut monte à y=645, au-dessus de la bande de leur rangée : la boîte du découpage part de 649 et laisserait un moignon de 4 px du dièse gravé au-dessus de l'accord réécrit. Ces deux mêmes hauts de dièse étaient par ailleurs comptés comme une **rangée orpheline** dans le vide 567-648 — deux amas de 5 px, appariés tous les deux —, ce qui bloquait la publication. Les deux étiquettes sont donc écartées en not_labels et republiées en extra_labels sur y=643..675, ce qui règle les deux à la fois.",
+ "verified": "planche navigateur E→F relue sur les sept tranches (itération 61) : les 34 étiquettes des cinq systèmes sont encadrées et réécrites, aucun accord ne reste en mi, et « 1=E » devient « 1=F ». Les deux rangées cachées (y=1175 et y=1436, typées `numbers`) publient bien leurs quatorze étiquettes. Les crochets de triolet « 3 » et les arcs de liaison sont laissés intacts. Deux défauts vus et corrigés en route : les « C#m » des rangées cachées s'affichaient « Dm » suivi du « m » gravé — la boîte, mesurée en composantes connexes, laissait tomber la minuscule ; et les dièses de « G#m » et « C#m » en y=649 montaient au-dessus de la boîte du découpage.",
+ "frozen_labels": [
+  {
+   "x": 128,
+   "y": 381,
+   "w": 15,
+   "h": 28,
+   "c": "E"
+  },
+  {
+   "x": 338,
+   "y": 381,
+   "w": 58,
+   "h": 28,
+   "c": "E/G#"
+  },
+  {
+   "x": 547,
+   "y": 381,
+   "w": 69,
+   "h": 28,
+   "c": "Amaj7"
+  },
+  {
+   "x": 669,
+   "y": 381,
+   "w": 31,
+   "h": 28,
+   "c": "A6"
+  },
+  {
+   "x": 751,
+   "y": 381,
+   "w": 58,
+   "h": 28,
+   "c": "E/G#"
+  },
+  {
+   "x": 846,
+   "y": 381,
+   "w": 62,
+   "h": 28,
+   "c": "F#m7"
+  },
+  {
+   "x": 1068,
+   "y": 381,
+   "w": 41,
+   "h": 28,
+   "c": "B13"
+  },
+  {
+   "x": 18,
+   "y": 649,
+   "w": 66,
+   "h": 37,
+   "c": "Emaj7"
+  },
+  {
+   "x": 106,
+   "y": 649,
+   "w": 73,
+   "h": 37,
+   "c": "Bm7"
+  },
+  {
+   "x": 241,
+   "y": 649,
+   "w": 27,
+   "h": 37,
+   "c": "E7"
+  },
+  {
+   "x": 330,
+   "y": 649,
+   "w": 70,
+   "h": 37,
+   "c": "Amaj7"
+  },
+  {
+   "x": 619,
+   "y": 649,
+   "w": 43,
+   "h": 37,
+   "c": "B/A"
+  },
+  {
+   "x": 22,
+   "y": 912,
+   "w": 48,
+   "h": 34,
+   "c": "F#m"
+  },
+  {
+   "x": 257,
+   "y": 912,
+   "w": 42,
+   "h": 34,
+   "c": "F#9"
+  },
+  {
+   "x": 468,
+   "y": 912,
+   "w": 75,
+   "h": 34,
+   "c": "B9sus4"
+  },
+  {
+   "x": 663,
+   "y": 912,
+   "w": 28,
+   "h": 34,
+   "c": "B7"
+  },
+  {
+   "x": 893,
+   "y": 912,
+   "w": 14,
+   "h": 34,
+   "c": "E"
+  },
+  {
+   "x": 1023,
+   "y": 912,
+   "w": 56,
+   "h": 34,
+   "c": "B/D#"
+  },
+  {
+   "x": 789,
+   "y": 643,
+   "w": 61,
+   "h": 32,
+   "c": "G#m"
+  },
+  {
+   "x": 1067,
+   "y": 643,
+   "w": 57,
+   "h": 32,
+   "c": "C#m"
+  },
+  {
+   "x": 18,
+   "y": 1173,
+   "w": 57,
+   "h": 28,
+   "c": "C#m"
+  },
+  {
+   "x": 358,
+   "y": 1173,
+   "w": 64,
+   "h": 28,
+   "c": "E/G#"
+  },
+  {
+   "x": 637,
+   "y": 1173,
+   "w": 48,
+   "h": 28,
+   "c": "F#7"
+  },
+  {
+   "x": 891,
+   "y": 1173,
+   "w": 84,
+   "h": 28,
+   "c": "B9sus4"
+  },
+  {
+   "x": 1037,
+   "y": 1176,
+   "w": 21,
+   "h": 25,
+   "c": "B"
+  },
+  {
+   "x": 186,
+   "y": 1177,
+   "w": 23,
+   "h": 24,
+   "c": "A"
+  },
+  {
+   "x": 183,
+   "y": 1434,
+   "w": 63,
+   "h": 28,
+   "c": "B/D#"
+  },
+  {
+   "x": 423,
+   "y": 1434,
+   "w": 56,
+   "h": 28,
+   "c": "C#m"
+  },
+  {
+   "x": 37,
+   "y": 1437,
+   "w": 21,
+   "h": 25,
+   "c": "E"
+  },
+  {
+   "x": 770,
+   "y": 1437,
+   "w": 49,
+   "h": 25,
+   "c": "E/B"
+  },
+  {
+   "x": 917,
+   "y": 1437,
+   "w": 51,
+   "h": 25,
+   "c": "A/B"
+  },
+  {
+   "x": 984,
+   "y": 1437,
+   "w": 22,
+   "h": 25,
+   "c": "B"
+  },
+  {
+   "x": 1081,
+   "y": 1437,
+   "w": 21,
+   "h": 25,
+   "c": "E"
+  },
+  {
+   "x": 604,
+   "y": 1438,
+   "w": 22,
+   "h": 24,
+   "c": "A"
+  }
+ ]
+}
