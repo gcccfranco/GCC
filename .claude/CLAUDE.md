@@ -26,11 +26,12 @@ Invoquer **tous** : `frontend-design`, `taste-skill`, `redesign-skill`,
 `web-design-engineer`, `ui-ux-pro-max`, `ui-styling`, `design-system`, plus
 `apple-design` (déjà installé). Parmi les skills de style (`minimalist-skill`,
 `soft-skill`, `brutalist-skill`, `gpt-tasteskill`, `stitch-skill`), prendre celui
-qui sert la direction retenue — aujourd'hui « Sobre & classique » → `minimalist-skill`.
+qui sert la direction retenue — direction **à rechoisir** (« Sobre sur crème » rouverte
+le 13/09/2026 : rester sobre, mais moins fade et moins « document »).
 Génération d'images, bannières, slides, articles, vidéo : seulement si la tâche en produit.
 
 ## Priorités en cas de conflit
-Les règles du `CLAUDE.md` racine gagnent : commits séparés par fichier, commit sur
+Les règles du `CLAUDE.md` racine gagnent : un commit par étape ou par lot, commit sur
 demande seulement, tests via Playwright, zones gelées, simplicité (Karpathy).
 
 ## Renommages locaux (collision avec des skills intégrés)

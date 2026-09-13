@@ -63,7 +63,7 @@ ils ne voient pas le composant réel. Détail du protocole dans
 - Jianpu : `#B91C1C` (rouge foncé)
 
 ## Règles
-- Commits séparés par fichier (best practice de ce projet)
+- Un commit par étape ou par lot, pas un commit par fichier (consigne de Timothée du 13/09/2026)
 - Tester sur au moins 1 chant FR + 1 chant ZH avant de valider une étape
 - Toute modif des permissions doit être faite en double : `src/lib/access.ts` (client) **et** `firestore.rules` (serveur)
 

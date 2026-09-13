@@ -45,6 +45,40 @@ comme constats sans recommandation par défaut.
 pas seulement le style. La refonte 2026 est cadrée « UI pure » : ces pistes
 sont marquées **[UX — à décider]**.
 
+### Dégel du 13/09/2026 (décision de Timothée, chantier `ui/apple-design`)
+
+Le rappel ci-dessus date de l'audit. Pour la refonte, sont désormais **dégelés** :
+
+1. **L'organisation de l'interface** : où vivent les actions, menus, filtres,
+   hiérarchie des pages. Les pistes **[UX — à décider]** et le lot 7 sont donc
+   ouverts. Ajouter ou retirer une fonctionnalité est possible, mais **Timothée
+   valide chaque ajout ou retrait avant** qu'il soit fait (vision complète :
+   [intent/vision-site.md](intent/vision-site.md)).
+2. **La forme du label contextuel de la navbar** (taille, troncature, place sur
+   mobile), pour corriger A4. Son comportement reste gelé : contextuel, coloré,
+   animé.
+3. **Le chrome de la page chant et du mode louange** : barre d'outils (dont la
+   troncature ZH du § 9), `CustomizePanel`, réglages, sommaire, outils
+   d'annotation.
+4. **La typographie du rendu des chants et des accords, partout** (page chant,
+   vue partitions, mode louange). Initialement gelée en mode louange, elle y est
+   dégelée le même jour : les annotations sont stockées en coordonnées d'écran,
+   sous une clé qui ignore la typographie
+   ([PerformanceMode.tsx:637](../src/components/performance/PerformanceMode.tsx#L637)),
+   donc les traits déjà dessinés se décaleront. Timothée l'accepte ; l'équipe
+   sera prévenue avant.
+
+**Restent gelés** : couleurs de `serviceColors.ts`, logo, couleurs des accords,
+du 简谱 et des sections (`--chord-color`, `--jianpu-color`, `--sec-*`),
+l'intérieur du calque 简谱 (`JianpuSheet`, calques certifiés), l'export PDF.
+
+**Direction visuelle rouverte** : « Sobre sur crème » (fond crème, orange
+réservé aux actions, cartes à ombre douce sans bordure) n'est plus acquise. La
+nouvelle direction reste à choisir. Elle doit composer avec ce qui reste gelé :
+couleurs de services, couleurs des accords, du 简谱 et des sections, logo en
+pastille blanche. Attention, `--sec-chorus` et `--primary` partagent le même
+orange (`#e0560a`).
+
 ## 3. Synthèse
 
 **Ce qui est déjà très « Apple »** (à préserver)
@@ -417,7 +451,7 @@ en regardant les captures, sur 1 chant FR et 1 chant ZH, en clair et en sombre.
 | 5 | Modales unifiées : `ReportDialog` et `CustomizePanel` vers Radix/vaul, AlertDialog repris, menu Louange vers Radix, i18n des libellés en dur | C1, C2, E1 | UI (+ i18n) |
 | 6 | Tokens typo et rayons (hors chants) | F1, F2, E2 | UI |
 | 6 bis | Badge d'état et sélections en encre, finitions membre | G5, G6 | UI |
-| 7 | Menu compte, menu mobile sans doublons, CTA uniques, filtres setlists, carte d'accueil planning | G1–G4, G6 | **UX, à décider** |
+| 7 | Menu compte, menu mobile sans doublons, CTA uniques, filtres setlists, carte d'accueil planning | G1–G4, G6 | **UX, dégelé le 13/09/2026** (§ 2) |
 
-Hors lots, à trancher : l'effet de recul vaul (D4) et la troncature de la
-barre chant en ZH (§ 9, zone gelée).
+Hors lots, à trancher : l'effet de recul vaul (D4). La troncature de la barre
+chant en ZH (§ 9) est dégelée depuis le 13/09/2026 (§ 2).
