@@ -287,6 +287,9 @@ function ZhLine({ tokens, pinyin, showChords, showPinyin, hideLyrics = false, ch
                   lineHeight: 1.2,
                   color: "var(--muted-foreground)",
                   whiteSpace: "nowrap",
+                  // Une syllabe plus large que la colonne (« chuàng ») l'élargit :
+                  // cette marge garde un espace avec sa voisine.
+                  paddingInline: "0.15em",
                 }}
               >
                 {col.py || " "}

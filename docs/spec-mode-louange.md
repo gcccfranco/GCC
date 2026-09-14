@@ -140,8 +140,8 @@ le lot 6 et avant tout commit.
 
 | Lot | État |
 | --- | --- |
-| 1 à 5 | Faits, testés (`tests/performance-mode.spec.ts`, 19 tests), captures regardées. Suite complète : 71 tests passés. Non commités. |
-| 6 | Choix faits sur captures le 13/09/2026 et appliqués (voir ci-dessous). Capture du pinyin agrandi à valider par Timothée. |
+| 1 à 5 | Faits, testés (`tests/performance-mode.spec.ts`, 19 tests), captures regardées. Commités le 14/09/2026 (`5397908`, suite complète : 240 tests sur trois appareils). |
+| 6 | Choix faits sur captures le 13/09/2026 et appliqués (voir ci-dessous), commités avec les lots 1 à 5. **Pinyin agrandi validé le 14/09/2026, avec un espace garanti** : sur captures (有一位神, trois appareils), à 0,7 × les syllabes longues se touchaient (« quánnéngchuàng », « shuāngshǒu ») ; une marge de 0,15 em de chaque côté du pinyin les sépare (`tests/pinyin-espace.spec.ts`). Reste, sur téléphone : une ligne trop longue passe à la ligne et son dernier accord frôle le pinyin du dessus (« 。 » seul avec A7 dans 有一位神), déjà le cas avant la marge. |
 
 Lot 6, choix de Timothée (13/09/2026, sur captures) :
 
