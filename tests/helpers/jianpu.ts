@@ -67,6 +67,11 @@ export async function openSheet(
 
   const pages = page.locator("[data-jianpu-page]");
   await pages.first().waitFor();
+  // Le calque vient d'un fetch à part (`/jianpu/chords.json`) et peut arriver
+  // après le scan : sous charge, le lire aussitôt rendait zéro étiquette.
+  if (opts.key && loadChords()[slug]?.labels.length) {
+    await page.locator("[data-jianpu-label]").first().waitFor({ state: "attached" });
+  }
   // Le scan pèse 1 à 2 Mo : sans cette attente la capture montre du vide, et
   // le calque flotte sur rien.
   await page.waitForFunction(() =>

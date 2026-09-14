@@ -12,14 +12,23 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: Boolean(process.env.CI),
   retries: 0,
-  workers: process.env.CI ? 1 : undefined,
+  // 3 en local : les profils téléphone et tablette émulent des écrans haute
+  // densité (×2,6, ×2), plus coûteux ; au-delà, `next dev` sature et des tests
+  // échouent au hasard (constaté le 14/09/2026 avec 5).
+  workers: process.env.CI ? 1 : 3,
   reporter: [["list"]],
   use: {
     baseURL: BASE_URL,
     trace: "on-first-retry",
     screenshot: "only-on-failure",
   },
-  projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
+  // Trois appareils, toujours (consigne de Timothée du 14/09/2026, CLAUDE.md),
+  // tous sous Chromium (émulation de taille et de toucher ; WebKit écarté).
+  projects: [
+    { name: "ordinateur", use: { ...devices["Desktop Chrome"] } },
+    { name: "telephone", use: { ...devices["Pixel 7"] } },
+    { name: "tablette", use: { ...devices["iPad (gen 7)"], defaultBrowserType: "chromium" } },
+  ],
   webServer: {
     command: `npm run dev -- -p ${PORT}`,
     url: BASE_URL,

@@ -32,6 +32,10 @@ Les rendus PIL de `scripts/jianpu/*.py` restent des dépannages hors ligne :
 ils ne voient pas le composant réel. Détail du protocole dans
 `scripts/jianpu/LOOP.md`.
 
+- **Trois appareils, toujours** (consigne de Timothée du 14/09/2026) : tout test
+  Playwright tourne sur **ordinateur, téléphone et tablette** (un projet par
+  appareil dans `playwright.config.ts`, tous sous Chromium : WebKit écarté). Les captures regardées à l'œil aussi :
+  les trois tailles. Un test propre à un appareil le dit dans son titre.
 - `tests/helpers/jianpu.ts` : ouvrir un chant, afficher sa 简谱, lire le calque.
 - La page chant lit ses paramètres d'URL en **JSON** : `?key=%22F%22`, pas `?key=F`.
 - Viser `localhost` et non `127.0.0.1` : `next dev` bloque ses ressources en
