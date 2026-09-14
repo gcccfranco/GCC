@@ -13,6 +13,7 @@ import { StaleBanner } from "@/components/planning/StaleBanner"
 import type { EddDataStructure, CampusSeance } from "@/lib/planning/utils"
 import { useProfile } from "@/lib/firebase/users"
 import { findMyServices, type PlanningData } from "@/lib/planning/names"
+import { PLANNING_COLORS } from "@/lib/serviceColors"
 
 function val(v: string) { return v?.trim() || "—" }
 
@@ -101,6 +102,17 @@ export default function PlanningAccueil() {
   const fidMRow = fidM.find(r => r[0] === sun) ?? null
   const bonteRow = bonte.find(r => r[0] === sun) ?? null
 
+  // Dimanche d'Interfranco ou d'Intergroupe (jamais les deux) : ce service
+  // remplace toute la section Groupes. Intergroupe a 3 choristes, Interfranco 2 ;
+  // les colonnes suivantes sont les mêmes (piano … traduction).
+  const interfrancoRow = interfranco.find(r => r[0] === sun)
+  const intergroupeRow = intergroupe.find(r => r[0] === sun)
+  const inter = interfrancoRow
+    ? { key: "interfranco" as const, choristes: interfrancoRow.slice(2, 4), rest: interfrancoRow.slice(4), pres: interfrancoRow[1] }
+    : intergroupeRow
+      ? { key: "intergroupe" as const, choristes: intergroupeRow.slice(2, 5), rest: intergroupeRow.slice(5), pres: intergroupeRow[1] }
+      : null
+
   const m = +sunParts[1]
   const pk = EDD_PERIODES[m<=2?0:m<=4?1:m<=6?2:m<=8?3:m<=10?4:5]
   const eddP = edd[pk]?.classes ?? null
@@ -139,8 +151,8 @@ export default function PlanningAccueil() {
       )}
 
       {/* Ce dimanche */}
-      <div>
-        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+      <section aria-labelledby="ce-dimanche">
+        <p id="ce-dimanche" className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
           {t("planning.thisSunday", { date: sunLabel })}
         </p>
         <div className="bg-card shadow-soft rounded-xl overflow-hidden">
@@ -174,7 +186,20 @@ export default function PlanningAccueil() {
             )}
           </SectionBlock>
 
-          {/* Groupes */}
+          {/* Groupes — ou, ces dimanches-là, Interfranco / Intergroupe */}
+          {inter ? (
+          <SectionBlock dot={PLANNING_COLORS[inter.key]} label={t(`planning.tabs.${inter.key}`)}>
+            <InfoRow label={t("planning.roles.presidence")} value={val(inter.pres)} />
+            <InfoRow label={t("planning.roles.choristes")} value={inter.choristes.filter(v => v?.trim()).join(", ")} />
+            <InfoRow label={t("planning.roles.piano")} value={val(inter.rest[0])} />
+            <InfoRow label={t("planning.roles.guitare")} value={val(inter.rest[1])} />
+            <InfoRow label={t("planning.roles.cajonBatt")} value={val(inter.rest[2])} />
+            <InfoRow label={t("planning.roles.sono")} value={val(inter.rest[3])} />
+            <InfoRow label={t("planning.roles.ppt")} value={val(inter.rest[4])} />
+            <InfoRow label={t("planning.roles.orateur")} value={val(inter.rest[5])} />
+            <InfoRow label={t("planning.roles.trad")} value={val(inter.rest[6])} />
+          </SectionBlock>
+          ) : (
           <SectionBlock dot="#6b4a8e" label={t("planning.tabs.groupes")}>
             <GroupBlock badge={t("planning.groupes.paix")}>
               <InfoRow label={t("planning.roles.presidence")} value={val(paixRow?.[1] ?? "")} />
@@ -194,6 +219,7 @@ export default function PlanningAccueil() {
               <InfoRow label={t("planning.roles.orateur")} value={val(bonteRow?.[3] ?? "")} />
             </GroupBlock>
           </SectionBlock>
+          )}
 
           {/* EDD */}
           <SectionBlock dot="#3b6d11" label={t("planning.tabs.edd")}>
@@ -208,7 +234,7 @@ export default function PlanningAccueil() {
             ))}
           </SectionBlock>
         </div>
-      </div>
+      </section>
 
       {/* Verset */}
       <blockquote className="bg-secondary rounded-xl p-5">
