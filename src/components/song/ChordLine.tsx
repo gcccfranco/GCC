@@ -56,7 +56,7 @@ interface ChordLineProps {
   fr_lyric_font?: ReturnType<typeof localFont>;
 }
 
-export function ChordLine({ tokens, showChords = true, hideLyrics = false, fontSize = 0.88, chordEm = 0.9, chord_font, fr_lyric_font }: ChordLineProps) {
+export function ChordLine({ tokens, showChords = true, hideLyrics = false, fontSize, chordEm = 0.9, chord_font, fr_lyric_font }: ChordLineProps) {
   const segments = toSegments(tokens);
   const hasAnyChord = showChords && segments.some((s) => s.chord !== null);
   return (
@@ -64,7 +64,8 @@ export function ChordLine({ tokens, showChords = true, hideLyrics = false, fontS
       data-copy-line
       className="font-sans leading-normal select-text flex flex-wrap items-end"
       style={{
-        fontSize: `${fontSize}rem`,
+        // Sans taille imposée (typographie PDF), taille par défaut de l'écran (globals.css).
+        fontSize: fontSize !== undefined ? `${fontSize}rem` : "var(--lyric-size)",
         paddingTop: "0.15em",
         paddingBottom: "0.15em",
         lineHeight: segments.every(s => !s.lyric?.trim()) ? "0" : undefined,

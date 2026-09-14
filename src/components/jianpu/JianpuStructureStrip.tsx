@@ -3,7 +3,7 @@
 import { useTranslation } from "react-i18next";
 import { formatSectionName } from "@/lib/chordpro/parser";
 import { CHART_TYPE_COLOR, NuanceBadge } from "@/components/song/SongView";
-import type { SectionOccurrence } from "@/lib/setlist/sectionSteps";
+import { isRepeatOf, type SectionOccurrence } from "@/lib/setlist/sectionSteps";
 
 /** Structure jouée d'un chant affiché sur sa partition 简谱, en une ligne.
  *
@@ -30,15 +30,13 @@ export function JianpuStructureStrip({
 }) {
   const { t } = useTranslation();
 
-  // Occurrences consécutives d'une même section repliées en « ×2 ». Seulement
-  // quand rien ne les distingue : deux refrains dont l'un a une nuance ne sont
-  // pas la même chose jouée deux fois.
+  // Occurrences consécutives d'une même section repliées en « ×2 », seulement
+  // quand rien ne les distingue (même règle que la vue structure).
   const groups: { step: SectionOccurrence; label: string; repeat: number }[] = [];
   for (const step of steps) {
     const label = formatSectionName(step.section, t);
     const last = groups[groups.length - 1];
-    const bare = !step.note && !step.nuance && !step.targetKey;
-    if (last && last.label === label && bare && !last.step.note && !last.step.nuance && !last.step.targetKey) {
+    if (last && isRepeatOf({ ...last.step, label: last.label }, { ...step, label })) {
       last.repeat++;
       continue;
     }

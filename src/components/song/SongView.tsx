@@ -2,16 +2,27 @@
 import localFont from "next/font/local";
 import { ChordLine } from "@/components/song/ChordLine";
 import { JianpuLine } from "@/components/song/JianpuLine";
+import { pinyin_font } from "@/components/song/pinyinFont";
 import type { ChordProAST, ChordProLine, ChordProSection, Token } from "@/types/chordPro";
 import { useTranslation } from "react-i18next";
 import { formatSectionName } from "@/lib/chordpro/parser";
 import { resolveStructureOverride } from "@/lib/chordpro/structure";
 import { semitonesTo } from "@/lib/transpose";
 import { transposeSection } from "@/lib/transposeAST";
-import { handleLyricsCopy } from "@/components/song/copyLyrics";
-import { MessageSquare } from "lucide-react";
+import {
+  ArrowDownRight,
+  ArrowUpRight,
+  Guitar,
+  MessageSquare,
+  MicVocal,
+  Pause,
+  Sparkles,
+  User,
+  Users,
+  type LucideIcon,
+} from "lucide-react";
 import type { SectionNuance } from "@/types/setList";
-import { nuanceLabel, nuanceFull } from "@/lib/setlist/nuances";
+import { nuanceDef, nuanceLabel, nuanceFull } from "@/lib/setlist/nuances";
 
 // ---------------------------------------------------------------------------
 // Thèmes et styles de sections
@@ -63,19 +74,25 @@ function getChartSectionStyle(type: string): React.CSSProperties {
   } as React.CSSProperties;
 }
 
-// Polices CJK volumineuses (KaiTi ~11 Mo, Han-source ~8 Mo) : preload désactivé
+// Polices CJK volumineuses (KaiTi ~11 Mo, Source Han Sans ~8 Mo) : preload désactivé
 // pour ne pas les précharger sur toute page rendant une partition (y compris
 // les chants FR). Elles se chargent à la demande quand un chant zh s'affiche.
 const KaiTiFont = localFont({
   src: [{ path: "../../../public/fonts/KaiTi.ttf", weight: "400", style: "normal" }],
   preload: false,
 });
-const fr_lyric_font = localFont({ src: "../../../public/fonts/inter-latin-ext-400-normal.ttf" });
-const zh_lyric_font = localFont({ src: "../../../public/fonts/Han-source.otf", preload: false });
+// Paroles FR, accords et libellés : Atkinson Hyperlegible Next (OFL), dessinée
+// pour qu'aucune lettre ne se confonde — lisible de loin sur le pupitre. Choisie
+// par Timothée le 13/09/2026 sur captures (docs/spec-mode-louange.md). Le PDF
+// garde ses propres polices (SongPDF).
+const fr_lyric_font = localFont({ src: "../../../public/fonts/AtkinsonHyperlegibleNext-Regular.woff2" });
+// Caractères chinois : Source Han Sans CN Medium (auparavant Light, trop fine
+// de loin) — choisie par Timothée le 13/09/2026 sur captures.
+const zh_lyric_font = localFont({ src: "../../../public/fonts/SourceHanSansCN-Medium.otf", preload: false });
 const chord_font = localFont({
   src: [
-    { path: "../../../public/fonts/SpaceGrotesk-Light.ttf", weight: "300" },
-    { path: "../../../public/fonts/SpaceGrotesk-Bold.ttf",  weight: "700" },
+    { path: "../../../public/fonts/AtkinsonHyperlegibleNext-Regular.woff2", weight: "400" },
+    { path: "../../../public/fonts/AtkinsonHyperlegibleNext-Bold.woff2", weight: "700" },
   ],
 });
 // Police des accords des PDF exportés (typographie « pdf » du Mode Louange)
@@ -179,10 +196,11 @@ function toSegments(tokens: Token[]): Seg[] {
 function ZhLine({ tokens, pinyin, showChords, showPinyin, hideLyrics = false, chord_font, zh_lyric_font, typography = "web" }: ZhLineProps) {
   // Typographie « pdf » : tailles des PDF exportés (accords 17px, chars 15px, pinyin 10.5px)
   const isPdfTypo = typography === "pdf";
-  const baseSize = isPdfTypo ? "0.9375rem" : "0.88rem";
+  const baseSize = isPdfTypo ? "0.9375rem" : "var(--lyric-size)";
   const chordEm = isPdfTypo ? "1.13em" : "0.9em";
   const charEm = isPdfTypo ? "1em" : "1.2em";
-  const pinyinEm = isPdfTypo ? "0.7em" : "0.6em";
+  // Pinyin un peu plus grand à l'écran (0,6 → 0,7), décision du 13/09/2026.
+  const pinyinEm = "0.7em";
   const pyWords = pinyin?.split(/\s+/).filter(Boolean) ?? [];
   let pIdx = 0;
 
@@ -215,6 +233,7 @@ function ZhLine({ tokens, pinyin, showChords, showPinyin, hideLyrics = false, ch
   return (
     <div
       data-copy-line
+      data-copy-pinyin={pinyin ?? undefined}
       className="flex flex-wrap items-start mb-[3px]"
       style={{
         fontSize: baseSize,
@@ -262,6 +281,7 @@ function ZhLine({ tokens, pinyin, showChords, showPinyin, hideLyrics = false, ch
             {showPinyin && !hideLyrics && (
               <span
                 data-copy-ignore
+                className={pinyin_font.className}
                 style={{
                   fontSize: pinyinEm,
                   lineHeight: 1.2,
@@ -296,22 +316,51 @@ export function TransitionNote({ text }: { text: string }) {
 // SectionView
 // ---------------------------------------------------------------------------
 
-/** Badge de nuances (dynamiques + expression voulues par la présidence). */
-export function NuanceBadge({ nuance }: { nuance?: SectionNuance }) {
+// Nuancier : une teinte, trois intensités — le fond fonce du doux au fort.
+// Les indications (a cappella, break…) restent neutres, avec une icône.
+const NUANCE_INTENSITY_CLASS = {
+  1: "bg-violet-100 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300",
+  2: "bg-violet-300 text-violet-950 dark:bg-violet-500/45 dark:text-violet-50",
+  3: "bg-violet-700 text-white dark:bg-violet-300 dark:text-violet-950",
+} as const;
+const NUANCE_NEUTRAL_CLASS = "bg-stone-200/70 text-stone-700 dark:bg-stone-500/25 dark:text-stone-200";
+const NUANCE_ICON: Record<string, LucideIcon> = {
+  cresc: ArrowUpRight,
+  decresc: ArrowDownRight,
+  acappella: MicVocal,
+  instrumental: Guitar,
+  solo: User,
+  tutti: Users,
+  spontane: Sparkles,
+  break: Pause,
+};
+
+/** Badge de nuances (dynamiques + expression voulues par la présidence).
+ *  `lg` : mode louange, lu de plus loin. */
+export function NuanceBadge({ nuance, size = "sm" }: { nuance?: SectionNuance; size?: "sm" | "lg" }) {
   if (!nuance || (nuance.tags.length === 0 && !nuance.note)) return null;
+  const lg = size === "lg";
   return (
-    <span className="inline-flex flex-wrap items-center gap-1 align-middle">
-      {nuance.tags.map((id) => (
-        <span
-          key={id}
-          title={nuanceFull(id)}
-          className="text-[10px] font-semibold leading-none normal-case tracking-normal px-1.5 py-0.5 rounded bg-violet-100 text-violet-700 dark:bg-violet-500/20 dark:text-violet-300"
-        >
-          {nuanceLabel(id)}
-        </span>
-      ))}
+    <span className={`inline-flex flex-wrap items-center align-middle ${lg ? "gap-1.5" : "gap-1"}`}>
+      {nuance.tags.map((id) => {
+        const def = nuanceDef(id);
+        const Icon = NUANCE_ICON[id];
+        return (
+          <span
+            key={id}
+            data-nuance
+            title={nuanceFull(id)}
+            className={`inline-flex items-center gap-[0.25em] leading-none normal-case tracking-normal ${
+              lg ? "text-[0.8125rem] font-bold px-2 py-1 rounded-md" : "text-[10px] font-semibold px-1.5 py-0.5 rounded"
+            } ${def?.intensity ? NUANCE_INTENSITY_CLASS[def.intensity] : NUANCE_NEUTRAL_CLASS}`}
+          >
+            {Icon && <Icon aria-hidden="true" className="h-[1.1em] w-[1.1em] shrink-0" strokeWidth={2.5} />}
+            {nuanceLabel(id)}
+          </span>
+        );
+      })}
       {nuance.note && (
-        <span className="text-[11px] normal-case font-normal tracking-normal text-violet-700 dark:text-violet-300">
+        <span className={`normal-case tracking-normal text-violet-700 dark:text-violet-300 ${lg ? "text-[0.8125rem] font-semibold" : "text-[11px] font-normal"}`}>
           {nuance.note}
         </span>
       )}
@@ -338,18 +387,26 @@ export interface SectionViewProps {
   chartStyle?: boolean;
   /** Mode édition setlist : rend chaque ligne tappable (ouvre la sheet d'édition). */
   onLineSelect?: (line: ChordProLine, sectionUid?: string) => void;
+  /** Taille des badges de nuances (« lg » en mode louange). */
+  nuanceSize?: "sm" | "lg";
+  /** Vue structure : passages identiques repliés (« Refrain ×2 »). */
+  repeat?: number;
 }
 
-export function SectionView({ section, language, showChords, showPinyin, useJianpu, hideLyrics = false, note, nuance, keyChange, songSourceLabel, typography = "web", chartStyle = false, onLineSelect }: SectionViewProps) {
+export function SectionView({ section, language, showChords, showPinyin, useJianpu, hideLyrics = false, note, nuance, keyChange, songSourceLabel, typography = "web", chartStyle = false, onLineSelect, nuanceSize = "sm", repeat = 1 }: SectionViewProps) {
   const isPdfTypo = typography === "pdf";
   const { t, i18n } = useTranslation();
   const isZh = language === "zh";
   const uiIsZh = i18n.language === "zh-CN";
   const label = formatSectionName(section, t);
+  // Ossature seule (paroles ET accords masqués) : pas de corps, donc ni marge
+  // sous le libellé ni padding bas plus grand que le haut — le libellé reste
+  // centré dans son cadre, même agrandi en vue structure.
+  const bodyHidden = hideLyrics && !showChords;
   return (
-    <div className="mb-5 print:mb-4" onCopy={handleLyricsCopy} style={{ breakInside: "avoid", ...(chartStyle ? getChartSectionStyle(section.type) : getSectionStyle(section.type, isZh)) }}>
-      {/* Label de section */}
-      <div className="mb-1.5" style={{ display: "flex", alignItems: "center", gap: 9 }}>
+    <div data-section className="mb-5 print:mb-4" style={{ breakInside: "avoid", ...(chartStyle ? getChartSectionStyle(section.type) : getSectionStyle(section.type, isZh)), ...(bodyHidden ? { paddingBottom: 10 } : null) }}>
+      {/* Label de section — hors copie : la régie colle les paroles seules. */}
+      <div data-copy-ignore className={bodyHidden ? undefined : "mb-1.5"} style={{ display: "flex", alignItems: "center", gap: 9 }}>
         <span
           aria-hidden="true"
           style={{
@@ -364,6 +421,7 @@ export function SectionView({ section, language, showChords, showPinyin, useJian
         <span className={`text-[0.75rem] font-bold uppercase tracking-[0.1em] ${uiIsZh ? zh_lyric_font.className : chord_font.className}`}
               style={{ color: "var(--sec-c, #6b7080)" }}>
           {label}
+          {repeat > 1 && <span className="ml-1 normal-case">×{repeat}</span>}
           {keyChange && (
             <span className="ml-2 normal-case tracking-normal text-xs font-bold" style={{ color: "var(--sec-c, currentColor)" }}>
               {t("setlists.detail.sectionKeyChange", { defaultValue: "升调 ({{key}})", key: keyChange })}
@@ -381,14 +439,14 @@ export function SectionView({ section, language, showChords, showPinyin, useJian
           )}
           {nuance && (nuance.tags.length > 0 || nuance.note) && (
             <span className="ml-2">
-              <NuanceBadge nuance={nuance} />
+              <NuanceBadge nuance={nuance} size={nuanceSize} />
             </span>
           )}
         </span>
       </div>
 
       {/* Lignes — corps vide quand paroles ET accords masqués (ossature seule). */}
-      {!(hideLyrics && !showChords) && (
+      {!bodyHidden && (
         <div>
           {section.lines.map((line, i) => {
             if (line.tokens.length === 0 && !line.jianpu) {
@@ -491,7 +549,7 @@ export function SongView({
       ? resolveStructureOverride(ast.sections, structureOverride)
       : ast.sections;
   return (
-    <div className="max-w-2xl print:max-w-none" onCopy={handleLyricsCopy}>
+    <div className="max-w-2xl print:max-w-none">
       {/* En-tête */}
       <div className="mb-0 pb-3 print:mb-3 border-b border-border">
         <div className="flex items-start justify-between gap-5">
@@ -500,7 +558,7 @@ export function SongView({
               {ast.metadata.title}
             </h1>
             {ast.metadata.titlePinyin && (
-              <p className={`text-muted-foreground text-[13px] mt-1 ${zh_lyric_font.className}`}>
+              <p className={`text-muted-foreground text-[13px] mt-1 ${pinyin_font.className}`}>
                 {ast.metadata.titlePinyin}
               </p>
             )}

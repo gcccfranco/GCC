@@ -45,6 +45,8 @@ sans comptes, alors que le produit est devenu un outil interne d'équipe.
 | 13/09/2026 | L'assistant de setlist en 3 étapes est remplacé par **une seule page** : infos en haut, chants en dessous, enregistrement automatique, plus de bouton « Suivant ». |
 | 13/09/2026 | Les pages d'administration (admin, notifier, questionnaire) passent au nouveau style, **sans réorganisation**. |
 | 13/09/2026 | Pour les nouveaux membres : l'app s'explique toute seule (libellés écrits plutôt qu'icônes muettes, écrans vides qui disent quoi faire), le guide est plus facile à trouver, **et l'accueil à la première connexion revient**. |
+| 13/09/2026 | Réalisation du chantier Régie (détail dans `docs/spec-regie.md`) : **déroulé = sommaire latéral** dans la vue partitions, sur ordinateur ; bouton « Copier les paroles » **seulement dans la vue partitions de la setlist**, qui copie **l'ordre joué, reprises comprises**, une ligne vide entre les sections ; lien de présentation : **tout lien https** (pas seulement Canva). |
+| 13/09/2026 | Réalisation du chantier Mode louange (détail dans `docs/spec-mode-louange.md`) : la tonalité reprise est celle **choisie sur la page du chant**, retenue **pour ce chant dans cette setlist, sur cet appareil**, avec un repère « A · setlist : G » et un retour possible ; **une seule taille du texte** pour la page du chant et le mode louange (les annotations dessinées à une autre taille ne s'affichent plus) ; vue structure : **« ×2 » seulement si les deux passages ont les mêmes nuances** ; la **police change dans ce chantier**, choisie sur captures. |
 
 ## Intention
 
@@ -84,7 +86,7 @@ besoin). Ensuite (13/09/2026) :
 | Musiciens | La police des chants et des accords : trop petite ou pas lisible de loin, accords en police « machine à écrire » peu lisibles. Partout : page chant, vue partitions, mode louange. | Paroles en Inter, accords en police à chasse fixe. |
 | Batteurs | Le mode louange : il leur manque la structure en grand (où on en est), les nuances par section, et ils ne trouvent pas le préréglage « Batteur ». | Le préréglage existe (masque paroles et accords). Les paroles sont rendues invisibles mais **gardent leur place** : la page reste surtout vide. Les nuances sont déjà affichées en mode louange. Le choix du rôle est dans les réglages. |
 | Régie (PPT) | Copie-colle les paroles du site vers PowerPoint ou Canva. Depuis la **vue partitions de la setlist**, sur ordinateur Windows ou macOS, le texte collé arrive **d'un bloc, sans retours à la ligne ni séparation entre les phrases**. Les noms de section sont copiés avec, et le pinyin des chants chinois ne l'est pas. | Un traitement de la copie existe (`copyLyrics.ts`) et devrait produire une ligne par ligne de chant : le problème vient donc d'un cas qu'il ne couvre pas (**bug à reproduire**). Le pinyin est volontairement exclu de la copie (`data-copy-ignore`) ; les noms de section ne le sont pas. |
-| Régie (PPT) | Voir d'un coup d'œil l'ordre des chants et de leurs sections, et retrouver vite un chant ou une section. Elle s'en sert **avant le culte, sur ordinateur**, pour préparer ses diapos. | à détailler |
+| Régie (PPT) | Voir d'un coup d'œil l'ordre des chants et de leurs sections, et retrouver vite un chant ou une section. Elle s'en sert **avant le culte, sur ordinateur**, pour préparer ses diapos. | La vue liste montre l'ordre et les sections, mais pas à côté des paroles. Réponse retenue : un sommaire latéral dans la vue partitions (13/09/2026). |
 | Tous | En passant en mode louange, les réglages faits avant ne sont pas repris : réglages de la page setlist (accords, pinyin, couleurs par section, 简谱), tonalité ou capo choisis juste avant, taille du texte. | La page setlist ne transmet au mode louange que « accords affichés ». |
 | Sinophones | L'interface en 中文 est moins soignée que le français : textes restés en français, traductions maladroites, mise en page pensée pour le français. | Audit : fenêtre de signalement entièrement en français, libellés du menu mobile en dur (« Language / 语言 »). Les traductions maladroites ne peuvent être jugées que par un sinophone. |
 | Planning | Un dimanche où il y a Interfranco ou Intergroupe, l'accueil du planning montre quand même la section « Groupes » (Paix, Fidélité, Bonté). | Les données Interfranco et Intergroupe sont déjà chargées par la page d'accueil du planning, mais pas affichées dans « Ce dimanche ». |
@@ -215,6 +217,24 @@ _Aucune pour l'instant. Les détails de réalisation de chaque chantier seront s
 - **Tonalité recommandée** : (b) calculée une fois, validée, puis figée dans le chant.
 - **Reformulation d'ensemble** : « Oui. » Statut passé à « confirmé ».
 - **Ajout de Timothée** : « La bande verticale avec les lettres pour naviguer dans la liste des chants fonctionne mal, il faudrait qu'on puisse glisser notre doigt dessus et que ça bouge, pas seulement appuyer. »
+
+### Réalisation du chantier Régie (13/09/2026)
+
+- **Déroulé** : sommaire latéral dans la vue partitions, sur ordinateur.
+- **Bouton de copie** : ordre joué, reprises comprises, ligne vide entre les sections.
+- **Emplacement du bouton** : vue partitions de la setlist seulement.
+- **Liens acceptés** : tout lien https (Canva, Google Slides, PowerPoint en ligne…).
+
+### Réalisation du chantier Mode louange (13/09/2026)
+
+- **Tonalité reprise** : celle choisie sur la page du chant (le capo viendra avec le chantier 4).
+- **Portée** : retenue pour ce chant dans cette setlist, sur cet appareil, avec un repère et un retour à la tonalité de la setlist.
+- **Taille du texte** : une seule taille partout, page du chant et mode louange.
+- **Reprises en vue structure** : « ×2 » si les deux passages ont les mêmes nuances, sinon une ligne chacun.
+- **Police** : changée maintenant, sur captures, pas avec le nouveau look.
+- **Police choisie** : **Atkinson Hyperlegible Next** (paroles et accords, FR ; le 中文 garde Source Han ; PDF inchangé), préférée à Source Sans 3 et à Inter partout.
+- **Deux polices pour le français et le chinois** (demande de Timothée) : caractères chinois en **Source Han Sans Medium** (au lieu de Light), pinyin en **Andika** (tous les tons vérifiés), choisis sur captures.
+- **Taille par défaut** des paroles et accords, vue sur captures : **+20 % sur grand écran (tablette, ordinateur), +10 % sur téléphone** ; pinyin agrandi de 0,6 à 0,7 × la taille de base (capture à valider).
 
 ## Historique des changements d'avis
 

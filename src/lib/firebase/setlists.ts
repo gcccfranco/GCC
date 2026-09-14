@@ -37,6 +37,8 @@ export interface FSSetlist {
   isDraft?: boolean;
   isPrivate?: boolean;
   ownerId?: string | null;
+  /** Lien de la présentation (PPT) de la régie — écrit par /api/setlist/presentation. */
+  presentationUrl?: string;
 }
 
 // ─── Firestore REST API ───────────────────────────────────────────────────────

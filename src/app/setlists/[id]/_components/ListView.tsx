@@ -44,10 +44,13 @@ function sectionNamesFor(
 }
 
 export function ListView({
+  setlistId,
   items,
   songsMap,
   jianpuPref,
 }: {
+  /** Passé à la page du chant : une tonalité qui y est choisie est retenue pour cette setlist. */
+  setlistId: string;
   items: SetlistItem[];
   songsMap: Record<string, SongIndexEntry>;
   /** Partition 简谱 : suivre le choix du responsable, l'imposer, ou l'ignorer. */
@@ -226,7 +229,8 @@ export function ListView({
                     }),
                     ...(item.sectionKeys && {
                       sectionKeys: JSON.stringify(item.sectionKeys)
-                    })
+                    }),
+                    setlist: JSON.stringify(setlistId),
                   },
                 }}
                   className="font-semibold text-sm text-foreground hover:text-primary">

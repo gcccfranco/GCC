@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import type { SetlistItem } from "@/types/setList";
 import type { SongContent } from "@/lib/api/songs";
 import { SongView, SectionView, TransitionNote } from "@/components/song/SongView";
@@ -12,8 +12,33 @@ import { useTranslation } from "react-i18next";
 import { transposeAST, transposeSection } from "@/lib/transposeAST";
 import { semitonesTo } from "@/lib/transpose";
 import { itemAst } from "@/lib/chordpro/itemContent";
-import { Link2, MessageSquare } from "lucide-react";
-import type { ChordProAST, ChordProLine } from "@/types/chordPro";
+import { lyricsText } from "@/components/song/copyLyrics";
+import { playedSections } from "@/lib/setlist/playedSections";
+import { Check, Copy, Link2, MessageSquare } from "lucide-react";
+import type { ChordProAST, ChordProLine, ChordProSection } from "@/types/chordPro";
+
+/** Copie les paroles d'un chant, dans l'ordre joué, pour la régie (PPT). */
+function CopyLyricsButton({ sections }: { sections: ChordProSection[] }) {
+  const { t } = useTranslation();
+  const [copied, setCopied] = useState(false);
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(lyricsText(sections));
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2000);
+    } catch { /* presse-papiers indisponible */ }
+  }
+  return (
+    <button
+      type="button"
+      onClick={copy}
+      className="h-6 px-2 rounded-md border border-border bg-card text-[11px] font-semibold text-muted-foreground hover:text-foreground inline-flex items-center gap-1 transition-colors print:hidden"
+    >
+      {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+      {copied ? t("setlists.detail.copyLyricsDone") : t("setlists.detail.copyLyrics")}
+    </button>
+  );
+}
 
 function TransitionBanner({ text }: { text: string }) {
   return (
@@ -92,13 +117,14 @@ export function PartitionsView({
           // ── Structure mélangée ──
           if (item.mixedStructure && item.mixedStructure.length > 0) {
             return (
-              <div key={`fusion-${idx}`} className="print:break-before-page first:print:break-before-auto">
+              <div key={`fusion-${idx}`} data-outline-item={item.position} className="print:break-before-page first:print:break-before-auto">
                 {/* En-tête fusion */}
                 <div className="flex items-center gap-2 mb-2 print:mb-2 pb-3 border-b border-border">
                   <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center shrink-0">
                     {item.position}
                   </span>
                   <Link2 className="h-3.5 w-3.5 text-primary shrink-0" />
+                  <CopyLyricsButton sections={playedSections(item, contents)} />
                   <div className="flex flex-wrap gap-x-3 gap-y-0.5">
                     {item.fusionSongs.map((fs) => {
                       const ast = transposedAsts[fs.songSlug];
@@ -157,7 +183,7 @@ export function PartitionsView({
 
           // ── Fusion sans structure mélangée : enchaînement en ordre ──
           return (
-            <div key={`fusion-${idx}`} className="print:break-before-page first:print:break-before-auto">
+            <div key={`fusion-${idx}`} data-outline-item={item.position} className="print:break-before-page first:print:break-before-auto">
               <div className="flex items-center gap-2 mb-4 print:mb-2">
                 <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center shrink-0">
                   {item.position}
@@ -166,6 +192,7 @@ export function PartitionsView({
                 <span className="text-xs text-primary font-medium uppercase tracking-wider">
                   {t("setlists.form.fusionLabel")}
                 </span>
+                <CopyLyricsButton sections={playedSections(item, contents)} />
               </div>
               <div className="space-y-8">
                 {item.fusionSongs.map((fs, fsIdx) => {
@@ -258,21 +285,18 @@ function NormalSongItem({
   const jianpuScore = useJianpuScore(sheetEnabled(jianpuPref, item.jianpuSheet) ? item.songSlug : null);
   if (!ast) return null;
 
+  const playedSections = item.structureOverride?.length
+    ? resolveStructureOverride(ast.sections, item.structureOverride)
+    : ast.sections;
   // Partition 简谱 : le scan porte déjà titre, auteur et tonalité. À la place,
   // la structure jouée — qu'un scan ne peut pas connaître.
-  const steps = jianpuScore
-    ? resolveSectionOccurrences(
-        item.structureOverride?.length
-          ? resolveStructureOverride(ast.sections, item.structureOverride)
-          : ast.sections,
-        item,
-      )
-    : [];
+  const steps = jianpuScore ? resolveSectionOccurrences(playedSections, item) : [];
 
   // Badges d'état : ils ne sont pas dans le scan et suivent donc l'item, que
   // le chant s'affiche en paroles ou en partition.
   const badges = (
     <>
+      <CopyLyricsButton sections={playedSections} />
       {item.notes && (
         <span className="text-xs text-muted-foreground italic">{item.notes}</span>
       )}
@@ -299,7 +323,7 @@ function NormalSongItem({
   );
 
   return (
-    <div className="print:break-before-page first:print:break-before-auto">
+    <div data-outline-item={item.position} className="print:break-before-page first:print:break-before-auto">
       {jianpuScore ? (
         <JianpuStructureStrip position={item.position} steps={steps} className="mb-3 print:mb-2">
           {badges}

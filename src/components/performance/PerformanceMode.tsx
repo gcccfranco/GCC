@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { X, ChevronLeft, ChevronRight, Link2, MessageSquare, ListMusic, Settings, PenLine, Sun, Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import {
   Drawer,
   DrawerContent,
+  DrawerDescription,
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
@@ -18,10 +19,16 @@ import { getJianpuPref, setJianpuPref, type JianpuPref } from "@/lib/jianpu/pref
 import { JianpuSheet } from "@/components/jianpu/JianpuSheet";
 import { JianpuStructureStrip } from "@/components/jianpu/JianpuStructureStrip";
 import { SectionView, TransitionNote } from "@/components/song/SongView";
+import { pinyin_font } from "@/components/song/pinyinFont";
+import { formatSectionName } from "@/lib/chordpro/parser";
+import { isRepeatOf } from "@/lib/setlist/sectionSteps";
 import { AnnotationCanvas, StrokesLayer } from "./AnnotationCanvas";
 import { type AnnotationData, serializeAnnotations, deserializeAnnotations } from "@/lib/annotations/strokes";
 import { loadAnnotation, saveAnnotation } from "@/lib/firebase/annotations";
 import { getChartStylePref, setChartStylePref } from "@/lib/chartStylePref";
+import { getPersonalKeys, setPersonalKey } from "@/lib/setlist/personalKeys";
+import { getPinyinPref, setPinyinPref } from "@/lib/pinyinPref";
+import { getFontScalePref, setFontScalePref, MIN_FONT_SCALE, MAX_FONT_SCALE } from "@/lib/fontScalePref";
 import { useAuth } from "@/lib/firebase/auth";
 import type { SetlistItem } from "@/types/setList";
 import type { SongContent } from "@/lib/api/songs";
@@ -61,6 +68,7 @@ function BlockRenderer({
   chartStyle,
   showPinyinGlobal,
   fit = false,
+  repeat,
 }: {
   block: PerformanceBlock;
   showChordsGlobal: boolean;
@@ -70,6 +78,8 @@ function BlockRenderer({
   showPinyinGlobal: boolean;
   /** Page 简谱 : le scan se met à l'échelle de la hauteur disponible. */
   fit?: boolean;
+  /** Vue structure : nombre de passages repliés sur cette section (« ×2 »). */
+  repeat?: number;
 }) {
   if (block.kind === "song-header") {
     return <SongHeader block={block} />;
@@ -108,6 +118,8 @@ function BlockRenderer({
       keyChange={block.keyChange}
       songSourceLabel={block.songSourceLabel}
       chartStyle={chartStyle}
+      nuanceSize="lg"
+      repeat={repeat}
     />
   );
 }
@@ -155,7 +167,7 @@ function SongHeader({ block }: { block: SongHeaderBlock }) {
           </h2>
         </div>
         {block.titlePinyin && (
-          <p className="text-xs text-muted-foreground mt-0.5 ml-7">{block.titlePinyin}</p>
+          <p className={`text-xs text-muted-foreground mt-0.5 ml-7 ${pinyin_font.className}`}>{block.titlePinyin}</p>
         )}
         <p className="text-xs text-muted-foreground mt-0.5 ml-7">{block.artist}</p>
       </div>
@@ -169,6 +181,11 @@ function SongHeader({ block }: { block: SongHeaderBlock }) {
           style={{ color: langAccent(block.language), borderColor: langAccent(block.language) }}>
           {block.songKey}
         </span>
+        {block.setlistKey && (
+          <span className="text-xs font-semibold text-muted-foreground">
+            {t("performance.personalKey", { key: block.setlistKey })}
+          </span>
+        )}
       </div>
     </div>
   );
@@ -234,20 +251,41 @@ function splitSheetPages(
   return out;
 }
 
+// Vue structure : agrandissement maximal du corps, et place gardée en bas pour
+// la pastille « Suivant : … », qui recouvrirait la dernière section.
+const STRUCTURE_MAX_SCALE = 3;
+const NEXT_PILL_RESERVE = 40;
+
 // Mode ossature : UN CHANT PAR PAGE. L'en-tête occupe la pleine largeur ; les
 // sections (libellés + notes/transitions) sont disposées en 1 colonne si elles
 // tiennent, sinon en 2 colonnes équilibrées lues colonne par colonne (↓ gauche
-// puis ↓ droite). Si même 2 colonnes débordent, on réduit le texte (scale < 1)
-// pour que toute la structure tienne sur la page.
-function layoutSong(headerIdx: number | null, body: number[], heights: number[], viewportH: number): PerfPage {
+// puis ↓ droite). Le corps est mis à l'échelle de la place restante : réduit
+// s'il déborde, agrandi (jusqu'à ×3) pour remplir la page — les batteurs lisent
+// la structure de loin. L'en-tête reste à l'échelle 1 : un titre long agrandi
+// serait tronqué.
+// L'agrandissement réduit d'autant la largeur de mise en page : il s'arrête
+// avant qu'un libellé (largeur naturelle `widths`) ne passe à la ligne ou ne
+// déborde de son cadre. Un libellé déjà plus large que sa colonne à l'échelle 1
+// n'est pas agrandi ; le rendu réel est de toute façon vérifié après coup.
+function layoutSong(
+  headerIdx: number | null,
+  body: number[],
+  heights: number[],
+  widths: number[],
+  viewportH: number,
+  contentW: number,
+): PerfPage {
   const sum = (arr: number[]) => arr.reduce((s, i) => s + heights[i], 0);
   const headerH = headerIdx != null ? heights[headerIdx] : 0;
+  const room = Math.max(1, viewportH - headerH - NEXT_PILL_RESERVE);
   const bodyTotal = sum(body);
-  const fit = (contentH: number) => Math.min(1, viewportH / Math.max(1, headerH + contentH));
+  const widest = Math.max(1, ...body.map((i) => widths[i]));
+  const fit = (contentH: number, colW: number) =>
+    Math.min(STRUCTURE_MAX_SCALE, room / Math.max(1, contentH), Math.max(1, colW / widest));
 
   // 1 colonne si peu de sections ou si tout tient en hauteur.
-  if (body.length <= 1 || bodyTotal <= viewportH - headerH) {
-    return { header: headerIdx, cols: [body], scale: fit(bodyTotal) };
+  if (body.length <= 1 || bodyTotal <= room) {
+    return { header: headerIdx, cols: [body], scale: fit(bodyTotal, contentW) };
   }
 
   // 2 colonnes : coupure équilibrée minimisant la hauteur de la plus haute colonne.
@@ -260,14 +298,15 @@ function layoutSong(headerIdx: number | null, body: number[], heights: number[],
   return {
     header: headerIdx,
     cols: [body.slice(0, best.k), body.slice(best.k)],
-    scale: fit(best.maxH),
+    // gap-x-4 entre les deux colonnes
+    scale: fit(best.maxH, (contentW - 16) / 2),
   };
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-const MIN_SCALE = 0.8;
-const MAX_SCALE = 1.5;
+const MIN_SCALE = MIN_FONT_SCALE;
+const MAX_SCALE = MAX_FONT_SCALE;
 
 // Presets de rôle : raccourcis vers une combinaison accords/paroles. Mémorisé
 // par appareil ; un réglage manuel des toggles désélectionne le preset.
@@ -284,7 +323,9 @@ const ROLE_PRESET_IDS = Object.keys(ROLE_PRESETS) as RolePreset[];
 export interface PerformanceModeProps {
   items: SetlistItem[];
   contents: Record<string, SongContent>;
-  initialShowChords: boolean;
+  /** Accords changés sur la page setlist juste avant (absent sinon) : ils
+   *  l'emportent sur le rôle mémorisé, qui est alors désélectionné. */
+  initialShowChords?: boolean;
   setlistId: string;
   setlistTitle: string;
   onClose: () => void;
@@ -301,7 +342,7 @@ export function PerformanceMode({
   const { t } = useTranslation();
   const { user } = useAuth();
   const rootRef = useRef<HTMLDivElement>(null);
-  const [rolePreset, setRolePreset] = useState<RolePreset | null>(() => {
+  const [storedRole] = useState<RolePreset | null>(() => {
     try {
       const v = localStorage.getItem("perf-role-preset");
       return v && v in ROLE_PRESETS ? (v as RolePreset) : null;
@@ -309,11 +350,17 @@ export function PerformanceMode({
       return null;
     }
   });
+  // Rôle contredit par les accords choisis juste avant sur la page setlist :
+  // désélectionné, et l'affichage reprend celui de la page (paroles comprises).
+  const roleOverridden =
+    storedRole !== null && initialShowChords !== undefined && ROLE_PRESETS[storedRole].chords !== initialShowChords;
+  const [rolePreset, setRolePreset] = useState<RolePreset | null>(roleOverridden ? null : storedRole);
   const [showChords, setShowChords] = useState(
-    rolePreset ? ROLE_PRESETS[rolePreset].chords : initialShowChords,
+    initialShowChords ?? (storedRole ? ROLE_PRESETS[storedRole].chords : true),
   );
   const [showTransitions, setShowTransitions] = useState(true);
   const [hideLyrics, setHideLyrics] = useState(() => {
+    if (roleOverridden) return false;
     if (rolePreset) return ROLE_PRESETS[rolePreset].hideLyrics;
     try {
       return localStorage.getItem("perf-hide-lyrics") === "1";
@@ -325,17 +372,12 @@ export function PerformanceMode({
   // SectionView). Préférence par appareil partagée avec la fiche chant et la
   // vue setlist (chartStylePref).
   const [chartStyle, setChartStyle] = useState(() => getChartStylePref());
-  // Pinyin (chants zh) : masquable pour qui lit les caractères. Défaut : affiché.
-  const [showPinyin, setShowPinyin] = useState(() => {
-    try {
-      return localStorage.getItem("perf-show-pinyin") !== "0";
-    } catch {
-      return true;
-    }
-  });
+  // Pinyin (chants zh) : masquable pour qui lit les caractères. Même
+  // préférence que la vue setlist (pinyinPref). Défaut : affiché.
+  const [showPinyin, setShowPinyin] = useState(() => getPinyinPref());
   const toggleShowPinyin = (v: boolean) => {
     setShowPinyin(v);
-    try { localStorage.setItem("perf-show-pinyin", v ? "1" : "0"); } catch { /* ignore */ }
+    setPinyinPref(v);
   };
   // Capo par chant (slug → frets), mémorisé sur l'appareil. Appliqué aux
   // accords uniquement quand le preset Guitariste est actif.
@@ -361,14 +403,8 @@ export function PerformanceMode({
   const [layout, setLayout] = useState<PerfPage[]>([]);
   const [currentPage, setCurrentPage] = useState(0);
   const [remeasureKey, setRemeasureKey] = useState(0);
-  const [fontScale, setFontScale] = useState(() => {
-    try {
-      const v = parseFloat(localStorage.getItem("perf-font-scale") ?? "1");
-      return v >= MIN_SCALE && v <= MAX_SCALE ? v : 1;
-    } catch {
-      return 1;
-    }
-  });
+  // Même taille que la page du chant (fontScalePref).
+  const [fontScale, setFontScale] = useState(() => getFontScalePref());
 
   // ── Thème scène (indépendant du thème du site, mémorisé) ──
   const [stageTheme, setStageTheme] = useState<"light" | "dark">(() => {
@@ -419,9 +455,14 @@ export function PerformanceMode({
     setJianpuPref(v);
   }, []);
 
+  // Choisir ou retirer un rôle vaut réponse à la question de la première
+  // ouverture : un appareil qui retire son rôle n'est pas réinterrogé.
   const clearRolePreset = useCallback(() => {
     setRolePreset(null);
-    try { localStorage.removeItem("perf-role-preset"); } catch { /* ignore */ }
+    try {
+      localStorage.removeItem("perf-role-preset");
+      localStorage.setItem("perf-role-asked", "1");
+    } catch { /* ignore */ }
   }, []);
 
   const applyRolePreset = useCallback((id: RolePreset) => {
@@ -429,8 +470,27 @@ export function PerformanceMode({
     setShowChords(p.chords);
     toggleHideLyrics(p.hideLyrics);
     setRolePreset(id);
-    try { localStorage.setItem("perf-role-preset", id); } catch { /* ignore */ }
+    try {
+      localStorage.setItem("perf-role-preset", id);
+      localStorage.setItem("perf-role-asked", "1");
+    } catch { /* ignore */ }
   }, [toggleHideLyrics]);
+
+  // Première ouverture sur cet appareil : on demande le rôle, retenu ensuite
+  // (« Aucun » aussi). Refermer la feuille sans répondre la reporte à la
+  // prochaine ouverture.
+  const [askRole, setAskRole] = useState(() => {
+    try {
+      return !localStorage.getItem("perf-role-preset") && !localStorage.getItem("perf-role-asked");
+    } catch {
+      return false;
+    }
+  });
+  const answerRole = useCallback((id: RolePreset | null) => {
+    if (id) applyRolePreset(id);
+    else clearRolePreset();
+    setAskRole(false);
+  }, [applyRolePreset, clearRolePreset]);
 
   const capoActive = rolePreset === "guitariste";
 
@@ -470,12 +530,54 @@ export function PerformanceMode({
     () => items.some((it) => it.songSlug && jianpuManifest?.[it.songSlug]),
     [items, jianpuManifest],
   );
+  // Tonalités choisies sur la page du chant, pour cette setlist et cet appareil.
+  const [personalKeys, setPersonalKeysState] = useState(() => getPersonalKeys(setlistId));
+  const resetPersonalKey = useCallback((slug: string) => {
+    setPersonalKey(setlistId, slug, null);
+    setPersonalKeysState((prev) => {
+      const next = { ...prev };
+      delete next[slug];
+      return next;
+    });
+  }, [setlistId]);
+
   const blocks = useMemo(
-    // always build with chords=true for stable UIDs (le capo ne change ni le
-    // nombre ni l'ordre des blocs : les UIDs restent stables)
-    () => buildPerformanceBlocks(items, contents, true, capoActive ? capos : undefined, jianpuManifest, jianpuPref),
-    [items, contents, capoActive, capos, jianpuManifest, jianpuPref],
+    // always build with chords=true for stable UIDs (le capo et la tonalité ne
+    // changent ni le nombre ni l'ordre des blocs : les UIDs restent stables)
+    () => buildPerformanceBlocks(items, contents, true, capoActive ? capos : undefined, jianpuManifest, jianpuPref, personalKeys),
+    [items, contents, capoActive, capos, jianpuManifest, jianpuPref, personalKeys],
   );
+
+  // Vue structure : passages consécutifs identiques repliés sur le premier
+  // (« Refrain ×2 ») ; les suivants ne sont ni rendus ni comptés en hauteur.
+  // Une transition masquée ne sépare pas deux passages.
+  const { repeatCount, repeatHidden } = useMemo(() => {
+    const repeatCount = new Map<number, number>();
+    const repeatHidden = new Set<number>();
+    if (!structureMode) return { repeatCount, repeatHidden };
+    const step = (b: SectionBlock) => ({
+      label: formatSectionName(b.section, t),
+      note: b.note,
+      nuance: b.nuance,
+      targetKey: b.keyChange,
+    });
+    let lead = -1;
+    blocks.forEach((b, i) => {
+      if (b.kind === "transition-intra" && !showTransitions) return;
+      if (b.kind !== "section") {
+        lead = -1;
+        return;
+      }
+      const first = blocks[lead];
+      if (first?.kind === "section" && isRepeatOf(step(first), step(b))) {
+        repeatCount.set(lead, (repeatCount.get(lead) ?? 1) + 1);
+        repeatHidden.add(i);
+      } else {
+        lead = i;
+      }
+    });
+    return { repeatCount, repeatHidden };
+  }, [blocks, structureMode, showTransitions, t]);
 
   // Re-measure when a setting affecting heights changes
   useEffect(() => {
@@ -504,6 +606,9 @@ export function PerformanceMode({
       const padTop = mcs ? parseFloat(mcs.paddingTop) || 0 : 16;
       const padBottom = mcs ? parseFloat(mcs.paddingBottom) || 0 : 16;
       const viewportH = window.innerHeight / fontScale - padTop - padBottom - safety;
+      const contentW = mcs && measureInnerRef.current
+        ? measureInnerRef.current.clientWidth - parseFloat(mcs.paddingLeft) - parseFloat(mcs.paddingRight)
+        : window.innerWidth / fontScale;
       // Hauteur réellement occupée par chaque bloc, marges verticales comprises :
       // delta entre le haut du bloc et le haut du bloc suivant dans le flux.
       const rects = blocks.map((_, i) => blockRefs.current[i]?.getBoundingClientRect() ?? null);
@@ -512,6 +617,8 @@ export function PerformanceMode({
         const next = rects[i + 1];
         return next ? Math.max(0, next.top - r.top) : r.height;
       });
+      // Vue structure : largeur naturelle des sections (mesurées sans retour à la ligne).
+      const widths = rects.map((r, i) => (structureMode && blocks[i]?.kind === "section" ? r?.width ?? 0 : 0));
       const kindOf = (i: number) => blocks[i]?.kind;
       const all = blocks.map((_, i) => i);
       let computed: PerfPage[];
@@ -528,7 +635,7 @@ export function PerformanceMode({
           splitSheetPages(group, kindOf, (flow) => {
             const headerIdx = blocks[flow[0]].kind === "song-header" ? flow[0] : null;
             const body = headerIdx != null ? flow.slice(1) : flow;
-            return [layoutSong(headerIdx, body, heights, viewportH)];
+            return [layoutSong(headerIdx, body, heights, widths, viewportH, contentW)];
           }),
         );
       } else {
@@ -552,10 +659,32 @@ export function PerformanceMode({
     run();
   }, [blocks, remeasureKey, fontScale, structureMode]);
 
+  // Vue structure agrandie : la mesure se fait à l'échelle 1, mais à l'écran
+  // le corps agrandi dispose d'une largeur réduite d'autant, et un libellé
+  // chargé de nuances peut y passer à la ligne — la page déborderait en bas.
+  // On lit donc le rendu réel et on réduit l'échelle jusqu'à ce que tout
+  // tienne. Réduction seulement : la boucle converge.
+  const contentAreaRef = useRef<HTMLDivElement>(null);
+  const scaledBodyRef = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const page = layout[currentPage];
+    const area = contentAreaRef.current;
+    const body = scaledBodyRef.current;
+    if (!structureMode || !page || page.fit || !area || !body || annotZoom !== 1) return;
+    // Hauteurs en px de mise en page (hors échelle du texte) : clientHeight et
+    // offsetHeight ignorent les transform, getBoundingClientRect non.
+    const bodyTop = (body.getBoundingClientRect().top - area.getBoundingClientRect().top) / fontScale;
+    const room = area.clientHeight - parseFloat(getComputedStyle(area).paddingBottom) - bodyTop - NEXT_PILL_RESERVE;
+    const used = body.offsetHeight * page.scale;
+    if (used <= room + 0.5 || page.scale <= 0.3) return;
+    const scale = Math.max(0.3, page.scale * (room / used) * 0.98);
+    setLayout((prev) => prev.map((p, i) => (i === currentPage ? { ...p, scale } : p)));
+  }, [layout, currentPage, structureMode, fontScale, annotZoom]);
+
   const changeFontScale = useCallback((delta: number) => {
     setFontScale((s) => {
       const next = Math.min(MAX_SCALE, Math.max(MIN_SCALE, Math.round((s + delta) * 10) / 10));
-      try { localStorage.setItem("perf-font-scale", String(next)); } catch { /* privé */ }
+      setFontScalePref(next);
       return next;
     });
   }, []);
@@ -630,11 +759,13 @@ export function PerformanceMode({
   const nextEntry = songEntries[currentSongEntryIdx + 1];
   // Capo du chant courant — une page ne chevauche jamais deux chants
   const currentCapo = capoActive ? capos[currentEntry?.block.songSlug ?? ""] ?? 0 : 0;
+  const currentPersonalKey = currentEntry?.block.setlistKey ? currentEntry.block.songKey : "";
   // Les annotations sont liées à la mise en page : accords, transitions et
   // taille de texte font partie de la clé.
   // « s1 » / « kN » seulement quand style chart ou capo est actif : les clés
   // d'annotations existantes (sans ces marqueurs) restent valables sinon.
-  const layoutSig = `c${showChords ? 1 : 0}t${showTransitions ? 1 : 0}l${hideLyrics ? 1 : 0}${chartStyle ? "s1" : ""}${currentCapo ? `k${currentCapo}` : ""}z${Math.round(fontScale * 100)}`;
+  // « p<tonalité> » seulement quand une tonalité est choisie sur l'appareil.
+  const layoutSig = `c${showChords ? 1 : 0}t${showTransitions ? 1 : 0}l${hideLyrics ? 1 : 0}${chartStyle ? "s1" : ""}${currentCapo ? `k${currentCapo}` : ""}${currentPersonalKey ? `p${currentPersonalKey}` : ""}z${Math.round(fontScale * 100)}`;
   const currentPageKey = computePageKey(blocks, currentPageIndices, layoutSig);
 
   // Charger les traits de la page courante (toujours — affichage permanent)
@@ -681,9 +812,13 @@ export function PerformanceMode({
         e.preventDefault();
         goToPage(currentPage + 1, pages.length);
       } else if (e.key === "Escape") {
-        if (settingsOpen || songListOpen) {
+        // Échap déjà consommé par une feuille (Radix le marque en la fermant) :
+        // il ne doit pas aussi quitter le mode louange.
+        if (e.defaultPrevented) return;
+        if (settingsOpen || songListOpen || askRole) {
           setSettingsOpen(false);
           setSongListOpen(false);
+          setAskRole(false);
           return;
         }
         onClose();
@@ -691,7 +826,7 @@ export function PerformanceMode({
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [currentPage, pages.length, goToPage, onClose, settingsOpen, songListOpen]);
+  }, [currentPage, pages.length, goToPage, onClose, settingsOpen, songListOpen, askRole]);
 
   // Touch/pointer tap handling
   const handlePointerDown = useCallback((e: React.PointerEvent) => {
@@ -769,6 +904,7 @@ export function PerformanceMode({
   return (
     <div
       ref={rootRef}
+      data-performance-mode
       className="fixed inset-0 z-[9999] bg-background overflow-hidden select-none"
       style={{
         "--sat": "env(safe-area-inset-top, 0px)",
@@ -793,19 +929,29 @@ export function PerformanceMode({
             <div
               key={block.uid}
               ref={(el) => { blockRefs.current[i] = el; }}
-              // En ossature, les sections sont mesurées à la largeur d'une colonne
-              // (hauteur exacte si elles passent en 2 colonnes) ; l'en-tête, lui,
+              // En ossature, les sections sont mesurées à leur largeur naturelle
+              // (sans retour à la ligne : c'est la limite de l'agrandissement),
+              // les transitions à la largeur d'une colonne ; l'en-tête, lui,
               // occupe toujours la pleine largeur.
-              style={structureMode && block.kind !== "song-header" ? { width: "calc(50% - 0.5rem)" } : undefined}
+              style={
+                !structureMode || block.kind === "song-header"
+                  ? undefined
+                  : block.kind === "section"
+                    ? { width: "max-content" }
+                    : { width: "calc(50% - 0.5rem)" }
+              }
             >
-              <BlockRenderer
-                block={block}
-                showChordsGlobal={showChords}
-                showTransitions={showTransitions}
-                hideLyrics={hideLyrics}
-                chartStyle={chartStyle}
-                showPinyinGlobal={showPinyin}
-              />
+              {!repeatHidden.has(i) && (
+                <BlockRenderer
+                  block={block}
+                  showChordsGlobal={showChords}
+                  showTransitions={showTransitions}
+                  hideLyrics={hideLyrics}
+                  chartStyle={chartStyle}
+                  showPinyinGlobal={showPinyin}
+                  repeat={repeatCount.get(i)}
+                />
+              )}
             </div>
           ))}
         </div>
@@ -820,6 +966,7 @@ export function PerformanceMode({
           appareil. La loupe d'annotation (translate + scale) se compose avec le
           même facteur, en miroir exact du canvas d'annotation (origine (0,0)). */}
       <div
+        ref={contentAreaRef}
         className="absolute top-0 left-0 overflow-hidden"
         style={{
           zIndex: 1,
@@ -846,7 +993,7 @@ export function PerformanceMode({
           // recalcule, `pages` porte encore des indices trop grands.
           const renderBlock = (i: number, fit = false) => {
             const block = blocks[i];
-            if (!block) return null;
+            if (!block || repeatHidden.has(i)) return null;
             return (
               <BlockRenderer
                 key={block.uid}
@@ -857,6 +1004,7 @@ export function PerformanceMode({
                 chartStyle={chartStyle}
                 showPinyinGlobal={showPinyin}
                 fit={fit}
+                repeat={repeatCount.get(i)}
               />
             );
           };
@@ -878,7 +1026,13 @@ export function PerformanceMode({
                       steps={sheet.steps}
                       capo={sheet.capo}
                       className="mb-1.5"
-                    />
+                    >
+                      {sheet.setlistKey && (
+                        <span className="text-[11px] font-semibold text-muted-foreground">
+                          {sheet.songKey} · {t("performance.personalKey", { key: sheet.setlistKey })}
+                        </span>
+                      )}
+                    </JianpuStructureStrip>
                   </div>
                 )}
                 <div className="min-h-0 flex-1">{renderBlock(page.cols[0][0], true)}</div>
@@ -886,27 +1040,32 @@ export function PerformanceMode({
             );
           }
           return (
-            // Réduction d'une page trop haute : transform + largeur compensée,
-            // comme le conteneur parent (jamais `zoom` — arrondis de mise en
-            // page non déterministes, cf. commentaire du conteneur).
-            <div
-              style={
-                page.scale < 1
-                  ? {
-                      transform: `scale(${page.scale})`,
-                      transformOrigin: "top left",
-                      width: `${100 / page.scale}%`,
-                    }
-                  : undefined
-              }
-            >
+            <div>
+              {/* En-tête hors échelle : seule la vue structure en a un ici. */}
               {page.header != null && renderBlock(page.header)}
-              <div className={multiCol ? "flex items-start gap-x-4" : undefined}>
-                {page.cols.map((colIdxs, ci) => (
-                  <div key={ci} className={multiCol ? "flex-1 min-w-0" : undefined}>
-                    {colIdxs.map((i) => renderBlock(i))}
-                  </div>
-                ))}
+              {/* Mise à l'échelle d'une page (réduction si elle déborde, agrandissement
+                  en vue structure) : transform + largeur compensée, comme le
+                  conteneur parent (jamais `zoom` — arrondis de mise en page non
+                  déterministes, cf. commentaire du conteneur). */}
+              <div
+                ref={scaledBodyRef}
+                style={
+                  page.scale !== 1
+                    ? {
+                        transform: `scale(${page.scale})`,
+                        transformOrigin: "top left",
+                        width: `${100 / page.scale}%`,
+                      }
+                    : undefined
+                }
+              >
+                <div className={multiCol ? "flex items-start gap-x-4" : undefined}>
+                  {page.cols.map((colIdxs, ci) => (
+                    <div key={ci} className={multiCol ? "flex-1 min-w-0" : undefined}>
+                      {colIdxs.map((i) => renderBlock(i))}
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           );
@@ -977,7 +1136,7 @@ export function PerformanceMode({
                   <span className="flex-1 min-w-0">
                     <span className="block text-sm font-medium truncate">{block.title}</span>
                     {block.titlePinyin && (
-                      <span className="block text-[11px] text-muted-foreground truncate">{block.titlePinyin}</span>
+                      <span className={`block text-[11px] text-muted-foreground truncate ${pinyin_font.className}`}>{block.titlePinyin}</span>
                     )}
                   </span>
                   <span className="text-xs font-mono text-muted-foreground shrink-0">{block.songKey}</span>
@@ -1012,6 +1171,12 @@ export function PerformanceMode({
             {currentSong?.songKey && (
               <p className="text-xs text-muted-foreground font-mono leading-tight mt-0.5">
                 {currentSong.songKey}
+                {currentEntry?.block.setlistKey && (
+                  <>
+                    {" · "}
+                    <span className="font-sans">{t("performance.personalKey", { key: currentEntry.block.setlistKey })}</span>
+                  </>
+                )}
               </p>
             )}
           </div>
@@ -1095,6 +1260,42 @@ export function PerformanceMode({
         </div>
       </div>
 
+      {/* ── Choix du rôle à la première ouverture ── */}
+      <Drawer open={askRole} onOpenChange={(open) => !open && setAskRole(false)}>
+        <DrawerContent
+          className="z-[10000]"
+          overlayClassName="z-[10000] bg-black/40"
+          onPointerDown={(e) => e.stopPropagation()}
+          onPointerUp={(e) => e.stopPropagation()}
+        >
+          {/* Même colonne que les choix : titre et boutons alignés sur tablette. */}
+          <DrawerHeader className="pb-1 w-full max-w-md mx-auto">
+            <DrawerTitle>{t("performance.rolePrompt.title")}</DrawerTitle>
+            <DrawerDescription>{t("performance.rolePrompt.description")}</DrawerDescription>
+          </DrawerHeader>
+          <div
+            className="w-full max-w-md mx-auto px-4 pt-2 flex flex-col gap-1.5"
+            style={{ paddingBottom: "calc(1.5rem + env(safe-area-inset-bottom, 0px))" }}
+          >
+            {[...ROLE_PRESET_IDS, null].map((id) => (
+              <button
+                key={id ?? "none"}
+                type="button"
+                onClick={() => answerRole(id)}
+                className="min-h-12 px-4 py-2 rounded-lg border border-border text-left flex items-center justify-between gap-3 transition-colors hover:bg-muted/60 active:bg-muted"
+              >
+                <span className="text-sm font-semibold text-foreground">
+                  {id ? t(`performance.roles.${id}`) : t("performance.rolePrompt.none")}
+                </span>
+                <span className="text-xs text-muted-foreground text-right">
+                  {t(`performance.rolePrompt.hints.${id ?? "none"}`)}
+                </span>
+              </button>
+            ))}
+          </div>
+        </DrawerContent>
+      </Drawer>
+
       {/* ── Réglages : bottom-sheet (au-dessus du z-9999 du mode) ── */}
       <Drawer open={settingsOpen} onOpenChange={setSettingsOpen}>
         <DrawerContent
@@ -1128,6 +1329,24 @@ export function PerformanceMode({
                 ))}
               </div>
             </div>
+            {currentEntry?.block.setlistKey && currentEntry.block.songSlug && (
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <span className="text-sm font-medium text-foreground">{t("performance.key")}</span>
+                  <p className="text-xs text-muted-foreground truncate">
+                    {t("performance.personalKeyHint", { key: currentEntry.block.songKey, setlistKey: currentEntry.block.setlistKey })}
+                  </p>
+                </div>
+                <Button
+                  variant="outline"
+                  size="lg"
+                  onClick={() => resetPersonalKey(currentEntry.block.songSlug!)}
+                  className="text-xs font-semibold shrink-0"
+                >
+                  {t("performance.personalKeyReset", { key: currentEntry.block.setlistKey })}
+                </Button>
+              </div>
+            )}
             {capoActive && currentEntry?.block.songSlug && (
               <div className="flex items-center justify-between gap-3">
                 <div className="min-w-0">

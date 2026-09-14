@@ -29,7 +29,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { getSetlist, deleteSetlist, duplicateSetlist, updateSetlist, authHeader, type FSSetlist } from "@/lib/firebase/setlists";
 import { useProfile } from "@/lib/firebase/users";
-import { canSeeSetlist, canEditSetlist, canDuplicateSetlist } from "@/lib/access";
+import { canSeeSetlist, canEditSetlist, canDuplicateSetlist, canSetPresentationLink } from "@/lib/access";
 import { useTranslation } from "react-i18next";
 import type { SongIndexEntry } from "@/types/song";
 import type { SetlistItem } from "@/types/setList";
@@ -38,7 +38,10 @@ import { formatDate } from "@/lib/utils/formatDate";
 import { useScrollDirection } from "@/hooks/useScrollDirection";
 import { ListView } from "./_components/ListView";
 import { PartitionsView } from "./_components/PartitionView";
+import { SetlistOutline } from "./_components/SetlistOutline";
+import { PresentationLink } from "./_components/PresentationLink";
 import { getChartStylePref, setChartStylePref } from "@/lib/chartStylePref";
+import { getPinyinPref, setPinyinPref } from "@/lib/pinyinPref";
 import { jianpuPngDataUrl, loadJianpuChords, loadJianpuManifest, useJianpuManifest } from "@/lib/jianpu/images";
 import { getJianpuPref, setJianpuPref, sheetEnabled, type JianpuPref } from "@/lib/jianpu/preference";
 import { fetchSongAST, type SongContent} from "@/lib/api/songs";
@@ -98,6 +101,9 @@ export function SetlistDetailClient() {
   const [loadingSetlist, setLoadingSetlist] = useState(true);
   const [loadingContent, setLoadingContent] = useState(false);
   const [showChords, setShowChords] = useState(true);
+  // Accords changés sur cette page juste avant le mode louange : ils
+  // l'emportent alors sur le rôle mémorisé (reprise des réglages).
+  const [chordsTouched, setChordsTouched] = useState(false);
   // Affichage du pinyin en vue partitions — préférence persistée (par appareil).
   const [showPinyin, setShowPinyin] = useState(true);
   // Couleurs par section — préférence par appareil partagée (fiche chant, mode louange).
@@ -130,7 +136,7 @@ export function SetlistDetailClient() {
   }, []);
   // Restaure la préférence d'affichage du pinyin (masqué si "0").
   useEffect(() => {
-    setShowPinyin(localStorage.getItem("gcc.showPinyin") !== "0");
+    setShowPinyin(getPinyinPref());
     setChartStyle(getChartStylePref());
     setJianpuPrefState(getJianpuPref());
   }, []);
@@ -149,9 +155,8 @@ export function SetlistDetailClient() {
   );
   function togglePinyin() {
     setShowPinyin((v) => {
-      const next = !v;
-      try { localStorage.setItem("gcc.showPinyin", next ? "1" : "0"); } catch { /* stockage indisponible */ }
-      return next;
+      setPinyinPref(!v);
+      return !v;
     });
   }
   // Load setlist + songs index (wait for auth so private setlists get auth headers)
@@ -682,7 +687,7 @@ export function SetlistDetailClient() {
           <div className="flex items-center gap-2 py-[9px] flex-wrap">
 
             {/* ← Retour */}
-            <Link
+            <Link aria-label={t("songs.detail.backToAll")}
               href={backPath}
               className="h-8 px-2.5 mr-1 rounded-[8px] border border-border bg-card text-muted-foreground hover:text-foreground text-[12.5px] font-semibold flex items-center gap-0.5 transition-all duration-150"
             >
@@ -694,7 +699,7 @@ export function SetlistDetailClient() {
 
             {/* Vue toggle — pill identique au transpose pill */}
             <div className="flex items-center gap-0 border border-border rounded-[10px] bg-card overflow-hidden">
-              <button
+              <button aria-label={t("setlists.detail.tabList")}
                 onClick={() => setView("liste")}
                 className={`flex items-center gap-1.5 px-3 h-[34px] text-[12.5px] font-semibold transition-colors ${
                   view === "liste" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground"
@@ -704,7 +709,7 @@ export function SetlistDetailClient() {
                 <span className="hidden sm:inline">{t("setlists.detail.tabList")}</span>
               </button>
               <div className="w-px h-5 bg-border" />
-              <button
+              <button aria-label={t("setlists.detail.tabCharts")}
                 onClick={switchToPartitions}
                 className={`flex items-center gap-1.5 px-3 h-[34px] text-[12.5px] font-semibold transition-colors ${
                   view === "partitions" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground"
@@ -720,7 +725,7 @@ export function SetlistDetailClient() {
 
               {/* Adapter le chant (accords/paroles par setlist) — vue partitions */}
               {view === "partitions" && canEdit && (
-                <button
+                <button aria-label={t("setlists.contentEdit.toggle", { defaultValue: "Adapter" })}
                   onClick={() => {
                     setEditPartitions((e) => !e);
                     setEditTarget(null);
@@ -740,8 +745,11 @@ export function SetlistDetailClient() {
 
               {/* Accords (pertinent uniquement en vue partitions) */}
               {view === "partitions" && (
-                <button
-                  onClick={() => setShowChords((s) => !s)}
+                <button aria-label={t("songs.detail.chords")}
+                  onClick={() => {
+                    setShowChords((s) => !s);
+                    setChordsTouched(true);
+                  }}
                   className={`h-8 px-2.5 rounded-[8px] border text-[12.5px] font-semibold flex items-center gap-1.5 transition-all duration-150 ${
                     showChords
                       ? "border-transparent bg-primary/10 text-primary"
@@ -755,7 +763,7 @@ export function SetlistDetailClient() {
 
               {/* Pinyin (chants zh, vue partitions) — préférence persistée */}
               {view === "partitions" && hasZhSong && (
-                <button
+                <button aria-label={t("setlists.detail.pinyin", { defaultValue: "Pinyin" })}
                   onClick={togglePinyin}
                   className={`h-8 px-2.5 rounded-[8px] border text-[12.5px] font-semibold flex items-center gap-1.5 transition-all duration-150 ${
                     showPinyin
@@ -783,6 +791,7 @@ export function SetlistDetailClient() {
                   if (setlist) await loadContents(setlist.items);
                   setPerformanceMode(true);
                 }}
+                aria-label={t("setlists.detail.performanceMode")}
                 className="h-8 px-3 rounded-[8px] bg-primary text-primary-foreground text-[12.5px] font-semibold flex items-center gap-1.5 hover:bg-primary/90 transition-all duration-150"
               >
                 <Play className="h-3.5 w-3.5" />
@@ -929,6 +938,17 @@ export function SetlistDetailClient() {
                   })}
             </span>
           </div>
+          <PresentationLink
+            setlistId={id}
+            url={setlist.presentationUrl}
+            canChange={canSetPresentationLink(
+              user,
+              profile,
+              setlist,
+              !!profile?.serviceRoles[setlist.category]?.includes("regie"),
+            )}
+            onSaved={(presentationUrl) => setSetlist({ ...setlist, presentationUrl })}
+          />
           {setlist.notes && (
             <p className="mt-3 text-sm text-muted-foreground italic">{setlist.notes}</p>
           )}
@@ -940,7 +960,7 @@ export function SetlistDetailClient() {
             {t("setlists.detail.emptyItems")}
           </p>
         ) : view === "liste" ? (
-          <ListView items={setlist.items} songsMap={songsMap} jianpuPref={jianpuPref} />
+          <ListView setlistId={id} items={setlist.items} songsMap={songsMap} jianpuPref={jianpuPref} />
         ) : (
           <>
             {editPartitions && (
@@ -951,6 +971,7 @@ export function SetlistDetailClient() {
                 })}
               </p>
             )}
+            {!loadingContent && <SetlistOutline items={setlist.items} contents={contents} />}
             <PartitionsView
               items={setlist.items}
               contents={contents}
@@ -1035,7 +1056,7 @@ export function SetlistDetailClient() {
         <PerformanceMode
           items={setlist.items}
           contents={contents}
-          initialShowChords={showChords}
+          initialShowChords={chordsTouched ? showChords : undefined}
           setlistId={id}
           setlistTitle={setlist.title}
           onClose={() => {

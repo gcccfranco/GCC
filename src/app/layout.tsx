@@ -5,6 +5,7 @@ import { I18nProvider } from "@/lib/I18nProvider";
 import { Navbar } from "@/components/layout/Navbar";
 import { MobileTabBar } from "@/components/layout/MobileTabBar";
 import { PageTransition } from "@/components/layout/PageTransition";
+import { LyricsCopyListener } from "@/components/song/LyricsCopyListener";
 import "./globals.css";
 
 const inter = Inter({
@@ -59,6 +60,7 @@ export default function RootLayout({
               <PageTransition>{children}</PageTransition>
             </main>
             <MobileTabBar />
+            <LyricsCopyListener />
           </I18nProvider>
         </ThemeProvider>
       </body>

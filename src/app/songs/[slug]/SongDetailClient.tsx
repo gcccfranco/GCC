@@ -12,6 +12,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { getChartStylePref, setChartStylePref } from "@/lib/chartStylePref";
+import { getPersonalKeys, setPersonalKey } from "@/lib/setlist/personalKeys";
+import { getFontScalePref, setFontScalePref, MIN_FONT_SCALE, MAX_FONT_SCALE } from "@/lib/fontScalePref";
 import { SongView } from "@/components/song/SongView";
 import { JianpuSheet } from "@/components/jianpu/JianpuSheet";
 import { useJianpuScore } from "@/lib/jianpu/images";
@@ -143,11 +145,26 @@ function safeParseParam<T>(raw: string | null, fallback: T): T {
       setCustomize(prev => ({...prev, structure: structure}))
     },[]);
 
+    // Ouverte depuis une setlist : la tonalité choisie ici est retenue pour ce
+    // chant dans cette setlist, sur cet appareil (reprise en mode louange).
+    const fromSetlist = useMemo(() => safeParseParam<string | null>(searchParams.get("setlist"), null), [searchParams]);
+    const setlistKey = useMemo(() => safeParseParam<string>(searchParams.get("key"), originalKey), [searchParams, originalKey]);
+
+    // Tant que la tonalité de départ n'est pas appliquée, l'état porte encore la
+    // tonalité d'origine : l'enregistrer écraserait le choix retenu.
+    const [keyReady, setKeyReady] = useState(false);
+
     useEffect(() => {
-      const songKey = safeParseParam<string>(searchParams.get("key"), originalKey);
+      const songKey = (fromSetlist && getPersonalKeys(fromSetlist)[song.slug]) || setlistKey;
       const diff = semitonesTo(originalKey, songKey);
       setCustomize(prev => ({ ...prev, currentKey: songKey, semitones: diff }));
+      setKeyReady(true);
     }, []); // une seule fois au montage
+
+    useEffect(() => {
+      if (!fromSetlist || !keyReady) return;
+      setPersonalKey(fromSetlist, song.slug, customize.currentKey === setlistKey ? null : customize.currentKey);
+    }, [fromSetlist, keyReady, song.slug, setlistKey, customize.currentKey]);
 
     const displayedAST = useMemo(
       () => transposeAST(ast, customize.semitones, customize.currentKey),
@@ -157,16 +174,12 @@ function safeParseParam<T>(raw: string | null, fallback: T): T {
     // Taille de texte (zoom, persistée) — chargée après montage pour éviter
     // un écart d'hydratation (le composant est rendu côté serveur).
     const [fontScale, setFontScale] = useState(1);
-    useEffect(() => {
-      try {
-        const v = parseFloat(localStorage.getItem("song-font-scale") ?? "1");
-        if (v >= 0.8 && v <= 1.5) setFontScale(v);
-      } catch { /* stockage indisponible */ }
-    }, []);
+    // Même taille que le mode louange (fontScalePref).
+    useEffect(() => setFontScale(getFontScalePref()), []);
     const changeFontScale = (delta: number) => {
       setFontScale((s) => {
-        const next = Math.min(1.5, Math.max(0.8, Math.round((s + delta) * 10) / 10));
-        try { localStorage.setItem("song-font-scale", String(next)); } catch { /* privé */ }
+        const next = Math.min(MAX_FONT_SCALE, Math.max(MIN_FONT_SCALE, Math.round((s + delta) * 10) / 10));
+        setFontScalePref(next);
         return next;
       });
     };
@@ -222,7 +235,7 @@ function safeParseParam<T>(raw: string | null, fallback: T): T {
               variant="outline"
               className="h-9 sm:h-8 px-2.5 rounded-md text-xs font-semibold text-muted-foreground hover:text-foreground mr-1"
             >
-              <Link href={backPath}>
+              <Link aria-label={t("songs.detail.backToAll")} href={backPath}>
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M19 12H5m6-7l-7 7 7 7" />
                 </svg>
@@ -320,7 +333,7 @@ function safeParseParam<T>(raw: string | null, fallback: T): T {
               </div>
 
               {/* Accords */}
-              <button
+              <button aria-label={t("songs.detail.chords") || "Accords"}
                 onClick={() => setCustomize((c) => ({ ...c, showChords: !c.showChords }))}
                 className={`h-9 sm:h-8 px-2.5 rounded-md border text-xs font-semibold flex items-center gap-1.5 transition-all duration-150 ${
                       customize.showChords
@@ -334,7 +347,7 @@ function safeParseParam<T>(raw: string | null, fallback: T): T {
 
               {/* Pinyin (chants zh) */}
               {isZh && (
-                    <button
+                    <button aria-label={t("songs.detail.pinyin") || "Pinyin"}
                       onClick={() => setCustomize((c) => ({ ...c, showPinyin: !c.showPinyin }))}
                       className={`h-9 sm:h-8 px-2.5 rounded-md border text-xs font-semibold flex items-center gap-1.5 transition-all duration-150 ${
                         customize.showPinyin
@@ -349,7 +362,7 @@ function safeParseParam<T>(raw: string | null, fallback: T): T {
 
               {/* Partition 简谱 (chants zh qui en ont une) */}
               {jianpuScore && (
-                <button
+                <button aria-label={"简谱"}
                   onClick={() => setShowScore((v) => !v)}
                   className={`h-9 sm:h-8 px-2.5 rounded-md border text-xs font-semibold flex items-center gap-1.5 transition-all duration-150 ${
                     showScore

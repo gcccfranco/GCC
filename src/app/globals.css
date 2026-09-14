@@ -15,6 +15,14 @@
   }
 }
 
+/* Taille par défaut des paroles et accords (page chant, vue partitions, mode
+   louange) : lisible de loin — +10 % sur téléphone, +20 % dès la tablette.
+   Écran seulement : l'impression garde la taille d'origine. Décision de
+   Timothée du 13/09/2026 sur captures (docs/spec-mode-louange.md). */
+:root { --lyric-size: 0.88rem; }
+@media screen { :root { --lyric-size: calc(0.88rem * 1.1); } }
+@media screen and (min-width: 768px) { :root { --lyric-size: calc(0.88rem * 1.2); } }
+
 @layer base {
   :root {
     /* Hauteur de la navbar — source unique pour tous les offsets fixed/sticky */

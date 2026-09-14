@@ -101,6 +101,20 @@ export function canSeeSetlist(
   return profile ? visibleCategories(profile).includes(setlist.category) : false;
 }
 
+/** Lien de la présentation (PPT) : qui peut modifier la setlist, plus la régie
+ *  inscrite au planning ce jour-là. `regie` = régie de service (serveur, qui lit
+ *  le planning) ou, côté client, simple rôle régie dans la catégorie pour
+ *  afficher le bouton — le serveur tranche. Miroir : /api/setlist/presentation
+ *  (écriture Admin, firestore.rules inchangé). */
+export function canSetPresentationLink(
+  user: AuthUser,
+  profile: UserProfile | null,
+  setlist: FSSetlist,
+  regie: boolean
+): boolean {
+  return canEditSetlist(user, profile, setlist) || (!setlist.isPrivate && regie);
+}
+
 /** Modification : créateur de la setlist + niveau « edit » sur la catégorie (musicien, présidence) (+ admins). */
 export function canEditSetlist(
   user: AuthUser,
