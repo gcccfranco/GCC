@@ -276,7 +276,7 @@ export default function SetlistsPage() {
               </optgroup>
             </select>
             {canCreate && (
-              <Link
+              <Link aria-label={t("setlists.list.newButton")}
                 href="/setlists/new"
                 className="shrink-0 flex items-center gap-1.5 h-9 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
               >

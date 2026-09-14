@@ -153,6 +153,32 @@ export function parseSectionHeader(typeKey: string, value: string) {
   };
 }
 
+// Sorte de section désignée par un nom écrit (« Interlude », « 预备副歌/Pre-Refrain »…),
+// ou null s'il n'en désigne aucune (« Bénédiction », « Fin »). Ordre significatif :
+// « post-refrain » et « pré-refrain » contiennent « refrain », « 副歌前奏 » contient « 前奏 ».
+const SECTION_NAME_KINDS: [RegExp, string][] = [
+  [/post-?refrain|post-?chorus|后副歌/i, "postchorus"],
+  [/pr[ée]-?refrain|pre-?chorus|副歌前奏|预备副歌|前副歌|预备/i, "prechorus"],
+  [/interlude|间奏/i, "interlude"],
+  [/instru|solo|器乐/i, "instrumental"],
+  [/couplet|verse|verset|主歌/i, "verse"],
+  [/refrain|chorus|副歌/i, "chorus"],
+  [/pont|bridge|桥段/i, "bridge"],
+  [/intro|前奏/i, "intro"],
+  [/outro|ending|结尾|尾奏/i, "outro"],
+  [/coda/i, "coda"],
+  [/\btag\b/i, "tag"],
+];
+
+// Types dont le libellé vient de la traduction du type : c'est là qu'un nom
+// écrit contradictoire était ignoré. Les autres (other, final…) lisent déjà le nom.
+const TRANSLATED_TYPES = new Set(["verse", "chorus", "bridge", "intro", "outro", "prechorus", "postchorus", "tag", "interlude", "instrumental", "coda"]);
+
+function sectionKindOfName(name: string): string | null {
+  const clean = name.replace(/\s*\([^)]+\)\s*/g, " ");
+  return SECTION_NAME_KINDS.find(([re]) => re.test(clean))?.[1] ?? null;
+}
+
 export function formatSectionName(
   section: { type: string; name?: string; number?: string; suffix?: string },
   tOrTranslations: ((key: string, options?: { defaultValue?: string }) => string) | Record<string, unknown>
@@ -174,9 +200,18 @@ export function formatSectionName(
   };
 
   let baseName = "";
-  
+
+  // 0. Nom écrit qui désigne une autre sorte de section que le type
+  // ({start_of_intro: Interlude}) : le libellé suit l'auteur. Le type, lui,
+  // ne change pas — il fait les ids de sections sur lesquels reposent les
+  // structures, notes, nuances et annotations des setlists existantes.
+  const writtenKind = section.name && TRANSLATED_TYPES.has(section.type) ? sectionKindOfName(section.name) : null;
+  if (writtenKind && writtenKind !== section.type) {
+    baseName = getTranslation(`songs.sections.${writtenKind}`, "");
+  }
+
   // 1. If it's a standard type (other than "other"), translate the type
-  if (section.type && section.type !== "other") {
+  if (!baseName && section.type && section.type !== "other") {
     baseName = getTranslation(`songs.sections.${section.type}`, "");
   }
 

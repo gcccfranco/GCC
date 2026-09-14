@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useTranslation } from "react-i18next";
+import { useSetLanguage } from "@/lib/I18nProvider";
 import { Menu, X, Sun, Moon, Globe, LogIn, LogOut, ChevronDown, UserRound, Bell, BookOpen, MessageSquareHeart, TriangleAlert } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useAuth, logOut } from "@/lib/firebase/auth";
@@ -42,37 +43,24 @@ export function Navbar() {
   const dark = mounted && resolvedTheme === "dark";
   const toggleTheme = () => setTheme(dark ? "light" : "dark");
 
+  // Menu mobile : toujours monté, ouvert et fermé par des transitions CSS.
+  // Une transition repart de la valeur affichée : un re-tap pendant la
+  // fermeture fait remonter le menu depuis là où il en est.
   const [isOpen, setIsOpen] = useState(false);
-  const [isClosing, setIsClosing] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
   const { items: notifItems, unreadCount, markAllSeen } = useNotifications();
-  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const currentLang = i18n.language;
   const isZh = currentLang === "zh-CN";
   const scrollVisible = useScrollDirection();
 
-  const closeMenu = () => {
-    if (!isOpen) return;
-    setIsClosing(true);
-    closeTimerRef.current = setTimeout(() => {
-      setIsOpen(false);
-      setIsClosing(false);
-    }, 160);
-  };
-
-  // Close mobile menu and dropdown on route change
+  // Changement de route (barre du bas, retour…) : fermer menu et dropdown.
   useEffect(() => {
-    closeMenu();
+    setIsOpen(false);
     setDropdownOpen(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
-
-  useEffect(() => {
-    return () => { if (closeTimerRef.current) clearTimeout(closeTimerRef.current); };
-  }, []);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -90,10 +78,9 @@ export function Navbar() {
     };
   }, [dropdownOpen]);
 
+  const setLanguage = useSetLanguage();
   const toggleLanguage = () => {
-    const nextLang = currentLang === "zh-CN" ? "fr" : "zh-CN";
-    i18n.changeLanguage(nextLang);
-    localStorage.setItem("i18nextLng", nextLang);
+    setLanguage(currentLang === "zh-CN" ? "fr" : "zh-CN");
   };
 
   const isActiveSongs = pathname.startsWith("/songs");
@@ -117,14 +104,12 @@ export function Navbar() {
   return (
     <>
       {/* Backdrop derrière le menu mobile */}
-      {(isOpen || isClosing) && (
-        <div
-          className={`fixed top-[var(--nav-h)] inset-x-0 bottom-0 z-40 bg-black/20 lg:hidden ${isClosing ? "animate-out fade-out duration-150" : "animate-in fade-in duration-200"}`}
-          onClick={closeMenu}
-        />
-      )}
+      <div
+        className={`fixed top-[var(--nav-h)] inset-x-0 bottom-0 z-40 bg-black/20 lg:hidden transition-[opacity,visibility] ease-out ${isOpen ? "duration-200 opacity-100 visible" : "duration-150 opacity-0 invisible"}`}
+        onClick={() => setIsOpen(false)}
+      />
 
-      <header className={`fixed top-0 z-50 w-full h-[var(--nav-h)] border-b border-border/50 bg-background/82 backdrop-saturate-[1.2] backdrop-blur-[14px] print:hidden transition-transform duration-300 ${scrollVisible ? "translate-y-0" : "-translate-y-full"}`}>
+      <header className={`fixed top-0 z-50 w-full h-[var(--nav-h)] border-b border-border/50 bg-background/82 backdrop-saturate-[1.2] backdrop-blur-[14px] print:hidden transition-transform duration-300 ${scrollVisible || isOpen ? "translate-y-0" : "-translate-y-full"}`}>
         <div className="max-w-[1080px] mx-auto px-4 h-full flex items-center gap-3.5">
           {/* Brand */}
           <Link href={user ? "/planning" : "/songs"} className="flex items-center gap-2.5 shrink-0">
@@ -334,21 +319,21 @@ export function Navbar() {
               </DropdownMenu>
             )}
 
-            {/* Lang toggle */}
+            {/* Lang toggle — sous 375 px, il ne reste que dans le menu mobile */}
             <button
               onClick={toggleLanguage}
               aria-label={isZh ? "Changer en français" : "切换为中文"}
-              className="h-[34px] min-w-[34px] px-2 rounded-[9px] border border-border bg-card text-muted-foreground hover:text-foreground hover:border-muted-foreground/50 transition-all duration-150 active:scale-[.96] flex items-center justify-center gap-1.5 text-[12.5px] font-semibold cursor-pointer"
+              className="max-[374px]:hidden h-[34px] min-w-[34px] px-2 rounded-[9px] border border-border bg-card text-muted-foreground hover:text-foreground hover:border-muted-foreground/50 transition-all duration-150 active:scale-[.96] flex items-center justify-center gap-1.5 text-[12.5px] font-semibold cursor-pointer"
             >
               <Globe className="h-3.5 w-3.5" />
               <span>{isZh ? "中文" : "FR"}</span>
             </button>
 
-            {/* Dark mode toggle */}
+            {/* Dark mode toggle — sous 375 px, il ne reste que dans le menu mobile */}
             <button
               onClick={toggleTheme}
               aria-label={dark ? "Mode clair" : "Mode sombre"}
-              className="h-[34px] w-[34px] rounded-[9px] border border-border bg-card text-muted-foreground hover:text-foreground hover:border-muted-foreground/50 transition-all duration-150 active:scale-[.96] flex items-center justify-center cursor-pointer"
+              className="max-[374px]:hidden h-[34px] w-[34px] rounded-[9px] border border-border bg-card text-muted-foreground hover:text-foreground hover:border-muted-foreground/50 transition-all duration-150 active:scale-[.96] flex items-center justify-center cursor-pointer"
             >
               {dark ? <Sun className="h-[15px] w-[15px]" /> : <Moon className="h-[15px] w-[15px]" />}
             </button>
@@ -413,7 +398,7 @@ export function Navbar() {
             )}
             {!authLoading && (
               user ? (
-                <button
+                <button aria-label={t("common.header.logout")}
                   onClick={() => logOut()}
                   className="hidden lg:flex h-[34px] min-w-[34px] px-2 rounded-[9px] border border-border bg-card text-muted-foreground hover:text-foreground hover:border-muted-foreground/50 transition-all duration-150 active:scale-[.96] items-center justify-center gap-1.5 text-[12.5px] font-semibold cursor-pointer"
                   title={user.email ?? undefined}
@@ -422,7 +407,7 @@ export function Navbar() {
                   <span className="hidden md:inline">{t("common.header.logout")}</span>
                 </button>
               ) : (
-                <Link
+                <Link aria-label={t("common.header.login")}
                   href="/login"
                   className="flex h-[34px] px-3 rounded-[9px] bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-150 active:scale-[.96] items-center justify-center gap-1.5 text-[12.5px] font-semibold"
                 >
@@ -434,22 +419,24 @@ export function Navbar() {
 
             {/* Mobile hamburger */}
             <button
-              onClick={() => (isOpen ? closeMenu() : setIsOpen(true))}
+              onClick={() => setIsOpen((open) => !open)}
               aria-label="Toggle menu"
-              className="lg:hidden h-[34px] w-[34px] rounded-[9px] border border-border bg-card text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors duration-150 flex items-center justify-center cursor-pointer"
+              className="lg:hidden shrink-0 h-[34px] w-[34px] rounded-[9px] border border-border bg-card text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors duration-150 flex items-center justify-center cursor-pointer"
             >
               {isOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
             </button>
           </div>
         </div>
 
-        {/* Mobile Menu Panel */}
-        {(isOpen || isClosing) && (
-          <div
-            className={`absolute top-14 left-0 right-0 border-b border-border bg-background/95 backdrop-blur-md px-4 py-4 space-y-4 flex flex-col lg:hidden z-50 ${
-              isClosing
-                ? "animate-out slide-out-to-top-2 duration-150"
-                : "animate-in slide-in-from-top-2 duration-200"
+        {/* Mobile Menu Panel — `invisible` une fois fermé : hors du parcours clavier */}
+        <div
+            data-testid="mobile-menu"
+            // Un lien du menu ferme dès le clic, avant que la page suivante n'arrive.
+            onClick={(e) => { if ((e.target as Element).closest("a")) setIsOpen(false); }}
+            className={`absolute top-[var(--nav-h)] left-0 right-0 max-h-[calc(100dvh-var(--nav-h))] overflow-y-auto overscroll-contain border-b border-border bg-background px-4 py-4 space-y-4 flex flex-col lg:hidden z-50 transition-[opacity,transform,visibility] ease-out ${
+              isOpen
+                ? "duration-200 opacity-100 translate-y-0 visible"
+                : "duration-150 opacity-0 -translate-y-2 invisible"
             }`}
           >
             <div className="flex flex-col gap-1">
@@ -561,7 +548,7 @@ export function Navbar() {
                 user ? (
                   <>
                     <button
-                      onClick={() => { closeMenu(); setReportOpen(true); }}
+                      onClick={() => { setIsOpen(false); setReportOpen(true); }}
                       className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg border border-border bg-background hover:bg-muted text-foreground text-sm font-semibold transition-all duration-200 cursor-pointer"
                     >
                       <TriangleAlert className="h-4 w-4" />
@@ -616,7 +603,6 @@ export function Navbar() {
               )}
             </div>
           </div>
-        )}
       </header>
 
       <ReportDialog open={reportOpen} onClose={() => setReportOpen(false)} kind="site" />

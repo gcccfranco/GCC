@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useLayoutEffect, useRef } from "react";
 import Link from "next/link";
 import Fuse from "fuse.js";
 import { Search, X } from "lucide-react";
@@ -32,29 +32,35 @@ export function SongListClient({ songs, themes }: SongListClientProps) {
     } catch { /* stockage indisponible */ }
   }, []);
 
-  // Load from URL search params on mount
-  useEffect(() => {
+  // Load from URL search params on mount — avant la première image, pour que
+  // la liste affichée (et donc la position restaurée) soit déjà la filtrée.
+  useLayoutEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const q = params.get("q") || "";
     const lang = (params.get("lang") || "all") as "all" | "fr" | "zh";
     const theme = params.get("theme") || "";
-    
+
     setQuery(q);
     setLangFilter(lang);
     setThemeFilter(theme);
     setIsInitialized(true);
-
-    // Restore scroll position
-    const savedScroll = sessionStorage.getItem("songsScrollPos");
-    if (savedScroll) {
-      setTimeout(() => {
-        window.scrollTo({
-          top: parseInt(savedScroll, 10),
-          behavior: "instant" as ScrollBehavior
-        });
-      }, 80);
-    }
   }, []);
+
+  // Restore scroll position. Next.js remet la page en haut juste après le
+  // rendu de la route : on repasse derrière lui dans l'image suivante, qui
+  // s'affiche déjà à la bonne position (un délai fixe laissait voir le saut).
+  useLayoutEffect(() => {
+    if (!isInitialized) return;
+    const savedScroll = sessionStorage.getItem("songsScrollPos");
+    if (!savedScroll) return;
+    const frame = requestAnimationFrame(() => {
+      window.scrollTo({
+        top: parseInt(savedScroll, 10),
+        behavior: "instant" as ScrollBehavior
+      });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [isInitialized]);
 
   // Update URL search params and sessionStorage path when state changes
   useEffect(() => {
@@ -72,13 +78,19 @@ export function SongListClient({ songs, themes }: SongListClientProps) {
     sessionStorage.setItem("lastListPath", newUrl);
   }, [query, langFilter, themeFilter, isInitialized]);
 
-  // Save scroll position when navigating away
-  useEffect(() => {
-    const handleScroll = () => {
-      sessionStorage.setItem("songsScrollPos", window.scrollY.toString());
-    };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+  // Aussi au clic sur un chant (capture sur toute la liste) : un défilement
+  // fait avant l'hydratation — liste déjà visible, écouteur pas encore
+  // branché — n'était jamais enregistré, et le retour ramenait en haut.
+  function saveScrollPos() {
+    sessionStorage.setItem("songsScrollPos", window.scrollY.toString());
+  }
+
+  // Save scroll position when navigating away. useLayoutEffect : l'écouteur
+  // est retiré au démontage, avant que Next.js ne fasse défiler la page
+  // suivante — sinon ce défilement écrasait la position enregistrée.
+  useLayoutEffect(() => {
+    window.addEventListener("scroll", saveScrollPos);
+    return () => window.removeEventListener("scroll", saveScrollPos);
   }, []);
 
   const fuse = useMemo(
@@ -150,6 +162,17 @@ export function SongListClient({ songs, themes }: SongListClientProps) {
     document.getElementById(`song-li-${slug}`)?.scrollIntoView({ block: "start" });
   }
 
+  // Balayage de l'index : la lettre sous le doigt, tant qu'il est posé.
+  const swipeLetterRef = useRef<string | null>(null);
+  function followPointer(e: React.PointerEvent<HTMLElement>) {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const i = Math.floor(((e.clientY - rect.top) / rect.height) * letterIndex.length);
+    const [letter, slug] = letterIndex[Math.min(Math.max(i, 0), letterIndex.length - 1)];
+    if (letter === swipeLetterRef.current) return;
+    swipeLetterRef.current = letter;
+    scrollToLetter(slug);
+  }
+
   const usedThemeSlugs = new Set(songs.flatMap((s) => s.themes));
   const availableThemes = themes.filter((t) => usedThemeSlugs.has(t.slug));
   const hasFilter = query.trim() !== "" || langFilter !== "all" || themeFilter !== "";
@@ -160,8 +183,14 @@ export function SongListClient({ songs, themes }: SongListClientProps) {
     setThemeFilter("");
   }
 
+  const showIndex = letterIndex.length > 1 && filtered.length > 30;
+  // 24 px par lettre (cible de l'ancien h-6) + py-1 ; rétréci si l'écran est court.
+  const indexHeight = `min(78svh, ${letterIndex.length * 24 + 8}px)`;
+
   return (
-    <div>
+    // pr-7 : gouttière fixe de l'index A–Z. Elle ne dépend pas de la recherche,
+    // pour que le champ ne change pas de largeur pendant la frappe.
+    <div className="relative pr-7" onClickCapture={saveScrollPos}>
       {/* Barre de recherche */}
       <div className="relative mb-3.5">
         <Search className="absolute left-[14px] top-1/2 -translate-y-1/2 h-[18px] w-[18px] text-muted-foreground/70 pointer-events-none" />
@@ -230,7 +259,7 @@ export function SongListClient({ songs, themes }: SongListClientProps) {
 
       {/* Récemment consultés */}
       {!hasFilter && recentSongs.length > 0 && (
-        <div className={`mb-4 ${letterIndex.length > 1 ? "pr-7" : ""}`}>
+        <div className="mb-4">
           <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-1.5">
             {t("songs.list.recent", { defaultValue: "Récemment consultés" })}
           </p>
@@ -253,7 +282,7 @@ export function SongListClient({ songs, themes }: SongListClientProps) {
       )}
 
       {/* Compteur + proposition de chant */}
-      <div className={`flex items-center justify-between gap-3 mb-3 ${letterIndex.length > 1 ? "pr-7" : ""}`}>
+      <div className="flex items-center justify-between gap-3 mb-3">
         <p className="text-[12.5px] text-muted-foreground">
           {filtered.length === songs.length
             ? t("songs.list.counter", { count: songs.length })
@@ -268,7 +297,7 @@ export function SongListClient({ songs, themes }: SongListClientProps) {
           {t("songs.list.noSongsFound")}
         </p>
       ) : (
-        <ul className={`flex flex-col gap-[9px] ${letterIndex.length > 1 ? "pr-7" : ""}`}>
+        <ul className="flex flex-col gap-[9px]">
           {filtered.map((song) => (
             <li key={song.slug} id={`song-li-${song.slug}`} className="scroll-mt-[120px]">
               <Link
@@ -332,23 +361,44 @@ export function SongListClient({ songs, themes }: SongListClientProps) {
         </ul>
       )}
 
-      {/* Index A–Z (tri par titre, liste assez longue) */}
-      {letterIndex.length > 1 && filtered.length > 30 && (
-        <nav
-          aria-label="Index alphabétique"
-          className="fixed right-0.5 top-1/2 -translate-y-1/2 z-30 flex flex-col items-center px-0.5 py-1 rounded-full bg-background/70 backdrop-blur-sm max-h-[78vh] overflow-y-auto no-scrollbar"
-        >
-          {letterIndex.map(([letter, slug]) => (
-            <button
-              key={letter}
-              onClick={() => scrollToLetter(slug)}
-              aria-label={`Aller à ${letter}`}
-              className="w-8 h-6 flex items-center justify-center text-[11px] font-bold text-muted-foreground hover:text-foreground active:text-foreground"
-            >
-              {letter}
-            </button>
-          ))}
-        </nav>
+      {/* Index A–Z (tri par titre, liste assez longue) : dans la gouttière,
+          débordant sur la marge de page pour rester au bord de l'écran sur
+          téléphone et collé à la liste sur ordinateur. On le balaye du doigt. */}
+      {showIndex && (
+        // -top-6 : la colonne part du ras de la navbar, pour que l'index soit
+        // déjà à sa place collante avant le premier défilement.
+        <div className="absolute -top-6 bottom-0 -right-4 w-11 flex justify-end pointer-events-none">
+          <nav
+            aria-label="Index alphabétique"
+            onPointerDown={(e) => {
+              e.currentTarget.setPointerCapture(e.pointerId);
+              swipeLetterRef.current = null;
+              followPointer(e);
+            }}
+            onPointerMove={(e) => {
+              if (e.currentTarget.hasPointerCapture(e.pointerId)) followPointer(e);
+            }}
+            className="pointer-events-auto sticky z-30 mr-0.5 flex flex-col items-center px-0.5 py-1 rounded-full bg-background/70 backdrop-blur-sm touch-none select-none"
+            // Centré par `top` et non par une translation : en bas de liste,
+            // le collant bute sur la fin de la colonne et une translation
+            // ferait sortir le haut de l'index de l'écran.
+            style={{
+              height: indexHeight,
+              top: `calc((100svh - ${indexHeight}) / 2)`,
+            }}
+          >
+            {letterIndex.map(([letter, slug]) => (
+              <button
+                key={letter}
+                onClick={() => scrollToLetter(slug)}
+                aria-label={`Aller à ${letter}`}
+                className="w-8 flex-1 min-h-0 flex items-center justify-center text-[11px] font-bold text-muted-foreground hover:text-foreground active:text-foreground"
+              >
+                {letter}
+              </button>
+            ))}
+          </nav>
+        </div>
       )}
     </div>
   );
