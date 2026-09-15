@@ -13,6 +13,7 @@ import { useProfile } from "@/lib/firebase/users";
 import { isAdminUser } from "@/lib/access";
 import { useScrollDirection } from "@/hooks/useScrollDirection";
 import { useNotifications, type NotificationItem } from "@/hooks/useNotifications";
+import { saveNotifLang } from "@/lib/firebase/notifPrefs";
 import { ReportDialog } from "@/components/report/ReportDialog";
 import {
   DropdownMenu,
@@ -30,6 +31,9 @@ const NOTIF_KIND_KEYS: Record<NotificationItem["kind"], string> = {
   "manual": "notifications.manual",
   "reminder": "notifications.reminder",
   "broadcast": "notifications.broadcast",
+  "presentation": "notifications.presentation",
+  "scene": "notifications.scene",
+  "evenement": "notifications.evenement",
 };
 
 export function Navbar() {
@@ -83,12 +87,24 @@ export function Navbar() {
     setLanguage(currentLang === "zh-CN" ? "fr" : "zh-CN");
   };
 
+  // Langue mémorisée côté serveur (notifPrefs/{uid}.lang) : les rappels du
+  // cron partent dans la langue de l'interface. Écrite à la connexion puis à
+  // chaque changement, une fois par valeur et par compte.
+  const sentLangRef = useRef("");
+  useEffect(() => {
+    if (!user) return;
+    const key = `${user.uid}|${currentLang}`;
+    if (sentLangRef.current === key) return;
+    sentLangRef.current = key;
+    saveNotifLang(user.uid, currentLang === "zh-CN" ? "zh-CN" : "fr").catch(() => {});
+  }, [user, currentLang]);
+
   const isActiveSongs = pathname.startsWith("/songs");
   const isActiveSetlists = pathname.startsWith("/setlists");
   const isActiveLouange = isActiveSongs || isActiveSetlists;
   const isActivePlanning = pathname.startsWith("/planning");
   const isActiveMesServices = pathname.startsWith("/mes-services");
-  const isActiveAnnonces = pathname.startsWith("/annonces");
+  const isActiveEvenements = pathname.startsWith("/evenements");
   const isActiveAdmin = pathname.startsWith("/admin");
   const isActiveNotifier = pathname.startsWith("/notifier");
   const admin = isAdminUser(user);
@@ -97,9 +113,9 @@ export function Navbar() {
     ? t("common.header.planning")
     : isActiveMesServices
       ? t("common.header.service")
-      : isActiveAnnonces
-        ? t("common.header.annonces")
-        : t("common.header.louange");
+      : isActiveEvenements
+          ? t("common.header.evenements")
+          : t("common.header.louange");
 
   return (
     <>
@@ -223,16 +239,16 @@ export function Navbar() {
               </Link>
             )}
 
-            {!authLoading && user && (
+            {!authLoading && (
               <Link
-                href="/annonces"
-                className={`relative px-3 py-[7px] rounded-[9px] text-[13.5px] font-semibold transition-all duration-150 whitespace-nowrap ${
-                  isActiveAnnonces
+                href="/evenements"
+                className={`px-3 py-[7px] rounded-[9px] text-[13.5px] font-semibold transition-all duration-150 whitespace-nowrap ${
+                  isActiveEvenements
                     ? "bg-secondary text-foreground"
                     : "text-muted-foreground hover:text-foreground hover:bg-secondary"
                 }`}
               >
-                {t("common.header.annonces")}
+                {t("common.header.evenements")}
               </Link>
             )}
 
@@ -465,14 +481,14 @@ export function Navbar() {
                   {t("common.header.myServices")}
                 </Link>
               )}
-              {!authLoading && user && (
+              {!authLoading && (
                 <Link
-                  href="/annonces"
-                  className={`relative flex items-center gap-2 pl-5 pr-3 py-2 rounded-lg text-sm font-semibold transition-colors ${
-                    isActiveAnnonces ? "bg-secondary text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                  href="/evenements"
+                  className={`pl-5 pr-3 py-2 rounded-lg text-sm font-semibold transition-colors ${
+                    isActiveEvenements ? "bg-secondary text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted"
                   }`}
                 >
-                  {t("common.header.annonces")}
+                  {t("common.header.evenements")}
                 </Link>
               )}
               {!authLoading && canNotify && (

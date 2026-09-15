@@ -9,6 +9,7 @@ import type { SongProposal } from "@/types/songProposal";
 import { getReports, setReportStatus, deleteReport } from "@/lib/firebase/reports";
 import type { Report } from "@/types/report";
 import { isAdminUser } from "@/lib/access";
+import { authHeader } from "@/lib/firebase/setlists";
 import {
   loadPlanningData,
   collectPlanningNames,
@@ -17,11 +18,11 @@ import {
 } from "@/lib/planning/names";
 import { ProfileFields, type ProfileFormValue } from "@/components/auth/ProfileFields";
 import { SurveyResults } from "@/components/admin/SurveyResults";
-import { SERVICE_ROLE_LABELS, SERVICE_LIEUX, GROUPES, type ServiceRole, type UserProfile } from "@/types/user";
+import { SERVICE_ROLE_LABELS, SERVICE_LIEUX, GROUPES, POLES, POLE_LABELS, type Pole, type ServiceRole, type UserProfile } from "@/types/user";
 import { EDD_CLASSES } from "@/lib/planning/utils";
 import { ANNONCE_SECTIONS } from "@/types/annonce";
 import { NOTIFY_ALL, NOTIFY_GROUPS, audienceLabel } from "@/lib/push/audiences";
-import { categoryColor, categoryLabel } from "@/lib/serviceColors";
+import { categoryColor, categoryLabel, PLANNING_COLORS } from "@/lib/serviceColors";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -67,6 +68,7 @@ export default function AdminPage() {
   const admin = isAdminUser(user);
 
   const [regOpen, setRegOpen] = useState<boolean | null>(null);
+  const [migration, setMigration] = useState<"" | "busy" | string>("");
   const [togglingReg, setTogglingReg] = useState(false);
   const [profiles, setProfiles] = useState<UserProfile[]>([]);
   const [loadingProfiles, setLoadingProfiles] = useState(true);
@@ -82,6 +84,7 @@ export default function AdminPage() {
   const [form, setForm] = useState<ProfileFormValue | null>(null);
   const [annonceRights, setAnnonceRights] = useState<string[]>([]);
   const [notifyRights, setNotifyRights] = useState<string[]>([]);
+  const [poleRights, setPoleRights] = useState<Pole[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [query, setQuery] = useState("");
@@ -175,6 +178,20 @@ export default function AdminPage() {
     );
   }
 
+  /** Lot 6 : copie chaque annonce en évènement « info » (idempotent côté serveur). */
+  async function migrerAnnonces() {
+    if (!window.confirm("Copier toutes les annonces dans le calendrier des évènements ? Relancer ne crée pas de doublon.")) return;
+    setMigration("busy");
+    try {
+      const res = await fetch("/api/admin/migrer-annonces", { method: "POST", headers: await authHeader() });
+      const json = (await res.json().catch(() => ({}))) as { migrated?: number; skipped?: number; error?: string };
+      if (!res.ok) throw new Error(json.error ?? `Erreur ${res.status}`);
+      setMigration(`${json.migrated ?? 0} annonces migrées, ${json.skipped ?? 0} déjà présentes.`);
+    } catch (e) {
+      setMigration(e instanceof Error ? e.message : "Migration impossible.");
+    }
+  }
+
   async function toggleRegistration() {
     if (regOpen === null) return;
     setTogglingReg(true);
@@ -194,6 +211,7 @@ export default function AdminPage() {
     setForm(profileToForm(p));
     setAnnonceRights(p.annonces ?? []);
     setNotifyRights(p.notify ?? []);
+    setPoleRights(p.poles ?? []);
     setError("");
   }
 
@@ -202,7 +220,7 @@ export default function AdminPage() {
     setSaving(true);
     setError("");
     try {
-      const updated: UserProfile = { ...p, ...form, annonces: annonceRights, notify: notifyRights };
+      const updated: UserProfile = { ...p, ...form, annonces: annonceRights, notify: notifyRights, poles: poleRights };
       await saveProfile(updated);
       setProfiles((prev) => prev.map((x) => (x.uid === p.uid ? updated : x)));
       setEditingUid(null);
@@ -649,6 +667,24 @@ export default function AdminPage() {
         </div>
         )}
 
+        {/* ── Annonces → calendrier (lot 6) ── */}
+        {tab === "inscriptions" && (
+        <div className="rounded-xl bg-card shadow-soft p-5 space-y-3">
+          <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+            Annonces → Évènements
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            Les annonces vivent désormais dans le calendrier des évènements (entrées « info » épinglées). Ce bouton copie les anciennes annonces ; le relancer ne crée pas de doublon.
+          </p>
+          <div className="flex flex-wrap items-center gap-3">
+            <Button onClick={migrerAnnonces} disabled={migration === "busy"} variant="outline" className="h-11">
+              {migration === "busy" ? "…" : "Migrer les annonces vers le calendrier"}
+            </Button>
+            {migration && migration !== "busy" && <p className="text-sm text-foreground">{migration}</p>}
+          </div>
+        </div>
+        )}
+
         {/* ── Membres ── */}
         {tab === "membres" && (
         <div className="rounded-xl bg-card shadow-soft p-5 space-y-4">
@@ -784,10 +820,40 @@ export default function AdminPage() {
                           deriveFromPlanning={deriveFromPlanning}
                         />
 
+                        {/* Pôles de coordination (lot 3 bis : Événement = programmes de scène) — réservé aux admins */}
+                        <div className="rounded-lg border border-dashed border-border p-3">
+                          <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2">
+                            Pôles de coordination :
+                          </p>
+                          <div className="flex flex-wrap gap-2">
+                            {POLES.map((pole) => {
+                              const checked = poleRights.includes(pole);
+                              const color = PLANNING_COLORS.scene;
+                              return (
+                                <button
+                                  key={pole}
+                                  type="button"
+                                  onClick={() =>
+                                    setPoleRights((prev) =>
+                                      checked ? prev.filter((x) => x !== pole) : [...prev, pole]
+                                    )
+                                  }
+                                  className={`px-3 py-1.5 rounded-lg border text-xs font-semibold transition-colors ${
+                                    checked ? "" : "bg-background border-border text-muted-foreground hover:text-foreground"
+                                  }`}
+                                  style={checked ? { background: `${color}15`, borderColor: color, color } : undefined}
+                                >
+                                  {checked ? "✓ " : ""}{POLE_LABELS[pole]}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+
                         {/* Droits de publication d'annonces — réservé aux admins */}
                         <div className="rounded-lg border border-dashed border-border p-3">
                           <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2">
-                            Peut publier des annonces pour :
+                            Peut créer des évènements et des infos pour :
                           </p>
                           <div className="flex flex-wrap gap-2">
                             {ANNONCE_SECTIONS.map((s) => {

@@ -43,6 +43,11 @@ export default function CultePage() {
   const effTri = visibleTris.includes(tri) ? tri : getCurrentTri()
 
   const filtered = filterByTri(rows, effTri)
+  // Colonne « Sainte cène » (index 11) : affichée seulement si une case du
+  // trimestre est remplie — avant le T4 2026 la feuille ne l'avait pas.
+  const hasCene = filtered.some(r => r[11]?.trim())
+  const cols = hasCene ? [...COLS, t("planning.roles.sainteCene")] : COLS
+  const shown = hasCene ? filtered : filtered.map(r => r.slice(0, COLS.length))
 
   return (
     <div className="max-w-full space-y-4 mx-auto">
@@ -61,8 +66,8 @@ export default function CultePage() {
       </div>
 
       <PlanningTable
-        cols={COLS}
-        rows={filtered}
+        cols={cols}
+        rows={shown}
         color={COLOR}
         minWidth={680}
         dateBadge={(row, all) =>

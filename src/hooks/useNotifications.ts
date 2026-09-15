@@ -1,12 +1,13 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { getAnnoncesSince } from "@/lib/firebase/annonces";
+import { getEvenementsSince } from "@/lib/firebase/evenements";
 import { getSetlistsSince } from "@/lib/firebase/setlists";
 import { getNotifsSince } from "@/lib/firebase/notifications";
 import { useProfile } from "@/lib/firebase/users";
 import { visibleCategories, isAdminUser } from "@/lib/access";
 
 // Notifications in-app par polling REST (jamais de listener WebChannel).
-// Sources : annonces + setlists des catégories du profil, ET les notifications
+// Sources : évènements (toute l'église ou les sections du profil) + setlists
+// des catégories du profil, ET les notifications
 // push ponctuelles persistées (collection `notifications` : manuelles, rappels,
 // diffusions — cf. src/lib/push/notifications.ts), filtrées sur le destinataire.
 // Le « vu » est par appareil (localStorage), comme le badge annonces historique.
@@ -32,7 +33,7 @@ const MAX_ITEMS = 20;
 
 export interface NotificationItem {
   id: string;
-  kind: "annonce" | "setlist-created" | "setlist-updated" | "manual" | "reminder" | "broadcast";
+  kind: "annonce" | "setlist-created" | "setlist-updated" | "manual" | "reminder" | "broadcast" | "presentation" | "scene" | "evenement";
   title: string;
   /** Catégorie d'origine (annonce/setlist) ; vide pour les push ponctuels. */
   category: string;
@@ -61,8 +62,8 @@ export function useNotifications() {
     if (!user || document.visibilityState !== "visible") return;
     try {
       const since = latestTsRef.current;
-      const [annonces, setlists, notifs] = await Promise.all([
-        getAnnoncesSince(since, MAX_ITEMS),
+      const [evenements, setlists, notifs] = await Promise.all([
+        getEvenementsSince(since, MAX_ITEMS),
         getSetlistsSince(since, MAX_ITEMS),
         getNotifsSince(since, MAX_ITEMS),
       ]);
@@ -74,18 +75,18 @@ export function useNotifications() {
       // seulement les sections/catégories où le membre sert — admins : tout).
       const fresh: NotificationItem[] = [];
 
-      for (const a of annonces) {
-        if (a.authorId === user.uid) continue;
-        if (!admin && !cats.includes(a.section)) continue;
-        const ts = a.createdAt?.getTime() ?? 0;
+      for (const e of evenements) {
+        if (e.organisateurUid === user.uid) continue;
+        if (e.pour !== "eglise" && !admin && !cats.includes(e.pour)) continue;
+        const ts = Date.parse(e.createdAt) || 0;
         if (!ts) continue;
         fresh.push({
-          id: `annonce-${a.id}`,
-          kind: "annonce",
-          title: a.title,
-          category: a.section,
+          id: `evenement-${e.id}`,
+          kind: "evenement",
+          title: e.titre,
+          category: e.pour === "eglise" ? "" : e.pour,
           date: ts,
-          href: "/annonces",
+          href: `/evenements/${e.id}`,
         });
       }
 

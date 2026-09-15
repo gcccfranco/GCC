@@ -21,6 +21,9 @@ function main() {
       if (!m.title?.trim()) errors.push(`${file} : titre manquant ({title: …})`);
       if (!m.key) errors.push(`${file} : tonalité manquante ({key: …})`);
       else if (!VALID_KEY.test(m.key)) errors.push(`${file} : tonalité invalide « ${m.key} »`);
+      if (m.recommendedKey !== null && (!VALID_KEY.test(m.recommendedKey) || m.recommendedKey === m.key)) {
+        errors.push(`${file} : tonalité recommandée invalide « ${m.recommendedKey} » (ou égale à {key})`);
+      }
       if (!["fr", "zh"].includes(m.language)) errors.push(`${file} : langue invalide « ${m.language} » (fr|zh)`);
       if (ast.sections.length === 0) errors.push(`${file} : aucune section`);
     } catch (e) {

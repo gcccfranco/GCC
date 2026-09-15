@@ -96,7 +96,7 @@ function cellHasName(cell: string | undefined, name: string): boolean {
 const CULTE_ROLES: [number, string][] = [
   [1, "Présidence"], [2, "Choriste"], [3, "Choriste"], [4, "Piano"],
   [5, "Guitare"], [6, "Batterie"], [7, "Sono"], [8, "PPT"],
-  [9, "Orateur"], [10, "Traduction"],
+  [9, "Orateur"], [10, "Traduction"], [11, "Sainte cène"],
 ]
 
 const GROUPE_ROLES: [number, string][] = [[1, "Présidence"], [2, "Musicien"], [3, "Orateur"]]
@@ -354,9 +354,9 @@ export function setlistSeances(data: PlanningData): SetlistSeance[] {
 
 // ─── Personnes de service à une date — tous services (côté serveur) ────────────
 
-// Colonnes culte pour le ciblage notifications : CULTE_ROLE_MAP + Orateur/Traduction
-// (inclus pour les rappels « tu sers » ; serviceRole null → exclus de « setlist prête »).
-const CULTE_NOTIFY_MAP: [number, ServiceRole | null][] = [...CULTE_ROLE_MAP, [9, null], [10, null]]
+// Colonnes culte pour le ciblage notifications : CULTE_ROLE_MAP + Orateur/Traduction/
+// Sainte cène (inclus pour les rappels « tu sers » ; serviceRole null → exclus de « setlist prête »).
+const CULTE_NOTIFY_MAP: [number, ServiceRole | null][] = [...CULTE_ROLE_MAP, [9, null], [10, null], [11, null]]
 const INTERGROUPE_NOTIFY_MAP: [number, ServiceRole | null][] = [...INTERGROUPE_ROLE_MAP, [10, null], [11, null]]
 const INTERFRANCO_NOTIFY_MAP: [number, ServiceRole | null][] = [...INTERFRANCO_ROLE_MAP, [9, null], [10, null]]
 

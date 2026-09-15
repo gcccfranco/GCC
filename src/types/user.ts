@@ -29,6 +29,13 @@ export type EddRole = (typeof EDD_ROLES)[number];
 export const GROUPES = ["Groupe Paix", "Groupe Fidélité", "Groupe Bonté"] as const;
 export type Groupe = (typeof GROUPES)[number];
 
+// Pôles de coordination, attribués par un admin (lot 3 bis : « événement » =
+// programmes de scène ; le lot 6 ajoutera les autres). Cf. isCoordination
+// dans src/lib/access.ts et firestore.rules.
+export const POLES = ["evenement"] as const;
+export type Pole = (typeof POLES)[number];
+export const POLE_LABELS: Record<Pole, string> = { evenement: "Événement" };
+
 export interface UserProfile {
   uid: string;
   email: string;
@@ -41,12 +48,17 @@ export interface UserProfile {
    *  précise ses rôles (présidence / choriste / musicien / régie). Source unique des
    *  permissions — le niveau view/create/edit en est dérivé (cf. src/lib/access.ts). */
   serviceRoles: Record<string, ServiceRole[]>;
-  /** Sections où la personne peut publier des annonces — attribué par les admins uniquement */
+  /** Sections pour lesquelles la personne crée des évènements et des infos du
+   *  calendrier (ancien droit de publier des annonces, lot 6) — attribué par les
+   *  admins uniquement. Cf. canCreateEvenement (src/lib/access.ts). */
   annonces: string[];
   /** Audiences vers lesquelles la personne peut envoyer une notification manuelle
    *  (catégories culte/groupe/EDD, ou "*" pour tout le monde) — attribué par les
    *  admins uniquement. Cf. src/lib/push/audiences.ts. */
   notify: string[];
+  /** Pôles de coordination (« evenement » : programmes de scène) — attribués par
+   *  les admins uniquement. Absent = aucun. */
+  poles?: Pole[];
   /** Date d'inscription = createTime du document Firestore users/{uid}, en lecture
    *  seule (jamais persisté comme champ). Renseigné pour tous les profils existants. */
   createdAt?: Date;
@@ -57,7 +69,7 @@ export interface UserProfile {
 // édition). Le serveur filtre les envois automatiques selon ces préférences ;
 // absence de doc/champ = activé. Les envois manuels (notifier/broadcast) ne sont
 // PAS filtrés. Cf. src/lib/firebase/notifPrefs.ts + src/lib/push/recipients.ts.
-export const NOTIF_TYPES = ["reminders", "setlists", "annonces"] as const;
+export const NOTIF_TYPES = ["reminders", "setlists", "annonces", "evenements"] as const;
 export type NotifType = (typeof NOTIF_TYPES)[number];
 export type NotifPrefs = Record<NotifType, boolean>;
 
@@ -65,10 +77,16 @@ export const DEFAULT_NOTIF_PREFS: NotifPrefs = {
   reminders: true,
   setlists: true,
   annonces: true,
+  evenements: true,
 };
+
+/** Langue des envois automatiques (rappels), mémorisée dans notifPrefs/{uid}.lang
+ *  par la navbar à la connexion et à chaque changement ; absente = français. */
+export type NotifLang = "fr" | "zh-CN";
 
 export const NOTIF_TYPE_LABELS: Record<NotifType, string> = {
   reminders: "Rappels de service",
   setlists: "Setlist prête",
   annonces: "Annonces",
+  evenements: "Évènements",
 };

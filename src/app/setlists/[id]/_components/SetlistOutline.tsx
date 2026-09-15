@@ -7,21 +7,35 @@ import type { SongContent } from "@/lib/api/songs";
 import { formatSectionName } from "@/lib/chordpro/parser";
 import { itemAst } from "@/lib/chordpro/itemContent";
 import { playedSections } from "@/lib/setlist/playedSections";
+import { useScrollDirection } from "@/hooks/useScrollDirection";
 
 type Entry = {
   position: number;
   title: string;
-  /** Sections consécutives identiques repliées (« Refrain ×2 ») ; `index` =
-   *  rang de la première dans le chant, comme les [data-section] à l'écran. */
-  sections: { label: string; index: number; repeat: number }[];
+  /** Sections consécutives identiques repliées (« Refrain ×2 ») ; `uids` =
+   *  occurrences du groupe, retrouvées à l'écran par `data-section-uids`
+   *  (en sections uniques, une impression représente plusieurs occurrences). */
+  sections: { label: string; uids: string[]; repeat: number }[];
 };
+
+const uidsOf = (el: HTMLElement) => (el.dataset.sectionUids ?? "").split(" ").filter(Boolean);
+
+/** Ligne de lecture = bas de la barre d'outils (navbar + barre + marge), en
+ *  pixels. Elle ne bouge pas quand les barres s'escamotent, sinon le passage
+ *  visé par un clic serait marqué en retard. */
+function readingLine(): number {
+  const root = getComputedStyle(document.documentElement);
+  return (parseFloat(root.getPropertyValue("--nav-h")) || 58) + 5.5 * parseFloat(root.fontSize) + 1;
+}
 
 /** Déroulé de la régie : chants et sections dans l'ordre joué, à côté des
  *  partitions, sur ordinateur. Un clic y amène ; la position lue est marquée. */
 export function SetlistOutline({ items, contents }: { items: SetlistItem[]; contents: Record<string, SongContent> }) {
   const { t } = useTranslation();
   const navRef = useRef<HTMLElement>(null);
-  const [active, setActive] = useState<{ position: number; section: number } | null>(null);
+  const [active, setActive] = useState<{ position: number; uids: string[] } | null>(null);
+  // Les barres du haut s'escamotent au défilement : le sommaire monte avec elles.
+  const barsVisible = useScrollDirection();
 
   const entries = useMemo<Entry[]>(() =>
     [...items]
@@ -32,34 +46,37 @@ export function SetlistOutline({ items, contents }: { items: SetlistItem[]; cont
           ? item.fusionSongs.map((fs) => contents[fs.songSlug]?.ast.metadata.title ?? fs.songSlug).join(" / ")
           : itemAst(item, contents[item.songSlug])?.metadata.title ?? item.songSlug;
         const sections: Entry["sections"] = [];
-        playedSections(item, contents).forEach((section, index) => {
+        for (const section of playedSections(item, contents)) {
           const label = formatSectionName(section, t);
           const last = sections[sections.length - 1];
-          if (last && last.label === label) last.repeat++;
-          else sections.push({ label, index, repeat: 1 });
-        });
+          if (last && last.label === label) {
+            last.repeat++;
+            last.uids.push(section.uid);
+          } else {
+            sections.push({ label, uids: [section.uid], repeat: 1 });
+          }
+        }
         return { position: item.position, title, sections };
       }),
     [items, contents, t],
   );
 
-  // Ligne de lecture = bas de la barre d'outils, c'est-à-dire le haut du sommaire.
   useEffect(() => {
     let frame = 0;
     const update = () => {
       frame = 0;
-      const line = (navRef.current?.getBoundingClientRect().top ?? 0) + 1;
-      let found: { position: number; section: number } | null = null;
+      const line = readingLine();
+      let found: { position: number; uids: string[] } | null = null;
       for (const el of document.querySelectorAll<HTMLElement>("[data-outline-item]")) {
         if (el.getBoundingClientRect().top > line) break;
-        // -1 : aucune section encore atteinte, ou chant lu sur son scan 简谱.
-        let section = -1;
-        el.querySelectorAll("[data-section]").forEach((s, k) => {
-          if (s.getBoundingClientRect().top <= line) section = k;
+        // Vide : aucune section encore atteinte, ou chant lu sur son scan 简谱.
+        let uids: string[] = [];
+        el.querySelectorAll<HTMLElement>("[data-section]").forEach((s) => {
+          if (s.getBoundingClientRect().top <= line) uids = uidsOf(s);
         });
-        found = { position: Number(el.dataset.outlineItem), section };
+        found = { position: Number(el.dataset.outlineItem), uids };
       }
-      setActive(found ?? (entries[0] ? { position: entries[0].position, section: -1 } : null));
+      setActive(found ?? (entries[0] ? { position: entries[0].position, uids: [] } : null));
     };
     const onScroll = () => { if (!frame) frame = requestAnimationFrame(update); };
     update();
@@ -70,13 +87,13 @@ export function SetlistOutline({ items, contents }: { items: SetlistItem[]; cont
     };
   }, [entries]);
 
-  function go(position: number, section?: number) {
+  function go(position: number, uid?: string) {
     const item = document.querySelector(`[data-outline-item="${position}"]`);
-    const target = (section !== undefined && item?.querySelectorAll("[data-section]")[section]) || item;
-    if (!target || !navRef.current) return;
+    const target = (uid && item?.querySelector(`[data-section-uids~="${CSS.escape(uid)}"]`)) || item;
+    if (!target) return;
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     window.scrollTo({
-      top: target.getBoundingClientRect().top + window.scrollY - navRef.current.getBoundingClientRect().top,
+      top: target.getBoundingClientRect().top + window.scrollY - (readingLine() - 1),
       behavior: reduce ? "auto" : "smooth",
     });
   }
@@ -85,10 +102,10 @@ export function SetlistOutline({ items, contents }: { items: SetlistItem[]; cont
     <nav
       ref={navRef}
       aria-label={t("setlists.detail.outline")}
-      className="hidden xl:block fixed w-60 bottom-6 overflow-y-auto print:hidden"
+      className="hidden xl:block fixed w-60 bottom-6 overflow-y-auto print:hidden transition-[top] duration-300"
       // À gauche de la colonne des partitions (max-w-2xl centrée, 42rem), sous
-      // la barre d'outils de la setlist.
-      style={{ left: "max(1rem, calc(50% - 21rem - 17rem))", top: "calc(var(--nav-h) + 5.5rem)" }}
+      // la barre d'outils de la setlist — ou en haut quand les barres sont cachées.
+      style={{ left: "max(1rem, calc(50% - 21rem - 17rem))", top: barsVisible ? "calc(var(--nav-h) + 5.5rem)" : "1.5rem" }}
     >
       <p className="px-2 mb-2 text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
         {t("setlists.detail.outline")}
@@ -111,13 +128,13 @@ export function SetlistOutline({ items, contents }: { items: SetlistItem[]; cont
               </button>
               {entry.sections.length > 0 && (
                 <ol className="ml-8 mt-0.5">
-                  {entry.sections.map((s) => {
-                    const here = isActive && active.section >= s.index && active.section < s.index + s.repeat;
+                  {entry.sections.map((s, i) => {
+                    const here = isActive && s.uids.some((uid) => active.uids.includes(uid));
                     return (
-                      <li key={s.index}>
+                      <li key={`${s.uids[0]}-${i}`}>
                         <button
                           type="button"
-                          onClick={() => go(entry.position, s.index)}
+                          onClick={() => go(entry.position, s.uids[0])}
                           className={`w-full text-left px-2 py-0.5 rounded-md text-[12px] transition-colors hover:bg-muted ${
                             here ? "text-primary font-semibold" : "text-muted-foreground"
                           }`}

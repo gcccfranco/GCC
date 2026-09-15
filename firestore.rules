@@ -11,8 +11,16 @@ rules_version = '2';
 //   Exception : le lien de présentation (presentationUrl) peut aussi être posé par
 //   la régie inscrite au planning ce jour-là — via /api/setlist/presentation
 //   (Firebase Admin, qui lit le planning), jamais par le client. Aucune règle ici.
+//   Historique (setlists/{id}/history) : lu par les connectés, écrit par qui peut
+//   modifier la setlist, chacun sur ses propres entrées.
 // - Profils (users/{uid}) : chacun crée le sien à l'inscription ; une fois créé,
 //   seuls les admins peuvent le modifier.
+// - Évènements (evenements/{id}, lot 6) : « pour = eglise » public, le reste
+//   pour les connectés ; inscriptions écrites par le serveur seulement.
+// - Programmes de scène (programmes/{id}, lot 3 bis) : lus par les connectés ;
+//   écrits par la coordination (pôle « événement » du profil + admins). Créneaux
+//   (programmes/{id}/creneaux) : tout connecté en pose un à son nom ; auteur +
+//   coordination le modifient ou le retirent.
 // - config/app : état des inscriptions (registrationOpen), lisible publiquement,
 //   modifiable par les admins depuis la page /admin.
 //
@@ -59,7 +67,8 @@ service cloud.firestore {
         isAdmin()
         || (request.auth.uid == uid
             && request.resource.data.get('annonces', []) == []
-            && request.resource.data.get('notify', []) == [])
+            && request.resource.data.get('notify', []) == []
+            && request.resource.data.get('poles', []) == [])
       );
       // Une fois le profil créé, seuls les admins peuvent le modifier.
       allow update: if isAdmin();
@@ -79,6 +88,56 @@ service cloud.firestore {
       allow update, delete: if signedIn() && (
         isAdmin() || resource.data.authorId == request.auth.uid
       );
+    }
+
+    // Programmes de scène (lot 3 bis, docs/spec-programme-scene.md). Miroir :
+    // isCoordination / canEditCreneau dans src/lib/access.ts.
+    function isCoordination() {
+      return isAdmin() || (hasProfile() && 'evenement' in profile().get('poles', []));
+    }
+
+    match /programmes/{id} {
+      allow read: if signedIn();
+      allow create, update, delete: if isCoordination();
+
+      match /creneaux/{cid} {
+        allow read: if signedIn();
+        allow create: if signedIn() && request.resource.data.auteurUid == request.auth.uid;
+        allow update, delete: if signedIn() && (
+          isCoordination() || resource.data.auteurUid == request.auth.uid
+        );
+      }
+    }
+
+    // Évènements (lot 6, docs/spec-evenements.md). « pour = eglise » : lisible par
+    // tout le monde (calendrier public ; la requête filtre sur pour) ; les autres
+    // par les connectés. Création : coordination, ou membre dont le droit
+    // d'annonces couvre la section visée, à son nom, compteur à zéro.
+    // Modification et suppression : organisateur + coordination, sans toucher
+    // au compteur. Le compteur `inscrits` et les inscriptions ne s'écrivent
+    // que par le serveur (Admin SDK, /api/evenements/*). Miroir : canSeeEvenement,
+    // canCreateEvenement, canEditEvenement (src/lib/access.ts).
+    match /evenements/{id} {
+      allow read: if resource.data.pour == 'eglise' || signedIn();
+      allow create: if signedIn()
+        && request.resource.data.organisateurUid == request.auth.uid
+        && request.resource.data.inscrits == 0
+        && (isCoordination()
+            || (hasProfile() && request.resource.data.pour in profile().get('annonces', [])));
+      allow update: if signedIn()
+        && request.resource.data.inscrits == resource.data.inscrits
+        && (isCoordination() || resource.data.organisateurUid == request.auth.uid);
+      allow delete: if signedIn() && (isCoordination() || resource.data.organisateurUid == request.auth.uid);
+
+      match /inscriptions/{iid} {
+        // Sa propre place (id = uid), ou toute la liste pour l'organisateur et la coordination.
+        allow read: if signedIn() && (
+          iid == request.auth.uid
+          || isCoordination()
+          || get(/databases/$(database)/documents/evenements/$(id)).data.organisateurUid == request.auth.uid
+        );
+        allow write: if false;
+      }
     }
 
     // Propositions de chants envoyées par les membres (inbox de modération /admin).
@@ -133,6 +192,40 @@ service cloud.firestore {
         || isAdmin()
         || (hasProfile() && isEditorOf(resource.data.category))
       );
+
+      // Historique des modifications (docs/spec-setlist.md) : lu par tout
+      // connecté, comme la setlist ; écrit par qui peut la modifier
+      // (canEditSetlistDoc), sous son propre nom et sur ses propres entrées.
+      match /history/{entryId} {
+        allow read: if signedIn();
+        allow create: if signedIn()
+          && request.resource.data.authorUid == request.auth.uid
+          && canEditSetlistDoc(get(/databases/$(database)/documents/setlists/$(id)).data);
+        allow update: if signedIn()
+          && resource.data.authorUid == request.auth.uid
+          && request.resource.data.authorUid == request.auth.uid
+          && canEditSetlistDoc(get(/databases/$(database)/documents/setlists/$(id)).data);
+      }
+
+      // Versions perso d'un chant (docs/spec-version-perso.md) : un document
+      // par personne, lu par tout connecté (versions partagées), écrit par
+      // son propriétaire seul. Miroir client : canHaveSetlistVersion
+      // (src/lib/access.ts) = qui voit la setlist.
+      match /versions/{uid} {
+        allow read: if signedIn();
+        allow create, update: if signedIn()
+          && request.auth.uid == uid
+          && request.resource.data.authorUid == uid;
+        allow delete: if signedIn() && request.auth.uid == uid;
+      }
+    }
+
+    // Miroir de canEditSetlist (src/lib/access.ts) : une setlist privée ne se
+    // modifie que par son propriétaire.
+    function canEditSetlistDoc(setlist) {
+      return setlist.get('ownerId', '') == request.auth.uid
+        || (!setlist.get('isPrivate', false)
+            && (isAdmin() || (hasProfile() && isEditorOf(setlist.category))));
     }
 
     // Annotations dessinées en Mode Louange (personnelles).

@@ -6,6 +6,10 @@ import { pinyin_font } from "@/components/song/pinyinFont";
 import type { ChordProAST, ChordProLine, ChordProSection, Token } from "@/types/chordPro";
 import { useTranslation } from "react-i18next";
 import { formatSectionName } from "@/lib/chordpro/parser";
+import { abbreviateSection } from "@/lib/chordpro/abbreviations";
+import { isRepeatOf, resolveSectionOccurrences, type SectionOccurrence } from "@/lib/setlist/sectionSteps";
+import { uniqueSections } from "@/lib/setlist/uniqueSections";
+import type { PartitionLayout } from "@/lib/partitionLayoutPref";
 import { resolveStructureOverride } from "@/lib/chordpro/structure";
 import { semitonesTo } from "@/lib/transpose";
 import { transposeSection } from "@/lib/transposeAST";
@@ -59,6 +63,19 @@ export const CHART_TYPE_COLOR: Record<string, string> = {
   bridge: "var(--sec-bridge)",
   outro: "var(--sec-outro)",
   coda: "var(--sec-coda)",
+};
+
+// Clé --sec-* d'un type de section (mêmes correspondances que CHART_TYPE_COLOR).
+const SECTION_PALETTE_KEY: Record<string, string> = {
+  intro: "intro",
+  verse: "verse",
+  prechorus: "prechorus",
+  chorus: "chorus",
+  postchorus: "chorus",
+  final: "chorus",
+  bridge: "bridge",
+  outro: "outro",
+  coda: "coda",
 };
 
 function getChartSectionStyle(type: string): React.CSSProperties {
@@ -319,14 +336,16 @@ export function TransitionNote({ text }: { text: string }) {
 // SectionView
 // ---------------------------------------------------------------------------
 
-// Nuancier : une teinte, trois intensités — le fond fonce du doux au fort.
-// Les indications (a cappella, break…) restent neutres, avec une icône.
+// Nuancier : neutre, trois intensités — le fond fonce du doux au fort, comme
+// les nuances imprimées d'une partition. Sans teinte : la couleur est réservée
+// aux sections (le violet se confondait avec le pont, décision du 14/09/2026).
+// Les indications (a cappella, break…) : contour seul, avec une icône.
 const NUANCE_INTENSITY_CLASS = {
-  1: "bg-violet-100 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300",
-  2: "bg-violet-300 text-violet-950 dark:bg-violet-500/45 dark:text-violet-50",
-  3: "bg-violet-700 text-white dark:bg-violet-300 dark:text-violet-950",
+  1: "bg-stone-200 text-stone-700 dark:bg-stone-600/40 dark:text-stone-200",
+  2: "bg-stone-400/80 text-stone-950 dark:bg-stone-500/70 dark:text-white",
+  3: "bg-stone-800 text-white dark:bg-stone-200 dark:text-stone-900",
 } as const;
-const NUANCE_NEUTRAL_CLASS = "bg-stone-200/70 text-stone-700 dark:bg-stone-500/25 dark:text-stone-200";
+const NUANCE_NEUTRAL_CLASS = "border border-stone-400/80 text-stone-700 dark:border-stone-500 dark:text-stone-200";
 const NUANCE_ICON: Record<string, LucideIcon> = {
   cresc: ArrowUpRight,
   decresc: ArrowDownRight,
@@ -338,36 +357,148 @@ const NUANCE_ICON: Record<string, LucideIcon> = {
   break: Pause,
 };
 
+// Bandeau de structure : la nuance en texte seul, sans fond — la structure
+// doit rester ce qu'on voit d'abord ; la noirceur suit le nuancier.
+const NUANCE_TEXT_INTENSITY_CLASS = {
+  1: "text-stone-500 dark:text-stone-400",
+  2: "text-stone-700 dark:text-stone-200",
+  3: "text-stone-950 font-bold dark:text-white",
+} as const;
+const NUANCE_TEXT_NEUTRAL_CLASS = "text-stone-600 dark:text-stone-300";
+
 /** Badge de nuances (dynamiques + expression voulues par la présidence).
- *  `lg` : mode louange, lu de plus loin. */
-export function NuanceBadge({ nuance, size = "sm" }: { nuance?: SectionNuance; size?: "sm" | "lg" }) {
+ *  `lg` : mode louange, lu de plus loin ; `variant="text"` : bandeau de
+ *  structure, texte discret sous l'abréviation. */
+export function NuanceBadge({ nuance, size = "sm", variant = "badge" }: { nuance?: SectionNuance; size?: "sm" | "lg"; variant?: "badge" | "text" }) {
   if (!nuance || (nuance.tags.length === 0 && !nuance.note)) return null;
   const lg = size === "lg";
+  const text = variant === "text";
   return (
     <span className={`inline-flex flex-wrap items-center align-middle ${lg ? "gap-1.5" : "gap-1"}`}>
       {nuance.tags.map((id) => {
         const def = nuanceDef(id);
         const Icon = NUANCE_ICON[id];
+        // Bandeau : crescendo et decrescendo se lisent à leur seule flèche.
+        const arrowOnly = text && !!def?.trend && !!Icon;
         return (
           <span
             key={id}
             data-nuance
             title={nuanceFull(id)}
+            aria-label={arrowOnly ? nuanceLabel(id) : undefined}
             className={`inline-flex items-center gap-[0.25em] leading-none normal-case tracking-normal ${
-              lg ? "text-[0.8125rem] font-bold px-2 py-1 rounded-md" : "text-[10px] font-semibold px-1.5 py-0.5 rounded"
-            } ${def?.intensity ? NUANCE_INTENSITY_CLASS[def.intensity] : NUANCE_NEUTRAL_CLASS}`}
+              text
+                ? `text-[14px] font-semibold ${def?.intensity ? NUANCE_TEXT_INTENSITY_CLASS[def.intensity] : NUANCE_TEXT_NEUTRAL_CLASS}`
+                : `${lg ? "text-[0.8125rem] font-bold px-2 py-1 rounded-md" : "text-[10px] font-semibold px-1.5 py-0.5 rounded"} ${def?.intensity ? NUANCE_INTENSITY_CLASS[def.intensity] : NUANCE_NEUTRAL_CLASS}`
+            }`}
           >
-            {Icon && <Icon aria-hidden="true" className="h-[1.1em] w-[1.1em] shrink-0" strokeWidth={2.5} />}
-            {nuanceLabel(id)}
+            {Icon && <Icon aria-hidden="true" className={arrowOnly ? "h-[1.5em] w-[1.5em] shrink-0" : "h-[1.1em] w-[1.1em] shrink-0"} strokeWidth={2.5} />}
+            {!arrowOnly && nuanceLabel(id)}
           </span>
         );
       })}
       {nuance.note && (
-        <span className={`normal-case tracking-normal text-violet-700 dark:text-violet-300 ${lg ? "text-[0.8125rem] font-semibold" : "text-[11px] font-normal"}`}>
+        <span className={`normal-case tracking-normal text-stone-600 dark:text-stone-300 ${text ? "text-[13px] font-normal" : lg ? "text-[0.8125rem] font-semibold" : "text-[11px] font-normal"}`}>
           {nuance.note}
         </span>
       )}
     </span>
+  );
+}
+
+/** Bandeau de structure (« coup d'œil ») : la structure jouée en abrégé, la
+ *  nuance sous chaque étape, les reprises identiques repliées en « ×2 » (même
+ *  règle que la vue structure du mode louange). Remplace la ligne ORDRE.
+ *  Notes et transitions passent sous le bandeau (`details`) quand le corps ne
+ *  peut pas les porter : scan 简谱, sections uniques, structure seule. */
+export function StructureStrip({
+  steps,
+  position,
+  capo,
+  songKey,
+  details = false,
+  className = "",
+  children,
+}: {
+  steps: SectionOccurrence[];
+  /** Numéro du chant dans la setlist, quand le bandeau tient lieu d'en-tête. */
+  position?: number;
+  capo?: number;
+  /** Tonalité jouée : une « modulation » vers elle n'en est pas une. */
+  songKey?: string;
+  details?: boolean;
+  className?: string;
+  /** Badges d'état propres au contexte (copie des paroles, version modifiée…). */
+  children?: React.ReactNode;
+}) {
+  const { t } = useTranslation();
+  const groups: { step: SectionOccurrence; abbr: string; full: string; repeat: number }[] = [];
+  for (const step of steps) {
+    const full = formatSectionName(step.section, t);
+    const last = groups[groups.length - 1];
+    if (last && isRepeatOf({ ...last.step, label: last.full }, { ...step, label: full })) {
+      last.repeat++;
+      continue;
+    }
+    groups.push({ step, abbr: abbreviateSection(step.section), full, repeat: 1 });
+  }
+  // Pastille aux couleurs de la section (palette --sec-* de globals.css) :
+  // fond clair, lettre en couleur — les mêmes teintes que les cadres du corps.
+  const secKey = (type: string) => SECTION_PALETTE_KEY[type] ?? "other";
+  const colorOf = (type: string) => `var(--sec-${secKey(type)})`;
+  const tintOf = (type: string) => `var(--sec-${secKey(type)}-tint)`;
+  // Notes et transitions : un numéro noir accroché à la pastille, repris
+  // dans la liste sous le bandeau (quand le corps ne les porte pas).
+  const notes = details ? groups.filter((g) => g.step.note || g.step.transition) : [];
+  const noteNumber = new Map(notes.map((g, i) => [g, i + 1]));
+  const numberBadge = "inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-foreground px-1 text-[11px] font-bold leading-none text-background";
+  return (
+    <div className={className}>
+      <div className="flex flex-wrap items-start gap-x-3 gap-y-2">
+        {position !== undefined && (
+          <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center shrink-0">
+            {position}
+          </span>
+        )}
+        {capo ? (
+          <span className="text-[10px] font-bold font-mono border border-border rounded-full px-1.5 py-0.5 text-muted-foreground">
+            {t("performance.capoBadge", { n: capo })}
+          </span>
+        ) : null}
+        <ol aria-label={t("songs.view.structure")} className="flex flex-wrap items-start gap-x-3 gap-y-3">
+          {groups.map((g, i) => {
+            const targetKey = g.step.targetKey && g.step.targetKey !== songKey ? g.step.targetKey : undefined;
+            const n = noteNumber.get(g);
+            return (
+              <li key={i} className="flex flex-col items-center gap-1.5">
+                <span className="relative inline-flex h-11 min-w-11 items-center justify-center rounded-full px-2.5" style={{ background: tintOf(g.step.section.type), color: colorOf(g.step.section.type) }}>
+                  <span className="inline-flex items-baseline text-[17px] font-bold leading-none tracking-[0.02em]">
+                    <abbr title={g.full} className="no-underline [text-decoration:none]">{g.abbr}</abbr>
+                    {g.repeat > 1 && <span className="ml-px text-[13px] font-semibold">×{g.repeat}</span>}
+                  </span>
+                  {n !== undefined && (
+                    <span aria-label={`${n}`} className={`absolute -right-1 -top-1 ${numberBadge}`}>{n}</span>
+                  )}
+                </span>
+                {targetKey && <span className="font-mono text-[12px] leading-none text-muted-foreground">→ {targetKey}</span>}
+                <NuanceBadge nuance={g.step.nuance} variant="text" />
+              </li>
+            );
+          })}
+        </ol>
+        {children && <span className="ml-auto inline-flex flex-wrap items-center gap-2">{children}</span>}
+      </div>
+      {notes.length > 0 && (
+        <ol className="mt-3 space-y-1.5 border-t border-border pt-3 text-[14px] text-foreground/80">
+          {notes.map((g, i) => (
+            <li key={i} className="flex items-start gap-2">
+              <span className={`${numberBadge} mt-px shrink-0`}>{i + 1}</span>
+              <span>{[g.step.note, g.step.transition && `→ ${g.step.transition}`].filter(Boolean).join(" ")}</span>
+            </li>
+          ))}
+        </ol>
+      )}
+    </div>
   );
 }
 
@@ -394,9 +525,12 @@ export interface SectionViewProps {
   nuanceSize?: "sm" | "lg";
   /** Vue structure : passages identiques repliés (« Refrain ×2 »). */
   repeat?: number;
+  /** Occurrences de la structure jouée que cette impression représente
+   *  (`data-section-uids`) : le sommaire s'en sert pour y aller et se marquer. */
+  occurrenceUids?: string[];
 }
 
-export function SectionView({ section, language, showChords, showPinyin, useJianpu, hideLyrics = false, note, nuance, keyChange, songSourceLabel, typography = "web", chartStyle = false, onLineSelect, nuanceSize = "sm", repeat = 1 }: SectionViewProps) {
+export function SectionView({ section, language, showChords, showPinyin, useJianpu, hideLyrics = false, note, nuance, keyChange, songSourceLabel, typography = "web", chartStyle = false, onLineSelect, nuanceSize = "sm", repeat = 1, occurrenceUids }: SectionViewProps) {
   const isPdfTypo = typography === "pdf";
   const { t, i18n } = useTranslation();
   const isZh = language === "zh";
@@ -407,7 +541,7 @@ export function SectionView({ section, language, showChords, showPinyin, useJian
   // centré dans son cadre, même agrandi en vue structure.
   const bodyHidden = hideLyrics && !showChords;
   return (
-    <div data-section className="mb-5 print:mb-4" style={{ breakInside: "avoid", ...(chartStyle ? getChartSectionStyle(section.type) : getSectionStyle(section.type, isZh)), ...(bodyHidden ? { paddingBottom: 10 } : null) }}>
+    <div data-section data-section-uids={occurrenceUids?.join(" ")} className="mb-5 print:mb-4" style={{ breakInside: "avoid", ...(chartStyle ? getChartSectionStyle(section.type) : getSectionStyle(section.type, isZh)), ...(bodyHidden ? { paddingBottom: 10 } : null) }}>
       {/* Label de section — hors copie : la régie colle les paroles seules. */}
       <div data-copy-ignore className={bodyHidden ? undefined : "mb-1.5"} style={{ display: "flex", alignItems: "center", gap: 9 }}>
         <span
@@ -528,6 +662,12 @@ export interface SongViewProps {
   chartStyle?: boolean;
   /** Mode édition setlist : rend chaque ligne tappable (ouvre la sheet d'édition). */
   onLineSelect?: (line: ChordProLine, sectionUid?: string) => void;
+  /** Coup d'œil : ordre joué (défaut), chaque section une fois, ou bandeau seul. */
+  layout?: PartitionLayout;
+  /** Structure perso (docs/spec-version-perso.md) : le corps la suit telle
+   *  quelle, sans notes ni transitions d'occurrence ; le bandeau garde la
+   *  structure jouée. */
+  bodyStructure?: string[] | null;
 }
 
 export function SongView({
@@ -542,6 +682,8 @@ export function SongView({
   sectionKeys = {},
   chartStyle = false,
   onLineSelect,
+  layout = "played",
+  bodyStructure = null,
 }: SongViewProps) {
   const { t } = useTranslation();
   const isZh = ast.metadata.language === "zh";
@@ -551,6 +693,19 @@ export function SongView({
     structureOverride && structureOverride.length > 0 && !canUseJianpu
       ? resolveStructureOverride(ast.sections, structureOverride)
       : ast.sections;
+  const steps = resolveSectionOccurrences(sections, { sectionNotes, sectionTransitions, sectionNuances, sectionKeys });
+  const personalSteps =
+    bodyStructure && bodyStructure.length > 0 && !canUseJianpu
+      ? resolveSectionOccurrences(resolveStructureOverride(ast.sections, bodyStructure), { sectionNotes: {}, sectionKeys })
+      : null;
+  const shown: { step: SectionOccurrence; uids: string[]; withDetails: boolean }[] =
+    layout === "structure"
+      ? []
+      : personalSteps
+        ? personalSteps.map((step) => ({ step, uids: [step.section.uid], withDetails: false }))
+        : layout === "unique"
+          ? uniqueSections(steps, ast.metadata.key).map((u) => ({ ...u, withDetails: false }))
+          : steps.map((step) => ({ step, uids: [step.section.uid], withDetails: true }));
   return (
     <div className="max-w-2xl print:max-w-none">
       {/* En-tête */}
@@ -595,58 +750,39 @@ export function SongView({
         )}
       </div>
 
-      {/* Ligne ORDRE */}
-      <div className="flex flex-wrap items-baseline gap-x-1 gap-y-0.5 pt-2 pb-3">
-        <span
-          className={`text-[8px] font-bold tracking-[1.4px] uppercase mr-1.5 shrink-0 ${chord_font.className}`}
-          style={{ color: langAccent }}
-        >
-          ORDRE
-        </span>
-        {sections.map((section, i) => (
-          <span key={`ord-${section.id}-${i}`} className={`text-[11px] text-muted-foreground ${isZh ? zh_lyric_font.className : chord_font.className}`}>
-            {i > 0 && <span className="mx-0.5 opacity-40">·</span>}
-            {formatSectionName(section, t)}
-          </span>
-        ))}
-      </div>
+      {/* Bandeau de structure (coup d'œil) : notes et transitions y passent
+          dès que le corps ne les porte plus (sections uniques, structure seule). */}
+      <StructureStrip steps={steps} songKey={ast.metadata.key} details={layout !== "played"} className="pt-2 pb-3" />
 
-      {/* Corps */}
+      {/* Corps : ordre joué, ou chaque section une fois (les réglages
+          d'occurrence restent dans le bandeau), ou rien du tout. */}
       <div>
-        {(() => {
-          const occ: Record<string, number> = {};
-          return sections.map((section, i) => {
-            const idx = occ[section.id] ?? 0;
-            occ[section.id] = idx + 1;
-            const key = idx === 0 ? section.id : `${section.id}:${idx}`;
-            const note = sectionNotes[section.uid] ?? sectionNotes[key] ?? sectionNotes[section.id] ?? "";
-            const transition = sectionTransitions?.[section.uid] ?? sectionTransitions?.[key] ?? sectionTransitions?.[section.id] ?? "";
-            const nuance = sectionNuances[section.uid] ?? sectionNuances[key] ?? sectionNuances[section.id];
-            // Modulation (升调) : la section s'affiche transposée dans sa tonalité cible.
-            const targetKey = sectionKeys[section.uid] ?? sectionKeys[key] ?? sectionKeys[section.id];
-            const keyChange = targetKey && targetKey !== ast.metadata.key ? targetKey : undefined;
-            const shownSection = keyChange && ast.metadata.key
-              ? transposeSection(section, semitonesTo(ast.metadata.key, keyChange), keyChange)
-              : section;
-            return (
-              <div key={`${section.uid ?? section.id}-${i}`}>
-                <SectionView
-                  section={shownSection}
-                  language={ast.metadata.language}
-                  showChords={showChords}
-                  showPinyin={isZh ? showPinyin : false}
-                  useJianpu={canUseJianpu}
-                  note={note}
-                  nuance={nuance}
-                  keyChange={keyChange}
-                  chartStyle={chartStyle}
-                  onLineSelect={onLineSelect}
-                />
-                {transition && <TransitionNote text={transition} />}
-              </div>
-            );
-          });
-        })()}
+        {shown.map(({ step, uids, withDetails }, i) => {
+          const { section } = step;
+          // Modulation (升调) : la section s'affiche transposée dans sa tonalité cible.
+          const keyChange = step.targetKey && step.targetKey !== ast.metadata.key ? step.targetKey : undefined;
+          const shownSection = keyChange && ast.metadata.key
+            ? transposeSection(section, semitonesTo(ast.metadata.key, keyChange), keyChange)
+            : section;
+          return (
+            <div key={`${section.uid ?? section.id}-${i}`}>
+              <SectionView
+                section={shownSection}
+                language={ast.metadata.language}
+                showChords={showChords}
+                showPinyin={isZh ? showPinyin : false}
+                useJianpu={canUseJianpu}
+                note={withDetails ? step.note : undefined}
+                nuance={withDetails ? step.nuance : undefined}
+                keyChange={keyChange}
+                chartStyle={chartStyle}
+                onLineSelect={onLineSelect}
+                occurrenceUids={uids}
+              />
+              {withDetails && step.transition && <TransitionNote text={step.transition} />}
+            </div>
+          );
+        })}
       </div>
     </div>
   );

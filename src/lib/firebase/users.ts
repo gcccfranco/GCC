@@ -12,7 +12,7 @@ import {
   type RawDoc,
 } from "./setlists";
 import { useAuth } from "./auth";
-import type { ServiceRole, UserProfile } from "@/types/user";
+import type { Pole, ServiceRole, UserProfile } from "@/types/user";
 
 export async function signUp(email: string, password: string): Promise<User> {
   const cred = await createUserWithEmailAndPassword(auth, email, password);
@@ -35,6 +35,7 @@ function fromFsProfile(raw: RawDoc): UserProfile {
     serviceRoles: (data.serviceRoles as Record<string, ServiceRole[]>) ?? {},
     annonces: (data.annonces as string[]) ?? [],
     notify: (data.notify as string[]) ?? [],
+    poles: (data.poles as Pole[]) ?? [],
     // Date d'inscription = createTime du document (créé à l'inscription) ; disponible
     // rétroactivement pour tous les profils, contrairement à un champ écrit à la main.
     createdAt: raw.createTime ? new Date(raw.createTime) : undefined,

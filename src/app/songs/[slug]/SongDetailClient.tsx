@@ -56,6 +56,9 @@ function safeParseParam<T>(raw: string | null, fallback: T): T {
     const jianpuScore = useJianpuScore(song.slug);
     const [showScore, setShowScore] = useState(false);
     const originalKey = ast.metadata.key;
+    // Tonalité la plus chantée à GCC : la page y démarre, l'originale reste proposée.
+    const recommendedKey = ast.metadata.recommendedKey;
+    const defaultKey = recommendedKey ?? originalKey;
     const youtubeId = song.youtubeUrl ? extractYouTubeId(song.youtubeUrl) : null;
     const scrollVisible = useScrollDirection();
     // Barre d'outils rappelée d'un tap sur la partition (tablette au pupitre :
@@ -148,7 +151,11 @@ function safeParseParam<T>(raw: string | null, fallback: T): T {
     // Ouverte depuis une setlist : la tonalité choisie ici est retenue pour ce
     // chant dans cette setlist, sur cet appareil (reprise en mode louange).
     const fromSetlist = useMemo(() => safeParseParam<string | null>(searchParams.get("setlist"), null), [searchParams]);
-    const setlistKey = useMemo(() => safeParseParam<string>(searchParams.get("key"), originalKey), [searchParams, originalKey]);
+    // Depuis une setlist, l'absence de `key` veut dire la tonalité originale.
+    const setlistKey = useMemo(
+      () => safeParseParam<string>(searchParams.get("key"), fromSetlist ? originalKey : defaultKey),
+      [searchParams, fromSetlist, originalKey, defaultKey]
+    );
 
     // Tant que la tonalité de départ n'est pas appliquée, l'état porte encore la
     // tonalité d'origine : l'enregistrer écraserait le choix retenu.
@@ -267,10 +274,11 @@ function safeParseParam<T>(raw: string | null, fallback: T): T {
                   }
                   className="flex-1 min-w-0 h-9 sm:h-8 px-2 border border-border rounded-md bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
                 >
-                  {keyOptions(customize.currentKey).map((k) => (
+                  {keyOptions(customize.currentKey, originalKey).map((k) => (
                     <option key={k} value={k}>
                       {k}
                       {k === originalKey ? " " + t("customize.panel.keyOriginal") : ""}
+                      {k === recommendedKey ? " " + t("customize.panel.keyRecommended") : ""}
                     </option>
                   ))}
                 </select>
@@ -287,16 +295,16 @@ function safeParseParam<T>(raw: string | null, fallback: T): T {
               >
                 +
               </Button>
-              {/* Retour à la tonalité d'origine d'un tap (visible si transposé) */}
-              {customize.semitones !== 0 && (
+              {/* Retour à la tonalité par défaut (recommandée, sinon d'origine) d'un tap */}
+              {customize.currentKey !== defaultKey && (
                 <Button
                   variant="outline"
                   size="icon-lg"
                   className="h-9 w-9 sm:h-8 sm:w-8 rounded-md text-muted-foreground"
-                  aria-label={t("customize.panel.keyOriginal")}
-                  title={t("customize.panel.keyOriginal")}
+                  aria-label={t(recommendedKey ? "customize.panel.keyBackToRecommended" : "customize.panel.keyOriginal")}
+                  title={t(recommendedKey ? "customize.panel.keyBackToRecommended" : "customize.panel.keyOriginal")}
                   onClick={() =>
-                    setCustomize((c) => ({ ...c, semitones: 0, currentKey: originalKey }))
+                    setCustomize((c) => ({ ...c, semitones: semitonesTo(originalKey, defaultKey), currentKey: defaultKey }))
                   }
                 >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

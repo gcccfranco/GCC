@@ -4,7 +4,7 @@
 import { adminDb } from "./admin";
 import { normalizeName } from "@/lib/planning/names";
 import { ADMIN_EMAILS } from "@/lib/access";
-import type { ServiceRole, NotifType } from "@/types/user";
+import type { ServiceRole, NotifType, NotifLang } from "@/types/user";
 
 /** uid des comptes administrateurs (ADMIN_EMAILS). Cible des notifications de
  *  signalement. Serveur uniquement (Admin, lit tous les profils). */
@@ -90,4 +90,15 @@ export async function filterUidsByNotifPref(uids: string[], type: NotifType): Pr
   const snaps = await db.getAll(...uids.map((u) => db.collection("notifPrefs").doc(u)));
   // On garde tout uid qui n'a pas EXPLICITEMENT mis ce type à false.
   return snaps.filter((s) => !(s.exists && s.data()?.[type] === false)).map((s) => s.id);
+}
+
+/** Langue de chaque uid pour les envois automatiques (notifPrefs/{uid}.lang,
+ *  écrite par la navbar) ; document ou champ absent = français. Serveur uniquement. */
+export async function loadNotifLangs(uids: string[]): Promise<Map<string, NotifLang>> {
+  const out = new Map<string, NotifLang>();
+  if (!uids.length) return out;
+  const db = adminDb();
+  const snaps = await db.getAll(...uids.map((u) => db.collection("notifPrefs").doc(u)));
+  for (const s of snaps) out.set(s.id, s.exists && s.data()?.lang === "zh-CN" ? "zh-CN" : "fr");
+  return out;
 }

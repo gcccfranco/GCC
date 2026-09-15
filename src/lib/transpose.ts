@@ -268,7 +268,8 @@ export const ALL_KEYS = [
 ];
 
 /**
- * Les douze, plus la tonalité déjà en place quand elle s'écrit autrement.
+ * Les douze, plus chaque tonalité reçue qui s'écrit autrement (celle en place,
+ * et l'originale du chant quand la page démarre dans la recommandée).
  *
  * Un `<select>` dont la valeur n'est dans aucune option s'affiche **vide**, et
  * un chant gravé en `C#` ou une setlist dont quelqu'un a choisi `Gb` perdrait
@@ -276,15 +277,18 @@ export const ALL_KEYS = [
  * est en `C#`, `dieu-sauveur` en `G#`, et deux chants sont en `Am` — un nom que
  * la liste n'a jamais porté.
  *
- * Le nom reçu est inséré devant l'entrée de **même hauteur**, pour que l'ordre
+ * Chaque nom reçu est inséré devant l'entrée de **même hauteur**, pour que l'ordre
  * reste chromatique et que les deux orthographes soient voisines. Un nom dont
  * la hauteur est inconnue (`Am`) va en fin de liste.
  */
-export function keyOptions(current?: string | null): string[] {
-  if (!current || ALL_KEYS.includes(current)) return ALL_KEYS;
-  const i = ALL_KEYS.findIndex((k) => noteToIndex(k) === noteToIndex(current));
-  if (i === -1) return [...ALL_KEYS, current];
-  return [...ALL_KEYS.slice(0, i), current, ...ALL_KEYS.slice(i)];
+export function keyOptions(...names: (string | null | undefined)[]): string[] {
+  let options = ALL_KEYS;
+  for (const name of names) {
+    if (!name || options.includes(name)) continue;
+    const i = options.findIndex((k) => noteToIndex(k) === noteToIndex(name));
+    options = i === -1 ? [...options, name] : [...options.slice(0, i), name, ...options.slice(i)];
+  }
+  return options;
 }
 
 /**

@@ -11,7 +11,7 @@ export interface PushNotif {
   title: string;
   body: string;
   url: string;
-  kind: "manual" | "reminder" | "broadcast";
+  kind: "manual" | "reminder" | "broadcast" | "presentation" | "scene" | "evenement";
   recipients: string[];
   everyone: boolean;
   createdAt: Date | null;

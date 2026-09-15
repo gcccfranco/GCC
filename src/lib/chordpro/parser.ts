@@ -174,7 +174,7 @@ const SECTION_NAME_KINDS: [RegExp, string][] = [
 // écrit contradictoire était ignoré. Les autres (other, final…) lisent déjà le nom.
 const TRANSLATED_TYPES = new Set(["verse", "chorus", "bridge", "intro", "outro", "prechorus", "postchorus", "tag", "interlude", "instrumental", "coda"]);
 
-function sectionKindOfName(name: string): string | null {
+export function sectionKindOfName(name: string): string | null {
   const clean = name.replace(/\s*\([^)]+\)\s*/g, " ");
   return SECTION_NAME_KINDS.find(([re]) => re.test(clean))?.[1] ?? null;
 }
@@ -255,6 +255,7 @@ export function parseChordPro(source: string): ChordProAST {
     titlePinyin: null,
     artist: "Inconnu",
     key: "C",
+    recommendedKey: null,
     jianpuKey: null,
     tempo: null,
     language: "fr",
@@ -351,6 +352,9 @@ export function parseChordPro(source: string): ChordProAST {
           break;
         case "key":
           metadata.key = value;
+          break;
+        case "recommended_key":
+          metadata.recommendedKey = value || null;
           break;
         case "jianpu_key":
           metadata.jianpuKey = value || null;

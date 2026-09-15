@@ -51,6 +51,7 @@ export function loadSong(slug: string): Song {
     artist: m.artist,
     language: m.language,
     originalKey: m.key,
+    recommendedKey: m.recommendedKey,
     tempo: m.tempo,
     themes: m.themes.map(slugifyTheme),
     youtubeUrl: m.youtubeUrl,

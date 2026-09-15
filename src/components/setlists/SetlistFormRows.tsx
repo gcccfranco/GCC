@@ -30,7 +30,8 @@ import { useDefaultSensors } from "@/lib/dnd/sensors";
 import { nextUid } from "@/lib/uid";
 import { useJianpuScore } from "@/lib/jianpu/images";
 import type { FormItem, FormSectionItem, FormFusionItem, FormTransitionItem, FusionMixedSectionForm } from "@/lib/setlist/formItems";
-import type { SectionSummary } from "@/types/song";
+import type { SectionSummary, SongIndexEntry } from "@/types/song";
+import { LastPhraseSheet } from "@/components/setlists/LastPhraseSheet";
 import { NUANCES, nuanceFull } from "@/lib/setlist/nuances";
 
 // ─── Champs note / transition / nuance repliables ────────────────────────────
@@ -311,19 +312,35 @@ export function SortableSectionRow({
 
 // ─── Structure editor ─────────────────────────────────────────────────────────
 
+/** Ce qu'il faut pour matérialiser une « Dernière phrase » (Dp) : le chant,
+ *  sa version adaptée et sa tonalité ; absent = pas de Dp (fusions). */
+export type LastPhraseTarget = {
+  song: SongIndexEntry;
+  contentOverride?: string | null;
+  keyOverride: string | null;
+  onAdd: (result: { contentOverride: string; step: FormSectionItem }) => void;
+};
+
 export function SectionStructureEditor({
   allSections,
   sectionItems,
   onChange,
   hideNotes,
+  lastPhrase,
 }: {
   allSections: SectionSummary[];
   sectionItems: FormSectionItem[];
   onChange: (items: FormSectionItem[]) => void;
   hideNotes?: boolean;
+  lastPhrase?: LastPhraseTarget;
 }) {
   const { t } = useTranslation();
   const sensors = useDefaultSensors();
+  const [lastPhraseOpen, setLastPhraseOpen] = useState(false);
+  // Section proposée d'office : la dernière étape jouée (pas un Dp existant).
+  const knownIds = new Set(allSections.map((s) => s.id));
+  const defaultLastPhraseSection =
+    [...sectionItems].reverse().find((si) => knownIds.has(si.sectionId))?.sectionId ?? allSections[0]?.id ?? "";
   function handleDragEnd(e: DragEndEvent) {
     const { active, over } = e;
     if (!over || active.id === over.id) return;
@@ -355,7 +372,36 @@ export function SectionStructureEditor({
             {s.name}
           </button>
         ))}
+        {lastPhrase && (
+          <button
+            type="button"
+            onClick={() => setLastPhraseOpen(true)}
+            className="flex items-center gap-0.5 text-[11px] px-2 py-0.5 rounded border border-dashed border-border hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <Plus className="h-2.5 w-2.5" />
+            {t("setlists.form.lastPhrase.add")}
+          </button>
+        )}
       </div>
+      {lastPhrase && (
+        <LastPhraseSheet
+          open={lastPhraseOpen}
+          onClose={() => setLastPhraseOpen(false)}
+          song={lastPhrase.song}
+          contentOverride={lastPhrase.contentOverride}
+          keyOverride={lastPhrase.keyOverride}
+          sections={allSections}
+          defaultSectionId={defaultLastPhraseSection}
+          onAdd={({ contentOverride, sectionId, name }) => {
+            const uid = `${sectionId}-${Date.now()}${Math.floor(Math.random() * 1000)}`;
+            lastPhrase.onAdd({
+              contentOverride,
+              step: { uid, sectionId, name, note: "", transition: "", nuanceTags: [], nuanceNote: "", keyChange: "" },
+            });
+            setLastPhraseOpen(false);
+          }}
+        />
+      )}
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <SortableContext items={sectionItems.map((s) => s.uid)} strategy={verticalListSortingStrategy}>
           <div className="space-y-1">
@@ -654,6 +700,7 @@ export function SongRow({
   onNoteChange,
   onSectionItemsChange,
   onJianpuSheetChange,
+  onLastPhrase,
 }: {
   item: FormItem;
   selectable?: boolean;
@@ -664,6 +711,8 @@ export function SongRow({
   onNoteChange: (note: string) => void;
   onSectionItemsChange: (items: FormSectionItem[]) => void;
   onJianpuSheetChange: (on: boolean) => void;
+  /** « Dernière phrase » ajoutée : version adaptée + nouvelle étape, ensemble. */
+  onLastPhrase: LastPhraseTarget["onAdd"];
 }) {
   const { t } = useTranslation();
   const jianpuScore = useJianpuScore(item.song.slug);
@@ -743,13 +792,17 @@ export function SongRow({
 
         <div className="shrink-0 flex flex-col items-end gap-1.5">
           <select
+            aria-label={t("setlists.form.songKeyLabel", { title: item.song.title })}
             value={item.keyOverride ?? ""}
             onChange={(e) => onKeyChange(e.target.value || null)}
             className="text-xs px-1.5 py-1 border border-border rounded bg-background text-foreground font-mono font-bold focus:outline-none focus:ring-1 focus:ring-primary/30"
           >
             <option value="">{t("setlists.form.songOriginalKey", { key: item.song.originalKey })}</option>
             {keyOptions(item.keyOverride).map((k) => (
-              <option key={k} value={k}>{k}</option>
+              <option key={k} value={k}>
+                {k}
+                {k === item.song.recommendedKey ? " " + t("customize.panel.keyRecommended") : ""}
+              </option>
             ))}
           </select>
           {jianpuScore && (
@@ -800,6 +853,7 @@ export function SongRow({
           allSections={allSections}
           sectionItems={item.sectionItems}
           onChange={onSectionItemsChange}
+          lastPhrase={{ song: item.song, contentOverride: item.contentOverride, keyOverride: item.keyOverride, onAdd: onLastPhrase }}
         />
       )}
     </div>
@@ -898,13 +952,17 @@ function FusionSongCard({
         </div>
         <div className="shrink-0 flex flex-col items-end gap-1">
           <select
+            aria-label={t("setlists.form.songKeyLabel", { title: item.song.title })}
             value={item.keyOverride ?? ""}
             onChange={(e) => onKeyChange(e.target.value || null)}
             className="text-xs px-1.5 py-0.5 border border-border rounded bg-background text-foreground font-mono font-bold focus:outline-none focus:ring-1 focus:ring-primary/30"
           >
             <option value="">{t("setlists.form.songOriginalKey", { key: item.song.originalKey })}</option>
             {keyOptions(item.keyOverride).map((k) => (
-              <option key={k} value={k}>{k}</option>
+              <option key={k} value={k}>
+                {k}
+                {k === item.song.recommendedKey ? " " + t("customize.panel.keyRecommended") : ""}
+              </option>
             ))}
           </select>
           {!hasMixed && originalCount > 1 && (

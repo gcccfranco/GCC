@@ -342,7 +342,7 @@ export function SongListClient({ songs, themes }: SongListClientProps) {
                   {/* Meta */}
                   <span className="flex flex-col items-end gap-1.5 shrink-0">
                     <span className="font-mono text-xs font-semibold bg-secondary text-foreground px-2 py-0.5 rounded-[7px] border border-border/60">
-                      {song.originalKey}
+                      {song.recommendedKey ?? song.originalKey}
                     </span>
                     <span
                       className={`text-[11px] font-bold px-2 py-0.5 rounded-full min-w-[40px] text-center ${

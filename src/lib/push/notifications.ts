@@ -7,7 +7,7 @@
 
 import { adminDb } from "./admin";
 
-export type BellKind = "manual" | "reminder" | "broadcast";
+export type BellKind = "manual" | "reminder" | "broadcast" | "presentation" | "scene" | "evenement";
 
 export interface RecordNotificationInput {
   title: string;

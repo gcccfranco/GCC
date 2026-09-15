@@ -36,3 +36,27 @@ export function isOnDutyRegie(
         (setlist.moment ? s.moment === setlist.moment : normalizeName(s.leader) === normalizeName(setlist.leader ?? ""))),
   );
 }
+
+/** Comptes à prévenir quand le lien est posé ou remplacé : tous ceux dont le
+ *  nom de planning est celui du président de la setlist, sauf l'auteur du
+ *  lien. `linked` dit si au moins un compte porte ce nom (sinon la régie doit
+ *  savoir que personne n'a été prévenu). `index` = loadPlanningNameIndex(). */
+export function presidentRecipients(
+  leader: string,
+  index: Map<string, string[]>,
+  authorUid: string,
+): { uids: string[]; linked: boolean } {
+  const all = leader.trim() ? index.get(normalizeName(leader)) ?? [] : [];
+  return { uids: all.filter((u) => u !== authorUid), linked: all.length > 0 };
+}
+
+/** Clé notifLog d'un envoi « présentation prête » : une par setlist et par
+ *  lien (empreinte FNV-1a du lien), pour ne jamais prévenir deux fois du même. */
+export function presentationNotifKey(setlistId: string, url: string): string {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < url.length; i++) {
+    h ^= url.charCodeAt(i);
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  return `presentation-${setlistId}-${h.toString(16)}`;
+}

@@ -1,6 +1,7 @@
 {title: Un vin nouveau}
 {artist: Hillsong}
 {key: Bb}
+{recommended_key: C}
 {tempo: 70}
 {language: fr}
 {themes: Saint-Esprit, Engagement}

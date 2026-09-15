@@ -2,6 +2,8 @@
 
 Site de partitions de louange pour l'église GCC. Spec complète dans `cahier-des-charges-site-louange.md`.
 Specs de fonctionnalités en attente : `docs/` (ex. `docs/spec-ajouter-un-chant.md`).
+Feuille de route (fait / à venir / demandes à trancher, avec l'historique) :
+`docs/feuille-de-route.md` ; vision produit : `docs/intent/vision-site.md`.
 
 ## Stack
 Next.js 16 (App Router) · TypeScript · Tailwind CSS + shadcn/ui · Firebase Auth + Firestore · Resend (emails) · Vercel
@@ -55,6 +57,7 @@ ils ne voient pas le composant réel. Détail du protocole dans
 
 ## Formats importants
 - ChordPro : `[accord]paroles` dans les lignes, `{directive: valeur}` en en-tête — guidelines détaillées dans `CHORDPRO_GUIDELINES.md`
+- Tonalité recommandée : `{recommended_key: D}` en en-tête, sous `{key}` — la plus chantée à GCC, **validée par Timothée** (`docs/tonalites-recommandees.md`, recalcul en lecture seule : `npx tsx scripts/recommended-keys.ts`) ; affichée par défaut, et un chant ajouté à une setlist y démarre
 - Chinois : `[C]caractères   pinyin` (3 espaces min entre chars et pinyin)
 - Jianpu simple : `{jianpu: 3 3 5 6 5}` sur la ligne juste au-dessus des paroles
 - Partition 简谱 complète : bloc `{start_of_jianpu}…{end_of_jianpu}` (syntaxe

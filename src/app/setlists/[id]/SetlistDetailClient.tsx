@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { Trash2, List, Music, Pencil, SlidersHorizontal, Languages, Play, MoreHorizontal, Download, Copy, Share2, BellRing } from "lucide-react";
+import { Trash2, List, Music, Pencil, SlidersHorizontal, PenLine, Languages, Play, MoreHorizontal, Download, Copy, Share2, BellRing } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -29,7 +29,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { getSetlist, deleteSetlist, duplicateSetlist, updateSetlist, authHeader, type FSSetlist } from "@/lib/firebase/setlists";
 import { useProfile } from "@/lib/firebase/users";
-import { canSeeSetlist, canEditSetlist, canDuplicateSetlist, canSetPresentationLink } from "@/lib/access";
+import { canSeeSetlist, canEditSetlist, canDuplicateSetlist, canSetPresentationLink, canHaveSetlistVersion } from "@/lib/access";
 import { useTranslation } from "react-i18next";
 import type { SongIndexEntry } from "@/types/song";
 import type { SetlistItem } from "@/types/setList";
@@ -40,7 +40,13 @@ import { ListView } from "./_components/ListView";
 import { PartitionsView } from "./_components/PartitionView";
 import { SetlistOutline } from "./_components/SetlistOutline";
 import { PresentationLink } from "./_components/PresentationLink";
+import { SetlistHistory } from "./_components/SetlistHistory";
+import { continuePass, historyAuthor, recordHistory, type HistoryPass } from "@/lib/firebase/setlistHistory";
+import { getSetlistVersions, saveSetlistVersions, type SetlistVersions, type VersionItem } from "@/lib/firebase/setlistVersions";
+import { MyStructureSheet, type MyStructureTarget } from "@/components/setlists/MyStructureSheet";
+import { songVersionView, type SongVersionView } from "@/lib/setlist/versionChoice";
 import { getChartStylePref, setChartStylePref } from "@/lib/chartStylePref";
+import { getPartitionLayoutPref, setPartitionLayoutPref, type PartitionLayout } from "@/lib/partitionLayoutPref";
 import { getPinyinPref, setPinyinPref } from "@/lib/pinyinPref";
 import { jianpuPngDataUrl, loadJianpuChords, loadJianpuManifest, useJianpuManifest } from "@/lib/jianpu/images";
 import { getJianpuPref, setJianpuPref, sheetEnabled, type JianpuPref } from "@/lib/jianpu/preference";
@@ -97,6 +103,11 @@ export function SetlistDetailClient() {
     return () => ro.disconnect();
   }, [setlist]); // la barre n'existe qu'une fois la setlist chargée
   const [songsMap, setSongsMap] = useState<Record<string, SongIndexEntry>>({});
+  // Relit l'historique après une adaptation écrite depuis cette page.
+  const [historyVersion, setHistoryVersion] = useState(0);
+  // Adaptations successives depuis cette page : un seul passage (adapter puis
+  // rétablir ne laisse rien), tant que personne d'autre n'a touché la setlist.
+  const historyPassRef = useRef<HistoryPass | null>(null);
   const [contents, setContents] = useState<Record<string, SongContent>>({});
   const [loadingSetlist, setLoadingSetlist] = useState(true);
   const [loadingContent, setLoadingContent] = useState(false);
@@ -108,6 +119,8 @@ export function SetlistDetailClient() {
   const [showPinyin, setShowPinyin] = useState(true);
   // Couleurs par section — préférence par appareil partagée (fiche chant, mode louange).
   const [chartStyle, setChartStyle] = useState(true);
+  // Coup d'œil : ordre joué / sections uniques / structure seule — par appareil.
+  const [layout, setLayout] = useState<PartitionLayout>("unique");
   // Partition 简谱 : suivre le choix du responsable, l'imposer, ou l'ignorer —
   // par appareil, comme en mode louange.
   const [jianpuPref, setJianpuPrefState] = useState<JianpuPref>("auto");
@@ -126,6 +139,40 @@ export function SetlistDetailClient() {
   const [editTarget, setEditTarget] = useState<LineEditState | null>(null);
   const [savingLine, setSavingLine] = useState(false);
   const [confirmRevert, setConfirmRevert] = useState<number | null>(null);
+  // Versions perso des chants (docs/spec-version-perso.md) : un document par
+  // personne, chargé avec la setlist. La mienne remplace les accords et
+  // paroles de la présidence dans la vue partitions, le sommaire et le mode
+  // louange — jamais dans la liste, le PDF ni l'historique.
+  const [versions, setVersions] = useState<Record<string, SetlistVersions>>({});
+  // Mode « Ma version » : mêmes gestes qu'Adapter, écrits dans mon document.
+  const [editMine, setEditMine] = useState(false);
+  const myItems = user ? versions[user.uid]?.items : undefined;
+  /** Item en mode « Ma version » : mes accords et paroles à la place de ceux de la présidence. */
+  function withMine(item: SetlistItem): SetlistItem {
+    const content = myItems?.[item.songSlug]?.content;
+    return content ? { ...item, contentOverride: content } : item;
+  }
+  /** Version d'un chant pour moi : la présidence, la mienne, ou celle d'un
+   *  autre partagée et choisie. */
+  function viewOf(slug: string): SongVersionView | undefined {
+    return user ? songVersionView(slug, user.uid, versions) : undefined;
+  }
+  /** Item tel qu'affiché : les accords et paroles de la version choisie. */
+  function withChosen(item: SetlistItem): SetlistItem {
+    const content = viewOf(item.songSlug)?.content;
+    return content ? { ...item, contentOverride: content } : item;
+  }
+  /** Pour le sommaire et le mode louange : ma structure remplace aussi celle
+   *  de la présidence, sans ses notes, nuances et transitions d'occurrence
+   *  (elles restent dans le bandeau de la vue partitions). */
+  function withMineStructure(item: SetlistItem): SetlistItem {
+    const structure = myItems?.[item.songSlug]?.structure;
+    return structure?.length
+      ? { ...item, structureOverride: structure, sectionNotes: {}, sectionTransitions: {}, sectionNuances: {} }
+      : item;
+  }
+  // Feuille « Sections » de ma version : chant en cours de réglage.
+  const [structureTarget, setStructureTarget] = useState<(MyStructureTarget & { itemIndex: number }) | null>(null);
 
   useEffect(() => {
     const saved = sessionStorage.getItem("lastListPath");
@@ -139,10 +186,15 @@ export function SetlistDetailClient() {
     setShowPinyin(getPinyinPref());
     setChartStyle(getChartStylePref());
     setJianpuPrefState(getJianpuPref());
+    setLayout(getPartitionLayoutPref());
   }, []);
   const toggleChartStyle = (v: boolean) => {
     setChartStyle(v);
     setChartStylePref(v);
+  };
+  const changeLayout = (v: PartitionLayout) => {
+    setLayout(v);
+    setPartitionLayoutPref(v);
   };
   const changeJianpuPref = (v: JianpuPref) => {
     setJianpuPrefState(v);
@@ -167,8 +219,11 @@ export function SetlistDetailClient() {
     Promise.all([
       getSetlist(id),
       fetch("/songs-index.json").then((r) => r.json()),
-    ]).then(([sl, index]) => {
+      // Règles pas publiées, hors-ligne… : la présidence seule, sans erreur.
+      getSetlistVersions(id).catch(() => ({})),
+    ]).then(([sl, index, v]) => {
       setSetlist(sl);
+      setVersions(v);
       const map: Record<string, SongIndexEntry> = {};
       for (const s of index.songs ?? []) map[s.slug] = s;
       setSongsMap(map);
@@ -366,9 +421,10 @@ export function SetlistDetailClient() {
 
   // ── Adapter le chant (accords/paroles par setlist) ──────────────────────────
 
-  /** Source ChordPro de travail d'un item : version modifiée sinon original. */
+  /** Source ChordPro de travail d'un item : version modifiée sinon original
+   *  (en mode « Ma version » : la mienne d'abord). */
   function sourceForItem(item: SetlistItem): string | null {
-    return item.contentOverride ?? contents[item.songSlug]?.source ?? null;
+    return (editMine ? withMine(item) : item).contentOverride ?? contents[item.songSlug]?.source ?? null;
   }
 
   function handleSelectLine(itemIndex: number, line: ChordProLine, sectionUid?: string) {
@@ -384,7 +440,7 @@ export function SetlistDetailClient() {
       );
       return;
     }
-    const baseAst = itemAst(item, contents[item.songSlug]);
+    const baseAst = itemAst(editMine ? withMine(item) : item, contents[item.songSlug]);
     if (!baseAst) return;
     const origKey = baseAst.metadata.key;
 
@@ -392,8 +448,10 @@ export function SetlistDetailClient() {
     // l'édition matérialise une copie au lieu de toucher toutes les répétitions.
     let repeatedSectionId: string | undefined;
     let structIndex: number | undefined;
+    // Ma version : pas de copie, une retouche vaut pour toutes les répétitions
+    // (spec, hypothèse 3).
     const struct = item.structureOverride;
-    if (struct && sectionUid) {
+    if (struct && sectionUid && !editMine) {
       const sec = baseAst.sections.find((s) => s.lines.some((l) => l.srcLine === line.srcLine));
       if (sec) {
         const refs = struct.filter((ov) => ov === sec.id || ov.replace(/-\d+$/, "") === sec.id);
@@ -480,11 +538,59 @@ export function SetlistDetailClient() {
       await updateSetlist(id, { items });
       setSetlist({ ...base, items });
       setEditTarget(null);
+      const author = historyAuthor(profile);
+      if (author) {
+        historyPassRef.current = continuePass(historyPassRef.current, id, author, base);
+        await recordHistory(historyPassRef.current, { ...base, items });
+        setHistoryVersion((v) => v + 1);
+      }
     } catch {
       flashFeedback(t("setlists.contentEdit.saveError", { defaultValue: "Échec de l'enregistrement — réessaie." }));
     } finally {
       setSavingLine(false);
     }
+  }
+
+  /** Réécrit mon document de versions — jamais la setlist : ni relecture,
+   *  ni historique. */
+  async function saveMine(items: Record<string, VersionItem>, choices: Record<string, string>) {
+    if (!user) return;
+    setSavingLine(true);
+    try {
+      const doc: SetlistVersions = {
+        authorUid: user.uid,
+        authorName: historyAuthor(profile)?.name ?? "",
+        items,
+        choices,
+      };
+      await saveSetlistVersions(id, user.uid, doc);
+      setVersions((v) => ({ ...v, [user.uid]: doc }));
+      setEditTarget(null);
+      setStructureTarget(null);
+    } catch {
+      flashFeedback(t("setlists.contentEdit.saveError", { defaultValue: "Échec de l'enregistrement — réessaie." }));
+    } finally {
+      setSavingLine(false);
+    }
+  }
+
+  /** Modifie ma version d'un chant (accords et paroles, structure, partage).
+   *  Une version revenue à la présidence sur tout est retirée. */
+  async function persistMine(songSlug: string, patch: Partial<VersionItem>) {
+    if (!user) return;
+    const prev = versions[user.uid];
+    const items = { ...(prev?.items ?? {}) };
+    const next = { ...(items[songSlug] ?? { content: null, structure: null, shared: false }), ...patch };
+    if (next.content === null && next.structure === null) delete items[songSlug];
+    else items[songSlug] = next;
+    await saveMine(items, prev?.choices ?? {});
+  }
+
+  /** Retient la version choisie pour un chant (« presidence » ou l'uid de son auteur). */
+  async function persistChoice(songSlug: string, value: string) {
+    if (!user) return;
+    const prev = versions[user.uid];
+    await saveMine(prev?.items ?? {}, { ...(prev?.choices ?? {}), [songSlug]: value });
   }
 
   /** Applique un nouveau source complet : no-op si rien n'a changé, retrait
@@ -494,6 +600,13 @@ export function SetlistDetailClient() {
     const current = sourceForItem(setlist.items[itemIndex]);
     if (next === current && !extra) {
       setEditTarget(null);
+      return;
+    }
+    if (editMine) {
+      // Ma version : retirée d'elle-même si elle redevient celle de la présidence.
+      const item = setlist.items[itemIndex];
+      const presidency = item.contentOverride ?? contents[item.songSlug]?.source;
+      await persistMine(item.songSlug, { content: next === presidency ? null : next });
       return;
     }
     const original = contents[setlist.items[itemIndex].songSlug]?.source;
@@ -611,6 +724,10 @@ export function SetlistDetailClient() {
   async function handleRevert(itemIndex: number) {
     setConfirmRevert(null);
     if (!setlist) return;
+    if (editMine) {
+      await persistMine(setlist.items[itemIndex].songSlug, { content: null, structure: null });
+      return;
+    }
     // Les sections matérialisées disparaissent avec le contenu adapté : la
     // structure doit repointer vers les sections d'origine, sinon les
     // occurrences modifiées sortent de la setlist.
@@ -668,6 +785,18 @@ export function SetlistDetailClient() {
 
   // Modification/suppression : créateur + musiciens du même service
   const canEdit = canEditSetlist(user, profile, setlist);
+  // Items affichés : la version choisie (en mode « Ma version » : la mienne)
+  // remplace celle de la présidence — accords et paroles pour la vue
+  // partitions (qui applique ma structure au corps seul), ma structure
+  // comprise pour le sommaire et le mode louange. Mode Adapter : la
+  // présidence seule.
+  const displayItems = editPartitions ? setlist.items : setlist.items.map(editMine ? withMine : withChosen);
+  const stageItems = editPartitions ? setlist.items : displayItems.map(withMineStructure);
+  const versionViews = editPartitions
+    ? undefined
+    : Object.fromEntries(
+        setlist.items.filter((it) => it.songSlug).map((it) => [it.songSlug, songVersionView(it.songSlug, user.uid, versions)]),
+      );
   const canDuplicate = canDuplicateSetlist(user, profile, setlist);
   // Notif « setlist prête » : pour toute setlist modifiable par l'utilisateur,
   // contenant au moins 4 vrais chants (hors transitions). Toutes catégories.
@@ -728,6 +857,7 @@ export function SetlistDetailClient() {
                 <button aria-label={t("setlists.contentEdit.toggle", { defaultValue: "Adapter" })}
                   onClick={() => {
                     setEditPartitions((e) => !e);
+                    setEditMine(false);
                     setEditTarget(null);
                   }}
                   className={`h-8 px-2.5 rounded-[8px] border text-[12.5px] font-semibold flex items-center gap-1.5 transition-all duration-150 ${
@@ -740,6 +870,25 @@ export function SetlistDetailClient() {
                   <span className="hidden sm:inline">
                     {t("setlists.contentEdit.toggle", { defaultValue: "Adapter" })}
                   </span>
+                </button>
+              )}
+
+              {/* Ma version (accords/paroles pour soi) — vue partitions, tout connecté */}
+              {view === "partitions" && canHaveSetlistVersion(user, profile, setlist) && (
+                <button aria-label={t("setlists.myVersion.toggle")}
+                  onClick={() => {
+                    setEditMine((m) => !m);
+                    setEditPartitions(false);
+                    setEditTarget(null);
+                  }}
+                  className={`h-8 px-2.5 rounded-[8px] border text-[12.5px] font-semibold flex items-center gap-1.5 transition-all duration-150 ${
+                    editMine
+                      ? "border-transparent bg-primary/10 text-primary"
+                      : "border-border bg-card text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <PenLine className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline">{t("setlists.myVersion.toggle")}</span>
                 </button>
               )}
 
@@ -820,6 +969,17 @@ export function SetlistDetailClient() {
                       >
                         {t("performance.chartStyle")}
                       </DropdownMenuCheckboxItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
+                        {t("setlists.detail.layout.label")}
+                      </DropdownMenuLabel>
+                      <DropdownMenuRadioGroup value={layout} onValueChange={(v) => changeLayout(v as PartitionLayout)}>
+                        {(["played", "unique", "structure"] as const).map((v) => (
+                          <DropdownMenuRadioItem key={v} value={v} onSelect={(e) => e.preventDefault()}>
+                            {t(`setlists.detail.layout.${v}`)}
+                          </DropdownMenuRadioItem>
+                        ))}
+                      </DropdownMenuRadioGroup>
                       {hasJianpuSheets && (
                         <>
                           <DropdownMenuSeparator />
@@ -912,6 +1072,7 @@ export function SetlistDetailClient() {
               <p className="text-muted-foreground capitalize mt-1 text-sm">
                 {formatDate(setlist.date, i18n.language)}
               </p>
+              <SetlistHistory key={historyVersion} setlistId={id} songsMap={songsMap} />
             </div>
             <span className="text-xs px-2 py-0.5 rounded border border-border text-muted-foreground shrink-0 mt-1">
               {t("common.languages." + setlist.language, { defaultValue: setlist.language })}
@@ -971,18 +1132,39 @@ export function SetlistDetailClient() {
                 })}
               </p>
             )}
-            {!loadingContent && <SetlistOutline items={setlist.items} contents={contents} />}
+            {editMine && (
+              <p className="mb-4 text-xs text-muted-foreground bg-primary/5 border border-primary/20 rounded-lg px-3 py-2 print:hidden">
+                {t("setlists.myVersion.hint")}
+              </p>
+            )}
+            {!loadingContent && <SetlistOutline items={stageItems} contents={contents} />}
             <PartitionsView
-              items={setlist.items}
+              items={displayItems}
               contents={contents}
               loading={loadingContent}
               showChordsGlobal={showChords}
               showPinyinGlobal={showPinyin}
               chartStyle={chartStyle}
               jianpuPref={jianpuPref}
-              editMode={editPartitions}
+              layout={layout}
+              editMode={editPartitions || editMine}
+              versions={versionViews}
+              editMine={editMine}
               onSelectLine={handleSelectLine}
               onRevert={(itemIndex) => setConfirmRevert(itemIndex)}
+              onEditStructure={(itemIndex) => {
+                const item = setlist.items[itemIndex];
+                const ast = itemAst(withMine(item), contents[item.songSlug]);
+                if (!ast) return;
+                setStructureTarget({
+                  itemIndex,
+                  ast,
+                  structure: myItems?.[item.songSlug]?.structure ?? null,
+                  presidency: item.structureOverride,
+                });
+              }}
+              onChooseVersion={(itemIndex, value) => persistChoice(setlist.items[itemIndex].songSlug, value)}
+              onShare={(itemIndex, shared) => persistMine(setlist.items[itemIndex].songSlug, { shared })}
             />
           </>
         )}
@@ -1025,18 +1207,32 @@ export function SetlistDetailClient() {
         onDeleteLine={handleDeleteLine}
       />
 
+      {/* Feuille « Sections » de ma version */}
+      <MyStructureSheet
+        target={structureTarget}
+        saving={savingLine}
+        onClose={() => setStructureTarget(null)}
+        onSave={(structure) =>
+          structureTarget && persistMine(setlist.items[structureTarget.itemIndex].songSlug, { structure })
+        }
+      />
+
       {/* Confirmation de rétablissement de l'original */}
       <AlertDialog open={confirmRevert !== null} onOpenChange={(o) => !o && setConfirmRevert(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {t("setlists.contentEdit.revert", { defaultValue: "Rétablir l'original" })}
+              {editMine
+                ? t("setlists.myVersion.revert")
+                : t("setlists.contentEdit.revert", { defaultValue: "Rétablir l'original" })}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              {t("setlists.contentEdit.revertConfirm", {
-                defaultValue:
-                  "Toutes les modifications d'accords et de paroles de ce chant pour cette setlist seront perdues.",
-              })}
+              {editMine
+                ? t("setlists.myVersion.revertConfirm")
+                : t("setlists.contentEdit.revertConfirm", {
+                    defaultValue:
+                      "Toutes les modifications d'accords et de paroles de ce chant pour cette setlist seront perdues.",
+                  })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -1054,7 +1250,7 @@ export function SetlistDetailClient() {
       {/* Mode Louange */}
       {performanceMode && (
         <PerformanceMode
-          items={setlist.items}
+          items={stageItems}
           contents={contents}
           initialShowChords={chordsTouched ? showChords : undefined}
           setlistId={id}

@@ -1,9 +1,17 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { FieldValue } from "firebase-admin/firestore";
 import { adminDb, verifyIdToken } from "@/lib/push/admin";
+import { sendPushToUids } from "@/lib/push/send";
+import { recordNotification } from "@/lib/push/notifications";
+import { loadPlanningNameIndex, filterUidsByNotifPref } from "@/lib/push/recipients";
 import { loadPlanningData, servantsForDate } from "@/lib/planning/names";
 import { canEditSetlist, canSetPresentationLink } from "@/lib/access";
-import { isOnDutyRegie, parsePresentationUrl } from "@/lib/setlist/presentationLink";
+import {
+  isOnDutyRegie,
+  parsePresentationUrl,
+  presentationNotifKey,
+  presidentRecipients,
+} from "@/lib/setlist/presentationLink";
 import type { FSSetlist } from "@/lib/firebase/setlists";
 import type { UserProfile } from "@/types/user";
 
@@ -14,6 +22,39 @@ export const dynamic = "force-dynamic";
 // serveur parce que la régie du jour ne peut être reconnue qu'en lisant le
 // planning, ce que les règles Firestore ne savent pas faire. `url` vide = retirer.
 // `updatedAt` n'est pas touché : ajouter le lien n'est pas modifier la setlist.
+// Lien posé ou remplacé → le président de la setlist est prévenu (lot 2,
+// docs/spec-notif-president.md) ; retrait ou lien inchangé → rien.
+
+/** Prévient les comptes au nom du président (préférence « Setlist prête »,
+ *  jamais deux fois du même lien). Renvoie ce que la régie doit voir. */
+async function notifyPresident(
+  db: FirebaseFirestore.Firestore,
+  setlist: FSSetlist,
+  url: string,
+  author: { uid: string; profile: UserProfile | null },
+): Promise<{ notified: number; linked: boolean }> {
+  const { uids, linked } = presidentRecipients(setlist.leader ?? "", await loadPlanningNameIndex(), author.uid);
+  const key = presentationNotifKey(setlist.id, url);
+  const fresh: string[] = [];
+  for (const u of await filterUidsByNotifPref(uids, "setlists")) {
+    if (!(await db.collection("notifLog").doc(`${key}-${u}`).get()).exists) fresh.push(u);
+  }
+  if (!fresh.length) return { notified: 0, linked };
+  const p = author.profile;
+  const who = p?.planningName || [p?.firstName, p?.lastName].filter(Boolean).join(" ") || "La régie";
+  const payload = {
+    title: `Présentation prête — ${setlist.title || setlist.category}`,
+    body: `${who} a ajouté le lien de la présentation.`,
+    url: `/setlists/${setlist.id}`,
+    tag: key,
+  };
+  await sendPushToUids(fresh, payload);
+  await recordNotification({ ...payload, kind: "presentation", recipients: fresh });
+  const batch = db.batch();
+  for (const u of fresh) batch.set(db.collection("notifLog").doc(`${key}-${u}`), { setlistId: setlist.id, uid: u, at: Date.now() });
+  await batch.commit();
+  return { notified: fresh.length, linked };
+}
 
 export async function POST(req: NextRequest) {
   const authz = req.headers.get("authorization") ?? "";
@@ -59,5 +100,7 @@ export async function POST(req: NextRequest) {
   }
 
   await ref.update({ presentationUrl: presentationUrl || FieldValue.delete() });
-  return NextResponse.json({ ok: true, presentationUrl: presentationUrl || null });
+  const changed = presentationUrl && presentationUrl !== (setlist.presentationUrl ?? "");
+  const notice = changed ? await notifyPresident(db, setlist, presentationUrl, { uid: user.uid, profile: profile }) : {};
+  return NextResponse.json({ ok: true, presentationUrl: presentationUrl || null, ...notice });
 }

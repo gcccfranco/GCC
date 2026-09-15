@@ -2,7 +2,12 @@ import { NextResponse, type NextRequest } from "next/server";
 import { adminDb } from "@/lib/push/admin";
 import { sendPushToUids } from "@/lib/push/send";
 import { recordNotification } from "@/lib/push/notifications";
-import { loadPlanningNameIndex, resolveNamesToUids, filterUidsByNotifPref } from "@/lib/push/recipients";
+import { loadPlanningNameIndex, filterUidsByNotifPref, loadNotifLangs, uidsForCategories } from "@/lib/push/recipients";
+import { reminderBody, reminderServicesFor, reminderTitle, type ReminderService } from "@/lib/push/reminderMessage";
+import { quiCategories, sceneReminder } from "@/lib/scene/rappels";
+import { evenementReminder } from "@/lib/evenements/rappel";
+import type { Evenement } from "@/types/evenement";
+import type { Creneau } from "@/types/programme";
 import {
   loadPlanningData,
   servantsForDate,
@@ -15,8 +20,11 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
 // Rappels — exécuté chaque jour par Vercel Cron (cf. vercel.json).
-// - Service (tous services sauf Campus) : rappel à J-7, J-3 puis J-1.
-// - Répétition Campus : mêmes échéances, message avec heure + lieu.
+// À J-7, J-3 puis J-1, UNE notification par personne qui liste ses services du
+// jour avec le rôle (docs/spec-planning-petits-lots.md, lot 1c) : services de
+// tous les plannings sauf les séances Campus, plus la répétition Campus (heure
+// et lieu) et les entraînements sur scène des programmes affichés (lot 3 bis :
+// auteur + membres du « qui ») fondus dans le même message. Langue : notifPrefs/{uid}.lang.
 // Idempotent : un document notifLog par (échéance, date, uid) évite tout doublon.
 
 const REMINDERS: { tag: "J7" | "J3" | "J1"; days: number }[] = [
@@ -29,20 +37,6 @@ const REMINDERS: { tag: "J7" | "J3" | "J1"; days: number }[] = [
 // (≥ 09:00 à Paris), heure à laquelle la date UTC est déjà la date du jour à Paris.
 function isoInDays(days: number): string {
   return new Date(Date.now() + days * 86_400_000).toISOString().slice(0, 10);
-}
-
-function whenLabel(tag: "J7" | "J3" | "J1"): string {
-  return tag === "J7" ? "dans 1 semaine" : tag === "J3" ? "dans 3 jours" : "demain";
-}
-
-function formatFr(dateISO: string): string {
-  const d = new Date(`${dateISO}T12:00:00Z`);
-  return new Intl.DateTimeFormat("fr-FR", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    timeZone: "Europe/Paris",
-  }).format(d);
 }
 
 /** Retient les uid pas encore notifiés pour cette clé notifLog `${prefix}-${uid}`. */
@@ -74,6 +68,17 @@ async function markNotified(
   await batch.commit();
 }
 
+/** Créneaux sur scène des programmes affichés, pour ces dates (ISO). */
+async function sceneCreneaux(db: FirebaseFirestore.Firestore, dates: string[]): Promise<Creneau[]> {
+  const programmes = await db.collection("programmes").where("visible", "==", true).get();
+  const out: Creneau[] = [];
+  for (const p of programmes.docs) {
+    const snap = await p.ref.collection("creneaux").where("dimanche", "in", dates).get();
+    for (const c of snap.docs) out.push({ id: c.id, ...c.data() } as Creneau);
+  }
+  return out;
+}
+
 export async function GET(req: NextRequest) {
   const secret = process.env.CRON_SECRET;
   const authz = req.headers.get("authorization");
@@ -83,80 +88,89 @@ export async function GET(req: NextRequest) {
 
   const db = adminDb();
   const [planning, index] = await Promise.all([loadPlanningData(), loadPlanningNameIndex()]);
+  const creneaux = await sceneCreneaux(db, REMINDERS.map((r) => isoInDays(r.days)));
 
-  const summary: Record<string, { date: string; service: number; repet: number }> = {};
+  const summary: Record<string, { date: string; sent: number }> = {};
 
   for (const { tag, days } of REMINDERS) {
     const date = isoInDays(days);
-    const when = whenLabel(tag);
 
-    // ── Rappels de service (tous services sauf Campus) ──
-    // Campus exclu : pendant la semaine du campus on sert tous les jours, le
-    // « tu sers demain » est du bruit. Les rappels de répétition ci-dessous
-    // suffisent.
+    // Personnes de service ce jour-là (Campus exclu : pendant la semaine du
+    // campus on sert tous les jours, le rappel serait du bruit) ou en
+    // répétition Campus. Chaque compte reçoit un message avec SES services.
     const names = [
-      ...new Set(
-        servantsForDate(planning, date)
-          .filter((s) => s.category !== "Campus")
-          .map((s) => s.name)
-      ),
+      ...new Set([
+        ...servantsForDate(planning, date).filter((s) => s.category !== "Campus").map((s) => s.name),
+        ...rehearsalsForDate(planning, date).map((r) => r.name),
+      ]),
     ];
-    const { uids } = resolveNamesToUids(names, index);
-    const prefUids = await filterUidsByNotifPref(uids, "reminders");
-    const fresh = await freshUids(db, prefUids, `rappel-${tag}-${date}`);
-    if (fresh.length) {
-      await sendPushToUids(fresh, {
-        title: "Rappel de service",
-        body: `Tu sers ${when} (${formatFr(date)}).`,
-        url: "/mes-services",
-        tag: `rappel-${tag}-${date}`,
-      });
-      await recordNotification({
-        title: "Rappel de service",
-        body: `Tu sers ${when} (${formatFr(date)}).`,
-        url: "/mes-services",
-        kind: "reminder",
-        recipients: fresh,
-      });
-      await markNotified(db, fresh, `rappel-${tag}-${date}`, { tag, date, kind: "service" });
+    const byUid = new Map<string, ReminderService[]>();
+    for (const name of names) {
+      const services = reminderServicesFor(planning, name, date);
+      if (!services.length) continue;
+      for (const u of index.get(normalizeName(name)) ?? []) if (!byUid.has(u)) byUid.set(u, services);
     }
-
-    // ── Rappels de répétition Campus (heure + lieu, message par personne) ──
-    const rehByUid = new Map<string, { time: string; location: string }>();
-    for (const r of rehearsalsForDate(planning, date)) {
-      for (const u of index.get(normalizeName(r.name)) ?? []) {
-        if (!rehByUid.has(u)) rehByUid.set(u, { time: r.time, location: r.location });
+    // Entraînements sur scène ce jour-là : l'auteur et les membres ayant un
+    // rôle dans le « qui » (quand il correspond à une catégorie de l'app).
+    for (const c of creneaux.filter((x) => x.dimanche === date)) {
+      const entry = sceneReminder(c);
+      const uids = new Set([c.auteurUid, ...(await uidsForCategories(quiCategories(c.qui)))]);
+      for (const u of uids) {
+        if (!u) continue;
+        const mine = byUid.get(u);
+        if (mine) mine.push(entry); else byUid.set(u, [entry]);
       }
     }
-    const rehPrefUids = await filterUidsByNotifPref([...rehByUid.keys()], "reminders");
-    const rehFresh = await freshUids(db, rehPrefUids, `repet-${tag}-${date}`);
-    if (rehFresh.length) {
+
+    const prefix = `rappel-${tag}-${date}`;
+    const prefUids = await filterUidsByNotifPref([...byUid.keys()], "reminders");
+    const fresh = await freshUids(db, prefUids, prefix);
+    if (fresh.length) {
+      const langs = await loadNotifLangs(fresh);
       await Promise.all(
-        rehFresh.map((u) => {
-          const m = rehByUid.get(u)!;
-          const extra = `${m.time ? ` à ${m.time}` : ""}${m.location ? `, ${m.location}` : ""}`;
-          return sendPushToUids([u], {
-            title: "Répétition Campus",
-            body: `Répétition ${when} (${formatFr(date)})${extra}.`,
+        fresh.map(async (u) => {
+          const lang = langs.get(u) ?? "fr";
+          const payload = {
+            title: reminderTitle(lang),
+            body: reminderBody(date, tag, byUid.get(u)!, lang),
             url: "/mes-services",
-            tag: `repet-${tag}-${date}`,
-          });
+            tag: prefix,
+          };
+          await sendPushToUids([u], payload);
+          // Une entrée de cloche par destinataire : le corps est personnel.
+          await recordNotification({ ...payload, kind: "reminder", recipients: [u] });
         })
       );
-      // Entrée de cloche unique pour la fournée (le détail heure/lieu reste dans
-      // le push individuel ; la cloche affiche un libellé générique).
-      await recordNotification({
-        title: "Répétition Campus",
-        body: `Répétition ${when} (${formatFr(date)}).`,
-        url: "/mes-services",
-        kind: "reminder",
-        recipients: rehFresh,
-      });
-      await markNotified(db, rehFresh, `repet-${tag}-${date}`, { tag, date, kind: "repet" });
+      await markNotified(db, fresh, prefix, { tag, date, kind: "service" });
     }
 
-    summary[tag] = { date, service: fresh.length, repet: rehFresh.length };
+    summary[tag] = { date, sent: fresh.length };
   }
 
-  return NextResponse.json({ ok: true, summary });
+  // Évènements de demain (lot 6) : un rappel à chaque inscrit ayant un compte,
+  // préférence « Évènements », une fois par (évènement, uid).
+  const demain = isoInDays(1);
+  let evenementsSent = 0;
+  const evs = await db.collection("evenements").where("date", "==", demain).get();
+  for (const doc of evs.docs) {
+    const e = { id: doc.id, ...doc.data() } as Evenement;
+    const inscrits = (await doc.ref.collection("inscriptions").get()).docs
+      .map((i) => i.data().uid as string | null)
+      .filter((u): u is string => !!u);
+    const prefix = `rappel-evenement-${e.id}`;
+    const fresh = await freshUids(db, await filterUidsByNotifPref(inscrits, "evenements"), prefix);
+    if (!fresh.length) continue;
+    const langs = await loadNotifLangs(fresh);
+    await Promise.all(
+      fresh.map(async (u) => {
+        const payload = { ...evenementReminder(e, langs.get(u) ?? "fr"), url: `/evenements/${e.id}`, tag: prefix };
+        await sendPushToUids([u], payload);
+        await recordNotification({ ...payload, kind: "evenement", recipients: [u] });
+      })
+    );
+    await markNotified(db, fresh, prefix, { date: demain, kind: "evenement", evenementId: e.id });
+    evenementsSent += fresh.length;
+  }
+
+  return NextResponse.json({ ok: true, summary, evenements: { date: demain, sent: evenementsSent } });
 }

@@ -7,6 +7,8 @@ export type Song = {
   artist: string;
   language: Language;
   originalKey: string;
+  /** Tonalité la plus chantée à GCC, affichée par défaut (docs/tonalites-recommandees.md). */
+  recommendedKey: string | null;
   tempo: number | null;
   themes: string[];
   youtubeUrl: string | null;

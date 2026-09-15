@@ -30,14 +30,76 @@ export function canEditProfile(
   return isAdminUser(user) || !profile;
 }
 
-/** Publication d'annonces : droit attribué par les admins (par section) — admins toujours autorisés. */
-export function canPublishAnnonce(
+/** Coordination des programmes de scène (lot 3 bis) : pôle « événement » du
+ *  profil (attribué par un admin) + admins. Crée, modifie, affiche ou masque un
+ *  programme, tient l'ordre de passage, déplace ou retire n'importe quel
+ *  créneau. Miroir serveur : isCoordination() dans firestore.rules. */
+export function isCoordination(
   user: { email?: string | null } | null,
-  profile: { annonces?: string[] } | null,
-  section: string
+  profile: { poles?: string[] } | null
 ): boolean {
-  if (isAdminUser(user)) return true;
-  return (profile?.annonces ?? []).includes(section);
+  return isAdminUser(user) || (profile?.poles ?? []).includes("evenement");
+}
+
+/** Créneau sur scène : son auteur + la coordination. Miroir : programmes/{id}/creneaux dans firestore.rules. */
+export function canEditCreneau(
+  user: AuthUser,
+  profile: { poles?: string[] } | null,
+  creneau: { auteurUid: string }
+): boolean {
+  return creneau.auteurUid === user.uid || isCoordination(user, profile);
+}
+
+// ─── Évènements (lot 6, docs/spec-evenements.md) — miroir : firestore.rules ───
+
+type EvenementDroits = { pour: string; organisateurUid: string };
+
+/** Qui voit un évènement : « toute l'église » = tout le monde, compte ou non ;
+ *  une section = ses membres connectés (clé de serviceRoles), l'organisateur,
+ *  la coordination. Un visiteur sans compte ne voit que « eglise ». */
+export function canSeeEvenement(
+  user: AuthUser | null,
+  profile: { serviceRoles?: Record<string, unknown>; poles?: string[] } | null,
+  e: EvenementDroits
+): boolean {
+  if (e.pour === "eglise") return true;
+  if (!user) return false;
+  if (e.organisateurUid === user.uid || isCoordination(user, profile)) return true;
+  return e.pour in (profile?.serviceRoles ?? {});
+}
+
+/** Qui crée pour un public donné : la coordination pour tout ; un membre dont le
+ *  droit d'annonces couvre la section (le droit d'annonces devient un droit de
+ *  création pour sa section, tranché le 15/09/2026). */
+export function canCreateEvenement(
+  user: AuthUser | null,
+  profile: { annonces?: string[]; poles?: string[] } | null,
+  pour: string
+): boolean {
+  if (!user) return false;
+  if (isCoordination(user, profile)) return true;
+  return (profile?.annonces ?? []).includes(pour);
+}
+
+/** Sections pour lesquelles la personne peut créer (vide = aucun bouton). */
+export function creatableEvenementPours(
+  user: AuthUser | null,
+  profile: { annonces?: string[]; poles?: string[] } | null,
+  sections: readonly string[]
+): string[] {
+  if (!user) return [];
+  if (isCoordination(user, profile)) return ["eglise", ...sections];
+  return sections.filter((s) => (profile?.annonces ?? []).includes(s));
+}
+
+/** Modifier, dupliquer, supprimer, fermer les inscriptions, voir les inscrits : organisateur + coordination. */
+export function canEditEvenement(
+  user: AuthUser | null,
+  profile: { poles?: string[] } | null,
+  e: EvenementDroits
+): boolean {
+  if (!user) return false;
+  return e.organisateurUid === user.uid || isCoordination(user, profile);
 }
 
 const LEVEL_RANK: Record<AccessLevel, number> = { view: 0, create: 1, edit: 2 };
@@ -116,6 +178,11 @@ export function canSetPresentationLink(
 }
 
 /** Modification : créateur de la setlist + niveau « edit » sur la catégorie (musicien, présidence) (+ admins). */
+/** Version perso d'un chant dans une setlist (docs/spec-version-perso.md) :
+ *  qui voit la setlist peut avoir la sienne. Miroir serveur dans
+ *  firestore.rules (setlists/{id}/versions/{uid} : écrit par son propriétaire). */
+export const canHaveSetlistVersion = canSeeSetlist;
+
 export function canEditSetlist(
   user: AuthUser,
   profile: UserProfile | null,

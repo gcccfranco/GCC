@@ -14,6 +14,9 @@ export const PLANNING_COLORS = {
   paix: "#6b4a8e",
   fidelite: "#a03030",
   bonte: "#8b4a2e",
+  // Programmes de scène (lot 3 bis, 14/09/2026) : ajout validé par Timothée,
+  // les neuf valeurs ci-dessus restent gelées.
+  scene: "#3f51a3",
 } as const;
 
 export const CATEGORY_COLORS: Record<string, string> = {

@@ -51,6 +51,14 @@ export function fdLongL(dateStr: string, lang: string) {
     : `${parseInt(dd)} ${moisName(parseInt(mm), "fr")}`
 }
 
+/** « jeudi 24 décembre 2026 » / « 2026年12月24日星期四 ». */
+export function fdFullL(iso: string, lang: string) {
+  const [y, m, d] = iso.split("-").map(Number)
+  return new Date(y, m - 1, d).toLocaleDateString(lang === "zh-CN" ? "zh-CN" : "fr-FR", {
+    weekday: "long", day: "numeric", month: "long", year: "numeric",
+  })
+}
+
 export function currentSundayStr() {
   const d = new Date()
   const day = d.getDay()

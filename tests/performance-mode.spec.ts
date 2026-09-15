@@ -279,7 +279,8 @@ test.describe("tonalité choisie sur la page du chant", () => {
     test(`retenue pour ce chant dans cette setlist, repère visible et retour possible (${c.slug})`, async ({ page }) => {
       const writes: string[] = [];
       page.on("request", (r) => {
-        if (/firestore\.googleapis\.com/.test(r.url()) && r.method() !== "GET" && !r.url().endsWith(":runQuery")) writes.push(`${r.method()} ${r.url()}`);
+        // Seules les écritures de la setlist comptent (la navbar écrit la langue dans notifPrefs).
+        if (/firestore\.googleapis\.com.*\/documents\/setlists\//.test(r.url()) && r.method() !== "GET" && !r.url().endsWith(":runQuery")) writes.push(`${r.method()} ${r.url()}`);
       });
       await page.addInitScript(() => localStorage.setItem("perf-role-preset", "pianiste"));
       await signInAs(page, MUSICIEN, {
@@ -418,7 +419,8 @@ test.describe("nuancier", () => {
 
   test("badges plus grands en mode louange que sur la page du chant", async ({ page }) => {
     await page.goto(`/songs/abba-pere?sectionNuances=${encodeURIComponent(JSON.stringify(NUANCES))}`);
-    const onSong = await fontSize(nuance(page, /^ff$/));
+    // Le badge du corps (le bandeau de structure en porte un aussi, même taille).
+    const onSong = await fontSize(page.locator("[data-section] [data-nuance]").filter({ hasText: /^ff$/ }));
     await page.goto("about:blank");
     await openPerformance(page, [
       item({ songSlug: "abba-pere", position: 1, structureOverride: Object.keys(NUANCES), sectionNuances: NUANCES }),

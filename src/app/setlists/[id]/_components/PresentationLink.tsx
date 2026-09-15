@@ -28,6 +28,9 @@ export function PresentationLink({
   const [draft, setDraft] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  // Ce qui s'est passé côté président au dernier enregistrement (lot 2) :
+  // prévenu, ou aucun compte relié à son nom — la régie doit le savoir.
+  const [notice, setNotice] = useState<"notified" | "unlinked" | null>(null);
   // Qui modifie la setlist peut aussi écrire ce champ en REST, sans la route :
   // on n'affiche jamais un lien qui ne serait pas https.
   const href = url ? parsePresentationUrl(url) : null;
@@ -59,6 +62,7 @@ export function PresentationLink({
         return;
       }
       onSaved(data.presentationUrl ?? undefined);
+      setNotice(data.notified > 0 ? "notified" : data.linked === false ? "unlinked" : null);
       setEditing(false);
     } catch {
       setError(t("setlists.detail.presentationError"));
@@ -114,6 +118,11 @@ export function PresentationLink({
 
   return (
     <div className="mt-3 flex flex-wrap items-center gap-2 print:hidden">
+      {notice && (
+        <p role="status" className="basis-full text-xs text-muted-foreground">
+          {notice === "notified" ? t("setlists.detail.presentationNotified") : t("setlists.detail.presentationUnlinked")}
+        </p>
+      )}
       {href ? (
         <a
           href={href}

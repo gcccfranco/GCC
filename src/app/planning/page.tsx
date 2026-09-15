@@ -171,6 +171,7 @@ export default function PlanningAccueil() {
                 <InfoRow label={t("planning.roles.ppt")} value={val(cRow[8])} />
                 <InfoRow label={t("planning.roles.orateur")} value={val(cRow[9])} />
                 {cRow[10] && <InfoRow label={t("planning.roles.trad")} value={val(cRow[10])} />}
+                {cRow[11] && <InfoRow label={t("planning.roles.sainteCene")} value={val(cRow[11])} />}
               </>
             ) : (
               <p className="text-sm text-muted-foreground">{t("planning.dataPending")}</p>

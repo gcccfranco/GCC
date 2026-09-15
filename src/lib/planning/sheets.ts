@@ -82,12 +82,15 @@ async function fetchSheet(sheet: string): Promise<string[][]> {
   }
 }
 
+// Colonnes 1–11 : présidence … traduction, puis « Sainte cène » (index 11,
+// ajoutée au T4 2026). Jamais au-delà : les colonnes suivantes portent des
+// notes de travail.
 export async function fetchCulte(): Promise<string[][]> {
   const rows = await fetchSheet("Franco_Louange")
   return rows.flatMap(r => {
     const dt = parseDate(r[0])
     if (!dt) return []
-    return [[dt, r[1]||"", r[2]||"", r[3]||"", r[4]||"", r[5]||"", r[6]||"", r[7]||"", r[8]||"", r[9]||"", r[10]||""]]
+    return [[dt, r[1]||"", r[2]||"", r[3]||"", r[4]||"", r[5]||"", r[6]||"", r[7]||"", r[8]||"", r[9]||"", r[10]||"", r[11]||""]]
   })
 }
 
