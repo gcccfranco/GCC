@@ -2,12 +2,14 @@
 // fiches, inscriptions. Les annonces y sont fusionnées (type « info »).
 
 import type { AnnonceLink, AnnonceSection } from "./annonce";
+import type { TachePole } from "./tache";
 
 export const EVENEMENT_TYPES = ["sport", "loisir", "musique", "eglise", "info"] as const;
 export type EvenementType = (typeof EVENEMENT_TYPES)[number];
 
-/** Public visé : toute l'église (calendrier public) ou une section (membres connectés de la section). */
-export type EvenementPour = "eglise" | AnnonceSection;
+/** Public visé : toute l'église (calendrier public), une section (membres
+ *  connectés de la section) ou un pôle (réunion, lot 7 : membres du pôle). */
+export type EvenementPour = "eglise" | AnnonceSection | `pole:${TachePole}`;
 export const POUR_EGLISE = "eglise" as const;
 
 export interface Evenement {

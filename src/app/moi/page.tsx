@@ -4,10 +4,10 @@
 // sur téléphone et tablette. Rien de nouveau : des liens vers les pages qui
 // existaient dans le menu et la navbar, plus les réglages de langue et de thème.
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "next-themes";
-import { CalendarDays, UserRound, BookOpen, MessageSquareHeart, TriangleAlert, Megaphone, ShieldCheck, Globe, Moon, LogOut } from "lucide-react";
+import { CalendarDays, UserRound, BookOpen, MessageSquareHeart, TriangleAlert, Megaphone, ShieldCheck, Globe, Moon, LogOut, ListChecks } from "lucide-react";
 import { RequireAuth } from "@/components/auth/RequireAuth";
 import { PageTitle } from "@/components/layout/PageTitle";
 import { Group, GroupRow } from "@/components/ui/group";
@@ -15,7 +15,11 @@ import { ReportDialog } from "@/components/report/ReportDialog";
 import { useSetLanguage } from "@/lib/I18nProvider";
 import { useAuth, logOut } from "@/lib/firebase/auth";
 import { useProfile } from "@/lib/firebase/users";
-import { isAdminUser } from "@/lib/access";
+import { isAdminUser, polesDe } from "@/lib/access";
+import { useTaches } from "@/lib/taches/useTaches";
+import { aFairePour, lignesDeTache } from "@/lib/taches/echeances";
+import { todayIso } from "@/lib/scene/dimanches";
+import { TACHE_POLES } from "@/types/tache";
 
 const TOGGLE = "rounded-full bg-secondary px-3 py-1.5 text-sm font-semibold text-foreground transition-transform duration-150 active:scale-[.96] cursor-pointer";
 
@@ -32,6 +36,13 @@ function MoiClient() {
   const admin = isAdminUser(user);
   const canNotify = admin || (profile?.notify?.length ?? 0) > 0;
   const name = [profile?.firstName, profile?.lastName].filter(Boolean).join(" ");
+  // « Mes tâches » (lot 7) : seulement pour les membres d'un pôle et les admins.
+  const poles = useMemo(() => (admin ? [...TACHE_POLES] : polesDe(profile)), [admin, profile]);
+  const { items } = useTaches(poles);
+  const today = todayIso();
+  const mesTaches = user
+    ? aFairePour(items.flatMap(({ tache, fois }) => lignesDeTache(tache, fois, today)), user.uid).length
+    : 0;
 
   return (
     <div className="max-w-2xl mx-auto px-4 pt-6 pb-10 space-y-6">
@@ -39,6 +50,11 @@ function MoiClient() {
 
       <Group>
         <GroupRow href="/mes-services" leading={<CalendarDays />} chevron>{t("common.header.myServices")}</GroupRow>
+        {poles.length > 0 && (
+          <GroupRow href="/taches" leading={<ListChecks />} trailing={mesTaches > 0 ? String(mesTaches) : undefined} chevron>
+            {t("taches.mesTaches")}
+          </GroupRow>
+        )}
         <GroupRow href="/profil" leading={<UserRound />} chevron>{t("common.header.profile")}</GroupRow>
       </Group>
 

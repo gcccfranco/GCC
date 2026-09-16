@@ -10,7 +10,7 @@ import { Sun, Moon, Globe, LogIn, LogOut, ChevronDown, UserRound, Bell, BookOpen
 import { useTheme } from "next-themes";
 import { useAuth, logOut } from "@/lib/firebase/auth";
 import { useProfile } from "@/lib/firebase/users";
-import { isAdminUser } from "@/lib/access";
+import { isAdminUser, polesDe } from "@/lib/access";
 import { useScrollDirection } from "@/hooks/useScrollDirection";
 import { useNotifications, type NotificationItem } from "@/hooks/useNotifications";
 import { saveNotifLang } from "@/lib/firebase/notifPrefs";
@@ -34,6 +34,7 @@ const NOTIF_KIND_KEYS: Record<NotificationItem["kind"], string> = {
   "presentation": "notifications.presentation",
   "scene": "notifications.scene",
   "evenement": "notifications.evenement",
+  "tache": "notifications.tache",
 };
 
 // Bouton d'icône de la barre : rond, sans bordure, réponse dès l'appui.
@@ -123,6 +124,7 @@ export function Navbar() {
   const isActivePlanning = pathname.startsWith("/planning");
   const isActiveMesServices = pathname.startsWith("/mes-services");
   const isActiveEvenements = pathname.startsWith("/evenements");
+  const isActiveTaches = pathname.startsWith("/taches");
   const admin = isAdminUser(user);
   const canNotify = admin || (profile?.notify?.length ?? 0) > 0;
   const headerLabel = isActivePlanning
@@ -131,7 +133,9 @@ export function Navbar() {
       ? t("common.header.service")
       : isActiveEvenements
           ? t("common.header.evenements")
-          : t("common.header.louange");
+          : isActiveTaches
+            ? t("common.header.taches")
+            : t("common.header.louange");
   const displayName = [profile?.firstName, profile?.lastName].filter(Boolean).join(" ") || user?.email || "";
   const initial = (profile?.firstName || user?.email || "?").trim().charAt(0).toUpperCase();
 
@@ -233,6 +237,12 @@ export function Navbar() {
             {!authLoading && user && (
               <Link href="/mes-services" className={sectionClass(isActiveMesServices)}>
                 {t("common.header.myServices")}
+              </Link>
+            )}
+            {/* Tâches (lot 7) : pour les membres d'un pôle et les admins. */}
+            {!authLoading && user && (admin || polesDe(profile).length > 0) && (
+              <Link href="/taches" className={sectionClass(isActiveTaches)}>
+                {t("common.header.taches")}
               </Link>
             )}
           </nav>

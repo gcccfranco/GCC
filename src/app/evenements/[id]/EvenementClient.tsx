@@ -11,7 +11,7 @@ import { useParams, useRouter } from "next/navigation"
 import { useTranslation } from "react-i18next"
 import { useAuth } from "@/lib/firebase/auth"
 import { useProfile } from "@/lib/firebase/users"
-import { canEditEvenement, canSeeEvenement } from "@/lib/access"
+import { canEditEvenement, canSeeEvenement, poleDuPour } from "@/lib/access"
 import { deleteEvenement, getEvenement } from "@/lib/firebase/evenements"
 import { isInfo } from "@/lib/evenements/agenda"
 import { fdFullL } from "@/lib/planning/utils"
@@ -141,7 +141,7 @@ export function EvenementClient() {
         <span>{t("evenements.plusInfos", { nom: e.contact || e.organisateurNom })}</span>
       </p>
 
-      {!isInfo(e) && (
+      {!isInfo(e) && !poleDuPour(e.pour) && (
         <Inscriptions
           evenement={e}
           user={user}

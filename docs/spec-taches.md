@@ -202,3 +202,42 @@ npm test -- tests/taches.spec.ts   # PW_PORT=3000 si un next dev tourne déjà
 npx tsc --noEmit
 npm run lint
 ```
+
+## Avancement
+
+**Codé le 16/09/2026**, sur le go du même jour, en quatre tranches :
+`tests/taches.spec.ts`, 27 tests × 3 appareils ; suites voisines (évènements,
+navigation, pages secondaires, programme de scène, rappels, président, 中文)
+vertes ; lint propre sur les nouveaux fichiers. Captures regardées sur
+ordinateur, téléphone et tablette (page d'un pôle, formulaire, page Tâches).
+
+| Tranche | Construit |
+| --- | --- |
+| T1 | `src/types/tache.ts`, `src/lib/taches/echeances.ts` (calculs), `src/lib/firebase/taches.ts` (REST), `polesDe` / `isPoleMember` dans `access.ts` + `isTachePole` dans `firestore.rules`, pages `/taches` et `/taches/[pole]`, `TacheLigne`, `TacheForm`, ligne « Mes tâches » dans Moi, entrée « Tâches » de la barre du haut (ordinateur), pôles DA / Média / Orga dans l'administration. |
+| T2 | Répétition (semaine, deux semaines, N-ième jour du mois ou dernier), fois visibles, fois ratée qui disparaît. |
+| T3 | Préférence « Tâches », cloche `tache`, routes `/api/taches/fait` et `/api/taches/assigne`, messages FR / 中文 (`src/lib/taches/messages.ts`), rappels J-3 / J-1 / lendemain ajoutés à la notification du jour dans `cron/reminders`, ligne d'état après la coche. |
+| T4 | Évènement `pour: "pole:<id>"` : visible des membres du pôle et des admins, créé par un membre, sans inscriptions, push à la création et rappel de la veille à tout le pôle. |
+
+Écarts et points à confirmer :
+
+- **Données** : `poles/{pole}/taches/{id}` (et `…/fois/{date}`) plutôt que
+  `taches/{id}` avec un champ `pole` — les règles lisent le pôle dans le
+  chemin, sans lecture supplémentaire. Revers : une tâche ne change pas de
+  pôle.
+- **À confirmer par Timothée** : comme Louange = avoir un rôle de service,
+  **tout musicien, choriste, présidence ou régie peut créer une réunion du pôle
+  Louange** dans le calendrier. Deux tests du lot 6 ont été adaptés à cette
+  règle (la responsable du Groupe Paix voit aussi « Pôle Louange » dans
+  « Public » ; le test « membre sans droit » utilise un compte sans rôle).
+- La lecture des évènements hors « église » reste ouverte aux connectés dans
+  les règles (filtrage côté client, comme les sections) ; les tâches, elles,
+  sont filtrées côté serveur.
+- Quand la régie est prévenue, le lien de la tâche (fond Canva…) est ajouté
+  en texte au message ; la notification ouvre les setlists.
+- Les tests d'interface de T1–T2 ont été écrits avant les pages, mais pas
+  lancés entre les deux : leur échec n'a pas été observé.
+
+## Après le code (rappel)
+
+- Publier `firestore.rules` (tâches, réunions de pôle).
+- Cocher les pôles DA, Média, Orga dans l'administration.

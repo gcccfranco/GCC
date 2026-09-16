@@ -19,7 +19,7 @@ const MEMBER_TABS: Tab[] = [
   { href: "/setlists", key: "common.header.setlists", Icon: ListMusic, match: ["/setlists"] },
   { href: "/planning", key: "common.header.planning", Icon: CalendarDays, match: ["/planning"] },
   { href: "/evenements", key: "common.header.evenements", Icon: Ticket, match: ["/evenements"] },
-  { href: "/moi", key: "common.header.moi", Icon: UserRound, match: ["/moi", "/mes-services", "/profil", "/guide", "/questionnaire", "/notifier", "/admin"] },
+  { href: "/moi", key: "common.header.moi", Icon: UserRound, match: ["/moi", "/mes-services", "/taches", "/profil", "/guide", "/questionnaire", "/notifier", "/admin"] },
 ];
 
 // Sans compte : les chants et le calendrier public (décision Q10).

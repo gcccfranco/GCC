@@ -11,6 +11,7 @@ import { useTranslation } from "react-i18next"
 import { ImagePlus, Trash2 } from "lucide-react"
 import { compressImage } from "@/lib/utils/compressImage"
 import { categoryLabel } from "@/lib/serviceColors"
+import { poleDuPour } from "@/lib/access"
 import { EVENEMENT_TYPES, type Evenement, type EvenementType } from "@/types/evenement"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -43,6 +44,9 @@ export function EvenementForm({ initial, pours, creation, onSubmit, onCancel }: 
   const [busy, setBusy] = useState(false)
   const [compressing, setCompressing] = useState(false)
   const info = v.type === "info"
+  // Réunion de pôle (lot 7) : pas d'inscriptions.
+  const reunion = poleDuPour(v.pour) !== null
+  const sansInscription = { inscriptionOuverte: false, sansCompte: false, placesMax: null }
   const set = (patch: Partial<EvenementValues>) => setV((x) => ({ ...x, ...patch }))
   const field = "w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
   const LABEL = "text-xs font-semibold"
@@ -87,6 +91,7 @@ export function EvenementForm({ initial, pours, creation, onSubmit, onCancel }: 
         liens: v.liens.map((l) => ({ label: l.label.trim(), url: l.url.trim() })).filter((l) => l.url),
         expiresAt: info ? v.expiresAt || null : null,
         epingle: info ? v.epingle : false,
+        ...(reunion ? sansInscription : {}),
       }, creation && prevenir)
     } catch (err) {
       setError(err instanceof Error ? err.message : t("evenements.form.errorSave"))
@@ -115,8 +120,12 @@ export function EvenementForm({ initial, pours, creation, onSubmit, onCancel }: 
           </div>
           <div className="space-y-1">
             <label htmlFor="ev-pour" className={LABEL}>{t("evenements.form.pour")}</label>
-            <select id="ev-pour" className={field} value={v.pour} onChange={(e) => set({ pour: e.target.value as EvenementValues["pour"] })}>
-              {pours.map((p) => <option key={p} value={p}>{p === "eglise" ? t("evenements.pourEglise") : categoryLabel(p)}</option>)}
+            <select id="ev-pour" className={field} value={v.pour}
+              onChange={(e) => set({ pour: e.target.value as EvenementValues["pour"], ...(poleDuPour(e.target.value) ? sansInscription : {}) })}>
+              {pours.map((p) => {
+                const pole = poleDuPour(p)
+                return <option key={p} value={p}>{p === "eglise" ? t("evenements.pourEglise") : pole ? t("evenements.pourPole", { pole: t(`taches.pole.${pole}`) }) : categoryLabel(p)}</option>
+              })}
             </select>
           </div>
         </div>
@@ -173,7 +182,7 @@ export function EvenementForm({ initial, pours, creation, onSubmit, onCancel }: 
         )}
       </div>
 
-      {!info && (
+      {!info && !reunion && (
         <label htmlFor="ev-ouverte" className="flex items-center justify-between gap-3 px-4 py-3.5 text-sm font-semibold">
           {t("evenements.form.ouverte")}
           <Switch id="ev-ouverte" checked={v.inscriptionOuverte} onCheckedChange={(c) => set({ inscriptionOuverte: c })} />
@@ -223,7 +232,7 @@ export function EvenementForm({ initial, pours, creation, onSubmit, onCancel }: 
             <Button type="button" variant="outline" size="sm" onClick={() => set({ liens: [...v.liens, { label: "", url: "" }] })}>{t("evenements.form.addLink")}</Button>
           </div>
 
-          {!info && (
+          {!info && !reunion && (
             <div className="space-y-3">
               <div className="space-y-1">
                 <label htmlFor="ev-places" className={LABEL}>{t("evenements.form.places")}</label>

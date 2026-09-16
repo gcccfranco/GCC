@@ -168,7 +168,8 @@ test("créer : un responsable avec le droit d'annonces ne crée que pour sa sect
   let pushed = false;
   await page.route("**/api/push/notify-evenement", (route) => { pushed = true; return route.fulfill({ json: { ok: true } }); });
   await page.getByRole("link", { name: "Nouvel évènement" }).click();
-  await expect(page.getByLabel("Public").locator("option")).toHaveCount(1);
+  // Sa section, puis la réunion du pôle Louange (lot 7 : un rôle de service = pôle Louange).
+  await expect(page.getByLabel("Public").locator("option")).toHaveText(["Groupe Paix", "Pôle Louange"]);
   await expect(page.getByLabel("Public")).toHaveValue("Groupe Paix");
   await page.getByLabel("Nom de l'évènement").fill("Prière du groupe");
   await page.getByLabel("Date", { exact: true }).fill("2026-10-20");
@@ -182,7 +183,8 @@ test("créer : un responsable avec le droit d'annonces ne crée que pour sa sect
 });
 
 test("créer : un membre sans droit n'a pas de bouton et la page de création lui est refusée", async ({ page }) => {
-  await member(page, JO, "/evenements");
+  // Sans rôle de service ni pôle : un rôle de service donnerait le pôle Louange (lot 7).
+  await member(page, { uid: "uid-sans", email: "sans@example.com", firstName: "Sam", lastName: "S." }, "/evenements");
   await expect(page.getByRole("link", { name: "Nouvel évènement" })).toHaveCount(0);
   await page.goto("/evenements/nouveau");
   await expect(page.getByText("réservée")).toBeVisible();

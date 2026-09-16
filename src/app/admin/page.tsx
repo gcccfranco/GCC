@@ -820,10 +820,10 @@ export default function AdminPage() {
                           deriveFromPlanning={deriveFromPlanning}
                         />
 
-                        {/* Pôles de coordination (lot 3 bis : Événement = programmes de scène) — réservé aux admins */}
+                        {/* Pôles (tâches du lot 7 ; Événement = aussi programmes de scène, lot 3 bis) — réservé aux admins */}
                         <div className="rounded-lg border border-dashed border-border p-3">
                           <p className="text-sm font-semibold text-muted-foreground mb-2">
-                            Pôles de coordination :
+                            Pôles (Louange : automatique avec un rôle de service) :
                           </p>
                           <div className="flex flex-wrap gap-2">
                             {POLES.map((pole) => {

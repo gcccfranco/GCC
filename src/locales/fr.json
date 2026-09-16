@@ -18,7 +18,8 @@
       "admin": "Admin",
       "evenements": "Évènements",
       "moi": "Moi",
-      "account": "Compte"
+      "account": "Compte",
+      "taches": "Tâches"
     },
     "buttons": {
       "reset": "Réinitialiser",
@@ -485,7 +486,8 @@
     "broadcast": "Diffusion",
     "presentation": "Présentation prête",
     "scene": "Scène",
-    "evenement": "Évènement"
+    "evenement": "Évènement",
+    "tache": "Tâche"
   },
   "profile": {
     "title": "Mon profil",
@@ -1490,7 +1492,8 @@
     "fermees": "Fermées",
     "voirInscrits": "Voir les inscrits ({{count}})",
     "masquerInscrits": "Masquer les inscrits",
-    "lienFiche": "Lien de la fiche"
+    "lienFiche": "Lien de la fiche",
+    "pourPole": "Pôle {{pole}}"
   },
   "moi": {
     "title": "Moi",
@@ -1513,5 +1516,71 @@
       "download": "Télécharger",
       "preparing": "Préparation…"
     }
+  },
+  "taches": {
+    "title": "Tâches",
+    "mesTaches": "Mes tâches",
+    "aFairePourMoi": "À faire pour moi",
+    "poles": "Pôles",
+    "pole": {
+      "da": "DA",
+      "media": "Média",
+      "orga": "Orga",
+      "louange": "Louange",
+      "evenement": "Événement"
+    },
+    "subtitle": "Tâches du pôle",
+    "aucunPole": "Tu ne fais partie d'aucun pôle : les tâches sont réservées aux membres des pôles.",
+    "pasMembre": "Tu ne fais pas partie de ce pôle.",
+    "rienAFaire": "Rien à faire pour l'instant.",
+    "vide": "Aucune tâche pour l'instant. Ajoute la première avec « Nouvelle tâche ».",
+    "nouvelle": "Nouvelle tâche",
+    "modifier": "Modifier la tâche",
+    "groupes": {
+      "enRetard": "En retard",
+      "cetteSemaine": "Cette semaine",
+      "plusTard": "Plus tard",
+      "faites": "Faites"
+    },
+    "pourTous": "Tout le pôle",
+    "faitePar": "Faite par {{nom}}",
+    "cocher": "{{titre}}, {{date}}",
+    "ouvrirLien": "Ouvrir le lien",
+    "champs": {
+      "titre": "Titre",
+      "responsable": "Responsable",
+      "echeance": "Échéance",
+      "repetition": "Répétition",
+      "rang": "Quelle semaine du mois",
+      "lien": "Lien",
+      "note": "Note",
+      "prevenir": "Quand c'est fait, prévenir"
+    },
+    "rythme": {
+      "aucun": "Une seule fois",
+      "semaine": "Chaque semaine",
+      "2semaines": "Toutes les deux semaines",
+      "mois": "Chaque mois"
+    },
+    "rang": {
+      "1": "1re semaine",
+      "2": "2e semaine",
+      "3": "3e semaine",
+      "4": "4e semaine",
+      "-1": "Dernière semaine"
+    },
+    "prevenirPersonne": "Personne",
+    "prevenirPole": "Pôle {{pole}}",
+    "prevenirRegie": "Régie {{service}}, le dimanche suivant",
+    "enregistrer": "Enregistrer",
+    "supprimer": "Supprimer",
+    "annuler": "Annuler",
+    "confirmerSuppression": "Supprimer cette tâche et tout son historique ?",
+    "erreur": "L'enregistrement a échoué. Réessaie.",
+    "titreRequis": "Donne un titre à la tâche.",
+    "echeanceRequise": "Choisis une échéance.",
+    "regiePrevenue": "Régie prévenue.",
+    "polePrevenu": "Pôle {{pole}} prévenu.",
+    "personnePrevenue": "Personne n'a été prévenu : aucune régie reliée à un compte."
   }
 }

@@ -11,6 +11,7 @@ import { useTranslation } from "react-i18next"
 import { Check } from "lucide-react"
 import { aCommence, isInfo, nowIsoParis, placesRestantes } from "@/lib/evenements/agenda"
 import { categoryColor, categoryLabel, PLANNING_COLORS } from "@/lib/serviceColors"
+import { poleDuPour } from "@/lib/access"
 import type { Evenement } from "@/types/evenement"
 import { Tile } from "@/components/ui/tile"
 
@@ -31,7 +32,11 @@ export function TypePour({ e }: { e: Pick<Evenement, "type" | "pour"> }) {
       </span>
       <span className="inline-block text-xs px-2 py-0.5 rounded-full font-semibold bg-secondary text-foreground"
         style={e.pour === "eglise" ? undefined : { background: `${categoryColor(e.pour)}18`, color: categoryColor(e.pour) }}>
-        {e.pour === "eglise" ? t("evenements.pourEglise") : categoryLabel(e.pour)}
+        {e.pour === "eglise"
+          ? t("evenements.pourEglise")
+          : poleDuPour(e.pour)
+            ? t("evenements.pourPole", { pole: t(`taches.pole.${poleDuPour(e.pour)}`) })
+            : categoryLabel(e.pour)}
       </span>
     </>
   )

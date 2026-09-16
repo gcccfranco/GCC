@@ -18,7 +18,8 @@
       "admin": "管理",
       "evenements": "活动",
       "moi": "我",
-      "account": "账户"
+      "account": "账户",
+      "taches": "任务"
     },
     "buttons": {
       "reset": "重置",
@@ -485,7 +486,8 @@
     "broadcast": "群发通知",
     "presentation": "幻灯片已就绪",
     "scene": "舞台",
-    "evenement": "活动"
+    "evenement": "活动",
+    "tache": "任务"
   },
   "profile": {
     "title": "我的资料",
@@ -1490,7 +1492,8 @@
     "fermees": "已关闭",
     "voirInscrits": "查看报名（{{count}}）",
     "masquerInscrits": "收起报名名单",
-    "lienFiche": "活动链接"
+    "lienFiche": "活动链接",
+    "pourPole": "{{pole}}部门"
   },
   "moi": {
     "title": "我",
@@ -1513,5 +1516,71 @@
       "download": "下载",
       "preparing": "正在生成…"
     }
+  },
+  "taches": {
+    "title": "任务",
+    "mesTaches": "我的任务",
+    "aFairePourMoi": "我要做的",
+    "poles": "部门",
+    "pole": {
+      "da": "美工",
+      "media": "媒体",
+      "orga": "组织",
+      "louange": "敬拜",
+      "evenement": "活动"
+    },
+    "subtitle": "部门任务",
+    "aucunPole": "你不属于任何部门：任务只对部门成员开放。",
+    "pasMembre": "你不属于这个部门。",
+    "rienAFaire": "目前没有要做的事。",
+    "vide": "还没有任务。点击「新任务」添加第一个。",
+    "nouvelle": "新任务",
+    "modifier": "修改任务",
+    "groupes": {
+      "enRetard": "已逾期",
+      "cetteSemaine": "本周",
+      "plusTard": "以后",
+      "faites": "已完成"
+    },
+    "pourTous": "整个部门",
+    "faitePar": "{{nom}} 已完成",
+    "cocher": "{{titre}}，{{date}}",
+    "ouvrirLien": "打开链接",
+    "champs": {
+      "titre": "标题",
+      "responsable": "负责人",
+      "echeance": "截止日期",
+      "repetition": "重复",
+      "rang": "每月第几周",
+      "lien": "链接",
+      "note": "备注",
+      "prevenir": "完成后通知"
+    },
+    "rythme": {
+      "aucun": "仅一次",
+      "semaine": "每周",
+      "2semaines": "每两周",
+      "mois": "每月"
+    },
+    "rang": {
+      "1": "第 1 周",
+      "2": "第 2 周",
+      "3": "第 3 周",
+      "4": "第 4 周",
+      "-1": "最后一周"
+    },
+    "prevenirPersonne": "不通知",
+    "prevenirPole": "{{pole}}部门",
+    "prevenirRegie": "{{service}}的音控/投影（下一个主日）",
+    "enregistrer": "保存",
+    "supprimer": "删除",
+    "annuler": "取消",
+    "confirmerSuppression": "删除这个任务及其全部记录？",
+    "erreur": "保存失败，请重试。",
+    "titreRequis": "请填写任务标题。",
+    "echeanceRequise": "请选择截止日期。",
+    "regiePrevenue": "已通知音控/投影。",
+    "polePrevenu": "已通知{{pole}}部门。",
+    "personnePrevenue": "没有通知任何人：没有与账号关联的音控/投影。"
   }
 }

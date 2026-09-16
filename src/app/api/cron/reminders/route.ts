@@ -7,6 +7,10 @@ import { reminderBody, reminderServicesFor, reminderTitle, type ReminderService 
 import { quiCategories, sceneReminder } from "@/lib/scene/rappels";
 import { evenementReminder } from "@/lib/evenements/rappel";
 import type { Evenement } from "@/types/evenement";
+import { corpsAvecTaches, rappelsDuJour, rappelTachesTitre, type RappelTache } from "@/lib/taches/messages";
+import { poleDuPour, polesDe } from "@/lib/access";
+import { membresDuPole } from "@/lib/taches/serveur";
+import type { Fois, Tache, TachePole } from "@/types/tache";
 import type { Creneau } from "@/types/programme";
 import {
   loadPlanningData,
@@ -79,6 +83,42 @@ async function sceneCreneaux(db: FirebaseFirestore.Firestore, dates: string[]): 
   return out;
 }
 
+/** Rappels de tâches du jour (lot 7, docs/spec-taches.md) : J-3, J-1 et le
+ *  lendemain d'une échéance non cochée, au responsable ou à tout le pôle,
+ *  préférence « Tâches », une fois par (rappel, destinataire). Renvoie, pour
+ *  chaque destinataire, ses rappels et les clés notifLog à marquer. */
+async function rappelsTaches(
+  db: FirebaseFirestore.Firestore,
+  today: string,
+): Promise<Map<string, { rappels: RappelTache[]; keys: string[] }>> {
+  const snap = await db.collectionGroup("taches").get();
+  const items = await Promise.all(
+    snap.docs.map(async (doc) => {
+      const pole = doc.ref.parent.parent?.id as TachePole;
+      const tache = { ...(doc.data() as Omit<Tache, "id">), id: doc.id, pole };
+      const fois = (await doc.ref.collection("fois").get()).docs.map((f) => ({ ...(f.data() as Fois), date: f.id }));
+      return { tache, fois };
+    }),
+  );
+  const rappels = rappelsDuJour(items, today);
+  const out = new Map<string, { rappels: RappelTache[]; keys: string[] }>();
+  if (!rappels.length) return out;
+
+  const users = await db.collection("users").get();
+  const membres = (pole: TachePole) => users.docs.filter((d) => (polesDe(d.data()) as string[]).includes(pole)).map((d) => d.id);
+  for (const r of rappels) {
+    const key = `rappel-tache-${r.quand}-${r.tache.pole}-${r.tache.id}-${r.date}`;
+    const cibles = r.tache.responsableUid ? [r.tache.responsableUid] : membres(r.tache.pole);
+    for (const u of await freshUids(db, await filterUidsByNotifPref(cibles, "taches"), key)) {
+      const entry = out.get(u) ?? { rappels: [], keys: [] };
+      entry.rappels.push(r);
+      entry.keys.push(key);
+      out.set(u, entry);
+    }
+  }
+  return out;
+}
+
 export async function GET(req: NextRequest) {
   const secret = process.env.CRON_SECRET;
   const authz = req.headers.get("authorization");
@@ -89,6 +129,15 @@ export async function GET(req: NextRequest) {
   const db = adminDb();
   const [planning, index] = await Promise.all([loadPlanningData(), loadPlanningNameIndex()]);
   const creneaux = await sceneCreneaux(db, REMINDERS.map((r) => isoInDays(r.days)));
+  // Rappels de tâches : ajoutés à la première notification de service de la
+  // personne aujourd'hui, sinon envoyés seuls après la boucle.
+  const taches = await rappelsTaches(db, isoInDays(0));
+  const marquerTaches = async (u: string) => {
+    const entry = taches.get(u);
+    if (!entry) return;
+    taches.delete(u);
+    for (const key of entry.keys) await markNotified(db, [u], key, { kind: "tache" });
+  };
 
   const summary: Record<string, { date: string; sent: number }> = {};
 
@@ -132,10 +181,11 @@ export async function GET(req: NextRequest) {
           const lang = langs.get(u) ?? "fr";
           const payload = {
             title: reminderTitle(lang),
-            body: reminderBody(date, tag, byUid.get(u)!, lang),
+            body: corpsAvecTaches(reminderBody(date, tag, byUid.get(u)!, lang), taches.get(u)?.rappels ?? [], lang),
             url: "/mes-services",
             tag: prefix,
           };
+          await marquerTaches(u);
           await sendPushToUids([u], payload);
           // Une entrée de cloche par destinataire : le corps est personnel.
           await recordNotification({ ...payload, kind: "reminder", recipients: [u] });
@@ -147,6 +197,24 @@ export async function GET(req: NextRequest) {
     summary[tag] = { date, sent: fresh.length };
   }
 
+  // Tâches des personnes sans notification de service aujourd'hui.
+  const tachesSeules = [...taches.keys()];
+  if (tachesSeules.length) {
+    const langs = await loadNotifLangs(tachesSeules);
+    for (const u of tachesSeules) {
+      const lang = langs.get(u) ?? "fr";
+      const payload = {
+        title: rappelTachesTitre(lang),
+        body: corpsAvecTaches("", taches.get(u)!.rappels, lang),
+        url: "/taches",
+        tag: `rappel-taches-${isoInDays(0)}`,
+      };
+      await marquerTaches(u);
+      await sendPushToUids([u], payload);
+      await recordNotification({ ...payload, kind: "tache", recipients: [u] });
+    }
+  }
+
   // Évènements de demain (lot 6) : un rappel à chaque inscrit ayant un compte,
   // préférence « Évènements », une fois par (évènement, uid).
   const demain = isoInDays(1);
@@ -154,9 +222,13 @@ export async function GET(req: NextRequest) {
   const evs = await db.collection("evenements").where("date", "==", demain).get();
   for (const doc of evs.docs) {
     const e = { id: doc.id, ...doc.data() } as Evenement;
-    const inscrits = (await doc.ref.collection("inscriptions").get()).docs
-      .map((i) => i.data().uid as string | null)
-      .filter((u): u is string => !!u);
+    // Réunion de pôle (lot 7) : pas d'inscriptions, tout le pôle est rappelé.
+    const pole = poleDuPour(e.pour);
+    const inscrits = pole
+      ? await membresDuPole(pole)
+      : (await doc.ref.collection("inscriptions").get()).docs
+          .map((i) => i.data().uid as string | null)
+          .filter((u): u is string => !!u);
     const prefix = `rappel-evenement-${e.id}`;
     const fresh = await freshUids(db, await filterUidsByNotifPref(inscrits, "evenements"), prefix);
     if (!fresh.length) continue;
@@ -172,5 +244,5 @@ export async function GET(req: NextRequest) {
     evenementsSent += fresh.length;
   }
 
-  return NextResponse.json({ ok: true, summary, evenements: { date: demain, sent: evenementsSent } });
+  return NextResponse.json({ ok: true, summary, taches: tachesSeules.length, evenements: { date: demain, sent: evenementsSent } });
 }

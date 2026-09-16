@@ -29,12 +29,13 @@ export type EddRole = (typeof EDD_ROLES)[number];
 export const GROUPES = ["Groupe Paix", "Groupe Fidélité", "Groupe Bonté"] as const;
 export type Groupe = (typeof GROUPES)[number];
 
-// Pôles de coordination, attribués par un admin (lot 3 bis : « événement » =
-// programmes de scène ; le lot 6 ajoutera les autres). Cf. isCoordination
-// dans src/lib/access.ts et firestore.rules.
-export const POLES = ["evenement"] as const;
+// Pôles, attribués par un admin. « événement » donne aussi la coordination des
+// programmes de scène (lot 3 bis, isCoordination) ; DA, Média et Orga servent
+// aux tâches par pôle (lot 7). Louange n'est pas coché : il découle des rôles de
+// service (polesDe dans src/lib/access.ts, isTachePole dans firestore.rules).
+export const POLES = ["da", "media", "orga", "evenement"] as const;
 export type Pole = (typeof POLES)[number];
-export const POLE_LABELS: Record<Pole, string> = { evenement: "Événement" };
+export const POLE_LABELS: Record<Pole, string> = { da: "DA", media: "Média", orga: "Orga", evenement: "Événement" };
 
 export interface UserProfile {
   uid: string;
@@ -69,7 +70,7 @@ export interface UserProfile {
 // édition). Le serveur filtre les envois automatiques selon ces préférences ;
 // absence de doc/champ = activé. Les envois manuels (notifier/broadcast) ne sont
 // PAS filtrés. Cf. src/lib/firebase/notifPrefs.ts + src/lib/push/recipients.ts.
-export const NOTIF_TYPES = ["reminders", "setlists", "annonces", "evenements"] as const;
+export const NOTIF_TYPES = ["reminders", "setlists", "annonces", "evenements", "taches"] as const;
 export type NotifType = (typeof NOTIF_TYPES)[number];
 export type NotifPrefs = Record<NotifType, boolean>;
 
@@ -78,6 +79,7 @@ export const DEFAULT_NOTIF_PREFS: NotifPrefs = {
   setlists: true,
   annonces: true,
   evenements: true,
+  taches: true,
 };
 
 /** Langue des envois automatiques (rappels), mémorisée dans notifPrefs/{uid}.lang
@@ -89,4 +91,5 @@ export const NOTIF_TYPE_LABELS: Record<NotifType, string> = {
   setlists: "Setlist prête",
   annonces: "Annonces",
   evenements: "Évènements",
+  taches: "Tâches",
 };

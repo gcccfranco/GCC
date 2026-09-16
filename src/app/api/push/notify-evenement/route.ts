@@ -3,7 +3,8 @@ import { adminDb, verifyIdToken } from "@/lib/push/admin";
 import { sendPushToUids } from "@/lib/push/send";
 import { recordNotification } from "@/lib/push/notifications";
 import { filterUidsByNotifPref, uidsForCategory } from "@/lib/push/recipients";
-import { canCreateEvenement, canEditEvenement } from "@/lib/access";
+import { canCreateEvenement, canEditEvenement, poleDuPour } from "@/lib/access";
+import { membresDuPole } from "@/lib/taches/serveur";
 import type { Evenement } from "@/types/evenement";
 
 export const runtime = "nodejs";
@@ -43,9 +44,13 @@ export async function POST(req: NextRequest) {
   const logRef = db.collection("notifLog").doc(`evenement-${evenementId}`);
   if ((await logRef.get()).exists) return NextResponse.json({ ok: true, sent: 0, already: true });
 
+  // Réunion de pôle (lot 7) : les membres du pôle.
+  const pole = poleDuPour(e.pour);
   const all = e.pour === "eglise"
     ? (await db.collection("users").get()).docs.map((d) => d.id)
-    : await uidsForCategory(e.pour);
+    : pole
+      ? await membresDuPole(pole)
+      : await uidsForCategory(e.pour);
   const uids = (await filterUidsByNotifPref(all, "evenements")).filter((u) => u !== user.uid);
   const when = e.date ? ` — ${e.date.split("-").reverse().join("/")}${e.heure ? ` ${e.heure}` : ""}` : "";
   const payload = {

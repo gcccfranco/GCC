@@ -96,6 +96,28 @@ service cloud.firestore {
       return isAdmin() || (hasProfile() && 'evenement' in profile().get('poles', []));
     }
 
+    // Tâches par pôle (lot 7, docs/spec-taches.md). Chacun ne voit, crée,
+    // modifie et coche que les tâches de ses pôles ; les admins voient tout.
+    // Louange = avoir au moins un rôle de service. Miroir : polesDe /
+    // isPoleMember (src/lib/access.ts).
+    function isTachePole(pole) {
+      return isAdmin() || (hasProfile() && (
+        pole in profile().get('poles', [])
+        || (pole == 'louange' && profile().get('serviceRoles', {}).size() > 0)
+      ));
+    }
+
+    match /poles/{pole}/taches/{id} {
+      allow read, update, delete: if signedIn() && isTachePole(pole);
+      allow create: if signedIn() && isTachePole(pole)
+        && request.resource.data.auteurUid == request.auth.uid
+        && request.resource.data.pole == pole;
+
+      match /fois/{date} {
+        allow read, write: if signedIn() && isTachePole(pole);
+      }
+    }
+
     match /programmes/{id} {
       allow read: if signedIn();
       allow create, update, delete: if isCoordination();
@@ -119,11 +141,14 @@ service cloud.firestore {
     // canCreateEvenement, canEditEvenement (src/lib/access.ts).
     match /evenements/{id} {
       allow read: if resource.data.pour == 'eglise' || signedIn();
+      // Réunion de pôle (lot 7) : « pole:<id> », créée par un membre du pôle.
       allow create: if signedIn()
         && request.resource.data.organisateurUid == request.auth.uid
         && request.resource.data.inscrits == 0
         && (isCoordination()
-            || (hasProfile() && request.resource.data.pour in profile().get('annonces', [])));
+            || (hasProfile() && request.resource.data.pour in profile().get('annonces', []))
+            || (request.resource.data.pour.matches('pole:[a-z]+')
+                && isTachePole(request.resource.data.pour.split(':')[1])));
       allow update: if signedIn()
         && request.resource.data.inscrits == resource.data.inscrits
         && (isCoordination() || resource.data.organisateurUid == request.auth.uid);

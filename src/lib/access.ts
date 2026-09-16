@@ -1,5 +1,6 @@
 import { EDD_CLASSES } from "@/lib/planning/utils";
 import type { FSSetlist } from "@/lib/firebase/setlists";
+import { TACHE_POLES, type TachePole } from "@/types/tache";
 import {
   GROUPES,
   type AccessLevel,
@@ -30,6 +31,29 @@ export function canEditProfile(
   return isAdminUser(user) || !profile;
 }
 
+/** Pôles d'une personne pour les tâches (lot 7, docs/spec-taches.md) : ceux
+ *  cochés par un admin, plus « louange » dès qu'elle a un rôle de service.
+ *  Miroir serveur : isTachePole() dans firestore.rules. */
+export function polesDe(
+  profile: { poles?: string[]; serviceRoles?: Record<string, unknown> } | null
+): TachePole[] {
+  const poles = (profile?.poles ?? []).filter((p): p is TachePole => (TACHE_POLES as readonly string[]).includes(p));
+  if (Object.keys(profile?.serviceRoles ?? {}).length > 0 && !poles.includes("louange")) poles.push("louange");
+  return poles;
+}
+
+/** Voir, créer, modifier et cocher les tâches d'un pôle : ses membres et les
+ *  admins (chacun ne voit que les tâches de ses pôles, tranché le 16/09/2026).
+ *  Miroir serveur : isTachePole() dans firestore.rules. */
+export function isPoleMember(
+  user: { email?: string | null } | null,
+  profile: { poles?: string[]; serviceRoles?: Record<string, unknown> } | null,
+  pole: string
+): boolean {
+  if (!user) return false;
+  return isAdminUser(user) || (polesDe(profile) as string[]).includes(pole);
+}
+
 /** Coordination des programmes de scène (lot 3 bis) : pôle « événement » du
  *  profil (attribué par un admin) + admins. Crée, modifie, affiche ou masque un
  *  programme, tient l'ordre de passage, déplace ou retire n'importe quel
@@ -54,9 +78,16 @@ export function canEditCreneau(
 
 type EvenementDroits = { pour: string; organisateurUid: string };
 
+/** Réunion de pôle (lot 7) : `pour` = « pole:<id> » ; null sinon. */
+export function poleDuPour(pour: string): TachePole | null {
+  const id = pour.startsWith("pole:") ? pour.slice(5) : "";
+  return (TACHE_POLES as readonly string[]).includes(id) ? (id as TachePole) : null;
+}
+
 /** Qui voit un évènement : « toute l'église » = tout le monde, compte ou non ;
  *  une section = ses membres connectés (clé de serviceRoles), l'organisateur,
- *  la coordination. Un visiteur sans compte ne voit que « eglise ». */
+ *  la coordination ; une réunion de pôle = les membres du pôle, l'organisateur
+ *  et les admins (lot 7). Un visiteur sans compte ne voit que « eglise ». */
 export function canSeeEvenement(
   user: AuthUser | null,
   profile: { serviceRoles?: Record<string, unknown>; poles?: string[] } | null,
@@ -64,7 +95,10 @@ export function canSeeEvenement(
 ): boolean {
   if (e.pour === "eglise") return true;
   if (!user) return false;
-  if (e.organisateurUid === user.uid || isCoordination(user, profile)) return true;
+  if (e.organisateurUid === user.uid) return true;
+  const pole = poleDuPour(e.pour);
+  if (pole) return isPoleMember(user, profile, pole);
+  if (isCoordination(user, profile)) return true;
   return e.pour in (profile?.serviceRoles ?? {});
 }
 
@@ -73,23 +107,27 @@ export function canSeeEvenement(
  *  création pour sa section, tranché le 15/09/2026). */
 export function canCreateEvenement(
   user: AuthUser | null,
-  profile: { annonces?: string[]; poles?: string[] } | null,
+  profile: { annonces?: string[]; poles?: string[]; serviceRoles?: Record<string, unknown> } | null,
   pour: string
 ): boolean {
   if (!user) return false;
+  const pole = poleDuPour(pour);
+  if (pole) return isPoleMember(user, profile, pole);
   if (isCoordination(user, profile)) return true;
   return (profile?.annonces ?? []).includes(pour);
 }
 
-/** Sections pour lesquelles la personne peut créer (vide = aucun bouton). */
+/** Publics pour lesquels la personne peut créer (vide = aucun bouton) : ses
+ *  sections, puis ses pôles pour les réunions (lot 7 ; tous pour un admin). */
 export function creatableEvenementPours(
   user: AuthUser | null,
-  profile: { annonces?: string[]; poles?: string[] } | null,
+  profile: { annonces?: string[]; poles?: string[]; serviceRoles?: Record<string, unknown> } | null,
   sections: readonly string[]
 ): string[] {
   if (!user) return [];
-  if (isCoordination(user, profile)) return ["eglise", ...sections];
-  return sections.filter((s) => (profile?.annonces ?? []).includes(s));
+  const poles = (isAdminUser(user) ? [...TACHE_POLES] : polesDe(profile)).map((p) => `pole:${p}`);
+  if (isCoordination(user, profile)) return ["eglise", ...sections, ...poles];
+  return [...sections.filter((s) => (profile?.annonces ?? []).includes(s)), ...poles];
 }
 
 /** Modifier, dupliquer, supprimer, fermer les inscriptions, voir les inscrits : organisateur + coordination. */

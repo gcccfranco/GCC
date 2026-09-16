@@ -33,7 +33,7 @@ const MAX_ITEMS = 20;
 
 export interface NotificationItem {
   id: string;
-  kind: "annonce" | "setlist-created" | "setlist-updated" | "manual" | "reminder" | "broadcast" | "presentation" | "scene" | "evenement";
+  kind: "annonce" | "setlist-created" | "setlist-updated" | "manual" | "reminder" | "broadcast" | "presentation" | "scene" | "evenement" | "tache";
   title: string;
   /** Catégorie d'origine (annonce/setlist) ; vide pour les push ponctuels. */
   category: string;
