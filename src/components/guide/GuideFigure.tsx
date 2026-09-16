@@ -81,7 +81,7 @@ function Labels({ items, figureId }: { items: Annotation[]; figureId: string }) 
         return (
           <span
             key={i}
-            className="absolute inline-block max-w-[45%] rounded bg-[#EA580C] px-1 py-px text-[9px] font-medium leading-snug text-white shadow-sm"
+            className="absolute inline-block max-w-[45%] rounded bg-primary text-primary-foreground px-1 py-px text-xs font-medium leading-snug text-white shadow-sm"
             style={{
               left: `${a.x}%`,
               top: `${a.y}%`,

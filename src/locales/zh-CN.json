@@ -16,7 +16,9 @@
       "guide": "使用指南",
       "notify": "通知",
       "admin": "管理",
-      "evenements": "活动"
+      "evenements": "活动",
+      "moi": "我",
+      "account": "账户"
     },
     "buttons": {
       "reset": "重置",
@@ -1425,8 +1427,8 @@
     "confirmDelete": "删除「{{titre}}」？报名信息将丢失。",
     "reserved": "此页面仅限协调组和各小组负责人。",
     "form": {
-      "titre": "标题",
-      "type": "类型",
+      "titre": "活动名称",
+      "type": "类别",
       "pour": "对象",
       "date": "日期",
       "heure": "时间",
@@ -1440,8 +1442,8 @@
       "sansCompte": "允许无账号者报名",
       "epingle": "置顶",
       "expiresAt": "显示至",
-      "contact": "联系人",
-      "contactHint": "可选：姓名、电话…",
+      "contact": "负责人",
+      "contactHint": "姓名、电话…",
       "prevenir": "通知成员",
       "addLink": "添加链接",
       "lienLabel": "名称",
@@ -1455,7 +1457,9 @@
       "errorTitre": "标题为必填项。",
       "errorDate": "日期为必填项。",
       "errorDateFin": "结束日期须晚于开始日期。",
-      "errorSave": "无法保存。请检查网络连接及 Firestore 规则是否已发布。"
+      "errorSave": "无法保存。请检查网络连接及 Firestore 规则是否已发布。",
+      "plusOptions": "更多选项",
+      "banniere": "添加横幅图片"
     },
     "jeParticipe": "我要参加",
     "tuParticipes": "你已报名",
@@ -1473,6 +1477,28 @@
     "sansCompteTag": "无账号",
     "inscriptionError": "报名失败，请重试。",
     "qr": "二维码",
-    "qrAlt": "{{label}} 的二维码"
+    "qrAlt": "{{label}} 的二维码",
+    "inscrit": "已报名",
+    "sinscrire": "报名",
+    "plusInfos": "详情联系：{{nom}}",
+    "dejaInscrits_one": "已有 {{count}} 人报名",
+    "dejaInscrits_other": "已有 {{count}} 人报名",
+    "confirmer": "确认",
+    "annuler": "取消",
+    "panneauInscriptions": "报名",
+    "ouvertes": "开放",
+    "fermees": "已关闭",
+    "voirInscrits": "查看报名（{{count}}）",
+    "masquerInscrits": "收起报名名单",
+    "lienFiche": "活动链接"
+  },
+  "moi": {
+    "title": "我",
+    "settings": "设置",
+    "language": "语言",
+    "theme": "主题",
+    "light": "浅色",
+    "dark": "深色",
+    "french": "Français"
   }
 }

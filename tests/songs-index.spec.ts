@@ -94,3 +94,58 @@ test.describe("index A–Z en bas de liste", () => {
     await expect(letters.last()).toBeInViewport({ ratio: 1 });
   });
 });
+
+test.describe("index A–Z : finitions (lot T0)", () => {
+  test.use(phone);
+
+  async function touchTools(page: Page) {
+    const cdp = await page.context().newCDPSession(page);
+    return (type: "touchStart" | "touchMove" | "touchEnd", x: number, y: number) =>
+      cdp.send("Input.dispatchTouchEvent", {
+        type,
+        touchPoints: type === "touchEnd" ? [] : [{ x, y }],
+      });
+  }
+
+  test("pendant le geste, la lettre sous le doigt s'affiche dans un encart, et la barre du haut reste en place", async ({ page }) => {
+    await openSongs(page);
+    const letters = index(page).getByRole("button");
+    const a = (await letters.filter({ hasText: /^A$/ }).boundingBox())!;
+    const m = (await letters.filter({ hasText: /^M$/ }).boundingBox())!;
+    const cx = a.x + a.width / 2;
+    const ay = a.y + a.height / 2;
+    const my = m.y + m.height / 2;
+    const touch = await touchTools(page);
+    const encart = page.getByTestId("index-letter");
+
+    await touch("touchStart", cx, ay);
+    for (let i = 1; i <= 8; i++) await touch("touchMove", cx, ay + ((my - ay) * i) / 8);
+    await page.waitForTimeout(120);
+
+    await expect(encart, "l'encart montre la lettre courante").toHaveText("M");
+    const headerTop = await page.locator("header").evaluate((h) => h.getBoundingClientRect().top);
+    expect(headerTop, "la barre du haut ne s'est pas cachée pendant le geste").toBe(0);
+
+    await touch("touchEnd", cx, my);
+    await expect(encart, "l'encart disparaît au relâcher").toBeHidden();
+  });
+
+  test("après un tap sur une lettre, son premier chant est visible juste sous la barre du haut", async ({ page }) => {
+    await openSongs(page);
+    await index(page).getByRole("button").filter({ hasText: /^J$/ }).click();
+    await page.waitForTimeout(400);
+    const measured = await page.evaluate(() => {
+      const header = document.querySelector("header")!.getBoundingClientRect();
+      // Le premier chant entièrement sous la barre (les lignes sont serrées :
+      // le chant précédent peut encore dépasser en haut).
+      const first = [...document.querySelectorAll('li[id^="song-li-"]')]
+        .map((li) => ({ top: li.getBoundingClientRect().top, title: li.id.replace("song-li-", "") }))
+        .filter((l) => l.top >= header.bottom - 1)
+        .sort((a, b) => a.top - b.top)[0];
+      return { headerTop: header.top, headerBottom: header.bottom, firstTop: first.top, title: first.title };
+    });
+    expect(measured.headerTop, "la barre du haut est visible").toBe(0);
+    expect(measured.title.charAt(0).toUpperCase(), "c'est bien un chant en J qui arrive sous la barre").toBe("J");
+    expect(measured.firstTop - measured.headerBottom, "sans grand vide entre la barre et le chant").toBeLessThanOrEqual(24);
+  });
+});

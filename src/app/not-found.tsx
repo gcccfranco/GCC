@@ -18,7 +18,7 @@ export default function NotFound() {
       </div>
       <Link
         href="/songs"
-        className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
+        className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
       >
         <Music className="h-4 w-4" />
         {t("common.notFound.cta")}

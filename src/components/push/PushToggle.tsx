@@ -103,7 +103,7 @@ export function PushToggle() {
     <Card>
       <CardContent className="p-5">
         <div className="flex items-start gap-3">
-          <Bell className="h-5 w-5 text-primary mt-0.5 shrink-0" />
+          <Bell className="h-5 w-5 text-foreground mt-0.5 shrink-0" />
           <div className="flex-1">
             <p className="font-semibold text-sm text-foreground">
               {t("push.title", { defaultValue: "Notifications" })}

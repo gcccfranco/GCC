@@ -42,7 +42,7 @@ export function NouveauClient() {
   return (
     <div className="max-w-2xl mx-auto">
       <EvenementForm
-        initial={initial}
+        initial={{ ...initial, contact: initial.contact || nom }}
         pours={pours}
         creation
         onSubmit={async (values, prevenir) => {

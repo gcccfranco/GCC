@@ -43,7 +43,7 @@ function normalize(s: string): string {
 function Pill({ label, color }: { label: string; color?: string }) {
   return (
     <span
-      className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+      className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
         color ? "" : "bg-muted text-muted-foreground"
       }`}
       style={color ? { background: `${color}15`, color, border: `1px solid ${color}4d` } : undefined}
@@ -303,7 +303,7 @@ export default function AdminPage() {
     <div className="min-h-screen bg-background">
       <div className="max-w-2xl mx-auto px-4 pt-6 pb-10 space-y-5">
         <div className="flex items-center gap-2">
-          <ShieldCheck className="h-5 w-5 text-primary" />
+          <ShieldCheck className="h-5 w-5 text-muted-foreground" />
           <h1 className="text-lg font-bold text-foreground">Administration</h1>
         </div>
 
@@ -325,14 +325,14 @@ export default function AdminPage() {
                 className={`shrink-0 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[13px] font-semibold transition-colors ${
                   active
                     ? "bg-foreground text-background"
-                    : "bg-card border border-border text-muted-foreground hover:text-foreground"
+                    : "bg-secondary text-muted-foreground hover:text-foreground"
                 }`}
               >
                 <Icon className="h-3.5 w-3.5" />
                 {label}
                 {showCount && (
                   <span
-                    className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
+                    className={`text-xs px-1.5 py-0.5 rounded-full font-bold ${
                       active
                         ? "bg-white/20 text-white"
                         : always
@@ -352,11 +352,11 @@ export default function AdminPage() {
         {tab === "reception" && (
         <div className="rounded-xl bg-card shadow-soft p-5 space-y-3">
           <div className="flex items-center justify-between">
-            <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+            <h2 className="text-sm font-semibold text-muted-foreground">
               Signalements
             </h2>
             {pendingReports.length > 0 && (
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-secondary text-foreground">
+              <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-secondary text-foreground">
                 {pendingReports.length} en attente
               </span>
             )}
@@ -380,7 +380,7 @@ export default function AdminPage() {
                 return (
                   <div
                     key={r.id}
-                    className={`rounded-xl border border-border bg-background ${
+                    className={`rounded-xl bg-card ${
                       r.status !== "pending" ? "opacity-60" : ""
                     }`}
                   >
@@ -466,7 +466,7 @@ export default function AdminPage() {
                             type="button"
                             onClick={() => handleReportDelete(r)}
                             disabled={busy}
-                            className="h-9 w-9 rounded-lg border border-border text-muted-foreground hover:text-destructive flex items-center justify-center disabled:opacity-50"
+                            className="h-9 w-9 rounded-full bg-secondary text-muted-foreground hover:text-destructive flex items-center justify-center disabled:opacity-50"
                             aria-label="Supprimer le signalement"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
@@ -498,11 +498,11 @@ export default function AdminPage() {
         {tab === "reception" && (
         <div className="rounded-xl bg-card shadow-soft p-5 space-y-3">
           <div className="flex items-center justify-between">
-            <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+            <h2 className="text-sm font-semibold text-muted-foreground">
               Propositions de chants
             </h2>
             {pendingProposals.length > 0 && (
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-secondary text-foreground">
+              <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-secondary text-foreground">
                 {pendingProposals.length} en attente
               </span>
             )}
@@ -526,7 +526,7 @@ export default function AdminPage() {
                 return (
                   <div
                     key={p.id}
-                    className={`rounded-xl border border-border bg-background ${
+                    className={`rounded-xl bg-card ${
                       p.status !== "pending" ? "opacity-60" : ""
                     }`}
                   >
@@ -606,7 +606,7 @@ export default function AdminPage() {
                             type="button"
                             onClick={() => handleProposalDelete(p)}
                             disabled={busy}
-                            className="h-9 w-9 rounded-lg border border-border text-muted-foreground hover:text-destructive flex items-center justify-center disabled:opacity-50"
+                            className="h-9 w-9 rounded-full bg-secondary text-muted-foreground hover:text-destructive flex items-center justify-center disabled:opacity-50"
                             aria-label="Supprimer la proposition"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
@@ -637,7 +637,7 @@ export default function AdminPage() {
         {/* ── Inscriptions ── */}
         {tab === "inscriptions" && (
         <div className="rounded-xl bg-card shadow-soft p-5 space-y-3">
-          <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+          <h2 className="text-sm font-semibold text-muted-foreground">
             Inscriptions
           </h2>
           <div className="flex items-center justify-between gap-3">
@@ -670,7 +670,7 @@ export default function AdminPage() {
         {/* ── Annonces → calendrier (lot 6) ── */}
         {tab === "inscriptions" && (
         <div className="rounded-xl bg-card shadow-soft p-5 space-y-3">
-          <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+          <h2 className="text-sm font-semibold text-muted-foreground">
             Annonces → Évènements
           </h2>
           <p className="text-sm text-muted-foreground">
@@ -689,7 +689,7 @@ export default function AdminPage() {
         {tab === "membres" && (
         <div className="rounded-xl bg-card shadow-soft p-5 space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+            <h2 className="text-sm font-semibold text-muted-foreground">
               Membres
             </h2>
             <span className="text-xs text-muted-foreground">
@@ -770,7 +770,7 @@ export default function AdminPage() {
               {displayed.map((p) => {
                 const isEditing = editingUid === p.uid;
                 return (
-                  <div key={p.uid} className="rounded-xl border border-border bg-background">
+                  <div key={p.uid} className="rounded-xl bg-card">
                     <button
                       onClick={() => (isEditing ? setEditingUid(null) : startEdit(p))}
                       className="w-full flex items-start gap-3 px-4 py-3 text-left"
@@ -782,7 +782,7 @@ export default function AdminPage() {
                         <p className="text-sm font-semibold text-foreground truncate">
                           {p.firstName} {p.lastName}
                           {isAdminUser(p) && (
-                            <span className="ml-2 text-[10px] font-bold text-muted-foreground uppercase">admin</span>
+                            <span className="ml-2 text-xs font-semibold text-muted-foreground">admin</span>
                           )}
                         </p>
                         <p className="text-xs text-muted-foreground truncate">
@@ -822,7 +822,7 @@ export default function AdminPage() {
 
                         {/* Pôles de coordination (lot 3 bis : Événement = programmes de scène) — réservé aux admins */}
                         <div className="rounded-lg border border-dashed border-border p-3">
-                          <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2">
+                          <p className="text-sm font-semibold text-muted-foreground mb-2">
                             Pôles de coordination :
                           </p>
                           <div className="flex flex-wrap gap-2">
@@ -852,7 +852,7 @@ export default function AdminPage() {
 
                         {/* Droits de publication d'annonces — réservé aux admins */}
                         <div className="rounded-lg border border-dashed border-border p-3">
-                          <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2">
+                          <p className="text-sm font-semibold text-muted-foreground mb-2">
                             Peut créer des évènements et des infos pour :
                           </p>
                           <div className="flex flex-wrap gap-2">
@@ -882,7 +882,7 @@ export default function AdminPage() {
 
                         {/* Droits d'envoi de notifications manuelles — réservé aux admins */}
                         <div className="rounded-lg border border-dashed border-border p-3">
-                          <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2">
+                          <p className="text-sm font-semibold text-muted-foreground mb-2">
                             Peut envoyer des notifications à :
                           </p>
                           <div className="flex flex-wrap gap-2">
@@ -939,7 +939,7 @@ export default function AdminPage() {
         {/* ── Noms du planning sans compte ── */}
         {tab === "planning" && (
         <div className="rounded-xl bg-card shadow-soft p-5 space-y-3">
-          <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+          <h2 className="text-sm font-semibold text-muted-foreground">
             Planning sans compte ({unlinkedNames.length})
           </h2>
           <p className="text-xs text-muted-foreground">

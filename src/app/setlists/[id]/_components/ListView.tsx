@@ -81,13 +81,13 @@ export function ListView({
               </span>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5 flex-wrap">
-                  <Link2 className="h-3.5 w-3.5 text-primary shrink-0" />
+                  <Link2 className="h-3.5 w-3.5 text-foreground shrink-0" />
                   <span className="font-semibold text-sm text-foreground">
                     {item.fusionSongs
                       .map((fs) => songsMap[fs.songSlug]?.title ?? fs.songSlug)
                       .join(" / ")}
                   </span>
-                  <span className="text-[10px] uppercase tracking-wider text-primary font-medium px-1.5 py-0.5 bg-primary/10 rounded">
+                  <span className="text-xs uppercase tracking-wider text-foreground font-medium px-1.5 py-0.5 bg-primary/10 rounded">
                     {t("setlists.form.fusionLabel")}
                   </span>
                 </div>
@@ -164,12 +164,12 @@ export function ListView({
                       return (
                         <div key={fs.songSlug}>
                           <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground/80">
-                            <Link href={`/songs/${fs.songSlug}`} className="hover:text-primary hover:underline">
+                            <Link href={`/songs/${fs.songSlug}`} className="hover:text-foreground hover:underline">
                               {song?.title ?? fs.songSlug}
                             </Link>
-                            <span className={`font-mono text-[10px] px-1 py-0.5 rounded ${
+                            <span className={`font-mono text-xs px-1 py-0.5 rounded ${
                               transposed
-                                ? "bg-primary/10 text-primary border border-primary/20"
+                                ? "bg-secondary text-foreground border border-transparent"
                                 : "bg-muted text-foreground"
                             }`}>
                               {displayKey}
@@ -233,7 +233,7 @@ export function ListView({
                     setlist: JSON.stringify(setlistId),
                   },
                 }}
-                  className="font-semibold text-sm text-foreground hover:text-primary">
+                  className="font-semibold text-sm text-foreground hover:text-foreground">
                   {song?.title ?? item.songSlug}
                 </Link>
                 {song?.titlePinyin && (
@@ -241,7 +241,7 @@ export function ListView({
                 )}
                 {sheetEnabled(jianpuPref, item.jianpuSheet) && jianpuManifest?.[item.songSlug] && (
                   <span
-                    className="text-[10px] px-1.5 py-0.5 rounded-full border border-primary/30 bg-primary/10 text-primary font-semibold"
+                    className="text-xs px-1.5 py-0.5 rounded-full border border-primary/30 bg-secondary text-foreground font-semibold"
                     title={t("setlists.form.jianpuSheetHint")}
                   >
                     谱 简谱
@@ -312,12 +312,12 @@ export function ListView({
             </div>
             <div className="shrink-0 text-right">
               <span className={`font-mono text-xs px-2 py-0.5 rounded font-bold ${
-                transposed ? "bg-primary/10 text-primary border border-primary/20" : "bg-muted text-foreground"
+                transposed ? "bg-secondary text-foreground border border-transparent" : "bg-muted text-foreground"
               }`}>
                 {displayKey}
               </span>
               {song?.language === "zh" && (
-                <p className="text-[10px] text-muted-foreground mt-0.5">{t("common.languages.zh")}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{t("common.languages.zh")}</p>
               )}
             </div>
           </li>

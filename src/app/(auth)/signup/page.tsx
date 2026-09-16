@@ -68,7 +68,7 @@ export default function SignupPage() {
         <div className="text-center space-y-3">
           <h1 className="text-xl font-bold text-foreground">{t("signup.closedTitle")}</h1>
           <p className="text-sm text-muted-foreground">{t("signup.closedText")}</p>
-          <Link href="/login" className="text-sm text-primary hover:underline block">
+          <Link href="/login" className="text-sm text-foreground underline underline-offset-2 block">
             {t("signup.loginLink")}
           </Link>
         </div>
@@ -158,17 +158,17 @@ export default function SignupPage() {
                 <span
                   className={`h-7 w-7 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${
                     i < step
-                      ? "bg-primary text-primary-foreground"
+                      ? "bg-foreground text-background"
                       : i === step
-                      ? "bg-primary/15 text-primary border-2 border-primary"
+                      ? "bg-secondary text-foreground border-2 border-transparent"
                       : "bg-muted text-muted-foreground"
                   }`}
                 >
                   {i < step ? <Check className="h-3.5 w-3.5" /> : i + 1}
                 </span>
                 <span
-                  className={`text-[10px] font-semibold uppercase tracking-wide ${
-                    i === step ? "text-primary" : "text-muted-foreground"
+                  className={`text-xs font-semibold ${
+                    i === step ? "text-foreground" : "text-muted-foreground"
                   }`}
                 >
                   {t(`signup.steps.${key}`)}

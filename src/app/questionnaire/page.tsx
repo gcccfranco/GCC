@@ -64,7 +64,7 @@ function QuestionField({
                   type="button"
                   onClick={() => onChange(n)}
                   aria-label={`${n}/${RATING_MAX}`}
-                  className="h-10 w-10 rounded-lg border border-border bg-background flex items-center justify-center transition-colors hover:border-muted-foreground/50"
+                  className="h-10 w-10 rounded-lg border border-transparent bg-secondary flex items-center justify-center transition-colors hover:border-muted-foreground/50"
                 >
                   <Star
                     className={`h-[18px] w-[18px] ${
@@ -107,7 +107,7 @@ function QuestionField({
                 }}
                 className={`px-3 py-1.5 rounded-lg border text-[13px] font-semibold transition-colors ${
                   checked
-                    ? "border-primary bg-primary/10 text-primary"
+                    ? "border-primary bg-secondary text-foreground"
                     : "bg-background border-border text-muted-foreground hover:text-foreground"
                 }`}
               >
@@ -271,7 +271,7 @@ export default function QuestionnairePage() {
       <div className="max-w-2xl mx-auto px-4 pt-6 pb-10 space-y-4">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <MessageSquareHeart className="h-5 w-5 text-primary" />
+            <MessageSquareHeart className="h-5 w-5 text-muted-foreground" />
             <h1 className="text-lg font-bold text-foreground">{t("survey.title")}</h1>
           </div>
           <p className="text-sm text-muted-foreground">{t("survey.intro")}</p>
@@ -286,7 +286,7 @@ export default function QuestionnairePage() {
         {/* Progression */}
         <div className="space-y-1.5">
           <div className="flex items-baseline justify-between gap-2">
-            <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+            <p className="text-sm font-semibold text-muted-foreground">
               {t(`survey.steps.${current.id}`)}
             </p>
             <span className="text-[11px] text-muted-foreground shrink-0 tabular-nums">
@@ -312,7 +312,7 @@ export default function QuestionnairePage() {
           {groups.map((group) => (
             <div key={group.id} className="p-4 space-y-4">
               <div>
-                <p className="text-xs font-bold uppercase tracking-widest text-primary">
+                <p className="text-sm font-semibold text-muted-foreground">
                   {t(`survey.s.${group.id}.title`)}
                 </p>
                 <p className="text-xs text-muted-foreground">

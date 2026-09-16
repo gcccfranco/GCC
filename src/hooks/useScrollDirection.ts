@@ -13,6 +13,14 @@ export function useScrollDirection() {
       const delta = currentY - lastY.current;
       lastY.current = currentY;
 
+      // Défilement piloté (index A–Z sous le doigt) : les barres restent en
+      // place, sinon elles se cachent et reviennent à chaque changement de sens.
+      if (document.documentElement.hasAttribute("data-nav-lock")) {
+        accumulated.current = 0;
+        setVisible(true);
+        return;
+      }
+
       if (currentY < 10) {
         setVisible(true);
         accumulated.current = 0;

@@ -110,7 +110,7 @@ function LastPhraseForm({ onClose, song, contentOverride, keyOverride, sections,
                   aria-pressed={count === n}
                   onClick={() => setCount(n)}
                   className={`h-9 px-3 rounded-md border text-sm font-medium transition-colors ${
-                    count === n ? "border-primary/40 bg-primary/10 text-primary" : "border-border text-foreground hover:bg-muted"
+                    count === n ? "border-primary/40 bg-secondary text-foreground" : "border-border text-foreground hover:bg-muted"
                   }`}
                 >
                   {t("setlists.form.lastPhrase.nLines", { count: n })}

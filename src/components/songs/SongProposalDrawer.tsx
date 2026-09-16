@@ -96,7 +96,7 @@ export function SongProposalDrawer() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-primary hover:underline"
+        className="inline-flex items-center gap-1.5 text-sm font-semibold text-foreground underline-offset-2 hover:underline"
       >
         <Music4 className="h-4 w-4" />
         Proposer un nouveau chant

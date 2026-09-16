@@ -14,6 +14,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { Search, X, Plus, Lock, LogIn, UserPen } from "lucide-react";
 import Link from "next/link";
+import { PageTitle } from "@/components/layout/PageTitle";
 import { SetlistCard } from "@/components/setlists/SetlistCard";
 import { PullToRefresh } from "@/components/layout/PullToRefresh";
 import { useSetlistsNavState } from "@/hooks/useSetlistsNavState";
@@ -122,10 +123,10 @@ export default function SetlistsPage() {
     : t("setlists.list.emptyArchived");
 
   const tabBtnClass = (active: boolean) =>
-    `flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 font-medium transition-colors text-sm ${
+    `flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-md font-semibold transition-colors text-sm ${
       active
-        ? "bg-foreground text-background"
-        : "bg-background text-muted-foreground hover:bg-muted/50"
+        ? "bg-card text-foreground shadow-sm"
+        : "text-muted-foreground hover:text-foreground"
     }`;
 
   if (authLoading) {
@@ -146,7 +147,7 @@ export default function SetlistsPage() {
           <div className="flex flex-col gap-2">
             <Link
               href="/login?from=/setlists"
-              className="flex items-center justify-center gap-2 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
+              className="flex items-center justify-center gap-2 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
             >
               <LogIn className="h-4 w-4" />
               {t("common.header.login")}
@@ -172,7 +173,7 @@ export default function SetlistsPage() {
           <p className="text-sm text-muted-foreground">{t("setlists.list.profileRequired")}</p>
           <Link
             href="/profil?from=/setlists"
-            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
+            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
           >
             {t("common.header.profile")}
           </Link>
@@ -185,29 +186,28 @@ export default function SetlistsPage() {
     <div className="min-h-screen bg-background">
       <PullToRefresh />
       <div className="max-w-4xl mx-auto px-4 pt-6 pb-10">
+        <PageTitle title={t("common.header.setlists")} />
 
         {/* ── Onglets ── */}
-        <div className="flex rounded-xl border border-border overflow-hidden text-sm mb-4">
+        <div className="flex rounded-lg bg-secondary p-0.5 gap-0.5 text-sm mb-4">
           <button onClick={() => setTab("upcoming")} className={tabBtnClass(tab === "upcoming")}>
             {t("setlists.list.upcoming", { defaultValue: "À venir" })}
           </button>
           <button
             onClick={() => setTab("archived")}
-            className={`${tabBtnClass(tab === "archived")} border-l border-border`}
+            className={tabBtnClass(tab === "archived")}
           >
             {t("setlists.list.archived", { defaultValue: "Archives" })}
           </button>
           {!authLoading && user && (
             <button
               onClick={() => setTab("mine")}
-              className={`${tabBtnClass(tab === "mine")} border-l border-border`}
+              className={tabBtnClass(tab === "mine")}
             >
-              <Lock className="h-3.5 w-3.5" />
+              <Lock className="hidden sm:block h-3.5 w-3.5" />
               {t("setlists.list.mySetlists")}
               {mySetlists.length > 0 && (
-                <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
-                  tab === "mine" ? "bg-white/20 text-white" : "bg-muted text-muted-foreground"
-                }`}>
+                <span className="text-xs px-1.5 py-0.5 rounded-full font-medium bg-secondary text-muted-foreground">
                   {mySetlists.length}
                 </span>
               )}
@@ -225,7 +225,7 @@ export default function SetlistsPage() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={t("setlists.list.searchPlaceholder")}
-              className="w-full pl-9 pr-9 py-2.5 rounded-xl border border-border bg-card text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-ring/50 focus:ring-[3px] focus:ring-ring/10 text-[16px] sm:text-sm [&::-webkit-search-cancel-button]:hidden"
+              className="w-full pl-9 pr-9 py-2.5 rounded-xl border border-transparent bg-card text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-ring/50 focus:ring-[3px] focus:ring-ring/10 text-[16px] sm:text-sm [&::-webkit-search-cancel-button]:hidden"
             />
             {query && (
               <button
@@ -243,10 +243,10 @@ export default function SetlistsPage() {
               type="button"
               aria-pressed={onlyMine}
               onClick={() => setOnlyMine((v) => !v)}
-              className={`inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-semibold border transition-colors ${
+              className={`inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-sm font-semibold transition-[background-color,color,transform] duration-150 active:scale-[.97] ${
                 onlyMine
-                  ? "bg-secondary border-foreground/30 text-foreground"
-                  : "bg-background border-border text-muted-foreground hover:text-foreground"
+                  ? "bg-foreground text-background"
+                  : "bg-secondary text-muted-foreground hover:text-foreground"
               }`}
             >
               {onlyMine ? `✓ ${t("setlists.list.myServicesFilter")}` : t("setlists.list.myServicesFilter")}
@@ -257,7 +257,7 @@ export default function SetlistsPage() {
             <select
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
-              className="flex-1 h-9 px-3 rounded-lg border border-border bg-background text-foreground text-[16px] sm:text-sm focus:outline-none focus:ring-2 focus:ring-ring/30"
+              className="flex-1 h-9 px-3 rounded-lg border border-transparent bg-secondary text-foreground text-[16px] sm:text-sm focus:outline-none focus:ring-2 focus:ring-ring/30"
             >
               <option value="Toutes">{t("setlists.list.allCategories")}</option>
               <optgroup label={t("setlists.list.mainMeetings")}>
@@ -278,7 +278,7 @@ export default function SetlistsPage() {
             {canCreate && (
               <Link aria-label={t("setlists.list.newButton")}
                 href="/setlists/new"
-                className="shrink-0 flex items-center gap-1.5 h-9 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
+                className="shrink-0 flex items-center gap-1.5 h-9 px-4 rounded-full bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-[background-color,transform] duration-150 active:scale-[.97]"
               >
                 <Plus className="h-4 w-4" />
                 <span className="hidden sm:inline">{t("setlists.list.newButton")}</span>
@@ -298,7 +298,7 @@ export default function SetlistsPage() {
             {tab === "upcoming" && !query && canCreate && (
               <Link
                 href="/setlists/new"
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-[background-color,transform] duration-150 active:scale-[.97]"
               >
                 <Plus className="h-4 w-4" />
                 {t("setlists.list.newButton")}
@@ -306,11 +306,13 @@ export default function SetlistsPage() {
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <ul className="rounded-xl bg-card [&>li:first-child>a]:rounded-t-xl [&>li:last-child>a]:rounded-b-xl">
             {displayed.map((s) => (
-              <SetlistCard key={s.id} setlist={s} />
+              <li key={s.id} className="group-row relative">
+                <SetlistCard setlist={s} />
+              </li>
             ))}
-          </div>
+          </ul>
         )}
       </div>
     </div>

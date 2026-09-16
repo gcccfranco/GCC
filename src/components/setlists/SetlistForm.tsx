@@ -533,7 +533,7 @@ export function SetlistForm({ mode, setlistId, songs, initial }: SetlistFormProp
     <div className="min-h-screen bg-background">
 
       {/* ── Header sticky ── */}
-      <div className={`sticky top-[var(--nav-h)] z-10 bg-background/95 backdrop-blur border-b border-border px-4 py-2.5 flex items-center gap-3 transition-transform duration-300 ${scrollVisible ? "translate-y-0" : "-translate-y-[calc(100%+var(--nav-h))]"}`}>
+      <div className={`sticky top-[var(--nav-h)] z-10 material-chrome shadow-[0_1px_0_hsl(var(--border))] px-4 py-2.5 flex items-center gap-3 transition-transform duration-300 ${scrollVisible ? "translate-y-0" : "-translate-y-[calc(100%+var(--nav-h))]"}`}>
         {isEdit ? (
           <button
             type="button"
@@ -745,7 +745,7 @@ export function SetlistForm({ mode, setlistId, songs, initial }: SetlistFormProp
                       <button
                         type="button"
                         onClick={mergeSongs}
-                        className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition-colors"
+                        className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition-colors"
                       >
                         <Link2 className="h-3 w-3" />
                         {t("setlists.form.mergeButton", { count: selectedUids.size })}
@@ -810,7 +810,7 @@ export function SetlistForm({ mode, setlistId, songs, initial }: SetlistFormProp
                       >
                         <span className="text-sm font-medium text-foreground truncate">{song.title}</span>
                         {song.language === "zh" && (
-                          <span className="shrink-0 text-[10px] text-muted-foreground">{t("common.languages.zh")}</span>
+                          <span className="shrink-0 text-xs text-muted-foreground">{t("common.languages.zh")}</span>
                         )}
                         <span className="shrink-0 font-mono text-xs text-muted-foreground">{song.recommendedKey ?? song.originalKey}</span>
                         {expandedSlug === song.slug
@@ -821,7 +821,7 @@ export function SetlistForm({ mode, setlistId, songs, initial }: SetlistFormProp
                       <button
                         type="button"
                         onClick={() => addSong(song)}
-                        className="shrink-0 flex items-center gap-1 h-7 px-2.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors text-xs font-semibold"
+                        className="shrink-0 flex items-center gap-1 h-7 px-2.5 rounded-lg bg-secondary text-foreground hover:bg-secondary/80 transition-colors text-xs font-semibold"
                       >
                         <Plus className="h-3.5 w-3.5" />
                         {t("common.buttons.add")}
@@ -830,7 +830,7 @@ export function SetlistForm({ mode, setlistId, songs, initial }: SetlistFormProp
                     {expandedSlug === song.slug && song.sections && song.sections.length > 0 && (
                       <div className="px-3 pb-2.5 flex flex-wrap gap-1.5 bg-muted/20">
                         {song.sections.map((s) => (
-                          <span key={s.id} className="text-[10px] px-2 py-0.5 rounded-md bg-muted text-muted-foreground">
+                          <span key={s.id} className="text-xs px-2 py-0.5 rounded-md bg-muted text-muted-foreground">
                             {s.name}
                           </span>
                         ))}
@@ -910,7 +910,7 @@ export function SetlistForm({ mode, setlistId, songs, initial }: SetlistFormProp
             <button
               type="button"
               onClick={() => void finishEdit()}
-              className="h-11 px-6 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
+              className="h-11 px-6 rounded-full bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
             >
               {t("setlists.form.done")}
             </button>
@@ -919,7 +919,7 @@ export function SetlistForm({ mode, setlistId, songs, initial }: SetlistFormProp
               type="button"
               onClick={() => void publish()}
               disabled={saving}
-              className="h-11 px-6 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50"
+              className="h-11 px-6 rounded-full bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50"
             >
               {t(saving ? "setlists.form.publishing" : "setlists.form.publish")}
             </button>

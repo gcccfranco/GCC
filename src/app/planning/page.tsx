@@ -13,7 +13,10 @@ import { StaleBanner } from "@/components/planning/StaleBanner"
 import type { EddDataStructure, CampusSeance } from "@/lib/planning/utils"
 import { useProfile } from "@/lib/firebase/users"
 import { findMyServices, type PlanningData } from "@/lib/planning/names"
-import { PLANNING_COLORS } from "@/lib/serviceColors"
+import { PLANNING_COLORS, serviceColor } from "@/lib/serviceColors"
+import { ChevronRight } from "lucide-react"
+import { PageTitle } from "@/components/layout/PageTitle"
+import { Tile } from "@/components/ui/tile"
 
 function val(v: string) { return v?.trim() || "—" }
 
@@ -21,7 +24,7 @@ function InfoRow({ label, value }: { label: string; value: string }) {
   if (!value || value === "—") return null
   return (
     <div className="flex items-baseline gap-2 text-sm">
-      <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide w-20 shrink-0">{label}</span>
+      <span className="text-xs font-semibold text-muted-foreground w-20 shrink-0">{label}</span>
       <span className="text-foreground">{value}</span>
     </div>
   )
@@ -30,7 +33,7 @@ function InfoRow({ label, value }: { label: string; value: string }) {
 function SectionBlock({ dot, label, children }: { dot: string; label: string; children: React.ReactNode }) {
   return (
     <div className="flex gap-3 px-4 py-3 border-b border-border last:border-b-0">
-      <div className="w-2 h-2 rounded-full mt-[7px] shrink-0" style={{ background: dot }} />
+      <div data-testid="carre-service" className="w-2.5 h-2.5 rounded-[3px] mt-[6px] shrink-0" style={{ background: dot }} />
       <div className="w-24 shrink-0 text-sm font-semibold text-foreground pt-px">{label}</div>
       <div className="flex-1 space-y-1">{children}</div>
     </div>
@@ -40,7 +43,7 @@ function SectionBlock({ dot, label, children }: { dot: string; label: string; ch
 function GroupBlock({ badge, children }: { badge: string; children: React.ReactNode }) {
   return (
     <div className="mb-3 pb-3 border-b border-dashed border-border last:mb-0 last:pb-0 last:border-0">
-      <span className="inline-block text-[10px] font-semibold px-2 py-0.5 rounded-full bg-secondary text-muted-foreground mb-2">{badge}</span>
+      <span className="inline-block text-xs font-semibold px-2 py-0.5 rounded-full bg-secondary text-muted-foreground mb-2">{badge}</span>
       <div className="space-y-1">{children}</div>
     </div>
   )
@@ -122,40 +125,42 @@ export default function PlanningAccueil() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
-      {/* Intro */}
-      <div className="bg-card shadow-soft rounded-xl p-5 text-center space-y-2">
-        <p className="text-xs text-muted-foreground font-medium italic">{t("planning.welcome")}</p>
-        <h1 className="text-lg font-bold text-foreground">{t("planning.title")}</h1>
-        <p className="text-sm text-muted-foreground leading-relaxed">
-          {t("planning.subtitle")}
-        </p>
-      </div>
+      <PageTitle title={t("common.header.planning")} />
 
       <StaleBanner show={stale} />
 
       {/* Prochain service de la personne connectée */}
-      {nextServices && (
-        <Link
-          href="/mes-services"
-          className="block bg-card border border-primary/30 rounded-xl p-4 hover:border-primary/60 transition-colors"
-        >
-          <p className="text-[10px] font-bold text-primary uppercase tracking-wider mb-1">
-            {t("planning.nextService")}
-          </p>
-          <p className="text-sm font-semibold text-foreground">
-            {fdLongL(nextServices[0].date, i18n.language)} —{" "}
-            {nextServices.map(e => `${e.service} (${e.role})`).join(" · ")}
-          </p>
-          <p className="text-xs text-muted-foreground mt-1">{t("planning.seeAllServices")}</p>
-        </Link>
-      )}
+      {nextServices && (() => {
+        const jour = new Date(nextServices[0].date + "T12:00:00")
+        const mois = new Intl.DateTimeFormat(i18n.language === "zh-CN" ? "zh-CN" : "fr-FR", { month: "short" }).format(jour)
+        return (
+          <section>
+            <h2 className="mb-1.5 px-4 text-sm font-semibold text-muted-foreground">{t("planning.nextService")}</h2>
+            <Link
+              href="/mes-services"
+              className="flex items-center gap-3 rounded-xl bg-card px-4 py-3 transition-colors duration-150 active:bg-secondary/70"
+            >
+              <Tile color={serviceColor(nextServices[0].service)} big={jour.getDate()} small={mois} size="lg" />
+              <span className="min-w-0 flex-1">
+                <span className="block text-base font-semibold text-foreground">
+                  {nextServices.map(e => `${e.service} (${e.role})`).join(" · ")}
+                </span>
+                <span className="block text-sm text-muted-foreground">
+                  <span className="capitalize">{fdLongL(nextServices[0].date, i18n.language)}</span> · {t("planning.seeAllServices")}
+                </span>
+              </span>
+              <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/60" aria-hidden />
+            </Link>
+          </section>
+        )
+      })()}
 
       {/* Ce dimanche */}
       <section aria-labelledby="ce-dimanche">
-        <p id="ce-dimanche" className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+        <h2 id="ce-dimanche" className="mb-1.5 px-4 text-sm font-semibold text-muted-foreground">
           {t("planning.thisSunday", { date: sunLabel })}
-        </p>
-        <div className="bg-card shadow-soft rounded-xl overflow-hidden">
+        </h2>
+        <div className="rounded-xl bg-card overflow-hidden">
           {/* Culte Franco */}
           <SectionBlock dot="#2d5a65" label={t("planning.tabs.culte")}>
             {cRow ? (
@@ -242,7 +247,7 @@ export default function PlanningAccueil() {
         <p className="text-sm text-muted-foreground italic leading-relaxed mb-3">
           {t("planning.verse.text")}
         </p>
-        <footer className="text-xs font-semibold text-primary text-right">{t("planning.verse.ref")}</footer>
+        <footer className="text-xs font-semibold text-muted-foreground text-right">{t("planning.verse.ref")}</footer>
       </blockquote>
     </div>
   )

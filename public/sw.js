@@ -16,16 +16,28 @@
 //         en cache.
 //   Le nom de cache est versionné : à chaque déploiement (nouveau contenu de
 //   ce fichier), l'ancien cache est purgé à l'activation.
+//   En DÉVELOPPEMENT (serveur local), rien n'est mis en cache : les fichiers
+//   de Next n'y portent pas de nom hashé, et les servir depuis le cache
+//   affichait l'ancien code après chaque modification (16/09/2026).
 
-const CACHE = "gcc-louange-v1";
+const CACHE = "gcc-louange-v3";
+
+/** Serveur de développement : localhost, 127.0.0.1 ou le réseau local. */
+const LOCAL =
+  self.location.hostname === "localhost" ||
+  self.location.hostname === "127.0.0.1" ||
+  self.location.hostname.startsWith("192.168.") ||
+  self.location.hostname.endsWith(".local");
 
 // Ressources du shell préchargées à l'installation (best-effort).
 const PRECACHE = ["/songs/", "/songs-index.json"];
 
 self.addEventListener("install", (event) => {
-  event.waitUntil(
-    caches.open(CACHE).then((c) => c.addAll(PRECACHE).catch(() => {}))
-  );
+  if (!LOCAL) {
+    event.waitUntil(
+      caches.open(CACHE).then((c) => c.addAll(PRECACHE).catch(() => {}))
+    );
+  }
   self.skipWaiting();
 });
 
@@ -33,7 +45,8 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches
       .keys()
-      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
+      // En local, tout est purgé : sinon un ancien cache continue de servir du code périmé.
+      .then((keys) => Promise.all(keys.filter((k) => LOCAL || k !== CACHE).map((k) => caches.delete(k))))
       .then(() => self.clients.claim())
   );
 });
@@ -83,6 +96,9 @@ function staleWhileRevalidate(request) {
 self.addEventListener("fetch", (event) => {
   const { request } = event;
   if (request.method !== "GET") return;
+
+  // Développement : tout passe par le réseau, rien n'est mis en cache.
+  if (LOCAL) return;
 
   let url;
   try {

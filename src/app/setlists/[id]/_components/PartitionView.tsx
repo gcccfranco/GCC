@@ -148,7 +148,7 @@ export function PartitionsView({
                   <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center shrink-0">
                     {item.position}
                   </span>
-                  <Link2 className="h-3.5 w-3.5 text-primary shrink-0" />
+                  <Link2 className="h-3.5 w-3.5 text-foreground shrink-0" />
                   <CopyLyricsButton sections={playedSections(item, contents)} />
                   <div className="flex flex-wrap gap-x-3 gap-y-0.5">
                     {item.fusionSongs.map((fs) => {
@@ -229,8 +229,8 @@ export function PartitionsView({
                 <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center shrink-0">
                   {item.position}
                 </span>
-                <Link2 className="h-3.5 w-3.5 text-primary shrink-0" />
-                <span className="text-xs text-primary font-medium uppercase tracking-wider">
+                <Link2 className="h-3.5 w-3.5 text-foreground shrink-0" />
+                <span className="text-xs text-foreground font-medium uppercase tracking-wider">
                   {t("setlists.form.fusionLabel")}
                 </span>
                 <CopyLyricsButton sections={playedSections(item, contents)} />
@@ -244,7 +244,7 @@ export function PartitionsView({
                       {fsIdx > 0 && (
                         <div className="flex items-center gap-2 my-6 print:my-3">
                           <div className="flex-1 border-t border-dashed border-primary/30" />
-                          <Link2 className="h-3 w-3 text-primary/50 shrink-0" />
+                          <Link2 className="h-3 w-3 text-foreground/50 shrink-0" />
                           <div className="flex-1 border-t border-dashed border-primary/30" />
                         </div>
                       )}

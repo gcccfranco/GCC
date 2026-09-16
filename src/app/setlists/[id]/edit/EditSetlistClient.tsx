@@ -51,7 +51,7 @@ export function EditSetlistClient() {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-3 px-4">
         <p className="text-sm text-muted-foreground">{t("setlists.detail.loginRequired")}</p>
-        <Link href={`/login?from=/setlists/${id}/edit`} className="text-sm text-primary hover:underline">
+        <Link href={`/login?from=/setlists/${id}/edit`} className="text-sm text-foreground hover:underline">
           {t("common.header.login")}
         </Link>
       </div>
@@ -71,7 +71,7 @@ export function EditSetlistClient() {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-3 px-4">
         <p className="text-sm text-muted-foreground">{t("setlists.detail.noEditAccess")}</p>
-        <Link href={`/setlists/${id}`} className="text-sm text-primary hover:underline">
+        <Link href={`/setlists/${id}`} className="text-sm text-foreground hover:underline">
           {t("setlists.detail.back")}
         </Link>
       </div>

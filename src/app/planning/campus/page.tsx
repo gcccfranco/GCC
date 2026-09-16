@@ -96,14 +96,14 @@ export default function CampusPage() {
                 </div>
                 <div className="grid grid-cols-2 border-b border-border">
                   <div className="px-4 py-3 border-r border-border">
-                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-2">{t("planning.campus.presChoristes")}</p>
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">{t("planning.campus.presChoristes")}</p>
                     {s.pres && (
                       <p className="text-sm font-semibold mb-1" style={{ color: COLOR }}>{s.pres}</p>
                     )}
                     {choristes.map(c => <Chip key={c} label={c} />)}
                   </div>
                   <div className="px-4 py-3">
-                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-2">{t("planning.campus.musiciens")}</p>
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">{t("planning.campus.musiciens")}</p>
                     {musiciens.map(m => <Chip key={m} label={m} />)}
                   </div>
                 </div>
@@ -121,7 +121,7 @@ export default function CampusPage() {
                   </div>
                 )}
                 <div className="px-4 py-3 bg-secondary/30">
-                  <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-2">{t("planning.campus.chants")}</p>
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">{t("planning.campus.chants")}</p>
                   <div className="space-y-1">
                     {(s.chants.some(c => c?.trim()) ? s.chants : ["","","",""]).map((c, ci) => (
                       <div key={ci} className={`text-xs px-3 py-1.5 rounded-lg border ${c?.trim() ? "border-border bg-card text-foreground font-medium" : "border-dashed border-border text-muted-foreground"}`}>

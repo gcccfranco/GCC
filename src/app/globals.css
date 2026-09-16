@@ -6,6 +6,35 @@
   .no-scrollbar::-webkit-scrollbar { display: none; }
   .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
+  /* Deux matériaux (docs/spec-look.md) : « chrome » fin pour les barres qui
+     laissent passer le contenu, « panneau » quasi opaque pour menus et
+     feuilles. Une seule surface translucide à la fois : jamais l'un dans
+     l'autre. */
+  .material-chrome {
+    background-color: hsl(var(--background) / 0.8);
+    -webkit-backdrop-filter: blur(20px) saturate(1.4);
+    backdrop-filter: blur(20px) saturate(1.4);
+  }
+  /* Lignes d'une liste groupée : filet en retrait, à partir du texte. */
+  .group-row + .group-row::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 1rem;
+    right: 0;
+    height: 1px;
+    background: hsl(var(--border));
+  }
+  .material-panel {
+    background-color: hsl(var(--card) / 0.97);
+    -webkit-backdrop-filter: blur(24px);
+    backdrop-filter: blur(24px);
+  }
+  @media (prefers-reduced-transparency: reduce) {
+    .material-chrome { background-color: hsl(var(--background)); backdrop-filter: none; -webkit-backdrop-filter: none; }
+    .material-panel { background-color: hsl(var(--card)); backdrop-filter: none; -webkit-backdrop-filter: none; }
+  }
+
   /* Masqué uniquement sur un vrai poste desktop (pointeur fin = souris ET écran
      large). Une tablette tactile en paysage (≥1024px mais pointeur grossier)
      n'est PAS masquée → elle garde la nav à portée de pouce, contrairement à
@@ -27,29 +56,31 @@
   :root {
     /* Hauteur de la navbar — source unique pour tous les offsets fixed/sticky */
     --nav-h: 58px;
-    /* Warm-neutral light surfaces (design system) */
-    --background: 38 26% 98%;        /* #fbfaf8 */
-    --foreground: 223 14% 10%;       /* #16181d */
+    /* Direction A « Réglages » (docs/spec-look.md, 15/09/2026) : gris chaud,
+       groupes blancs sans bordure ni ombre, encre pour le texte et les
+       sélections, rouge du logo réservé aux boutons pleins. */
+    --background: 60 10.3% 94.3%;    /* #f2f2ef */
+    --foreground: 240 3.4% 11.4%;    /* #1c1c1e */
     --card: 0 0% 100%;
-    --card-foreground: 223 14% 10%;
+    --card-foreground: 240 3.4% 11.4%;
     --popover: 0 0% 100%;
-    --popover-foreground: 223 14% 10%;
-    --primary: 21 93% 46%;           /* #e0560a */
+    --popover-foreground: 240 3.4% 11.4%;
+    --primary: 3.4 73.2% 46.9%;      /* #cf2a20 rouge du logo */
     --primary-foreground: 0 0% 100%;
-    --secondary: 40 21% 94%;         /* #f4f2ee */
-    --secondary-foreground: 223 10% 25%;
-    --muted: 40 21% 94%;             /* #f4f2ee */
-    --muted-foreground: 219 6% 45%;  /* #6b7079 */
-    --accent: 40 21% 94%;            /* gris chaud discret — survol menus (sobre) */
-    --accent-foreground: 223 14% 10%;
+    --secondary: 60 5.5% 89.2%;      /* #e5e5e2 : sélection, segmenté, champs */
+    --secondary-foreground: 240 3.4% 11.4%;
+    --muted: 60 5.5% 89.2%;
+    --muted-foreground: 240 2.7% 43.5%; /* #6c6c72 */
+    --accent: 60 5.5% 89.2%;         /* survol des menus */
+    --accent-foreground: 240 3.4% 11.4%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
-    --border: 45 7% 89%;             /* #e5e4e1 légèrement neutralisé */
-    --input: 45 7% 89%;
-    --ring: 223 14% 10%;             /* focus encre — l'orange reste aux actions */
-    --radius: 0.75rem;
-    /* Cartes : ombre douce sans bordure (direction « Sobre sur crème ») */
-    --shadow-soft: 0 1px 2px rgba(23, 20, 15, 0.05), 0 2px 10px rgba(23, 20, 15, 0.07);
+    --border: 240 6.1% 87.1%;        /* filet des groupes, #dcdce0 */
+    --input: 240 6.1% 87.1%;
+    --ring: 240 3.4% 11.4%;          /* focus encre */
+    --radius: 0.75rem;               /* 12 : groupes et champs ; 8 : petits contrôles ; pilules : rounded-full */
+    /* Les groupes n'ont pas d'ombre : le contraste vient du fond gris. */
+    --shadow-soft: 0 0 0 0 transparent;
 
     /* Semantic music colors */
     --chord-color: #3f63cf;   /* bleu PDF FR */
@@ -79,26 +110,27 @@
   }
 
   .dark {
-    --background: 224 24% 6%;        /* #0c0e13 */
-    --foreground: 220 8% 92%;        /* #ecedf0 */
-    --card: 220 20% 12%;             /* #181c24 — surface élevée (cartes sans bordure) */
-    --card-foreground: 220 8% 92%;
-    --popover: 224 18% 10%;
-    --popover-foreground: 220 8% 92%;
-    --primary: 21 96% 54%;           /* #f4751f */
-    --primary-foreground: 24 15% 10%;
-    --secondary: 220 20% 13%;        /* #1b1f28 */
-    --secondary-foreground: 220 8% 80%;
-    --muted: 220 20% 13%;
-    --muted-foreground: 220 6% 61%;  /* #9298a3 */
-    --accent: 220 20% 13%;
-    --accent-foreground: 220 8% 92%;
+    /* Sombre : noir pur, groupes anthracite (décision Q6 du 15/09/2026). */
+    --background: 0 0% 0%;           /* #000000 */
+    --foreground: 240 23.8% 95.9%;   /* #f2f2f7 */
+    --card: 240 3.4% 11.4%;          /* #1c1c1e — groupe */
+    --card-foreground: 240 23.8% 95.9%;
+    --popover: 240 3.4% 11.4%;
+    --popover-foreground: 240 23.8% 95.9%;
+    --primary: 3.8 100% 69%;         /* #ff6b61 rouge du logo, éclairci */
+    --primary-foreground: 6 55.6% 7.1%; /* #1c0a08 */
+    --secondary: 240 2.2% 17.6%;     /* #2c2c2e */
+    --secondary-foreground: 240 23.8% 95.9%;
+    --muted: 240 2.2% 17.6%;
+    --muted-foreground: 240 3.5% 61%; /* #98989f */
+    --accent: 240 2.2% 17.6%;
+    --accent-foreground: 240 23.8% 95.9%;
     --destructive: 0 63% 31%;
     --destructive-foreground: 210 40% 98%;
-    --border: 220 16% 18%;           /* #262b35 — inchangé : le mode louange s'appuie dessus */
-    --input: 220 16% 18%;
-    --ring: 220 8% 92%;              /* focus blanc cassé — l'orange reste aux actions */
-    --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.5), 0 3px 12px rgba(0, 0, 0, 0.35);
+    --border: 240 1.8% 22%;          /* #373739 — filet des groupes ; le mode louange s'en sert aussi */
+    --input: 240 1.8% 22%;
+    --ring: 240 23.8% 95.9%;         /* focus blanc cassé */
+    --shadow-soft: 0 0 0 0 transparent;
 
     --chord-color: #8fb0ff;   /* bleu PDF FR dark */
     --jianpu-color: #ff7d72;
@@ -124,6 +156,17 @@
     --zh-box-fill: #2d1412; 
     --zh-box-border: #5c2e2b; 
     }
+}
+
+/* Mouvement réduit, partout : les glissements et zooms deviennent des
+   changements quasi instantanés ; les fondus courts restent lisibles. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 @layer base {

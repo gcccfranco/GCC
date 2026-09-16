@@ -41,7 +41,7 @@ function TransitionBanner({ text }: { text: string }) {
     return (
       <div className="flex items-center gap-2 my-3">
         <div className="flex-1 border-t border-dashed border-primary/30" />
-        <Link2 className="h-3 w-3 text-primary/50 shrink-0" />
+        <Link2 className="h-3 w-3 text-foreground/50 shrink-0" />
         <div className="flex-1 border-t border-dashed border-primary/30" />
       </div>
     );
@@ -132,10 +132,10 @@ function SongHeader({ block }: { block: SongHeaderBlock }) {
   if (block.fusionSongs?.length) {
     return (
       <div className="flex items-start gap-2 mb-3 pb-3 border-b border-border">
-        <span className="w-5 h-5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">
+        <span className="w-5 h-5 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">
           {block.position}
         </span>
-        <Link2 className="h-3.5 w-3.5 text-primary shrink-0 mt-1" />
+        <Link2 className="h-3.5 w-3.5 text-foreground shrink-0 mt-1" />
         <div className="flex flex-wrap gap-x-3 gap-y-0.5 min-w-0">
           {block.fusionSongs.map((s, i) => (
             <span
@@ -159,7 +159,7 @@ function SongHeader({ block }: { block: SongHeaderBlock }) {
     <div className="flex items-start justify-between gap-4 mb-3 pb-3 border-b border-border">
       <div className="min-w-0">
         <div className="flex items-center gap-2">
-          <span className="w-5 h-5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center shrink-0">
+          <span className="w-5 h-5 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center shrink-0">
             {block.position}
           </span>
           <h2 className="text-[22px] font-bold text-foreground leading-tight uppercase tracking-tight truncate">
@@ -1127,10 +1127,10 @@ export function PerformanceMode({
                     setSongListOpen(false);
                   }}
                   className={`w-full flex items-center gap-2.5 px-4 py-2.5 text-left transition-colors ${
-                    isCurrent ? "bg-primary/10 text-primary" : "text-foreground hover:bg-muted/50"
+                    isCurrent ? "bg-secondary text-foreground" : "text-foreground hover:bg-muted/50"
                   }`}
                 >
-                  <span className="w-5 h-5 rounded-full bg-muted text-muted-foreground text-[10px] font-bold flex items-center justify-center shrink-0">
+                  <span className="w-5 h-5 rounded-full bg-muted text-muted-foreground text-xs font-bold flex items-center justify-center shrink-0">
                     {block.position}
                   </span>
                   <span className="flex-1 min-w-0">
@@ -1155,7 +1155,7 @@ export function PerformanceMode({
       >
         {/* Top bar */}
         <div
-          className="absolute top-0 left-0 right-0 pointer-events-auto bg-background/90 backdrop-blur-md border-b border-border px-4 py-3 flex items-center gap-3"
+          className="absolute top-0 left-0 right-0 pointer-events-auto material-chrome shadow-[0_1px_0_hsl(var(--border))] px-4 py-3 flex items-center gap-3"
           style={{
             paddingTop: "calc(0.75rem + var(--sat, 0px))",
             paddingLeft: "calc(1rem + var(--sal, 0px))",
@@ -1202,7 +1202,7 @@ export function PerformanceMode({
 
         {/* Bottom bar */}
         <div
-          className="absolute bottom-0 left-0 right-0 pointer-events-auto bg-background/90 backdrop-blur-md border-t border-border px-3 py-2.5 flex items-center gap-1.5 flex-wrap"
+          className="absolute bottom-0 left-0 right-0 pointer-events-auto material-chrome shadow-[0_-1px_0_hsl(var(--border))] px-3 py-2.5 flex items-center gap-1.5 flex-wrap"
           style={{
             paddingBottom: "calc(0.625rem + var(--sab, 0px))",
             paddingLeft: "calc(0.75rem + var(--sal, 0px))",
@@ -1419,7 +1419,7 @@ export function PerformanceMode({
                       onClick={() => changeJianpuPref(v)}
                       className={`px-2.5 py-1 text-xs font-semibold transition-colors ${
                         jianpuPref === v
-                          ? "bg-primary/10 text-primary"
+                          ? "bg-secondary text-foreground"
                           : "text-muted-foreground hover:text-foreground"
                       }`}
                     >
@@ -1506,7 +1506,7 @@ function IconBtn({
   const activeClass =
     accent === "amber"
       ? "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-transparent"
-      : "bg-primary/10 text-primary border-transparent";
+      : "bg-secondary text-foreground border-transparent";
 
   return (
     <button

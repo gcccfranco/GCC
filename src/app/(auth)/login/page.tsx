@@ -126,7 +126,7 @@ function LoginForm() {
           >
             {t("login.forgotPassword")}
           </button>
-          <Link href="/signup" className="text-sm text-primary hover:underline block">
+          <Link href="/signup" className="text-sm text-foreground underline underline-offset-2 block">
             {t("login.signupLink")}
           </Link>
           <Link href="/setlists" className="text-sm text-muted-foreground hover:text-foreground block">

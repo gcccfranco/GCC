@@ -75,7 +75,7 @@ export function PushPrompt() {
         <X className="h-4 w-4" />
       </button>
       <div className="flex items-start gap-3 pr-5">
-        <BellRing className="h-5 w-5 text-primary mt-0.5 shrink-0" />
+        <BellRing className="h-5 w-5 text-muted-foreground mt-0.5 shrink-0" />
         <div className="flex-1">
           <p className="text-sm font-semibold text-foreground">Active les rappels de service</p>
           {needsInstall ? (
@@ -94,7 +94,7 @@ export function PushPrompt() {
             <button
               onClick={enable}
               disabled={busy}
-              className="mt-2 h-8 px-3 rounded-[8px] bg-primary text-primary-foreground text-[12.5px] font-semibold disabled:opacity-50"
+              className="mt-2 h-8 px-3 rounded-full bg-primary text-primary-foreground text-sm font-semibold disabled:opacity-50"
             >
               {busy ? "…" : "Activer les notifications"}
             </button>

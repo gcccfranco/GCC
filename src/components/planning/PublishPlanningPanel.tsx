@@ -103,7 +103,7 @@ export function PublishPlanningPanel({
         <select
           value={key}
           onChange={(e) => setKey(e.target.value)}
-          className="w-full h-11 px-3 rounded-lg border border-border bg-background text-foreground text-[16px] sm:text-sm focus:outline-none focus:ring-2 focus:ring-ring/30"
+          className="w-full h-11 px-3 rounded-lg border border-transparent bg-secondary text-foreground text-[16px] sm:text-sm focus:outline-none focus:ring-2 focus:ring-ring/30"
         >
           {plannings.map((p) => (
             <option key={p.key} value={p.key}>
@@ -156,7 +156,7 @@ export function PublishPlanningPanel({
                   <button
                     onClick={() => act(tri, false)}
                     disabled={busy}
-                    className="h-8 px-3 rounded-lg border border-border bg-background text-xs font-semibold text-muted-foreground hover:text-foreground disabled:opacity-50"
+                    className="h-8 px-3 rounded-lg border border-transparent bg-secondary text-xs font-semibold text-muted-foreground hover:text-foreground disabled:opacity-50"
                   >
                     {busy ? "…" : "Masquer"}
                   </button>
@@ -164,14 +164,14 @@ export function PublishPlanningPanel({
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => setConfirmTri("")}
-                      className="h-8 px-3 rounded-lg border border-border bg-background text-xs font-semibold text-muted-foreground"
+                      className="h-8 px-3 rounded-lg border border-transparent bg-secondary text-xs font-semibold text-muted-foreground"
                     >
                       Annuler
                     </button>
                     <button
                       onClick={() => act(tri, true)}
                       disabled={busy}
-                      className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 disabled:opacity-50"
+                      className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 disabled:opacity-50"
                     >
                       <Send className="h-3.5 w-3.5" />
                       {busy ? "Publication…" : "Confirmer"}
@@ -180,7 +180,7 @@ export function PublishPlanningPanel({
                 ) : (
                   <button
                     onClick={() => setConfirmTri(tri)}
-                    className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90"
+                    className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90"
                   >
                     Publier
                   </button>

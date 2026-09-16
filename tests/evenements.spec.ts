@@ -15,6 +15,7 @@ const base: Omit<Evenement, "id" | "titre"> = {
   createdAt: "2026-09-20T10:00:00Z", updatedAt: "2026-09-20T10:00:00Z",
 };
 const FOOT: Omit<Evenement, "id"> = { ...base, titre: "Foot au parc" };
+const PIXEL = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==";
 const PAIX: Omit<Evenement, "id"> = { ...base, titre: "Repas Groupe Paix", type: "loisir", pour: "Groupe Paix", date: "2026-10-17", placesMax: null };
 const CULTE_NOEL: Omit<Evenement, "id"> = { ...base, titre: "Culte de Noël", type: "eglise", date: "2026-12-24", heure: "19:30", placesMax: null, inscriptionOuverte: false };
 const INFO: Omit<Evenement, "id"> = { ...base, titre: "Nouveau parking", type: "info", date: "", heure: "", epingle: true, placesMax: null, inscriptionOuverte: false };
@@ -87,7 +88,8 @@ test("fiche sans compte : détails, places restantes, formulaire sans compte, au
   await expect(page.getByText("19:00")).toBeVisible();
   await expect(page.getByText("Match amical, venez nombreux.")).toBeVisible();
   await expect(page.getByText("6 places restantes")).toBeVisible();
-  await expect(page.getByText("Steph")).toBeVisible();
+  await expect(page.getByText("Pour plus d'infos : Steph")).toBeVisible();
+  await page.getByRole("button", { name: "S'inscrire" }).click();
   await expect(page.getByLabel("Ton nom")).toBeVisible();
   await expect(page.getByText("Jo L.")).toHaveCount(0);
 });
@@ -140,15 +142,16 @@ test("créer : la coordination remplit la fiche ; écriture à son nom, compteur
     return route.fulfill({ json: { ok: true, sent: 3 } });
   });
   await page.getByRole("link", { name: "Nouvel évènement" }).click();
-  await page.getByLabel("Titre").fill("Soirée jeux");
-  await page.getByLabel("Type").selectOption("loisir");
-  await page.getByLabel("Pour").selectOption("eglise");
+  await page.getByLabel("Nom de l'évènement").fill("Soirée jeux");
+  await page.getByLabel("Catégorie").selectOption("loisir");
+  await page.getByLabel("Public").selectOption("eglise");
   await page.getByLabel("Date", { exact: true }).fill("2026-11-07");
-  await page.getByLabel("Heure", { exact: true }).fill("19:30");
+  await page.getByLabel("Horaire", { exact: true }).fill("19:30");
   await page.getByLabel("Lieu").fill("Salle du bas");
   await page.getByLabel("Description").fill("Apportez vos jeux.");
+  await page.getByText("Plus d'options").click();
   await page.getByLabel("Places").fill("20");
-  await page.getByLabel("Contact").fill("Alice 06 00 00 00 00");
+  await page.getByLabel("Responsable").fill("Alice 06 00 00 00 00");
   await page.getByRole("button", { name: "Créer l'évènement" }).click();
   await expect(page.getByRole("heading", { name: "Soirée jeux" })).toBeVisible();
   const created = db.writes.find((w) => w.method === "POST" && w.path.startsWith("evenements/"));
@@ -165,9 +168,9 @@ test("créer : un responsable avec le droit d'annonces ne crée que pour sa sect
   let pushed = false;
   await page.route("**/api/push/notify-evenement", (route) => { pushed = true; return route.fulfill({ json: { ok: true } }); });
   await page.getByRole("link", { name: "Nouvel évènement" }).click();
-  await expect(page.getByLabel("Pour").locator("option")).toHaveCount(1);
-  await expect(page.getByLabel("Pour")).toHaveValue("Groupe Paix");
-  await page.getByLabel("Titre").fill("Prière du groupe");
+  await expect(page.getByLabel("Public").locator("option")).toHaveCount(1);
+  await expect(page.getByLabel("Public")).toHaveValue("Groupe Paix");
+  await page.getByLabel("Nom de l'évènement").fill("Prière du groupe");
   await page.getByLabel("Date", { exact: true }).fill("2026-10-20");
   await page.getByLabel("Prévenir les membres").uncheck();
   await page.getByRole("button", { name: "Créer l'évènement" }).click();
@@ -183,14 +186,14 @@ test("créer : un membre sans droit n'a pas de bouton et la page de création lu
   await expect(page.getByRole("link", { name: "Nouvel évènement" })).toHaveCount(0);
   await page.goto("/evenements/nouveau");
   await expect(page.getByText("réservée")).toBeVisible();
-  await expect(page.getByLabel("Titre")).toHaveCount(0);
+  await expect(page.getByLabel("Nom de l'évènement")).toHaveCount(0);
 });
 
 test("créer une info : pas de date, épinglée, avec une date d'expiration", async ({ page }) => {
   const db = await member(page, ALICE, "/evenements/nouveau");
   await page.route("**/api/push/notify-evenement", (route) => route.fulfill({ json: { ok: true } }));
-  await page.getByLabel("Titre").fill("Travaux dans le hall");
-  await page.getByLabel("Type").selectOption("info");
+  await page.getByLabel("Nom de l'évènement").fill("Travaux dans le hall");
+  await page.getByLabel("Catégorie").selectOption("info");
   await expect(page.getByLabel("Date", { exact: true })).toHaveCount(0);
   await page.getByLabel("Épinglée").check();
   await page.getByLabel("Visible jusqu'au").fill("2026-11-30");
@@ -204,7 +207,7 @@ test("créer une info : pas de date, épinglée, avec une date d'expiration", as
 test("modifier : l'organisateur change le lieu, sans toucher au compteur", async ({ page }) => {
   const db = await member(page, STEPH, "/evenements/foot");
   await page.getByRole("link", { name: "Modifier" }).click();
-  await expect(page.getByLabel("Titre")).toHaveValue("Foot au parc");
+  await expect(page.getByLabel("Nom de l'évènement")).toHaveValue("Foot au parc");
   await page.getByLabel("Lieu").fill("Stade Charléty");
   await page.getByRole("button", { name: "Enregistrer" }).click();
   await expect(page.getByText("Stade Charléty")).toBeVisible();
@@ -218,7 +221,7 @@ test("dupliquer : formulaire pré-rempli sans date, nouvel évènement écrit av
   const db = await member(page, ALICE, "/evenements/culte-noel");
   await page.route("**/api/push/notify-evenement", (route) => route.fulfill({ json: { ok: true } }));
   await page.getByRole("link", { name: "Dupliquer" }).click();
-  await expect(page.getByLabel("Titre")).toHaveValue("Culte de Noël");
+  await expect(page.getByLabel("Nom de l'évènement")).toHaveValue("Culte de Noël");
   await expect(page.getByLabel("Date", { exact: true })).toHaveValue("");
   await page.getByLabel("Date", { exact: true }).fill("2027-12-24");
   await page.getByRole("button", { name: "Créer l'évènement" }).click();
@@ -266,16 +269,18 @@ test("refus d'inscription : fermée, commencée, complète, sinon acceptée", ()
   expect(refusInscription(INFO, 0, now)).toBe("fermee");
 });
 
-test("membre : « Je participe » avec des invités envoie au serveur avec son jeton, puis affiche sa place", async ({ page }) => {
+test("membre : « S'inscrire » puis invités et « Confirmer » envoie au serveur avec son jeton, puis affiche « Inscrit »", async ({ page }) => {
   await member(page, JO, "/evenements/foot");
   let sent: { body: { evenementId: string; invites: number }; auth?: string } | null = null;
   await page.route(INSCRIPTION, (route) => {
     sent = { body: route.request().postDataJSON(), auth: route.request().headers()["authorization"] };
     return route.fulfill({ json: { ok: true, inscrits: 7, mine: { id: "uid-jo", nom: "Jo L.", invites: 2 } } });
   });
+  await page.getByRole("button", { name: "S'inscrire" }).click();
   await page.getByLabel("Invités").selectOption("2");
-  await page.getByRole("button", { name: "Je participe" }).click();
-  await expect(page.getByText("Tu participes")).toBeVisible();
+  await page.getByRole("button", { name: "Confirmer" }).click();
+  await expect(page.getByText("Inscrit", { exact: true })).toBeVisible();
+  await expect(page.getByText("2 invités")).toBeVisible();
   await expect(page.getByText("3 places restantes")).toBeVisible();
   await expect(page.getByRole("button", { name: "Me désinscrire" })).toBeVisible();
   expect(sent!.auth).toMatch(/^Bearer /);
@@ -289,10 +294,10 @@ test("membre déjà inscrit : voit sa place et se désinscrit", async ({ page })
     sent = route.request().postDataJSON();
     return route.fulfill({ json: { ok: true, inscrits: 2 } });
   });
-  await expect(page.getByText("Tu participes")).toBeVisible();
+  await expect(page.getByText("Inscrit", { exact: true })).toBeVisible();
   await expect(page.getByText("1 invité")).toBeVisible();
   await page.getByRole("button", { name: "Me désinscrire" }).click();
-  await expect(page.getByRole("button", { name: "Je participe" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "S'inscrire" })).toBeVisible();
   await expect(page.getByText("8 places restantes")).toBeVisible();
   expect(sent).toEqual({ evenementId: "foot" });
 });
@@ -304,9 +309,10 @@ test("sans compte, autorisé : nom + invités, envoyé sans jeton, confirmation 
     sent = { body: route.request().postDataJSON(), auth: route.request().headers()["authorization"] };
     return route.fulfill({ json: { ok: true, inscrits: 6, mine: { id: "x1", nom: "Marie", invites: 1 } } });
   });
+  await page.getByRole("button", { name: "S'inscrire" }).click();
   await page.getByLabel("Ton nom").fill("Marie");
   await page.getByLabel("Invités").selectOption("1");
-  await page.getByRole("button", { name: "Je participe" }).click();
+  await page.getByRole("button", { name: "Confirmer" }).click();
   await expect(page.getByText("Inscription enregistrée")).toBeVisible();
   await expect(page.getByText("4 places restantes")).toBeVisible();
   expect(sent!.auth).toBeUndefined();
@@ -322,13 +328,13 @@ test("sans compte, non autorisé : pas de formulaire, invitation à se connecter
 test("complet : ni bouton ni formulaire", async ({ page }) => {
   await member(page, JO, "/evenements/foot", { ...DOCS, "evenements/foot": { ...FOOT, inscrits: 10 } });
   await expect(page.getByText("Complet")).toBeVisible();
-  await expect(page.getByRole("button", { name: "Je participe" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "S'inscrire" })).toHaveCount(0);
 });
 
 test("fermées ou commencées : « Inscriptions fermées », sans bouton", async ({ page }) => {
   await member(page, JO, "/evenements/foot", { ...DOCS, "evenements/foot": { ...FOOT, inscriptionOuverte: false } });
   await expect(page.getByText("Inscriptions fermées")).toBeVisible();
-  await expect(page.getByRole("button", { name: "Je participe" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "S'inscrire" })).toHaveCount(0);
   await page.clock.setFixedTime(new Date("2026-10-10T19:30:00"));
   await page.reload();
   await expect(page.getByText("Inscriptions fermées")).toBeVisible();
@@ -345,6 +351,7 @@ test("organisateur : liste des inscrits avec invités, retrait, fermeture des in
     sent = route.request().postDataJSON();
     return route.fulfill({ json: { ok: true, inscrits: 2 } });
   });
+  await page.getByRole("button", { name: "Voir les inscrits (2)" }).click();
   const liste = page.getByRole("list", { name: "Inscrits" });
   await expect(liste.getByRole("listitem")).toHaveCount(2);
   await expect(liste).toContainText("Jo L.");
@@ -399,22 +406,25 @@ test("cloche : un nouvel évènement d'une autre personne apparaît comme non lu
   await expect(page.getByRole("menuitem", { name: /Foot au parc/ })).toContainText("Évènement");
 });
 
-test("QR code : l'organisateur affiche le QR de sa fiche, la coordination celui du calendrier", async ({ page }) => {
+test("QR code : l'organisateur voit le QR de sa fiche à côté du lien", async ({ page }) => {
   await member(page, STEPH, "/evenements/foot");
-  await page.getByRole("button", { name: "QR code" }).click();
   const qr = page.getByRole("img", { name: /QR code/ });
   await expect(qr).toBeVisible();
   await expect(qr).toHaveAttribute("src", /^data:image\/png/);
   await expect(page.getByText(/\/evenements\/foot/)).toBeVisible();
+});
+
+// 16/09/2026 : plus de QR code sur l'onglet Évènements (demande de Timothée).
+test("QR code : aucun bouton sur le calendrier, même pour la coordination", async ({ page }) => {
   await member(page, ALICE, "/evenements");
-  await page.getByRole("button", { name: "QR code" }).click();
-  await expect(page.getByRole("img", { name: /QR code/ })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "Évènements" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "QR code" })).toHaveCount(0);
 });
 
 test("QR code : un simple membre n'a pas le bouton", async ({ page }) => {
   await member(page, JO, "/evenements/foot");
   await expect(page.getByRole("heading", { name: "Foot au parc" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "QR code" })).toHaveCount(0);
+  await expect(page.getByRole("img", { name: /QR code/ })).toHaveCount(0);
 });
 
 test("migration : l'admin lance la migration des annonces depuis l'administration", async ({ page }) => {
@@ -435,3 +445,123 @@ test("route de migration : refusée sans jeton", async ({ request }) => {
   const res = await request.post("/api/admin/migrer-annonces");
   expect(res.status()).toBe(401);
 });
+
+// ─── Lot 6 bis : look de la maquette de Timothée (16/09/2026, spec-evenements-look.md) ──
+
+test("L1 calendrier : la carte porte l'état d'inscription, sans badge de type ni de public ; « S'inscrire » ouvre la fiche", async ({ page }) => {
+  await member(page, JO, "/evenements", {
+    ...DOCS,
+    "evenements/foot/inscriptions/uid-jo": MA_PLACE,
+    "evenements/culte-noel": { ...CULTE_NOEL, inscriptionOuverte: true, placesMax: 10, inscrits: 10 },
+  });
+  const foot = page.getByRole("link", { name: /Foot au parc/ });
+  await expect(foot).toContainText("Inscrit");
+  await expect(foot).not.toContainText("Sport");
+  await expect(foot).not.toContainText("Toute l'église");
+  await expect(foot).toContainText("19:00");
+  await expect(foot).toContainText("Parc de Bercy");
+  await expect(page.getByRole("link", { name: /Culte de Noël/ })).toContainText("Complet");
+  const paix = page.getByRole("link", { name: /Repas Groupe Paix/ });
+  await expect(paix).toContainText("S'inscrire");
+  await paix.click();
+  await expect(page).toHaveURL(/\/evenements\/paix\/?$/);
+});
+
+test("L1 calendrier sans compte : « S'inscrire » sur les cartes ouvertes, rien sur une info", async ({ page }) => {
+  await visitor(page, "/evenements");
+  await expect(page.getByRole("link", { name: /Foot au parc/ })).toContainText("S'inscrire");
+  await expect(page.getByRole("link", { name: /Nouveau parking/ })).not.toContainText("S'inscrire");
+});
+
+test("L2 fiche : bannière, lignes date · horaire · lieu, « Pour plus d'infos », bouton plein « S'inscrire », invités derrière, compteur", async ({ page }) => {
+  await member(page, JO, "/evenements/foot", { ...DOCS, "evenements/foot": { ...FOOT, heureFin: "21:00", images: ["data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="], contact: "Steph 06 00 00 00 00" } });
+  await expect(page.getByRole("img", { name: "Foot au parc" })).toBeVisible();
+  await expect(page.getByText("19:00 – 21:00")).toBeVisible();
+  await expect(page.getByText("Pour plus d'infos : Steph 06 00 00 00 00")).toBeVisible();
+  await expect(page.getByText("4 déjà inscrits")).toBeVisible();
+  await expect(page.getByLabel("Invités")).toHaveCount(0);
+  const sinscrire = page.getByRole("button", { name: "S'inscrire" });
+  const box = (await sinscrire.boundingBox())!;
+  expect(box.height, "bouton plein, haut").toBeGreaterThanOrEqual(44);
+  await sinscrire.click();
+  await expect(page.getByLabel("Invités")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Confirmer" })).toBeVisible();
+  await page.getByRole("button", { name: "Annuler" }).click();
+  await expect(page.getByLabel("Invités")).toHaveCount(0);
+});
+
+test("L3 organisateur : panneau des inscriptions avec compteur et état, lien de la fiche avec QR visible, inscrits repliés", async ({ page }) => {
+  await member(page, STEPH, "/evenements/foot", {
+    ...DOCS,
+    "evenements/foot/inscriptions/uid-jo": MA_PLACE,
+    "evenements/foot/inscriptions/x1": { uid: null, nom: "Marie", invites: 0, createdAt: "2026-09-22T10:00:00Z" },
+  });
+  await expect(page.getByRole("link", { name: "Modifier" })).toBeVisible();
+  const panneau = page.getByRole("region", { name: "Inscriptions", exact: true });
+  await expect(panneau).toContainText("Ouvertes");
+  await expect(panneau.getByText("4", { exact: true })).toBeVisible();
+  const qr = page.getByRole("img", { name: /QR code/ });
+  await expect(qr).toBeVisible();
+  await expect(qr).toHaveAttribute("src", /^data:image\/png/);
+  await expect(page.getByText("Lien de la fiche")).toBeVisible();
+  await expect(page.getByText(/\/evenements\/foot/)).toBeVisible();
+  await expect(page.getByRole("list", { name: "Inscrits" })).toHaveCount(0);
+  await page.getByRole("button", { name: "Voir les inscrits (2)" }).click();
+  await expect(page.getByRole("list", { name: "Inscrits" })).toBeVisible();
+  await page.getByRole("button", { name: "Fermer les inscriptions" }).click();
+  await expect(panneau).toContainText("Fermées");
+});
+
+test("L4 formulaire : champs courants dans l'ordre de la maquette, responsable pré-rempli, bannière, champs rares sous « Plus d'options »", async ({ page }) => {
+  await member(page, ALICE, "/evenements/nouveau");
+  await page.getByLabel("Nom de l'évènement").waitFor();
+  const labels = await page.locator("form label[for]").evaluateAll((els) => els.map((el) => el.textContent?.trim()));
+  expect(labels.slice(0, 8)).toEqual(["Nom de l'évènement", "Catégorie", "Public", "Date", "Horaire", "Lieu", "Responsable", "Description"]);
+  await expect(page.getByLabel("Responsable")).toHaveValue("Alice Q.");
+  await expect(page.getByText("Ajouter une bannière")).toBeVisible();
+  await expect(page.getByLabel("Inscriptions ouvertes")).toBeChecked();
+  await expect(page.getByLabel("Heure de fin")).toBeHidden();
+  await expect(page.getByLabel("Places")).toBeHidden();
+  await page.getByText("Plus d'options").click();
+  await expect(page.getByLabel("Heure de fin")).toBeVisible();
+  await expect(page.getByLabel("Places")).toBeVisible();
+  await expect(page.getByLabel("Les personnes sans compte peuvent s'inscrire")).toBeVisible();
+});
+
+// ─── L6 : même carte blanche partout (ordinateur, téléphone, tablette) ──────
+
+const BLANC = "rgb(255, 255, 255)";
+
+test("L6 fiche : tout le contenu dans une carte blanche, zone d'attente quand il n'y a pas de bannière", async ({ page }) => {
+  await member(page, JO, "/evenements/paix");
+  const carte = page.getByTestId("fiche-carte");
+  await expect(carte).toBeVisible();
+  expect(await carte.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe(BLANC);
+  await expect(carte.getByTestId("banniere")).toBeVisible();
+  await expect(carte.getByRole("heading", { name: "Repas Groupe Paix" })).toBeVisible();
+  await expect(carte.getByText("Parc de Bercy")).toBeVisible();
+  await expect(carte.getByRole("button", { name: "S'inscrire" })).toBeVisible();
+});
+
+test("L6 fiche : la bannière montre l'image quand il y en a une", async ({ page }) => {
+  await member(page, JO, "/evenements/foot", { ...DOCS, "evenements/foot": { ...FOOT, images: [PIXEL] } });
+  await expect(page.getByTestId("banniere").getByRole("img", { name: "Foot au parc" })).toBeVisible();
+});
+
+test("L6 formulaire : champs, bannière et interrupteur dans une seule carte blanche", async ({ page }) => {
+  await member(page, ALICE, "/evenements/nouveau");
+  const carte = page.getByTestId("form-carte");
+  await expect(carte).toBeVisible();
+  expect(await carte.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe(BLANC);
+  await expect(carte.getByLabel("Nom de l'évènement")).toBeVisible();
+  await expect(carte.getByText("Ajouter une bannière")).toBeVisible();
+  await expect(carte.getByLabel("Inscriptions ouvertes")).toBeVisible();
+  await expect(carte.getByText("Plus d'options")).toBeVisible();
+});
+
+test("L6 organisateur : le compteur n'est écrit qu'une fois", async ({ page }) => {
+  await member(page, STEPH, "/evenements/foot", { ...DOCS, "evenements/foot/inscriptions/uid-jo": MA_PLACE });
+  await expect(page.getByRole("region", { name: "Inscriptions", exact: true })).toBeVisible();
+  await expect(page.getByText(/déjà inscrits/)).toHaveCount(0);
+});
+

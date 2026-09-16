@@ -72,7 +72,7 @@ export default function CultePage() {
         minWidth={680}
         dateBadge={(row, all) =>
           isFirstSundayOfMonth(row[0], all) ? (
-            <span className="inline-block text-[9px] font-bold px-1.5 py-0.5 rounded bg-red-50 text-red-700 border border-red-200 mt-0.5">
+            <span className="inline-block text-xs font-bold px-1.5 py-0.5 rounded bg-red-50 text-red-700 border border-red-200 mt-0.5">
               {t("planning.sainteCene")}
             </span>
           ) : null

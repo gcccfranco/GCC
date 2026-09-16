@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import { I18nProvider } from "@/lib/I18nProvider";
 import { Navbar } from "@/components/layout/Navbar";
@@ -7,11 +6,6 @@ import { MobileTabBar } from "@/components/layout/MobileTabBar";
 import { PageTransition } from "@/components/layout/PageTransition";
 import { LyricsCopyListener } from "@/components/song/LyricsCopyListener";
 import "./globals.css";
-
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   title: "GCC Louange",
@@ -26,7 +20,12 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#EA580C",
+  // Égale au fond, par schéma : plus de barre orange sur Android ni de saut
+  // de luminosité au lancement (audit D5).
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f2f2ef" },
+    { media: "(prefers-color-scheme: dark)", color: "#000000" },
+  ],
   width: "device-width",
   initialScale: 1,
   // Pinch-zoom désactivé : sur iOS, un zoom pincé décroche les éléments
@@ -52,7 +51,7 @@ export default function RootLayout({
             Web Push sur PWA iOS/Android. Il ne fait plus de cache hors-ligne. */}
         <script dangerouslySetInnerHTML={{ __html: `if('serviceWorker'in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js').catch(function(){})})}` }} />
       </head>
-      <body className={`${inter.variable} font-sans antialiased min-h-screen bg-background`}>
+      <body className="font-sans antialiased min-h-screen bg-background">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <I18nProvider>
             <Navbar />

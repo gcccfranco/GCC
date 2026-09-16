@@ -1,7 +1,9 @@
 "use client"
 
-// Fiche d'un évènement (lot 6) : détails, places, organisateur. Sans compte,
-// invitation à se connecter pour s'inscrire (E3 ajoute l'inscription).
+// Fiche d'un évènement (lot 6) : une carte blanche qui porte la bannière,
+// les badges, le titre, date · horaire · lieu à icône, la description,
+// « Pour plus d'infos » et l'inscription (lot 6 bis, maquette du 16/09/2026 :
+// même rendu sur ordinateur, téléphone et tablette).
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
@@ -15,10 +17,11 @@ import { isInfo } from "@/lib/evenements/agenda"
 import { fdFullL } from "@/lib/planning/utils"
 import { PLANNING_COLORS } from "@/lib/serviceColors"
 import type { Evenement } from "@/types/evenement"
+import { CalendarDays, Clock, Image as ImageIcon, Info, MapPin } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { TypePour } from "../EvenementCard"
 import { Inscriptions } from "./Inscriptions"
-import { QrCodeButton } from "@/components/evenements/QrCode"
+import { QrCodeLink } from "@/components/evenements/QrCode"
 
 const COLOR = PLANNING_COLORS.scene
 const URL_RE = /(https?:\/\/[^\s]+)/g
@@ -59,11 +62,22 @@ export function EvenementClient() {
   const e = evenement
 
   return (
-    <div className="max-w-2xl mx-auto space-y-4">
+    <div className="max-w-2xl mx-auto space-y-3">
       <Link href="/evenements" className="text-xs font-semibold text-muted-foreground hover:text-foreground">← {t("evenements.title")}</Link>
+      <div data-testid="fiche-carte" className="space-y-4 rounded-2xl bg-card p-4">
+      {(!isInfo(e) || e.images[0]) && (
+        <div data-testid="banniere" className="flex aspect-[16/9] w-full items-center justify-center overflow-hidden rounded-xl bg-secondary">
+          {e.images[0] ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={e.images[0]} alt={e.titre} className="h-full w-full object-cover" />
+          ) : (
+            <ImageIcon className="h-10 w-10 text-muted-foreground/50" aria-hidden />
+          )}
+        </div>
+      )}
       <div>
-        <h2 className="text-xl font-bold text-foreground text-balance">{e.titre}</h2>
-        <div className="flex flex-wrap gap-1 mt-2"><TypePour e={e} /></div>
+        <div className="flex flex-wrap gap-1"><TypePour e={e} /></div>
+        <h2 className="mt-2 text-xl font-bold text-foreground text-balance">{e.titre}</h2>
       </div>
 
       {canEditEvenement(user, profile, e) && (
@@ -77,18 +91,30 @@ export function EvenementClient() {
           }}>{t("evenements.supprimer")}</Button>
         </div>
       )}
-      {canEditEvenement(user, profile, e) && <QrCodeButton path={`/evenements/${e.id}`} label={e.titre} />}
 
       {!isInfo(e) && (
-        <div className="bg-card shadow-soft rounded-xl px-4 py-3 text-sm space-y-1">
-          <p className="font-semibold">
-            {e.dateFin
-              ? t("evenements.du", { from: fdFullL(e.date, i18n.language), to: fdFullL(e.dateFin, i18n.language) })
-              : fdFullL(e.date, i18n.language)}
-            {e.heure && <span className="font-normal text-muted-foreground"> · {e.heure}{e.heureFin ? ` – ${e.heureFin}` : ""}</span>}
-          </p>
-          {e.lieu && <p className="text-muted-foreground">{e.lieu}</p>}
-        </div>
+        <ul className="space-y-1.5 text-sm text-foreground">
+          <li className="flex items-start gap-2.5">
+            <CalendarDays className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+            <span className="font-semibold">
+              {e.dateFin
+                ? t("evenements.du", { from: fdFullL(e.date, i18n.language), to: fdFullL(e.dateFin, i18n.language) })
+                : fdFullL(e.date, i18n.language)}
+            </span>
+          </li>
+          {e.heure && (
+            <li className="flex items-start gap-2.5">
+              <Clock className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+              <span>{e.heure}{e.heureFin ? ` – ${e.heureFin}` : ""}</span>
+            </li>
+          )}
+          {e.lieu && (
+            <li className="flex items-start gap-2.5">
+              <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+              <span>{e.lieu}</span>
+            </li>
+          )}
+        </ul>
       )}
 
       {e.description && <Linkified text={e.description} />}
@@ -101,14 +127,19 @@ export function EvenementClient() {
         </ul>
       )}
 
-      {e.images.length > 0 && (
+      {e.images.length > 1 && (
         <div className="grid grid-cols-2 gap-2">
-          {e.images.map((src, i) => (
+          {e.images.slice(1).map((src, i) => (
             // eslint-disable-next-line @next/next/no-img-element
             <img key={i} src={src} alt="" className="rounded-lg w-full object-cover" />
           ))}
         </div>
       )}
+
+      <p className="flex items-start gap-2.5 border-t border-border pt-4 text-sm text-muted-foreground">
+        <Info className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+        <span>{t("evenements.plusInfos", { nom: e.contact || e.organisateurNom })}</span>
+      </p>
 
       {!isInfo(e) && (
         <Inscriptions
@@ -120,10 +151,8 @@ export function EvenementClient() {
         />
       )}
 
-      <p className="text-xs text-muted-foreground">
-        {t("evenements.organisePar", { nom: e.organisateurNom })}
-        {e.contact ? ` · ${t("evenements.contact", { contact: e.contact })}` : ""}
-      </p>
+      {canEditEvenement(user, profile, e) && <QrCodeLink path={`/evenements/${e.id}`} label={e.titre} />}
+      </div>
     </div>
   )
 }

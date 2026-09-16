@@ -8,7 +8,7 @@
       "logout": "Déconnexion",
       "louange": "Louange",
       "planning": "Planning",
-      "myServices": "Mes Services",
+      "myServices": "Mes services",
       "service": "Service",
       "annonces": "Annonces",
       "profile": "Mon profil",
@@ -16,7 +16,9 @@
       "guide": "Guide d'utilisation",
       "notify": "Notifier",
       "admin": "Admin",
-      "evenements": "Évènements"
+      "evenements": "Évènements",
+      "moi": "Moi",
+      "account": "Compte"
     },
     "buttons": {
       "reset": "Réinitialiser",
@@ -555,7 +557,7 @@
     "alreadyAccount": "J'ai déjà un compte — me connecter"
   },
   "mesServices": {
-    "title": "Mes Services",
+    "title": "Mes services",
     "loading": "Chargement…",
     "loginPrompt": "Connecte-toi pour voir tes prochains services.",
     "login": "Se connecter",
@@ -1425,11 +1427,11 @@
     "confirmDelete": "Supprimer « {{titre}} » ? Les inscriptions seront perdues.",
     "reserved": "Cette page est réservée à la coordination et aux responsables de section.",
     "form": {
-      "titre": "Titre",
-      "type": "Type",
-      "pour": "Pour",
+      "titre": "Nom de l'évènement",
+      "type": "Catégorie",
+      "pour": "Public",
       "date": "Date",
-      "heure": "Heure",
+      "heure": "Horaire",
       "heureFin": "Heure de fin",
       "dateFin": "Date de fin",
       "lieu": "Lieu",
@@ -1440,8 +1442,8 @@
       "sansCompte": "Les personnes sans compte peuvent s'inscrire",
       "epingle": "Épinglée",
       "expiresAt": "Visible jusqu'au",
-      "contact": "Contact",
-      "contactHint": "Facultatif : nom, téléphone…",
+      "contact": "Responsable",
+      "contactHint": "Nom, téléphone…",
       "prevenir": "Prévenir les membres",
       "addLink": "Ajouter un lien",
       "lienLabel": "Intitulé",
@@ -1455,7 +1457,9 @@
       "errorTitre": "Le titre est obligatoire.",
       "errorDate": "La date est obligatoire.",
       "errorDateFin": "La date de fin doit suivre la date.",
-      "errorSave": "Enregistrement impossible. Vérifie ta connexion et que les règles Firestore sont publiées."
+      "errorSave": "Enregistrement impossible. Vérifie ta connexion et que les règles Firestore sont publiées.",
+      "plusOptions": "Plus d'options",
+      "banniere": "Ajouter une bannière"
     },
     "jeParticipe": "Je participe",
     "tuParticipes": "Tu participes",
@@ -1473,6 +1477,28 @@
     "sansCompteTag": "sans compte",
     "inscriptionError": "Inscription impossible. Réessaie.",
     "qr": "QR code",
-    "qrAlt": "QR code vers {{label}}"
+    "qrAlt": "QR code vers {{label}}",
+    "inscrit": "Inscrit",
+    "sinscrire": "S'inscrire",
+    "plusInfos": "Pour plus d'infos : {{nom}}",
+    "dejaInscrits_one": "{{count}} déjà inscrit",
+    "dejaInscrits_other": "{{count}} déjà inscrits",
+    "confirmer": "Confirmer",
+    "annuler": "Annuler",
+    "panneauInscriptions": "Inscriptions",
+    "ouvertes": "Ouvertes",
+    "fermees": "Fermées",
+    "voirInscrits": "Voir les inscrits ({{count}})",
+    "masquerInscrits": "Masquer les inscrits",
+    "lienFiche": "Lien de la fiche"
+  },
+  "moi": {
+    "title": "Moi",
+    "settings": "Réglages",
+    "language": "Langue",
+    "theme": "Thème",
+    "light": "Clair",
+    "dark": "Sombre",
+    "french": "Français"
   }
 }

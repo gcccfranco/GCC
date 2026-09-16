@@ -3,7 +3,9 @@
 import { useState, useMemo, useEffect, useLayoutEffect, useRef } from "react";
 import Link from "next/link";
 import Fuse from "fuse.js";
-import { Search, X } from "lucide-react";
+import { Search, X, ChevronRight } from "lucide-react";
+import { Tile } from "@/components/ui/tile";
+import { PageTitle } from "@/components/layout/PageTitle";
 import { useTranslation } from "react-i18next";
 import type { SongIndexEntry, Theme } from "@/types/song";
 import { SongProposalDrawer } from "@/components/songs/SongProposalDrawer";
@@ -158,19 +160,42 @@ export function SongListClient({ songs, themes }: SongListClientProps) {
     return [...seen.entries()];
   }, [filtered, query]);
 
+  // Pendant un saut piloté par l'index, les barres du haut et du bas ne
+  // bougent pas (lu par useScrollDirection). Le verrou est levé après le
+  // défilement, ou au relâcher du doigt.
+  const pressingRef = useRef(false);
+  function lockNav() { document.documentElement.setAttribute("data-nav-lock", ""); }
+  function unlockNav() {
+    if (pressingRef.current) return;
+    document.documentElement.removeAttribute("data-nav-lock");
+  }
   function scrollToLetter(slug: string) {
+    lockNav();
     document.getElementById(`song-li-${slug}`)?.scrollIntoView({ block: "start" });
+    // L'événement scroll part à l'image suivante ; on lève le verrou après.
+    requestAnimationFrame(() => requestAnimationFrame(unlockNav));
   }
 
-  // Balayage de l'index : la lettre sous le doigt, tant qu'il est posé.
+  // Balayage de l'index : la lettre sous le doigt, tant qu'il est posé,
+  // affichée dans un encart (le doigt cache la colonne).
   const swipeLetterRef = useRef<string | null>(null);
+  const [activeIndex, setActiveIndex] = useState<number | null>(null);
   function followPointer(e: React.PointerEvent<HTMLElement>) {
     const rect = e.currentTarget.getBoundingClientRect();
-    const i = Math.floor(((e.clientY - rect.top) / rect.height) * letterIndex.length);
-    const [letter, slug] = letterIndex[Math.min(Math.max(i, 0), letterIndex.length - 1)];
+    const raw = Math.floor(((e.clientY - rect.top) / rect.height) * letterIndex.length);
+    const i = Math.min(Math.max(raw, 0), letterIndex.length - 1);
+    const [letter, slug] = letterIndex[i];
+    setActiveIndex(i);
     if (letter === swipeLetterRef.current) return;
     swipeLetterRef.current = letter;
     scrollToLetter(slug);
+  }
+  function releasePointer() {
+    pressingRef.current = false;
+    swipeLetterRef.current = null;
+    setActiveIndex(null);
+    // Un tap : le défilement du pointerdown n'a pas encore émis son événement.
+    requestAnimationFrame(() => requestAnimationFrame(unlockNav));
   }
 
   const usedThemeSlugs = new Set(songs.flatMap((s) => s.themes));
@@ -191,6 +216,7 @@ export function SongListClient({ songs, themes }: SongListClientProps) {
     // pr-7 : gouttière fixe de l'index A–Z. Elle ne dépend pas de la recherche,
     // pour que le champ ne change pas de largeur pendant la frappe.
     <div className="relative pr-7" onClickCapture={saveScrollPos}>
+      <PageTitle title={t("common.header.songs")} />
       {/* Barre de recherche */}
       <div className="relative mb-3.5">
         <Search className="absolute left-[14px] top-1/2 -translate-y-1/2 h-[18px] w-[18px] text-muted-foreground/70 pointer-events-none" />
@@ -200,7 +226,7 @@ export function SongListClient({ songs, themes }: SongListClientProps) {
           placeholder={t("songs.list.searchPlaceholder")}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          className="w-full h-[46px] pl-[42px] pr-10 border border-border rounded-xl bg-card text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-ring/50 focus:ring-[3px] focus:ring-ring/10 text-[16px] transition-all duration-150 [&::-webkit-search-cancel-button]:hidden"
+          className="w-full h-[46px] pl-[42px] pr-10 border border-transparent rounded-xl bg-card text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-ring/50 focus:ring-[3px] focus:ring-ring/10 text-[16px] transition-all duration-150 [&::-webkit-search-cancel-button]:hidden"
         />
         {query && (
           <button
@@ -216,14 +242,14 @@ export function SongListClient({ songs, themes }: SongListClientProps) {
       {/* Filtres */}
       <div className="flex flex-wrap gap-2 mb-4 items-center">
         {/* Langue — segmented control */}
-        <div className="inline-flex bg-secondary rounded-[9px] p-[3px] gap-0.5">
+        <div className="inline-flex bg-secondary rounded-sm p-[3px] gap-0.5">
           {(["all", "fr", "zh"] as const).map((lang) => (
             <button
               key={lang}
               onClick={() => setLangFilter(lang)}
-              className={`px-3 py-1.5 rounded-[7px] text-[12.5px] font-semibold transition-all duration-150 cursor-pointer ${
+              className={`px-3 py-1.5 rounded-sm text-sm font-semibold transition-all duration-150 cursor-pointer ${
                 langFilter === lang
-                  ? "bg-foreground text-background"
+                  ? "bg-card text-foreground shadow-sm"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
@@ -236,7 +262,7 @@ export function SongListClient({ songs, themes }: SongListClientProps) {
         <select
           value={themeFilter}
           onChange={(e) => setThemeFilter(e.target.value)}
-          className="h-8 pl-3 pr-7 rounded-[8px] text-[16px] sm:text-[12.5px] font-semibold bg-card text-foreground/80 border border-border focus:outline-none focus:ring-2 focus:ring-ring/20 cursor-pointer appearance-none"
+          className="h-8 pl-3 pr-7 rounded-sm text-[16px] sm:text-sm font-semibold bg-secondary text-foreground border border-transparent focus:outline-none focus:ring-2 focus:ring-ring/20 cursor-pointer appearance-none"
           style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7079' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`, backgroundRepeat: "no-repeat", backgroundPosition: "right 9px center" }}
         >
           <option value="">{t("songs.list.filterTheme")}</option>
@@ -250,7 +276,7 @@ export function SongListClient({ songs, themes }: SongListClientProps) {
         {hasFilter && (
           <button
             onClick={reset}
-            className="text-[12.5px] font-semibold text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2 cursor-pointer"
+            className="text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2 cursor-pointer"
           >
             {t("common.buttons.reset")}
           </button>
@@ -260,7 +286,7 @@ export function SongListClient({ songs, themes }: SongListClientProps) {
       {/* Récemment consultés */}
       {!hasFilter && recentSongs.length > 0 && (
         <div className="mb-4">
-          <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-1.5">
+          <p className="text-sm font-semibold text-muted-foreground mb-1.5">
             {t("songs.list.recent", { defaultValue: "Récemment consultés" })}
           </p>
           <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
@@ -268,7 +294,7 @@ export function SongListClient({ songs, themes }: SongListClientProps) {
               <Link
                 key={song.slug}
                 href={`/songs/${song.slug}`}
-                className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border bg-card text-[12.5px] font-semibold text-foreground hover:border-muted-foreground/50 active:bg-secondary transition-colors"
+                className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-secondary text-sm font-semibold text-foreground active:bg-secondary/60 transition-colors"
               >
                 <span
                   className="w-1.5 h-1.5 rounded-full shrink-0"
@@ -283,7 +309,7 @@ export function SongListClient({ songs, themes }: SongListClientProps) {
 
       {/* Compteur + proposition de chant */}
       <div className="flex items-center justify-between gap-3 mb-3">
-        <p className="text-[12.5px] text-muted-foreground">
+        <p className="text-sm text-muted-foreground">
           {filtered.length === songs.length
             ? t("songs.list.counter", { count: songs.length })
             : t("songs.list.counterFiltered", { count: filtered.length, filteredCount: filtered.length, totalCount: songs.length })}
@@ -297,64 +323,25 @@ export function SongListClient({ songs, themes }: SongListClientProps) {
           {t("songs.list.noSongsFound")}
         </p>
       ) : (
-        <ul className="flex flex-col gap-[9px]">
+        <ul className="rounded-xl bg-card [&>li:first-child>a]:rounded-t-xl [&>li:last-child>a]:rounded-b-xl">
           {filtered.map((song) => (
-            <li key={song.slug} id={`song-li-${song.slug}`} className="scroll-mt-[120px]">
+            <li key={song.slug} id={`song-li-${song.slug}`} className="group-row relative scroll-mt-[calc(var(--nav-h)+8px)]">
               <Link
                 href={`/songs/${song.slug}`}
-                className="flex overflow-hidden rounded-xl bg-card shadow-soft hover:shadow-[0_4px_14px_rgba(20,22,28,0.08),0_2px_6px_rgba(20,22,28,0.05)] transition-all duration-150 active:scale-[.995]"
+                className="flex min-h-[60px] items-center gap-3 px-4 py-2.5 transition-colors duration-150 active:bg-secondary/70"
               >
-                {/* Language rail */}
-                <span
-                  className="w-[5px] shrink-0"
-                  style={{ background: song.language === "zh" ? "var(--jianpu-color)" : "var(--chord-color)" }}
+                {/* Vignette : tonalité recommandée (sinon d'origine), teinte de la langue */}
+                <Tile
+                  color={song.language === "zh" ? "var(--zh-accent)" : "var(--fr-accent)"}
+                  big={song.recommendedKey ?? song.originalKey}
                 />
-                {/* Body */}
-                <span className="flex-1 min-w-0 px-[15px] py-[13px] flex items-center gap-3">
-                  <span className="flex-1 min-w-0">
-                    <span className="block font-bold text-[15.5px] leading-tight tracking-[-0.2px] text-foreground">
-                      {song.title}
-                    </span>
-                    {song.titlePinyin && (
-                      <span className="block text-xs text-muted-foreground mt-0.5">
-                        {song.titlePinyin}
-                      </span>
-                    )}
-                    <span className="block text-[13px] text-muted-foreground mt-0.5">
-                      {song.artist}
-                    </span>
-                    {song.themes.length > 0 && (
-                      <span className="flex flex-wrap gap-[5px] mt-2">
-                        {song.themes.slice(0, 3).map((slug) => {
-                          const theme = availableThemes.find((themeObj) => themeObj.slug === slug);
-                          return (
-                            <span
-                              key={slug}
-                              className="text-[11px] font-semibold text-foreground/70 bg-secondary px-2 py-0.5 rounded-full"
-                            >
-                              {(isZhLocale ? theme?.name_zh : theme?.name_fr) ?? slug}
-                            </span>
-                          );
-                        })}
-                      </span>
-                    )}
-                  </span>
-                  {/* Meta */}
-                  <span className="flex flex-col items-end gap-1.5 shrink-0">
-                    <span className="font-mono text-xs font-semibold bg-secondary text-foreground px-2 py-0.5 rounded-[7px] border border-border/60">
-                      {song.recommendedKey ?? song.originalKey}
-                    </span>
-                    <span
-                      className={`text-[11px] font-bold px-2 py-0.5 rounded-full min-w-[40px] text-center ${
-                        song.language === "zh"
-                          ? "bg-red-100 dark:bg-[#321617] text-red-700 dark:text-[#ff8e85]"
-                          : "bg-blue-100 dark:bg-[#18233f] text-blue-700 dark:text-[#8fb0ff]"
-                      }`}
-                    >
-                      {song.language === "zh" ? "中文" : "FR"}
-                    </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-base font-semibold text-foreground">{song.title}</span>
+                  <span className="block truncate text-sm text-muted-foreground">
+                    {song.titlePinyin ? `${song.titlePinyin} · ${song.artist}` : song.artist}
                   </span>
                 </span>
+                <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/60" aria-hidden />
               </Link>
             </li>
           ))}
@@ -372,12 +359,16 @@ export function SongListClient({ songs, themes }: SongListClientProps) {
             aria-label="Index alphabétique"
             onPointerDown={(e) => {
               e.currentTarget.setPointerCapture(e.pointerId);
+              pressingRef.current = true;
+              lockNav();
               swipeLetterRef.current = null;
               followPointer(e);
             }}
             onPointerMove={(e) => {
               if (e.currentTarget.hasPointerCapture(e.pointerId)) followPointer(e);
             }}
+            onPointerUp={releasePointer}
+            onPointerCancel={releasePointer}
             className="pointer-events-auto sticky z-30 mr-0.5 flex flex-col items-center px-0.5 py-1 rounded-full bg-background/70 backdrop-blur-sm touch-none select-none"
             // Centré par `top` et non par une translation : en bas de liste,
             // le collant bute sur la fin de la colonne et une translation
@@ -387,12 +378,25 @@ export function SongListClient({ songs, themes }: SongListClientProps) {
               top: `calc((100svh - ${indexHeight}) / 2)`,
             }}
           >
-            {letterIndex.map(([letter, slug]) => (
+            {activeIndex !== null && (
+              <span
+                data-testid="index-letter"
+                role="status"
+                aria-live="polite"
+                className="pointer-events-none absolute right-full mr-2 flex h-9 min-w-9 -translate-y-1/2 items-center justify-center rounded-sm bg-card px-2.5 text-[22px] font-extrabold text-foreground shadow-soft"
+                style={{ top: `calc((${activeIndex} + 0.5) * 100% / ${letterIndex.length})` }}
+              >
+                {letterIndex[activeIndex][0]}
+              </span>
+            )}
+            {letterIndex.map(([letter, slug], i) => (
               <button
                 key={letter}
                 onClick={() => scrollToLetter(slug)}
                 aria-label={`Aller à ${letter}`}
-                className="w-8 flex-1 min-h-0 flex items-center justify-center text-[11px] font-bold text-muted-foreground hover:text-foreground active:text-foreground"
+                className={`w-8 flex-1 min-h-0 flex items-center justify-center text-[11px] font-bold transition-transform duration-100 hover:text-foreground active:text-foreground ${
+                  i === activeIndex ? "text-foreground scale-125" : "text-muted-foreground"
+                }`}
               >
                 {letter}
               </button>

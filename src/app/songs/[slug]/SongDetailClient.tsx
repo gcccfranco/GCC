@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
-import { MoreHorizontal, Download, Play, X, TriangleAlert , Music, Music2, Settings } from "lucide-react";
+import { MoreHorizontal, Download, Play, X, TriangleAlert , Music, Music2, Settings, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -232,15 +232,20 @@ function safeParseParam<T>(raw: string | null, fallback: T): T {
       }
     }
 
-    return (
+    // « (orig.) » / « (reco.) » après une tonalité, dans la liste et sur ordinateur.
+  const keySuffix = (k: string) =>
+    (k === originalKey ? " " + t("customize.panel.keyOriginal") : "") +
+    (k === recommendedKey ? " " + t("customize.panel.keyRecommended") : "");
+
+  return (
       <div className="min-h-screen print:min-h-0 bg-background" style={{ width: `${100 / fontScale}%` }}>
         {/* Barre de contrôles */}
-        <div className={`print:hidden fixed left-0 right-0 top-[var(--nav-h)] z-10 bg-background/95 backdrop-blur border-b border-border transition-transform duration-300 ${ scrollVisible || barPinned ? "translate-y-0" : "-translate-y-[calc(100%+var(--nav-h))]"}`}>
-          <div className = "max-w-3xl mx-auto w-full flex flex-nowrap gap-0.5 items-center py-2 px-1">
+        <div data-testid="barre-outils" className={`print:hidden fixed left-0 right-0 top-[var(--nav-h)] z-10 material-chrome shadow-[0_1px_0_hsl(var(--border))] transition-transform duration-300 ${ scrollVisible || barPinned ? "translate-y-0" : "-translate-y-[calc(100%+var(--nav-h))]"}`}>
+          <div className = "max-w-3xl mx-auto w-full flex flex-nowrap gap-1 items-center py-2 px-1.5">
             <Button
               asChild
-              variant="outline"
-              className="h-9 sm:h-8 px-2.5 rounded-md text-xs font-semibold text-muted-foreground hover:text-foreground mr-1"
+              variant="secondary"
+              className="h-9 lg:h-8 px-2.5 rounded-full text-xs font-semibold text-muted-foreground hover:text-foreground"
             >
               <Link aria-label={t("songs.detail.backToAll")} href={backPath}>
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -250,11 +255,11 @@ function safeParseParam<T>(raw: string | null, fallback: T): T {
               </Link>
             </Button>
             {/* Transposition rapide */}
-            <div className="flex items-center gap-0.5 flex-1 min-w-0 sm:flex-none">
+            <div data-testid="pilule-tonalite" className="flex items-center gap-0.5 flex-1 min-w-0 sm:flex-none rounded-full bg-secondary p-0.5">
               <Button
-                variant="outline"
+                variant="ghost"
                 size="icon-lg"
-                className="h-9 w-9 sm:h-8 sm:w-8 rounded-md text-xs font-bold"
+                className="h-9 w-9 lg:h-8 lg:w-8 rounded-full text-sm font-bold"
                 onClick={() =>
                   setCustomize((c) => {
                     const s = c.semitones - 1;
@@ -264,28 +269,38 @@ function safeParseParam<T>(raw: string | null, fallback: T): T {
               >
                 −
               </Button>
-                <select
-                  value={customize.currentKey}
-                  onChange={(e) => setCustomize((c) => {
-                    const key = e.target.value;
-                    const diff = semitonesTo(originalKey, key);
-                    return { ...c, semitones: diff, currentKey: key };
-                    })
-                  }
-                  className="flex-1 min-w-0 h-9 sm:h-8 px-2 border border-border rounded-md bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
-                >
-                  {keyOptions(customize.currentKey, originalKey).map((k) => (
-                    <option key={k} value={k}>
-                      {k}
-                      {k === originalKey ? " " + t("customize.panel.keyOriginal") : ""}
-                      {k === recommendedKey ? " " + t("customize.panel.keyRecommended") : ""}
-                    </option>
-                  ))}
-                </select>
+                {/* Fermé : la tonalité seule sur tactile (le suffixe rognait « E ( » à
+                    six commandes), tonalité + suffixe sur ordinateur ; la liste native,
+                    transparente par-dessus, garde ses libellés complets. */}
+                <span className="relative flex-1 min-w-0 h-9 lg:h-8 flex items-center justify-center gap-0.5 px-1.5 rounded-full text-foreground text-sm font-semibold focus-within:ring-2 focus-within:ring-ring/30">
+                  <span data-testid="tonalite-courante" className="truncate" aria-hidden>
+                    {customize.currentKey}
+                    <span className="hidden lg:inline">{keySuffix(customize.currentKey)}</span>
+                  </span>
+                  <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-60" aria-hidden />
+                  <select
+                    aria-label={t("customize.panel.key")}
+                    value={customize.currentKey}
+                    onChange={(e) => setCustomize((c) => {
+                      const key = e.target.value;
+                      const diff = semitonesTo(originalKey, key);
+                      return { ...c, semitones: diff, currentKey: key };
+                      })
+                    }
+                    className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+                  >
+                    {keyOptions(customize.currentKey, originalKey).map((k) => (
+                      <option key={k} value={k}>
+                        {k}
+                        {keySuffix(k)}
+                      </option>
+                    ))}
+                  </select>
+                </span>
               <Button
-                variant="outline"
+                variant="ghost"
                 size="icon-lg"
-                className="h-9 w-9 sm:h-8 sm:w-8 rounded-md text-xs font-bold"
+                className="h-9 w-9 lg:h-8 lg:w-8 rounded-full text-sm font-bold"
                 onClick={() =>
                   setCustomize((c) => {
                     const s = c.semitones + 1;
@@ -298,9 +313,9 @@ function safeParseParam<T>(raw: string | null, fallback: T): T {
               {/* Retour à la tonalité par défaut (recommandée, sinon d'origine) d'un tap */}
               {customize.currentKey !== defaultKey && (
                 <Button
-                  variant="outline"
+                  variant="ghost"
                   size="icon-lg"
-                  className="h-9 w-9 sm:h-8 sm:w-8 rounded-md text-muted-foreground"
+                  className="h-9 w-9 lg:h-8 lg:w-8 rounded-full text-muted-foreground"
                   aria-label={t(recommendedKey ? "customize.panel.keyBackToRecommended" : "customize.panel.keyOriginal")}
                   title={t(recommendedKey ? "customize.panel.keyBackToRecommended" : "customize.panel.keyOriginal")}
                   onClick={() =>
@@ -315,13 +330,13 @@ function safeParseParam<T>(raw: string | null, fallback: T): T {
               )}
             </div>
 
-            <div className="ml-auto flex gap-1 sm:gap-1.5 items-center justify-end">
+            <div className="ml-auto flex gap-0.5 items-center justify-end rounded-full bg-secondary p-0.5">
               {/* Taille du texte */}
               <div className="flex items-center">
                 <Button
-                  variant="outline"
+                  variant="ghost"
                   size="icon-lg"
-                  className="h-9 w-9 sm:h-8 sm:w-8 rounded-md rounded-r-none border-r-0 text-[11px] font-bold"
+                  className="h-9 w-9 lg:h-8 lg:w-8 rounded-full text-xs font-bold"
                   onClick={() => changeFontScale(-0.1)}
                   disabled={fontScale <= 0.8}
                   aria-label={t("performance.textSmaller")}
@@ -329,9 +344,9 @@ function safeParseParam<T>(raw: string | null, fallback: T): T {
                   A−
                 </Button>
                 <Button
-                  variant="outline"
+                  variant="ghost"
                   size="icon-lg"
-                  className="h-9 w-9 sm:h-8 sm:w-8 rounded-md rounded-l-none text-[13px] font-bold"
+                  className="h-9 w-9 lg:h-8 lg:w-8 rounded-full text-sm font-bold"
                   onClick={() => changeFontScale(0.1)}
                   disabled={fontScale >= 1.5}
                   aria-label={t("performance.textLarger")}
@@ -343,10 +358,10 @@ function safeParseParam<T>(raw: string | null, fallback: T): T {
               {/* Accords */}
               <button aria-label={t("songs.detail.chords") || "Accords"}
                 onClick={() => setCustomize((c) => ({ ...c, showChords: !c.showChords }))}
-                className={`h-9 sm:h-8 px-2.5 rounded-md border text-xs font-semibold flex items-center gap-1.5 transition-all duration-150 ${
+                className={`h-9 min-w-9 lg:h-8 lg:min-w-8 px-2.5 rounded-full text-xs font-semibold flex items-center justify-center gap-1.5 transition-all duration-150 ${
                       customize.showChords
-                        ? "border-transparent bg-primary/10 text-primary"
-                        : "border-border bg-card text-muted-foreground hover:text-foreground"
+                        ? "bg-card text-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground"
                     }`}
               >
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/><path d="M9 18V5l12-2v13"/></svg>
@@ -357,10 +372,10 @@ function safeParseParam<T>(raw: string | null, fallback: T): T {
               {isZh && (
                     <button aria-label={t("songs.detail.pinyin") || "Pinyin"}
                       onClick={() => setCustomize((c) => ({ ...c, showPinyin: !c.showPinyin }))}
-                      className={`h-9 sm:h-8 px-2.5 rounded-md border text-xs font-semibold flex items-center gap-1.5 transition-all duration-150 ${
+                      className={`h-9 min-w-9 lg:h-8 lg:min-w-8 px-2.5 rounded-full text-xs font-semibold flex items-center justify-center gap-1.5 transition-all duration-150 ${
                         customize.showPinyin
-                          ? "border-transparent bg-primary/10 text-primary"
-                          : "border-border bg-card text-muted-foreground hover:text-foreground"
+                          ? "bg-card text-foreground shadow-sm"
+                          : "text-muted-foreground hover:text-foreground"
                       }`}
                     >
                       <span className="font-bold">拼</span>
@@ -372,10 +387,10 @@ function safeParseParam<T>(raw: string | null, fallback: T): T {
               {jianpuScore && (
                 <button aria-label={"简谱"}
                   onClick={() => setShowScore((v) => !v)}
-                  className={`h-9 sm:h-8 px-2.5 rounded-md border text-xs font-semibold flex items-center gap-1.5 transition-all duration-150 ${
+                  className={`h-9 min-w-9 lg:h-8 lg:min-w-8 px-2.5 rounded-full text-xs font-semibold flex items-center justify-center gap-1.5 transition-all duration-150 ${
                     showScore
-                      ? "border-transparent bg-primary/10 text-primary"
-                      : "border-border bg-card text-muted-foreground hover:text-foreground"
+                      ? "bg-card text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   <span className="font-bold">谱</span>
@@ -387,9 +402,9 @@ function safeParseParam<T>(raw: string | null, fallback: T): T {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
-                    variant="outline"
+                    variant="ghost"
                     size="icon-lg"
-                    className="h-9 w-9 sm:h-8 sm:w-8 rounded-md text-muted-foreground"
+                    className="h-9 w-9 lg:h-8 lg:w-8 rounded-full text-muted-foreground"
                     aria-label={t("common.moreActions")}
                   >
                     <MoreHorizontal className="h-4 w-4" />

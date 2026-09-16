@@ -1,38 +1,42 @@
 "use client"
 
-// QR code vers une adresse du site (calendrier public, fiche d'évènement),
-// généré dans le navigateur, affiché en grand pour être photographié ou imprimé.
+// Lien d'une fiche d'évènement avec son QR code (lot 6 bis) : le QR est
+// visible d'emblée en petit, un tap l'agrandit pour être photographié ou
+// imprimé ; l'adresse est écrite à côté.
 
 import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import QRCode from "qrcode"
-import { Button } from "@/components/ui/button"
 
-export function QrCodeButton({ path, label }: { path: string; label: string }) {
+export function QrCodeLink({ path, label }: { path: string; label: string }) {
   const { t } = useTranslation()
-  const [open, setOpen] = useState(false)
   const [src, setSrc] = useState("")
+  const [big, setBig] = useState(false)
   const url = typeof window === "undefined" ? path : `${window.location.origin}${path}`
 
   useEffect(() => {
-    if (!open || src) return
     QRCode.toDataURL(url, { width: 512, margin: 1 }).then(setSrc).catch(() => setSrc(""))
-  }, [open, src, url])
+  }, [url])
 
   return (
-    <div className="space-y-2">
-      <Button size="sm" variant="outline" onClick={() => setOpen(!open)}>{t("evenements.qr")}</Button>
-      {open && (
-        <div className="bg-card shadow-soft rounded-xl p-4 flex flex-col items-center gap-2">
-          {src ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={src} alt={t("evenements.qrAlt", { label })} className="w-64 h-64 max-w-full" />
-          ) : (
-            <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
-          )}
-          <p className="text-xs text-muted-foreground break-all text-center">{url}</p>
-        </div>
-      )}
+    <div className="flex items-center gap-3 border-t border-border pt-4">
+      <button
+        type="button"
+        onClick={() => setBig((b) => !b)}
+        aria-pressed={big}
+        className={`shrink-0 overflow-hidden rounded-xl bg-white p-1.5 transition-[width,height] duration-200 ${big ? "h-56 w-56" : "h-20 w-20"}`}
+      >
+        {src ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={src} alt={t("evenements.qrAlt", { label })} className="h-full w-full" />
+        ) : (
+          <span className="block h-full w-full rounded-lg bg-secondary" aria-hidden />
+        )}
+      </button>
+      <div className="min-w-0">
+        <p className="text-sm font-semibold text-foreground">{t("evenements.lienFiche")}</p>
+        <p className="break-all text-xs text-muted-foreground">{url}</p>
+      </div>
     </div>
   )
 }

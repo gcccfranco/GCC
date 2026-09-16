@@ -61,7 +61,7 @@ export default function GuidePage() {
         <div className="max-w-2xl mx-auto px-4 pt-6 pb-16 space-y-6">
           <header className="space-y-1.5">
             <div className="flex items-center gap-2">
-              <BookOpen className="h-5 w-5 text-primary" />
+              <BookOpen className="h-5 w-5 text-muted-foreground" />
               <h1 className="text-lg font-bold text-foreground">{t("guide.title")}</h1>
             </div>
             <p className="text-sm text-muted-foreground">{t("guide.subtitle")}</p>
@@ -69,7 +69,7 @@ export default function GuidePage() {
 
           {/* Sommaire */}
           <nav className="rounded-xl bg-card shadow-soft p-3">
-            <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-2">
+            <p className="text-sm font-semibold text-muted-foreground mb-2">
               {t("guide.tocTitle")}
             </p>
             <ul className="flex flex-col gap-0.5">
@@ -79,7 +79,7 @@ export default function GuidePage() {
                     href={`#${key}`}
                     className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm font-medium text-foreground/80 hover:text-foreground hover:bg-secondary transition-colors"
                   >
-                    <Icon className="h-4 w-4 text-primary shrink-0" />
+                    <Icon className="h-4 w-4 text-muted-foreground shrink-0" />
                     {t(`guide.sections.${key}.title`)}
                   </a>
                 </li>
@@ -105,11 +105,11 @@ export default function GuidePage() {
                 >
                   <div className="flex flex-wrap items-center gap-2">
                     <h2 className="flex items-center gap-2 text-base font-bold text-foreground">
-                      <Icon className="h-[18px] w-[18px] text-primary shrink-0" />
+                      <Icon className="h-[18px] w-[18px] text-muted-foreground shrink-0" />
                       {t(`guide.sections.${key}.title`)}
                     </h2>
                     {forWhom && (
-                      <span className="inline-flex items-center rounded-full border border-border bg-secondary px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+                      <span className="inline-flex items-center rounded-full bg-secondary px-2 py-0.5 text-xs font-medium text-muted-foreground">
                         {forWhom}
                       </span>
                     )}
@@ -141,7 +141,7 @@ export default function GuidePage() {
 
                   {tip && (
                     <div className="flex gap-2 rounded-lg bg-secondary/60 px-3 py-2 text-xs leading-relaxed text-muted-foreground">
-                      <Lightbulb className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
+                      <Lightbulb className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                       <span>
                         <RichText text={tip} />
                       </span>

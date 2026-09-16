@@ -123,7 +123,7 @@ export function SetlistOutline({ items, contents }: { items: SetlistItem[]; cont
                   isActive ? "text-foreground font-semibold" : "text-muted-foreground"
                 }`}
               >
-                <span className="shrink-0 w-4 text-right tabular-nums text-[11px] font-bold text-primary">{entry.position}</span>
+                <span className="shrink-0 w-4 text-right tabular-nums text-[11px] font-bold text-foreground">{entry.position}</span>
                 <span className="min-w-0">{entry.title}</span>
               </button>
               {entry.sections.length > 0 && (
@@ -136,7 +136,7 @@ export function SetlistOutline({ items, contents }: { items: SetlistItem[]; cont
                           type="button"
                           onClick={() => go(entry.position, s.uids[0])}
                           className={`w-full text-left px-2 py-0.5 rounded-md text-[12px] transition-colors hover:bg-muted ${
-                            here ? "text-primary font-semibold" : "text-muted-foreground"
+                            here ? "text-foreground font-semibold" : "text-muted-foreground"
                           }`}
                         >
                           {s.repeat > 1 ? `${s.label} ×${s.repeat}` : s.label}

@@ -93,7 +93,7 @@ function Chip({ chord, selected, onTap }: { chord: string; selected: boolean; on
     <button
       type="button"
       onClick={onTap}
-      className={`h-8 px-2 mb-0.5 rounded-[8px] border text-[15px] font-bold whitespace-nowrap transition-colors ${
+      className={`h-8 px-2 mb-0.5 rounded-sm border text-[15px] font-bold whitespace-nowrap transition-colors ${
         selected
           ? "border-foreground bg-foreground text-background"
           : "border-[color:var(--chord-color,#2563EB)]/40 bg-[color:var(--chord-color,#2563EB)]/10 text-[color:var(--chord-color,#2563EB)]"
@@ -143,7 +143,7 @@ function LineCanvas({
                   ))}
                 </span>
                 <span className="text-[22px] leading-[1.3] px-0.5">{ch === " " ? " " : ch}</span>
-                <span className="text-[10px] text-muted-foreground leading-tight min-h-[13px]">{py || " "}</span>
+                <span className="text-xs text-muted-foreground leading-tight min-h-[13px]">{py || " "}</span>
               </span>
               <InsertDot onTap={() => onInsert(ci + 1)} active={insertOffset === ci + 1} />
             </span>
@@ -368,7 +368,7 @@ function SheetBody({
         : t("setlists.contentEdit.lineTitle", { defaultValue: "Modifier la ligne" });
 
   const actionBtn =
-    "h-10 px-3 rounded-[8px] border border-border bg-card text-[13px] font-semibold text-muted-foreground hover:text-foreground flex items-center gap-1.5 transition-colors";
+    "h-10 px-3 rounded-sm border border-border bg-card text-[13px] font-semibold text-muted-foreground hover:text-foreground flex items-center gap-1.5 transition-colors";
 
   return (
     <>
@@ -465,7 +465,7 @@ function SheetBody({
               <button
                 type="button"
                 onClick={() => setInstrPad(-1)}
-                className={`h-8 px-2.5 rounded-[8px] border border-dashed text-[13px] font-semibold flex items-center gap-1 ${
+                className={`h-8 px-2.5 rounded-sm border border-dashed text-[13px] font-semibold flex items-center gap-1 ${
                   instrPad === -1 ? "border-foreground text-foreground" : "border-border text-muted-foreground"
                 }`}
               >
@@ -563,7 +563,7 @@ function SheetBody({
                       <button
                         type="button"
                         aria-label="◀"
-                        className="h-9 w-9 rounded-[8px] border border-border flex items-center justify-center text-muted-foreground hover:text-foreground"
+                        className="h-9 w-9 rounded-sm border border-border flex items-center justify-center text-muted-foreground hover:text-foreground"
                         onClick={() => nudge(-1)}
                       >
                         <ChevronLeft className="h-4 w-4" />
@@ -571,7 +571,7 @@ function SheetBody({
                       <button
                         type="button"
                         aria-label="▶"
-                        className="h-9 w-9 rounded-[8px] border border-border flex items-center justify-center text-muted-foreground hover:text-foreground"
+                        className="h-9 w-9 rounded-sm border border-border flex items-center justify-center text-muted-foreground hover:text-foreground"
                         onClick={() => nudge(1)}
                       >
                         <ChevronRight className="h-4 w-4" />

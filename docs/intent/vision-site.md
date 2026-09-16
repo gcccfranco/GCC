@@ -66,6 +66,7 @@ sans comptes, alors que le produit est devenu un outil interne d'équipe.
 | 14/09/2026 | **Nuancier en neutre** (test local du coup d'œil) : gris clair, gris, noir du doux au fort, indications en contour ; plus de violet, qui se confondait avec le pont — la couleur reste aux sections. Dans le bandeau, la nuance est un texte discret sous l'abréviation, jamais une pastille. |
 | 14/09/2026 | **Go donné** (soir) pour les lots dans l'ordre décidé, lint compris. Réalisés le soir même, **à valider en local** : lint ; **Sainte cène** (colonne du Sheet = service à part entière, visible si remplie) ; **rappels regroupés** (une notification par personne et par échéance, services et rôles, FR / 中文 selon la langue de l'interface mémorisée côté serveur) ; **notification au président** quand le lien de présentation est posé ou remplacé (préférence « Setlist prête », jamais deux fois du même lien, la régie voit si personne n'a été prévenu) ; **coup d'œil** complet (menu Affichage à trois positions par appareil, sommaire par occurrence, « Dernière phrase » = section du chant adapté nommée « Dernière phrase – R », badge masqué, phrase d'historique dédiée). Détail : `../spec-planning-petits-lots.md`, `../spec-notif-president.md`, `../spec-coup-d-oeil.md`. Petit déj en attente du Sheet de Christelle. |
 | 14/09/2026 | **Version perso d'un chant dans une setlist** (demande de Timothée, soir, entretien en quatre tours) : chaque musicien peut se faire **sa version** d'un chant (sections choisies et ordonnées, accords et paroles retouchés), **pour lui seul, dans cette setlist seulement**, sans toucher la structure ni la version de la présidence ; ses accords et paroles peuvent être **partagés sous son nom** et choisis par les autres, chacun gardant son choix ; la structure perso ne se partage jamais. Spec : `../spec-version-perso.md`. **Tranché le soir même** : lot **3 ter**, avant le look ; en V1, une retouche dans une section répétée **touche toutes ses répétitions** (confirmé après un aller-retour) ; libellés « Ma version », « Version de Christelle », « Présidence », « Partager ma version », « Sections ». **Go donné le soir même ; codé le 15/09/2026 en trois tranches (`../spec-version-perso.md`, « Avancement »), à valider en local.** |
+| 15/09/2026 | **Nouveau look, direction tranchée** (planche https://claude.ai/artifact/3AXs4eYYCedEAYa8bgW8zL, spec `../spec-look.md`) : direction **A « Réglages »** (listes groupées sur gris chaud, noir pur en sombre, police du système, grand titre replié au défilement) avec **vignettes teintées** (tonalité des chants, date des setlists et services), **accent rouge du logo réservé aux boutons pleins** (onglet actif, liens, interrupteurs en encre ; label de la navbar dans le même rouge ; l'orange ne reste qu'au refrain), barre du bas **Louange · Planning · Évènements · Moi** (page « Moi » = tout ce qui me concerne), visiteur **Chants · Évènements + Connexion**, menu compte sur ordinateur, onglets de planning neutres avec actif coloré, liste des chants en deux lignes sans thèmes, barre d'outils du chant en pilule à la même place, **index A–Z en lettre agrandie** (petit lot avant le look). Plan en six tranches `../../tasks/plan.md`. **Go non donné.** |
 
 ## Intention
 
@@ -448,6 +449,30 @@ Chaque tour : quatre questions, le pari de Claude en première option.
   par section. **Go donné puis codé le 15/09/2026** (quatre tranches, 36
   tests × 3 appareils), à valider en local ; règles à publier, migration des
   annonces à lancer depuis l'administration.
+
+### Lot 4 Nouveau look, planche du 15/09/2026
+
+- Timothée demande « fais le lot 4 » et « propose-moi des designs pour que je
+  valide ». Rien n'est codé : une planche de trois directions est publiée
+  (https://claude.ai/artifact/3AXs4eYYCedEAYa8bgW8zL) et la spec courte
+  `../spec-look.md` liste sept décisions à prendre (direction A Réglages /
+  B Musique / C Crème relevée, accent des actions, police, onglets du bas et
+  menu par sections, navigation sans compte, grand titre, index A–Z).
+  Proposé : A, accent encre, onglets Louange · Planning · Évènements · Moi.
+  **Réponse le soir même** : A avec les vignettes teintées de B, accent rouge
+  du logo, index A–Z en lettre agrandie ; treize questions de détail (Q1–Q13,
+  `../spec-look.md`) ajoutées sur la même planche, **toutes tranchées le soir
+  même** (propositions acceptées) : ligne « Déjà décidé » du 15/09/2026. Spec
+  consolidée, plan `../../tasks/plan.md`. **Go donné le soir même** pour T0 et
+  tout le lot 4 ; T0 à T6 codées le 15/09/2026 (`../spec-look.md`,
+  « Avancement »), à valider en local. Deux choix de réalisation notés : le
+  grand titre défile avec la page (pas de repli animé) ; le menu burger
+  disparaît, remplacé par la barre du bas et « Moi » (visiteur : Chants ·
+  Évènements + Connexion).
+- Index A–Z : le balayage était déjà codé et commité le 14/09 (`b395745`),
+  revérifié ; ce qui reste (lettre visible sous le doigt, barre du haut fixe
+  pendant le geste, marge de défilement) est proposé en petit lot avant le
+  look, sur décision D7.
 
 ## Historique des changements d'avis
 

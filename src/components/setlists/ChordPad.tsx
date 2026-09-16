@@ -68,7 +68,7 @@ export function ChordPad({
   };
 
   const keyBtn = (active: boolean, small = false) =>
-    `h-10 min-w-10 rounded-[8px] border font-bold transition-colors ${
+    `h-10 min-w-10 rounded-sm border font-bold transition-colors ${
       small ? "px-1 text-[12.5px]" : "px-2 text-[14px]"
     } ${
       active
@@ -142,7 +142,7 @@ export function ChordPad({
         <div className="flex items-center gap-2">
           <button
             type="button"
-            className={`h-8 px-2.5 rounded-[8px] border text-[12px] font-semibold ${
+            className={`h-8 px-2.5 rounded-sm border text-[12px] font-semibold ${
               showBass ? "border-transparent bg-secondary text-foreground" : "border-border bg-card text-muted-foreground"
             }`}
             onClick={() =>
@@ -158,7 +158,7 @@ export function ChordPad({
               Choix terminal → insertion immédiate, sans passer par Valider. */}
           <button
             type="button"
-            className="h-8 px-2.5 rounded-[8px] border border-dashed border-border bg-card text-[12px] font-semibold text-muted-foreground hover:text-foreground"
+            className="h-8 px-2.5 rounded-sm border border-dashed border-border bg-card text-[12px] font-semibold text-muted-foreground hover:text-foreground"
             onClick={() => onSubmit(" ")}
           >
             ␣ {t("setlists.contentEdit.emptyColumn", { defaultValue: "colonne vide" })}

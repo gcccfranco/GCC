@@ -7,8 +7,8 @@ export default function manifest(): MetadataRoute.Manifest {
     description: "Partitions et setlists de louange — église GCC",
     start_url: "/planning",
     display: "standalone",
-    background_color: "#ffffff",
-    theme_color: "#EA580C",
+    background_color: "#f2f2ef",
+    theme_color: "#f2f2ef",
     orientation: "portrait",
     icons: [
       {

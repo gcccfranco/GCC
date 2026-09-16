@@ -746,7 +746,7 @@ export function SetlistDetailClient() {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-3 px-4">
         <p className="text-sm text-muted-foreground">{t("setlists.detail.loginRequired")}</p>
-        <Link href={`/login?from=/setlists/${id}`} className="text-sm text-primary hover:underline">
+        <Link href={`/login?from=/setlists/${id}`} className="text-sm text-foreground hover:underline">
           {t("common.header.login")}
         </Link>
       </div>
@@ -768,7 +768,7 @@ export function SetlistDetailClient() {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-3">
         <p className="text-sm text-muted-foreground">{t("setlists.detail.notFound")}</p>
-        <Link href={backPath} className="text-sm text-primary hover:underline">{t("setlists.detail.back")}</Link>
+        <Link href={backPath} className="text-sm text-foreground hover:underline">{t("setlists.detail.back")}</Link>
       </div>
     );
   }
@@ -778,7 +778,7 @@ export function SetlistDetailClient() {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-3 px-4">
         <p className="text-sm text-muted-foreground">{t("setlists.detail.noAccess")}</p>
-        <Link href="/setlists" className="text-sm text-primary hover:underline">{t("setlists.detail.back")}</Link>
+        <Link href="/setlists" className="text-sm text-foreground hover:underline">{t("setlists.detail.back")}</Link>
       </div>
     );
   }
@@ -811,14 +811,14 @@ export function SetlistDetailClient() {
   return (
     <div className="min-h-screen bg-background">
       {/* Top bar — même style que SongDetailClient */}
-      <div ref={toolbarRef} className={`print:hidden fixed left-0 right-0 top-[var(--nav-h)] z-10 bg-background/95 backdrop-blur border-b border-border transition-transform duration-300 ${ scrollVisible ? "translate-y-0" : "-translate-y-[calc(100%+var(--nav-h))]"}`}>
+      <div ref={toolbarRef} className={`print:hidden fixed left-0 right-0 top-[var(--nav-h)] z-10 material-chrome shadow-[0_1px_0_hsl(var(--border))] transition-transform duration-300 ${ scrollVisible ? "translate-y-0" : "-translate-y-[calc(100%+var(--nav-h))]"}`}>
         <div className="max-w-[1080px] mx-auto px-4">
           <div className="flex items-center gap-2 py-[9px] flex-wrap">
 
             {/* ← Retour */}
             <Link aria-label={t("songs.detail.backToAll")}
               href={backPath}
-              className="h-8 px-2.5 mr-1 rounded-[8px] border border-border bg-card text-muted-foreground hover:text-foreground text-[12.5px] font-semibold flex items-center gap-0.5 transition-all duration-150"
+              className="h-8 px-2.5 mr-1 rounded-full bg-secondary text-muted-foreground hover:text-foreground text-sm font-semibold flex items-center gap-0.5 transition-[background-color,color,transform] duration-150 active:scale-[.96]"
             >
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M19 12H5m6-7l-7 7 7 7" />
@@ -827,21 +827,21 @@ export function SetlistDetailClient() {
             </Link>
 
             {/* Vue toggle — pill identique au transpose pill */}
-            <div className="flex items-center gap-0 border border-border rounded-[10px] bg-card overflow-hidden">
+            <div className="flex items-center gap-0.5 rounded-full bg-secondary p-0.5">
               <button aria-label={t("setlists.detail.tabList")}
                 onClick={() => setView("liste")}
-                className={`flex items-center gap-1.5 px-3 h-[34px] text-[12.5px] font-semibold transition-colors ${
-                  view === "liste" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground"
+                className={`flex items-center gap-1.5 px-3 h-8 rounded-full text-sm font-semibold transition-colors ${
+                  view === "liste" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 <List className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">{t("setlists.detail.tabList")}</span>
               </button>
-              <div className="w-px h-5 bg-border" />
+              
               <button aria-label={t("setlists.detail.tabCharts")}
                 onClick={switchToPartitions}
-                className={`flex items-center gap-1.5 px-3 h-[34px] text-[12.5px] font-semibold transition-colors ${
-                  view === "partitions" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground"
+                className={`flex items-center gap-1.5 px-3 h-8 rounded-full text-sm font-semibold transition-colors ${
+                  view === "partitions" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 <Music className="h-3.5 w-3.5" />
@@ -860,10 +860,10 @@ export function SetlistDetailClient() {
                     setEditMine(false);
                     setEditTarget(null);
                   }}
-                  className={`h-8 px-2.5 rounded-[8px] border text-[12.5px] font-semibold flex items-center gap-1.5 transition-all duration-150 ${
+                  className={`h-8 px-2.5 rounded-full text-sm font-semibold flex items-center gap-1.5 transition-[background-color,color,transform] duration-150 active:scale-[.96] ${
                     editPartitions
-                      ? "border-transparent bg-primary/10 text-primary"
-                      : "border-border bg-card text-muted-foreground hover:text-foreground"
+                      ? "bg-foreground text-background"
+                      : "bg-secondary text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   <SlidersHorizontal className="h-3.5 w-3.5" />
@@ -881,10 +881,10 @@ export function SetlistDetailClient() {
                     setEditPartitions(false);
                     setEditTarget(null);
                   }}
-                  className={`h-8 px-2.5 rounded-[8px] border text-[12.5px] font-semibold flex items-center gap-1.5 transition-all duration-150 ${
+                  className={`h-8 px-2.5 rounded-full text-sm font-semibold flex items-center gap-1.5 transition-[background-color,color,transform] duration-150 active:scale-[.96] ${
                     editMine
-                      ? "border-transparent bg-primary/10 text-primary"
-                      : "border-border bg-card text-muted-foreground hover:text-foreground"
+                      ? "bg-foreground text-background"
+                      : "bg-secondary text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   <PenLine className="h-3.5 w-3.5" />
@@ -899,10 +899,10 @@ export function SetlistDetailClient() {
                     setShowChords((s) => !s);
                     setChordsTouched(true);
                   }}
-                  className={`h-8 px-2.5 rounded-[8px] border text-[12.5px] font-semibold flex items-center gap-1.5 transition-all duration-150 ${
+                  className={`h-8 px-2.5 rounded-full text-sm font-semibold flex items-center gap-1.5 transition-[background-color,color,transform] duration-150 active:scale-[.96] ${
                     showChords
-                      ? "border-transparent bg-primary/10 text-primary"
-                      : "border-border bg-card text-muted-foreground hover:text-foreground"
+                      ? "bg-foreground text-background"
+                      : "bg-secondary text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/><path d="M9 18V5l12-2v13"/></svg>
@@ -914,10 +914,10 @@ export function SetlistDetailClient() {
               {view === "partitions" && hasZhSong && (
                 <button aria-label={t("setlists.detail.pinyin", { defaultValue: "Pinyin" })}
                   onClick={togglePinyin}
-                  className={`h-8 px-2.5 rounded-[8px] border text-[12.5px] font-semibold flex items-center gap-1.5 transition-all duration-150 ${
+                  className={`h-8 px-2.5 rounded-full text-sm font-semibold flex items-center gap-1.5 transition-[background-color,color,transform] duration-150 active:scale-[.96] ${
                     showPinyin
-                      ? "border-transparent bg-primary/10 text-primary"
-                      : "border-border bg-card text-muted-foreground hover:text-foreground"
+                      ? "bg-foreground text-background"
+                      : "bg-secondary text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   <Languages className="h-3.5 w-3.5" />
@@ -941,7 +941,7 @@ export function SetlistDetailClient() {
                   setPerformanceMode(true);
                 }}
                 aria-label={t("setlists.detail.performanceMode")}
-                className="h-8 px-3 rounded-[8px] bg-primary text-primary-foreground text-[12.5px] font-semibold flex items-center gap-1.5 hover:bg-primary/90 transition-all duration-150"
+                className="h-8 px-3 rounded-full bg-primary text-primary-foreground text-[12.5px] font-semibold flex items-center gap-1.5 hover:bg-primary/90 transition-all duration-150"
               >
                 <Play className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">{t("setlists.detail.performanceMode")}</span>
@@ -1088,7 +1088,7 @@ export function SetlistDetailClient() {
           </div>
           {/* Qui peut modifier — rend visible la logique de access.ts */}
           <div className="mt-3 flex items-center gap-2 flex-wrap">
-            <Badge variant={canEdit ? "default" : "secondary"}>
+            <Badge variant="secondary">
               {canEdit ? t("setlists.detail.canEdit") : t("setlists.detail.readOnly")}
             </Badge>
             <span className="text-xs text-muted-foreground">

@@ -178,7 +178,7 @@ export default function NotifierPage() {
     <div className="min-h-screen bg-background">
       <div className="max-w-xl mx-auto px-4 pt-6 pb-10 space-y-5">
         <div className="flex items-center gap-2">
-          <Megaphone className="h-5 w-5 text-primary" />
+          <Megaphone className="h-5 w-5 text-muted-foreground" />
           <h1 className="text-lg font-bold text-foreground">Envoyer une notification</h1>
         </div>
         <p className="text-sm text-muted-foreground">
@@ -220,7 +220,7 @@ export default function NotifierPage() {
             <select
               value={audience}
               onChange={(e) => setAudience(e.target.value)}
-              className="w-full h-11 px-3 rounded-lg border border-border bg-background text-foreground text-[16px] sm:text-sm focus:outline-none focus:ring-2 focus:ring-ring/30"
+              className="w-full h-11 px-3 rounded-lg border border-transparent bg-secondary text-foreground text-[16px] sm:text-sm focus:outline-none focus:ring-2 focus:ring-ring/30"
             >
               <option value="">Choisir…</option>
               {canAll && <option value={NOTIFY_ALL}>{audienceLabel(NOTIFY_ALL)}</option>}
@@ -265,7 +265,7 @@ export default function NotifierPage() {
                   value={peopleQuery}
                   onChange={(e) => setPeopleQuery(e.target.value)}
                   placeholder="Filtrer la liste…"
-                  className="w-full h-10 pl-9 pr-9 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground text-[16px] sm:text-sm focus:outline-none focus:ring-2 focus:ring-ring/30 [&::-webkit-search-cancel-button]:hidden"
+                  className="w-full h-10 pl-9 pr-9 rounded-lg border border-transparent bg-secondary text-foreground placeholder:text-muted-foreground text-[16px] sm:text-sm focus:outline-none focus:ring-2 focus:ring-ring/30 [&::-webkit-search-cancel-button]:hidden"
                 />
                 {peopleQuery && (
                   <button
@@ -276,7 +276,7 @@ export default function NotifierPage() {
                   </button>
                 )}
               </div>
-              <div className="max-h-64 overflow-y-auto rounded-xl border border-border divide-y divide-border">
+              <div className="max-h-64 overflow-y-auto rounded-xl bg-card divide-y divide-border">
                 {profiles === null ? (
                   <p className="text-sm text-muted-foreground text-center py-6">Chargement…</p>
                 ) : shownPool.length === 0 ? (
@@ -292,8 +292,8 @@ export default function NotifierPage() {
                         className="w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-muted/40"
                       >
                         <span
-                          className={`h-4 w-4 rounded border flex items-center justify-center shrink-0 text-[10px] ${
-                            checked ? "bg-primary border-primary text-primary-foreground" : "border-border"
+                          className={`h-4 w-4 rounded border flex items-center justify-center shrink-0 text-xs ${
+                            checked ? "bg-foreground border-foreground text-background" : "border-border"
                           }`}
                         >
                           {checked && "✓"}
@@ -326,7 +326,7 @@ export default function NotifierPage() {
               onChange={(e) => setTitle(e.target.value)}
               maxLength={80}
               placeholder="Ex. Changement de planning"
-              className="w-full h-11 px-3 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground text-[16px] sm:text-sm focus:outline-none focus:ring-2 focus:ring-ring/30"
+              className="w-full h-11 px-3 rounded-lg border border-transparent bg-secondary text-foreground placeholder:text-muted-foreground text-[16px] sm:text-sm focus:outline-none focus:ring-2 focus:ring-ring/30"
             />
           </div>
 
@@ -340,7 +340,7 @@ export default function NotifierPage() {
               maxLength={300}
               rows={3}
               placeholder="Ex. Le planning du Culte a été mis à jour, vérifie tes dates."
-              className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground text-[16px] sm:text-sm focus:outline-none focus:ring-2 focus:ring-ring/30 resize-none"
+              className="w-full px-3 py-2.5 rounded-lg border border-transparent bg-secondary text-foreground placeholder:text-muted-foreground text-[16px] sm:text-sm focus:outline-none focus:ring-2 focus:ring-ring/30 resize-none"
             />
           </div>
 
@@ -351,7 +351,7 @@ export default function NotifierPage() {
             <select
               value={dest}
               onChange={(e) => setDest(e.target.value)}
-              className="w-full h-11 px-3 rounded-lg border border-border bg-background text-foreground text-[16px] sm:text-sm focus:outline-none focus:ring-2 focus:ring-ring/30"
+              className="w-full h-11 px-3 rounded-lg border border-transparent bg-secondary text-foreground text-[16px] sm:text-sm focus:outline-none focus:ring-2 focus:ring-ring/30"
             >
               {DESTINATIONS.map((d) => (
                 <option key={d.value} value={d.value}>
@@ -364,21 +364,21 @@ export default function NotifierPage() {
           {feedback && <p className="text-xs text-muted-foreground">{feedback}</p>}
 
           {confirmOpen ? (
-            <div className="rounded-lg border border-border p-3 space-y-3">
+            <div className="rounded-xl bg-card p-3 space-y-3">
               <p className="text-sm text-foreground">
                 Envoyer cette notification à <span className="font-semibold">{recipLabel}</span> ?
               </p>
               <div className="flex justify-end gap-2">
                 <button
                   onClick={() => setConfirmOpen(false)}
-                  className="h-9 px-4 rounded-lg border border-border bg-background text-sm font-semibold text-muted-foreground hover:text-foreground"
+                  className="h-9 px-4 rounded-full bg-secondary text-sm font-semibold text-muted-foreground hover:text-foreground"
                 >
                   Annuler
                 </button>
                 <button
                   onClick={doSend}
                   disabled={busy}
-                  className="inline-flex items-center gap-1.5 h-9 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 disabled:opacity-50"
+                  className="inline-flex items-center gap-1.5 h-9 px-4 rounded-full bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 disabled:opacity-50"
                 >
                   <Send className="h-4 w-4" />
                   {busy ? "Envoi…" : "Confirmer"}
@@ -390,7 +390,7 @@ export default function NotifierPage() {
               <button
                 onClick={attemptSend}
                 disabled={!canSend}
-                className="inline-flex items-center gap-1.5 h-11 px-5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 h-11 px-5 rounded-full bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50"
               >
                 <Send className="h-4 w-4" />
                 {busy ? "Envoi…" : "Envoyer"}

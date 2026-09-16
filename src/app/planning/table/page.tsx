@@ -54,7 +54,7 @@ export default function TablePage() {
                 <Fragment key={row[0]}>
                   {showSep && (
                     <tr style={{ background: `${COLOR}15` }}>
-                      <td colSpan={2} className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider" style={{ color: COLOR }}>
+                      <td colSpan={2} className="px-3 py-1.5 text-xs font-bold uppercase tracking-wider" style={{ color: COLOR }}>
                         {month}
                       </td>
                     </tr>
@@ -65,7 +65,7 @@ export default function TablePage() {
                   >
                     <td className="px-3 py-2.5 font-semibold w-16 align-top pt-3" style={{ color: COLOR }}>
                       {isThis ? (
-                        <span className="inline-block text-[9px] font-bold px-1.5 py-0.5 rounded text-white mt-0.5" style={{ background: COLOR }}>{t("planning.table.thisWeek")}</span>
+                        <span className="inline-block text-xs font-bold px-1.5 py-0.5 rounded text-white mt-0.5" style={{ background: COLOR }}>{t("planning.table.thisWeek")}</span>
                       ) : fdShort(row[0])}
                     </td>
                     <td className="px-3 py-2.5 text-foreground leading-relaxed">{row[1] || "—"}</td>
