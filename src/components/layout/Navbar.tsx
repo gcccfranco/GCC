@@ -171,7 +171,7 @@ export function Navbar() {
           </Link>
 
           {/* Sections (ordinateur) */}
-          <nav className="hidden lg:flex items-center gap-1 ml-2" aria-label="Sections">
+          <nav className="hidden lg:flex items-center gap-1 ml-2" aria-label={t("common.aria.sections")}>
             {!authLoading && user && (
               <Link href="/planning" className={sectionClass(isActivePlanning)}>
                 {t("common.header.planning")}
@@ -313,7 +313,7 @@ export function Navbar() {
             {/* Thème : sur ordinateur ; sur tactile, un membre le trouve dans « Moi » */}
             <button
               onClick={toggleTheme}
-              aria-label={dark ? "Mode clair" : "Mode sombre"}
+              aria-label={dark ? t("common.aria.modeClair") : t("common.aria.modeSombre")}
               className={`${ICON_BUTTON} ${user ? "hidden lg:flex" : "hidden sm:flex"}`}
             >
               {dark ? <Sun className="h-[18px] w-[18px]" /> : <Moon className="h-[18px] w-[18px]" />}

@@ -4,6 +4,7 @@
 // seulement), plus les évènements de ses sections quand on est connecté.
 // Infos épinglées en tête, puis agenda par mois, passés derrière un lien.
 
+import { GuideLien } from "@/components/guide/GuideLien"
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { PageTitle } from "@/components/layout/PageTitle"
@@ -79,7 +80,12 @@ export function CalendrierClient() {
         </section>
       )}
 
-      {upcoming.length === 0 && <p className="text-sm text-muted-foreground">{t("evenements.none")}</p>}
+      {upcoming.length === 0 && (
+        <p className="text-sm text-muted-foreground">
+          {t("evenements.none")}
+          {user && creatableEvenementPours(user, profile, ANNONCE_SECTIONS).length > 0 && ` ${t("evenements.noneHint")}`}
+        </p>
+      )}
       {upcoming.map((g) => (
         <section key={g.key} className="space-y-2">
           <h2 className="text-sm font-semibold text-muted-foreground px-1 capitalize">{g.label}</h2>
@@ -101,6 +107,7 @@ export function CalendrierClient() {
           {t("evenements.loginHint")} <Link href="/login?from=%2Fevenements" className="font-semibold underline">{t("evenements.login")}</Link>
         </p>
       )}
+      <GuideLien section="evenements" />
     </div>
   )
 }

@@ -3,7 +3,7 @@ import { FieldValue } from "firebase-admin/firestore";
 import { adminDb, verifyIdToken } from "@/lib/push/admin";
 import { sendPushToUids } from "@/lib/push/send";
 import { recordNotification } from "@/lib/push/notifications";
-import { loadPlanningNameIndex, filterUidsByNotifPref } from "@/lib/push/recipients";
+import { loadPlanningNameIndex, filterUidsByNotifPref, loadNotifLangs } from "@/lib/push/recipients";
 import { loadPlanningData, servantsForDate } from "@/lib/planning/names";
 import { canEditSetlist, canSetPresentationLink } from "@/lib/access";
 import {
@@ -11,6 +11,7 @@ import {
   parsePresentationUrl,
   presentationNotifKey,
   presidentRecipients,
+  presentationMessage,
 } from "@/lib/setlist/presentationLink";
 import type { FSSetlist } from "@/lib/firebase/setlists";
 import type { UserProfile } from "@/types/user";
@@ -41,15 +42,16 @@ async function notifyPresident(
   }
   if (!fresh.length) return { notified: 0, linked };
   const p = author.profile;
-  const who = p?.planningName || [p?.firstName, p?.lastName].filter(Boolean).join(" ") || "La régie";
-  const payload = {
-    title: `Présentation prête — ${setlist.title || setlist.category}`,
-    body: `${who} a ajouté le lien de la présentation.`,
-    url: `/setlists/${setlist.id}`,
-    tag: key,
-  };
-  await sendPushToUids(fresh, payload);
-  await recordNotification({ ...payload, kind: "presentation", recipients: fresh });
+  const who = p?.planningName || [p?.firstName, p?.lastName].filter(Boolean).join(" ");
+  // Une fournée par langue (lot 8) : le président lit le message dans la sienne.
+  const langs = await loadNotifLangs(fresh);
+  for (const lang of ["fr", "zh-CN"] as const) {
+    const groupe = fresh.filter((u) => (langs.get(u) ?? "fr") === lang);
+    if (!groupe.length) continue;
+    const payload = { ...presentationMessage(setlist.title || setlist.category, who, lang), url: `/setlists/${setlist.id}`, tag: key };
+    await sendPushToUids(groupe, payload);
+    await recordNotification({ ...payload, kind: "presentation", recipients: groupe });
+  }
   const batch = db.batch();
   for (const u of fresh) batch.set(db.collection("notifLog").doc(`${key}-${u}`), { setlistId: setlist.id, uid: u, at: Date.now() });
   await batch.commit();

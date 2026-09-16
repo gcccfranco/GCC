@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { Trans, useTranslation } from "react-i18next";
 import Image from "next/image";
 import type { JianpuEntry } from "@/lib/jianpu/images";
 import { jianpuImageUrl, useJianpuChords } from "@/lib/jianpu/images";
@@ -136,6 +137,7 @@ type JianpuSheetProps = {
  *  PNG pré-rendu : 124 chants × 12 tonalités serait intenable, et la
  *  transposition doit rester instantanée. */
 export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey, capo = 0, pageIndex }: JianpuSheetProps) {
+  const { t } = useTranslation();
   const fit = layout === "fit";
   const chords = useJianpuChords(slug);
   // Une seule page en Mode Louange, tout le scan ailleurs. L'index d'origine
@@ -210,28 +212,25 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey, ca
     <div className={fit ? "flex h-full w-full flex-col items-center justify-center gap-2" : "flex flex-col items-center gap-6"}>
       {staleChords && (
         <div className="w-full max-w-2xl rounded-lg border border-amber-300/70 bg-amber-50/90 px-3 py-2 text-xs text-amber-900 dark:border-amber-700/50 dark:bg-amber-950/30 dark:text-amber-300">
-          <span className="font-semibold">Jouer en {playedKey}.</span>{" "}
-          Les chiffres du 简谱 restent justes dans toutes les tonalités, mais les
-          accords imprimés sur cette partition sont ceux d&apos;origine et ne
-          suivent pas la transposition.
+          <span className="font-semibold">{t("jianpu.jouerEn", { key: playedKey })}</span>{" "}
+          {t("jianpu.accordsOrigine")}
         </div>
       )}
 
       {partial && (
         <div className="w-full max-w-2xl rounded-lg border border-amber-300/70 bg-amber-50/90 px-3 py-2 text-xs text-amber-900 dark:border-amber-700/50 dark:bg-amber-950/30 dark:text-amber-300">
-          <span className="font-semibold">Jouer en {playedKey}.</span>{" "}
-          Seuls les accords{" "}
-          <span className="font-semibold text-blue-700 dark:text-blue-400">en bleu</span>{" "}
-          ont été transposés. Les autres sont ceux d&apos;origine
-          {chords?.printedKey ? ` (${chords.printedKey})` : ""}
-          {chords?.keyLabel ? "" : `, comme l’indication « 1=${chords?.printedKey} » en haut de page`}{" "}
-          et ne suivent pas la transposition — les chiffres, eux, restent justes.
+          <span className="font-semibold">{t("jianpu.jouerEn", { key: playedKey })}</span>{" "}
+          <Trans
+            i18nKey={chords?.keyLabel ? "jianpu.partiel" : "jianpu.partielIndication"}
+            values={{ key: chords?.printedKey ?? "" }}
+            components={{ bleu: <span className="font-semibold text-blue-700 dark:text-blue-400" /> }}
+          />
         </div>
       )}
 
       {selector && (
         <div className="flex w-full max-w-2xl items-center justify-center gap-2 text-xs">
-          <span className="text-neutral-500 dark:text-neutral-400">Accords :</span>
+          <span className="text-neutral-500 dark:text-neutral-400">{t("jianpu.accords")}</span>
           <div className="inline-flex overflow-hidden rounded-full border border-neutral-300 dark:border-neutral-700">
             {[false, true].map((v) => (
               <button
@@ -249,9 +248,9 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey, ca
               >
                 {v
                   ? altKeyName
-                    ? `${sounding} et ${altKeyName}`
-                    : "Toutes les tonalités"
-                  : `${sounding} seul`}
+                    ? t("jianpu.deuxTonalites", { a: sounding, b: altKeyName })
+                    : t("jianpu.toutesTonalites")
+                  : t("jianpu.seule", { key: sounding })}
               </button>
             ))}
           </div>

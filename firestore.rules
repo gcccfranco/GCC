@@ -292,6 +292,14 @@ service cloud.firestore {
       allow write: if signedIn() && request.auth.uid == uid;
     }
 
+    // Accueil de première connexion déjà vu (lot 8, docs/spec-nouveaux-membres.md) :
+    // doc auto-géré par l'intéressé (le profil users/{uid} est verrouillé).
+    // Miroir : src/lib/firebase/onboarding.ts (aucun droit dans access.ts, chacun
+    // n'écrit que le sien).
+    match /onboarding/{uid} {
+      allow read, write: if signedIn() && request.auth.uid == uid;
+    }
+
     match /config/app {
       // La page d'inscription lit registrationOpen sans être connectée
       allow read: if true;

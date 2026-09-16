@@ -61,7 +61,7 @@ export function MobileTabBar() {
       {/* Cale en flux : le contenu ne finit pas caché derrière la barre */}
       <div aria-hidden className="hide-on-desktop h-[calc(56px+env(safe-area-inset-bottom))] print:hidden" />
       <nav
-        aria-label="Navigation principale"
+        aria-label={t("common.aria.navigationPrincipale")}
         className={`hide-on-desktop print:hidden fixed bottom-0 inset-x-0 z-40 material-chrome border-t border-border pb-[env(safe-area-inset-bottom)] transition-transform duration-300 ${
           scrollVisible ? "translate-y-0" : "translate-y-full"
         }`}

@@ -10,7 +10,12 @@ import {
   ListMusic,
   ListPlus,
   CalendarDays,
-  Megaphone,
+  CalendarClock,
+  Ticket,
+  FileMusic,
+  PenLine,
+  ListChecks,
+  UserRound,
   Bell,
   AlertCircle,
   ShieldCheck,
@@ -21,17 +26,24 @@ import { RequireAuth } from "@/components/auth/RequireAuth";
 import { GuideFigure } from "@/components/guide/GuideFigure";
 import { FIGURES } from "@/lib/guide/figures";
 
+// Les ancres (#songs, #setlists, #planning, #evenements…) sont visées par les
+// liens « Comment ça marche ? » des pages (lot 8).
 const SECTIONS = [
   { key: "songs", Icon: Music },
   { key: "customize", Icon: SlidersHorizontal },
   { key: "performance", Icon: Pencil },
   { key: "setlists", Icon: ListMusic },
+  { key: "partitions", Icon: FileMusic },
+  { key: "maVersion", Icon: PenLine },
   { key: "compose", Icon: ListPlus },
   { key: "planning", Icon: CalendarDays },
-  { key: "annonces", Icon: Megaphone },
+  { key: "evenements", Icon: Ticket },
+  { key: "scene", Icon: CalendarClock },
+  { key: "taches", Icon: ListChecks },
   { key: "notifications", Icon: Bell },
   { key: "report", Icon: AlertCircle },
   { key: "roles", Icon: ShieldCheck },
+  { key: "moi", Icon: UserRound },
   { key: "account", Icon: UserCog },
 ] as const;
 

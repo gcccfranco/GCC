@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import Link from "next/link";
 import { AlertCircle, X, Send } from "lucide-react";
 import { useAuth } from "@/lib/firebase/auth";
@@ -22,6 +23,7 @@ interface ReportDialogProps {
  * connectés : enregistre le signalement (→ inbox /admin) et notifie les admins.
  */
 export function ReportDialog({ open, onClose, kind, songSlug, songTitle }: ReportDialogProps) {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [status, setStatus] = useState<"idle" | "loading" | "done" | "error">("idle");
 
@@ -64,12 +66,12 @@ export function ReportDialog({ open, onClose, kind, songSlug, songTitle }: Repor
         <div className="flex items-center justify-between px-4 py-3 border-b border-border">
           <div className="flex items-center gap-2">
             <AlertCircle className="h-4 w-4 text-muted-foreground" />
-            <h3 className="text-sm font-semibold text-foreground">Signaler un problème</h3>
+            <h3 className="text-sm font-semibold text-foreground">{t("signalement.titre")}</h3>
           </div>
           <button
             onClick={onClose}
             className="text-muted-foreground hover:text-foreground transition-colors"
-            aria-label="Fermer"
+            aria-label={t("signalement.fermer")}
           >
             <X className="h-4 w-4" />
           </button>
@@ -79,27 +81,27 @@ export function ReportDialog({ open, onClose, kind, songSlug, songTitle }: Repor
         {!user ? (
           <div className="px-4 py-6 space-y-3 text-center">
             <p className="text-sm text-muted-foreground">
-              Connecte-toi pour signaler un problème.
+              {t("signalement.connecte")}
             </p>
             <Link
               href="/login"
               className="inline-flex items-center justify-center px-4 py-1.5 text-sm font-medium rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
             >
-              Se connecter
+              {t("signalement.seConnecter")}
             </Link>
           </div>
         ) : status === "done" ? (
           <p className="px-4 py-6 text-sm text-muted-foreground flex items-center justify-center gap-1.5">
-            <span className="text-green-500">✓</span> Signalement envoyé, merci !
+            <span className="text-green-500">✓</span> {t("signalement.envoye")}
           </p>
         ) : (
           <form onSubmit={handleSubmit} className="px-4 py-4 space-y-3">
             <div className="space-y-1">
-              <label className="text-xs font-medium text-muted-foreground">Résumé</label>
+              <label className="text-xs font-medium text-muted-foreground">{t("signalement.resume")}</label>
               <input
                 name="title"
-                defaultValue={kind === "song" && songTitle ? `Problème avec : ${songTitle}` : ""}
-                placeholder={kind === "site" ? "Décris le problème en une phrase…" : undefined}
+                defaultValue={kind === "song" && songTitle ? t("signalement.resumeChant", { titre: songTitle }) : ""}
+                placeholder={kind === "site" ? t("signalement.resumePlaceholder") : undefined}
                 required
                 minLength={3}
                 maxLength={REPORT_LIMITS.title}
@@ -109,11 +111,11 @@ export function ReportDialog({ open, onClose, kind, songSlug, songTitle }: Repor
 
             <div className="space-y-1">
               <label className="text-xs font-medium text-muted-foreground">
-                Détails <span className="font-normal">(optionnel)</span>
+                {t("signalement.details")} <span className="font-normal">{t("signalement.optionnel")}</span>
               </label>
               <textarea
                 name="description"
-                placeholder="Décris le problème…"
+                placeholder={t("signalement.detailsPlaceholder")}
                 rows={3}
                 maxLength={REPORT_LIMITS.description}
                 className="w-full px-3 py-2.5 text-[16px] sm:text-sm border border-border rounded-lg bg-background text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-ring/30 resize-none"
@@ -121,7 +123,7 @@ export function ReportDialog({ open, onClose, kind, songSlug, songTitle }: Repor
             </div>
 
             {status === "error" && (
-              <p className="text-xs text-destructive">Échec de l&apos;envoi. Réessaie plus tard.</p>
+              <p className="text-xs text-destructive">{t("signalement.erreur")}</p>
             )}
 
             <div className="flex items-center justify-end gap-2 pt-1">
@@ -130,7 +132,7 @@ export function ReportDialog({ open, onClose, kind, songSlug, songTitle }: Repor
                 onClick={onClose}
                 className="px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
               >
-                Annuler
+                {t("signalement.annuler")}
               </button>
               <button
                 type="submit"
@@ -138,7 +140,7 @@ export function ReportDialog({ open, onClose, kind, songSlug, songTitle }: Repor
                 className="flex items-center gap-1.5 px-4 py-1.5 text-sm font-medium rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
               >
                 <Send className="h-3.5 w-3.5" />
-                {status === "loading" ? "Envoi…" : "Envoyer"}
+                {status === "loading" ? t("signalement.envoi") : t("signalement.envoyer")}
               </button>
             </div>
           </form>

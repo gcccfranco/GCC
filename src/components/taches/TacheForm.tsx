@@ -158,7 +158,7 @@ function Champs({ pole, initial, membres, onSubmit, onDelete, onClose }: Omit<Pa
             <option key={p} value={`pole:${p}`}>{t("taches.prevenirPole", { pole: t(`taches.pole.${p}`) })}</option>
           ))}
           {SERVICE_LIEUX.map((s) => (
-            <option key={s} value={`regie:${s}`}>{t("taches.prevenirRegie", { service: s })}</option>
+            <option key={s} value={`regie:${s}`}>{t("taches.prevenirRegie", { service: t(`categories.${s}`, { defaultValue: s }) })}</option>
           ))}
         </select>
       </div>

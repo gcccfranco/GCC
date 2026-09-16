@@ -10,6 +10,12 @@ async function copyFromPageTopToSongEnd(page: Page, slug: string) {
   await page.goto(`/songs/${encodeURIComponent(slug)}`);
   await page.locator("h1").first().waitFor();
   await page.locator("[data-copy-line]").first().waitFor();
+  // Le copieur de paroles s'abonne à « copy » au montage : copier avant que
+  // React ait hydraté la page donnerait la copie brute du navigateur.
+  await page.waitForFunction(() => {
+    const button = document.querySelector("button");
+    return !!button && Object.keys(button).some((k) => k.startsWith("__reactProps"));
+  });
   await page.evaluate(() => {
     const lines = document.querySelectorAll("[data-copy-line]");
     const r = document.createRange();

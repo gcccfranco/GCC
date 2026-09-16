@@ -1,5 +1,6 @@
 "use client";
 
+import { GuideLien } from "@/components/guide/GuideLien";
 import { useState, useMemo, useEffect, useLayoutEffect, useRef } from "react";
 import Link from "next/link";
 import Fuse from "fuse.js";
@@ -348,6 +349,8 @@ export function SongListClient({ songs, themes }: SongListClientProps) {
         </ul>
       )}
 
+      <GuideLien section="songs" />
+
       {/* Index A–Z (tri par titre, liste assez longue) : dans la gouttière,
           débordant sur la marge de page pour rester au bord de l'écran sur
           téléphone et collé à la liste sur ordinateur. On le balaye du doigt. */}
@@ -356,7 +359,7 @@ export function SongListClient({ songs, themes }: SongListClientProps) {
         // déjà à sa place collante avant le premier défilement.
         <div className="absolute -top-6 bottom-0 -right-4 w-11 flex justify-end pointer-events-none">
           <nav
-            aria-label="Index alphabétique"
+            aria-label={t("common.aria.indexAlphabetique")}
             onPointerDown={(e) => {
               e.currentTarget.setPointerCapture(e.pointerId);
               pressingRef.current = true;
@@ -393,7 +396,7 @@ export function SongListClient({ songs, themes }: SongListClientProps) {
               <button
                 key={letter}
                 onClick={() => scrollToLetter(slug)}
-                aria-label={`Aller à ${letter}`}
+                aria-label={t("common.aria.allerA", { lettre: letter })}
                 className={`w-8 flex-1 min-h-0 flex items-center justify-center text-[11px] font-bold transition-transform duration-100 hover:text-foreground active:text-foreground ${
                   i === activeIndex ? "text-foreground scale-125" : "text-muted-foreground"
                 }`}

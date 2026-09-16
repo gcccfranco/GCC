@@ -129,16 +129,6 @@ export const FIGURES: Record<string, GuideFigure[]> = {
       ],
     },
   ],
-  annonces: [
-    {
-      id: "annonces",
-      annotations: [
-        { kind: "circle", x: 51, y: 3.5, rx: 4.7, ry: 3.6 },
-        { kind: "label", x: 51, y: 9.2, labelId: "tab" },
-        { kind: "circle", x: 77.2, y: 12.5, rx: 8.6, ry: 4.3 },
-      ],
-    },
-  ],
   notifications: [
     {
       id: "notifications",

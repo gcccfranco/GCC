@@ -56,6 +56,14 @@
       "title": "Page introuvable",
       "body": "Cette page n'existe pas ou a été déplacée.",
       "cta": "Voir les chants"
+    },
+    "aria": {
+      "navigationPrincipale": "Navigation principale",
+      "sections": "Sections",
+      "modeClair": "Mode clair",
+      "modeSombre": "Mode sombre",
+      "indexAlphabetique": "Index alphabétique",
+      "allerA": "Aller à {{lettre}}"
     }
   },
   "songs": {
@@ -144,7 +152,8 @@
       "searchPlaceholder": "Rechercher par titre, leader, date…",
       "myServicesFilter": "Mes services",
       "mainMeetings": "Réunions principales",
-      "groupsLabel": "Groupes"
+      "groupsLabel": "Groupes",
+      "emptyUpcomingHint": "Les setlists de tes services apparaissent ici dès que la présidence les a préparées."
     },
     "detail": {
       "backToAll": "←",
@@ -282,7 +291,8 @@
       "transitionLabel": "Transition",
       "keyChangeHint": "La section s'affichera transposée dans cette tonalité (retape pour retirer).",
       "jianpuSheet": "简谱",
-      "jianpuSheetHint": "Jouer ce chant sur sa partition 简谱"
+      "jianpuSheetHint": "Jouer ce chant sur sa partition 简谱",
+      "transitionPlaceholder": "Texte de la transition…"
     },
     "history": {
       "heading": "Historique des modifications",
@@ -620,7 +630,7 @@
         "for": "Lecture pour tous · création selon tes droits",
         "body": "Une setlist regroupe les chants d'un culte ou d'une réunion. Tu vois celles des services auxquels ton profil donne accès.",
         "points": [
-          "Ouvre une setlist pour parcourir les chants, lancer le **Mode Louange** ou télécharger un **PDF unique** (page de garde + tous les chants à la suite).",
+          "Ouvre une setlist pour parcourir les chants, lancer le **Mode Louange** ou télécharger un **PDF** (voir « Vue partitions et coup d'œil »).",
           "Chaque chant garde sa tonalité, son mode (standard / Jianpu) et ses notes propres au culte.",
           "**Dupliquer** crée ta propre copie d'une setlist ; **Partager** copie son lien.",
           "Avec le rôle **musicien / présidence** (créer et modifier) ou **choriste** (créer), tu composes les setlists de tes services — voir « Composer une setlist » ci-dessous."
@@ -652,17 +662,6 @@
           "Quand une setlist existe pour un de tes services, un lien direct y mène.",
           "Les couleurs distinguent les types de service."
         ]
-      },
-      "annonces": {
-        "title": "Annonces",
-        "for": "Lecture pour tous · publication selon tes droits",
-        "body": "L'onglet **Annonces** rassemble les infos de l'équipe : répétitions, consignes, infos de groupe ou de classe EDD.",
-        "points": [
-          "Les annonces épinglées restent en haut ; les liens sont cliquables.",
-          "Elles sont classées par section (culte, groupe, EDD).",
-          "Si un responsable t'a donné le droit sur une section, tu peux y publier, modifier ou supprimer une annonce."
-        ],
-        "tip": "Une nouvelle annonce peut aussi déclencher une notification (voir ci-dessous)."
       },
       "notifications": {
         "title": "Notifications et rappels",
@@ -704,6 +703,74 @@
           "Le bouton **中文 / FR** change la langue de toute l'interface.",
           "Le bouton **lune / soleil** bascule entre thème clair et sombre.",
           "Une fois complété, le profil n'est modifiable que par un responsable : signale-lui toute erreur."
+        ]
+      },
+      "evenements": {
+        "title": "Évènements",
+        "for": "Lecture pour tous · création selon tes droits",
+        "body": "L'onglet **Évènements** rassemble le calendrier de l'église : sorties, cultes spéciaux et infos. Sans compte, on voit les évènements de toute l'église ; connecté, tu vois aussi ceux de ta section et de tes pôles.",
+        "points": [
+          "Ouvre un évènement pour voir le lieu, l'heure et les places restantes, puis **S'inscrire**, avec tes invités.",
+          "Les **infos** épinglées restent en tête du calendrier : elles remplacent les anciennes annonces.",
+          "Avec le droit d'annonces d'une section, ou dans un pôle, tu peux **créer** un évènement pour ta section ou une **réunion de pôle**.",
+          "Tu reçois un rappel la veille des évènements auxquels tu es inscrit."
+        ],
+        "tip": "L'organisateur retrouve la liste des inscrits et un **QR code** sur la fiche de l'évènement."
+      },
+      "scene": {
+        "title": "Programme de scène",
+        "for": "Membres connectés · ordre de passage tenu par la coordination",
+        "body": "Avant une grande fête (Noël), un onglet du programme apparaît dans **Évènements** pour réserver la scène le dimanche et préparer l'ordre de passage.",
+        "points": [
+          "**Entraînements** : choisis un dimanche, l'heure, quoi et qui ; un créneau qui en chevauche un autre est refusé.",
+          "Tu modifies ou retires tes créneaux ; la coordination peut tous les déplacer.",
+          "**Programme** : l'ordre de passage du jour J, tenu par la coordination.",
+          "Tes entraînements sont rappelés avec tes services."
+        ]
+      },
+      "partitions": {
+        "title": "Vue partitions et coup d'œil",
+        "for": "Musiciens, choristes, batteurs",
+        "body": "Dans une setlist, **Partitions** affiche tous les chants à la suite. En tête de chacun, un **bandeau** montre la structure en abrégé (I, C1, R, P…), la nuance sous chaque étape et les notes numérotées.",
+        "points": [
+          "Le menu **Affichage** choisit entre **Ordre joué**, **Sections uniques** (chaque section une seule fois, par défaut) et **Structure seule** (pour les batteurs).",
+          "La présidence peut ajouter une **Dernière phrase** (Dp) dans l'éditeur : elle s'affiche comme une vraie section.",
+          "**PDF** : choisis **Classique**, **Couleurs par section** ou **Compact** (le bandeau et chaque section une seule fois)."
+        ],
+        "tip": "Le réglage d'affichage est retenu sur ton appareil."
+      },
+      "maVersion": {
+        "title": "Ma version d'un chant",
+        "for": "Tous ceux qui voient la setlist",
+        "body": "Dans la vue partitions, tu peux te faire **ta version** d'un chant, pour cette setlist seulement : choisir les sections et leur ordre, retoucher accords et paroles. Rien ne change pour les autres.",
+        "points": [
+          "**Sections** : garde et range les sections qui te servent.",
+          "Touche une ligne pour retoucher ses accords ou ses paroles.",
+          "**Partager ma version** la propose aux autres sous ton nom ; chacun choisit la version qu'il suit.",
+          "Le Mode Louange suit la version que tu as choisie."
+        ],
+        "tip": "Le bandeau, le PDF et le lien de présentation restent sur la version de la présidence."
+      },
+      "taches": {
+        "title": "Tâches des pôles",
+        "for": "Membres des pôles DA, Média, Orga, Louange, Événement",
+        "body": "Chaque pôle suit ses tâches dans **Tâches** : qui fait quoi, pour quand. Tu ne vois que les tâches de tes pôles.",
+        "points": [
+          "Coche une tâche quand elle est faite ; si la tâche le prévoit, le pôle suivant ou la régie du dimanche est prévenu.",
+          "Une tâche peut revenir **chaque semaine**, **toutes les deux semaines** ou **chaque mois**.",
+          "Tu reçois un rappel 3 jours et 1 jour avant l'échéance, et le lendemain si elle n'est pas faite.",
+          "Les **réunions de pôle** se créent dans Évènements."
+        ],
+        "tip": "« Mes tâches », dans Moi, montre ce qui reste à faire pour toi."
+      },
+      "moi": {
+        "title": "Moi et réglages",
+        "for": "Tous les membres",
+        "body": "L'onglet **Moi** rassemble ce qui te concerne : tes services, tes tâches, ton profil, ce guide et les réglages.",
+        "points": [
+          "**Langue** : français ou 中文 ; les rappels arrivent dans la langue choisie.",
+          "**Thème** : clair ou sombre.",
+          "**Signaler un problème** envoie un message aux administrateurs."
         ]
       }
     },
@@ -762,11 +829,6 @@
           "tab": "Onglet Mes Services"
         }
       },
-      "annonces": {
-        "labels": {
-          "tab": "Onglet Annonces"
-        }
-      },
       "notifications": {
         "labels": {
           "toggle": "Interrupteur notifications"
@@ -782,7 +844,8 @@
           "planningName": "Nom de planning"
         }
       }
-    }
+    },
+    "commentCaMarche": "Comment ça marche ?"
   },
   "annonces": {
     "title": "Annonces",
@@ -1493,7 +1556,8 @@
     "voirInscrits": "Voir les inscrits ({{count}})",
     "masquerInscrits": "Masquer les inscrits",
     "lienFiche": "Lien de la fiche",
-    "pourPole": "Pôle {{pole}}"
+    "pourPole": "Pôle {{pole}}",
+    "noneHint": "Ajoute le prochain avec « Nouvel évènement »."
   },
   "moi": {
     "title": "Moi",
@@ -1582,5 +1646,104 @@
     "regiePrevenue": "Régie prévenue.",
     "polePrevenu": "Pôle {{pole}} prévenu.",
     "personnePrevenue": "Personne n'a été prévenu : aucune régie reliée à un compte."
+  },
+  "accueil": {
+    "nom": "Bienvenue dans GCC",
+    "passer": "Passer",
+    "suivant": "Suivant",
+    "retour": "Retour",
+    "commencer": "Commencer",
+    "etape": "Étape {{n}} sur {{total}}",
+    "bienvenue": {
+      "titre": "Bienvenue dans GCC",
+      "texte": "L'app de l'église : les chants et les setlists, le planning des services et les évènements."
+    },
+    "ou": {
+      "titre": "Où trouver quoi",
+      "chants": "Tous les chants, en français et en chinois, dans la tonalité de ton choix.",
+      "setlists": "Les chants prévus pour chaque culte, dans l'ordre.",
+      "planning": "Qui sert quel dimanche.",
+      "evenements": "Le calendrier de l'église et les inscriptions.",
+      "moi": "Tes services, ton profil et les réglages."
+    },
+    "presidence": {
+      "titre": "Préparer une setlist",
+      "texte": "Dans Setlists, crée la setlist de ton culte : les chants, l'ordre et les tonalités. L'équipe la retrouve aussitôt."
+    },
+    "musicien": {
+      "titre": "Répéter avant le dimanche",
+      "texte": "Ouvre la setlist de ton service. Le Mode Louange l'affiche en grand, chant après chant, pour jouer sans rien toucher."
+    },
+    "autre": {
+      "titre": "La vie de l'église",
+      "texte": "Le planning montre qui sert chaque dimanche. Dans Évènements, inscris-toi aux sorties et aux temps forts de l'église."
+    },
+    "notifs": {
+      "titre": "Ne rate pas ton service",
+      "texte": "Reçois un rappel avant chaque service, et les nouvelles de l'église.",
+      "activer": "Activer les notifications",
+      "actives": "Notifications activées.",
+      "iphone": "Sur iPhone, ajoute d'abord GCC à l'écran d'accueil (Partager, puis « Sur l'écran d'accueil »). Tu pourras ensuite les activer dans Moi.",
+      "erreur": "Les notifications n'ont pas pu être activées. Tu peux réessayer depuis Moi."
+    },
+    "fin": {
+      "titre": "C'est parti",
+      "texte": "Le guide explique chaque écran en détail. Tu le retrouves à tout moment dans Moi.",
+      "guide": "Ouvrir le guide"
+    }
+  },
+  "signalement": {
+    "titre": "Signaler un problème",
+    "fermer": "Fermer",
+    "connecte": "Connecte-toi pour signaler un problème.",
+    "seConnecter": "Se connecter",
+    "envoye": "Signalement envoyé, merci.",
+    "resume": "Résumé",
+    "resumeChant": "Problème avec : {{titre}}",
+    "resumePlaceholder": "Décris le problème en une phrase…",
+    "details": "Détails",
+    "optionnel": "(optionnel)",
+    "detailsPlaceholder": "Décris le problème…",
+    "erreur": "Échec de l'envoi. Réessaie plus tard.",
+    "annuler": "Annuler",
+    "envoi": "Envoi…",
+    "envoyer": "Envoyer"
+  },
+  "push": {
+    "error": "Une erreur est survenue",
+    "title": "Notifications",
+    "description": "Rappels avant un service (1 semaine puis 3 jours) et alerte quand une setlist est prête.",
+    "unsupported": "Cet appareil ou ce navigateur ne supporte pas les notifications.",
+    "iosInstall": "Sur iPhone ou iPad : ajoute d'abord le site à l'écran d'accueil (Partager, puis « Sur l'écran d'accueil »), puis ouvre-le depuis l'icône pour activer les notifications.",
+    "blocked": "Les notifications sont bloquées pour ce site dans ton navigateur. Pour les réactiver : clique sur l'icône à gauche de l'adresse, puis Notifications, Autoriser, et recharge la page.",
+    "promptTitle": "Active les rappels de service",
+    "promptText": "Reçois un rappel avant chaque service et une alerte quand une setlist est prête."
+  },
+  "proposition": {
+    "titre": "Proposer un nouveau chant",
+    "description": "Ta proposition est envoyée aux administrateurs, qui l'ajouteront au répertoire.",
+    "envoyee": "Merci. Ta proposition a bien été envoyée aux administrateurs.",
+    "nom": "Nom du chant",
+    "nomExemple": "ex. Tu es fidèle",
+    "youtube": "Lien YouTube",
+    "partition": "Lien de la partition PDF",
+    "partitionExemple": "https://… (Google Drive, etc.)",
+    "envoyer": "Envoyer aux admins",
+    "utilisateur": "Utilisateur",
+    "erreurNom": "Donne le nom du chant.",
+    "erreurYoutube": "Ajoute le lien YouTube du chant.",
+    "erreurYoutubeLien": "Le lien YouTube doit commencer par http:// ou https://",
+    "erreurPartitionLien": "Le lien de la partition doit commencer par http:// ou https://",
+    "erreurEnvoi": "Envoi impossible. Vérifie ta connexion et réessaie."
+  },
+  "jianpu": {
+    "jouerEn": "Jouer en {{key}}.",
+    "accordsOrigine": "Les chiffres du 简谱 restent justes dans toutes les tonalités, mais les accords imprimés sur cette partition sont ceux d'origine et ne suivent pas la transposition.",
+    "partiel": "Seuls les accords <bleu>en bleu</bleu> ont été transposés. Les autres sont ceux d'origine ({{key}}) et ne suivent pas la transposition ; les chiffres, eux, restent justes.",
+    "partielIndication": "Seuls les accords <bleu>en bleu</bleu> ont été transposés. Les autres sont ceux d'origine ({{key}}), comme l'indication « 1={{key}} » en haut de page, et ne suivent pas la transposition ; les chiffres, eux, restent justes.",
+    "accords": "Accords :",
+    "deuxTonalites": "{{a}} et {{b}}",
+    "toutesTonalites": "Toutes les tonalités",
+    "seule": "{{key}} seul"
   }
 }

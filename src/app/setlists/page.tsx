@@ -1,5 +1,6 @@
 "use client";
 
+import { GuideLien } from "@/components/guide/GuideLien";
 import { useEffect, useState, useMemo } from "react";
 import { ALL_CATEGORIES, getSetlists, getMySetlists, type FSSetlist } from "@/lib/firebase/setlists";
 import { useProfile } from "@/lib/firebase/users";
@@ -295,6 +296,9 @@ export default function SetlistsPage() {
         ) : displayed.length === 0 ? (
           <div className="text-center py-16 border border-dashed border-border rounded-xl space-y-3">
             <p className="text-sm text-muted-foreground">{emptyMessage}</p>
+            {tab === "upcoming" && !query && !canCreate && (
+              <p className="text-sm text-muted-foreground">{t("setlists.list.emptyUpcomingHint")}</p>
+            )}
             {tab === "upcoming" && !query && canCreate && (
               <Link
                 href="/setlists/new"
@@ -314,6 +318,7 @@ export default function SetlistsPage() {
             ))}
           </ul>
         )}
+        <GuideLien section="setlists" />
       </div>
     </div>
   );

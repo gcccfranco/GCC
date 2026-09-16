@@ -2,7 +2,8 @@ import { NextResponse, type NextRequest } from "next/server";
 import { adminDb, verifyIdToken } from "@/lib/push/admin";
 import { sendPushToUids } from "@/lib/push/send";
 import { recordNotification } from "@/lib/push/notifications";
-import { filterUidsByNotifPref, uidsForCategory } from "@/lib/push/recipients";
+import { filterUidsByNotifPref, loadNotifLangs, uidsForCategory } from "@/lib/push/recipients";
+import { nouvelEvenementMessage } from "@/lib/evenements/rappel";
 import { canCreateEvenement, canEditEvenement, poleDuPour } from "@/lib/access";
 import { membresDuPole } from "@/lib/taches/serveur";
 import type { Evenement } from "@/types/evenement";
@@ -52,15 +53,16 @@ export async function POST(req: NextRequest) {
       ? await membresDuPole(pole)
       : await uidsForCategory(e.pour);
   const uids = (await filterUidsByNotifPref(all, "evenements")).filter((u) => u !== user.uid);
-  const when = e.date ? ` — ${e.date.split("-").reverse().join("/")}${e.heure ? ` ${e.heure}` : ""}` : "";
-  const payload = {
-    title: e.type === "info" ? `Info — ${e.titre}` : `Évènement — ${e.titre}`,
-    body: `${e.lieu || e.description.slice(0, 80)}${when}`.trim() || e.titre,
-    url: `/evenements/${evenementId}`,
-    tag: `evenement-${evenementId}`,
-  };
-  const result = await sendPushToUids(uids, payload);
-  await recordNotification({ ...payload, kind: "evenement", recipients: uids });
+  // Une fournée par langue (lot 8) : chacun reçoit le message dans la sienne.
+  const langs = await loadNotifLangs(uids);
+  let result: Awaited<ReturnType<typeof sendPushToUids>> | undefined;
+  for (const lang of ["fr", "zh-CN"] as const) {
+    const groupe = uids.filter((u) => (langs.get(u) ?? "fr") === lang);
+    if (!groupe.length) continue;
+    const payload = { ...nouvelEvenementMessage(e, lang), url: `/evenements/${evenementId}`, tag: `evenement-${evenementId}` };
+    result = await sendPushToUids(groupe, payload);
+    await recordNotification({ ...payload, kind: "evenement", recipients: groupe });
+  }
   await logRef.set({ at: Date.now(), evenementId, pour: e.pour, recipients: uids.length });
   return NextResponse.json({ ok: true, ...result, sent: uids.length });
 }

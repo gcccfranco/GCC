@@ -171,3 +171,43 @@ npm test -- tests/nouveaux-membres.spec.ts   # PW_PORT=3000 si un next dev tourn
 npx tsc --noEmit
 npm run lint
 ```
+
+## Avancement
+
+**A1 à A4 codées le 17/09/2026** (go du 16/09/2026) ; **A5 (captures)
+attend la validation du look**. `tests/nouveaux-membres.spec.ts`, 16 tests
+× 3 appareils. Captures regardées : accueil (5 écrans) et écrans en 中文
+(accueil, Moi, Tâches, formulaire, chant) sur téléphone, tablette et
+ordinateur.
+
+| Tranche | Construit |
+| --- | --- |
+| A1 | `src/components/onboarding/Accueil.tsx` (monté dans `layout.tsx`), `src/lib/firebase/onboarding.ts` (`onboarding/{uid}` : `vu`, `le`), règle remise dans `firestore.rules`, libellés FR / 中文. Les faux comptes des tests ont l'accueil « déjà vu » par défaut (`accueil: true` pour un compte neuf). |
+| A2 | Guide : Annonces retirées ; Évènements, Programme de scène, Vue partitions et coup d'œil, Ma version d'un chant, Tâches des pôles, Moi et réglages ajoutés ; point PDF des setlists corrigé. `GuideLien` « Comment ça marche ? » en bas de Chants, Setlists, Planning, Évènements (connectés). Écrans vides : setlists à venir sans droit de création, évènements pour qui peut en créer. |
+| A3 | Traduits : fenêtre de signalement, invitation et réglage des notifications (6 clés `push.*` manquaient), proposition de chant, avertissements et sélecteur des partitions 简谱, libellés d'accessibilité (navigation, thème, index A–Z), service dans le formulaire de tâche. Serveur : notification au président et nouvel évènement dans la langue de chaque destinataire (rappels, conflits de scène et tâches l'étaient déjà). Test : en 中文, aucun texte français des fichiers de langue sur Moi, Tâches, Setlists, Évènements (contre-épreuve en français : le test échoue bien). |
+| A4 | Planche de relecture publiée : https://claude.ai/artifact/Hc57MjKz92W2KayepZYoth — 1 251 textes classés par écran, 180 marqués « nouveau » (écrits ou changés depuis `de882b7`), corrections enregistrées dans la base de la page (`corrections/…`), relues ensuite par Claude. |
+
+Écarts et précisions :
+
+- **Hypothèse 2 révisée** : si la lecture de `onboarding/{uid}` échoue pour
+  une autre raison qu'un document absent (règle pas encore publiée, réseau),
+  l'accueil **ne s'affiche pas** ; il n'apparaît donc qu'une fois la règle
+  publiée. Si l'écriture échoue, il ne revient pas de la session.
+- `PushPrompt` n'est monté que dans Mes services : pas de conflit avec
+  l'accueil, rien à masquer.
+- **Page Notifier et publication du planning non traduites** : la vision
+  (13/09/2026) les range parmi les pages d'administration (« admin,
+  notifier, questionnaire »), exclues par Q22.
+- Le bouton de langue de la barre garde son libellé dans la langue cible
+  (« Changer en français » / « 切换为中文 »), volontairement.
+- Relevé sans y toucher : sur téléphone, certains accords d'un chant chinois
+  passent à la ligne sous les paroles (rendu existant du chant).
+- Les tests du guide et des liens ont été écrits après le contenu : leur
+  échec n'a pas été observé.
+- `public/guide/annonces.png` n'est plus utilisée ; elle sera remplacée avec
+  les captures de A5.
+- Suite complète relancée le 17/09/2026 : 939 réussis, 8 ignorés (prévus),
+  1 échec intermittent sur tablette (`copy-lyrics`, « chant FR ») : le test
+  copiait avant l'hydratation de la page, donc avant que le copieur de
+  paroles s'abonne. Le test attend désormais l'hydratation (60 sur 60 en
+  répétition) ; l'app n'a pas changé.

@@ -15,6 +15,9 @@ export type FakeProfile = {
   poles?: string[];
   /** Sections où la personne publie des annonces (droit de créer des évènements pour sa section). */
   annonces?: string[];
+  /** Vrai = compte qui n'a pas encore vu l'accueil de première connexion (lot 8).
+   *  Par défaut l'accueil est déjà vu, pour ne pas masquer les pages testées. */
+  accueil?: boolean;
 };
 
 /** Document Firestore REST à partir d'un objet JS (miroir de toFsFields). */
@@ -238,6 +241,7 @@ export async function signInAs(
       notify: [],
       poles: profile.poles ?? [],
     },
+    ...(profile.accueil ? {} : { [`onboarding/${profile.uid}`]: { vu: true, le: "2026-09-01T10:00:00Z" } }),
     ...docs,
   });
 

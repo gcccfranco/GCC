@@ -1,4 +1,5 @@
 import { normalizeName, type Servant } from "@/lib/planning/names";
+import type { NotifLang } from "@/types/user";
 
 // Lien de la présentation (PPT) rangé dans la setlist par la régie.
 // Voir docs/spec-regie.md.
@@ -59,4 +60,12 @@ export function presentationNotifKey(setlistId: string, url: string): string {
     h = Math.imul(h, 0x01000193) >>> 0;
   }
   return `presentation-${setlistId}-${h.toString(16)}`;
+}
+
+/** Message « présentation prête » dans la langue du président (lot 8) ;
+ *  `who` vide = la régie. */
+export function presentationMessage(titre: string, who: string, lang: NotifLang): { title: string; body: string } {
+  return lang === "zh-CN"
+    ? { title: `演示文稿已就绪：${titre}`, body: `${who || "音控/投影"} 已添加演示文稿的链接。` }
+    : { title: `Présentation prête — ${titre}`, body: `${who || "La régie"} a ajouté le lien de la présentation.` };
 }

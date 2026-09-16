@@ -1,5 +1,6 @@
 "use client"
 
+import { GuideLien } from "@/components/guide/GuideLien"
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { useTranslation } from "react-i18next"
@@ -249,6 +250,7 @@ export default function PlanningAccueil() {
         </p>
         <footer className="text-xs font-semibold text-muted-foreground text-right">{t("planning.verse.ref")}</footer>
       </blockquote>
+      <GuideLien section="planning" />
     </div>
   )
 }
