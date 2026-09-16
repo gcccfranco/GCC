@@ -1500,5 +1500,18 @@
     "light": "浅色",
     "dark": "深色",
     "french": "Français"
+  },
+  "pdf": {
+    "choice": {
+      "title": "下载哪种 PDF？",
+      "classic": "经典",
+      "classicHelp": "常用的乐谱版式。",
+      "colors": "按段落着色",
+      "colorsHelp": "每个段落用自己的颜色框出，与屏幕显示一致。",
+      "compact": "紧凑",
+      "compactHelp": "先是结构条，每个段落只出现一次。",
+      "download": "下载",
+      "preparing": "正在生成…"
+    }
   }
 }

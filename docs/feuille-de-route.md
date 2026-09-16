@@ -51,9 +51,10 @@ nominatif.
 | 14/09/2026 | Lot 1a **Sainte cène** : index 11 lu, service dans Ce dimanche / onglet Culte / Mes services / rappels, visible si rempli (`spec-planning-petits-lots.md`) | `sheets.ts`, `names.ts`, `planning/page.tsx`, `planning/culte` | commité le 15/09/2026 ; à valider |
 | 14/09/2026 | Lot 1c **Rappels regroupés** : une notification par personne et par échéance, services + rôles, FR / 中文 (langue dans `notifPrefs/{uid}.lang`), répétition Campus fondue, une entrée de cloche par destinataire | `reminderMessage.ts`, `cron/reminders`, `notifPrefs.ts`, `recipients.ts`, navbar | commité le 15/09/2026 ; à valider (cron en ligne) |
 | 14/09/2026 | Lot 2 **Notification au président** : lien posé ou remplacé → push + cloche « Présentation prête » aux comptes au nom du président (sauf l'auteur), préférence « Setlist prête », anti-doublon par lien ; la régie voit « Président prévenu. » ou « aucun compte relié » (`spec-notif-president.md`) | `/api/setlist/presentation`, `presentationLink.ts`, `PresentationLink.tsx`, cloche | commité le 15/09/2026 ; à valider |
-| 15/09/2026 | Lot 4 **Nouveau look** T0–T6 : direction A « Réglages », vignettes teintées, rouge du logo sur les boutons pleins, police du système, navigation par sections (barre du bas Louange · Planning · Évènements · Moi, page « Moi », menu compte), grand titre, index A–Z en lettre agrandie (`spec-look.md`, « Avancement ») | tout le site : `globals.css`, `tailwind.config.ts`, `layout.tsx`, `Navbar`, `MobileTabBar`, `SectionTabs`, `PageTitle`, `Group`, `Tile`, `/moi`, listes, pages secondaires | non commité ; à valider en local |
-| 16/09/2026 | **Bug : le serveur local affichait l'ancien code.** Le service worker servait `/_next/static/*` en cache-first ; en production ces fichiers sont hashés, en développement non — la page arrivait à jour et le JavaScript venait du cache (barre du bas et look figés malgré les modifications). Corrigé : rien n'est mis en cache sur un serveur local, cache purgé à l'activation, `gcc-louange-v3` | `public/sw.js`, `tests/service-worker.spec.ts` (nouveau), `CLAUDE.md` | non commité |
-| 16/09/2026 | Lot 4 **retour tactile** : Timothée trouve l'usage moins bon sur téléphone et tablette ; audit avant/après (la seule régression : les setlists injoignables, Mes services à deux taps) → barre du bas **Chants · Setlists · Planning · Évènements · Moi** (Q9 révisée dans `spec-look.md`), pilules de section à 40 px, commandes du chant à 36 px, catégorie et présidence sur la ligne de setlist ; **QR code retiré de l'onglet Évènements** (gardé sur la fiche d'un évènement pour l'organisateur) ; sélecteur de tonalité du chant réduit à la tonalité quand il est fermé sur tactile (six commandes ne tenaient plus à 390 px) | `MobileTabBar`, `SectionTabs`, `SongDetailClient`, `SetlistCard`, `CalendrierClient`, tests `look-navigation`, `look-louange` et `evenements` | non commité ; à valider en local |
+| 15/09/2026 | Lot 4 **Nouveau look** T0–T6 : direction A « Réglages », vignettes teintées, rouge du logo sur les boutons pleins, police du système, navigation par sections (barre du bas Louange · Planning · Évènements · Moi, page « Moi », menu compte), grand titre, index A–Z en lettre agrandie (`spec-look.md`, « Avancement ») | tout le site : `globals.css`, `tailwind.config.ts`, `layout.tsx`, `Navbar`, `MobileTabBar`, `SectionTabs`, `PageTitle`, `Group`, `Tile`, `/moi`, listes, pages secondaires | commité le 16/09/2026 (`de882b7`) ; à valider en local |
+| 16/09/2026 | **Bug : le serveur local affichait l'ancien code.** Le service worker servait `/_next/static/*` en cache-first ; en production ces fichiers sont hashés, en développement non — la page arrivait à jour et le JavaScript venait du cache (barre du bas et look figés malgré les modifications). Corrigé : rien n'est mis en cache sur un serveur local, cache purgé à l'activation, `gcc-louange-v3` | `public/sw.js`, `tests/service-worker.spec.ts` (nouveau), `CLAUDE.md` | commité le 16/09/2026 (`de882b7`) |
+| 16/09/2026 | Lot 4 **retour tactile** : Timothée trouve l'usage moins bon sur téléphone et tablette ; audit avant/après (la seule régression : les setlists injoignables, Mes services à deux taps) → barre du bas **Chants · Setlists · Planning · Évènements · Moi** (Q9 révisée dans `spec-look.md`), pilules de section à 40 px, commandes du chant à 36 px, catégorie et présidence sur la ligne de setlist ; **QR code retiré de l'onglet Évènements** (gardé sur la fiche d'un évènement pour l'organisateur) ; sélecteur de tonalité du chant réduit à la tonalité quand il est fermé sur tactile (six commandes ne tenaient plus à 390 px) | `MobileTabBar`, `SectionTabs`, `SongDetailClient`, `SetlistCard`, `CalendrierClient`, tests `look-navigation`, `look-louange` et `evenements` | commité le 16/09/2026 (`de882b7`) ; à valider en local |
+| 16/09/2026 | Lot 5 **Export PDF** P1–P3 : fenêtre « Quel PDF ? » (dernier choix par appareil), nuancier gris dans tous les PDF, couleurs par section comme l'écran (cadre fin, accords noirs), compact de la setlist (bandeau + sections uniques, un chant par page, bandeau au-dessus des scans, transition en bas de page) (`spec-export-pdf.md`, « Avancement ») | `PdfChoiceSheet`, `pdfStylePref`, `lib/pdf/colors` et `compact`, `StructureStripPDF`, `SongPDF`, `SetlistFullPDF`, pages chant et setlist | commité le 16/09/2026 ; à valider en local |
 | 14/09/2026 | Lot 3 **Coup d'œil** S1–S3 : bandeau abrégé + nuances, menu « Affichage » (ordre joué / sections uniques / structure seule, par appareil, batteur → structure), sommaire par occurrence, « Dernière phrase » dans l'éditeur (section du chant adapté, badge masqué, historique) (`spec-coup-d-oeil.md`) | `SongView.tsx`, `PartitionView.tsx`, `SetlistOutline.tsx`, `SetlistFormRows.tsx`, `LastPhraseSheet.tsx`, `lastPhrase.ts`, `uniqueSections.ts`, `partitionLayoutPref.ts` | commité le 15/09/2026 ; à valider, résultat à montrer à Christelle |
 
 ## 2. À construire, dans l'ordre validé le 14/09/2026
@@ -71,11 +72,11 @@ s'affiche), un commit par lot, sur demande.
 | 3 bis | **Programmes de scène, onglet « Noël »** — **codé dans la nuit du 14 au 15/09/2026**, refait en onglet unique le 15/09 (`spec-programme-scene.md`), 27 tests × 3 appareils, non commité, à valider ; vit dans la nouvelle **section « Évènements »** (tranché le 15/09/2026) | Un onglet par programme (nom, jour J 24/12/2026, réservations d'octobre au 20/12), affiché ou masqué par la coordination (rôle « événement » = Alice, + admins) ; volet **Entraînements** = dimanches (« Scène libre » si vide), créneaux 17:00–18:00 par défaut, Quoi / Qui en dur, refus des chevauchements + alerte des deux auteurs si un conflit passe ; volet **« Programme Noël »** = ordre de passage numéroté, à la main ; rappels fondus dans ceux du lot 1c ; après le 20/12 le programme seul | `planning/programme/[id]`, `planning/programmes`, `PlanningTabs`, `access.ts` + `firestore.rules`, `api/scene/conflit`, cron `reminders`, admin (pôle) | M |
 | 3 ter | **Version perso d'un chant dans une setlist** (Timothée, 14/09/2026 soir) — **spec `spec-version-perso.md` tranchée le 14/09/2026 soir (position 3 ter, une retouche d'une section répétée touche toutes ses répétitions en V1, libellés), go donné le soir même, V1 + V2 + V3 codées le 15/09/2026 (18 tests × 3 appareils), à valider en local ; `firestore.rules` à publier** | Chaque musicien se fait **sa version** d'un chant de la setlist : sections choisies et ordonnées (C R P une fois chacune), accords et paroles retouchés, pour lui seul, **dans cette setlist seulement**, sans toucher la structure ni la version de la présidence (liste, bandeau, PDF, lien de présentation, copie des paroles inchangés) ; ses accords et paroles peuvent être **partagés sous son nom** (« Version de Christelle ») et choisis par les autres, chacun gardant son choix ; la structure perso ne se partage jamais ; le mode louange suit la version choisie et ma structure ; « Adapter » reste l'outil de la présidence. Trois tranches : V1 accords et paroles, V2 structure, V3 partage et sélecteur | sous-collection `setlists/{id}/versions/{uid}` + `firestore.rules` + `access.ts` (en double), `SetlistDetailClient.tsx`, `PartitionView.tsx`, `blocks.ts`, `PerformanceMode.tsx`, `SectionStructureEditor` réutilisé | M |
 | 4 | **Nouveau look** (chantier 5) | Direction visuelle à rechoisir (sobre, moins fade, moins « document ») ; **nom « GCC »**, menu par sections ; toutes les pages, mis en ligne d'un bloc ; pages d'administration au nouveau style sans réorganisation — **planche du 15/09/2026** : trois directions (A Réglages, B Musique, C Crème relevée), fondations communes et sept décisions dans `spec-look.md`, planche https://claude.ai/artifact/3AXs4eYYCedEAYa8bgW8zL ; **tout tranché le 15/09/2026 au soir** (A Réglages, vignettes teintées, accent rouge du logo réservé aux boutons pleins, police système, onglets Louange · Planning · Évènements · Moi, page « Moi », grand titre replié, sombre noir pur, pilule d'outils du chant : détail `spec-look.md` § « Ce qui est construit », plan `tasks/plan.md`, six tranches T1–T6) ; **go donné le 15/09/2026 au soir, T0–T6 codées le jour même, à valider en local** (voir § 1) | tout le site ; `docs/audit-ui-apple-design.md` | L |
-| 5 | **Export PDF** (chantier 6) | Choix au téléchargement : **classique / couleurs par section / compact** (bandeau + sections uniques) ; pour un chant et pour la setlist. La « demande via GCC » de Christelle = couleurs par section | `SongPDF.tsx`, `SetlistFullPDF.tsx` | M |
+| 5 | **Export PDF** (chantier 6) — **spec `spec-export-pdf.md` écrite le 16/09/2026 après entretien (§ 3.N), go donné et codé le jour même (§ 1)** | Choix au téléchargement : **classique / couleurs par section / compact** (bandeau + sections uniques) ; pour un chant et pour la setlist. La « demande via GCC » de Christelle = couleurs par section | `SongPDF.tsx`, `SetlistFullPDF.tsx` | M |
 | 6 | **Évènements** (nouveau module) — **spec écrite le 15/09/2026 (`spec-evenements.md`), 19 questions tranchées, **go donné le 15/09/2026, codé le jour même** (36 tests × 3, suite 663 verte), non commité, à valider** | Calendrier public (agenda par mois, rien de nominatif), fiche complète (titre, type sport / loisir / musique / église / info, pour toute l'église ou une section, dates, lieu, description, liens, images, places, contact), créée par la coordination ou par les détenteurs du droit d'annonces pour leur section ; **inscription avec compte + invités** (nombre), sans compte au choix de l'organisateur (nom + invités, via le serveur), « Complet » sans liste d'attente ; **évènements annuels** dupliqués à la main ; **QR code** (bibliothèque `qrcode`) ; push à la création + rappel la veille aux inscrits, préférence « Évènements » ; **annonces fusionnées** (type info épinglé, migration par bouton admin, badge transféré, entrée Annonces retirée) | section `/evenements` (public), `/evenements/[id]`, `/evenements/scene`, routes `api/evenements/*`, `notify-evenement`, cron, admin, `access.ts` + `firestore.rules` | L |
 | 6 bis | **Look de l'onglet Évènements** (maquette de Timothée, 16/09/2026 : liste avec état d'inscription, fiche avec bannière et bouton plein, vue organisateur avec panneau des inscriptions, formulaire réordonné) — **spec écrite puis go le 16/09/2026** (`spec-evenements-look.md`, quatre recommandations retenues) ; **L1–L6 codées le 16/09/2026** (L6 : même carte blanche sur ordinateur, téléphone et tablette), non commité, à valider en local | `EvenementCard`, `EvenementClient`, `Inscriptions`, `EvenementForm` ; aucun champ nouveau | M |
-| 7 | **Tâches par pôle** (nouveau module) | Pôles : **DA, Média, Orga, Louange, Événement**. Tâche = pôle, responsable, échéance, état, lien (fond Canva…) ; **rappel d'échéance** via le cron quotidien ; **chaîne** : tâche marquée faite → le pôle suivant est notifié (DA → régie). Cadré par un entretien à part | nouveau module | L |
-| 8 | **Nouveaux membres et 中文** (chantier 7) | Accueil à la première connexion (nouveau style), guide plus visible, textes restés en français ; d'autant plus utile que l'assemblée entière arrive | onboarding, `/guide`, locales | M |
+| 7 | **Tâches par pôle** (nouveau module) — **spec `spec-taches.md` écrite le 16/09/2026 après entretien (§ 3.N), go donné le jour même** | Pôles : **DA, Média, Orga, Louange, Événement**. Tâche = pôle, responsable, échéance, état, lien (fond Canva…) ; **rappel d'échéance** via le cron quotidien ; **chaîne** : tâche marquée faite → le pôle suivant est notifié (DA → régie). Cadré par un entretien à part | nouveau module | L |
+| 8 | **Nouveaux membres et 中文** (chantier 7) — **spec `spec-nouveaux-membres.md` écrite le 16/09/2026 après entretien (§ 3.N), go donné le jour même** | Accueil à la première connexion (nouveau style), guide plus visible, textes restés en français ; d'autant plus utile que l'assemblée entière arrive | onboarding, `/guide`, locales | M |
 
 Toujours vrai : **capo conseillé en stand-by** ; **index A–Z balayable** : le
 balayage est codé et commité depuis `b395745` (14/09/2026), revérifié le
@@ -430,6 +431,51 @@ admin ; annuels dupliqués à la main ; QR code par bibliothèque ; organisateur
 section ; dates de fin facultatives ; passés sur trois mois ; barre du bas
 inchangée. **Go pas encore donné.**
 
+### N. Lots 5, 7 et 8 — entretien du 16/09/2026 → trois specs
+
+**Déclencheur** : Timothée, 16/09/2026 : « Fait le 5, 7 et 8 », puis « si
+besoin pose-moi des questions avec le skill grill me pour que ce soit plus
+précis sur les specs ». Aucune spec n'existait : lu comme le départ des
+specs, pas comme un go de code (règle du go par lot, § « Mode de travail »). Deux tours (Q1–Q23
+puis Q24–Q33), **toutes les recommandations acceptées**.
+
+- **Lot 5** (`spec-export-pdf.md`) : fenêtre « Quel PDF ? » (chant : Classique ·
+  Couleurs par section ; setlist en vue partitions : + Compact), dernier choix
+  retenu par appareil ; nuancier gris aussi dans le classique (constat 20) ;
+  couleurs par section = comme l'écran ; compact = « Sections uniques »
+  imprimé, en couleurs, un chant par page, bandeau au-dessus des scans ; pas
+  de PDF « structure seule ». **Écart relevé en écrivant la spec** : l'écran
+  « couleurs par section » est un cadre fin sans fond, accords en noir — pas
+  l'encadré teinté décrit en Q3 ; la spec suit l'écran, à confirmer.
+- **Lot 7** (`spec-taches.md`) : pôles DA, Média, Orga, Événement cochés par
+  un admin, Louange = avoir un rôle de service ; tâche = titre, pôle,
+  responsable facultatif, échéance (jour), faite / à faire, lien, note,
+  « prévenir » ; répétition semaine / deux semaines / mois, une fois ratée
+  disparaît quand la suivante arrive ; tous les connectés voient, les membres
+  du pôle agissent ; **cible « régie » (constat 12) = la régie du service
+  choisi le dimanche qui suit l'échéance, d'après le planning** ; rappels J-3,
+  J-1, lendemain, dans la notification du jour ; « Nouvelle tâche » au
+  responsable ; réunions = évènements réservés au pôle, sans inscription,
+  rappel la veille au pôle ; « Mes tâches » dans Moi, entrée « Tâches » sur
+  ordinateur, pas de sixième onglet.
+- **Lot 8** (`spec-nouveaux-membres.md`) : accueil de 5 écrans (bienvenue,
+  onglets, rôle, notifications, guide), vu une fois par compte, tous les
+  comptes ; guide mis à jour (Évènements, scène, version perso, coup d'œil,
+  Moi ; Annonces retirées), liens « Comment ça marche ? », écrans vides qui
+  disent quoi faire ; captures sur téléphone **après validation du look** ;
+  tout traduit sauf l'administration ; planche de relecture pour un
+  sinophone (nom à donner).
+- **Organisation** : le look est commité avant (`de882b7`) pour garder un
+  commit par lot ; ordre 5 → 7 → 8.
+- **Remise des specs (16/09/2026)** : Q3 « identique à l'écran » confirmé
+  (cadre fin, accords noirs) ; lot 7 : « une personne qui n'est pas connectée
+  ou qui n'est pas dans un pôle ne voit pas les tâches des pôles », puis
+  **chacun voit les tâches de ses pôles** (admins : tout), filtrage côté
+  serveur ; lot 8 : messages push du serveur dans la langue du destinataire ;
+  **Timothée relit lui-même le 中文**. **Go : « Go pour tous les lots 5, 7
+  et 8 »** → codés à la suite, un commit par lot, testés par Timothée
+  ensuite.
+
 ## 4. Carte des modules de l'app « GCC »
 
 À valider par Timothée avant toute spec de module (les modules existants ne
@@ -573,6 +619,12 @@ porte le nom « GCC » et le menu par sections dont ces modules ont besoin.
   ligne « à caser tôt » corrigée (balayage déjà livré le 14/09), petit lot de
   finition proposé avant le look (D7).
 
+- 16/09/2026 : commit du look et du travail non commité (`de882b7`, lot 4
+  T0–T7, lot 6 bis, service worker) à la demande de Timothée (Q32), avant les
+  lots 5, 7 et 8 ; `tsc` et lint propres, suite Playwright non relancée pour
+  ce commit. Entretien des lots 5, 7 et 8 (§ 3.N), trois specs écrites ;
+  réponses de Timothée à la remise, **go pour les trois lots**.
+
 ## 7. Relecture adversariale (14/09/2026)
 
 Relecteur à contexte vierge (skill `doubt-driven-development`), chargé de
@@ -596,7 +648,7 @@ contre le code. Classement : **agir** (le plan change), **arbitrer**
 | 9 | Pastille « Sainte Cène » calculée (premier dimanche) vs colonne du Sheet. | compromis | Deux informations différentes (le dimanche de cène ; la personne qui aide) : la pastille reste, le nom s'affiche dès que la case est remplie, quel que soit le dimanche. | 1a |
 | 10 | `fetchSheet` ne lit qu'un onglet du fichier fixe ; cache keyé par nom d'onglet. | agir | `fetchSheet(fileId, tab)` avec cache `${fileId}/${tab}` ; second identifiant en constante ; la colonne R de `Franco_Table_PtD` est explicitement ignorée. | 1b |
 | 11 | Le rappel « Répétition Campus » reste une 2ᵉ notification ; `servantsForDate` donne un rôle technique, pas « Piano ». | agir | Corps construit par `findMyServices` (libellés « Piano », « Guitare »…), répétition Campus fondue dans le même message ; services Campus toujours exclus des rappels (règle conservée). | 1c |
-| 12 | Rôle « événement », pôle « Événement », pôle « Louange » vs `serviceRoles` / `annonces` / `notify` : plusieurs représentations d'un même droit ; cible « régie » de la chaîne DA → régie non définie. | arbitrer (plus tard) | Un seul champ `poles` fixé dans la carte des modules avant le lot 6 ; « Louange » dérivé de `serviceRoles` ; cible « régie » à définir à l'entretien du lot 7. | 6–7 |
+| 12 | Rôle « événement », pôle « Événement », pôle « Louange » vs `serviceRoles` / `annonces` / `notify` : plusieurs représentations d'un même droit ; cible « régie » de la chaîne DA → régie non définie. | arbitrer (plus tard) | Un seul champ `poles` fixé dans la carte des modules avant le lot 6 ; « Louange » dérivé de `serviceRoles` ; cible « régie » **tranchée le 16/09/2026** : la régie du dimanche d'après le planning (`spec-taches.md`). | 6–7 |
 | 13 | Évènements « église » publics vs annonces (texte, section, épinglé) vs planning (dimanches spéciaux, réservé aux connectés) : trois canaux pour une même date. | arbitrer | **Tranché** : les annonces fusionnent dans le calendrier (page Annonces supprimée, annonce sans date = entrée épinglée) ; migration au lot 6. | 6 |
 | 14 | Inscriptions sans compte et places max : écritures anonymes et comptage concurrent. | agir | Lot 6 : inscriptions via route serveur (Admin SDK), comptage transactionnel, `events` en lecture publique, protection contre l'abus. | 6 |
 | 15 | Nouveaux envois automatiques (échéances, chaîne, évènements) sans type de préférence. | agir | `NOTIF_TYPES` gagne `evenements` et `taches`, filtrés comme les autres. | 6–7 |

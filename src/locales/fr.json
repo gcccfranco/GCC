@@ -1500,5 +1500,18 @@
     "light": "Clair",
     "dark": "Sombre",
     "french": "Français"
+  },
+  "pdf": {
+    "choice": {
+      "title": "Quel PDF ?",
+      "classic": "Classique",
+      "classicHelp": "La partition habituelle.",
+      "colors": "Couleurs par section",
+      "colorsHelp": "Chaque section dans un cadre à sa couleur, comme à l'écran.",
+      "compact": "Compact",
+      "compactHelp": "Le bandeau de structure, puis chaque section une seule fois.",
+      "download": "Télécharger",
+      "preparing": "Préparation…"
+    }
   }
 }

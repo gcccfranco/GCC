@@ -58,6 +58,3 @@ export function nuanceDef(id: string): NuanceDef | undefined {
 export function nuanceFull(id: string): string {
   return NUANCE_BY_ID[id]?.full ?? nuanceLabel(id);
 }
-
-/** Couleur du badge de nuance (hex pour le PDF ; côté web on utilise violet-*). */
-export const NUANCE_COLOR = "#7C3AED";

@@ -53,6 +53,8 @@ import { getJianpuPref, setJianpuPref, sheetEnabled, type JianpuPref } from "@/l
 import { fetchSongAST, type SongContent} from "@/lib/api/songs";
 import { PerformanceMode } from "@/components/performance/PerformanceMode";
 import { EditLineSheet, type EditLineTarget } from "@/components/setlists/EditLineSheet";
+import { PdfChoiceSheet } from "@/components/pdf/PdfChoiceSheet";
+import { pdfFileName, type PdfStyle } from "@/lib/pdfStylePref";
 import { itemAst } from "@/lib/chordpro/itemContent";
 import { semitonesTo } from "@/lib/transpose";
 import {
@@ -128,6 +130,7 @@ export function SetlistDetailClient() {
   const [deleting, setDeleting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [downloading, setDownloading] = useState(false);
+  const [showPdfChoice, setShowPdfChoice] = useState(false);
   const [performanceMode, setPerformanceMode] = useState(false);
   const [duplicating, setDuplicating] = useState(false);
   const [shareFeedback, setShareFeedback] = useState<string | null>(null);
@@ -259,7 +262,7 @@ export function SetlistDetailClient() {
     if (setlist) loadContents(setlist.items);
   }
 
-  async function handleDownload() {
+  async function handleDownload(style: PdfStyle = "classic") {
     if (!setlist) return;
     setDownloading(true);
     try {
@@ -323,12 +326,14 @@ export function SetlistDetailClient() {
             jianpuChords={sheetChords}
             jianpuImages={sheetImages}
             jianpuPref={jianpuPref}
+            sectionStyle={style === "classic" ? "classic" : "colors"}
+            layout={style === "compact" ? "unique" : "played"}
           />
         ).toBlob();
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `${setlist.title}-partitions.pdf`;
+        a.download = pdfFileName(setlist.title, style, "partitions");
         a.click();
         URL.revokeObjectURL(url);
       }
@@ -1038,7 +1043,11 @@ export function SetlistDetailClient() {
                     <Share2 className="h-3.5 w-3.5 text-muted-foreground" />
                     {t("setlists.detail.share")}
                   </DropdownMenuItem>
-                  <DropdownMenuItem disabled={downloading} onClick={() => handleDownload()}>
+                  <DropdownMenuItem
+                    disabled={downloading}
+                    // Vue liste : le PDF liste, sans choix ; vue partitions : « Quel PDF ? ».
+                    onClick={() => (view === "liste" ? handleDownload() : setShowPdfChoice(true))}
+                  >
                     <Download className="h-3.5 w-3.5 text-muted-foreground" />
                     {downloading ? "…" : t("songs.detail.downloadPdf")}
                   </DropdownMenuItem>
@@ -1171,6 +1180,13 @@ export function SetlistDetailClient() {
       </div>
 
       {/* Confirmation de suppression */}
+      <PdfChoiceSheet
+        open={showPdfChoice}
+        onClose={() => setShowPdfChoice(false)}
+        forSetlist
+        onDownload={handleDownload}
+      />
+
       <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
         <AlertDialogContent>
           <AlertDialogHeader>

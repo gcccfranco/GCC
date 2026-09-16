@@ -30,6 +30,8 @@ import { useSearchParams } from "next/navigation";
 import type { SectionItem } from "@/types/song";
 import type { SectionNuance } from "@/types/setList";
 import { ReportDialog } from "@/components/report/ReportDialog";
+import { PdfChoiceSheet } from "@/components/pdf/PdfChoiceSheet";
+import { pdfFileName, type PdfStyle } from "@/lib/pdfStylePref";
 
 interface SongDetailClientProps {
   song: Song;
@@ -78,6 +80,7 @@ function safeParseParam<T>(raw: string | null, fallback: T): T {
     const [downloading, setDownloading] = useState(false);
     const [backPath, setBackPath] = useState("/songs");
     const [showReport, setShowReport] = useState(false);
+    const [showPdfChoice, setShowPdfChoice] = useState(false);
     const searchParams = useSearchParams();
     useEffect(() => {
       const saved = sessionStorage.getItem("lastListPath");
@@ -200,7 +203,7 @@ function safeParseParam<T>(raw: string | null, fallback: T): T {
       setChartStylePref(v);
     };
 
-    async function handleDownload() {
+    async function handleDownload(style: PdfStyle) {
       setDownloading(true);
       try {
         // Chargés à la demande : @react-pdf/renderer est lourd et ne doit pas
@@ -219,12 +222,13 @@ function safeParseParam<T>(raw: string | null, fallback: T): T {
             sectionNotes={sectionsNote}
             sectionNuances={sectionsNuance}
             language={i18n.language}
+            sectionStyle={style === "colors" ? "colors" : "classic"}
           />
         ).toBlob();
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `${song.slug}-${customize.currentKey}.pdf`;
+        a.download = pdfFileName(`${song.slug}-${customize.currentKey}`, style);
         a.click();
         URL.revokeObjectURL(url);
       } finally {
@@ -444,7 +448,7 @@ function safeParseParam<T>(raw: string | null, fallback: T): T {
                     <Settings className="h-3.5 w-3.5 text-muted-foreground" />
                     {t("songs.detail.customize")}
                   </DropdownMenuItem>
-                  <DropdownMenuItem disabled={downloading} onClick={() => handleDownload()}>
+                  <DropdownMenuItem disabled={downloading} onClick={() => setShowPdfChoice(true)}>
                     <Download className="h-3.5 w-3.5 text-muted-foreground" />
                     {downloading ? "…" : t("songs.detail.downloadPdf") || "PDF"}
                   </DropdownMenuItem>
@@ -519,6 +523,12 @@ function safeParseParam<T>(raw: string | null, fallback: T): T {
           />
         )}
         
+        <PdfChoiceSheet
+          open={showPdfChoice}
+          onClose={() => setShowPdfChoice(false)}
+          forSetlist={false}
+          onDownload={handleDownload}
+        />
         {/* Signalement */}
         <ReportDialog
           open={showReport}
