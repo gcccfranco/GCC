@@ -46,6 +46,19 @@ export function echeancesDe(t: Pick<Tache, "echeance" | "repetition">, from: str
     }
     return out;
   }
+  if (rythme === "an") {
+    // Même mois, même quantième, chaque année. `Date.UTC(2027, 1, 29)` déborde
+    // sur le 1er mars : on borne au dernier jour du mois (29/02 → 28/02). Le
+    // calcul repart toujours de `echeance`, jamais de l'année d'avant.
+    const [an0, mois, jour] = t.echeance.split("-").map(Number);
+    for (let y = an0; ; y++) {
+      const dernier = new Date(Date.UTC(y, mois, 0)).getUTCDate();
+      const d = `${y}-${String(mois).padStart(2, "0")}-${String(Math.min(jour, dernier)).padStart(2, "0")}`;
+      if (d > to) break;
+      if (d >= start) out.push(d);
+    }
+    return out;
+  }
   const step = rythme === "semaine" ? 7 : 14;
   const skip = Math.max(0, Math.ceil((toUtc(start) - toUtc(t.echeance)) / DAY / step));
   for (let d = addDays(t.echeance, skip * step); d <= to; d = addDays(d, step)) out.push(d);
@@ -62,15 +75,18 @@ export type Ligne = { tache: Tache; date: string; fois: Fois | null };
 export function lignesDeTache(t: Tache, fois: Fois[], today: string): Ligne[] {
   const done = new Map(fois.map((f) => [f.date, f]));
   const out: Ligne[] = fois
-    .filter((f) => f.le.slice(0, 10) >= addDays(today, -30))
+    .filter((f) => f.etat === "encours" || f.le.slice(0, 10) >= addDays(today, -30))
     .map((f) => ({ tache: t, date: f.date, fois: f }));
   const horizon = addDays(today, 7);
   if (!t.repetition) {
     if (!done.has(t.echeance)) out.push({ tache: t, date: t.echeance, fois: null });
   } else {
-    for (const d of echeancesDe(t, addDays(today, -62), horizon)) {
+    // Une fois annuelle oubliée n'est remplacée qu'un an plus tard : sans ce
+    // recul, elle sortirait de la page au bout de deux mois (lot 13).
+    const recul = t.repetition.rythme === "an" ? 400 : 62;
+    for (const d of echeancesDe(t, addDays(today, -recul), horizon)) {
       if (done.has(d)) continue;
-      const next = echeancesDe(t, addDays(d, 1), addDays(d, 70))[0];
+      const next = echeancesDe(t, addDays(d, 1), addDays(d, recul + 8))[0];
       const visible = d >= today || today <= addDays(d, 1) || !next || next > horizon;
       if (visible) out.push({ tache: t, date: d, fois: null });
     }
@@ -83,15 +99,20 @@ function dimancheDeLaSemaine(today: string): string {
   return addDays(today, (7 - new Date(toUtc(today)).getUTCDay()) % 7);
 }
 
+/** Reste à faire : pas de document, ou un document seulement « en cours ». */
+export function resteAFaire(l: Ligne): boolean {
+  return !l.fois || l.fois.etat === "encours";
+}
+
 export function grouperLignes(lignes: Ligne[], today: string) {
   const dimanche = dimancheDeLaSemaine(today);
-  const aFaire = lignes.filter((l) => !l.fois);
+  const aFaire = lignes.filter(resteAFaire);
   const byDate = (a: Ligne, b: Ligne) => a.date.localeCompare(b.date);
   return {
     enRetard: aFaire.filter((l) => l.date < today).sort(byDate),
     cetteSemaine: aFaire.filter((l) => l.date >= today && l.date <= dimanche).sort(byDate),
     plusTard: aFaire.filter((l) => l.date > dimanche).sort(byDate),
-    faites: lignes.filter((l) => l.fois).sort((a, b) => b.fois!.le.localeCompare(a.fois!.le)),
+    faites: lignes.filter((l) => l.fois?.etat === "terminee").sort((a, b) => b.fois!.le.localeCompare(a.fois!.le)),
   };
 }
 
@@ -104,5 +125,10 @@ export function dimancheApres(echeance: string): string {
 /** « Mes tâches » : ce qui reste à faire pour moi — les tâches dont je suis
  *  responsable et celles de mes pôles sans responsable. */
 export function aFairePour(lignes: Ligne[], uid: string): Ligne[] {
-  return lignes.filter((l) => !l.fois && (l.tache.responsableUid === uid || l.tache.responsableUid === null));
+  return lignes.filter((l) => resteAFaire(l) && (l.tache.responsableUid === uid || l.tache.responsableUid === null));
+}
+
+/** Jours entiers entre deux dates ISO (`debutLe` peut porter une heure). */
+export function joursEntre(debut: string, today: string): number {
+  return Math.round((toUtc(today) - toUtc(debut.slice(0, 10))) / DAY);
 }

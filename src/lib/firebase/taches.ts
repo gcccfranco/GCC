@@ -1,5 +1,5 @@
 import { FS_BASE, authHeader, checkRest, toFsFields, fromFsValue, type RawDoc } from "./setlists";
-import type { Fois, Prevenir, Repetition, Tache, TachePole } from "@/types/tache";
+import type { EtatFois, Fois, Prevenir, Repetition, Tache, TachePole } from "@/types/tache";
 
 // Tâches par pôle (lot 7, docs/spec-taches.md) : poles/{pole}/taches/{id} et
 // poles/{pole}/taches/{id}/fois/{date}, en REST comme le reste. Droits :
@@ -38,6 +38,9 @@ function fromFsFois(raw: RawDoc): Fois {
     parUid: (data.parUid as string) ?? "",
     parNom: (data.parNom as string) ?? "",
     le: (data.le as string) ?? "",
+    // Un document d'avant le lot 13 n'a pas d'état : il était forcément terminé.
+    etat: (data.etat as EtatFois) ?? "terminee",
+    debutLe: (data.debutLe as string) ?? "",
   };
 }
 
@@ -110,8 +113,8 @@ export async function deleteTache(pole: TachePole, id: string, fois: Fois[]): Pr
   await remove(tachePath(pole, id));
 }
 
-/** Coche une fois (document nommé par sa date). */
-export async function cocherFois(pole: TachePole, id: string, fois: Fois): Promise<void> {
+/** Écrit l'état d'une fois (document nommé par sa date). */
+async function ecrireFois(pole: TachePole, id: string, fois: Fois): Promise<void> {
   const headers = await authHeader();
   const res = await fetch(`${FS_BASE}/${tachePath(pole, id)}/fois/${fois.date}`, {
     method: "PATCH",
@@ -121,6 +124,22 @@ export async function cocherFois(pole: TachePole, id: string, fois: Fois): Promi
   await checkRest(res);
 }
 
-export async function decocherFois(pole: TachePole, id: string, date: string): Promise<void> {
-  await remove(`${tachePath(pole, id)}/fois/${date}`);
+/** Cycle d'une échéance (lot 13) : À faire → En cours → Terminé → À faire, le
+ *  retour à « À faire » supprimant le document. Renvoie le nouvel état (`null`
+ *  = plus de document) : seul « terminee » prévient le pôle suivant. */
+export async function cyclerEtat(
+  pole: TachePole,
+  id: string,
+  date: string,
+  fois: Fois | null,
+  par: { uid: string; nom: string },
+): Promise<EtatFois | null> {
+  if (fois && fois.etat === "terminee") {
+    await remove(`${tachePath(pole, id)}/fois/${date}`);
+    return null;
+  }
+  const le = new Date().toISOString();
+  const etat: EtatFois = fois ? "terminee" : "encours";
+  await ecrireFois(pole, id, { date, parUid: par.uid, parNom: par.nom, le, etat, debutLe: fois?.debutLe || le });
+  return etat;
 }

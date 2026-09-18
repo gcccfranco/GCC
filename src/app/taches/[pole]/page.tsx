@@ -14,7 +14,7 @@ import { TacheLigne } from "@/components/taches/TacheLigne";
 import { TacheForm } from "@/components/taches/TacheForm";
 import { useProfile, listProfiles } from "@/lib/firebase/users";
 import { isPoleMember, polesDe } from "@/lib/access";
-import { cocherFois, createTache, decocherFois, deleteTache, updateTache, type TacheValues } from "@/lib/firebase/taches";
+import { createTache, cyclerEtat, deleteTache, updateTache, type TacheValues } from "@/lib/firebase/taches";
 import { grouperLignes, lignesDeTache, type Ligne } from "@/lib/taches/echeances";
 import { useTaches } from "@/lib/taches/useTaches";
 import { prevenirFait, prevenirResponsable } from "@/lib/taches/prevenir";
@@ -62,17 +62,15 @@ function PoleTaches({ pole }: { pole: TachePole }) {
   const g = grouperLignes(lignes, today);
   const parNom = profile ? `${profile.firstName} ${profile.lastName}`.trim() || profile.email : user?.email ?? "";
 
+  // À faire → En cours → Terminé → À faire : on ne prévient qu'à « Terminé ».
   async function toggle(l: Ligne) {
     if (!user) return;
     setRetour("");
-    if (l.fois) {
-      await decocherFois(pole, l.tache.id, l.date);
-      await reload();
-      return;
-    }
-    await cocherFois(pole, l.tache.id, { date: l.date, parUid: user.uid, parNom, le: new Date().toISOString() });
+    const etat = await cyclerEtat(pole, l.tache.id, l.date, l.fois, { uid: user.uid, nom: parNom });
     await reload();
-    if (l.tache.prevenir) setRetour(texteRetour(t, await prevenirFait(pole, l.tache.id, l.date), l.tache));
+    if (etat === "terminee" && l.tache.prevenir) {
+      setRetour(texteRetour(t, await prevenirFait(pole, l.tache.id, l.date), l.tache));
+    }
   }
 
   async function save(values: TacheValues) {

@@ -6,10 +6,11 @@
 export const TACHE_POLES = ["da", "media", "orga", "louange", "evenement"] as const;
 export type TachePole = (typeof TACHE_POLES)[number];
 
-export type Rythme = "semaine" | "2semaines" | "mois";
+export type Rythme = "semaine" | "2semaines" | "mois" | "an";
 
 /** Répétition : le jour de la semaine est celui de la première échéance ; pour
- *  « mois », `rang` = 1 à 4, ou -1 pour le dernier (« le 1er dimanche du mois »). */
+ *  « mois », `rang` = 1 à 4, ou -1 pour le dernier (« le 1er dimanche du mois »).
+ *  « an » garde le mois et le quantième de la première échéance, et ignore `rang`. */
 export interface Repetition {
   rythme: Rythme;
   rang?: number;
@@ -37,11 +38,19 @@ export interface Tache {
   updatedAt: string;
 }
 
-/** Une fois cochée « faite » (id du document = sa date d'échéance). */
+/** Où en est une échéance (lot 13). Un document d'avant ce lot n'a pas d'état :
+ *  il se lit « terminee » (fromFsFois, src/lib/firebase/taches.ts). */
+export type EtatFois = "encours" | "terminee";
+
+/** Une fois commencée ou terminée (id du document = sa date d'échéance). Elle
+ *  n'existe pas tant que personne n'y a touché. */
 export interface Fois {
   date: string;
   parUid: string;
   parNom: string;
-  /** ISO : quand elle a été cochée. */
+  /** ISO : quand elle a pris son état courant. */
   le: string;
+  etat: EtatFois;
+  /** ISO du passage en « En cours » ; "" si on ne le sait pas. */
+  debutLe: string;
 }

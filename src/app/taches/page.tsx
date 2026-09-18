@@ -11,10 +11,10 @@ import { Group, GroupRow } from "@/components/ui/group";
 import { TacheLigne } from "@/components/taches/TacheLigne";
 import { useProfile } from "@/lib/firebase/users";
 import { isAdminUser, polesDe } from "@/lib/access";
-import { aFairePour, lignesDeTache, type Ligne } from "@/lib/taches/echeances";
+import { aFairePour, lignesDeTache, resteAFaire, type Ligne } from "@/lib/taches/echeances";
 import { useTaches } from "@/lib/taches/useTaches";
 import { todayIso } from "@/lib/scene/dimanches";
-import { cocherFois, decocherFois } from "@/lib/firebase/taches";
+import { cyclerEtat } from "@/lib/firebase/taches";
 import { prevenirFait } from "@/lib/taches/prevenir";
 import { texteRetour } from "@/components/taches/retour";
 import { TACHE_POLES } from "@/types/tache";
@@ -32,14 +32,16 @@ function TachesClient() {
   const lignes = items.flatMap(({ tache, fois }) => lignesDeTache(tache, fois, today));
   const miennes = user ? aFairePour(lignes, user.uid) : [];
 
+  // Même cycle que la page d'un pôle : À faire → En cours → Terminé → À faire.
   async function cocher(l: Ligne) {
     if (!user) return;
     const parNom = profile ? `${profile.firstName} ${profile.lastName}`.trim() || profile.email : user.email ?? "";
     setRetour("");
-    if (l.fois) await decocherFois(l.tache.pole, l.tache.id, l.date);
-    else await cocherFois(l.tache.pole, l.tache.id, { date: l.date, parUid: user.uid, parNom, le: new Date().toISOString() });
+    const etat = await cyclerEtat(l.tache.pole, l.tache.id, l.date, l.fois, { uid: user.uid, nom: parNom });
     await reload();
-    if (!l.fois && l.tache.prevenir) setRetour(texteRetour(t, await prevenirFait(l.tache.pole, l.tache.id, l.date), l.tache));
+    if (etat === "terminee" && l.tache.prevenir) {
+      setRetour(texteRetour(t, await prevenirFait(l.tache.pole, l.tache.id, l.date), l.tache));
+    }
   }
 
   if (loading) return <p className="px-4 pt-6 text-sm text-muted-foreground">{t("common.loading")}</p>;
@@ -67,7 +69,7 @@ function TachesClient() {
           </Group>
           <Group title={t("taches.poles")}>
             {poles.map((p) => {
-              const n = lignes.filter((l) => !l.fois && l.tache.pole === p).length;
+              const n = lignes.filter((l) => resteAFaire(l) && l.tache.pole === p).length;
               return (
                 <GroupRow key={p} href={`/taches/${p}`} trailing={n > 0 ? String(n) : undefined} chevron>
                   {t(`taches.pole.${p}`)}

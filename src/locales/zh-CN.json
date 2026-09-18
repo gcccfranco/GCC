@@ -1658,6 +1658,12 @@
     },
     "pourTous": "整个部门",
     "faitePar": "{{nom}} 已完成",
+    "commenceePar": "{{nom}} 已开始",
+    "enCoursDepuis_one": "进行中 {{count}} 天",
+    "enCoursDepuis_other": "进行中 {{count}} 天",
+    "enCoursAujourdhui": "今天开始",
+    "enCoursSansDate": "进行中",
+    "anAide": "每年同一天。",
     "cocher": "{{titre}}，{{date}}",
     "ouvrirLien": "打开链接",
     "champs": {
@@ -1674,7 +1680,8 @@
       "aucun": "仅一次",
       "semaine": "每周",
       "2semaines": "每两周",
-      "mois": "每月"
+      "mois": "每月",
+      "an": "每年"
     },
     "rang": {
       "1": "第 1 周",
