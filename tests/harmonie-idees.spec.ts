@@ -98,6 +98,10 @@ test("une idée écrite dans une autre tonalité se range dans celle du chant", 
   await page.getByLabel("Avant (accords)").fill("Bb");
   await page.getByLabel("Après (accords)").fill("Bbmaj7");
   await page.getByRole("button", { name: "Enregistrer" }).click();
+  // Attendre que l'idée s'affiche avant de lire les écritures : sans cela le
+  // test lisait db.writes avant que l'enregistrement soit parti (rouge au
+  // hasard selon l'appareil, sous charge).
+  await expect(page.getByText("Refrain : ouvrir l'accord")).toBeVisible();
 
   const ecrit = db.writes.find((w) => w.path.startsWith("harmonie/hosanna/idees/"))!;
   expect(ecrit.data.avant, "rangée dans la tonalité du chant").toBe("G");
