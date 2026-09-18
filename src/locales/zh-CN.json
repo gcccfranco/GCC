@@ -154,7 +154,19 @@
       "myServicesFilter": "我的服侍",
       "mainMeetings": "主要聚会",
       "groupsLabel": "团契小组",
-      "emptyUpcomingHint": "主领准备好歌单后，你服侍的歌单会显示在这里。"
+      "emptyUpcomingHint": "主领准备好歌单后，你服侍的歌单会显示在这里。",
+      "select": "选择",
+      "selectCancel": "取消",
+      "deleteSelected": "删除（{{n}}）",
+      "deleteDone_one": "已删除 {{count}} 个歌单。",
+      "deleteDone_other": "已删除 {{count}} 个歌单。",
+      "deleteFailed_one": "{{titles}} 无法删除。",
+      "deleteFailed_other": "{{titles}} 无法删除。",
+      "deleteSelectedTitle_one": "删除这个歌单？",
+      "deleteSelectedTitle_other": "删除 {{count}} 个歌单？",
+      "deleteSelectedBody": "此操作无法撤销。",
+      "deleteMore_one": "……还有 {{count}} 个",
+      "deleteMore_other": "……还有 {{count}} 个"
     },
     "detail": {
       "backToAll": "←",

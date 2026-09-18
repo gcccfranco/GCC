@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-type Tab = "upcoming" | "archived" | "mine";
+export type Tab = "upcoming" | "archived" | "mine";
 
 const ONLY_MINE_KEY = "setlists-only-mine";
 

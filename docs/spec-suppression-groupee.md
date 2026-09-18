@@ -413,4 +413,27 @@ npm run lint
 
 ## Avancement
 
-Rien n'est codé : la spec attend le go de Timothée.
+**Codé le 18/09/2026** (go donné), sur la branche `lot/10-suppression-groupee` :
+S1, S2 et S3, dans l'ordre. Tests :
+`tests/setlist-suppression-groupee.spec.ts`, 19 tests × 3 appareils, verts.
+
+Deux écarts avec la spec, assumés :
+
+1. **La barre d'action est en tête de liste sur les trois appareils** (collante
+   sous la navbar), et non collée au bas de l'écran sur téléphone. À l'intérieur
+   d'une page, `position: fixed` se règle sur la transformation d'animation de
+   `PageTransition` (`animate-in`, layout.tsx) : la barre se posait au bas du
+   **document**, pas de l'écran — mesuré au navigateur (bas de barre à 841 px
+   pour un écran de 839 px). La rendre vraiment flottante demanderait un portail
+   vers `document.body` ; à demander si Timothée y tient. Même cause pour le
+   message de résultat, devenu un bandeau en tête de liste au lieu d'une
+   pastille flottante. **La pastille de partage de la fiche
+   (`SetlistDetailClient.tsx` l. 1392-1396) a le même défaut aujourd'hui.**
+2. **La case à cocher est le balisage de `TacheLigne.tsx`**
+   (`<button role="checkbox" aria-checked aria-label>`), pas
+   `components/ui/checkbox.tsx` : ce dernier rend lui-même un `<button>`, et la
+   spec demande que **toute la ligne** soit un `<button>` — deux boutons
+   imbriqués sont invalides. Le contrat d'accessibilité est identique.
+
+Reste hors périmètre, inchangé : sous-collections (R4), « Tout sélectionner »,
+corbeille, écart client / serveur de `allow delete`.

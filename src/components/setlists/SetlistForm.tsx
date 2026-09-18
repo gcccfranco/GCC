@@ -136,7 +136,9 @@ export function SetlistForm({ mode, setlistId, songs, initial }: SetlistFormProp
     return () => {
       const draftId = autoSaveIdRef.current;
       if (!isEdit && draftId && draftId !== committedIdRef.current) {
-        void deleteSetlist(draftId);
+        // `deleteSetlist` lève désormais sur un refus (lot 10) : personne
+        // n'attend ce nettoyage, on ne laisse pas la promesse rejeter seule.
+        void deleteSetlist(draftId).catch(() => {});
       }
     };
   }, [isEdit]);
