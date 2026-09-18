@@ -68,6 +68,10 @@ sans comptes, alors que le produit est devenu un outil interne d'équipe.
 | 14/09/2026 | **Version perso d'un chant dans une setlist** (demande de Timothée, soir, entretien en quatre tours) : chaque musicien peut se faire **sa version** d'un chant (sections choisies et ordonnées, accords et paroles retouchés), **pour lui seul, dans cette setlist seulement**, sans toucher la structure ni la version de la présidence ; ses accords et paroles peuvent être **partagés sous son nom** et choisis par les autres, chacun gardant son choix ; la structure perso ne se partage jamais. Spec : `../spec-version-perso.md`. **Tranché le soir même** : lot **3 ter**, avant le look ; en V1, une retouche dans une section répétée **touche toutes ses répétitions** (confirmé après un aller-retour) ; libellés « Ma version », « Version de Christelle », « Présidence », « Partager ma version », « Sections ». **Go donné le soir même ; codé le 15/09/2026 en trois tranches (`../spec-version-perso.md`, « Avancement »), à valider en local.** |
 | 15/09/2026 | **Nouveau look, direction tranchée** (planche https://claude.ai/artifact/3AXs4eYYCedEAYa8bgW8zL, spec `../spec-look.md`) : direction **A « Réglages »** (listes groupées sur gris chaud, noir pur en sombre, police du système, grand titre replié au défilement) avec **vignettes teintées** (tonalité des chants, date des setlists et services), **accent rouge du logo réservé aux boutons pleins** (onglet actif, liens, interrupteurs en encre ; label de la navbar dans le même rouge ; l'orange ne reste qu'au refrain), barre du bas **Louange · Planning · Évènements · Moi** (page « Moi » = tout ce qui me concerne), visiteur **Chants · Évènements + Connexion**, menu compte sur ordinateur, onglets de planning neutres avec actif coloré, liste des chants en deux lignes sans thèmes, barre d'outils du chant en pilule à la même place, **index A–Z en lettre agrandie** (petit lot avant le look). Plan en six tranches `../../tasks/plan.md`. **Go non donné.** |
 | 16/09/2026 | **Lots 5, 7 et 8 cadrés** (« Fait le 5, 7 et 8 », entretien en deux tours, recommandations toutes acceptées ; specs `../spec-export-pdf.md`, `../spec-taches.md`, `../spec-nouveaux-membres.md`). **PDF** : fenêtre « Quel PDF ? » au téléchargement (chant : Classique · Couleurs par section ; setlist : + Compact), dernier choix retenu par appareil ; nuancier gris aussi dans le classique ; couleurs par section = comme l'écran ; compact = « Sections uniques » imprimé, un chant par page, bandeau au-dessus des scans ; pas de PDF structure. **Tâches** : pôles DA, Média, Orga, Événement cochés par un admin, Louange = rôle de service ; tâches uniques ou répétées (semaine, deux semaines, mois), une fois ratée disparaît quand la suivante arrive ; chacun voit seulement les tâches de ses pôles (admins : tout ; révisé à la remise de la spec), les membres du pôle agissent ; une tâche faite prévient un pôle ou **la régie du dimanche d'après le planning** ; rappels J-3, J-1 et lendemain dans la notification du jour ; réunions = évènements réservés au pôle ; « Mes tâches » dans Moi, pas de sixième onglet. **Nouveaux membres et 中文** : accueil de 5 écrans vu une fois par compte (tous les comptes) ; guide mis à jour, liens « Comment ça marche ? », écrans vides qui disent quoi faire ; captures sur téléphone après validation du look ; tout traduit sauf l'administration, messages push du serveur dans la langue du destinataire, **relu par Timothée**. **Rythme** : le look est commité avant (`de882b7`). **Go pour les trois lots** : codés à la suite, un commit par lot. |
+| 17/09/2026 | **Onglet Évènements, retour sur le look** : « la même DA [que les maquettes] mais adaptée au site », et **le créateur d'un évènement peut s'y inscrire**. Pour l'organisateur, la **carte de gestion de la maquette en haut** (titre, badges, Modifier · Dupliquer · Supprimer, panneau des inscriptions, lien d'inscription), **puis la fiche des membres** avec « S'inscrire », sans répéter titre ni badges. Un évènement commencé est « Fermées » partout (`../spec-evenements-look.md` § 6). Les règles Firestore sont publiées. **Qui est inscrit** (noms, invités) : visible de **tout membre connecté**, plus seulement de l'organisateur ; sans compte, le nombre seul (la règle « rien de nominatif sans compte » tient). **Onglet Évènements** : chaque évènement à venir en **grande carte** comme la maquette (bannière, badges, titre, date · horaire · lieu, S'inscrire, « N déjà inscrits ») ; infos et passés en ligne compacte. **Période d'inscription** (spec `../spec-inscriptions-periode.md`, go et codée le 17/09/2026) : ouverture et fin d'inscription automatiques (sans fin : au début de l'évènement), le responsable peut forcer « Ouvertes » (hors dates, places respectées) ou « Fermées », la page dit toujours pourquoi c'est fermé, les membres sont prévenus dans le rappel du matin du jour d'ouverture. |
+| 17/09/2026 | **Historique des setlists : avant / après** (spec `../spec-historique-avant-apres.md`, recommandations Q1–Q4 acceptées, go, codé le jour même, à valider) : ce qui a été **ajouté, retiré** (et déplacé) se voit en comparant l'avant et l'après, pour **la structure de chaque chant et la liste des chants** de la setlist, **plus les notes seulement** (setlist, chant, sections) ; les autres réglages gardent leur phrase seule. Structures visibles d'office en pastilles ; chants et notes derrière « Voir avant / après » ; retiré = barré et pâli, ajouté = vert, déplacé = ↕. **Fusions** (go du soir) : l'ordre mélangé est traité comme un chant (structure et notes avec avant / après, nuances, transitions et 升调 en phrase seule). Deux sections de même abréviation interverties sans phrase : « pas très grave ». Consultation seulement, comme avant ; les entrées déjà écrites restent sans avant / après. |
+| 17/09/2026 | **Harmonie : aides à la réharmonisation** (demande de Timothée, entretien en sept tours, spec `../spec-harmonie.md`) : pour les **pianistes et guitaristes** (d'après les plannings) et les admins, **former et inspirer un dimanche**, en préparation et en répétition, **jamais en mode louange**, **aucun son**. Un **catalogue « Harmonie »** (12 familles, 60 fiches et plus, sensations × moments × niveau, piano / guitare, capo, diagrammes, « Par où commencer », tous les exemples du répertoire), écrit par Claude et **validé par Timothée famille par famille** ; des **suggestions par chant** par règles automatiques (« À vérifier en jouant », « Essayer dans Ma version », « Appliquer à la setlist » pour une modulation, « Ne marche pas sur ce chant ») et des **idées de l'équipe** ; **Ma version : « Seulement ce passage »** ; **retoucher un accord sur un scan 简谱** dans Ma version et Adapter ; transitions entre chants. Sept lots, après la validation des lots en cours. |
+| 17/09/2026 (soir) | **Go pour le lot 9 en entier**, plus trois décisions : le **capo conseillé est retiré** (il ne reste que celui du mode louange) ; les heures s'écrivent **« 12:00 »** partout, la maquette des évènements ne l'emporte pas ; le **lot 1b (petit déj) se fait sans attendre le nouveau Google Sheet**, en lisant le bloc « PETIT DÉJEUNER » de l'onglet existant. La **finition de l'index A–Z** était déjà livrée (tranche T0 du lot 4) : rien à refaire. Harmonie construit le jour même, avec des écarts assumés notés dans `../spec-harmonie.md` : les fiches sont **publiées avec une étiquette « à relire »** (sinon le catalogue serait vide) et leur 中文 attend la validation du français ; la tonalité choisie **ne transpose que les accords**, pas les explications (les transposer donnait des phrases à moitié justes). |
 
 ## Intention
 
@@ -313,7 +317,7 @@ de le commencer.
 - **Historique, détail** : une phrase par sorte de réglage d'un chant ; ajouts, retraits, ordre, tonalité et infos en détail.
 - **Historique, emplacement** : ligne sous le titre de la setlist, qui ouvre une feuille (dernière, 5 dernières, toutes).
 - **Tonalité recommandée** : la liste des 32 chants, avec une proposition pour chacun (`docs/tonalites-recommandees.md`).
-- **Capo** : « On ne met pas de capo conseillé pour le moment » ; stand-by, Timothée demande des informations supplémentaires.
+- **Capo** : « On ne met pas de capo conseillé pour le moment » ; stand-by, Timothée demande des informations supplémentaires. **Retiré le 17/09/2026** : « on retire l'idée du capo conseillé » — le capo reste celui du mode louange, et les fiches guitare de l'harmonie le reprennent.
 
 ### Demandes de l'équipe, conversation avec Christelle (14/09/2026)
 
@@ -476,6 +480,37 @@ Chaque tour : quatre questions, le pari de Claude en première option.
   pendant le geste, marge de défilement) est proposé en petit lot avant le
   look, sur décision D7.
 
+### Conversation Christelle du 17→18/09/2026 et entretien du 18/09 (5 tours)
+
+- **Cap confirmé** : l'app est l'outil de toute l'église, et les plannings y
+  entrent pour de bon. Timothée, 18/09/2026 : « on ouvre maintenant dans l'app »,
+  et pour le petit déj « Le faire sur le site » plutôt qu'un Google Sheet de plus.
+- **Le Google Sheet ne disparaît pas d'un coup** : import initial, export CSV, et
+  une bascule planning par planning (Culte Franco d'abord), parce que le dimanche
+  ne casse jamais. Le Sheet devient l'archive, pas la source.
+- **L'organigramme devient une donnée de l'app, pas une image** : placer quelqu'un
+  dans une team lui donne son pôle. Ce que Christelle appelle « la vue back
+  office » pour les profils internes, c'est ça, plus la page Tâches déjà réservée
+  aux pôles. La matrice des musiciens n'est pas ressaisie : elle est calculée
+  depuis les rôles de service, pour qu'il n'existe jamais deux vérités.
+- **Qui a le droit d'écrire est une décision d'admin, pas une déduction** :
+  « il faudrait que l'admin puisse choisir qui est autorisé à modifier les
+  plannings et lesquels ». Le profil gagne `plannings: string[]`, comme
+  `annonces` et `notify`. Les autres membres lisent ; qui n'est pas disponible
+  envoie un message, comme aujourd'hui.
+- **S'inscrire soi-même reste l'exception** : seul le petit déj, parce que c'est
+  du volontariat (compte obligatoire — « faut les forcer un peu à s'inscrire »),
+  avec un libellé libre parce que ce sont parfois des familles (« Famille Chung »).
+- **L'app garde sa règle d'or sur les notifications** : une seule par personne et
+  par jour. Ni la relance des tâches en cours, ni l'appel au petit déj ne créent
+  une notification de plus : ils s'ajoutent au rappel du matin.
+- **Le téléphone ne se sacrifie pas à la ressemblance avec le tableur** : grille
+  complète sur ordinateur et tablette, une carte par dimanche sur téléphone.
+- **Écarté** : QR code du site fourni par l'app (Timothée le fait lui-même),
+  autocomplétion d'adresse (« on abandonne ça »), deux onglets de programme de
+  scène en même temps (la scène est unique, le contrôle de chevauchement l'est
+  aussi).
+
 ## Historique des changements d'avis
 
 | Date | Avant | Après |
@@ -488,3 +523,6 @@ Chaque tour : quatre questions, le pari de Claude en première option.
 | 14/09/2026 | Annonces : page à part, poussées par section. | Fusionnées dans le calendrier des évènements (lot 6) ; une annonce sans date = entrée épinglée. |
 | 15/09/2026 | Lot 6 après le look et le PDF. | Lot 6 juste après 3 bis, avant 3 ter et le look (Timothée). |
 | 14/09/2026 (soir) | Version perso d'un chant : une retouche dans une section répétée ne touche que cette occurrence (copie, comme Adapter). | Retour à l'hypothèse de la spec : en V1, la retouche touche toutes les répétitions ; copie d'occurrence plus tard si gênant. |
+| 18/09/2026 | Plannings remplis dans l'app « plus tard », Google Sheets en attendant. | On ouvre maintenant : grille dans l'app, Sheet en archive, bascule planning par planning. |
+| 18/09/2026 | Petit déj lu depuis le Google Sheet (lot 1b). | Inscription dans l'app, compte obligatoire, libellé libre ; le Sheet reste lu en repli. |
+| 18/09/2026 | Pôles cochés à la main sur chaque profil. | L'organigramme les donne : placer quelqu'un dans une team lui donne son pôle. |

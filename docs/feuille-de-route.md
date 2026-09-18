@@ -4,7 +4,7 @@
 le matin, puis entretien Timothée ↔ Claude en 8 tours le soir). Tout est
 tranché ; **go donné le 14/09/2026 (soir)** pour les lots dans l'ordre : lots
 1a, 1c, 2 et 3 codés (§ 1), **à valider en local par Timothée**, non commités.
-Lot 1b en attente du fichier de Christelle ; lot 4 (look) = prochaine étape,
+Lot 1b codé le 17/09/2026 sans ce fichier ; lot 4 (look) = prochaine étape,
 direction visuelle à choisir avec Timothée. **Nouvelle demande du 14/09/2026
 (18:37)** : planning de la scène avant Noël (§ 3.K), lot **3 bis** placé avant
 le look à cause de l'échéance ; sept paris acceptés le 14/09/2026, détails à l'entretien. La vision produit reste `intent/vision-site.md`
@@ -44,19 +44,22 @@ nominatif.
 | 13/09/2026 | Chantier 2 **Mode louange** : nuancier, vue structure batteurs, choix du rôle, reprise des réglages, tonalité choisie, police Atkinson / Source Han Medium / Andika (`spec-mode-louange.md`) | `PerformanceMode.tsx`, `SongView.tsx`, `public/fonts/` | `5397908` |
 | 14/09/2026 | Suite Playwright sur trois appareils (ordinateur, téléphone, tablette) | `playwright.config.ts`, `tests/` | `6c30235` |
 | 14/09/2026 | Chantier 3 **Planning** : Interfranco / Intergroupe remplacent Groupes le dimanche (`spec-planning.md`) | `/planning` (accueil) | `6ab3aca` |
-| 14/09/2026 | Chantier 4 **Setlist** : page unique, historique, tonalité recommandée (15 chants) (`spec-setlist.md`) | `SetlistForm.tsx`, `setlists/{id}/history`, `.cho` | commité le 15/09/2026 ; `firestore.rules` à publier dans la console |
+| 14/09/2026 | Chantier 4 **Setlist** : page unique, historique, tonalité recommandée (15 chants) (`spec-setlist.md`) | `SetlistForm.tsx`, `setlists/{id}/history`, `.cho` | commité le 15/09/2026 ; `firestore.rules` publiées (17/09/2026) |
 | 14/09/2026 | **Lint réparé** : `.claude/**` et `graphify-out/**` ignorés, objet de règles limité aux `.{js,jsx,mjs,ts,tsx,mts,cts}` (`npm run lint` : 0 erreur, 50 avertissements préexistants en « warn ») | `eslint.config.mjs` | commité le 15/09/2026 |
-| 15/09/2026 | Lot 6 **Évènements** : calendrier public, fiches, inscriptions avec invités et sans compte, fusion des annonces (migration par bouton), cloche, QR code, rappel de la veille (`spec-evenements.md`) | section `/evenements`, `api/evenements/*`, `notify-evenement`, `admin/migrer-annonces`, cron, `Navbar`, `access.ts` + `firestore.rules`, admin | commité le 15/09/2026 ; à valider ; `firestore.rules` à publier ; migration à lancer |
-| 14–15/09/2026 | Lot 3 bis **Programmes de scène, onglet « Noël »** : rôle « événement », onglets par programme, entraînements du dimanche, ordre de passage, conflit, rappels (`spec-programme-scene.md`) | section `/evenements` (layout, `SceneClient`, `EvenementsTabs`), `SectionTabs`, `Navbar`, `access.ts` + `firestore.rules`, `api/scene/conflit`, `cron/reminders`, admin | commité le 15/09/2026 ; à valider ; `firestore.rules` à publier ; pôle à donner à Alice ; programme « Noël » à créer |
+| 15/09/2026 | Lot 6 **Évènements** : calendrier public, fiches, inscriptions avec invités et sans compte, fusion des annonces (migration par bouton), cloche, QR code, rappel de la veille (`spec-evenements.md`) | section `/evenements`, `api/evenements/*`, `notify-evenement`, `admin/migrer-annonces`, cron, `Navbar`, `access.ts` + `firestore.rules`, admin | commité le 15/09/2026 ; à valider ; `firestore.rules` publiées (17/09/2026) ; migration à lancer |
+| 14–15/09/2026 | Lot 3 bis **Programmes de scène, onglet « Noël »** : rôle « événement », onglets par programme, entraînements du dimanche, ordre de passage, conflit, rappels (`spec-programme-scene.md`) | section `/evenements` (layout, `SceneClient`, `EvenementsTabs`), `SectionTabs`, `Navbar`, `access.ts` + `firestore.rules`, `api/scene/conflit`, `cron/reminders`, admin | commité le 15/09/2026 ; à valider ; `firestore.rules` publiées (17/09/2026) ; pôle à donner à Alice ; programme « Noël » à créer |
 | 14/09/2026 | Lot 1a **Sainte cène** : index 11 lu, service dans Ce dimanche / onglet Culte / Mes services / rappels, visible si rempli (`spec-planning-petits-lots.md`) | `sheets.ts`, `names.ts`, `planning/page.tsx`, `planning/culte` | commité le 15/09/2026 ; à valider |
 | 14/09/2026 | Lot 1c **Rappels regroupés** : une notification par personne et par échéance, services + rôles, FR / 中文 (langue dans `notifPrefs/{uid}.lang`), répétition Campus fondue, une entrée de cloche par destinataire | `reminderMessage.ts`, `cron/reminders`, `notifPrefs.ts`, `recipients.ts`, navbar | commité le 15/09/2026 ; à valider (cron en ligne) |
 | 14/09/2026 | Lot 2 **Notification au président** : lien posé ou remplacé → push + cloche « Présentation prête » aux comptes au nom du président (sauf l'auteur), préférence « Setlist prête », anti-doublon par lien ; la régie voit « Président prévenu. » ou « aucun compte relié » (`spec-notif-president.md`) | `/api/setlist/presentation`, `presentationLink.ts`, `PresentationLink.tsx`, cloche | commité le 15/09/2026 ; à valider |
 | 15/09/2026 | Lot 4 **Nouveau look** T0–T6 : direction A « Réglages », vignettes teintées, rouge du logo sur les boutons pleins, police du système, navigation par sections (barre du bas Louange · Planning · Évènements · Moi, page « Moi », menu compte), grand titre, index A–Z en lettre agrandie (`spec-look.md`, « Avancement ») | tout le site : `globals.css`, `tailwind.config.ts`, `layout.tsx`, `Navbar`, `MobileTabBar`, `SectionTabs`, `PageTitle`, `Group`, `Tile`, `/moi`, listes, pages secondaires | commité le 16/09/2026 (`de882b7`) ; à valider en local |
 | 16/09/2026 | **Bug : le serveur local affichait l'ancien code.** Le service worker servait `/_next/static/*` en cache-first ; en production ces fichiers sont hashés, en développement non — la page arrivait à jour et le JavaScript venait du cache (barre du bas et look figés malgré les modifications). Corrigé : rien n'est mis en cache sur un serveur local, cache purgé à l'activation, `gcc-louange-v3` | `public/sw.js`, `tests/service-worker.spec.ts` (nouveau), `CLAUDE.md` | commité le 16/09/2026 (`de882b7`) |
 | 16/09/2026 | Lot 4 **retour tactile** : Timothée trouve l'usage moins bon sur téléphone et tablette ; audit avant/après (la seule régression : les setlists injoignables, Mes services à deux taps) → barre du bas **Chants · Setlists · Planning · Évènements · Moi** (Q9 révisée dans `spec-look.md`), pilules de section à 40 px, commandes du chant à 36 px, catégorie et présidence sur la ligne de setlist ; **QR code retiré de l'onglet Évènements** (gardé sur la fiche d'un évènement pour l'organisateur) ; sélecteur de tonalité du chant réduit à la tonalité quand il est fermé sur tactile (six commandes ne tenaient plus à 390 px) | `MobileTabBar`, `SectionTabs`, `SongDetailClient`, `SetlistCard`, `CalendrierClient`, tests `look-navigation`, `look-louange` et `evenements` | commité le 16/09/2026 (`de882b7`) ; à valider en local |
-| 17/09/2026 | Lot 8 **Nouveaux membres et 中文** A1–A4 : accueil de première connexion (5 écrans, une fois par compte), guide à jour et liens « Comment ça marche ? », écrans vides qui disent quoi faire, textes restés en français traduits, messages du serveur dans la langue du destinataire, planche de relecture du chinois publiée ; A5 (captures) après validation du look (`spec-nouveaux-membres.md`, « Avancement ») | `onboarding`, `guide`, `GuideLien`, `ReportDialog`, `PushPrompt`, `SongProposalDrawer`, `JianpuSheet`, routes `setlist/presentation` et `notify-evenement`, `firestore.rules`, locales | commité le 17/09/2026 ; à valider en local ; règle `onboarding/{uid}` à publier ; planche à relire |
-| 16/09/2026 | Lot 7 **Tâches par pôle** T1–T4 : pôles DA / Média / Orga (Louange = rôle de service), page Tâches et page d'un pôle (en retard, cette semaine, plus tard, faites), tâches répétées, coche qui prévient un pôle ou la régie du dimanche, « Nouvelle tâche » au responsable, rappels dans la notification du jour, réunions de pôle dans le calendrier ; chacun ne voit que ses pôles (`spec-taches.md`, « Avancement ») | `/taches`, `lib/taches`, `api/taches/*`, `cron/reminders`, `access.ts` + `firestore.rules`, Moi, navbar, admin, `EvenementForm` | commité le 16/09/2026 ; à valider en local ; `firestore.rules` à publier ; pôles à cocher |
+| 17/09/2026 | Lot 8 **Nouveaux membres et 中文** A1–A4 : accueil de première connexion (5 écrans, une fois par compte), guide à jour et liens « Comment ça marche ? », écrans vides qui disent quoi faire, textes restés en français traduits, messages du serveur dans la langue du destinataire, planche de relecture du chinois publiée ; A5 (captures) après validation du look (`spec-nouveaux-membres.md`, « Avancement ») | `onboarding`, `guide`, `GuideLien`, `ReportDialog`, `PushPrompt`, `SongProposalDrawer`, `JianpuSheet`, routes `setlist/presentation` et `notify-evenement`, `firestore.rules`, locales | commité le 17/09/2026 ; à valider en local ; règle `onboarding/{uid}` publiée (17/09/2026) ; planche à relire |
+| 16/09/2026 | Lot 7 **Tâches par pôle** T1–T4 : pôles DA / Média / Orga (Louange = rôle de service), page Tâches et page d'un pôle (en retard, cette semaine, plus tard, faites), tâches répétées, coche qui prévient un pôle ou la régie du dimanche, « Nouvelle tâche » au responsable, rappels dans la notification du jour, réunions de pôle dans le calendrier ; chacun ne voit que ses pôles (`spec-taches.md`, « Avancement ») | `/taches`, `lib/taches`, `api/taches/*`, `cron/reminders`, `access.ts` + `firestore.rules`, Moi, navbar, admin, `EvenementForm` | commité le 16/09/2026 ; à valider en local ; `firestore.rules` publiées (17/09/2026) ; pôles à cocher |
 | 16/09/2026 | Lot 5 **Export PDF** P1–P3 : fenêtre « Quel PDF ? » (dernier choix par appareil), nuancier gris dans tous les PDF, couleurs par section comme l'écran (cadre fin, accords noirs), compact de la setlist (bandeau + sections uniques, un chant par page, bandeau au-dessus des scans, transition en bas de page) (`spec-export-pdf.md`, « Avancement ») | `PdfChoiceSheet`, `pdfStylePref`, `lib/pdf/colors` et `compact`, `StructureStripPDF`, `SongPDF`, `SetlistFullPDF`, pages chant et setlist | commité le 16/09/2026 ; à valider en local |
+| 17/09/2026 | Lot **1b Petit déj** : lu dans le bloc « PETIT DÉJEUNER » de l'onglet existant `Franco_Table_PtD` (deux paires DATE / NOM, noms « A & B » séparés), ligne dans Ce dimanche **si la case est remplie**, service dans Mes services, fondu dans le rappel groupé, FR / 中文 (`spec-planning-petits-lots.md`) | `sheets.ts`, `names.ts`, `planning/page.tsx`, `reminderMessage.ts`, `serviceColors.ts`, locales | non commité ; 7 tests × 3 appareils ; à valider en local |
+| 17/09/2026 | **Décisions** : capo conseillé **retiré** (§ 5), heure **« 12:00 »** partout (aucun « 12h00 » dans le code), **finition de l'index A–Z** revérifiée — elle était déjà livrée avec la tranche T0 du lot 4, la feuille de route disait le contraire | docs, `tests/songs-index.spec.ts` (18 verts) | fait |
+| 17–18/09/2026 | Lot 9 **Harmonie en entier** — fondations (degrés, motifs, 40 règles), H1 catalogue, MV « seulement ce passage », 简谱 retouche d'accord, H2 idées par chant (chant + setlist), H3 idées de l'équipe, H4 transitions ; relu par un relecteur à contexte vierge, **12 défauts prouvés et corrigés** (`spec-harmonie.md`, « Avancement ») | `lib/harmonie/*`, `components/harmonie/*`, `/harmonie`, `scripts/build-harmonie.ts`, `firebase/harmonie.ts`, `lib/jianpu/retouches.ts`, `access.ts` + `firestore.rules`, page du chant, vue partitions, locales | non commité ; **suite complète 1331 verts** ; **`firestore.rules` à publier** ; fiches à valider famille par famille |
 | 14/09/2026 | Lot 3 **Coup d'œil** S1–S3 : bandeau abrégé + nuances, menu « Affichage » (ordre joué / sections uniques / structure seule, par appareil, batteur → structure), sommaire par occurrence, « Dernière phrase » dans l'éditeur (section du chant adapté, badge masqué, historique) (`spec-coup-d-oeil.md`) | `SongView.tsx`, `PartitionView.tsx`, `SetlistOutline.tsx`, `SetlistFormRows.tsx`, `LastPhraseSheet.tsx`, `lastPhrase.ts`, `uniqueSections.ts`, `partitionLayoutPref.ts` | commité le 15/09/2026 ; à valider, résultat à montrer à Christelle |
 
 ## 2. À construire, dans l'ordre validé le 14/09/2026
@@ -67,7 +70,7 @@ s'affiche), un commit par lot, sur demande.
 
 | # | Lot | Contenu tranché | Où | Taille |
 | --- | --- | --- | --- | --- |
-| 1 | **Planning, petits lots** (demandés pour T4) — **1a et 1c codés le 14/09/2026 ; 1b en attente du Sheet de Christelle** | (a) colonne **Sainte cène** : index 11 de `Franco_Louange`, service à part entière (Ce dimanche, onglet Culte, Mes services, rappels), visible seulement si remplie ; (b) **petit déj** : nouveau Google Sheet à part (fichier et colonnes à recevoir de Christelle), ligne dans Ce dimanche + Mes services + rappels, pas d'onglet ; (c) **rappels regroupés** : une seule notification par personne et par échéance (J-7, J-3, J-1) qui liste ses services avec le rôle, « Dimanche 20 septembre : Culte Franco (Piano) · Petit déj », FR et 中文 (langue à mémoriser côté serveur, voir § 7) ; ~~(d) liste admin des noms sans compte~~ : **existe déjà** (« Planning sans compte » dans l'administration), écarté | `sheets.ts`, `names.ts`, `planning/page.tsx`, `planning/culte`, `cron/reminders`, `notifPrefs` | 3 lots S |
+| 1 | **Planning, petits lots** (demandés pour T4) — **1a et 1c codés le 14/09/2026 ; 1b codé le 17/09/2026 sans attendre le Sheet de Christelle (go)** | (a) colonne **Sainte cène** : index 11 de `Franco_Louange`, service à part entière (Ce dimanche, onglet Culte, Mes services, rappels), visible seulement si remplie ; (b) **petit déj** : lu dans le bloc « PETIT DÉJEUNER » de l'onglet existant `Franco_Table_PtD` (17/09/2026 : « le lot 1b sans le sheet »), ligne dans Ce dimanche + Mes services + rappels, pas d'onglet ; le fichier à part de Christelle ne changera que le parseur ; (c) **rappels regroupés** : une seule notification par personne et par échéance (J-7, J-3, J-1) qui liste ses services avec le rôle, « Dimanche 20 septembre : Culte Franco (Piano) · Petit déj », FR et 中文 (langue à mémoriser côté serveur, voir § 7) ; ~~(d) liste admin des noms sans compte~~ : **existe déjà** (« Planning sans compte » dans l'administration), écarté | `sheets.ts`, `names.ts`, `planning/page.tsx`, `planning/culte`, `cron/reminders`, `notifPrefs` | 3 lots S |
 | 2 | **Notification au président** — **codé le 14/09/2026** | Décidée le 14/09 (matin) : automatique quand le lien de présentation est posé ou remplacé ; retrait = rien ; sans compte relié = rien, la régie le voit | `/api/setlist/presentation`, `push/send` | S |
 | 3 | **Structure « coup d'œil »** — **S1 à S3 codées le 14/09/2026 sur go** | **Bandeau** en tête de chaque chant de la vue partitions, **à la place de la ligne « ORDRE » actuelle** : structure abrégée (I, C1, C2…, Pr, R, P, Inst, F, Pm, Dp, « ×2 »), **nuance sous chaque étape**, notes et transitions ; **sections uniques** en dessous (chaque section une fois), réglage par appareil **activé par défaut** ; **batteurs** = bandeau seul, sans paroles ni accords ; **Dp** = étape « Dernière phrase » dans l'éditeur (section source + N dernières lignes, aperçu), **matérialisée comme une vraie section du chant adapté** (`contentOverride` + `sectionOrigins`, mécanisme du mode Adapter ; badge « Version modifiée » masqué quand seul un Dp a été ajouté — tranché le 14/09/2026) ; **menu d'affichage** de la vue partitions à trois positions « Ordre joué / Sections uniques / Structure seule », mémorisé par appareil, défaut « Sections uniques », « Structure seule » présélectionné si le rôle mémorisé du mode louange est Batteur ; **table d'abréviations** : I · C1 C2… · Pr · R · Po · P · Pm · F · Tag · Dp · ×2, sections « autre » = nom écrit ; **Pm** = pont musical (instrumental) ; abréviations françaises partout, même en 中文 ; **mode louange inchangé** (ordre joué, le Dp y apparaît comme une section). Règles des sections uniques et du bandeau : § 7. **Codé directement, résultat montré à Christelle par Timothée** | `PartitionView.tsx`, `SongView.tsx`, `JianpuStructureStrip.tsx`, `SetlistFormRows.tsx`, `formItems.ts`, `editSource.ts`, `ListView.tsx`, `SetlistOutline.tsx`, `sectionSteps.ts`, `history.ts` | M |
 | 3 bis | **Planning de la scène avant Noël** (Christelle et Alice, 14/09/2026 à 18:37) — **position tranchée le 14/09/2026** : avant le look, parce que la scène se réserve dès novembre | Nouvel onglet **« Scène »** du planning, **rempli dans l'app** (pas de Google Sheet : « c'est plus simple directement sur GCCLouange ») — premier planning saisi dans l'app ; modèle visuel = onglet Campus, **deux volets** : (1) **Entraînements** : créneaux sur scène par jour (date, heure de début et de fin, groupe — entraînement franco, louange 25, chants EDD, spectacle… —, responsable, note), posés par tout membre connecté, modifiables par leur auteur et les admins, un créneau pris reste visible de tous avec son groupe ; (2) **Passage le jour J** : ordre de passage du jour de Noël (numéro, groupe, titre ou chant, durée, responsable), tenu par Alice (coordination) et les admins. Réservé aux connectés (nominatif). Sans rappel push dans un premier temps. Paris détaillés en § 3.K | nouvel onglet `src/app/planning/scene/` (déclaré dans `src/components/planning/PlanningTabs.tsx`), nouvelle collection Firestore + `firestore.rules` + `access.ts` (en double), `serviceColors.ts` (couleur d'onglet, fichier gelé : à valider) | M |
@@ -79,13 +82,25 @@ s'affiche), un commit par lot, sur demande.
 | 6 bis | **Look de l'onglet Évènements** (maquette de Timothée, 16/09/2026 : liste avec état d'inscription, fiche avec bannière et bouton plein, vue organisateur avec panneau des inscriptions, formulaire réordonné) — **spec écrite puis go le 16/09/2026** (`spec-evenements-look.md`, quatre recommandations retenues) ; **L1–L6 codées le 16/09/2026** (L6 : même carte blanche sur ordinateur, téléphone et tablette), non commité, à valider en local | `EvenementCard`, `EvenementClient`, `Inscriptions`, `EvenementForm` ; aucun champ nouveau | M |
 | 7 | **Tâches par pôle** (nouveau module) — **spec `spec-taches.md` écrite le 16/09/2026 après entretien (§ 3.N), go donné et codé le jour même (§ 1)** | Pôles : **DA, Média, Orga, Louange, Événement**. Tâche = pôle, responsable, échéance, état, lien (fond Canva…) ; **rappel d'échéance** via le cron quotidien ; **chaîne** : tâche marquée faite → le pôle suivant est notifié (DA → régie). Cadré par un entretien à part | nouveau module | L |
 | 8 | **Nouveaux membres et 中文** (chantier 7) — **spec `spec-nouveaux-membres.md` écrite le 16/09/2026 après entretien (§ 3.N), go donné le jour même ; A1–A4 codées le 17/09/2026 (§ 1), A5 après validation du look** | Accueil à la première connexion (nouveau style), guide plus visible, textes restés en français ; d'autant plus utile que l'assemblée entière arrive | onboarding, `/guide`, locales | M |
+| 9 | **Harmonie : aides à la réharmonisation** (Timothée, 17/09/2026) — **go pour le lot entier le 17/09/2026 au soir ; H0 (69 fiches) écrit, H1 · MV · 简谱 · H2 · H3 · H4 codés le jour même** (`spec-harmonie.md`, « Avancement ») | Pour les **pianistes et guitaristes** (planning) et les admins : catalogue **« Harmonie »** (12 familles, 60 fiches et plus, 12 sensations × 7 moments × niveau, piano / guitare, capo, diagrammes, « Par où commencer », tous les exemples du répertoire) ; **« Idées d'harmonie »** sur un chant (règles automatiques « À vérifier en jouant », 5 puis « Voir plus », « Essayer dans Ma version », « Appliquer à la setlist » pour une modulation, « Ne marche pas sur ce chant ») ; **Ma version : « Seulement ce passage »** ; **retoucher un accord sur un scan 简谱** (Ma version et Adapter) ; idées de l'équipe ; transitions entre chants. Jamais en mode louange, aucun son. Sept lots : H0 fiches → H1 catalogue → MV → 简谱 → H2 suggestions → H3 idées → H4 transitions | `src/app/harmonie/`, `src/lib/harmonie/`, `src/components/harmonie/`, `content/harmonie/`, `docs/harmonie/`, `setlistVersions.ts`, `JianpuSheet.tsx`, `SongView.tsx`, `PartitionView.tsx`, `access.ts` + `firestore.rules` | L |
 
-Toujours vrai : **capo conseillé en stand-by** ; **index A–Z balayable** : le
-balayage est codé et commité depuis `b395745` (14/09/2026), revérifié le
-15/09/2026 (Chromium, vrais événements tactiles) ; reste un petit lot de
-finition proposé avant le look (lettre visible sous le doigt, barre du haut
-fixe pendant le geste, marge de défilement), décision D7 de `spec-look.md` ;
-idée « modifié depuis ta dernière visite ».
+| 10 | **Suppression groupée des setlists** (Christelle, 18/09/2026) — tranché le 18/09/2026, spec à écrire | Bouton « Sélectionner » en tête de la liste des setlists ; cases à cocher sur les seules setlists qu'on a le droit de supprimer (les siennes, tout pour un admin) ; « Supprimer (3) » avec confirmation qui **nomme** les setlists. Aujourd'hui on ne supprime que depuis la fiche (`SetlistDetailClient`, menu ⋯) | `setlists/page.tsx`, `SetlistCard.tsx`, `firebase/setlists.ts` | S |
+| 11 | **Inscription externe (Google Forms)** (Christelle, 18/09/2026) — tranché le 18/09/2026 | Champ « Lien d'inscription externe » sur un évènement : rempli, le grand bouton de la fiche devient « S'inscrire » et ouvre le formulaire (l'app ne compte ni places ni inscrits) ; le **QR continue de pointer vers la fiche GCC**, pas vers le Forms (l'affiche fait entrer dans l'app). Le champ `liens` existe déjà mais n'est pas un bouton d'inscription | `types/evenement.ts`, `EvenementForm`, `EvenementClient`, `agenda.ts` | S |
+| 12 | **Noël / Pâques : archivage et bascule automatiques** (Timothée, 18/09/2026) — tranché le 18/09/2026 | Après le jour J, l'onglet affiche **7 jours** « Noël, c'est passé » sans programme ni réservations, puis **s'archive** ; s'il existe un autre programme dont les réservations sont ouvertes, l'onglet **bascule dessus** et prend son nom. Alice garde Afficher/Masquer. **Un seul programme à la fois conservé** parce que `overlaps()` ne compare que les créneaux du programme courant : deux onglets simultanés laisseraient deux groupes réserver la scène à la même heure sans alerte | `SceneClient.tsx`, `lib/scene/dimanches.ts` | S |
+| 13 | **Tâches : rythme annuel, « en cours », relances** (Christelle, 18/09/2026) — tranché le 18/09/2026 | Rythme **« an »** ajouté à semaine / 2 semaines / mois (pas de bouton « dupliquer » : la tâche se regénère) ; trois états par échéance **À faire → En cours → Terminé** ; une tâche en cours reste dans la notification groupée du matin (« En cours depuis 3 jours ») **sans notification supplémentaire**, et **seulement après l'échéance dépassée** (règle du lot 1c). Aujourd'hui : fait / pas fait, rappels J-3, J-1, jour J au responsable ou à tout le pôle | `types/tache.ts`, `lib/taches/*`, `cron/reminders` | M |
+| 14 | **Tâches ↔ évènements** (Christelle, 18/09/2026) — tranché le 18/09/2026 | Lien **à sens unique** : une tâche peut pointer un évènement, avec une échéance **relative au jour J** (« J-14 ») ; bloc « Tâches » sur la fiche, visible des seuls membres d'un pôle, avec « Nouvelle tâche » pré-remplie ; dupliquer un évènement annuel propose de **dupliquer ses tâches**, échéances recalculées. Pas de « back office » séparé : la page *Tâches* est déjà réservée aux pôles | `types/tache.ts`, `EvenementClient`, `/taches` | M |
+| 15 | **Petit déj dans l'app** (Christelle + Timothée, 18/09/2026 : « si c'est pas google sheets* » → « Le faire sur le site ») — tranché le 18/09/2026 | **Compte obligatoire** (« faut les forcer un peu à s'inscrire »). **Pas de compteur de places** : un dimanche est « Libre » ou porte une équipe ; s'inscrire ajoute une ligne pré-remplie à son nom, **réécrivable** (« Famille Chung ») ; chacun retire **sa** ligne, un admin n'importe laquelle. Notif du **mercredi** fondue dans le rappel du matin, seulement si le dimanche est libre, préférence « Petit déj » activée par défaut avec « Ne plus recevoir » dans le corps. Fusionné dans l'onglet **Table** (pas de 9ᵉ onglet). L'app fait foi, le Sheet reste lu en repli | `planning/table`, nouvelle collection Firestore, `reminderMessage.ts`, `notifPrefs` | M |
+| 16 | **Organigramme, source des pôles** (Timothée, 18/09/2026 : « et aussi avoir un organigramme et tout ? ») — tranché le 18/09/2026 | Les 13 teams de l'onglet **ORGANIGRAMME** du Sheet (Orga, Comité Franco, DA, Médias, Développement, Régie, Traduction, Théologie, Événementiel, Décoration, Accueil J1, Louange, EDD), tenues **dans l'app** avec référent, membres et mention « en essai » ; placer quelqu'un dans une team **lui donne le pôle** (fin du cochage à la main). La matrice **TEAM MUSICIENS** n'est **pas** ressaisie : elle est **calculée** depuis `serviceRoles` (même information, 28 noms × 8 groupes), cases cliquables vers les fiches. Entrée « Équipes » dans *Moi*, pas un onglet de Planning | `/moi`, nouvelle page Équipes, `types/user.ts`, `access.ts` + `firestore.rules` | L |
+| 17 | **Planning en grille dans l'app** (Timothée, 18/09/2026 : « on ouvre maintenant ») — tranché le 18/09/2026, **planche cliquable avant la spec** | Trois tranches : **(1) grille en lecture** (`Franco_Louange` affiché comme le Sheet, Christelle écrit toujours dans Google, risque nul) ; **(2) écriture sur le seul Culte Franco** (import initial par bouton admin, rattachement des noms par `planningName`, liste des non-rattachés ; export **CSV** ; le Sheet devient l'archive) ; **(3) les groupes et le reste**, seulement après trois dimanches sans incident. **Apparence** : grille complète sur ordinateur et tablette, **une carte par dimanche sur téléphone** (option B, 11 colonnes ne tiennent pas dans 390 px). **Droits** : nouveau champ `plannings: string[]` sur le profil, **coché par un admin planning par planning** (« il faudrait que l'admin puisse choisir qui est autorisé à modifier les plannings et lesquels »), sur le modèle de `annonces` et `notify` ; les autres **lisent seulement** — qui n'est pas dispo envoie un message, comme aujourd'hui (seul le petit déj permet de se retirer soi-même). **Trimestre conservé** (groupe + période + jour) en **bandeau** au-dessus d'une grille continue, sans couper en quatre. Saisie libre acceptée pour les noms sans compte (« Pasteur ZHOU »). Enregistrement **case par case**, historique nommé, **pas de fenêtre de conflit** | `planning/*`, nouvelle collection Firestore, `sheets.ts`, `types/user.ts`, `access.ts` + `firestore.rules`, admin | XL |
+
+Toujours vrai : **index A–Z balayable** : le balayage est codé et commité
+depuis `b395745` (14/09/2026), revérifié le 15/09/2026 (Chromium, vrais
+événements tactiles) ; sa **finition** (lettre visible sous le doigt, barre du
+haut fixe pendant le geste, marge de défilement — décision D7 de
+`spec-look.md`) a été codée dans la tranche T0 du lot 4 et commitée avec lui
+(`de882b7`) : **rien ne reste**, revérifié le 17/09/2026 (18 tests verts sur
+les trois appareils, `tests/songs-index.spec.ts`). Le **capo conseillé** est
+**retiré** (§ 5, 17/09/2026). Idée « modifié depuis ta dernière visite ».
 
 **Bug d'outillage — corrigé le 14/09/2026 (soir), sur le go du même soir,
 exactement comme proposé ci-dessous ; `npm run lint` passe (0 erreur)** :
@@ -172,7 +187,7 @@ fichier par an obligerait à changer `SHEET_ID` et redéployer. `SHEET_ID`
 reste en dur (rien de spéculatif). Les données de secours de `data.ts`
 (2026) vieilliront : à régénérer un jour ou à retirer.
 
-### D. Petit déjeuner sur un Google Sheet à part → lot 1b
+### D. Petit déjeuner sur un Google Sheet à part → lot 1b (codé le 17/09/2026)
 
 **Demande** : « inscription directement sur un fichier Google Sheet, à part
 du reste des plannings [beaucoup de gens y auront accès] ; faire apparaître
@@ -188,6 +203,11 @@ multiples avec « & » via `splitNames`.
 **Tranché** : accueil « Ce dimanche » + Mes services + rappels, pas d'onglet ;
 fichier et colonnes à recevoir de Christelle. **Plus tard : inscription dans
 l'app.**
+
+**Repris le 17/09/2026** — Timothée : « le lot 1b sans le sheet ». On ne
+l'attend plus : le bloc « PETIT DÉJEUNER » de `Franco_Table_PtD` est lu tel
+qu'il est (deux paires DATE / NOM, noms écrits « A & B »). Le fichier à part,
+s'il arrive, ne changera que `parsePetitDej`.
 
 ### E. Rappels par service → lot 1c
 
@@ -478,6 +498,143 @@ puis Q24–Q33), **toutes les recommandations acceptées**.
   et 8 »** → codés à la suite, un commit par lot, testés par Timothée
   ensuite.
 
+### O. Avant / après dans l'historique des setlists (Timothée, 17/09/2026) → `spec-historique-avant-apres.md`
+
+**Mots de Timothée** : « Pour le système d'historique des modifications c'est
+possible de mettre en évidence ce qui a été rajouté et enlevé par rapport à la
+structure précédente ? avoir un avant après ».
+
+**Ce que le code montre** : une entrée d'historique ne garde que des phrases
+(« Structure de … modifiée »), aucun état d'avant ni d'après ; les entrées déjà
+écrites ne pourront pas en avoir.
+
+**Tranché le 17/09/2026** : avant / après pour **la structure de chaque chant
+et la liste des chants** (« Les deux ») ; en plus, **les notes seulement**
+(« juste les structures, plus les notes »). Nuances, transitions, 升调, accords
+et paroles adaptés gardent leur phrase seule. Q1–Q4 de la spec (quelles
+notes, chant déplacé, ce qui est ouvert d'office, marques) : **« ok pour les
+recommandations, go »** (17/09/2026). **H1–H3 codées le jour même** (captures
+regardées), non commitées, à valider en local. Le soir : abréviations en double
+(deux « Intro ») jugées « pas très grave » ; contre-épreuve des tests, test du
+mode Adapter, suites relancées ; **go pour les fusions** (H4 : l'ordre mélangé
+traité comme un chant, notes avec avant / après, nuances et transitions en
+phrase seule), codé le soir même. 25 tests × 3 appareils.
+
+### P. Harmonie : aides à la réharmonisation (Timothée, 17/09/2026) → `spec-harmonie.md`
+
+**Mots de Timothée** : « Pour les musiciens (pianiste et guitariste) j'aimerais
+mettre à leur disposition des aides pour qu'ils fassent des réharmonisations,
+pour pouvoir ajouter du nouveau dans les chants. Soit une liste exhaustive de
+tout ce qu'ils peuvent faire en progressions d'accords avec la sensation
+associée (épique, tension…), soit, en fonction du chant, des recommandations
+pour améliorer / réharmoniser / ajouter un petit plus. »
+
+**Ce que le code montre** : 371 chants, tous avec accords et tonalité ; le
+site sait situer un accord en degré (transposition) ; « Ma version » existe
+mais une retouche touche toutes les répétitions ; aucune IA, aucun diagramme,
+aucun son ; l'instrument n'est connu que par les plannings ; le site ne
+connaît pas la mélodie ; sur un scan 简谱, chaque accord imprimé est repéré mais
+n'est relié à aucun accord du `.cho`, et le 升调 ne s'y voit pas.
+
+**Tranché le 17/09/2026** (entretien en sept tours) : former **et** inspirer
+un dimanche ; préparation et répétition, **jamais en mode louange** ; **aucun
+son** ; bilingue. **Les deux** : catalogue d'abord (12 familles, dont voicings,
+rythme harmonique et boucles pour la prière libre ; notes tenues, épurer et
+jouer à deux écartés), **le plus complet possible (60 fiches et plus)**, fiches
+séparées par instrument sur une base commune, diagrammes, capo, « Par où
+commencer », tous les exemples du répertoire ; puis suggestions par chant par
+**règles automatiques** + **idées de l'équipe**. Accès : **pianistes et
+guitaristes** (plannings) + admins. Fiches écrites par Claude, **validées par
+Timothée famille par famille**, catalogue ouvert au fur et à mesure.
+Modulation : « Appliquer à la setlist » (升调 existant). **Ma version apprend
+« Seulement ce passage »** (« avant même que l'équipe le demande »). **Scans
+简谱 : toucher un accord pour le changer, l'effacer ou en ajouter un**, dans Ma
+version et Adapter. Sept lots, H0 → H1 → MV → 简谱 → H2 → H3 → H4. Les
+trois questions ouvertes de la spec sont tranchées le jour même, propositions
+acceptées : dans une version partagée, le dernier passage reste le dernier et
+les autres se repèrent par leur rang ; chants les plus chantés comptés dans le
+navigateur ; degrés en chiffres (1 4 5 6m b7).
+
+### Q. Conversation Christelle du 17→18/09/2026 → lots 10 à 17
+
+**Mots de Christelle** (WhatsApp, nuit du 17 au 18/09/2026, transmise en
+captures par Timothée le 18/09) :
+
+- **Cours de théologie** : « on pourra aussi s'inscrire via l'onglet évènement
+  mais c'est ce que je trouvais que c'était mieux de pouvoir mettre un lien
+  cliquable vers google forms ou sheets » ; « y'a un QR code que tu peux mettre
+  sur les affiches ».
+- **Lieu** : « possibilité que pour le lieu, si on met une adresse ça sort une
+  liste déroulante d'adresse jsp s'il faut une api google maps ou quoi ? »
+- **Petit déj** : « si c'est pas google sheets* » → Timothée : « Le faire sur le
+  site » ; « du coup tout le monde doit se créer un compte alors ? » → « faut
+  les forcer un peu à s'inscrire » → « ouais » ; « le petit déj, pas tout le
+  monde est chaud pour faire ».
+- **Tâches** : « les tâches c'est tjrs les mêmes à dupliquer et à remettre à la
+  bonne date butoir de l'an prochain » ; « ça envoie notif au pôle concerné pour
+  rappel de réaliser la tâche » ; « dès qu'il a fait il peut cliquer que c'est en
+  cours ou terminé » ; « tant que c'est en cours, y'a des notifs ».
+- **Tâches et évènements** : « faudrait voir si c'est mieux ou pas de relier »
+  → Timothée : « je pense que c'est mieux » ; « les events annuels apparaissent
+  aussi dans le calendrier event mais ils auront pas tous des inscriptions
+  (genre 1e mai inscription, noel pas besoin, paques non plus) » ; « selon le
+  profil si on est “interne” bah on peut ajouter des taches fin voir la vue back
+  office/outil ».
+- **Setlists** : « dans les setlist privés possibilité d'ajouter une
+  fonctionnalité de supprimer sans forcément aller dans la setlist ? genre d'ici
+  j'ai un bouton de suppression groupée ».
+- **Lancement** : QR code affiché par les présidents de groupe, présentation aux
+  groupes, « quand t'aurais la version 2.0 ? » ; « si y'a des choses à ajouter
+  c'est ce mois qu'il faut le faire ».
+
+**Mots de Timothée** (18/09/2026) : « Dit moi ce qu'il reste à faire […] il faut
+faire en sorte que tout ce qui a été décidé puisse être fait sur le site » ;
+« je vais lui montrer en local sur mon mac d'abord » ; « on ouvre maintenant
+dans l'app » (plannings) ; « est ce que tu peux faire en sorte que le planning
+qu'on fait sur le site ait la même apparence que le google sheet qu'on a
+aujourd'hui. Et aussi avoir un organigramme et tout ? » ; « il faudrait que
+l'admin puisse choisir qui est autorisé à modifier les plannings et lesquels » ;
+« il faut que t'utilises tous les skills qui sont à ta disposition ».
+
+**Ce que le code montre (18/09/2026)** :
+
+- Le champ `liens` d'un évènement affiche déjà des liens cliquables, mais aucun
+  n'est un **bouton d'inscription** ; le QR (`QrCodeLink`) pointe vers la fiche.
+- Les rappels de tâche existent (J-3, J-1, jour J) et vont **au responsable, ou
+  à tout le pôle** quand la tâche n'en a pas (`cron/reminders`, l. 113) : « notif
+  au pôle concerné » est déjà fait. Manquent le rythme **annuel** (`Rythme` =
+  semaine / 2semaines / mois) et l'état **en cours** (`Fois` = faite, ou rien).
+- Aucun lien entre une tâche et un évènement.
+- Une setlist ne se supprime que depuis sa fiche (`SetlistDetailClient`, menu ⋯).
+- Le petit déj est **lu** dans `Franco_Table_PtD` (lot 1b), jamais écrit.
+- `reservationsClosed` fait **déjà** disparaître les entraînements après le
+  dernier dimanche avant le jour J ; rien ne se passe **après** le jour J,
+  l'onglet reste jusqu'à ce qu'Alice le masque. `overlaps()` ne compare que les
+  créneaux **du programme courant**.
+- Le profil porte déjà des droits attribués par un admin, `annonces: string[]` et
+  `notify: string[]` : le modèle exact demandé pour les plannings.
+- `serviceRoles: Record<string, ServiceRole[]>` est **la matrice TEAM MUSICIENS**
+  du Sheet, colonne pour colonne (28 noms × 8 groupes).
+- L'onglet **ORGANIGRAMME** (`gid=496690710`) n'est **pas lu** : `sheets.ts` ne
+  connaît que les 8 onglets de planning. `Franco_Louange` = 11 colonnes ×
+  ~52 dimanches, coupé par trimestre ; les onglets de groupe portent l'horaire
+  dans leur en-tête (« GROUPE PAIX · Janvier à Mars 2026 · Dimanche de 13h à
+  14h30 ») et des noms fragiles (`Paix _T2`, `Bonté _T3`).
+
+**Tranché (entretien « grill » en cinq tours, 18/09/2026, Q1–Q30)** : voir les
+lots 10 à 17 de la partie 2. Les points qui ne se lisent pas dans un lot :
+
+| # | Décision |
+| --- | --- |
+| Q1 | La V2.0 est **montrée en local sur le Mac de Timothée** d'abord, pas déployée dans l'urgence. `main` est à **25 commits** derrière `ui/apple-design` et la branche n'est pas poussée : rien de tout cela n'est en ligne. |
+| Q2 | **QR code du site écarté** : « je vais créer un QRCode moi-même ». |
+| Q5 | **Autocomplétion d'adresse abandonnée** (« on abandonne ça ») : ni API Google Maps, ni suggestion des lieux déjà saisis. Le lieu reste un champ libre. |
+| Q7 | Relance d'une tâche « en cours » : **pas de notification supplémentaire** (règle du lot 1c), seulement une ligne dans le rappel du matin, après l'échéance. Proposition acceptée contre la lettre de la demande (« tant que c'est en cours, y'a des notifs »). |
+| Q26 | Le Planning **reste à 8 onglets** : petit déj fondu dans « Table », organigramme sorti dans *Moi* sous « Équipes ». |
+| Q28 | **Pas de fenêtre de conflit** sur la grille (« si on fait tout dans l'app on a pas besoin de ça ») : enregistrement case par case, l'historique nommé suffit à retrouver une modification écrasée. D'autant que seuls les autorisés écrivent. |
+| Q29 | **Ordre** : 10 → 11 → 12 → 13 → 14 → 15 → 16 → 17, du plus court au plus long, un commit par lot. Décidé par Claude sur « fait ce que tu penses est le mieux ». |
+| Q30 | **Planche cliquable** de la grille (ordinateur / téléphone) **avant** la spec du lot 17, pas avant les lots courts. |
+
 ## 4. Carte des modules de l'app « GCC »
 
 À valider par Timothée avant toute spec de module (les modules existants ne
@@ -512,6 +669,38 @@ porte le nom « GCC » et le menu par sections dont ces modules ont besoin.
   service n'apporte rien.
 - Maquettes du coup d'œil avant de coder : Timothée préfère tester le résultat
   en local et le montrer à Christelle.
+
+### Écarté le 17/09/2026
+
+- **Capo conseillé** (page du chant, setlist, mode louange) : **retiré**, plus
+  en stand-by — « on retire l'idée du capo conseillé ». Le capo reste ce qu'il
+  est aujourd'hui : choisi à la main en mode louange, retenu par chant sur
+  l'appareil (`perf-capos`), et repris par les fiches guitare de l'harmonie
+  (lot 9). Rien à coder, rien à défaire.
+- **Heures écrites « 12h00 »** (la maquette des évènements du 16/09) : non, le
+  site écrit **« 12:00 » partout**, planning compris ; la maquette ne l'emporte
+  pas sur la cohérence du site. Aucun « 12h00 » dans le code (vérifié le
+  17/09/2026), donc rien à changer.
+
+### Écarté le 18/09/2026
+
+- **QR code du site fourni par l'app** (page « Inviter » pour le lancement) :
+  « pas besoin de ça, je vais créer un QRCode moi-même ».
+- **Autocomplétion d'adresse sur le lieu d'un évènement** : « on abandonne ça ».
+  Ni API Google Maps (payante, clé exposée, quota — contre la règle du coût nul),
+  ni suggestion des lieux déjà saisis. Le lieu reste un champ libre.
+- **Se retirer soi-même d'une case du planning** : non — « il faut envoyer un
+  message si on est pas dispo ». Seul le **petit déj** permet de se retirer, parce
+  qu'on s'y inscrit soi-même.
+- **Deux onglets de programme de scène en même temps** (Noël et Pâques) : non,
+  `overlaps()` ne compare que les créneaux du programme courant, deux programmes
+  affichés laisseraient réserver la scène deux fois au même moment sans alerte.
+  Remplacé par la bascule automatique (lot 12).
+- **Fenêtre de conflit sur une case du planning** : non — « si on fait tout dans
+  l'app on a pas besoin de ça ». Enregistrement case par case et historique nommé.
+- **Notification de relance tant qu'une tâche est « en cours »** : non, une ligne
+  dans le rappel groupé du matin après l'échéance (règle du lot 1c, une seule
+  notification par personne et par jour).
 
 ## 6. Journal
 
@@ -626,6 +815,81 @@ porte le nom « GCC » et le menu par sections dont ces modules ont besoin.
   lots 5, 7 et 8 ; `tsc` et lint propres, suite Playwright non relancée pour
   ce commit. Entretien des lots 5, 7 et 8 (§ 3.N), trois specs écrites ;
   réponses de Timothée à la remise, **go pour les trois lots**.
+
+- 17/09/2026 : Timothée : **les règles Firestore sont publiées** (tâches,
+  réunions de pôle, accueil compris). Demandes du jour : voir échouer les tests
+  écrits après le code (Tâches, guide), corriger les accords d'un chant chinois
+  qui passent à la ligne sur téléphone, faire les captures du guide (A5).
+  Fait le jour même : tests vus en échec sur le code d'avant chaque lot (sauf
+  les tests négatifs, refusés par le contrôle des permissions), test du 中文
+  renforcé parce qu'il passait sur l'ancien code, accords chinois corrigés
+  (`spec-nouveaux-membres.md`, « Avancement »). Puis retour sur l'onglet
+  Évènements : carte de gestion de la maquette pour l'organisateur, état
+  « Fermées » cohérent, formulaire (`spec-evenements-look.md` § 6). A5 attend
+  la validation de ce look. Puis : noms des inscrits visibles de tout membre
+  connecté (`access.ts` + `firestore.rules`, **règles à republier**) ; liste des
+  évènements en grandes cartes comme la maquette (`spec-evenements-look.md` § 6).
+  Nouvelle demande : période d'inscription (ouverture, fin, forçage, rappel du
+  jour) : spec `spec-inscriptions-periode.md`, go le 17/09/2026, P1 à P4 codées
+  (non commité, à valider en local).
+  Nouvelle demande : avant / après dans l'historique des setlists (§ 3.O),
+  structures et liste des chants, plus les notes : spec
+  `spec-historique-avant-apres.md` écrite ; recommandations acceptées et go ;
+  codé le jour même (H1 structures, H2 liste des chants, H3 notes), **non
+  commité, à valider en local**.
+
+- 17/09/2026 (suite) : demande de Timothée, aides à la réharmonisation pour
+  pianistes et guitaristes (§ 3.P). Entretien en sept tours (skill
+  *grilling*), tout tranché ; spec `spec-harmonie.md` écrite, lot 9 ajouté au
+  § 2, **à relire** ; code après la validation des lots en cours.
+
+- 17/09/2026 (soir, go) : Timothée : « Fait le lot 9 en entier, le lot 1b sans
+  le sheet, fait la finition index A–Z, on retire l'idée du capo conseillé. Le
+  format de l'heure en 12:00 ». Plan dans `tasks/plan-lot9.md` (celui du lot 4
+  n'est pas touché). Traité dans l'ordre : **décisions** (capo retiré, heure
+  « 12:00 » tranchée, index A–Z revérifié — sa finition D7 était déjà livrée
+  avec la tranche T0 du lot 4, 18 tests verts sur trois appareils, la feuille
+  de route disait le contraire) ; **lot 1b** lu dans le bloc « PETIT DÉJEUNER »
+  de l'onglet existant `Franco_Table_PtD`, sans attendre le fichier de
+  Christelle ; puis le **lot 9** tranche par tranche, dans la nuit du 17 au
+  18/09/2026. Trois tranches ont été confiées à des agents en parallèle (Ma
+  version « seulement ce passage », retouche d'accord sur scan 简谱, relecture
+  du code d'harmonie) : Timothée l'avait proposé (« si t'as besoin de créer des
+  agents […] fais-le »). Chaque tranche garde son test écrit d'abord, vu en
+  échec, et ses captures regardées sur les trois appareils.
+
+- 18/09/2026 (incident, réparé) : en ajoutant les libellés de l'harmonie, les
+  deux fichiers de langue ont été **repris depuis `git HEAD`** — donc sans les
+  libellés du 17/09, non commités (avant / après de l'historique, période
+  d'inscription, retours du soir) : **30 clés effacées**, 36 tests rouges sur
+  `setlist-history`, et des écrans qui affichaient `setlists.history.before`
+  au lieu de « Avant ». Reconstruites **depuis ce que les tests exigent mot
+  pour mot** ; vérifié ensuite qu'aucune clé de HEAD ne manque, qu'il n'y a
+  aucun écart entre `fr.json` et `zh-CN.json`, et que tous les préfixes
+  dynamiques résolvent. `setlist-history` 75/75 et `evenements` 69/69 verts.
+  **À regarder en relecture locale** : un libellé qu'aucun test ne vérifie
+  pourrait manquer encore — il s'afficherait comme `une.clé.en.points`.
+
+- 18/09/2026 : Timothée transmet la conversation WhatsApp de la nuit avec
+  Christelle (15 captures) et demande l'état des lieux plus l'intégration de
+  tout ce qui y est décidé. État des lieux établi : `main` est à **25 commits**
+  derrière `ui/apple-design`, la branche n'est pas poussée, **rien n'est en
+  ligne** ; sept chantiers non commités dans l'arbre. Entretien « grill » en
+  **cinq tours** (Q1–Q30, § 3.Q), tout tranché ; deux propositions écartées par
+  Timothée (QR code du site, autocomplétion d'adresse), une recommandation
+  maintenue contre la lettre de la demande (relances d'une tâche en cours), une
+  simplification demandée par Timothée et acceptée (pas de fenêtre de conflit).
+  Huit lots ajoutés en partie 2 (10 à 17). Sur « fait ce que tu penses est le
+  mieux » : ordre du plus court au plus long, planche cliquable seulement avant
+  le lot 17, et **commit de l'arbre** pour protéger les sept chantiers.
+  Trouvé et corrigé au passage, résidu de l'incident du 18/09 : trois libellés
+  d'harmonie (`endroits`, `ecartees`, `repertoireCompte`) écrits en 中文 sans le
+  suffixe `_other` alors que les neuf autres pluriels du fichier l'ont — en
+  chinois ils retombaient sur le français. Contrôles : `tsc` propre (la seule
+  erreur vient de `.next/types`, artefact de développement qui cite une route
+  supprimée), lint 0 erreur (54 avertissements préexistants), 370 chants
+  valides, harmonie 74 tests verts sur trois appareils (un échec sur téléphone
+  non reproductible seul : flottant sous charge).
 
 ## 7. Relecture adversariale (14/09/2026)
 

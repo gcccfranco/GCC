@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "npm run build:index && next build",
     "build:glyphs": "tsx scripts/build-glyph-widths.ts",
-    "build:index": "tsx scripts/build-glyph-widths.ts && tsx scripts/build-index.ts",
+    "build:index": "tsx scripts/build-glyph-widths.ts && tsx scripts/build-index.ts && tsx scripts/build-harmonie.ts",
     "start": "next start",
     "lint": "eslint .",
     "validate": "tsx scripts/validate-songs.ts",

@@ -51,6 +51,8 @@ export function serviceColor(service: string): string {
   if (service.startsWith("EDD")) return "#3b6d11";
   if (service.startsWith("Campus")) return "#2471a3";
   if (service === "Culte Franco") return "#2d5a65";
-  if (service === "Prépa. Table") return "#c87941";
+  // Petit déj (lot 1b) : même orange que la Prépa. Table, même famille ;
+  // aucune couleur nouvelle n'est introduite (palette gelée).
+  if (service === "Prépa. Table" || service === "Petit déj") return "#c87941";
   return CATEGORY_COLORS[service] ?? "#64748b";
 }

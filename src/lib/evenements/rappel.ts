@@ -1,7 +1,10 @@
-// Rappel de la veille aux inscrits d'un évènement (lot 6), envoyé par le cron
-// quotidien. Fonction pure, partagée avec les tests.
+// Rappel de la veille aux inscrits d'un évènement (lot 6) et ligne « Inscriptions
+// ouvertes » du jour d'ouverture (période d'inscription, 17/09/2026), envoyés
+// par le cron quotidien. Fonctions pures, partagées avec les tests.
 
 import type { Evenement } from "@/types/evenement";
+import { isInfo, isPast, modeInscriptions } from "@/lib/evenements/agenda";
+import { poleDuPour } from "@/lib/access";
 import type { NotifLang } from "@/types/user";
 import { formatReminderDate } from "@/lib/push/reminderMessage";
 
@@ -34,4 +37,31 @@ export function nouvelEvenementMessage(
     title: info ? `Info — ${e.titre}` : `Évènement — ${e.titre}`,
     body: `${e.lieu || e.description.slice(0, 80)}${when}`.trim() || e.titre,
   };
+}
+
+/** Les inscriptions s'ouvrent aujourd'hui : mode automatique, ouverture datée
+ *  du jour, évènement à inscriptions (ni info ni réunion de pôle) pas passé. */
+export function ouvertureDuJour(
+  e: Pick<Evenement, "type" | "date" | "dateFin" | "pour" | "inscriptions" | "inscriptionOuverte" | "inscriptionDebut">,
+  today: string,
+): boolean {
+  return modeInscriptions(e) === "auto" && !isInfo(e) && !poleDuPour(e.pour)
+    && (e.inscriptionDebut ?? "").slice(0, 10) === today && !isPast(e, today);
+}
+
+/** « Inscriptions ouvertes : titre (dès 10:00) », dans la langue du destinataire. */
+export function ligneOuverture(e: Pick<Evenement, "titre" | "inscriptionDebut">, lang: NotifLang): string {
+  const heure = (e.inscriptionDebut ?? "").split("T")[1];
+  if (lang === "zh-CN") return `报名开始：${e.titre}${heure ? `（${heure} 起）` : ""}`;
+  return `Inscriptions ouvertes : ${e.titre}${heure ? ` (dès ${heure})` : ""}`;
+}
+
+/** Titre d'une notification qui ne porte que des ouvertures d'inscriptions. */
+export function ouverturesTitre(lang: NotifLang): string {
+  return lang === "zh-CN" ? "报名开始" : "Inscriptions ouvertes";
+}
+
+/** Corps d'une notification du jour, des lignes ajoutées à la suite. */
+export function avecLignes(body: string, lignes: string[]): string {
+  return [body, ...lignes].filter(Boolean).join("\n");
 }

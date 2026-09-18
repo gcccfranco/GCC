@@ -13,7 +13,9 @@ const FLAT_KEYS = new Set(["F", "Bb", "Eb", "Ab", "Db", "Gb", "Cb", "Fb"]);
 // parallèle, jamais écrits A#/D# en pratique.
 const FLAT_DEGREES = new Set([3, 8]);
 
-function noteToIndex(note: string): number {
+/** Demi-tons de C à cette note (-1 si ce n'est pas une note) — l'harmonie
+ *  s'en sert pour situer un accord dans la tonalité (`lib/harmonie/degres.ts`). */
+export function noteToIndex(note: string): number {
   const i = SHARPS.indexOf(note);
   if (i !== -1) return i;
   const j = FLATS.indexOf(note);

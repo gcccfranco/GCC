@@ -186,6 +186,14 @@
     box-shadow: var(--shadow-soft);
   }
 
+  /* Harmonie (lot 9) : la section visée par une idée s'entoure un instant
+     quand on touche « Montrer ». */
+  .harmonie-surligne {
+    outline: 2px solid var(--chord-color);
+    outline-offset: 3px;
+    border-radius: 12px;
+  }
+
   .font-chord {
     color: var(--chord-color);
   }

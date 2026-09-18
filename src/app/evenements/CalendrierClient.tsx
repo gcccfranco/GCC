@@ -18,7 +18,7 @@ import { EVENEMENTS_CHANGED, getInscription, listEvenements } from "@/lib/fireba
 import { daysAgo, groupByMonth, isExpired, isInfo, isPast } from "@/lib/evenements/agenda"
 import { todayIso } from "@/lib/scene/dimanches"
 import type { Evenement } from "@/types/evenement"
-import { EvenementCard } from "./EvenementCard"
+import { EvenementCard, EvenementCarte } from "./EvenementCard"
 
 export function CalendrierClient() {
   const { t, i18n } = useTranslation()
@@ -87,9 +87,9 @@ export function CalendrierClient() {
         </p>
       )}
       {upcoming.map((g) => (
-        <section key={g.key} className="space-y-2">
+        <section key={g.key} className="space-y-3">
           <h2 className="text-sm font-semibold text-muted-foreground px-1 capitalize">{g.label}</h2>
-          {g.evenements.map((e) => <EvenementCard key={e.id} evenement={e} inscrit={!!user && inscrits.has(e.id)} />)}
+          {g.evenements.map((e) => <EvenementCarte key={e.id} evenement={e} inscrit={!!user && inscrits.has(e.id)} />)}
         </section>
       ))}
 

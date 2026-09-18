@@ -35,6 +35,7 @@ import {
 } from "@/lib/setlist/formItems";
 import { buildSetlistItems, detectSetlistLanguage } from "@/lib/setlist/buildSetlistItems";
 import { historyAuthor, recordCreation, recordHistory, type HistoryPass } from "@/lib/firebase/setlistHistory";
+import type { SectionsOf } from "@/lib/setlist/history";
 import type { SongIndexEntry } from "@/types/song";
 import { useDefaultSensors } from "@/lib/dnd/sensors";
 import { nextUid } from "@/lib/uid";
@@ -283,6 +284,11 @@ export function SetlistForm({ mode, setlistId, songs, initial }: SetlistFormProp
   // l'éditeur (comparer au document brut ferait apparaître de faux changements).
   const historyPassRef = useRef<HistoryPass | null>(null);
   const baselineJsonRef = useRef(payloadJson);
+  // Sections des chants (avant / après des structures), à jour des chants reçus.
+  const sectionsOfRef = useRef<SectionsOf>(() => undefined);
+  useEffect(() => {
+    sectionsOfRef.current = (slug) => songs.find((s) => s.slug === slug)?.sections;
+  });
 
   // Les enregistrements se suivent : un envoi plus ancien ne peut pas arriver après un plus récent.
   const saveChainRef = useRef<Promise<void>>(Promise.resolve());
@@ -302,7 +308,7 @@ export function SetlistForm({ mode, setlistId, songs, initial }: SetlistFormProp
         const author = historyAuthor(profileRef.current);
         if (author) {
           historyPassRef.current ??= { setlistId, author, baseline: JSON.parse(baselineJsonRef.current) };
-          await recordHistory(historyPassRef.current, next);
+          await recordHistory(historyPassRef.current, next, sectionsOfRef.current);
         }
       } catch {
         setAutoSaveError(true);

@@ -1,5 +1,6 @@
 {
   "common": {
+    "noAccess": "Cette page est réservée aux musiciens de l'équipe.",
     "header": {
       "title": "GCC Louange",
       "songs": "Chants",
@@ -329,7 +330,15 @@
       "moment": {
         "matin": "matin",
         "soir": "soir"
-      }
+      },
+      "before": "Avant",
+      "after": "Après",
+      "removed": "retiré",
+      "added": "ajouté",
+      "moved": "déplacé",
+      "showBeforeAfter": "Voir avant / après",
+      "hideBeforeAfter": "Masquer avant / après",
+      "songs": "Chants de la setlist"
     },
     "contentEdit": {
       "toggle": "Adapter",
@@ -739,6 +748,19 @@
         ],
         "tip": "Le réglage d'affichage est retenu sur ton appareil."
       },
+      "harmonie": {
+        "title": "Harmonie",
+        "for": "Pianistes et guitaristes",
+        "body": "Un catalogue d'idées pour **réharmoniser** un chant : substitutions, couleurs, lignes de basse, montées, fins, modulations… Chaque fiche dit ce que ça change, pourquoi ça marche, quand l'éviter, et comment le jouer au piano ou à la guitare.",
+        "points": [
+          "**Par où commencer** : dix fiches dans l'ordre, de la plus simple à la plus riche.",
+          "Filtre par **sensation** (épique, douceur…), par **moment** du chant et par niveau.",
+          "Sur un chant, **Idées d'harmonie** (menu ⋯) propose ce qui s'applique **à ce chant-là**, avec les vrais accords.",
+          "Une idée ne convient pas ? **Ne marche pas sur ce chant** la retire pour tout le monde.",
+          "Ajoute tes propres **idées** : l'équipe les voit sur le chant."
+        ],
+        "tip": "Les idées sont calculées sur les accords : le site n'entend pas la mélodie. D'où « À vérifier en jouant »."
+      },
       "maVersion": {
         "title": "Ma version d'un chant",
         "for": "Tous ceux qui voient la setlist",
@@ -908,6 +930,7 @@
       "accueil": "Accueil",
       "culte": "Culte Franco",
       "table": "Prépa. Table",
+      "petitDej": "Petit déj",
       "groupes": "Groupes",
       "edd": "EDD",
       "campus": "Campus",
@@ -1497,8 +1520,8 @@
       "pour": "Public",
       "date": "Date",
       "heure": "Horaire",
-      "heureFin": "Heure de fin",
-      "dateFin": "Date de fin",
+      "heureFin": "Fin de l'évènement (heure)",
+      "dateFin": "Fin de l'évènement (date)",
       "lieu": "Lieu",
       "description": "Description",
       "places": "Places",
@@ -1524,7 +1547,24 @@
       "errorDateFin": "La date de fin doit suivre la date.",
       "errorSave": "Enregistrement impossible. Vérifie ta connexion et que les règles Firestore sont publiées.",
       "plusOptions": "Plus d'options",
-      "banniere": "Ajouter une bannière"
+      "banniere": "Ajouter une bannière",
+      "inscriptions": "Inscriptions",
+      "mode": {
+        "auto": "Automatique",
+        "ouvertes": "Ouvertes",
+        "fermees": "Fermées"
+      },
+      "modeAide": {
+        "ouvertes": "Ouvertes quoi qu'il arrive, dans la limite des places.",
+        "fermees": "Fermées : personne ne peut s'inscrire."
+      },
+      "insDebut": "Ouverture des inscriptions",
+      "insDebutHeure": "Heure d'ouverture des inscriptions",
+      "insDebutAide": "Vide : dès la publication",
+      "insFin": "Fin des inscriptions",
+      "insFinHeure": "Heure de fin des inscriptions",
+      "insFinAide": "Vide : au début de l'évènement",
+      "errorInsFin": "La fin des inscriptions est avant leur ouverture."
     },
     "jeParticipe": "Je participe",
     "tuParticipes": "Tu participes",
@@ -1557,7 +1597,17 @@
     "masquerInscrits": "Masquer les inscrits",
     "lienFiche": "Lien de la fiche",
     "pourPole": "Pôle {{pole}}",
-    "noneHint": "Ajoute le prochain avec « Nouvel évènement »."
+    "noneHint": "Ajoute le prochain avec « Nouvel évènement ».",
+    "bientot": "Bientôt",
+    "reglageInscriptions": "Inscriptions",
+    "aHeure": "{{jour}} à {{heure}}",
+    "raison": {
+      "pasEncore": "Inscriptions à partir du {{quand}}",
+      "terminee": "Inscriptions closes le {{quand}}",
+      "commencee": "Inscriptions fermées : l'évènement a commencé",
+      "fermee": "Inscriptions fermées par l'organisateur"
+    },
+    "lienInscription": "Lien d'inscription"
   },
   "moi": {
     "title": "Moi",
@@ -1745,5 +1795,111 @@
     "deuxTonalites": "{{a}} et {{b}}",
     "toutesTonalites": "Toutes les tonalités",
     "seule": "{{key}} seul"
+  },
+  "harmonie": {
+    "titre": "Harmonie",
+    "sousTitre": "Des idées pour réharmoniser, au piano et à la guitare.",
+    "idees": "Idées d'harmonie",
+    "parcours": "Par où commencer",
+    "aVerifier": "À vérifier en jouant",
+    "essayer": "Essayer dans Ma version",
+    "appliquer": "Appliquer à la setlist",
+    "neMarchePas": "Ne marche pas sur ce chant",
+    "remettre": "Remettre cette idée",
+    "toutesRepetitions": "Toutes les répétitions",
+    "seulementCePassage": "Seulement ce passage",
+    "reporterJianpu": "À reporter sur la partition 简谱 : {{quoi}}",
+    "bandeauModulation": "{{section}} : on monte en {{ton}}",
+    "nouveau": "nouveau",
+    "endroits": "{{count}} endroit",
+    "endroits_other": "{{count}} endroits",
+    "ecartees": "{{count}} idée écartée",
+    "ecartees_other": "{{count}} idées écartées",
+    "montrer": "Montrer",
+    "resteEnD": "Seul l'avant → après suit la tonalité : le reste de la fiche reste écrit en {{ton}}.",
+    "formesEcrites": "Formes écrites en {{ton}}.",
+    "formesSonnent": "Ces formes (écrites en {{ton}}) sonnent en {{sonne}}.",
+    "foisEnSetlist": "{{count}} fois en setlist",
+    "capoTitre": "Capo",
+    "degre": "degré {{degre}}",
+    "ariaDoigte": "Doigté guitare {{doigte}}",
+    "ariaClavier": "Notes au piano : {{notes}}",
+    "voirPlus": "Voir plus",
+    "aRelire": "à relire",
+    "aRelireTout": "Les fiches sont en relecture : leur contenu peut encore changer.",
+    "instrument": {
+      "piano": "Piano",
+      "guitare": "Guitare"
+    },
+    "niveau": {
+      "facile": "Facile",
+      "intermediaire": "Intermédiaire",
+      "avance": "Avancé",
+      "titre": "Niveau"
+    },
+    "sensation": {
+      "titre": "Sensation",
+      "epique": "Épique",
+      "majeste": "Majesté",
+      "tension": "Tension",
+      "repos": "Repos",
+      "surprise": "Surprise",
+      "suspendu": "Suspendu et planant",
+      "emerveillement": "Émerveillement",
+      "douceur": "Douceur et intimité",
+      "tendresse": "Tendresse et nostalgie",
+      "gravite": "Gravité et recueillement",
+      "lumiere": "Lumière et espérance",
+      "joie": "Joie et élan"
+    },
+    "moment": {
+      "titre": "Moment",
+      "intro": "Intro",
+      "couplet": "Couplet",
+      "montee": "Montée",
+      "refrain": "Refrain",
+      "pont": "Pont",
+      "fin": "Fin",
+      "transition": "Transition"
+    },
+    "surete": {
+      "tres-sure": "Très sûre",
+      "sure": "Sûre",
+      "a-ecouter": "À écouter"
+    },
+    "avantApres": "Avant → après",
+    "pourquoi": "Pourquoi ça marche",
+    "eviter": "Quand l'éviter",
+    "auPiano": "Au piano",
+    "aLaGuitare": "À la guitare",
+    "repertoire": "Dans le répertoire",
+    "repertoireCompte": "{{count}} chant qui le joue déjà",
+    "repertoireCompte_other": "{{count}} chants qui le jouent déjà",
+    "tonalite": "Tonalité",
+    "capo": "Capo {{n}}",
+    "sansCapo": "Sans capo",
+    "aucuneFiche": "Aucune fiche avec ces filtres.",
+    "effacerFiltres": "Tout afficher",
+    "retour": "Harmonie",
+    "idee": {
+      "ajouter": "Ajouter une idée",
+      "titre": "Idées de l'équipe",
+      "texte": "L'idée",
+      "avant": "Avant (accords)",
+      "apres": "Après (accords)",
+      "fiche": "Fiche liée",
+      "aucune": "Aucune idée pour l'instant.",
+      "supprimer": "Supprimer",
+      "modifier": "Modifier",
+      "enregistrer": "Enregistrer",
+      "annuler": "Annuler"
+    },
+    "modulation": {
+      "titre": "Faire monter le dernier refrain",
+      "ou": "{{section}} en {{ton}}"
+    },
+    "transition": {
+      "titre": "Vers le chant suivant"
+    }
   }
 }

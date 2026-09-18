@@ -66,7 +66,7 @@ export const CHART_TYPE_COLOR: Record<string, string> = {
 };
 
 // Clé --sec-* d'un type de section (mêmes correspondances que CHART_TYPE_COLOR).
-const SECTION_PALETTE_KEY: Record<string, string> = {
+export const SECTION_PALETTE_KEY: Record<string, string> = {
   intro: "intro",
   verse: "verse",
   prechorus: "prechorus",
@@ -170,6 +170,8 @@ function isCJK(ch: string) {
   return (cp >= 0x4e00 && cp <= 0x9fff) || (cp >= 0x3400 && cp <= 0x4dbf);
 }
 
+const ZH_PUNCTUATION = /^[，。、；：！？」』）…,.;:!?)]$/;
+
 interface ZhLineProps {
   tokens: Token[];
   pinyin: string | null;
@@ -240,6 +242,22 @@ function ZhLine({ tokens, pinyin, showChords, showPinyin, hideLyrics = false, ch
   }
 
   const hasAnyChord = showChords && cols.some((c) => c.chord !== null);
+  // Air au-dessus de la ligne quand elle porte des accords : sinon
+  // l'accord (haut de colonne) vient « manger » le pinyin de la ligne
+  // précédente (bas de colonne).
+  const chordAir = hasAnyChord ? (isPdfTypo ? "0.2em" : "0.35em") : undefined;
+
+  // Une ligne trop longue passe à la ligne colonne par colonne. Ce qui n'a pas
+  // de caractère à soi (accord seul, espace) et la ponctuation restent collés
+  // au caractère qui précède : sinon, sur téléphone, un accord de fin de ligne
+  // ou une virgule ouvrait seul la rangée suivante, sous les paroles.
+  const groups: { cols: Col[]; lyric: boolean }[] = [];
+  for (const col of cols) {
+    const lyric = col.char.trim() !== "" && !ZH_PUNCTUATION.test(col.char);
+    const last = groups[groups.length - 1];
+    if (last?.lyric && !lyric) last.cols.push(col);
+    else groups.push({ cols: [col], lyric });
+  }
 
   const cellMinWidth = (col: Col): string | undefined => {
     if (isCJK(col.char)) return "1.6em";
@@ -254,67 +272,71 @@ function ZhLine({ tokens, pinyin, showChords, showPinyin, hideLyrics = false, ch
       className="flex flex-wrap items-start mb-[3px]"
       style={{
         fontSize: baseSize,
-        // Air au-dessus de la ligne quand elle porte des accords : sinon
-        // l'accord (haut de colonne) vient « manger » le pinyin de la ligne
-        // précédente (bas de colonne).
-        marginTop: hasAnyChord ? (isPdfTypo ? "0.2em" : "0.35em") : undefined,
+        marginTop: chordAir,
+        // Entre les rangées d'une ligne coupée, le même air qu'entre deux
+        // lignes (la marge du bas se fond dans celle du haut).
+        rowGap: chordAir,
       }}
     >
-      {cols.map((col, i) => {
-        if (!showChords && col.char === " " && col.chord !== null) return null;
-        return (
-          <span
-            key={i}
-            style={{
-              display: "inline-flex",
-              flexDirection: "column",
-              alignItems: "center",
-              minWidth: cellMinWidth(col),
-            }}
-          >
-            {showChords && (
+      {groups.map((group, gi) => (
+        <span key={gi} style={{ display: "inline-flex", alignItems: "flex-start" }}>
+          {group.cols.map((col, i) => {
+            if (!showChords && col.char === " " && col.chord !== null) return null;
+            return (
               <span
-                data-copy-ignore
+                key={i}
                 style={{
-                  fontWeight: 700,
-                  fontSize: chordEm,
-                  lineHeight: "0.7",
-                  minHeight: hasAnyChord ? "1.1em" : undefined,
-                  color: "var(--jianpu-color, #b3261d)",
-                  visibility: col.chord ? "visible" : "hidden",
-                  whiteSpace: "nowrap",
-                }}
-                className={chord_font.className}
-              >
-                {col.chord ?? "x"}
-              </span>
-            )}
-            <span
-              className={zh_lyric_font.className}
-              style={{ fontSize: charEm, lineHeight: 1.35, visibility: hideLyrics ? "hidden" : undefined }}
-            >
-              {col.char}
-            </span>
-            {showPinyin && !hideLyrics && (
-              <span
-                data-copy-ignore
-                className={pinyin_font.className}
-                style={{
-                  fontSize: pinyinEm,
-                  lineHeight: 1.2,
-                  color: "var(--muted-foreground)",
-                  whiteSpace: "nowrap",
-                  // Une syllabe plus large que la colonne (« chuàng ») l'élargit :
-                  // cette marge garde un espace avec sa voisine.
-                  paddingInline: "0.15em",
+                  display: "inline-flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  minWidth: cellMinWidth(col),
                 }}
               >
-                {col.py || " "}
+                {showChords && (
+                  <span
+                    data-copy-ignore
+                    style={{
+                      fontWeight: 700,
+                      fontSize: chordEm,
+                      lineHeight: "0.7",
+                      minHeight: hasAnyChord ? "1.1em" : undefined,
+                      color: "var(--jianpu-color, #b3261d)",
+                      visibility: col.chord ? "visible" : "hidden",
+                      whiteSpace: "nowrap",
+                    }}
+                    className={chord_font.className}
+                  >
+                    {col.chord ?? "x"}
+                  </span>
+                )}
+                <span
+                  className={zh_lyric_font.className}
+                  style={{ fontSize: charEm, lineHeight: 1.35, visibility: hideLyrics ? "hidden" : undefined }}
+                >
+                  {col.char}
+                </span>
+                {showPinyin && !hideLyrics && (
+                  <span
+                    data-copy-ignore
+                    className={pinyin_font.className}
+                    style={{
+                      fontSize: pinyinEm,
+                      lineHeight: 1.2,
+                      color: "var(--muted-foreground)",
+                      whiteSpace: "nowrap",
+                      // Une syllabe plus large que la colonne (« chuàng ») l'élargit :
+                      // cette marge garde un espace avec sa voisine.
+                      paddingInline: "0.15em",
+                    }}
+                  >
+                    {col.py || " "}
+                  </span>
+                )}
               </span>
-            )}
-          </span>
-        );
-      })}
+            );
+          })}
+        </span>
+      ))}
     </div>
   );
 }

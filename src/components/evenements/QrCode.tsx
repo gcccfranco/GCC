@@ -1,14 +1,14 @@
 "use client"
 
-// Lien d'une fiche d'évènement avec son QR code (lot 6 bis) : le QR est
-// visible d'emblée en petit, un tap l'agrandit pour être photographié ou
-// imprimé ; l'adresse est écrite à côté.
+// Lien d'inscription d'un évènement avec son QR code (lot 6 bis) : le QR est
+// visible d'emblée dans une petite tuile, un tap l'agrandit pour être
+// photographié ou imprimé ; l'adresse, sans « https:// », est écrite à côté.
 
 import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import QRCode from "qrcode"
 
-export function QrCodeLink({ path, label }: { path: string; label: string }) {
+export function QrCodeLink({ path, label, avecInscriptions }: { path: string; label: string; avecInscriptions: boolean }) {
   const { t } = useTranslation()
   const [src, setSrc] = useState("")
   const [big, setBig] = useState(false)
@@ -24,7 +24,7 @@ export function QrCodeLink({ path, label }: { path: string; label: string }) {
         type="button"
         onClick={() => setBig((b) => !b)}
         aria-pressed={big}
-        className={`shrink-0 overflow-hidden rounded-xl bg-white p-1.5 transition-[width,height] duration-200 ${big ? "h-56 w-56" : "h-20 w-20"}`}
+        className={`shrink-0 overflow-hidden rounded-xl border border-border bg-white p-2 transition-[width,height] duration-200 ${big ? "h-56 w-56" : "h-16 w-16"}`}
       >
         {src ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -34,8 +34,8 @@ export function QrCodeLink({ path, label }: { path: string; label: string }) {
         )}
       </button>
       <div className="min-w-0">
-        <p className="text-sm font-semibold text-foreground">{t("evenements.lienFiche")}</p>
-        <p className="break-all text-xs text-muted-foreground">{url}</p>
+        <p className="text-sm text-muted-foreground">{t(avecInscriptions ? "evenements.lienInscription" : "evenements.lienFiche")}</p>
+        <a href={url} className="block truncate text-sm font-medium text-foreground underline-offset-4 hover:underline">{url.replace(/^https?:\/\//, "")}</a>
       </div>
     </div>
   )

@@ -1,7 +1,7 @@
 // Calculs purs du calendrier des évènements : tri, groupes par mois, passés,
 // places restantes. Dates ISO comparées comme du texte.
 
-import type { Evenement } from "@/types/evenement";
+import type { Evenement, ModeInscriptions } from "@/types/evenement";
 
 export const isInfo = (e: Pick<Evenement, "type" | "date">) => e.type === "info" || !e.date;
 
@@ -63,19 +63,36 @@ export function daysAgo(today: string, days: number): string {
   return new Date(Date.UTC(y, m - 1, d) - days * 86_400_000).toISOString().slice(0, 10);
 }
 
-export type RefusInscription = "fermee" | "commencee" | "complet";
+export type RefusInscription = "fermee" | "pasEncore" | "terminee" | "commencee" | "complet";
+
+/** Mode des inscriptions (docs/spec-inscriptions-periode.md). Un évènement
+ *  d'avant le 17/09/2026 n'a que l'interrupteur `inscriptionOuverte`. */
+export function modeInscriptions(e: Pick<Evenement, "inscriptions" | "inscriptionOuverte">): ModeInscriptions {
+  return e.inscriptions ?? (e.inscriptionOuverte ? "auto" : "fermees");
+}
+
+/** Borne d'une période d'inscription, comparable à `nowIsoParis()` : sans heure,
+ *  l'ouverture se fait à 00:00 et la fin à 23:59. */
+export function borneInscription(valeur: string, sansHeure: "00:00" | "23:59"): string {
+  return valeur.includes("T") ? valeur : `${valeur}T${sansHeure}`;
+}
 
 /** Pourquoi une inscription (1 personne + `invites`) serait refusée, ou null si
- *  elle passe. Même règle côté client (boutons) et côté serveur (transaction). */
+ *  elle passe. Même règle côté client (boutons) et côté serveur (transaction).
+ *  « Fermées » par le responsable l'emporte ; les places tiennent toujours, même
+ *  « Ouvertes » forcées ; en automatique : ouverture, fin, sinon début de l'évènement. */
 export function refusInscription(
-  e: Pick<Evenement, "type" | "date" | "heure" | "inscriptionOuverte" | "placesMax" | "inscrits">,
+  e: Pick<Evenement, "type" | "date" | "heure" | "inscriptions" | "inscriptionOuverte" | "inscriptionDebut" | "inscriptionFin" | "placesMax" | "inscrits">,
   invites: number,
   nowIso: string,
 ): RefusInscription | null {
-  if (isInfo(e) || !e.inscriptionOuverte) return "fermee";
-  if (aCommence(e, nowIso)) return "commencee";
+  const mode = modeInscriptions(e);
+  if (isInfo(e) || mode === "fermees") return "fermee";
   if (e.placesMax !== null && e.inscrits + 1 + invites > e.placesMax) return "complet";
-  return null;
+  if (mode === "ouvertes") return null;
+  if (e.inscriptionDebut && nowIso < borneInscription(e.inscriptionDebut, "00:00")) return "pasEncore";
+  if (e.inscriptionFin) return nowIso > borneInscription(e.inscriptionFin, "23:59") ? "terminee" : null;
+  return aCommence(e, nowIso) ? "commencee" : null;
 }
 
 /** Maintenant, en heure de Paris, « AAAA-MM-JJTHH:MM » (serveur comme navigateur). */

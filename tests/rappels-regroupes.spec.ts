@@ -8,7 +8,7 @@ import type { PlanningData } from "../src/lib/planning/names";
 // français ou en 中文 selon la langue mémorisée côté serveur.
 
 const vide: PlanningData = {
-  culte: [], dejeuner: [], paix: [], fidelite: [], fideliteMusic: [], bonte: [],
+  culte: [], dejeuner: [], petitDej: [], paix: [], fidelite: [], fideliteMusic: [], bonte: [],
   edd: {}, campus: [], intergroupe: [], interfranco: [],
 };
 

@@ -5,6 +5,9 @@ import { Trans, useTranslation } from "react-i18next";
 import Image from "next/image";
 import type { JianpuEntry } from "@/lib/jianpu/images";
 import { jianpuImageUrl, useJianpuChords } from "@/lib/jianpu/images";
+import { aDesRetouches, cibleRetouche, type CibleRetouche } from "@/lib/jianpu/retouches";
+import { JianpuChordSheet } from "@/components/jianpu/JianpuChordSheet";
+import type { JianpuChords } from "@/types/setList";
 import { altSpellingKey, getTransposedKey, semitonesTo, transposeLabel } from "@/lib/transpose";
 
 /** Les étiquettes du scan sont mesurées en **hauteur d'encre** (le haut d'une
@@ -126,6 +129,13 @@ type JianpuSheetProps = {
   /** N'afficher que cette page du scan. Le Mode Louange donne une page
    *  d'écran par page de partition ; ailleurs, tout le scan défile. */
   pageIndex?: number;
+  /** Accords retouchés sur ce scan (lot 9) : ils remplacent l'accord gravé,
+   *  sont écrits dans la tonalité de la gravure et suivent la transposition
+   *  comme lui. `public/jianpu/chords.json` n'est jamais écrit. */
+  chordEdits?: JianpuChords;
+  /** Donné : toucher un accord le change ou l'efface, toucher une ligne
+   *  d'accords en ajoute un (modes « Adapter » et « Ma version »). */
+  onEditChords?: (next: JianpuChords) => void;
 };
 
 /** Partition 简谱 en image. Les chiffres, durées, points d'octave et
@@ -136,10 +146,16 @@ type JianpuSheetProps = {
  *  Le calque est en HTML positionné en pourcentage de l'image, pas en
  *  PNG pré-rendu : 124 chants × 12 tonalités serait intenable, et la
  *  transposition doit rester instantanée. */
-export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey, capo = 0, pageIndex }: JianpuSheetProps) {
+export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey, capo = 0, pageIndex, chordEdits, onEditChords }: JianpuSheetProps) {
   const { t } = useTranslation();
   const fit = layout === "fit";
   const chords = useJianpuChords(slug);
+  // Retouches (lot 9) : l'accord retouché remplace le gravé partout où le
+  // calque parle de lui, y compris dans l'ordre de peinture.
+  const retouches = chordEdits?.changed ?? {};
+  const ajouts = chordEdits?.added ?? [];
+  // Accord visé par le doigt, tant que la feuille du pavé est ouverte.
+  const [cible, setCible] = useState<CibleRetouche | null>(null);
   // Une seule page en Mode Louange, tout le scan ailleurs. L'index d'origine
   // est conservé : le calque ne concerne que la première page du scan.
   const shownPages = pageIndex == null ? entry.pages : entry.pages.slice(pageIndex, pageIndex + 1);
@@ -154,6 +170,12 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey, ca
   const chordSemitones = semitones - capo;
   const chordKey = getTransposedKey(playedKey ?? chords?.printedKey ?? "C", -capo);
   const chordFontPx = chords ? chords.labelH / CAP_HEIGHT : 0;
+  /** Corps des accords gravés à cette hauteur : une ligne d'intro est gravée
+   *  plus petite que le corps de la page, un accord ajouté sur elle la suit. */
+  const corpsALaHauteur = (y: number) => {
+    const voisin = chords?.labels.find((l) => y < l.y + l.h && l.y < y + chords.labelH);
+    return voisin?.fh ? voisin.fh / CAP_HEIGHT : chordFontPx;
+  };
   // **L'ordre de peinture du calque.** Les fonds sont opaques : ce qui se
   // dessine après efface la fin de ce qui précède. Trois rangs, et le
   // premier est une règle, pas un détail de rendu — un **masque** (boîte
@@ -170,7 +192,7 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey, ca
     if (!chords) return { boites: [], rangDe: [] as number[], rangCadre: -1 };
     // `source` : −1 pour le cadre « 1=X », l'index de l'étiquette sinon.
     const ordre = [
-      ...chords.labels.map((l, n) => ({ l, n, rang: l.c.trim() ? 1 : 0 })),
+      ...chords.labels.map((l, n) => ({ l, n, rang: (chordEdits?.changed?.[n] ?? l.c).trim() ? 1 : 0 })),
       ...(chords.keyLabel ? [{ l: chords.keyLabel, n: -1, rang: 1 }] : []),
     ].sort((a, b) => a.rang - b.rang || a.n - b.n);
     const rangDe: number[] = new Array(chords.labels.length);
@@ -180,8 +202,12 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey, ca
       else rangDe[o.n] = i;
     });
     return { boites: ordre.map(({ l }) => ({ x: l.x, y: l.y, h: l.h })), rangDe, rangCadre };
-  }, [chords]);
+  }, [chords, chordEdits]);
   const overlayOn = Boolean(chords && playedKey);
+  // Sans transposition, le calque reste éteint : seules les retouches se
+  // dessinent, pour ne pas redessiner par-dessus une gravure intacte.
+  const retouchesOn = Boolean(chords && aDesRetouches(chordEdits));
+  const retouchable = Boolean(chords && onEditChords);
   const staleChords = Boolean(playedKey && !chords);
   // Calque partiel : une partie des accords n'a pas été relevée et reste
   // donc dans la tonalité imprimée. On le dit, et on met en évidence ceux
@@ -207,6 +233,54 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey, ca
   const sounding = playedKey ?? chords?.printedKey ?? "C";
   const altKeyName =
     altKeys.length === 1 ? altSpellingKey(sounding, altKeys[0]) : null;
+
+  // ── Retouches : saisies dans la tonalité jouée, stockées dans celle de la
+  // gravure — comme le `c` du calque, pour que la transposition continue de
+  // s'appliquer telle quelle.
+  const accordVise =
+    !chords || !cible
+      ? ""
+      : cible.kind === "etiquette"
+        ? retouches[cible.index] ?? chords.labels[cible.index].c
+        : cible.kind === "ajout"
+          ? ajouts[cible.index].c
+          : "";
+  const accordAffiche = accordVise.trim() ? transposeLabel(accordVise, chordSemitones, chordKey) : "";
+
+  function poser(next: JianpuChords) {
+    onEditChords?.(next);
+    setCible(null);
+  }
+
+  function enregistrer(accord: string) {
+    if (!chords || !cible) return;
+    const grave = transposeLabel(accord, -chordSemitones, chords.printedKey).trim();
+    if (cible.kind === "nouveau") {
+      poser({ ...chordEdits, added: [...ajouts, { page: 0, x: cible.x, y: cible.y, c: grave }] });
+      return;
+    }
+    if (cible.kind === "ajout") {
+      poser({ ...chordEdits, added: ajouts.map((a, i) => (i === cible.index ? { ...a, c: grave } : a)) });
+      return;
+    }
+    // Retrouver l'accord gravé, c'est retirer la retouche : le calque reprend
+    // la main et l'accord suit de nouveau la gravure.
+    const changed = { ...retouches };
+    if (grave === chords.labels[cible.index].c) delete changed[cible.index];
+    else changed[cible.index] = grave;
+    poser({ ...chordEdits, changed });
+  }
+
+  /** Effacer : un accord gravé devient un simple masque (« »), un accord
+   *  ajouté disparaît. */
+  function effacer() {
+    if (!cible || cible.kind === "nouveau") return;
+    if (cible.kind === "ajout") {
+      poser({ ...chordEdits, added: ajouts.filter((_, i) => i !== cible.index) });
+      return;
+    }
+    poser({ ...chordEdits, changed: { ...retouches, [cible.index]: "" } });
+  }
 
   return (
     <div className={fit ? "flex h-full w-full flex-col items-center justify-center gap-2" : "flex flex-col items-center gap-6"}>
@@ -310,9 +384,10 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey, ca
               devient du noir **pur**. Toute autre teinte fait apparaître un
               pavé gris autour de chaque accord — invisible sur les rendus de
               contrôle en Python, qui travaillent sur l'image d'origine. */}
-          {overlayOn && i === 0 && chords && (
+          {(overlayOn || retouchesOn || retouchable) && i === 0 && chords && (
+            <>
             <div className="pointer-events-none absolute inset-0" aria-hidden>
-              {chords.keyLabel && (() => {
+              {overlayOn && chords.keyLabel && (() => {
                 const kl = chords.keyLabel!;
                 const keyShown = kl.c
                   ? transposeLabel(kl.c, chordSemitones, chordKey)
@@ -359,7 +434,7 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey, ca
                 </span>
                 );
               })()}
-              {chords.titleKey && (
+              {overlayOn && chords.titleKey && (
                 <span
                   className="absolute flex items-end whitespace-nowrap bg-white font-bold text-black dark:bg-black dark:text-neutral-100"
                   style={{
@@ -375,6 +450,14 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey, ca
                 </span>
               )}
               {chords.labels.map((l, n) => {
+                // Calque éteint (pas de transposition) : seules les étiquettes
+                // retouchées se dessinent, les autres restent telles qu'elles
+                // sont gravées.
+                const retouche = retouches[n];
+                if (!overlayOn && retouche === undefined) return null;
+                // L'accord retouché prend la place du gravé — « » l'efface et
+                // laisse un simple masque.
+                const grave = retouche ?? l.c;
                 // `fh` : le corps propre à l'étiquette, quand elle n'est pas
                 // gravée au corps de la page (ligne d'intro, mention entre
                 // parenthèses). Absent, c'est `labelH` — donc rien ne bouge
@@ -389,7 +472,7 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey, ca
                 // capo en ré reste écrite en ré au-dessus d'accords en fa.
                 const shown = hidden
                   ? ""
-                  : transposeLabel(l.c, chordSemitones, altSpellingKey(chordKey, l.alt ?? 0));
+                  : transposeLabel(grave, chordSemitones, altSpellingKey(chordKey, l.alt ?? 0));
                 const corps = l.fh ? l.fh / CAP_HEIGHT : chordFontPx;
                 const fontPx = Math.min(
                   fitFont(shown, corps, l.sp),
@@ -399,6 +482,10 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey, ca
                 <span
                   key={n}
                   data-jianpu-label={l.c}
+                  // Retouchée : l'accord affiché n'est plus celui de la
+                  // gravure, et les contrôles de transposition ne peuvent
+                  // plus le comparer au `c` du calque.
+                  data-jianpu-retouche={retouche !== undefined ? n : undefined}
                   // L'oracle de transposition tient une étiquette écrite qui
                   // sort vide pour un accord disparu. Une lecture alternative
                   // masquée par le sélecteur en est une, et légitimement :
@@ -431,7 +518,7 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey, ca
                     // porte un accord dessus. L'ordre du DOM ne suffit pas —
                     // le cadre « 1=X » est rendu avant la liste, et un masque
                     // de la liste passait donc par-dessus lui.
-                    zIndex: l.c.trim() ? 1 : 0,
+                    zIndex: grave.trim() ? 1 : 0,
                     fontFamily: CHORD_FONT,
                   }}
                 >
@@ -439,12 +526,75 @@ export function JianpuSheet({ entry, title, slug, layout = "flow", playedKey, ca
                 </span>
                 );
               })}
+
+              {/* Accords ajoutés sur une ligne : dessinés après tout le reste,
+                  donc au-dessus. Sans fond opaque — ils se posent dans la
+                  place libre de la ligne, pas sur une gravure à masquer. */}
+              {ajouts.map((a, n) => {
+                if (a.page !== i) return null;
+                const fontPx = corpsALaHauteur(a.y);
+                return (
+                  <span
+                    key={`ajout-${n}`}
+                    data-jianpu-ajout={n}
+                    className="absolute flex items-end whitespace-nowrap text-black dark:text-neutral-100"
+                    style={{
+                      left: `${((a.x - 3) / chords.w) * 100}%`,
+                      top: `${((a.y - 6) / chords.h) * 100}%`,
+                      height: `${((chords.labelH + 6 + DESCENDER * fontPx) / chords.h) * 100}%`,
+                      paddingBottom: `${DESCENDER - LINE_BOX_DROP}em`,
+                      fontSize: `${(fontPx / chords.w) * 100}cqw`,
+                      fontWeight: 700,
+                      lineHeight: 1,
+                      zIndex: 1,
+                      fontFamily: CHORD_FONT,
+                    }}
+                  >
+                    {transposeLabel(a.c, chordSemitones, chordKey)}
+                  </span>
+                );
+              })}
             </div>
+
+            {/* Retouche : toute la page est tactile. Un accord touché s'ouvre
+                dans le pavé, une ligne d'accords touchée à côté de ses accords
+                en reçoit un nouveau (`cibleRetouche`). */}
+            {retouchable && (
+              <button
+                type="button"
+                data-jianpu-retouche-zone
+                aria-label={t("setlists.contentEdit.addChord", { defaultValue: "Accord" })}
+                className="absolute inset-0 z-10 cursor-crosshair"
+                onClick={(e) => {
+                  const r = e.currentTarget.getBoundingClientRect();
+                  setCible(
+                    cibleRetouche(
+                      chords.labels,
+                      chords.labelH,
+                      chordEdits,
+                      ((e.clientX - r.left) / r.width) * chords.w,
+                      ((e.clientY - r.top) / r.height) * chords.h,
+                    ),
+                  );
+                }}
+              />
+            )}
+            </>
           )}
         </div>
         );
       })}
       </div>
+
+      {cible && (
+        <JianpuChordSheet
+          accord={accordAffiche || undefined}
+          tonalite={chordSemitones !== 0 ? chordKey : undefined}
+          onValider={enregistrer}
+          onEffacer={accordAffiche ? effacer : undefined}
+          onFermer={() => setCible(null)}
+        />
+      )}
     </div>
   );
 }

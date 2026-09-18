@@ -1,5 +1,6 @@
 {
   "common": {
+    "noAccess": "此页面仅限乐手查看。",
     "header": {
       "title": "GCC 敬拜",
       "songs": "诗歌",
@@ -329,7 +330,15 @@
       "moment": {
         "matin": "上午",
         "soir": "晚上"
-      }
+      },
+      "before": "之前",
+      "after": "之后",
+      "removed": "移除",
+      "added": "新增",
+      "moved": "移动",
+      "showBeforeAfter": "查看前后对比",
+      "hideBeforeAfter": "收起前后对比",
+      "songs": "歌单的歌曲"
     },
     "contentEdit": {
       "toggle": "调整",
@@ -739,6 +748,19 @@
         ],
         "tip": "显示方式会保存在你的设备上。"
       },
+      "harmonie": {
+        "title": "和声",
+        "for": "钢琴手和吉他手",
+        "body": "一个**重新配和声**的灵感目录：代理和弦、色彩音、低音线、过门、结尾、转调……每张卡片说明改动是什么、为什么好听、什么时候别用，以及钢琴和吉他怎么弹。",
+        "points": [
+          "**从这里开始**：十张卡片，由浅入深。",
+          "按**感觉**（史诗、柔和……）、按歌曲**段落**、按难度筛选。",
+          "在一首歌里，**和声灵感**（⋯ 菜单）只提示适合这首歌的做法，并写出实际和弦。",
+          "不合适？**不适合这首歌**会为所有人移除该建议。",
+          "也可以添加自己的**灵感**，团队都能看到。"
+        ],
+        "tip": "建议只根据和弦计算，网站听不到旋律，所以标了「请弹奏确认」。"
+      },
       "maVersion": {
         "title": "我的版本",
         "for": "所有能看到歌单的人",
@@ -908,6 +930,7 @@
       "accueil": "首页",
       "culte": "法语崇拜",
       "table": "圣餐预备",
+      "petitDej": "早餐",
       "groupes": "团契",
       "edd": "主日学",
       "campus": "夏令营",
@@ -1497,8 +1520,8 @@
       "pour": "对象",
       "date": "日期",
       "heure": "时间",
-      "heureFin": "结束时间",
-      "dateFin": "结束日期",
+      "heureFin": "活动结束（时间）",
+      "dateFin": "活动结束（日期）",
       "lieu": "地点",
       "description": "说明",
       "places": "名额",
@@ -1524,7 +1547,24 @@
       "errorDateFin": "结束日期须晚于开始日期。",
       "errorSave": "无法保存。请检查网络连接及 Firestore 规则是否已发布。",
       "plusOptions": "更多选项",
-      "banniere": "添加横幅图片"
+      "banniere": "添加横幅图片",
+      "inscriptions": "报名",
+      "mode": {
+        "auto": "自动",
+        "ouvertes": "开放",
+        "fermees": "关闭"
+      },
+      "modeAide": {
+        "ouvertes": "始终开放，直到名额满。",
+        "fermees": "关闭：任何人都无法报名。"
+      },
+      "insDebut": "报名开始",
+      "insDebutHeure": "报名开始时间",
+      "insDebutAide": "留空：发布后即可报名",
+      "insFin": "报名截止",
+      "insFinHeure": "报名截止时间",
+      "insFinAide": "留空：活动开始时截止",
+      "errorInsFin": "报名截止时间早于开始时间。"
     },
     "jeParticipe": "我要参加",
     "tuParticipes": "你已报名",
@@ -1557,7 +1597,17 @@
     "masquerInscrits": "收起报名名单",
     "lienFiche": "活动链接",
     "pourPole": "{{pole}}部门",
-    "noneHint": "点「新建活动」添加下一个活动。"
+    "noneHint": "点「新建活动」添加下一个活动。",
+    "bientot": "即将开放",
+    "reglageInscriptions": "报名",
+    "aHeure": "{{jour}} {{heure}}",
+    "raison": {
+      "pasEncore": "{{quand}} 开始报名",
+      "terminee": "报名已于 {{quand}} 截止",
+      "commencee": "报名已关闭：活动已开始",
+      "fermee": "组织者已关闭报名"
+    },
+    "lienInscription": "报名链接"
   },
   "moi": {
     "title": "我",
@@ -1745,5 +1795,108 @@
     "deuxTonalites": "{{a}} 和 {{b}}",
     "toutesTonalites": "所有调",
     "seule": "仅 {{key}}"
+  },
+  "harmonie": {
+    "titre": "和声",
+    "sousTitre": "为钢琴和吉他提供的重新配和声灵感。",
+    "idees": "和声灵感",
+    "parcours": "从这里开始",
+    "aVerifier": "请弹奏确认",
+    "essayer": "在我的版本中试试",
+    "appliquer": "应用到歌单",
+    "neMarchePas": "不适合这首歌",
+    "remettre": "恢复这个建议",
+    "toutesRepetitions": "所有重复",
+    "seulementCePassage": "仅此处",
+    "reporterJianpu": "请在简谱上改为：{{quoi}}",
+    "bandeauModulation": "{{section}}：升到 {{ton}}",
+    "nouveau": "新",
+    "endroits_other": "{{count}} 处",
+    "ecartees_other": "{{count}} 条已移除",
+    "montrer": "指出位置",
+    "resteEnD": "只有「改前 → 改后」跟随所选调，卡片其余部分仍写在 {{ton}} 调。",
+    "formesEcrites": "和弦指法写在 {{ton}} 调。",
+    "formesSonnent": "这些指法（写在 {{ton}} 调）实际响在 {{sonne}} 调。",
+    "foisEnSetlist": "在歌单中出现 {{count}} 次",
+    "capoTitre": "变调夹",
+    "degre": "级数 {{degre}}",
+    "ariaDoigte": "吉他指法 {{doigte}}",
+    "ariaClavier": "钢琴音：{{notes}}",
+    "voirPlus": "查看更多",
+    "aRelire": "待校对",
+    "aRelireTout": "这些卡片仍在校对中，内容可能会改动。",
+    "instrument": {
+      "piano": "钢琴",
+      "guitare": "吉他"
+    },
+    "niveau": {
+      "facile": "简单",
+      "intermediaire": "中等",
+      "avance": "进阶",
+      "titre": "难度"
+    },
+    "sensation": {
+      "titre": "感觉",
+      "epique": "史诗",
+      "majeste": "庄严",
+      "tension": "张力",
+      "repos": "安息",
+      "surprise": "意外",
+      "suspendu": "悬浮飘渺",
+      "emerveillement": "惊叹",
+      "douceur": "柔和亲密",
+      "tendresse": "温柔怀旧",
+      "gravite": "肃穆默想",
+      "lumiere": "光明盼望",
+      "joie": "喜乐激昂"
+    },
+    "moment": {
+      "titre": "段落",
+      "intro": "前奏",
+      "couplet": "主歌",
+      "montee": "过门",
+      "refrain": "副歌",
+      "pont": "桥段",
+      "fin": "结尾",
+      "transition": "过渡"
+    },
+    "surete": {
+      "tres-sure": "很稳妥",
+      "sure": "稳妥",
+      "a-ecouter": "需试听"
+    },
+    "avantApres": "改前 → 改后",
+    "pourquoi": "为什么好听",
+    "eviter": "什么时候别用",
+    "auPiano": "钢琴弹法",
+    "aLaGuitare": "吉他弹法",
+    "repertoire": "曲库中的例子",
+    "repertoireCompte_other": "{{count}} 首歌已经这样弹",
+    "tonalite": "调",
+    "capo": "变调夹 {{n}}",
+    "sansCapo": "不用变调夹",
+    "aucuneFiche": "没有符合条件的卡片。",
+    "effacerFiltres": "显示全部",
+    "retour": "和声",
+    "idee": {
+      "ajouter": "添加灵感",
+      "titre": "团队的灵感",
+      "texte": "灵感内容",
+      "avant": "改前（和弦）",
+      "apres": "改后（和弦）",
+      "fiche": "相关卡片",
+      "aucune": "暂时还没有灵感。",
+      "supprimer": "删除",
+      "modifier": "修改",
+      "enregistrer": "保存",
+      "annuler": "取消"
+    },
+    "modulation": {
+      "titre": "让最后一遍副歌升调",
+      "ou": "{{section}} 升到 {{ton}}"
+    },
+    "transition": {
+      "titre": "接下一首"
+    }
   }
 }

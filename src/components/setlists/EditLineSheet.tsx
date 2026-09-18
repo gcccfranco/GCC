@@ -255,9 +255,13 @@ type SheetProps = {
   /** Insère une ligne instrumentale après la ligne courante. */
   onInsertAfter: (newRaw: string) => void;
   onDeleteLine: () => void;
+  /** Ligne d'une section répétée en « Ma version » (lot 9) : la retouche vaut
+   *  pour toutes les répétitions ou pour ce seul passage. Absent = pas de choix. */
+  repeatScope?: "all" | "one";
+  onRepeatScope?: (scope: "all" | "one") => void;
 };
 
-export function EditLineSheet({ target, saving, onClose, onSaveLine, onInsertAfter, onDeleteLine }: SheetProps) {
+export function EditLineSheet({ target, saving, onClose, onSaveLine, onInsertAfter, onDeleteLine, repeatScope, onRepeatScope }: SheetProps) {
   useStandaloneScrollLock(!!target);
   return (
     <Drawer open={!!target} onOpenChange={(o) => !o && onClose()}>
@@ -272,6 +276,8 @@ export function EditLineSheet({ target, saving, onClose, onSaveLine, onInsertAft
             onSaveLine={onSaveLine}
             onInsertAfter={onInsertAfter}
             onDeleteLine={onDeleteLine}
+            repeatScope={repeatScope}
+            onRepeatScope={onRepeatScope}
           />
         )}
       </DrawerContent>
@@ -286,6 +292,8 @@ function SheetBody({
   onSaveLine,
   onInsertAfter,
   onDeleteLine,
+  repeatScope,
+  onRepeatScope,
 }: SheetProps & { target: EditLineTarget }) {
   const { t } = useTranslation();
 
@@ -387,6 +395,27 @@ function SheetBody({
       </DrawerHeader>
 
       <div className="px-4 pb-6 overflow-y-auto">
+        {/* Section répétée en « Ma version » : à qui profite la retouche. */}
+        {repeatScope && (
+          <div className="flex items-center gap-0.5 rounded-full bg-secondary p-0.5 mb-3 w-fit">
+            {(["all", "one"] as const).map((scope) => (
+              <button
+                key={scope}
+                type="button"
+                aria-pressed={repeatScope === scope}
+                onClick={() => onRepeatScope?.(scope)}
+                className={`h-8 px-3 rounded-full text-[13px] font-semibold transition-colors ${
+                  repeatScope === scope
+                    ? "bg-card text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {t(scope === "all" ? "harmonie.toutesRepetitions" : "harmonie.seulementCePassage")}
+              </button>
+            ))}
+          </div>
+        )}
+
         {/* ── Mode paroles ── */}
         {mode === "lyrics" && (
           <div className="space-y-3">

@@ -1,8 +1,9 @@
 import { expect, test, type Page } from "@playwright/test";
 import { fakeFirestore, signInAs, type FakeProfile } from "./helpers/fakeSession";
-import { groupByMonth, isPast, placesRestantes, refusInscription } from "../src/lib/evenements/agenda";
+import { groupByMonth, isPast, modeInscriptions, placesRestantes, refusInscription } from "../src/lib/evenements/agenda";
 import type { Evenement } from "../src/types/evenement";
-import { evenementReminder } from "../src/lib/evenements/rappel";
+import { avecLignes, evenementReminder, ligneOuverture, ouvertureDuJour, ouverturesTitre } from "../src/lib/evenements/rappel";
+import { canSeeInscrits } from "../src/lib/access";
 
 // Lot 6 (docs/spec-evenements.md), tranche E1 : calendrier public de la section
 // Évènements (agenda par mois, infos épinglées, passés), fiche en lecture,
@@ -157,7 +158,7 @@ test("créer : la coordination remplit la fiche ; écriture à son nom, compteur
   const created = db.writes.find((w) => w.method === "POST" && w.path.startsWith("evenements/"));
   expect(created?.data).toMatchObject({
     titre: "Soirée jeux", type: "loisir", pour: "eglise", date: "2026-11-07", heure: "19:30", lieu: "Salle du bas",
-    placesMax: 20, inscriptionOuverte: true, inscrits: 0, organisateurUid: "uid-alice", organisateurNom: "Alice Q.",
+    placesMax: 20, inscriptions: "auto", inscriptionDebut: "", inscriptionFin: "", inscrits: 0, organisateurUid: "uid-alice", organisateurNom: "Alice Q.",
   });
   await expect.poll(() => pushed).not.toBeNull();
   expect(pushed!.evenementId).toBe(created!.path.split("/").pop());
@@ -203,7 +204,7 @@ test("créer une info : pas de date, épinglée, avec une date d'expiration", as
   await page.getByRole("button", { name: "Créer l'évènement" }).click();
   await expect(page.getByRole("heading", { name: "Travaux dans le hall" })).toBeVisible();
   const created = db.writes.find((w) => w.method === "POST" && w.path.startsWith("evenements/"));
-  expect(created?.data).toMatchObject({ type: "info", date: "", epingle: true, expiresAt: "2026-11-30", inscriptionOuverte: false });
+  expect(created?.data).toMatchObject({ type: "info", date: "", epingle: true, expiresAt: "2026-11-30", inscriptions: "fermees" });
 });
 
 test("modifier : l'organisateur change le lieu, sans toucher au compteur", async ({ page }) => {
@@ -269,6 +270,42 @@ test("refus d'inscription : fermée, commencée, complète, sinon acceptée", ()
   expect(refusInscription({ ...FOOT, inscrits: 10 }, 0, now)).toBe("complet");
   expect(refusInscription(PAIX, 5, now)).toBeNull();
   expect(refusInscription(INFO, 0, now)).toBe("fermee");
+});
+
+// ─── Période d'inscription (docs/spec-inscriptions-periode.md, 17/09/2026) ──
+
+test("période P1 : pas encore avant l'ouverture, ouvertes pendant, terminées après la fin", () => {
+  const e = { ...FOOT, inscriptions: "auto" as const, inscriptionDebut: "2026-10-01T10:00", inscriptionFin: "2026-10-05T18:00" };
+  expect(refusInscription(e, 0, "2026-10-01T09:59")).toBe("pasEncore");
+  expect(refusInscription(e, 0, "2026-10-01T10:00")).toBeNull();
+  expect(refusInscription(e, 0, "2026-10-05T18:00")).toBeNull();
+  expect(refusInscription(e, 0, "2026-10-05T18:01")).toBe("terminee");
+});
+
+test("période P1 : sans heure, ouverture à 00:00 et fin à 23:59 ; sans fin, fermeture au début de l'évènement", () => {
+  const e = { ...FOOT, inscriptions: "auto" as const, inscriptionDebut: "2026-10-01", inscriptionFin: "2026-10-05" };
+  expect(refusInscription(e, 0, "2026-09-30T23:59")).toBe("pasEncore");
+  expect(refusInscription(e, 0, "2026-10-01T00:00")).toBeNull();
+  expect(refusInscription(e, 0, "2026-10-05T23:59")).toBeNull();
+  expect(refusInscription(e, 0, "2026-10-06T00:00")).toBe("terminee");
+  const sansFin = { ...e, inscriptionFin: "" };
+  expect(refusInscription(sansFin, 0, "2026-10-10T18:59")).toBeNull();
+  expect(refusInscription(sansFin, 0, "2026-10-10T19:00")).toBe("commencee");
+});
+
+test("période P1 : « Ouvertes » forcées hors dates et après le début, jamais au-delà des places ; « Fermées » forcées", () => {
+  const forcees = { ...FOOT, inscriptions: "ouvertes" as const, inscriptionDebut: "2026-12-01", inscriptionFin: "2026-12-02" };
+  expect(refusInscription(forcees, 0, "2026-10-01T10:00")).toBeNull();
+  expect(refusInscription(forcees, 0, "2026-10-10T20:00")).toBeNull();
+  expect(refusInscription({ ...forcees, inscrits: 10 }, 0, "2026-10-10T20:00")).toBe("complet");
+  expect(refusInscription({ ...FOOT, inscriptions: "fermees" as const }, 0, "2026-10-01T10:00")).toBe("fermee");
+});
+
+test("période P1 : un évènement d'avant la période se lit avec l'ancien interrupteur", () => {
+  expect(modeInscriptions({ inscriptionOuverte: true })).toBe("auto");
+  expect(modeInscriptions({ inscriptionOuverte: false })).toBe("fermees");
+  expect(modeInscriptions({ inscriptionOuverte: false, inscriptions: "ouvertes" })).toBe("ouvertes");
+  expect(refusInscription({ ...FOOT, inscriptionOuverte: true }, 0, "2026-10-01T10:00")).toBeNull();
 });
 
 test("membre : « S'inscrire » puis invités et « Confirmer » envoie au serveur avec son jeton, puis affiche « Inscrit »", async ({ page }) => {
@@ -362,16 +399,33 @@ test("organisateur : liste des inscrits avec invités, retrait, fermeture des in
   await liste.getByRole("listitem").filter({ hasText: "Marie" }).getByRole("button", { name: "Retirer" }).click();
   await expect(liste.getByRole("listitem")).toHaveCount(1);
   expect(sent).toEqual({ evenementId: "foot", inscriptionId: "x1" });
-  await page.getByRole("button", { name: "Fermer les inscriptions" }).click();
-  await expect(page.getByRole("button", { name: "Ouvrir les inscriptions" })).toBeVisible();
-  expect(db.doc("evenements/foot")?.inscriptionOuverte).toBe(false);
+  await page.getByRole("region", { name: "Inscriptions", exact: true }).getByRole("radio", { name: "Fermées" }).click();
+  await expect(page.getByTestId("etat-inscriptions")).toHaveText("Fermées");
+  await expect.poll(() => db.doc("evenements/foot")?.inscriptions).toBe("fermees");
 });
 
-test("membre : aucun nom d'inscrit visible", async ({ page }) => {
-  await member(page, JO, "/evenements/foot", { ...DOCS, "evenements/foot/inscriptions/x1": { uid: null, nom: "Marie", invites: 0, createdAt: "2026-09-22T10:00:00Z" } });
+// 17/09/2026 (Timothée) : les noms des inscrits sont visibles de tout membre
+// connecté, plus seulement de l'organisateur ; sans compte, le nombre seul.
+test("membre connecté : voit qui est inscrit, avec les invités, sans pouvoir retirer personne", async ({ page }) => {
+  await member(page, EVA, "/evenements/foot", {
+    ...DOCS,
+    "evenements/foot/inscriptions/uid-jo": MA_PLACE,
+    "evenements/foot/inscriptions/x1": { uid: null, nom: "Marie", invites: 0, createdAt: "2026-09-22T10:00:00Z" },
+  });
   await expect(page.getByRole("heading", { name: "Foot au parc" })).toBeVisible();
-  await expect(page.getByText("Marie")).toHaveCount(0);
-  await expect(page.getByRole("list", { name: "Inscrits" })).toHaveCount(0);
+  await expect(page.getByText("4 déjà inscrits")).toBeVisible();
+  await page.getByRole("button", { name: "Voir les inscrits (2)" }).click();
+  const liste = page.getByRole("list", { name: "Inscrits" });
+  await expect(liste.getByRole("listitem")).toHaveCount(2);
+  await expect(liste).toContainText("Jo L.");
+  await expect(liste).toContainText("1 invité");
+  await expect(liste).toContainText("Marie");
+  await expect(liste.getByRole("button", { name: "Retirer" })).toHaveCount(0);
+});
+
+test("droits : voir les inscrits = être connecté ; les modifier = organisateur ou coordination", () => {
+  expect(canSeeInscrits(null)).toBe(false);
+  expect(canSeeInscrits({ uid: "uid-eva", email: "eva@example.com" })).toBe(true);
 });
 
 test("routes d'inscription : refusées sans jeton ni nom", async ({ request }) => {
@@ -450,7 +504,7 @@ test("route de migration : refusée sans jeton", async ({ request }) => {
 
 // ─── Lot 6 bis : look de la maquette de Timothée (16/09/2026, spec-evenements-look.md) ──
 
-test("L1 calendrier : la carte porte l'état d'inscription, sans badge de type ni de public ; « S'inscrire » ouvre la fiche", async ({ page }) => {
+test("L1 calendrier : la carte porte l'état d'inscription ; « S'inscrire » ouvre la fiche", async ({ page }) => {
   await member(page, JO, "/evenements", {
     ...DOCS,
     "evenements/foot/inscriptions/uid-jo": MA_PLACE,
@@ -458,8 +512,6 @@ test("L1 calendrier : la carte porte l'état d'inscription, sans badge de type n
   });
   const foot = page.getByRole("link", { name: /Foot au parc/ });
   await expect(foot).toContainText("Inscrit");
-  await expect(foot).not.toContainText("Sport");
-  await expect(foot).not.toContainText("Toute l'église");
   await expect(foot).toContainText("19:00");
   await expect(foot).toContainText("Parc de Bercy");
   await expect(page.getByRole("link", { name: /Culte de Noël/ })).toContainText("Complet");
@@ -500,18 +552,18 @@ test("L3 organisateur : panneau des inscriptions avec compteur et état, lien de
   });
   await expect(page.getByRole("link", { name: "Modifier" })).toBeVisible();
   const panneau = page.getByRole("region", { name: "Inscriptions", exact: true });
-  await expect(panneau).toContainText("Ouvertes");
+  await expect(panneau.getByTestId("etat-inscriptions")).toHaveText("Ouvertes");
   await expect(panneau.getByText("4", { exact: true })).toBeVisible();
   const qr = page.getByRole("img", { name: /QR code/ });
   await expect(qr).toBeVisible();
   await expect(qr).toHaveAttribute("src", /^data:image\/png/);
-  await expect(page.getByText("Lien de la fiche")).toBeVisible();
+  await expect(page.getByText("Lien d'inscription")).toBeVisible();
   await expect(page.getByText(/\/evenements\/foot/)).toBeVisible();
   await expect(page.getByRole("list", { name: "Inscrits" })).toHaveCount(0);
   await page.getByRole("button", { name: "Voir les inscrits (2)" }).click();
   await expect(page.getByRole("list", { name: "Inscrits" })).toBeVisible();
-  await page.getByRole("button", { name: "Fermer les inscriptions" }).click();
-  await expect(panneau).toContainText("Fermées");
+  await panneau.getByRole("radio", { name: "Fermées" }).click();
+  await expect(panneau.getByTestId("etat-inscriptions")).toHaveText("Fermées");
 });
 
 test("L4 formulaire : champs courants dans l'ordre de la maquette, responsable pré-rempli, bannière, champs rares sous « Plus d'options »", async ({ page }) => {
@@ -521,11 +573,11 @@ test("L4 formulaire : champs courants dans l'ordre de la maquette, responsable p
   expect(labels.slice(0, 8)).toEqual(["Nom de l'évènement", "Catégorie", "Public", "Date", "Horaire", "Lieu", "Responsable", "Description"]);
   await expect(page.getByLabel("Responsable")).toHaveValue("Alice Q.");
   await expect(page.getByText("Ajouter une bannière")).toBeVisible();
-  await expect(page.getByLabel("Inscriptions ouvertes")).toBeChecked();
-  await expect(page.getByLabel("Heure de fin")).toBeHidden();
+  await expect(page.getByRole("radio", { name: "Automatique" })).toBeChecked();
+  await expect(page.getByLabel("Fin de l'évènement (heure)")).toBeHidden();
   await expect(page.getByLabel("Places")).toBeHidden();
   await page.getByText("Plus d'options").click();
-  await expect(page.getByLabel("Heure de fin")).toBeVisible();
+  await expect(page.getByLabel("Fin de l'évènement (heure)")).toBeVisible();
   await expect(page.getByLabel("Places")).toBeVisible();
   await expect(page.getByLabel("Les personnes sans compte peuvent s'inscrire")).toBeVisible();
 });
@@ -557,7 +609,7 @@ test("L6 formulaire : champs, bannière et interrupteur dans une seule carte bla
   expect(await carte.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe(BLANC);
   await expect(carte.getByLabel("Nom de l'évènement")).toBeVisible();
   await expect(carte.getByText("Ajouter une bannière")).toBeVisible();
-  await expect(carte.getByLabel("Inscriptions ouvertes")).toBeVisible();
+  await expect(carte.getByRole("radiogroup", { name: "Inscriptions" })).toBeVisible();
   await expect(carte.getByText("Plus d'options")).toBeVisible();
 });
 
@@ -567,3 +619,226 @@ test("L6 organisateur : le compteur n'est écrit qu'une fois", async ({ page }) 
   await expect(page.getByText(/déjà inscrits/)).toHaveCount(0);
 });
 
+
+// ─── Retour de Timothée du 17/09/2026 : la maquette organisateur, et le créateur s'inscrit ──
+// Fiche de l'organisateur : carte de gestion en haut (titre, badges, trois
+// pilules, panneau des inscriptions, lien d'inscription), puis la fiche des
+// membres sans répéter titre ni badges, avec « S'inscrire » (choix du 17/09/2026).
+
+test("organisateur : carte de gestion en haut (titre, pilules, panneau, lien), puis la fiche avec « S'inscrire »", async ({ page }) => {
+  await member(page, STEPH, "/evenements/foot");
+  const gestion = page.getByTestId("gestion-carte");
+  const fiche = page.getByTestId("fiche-carte");
+  await expect(gestion.getByRole("heading", { name: "Foot au parc" })).toBeVisible();
+  await expect(gestion.getByText("Sport")).toBeVisible();
+  for (const action of ["Modifier", "Dupliquer", "Supprimer"]) {
+    await expect(gestion.getByRole(action === "Supprimer" ? "button" : "link", { name: action })).toBeVisible();
+  }
+  await expect(gestion.getByRole("region", { name: "Inscriptions", exact: true })).toContainText("Ouvertes");
+  await expect(gestion.getByText("Lien d'inscription")).toBeVisible();
+  await expect(gestion.getByRole("img", { name: /QR code/ })).toBeVisible();
+
+  await expect(fiche.getByRole("button", { name: "S'inscrire" })).toBeVisible();
+  await expect(fiche.getByTestId("banniere")).toBeVisible();
+  await expect(fiche.getByRole("heading")).toHaveCount(0);
+  const [g, f] = [(await gestion.boundingBox())!, (await fiche.boundingBox())!];
+  expect(g.y + g.height, "la gestion est au-dessus de la fiche").toBeLessThanOrEqual(f.y);
+});
+
+test("organisateur : « Supprimer » est une pilule à bord, comme « Modifier » et « Dupliquer »", async ({ page }) => {
+  await member(page, STEPH, "/evenements/foot");
+  const bord = (name: string, role: "link" | "button") =>
+    page.getByTestId("gestion-carte").getByRole(role, { name }).evaluate((el) => getComputedStyle(el).borderTopWidth);
+  expect(await bord("Modifier", "link")).toBe("1px");
+  expect(await bord("Supprimer", "button")).toBe("1px");
+});
+
+test("le créateur s'inscrit à son propre évènement", async ({ page }) => {
+  await member(page, STEPH, "/evenements/foot");
+  let sent: { evenementId: string; invites: number } | null = null;
+  await page.route(INSCRIPTION, (route) => {
+    sent = route.request().postDataJSON();
+    return route.fulfill({ json: { ok: true, inscrits: 5, mine: { id: "uid-steph", nom: "Steph R.", invites: 0 } } });
+  });
+  await page.getByTestId("fiche-carte").getByRole("button", { name: "S'inscrire" }).click();
+  await page.getByRole("button", { name: "Confirmer" }).click();
+  await expect(page.getByTestId("fiche-carte").getByText("Inscrit", { exact: true })).toBeVisible();
+  await expect(page.getByRole("region", { name: "Inscriptions", exact: true }).getByText("5", { exact: true })).toBeVisible();
+  expect(sent).toEqual({ evenementId: "foot", invites: 0 });
+});
+
+test("évènement commencé : l'organisateur lit « Fermées » et pourquoi ; « Ouvertes » les rouvre (places respectées)", async ({ page }) => {
+  await page.clock.setFixedTime(new Date("2026-10-10T20:00:00"));
+  const db = await signInAs(page, STEPH, DOCS, "/evenements/foot");
+  const panneau = page.getByRole("region", { name: "Inscriptions", exact: true });
+  await expect(panneau.getByTestId("etat-inscriptions")).toHaveText("Fermées");
+  await expect(panneau).toContainText("Inscriptions fermées : l'évènement a commencé");
+  await expect(panneau.getByRole("radio", { name: "Automatique" })).toHaveAttribute("aria-checked", "true");
+  await panneau.getByRole("radio", { name: "Ouvertes" }).click();
+  await expect(panneau.getByTestId("etat-inscriptions")).toHaveText("Ouvertes");
+  await expect(page.getByTestId("fiche-carte").getByRole("button", { name: "S'inscrire" })).toBeVisible();
+  await expect.poll(() => db.doc("evenements/foot")?.inscriptions).toBe("ouvertes");
+});
+
+test("calendrier : « Inscrit » s'écrit sous l'heure et le lieu, comme la maquette", async ({ page }) => {
+  await member(page, JO, "/evenements", { ...DOCS, "evenements/foot/inscriptions/uid-jo": MA_PLACE });
+  const carte = page.getByRole("link", { name: /Foot au parc/ });
+  const [meta, badge] = [(await carte.getByText(/Parc de Bercy/).boundingBox())!, (await carte.getByText("Inscrit", { exact: true }).boundingBox())!];
+  expect(badge.y, "sous la ligne heure · lieu").toBeGreaterThanOrEqual(meta.y + meta.height - 1);
+});
+
+test("fiche : la date n'est pas en gras", async ({ page }) => {
+  await member(page, JO, "/evenements/foot");
+  const poids = await page.getByText("samedi 10 octobre 2026").evaluate((el) => Number(getComputedStyle(el).fontWeight));
+  expect(poids).toBeLessThan(600);
+});
+
+test("formulaire : libellés discrets, « Prévenir les membres » et le bouton pleine largeur dans la carte", async ({ page }) => {
+  await member(page, ALICE, "/evenements/nouveau");
+  const carte = page.getByTestId("form-carte");
+  const poids = await carte.locator("label[for='ev-titre']").evaluate((el) => Number(getComputedStyle(el).fontWeight));
+  expect(poids).toBeLessThan(600);
+  await expect(carte.getByLabel("Prévenir les membres")).toBeVisible();
+  const bouton = carte.getByRole("button", { name: "Créer l'évènement" });
+  await expect(bouton).toBeVisible();
+  const [c, b] = [(await carte.boundingBox())!, (await bouton.boundingBox())!];
+  expect(b.width, "pleine largeur").toBeGreaterThan(c.width * 0.8);
+  const [lieu, type] = [carte.locator("#ev-lieu"), carte.locator("#ev-type")];
+  const fond = (l: typeof lieu) => l.evaluate((el) => getComputedStyle(el).backgroundColor);
+  expect(await fond(type), "listes et champs au même style").toBe(await fond(lieu));
+});
+
+// ─── 17/09/2026 : l'onglet Évènements montre une grande carte par évènement ──
+// Maquette de Timothée (图片_20260916093643_1235_30.jpg) : bannière, badges,
+// titre, date · horaire · lieu, « Pour plus d'infos », « S'inscrire »,
+// « N déjà inscrits ». Infos épinglées et évènements passés restent compacts.
+
+test("calendrier : un évènement à venir est une grande carte comme la maquette", async ({ page }) => {
+  await member(page, JO, "/evenements", { ...DOCS, "evenements/foot": { ...FOOT, heureFin: "21:00", contact: "Steph R." } });
+  const carte = page.getByRole("link", { name: /Foot au parc/ });
+  await expect(carte.getByTestId("banniere")).toBeVisible();
+  for (const texte of ["Sport", "Toute l'église", "samedi 10 octobre 2026", "19:00 – 21:00", "Parc de Bercy", "Pour plus d'infos : Steph R.", "S'inscrire", "4 déjà inscrits"]) {
+    await expect(carte).toContainText(texte);
+  }
+  const [titre, date, bouton, compteur] = await Promise.all(
+    [carte.getByText("Foot au parc"), carte.getByText("samedi 10 octobre 2026"), carte.getByText("S'inscrire"), carte.getByText("4 déjà inscrits")].map(async (l) => (await l.boundingBox())!.y),
+  );
+  expect(titre, "titre, puis date").toBeLessThan(date);
+  expect(date, "date, puis bouton").toBeLessThan(bouton);
+  expect(bouton, "bouton, puis compteur").toBeLessThan(compteur);
+  const box = (await carte.getByText("S'inscrire").boundingBox())!;
+  const cadre = (await carte.boundingBox())!;
+  expect(box.width, "« S'inscrire » sur toute la largeur").toBeGreaterThan(cadre.width * 0.7);
+});
+
+test("calendrier : une info épinglée et un évènement passé restent sur une ligne compacte", async ({ page }) => {
+  await member(page, JO, "/evenements");
+  await expect(page.getByRole("link", { name: /Nouveau parking/ }).getByTestId("banniere")).toHaveCount(0);
+  await page.getByRole("button", { name: "Évènements passés" }).click();
+  await expect(page.getByRole("link", { name: /Pique-nique de rentrée/ }).getByTestId("banniere")).toHaveCount(0);
+});
+
+test("calendrier : une réunion de pôle n'a ni « S'inscrire » ni compteur", async ({ page }) => {
+  const reunion = { ...FOOT, titre: "Réunion DA", pour: "pole:da", placesMax: null, inscriptionOuverte: false, inscrits: 0 };
+  await member(page, { ...JO, poles: ["da"] }, "/evenements", { ...DOCS, "evenements/reunion": reunion });
+  const carte = page.getByRole("link", { name: /Réunion DA/ });
+  await expect(carte).toContainText("Parc de Bercy");
+  await expect(carte).not.toContainText("S'inscrire");
+  await expect(carte).not.toContainText("déjà inscrit");
+});
+
+test("période P2 : le formulaire écrit l'ouverture et la fin des inscriptions (heure facultative)", async ({ page }) => {
+  const db = await member(page, ALICE, "/evenements/nouveau");
+  await page.route("**/api/push/notify-evenement", (route) => route.fulfill({ json: { ok: true } }));
+  await page.getByLabel("Nom de l'évènement").fill("Retraite");
+  await page.getByLabel("Date", { exact: true }).fill("2026-11-14");
+  await expect(page.getByText("Vide : dès la publication")).toBeVisible();
+  await expect(page.getByText("Vide : au début de l'évènement")).toBeVisible();
+  await page.getByLabel("Ouverture des inscriptions", { exact: true }).fill("2026-10-05");
+  await page.getByLabel("Heure d'ouverture des inscriptions").fill("10:00");
+  await page.getByLabel("Fin des inscriptions", { exact: true }).fill("2026-11-08");
+  await page.getByRole("button", { name: "Créer l'évènement" }).click();
+  await expect(page.getByRole("heading", { name: "Retraite" })).toBeVisible();
+  const created = db.writes.find((w) => w.method === "POST" && w.path.startsWith("evenements/"));
+  expect(created?.data).toMatchObject({ inscriptions: "auto", inscriptionDebut: "2026-10-05T10:00", inscriptionFin: "2026-11-08" });
+  expect(created?.data).not.toHaveProperty("inscriptionOuverte");
+});
+
+test("période P2 : forcer « Ouvertes » cache les dates ; une fin avant l'ouverture est refusée", async ({ page }) => {
+  const db = await member(page, ALICE, "/evenements/nouveau");
+  await page.route("**/api/push/notify-evenement", (route) => route.fulfill({ json: { ok: true } }));
+  await page.getByLabel("Nom de l'évènement").fill("Soirée louange");
+  await page.getByLabel("Date", { exact: true }).fill("2026-11-14");
+  await page.getByLabel("Ouverture des inscriptions", { exact: true }).fill("2026-11-10");
+  await page.getByLabel("Fin des inscriptions", { exact: true }).fill("2026-11-01");
+  await page.getByRole("button", { name: "Créer l'évènement" }).click();
+  await expect(page.getByText("La fin des inscriptions est avant leur ouverture.")).toBeVisible();
+  await page.getByRole("radio", { name: "Ouvertes" }).check();
+  await expect(page.getByLabel("Ouverture des inscriptions", { exact: true })).toHaveCount(0);
+  await page.getByRole("button", { name: "Créer l'évènement" }).click();
+  await expect(page.getByRole("heading", { name: "Soirée louange" })).toBeVisible();
+  const created = db.writes.find((w) => w.method === "POST" && w.path.startsWith("evenements/"));
+  expect(created?.data).toMatchObject({ inscriptions: "ouvertes", inscriptionDebut: "", inscriptionFin: "" });
+});
+
+// P3 : la page dit toujours pourquoi on ne peut pas s'inscrire.
+const PAS_ENCORE = { ...FOOT, inscriptions: "auto", inscriptionDebut: "2026-10-05T10:00", inscriptionFin: "" };
+
+test("période P3 : la fiche dit pourquoi — pas encore, closes, commencé, fermées par l'organisateur", async ({ page }) => {
+  await member(page, JO, "/evenements/foot", { ...DOCS, "evenements/foot": PAS_ENCORE });
+  const fiche = page.getByTestId("fiche-carte");
+  await expect(fiche).toContainText(/Inscriptions à partir du lundi 5 octobre 2026 à 10:00/);
+  await expect(fiche.getByRole("button", { name: "S'inscrire" })).toHaveCount(0);
+
+  await member(page, JO, "/evenements/foot", { ...DOCS, "evenements/foot": { ...FOOT, inscriptions: "auto", inscriptionFin: "2026-09-30" } });
+  await expect(page.getByTestId("fiche-carte")).toContainText(/Inscriptions closes le mercredi 30 septembre 2026/);
+
+  await member(page, JO, "/evenements/foot", { ...DOCS, "evenements/foot": { ...FOOT, inscriptions: "fermees" } });
+  await expect(page.getByTestId("fiche-carte")).toContainText("Inscriptions fermées par l'organisateur");
+});
+
+test("période P3 : sans compte aussi, la raison s'affiche", async ({ page }) => {
+  await page.clock.setFixedTime(new Date("2026-10-10T20:00:00"));
+  await fakeFirestore(page, DOCS);
+  await page.goto("/evenements/foot");
+  await expect(page.getByText("Inscriptions fermées : l'évènement a commencé")).toBeVisible();
+});
+
+test("période P3 : la carte de la liste annonce l'ouverture au lieu de « S'inscrire »", async ({ page }) => {
+  await member(page, JO, "/evenements", { ...DOCS, "evenements/foot": PAS_ENCORE });
+  const carte = page.getByRole("link", { name: /Foot au parc/ });
+  await expect(carte).toContainText("Inscriptions à partir du 5 oct.");
+  await expect(carte).not.toContainText("S'inscrire");
+});
+
+test("période P3 : le panneau de l'organisateur dit « Bientôt » avant l'ouverture", async ({ page }) => {
+  await member(page, STEPH, "/evenements/foot", { ...DOCS, "evenements/foot": PAS_ENCORE });
+  const panneau = page.getByRole("region", { name: "Inscriptions", exact: true });
+  await expect(panneau.getByTestId("etat-inscriptions")).toHaveText("Bientôt");
+  await expect(panneau).toContainText(/Inscriptions à partir du lundi 5 octobre 2026 à 10:00/);
+});
+
+// P4 : le matin du jour d'ouverture, une ligne dans le rappel du jour.
+test("période P4 : les inscriptions qui s'ouvrent aujourd'hui, en automatique seulement", () => {
+  const e = { ...FOOT, id: "foot", inscriptions: "auto" as const, inscriptionDebut: "2026-10-05T10:00" };
+  expect(ouvertureDuJour(e, "2026-10-05")).toBe(true);
+  expect(ouvertureDuJour({ ...e, inscriptionDebut: "2026-10-05" }, "2026-10-05")).toBe(true);
+  expect(ouvertureDuJour(e, "2026-10-04")).toBe(false);
+  expect(ouvertureDuJour(e, "2026-10-06")).toBe(false);
+  expect(ouvertureDuJour({ ...e, inscriptions: "ouvertes" as const }, "2026-10-05")).toBe(false);
+  expect(ouvertureDuJour({ ...e, inscriptions: "fermees" as const }, "2026-10-05")).toBe(false);
+  expect(ouvertureDuJour({ ...e, inscriptionDebut: "" }, "2026-10-05")).toBe(false);
+  expect(ouvertureDuJour({ ...e, pour: "pole:da" as const }, "2026-10-05")).toBe(false);
+  expect(ouvertureDuJour({ ...e, date: "2026-10-01" }, "2026-10-05"), "évènement déjà passé").toBe(false);
+});
+
+test("période P4 : la ligne « Inscriptions ouvertes », en français et en chinois, ajoutée au message du jour", () => {
+  const e = { ...FOOT, inscriptionDebut: "2026-10-05T10:00" };
+  expect(ligneOuverture(e, "fr")).toBe("Inscriptions ouvertes : Foot au parc (dès 10:00)");
+  expect(ligneOuverture({ ...e, inscriptionDebut: "2026-10-05" }, "fr")).toBe("Inscriptions ouvertes : Foot au parc");
+  expect(ligneOuverture(e, "zh-CN")).toBe("报名开始：Foot au parc（10:00 起）");
+  expect(ouverturesTitre("fr")).toBe("Inscriptions ouvertes");
+  expect(ouverturesTitre("zh-CN")).toBe("报名开始");
+  expect(avecLignes("Dimanche : piano", ["Inscriptions ouvertes : Foot au parc"])).toBe("Dimanche : piano\nInscriptions ouvertes : Foot au parc");
+  expect(avecLignes("", ["Inscriptions ouvertes : Foot au parc"])).toBe("Inscriptions ouvertes : Foot au parc");
+});

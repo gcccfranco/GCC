@@ -1,6 +1,7 @@
 "use client";
 
 import { GuideLien } from "@/components/guide/GuideLien";
+import { LienHarmonie } from "@/components/harmonie/LienHarmonie";
 import { useState, useMemo, useEffect, useLayoutEffect, useRef } from "react";
 import Link from "next/link";
 import Fuse from "fuse.js";
@@ -348,6 +349,8 @@ export function SongListClient({ songs, themes }: SongListClientProps) {
           ))}
         </ul>
       )}
+
+      <LienHarmonie />
 
       <GuideLien section="songs" />
 

@@ -101,7 +101,10 @@ structure de la présidence.
   dans la tonalité affichée, stockage en tonalité d'origine, comme Adapter.
 - **Section répétée** (tranché le 14/09/2026, après un aller-retour) : en
   V1, retoucher une ligne change toutes ses répétitions dans ma version (pas
-  de copie matérialisée : hypothèse 3).
+  de copie matérialisée : hypothèse 3). **Depuis le lot 9 (tranche MV de
+  `spec-harmonie.md`, 17/09/2026)** : le choix est proposé à l'enregistrement
+  — « Toutes les répétitions » (toujours par défaut) ou « Seulement ce
+  passage » (copie de section d'Adapter).
 - **« Rétablir »** retire `content` (retour à la présidence). Une version
   redevenue identique à celle de la présidence est retirée d'elle-même.
 - **Badge** sur le chant : « Ma version » (ambre, comme « Version modifiée »).
@@ -164,7 +167,12 @@ dans ma version comme une section ordinaire.
    ma version (pas de `materializeSectionCopy` en V1). Si c'est gênant,
    reprendre le mécanisme d'Adapter ensuite. **Confirmée par Timothée le
    14/09/2026**, après un aller-retour (d'abord refusée, puis « je me suis
-   trompé, c'était bien comme tu avais fait »).
+   trompé, c'était bien comme tu avais fait »). **Dépassée le 17/09/2026**
+   (lot 9, tranche MV) : « Toutes les répétitions » reste le défaut, mais
+   « Seulement ce passage » copie la section avec `materializeSectionCopy` et
+   garde la trace de l'original dans `sectionOrigins` ; la copie s'affiche « au
+   même endroit » chez qui lit ma version partagée avec une autre structure
+   (dernière occurrence, sinon même rang depuis le début).
 4. La présidence adapte le chant après moi : ma version reste la mienne ; le
    sélecteur « Présidence » me permet d'aller voir. Pas de repère « la
    présidence a modifié depuis » en V1.

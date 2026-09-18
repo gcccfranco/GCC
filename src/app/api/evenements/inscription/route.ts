@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { adminDb } from "@/lib/push/admin";
-import { nowIsoParis, refusInscription } from "@/lib/evenements/agenda";
+import { nowIsoParis, refusInscription, type RefusInscription } from "@/lib/evenements/agenda";
 import { HttpError, ID, errorResponse, optionalUser } from "@/lib/evenements/serveur";
 import type { Evenement } from "@/types/evenement";
 
@@ -11,10 +11,13 @@ export const dynamic = "force-dynamic";
 // une place au nom du profil (id = uid, réinscription = mise à jour des
 // invités). Sans compte, si l'organisateur l'autorise : nom + invités, id
 // aléatoire. Le compteur `inscrits` (personnes + invités) et la place sont
-// écrits dans une même transaction ; refus si fermé, commencé ou complet.
+// écrits dans une même transaction ; refus si fermé, pas encore ouvert,
+// terminé, commencé ou complet (période d'inscription, 17/09/2026).
 
-const REFUS: Record<string, string> = {
+const REFUS: Record<RefusInscription, string> = {
   fermee: "Les inscriptions sont fermées.",
+  pasEncore: "Les inscriptions ne sont pas encore ouvertes.",
+  terminee: "Les inscriptions sont closes.",
   commencee: "L'évènement a déjà commencé.",
   complet: "Il n'y a plus assez de places.",
 };

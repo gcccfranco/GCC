@@ -2,6 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { presentationMessage } from "../src/lib/setlist/presentationLink";
 import { nouvelEvenementMessage } from "../src/lib/evenements/rappel";
+import { auditKey, certifiedSlugs, halfStepUp, loadChords, openSheet, slugsWithoutOverlay, songKey } from "./helpers/jianpu";
 
 // Lot 8 « Nouveaux membres et 中文 » (docs/spec-nouveaux-membres.md).
 
@@ -152,17 +153,72 @@ function textesFrancais(): string[] {
   return out.filter((s) => s.length >= 8);
 }
 
+/** Les textes français que la page montre ou fait lire : texte affiché, mais
+ *  aussi libellés d'accessibilité, exemples des champs et options des listes,
+ *  que `innerText` ne voit pas. */
+async function francaisAffiche(page: Page, francais: string[]): Promise<string[]> {
+  const lu = await page.evaluate(() => [
+    document.body.innerText,
+    ...Array.from(document.querySelectorAll("[aria-label],[placeholder],[title]")).flatMap((el) =>
+      ["aria-label", "placeholder", "title"].map((a) => el.getAttribute(a) ?? "")),
+    ...Array.from(document.querySelectorAll("option")).map((o) => o.textContent ?? ""),
+  ].join("\n"));
+  return francais.filter((f) => lu.includes(f));
+}
+
 test("en 中文, aucun texte français sur les écrans membres principaux", async ({ page }) => {
   test.setTimeout(90_000);
   await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
   const francais = textesFrancais();
   await signInAs(page, { ...MEMBRE, poles: ["da"] }, {}, "/moi");
-  for (const chemin of ["/moi", "/taches", "/taches/da", "/setlists", "/evenements"]) {
+  for (const chemin of ["/moi", "/songs", "/taches", "/taches/da", "/setlists", "/evenements"]) {
     if (chemin !== "/moi") await page.goto(chemin);
     await expect(page.locator("html")).toHaveAttribute("lang", "zh-CN");
     await page.waitForTimeout(800);
-    const texte = await page.locator("body").innerText();
-    const restes = francais.filter((f) => texte.includes(f));
+    const restes = await francaisAffiche(page, francais);
     expect(restes, `${chemin} : ${restes.join(" | ")}`).toEqual([]);
+  }
+});
+
+// Les fenêtres de l'inventaire A3 (docs/spec-nouveaux-membres.md) : sans les
+// ouvrir, le test précédent passait aussi sur le code d'avant le lot 8.
+test("en 中文, la fenêtre de signalement n'a plus de français", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
+  await signInAs(page, MEMBRE, {}, "/moi");
+  await page.getByRole("button", { name: "报告问题" }).click();
+  await expect(page.getByRole("heading", { name: "报告问题" })).toBeVisible();
+  expect(await francaisAffiche(page, textesFrancais())).toEqual([]);
+});
+
+test("en 中文, la proposition de chant n'a plus de français", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
+  await signInAs(page, MEMBRE, {}, "/songs");
+  await page.getByRole("button", { name: "推荐新诗歌" }).click();
+  await expect(page.getByRole("heading", { name: "推荐新诗歌" })).toBeVisible();
+  expect(await francaisAffiche(page, textesFrancais())).toEqual([]);
+});
+
+test("en 中文, le formulaire de nouvelle tâche n'a plus de français", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
+  await signInAs(page, { ...MEMBRE, poles: ["da"] }, {}, "/taches/da");
+  await page.getByRole("button", { name: "新任务" }).click();
+  await expect(page.getByRole("dialog", { name: "新任务" })).toBeVisible();
+  expect(await francaisAffiche(page, textesFrancais())).toEqual([]);
+});
+
+test("en 中文, aucun texte français sur la partition 简谱 transposée", async ({ page }) => {
+  test.setTimeout(90_000);
+  await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
+  const francais = textesFrancais();
+  const chords = loadChords();
+  // Un chant à deux lectures d'accords (sélecteur « 和弦 ») et un chant sans
+  // calque (avertissement « les accords ne suivent pas »).
+  const aDeuxLectures = certifiedSlugs().find((s) => chords[s].labels.some((l) => l.opt && l.c));
+  const sansCalque = slugsWithoutOverlay()[0];
+  for (const slug of [aDeuxLectures, sansCalque].filter((s): s is string => !!s)) {
+    const key = chords[slug] ? auditKey(slug, chords[slug].printedKey) : halfStepUp(songKey(slug) ?? "C");
+    await openSheet(page, slug, { key });
+    const restes = await francaisAffiche(page, francais);
+    expect(restes, `${slug} : ${restes.join(" | ")}`).toEqual([]);
   }
 });

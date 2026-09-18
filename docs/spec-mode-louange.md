@@ -107,7 +107,8 @@ s'affichent plus, jusqu'au retour à cette taille.
   setlist enregistrée ne changent pas.
 - Chants fusionnés : hors lot (leur lien n'ouvre pas la page du chant avec les
   réglages de la setlist).
-- Capo sur la page du chant : chantier 4 (capo conseillé).
+- Capo sur la page du chant : renvoyé au capo conseillé, **idée retirée le
+  17/09/2026** (`feuille-de-route.md` § 5). Le capo reste au mode louange.
 
 ### 6. Police
 

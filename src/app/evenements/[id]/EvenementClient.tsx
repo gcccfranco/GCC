@@ -3,7 +3,8 @@
 // Fiche d'un évènement (lot 6) : une carte blanche qui porte la bannière,
 // les badges, le titre, date · horaire · lieu à icône, la description,
 // « Pour plus d'infos » et l'inscription (lot 6 bis, maquette du 16/09/2026 :
-// même rendu sur ordinateur, téléphone et tablette).
+// même rendu sur ordinateur, téléphone et tablette). L'organisateur a en plus,
+// au-dessus, la carte de gestion de la maquette ; titre et badges y passent.
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
@@ -14,13 +15,11 @@ import { useProfile } from "@/lib/firebase/users"
 import { canEditEvenement, canSeeEvenement, poleDuPour } from "@/lib/access"
 import { deleteEvenement, getEvenement } from "@/lib/firebase/evenements"
 import { isInfo } from "@/lib/evenements/agenda"
-import { fdFullL } from "@/lib/planning/utils"
 import { PLANNING_COLORS } from "@/lib/serviceColors"
 import type { Evenement } from "@/types/evenement"
-import { CalendarDays, Clock, Image as ImageIcon, Info, MapPin } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { TypePour } from "../EvenementCard"
-import { Inscriptions } from "./Inscriptions"
+import { EnteteEvenement, PlusInfos, TypePour } from "../EvenementCard"
+import { Inscriptions, PanneauInscriptions } from "./Inscriptions"
 import { QrCodeLink } from "@/components/evenements/QrCode"
 
 const COLOR = PLANNING_COLORS.scene
@@ -40,12 +39,16 @@ function Linkified({ text }: { text: string }) {
 }
 
 export function EvenementClient() {
-  const { t, i18n } = useTranslation()
+  const { t } = useTranslation()
   const { id } = useParams<{ id: string }>()
   const router = useRouter()
   const { user, loading: authLoading } = useAuth()
   const { profile, loading: profileLoading } = useProfile()
   const [evenement, setEvenement] = useState<Evenement | null | undefined>(undefined)
+  // L'organisateur a les deux cartes : sa place retirée dans le panneau fait
+  // relire la fiche, son inscription dans la fiche fait relire le panneau.
+  const [cleInscription, setCleInscription] = useState(0)
+  const [relireListe, setRelireListe] = useState(0)
 
   useEffect(() => {
     if (authLoading) return
@@ -60,62 +63,42 @@ export function EvenementClient() {
   }
 
   const e = evenement
+  // Organisateur ou coordination : ceux qui gèrent l'évènement.
+  const gestionnaire = canEditEvenement(user, profile, e)
+  const avecInscriptions = !isInfo(e) && !poleDuPour(e.pour)
 
   return (
     <div className="max-w-2xl mx-auto space-y-3">
       <Link href="/evenements" className="text-xs font-semibold text-muted-foreground hover:text-foreground">← {t("evenements.title")}</Link>
+
+      {/* Organisateur (maquette du 16/09/2026, choix du 17/09/2026) : la carte
+          de gestion en haut, puis la fiche des membres, où il peut s'inscrire. */}
+      {gestionnaire && (
+        <div data-testid="gestion-carte" className="space-y-4 rounded-2xl bg-card p-4">
+          <div>
+            <h2 className="text-xl font-bold text-foreground text-balance">{e.titre}</h2>
+            <div className="mt-2 flex flex-wrap gap-1"><TypePour e={e} /></div>
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            <Button asChild variant="outline"><Link href={`/evenements/${e.id}/modifier`}>{t("evenements.modifier")}</Link></Button>
+            <Button asChild variant="outline"><Link href={`/evenements/nouveau?from=${e.id}`}>{t("evenements.dupliquer")}</Link></Button>
+            <Button variant="outline" className="text-destructive hover:text-destructive" onClick={async () => {
+              if (!window.confirm(t("evenements.confirmDelete", { titre: e.titre }))) return
+              await deleteEvenement(e.id)
+              router.push("/evenements")
+            }}>{t("evenements.supprimer")}</Button>
+          </div>
+          {avecInscriptions && (
+            <PanneauInscriptions evenement={e} relire={relireListe} onMode={(inscriptions) => setEvenement({ ...e, inscriptions })}
+              onInscrits={(inscrits) => setEvenement({ ...e, inscrits })}
+              onRetire={(id) => { if (id === user?.uid) setCleInscription((c) => c + 1) }} />
+          )}
+          <QrCodeLink path={`/evenements/${e.id}`} label={e.titre} avecInscriptions={avecInscriptions} />
+        </div>
+      )}
+
       <div data-testid="fiche-carte" className="space-y-4 rounded-2xl bg-card p-4">
-      {(!isInfo(e) || e.images[0]) && (
-        <div data-testid="banniere" className="flex aspect-[16/9] w-full items-center justify-center overflow-hidden rounded-xl bg-secondary">
-          {e.images[0] ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={e.images[0]} alt={e.titre} className="h-full w-full object-cover" />
-          ) : (
-            <ImageIcon className="h-10 w-10 text-muted-foreground/50" aria-hidden />
-          )}
-        </div>
-      )}
-      <div>
-        <div className="flex flex-wrap gap-1"><TypePour e={e} /></div>
-        <h2 className="mt-2 text-xl font-bold text-foreground text-balance">{e.titre}</h2>
-      </div>
-
-      {canEditEvenement(user, profile, e) && (
-        <div className="flex flex-wrap gap-2">
-          <Button asChild size="sm" variant="outline"><Link href={`/evenements/${e.id}/modifier`}>{t("evenements.modifier")}</Link></Button>
-          <Button asChild size="sm" variant="outline"><Link href={`/evenements/nouveau?from=${e.id}`}>{t("evenements.dupliquer")}</Link></Button>
-          <Button size="sm" variant="ghost" className="text-destructive" onClick={async () => {
-            if (!window.confirm(t("evenements.confirmDelete", { titre: e.titre }))) return
-            await deleteEvenement(e.id)
-            router.push("/evenements")
-          }}>{t("evenements.supprimer")}</Button>
-        </div>
-      )}
-
-      {!isInfo(e) && (
-        <ul className="space-y-1.5 text-sm text-foreground">
-          <li className="flex items-start gap-2.5">
-            <CalendarDays className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
-            <span className="font-semibold">
-              {e.dateFin
-                ? t("evenements.du", { from: fdFullL(e.date, i18n.language), to: fdFullL(e.dateFin, i18n.language) })
-                : fdFullL(e.date, i18n.language)}
-            </span>
-          </li>
-          {e.heure && (
-            <li className="flex items-start gap-2.5">
-              <Clock className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
-              <span>{e.heure}{e.heureFin ? ` – ${e.heureFin}` : ""}</span>
-            </li>
-          )}
-          {e.lieu && (
-            <li className="flex items-start gap-2.5">
-              <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
-              <span>{e.lieu}</span>
-            </li>
-          )}
-        </ul>
-      )}
+      <EnteteEvenement e={e} titre={gestionnaire ? false : "h2"} />
 
       {e.description && <Linkified text={e.description} />}
 
@@ -136,22 +119,17 @@ export function EvenementClient() {
         </div>
       )}
 
-      <p className="flex items-start gap-2.5 border-t border-border pt-4 text-sm text-muted-foreground">
-        <Info className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
-        <span>{t("evenements.plusInfos", { nom: e.contact || e.organisateurNom })}</span>
-      </p>
+      <PlusInfos e={e} />
 
-      {!isInfo(e) && !poleDuPour(e.pour) && (
+      {avecInscriptions && (
         <Inscriptions
+          key={cleInscription}
           evenement={e}
           user={user}
-          canEdit={canEditEvenement(user, profile, e)}
-          onInscrits={(inscrits) => setEvenement({ ...e, inscrits })}
-          onOuverte={(inscriptionOuverte) => setEvenement({ ...e, inscriptionOuverte })}
+          organisateur={gestionnaire}
+          onInscrits={(inscrits) => { setEvenement({ ...e, inscrits }); setRelireListe((n) => n + 1) }}
         />
       )}
-
-      {canEditEvenement(user, profile, e) && <QrCodeLink path={`/evenements/${e.id}`} label={e.titre} />}
       </div>
     </div>
   )

@@ -9,7 +9,7 @@ import {
   CULTE_FALLBACK, FIDELITE_FALLBACK, FIDELITE_MUSIC_FALLBACK,
   PAIX_FALLBACK, BONTE_FALLBACK, DEJEUNER_FALLBACK, EDD_FALLBACK, CAMP_LOUANGE_FALLBACK
 } from "@/lib/planning/data"
-import { fetchCulte, fetchDejeuner, fetchPaix, fetchFidelite, fetchFideliteMusic, fetchBonte, fetchEDD, fetchCampus, fetchIntergroupe, fetchInterfranco } from "@/lib/planning/sheets"
+import { fetchCulte, fetchDejeuner, fetchPetitDej, fetchPaix, fetchFidelite, fetchFideliteMusic, fetchBonte, fetchEDD, fetchCampus, fetchIntergroupe, fetchInterfranco } from "@/lib/planning/sheets"
 import { StaleBanner } from "@/components/planning/StaleBanner"
 import type { EddDataStructure, CampusSeance } from "@/lib/planning/utils"
 import { useProfile } from "@/lib/firebase/users"
@@ -55,6 +55,8 @@ export default function PlanningAccueil() {
   const { user, profile } = useProfile()
   const [culte, setCulte] = useState(CULTE_FALLBACK)
   const [dej, setDej] = useState(DEJEUNER_FALLBACK)
+  // Petit déj : aucune donnée de secours, il ne s'affiche que s'il est lu.
+  const [petitDej, setPetitDej] = useState<string[][]>([])
   const [paix, setPaix] = useState(PAIX_FALLBACK)
   const [fid, setFid] = useState(FIDELITE_FALLBACK)
   const [fidM, setFidM] = useState(FIDELITE_MUSIC_FALLBACK)
@@ -71,6 +73,7 @@ export default function PlanningAccueil() {
     Promise.allSettled([
       fetchCulte().then(d => { if (d.length) setCulte(d) }),
       fetchDejeuner().then(d => { if (d.length) setDej(d) }),
+      fetchPetitDej().then(d => { if (d.length) setPetitDej(d) }),
       fetchPaix().then(d => { if (d.length) setPaix(d) }),
       fetchFidelite().then(d => { if (d.length) setFid(d) }),
       fetchFideliteMusic().then(d => { if (d.length) setFidM(d) }),
@@ -85,12 +88,12 @@ export default function PlanningAccueil() {
   // Prochain service de la personne connectée (d'après son nom de planning)
   const nextServices = useMemo(() => {
     if (!user || !profile?.planningName) return null
-    const data: PlanningData = { culte, dejeuner: dej, paix, fidelite: fid, fideliteMusic: fidM, bonte, edd, campus, intergroupe, interfranco }
+    const data: PlanningData = { culte, dejeuner: dej, petitDej, paix, fidelite: fid, fideliteMusic: fidM, bonte, edd, campus, intergroupe, interfranco }
     const today = new Date().toISOString().split("T")[0]
     const upcoming = findMyServices(data, profile.planningName).filter(e => e.date >= today)
     if (!upcoming.length) return null
     return upcoming.filter(e => e.date === upcoming[0].date)
-  }, [user, profile, culte, dej, paix, fid, fidM, bonte, edd, campus, intergroupe, interfranco])
+  }, [user, profile, culte, dej, petitDej, paix, fid, fidM, bonte, edd, campus, intergroupe, interfranco])
 
   const sun = currentSundayStr()
   const sunParts = sun.split("-")
@@ -101,6 +104,7 @@ export default function PlanningAccueil() {
 
   const cRow = culte.find(r => r[0] === sun) ?? null
   const dRow = dej.find(r => r[0] === sun) ?? null
+  const pdRow = petitDej.find(r => r[0] === sun) ?? null
   const paixRow = paix.find(r => r[0] === sun) ?? null
   const fidRow = fid.find(r => r[0] === sun) ?? null
   const fidMRow = fidM.find(r => r[0] === sun) ?? null
@@ -192,6 +196,13 @@ export default function PlanningAccueil() {
               <p className="text-sm text-muted-foreground">—</p>
             )}
           </SectionBlock>
+
+          {/* Petit déj — seulement quand la case de la feuille est remplie */}
+          {pdRow?.[1]?.trim() && (
+            <SectionBlock dot={PLANNING_COLORS.table} label={t("planning.tabs.petitDej")}>
+              <p className="text-sm text-foreground">{pdRow[1]}</p>
+            </SectionBlock>
+          )}
 
           {/* Groupes — ou, ces dimanches-là, Interfranco / Intergroupe */}
           {inter ? (

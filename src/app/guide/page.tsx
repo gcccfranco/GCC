@@ -21,6 +21,7 @@ import {
   ShieldCheck,
   UserCog,
   Lightbulb,
+  Sparkles,
 } from "lucide-react";
 import { RequireAuth } from "@/components/auth/RequireAuth";
 import { GuideFigure } from "@/components/guide/GuideFigure";
@@ -39,6 +40,7 @@ const SECTIONS = [
   { key: "planning", Icon: CalendarDays },
   { key: "evenements", Icon: Ticket },
   { key: "scene", Icon: CalendarClock },
+  { key: "harmonie", Icon: Sparkles },
   { key: "taches", Icon: ListChecks },
   { key: "notifications", Icon: Bell },
   { key: "report", Icon: AlertCircle },

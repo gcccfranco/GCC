@@ -29,7 +29,7 @@ export function NouveauClient() {
       if (!e) { setInitial(EMPTY_EVENEMENT); return }
       const { id, organisateurUid, organisateurNom, inscrits, createdAt, updatedAt, ...rest } = e
       void id; void organisateurUid; void organisateurNom; void inscrits; void createdAt; void updatedAt
-      setInitial({ ...rest, date: "", heure: e.heure, heureFin: e.heureFin, dateFin: "" })
+      setInitial({ ...rest, date: "", heure: e.heure, heureFin: e.heureFin, dateFin: "", inscriptionDebut: "", inscriptionFin: "" })
     })
   }, [from])
 

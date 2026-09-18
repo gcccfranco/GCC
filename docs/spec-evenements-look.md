@@ -103,4 +103,73 @@ Taille **M** (une soirée).
 - **L5** captures 4 formats (téléphone clair / sombre, tablette portrait / paysage), suite complète, feuille de route.
 - **L6** (16/09/2026, « je veux que ce soit comme ça qu'on soit sur ordinateur, téléphone, tablette ») : la fiche et la vue organisateur passent dans une **carte blanche** (`fiche-carte`), la bannière montre une **zone d'attente** avec une icône quand il n'y a pas d'image, le formulaire devient **un seul bloc blanc** (`form-carte`) avec filets de séparation, le panneau des inscriptions passe en gris dans la carte et le compteur n'est plus écrit deux fois pour l'organisateur. Les `sm:grid-cols-2` restants ont disparu : la structure est identique sur ordinateur, téléphone et tablette.
 
-**Reste à trancher** : la maquette écrit les heures « 12h00 », le site écrit « 12:00 » partout (planning compris). Changer le format touche l'affichage et les tests de plusieurs pages ; non fait, à décider séparément.
+**Tranché le 17/09/2026** : la maquette écrit les heures « 12h00 », le site écrit « 12:00 » partout (planning compris) — Timothée : « Le format de l'heure en 12:00 ». Le site garde son écriture, la maquette ne l'emporte pas ; aucun « 12h00 » ne traîne dans le code ni dans les locales (vérifié), rien à changer.
+
+## 6. Retour de Timothée (17/09/2026)
+
+« Pourquoi l'onglet évènement s'affiche toujours comme ça ? […] je veux la
+même DA mais adapté au site. Il faut aussi que celui qui crée l'évènement
+puisse aussi s'inscrire. » Captures sur téléphone d'un évènement de test
+commencé depuis la veille.
+
+**Diagnostic.**
+- Le créateur **pouvait** s'inscrire (ni la page ni le serveur ne l'en
+  empêchent) ; son évènement avait commencé, et un évènement commencé refuse
+  les inscriptions. Mais le panneau de l'organisateur affichait « Ouvertes »
+  juste sous « Inscriptions fermées » : il ne lisait que l'interrupteur.
+- La vue organisateur mélangeait en une carte ce que la maquette sépare ;
+  « Supprimer » sans bord, date en gras, « Lien de la fiche » avec l'adresse
+  complète ; formulaire aux libellés gras, listes blanches à bord à côté de
+  champs gris, boutons hors de la carte.
+
+**Tranché (question du 17/09/2026)** : pour l'organisateur, la **carte de
+gestion en haut** (titre, badges, Modifier · Dupliquer · Supprimer en pilules
+à bord, panneau « Inscriptions » avec état et compteur, tuile QR + « Lien
+d'inscription »), **puis la fiche des membres** sans répéter titre ni badges,
+avec « S'inscrire ».
+
+**Fait** (test d'abord, trois appareils) :
+- `EvenementClient.tsx` : `gestion-carte` au-dessus de `fiche-carte` pour
+  l'organisateur ; date sans gras.
+- `Inscriptions.tsx` : `Inscriptions` (fiche) et `PanneauInscriptions`
+  (gestion) séparés ; un évènement commencé est « Fermées » dans le panneau,
+  sans bouton pour rouvrir ; l'inscription de l'organisateur fait relire la
+  liste, le retrait de sa propre place fait relire la fiche.
+- `EvenementCard.tsx` : « Inscrit » sous l'heure et le lieu.
+- `QrCode.tsx` : tuile à bord, « Lien d'inscription » (« Lien de la fiche »
+  pour une info ou une réunion de pôle), adresse sans `https://`.
+- `EvenementForm.tsx` : libellés discrets, listes au style des champs du site,
+  « Prévenir les membres » en interrupteur dans la carte, boutons pleine
+  largeur dans la carte.
+- Adapté au site plutôt que copié : champs gris, boutons en pilule, cartes
+  sans bord, rouge du logo.
+- Tests `evenements.spec.ts` § « Retour de Timothée du 17/09/2026 » (7 tests ;
+  « le créateur s'inscrit » passait déjà, il reste en garde-fou) ; suite
+  Évènements 159 verts.
+
+**Suite du 17/09/2026 : qui voit les inscrits.** Timothée : « montrer le nombre
+[d'inscrits et] qui est inscrit pour tout le monde, pas seulement à la personne
+qui a créé l'évènement » ; question posée (sans compte aussi ?), réponse :
+« visible que pour les membres connectés ». Fait : `canSeeInscrits` (connecté)
+dans `access.ts`, lecture de `evenements/{id}/inscriptions` ouverte aux
+connectés dans `firestore.rules` (**à publier**), « Voir les inscrits (N) » en
+lecture seule sous « N déjà inscrits » dans la fiche d'un membre ; sans compte,
+le nombre seul ; retirer une place reste à l'organisateur et à la coordination
+(liste commune `ListeInscrits`). Tests : « membre connecté : voit qui est
+inscrit… », droit `canSeeInscrits` ; « fiche sans compte : aucun nom » inchangé.
+La carte de la liste « comme ça » attend l'image, qui n'est pas arrivée.
+
+**Suite du 17/09/2026 : la liste en grandes cartes.** Timothée : « je veux que
+la page avec les évènements ait une carte comme ça pour l'évènement » (maquette
+`../图片_20260916093643_1235_30.jpg`, hors dépôt : la carte « Brunch de
+rentrée » du 16/09) ; question posée (liste, fiche ou les deux), réponse :
+**la liste**. Fait : `EvenementCarte` pour chaque évènement à venir (bannière,
+badges, titre, date · horaire · lieu, « Pour plus d'infos », « Inscrit » /
+« Complet » / « Inscriptions fermées » / « S'inscrire » pleine largeur, « N
+déjà inscrits ») ; toute la carte mène à la fiche ; réunion de pôle : ni bouton
+ni compteur ; infos épinglées et passés gardent la ligne compacte. Haut de
+carte commun avec la fiche (`EnteteEvenement`, `PlusInfos`) ; date avec
+majuscule à l'écran. Tests : « un évènement à venir est une grande carte comme
+la maquette », « ligne compacte », « réunion de pôle ». Contrôle : ordre et
+alignements lus sur les captures des trois appareils, identiques à la maquette
+(sauf « 12:00 » contre « 12h00 », toujours à trancher).

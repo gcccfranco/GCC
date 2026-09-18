@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
-import { MoreHorizontal, Download, Play, X, TriangleAlert , Music, Music2, Settings, ChevronDown } from "lucide-react";
+import { MoreHorizontal, Download, Play, X, TriangleAlert , Music, Music2, Settings, ChevronDown, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -31,6 +31,8 @@ import type { SectionItem } from "@/types/song";
 import type { SectionNuance } from "@/types/setList";
 import { ReportDialog } from "@/components/report/ReportDialog";
 import { PdfChoiceSheet } from "@/components/pdf/PdfChoiceSheet";
+import { IdeesSheet } from "@/components/harmonie/IdeesSheet";
+import { useAccesHarmonie, useInstrument } from "@/lib/harmonie/useHarmonie";
 import { pdfFileName, type PdfStyle } from "@/lib/pdfStylePref";
 
 interface SongDetailClientProps {
@@ -81,6 +83,10 @@ function safeParseParam<T>(raw: string | null, fallback: T): T {
     const [backPath, setBackPath] = useState("/songs");
     const [showReport, setShowReport] = useState(false);
     const [showPdfChoice, setShowPdfChoice] = useState(false);
+    // Idées d'harmonie (lot 9) : pianistes, guitaristes et admins seulement.
+    const [showIdees, setShowIdees] = useState(false);
+    const accesHarmonie = useAccesHarmonie();
+    const [instrumentHarmonie] = useInstrument(accesHarmonie);
     const searchParams = useSearchParams();
     useEffect(() => {
       const saved = sessionStorage.getItem("lastListPath");
@@ -452,6 +458,12 @@ function safeParseParam<T>(raw: string | null, fallback: T): T {
                     <Download className="h-3.5 w-3.5 text-muted-foreground" />
                     {downloading ? "…" : t("songs.detail.downloadPdf") || "PDF"}
                   </DropdownMenuItem>
+                  {accesHarmonie.peut && (
+                    <DropdownMenuItem onClick={() => setShowIdees(true)}>
+                      <Sparkles className="h-3.5 w-3.5 text-muted-foreground" />
+                      {t("harmonie.idees")}
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuItem onClick= {() => setShowReport(true)}>
                     <TriangleAlert className='h-3.5 w-3.5 text-muted-foreground'/>
                     {t('songs.detail.report')}
@@ -523,6 +535,18 @@ function safeParseParam<T>(raw: string | null, fallback: T): T {
           />
         )}
         
+        {/* Idées d'harmonie du chant (lot 9) */}
+        <IdeesSheet
+          open={showIdees}
+          onClose={() => setShowIdees(false)}
+          slug={song.slug}
+          titre={song.title}
+          sections={displayedAST.sections}
+          tonalite={customize.currentKey}
+          tonaliteOrigine={originalKey}
+          instrument={instrumentHarmonie}
+        />
+
         <PdfChoiceSheet
           open={showPdfChoice}
           onClose={() => setShowPdfChoice(false)}

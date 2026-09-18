@@ -235,9 +235,13 @@ ordinateur, téléphone et tablette (page d'un pôle, formulaire, page Tâches).
 - Quand la régie est prévenue, le lien de la tâche (fond Canva…) est ajouté
   en texte au message ; la notification ouvre les setlists.
 - Les tests d'interface de T1–T2 ont été écrits avant les pages, mais pas
-  lancés entre les deux : leur échec n'a pas été observé.
+  lancés entre les deux. **Vus en échec le 17/09/2026** (copie de travail sans
+  les pages Tâches, page Moi d'avant le lot 7) : 6 sur 7 échouent sur les trois
+  appareils ; « Moi : pas de Mes tâches hors pôle », négatif, passe forcément
+  sans le code, et le casser exprès a été refusé par le contrôle des
+  permissions.
 
 ## Après le code (rappel)
 
-- Publier `firestore.rules` (tâches, réunions de pôle).
+- ~~Publier `firestore.rules` (tâches, réunions de pôle).~~ Publiées le 17/09/2026.
 - Cocher les pôles DA, Média, Orga dans l'administration.

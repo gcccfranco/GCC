@@ -2,10 +2,10 @@ import { NextResponse, type NextRequest } from "next/server";
 import { adminDb, verifyIdToken } from "@/lib/push/admin";
 import { sendPushToUids } from "@/lib/push/send";
 import { recordNotification } from "@/lib/push/notifications";
-import { filterUidsByNotifPref, loadNotifLangs, uidsForCategory } from "@/lib/push/recipients";
+import { filterUidsByNotifPref, loadNotifLangs } from "@/lib/push/recipients";
 import { nouvelEvenementMessage } from "@/lib/evenements/rappel";
-import { canCreateEvenement, canEditEvenement, poleDuPour } from "@/lib/access";
-import { membresDuPole } from "@/lib/taches/serveur";
+import { canCreateEvenement, canEditEvenement } from "@/lib/access";
+import { destinatairesEvenement } from "@/lib/evenements/serveur";
 import type { Evenement } from "@/types/evenement";
 
 export const runtime = "nodejs";
@@ -45,14 +45,7 @@ export async function POST(req: NextRequest) {
   const logRef = db.collection("notifLog").doc(`evenement-${evenementId}`);
   if ((await logRef.get()).exists) return NextResponse.json({ ok: true, sent: 0, already: true });
 
-  // Réunion de pôle (lot 7) : les membres du pôle.
-  const pole = poleDuPour(e.pour);
-  const all = e.pour === "eglise"
-    ? (await db.collection("users").get()).docs.map((d) => d.id)
-    : pole
-      ? await membresDuPole(pole)
-      : await uidsForCategory(e.pour);
-  const uids = (await filterUidsByNotifPref(all, "evenements")).filter((u) => u !== user.uid);
+  const uids = (await filterUidsByNotifPref(await destinatairesEvenement(db, e), "evenements")).filter((u) => u !== user.uid);
   // Une fournée par langue (lot 8) : chacun reçoit le message dans la sienne.
   const langs = await loadNotifLangs(uids);
   let result: Awaited<ReturnType<typeof sendPushToUids>> | undefined;

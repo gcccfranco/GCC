@@ -12,6 +12,9 @@ export type EvenementType = (typeof EVENEMENT_TYPES)[number];
 export type EvenementPour = "eglise" | AnnonceSection | `pole:${TachePole}`;
 export const POUR_EGLISE = "eglise" as const;
 
+export const MODES_INSCRIPTIONS = ["auto", "ouvertes", "fermees"] as const;
+export type ModeInscriptions = (typeof MODES_INSCRIPTIONS)[number];
+
 export interface Evenement {
   id: string;
   titre: string;
@@ -32,7 +35,16 @@ export interface Evenement {
   images: string[];
   /** Places (inscrits + invités) ; null = sans limite. */
   placesMax: number | null;
-  inscriptionOuverte: boolean;
+  /** Automatique (période, sinon jusqu'au début de l'évènement), « Ouvertes »
+   *  ou « Fermées » forcées par le responsable. Absent avant le 17/09/2026 :
+   *  voir `modeInscriptions` (docs/spec-inscriptions-periode.md). */
+  inscriptions?: ModeInscriptions;
+  /** « AAAA-MM-JJ » ou « AAAA-MM-JJTHH:MM » ; vide = dès la publication. */
+  inscriptionDebut?: string;
+  /** Idem ; vide = au début de l'évènement. */
+  inscriptionFin?: string;
+  /** Ancien interrupteur (lot 6), lu seulement pour les évènements d'avant la période. */
+  inscriptionOuverte?: boolean;
   /** Les personnes sans compte peuvent s'inscrire (nom + invités). */
   sansCompte: boolean;
   contact: string;

@@ -16,7 +16,8 @@ rules_version = '2';
 // - Profils (users/{uid}) : chacun crée le sien à l'inscription ; une fois créé,
 //   seuls les admins peuvent le modifier.
 // - Évènements (evenements/{id}, lot 6) : « pour = eglise » public, le reste
-//   pour les connectés ; inscriptions écrites par le serveur seulement.
+//   pour les connectés ; inscriptions lues par les connectés, écrites par le
+//   serveur seulement.
 // - Programmes de scène (programmes/{id}, lot 3 bis) : lus par les connectés ;
 //   écrits par la coordination (pôle « événement » du profil + admins). Créneaux
 //   (programmes/{id}/creneaux) : tout connecté en pose un à son nom ; auteur +
@@ -155,12 +156,10 @@ service cloud.firestore {
       allow delete: if signedIn() && (isCoordination() || resource.data.organisateurUid == request.auth.uid);
 
       match /inscriptions/{iid} {
-        // Sa propre place (id = uid), ou toute la liste pour l'organisateur et la coordination.
-        allow read: if signedIn() && (
-          iid == request.auth.uid
-          || isCoordination()
-          || get(/databases/$(database)/documents/evenements/$(id)).data.organisateurUid == request.auth.uid
-        );
+        // Tout membre connecté voit qui est inscrit (17/09/2026) ; sans compte,
+        // le compteur `inscrits` de l'évènement seulement. Miroir : canSeeInscrits
+        // (src/lib/access.ts).
+        allow read: if signedIn();
         allow write: if false;
       }
     }
@@ -251,6 +250,39 @@ service cloud.firestore {
       return setlist.get('ownerId', '') == request.auth.uid
         || (!setlist.get('isPrivate', false)
             && (isAdmin() || (hasProfile() && isEditorOf(setlist.category))));
+    }
+
+    // Harmonie (lot 9, docs/spec-harmonie.md). Le catalogue lui-même est un
+    // fichier public (public/harmonie-index.json) : rien ici. Restent ce que
+    // l'équipe écrit autour d'un chant, lisible de tout membre connecté (le
+    // filtrage pianiste / guitariste est côté navigateur, comme le reste du
+    // site — choix de confiance assumé).
+    match /harmonie/{songSlug} {
+      allow read: if signedIn();
+      // Le document parent n'est jamais écrit : seules les sous-collections le sont.
+      allow write: if false;
+
+      // Une idée automatique qui ne marche pas sur ce chant : elle disparaît
+      // pour tout le monde. Son auteur ou un admin peut la remettre.
+      match /rejets/{rid} {
+        allow read: if signedIn();
+        allow create: if signedIn() && request.resource.data.uid == request.auth.uid;
+        // Réécrire le même refus (double tap, état local en retard) ne doit pas
+        // échouer ; changer son auteur, si.
+        allow update: if signedIn() && resource.data.uid == request.auth.uid
+                      && request.resource.data.uid == resource.data.uid;
+        allow delete: if signedIn() && (resource.data.uid == request.auth.uid || isAdmin());
+      }
+
+      // Idées de l'équipe, attachées au chant. Modifiables par leur auteur ;
+      // les admins peuvent supprimer.
+      match /idees/{iid} {
+        allow read: if signedIn();
+        allow create: if signedIn() && request.resource.data.uid == request.auth.uid;
+        allow update: if signedIn() && resource.data.uid == request.auth.uid
+                      && request.resource.data.uid == resource.data.uid;
+        allow delete: if signedIn() && (resource.data.uid == request.auth.uid || isAdmin());
+      }
     }
 
     // Annotations dessinées en Mode Louange (personnelles).

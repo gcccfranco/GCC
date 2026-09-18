@@ -47,6 +47,7 @@ export function reminderServicesFor(planning: PlanningData, name: string, dateIS
 const SERVICES_ZH: Record<string, string> = {
   "Culte Franco": "法语崇拜",
   "Prépa. Table": "圣餐预备",
+  "Petit déj": "早餐",
   "Groupe Paix": "和平团契",
   "Groupe Fidélité": "信实团契",
   "Groupe Bonté": "良善团契",

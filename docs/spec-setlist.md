@@ -101,10 +101,12 @@ ordinateur. Trois changements :
   setlists existantes ne changent pas.
 - `npm run validate` vérifie la tonalité recommandée.
 
-### En attente
+### Écarté
 
-- **Capo conseillé** (page du chant, setlist, mode louange) : stand-by, décision
-  de Timothée du 14/09/2026.
+- **Capo conseillé** (page du chant, setlist, mode louange) : mis en stand-by le
+  14/09/2026, **retiré le 17/09/2026** (« on retire l'idée du capo conseillé »).
+  Le capo garde son seul usage : choisi à la main en mode louange, retenu par
+  chant sur l'appareil.
 
 ## Hypothèses
 

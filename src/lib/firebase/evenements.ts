@@ -7,6 +7,7 @@ import {
   type RawDoc,
 } from "./setlists";
 import type { Evenement, Inscription } from "@/types/evenement";
+import { modeInscriptions } from "@/lib/evenements/agenda";
 
 // Évènements (lot 6) : evenements/{id} et evenements/{id}/inscriptions/{iid},
 // en REST. Sans compte, seule la requête filtrée « pour = eglise » est
@@ -40,7 +41,12 @@ export function fromFsEvenement(raw: RawDoc): Evenement {
     liens: (data.liens as Evenement["liens"]) ?? [],
     images: (data.images as string[]) ?? [],
     placesMax: typeof data.placesMax === "number" ? data.placesMax : null,
-    inscriptionOuverte: (data.inscriptionOuverte as boolean) ?? false,
+    inscriptions: modeInscriptions({
+      inscriptions: data.inscriptions as Evenement["inscriptions"],
+      inscriptionOuverte: (data.inscriptionOuverte as boolean) ?? false,
+    }),
+    inscriptionDebut: (data.inscriptionDebut as string) ?? "",
+    inscriptionFin: (data.inscriptionFin as string) ?? "",
     sansCompte: (data.sansCompte as boolean) ?? false,
     contact: (data.contact as string) ?? "",
     organisateurUid: (data.organisateurUid as string) ?? "",

@@ -23,6 +23,8 @@ npx tsc --noEmit     # Vérification TypeScript (c'est ce que fait la CI)
 npm test                          # suite Playwright (tests/), démarre next dev sur :3100
 npm test -- --ui                  # mode interactif
 PW_SLUGS=all npm test             # les 80 partitions 简谱 certifiées (~2 min)
+PW_CHANTS_ZH=all npm test -- tests/lignes-chinoises.spec.ts --project=telephone --workers=2
+                                  # lignes chinoises coupées, les 188 chants (~4 min)
 npm run jianpu:audit <slug>       # planche d'audit visuel d'une 简谱, dans le navigateur
 ```
 **Tout test passe par Playwright, y compris la vérification à l'œil des

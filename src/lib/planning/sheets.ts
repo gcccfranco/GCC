@@ -114,6 +114,29 @@ export async function fetchDejeuner(): Promise<string[][]> {
     .sort((a, b) => a[0] < b[0] ? -1 : 1)
 }
 
+/** Bloc « PETIT DÉJEUNER » de l'onglet Franco_Table_PtD (lot 1b) : deux paires
+ *  DATE / NOM côte à côte — 17 et 18 pour janvier → juin, 19 et 20 pour
+ *  juillet → décembre. Les cases portent plusieurs personnes avec un « & »
+ *  (« Charlie & Isabelle ») : on rend une liste séparée par des virgules, la
+ *  seule que `splitNames` sache découper. Une case vide ne donne pas de ligne :
+ *  le petit déj ne s'affiche que lorsqu'il est rempli. Pur, donc testable. */
+export function parsePetitDej(rows: string[][]): string[][] {
+  const out: string[][] = []
+  for (const r of rows) {
+    for (const [iDate, iNom] of [[17, 18], [19, 20]]) {
+      const date = parseDate(r[iDate] ?? "")
+      const noms = (r[iNom] ?? "").replace(/"+/g, "").split("&").map(s => s.trim()).filter(Boolean).join(", ")
+      if (date && noms) out.push([date, noms])
+    }
+  }
+  return out
+}
+
+export async function fetchPetitDej(): Promise<string[][]> {
+  // Même onglet que la Prépa. Table : le cache mémoire évite un second appel.
+  return parsePetitDej(await fetchSheet("Franco_Table_PtD"))
+}
+
 async function fetchMulti(sheets: string[], cols: number): Promise<string[][]> {
   const all: string[][] = []
   await Promise.all(sheets.map(sh => fetchSheet(sh).then(rows => {

@@ -337,12 +337,12 @@ test("créer une réunion de pôle : pas d'inscriptions", async ({ page }) => {
   await page.route("**/api/push/notify-evenement", (route) => { pushed = true; return route.fulfill({ json: { ok: true } }); });
   const db = await signInAs(page, MEMBRE_DA, {}, "/evenements/nouveau");
   await page.getByLabel("Public").selectOption({ label: "Pôle DA" });
-  await expect(page.getByLabel("Inscriptions ouvertes")).toHaveCount(0);
+  await expect(page.getByRole("radiogroup", { name: "Inscriptions" })).toHaveCount(0);
   await page.getByLabel("Nom de l'évènement").fill("Réunion DA");
   await page.getByLabel("Date", { exact: true }).fill("2026-10-10");
   await page.getByRole("button", { name: "Créer l'évènement" }).click();
   await expect(page.getByRole("heading", { name: "Réunion DA" })).toBeVisible();
   const created = db.writes.find((w) => w.method === "POST" && w.path.startsWith("evenements/"));
-  expect(created?.data).toMatchObject({ pour: "pole:da", inscriptionOuverte: false, sansCompte: false, placesMax: null });
+  expect(created?.data).toMatchObject({ pour: "pole:da", inscriptions: "fermees", sansCompte: false, placesMax: null });
   await expect.poll(() => pushed).toBe(true);
 });

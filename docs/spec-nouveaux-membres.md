@@ -200,10 +200,34 @@ ordinateur.
   notifier, questionnaire »), exclues par Q22.
 - Le bouton de langue de la barre garde son libellé dans la langue cible
   (« Changer en français » / « 切换为中文 »), volontairement.
-- Relevé sans y toucher : sur téléphone, certains accords d'un chant chinois
-  passent à la ligne sous les paroles (rendu existant du chant).
-- Les tests du guide et des liens ont été écrits après le contenu : leur
-  échec n'a pas été observé.
+- Relevé le 17/09/2026 puis **corrigé le même jour** (demande de Timothée) : sur
+  téléphone, un accord de fin de ligne chinoise descendait seul sous les
+  paroles, une virgule ouvrait la rangée suivante et les accords d'une ligne
+  coupée collaient aux pinyin du dessus. Mesuré sur les 188 chants chinois
+  (téléphone) : 78 accords orphelins, 189 virgules en tête de rangée, écart
+  pinyin → accords de −7 px dans une ligne coupée contre −2 px entre deux
+  lignes. `ZhLine` (`SongView.tsx`) colle au caractère qui précède ce qui n'a
+  pas de caractère à soi (accord seul, espace) et la ponctuation, et donne aux
+  rangées l'écart d'une ligne : 0, 0 et −2 px partout. Test
+  `tests/lignes-chinoises.spec.ts` (9 tests × 3), vu rouge puis vert, captures
+  regardées sur les trois appareils. Mesure des 188 chants rejouable :
+  `PW_CHANTS_ZH=all npm test -- tests/lignes-chinoises.spec.ts --project=telephone`
+  (deux workers au plus : au-delà, `next dev` sature et des tests pendent).
+- Tests écrits après le contenu, **vus en échec le 17/09/2026** sur le code
+  d'avant le lot 8 (copie de travail séparée, tests d'aujourd'hui) : guide,
+  liens « Comment ça marche ? », accueil et messages du serveur échouent sur
+  les trois appareils. Les tests négatifs (« sans compte », « déjà vu »)
+  passent forcément sans le code ; les casser exprès pour les voir échouer a
+  été refusé par le contrôle des permissions : non contre-éprouvés.
+- **Le test « en 中文, aucun texte français » passait aussi sur le code d'avant
+  le lot 8** : il ne voyait aucune des traductions (fenêtres fermées, libellés
+  d'accessibilité). Renforcé : il lit aussi `aria-label`, `placeholder`,
+  `title` et les options des listes, passe par Chants ; trois tests ouvrent le
+  signalement, la proposition de chant et le formulaire de tâche, un quatrième
+  la partition 简谱 transposée. Vus rouges sur l'ancien code (« Navigation
+  principale », « Mode sombre », « Culte Francophone », « Accords : »), verts
+  aujourd'hui. Limite : le test ne connaît que les textes de `fr.json` ; un
+  texte français écrit en dur ailleurs lui échappe.
 - `public/guide/annonces.png` n'est plus utilisée ; elle sera remplacée avec
   les captures de A5.
 - Suite complète relancée le 17/09/2026 : 939 réussis, 8 ignorés (prévus),

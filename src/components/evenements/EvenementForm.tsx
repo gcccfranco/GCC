@@ -2,9 +2,10 @@
 
 // Formulaire d'un évènement (lot 6, ordre de la maquette du lot 6 bis) :
 // nom, catégorie · public, date · horaire, lieu, responsable, description,
-// bannière, inscriptions ouvertes ; les champs rares (fin, liens, places,
-// sans compte) sous « Plus d'options ». Une « info » n'a ni date ni
-// inscription : elle est épinglée et expire.
+// bannière, inscriptions (Automatique avec ouverture et fin, Ouvertes ou
+// Fermées forcées, docs/spec-inscriptions-periode.md) ; les champs rares (fin
+// de l'évènement, liens, places, sans compte) sous « Plus d'options ». Une
+// « info » n'a ni date ni inscription : elle est épinglée et expire.
 
 import { useState, type FormEvent } from "react"
 import { useTranslation } from "react-i18next"
@@ -13,6 +14,8 @@ import { compressImage } from "@/lib/utils/compressImage"
 import { categoryLabel } from "@/lib/serviceColors"
 import { poleDuPour } from "@/lib/access"
 import { EVENEMENT_TYPES, type Evenement, type EvenementType } from "@/types/evenement"
+import { ChoixInscriptions } from "@/components/evenements/ChoixInscriptions"
+import { borneInscription, modeInscriptions } from "@/lib/evenements/agenda"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
@@ -25,7 +28,27 @@ export type EvenementValues = Omit<Evenement, "id" | "organisateurUid" | "organi
 
 export const EMPTY_EVENEMENT: EvenementValues = {
   titre: "", type: "loisir", pour: "eglise", date: "", heure: "", heureFin: "", dateFin: "", lieu: "", description: "",
-  liens: [], images: [], placesMax: null, inscriptionOuverte: true, sansCompte: false, contact: "", epingle: false, expiresAt: null,
+  liens: [], images: [], placesMax: null, inscriptions: "auto", inscriptionDebut: "", inscriptionFin: "", sansCompte: false, contact: "", epingle: false, expiresAt: null,
+}
+
+/** « AAAA-MM-JJ » + « HH:MM » facultative ↔ « AAAA-MM-JJ[THH:MM] » ; sans jour, rien. */
+const joindre = (jour: string, heure: string) => (jour ? (heure ? `${jour}T${heure}` : jour) : "")
+
+/** Ouverture ou fin des inscriptions : un jour, une heure facultative, une aide. */
+function Periode({ id, label, heureLabel, aide, value, onChange }: {
+  id: string; label: string; heureLabel: string; aide: string; value: string; onChange: (v: string) => void
+}) {
+  const [jour = "", heure = ""] = value.split("T")
+  return (
+    <div className="space-y-1">
+      <label htmlFor={id} className="text-sm text-muted-foreground">{label}</label>
+      <div className="grid grid-cols-2 gap-3">
+        <Input id={id} type="date" value={jour} onChange={(e) => onChange(joindre(e.target.value, heure))} />
+        <Input type="time" aria-label={heureLabel} value={heure} disabled={!jour} onChange={(e) => onChange(joindre(jour, e.target.value))} />
+      </div>
+      <p className="text-xs text-muted-foreground">{aide}</p>
+    </div>
+  )
 }
 
 export function EvenementForm({ initial, pours, creation, onSubmit, onCancel }: {
@@ -46,13 +69,16 @@ export function EvenementForm({ initial, pours, creation, onSubmit, onCancel }: 
   const info = v.type === "info"
   // Réunion de pôle (lot 7) : pas d'inscriptions.
   const reunion = poleDuPour(v.pour) !== null
-  const sansInscription = { inscriptionOuverte: false, sansCompte: false, placesMax: null }
+  const sansInscription = { inscriptions: "fermees" as const, inscriptionDebut: "", inscriptionFin: "", sansCompte: false, placesMax: null }
+  const mode = modeInscriptions(v)
   const set = (patch: Partial<EvenementValues>) => setV((x) => ({ ...x, ...patch }))
-  const field = "w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
-  const LABEL = "text-xs font-semibold"
+  // Listes au style des champs du site (fond gris, sans bord), libellés
+  // discrets comme la maquette (retour du 17/09/2026).
+  const field = "w-full h-10 rounded-lg border border-transparent bg-secondary px-3 text-base md:text-sm"
+  const LABEL = "text-sm text-muted-foreground"
 
   function setType(type: EvenementType) {
-    set({ type, ...(type === "info" ? { date: "", heure: "", heureFin: "", dateFin: "", placesMax: null, inscriptionOuverte: false, sansCompte: false } : {}) })
+    set({ type, ...(type === "info" ? { date: "", heure: "", heureFin: "", dateFin: "", ...sansInscription } : {}) })
     setPrevenir(type !== "eglise")
   }
 
@@ -80,6 +106,10 @@ export function EvenementForm({ initial, pours, creation, onSubmit, onCancel }: 
     if (!v.titre.trim()) { setError(t("evenements.form.errorTitre")); return }
     if (!info && !v.date) { setError(t("evenements.form.errorDate")); return }
     if (!info && v.dateFin && v.dateFin < v.date) { setError(t("evenements.form.errorDateFin")); return }
+    if (mode === "auto" && v.inscriptionDebut && v.inscriptionFin
+      && borneInscription(v.inscriptionFin, "23:59") < borneInscription(v.inscriptionDebut, "00:00")) {
+      setError(t("evenements.form.errorInsFin")); return
+    }
     for (const l of v.liens) {
       if (l.url.trim() && !/^https?:\/\//i.test(l.url.trim())) { setError(t("annonces.form.errorLink", { url: l.url })); return }
     }
@@ -90,6 +120,10 @@ export function EvenementForm({ initial, pours, creation, onSubmit, onCancel }: 
         titre: v.titre.trim(), lieu: v.lieu.trim(), description: v.description.trim(), contact: v.contact.trim(),
         liens: v.liens.map((l) => ({ label: l.label.trim(), url: l.url.trim() })).filter((l) => l.url),
         expiresAt: info ? v.expiresAt || null : null,
+        // Hors automatique, les dates ne servent pas : on ne les garde pas.
+        inscriptions: mode,
+        inscriptionDebut: mode === "auto" ? v.inscriptionDebut ?? "" : "",
+        inscriptionFin: mode === "auto" ? v.inscriptionFin ?? "" : "",
         epingle: info ? v.epingle : false,
         ...(reunion ? sansInscription : {}),
       }, creation && prevenir)
@@ -183,9 +217,27 @@ export function EvenementForm({ initial, pours, creation, onSubmit, onCancel }: 
       </div>
 
       {!info && !reunion && (
-        <label htmlFor="ev-ouverte" className="flex items-center justify-between gap-3 px-4 py-3.5 text-sm font-semibold">
-          {t("evenements.form.ouverte")}
-          <Switch id="ev-ouverte" checked={v.inscriptionOuverte} onCheckedChange={(c) => set({ inscriptionOuverte: c })} />
+        <div className="space-y-3 px-4 py-3.5">
+          <div className="space-y-2">
+            <p className="text-sm">{t("evenements.form.inscriptions")}</p>
+            <ChoixInscriptions label={t("evenements.form.inscriptions")} mode={mode} onChange={(m) => set({ inscriptions: m })} />
+            {mode !== "auto" && <p className="text-xs text-muted-foreground">{t(`evenements.form.modeAide.${mode}`)}</p>}
+          </div>
+          {mode === "auto" && (
+            <>
+              <Periode id="ev-ins-debut" label={t("evenements.form.insDebut")} heureLabel={t("evenements.form.insDebutHeure")}
+                aide={t("evenements.form.insDebutAide")} value={v.inscriptionDebut ?? ""} onChange={(x) => set({ inscriptionDebut: x })} />
+              <Periode id="ev-ins-fin" label={t("evenements.form.insFin")} heureLabel={t("evenements.form.insFinHeure")}
+                aide={t("evenements.form.insFinAide")} value={v.inscriptionFin ?? ""} onChange={(x) => set({ inscriptionFin: x })} />
+            </>
+          )}
+        </div>
+      )}
+
+      {creation && (
+        <label htmlFor="ev-prevenir" className="flex items-center justify-between gap-3 px-4 py-3.5 text-sm">
+          {t("evenements.form.prevenir")}
+          <Switch id="ev-prevenir" checked={prevenir} onCheckedChange={setPrevenir} />
         </label>
       )}
 
@@ -203,7 +255,7 @@ export function EvenementForm({ initial, pours, creation, onSubmit, onCancel }: 
       )}
 
       <details>
-        <summary className="cursor-pointer px-4 py-3 text-sm font-semibold text-foreground">{t("evenements.form.plusOptions")}</summary>
+        <summary className="cursor-pointer px-4 py-3.5 text-sm text-foreground">{t("evenements.form.plusOptions")}</summary>
         <div className="space-y-4 border-t border-border p-4">
           {!info && (
             <div className="grid grid-cols-2 gap-3">
@@ -247,20 +299,13 @@ export function EvenementForm({ initial, pours, creation, onSubmit, onCancel }: 
           )}
         </div>
       </details>
-      </div>
 
-      {creation && (
-        <label className="flex items-center gap-2 px-1 text-sm">
-          <input type="checkbox" className="h-4 w-4" checked={prevenir} onChange={(e) => setPrevenir(e.target.checked)} />
-          {t("evenements.form.prevenir")}
-        </label>
-      )}
-
-      <div className="flex gap-2">
-        <Button type="submit" size="lg" disabled={busy || compressing} className="flex-1">
+      <div className="space-y-1 p-4">
+        <Button type="submit" size="lg" disabled={busy || compressing} className="w-full">
           {creation ? t("evenements.form.create") : t("evenements.form.save")}
         </Button>
-        <Button type="button" variant="ghost" size="lg" onClick={onCancel}>{t("evenements.form.cancel")}</Button>
+        <Button type="button" variant="ghost" className="w-full text-muted-foreground" onClick={onCancel}>{t("evenements.form.cancel")}</Button>
+      </div>
       </div>
     </form>
   )

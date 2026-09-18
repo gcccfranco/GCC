@@ -32,7 +32,7 @@ import { useProfile } from "@/lib/firebase/users";
 import { canSeeSetlist, canEditSetlist, canDuplicateSetlist, canSetPresentationLink, canHaveSetlistVersion } from "@/lib/access";
 import { useTranslation } from "react-i18next";
 import type { SongIndexEntry } from "@/types/song";
-import type { SetlistItem } from "@/types/setList";
+import type { JianpuChords, SetlistItem } from "@/types/setList";
 import type { ChordProLine } from "@/types/chordPro";
 import { formatDate } from "@/lib/utils/formatDate";
 import { useScrollDirection } from "@/hooks/useScrollDirection";
@@ -50,12 +50,16 @@ import { getPartitionLayoutPref, setPartitionLayoutPref, type PartitionLayout } 
 import { getPinyinPref, setPinyinPref } from "@/lib/pinyinPref";
 import { jianpuPngDataUrl, loadJianpuChords, loadJianpuManifest, useJianpuManifest } from "@/lib/jianpu/images";
 import { getJianpuPref, setJianpuPref, sheetEnabled, type JianpuPref } from "@/lib/jianpu/preference";
+import { aDesRetouches } from "@/lib/jianpu/retouches";
 import { fetchSongAST, type SongContent} from "@/lib/api/songs";
 import { PerformanceMode } from "@/components/performance/PerformanceMode";
 import { EditLineSheet, type EditLineTarget } from "@/components/setlists/EditLineSheet";
 import { PdfChoiceSheet } from "@/components/pdf/PdfChoiceSheet";
 import { pdfFileName, type PdfStyle } from "@/lib/pdfStylePref";
 import { itemAst } from "@/lib/chordpro/itemContent";
+import { IdeesSheet } from "@/components/harmonie/IdeesSheet";
+import { appliquerDansLaSource } from "@/lib/harmonie/appliquer";
+import { useAccesHarmonie, useInstrument } from "@/lib/harmonie/useHarmonie";
 import { semitonesTo } from "@/lib/transpose";
 import {
   replaceSourceLine,
@@ -75,6 +79,19 @@ type LineEditState = EditLineTarget & {
    *  pour cette occurrence (sinon toutes les répétitions changeraient). */
   repeatedSectionId?: string;
   structIndex?: number;
+};
+
+/** Sur quoi appliquer l'édition d'une ligne : le source (et les index de
+ *  lignes) après une éventuelle copie d'occurrence, plus ce qu'il faut
+ *  enregistrer à côté — sur l'item de la setlist (Adapter) ou dans ma version
+ *  (« Seulement ce passage »). */
+type EditBase = {
+  source: string;
+  srcLine: number;
+  pinyinSrcLine?: number;
+  jianpuSrcLine?: number;
+  extra?: Partial<SetlistItem>;
+  mine?: Partial<VersionItem>;
 };
 
 
@@ -149,30 +166,52 @@ export function SetlistDetailClient() {
   const [versions, setVersions] = useState<Record<string, SetlistVersions>>({});
   // Mode « Ma version » : mêmes gestes qu'Adapter, écrits dans mon document.
   const [editMine, setEditMine] = useState(false);
+  // Retouche d'une section répétée en « Ma version » : toutes les répétitions
+  // (défaut, comme avant le lot 9) ou ce seul passage (docs/spec-harmonie.md).
+  const [repeatScope, setRepeatScope] = useState<"all" | "one">("all");
   const myItems = user ? versions[user.uid]?.items : undefined;
   /** Item en mode « Ma version » : mes accords et paroles à la place de ceux de la présidence. */
   function withMine(item: SetlistItem): SetlistItem {
     const content = myItems?.[item.songSlug]?.content;
-    return content ? { ...item, contentOverride: content } : item;
+    return withMyJianpu(content ? { ...item, contentOverride: content } : item);
+  }
+  /** Mes retouches d'accords sur un scan 简谱 (lot 9) remplacent celles de la
+   *  présidence, comme mes accords et mes paroles. */
+  function withMyJianpu(item: SetlistItem): SetlistItem {
+    const jianpuChords = myItems?.[item.songSlug]?.jianpuChords;
+    return aDesRetouches(jianpuChords) ? { ...item, jianpuChords } : item;
   }
   /** Version d'un chant pour moi : la présidence, la mienne, ou celle d'un
    *  autre partagée et choisie. */
-  function viewOf(slug: string): SongVersionView | undefined {
-    return user ? songVersionView(slug, user.uid, versions) : undefined;
+  function viewOf(item: SetlistItem): SongVersionView | undefined {
+    return user
+      ? songVersionView(item.songSlug, user.uid, versions, {
+          structure: item.structureOverride,
+          sectionIds: contents[item.songSlug]?.ast.sections.map((s) => s.id),
+        })
+      : undefined;
   }
   /** Item tel qu'affiché : les accords et paroles de la version choisie. */
   function withChosen(item: SetlistItem): SetlistItem {
-    const content = viewOf(item.songSlug)?.content;
-    return content ? { ...item, contentOverride: content } : item;
+    const content = viewOf(item)?.content;
+    return withMyJianpu(content ? { ...item, contentOverride: content } : item);
+  }
+  /** Structure que suit le corps du chant en « Ma version » : la mienne si
+   *  j'en ai une, sinon celle de la présidence. */
+  function myStructure(item: SetlistItem): string[] | null {
+    return myItems?.[item.songSlug]?.structure ?? item.structureOverride ?? null;
   }
   /** Pour le sommaire et le mode louange : ma structure remplace aussi celle
    *  de la présidence, sans ses notes, nuances et transitions d'occurrence
    *  (elles restent dans le bandeau de la vue partitions). */
   function withMineStructure(item: SetlistItem): SetlistItem {
-    const structure = myItems?.[item.songSlug]?.structure;
-    return structure?.length
+    const structure = viewOf(item)?.bodyStructure;
+    if (!structure?.length) return item;
+    // Les réglages d'occurrence de la présidence ne suivent que si je garde sa
+    // structure (un passage retouché seul ne la change pas vraiment).
+    return myItems?.[item.songSlug]?.structure?.length
       ? { ...item, structureOverride: structure, sectionNotes: {}, sectionTransitions: {}, sectionNuances: {} }
-      : item;
+      : { ...item, structureOverride: structure };
   }
   // Feuille « Sections » de ma version : chant en cours de réglage.
   const [structureTarget, setStructureTarget] = useState<(MyStructureTarget & { itemIndex: number }) | null>(null);
@@ -424,6 +463,14 @@ export function SetlistDetailClient() {
     }
   }
 
+  // ── Idées d'harmonie (lot 9) ────────────────────────────────────────────────
+  // Réservées aux pianistes et guitaristes (et aux admins) ; « Essayer dans Ma
+  // version » n'apparaît que dans le mode « Ma version », seul endroit où une
+  // retouche ne touche personne d'autre.
+  const accesHarmonie = useAccesHarmonie();
+  const [instrumentHarmonie] = useInstrument(accesHarmonie);
+  const [ideesTarget, setIdeesTarget] = useState<number | null>(null);
+
   // ── Adapter le chant (accords/paroles par setlist) ──────────────────────────
 
   /** Source ChordPro de travail d'un item : version modifiée sinon original
@@ -449,14 +496,12 @@ export function SetlistDetailClient() {
     if (!baseAst) return;
     const origKey = baseAst.metadata.key;
 
-    // Section répétée par la structure ? On note l'occurrence tapée pour que
-    // l'édition matérialise une copie au lieu de toucher toutes les répétitions.
+    // Section répétée par la structure ? On note l'occurrence tapée : Adapter
+    // matérialise une copie, « Ma version » propose le choix à l'enregistrement.
     let repeatedSectionId: string | undefined;
     let structIndex: number | undefined;
-    // Ma version : pas de copie, une retouche vaut pour toutes les répétitions
-    // (spec, hypothèse 3).
-    const struct = item.structureOverride;
-    if (struct && sectionUid && !editMine) {
+    const struct = editMine ? myStructure(item) : item.structureOverride;
+    if (struct && sectionUid) {
       const sec = baseAst.sections.find((s) => s.lines.some((l) => l.srcLine === line.srcLine));
       if (sec) {
         const refs = struct.filter((ov) => ov === sec.id || ov.replace(/-\d+$/, "") === sec.id);
@@ -479,6 +524,7 @@ export function SetlistDetailClient() {
       item.keyOverride ??
       origKey;
 
+    setRepeatScope("all");
     setEditTarget({
       itemIndex,
       raw: source.split("\n")[line.srcLine] ?? "",
@@ -546,7 +592,7 @@ export function SetlistDetailClient() {
       const author = historyAuthor(profile);
       if (author) {
         historyPassRef.current = continuePass(historyPassRef.current, id, author, base);
-        await recordHistory(historyPassRef.current, { ...base, items });
+        await recordHistory(historyPassRef.current, { ...base, items }, (slug) => songsMap[slug]?.sections);
         setHistoryVersion((v) => v + 1);
       }
     } catch {
@@ -586,7 +632,9 @@ export function SetlistDetailClient() {
     const prev = versions[user.uid];
     const items = { ...(prev?.items ?? {}) };
     const next = { ...(items[songSlug] ?? { content: null, structure: null, shared: false }), ...patch };
-    if (next.content === null && next.structure === null) delete items[songSlug];
+    if (next.content === null && next.structure === null && !aDesRetouches(next.jianpuChords)) {
+      delete items[songSlug];
+    }
     else items[songSlug] = next;
     await saveMine(items, prev?.choices ?? {});
   }
@@ -598,12 +646,31 @@ export function SetlistDetailClient() {
     await saveMine(prev?.items ?? {}, { ...(prev?.choices ?? {}), [songSlug]: value });
   }
 
+  /** Retouche d'accords sur un scan 简谱 (lot 9, docs/spec-harmonie.md) : dans
+   *  l'item de la setlist pour la présidence — donc dans l'historique, avec la
+   *  phrase des autres retouches d'Adapter —, dans ma version pour moi. Le
+   *  calque publié (`public/jianpu/chords.json`) n'est jamais écrit. */
+  async function handleEditJianpu(itemIndex: number, next: JianpuChords) {
+    if (!setlist) return;
+    const item = setlist.items[itemIndex];
+    if (editMine) {
+      await persistMine(item.songSlug, { jianpuChords: next });
+      return;
+    }
+    await persistOverride(itemIndex, item.contentOverride ?? undefined, { jianpuChords: next });
+  }
+
   /** Applique un nouveau source complet : no-op si rien n'a changé, retrait
    *  automatique de l'override s'il redevient identique au chant original. */
-  async function applyNewSource(itemIndex: number, next: string, extra?: Partial<SetlistItem>) {
+  async function applyNewSource(
+    itemIndex: number,
+    next: string,
+    extra?: Partial<SetlistItem>,
+    mine?: Partial<VersionItem>
+  ) {
     if (!setlist) return;
     const current = sourceForItem(setlist.items[itemIndex]);
-    if (next === current && !extra) {
+    if (next === current && !extra && !mine) {
       setEditTarget(null);
       return;
     }
@@ -611,7 +678,7 @@ export function SetlistDetailClient() {
       // Ma version : retirée d'elle-même si elle redevient celle de la présidence.
       const item = setlist.items[itemIndex];
       const presidency = item.contentOverride ?? contents[item.songSlug]?.source;
-      await persistMine(item.songSlug, { content: next === presidency ? null : next });
+      await persistMine(item.songSlug, { content: next === presidency ? null : next, ...mine });
       return;
     }
     const original = contents[setlist.items[itemIndex].songSlug]?.source;
@@ -623,17 +690,7 @@ export function SetlistDetailClient() {
    *  l'édition ne touche pas les autres répétitions. Renvoie le source (et les
    *  index de lignes) sur lesquels appliquer l'édition, plus les champs d'item
    *  à persister (structure et notes/transitions re-clés). */
-  function materializeIfRepeated(
-    item: SetlistItem,
-    source: string,
-    t: LineEditState
-  ): {
-    source: string;
-    srcLine: number;
-    pinyinSrcLine?: number;
-    jianpuSrcLine?: number;
-    extra?: Partial<SetlistItem>;
-  } {
+  function materializeIfRepeated(item: SetlistItem, source: string, t: LineEditState): EditBase {
     const passthrough = {
       source,
       srcLine: t.srcLine,
@@ -688,6 +745,46 @@ export function SetlistDetailClient() {
     };
   }
 
+  /** « Seulement ce passage » (Ma version) : la section répétée est copiée dans
+   *  mon source et ma structure fait pointer cette occurrence vers la copie —
+   *  le mécanisme d'Adapter, écrit dans mon document. */
+  function materializeMine(item: SetlistItem, source: string, t: LineEditState): EditBase | null {
+    const struct = myStructure(item);
+    if (t.repeatedSectionId === undefined || t.structIndex === undefined || !struct) return null;
+    const mat = materializeSectionCopy(source, t.repeatedSectionId);
+    if (!mat) return null;
+    return {
+      source: mat.source,
+      srcLine: t.srcLine + mat.lineOffset,
+      pinyinSrcLine: t.pinyinSrcLine !== undefined ? t.pinyinSrcLine + mat.lineOffset : undefined,
+      jianpuSrcLine: t.jianpuSrcLine !== undefined ? t.jianpuSrcLine + mat.lineOffset : undefined,
+      mine: {
+        structure: struct.map((ov, k) => (k === t.structIndex ? `${mat.newSectionId}-${t.structIndex}` : ov)),
+        // Provenance de la copie : elle situe le passage chez qui lit ma
+        // version partagée avec une autre structure.
+        sectionOrigins: {
+          ...myItems?.[item.songSlug]?.sectionOrigins,
+          [mat.newSectionId]: t.repeatedSectionId,
+        },
+      },
+    };
+  }
+
+  /** Base d'une édition de ligne : Adapter copie toujours l'occurrence tapée,
+   *  « Ma version » seulement si la retouche ne vise que ce passage. */
+  function editBase(item: SetlistItem, source: string, t: LineEditState): EditBase {
+    if (!editMine) return materializeIfRepeated(item, source, t);
+    const one = repeatScope === "one" ? materializeMine(item, source, t) : null;
+    return (
+      one ?? {
+        source,
+        srcLine: t.srcLine,
+        pinyinSrcLine: t.pinyinSrcLine,
+        jianpuSrcLine: t.jianpuSrcLine,
+      }
+    );
+  }
+
   async function handleSaveLine(newRaw: string) {
     if (!setlist || !editTarget) return;
     const source = sourceForItem(setlist.items[editTarget.itemIndex]);
@@ -697,46 +794,56 @@ export function SetlistDetailClient() {
       setEditTarget(null);
       return;
     }
-    const m = materializeIfRepeated(setlist.items[editTarget.itemIndex], source, editTarget);
+    const m = editBase(setlist.items[editTarget.itemIndex], source, editTarget);
     let next = replaceSourceLine(m.source, m.srcLine, newRaw);
     // Le pinyin est désormais inline dans la ligne → la ligne séparée disparaît.
     if (m.pinyinSrcLine !== undefined) {
       next = deleteSourceLines(next, [m.pinyinSrcLine]);
     }
-    await applyNewSource(editTarget.itemIndex, next, m.extra);
+    await applyNewSource(editTarget.itemIndex, next, m.extra, m.mine);
   }
 
   async function handleInsertAfter(newRaw: string) {
     if (!setlist || !editTarget) return;
     const source = sourceForItem(setlist.items[editTarget.itemIndex]);
     if (!source) return;
-    const m = materializeIfRepeated(setlist.items[editTarget.itemIndex], source, editTarget);
+    const m = editBase(setlist.items[editTarget.itemIndex], source, editTarget);
     const at = Math.max(m.srcLine, m.pinyinSrcLine ?? -1);
-    await applyNewSource(editTarget.itemIndex, insertSourceLineAfter(m.source, at, newRaw), m.extra);
+    await applyNewSource(editTarget.itemIndex, insertSourceLineAfter(m.source, at, newRaw), m.extra, m.mine);
   }
 
   async function handleDeleteLine() {
     if (!setlist || !editTarget) return;
     const source = sourceForItem(setlist.items[editTarget.itemIndex]);
     if (!source) return;
-    const m = materializeIfRepeated(setlist.items[editTarget.itemIndex], source, editTarget);
+    const m = editBase(setlist.items[editTarget.itemIndex], source, editTarget);
     const idxs = [m.srcLine];
     if (m.pinyinSrcLine !== undefined) idxs.push(m.pinyinSrcLine);
     if (m.jianpuSrcLine !== undefined) idxs.push(m.jianpuSrcLine);
-    await applyNewSource(editTarget.itemIndex, deleteSourceLines(m.source, idxs), m.extra);
+    await applyNewSource(editTarget.itemIndex, deleteSourceLines(m.source, idxs), m.extra, m.mine);
   }
 
   async function handleRevert(itemIndex: number) {
     setConfirmRevert(null);
     if (!setlist) return;
     if (editMine) {
-      await persistMine(setlist.items[itemIndex].songSlug, { content: null, structure: null });
+      await persistMine(setlist.items[itemIndex].songSlug, {
+        content: null,
+        structure: null,
+        // Mes passages retouchés seuls disparaissent avec mon contenu.
+        sectionOrigins: undefined,
+        jianpuChords: undefined,
+      });
       return;
     }
     // Les sections matérialisées disparaissent avec le contenu adapté : la
     // structure doit repointer vers les sections d'origine, sinon les
-    // occurrences modifiées sortent de la setlist.
-    await persistOverride(itemIndex, undefined, revertSectionOrigins(setlist.items[itemIndex]));
+    // occurrences modifiées sortent de la setlist. Les retouches du scan
+    // partent avec le reste : ce sont des accords adaptés comme les autres.
+    await persistOverride(itemIndex, undefined, {
+      ...revertSectionOrigins(setlist.items[itemIndex]),
+      jianpuChords: {},
+    });
   }
 
   if (loadingSetlist) {
@@ -799,9 +906,7 @@ export function SetlistDetailClient() {
   const stageItems = editPartitions ? setlist.items : displayItems.map(withMineStructure);
   const versionViews = editPartitions
     ? undefined
-    : Object.fromEntries(
-        setlist.items.filter((it) => it.songSlug).map((it) => [it.songSlug, songVersionView(it.songSlug, user.uid, versions)]),
-      );
+    : Object.fromEntries(setlist.items.filter((it) => it.songSlug).map((it) => [it.songSlug, viewOf(it)!]));
   const canDuplicate = canDuplicateSetlist(user, profile, setlist);
   // Notif « setlist prête » : pour toute setlist modifiable par l'utilisateur,
   // contenant au moins 4 vrais chants (hors transitions). Toutes catégories.
@@ -1174,10 +1279,90 @@ export function SetlistDetailClient() {
               }}
               onChooseVersion={(itemIndex, value) => persistChoice(setlist.items[itemIndex].songSlug, value)}
               onShare={(itemIndex, shared) => persistMine(setlist.items[itemIndex].songSlug, { shared })}
+              onEditJianpu={handleEditJianpu}
+              onIdees={accesHarmonie.peut ? (itemIndex) => setIdeesTarget(itemIndex) : undefined}
             />
           </>
         )}
       </div>
+
+      {/* Idées d'harmonie du chant (lot 9) */}
+      {ideesTarget !== null && setlist?.items[ideesTarget] && (() => {
+        const item = setlist.items[ideesTarget];
+        const ast = itemAst(editMine ? withMine(item) : item, contents[item.songSlug]);
+        if (!ast) return null;
+        const tonalite = item.keyOverride ?? ast.metadata.key;
+        // Le chant suivant, pour la transition : les fusions et les items sans
+        // chant sont sautés (la spec les exclut).
+        const suivantItem = setlist.items
+          .slice(ideesTarget + 1)
+          .find((i) => i.songSlug && i.type !== "fusion");
+        const suivantAst = suivantItem ? itemAst(suivantItem, contents[suivantItem.songSlug]) : null;
+        const suivant =
+          suivantItem && suivantAst
+            ? {
+                titre: songsMap[suivantItem.songSlug]?.title ?? suivantItem.songSlug,
+                tonalite: suivantItem.keyOverride ?? suivantAst.metadata.key,
+              }
+            : undefined;
+        return (
+          <IdeesSheet
+            open
+            onClose={() => setIdeesTarget(null)}
+            slug={item.songSlug}
+            titre={songsMap[item.songSlug]?.title ?? item.songSlug}
+            sections={ast.sections}
+            tonalite={tonalite}
+            tonaliteOrigine={ast.metadata.key}
+            instrument={instrumentHarmonie}
+            suivant={item.type === "fusion" ? undefined : suivant}
+            onModuler={
+              canEdit && !editMine && item.type !== "fusion"
+                ? (_m, prop) => {
+                    // Le 升调 existant porte la montée ; l'accord d'approche se
+                    // pose à la fin de la section d'avant, dans le chant adapté.
+                    const sectionKeys = { ...(item.sectionKeys ?? {}), [prop.sectionUid]: prop.tonaliteCible };
+                    const source = sourceForItem(item);
+                    const next =
+                      source && prop.endroitApproche && prop.approche.length
+                        ? appliquerDansLaSource(
+                            source,
+                            prop.endroitApproche,
+                            [...prop.endroitApproche.accords, ...prop.approche],
+                            semitonesTo(ast.metadata.key, tonalite),
+                            ast.metadata.key,
+                          )
+                        : source;
+                    void applyNewSource(ideesTarget, next ?? "", { sectionKeys });
+                    setIdeesTarget(null);
+                  }
+                : undefined
+            }
+            onEssayer={
+              editMine
+                ? (s, apres) => {
+                    const source = sourceForItem(item);
+                    if (!source) return;
+                    const demiTons = semitonesTo(ast.metadata.key, tonalite);
+                    void applyNewSource(
+                      ideesTarget,
+                      appliquerDansLaSource(source, s.endroits[0], apres, demiTons, ast.metadata.key),
+                    );
+                    // Chant affiché en scan 简谱 : la retouche va bien dans la
+                    // version texte, mais elle ne se verra pas sur l'image —
+                    // on le dit, avec le changement à reporter à la main.
+                    if (sheetEnabled(jianpuPref, item.jianpuSheet)) {
+                      flashFeedback(
+                        t("harmonie.reporterJianpu", { quoi: `${s.endroits[0].accords.join(" – ")} → ${apres.join(" – ")}` }),
+                      );
+                    }
+                    setIdeesTarget(null);
+                  }
+                : undefined
+            }
+          />
+        );
+      })()}
 
       {/* Confirmation de suppression */}
       <PdfChoiceSheet
@@ -1217,6 +1402,8 @@ export function SetlistDetailClient() {
       <EditLineSheet
         target={editTarget}
         saving={savingLine}
+        repeatScope={editMine && editTarget?.repeatedSectionId !== undefined ? repeatScope : undefined}
+        onRepeatScope={setRepeatScope}
         onClose={() => setEditTarget(null)}
         onSaveLine={handleSaveLine}
         onInsertAfter={handleInsertAfter}

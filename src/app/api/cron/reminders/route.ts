@@ -5,7 +5,9 @@ import { recordNotification } from "@/lib/push/notifications";
 import { loadPlanningNameIndex, filterUidsByNotifPref, loadNotifLangs, uidsForCategories } from "@/lib/push/recipients";
 import { reminderBody, reminderServicesFor, reminderTitle, type ReminderService } from "@/lib/push/reminderMessage";
 import { quiCategories, sceneReminder } from "@/lib/scene/rappels";
-import { evenementReminder } from "@/lib/evenements/rappel";
+import { avecLignes, evenementReminder, ligneOuverture, ouvertureDuJour, ouverturesTitre } from "@/lib/evenements/rappel";
+import { destinatairesEvenement } from "@/lib/evenements/serveur";
+import type { NotifLang } from "@/types/user";
 import type { Evenement } from "@/types/evenement";
 import { corpsAvecTaches, rappelsDuJour, rappelTachesTitre, type RappelTache } from "@/lib/taches/messages";
 import { poleDuPour, polesDe } from "@/lib/access";
@@ -119,6 +121,30 @@ async function rappelsTaches(
   return out;
 }
 
+/** Évènements dont les inscriptions s'ouvrent aujourd'hui (docs/spec-inscriptions-periode.md),
+ *  par membre concerné, préférence « Évènements », pas encore prévenu. */
+async function ouverturesDuJour(
+  db: FirebaseFirestore.Firestore,
+  today: string
+): Promise<Map<string, { evenements: Evenement[]; keys: string[] }>> {
+  const out = new Map<string, { evenements: Evenement[]; keys: string[] }>();
+  // « AAAA-MM-JJ » et « AAAA-MM-JJTHH:MM » du jour sont entre `today` et `today~`.
+  const snap = await db.collection("evenements").where("inscriptionDebut", ">=", today).where("inscriptionDebut", "<", `${today}~`).get();
+  for (const doc of snap.docs) {
+    const e = { id: doc.id, ...doc.data() } as Evenement;
+    if (!ouvertureDuJour(e, today)) continue;
+    const key = `ouverture-inscriptions-${e.id}`;
+    const uids = (await destinatairesEvenement(db, e)).filter((u) => u !== e.organisateurUid);
+    for (const u of await freshUids(db, await filterUidsByNotifPref(uids, "evenements"), key)) {
+      const entry = out.get(u) ?? { evenements: [], keys: [] };
+      entry.evenements.push(e);
+      entry.keys.push(key);
+      out.set(u, entry);
+    }
+  }
+  return out;
+}
+
 export async function GET(req: NextRequest) {
   const secret = process.env.CRON_SECRET;
   const authz = req.headers.get("authorization");
@@ -137,6 +163,15 @@ export async function GET(req: NextRequest) {
     if (!entry) return;
     taches.delete(u);
     for (const key of entry.keys) await markNotified(db, [u], key, { kind: "tache" });
+  };
+  // Ouvertures d'inscriptions du jour : même principe que les tâches.
+  const ouvertures = await ouverturesDuJour(db, isoInDays(0));
+  const lignesOuvertures = (u: string, lang: NotifLang) => (ouvertures.get(u)?.evenements ?? []).map((e) => ligneOuverture(e, lang));
+  const marquerOuvertures = async (u: string) => {
+    const entry = ouvertures.get(u);
+    if (!entry) return;
+    ouvertures.delete(u);
+    for (const key of entry.keys) await markNotified(db, [u], key, { kind: "ouverture" });
   };
 
   const summary: Record<string, { date: string; sent: number }> = {};
@@ -181,11 +216,12 @@ export async function GET(req: NextRequest) {
           const lang = langs.get(u) ?? "fr";
           const payload = {
             title: reminderTitle(lang),
-            body: corpsAvecTaches(reminderBody(date, tag, byUid.get(u)!, lang), taches.get(u)?.rappels ?? [], lang),
+            body: avecLignes(corpsAvecTaches(reminderBody(date, tag, byUid.get(u)!, lang), taches.get(u)?.rappels ?? [], lang), lignesOuvertures(u, lang)),
             url: "/mes-services",
             tag: prefix,
           };
           await marquerTaches(u);
+          await marquerOuvertures(u);
           await sendPushToUids([u], payload);
           // Une entrée de cloche par destinataire : le corps est personnel.
           await recordNotification({ ...payload, kind: "reminder", recipients: [u] });
@@ -205,13 +241,33 @@ export async function GET(req: NextRequest) {
       const lang = langs.get(u) ?? "fr";
       const payload = {
         title: rappelTachesTitre(lang),
-        body: corpsAvecTaches("", taches.get(u)!.rappels, lang),
+        body: avecLignes(corpsAvecTaches("", taches.get(u)!.rappels, lang), lignesOuvertures(u, lang)),
         url: "/taches",
         tag: `rappel-taches-${isoInDays(0)}`,
       };
       await marquerTaches(u);
+      await marquerOuvertures(u);
       await sendPushToUids([u], payload);
       await recordNotification({ ...payload, kind: "tache", recipients: [u] });
+    }
+  }
+
+  // Ouvertures d'inscriptions des membres sans autre notification aujourd'hui.
+  const ouverturesSeules = [...ouvertures.keys()];
+  if (ouverturesSeules.length) {
+    const langs = await loadNotifLangs(ouverturesSeules);
+    for (const u of ouverturesSeules) {
+      const lang = langs.get(u) ?? "fr";
+      const evs = ouvertures.get(u)!.evenements;
+      const payload = {
+        title: ouverturesTitre(lang),
+        body: avecLignes("", lignesOuvertures(u, lang)),
+        url: evs.length === 1 ? `/evenements/${evs[0].id}` : "/evenements",
+        tag: `ouvertures-inscriptions-${isoInDays(0)}`,
+      };
+      await marquerOuvertures(u);
+      await sendPushToUids([u], payload);
+      await recordNotification({ ...payload, kind: "evenement", recipients: [u] });
     }
   }
 
@@ -244,5 +300,5 @@ export async function GET(req: NextRequest) {
     evenementsSent += fresh.length;
   }
 
-  return NextResponse.json({ ok: true, summary, taches: tachesSeules.length, evenements: { date: demain, sent: evenementsSent } });
+  return NextResponse.json({ ok: true, summary, taches: tachesSeules.length, ouvertures: ouverturesSeules.length, evenements: { date: demain, sent: evenementsSent } });
 }

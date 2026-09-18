@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import type { SetlistItem } from "@/types/setList";
+import type { JianpuChords, SetlistItem } from "@/types/setList";
 import type { SongContent } from "@/lib/api/songs";
 import { SongView, SectionView, StructureStrip, TransitionNote } from "@/components/song/SongView";
 import { JianpuSheet } from "@/components/jianpu/JianpuSheet";
@@ -7,6 +7,7 @@ import { resolveSectionOccurrences, type SectionOccurrence } from "@/lib/setlist
 import type { PartitionLayout } from "@/lib/partitionLayoutPref";
 import { resolveStructureOverride } from "@/lib/chordpro/structure";
 import { useJianpuScore } from "@/lib/jianpu/images";
+import { aDesRetouches } from "@/lib/jianpu/retouches";
 import { sheetEnabled, type JianpuPref } from "@/lib/jianpu/preference";
 import { useTranslation } from "react-i18next";
 import { transposeAST, transposeSection } from "@/lib/transposeAST";
@@ -76,6 +77,8 @@ export function PartitionsView({
   onEditStructure,
   onChooseVersion,
   onShare,
+  onEditJianpu,
+  onIdees,
 }: {
   items: SetlistItem[];
   contents: Record<string, SongContent>;
@@ -91,9 +94,9 @@ export function PartitionsView({
   /** Mode « adapter le chant » : lignes tappables (hors fusions), rétablir l'original. */
   editMode?: boolean;
   /** Versions par chant (docs/spec-version-perso.md) : accords et paroles de
-   *  la version affichée déjà substitués dans `items` ; ma structure
-   *  s'applique au corps du chant (le bandeau garde celle de la présidence) ;
-   *  badge, sélecteur de version, partage. */
+   *  la version affichée déjà substitués dans `items` ; la structure du corps
+   *  du chant (le bandeau garde celle de la présidence) ; badge, sélecteur de
+   *  version, partage. */
   versions?: Record<string, SongVersionView>;
   /** Le mode d'édition vise ma version : « Revenir à la présidence » au lieu
    *  de « Rétablir l'original », bouton « Sections », case « Partager ». */
@@ -103,6 +106,11 @@ export function PartitionsView({
   onEditStructure?: (itemIndex: number) => void;
   onChooseVersion?: (itemIndex: number, value: string) => void;
   onShare?: (itemIndex: number, shared: boolean) => void;
+  /** Retouche d'accords sur un scan 简谱 (lot 9) : l'item pour la présidence,
+   *  ma version pour moi — la page tranche. */
+  onEditJianpu?: (itemIndex: number, next: JianpuChords) => void;
+  /** Idées d'harmonie du chant (lot 9) — absent si la personne n'y a pas droit. */
+  onIdees?: (itemIndex: number) => void;
 }) {
   const { t } = useTranslation();
   if (loading) {
@@ -288,6 +296,8 @@ export function PartitionsView({
             onEditStructure={onEditStructure}
             onChooseVersion={onChooseVersion}
             onShare={onShare}
+            onEditJianpu={onEditJianpu}
+            onIdees={onIdees}
           />
         );
       })}
@@ -312,6 +322,8 @@ function NormalSongItem({
   onEditStructure,
   onChooseVersion,
   onShare,
+  onEditJianpu,
+  onIdees,
 }: {
   item: SetlistItem;
   origIndex: number;
@@ -329,6 +341,8 @@ function NormalSongItem({
   onEditStructure?: (itemIndex: number) => void;
   onChooseVersion?: (itemIndex: number, value: string) => void;
   onShare?: (itemIndex: number, shared: boolean) => void;
+  onEditJianpu?: (itemIndex: number, next: JianpuChords) => void;
+  onIdees?: (itemIndex: number) => void;
 }) {
   const { t } = useTranslation();
   const mine = version?.mine;
@@ -340,16 +354,24 @@ function NormalSongItem({
   const followsPresidency = shown === "presidence" && !mine?.structure?.length;
   // Parse (contentOverride) + transposition mémoïsés : la vue Partitions se
   // re-rend à chaque toggle de la barre au scroll, inutile de re-parser.
-  const ast = useMemo(() => {
+  // `songKey` est la tonalité du chant lui-même : `ast` sort déjà transposé,
+  // et le comparer à `keyOverride` répondait toujours « la même », ce qui
+  // éteignait le calque de la partition 简谱 (accords laissés dans la
+  // tonalité gravée pendant que le reste de la setlist est transposé).
+  const { ast, songKey } = useMemo(() => {
     const base = itemAst(item, content);
-    if (!base) return undefined;
-    if (item.keyOverride && item.keyOverride !== base.metadata.key) {
-      return transposeAST(base, semitonesTo(base.metadata.key, item.keyOverride), item.keyOverride);
+    if (!base) return { ast: undefined, songKey: undefined };
+    const key = base.metadata.key;
+    if (item.keyOverride && item.keyOverride !== key) {
+      return { ast: transposeAST(base, semitonesTo(key, item.keyOverride), item.keyOverride), songKey: key };
     }
-    return base;
+    return { ast: base, songKey: key };
   }, [item, content]);
   // Partition 简谱 choisie pour cet item : le scan remplace les paroles.
   const jianpuScore = useJianpuScore(sheetEnabled(jianpuPref, item.jianpuSheet) ? item.songSlug : null);
+  // Retouches d'accords sur le scan qui sont les miennes : elles ouvrent
+  // « Revenir à la présidence » même sans accords ni paroles retouchés.
+  const mesRetouches = aDesRetouches(mine?.jianpuChords);
   if (!ast) return null;
 
   // Mode Adapter : on tape une occurrence précise → ordre joué forcé.
@@ -388,7 +410,7 @@ function NormalSongItem({
             : t("setlists.contentEdit.modifiedBadge", { defaultValue: "Version modifiée" })}
         </span>
       )}
-      {editMode && (editMine ? isMine : !!item.contentOverride) && (
+      {editMode && (editMine ? isMine || mesRetouches : !!item.contentOverride || aDesRetouches(item.jianpuChords)) && (
         <button
           type="button"
           onClick={() => onRevert?.(origIndex)}
@@ -397,6 +419,15 @@ function NormalSongItem({
           {editMine
             ? t("setlists.myVersion.revert")
             : t("setlists.contentEdit.revert", { defaultValue: "Rétablir l'original" })}
+        </button>
+      )}
+      {onIdees && (
+        <button
+          type="button"
+          onClick={() => onIdees(origIndex)}
+          className="text-[11px] text-muted-foreground underline hover:text-foreground"
+        >
+          {t("harmonie.idees")}
         </button>
       )}
       {editMode && editMine && !jianpuScore && (
@@ -457,12 +488,33 @@ function NormalSongItem({
       {jianpuScore ? (
         // Structure seule : le bandeau suffit, le scan ne s'affiche pas.
         layout !== "structure" && (
+          <>
+            {/* Un 升调 ne se voit pas sur un scan : le dire au-dessus (lot 9). */}
+            {steps
+              .filter((st) => st.targetKey)
+              .map((st) => (
+                <p
+                  key={st.section.uid}
+                  data-bandeau-modulation
+                  className="mb-2 rounded-lg bg-secondary px-3 py-1.5 text-[13px] font-medium text-foreground"
+                >
+                  {t("harmonie.bandeauModulation", {
+                    section: st.section.name || st.section.type,
+                    ton: st.targetKey,
+                  })}
+                </p>
+              ))}
           <JianpuSheet
             entry={jianpuScore}
             title={ast.metadata.title}
             slug={item.songSlug}
-            playedKey={item.keyOverride && item.keyOverride !== ast.metadata.key ? item.keyOverride : null}
+            playedKey={item.keyOverride && item.keyOverride !== songKey ? item.keyOverride : null}
+            chordEdits={item.jianpuChords}
+            onEditChords={
+              editMode && onEditJianpu ? (next) => onEditJianpu(origIndex, next) : undefined
+            }
           />
+          </>
         )
       ) : (
       <SongView
@@ -477,7 +529,7 @@ function NormalSongItem({
         sectionKeys={item.sectionKeys ?? {}}
         chartStyle={chartStyle}
         layout={layout}
-        bodyStructure={mine?.structure}
+        bodyStructure={version?.bodyStructure}
         onLineSelect={editMode ? (line, sectionUid) => onSelectLine?.(origIndex, line, sectionUid) : undefined}
       />
       )}

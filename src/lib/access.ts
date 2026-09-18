@@ -130,7 +130,14 @@ export function creatableEvenementPours(
   return [...sections.filter((s) => (profile?.annonces ?? []).includes(s)), ...poles];
 }
 
-/** Modifier, dupliquer, supprimer, fermer les inscriptions, voir les inscrits : organisateur + coordination. */
+/** Voir qui est inscrit (noms et invités) : tout membre connecté (Timothée,
+ *  17/09/2026) ; sans compte, le nombre seulement. Miroir :
+ *  `evenements/{id}/inscriptions` dans firestore.rules. */
+export function canSeeInscrits(user: AuthUser | null): boolean {
+  return user !== null;
+}
+
+/** Modifier, dupliquer, supprimer, fermer les inscriptions, retirer un inscrit : organisateur + coordination. */
 export function canEditEvenement(
   user: AuthUser | null,
   profile: { poles?: string[] } | null,
@@ -138,6 +145,24 @@ export function canEditEvenement(
 ): boolean {
   if (!user) return false;
   return e.organisateurUid === user.uid || isCoordination(user, profile);
+}
+
+/** Harmonie (lot 9, docs/spec-harmonie.md) : le catalogue et les « Idées
+ *  d'harmonie » sont pour les **pianistes et les guitaristes**, plus les
+ *  admins. L'instrument n'est pas dans le profil : il est écrit dans les
+ *  colonnes Piano / Guitare des plannings, d'où les services passés en
+ *  argument (`findMyServices` sur le nom de planning du compte). Chacun voit
+ *  d'abord son instrument ; qui tient les deux voit les deux.
+ *  Filtrage côté navigateur, comme le reste du site (choix de confiance
+ *  assumé, cf. CLAUDE.md) — aucune règle Firestore : les fiches sont des
+ *  fichiers publics. */
+export function canUseHarmonie(
+  user: { email?: string | null } | null,
+  services: { role: string }[],
+): { piano: boolean; guitare: boolean } {
+  if (isAdminUser(user)) return { piano: true, guitare: true };
+  const roles = new Set(services.map((s) => s.role));
+  return { piano: roles.has("Piano"), guitare: roles.has("Guitare") };
 }
 
 const LEVEL_RANK: Record<AccessLevel, number> = { view: 0, create: 1, edit: 2 };

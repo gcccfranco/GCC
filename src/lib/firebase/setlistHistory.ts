@@ -1,6 +1,6 @@
 import { auth } from "@/lib/firebase/config";
 import { FS_BASE, authHeader, checkRest, fromFsValue, toFsFields, type RawDoc } from "@/lib/firebase/setlists";
-import { diffSetlists, mergeChanges, type HistoryChange, type SetlistSnapshot } from "@/lib/setlist/history";
+import { diffSetlists, mergeChanges, type HistoryChange, type SectionsOf, type SetlistSnapshot } from "@/lib/setlist/history";
 import type { UserProfile } from "@/types/user";
 
 // Historique des modifications : sous-collection setlists/{id}/history
@@ -100,8 +100,9 @@ export function continuePass(previous: HistoryPass | null, setlistId: string, au
   return { setlistId, author, baseline: base };
 }
 
-/** Écrit les phrases du passage (état de départ → `current`). Ne lève jamais. */
-export async function recordHistory(pass: HistoryPass, current: SetlistSnapshot): Promise<void> {
+/** Écrit les phrases du passage (état de départ → `current`). Ne lève jamais.
+ *  `sectionsOf` : sections des chants, pour l'avant / après des structures. */
+export async function recordHistory(pass: HistoryPass, current: SetlistSnapshot, sectionsOf?: SectionsOf): Promise<void> {
   try {
     if (pass.last && Date.now() - pass.last.at >= SAME_PASS_MS) {
       // Éditeur resté ouvert : la retouche suivante ouvre une nouvelle entrée.
@@ -109,7 +110,7 @@ export async function recordHistory(pass: HistoryPass, current: SetlistSnapshot)
       pass.entryId = undefined;
       pass.prior = undefined;
     }
-    const changes = diffSetlists(pass.baseline, current);
+    const changes = diffSetlists(pass.baseline, current, sectionsOf);
     if (!pass.entryId) {
       if (changes.length === 0) return;
       const [last] = await getSetlistHistory(pass.setlistId, 1);
