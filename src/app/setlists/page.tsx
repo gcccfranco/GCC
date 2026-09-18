@@ -2,9 +2,9 @@
 
 import { GuideLien } from "@/components/guide/GuideLien";
 import { useEffect, useState, useMemo } from "react";
-import { ALL_CATEGORIES, getSetlists, getMySetlists, type FSSetlist } from "@/lib/firebase/setlists";
+import { ALL_CATEGORIES, getSetlists, getMySetlists, deleteSetlists, type FSSetlist } from "@/lib/firebase/setlists";
 import { useProfile } from "@/lib/firebase/users";
-import { visibleCategories, canCreateSetlist, isAdminUser } from "@/lib/access";
+import { visibleCategories, canCreateSetlist, canDeleteSetlist, isAdminUser } from "@/lib/access";
 import {
   loadPlanningData,
   findMyServices,
@@ -18,10 +18,21 @@ import Link from "next/link";
 import { PageTitle } from "@/components/layout/PageTitle";
 import { SetlistCard } from "@/components/setlists/SetlistCard";
 import { PullToRefresh } from "@/components/layout/PullToRefresh";
-import { useSetlistsNavState } from "@/hooks/useSetlistsNavState";
+import { formatDate } from "@/lib/utils/formatDate";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useSetlistsNavState, type Tab } from "@/hooks/useSetlistsNavState";
 
 export default function SetlistsPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { user, profile, loading: authLoading } = useProfile();
   const [setlists, setSetlists] = useState<FSSetlist[]>([]);
   const [mySetlists, setMySetlists] = useState<FSSetlist[]>([]);
@@ -115,6 +126,66 @@ export default function SetlistsPage() {
       : list.filter((s) => s.date < todayStr).sort((a, b) => b.date.localeCompare(a.date));
   }, [tab, setlists, mySetlists, matches, todayStr, myCategories, user, onlyMine, profile, myServiceKeys]);
 
+  // ── Suppression groupée (lot 10, docs/spec-suppression-groupee.md) ──
+  // La sélection est **dérivée** de ce qui est affiché : changer de filtre ou
+  // chercher la rétrécit sous les yeux, et on ne supprime jamais une setlist
+  // qu'on ne voit plus. Le mode, lui, reste ouvert jusqu'à « Annuler ».
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [coches, setCoches] = useState<Set<string>>(new Set());
+  const [enCours, setEnCours] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+
+  const peutSupprimer = (s: FSSetlist) => !!user && canDeleteSetlist(user, profile, s);
+  const supprimables = displayed.filter(peutSupprimer);
+  const selection = supprimables.filter((s) => coches.has(s.id));
+
+  // Changer d'onglet vide la sélection : aucune ligne n'est commune d'un onglet
+  // à l'autre, et revenir ne doit pas ramener des cases cochées oubliées.
+  function changerOnglet(onglet: Tab) {
+    setTab(onglet);
+    setCoches(new Set());
+  }
+
+  function quitterSelection() {
+    setSelectionMode(false);
+    setCoches(new Set());
+  }
+
+  function basculer(id: string) {
+    setCoches((prev) => {
+      const next = new Set(prev);
+      if (!next.delete(id)) next.add(id);
+      return next;
+    });
+  }
+
+  async function supprimerSelection() {
+    const cibles = selection;
+    setEnCours(true);
+    const { ok, ko } = await deleteSetlists(cibles.map((s) => s.id));
+    // Pas de rechargement : les deux effets de chargement ne dépendent que de
+    // `user` et ne se rejoueraient pas. On retire les supprimées en local.
+    setSetlists((prev) => prev.filter((s) => !ok.includes(s.id)));
+    setMySetlists((prev) => prev.filter((s) => !ok.includes(s.id)));
+    // Les ratées restent cochées : réessayer est un seul appui.
+    setCoches(new Set(ko));
+    const rates = cibles.filter((s) => ko.includes(s.id)).map((s) => `« ${s.title} »`);
+    setMessage(
+      [
+        ok.length ? t("setlists.list.deleteDone", { count: ok.length }) : null,
+        rates.length
+          ? t("setlists.list.deleteFailed", { count: rates.length, titles: rates.join(", ") })
+          : null,
+      ]
+        .filter(Boolean)
+        .join(" ")
+    );
+    window.setTimeout(() => setMessage(null), 6000);
+    setEnCours(false);
+    if (ko.length === 0) setSelectionMode(false);
+  }
+
   const emptyMessage = query
     ? t("setlists.list.emptySearch")
     : tab === "mine"
@@ -191,18 +262,18 @@ export default function SetlistsPage() {
 
         {/* ── Onglets ── */}
         <div className="flex rounded-lg bg-secondary p-0.5 gap-0.5 text-sm mb-4">
-          <button onClick={() => setTab("upcoming")} className={tabBtnClass(tab === "upcoming")}>
+          <button onClick={() => changerOnglet("upcoming")} className={tabBtnClass(tab === "upcoming")}>
             {t("setlists.list.upcoming", { defaultValue: "À venir" })}
           </button>
           <button
-            onClick={() => setTab("archived")}
+            onClick={() => changerOnglet("archived")}
             className={tabBtnClass(tab === "archived")}
           >
             {t("setlists.list.archived", { defaultValue: "Archives" })}
           </button>
           {!authLoading && user && (
             <button
-              onClick={() => setTab("mine")}
+              onClick={() => changerOnglet("mine")}
               className={tabBtnClass(tab === "mine")}
             >
               <Lock className="hidden sm:block h-3.5 w-3.5" />
@@ -255,6 +326,15 @@ export default function SetlistsPage() {
           )}
 
           <div className="flex items-center gap-2">
+            {!selectionMode && supprimables.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setSelectionMode(true)}
+                className="shrink-0 h-9 px-4 rounded-full bg-secondary text-foreground text-sm font-semibold hover:bg-muted transition-[background-color,transform] duration-150 active:scale-[.97]"
+              >
+                {t("setlists.list.select")}
+              </button>
+            )}
             <select
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
@@ -288,6 +368,41 @@ export default function SetlistsPage() {
           </div>
         </div>
 
+        {/* ── Résultat de la dernière suppression ── */}
+        {message && (
+          <div role="status" className="mb-4 rounded-xl bg-foreground px-4 py-2.5 text-sm text-background">
+            {message}
+          </div>
+        )}
+
+        {/* ── Barre d'action de la sélection ──
+             En tête de liste sur les trois appareils, et **collante** sous la
+             navbar : sur une longue liste elle reste à portée sans remonter.
+             Pas de barre collée au bas de l'écran : à l'intérieur d'une page,
+             `position: fixed` se règle sur la transformation d'animation de
+             PageTransition, donc sur le bas du **document** et non de l'écran
+             (docs/spec-suppression-groupee.md, R3). */}
+        {selectionMode && (
+          <div className="sticky top-[var(--nav-h)] z-10 -mx-4 mb-4 flex items-center gap-2 material-chrome shadow-[0_1px_0_hsl(var(--border))] px-4 py-2.5">
+            <button
+              type="button"
+              disabled={selection.length === 0 || enCours}
+              onClick={() => setConfirmOpen(true)}
+              className="h-10 px-5 rounded-full bg-destructive text-destructive-foreground text-sm font-semibold transition-[background-color,transform] duration-150 active:scale-[.97] disabled:opacity-40 disabled:active:scale-100"
+            >
+              {enCours ? "…" : t("setlists.list.deleteSelected", { n: selection.length })}
+            </button>
+            <button
+              type="button"
+              onClick={quitterSelection}
+              disabled={enCours}
+              className="h-10 px-5 rounded-full bg-secondary text-foreground text-sm font-semibold transition-[background-color,transform] duration-150 active:scale-[.97]"
+            >
+              {t("setlists.list.selectCancel")}
+            </button>
+          </div>
+        )}
+
         {/* ── Contenu ── */}
         {(tab === "mine" ? loadingMine : loading) ? (
           <div className="text-sm text-muted-foreground text-center py-16">
@@ -310,14 +425,59 @@ export default function SetlistsPage() {
             )}
           </div>
         ) : (
-          <ul className="rounded-xl bg-card [&>li:first-child>a]:rounded-t-xl [&>li:last-child>a]:rounded-b-xl">
+          <ul className="rounded-xl bg-card [&>li:first-child>*]:rounded-t-xl [&>li:last-child>*]:rounded-b-xl">
             {displayed.map((s) => (
               <li key={s.id} className="group-row relative">
-                <SetlistCard setlist={s} />
+                <SetlistCard
+                  setlist={s}
+                  selectable={selectionMode ? peutSupprimer(s) : undefined}
+                  selected={coches.has(s.id)}
+                  onToggle={() => basculer(s.id)}
+                />
               </li>
             ))}
           </ul>
         )}
+        {/* ── Confirmation : elle NOMME ce qui va disparaître (D3) ── */}
+        <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>
+                {t("setlists.list.deleteSelectedTitle", { count: selection.length })}
+              </AlertDialogTitle>
+              <AlertDialogDescription asChild>
+                <div>
+                  <ul className="list-disc pl-5 space-y-0.5">
+                    {selection.slice(0, 8).map((s) => (
+                      <li key={s.id}>
+                        {s.title}
+                        {" · "}
+                        <span className="capitalize">{formatDate(s.date, i18n.language)}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  {selection.length > 8 && (
+                    <p className="mt-1">
+                      {t("setlists.list.deleteMore", { count: selection.length - 8 })}
+                    </p>
+                  )}
+                  <p className="mt-2">{t("setlists.list.deleteSelectedBody")}</p>
+                </div>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={enCours}>{t("setlists.detail.deleteCancel")}</AlertDialogCancel>
+              <AlertDialogAction
+                disabled={enCours}
+                onClick={() => void supprimerSelection()}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                {enCours ? "…" : t("setlists.detail.deleteYes")}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
         <GuideLien section="setlists" />
       </div>
     </div>

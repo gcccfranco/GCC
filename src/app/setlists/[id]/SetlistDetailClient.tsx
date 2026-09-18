@@ -29,7 +29,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { getSetlist, deleteSetlist, duplicateSetlist, updateSetlist, authHeader, type FSSetlist } from "@/lib/firebase/setlists";
 import { useProfile } from "@/lib/firebase/users";
-import { canSeeSetlist, canEditSetlist, canDuplicateSetlist, canSetPresentationLink, canHaveSetlistVersion } from "@/lib/access";
+import { canSeeSetlist, canEditSetlist, canDeleteSetlist, canDuplicateSetlist, canSetPresentationLink, canHaveSetlistVersion } from "@/lib/access";
 import { useTranslation } from "react-i18next";
 import type { SongIndexEntry } from "@/types/song";
 import type { JianpuChords, SetlistItem } from "@/types/setList";
@@ -895,8 +895,10 @@ export function SetlistDetailClient() {
     );
   }
 
-  // Modification/suppression : créateur + musiciens du même service
+  // Modification : créateur + musiciens du même service
   const canEdit = canEditSetlist(user, profile, setlist);
+  // Suppression : le même droit, sous son nom — la liste (lot 10) s'en sert aussi
+  const canDelete = canDeleteSetlist(user, profile, setlist);
   // Items affichés : la version choisie (en mode « Ma version » : la mienne)
   // remplace celle de la présidence — accords et paroles pour la vue
   // partitions (qui applique ma structure au corps seul), ma structure
@@ -1156,7 +1158,7 @@ export function SetlistDetailClient() {
                     <Download className="h-3.5 w-3.5 text-muted-foreground" />
                     {downloading ? "…" : t("songs.detail.downloadPdf")}
                   </DropdownMenuItem>
-                  {canEdit && (
+                  {canDelete && (
                     <>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem

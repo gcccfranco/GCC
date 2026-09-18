@@ -257,3 +257,9 @@ export function canEditSetlist(
   const roles = profile?.serviceRoles[setlist.category];
   return roles ? categoryLevel(setlist.category, roles) === "edit" : false;
 }
+
+/** Suppression : exactement le droit de modification, sous son vrai nom, pour
+ *  que la liste (suppression groupée, lot 10) et la fiche ne puissent pas
+ *  diverger. Aucun droit nouveau. Miroir serveur : `allow delete` sur
+ *  setlists/{id} dans firestore.rules. */
+export const canDeleteSetlist = canEditSetlist;

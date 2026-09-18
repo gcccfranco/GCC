@@ -154,7 +154,19 @@
       "myServicesFilter": "Mes services",
       "mainMeetings": "Réunions principales",
       "groupsLabel": "Groupes",
-      "emptyUpcomingHint": "Les setlists de tes services apparaissent ici dès que la présidence les a préparées."
+      "emptyUpcomingHint": "Les setlists de tes services apparaissent ici dès que la présidence les a préparées.",
+      "select": "Sélectionner",
+      "selectCancel": "Annuler",
+      "deleteSelected": "Supprimer ({{n}})",
+      "deleteDone_one": "{{count}} setlist supprimée.",
+      "deleteDone_other": "{{count}} setlists supprimées.",
+      "deleteFailed_one": "{{titles}} n'a pas pu être supprimée.",
+      "deleteFailed_other": "{{titles}} n'ont pas pu être supprimées.",
+      "deleteSelectedTitle_one": "Supprimer cette setlist ?",
+      "deleteSelectedTitle_other": "Supprimer {{count}} setlists ?",
+      "deleteSelectedBody": "Cette action est définitive.",
+      "deleteMore_one": "… et {{count}} autre",
+      "deleteMore_other": "… et {{count}} autres"
     },
     "detail": {
       "backToAll": "←",

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronRight, Lock } from "lucide-react";
+import { Check, ChevronRight, Lock } from "lucide-react";
 import { type FSSetlist } from "@/lib/firebase/setlists";
 import { useTranslation } from "react-i18next";
 import { formatDate } from "@/lib/utils/formatDate";
@@ -12,18 +12,29 @@ import { Tile } from "@/components/ui/tile";
 // la couleur de la catégorie (docs/spec-look.md, « Listes et vignettes »).
 // La présidence passe avant la date pour ne jamais être tronquée, et la
 // catégorie est écrite sous le titre (retour du 16/09/2026).
-export function SetlistCard({ setlist }: { setlist: FSSetlist }) {
+export function SetlistCard({
+  setlist,
+  selectable,
+  selected,
+  onToggle,
+}: {
+  setlist: FSSetlist;
+  /** Mode sélection (lot 10) : `undefined` = pas de mode, la ligne est le lien
+   *  d'avant ; `false` = mode, mais pas le droit de supprimer (pas de case) ;
+   *  `true` = case à cocher, et toute la ligne la bascule. */
+  selectable?: boolean;
+  selected?: boolean;
+  onToggle?: () => void;
+}) {
   const { t, i18n } = useTranslation();
   const color = categoryColor(setlist.category);
   const jour = new Date(setlist.date + "T12:00:00");
   const mois = new Intl.DateTimeFormat(i18n.language === "zh-CN" ? "zh-CN" : "fr-FR", { month: "short" }).format(jour);
   const chants = setlist.items.filter((i) => i.type !== "transition").length;
 
-  return (
-    <Link
-      href={`/setlists/${setlist.id}`}
-      className="flex min-h-[64px] items-center gap-3 px-4 py-2.5 transition-colors duration-150 active:bg-secondary/70"
-    >
+  const classe = "flex min-h-[64px] items-center gap-3 px-4 py-2.5 transition-colors duration-150 active:bg-secondary/70";
+  const contenu = (
+    <>
       <Tile color={color} big={jour.getDate()} small={mois} size="lg" />
       <span className="min-w-0 flex-1">
         <span className="flex items-center gap-1.5">
@@ -43,6 +54,41 @@ export function SetlistCard({ setlist }: { setlist: FSSetlist }) {
         </span>
       </span>
       <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/60" aria-hidden />
+    </>
+  );
+
+  // Ligne supprimable en mode sélection : un bouton, sinon un appui ouvrirait
+  // la setlist au lieu de cocher. Case de 24 px dans une zone d'appui de 44 px.
+  if (selectable) {
+    return (
+      <button
+        type="button"
+        role="checkbox"
+        aria-checked={!!selected}
+        aria-label={setlist.title}
+        onClick={onToggle}
+        className={`${classe} w-full text-left cursor-pointer`}
+      >
+        <span className="grid h-11 w-11 shrink-0 place-content-center">
+          <span
+            className={`flex h-6 w-6 items-center justify-center rounded-md border-2 ${
+              selected ? "border-foreground bg-foreground text-background" : "border-muted-foreground/50"
+            }`}
+          >
+            {selected && <Check className="h-4 w-4" strokeWidth={3} aria-hidden />}
+          </span>
+        </span>
+        {contenu}
+      </button>
+    );
+  }
+
+  return (
+    <Link href={`/setlists/${setlist.id}`} className={classe}>
+      {/* Mode sélection sans le droit de supprimer : la place de la case, pour
+          que les vignettes restent alignées d'une ligne à l'autre. */}
+      {selectable === false && <span className="h-11 w-11 shrink-0" aria-hidden />}
+      {contenu}
     </Link>
   );
 }
