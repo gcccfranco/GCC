@@ -529,5 +529,65 @@ npm run lint
 
 ## Avancement
 
-Rien n'est codé : la forme est validée (planche du 18/09/2026), la spec attend
-le go de Timothée.
+**18/09/2026 — G1, G2, G3 codées** (branche `lot/17-planning-grille`), plus la
+lecture depuis l'app avec le Sheet en repli. **À valider en local par Timothée.**
+
+Fait :
+
+- **G1 — la grille en lecture.** `src/lib/planning/grilles.ts` (définitions des
+  colonnes, `lignesPubliees`, `fusionnerLignes` — module pur) ;
+  `src/components/planning/PlanningGrille.tsx` (bandeau planning · période ·
+  horaire, grille continue, **colonne des dates figée**, « Voir plus tôt / plus
+  tard », une carte par dimanche sur téléphone, « Mon prénom », « Mes dates »,
+  séparateurs de mois, « Cette semaine », badge Sainte Cène) ;
+  `src/app/planning/culte/page.tsx` bascule dessus. Les quatre pilules de
+  trimestre ont disparu, et **D7 est appliquée ligne par ligne** : un dimanche
+  d'un trimestre futur non publié est retiré pour les membres, montré aux
+  publieurs avec la marque « Non publié ». `PlanningTable` est **intact**.
+- **G2 — droits et modèle.** `plannings?: string[]` (`src/types/user.ts`, lu par
+  `fromFsProfile`) ; `canEditPlanning` (`src/lib/access.ts`) ; bloc de cases à
+  cocher « Peut remplir les plannings : » dans `/admin` ; règles Firestore
+  (`plannings/{key}/dimanches` et `/history`, `plannings == []` à la création
+  d'un profil) — **à publier à la main dans la console Firebase** ;
+  `src/lib/planning/grille.ts` (`PLANNINGS_APP`, `ecritDansLApp`, `fetchGrille`)
+  et `src/lib/firebase/planningGrille.ts` (`ecrireCase`, PATCH `updateMask`).
+- **G3 — écriture case par case.** Mode « Modifier », champ avec `datalist`
+  (noms de la grille ∪ `planningName` des comptes), enregistrement à la sortie
+  du champ ou sur Entrée, Échap annule, « Enregistré », refus du serveur →
+  la case revient + « Tu n'as plus le droit… » + « Recharger » (D6) ;
+  `src/lib/planning/historique.ts` (pur) +
+  `src/lib/firebase/planningHistorique.ts` (regroupement 15 min) ; panneau
+  « Historique des modifications » sous la grille.
+- **Lecture depuis l'app** : `fetchCulte` lit la grille et **fusionne dimanche
+  par dimanche** avec `Franco_Louange` (`fusionnerLignes`) — un dimanche écrit
+  dans l'app remplace celui du Sheet, les autres continuent d'en venir. Les dix
+  appelants de `loadPlanningData` ne voient rien.
+
+Écarts assumés, à connaître :
+
+- **Première écriture d'un dimanche : la ligne entière est recopiée** (champ
+  `semer` de `ecrireCase`). Tant que l'import initial (G4) n'a pas eu lieu, les
+  autres cases de ce dimanche viennent du Sheet ; un document qui ne porterait
+  que la case modifiée les ferait disparaître, la fusion se faisant dimanche par
+  dimanche. Les écritures suivantes sur ce dimanche ne touchent que leur colonne
+  (D1). Le jour où l'import aura tout écrit, ce chemin ne servira plus.
+- `fetchGrille(key)` n'a **pas** de bornes `debut`/`fin` : `fetchCulte()` n'en a
+  pas, et la sous-collection fait au plus 52 documents par an.
+- L'autocomplétion réunit les noms **de la grille du Culte** et les
+  `planningName` des comptes, non `collectPlanningNames` des dix plannings — la
+  page Culte ne charge qu'une feuille, et l'union coûterait dix requêtes.
+- `CULTE_FALLBACK` **alimente encore** le Culte : son retrait (D4) appartient à
+  G5, la bascule complète de la source.
+- Libellés `planning.grille.exporter` et `planning.grille.importe` **non
+  ajoutés** : ils appartiennent à G4.
+
+Reste à faire : **G4** (import initial + export CSV), **G5** (bascule complète
+de la source, retrait de `CULTE_FALLBACK` du Culte), **G6** (les sept autres
+plannings, après trois dimanches sans incident).
+
+Tests : `tests/planning-grille.spec.ts` — 19 tests × 3 appareils (53 passés,
+4 sautés parce que propres à un appareil). Contre-épreuve faite sur D7 : la
+règle de publication retirée, les trois tests de publication virent au rouge sur
+les trois appareils. Suites voisines vertes : `look-planning`,
+`planning-accueil`, `planning-sainte-cene`, `planning-petit-dej`,
+`rappels-regroupes`, `nouveaux-membres`, `notif-president`, `i18n-hydration`.

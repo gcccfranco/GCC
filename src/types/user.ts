@@ -64,6 +64,11 @@ export interface UserProfile {
   /** Pôles de coordination (« evenement » : programmes de scène) — attribués par
    *  les admins uniquement. Absent = aucun. */
   poles?: Pole[];
+  /** Plannings que la personne peut remplir dans l'app (clés de
+   *  PUBLISHABLE_PLANNINGS, ex. « culte ») — attribué par les admins uniquement,
+   *  planning par planning (lot 17). Absent = aucun.
+   *  Cf. canEditPlanning (src/lib/access.ts). */
+  plannings?: string[];
   /** Date d'inscription = createTime du document Firestore users/{uid}, en lecture
    *  seule (jamais persisté comme champ). Renseigné pour tous les profils existants. */
   createdAt?: Date;

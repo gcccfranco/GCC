@@ -25,7 +25,8 @@ import type { Equipe } from "@/types/equipe";
 import { EDD_CLASSES } from "@/lib/planning/utils";
 import { ANNONCE_SECTIONS } from "@/types/annonce";
 import { NOTIFY_ALL, NOTIFY_GROUPS, audienceLabel } from "@/lib/push/audiences";
-import { categoryColor, categoryLabel } from "@/lib/serviceColors";
+import { PUBLISHABLE_PLANNINGS } from "@/lib/planning/releases";
+import { categoryColor, categoryLabel, PLANNING_COLORS } from "@/lib/serviceColors";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -147,6 +148,7 @@ export default function AdminPage() {
   const [importEtat, setImportEtat] = useState<"" | "busy" | "fait">("");
   const [importErreur, setImportErreur] = useState("");
   const [importResultat, setImportResultat] = useState<ImportEquipes | null>(null);
+  const [planningRights, setPlanningRights] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [query, setQuery] = useState("");
@@ -318,6 +320,7 @@ export default function AdminPage() {
     setAnnonceRights(p.annonces ?? []);
     setNotifyRights(p.notify ?? []);
     setEquipesRight(p.equipes ?? false);
+    setPlanningRights(p.plannings ?? []);
     setError("");
   }
 
@@ -327,7 +330,7 @@ export default function AdminPage() {
     setError("");
     try {
       // `poles` n'est plus écrit ici (lot 16, D9) : il vient des équipes.
-      const updated: UserProfile = { ...p, ...form, annonces: annonceRights, notify: notifyRights, equipes: equipesRight };
+      const updated: UserProfile = { ...p, ...form, annonces: annonceRights, notify: notifyRights, equipes: equipesRight, plannings: planningRights };
       await saveProfile(updated);
       setProfiles((prev) => prev.map((x) => (x.uid === p.uid ? updated : x)));
       setEditingUid(null);
@@ -953,6 +956,37 @@ export default function AdminPage() {
                           >
                             {equipesRight ? "✓ " : ""}Équipes (tout l&apos;organigramme)
                           </button>
+                        </div>
+
+                        {/* Qui remplit les plannings dans l'app (lot 17) — réservé aux admins.
+                            Ne donne pas le droit de PUBLIER un trimestre (droits de notification). */}
+                        <div className="rounded-lg border border-dashed border-border p-3">
+                          <p className="text-sm font-semibold text-muted-foreground mb-2">
+                            Peut remplir les plannings :
+                          </p>
+                          <div className="flex flex-wrap gap-2">
+                            {PUBLISHABLE_PLANNINGS.map((pl) => {
+                              const checked = planningRights.includes(pl.key);
+                              const color = PLANNING_COLORS[pl.key as keyof typeof PLANNING_COLORS];
+                              return (
+                                <button
+                                  key={pl.key}
+                                  type="button"
+                                  onClick={() =>
+                                    setPlanningRights((prev) =>
+                                      checked ? prev.filter((x) => x !== pl.key) : [...prev, pl.key]
+                                    )
+                                  }
+                                  className={`px-3 py-1.5 rounded-lg border text-xs font-semibold transition-colors ${
+                                    checked ? "" : "bg-background border-border text-muted-foreground hover:text-foreground"
+                                  }`}
+                                  style={checked ? { background: `${color}15`, borderColor: color, color } : undefined}
+                                >
+                                  {checked ? "✓ " : ""}{pl.label}
+                                </button>
+                              );
+                            })}
+                          </div>
                         </div>
 
                         {/* Droits de publication d'annonces — réservé aux admins */}

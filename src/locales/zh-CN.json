@@ -980,6 +980,27 @@
       "thisWeek": "本周",
       "clear": "清除"
     },
+    "grille": {
+      "modifier": "修改",
+      "termine": "完成",
+      "enregistre": "已保存",
+      "plusTot": "查看更早",
+      "plusTard": "查看更晚",
+      "aVenir": "服事表待定",
+      "periode": "{{du}}至{{au}}",
+      "nonPublie": "尚未发布",
+      "pasDispo": "某个主日无法服事？请联系负责排表的同工。",
+      "droitRetire": "你已没有修改此服事表的权限。",
+      "horsLigne": "无法修改：网络不可用。",
+      "recharger": "重新加载",
+      "historique": "修改记录",
+      "remplace": "{{auteur}} 把 {{date}} 的{{colonne}}从 {{avant}} 改为 {{apres}}",
+      "ajoute": "{{auteur}} 把 {{apres}} 安排在 {{date}} 的{{colonne}}",
+      "efface": "{{auteur}} 清空了 {{date}} 的{{colonne}}"
+    },
+    "horaires": {
+      "culte": "主日 10:30"
+    },
     "pages": {
       "culte": "法语崇拜",
       "table": "圣餐预备",

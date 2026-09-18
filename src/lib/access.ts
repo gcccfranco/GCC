@@ -169,6 +169,21 @@ export function canEditEvenement(
   return e.organisateurUid === user.uid || isCoordination(user, profile);
 }
 
+/** Remplir les cases d'un planning dans l'app (lot 17, docs/spec-planning-grille.md) :
+ *  les admins, et les profils dont `plannings` contient sa clé — coché par un
+ *  admin, planning par planning. Ne donne PAS le droit de publier un trimestre
+ *  (canPublishPlanning, src/lib/planning/releases.ts, qui dépend de `notify`) :
+ *  deux gestes différents, deux droits (D10).
+ *  Miroir serveur : plannings/{key}/dimanches dans firestore.rules. */
+export function canEditPlanning(
+  user: { email?: string | null } | null,
+  profile: { plannings?: string[] } | null,
+  key: string
+): boolean {
+  if (!user) return false;
+  return isAdminUser(user) || (profile?.plannings ?? []).includes(key);
+}
+
 /** Harmonie (lot 9, docs/spec-harmonie.md) : le catalogue et les « Idées
  *  d'harmonie » sont pour les **pianistes et les guitaristes**, plus les
  *  admins. L'instrument n'est pas dans le profil : il est écrit dans les

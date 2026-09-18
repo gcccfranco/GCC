@@ -1,5 +1,7 @@
 import type { EddDataStructure, EddPeriode, CampusSeance } from "./utils"
 import { EDD_PERIODES, getMois } from "./utils"
+import { ecritDansLApp, fetchGrille } from "./grille"
+import { fusionnerLignes } from "./grilles"
 
 const SHEET_ID = "1khxUvrKSnrqtkkdCsmXiCjW3TjWcSV38otYOGMO5klU"
 const BASE_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=`
@@ -85,13 +87,21 @@ export async function fetchSheet(sheet: string): Promise<string[][]> {
 // Colonnes 1–11 : présidence … traduction, puis « Sainte cène » (index 11,
 // ajoutée au T4 2026). Jamais au-delà : les colonnes suivantes portent des
 // notes de travail.
+//
+// Lot 17 (D2) : la bascule de source se fait ICI, pas chez les appelants. Le
+// Culte Franco est rempli dans l'app (PLANNINGS_APP) ; ses dimanches déjà
+// écrits remplacent ceux du Sheet, les autres continuent d'en venir. La forme
+// rendue est identique, donc `loadPlanningData` et ses dix appelants — « Ce
+// dimanche », « Mes services », les rappels, les setlists — ne voient rien.
 export async function fetchCulte(): Promise<string[][]> {
   const rows = await fetchSheet("Franco_Louange")
-  return rows.flatMap(r => {
+  const sheet = rows.flatMap(r => {
     const dt = parseDate(r[0])
     if (!dt) return []
     return [[dt, r[1]||"", r[2]||"", r[3]||"", r[4]||"", r[5]||"", r[6]||"", r[7]||"", r[8]||"", r[9]||"", r[10]||"", r[11]||""]]
   })
+  if (!ecritDansLApp("culte")) return sheet
+  return fusionnerLignes(await fetchGrille("culte"), sheet)
 }
 
 export async function fetchDejeuner(): Promise<string[][]> {

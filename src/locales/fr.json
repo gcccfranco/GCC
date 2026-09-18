@@ -980,6 +980,27 @@
       "thisWeek": "Cette semaine",
       "clear": "Effacer"
     },
+    "grille": {
+      "modifier": "Modifier",
+      "termine": "Terminé",
+      "enregistre": "Enregistré",
+      "plusTot": "Voir plus tôt",
+      "plusTard": "Voir plus tard",
+      "aVenir": "Planning à venir",
+      "periode": "{{du}} à {{au}}",
+      "nonPublie": "Non publié",
+      "pasDispo": "Pas disponible un dimanche ? Préviens la personne qui tient le planning.",
+      "droitRetire": "Tu n'as plus le droit de modifier ce planning.",
+      "horsLigne": "Modification impossible : pas de réseau.",
+      "recharger": "Recharger",
+      "historique": "Historique des modifications",
+      "remplace": "{{auteur}} a remplacé {{avant}} par {{apres}} au {{colonne}} du {{date}}",
+      "ajoute": "{{auteur}} a mis {{apres}} au {{colonne}} du {{date}}",
+      "efface": "{{auteur}} a effacé le {{colonne}} du {{date}}"
+    },
+    "horaires": {
+      "culte": "Dimanche 10:30"
+    },
     "pages": {
       "culte": "Culte Franco",
       "table": "Prépa. Table du Seigneur",
