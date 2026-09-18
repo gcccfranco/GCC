@@ -13,6 +13,8 @@ export type FakeProfile = {
   planningName?: string;
   serviceRoles?: Record<string, string[]>;
   poles?: string[];
+  /** Droit de tenir l'organigramme (lot 16) — attribué par un admin. */
+  equipes?: boolean;
   /** Sections où la personne publie des annonces (droit de créer des évènements pour sa section). */
   annonces?: string[];
   /** Vrai = compte qui n'a pas encore vu l'accueil de première connexion (lot 8).
@@ -240,6 +242,7 @@ export async function signInAs(
       annonces: profile.annonces ?? [],
       notify: [],
       poles: profile.poles ?? [],
+      equipes: profile.equipes ?? false,
     },
     ...(profile.accueil ? {} : { [`onboarding/${profile.uid}`]: { vu: true, le: "2026-09-01T10:00:00Z" } }),
     ...docs,

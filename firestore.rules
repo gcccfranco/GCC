@@ -22,6 +22,9 @@ rules_version = '2';
 //   écrits par la coordination (pôle « événement » du profil + admins). Créneaux
 //   (programmes/{id}/creneaux) : tout connecté en pose un à son nom ; auteur +
 //   coordination le modifient ou le retirent.
+// - Organigramme (equipes/{id}, lot 16) : lu par les connectés ; écrit par les
+//   admins et par les comptes portant le droit `equipes`. Les pôles qui en
+//   découlent (users/{uid}.poles) restent écrits par le serveur seul.
 // - config/app : état des inscriptions (registrationOpen), lisible publiquement,
 //   modifiable par les admins depuis la page /admin.
 //
@@ -69,7 +72,8 @@ service cloud.firestore {
         || (request.auth.uid == uid
             && request.resource.data.get('annonces', []) == []
             && request.resource.data.get('notify', []) == []
-            && request.resource.data.get('poles', []) == [])
+            && request.resource.data.get('poles', []) == []
+            && request.resource.data.get('equipes', false) == false)
       );
       // Une fois le profil créé, seuls les admins peuvent le modifier.
       allow update: if isAdmin();
@@ -89,6 +93,24 @@ service cloud.firestore {
       allow update, delete: if signedIn() && (
         isAdmin() || resource.data.authorId == request.auth.uid
       );
+    }
+
+    // Organigramme (lot 16, docs/spec-organigramme.md). Lu par tout membre
+    // connecté (l'écran est nominatif : rien sans compte) ; écrit par les admins
+    // et par les comptes à qui un admin a donné le droit `equipes` sur leur
+    // profil (D4, rouverte par Timothée le 18/09/2026 : « pouvoir donner la
+    // possibilité à certains de modifier tout l'organigramme »).
+    // `users/{uid}.poles` n'est PAS ouvert pour autant : placer quelqu'un dans
+    // une équipe passe par /api/equipes/poles (Admin SDK, qui revérifie ce même
+    // droit) — `allow update` sur users/{uid} reste aux admins.
+    // Miroir client : canVoirEquipes / canEditerEquipes (src/lib/access.ts).
+    function isEquipier() {
+      return isAdmin() || (hasProfile() && profile().get('equipes', false) == true);
+    }
+
+    match /equipes/{id} {
+      allow read: if signedIn();
+      allow create, update, delete: if signedIn() && isEquipier();
     }
 
     // Programmes de scène (lot 3 bis, docs/spec-programme-scene.md). Miroir :

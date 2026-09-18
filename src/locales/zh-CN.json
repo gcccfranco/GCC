@@ -1936,5 +1936,92 @@
     "transition": {
       "titre": "接下一首"
     }
+  },
+  "equipes": {
+    "title": "团队",
+    "sousTitre": "GCC 法语堂 2026 组织架构",
+    "onglet": {
+      "equipes": "团队",
+      "musiciens": "乐手"
+    },
+    "team": {
+      "orga": "统筹组",
+      "comite-franco": "法语堂委员会",
+      "da": "美工组",
+      "medias": "媒体组",
+      "developpement": "开发组",
+      "regie": "音控组",
+      "traduction": "翻译组",
+      "theologie": "神学组",
+      "evenementiel": "活动组",
+      "decoration": "布置组",
+      "accueil-j1": "迎新组",
+      "louange": "敬拜组",
+      "edd": "主日学"
+    },
+    "soustitre": {
+      "orga": "总协调",
+      "comite-franco": "",
+      "da": "美术设计",
+      "medias": "摄影、录像",
+      "developpement": "GCCLouange、网站、电子歌本",
+      "regie": "音响与投影",
+      "traduction": "",
+      "theologie": "",
+      "evenementiel": "",
+      "decoration": "",
+      "accueil-j1": "夏令营",
+      "louange": "法语堂 / 联合",
+      "edd": "主日学"
+    },
+    "donnePole": "归入{{pole}}部门",
+    "referent": "负责人",
+    "essai": "试用中",
+    "membres_one": "{{count}} 人",
+    "membres_other": "{{count}} 人",
+    "aucunMembre": "目前没有成员。",
+    "modifier": "修改",
+    "enregistrer": "保存",
+    "annuler": "取消",
+    "ajouterMembre": "添加成员",
+    "nomLibre": "添加「{{nom}}」（没有账号）",
+    "retirer": "移除 {{nom}}",
+    "mention": "备注",
+    "poleEquipe": "这个团队带来的部门",
+    "aucunPole": "无",
+    "erreur": "保存失败。",
+    "fiche": {
+      "equipes": "所属团队",
+      "services": "服事",
+      "planning": "排班中的岗位",
+      "rien": "没有可显示的内容。",
+      "fermer": "关闭",
+      "admin": "在管理后台打开"
+    },
+    "colonne": {
+      "paix": "和平",
+      "bonte": "恩慈",
+      "fidelite": "信实",
+      "campus": "夏令营",
+      "edd": "主日学",
+      "franco": "法语堂",
+      "intergroupe": "联合",
+      "interfranco": "法语联合"
+    },
+    "role": {
+      "presidence": "主领",
+      "choriste": "唱诗",
+      "piano": "钢琴",
+      "guitare": "吉他",
+      "batterie": "架子鼓",
+      "cajon": "木箱鼓",
+      "cajonBatterie": "木箱鼓/架子鼓",
+      "sono": "音响",
+      "ppt": "投影",
+      "musicien": "乐手",
+      "regie": "音控"
+    },
+    "matriceVide": "目前没有人在排班中。",
+    "nom": "姓名"
   }
 }

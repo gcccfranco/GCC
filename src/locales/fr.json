@@ -1936,5 +1936,92 @@
     "transition": {
       "titre": "Vers le chant suivant"
     }
+  },
+  "equipes": {
+    "title": "Équipes",
+    "sousTitre": "Organigramme GCC Franco 2026",
+    "onglet": {
+      "equipes": "Équipes",
+      "musiciens": "Musiciens"
+    },
+    "team": {
+      "orga": "TEAM ORGA",
+      "comite-franco": "COMITÉ FRANCO",
+      "da": "TEAM DA",
+      "medias": "TEAM MÉDIAS",
+      "developpement": "TEAM DÉVELOPPEMENT",
+      "regie": "TEAM RÉGIE",
+      "traduction": "TEAM TRADUCTION",
+      "theologie": "TEAM THÉOLOGIE",
+      "evenementiel": "TEAM ÉVÉNEMENTIEL",
+      "decoration": "TEAM DÉCORATION",
+      "accueil-j1": "TEAM ACCUEIL J1",
+      "louange": "TEAM LOUANGE",
+      "edd": "TEAM EDD"
+    },
+    "soustitre": {
+      "orga": "Coordination générale",
+      "comite-franco": "",
+      "da": "Direction Artistique",
+      "medias": "Photo, Vidéo",
+      "developpement": "GCCLouange, Siteweb, Livret digital",
+      "regie": "Sono Live & PPT",
+      "traduction": "",
+      "theologie": "",
+      "evenementiel": "",
+      "decoration": "",
+      "accueil-j1": "Campus",
+      "louange": "Franco / Inter",
+      "edd": "École du Dimanche"
+    },
+    "donnePole": "Donne le pôle {{pole}}",
+    "referent": "Référent",
+    "essai": "en essai",
+    "membres_one": "{{count}} personne",
+    "membres_other": "{{count}} personnes",
+    "aucunMembre": "Personne pour l'instant.",
+    "modifier": "Modifier",
+    "enregistrer": "Enregistrer",
+    "annuler": "Annuler",
+    "ajouterMembre": "Ajouter un membre",
+    "nomLibre": "Ajouter « {{nom}} » sans compte",
+    "retirer": "Retirer {{nom}}",
+    "mention": "Mention",
+    "poleEquipe": "Pôle donné par cette équipe",
+    "aucunPole": "Aucun",
+    "erreur": "L'enregistrement a échoué.",
+    "fiche": {
+      "equipes": "Ses équipes",
+      "services": "Ses services",
+      "planning": "Au planning",
+      "rien": "Rien à afficher.",
+      "fermer": "Fermer",
+      "admin": "Ouvrir dans l'administration"
+    },
+    "colonne": {
+      "paix": "Paix",
+      "bonte": "Bonté",
+      "fidelite": "Fidélité",
+      "campus": "Campus",
+      "edd": "EDD",
+      "franco": "Franco",
+      "intergroupe": "Intergroupe",
+      "interfranco": "Interfranco"
+    },
+    "role": {
+      "presidence": "Présidence",
+      "choriste": "Chant",
+      "piano": "Piano",
+      "guitare": "Guitare",
+      "batterie": "Batterie",
+      "cajon": "Cajon",
+      "cajonBatterie": "Cajon/Batterie",
+      "sono": "Sono",
+      "ppt": "PPT",
+      "musicien": "Musicien",
+      "regie": "Régie"
+    },
+    "matriceVide": "Personne ne sert au planning pour l'instant.",
+    "nom": "Nom"
   }
 }
