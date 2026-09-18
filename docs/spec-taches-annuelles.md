@@ -326,4 +326,31 @@ npm run lint
 
 ## Avancement
 
-Rien n'est codé : la spec attend le go de Timothée.
+**Codé le 18/09/2026** (go de Timothée, R1 à R8 retenues), en arbre isolé sur
+la branche `lot/13-taches-annuelles`, commit `f3017ce`, fusionné dans
+`ui/apple-design` le jour même. **À valider en local.**
+
+- Tests écrits avant le code et **vus rouges** : 16 rouges / 23 verts au
+  premier passage. Puis **39 tests x 3 appareils verts**, plus
+  `rappels-regroupes` (12) et `nouveaux-membres` (54).
+- Les trois pièges du code sont traités : clé anti-doublon avec le jour
+  d'envoi, recul porté à 400 jours pour l'annuel (et fenêtre de relève
+  assortie, sans quoi la fois de l'année passée n'aurait jamais cédé sa
+  place), `/api/taches/fait` qui refuse une fois seulement commencée.
+- **Aucune règle Firestore à publier** : `match /fois/{date}` couvre déjà
+  `create`, et les droits ne changent pas.
+- Quatre tests existants ont été adaptés, sans qu'aucune assertion soit
+  affaiblie : cocher demande maintenant deux touches (En cours, puis
+  Terminé), et les tests vérifient en plus `aria-checked` et l'état en base.
+
+**Écarts assumés, à trancher par Timothée :**
+1. Les clés `etat.enCours` / `etat.terminee` du tableau des libellés n'ont pas
+   été ajoutées : rien ne les utilisait (`aria-checked="mixed"` porte déjà
+   l'état), et quatre entrées mortes dans deux fichiers de langue ne valent
+   rien.
+2. « Commencée par … » s'affiche sur une fois en cours : le détail passe à
+   deux lignes sur téléphone. À couper si cela gêne.
+3. **Conséquence d'usage** : marquer une tâche faite demande désormais deux
+   touches. C'est la demande de Christelle à la lettre, mais le cas simple a
+   doublé. Un appui long qui irait droit à « Terminé » reste possible.
+
