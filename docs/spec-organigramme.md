@@ -11,8 +11,9 @@ Demande de Christelle, 18/09/2026 (conversation WhatsApp de la nuit) :
 > « selon le profil si on est “interne” bah on peut ajouter des taches fin voir
 > la vue back office/outil »
 
-Statut : **tranché le 18/09/2026 (feuille de route, lot 16) ; spec écrite,
-rien n'est codé — le lot attend le go de Timothée.**
+Statut : **codé le 18/09/2026** (lot 16, branche `lot/16-organigramme`).
+D4 a été rouverte et changée le jour même par Timothée — voir le tableau et
+« Avancement » en fin de fichier.
 
 ## Ce que le code montre (18/09/2026)
 
@@ -109,8 +110,8 @@ rien n'est codé — le lot attend le go de Timothée.**
 | D1 | 13 équipes contre 5 pôles : créer des pôles ? | **Non. Aucun pôle nouveau.** L'équipe est un **niveau à part** (`equipes/{id}`), et chaque équipe **désigne** un pôle existant, ou aucun. Un pôle de plus, c'est un onglet de plus dans *Tâches*, une audience de plus pour les réunions de pôle (`pour: "pole:<id>"`, `firestore.rules` l. 152), une cible de plus dans les rappels du cron, et deux libellés dans chaque langue — pour des équipes de deux ou trois personnes qui n'ont aucune tâche. Si la Traduction réclame plus tard son tableau, on ajoute son pôle ce jour-là : une ligne dans `TACHE_POLES` et deux libellés. |
 | D2 | Quelle correspondance équipe → pôle ? | Voir le tableau **« Les 13 équipes »** ci-dessous. Cinq équipes donnent un pôle (ORGA, COMITÉ FRANCO → `orga` ; DA, DÉCORATION → `da` ; MÉDIAS → `media` ; THÉOLOGIE → `orga` ; ÉVÉNEMENTIEL, ACCUEIL J1 → `evenement`) ; les autres n'en donnent aucun. **DÉCORATION et THÉOLOGIE sont les deux à confirmer d'un coup d'œil** : la décoration sert surtout les évènements, et la Théologie n'est qu'une équipe d'organisation de cours. |
 | D3 | LOUANGE, RÉGIE, EDD donnent-elles le pôle `louange` ? | **Elles ne l'écrivent jamais.** `louange` reste **dérivé** de `serviceRoles` (`access.ts` l. 40-41, `firestore.rules` l. 107) : leurs membres l'ont déjà, par leur planning. L'équipe reste affichée, elle est simplement **descriptive**. Écrire `louange` dans `poles` créerait un deuxième chemin vers le même droit — exactement la deuxième vérité qu'on veut éviter. |
-| D4 | Qui modifie l'organigramme ? | **Les admins seuls, en V1**, depuis un onglet « Équipes » de `/admin`. Raison de code, pas de principe : placer quelqu'un dans une équipe écrit `users/{uid}.poles`, or `firestore.rules` l. 75 réserve l'écriture d'un profil aux admins. Ouvrir ce geste à un référent voudrait dire, soit lui donner le droit d'écrire n'importe quel profil, soit une route serveur de plus. Les 13 équipes bougent quelques fois par an. **À demander avant**, si Timothée le veut : « le référent modifie son équipe », via une route serveur. |
-| D5 | Ce que voit un membre ordinaire, ce que voit un admin | **Tout membre connecté voit l'organigramme entier** — c'est l'objet de la demande — plus la matrice des musiciens, plus la fiche d'une personne. **Rien pour un visiteur sans compte** (l'écran est nominatif) : `read: if signedIn()`, comme les profils. L'admin voit **en plus** le bouton d'import, l'édition d'une équipe, les noms non rattachés et les écarts. Aucun droit d'écriture ne s'affiche à qui ne l'a pas. |
+| D4 | Qui modifie l'organigramme ? | **Les admins, plus les comptes à qui un admin donne le droit « Équipes »** (Timothée, 18/09/2026 : « il faut pouvoir donner la possibilité à certains de pouvoir modifier et tout l'organigramme »). Le droit est un **booléen `equipes` sur le profil**, coché dans l'administration à côté des droits d'annonces et de notifications — un booléen et non une liste, parce que le droit porte sur **tout** l'organigramme, pas sur une équipe ou une section : un tableau `equipes: string[]` promettrait un découpage par équipe que personne n'a demandé. Deux chemins d'écriture, parce que les deux verrous ne sont pas au même endroit : `equipes/{id}` s'écrit **directement** par ce droit (`isEquipier()` dans `firestore.rules`) ; `users/{uid}.poles` ne s'écrit **jamais depuis le navigateur** — `allow update: if isAdmin()` (l. 75) ne bouge pas — mais par la route serveur **`POST /api/equipes/poles`** (Admin SDK, sur le modèle de `/api/admin/migrer-annonces` et `/api/evenements/inscription`), qui revérifie le même droit avant de recalculer les pôles des comptes touchés. Ainsi personne ne gagne le droit d'écrire un profil : il gagne le droit de **demander un recalcul**, et le serveur n'écrit que le champ `poles`, et seulement ce que les équipes disent. L'écran d'édition vit donc sur **`/equipes`** (visible à qui a le droit) et non dans `/admin`, qui reste fermé aux non-admins. |
+| D5 | Ce que voit un membre ordinaire, ce que voit un admin | **Tout membre connecté voit l'organigramme entier** — c'est l'objet de la demande — plus la matrice des musiciens, plus la fiche d'une personne. **Rien pour un visiteur sans compte** (l'écran est nominatif) : `read: if signedIn()`, comme les profils. Qui tient l'organigramme (admins + droit « Équipes », D4) voit **en plus** l'édition d'une équipe, sur `/equipes` même ; l'admin voit encore, dans `/admin`, le bouton d'import, les noms non rattachés et les écarts. Aucun droit d'écriture ne s'affiche à qui ne l'a pas. |
 | D6 | Comment calculer la matrice, puisque `serviceRoles` ne porte pas l'instrument ? | **Deux sources, toutes deux déjà lues, aucune saisie.** La **présence** d'une case vient de `serviceRoles` (la catégorie est une clé du profil) ; le **libellé** de la case vient du planning quand il nomme l'instrument (`findMyServices` : Piano, Guitare, Batterie, Cajon, Chant, Présidence, Sono/PPT), et retombe sur « Musicien » sinon. Ce repli est visible dans le Sheet lui-même : les colonnes Campus, Paix et Bonté des plannings n'ont qu'une case « musicien », c'est un humain qui y a écrit « Guit., Piano ». Mieux vaut afficher « Musicien » que d'inventer un instrument. |
 | D7 | Que devient « en essai » ? | Un **booléen par membre d'équipe**, affiché en puce discrète à côté du nom. Il **ne change aucun droit** : le pôle est donné quand même. Dans le Sheet, c'est une information d'équipe, pas une permission — Mathys S. « en essai » fait déjà la régie. En faire un demi-droit obligerait à le tester partout (tâches, réunions, notifications). |
 | D8 | Une équipe inconnue à l'import ? | **Signalée, jamais créée.** Les 13 identifiants et leur pôle sont une table en dur (`EQUIPES` dans `src/lib/equipes/organigramme.ts`). Une cellule `TEAM …` qui n'y figure pas ressort dans le compte rendu (« Équipe inconnue : TEAM X — ignorée ») et rien n'est écrit. Une équipe sans pôle choisi n'aurait aucun sens pour les tâches, et une équipe fantôme se remarque moins qu'une ligne de rapport. L'admin la crée ensuite à la main s'il la veut, et choisit son pôle. |
@@ -201,15 +202,23 @@ la page ne défile pas horizontalement.
 ### Règles Firestore (à publier à la main, CLAUDE.md)
 
 ```
+function isEquipier() {
+  return isAdmin() || (hasProfile() && profile().get('equipes', false) == true);
+}
+
 match /equipes/{id} {
   allow read: if signedIn();
-  allow create, update, delete: if isAdmin();
+  allow create, update, delete: if signedIn() && isEquipier();
 }
 ```
 
-`users/{uid}` ne bouge pas (l. 61-77) : l'écriture de `poles` reste admin,
-c'est-à-dire l'écran Équipes. Miroir client : `canVoirEquipes` (connecté) et
-`canEditerEquipes` (admin) dans `src/lib/access.ts`, à côté de `isCoordination`.
+`users/{uid}` ne bouge pas : `allow update: if isAdmin()` reste tel quel, et la
+création interdit désormais aussi de se donner `equipes` (comme `annonces`,
+`notify` et `poles`). L'écriture de `poles` passe par `POST /api/equipes/poles`
+(Admin SDK, `exigerDroitEquipes`), qui n'écrit que ce champ et seulement ce que
+les équipes disent. Miroir client : `canVoirEquipes` (connecté) et
+`canEditerEquipes` (admin ou droit `equipes`) dans `src/lib/access.ts`, à côté
+de `isCoordination`.
 
 ## Écrans
 
@@ -264,10 +273,13 @@ planning. Pour un admin seulement : « Ouvrir dans l'administration ».
   pôle »).
 - **« Équipes inconnues »** et **« Pôle coché hors organigramme »** : deux
   listes courtes, avec un bouton « Décocher » sur la seconde (D10).
-- **Édition d'une équipe** : ajouter un membre (recherche dans les comptes, ou
-  nom libre), le retirer, cocher Référent / en essai, écrire la mention, changer
-  le pôle de l'équipe. Chaque enregistrement **recalcule `poles`** pour les
-  comptes ajoutés et retirés.
+- **Droit « Équipes »** sur la fiche membre : une case, comme les droits
+  d'annonces et de notifications, qui ouvre l'édition de tout l'organigramme (D4).
+- **L'édition d'une équipe n'est pas ici** : elle vit sur `/equipes`, pour que
+  les non-admins qui ont le droit puissent y accéder — `/admin` leur est fermé.
+  Ajouter un membre (recherche dans les comptes, ou nom libre), le retirer,
+  cocher Référent / en essai, écrire la mention, changer le pôle de l'équipe.
+  Chaque enregistrement **recalcule `poles`** pour les comptes ajoutés et retirés.
 - **Fiche membre, bloc « Pôles » (l. 823-851) : en lecture seule.** « DA · Orga
   — via TEAM DA, TEAM ORGA », chaque équipe cliquable. Plus aucune case.
 
@@ -351,8 +363,8 @@ Trois appareils pour tous, captures regardées en 390, 820 et 1280 px.
 - **Toujours** : permissions en double (`src/lib/access.ts` **et**
   `firestore.rules`, règles à publier à la main) ; FR + 中文 ; trois appareils ;
   un seul commit pour le lot.
-- **Demander avant** : ouvrir la modification aux **référents** (route serveur,
-  D4) ; créer un **pôle nouveau** (Traduction, Théologie, Décoration…) ;
+- **Demander avant** : restreindre le droit « Équipes » **à une équipe** plutôt
+  qu'à tout l'organigramme ; créer un **pôle nouveau** (Traduction, Théologie, Décoration…) ;
   calculer entièrement TEAM LOUANGE et TEAM EDD depuis `serviceRoles` au lieu de
   les tenir (aujourd'hui l'écart est **montré**, pas masqué) ; une **page
   publique de profil** ; un **export** de l'organigramme en PDF ou en image ;
@@ -371,4 +383,58 @@ npm run lint
 
 ## Avancement
 
-Rien n'est codé : la spec attend le go de Timothée.
+**Les cinq tranches O1 à O5 sont codées** (18/09/2026, branche
+`lot/16-organigramme`, un seul commit). 21 tests dans `tests/equipes.spec.ts`,
+verts sur les trois appareils (63 exécutions) ; captures regardées à l'œil en
+390, 820 et 1280 px.
+
+- **O1** — `src/types/equipe.ts`, table `EQUIPES` + `parseOrganigramme` +
+  `rattacherNoms` + `polesDesEquipes` dans `src/lib/equipes/organigramme.ts`,
+  `src/lib/firebase/equipes.ts` (REST), `canVoirEquipes` / `canEditerEquipes`
+  dans `access.ts`, bloc `equipes/{id}` et `isEquipier()` dans `firestore.rules`.
+- **O2** — `POST /api/equipes/importer` (Admin SDK) : `fetchSheet("ORGANIGRAMME")`,
+  rattachement, réécriture des 13 documents, recalcul des pôles, compte rendu ;
+  carte et listes dans l'onglet « Équipes » de `/admin`.
+- **O3** — `/equipes` (cartes d'équipe, fiche en panneau), ligne « Équipes » dans
+  *Moi*, 73 clés `equipes.*` en FR et en 中文.
+- **O4** — `matriceMusiciens` dans `src/lib/equipes/musiciens.ts` : tableau sur
+  ordinateur et tablette, cartes sur téléphone.
+- **O5** — `POST /api/equipes/poles` (la seule écriture de profil du lot),
+  édition d'une équipe sur `/equipes`, bloc « Pôles » de la fiche membre passé en
+  lecture seule (« DA — via TEAM DA »), liste « Pôle coché hors organigramme »
+  avec son bouton « Décocher ».
+
+### Écarts avec la spec, et pourquoi
+
+1. **D4 changée** (demande de Timothée du 18/09/2026) : droit `equipes: boolean`
+   sur le profil, `equipes/{id}` écrit directement, `users/{uid}.poles` posé par
+   une route serveur. Voir le tableau des décisions.
+2. **L'édition vit sur `/equipes`, pas dans `/admin`** : conséquence directe de
+   D4 — `/admin` est fermé aux non-admins, l'écran d'édition devait en sortir.
+   `/admin` garde l'import, les listes et le droit à cocher.
+3. **`equipes/{id}` ne stocke ni `nom`, ni `soustitre`, ni `ordre`** : la table
+   `EQUIPES` les tient déjà, et les écrans affichent la traduction
+   `equipes.team.<id>`. Les recopier dans Firestore aurait fait deux vérités
+   pour la même chose, sans lecteur.
+4. **`matriceMusiciens` rend des clés de libellé** (`piano`, `musicien`) et non
+   des mots français : le 中文 sort du même calcul.
+5. **Cartes en colonnes CSS** et non en grille : les cartes vont de deux lignes
+   (TEAM DÉCORATION) à trente-trois (TEAM EDD) ; une grille laissait de grands
+   trous, vus à l'œil sur la planche du 18/09/2026.
+6. **Le badge « Référent » ne s'affiche pas quand la mention le dit déjà**
+   (« Charlie L. — Référente »), sinon le mot était écrit deux fois.
+
+### À trancher par Timothée
+
+- **TEAM DÉCORATION → pôle `da`** et **TEAM THÉOLOGIE → pôle `orga`** : les deux
+  rattachements laissés ouverts par D2 sont posés sur la recommandation de la
+  spec. `evenement` se défend pour la décoration. Un changement ne coûte qu'une
+  ligne dans `EQUIPES` **ou** le sélecteur de pôle de la carte, suivi d'un
+  passage de `/api/equipes/poles`.
+- **Traductions 中文 des 13 noms d'équipe** (D11) : à relire.
+
+### À publier à la main
+
+`firestore.rules` doit être **publiée dans la console Firebase** : le bloc
+`equipes/{id}` + `isEquipier()`, et la garde `equipes == false` ajoutée à la
+création d'un profil. Sans cela, `/equipes` ne lit rien et l'édition échoue.

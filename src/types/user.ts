@@ -57,6 +57,10 @@ export interface UserProfile {
    *  (catégories culte/groupe/EDD, ou "*" pour tout le monde) — attribué par les
    *  admins uniquement. Cf. src/lib/push/audiences.ts. */
   notify: string[];
+  /** Droit de tenir l'organigramme (lot 16) : ajouter, retirer et déplacer
+   *  n'importe qui dans n'importe quelle équipe — attribué par les admins
+   *  uniquement. Cf. canEditerEquipes (src/lib/access.ts). */
+  equipes?: boolean;
   /** Pôles de coordination (« evenement » : programmes de scène) — attribués par
    *  les admins uniquement. Absent = aucun. */
   poles?: Pole[];

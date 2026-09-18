@@ -65,6 +65,28 @@ export function isCoordination(
   return isAdminUser(user) || (profile?.poles ?? []).includes("evenement");
 }
 
+/** Organigramme (lot 16, docs/spec-organigramme.md) : tout membre connecté le
+ *  voit — c'est l'objet de la demande ; rien pour un visiteur sans compte,
+ *  l'écran est nominatif. Miroir serveur : `read: if signedIn()` sur
+ *  equipes/{id} dans firestore.rules. */
+export function canVoirEquipes(user: AuthUser | null): boolean {
+  return user !== null;
+}
+
+/** Modifier l'organigramme : les admins, plus les comptes à qui un admin a
+ *  donné le droit « Équipes » (Timothée, 18/09/2026 — D4 rouverte). Le droit
+ *  porte sur tout l'organigramme, d'où un booléen et non une liste. Miroir
+ *  serveur : isEquipier() dans firestore.rules pour equipes/{id}, et
+ *  exigerDroitEquipes (src/lib/equipes/serveur.ts) pour les pôles, qui restent
+ *  écrits par le serveur seul — `allow update` des profils ne bouge pas. */
+export function canEditerEquipes(
+  user: AuthUser | null,
+  profile: { equipes?: boolean } | null
+): boolean {
+  if (!user) return false;
+  return isAdminUser(user) || profile?.equipes === true;
+}
+
 /** Créneau sur scène : son auteur + la coordination. Miroir : programmes/{id}/creneaux dans firestore.rules. */
 export function canEditCreneau(
   user: AuthUser,

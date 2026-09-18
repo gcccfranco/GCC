@@ -7,7 +7,7 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "next-themes";
-import { CalendarDays, UserRound, BookOpen, MessageSquareHeart, TriangleAlert, Megaphone, ShieldCheck, Globe, Moon, LogOut, ListChecks } from "lucide-react";
+import { BookOpen, CalendarDays, Globe, ListChecks, LogOut, Megaphone, MessageSquareHeart, Moon, Network, ShieldCheck, TriangleAlert, UserRound } from "lucide-react";
 import { RequireAuth } from "@/components/auth/RequireAuth";
 import { PageTitle } from "@/components/layout/PageTitle";
 import { Group, GroupRow } from "@/components/ui/group";
@@ -50,6 +50,7 @@ function MoiClient() {
 
       <Group>
         <GroupRow href="/mes-services" leading={<CalendarDays />} chevron>{t("common.header.myServices")}</GroupRow>
+        <GroupRow href="/equipes" leading={<Network />} chevron>{t("equipes.title")}</GroupRow>
         {poles.length > 0 && (
           <GroupRow href="/taches" leading={<ListChecks />} trailing={mesTaches > 0 ? String(mesTaches) : undefined} chevron>
             {t("taches.mesTaches")}

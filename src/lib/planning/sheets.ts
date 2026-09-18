@@ -8,7 +8,7 @@ function csvUrl(sheet: string) {
   return BASE_URL + encodeURIComponent(sheet)
 }
 
-function parseCSV(txt: string): string[][] {
+export function parseCSV(txt: string): string[][] {
   const rows: string[][] = []
   for (const line of txt.split("\n")) {
     if (!line.trim()) continue
@@ -67,7 +67,7 @@ export function parseDate(s: string): string | null {
 const SHEET_TTL_MS = 5 * 60_000
 const sheetCache = new Map<string, { at: number; rows: string[][] }>()
 
-async function fetchSheet(sheet: string): Promise<string[][]> {
+export async function fetchSheet(sheet: string): Promise<string[][]> {
   const hit = sheetCache.get(sheet)
   if (hit && Date.now() - hit.at < SHEET_TTL_MS) return hit.rows
   try {
