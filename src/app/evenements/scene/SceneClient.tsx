@@ -5,6 +5,10 @@
 // coordination (pôle Événement + admins) crée, modifie, affiche, masque et
 // supprime les programmes en haut de la même page. Sans programme affiché, les
 // membres ne voient pas l'onglet ; la coordination y crée le suivant.
+// Lot 12 : le programme affiché est **calculé** (currentProgramme), jamais
+// écrit — après le jour J l'onglet remercie sept jours, puis le programme
+// s'archive et la bascule prend le suivant dès l'ouverture de ses
+// réservations. `visible` n'est plus que l'épinglage de la coordination.
 
 import { useCallback, useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
@@ -14,7 +18,9 @@ import { isCoordination } from "@/lib/access"
 import {
   createProgramme, deleteProgramme, listCreneaux, listProgrammes, updateProgramme,
 } from "@/lib/firebase/programmes"
-import { lastSundayBefore, reservationsClosed, sundaysBetween, todayIso } from "@/lib/scene/dimanches"
+import {
+  archiveDate, currentProgramme, lastSundayBefore, programmeState, reservationsClosed, sundaysBetween, todayIso,
+} from "@/lib/scene/dimanches"
 import { reportConflict } from "@/lib/scene/reportConflict"
 import { fdFullL, fdLongL } from "@/lib/planning/utils"
 import { PLANNING_COLORS } from "@/lib/serviceColors"
@@ -29,7 +35,7 @@ type Volet = "entrainements" | "programme"
 
 async function fetchAll(): Promise<{ programmes: Programme[]; creneaux: Creneau[] }> {
   const programmes = await listProgrammes()
-  const current = programmes.find((p) => p.visible)
+  const current = currentProgramme(programmes, todayIso())
   return { programmes, creneaux: current ? await listCreneaux(current.id) : [] }
 }
 
@@ -41,6 +47,7 @@ export function SceneClient() {
   const [creneaux, setCreneaux] = useState<Creneau[]>([])
   const [volet, setVolet] = useState<Volet>("entrainements")
   const [form, setForm] = useState<"new" | Programme | null>(null)
+  const [ordre, setOrdre] = useState<string | null>(null)
   const [error, setError] = useState("")
 
   const reload = useCallback(async () => {
@@ -55,15 +62,23 @@ export function SceneClient() {
   }, [user])
 
   const coordination = isCoordination(user, profile)
-  const current = programmes?.find((p) => p.visible) ?? null
-  const hidden = programmes?.filter((p) => !p.visible) ?? []
+  const today = todayIso()
+  const current = programmes ? currentProgramme(programmes, today) : null
+  const state = current ? programmeState(current, today) : null
+  // Tous les autres programmes : en attente, à venir ou archivés.
+  const others = programmes?.filter((p) => p.id !== current?.id) ?? []
+  const next = current
+    ? others.find((p) => p.jourJ > current.jourJ && programmeState(p, today) !== "archived") ?? null
+    : null
 
   async function run(action: () => Promise<void>) {
     setError("")
     try { await action(); await reload() } catch { setError(t("planning.programmes.error")) }
   }
 
-  /** Un seul programme affiché à la fois : afficher celui-ci masque les autres. */
+  /** « Afficher » épingle ce programme, et désépingle les autres : un seul
+   *  affiché à la fois. Un programme choisi automatiquement n'est épinglé nulle
+   *  part, donc forcer le suivant ne coûte qu'une écriture. */
   async function show(id: string) {
     for (const p of programmes ?? []) if (p.visible && p.id !== id) await updateProgramme(p.id, { visible: false })
     await updateProgramme(id, { visible: true })
@@ -77,11 +92,25 @@ export function SceneClient() {
       if (editing) {
         await updateProgramme(editing.id, values)
       } else {
-        for (const p of programmes ?? []) if (p.visible) await updateProgramme(p.id, { visible: false })
-        await createProgramme({ ...values, visible: true, passages: [], createdBy: user.uid, updatedAt: new Date().toISOString() })
+        // Lot 12 : le programme créé n'est pas épinglé et ne vole l'onglet à
+        // personne ; il apparaîtra quand ses réservations ouvriront.
+        await createProgramme({ ...values, visible: false, passages: [], createdBy: user.uid, updatedAt: new Date().toISOString() })
       }
       setForm(null)
     })
+  }
+
+  /** Dépli « Voir l'ordre de passage », en lecture seule ; un seul ouvert à la fois. */
+  function ordreDepli(p: Programme) {
+    const open = ordre === p.id
+    return (
+      <div className="w-full space-y-2">
+        <Button size="sm" variant="ghost" onClick={() => setOrdre(open ? null : p.id)}>
+          {t(open ? "planning.scene.hideOrdre" : "planning.scene.viewOrdre")}
+        </Button>
+        {open && <OrdrePassage passages={p.passages} canEdit={false} onSave={async () => undefined} />}
+      </div>
+    )
   }
 
   function remove(p: Programme) {
@@ -114,13 +143,22 @@ export function SceneClient() {
           {current && (
             <>
               <Button size="sm" variant="outline" onClick={() => setForm(current)}>{t("planning.scene.editProgramme")}</Button>
-              <Button size="sm" variant="outline" onClick={() => run(() => updateProgramme(current.id, { visible: false }))}>{t("planning.programmes.hide")}</Button>
+              {/* Rien à désépingler sur un programme choisi automatiquement : pas de bouton. */}
+              {current.visible && (
+                <Button size="sm" variant="outline" onClick={() => run(() => updateProgramme(current.id, { visible: false }))}>{t("planning.programmes.hide")}</Button>
+              )}
             </>
           )}
           {!showForm && (
             <Button size="sm" variant="outline" onClick={() => setForm("new")}>{t("planning.scene.newProgramme")}</Button>
           )}
         </div>
+      )}
+
+      {coordination && current && !current.visible && (
+        <p className="text-xs text-muted-foreground">
+          {t("planning.scene.autoChosen", { date: fdLongL(current.debut, i18n.language) })}
+        </p>
       )}
 
       {coordination && showForm && (
@@ -134,7 +172,25 @@ export function SceneClient() {
         />
       )}
 
-      {current ? (
+      {current && state === "passed" ? (
+        <section className="bg-card shadow-soft rounded-xl p-4 space-y-2" aria-labelledby="scene-passed-title">
+          <h3 id="scene-passed-title" className="text-sm font-bold" style={{ color: COLOR }}>
+            {t("planning.scene.passed", { nom: current.nom })}
+          </h3>
+          <p className="text-sm text-muted-foreground">{t("planning.scene.passedHint")}</p>
+          {next && (
+            <p className="text-sm">{t("planning.scene.nextSoon", { nom: next.nom, date: fdLongL(next.debut, i18n.language) })}</p>
+          )}
+          {coordination && (
+            <>
+              <p className="text-xs text-muted-foreground">
+                {t("planning.scene.willArchive", { date: fdLongL(archiveDate(current.jourJ), i18n.language) })}
+              </p>
+              {ordreDepli(current)}
+            </>
+          )}
+        </section>
+      ) : current ? (
         <>
           {!closed && (
             <div className="flex gap-2">
@@ -170,16 +226,24 @@ export function SceneClient() {
         !coordination && <p className="text-sm text-muted-foreground">{t("planning.scene.noCurrent")}</p>
       )}
 
-      {coordination && hidden.length > 0 && (
+      {coordination && others.length > 0 && (
         <section className="space-y-2" aria-label={t("planning.scene.others")}>
           <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{t("planning.scene.others")}</h3>
           <ul className="space-y-2">
-            {hidden.map((p) => {
+            {others.map((p) => {
               const dimanches = sundaysBetween(p.debut, p.jourJ)
+              const st = programmeState(p, today)
               return (
                 <li key={p.id} className="bg-card shadow-soft rounded-xl px-4 py-3 flex flex-wrap items-center justify-between gap-2">
                   <div className="text-sm">
-                    <p className="font-semibold">{p.nom}</p>
+                    <p className="font-semibold flex items-center gap-2">
+                      {p.nom}
+                      {(st === "archived" || st === "open") && (
+                        <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: `${COLOR}18`, color: COLOR }}>
+                          {t(st === "archived" ? "planning.programmes.archived" : "planning.programmes.waiting")}
+                        </span>
+                      )}
+                    </p>
                     <p className="text-xs text-muted-foreground">
                       {t("planning.programmes.jourJLabel", { date: fdLongL(p.jourJ, i18n.language) })}
                       {" · "}
@@ -194,6 +258,7 @@ export function SceneClient() {
                     <Button size="sm" variant="ghost" onClick={() => setForm(p)}>{t("planning.programmes.edit")}</Button>
                     <Button size="sm" variant="ghost" className="text-destructive" onClick={() => remove(p)}>{t("planning.programmes.delete")}</Button>
                   </div>
+                  {ordreDepli(p)}
                 </li>
               )
             })}
