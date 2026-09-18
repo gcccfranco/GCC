@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
-import { echeancesDe, lignesDeTache, grouperLignes, dimancheApres } from "../src/lib/taches/echeances";
+import { echeancesDe, lignesDeTache, grouperLignes, dimancheApres, aFairePour } from "../src/lib/taches/echeances";
 import { polesDe, isPoleMember, canSeeEvenement, canCreateEvenement, creatableEvenementPours } from "../src/lib/access";
 import type { Tache, Fois } from "../src/types/tache";
 import { nouvelleTacheMessage, tacheFaiteMessage, rappelsDuJour, ligneRappelTache, corpsAvecTaches } from "../src/lib/taches/messages";
@@ -25,7 +25,11 @@ function tache(over: Partial<Tache> = {}): Tache {
     ...over,
   };
 }
-const fait = (date: string, le = `${date}T09:00:00Z`): Fois => ({ date, parUid: "u", parNom: "Ruth K.", le });
+const fait = (date: string, le = `${date}T09:00:00Z`): Fois =>
+  ({ date, parUid: "u", parNom: "Ruth K.", le, etat: "terminee", debutLe: "" });
+/** Une fois commencée mais pas terminée (lot 13). */
+const enCours = (date: string, debutLe = `${date}T09:00:00Z`): Fois =>
+  ({ date, parUid: "u", parNom: "Ruth K.", le: debutLe, etat: "encours", debutLe });
 
 // ── Échéances ───────────────────────────────────────────────────────────────
 
@@ -155,10 +159,14 @@ test("un membre du pôle voit ses tâches rangées et en coche une, qui passe da
   await expect(groupe(page, "En retard").getByText("Affiche Noël")).toBeVisible();
   await expect(groupe(page, "Cette semaine").getByText("Fond PPT")).toBeVisible();
 
-  await groupe(page, "Cette semaine").getByRole("checkbox", { name: /Fond PPT/ }).click();
+  // Deux touches depuis le lot 13 : En cours, puis Terminé.
+  const cercle = groupe(page, "Cette semaine").getByRole("checkbox", { name: /Fond PPT/ });
+  await cercle.click();
+  await expect(cercle).toHaveAttribute("aria-checked", "mixed");
+  await cercle.click();
   await expect(groupe(page, "Faites").getByText("Fond PPT")).toBeVisible();
-  const ecrit = db.writes.find((w) => w.path === `poles/da/taches/t1/fois/${jour(0)}`);
-  expect(ecrit?.data).toMatchObject({ date: jour(0), parUid: "uid-da", parNom: "Ruth Kouassi" });
+  expect(db.doc(`poles/da/taches/t1/fois/${jour(0)}`))
+    .toMatchObject({ date: jour(0), parUid: "uid-da", parNom: "Ruth Kouassi", etat: "terminee" });
 });
 
 test("créer une tâche pour tout le pôle", async ({ page }) => {
@@ -179,8 +187,12 @@ test("une tâche répétée chaque semaine : cochée, la fois suivante apparaît
     "poles/da/taches/t1": tacheDoc({ echeance: jour(-7), repetition: { rythme: "semaine" } }),
     [`poles/da/taches/t1/fois/${jour(-7)}`]: { date: jour(-7), parUid: "uid-da", parNom: "Ruth Kouassi", le: new Date().toISOString() },
   }, "/taches/da");
-  await expect(groupe(page, "Plus tard")).toHaveCount(0);
-  await groupe(page, "Cette semaine").getByRole("checkbox", { name: /Fond PPT/ }).click();
+  const cercle = groupe(page, "Cette semaine").getByRole("checkbox", { name: /Fond PPT/ });
+  await expect(cercle).toHaveAttribute("aria-checked", "false");
+  await cercle.click();
+  await expect(cercle).toHaveAttribute("aria-checked", "mixed");
+  await cercle.click();
+  await expect(groupe(page, "Faites").getByText("Fond PPT")).toBeVisible();
   await expect(groupe(page, "Plus tard").getByText("Fond PPT")).toBeVisible();
 });
 
@@ -255,7 +267,10 @@ test("cocher une tâche qui prévient la régie : la route part, la régie est d
   await signInAs(page, MEMBRE_DA, {
     "poles/da/taches/t1": tacheDoc({ prevenir: { regie: "Culte Francophone" } }),
   }, "/taches/da");
-  await groupe(page, "Cette semaine").getByRole("checkbox", { name: /Fond PPT/ }).click();
+  const cercle = groupe(page, "Cette semaine").getByRole("checkbox", { name: /Fond PPT/ });
+  await cercle.click();
+  await expect(cercle).toHaveAttribute("aria-checked", "mixed");
+  await cercle.click();
   await expect(page.getByRole("status")).toHaveText("Régie prévenue.");
   expect(recu).toEqual({ pole: "da", tacheId: "t1", date: jour(0) });
 });
@@ -268,10 +283,16 @@ test("cocher : sans régie reliée à un compte, on le dit ; un pôle prévenu e
     "poles/da/taches/t1": tacheDoc({ prevenir: { regie: "Culte Francophone" } }),
     "poles/da/taches/t2": tacheDoc({ titre: "Visuel", prevenir: { pole: "media" } }),
   }, "/taches/da");
-  await groupe(page, "Cette semaine").getByRole("checkbox", { name: /Fond PPT/ }).click();
+  const terminer = async (titre: RegExp) => {
+    const cercle = groupe(page, "Cette semaine").getByRole("checkbox", { name: titre });
+    await cercle.click();
+    await expect(cercle).toHaveAttribute("aria-checked", "mixed");
+    await cercle.click();
+  };
+  await terminer(/Fond PPT/);
   await expect(page.getByRole("status")).toHaveText("Personne n'a été prévenu : aucune régie reliée à un compte.");
   reponse = { ok: true, notified: 2, linked: true, cible: "pole" };
-  await groupe(page, "Cette semaine").getByRole("checkbox", { name: /Visuel/ }).click();
+  await terminer(/Visuel/);
   await expect(page.getByRole("status")).toHaveText("Pôle Média prévenu.");
 });
 
@@ -345,4 +366,173 @@ test("créer une réunion de pôle : pas d'inscriptions", async ({ page }) => {
   const created = db.writes.find((w) => w.method === "POST" && w.path.startsWith("evenements/"));
   expect(created?.data).toMatchObject({ pour: "pole:da", inscriptions: "fermees", sansCompte: false, placesMax: null });
   await expect.poll(() => pushed).toBe(true);
+});
+
+// ── Lot 13 : rythme annuel, « en cours », relances (docs/spec-taches-annuelles.md) ──
+
+test("échéances : chaque année, le même jour du même mois", () => {
+  const an = tache({ echeance: "2026-12-10", repetition: { rythme: "an" } });
+  expect(echeancesDe(an, "2026-01-01", "2029-01-01")).toEqual(["2026-12-10", "2027-12-10", "2028-12-10"]);
+  // Jamais avant la première échéance, et le calcul repart toujours d'elle.
+  expect(echeancesDe(an, "2027-01-01", "2029-12-31")).toEqual(["2027-12-10", "2028-12-10", "2029-12-10"]);
+  expect(echeancesDe(an, "2024-01-01", "2026-06-30")).toEqual([]);
+});
+
+test("échéances : le 29 février se replie sur le 28 les années non bissextiles", () => {
+  const bissextile = tache({ echeance: "2028-02-29", repetition: { rythme: "an" } });
+  expect(echeancesDe(bissextile, "2028-01-01", "2032-12-31"))
+    .toEqual(["2028-02-29", "2029-02-28", "2030-02-28", "2031-02-28", "2032-02-29"]);
+  // Le 31 janvier ne déborde pas sur février : aucune dérive d'année en année.
+  const trenteEtUn = tache({ echeance: "2026-01-31", repetition: { rythme: "an" } });
+  expect(echeancesDe(trenteEtUn, "2026-01-01", "2028-12-31")).toEqual(["2026-01-31", "2027-01-31", "2028-01-31"]);
+});
+
+test("une échéance annuelle oubliée reste en retard, puis laisse la place 7 jours avant la suivante", () => {
+  const an = tache({ echeance: "2026-12-10", repetition: { rythme: "an" } });
+  expect(lignesDeTache(an, [], "2027-06-10").map((l) => l.date)).toEqual(["2026-12-10"]);
+  expect(lignesDeTache(an, [], "2027-12-02").map((l) => l.date)).toEqual(["2026-12-10"]);
+  expect(lignesDeTache(an, [], "2027-12-03").map((l) => l.date)).toEqual(["2027-12-10"]);
+});
+
+test("une fois en cours n'est pas faite : elle reste dans son groupe de date", () => {
+  const today = "2026-12-14";
+  const t1 = tache({ id: "a", echeance: "2026-12-10" });
+  const lignes = lignesDeTache(t1, [enCours("2026-12-10", "2026-12-11T09:00:00Z")], today);
+  expect(lignes.map((l) => l.fois?.etat)).toEqual(["encours"]);
+  const g = grouperLignes(lignes, today);
+  expect(g.enRetard.map((l) => l.tache.id)).toEqual(["a"]);
+  expect(g.faites).toEqual([]);
+});
+
+test("une fois en cours ne disparaît jamais ; une fois terminée sort après 30 jours", () => {
+  const hebdo = tache({ echeance: "2026-09-18", repetition: { rythme: "semaine" } });
+  const commencee = lignesDeTache(hebdo, [enCours("2026-09-18", "2026-09-19T09:00:00Z")], "2026-11-20");
+  expect(commencee.filter((l) => l.fois).map((l) => l.date)).toEqual(["2026-09-18"]);
+  expect(lignesDeTache(hebdo, [fait("2026-09-18", "2026-09-19T09:00:00Z")], "2026-11-20").filter((l) => l.fois)).toEqual([]);
+});
+
+test("« Mes tâches » compte une fois en cours, pas une fois terminée", () => {
+  const today = "2026-12-14";
+  const mienne = tache({ id: "m", responsableUid: "uid-da", responsableNom: "Ruth", echeance: "2026-12-10" });
+  expect(aFairePour(lignesDeTache(mienne, [enCours("2026-12-10")], today), "uid-da").map((l) => l.date))
+    .toEqual(["2026-12-10"]);
+  expect(aFairePour(lignesDeTache(mienne, [fait("2026-12-10", "2026-12-13T09:00:00Z")], today), "uid-da")).toEqual([]);
+});
+
+test("rappel « en cours » : rien avant l'échéance, puis une ligne chaque matin", () => {
+  const ppt = tache({ id: "ppt", echeance: "2026-12-10" });
+  const items = (fois: Fois[]) => [{ tache: ppt, fois }];
+  const debut = enCours("2026-12-10", "2026-12-08T09:00:00Z");
+  // Commencée : plus de « À faire » à J-1, et rien le jour même.
+  expect(rappelsDuJour(items([debut]), "2026-12-09")).toEqual([]);
+  expect(rappelsDuJour(items([debut]), "2026-12-10")).toEqual([]);
+  // Le lendemain puis le surlendemain : une ligne « en cours », jamais « En retard ».
+  expect(rappelsDuJour(items([debut]), "2026-12-11").map((r) => `${r.quand}:${r.depuis}`)).toEqual(["encours:3"]);
+  expect(rappelsDuJour(items([debut]), "2026-12-12").map((r) => `${r.quand}:${r.depuis}`)).toEqual(["encours:4"]);
+  // Une fois d'avant le lot 13, sans debutLe : la ligne part quand même, sans durée.
+  expect(rappelsDuJour(items([{ ...debut, debutLe: "" }]), "2026-12-11").map((r) => r.depuis)).toEqual([undefined]);
+  // Sans document, le rappel « En retard » part comme avant.
+  expect(rappelsDuJour(items([]), "2026-12-11").map((r) => r.quand)).toEqual(["retard"]);
+  // Terminée : plus rien.
+  expect(rappelsDuJour(items([fait("2026-12-10")]), "2026-12-11")).toEqual([]);
+});
+
+test("ligne « en cours » : depuis n jours, aujourd'hui ou sans date, en français et en 中文", () => {
+  const base = { tache: tache({ titre: "Fond PPT", pole: "da" as const }), date: "2026-12-10", quand: "encours" as const };
+  expect(ligneRappelTache({ ...base, depuis: 3 }, "fr")).toBe("En cours depuis 3 jours : Fond PPT (DA)");
+  expect(ligneRappelTache({ ...base, depuis: 1 }, "fr")).toBe("En cours depuis 1 jour : Fond PPT (DA)");
+  expect(ligneRappelTache({ ...base, depuis: 0 }, "fr")).toBe("En cours depuis aujourd'hui : Fond PPT (DA)");
+  expect(ligneRappelTache(base, "fr")).toBe("En cours : Fond PPT (DA)");
+  expect(ligneRappelTache({ ...base, depuis: 3 }, "zh-CN")).toBe("进行中 3 天：Fond PPT（美工）");
+  expect(ligneRappelTache({ ...base, depuis: 0 }, "zh-CN")).toBe("今天开始：Fond PPT（美工）");
+  expect(ligneRappelTache(base, "zh-CN")).toBe("进行中：Fond PPT（美工）");
+  // Une seule notification : la ligne s'ajoute au rappel de service du jour.
+  expect(corpsAvecTaches("Dimanche 13 décembre (dans 3 jours) : Culte Franco (Piano)", [{ ...base, depuis: 3 }], "fr"))
+    .toBe("Dimanche 13 décembre (dans 3 jours) : Culte Franco (Piano)\nEn cours depuis 3 jours : Fond PPT (DA)");
+});
+
+test("le cercle cycle À faire → En cours → Terminé → À faire", async ({ page }) => {
+  let appels = 0;
+  await page.route("**/api/taches/fait", (route) => {
+    appels++;
+    return route.fulfill({ contentType: "application/json", body: JSON.stringify({ ok: true, notified: 1, linked: true, cible: "regie" }) });
+  });
+  const db = await signInAs(page, MEMBRE_DA, {
+    "poles/da/taches/t1": tacheDoc({ prevenir: { regie: "Culte Francophone" } }),
+  }, "/taches/da");
+  const chemin = `poles/da/taches/t1/fois/${jour(0)}`;
+  const cercle = page.getByRole("checkbox", { name: /Fond PPT/ });
+  await expect(cercle).toHaveAttribute("aria-checked", "false");
+
+  await cercle.click();
+  await expect(cercle).toHaveAttribute("aria-checked", "mixed");
+  await expect(groupe(page, "Cette semaine").getByText(/En cours/)).toBeVisible();
+  expect(db.doc(chemin)).toMatchObject({ etat: "encours", parNom: "Ruth Kouassi" });
+  expect(appels, "on ne prévient personne sur une tâche seulement commencée").toBe(0);
+
+  await cercle.click();
+  await expect(cercle).toHaveAttribute("aria-checked", "true");
+  await expect(page.getByRole("status")).toHaveText("Régie prévenue.");
+  expect(db.doc(chemin)).toMatchObject({ etat: "terminee" });
+  expect(appels).toBe(1);
+
+  await cercle.click();
+  await expect(cercle).toHaveAttribute("aria-checked", "false");
+  expect(db.doc(chemin)).toBeUndefined();
+  expect(appels).toBe(1);
+});
+
+test("la ligne d'une fois en cours dit depuis quand et par qui", async ({ page }) => {
+  await signInAs(page, MEMBRE_DA, {
+    "poles/da/taches/t1": tacheDoc({ echeance: jour(-3) }),
+    [`poles/da/taches/t1/fois/${jour(-3)}`]: {
+      date: jour(-3), parUid: "uid-da", parNom: "Ruth Kouassi", le: `${jour(-2)}T09:00:00Z`,
+      etat: "encours", debutLe: `${jour(-2)}T09:00:00Z`,
+    },
+  }, "/taches/da");
+  const retard = groupe(page, "En retard");
+  await expect(retard.getByText("En cours depuis 2 jours")).toBeVisible();
+  await expect(retard.getByText("Commencée par Ruth Kouassi")).toBeVisible();
+  await expect(groupe(page, "Faites")).toHaveCount(0);
+});
+
+test("le formulaire propose « Chaque année », sans semaine du mois", async ({ page }) => {
+  const db = await signInAs(page, MEMBRE_DA, {}, "/taches/da");
+  await page.getByRole("button", { name: "Nouvelle tâche" }).click();
+  const form = page.getByRole("dialog", { name: "Nouvelle tâche" });
+  await form.getByLabel("Titre").fill("Fond PPT de Noël");
+  await form.getByLabel("Échéance").fill(jour(2));
+  await form.getByLabel("Répétition").selectOption({ label: "Chaque année" });
+  await expect(form.getByText("Chaque année à la même date.")).toBeVisible();
+  await expect(form.getByLabel("Quelle semaine du mois")).toHaveCount(0);
+  await form.getByRole("button", { name: "Enregistrer" }).click();
+  await expect(form).toHaveCount(0);
+  await expect(page.getByText("Fond PPT de Noël")).toBeVisible();
+  const cree = db.writes.find((w) => w.method === "POST" && w.path.startsWith("poles/da/taches/"));
+  expect(cree?.data).toMatchObject({ titre: "Fond PPT de Noël", echeance: jour(2), repetition: { rythme: "an" } });
+});
+
+/** Capture à regarder à l'œil (PW_CAPTURES=<dossier>), une par appareil. */
+async function capture(page: Page, name: string) {
+  const dir = process.env.PW_CAPTURES;
+  if (dir) await page.screenshot({ path: `${dir}/${name}-${test.info().project.name}.png` });
+}
+
+test("capture : les trois états sur la page d'un pôle", async ({ page }) => {
+  await signInAs(page, MEMBRE_DA, {
+    "poles/da/taches/t1": tacheDoc({ titre: "Fond PPT de Noël", echeance: jour(-4), repetition: { rythme: "an" } }),
+    [`poles/da/taches/t1/fois/${jour(-4)}`]: {
+      date: jour(-4), parUid: "uid-da", parNom: "Ruth Kouassi", le: `${jour(-1)}T09:00:00Z`,
+      etat: "encours", debutLe: `${jour(-1)}T09:00:00Z`,
+    },
+    "poles/da/taches/t2": tacheDoc({ titre: "Affiche de la retraite", echeance: jour(1) }),
+    "poles/da/taches/t3": tacheDoc({ titre: "Vidéo d'annonce", echeance: jour(-2) }),
+    [`poles/da/taches/t3/fois/${jour(-2)}`]: {
+      date: jour(-2), parUid: "uid-da", parNom: "Ruth Kouassi", le: `${jour(-1)}T18:00:00Z`,
+      etat: "terminee", debutLe: `${jour(-2)}T09:00:00Z`,
+    },
+  }, "/taches/da");
+  await expect(groupe(page, "En retard").getByText("En cours depuis 1 jour")).toBeVisible();
+  await expect(groupe(page, "Faites").getByText("Vidéo d'annonce")).toBeVisible();
+  await capture(page, "taches-trois-etats");
 });

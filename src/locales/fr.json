@@ -1674,6 +1674,12 @@
     },
     "pourTous": "Tout le pôle",
     "faitePar": "Faite par {{nom}}",
+    "commenceePar": "Commencée par {{nom}}",
+    "enCoursDepuis_one": "En cours depuis {{count}} jour",
+    "enCoursDepuis_other": "En cours depuis {{count}} jours",
+    "enCoursAujourdhui": "En cours depuis aujourd'hui",
+    "enCoursSansDate": "En cours",
+    "anAide": "Chaque année à la même date.",
     "cocher": "{{titre}}, {{date}}",
     "ouvrirLien": "Ouvrir le lien",
     "champs": {
@@ -1690,7 +1696,8 @@
       "aucun": "Une seule fois",
       "semaine": "Chaque semaine",
       "2semaines": "Toutes les deux semaines",
-      "mois": "Chaque mois"
+      "mois": "Chaque mois",
+      "an": "Chaque année"
     },
     "rang": {
       "1": "1re semaine",

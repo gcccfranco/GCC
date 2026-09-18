@@ -28,6 +28,11 @@ export async function POST(req: NextRequest) {
   if (!tache) return NextResponse.json({ error: "Tâche introuvable" }, { status: 404 });
   const fois = await adminDb().collection("poles").doc(pole).collection("taches").doc(tacheId).collection("fois").doc(date).get();
   if (!fois.exists) return NextResponse.json({ error: "Pas encore cochée" }, { status: 400 });
+  // Lot 13 : on ne prévient le pôle suivant que sur une tâche terminée, jamais
+  // sur une tâche seulement commencée (un document d'avant le lot n'a pas d'état).
+  if (((fois.data()?.etat as string) ?? "terminee") !== "terminee") {
+    return NextResponse.json({ error: "Pas encore terminée" }, { status: 400 });
+  }
   if (!tache.prevenir) return NextResponse.json({ ok: true, notified: 0, linked: true, cible: null });
 
   let uids: string[];

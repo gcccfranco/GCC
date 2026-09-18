@@ -91,7 +91,8 @@ async function sceneCreneaux(db: FirebaseFirestore.Firestore, dates: string[], t
 }
 
 /** Rappels de tâches du jour (lot 7, docs/spec-taches.md) : J-3, J-1 et le
- *  lendemain d'une échéance non cochée, au responsable ou à tout le pôle,
+ *  lendemain d'une échéance sans document, plus les fois « en cours » et en
+ *  retard (lot 13, chaque matin), au responsable ou à tout le pôle,
  *  préférence « Tâches », une fois par (rappel, destinataire). Renvoie, pour
  *  chaque destinataire, ses rappels et les clés notifLog à marquer. */
 async function rappelsTaches(
@@ -103,7 +104,11 @@ async function rappelsTaches(
     snap.docs.map(async (doc) => {
       const pole = doc.ref.parent.parent?.id as TachePole;
       const tache = { ...(doc.data() as Omit<Tache, "id">), id: doc.id, pole };
-      const fois = (await doc.ref.collection("fois").get()).docs.map((f) => ({ ...(f.data() as Fois), date: f.id }));
+      // `etat` et `debutLe` manquent aux documents d'avant le lot 13 : terminés.
+      const fois = (await doc.ref.collection("fois").get()).docs.map((f) => {
+        const d = f.data() as Partial<Fois>;
+        return { parUid: "", parNom: "", le: "", ...d, date: f.id, etat: d.etat ?? "terminee", debutLe: d.debutLe ?? "" };
+      });
       return { tache, fois };
     }),
   );
@@ -114,7 +119,11 @@ async function rappelsTaches(
   const users = await db.collection("users").get();
   const membres = (pole: TachePole) => users.docs.filter((d) => (polesDe(d.data()) as string[]).includes(pole)).map((d) => d.id);
   for (const r of rappels) {
-    const key = `rappel-tache-${r.quand}-${r.tache.pole}-${r.tache.id}-${r.date}`;
+    // « en cours » revient chaque matin : le jour d'envoi entre dans la clé,
+    // sinon la ligne ne sortirait qu'une seule fois (lot 13).
+    const key = r.quand === "encours"
+      ? `rappel-tache-encours-${r.tache.pole}-${r.tache.id}-${r.date}-${today}`
+      : `rappel-tache-${r.quand}-${r.tache.pole}-${r.tache.id}-${r.date}`;
     const cibles = r.tache.responsableUid ? [r.tache.responsableUid] : membres(r.tache.pole);
     for (const u of await freshUids(db, await filterUidsByNotifPref(cibles, "taches"), key)) {
       const entry = out.get(u) ?? { rappels: [], keys: [] };

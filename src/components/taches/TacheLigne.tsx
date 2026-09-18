@@ -1,8 +1,11 @@
 "use client";
 
 import { useTranslation } from "react-i18next";
-import { Check, ExternalLink } from "lucide-react";
-import type { Ligne } from "@/lib/taches/echeances";
+import type { TFunction } from "i18next";
+import { Check, ExternalLink, Minus } from "lucide-react";
+import { joursEntre, type Ligne } from "@/lib/taches/echeances";
+import { todayIso } from "@/lib/scene/dimanches";
+import type { Fois } from "@/types/tache";
 
 /** Date courte d'une échéance : « mer. 16 sept. » / « 9月16日周三 ». */
 export function dateCourte(iso: string, lang: string): string {
@@ -12,8 +15,16 @@ export function dateCourte(iso: string, lang: string): string {
   });
 }
 
-/** Une fois de tâche : cercle à cocher, titre, puis échéance · responsable ·
- *  rythme (et qui l'a faite). Toucher la ligne ouvre la tâche. */
+/** « En cours depuis 3 jours », ou « En cours » faute de date de début. */
+function depuisQuand(t: TFunction, fois: Fois): string {
+  if (!fois.debutLe) return t("taches.enCoursSansDate");
+  const jours = joursEntre(fois.debutLe, todayIso());
+  return jours <= 0 ? t("taches.enCoursAujourdhui") : t("taches.enCoursDepuis", { count: jours });
+}
+
+/** Une fois de tâche : cercle à trois états (À faire → En cours → Terminé),
+ *  titre, puis échéance · responsable · rythme · où ça en est. Toucher la
+ *  ligne ouvre la tâche. */
 export function TacheLigne({ ligne, onToggle, onOpen, poleLabel }: {
   ligne: Ligne;
   onToggle: () => void;
@@ -24,12 +35,16 @@ export function TacheLigne({ ligne, onToggle, onOpen, poleLabel }: {
   const { t, i18n } = useTranslation();
   const { tache, date, fois } = ligne;
   const date_ = dateCourte(date, i18n.language);
+  const enCours = fois?.etat === "encours";
+  const terminee = fois?.etat === "terminee";
   const details = [
     date_,
     poleLabel,
     tache.responsableUid ? tache.responsableNom : t("taches.pourTous"),
     tache.repetition ? t(`taches.rythme.${tache.repetition.rythme}`) : null,
-    fois ? t("taches.faitePar", { nom: fois.parNom }) : null,
+    terminee ? t("taches.faitePar", { nom: fois!.parNom }) : null,
+    enCours ? depuisQuand(t, fois!) : null,
+    enCours ? t("taches.commenceePar", { nom: fois!.parNom }) : null,
   ].filter(Boolean).join(" · ");
 
   return (
@@ -37,17 +52,21 @@ export function TacheLigne({ ligne, onToggle, onOpen, poleLabel }: {
       <button
         type="button"
         role="checkbox"
-        aria-checked={!!fois}
+        aria-checked={enCours ? "mixed" : terminee}
         aria-label={t("taches.cocher", { titre: tache.titre, date: date_ })}
         onClick={onToggle}
         className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full active:scale-[.94] transition-transform duration-150 cursor-pointer"
       >
-        <span className={`flex h-[22px] w-[22px] items-center justify-center rounded-full border-2 ${fois ? "border-foreground bg-foreground text-background" : "border-muted-foreground/50"}`}>
-          {fois && <Check className="h-3.5 w-3.5" strokeWidth={3} aria-hidden />}
+        <span className={`flex h-[22px] w-[22px] items-center justify-center rounded-full border-2 ${
+          terminee ? "border-foreground bg-foreground text-background"
+            : enCours ? "border-foreground text-foreground"
+            : "border-muted-foreground/50"}`}>
+          {terminee && <Check className="h-3.5 w-3.5" strokeWidth={3} aria-hidden />}
+          {enCours && <Minus className="h-3.5 w-3.5" strokeWidth={3} aria-hidden />}
         </span>
       </button>
       <button type="button" onClick={onOpen} disabled={!onOpen} className="min-w-0 flex-1 text-left cursor-pointer disabled:cursor-default">
-        <span className={`block text-base ${fois ? "text-muted-foreground line-through" : "text-foreground"}`}>{tache.titre}</span>
+        <span className={`block text-base ${terminee ? "text-muted-foreground line-through" : "text-foreground"}`}>{tache.titre}</span>
         <span className="block text-sm text-muted-foreground">{details}</span>
       </button>
       {tache.lien && (

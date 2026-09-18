@@ -138,7 +138,9 @@ function Champs({ pole, initial, membres, onSubmit, onDelete, onClose }: Omit<Pa
             <option value="semaine">{t("taches.rythme.semaine")}</option>
             <option value="2semaines">{t("taches.rythme.2semaines")}</option>
             <option value="mois">{t("taches.rythme.mois")}</option>
+            <option value="an">{t("taches.rythme.an")}</option>
           </select>
+          {rythme === "an" && <p className="text-xs text-muted-foreground">{t("taches.anAide")}</p>}
         </div>
         {rythme === "mois" && (
           <div className="space-y-1">
