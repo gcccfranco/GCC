@@ -47,6 +47,10 @@ export interface Evenement {
   inscriptionOuverte?: boolean;
   /** Les personnes sans compte peuvent s'inscrire (nom + invités). */
   sansCompte: boolean;
+  /** Inscription sur un formulaire externe (Google Forms…), lot 11 : rempli,
+   *  l'app n'inscrit plus personne et ne compte ni places ni inscrits.
+   *  Vide = inscription dans l'app. */
+  lienExterne: string;
   contact: string;
   organisateurUid: string;
   organisateurNom: string;

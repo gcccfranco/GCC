@@ -39,6 +39,7 @@ export function ModifierClient() {
         initial={initial}
         pours={pours}
         creation={false}
+        inscrits={evenement.inscrits}
         onSubmit={async (values) => {
           await updateEvenement(evenement.id, values)
           router.push(`/evenements/${evenement.id}`)

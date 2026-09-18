@@ -11,10 +11,12 @@ export const dynamic = "force-dynamic";
 // une place au nom du profil (id = uid, réinscription = mise à jour des
 // invités). Sans compte, si l'organisateur l'autorise : nom + invités, id
 // aléatoire. Le compteur `inscrits` (personnes + invités) et la place sont
-// écrits dans une même transaction ; refus si fermé, pas encore ouvert,
-// terminé, commencé ou complet (période d'inscription, 17/09/2026).
+// écrits dans une même transaction ; refus si l'inscription se fait sur un
+// formulaire externe (lot 11), si c'est fermé, pas encore ouvert, terminé,
+// commencé ou complet (période d'inscription, 17/09/2026).
 
 const REFUS: Record<RefusInscription, string> = {
+  externe: "Les inscriptions se font sur un formulaire externe.",
   fermee: "Les inscriptions sont fermées.",
   pasEncore: "Les inscriptions ne sont pas encore ouvertes.",
   terminee: "Les inscriptions sont closes.",

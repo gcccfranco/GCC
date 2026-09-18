@@ -118,8 +118,13 @@ function PiedCarte({ e, inscrit }: { e: Evenement; inscrit: boolean }) {
   if (isInfo(e) || poleDuPour(e.pour)) return null
   const places = placesRestantes(e)
   const refus = refusInscription(e, 0, nowIsoParis())
+  // Lot 11 : inscription sur un formulaire externe — la pilule, et rien d'autre.
+  // La carte reste un lien vers la fiche : c'est elle qui mène au formulaire.
+  const externe = refus === "externe"
   let etat
-  if (inscrit) {
+  if (externe) {
+    etat = <span className={buttonVariants({ size: "lg", className: "w-full" })}>{t("evenements.sinscrire")}</span>
+  } else if (inscrit) {
     etat = (
       <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 px-3 py-1.5 text-sm font-semibold text-emerald-700 dark:text-emerald-400">
         <Check className="h-4 w-4" aria-hidden />{t("evenements.inscrit")}
@@ -135,10 +140,12 @@ function PiedCarte({ e, inscrit }: { e: Evenement; inscrit: boolean }) {
   return (
     <div className="space-y-2 text-center">
       {etat}
-      <p className="text-sm text-muted-foreground">
-        {t("evenements.dejaInscrits", { count: e.inscrits })}
-        {places !== null && places > 0 && ` · ${t("evenements.places", { count: places })}`}
-      </p>
+      {!externe && (
+        <p className="text-sm text-muted-foreground">
+          {t("evenements.dejaInscrits", { count: e.inscrits })}
+          {places !== null && places > 0 && ` · ${t("evenements.places", { count: places })}`}
+        </p>
+      )}
     </div>
   )
 }

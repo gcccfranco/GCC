@@ -11,7 +11,7 @@ import { canSeeInscrits } from "../src/lib/access";
 
 const base: Omit<Evenement, "id" | "titre"> = {
   type: "sport", pour: "eglise", date: "2026-10-10", heure: "19:00", heureFin: "", dateFin: "", lieu: "Parc de Bercy",
-  description: "Match amical, venez nombreux.", liens: [], images: [], placesMax: 10, inscriptionOuverte: true, sansCompte: true,
+  description: "Match amical, venez nombreux.", liens: [], images: [], placesMax: 10, inscriptionOuverte: true, sansCompte: true, lienExterne: "",
   contact: "", organisateurUid: "uid-steph", organisateurNom: "Steph", epingle: false, expiresAt: null, inscrits: 4,
   createdAt: "2026-09-20T10:00:00Z", updatedAt: "2026-09-20T10:00:00Z",
 };
@@ -841,4 +841,132 @@ test("période P4 : la ligne « Inscriptions ouvertes », en français et en chi
   expect(ouverturesTitre("zh-CN")).toBe("报名开始");
   expect(avecLignes("Dimanche : piano", ["Inscriptions ouvertes : Foot au parc"])).toBe("Dimanche : piano\nInscriptions ouvertes : Foot au parc");
   expect(avecLignes("", ["Inscriptions ouvertes : Foot au parc"])).toBe("Inscriptions ouvertes : Foot au parc");
+});
+
+// ─── Lot 11 : inscription par un lien externe (docs/spec-inscription-externe.md) ──
+// Le lien externe est un refus de plus, testé en premier : une seule règle
+// décide pour la page comme pour le serveur, et l'app ne compte plus rien.
+
+const FORMULAIRE = "https://forms.gle/theologie";
+const THEOLOGIE: Omit<Evenement, "id"> = {
+  ...base, titre: "Cours de théologie", type: "eglise", date: "2026-11-05", heure: "20:00",
+  lieu: "Salle du haut", description: "Six soirées.", lienExterne: FORMULAIRE, inscrits: 0,
+};
+const DOCS_EXT = { ...DOCS, "evenements/theologie": THEOLOGIE };
+const DOCS_SANS = { ...DOCS, "evenements/theologie": { ...THEOLOGIE, lienExterne: "" } };
+
+test("lot 11 : le lien externe refuse l'inscription avant la fermeture, les places et la période", () => {
+  const now = "2026-10-01T10:00";
+  expect(refusInscription(THEOLOGIE, 0, now)).toBe("externe");
+  expect(refusInscription({ ...THEOLOGIE, inscriptions: "fermees" }, 0, now)).toBe("externe");
+  expect(refusInscription({ ...THEOLOGIE, inscrits: 10 }, 0, now)).toBe("externe");
+  expect(refusInscription({ ...THEOLOGIE, inscriptions: "auto", inscriptionDebut: "2026-11-01" }, 0, now)).toBe("externe");
+  // Lien vide : la règle d'aujourd'hui, intacte.
+  expect(refusInscription({ ...THEOLOGIE, lienExterne: "" }, 0, now)).toBeNull();
+  expect(refusInscription({ ...THEOLOGIE, lienExterne: "", inscrits: 10 }, 0, now)).toBe("complet");
+  expect(refusInscription({ ...THEOLOGIE, lienExterne: "", inscriptions: "fermees" }, 0, now)).toBe("fermee");
+});
+
+// Le lien externe masque les dates d'inscription sans les effacer (R2) : une
+// ouverture datée restée là ne doit plus rien annoncer à toute l'église.
+test("lot 11 : un formulaire externe n'annonce aucune ouverture d'inscriptions le matin", () => {
+  const e = { ...THEOLOGIE, id: "theologie", inscriptions: "auto" as const, inscriptionDebut: "2026-10-05T10:00" };
+  expect(ouvertureDuJour(e, "2026-10-05")).toBe(false);
+  expect(ouvertureDuJour({ ...e, lienExterne: "" }, "2026-10-05"), "sans lien externe, l'ouverture s'annonce").toBe(true);
+});
+
+test("lot 11 fiche : « S'inscrire » ouvre le formulaire externe dans un nouvel onglet, sans compteur ni places", async ({ page }) => {
+  await member(page, JO, "/evenements/theologie", DOCS_EXT);
+  const fiche = page.getByTestId("fiche-carte");
+  const bouton = fiche.getByRole("link", { name: "S'inscrire" });
+  await expect(bouton).toHaveAttribute("href", FORMULAIRE);
+  await expect(bouton).toHaveAttribute("target", "_blank");
+  await expect(bouton).toHaveAttribute("rel", /noopener/);
+  await expect(fiche).toContainText("Inscriptions sur un formulaire externe");
+  await expect(fiche).not.toContainText("déjà inscrit");
+  await expect(fiche).not.toContainText("places restantes");
+  await expect(fiche).not.toContainText("Complet");
+  await expect(fiche.getByRole("button", { name: "S'inscrire" })).toHaveCount(0);
+});
+
+test("lot 11 fiche : un visiteur sans compte voit le même bouton, jamais « Connecte-toi »", async ({ page }) => {
+  await visitor(page, "/evenements/theologie", { ...DOCS_EXT, "evenements/theologie": { ...THEOLOGIE, sansCompte: false } });
+  await expect(page.getByRole("link", { name: "S'inscrire" })).toHaveAttribute("href", FORMULAIRE);
+  await expect(page.getByText("Connecte-toi pour t'inscrire")).toHaveCount(0);
+});
+
+test("lot 11 panneau : « Formulaire externe », l'adresse cliquable, aucun réglage ; le QR reste celui de la fiche", async ({ page }) => {
+  await member(page, STEPH, "/evenements/theologie", DOCS_EXT);
+  const panneau = page.getByRole("region", { name: "Inscriptions", exact: true });
+  await expect(panneau.getByTestId("etat-inscriptions")).toHaveText("Formulaire externe");
+  await expect(panneau).toContainText("Inscriptions sur un formulaire externe");
+  await expect(panneau.getByRole("link", { name: FORMULAIRE })).toHaveAttribute("href", FORMULAIRE);
+  await expect(panneau.getByRole("radiogroup")).toHaveCount(0);
+  // D4 : l'affiche fait entrer dans l'app, la fiche envoie au formulaire.
+  await expect(page.getByRole("img", { name: /QR code/ })).toBeVisible();
+  const lienQr = page.getByRole("link", { name: /\/evenements\/theologie/ });
+  await expect(lienQr).toBeVisible();
+  await expect(lienQr).toHaveAttribute("href", /\/evenements\/theologie$/);
+});
+
+test("lot 11 calendrier : la carte montre « S'inscrire » seul et mène à la fiche, pas au formulaire", async ({ page }) => {
+  await member(page, JO, "/evenements", DOCS_EXT);
+  const carte = page.getByRole("link", { name: /Cours de théologie/ });
+  await expect(carte).toContainText("S'inscrire");
+  await expect(carte).not.toContainText("déjà inscrit");
+  await expect(carte).not.toContainText("places restantes");
+  await expect(carte).toHaveAttribute("href", "/evenements/theologie/");
+  await carte.click();
+  await expect(page).toHaveURL(/\/evenements\/theologie\/?$/);
+});
+
+test("lot 11 formulaire : le lien est écrit, le mode et les dates disparaissent, places et sans compte désactivés", async ({ page }) => {
+  const db = await member(page, STEPH, "/evenements/theologie/modifier", DOCS_SANS);
+  await expect(page.getByRole("radio", { name: "Automatique" })).toBeVisible();
+  await page.getByLabel("Lien d'inscription externe").fill(FORMULAIRE);
+  await expect(page.getByRole("radiogroup", { name: "Inscriptions" })).toHaveCount(0);
+  await expect(page.getByLabel("Ouverture des inscriptions", { exact: true })).toHaveCount(0);
+  await page.getByText("Plus d'options").click();
+  await expect(page.getByText("Inscription sur un formulaire externe : ces réglages ne s'appliquent pas.")).toBeVisible();
+  await expect(page.getByLabel("Places")).toBeDisabled();
+  await expect(page.getByLabel("Les personnes sans compte peuvent s'inscrire")).toBeDisabled();
+  await page.getByRole("button", { name: "Enregistrer" }).click();
+  await expect(page.getByRole("heading", { name: "Cours de théologie" })).toBeVisible();
+  const write = db.writes.find((w) => w.method === "PATCH" && w.path === "evenements/theologie");
+  expect(write?.data.lienExterne).toBe(FORMULAIRE);
+});
+
+test("lot 11 formulaire : une adresse sans http(s) est refusée, comme les liens", async ({ page }) => {
+  const db = await member(page, STEPH, "/evenements/theologie/modifier", DOCS_SANS);
+  const champ = page.getByLabel("Lien d'inscription externe");
+  // Sans schéma : le champ « url » ne laisse même pas partir le formulaire.
+  await champ.fill("forms.gle/theologie");
+  expect(await champ.evaluate((el: HTMLInputElement) => el.checkValidity())).toBe(false);
+  // Un autre schéma passe le navigateur : la règle de l'app le refuse, avec le
+  // message des liens (jamais de « javascript: » derrière « S'inscrire »).
+  await champ.fill("javascript:alert(1)");
+  expect(await champ.evaluate((el: HTMLInputElement) => el.checkValidity())).toBe(true);
+  await page.getByRole("button", { name: "Enregistrer" }).click();
+  await expect(page.getByText("doit commencer par http:// ou https://")).toBeVisible();
+  expect(db.writes.find((w) => w.path === "evenements/theologie")).toBeUndefined();
+});
+
+test("lot 11 formulaire : un évènement qui a déjà des inscrits refuse le lien externe", async ({ page }) => {
+  const db = await member(page, STEPH, "/evenements/foot/modifier");
+  await page.getByLabel("Lien d'inscription externe").fill(FORMULAIRE);
+  await page.getByRole("button", { name: "Enregistrer" }).click();
+  await expect(page.getByText("Cet évènement a déjà 4 inscrits dans l'app.")).toBeVisible();
+  expect(db.writes.find((w) => w.method === "PATCH" && w.path === "evenements/foot")).toBeUndefined();
+});
+
+test("lot 11 中文 : la fiche et le formulaire montrent les nouveaux libellés", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
+  await member(page, STEPH, "/evenements/theologie", DOCS_EXT);
+  await expect(page.getByTestId("etat-inscriptions")).toHaveText("外部表单");
+  const fiche = page.getByTestId("fiche-carte");
+  await expect(fiche).toContainText("通过外部表单报名");
+  await expect(fiche.getByRole("link", { name: "报名" })).toHaveAttribute("href", FORMULAIRE);
+  await page.goto("/evenements/theologie/modifier");
+  await expect(page.getByLabel("外部报名链接")).toHaveValue(FORMULAIRE);
+  await expect(page.getByText(/应用不再统计名额和报名人数/)).toBeVisible();
 });
