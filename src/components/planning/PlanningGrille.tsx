@@ -35,26 +35,11 @@ export interface PlanningGrilleProps {
   nomsDesComptes: readonly string[]
   /** Badge optionnel à côté de la date (Sainte Cène), comme PlanningTable. */
   dateBadge?: (row: string[], allRows: string[][]) => ReactNode
+  /** Période affichée, écrite dans le bandeau (le trimestre choisi par la page). */
+  periode: string
 }
 
 const pad = (n: number) => String(n).padStart(2, "0")
-
-/** Date ISO décalée de `mois` mois. */
-function decalerMois(iso: string, mois: number): string {
-  const [y, m, d] = iso.split("-").map(Number)
-  const dt = new Date(y, m - 1 + mois, d)
-  return `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}`
-}
-
-/** « Septembre 2026 » / « 2026年9月 ». */
-function moisAnnee(iso: string, lang: string): string {
-  const [y, m, d] = iso.split("-").map(Number)
-  const s = new Date(y, m - 1, d).toLocaleDateString(lang === "zh-CN" ? "zh-CN" : "fr-FR", {
-    month: "long",
-    year: "numeric",
-  })
-  return s.charAt(0).toUpperCase() + s.slice(1)
-}
 
 export function PlanningGrille({
   definition,
@@ -63,17 +48,12 @@ export function PlanningGrille({
   datesDansLApp,
   nomsDesComptes,
   dateBadge,
+  periode,
 }: PlanningGrilleProps) {
   const { t, i18n } = useTranslation()
   const { profile } = useProfile()
   const couleur = definition.couleur
   const sun = currentSundayStr()
-
-  // Fenêtre : les 3 mois à venir, élargie d'un trimestre à chaque « Voir plus ».
-  const [tot, setTot] = useState(0)
-  const [tard, setTard] = useState(0)
-  const debut = decalerMois(sun, -3 * tot)
-  const fin = decalerMois(sun, 3 * (1 + tard))
 
   const [mode, setMode] = useState<"lecture" | "edition">("lecture")
   const [modifs, setModifs] = useState<Record<string, string>>({})
@@ -116,9 +96,10 @@ export function PlanningGrille({
     return row
   }
 
-  const dansLaFenetre = lignes.filter((l) => l.row[0] >= debut && l.row[0] <= fin)
-  const yAAvant = lignes.some((l) => l.row[0] < debut)
-  const yAApres = lignes.some((l) => l.row[0] > fin)
+  // La page donne les lignes du trimestre choisi (demande de Timothée du
+  // 18/09/2026 : « L'affichage du planning doit être affiché trimestre par
+  // trimestre ») : la grille n'a plus de fenêtre à elle.
+  const dansLaFenetre = lignes
   const affichees = mesDates && aUnNom
     ? dansLaFenetre.filter((l) => definition.colonnes.some((c) => estMoi(valeur(l.row[0], c, l.row))))
     : dansLaFenetre
@@ -270,7 +251,7 @@ export function PlanningGrille({
         {t(definition.i18nTitre)}
         <span className="font-normal opacity-90">
           {" · "}
-          {t("planning.grille.periode", { du: moisAnnee(debut, i18n.language), au: moisAnnee(fin, i18n.language) })}
+          {periode}
           {" · "}
           {t(definition.i18nHoraire)}
         </span>
@@ -333,14 +314,6 @@ export function PlanningGrille({
         </p>
       )}
 
-      {yAAvant && (
-        <button
-          onClick={() => setTot((n) => n + 1)}
-          className="w-full h-10 rounded-xl border border-dashed border-border text-sm font-semibold text-muted-foreground hover:text-foreground"
-        >
-          {t("planning.grille.plusTot")}
-        </button>
-      )}
 
       {peutModifier && (
         <datalist id={listeId}>
@@ -481,14 +454,6 @@ export function PlanningGrille({
         })}
       </div>
 
-      {yAApres && (
-        <button
-          onClick={() => setTard((n) => n + 1)}
-          className="w-full h-10 rounded-xl border border-dashed border-border text-sm font-semibold text-muted-foreground hover:text-foreground"
-        >
-          {t("planning.grille.plusTard")}
-        </button>
-      )}
 
       {/* ── Pied de grille : on prévient, on ne se retire pas (T3) ── */}
       <p className="text-xs text-muted-foreground">{t("planning.grille.pasDispo")}</p>

@@ -126,10 +126,11 @@ test("la grille du Culte : les colonnes du Sheet, un bandeau de période et d'ho
   await expect(bandeau).toContainText("Culte Franco");
   await expect(bandeau).toContainText("Dimanche 10:30");
   await expect(bandeau).toContainText("2026");
-  // Les 3 mois à venir à partir du dimanche courant : 30/08 n'y est pas.
+  // Affichage par trimestre (demande de Timothée, 18/09/2026) : le trimestre
+  // courant, T3, donc août et septembre ; octobre est au T4.
   await expect(laCase(page, "2026-09-20", "presidence")).toHaveText("Paul W.");
-  await expect(laCase(page, "2026-10-11", "piano")).toHaveText("Jo M.");
-  await expect(laCase(page, "2026-08-30", "presidence")).toHaveCount(0);
+  await expect(laCase(page, "2026-08-30", "presidence")).toHaveText("Belka");
+  await expect(laCase(page, "2026-10-11", "piano")).toHaveCount(0);
   await expect(page.getByText("à confirmer"), "les notes de travail restent dans la feuille").toHaveCount(0);
 });
 
@@ -141,17 +142,34 @@ test("ordinateur et tablette : les colonnes sont dans l'ordre du Sheet", async (
   );
 });
 
-test("« Voir plus tôt » ajoute les dimanches antérieurs", async ({ page }) => {
+test("le sélecteur de trimestre : T3 par défaut, T4 sur demande", async ({ page }) => {
   await open(page, PUBLIEUR, "/planning/culte");
-  await expect(laCase(page, "2026-08-30", "presidence")).toHaveCount(0);
-  await page.getByRole("button", { name: "Voir plus tôt" }).click();
-  await expect(laCase(page, "2026-08-30", "presidence")).toHaveText("Belka");
+  // Le trimestre courant est choisi d'office, et le bandeau le nomme.
+  await expect(page.getByRole("button", { name: "T3" })).toBeVisible();
+  await expect(page.getByTestId("grille-bandeau")).toContainText("T3");
+  await expect(laCase(page, "2026-10-11", "piano")).toHaveCount(0);
+
+  await page.getByRole("button", { name: "T4" }).click();
+  await expect(laCase(page, "2026-10-11", "piano")).toHaveText("Jo M.");
+  await expect(laCase(page, "2026-09-20", "presidence"), "on ne voit qu'un trimestre à la fois").toHaveCount(0);
+  await expect(page.getByTestId("grille-bandeau")).toContainText("T4");
+});
+
+test("plus de fenêtre glissante : « Voir plus tôt » n'existe plus", async ({ page }) => {
+  await open(page, PUBLIEUR, "/planning/culte");
+  // Attendre que la grille soit chargée : sans cela, l'absence des boutons
+  // serait vraie d'une page vide et le test passerait pour rien.
   await expect(laCase(page, "2026-09-20", "presidence")).toHaveText("Paul W.");
+  await expect(page.getByRole("button", { name: "Voir plus tôt" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Voir plus tard" })).toHaveCount(0);
 });
 
 test("ordinateur et tablette : la colonne des dates reste visible au défilement horizontal", async ({ page }) => {
   ordinateurEtTablette();
   await open(page, PUBLIEUR, "/planning/culte");
+  // Un seul trimestre tient parfois dans la largeur : on rétrécit la fenêtre
+  // pour que la grille déborde, puisque c'est le débordement qu'on teste.
+  await page.setViewportSize({ width: 820, height: 800 });
   const defilement = page.getByTestId("grille-defilement");
   const date = page.locator('[data-date-cell="2026-09-20"]').filter({ visible: true });
   const loin = laCase(page, "2026-09-20", "traduction");
@@ -165,7 +183,8 @@ test("ordinateur et tablette : la colonne des dates reste visible au défilement
 test("téléphone : une carte par dimanche, aucun défilement horizontal de la page", async ({ page }) => {
   telephoneSeul();
   await open(page, PUBLIEUR, "/planning/culte");
-  await expect(page.getByTestId("grille-carte")).toHaveCount(4);
+  // T3 : 30/08, 20/09 et 27/09 (04/10 et 11/10 sont au T4).
+  await expect(page.getByTestId("grille-carte")).toHaveCount(3);
   await expect(laCase(page, "2026-09-20", "presidence")).toHaveText("Paul W.");
   const deborde = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1);
   expect(deborde, "la page ne défile pas horizontalement").toBe(false);
@@ -181,6 +200,8 @@ test("trimestre non publié : invisible pour un membre, marqué « Non publié �
 
 test("trimestre non publié : le publieur voit les lignes, marquées", async ({ page }) => {
   await open(page, PUBLIEUR, "/planning/culte");
+  // Le T4 n'est pas publié : le publieur a sa pilule, le membre ne l'a pas.
+  await page.getByRole("button", { name: "T4" }).click();
   await expect(laCase(page, "2026-10-04", "presidence")).toHaveText("Paul W.");
   await expect(page.locator('[data-non-publie="2026-10-04"]').filter({ visible: true })).toBeVisible();
   await expect(page.locator('[data-non-publie="2026-09-20"]')).toHaveCount(0);
