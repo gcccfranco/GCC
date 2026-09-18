@@ -176,7 +176,9 @@ Le bouton garde `evenements.sinscrire` (« S'inscrire » · 报名).
 - `QrCode.tsx` et l'appel de `EvenementClient.tsx` (96) : même adresse, même
   libellé « Lien d'inscription » — il reste vrai, la fiche est bien l'endroit
   où l'on s'inscrit.
-- Le cron des rappels : aucune ligne (R5).
+- Le **rappel de la veille** du cron : aucune ligne (R5) — l'app ne connaît
+  aucun inscrit, la boucle n'envoie rien. (La ligne « Inscriptions ouvertes »
+  du matin, elle, a dû être corrigée : voir l'avancement.)
 - `firestore.rules` : rien à publier.
 - Les évènements sans lien externe : rien ne bouge, période comprise
   (`spec-inscriptions-periode.md`).
@@ -223,4 +225,42 @@ npm run lint
 
 ## Avancement
 
-Rien n'est codé : la spec attend le go de Timothée.
+**Codé le 18/09/2026** (go de Timothée, R1 à R10 retenues), 10 tests écrits
+avant le code et vus rouges, puis verts sur les trois appareils (30 exécutions) ;
+`tests/evenements.spec.ts` en entier reste verte (79 × 3).
+
+| Pièce | Ce qui est fait |
+| --- | --- |
+| Modèle | `lienExterne: string` (`types/evenement.ts`), lu avec un défaut `""` (`firebase/evenements.ts`) : aucune migration, aucune règle à publier. |
+| Règle | `RefusInscription` gagne `"externe"`, testé **en premier** dans `refusInscription` (`agenda.ts`) ; la route `/api/evenements/inscription` répond 409 « Les inscriptions se font sur un formulaire externe. » par le même chemin. |
+| Formulaire | Champ « Lien d'inscription externe » en tête du bloc « Inscriptions » (`type="url"`, aide) ; rempli, le mode et les deux dates disparaissent ; « Places » et « sans compte » restent sous « Plus d'options », désactivés, sous `form.placesExterne` ; refus si `inscrits > 0` (nouvelle prop `inscrits`, passée par `ModifierClient`). |
+| Fiche | `Inscriptions` : grand bouton **lien** `buttonVariants({ size: "lg" })`, `target="_blank" rel="noopener noreferrer"`, puis `raison.externe` ; ni compteur, ni places, ni « Connecte-toi ». |
+| Panneau | Pilule « Formulaire externe » (grise), `raison.externe`, l'adresse cliquable ; ni réglage, ni compteur. Le QR reste celui de la fiche. |
+| Carte | `PiedCarte` : la pilule « S'inscrire » seule, sans la ligne du compteur. |
+| Libellés | 7 clés FR + 中文 (`lienExterneOccupe` en `_one` / `_other`). |
+| Cron | `ouvertureDuJour` (`rappel.ts`) ne déclenche plus la ligne « Inscriptions ouvertes » pour un évènement à formulaire externe (voir les écarts). |
+
+Écarts avec la spec, et pourquoi :
+
+- `lienExterneOccupe` s'écrit avec `{{count}}` et non `{{n}}` : la règle du
+  projet veut `_one` **et** `_other` dans les deux langues, et i18next ne
+  pluralise que sur `count`.
+- La 409 de la route n'est **pas** testée de bout en bout : les tests n'ont pas
+  Firebase Admin (même écart que la période d'inscription et les rappels). La
+  règle partagée est testée, et `Record<RefusInscription, string>` force le
+  message à exister à la compilation.
+- Le contrôle d'URL de l'app (R8) est doublé par le `type="url"` du champ : le
+  navigateur refuse déjà une adresse sans schéma. La règle de l'app reste
+  nécessaire — `javascript:…` est une URL valide pour le navigateur — et c'est
+  elle que le test exerce.
+- `sansInscription` (info, réunion de pôle) efface aussi `lienExterne`, comme
+  les autres champs d'inscription : sans cela une fiche passée en « info »
+  garderait un lien caché qui changerait la règle.
+- **Ajout à la spec** (repéré à la relecture, tranché par Timothée le
+  18/09/2026) : `ouvertureDuJour` (`rappel.ts`, P4) regarde désormais le lien
+  externe. Le champ « Ouverture des inscriptions » est masqué mais **pas
+  effacé** (R2) : sans cette ligne, un évènement à formulaire externe aurait
+  encore annoncé « Inscriptions ouvertes » à toute l'église le matin venu,
+  alors que l'app n'inscrit plus personne. C'est ce lot qui créait
+  l'incohérence, c'est lui qui la referme. R5 tient toujours pour le **rappel
+  de la veille** : rien à coder, la boucle ne trouve aucun inscrit.

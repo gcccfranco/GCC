@@ -2,8 +2,9 @@
 
 // Formulaire d'un évènement (lot 6, ordre de la maquette du lot 6 bis) :
 // nom, catégorie · public, date · horaire, lieu, responsable, description,
-// bannière, inscriptions (Automatique avec ouverture et fin, Ouvertes ou
-// Fermées forcées, docs/spec-inscriptions-periode.md) ; les champs rares (fin
+// bannière, inscriptions (lien externe en tête, lot 11 ; sinon Automatique avec
+// ouverture et fin, Ouvertes ou Fermées forcées,
+// docs/spec-inscriptions-periode.md) ; les champs rares (fin
 // de l'évènement, liens, places, sans compte) sous « Plus d'options ». Une
 // « info » n'a ni date ni inscription : elle est épinglée et expire.
 
@@ -28,7 +29,7 @@ export type EvenementValues = Omit<Evenement, "id" | "organisateurUid" | "organi
 
 export const EMPTY_EVENEMENT: EvenementValues = {
   titre: "", type: "loisir", pour: "eglise", date: "", heure: "", heureFin: "", dateFin: "", lieu: "", description: "",
-  liens: [], images: [], placesMax: null, inscriptions: "auto", inscriptionDebut: "", inscriptionFin: "", sansCompte: false, contact: "", epingle: false, expiresAt: null,
+  liens: [], images: [], placesMax: null, inscriptions: "auto", inscriptionDebut: "", inscriptionFin: "", sansCompte: false, lienExterne: "", contact: "", epingle: false, expiresAt: null,
 }
 
 /** « AAAA-MM-JJ » + « HH:MM » facultative ↔ « AAAA-MM-JJ[THH:MM] » ; sans jour, rien. */
@@ -51,12 +52,14 @@ function Periode({ id, label, heureLabel, aide, value, onChange }: {
   )
 }
 
-export function EvenementForm({ initial, pours, creation, onSubmit, onCancel }: {
+export function EvenementForm({ initial, pours, creation, inscrits = 0, onSubmit, onCancel }: {
   initial: EvenementValues
   /** Publics que la personne peut viser (« eglise » et/ou des sections). */
   pours: string[]
   /** À la création : bouton « Créer » et case « Prévenir les membres ». */
   creation: boolean
+  /** Inscrits déjà comptés par l'app : ils interdisent le lien externe (lot 11). */
+  inscrits?: number
   onSubmit: (values: EvenementValues, prevenir: boolean) => Promise<void>
   onCancel: () => void
 }) {
@@ -69,8 +72,11 @@ export function EvenementForm({ initial, pours, creation, onSubmit, onCancel }: 
   const info = v.type === "info"
   // Réunion de pôle (lot 7) : pas d'inscriptions.
   const reunion = poleDuPour(v.pour) !== null
-  const sansInscription = { inscriptions: "fermees" as const, inscriptionDebut: "", inscriptionFin: "", sansCompte: false, placesMax: null }
+  const sansInscription = { inscriptions: "fermees" as const, inscriptionDebut: "", inscriptionFin: "", sansCompte: false, placesMax: null, lienExterne: "" }
   const mode = modeInscriptions(v)
+  // Lien externe (lot 11) : l'inscription se passe ailleurs, le reste du bloc
+  // ne s'applique plus (docs/spec-inscription-externe.md).
+  const externe = v.lienExterne.trim() !== ""
   const set = (patch: Partial<EvenementValues>) => setV((x) => ({ ...x, ...patch }))
   // Listes au style des champs du site (fond gris, sans bord), libellés
   // discrets comme la maquette (retour du 17/09/2026).
@@ -113,12 +119,17 @@ export function EvenementForm({ initial, pours, creation, onSubmit, onCancel }: 
     for (const l of v.liens) {
       if (l.url.trim() && !/^https?:\/\//i.test(l.url.trim())) { setError(t("annonces.form.errorLink", { url: l.url })); return }
     }
+    if (externe && !/^https?:\/\//i.test(v.lienExterne.trim())) { setError(t("annonces.form.errorLink", { url: v.lienExterne })); return }
+    // Une seule porte d'inscription à la fois : des places déjà prises dans
+    // l'app ne se perdent pas au profit d'un formulaire externe.
+    if (externe && inscrits > 0) { setError(t("evenements.form.lienExterneOccupe", { count: inscrits })); return }
     setBusy(true); setError("")
     try {
       await onSubmit({
         ...v,
         titre: v.titre.trim(), lieu: v.lieu.trim(), description: v.description.trim(), contact: v.contact.trim(),
         liens: v.liens.map((l) => ({ label: l.label.trim(), url: l.url.trim() })).filter((l) => l.url),
+        lienExterne: v.lienExterne.trim(),
         expiresAt: info ? v.expiresAt || null : null,
         // Hors automatique, les dates ne servent pas : on ne les garde pas.
         inscriptions: mode,
@@ -218,17 +229,27 @@ export function EvenementForm({ initial, pours, creation, onSubmit, onCancel }: 
 
       {!info && !reunion && (
         <div className="space-y-3 px-4 py-3.5">
-          <div className="space-y-2">
-            <p className="text-sm">{t("evenements.form.inscriptions")}</p>
-            <ChoixInscriptions label={t("evenements.form.inscriptions")} mode={mode} onChange={(m) => set({ inscriptions: m })} />
-            {mode !== "auto" && <p className="text-xs text-muted-foreground">{t(`evenements.form.modeAide.${mode}`)}</p>}
+          {/* Lot 11 : le lien externe est en tête, c'est lui qui décide si le reste s'applique. */}
+          <div className="space-y-1">
+            <label htmlFor="ev-lien-externe" className={LABEL}>{t("evenements.form.lienExterne")}</label>
+            <Input id="ev-lien-externe" type="url" value={v.lienExterne} placeholder="https://…" onChange={(e) => set({ lienExterne: e.target.value })} />
+            <p className="text-xs text-muted-foreground">{t("evenements.form.lienExterneAide")}</p>
           </div>
-          {mode === "auto" && (
+          {!externe && (
             <>
-              <Periode id="ev-ins-debut" label={t("evenements.form.insDebut")} heureLabel={t("evenements.form.insDebutHeure")}
-                aide={t("evenements.form.insDebutAide")} value={v.inscriptionDebut ?? ""} onChange={(x) => set({ inscriptionDebut: x })} />
-              <Periode id="ev-ins-fin" label={t("evenements.form.insFin")} heureLabel={t("evenements.form.insFinHeure")}
-                aide={t("evenements.form.insFinAide")} value={v.inscriptionFin ?? ""} onChange={(x) => set({ inscriptionFin: x })} />
+              <div className="space-y-2">
+                <p className="text-sm">{t("evenements.form.inscriptions")}</p>
+                <ChoixInscriptions label={t("evenements.form.inscriptions")} mode={mode} onChange={(m) => set({ inscriptions: m })} />
+                {mode !== "auto" && <p className="text-xs text-muted-foreground">{t(`evenements.form.modeAide.${mode}`)}</p>}
+              </div>
+              {mode === "auto" && (
+                <>
+                  <Periode id="ev-ins-debut" label={t("evenements.form.insDebut")} heureLabel={t("evenements.form.insDebutHeure")}
+                    aide={t("evenements.form.insDebutAide")} value={v.inscriptionDebut ?? ""} onChange={(x) => set({ inscriptionDebut: x })} />
+                  <Periode id="ev-ins-fin" label={t("evenements.form.insFin")} heureLabel={t("evenements.form.insFinHeure")}
+                    aide={t("evenements.form.insFinAide")} value={v.inscriptionFin ?? ""} onChange={(x) => set({ inscriptionFin: x })} />
+                </>
+              )}
             </>
           )}
         </div>
@@ -284,15 +305,18 @@ export function EvenementForm({ initial, pours, creation, onSubmit, onCancel }: 
             <Button type="button" variant="outline" size="sm" onClick={() => set({ liens: [...v.liens, { label: "", url: "" }] })}>{t("evenements.form.addLink")}</Button>
           </div>
 
+          {/* Lot 11 : avec un lien externe, ces réglages restent là mais ne
+              servent plus — retirer le lien rend l'ancien réglage. */}
           {!info && !reunion && (
-            <div className="space-y-3">
+            <div className={`space-y-3 ${externe ? "opacity-60" : ""}`}>
+              {externe && <p className="text-xs text-muted-foreground">{t("evenements.form.placesExterne")}</p>}
               <div className="space-y-1">
                 <label htmlFor="ev-places" className={LABEL}>{t("evenements.form.places")}</label>
-                <Input id="ev-places" type="number" min={1} max={999} value={v.placesMax ?? ""} placeholder={t("evenements.form.placesHint")}
+                <Input id="ev-places" type="number" min={1} max={999} value={v.placesMax ?? ""} placeholder={t("evenements.form.placesHint")} disabled={externe}
                   onChange={(e) => set({ placesMax: e.target.value ? Number(e.target.value) : null })} />
               </div>
               <label className="flex items-center gap-2 text-sm">
-                <input type="checkbox" className="h-4 w-4" checked={v.sansCompte} onChange={(e) => set({ sansCompte: e.target.checked })} />
+                <input type="checkbox" className="h-4 w-4" checked={v.sansCompte} disabled={externe} onChange={(e) => set({ sansCompte: e.target.checked })} />
                 {t("evenements.form.sansCompte")}
               </label>
             </div>

@@ -63,7 +63,7 @@ export function daysAgo(today: string, days: number): string {
   return new Date(Date.UTC(y, m - 1, d) - days * 86_400_000).toISOString().slice(0, 10);
 }
 
-export type RefusInscription = "fermee" | "pasEncore" | "terminee" | "commencee" | "complet";
+export type RefusInscription = "externe" | "fermee" | "pasEncore" | "terminee" | "commencee" | "complet";
 
 /** Mode des inscriptions (docs/spec-inscriptions-periode.md). Un évènement
  *  d'avant le 17/09/2026 n'a que l'interrupteur `inscriptionOuverte`. */
@@ -79,13 +79,16 @@ export function borneInscription(valeur: string, sansHeure: "00:00" | "23:59"): 
 
 /** Pourquoi une inscription (1 personne + `invites`) serait refusée, ou null si
  *  elle passe. Même règle côté client (boutons) et côté serveur (transaction).
- *  « Fermées » par le responsable l'emporte ; les places tiennent toujours, même
- *  « Ouvertes » forcées ; en automatique : ouverture, fin, sinon début de l'évènement. */
+ *  Un lien externe (lot 11) l'emporte sur tout : l'app n'inscrit plus personne,
+ *  ni fermeture, ni places, ni période ne sont évaluées. Sinon : « Fermées » par
+ *  le responsable l'emporte ; les places tiennent toujours, même « Ouvertes »
+ *  forcées ; en automatique : ouverture, fin, sinon début de l'évènement. */
 export function refusInscription(
-  e: Pick<Evenement, "type" | "date" | "heure" | "inscriptions" | "inscriptionOuverte" | "inscriptionDebut" | "inscriptionFin" | "placesMax" | "inscrits">,
+  e: Pick<Evenement, "type" | "date" | "heure" | "lienExterne" | "inscriptions" | "inscriptionOuverte" | "inscriptionDebut" | "inscriptionFin" | "placesMax" | "inscrits">,
   invites: number,
   nowIso: string,
 ): RefusInscription | null {
+  if (e.lienExterne) return "externe";
   const mode = modeInscriptions(e);
   if (isInfo(e) || mode === "fermees") return "fermee";
   if (e.placesMax !== null && e.inscrits + 1 + invites > e.placesMax) return "complet";

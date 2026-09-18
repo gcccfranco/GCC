@@ -48,6 +48,7 @@ export function fromFsEvenement(raw: RawDoc): Evenement {
     inscriptionDebut: (data.inscriptionDebut as string) ?? "",
     inscriptionFin: (data.inscriptionFin as string) ?? "",
     sansCompte: (data.sansCompte as boolean) ?? false,
+    lienExterne: (data.lienExterne as string) ?? "",
     contact: (data.contact as string) ?? "",
     organisateurUid: (data.organisateurUid as string) ?? "",
     organisateurNom: (data.organisateurNom as string) ?? "",

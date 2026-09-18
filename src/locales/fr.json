@@ -1564,7 +1564,12 @@
       "insFin": "Fin des inscriptions",
       "insFinHeure": "Heure de fin des inscriptions",
       "insFinAide": "Vide : au début de l'évènement",
-      "errorInsFin": "La fin des inscriptions est avant leur ouverture."
+      "errorInsFin": "La fin des inscriptions est avant leur ouverture.",
+      "lienExterne": "Lien d'inscription externe",
+      "lienExterneAide": "Google Forms, Sheets… L'app ne compte alors ni places ni inscrits, et n'envoie pas de rappel la veille. Le QR code mène toujours à cette fiche.",
+      "lienExterneOccupe_one": "Cet évènement a déjà {{count}} inscrit dans l'app. Retire-le dans le panneau des inscriptions avant de passer à un formulaire externe.",
+      "lienExterneOccupe_other": "Cet évènement a déjà {{count}} inscrits dans l'app. Retire-les dans le panneau des inscriptions avant de passer à un formulaire externe.",
+      "placesExterne": "Inscription sur un formulaire externe : ces réglages ne s'appliquent pas."
     },
     "jeParticipe": "Je participe",
     "tuParticipes": "Tu participes",
@@ -1605,9 +1610,11 @@
       "pasEncore": "Inscriptions à partir du {{quand}}",
       "terminee": "Inscriptions closes le {{quand}}",
       "commencee": "Inscriptions fermées : l'évènement a commencé",
-      "fermee": "Inscriptions fermées par l'organisateur"
+      "fermee": "Inscriptions fermées par l'organisateur",
+      "externe": "Inscriptions sur un formulaire externe"
     },
-    "lienInscription": "Lien d'inscription"
+    "lienInscription": "Lien d'inscription",
+    "externe": "Formulaire externe"
   },
   "moi": {
     "title": "Moi",

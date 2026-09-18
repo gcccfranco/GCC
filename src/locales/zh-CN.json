@@ -1564,7 +1564,12 @@
       "insFin": "报名截止",
       "insFinHeure": "报名截止时间",
       "insFinAide": "留空：活动开始时截止",
-      "errorInsFin": "报名截止时间早于开始时间。"
+      "errorInsFin": "报名截止时间早于开始时间。",
+      "lienExterne": "外部报名链接",
+      "lienExterneAide": "如 Google Forms、Sheets…… 应用不再统计名额和报名人数，也不会在前一天发送提醒。二维码仍然指向本活动页面。",
+      "lienExterneOccupe_one": "本活动在应用内已有 {{count}} 人报名。请先在报名面板中移除，再改用外部表单。",
+      "lienExterneOccupe_other": "本活动在应用内已有 {{count}} 人报名。请先在报名面板中移除，再改用外部表单。",
+      "placesExterne": "报名在外部表单进行：这些设置不适用。"
     },
     "jeParticipe": "我要参加",
     "tuParticipes": "你已报名",
@@ -1605,9 +1610,11 @@
       "pasEncore": "{{quand}} 开始报名",
       "terminee": "报名已于 {{quand}} 截止",
       "commencee": "报名已关闭：活动已开始",
-      "fermee": "组织者已关闭报名"
+      "fermee": "组织者已关闭报名",
+      "externe": "通过外部表单报名"
     },
-    "lienInscription": "报名链接"
+    "lienInscription": "报名链接",
+    "externe": "外部表单"
   },
   "moi": {
     "title": "我",

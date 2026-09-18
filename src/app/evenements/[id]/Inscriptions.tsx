@@ -20,7 +20,7 @@ import { desinscrire, inscrire } from "@/lib/evenements/inscription"
 import { aCommence, modeInscriptions, nowIsoParis, placesRestantes, refusInscription } from "@/lib/evenements/agenda"
 import { PLANNING_COLORS } from "@/lib/serviceColors"
 import type { Evenement, Inscription, ModeInscriptions } from "@/types/evenement"
-import { Button } from "@/components/ui/button"
+import { Button, buttonVariants } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ChoixInscriptions, useRaisonInscription } from "@/components/evenements/ChoixInscriptions"
 
@@ -77,6 +77,19 @@ export function Inscriptions({ evenement: e, user, organisateur, onInscrits }: {
   const places = placesRestantes(e)
   const refus = refusInscription(e, invites, now)
   const commence = aCommence(e, now)
+
+  // Lot 11 : l'inscription se passe sur un formulaire externe. Le grand bouton
+  // y mène et l'app ne compte plus rien — ni places, ni inscrits, ni période.
+  if (refus === "externe") {
+    return (
+      <section className="space-y-3" aria-label={t("evenements.inscription")}>
+        <a href={e.lienExterne} target="_blank" rel="noopener noreferrer" className={buttonVariants({ size: "lg", className: "w-full" })}>
+          {t("evenements.sinscrire")}
+        </a>
+        <p className="text-center text-sm text-muted-foreground">{raison(e, refus)}</p>
+      </section>
+    )
+  }
 
   async function run(action: () => Promise<void>) {
     setBusy(true); setError("")
@@ -198,7 +211,9 @@ export function PanneauInscriptions({ evenement: e, relire, onInscrits, onMode, 
 
   // L'état se lit sans les places : « Complet » est une autre information, le compteur la porte.
   const refus = refusInscription({ ...e, placesMax: null }, 0, nowIsoParis())
-  const etat = refus === null ? "ouvertes" : refus === "pasEncore" ? "bientot" : "fermees"
+  // Lot 11 : sur formulaire externe, le réglage et le compteur ne veulent plus rien dire.
+  const externe = refus === "externe"
+  const etat = externe ? "externe" : refus === null ? "ouvertes" : refus === "pasEncore" ? "bientot" : "fermees"
 
   async function run(action: () => Promise<void>) {
     setBusy(true); setError("")
@@ -215,12 +230,18 @@ export function PanneauInscriptions({ evenement: e, relire, onInscrits, onMode, 
         </span>
       </div>
       {refus && refus !== "complet" && <p className="text-sm text-muted-foreground">{raison(e, refus)}</p>}
-      <p className="flex items-baseline gap-2">
-        <span className="text-3xl font-bold tabular-nums text-foreground">{e.inscrits}</span>
-        <span className="text-sm text-muted-foreground">{t("evenements.inscrits").toLowerCase()}</span>
-      </p>
-      <ChoixInscriptions label={t("evenements.reglageInscriptions")} mode={modeInscriptions(e)} disabled={busy}
-        onChange={(m) => run(async () => { await updateEvenement(e.id, { inscriptions: m }); onMode(m) })} />
+      {externe ? (
+        <a href={e.lienExterne} target="_blank" rel="noopener noreferrer" className="block truncate text-sm font-medium text-foreground underline underline-offset-4">{e.lienExterne}</a>
+      ) : (
+        <>
+          <p className="flex items-baseline gap-2">
+            <span className="text-3xl font-bold tabular-nums text-foreground">{e.inscrits}</span>
+            <span className="text-sm text-muted-foreground">{t("evenements.inscrits").toLowerCase()}</span>
+          </p>
+          <ChoixInscriptions label={t("evenements.reglageInscriptions")} mode={modeInscriptions(e)} disabled={busy}
+            onChange={(m) => run(async () => { await updateEvenement(e.id, { inscriptions: m }); onMode(m) })} />
+        </>
+      )}
       {liste && liste.length > 0 && (
         <Button size="sm" variant="ghost" onClick={() => setShowListe((v) => !v)}>
           {showListe ? t("evenements.masquerInscrits") : t("evenements.voirInscrits", { count: liste.length })}
