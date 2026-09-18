@@ -1,0 +1,213 @@
+{
+ "slug": "我神我王",
+ "printed_key": "D",
+ "printed_key_verified": "en-tête de la page lu à l'œil avant toute mesure (étape 0), lot des 50 简谱 fournis, 2026-09-18 (itération 63)",
+ "key_label": {
+  "x": 15,
+  "y": 163,
+  "w": 84,
+  "h": 26
+ },
+ "key_label_verified": "cadre « 1=  D » élu sur la planche measure-keylabel (candidate #2) ; la candidate #1 était la ligne de tempo « ♩= 110 », écartée. Lettre gravée D = printed_key D. 2026-09-18 (itération 63)",
+ "not_labels": [
+  "755,804",
+  "1255,173",
+  "1759,160",
+  "2007,1383"
+ ],
+ "not_labels_verified": "quatre repères de section relus au zoom, qui ne sont pas des accords : 【Pre-Chorus】 (755,804), 【Chorus】 (1255,173), 【Bridge】 (1759,160) et « To Chorus » (2007,1383). 2026-09-18 (itération 63)",
+ "corrections": {
+  "263,66": "Bm7",
+  "263,911": "Bm7",
+  "514,785": "Bm7",
+  "755,1261": "Bm7",
+  "1255,826": "Bm7",
+  "1759,832": "Bm7"
+ },
+ "corrections_verified": "les six « Bm7 » de la page, relus un à un sur les bandes d'encre (band 263 · 510 · 750 · 1250 · 1755) : le matcher y lisait « Em7 », et sur la rangée d'intro il le **retenait** (+0,73 et +0,70) — six faux accords que seul l'œil voyait, la page ne gravant Em7 que dans les quatre rangées où il est juste (755,690 · 1015,316 · 1518,42 · 2007,49). Page en ré et .cho en ré (song_semitones = 0). 2026-09-18 (itération 63)",
+ "verified": "planche navigateur (npm run jianpu:audit) relue tranche par tranche, 7/7, en D→Eb : les 8 rangées d'accords sont cadrées et les 26 étiquettes réécrites (6 corrigées). Défaut principal, invisible aux compteurs : la page grave « Bm7 » six fois et le matcher y lisait « Em7 », **retenu** à +0,73 et +0,70 sur la rangée d'intro — six faux accords publiés et plausibles, vus au zoom sur les bandes d'encre et corrigés ; les quatre vrais Em7 (755,690 · 1015,316 · 1518,42 · 2007,49) sont restés. Les quatre repères 【Pre-Chorus】【Chorus】【Bridge】« To Chorus » sont écartés et intacts, comme « Fine », les arcs et le crochet de triolet. Le cadre « 1=  D » suit en « 1=Eb ». Pas de mention « （X调） » au titre. 2026-09-18 (itération 63)",
+ "frozen_labels": [
+  {
+   "x": 66,
+   "y": 263,
+   "w": 63,
+   "h": 24,
+   "c": "Bm7"
+  },
+  {
+   "x": 272,
+   "y": 263,
+   "w": 92,
+   "h": 24,
+   "c": "Dmaj7"
+  },
+  {
+   "x": 487,
+   "y": 263,
+   "w": 19,
+   "h": 24,
+   "c": "G"
+  },
+  {
+   "x": 911,
+   "y": 263,
+   "w": 63,
+   "h": 24,
+   "c": "Bm7"
+  },
+  {
+   "x": 1232,
+   "y": 263,
+   "w": 92,
+   "h": 24,
+   "c": "Dmaj7"
+  },
+  {
+   "x": 64,
+   "y": 514,
+   "w": 19,
+   "h": 23,
+   "c": "G"
+  },
+  {
+   "x": 785,
+   "y": 514,
+   "w": 63,
+   "h": 23,
+   "c": "Bm7"
+  },
+  {
+   "x": 1178,
+   "y": 514,
+   "w": 92,
+   "h": 23,
+   "c": "Dmaj7"
+  },
+  {
+   "x": 53,
+   "y": 755,
+   "w": 19,
+   "h": 33,
+   "c": "G"
+  },
+  {
+   "x": 690,
+   "y": 755,
+   "w": 61,
+   "h": 33,
+   "c": "Em7"
+  },
+  {
+   "x": 1261,
+   "y": 755,
+   "w": 63,
+   "h": 33,
+   "c": "Bm7"
+  },
+  {
+   "x": 316,
+   "y": 1015,
+   "w": 61,
+   "h": 24,
+   "c": "Em7"
+  },
+  {
+   "x": 915,
+   "y": 1015,
+   "w": 19,
+   "h": 24,
+   "c": "G"
+  },
+  {
+   "x": 1289,
+   "y": 1015,
+   "w": 85,
+   "h": 24,
+   "c": "Asus4"
+  },
+  {
+   "x": 1417,
+   "y": 1015,
+   "w": 19,
+   "h": 24,
+   "c": "A"
+  },
+  {
+   "x": 91,
+   "y": 1255,
+   "w": 18,
+   "h": 35,
+   "c": "D"
+  },
+  {
+   "x": 826,
+   "y": 1255,
+   "w": 63,
+   "h": 35,
+   "c": "Bm7"
+  },
+  {
+   "x": 42,
+   "y": 1518,
+   "w": 61,
+   "h": 23,
+   "c": "Em7"
+  },
+  {
+   "x": 687,
+   "y": 1518,
+   "w": 86,
+   "h": 23,
+   "c": "Asus4"
+  },
+  {
+   "x": 965,
+   "y": 1518,
+   "w": 19,
+   "h": 23,
+   "c": "A"
+  },
+  {
+   "x": 1347,
+   "y": 1518,
+   "w": 18,
+   "h": 23,
+   "c": "D"
+  },
+  {
+   "x": 97,
+   "y": 1759,
+   "w": 18,
+   "h": 33,
+   "c": "D"
+  },
+  {
+   "x": 832,
+   "y": 1759,
+   "w": 63,
+   "h": 33,
+   "c": "Bm7"
+  },
+  {
+   "x": 49,
+   "y": 2007,
+   "w": 61,
+   "h": 36,
+   "c": "Em7"
+  },
+  {
+   "x": 801,
+   "y": 2007,
+   "w": 86,
+   "h": 36,
+   "c": "Asus4"
+  },
+  {
+   "x": 1186,
+   "y": 2007,
+   "w": 19,
+   "h": 36,
+   "c": "A"
+  }
+ ]
+}

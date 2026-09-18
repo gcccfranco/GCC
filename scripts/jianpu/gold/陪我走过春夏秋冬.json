@@ -1,0 +1,566 @@
+{
+ "slug": "陪我走过春夏秋冬",
+ "printed_key": "C",
+ "printed_key_verified": "en-tête de la page lu à l'œil avant toute mesure (étape 0), lot des 50 简谱 fournis, 2026-09-18 (itération 63)",
+ "corrections": {
+  "457,281": "A/C#",
+  "457,676": "F#m/A",
+  "457,1024": "D/F#",
+  "457,1430": "A",
+  "766,264": "A/C#",
+  "766,657": "F#m/A",
+  "766,1064": "D/F#",
+  "1093,271": "A",
+  "1093,1444": "A",
+  "1401,1459": "D",
+  "2034,1500": "A"
+ },
+ "corrections_verified": "amas relus au zoom (propose-extra --all, planche _extra-1). **Page gravée en ut, .cho en ré** (song_semitones 10) : chaque amas lu est écrit deux demi-tons au-dessus du gravé — G/B→A/C#, F→G, C→D, Dm→Em, G→A, C/G→D/A, Em/G→F#m/A, C/E→D/F#. « F#m/A » et « D/F# » ne sont pas dans le vocabulaire du .cho, qui n'a que des accords à l'état fondamental : ce sont bien des renversements gravés (Em/G, C/E). 2026-09-18 (itération 63)",
+ "not_labels": [
+  "207,69",
+  "207,220",
+  "207,320",
+  "207,484",
+  "207,566",
+  "207,727",
+  "207,819",
+  "207,986",
+  "207,1097",
+  "207,1278",
+  "207,1354",
+  "207,1418",
+  "207,1585"
+ ],
+ "not_labels_verified": "y=207 x=1585 : le crochet vertical de fin de 2e fin (2 px de large), pas un accord. Les douze amas de la rangée y=207 sont écartés de la lecture et repris un par un en extra_labels : la bande du découpage fait 56 px parce qu'elle englobe le crochet de 1re/2e fin gravé sous les accords, si bien que le fond opaque de chaque étiquette descendait jusqu'à y≈271 et effaçait le filet du crochet (y=249-250) et ses chiffres « 1 » et « 2 ». Vu sur la planche navigateur (tranche 1/6). 2026-09-18 (itération 63)",
+ "title_key": {
+  "x": 1011,
+  "y": 16,
+  "w": 172,
+  "h": 69
+ },
+ "title_key_verified": "mention « （C调） » du titre, **mesurée à la main** : measure-titlekey ne la propose pas, la bande du titre de cette page tient aussi le tempo à gauche et les crédits à droite, et ses quatre coupes couvrent 1277 px ou plus. Encre mesurée au profil de colonnes sur la ligne du titre (« 陪我走过春夏秋冬 » 376…964, puis « （ » 1011…1032, « C » 1042…1075, « 调 » 1080…1147, « ） » 1160…1182) puis en lignes (16…84), zoom relu à l'œil. La mention de série « [共3张：D(原调)/C调、级数] » décrit la série et reste telle quelle. 2026-09-18 (itération 63)",
+ "key_label": {
+  "x": 14,
+  "y": 168,
+  "w": 84,
+  "h": 27
+ },
+ "key_label_verified": "mesure measure-keylabel (ancrage sur le « = », cadre = voisin gauche…voisin droit), zoom relu à l’œil sur planche de lot, lettre gravée confrontée à printedKey, 2026-08-26 (itération 35)",
+ "extra_labels": [
+  {
+   "x": 69,
+   "y": 231,
+   "w": 17,
+   "h": 25,
+   "c": "D"
+  },
+  {
+   "x": 220,
+   "y": 231,
+   "w": 55,
+   "h": 25,
+   "c": "A/C#"
+  },
+  {
+   "x": 322,
+   "y": 231,
+   "w": 46,
+   "h": 25,
+   "c": "Bm"
+  },
+  {
+   "x": 484,
+   "y": 231,
+   "w": 43,
+   "h": 25,
+   "c": "F#m"
+  },
+  {
+   "x": 591,
+   "y": 207,
+   "w": 12,
+   "h": 25,
+   "c": "G"
+  },
+  {
+   "x": 727,
+   "y": 207,
+   "w": 17,
+   "h": 25,
+   "c": "D"
+  },
+  {
+   "x": 819,
+   "y": 207,
+   "w": 48,
+   "h": 25,
+   "c": "Em"
+  },
+  {
+   "x": 986,
+   "y": 207,
+   "w": 20,
+   "h": 25,
+   "c": "A"
+  },
+  {
+   "x": 1129,
+   "y": 207,
+   "w": 13,
+   "h": 25,
+   "c": "G"
+  },
+  {
+   "x": 1278,
+   "y": 207,
+   "w": 54,
+   "h": 25,
+   "c": "D/A"
+  },
+  {
+   "x": 1354,
+   "y": 207,
+   "w": 20,
+   "h": 25,
+   "c": "A"
+  },
+  {
+   "x": 1418,
+   "y": 207,
+   "w": 18,
+   "h": 25,
+   "c": "D"
+  }
+ ],
+ "extra_labels_verified": "la rangée y=207 relevée à la main, boîtes mesurées sur l'encre au profil de lignes et de colonnes. Deux lignes de base, comme la gravure : les quatre premiers accords sont gravés 24 px plus bas (encre 231…255, barre du « G/B » 228…260), les huit suivants sont remontés au-dessus du crochet de 1re/2e fin (encre 207…231, le « C/G » 204…236 à cause de sa barre). Les boîtes du découpage partaient toutes de y=207 avec h=56 : elles remontaient les quatre de gauche de 24 px et, surtout, leur fond effaçait le filet du crochet et ses chiffres. Deux amas débordaient aussi à gauche sur le coin du crochet (x0 lu 566 pour un « F » dont l'encre est à 591…602, x0 lu 1097 pour un « F » à 1129…1141). Page gravée en ut, .cho en ré (song_semitones=10) : gravé C G/B Am Em | F C Dm G | F C/G G C, écrit ici D A/C# Bm F#m | G D Em A | G D/A A D. 2026-09-18 (itération 63)",
+ "verified": "planche navigateur (npm run jianpu:audit) relue tranche par tranche 1/6 à 6/6 en C→C# : les 7 rangées d'accords (y=207, 457, 766, 1093, 1401, 1725, 2034 — une par système) sont cadrées en rouge, 61 étiquettes réécrites, aucune restée dans la tonalité gravée. Page gravée en ut, .cho en ré (song_semitones=10) : le bas est le gravé transposé d'un demi-ton, donc la convention se contrôle étiquette par étiquette (un accord faux d'un demi-ton donnerait +2 ou 0 au lieu de +1). Fait pour les 61 : C→Db, G/B→Ab/C, Am→Bbm, Em→Fm, Em/G→Fm/Ab, F→Gb, C/E→Db/F, C/G→Db/Ab, Dm→Ebm, G→Ab. Le cadre « 1=C » devient « 1=C# » et la mention « （C调） » du titre « （C#调） » ; la mention de série « [共3张：D(原调)/C调、级数] » décrit la série des trois planches et reste intacte, comme 【Chorus】, 【Bridge】, « Fine » et « To Chorus ». Défaut corrigé à cette itération, vu sur la tranche 1/6 : la bande du découpage de la rangée y=207 englobe le crochet de 1re/2e fin, si bien que le fond opaque des douze étiquettes effaçait le filet du crochet et ses chiffres « 1 » et « 2 », et remontait de 24 px les quatre accords de gauche ; la rangée est désormais posée à la main en extra_labels, boîtes serrées sur l'encre, et le crochet est intact sur la planche. 2026-09-18 (itération 63)",
+ "frozen_labels": [
+  {
+   "x": 80,
+   "y": 457,
+   "w": 17,
+   "h": 32,
+   "c": "C"
+  },
+  {
+   "x": 281,
+   "y": 457,
+   "w": 56,
+   "h": 32,
+   "c": "G/B"
+  },
+  {
+   "x": 464,
+   "y": 457,
+   "w": 48,
+   "h": 32,
+   "c": "Am"
+  },
+  {
+   "x": 676,
+   "y": 457,
+   "w": 81,
+   "h": 32,
+   "c": "Em/G"
+  },
+  {
+   "x": 870,
+   "y": 457,
+   "w": 12,
+   "h": 32,
+   "c": "F"
+  },
+  {
+   "x": 1024,
+   "y": 457,
+   "w": 48,
+   "h": 32,
+   "c": "C/E"
+  },
+  {
+   "x": 1213,
+   "y": 457,
+   "w": 48,
+   "h": 32,
+   "c": "Dm"
+  },
+  {
+   "x": 1430,
+   "y": 457,
+   "w": 19,
+   "h": 32,
+   "c": "G"
+  },
+  {
+   "x": 62,
+   "y": 766,
+   "w": 18,
+   "h": 32,
+   "c": "C"
+  },
+  {
+   "x": 264,
+   "y": 766,
+   "w": 55,
+   "h": 32,
+   "c": "G/B"
+  },
+  {
+   "x": 446,
+   "y": 766,
+   "w": 48,
+   "h": 32,
+   "c": "Am"
+  },
+  {
+   "x": 657,
+   "y": 766,
+   "w": 81,
+   "h": 32,
+   "c": "Em/G"
+  },
+  {
+   "x": 850,
+   "y": 766,
+   "w": 12,
+   "h": 32,
+   "c": "F"
+  },
+  {
+   "x": 1064,
+   "y": 766,
+   "w": 49,
+   "h": 32,
+   "c": "C/E"
+  },
+  {
+   "x": 1271,
+   "y": 766,
+   "w": 47,
+   "h": 32,
+   "c": "Dm"
+  },
+  {
+   "x": 1445,
+   "y": 766,
+   "w": 20,
+   "h": 32,
+   "c": "G"
+  },
+  {
+   "x": 89,
+   "y": 1093,
+   "w": 18,
+   "h": 25,
+   "c": "C"
+  },
+  {
+   "x": 271,
+   "y": 1093,
+   "w": 19,
+   "h": 25,
+   "c": "G"
+  },
+  {
+   "x": 526,
+   "y": 1093,
+   "w": 49,
+   "h": 25,
+   "c": "Am"
+  },
+  {
+   "x": 747,
+   "y": 1093,
+   "w": 43,
+   "h": 25,
+   "c": "Em"
+  },
+  {
+   "x": 926,
+   "y": 1093,
+   "w": 13,
+   "h": 25,
+   "c": "F"
+  },
+  {
+   "x": 1122,
+   "y": 1093,
+   "w": 18,
+   "h": 25,
+   "c": "C"
+  },
+  {
+   "x": 1290,
+   "y": 1093,
+   "w": 48,
+   "h": 25,
+   "c": "Dm"
+  },
+  {
+   "x": 1444,
+   "y": 1093,
+   "w": 19,
+   "h": 25,
+   "c": "G"
+  },
+  {
+   "x": 58,
+   "y": 1401,
+   "w": 17,
+   "h": 25,
+   "c": "C"
+  },
+  {
+   "x": 229,
+   "y": 1401,
+   "w": 20,
+   "h": 25,
+   "c": "G"
+  },
+  {
+   "x": 478,
+   "y": 1401,
+   "w": 49,
+   "h": 25,
+   "c": "Am"
+  },
+  {
+   "x": 720,
+   "y": 1401,
+   "w": 42,
+   "h": 25,
+   "c": "Em"
+  },
+  {
+   "x": 868,
+   "y": 1401,
+   "w": 13,
+   "h": 25,
+   "c": "F"
+  },
+  {
+   "x": 1061,
+   "y": 1401,
+   "w": 18,
+   "h": 25,
+   "c": "C"
+  },
+  {
+   "x": 1213,
+   "y": 1401,
+   "w": 48,
+   "h": 25,
+   "c": "Dm"
+  },
+  {
+   "x": 1363,
+   "y": 1401,
+   "w": 20,
+   "h": 25,
+   "c": "G"
+  },
+  {
+   "x": 1459,
+   "y": 1401,
+   "w": 17,
+   "h": 25,
+   "c": "C"
+  },
+  {
+   "x": 78,
+   "y": 1725,
+   "w": 48,
+   "h": 25,
+   "c": "Am"
+  },
+  {
+   "x": 287,
+   "y": 1725,
+   "w": 20,
+   "h": 25,
+   "c": "G"
+  },
+  {
+   "x": 505,
+   "y": 1725,
+   "w": 47,
+   "h": 25,
+   "c": "Dm"
+  },
+  {
+   "x": 703,
+   "y": 1725,
+   "w": 49,
+   "h": 25,
+   "c": "Am"
+  },
+  {
+   "x": 939,
+   "y": 1725,
+   "w": 12,
+   "h": 25,
+   "c": "F"
+  },
+  {
+   "x": 1137,
+   "y": 1725,
+   "w": 17,
+   "h": 25,
+   "c": "C"
+  },
+  {
+   "x": 1332,
+   "y": 1725,
+   "w": 48,
+   "h": 25,
+   "c": "Dm"
+  },
+  {
+   "x": 1466,
+   "y": 1725,
+   "w": 20,
+   "h": 25,
+   "c": "G"
+  },
+  {
+   "x": 46,
+   "y": 2034,
+   "w": 17,
+   "h": 24,
+   "c": "C"
+  },
+  {
+   "x": 279,
+   "y": 2034,
+   "w": 20,
+   "h": 24,
+   "c": "G"
+  },
+  {
+   "x": 448,
+   "y": 2034,
+   "w": 48,
+   "h": 24,
+   "c": "Dm"
+  },
+  {
+   "x": 681,
+   "y": 2034,
+   "w": 49,
+   "h": 24,
+   "c": "Am"
+  },
+  {
+   "x": 869,
+   "y": 2034,
+   "w": 13,
+   "h": 24,
+   "c": "F"
+  },
+  {
+   "x": 1102,
+   "y": 2034,
+   "w": 17,
+   "h": 24,
+   "c": "C"
+  },
+  {
+   "x": 1301,
+   "y": 2034,
+   "w": 47,
+   "h": 24,
+   "c": "Dm"
+  },
+  {
+   "x": 1500,
+   "y": 2034,
+   "w": 19,
+   "h": 24,
+   "c": "G"
+  },
+  {
+   "x": 69,
+   "y": 231,
+   "w": 17,
+   "h": 25,
+   "c": "C"
+  },
+  {
+   "x": 220,
+   "y": 231,
+   "w": 55,
+   "h": 25,
+   "c": "G/B"
+  },
+  {
+   "x": 322,
+   "y": 231,
+   "w": 46,
+   "h": 25,
+   "c": "Am"
+  },
+  {
+   "x": 484,
+   "y": 231,
+   "w": 43,
+   "h": 25,
+   "c": "Em"
+  },
+  {
+   "x": 591,
+   "y": 207,
+   "w": 12,
+   "h": 25,
+   "c": "F"
+  },
+  {
+   "x": 727,
+   "y": 207,
+   "w": 17,
+   "h": 25,
+   "c": "C"
+  },
+  {
+   "x": 819,
+   "y": 207,
+   "w": 48,
+   "h": 25,
+   "c": "Dm"
+  },
+  {
+   "x": 986,
+   "y": 207,
+   "w": 20,
+   "h": 25,
+   "c": "G"
+  },
+  {
+   "x": 1129,
+   "y": 207,
+   "w": 13,
+   "h": 25,
+   "c": "F"
+  },
+  {
+   "x": 1278,
+   "y": 207,
+   "w": 54,
+   "h": 25,
+   "c": "C/G"
+  },
+  {
+   "x": 1354,
+   "y": 207,
+   "w": 20,
+   "h": 25,
+   "c": "G"
+  },
+  {
+   "x": 1418,
+   "y": 207,
+   "w": 18,
+   "h": 25,
+   "c": "C"
+  }
+ ]
+}

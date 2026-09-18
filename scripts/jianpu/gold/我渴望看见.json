@@ -1,0 +1,407 @@
+{
+ "slug": "我渴望看见",
+ "printed_key": "F",
+ "printed_key_verified": "en-tête de la page lu à l'œil avant toute mesure (étape 0), lot des 50 简谱 fournis, 2026-09-18 (itération 63)",
+ "corrections": {
+  "251,304": "C/E",
+  "251,1116": "C/E",
+  "251,1474": "F/C",
+  "503,251": "F/A",
+  "503,439": "Gm7",
+  "503,1022": "C/E",
+  "503,1216": "Cm/Eb",
+  "747,252": "Bb/C",
+  "747,1243": "C/E",
+  "1035,974": "C或C/Bb",
+  "1035,1272": "C/E",
+  "1335,242": "G/B",
+  "1335,506": "C",
+  "1335,1007": "Bb/C",
+  "1606,363": "C/Bb",
+  "1606,1130": "C",
+  "1921,323": "C/Bb",
+  "1921,1092": "Bb/C"
+ },
+ "corrections_verified": "les 8 rangées d'accords rendues en bande pleine largeur avec une règle en pixels et relues une par une. Dix-huit amas repris, dont sept **lus faux** et plausibles (mode C) : cinq « C/E » publiés « D7 », « Gm7 » publié « Cm7 », « Cm/Eb » publié « C/Bb ». « C或C/Bb » est une composite gravée telle quelle (LABEL_SPLIT découpe sur le 或). Page en fa comme le .cho : rien à transposer avant d'écrire. 2026-09-18 (itération 63)",
+ "not_labels": [
+  "747,576",
+  "747,732",
+  "1606,174",
+  "1921,1415"
+ ],
+ "not_labels_verified": "le segno 𝄋 soudé à son « Bb/C » (amas de 117 px : segno 576-608, accord 621-692 — republié à part pour ne pas effacer le signe), 【Chorus】, 【Bridge】 et « D.S. al Fine ».",
+ "not_rows": [
+  1479
+ ],
+ "not_rows_verified": "la rangée des ligatures et des points d'octave du 6e système, avec le « Fine » à droite, promue rangée d'accords : 10 amas au dénominateur, aucun n'est de l'écriture d'accord.",
+ "extra_labels": [
+  {
+   "x": 621,
+   "y": 755,
+   "w": 72,
+   "h": 33,
+   "c": "Bb/C"
+  }
+ ],
+ "extra_labels_verified": "le « Bb/C » du 3e système, soudé au segno dans un amas de 117 px : boîte mesurée sur l'encre de l'accord seul (621…692), le segno reste gravé à gauche.",
+ "key_label": {
+  "x": 11,
+  "y": 166,
+  "w": 80,
+  "h": 26
+ },
+ "key_label_verified": "mesure measure-keylabel (ancrage sur le « = », cadre = voisin gauche…voisin droit), zoom relu à l’œil sur planche de lot, lettre gravée confrontée à printedKey, 2026-08-26 (itération 35)",
+ "verified": "planche navigateur (npm run jianpu:audit) relue tranche par tranche, 6/6, en F→F# : les 8 rangées d'accords sont cadrées et les 50 étiquettes réécrites (F→F#, C/E→C#/F, Gm→G#m, Bb→B, Cm/Eb→C#m/E, Dm7→D#m7, C或C/Bb→C#或C#/B), le cadre « 1= F » devient « 1=F# ». Le segno 𝄋, 【Chorus】, 【Bridge】, « D.S. al Fine » et « Fine » restent intacts, ainsi que la mention « （F原调） » du titre et « [有多张，原调F] », qui décrivent la source. 2026-09-18 (itération 63)",
+ "frozen_labels": [
+  {
+   "x": 138,
+   "y": 251,
+   "w": 12,
+   "h": 32,
+   "c": "F"
+  },
+  {
+   "x": 304,
+   "y": 251,
+   "w": 49,
+   "h": 32,
+   "c": "C/E"
+  },
+  {
+   "x": 506,
+   "y": 251,
+   "w": 50,
+   "h": 32,
+   "c": "Gm"
+  },
+  {
+   "x": 741,
+   "y": 251,
+   "w": 18,
+   "h": 32,
+   "c": "C"
+  },
+  {
+   "x": 932,
+   "y": 251,
+   "w": 12,
+   "h": 32,
+   "c": "F"
+  },
+  {
+   "x": 1116,
+   "y": 251,
+   "w": 49,
+   "h": 32,
+   "c": "C/E"
+  },
+  {
+   "x": 1277,
+   "y": 251,
+   "w": 69,
+   "h": 32,
+   "c": "Dm7"
+  },
+  {
+   "x": 1474,
+   "y": 251,
+   "w": 48,
+   "h": 32,
+   "c": "F/C"
+  },
+  {
+   "x": 50,
+   "y": 503,
+   "w": 36,
+   "h": 33,
+   "c": "Bb"
+  },
+  {
+   "x": 251,
+   "y": 503,
+   "w": 50,
+   "h": 33,
+   "c": "F/A"
+  },
+  {
+   "x": 439,
+   "y": 503,
+   "w": 70,
+   "h": 33,
+   "c": "Gm7"
+  },
+  {
+   "x": 651,
+   "y": 503,
+   "w": 17,
+   "h": 33,
+   "c": "C"
+  },
+  {
+   "x": 832,
+   "y": 503,
+   "w": 13,
+   "h": 33,
+   "c": "F"
+  },
+  {
+   "x": 1022,
+   "y": 503,
+   "w": 50,
+   "h": 33,
+   "c": "C/E"
+  },
+  {
+   "x": 1216,
+   "y": 503,
+   "w": 99,
+   "h": 33,
+   "c": "Cm/Eb"
+  },
+  {
+   "x": 1419,
+   "y": 503,
+   "w": 37,
+   "h": 33,
+   "c": "D7"
+  },
+  {
+   "x": 50,
+   "y": 747,
+   "w": 50,
+   "h": 42,
+   "c": "Gm"
+  },
+  {
+   "x": 252,
+   "y": 747,
+   "w": 71,
+   "h": 42,
+   "c": "Bb/C"
+  },
+  {
+   "x": 487,
+   "y": 747,
+   "w": 13,
+   "h": 42,
+   "c": "F"
+  },
+  {
+   "x": 872,
+   "y": 747,
+   "w": 13,
+   "h": 42,
+   "c": "F"
+  },
+  {
+   "x": 1243,
+   "y": 747,
+   "w": 49,
+   "h": 42,
+   "c": "C/E"
+  },
+  {
+   "x": 44,
+   "y": 1035,
+   "w": 69,
+   "h": 32,
+   "c": "Dm7"
+  },
+  {
+   "x": 473,
+   "y": 1035,
+   "w": 66,
+   "h": 32,
+   "c": "Cm7"
+  },
+  {
+   "x": 570,
+   "y": 1035,
+   "w": 32,
+   "h": 32,
+   "c": "F7"
+  },
+  {
+   "x": 727,
+   "y": 1035,
+   "w": 36,
+   "h": 32,
+   "c": "Bb"
+  },
+  {
+   "x": 974,
+   "y": 1035,
+   "w": 129,
+   "h": 32,
+   "c": "C或C/Bb"
+  },
+  {
+   "x": 1178,
+   "y": 1035,
+   "w": 12,
+   "h": 32,
+   "c": "F"
+  },
+  {
+   "x": 1272,
+   "y": 1035,
+   "w": 48,
+   "h": 32,
+   "c": "C/E"
+  },
+  {
+   "x": 1417,
+   "y": 1035,
+   "w": 48,
+   "h": 32,
+   "c": "Dm"
+  },
+  {
+   "x": 52,
+   "y": 1335,
+   "w": 35,
+   "h": 27,
+   "c": "Bb"
+  },
+  {
+   "x": 242,
+   "y": 1335,
+   "w": 57,
+   "h": 27,
+   "c": "G/B"
+  },
+  {
+   "x": 506,
+   "y": 1335,
+   "w": 17,
+   "h": 27,
+   "c": "C"
+  },
+  {
+   "x": 815,
+   "y": 1335,
+   "w": 36,
+   "h": 27,
+   "c": "Bb"
+  },
+  {
+   "x": 1007,
+   "y": 1335,
+   "w": 71,
+   "h": 27,
+   "c": "Bb/C"
+  },
+  {
+   "x": 1256,
+   "y": 1335,
+   "w": 13,
+   "h": 27,
+   "c": "F"
+  },
+  {
+   "x": 90,
+   "y": 1606,
+   "w": 36,
+   "h": 32,
+   "c": "Bb"
+  },
+  {
+   "x": 363,
+   "y": 1606,
+   "w": 72,
+   "h": 32,
+   "c": "C/Bb"
+  },
+  {
+   "x": 498,
+   "y": 1606,
+   "w": 69,
+   "h": 32,
+   "c": "Am7"
+  },
+  {
+   "x": 772,
+   "y": 1606,
+   "w": 68,
+   "h": 32,
+   "c": "Dm7"
+  },
+  {
+   "x": 913,
+   "y": 1606,
+   "w": 35,
+   "h": 32,
+   "c": "Bb"
+  },
+  {
+   "x": 1130,
+   "y": 1606,
+   "w": 17,
+   "h": 32,
+   "c": "C"
+  },
+  {
+   "x": 1364,
+   "y": 1606,
+   "w": 12,
+   "h": 32,
+   "c": "F"
+  },
+  {
+   "x": 50,
+   "y": 1921,
+   "w": 36,
+   "h": 42,
+   "c": "Bb"
+  },
+  {
+   "x": 323,
+   "y": 1921,
+   "w": 72,
+   "h": 42,
+   "c": "C/Bb"
+  },
+  {
+   "x": 463,
+   "y": 1921,
+   "w": 69,
+   "h": 42,
+   "c": "Am7"
+  },
+  {
+   "x": 737,
+   "y": 1921,
+   "w": 69,
+   "h": 42,
+   "c": "Dm7"
+  },
+  {
+   "x": 883,
+   "y": 1921,
+   "w": 36,
+   "h": 42,
+   "c": "Bb"
+  },
+  {
+   "x": 1092,
+   "y": 1921,
+   "w": 72,
+   "h": 42,
+   "c": "Bb/C"
+  },
+  {
+   "x": 1341,
+   "y": 1921,
+   "w": 13,
+   "h": 42,
+   "c": "F"
+  },
+  {
+   "x": 621,
+   "y": 755,
+   "w": 72,
+   "h": 33,
+   "c": "Bb/C"
+  }
+ ]
+}

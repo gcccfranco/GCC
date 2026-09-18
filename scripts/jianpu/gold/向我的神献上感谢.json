@@ -1,0 +1,451 @@
+{
+ "slug": "向我的神献上感谢",
+ "printed_key": "C",
+ "printed_key_verified": "en-tête de la page lu à l'œil avant toute mesure (étape 0), lot des 50 简谱 fournis, 2026-09-18 (itération 63)",
+ "corrections": {
+  "556,383": "G",
+  "1255,455": "G",
+  "1255,857": "G",
+  "1501,861": "C/E",
+  "1743,49": "F/G",
+  "1743,1373": "C/E",
+  "1976,1020": "G"
+ },
+ "corrections_verified": "sept amas relus au zoom : trois « G » non unanimes, les deux C/E et le F/G sous le seuil, et le « G » de la dernière rangée que le matcher lisait F (mode C). Page en ut, .cho en ut (song_semitones=0). 2026-09-18 (itération 63)",
+ "not_labels": [
+  "242,158",
+  "912,171",
+  "1501,76",
+  "1976,1090",
+  "1976,1124",
+  "1976,1142",
+  "1976,1202",
+  "1976,1226"
+ ],
+ "not_labels_verified": "trois mentions de section (【Verse】 y=242, 【Chorus】 y=912, 【Bridge】 y=1501) et les cinq fragments de la longue liaison de la dernière rangée (x=1090…1226), tous relus au zoom. 2026-09-18 (itération 63)",
+ "not_rows": [
+  603,
+  1297
+ ],
+ "not_rows_verified": "y=603 et y=1297 ne portent que les chiffres ┌1 ┌2 des maisons de reprise. 2026-09-18 (itération 63)",
+ "mask_rows": [
+  817,
+  1159
+ ],
+ "mask_rows_verified": "1=C · deux rangées gravées en **ré** empilées au-dessus des rangées réelles en ut du refrain (y=912 et y=1255) : D A Bm F#m G D puis G A A D, soit +2 demi-tons sur chaque accord. La page annonce elle-même la modulation en bas à droite : « [升调时，间奏 G A Bb C D] ». La rangée y=817 est typée « chords » (le matcher y retenait D, Em et D, faux), y=1159 ne l'est pas. Relues au zoom avec règle en x. 2026-09-18 (itération 63)",
+ "alt_labels": [
+  {
+   "x": 94,
+   "y": 817,
+   "w": 16,
+   "h": 21,
+   "c": "D",
+   "alt": 2,
+   "opt": true
+  },
+  {
+   "x": 344,
+   "y": 817,
+   "w": 17,
+   "h": 21,
+   "c": "A",
+   "alt": 2,
+   "opt": true
+  },
+  {
+   "x": 588,
+   "y": 817,
+   "w": 38,
+   "h": 21,
+   "c": "Bm",
+   "alt": 2,
+   "opt": true
+  },
+  {
+   "x": 861,
+   "y": 817,
+   "w": 51,
+   "h": 21,
+   "c": "F#m",
+   "alt": 2,
+   "opt": true
+  },
+  {
+   "x": 1090,
+   "y": 817,
+   "w": 16,
+   "h": 21,
+   "c": "G",
+   "alt": 2,
+   "opt": true
+  },
+  {
+   "x": 1360,
+   "y": 817,
+   "w": 15,
+   "h": 21,
+   "c": "D",
+   "alt": 2,
+   "opt": true
+  },
+  {
+   "x": 77,
+   "y": 1159,
+   "w": 17,
+   "h": 20,
+   "c": "G",
+   "alt": 2,
+   "opt": true
+  },
+  {
+   "x": 456,
+   "y": 1159,
+   "w": 17,
+   "h": 20,
+   "c": "A",
+   "alt": 2,
+   "opt": true
+  },
+  {
+   "x": 859,
+   "y": 1159,
+   "w": 16,
+   "h": 20,
+   "c": "A",
+   "alt": 2,
+   "opt": true
+  },
+  {
+   "x": 1239,
+   "y": 1159,
+   "w": 16,
+   "h": 20,
+   "c": "D",
+   "alt": 2,
+   "opt": true
+  }
+ ],
+ "alt_labels_verified": "les dix accords des deux rangées empilées, lus à l'œil au zoom et écrits dans la tonalité **gravée** (ré, +2 demi-tons sur la page en ut) ; `opt` parce qu'elles décrivent la même musique que les rangées en ut juste dessous — masquées par défaut, révélées par le sélecteur de tonalité. Boîtes mesurées sur l'encre. 2026-09-18 (itération 63)",
+ "key_label": {
+  "x": 11,
+  "y": 167,
+  "w": 84,
+  "h": 26
+ },
+ "key_label_verified": "mesure measure-keylabel (ancrage sur le « = », cadre = voisin gauche…voisin droit), zoom relu à l’œil sur planche de lot, lettre gravée confrontée à printedKey, 2026-08-26 (itération 35)",
+ "extra_labels": [
+  {
+   "x": 1365,
+   "y": 2130,
+   "w": 171,
+   "h": 23,
+   "fh": 23,
+   "c": "G A Bb C D"
+  }
+ ],
+ "extra_labels_verified": "la mention « [升调时，间奏 G A Bb C D] » du bas de page nomme les accords de l'interlude de modulation : cinq vrais accords, qui resteraient en ut sur une page transposée. Pris comme étiquette composite (transpose_label réécrit la ligne jeton par jeton), crochets et hanzi laissés hors de la boîte. Mesurée sur l'encre (x 1365…1535), gravée 23 px. 2026-09-18 (itération 63)",
+ "verified": "planche navigateur (npm run jianpu:audit) relue tranche par tranche, 6/6, en C→C#, puis une seconde fois avec --alt (sélecteur de tonalité ouvert). Par défaut : les 7 rangées en ut sont cadrées, les 29 étiquettes réécrites (C→Db, G→Ab, Am→Bbm, Em→Fm, F→Gb, C/E→Db/F, Dm7→Ebm7, F/G→Gb/Ab, D→Eb), le cadre « 1=  C » devient « 1=C# », la mention « [升调时，间奏 G A Bb C D] » devient « [升调时，间奏 Ab Bb B Db Eb] », et les deux rangées gravées en ré sont masquées (cadres vides). Avec --alt : elles reparaissent en Eb Bb Cm Gm Ab Eb et Ab Bb Bb Eb, soit +1 demi-ton sur la gravure en ré. Défauts corrigés à l'œil : deux rangées empilées en ré (y=817, y=1159) dont le matcher publiait trois faux accords ; la rangée du bas de page lue « F » pour un « G » gravé (mode C) ; cinq fragments de liaison pris pour des étiquettes ; trois mentions de section et deux rangées de maisons de reprise. Aucun cadre orange, aucun accord sans cadre. 2026-09-18 (itération 63)",
+ "frozen_labels": [
+  {
+   "x": 85,
+   "y": 242,
+   "w": 17,
+   "h": 37,
+   "c": "C"
+  },
+  {
+   "x": 354,
+   "y": 242,
+   "w": 20,
+   "h": 37,
+   "c": "G"
+  },
+  {
+   "x": 578,
+   "y": 242,
+   "w": 49,
+   "h": 37,
+   "c": "Am"
+  },
+  {
+   "x": 856,
+   "y": 242,
+   "w": 43,
+   "h": 37,
+   "c": "Em"
+  },
+  {
+   "x": 1099,
+   "y": 242,
+   "w": 12,
+   "h": 37,
+   "c": "F"
+  },
+  {
+   "x": 1368,
+   "y": 242,
+   "w": 17,
+   "h": 37,
+   "c": "C"
+  },
+  {
+   "x": 74,
+   "y": 556,
+   "w": 12,
+   "h": 25,
+   "c": "F"
+  },
+  {
+   "x": 383,
+   "y": 556,
+   "w": 19,
+   "h": 25,
+   "c": "G"
+  },
+  {
+   "x": 708,
+   "y": 556,
+   "w": 20,
+   "h": 25,
+   "c": "G"
+  },
+  {
+   "x": 1032,
+   "y": 556,
+   "w": 17,
+   "h": 25,
+   "c": "C"
+  },
+  {
+   "x": 93,
+   "y": 912,
+   "w": 17,
+   "h": 37,
+   "c": "C"
+  },
+  {
+   "x": 342,
+   "y": 912,
+   "w": 20,
+   "h": 37,
+   "c": "G"
+  },
+  {
+   "x": 586,
+   "y": 912,
+   "w": 49,
+   "h": 37,
+   "c": "Am"
+  },
+  {
+   "x": 860,
+   "y": 912,
+   "w": 44,
+   "h": 37,
+   "c": "Em"
+  },
+  {
+   "x": 1093,
+   "y": 912,
+   "w": 12,
+   "h": 37,
+   "c": "F"
+  },
+  {
+   "x": 1359,
+   "y": 912,
+   "w": 17,
+   "h": 37,
+   "c": "C"
+  },
+  {
+   "x": 80,
+   "y": 1255,
+   "w": 12,
+   "h": 25,
+   "c": "F"
+  },
+  {
+   "x": 455,
+   "y": 1255,
+   "w": 19,
+   "h": 25,
+   "c": "G"
+  },
+  {
+   "x": 857,
+   "y": 1255,
+   "w": 19,
+   "h": 25,
+   "c": "G"
+  },
+  {
+   "x": 1238,
+   "y": 1255,
+   "w": 17,
+   "h": 25,
+   "c": "C"
+  },
+  {
+   "x": 366,
+   "y": 1501,
+   "w": 13,
+   "h": 37,
+   "c": "F"
+  },
+  {
+   "x": 861,
+   "y": 1501,
+   "w": 49,
+   "h": 37,
+   "c": "C/E"
+  },
+  {
+   "x": 1378,
+   "y": 1501,
+   "w": 68,
+   "h": 37,
+   "c": "Dm7"
+  },
+  {
+   "x": 49,
+   "y": 1743,
+   "w": 50,
+   "h": 27,
+   "c": "F/G"
+  },
+  {
+   "x": 346,
+   "y": 1743,
+   "w": 17,
+   "h": 27,
+   "c": "C"
+  },
+  {
+   "x": 865,
+   "y": 1743,
+   "w": 12,
+   "h": 27,
+   "c": "F"
+  },
+  {
+   "x": 1373,
+   "y": 1743,
+   "w": 49,
+   "h": 27,
+   "c": "C/E"
+  },
+  {
+   "x": 392,
+   "y": 1976,
+   "w": 18,
+   "h": 40,
+   "c": "D"
+  },
+  {
+   "x": 1020,
+   "y": 1976,
+   "w": 20,
+   "h": 40,
+   "c": "G"
+  },
+  {
+   "x": 1365,
+   "y": 2130,
+   "w": 171,
+   "h": 23,
+   "c": "G A Bb C D",
+   "fh": 23
+  },
+  {
+   "x": 94,
+   "y": 817,
+   "w": 16,
+   "h": 21,
+   "c": "D",
+   "alt": 2,
+   "opt": true
+  },
+  {
+   "x": 344,
+   "y": 817,
+   "w": 17,
+   "h": 21,
+   "c": "A",
+   "alt": 2,
+   "opt": true
+  },
+  {
+   "x": 588,
+   "y": 817,
+   "w": 38,
+   "h": 21,
+   "c": "Bm",
+   "alt": 2,
+   "opt": true
+  },
+  {
+   "x": 861,
+   "y": 817,
+   "w": 51,
+   "h": 21,
+   "c": "F#m",
+   "alt": 2,
+   "opt": true
+  },
+  {
+   "x": 1090,
+   "y": 817,
+   "w": 16,
+   "h": 21,
+   "c": "G",
+   "alt": 2,
+   "opt": true
+  },
+  {
+   "x": 1360,
+   "y": 817,
+   "w": 15,
+   "h": 21,
+   "c": "D",
+   "alt": 2,
+   "opt": true
+  },
+  {
+   "x": 77,
+   "y": 1159,
+   "w": 17,
+   "h": 20,
+   "c": "G",
+   "alt": 2,
+   "opt": true
+  },
+  {
+   "x": 456,
+   "y": 1159,
+   "w": 17,
+   "h": 20,
+   "c": "A",
+   "alt": 2,
+   "opt": true
+  },
+  {
+   "x": 859,
+   "y": 1159,
+   "w": 16,
+   "h": 20,
+   "c": "A",
+   "alt": 2,
+   "opt": true
+  },
+  {
+   "x": 1239,
+   "y": 1159,
+   "w": 16,
+   "h": 20,
+   "c": "D",
+   "alt": 2,
+   "opt": true
+  }
+ ]
+}

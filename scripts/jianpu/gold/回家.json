@@ -1,0 +1,406 @@
+{
+ "slug": "回家",
+ "printed_key": "D",
+ "printed_key_verified": "en-tête de la page lu à l'œil avant toute mesure (étape 0), lot des 50 简谱 fournis, 2026-09-18 (itération 63)",
+ "corrections": {
+  "407,218": "E2/D",
+  "407,388": "Gm/D",
+  "407,1021": "E2/D",
+  "407,1198": "Gm/D",
+  "624,761": "F#",
+  "624,921": "Bm",
+  "624,1186": "D/A",
+  "1155,15": "Bm",
+  "1155,274": "D/A",
+  "1155,1080": "D",
+  "1155,1288": "G/A",
+  "1410,688": "D/A",
+  "1674,142": "E/G#",
+  "1674,1224": "D/A",
+  "1951,1042": "D"
+ },
+ "corrections_verified": "amas relus un par un au zoom (propose-extra --all --hidden), convention du .cho (song_semitones=0), 2026-09-18 (itération 63)",
+ "not_rows": [
+  226,
+  914
+ ],
+ "not_labels": [
+  "624,347",
+  "624,466",
+  "624,1417",
+  "1155,507",
+  "1155,655",
+  "1155,1417",
+  "1951,172"
+ ],
+ "extra_labels": [
+  {
+   "x": 26,
+   "y": 878,
+   "w": 22,
+   "h": 26,
+   "c": "G"
+  },
+  {
+   "x": 279,
+   "y": 878,
+   "w": 76,
+   "h": 26,
+   "c": "D/F#"
+  },
+  {
+   "x": 572,
+   "y": 878,
+   "w": 21,
+   "h": 26,
+   "c": "E"
+  },
+  {
+   "x": 737,
+   "y": 878,
+   "w": 24,
+   "h": 26,
+   "c": "A"
+  },
+  {
+   "x": 923,
+   "y": 878,
+   "w": 25,
+   "h": 26,
+   "c": "D"
+  },
+  {
+   "x": 1120,
+   "y": 878,
+   "w": 106,
+   "h": 26,
+   "c": "C#dim"
+  },
+  {
+   "x": 1310,
+   "y": 878,
+   "w": 40,
+   "h": 26,
+   "c": "F#"
+  }
+ ],
+ "extra_verified": "rangée cachée y=878 (mode D, jamais typée « chords ») : sept accords relus au zoom via propose-extra --hidden. 2026-09-18 (itération 63)",
+ "key_label": {
+  "x": 38,
+  "y": 267,
+  "w": 72,
+  "h": 26
+ },
+ "key_label_verified": "cadre mesuré par measure-keylabel (ancrage sur le « = »), candidate relue sur la planche _kl : la lettre gravée est bien celle de printed_key, donc pas de champ `c` — le client écrit « 1=<tonalité jouée> ». La ligne de tempo ♩=NN, proposée en même temps, a été écartée. 2026-09-18 (itération 63)",
+ "verified": "planche navigateur relue tranche par tranche, 7/7, en D→Eb : les 6 rangées d'accords sont cadrées et les 44 étiquettes réécrites, cadre « 1=D » → « 1=Eb » compris. Le bloc de titre (y=226) et une rangée de liaisons (y=914) écartés en not_rows ; sept amas qui ne sont pas des étiquettes (barres de mesure, bouts de liaison) écartés en not_labels. Une rangée cachée entière (y=878, mode D) relevée au zoom et publiée en extra_labels (G D/F# E A D C#dim F#) : tranche 3/7 la montre cadrée, liaisons intactes. Quinze amas corrigés à l'œil, dont les « E2/D » et « Gm/D » de l'intro que le matcher lisait « E/G# » et ne retenait pas. Reste cosmétique et accepté : quelques amas soudent l'accord à une liaison, dont le fond opaque efface le fragment qui passe sous les lettres. 2026-09-18 (itération 63)",
+ "frozen_labels": [
+  {
+   "x": 52,
+   "y": 407,
+   "w": 20,
+   "h": 27,
+   "c": "D"
+  },
+  {
+   "x": 218,
+   "y": 407,
+   "w": 67,
+   "h": 27,
+   "c": "E2/D"
+  },
+  {
+   "x": 388,
+   "y": 407,
+   "w": 83,
+   "h": 27,
+   "c": "Gm/D"
+  },
+  {
+   "x": 615,
+   "y": 407,
+   "w": 21,
+   "h": 27,
+   "c": "D"
+  },
+  {
+   "x": 852,
+   "y": 407,
+   "w": 21,
+   "h": 27,
+   "c": "D"
+  },
+  {
+   "x": 1021,
+   "y": 407,
+   "w": 67,
+   "h": 27,
+   "c": "E2/D"
+  },
+  {
+   "x": 1198,
+   "y": 407,
+   "w": 83,
+   "h": 27,
+   "c": "Gm/D"
+  },
+  {
+   "x": 28,
+   "y": 624,
+   "w": 21,
+   "h": 36,
+   "c": "D"
+  },
+  {
+   "x": 367,
+   "y": 624,
+   "w": 21,
+   "h": 36,
+   "c": "D"
+  },
+  {
+   "x": 596,
+   "y": 619,
+   "w": 91,
+   "h": 41,
+   "c": "C#dim"
+  },
+  {
+   "x": 761,
+   "y": 619,
+   "w": 66,
+   "h": 41,
+   "c": "F#"
+  },
+  {
+   "x": 921,
+   "y": 624,
+   "w": 72,
+   "h": 36,
+   "c": "Bm"
+  },
+  {
+   "x": 1186,
+   "y": 624,
+   "w": 71,
+   "h": 36,
+   "c": "D/A"
+  },
+  {
+   "x": 15,
+   "y": 1155,
+   "w": 62,
+   "h": 36,
+   "c": "Bm"
+  },
+  {
+   "x": 274,
+   "y": 1155,
+   "w": 70,
+   "h": 36,
+   "c": "D/A"
+  },
+  {
+   "x": 524,
+   "y": 1155,
+   "w": 21,
+   "h": 36,
+   "c": "G"
+  },
+  {
+   "x": 805,
+   "y": 1155,
+   "w": 57,
+   "h": 36,
+   "c": "G/A"
+  },
+  {
+   "x": 1080,
+   "y": 1155,
+   "w": 66,
+   "h": 36,
+   "c": "D"
+  },
+  {
+   "x": 1288,
+   "y": 1155,
+   "w": 74,
+   "h": 36,
+   "c": "G/A"
+  },
+  {
+   "x": 29,
+   "y": 1410,
+   "w": 21,
+   "h": 34,
+   "c": "D"
+  },
+  {
+   "x": 210,
+   "y": 1410,
+   "w": 69,
+   "h": 34,
+   "c": "A/C#"
+  },
+  {
+   "x": 436,
+   "y": 1410,
+   "w": 45,
+   "h": 34,
+   "c": "Bm"
+  },
+  {
+   "x": 688,
+   "y": 1410,
+   "w": 52,
+   "h": 34,
+   "c": "D/A"
+  },
+  {
+   "x": 878,
+   "y": 1410,
+   "w": 22,
+   "h": 34,
+   "c": "G"
+  },
+  {
+   "x": 1165,
+   "y": 1410,
+   "w": 64,
+   "h": 34,
+   "c": "D/F#"
+  },
+  {
+   "x": 30,
+   "y": 1674,
+   "w": 17,
+   "h": 34,
+   "c": "E"
+  },
+  {
+   "x": 142,
+   "y": 1674,
+   "w": 68,
+   "h": 34,
+   "c": "E/G#"
+  },
+  {
+   "x": 300,
+   "y": 1674,
+   "w": 19,
+   "h": 34,
+   "c": "A"
+  },
+  {
+   "x": 518,
+   "y": 1674,
+   "w": 21,
+   "h": 34,
+   "c": "D"
+  },
+  {
+   "x": 715,
+   "y": 1674,
+   "w": 68,
+   "h": 34,
+   "c": "A/C#"
+  },
+  {
+   "x": 956,
+   "y": 1674,
+   "w": 46,
+   "h": 34,
+   "c": "Bm"
+  },
+  {
+   "x": 1224,
+   "y": 1674,
+   "w": 52,
+   "h": 34,
+   "c": "D/A"
+  },
+  {
+   "x": 25,
+   "y": 1951,
+   "w": 21,
+   "h": 32,
+   "c": "G"
+  },
+  {
+   "x": 339,
+   "y": 1944,
+   "w": 64,
+   "h": 39,
+   "c": "D/F#"
+  },
+  {
+   "x": 637,
+   "y": 1951,
+   "w": 43,
+   "h": 32,
+   "c": "Em"
+  },
+  {
+   "x": 828,
+   "y": 1951,
+   "w": 56,
+   "h": 32,
+   "c": "G/A"
+  },
+  {
+   "x": 1042,
+   "y": 1951,
+   "w": 78,
+   "h": 32,
+   "c": "D"
+  },
+  {
+   "x": 26,
+   "y": 878,
+   "w": 22,
+   "h": 26,
+   "c": "G"
+  },
+  {
+   "x": 279,
+   "y": 878,
+   "w": 76,
+   "h": 26,
+   "c": "D/F#"
+  },
+  {
+   "x": 572,
+   "y": 878,
+   "w": 21,
+   "h": 26,
+   "c": "E"
+  },
+  {
+   "x": 737,
+   "y": 878,
+   "w": 24,
+   "h": 26,
+   "c": "A"
+  },
+  {
+   "x": 923,
+   "y": 878,
+   "w": 25,
+   "h": 26,
+   "c": "D"
+  },
+  {
+   "x": 1120,
+   "y": 878,
+   "w": 106,
+   "h": 26,
+   "c": "C#dim"
+  },
+  {
+   "x": 1310,
+   "y": 878,
+   "w": 40,
+   "h": 26,
+   "c": "F#"
+  }
+ ]
+}

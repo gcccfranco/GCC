@@ -1,0 +1,6 @@
+{
+ "slug": "有一位神",
+ "printed_key": "D",
+ "printed_key_verified": "en-tête de la page lu à l'œil avant toute mesure (étape 0) : le cadre est gravé à l'envers, « D=1 » ; lot des 50 简谱 fournis, 2026-09-18 (itération 63)",
+ "en_chantier": "page laissée sans calque, faute de lecture exploitable. L'image fournie fait 623 × 541 — la plus petite du lot, cinq fois moins de pixels que les autres — et ses étiquettes font une douzaine de pixels de haut ; le dièse y est gravé en préfixe (« ♯Fm » et non « F#m »). Le découpage ne sépare pas les rangées d'accords de leurs chiffres (bandes de 56 px de haut soudées), et sur les quatre rangées que read() rend, aucun amas ne passe le plancher : les scores vont de -2,5 à +0,07, soit une couverture nulle. Sans une seule étiquette lue, `_from_reading` rend « aucune rangée d'accords » et `extra_labels` ne peut rien amorcer — la page ne peut pas être publiée depuis le gold seul. Il faudrait un scan de meilleure définition (les accords gravés sont D, ♯Fm, G, A, A7, Em, relevés à l'œil sur la page agrandie ×2) ou la voie `chord_rows`. 2026-09-18 (itération 63)"
+}

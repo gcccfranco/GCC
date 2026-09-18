@@ -1,0 +1,628 @@
+{
+ "slug": "谢谢你成为我的家",
+ "printed_key": "D",
+ "printed_key_verified": "en-tête de la page lu à l'œil avant toute mesure (étape 0), lot des 50 简谱 fournis, 2026-09-18 (itération 63)",
+ "corrections": {
+  "226,221": "A/C#",
+  "226,631": "D/A",
+  "226,1247": "D/A",
+  "226,1327": "F#/A#",
+  "226,1439": "Bm7",
+  "226,1522": "B/D#",
+  "377,591": "A/C#",
+  "377,891": "D/A",
+  "377,1168": "D/F#",
+  "648,217": "A/C#",
+  "648,370": "Bm7",
+  "648,539": "D/A",
+  "648,855": "D/F#",
+  "648,964": "( B7 )",
+  "648,1461": "( Gm",
+  "648,1538": "A )",
+  "975,216": "A/C#",
+  "975,535": "D/A",
+  "975,836": "D/F#",
+  "975,985": "Em7",
+  "975,1457": "A/C#",
+  "1245,226": "D/A",
+  "1245,547": "D/F#",
+  "1245,1113": "(或 G",
+  "1245,1216": "D/F#",
+  "1245,1424": "A7b9",
+  "1245,1513": "G/A )",
+  "1513,418": "A/C#",
+  "1513,588": "( F#/A# )",
+  "1513,709": "Bm7",
+  "1778,86": "D/F#",
+  "1778,782": "( E/G# )",
+  "1778,1070": "G/A",
+  "1778,1351": "G/B",
+  "1778,1465": "A/C#",
+  "2010,507": "D/F#",
+  "377,242": "Gm/A"
+ },
+ "corrections_verified": "amas relus un par un au zoom (propose-extra --all --hidden), convention du .cho (song_semitones=0), 2026-09-18 (itération 63) · les groupes entre parenthèses sont écrits avec leurs espaces gravés pour que transposeLabel réécrive le seul jeton d'accord (« ( Gm » / « A ) », « (或 G » … « G/A ) ») · « Gm/A » du 2e système publiait « Gmaj7 » (mode C), vu sur la planche des cadres puis confirmé sur l'en-tête au zoom",
+ "not_labels": [
+  "1513,166",
+  "2037,36",
+  "2037,529"
+ ],
+ "extra_chords": [
+  "A7b9"
+ ],
+ "extra_chords_verified": "« A7b9 » gravé dans l'alternative entre parenthèses du 5e système (（或 G D/F# A7b9 G/A）), absent du vocabulaire du .cho ; zoom relu. 2026-09-18 (itération 63)",
+ "key_label": {
+  "x": 11,
+  "y": 166,
+  "w": 86,
+  "h": 26
+ },
+ "key_label_verified": "cadre mesuré par measure-keylabel (ancrage sur le « = »), candidate relue sur la planche _kl : la lettre gravée est bien celle de printed_key, donc pas de champ `c` — le client écrit « 1=<tonalité jouée> ». La ligne de tempo ♩=NN, proposée en même temps, a été écartée. 2026-09-18 (itération 63)",
+ "extra_labels": [
+  {
+   "x": 1146,
+   "y": 915,
+   "w": 136,
+   "h": 23,
+   "c": "( G/B  A/C# )"
+  },
+  {
+   "x": 1426,
+   "y": 915,
+   "w": 164,
+   "h": 23,
+   "c": "( C#m7b5  F#7 )"
+  }
+ ],
+ "extra_verified": "deux alternatives entre parenthèses posées SEULES entre les paroles et la rangée d'accords du 4e système — « （G/B  A/C#） » et « （C#m7b5  F#7） », y=915 : hors de toute rangée, invisibles à la lecture comme à propose-extra (aucun compteur ne les portait), elles restaient en ré sur la page transposée (mode D). Vues sur la tranche 3/6 de la planche navigateur, boîtes mesurées sur le profil d'encre, relues au zoom. 2026-09-18 (itération 63) · le premier groupe est publié en UNE étiquette composite sur toute son étendue (x=1146 w=136) : coupé en deux amas (« ( G/B » / « A/C# ) »), le fond de la seconde rognait la première et « ( Ab/C » sortait au tiers du corps (vu sur la tranche 3/6).",
+ "verified": "planche navigateur relue tranche par tranche, 6/6, en D→Eb : les 9 rangées d'accords sont cadrées et les 78 étiquettes réécrites, cadre « 1= D » → « 1=Eb » compris ; la mention « （D原调） » du titre décrit la source et reste vraie transposée, donc pas de title_key. 37 amas corrigés à l'œil — toute la famille des basses (A/C#, D/A, D/F#, B/D#) que le matcher confondait, quatre « Bm7 » lus « Em7 », et un « Gm/A » publié « Gmaj7 » (mode C, repéré sur la planche des cadres puis confirmé au zoom sur l'en-tête). Les groupes entre parenthèses sont écrits avec leurs espaces gravés (« ( B7 ) », « ( Gm » / « A ) », « (或 G … G/A ) ») pour que transposeLabel ne réécrive que les jetons d'accord. Défaut mode D trouvé sur la planche et réparé : deux alternatives entre parenthèses posées seules entre les paroles et la rangée du 4e système (« （G/B A/C#） » et « （C#m7b5 F#7） », y=915) restaient en ré ; publiées en étiquettes composites, la tranche 3/6 les montre cadrées et réécrites. « A7b9 » ajouté à extra_chords. 2026-09-18 (itération 63) ⚠ défaut vu par le banc après gel et corrigé : « G/A ) », dernière étiquette de sa rangée, sort « Ab/Bb ) » plus large que le gravé et débordait de 4 px hors de la page — `fitFont` ne peut pas la rétrécir plus de 20 % (MIN_SHRINK), donc `sp` ne suffisait pas. `fh` 25 → 23 sur cette étiquette seule. Planche relue après correction.",
+ "frozen_labels": [
+  {
+   "x": 56,
+   "y": 226,
+   "w": 19,
+   "h": 33,
+   "c": "D"
+  },
+  {
+   "x": 221,
+   "y": 226,
+   "w": 73,
+   "h": 33,
+   "c": "A/C#"
+  },
+  {
+   "x": 330,
+   "y": 226,
+   "w": 50,
+   "h": 33,
+   "c": "F#7"
+  },
+  {
+   "x": 455,
+   "y": 226,
+   "w": 46,
+   "h": 33,
+   "c": "Bm"
+  },
+  {
+   "x": 631,
+   "y": 226,
+   "w": 55,
+   "h": 33,
+   "c": "D/A"
+  },
+  {
+   "x": 866,
+   "y": 226,
+   "w": 97,
+   "h": 33,
+   "c": "Gmaj7"
+  },
+  {
+   "x": 1048,
+   "y": 226,
+   "w": 49,
+   "h": 33,
+   "c": "Gm"
+  },
+  {
+   "x": 1247,
+   "y": 226,
+   "w": 56,
+   "h": 33,
+   "c": "D/A"
+  },
+  {
+   "x": 1327,
+   "y": 226,
+   "w": 79,
+   "h": 33,
+   "c": "F#/A#"
+  },
+  {
+   "x": 1439,
+   "y": 226,
+   "w": 59,
+   "h": 33,
+   "c": "Bm7"
+  },
+  {
+   "x": 1522,
+   "y": 226,
+   "w": 65,
+   "h": 33,
+   "c": "B/D#"
+  },
+  {
+   "x": 87,
+   "y": 377,
+   "w": 63,
+   "h": 33,
+   "c": "Em7"
+  },
+  {
+   "x": 242,
+   "y": 377,
+   "w": 87,
+   "h": 33,
+   "c": "Gm/A"
+  },
+  {
+   "x": 438,
+   "y": 377,
+   "w": 18,
+   "h": 33,
+   "c": "D"
+  },
+  {
+   "x": 591,
+   "y": 377,
+   "w": 73,
+   "h": 33,
+   "c": "A/C#"
+  },
+  {
+   "x": 728,
+   "y": 377,
+   "w": 45,
+   "h": 33,
+   "c": "Bm"
+  },
+  {
+   "x": 891,
+   "y": 377,
+   "w": 56,
+   "h": 33,
+   "c": "D/A"
+  },
+  {
+   "x": 1011,
+   "y": 377,
+   "w": 20,
+   "h": 33,
+   "c": "G"
+  },
+  {
+   "x": 1168,
+   "y": 377,
+   "w": 70,
+   "h": 33,
+   "c": "D/F#"
+  },
+  {
+   "x": 1302,
+   "y": 377,
+   "w": 63,
+   "h": 33,
+   "c": "Em7"
+  },
+  {
+   "x": 1495,
+   "y": 377,
+   "w": 20,
+   "h": 33,
+   "c": "A"
+  },
+  {
+   "x": 57,
+   "y": 648,
+   "w": 19,
+   "h": 32,
+   "c": "D"
+  },
+  {
+   "x": 217,
+   "y": 648,
+   "w": 73,
+   "h": 32,
+   "c": "A/C#"
+  },
+  {
+   "x": 370,
+   "y": 648,
+   "w": 65,
+   "h": 32,
+   "c": "Bm7"
+  },
+  {
+   "x": 539,
+   "y": 648,
+   "w": 56,
+   "h": 32,
+   "c": "D/A"
+  },
+  {
+   "x": 681,
+   "y": 648,
+   "w": 19,
+   "h": 32,
+   "c": "G"
+  },
+  {
+   "x": 855,
+   "y": 648,
+   "w": 69,
+   "h": 32,
+   "c": "D/F#"
+  },
+  {
+   "x": 964,
+   "y": 648,
+   "w": 61,
+   "h": 32,
+   "c": "( B7 )"
+  },
+  {
+   "x": 1104,
+   "y": 648,
+   "w": 63,
+   "h": 32,
+   "c": "Em7"
+  },
+  {
+   "x": 1207,
+   "y": 648,
+   "w": 38,
+   "h": 32,
+   "c": "A7"
+  },
+  {
+   "x": 1382,
+   "y": 648,
+   "w": 18,
+   "h": 32,
+   "c": "D"
+  },
+  {
+   "x": 1461,
+   "y": 648,
+   "w": 56,
+   "h": 32,
+   "c": "( Gm"
+  },
+  {
+   "x": 1538,
+   "y": 648,
+   "w": 31,
+   "h": 32,
+   "c": "A )"
+  },
+  {
+   "x": 56,
+   "y": 975,
+   "w": 19,
+   "h": 32,
+   "c": "D"
+  },
+  {
+   "x": 216,
+   "y": 975,
+   "w": 73,
+   "h": 32,
+   "c": "A/C#"
+  },
+  {
+   "x": 367,
+   "y": 975,
+   "w": 45,
+   "h": 32,
+   "c": "Bm"
+  },
+  {
+   "x": 535,
+   "y": 975,
+   "w": 55,
+   "h": 32,
+   "c": "D/A"
+  },
+  {
+   "x": 675,
+   "y": 975,
+   "w": 20,
+   "h": 32,
+   "c": "G"
+  },
+  {
+   "x": 836,
+   "y": 975,
+   "w": 70,
+   "h": 32,
+   "c": "D/F#"
+  },
+  {
+   "x": 985,
+   "y": 975,
+   "w": 63,
+   "h": 32,
+   "c": "Em7"
+  },
+  {
+   "x": 1166,
+   "y": 975,
+   "w": 38,
+   "h": 32,
+   "c": "A7"
+  },
+  {
+   "x": 1298,
+   "y": 975,
+   "w": 19,
+   "h": 32,
+   "c": "D"
+  },
+  {
+   "x": 1457,
+   "y": 975,
+   "w": 73,
+   "h": 32,
+   "c": "A/C#"
+  },
+  {
+   "x": 52,
+   "y": 1245,
+   "w": 65,
+   "h": 30,
+   "c": "Bm7"
+  },
+  {
+   "x": 226,
+   "y": 1245,
+   "w": 56,
+   "h": 30,
+   "c": "D/A"
+  },
+  {
+   "x": 381,
+   "y": 1245,
+   "w": 19,
+   "h": 30,
+   "c": "G"
+  },
+  {
+   "x": 547,
+   "y": 1245,
+   "w": 69,
+   "h": 30,
+   "c": "D/F#"
+  },
+  {
+   "x": 742,
+   "y": 1245,
+   "w": 62,
+   "h": 30,
+   "c": "Em7"
+  },
+  {
+   "x": 886,
+   "y": 1245,
+   "w": 38,
+   "h": 30,
+   "c": "A7"
+  },
+  {
+   "x": 1060,
+   "y": 1245,
+   "w": 18,
+   "h": 30,
+   "c": "D"
+  },
+  {
+   "x": 1113,
+   "y": 1245,
+   "w": 62,
+   "h": 30,
+   "c": "(或 G"
+  },
+  {
+   "x": 1216,
+   "y": 1245,
+   "w": 57,
+   "h": 30,
+   "c": "D/F#"
+  },
+  {
+   "x": 1309,
+   "y": 1245,
+   "w": 51,
+   "h": 30,
+   "c": "Em7"
+  },
+  {
+   "x": 1424,
+   "y": 1245,
+   "w": 62,
+   "h": 30,
+   "c": "A7b9"
+  },
+  {
+   "x": 1513,
+   "y": 1245,
+   "w": 62,
+   "h": 30,
+   "c": "G/A )",
+   "fh": 23
+  },
+  {
+   "x": 94,
+   "y": 1513,
+   "w": 19,
+   "h": 32,
+   "c": "D"
+  },
+  {
+   "x": 418,
+   "y": 1513,
+   "w": 72,
+   "h": 32,
+   "c": "A/C#"
+  },
+  {
+   "x": 588,
+   "y": 1513,
+   "w": 103,
+   "h": 32,
+   "c": "( F#/A# )"
+  },
+  {
+   "x": 709,
+   "y": 1513,
+   "w": 65,
+   "h": 32,
+   "c": "Bm7"
+  },
+  {
+   "x": 1041,
+   "y": 1513,
+   "w": 49,
+   "h": 32,
+   "c": "Am"
+  },
+  {
+   "x": 1176,
+   "y": 1513,
+   "w": 38,
+   "h": 32,
+   "c": "D7"
+  },
+  {
+   "x": 1325,
+   "y": 1513,
+   "w": 20,
+   "h": 32,
+   "c": "G"
+  },
+  {
+   "x": 86,
+   "y": 1778,
+   "w": 69,
+   "h": 32,
+   "c": "D/F#"
+  },
+  {
+   "x": 308,
+   "y": 1778,
+   "w": 45,
+   "h": 32,
+   "c": "Bm"
+  },
+  {
+   "x": 548,
+   "y": 1778,
+   "w": 63,
+   "h": 32,
+   "c": "Em7"
+  },
+  {
+   "x": 782,
+   "y": 1778,
+   "w": 101,
+   "h": 32,
+   "c": "( E/G# )"
+  },
+  {
+   "x": 1070,
+   "y": 1778,
+   "w": 58,
+   "h": 32,
+   "c": "G/A"
+  },
+  {
+   "x": 1351,
+   "y": 1778,
+   "w": 56,
+   "h": 32,
+   "c": "G/B"
+  },
+  {
+   "x": 1465,
+   "y": 1778,
+   "w": 73,
+   "h": 32,
+   "c": "A/C#"
+  },
+  {
+   "x": 59,
+   "y": 2010,
+   "w": 61,
+   "h": 25,
+   "c": "F#m"
+  },
+  {
+   "x": 189,
+   "y": 2010,
+   "w": 46,
+   "h": 25,
+   "c": "Bm"
+  },
+  {
+   "x": 336,
+   "y": 2010,
+   "w": 62,
+   "h": 25,
+   "c": "Em7"
+  },
+  {
+   "x": 507,
+   "y": 2010,
+   "w": 70,
+   "h": 25,
+   "c": "D/F#"
+  },
+  {
+   "x": 695,
+   "y": 2010,
+   "w": 49,
+   "h": 25,
+   "c": "Gm"
+  },
+  {
+   "x": 987,
+   "y": 2037,
+   "w": 19,
+   "h": 24,
+   "c": "A"
+  },
+  {
+   "x": 1377,
+   "y": 2037,
+   "w": 18,
+   "h": 24,
+   "c": "D"
+  },
+  {
+   "x": 1146,
+   "y": 915,
+   "w": 136,
+   "h": 23,
+   "c": "( G/B  A/C# )"
+  },
+  {
+   "x": 1426,
+   "y": 915,
+   "w": 164,
+   "h": 23,
+   "c": "( C#m7b5  F#7 )"
+  }
+ ]
+}

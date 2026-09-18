@@ -1,0 +1,6 @@
+{
+ "slug": "从这代到那代",
+ "printed_key": "E",
+ "printed_key_verified": "en-tête de la page lu à l'œil avant toute mesure (étape 0), lot des 50 简谱 fournis, 2026-09-18 (itération 63)",
+ "en_chantier": "page à deux jeux d'accords empilés, laissée sans calque. L'en-tête l'annonce : titre « 从这代到那代（原调） » et mention de série « [共5张：原调（E->F）、D/E/F调、级数] » — la gravure porte, au-dessus de chaque rangée en mi (celle du .cho), une seconde rangée en fa (F, C/E, Dm, Bb, Gm, Bb/C), et le système de coda écrit les deux dans une seule étiquette : « F [E] », « Dm [C#m] », « Gm [F#m] », « C [B] ». Les rangées en fa ne sont isolées par aucune bande — read() ne les voit pas, foreign_rows non plus — donc publier la lecture actuelle laisserait tout le jeu en fa gravé au milieu d'accords transposés : une page à deux tonalités, pire que pas de calque. Il faudrait la voie du sélecteur de tonalité (alt_labels relevés à la main sur l'encre des rangées en fa, orthographe de la tonalité alternative) plus les étiquettes composites de la coda ; lot non tenté ici. Relu sur la page entière (4 tranches) le 2026-09-18 (itération 63)."
+}

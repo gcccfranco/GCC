@@ -1,0 +1,400 @@
+{
+ "slug": "只要有你在我左右",
+ "printed_key": "G",
+ "printed_key_verified": "en-tête de la page lu à l'œil avant toute mesure (étape 0), lot des 50 简谱 fournis, 2026-09-18 (itération 63)",
+ "corrections": {
+  "418,1047": "G",
+  "622,215": "D/F#",
+  "1051,921": "G",
+  "1474,910": "G/B"
+ },
+ "corrections_verified": "quatre amas relus au zoom. Deux sont le mode C : les « G » des 2e et 5e systèmes, que le matcher lit « C » (+0,52 et +0,65) sur cette gravure serif. Page en sol, .cho en sol (song_semitones 0). 2026-09-18 (itération 63)",
+ "extra_chords": [
+  "C/D"
+ ],
+ "extra_chords_verified": "« C/D » gravé au 6e système, absent du vocabulaire du .cho ; relu au zoom. 2026-09-18 (itération 63)",
+ "not_labels": [
+  "418,1195",
+  "1474,14",
+  "1474,557",
+  "1474,713",
+  "1474,1042",
+  "1474,1254"
+ ],
+ "not_labels_verified": "cinq liaisons et barres de mesure, plus l'amas de 282 px du 7e système où le « G » est soudé au long filet du crochet de reprise — ce G est republié à part en extra_labels, sur son encre propre. 2026-09-18 (itération 63)",
+ "not_rows": [
+  236,
+  658
+ ],
+ "not_rows_verified": "deux rangées de liaisons et de barres de mesure (zooms #0–#5 et #9–#14) : aucun accord gravé. 2026-09-18 (itération 63)",
+ "extra_labels": [
+  {
+   "x": 141,
+   "y": 203,
+   "w": 27,
+   "h": 25,
+   "c": "G"
+  },
+  {
+   "x": 695,
+   "y": 203,
+   "w": 23,
+   "h": 25,
+   "c": "C"
+  },
+  {
+   "x": 28,
+   "y": 844,
+   "w": 25,
+   "h": 23,
+   "c": "D"
+  },
+  {
+   "x": 233,
+   "y": 844,
+   "w": 25,
+   "h": 23,
+   "c": "G"
+  },
+  {
+   "x": 461,
+   "y": 844,
+   "w": 25,
+   "h": 23,
+   "c": "D"
+  },
+  {
+   "x": 568,
+   "y": 844,
+   "w": 25,
+   "h": 23,
+   "c": "G"
+  },
+  {
+   "x": 902,
+   "y": 844,
+   "w": 25,
+   "h": 23,
+   "c": "D"
+  },
+  {
+   "x": 1126,
+   "y": 841,
+   "w": 25,
+   "h": 25,
+   "c": "G"
+  },
+  {
+   "x": 31,
+   "y": 1262,
+   "w": 25,
+   "h": 24,
+   "c": "D"
+  },
+  {
+   "x": 264,
+   "y": 1262,
+   "w": 25,
+   "h": 25,
+   "c": "G"
+  },
+  {
+   "x": 426,
+   "y": 1262,
+   "w": 22,
+   "h": 25,
+   "c": "C"
+  },
+  {
+   "x": 647,
+   "y": 1261,
+   "w": 63,
+   "h": 26,
+   "c": "G/B"
+  },
+  {
+   "x": 896,
+   "y": 1262,
+   "w": 55,
+   "h": 24,
+   "c": "Am"
+  },
+  {
+   "x": 1065,
+   "y": 1261,
+   "w": 63,
+   "h": 26,
+   "c": "C/D"
+  },
+  {
+   "x": 29,
+   "y": 1474,
+   "w": 25,
+   "h": 26,
+   "c": "G"
+  },
+  {
+   "x": 17,
+   "y": 1684,
+   "w": 51,
+   "h": 24,
+   "c": "Em"
+  },
+  {
+   "x": 388,
+   "y": 1684,
+   "w": 55,
+   "h": 24,
+   "c": "Am"
+  },
+  {
+   "x": 779,
+   "y": 1684,
+   "w": 55,
+   "h": 24,
+   "c": "Am"
+  },
+  {
+   "x": 1165,
+   "y": 1684,
+   "w": 25,
+   "h": 24,
+   "c": "D"
+  }
+ ],
+ "extra_labels_verified": "quatre systèmes entiers (1er, 4e, 6e, 8e) ne sont portés par aucune bande : le découpage n'isole à leur hauteur que les liaisons, et read() ne les voit pas — c'est le mode D, pire que pas de calque. Chaque rangée relue sur la page à l'agrandissement (bandes y 196–233, 828–866, 1255–1295, 1678–1712), chaque boîte mesurée sur l'encre propre de l'étiquette, le segno 𝄋 et les chiffres « 1. / 2. » des crochets laissés hors des boîtes. S'y ajoute le « G » du 7e système, soudé au filet du crochet. 2026-09-18 (itération 63)",
+ "key_label": {
+  "x": 39,
+  "y": 82,
+  "w": 82,
+  "h": 30
+ },
+ "key_label_verified": "mesure measure-keylabel (ancrage sur le « = », cadre = voisin gauche…voisin droit), zoom relu à l’œil sur planche de lot, lettre gravée confrontée à printedKey, 2026-08-26 (itération 35)",
+ "verified": "planche navigateur (npm run jianpu:audit) relue tranche par tranche, 7/7, en G→Ab : les 8 systèmes de la page ont leur rangée d'accords cadrée et les 32 étiquettes réécrites (13 lues + 19 extra_labels). Le cadre « 1=G » devient « 1=Ab » (tranche 1/7) ; pas de mention « （X调） » au titre — measure-titlekey ne proposait que le sous-titre « If My God Is With Me » et la référence biblique entre parenthèses —, donc pas de title_key. Les quatre rangées reconstruites à la main, que le découpage n'isole pas, ont été revues cadre par cadre sur la planche : y=203 (2/7 en haut de la tranche 1), y=844 (tranche 3/7), y=1262 (tranche 5/7), y=1684 (tranches 6/7 et 7/7) — chaque boîte tombe sur son accord gravé, aucune ne mord sur une voisine, le segno 𝄋 de y=844 et les chiffres « 1. » / « 2. » des crochets de y=1684 restent lisibles hors des boîtes. Le « G » de y=1474 x=29, soudé au long filet du crochet, est republié sur son encre propre : au zoom sur la tranche 6/7 le filet reprend au bord de la boîte et n'est pas effacé. Le décalage de 3 px de la boîte {1126, 841} de la rangée 844 est vérifié sur le scan et non sur l'écran : l'encre du « G » y court de y=841 à 865 quand ses cinq voisines courent de 844 à 867 — la gravure elle-même est plus haute, la boîte la suit (mesuré sur la planche : cadre 5 px device au-dessus des cinq autres, fidèle au gravé). Contrôle au demi-ton étiquette par étiquette : G→Ab, C→Db, Am→Bbm, D→Eb, D/F#→Eb/G, Em→Fm, G/B→Ab/C, C/D→Db/Eb, Gsus→Absus — aucun accord identique en haut et en bas, aucun cadre orange, aucun accord sans cadre. Les deux « G » que le matcher lisait « C » (mode C, +0,52 et +0,65) sortent bien Ab. Contrôle mode D en plus de l'œil : bandes.py ne rend aucune bande nue qui s'apparie. 2026-09-18 (itération 63)",
+ "frozen_labels": [
+  {
+   "x": 18,
+   "y": 418,
+   "w": 51,
+   "h": 27,
+   "c": "Am"
+  },
+  {
+   "x": 558,
+   "y": 418,
+   "w": 22,
+   "h": 27,
+   "c": "D"
+  },
+  {
+   "x": 1047,
+   "y": 418,
+   "w": 22,
+   "h": 27,
+   "c": "G"
+  },
+  {
+   "x": 215,
+   "y": 622,
+   "w": 74,
+   "h": 34,
+   "c": "D/F#"
+  },
+  {
+   "x": 338,
+   "y": 622,
+   "w": 46,
+   "h": 34,
+   "c": "Em"
+  },
+  {
+   "x": 930,
+   "y": 622,
+   "w": 21,
+   "h": 34,
+   "c": "C"
+  },
+  {
+   "x": 29,
+   "y": 1051,
+   "w": 21,
+   "h": 25,
+   "c": "C"
+  },
+  {
+   "x": 266,
+   "y": 1051,
+   "w": 63,
+   "h": 25,
+   "c": "G/B"
+  },
+  {
+   "x": 541,
+   "y": 1051,
+   "w": 50,
+   "h": 25,
+   "c": "Am"
+  },
+  {
+   "x": 754,
+   "y": 1051,
+   "w": 22,
+   "h": 25,
+   "c": "D"
+  },
+  {
+   "x": 921,
+   "y": 1051,
+   "w": 23,
+   "h": 25,
+   "c": "G"
+  },
+  {
+   "x": 603,
+   "y": 1474,
+   "w": 21,
+   "h": 40,
+   "c": "C"
+  },
+  {
+   "x": 910,
+   "y": 1474,
+   "w": 67,
+   "h": 40,
+   "c": "G/B"
+  },
+  {
+   "x": 141,
+   "y": 203,
+   "w": 27,
+   "h": 25,
+   "c": "G"
+  },
+  {
+   "x": 695,
+   "y": 203,
+   "w": 23,
+   "h": 25,
+   "c": "C"
+  },
+  {
+   "x": 28,
+   "y": 844,
+   "w": 25,
+   "h": 23,
+   "c": "D"
+  },
+  {
+   "x": 233,
+   "y": 844,
+   "w": 25,
+   "h": 23,
+   "c": "G"
+  },
+  {
+   "x": 461,
+   "y": 844,
+   "w": 25,
+   "h": 23,
+   "c": "D"
+  },
+  {
+   "x": 568,
+   "y": 844,
+   "w": 25,
+   "h": 23,
+   "c": "G"
+  },
+  {
+   "x": 902,
+   "y": 844,
+   "w": 25,
+   "h": 23,
+   "c": "D"
+  },
+  {
+   "x": 1126,
+   "y": 841,
+   "w": 25,
+   "h": 25,
+   "c": "G"
+  },
+  {
+   "x": 31,
+   "y": 1262,
+   "w": 25,
+   "h": 24,
+   "c": "D"
+  },
+  {
+   "x": 264,
+   "y": 1262,
+   "w": 25,
+   "h": 25,
+   "c": "G"
+  },
+  {
+   "x": 426,
+   "y": 1262,
+   "w": 22,
+   "h": 25,
+   "c": "C"
+  },
+  {
+   "x": 647,
+   "y": 1261,
+   "w": 63,
+   "h": 26,
+   "c": "G/B"
+  },
+  {
+   "x": 896,
+   "y": 1262,
+   "w": 55,
+   "h": 24,
+   "c": "Am"
+  },
+  {
+   "x": 1065,
+   "y": 1261,
+   "w": 63,
+   "h": 26,
+   "c": "C/D"
+  },
+  {
+   "x": 29,
+   "y": 1474,
+   "w": 25,
+   "h": 26,
+   "c": "G"
+  },
+  {
+   "x": 17,
+   "y": 1684,
+   "w": 51,
+   "h": 24,
+   "c": "Em"
+  },
+  {
+   "x": 388,
+   "y": 1684,
+   "w": 55,
+   "h": 24,
+   "c": "Am"
+  },
+  {
+   "x": 779,
+   "y": 1684,
+   "w": 55,
+   "h": 24,
+   "c": "Am"
+  },
+  {
+   "x": 1165,
+   "y": 1684,
+   "w": 25,
+   "h": 24,
+   "c": "D"
+  }
+ ]
+}

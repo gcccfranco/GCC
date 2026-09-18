@@ -1,0 +1,444 @@
+{
+ "slug": "宝贵十架",
+ "printed_key": "A",
+ "printed_key_verified": "en-tête de la page lu à l'œil avant toute mesure (étape 0), lot des 50 简谱 fournis, 2026-09-18 (itération 63)",
+ "corrections": {
+  "422,266": "C#/G#",
+  "422,730": "A7/E",
+  "593,16": "Esus4",
+  "593,437": "C#/G#",
+  "593,810": "A7/E",
+  "593,1179": "D/E",
+  "863,475": "D/E",
+  "863,759": "E/G#",
+  "863,994": "Bm",
+  "1122,803": "A7/E",
+  "1122,1177": "D/E",
+  "1382,474": "D/E",
+  "1382,991": "Bm",
+  "1647,37": "E",
+  "1904,19": "Bm",
+  "1904,963": "A"
+ },
+ "corrections_verified": "amas relus un à un au zoom (propose-extra --all, planche _extra-1) : page gravée en la, .cho en la (song_semitones 0), donc recopie telle que gravée. Trois lectures du matcher contredites à l'œil : « A7/E » lu A7/C# (y=422 x=730, y=593 x=810) et lu A/C# (y=1122 x=803). 2026-09-18 (itération 63)",
+ "not_labels": [
+  "863,1391"
+ ],
+ "not_labels_verified": "amas y=863 x=1391 : un fragment d'arc de liaison, aucune encre d'étiquette dans la boîte (zoom _extra-1 #9). 2026-09-18 (itération 63)",
+ "not_rows": [
+  901
+ ],
+ "not_rows_verified": "rangée y=901 : trois fragments d'arcs de liaison sous la rangée d'accords y=863, aucune étiquette (zooms _extra-1 #10, #11, #12). 2026-09-18 (itération 63)",
+ "alt_labels": [
+  {
+   "x": 36,
+   "y": 2164,
+   "w": 18,
+   "h": 27,
+   "c": "D"
+  },
+  {
+   "x": 307,
+   "y": 2164,
+   "w": 79,
+   "h": 27,
+   "c": "B7/D#"
+  },
+  {
+   "x": 530,
+   "y": 2164,
+   "w": 49,
+   "h": 27,
+   "c": "A/E"
+  },
+  {
+   "x": 837,
+   "y": 2164,
+   "w": 31,
+   "h": 27,
+   "c": "E7"
+  },
+  {
+   "x": 1150,
+   "y": 2164,
+   "w": 16,
+   "h": 27,
+   "c": "A"
+  }
+ ],
+ "alt_labels_verified": "**faux positif de foreign_rows, pas une modulation** : la dernière rangée (y=2164) est gravée « D  B7/D#  A/E  E7  A », en la comme toute la page, mais foreign_rows la classe à +7 et build-chords la masquerait. Rangée relue à l'œil sur la page (crop y=2100..2280) et republiée à l'identique, sans décalage (alt absent = 0). 2026-09-18 (itération 63)",
+ "key_label": {
+  "x": 54,
+  "y": 271,
+  "w": 70,
+  "h": 27
+ },
+ "key_label_verified": "mesure measure-keylabel (ancrage sur le « = », cadre = voisin gauche…voisin droit), zoom relu à l’œil sur planche de lot, lettre gravée confrontée à printedKey, 2026-08-26 (itération 35)",
+ "verified": "planche navigateur (npm run jianpu:audit) relue tranche par tranche, 7/7, en A→Bb : les 8 systèmes sont cadrés, les 47 étiquettes réécrites (Bb D/A Gm Bb7/F Eb C7 …) et le cadre « 1=A » devient « 1=Bb ». Trois accords faux vus à l'œil et corrigés : « A7/E » publiait A7/C# (y=422 x=730, y=593 x=810) et A/C# (y=1122 x=803). La dernière rangée (y=2164), classée à tort « autre tonalité » par foreign_rows et donc masquée, est relue et republiée en la (alt_labels). 2026-09-18 (itération 63)",
+ "frozen_labels": [
+  {
+   "x": 50,
+   "y": 422,
+   "w": 15,
+   "h": 27,
+   "c": "A"
+  },
+  {
+   "x": 266,
+   "y": 422,
+   "w": 73,
+   "h": 27,
+   "c": "C#/G#"
+  },
+  {
+   "x": 495,
+   "y": 422,
+   "w": 48,
+   "h": 27,
+   "c": "F#m"
+  },
+  {
+   "x": 730,
+   "y": 422,
+   "w": 56,
+   "h": 27,
+   "c": "A7/E"
+  },
+  {
+   "x": 957,
+   "y": 422,
+   "w": 16,
+   "h": 27,
+   "c": "D"
+  },
+  {
+   "x": 1198,
+   "y": 422,
+   "w": 27,
+   "h": 27,
+   "c": "B7"
+  },
+  {
+   "x": 16,
+   "y": 593,
+   "w": 59,
+   "h": 33,
+   "c": "Esus4"
+  },
+  {
+   "x": 349,
+   "y": 593,
+   "w": 17,
+   "h": 33,
+   "c": "A"
+  },
+  {
+   "x": 437,
+   "y": 593,
+   "w": 84,
+   "h": 33,
+   "c": "C#/G#"
+  },
+  {
+   "x": 691,
+   "y": 593,
+   "w": 55,
+   "h": 33,
+   "c": "F#m"
+  },
+  {
+   "x": 810,
+   "y": 593,
+   "w": 65,
+   "h": 33,
+   "c": "A7/E"
+  },
+  {
+   "x": 1075,
+   "y": 593,
+   "w": 18,
+   "h": 33,
+   "c": "D"
+  },
+  {
+   "x": 1179,
+   "y": 593,
+   "w": 50,
+   "h": 33,
+   "c": "D/E"
+  },
+  {
+   "x": 34,
+   "y": 863,
+   "w": 18,
+   "h": 36,
+   "c": "D"
+  },
+  {
+   "x": 105,
+   "y": 863,
+   "w": 79,
+   "h": 36,
+   "c": "A7/C#"
+  },
+  {
+   "x": 359,
+   "y": 863,
+   "w": 18,
+   "h": 36,
+   "c": "D"
+  },
+  {
+   "x": 475,
+   "y": 863,
+   "w": 49,
+   "h": 36,
+   "c": "D/E"
+  },
+  {
+   "x": 713,
+   "y": 863,
+   "w": 16,
+   "h": 36,
+   "c": "A"
+  },
+  {
+   "x": 759,
+   "y": 863,
+   "w": 66,
+   "h": 36,
+   "c": "E/G#"
+  },
+  {
+   "x": 869,
+   "y": 863,
+   "w": 54,
+   "h": 36,
+   "c": "F#m"
+  },
+  {
+   "x": 994,
+   "y": 863,
+   "w": 40,
+   "h": 36,
+   "c": "Bm"
+  },
+  {
+   "x": 1220,
+   "y": 863,
+   "w": 17,
+   "h": 36,
+   "c": "B"
+  },
+  {
+   "x": 36,
+   "y": 1122,
+   "w": 16,
+   "h": 32,
+   "c": "E"
+  },
+  {
+   "x": 342,
+   "y": 1122,
+   "w": 17,
+   "h": 32,
+   "c": "A"
+  },
+  {
+   "x": 431,
+   "y": 1122,
+   "w": 83,
+   "h": 32,
+   "c": "C#/G#"
+  },
+  {
+   "x": 692,
+   "y": 1122,
+   "w": 54,
+   "h": 32,
+   "c": "F#m"
+  },
+  {
+   "x": 803,
+   "y": 1122,
+   "w": 65,
+   "h": 32,
+   "c": "A7/E"
+  },
+  {
+   "x": 1073,
+   "y": 1122,
+   "w": 18,
+   "h": 32,
+   "c": "D"
+  },
+  {
+   "x": 1177,
+   "y": 1122,
+   "w": 49,
+   "h": 32,
+   "c": "D/E"
+  },
+  {
+   "x": 34,
+   "y": 1382,
+   "w": 18,
+   "h": 31,
+   "c": "D"
+  },
+  {
+   "x": 107,
+   "y": 1382,
+   "w": 80,
+   "h": 31,
+   "c": "A7/C#"
+  },
+  {
+   "x": 360,
+   "y": 1382,
+   "w": 18,
+   "h": 31,
+   "c": "D"
+  },
+  {
+   "x": 474,
+   "y": 1382,
+   "w": 49,
+   "h": 31,
+   "c": "D/E"
+  },
+  {
+   "x": 711,
+   "y": 1382,
+   "w": 16,
+   "h": 31,
+   "c": "A"
+  },
+  {
+   "x": 758,
+   "y": 1382,
+   "w": 65,
+   "h": 31,
+   "c": "E/G#"
+  },
+  {
+   "x": 867,
+   "y": 1382,
+   "w": 55,
+   "h": 31,
+   "c": "F#m"
+  },
+  {
+   "x": 991,
+   "y": 1382,
+   "w": 41,
+   "h": 31,
+   "c": "Bm"
+  },
+  {
+   "x": 1219,
+   "y": 1382,
+   "w": 17,
+   "h": 31,
+   "c": "B"
+  },
+  {
+   "x": 37,
+   "y": 1647,
+   "w": 16,
+   "h": 25,
+   "c": "E"
+  },
+  {
+   "x": 484,
+   "y": 1647,
+   "w": 17,
+   "h": 25,
+   "c": "A"
+  },
+  {
+   "x": 719,
+   "y": 1644,
+   "w": 64,
+   "h": 28,
+   "c": "A/C#"
+  },
+  {
+   "x": 969,
+   "y": 1647,
+   "w": 18,
+   "h": 25,
+   "c": "D"
+  },
+  {
+   "x": 19,
+   "y": 1904,
+   "w": 40,
+   "h": 26,
+   "c": "Bm"
+  },
+  {
+   "x": 223,
+   "y": 1904,
+   "w": 17,
+   "h": 26,
+   "c": "B"
+  },
+  {
+   "x": 527,
+   "y": 1904,
+   "w": 15,
+   "h": 26,
+   "c": "E"
+  },
+  {
+   "x": 963,
+   "y": 1904,
+   "w": 16,
+   "h": 26,
+   "c": "A"
+  },
+  {
+   "x": 1187,
+   "y": 1901,
+   "w": 64,
+   "h": 29,
+   "c": "A/C#"
+  },
+  {
+   "x": 36,
+   "y": 2164,
+   "w": 18,
+   "h": 27,
+   "c": "D"
+  },
+  {
+   "x": 307,
+   "y": 2164,
+   "w": 79,
+   "h": 27,
+   "c": "B7/D#"
+  },
+  {
+   "x": 530,
+   "y": 2164,
+   "w": 49,
+   "h": 27,
+   "c": "A/E"
+  },
+  {
+   "x": 837,
+   "y": 2164,
+   "w": 31,
+   "h": 27,
+   "c": "E7"
+  },
+  {
+   "x": 1150,
+   "y": 2164,
+   "w": 16,
+   "h": 27,
+   "c": "A"
+  }
+ ]
+}

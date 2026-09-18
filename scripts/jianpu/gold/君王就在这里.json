@@ -1,0 +1,447 @@
+{
+ "slug": "君王就在这里",
+ "printed_key": "A",
+ "printed_key_verified": "en-tête de la page lu à l'œil avant toute mesure (étape 0), lot des 50 简谱 fournis, 2026-09-18 (itération 63)",
+ "corrections": {
+  "246,428": "F/A",
+  "246,792": "Gm",
+  "417,434": "D/F#",
+  "417,854": "Cm",
+  "593,76": "Bb/D",
+  "593,369": "F/A",
+  "593,681": "Gm",
+  "593,1273": "Bb/D",
+  "888,55": "D/F#",
+  "888,419": "Cm",
+  "888,886": "Bb/D",
+  "888,1307": "F/Eb",
+  "1163,36": "Dm",
+  "1163,388": "Cm",
+  "1163,919": "Bb/D",
+  "1429,189": "G/B",
+  "1429,433": "Cm",
+  "1707,459": "Eb/Bb",
+  "1979,50": "Bb/D"
+ },
+ "corrections_verified": "amas relus au zoom (propose-extra --all, planches _extra-1 et _extra-2). **Page gravée en la, .cho en si bémol** (song_semitones 11) : chaque amas lu est écrit un demi-ton au-dessus de ce qui est gravé — E/G#→F/A, F#m→Gm, C#/F→D/F#, Bm→Cm, A/C#→Bb/D, E/D→F/Eb, C#m→Dm, F#/A#→G/B, D/A→Eb/Bb. « Dm » (y=1163 x=36) n'est pas dans le vocabulaire du .cho, qui n'a que Dm7 : c'est bien un « C#m » nu qui est gravé. 2026-09-18 (itération 63)",
+ "not_labels": [
+  "888,1103",
+  "1429,1317",
+  "1979,1349",
+  "1979,1421"
+ ],
+ "not_labels_verified": "y=888 x=1103 : le **segno** 𝄋 seul dans son amas (le « D » voisin est un autre amas) ; y=1429 x=1317 : « 【Bridge】 » ; y=1979 x=1349 et x=1421 : « D.S. » et « al Fine ». Aucun n'est un accord (zooms _extra-1 #11, #18, _extra-2 #27, #28). 2026-09-18 (itération 63)",
+ "not_rows": [
+  1746
+ ],
+ "not_rows_verified": "y=1746 : six fragments d'arcs de liaison, de hampes et de points, sous la rangée d'accords y=1707 (zooms _extra-2 #20 à #25). 2026-09-18 (itération 63)",
+ "title_key": {
+  "x": 910,
+  "y": 14,
+  "w": 166,
+  "h": 69
+ },
+ "title_key_verified": "mention « （X调） » du titre, mesurée sur l'encre de la bande du titre et relue à l'œil sur planche (measure-titlekey), 2026-09-18",
+ "key_label": {
+  "x": 14,
+  "y": 161,
+  "w": 88,
+  "h": 27
+ },
+ "key_label_verified": "mesure measure-keylabel (ancrage sur le « = », cadre = voisin gauche…voisin droit), zoom relu à l’œil sur planche de lot, lettre gravée confrontée à printedKey, 2026-08-26 (itération 35)",
+ "verified": "planche navigateur (npm run jianpu:audit) relue tranche par tranche, 6/6, en A gravé → B rendu (page en la, .cho en si bémol) : les 8 rangées d'accords (y=246, 417, 593, 888, 1163, 1429, 1707, 1979) sont cadrées, les 56 étiquettes réécrites, le cadre « 1= A » devient « 1=B » et la mention « （A调） » du titre devient « （B调） ». La mention « [原曲Bb→C→D调] » reste telle quelle, elle décrit la source. Le segno 𝄋, « 【Chorus】 », « 【Bridge】 », « Fine » et « D.S. al Fine » restent intacts. Dix-neuf amas relus à l'œil et convertis d'un demi-ton vers la convention du .cho. 2026-09-18 (itération 63)",
+ "frozen_labels": [
+  {
+   "x": 56,
+   "y": 246,
+   "w": 75,
+   "h": 27,
+   "c": "A/C#"
+  },
+  {
+   "x": 238,
+   "y": 246,
+   "w": 19,
+   "h": 27,
+   "c": "D"
+  },
+  {
+   "x": 428,
+   "y": 246,
+   "w": 75,
+   "h": 27,
+   "c": "E/G#"
+  },
+  {
+   "x": 606,
+   "y": 246,
+   "w": 20,
+   "h": 27,
+   "c": "A"
+  },
+  {
+   "x": 792,
+   "y": 246,
+   "w": 63,
+   "h": 27,
+   "c": "F#m"
+  },
+  {
+   "x": 973,
+   "y": 246,
+   "w": 36,
+   "h": 27,
+   "c": "B7"
+  },
+  {
+   "x": 1187,
+   "y": 246,
+   "w": 86,
+   "h": 27,
+   "c": "Esus4"
+  },
+  {
+   "x": 1366,
+   "y": 246,
+   "w": 14,
+   "h": 27,
+   "c": "E"
+  },
+  {
+   "x": 66,
+   "y": 417,
+   "w": 75,
+   "h": 27,
+   "c": "A/C#"
+  },
+  {
+   "x": 243,
+   "y": 417,
+   "w": 19,
+   "h": 27,
+   "c": "D"
+  },
+  {
+   "x": 434,
+   "y": 417,
+   "w": 69,
+   "h": 27,
+   "c": "C#/F"
+  },
+  {
+   "x": 649,
+   "y": 417,
+   "w": 63,
+   "h": 27,
+   "c": "F#m"
+  },
+  {
+   "x": 854,
+   "y": 417,
+   "w": 46,
+   "h": 27,
+   "c": "Bm"
+  },
+  {
+   "x": 1022,
+   "y": 417,
+   "w": 14,
+   "h": 27,
+   "c": "E"
+  },
+  {
+   "x": 1218,
+   "y": 417,
+   "w": 21,
+   "h": 27,
+   "c": "A"
+  },
+  {
+   "x": 76,
+   "y": 593,
+   "w": 77,
+   "h": 34,
+   "c": "A/C#"
+  },
+  {
+   "x": 221,
+   "y": 593,
+   "w": 19,
+   "h": 34,
+   "c": "D"
+  },
+  {
+   "x": 369,
+   "y": 593,
+   "w": 75,
+   "h": 34,
+   "c": "E/G#"
+  },
+  {
+   "x": 511,
+   "y": 593,
+   "w": 20,
+   "h": 34,
+   "c": "A"
+  },
+  {
+   "x": 681,
+   "y": 593,
+   "w": 63,
+   "h": 34,
+   "c": "F#m"
+  },
+  {
+   "x": 823,
+   "y": 593,
+   "w": 36,
+   "h": 34,
+   "c": "B7"
+  },
+  {
+   "x": 999,
+   "y": 593,
+   "w": 87,
+   "h": 34,
+   "c": "Esus4"
+  },
+  {
+   "x": 1134,
+   "y": 593,
+   "w": 14,
+   "h": 34,
+   "c": "E"
+  },
+  {
+   "x": 1273,
+   "y": 593,
+   "w": 77,
+   "h": 34,
+   "c": "A/C#"
+  },
+  {
+   "x": 1419,
+   "y": 593,
+   "w": 19,
+   "h": 34,
+   "c": "D"
+  },
+  {
+   "x": 55,
+   "y": 888,
+   "w": 70,
+   "h": 34,
+   "c": "C#/F"
+  },
+  {
+   "x": 241,
+   "y": 888,
+   "w": 63,
+   "h": 34,
+   "c": "F#m"
+  },
+  {
+   "x": 419,
+   "y": 888,
+   "w": 47,
+   "h": 34,
+   "c": "Bm"
+  },
+  {
+   "x": 570,
+   "y": 888,
+   "w": 13,
+   "h": 34,
+   "c": "E"
+  },
+  {
+   "x": 745,
+   "y": 888,
+   "w": 21,
+   "h": 34,
+   "c": "A"
+  },
+  {
+   "x": 886,
+   "y": 888,
+   "w": 76,
+   "h": 34,
+   "c": "A/C#"
+  },
+  {
+   "x": 1159,
+   "y": 888,
+   "w": 19,
+   "h": 34,
+   "c": "D"
+  },
+  {
+   "x": 1307,
+   "y": 888,
+   "w": 54,
+   "h": 34,
+   "c": "E/D"
+  },
+  {
+   "x": 36,
+   "y": 1163,
+   "w": 68,
+   "h": 26,
+   "c": "C#m"
+  },
+  {
+   "x": 143,
+   "y": 1163,
+   "w": 32,
+   "h": 26,
+   "c": "F#"
+  },
+  {
+   "x": 388,
+   "y": 1163,
+   "w": 47,
+   "h": 26,
+   "c": "Bm"
+  },
+  {
+   "x": 538,
+   "y": 1163,
+   "w": 14,
+   "h": 26,
+   "c": "E"
+  },
+  {
+   "x": 782,
+   "y": 1163,
+   "w": 21,
+   "h": 26,
+   "c": "A"
+  },
+  {
+   "x": 919,
+   "y": 1163,
+   "w": 76,
+   "h": 26,
+   "c": "A/C#"
+  },
+  {
+   "x": 1175,
+   "y": 1163,
+   "w": 19,
+   "h": 26,
+   "c": "D"
+  },
+  {
+   "x": 1316,
+   "y": 1163,
+   "w": 38,
+   "h": 26,
+   "c": "C#"
+  },
+  {
+   "x": 46,
+   "y": 1429,
+   "w": 63,
+   "h": 37,
+   "c": "F#m"
+  },
+  {
+   "x": 189,
+   "y": 1429,
+   "w": 91,
+   "h": 37,
+   "c": "F#/A#"
+  },
+  {
+   "x": 433,
+   "y": 1429,
+   "w": 47,
+   "h": 37,
+   "c": "Bm"
+  },
+  {
+   "x": 620,
+   "y": 1429,
+   "w": 13,
+   "h": 37,
+   "c": "E"
+  },
+  {
+   "x": 882,
+   "y": 1429,
+   "w": 20,
+   "h": 37,
+   "c": "A"
+  },
+  {
+   "x": 1191,
+   "y": 1429,
+   "w": 13,
+   "h": 37,
+   "c": "E"
+  },
+  {
+   "x": 58,
+   "y": 1707,
+   "w": 21,
+   "h": 26,
+   "c": "A"
+  },
+  {
+   "x": 459,
+   "y": 1707,
+   "w": 58,
+   "h": 26,
+   "c": "D/A"
+  },
+  {
+   "x": 806,
+   "y": 1707,
+   "w": 63,
+   "h": 26,
+   "c": "F#m"
+  },
+  {
+   "x": 1224,
+   "y": 1707,
+   "w": 14,
+   "h": 26,
+   "c": "E"
+  },
+  {
+   "x": 50,
+   "y": 1979,
+   "w": 76,
+   "h": 32,
+   "c": "A/C#"
+  },
+  {
+   "x": 462,
+   "y": 1979,
+   "w": 19,
+   "h": 32,
+   "c": "D"
+  },
+  {
+   "x": 795,
+   "y": 1979,
+   "w": 62,
+   "h": 32,
+   "c": "F#m"
+  },
+  {
+   "x": 917,
+   "y": 1979,
+   "w": 13,
+   "h": 32,
+   "c": "E"
+  },
+  {
+   "x": 1185,
+   "y": 1979,
+   "w": 20,
+   "h": 32,
+   "c": "A"
+  }
+ ]
+}

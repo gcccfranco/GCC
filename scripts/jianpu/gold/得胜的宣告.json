@@ -1,0 +1,383 @@
+{
+ "slug": "得胜的宣告",
+ "printed_key": "D",
+ "printed_key_verified": "en-tête de la page lu à l'œil avant toute mesure (étape 0), lot des 50 简谱 fournis, 2026-09-18 (itération 63)",
+ "not_rows": [
+  547
+ ],
+ "not_rows_verified": "y=547 est la rangée de paroles « 信心，看见流奶与蜜之地； » promue par le classifieur (10 amas de hanzi), pas des accords. 2026-09-18 (itération 63)",
+ "not_labels": [
+  "423,655",
+  "423,992",
+  "423,1247",
+  "632,97",
+  "632,418",
+  "632,677",
+  "632,1459",
+  "1032,21",
+  "1256,178",
+  "1256,774",
+  "1452,476",
+  "1452,491",
+  "1452,900",
+  "1452,1025",
+  "1452,1138",
+  "1452,1448",
+  "1684,345",
+  "1684,364",
+  "1684,1559",
+  "2007,30",
+  "2007,722",
+  "2007,1129",
+  "2007,1171",
+  "2007,1215",
+  "2007,1241",
+  "2007,1433"
+ ],
+ "not_labels_verified": "amas relus au zoom qui ne sont pas des étiquettes : barres de mesure et arcs de liaison (423,655/992/1247 · 632,97/418/677/1459 · 1256,178/774 · 1452,476/491 · 1684,345/364/1559 · 2007,1129/1171/1215/1241), le segno 𝄋 soudé à « D(F) » (1032,21 — l'étiquette repasse en extra_labels, cadre serré, pour ne pas effacer le segno), les trois premiers morceaux de la note « (Bridge连唱3次， » qui ne nomment aucune tonalité (1452,900/1025/1138), les repères 【Bridge】 (1452,1448), « 1.2 » et « 3 » des renvois (2007,30 · 2007,722) et « To Chorus » (2007,1433). 2026-09-18 (itération 63)",
+ "corrections": {
+  "287,481": "A/C#",
+  "287,571": "Bm",
+  "423,32": "G/A",
+  "423,603": "D",
+  "423,1125": "Bm",
+  "632,35": "Em",
+  "632,563": "G/A",
+  "1032,312": "Bm(Dm)",
+  "1032,559": "G(Bb)",
+  "1032,863": "A(C)",
+  "1032,1108": "D(F)",
+  "1032,1357": "Bm(Dm)",
+  "1256,32": "G(Bb)",
+  "1256,316": "A(C)",
+  "1256,501": "G(Bb)",
+  "1256,791": "A(C)",
+  "1256,1058": "F#m(Am)",
+  "1256,1330": "Bm(Dm)",
+  "1452,41": "Em(Gm)",
+  "1452,304": "G/A(Bb/C)",
+  "1452,584": "D(F)",
+  "1452,1236": "至Eb调、",
+  "1452,1359": "F调)",
+  "1684,48": "D(Eb)(F)",
+  "1684,666": "G/D(Ab/Eb)(Bb)",
+  "1684,1273": "D(Cm)(Dm)",
+  "2007,355": "G/D(Ab)",
+  "2007,1058": "C"
+ },
+ "corrections_verified": "page relue rangée par rangée sur les bandes d'encre (band 287 · 423 · 632 · 1032 · 1256 · 1452 · 1684 · 2007). À partir du 【Chorus】 la gravure écrit des **étiquettes composites** : l'accord de la tonalité de la page suivi, entre parenthèses, de celui des reprises en Eb puis en F — « D(F) », « Bm(Dm) », « G/A(Bb/C) », puis « D(Eb)(F) », « G/D(Ab/Eb)(Bb) », « D(Cm)(Dm) » au pont. Elles correspondent exactement aux trois blocs du .cho (桥段 1 D / 桥段 2 Eb / 桥段 3 F) et `transposeLabel` réécrit la ligne entière, donc les deux jeux montent ensemble : la page ne reste jamais à deux tonalités. Les deux morceaux de la note du pont qui nomment une tonalité (« 至Eb调、 » et « F调) ») sont corrigés pour suivre, le reste de la note est laissé intact. « A/C# » (intro, x=481) est gravé mais absent du vocabulaire du .cho : c'est une basse de passage, écrite telle quelle par la correction. Page en ré et .cho en ré (song_semitones = 0). 2026-09-18 (itération 63)",
+ "extra_labels": [
+  {
+   "x": 181,
+   "y": 218,
+   "w": 383,
+   "h": 34,
+   "c": "（后面依次升Eb调、F调）"
+  },
+  {
+   "x": 35,
+   "y": 841,
+   "w": 45,
+   "h": 24,
+   "c": "Bm"
+  },
+  {
+   "x": 610,
+   "y": 841,
+   "w": 43,
+   "h": 24,
+   "c": "Em"
+  },
+  {
+   "x": 1162,
+   "y": 841,
+   "w": 22,
+   "h": 24,
+   "c": "A"
+  },
+  {
+   "x": 63,
+   "y": 1047,
+   "w": 58,
+   "h": 28,
+   "c": "D(F)"
+  }
+ ],
+ "extra_labels_verified": "la rangée d'accords y=841 (« Bm … Em … A », fin du couplet avant 【Chorus】) n'a jamais été isolée par le classifieur — mode D, trouvée en comparant la page aux huit rangées lues ; cadres mesurés sur l'encre. « D(F) » du système du refrain est soudé au segno, il repasse ici au cadre serré. Et la note d'en-tête « （后面依次升Eb调、F调） », qui nomme les deux tonalités de reprise, est réécrite comme une étiquette pour qu'elle suive la transposition au lieu de contredire les accords composites. 2026-09-18 (itération 63)",
+ "key_label": {
+  "x": 9,
+  "y": 224,
+  "w": 86,
+  "h": 26
+ },
+ "key_label_verified": "cadre « 1=  D » mesuré à la main sur l'encre (« 1= » x=9..44, « D » x=75..94, y=224..249) ; le « 4/4 » commence à x=120 et reste dehors. Lettre gravée D = printed_key D. 2026-09-18 (itération 63)",
+ "verified": "planche navigateur (npm run jianpu:audit) relue tranche par tranche, 7/7, en D→Eb : les 9 rangées d'accords sont cadrées et les 38 étiquettes réécrites (33 lues, dont 28 corrigées, + 5 hors rangées). La rangée y=841 (Bm … Em … A) manquait entièrement (mode D) et est publiée. La page **module en cours de route** — « 后面依次升Eb调、F调 » — mais elle ne grave jamais de rangée en tonalité étrangère : à partir du 【Chorus】 chaque étiquette est composite, « D(F) », « Bm(Dm) », « D(Eb)(F) », « G/D(Ab/Eb)(Bb) », « D(Cm)(Dm) », et transposeLabel réécrit la ligne entière, donc les deux (ou trois) jeux montent ensemble : vu sur la planche, Eb(E)(Gb), Ab/Eb(A/E)(B), Eb(Dbm)(Ebm). Ni mask_rows ni alt_labels n'étaient donc nécessaires. Les deux notes qui nomment les tonalités de reprise suivent aussi : l'en-tête devient « （后面依次升E调、Gb调） » et la note du pont « …依次升至E调、Gb调) ». Le segno, Fine, To Chorus, 【Chorus】, 【Bridge】, les renvois 1.2/3 et les arcs restent intacts. Pas de mention « （X调） » au titre. 2026-09-18 (itération 63)",
+ "frozen_labels": [
+  {
+   "x": 49,
+   "y": 287,
+   "w": 18,
+   "h": 25,
+   "c": "D"
+  },
+  {
+   "x": 481,
+   "y": 287,
+   "w": 73,
+   "h": 25,
+   "c": "A/C#"
+  },
+  {
+   "x": 571,
+   "y": 287,
+   "w": 44,
+   "h": 25,
+   "c": "Bm"
+  },
+  {
+   "x": 1087,
+   "y": 287,
+   "w": 43,
+   "h": 25,
+   "c": "Em"
+  },
+  {
+   "x": 32,
+   "y": 423,
+   "w": 57,
+   "h": 34,
+   "c": "G/A"
+  },
+  {
+   "x": 312,
+   "y": 423,
+   "w": 20,
+   "h": 34,
+   "c": "A"
+  },
+  {
+   "x": 603,
+   "y": 423,
+   "w": 33,
+   "h": 34,
+   "c": "D"
+  },
+  {
+   "x": 1125,
+   "y": 423,
+   "w": 50,
+   "h": 34,
+   "c": "Bm"
+  },
+  {
+   "x": 35,
+   "y": 632,
+   "w": 43,
+   "h": 33,
+   "c": "Em"
+  },
+  {
+   "x": 563,
+   "y": 632,
+   "w": 57,
+   "h": 33,
+   "c": "G/A"
+  },
+  {
+   "x": 830,
+   "y": 632,
+   "w": 20,
+   "h": 33,
+   "c": "A"
+  },
+  {
+   "x": 1045,
+   "y": 632,
+   "w": 19,
+   "h": 33,
+   "c": "D"
+  },
+  {
+   "x": 312,
+   "y": 1032,
+   "w": 121,
+   "h": 48,
+   "c": "Bm(Dm)"
+  },
+  {
+   "x": 559,
+   "y": 1032,
+   "w": 82,
+   "h": 48,
+   "c": "G(Bb)"
+  },
+  {
+   "x": 863,
+   "y": 1032,
+   "w": 61,
+   "h": 48,
+   "c": "A(C)"
+  },
+  {
+   "x": 1108,
+   "y": 1032,
+   "w": 58,
+   "h": 48,
+   "c": "D(F)"
+  },
+  {
+   "x": 1357,
+   "y": 1032,
+   "w": 121,
+   "h": 48,
+   "c": "Bm(Dm)"
+  },
+  {
+   "x": 32,
+   "y": 1256,
+   "w": 83,
+   "h": 35,
+   "c": "G(Bb)"
+  },
+  {
+   "x": 316,
+   "y": 1256,
+   "w": 62,
+   "h": 35,
+   "c": "A(C)"
+  },
+  {
+   "x": 501,
+   "y": 1256,
+   "w": 83,
+   "h": 35,
+   "c": "G(Bb)"
+  },
+  {
+   "x": 791,
+   "y": 1256,
+   "w": 71,
+   "h": 35,
+   "c": "A(C)"
+  },
+  {
+   "x": 1058,
+   "y": 1256,
+   "w": 136,
+   "h": 35,
+   "c": "F#m(Am)"
+  },
+  {
+   "x": 1330,
+   "y": 1256,
+   "w": 147,
+   "h": 35,
+   "c": "Bm(Dm)"
+  },
+  {
+   "x": 41,
+   "y": 1452,
+   "w": 120,
+   "h": 45,
+   "c": "Em(Gm)"
+  },
+  {
+   "x": 304,
+   "y": 1452,
+   "w": 154,
+   "h": 45,
+   "c": "G/A(Bb/C)"
+  },
+  {
+   "x": 584,
+   "y": 1452,
+   "w": 58,
+   "h": 45,
+   "c": "D(F)"
+  },
+  {
+   "x": 1236,
+   "y": 1452,
+   "w": 100,
+   "h": 45,
+   "c": "至Eb调、"
+  },
+  {
+   "x": 1359,
+   "y": 1452,
+   "w": 52,
+   "h": 45,
+   "c": "F调)"
+  },
+  {
+   "x": 48,
+   "y": 1684,
+   "w": 120,
+   "h": 34,
+   "c": "D(Eb)(F)"
+  },
+  {
+   "x": 666,
+   "y": 1684,
+   "w": 239,
+   "h": 34,
+   "c": "G/D(Ab/Eb)(Bb)"
+  },
+  {
+   "x": 1273,
+   "y": 1684,
+   "w": 167,
+   "h": 34,
+   "c": "D(Cm)(Dm)"
+  },
+  {
+   "x": 355,
+   "y": 2007,
+   "w": 122,
+   "h": 37,
+   "c": "G/D(Ab)"
+  },
+  {
+   "x": 1058,
+   "y": 2007,
+   "w": 18,
+   "h": 37,
+   "c": "C"
+  },
+  {
+   "x": 181,
+   "y": 218,
+   "w": 383,
+   "h": 34,
+   "c": "（后面依次升Eb调、F调）"
+  },
+  {
+   "x": 35,
+   "y": 841,
+   "w": 45,
+   "h": 24,
+   "c": "Bm"
+  },
+  {
+   "x": 610,
+   "y": 841,
+   "w": 43,
+   "h": 24,
+   "c": "Em"
+  },
+  {
+   "x": 1162,
+   "y": 841,
+   "w": 22,
+   "h": 24,
+   "c": "A"
+  },
+  {
+   "x": 63,
+   "y": 1047,
+   "w": 58,
+   "h": 28,
+   "c": "D(F)"
+  }
+ ]
+}

@@ -1,0 +1,234 @@
+{
+ "slug": "你是唯一",
+ "printed_key": "C",
+ "printed_key_verified": "en-tête de la page lu à l'œil avant toute mesure (étape 0), lot des 50 简谱 fournis, 2026-09-18 (itération 63)",
+ "corrections": {
+  "852,204": "A",
+  "852,1269": "D7"
+ },
+ "corrections_verified": "amas relu au zoom (propose-extra --all) : « G » gravé, page en ut, .cho en ré → A. et « C7 » lu A7 par le matcher (mode C, vu sur la planche navigateur) → D7. 2026-09-18 (itération 63)",
+ "key_label": {
+  "x": 14,
+  "y": 154,
+  "w": 81,
+  "h": 26
+ },
+ "key_label_verified": "mesure measure-keylabel (ancrage sur le « = », cadre = voisin gauche…voisin droit), zoom relu à l’œil sur planche de lot, lettre gravée confrontée à printedKey, 2026-08-26 (itération 35)",
+ "extra_chords": [
+  "D7"
+ ],
+ "extra_chords_verified": "« C7 » gravé au dernier temps du 2e système, absent du vocabulaire du .cho (D7 en convention .cho) ; zoom relu à l'œil. 2026-09-18 (itération 63)",
+ "title_key": {
+  "x": 1053,
+  "y": 14,
+  "w": 169,
+  "h": 72
+ },
+ "title_key_verified": "mention « （X调） » du titre, mesurée sur l'encre de la bande du titre et relue à l'œil sur planche (measure-titlekey), 2026-09-18",
+ "verified": "planche navigateur (npm run jianpu:audit) relue tranche par tranche en C→C# : les 4 rangées d'accords sont cadrées, les 29 étiquettes réécrites, le cadre « 1=C » et la mention « （C调） » du titre suivent. Un accord faux vu à l'œil et corrigé : « C7 » du 2e système publiait A7 (mode C). 2026-09-18 (itération 63)",
+ "frozen_labels": [
+  {
+   "x": 67,
+   "y": 323,
+   "w": 18,
+   "h": 26,
+   "c": "C"
+  },
+  {
+   "x": 231,
+   "y": 323,
+   "w": 21,
+   "h": 26,
+   "c": "G"
+  },
+  {
+   "x": 443,
+   "y": 323,
+   "w": 50,
+   "h": 26,
+   "c": "Am"
+  },
+  {
+   "x": 622,
+   "y": 323,
+   "w": 13,
+   "h": 26,
+   "c": "F"
+  },
+  {
+   "x": 803,
+   "y": 323,
+   "w": 45,
+   "h": 26,
+   "c": "Em"
+  },
+  {
+   "x": 995,
+   "y": 323,
+   "w": 50,
+   "h": 26,
+   "c": "Am"
+  },
+  {
+   "x": 1208,
+   "y": 323,
+   "w": 50,
+   "h": 26,
+   "c": "Dm"
+  },
+  {
+   "x": 1381,
+   "y": 323,
+   "w": 21,
+   "h": 26,
+   "c": "G"
+  },
+  {
+   "x": 62,
+   "y": 852,
+   "w": 18,
+   "h": 26,
+   "c": "C"
+  },
+  {
+   "x": 204,
+   "y": 852,
+   "w": 20,
+   "h": 26,
+   "c": "G"
+  },
+  {
+   "x": 399,
+   "y": 852,
+   "w": 50,
+   "h": 26,
+   "c": "Am"
+  },
+  {
+   "x": 568,
+   "y": 852,
+   "w": 13,
+   "h": 26,
+   "c": "F"
+  },
+  {
+   "x": 762,
+   "y": 852,
+   "w": 18,
+   "h": 26,
+   "c": "C"
+  },
+  {
+   "x": 937,
+   "y": 852,
+   "w": 41,
+   "h": 26,
+   "c": "G7"
+  },
+  {
+   "x": 1150,
+   "y": 852,
+   "w": 18,
+   "h": 26,
+   "c": "C"
+  },
+  {
+   "x": 1269,
+   "y": 852,
+   "w": 37,
+   "h": 26,
+   "c": "C7"
+  },
+  {
+   "x": 79,
+   "y": 1380,
+   "w": 12,
+   "h": 26,
+   "c": "F"
+  },
+  {
+   "x": 511,
+   "y": 1380,
+   "w": 45,
+   "h": 26,
+   "c": "Em"
+  },
+  {
+   "x": 747,
+   "y": 1380,
+   "w": 50,
+   "h": 26,
+   "c": "Am"
+  },
+  {
+   "x": 884,
+   "y": 1380,
+   "w": 49,
+   "h": 26,
+   "c": "Dm"
+  },
+  {
+   "x": 1117,
+   "y": 1380,
+   "w": 21,
+   "h": 26,
+   "c": "G"
+  },
+  {
+   "x": 1249,
+   "y": 1380,
+   "w": 18,
+   "h": 26,
+   "c": "C"
+  },
+  {
+   "x": 1332,
+   "y": 1380,
+   "w": 37,
+   "h": 26,
+   "c": "C7"
+  },
+  {
+   "x": 63,
+   "y": 1908,
+   "w": 12,
+   "h": 26,
+   "c": "F"
+  },
+  {
+   "x": 517,
+   "y": 1908,
+   "w": 45,
+   "h": 26,
+   "c": "Em"
+  },
+  {
+   "x": 753,
+   "y": 1908,
+   "w": 50,
+   "h": 26,
+   "c": "Am"
+  },
+  {
+   "x": 916,
+   "y": 1908,
+   "w": 50,
+   "h": 26,
+   "c": "Dm"
+  },
+  {
+   "x": 1143,
+   "y": 1908,
+   "w": 41,
+   "h": 26,
+   "c": "G7"
+  },
+  {
+   "x": 1312,
+   "y": 1908,
+   "w": 18,
+   "h": 26,
+   "c": "C"
+  }
+ ]
+}

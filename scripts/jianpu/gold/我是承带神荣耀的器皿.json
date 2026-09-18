@@ -1,0 +1,255 @@
+{
+ "slug": "我是承带神荣耀的器皿",
+ "printed_key": "G",
+ "printed_key_verified": "en-tête de la page lu à l'œil avant toute mesure (étape 0), lot des 50 简谱 fournis, 2026-09-18 (itération 63)",
+ "corrections": {
+  "363,66": "G",
+  "363,592": "C/G",
+  "574,510": "G",
+  "574,1095": "C/G",
+  "996,48": "G",
+  "996,1061": "G",
+  "1207,1244": "C/D",
+  "1419,824": "C/D",
+  "1620,69": "G",
+  "1620,640": "C/D",
+  "1620,1270": "G",
+  "1841,705": "G",
+  "1841,1220": "C/G",
+  "2052,333": "G"
+ },
+ "corrections_verified": "amas relus au zoom (propose-extra --all --hidden, planches _extra-1/2) : 6 « G » et 3 « C/G » que le matcher laissait sous le seuil, et 3 « C/D » ; le matcher confondait C/G et C/D (mode C) — la barre du G est nette au zoom. Page en sol, .cho en sol (song_semitones=0). 2026-09-18 (itération 63)",
+ "not_labels": [
+  "776,1404",
+  "1620,131",
+  "2052,1382"
+ ],
+ "not_labels_verified": "trois amas qui ne sont pas des accords, vus au zoom : 【Chorus】 (y=776), 【Bridge】 (y=1620) et « To Chorus » (y=2052). 2026-09-18 (itération 63)",
+ "not_rows": [
+  249
+ ],
+ "not_rows_verified": "rangée y=249 : six arcs de liaison du premier système, aucun caractère latin (vus au zoom, scores −1,6 à −2,5). 2026-09-18 (itération 63)",
+ "key_label": {
+  "x": 14,
+  "y": 163,
+  "w": 83,
+  "h": 26
+ },
+ "key_label_verified": "mesure measure-keylabel (ancrage sur le « = », cadre = voisin gauche…voisin droit), zoom relu à l’œil sur planche de lot, lettre gravée confrontée à printedKey, 2026-08-26 (itération 35)",
+ "extra_labels": [
+  {
+   "x": 46,
+   "y": 225,
+   "w": 19,
+   "h": 23,
+   "c": "G"
+  }
+ ],
+ "extra_labels_verified": "le « G » d'intro du 1er système, seul au-dessus des chiffres : le découpage l'a coupé en deux bandes d'une seule colonne (y=235–239 et 241–247), il n'est donc jamais entré dans read() ni dans propose-extra. Vu **sur la planche navigateur** (tranche 1/7 : « G » resté en sol sous des accords en la bémol), boîte mesurée sur l'encre (46,225,19,23) et relue au zoom ×3. 2026-09-18 (itération 63)",
+ "verified": "planche navigateur (npm run jianpu:audit) relue tranche par tranche, 7/7, en G→Ab : les 10 rangées d'accords sont cadrées, les 29 étiquettes réécrites (G→Ab, C/G→Db/Ab, Am→Bbm, D→Eb, Em→Fm, C→Db, C/D→Db/Eb) et le cadre « 1=G » suit en « 1=Ab ». Défaut vu et corrigé pendant l'audit : le « G » d'intro du 1er système restait en sol sur la page transposée (tranche 1/7) — rangée que le découpage avait coupée en deux bandes d'une colonne, republiée en extra_label. 【Chorus】, 【Bridge】, « To Chorus » et « Fine » restent gravés, ce ne sont pas des accords. Pas de mention « （X调） » au titre. 2026-09-18 (itération 63)",
+ "frozen_labels": [
+  {
+   "x": 66,
+   "y": 363,
+   "w": 19,
+   "h": 24,
+   "c": "G"
+  },
+  {
+   "x": 592,
+   "y": 363,
+   "w": 53,
+   "h": 24,
+   "c": "C/G"
+  },
+  {
+   "x": 1030,
+   "y": 363,
+   "w": 47,
+   "h": 24,
+   "c": "Am"
+  },
+  {
+   "x": 47,
+   "y": 574,
+   "w": 18,
+   "h": 24,
+   "c": "D"
+  },
+  {
+   "x": 510,
+   "y": 574,
+   "w": 19,
+   "h": 24,
+   "c": "G"
+  },
+  {
+   "x": 1095,
+   "y": 574,
+   "w": 52,
+   "h": 24,
+   "c": "C/G"
+  },
+  {
+   "x": 41,
+   "y": 776,
+   "w": 47,
+   "h": 33,
+   "c": "Am"
+  },
+  {
+   "x": 610,
+   "y": 776,
+   "w": 18,
+   "h": 33,
+   "c": "D"
+  },
+  {
+   "x": 48,
+   "y": 996,
+   "w": 19,
+   "h": 24,
+   "c": "G"
+  },
+  {
+   "x": 562,
+   "y": 996,
+   "w": 16,
+   "h": 24,
+   "c": "C"
+  },
+  {
+   "x": 1061,
+   "y": 996,
+   "w": 19,
+   "h": 24,
+   "c": "G"
+  },
+  {
+   "x": 50,
+   "y": 1207,
+   "w": 18,
+   "h": 24,
+   "c": "D"
+  },
+  {
+   "x": 619,
+   "y": 1207,
+   "w": 42,
+   "h": 24,
+   "c": "Em"
+  },
+  {
+   "x": 967,
+   "y": 1207,
+   "w": 16,
+   "h": 24,
+   "c": "C"
+  },
+  {
+   "x": 1244,
+   "y": 1207,
+   "w": 53,
+   "h": 24,
+   "c": "C/D"
+  },
+  {
+   "x": 47,
+   "y": 1419,
+   "w": 18,
+   "h": 24,
+   "c": "D"
+  },
+  {
+   "x": 299,
+   "y": 1419,
+   "w": 42,
+   "h": 24,
+   "c": "Em"
+  },
+  {
+   "x": 555,
+   "y": 1419,
+   "w": 16,
+   "h": 24,
+   "c": "C"
+  },
+  {
+   "x": 824,
+   "y": 1419,
+   "w": 53,
+   "h": 24,
+   "c": "C/D"
+  },
+  {
+   "x": 1130,
+   "y": 1419,
+   "w": 18,
+   "h": 24,
+   "c": "D"
+  },
+  {
+   "x": 69,
+   "y": 1620,
+   "w": 19,
+   "h": 34,
+   "c": "G"
+  },
+  {
+   "x": 640,
+   "y": 1620,
+   "w": 53,
+   "h": 34,
+   "c": "C/D"
+  },
+  {
+   "x": 1270,
+   "y": 1620,
+   "w": 19,
+   "h": 34,
+   "c": "G"
+  },
+  {
+   "x": 341,
+   "y": 1841,
+   "w": 18,
+   "h": 24,
+   "c": "D"
+  },
+  {
+   "x": 705,
+   "y": 1841,
+   "w": 19,
+   "h": 24,
+   "c": "G"
+  },
+  {
+   "x": 1220,
+   "y": 1841,
+   "w": 52,
+   "h": 24,
+   "c": "C/G"
+  },
+  {
+   "x": 333,
+   "y": 2052,
+   "w": 19,
+   "h": 35,
+   "c": "G"
+  },
+  {
+   "x": 1015,
+   "y": 2052,
+   "w": 18,
+   "h": 35,
+   "c": "D"
+  },
+  {
+   "x": 46,
+   "y": 225,
+   "w": 19,
+   "h": 23,
+   "c": "G"
+  }
+ ]
+}

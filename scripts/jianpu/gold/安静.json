@@ -1,0 +1,276 @@
+{
+ "slug": "安静",
+ "printed_key": "D",
+ "printed_key_verified": "en-tête de la page lu à l'œil avant toute mesure (étape 0), lot des 50 简谱 fournis, 2026-09-18 (itération 63)",
+ "corrections": {
+  "345,1005": "D/F#",
+  "345,1114": "A7",
+  "771,1109": "A7",
+  "1491,29": "G",
+  "1491,743": "A7",
+  "1491,982": "D"
+ },
+ "corrections_verified": "six amas relus au zoom (propose-extra --all --hidden) : D/F# et A7 du 1er système, A7 du 3e, G / A7 / D du 6e — tous sous le seuil, aucun contredit. Page en ré, .cho en ré (song_semitones=0). 2026-09-18 (itération 63)",
+ "not_rows": [
+  248
+ ],
+ "not_rows_verified": "la rangée y=248 est la ligne « ♩=62 有信心盼望地、敬拜地 » + le bloc 詞/曲 : aucun accord, six amas qui gonflaient le dénominateur. Vu au zoom. 2026-09-18 (itération 63)",
+ "extra_labels": [
+  {
+   "x": 32,
+   "y": 1022,
+   "w": 14,
+   "h": 18,
+   "c": "D"
+  },
+  {
+   "x": 460,
+   "y": 1022,
+   "w": 14,
+   "h": 18,
+   "c": "D"
+  },
+  {
+   "x": 655,
+   "y": 1015,
+   "w": 45,
+   "h": 25,
+   "c": "D/F#"
+  },
+  {
+   "x": 876,
+   "y": 1022,
+   "w": 16,
+   "h": 18,
+   "c": "G"
+  }
+ ],
+ "extra_labels_verified": "rangée d'accords du 4e système (y≈1022) jamais typée « chords » — invisible à read(), à propose-extra --all et à --hidden (mode D). Relue au zoom avec règle en x : D(32) D(460) D/F#(655) G(876) ; boîtes mesurées sur l'encre, bas aligné sur la ligne de base. 2026-09-18 (itération 63)",
+ "key_label": {
+  "x": 60,
+  "y": 156,
+  "w": 68,
+  "h": 25
+ },
+ "key_label_verified": "mesure measure-keylabel (ancrage sur le « = », cadre = voisin gauche…voisin droit), zoom relu à l’œil sur planche de lot, lettre gravée confrontée à printedKey, 2026-08-26 (itération 35)",
+ "verified": "planche navigateur (npm run jianpu:audit) relue tranche par tranche, 6/6, en D→Eb : les 6 rangées d'accords sont cadrées de rouge et les 31 étiquettes réécrites (D→Eb, D/F#→Eb/G, G→Ab, A→Bb, A7→Bb7, D/A→Eb/Bb), le cadre « 1=D » devient « 1=Eb ». Défauts corrigés à l'œil : la rangée du 4e système (y≈1022) n'était pas typée « chords » — invisible à read(), à propose-extra --all et à --hidden — et restait en ré (mode D), reprise en extra_labels ; six amas sous le seuil (D/F# et A7 du 1er système, A7 du 3e, G / A7 / D du 6e) repris en corrections ; la ligne « ♩=62 » écartée en not_rows. Aucun cadre orange, aucun accord sans cadre. 2026-09-18 (itération 63)",
+ "frozen_labels": [
+  {
+   "x": 32,
+   "y": 345,
+   "w": 14,
+   "h": 24,
+   "c": "D"
+  },
+  {
+   "x": 83,
+   "y": 345,
+   "w": 45,
+   "h": 24,
+   "c": "D/F#"
+  },
+  {
+   "x": 161,
+   "y": 345,
+   "w": 16,
+   "h": 24,
+   "c": "G"
+  },
+  {
+   "x": 354,
+   "y": 345,
+   "w": 45,
+   "h": 24,
+   "c": "D/F#"
+  },
+  {
+   "x": 561,
+   "y": 345,
+   "w": 14,
+   "h": 24,
+   "c": "A"
+  },
+  {
+   "x": 684,
+   "y": 345,
+   "w": 14,
+   "h": 24,
+   "c": "D"
+  },
+  {
+   "x": 813,
+   "y": 345,
+   "w": 15,
+   "h": 24,
+   "c": "G"
+  },
+  {
+   "x": 1005,
+   "y": 345,
+   "w": 45,
+   "h": 24,
+   "c": "D/F#"
+  },
+  {
+   "x": 1114,
+   "y": 345,
+   "w": 25,
+   "h": 24,
+   "c": "A7"
+  },
+  {
+   "x": 1243,
+   "y": 345,
+   "w": 14,
+   "h": 24,
+   "c": "D"
+  },
+  {
+   "x": 32,
+   "y": 535,
+   "w": 14,
+   "h": 24,
+   "c": "D"
+  },
+  {
+   "x": 168,
+   "y": 535,
+   "w": 45,
+   "h": 24,
+   "c": "D/F#"
+  },
+  {
+   "x": 332,
+   "y": 535,
+   "w": 15,
+   "h": 24,
+   "c": "G"
+  },
+  {
+   "x": 694,
+   "y": 535,
+   "w": 45,
+   "h": 24,
+   "c": "D/F#"
+  },
+  {
+   "x": 1072,
+   "y": 535,
+   "w": 14,
+   "h": 24,
+   "c": "A"
+  },
+  {
+   "x": 43,
+   "y": 771,
+   "w": 13,
+   "h": 21,
+   "c": "D"
+  },
+  {
+   "x": 426,
+   "y": 771,
+   "w": 15,
+   "h": 21,
+   "c": "G"
+  },
+  {
+   "x": 873,
+   "y": 771,
+   "w": 45,
+   "h": 21,
+   "c": "D/F#"
+  },
+  {
+   "x": 1109,
+   "y": 771,
+   "w": 24,
+   "h": 21,
+   "c": "A7"
+  },
+  {
+   "x": 32,
+   "y": 1256,
+   "w": 38,
+   "h": 21,
+   "c": "D/A"
+  },
+  {
+   "x": 529,
+   "y": 1256,
+   "w": 14,
+   "h": 21,
+   "c": "A"
+  },
+  {
+   "x": 952,
+   "y": 1256,
+   "w": 14,
+   "h": 21,
+   "c": "D"
+  },
+  {
+   "x": 1144,
+   "y": 1256,
+   "w": 45,
+   "h": 21,
+   "c": "D/F#"
+  },
+  {
+   "x": 29,
+   "y": 1491,
+   "w": 16,
+   "h": 21,
+   "c": "G"
+  },
+  {
+   "x": 487,
+   "y": 1491,
+   "w": 38,
+   "h": 21,
+   "c": "D/A"
+  },
+  {
+   "x": 743,
+   "y": 1491,
+   "w": 26,
+   "h": 21,
+   "c": "A7"
+  },
+  {
+   "x": 982,
+   "y": 1491,
+   "w": 14,
+   "h": 21,
+   "c": "D"
+  },
+  {
+   "x": 32,
+   "y": 1022,
+   "w": 14,
+   "h": 18,
+   "c": "D"
+  },
+  {
+   "x": 460,
+   "y": 1022,
+   "w": 14,
+   "h": 18,
+   "c": "D"
+  },
+  {
+   "x": 655,
+   "y": 1015,
+   "w": 45,
+   "h": 25,
+   "c": "D/F#"
+  },
+  {
+   "x": 876,
+   "y": 1022,
+   "w": 16,
+   "h": 18,
+   "c": "G"
+  }
+ ]
+}

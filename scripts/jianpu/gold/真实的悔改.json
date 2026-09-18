@@ -1,0 +1,365 @@
+{
+ "slug": "真实的悔改",
+ "printed_key": "F",
+ "printed_key_verified": "en-tête de la page lu à l'œil avant toute mesure (étape 0), lot des 50 简谱 fournis, 2026-09-18 (itération 63)",
+ "corrections": {
+  "429,289": "C/E",
+  "429,373": "Bb/D",
+  "429,791": "Gm/F",
+  "429,1257": "Csus4",
+  "892,607": "Bb/C",
+  "892,1041": "A7",
+  "1193,749": "Gm7",
+  "1193,1039": "Bb/C",
+  "1480,270": "C/E",
+  "1480,1236": "D/F#",
+  "2060,10": "Gm7",
+  "2060,496": "Bb/C"
+ },
+ "corrections_verified": "amas relus à l'œil sur la page à l'échelle 1:1 (tranches y=0-560, 540-1100, 1080-1640, 1620-2233) : onze amas justes que le matcher n'avait pas retenus, et un mode C — « A7 » du 3e système publiait Bb. Page en fa, .cho en fa (song_semitones=0). 2026-09-18 (itération 63)",
+ "not_labels": [
+  "1480,450",
+  "1480,922",
+  "2060,940"
+ ],
+ "not_labels_verified": "les trois « 3 » d'un crochet de triolet (amas de 2 px de large), lus « F » par le matcher. 2026-09-18 (itération 63)",
+ "not_rows": [
+  1223
+ ],
+ "not_rows_verified": "rangée y=1223 : deux arcs de liaison au-dessus des chiffres du 4e système, aucun accord (zoom x=100-800). 2026-09-18 (itération 63)",
+ "extra_labels": [
+  {
+   "x": 364,
+   "y": 610,
+   "w": 78,
+   "h": 26,
+   "c": "Fadd2"
+  },
+  {
+   "x": 938,
+   "y": 610,
+   "w": 92,
+   "h": 26,
+   "c": "Bbmaj7"
+  },
+  {
+   "x": 16,
+   "y": 1772,
+   "w": 56,
+   "h": 22,
+   "c": "Bb/C"
+  },
+  {
+   "x": 310,
+   "y": 1772,
+   "w": 18,
+   "h": 22,
+   "c": "C"
+  },
+  {
+   "x": 522,
+   "y": 1772,
+   "w": 13,
+   "h": 22,
+   "c": "F"
+  },
+  {
+   "x": 737,
+   "y": 1772,
+   "w": 48,
+   "h": 22,
+   "c": "C/E"
+  },
+  {
+   "x": 975,
+   "y": 1772,
+   "w": 60,
+   "h": 22,
+   "c": "Dm9"
+  },
+  {
+   "x": 1176,
+   "y": 1772,
+   "w": 43,
+   "h": 22,
+   "c": "F/C"
+  }
+ ],
+ "extra_labels_verified": "deux rangées que le découpage n'isole pas : le 2e système (Fadd2, Bbmaj7 — boîtes mesurées sur l'encre, y=606..642) et le 6e système (six accords, boîtes de propose-extra --hidden). Relues à l'œil sur la page. 2026-09-18 (itération 63)",
+ "key_label": {
+  "x": 54,
+  "y": 271,
+  "w": 69,
+  "h": 27
+ },
+ "key_label_verified": "mesure measure-keylabel (ancrage sur le « = », cadre = voisin gauche…voisin droit), zoom relu à l’œil sur planche de lot, lettre gravée confrontée à printedKey, 2026-08-26 (itération 35)",
+ "verified": "planche navigateur (npm run jianpu:audit) relue tranche par tranche, les 6 sur 6, en F→F# : les 7 systèmes sont cadrés en rouge, les 30 étiquettes réécrites (F#, C#/F, B/D#, D#/G, G#m, G#m/F#, Bmaj7, C#sus4, F#add2, G#m9, A#7, A#/D, D#m9, B, G#m7, B/C#, C#, F#maj7…), aucun cadre orange, aucun accord laissé en fa, et le cadre « 1=F# » suit. Deux rangées que le découpage ne voyait pas (2e et 6e systèmes) ont été relevées à la main et sont converties ; l'accord faux vu à l'œil était « A7 » du 3e système, publié Bb. 2026-09-18 (itération 63)",
+ "frozen_labels": [
+  {
+   "x": 161,
+   "y": 429,
+   "w": 11,
+   "h": 25,
+   "c": "F"
+  },
+  {
+   "x": 289,
+   "y": 429,
+   "w": 38,
+   "h": 25,
+   "c": "C/E"
+  },
+  {
+   "x": 373,
+   "y": 425,
+   "w": 46,
+   "h": 29,
+   "c": "Bb/D"
+  },
+  {
+   "x": 520,
+   "y": 429,
+   "w": 48,
+   "h": 25,
+   "c": "D/F#"
+  },
+  {
+   "x": 664,
+   "y": 429,
+   "w": 37,
+   "h": 25,
+   "c": "Gm"
+  },
+  {
+   "x": 791,
+   "y": 429,
+   "w": 59,
+   "h": 25,
+   "c": "Gm/F"
+  },
+  {
+   "x": 961,
+   "y": 424,
+   "w": 73,
+   "h": 30,
+   "c": "Bbmaj7"
+  },
+  {
+   "x": 1257,
+   "y": 429,
+   "w": 61,
+   "h": 25,
+   "c": "Csus4"
+  },
+  {
+   "x": 10,
+   "y": 892,
+   "w": 63,
+   "h": 33,
+   "c": "Gm9"
+  },
+  {
+   "x": 301,
+   "y": 892,
+   "w": 60,
+   "h": 33,
+   "c": "D/F#"
+  },
+  {
+   "x": 607,
+   "y": 892,
+   "w": 56,
+   "h": 33,
+   "c": "Bb/C"
+  },
+  {
+   "x": 850,
+   "y": 892,
+   "w": 18,
+   "h": 33,
+   "c": "C"
+  },
+  {
+   "x": 1041,
+   "y": 892,
+   "w": 34,
+   "h": 33,
+   "c": "A7"
+  },
+  {
+   "x": 1266,
+   "y": 892,
+   "w": 65,
+   "h": 33,
+   "c": "A/C#"
+  },
+  {
+   "x": 14,
+   "y": 1193,
+   "w": 60,
+   "h": 22,
+   "c": "Dm9"
+  },
+  {
+   "x": 250,
+   "y": 1193,
+   "w": 42,
+   "h": 22,
+   "c": "F/C"
+  },
+  {
+   "x": 541,
+   "y": 1182,
+   "w": 27,
+   "h": 33,
+   "c": "Bb"
+  },
+  {
+   "x": 749,
+   "y": 1193,
+   "w": 61,
+   "h": 22,
+   "c": "Gm7"
+  },
+  {
+   "x": 1039,
+   "y": 1182,
+   "w": 56,
+   "h": 33,
+   "c": "Bb/C"
+  },
+  {
+   "x": 1187,
+   "y": 1193,
+   "w": 18,
+   "h": 22,
+   "c": "C"
+  },
+  {
+   "x": 39,
+   "y": 1480,
+   "w": 12,
+   "h": 26,
+   "c": "F"
+  },
+  {
+   "x": 270,
+   "y": 1480,
+   "w": 48,
+   "h": 26,
+   "c": "C/E"
+  },
+  {
+   "x": 529,
+   "y": 1480,
+   "w": 60,
+   "h": 26,
+   "c": "Dm9"
+  },
+  {
+   "x": 745,
+   "y": 1480,
+   "w": 43,
+   "h": 26,
+   "c": "F/C"
+  },
+  {
+   "x": 995,
+   "y": 1480,
+   "w": 62,
+   "h": 26,
+   "c": "Gm9"
+  },
+  {
+   "x": 1236,
+   "y": 1476,
+   "w": 61,
+   "h": 30,
+   "c": "D/F#"
+  },
+  {
+   "x": 10,
+   "y": 2060,
+   "w": 62,
+   "h": 22,
+   "c": "Gm7"
+  },
+  {
+   "x": 496,
+   "y": 2050,
+   "w": 56,
+   "h": 32,
+   "c": "Bb/C"
+  },
+  {
+   "x": 752,
+   "y": 2060,
+   "w": 18,
+   "h": 22,
+   "c": "C"
+  },
+  {
+   "x": 1022,
+   "y": 2060,
+   "w": 78,
+   "h": 22,
+   "c": "Fmaj7"
+  },
+  {
+   "x": 364,
+   "y": 610,
+   "w": 78,
+   "h": 26,
+   "c": "Fadd2"
+  },
+  {
+   "x": 938,
+   "y": 604,
+   "w": 92,
+   "h": 32,
+   "c": "Bbmaj7"
+  },
+  {
+   "x": 16,
+   "y": 1761,
+   "w": 56,
+   "h": 33,
+   "c": "Bb/C"
+  },
+  {
+   "x": 310,
+   "y": 1772,
+   "w": 18,
+   "h": 22,
+   "c": "C"
+  },
+  {
+   "x": 522,
+   "y": 1772,
+   "w": 13,
+   "h": 22,
+   "c": "F"
+  },
+  {
+   "x": 737,
+   "y": 1772,
+   "w": 48,
+   "h": 22,
+   "c": "C/E"
+  },
+  {
+   "x": 975,
+   "y": 1772,
+   "w": 60,
+   "h": 22,
+   "c": "Dm9"
+  },
+  {
+   "x": 1176,
+   "y": 1772,
+   "w": 43,
+   "h": 22,
+   "c": "F/C"
+  }
+ ]
+}

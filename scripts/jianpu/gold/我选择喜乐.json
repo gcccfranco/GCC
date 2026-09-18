@@ -1,0 +1,278 @@
+{
+ "slug": "我选择喜乐",
+ "printed_key": "G",
+ "printed_key_verified": "en-tête de la page lu à l'œil avant toute mesure (étape 0), lot des 50 简谱 fournis, 2026-09-18 (itération 63)",
+ "corrections": {
+  "262,220": "C",
+  "262,602": "G",
+  "262,1382": "G",
+  "451,386": "C",
+  "451,989": "G",
+  "764,565": "G",
+  "764,1336": "G",
+  "1042,983": "G",
+  "1372,670": "G",
+  "1693,458": "G",
+  "1693,628": "D/F#",
+  "2006,461": "G",
+  "2006,1204": "G"
+ },
+ "corrections_verified": "treize amas relus au zoom : les « G » de la page sortent systématiquement non unanimes (0,65–0,75) et les « C » sous le seuil (0,27–0,29), plus le D/F# du 6e système. Aucun ne contredit une lecture retenue. Page en sol, .cho en sol (song_semitones=0). 2026-09-18 (itération 63)",
+ "not_labels": [
+  "1042,146"
+ ],
+ "not_labels_verified": "l'amas 1042,146 est la mention 【Chorus】 (119 px de large), lue D/F# à -0,76. Zoom relu. 2026-09-18 (itération 63)",
+ "not_rows": [
+  802,
+  2044
+ ],
+ "not_rows_verified": "y=802 porte les chiffres ┌1 et ┌2 des maisons de reprise, y=2044 la barre horizontale de la maison de reprise du dernier système (790 px de large) : aucun accord. 2026-09-18 (itération 63)",
+ "key_label": {
+  "x": 14,
+  "y": 173,
+  "w": 83,
+  "h": 26
+ },
+ "key_label_verified": "mesure measure-keylabel (ancrage sur le « = », cadre = voisin gauche…voisin droit), zoom relu à l’œil sur planche de lot, lettre gravée confrontée à printedKey, 2026-08-26 (itération 35)",
+ "verified": "planche navigateur (npm run jianpu:audit) relue tranche par tranche, 7/7, en G→Ab : les 7 rangées d'accords sont cadrées de rouge et les 34 étiquettes réécrites (C→Db, D→Eb, G→Ab, Em→Fm, Am→Bbm, D/F#→Eb/G), le cadre « 1=  G » devient « 1=Ab ». Défauts corrigés à l'œil : treize amas sous le seuil ou non unanimes (tous les « G » et les « C » de la page, plus le D/F# du 6e système) repris en corrections ; 【Chorus】 écarté en not_labels ; les chiffres ┌1 ┌2 des maisons de reprise et leur barre horizontale écartés en not_rows. Les maisons de reprise et 【Chorus】 restent intacts sur le rendu. Aucun cadre orange, aucun accord sans cadre. 2026-09-18 (itération 63)",
+ "frozen_labels": [
+  {
+   "x": 220,
+   "y": 262,
+   "w": 16,
+   "h": 24,
+   "c": "C"
+  },
+  {
+   "x": 411,
+   "y": 262,
+   "w": 18,
+   "h": 24,
+   "c": "D"
+  },
+  {
+   "x": 602,
+   "y": 262,
+   "w": 19,
+   "h": 24,
+   "c": "G"
+  },
+  {
+   "x": 787,
+   "y": 262,
+   "w": 42,
+   "h": 24,
+   "c": "Em"
+  },
+  {
+   "x": 977,
+   "y": 262,
+   "w": 47,
+   "h": 24,
+   "c": "Am"
+  },
+  {
+   "x": 1177,
+   "y": 262,
+   "w": 18,
+   "h": 24,
+   "c": "D"
+  },
+  {
+   "x": 1382,
+   "y": 262,
+   "w": 19,
+   "h": 24,
+   "c": "G"
+  },
+  {
+   "x": 386,
+   "y": 451,
+   "w": 16,
+   "h": 23,
+   "c": "C"
+  },
+  {
+   "x": 697,
+   "y": 451,
+   "w": 18,
+   "h": 23,
+   "c": "D"
+  },
+  {
+   "x": 989,
+   "y": 451,
+   "w": 19,
+   "h": 23,
+   "c": "G"
+  },
+  {
+   "x": 1294,
+   "y": 451,
+   "w": 42,
+   "h": 23,
+   "c": "Em"
+  },
+  {
+   "x": 53,
+   "y": 764,
+   "w": 47,
+   "h": 24,
+   "c": "Am"
+  },
+  {
+   "x": 285,
+   "y": 764,
+   "w": 19,
+   "h": 24,
+   "c": "D"
+  },
+  {
+   "x": 565,
+   "y": 764,
+   "w": 19,
+   "h": 24,
+   "c": "G"
+  },
+  {
+   "x": 809,
+   "y": 764,
+   "w": 48,
+   "h": 24,
+   "c": "Am"
+  },
+  {
+   "x": 1068,
+   "y": 764,
+   "w": 18,
+   "h": 24,
+   "c": "D"
+  },
+  {
+   "x": 1336,
+   "y": 764,
+   "w": 19,
+   "h": 24,
+   "c": "G"
+  },
+  {
+   "x": 393,
+   "y": 1042,
+   "w": 16,
+   "h": 32,
+   "c": "C"
+  },
+  {
+   "x": 689,
+   "y": 1042,
+   "w": 18,
+   "h": 32,
+   "c": "D"
+  },
+  {
+   "x": 983,
+   "y": 1042,
+   "w": 19,
+   "h": 32,
+   "c": "G"
+  },
+  {
+   "x": 1273,
+   "y": 1042,
+   "w": 42,
+   "h": 32,
+   "c": "Em"
+  },
+  {
+   "x": 57,
+   "y": 1372,
+   "w": 47,
+   "h": 23,
+   "c": "Am"
+  },
+  {
+   "x": 370,
+   "y": 1372,
+   "w": 18,
+   "h": 23,
+   "c": "D"
+  },
+  {
+   "x": 670,
+   "y": 1372,
+   "w": 19,
+   "h": 23,
+   "c": "G"
+  },
+  {
+   "x": 1275,
+   "y": 1372,
+   "w": 17,
+   "h": 23,
+   "c": "C"
+  },
+  {
+   "x": 82,
+   "y": 1693,
+   "w": 18,
+   "h": 24,
+   "c": "D"
+  },
+  {
+   "x": 458,
+   "y": 1693,
+   "w": 19,
+   "h": 24,
+   "c": "G"
+  },
+  {
+   "x": 628,
+   "y": 1693,
+   "w": 68,
+   "h": 24,
+   "c": "D/F#"
+  },
+  {
+   "x": 831,
+   "y": 1693,
+   "w": 42,
+   "h": 24,
+   "c": "Em"
+  },
+  {
+   "x": 1209,
+   "y": 1693,
+   "w": 46,
+   "h": 24,
+   "c": "Am"
+  },
+  {
+   "x": 77,
+   "y": 2006,
+   "w": 19,
+   "h": 24,
+   "c": "D"
+  },
+  {
+   "x": 461,
+   "y": 2006,
+   "w": 19,
+   "h": 24,
+   "c": "G"
+  },
+  {
+   "x": 848,
+   "y": 2006,
+   "w": 19,
+   "h": 24,
+   "c": "D"
+  },
+  {
+   "x": 1204,
+   "y": 2006,
+   "w": 19,
+   "h": 24,
+   "c": "G"
+  }
+ ]
+}

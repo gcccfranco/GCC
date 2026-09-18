@@ -1,0 +1,302 @@
+{
+ "slug": "医治我",
+ "printed_key": "A",
+ "printed_key_verified": "en-tête de la page lu à l'œil avant toute mesure (étape 0), lot des 50 简谱 fournis, 2026-09-18 (itération 63)",
+ "corrections": {
+  "194,263": "E/G#",
+  "194,629": "A/E",
+  "724,219": "D/E",
+  "724,1007": "D/E",
+  "989,179": "D/E",
+  "1251,269": "D/E",
+  "1251,666": "D/E",
+  "1515,675": "D/E"
+ },
+ "corrections_verified": "les huit amas que le matcher lisait juste mais sous le seuil, relus au zoom (propose-extra --all, planches 4 et 5) : E/G#, A/E et six D/E. Page en la, .cho en la (song_semitones 0) : recopiés tels que gravés. 2026-09-18 (itération 63)",
+ "not_rows": [
+  762,
+  1286
+ ],
+ "not_rows_verified": "deux rangées de liaisons et de barres de mesure sous les rangées d'accords (zooms #4–#10 et #17–#22) : aucun accord gravé. 2026-09-18 (itération 63)",
+ "not_labels": [
+  "989,352",
+  "989,783",
+  "989,1100",
+  "989,1254",
+  "1251,1229",
+  "1515,271"
+ ],
+ "not_labels_verified": "amas non-étiquettes dans des rangées d'accords : trois barres de mesure, l'arc de triolet « 3 » du 4e système, une liaison, et l'amas de 108 px du 4e système où la liaison du système précédent est soudée au « F#m » — ce F#m est republié à part en extra_labels, sur son encre propre, parce que la boîte de l'amas effaçait la liaison (vu à la planche navigateur, tranche 4/6). 2026-09-18 (itération 63)",
+ "key_label": {
+  "x": 39,
+  "y": 82,
+  "w": 82,
+  "h": 29
+ },
+ "key_label_verified": "candidate #1 de measure-keylabel relue sur la planche : le cadre tient « 1=A » sans le chiffrage 4/4, et la ligne de tempo « ♩=65 » (aucune candidate proposée ici) reste hors cadre. Lettre gravée A = printedKey A. 2026-09-18 (itération 63)",
+ "extra_labels": [
+  {
+   "x": 829,
+   "y": 980,
+   "w": 63,
+   "h": 36,
+   "c": "F#m"
+  }
+ ],
+ "extra_labels_verified": "le « F#m » du 4e système, soudé à la liaison qui le précède : boîte resserrée sur son encre propre (x 829–891, y 980–1015), même bord bas que la boîte d'origine donc même ligne de base. 2026-09-18 (itération 63)",
+ "verified": "planche navigateur (npm run jianpu:audit) relue tranche par tranche, 6/6, en A→Bb : les six rangées d'accords sont cadrées de rouge, les 36 étiquettes réécrites (A→Bb, E/G#→F/A, F#m→Gm, A/E→Bb/F, D→Eb, D/E→Eb/F, A/C#→Bb/D, Bm→Cm, D/F#→Eb/G) et le cadre « 1=A » suit en « 1=Bb ». La ligne de tempo ♩=65, les deux rangées de liaisons, l'arc de triolet « 3 » et les barres de mesure restent intacts. Un défaut vu à l'œil et corrigé : la boîte du F#m du 4e système, soudée à la liaison qui le précède, effaçait cette liaison ; l'étiquette est republiée sur son encre propre (tranche 4/6 revue après correction). Pas de mention « （X调） » dans le titre (« （赛 42:3） » est une référence biblique). 2026-09-18 (itération 63)",
+ "frozen_labels": [
+  {
+   "x": 33,
+   "y": 194,
+   "w": 20,
+   "h": 35,
+   "c": "A"
+  },
+  {
+   "x": 263,
+   "y": 194,
+   "w": 67,
+   "h": 35,
+   "c": "E/G#"
+  },
+  {
+   "x": 533,
+   "y": 194,
+   "w": 58,
+   "h": 35,
+   "c": "F#m"
+  },
+  {
+   "x": 629,
+   "y": 194,
+   "w": 53,
+   "h": 35,
+   "c": "A/E"
+  },
+  {
+   "x": 756,
+   "y": 194,
+   "w": 21,
+   "h": 35,
+   "c": "D"
+  },
+  {
+   "x": 995,
+   "y": 194,
+   "w": 47,
+   "h": 35,
+   "c": "Bm"
+  },
+  {
+   "x": 29,
+   "y": 455,
+   "w": 17,
+   "h": 36,
+   "c": "E"
+  },
+  {
+   "x": 149,
+   "y": 455,
+   "w": 67,
+   "h": 36,
+   "c": "D/F#"
+  },
+  {
+   "x": 231,
+   "y": 455,
+   "w": 66,
+   "h": 36,
+   "c": "E/G#"
+  },
+  {
+   "x": 341,
+   "y": 455,
+   "w": 19,
+   "h": 36,
+   "c": "A"
+  },
+  {
+   "x": 611,
+   "y": 455,
+   "w": 67,
+   "h": 36,
+   "c": "E/G#"
+  },
+  {
+   "x": 923,
+   "y": 455,
+   "w": 58,
+   "h": 36,
+   "c": "F#m"
+  },
+  {
+   "x": 1062,
+   "y": 455,
+   "w": 53,
+   "h": 36,
+   "c": "A/E"
+  },
+  {
+   "x": 33,
+   "y": 724,
+   "w": 20,
+   "h": 27,
+   "c": "D"
+  },
+  {
+   "x": 219,
+   "y": 724,
+   "w": 52,
+   "h": 27,
+   "c": "D/E"
+  },
+  {
+   "x": 488,
+   "y": 724,
+   "w": 20,
+   "h": 27,
+   "c": "A"
+  },
+  {
+   "x": 598,
+   "y": 720,
+   "w": 71,
+   "h": 31,
+   "c": "A/C#"
+  },
+  {
+   "x": 819,
+   "y": 724,
+   "w": 21,
+   "h": 27,
+   "c": "D"
+  },
+  {
+   "x": 1007,
+   "y": 724,
+   "w": 52,
+   "h": 27,
+   "c": "D/E"
+  },
+  {
+   "x": 32,
+   "y": 989,
+   "w": 20,
+   "h": 52,
+   "c": "A"
+  },
+  {
+   "x": 179,
+   "y": 989,
+   "w": 53,
+   "h": 52,
+   "c": "D/E"
+  },
+  {
+   "x": 377,
+   "y": 989,
+   "w": 20,
+   "h": 52,
+   "c": "A"
+  },
+  {
+   "x": 549,
+   "y": 984,
+   "w": 66,
+   "h": 57,
+   "c": "E/G#"
+  },
+  {
+   "x": 996,
+   "y": 989,
+   "w": 53,
+   "h": 52,
+   "c": "A/E"
+  },
+  {
+   "x": 33,
+   "y": 1251,
+   "w": 21,
+   "h": 32,
+   "c": "D"
+  },
+  {
+   "x": 269,
+   "y": 1251,
+   "w": 53,
+   "h": 32,
+   "c": "D/E"
+  },
+  {
+   "x": 546,
+   "y": 1251,
+   "w": 20,
+   "h": 32,
+   "c": "A"
+  },
+  {
+   "x": 666,
+   "y": 1251,
+   "w": 53,
+   "h": 32,
+   "c": "D/E"
+  },
+  {
+   "x": 848,
+   "y": 1251,
+   "w": 19,
+   "h": 32,
+   "c": "A"
+  },
+  {
+   "x": 999,
+   "y": 1247,
+   "w": 67,
+   "h": 36,
+   "c": "E/G#"
+  },
+  {
+   "x": 18,
+   "y": 1509,
+   "w": 58,
+   "h": 37,
+   "c": "F#m"
+  },
+  {
+   "x": 164,
+   "y": 1515,
+   "w": 53,
+   "h": 31,
+   "c": "A/E"
+  },
+  {
+   "x": 431,
+   "y": 1515,
+   "w": 21,
+   "h": 31,
+   "c": "D"
+  },
+  {
+   "x": 675,
+   "y": 1515,
+   "w": 53,
+   "h": 31,
+   "c": "D/E"
+  },
+  {
+   "x": 955,
+   "y": 1515,
+   "w": 20,
+   "h": 31,
+   "c": "A"
+  },
+  {
+   "x": 829,
+   "y": 980,
+   "w": 63,
+   "h": 36,
+   "c": "F#m"
+  }
+ ]
+}

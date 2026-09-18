@@ -1,0 +1,6 @@
+{
+ "slug": "新造的人",
+ "printed_key": "G",
+ "printed_key_verified": "en-tête de la page lu à l'œil avant toute mesure (étape 0), lot des 50 简谱 fournis, 2026-09-18 (itération 63)",
+ "en_chantier": "scan de 636×632 px (le corpus est à 1600), gravure manuscrite : le découpage n'isole aucune rangée d'accords — les quatre rangées qu'il type « chords » (y=131, 225, 318, 415) sont les lignes de **paroles**, et le matcher y retient 0 amas sur 22. `propose-extra --all --hidden` rend « ni calque ni lecture exploitable », `bandes.py` « pas de calque ». Rien à corriger par `corrections` : il n'y a pas d'amas à corriger. S'ajoutent deux obstacles : la page écrit sa tonalité **à l'envers** (« G=1 »), invisible à measure-keylabel, et grave deux accords absents du .cho (Am, D7). Il faut un scan en définition normale avant de reprendre. 2026-09-18 (itération 63)"
+}

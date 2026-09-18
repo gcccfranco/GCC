@@ -399,6 +399,7 @@ rangées les tronque.
 | 59 | **une correction prend la hauteur de sa bande** : quand la bande descend jusqu'aux arcs (42 à 48 px contre 25 à 30), l'accord corrigé tombe une demi-ligne sous ses voisins posés en boîte serrée — vu à la planche navigateur seule, sur trois pages · le dénominateur, encore : en-têtes, arcs et chiffres empilés promus, rangées d'accords entières jamais isolées | **les deux pages à deux jeux** : 无价至宝 (sib, capo en la, `.cho` écrit sur la rangée capo → shift +1 et aller-retour `transpose_label` sur chaque nom) et 所有的荣耀归于你 (fa, capo en mi) · `mode_d` ne voit pas les `alt_labels` → `mask_rows`, modèle de 在这里 · `audit-browser --alt` relit la seconde tonalité, que la planche n'avait jamais montrée | corpus 135, calques **117 → 121**, tous certifiés et complets · étiquettes 4 929 → **5 142**, dont 106 `alt` et 93 `opt` · cadres 121 · **617 tests** Playwright, `tsc`, `validate` |
 | 60 | **la page grave sa propre tonalité, et personne ne la lisait** : trois des treize pages sans calque déclarent en toutes lettres une tonalité qui n'est pas celle de leur `.cho` — titre « （E调）», « （Bb调）», « （G调）» et cadre « 1= X » —, et le vocabulaire transposé de travers les tenait à 1/39, 4/42 et 10/37 · le balayage conjoint fonte/tonalité, lui, proposait la bonne à 54 % et dans le bruit : **ce qu'il cherchait par corrélation était écrit sur la page** | **le dénominateur, cinquième itération de suite** : sur 看见复兴, 16 des 24 amas venaient de rangées sans accord (fragments de chiffres, le filet d'un crochet de reprise large de 797 px) et quatre vraies rangées ne pesaient rien — « 3/24 » pour une page à 22 accords sur 22 · **la vérité terrain d'une page élit sa fonte sans être circulaire** : une fois la page transcrite à l'œil, chaque fonte se mesure en *accords justes*, pas en couverture — verdana-bold 3 contre din-bold 9 sur 看见复兴, et le passage à din-bold fait confirmer une rangée entière par le matcher | corpus 135, calques **121 → 126**, tous certifiés et complets · étiquettes 5 142 → **5 313** · cadres 1=X 121 → **126** · `worklist --certifiées` : 0 · `bandes.py` et `grille.py` : 0 sur les cinq pages · **642 tests** Playwright (617 avant), `tsc`, `validate` (370 chants) |
 
+| 63 | **compter les systèmes est le meilleur détecteur de rangée manquée, et il est manuel** : toute rangée de chiffres doit avoir sa rangée d'accords, et la différence entre les bandes de `classify()` et les rangées de `read()` *est* la liste du mode D — au moins **15 rangées entières** sur ce lot, dont quatre systèmes complets sur 只要有你在我左右 ; `propose-extra --all --hidden` n'en a proposé qu'une partie et `bandes.py` rendait « 0 bande nue » sur des pages qui en portaient trois · **le mode C est un phénomène de famille** : ce n'est pas un amas qui rate, c'est une classe — toutes les basses barrées de 谢谢你成为我的家, les 13 Cmaj7/Gmaj7 de 不停赞美你 lus « Bm7 », les six Bm7 de 我神我王 lus « Em7 », deux publiés **au-dessus du seuil** (+0,73) | **le banc attrape ce que la planche ne montre pas** : « Ab/Bb ) » débordait de 4 px hors de la page, `fitFont` ne rétrécissant que de 20 % (`MIN_SHRINK`) — d'où la règle « geler page par page, banc juste après » · **une page peut porter sa seconde tonalité en prose** (得胜的宣告 : « 后面依次升Eb调、F调 »), et `transposeLabel` la suit comme une composite · `measure-titlekey.py` propose la mention « （X调） » du titre, aveugle quand la bande du titre porte aussi les crédits · `build-chords.py <slug>…` ne reconstruit que les chants nommés | corpus **135 → 185**, calques **134 → 180**, tous certifiés, complets et gelés · étiquettes **5 313 → 7 629** · cadres 1=X **180** · 589 corrections et 201 étiquettes à la main sur les 51 pages nouvelles · **5 retenues à l'étude** (3 pour la définition du scan, 2 à deux jeux d'accords) · banc Playwright **682 → 923 tests**, tous verts |
 ## Journal
 
 ### Itération 0 — mise en place
@@ -5809,3 +5810,137 @@ identique après chaque gel.
   `bandes.py` aveugle aux annotations noyées dans les hanzi (57), les fichiers
   « … 2.json », le `.cho` de 给梦想一双翅膀, le PDF sans sélecteur,
   l'alternative parenthésée solitaire, les tonalités mineures.
+
+### Itération 63 — les 50 简谱 manquantes, et ce qu'un lot d'agents apprend
+
+Timothée a fourni les partitions qui manquaient. **58 planches pour les 53
+chants chinois qui n'avaient aucune partition** : 50 sont appariées à un chant
+du site (titre gravé, première ligne de paroles et tonalité relus un par un),
+3 chants restent sans planche (圣诞节耶稣为你而来, 活着为要敬拜你, 谢谢你) et
+8 images doublent des chants déjà pourvus. Le corpus passe de **135 à 185
+pages**, et le site n'a plus de chant chinois sans partition — sauf ces trois.
+
+**Les sources ne sont plus toutes des PDF.** `build-images.py` accepte une
+entrée d'inventaire qui porte `images` (une par page) au lieu de `pdf`, aplatit
+l'alpha des GIF et PNG indexés sur blanc, et rend les mêmes
+`<slug>-p<n>.webp`. Sortie inchangée au bit près sur les 135 PDF déjà publiés,
+vérifiée avant d'ajouter quoi que ce soit.
+
+**你的爱不离不弃 n'était pas une page à portée, c'était la mauvaise page.**
+Elle était tenue hors du calque depuis le 10/09/2026 par une décision de
+Timothée — on ne calque pas une page qui porte une portée à cinq lignes, qui
+ne se transpose pas. La planche fournie est le **简谱 du même chant**, gravé
+1=A comme le `.cho` : la raison tombe avec la portée. La page est remplacée,
+le relevé de l'itération 58 (qui portait sur l'ancienne image, donc sur des
+coordonnées caduques) est archivé dans son `gold/` sous
+`lecture_page_a_portee_retiree`, et le calque est refait et certifié. C'était
+la dernière page du corpus d'avant sans calque.
+
+**前来敬拜 était bloquée par son `.cho`, pas par sa gravure.** Le fichier
+déclarait `{key: C}` sur un jeu d'accords de **sol** majeur — G D C Em Am G/B,
+avec un ré *majeur* et aucun fa —, et la planche grave « 1=G » sur exactement
+ces accords. `song_semitones` valait donc 7 et le matcher cherchait des noms
+que la page n'imprime nulle part : 16 amas lus sur 45, dont plusieurs justes
+par coïncidence. Un compteur de couverture y voyait des réussites. Corrigé en
+`{key: G}` — un caractère —, la page se lit normalement. Côté client, l'écart
+était pire que la lecture : `semitonesTo(printedKey, playedKey)` serait parti
+de sol quand `originalKey` valait do, et la grille ChordPro et le calque
+auraient divergé de **cinq demi-tons sur la même page**.
+
+**Ce que la mécanisation par agents a appris.** Sept agents ont travaillé les
+pages en parallèle, puis trois de plus après une coupure. Leurs comptes rendus
+convergent sur des points que le protocole ne disait pas :
+
+- **Compter les systèmes est le meilleur détecteur de mode D, et il est
+  manuel.** Toute rangée de chiffres doit avoir sa rangée d'accords au-dessus ;
+  la différence entre les bandes que `classify()` rend et les rangées que
+  `read()` rend *est* la liste des rangées manquées. Sur ce lot, **au moins
+  quinze rangées d'accords entières** ne sont dans aucune bande — quatre
+  systèmes complets sur 只要有你在我左右, deux sur 爱中相遇, deux sur 我要看见,
+  une sur 恩典之路, 回家, 我需要有你在我生命中, 安静, 活出爱, 主你是我力量,
+  得胜的宣告, 满有能力 (deux), 前来敬拜 (deux). **`propose-extra --all
+  --hidden` n'en a proposé qu'une partie**, et `bandes.py` rendait « 0 bande
+  nue » sur des pages qui en portaient trois.
+- **Le mode C est un phénomène de famille, pas un accident d'amas.** Sur une
+  gravure donnée, ce n'est pas *un* accord que le matcher rate, c'est une
+  **classe** : toutes les basses barrées de 谢谢你成为我的家 (A/C#, D/A, D/F#,
+  B/D#), tous les Cmaj7 et Gmaj7 de 不停赞美你 lus « Bm7 » (13 étiquettes), tout
+  le vocabulaire des deux ponts de 天国的子民 publié en G7/F7/C7, les six Bm7 de
+  我神我王 lus « Em7 », les trois Am de 我要顺服 lus « A/G ». Deux publiaient
+  **au-dessus du seuil** (+0,52 et +0,59 sur 打开天窗, +0,73 et +0,70 sur
+  我神我王) : la couverture était de 100 % avant comme après la correction.
+- **Le banc attrape ce que la planche ne montre pas.** Sur 谢谢你成为我的家,
+  l'étiquette « G/A ) » de fin de rangée sort « Ab/Bb ) », plus large que le
+  gravé, et **débordait de 4 px hors de la page** : `fitFont` ne rétrécit que
+  de 20 % (`MIN_SHRINK`), donc `sp` ne pouvait pas la contenir. Invisible sur
+  la planche, rouge au banc. Corrigé en posant `fh` (25 → 23) sur cette
+  étiquette seule. D'où la règle ajoutée au protocole : **geler page par page,
+  et lancer `PW_SLUGS=<slug>` juste après le gel** — l'agent qui avait gardé le
+  gel pour la fin de son lot a laissé passer ce défaut sur sept pages.
+- **Un jeu d'accords empilé ne se trouve pas mécaniquement.** Sur
+  大山为我挪开, `foreign_rows` ne signalait **rien** et la seconde rangée en sol
+  (y=1238) n'est apparue que sur la planche navigateur, six accords restés en
+  sol au-dessus d'une rangée passée en fa. Sur 从早晨到夜晚, `foreign_rows`
+  signalait la première rangée empilée mais pas la seconde, où le matcher
+  publiait deux faux accords.
+- **Une page peut porter sa seconde tonalité en prose.** 得胜的宣告 grave
+  « （后面依次升Eb调、F调） » et « (Bridge连唱3次，依次升至Eb调、F调) » : laissées
+  telles quelles, ces phrases contredisent les accords transposés. C'est un
+  mode D d'un genre nouveau — la seconde tonalité écrite en chinois. Traitées
+  comme des étiquettes composites (`transposeLabel` réécrit la ligne entière et
+  ne touche que les jetons d'accord), elles suivent la page.
+- **Une définition insuffisante n'est pas une page difficile, c'est une page
+  sans prise.** Trois planches viennent de GIF de recueil à 600 px de large
+  (le corpus est à 1600) : 有一位神 (623×541), 新造的人 (636×632), 有一天
+  (601×887). Étiquettes de 12 à 15 px, dièse gravé **en préfixe** (« ♯Fm »),
+  bandes d'accords soudées aux chiffres : sur 有一位神, aucun des amas des
+  quatre rangées rendues ne passe le plancher (scores −2,5 à +0,07). Et il n'y
+  a **aucune voie** pour publier une page à la main : `_from_reading` rend
+  « aucune rangée d'accords » *avant* que les `extra_labels` du gold soient
+  ajoutés. Il faut de meilleurs scans.
+
+**Outillage.** `measure-titlekey.py` fait pour la mention « （X调） » du titre
+ce que `measure-keylabel.py` fait pour le cadre : il propose les quatre coupes
+possibles (les 3, 4, 5 et 6 derniers amas de la bande du titre — le 调 se fend
+en 讠 et 周) et l'œil élit. Limite mesurée : quand la bande du titre contient
+aussi le bloc de crédits à droite, aucune candidate n'est bonne et la boîte se
+mesure à la main (唯有耶稣, 陪我走过春夏秋冬). La forme nue « （C调） » décrit la
+page et suit la transposition ; « （F原调） » et « 原调Eb » décrivent la source et
+restent vraies transposées — de même que les mentions de série
+« [共3张：D(原调)/C调、级数] », qui contiennent pourtant « C调 » sans 原.
+`build-chords.py` accepte maintenant des slugs et ne reconstruit que ceux-là :
+un tour complet coûte une demi-minute sur 185 pages, et la boucle en demande
+plusieurs par page travaillée.
+
+**Travailler à plusieurs sur les mêmes fichiers.** `chords.json` et
+`scripts/jianpu/debug/` sont partagés : un verrou (`mkdir`) autour de
+`build-chords`, `propose-extra`, `measure-keylabel`, `measure-titlekey`,
+`bandes` et `freeze`, et la recopie des planches dans un dossier propre **avant
+de rendre le verrou**. Deux agents ont lu les vignettes d'un autre sans s'en
+apercevoir, parce que `propose-extra` s'arrête au premier chant illisible
+(`SystemExit`) sans rien écrire, et que le titre en hanzi sort en carrés sur la
+vignette : rien n'identifie la page. Une reconstruction complète à la fin purge
+de toute façon un écrasement concurrent, `chords.json` étant une fonction pure
+de `gold/` et des images.
+
+**Cinq pages retenues à l'étude**, avec leur raison mesurée. Trois pour la
+définition : 有一位神, 新造的人 et 有一天 — sur cette dernière, le profil
+d'encre ne laisse **pas une ligne blanche** entre les accords et les chiffres
+(l'encre court sans interruption de y=71 à y=118 sur le premier système), donc
+le découpage soude chaque rangée d'accords à sa rangée de chiffres et les sept
+rangées que `read()` rend sont les lignes de paroles. Deux pour la structure :
+从这代到那代, qui grave une rangée en fa au-dessus de chaque rangée en mi et
+écrit les deux tonalités dans une seule étiquette au système de coda
+(« F [E] », « Dm [C#m] ») ; et 大手牵着小手, qui grave le jeu de fa de sa
+reprise **en plus** du jeu de ré, entrelacé de prose — une itération à elle
+seule, sur le modèle de 在这里 (`alt` + `opt`).
+
+**Bilan.** Corpus **135 → 185 pages** ; calques **134 → 180**, tous certifiés,
+complets et gelés ; étiquettes **5 313 → 7 629** ; cadres « 1=X » 180 ;
+mentions « （X调） » du titre 11. Les 51 pages nouvelles (50 fournies +
+你的爱不离不弃) ont demandé **589 corrections** et **201 étiquettes posées à la
+main** ; 46 sont calquées, 5 retenues. Banc Playwright : **923 tests** (682 à
+l'itération 62), tous verts — dont, pour la première fois, les pages **sans
+calque** : le scan s'affiche et la page prévient que ses accords imprimés ne
+suivent pas la transposition. Un test de plus vérifie que chaque page promise
+par le manifeste a bien son image sur le disque.
