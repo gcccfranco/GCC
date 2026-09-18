@@ -216,6 +216,20 @@ export function slugsWithoutOverlay(): string[] {
   return Object.keys(index).filter((s) => !(s in chords)).sort();
 }
 
+/** Les pages annoncées par le manifeste dont le fichier WebP manque sur le
+ *  disque. Le manifeste et les images sont écrits par le même script, mais
+ *  rien ne le vérifiait : un build interrompu publie un manifeste qui promet
+ *  des scans absents, et la page chant n'affiche alors qu'une image cassée —
+ *  ce que le banc, qui ne visite que trois chants, ne voit pas. */
+export function pagesManquantes(): string[] {
+  const index: Record<string, { pages: { file: string }[] }> = JSON.parse(
+    fs.readFileSync(path.join(ROOT, "public/jianpu/index.json"), "utf8")
+  );
+  return Object.values(index)
+    .flatMap((e) => e.pages.map((p) => p.file))
+    .filter((f) => !fs.existsSync(path.join(ROOT, "public/jianpu", f)));
+}
+
 /** Tonalité du `.cho`. La page ne passe une tonalité jouée au calque que si
  *  elle diffère de celle-là : viser par erreur la tonalité d'origine éteint
  *  le calque et le test mesure alors autre chose. */
