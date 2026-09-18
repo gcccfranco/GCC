@@ -49,3 +49,38 @@ export function overlaps(
 ): boolean {
   return a.dimanche === b.dimanche && a.debut < b.fin && b.debut < a.fin;
 }
+
+// ─── Lot 12 : archivage et bascule automatiques (docs/spec-programme-bascule.md) ──
+// L'affichage d'un programme est **calculé** ici, jamais écrit : la page,
+// la barre d'onglets et le cron des rappels appellent les mêmes fonctions.
+
+/** Jour où un programme passé s'archive : jour J + `jours` (24/12 → 31/12). */
+export function archiveDate(jourJ: string, jours = 7): string {
+  return toIso(toUtc(jourJ) + jours * DAY);
+}
+
+/** Où en est un programme le jour `today`. */
+export type ProgrammeState = "soon" | "open" | "passed" | "archived";
+
+export function programmeState(p: { debut: string; jourJ: string }, today: string): ProgrammeState {
+  if (today < p.debut) return "soon";
+  if (today <= p.jourJ) return "open";
+  if (today <= archiveDate(p.jourJ)) return "passed";
+  return "archived";
+}
+
+/** Le programme affiché le jour `today`, ou `null` (pas d'onglet pour les
+ *  membres). `programmes` est trié par jour J croissant (`listProgrammes`),
+ *  donc le premier retenu est l'échéance la plus proche. Les archivés sont
+ *  écartés ; un programme épinglé par la coordination (`visible`) gagne ; sinon
+ *  la bascule prend le premier programme ouvert — ou passé, dont le message de
+ *  remerciement a la priorité sur sa semaine. */
+export function currentProgramme<T extends { debut: string; jourJ: string; visible: boolean }>(
+  programmes: T[],
+  today: string,
+): T | null {
+  const vivants = programmes.filter((p) => programmeState(p, today) !== "archived");
+  return vivants.find((p) => p.visible)
+    ?? vivants.find((p) => programmeState(p, today) !== "soon")
+    ?? null;
+}

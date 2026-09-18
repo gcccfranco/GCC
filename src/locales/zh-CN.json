@@ -1027,6 +1027,8 @@
       "hide": "隐藏",
       "shown": "已显示",
       "hidden": "已隐藏",
+      "archived": "已归档",
+      "waiting": "等待中",
       "jourJLabel": "正日：{{date}}",
       "reservations": "预约：{{from}} 至 {{to}}",
       "error": "无法保存。请检查网络连接及 Firestore 规则是否已发布。"
@@ -1073,7 +1075,14 @@
       "noCurrent": "暂无进行中的节目。",
       "others": "已隐藏的节目",
       "editProgramme": "修改节目信息",
-      "newProgramme": "新建节目"
+      "newProgramme": "新建节目",
+      "passed": "「{{nom}}」已经过去了——感谢大家！",
+      "passedHint": "舞台预约和节目单已关闭。",
+      "nextSoon": "下一个节目：{{nom}}，{{date}} 起可预约。",
+      "willArchive": "此节目将于 {{date}} 归档。",
+      "autoChosen": "自动选择：自 {{date}} 起开放预约。",
+      "viewOrdre": "查看出场顺序",
+      "hideOrdre": "隐藏出场顺序"
     }
   },
   "survey": {

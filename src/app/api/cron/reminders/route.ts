@@ -13,7 +13,8 @@ import { corpsAvecTaches, rappelsDuJour, rappelTachesTitre, type RappelTache } f
 import { poleDuPour, polesDe } from "@/lib/access";
 import { membresDuPole } from "@/lib/taches/serveur";
 import type { Fois, Tache, TachePole } from "@/types/tache";
-import type { Creneau } from "@/types/programme";
+import type { Creneau, Programme } from "@/types/programme";
+import { currentProgramme } from "@/lib/scene/dimanches";
 import {
   loadPlanningData,
   servantsForDate,
@@ -74,15 +75,19 @@ async function markNotified(
   await batch.commit();
 }
 
-/** Créneaux sur scène des programmes affichés, pour ces dates (ISO). */
-async function sceneCreneaux(db: FirebaseFirestore.Firestore, dates: string[]): Promise<Creneau[]> {
-  const programmes = await db.collection("programmes").where("visible", "==", true).get();
-  const out: Creneau[] = [];
-  for (const p of programmes.docs) {
-    const snap = await p.ref.collection("creneaux").where("dimanche", "in", dates).get();
-    for (const c of snap.docs) out.push({ id: c.id, ...c.data() } as Creneau);
-  }
-  return out;
+/** Créneaux sur scène du programme affiché aujourd'hui, pour ces dates (ISO).
+ *  Lot 12 : le programme n'est plus celui qui porte `visible` mais celui que
+ *  `currentProgramme` désigne — la même règle que la page et que l'onglet, sans
+ *  quoi un programme choisi automatiquement n'enverrait aucun rappel. */
+async function sceneCreneaux(db: FirebaseFirestore.Firestore, dates: string[], today: string): Promise<Creneau[]> {
+  // Trié par jour J croissant, comme `listProgrammes` : `currentProgramme` s'y fie.
+  const snap = await db.collection("programmes").orderBy("jourJ").get();
+  const programmes = snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<Programme, "id">) }));
+  const current = currentProgramme(programmes, today);
+  if (!current) return [];
+  const creneaux = await db.collection("programmes").doc(current.id).collection("creneaux")
+    .where("dimanche", "in", dates).get();
+  return creneaux.docs.map((c) => ({ id: c.id, ...c.data() } as Creneau));
 }
 
 /** Rappels de tâches du jour (lot 7, docs/spec-taches.md) : J-3, J-1 et le
@@ -154,7 +159,7 @@ export async function GET(req: NextRequest) {
 
   const db = adminDb();
   const [planning, index] = await Promise.all([loadPlanningData(), loadPlanningNameIndex()]);
-  const creneaux = await sceneCreneaux(db, REMINDERS.map((r) => isoInDays(r.days)));
+  const creneaux = await sceneCreneaux(db, REMINDERS.map((r) => isoInDays(r.days)), isoInDays(0));
   // Rappels de tâches : ajoutés à la première notification de service de la
   // personne aujourd'hui, sinon envoyés seuls après la boucle.
   const taches = await rappelsTaches(db, isoInDays(0));

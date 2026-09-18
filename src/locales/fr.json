@@ -1027,6 +1027,8 @@
       "hide": "Masquer",
       "shown": "Affiché",
       "hidden": "Masqué",
+      "archived": "Archivé",
+      "waiting": "En attente",
       "jourJLabel": "Jour J : {{date}}",
       "reservations": "Réservations : du {{from}} au {{to}}",
       "error": "Enregistrement impossible. Vérifie ta connexion et que les règles Firestore sont publiées."
@@ -1073,7 +1075,14 @@
       "noCurrent": "Aucun programme en cours.",
       "others": "Programmes masqués",
       "editProgramme": "Modifier le programme",
-      "newProgramme": "Nouveau programme"
+      "newProgramme": "Nouveau programme",
+      "passed": "{{nom}}, c'est passé — merci à tous !",
+      "passedHint": "Les réservations de la scène et le programme sont fermés.",
+      "nextSoon": "Prochain programme : {{nom}}, réservations à partir du {{date}}.",
+      "willArchive": "Ce programme s'archivera le {{date}}.",
+      "autoChosen": "Choisi automatiquement : réservations ouvertes depuis le {{date}}.",
+      "viewOrdre": "Voir l'ordre de passage",
+      "hideOrdre": "Masquer l'ordre de passage"
     }
   },
   "survey": {

@@ -130,8 +130,11 @@ Trois fonctions pures s'ajoutent à `src/lib/scene/dimanches.ts`, à côté de
 1. les programmes **archivés** sont écartés ;
 2. le premier programme **épinglé** (`visible === true`) qui reste → c'est lui
    (le forçage d'Alice gagne, même avant l'ouverture des réservations) ;
-3. sinon, le premier programme **ouvert** (`state === "open"`) → bascule
-   automatique, jour J le plus proche d'abord (Q2) ;
+3. sinon, le premier programme **ouvert ou passé** (`state !== "soon"`) →
+   bascule automatique, jour J le plus proche d'abord (Q2). « Passé » compte :
+   sans lui, un programme non épinglé — et depuis Q6 aucun ne l'est à la
+   création — n'afficherait jamais son message de remerciement, et le message
+   ne pourrait pas avoir la priorité sur le programme suivant (Q5) ;
 4. sinon `null` : pas d'onglet pour les membres, « Scène » pour la coordination
    (comportement actuel).
 
@@ -285,4 +288,17 @@ npm run lint
 
 ## Avancement
 
-Rien n'est codé : la spec attend le go de Timothée.
+- 18/09/2026 : **lot 12 codé**, un commit sur la branche
+  `lot/12-programme-bascule`, à valider en local.
+  B1 : `archiveDate`, `programmeState`, `currentProgramme` dans
+  `src/lib/scene/dimanches.ts`.
+  B2 : `SceneClient.tsx` (programme courant calculé, carte « c'est passé »,
+  « Masquer » réservé à un programme épinglé, ligne « Choisi automatiquement »,
+  badges « Archivé » / « En attente » et dépli « Voir l'ordre de passage » en
+  lecture seule), `EvenementsTabs.tsx` (la même fonction que la page), création
+  `visible: false`, libellés FR et 中文.
+  B3 : le cron des rappels (`api/cron/reminders/route.ts`) choisit son programme
+  avec `currentProgramme` au lieu de `.where("visible", "==", true)`.
+  `tests/programme-scene.spec.ts` : 43 tests × 3 appareils, dont 16 nouveaux et
+  un adapté (la création n'épingle plus, l. 67). Aucun champ, aucune règle
+  Firestore, aucune tâche planifiée.
