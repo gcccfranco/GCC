@@ -36,6 +36,7 @@ function fromFsProfile(raw: RawDoc): UserProfile {
     annonces: (data.annonces as string[]) ?? [],
     notify: (data.notify as string[]) ?? [],
     poles: (data.poles as Pole[]) ?? [],
+    plannings: (data.plannings as string[]) ?? [],
     // Date d'inscription = createTime du document (créé à l'inscription) ; disponible
     // rétroactivement pour tous les profils, contrairement à un champ écrit à la main.
     createdAt: raw.createTime ? new Date(raw.createTime) : undefined,

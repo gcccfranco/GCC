@@ -24,6 +24,9 @@ rules_version = '2';
 //   coordination le modifient ou le retirent.
 // - config/app : état des inscriptions (registrationOpen), lisible publiquement,
 //   modifiable par les admins depuis la page /admin.
+// - Plannings remplis dans l'app (plannings/{key}/dimanches, lot 17) : lus
+//   publiquement (pages planning consultées sans compte) ; écrits par les
+//   admins et par les profils dont `plannings` porte la clé du planning.
 //
 // La liste des admins doit rester synchronisée avec ADMIN_EMAILS dans src/lib/access.ts.
 
@@ -69,7 +72,8 @@ service cloud.firestore {
         || (request.auth.uid == uid
             && request.resource.data.get('annonces', []) == []
             && request.resource.data.get('notify', []) == []
-            && request.resource.data.get('poles', []) == [])
+            && request.resource.data.get('poles', []) == []
+            && request.resource.data.get('plannings', []) == [])
       );
       // Une fois le profil créé, seuls les admins peuvent le modifier.
       allow update: if isAdmin();
@@ -346,6 +350,43 @@ service cloud.firestore {
     match /planningReleases/{id} {
       allow read: if true;
       allow write: if false;
+    }
+
+    // Planning rempli dans l'app (lot 17, docs/spec-planning-grille.md). Un
+    // document par dimanche, une case par champ : une écriture ne porte que sur
+    // sa colonne (updateMask), donc deux personnes ne s'effacent jamais.
+    // Lecture PUBLIQUE, comme planningReleases : les pages planning se
+    // consultent sans compte, et le CSV gviz du Google Sheet l'est déjà.
+    // Écriture : les admins, et les profils dont `plannings` porte la clé.
+    // Miroir client : canEditPlanning (src/lib/access.ts).
+    function peutEcrirePlanning(key) {
+      return isAdmin() || (hasProfile() && key in profile().get('plannings', []));
+    }
+
+    match /plannings/{key} {
+      allow read: if true;
+      allow write: if false;
+
+      match /dimanches/{date} {
+        allow read: if true;
+        allow create, update: if peutEcrirePlanning(key)
+          && request.resource.data.date == date;
+        // On vide les cases, on ne supprime pas un dimanche.
+        allow delete: if false;
+      }
+
+      // Historique nommé : lu par tout connecté, écrit par qui peut remplir,
+      // sous son propre nom et sur ses propres entrées (patron de
+      // setlists/{id}/history).
+      match /history/{entryId} {
+        allow read: if signedIn();
+        allow create: if peutEcrirePlanning(key)
+          && request.resource.data.authorUid == request.auth.uid;
+        allow update: if peutEcrirePlanning(key)
+          && resource.data.authorUid == request.auth.uid
+          && request.resource.data.authorUid == request.auth.uid;
+        allow delete: if false;
+      }
     }
   }
 }

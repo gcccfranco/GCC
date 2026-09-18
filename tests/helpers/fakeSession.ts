@@ -15,6 +15,10 @@ export type FakeProfile = {
   poles?: string[];
   /** Sections où la personne publie des annonces (droit de créer des évènements pour sa section). */
   annonces?: string[];
+  /** Audiences de notification manuelle — donne aussi le droit de publier un trimestre de planning. */
+  notify?: string[];
+  /** Plannings que la personne peut remplir dans l'app (lot 17). */
+  plannings?: string[];
   /** Vrai = compte qui n'a pas encore vu l'accueil de première connexion (lot 8).
    *  Par défaut l'accueil est déjà vu, pour ne pas masquer les pages testées. */
   accueil?: boolean;
@@ -238,8 +242,9 @@ export async function signInAs(
       planningName: profile.planningName ?? "",
       serviceRoles: profile.serviceRoles ?? {},
       annonces: profile.annonces ?? [],
-      notify: [],
+      notify: profile.notify ?? [],
       poles: profile.poles ?? [],
+      plannings: profile.plannings ?? [],
     },
     ...(profile.accueil ? {} : { [`onboarding/${profile.uid}`]: { vu: true, le: "2026-09-01T10:00:00Z" } }),
     ...docs,

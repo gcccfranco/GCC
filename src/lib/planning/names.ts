@@ -97,7 +97,9 @@ function cellHasName(cell: string | undefined, name: string): boolean {
 }
 
 // Colonnes "personnes" de chaque planning : index → rôle affiché
-const CULTE_ROLES: [number, string][] = [
+// Exporté : le lot 17 compare ces index à ceux des colonnes de la grille
+// (src/lib/planning/grilles.ts) pour que grille et Sheet ne divergent jamais.
+export const CULTE_ROLES: [number, string][] = [
   [1, "Présidence"], [2, "Choriste"], [3, "Choriste"], [4, "Piano"],
   [5, "Guitare"], [6, "Batterie"], [7, "Sono"], [8, "PPT"],
   [9, "Orateur"], [10, "Traduction"], [11, "Sainte cène"],
