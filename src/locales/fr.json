@@ -689,7 +689,7 @@
         "body": "La **cloche** en haut affiche les nouveautés. Sur mobile, tu peux aussi recevoir des **notifications push**, même site fermé.",
         "points": [
           "Active-les depuis ton **profil**, avec l'interrupteur Notifications.",
-          "Trois types, activables séparément : **Rappels de service** (à J-7, J-3 et J-1, plus les répétitions Campus), **Setlist prête** et **Annonces**.",
+          "Quatre types, activables séparément : **Rappels de service** (à J-7, J-3 et J-1, plus les répétitions Campus), **Setlist prête**, **Évènements** et **Tâches**.",
           "Sur iPhone, installe d'abord le site sur l'écran d'accueil (PWA) pour activer le push."
         ],
         "tip": "Les responsables peuvent aussi t'envoyer une notification ciblée (voir Rôles et responsables)."
@@ -971,7 +971,14 @@
       "cajon": "Cajon",
       "cajonBatt": "Cajon/Batt.",
       "theme": "Thème",
-      "pianiste": "Pianiste"
+      "pianiste": "Pianiste",
+      "equipe": "Équipe",
+      "petitDej": "Petit déj",
+      "chant1": "Chant 1",
+      "chant2": "Chant 2",
+      "chant3": "Chant 3",
+      "chant4": "Chant 4",
+      "repetition": "Répétition"
     },
     "table": {
       "myName": "Mon prénom…",
@@ -996,7 +1003,11 @@
       "historique": "Historique des modifications",
       "remplace": "{{auteur}} a remplacé {{avant}} par {{apres}} au {{colonne}} du {{date}}",
       "ajoute": "{{auteur}} a mis {{apres}} au {{colonne}} du {{date}}",
-      "efface": "{{auteur}} a effacé le {{colonne}} du {{date}}"
+      "efface": "{{auteur}} a effacé le {{colonne}} du {{date}}",
+      "exporter": "Exporter en CSV",
+      "exporterPdf": "Exporter en PDF",
+      "importe": "{{auteur}} a importé {{count}} dimanches depuis le Google Sheet",
+      "periodeAnnee": "Année {{annee}}"
     },
     "horaires": {
       "culte": "Dimanche 10:30"
@@ -1036,7 +1047,8 @@
       "presChoristes": "Présidence & choristes",
       "musiciens": "Musiciens",
       "chants": "Chants",
-      "chantN": "Chant {{n}}"
+      "chantN": "Chant {{n}}",
+      "grille": "Grille"
     },
     "verse": {
       "text": "« Tout ce que vous faites, faites-le de bon cœur, comme pour le Seigneur et non pour des hommes, sachant que vous recevrez du Seigneur l'héritage pour récompense. Servez Christ, le Seigneur. »",

@@ -1,19 +1,26 @@
 "use client"
 
 import { useTranslation } from "react-i18next"
-import { PlanningTable } from "@/components/planning/PlanningTable"
+import { PlanningGrille } from "@/components/planning/PlanningGrille"
 import { useSheet } from "@/lib/planning/useSheet"
 import { fetchIntergroupe } from "@/lib/planning/sheets"
-import { PLANNING_COLORS } from "@/lib/serviceColors"
+import { GRILLE_INTERGROUPE, lignesSimples } from "@/lib/planning/grilles"
+import { useGrilleApp } from "@/lib/planning/useGrilleApp"
+import { useProfile } from "@/lib/firebase/users"
+import { canEditPlanning } from "@/lib/access"
 
-const COLOR = PLANNING_COLORS.intergroupe
+// Une séance par trimestre, pas de publication par trimestre : toute l'année
+// s'affiche. Rempli dans l'app depuis le 19/09/2026 (lot 17, G6) par qui en a
+// le droit (canEditPlanning), le Sheet restant la source des dates non écrites.
 
 export default function IntergroupePage() {
   const { t } = useTranslation()
+  const { user, profile } = useProfile()
   // Pas de fallback compilé : une liste vide est un état valide (aucun
   // intergroupe planifié), on n'affiche donc pas de bannière « périmé ».
   const { rows, status } = useSheet<string[]>(fetchIntergroupe, [])
-  const COLS = [t("planning.roles.date"), t("planning.roles.presidence"), t("planning.roles.choriste1"), t("planning.roles.choriste2"), t("planning.roles.choriste3"), t("planning.roles.piano"), t("planning.roles.guitare"), t("planning.roles.cajonBatt"), t("planning.roles.sonoLive"), t("planning.roles.ppt"), t("planning.roles.orateur"), t("planning.roles.trad")]
+  const peutModifier = canEditPlanning(user, profile, GRILLE_INTERGROUPE.key)
+  const { datesDansLApp, nomsDesComptes } = useGrilleApp(GRILLE_INTERGROUPE.key, peutModifier)
 
   return (
     <div className="max-w-full space-y-4 mx-auto">
@@ -22,7 +29,14 @@ export default function IntergroupePage() {
         {status === "loading" && <span className="text-xs text-muted-foreground">{t("common.loading")}</span>}
       </div>
 
-      <PlanningTable cols={COLS} rows={rows} color={COLOR} minWidth={760} groupBy="year" />
+      <PlanningGrille
+        definition={GRILLE_INTERGROUPE}
+        periode={t("planning.grille.periodeAnnee", { annee: new Date().getFullYear() })}
+        lignes={lignesSimples(rows)}
+        peutModifier={peutModifier}
+        datesDansLApp={datesDansLApp}
+        nomsDesComptes={nomsDesComptes}
+      />
     </div>
   )
 }

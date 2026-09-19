@@ -6,11 +6,10 @@ import { PlanningGrille } from "@/components/planning/PlanningGrille"
 import { StaleBanner } from "@/components/planning/StaleBanner"
 import { getCurrentTri, getTri, isFirstSundayOfMonth } from "@/lib/planning/utils"
 import { useSheet } from "@/lib/planning/useSheet"
-import { CULTE_FALLBACK } from "@/lib/planning/data"
 import { fetchCulte } from "@/lib/planning/sheets"
-import { fetchGrille } from "@/lib/planning/grille"
 import { GRILLE_CULTE, lignesPubliees } from "@/lib/planning/grilles"
-import { listProfiles, useProfile } from "@/lib/firebase/users"
+import { useGrilleApp } from "@/lib/planning/useGrilleApp"
+import { useProfile } from "@/lib/firebase/users"
 import { canEditPlanning, isAdminUser } from "@/lib/access"
 import {
   PUBLISHABLE_PLANNINGS,
@@ -27,34 +26,25 @@ import { FilterButtons } from "@/components/planning/FilterButtons"
 // La publication par trimestre ne bouge pas : elle décide des pilules visibles
 // ET s'applique ligne par ligne (lignesPubliees, D7), les deux — c'est cette
 // règle-là que la contre-épreuve a prouvée.
+//
+// G5 (D4, 19/09/2026) : plus de données de secours de 2026 — grille vide =
+// « Planning à venir » et la bannière d'indisponibilité, pas des noms périmés.
 
 const CULTE = PUBLISHABLE_PLANNINGS.find(p => p.key === "culte")!
 
 export default function CultePage() {
   const { t } = useTranslation()
   const { user, profile } = useProfile()
-  const { rows, status } = useSheet(fetchCulte, CULTE_FALLBACK)
+  const { rows, status } = useSheet<string[]>(fetchCulte, [])
   const [tri, setTri] = useState(getCurrentTri())
   const [published, setPublished] = useState<string[]>([])
-  const [datesDansLApp, setDatesDansLApp] = useState<string[]>([])
-  const [nomsDesComptes, setNomsDesComptes] = useState<string[]>([])
 
   const peutModifier = canEditPlanning(user, profile, "culte")
+  const { datesDansLApp, nomsDesComptes } = useGrilleApp("culte", peutModifier)
 
   useEffect(() => {
     getPublishedQuarters("culte", new Date().getFullYear()).then(setPublished)
-    // Dimanches déjà écrits dans l'app : les autres viennent encore du Sheet,
-    // et une première écriture doit les recopier (cf. `semer`).
-    fetchGrille("culte").then(g => setDatesDansLApp(g.map(r => r[0])))
   }, [])
-
-  useEffect(() => {
-    // Noms des comptes pour l'autocomplétion : seulement pour qui remplit.
-    if (!peutModifier) return
-    listProfiles()
-      .then(ps => setNomsDesComptes(ps.map(p => p.planningName).filter(Boolean)))
-      .catch(() => { /* suggestions en moins, saisie libre inchangée */ })
-  }, [peutModifier])
 
   const canPublish = canPublishPlanning(CULTE, isAdminUser(user), profile?.notify ?? [])
   // Pilules visibles : un trimestre futur non publié est masqué aux membres,

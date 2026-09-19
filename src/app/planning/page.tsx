@@ -6,7 +6,7 @@ import Link from "next/link"
 import { useTranslation } from "react-i18next"
 import { currentSundayStr, fdLongL, moisName, EDD_PERIODES } from "@/lib/planning/utils"
 import {
-  CULTE_FALLBACK, FIDELITE_FALLBACK, FIDELITE_MUSIC_FALLBACK,
+  FIDELITE_FALLBACK, FIDELITE_MUSIC_FALLBACK,
   PAIX_FALLBACK, BONTE_FALLBACK, DEJEUNER_FALLBACK, EDD_FALLBACK, CAMP_LOUANGE_FALLBACK
 } from "@/lib/planning/data"
 import { fetchCulte, fetchDejeuner, fetchPetitDej, fetchPaix, fetchFidelite, fetchFideliteMusic, fetchBonte, fetchEDD, fetchCampus, fetchIntergroupe, fetchInterfranco } from "@/lib/planning/sheets"
@@ -53,7 +53,8 @@ function GroupBlock({ badge, children }: { badge: string; children: React.ReactN
 export default function PlanningAccueil() {
   const { t, i18n } = useTranslation()
   const { user, profile } = useProfile()
-  const [culte, setCulte] = useState(CULTE_FALLBACK)
+  // G5 (19/09/2026) : le Culte n’a plus de données de secours de 2026.
+  const [culte, setCulte] = useState<string[][]>([])
   const [dej, setDej] = useState(DEJEUNER_FALLBACK)
   // Petit déj : aucune donnée de secours, il ne s'affiche que s'il est lu.
   const [petitDej, setPetitDej] = useState<string[][]>([])
@@ -71,7 +72,7 @@ export default function PlanningAccueil() {
 
   useEffect(() => {
     Promise.allSettled([
-      fetchCulte().then(d => { if (d.length) setCulte(d) }),
+      fetchCulte().then(d => setCulte(d)),
       fetchDejeuner().then(d => { if (d.length) setDej(d) }),
       fetchPetitDej().then(d => { if (d.length) setPetitDej(d) }),
       fetchPaix().then(d => { if (d.length) setPaix(d) }),

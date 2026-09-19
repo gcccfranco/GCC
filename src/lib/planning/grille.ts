@@ -6,10 +6,11 @@
 // `src/lib/firebase/*` ici : ce module est appelé par `sheets.ts`, donc aussi
 // par le cron (runtime Node), où le SDK client n'a rien à faire.
 
-import { grilleDe, type DefinitionGrille } from "./grilles"
+import { GRILLES, grilleDe, type DefinitionGrille } from "./grilles"
 
-/** Plannings dont la source est l'app (D2). Seul interrupteur de la bascule. */
-export const PLANNINGS_APP = ["culte"]
+/** Plannings dont la source est l’app (D2) : tous depuis le 19/09/2026
+ *  (« pouvoir modifier tous les plannings sur le site »). */
+export const PLANNINGS_APP = GRILLES.map((g) => g.key)
 
 export function ecritDansLApp(key: string): boolean {
   return PLANNINGS_APP.includes(key)

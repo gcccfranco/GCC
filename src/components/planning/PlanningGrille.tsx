@@ -1,11 +1,12 @@
 "use client"
 
 import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from "react"
-import { History, Lock, User, X } from "lucide-react"
+import { Download, History, Lock, User, X } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { currentSundayStr, fdLongL, fdShort, getMois, moisName } from "@/lib/planning/utils"
 import type { ColonneGrille, DefinitionGrille, LigneGrille } from "@/lib/planning/grilles"
 import { phraseDuChangement } from "@/lib/planning/historique"
+import { colonnesExportees, nomFichier, versCSV } from "@/lib/planning/csv"
 import { ecrireCase } from "@/lib/firebase/planningGrille"
 import { getHistoriqueGrille, noterChangement, type EntreeGrille } from "@/lib/firebase/planningHistorique"
 import { historyAuthor } from "@/lib/firebase/setlistHistory"
@@ -229,6 +230,7 @@ export function PlanningGrille({
   }
 
   const phrase = (auteurNom: string, ch: EntreeGrille["changes"][number]) => {
+    if (ch.kind === "import") return t("planning.grille.importe", { auteur: auteurNom, count: ch.count })
     const col = definition.colonnes.find((x) => x.cle === ch.colonne)
     return t(`planning.grille.${phraseDuChangement(ch)}`, {
       auteur: auteurNom,
@@ -239,8 +241,60 @@ export function PlanningGrille({
     })
   }
 
+  // ── Export (G4, D5) : la période affichée, telle qu'elle est à l'écran ──
+  const lignesExport = () => dansLaFenetre.map(ligneAffichee)
+  const sousTitre = [
+    definition.sousTitre ?? (definition.i18nSousTitre ? t(definition.i18nSousTitre) : ""),
+    periode,
+    definition.i18nHoraire ? t(definition.i18nHoraire) : "",
+  ].filter(Boolean).join(" · ")
+
+  function telecharger(blob: Blob, nom: string) {
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = nom
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  function exporterCSV() {
+    const rows = lignesExport()
+    telecharger(
+      new Blob([versCSV(rows, definition, (k) => t(k), t("planning.roles.date"))], { type: "text/csv;charset=utf-8" }),
+      nomFichier(definition.label, rows, "csv")
+    )
+  }
+
+  const [pdfEnCours, setPdfEnCours] = useState(false)
+  async function exporterPDF() {
+    setPdfEnCours(true)
+    try {
+      const rows = lignesExport()
+      const cols = colonnesExportees(definition, rows)
+      // Chargés à la demande : @react-pdf/renderer est lourd (cf. SongDetailClient).
+      const [{ pdf }, { PlanningPDF }] = await Promise.all([import("@react-pdf/renderer"), import("@/components/pdf/PlanningPDF")])
+      const blob = await pdf(
+        <PlanningPDF
+          titre={t(definition.i18nTitre)}
+          sousTitre={sousTitre}
+          couleur={couleur}
+          entetes={[t("planning.roles.date"), ...cols.map((c) => t(c.i18n))]}
+          lignes={rows.map((r, i) => ({
+            cells: [fdShort(r[0]), ...cols.map((c) => r[c.index] ?? "")],
+            mois: i === 0 || getMois(rows[i - 1][0]) !== getMois(r[0]) ? moisName(getMois(r[0]), i18n.language) : undefined,
+          }))}
+          lang={i18n.language}
+        />
+      ).toBlob()
+      telecharger(blob, nomFichier(definition.label, rows, "pdf"))
+    } finally {
+      setPdfEnCours(false)
+    }
+  }
+
   return (
-    <div className="space-y-3">
+    <div className="space-y-3" data-grille={definition.key}>
       {/* ── Bandeau : planning, période, horaire (T4) ── */}
       <div
         data-testid="grille-bandeau"
@@ -250,9 +304,7 @@ export function PlanningGrille({
         {t(definition.i18nTitre)}
         <span className="font-normal opacity-90">
           {" · "}
-          {periode}
-          {" · "}
-          {t(definition.i18nHoraire)}
+          {sousTitre}
         </span>
       </div>
 
@@ -302,6 +354,24 @@ export function PlanningGrille({
         {enregistre && (
           <span aria-live="polite" className="text-xs text-muted-foreground">{t("planning.grille.enregistre")}</span>
         )}
+        {/* Export de la période affichée (G4) : CSV recollable dans le Sheet, ou PDF. */}
+        <button
+          type="button"
+          onClick={exporterCSV}
+          className="h-10 sm:h-8 px-3 rounded-full text-sm font-semibold bg-secondary text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 transition-[background-color,color,transform] duration-150 active:scale-[.96] cursor-pointer"
+        >
+          <Download className="h-3.5 w-3.5" aria-hidden />
+          {t("planning.grille.exporter")}
+        </button>
+        <button
+          type="button"
+          onClick={() => void exporterPDF()}
+          disabled={pdfEnCours}
+          className="h-10 sm:h-8 px-3 rounded-full text-sm font-semibold bg-secondary text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 transition-[background-color,color,transform] duration-150 active:scale-[.96] cursor-pointer disabled:opacity-60"
+        >
+          <Download className="h-3.5 w-3.5" aria-hidden />
+          {t("planning.grille.exporterPdf")}
+        </button>
       </div>
 
       {refus && (

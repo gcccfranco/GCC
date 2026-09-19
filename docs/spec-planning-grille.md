@@ -591,3 +591,72 @@ règle de publication retirée, les trois tests de publication virent au rouge s
 les trois appareils. Suites voisines vertes : `look-planning`,
 `planning-accueil`, `planning-sainte-cene`, `planning-petit-dej`,
 `rappels-regroupes`, `nouveaux-membres`, `notif-president`, `i18n-hydration`.
+
+### 19/09/2026 — G4, G5 et G6 codés le même jour
+
+**Décision de Timothée (19/09/2026)** : « pour le planning il faudrait pouvoir
+modifier tous les plannings sur le site et pouvoir les exporter en CSV ou en
+PDF ». La tranche 3 n'attend donc plus « trois dimanches sans incident » (T1
+révisé), et l'export gagne le PDF. Tout ce qui suit est codé, test écrit
+d'abord, vert sur les trois appareils.
+
+- **G4 export** : `src/lib/planning/csv.ts` (pur) — `versCSV` suit D5 à la
+  lettre (BOM, virgule, guillemets seulement si nécessaire, dates `JJ/MM`,
+  colonne optionnelle absente si vide), `depuisCSV` fait l'aller-retour,
+  `nomFichier` donne `Culte_Franco_2026-09-20_2026-09-27.csv`. Deux boutons dans
+  la grille, pour tout le monde : **« Exporter en CSV »** et **« Exporter en
+  PDF »** (`src/components/pdf/PlanningPDF.tsx`, A4 paysage, en-tête à la couleur
+  du planning, séparateurs de mois, chargé à la demande comme `SongPDF`). C'est
+  la **période affichée** qui s'exporte (le trimestre, la période EDD, l'année).
+- **G4 import** : `src/lib/planning/import.ts` (pur : `planifierImport`,
+  `documentDimanche`, `nomsNonRattaches`) et la route
+  `/api/admin/importer-planning` (POST `{ key }`, admins seulement, Admin SDK,
+  un lot d'écritures, dimanches déjà dans l'app ignorés, **une** entrée
+  d'historique `{ kind: "import", count }`, réponse `{ importes, ignores,
+  nomsNonRattaches }`). Bouton par grille dans l'onglet **Planning** de
+  `/admin`. `lireSheetDe(key)` (`sheets.ts`) donne le Sheet brut de chaque
+  grille.
+- **G5** : `CULTE_FALLBACK` n'alimente plus rien (page Culte, accueil du
+  planning, `loadPlanningData`) ; la constante reste dans `data.ts`, **code mort
+  signalé, pas effacé**. Grille vide = « Planning à venir » + bannière.
+- **G6, onze grilles** (`grilles.ts`, `GRILLES`) : Culte ; **Table** (`table` :
+  équipe + petit déj, deux cases par dimanche) ; **EDD** (une grille par classe :
+  `eddZhongban`, `eddDaban`, `eddGaoban`) ; **Campus** (`campusMatin`,
+  `campusSoir`, treize cases, la répétition en texte libre « JJ/MM/AAAA HH:MM
+  Salle ») ; **Intergroupe**, **Interfranco** ; **Paix**, **Fidélité**,
+  **Fidélité musiciens** (`fideliteMusiciens`), **Bonté**. Chaque lecteur de
+  `sheets.ts` a sa lecture brute (`lire…Sheet`) et fusionne la grille de l'app
+  dimanche par dimanche : les dix appelants de `loadPlanningData` ne changent
+  pas. `PLANNINGS_APP` = toutes les clés.
+- **Pages** : Culte, Groupes (grille par groupe + musiciens de Fidélité,
+  publication par trimestre appliquée ligne par ligne), Intergroupe, Interfranco,
+  Table (filtre par trimestre), EDD (périodes et classes comme avant), Campus
+  (les cartes Louange / Répétition restent la lecture ; nouveau volet
+  **« Grille »**, matin puis soir, et les cartes relisent la grille au retour).
+  `useGrilleApp(key, peutModifier)` porte ce que chaque page donnait à la main.
+- **Droits** : les cases « Peut remplir les plannings » de `/admin` listent
+  désormais les onze grilles (`GRILLES`, plus seulement les quatre plannings
+  publiables) ; `canEditPlanning` et la règle `plannings/{key}` étaient déjà
+  génériques : **aucune règle à publier pour ce lot**.
+- **Message de refus** reformulé (lot cohérence du même jour) : « Enregistrement
+  refusé par le serveur : tu n'as plus le droit de modifier ce planning, ou les
+  règles n'ont pas été publiées. » C'est ce que Timothée avait vu en admin tant
+  que les règles `plannings/*` n'étaient pas publiées.
+
+**Écarts assumés, à trancher** : (1) le CSV prend les libellés de l'app
+(« Choriste 1 », « Piano »), pas ceux du Sheet (« Choristes », « Pianiste ») — la
+ligne d'en-tête est de toute façon sautée à la relecture ; (2) la Table en
+grille n'est pas l'inscription libre au petit déj du lot 15 (chacun s'inscrit
+soi-même) : ici seuls les porteurs du droit `table` écrivent ; (3) le Campus
+garde ses cartes, la grille est un troisième volet ; (4) `PlanningTable.tsx`
+n'a plus d'appelant : **code mort signalé, pas effacé** ; (5) les données de
+secours de 2026 restent pour les sept autres plannings tant qu'ils ne sont pas
+importés (D4 ne vaut que pour le Culte).
+
+Tests : `planning-export` (6 × 3), `planning-import` (5 × 3),
+`planning-groupes-grille` (5 × 3), `planning-table` (4 × 3), `planning-edd`
+(4 × 3), `planning-campus` (4 × 3), plus `planning-grille` inchangé sauf le
+libellé de refus. Captures regardées sur les trois appareils (Culte, Table en
+modification, EDD, Campus en grille). Les tests EDD et Campus ont été écrits
+avant leurs pages mais lancés seulement après (pas de passage au rouge
+observé pour ces deux-là, contrairement à Table, export, import et cohérence).

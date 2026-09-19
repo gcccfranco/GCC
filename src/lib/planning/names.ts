@@ -1,7 +1,7 @@
 import type { CampusSeance, EddDataStructure } from "./utils"
 import { EDD_CLASSES, EDD_PERIODES } from "./utils"
 import {
-  CULTE_FALLBACK, DEJEUNER_FALLBACK, PAIX_FALLBACK, FIDELITE_FALLBACK,
+  DEJEUNER_FALLBACK, PAIX_FALLBACK, FIDELITE_FALLBACK,
   FIDELITE_MUSIC_FALLBACK, BONTE_FALLBACK, EDD_FALLBACK, CAMP_LOUANGE_FALLBACK,
 } from "./data"
 import {
@@ -35,7 +35,8 @@ export async function loadPlanningData(): Promise<PlanningData> {
       fetchIntergroupe(), fetchInterfranco(),
     ])
   return {
-    culte: culte.length ? culte : CULTE_FALLBACK,
+    // G5 (19/09/2026) : plus de repli sur CULTE_FALLBACK (données de 2026, D4).
+    culte,
     dejeuner: dejeuner.length ? dejeuner : DEJEUNER_FALLBACK,
     // Pas de données de secours : le petit déj n'apparaît que s'il est lu.
     petitDej,
@@ -78,7 +79,7 @@ export function normalizeName(s: string): string {
 }
 
 /** Découpe une cellule de planning en noms : gère "A, B", "Piano: X, Guitare: Y"… */
-function splitNames(cell: string): string[] {
+export function splitNames(cell: string): string[] {
   return cell
     .replace(/"+/g, "")
     .split(/[,，;；/]/)

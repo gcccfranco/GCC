@@ -26,8 +26,8 @@ import type { Equipe } from "@/types/equipe";
 import { EDD_CLASSES } from "@/lib/planning/utils";
 import { ANNONCE_SECTIONS } from "@/types/annonce";
 import { NOTIFY_ALL, NOTIFY_GROUPS, audienceLabel } from "@/lib/push/audiences";
-import { PUBLISHABLE_PLANNINGS } from "@/lib/planning/releases";
-import { categoryColor, categoryLabel, PLANNING_COLORS } from "@/lib/serviceColors";
+import { GRILLES } from "@/lib/planning/grilles";
+import { categoryColor, categoryLabel } from "@/lib/serviceColors";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -142,6 +142,32 @@ export default function AdminPage() {
   const [notifyRights, setNotifyRights] = useState<string[]>([]);
   const [equipesRight, setEquipesRight] = useState(false);
   const [equipes, setEquipes] = useState<Equipe[]>([]);
+  // Import initial d’un planning (lot 17, G4) : compte rendu de /api/admin/importer-planning.
+  const [importPlanningEnCours, setImportPlanningEnCours] = useState<string | null>(null);
+  const [importPlanningResultat, setImportPlanningResultat] = useState("");
+
+  async function importerPlanning(key: string) {
+    setImportPlanningEnCours(key);
+    setImportPlanningResultat("");
+    try {
+      const res = await fetch("/api/admin/importer-planning", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(await authHeader()) },
+        body: JSON.stringify({ key }),
+      });
+      const json = (await res.json()) as { importes?: number; ignores?: number; nomsNonRattaches?: string[]; error?: string };
+      if (!res.ok) throw new Error(json.error ?? "Import impossible");
+      const noms = json.nomsNonRattaches ?? [];
+      setImportPlanningResultat(
+        `${json.importes ?? 0} dimanches importés, ${json.ignores ?? 0} déjà dans l'app.` +
+          (noms.length ? ` Noms sans compte : ${noms.join(", ")}.` : " Tous les noms ont un compte.")
+      );
+    } catch (e) {
+      setImportPlanningResultat(e instanceof Error ? e.message : "Import impossible");
+    } finally {
+      setImportPlanningEnCours(null);
+    }
+  }
   const [importEtat, setImportEtat] = useState<"" | "busy" | "fait">("");
   const [importErreur, setImportErreur] = useState("");
   const [importResultat, setImportResultat] = useState<ImportEquipes | null>(null);
@@ -965,9 +991,9 @@ export default function AdminPage() {
                             Peut remplir les plannings :
                           </p>
                           <div className="flex flex-wrap gap-2">
-                            {PUBLISHABLE_PLANNINGS.map((pl) => {
+                            {GRILLES.map((pl) => {
                               const checked = planningRights.includes(pl.key);
-                              const color = PLANNING_COLORS[pl.key as keyof typeof PLANNING_COLORS];
+                              const color = pl.couleur;
                               return (
                                 <button
                                   key={pl.key}
@@ -1076,6 +1102,34 @@ export default function AdminPage() {
         )}
 
         {/* ── Noms du planning sans compte ── */}
+        {tab === "planning" && (
+        <div className="rounded-xl bg-card shadow-soft p-5 space-y-3">
+          <h2 className="text-sm font-semibold text-muted-foreground">Importer depuis le Google Sheet</h2>
+          <p className="text-xs text-muted-foreground">
+            Recopie dans l&apos;app les dimanches du Sheet qui n&apos;y sont pas encore (les dimanches déjà
+            écrits dans l&apos;app ne bougent pas : relancer ne fait jamais de doublon). Une entrée
+            d&apos;historique par import. Ensuite, le Sheet n&apos;est plus qu&apos;une archive : on exporte en CSV depuis la grille.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {GRILLES.map((g) => (
+              <button
+                key={g.key}
+                type="button"
+                disabled={importPlanningEnCours === g.key}
+                onClick={() => void importerPlanning(g.key)}
+                className="px-3 py-1.5 rounded-lg border text-xs font-semibold bg-background border-border text-muted-foreground hover:text-foreground disabled:opacity-60"
+                style={{ borderColor: g.couleur, color: g.couleur }}
+              >
+                {importPlanningEnCours === g.key ? "Import…" : `Importer le ${g.label} depuis le Google Sheet`}
+              </button>
+            ))}
+          </div>
+          {importPlanningResultat && (
+            <p className="text-sm text-foreground" aria-live="polite">{importPlanningResultat}</p>
+          )}
+        </div>
+        )}
+
         {tab === "planning" && (
         <div className="rounded-xl bg-card shadow-soft p-5 space-y-3">
           <h2 className="text-sm font-semibold text-muted-foreground">

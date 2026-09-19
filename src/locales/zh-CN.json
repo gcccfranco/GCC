@@ -689,7 +689,7 @@
         "body": "顶部的**铃铛**会显示最新动态。在手机上，即使关闭网站，你也可以接收**推送通知**。",
         "points": [
           "在你的**个人资料**中，用「通知」开关启用它们。",
-          "三种类型，可分别启用：**服事提醒**（提前 7 天、3 天和 1 天，以及 Campus 排练）、**歌单就绪**和**公告**。",
+          "四种类型，可分别启用：**服事提醒**（提前 7 天、3 天和 1 天，以及 Campus 排练）、**歌单就绪**、**活动**和**任务**。",
           "在 iPhone 上，请先把网站安装到主屏幕（PWA），才能启用推送。"
         ],
         "tip": "负责人也可以向你发送定向通知（见「角色与负责人」）。"
@@ -971,7 +971,14 @@
       "cajon": "箱鼓",
       "cajonBatt": "箱鼓/鼓",
       "theme": "主题",
-      "pianiste": "钢琴"
+      "pianiste": "钢琴",
+      "equipe": "团队",
+      "petitDej": "早餐",
+      "chant1": "诗歌 1",
+      "chant2": "诗歌 2",
+      "chant3": "诗歌 3",
+      "chant4": "诗歌 4",
+      "repetition": "排练"
     },
     "table": {
       "myName": "我的名字…",
@@ -996,7 +1003,11 @@
       "historique": "修改记录",
       "remplace": "{{auteur}} 把 {{date}} 的{{colonne}}从 {{avant}} 改为 {{apres}}",
       "ajoute": "{{auteur}} 把 {{apres}} 安排在 {{date}} 的{{colonne}}",
-      "efface": "{{auteur}} 清空了 {{date}} 的{{colonne}}"
+      "efface": "{{auteur}} 清空了 {{date}} 的{{colonne}}",
+      "exporter": "导出 CSV",
+      "exporterPdf": "导出 PDF",
+      "importe": "{{auteur}} 从 Google 表格导入了 {{count}} 个主日",
+      "periodeAnnee": "{{annee}} 年"
     },
     "horaires": {
       "culte": "主日 10:30"
@@ -1036,7 +1047,8 @@
       "presChoristes": "司会与和声",
       "musiciens": "乐手",
       "chants": "诗歌",
-      "chantN": "诗歌 {{n}}"
+      "chantN": "诗歌 {{n}}",
+      "grille": "表格"
     },
     "verse": {
       "text": "「无论做什么，都要从心里做，像是给主做的，不是给人做的，因为你们知道从主那里必得着基业为赏赐。你们所侍奉的乃是主基督。」",
