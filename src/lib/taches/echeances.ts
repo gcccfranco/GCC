@@ -2,7 +2,8 @@
 // d'une tâche répétée, fois visibles, groupes de la page, dimanche de la régie.
 // Dates ISO « AAAA-MM-JJ », comparées comme du texte.
 
-import type { Fois, Tache } from "@/types/tache";
+import type { Fois, Tache, TachePole } from "@/types/tache";
+import type { TacheValues } from "@/lib/firebase/taches";
 
 const DAY = 86_400_000;
 
@@ -131,4 +132,31 @@ export function aFairePour(lignes: Ligne[], uid: string): Ligne[] {
 /** Jours entiers entre deux dates ISO (`debutLe` peut porter une heure). */
 export function joursEntre(debut: string, today: string): number {
   return Math.round((toUtc(today) - toUtc(debut.slice(0, 10))) / DAY);
+}
+
+/** Copies des tâches d'un évènement qu'on duplique (lot 14) : chaque échéance
+ *  glisse d'autant de jours que l'évènement, donc garde son délai (J-14 reste
+ *  J-14). Responsable, lien, note et « prévenir » suivent ; ni répétition, ni
+ *  fois déjà faites. */
+export function tachesDupliquees(
+  taches: Tache[],
+  sourceDate: string,
+  nouvelleDate: string,
+  nouvelEvenement: { id: string; titre: string },
+): { pole: TachePole; values: TacheValues }[] {
+  const delta = joursEntre(sourceDate, nouvelleDate);
+  return taches.map((t) => ({
+    pole: t.pole,
+    values: {
+      titre: t.titre,
+      responsableUid: t.responsableUid,
+      responsableNom: t.responsableNom,
+      echeance: addDays(t.echeance, delta),
+      repetition: null,
+      lien: t.lien,
+      note: t.note,
+      prevenir: t.prevenir,
+      evenement: nouvelEvenement,
+    },
+  }));
 }

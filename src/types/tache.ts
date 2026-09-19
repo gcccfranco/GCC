@@ -33,6 +33,10 @@ export interface Tache {
   lien: string;
   note: string;
   prevenir: Prevenir;
+  /** Évènement daté auquel la tâche est rattachée (lot 14), un au plus. Le
+   *  titre est mémorisé : il reste lisible si l'évènement est supprimé. Une
+   *  tâche liée ne se répète pas. Absent des documents d'avant : lu `null`. */
+  evenement: { id: string; titre: string } | null;
   auteurUid: string;
   createdAt: string;
   updatedAt: string;

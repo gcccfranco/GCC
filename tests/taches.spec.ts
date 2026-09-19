@@ -19,6 +19,7 @@ function tache(over: Partial<Tache> = {}): Tache {
     lien: "",
     note: "",
     prevenir: null,
+    evenement: null,
     auteurUid: "uid-auteur",
     createdAt: "2026-09-01T10:00:00Z",
     updatedAt: "2026-09-01T10:00:00Z",

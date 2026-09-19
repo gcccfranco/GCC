@@ -233,6 +233,61 @@ test("dupliquer : formulaire pré-rempli sans date, nouvel évènement écrit av
   expect(created?.data).toMatchObject({ titre: "Culte de Noël", type: "eglise", date: "2027-12-24", inscrits: 0, organisateurUid: "uid-alice" });
 });
 
+// Lot 14 : les tâches rattachées à l'évènement suivent la duplication, aux mêmes
+// délais. Alice (pôle Événement) ne copie que les tâches de ses pôles.
+const LIE_AU_CULTE = { id: "culte-noel", titre: "Culte de Noël" };
+const tacheLiee = (over: Record<string, unknown>) => ({
+  pole: "evenement", titre: "Réserver la salle", responsableUid: null, responsableNom: "", echeance: "2026-12-10",
+  repetition: null, lien: "", note: "", prevenir: null, evenement: LIE_AU_CULTE, auteurUid: "uid-alice",
+  createdAt: "2026-09-01T10:00:00Z", updatedAt: "2026-09-01T10:00:00Z", ...over,
+});
+const DOCS_TACHES = {
+  ...DOCS,
+  "poles/evenement/taches/e1": tacheLiee({ responsableUid: "uid-steph", responsableNom: "Steph R.", lien: "https://exemple.org/salle", note: "Avant midi", prevenir: { pole: "da" } }),
+  "poles/evenement/taches/e1/fois/2026-12-10": { date: "2026-12-10", parUid: "uid-steph", parNom: "Steph R.", le: "2026-09-30T09:00:00Z", etat: "terminee", debutLe: "" },
+  "poles/evenement/taches/e2": tacheLiee({ titre: "Commander le goûter", echeance: "2026-12-23" }),
+  // Ni celle d'un autre évènement, ni celle sans évènement, ni celle d'un pôle qui n'est pas le sien.
+  "poles/evenement/taches/e3": tacheLiee({ titre: "Ballons du foot", evenement: { id: "foot", titre: "Foot au parc" } }),
+  "poles/evenement/taches/e4": tacheLiee({ titre: "Ranger le local", evenement: null }),
+  "poles/da/taches/d1": tacheLiee({ pole: "da", titre: "Fond PPT de Noël" }),
+};
+
+async function dupliquerLeCulte(page: Page, copier: boolean) {
+  const questions: string[] = [];
+  page.on("dialog", (d) => { questions.push(d.message()); return copier ? d.accept() : d.dismiss(); });
+  await page.route("**/api/push/notify-evenement", (route) => route.fulfill({ json: { ok: true } }));
+  const db = await member(page, ALICE, "/evenements/culte-noel", DOCS_TACHES);
+  await page.getByRole("link", { name: "Dupliquer" }).click();
+  await page.getByLabel("Date", { exact: true }).fill("2027-12-24");
+  await page.getByRole("button", { name: "Créer l'évènement" }).click();
+  await expect(page).toHaveURL(/\/evenements\/fake-\d+\/?$/);
+  return { db, questions };
+}
+
+test("dupliquer : Copier aussi ses 2 tâches écrit deux tâches liées au nouvel évènement, échéances décalées ; refuser ne copie rien", async ({ page, browser }) => {
+  const { db, questions } = await dupliquerLeCulte(page, true);
+  expect(questions).toEqual(["Copier aussi ses 2 tâches, aux mêmes délais ?"]);
+  const nouvelId = db.writes.find((w) => w.method === "POST" && w.path.startsWith("evenements/"))!.path.split("/").pop();
+  const copies = db.writes.filter((w) => w.path.startsWith("poles/"));
+  expect(copies.map((w) => `${w.method} ${w.path.replace(/fake-\d+$/, "*")}`))
+    .toEqual(["POST poles/evenement/taches/*", "POST poles/evenement/taches/*"]);
+  const lie = { id: nouvelId, titre: "Culte de Noël" };
+  // Du 24/12/2026 au 24/12/2027 : 365 jours, chaque échéance garde son délai.
+  expect(copies[0].data).toMatchObject({
+    titre: "Réserver la salle", pole: "evenement", echeance: "2027-12-10", repetition: null, evenement: lie, auteurUid: "uid-alice",
+    responsableUid: "uid-steph", responsableNom: "Steph R.", lien: "https://exemple.org/salle", note: "Avant midi", prevenir: { pole: "da" },
+  });
+  expect(copies[1].data).toMatchObject({ titre: "Commander le goûter", echeance: "2027-12-23", repetition: null, evenement: lie });
+  // La fiche du nouvel évènement montre ses deux tâches.
+  await expect(page.getByTestId("taches-carte").getByRole("checkbox")).toHaveCount(2);
+
+  const autre = await (await browser.newContext()).newPage();
+  const refus = await dupliquerLeCulte(autre, false);
+  expect(refus.questions).toEqual(["Copier aussi ses 2 tâches, aux mêmes délais ?"]);
+  expect(refus.db.writes.filter((w) => w.path.startsWith("poles/"))).toEqual([]);
+  await autre.context().close();
+});
+
 test("supprimer : l'organisateur confirme, la fiche disparaît", async ({ page }) => {
   const db = await member(page, STEPH, "/evenements/foot");
   page.on("dialog", (d) => d.accept());

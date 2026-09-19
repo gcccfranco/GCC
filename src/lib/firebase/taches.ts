@@ -25,6 +25,7 @@ function fromFsTache(raw: RawDoc, pole: TachePole): Tache {
     lien: (data.lien as string) ?? "",
     note: (data.note as string) ?? "",
     prevenir: (data.prevenir as Prevenir) ?? null,
+    evenement: (data.evenement as Tache["evenement"]) ?? null,
     auteurUid: (data.auteurUid as string) ?? "",
     createdAt: (data.createdAt as string) ?? "",
     updatedAt: (data.updatedAt as string) ?? "",

@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useStandaloneScrollLock } from "@/hooks/useStandaloneScrollLock";
 import { SERVICE_LIEUX, type UserProfile } from "@/types/user";
-import { TACHE_POLES, type Prevenir, type Rythme, type TachePole } from "@/types/tache";
+import { TACHE_POLES, type Prevenir, type Rythme, type Tache, type TachePole } from "@/types/tache";
+import { polesDe } from "@/lib/access";
 import type { TacheValues } from "@/lib/firebase/taches";
 
 const LABEL = "text-xs font-semibold";
@@ -31,14 +32,19 @@ function rangDe(iso: string): number {
 }
 
 /** Feuille de création ou de modification d'une tâche (lot 7). */
-export function TacheForm({ open, pole, initial, membres, onSubmit, onDelete, onClose }: {
+export function TacheForm({ open, pole, poles, evenement, initial, membres, onSubmit, onDelete, onClose }: {
   open: boolean;
   pole: TachePole;
+  /** Pôles où créer la tâche, depuis la fiche d'un évènement (lot 14) : un
+   *  choix s'il y en a plusieurs, `pole` étant celui de départ. */
+  poles?: TachePole[];
+  /** Évènement auquel rattacher une nouvelle tâche (lot 14). */
+  evenement?: Tache["evenement"];
   /** Valeurs de départ ; `null` = nouvelle tâche. */
   initial: TacheValues | null;
-  /** Membres du pôle, proposés comme responsables. */
+  /** Proposés comme responsables : ceux du pôle de la tâche. */
   membres: UserProfile[];
-  onSubmit: (values: TacheValues) => Promise<void>;
+  onSubmit: (values: TacheValues, pole: TachePole) => Promise<void>;
   onDelete?: () => Promise<void>;
   onClose: () => void;
 }) {
@@ -51,19 +57,20 @@ export function TacheForm({ open, pole, initial, membres, onSubmit, onDelete, on
           <DrawerTitle>{initial ? t("taches.modifier") : t("taches.nouvelle")}</DrawerTitle>
         </DrawerHeader>
         {open && (
-          <Champs pole={pole} initial={initial} membres={membres} onSubmit={onSubmit} onDelete={onDelete} onClose={onClose} />
+          <Champs pole={pole} poles={poles} evenement={evenement} initial={initial} membres={membres} onSubmit={onSubmit} onDelete={onDelete} onClose={onClose} />
         )}
       </DrawerContent>
     </Drawer>
   );
 }
 
-function Champs({ pole, initial, membres, onSubmit, onDelete, onClose }: Omit<Parameters<typeof TacheForm>[0], "open">) {
+function Champs({ pole: poleDepart, poles, evenement, initial, membres, onSubmit, onDelete, onClose }: Omit<Parameters<typeof TacheForm>[0], "open">) {
   const { t } = useTranslation();
+  const [pole, setPole] = useState(poleDepart);
   const [v, setV] = useState<TacheValues>(
     initial ?? {
       titre: "", responsableUid: null, responsableNom: "", echeance: "", repetition: null,
-      lien: "", note: "", prevenir: null,
+      lien: "", note: "", prevenir: null, evenement: evenement ?? null,
     },
   );
   const [error, setError] = useState("");
@@ -83,7 +90,7 @@ function Champs({ pole, initial, membres, onSubmit, onDelete, onClose }: Omit<Pa
     setBusy(true);
     setError("");
     try {
-      await onSubmit({ ...v, titre: v.titre.trim(), lien: v.lien.trim(), note: v.note.trim() });
+      await onSubmit({ ...v, titre: v.titre.trim(), lien: v.lien.trim(), note: v.note.trim() }, pole);
     } catch {
       setError(t("taches.erreur"));
     } finally {
@@ -105,6 +112,21 @@ function Champs({ pole, initial, membres, onSubmit, onDelete, onClose }: Omit<Pa
   return (
     <form onSubmit={submit} className="px-4 pb-6 space-y-4 overflow-y-auto">
       {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
+      {poles && poles.length > 1 && (
+        <div className="space-y-1">
+          <label htmlFor="tache-pole" className={LABEL}>{t("taches.champs.pole")}</label>
+          <select id="tache-pole" className={FIELD} value={pole}
+            onChange={(e) => {
+              const p = e.target.value as TachePole;
+              setPole(p);
+              // Le responsable est un membre du pôle, et un pôle ne se prévient pas lui-même.
+              const soiMeme = !!v.prevenir && "pole" in v.prevenir && v.prevenir.pole === p;
+              set({ responsableUid: null, responsableNom: "", ...(soiMeme ? { prevenir: null } : {}) });
+            }}>
+            {poles.map((p) => <option key={p} value={p}>{t(`taches.pole.${p}`)}</option>)}
+          </select>
+        </div>
+      )}
       <div className="space-y-1">
         <label htmlFor="tache-titre" className={LABEL}>{t("taches.champs.titre")}</label>
         <Input id="tache-titre" value={v.titre} maxLength={80} onChange={(e) => set({ titre: e.target.value })} />
@@ -126,10 +148,26 @@ function Champs({ pole, initial, membres, onSubmit, onDelete, onClose }: Omit<Pa
               set({ responsableUid: m?.uid ?? null, responsableNom: m ? `${m.firstName} ${m.lastName}`.trim() : "" });
             }}>
             <option value="">{t("taches.pourTous")}</option>
-            {membres.map((m) => <option key={m.uid} value={m.uid}>{`${m.firstName} ${m.lastName}`.trim() || m.email}</option>)}
+            {membres.filter((m) => polesDe(m).includes(pole)).map((m) => <option key={m.uid} value={m.uid}>{`${m.firstName} ${m.lastName}`.trim() || m.email}</option>)}
           </select>
         </div>
       </div>
+      {/* Une tâche liée à un évènement ne se répète pas (lot 14) : l'évènement
+          prend la place de la répétition, qui revient si on la détache. */}
+      {v.evenement ? (
+        <div className="space-y-1">
+          <p className={LABEL}>{t("taches.champs.evenement")}</p>
+          <div className="flex min-h-10 flex-wrap items-center justify-between gap-x-3 rounded-lg bg-secondary pl-3 pr-1 text-base md:text-sm">
+            <span className="min-w-0 break-words py-2">{v.evenement.titre}</span>
+            {/* Détacher n'a de sens que sur une tâche qui existe déjà. */}
+            {initial && (
+              <Button type="button" variant="ghost" size="sm" onClick={() => set({ evenement: null })}>
+                {t("taches.detacherEvenement")}
+              </Button>
+            )}
+          </div>
+        </div>
+      ) : (
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1">
           <label htmlFor="tache-repetition" className={LABEL}>{t("taches.champs.repetition")}</label>
@@ -152,6 +190,7 @@ function Champs({ pole, initial, membres, onSubmit, onDelete, onClose }: Omit<Pa
           </div>
         )}
       </div>
+      )}
       <div className="space-y-1">
         <label htmlFor="tache-prevenir" className={LABEL}>{t("taches.champs.prevenir")}</label>
         <select id="tache-prevenir" className={FIELD} value={prevenirValue(v.prevenir)} onChange={(e) => set({ prevenir: parsePrevenir(e.target.value) })}>

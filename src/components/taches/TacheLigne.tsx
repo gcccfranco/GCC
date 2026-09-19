@@ -25,12 +25,14 @@ function depuisQuand(t: TFunction, fois: Fois): string {
 /** Une fois de tâche : cercle à trois états (À faire → En cours → Terminé),
  *  titre, puis échéance · responsable · rythme · où ça en est. Toucher la
  *  ligne ouvre la tâche. */
-export function TacheLigne({ ligne, onToggle, onOpen, poleLabel }: {
+export function TacheLigne({ ligne, onToggle, onOpen, poleLabel, sansEvenement }: {
   ligne: Ligne;
   onToggle: () => void;
   onOpen?: () => void;
   /** Nom du pôle, quand la liste mélange plusieurs pôles. */
   poleLabel?: string;
+  /** Sur la fiche de l'évènement lui-même : « pour Noël 2026 » n'apprend rien. */
+  sansEvenement?: boolean;
 }) {
   const { t, i18n } = useTranslation();
   const { tache, date, fois } = ligne;
@@ -42,6 +44,8 @@ export function TacheLigne({ ligne, onToggle, onOpen, poleLabel }: {
     poleLabel,
     tache.responsableUid ? tache.responsableNom : t("taches.pourTous"),
     tache.repetition ? t(`taches.rythme.${tache.repetition.rythme}`) : null,
+    // Du texte, pas un lien : toute la zone est déjà le bouton qui ouvre la tâche.
+    tache.evenement && !sansEvenement ? t("taches.pourEvenement", { titre: tache.evenement.titre }) : null,
     terminee ? t("taches.faitePar", { nom: fois!.parNom }) : null,
     enCours ? depuisQuand(t, fois!) : null,
     enCours ? t("taches.commenceePar", { nom: fois!.parNom }) : null,

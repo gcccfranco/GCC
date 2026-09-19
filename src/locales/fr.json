@@ -1668,7 +1668,13 @@
       "externe": "Inscriptions sur un formulaire externe"
     },
     "lienInscription": "Lien d'inscription",
-    "externe": "Formulaire externe"
+    "externe": "Formulaire externe",
+    "taches": {
+      "titre": "Tâches",
+      "vide": "Aucune tâche pour cet évènement."
+    },
+    "copierTaches_one": "Copier aussi sa tâche, au même délai ?",
+    "copierTaches_other": "Copier aussi ses {{count}} tâches, aux mêmes délais ?"
   },
   "moi": {
     "title": "Moi",
@@ -1735,7 +1741,9 @@
       "rang": "Quelle semaine du mois",
       "lien": "Lien",
       "note": "Note",
-      "prevenir": "Quand c'est fait, prévenir"
+      "prevenir": "Quand c'est fait, prévenir",
+      "evenement": "Évènement",
+      "pole": "Pôle"
     },
     "rythme": {
       "aucun": "Une seule fois",
@@ -1763,7 +1771,9 @@
     "echeanceRequise": "Choisis une échéance.",
     "regiePrevenue": "Régie prévenue.",
     "polePrevenu": "Pôle {{pole}} prévenu.",
-    "personnePrevenue": "Personne n'a été prévenu : aucune régie reliée à un compte."
+    "personnePrevenue": "Personne n'a été prévenu : aucune régie reliée à un compte.",
+    "pourEvenement": "pour {{titre}}",
+    "detacherEvenement": "Détacher de l'évènement"
   },
   "accueil": {
     "nom": "Bienvenue dans GCC",

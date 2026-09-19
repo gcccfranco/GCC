@@ -1668,7 +1668,13 @@
       "externe": "通过外部表单报名"
     },
     "lienInscription": "报名链接",
-    "externe": "外部表单"
+    "externe": "外部表单",
+    "taches": {
+      "titre": "任务",
+      "vide": "此活动还没有任务。"
+    },
+    "copierTaches_one": "是否同时复制它的 {{count}} 个任务（保持相同提前天数）？",
+    "copierTaches_other": "是否同时复制它的 {{count}} 个任务（保持相同提前天数）？"
   },
   "moi": {
     "title": "我",
@@ -1735,7 +1741,9 @@
       "rang": "每月第几周",
       "lien": "链接",
       "note": "备注",
-      "prevenir": "完成后通知"
+      "prevenir": "完成后通知",
+      "evenement": "活动",
+      "pole": "部门"
     },
     "rythme": {
       "aucun": "仅一次",
@@ -1763,7 +1771,9 @@
     "echeanceRequise": "请选择截止日期。",
     "regiePrevenue": "已通知音控/投影。",
     "polePrevenu": "已通知{{pole}}部门。",
-    "personnePrevenue": "没有通知任何人：没有与账号关联的音控/投影。"
+    "personnePrevenue": "没有通知任何人：没有与账号关联的音控/投影。",
+    "pourEvenement": "用于 {{titre}}",
+    "detacherEvenement": "取消关联活动"
   },
   "accueil": {
     "nom": "欢迎使用 GCC",

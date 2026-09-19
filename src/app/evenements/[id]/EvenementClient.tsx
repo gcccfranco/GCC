@@ -20,6 +20,7 @@ import type { Evenement } from "@/types/evenement"
 import { Button } from "@/components/ui/button"
 import { EnteteEvenement, PlusInfos, TypePour } from "../EvenementCard"
 import { Inscriptions, PanneauInscriptions } from "./Inscriptions"
+import { TachesEvenement } from "./TachesEvenement"
 import { QrCodeLink } from "@/components/evenements/QrCode"
 
 const COLOR = PLANNING_COLORS.scene
@@ -131,6 +132,10 @@ export function EvenementClient() {
         />
       )}
       </div>
+
+      {/* Lot 14 : les tâches de mes pôles rattachées à l'évènement. Daté
+          seulement (réunions de pôle comprises) : une info sans date n'a pas de délai. */}
+      {e.date && <TachesEvenement evenement={e} user={user} profile={profile} />}
     </div>
   )
 }
