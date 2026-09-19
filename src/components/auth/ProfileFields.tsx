@@ -10,6 +10,7 @@ import {
 } from "@/types/user";
 import { RESTRICTED_CATEGORIES } from "@/lib/firebase/setlists";
 import { EDD_CLASSES } from "@/lib/planning/utils";
+import { normalizeName } from "@/lib/planning/names";
 import { categoryColor, categoryLabel } from "@/lib/serviceColors";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -210,10 +211,6 @@ export function ServiceGrid({
 }
 
 // ─── Nom de planning ──────────────────────────────────────────────────────────
-
-function normalizeName(s: string): string {
-  return s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();
-}
 
 function NameOption({
   active,

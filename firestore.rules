@@ -226,22 +226,22 @@ service cloud.firestore {
       // Création : le créateur doit se déclarer propriétaire (ownerId = uid)
       allow create: if signedIn()
         && request.resource.data.get('ownerId', null) == request.auth.uid;
-      // Modification : ownerId ne change jamais ; un musicien/présidence du service
-      // ne peut déplacer la setlist que vers une catégorie où il sert aussi.
+      // Modification : ownerId ne change jamais ; qui peut modifier =
+      // canEditSetlistDoc (le propriétaire ; sinon, setlist non privée, un
+      // admin ou un musicien/présidence du service) — jusqu'au 19/09/2026 la
+      // règle ignorait `isPrivate`, contrairement au client. Un musicien/
+      // présidence ne déplace la setlist que vers une catégorie où il sert aussi.
       allow update: if signedIn()
         && request.resource.data.get('ownerId', null) == resource.data.get('ownerId', null)
+        && canEditSetlistDoc(resource.data)
         && (
           resource.data.get('ownerId', '') == request.auth.uid
           || isAdmin()
-          || (hasProfile() && isEditorOf(resource.data.category)
-              && (request.resource.data.category == resource.data.category
-                  || isEditorOf(request.resource.data.category)))
+          || request.resource.data.category == resource.data.category
+          || isEditorOf(request.resource.data.category)
         );
-      allow delete: if signedIn() && (
-        resource.data.get('ownerId', '') == request.auth.uid
-        || isAdmin()
-        || (hasProfile() && isEditorOf(resource.data.category))
-      );
+      // Suppression : exactement le droit de modification (lot 10).
+      allow delete: if signedIn() && canEditSetlistDoc(resource.data);
 
       // Historique des modifications (docs/spec-setlist.md) : lu par tout
       // connecté, comme la setlist ; écrit par qui peut la modifier

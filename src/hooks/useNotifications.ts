@@ -3,7 +3,7 @@ import { getEvenementsSince } from "@/lib/firebase/evenements";
 import { getSetlistsSince } from "@/lib/firebase/setlists";
 import { getNotifsSince } from "@/lib/firebase/notifications";
 import { useProfile } from "@/lib/firebase/users";
-import { visibleCategories, isAdminUser } from "@/lib/access";
+import { visibleCategories, isAdminUser, canSeeEvenement } from "@/lib/access";
 
 // Notifications in-app par polling REST (jamais de listener WebChannel).
 // Sources : évènements (toute l'église ou les sections du profil) + setlists
@@ -77,7 +77,11 @@ export function useNotifications() {
 
       for (const e of evenements) {
         if (e.organisateurUid === user.uid) continue;
-        if (e.pour !== "eglise" && !admin && !cats.includes(e.pour)) continue;
+        // Même règle que la fiche : section du profil, réunion de son pôle
+        // (`pole:x`, lot 7), coordination, admins. Avant le 19/09/2026 le filtre
+        // ne connaissait que les catégories de service : aucune réunion de
+        // pôle n'atteignait la cloche.
+        if (!canSeeEvenement(user, profile, e)) continue;
         const ts = Date.parse(e.createdAt) || 0;
         if (!ts) continue;
         fresh.push({

@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { adminDb } from "@/lib/push/admin";
-import { ADMIN_EMAILS } from "@/lib/access";
+import { isAdminEmail } from "@/lib/access";
 import { HttpError, errorResponse, optionalUser } from "@/lib/evenements/serveur";
 
 export const runtime = "nodejs";
@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
   try {
     const user = await optionalUser(req);
     if (!user) throw new HttpError(401, "Non authentifié");
-    if (!ADMIN_EMAILS.includes(user.email)) throw new HttpError(403, "Réservé aux admins");
+    if (!isAdminEmail(user.email)) throw new HttpError(403, "Réservé aux admins");
 
     const db = adminDb();
     const annonces = await db.collection("annonces").get();

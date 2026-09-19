@@ -990,7 +990,7 @@
       "periode": "{{du}} à {{au}}",
       "nonPublie": "Non publié",
       "pasDispo": "Pas disponible un dimanche ? Préviens la personne qui tient le planning.",
-      "droitRetire": "Tu n'as plus le droit de modifier ce planning.",
+      "droitRetire": "Enregistrement refusé par le serveur : tu n’as plus le droit de modifier ce planning, ou les règles n’ont pas été publiées.",
       "horsLigne": "Modification impossible : pas de réseau.",
       "recharger": "Recharger",
       "historique": "Historique des modifications",

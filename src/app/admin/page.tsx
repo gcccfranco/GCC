@@ -15,6 +15,7 @@ import {
   collectPlanningNames,
   deriveServiceRolesFromPlanning,
   type PlanningData,
+  normalizeName,
 } from "@/lib/planning/names";
 import { ProfileFields, type ProfileFormValue } from "@/components/auth/ProfileFields";
 import { SurveyResults } from "@/components/admin/SurveyResults";
@@ -38,10 +39,6 @@ function profileToForm(p: UserProfile): ProfileFormValue {
     planningName: p.planningName,
     serviceRoles: p.serviceRoles,
   };
-}
-
-function normalize(s: string): string {
-  return s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 }
 
 function Pill({ label, color }: { label: string; color?: string }) {
@@ -178,13 +175,13 @@ export default function AdminPage() {
     : undefined;
 
   const displayed = useMemo(() => {
-    const q = normalize(query.trim());
+    const q = normalizeName(query.trim());
     const byName = (a: UserProfile, b: UserProfile) =>
       a.lastName.localeCompare(b.lastName, "fr") || a.firstName.localeCompare(b.firstName, "fr");
     return profiles
       .filter((p) => {
         if (q) {
-          const hay = normalize(`${p.firstName} ${p.lastName} ${p.email} ${p.planningName}`);
+          const hay = normalizeName(`${p.firstName} ${p.lastName} ${p.email} ${p.planningName}`);
           if (!hay.includes(q)) return false;
         }
         if (filter === "Tous") return true;
@@ -216,9 +213,9 @@ export default function AdminPage() {
   // par nom de planning, cf. src/lib/push/recipients.ts). Visibilité pour l'admin.
   const unlinkedNames = useMemo(() => {
     const linked = new Set(
-      profiles.map((p) => normalize(p.planningName.trim())).filter(Boolean)
+      profiles.map((p) => normalizeName(p.planningName.trim())).filter(Boolean)
     );
-    return planningNames.filter((n) => !linked.has(normalize(n.trim())));
+    return planningNames.filter((n) => !linked.has(normalizeName(n.trim())));
   }, [planningNames, profiles]);
 
   if (loading) {
@@ -329,9 +326,12 @@ export default function AdminPage() {
     setSaving(true);
     setError("");
     try {
-      // `poles` n'est plus écrit ici (lot 16, D9) : il vient des équipes.
-      const updated: UserProfile = { ...p, ...form, annonces: annonceRights, notify: notifyRights, equipes: equipesRight, plannings: planningRights };
-      await saveProfile(updated);
+      // Seuls les champs tenus ici sont écrits (saveProfile n’envoie que le
+      // masque) : `poles` vient des équipes (lot 16, D9) et n’est jamais renvoyé,
+      // même périmé. Jusqu’au 19/09/2026 le document entier était remplacé.
+      const patch = { uid: p.uid, ...form, annonces: annonceRights, notify: notifyRights, equipes: equipesRight, plannings: planningRights };
+      await saveProfile(patch);
+      const updated: UserProfile = { ...p, ...patch };
       setProfiles((prev) => prev.map((x) => (x.uid === p.uid ? updated : x)));
       setEditingUid(null);
       setForm(null);

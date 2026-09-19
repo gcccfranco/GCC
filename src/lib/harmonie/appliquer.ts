@@ -48,7 +48,7 @@ export function appliquerDansLaSource(
 
   const versLaSource = demiTons ? nouveaux.map((c) => transposeChord(c, -demiTons, tonaliteSource)) : nouveaux;
   // Les accords en trop (le motif s'allonge) rejoignent le dernier remplacé.
-  const parPlace = places.map((place, k) =>
+  const parPlace = places.map((_place, k) =>
     k === places.length - 1 ? versLaSource.slice(k) : [versLaSource[k] ?? ""],
   );
 

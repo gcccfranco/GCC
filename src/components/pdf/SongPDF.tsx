@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 import type { ChordProAST, ChordProSection, Token } from "@/types/chordPro";
 import { formatSectionName } from "@/lib/chordpro/parser";
 import { resolveStructureOverride } from "@/lib/chordpro/structure";
-import { altSpellingKey, semitonesTo, transposeChord, transposeLabel } from "@/lib/transpose";
+import { altSpellingKey, semitonesTo, transposeLabel } from "@/lib/transpose";
 import { transposeSection } from "@/lib/transposeAST";
 import frTranslations from "@/locales/fr.json";
 import zhTranslations from "@/locales/zh-CN.json";

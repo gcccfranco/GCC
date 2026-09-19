@@ -17,8 +17,15 @@ export const ADMIN_EMAILS = [
 
 type AuthUser = { uid: string; email?: string | null };
 
+/** Une adresse d'admin, quelle que soit sa casse — seule comparaison à utiliser,
+ *  client comme serveur (audit du 19/09/2026 : deux routes comparaient sans
+ *  mettre en minuscules). */
+export function isAdminEmail(email: string | null | undefined): boolean {
+  return !!email && ADMIN_EMAILS.includes(email.toLowerCase());
+}
+
 export function isAdminUser(user: { email?: string | null } | null): boolean {
-  return !!user?.email && ADMIN_EMAILS.includes(user.email.toLowerCase());
+  return isAdminEmail(user?.email);
 }
 
 /** Modification du profil : autorisée tant qu'il n'existe pas encore (première

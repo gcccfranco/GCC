@@ -2,9 +2,12 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "GCC Louange",
-    short_name: "GCC Louange",
-    description: "Partitions et setlists de louange — église GCC",
+    // L'app s'appelle « GCC » depuis le lot 4 (docs/spec-look.md) ; le
+    // manifeste est la seule source, public/manifest.webmanifest a été retiré
+    // le 19/09/2026 (il démarrait sur l'accueil, en orange d'avant le look).
+    name: "GCC",
+    short_name: "GCC",
+    description: "L'app de l'église GCC : chants, setlists, planning, évènements",
     start_url: "/planning",
     display: "standalone",
     background_color: "#f2f2ef",

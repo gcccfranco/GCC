@@ -7,7 +7,8 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "next-themes";
-import { BookOpen, CalendarDays, Globe, ListChecks, LogOut, Megaphone, MessageSquareHeart, Moon, Network, ShieldCheck, TriangleAlert, UserRound } from "lucide-react";
+import { BookOpen, CalendarDays, Globe, ListChecks, LogOut, Megaphone, MessageSquareHeart, Moon, Network, ShieldCheck, Sparkles, TriangleAlert, UserRound } from "lucide-react";
+import { useAccesHarmonie } from "@/lib/harmonie/useHarmonie";
 import { RequireAuth } from "@/components/auth/RequireAuth";
 import { PageTitle } from "@/components/layout/PageTitle";
 import { Group, GroupRow } from "@/components/ui/group";
@@ -28,6 +29,9 @@ function MoiClient() {
   const { user } = useAuth();
   const { profile } = useProfile();
   const { resolvedTheme, setTheme } = useTheme();
+  // Catalogue « Harmonie » (lot 9) : jusqu'au 19/09/2026 il n'était joignable
+  // que depuis l'onglet Chants et la page d'un chant.
+  const harmonie = useAccesHarmonie();
   const setLanguage = useSetLanguage();
   const [reportOpen, setReportOpen] = useState(false);
 
@@ -51,6 +55,9 @@ function MoiClient() {
       <Group>
         <GroupRow href="/mes-services" leading={<CalendarDays />} chevron>{t("common.header.myServices")}</GroupRow>
         <GroupRow href="/equipes" leading={<Network />} chevron>{t("equipes.title")}</GroupRow>
+        {!harmonie.chargement && harmonie.peut && (
+          <GroupRow href="/harmonie" leading={<Sparkles />} chevron>{t("harmonie.titre")}</GroupRow>
+        )}
         {poles.length > 0 && (
           <GroupRow href="/taches" leading={<ListChecks />} trailing={mesTaches > 0 ? String(mesTaches) : undefined} chevron>
             {t("taches.mesTaches")}

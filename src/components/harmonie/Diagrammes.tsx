@@ -10,7 +10,7 @@ const CASES = 5;
 
 /** « 320033 » ou « x24432 » : une case par corde, de la plus grave à la plus
  *  aiguë ; `x` = corde étouffée, `0` = corde à vide. */
-export function DiagrammeGuitare({ doigte, capo = 0, label }: { doigte: string; capo?: number; label?: string }) {
+export function DiagrammeGuitare({ doigte, label }: { doigte: string; capo?: number; label?: string }) {
   const cordes = doigte.split("").slice(0, CORDES);
   const frettes = cordes.map((c) => (/^[1-9]$/.test(c) ? Number(c) : null)).filter((n): n is number => n !== null);
   // La grille commence à la première case utilisée quand l'accord est haut sur

@@ -271,7 +271,7 @@ test("droit retiré en cours de route : la case revient, le message et « Rechar
   const champ = champDe(page, "2026-09-27", "piano", "Piano");
   await champ.fill("Esther C.");
   await champ.press("Enter");
-  await expect(page.getByText("Tu n'as plus le droit de modifier ce planning.")).toBeVisible();
+  await expect(page.getByText(/Enregistrement refusé par le serveur/)).toBeVisible();
   await expect(page.getByRole("button", { name: "Recharger" })).toBeVisible();
   await expect(laCase(page, "2026-09-27", "piano")).toContainText("Eva C.");
 });

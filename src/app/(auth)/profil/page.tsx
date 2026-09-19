@@ -85,10 +85,8 @@ export default function ProfilPage() {
         firstName: form.firstName.trim(),
         lastName: form.lastName.trim(),
         planningName: form.planningName.trim(),
-        // Droits de publication d'annonces : attribués par les admins, on les conserve tels quels
-        annonces: profile?.annonces ?? [],
-        // Droits d'envoi de notifications : idem, attribués par les admins
-        notify: profile?.notify ?? [],
+        // Les droits (annonces, notify, poles, equipes, plannings) ne sont pas
+        // envoyés : saveProfile n'écrit que les champs donnés, ils restent intacts.
       });
       // Retour à la page d'origine (?from=…) plutôt que /setlists systématique
       const from = new URLSearchParams(window.location.search).get("from");

@@ -79,14 +79,17 @@ export interface UserProfile {
 // édition). Le serveur filtre les envois automatiques selon ces préférences ;
 // absence de doc/champ = activé. Les envois manuels (notifier/broadcast) ne sont
 // PAS filtrés. Cf. src/lib/firebase/notifPrefs.ts + src/lib/push/recipients.ts.
-export const NOTIF_TYPES = ["reminders", "setlists", "annonces", "evenements", "taches"] as const;
+// « annonces » retiré le 19/09/2026 : les annonces sont fondues dans les
+// évènements depuis le lot 6, plus aucun expéditeur ne consultait cette
+// préférence ; un champ `annonces` encore présent dans notifPrefs/{uid} est
+// simplement ignoré à la lecture.
+export const NOTIF_TYPES = ["reminders", "setlists", "evenements", "taches"] as const;
 export type NotifType = (typeof NOTIF_TYPES)[number];
 export type NotifPrefs = Record<NotifType, boolean>;
 
 export const DEFAULT_NOTIF_PREFS: NotifPrefs = {
   reminders: true,
   setlists: true,
-  annonces: true,
   evenements: true,
   taches: true,
 };
@@ -98,7 +101,6 @@ export type NotifLang = "fr" | "zh-CN";
 export const NOTIF_TYPE_LABELS: Record<NotifType, string> = {
   reminders: "Rappels de service",
   setlists: "Setlist prête",
-  annonces: "Annonces",
   evenements: "Évènements",
   taches: "Tâches",
 };

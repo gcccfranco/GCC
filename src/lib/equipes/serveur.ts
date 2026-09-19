@@ -1,7 +1,7 @@
 // Outils des routes /api/equipes/* (serveur seulement, Admin SDK).
 
 import { adminDb } from "@/lib/push/admin";
-import { ADMIN_EMAILS } from "@/lib/access";
+import { isAdminEmail } from "@/lib/access";
 import { HttpError } from "@/lib/evenements/serveur";
 import { polesDesEquipes } from "./organigramme";
 import type { MembreEquipe } from "@/types/equipe";
@@ -12,7 +12,7 @@ import type { Pole } from "@/types/user";
  *  contrôle qui remplace `allow update` sur users/{uid}, resté aux admins. */
 export async function exigerDroitEquipes(user: { uid: string; email: string } | null): Promise<void> {
   if (!user) throw new HttpError(401, "Non authentifié");
-  if (ADMIN_EMAILS.includes(user.email)) return;
+  if (isAdminEmail(user.email)) return;
   const snap = await adminDb().collection("users").doc(user.uid).get();
   if (snap.data()?.equipes !== true) throw new HttpError(403, "Réservé à qui tient l'organigramme");
 }

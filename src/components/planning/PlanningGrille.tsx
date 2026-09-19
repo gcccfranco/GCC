@@ -39,7 +39,6 @@ export interface PlanningGrilleProps {
   periode: string
 }
 
-const pad = (n: number) => String(n).padStart(2, "0")
 
 export function PlanningGrille({
   definition,

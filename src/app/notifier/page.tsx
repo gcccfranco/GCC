@@ -5,15 +5,12 @@ import Link from "next/link";
 import { Send, Megaphone, Lock, Search, X } from "lucide-react";
 import { useProfile, listProfiles } from "@/lib/firebase/users";
 import { isAdminUser } from "@/lib/access";
+import { normalizeName } from "@/lib/planning/names";
 import { authHeader } from "@/lib/firebase/setlists";
 import type { UserProfile } from "@/types/user";
 import { NOTIFY_ALL, NOTIFY_GROUPS, audienceLabel } from "@/lib/push/audiences";
 import { PUBLISHABLE_PLANNINGS, canPublishPlanning } from "@/lib/planning/releases";
 import { PublishPlanningPanel } from "@/components/planning/PublishPlanningPanel";
-
-function normalize(s: string): string {
-  return s.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
-}
 
 // Au-delà de ce nombre de destinataires (ou « tout le monde »), on demande confirmation.
 const CONFIRM_THRESHOLD = 20;
@@ -69,9 +66,9 @@ export default function NotifierPage() {
   }, [profiles, audience]);
 
   const shownPool = useMemo(() => {
-    const q = normalize(peopleQuery.trim());
+    const q = normalizeName(peopleQuery.trim());
     return q
-      ? pool.filter((p) => normalize(`${p.firstName} ${p.lastName} ${p.planningName}`).includes(q))
+      ? pool.filter((p) => normalizeName(`${p.firstName} ${p.lastName} ${p.planningName}`).includes(q))
       : pool;
   }, [pool, peopleQuery]);
 

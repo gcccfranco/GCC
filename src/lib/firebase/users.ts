@@ -52,18 +52,31 @@ export async function getProfile(uid: string): Promise<UserProfile | null> {
   return fromFsProfile(raw);
 }
 
-export async function saveProfile(profile: UserProfile): Promise<void> {
-  // createdAt est dérivé du createTime du document Firestore : jamais persisté.
-  const { uid, createdAt, ...data } = profile;
+/** Ce qu'un formulaire envoie : l'uid et les seuls champs qu'il tient. `createdAt`
+ *  est dérivé du createTime du document Firestore, jamais persisté. */
+export type ProfilePatch = { uid: string } & Partial<Omit<UserProfile, "uid" | "createdAt">>;
+
+function profilVide(uid: string): UserProfile {
+  return { uid, email: "", firstName: "", lastName: "", planningName: "", serviceRoles: {}, annonces: [], notify: [], poles: [], equipes: false, plannings: [] };
+}
+
+/** Écrit les champs donnés, et eux seuls (PATCH avec updateMask) ; crée le
+ *  document s'il n'existe pas. Avant le 19/09/2026 le PATCH remplaçait le
+ *  document entier : un admin qui enregistrait son profil perdait `poles`,
+ *  `equipes` et `plannings`, que la page Profil n'envoie pas. */
+export async function saveProfile(patch: ProfilePatch): Promise<void> {
+  const { uid, ...rest } = patch;
+  const data = Object.fromEntries(Object.entries(rest).filter(([, v]) => v !== undefined));
+  const mask = Object.keys(data).map((k) => `updateMask.fieldPaths=${k}`).join("&");
   const headers = await authHeader();
-  // PATCH sans updateMask crée ou remplace le document users/{uid}
-  const res = await fetch(`${FS_BASE}/users/${uid}`, {
+  const res = await fetch(`${FS_BASE}/users/${uid}?${mask}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json", ...headers },
-    body: JSON.stringify({ fields: toFsFields(data as Record<string, unknown>) }),
+    body: JSON.stringify({ fields: toFsFields(data) }),
   });
   await checkRest(res);
-  profileCache.set(uid, profile);
+  const avant = profileCache.get(uid) ?? profilVide(uid);
+  profileCache.set(uid, { ...avant, ...data, uid } as UserProfile);
 }
 
 /** Tous les profils, triés par nom — réservé à la page admin. */

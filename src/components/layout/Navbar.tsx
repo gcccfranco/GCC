@@ -6,7 +6,8 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import { useSetLanguage } from "@/lib/I18nProvider";
-import { Sun, Moon, Globe, LogIn, LogOut, ChevronDown, UserRound, Bell, BookOpen, MessageSquareHeart, TriangleAlert, Megaphone, ShieldCheck } from "lucide-react";
+import { Sun, Moon, Globe, LogIn, LogOut, ChevronDown, UserRound, Bell, BookOpen, MessageSquareHeart, TriangleAlert, Megaphone, ShieldCheck, Network, Sparkles } from "lucide-react";
+import { useAccesHarmonie } from "@/lib/harmonie/useHarmonie";
 import { useTheme } from "next-themes";
 import { useAuth, logOut } from "@/lib/firebase/auth";
 import { useProfile } from "@/lib/firebase/users";
@@ -344,6 +345,10 @@ export function Navbar() {
                       <Link href="/profil"><UserRound aria-hidden />{t("common.header.profile")}</Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
+                      <Link href="/equipes"><Network aria-hidden />{t("equipes.title")}</Link>
+                    </DropdownMenuItem>
+                    <HarmonieMenuItem label={t("harmonie.titre")} />
+                    <DropdownMenuItem asChild>
                       <Link href="/guide"><BookOpen aria-hidden />{t("common.header.guide")}</Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
@@ -386,5 +391,18 @@ export function Navbar() {
 
       <ReportDialog open={reportOpen} onClose={() => setReportOpen(false)} kind="site" />
     </>
+  );
+}
+
+/** Entrée « Harmonie » du menu du compte (ordinateur). Rendue seulement une
+ *  fois le menu ouvert, donc l'accès (qui lit les plannings pour trouver
+ *  l'instrument) n'est calculé qu'à ce moment-là, jamais à chaque page. */
+function HarmonieMenuItem({ label }: { label: string }) {
+  const acces = useAccesHarmonie();
+  if (acces.chargement || !acces.peut) return null;
+  return (
+    <DropdownMenuItem asChild>
+      <Link href="/harmonie"><Sparkles aria-hidden />{label}</Link>
+    </DropdownMenuItem>
   );
 }

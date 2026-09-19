@@ -18,7 +18,6 @@ const FRENCH = "àâäáãéèêëíìîïóòôöõúùûüÿçñœæÀÂÄÉÈ
 const PINYIN = "āáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜüĀÁǍÀ";
 const CHARSET = ASCII + FRENCH + PINYIN;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function advances(file: string, chars: string): Record<string, number> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const font: any = fontkit.openSync(path.join(FONTS, file));

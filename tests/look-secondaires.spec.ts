@@ -4,7 +4,6 @@ import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 // Lot 4 « Nouveau look », tranche T5 : pages secondaires au nouveau style,
 // sans réorganisation (docs/spec-look.md).
 const MEMBRE: FakeProfile = { uid: "uid-ruth", email: "ruth@example.com", firstName: "Ruth", lastName: "K.", planningName: "Ruth K.", annonces: ["Culte Francophone"] };
-const ROUGE = "rgb(207, 42, 32)";
 const phone = { viewport: { width: 390, height: 664 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 };
 
 /** Contrôles communs : aucune erreur console, boutons pleins en pilule rouge,

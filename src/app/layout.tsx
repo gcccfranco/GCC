@@ -45,7 +45,9 @@ export default function RootLayout({
   return (
     <html lang="fr" suppressHydrationWarning>
       <head>
-        <link rel="manifest" href="/manifest.webmanifest" />
+        {/* Le manifeste vient de src/app/manifest.ts, que Next lie lui-même :
+            aucun lien de manifeste écrit ici (deux manifestes se contredisaient
+            jusqu'au 19/09/2026). */}
         <link rel="icon" href="/icon.png" type="image/png" />
         <meta name="mobile-web-app-capable" content="yes" />
         {/* Service worker push-only (public/sw.js) — requis pour les notifications

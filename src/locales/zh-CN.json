@@ -990,7 +990,7 @@
       "periode": "{{du}}至{{au}}",
       "nonPublie": "尚未发布",
       "pasDispo": "某个主日无法服事？请联系负责排表的同工。",
-      "droitRetire": "你已没有修改此服事表的权限。",
+      "droitRetire": "服务器拒绝保存：你已没有修改此服事表的权限，或规则尚未发布。",
       "horsLigne": "无法修改：网络不可用。",
       "recharger": "重新加载",
       "historique": "修改记录",

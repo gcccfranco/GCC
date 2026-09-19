@@ -41,7 +41,7 @@ import { useDefaultSensors } from "@/lib/dnd/sensors";
 import { nextUid } from "@/lib/uid";
 import { SongRow, FusionRow, TransitionRow } from "@/components/setlists/SetlistFormRows";
 
-const FREE_CATEGORIES = ["Groupe Paix", "Groupe Fidélité", "Groupe Bonté", "中班", "大班", "高班"];
+import { FREE_CATEGORIES } from "@/lib/firebase/setlists";
 
 export interface SetlistFormInitial {
   title: string;
