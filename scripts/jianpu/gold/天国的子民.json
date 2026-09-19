@@ -1,0 +1,416 @@
+{
+ "slug": "天国的子民",
+ "printed_key": "C",
+ "printed_key_verified": "en-tête de la page lu à l'œil avant toute mesure (étape 0), lot des 50 简谱 fournis, 2026-09-18 (itération 63)",
+ "corrections": {
+  "184,47": "G",
+  "184,711": "C",
+  "386,265": "G",
+  "386,918": "C",
+  "386,1157": "C",
+  "386,1228": "( Dm",
+  "386,1344": "C/E )",
+  "638,685": "先C/E后Am7",
+  "638,1319": "G",
+  "894,477": "C",
+  "1113,672": "C/E",
+  "1113,1273": "G",
+  "1589,308": "G/B",
+  "1589,518": "Am",
+  "1589,835": "Bb",
+  "1589,1038": "F/A",
+  "1589,1197": "Gm",
+  "1797,254": "G/B",
+  "1797,456": "Am",
+  "1797,817": "Bb",
+  "1797,1020": "F/A",
+  "1797,1174": "Gm",
+  "1997,297": "C/E",
+  "1997,563": "Dm",
+  "1997,1043": "Bb",
+  "1997,1270": "F/A",
+  "1997,1474": "F/G"
+ },
+ "corrections_verified": "27 amas relus au zoom (propose-extra --all, planches 6 à 8). Les deux ponts de la page sont gravés dans un vocabulaire que le .cho n'a pas (G/B, Am, Bb, F/A, Gm, C/E, Dm, F/G) : le matcher y publiait G7 ou F7, faux et plausibles. Deux étiquettes composites relevées telles que gravées : « ( Dm » / « C/E ) » (alternative entre parenthèses du 2e système) et « 先C/E后Am7 » du 3e. Page en ut, .cho en ut (song_semitones 0). 2026-09-18 (itération 63)",
+ "extra_chords": [
+  "Am",
+  "Am7",
+  "Bb",
+  "C/E",
+  "Dm",
+  "F/A",
+  "F/G",
+  "G/B",
+  "Gm"
+ ],
+ "extra_chords_verified": "neuf accords gravés absents du .cho (ponts 1 et 2, alternative entre parenthèses, « 先C/E后Am7 ») ; chacun relu au zoom. 2026-09-18 (itération 63)",
+ "not_labels": [
+  "1113,153",
+  "1113,537",
+  "1589,145"
+ ],
+ "not_labels_verified": "【Bridge 1】, une barre de mesure et 【Bridge 2】 : trois amas retenus dans des rangées d'accords qui ne sont pas des accords. 2026-09-18 (itération 63)",
+ "not_rows": [
+  581,
+  930,
+  1407,
+  2037
+ ],
+ "not_rows_verified": "une rangée de paroles (« 我们要在主里面 », zooms #7–#13) et trois rangées de crochets de reprise « 1. / 2. » et de barres de mesure. 2026-09-18 (itération 63)",
+ "extra_labels": [
+  {
+   "x": 60,
+   "y": 1371,
+   "w": 38,
+   "h": 24,
+   "c": "G7"
+  },
+  {
+   "x": 381,
+   "y": 1371,
+   "w": 17,
+   "h": 24,
+   "c": "C"
+  },
+  {
+   "x": 681,
+   "y": 1371,
+   "w": 35,
+   "h": 24,
+   "c": "C7"
+  },
+  {
+   "x": 999,
+   "y": 1371,
+   "w": 38,
+   "h": 24,
+   "c": "G7"
+  },
+  {
+   "x": 1303,
+   "y": 1371,
+   "w": 17,
+   "h": 24,
+   "c": "C"
+  }
+ ],
+ "extra_labels_verified": "le 6e système (« G7 C C7 G7 C ») n'est isolé par aucune bande : le découpage ne retient à cette hauteur que le crochet de reprise « 1. / 2. » (y=1407). Rangée relue sur la page (bande y 1362–1400) et boîtes mesurées sur l'encre. Sans elles ce système resterait en ut au milieu d'une page transposée. 2026-09-18 (itération 63)",
+ "key_label": {
+  "x": 14,
+  "y": 136,
+  "w": 76,
+  "h": 24
+ },
+ "key_label_verified": "candidate #2 de measure-keylabel relue sur la planche : cadre sur « 1= C » sans le 4/4 ; la candidate #1 était la ligne de tempo « ♩= 118 », écartée. Lettre gravée C = printedKey C. 2026-09-18 (itération 63)",
+ "verified": "planche navigateur (npm run jianpu:audit) relue tranche par tranche, 6/6, en C→C# : les neuf rangées d'accords sont cadrées de rouge, les 44 étiquettes réécrites (C→Db, C7→Db7, F→Gb, F7→Gb7, G→Ab, G7→Ab7, G/B→Ab/C, Am→Bbm, Bb→B, F/A→Gb/Bb, Gm→Abm, C/E→Db/F, Dm→Ebm, F/G→Gb/Ab) et le cadre « 1= C » suit en « 1=C# ». Les deux étiquettes composites suivent aussi : « ( Dm » / « C/E ) » du 2e système et « 先C/E后Am7 » du 3e, qui sort « 先Db/F后Bbm7 » (hanzi intacts, les deux accords réécrits). Le 6e système, qu'aucune bande ne porte, est publié en extra_labels et sort bien « Ab7 Db Db7 Ab7 Db » : sans lui il serait resté en ut. Les deux ponts, gravés dans un vocabulaire absent du .cho, publiaient G7/F7 avant relecture (mode C). 【Bridge 1】, 【Bridge 2】, 【Chorus】, « Fine », « D.C. al Fine », les crochets de reprise et la ligne de tempo ♩=118 restent intacts. Pas de mention « （X调） » dans le titre (« （2009） » est l'année de l'album). 2026-09-18 (itération 63) [compte rectifié après coup : la phrase disait 49, le calque en publie 44.]",
+ "frozen_labels": [
+  {
+   "x": 47,
+   "y": 184,
+   "w": 19,
+   "h": 24,
+   "c": "G"
+  },
+  {
+   "x": 465,
+   "y": 184,
+   "w": 17,
+   "h": 24,
+   "c": "C"
+  },
+  {
+   "x": 711,
+   "y": 184,
+   "w": 16,
+   "h": 24,
+   "c": "C"
+  },
+  {
+   "x": 1135,
+   "y": 184,
+   "w": 12,
+   "h": 24,
+   "c": "F"
+  },
+  {
+   "x": 1356,
+   "y": 184,
+   "w": 31,
+   "h": 24,
+   "c": "F7"
+  },
+  {
+   "x": 265,
+   "y": 386,
+   "w": 19,
+   "h": 27,
+   "c": "G"
+  },
+  {
+   "x": 497,
+   "y": 386,
+   "w": 38,
+   "h": 27,
+   "c": "G7"
+  },
+  {
+   "x": 918,
+   "y": 386,
+   "w": 16,
+   "h": 27,
+   "c": "C"
+  },
+  {
+   "x": 1157,
+   "y": 386,
+   "w": 16,
+   "h": 27,
+   "c": "C"
+  },
+  {
+   "x": 1228,
+   "y": 386,
+   "w": 58,
+   "h": 27,
+   "c": "( Dm"
+  },
+  {
+   "x": 1344,
+   "y": 386,
+   "w": 60,
+   "h": 27,
+   "c": "C/E )"
+  },
+  {
+   "x": 58,
+   "y": 638,
+   "w": 12,
+   "h": 32,
+   "c": "F"
+  },
+  {
+   "x": 685,
+   "y": 638,
+   "w": 185,
+   "h": 32,
+   "c": "先C/E后Am7"
+  },
+  {
+   "x": 1319,
+   "y": 638,
+   "w": 19,
+   "h": 32,
+   "c": "G"
+  },
+  {
+   "x": 69,
+   "y": 894,
+   "w": 38,
+   "h": 24,
+   "c": "G7"
+  },
+  {
+   "x": 477,
+   "y": 894,
+   "w": 16,
+   "h": 24,
+   "c": "C"
+  },
+  {
+   "x": 806,
+   "y": 894,
+   "w": 38,
+   "h": 24,
+   "c": "G7"
+  },
+  {
+   "x": 1247,
+   "y": 894,
+   "w": 17,
+   "h": 24,
+   "c": "C"
+  },
+  {
+   "x": 90,
+   "y": 1113,
+   "w": 12,
+   "h": 36,
+   "c": "F"
+  },
+  {
+   "x": 672,
+   "y": 1113,
+   "w": 47,
+   "h": 36,
+   "c": "C/E"
+  },
+  {
+   "x": 1273,
+   "y": 1113,
+   "w": 19,
+   "h": 36,
+   "c": "G"
+  },
+  {
+   "x": 60,
+   "y": 1371,
+   "w": 38,
+   "h": 24,
+   "c": "G7"
+  },
+  {
+   "x": 999,
+   "y": 1371,
+   "w": 38,
+   "h": 24,
+   "c": "G7"
+  },
+  {
+   "x": 82,
+   "y": 1589,
+   "w": 17,
+   "h": 32,
+   "c": "C"
+  },
+  {
+   "x": 308,
+   "y": 1589,
+   "w": 53,
+   "h": 32,
+   "c": "G/B"
+  },
+  {
+   "x": 518,
+   "y": 1589,
+   "w": 47,
+   "h": 32,
+   "c": "Am"
+  },
+  {
+   "x": 835,
+   "y": 1589,
+   "w": 35,
+   "h": 32,
+   "c": "Bb"
+  },
+  {
+   "x": 1038,
+   "y": 1589,
+   "w": 48,
+   "h": 32,
+   "c": "F/A"
+  },
+  {
+   "x": 1197,
+   "y": 1589,
+   "w": 48,
+   "h": 32,
+   "c": "Gm"
+  },
+  {
+   "x": 59,
+   "y": 1797,
+   "w": 17,
+   "h": 26,
+   "c": "C"
+  },
+  {
+   "x": 254,
+   "y": 1797,
+   "w": 54,
+   "h": 26,
+   "c": "G/B"
+  },
+  {
+   "x": 456,
+   "y": 1797,
+   "w": 47,
+   "h": 26,
+   "c": "Am"
+  },
+  {
+   "x": 817,
+   "y": 1797,
+   "w": 35,
+   "h": 26,
+   "c": "Bb"
+  },
+  {
+   "x": 1020,
+   "y": 1797,
+   "w": 49,
+   "h": 26,
+   "c": "F/A"
+  },
+  {
+   "x": 1174,
+   "y": 1797,
+   "w": 48,
+   "h": 26,
+   "c": "Gm"
+  },
+  {
+   "x": 76,
+   "y": 1997,
+   "w": 12,
+   "h": 31,
+   "c": "F"
+  },
+  {
+   "x": 297,
+   "y": 1997,
+   "w": 48,
+   "h": 31,
+   "c": "C/E"
+  },
+  {
+   "x": 563,
+   "y": 1997,
+   "w": 47,
+   "h": 31,
+   "c": "Dm"
+  },
+  {
+   "x": 1043,
+   "y": 1997,
+   "w": 35,
+   "h": 31,
+   "c": "Bb"
+  },
+  {
+   "x": 1270,
+   "y": 1997,
+   "w": 48,
+   "h": 31,
+   "c": "F/A"
+  },
+  {
+   "x": 1474,
+   "y": 1997,
+   "w": 49,
+   "h": 31,
+   "c": "F/G"
+  },
+  {
+   "x": 381,
+   "y": 1371,
+   "w": 17,
+   "h": 24,
+   "c": "C"
+  },
+  {
+   "x": 681,
+   "y": 1371,
+   "w": 35,
+   "h": 24,
+   "c": "C7"
+  },
+  {
+   "x": 1303,
+   "y": 1371,
+   "w": 17,
+   "h": 24,
+   "c": "C"
+  }
+ ]
+}

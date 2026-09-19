@@ -1,0 +1,416 @@
+{
+ "slug": "爱的约定",
+ "printed_key": "C",
+ "printed_key_verified": "en-tête de la page lu à l'œil avant toute mesure (étape 0), lot des 50 简谱 fournis, 2026-09-18 (itération 63)",
+ "corrections": {
+  "210,288": "G#m7b5",
+  "210,446": "E7/G#",
+  "210,579": "Am7",
+  "210,817": "F/G",
+  "210,1333": "G/B",
+  "499,311": "C/G",
+  "785,363": "G/B",
+  "785,604": "F/A",
+  "785,857": "C/G",
+  "785,1300": "F/G",
+  "1068,732": "Bb/C",
+  "1068,1315": "G/F",
+  "1306,1449": "G/F",
+  "1538,929": "C/E",
+  "1538,1151": "F/G",
+  "1777,480": "Bb",
+  "1777,902": "C",
+  "1777,1208": "Bb/C",
+  "2051,413": "F/A",
+  "2051,596": "Fm/Ab",
+  "2051,778": "C/G",
+  "2051,1127": "Dm7b5/G",
+  "2051,1316": "Cmaj9"
+ },
+ "corrections_verified": "les huit rangées d'accords relues en entier, tous les amas du classifieur encadrés (planche ady-rows.png) et les chiffrages riches zoomés ×2/×3 (ady-z1/z4) : « G#m7b5 », « E7/G# », « Am7 » (1re rangée), « Fm/Ab C/G F#dim9 Dm7 Dm7b5/G Cmaj9 » (dernière). Les noms sont recopiés **tels que gravés** (G#m7b5 et non G#m7(b5), Dm7b5/G et non Dm7(b5)/G, Cmaj9 et non CMaj9) — la page est une grille, pas une gravure normalisée. « E7/G# » et « Bb » ne sont pas dans le vocabulaire du .cho ; la correction tranche avant keep(), le vocabulaire n'a pas été ouvert pour ne pas déplacer les lectures justes ailleurs. Deux lectures retenues fausses (mode C) : aucune — les 23 corrections comblent des amas sous le seuil. Page en ut, .cho en ut (song_semitones=0). 2026-09-18 (itération 63)",
+ "not_labels": [
+  "1068,37",
+  "1068,402",
+  "1068,705",
+  "1068,932",
+  "1777,589",
+  "1777,655",
+  "1777,684",
+  "1777,869",
+  "1777,1534"
+ ],
+ "not_labels_verified": "amas qui ne sont pas des accords, vus au zoom ×2 : les crochets de reprise « ⌐1 » / « ⌐2 » et leurs traits (y=1068 x=37, 402, 705), 【Chorus】 (y=1068 x=932), les trois morceaux de « [3房子不唱'到永远'] », le crochet de 3e fois et la barre finale (y=1777). 2026-09-18 (itération 63)",
+ "not_rows": [
+  542,
+  832,
+  1574
+ ],
+ "not_rows_verified": "trois rangées d'arcs de liaison (largeur médiane 1, 2 et 7 px) : y=542, 832, 1574. 2026-09-18 (itération 63)",
+ "key_label": {
+  "x": 14,
+  "y": 142,
+  "w": 81,
+  "h": 26
+ },
+ "key_label_verified": "mesure measure-keylabel (ancrage sur le « = », cadre = voisin gauche…voisin droit), zoom relu à l’œil sur planche de lot, lettre gravée confrontée à printedKey, 2026-08-26 (itération 35)",
+ "verified": "planche navigateur (npm run jianpu:audit) relue tranche par tranche, 7/7, en C→C# : les 8 rangées d'accords sont cadrées et les 51 étiquettes réécrites, cadre « 1= C » → « 1=C# » compris (tranche 1/7). Le titre ne porte pas de mention « （X调） » — measure-titlekey ne proposait que le bloc « 周巽倩 词曲 » et le « （2021） » de la référence d'album, qui est une année —, donc pas de title_key. Contrôle au demi-ton étiquette par étiquette : G#m7b5→Am7b5, E7/G#→F7/A, Am7→Bbm7, F/G→Gb/Ab, C2→Db2, G/B→Ab/C, F/A→Gb/Bb, Fmaj7→Gbmaj7, Dm7→Ebm7, Bb/C→B/Db, C7→Db7, G/F→Ab/Gb, E7→F7, C/E→Db/F, F2→Gb2, Bb→B, Fm/Ab→Gbm/A, F#dim9→Gdim9, Dm7b5/G→Ebm7b5/Ab, Cmaj9→Dbmaj9 — aucun accord identique en haut et en bas, aucun cadre orange, aucun accord sans cadre. Les 23 corrections tiennent, y compris les chiffrages riches de la dernière rangée, très serrés (Db/Ab Gdim9 Ebm7 Ebm7b5/Ab Dbmaj9 se suivent sans que le fond d'une étiquette rogne sa voisine). 2026-09-18 (itération 63)",
+ "frozen_labels": [
+  {
+   "x": 69,
+   "y": 210,
+   "w": 16,
+   "h": 31,
+   "c": "C"
+  },
+  {
+   "x": 288,
+   "y": 210,
+   "w": 123,
+   "h": 31,
+   "c": "G#m7b5"
+  },
+  {
+   "x": 446,
+   "y": 210,
+   "w": 89,
+   "h": 31,
+   "c": "E7/G#"
+  },
+  {
+   "x": 579,
+   "y": 210,
+   "w": 66,
+   "h": 31,
+   "c": "Am7"
+  },
+  {
+   "x": 817,
+   "y": 210,
+   "w": 49,
+   "h": 31,
+   "c": "F/G"
+  },
+  {
+   "x": 895,
+   "y": 210,
+   "w": 38,
+   "h": 31,
+   "c": "G7"
+  },
+  {
+   "x": 1085,
+   "y": 210,
+   "w": 34,
+   "h": 31,
+   "c": "C2"
+  },
+  {
+   "x": 1333,
+   "y": 210,
+   "w": 53,
+   "h": 31,
+   "c": "G/B"
+  },
+  {
+   "x": 61,
+   "y": 499,
+   "w": 49,
+   "h": 30,
+   "c": "F/A"
+  },
+  {
+   "x": 311,
+   "y": 499,
+   "w": 52,
+   "h": 30,
+   "c": "C/G"
+  },
+  {
+   "x": 574,
+   "y": 499,
+   "w": 86,
+   "h": 30,
+   "c": "Fmaj7"
+  },
+  {
+   "x": 831,
+   "y": 499,
+   "w": 42,
+   "h": 30,
+   "c": "Em"
+  },
+  {
+   "x": 1073,
+   "y": 499,
+   "w": 66,
+   "h": 30,
+   "c": "Dm7"
+  },
+  {
+   "x": 1313,
+   "y": 499,
+   "w": 19,
+   "h": 30,
+   "c": "G"
+  },
+  {
+   "x": 70,
+   "y": 785,
+   "w": 17,
+   "h": 32,
+   "c": "C"
+  },
+  {
+   "x": 363,
+   "y": 785,
+   "w": 54,
+   "h": 32,
+   "c": "G/B"
+  },
+  {
+   "x": 604,
+   "y": 785,
+   "w": 49,
+   "h": 32,
+   "c": "F/A"
+  },
+  {
+   "x": 857,
+   "y": 785,
+   "w": 53,
+   "h": 32,
+   "c": "C/G"
+  },
+  {
+   "x": 1092,
+   "y": 785,
+   "w": 13,
+   "h": 32,
+   "c": "F"
+  },
+  {
+   "x": 1300,
+   "y": 785,
+   "w": 49,
+   "h": 32,
+   "c": "F/G"
+  },
+  {
+   "x": 72,
+   "y": 1068,
+   "w": 17,
+   "h": 39,
+   "c": "C"
+  },
+  {
+   "x": 452,
+   "y": 1068,
+   "w": 17,
+   "h": 39,
+   "c": "C"
+  },
+  {
+   "x": 732,
+   "y": 1068,
+   "w": 69,
+   "h": 39,
+   "c": "Bb/C"
+  },
+  {
+   "x": 857,
+   "y": 1068,
+   "w": 34,
+   "h": 39,
+   "c": "C7"
+  },
+  {
+   "x": 1122,
+   "y": 1068,
+   "w": 13,
+   "h": 39,
+   "c": "F"
+  },
+  {
+   "x": 1315,
+   "y": 1068,
+   "w": 51,
+   "h": 39,
+   "c": "G/F"
+  },
+  {
+   "x": 50,
+   "y": 1306,
+   "w": 42,
+   "h": 24,
+   "c": "Em"
+  },
+  {
+   "x": 177,
+   "y": 1306,
+   "w": 47,
+   "h": 24,
+   "c": "Am"
+  },
+  {
+   "x": 402,
+   "y": 1306,
+   "w": 47,
+   "h": 24,
+   "c": "Dm"
+  },
+  {
+   "x": 537,
+   "y": 1306,
+   "w": 19,
+   "h": 24,
+   "c": "G"
+  },
+  {
+   "x": 764,
+   "y": 1306,
+   "w": 17,
+   "h": 24,
+   "c": "C"
+  },
+  {
+   "x": 945,
+   "y": 1306,
+   "w": 35,
+   "h": 24,
+   "c": "C7"
+  },
+  {
+   "x": 1096,
+   "y": 1306,
+   "w": 12,
+   "h": 24,
+   "c": "F"
+  },
+  {
+   "x": 1449,
+   "y": 1306,
+   "w": 50,
+   "h": 24,
+   "c": "G/F"
+  },
+  {
+   "x": 63,
+   "y": 1538,
+   "w": 32,
+   "h": 24,
+   "c": "E7"
+  },
+  {
+   "x": 403,
+   "y": 1538,
+   "w": 46,
+   "h": 24,
+   "c": "Am"
+  },
+  {
+   "x": 667,
+   "y": 1538,
+   "w": 13,
+   "h": 24,
+   "c": "F"
+  },
+  {
+   "x": 929,
+   "y": 1538,
+   "w": 47,
+   "h": 24,
+   "c": "C/E"
+  },
+  {
+   "x": 1151,
+   "y": 1538,
+   "w": 49,
+   "h": 24,
+   "c": "F/G"
+  },
+  {
+   "x": 48,
+   "y": 1777,
+   "w": 31,
+   "h": 47,
+   "c": "F2"
+  },
+  {
+   "x": 480,
+   "y": 1777,
+   "w": 35,
+   "h": 47,
+   "c": "Bb"
+  },
+  {
+   "x": 902,
+   "y": 1777,
+   "w": 17,
+   "h": 47,
+   "c": "C"
+  },
+  {
+   "x": 1208,
+   "y": 1777,
+   "w": 69,
+   "h": 47,
+   "c": "Bb/C"
+  },
+  {
+   "x": 66,
+   "y": 2051,
+   "w": 17,
+   "h": 31,
+   "c": "C"
+  },
+  {
+   "x": 413,
+   "y": 2051,
+   "w": 49,
+   "h": 31,
+   "c": "F/A"
+  },
+  {
+   "x": 596,
+   "y": 2051,
+   "w": 96,
+   "h": 31,
+   "c": "Fm/Ab"
+  },
+  {
+   "x": 778,
+   "y": 2051,
+   "w": 52,
+   "h": 31,
+   "c": "C/G"
+  },
+  {
+   "x": 897,
+   "y": 2051,
+   "w": 106,
+   "h": 31,
+   "c": "F#dim9"
+  },
+  {
+   "x": 1026,
+   "y": 2051,
+   "w": 66,
+   "h": 31,
+   "c": "Dm7"
+  },
+  {
+   "x": 1127,
+   "y": 2051,
+   "w": 141,
+   "h": 31,
+   "c": "Dm7b5/G"
+  },
+  {
+   "x": 1316,
+   "y": 2051,
+   "w": 90,
+   "h": 31,
+   "c": "Cmaj9"
+  }
+ ]
+}

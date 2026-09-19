@@ -1,0 +1,628 @@
+{
+ "slug": "爱中相遇",
+ "printed_key": "C",
+ "printed_key_verified": "en-tête de la page lu à l'œil avant toute mesure (étape 0), lot des 50 简谱 fournis, 2026-09-18 (itération 63)",
+ "corrections": {
+  "279,256": "C/E",
+  "279,589": "G",
+  "279,889": "C/E",
+  "279,1239": "G",
+  "399,28": "Bb",
+  "399,144": "C/Bb",
+  "399,276": "Am",
+  "399,395": "Dm",
+  "399,561": "Db",
+  "399,893": "Gsus4",
+  "399,1143": "G",
+  "541,452": "C/E",
+  "541,802": "G",
+  "541,1135": "C/E",
+  "993,97": "Bb/C",
+  "993,362": "G/F",
+  "993,547": "Em",
+  "993,630": "Am",
+  "993,797": "Dm",
+  "993,929": "G",
+  "993,1197": "Bb/C",
+  "1218,175": "G/F",
+  "1218,393": "Em",
+  "1218,509": "Am",
+  "1218,693": "Dm",
+  "1218,893": "F/G",
+  "1652,233": "G/F",
+  "1652,468": "Em",
+  "1652,684": "Am",
+  "1652,835": "Dm",
+  "1652,951": "F/G"
+ },
+ "corrections_verified": "page gravée dans une fonte serif à empattements que le matcher lit mal : les 7 amas de la rangée d'intro (y=399) et la plupart des basses barrées sont sous le seuil. Chaque rangée a été relue en entier sur une bande pleine largeur de la page (crops azx-*), pas seulement sur les zooms. Quatre lectures retenues fausses (mode C) corrigées : « C » publié pour G en 279,589 · 279,1239 · 541,802 · 993,929. Quatre accords absents du vocabulaire du .cho lus à l'œil au zoom ×3 dans l'intro : Bb, C/Bb, Db, Gsus4 (pas de extra_chords : la correction tranche avant keep(), et ouvrir le vocabulaire risquait de déplacer des lectures déjà justes ailleurs). Page en ut, .cho en ut (song_semitones=0). 2026-09-18 (itération 63)",
+ "not_labels": [
+  "993,858",
+  "1218,803"
+ ],
+ "not_labels_verified": "deux sommets d'arc de liaison pris pour des amas (y=993 x=858, y=1218 x=803), vus au zoom : cadre vide. 2026-09-18 (itération 63)",
+ "not_rows": [
+  191
+ ],
+ "not_rows_verified": "rangée y=191 : la ligne de tempo « ♩=66 亲密地,敬拜地 » et le bloc « MaryWang, Sandy Yu / 游智婷Sandy Yu » des crédits — aucun accord. 2026-09-18 (itération 63)",
+ "extra_labels": [
+  {
+   "x": 31,
+   "y": 766,
+   "w": 12,
+   "h": 21,
+   "c": "F"
+  },
+  {
+   "x": 129,
+   "y": 766,
+   "w": 13,
+   "h": 21,
+   "c": "G"
+  },
+  {
+   "x": 296,
+   "y": 766,
+   "w": 14,
+   "h": 21,
+   "c": "F"
+  },
+  {
+   "x": 496,
+   "y": 766,
+   "w": 47,
+   "h": 24,
+   "c": "G/F"
+  },
+  {
+   "x": 731,
+   "y": 766,
+   "w": 27,
+   "h": 21,
+   "c": "Em"
+  },
+  {
+   "x": 830,
+   "y": 766,
+   "w": 28,
+   "h": 21,
+   "c": "Am"
+  },
+  {
+   "x": 995,
+   "y": 766,
+   "w": 30,
+   "h": 21,
+   "c": "Dm"
+  },
+  {
+   "x": 1147,
+   "y": 766,
+   "w": 45,
+   "h": 24,
+   "c": "F/G"
+  },
+  {
+   "x": 33,
+   "y": 1443,
+   "w": 13,
+   "h": 21,
+   "c": "F"
+  },
+  {
+   "x": 231,
+   "y": 1443,
+   "w": 48,
+   "h": 23,
+   "c": "G/F"
+  },
+  {
+   "x": 466,
+   "y": 1443,
+   "w": 28,
+   "h": 21,
+   "c": "Em"
+  },
+  {
+   "x": 682,
+   "y": 1443,
+   "w": 29,
+   "h": 21,
+   "c": "Am"
+  },
+  {
+   "x": 831,
+   "y": 1443,
+   "w": 29,
+   "h": 21,
+   "c": "Dm"
+  },
+  {
+   "x": 949,
+   "y": 1443,
+   "w": 45,
+   "h": 23,
+   "c": "F/G"
+  },
+  {
+   "x": 1114,
+   "y": 1443,
+   "w": 14,
+   "h": 21,
+   "c": "C"
+  },
+  {
+   "x": 1199,
+   "y": 1443,
+   "w": 62,
+   "h": 23,
+   "c": "Bb/C"
+  },
+  {
+   "x": 1297,
+   "y": 1443,
+   "w": 29,
+   "h": 21,
+   "c": "C7"
+  }
+ ],
+ "extra_labels_verified": "deux rangées d'accords entières que le classifieur n'a jamais typées « accords » — invisibles à read(), à foreign_rows, à propose-extra --all comme à --hidden (mode D) : y=766 « F G F G/F Em Am Dm F/G » et y=1443 « F G/F Em Am Dm F/G C Bb/C C7 ». Trouvées en découpant les huit systèmes de la page : chaque rangée de chiffres doit avoir sa rangée d'accords au-dessus, et deux n'en avaient pas. Boîtes mesurées sur l'encre dans la fenêtre haute de la bande (25 px) pour ne pas avaler la barre de mesure du système en dessous, puis relues cadre par cadre sur la page (mes2-766.png, mes2-1443.png). Les sommets d'arc de liaison ne sont pas repris. 2026-09-18 (itération 63)",
+ "key_label": {
+  "x": 60,
+  "y": 156,
+  "w": 67,
+  "h": 25
+ },
+ "key_label_verified": "mesure measure-keylabel (ancrage sur le « = », cadre = voisin gauche…voisin droit), zoom relu à l’œil sur planche de lot, lettre gravée confrontée à printedKey, 2026-08-26 (itération 35)",
+ "verified": "planche navigateur (npm run jianpu:audit) relue tranche par tranche, 6/6, en C→C# : les 8 rangées d'accords sont cadrées et les 64 étiquettes réécrites (47 lues + les 17 des deux rangées y=766 et y=1443 que le classifieur n'a jamais typées, republiées en extra_labels — mode D vérifié réparé : tranche 3/6 pour y=766, tranche 5/6 pour y=1443, les deux cadrées et transposées comme les autres). Le cadre « 1=C » devient « 1=C# » (tranche 1/6). Pas de mention « （X调） » au titre (measure-titlekey ne proposait que le bloc des crédits 词/曲), donc pas de title_key. Contrôle au demi-ton étiquette par étiquette : C→Db, C/E→Db/F, F→Gb, G→Ab, Bb→B, C/Bb→Db/B, Am→Bbm, Dm→Ebm, Db→D, Gsus4→Absus4, G/F→Ab/Gb, Em→Fm, F/G→Gb/Ab, Bb/C→B/Db, C7→Db7 — aucun accord identique en haut et en bas, aucun cadre orange, aucun accord sans cadre. Les quatre « C » publiés pour des « G » (mode C) sont bien corrigés : les quatre positions sortent Ab. 2026-09-18 (itération 63)",
+ "frozen_labels": [
+  {
+   "x": 123,
+   "y": 279,
+   "w": 14,
+   "h": 22,
+   "c": "C"
+  },
+  {
+   "x": 256,
+   "y": 279,
+   "w": 48,
+   "h": 22,
+   "c": "C/E"
+  },
+  {
+   "x": 456,
+   "y": 279,
+   "w": 13,
+   "h": 22,
+   "c": "F"
+  },
+  {
+   "x": 589,
+   "y": 279,
+   "w": 13,
+   "h": 22,
+   "c": "G"
+  },
+  {
+   "x": 756,
+   "y": 279,
+   "w": 14,
+   "h": 22,
+   "c": "C"
+  },
+  {
+   "x": 889,
+   "y": 279,
+   "w": 48,
+   "h": 22,
+   "c": "C/E"
+  },
+  {
+   "x": 1073,
+   "y": 279,
+   "w": 12,
+   "h": 22,
+   "c": "F"
+  },
+  {
+   "x": 1239,
+   "y": 279,
+   "w": 13,
+   "h": 22,
+   "c": "G"
+  },
+  {
+   "x": 28,
+   "y": 399,
+   "w": 28,
+   "h": 22,
+   "c": "Bb"
+  },
+  {
+   "x": 144,
+   "y": 399,
+   "w": 62,
+   "h": 22,
+   "c": "C/Bb"
+  },
+  {
+   "x": 276,
+   "y": 399,
+   "w": 29,
+   "h": 22,
+   "c": "Am"
+  },
+  {
+   "x": 395,
+   "y": 399,
+   "w": 28,
+   "h": 22,
+   "c": "Dm"
+  },
+  {
+   "x": 561,
+   "y": 399,
+   "w": 28,
+   "h": 22,
+   "c": "Db"
+  },
+  {
+   "x": 893,
+   "y": 399,
+   "w": 74,
+   "h": 22,
+   "c": "Gsus4"
+  },
+  {
+   "x": 1143,
+   "y": 399,
+   "w": 13,
+   "h": 22,
+   "c": "G"
+  },
+  {
+   "x": 285,
+   "y": 541,
+   "w": 14,
+   "h": 22,
+   "c": "C"
+  },
+  {
+   "x": 452,
+   "y": 541,
+   "w": 47,
+   "h": 22,
+   "c": "C/E"
+  },
+  {
+   "x": 687,
+   "y": 541,
+   "w": 13,
+   "h": 22,
+   "c": "F"
+  },
+  {
+   "x": 802,
+   "y": 541,
+   "w": 13,
+   "h": 22,
+   "c": "G"
+  },
+  {
+   "x": 968,
+   "y": 541,
+   "w": 14,
+   "h": 22,
+   "c": "C"
+  },
+  {
+   "x": 1135,
+   "y": 541,
+   "w": 48,
+   "h": 22,
+   "c": "C/E"
+  },
+  {
+   "x": 29,
+   "y": 993,
+   "w": 14,
+   "h": 21,
+   "c": "C"
+  },
+  {
+   "x": 97,
+   "y": 993,
+   "w": 63,
+   "h": 21,
+   "c": "Bb/C"
+  },
+  {
+   "x": 179,
+   "y": 993,
+   "w": 29,
+   "h": 21,
+   "c": "C7"
+  },
+  {
+   "x": 281,
+   "y": 993,
+   "w": 12,
+   "h": 21,
+   "c": "F"
+  },
+  {
+   "x": 362,
+   "y": 993,
+   "w": 48,
+   "h": 21,
+   "c": "G/F"
+  },
+  {
+   "x": 547,
+   "y": 993,
+   "w": 28,
+   "h": 21,
+   "c": "Em"
+  },
+  {
+   "x": 630,
+   "y": 993,
+   "w": 28,
+   "h": 21,
+   "c": "Am"
+  },
+  {
+   "x": 797,
+   "y": 993,
+   "w": 28,
+   "h": 21,
+   "c": "Dm"
+  },
+  {
+   "x": 929,
+   "y": 993,
+   "w": 13,
+   "h": 21,
+   "c": "G"
+  },
+  {
+   "x": 1112,
+   "y": 993,
+   "w": 14,
+   "h": 21,
+   "c": "C"
+  },
+  {
+   "x": 1197,
+   "y": 993,
+   "w": 62,
+   "h": 21,
+   "c": "Bb/C"
+  },
+  {
+   "x": 1279,
+   "y": 993,
+   "w": 28,
+   "h": 21,
+   "c": "C7"
+  },
+  {
+   "x": 27,
+   "y": 1218,
+   "w": 12,
+   "h": 23,
+   "c": "F"
+  },
+  {
+   "x": 175,
+   "y": 1218,
+   "w": 48,
+   "h": 23,
+   "c": "G/F"
+  },
+  {
+   "x": 393,
+   "y": 1218,
+   "w": 28,
+   "h": 23,
+   "c": "Em"
+  },
+  {
+   "x": 509,
+   "y": 1218,
+   "w": 29,
+   "h": 23,
+   "c": "Am"
+  },
+  {
+   "x": 693,
+   "y": 1218,
+   "w": 28,
+   "h": 23,
+   "c": "Dm"
+  },
+  {
+   "x": 893,
+   "y": 1218,
+   "w": 45,
+   "h": 23,
+   "c": "F/G"
+  },
+  {
+   "x": 1124,
+   "y": 1218,
+   "w": 15,
+   "h": 23,
+   "c": "C"
+  },
+  {
+   "x": 35,
+   "y": 1652,
+   "w": 13,
+   "h": 22,
+   "c": "F"
+  },
+  {
+   "x": 233,
+   "y": 1652,
+   "w": 48,
+   "h": 22,
+   "c": "G/F"
+  },
+  {
+   "x": 468,
+   "y": 1652,
+   "w": 28,
+   "h": 22,
+   "c": "Em"
+  },
+  {
+   "x": 684,
+   "y": 1652,
+   "w": 28,
+   "h": 22,
+   "c": "Am"
+  },
+  {
+   "x": 835,
+   "y": 1652,
+   "w": 28,
+   "h": 22,
+   "c": "Dm"
+  },
+  {
+   "x": 951,
+   "y": 1652,
+   "w": 45,
+   "h": 22,
+   "c": "F/G"
+  },
+  {
+   "x": 1116,
+   "y": 1652,
+   "w": 14,
+   "h": 22,
+   "c": "C"
+  },
+  {
+   "x": 31,
+   "y": 766,
+   "w": 12,
+   "h": 21,
+   "c": "F"
+  },
+  {
+   "x": 129,
+   "y": 766,
+   "w": 13,
+   "h": 21,
+   "c": "G"
+  },
+  {
+   "x": 296,
+   "y": 766,
+   "w": 14,
+   "h": 21,
+   "c": "F"
+  },
+  {
+   "x": 496,
+   "y": 766,
+   "w": 47,
+   "h": 24,
+   "c": "G/F"
+  },
+  {
+   "x": 731,
+   "y": 766,
+   "w": 27,
+   "h": 21,
+   "c": "Em"
+  },
+  {
+   "x": 830,
+   "y": 766,
+   "w": 28,
+   "h": 21,
+   "c": "Am"
+  },
+  {
+   "x": 995,
+   "y": 766,
+   "w": 30,
+   "h": 21,
+   "c": "Dm"
+  },
+  {
+   "x": 1147,
+   "y": 766,
+   "w": 45,
+   "h": 24,
+   "c": "F/G"
+  },
+  {
+   "x": 33,
+   "y": 1443,
+   "w": 13,
+   "h": 21,
+   "c": "F"
+  },
+  {
+   "x": 231,
+   "y": 1443,
+   "w": 48,
+   "h": 23,
+   "c": "G/F"
+  },
+  {
+   "x": 466,
+   "y": 1443,
+   "w": 28,
+   "h": 21,
+   "c": "Em"
+  },
+  {
+   "x": 682,
+   "y": 1443,
+   "w": 29,
+   "h": 21,
+   "c": "Am"
+  },
+  {
+   "x": 831,
+   "y": 1443,
+   "w": 29,
+   "h": 21,
+   "c": "Dm"
+  },
+  {
+   "x": 949,
+   "y": 1443,
+   "w": 45,
+   "h": 23,
+   "c": "F/G"
+  },
+  {
+   "x": 1114,
+   "y": 1443,
+   "w": 14,
+   "h": 21,
+   "c": "C"
+  },
+  {
+   "x": 1199,
+   "y": 1443,
+   "w": 62,
+   "h": 23,
+   "c": "Bb/C"
+  },
+  {
+   "x": 1297,
+   "y": 1443,
+   "w": 29,
+   "h": 21,
+   "c": "C7"
+  }
+ ]
+}

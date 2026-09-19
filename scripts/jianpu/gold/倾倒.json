@@ -1,0 +1,335 @@
+{
+ "slug": "倾倒",
+ "printed_key": "A",
+ "printed_key_verified": "en-tête de la page lu à l'œil avant toute mesure (étape 0), lot des 50 简谱 fournis, 2026-09-18 (itération 63)",
+ "corrections": {
+  "203,476": "Aadd2",
+  "435,17": "Aadd2",
+  "435,801": "C#",
+  "922,512": "D/E",
+  "1152,386": "C#m",
+  "1152,835": "D/E",
+  "1390,313": "C#m",
+  "1390,482": "F#",
+  "1630,319": "C#m"
+ },
+ "corrections_verified": "amas relus au zoom (propose-extra --all, planches _extra-1 et _extra-2) : page gravée en la comme son .cho (song_semitones 0). Le matcher lisait « F#m » là où la page grave « C#m » (y=1152 x=386) — corrigé à l'œil, comme les trois autres C#m. 2026-09-18 (itération 63)",
+ "not_labels": [
+  "675,780",
+  "1630,1084"
+ ],
+ "not_labels_verified": "y=675 x=780 : le **segno** 𝄋 soudé au « Dmaj7 » qui le suit (un seul amas de 118 px) ; l'accord est reposé à part en extra_label, le signe reste intact. y=1630 x=1084 : « D.S. al Fine », une indication de reprise, pas un accord. Zooms _extra-1 #8 et _extra-2 #21. 2026-09-18 (itération 63)",
+ "not_rows": [
+  239,
+  956,
+  1540
+ ],
+ "not_rows_verified": "y=239 et y=956 : des fragments de barres de mesure, de points de staccato et d'arcs de liaison, sous les rangées d'accords y=203 et y=922 (zooms _extra-1 #1..#5 et #10..#14) ; y=1540 : la ligne de **paroles** « 我的过去，我的未来，全然倾倒 在你脚 前。» (crop y=1370…1700). Aucune n'est une rangée d'accords. 2026-09-18 (itération 63)",
+ "extra_labels": [
+  {
+   "x": 805,
+   "y": 675,
+   "w": 94,
+   "h": 34,
+   "c": "DMaj7"
+  }
+ ],
+ "extra_labels_verified": "le « Dmaj7 » du 4e système (y=675) est gravé **collé au segno** : un seul amas 779…898. Encre mesurée colonne par colonne — segno 779…803, « Dmaj7 » 805…898 — et l'étiquette reposée sur la seule encre de l'accord, pour ne pas effacer le signe. 2026-09-18 (itération 63)",
+ "key_label": {
+  "x": 39,
+  "y": 80,
+  "w": 82,
+  "h": 30
+ },
+ "key_label_verified": "mesure measure-keylabel (ancrage sur le « = », cadre = voisin gauche…voisin droit), zoom relu à l’œil sur planche de lot, lettre gravée confrontée à printedKey, 2026-08-26 (itération 35)",
+ "verified": "planche navigateur (npm run jianpu:audit) relue tranche par tranche, 7/7, en A→Bb : les 7 rangées d'accords (y=203, 435, 675, 922, 1152, 1390, 1630) sont cadrées, les 41 étiquettes réécrites (EbMaj7 F Bbadd2 Dm G Cm Eb/F Bb) et le cadre « 1=A » devient « 1=Bb ». Le segno 𝄋 et le « D.S. al Fine » restent intacts, l'accord soudé au segno est réécrit à côté de lui. Un accord mal lu corrigé à l'œil : « C#m » (y=1152 x=386) publiait F#m. 2026-09-18 (itération 63)",
+ "frozen_labels": [
+  {
+   "x": 17,
+   "y": 203,
+   "w": 91,
+   "h": 31,
+   "c": "DMaj7"
+  },
+  {
+   "x": 253,
+   "y": 203,
+   "w": 16,
+   "h": 31,
+   "c": "E"
+  },
+  {
+   "x": 476,
+   "y": 203,
+   "w": 80,
+   "h": 31,
+   "c": "Aadd2"
+  },
+  {
+   "x": 785,
+   "y": 203,
+   "w": 91,
+   "h": 31,
+   "c": "DMaj7"
+  },
+  {
+   "x": 1037,
+   "y": 203,
+   "w": 16,
+   "h": 31,
+   "c": "E"
+  },
+  {
+   "x": 17,
+   "y": 435,
+   "w": 81,
+   "h": 35,
+   "c": "Aadd2"
+  },
+  {
+   "x": 365,
+   "y": 435,
+   "w": 91,
+   "h": 35,
+   "c": "DMaj7"
+  },
+  {
+   "x": 653,
+   "y": 435,
+   "w": 17,
+   "h": 35,
+   "c": "E"
+  },
+  {
+   "x": 801,
+   "y": 435,
+   "w": 37,
+   "h": 35,
+   "c": "C#"
+  },
+  {
+   "x": 1033,
+   "y": 435,
+   "w": 58,
+   "h": 35,
+   "c": "F#m"
+  },
+  {
+   "x": 29,
+   "y": 675,
+   "w": 21,
+   "h": 34,
+   "c": "D"
+  },
+  {
+   "x": 167,
+   "y": 675,
+   "w": 17,
+   "h": 34,
+   "c": "E"
+  },
+  {
+   "x": 398,
+   "y": 675,
+   "w": 20,
+   "h": 34,
+   "c": "A"
+  },
+  {
+   "x": 1023,
+   "y": 675,
+   "w": 16,
+   "h": 34,
+   "c": "E"
+  },
+  {
+   "x": 32,
+   "y": 922,
+   "w": 19,
+   "h": 27,
+   "c": "A"
+  },
+  {
+   "x": 127,
+   "y": 918,
+   "w": 58,
+   "h": 31,
+   "c": "F#m"
+  },
+  {
+   "x": 354,
+   "y": 922,
+   "w": 47,
+   "h": 27,
+   "c": "Bm"
+  },
+  {
+   "x": 512,
+   "y": 922,
+   "w": 53,
+   "h": 27,
+   "c": "D/E"
+  },
+  {
+   "x": 807,
+   "y": 922,
+   "w": 20,
+   "h": 27,
+   "c": "A"
+  },
+  {
+   "x": 17,
+   "y": 1152,
+   "w": 91,
+   "h": 37,
+   "c": "DMaj7"
+  },
+  {
+   "x": 197,
+   "y": 1152,
+   "w": 17,
+   "h": 37,
+   "c": "E"
+  },
+  {
+   "x": 386,
+   "y": 1152,
+   "w": 64,
+   "h": 37,
+   "c": "C#m"
+  },
+  {
+   "x": 488,
+   "y": 1152,
+   "w": 58,
+   "h": 37,
+   "c": "F#m"
+  },
+  {
+   "x": 690,
+   "y": 1152,
+   "w": 47,
+   "h": 37,
+   "c": "Bm"
+  },
+  {
+   "x": 835,
+   "y": 1152,
+   "w": 52,
+   "h": 37,
+   "c": "D/E"
+  },
+  {
+   "x": 1066,
+   "y": 1152,
+   "w": 20,
+   "h": 37,
+   "c": "A"
+  },
+  {
+   "x": 32,
+   "y": 1390,
+   "w": 21,
+   "h": 34,
+   "c": "D"
+  },
+  {
+   "x": 185,
+   "y": 1390,
+   "w": 16,
+   "h": 34,
+   "c": "E"
+  },
+  {
+   "x": 313,
+   "y": 1390,
+   "w": 64,
+   "h": 34,
+   "c": "C#m"
+  },
+  {
+   "x": 482,
+   "y": 1390,
+   "w": 31,
+   "h": 34,
+   "c": "F#"
+  },
+  {
+   "x": 640,
+   "y": 1390,
+   "w": 21,
+   "h": 34,
+   "c": "D"
+  },
+  {
+   "x": 790,
+   "y": 1390,
+   "w": 16,
+   "h": 34,
+   "c": "E"
+  },
+  {
+   "x": 989,
+   "y": 1390,
+   "w": 20,
+   "h": 34,
+   "c": "A"
+  },
+  {
+   "x": 32,
+   "y": 1630,
+   "w": 21,
+   "h": 34,
+   "c": "D"
+  },
+  {
+   "x": 185,
+   "y": 1630,
+   "w": 16,
+   "h": 34,
+   "c": "E"
+  },
+  {
+   "x": 319,
+   "y": 1630,
+   "w": 64,
+   "h": 34,
+   "c": "C#m"
+  },
+  {
+   "x": 484,
+   "y": 1630,
+   "w": 31,
+   "h": 34,
+   "c": "F#"
+  },
+  {
+   "x": 651,
+   "y": 1630,
+   "w": 21,
+   "h": 34,
+   "c": "D"
+  },
+  {
+   "x": 799,
+   "y": 1630,
+   "w": 17,
+   "h": 34,
+   "c": "E"
+  },
+  {
+   "x": 999,
+   "y": 1630,
+   "w": 20,
+   "h": 34,
+   "c": "A"
+  },
+  {
+   "x": 805,
+   "y": 675,
+   "w": 94,
+   "h": 34,
+   "c": "DMaj7"
+  }
+ ]
+}

@@ -1,0 +1,380 @@
+{
+ "slug": "荣耀至高神",
+ "printed_key": "D",
+ "printed_key_verified": "en-tête de la page lu à l'œil avant toute mesure (étape 0), lot des 50 简谱 fournis, 2026-09-18 (itération 63)",
+ "corrections": {
+  "227,271": "Bm7",
+  "227,1241": "A/C#",
+  "743,876": "D/F#",
+  "988,1060": "A/C#",
+  "988,1421": "Bm7",
+  "1266,923": "D/F#",
+  "1533,225": "G/A",
+  "1533,868": "D/F#",
+  "1778,939": "D/F#",
+  "2063,677": "D/F#"
+ },
+ "corrections_verified": "dix amas relus à l'œil sur la page à l'échelle 1:1 (tranches y=0-500, 480-1050, 1030-1620, 1600-2130, 2030-2316), dont trois modes C : les « Bm7 » de x=271 (1er système) et x=1421 (4e) étaient lus « Em7 », et le « G/A » de x=225 (6e) était lu « D/A ». Page en ré, .cho en ré (song_semitones=0). 2026-09-18 (itération 63)",
+ "not_labels": [
+  "988,262",
+  "988,393",
+  "1266,561",
+  "1778,439"
+ ],
+ "not_labels_verified": "le segno 𝄋 et le titre 【Chorus】 du 4e système, le coin du crochet de reprise ⌐1 du 5e (amas retenu à +0,22, qui aurait publié un faux « D »), et le 【Bridge】 du 7e. Aucun n'est un accord. 2026-09-18 (itération 63)",
+ "not_rows": [
+  371,
+  784,
+  1575
+ ],
+ "not_rows_verified": "371 : la rangée de chiffres du 1er système. 784 et 1575 : les coins des crochets de reprise ⌐1/⌐2, promus en rangées de deux amas. 2026-09-18 (itération 63)",
+ "extra_labels": [
+  {
+   "x": 63,
+   "y": 469,
+   "w": 65,
+   "h": 24,
+   "c": "Bm7"
+  },
+  {
+   "x": 412,
+   "y": 469,
+   "w": 55,
+   "h": 24,
+   "c": "D/A"
+  },
+  {
+   "x": 684,
+   "y": 469,
+   "w": 19,
+   "h": 24,
+   "c": "G"
+  },
+  {
+   "x": 1030,
+   "y": 492,
+   "w": 69,
+   "h": 24,
+   "c": "D/F#"
+  },
+  {
+   "x": 1414,
+   "y": 495,
+   "w": 62,
+   "h": 24,
+   "c": "Em7"
+  },
+  {
+   "x": 586,
+   "y": 1240,
+   "w": 20,
+   "h": 24,
+   "c": "G"
+  }
+ ],
+ "extra_labels_verified": "le 2e système entier, que le découpage n'isole pas (Bm7 D/A G D/F# Em7 — les deux derniers gravés 22 px plus bas, au-dessus du crochet), et le « G » du 5e système, gravé 26 px au-dessus de sa rangée pour laisser passer le crochet ⌐1. L'annotation [先低后高] n'est pas un accord et n'est pas republiée. Boîtes mesurées sur l'encre. 2026-09-18 (itération 63)",
+ "key_label": {
+  "x": 14,
+  "y": 166,
+  "w": 86,
+  "h": 26
+ },
+ "key_label_verified": "mesure measure-keylabel (ancrage sur le « = », cadre = voisin gauche…voisin droit), zoom relu à l’œil sur planche de lot, lettre gravée confrontée à printedKey, 2026-08-26 (itération 35)",
+ "verified": "planche navigateur (npm run jianpu:audit) relue tranche par tranche, 7/7, en D→Eb : les 8 rangées d'accords sont cadrées et les 42 étiquettes réécrites (36 lues + 6 extra_labels). Le cadre est bien posé sur « 1= D » et non sur la ligne de tempo ♩=76 (vérifié sur la tranche 1/7 : le cadre encadre « 1= D », la ligne de tempo reste au-dessus, hors cadre) et devient « 1=Eb ». Pas de mention « （X调） » au titre — measure-titlekey ne proposait que des morceaux du titre lui-même, et le « （2022） » est une année —, donc pas de title_key. Le 2e système entier, republié à la main, est cadré de bout en bout sur la tranche 2/7 (Bm7 D/A G D/F# Em7 → Cm7 Eb/Bb Ab Eb/G Fm7) : les deux derniers, gravés 22 px plus bas, sont bien à leur hauteur, et l'annotation [先低后高] reste hors cadre. Le « G » orphelin du 5e système, gravé au-dessus du crochet ⌐1, sort « Ab » à sa place (tranche 4/7). Contrôle au demi-ton étiquette par étiquette : D→Eb, Bm7→Cm7, Gmaj7→AbMaj7, A→Bb, A/C#→Bb/D, D/A→Eb/Bb, G→Ab, D/F#→Eb/G, Em7→Fm7, Asus4→Bbsus4, Am7→Bbm7, G/A→Ab/Bb — aucun accord identique en haut et en bas, aucun cadre orange, aucun accord sans cadre. Les trois modes C sont réparés : les deux « Bm7 » lus « Em7 » sortent Cm7, et le « G/A » lu « D/A » à +0,78 sort Ab/Bb. Les coins de crochets écartés ne publient aucun faux accord : rien n'est cadré au coin du ⌐1 du 5e système, et 【Chorus】 comme 【Bridge】 restent hors cadre. Contrôle mode D en plus de l'œil : bandes.py ne rend aucune bande nue qui s'apparie. 2026-09-18 (itération 63)",
+ "frozen_labels": [
+  {
+   "x": 69,
+   "y": 227,
+   "w": 18,
+   "h": 25,
+   "c": "D"
+  },
+  {
+   "x": 271,
+   "y": 227,
+   "w": 64,
+   "h": 25,
+   "c": "Bm7"
+  },
+  {
+   "x": 478,
+   "y": 227,
+   "w": 96,
+   "h": 25,
+   "c": "GMaj7"
+  },
+  {
+   "x": 696,
+   "y": 227,
+   "w": 19,
+   "h": 25,
+   "c": "A"
+  },
+  {
+   "x": 935,
+   "y": 227,
+   "w": 19,
+   "h": 25,
+   "c": "D"
+  },
+  {
+   "x": 1241,
+   "y": 227,
+   "w": 71,
+   "h": 25,
+   "c": "A/C#"
+  },
+  {
+   "x": 247,
+   "y": 743,
+   "w": 20,
+   "h": 28,
+   "c": "A"
+  },
+  {
+   "x": 526,
+   "y": 743,
+   "w": 20,
+   "h": 28,
+   "c": "G"
+  },
+  {
+   "x": 876,
+   "y": 743,
+   "w": 69,
+   "h": 28,
+   "c": "D/F#"
+  },
+  {
+   "x": 1256,
+   "y": 743,
+   "w": 63,
+   "h": 28,
+   "c": "Em7"
+  },
+  {
+   "x": 53,
+   "y": 988,
+   "w": 87,
+   "h": 34,
+   "c": "Asus4"
+  },
+  {
+   "x": 309,
+   "y": 988,
+   "w": 19,
+   "h": 34,
+   "c": "A"
+  },
+  {
+   "x": 694,
+   "y": 988,
+   "w": 19,
+   "h": 34,
+   "c": "D"
+  },
+  {
+   "x": 1060,
+   "y": 988,
+   "w": 73,
+   "h": 34,
+   "c": "A/C#"
+  },
+  {
+   "x": 1421,
+   "y": 988,
+   "w": 64,
+   "h": 34,
+   "c": "Bm7"
+  },
+  {
+   "x": 233,
+   "y": 1266,
+   "w": 68,
+   "h": 29,
+   "c": "Am7"
+  },
+  {
+   "x": 354,
+   "y": 1266,
+   "w": 18,
+   "h": 29,
+   "c": "D"
+  },
+  {
+   "x": 923,
+   "y": 1266,
+   "w": 69,
+   "h": 29,
+   "c": "D/F#"
+  },
+  {
+   "x": 1264,
+   "y": 1266,
+   "w": 63,
+   "h": 29,
+   "c": "Em7"
+  },
+  {
+   "x": 68,
+   "y": 1533,
+   "w": 19,
+   "h": 25,
+   "c": "A"
+  },
+  {
+   "x": 225,
+   "y": 1533,
+   "w": 57,
+   "h": 25,
+   "c": "G/A"
+  },
+  {
+   "x": 496,
+   "y": 1533,
+   "w": 19,
+   "h": 25,
+   "c": "G"
+  },
+  {
+   "x": 868,
+   "y": 1533,
+   "w": 69,
+   "h": 25,
+   "c": "D/F#"
+  },
+  {
+   "x": 1238,
+   "y": 1533,
+   "w": 63,
+   "h": 25,
+   "c": "Em7"
+  },
+  {
+   "x": 1408,
+   "y": 1533,
+   "w": 20,
+   "h": 25,
+   "c": "A"
+  },
+  {
+   "x": 70,
+   "y": 1778,
+   "w": 19,
+   "h": 32,
+   "c": "D"
+  },
+  {
+   "x": 597,
+   "y": 1778,
+   "w": 20,
+   "h": 32,
+   "c": "G"
+  },
+  {
+   "x": 939,
+   "y": 1778,
+   "w": 69,
+   "h": 32,
+   "c": "D/F#"
+  },
+  {
+   "x": 1247,
+   "y": 1778,
+   "w": 63,
+   "h": 32,
+   "c": "Em7"
+  },
+  {
+   "x": 1420,
+   "y": 1778,
+   "w": 19,
+   "h": 32,
+   "c": "A"
+  },
+  {
+   "x": 73,
+   "y": 2063,
+   "w": 19,
+   "h": 24,
+   "c": "D"
+  },
+  {
+   "x": 321,
+   "y": 2063,
+   "w": 19,
+   "h": 24,
+   "c": "G"
+  },
+  {
+   "x": 677,
+   "y": 2063,
+   "w": 68,
+   "h": 24,
+   "c": "D/F#"
+  },
+  {
+   "x": 983,
+   "y": 2063,
+   "w": 63,
+   "h": 24,
+   "c": "Em7"
+  },
+  {
+   "x": 1155,
+   "y": 2063,
+   "w": 20,
+   "h": 24,
+   "c": "A"
+  },
+  {
+   "x": 1344,
+   "y": 2063,
+   "w": 18,
+   "h": 24,
+   "c": "D"
+  },
+  {
+   "x": 63,
+   "y": 469,
+   "w": 65,
+   "h": 24,
+   "c": "Bm7"
+  },
+  {
+   "x": 412,
+   "y": 469,
+   "w": 55,
+   "h": 24,
+   "c": "D/A"
+  },
+  {
+   "x": 684,
+   "y": 469,
+   "w": 19,
+   "h": 24,
+   "c": "G"
+  },
+  {
+   "x": 1030,
+   "y": 492,
+   "w": 69,
+   "h": 24,
+   "c": "D/F#"
+  },
+  {
+   "x": 1414,
+   "y": 495,
+   "w": 62,
+   "h": 24,
+   "c": "Em7"
+  },
+  {
+   "x": 586,
+   "y": 1240,
+   "w": 20,
+   "h": 24,
+   "c": "G"
+  }
+ ]
+}

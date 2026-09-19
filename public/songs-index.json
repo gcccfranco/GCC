@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-14T08:25:14.570Z",
+  "generatedAt": "2026-09-19T11:13:13.231Z",
   "songs": [
     {
       "slug": "abba-pere",
@@ -66,7 +66,7 @@
         "adoration",
         "foi"
       ],
-      "youtubeUrl": null,
+      "youtubeUrl": "https://www.youtube.com/watch?v=jRNH-r8ltbg",
       "spotifyUrl": null,
       "appleMusicUrl": null,
       "hasJianpu": false,
@@ -213,7 +213,7 @@
       "recommendedKey": null,
       "tempo": 70,
       "themes": [],
-      "youtubeUrl": null,
+      "youtubeUrl": "https://www.youtube.com/watch?v=MP_0qHJW-Gw",
       "spotifyUrl": null,
       "appleMusicUrl": null,
       "hasJianpu": false,
@@ -1160,7 +1160,7 @@
         "adoration",
         "action-de-grace"
       ],
-      "youtubeUrl": null,
+      "youtubeUrl": "https://www.youtube.com/watch?v=3f-HiJOboi8",
       "spotifyUrl": null,
       "appleMusicUrl": null,
       "hasJianpu": false,
@@ -1395,7 +1395,7 @@
         "adoration",
         "resurrection"
       ],
-      "youtubeUrl": null,
+      "youtubeUrl": "https://www.youtube.com/watch?v=l7P0Q6qI7cw",
       "spotifyUrl": null,
       "appleMusicUrl": null,
       "hasJianpu": false,
@@ -2138,7 +2138,7 @@
         "adoration",
         "salut"
       ],
-      "youtubeUrl": null,
+      "youtubeUrl": "https://www.youtube.com/watch?v=hF4Smyek9zI",
       "spotifyUrl": null,
       "appleMusicUrl": null,
       "hasJianpu": false,
@@ -5904,7 +5904,7 @@
         "adoration",
         "engagement"
       ],
-      "youtubeUrl": null,
+      "youtubeUrl": "https://www.youtube.com/watch?v=vspHmEGzYI4",
       "spotifyUrl": null,
       "appleMusicUrl": null,
       "hasJianpu": false,
@@ -5955,7 +5955,7 @@
         "esperance",
         "adoration"
       ],
-      "youtubeUrl": null,
+      "youtubeUrl": "https://www.youtube.com/watch?v=kddtHCTLGgs",
       "spotifyUrl": null,
       "appleMusicUrl": null,
       "hasJianpu": false,
@@ -6993,7 +6993,7 @@
         "foi",
         "esperance"
       ],
-      "youtubeUrl": null,
+      "youtubeUrl": "https://www.youtube.com/watch?v=0aTLfEWuKUc",
       "spotifyUrl": null,
       "appleMusicUrl": null,
       "hasJianpu": false,
@@ -8605,7 +8605,7 @@
       "titlePinyin": "Qián lái jìng bài",
       "artist": "赞美之泉",
       "language": "zh",
-      "originalKey": "C",
+      "originalKey": "G",
       "recommendedKey": null,
       "tempo": 172,
       "themes": [],

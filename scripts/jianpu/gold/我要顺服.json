@@ -1,0 +1,382 @@
+{
+ "slug": "我要顺服",
+ "printed_key": "D",
+ "printed_key_verified": "en-tête de la page lu à l'œil avant toute mesure (étape 0), lot des 50 简谱 fournis, 2026-09-18 (itération 63)",
+ "corrections": {
+  "450,634": "Am",
+  "450,856": "A/G",
+  "648,206": "A/C#",
+  "648,558": "D/A",
+  "939,215": "A/C#",
+  "939,572": "D/A",
+  "1228,1101": "Am",
+  "1806,1101": "Am",
+  "2097,157": "A/G"
+ },
+ "corrections_verified": "neuf amas relus au zoom. Trois d'entre eux sont le piège du mode C : « Am » gravé (systèmes 1, 4 et 6) que le matcher lit « A/G » — sous le seuil ici, mais faux et plausible. Les six autres sont des lectures justes recalées sous le seuil (A/C#, D/A, A/G). Page en ré, .cho en ré (song_semitones 0). 2026-09-18 (itération 63)",
+ "not_rows": [
+  677,
+  1550
+ ],
+ "not_rows_verified": "deux rangées de liaisons seules (aucun caractère gravé) sous les systèmes 2 et 5, relues au zoom. 2026-09-18 (itération 63)",
+ "key_label": {
+  "x": 49,
+  "y": 272,
+  "w": 71,
+  "h": 26
+ },
+ "key_label_verified": "candidate #1 de measure-keylabel relue sur la planche (_kl) : cadre sur « 1=D » sans le 4/4 ; la candidate #2 était la ligne de tempo « ♩=74 », écartée. Lettre gravée D = printedKey D. 2026-09-18 (itération 63)",
+ "verified": "planche navigateur (npm run jianpu:audit) relue tranche par tranche, 7/7, en D→Eb : les sept rangées d'accords sont cadrées de rouge, les 50 étiquettes réécrites (D→Eb, F#m→Gm, Bm→Cm, Am→Bbm, D7→Eb7, G→Ab, A/G→Bb/Ab, Em→Fm, A→Bb, A/C#→Bb/D, D/A→Eb/Bb, G/A→Ab/Bb, A7→Bb7) et le cadre « 1=D » suit en « 1=Eb ». Le piège du mode C a été pris à l'œil avant publication : les trois « Am » des systèmes 1, 4 et 6, que le matcher lit « A/G », sortent bien « Bbm » et non « Bb/Ab ». Les liaisons et les barres de mesure restent intactes, la ligne de tempo ♩=74 aussi. Pas de mention « （X调） » dans le titre. 2026-09-18 (itération 63)",
+ "frozen_labels": [
+  {
+   "x": 129,
+   "y": 450,
+   "w": 15,
+   "h": 20,
+   "c": "D"
+  },
+  {
+   "x": 296,
+   "y": 450,
+   "w": 45,
+   "h": 20,
+   "c": "F#m"
+  },
+  {
+   "x": 458,
+   "y": 450,
+   "w": 34,
+   "h": 20,
+   "c": "Bm"
+  },
+  {
+   "x": 634,
+   "y": 450,
+   "w": 35,
+   "h": 20,
+   "c": "Am"
+  },
+  {
+   "x": 685,
+   "y": 450,
+   "w": 28,
+   "h": 20,
+   "c": "D7"
+  },
+  {
+   "x": 801,
+   "y": 450,
+   "w": 16,
+   "h": 20,
+   "c": "G"
+  },
+  {
+   "x": 856,
+   "y": 450,
+   "w": 41,
+   "h": 20,
+   "c": "A/G"
+  },
+  {
+   "x": 969,
+   "y": 450,
+   "w": 45,
+   "h": 20,
+   "c": "F#m"
+  },
+  {
+   "x": 1041,
+   "y": 450,
+   "w": 34,
+   "h": 20,
+   "c": "Bm"
+  },
+  {
+   "x": 1117,
+   "y": 450,
+   "w": 32,
+   "h": 20,
+   "c": "Em"
+  },
+  {
+   "x": 1308,
+   "y": 450,
+   "w": 13,
+   "h": 20,
+   "c": "A"
+  },
+  {
+   "x": 31,
+   "y": 648,
+   "w": 19,
+   "h": 24,
+   "c": "D"
+  },
+  {
+   "x": 206,
+   "y": 645,
+   "w": 67,
+   "h": 27,
+   "c": "A/C#"
+  },
+  {
+   "x": 382,
+   "y": 648,
+   "w": 41,
+   "h": 24,
+   "c": "Bm"
+  },
+  {
+   "x": 558,
+   "y": 648,
+   "w": 51,
+   "h": 24,
+   "c": "D/A"
+  },
+  {
+   "x": 738,
+   "y": 648,
+   "w": 20,
+   "h": 24,
+   "c": "G"
+  },
+  {
+   "x": 944,
+   "y": 648,
+   "w": 51,
+   "h": 24,
+   "c": "G/A"
+  },
+  {
+   "x": 1169,
+   "y": 648,
+   "w": 19,
+   "h": 24,
+   "c": "D"
+  },
+  {
+   "x": 31,
+   "y": 939,
+   "w": 19,
+   "h": 24,
+   "c": "D"
+  },
+  {
+   "x": 215,
+   "y": 935,
+   "w": 66,
+   "h": 28,
+   "c": "A/C#"
+  },
+  {
+   "x": 391,
+   "y": 939,
+   "w": 41,
+   "h": 24,
+   "c": "Bm"
+  },
+  {
+   "x": 572,
+   "y": 939,
+   "w": 50,
+   "h": 24,
+   "c": "D/A"
+  },
+  {
+   "x": 738,
+   "y": 939,
+   "w": 20,
+   "h": 24,
+   "c": "G"
+  },
+  {
+   "x": 921,
+   "y": 939,
+   "w": 50,
+   "h": 24,
+   "c": "G/A"
+  },
+  {
+   "x": 1090,
+   "y": 939,
+   "w": 18,
+   "h": 24,
+   "c": "D"
+  },
+  {
+   "x": 1186,
+   "y": 939,
+   "w": 51,
+   "h": 24,
+   "c": "G/A"
+  },
+  {
+   "x": 32,
+   "y": 1228,
+   "w": 18,
+   "h": 24,
+   "c": "D"
+  },
+  {
+   "x": 377,
+   "y": 1224,
+   "w": 54,
+   "h": 28,
+   "c": "F#m"
+  },
+  {
+   "x": 709,
+   "y": 1228,
+   "w": 41,
+   "h": 24,
+   "c": "Bm"
+  },
+  {
+   "x": 1101,
+   "y": 1228,
+   "w": 44,
+   "h": 24,
+   "c": "Am"
+  },
+  {
+   "x": 1200,
+   "y": 1228,
+   "w": 34,
+   "h": 24,
+   "c": "D7"
+  },
+  {
+   "x": 27,
+   "y": 1518,
+   "w": 19,
+   "h": 23,
+   "c": "G"
+  },
+  {
+   "x": 150,
+   "y": 1518,
+   "w": 51,
+   "h": 23,
+   "c": "A/G"
+  },
+  {
+   "x": 418,
+   "y": 1515,
+   "w": 55,
+   "h": 26,
+   "c": "F#m"
+  },
+  {
+   "x": 562,
+   "y": 1518,
+   "w": 41,
+   "h": 23,
+   "c": "Bm"
+  },
+  {
+   "x": 709,
+   "y": 1518,
+   "w": 39,
+   "h": 23,
+   "c": "Em"
+  },
+  {
+   "x": 1090,
+   "y": 1518,
+   "w": 50,
+   "h": 23,
+   "c": "G/A"
+  },
+  {
+   "x": 1205,
+   "y": 1518,
+   "w": 35,
+   "h": 23,
+   "c": "A7"
+  },
+  {
+   "x": 32,
+   "y": 1806,
+   "w": 18,
+   "h": 25,
+   "c": "D"
+  },
+  {
+   "x": 377,
+   "y": 1803,
+   "w": 54,
+   "h": 28,
+   "c": "F#m"
+  },
+  {
+   "x": 708,
+   "y": 1806,
+   "w": 41,
+   "h": 25,
+   "c": "Bm"
+  },
+  {
+   "x": 1101,
+   "y": 1806,
+   "w": 44,
+   "h": 25,
+   "c": "Am"
+  },
+  {
+   "x": 1200,
+   "y": 1806,
+   "w": 34,
+   "h": 25,
+   "c": "D7"
+  },
+  {
+   "x": 27,
+   "y": 2097,
+   "w": 19,
+   "h": 24,
+   "c": "G"
+  },
+  {
+   "x": 157,
+   "y": 2097,
+   "w": 51,
+   "h": 24,
+   "c": "A/G"
+  },
+  {
+   "x": 406,
+   "y": 2094,
+   "w": 54,
+   "h": 27,
+   "c": "F#m"
+  },
+  {
+   "x": 544,
+   "y": 2097,
+   "w": 41,
+   "h": 24,
+   "c": "Bm"
+  },
+  {
+   "x": 697,
+   "y": 2097,
+   "w": 39,
+   "h": 24,
+   "c": "Em"
+  },
+  {
+   "x": 930,
+   "y": 2097,
+   "w": 50,
+   "h": 24,
+   "c": "G/A"
+  },
+  {
+   "x": 1197,
+   "y": 2097,
+   "w": 18,
+   "h": 24,
+   "c": "D"
+  }
+ ]
+}

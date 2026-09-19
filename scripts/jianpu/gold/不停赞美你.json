@@ -1,0 +1,372 @@
+{
+ "slug": "不停赞美你",
+ "printed_key": "G",
+ "printed_key_verified": "en-tête de la page lu à l'œil avant toute mesure (étape 0), lot des 50 简谱 fournis, 2026-09-18 (itération 63)",
+ "corrections": {
+  "228,33": "Cmaj7",
+  "228,279": "D/C",
+  "228,1207": "C/D",
+  "228,1428": "Gmaj7",
+  "382,325": "Cmaj7",
+  "382,682": "D/C",
+  "597,341": "C/D",
+  "597,668": "G",
+  "597,942": "Gmaj7",
+  "597,1093": "Cmaj7",
+  "597,1394": "D/C",
+  "816,602": "Am",
+  "816,889": "C/D",
+  "816,1193": "Gmaj7",
+  "1022,98": "Cmaj7",
+  "1022,500": "D/C",
+  "1299,381": "C/D",
+  "1299,735": "Gmaj7",
+  "1534,945": "C",
+  "1795,75": "G",
+  "1996,66": "G",
+  "1996,683": "C/D",
+  "1996,1038": "G"
+ },
+ "corrections_verified": "25 amas relus au zoom (propose-extra --all, planches 1 et 2). Le matcher lisait « Bm7 » pour tous les Cmaj7 et Gmaj7 de la page — absents de son vocabulaire fermé — et « Em » pour un D/C : mode C sur 10 étiquettes. Page en sol, .cho en sol (song_semitones 0). 2026-09-18 (itération 63)",
+ "extra_chords": [
+  "Am",
+  "Cmaj7",
+  "Gmaj7"
+ ],
+ "extra_chords_verified": "trois accords gravés absents du .cho : Cmaj7 (7 fois), Gmaj7 (6 fois) et le Am du 4e système. Relus au zoom un par un. 2026-09-18 (itération 63)",
+ "not_labels": [
+  "1022,249",
+  "1534,35",
+  "1534,382",
+  "1534,612",
+  "1534,770",
+  "1795,1190",
+  "1795,1239"
+ ],
+ "not_labels_verified": "amas qui ne sont pas des accords dans des rangées d'accords : 【Chorus】, 【Bridge】, une barre de mesure et les deux traits du crochet de reprise « 1. ». S'y ajoutent les deux amas du 7e système (« C/D » et « Gmaj7 ») : leur bande descend jusqu'au filet du crochet « 2. », et la boîte de la rangée effaçait ce filet et son chiffre (vu à la planche navigateur, tranche 5/6) ; ils sont republiés en extra_labels sur leur encre propre. 2026-09-18 (itération 63)",
+ "not_rows": [
+  2032
+ ],
+ "not_rows_verified": "rangée du crochet de reprise final et de la mention « To Chorus » (zooms #26 et #27) : aucun accord. 2026-09-18 (itération 63)",
+ "extra_labels": [
+  {
+   "x": 1220,
+   "y": 1763,
+   "w": 54,
+   "h": 33,
+   "c": "C/D"
+  },
+  {
+   "x": 56,
+   "y": 1531,
+   "w": 54,
+   "h": 33,
+   "c": "C/D"
+  },
+  {
+   "x": 382,
+   "y": 1534,
+   "w": 97,
+   "h": 31,
+   "c": "Gmaj7"
+  }
+ ],
+ "extra_labels_verified": "le C/D du 8e système est gravé 30 px au-dessus de sa rangée (il coiffe le crochet de reprise « 1. ») : aucune bande ne le porte, read() ne le voit pas ; boîte mesurée sur son encre propre (x 1220–1273, y 1763–1795). S'y ajoutent le C/D et le Gmaj7 du 7e système, repris sur leur encre (y 1531–1563 et 1534–1564) pour ne plus effacer le filet du crochet « 2. » qui court sous eux. 2026-09-18 (itération 63)",
+ "key_label": {
+  "x": 14,
+  "y": 167,
+  "w": 85,
+  "h": 27
+ },
+ "key_label_verified": "candidate #2 de measure-keylabel relue sur la planche : cadre sur « 1= G » (l'espace est dans la gravure) sans le 4/4 ; la candidate #1 était la ligne de tempo « ♩= 146 », écartée. Lettre gravée G = printedKey G, donc pas de key_label.c. 2026-09-18 (itération 63)",
+ "verified": "planche navigateur (npm run jianpu:audit) relue tranche par tranche, 6/6, en G→Ab : les neuf rangées d'accords sont cadrées de rouge, les 41 étiquettes réécrites (Cmaj7→Dbmaj7, Gmaj7→Abmaj7, D/C→Eb/Db, C/D→Db/Eb, Bm7→Cm7, Em→Fm, Am7→Bbm7, Am→Bbm, G→Ab, C→Db, D→Eb) et le cadre « 1= G » suit en « 1=Ab ». Les Cmaj7 et Gmaj7, absents du .cho, publiaient tous « Bm7 » avant relecture : c'était le mode C sur dix étiquettes. Le C/D du 8e système, que read() ne voyait pas (aucune bande ne le porte), est publié en extra_label — sans lui le système serait resté en sol. Un défaut vu à l'œil et corrigé : au 7e système, la bande descend jusqu'au filet du crochet « 2. » et les boîtes de C/D et Gmaj7 effaçaient ce filet et son chiffre ; reprises sur leur encre, la planche 5/6 est propre. 【Chorus】, 【Bridge】, « To Chorus », « Fine », les crochets de reprise et la ligne de tempo ♩=146 restent intacts. Pas de mention « （X调） » dans le titre. 2026-09-18 (itération 63)",
+ "frozen_labels": [
+  {
+   "x": 33,
+   "y": 228,
+   "w": 92,
+   "h": 32,
+   "c": "Cmaj7"
+  },
+  {
+   "x": 279,
+   "y": 228,
+   "w": 54,
+   "h": 32,
+   "c": "D/C"
+  },
+  {
+   "x": 523,
+   "y": 228,
+   "w": 65,
+   "h": 32,
+   "c": "Bm7"
+  },
+  {
+   "x": 767,
+   "y": 228,
+   "w": 43,
+   "h": 32,
+   "c": "Em"
+  },
+  {
+   "x": 962,
+   "y": 228,
+   "w": 67,
+   "h": 32,
+   "c": "Am7"
+  },
+  {
+   "x": 1207,
+   "y": 228,
+   "w": 54,
+   "h": 32,
+   "c": "C/D"
+  },
+  {
+   "x": 1428,
+   "y": 228,
+   "w": 96,
+   "h": 32,
+   "c": "Gmaj7"
+  },
+  {
+   "x": 325,
+   "y": 382,
+   "w": 92,
+   "h": 30,
+   "c": "Cmaj7"
+  },
+  {
+   "x": 682,
+   "y": 382,
+   "w": 54,
+   "h": 30,
+   "c": "D/C"
+  },
+  {
+   "x": 938,
+   "y": 382,
+   "w": 65,
+   "h": 30,
+   "c": "Bm7"
+  },
+  {
+   "x": 1296,
+   "y": 382,
+   "w": 43,
+   "h": 30,
+   "c": "Em"
+  },
+  {
+   "x": 48,
+   "y": 597,
+   "w": 67,
+   "h": 33,
+   "c": "Am7"
+  },
+  {
+   "x": 341,
+   "y": 597,
+   "w": 54,
+   "h": 33,
+   "c": "C/D"
+  },
+  {
+   "x": 668,
+   "y": 597,
+   "w": 20,
+   "h": 33,
+   "c": "G"
+  },
+  {
+   "x": 942,
+   "y": 597,
+   "w": 96,
+   "h": 33,
+   "c": "Gmaj7"
+  },
+  {
+   "x": 1093,
+   "y": 597,
+   "w": 92,
+   "h": 33,
+   "c": "Cmaj7"
+  },
+  {
+   "x": 1394,
+   "y": 597,
+   "w": 54,
+   "h": 33,
+   "c": "D/C"
+  },
+  {
+   "x": 48,
+   "y": 816,
+   "w": 65,
+   "h": 29,
+   "c": "Bm7"
+  },
+  {
+   "x": 344,
+   "y": 816,
+   "w": 43,
+   "h": 29,
+   "c": "Em"
+  },
+  {
+   "x": 602,
+   "y": 816,
+   "w": 48,
+   "h": 29,
+   "c": "Am"
+  },
+  {
+   "x": 889,
+   "y": 816,
+   "w": 54,
+   "h": 29,
+   "c": "C/D"
+  },
+  {
+   "x": 1193,
+   "y": 816,
+   "w": 96,
+   "h": 29,
+   "c": "Gmaj7"
+  },
+  {
+   "x": 98,
+   "y": 1022,
+   "w": 92,
+   "h": 36,
+   "c": "Cmaj7"
+  },
+  {
+   "x": 500,
+   "y": 1022,
+   "w": 54,
+   "h": 36,
+   "c": "D/C"
+  },
+  {
+   "x": 839,
+   "y": 1022,
+   "w": 65,
+   "h": 36,
+   "c": "Bm7"
+  },
+  {
+   "x": 1236,
+   "y": 1022,
+   "w": 43,
+   "h": 36,
+   "c": "Em"
+  },
+  {
+   "x": 58,
+   "y": 1299,
+   "w": 67,
+   "h": 25,
+   "c": "Am7"
+  },
+  {
+   "x": 381,
+   "y": 1299,
+   "w": 54,
+   "h": 25,
+   "c": "C/D"
+  },
+  {
+   "x": 735,
+   "y": 1299,
+   "w": 96,
+   "h": 25,
+   "c": "Gmaj7"
+  },
+  {
+   "x": 1280,
+   "y": 1299,
+   "w": 67,
+   "h": 25,
+   "c": "Am7"
+  },
+  {
+   "x": 945,
+   "y": 1534,
+   "w": 17,
+   "h": 55,
+   "c": "C"
+  },
+  {
+   "x": 1299,
+   "y": 1534,
+   "w": 19,
+   "h": 55,
+   "c": "D"
+  },
+  {
+   "x": 75,
+   "y": 1795,
+   "w": 19,
+   "h": 24,
+   "c": "G"
+  },
+  {
+   "x": 472,
+   "y": 1795,
+   "w": 43,
+   "h": 24,
+   "c": "Em"
+  },
+  {
+   "x": 852,
+   "y": 1795,
+   "w": 17,
+   "h": 24,
+   "c": "C"
+  },
+  {
+   "x": 66,
+   "y": 1996,
+   "w": 19,
+   "h": 24,
+   "c": "G"
+  },
+  {
+   "x": 683,
+   "y": 1996,
+   "w": 54,
+   "h": 24,
+   "c": "C/D"
+  },
+  {
+   "x": 1038,
+   "y": 1996,
+   "w": 20,
+   "h": 24,
+   "c": "G"
+  },
+  {
+   "x": 1220,
+   "y": 1763,
+   "w": 54,
+   "h": 33,
+   "c": "C/D"
+  },
+  {
+   "x": 56,
+   "y": 1531,
+   "w": 54,
+   "h": 33,
+   "c": "C/D"
+  },
+  {
+   "x": 382,
+   "y": 1534,
+   "w": 97,
+   "h": 31,
+   "c": "Gmaj7"
+  }
+ ]
+}

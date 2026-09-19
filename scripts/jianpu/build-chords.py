@@ -772,23 +772,35 @@ def build(slug: str):
 
 def main() -> int:
     inventaire = json.load(open(INVENTAIRE, encoding="utf8"))
-    out = {}
+    dest = os.path.join(IMAGES, "chords.json")
+    # Le corpus passé à 185 pages, un tour complet coûte une demi-minute, et
+    # la boucle en demande plusieurs par page travaillée. Nommer les chants
+    # ne reconstruit que ceux-là et laisse les autres entrées telles quelles
+    # — une page qui ne publie plus est retirée, sinon le calque d'avant
+    # survivrait à la retouche qui vient de l'invalider.
+    cibles = [a for a in sys.argv[1:] if not a.startswith("-")]
+    if cibles:
+        out = json.load(open(dest, encoding="utf8")) if os.path.exists(dest) else {}
+        inventaire = [i for i in inventaire if i["slug"] in cibles]
+    else:
+        out = {}
     for item in inventaire:
         slug = item["slug"]
         entry, note = build(slug)
         if entry:
             out[slug] = entry
             print(f"  {slug:16} {note}")
-        elif note.endswith("non publiée"):
+        else:
+            out.pop(slug, None)
+        if not entry and note.endswith("non publiée"):
             # Une page **retenue** se dit, sinon la garde du mode D ne fait
             # que déplacer le silence : la page disparaîtrait du calque sans
             # que rien n'apprenne pourquoi.
             print(f"  {slug:16} ⚠ {note}")
 
-    dest = os.path.join(IMAGES, "chords.json")
     with open(dest, "w", encoding="utf8") as fh:
         json.dump(out, fh, ensure_ascii=False, indent=0, sort_keys=True)
-    print(f"✓ {len(out)}/{len(inventaire)} chant(s) avec calque → public/jianpu/chords.json")
+    print(f"✓ {len(out)} chant(s) avec calque → public/jianpu/chords.json")
     return 0
 
 

@@ -1,0 +1,381 @@
+{
+ "slug": "前来敬拜",
+ "printed_key": "G",
+ "printed_key_verified": "en-tête de la page lu à l'œil avant toute mesure (étape 0), lot des 50 简谱 fournis, 2026-09-18 (itération 63)",
+ "source": "la page était bloquée par une coquille du `.cho`, pas par sa gravure : `{key: C}` sur un jeu d'accords de sol majeur (G D C Em Am G/B, ré **majeur** et aucun fa), corrigé en `{key: G}` le 18/09/2026 — la planche grave « 1=G » sur exactement ces accords. `song_semitones` passe de 7 à 0 et la lecture redevient normale.",
+ "not_rows": [
+  235,
+  446,
+  557,
+  1190
+ ],
+ "not_rows_verified": "quatre rangées promues à tort : deux rangées de hampes et d'arcs (235, 446), la rangée de paroles du 2e système (557) et celle du 6e (1190, « 能力权柄归于你。你是配得… », 13 amas de hanzi lus comme des accords). Bandes rendues et regardées une par une.",
+ "not_labels": [
+  "621,401",
+  "621,1209"
+ ],
+ "not_labels_verified": "le segno 𝄋 du 3e système, isolé en amas et lu « D », et un sommet d'arc à droite de la même rangée.",
+ "extra_labels": [
+  {
+   "x": 14,
+   "y": 1266,
+   "w": 54,
+   "h": 24,
+   "c": "Am"
+  },
+  {
+   "x": 212,
+   "y": 1266,
+   "w": 25,
+   "h": 24,
+   "c": "D"
+  },
+  {
+   "x": 411,
+   "y": 1266,
+   "w": 24,
+   "h": 25,
+   "c": "G"
+  },
+  {
+   "x": 725,
+   "y": 1266,
+   "w": 24,
+   "h": 25,
+   "c": "G"
+  },
+  {
+   "x": 924,
+   "y": 1266,
+   "w": 25,
+   "h": 24,
+   "c": "D"
+  },
+  {
+   "x": 1065,
+   "y": 1266,
+   "w": 50,
+   "h": 24,
+   "c": "Em"
+  },
+  {
+   "x": 17,
+   "y": 1686,
+   "w": 50,
+   "h": 23,
+   "c": "Em"
+  },
+  {
+   "x": 377,
+   "y": 1686,
+   "w": 22,
+   "h": 24,
+   "c": "C"
+  },
+  {
+   "x": 573,
+   "y": 1686,
+   "w": 24,
+   "h": 24,
+   "c": "G"
+  },
+  {
+   "x": 722,
+   "y": 1686,
+   "w": 54,
+   "h": 23,
+   "c": "Am"
+  },
+  {
+   "x": 887,
+   "y": 1686,
+   "w": 25,
+   "h": 23,
+   "c": "D"
+  },
+  {
+   "x": 1123,
+   "y": 1686,
+   "w": 24,
+   "h": 24,
+   "c": "G"
+  }
+ ],
+ "extra_labels_verified": "les rangées d'accords des 6e et 8e systèmes, qu'aucune bande n'isole — trouvées en comptant les systèmes de la page (8) contre les rangées que `read()` rend (6 utiles). Lues sur la bande rendue avec une règle en pixels, boîtes mesurées sur l'encre des seules lettres (fenêtres 1255-1300 et 1686-1712, les arcs et le « D.S. » exclus). Page en sol comme le .cho : rien à transposer avant d'écrire. 2026-09-18 (itération 63)",
+ "key_label": {
+  "x": 39,
+  "y": 83,
+  "w": 82,
+  "h": 30
+ },
+ "key_label_verified": "mesure measure-keylabel (ancrage sur le « = », cadre = voisin gauche…voisin droit), zoom relu à l’œil sur planche de lot, lettre gravée confrontée à printedKey, 2026-08-26 (itération 35)",
+ "verified": "planche navigateur (npm run jianpu:audit) relue tranche par tranche, 7/7, en G→Ab : les 8 systèmes sont cadrés et les 38 étiquettes réécrites (G→Ab, C→Db, D→Eb, Em→Fm, Am→Bbm, G/B→Ab/C), le cadre « 1=G » devient « 1=Ab ». Le segno 𝄋 du 3e système et le « D.S. » du dernier restent intacts. Les rangées d'accords des 6e et 8e systèmes, qu'aucune bande n'isole, sont posées à la main et tombent juste au-dessus de leurs chiffres. 2026-09-18 (itération 63)",
+ "frozen_labels": [
+  {
+   "x": 221,
+   "y": 207,
+   "w": 22,
+   "h": 24,
+   "c": "G"
+  },
+  {
+   "x": 558,
+   "y": 207,
+   "w": 21,
+   "h": 24,
+   "c": "C"
+  },
+  {
+   "x": 899,
+   "y": 207,
+   "w": 21,
+   "h": 24,
+   "c": "D"
+  },
+  {
+   "x": 29,
+   "y": 417,
+   "w": 22,
+   "h": 25,
+   "c": "G"
+  },
+  {
+   "x": 378,
+   "y": 417,
+   "w": 22,
+   "h": 25,
+   "c": "G"
+  },
+  {
+   "x": 730,
+   "y": 417,
+   "w": 21,
+   "h": 25,
+   "c": "C"
+  },
+  {
+   "x": 1083,
+   "y": 417,
+   "w": 20,
+   "h": 25,
+   "c": "D"
+  },
+  {
+   "x": 274,
+   "y": 621,
+   "w": 22,
+   "h": 39,
+   "c": "G"
+  },
+  {
+   "x": 640,
+   "y": 621,
+   "w": 22,
+   "h": 39,
+   "c": "G"
+  },
+  {
+   "x": 800,
+   "y": 621,
+   "w": 21,
+   "h": 39,
+   "c": "D"
+  },
+  {
+   "x": 1037,
+   "y": 621,
+   "w": 45,
+   "h": 39,
+   "c": "Em"
+  },
+  {
+   "x": 260,
+   "y": 840,
+   "w": 21,
+   "h": 25,
+   "c": "C"
+  },
+  {
+   "x": 477,
+   "y": 840,
+   "w": 22,
+   "h": 25,
+   "c": "G"
+  },
+  {
+   "x": 638,
+   "y": 840,
+   "w": 49,
+   "h": 25,
+   "c": "Am"
+  },
+  {
+   "x": 872,
+   "y": 840,
+   "w": 21,
+   "h": 25,
+   "c": "D"
+  },
+  {
+   "x": 1102,
+   "y": 840,
+   "w": 22,
+   "h": 25,
+   "c": "G"
+  },
+  {
+   "x": 33,
+   "y": 1051,
+   "w": 21,
+   "h": 24,
+   "c": "D"
+  },
+  {
+   "x": 279,
+   "y": 1051,
+   "w": 44,
+   "h": 24,
+   "c": "Em"
+  },
+  {
+   "x": 763,
+   "y": 1051,
+   "w": 21,
+   "h": 24,
+   "c": "C"
+  },
+  {
+   "x": 999,
+   "y": 1051,
+   "w": 57,
+   "h": 24,
+   "c": "G/B"
+  },
+  {
+   "x": 184,
+   "y": 1473,
+   "w": 21,
+   "h": 25,
+   "c": "C"
+  },
+  {
+   "x": 381,
+   "y": 1473,
+   "w": 22,
+   "h": 25,
+   "c": "G"
+  },
+  {
+   "x": 524,
+   "y": 1473,
+   "w": 49,
+   "h": 25,
+   "c": "Am"
+  },
+  {
+   "x": 773,
+   "y": 1473,
+   "w": 21,
+   "h": 25,
+   "c": "D"
+  },
+  {
+   "x": 925,
+   "y": 1473,
+   "w": 22,
+   "h": 25,
+   "c": "G"
+  },
+  {
+   "x": 1127,
+   "y": 1473,
+   "w": 20,
+   "h": 25,
+   "c": "D"
+  },
+  {
+   "x": 14,
+   "y": 1266,
+   "w": 54,
+   "h": 24,
+   "c": "Am"
+  },
+  {
+   "x": 212,
+   "y": 1266,
+   "w": 25,
+   "h": 24,
+   "c": "D"
+  },
+  {
+   "x": 411,
+   "y": 1266,
+   "w": 24,
+   "h": 25,
+   "c": "G"
+  },
+  {
+   "x": 725,
+   "y": 1266,
+   "w": 24,
+   "h": 25,
+   "c": "G"
+  },
+  {
+   "x": 924,
+   "y": 1266,
+   "w": 25,
+   "h": 24,
+   "c": "D"
+  },
+  {
+   "x": 1065,
+   "y": 1266,
+   "w": 50,
+   "h": 24,
+   "c": "Em"
+  },
+  {
+   "x": 17,
+   "y": 1686,
+   "w": 50,
+   "h": 23,
+   "c": "Em"
+  },
+  {
+   "x": 377,
+   "y": 1686,
+   "w": 22,
+   "h": 24,
+   "c": "C"
+  },
+  {
+   "x": 573,
+   "y": 1686,
+   "w": 24,
+   "h": 24,
+   "c": "G"
+  },
+  {
+   "x": 722,
+   "y": 1686,
+   "w": 54,
+   "h": 23,
+   "c": "Am"
+  },
+  {
+   "x": 887,
+   "y": 1686,
+   "w": 25,
+   "h": 23,
+   "c": "D"
+  },
+  {
+   "x": 1123,
+   "y": 1686,
+   "w": 24,
+   "h": 24,
+   "c": "G"
+  }
+ ]
+}

@@ -1,0 +1,335 @@
+{
+ "slug": "主你是我力量",
+ "printed_key": "G",
+ "printed_key_verified": "en-tête de la page lu à l'œil avant toute mesure (étape 0), lot des 50 简谱 fournis, 2026-09-18 (itération 63)",
+ "extra_chords": [
+  "Cm",
+  "D/F#",
+  "G/D"
+ ],
+ "extra_chords_verified": "trois accords gravés que le .cho n'écrit pas : « D/F# » (5 fois), « G/D » (4 fois) et « Cm » (fin de l'intro, sur un ♭6) — tous relus au zoom. Sans eux le matcher publiait « G/B » sur les « G/D » (mode C, retenu à +0,47 sur la rangée d'intro). Page en sol, .cho en sol (song_semitones = 0). 2026-09-18 (itération 63)",
+ "not_labels": [
+  "922,1110"
+ ],
+ "not_labels_verified": "922,1110 est la patte gauche du crochet de triolet qui suit « Am », large de 2 px — pas une étiquette. 2026-09-18 (itération 63)",
+ "corrections": {
+  "431,198": "G",
+  "431,331": "D/F#",
+  "431,692": "G/D",
+  "633,772": "G/D",
+  "922,621": "G/B",
+  "1212,22": "G",
+  "1212,1190": "G/D",
+  "1795,289": "G/D",
+  "1795,841": "C/D",
+  "1795,1088": "G"
+ },
+ "corrections_verified": "les 31 amas des cinq rangées lues relus un à un sur les bandes d'encre (band 424 · 625 · 915 · 1205 · 1790) ; dix restaient sous le seuil ou faux. Le piège de la page : elle grave « G/D » quatre fois et « G/B » une seule (y=922), et le matcher, avant extra_chords, publiait « G/B » sur le « G/D » de l'intro — retenu à +0,47, donc un accord faux sur la page. Page en sol, .cho en sol (song_semitones = 0). 2026-09-18 (itération 63)",
+ "extra_labels": [
+  {
+   "x": 24,
+   "y": 1505,
+   "w": 19,
+   "h": 24,
+   "c": "C"
+  },
+  {
+   "x": 269,
+   "y": 1505,
+   "w": 47,
+   "h": 24,
+   "c": "Am"
+  },
+  {
+   "x": 491,
+   "y": 1505,
+   "w": 52,
+   "h": 24,
+   "c": "C/D"
+  },
+  {
+   "x": 742,
+   "y": 1505,
+   "w": 21,
+   "h": 24,
+   "c": "D"
+  },
+  {
+   "x": 970,
+   "y": 1505,
+   "w": 23,
+   "h": 24,
+   "c": "G"
+  },
+  {
+   "x": 1184,
+   "y": 1496,
+   "w": 67,
+   "h": 33,
+   "c": "D/F#"
+  }
+ ],
+ "extra_labels_verified": "la rangée d'accords y=1505 (« C Am C/D D G D/F# », système « 固磐石，我信靠祢必不动摇。主祢是我力量，主祢是 ») n'a jamais été isolée par le classifieur — mode D, trouvée en comparant la page aux cinq rangées lues ; cadres mesurés sur l'encre, celui de « D/F# » remonté à y=1496 pour couvrir le dièse. 2026-09-18 (itération 63)",
+ "key_label": {
+  "x": 46,
+  "y": 272,
+  "w": 71,
+  "h": 27
+ },
+ "key_label_verified": "cadre « 1=G » mesuré à la main sur l'encre (« 1 » x=46..53, « =G » jusqu'à x=116, y=272..298) ; le « 4/4 » commence à x=141 et reste dehors. measure-keylabel ne propose rien sur cette page. Lettre gravée G = printed_key G. 2026-09-18 (itération 63)",
+ "verified": "planche navigateur (npm run jianpu:audit) relue tranche par tranche, 6/6, en G→Ab : les 6 rangées d'accords sont cadrées et les 36 étiquettes réécrites (30 lues, dont 10 corrigées, + 6 hors rangées). La rangée y=1505 (« C Am C/D D G D/F# ») manquait entièrement (mode D) et est publiée. Le défaut que l'œil a attrapé : la page grave « G/D » quatre fois et « G/B » une seule, et le matcher — vocabulaire du .cho, qui ignore G/D — publiait « G/B » sur le G/D de l'intro, retenu à +0,47 (mode C) ; extra_chords (Cm, D/F#, G/D) plus dix corrections règlent les 31 amas. Arcs, crochet de triolet et barres de mesure intacts ; le cadre « 1=G » suit en « 1=Ab ». Pas de mention « （X调） » au titre. 2026-09-18 (itération 63)",
+ "frozen_labels": [
+  {
+   "x": 198,
+   "y": 431,
+   "w": 30,
+   "h": 26,
+   "c": "G"
+  },
+  {
+   "x": 331,
+   "y": 428,
+   "w": 57,
+   "h": 29,
+   "c": "D/F#"
+  },
+  {
+   "x": 555,
+   "y": 431,
+   "w": 35,
+   "h": 26,
+   "c": "Em"
+  },
+  {
+   "x": 692,
+   "y": 431,
+   "w": 50,
+   "h": 26,
+   "c": "G/D"
+  },
+  {
+   "x": 932,
+   "y": 431,
+   "w": 16,
+   "h": 26,
+   "c": "C"
+  },
+  {
+   "x": 1262,
+   "y": 431,
+   "w": 38,
+   "h": 26,
+   "c": "Cm"
+  },
+  {
+   "x": 27,
+   "y": 633,
+   "w": 16,
+   "h": 27,
+   "c": "D"
+  },
+  {
+   "x": 353,
+   "y": 633,
+   "w": 21,
+   "h": 27,
+   "c": "G"
+  },
+  {
+   "x": 443,
+   "y": 629,
+   "w": 64,
+   "h": 31,
+   "c": "D/F#"
+  },
+  {
+   "x": 675,
+   "y": 633,
+   "w": 40,
+   "h": 27,
+   "c": "Em"
+  },
+  {
+   "x": 772,
+   "y": 633,
+   "w": 57,
+   "h": 27,
+   "c": "G/D"
+  },
+  {
+   "x": 1017,
+   "y": 633,
+   "w": 18,
+   "h": 27,
+   "c": "C"
+  },
+  {
+   "x": 1217,
+   "y": 633,
+   "w": 18,
+   "h": 27,
+   "c": "D"
+  },
+  {
+   "x": 23,
+   "y": 922,
+   "w": 21,
+   "h": 24,
+   "c": "G"
+  },
+  {
+   "x": 298,
+   "y": 922,
+   "w": 19,
+   "h": 24,
+   "c": "C"
+  },
+  {
+   "x": 621,
+   "y": 922,
+   "w": 55,
+   "h": 24,
+   "c": "G/B"
+  },
+  {
+   "x": 783,
+   "y": 922,
+   "w": 40,
+   "h": 24,
+   "c": "Em"
+  },
+  {
+   "x": 1026,
+   "y": 922,
+   "w": 44,
+   "h": 24,
+   "c": "Am"
+  },
+  {
+   "x": 1202,
+   "y": 922,
+   "w": 51,
+   "h": 24,
+   "c": "C/D"
+  },
+  {
+   "x": 22,
+   "y": 1212,
+   "w": 20,
+   "h": 26,
+   "c": "G"
+  },
+  {
+   "x": 144,
+   "y": 1212,
+   "w": 52,
+   "h": 26,
+   "c": "C/D"
+  },
+  {
+   "x": 418,
+   "y": 1212,
+   "w": 21,
+   "h": 26,
+   "c": "G"
+  },
+  {
+   "x": 668,
+   "y": 1209,
+   "w": 64,
+   "h": 29,
+   "c": "D/F#"
+  },
+  {
+   "x": 933,
+   "y": 1212,
+   "w": 40,
+   "h": 26,
+   "c": "Em"
+  },
+  {
+   "x": 1190,
+   "y": 1212,
+   "w": 56,
+   "h": 26,
+   "c": "G/D"
+  },
+  {
+   "x": 13,
+   "y": 1795,
+   "w": 40,
+   "h": 24,
+   "c": "Em"
+  },
+  {
+   "x": 289,
+   "y": 1795,
+   "w": 57,
+   "h": 24,
+   "c": "G/D"
+  },
+  {
+   "x": 545,
+   "y": 1795,
+   "w": 19,
+   "h": 24,
+   "c": "C"
+  },
+  {
+   "x": 841,
+   "y": 1795,
+   "w": 52,
+   "h": 24,
+   "c": "C/D"
+  },
+  {
+   "x": 1088,
+   "y": 1795,
+   "w": 20,
+   "h": 24,
+   "c": "G"
+  },
+  {
+   "x": 24,
+   "y": 1505,
+   "w": 19,
+   "h": 24,
+   "c": "C"
+  },
+  {
+   "x": 269,
+   "y": 1505,
+   "w": 47,
+   "h": 24,
+   "c": "Am"
+  },
+  {
+   "x": 491,
+   "y": 1505,
+   "w": 52,
+   "h": 24,
+   "c": "C/D"
+  },
+  {
+   "x": 742,
+   "y": 1505,
+   "w": 21,
+   "h": 24,
+   "c": "D"
+  },
+  {
+   "x": 970,
+   "y": 1505,
+   "w": 23,
+   "h": 24,
+   "c": "G"
+  },
+  {
+   "x": 1184,
+   "y": 1496,
+   "w": 67,
+   "h": 33,
+   "c": "D/F#"
+  }
+ ]
+}

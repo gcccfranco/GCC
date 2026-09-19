@@ -1,0 +1,319 @@
+{
+ "slug": "我需要有你在我生命中",
+ "printed_key": "C",
+ "printed_key_verified": "en-tête de la page lu à l'œil avant toute mesure (étape 0), lot des 50 简谱 fournis, 2026-09-18 (itération 63)",
+ "corrections": {
+  "327,158": "C",
+  "327,355": "G/B",
+  "327,918": "Bb/G",
+  "327,1024": "C/G",
+  "327,1356": "G/F",
+  "703,574": "F",
+  "703,824": "G/F",
+  "1383,280": "Bb/C",
+  "1383,605": "F",
+  "1383,800": "G/F",
+  "1707,365": "G",
+  "1707,648": "Cmaj7",
+  "1707,844": "Bb/C",
+  "1707,1331": "G/F",
+  "2019,920": "G",
+  "1065,412": "Dm/C",
+  "1065,789": "F/G",
+  "1065,1342": "Dm/C"
+ },
+ "corrections_verified": "amas relus un par un au zoom (propose-extra --all --hidden), convention du .cho (song_semitones=0), 2026-09-18 (itération 63) · « Cmaj7 » lu « Fmaj7 » et « Bb/C » lu « Cmaj7 » / « Gm7 » (mode C)",
+ "not_rows": [
+  1121
+ ],
+ "not_labels": [
+  "1383,417"
+ ],
+ "extra_chords": [
+  "Bb",
+  "Bb/C",
+  "Bb/G",
+  "C/G",
+  "F/G"
+ ],
+ "extra_chords_verified": "cinq accords gravés absents du vocabulaire du .cho, lus au zoom : « Bb/G » et « C/G » (1re rangée), « Bb/C » (refrains), « Bb » et « F/G » (rangée cachée y=1065). 2026-09-18 (itération 63)",
+ "extra_verified": "rangée y=1065 : d'abord invisible au matcher (mode D), elle est redevenue une rangée d'accords lue dès que « Bb » et « F/G » ont rejoint extra_chords ; ses six accords sont donc publiés par la lecture + trois corrections, et non plus en extra_labels (qui les auraient dupliqués). 2026-09-18 (itération 63) · étiquette flottante « ( C/G ) » (x=907 y=244 w=78 h=28) posée seule au-dessus du 1er système, hors de toute rangée : ni la lecture ni propose-extra ne la voyaient, elle serait restée en ut. Boîte mesurée sur l'encre, relue au zoom.",
+ "key_label": {
+  "x": 14,
+  "y": 198,
+  "w": 84,
+  "h": 26
+ },
+ "key_label_verified": "cadre mesuré par measure-keylabel (ancrage sur le « = »), candidate relue sur la planche _kl : la lettre gravée est bien celle de printed_key, donc pas de champ `c` — le client écrit « 1=<tonalité jouée> ». La ligne de tempo ♩=NN, proposée en même temps, a été écartée. 2026-09-18 (itération 63)",
+ "extra_labels": [
+  {
+   "x": 907,
+   "y": 244,
+   "w": 78,
+   "h": 28,
+   "c": "( C/G )"
+  }
+ ],
+ "verified": "planche navigateur relue tranche par tranche, 6/6, en C→C# : les 6 rangées d'accords sont cadrées et les 37 étiquettes réécrites, cadre « 1= C » → « 1=C# » compris ; la mention « （C原调） » du titre et la série « [共3张：C（原调）/ Bb / A调] » décrivent la source et restent telles quelles. Une rangée de crochets de reprise (y=1121) écartée en not_rows, 【Chorus】 écarté en not_labels. 18 amas corrigés à l'œil, dont « Cmaj7 » publié « Fmaj7 » et « Bb/C » publié « Cmaj7 » / « Gm7 » (mode C). Cinq accords hors vocabulaire du .cho ajoutés (Bb, Bb/C, Bb/G, C/G, F/G) ; leur ajout a fait revenir la rangée y=1065, d'abord invisible au matcher (mode D), dans la lecture — ses six accords sont donc publiés par la lecture et non plus en extra_labels, qui les auraient dupliqués (tranche 3/6). Défaut mode D trouvé sur la planche : l'étiquette flottante « ( C/G ) » posée seule au-dessus du 1er système (x=907 y=244) restait en ut ; publiée en extra_label, la tranche 1/6 la montre cadrée. 2026-09-18 (itération 63)",
+ "frozen_labels": [
+  {
+   "x": 158,
+   "y": 327,
+   "w": 19,
+   "h": 33,
+   "c": "C"
+  },
+  {
+   "x": 355,
+   "y": 327,
+   "w": 60,
+   "h": 33,
+   "c": "G/B"
+  },
+  {
+   "x": 641,
+   "y": 327,
+   "w": 51,
+   "h": 33,
+   "c": "Am"
+  },
+  {
+   "x": 918,
+   "y": 327,
+   "w": 72,
+   "h": 33,
+   "c": "Bb/G"
+  },
+  {
+   "x": 1024,
+   "y": 327,
+   "w": 54,
+   "h": 33,
+   "c": "C/G"
+  },
+  {
+   "x": 1163,
+   "y": 327,
+   "w": 14,
+   "h": 33,
+   "c": "F"
+  },
+  {
+   "x": 1356,
+   "y": 327,
+   "w": 56,
+   "h": 33,
+   "c": "G/F"
+  },
+  {
+   "x": 81,
+   "y": 703,
+   "w": 47,
+   "h": 26,
+   "c": "Em"
+  },
+  {
+   "x": 283,
+   "y": 703,
+   "w": 51,
+   "h": 26,
+   "c": "Am"
+  },
+  {
+   "x": 574,
+   "y": 703,
+   "w": 13,
+   "h": 26,
+   "c": "F"
+  },
+  {
+   "x": 824,
+   "y": 703,
+   "w": 55,
+   "h": 26,
+   "c": "G/F"
+  },
+  {
+   "x": 1139,
+   "y": 703,
+   "w": 46,
+   "h": 26,
+   "c": "Em"
+  },
+  {
+   "x": 1332,
+   "y": 703,
+   "w": 51,
+   "h": 26,
+   "c": "Am"
+  },
+  {
+   "x": 59,
+   "y": 1065,
+   "w": 52,
+   "h": 35,
+   "c": "Dm"
+  },
+  {
+   "x": 412,
+   "y": 1065,
+   "w": 91,
+   "h": 35,
+   "c": "Dm/C"
+  },
+  {
+   "x": 685,
+   "y": 1065,
+   "w": 38,
+   "h": 35,
+   "c": "Bb"
+  },
+  {
+   "x": 789,
+   "y": 1065,
+   "w": 54,
+   "h": 35,
+   "c": "F/G"
+  },
+  {
+   "x": 990,
+   "y": 1065,
+   "w": 52,
+   "h": 35,
+   "c": "Dm"
+  },
+  {
+   "x": 1342,
+   "y": 1065,
+   "w": 92,
+   "h": 35,
+   "c": "Dm/C"
+  },
+  {
+   "x": 75,
+   "y": 1383,
+   "w": 42,
+   "h": 48,
+   "c": "G7"
+  },
+  {
+   "x": 280,
+   "y": 1383,
+   "w": 76,
+   "h": 48,
+   "c": "Bb/C"
+  },
+  {
+   "x": 605,
+   "y": 1383,
+   "w": 13,
+   "h": 48,
+   "c": "F"
+  },
+  {
+   "x": 800,
+   "y": 1383,
+   "w": 55,
+   "h": 48,
+   "c": "G/F"
+  },
+  {
+   "x": 1105,
+   "y": 1383,
+   "w": 46,
+   "h": 48,
+   "c": "Em"
+  },
+  {
+   "x": 1307,
+   "y": 1383,
+   "w": 51,
+   "h": 48,
+   "c": "Am"
+  },
+  {
+   "x": 69,
+   "y": 1707,
+   "w": 51,
+   "h": 34,
+   "c": "Dm"
+  },
+  {
+   "x": 365,
+   "y": 1707,
+   "w": 21,
+   "h": 34,
+   "c": "G"
+  },
+  {
+   "x": 648,
+   "y": 1707,
+   "w": 101,
+   "h": 34,
+   "c": "Cmaj7"
+  },
+  {
+   "x": 844,
+   "y": 1707,
+   "w": 76,
+   "h": 34,
+   "c": "Bb/C"
+  },
+  {
+   "x": 1146,
+   "y": 1707,
+   "w": 13,
+   "h": 34,
+   "c": "F"
+  },
+  {
+   "x": 1331,
+   "y": 1707,
+   "w": 56,
+   "h": 34,
+   "c": "G/F"
+  },
+  {
+   "x": 84,
+   "y": 2019,
+   "w": 47,
+   "h": 26,
+   "c": "Em"
+  },
+  {
+   "x": 299,
+   "y": 2019,
+   "w": 51,
+   "h": 26,
+   "c": "Am"
+  },
+  {
+   "x": 567,
+   "y": 2019,
+   "w": 51,
+   "h": 26,
+   "c": "Dm"
+  },
+  {
+   "x": 920,
+   "y": 2019,
+   "w": 21,
+   "h": 26,
+   "c": "G"
+  },
+  {
+   "x": 1226,
+   "y": 2019,
+   "w": 19,
+   "h": 26,
+   "c": "C"
+  },
+  {
+   "x": 907,
+   "y": 244,
+   "w": 78,
+   "h": 28,
+   "c": "( C/G )"
+  }
+ ]
+}

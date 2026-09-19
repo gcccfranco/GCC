@@ -1,99 +1,409 @@
 {
  "slug": "你的爱不离不弃",
- "face": "times",
- "face_verified": "zoom ×5 sur le « F♯m » de la page (itération 58) : **serif**, empattements nets sur le F et sur les jambages du m, dièse musical surélevé. helvetica-neue, la fonte par défaut, n'a rien de ce dessin.",
- "corrections": {
-  "583,210": "A/E",
-  "583,307": "F#m",
-  "583,697": "D",
-  "885,138": "D",
-  "885,357": "E",
-  "885,556": "F#m",
-  "885,714": "C#m",
-  "885,827": "F#m",
-  "1188,138": "E",
-  "1188,339": "F#m",
-  "1188,602": "C#m",
-  "1494,134": "B7",
-  "1494,400": "E",
-  "1494,603": "A",
-  "1494,808": "E",
-  "1494,1005": "F#m",
-  "1789,117": "C#m",
-  "1789,461": "A",
-  "1789,593": "B7",
-  "1789,719": "E",
-  "1789,984": "C#m",
-  "1789,1108": "F#m"
+ "printed_key": "A",
+ "printed_key_verified": "en-tête « 1= A 4/4 » de la planche 简谱 fournie le 18/09/2026, lu avant toute mesure (étape 0). Même tonalité que le .cho.",
+ "lecture_page_a_portee_retiree": {
+  "face": "times",
+  "face_verified": "zoom ×5 sur le « F♯m » de la page (itération 58) : **serif**, empattements nets sur le F et sur les jambages du m, dièse musical surélevé. helvetica-neue, la fonte par défaut, n'a rien de ce dessin.",
+  "corrections": {
+   "583,210": "A/E",
+   "583,307": "F#m",
+   "583,697": "D",
+   "885,138": "D",
+   "885,357": "E",
+   "885,556": "F#m",
+   "885,714": "C#m",
+   "885,827": "F#m",
+   "1188,138": "E",
+   "1188,339": "F#m",
+   "1188,602": "C#m",
+   "1494,134": "B7",
+   "1494,400": "E",
+   "1494,603": "A",
+   "1494,808": "E",
+   "1494,1005": "F#m",
+   "1789,117": "C#m",
+   "1789,461": "A",
+   "1789,593": "B7",
+   "1789,719": "E",
+   "1789,984": "C#m",
+   "1789,1108": "F#m"
+  },
+  "corrections_verified": "les huit rangées rendues entières au 2,4× (itération 58). Sous `times` la page se lit juste mais bas — « E » à −0,07, « A » à −0,01 —, et les deux « B7 » sortaient « C# », leur 7 en exposant n'étant pas vu.",
+  "not_labels": [
+   "242,38",
+   "1494,1195"
+  ],
+  "not_labels_verified": "la ligne de tempo « ♩=82 », isolée dans une bande à elle et typée rangée d'accords, et un sommet d'arc de liaison.",
+  "not_rows": [
+   1524
+  ],
+  "not_rows_verified": "y=1524 est la rangée des **chiffres** du dernier système — numéro de mesure ㉓ compris — promue rangée d'accords : vingt-sept amas au dénominateur, presque la moitié.",
+  "extra_labels": [
+   {
+    "x": 238,
+    "y": 281,
+    "w": 48,
+    "h": 28,
+    "c": "F#m"
+   },
+   {
+    "x": 437,
+    "y": 289,
+    "w": 18,
+    "h": 20,
+    "c": "D"
+   },
+   {
+    "x": 589,
+    "y": 289,
+    "w": 14,
+    "h": 20,
+    "c": "E"
+   },
+   {
+    "x": 771,
+    "y": 289,
+    "w": 16,
+    "h": 20,
+    "c": "A"
+   },
+   {
+    "x": 830,
+    "y": 281,
+    "w": 31,
+    "h": 28,
+    "c": "C#"
+   },
+   {
+    "x": 934,
+    "y": 281,
+    "w": 48,
+    "h": 28,
+    "c": "F#m"
+   },
+   {
+    "x": 1131,
+    "y": 289,
+    "w": 17,
+    "h": 20,
+    "c": "D"
+   }
+  ],
+  "extra_verified": "la **première rangée d'accords de la page**, celle qui partage sa bande avec le cadre « 1 = A 4/4 » : le classifieur ne la type pas `chords`, elle n'entre donc dans aucun dénominateur et rien ne la proposait. Sept accords, F#m D E A C# F#m D.",
+  "key_label": {
+   "x": 40,
+   "y": 335,
+   "w": 75,
+   "h": 23
+  },
+  "key_label_verified": "mesuré à la main sur l'encre (x 40→114, y 335→357). `measure-keylabel` ne le propose pas : il ne rendait que la ligne de tempo ♩=82, parce que le cadre de cette page n'est **pas au-dessus de la portée** mais **dans la rangée des chiffres**, sur la même ligne que le chiffrage 4/4 et les premiers degrés. La lettre gravée **A** est bien celle des accords. Itération 58.",
+  "en_chantier": "**décision de Timothée, 10/09/2026 : on ne publie pas de calque sur une page qui porte aussi une portée à cinq lignes.** Une page transposée y afficherait des accords en si bémol au-dessus d'une portée gravée en la, armure à trois dièses comprise : le 简谱 est invariant par transposition, la portée ne l'est pas. La règle vaut pour toute page à portée qui arriverait plus tard ; celle-ci est la seule du corpus (mesuré sur les 135 pages : cinq lignes couvrant 96 % de la largeur, six fois).\n\nLa lecture reste faite et complète (32/32 + 7) et n'est pas à refaire : fonte serif élue, première rangée d'accords récupérée (elle partage sa bande avec le cadre « 1 = A »), rangée de chiffres du dernier système écartée, cadre mesuré à la main dans la rangée des chiffres. Ne pas re-signaler la page comme « à ouvrir »."
  },
- "corrections_verified": "les huit rangées rendues entières au 2,4× (itération 58). Sous `times` la page se lit juste mais bas — « E » à −0,07, « A » à −0,01 —, et les deux « B7 » sortaient « C# », leur 7 en exposant n'étant pas vu.",
+ "source": "la page publiée n'est plus la même : le PDF 你的爱不离不弃.pdf est une portée 五线谱 (d'où la décision du 10/09/2026 de ne pas la calquer), et Timothée a fourni le 18/09/2026 le 简谱 du même chant, gravé 1=A comme le .cho. Toutes les coordonnées du relevé de l'itération 58 portaient sur l'ancienne image : elles sont archivées ci-dessus sous `lecture_page_a_portee_retiree` et ne valent plus rien sur la nouvelle. La raison de `en_chantier` (une portée ne se transpose pas) tombe avec la portée.",
+ "corrections": {
+  "467,305": "(E)",
+  "1502,446": "C#m",
+  "2018,231": "C#m",
+  "2018,857": "Dadd2",
+  "2018,1062": "Eadd2"
+ },
+ "corrections_verified": "amas relus au zoom (propose-extra --all) sur la planche 简谱 : « (E) » entre parenthèses ; deux « C#m » que le matcher publiait « F#m » à +0,67 et +0,65 (mode C, deux accords faux et plausibles) ; « Dadd2 » et « Eadd2 » du dernier système, absents du .cho. Page en la comme le .cho : rien à transposer avant d'écrire. 2026-09-18 (itération 63)",
+ "extra_chords": [
+  "Dadd2",
+  "Eadd2"
+ ],
+ "extra_chords_verified": "« Dadd2 » et « Eadd2 » gravés au dernier système, absents du vocabulaire du .cho ([A/E] [A] [B7] [Bm] [C#] [C#m] [D] [E] [F#m]) : sans eux le matcher publie le plus proche, faux et plausible (il rendait C#m). Zooms relus. 2026-09-18",
  "not_labels": [
-  "242,38",
-  "1494,1195"
+  "975,1397"
  ],
- "not_labels_verified": "la ligne de tempo « ♩=82 », isolée dans une bande à elle et typée rangée d'accords, et un sommet d'arc de liaison.",
+ "not_labels_verified": "l'étiquette 【Chorus】 du 4e système, typée amas d'accords (lue « C#m » à −0,76).",
  "not_rows": [
-  1524
+  507,
+  1801
  ],
- "not_rows_verified": "y=1524 est la rangée des **chiffres** du dernier système — numéro de mesure ㉓ compris — promue rangée d'accords : vingt-sept amas au dénominateur, presque la moitié.",
- "extra_labels": [
+ "not_rows_verified": "deux rangées d'arcs de liaison et de barres de mesure promues rangées d'accords (scores tous négatifs, −1,3 à −3,9) : onze amas au dénominateur qui ne sont pas de l'écriture.",
+ "key_label": {
+  "x": 14,
+  "y": 150,
+  "w": 83,
+  "h": 26
+ },
+ "key_label_verified": "mesure measure-keylabel (ancrage sur le « = », cadre = voisin gauche…voisin droit), zoom relu à l’œil sur planche de lot, lettre gravée confrontée à printedKey, 2026-08-26 (itération 35)",
+ "verified": "planche navigateur (npm run jianpu:audit) relue tranche par tranche, 7/7, en A→Bb : les 8 rangées d'accords sont cadrées, les 39 étiquettes réécrites, le cadre « 1=A » suit, « (E) » sort « (F) » et 【Chorus】 reste intact. Deux accords faux et plausibles corrigés à l'œil (C#m publiés F#m), « Dadd2 »/« Eadd2 » ajoutés au vocabulaire. 2026-09-18 (itération 63)",
+ "frozen_labels": [
   {
-   "x": 238,
-   "y": 281,
-   "w": 48,
-   "h": 28,
+   "x": 187,
+   "y": 209,
+   "w": 60,
+   "h": 23,
    "c": "F#m"
   },
   {
-   "x": 437,
-   "y": 289,
+   "x": 534,
+   "y": 209,
    "w": 18,
-   "h": 20,
+   "h": 23,
    "c": "D"
   },
   {
-   "x": 589,
-   "y": 289,
-   "w": 14,
-   "h": 20,
+   "x": 875,
+   "y": 209,
+   "w": 13,
+   "h": 23,
    "c": "E"
   },
   {
-   "x": 771,
-   "y": 289,
-   "w": 16,
-   "h": 20,
+   "x": 1215,
+   "y": 209,
+   "w": 19,
+   "h": 23,
    "c": "A"
   },
   {
-   "x": 830,
-   "y": 281,
-   "w": 31,
-   "h": 28,
+   "x": 1360,
+   "y": 209,
+   "w": 34,
+   "h": 23,
    "c": "C#"
   },
   {
-   "x": 934,
-   "y": 281,
-   "w": 48,
-   "h": 28,
+   "x": 48,
+   "y": 467,
+   "w": 59,
+   "h": 24,
    "c": "F#m"
   },
   {
-   "x": 1131,
-   "y": 289,
-   "w": 17,
-   "h": 20,
+   "x": 305,
+   "y": 467,
+   "w": 36,
+   "h": 24,
+   "c": "(E)"
+  },
+  {
+   "x": 430,
+   "y": 467,
+   "w": 18,
+   "h": 24,
    "c": "D"
+  },
+  {
+   "x": 813,
+   "y": 467,
+   "w": 13,
+   "h": 24,
+   "c": "E"
+  },
+  {
+   "x": 1172,
+   "y": 467,
+   "w": 60,
+   "h": 24,
+   "c": "F#m"
+  },
+  {
+   "x": 48,
+   "y": 726,
+   "w": 59,
+   "h": 23,
+   "c": "F#m"
+  },
+  {
+   "x": 421,
+   "y": 726,
+   "w": 18,
+   "h": 23,
+   "c": "D"
+  },
+  {
+   "x": 809,
+   "y": 726,
+   "w": 13,
+   "h": 23,
+   "c": "E"
+  },
+  {
+   "x": 1188,
+   "y": 726,
+   "w": 19,
+   "h": 23,
+   "c": "A"
+  },
+  {
+   "x": 1350,
+   "y": 726,
+   "w": 34,
+   "h": 23,
+   "c": "C#"
+  },
+  {
+   "x": 47,
+   "y": 975,
+   "w": 59,
+   "h": 33,
+   "c": "F#m"
+  },
+  {
+   "x": 400,
+   "y": 975,
+   "w": 44,
+   "h": 33,
+   "c": "Bm"
+  },
+  {
+   "x": 781,
+   "y": 975,
+   "w": 18,
+   "h": 33,
+   "c": "D"
+  },
+  {
+   "x": 1006,
+   "y": 975,
+   "w": 13,
+   "h": 33,
+   "c": "E"
+  },
+  {
+   "x": 1185,
+   "y": 975,
+   "w": 59,
+   "h": 33,
+   "c": "F#m"
+  },
+  {
+   "x": 89,
+   "y": 1244,
+   "w": 19,
+   "h": 23,
+   "c": "A"
+  },
+  {
+   "x": 435,
+   "y": 1244,
+   "w": 13,
+   "h": 23,
+   "c": "E"
+  },
+  {
+   "x": 803,
+   "y": 1244,
+   "w": 18,
+   "h": 23,
+   "c": "D"
+  },
+  {
+   "x": 1196,
+   "y": 1244,
+   "w": 19,
+   "h": 23,
+   "c": "A"
+  },
+  {
+   "x": 47,
+   "y": 1502,
+   "w": 44,
+   "h": 24,
+   "c": "Bm"
+  },
+  {
+   "x": 446,
+   "y": 1502,
+   "w": 63,
+   "h": 24,
+   "c": "C#m"
+  },
+  {
+   "x": 806,
+   "y": 1502,
+   "w": 18,
+   "h": 24,
+   "c": "D"
+  },
+  {
+   "x": 1197,
+   "y": 1502,
+   "w": 13,
+   "h": 24,
+   "c": "E"
+  },
+  {
+   "x": 55,
+   "y": 1761,
+   "w": 19,
+   "h": 23,
+   "c": "A"
+  },
+  {
+   "x": 409,
+   "y": 1761,
+   "w": 13,
+   "h": 23,
+   "c": "E"
+  },
+  {
+   "x": 787,
+   "y": 1761,
+   "w": 18,
+   "h": 23,
+   "c": "D"
+  },
+  {
+   "x": 1187,
+   "y": 1761,
+   "w": 19,
+   "h": 23,
+   "c": "A"
+  },
+  {
+   "x": 47,
+   "y": 2018,
+   "w": 44,
+   "h": 25,
+   "c": "Bm"
+  },
+  {
+   "x": 231,
+   "y": 2018,
+   "w": 63,
+   "h": 25,
+   "c": "C#m"
+  },
+  {
+   "x": 452,
+   "y": 2018,
+   "w": 18,
+   "h": 25,
+   "c": "D"
+  },
+  {
+   "x": 639,
+   "y": 2018,
+   "w": 13,
+   "h": 25,
+   "c": "E"
+  },
+  {
+   "x": 857,
+   "y": 2018,
+   "w": 92,
+   "h": 25,
+   "c": "Dadd2"
+  },
+  {
+   "x": 1062,
+   "y": 2018,
+   "w": 87,
+   "h": 25,
+   "c": "Eadd2"
+  },
+  {
+   "x": 1280,
+   "y": 2018,
+   "w": 59,
+   "h": 25,
+   "c": "F#m"
   }
- ],
- "extra_verified": "la **première rangée d'accords de la page**, celle qui partage sa bande avec le cadre « 1 = A 4/4 » : le classifieur ne la type pas `chords`, elle n'entre donc dans aucun dénominateur et rien ne la proposait. Sept accords, F#m D E A C# F#m D.",
- "key_label": {
-  "x": 40,
-  "y": 335,
-  "w": 75,
-  "h": 23
- },
- "key_label_verified": "mesuré à la main sur l'encre (x 40→114, y 335→357). `measure-keylabel` ne le propose pas : il ne rendait que la ligne de tempo ♩=82, parce que le cadre de cette page n'est **pas au-dessus de la portée** mais **dans la rangée des chiffres**, sur la même ligne que le chiffrage 4/4 et les premiers degrés. La lettre gravée **A** est bien celle des accords. Itération 58.",
- "en_chantier": "**décision de Timothée, 10/09/2026 : on ne publie pas de calque sur une page qui porte aussi une portée à cinq lignes.** Une page transposée y afficherait des accords en si bémol au-dessus d'une portée gravée en la, armure à trois dièses comprise : le 简谱 est invariant par transposition, la portée ne l'est pas. La règle vaut pour toute page à portée qui arriverait plus tard ; celle-ci est la seule du corpus (mesuré sur les 135 pages : cinq lignes couvrant 96 % de la largeur, six fois).\n\nLa lecture reste faite et complète (32/32 + 7) et n'est pas à refaire : fonte serif élue, première rangée d'accords récupérée (elle partage sa bande avec le cadre « 1 = A »), rangée de chiffres du dernier système écartée, cadre mesuré à la main dans la rangée des chiffres. Ne pas re-signaler la page comme « à ouvrir »."
+ ]
 }

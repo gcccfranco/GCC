@@ -1,0 +1,322 @@
+{
+ "slug": "我们爱让世界不一样",
+ "printed_key": "D",
+ "printed_key_verified": "en-tête de la page lu à l'œil avant toute mesure (étape 0), lot des 50 简谱 fournis, 2026-09-18 (itération 63)",
+ "corrections": {
+  "429,299": "A/C#",
+  "721,922": "D/A",
+  "1013,1146": "A/C#",
+  "1592,178": "A/C#",
+  "1592,1156": "D/F#",
+  "1880,307": "D/F#"
+ },
+ "corrections_verified": "six amas justes que le matcher n'avait pas retenus, relus à l'œil sur la page à l'échelle 1:1 (tranches y=0-530, 510-1050, 1030-1570, 1550-2062). Page en ré, .cho en ré (song_semitones=0). 2026-09-18 (itération 63)",
+ "not_labels": [
+  "721,1129"
+ ],
+ "not_labels_verified": "amas « E———— » du 2e système : la lettre est suivie d'un long crochet de tenue de 172 px. L'amas entier est écarté et le seul « E » republié en extra_label (boîte de 20 px), pour ne pas effacer le crochet. 2026-09-18 (itération 63)",
+ "not_rows": [
+  1638
+ ],
+ "not_rows_verified": "rangée y=1638 (61 px, 15 amas) : la rangée de chiffres du 5e système, promue à tort par le classifieur. 2026-09-18 (itération 63)",
+ "extra_labels": [
+  {
+   "x": 1127,
+   "y": 721,
+   "w": 20,
+   "h": 24,
+   "c": "E"
+  },
+  {
+   "x": 13,
+   "y": 1304,
+   "w": 41,
+   "h": 24,
+   "c": "Bm"
+  },
+  {
+   "x": 168,
+   "y": 1304,
+   "w": 50,
+   "h": 24,
+   "c": "D/A"
+  },
+  {
+   "x": 428,
+   "y": 1304,
+   "w": 20,
+   "h": 24,
+   "c": "G"
+  },
+  {
+   "x": 687,
+   "y": 1304,
+   "w": 60,
+   "h": 24,
+   "c": "D/F#"
+  },
+  {
+   "x": 982,
+   "y": 1304,
+   "w": 39,
+   "h": 24,
+   "c": "Em"
+  },
+  {
+   "x": 1229,
+   "y": 1304,
+   "w": 17,
+   "h": 24,
+   "c": "A"
+  }
+ ],
+ "extra_labels_verified": "le « E » seul du 2e système (voir not_labels) et le 4e système entier, rangée que le découpage n'isole pas : Bm D/A G D/F# Em A, boîtes de propose-extra --hidden, relues à l'œil. 2026-09-18 (itération 63)",
+ "key_label": {
+  "x": 44,
+  "y": 273,
+  "w": 72,
+  "h": 26
+ },
+ "key_label_verified": "mesure measure-keylabel (ancrage sur le « = », cadre = voisin gauche…voisin droit), zoom relu à l’œil sur planche de lot, lettre gravée confrontée à printedKey, 2026-08-26 (itération 35)",
+ "verified": "planche navigateur (npm run jianpu:audit) relue tranche par tranche, les 6 sur 6, en D→Eb : les 6 systèmes sont cadrés en rouge, les 34 étiquettes réécrites (Eb, Bb/D, Cm, Ab, Eb/G, Fm, Bb, Cm/B, Eb/Bb, F), aucun cadre orange, aucun accord laissé en ré, et le cadre « 1=Eb » suit. Le 4e système, que le découpage n'isolait pas, est relevé à la main et converti ; le long crochet de tenue du « E » du 2e système est intact (boîte de 20 px). 2026-09-18 (itération 63)",
+ "frozen_labels": [
+  {
+   "x": 153,
+   "y": 429,
+   "w": 18,
+   "h": 26,
+   "c": "D"
+  },
+  {
+   "x": 299,
+   "y": 425,
+   "w": 64,
+   "h": 30,
+   "c": "A/C#"
+  },
+  {
+   "x": 592,
+   "y": 429,
+   "w": 41,
+   "h": 26,
+   "c": "Bm"
+  },
+  {
+   "x": 977,
+   "y": 429,
+   "w": 19,
+   "h": 26,
+   "c": "G"
+  },
+  {
+   "x": 1130,
+   "y": 426,
+   "w": 60,
+   "h": 29,
+   "c": "D/F#"
+  },
+  {
+   "x": 14,
+   "y": 721,
+   "w": 39,
+   "h": 24,
+   "c": "Em"
+  },
+  {
+   "x": 185,
+   "y": 721,
+   "w": 17,
+   "h": 24,
+   "c": "A"
+  },
+  {
+   "x": 399,
+   "y": 721,
+   "w": 41,
+   "h": 24,
+   "c": "Bm"
+  },
+  {
+   "x": 656,
+   "y": 717,
+   "w": 87,
+   "h": 28,
+   "c": "Bm/A#"
+  },
+  {
+   "x": 922,
+   "y": 721,
+   "w": 50,
+   "h": 24,
+   "c": "D/A"
+  },
+  {
+   "x": 22,
+   "y": 1013,
+   "w": 20,
+   "h": 25,
+   "c": "G"
+  },
+  {
+   "x": 330,
+   "y": 1013,
+   "w": 17,
+   "h": 25,
+   "c": "A"
+  },
+  {
+   "x": 600,
+   "y": 1013,
+   "w": 19,
+   "h": 25,
+   "c": "D"
+  },
+  {
+   "x": 739,
+   "y": 1013,
+   "w": 50,
+   "h": 25,
+   "c": "G/A"
+  },
+  {
+   "x": 980,
+   "y": 1013,
+   "w": 18,
+   "h": 25,
+   "c": "D"
+  },
+  {
+   "x": 1146,
+   "y": 1009,
+   "w": 63,
+   "h": 29,
+   "c": "A/C#"
+  },
+  {
+   "x": 25,
+   "y": 1592,
+   "w": 18,
+   "h": 26,
+   "c": "D"
+  },
+  {
+   "x": 178,
+   "y": 1588,
+   "w": 64,
+   "h": 30,
+   "c": "A/C#"
+  },
+  {
+   "x": 444,
+   "y": 1592,
+   "w": 41,
+   "h": 26,
+   "c": "Bm"
+  },
+  {
+   "x": 611,
+   "y": 1592,
+   "w": 50,
+   "h": 26,
+   "c": "D/A"
+  },
+  {
+   "x": 882,
+   "y": 1592,
+   "w": 19,
+   "h": 26,
+   "c": "G"
+  },
+  {
+   "x": 1156,
+   "y": 1589,
+   "w": 58,
+   "h": 29,
+   "c": "D/F#"
+  },
+  {
+   "x": 16,
+   "y": 1880,
+   "w": 39,
+   "h": 27,
+   "c": "Em"
+  },
+  {
+   "x": 307,
+   "y": 1875,
+   "w": 61,
+   "h": 32,
+   "c": "D/F#"
+  },
+  {
+   "x": 665,
+   "y": 1880,
+   "w": 19,
+   "h": 27,
+   "c": "G"
+  },
+  {
+   "x": 923,
+   "y": 1880,
+   "w": 18,
+   "h": 27,
+   "c": "A"
+  },
+  {
+   "x": 1190,
+   "y": 1880,
+   "w": 19,
+   "h": 27,
+   "c": "D"
+  },
+  {
+   "x": 1127,
+   "y": 721,
+   "w": 20,
+   "h": 24,
+   "c": "E"
+  },
+  {
+   "x": 13,
+   "y": 1304,
+   "w": 41,
+   "h": 24,
+   "c": "Bm"
+  },
+  {
+   "x": 168,
+   "y": 1304,
+   "w": 50,
+   "h": 24,
+   "c": "D/A"
+  },
+  {
+   "x": 428,
+   "y": 1304,
+   "w": 20,
+   "h": 24,
+   "c": "G"
+  },
+  {
+   "x": 687,
+   "y": 1299,
+   "w": 60,
+   "h": 29,
+   "c": "D/F#"
+  },
+  {
+   "x": 982,
+   "y": 1304,
+   "w": 39,
+   "h": 24,
+   "c": "Em"
+  },
+  {
+   "x": 1229,
+   "y": 1304,
+   "w": 17,
+   "h": 24,
+   "c": "A"
+  }
+ ]
+}

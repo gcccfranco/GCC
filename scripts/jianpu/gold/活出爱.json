@@ -1,0 +1,317 @@
+{
+ "slug": "活出爱",
+ "printed_key": "C",
+ "printed_key_verified": "en-tête de la page lu à l'œil avant toute mesure (étape 0), lot des 50 简谱 fournis, 2026-09-18 (itération 63)",
+ "corrections": {
+  "318,823": "G",
+  "655,299": "C/E",
+  "655,607": "Dm",
+  "2004,634": "Dm"
+ },
+ "corrections_verified": "quatre amas relus au zoom : G du 1er système (lu juste mais non unanime), C/E du 2e, et surtout les deux « Dm » — celui du 2e système que le matcher lisait G/B, celui du dernier qu'il lisait Em (mode C). Page en ut, .cho en ut (song_semitones=0). 2026-09-18 (itération 63)",
+ "extra_chords": [
+  "Dm"
+ ],
+ "extra_chords_verified": "la page grave « Dm » (2e et dernier système) là où le .cho écrit Dm7 ; « Dm » est absent du vocabulaire, d'où les deux lectures fausses. Aucun Dm7 n'est gravé sur la page. Zoom relu à l'œil. 2026-09-18 (itération 63)",
+ "not_labels": [
+  "1313,390"
+ ],
+ "not_labels_verified": "l'amas 1313,390 est la mention 【Chorus】, pas un accord (lue Dm7 à -1,01). Zoom relu. 2026-09-18 (itération 63)",
+ "not_rows": [
+  1037,
+  1710
+ ],
+ "not_rows_verified": "y=1037 et y=1710 ne portent que des fragments de barres de mesure et de points (2 et 3 px de large) : aucune étiquette, mais neuf amas au dénominateur. 2026-09-18 (itération 63)",
+ "extra_labels": [
+  {
+   "x": 102,
+   "y": 993,
+   "w": 12,
+   "h": 24,
+   "c": "F"
+  },
+  {
+   "x": 465,
+   "y": 993,
+   "w": 18,
+   "h": 24,
+   "c": "C"
+  },
+  {
+   "x": 883,
+   "y": 993,
+   "w": 12,
+   "h": 24,
+   "c": "F"
+  },
+  {
+   "x": 1239,
+   "y": 992,
+   "w": 20,
+   "h": 25,
+   "c": "G"
+  },
+  {
+   "x": 802,
+   "y": 201,
+   "w": 67,
+   "h": 24,
+   "fh": 22,
+   "c": "( G/B"
+  },
+  {
+   "x": 1095,
+   "y": 201,
+   "w": 44,
+   "h": 24,
+   "fh": 22,
+   "c": "F/A"
+  },
+  {
+   "x": 1342,
+   "y": 201,
+   "w": 66,
+   "h": 24,
+   "fh": 22,
+   "c": "C/G )"
+  }
+ ],
+ "extra_labels_verified": "deux gisements hors lecture : la rangée du 3e système (y≈993, F C F G) jamais typée « chords » — mode D —, et la ligne d'intro « ( G/B  F/A  C/G ) » de l'en-tête (y≈201), gravée 22 px au lieu de 24 d'où le fh. Les parenthèses sont prises DANS les étiquettes composites (« ( G/B », « C/G ) ») : posées à côté, le fond opaque du nom transposé, plus long, effaçait la parenthèse fermante (vu sur la planche). Boîtes mesurées sur l'encre. 2026-09-18 (itération 63)",
+ "key_label": {
+  "x": 14,
+  "y": 169,
+  "w": 78,
+  "h": 25
+ },
+ "key_label_verified": "mesure measure-keylabel (ancrage sur le « = », cadre = voisin gauche…voisin droit), zoom relu à l’œil sur planche de lot, lettre gravée confrontée à printedKey, 2026-08-26 (itération 35)",
+ "verified": "planche navigateur (npm run jianpu:audit) relue tranche par tranche, 6/6, en C→C# : les 6 rangées d'accords et la ligne d'intro sont cadrées de rouge, les 32 étiquettes réécrites (C→Db, F→Gb, G→Ab, C/E→Db/F, Dm→Ebm, Em→Fm, Am→Bbm, « ( G/B »→« ( Ab/C », F/A→Gb/Bb, « C/G ) »→« Db/Ab ) »), le cadre « 1= C » devient « 1=C# ». Défauts corrigés à l'œil : la rangée du 3e système (y≈993) n'était pas typée « chords » et restait en ut (mode D) ; la ligne d'intro entre parenthèses de l'en-tête aussi ; deux « Dm » lus G/B et Em (mode C) ; 【Chorus】 pris pour un accord ; deux rangées de fragments de barres au dénominateur. La mention « （C原调） » du titre n'est PAS cadrée : elle nomme la tonalité source et reste vraie transposée. Aucun cadre orange, aucun accord sans cadre. 2026-09-18 (itération 63)",
+ "frozen_labels": [
+  {
+   "x": 566,
+   "y": 318,
+   "w": 17,
+   "h": 24,
+   "c": "C"
+  },
+  {
+   "x": 823,
+   "y": 318,
+   "w": 19,
+   "h": 24,
+   "c": "G"
+  },
+  {
+   "x": 1099,
+   "y": 318,
+   "w": 13,
+   "h": 24,
+   "c": "F"
+  },
+  {
+   "x": 1349,
+   "y": 318,
+   "w": 17,
+   "h": 24,
+   "c": "C"
+  },
+  {
+   "x": 81,
+   "y": 655,
+   "w": 12,
+   "h": 25,
+   "c": "F"
+  },
+  {
+   "x": 299,
+   "y": 655,
+   "w": 49,
+   "h": 25,
+   "c": "C/E"
+  },
+  {
+   "x": 607,
+   "y": 655,
+   "w": 48,
+   "h": 25,
+   "c": "Dm"
+  },
+  {
+   "x": 798,
+   "y": 655,
+   "w": 20,
+   "h": 25,
+   "c": "G"
+  },
+  {
+   "x": 1094,
+   "y": 655,
+   "w": 17,
+   "h": 25,
+   "c": "C"
+  },
+  {
+   "x": 1359,
+   "y": 655,
+   "w": 20,
+   "h": 25,
+   "c": "G"
+  },
+  {
+   "x": 79,
+   "y": 1313,
+   "w": 17,
+   "h": 42,
+   "c": "C"
+  },
+  {
+   "x": 606,
+   "y": 1313,
+   "w": 12,
+   "h": 42,
+   "c": "F"
+  },
+  {
+   "x": 834,
+   "y": 1313,
+   "w": 20,
+   "h": 42,
+   "c": "G"
+  },
+  {
+   "x": 1113,
+   "y": 1313,
+   "w": 43,
+   "h": 42,
+   "c": "Em"
+  },
+  {
+   "x": 1344,
+   "y": 1313,
+   "w": 48,
+   "h": 42,
+   "c": "Am"
+  },
+  {
+   "x": 83,
+   "y": 1666,
+   "w": 12,
+   "h": 25,
+   "c": "F"
+  },
+  {
+   "x": 315,
+   "y": 1666,
+   "w": 20,
+   "h": 25,
+   "c": "G"
+  },
+  {
+   "x": 570,
+   "y": 1666,
+   "w": 17,
+   "h": 25,
+   "c": "C"
+  },
+  {
+   "x": 1111,
+   "y": 1666,
+   "w": 13,
+   "h": 25,
+   "c": "F"
+  },
+  {
+   "x": 1344,
+   "y": 1666,
+   "w": 20,
+   "h": 25,
+   "c": "G"
+  },
+  {
+   "x": 74,
+   "y": 2004,
+   "w": 43,
+   "h": 24,
+   "c": "Em"
+  },
+  {
+   "x": 310,
+   "y": 2004,
+   "w": 48,
+   "h": 24,
+   "c": "Am"
+  },
+  {
+   "x": 634,
+   "y": 2004,
+   "w": 47,
+   "h": 24,
+   "c": "Dm"
+  },
+  {
+   "x": 873,
+   "y": 2004,
+   "w": 20,
+   "h": 24,
+   "c": "G"
+  },
+  {
+   "x": 1168,
+   "y": 2004,
+   "w": 17,
+   "h": 24,
+   "c": "C"
+  },
+  {
+   "x": 102,
+   "y": 993,
+   "w": 12,
+   "h": 24,
+   "c": "F"
+  },
+  {
+   "x": 465,
+   "y": 993,
+   "w": 18,
+   "h": 24,
+   "c": "C"
+  },
+  {
+   "x": 883,
+   "y": 993,
+   "w": 12,
+   "h": 24,
+   "c": "F"
+  },
+  {
+   "x": 1239,
+   "y": 992,
+   "w": 20,
+   "h": 25,
+   "c": "G"
+  },
+  {
+   "x": 802,
+   "y": 201,
+   "w": 67,
+   "h": 24,
+   "c": "( G/B",
+   "fh": 22
+  },
+  {
+   "x": 1095,
+   "y": 201,
+   "w": 44,
+   "h": 24,
+   "c": "F/A",
+   "fh": 22
+  },
+  {
+   "x": 1342,
+   "y": 201,
+   "w": 66,
+   "h": 24,
+   "c": "C/G )",
+   "fh": 22
+  }
+ ]
+}

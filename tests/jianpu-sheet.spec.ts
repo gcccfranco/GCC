@@ -7,6 +7,7 @@ import {
   loadChords,
   openSheet,
   overlayLabels,
+  pagesManquantes,
   partialSlugs,
   slugsWithoutOverlay,
   songKey,
@@ -23,6 +24,14 @@ const picked = asked ? (tout ? certified : asked) : certified.slice(0, 3);
 
 /** Les calques partiels ne passent que le contrôle de réécriture, et
  *  seulement quand on demande tout le corpus ou ces chants-là nommément. */
+/** Les planches sans calque, échantillonnées comme les certifiées : trois
+ *  par défaut, toutes sur `PW_SLUGS=all`, nommément sinon. */
+const nus = (() => {
+  const sans = slugsWithoutOverlay();
+  if (tout) return sans;
+  return asked ? asked.filter((s) => sans.includes(s)) : sans.slice(0, 3);
+})();
+
 const partiels = tout
   ? partialSlugs()
   : asked
@@ -232,11 +241,24 @@ test.describe("partition 简谱", () => {
     });
   }
 
-  test("un chant sans calque prévient que ses accords ne suivent pas", async ({ page }) => {
-    const slug = slugsWithoutOverlay()[0];
-    test.skip(!slug, "tous les chants ont un calque");
-    const key = halfStepUp(songKey(slug) ?? "C");
-    await openSheet(page, slug, { key });
-    await expect(page.getByText(/ne suivent pas la transposition/)).toBeVisible();
+  /** Les planches sans calque. Elles sont la majorité depuis que les 50
+   *  简谱 manquants sont publiés (18/09/2026) et rien n'y est à vérifier côté
+   *  accords : ce qui doit tenir, c'est que le scan s'affiche et que la page
+   *  dise que les accords imprimés ne suivent pas la transposition. */
+  for (const slug of nus) {
+    test(`${slug} — sans calque, le scan s'affiche`, async ({ page }) => {
+      const pages = await openSheet(page, slug);
+      await expect(pages.first().locator("img")).toBeVisible();
+    });
+
+    test(`${slug} — sans calque, prévient que ses accords ne suivent pas`, async ({ page }) => {
+      const key = halfStepUp(songKey(slug) ?? "C");
+      await openSheet(page, slug, { key });
+      await expect(page.getByText(/ne suivent pas la transposition/)).toBeVisible();
+    });
+  }
+
+  test("chaque partition du manifeste a ses images sur le disque", () => {
+    expect(pagesManquantes()).toEqual([]);
   });
 });

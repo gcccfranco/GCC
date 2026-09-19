@@ -1,0 +1,365 @@
+{
+ "slug": "有一天",
+ "printed_key": "A",
+ "printed_key_verified": "en-tête lu à l'œil avant toute mesure (étape 0) : titre « 667 有一天 » (recueil 泥土音乐, n° 667), crédits « 选自「泥土音乐」 » à droite, et la tonalité écrite « A 4/4 » en haut à gauche — **sans cadre « 1= »**, une forme que le corpus ne connaissait pas. A = clé du `.cho`, donc song_semitones = 0 : la convention de la page et celle du `.cho` coïncident, et tout ce qui est écrit ici se lit à l'identique des deux côtés. Les six accords gravés (A, F#m7, D, E, C#m7, Bm7) sont tous dans le `.cho` — pas d'extra_chords. 2026-09-19 (itération 64)",
+ "en_chantier_leve": "levé par le **nouveau scan** fourni le 19/09/2026 : « 有一天 简谱 (667).jpg », 1200 × 1453 px (601 × 887 avant, un GIF de recueil), ingéré en 1025 × 1271. Les trois obstacles mesurés à l'itération 63 tombent tous les trois avec lui. (1) Le profil d'encre laisse maintenant une ligne blanche franche entre chaque rangée d'accords et sa rangée de chiffres : la page rend 26 bandes, dont les 8 rangées d'accords isolées (y=114, 261, 407, 554, 701, 847, 994, 1140), là où l'ancienne image soudait les accords aux chiffres et ne rendait que les lignes de paroles. (2) La lecture n'est plus nulle mais complète : 37 amas rendus par read(), 28 retenus d'emblée (scores +0,32 à +0,78). (3) La gravure **suffixe** le dièse — « F#m7 », « C#m7 » —, elle ne le préfixe plus (« ♯Fm7 ») : les gabarits s'apparient. La tonalité, elle, n'est plus écrite « A=1 » à l'envers mais « A 4/4 » à l'endroit. 2026-09-19 (itération 64)",
+ "source": "nouveau scan fourni le 19/09/2026 (itération 64) en remplacement du GIF de recueil à 600 px : 1200 × 1453 px (601 × 887 avant).",
+ "not_labels": [
+  "261,824",
+  "554,728",
+  "701,866",
+  "847,324",
+  "847,833",
+  "994,876",
+  "1140,351",
+  "1140,708"
+ ],
+ "not_labels_verified": "huit amas écartés, et **aucun n'est un parasite** — ce sont des relevés faux d'une étiquette vraie, repris en extra_labels sur la boîte d'encre mesurée. Sept sont des « E » que le découpage réduit à **2 px de large** (261,824 · 554,728 · 701,866 · 847,833 · 994,876 · 1140,351 · 1140,708) : dans cette gravure, la hampe du E est noire sur toute la hauteur (12 px d'encre par colonne) et ses trois bras ne noircissent que 2 à 6 px, si bien que la segmentation s'arrête après la hampe. Les scores le disent (−2,43 à −2,91) et six sur sept sortent quand même « E », par accident de forme ; le septième (1140,351) sort « A ». Publier une boîte de 2 px laisserait les bras du E gravé visibles à droite de l'accord réécrit, et fausserait `sp`, qui irait chercher son voisin de droite **dans le E lui-même**. Le huitième (847,324, w=72, lu « F#m7 » à −1,37) est le **collage** de « C#m7 F#m7 » du 6e système : 4 colonnes blanches seulement les séparent (x=359..362), moins que le seuil de découpage. Il repart en deux extra_labels. 2026-09-19 (itération 64)",
+ "corrections": {
+  "1140,499": "Bm7"
+ },
+ "corrections_verified": "un seul amas corrigé : « Bm7 » du 8e système (x=499..525), lu juste mais à +0,10, sous le seuil — la même étiquette passe à +0,67 au 4e système et +0,44 au 6e, elle est simplement plus pâle ici. Relue au zoom ×12 : « Bm7 ». `corrections` nomme comme le `.cho` et `frozen_labels` nommera comme la page (itération 47) ; ici **les deux conventions coïncident**, song_semitones = 0, page en A et `.cho` en A, donc « Bm7 » s'écrit « Bm7 » des deux côtés. Les 28 autres amas retenus ont été relus rangée par rangée sur les huit planches de systèmes : aucun mode C. 2026-09-19 (itération 64)",
+ "extra_labels": [
+  {
+   "x": 824,
+   "y": 261,
+   "w": 7,
+   "h": 12,
+   "c": "E"
+  },
+  {
+   "x": 728,
+   "y": 554,
+   "w": 7,
+   "h": 12,
+   "c": "E"
+  },
+  {
+   "x": 866,
+   "y": 701,
+   "w": 7,
+   "h": 12,
+   "c": "E"
+  },
+  {
+   "x": 324,
+   "y": 847,
+   "w": 35,
+   "h": 12,
+   "c": "C#m7"
+  },
+  {
+   "x": 363,
+   "y": 847,
+   "w": 34,
+   "h": 12,
+   "c": "F#m7"
+  },
+  {
+   "x": 833,
+   "y": 847,
+   "w": 8,
+   "h": 12,
+   "c": "E"
+  },
+  {
+   "x": 876,
+   "y": 994,
+   "w": 8,
+   "h": 12,
+   "c": "E"
+  },
+  {
+   "x": 351,
+   "y": 1140,
+   "w": 8,
+   "h": 12,
+   "c": "E"
+  },
+  {
+   "x": 708,
+   "y": 1140,
+   "w": 7,
+   "h": 12,
+   "c": "E"
+  }
+ ],
+ "extra_labels_verified": "les neuf étiquettes que le découpage ne rend pas telles qu'elles sont gravées, reposées sur leur propre encre (seuil 160, profil de colonnes de la bande de la rangée), `y` et `h` recopiés de la rangée pour que la ligne de base tombe sur celle de ses sœurs. Sept « E » de 7 ou 8 px (824..830 · 728..734 · 866..872 · 833..840 · 876..883 · 351..358 · 708..714), chacun regardé au zoom ×12 un par un — ce sont bien des E, et c'est la **famille** de la page : dans cette gravure le E est la seule capitale dont la segmentation ne garde que la hampe. Et le couple collé du 6e système, rendu à ses deux boîtes : « C#m7 » x=324..358 (w=35, la même largeur que les C#m7 isolés des systèmes 1, 3, 5, 7) et « F#m7 » x=363..396 (w=34, la même que les F#m7 des systèmes 1, 3, 4, 8). Noms écrits dans la convention du `.cho`, qui est aussi celle de la page (song_semitones = 0). 2026-09-19 (itération 64)",
+ "key_label": {
+  "x": 14,
+  "y": 74,
+  "w": 14,
+  "h": 17,
+  "c": "A"
+ },
+ "key_label_verified": "**cette page n'écrit pas « 1= »** : elle grave « A 4/4 » en gras en haut à gauche, tonalité et chiffrage collés, une forme que le corpus ne connaissait pas (la plus proche est le « D 4/4 » de 赞美之泉, itération 41). `measure-keylabel.py 有一天` rend « 0 candidate » — il s'ancre sur un « = » et la page n'en porte aucun —, la boîte est donc mesurée à la main sur l'encre, comme pour 主你是我力量. Bornes lues au profil d'encre (seuil 160) dans la bande y=72..94 : le **« A » seul** occupe x=14..27 et y=74..90, soit w=14, h=17 (hauteur de capitale, pas un corps) ; le « 4/ » commence à x=35 et le second « 4 » finit à x=61, tous deux **laissés dehors** — 7 px de blanc séparent le A du premier 4, et le fond opaque du cadre (x−3 → x+w+7, soit 11..32) s'arrête 2 px avant. C'est ce qu'il faut : le « A » suit la transposition, le « 4/4 » non. `c` = « A » (la lettre seule, sans « 1= ») pour que le client la transpose **comme une étiquette** au lieu d'écrire « 1=<tonalité jouée> ». Lettre gravée A = printed_key A. 2026-09-19 (itération 64)",
+ "verified": "planche navigateur `npm run jianpu:audit 有一天` regardée tranche par tranche (6/6), A → Bb, le demi-ton où aucun accord ne garde son nom. Les 38 étiquettes des 8 systèmes portent toutes leur cadre rouge : A→Bb, D→Eb, E→F, C#m7→Dm7, F#m7→Gm7, Bm7→Cm7. Aucun accord laissé en la, aucune rangée manquée. Le cadre de tonalité — « A » seul, sans « 1= » — devient « Bb » et le « 4/4 » gravé reste intact à côté (le rendu PIL d'`overlay.py` écrit « 1=A# » à cet endroit : il ignore `kl.c`, c'est une limite connue du rendu hors navigateur, pas du client). Les deux trios serrés sont sortis complets et séparés : « Bb Dm7 Gm7 » au 6e système, « Bb F Gm7 » au 8e ; le dernier « Bb » du 8e système tient dans la page. Seule réserve esthétique : « Bb » étant plus large que le « A » gravé, il mange les 7 px de blanc qui le séparaient du « 4/4 » — lisible, rien de rogné. 2026-09-19 (itération 64)",
+ "frozen_labels": [
+  {
+   "x": 124,
+   "y": 114,
+   "w": 8,
+   "h": 12,
+   "c": "A"
+  },
+  {
+   "x": 373,
+   "y": 114,
+   "w": 34,
+   "h": 12,
+   "c": "F#m7"
+  },
+  {
+   "x": 587,
+   "y": 114,
+   "w": 8,
+   "h": 12,
+   "c": "A"
+  },
+  {
+   "x": 836,
+   "y": 114,
+   "w": 35,
+   "h": 12,
+   "c": "C#m7"
+  },
+  {
+   "x": 31,
+   "y": 261,
+   "w": 9,
+   "h": 12,
+   "c": "D"
+  },
+  {
+   "x": 328,
+   "y": 261,
+   "w": 9,
+   "h": 12,
+   "c": "A"
+  },
+  {
+   "x": 559,
+   "y": 261,
+   "w": 9,
+   "h": 12,
+   "c": "D"
+  },
+  {
+   "x": 31,
+   "y": 407,
+   "w": 8,
+   "h": 12,
+   "c": "A"
+  },
+  {
+   "x": 308,
+   "y": 407,
+   "w": 33,
+   "h": 12,
+   "c": "F#m7"
+  },
+  {
+   "x": 543,
+   "y": 407,
+   "w": 8,
+   "h": 12,
+   "c": "A"
+  },
+  {
+   "x": 820,
+   "y": 407,
+   "w": 35,
+   "h": 12,
+   "c": "C#m7"
+  },
+  {
+   "x": 29,
+   "y": 554,
+   "w": 8,
+   "h": 12,
+   "c": "D"
+  },
+  {
+   "x": 290,
+   "y": 554,
+   "w": 8,
+   "h": 12,
+   "c": "A"
+  },
+  {
+   "x": 379,
+   "y": 554,
+   "w": 33,
+   "h": 12,
+   "c": "F#m7"
+  },
+  {
+   "x": 499,
+   "y": 554,
+   "w": 27,
+   "h": 12,
+   "c": "Bm7"
+  },
+  {
+   "x": 34,
+   "y": 701,
+   "w": 8,
+   "h": 12,
+   "c": "A"
+  },
+  {
+   "x": 337,
+   "y": 701,
+   "w": 35,
+   "h": 12,
+   "c": "C#m7"
+  },
+  {
+   "x": 549,
+   "y": 701,
+   "w": 8,
+   "h": 12,
+   "c": "D"
+  },
+  {
+   "x": 33,
+   "y": 847,
+   "w": 9,
+   "h": 12,
+   "c": "D"
+  },
+  {
+   "x": 299,
+   "y": 847,
+   "w": 9,
+   "h": 12,
+   "c": "A"
+  },
+  {
+   "x": 480,
+   "y": 847,
+   "w": 27,
+   "h": 12,
+   "c": "Bm7"
+  },
+  {
+   "x": 32,
+   "y": 994,
+   "w": 9,
+   "h": 12,
+   "c": "A"
+  },
+  {
+   "x": 330,
+   "y": 994,
+   "w": 35,
+   "h": 12,
+   "c": "C#m7"
+  },
+  {
+   "x": 546,
+   "y": 994,
+   "w": 8,
+   "h": 12,
+   "c": "D"
+  },
+  {
+   "x": 34,
+   "y": 1140,
+   "w": 9,
+   "h": 12,
+   "c": "D"
+  },
+  {
+   "x": 311,
+   "y": 1140,
+   "w": 8,
+   "h": 12,
+   "c": "A"
+  },
+  {
+   "x": 378,
+   "y": 1140,
+   "w": 33,
+   "h": 12,
+   "c": "F#m7"
+  },
+  {
+   "x": 499,
+   "y": 1140,
+   "w": 27,
+   "h": 12,
+   "c": "Bm7"
+  },
+  {
+   "x": 905,
+   "y": 1140,
+   "w": 8,
+   "h": 12,
+   "c": "A"
+  },
+  {
+   "x": 824,
+   "y": 261,
+   "w": 7,
+   "h": 12,
+   "c": "E"
+  },
+  {
+   "x": 728,
+   "y": 554,
+   "w": 7,
+   "h": 12,
+   "c": "E"
+  },
+  {
+   "x": 866,
+   "y": 701,
+   "w": 7,
+   "h": 12,
+   "c": "E"
+  },
+  {
+   "x": 324,
+   "y": 847,
+   "w": 35,
+   "h": 12,
+   "c": "C#m7"
+  },
+  {
+   "x": 363,
+   "y": 847,
+   "w": 34,
+   "h": 12,
+   "c": "F#m7"
+  },
+  {
+   "x": 833,
+   "y": 847,
+   "w": 8,
+   "h": 12,
+   "c": "E"
+  },
+  {
+   "x": 876,
+   "y": 994,
+   "w": 8,
+   "h": 12,
+   "c": "E"
+  },
+  {
+   "x": 351,
+   "y": 1140,
+   "w": 8,
+   "h": 12,
+   "c": "E"
+  },
+  {
+   "x": 708,
+   "y": 1140,
+   "w": 7,
+   "h": 12,
+   "c": "E"
+  }
+ ]
+}

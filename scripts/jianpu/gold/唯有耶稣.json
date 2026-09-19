@@ -1,0 +1,452 @@
+{
+ "slug": "唯有耶稣",
+ "printed_key": "F",
+ "printed_key_verified": "en-tête de la page lu à l'œil avant toute mesure (étape 0), lot des 50 简谱 fournis, 2026-09-18 (itération 63)",
+ "corrections": {
+  "288,226": "D/F#",
+  "288,438": "C/E",
+  "288,620": "G/D",
+  "288,1225": "G/D",
+  "512,292": "D/F#",
+  "512,464": "C/E",
+  "512,699": "G/D",
+  "512,1241": "G/D",
+  "786,266": "D/F#",
+  "786,418": "C/E",
+  "786,651": "G/D",
+  "786,1345": "C/D",
+  "1099,234": "D/F#",
+  "1099,607": "G/D",
+  "1099,870": "A/C#",
+  "1099,1036": "A",
+  "1384,284": "E/G#",
+  "1384,966": "G/D",
+  "1384,1119": "C/D",
+  "1384,1470": "(D/F#)",
+  "1670,99": "C/E",
+  "1670,310": "G/D",
+  "1954,241": "D/F#",
+  "1954,420": "C/E",
+  "1954,613": "G/D",
+  "1954,1338": "C/D"
+ },
+ "corrections_verified": "amas relus au zoom (propose-extra --all, planches _extra-1 et _extra-2). **Page gravée en fa, .cho en sol** (song_semitones 10) : chaque amas lu est écrit deux demi-tons au-dessus du gravé — C/E→D/F#, Bb/D→C/E, F/C→G/D, Bb/C→C/D, G/B→A/C#, G→A, D/F#→E/G#. L'alternative gravée entre parenthèses « (C/E) » (y=1384 x=1470) est recopiée avec ses parenthèses, « (D/F#) ». 2026-09-18 (itération 63)",
+ "not_labels": [
+  "786,1454",
+  "1099,39",
+  "1954,1436"
+ ],
+ "not_labels_verified": "y=786 x=1454 : « 【Chorus】 » ; y=1099 x=39 : le **segno** 𝄉 seul dans son amas (le « F » voisin est un autre amas) ; y=1954 x=1436 : « To Chorus ». Aucun n'est un accord (zooms _extra-1 #13, _extra-2 #23 et #38). 2026-09-18 (itération 63)",
+ "not_rows": [
+  210,
+  848
+ ],
+ "not_rows_verified": "y=210 : le « 4 » du chiffrage 4/4, seul amas de sa bande (zoom _extra-1 #0) ; y=848 : neuf fragments d'arcs, de hampes, de barres et de « 3 » de triolet, sous la rangée d'accords y=786 (zooms _extra-1 #14 à #22). 2026-09-18 (itération 63)",
+ "title_key": {
+  "x": 1085,
+  "y": 13,
+  "w": 173,
+  "h": 72
+ },
+ "title_key_verified": "mention « （F调） » du titre, **mesurée à la main** : measure-titlekey ne la propose pas, la bande du titre de cette page s'étend jusqu'au bloc de crédits « 曾祥怡 词曲 » et ses quatre coupes tombent toutes dessus. Encre mesurée au profil de colonnes sur la ligne du titre (groupes 298…591 « 唯有耶稣 », 637…996 « （赞美之泉） », 1085…1257 « （F调） ») puis en lignes (13…84), et le zoom relu à l'œil. La mention de série « [共4张：G(原调)/ F/E调、级数] » décrit la source et reste telle quelle. 2026-09-18 (itération 63)",
+ "key_label": {
+  "x": 11,
+  "y": 226,
+  "w": 85,
+  "h": 28
+ },
+ "key_label_verified": "mesure measure-keylabel (ancrage sur le « = », cadre = voisin gauche…voisin droit), zoom relu à l’œil sur planche de lot, lettre gravée confrontée à printedKey, 2026-08-26 (itération 35)",
+ "extra_labels": [
+  {
+   "x": 478,
+   "y": 1030,
+   "w": 103,
+   "h": 30,
+   "c": "( C/E )",
+   "fh": 23
+  }
+ ],
+ "extra_labels_verified": "« ( Bb/D ) » gravé **sous la ligne de paroles** du 3e système (y=1030), une variante d'accord qu'aucune rangée ne porte : ni le découpage, ni propose-extra, ni le matcher ne la voient — repérée à l'œil sur la planche navigateur, où elle restait en fa au milieu d'accords transposés. Encre mesurée (x 478…580, y 1030…1059, capitale 23 px contre 27 pour la page, d'où fh). Écrite dans la convention du .cho : « ( C/E ) », espaces comprises comme sur la gravure. 2026-09-18 (itération 63)",
+ "verified": "planche navigateur (npm run jianpu:audit) relue tranche par tranche, 6/6, en F gravé → F# rendu (page en fa, .cho en sol) : les 7 rangées d'accords (y=288, 512, 786, 1099, 1384, 1670, 1954) sont cadrées, les 54 étiquettes réécrites, le cadre « 1= F » devient « 1=F# » et la mention « （F调） » du titre devient « （F#调） ». Chaque étiquette du bas a été confrontée au transposé d'un demi-ton de celle du haut, une à une. Un défaut vu à l'œil et à l'œil seul : la variante « ( Bb/D ) » gravée sous la ligne de paroles du 3e système restait en fa — aucun outil ne la propose, elle est reposée en extra_label. Le segno 𝄉, « 【Chorus】 », « 【Free Worship】 », « (唱Free时) », « Fine » et « To Chorus » restent intacts, ainsi que la mention de série « [共4张：G(原调)…] ». 2026-09-18 (itération 63)",
+ "frozen_labels": [
+  {
+   "x": 57,
+   "y": 288,
+   "w": 14,
+   "h": 35,
+   "c": "F"
+  },
+  {
+   "x": 226,
+   "y": 288,
+   "w": 53,
+   "h": 35,
+   "c": "C/E"
+  },
+  {
+   "x": 438,
+   "y": 288,
+   "w": 79,
+   "h": 35,
+   "c": "Bb/D"
+  },
+  {
+   "x": 620,
+   "y": 288,
+   "w": 52,
+   "h": 35,
+   "c": "F/C"
+  },
+  {
+   "x": 831,
+   "y": 288,
+   "w": 38,
+   "h": 35,
+   "c": "Bb"
+  },
+  {
+   "x": 1009,
+   "y": 288,
+   "w": 55,
+   "h": 35,
+   "c": "Gm"
+  },
+  {
+   "x": 1225,
+   "y": 288,
+   "w": 52,
+   "h": 35,
+   "c": "F/C"
+  },
+  {
+   "x": 1402,
+   "y": 288,
+   "w": 39,
+   "h": 35,
+   "c": "C7"
+  },
+  {
+   "x": 73,
+   "y": 512,
+   "w": 13,
+   "h": 35,
+   "c": "F"
+  },
+  {
+   "x": 292,
+   "y": 512,
+   "w": 53,
+   "h": 35,
+   "c": "C/E"
+  },
+  {
+   "x": 464,
+   "y": 512,
+   "w": 79,
+   "h": 35,
+   "c": "Bb/D"
+  },
+  {
+   "x": 699,
+   "y": 512,
+   "w": 52,
+   "h": 35,
+   "c": "F/C"
+  },
+  {
+   "x": 836,
+   "y": 512,
+   "w": 38,
+   "h": 35,
+   "c": "Bb"
+  },
+  {
+   "x": 1065,
+   "y": 512,
+   "w": 53,
+   "h": 35,
+   "c": "Gm"
+  },
+  {
+   "x": 1241,
+   "y": 512,
+   "w": 52,
+   "h": 35,
+   "c": "F/C"
+  },
+  {
+   "x": 1473,
+   "y": 512,
+   "w": 39,
+   "h": 35,
+   "c": "C7"
+  },
+  {
+   "x": 54,
+   "y": 786,
+   "w": 13,
+   "h": 46,
+   "c": "F"
+  },
+  {
+   "x": 266,
+   "y": 786,
+   "w": 53,
+   "h": 46,
+   "c": "C/E"
+  },
+  {
+   "x": 418,
+   "y": 786,
+   "w": 79,
+   "h": 46,
+   "c": "Bb/D"
+  },
+  {
+   "x": 651,
+   "y": 786,
+   "w": 51,
+   "h": 46,
+   "c": "F/C"
+  },
+  {
+   "x": 857,
+   "y": 786,
+   "w": 38,
+   "h": 46,
+   "c": "Bb"
+  },
+  {
+   "x": 1003,
+   "y": 786,
+   "w": 93,
+   "h": 46,
+   "c": "Csus4"
+  },
+  {
+   "x": 1222,
+   "y": 786,
+   "w": 13,
+   "h": 46,
+   "c": "F"
+  },
+  {
+   "x": 1345,
+   "y": 786,
+   "w": 76,
+   "h": 46,
+   "c": "Bb/C"
+  },
+  {
+   "x": 96,
+   "y": 1099,
+   "w": 13,
+   "h": 35,
+   "c": "F"
+  },
+  {
+   "x": 234,
+   "y": 1099,
+   "w": 53,
+   "h": 35,
+   "c": "C/E"
+  },
+  {
+   "x": 493,
+   "y": 1099,
+   "w": 52,
+   "h": 35,
+   "c": "Dm"
+  },
+  {
+   "x": 607,
+   "y": 1099,
+   "w": 52,
+   "h": 35,
+   "c": "F/C"
+  },
+  {
+   "x": 870,
+   "y": 1099,
+   "w": 59,
+   "h": 35,
+   "c": "G/B"
+  },
+  {
+   "x": 1036,
+   "y": 1099,
+   "w": 21,
+   "h": 35,
+   "c": "G"
+  },
+  {
+   "x": 1296,
+   "y": 1099,
+   "w": 92,
+   "h": 35,
+   "c": "Csus4"
+  },
+  {
+   "x": 1420,
+   "y": 1099,
+   "w": 19,
+   "h": 35,
+   "c": "C"
+  },
+  {
+   "x": 38,
+   "y": 1384,
+   "w": 82,
+   "h": 35,
+   "c": "Adim"
+  },
+  {
+   "x": 284,
+   "y": 1384,
+   "w": 74,
+   "h": 35,
+   "c": "D/Gb"
+  },
+  {
+   "x": 493,
+   "y": 1384,
+   "w": 53,
+   "h": 35,
+   "c": "Gm"
+  },
+  {
+   "x": 742,
+   "y": 1384,
+   "w": 178,
+   "h": 35,
+   "c": "Gm7(b5)/Db"
+  },
+  {
+   "x": 966,
+   "y": 1384,
+   "w": 51,
+   "h": 35,
+   "c": "F/C"
+  },
+  {
+   "x": 1119,
+   "y": 1384,
+   "w": 76,
+   "h": 35,
+   "c": "Bb/C"
+  },
+  {
+   "x": 1392,
+   "y": 1384,
+   "w": 13,
+   "h": 35,
+   "c": "F"
+  },
+  {
+   "x": 1470,
+   "y": 1384,
+   "w": 70,
+   "h": 35,
+   "c": "(C/E)"
+  },
+  {
+   "x": 99,
+   "y": 1670,
+   "w": 79,
+   "h": 31,
+   "c": "Bb/D"
+  },
+  {
+   "x": 310,
+   "y": 1670,
+   "w": 51,
+   "h": 31,
+   "c": "F/C"
+  },
+  {
+   "x": 630,
+   "y": 1670,
+   "w": 38,
+   "h": 31,
+   "c": "Bb"
+  },
+  {
+   "x": 939,
+   "y": 1670,
+   "w": 53,
+   "h": 31,
+   "c": "Gm"
+  },
+  {
+   "x": 1182,
+   "y": 1670,
+   "w": 19,
+   "h": 31,
+   "c": "C"
+  },
+  {
+   "x": 60,
+   "y": 1954,
+   "w": 13,
+   "h": 35,
+   "c": "F"
+  },
+  {
+   "x": 241,
+   "y": 1954,
+   "w": 53,
+   "h": 35,
+   "c": "C/E"
+  },
+  {
+   "x": 420,
+   "y": 1954,
+   "w": 79,
+   "h": 35,
+   "c": "Bb/D"
+  },
+  {
+   "x": 613,
+   "y": 1954,
+   "w": 51,
+   "h": 35,
+   "c": "F/C"
+  },
+  {
+   "x": 790,
+   "y": 1954,
+   "w": 39,
+   "h": 35,
+   "c": "Bb"
+  },
+  {
+   "x": 988,
+   "y": 1954,
+   "w": 18,
+   "h": 35,
+   "c": "C"
+  },
+  {
+   "x": 1201,
+   "y": 1954,
+   "w": 13,
+   "h": 35,
+   "c": "F"
+  },
+  {
+   "x": 1338,
+   "y": 1954,
+   "w": 76,
+   "h": 35,
+   "c": "Bb/C"
+  },
+  {
+   "x": 478,
+   "y": 1030,
+   "w": 103,
+   "h": 30,
+   "c": "( Bb/D )",
+   "fh": 23
+  }
+ ]
+}

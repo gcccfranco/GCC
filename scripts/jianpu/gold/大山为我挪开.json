@@ -1,0 +1,399 @@
+{
+ "slug": "大山为我挪开",
+ "printed_key": "E",
+ "printed_key_verified": "en-tête de la page lu à l'œil avant toute mesure (étape 0), lot des 50 简谱 fournis, 2026-09-18 (itération 63)",
+ "corrections": {
+  "224,434": "B/E",
+  "224,766": "A/E",
+  "367,313": "B/E",
+  "367,1237": "E/G#",
+  "631,1085": "B",
+  "956,425": "B",
+  "956,625": "C#m",
+  "956,955": "G#m",
+  "1330,57": "E/G#",
+  "1559,674": "(B)",
+  "1559,1382": "(B)",
+  "1699,438": "B/D#",
+  "1924,56": "C#m",
+  "1924,323": "B/D#"
+ },
+ "corrections_verified": "amas relus au zoom (propose-extra --all --hidden) et recoupés sur les bandes de la page : « A/E » (y=224) absent du vocabulaire du .cho, deux « B/E », trois « E/G# » / « B/D# » que le matcher confondait, et surtout quatre lectures retenues fausses (mode C) — « E » pour B (631,1085 et 956,425), « F#m » pour C#m (956,625), « C#m » pour G#m (956,955). Les deux « (B) » entre parenthèses du 间奏 sont réécrits d'un bloc par transposeLabel (vérifié : « (B) » → « (C) »). Page en mi, .cho en mi (song_semitones=0). 2026-09-18 (itération 63)",
+ "not_labels": [
+  "956,150",
+  "1559,154",
+  "1559,259",
+  "1699,188",
+  "1924,1321"
+ ],
+ "not_labels_verified": "amas qui ne sont pas des accords, vus au zoom : 【Chorus】 (956), les deux moitiés de « [间奏，接Bridge] » (1559), 【Bridge】 (1699), « To Chorus » (1924). 2026-09-18 (itération 63)",
+ "not_rows": [
+  250
+ ],
+ "not_rows_verified": "rangée y=250 : six fragments d'arcs de liaison du premier système (largeurs 1 à 6 px), aucune lettre. 2026-09-18 (itération 63)",
+ "mask_rows": [
+  869,
+  1238
+ ],
+ "mask_rows_verified": "les deux rangées du second jeu, gravées en SOL au-dessus des rangées en MI, rendues côte à côte avec leur jumelle avant de masquer : y=869 « G D Em Bm C » au-dessus de y=956 « E 【Chorus】 B C#m G#m A », et y=1238 « G/B Am D Am D G » au-dessus de y=1330 « E/G# F#m B F#m B E » — mêmes degrés. Aucune des deux n'a jamais été typée « accords » : absentes de read() comme de foreign_rows. La première est venue de propose-extra --hidden ; la seconde n'a été vue que **sur la planche navigateur** (tranche 4/7 : six accords restés en sol au-dessus d'une rangée en fa). 2026-09-18 (itération 63)",
+ "key_label": {
+  "x": 17,
+  "y": 160,
+  "w": 74,
+  "h": 24
+ },
+ "key_label_verified": "mesure measure-keylabel (ancrage sur le « = », cadre = voisin gauche…voisin droit), zoom relu à l’œil sur planche de lot, lettre gravée confrontée à printedKey, 2026-08-26 (itération 35)",
+ "verified": "planche navigateur (npm run jianpu:audit) relue tranche par tranche 1/7 à 7/7 en E→F, après l'ajout du masque de la rangée y=1238 : les 8 rangées d'accords publiées (y=224, 367, 631, 956, 1330, 1559, 1699, 1924) sont cadrées en rouge, 39 étiquettes réécrites, et les 2 rangées du second jeu en sol (y=869 et 1238) sont couvertes par leurs 11 masques — plus un seul accord en sol au-dessus d'une rangée en fa (tranches 3/7 et 4/7). Bas confronté au transposé du haut étiquette par étiquette : E→F, B/E→C/F, A/E→Bb/F, A→Bb, F#m→Gm, E/G#→F/A, B→C, C#m→Dm, G#m→Am, B/D#→C/E, et les deux « (B) » du 间奏 deviennent « (C) » d'un bloc. Le cadre « 1=E » devient « 1=F » ; le titre ne porte pas de mention « （X调） » et la note de série « [另有一张D调] » décrit l'autre planche, elle reste intacte, comme 【Chorus】, 【Bridge】, « [间奏，接Bridge] », « Fine », « To Chorus » et le filigrane. Les crochets de 1re/2e fin et leurs chiffres ne sont pas effacés. Page en mi, .cho en mi (song_semitones=0). 2026-09-18 (itération 63)",
+ "frozen_labels": [
+  {
+   "x": 105,
+   "y": 224,
+   "w": 12,
+   "h": 23,
+   "c": "E"
+  },
+  {
+   "x": 434,
+   "y": 224,
+   "w": 44,
+   "h": 23,
+   "c": "B/E"
+  },
+  {
+   "x": 766,
+   "y": 224,
+   "w": 47,
+   "h": 23,
+   "c": "A/E"
+  },
+  {
+   "x": 90,
+   "y": 367,
+   "w": 11,
+   "h": 23,
+   "c": "E"
+  },
+  {
+   "x": 313,
+   "y": 367,
+   "w": 44,
+   "h": 23,
+   "c": "B/E"
+  },
+  {
+   "x": 572,
+   "y": 367,
+   "w": 18,
+   "h": 23,
+   "c": "A"
+  },
+  {
+   "x": 815,
+   "y": 367,
+   "w": 12,
+   "h": 23,
+   "c": "E"
+  },
+  {
+   "x": 1004,
+   "y": 367,
+   "w": 56,
+   "h": 23,
+   "c": "F#m"
+  },
+  {
+   "x": 1237,
+   "y": 367,
+   "w": 65,
+   "h": 23,
+   "c": "E/G#"
+  },
+  {
+   "x": 63,
+   "y": 631,
+   "w": 18,
+   "h": 22,
+   "c": "A"
+  },
+  {
+   "x": 366,
+   "y": 631,
+   "w": 15,
+   "h": 22,
+   "c": "B"
+  },
+  {
+   "x": 590,
+   "y": 631,
+   "w": 18,
+   "h": 22,
+   "c": "A"
+  },
+  {
+   "x": 1085,
+   "y": 631,
+   "w": 14,
+   "h": 22,
+   "c": "B"
+  },
+  {
+   "x": 95,
+   "y": 956,
+   "w": 12,
+   "h": 34,
+   "c": "E"
+  },
+  {
+   "x": 425,
+   "y": 956,
+   "w": 14,
+   "h": 34,
+   "c": "B"
+  },
+  {
+   "x": 625,
+   "y": 956,
+   "w": 59,
+   "h": 34,
+   "c": "C#m"
+  },
+  {
+   "x": 955,
+   "y": 956,
+   "w": 63,
+   "h": 34,
+   "c": "G#m"
+  },
+  {
+   "x": 1164,
+   "y": 956,
+   "w": 18,
+   "h": 34,
+   "c": "A"
+  },
+  {
+   "x": 57,
+   "y": 1330,
+   "w": 64,
+   "h": 23,
+   "c": "E/G#"
+  },
+  {
+   "x": 287,
+   "y": 1330,
+   "w": 56,
+   "h": 23,
+   "c": "F#m"
+  },
+  {
+   "x": 590,
+   "y": 1330,
+   "w": 15,
+   "h": 23,
+   "c": "B"
+  },
+  {
+   "x": 800,
+   "y": 1330,
+   "w": 56,
+   "h": 23,
+   "c": "F#m"
+  },
+  {
+   "x": 895,
+   "y": 1330,
+   "w": 15,
+   "h": 23,
+   "c": "B"
+  },
+  {
+   "x": 1105,
+   "y": 1330,
+   "w": 12,
+   "h": 23,
+   "c": "E"
+  },
+  {
+   "x": 67,
+   "y": 1559,
+   "w": 59,
+   "h": 34,
+   "c": "C#m"
+  },
+  {
+   "x": 431,
+   "y": 1559,
+   "w": 12,
+   "h": 34,
+   "c": "E"
+  },
+  {
+   "x": 674,
+   "y": 1559,
+   "w": 36,
+   "h": 34,
+   "c": "(B)"
+  },
+  {
+   "x": 774,
+   "y": 1559,
+   "w": 60,
+   "h": 34,
+   "c": "C#m"
+  },
+  {
+   "x": 1138,
+   "y": 1559,
+   "w": 12,
+   "h": 34,
+   "c": "E"
+  },
+  {
+   "x": 1382,
+   "y": 1559,
+   "w": 35,
+   "h": 34,
+   "c": "(B)"
+  },
+  {
+   "x": 86,
+   "y": 1699,
+   "w": 60,
+   "h": 31,
+   "c": "C#m"
+  },
+  {
+   "x": 438,
+   "y": 1699,
+   "w": 66,
+   "h": 31,
+   "c": "B/D#"
+  },
+  {
+   "x": 804,
+   "y": 1699,
+   "w": 12,
+   "h": 31,
+   "c": "E"
+  },
+  {
+   "x": 1154,
+   "y": 1699,
+   "w": 18,
+   "h": 31,
+   "c": "A"
+  },
+  {
+   "x": 56,
+   "y": 1924,
+   "w": 60,
+   "h": 28,
+   "c": "C#m"
+  },
+  {
+   "x": 323,
+   "y": 1924,
+   "w": 67,
+   "h": 28,
+   "c": "B/D#"
+  },
+  {
+   "x": 584,
+   "y": 1924,
+   "w": 12,
+   "h": 28,
+   "c": "E"
+  },
+  {
+   "x": 857,
+   "y": 1924,
+   "w": 56,
+   "h": 28,
+   "c": "F#m"
+  },
+  {
+   "x": 1116,
+   "y": 1924,
+   "w": 15,
+   "h": 28,
+   "c": "B"
+  },
+  {
+   "x": 92,
+   "y": 869,
+   "w": 18,
+   "h": 23,
+   "c": ""
+  },
+  {
+   "x": 423,
+   "y": 869,
+   "w": 17,
+   "h": 23,
+   "c": ""
+  },
+  {
+   "x": 625,
+   "y": 869,
+   "w": 40,
+   "h": 23,
+   "c": ""
+  },
+  {
+   "x": 958,
+   "y": 869,
+   "w": 42,
+   "h": 23,
+   "c": ""
+  },
+  {
+   "x": 1165,
+   "y": 869,
+   "w": 16,
+   "h": 23,
+   "c": ""
+  },
+  {
+   "x": 56,
+   "y": 1238,
+   "w": 51,
+   "h": 23,
+   "c": ""
+  },
+  {
+   "x": 284,
+   "y": 1238,
+   "w": 45,
+   "h": 23,
+   "c": ""
+  },
+  {
+   "x": 589,
+   "y": 1238,
+   "w": 18,
+   "h": 23,
+   "c": ""
+  },
+  {
+   "x": 799,
+   "y": 1238,
+   "w": 45,
+   "h": 23,
+   "c": ""
+  },
+  {
+   "x": 894,
+   "y": 1238,
+   "w": 18,
+   "h": 23,
+   "c": ""
+  },
+  {
+   "x": 1101,
+   "y": 1238,
+   "w": 18,
+   "h": 23,
+   "c": ""
+  }
+ ]
+}

@@ -1,0 +1,334 @@
+{
+ "slug": "从早晨到夜晚",
+ "printed_key": "F",
+ "printed_key_verified": "en-tête de la page lu à l'œil avant toute mesure (étape 0), lot des 50 简谱 fournis, 2026-09-18 (itération 63)",
+ "corrections": {
+  "435,491": "Bb/F",
+  "435,1233": "Bb/F",
+  "1100,455": "Bb/F",
+  "1421,443": "Bb/F"
+ },
+ "corrections_verified": "quatre « Bb/F » relus au zoom (propose-extra --all --hidden) que le matcher laissait sous le seuil. Page en fa, .cho en fa (song_semitones=0). 2026-09-18 (itération 63)",
+ "not_labels": [
+  "717,1401",
+  "1100,43",
+  "1100,163",
+  "1100,251",
+  "1421,1413",
+  "1899,1370",
+  "1899,1433"
+ ],
+ "not_labels_verified": "amas qui ne sont pas des accords, vus au zoom : 【Chorus】 (717), le segno 𝄋 et les deux moitiés de « [最后一遍副歌升G调] » (1100), 【Bridge】 (1421), « D.S. » et « al Fine » (1899). 2026-09-18 (itération 63)",
+ "mask_rows": [
+  1006,
+  1330
+ ],
+ "mask_rows_verified": "les deux rangées du second jeu, gravées en SOL au-dessus des rangées en FA, rendues côte à côte avec leur jumelle avant de masquer (crops cjy-stack / cjy-stack2) : y=1006 « G C/G G D » au-dessus de y=1100 « F Bb/F F C », y=1330 « G C/G G D G » au-dessus de y=1421 « F Bb/F F C F ». La page l'annonce elle-même : « [最后一遍副歌升G调] » (dernier refrain en sol). foreign_rows ne voyait que y=1006 ; y=1330 a été trouvée à l'œil sur la planche de zooms (le matcher y lisait « Gm » pour C/G et « F » pour D). 2026-09-18 (itération 63)",
+ "key_label": {
+  "x": 14,
+  "y": 165,
+  "w": 77,
+  "h": 26
+ },
+ "key_label_verified": "mesure measure-keylabel (ancrage sur le « = », cadre = voisin gauche…voisin droit), zoom relu à l’œil sur planche de lot, lettre gravée confrontée à printedKey, 2026-08-26 (itération 35)",
+ "extra_labels": [
+  {
+   "x": 82,
+   "y": 261,
+   "w": 12,
+   "h": 24,
+   "c": "F"
+  },
+  {
+   "x": 627,
+   "y": 235,
+   "w": 65,
+   "h": 32,
+   "c": "Bb/F"
+  },
+  {
+   "x": 1090,
+   "y": 235,
+   "w": 65,
+   "h": 32,
+   "c": "Bb/F"
+  }
+ ],
+ "extra_labels_verified": "la rangée d'accords de l'intro (y≈236–285 : « F » puis les deux « Bb/F » des première et deuxième fois) n'a jamais été typée « accords » — absente de read() comme de propose-extra. Vue **sur la planche navigateur** (tranche 1/6 : trois accords restés en fa sous un « 1=F# »). Les trois étiquettes n'ont pas la même ligne de base (le F est 26 px plus bas que les Bb/F) : chaque boîte est mesurée sur son encre propre, hors du crochet de reprise qui commence à y=279. 2026-09-18 (itération 63)",
+ "verified": "planche navigateur (npm run jianpu:audit) relue tranche par tranche, 6/6, en F→F# : les 7 rangées en fa sont cadrées et réécrites (F→F#, Bb/F→B/F#, Gm→G#m, C→C#, Bb→B), le cadre « 1=F » suit en « 1=F# ». Les deux rangées du second jeu en SOL (y=1006 et y=1330) apparaissent en cadres orange vides, donc masquées : la page ne mélange pas deux tonalités. Défaut vu et corrigé pendant l'audit : la rangée d'intro (F, Bb/F, Bb/F, y≈236) restait en fa sur la page transposée (tranche 1/6) — jamais typée « accords », republiée en extra_label. Le titre porte « （F原调） », qui décrit la source et reste vrai transposé : pas de title_key. Réserve notée : l'annotation gravée « [最后一遍副歌升G调] » (tranches 3/6 et 4/6) reste en clair et parle toujours de sol ; c'est de la prose, jamais transposée par le calque, et le jeu en sol auquel elle renvoie est masqué. 2026-09-18 (itération 63)",
+ "frozen_labels": [
+  {
+   "x": 92,
+   "y": 435,
+   "w": 13,
+   "h": 26,
+   "c": "F"
+  },
+  {
+   "x": 491,
+   "y": 435,
+   "w": 66,
+   "h": 26,
+   "c": "Bb/F"
+  },
+  {
+   "x": 834,
+   "y": 435,
+   "w": 12,
+   "h": 26,
+   "c": "F"
+  },
+  {
+   "x": 1233,
+   "y": 435,
+   "w": 66,
+   "h": 26,
+   "c": "Bb/F"
+  },
+  {
+   "x": 63,
+   "y": 717,
+   "w": 48,
+   "h": 33,
+   "c": "Gm"
+  },
+  {
+   "x": 482,
+   "y": 717,
+   "w": 17,
+   "h": 33,
+   "c": "C"
+  },
+  {
+   "x": 794,
+   "y": 717,
+   "w": 48,
+   "h": 33,
+   "c": "Gm"
+  },
+  {
+   "x": 980,
+   "y": 717,
+   "w": 16,
+   "h": 33,
+   "c": "C"
+  },
+  {
+   "x": 1215,
+   "y": 717,
+   "w": 12,
+   "h": 33,
+   "c": "F"
+  },
+  {
+   "x": 98,
+   "y": 1100,
+   "w": 13,
+   "h": 37,
+   "c": "F"
+  },
+  {
+   "x": 455,
+   "y": 1100,
+   "w": 65,
+   "h": 37,
+   "c": "Bb/F"
+  },
+  {
+   "x": 805,
+   "y": 1100,
+   "w": 13,
+   "h": 37,
+   "c": "F"
+  },
+  {
+   "x": 1291,
+   "y": 1100,
+   "w": 17,
+   "h": 37,
+   "c": "C"
+  },
+  {
+   "x": 73,
+   "y": 1421,
+   "w": 12,
+   "h": 34,
+   "c": "F"
+  },
+  {
+   "x": 443,
+   "y": 1421,
+   "w": 66,
+   "h": 34,
+   "c": "Bb/F"
+  },
+  {
+   "x": 799,
+   "y": 1421,
+   "w": 12,
+   "h": 34,
+   "c": "F"
+  },
+  {
+   "x": 1020,
+   "y": 1421,
+   "w": 17,
+   "h": 34,
+   "c": "C"
+  },
+  {
+   "x": 1254,
+   "y": 1421,
+   "w": 13,
+   "h": 34,
+   "c": "F"
+  },
+  {
+   "x": 95,
+   "y": 1665,
+   "w": 12,
+   "h": 24,
+   "c": "F"
+  },
+  {
+   "x": 455,
+   "y": 1665,
+   "w": 35,
+   "h": 24,
+   "c": "Bb"
+  },
+  {
+   "x": 827,
+   "y": 1665,
+   "w": 12,
+   "h": 24,
+   "c": "F"
+  },
+  {
+   "x": 1211,
+   "y": 1665,
+   "w": 16,
+   "h": 24,
+   "c": "C"
+  },
+  {
+   "x": 72,
+   "y": 1899,
+   "w": 12,
+   "h": 30,
+   "c": "F"
+  },
+  {
+   "x": 425,
+   "y": 1899,
+   "w": 35,
+   "h": 30,
+   "c": "Bb"
+  },
+  {
+   "x": 792,
+   "y": 1899,
+   "w": 12,
+   "h": 30,
+   "c": "F"
+  },
+  {
+   "x": 994,
+   "y": 1899,
+   "w": 16,
+   "h": 30,
+   "c": "C"
+  },
+  {
+   "x": 1210,
+   "y": 1899,
+   "w": 12,
+   "h": 30,
+   "c": "F"
+  },
+  {
+   "x": 82,
+   "y": 261,
+   "w": 12,
+   "h": 24,
+   "c": "F"
+  },
+  {
+   "x": 627,
+   "y": 235,
+   "w": 65,
+   "h": 32,
+   "c": "Bb/F"
+  },
+  {
+   "x": 1090,
+   "y": 235,
+   "w": 65,
+   "h": 32,
+   "c": "Bb/F"
+  },
+  {
+   "x": 95,
+   "y": 1006,
+   "w": 17,
+   "h": 21,
+   "c": ""
+  },
+  {
+   "x": 455,
+   "y": 1006,
+   "w": 47,
+   "h": 21,
+   "c": ""
+  },
+  {
+   "x": 803,
+   "y": 1006,
+   "w": 17,
+   "h": 21,
+   "c": ""
+  },
+  {
+   "x": 1292,
+   "y": 1006,
+   "w": 16,
+   "h": 21,
+   "c": ""
+  },
+  {
+   "x": 70,
+   "y": 1330,
+   "w": 17,
+   "h": 21,
+   "c": ""
+  },
+  {
+   "x": 444,
+   "y": 1330,
+   "w": 46,
+   "h": 21,
+   "c": ""
+  },
+  {
+   "x": 796,
+   "y": 1330,
+   "w": 17,
+   "h": 21,
+   "c": ""
+  },
+  {
+   "x": 1021,
+   "y": 1330,
+   "w": 16,
+   "h": 21,
+   "c": ""
+  },
+  {
+   "x": 1252,
+   "y": 1330,
+   "w": 17,
+   "h": 21,
+   "c": ""
+  }
+ ]
+}

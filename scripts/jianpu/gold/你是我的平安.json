@@ -1,0 +1,264 @@
+{
+ "slug": "你是我的平安",
+ "printed_key": "D",
+ "printed_key_verified": "en-tête de la page lu à l'œil avant toute mesure (étape 0), lot des 50 简谱 fournis, 2026-09-18 (itération 63)",
+ "corrections": {
+  "505,1246": "G/A",
+  "1016,577": "Bm7",
+  "1272,909": "Bm7",
+  "1526,1100": "Bm7",
+  "2038,60": "Bm7"
+ },
+ "corrections_verified": "amas relus un par un au zoom (propose-extra --all --hidden), convention du .cho (song_semitones=0), 2026-09-18 (itération 63) · quatre « Bm7 » que le matcher lisait « Em7 » (mode C)",
+ "not_rows": [
+  550,
+  1317
+ ],
+ "not_labels": [
+  "755,1314",
+  "1016,45",
+  "1773,854",
+  "2038,1364"
+ ],
+ "key_label": {
+  "x": 14,
+  "y": 165,
+  "w": 83,
+  "h": 26
+ },
+ "key_label_verified": "cadre mesuré par measure-keylabel (ancrage sur le « = »), candidate relue sur la planche _kl : la lettre gravée est bien celle de printed_key, donc pas de champ `c` — le client écrit « 1=<tonalité jouée> ». La ligne de tempo ♩=NN, proposée en même temps, a été écartée. 2026-09-18 (itération 63)",
+ "verified": "planche navigateur relue tranche par tranche, 7/7, en D→Eb : les 8 rangées d'accords sont cadrées et les 33 étiquettes réécrites, cadre « 1= D » → « 1=Eb » compris (la candidate #1 de measure-keylabel était la ligne de tempo ♩=68, écartée). Deux rangées de liaisons (y=550, 1317) écartées en not_rows ; le segno, 【Chorus】, « [连唱3次] » et « D.S. al Fine » écartés en not_labels et laissés intacts sur le rendu. Quatre « Bm7 » que le matcher publiait « Em7 » (mode C) corrigés à l'œil, plus un « G/A » non retenu. 2026-09-18 (itération 63)",
+ "frozen_labels": [
+  {
+   "x": 52,
+   "y": 250,
+   "w": 18,
+   "h": 25,
+   "c": "D"
+  },
+  {
+   "x": 277,
+   "y": 250,
+   "w": 92,
+   "h": 25,
+   "c": "Dmaj7"
+  },
+  {
+   "x": 527,
+   "y": 250,
+   "w": 18,
+   "h": 25,
+   "c": "D"
+  },
+  {
+   "x": 756,
+   "y": 250,
+   "w": 92,
+   "h": 25,
+   "c": "Dmaj7"
+  },
+  {
+   "x": 1158,
+   "y": 250,
+   "w": 18,
+   "h": 25,
+   "c": "D"
+  },
+  {
+   "x": 73,
+   "y": 505,
+   "w": 19,
+   "h": 24,
+   "c": "G"
+  },
+  {
+   "x": 561,
+   "y": 505,
+   "w": 61,
+   "h": 24,
+   "c": "Em7"
+  },
+  {
+   "x": 753,
+   "y": 505,
+   "w": 84,
+   "h": 24,
+   "c": "Asus4"
+  },
+  {
+   "x": 978,
+   "y": 505,
+   "w": 18,
+   "h": 24,
+   "c": "D"
+  },
+  {
+   "x": 1246,
+   "y": 505,
+   "w": 56,
+   "h": 24,
+   "c": "G/A"
+  },
+  {
+   "x": 1415,
+   "y": 505,
+   "w": 18,
+   "h": 24,
+   "c": "D"
+  },
+  {
+   "x": 356,
+   "y": 755,
+   "w": 19,
+   "h": 29,
+   "c": "G"
+  },
+  {
+   "x": 766,
+   "y": 755,
+   "w": 61,
+   "h": 29,
+   "c": "Em7"
+  },
+  {
+   "x": 943,
+   "y": 755,
+   "w": 85,
+   "h": 29,
+   "c": "Asus4"
+  },
+  {
+   "x": 1152,
+   "y": 755,
+   "w": 18,
+   "h": 29,
+   "c": "D"
+  },
+  {
+   "x": 91,
+   "y": 1016,
+   "w": 79,
+   "h": 26,
+   "c": "F#m7"
+  },
+  {
+   "x": 577,
+   "y": 1016,
+   "w": 63,
+   "h": 26,
+   "c": "Bm7"
+  },
+  {
+   "x": 985,
+   "y": 1016,
+   "w": 61,
+   "h": 26,
+   "c": "Em7"
+  },
+  {
+   "x": 1249,
+   "y": 1016,
+   "w": 84,
+   "h": 26,
+   "c": "Asus4"
+  },
+  {
+   "x": 67,
+   "y": 1272,
+   "w": 18,
+   "h": 23,
+   "c": "D"
+  },
+  {
+   "x": 433,
+   "y": 1272,
+   "w": 78,
+   "h": 23,
+   "c": "F#m7"
+  },
+  {
+   "x": 909,
+   "y": 1272,
+   "w": 62,
+   "h": 23,
+   "c": "Bm7"
+  },
+  {
+   "x": 1283,
+   "y": 1272,
+   "w": 61,
+   "h": 23,
+   "c": "Em7"
+  },
+  {
+   "x": 52,
+   "y": 1526,
+   "w": 85,
+   "h": 24,
+   "c": "Asus4"
+  },
+  {
+   "x": 368,
+   "y": 1526,
+   "w": 18,
+   "h": 24,
+   "c": "D"
+  },
+  {
+   "x": 653,
+   "y": 1526,
+   "w": 95,
+   "h": 24,
+   "c": "Gadd9"
+  },
+  {
+   "x": 1100,
+   "y": 1526,
+   "w": 63,
+   "h": 24,
+   "c": "Bm7"
+  },
+  {
+   "x": 70,
+   "y": 1773,
+   "w": 18,
+   "h": 33,
+   "c": "D"
+  },
+  {
+   "x": 511,
+   "y": 1773,
+   "w": 19,
+   "h": 33,
+   "c": "A"
+  },
+  {
+   "x": 1046,
+   "y": 1773,
+   "w": 95,
+   "h": 33,
+   "c": "Gadd9"
+  },
+  {
+   "x": 60,
+   "y": 2038,
+   "w": 63,
+   "h": 24,
+   "c": "Bm7"
+  },
+  {
+   "x": 548,
+   "y": 2038,
+   "w": 18,
+   "h": 24,
+   "c": "D"
+  },
+  {
+   "x": 890,
+   "y": 2038,
+   "w": 19,
+   "h": 24,
+   "c": "A"
+  }
+ ]
+}

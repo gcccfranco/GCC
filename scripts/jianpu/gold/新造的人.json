@@ -1,0 +1,217 @@
+{
+ "slug": "新造的人",
+ "printed_key": "G",
+ "printed_key_verified": "en-tête lu à l'œil avant toute mesure (étape 0) : le nouveau scan est l'édition **敬拜版**, cadre « 1= G » à l'endroit (le GIF précédent l'écrivait à l'envers, « G=1 ») ; mention de série « [共3张：敬拜版、儿童版、级数] », sans tonalité. 2026-09-19 (itération 64)",
+ "extra_chords": [
+  "D7/G",
+  "D7"
+ ],
+ "extra_chords_verified": "relevés à l'œil : la page grave « D7/G » (3 fois) et « D7 » (3 fois) là où le `.cho` écrit D/G et D. 2026-09-19 (itération 64)",
+ "source": "nouveau scan fourni le 19/09/2026 (itération 64) en remplacement du GIF de recueil à 600 px : 1786 × 2526 px (636 × 632 avant), gravure typographique 赞美之泉 et non plus manuscrite.",
+ "en_chantier_leve": "levé : le GIF de recueil à 636×632 px est remplacé par le scan de l'édition 敬拜版 de 赞美之泉 (1786×2526 px, gravure typographique), fourni le 19/09/2026. Sur cette image le découpage isole les 8 rangées d'accords, le matcher lit 10 étiquettes sur 24 tout seul et les 14 restantes se relisent au zoom ; la tonalité est gravée à l'endroit « 1= G », donc plus rien de ce qui retenait la page en 63 ne tient. 2026-09-19 (itération 64)",
+ "corrections": {
+  "227,99": "G",
+  "227,842": "C/G",
+  "483,88": "D7/G",
+  "483,843": "G",
+  "738,105": "G",
+  "738,844": "C/G",
+  "991,81": "D7/G",
+  "991,805": "G",
+  "991,1441": "D/F#",
+  "1241,401": "Bm",
+  "1501,547": "C/G",
+  "1501,1068": "D7/G",
+  "1759,1021": "Bm",
+  "2013,1188": "G"
+ },
+ "corrections_verified": "les 24 amas des 8 rangées d'accords relus un par un au zoom (propose-extra --all puis --all --hidden, planches _extra-1/2.png, plus une planche de contact des 10 amas déjà retenus). 14 amas corrigés. Page gravée en sol, .cho en sol : song_semitones = 0, donc la convention du .cho (celle de `corrections`) et celle de la page (celle de `frozen_labels`) coïncident ici — les noms écrits ci-dessus sont à la fois ceux du .cho et ceux de la gravure. Deux familles de défaut : (1) **mode C** — les **deux** « Bm » de la page (y=1241 x=401, système 5 ; y=1759 x=1021, système 7) sont lus « Em » à +0,54, sous le seuil donc jamais publiés, mais faux ; les deux vrais « Em » (1241,69 et 1759,525) sont lus juste à +0,68/+0,75 et vérifiés au zoom, la famille est donc complète ; (2) les trois « C/G » (227,842 · 738,844 · 1501,547) sont lus « D/G » (−0,18 à −0,19) et le « D7/G » de 1501,1068 est lu « D/F# » (+0,16) — tous sous le seuil. Les autres corrections ne rattrapent qu'un score trop bas sur une lecture juste (G, D7/G, D/F#). 2026-09-19 (itération 64)",
+ "not_labels": [
+  "1241,1300"
+ ],
+ "not_labels_verified": "1241,1300 est le marqueur de section 【Chorus】 gravé au bout du 5e système (amas de 126 px, lu « D/F# » à −0,82) : ce n'est pas une étiquette d'accord. Vu au zoom (_extra-2.png #22). 2026-09-19 (itération 64)",
+ "not_rows": [
+  528,
+  1038,
+  1804
+ ],
+ "not_rows_verified": "trois bandes de 11 px de haut promues par le classifieur, qui ne portent que le sommet des **arcs de liaison** et des **barres de mesure** : y=528 (6 amas, w = 1 à 2 px, scores −0,25 à −4,23), y=1038 (6 amas, w = 1 à 16 px, −4,04 à +0,12), y=1804 (3 amas, w = 1 à 2 px, −2,84 à −4,23). Les 15 amas regardés un par un au zoom (_extra-1.png #4–#9 et #15–#20, _extra-2.png #20 et #26–#28) : pas une lettre parmi eux. Sans ces trois rangées le dénominateur passe de 40 à 25 amas. 2026-09-19 (itération 64)",
+ "key_label": {
+  "x": 14,
+  "y": 166,
+  "w": 88,
+  "h": 27
+ },
+ "key_label_verified": "candidate #2 de measure-keylabel, relue sur la planche _kl-1.png puis recontrôlée sur le profil d'encre : « 1 » x=15..29, « = » x=34..50, « G » x=81..101 (la gravure espace largement le G), encre de y=166 à y=192 — le cadre x=14 y=166 w=88 h=27 les couvre tous les trois et s'arrête à x=101. Le « 4/4 » commence à x=129 et reste **dehors**. La candidate #1 ({x:27,y:31,w:111,h:50}) est la ligne de tempo « ♩= 80 », écartée. Lettre gravée G = printed_key G = clé du .cho, donc pas de champ `c` : le client écrit « 1=<tonalité jouée> ». Pas de mention « （X调） » au titre — l'en-tête n'écrit que « 新造的人（敬拜版） » et « [共3张：敬拜版、儿童版、级数] », sans tonalité, donc rien à mesurer avec measure-titlekey. 2026-09-19 (itération 64)",
+ "verified": "planche navigateur `npm run jianpu:audit 新造的人` regardée tranche par tranche (7/7), G → Ab, le demi-ton où aucun accord ne garde son nom. Les 24 étiquettes des 8 systèmes portent toutes leur cadre rouge — aucun accord laissé en sol, aucune rangée manquée : G→Ab, C/G→Db/Ab, D7/G→Eb7/Ab, D/F#→Eb/G, Em→Fm, Bm→Cm, C→Db, D7→Eb7. Le cadre « 1= G » devient « 1=Ab » et le « 4/4 » reste dehors ; la mention de série « [共3张：敬拜版、儿童版、级数] » et le marqueur 【Chorus】 restent tels quels ; chiffres, points d'octave, liaisons, crochets de triolet et paroles intacts. Le « D/F# » de fin du 4e système, seul endroit serré (x=1441, w=71, bord à 1556), tient dans la page une fois réécrit « Eb/G ». 2026-09-19 (itération 64)",
+ "frozen_labels": [
+  {
+   "x": 99,
+   "y": 227,
+   "w": 20,
+   "h": 26,
+   "c": "G"
+  },
+  {
+   "x": 842,
+   "y": 227,
+   "w": 56,
+   "h": 26,
+   "c": "C/G"
+  },
+  {
+   "x": 88,
+   "y": 483,
+   "w": 78,
+   "h": 25,
+   "c": "D7/G"
+  },
+  {
+   "x": 843,
+   "y": 483,
+   "w": 20,
+   "h": 25,
+   "c": "G"
+  },
+  {
+   "x": 105,
+   "y": 738,
+   "w": 20,
+   "h": 25,
+   "c": "G"
+  },
+  {
+   "x": 844,
+   "y": 738,
+   "w": 56,
+   "h": 25,
+   "c": "C/G"
+  },
+  {
+   "x": 81,
+   "y": 991,
+   "w": 78,
+   "h": 28,
+   "c": "D7/G"
+  },
+  {
+   "x": 805,
+   "y": 991,
+   "w": 20,
+   "h": 28,
+   "c": "G"
+  },
+  {
+   "x": 1365,
+   "y": 991,
+   "w": 21,
+   "h": 28,
+   "c": "G"
+  },
+  {
+   "x": 1441,
+   "y": 991,
+   "w": 71,
+   "h": 28,
+   "c": "D/F#"
+  },
+  {
+   "x": 69,
+   "y": 1241,
+   "w": 45,
+   "h": 33,
+   "c": "Em"
+  },
+  {
+   "x": 401,
+   "y": 1241,
+   "w": 47,
+   "h": 33,
+   "c": "Bm"
+  },
+  {
+   "x": 779,
+   "y": 1241,
+   "w": 18,
+   "h": 33,
+   "c": "C"
+  },
+  {
+   "x": 1147,
+   "y": 1241,
+   "w": 40,
+   "h": 33,
+   "c": "D7"
+  },
+  {
+   "x": 91,
+   "y": 1501,
+   "w": 21,
+   "h": 29,
+   "c": "G"
+  },
+  {
+   "x": 547,
+   "y": 1501,
+   "w": 56,
+   "h": 29,
+   "c": "C/G"
+  },
+  {
+   "x": 1068,
+   "y": 1501,
+   "w": 78,
+   "h": 29,
+   "c": "D7/G"
+  },
+  {
+   "x": 73,
+   "y": 1759,
+   "w": 21,
+   "h": 25,
+   "c": "G"
+  },
+  {
+   "x": 525,
+   "y": 1759,
+   "w": 44,
+   "h": 25,
+   "c": "Em"
+  },
+  {
+   "x": 1021,
+   "y": 1759,
+   "w": 47,
+   "h": 25,
+   "c": "Bm"
+  },
+  {
+   "x": 68,
+   "y": 2013,
+   "w": 18,
+   "h": 26,
+   "c": "C"
+  },
+  {
+   "x": 666,
+   "y": 2013,
+   "w": 18,
+   "h": 26,
+   "c": "C"
+  },
+  {
+   "x": 949,
+   "y": 2013,
+   "w": 40,
+   "h": 26,
+   "c": "D7"
+  },
+  {
+   "x": 1188,
+   "y": 2013,
+   "w": 20,
+   "h": 26,
+   "c": "G"
+  }
+ ]
+}

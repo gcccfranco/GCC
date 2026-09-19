@@ -1,0 +1,371 @@
+{
+ "slug": "满有能力",
+ "printed_key": "Bb",
+ "printed_key_verified": "en-tête de la page lu à l'œil avant toute mesure (étape 0), lot des 50 简谱 fournis, 2026-09-18 (itération 63)",
+ "not_rows": [
+  454
+ ],
+ "not_rows_verified": "y=454 n'est pas une rangée d'accords : trois arcs de liaison du système d'intro, relus au zoom (bande 400-470). 2026-09-18 (itération 63)",
+ "not_labels": [
+  "1128,653",
+  "1646,719",
+  "1646,1092",
+  "1646,1237",
+  "1905,96",
+  "1905,123",
+  "1905,244",
+  "1905,273",
+  "1905,961",
+  "1905,1338",
+  "1905,1367",
+  "2163,647",
+  "2163,1057",
+  "2163,1117",
+  "2163,1159",
+  "2163,1274"
+ ],
+ "not_labels_verified": "amas qui ne sont pas des étiquettes, relus au zoom : le segno 𝄋 (1128,653), les crochets de triolet « 3 » (1646,719 · 1905,96/123/244/273/1338/1367 · 2163,1057/1117/1159), deux arcs de liaison (1905,961 · 2163,647) et la mention « D.S. al Fine » (2163,1274). 1646,1092 et 1646,1237 soudent l'étiquette à son crochet de triolet : leur cadre effacerait le crochet, ils passent donc en extra_labels au cadre serré. 2026-09-18 (itération 63)",
+ "corrections": {
+  "1646,300": "F/A",
+  "1905,25": "Cm",
+  "1905,189": "F",
+  "1905,871": "Bb/D",
+  "1905,1283": "F"
+ },
+ "corrections_verified": "cinq amas relus au zoom sur la bande de leur rangée (band 1646 et 1905) : « F/A », « Cm », « F », « B♭/D », « F » — le matcher les rendait Bb, F7, F, Bb/D et F sous le seuil. Page en si♭ et .cho en si♭ (song_semitones = 0) : le gravé s'écrit tel quel. 2026-09-18 (itération 63)",
+ "extra_labels": [
+  {
+   "x": 97,
+   "y": 416,
+   "w": 23,
+   "h": 27,
+   "c": "Bb"
+  },
+  {
+   "x": 745,
+   "y": 416,
+   "w": 23,
+   "h": 27,
+   "c": "Bb"
+  },
+  {
+   "x": 38,
+   "y": 1378,
+   "w": 29,
+   "h": 31,
+   "c": "Eb"
+  },
+  {
+   "x": 334,
+   "y": 1378,
+   "w": 31,
+   "h": 31,
+   "c": "Bb"
+  },
+  {
+   "x": 499,
+   "y": 1378,
+   "w": 29,
+   "h": 31,
+   "c": "Eb"
+  },
+  {
+   "x": 625,
+   "y": 1378,
+   "w": 61,
+   "h": 32,
+   "c": "Bb/D"
+  },
+  {
+   "x": 805,
+   "y": 1388,
+   "w": 19,
+   "h": 22,
+   "c": "C"
+  },
+  {
+   "x": 1067,
+   "y": 1388,
+   "w": 16,
+   "h": 21,
+   "c": "F"
+  },
+  {
+   "x": 1089,
+   "y": 1647,
+   "w": 18,
+   "h": 21,
+   "c": "Eb"
+  },
+  {
+   "x": 1235,
+   "y": 1646,
+   "w": 61,
+   "h": 22,
+   "c": "Bb/D"
+  }
+ ],
+ "extra_labels_verified": "deux rangées d'accords entières que le classifieur n'a jamais isolées (mode D), trouvées en comparant la page entière aux sept rangées lues : l'intro (y=416, « B♭ » en x=97 et x=745) et le système 5 (y=1378 : « E♭ B♭ E♭ B♭/D C F »), cadres mesurés sur l'encre. Plus les deux amas soudés à leur crochet de triolet du système 6 (x=1089 et x=1235). L'étiquette x=1089 est gravée « E » **sans bémol** : le passage parallèle du système 5 (x=499) et le .cho (« 有[Eb]耶稣在[Bb/D]我里面 ») donnent tous deux E♭, et un mi majeur n'existe nulle part dans ce si♭ — l'omission du bémol est une coquille de la gravure, écrite E♭. 2026-09-18 (itération 63)",
+ "key_label": {
+  "x": 59,
+  "y": 262,
+  "w": 79,
+  "h": 35
+ },
+ "key_label_verified": "cadre « 1=♭B » mesuré à la main sur l'encre (measure-keylabel ne propose rien sur cette page : le bémol en exposant colle le « = » à la lettre) — « 1 » en x=59..66, « =♭B » jusqu'à x=137, y=262..296 ; le « 4/4 » commence à x=162 et reste hors du cadre. Lettre gravée ♭B = printed_key Bb. 2026-09-18 (itération 63)",
+ "verified": "planche navigateur (npm run jianpu:audit) relue tranche par tranche, 7/7, en Bb→B : les 8 rangées d'accords de la page sont cadrées et les 36 étiquettes réécrites (26 lues + 10 hors rangées). Deux rangées entières manquaient (mode D) — l'intro y=416 et le système 5 y=1378 — et sont maintenant publiées. Défauts corrigés à l'œil : F/A lu Bb, Cm lu F7, deux F et un Bb/D sous le seuil ; l'étiquette « E » du système 6, bémol omis par la gravure, écrite Eb. Le segno, « Fine », « D.S. al Fine », les crochets de triolet et les arcs sont intacts ; le cadre « 1=♭B » suit en « 1=B ». Pas de mention « （X调） » au titre. 2026-09-18 (itération 63)",
+ "frozen_labels": [
+  {
+   "x": 39,
+   "y": 600,
+   "w": 28,
+   "h": 34,
+   "c": "Bb"
+  },
+  {
+   "x": 530,
+   "y": 600,
+   "w": 27,
+   "h": 34,
+   "c": "Eb"
+  },
+  {
+   "x": 983,
+   "y": 611,
+   "w": 76,
+   "h": 23,
+   "c": "Fadd2"
+  },
+  {
+   "x": 39,
+   "y": 859,
+   "w": 28,
+   "h": 33,
+   "c": "Bb"
+  },
+  {
+   "x": 419,
+   "y": 858,
+   "w": 27,
+   "h": 34,
+   "c": "Bb"
+  },
+  {
+   "x": 932,
+   "y": 858,
+   "w": 26,
+   "h": 34,
+   "c": "Eb"
+  },
+  {
+   "x": 13,
+   "y": 1128,
+   "w": 76,
+   "h": 28,
+   "c": "Fadd2"
+  },
+  {
+   "x": 248,
+   "y": 1128,
+   "w": 29,
+   "h": 28,
+   "c": "F7"
+  },
+  {
+   "x": 494,
+   "y": 1117,
+   "w": 28,
+   "h": 39,
+   "c": "Bb"
+  },
+  {
+   "x": 920,
+   "y": 1117,
+   "w": 27,
+   "h": 39,
+   "c": "Bb"
+  },
+  {
+   "x": 39,
+   "y": 1635,
+   "w": 28,
+   "h": 45,
+   "c": "Bb"
+  },
+  {
+   "x": 300,
+   "y": 1646,
+   "w": 72,
+   "h": 34,
+   "c": "F/A"
+  },
+  {
+   "x": 587,
+   "y": 1635,
+   "w": 26,
+   "h": 45,
+   "c": "Eb"
+  },
+  {
+   "x": 886,
+   "y": 1635,
+   "w": 28,
+   "h": 45,
+   "c": "Bb"
+  },
+  {
+   "x": 25,
+   "y": 1905,
+   "w": 44,
+   "h": 34,
+   "c": "Cm"
+  },
+  {
+   "x": 189,
+   "y": 1905,
+   "w": 26,
+   "h": 34,
+   "c": "F"
+  },
+  {
+   "x": 345,
+   "y": 1894,
+   "w": 27,
+   "h": 45,
+   "c": "Bb"
+  },
+  {
+   "x": 691,
+   "y": 1894,
+   "w": 26,
+   "h": 45,
+   "c": "Eb"
+  },
+  {
+   "x": 871,
+   "y": 1894,
+   "w": 58,
+   "h": 45,
+   "c": "Bb/D"
+  },
+  {
+   "x": 1129,
+   "y": 1905,
+   "w": 43,
+   "h": 34,
+   "c": "Cm"
+  },
+  {
+   "x": 1283,
+   "y": 1905,
+   "w": 26,
+   "h": 34,
+   "c": "F"
+  },
+  {
+   "x": 39,
+   "y": 2152,
+   "w": 29,
+   "h": 46,
+   "c": "Bb"
+  },
+  {
+   "x": 276,
+   "y": 2152,
+   "w": 26,
+   "h": 46,
+   "c": "Eb"
+  },
+  {
+   "x": 528,
+   "y": 2152,
+   "w": 58,
+   "h": 46,
+   "c": "Bb/D"
+  },
+  {
+   "x": 870,
+   "y": 2163,
+   "w": 18,
+   "h": 35,
+   "c": "C"
+  },
+  {
+   "x": 1243,
+   "y": 2163,
+   "w": 13,
+   "h": 35,
+   "c": "F"
+  },
+  {
+   "x": 97,
+   "y": 416,
+   "w": 23,
+   "h": 27,
+   "c": "Bb"
+  },
+  {
+   "x": 745,
+   "y": 416,
+   "w": 23,
+   "h": 27,
+   "c": "Bb"
+  },
+  {
+   "x": 38,
+   "y": 1378,
+   "w": 29,
+   "h": 31,
+   "c": "Eb"
+  },
+  {
+   "x": 334,
+   "y": 1375,
+   "w": 31,
+   "h": 34,
+   "c": "Bb"
+  },
+  {
+   "x": 499,
+   "y": 1375,
+   "w": 29,
+   "h": 34,
+   "c": "Eb"
+  },
+  {
+   "x": 625,
+   "y": 1375,
+   "w": 61,
+   "h": 35,
+   "c": "Bb/D"
+  },
+  {
+   "x": 805,
+   "y": 1388,
+   "w": 19,
+   "h": 22,
+   "c": "C"
+  },
+  {
+   "x": 1067,
+   "y": 1388,
+   "w": 16,
+   "h": 21,
+   "c": "F"
+  },
+  {
+   "x": 1089,
+   "y": 1647,
+   "w": 18,
+   "h": 21,
+   "c": "Eb"
+  },
+  {
+   "x": 1235,
+   "y": 1635,
+   "w": 61,
+   "h": 33,
+   "c": "Bb/D"
+  }
+ ]
+}

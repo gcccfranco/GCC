@@ -1,0 +1,385 @@
+{
+ "slug": "吹起复兴的火",
+ "printed_key": "C",
+ "printed_key_verified": "en-tête de la page lu à l'œil avant toute mesure (étape 0), lot des 50 简谱 fournis, 2026-09-18 (itération 63)",
+ "corrections": {
+  "258,237": "F/C",
+  "258,630": "F/C",
+  "258,907": "C",
+  "258,1096": "F/C",
+  "525,258": "F/G",
+  "525,1044": "F/C",
+  "525,1276": "C",
+  "776,329": "F/G",
+  "776,657": "C",
+  "776,983": "G/B",
+  "1030,886": "F/G",
+  "1297,531": "C/E",
+  "1297,901": "F/G",
+  "1297,1161": "C",
+  "1556,577": "C/E",
+  "1556,964": "F/G",
+  "1556,1130": "C",
+  "1805,330": "C/E",
+  "1805,1068": "C/E",
+  "2074,606": "C/G"
+ },
+ "corrections_verified": "amas relus un par un au zoom (propose-extra --all --hidden), convention du .cho (song_semitones=0), 2026-09-18 (itération 63) · deux « F/G » que le matcher lisait « F/C », deux « C/E » lus « G7 » et un « C/G » lu « G7 » (mode C)",
+ "not_rows": [
+  827,
+  1086,
+  1686
+ ],
+ "not_labels": [
+  "776,756",
+  "1030,1032",
+  "1805,152",
+  "2074,1427"
+ ],
+ "key_label": {
+  "x": 14,
+  "y": 187,
+  "w": 78,
+  "h": 25
+ },
+ "key_label_verified": "cadre mesuré par measure-keylabel (ancrage sur le « = »), candidate relue sur la planche _kl : la lettre gravée est bien celle de printed_key, donc pas de champ `c` — le client écrit « 1=<tonalité jouée> ». La ligne de tempo ♩=NN, proposée en même temps, a été écartée. 2026-09-18 (itération 63)",
+ "verified": "planche navigateur relue tranche par tranche, 7/7, en C→C# : les 8 rangées d'accords sont cadrées et les 48 étiquettes réécrites, cadre « 1= C » → « 1=C# » compris (la candidate #1 de measure-keylabel était la ligne de tempo ♩=72). Deux rangées de liaisons (y=827, 1086) et une rangée de paroles portant « Fine » (y=1686) écartées en not_rows ; 【Pre-Chorus】, 【Chorus】, 【Bridge】 et « To Chorus » écartés en not_labels et laissés intacts sur le rendu. 20 amas corrigés à l'œil, dont deux « F/G » que le matcher publiait « F/C » et trois accords (« C/E », « C/E », « C/G ») qu'il publiait « G7 » — le mode C, chaque fois relu au zoom sur la planche de contact des étiquettes publiées. 2026-09-18 (itération 63)",
+ "frozen_labels": [
+  {
+   "x": 49,
+   "y": 258,
+   "w": 17,
+   "h": 32,
+   "c": "C"
+  },
+  {
+   "x": 237,
+   "y": 258,
+   "w": 48,
+   "h": 32,
+   "c": "F/C"
+  },
+  {
+   "x": 442,
+   "y": 258,
+   "w": 17,
+   "h": 32,
+   "c": "C"
+  },
+  {
+   "x": 630,
+   "y": 258,
+   "w": 49,
+   "h": 32,
+   "c": "F/C"
+  },
+  {
+   "x": 907,
+   "y": 258,
+   "w": 17,
+   "h": 32,
+   "c": "C"
+  },
+  {
+   "x": 1096,
+   "y": 258,
+   "w": 48,
+   "h": 32,
+   "c": "F/C"
+  },
+  {
+   "x": 1321,
+   "y": 258,
+   "w": 17,
+   "h": 32,
+   "c": "C"
+  },
+  {
+   "x": 51,
+   "y": 525,
+   "w": 68,
+   "h": 26,
+   "c": "Dm7"
+  },
+  {
+   "x": 258,
+   "y": 525,
+   "w": 50,
+   "h": 26,
+   "c": "F/G"
+  },
+  {
+   "x": 533,
+   "y": 525,
+   "w": 18,
+   "h": 26,
+   "c": "C"
+  },
+  {
+   "x": 844,
+   "y": 525,
+   "w": 18,
+   "h": 26,
+   "c": "C"
+  },
+  {
+   "x": 1044,
+   "y": 525,
+   "w": 48,
+   "h": 26,
+   "c": "F/C"
+  },
+  {
+   "x": 1276,
+   "y": 525,
+   "w": 17,
+   "h": 26,
+   "c": "C"
+  },
+  {
+   "x": 68,
+   "y": 776,
+   "w": 67,
+   "h": 32,
+   "c": "Dm7"
+  },
+  {
+   "x": 329,
+   "y": 776,
+   "w": 50,
+   "h": 32,
+   "c": "F/G"
+  },
+  {
+   "x": 657,
+   "y": 776,
+   "w": 17,
+   "h": 32,
+   "c": "C"
+  },
+  {
+   "x": 983,
+   "y": 776,
+   "w": 56,
+   "h": 32,
+   "c": "G/B"
+  },
+  {
+   "x": 1143,
+   "y": 776,
+   "w": 49,
+   "h": 32,
+   "c": "Am"
+  },
+  {
+   "x": 1343,
+   "y": 776,
+   "w": 43,
+   "h": 32,
+   "c": "Em"
+  },
+  {
+   "x": 55,
+   "y": 1030,
+   "w": 13,
+   "h": 36,
+   "c": "F"
+  },
+  {
+   "x": 248,
+   "y": 1030,
+   "w": 18,
+   "h": 36,
+   "c": "C"
+  },
+  {
+   "x": 451,
+   "y": 1030,
+   "w": 68,
+   "h": 36,
+   "c": "Dm7"
+  },
+  {
+   "x": 886,
+   "y": 1030,
+   "w": 50,
+   "h": 36,
+   "c": "F/G"
+  },
+  {
+   "x": 1220,
+   "y": 1030,
+   "w": 17,
+   "h": 36,
+   "c": "C"
+  },
+  {
+   "x": 61,
+   "y": 1297,
+   "w": 69,
+   "h": 27,
+   "c": "Am7"
+  },
+  {
+   "x": 400,
+   "y": 1297,
+   "w": 12,
+   "h": 27,
+   "c": "F"
+  },
+  {
+   "x": 531,
+   "y": 1297,
+   "w": 49,
+   "h": 27,
+   "c": "C/E"
+  },
+  {
+   "x": 752,
+   "y": 1297,
+   "w": 68,
+   "h": 27,
+   "c": "Dm7"
+  },
+  {
+   "x": 901,
+   "y": 1297,
+   "w": 50,
+   "h": 27,
+   "c": "F/G"
+  },
+  {
+   "x": 1161,
+   "y": 1297,
+   "w": 17,
+   "h": 27,
+   "c": "C"
+  },
+  {
+   "x": 55,
+   "y": 1556,
+   "w": 68,
+   "h": 26,
+   "c": "Am7"
+  },
+  {
+   "x": 389,
+   "y": 1556,
+   "w": 12,
+   "h": 26,
+   "c": "F"
+  },
+  {
+   "x": 577,
+   "y": 1556,
+   "w": 49,
+   "h": 26,
+   "c": "C/E"
+  },
+  {
+   "x": 802,
+   "y": 1556,
+   "w": 67,
+   "h": 26,
+   "c": "Dm7"
+  },
+  {
+   "x": 964,
+   "y": 1556,
+   "w": 51,
+   "h": 26,
+   "c": "F/G"
+  },
+  {
+   "x": 1130,
+   "y": 1556,
+   "w": 17,
+   "h": 26,
+   "c": "C"
+  },
+  {
+   "x": 86,
+   "y": 1805,
+   "w": 13,
+   "h": 36,
+   "c": "F"
+  },
+  {
+   "x": 330,
+   "y": 1805,
+   "w": 49,
+   "h": 36,
+   "c": "C/E"
+  },
+  {
+   "x": 563,
+   "y": 1805,
+   "w": 19,
+   "h": 36,
+   "c": "G"
+  },
+  {
+   "x": 840,
+   "y": 1805,
+   "w": 12,
+   "h": 36,
+   "c": "F"
+  },
+  {
+   "x": 1068,
+   "y": 1805,
+   "w": 49,
+   "h": 36,
+   "c": "C/E"
+  },
+  {
+   "x": 1300,
+   "y": 1805,
+   "w": 20,
+   "h": 36,
+   "c": "G"
+  },
+  {
+   "x": 70,
+   "y": 2074,
+   "w": 13,
+   "h": 33,
+   "c": "E"
+  },
+  {
+   "x": 405,
+   "y": 2074,
+   "w": 49,
+   "h": 33,
+   "c": "Am"
+  },
+  {
+   "x": 606,
+   "y": 2074,
+   "w": 53,
+   "h": 33,
+   "c": "C/G"
+  },
+  {
+   "x": 833,
+   "y": 2074,
+   "w": 12,
+   "h": 33,
+   "c": "F"
+  },
+  {
+   "x": 1067,
+   "y": 2074,
+   "w": 89,
+   "h": 33,
+   "c": "F#dim"
+  },
+  {
+   "x": 1299,
+   "y": 2074,
+   "w": 40,
+   "h": 33,
+   "c": "G7"
+  }
+ ]
+}

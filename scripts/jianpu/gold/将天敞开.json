@@ -1,0 +1,352 @@
+{
+ "slug": "将天敞开",
+ "printed_key": "G",
+ "printed_key_verified": "en-tête de la page lu à l'œil avant toute mesure (étape 0), lot des 50 简谱 fournis, 2026-09-18 (itération 63) · le cadre imprime « 1=C » au-dessus d'accords en sol : lettre du cadre fautive, printed_key pris sur les accords gravés",
+ "corrections": {
+  "449,730": "C/E",
+  "449,1056": "G/D",
+  "629,521": "C/E",
+  "629,731": "G/D",
+  "886,959": "C/E",
+  "886,1175": "G/D",
+  "1150,1266": "C/G",
+  "1410,495": "C/G",
+  "1410,1269": "G",
+  "1666,234": "C/E",
+  "1666,659": "G/D",
+  "1666,857": "C/D"
+ },
+ "corrections_verified": "amas relus un par un au zoom (propose-extra --all --hidden), convention du .cho (song_semitones=0), 2026-09-18 (itération 63) · trois « G/D » que le matcher lisait « C/D » (mode C)",
+ "not_rows": [
+  242
+ ],
+ "not_labels": [
+  "2182,1267"
+ ],
+ "key_label": {
+  "x": 59,
+  "y": 270,
+  "w": 69,
+  "h": 27,
+  "c": "1= C"
+ },
+ "key_label_verified": "la page grave « 1=C » au-dessus d'accords en sol (G, D/F#, C/E, G/D) : ce sont des positions de **capo 5** — même gravure, même éditeur (赞美之泉) et même cas que 十架的爱, qui imprime « 1=F » sur des accords en ré (capo 3). Le cadre est donc publié avec son texte gravé en `c` (« 1= C », l'espace compte) : transposeLabel réécrit le seul jeton « C » du même décalage que les accords, au lieu de laisser le client écrire « 1=<tonalité jouée> », qui poserait une lettre en base sol. Boîte = candidate #1 de measure-keylabel (x=59 y=270 w=69 h=27), relue sur _kl-1.png ; la candidate #2 était la ligne de tempo ♩=152, écartée. 2026-09-18 (itération 63)",
+ "verified": "planche navigateur relue tranche par tranche, 7/7, en G→Ab : les 8 rangées d'accords sont cadrées et les 45 étiquettes réécrites. La rangée d'en-tête (titre, « 4/4 », crédits) écartée en not_rows, « D.C.al.Fine » écarté en not_labels. Cinq accords mal lus corrigés à l'œil, dont trois « G/D » que le matcher publiait « C/D » (mode C). Le cadre de tonalité est le cas particulier de cette page : elle grave « 1=C » au-dessus d'accords en sol, c'est-à-dire des positions de capo 5 — même éditeur (赞美之泉) et même cas que 十架的爱, qui grave « 1=F » sur des accords en ré (capo 3). Le cadre est donc publié avec son texte gravé en `c` (« 1= C ») et non en cadre vide : la tranche 1/7 montre « 1=C » → « 1= Db » (do sonnant transposé du même décalage que les accords) au lieu du « 1=Ab » que le client aurait écrit. 2026-09-18 (itération 63)",
+ "frozen_labels": [
+  {
+   "x": 76,
+   "y": 449,
+   "w": 16,
+   "h": 21,
+   "c": "G"
+  },
+  {
+   "x": 399,
+   "y": 449,
+   "w": 49,
+   "h": 21,
+   "c": "D/F#"
+  },
+  {
+   "x": 730,
+   "y": 449,
+   "w": 39,
+   "h": 21,
+   "c": "C/E"
+  },
+  {
+   "x": 1056,
+   "y": 449,
+   "w": 43,
+   "h": 21,
+   "c": "G/D"
+  },
+  {
+   "x": 37,
+   "y": 629,
+   "w": 19,
+   "h": 23,
+   "c": "G"
+  },
+  {
+   "x": 274,
+   "y": 625,
+   "w": 62,
+   "h": 27,
+   "c": "D/F#"
+  },
+  {
+   "x": 521,
+   "y": 629,
+   "w": 48,
+   "h": 23,
+   "c": "C/E"
+  },
+  {
+   "x": 731,
+   "y": 629,
+   "w": 51,
+   "h": 23,
+   "c": "G/D"
+  },
+  {
+   "x": 940,
+   "y": 629,
+   "w": 18,
+   "h": 23,
+   "c": "C"
+  },
+  {
+   "x": 1173,
+   "y": 629,
+   "w": 49,
+   "h": 23,
+   "c": "G/B"
+  },
+  {
+   "x": 30,
+   "y": 886,
+   "w": 43,
+   "h": 24,
+   "c": "Am"
+  },
+  {
+   "x": 259,
+   "y": 886,
+   "w": 19,
+   "h": 24,
+   "c": "D"
+  },
+  {
+   "x": 455,
+   "y": 886,
+   "w": 19,
+   "h": 24,
+   "c": "G"
+  },
+  {
+   "x": 700,
+   "y": 883,
+   "w": 63,
+   "h": 27,
+   "c": "D/F#"
+  },
+  {
+   "x": 959,
+   "y": 886,
+   "w": 47,
+   "h": 24,
+   "c": "C/E"
+  },
+  {
+   "x": 1175,
+   "y": 886,
+   "w": 51,
+   "h": 24,
+   "c": "G/D"
+  },
+  {
+   "x": 38,
+   "y": 1150,
+   "w": 18,
+   "h": 22,
+   "c": "C"
+  },
+  {
+   "x": 331,
+   "y": 1150,
+   "w": 19,
+   "h": 22,
+   "c": "D"
+  },
+  {
+   "x": 542,
+   "y": 1150,
+   "w": 19,
+   "h": 22,
+   "c": "G"
+  },
+  {
+   "x": 911,
+   "y": 1150,
+   "w": 19,
+   "h": 22,
+   "c": "G"
+  },
+  {
+   "x": 1266,
+   "y": 1150,
+   "w": 50,
+   "h": 22,
+   "c": "C/G"
+  },
+  {
+   "x": 236,
+   "y": 1410,
+   "w": 43,
+   "h": 22,
+   "c": "Am"
+  },
+  {
+   "x": 495,
+   "y": 1410,
+   "w": 50,
+   "h": 22,
+   "c": "C/G"
+  },
+  {
+   "x": 780,
+   "y": 1410,
+   "w": 18,
+   "h": 22,
+   "c": "D"
+  },
+  {
+   "x": 1269,
+   "y": 1410,
+   "w": 19,
+   "h": 22,
+   "c": "G"
+  },
+  {
+   "x": 15,
+   "y": 1666,
+   "w": 71,
+   "h": 23,
+   "c": "Dm/F"
+  },
+  {
+   "x": 234,
+   "y": 1666,
+   "w": 47,
+   "h": 23,
+   "c": "C/E"
+  },
+  {
+   "x": 448,
+   "y": 1659,
+   "w": 87,
+   "h": 30,
+   "c": "Cm/Eb"
+  },
+  {
+   "x": 659,
+   "y": 1666,
+   "w": 52,
+   "h": 23,
+   "c": "G/D"
+  },
+  {
+   "x": 857,
+   "y": 1666,
+   "w": 52,
+   "h": 23,
+   "c": "C/D"
+  },
+  {
+   "x": 1103,
+   "y": 1666,
+   "w": 19,
+   "h": 23,
+   "c": "G"
+  },
+  {
+   "x": 40,
+   "y": 1923,
+   "w": 18,
+   "h": 22,
+   "c": "C"
+  },
+  {
+   "x": 288,
+   "y": 1923,
+   "w": 18,
+   "h": 22,
+   "c": "D"
+  },
+  {
+   "x": 415,
+   "y": 1923,
+   "w": 41,
+   "h": 22,
+   "c": "Bm"
+  },
+  {
+   "x": 665,
+   "y": 1923,
+   "w": 39,
+   "h": 22,
+   "c": "Em"
+  },
+  {
+   "x": 840,
+   "y": 1923,
+   "w": 18,
+   "h": 22,
+   "c": "C"
+  },
+  {
+   "x": 991,
+   "y": 1923,
+   "w": 18,
+   "h": 22,
+   "c": "D"
+  },
+  {
+   "x": 1164,
+   "y": 1923,
+   "w": 20,
+   "h": 22,
+   "c": "G"
+  },
+  {
+   "x": 37,
+   "y": 2182,
+   "w": 19,
+   "h": 24,
+   "c": "C"
+  },
+  {
+   "x": 292,
+   "y": 2182,
+   "w": 18,
+   "h": 24,
+   "c": "D"
+  },
+  {
+   "x": 422,
+   "y": 2182,
+   "w": 41,
+   "h": 24,
+   "c": "Bm"
+  },
+  {
+   "x": 663,
+   "y": 2182,
+   "w": 39,
+   "h": 24,
+   "c": "Em"
+  },
+  {
+   "x": 830,
+   "y": 2182,
+   "w": 43,
+   "h": 24,
+   "c": "Am"
+  },
+  {
+   "x": 994,
+   "y": 2179,
+   "w": 65,
+   "h": 27,
+   "c": "A/C#"
+  },
+  {
+   "x": 1164,
+   "y": 2182,
+   "w": 19,
+   "h": 24,
+   "c": "D"
+  }
+ ]
+}
