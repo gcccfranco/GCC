@@ -59,6 +59,7 @@ fusionnées** dedans (la page Annonces disparaît).
   existantes par un **bouton de l'administration** ; badge non-lu de la barre
   transféré sur Évènements ; entrée « Annonces » retirée du menu, `/annonces`
   redirige vers `/evenements`.
+- **Retiré du calendrier le 16/09/2026** (demande de Timothée) : le QR ne reste que sur la fiche, pour l'organisateur ; les mentions « QR pour les créateurs » plus bas décrivent l'état du 15/09.
 - **QR code** : généré dans l'app (bibliothèque `qrcode`, dépendance acceptée),
   un pour le calendrier public et un par fiche, affiché en grand.
 

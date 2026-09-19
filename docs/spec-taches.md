@@ -53,7 +53,7 @@ suivant reçoit la notification ; la tâche de la semaine suivante apparaît.
 | Q13 | Réunion = **évènement du calendrier réservé au pôle**. |
 | Q14 | Pas de sixième onglet : « Mes tâches » dans Moi (avec le nombre à faire), page « Tâches » par pôle ; sur ordinateur, entrée « Tâches » dans la barre du haut pour les membres d'un pôle. |
 | Q15 | Rappels à J-3 et J-1 au responsable (au pôle entier sans responsable), et un seul rappel le lendemain de l'échéance si pas faite ; **dans la notification du jour**, jamais deux le même jour. |
-| Q24 | Tâche = titre, pôle, responsable facultatif (membre du pôle), échéance (un jour, sans heure), état à faire / faite (qui, quand), lien et note facultatifs, « Quand c'est fait, prévenir » facultatif. Pas d'état « en cours ». |
+| Q24 | Tâche = titre, pôle, responsable facultatif (membre du pôle), échéance (un jour, sans heure), état à faire / faite (qui, quand), lien et note facultatifs, « Quand c'est fait, prévenir » facultatif. Pas d'état « en cours ». **Remplacé le 18/09/2026 par le lot 13** (`spec-taches-annuelles.md`) : trois états À faire → En cours → Terminé. |
 | Q25 | Rythmes : chaque semaine (jour choisi), toutes les deux semaines, chaque mois (« le 1er dimanche du mois »). |
 | Q26 | Une fois ratée **disparaît quand la suivante arrive**. Une tâche apparaît 7 jours avant son échéance. |
 | Q27 | La tâche indique le service (Culte Francophone par défaut, Intergroupe, Interfranco, Campus) ; on prévient **la régie de ce service le dimanche qui suit l'échéance** ; sans régie reliée à un compte, celui qui coche voit « aucune régie reliée ». |

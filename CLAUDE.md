@@ -52,7 +52,7 @@ ils ne voient pas le composant réel. Détail du protocole dans
 - **Comptes & rôles** : profils dans `users/{uid}` (rôles, lieux de service, EDD, groupe). Permissions client dans `src/lib/access.ts`, miroir serveur dans `firestore.rules`.
 - **`firestore.rules`** : versionné ici mais doit être **publié manuellement dans la console Firebase** pour prendre effet. La liste des admins doit rester synchronisée avec `ADMIN_EMAILS` dans `src/lib/access.ts`.
 - **Confidentialité (choix assumé)** : les rules autorisent `read: if signedIn()` sur **toutes** les setlists et tous les profils. Le filtrage `isPrivate` / visibilité par service (`canSeeSetlist`, `src/lib/access.ts`) est **côté client uniquement** — un membre connecté peut techniquement lire en REST une setlist privée ou un profil. Acceptable pour un outil interne de confiance ; ne pas re-signaler comme faille sans nouvelle demande de durcissement.
-- **Routes API** : `/api/song/[slug]` (contenu d'un chant), `/api/report` (signalement par email via Resend — env `RESEND_API_KEY`, `MAIL_TO`, `EMAIL_FROM` sur Vercel)
+- **Routes API** (18, toutes sous `src/app/api/`) : `/api/song/[slug]` (contenu d'un chant), `/api/report` (signalement par email via Resend — env `RESEND_API_KEY`, `MAIL_TO`, `EMAIL_FROM` sur Vercel), `/api/cron/reminders` (seul cron), `/api/push/*` (notify-setlist, notify-evenement, notify-audience, broadcast), `/api/setlist/presentation`, `/api/evenements/{inscription,desinscription}`, `/api/scene/conflit`, `/api/taches/{assigne,fait}`, `/api/equipes/{importer,poles}`, `/api/planning/release`, `/api/admin/{migrer-annonces,importer-planning}`
 - **Planning** : Google Sheet public lu en CSV (`src/lib/planning/sheets.ts`) + données statiques (`data.ts`)
 - **PWA** : service worker `public/sw.js` — push + cache hors-ligne. Cache versionné (`gcc-louange-vN`, purgé à l'activation). **Rien n'est mis en cache sur un serveur local** (`localhost`, `127.0.0.1`, réseau local) : en développement les fichiers de Next n'ont pas de nom hashé, et le cache servait l'ancien code après chaque modification (16/09/2026). Stratégies : HTML **network-first** (le déploiement en ligne gagne toujours → pas de page périmée), `/_next/static/*` **cache-first** (content-hashé, immuable), polices + `songs-index.json` + `/api/song/*` **stale-while-revalidate**, reste réseau-seul. Firestore/Sheets/YouTube (autres origines) jamais mis en cache.
 - **Hébergement** : Vercel. La CI GitHub (`.github/workflows/deploy.yml`) fait typecheck + validate.
@@ -62,12 +62,13 @@ ils ne voient pas le composant réel. Détail du protocole dans
 - Tonalité recommandée : `{recommended_key: D}` en en-tête, sous `{key}` — la plus chantée à GCC, **validée par Timothée** (`docs/tonalites-recommandees.md`, recalcul en lecture seule : `npx tsx scripts/recommended-keys.ts`) ; affichée par défaut, et un chant ajouté à une setlist y démarre
 - Chinois : `[C]caractères   pinyin` (3 espaces min entre chars et pinyin)
 - Jianpu simple : `{jianpu: 3 3 5 6 5}` sur la ligne juste au-dessus des paroles
-- Partition 简谱 complète : bloc `{start_of_jianpu}…{end_of_jianpu}` (syntaxe
-  détaillée dans `../Guidelines Chordpro/03-syntaxe-jianpu.md`), rendue en SVG
-  par `src/components/jianpu/JianpuScore.tsx`
+- Partition 简谱 : **l'image du scan**, avec un calque des accords (approche image,
+  `src/components/jianpu/JianpuSheet.tsx`, `public/jianpu/`, protocole dans
+  `scripts/jianpu/LOOP.md`). Le bloc `{start_of_jianpu}…{end_of_jianpu}` est encore
+  lu par le parseur mais plus rendu (l'ancien `JianpuScore.tsx` n'existe plus)
 
 ## Couleurs spec
-- Accords : `#2563EB` (bleu)
+- Accords : `#3f63cf` (bleu, `--chord-color` dans `globals.css` ; le `#2563EB` du cahier des charges n'est plus utilisé)
 - Sections : `#EA580C` (orange)
 - Jianpu : `#B91C1C` (rouge foncé)
 
