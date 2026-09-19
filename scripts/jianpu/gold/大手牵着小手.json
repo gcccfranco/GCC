@@ -1,6 +1,1368 @@
 {
  "slug": "大手牵着小手",
  "printed_key": "D",
- "printed_key_verified": "en-tête de la page lu à l'œil avant toute mesure (étape 0), lot des 50 简谱 fournis, 2026-09-18 (itération 63)",
- "en_chantier": "page à **deux jeux d'accords** — ré (le .cho) et fa —, laissée sans calque. La page module à la reprise (« [升F调] » au dernier système) et grave le jeu de fa **en plus** du jeu de ré, sur les mêmes systèmes : la bande y=1228 porte « Cm7  F7) » et la bande y=1300 « F/C  (F/A)  Bb  F/A  (G#m7b5)  Gm  G/B  C  Gm  Bb/C (*) », entrelacées avec de la prose gravée (« (结束时2房子) », « (第2遍时) », « (*)结尾时2房子改成第3拍Bbm，第4拍Bb/C »). Le dernier système est lui-même écrit en fa (Bb, Gm, Bb/C, F).\n\nMesuré le 18/09/2026 : `read()` ne rend que 6 rangées (289, 537, 761, 1054, 1594, 2009) là où le classifieur compte **9 rangées de chiffres** ; quatre bandes utiles restent en « chords? » ou « ? » (193, 715, 1007, 935) et deux bandes portent le jeu de fa (1228, 1300). La rangée 2009, lue comme des accords, a 29 amas : c'est de la prose. Publier la lecture actuelle poserait des accords transposés au-dessus d'un jeu de fa laissé gravé — une page à deux tonalités, ce que la boucle tient depuis l'itération 15 pour pire que pas de calque.\n\nCe qu'il faudra pour la finir, sur le modèle de 在这里 et 有你同行 : relever les deux jeux à l'œil, publier celui de fa en `alt_labels` avec `alt: 3` (l'orthographe suit la page sans changer le décalage) et `opt: true` (c'est une lecture alternative de la même musique, révélée par le sélecteur), masquer les bandes de prose, et reconstruire à la main les quatre rangées que le découpage n'isole pas. Compter une itération pour cette seule page."
+ "printed_key_verified": "en-tête de la page lu à l'œil avant toute mesure (étape 0), lot des 50 简谱 fournis, 2026-09-18 (itération 63) ; relu le 2026-09-19 (itération 64) au zoom : « 1=  D  4/4（速度70）», et le jeu d'accords des sept premiers systèmes est bien en ré.",
+ "not_rows": [
+  2009
+ ],
+ "not_rows_verified": "y=2009 est la **rangée de chiffres** du dernier système (« 5 − − − ‖ 0 3 2 | 1 6 6 6 6 6 5 3 | 3 2 4 3 1 | 1 − − 0 »), typée `chords` par le classifieur à cause de ses 29 amas ; la vraie rangée d'accords du système est 60 px plus haut (y=1958). Regardée au zoom 1,9× le 2026-09-19 (itération 64).",
+ "corrections": {
+  "289,188": "D",
+  "289,293": "A/C#",
+  "289,405": "Bm",
+  "289,625": "G",
+  "289,795": "D/F#",
+  "289,1004": "Em",
+  "289,1260": "D/F#",
+  "289,1357": "E/G#",
+  "537,169": "A7",
+  "537,407": "Em",
+  "537,662": "G/A",
+  "537,886": "Dsus4",
+  "537,995": "D",
+  "537,1135": "G",
+  "537,1323": "D/F#",
+  "761,225": "Em7",
+  "761,319": "A(Em7)",
+  "761,459": "D(D/F#)",
+  "761,683": "Bm",
+  "761,905": "Em",
+  "761,1001": "E/G#",
+  "761,1144": "Asus4",
+  "761,1298": "A7",
+  "761,1367": "A/C#",
+  "1054,79": "G",
+  "1054,196": "D/F#",
+  "1054,297": "Em",
+  "1054,392": "G/A",
+  "1054,857": "D",
+  "1054,1076": "A/C#",
+  "1054,1234": "Bm7",
+  "1594,305": "Em",
+  "1594,653": "D/F#",
+  "1594,1021": "G"
+ },
+ "corrections_verified": "les 34 amas d'accords des cinq rangées que `read()` rend, relus un par un au zoom 1,9× sur planche de rangée (cadres du classifieur superposés), 2026-09-19 (itération 64). Le matcher n'en retenait que 21 et se trompait deux fois de classe : les A/C# lus « E/G# » (y=289 x=293, y=289 x=795… même famille que le mode C de l'itération 63) et les composites « A(Em7) » / « D(D/F#) » lus « Asus4 » / « Dsus4 ».",
+ "not_labels": [
+  "289,46",
+  "289,590",
+  "289,711",
+  "289,962",
+  "289,1466",
+  "537,39",
+  "537,353",
+  "537,866",
+  "537,1089",
+  "761,44",
+  "761,146",
+  "761,196",
+  "761,642",
+  "761,807",
+  "761,1113",
+  "761,1454",
+  "1054,43",
+  "1054,364",
+  "1054,468",
+  "1054,662",
+  "1054,703",
+  "1054,916",
+  "1054,1208",
+  "1054,1453",
+  "1594,37",
+  "1594,164",
+  "1594,629",
+  "1594,992",
+  "1594,1466"
+ ],
+ "not_labels_verified": "29 amas qui ne sont pas des étiquettes, regardés un par un au zoom : marqueurs de section 【Verse1】(289,46) 【Chorus】(1054,916) 【Bridge】(1594,164), barres de mesure et barres de reprise, coins de crochets de renvoi ¹ et ², arcs de liaison, filigrane, et la prose « （()是2房子时） » (761,44 / 761,146 / 761,196). Quatre amas soudent un accord à autre chose et sont republiés à leur encre en `extra_labels` : (537,39) « ⌐¹Asus4 », (1054,468) barre + « D », (1054,703) « G/A » + segno, (1594,37) « ⌐²D ». 2026-09-19 (itération 64).",
+ "extra_labels": [
+  {
+   "x": 61,
+   "y": 537,
+   "w": 82,
+   "h": 29,
+   "c": "Asus4"
+  },
+  {
+   "x": 545,
+   "y": 1054,
+   "w": 18,
+   "h": 32,
+   "c": "D"
+  },
+  {
+   "x": 736,
+   "y": 1054,
+   "w": 54,
+   "h": 32,
+   "c": "G/A"
+  },
+  {
+   "x": 71,
+   "y": 1600,
+   "w": 19,
+   "h": 31,
+   "c": "D"
+  },
+  {
+   "x": 113,
+   "y": 166,
+   "w": 15,
+   "h": 20,
+   "c": "D"
+  },
+  {
+   "x": 162,
+   "y": 166,
+   "w": 45,
+   "h": 20,
+   "c": "A/D"
+  },
+  {
+   "x": 310,
+   "y": 166,
+   "w": 46,
+   "h": 20,
+   "c": "G/D"
+  },
+  {
+   "x": 527,
+   "y": 166,
+   "w": 15,
+   "h": 20,
+   "c": "D"
+  },
+  {
+   "x": 575,
+   "y": 166,
+   "w": 58,
+   "h": 20,
+   "c": "A/C#"
+  },
+  {
+   "x": 732,
+   "y": 166,
+   "w": 16,
+   "h": 20,
+   "c": "G"
+  },
+  {
+   "x": 818,
+   "y": 166,
+   "w": 46,
+   "h": 20,
+   "c": "G/A"
+  },
+  {
+   "x": 919,
+   "y": 166,
+   "w": 15,
+   "h": 20,
+   "c": "D"
+  },
+  {
+   "x": 964,
+   "y": 166,
+   "w": 178,
+   "h": 20,
+   "c": "A/C# G/B D/F#"
+  },
+  {
+   "x": 1163,
+   "y": 166,
+   "w": 16,
+   "h": 20,
+   "c": "G"
+  },
+  {
+   "x": 1344,
+   "y": 166,
+   "w": 46,
+   "h": 20,
+   "c": "G/A"
+  },
+  {
+   "x": 1127,
+   "y": 486,
+   "w": 28,
+   "h": 22,
+   "c": "(D"
+  },
+  {
+   "x": 1320,
+   "y": 486,
+   "w": 68,
+   "h": 22,
+   "c": "A/C#"
+  },
+  {
+   "x": 223,
+   "y": 717,
+   "w": 59,
+   "h": 23,
+   "c": "Bm7"
+  },
+  {
+   "x": 459,
+   "y": 717,
+   "w": 51,
+   "h": 23,
+   "c": "D/A"
+  },
+  {
+   "x": 683,
+   "y": 717,
+   "w": 18,
+   "h": 23,
+   "c": "G"
+  },
+  {
+   "x": 901,
+   "y": 717,
+   "w": 65,
+   "h": 23,
+   "c": "D/F#"
+  },
+  {
+   "x": 1001,
+   "y": 717,
+   "w": 65,
+   "h": 23,
+   "c": "E/G#"
+  },
+  {
+   "x": 1144,
+   "y": 717,
+   "w": 82,
+   "h": 23,
+   "c": "Asus4"
+  },
+  {
+   "x": 1299,
+   "y": 717,
+   "w": 19,
+   "h": 23,
+   "c": "A"
+  },
+  {
+   "x": 78,
+   "y": 1009,
+   "w": 18,
+   "h": 23,
+   "c": "G"
+  },
+  {
+   "x": 292,
+   "y": 1009,
+   "w": 53,
+   "h": 23,
+   "c": "G/A"
+  },
+  {
+   "x": 545,
+   "y": 1009,
+   "w": 17,
+   "h": 23,
+   "c": "D"
+  },
+  {
+   "x": 735,
+   "y": 1009,
+   "w": 62,
+   "h": 23,
+   "c": "G/A)"
+  },
+  {
+   "x": 57,
+   "y": 1351,
+   "w": 52,
+   "h": 23,
+   "c": "D/A"
+  },
+  {
+   "x": 157,
+   "y": 1351,
+   "w": 84,
+   "h": 23,
+   "c": "(D/F#)"
+  },
+  {
+   "x": 331,
+   "y": 1351,
+   "w": 18,
+   "h": 23,
+   "c": "G"
+  },
+  {
+   "x": 550,
+   "y": 1351,
+   "w": 65,
+   "h": 23,
+   "c": "D/F#"
+  },
+  {
+   "x": 755,
+   "y": 1351,
+   "w": 40,
+   "h": 23,
+   "c": "Em"
+  },
+  {
+   "x": 942,
+   "y": 1351,
+   "w": 18,
+   "h": 23,
+   "c": "A"
+  },
+  {
+   "x": 1128,
+   "y": 1351,
+   "w": 40,
+   "h": 23,
+   "c": "Em"
+  },
+  {
+   "x": 1257,
+   "y": 1351,
+   "w": 53,
+   "h": 23,
+   "c": "G/A"
+  },
+  {
+   "x": 66,
+   "y": 1780,
+   "w": 19,
+   "h": 23,
+   "c": "A"
+  },
+  {
+   "x": 166,
+   "y": 1780,
+   "w": 49,
+   "h": 23,
+   "c": "C/D"
+  },
+  {
+   "x": 293,
+   "y": 1780,
+   "w": 40,
+   "h": 23,
+   "c": "Em"
+  },
+  {
+   "x": 674,
+   "y": 1780,
+   "w": 65,
+   "h": 23,
+   "c": "D/F#"
+  },
+  {
+   "x": 1041,
+   "y": 1780,
+   "w": 19,
+   "h": 23,
+   "c": "G"
+  },
+  {
+   "x": 68,
+   "y": 1958,
+   "w": 19,
+   "h": 24,
+   "c": "A"
+  },
+  {
+   "x": 205,
+   "y": 1958,
+   "w": 92,
+   "h": 24,
+   "c": "[升F调]"
+  }
+ ],
+ "extra_labels_verified": "43 étiquettes posées à la main, toutes lues au zoom 1,9× à 9× le 2026-09-19 (itération 64). Elles couvrent **six rangées d'accords entières** que `read()` ne rend pas : l'intro (bande typée « ? »), la rangée haute du système 3 soudée à sa ligne de paroles (« (第2遍时) (D 【Verse2】 A/C# »), la rangée haute du système 4 (typée « chords? », jamais confirmée), la moitié gauche de la rangée haute du système 5, la rangée du système 6 (typée « lyrics ») et celle du système 8 (typée « numbers »). Deux accords ne sont pas dans le `.cho` : « G/B » à l'intro et « C/D » au pont — recopiés tels que gravés. Les trois derniers accords de la deuxième mesure de l'intro — « A/C# G/B D/F# », x=964..1141 — sont **une seule étiquette composite** : la gravure les crêne si serré qu'il ne reste que 10 px entre eux, et publiés séparément le voisin de droite rabotait « Ab/C » à 0,70× du corps de la page (mesuré dans le navigateur avant correction). Le « D » du « ⌐²D » (système 7) est posé à y=1600 h=31 et non sur la bande (y=1594 h=37) : sa ligne de base reste celle de la rangée (1631) mais le haut de sa boîte descend sous celle du « F » gravé juste au-dessus, qui sinon le recouvrait entièrement — le banc le voyait « Eb affiché «  » ».",
+ "extra_composites_verified": "étiquettes composites recopiées telles qu'imprimées, `transpose_label` réécrivant la ligne entière : « A(Em7) », « D(D/F#) », « (D/F#) », « (D », « G/A) », « (F », « F7) », « (F/A) », « (G#m7b5) », « [升F调] » et la note de bas de page « （(*)结尾时2房子改成第3拍Bbm，第4拍Bb/C） ». Vérifié hors navigateur : à +1 demi-ton elles sortent « Bb(Fm7) », « Eb(Eb/G) », « (Eb/G) », « (Eb », « Ab/Bb) », « (Gb », « Gb7) », « (Gb/Bb) », « (Am7b5) », « [升Gb调] », « （(*)结尾时2房子改成第3拍Bm，第4拍B/Db） ». 2026-09-19 (itération 64).",
+ "alt_labels": [
+  {
+   "x": 850,
+   "y": 958,
+   "w": 23,
+   "h": 25,
+   "c": "(F",
+   "alt": 3,
+   "opt": true
+  },
+  {
+   "x": 1077,
+   "y": 958,
+   "w": 31,
+   "h": 25,
+   "c": "Eb",
+   "alt": 3,
+   "opt": true
+  },
+  {
+   "x": 1232,
+   "y": 958,
+   "w": 68,
+   "h": 25,
+   "c": "Bb/D",
+   "alt": 3,
+   "opt": true
+  },
+  {
+   "x": 860,
+   "y": 1009,
+   "w": 12,
+   "h": 23,
+   "c": "F",
+   "alt": 3,
+   "opt": true
+  },
+  {
+   "x": 1077,
+   "y": 1009,
+   "w": 45,
+   "h": 23,
+   "c": "C/E",
+   "alt": 3,
+   "opt": true
+  },
+  {
+   "x": 1233,
+   "y": 1009,
+   "w": 62,
+   "h": 23,
+   "c": "Dm7",
+   "alt": 3,
+   "opt": true
+  },
+  {
+   "x": 54,
+   "y": 1252,
+   "w": 60,
+   "h": 23,
+   "c": "Cm7",
+   "alt": 3,
+   "opt": true
+  },
+  {
+   "x": 166,
+   "y": 1252,
+   "w": 39,
+   "h": 23,
+   "c": "F7)",
+   "alt": 3,
+   "opt": true
+  },
+  {
+   "x": 58,
+   "y": 1300,
+   "w": 44,
+   "h": 25,
+   "c": "F/C",
+   "alt": 3,
+   "opt": true
+  },
+  {
+   "x": 157,
+   "y": 1300,
+   "w": 65,
+   "h": 25,
+   "c": "(F/A)",
+   "alt": 3,
+   "opt": true
+  },
+  {
+   "x": 326,
+   "y": 1300,
+   "w": 33,
+   "h": 25,
+   "c": "Bb",
+   "alt": 3,
+   "opt": true
+  },
+  {
+   "x": 549,
+   "y": 1300,
+   "w": 180,
+   "h": 25,
+   "c": "F/A (G#m7b5)",
+   "alt": 3,
+   "opt": true
+  },
+  {
+   "x": 749,
+   "y": 1300,
+   "w": 45,
+   "h": 25,
+   "c": "Gm",
+   "alt": 3,
+   "opt": true
+  },
+  {
+   "x": 839,
+   "y": 1300,
+   "w": 51,
+   "h": 25,
+   "c": "G/B",
+   "alt": 3,
+   "opt": true
+  },
+  {
+   "x": 944,
+   "y": 1300,
+   "w": 16,
+   "h": 25,
+   "c": "C",
+   "alt": 3,
+   "opt": true
+  },
+  {
+   "x": 1123,
+   "y": 1300,
+   "w": 45,
+   "h": 25,
+   "c": "Gm",
+   "alt": 3,
+   "opt": true
+  },
+  {
+   "x": 1256,
+   "y": 1300,
+   "w": 65,
+   "h": 25,
+   "c": "Bb/C",
+   "alt": 3,
+   "opt": true
+  },
+  {
+   "x": 955,
+   "y": 1528,
+   "w": 502,
+   "h": 26,
+   "c": "（(*)结尾时2房子改成第3拍Bbm，第4拍Bb/C）",
+   "alt": 3,
+   "opt": true
+  },
+  {
+   "x": 74,
+   "y": 1563,
+   "w": 12,
+   "h": 22,
+   "c": "F",
+   "alt": 3,
+   "opt": true
+  },
+  {
+   "x": 496,
+   "y": 1958,
+   "w": 33,
+   "h": 24,
+   "c": "Bb",
+   "alt": 3,
+   "opt": false
+  },
+  {
+   "x": 719,
+   "y": 1958,
+   "w": 46,
+   "h": 24,
+   "c": "F/A",
+   "alt": 3,
+   "opt": false
+  },
+  {
+   "x": 905,
+   "y": 1958,
+   "w": 47,
+   "h": 24,
+   "c": "Gm",
+   "alt": 3,
+   "opt": false
+  },
+  {
+   "x": 1040,
+   "y": 1958,
+   "w": 66,
+   "h": 24,
+   "c": "Bb/C",
+   "alt": 3,
+   "opt": false
+  },
+  {
+   "x": 1223,
+   "y": 1958,
+   "w": 13,
+   "h": 24,
+   "c": "F",
+   "alt": 3,
+   "opt": false
+  }
+ ],
+ "alt_labels_verified": "24 étiquettes du **jeu de fa**, lues à l'œil au zoom et écrites telles que gravées ; `alt: 3` (fa = ré + 3 demi-tons) ne change que l'orthographe, le décalage reste celui de la page. Deux familles :\n— **19 en `opt: true`** : le jeu que la page grave *en plus* du jeu de ré pour la reprise montée, annoncé par « (升调后) » et « (结束时2房子) ». Il occupe deux rangées par système sur les systèmes 5 et 6 (la variante de coda « (F … Eb Bb/D | Cm7 F7) » au-dessus de la transposition ligne à ligne « F (升调后) C/E Dm7 » / « F/C (F/A) Bb F/A (G#m7b5) Gm G/B C Gm Bb/C »), plus le « F » solitaire gravé au-dessus du « ²D » du système 7 (y=1563 : aucune bande du classifieur ne le porte) et la note de bas de page qui nomme Bbm et Bb/C. Masqué par défaut, révélé par le sélecteur.\n— **5 sans `opt`** : le dernier système, après le « [升F调] » gravé au milieu de la rangée. C'est une **modulation** — une suite, pas une alternative —, donc elle s'affiche toujours. Première page du corpus à exercer ce cas, laissé ouvert depuis l'itération 54.\n2026-09-19 (itération 64). « F/A (G#m7b5) » (y=1300) est publié en **une seule étiquette** : la parenthèse ne commence que 24 px après le F/A, et publiés séparément « Gb/Bb » tombait à 0,71× du corps de la page, sélecteur ouvert (mesuré dans le navigateur).",
+ "key_label": {
+  "x": 19,
+  "y": 100,
+  "w": 74,
+  "h": 23,
+  "c": "1= D"
+ },
+ "key_label_verified": "mesuré à la main : `measure-keylabel.py` ne propose **rien** sur cette page (0 candidate), la gravure écrivant « 1= » et « D » séparés par 27 px de blanc. Zoom 3,5× sur x=0..420 y=80..145 : « 1= » occupe x=19..49 et « D » x=76..92, tous deux y=100..122 ; le cadre les couvre tous les deux et s'arrête avant le chiffrage « 4/4 » (x=114). Le texte porte l'espace (« 1= D ») sans lequel `transpose_label` ne verrait qu'un jeton et ne réécrirait rien. 2026-09-19 (itération 64).",
+ "verified": "planche navigateur `npm run jianpu:audit 大手牵着小手` (D → Eb), **les 7 tranches relues dans les deux états du sélecteur** (`audit-browser --alt` pour le second), 2026-09-19 (itération 64).\nSélecteur fermé : les **neuf** rangées d'accords en ré sont cadrées et réécrites — intro (Eb Bb/Eb Ab/Eb … et la composite « Bb/D Ab/C Eb/G »), 【Verse1】, les deux rangées du système 3, les deux du système 4 (dont « Bb(Fm7) » et « Eb(Eb/G) »), les deux du système 5, le système 6, le 【Bridge】, la deuxième ligne du pont (« Bb Db/Eb Fm Eb/G Ab ») et le « Bb » qui précède la modulation. Le cadre du haut de page affiche « 1= Eb ». Les quatre rangées du jeu de fa et la note de bas de page sont des boîtes blanches vides, qui couvrent bien tout le gravé (vérifié sur les tranches 3, 4 et 5). Aucun accord ne reste en ré ; la prose qui ne nomme aucun accord reste gravée telle quelle — « (第2遍时) », « （()是2房子时） », « (结束时2房子) » (deux fois), « (升调后) », 【Verse1】【Verse2】【Chorus】【Bridge】, le segno, le ⊕ de coda, « D.S. » et « Fine ».\nSélecteur ouvert : les 19 étiquettes `opt` s'écrivent en sol bémol (Eb + 3) — « (Gb … E … B/Eb | Dbm7 Gb7) » pour la variante de coda, « Gb (升调后) Db/F Ebm7 » et « Gb/Db (Gb/Bb) B Gb/Bb (Am7b5) Abm Ab/C Db Abm B/Db » pour la transposition ligne à ligne, le « Gb » au-dessus du « Eb » du système 7, et la note de bas de page réécrite « （(*)结尾时2房子改成第3拍Bm，第4拍B/Db） ». Les deux jeux montent bien ensemble : au-dessus de chaque Eb du jeu de ré il y a un Gb, au-dessus de chaque Bb/D un Db/F.\nLa **modulation** du dernier système (5 étiquettes `alt: 3` **sans** `opt`) s'affiche dans les deux états, à l'identique : « Bb  [升Gb调] ⊕ | B … Gb/Bb | Abm  B/Db | Gb ». C'est la première page du corpus à exercer la distinction modulation / alternative laissée ouverte à l'itération 54.\nCorps des étiquettes mesuré dans le navigateur : 17 sur 101 au plancher 0,80× (les filets des crochets de renvoi traversent la bande de mesure de `right_space`), minimum 79 % — le même ordre de grandeur que les pages certifiées du corpus (得胜的宣告 : 11 sur 38, minimum 78 %).",
+ "frozen_labels": [
+  {
+   "x": 188,
+   "y": 289,
+   "w": 17,
+   "h": 33,
+   "c": "D"
+  },
+  {
+   "x": 293,
+   "y": 289,
+   "w": 67,
+   "h": 33,
+   "c": "A/C#"
+  },
+  {
+   "x": 405,
+   "y": 289,
+   "w": 41,
+   "h": 33,
+   "c": "Bm"
+  },
+  {
+   "x": 625,
+   "y": 289,
+   "w": 18,
+   "h": 33,
+   "c": "G"
+  },
+  {
+   "x": 795,
+   "y": 289,
+   "w": 64,
+   "h": 33,
+   "c": "D/F#"
+  },
+  {
+   "x": 1004,
+   "y": 289,
+   "w": 39,
+   "h": 33,
+   "c": "Em"
+  },
+  {
+   "x": 1260,
+   "y": 289,
+   "w": 64,
+   "h": 33,
+   "c": "D/F#"
+  },
+  {
+   "x": 1357,
+   "y": 289,
+   "w": 66,
+   "h": 33,
+   "c": "E/G#"
+  },
+  {
+   "x": 169,
+   "y": 537,
+   "w": 35,
+   "h": 29,
+   "c": "A7"
+  },
+  {
+   "x": 407,
+   "y": 537,
+   "w": 40,
+   "h": 29,
+   "c": "Em"
+  },
+  {
+   "x": 662,
+   "y": 537,
+   "w": 53,
+   "h": 29,
+   "c": "G/A"
+  },
+  {
+   "x": 886,
+   "y": 537,
+   "w": 81,
+   "h": 29,
+   "c": "Dsus4"
+  },
+  {
+   "x": 995,
+   "y": 537,
+   "w": 17,
+   "h": 29,
+   "c": "D"
+  },
+  {
+   "x": 1135,
+   "y": 537,
+   "w": 18,
+   "h": 29,
+   "c": "G"
+  },
+  {
+   "x": 1323,
+   "y": 537,
+   "w": 64,
+   "h": 29,
+   "c": "D/F#"
+  },
+  {
+   "x": 225,
+   "y": 761,
+   "w": 58,
+   "h": 34,
+   "c": "Em7"
+  },
+  {
+   "x": 319,
+   "y": 761,
+   "w": 101,
+   "h": 34,
+   "c": "A(Em7)"
+  },
+  {
+   "x": 459,
+   "y": 761,
+   "w": 106,
+   "h": 34,
+   "c": "D(D/F#)"
+  },
+  {
+   "x": 683,
+   "y": 761,
+   "w": 41,
+   "h": 34,
+   "c": "Bm"
+  },
+  {
+   "x": 905,
+   "y": 761,
+   "w": 39,
+   "h": 34,
+   "c": "Em"
+  },
+  {
+   "x": 1001,
+   "y": 761,
+   "w": 66,
+   "h": 34,
+   "c": "E/G#"
+  },
+  {
+   "x": 1144,
+   "y": 761,
+   "w": 81,
+   "h": 34,
+   "c": "Asus4"
+  },
+  {
+   "x": 1298,
+   "y": 761,
+   "w": 35,
+   "h": 34,
+   "c": "A7"
+  },
+  {
+   "x": 1367,
+   "y": 761,
+   "w": 67,
+   "h": 34,
+   "c": "A/C#"
+  },
+  {
+   "x": 79,
+   "y": 1054,
+   "w": 18,
+   "h": 32,
+   "c": "G"
+  },
+  {
+   "x": 196,
+   "y": 1054,
+   "w": 69,
+   "h": 32,
+   "c": "D/F#"
+  },
+  {
+   "x": 297,
+   "y": 1054,
+   "w": 40,
+   "h": 32,
+   "c": "Em"
+  },
+  {
+   "x": 392,
+   "y": 1054,
+   "w": 53,
+   "h": 32,
+   "c": "G/A"
+  },
+  {
+   "x": 857,
+   "y": 1054,
+   "w": 17,
+   "h": 32,
+   "c": "D"
+  },
+  {
+   "x": 1076,
+   "y": 1054,
+   "w": 67,
+   "h": 32,
+   "c": "A/C#"
+  },
+  {
+   "x": 1234,
+   "y": 1054,
+   "w": 60,
+   "h": 32,
+   "c": "Bm7"
+  },
+  {
+   "x": 305,
+   "y": 1594,
+   "w": 39,
+   "h": 37,
+   "c": "Em"
+  },
+  {
+   "x": 653,
+   "y": 1594,
+   "w": 64,
+   "h": 37,
+   "c": "D/F#"
+  },
+  {
+   "x": 1021,
+   "y": 1594,
+   "w": 18,
+   "h": 37,
+   "c": "G"
+  },
+  {
+   "x": 61,
+   "y": 537,
+   "w": 82,
+   "h": 29,
+   "c": "Asus4"
+  },
+  {
+   "x": 545,
+   "y": 1054,
+   "w": 18,
+   "h": 32,
+   "c": "D"
+  },
+  {
+   "x": 736,
+   "y": 1054,
+   "w": 54,
+   "h": 32,
+   "c": "G/A"
+  },
+  {
+   "x": 71,
+   "y": 1600,
+   "w": 19,
+   "h": 31,
+   "c": "D"
+  },
+  {
+   "x": 113,
+   "y": 166,
+   "w": 15,
+   "h": 20,
+   "c": "D"
+  },
+  {
+   "x": 162,
+   "y": 166,
+   "w": 45,
+   "h": 20,
+   "c": "A/D"
+  },
+  {
+   "x": 310,
+   "y": 166,
+   "w": 46,
+   "h": 20,
+   "c": "G/D"
+  },
+  {
+   "x": 527,
+   "y": 166,
+   "w": 15,
+   "h": 20,
+   "c": "D"
+  },
+  {
+   "x": 575,
+   "y": 166,
+   "w": 58,
+   "h": 20,
+   "c": "A/C#"
+  },
+  {
+   "x": 732,
+   "y": 166,
+   "w": 16,
+   "h": 20,
+   "c": "G"
+  },
+  {
+   "x": 818,
+   "y": 166,
+   "w": 46,
+   "h": 20,
+   "c": "G/A"
+  },
+  {
+   "x": 919,
+   "y": 166,
+   "w": 15,
+   "h": 20,
+   "c": "D"
+  },
+  {
+   "x": 964,
+   "y": 166,
+   "w": 178,
+   "h": 20,
+   "c": "A/C# G/B D/F#"
+  },
+  {
+   "x": 1163,
+   "y": 166,
+   "w": 16,
+   "h": 20,
+   "c": "G"
+  },
+  {
+   "x": 1344,
+   "y": 166,
+   "w": 46,
+   "h": 20,
+   "c": "G/A"
+  },
+  {
+   "x": 1127,
+   "y": 486,
+   "w": 28,
+   "h": 22,
+   "c": "(D"
+  },
+  {
+   "x": 1320,
+   "y": 486,
+   "w": 68,
+   "h": 22,
+   "c": "A/C#"
+  },
+  {
+   "x": 223,
+   "y": 717,
+   "w": 59,
+   "h": 23,
+   "c": "Bm7"
+  },
+  {
+   "x": 459,
+   "y": 717,
+   "w": 51,
+   "h": 23,
+   "c": "D/A"
+  },
+  {
+   "x": 683,
+   "y": 717,
+   "w": 18,
+   "h": 23,
+   "c": "G"
+  },
+  {
+   "x": 901,
+   "y": 717,
+   "w": 65,
+   "h": 23,
+   "c": "D/F#"
+  },
+  {
+   "x": 1001,
+   "y": 717,
+   "w": 65,
+   "h": 23,
+   "c": "E/G#"
+  },
+  {
+   "x": 1144,
+   "y": 717,
+   "w": 82,
+   "h": 23,
+   "c": "Asus4"
+  },
+  {
+   "x": 1299,
+   "y": 717,
+   "w": 19,
+   "h": 23,
+   "c": "A"
+  },
+  {
+   "x": 78,
+   "y": 1009,
+   "w": 18,
+   "h": 23,
+   "c": "G"
+  },
+  {
+   "x": 292,
+   "y": 1009,
+   "w": 53,
+   "h": 23,
+   "c": "G/A"
+  },
+  {
+   "x": 545,
+   "y": 1009,
+   "w": 17,
+   "h": 23,
+   "c": "D"
+  },
+  {
+   "x": 735,
+   "y": 1009,
+   "w": 62,
+   "h": 23,
+   "c": "G/A)"
+  },
+  {
+   "x": 57,
+   "y": 1351,
+   "w": 52,
+   "h": 23,
+   "c": "D/A"
+  },
+  {
+   "x": 157,
+   "y": 1351,
+   "w": 84,
+   "h": 23,
+   "c": "(D/F#)"
+  },
+  {
+   "x": 331,
+   "y": 1351,
+   "w": 18,
+   "h": 23,
+   "c": "G"
+  },
+  {
+   "x": 550,
+   "y": 1351,
+   "w": 65,
+   "h": 23,
+   "c": "D/F#"
+  },
+  {
+   "x": 755,
+   "y": 1351,
+   "w": 40,
+   "h": 23,
+   "c": "Em"
+  },
+  {
+   "x": 942,
+   "y": 1351,
+   "w": 18,
+   "h": 23,
+   "c": "A"
+  },
+  {
+   "x": 1128,
+   "y": 1351,
+   "w": 40,
+   "h": 23,
+   "c": "Em"
+  },
+  {
+   "x": 1257,
+   "y": 1351,
+   "w": 53,
+   "h": 23,
+   "c": "G/A"
+  },
+  {
+   "x": 66,
+   "y": 1780,
+   "w": 19,
+   "h": 23,
+   "c": "A"
+  },
+  {
+   "x": 166,
+   "y": 1780,
+   "w": 49,
+   "h": 23,
+   "c": "C/D"
+  },
+  {
+   "x": 293,
+   "y": 1780,
+   "w": 40,
+   "h": 23,
+   "c": "Em"
+  },
+  {
+   "x": 674,
+   "y": 1780,
+   "w": 65,
+   "h": 23,
+   "c": "D/F#"
+  },
+  {
+   "x": 1041,
+   "y": 1780,
+   "w": 19,
+   "h": 23,
+   "c": "G"
+  },
+  {
+   "x": 68,
+   "y": 1958,
+   "w": 19,
+   "h": 24,
+   "c": "A"
+  },
+  {
+   "x": 205,
+   "y": 1958,
+   "w": 92,
+   "h": 24,
+   "c": "[升F调]"
+  },
+  {
+   "x": 850,
+   "y": 958,
+   "w": 23,
+   "h": 25,
+   "c": "(F",
+   "alt": 3,
+   "opt": true
+  },
+  {
+   "x": 1077,
+   "y": 958,
+   "w": 31,
+   "h": 25,
+   "c": "Eb",
+   "alt": 3,
+   "opt": true
+  },
+  {
+   "x": 1232,
+   "y": 958,
+   "w": 68,
+   "h": 25,
+   "c": "Bb/D",
+   "alt": 3,
+   "opt": true
+  },
+  {
+   "x": 860,
+   "y": 1009,
+   "w": 12,
+   "h": 23,
+   "c": "F",
+   "alt": 3,
+   "opt": true
+  },
+  {
+   "x": 1077,
+   "y": 1009,
+   "w": 45,
+   "h": 23,
+   "c": "C/E",
+   "alt": 3,
+   "opt": true
+  },
+  {
+   "x": 1233,
+   "y": 1009,
+   "w": 62,
+   "h": 23,
+   "c": "Dm7",
+   "alt": 3,
+   "opt": true
+  },
+  {
+   "x": 54,
+   "y": 1252,
+   "w": 60,
+   "h": 23,
+   "c": "Cm7",
+   "alt": 3,
+   "opt": true
+  },
+  {
+   "x": 166,
+   "y": 1252,
+   "w": 39,
+   "h": 23,
+   "c": "F7)",
+   "alt": 3,
+   "opt": true
+  },
+  {
+   "x": 58,
+   "y": 1300,
+   "w": 44,
+   "h": 25,
+   "c": "F/C",
+   "alt": 3,
+   "opt": true
+  },
+  {
+   "x": 157,
+   "y": 1300,
+   "w": 65,
+   "h": 25,
+   "c": "(F/A)",
+   "alt": 3,
+   "opt": true
+  },
+  {
+   "x": 326,
+   "y": 1300,
+   "w": 33,
+   "h": 25,
+   "c": "Bb",
+   "alt": 3,
+   "opt": true
+  },
+  {
+   "x": 549,
+   "y": 1300,
+   "w": 180,
+   "h": 25,
+   "c": "F/A (G#m7b5)",
+   "alt": 3,
+   "opt": true
+  },
+  {
+   "x": 749,
+   "y": 1300,
+   "w": 45,
+   "h": 25,
+   "c": "Gm",
+   "alt": 3,
+   "opt": true
+  },
+  {
+   "x": 839,
+   "y": 1300,
+   "w": 51,
+   "h": 25,
+   "c": "G/B",
+   "alt": 3,
+   "opt": true
+  },
+  {
+   "x": 944,
+   "y": 1300,
+   "w": 16,
+   "h": 25,
+   "c": "C",
+   "alt": 3,
+   "opt": true
+  },
+  {
+   "x": 1123,
+   "y": 1300,
+   "w": 45,
+   "h": 25,
+   "c": "Gm",
+   "alt": 3,
+   "opt": true
+  },
+  {
+   "x": 1256,
+   "y": 1300,
+   "w": 65,
+   "h": 25,
+   "c": "Bb/C",
+   "alt": 3,
+   "opt": true
+  },
+  {
+   "x": 955,
+   "y": 1528,
+   "w": 502,
+   "h": 26,
+   "c": "（(*)结尾时2房子改成第3拍Bbm，第4拍Bb/C）",
+   "alt": 3,
+   "opt": true
+  },
+  {
+   "x": 74,
+   "y": 1563,
+   "w": 12,
+   "h": 22,
+   "c": "F",
+   "alt": 3,
+   "opt": true
+  },
+  {
+   "x": 496,
+   "y": 1958,
+   "w": 33,
+   "h": 24,
+   "c": "Bb",
+   "alt": 3,
+   "opt": false
+  },
+  {
+   "x": 719,
+   "y": 1958,
+   "w": 46,
+   "h": 24,
+   "c": "F/A",
+   "alt": 3,
+   "opt": false
+  },
+  {
+   "x": 905,
+   "y": 1958,
+   "w": 47,
+   "h": 24,
+   "c": "Gm",
+   "alt": 3,
+   "opt": false
+  },
+  {
+   "x": 1040,
+   "y": 1958,
+   "w": 66,
+   "h": 24,
+   "c": "Bb/C",
+   "alt": 3,
+   "opt": false
+  },
+  {
+   "x": 1223,
+   "y": 1958,
+   "w": 13,
+   "h": 24,
+   "c": "F",
+   "alt": 3,
+   "opt": false
+  }
+ ]
 }

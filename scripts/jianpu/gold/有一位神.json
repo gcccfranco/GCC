@@ -1,6 +1,293 @@
 {
  "slug": "有一位神",
- "printed_key": "D",
- "printed_key_verified": "en-tête de la page lu à l'œil avant toute mesure (étape 0) : le cadre est gravé à l'envers, « D=1 » ; lot des 50 简谱 fournis, 2026-09-18 (itération 63)",
- "en_chantier": "page laissée sans calque, faute de lecture exploitable. L'image fournie fait 623 × 541 — la plus petite du lot, cinq fois moins de pixels que les autres — et ses étiquettes font une douzaine de pixels de haut ; le dièse y est gravé en préfixe (« ♯Fm » et non « F#m »). Le découpage ne sépare pas les rangées d'accords de leurs chiffres (bandes de 56 px de haut soudées), et sur les quatre rangées que read() rend, aucun amas ne passe le plancher : les scores vont de -2,5 à +0,07, soit une couverture nulle. Sans une seule étiquette lue, `_from_reading` rend « aucune rangée d'accords » et `extra_labels` ne peut rien amorcer — la page ne peut pas être publiée depuis le gold seul. Il faudrait un scan de meilleure définition (les accords gravés sont D, ♯Fm, G, A, A7, Em, relevés à l'œil sur la page agrandie ×2) ou la voie `chord_rows`. 2026-09-18 (itération 63)"
+ "printed_key": "C",
+ "printed_key_verified": "en-tête lu à l'œil avant toute mesure (étape 0) : le nouveau scan est l'édition **C调** — titre « 有一位神（C调） », cadre « 1= C » à l'endroit, mention de série « [共3张：D(原调)、C调、级数] ». Le `.cho` est en ré, donc song_semitones = 10. Le GIF précédent était l'édition ré au cadre inversé « D=1 ». 2026-09-19 (itération 64)",
+ "extra_chords": [
+  "D/F#",
+  "Bm"
+ ],
+ "extra_chords_verified": "relevés à l'œil sur la page agrandie : « C/E » (2e système du prélude) et « Am » / « ( Am ) » (reprise du prélude et avant-dernière mesure) — soit D/F# et Bm dans la convention du `.cho`, absents de sa transcription. 2026-09-19 (itération 64)",
+ "source": "nouveau scan fourni le 19/09/2026 (itération 64) en remplacement du GIF de recueil à 600 px : 1786 × 2526 px (623 × 541 avant), gravure typographique 赞美之泉 et non plus manuscrite.",
+ "en_chantier_leve": "levé le 19/09/2026 (itération 64) : Timothée a fourni un nouveau scan, « 有一位神 简谱 (C调).png » 1786×2526 px (623×541 avant), gravure typographique 赞美之泉 au lieu du GIF de recueil manuscrit. Ce n'est pas la même édition : l'ancienne planche était l'édition **ré** (cadre inversé « D=1 », dièse en préfixe « ♯Fm »), la nouvelle est l'édition **C调**. La raison de la retenue — « aucun amas ne passe le plancher, scores −2,5 à +0,07, couverture nulle » — tombe avec l'image : 23 amas sur 23 publiés, plus les 6 de la rangée soudée du 2e système posés à la main.",
+ "corrections": {
+  "989,621": "A",
+  "989,1103": "D",
+  "1892,675": "( Bm"
+ },
+ "corrections_verified": "**convention du `.cho`, donc en ré** (song_semitones = 10 : la page est gravée en ut). Trois amas du 4e et du 7e système, zooms `_extra-N.png` regardés un par un. « 989,621 » : la page grave « G », lu A (+0,52) mais non unanime, donc recalé sous le seuil — la lecture était juste, la correction ne fait que la publier. « 989,1103 » : la page grave « C », lu D (+0,15), même cas. « 1892,675 » : la page grave « ( Am » (l'amas porte la parenthèse ouvrante, vérifié au zoom ×5 sur l'encre, x=675→738), lu « Em » (−0,08) — seule vraie fausse lecture d'un amas rendu par read(). Écrit « ( Bm » avec l'espace, pour que transposeLabel voie deux jetons et ne réécrive que l'accord ; la parenthèse fermante reste l'encre gravée (voir not_labels). Aucune sœur de la même forme : le seul autre Am de la page est celui du 2e système, lu juste (+0,82 / +0,78). 2026-09-19 (itération 64)",
+ "not_labels": [
+  "1302,1353",
+  "1892,753"
+ ],
+ "not_labels_verified": "« 1302,1353 » : le marqueur 【Chorus】 annoncé au bout du 5e système, amas de 139 px lu « Em » (−1,35). « 1892,753 » : la parenthèse fermante « ） » du « ( Am ) » du dernier système, amas de 6 px de large lu « G » (−2,39) — un artefact de ligne, pas une étiquette (règle de l'itération 64 : w de 1 ou 2 px et score très négatif). On la laisse gravée telle quelle : la correction « ( Bm » posée sur l'amas voisin rend la parenthèse ouvrante, et la page affiche « ( Bm ) ». 2026-09-19 (itération 64)",
+ "not_rows": [
+  379,
+  1035
+ ],
+ "not_rows_verified": "deux rangées promues qui ne portent aucun accord, bandes rendues et regardées. y=379 : l'annotation chinoise « （第一行是《让赞美飞扬》专辑版本前奏） » sous le 1er système — 9 amas de hanzi, scores −2,25 à +0,03, dont deux de 4 et 5 px de large. y=1035 : une bande de 13 px sous les accords du 4e système, 4 amas qui sont deux hauts de barre de mesure de 1 à 2 px, un sommet d'arc de liaison (17 px) et une colonne de 0 px en bord droit ; scores −2,10 à −3,30. Elles ne pèsent donc plus sur la couverture. Le « （第二行是儿童专辑…前奏） » du 2e système n'est pas promu et n'avait rien à écarter. 2026-09-19 (itération 64)",
+ "extra_labels": [
+  {
+   "x": 56,
+   "y": 439,
+   "w": 52,
+   "h": 34,
+   "c": "D/F#"
+  },
+  {
+   "x": 389,
+   "y": 443,
+   "w": 13,
+   "h": 25,
+   "c": "G"
+  },
+  {
+   "x": 710,
+   "y": 423,
+   "w": 51,
+   "h": 25,
+   "c": "Bm"
+  },
+  {
+   "x": 977,
+   "y": 423,
+   "w": 21,
+   "h": 25,
+   "c": "A"
+  },
+  {
+   "x": 1221,
+   "y": 423,
+   "w": 51,
+   "h": 25,
+   "c": "Bm"
+  },
+  {
+   "x": 1488,
+   "y": 423,
+   "w": 20,
+   "h": 25,
+   "c": "A"
+  }
+ ],
+ "extra_labels_verified": "**convention du `.cho`, donc en ré** — la page grave « C/E · F · Am · G · Am · G », soit D/F# · G · Bm · A · Bm · A une fois le décalage de song_semitones = 10 appliqué. C'est la rangée d'accords du **2e système** (la 2e ligne de prélude, annotée « 第二行是儿童专辑《有一位神》专辑版本前奏 »), soudée à son crochet de reprise dans la bande y=423 h=69 que le classifieur ne promeut pas : elle n'apparaît ni dans read() ni dans `propose-extra --all`, seulement dans `--hidden`. Trouvée en comptant les systèmes (7 rangées de chiffres : 281, 493, 744, 1066, 1359, 1682, 1939 ; 6 rangées d'accords rendues), puis les six amas regardés un par un au zoom. Boîtes **remesurées sur l'encre** et non reprises de la proposition, qui donnait 28 px de blanc à gauche des deux « Am » (x=682 et 1187 pour une encre à 710 et 1221). Les deux premières étiquettes sont gravées 20 px plus bas que les quatre autres (le crochet de reprise occupe la place à droite), d'où deux y différents ; « C/E » monte à 439 et descend à 472 par sa barre oblique, d'où h=34. Cinq des six sont lues juste par le matcher une fois la rangée ouverte (+0,38 à +0,82) ; seul « C/E » sortait « A7 » (+0,02). 2026-09-19 (itération 64)",
+ "key_label": {
+  "x": 14,
+  "y": 166,
+  "w": 81,
+  "h": 26
+ },
+ "key_label_verified": "candidate #2 de `measure-keylabel` (ancrage sur le « = »), élue à l'œil sur la planche : #1 était la ligne de tempo ♩=76. Boîte confrontée à l'encre (« 1= » x=14-48, « C » x=77-94, y=166-191 pour les deux) : le cadre x=14-95 les couvre toutes deux et s'arrête avant le chiffrage « 4/4 », dont l'encre commence à x=122. La lettre gravée est **C**, égale à printedKey : pas de champ `c`, le client écrit « 1=<tonalité jouée> ». La mention de série « [共3张：D(原调)、C调、级数] » (x≈170-400, y≈85-150) reste dehors du cadre : elle ne bouge pas à la transposition. 2026-09-19 (itération 64)",
+ "title_key": {
+  "x": 837,
+  "y": 16,
+  "w": 167,
+  "h": 66
+ },
+ "title_key_verified": "**mesurée à la main**, la limite de `measure-titlekey` relevée à l'itération 63 : la bande du titre porte aussi le bloc de crédits « 万美兰 词 / 游智婷 曲 » à droite, et les quatre candidates proposées (x=1299…1407) tombent toutes dessus, aucune sur « （C调） ». Bornes relevées sur l'encre de la seule ligne du titre (y=14-81, la ligne de sous-titre « 赞美之泉《让赞美飞扬》（1995） » commençant à y=98) : glyphes 有 507-573, 一 580-645, 位 652-718, 神 724-788, puis « （ » 837-858, « C » 869-900, « 调 » 906-970, « ） » 982-1003 ; extrema verticaux des quatre derniers 16 et 81. D'où x=837 w=167 y=16 h=66, vérifié au zoom ×3. Forme nue « （C调） » : elle décrit la page et suit donc la transposition, contrairement à la mention de série. 2026-09-19 (itération 64)",
+ "verified": "planche navigateur `npm run jianpu:audit 有一位神` regardée tranche par tranche (6/6), C → C#, le demi-ton où aucun accord ne garde son nom. Les 29 étiquettes des 7 systèmes portent toutes leur cadre rouge, **y compris les six du 2e système** — la rangée soudée à son crochet de reprise, que ni `read()`, ni `propose-extra --all`, ni `bandes.py` ne voyaient et que seul le comptage des systèmes a trouvée. Convention de la page (ut) : C→Db, Em→Fm, F→Gb, G→Ab, G7→Ab7, C/E→Db/F, Am→Bbm, Dm→Ebm. Le cadre « 1= C » devient « 1=C# » et le « 4/4 » reste dehors ; la mention « （C调） » du titre devient « （C#调） » ; restent gravés tels quels, et c'est voulu : la mention de série « [共3张：D(原调)、C调、级数] », les deux annotations « （第一行是…） » / « （第二行是…） », 【Chorus】, （申6:4）, les crédits, les crochets de reprise ¹ ² et la parenthèse fermante de « ( Am ) ». L'étiquette serrée « ( Bbm » (x=675, w=64, sp=78, au plancher MIN_SHRINK) sort entière et ne mord pas sur la « ） » gravée : la page lit « ( Bbm ) ». 2026-09-19 (itération 64)",
+ "frozen_labels": [
+  {
+   "x": 227,
+   "y": 229,
+   "w": 18,
+   "h": 26,
+   "c": "C"
+  },
+  {
+   "x": 589,
+   "y": 229,
+   "w": 45,
+   "h": 26,
+   "c": "Em"
+  },
+  {
+   "x": 946,
+   "y": 229,
+   "w": 12,
+   "h": 26,
+   "c": "F"
+  },
+  {
+   "x": 1328,
+   "y": 229,
+   "w": 42,
+   "h": 26,
+   "c": "G7"
+  },
+  {
+   "x": 352,
+   "y": 668,
+   "w": 18,
+   "h": 25,
+   "c": "C"
+  },
+  {
+   "x": 929,
+   "y": 668,
+   "w": 45,
+   "h": 25,
+   "c": "Em"
+  },
+  {
+   "x": 76,
+   "y": 989,
+   "w": 13,
+   "h": 26,
+   "c": "F"
+  },
+  {
+   "x": 621,
+   "y": 989,
+   "w": 20,
+   "h": 26,
+   "c": "G"
+  },
+  {
+   "x": 822,
+   "y": 989,
+   "w": 42,
+   "h": 26,
+   "c": "G7"
+  },
+  {
+   "x": 1103,
+   "y": 989,
+   "w": 18,
+   "h": 26,
+   "c": "C"
+  },
+  {
+   "x": 63,
+   "y": 1302,
+   "w": 44,
+   "h": 35,
+   "c": "Em"
+  },
+  {
+   "x": 604,
+   "y": 1302,
+   "w": 13,
+   "h": 35,
+   "c": "F"
+  },
+  {
+   "x": 1122,
+   "y": 1302,
+   "w": 42,
+   "h": 35,
+   "c": "G7"
+  },
+  {
+   "x": 92,
+   "y": 1633,
+   "w": 18,
+   "h": 25,
+   "c": "C"
+  },
+  {
+   "x": 469,
+   "y": 1633,
+   "w": 45,
+   "h": 25,
+   "c": "Em"
+  },
+  {
+   "x": 863,
+   "y": 1633,
+   "w": 13,
+   "h": 25,
+   "c": "F"
+  },
+  {
+   "x": 1222,
+   "y": 1633,
+   "w": 41,
+   "h": 25,
+   "c": "G7"
+  },
+  {
+   "x": 65,
+   "y": 1892,
+   "w": 13,
+   "h": 26,
+   "c": "F"
+  },
+  {
+   "x": 446,
+   "y": 1892,
+   "w": 45,
+   "h": 26,
+   "c": "Em"
+  },
+  {
+   "x": 675,
+   "y": 1892,
+   "w": 64,
+   "h": 26,
+   "c": "( Am"
+  },
+  {
+   "x": 868,
+   "y": 1892,
+   "w": 49,
+   "h": 26,
+   "c": "Dm"
+  },
+  {
+   "x": 1094,
+   "y": 1892,
+   "w": 41,
+   "h": 26,
+   "c": "G7"
+  },
+  {
+   "x": 1337,
+   "y": 1892,
+   "w": 18,
+   "h": 26,
+   "c": "C"
+  },
+  {
+   "x": 56,
+   "y": 439,
+   "w": 52,
+   "h": 34,
+   "c": "C/E"
+  },
+  {
+   "x": 389,
+   "y": 443,
+   "w": 13,
+   "h": 25,
+   "c": "F"
+  },
+  {
+   "x": 710,
+   "y": 423,
+   "w": 51,
+   "h": 25,
+   "c": "Am"
+  },
+  {
+   "x": 977,
+   "y": 423,
+   "w": 21,
+   "h": 25,
+   "c": "G"
+  },
+  {
+   "x": 1221,
+   "y": 423,
+   "w": 51,
+   "h": 25,
+   "c": "Am"
+  },
+  {
+   "x": 1488,
+   "y": 423,
+   "w": 20,
+   "h": 25,
+   "c": "G"
+  }
+ ]
 }
