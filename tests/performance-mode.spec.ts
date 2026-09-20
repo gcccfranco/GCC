@@ -50,6 +50,18 @@ async function openPerformance(page: Page, items: Record<string, unknown>[], rol
 const onStage = (page: Page, selector: string) =>
   page.locator(`[data-performance-mode] ${selector}:not([aria-hidden=true] *)`);
 
+/** Quitte le mode louange. Avant chaque clic, Playwright fait défiler sa cible
+ *  « dans l'écran » ; pendant la transition du plein écran, ce défilement déplace
+ *  parfois la page restée dessous (tout en bas), ce qui masque navbar et barre
+ *  d'outils et fait échouer le clic suivant. Sondé le 20/09/2026 sur tablette :
+ *  4 sauts sur 24 avec le clic de Playwright, 0 sur 24 avec un clic DOM direct —
+ *  c'est l'outil de test, pas le site. On rend donc la page où elle était. */
+async function quitter(page: Page) {
+  const y = await page.evaluate(() => window.scrollY);
+  await page.getByRole("button", { name: "Quitter" }).click();
+  await page.evaluate((to) => window.scrollTo(0, to), y);
+}
+
 /** Badges de la page affichée — hors copie invisible qui sert à mesurer les hauteurs. */
 const nuance = (page: Page, text: string | RegExp) =>
   page.locator("[data-nuance]:not([aria-hidden=true] *)", { hasText: text });
@@ -163,7 +175,7 @@ test.describe("choix du rôle à la première ouverture", () => {
   /** Lignes de paroles de la page affichée (hors copie de mesure). */
   const lyricLines = (page: Page) => onStage(page, "[data-copy-line]");
   const reopen = async (page: Page) => {
-    await page.getByRole("button", { name: "Quitter" }).click();
+    await quitter(page);
     await page.getByRole("button", { name: /Mode Louange/ }).click();
     await expect(page.getByText("Mise en page…")).toHaveCount(0);
   };
@@ -240,7 +252,7 @@ test.describe("reprise des réglages", () => {
   test("accords changés sur la page setlist juste avant → l'emportent sur le rôle (FR)", async ({ page }) => {
     await openPerformance(page, FR, "batteur");
     await expect(lyricLines(page)).toHaveCount(0);
-    await page.getByRole("button", { name: "Quitter" }).click();
+    await quitter(page);
 
     await page.getByRole("button", { name: "Partitions" }).click();
     await page.getByRole("button", { name: "Accords" }).click(); // masqués
