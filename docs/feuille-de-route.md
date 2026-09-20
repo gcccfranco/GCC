@@ -35,7 +35,11 @@ demande des dérivés avec plus de relief (5C1, 5C2, 5C3 publiés, choix attendu
 Règles Firestore : publiées le 19/09/2026 (tout jusqu’au lot 17) ; la règle des
 setlists privées du lot cohérence reste à republier.
 
-**État au 20/09/2026** : lot 14 commité (`e13662e`), branche à 47 commits
+**EN LIGNE le 20/09/2026** : `main` fusionné et poussé (`e5497cd`), look 5C1 et lot 18
+codés le jour même, back-office coupé en ligne (`spec-mise-en-ligne.md`, « Mise en
+ligne »). Ce qui suit est l'état du matin.
+
+**État au 20/09/2026 (matin)** : lot 14 commité (`e13662e`), branche à 47 commits
 d'avance, toujours rien en ligne. Timothée choisit le look **5C1 « Encre ·
 Relief »** et transmet les retours de Christelle (`spec-look.md`, § 20/09/2026) ;
 boutons tranchés le soir sur la page « 5C1 · retours 20-09 » de la planche

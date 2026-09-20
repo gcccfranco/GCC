@@ -85,3 +85,41 @@ test.describe("back-office coupé : le planning reste le tableau d'aujourd'hui",
     expect(lectureDeLApp, "aucune lecture de plannings/* dans Firestore").toBe(false);
   });
 });
+
+// Lot 1a, vu « comme en ligne » : la page du Culte sert l'ancien tableau, et la colonne
+// « Sainte cène » (index 11 de Franco_Louange) doit y être, comme dans « Ce dimanche »
+// et « Mes services ». Question de Timothée du 20/09/2026, à la mise en ligne.
+test.describe("back-office coupé : la Sainte cène reste un service à part entière", () => {
+  const csv = (rows: string[][]) => rows.map((r) => r.map((c) => `"${c}"`).join(",")).join("\n");
+  const CULTE = csv([
+    ["2026 DATE", "Présidence", "Choristes", "", "Pianiste", "Guitariste", "Batterie", "Sono + Live", "PPT", "Orateur", "Traducteur", "Sainte cène", "Notes"],
+    ["13/09", "Jonathan Z.", "Daniela W.", "Alice Q.", "Timothée C.", "Christelle C.", "Yiyi C.", "Lorenzo S.", "Denis F.", "Belka", "", "", "à confirmer"],
+    ["20/09", "Paul W.", "Christelle Z.", "Inès L.", "Eva C.", "Éloïse M.", "Stéphane Z.", "Anyi Y.", "Karémy X.", "Hewei", "", "Ruth K.", "chants ?"],
+  ]);
+  const RUTH: FakeProfile = { uid: "uid-ruth", email: "ruth@example.com", planningName: "Ruth K." };
+  const ouvrir = async (page: Page, to: string) => {
+    await page.clock.setFixedTime(new Date("2026-09-18T10:00:00"));
+    await page.route(/docs\.google\.com\/spreadsheets/, (route) => {
+      const sheet = new URL(route.request().url()).searchParams.get("sheet");
+      return route.fulfill({ status: 200, contentType: "text/csv", body: sheet === "Franco_Louange" ? CULTE : "" });
+    });
+    await signInAs(page, RUTH, {}, to);
+  };
+
+  test("onglet Culte : la colonne et la personne s'affichent, pas les notes de travail", async ({ page }) => {
+    await ouvrir(page, "/planning/culte");
+    await expect(page.locator("[data-grille]"), "c'est bien l'ancien tableau").toHaveCount(0);
+    await expect(page.getByText("Ruth K.").filter({ visible: true })).toBeVisible();
+    await expect(page.getByText("Sainte cène", { exact: true }).filter({ visible: true })).toBeVisible();
+    await expect(page.getByText("chants ?")).toHaveCount(0);
+  });
+
+  test("Ce dimanche et Mes services la portent aussi", async ({ page }) => {
+    await ouvrir(page, "/planning");
+    const dimanche = page.getByRole("region", { name: /Ce dimanche/ });
+    await expect(dimanche.getByText("Sainte cène", { exact: true })).toBeVisible();
+    await expect(dimanche.getByText("Ruth K.")).toBeVisible();
+    await page.goto("/mes-services");
+    await expect(page.getByText("Sainte cène", { exact: true })).toBeVisible();
+  });
+});
