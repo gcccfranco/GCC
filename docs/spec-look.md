@@ -223,3 +223,125 @@ Restes connus, hors lot : les captures du guide montrent l'ancien look (à
 refaire au lot 8) ; `tsc` signale un fichier généré périmé dans `.next/types`
 (route `notify-annonce` supprimée au lot 6), sans effet en CI ; le grand titre
 défile avec la page (pas de repli animé, choix de simplicité).
+
+## 20/09/2026 : direction 5C1 « Encre · Relief » et retours de Christelle
+
+Statut : **direction choisie par Timothée le 20/09/2026 ; retours de Christelle
+reçus le même jour ; boutons, tonalité transposée, taille des pastilles et mode
+sombre tranchés le soir ; rien n'est codé, la spec attend le go.**
+
+Timothée : « Pour la DA du site on va aller sur la 5C1 de cet artefact. »
+Planche : https://claude.ai/artifact/HNDu1pSHipBnuG7MuDCqbR — page « Pistes de
+style » pour 5C1 tel que proposé, page **« 5C1 · retours 20-09 »** pour ce qui
+suit (17 planches, version 12, générateur dans le scratchpad `planche-retours/`).
+
+Christelle, sur l'ensemble : « pcq y'a vraiment des trucs bien actuellement »,
+« comme on s'est tous habitué à certains trucs, vaut mieux pas trop changer et
+perdre les gens ». Et la règle qu'elle pose pour tout le site : une forme ne
+sert qu'à une information (« faut que qu'une soit occupée pour 2 infos »).
+
+### Ce qu'est 5C1
+
+Fond blanc, encre `#1c1c1e`, gris `#6c6c72`, filets `rgba(60,60,67,.14)`,
+police du système, rayons 10 / 18 / 26. La couleur seulement où elle informe
+(tonalité, services, sections). **Ce qui se touche porte une ombre**
+(`0 4px 14px rgba(28,28,30,.10), 0 1px 2px rgba(28,28,30,.06)`) : recherche,
+pilule d'outils, boutons, barre du bas en verre flottante. Les listes restent des
+filets, sans cartes. Par rapport au lot 4 (direction A « Réglages ») : le fond
+gris et les groupes en cartes partent, la navigation et la structure des pages
+ne bougent pas.
+
+### Les retours, vue par vue
+
+| Vue | Retour de Christelle | Ce que le code montre | Ce qui est retenu |
+| --- | --- | --- | --- |
+| A, liste des chants | « OK pour l'ensemble, très épuré et minimaliste. On garde les pastilles rectangulaires + bord arrondi comme actuellement sur GCC pour les gammes et placer à droite ; on met en couleur bleu ou rouge selon le chant CH ou FR » | `main` : pastille `rounded-[7px]` neutre à droite + badge FR / 中文 dessous, pas de chevron. Branche : vignette `Tile` teintée à gauche | Pastille rectangulaire à coins arrondis, **à droite**, bleue (FR) ou rouge (中文). Le jeton rond de 5C1 et la vignette du lot 4 partent. Pas de chevron, comme aujourd'hui. Le badge FR / 中文 ne revient pas : la couleur le dit |
+| B, page du chant | « Ajouter structure pastille validée ensemble » | Le bandeau « coup d'œil » est déjà en pastilles rondes teintées (`SongView.tsx`, `h-11 min-w-11 rounded-full`) | **Rondes : le bandeau actuel**, rien à recoder (tranché par Timothée le 20/09). Tonalité en rectangle, structure en rond : une forme, une info |
+| B | « Accord à afficher en noir quand c'est en vue par section » | Déjà le cas : `chartStyle` = « couleur par type de section, cadre gris fin, accords neutres ». La planche 5C1 se trompait | Rien à coder ; la planche est corrigée |
+| C (et B) | « Bouton mode louange trop présent (rouge + taille) », « trop imposant (changer de couleur ?) » ; « ça me fait penser à : bouton urgence » ; idée : « le bouton change de couleur selon la setlist : si c'est franco c'est couleur franco » | Plein rouge du logo, 48 px, halo rouge. **Sur la page d'un chant il n'y a pas de mode louange** : `PerformanceMode` n'est importé que par `SetlistDetailClient`, sur `main` comme sur la branche ; la planche du 19/09 l'avait inventé (Timothée : « depuis quand il y a un mode louange pour un chant qui vient de la liste des chants ») | **Tranché par Timothée le 20/09 au soir** : 44 px, sans halo, **à la couleur du culte de la setlist** (`categoryColor`). Rien sur la page d'un chant |
+| C, setlist | « OK pour le haut. Liste des chants garder la présentation actuelle du site, la structure pas en couleur, on garde comme le site actuel mais en abréviation (C R..) » | `ListView.tsx` sur `main` : numéro dans un rond gris, titre, pinyin, artiste, structure en texte gris aux noms complets séparés par « · », modulation `↗A` en vert, transition colorée reliée à sa note, tonalité à droite | Cette présentation, avec les abréviations du lot 3 (I · C1 · Pr · R · P…). La modulation et la transition gardent leur couleur : elles relient la note à sa section, c'est le site actuel. Tonalité à droite, même pastille que la vue A |
+| D, planning | « OK, juste enlever le petit carré puisqu'il y a déjà la ligne en couleur » | Carré de couleur devant le nom du service, en plus du filet de gauche | Le carré part |
+
+Tous les accords, sections et couleurs de service restent gelés
+(`serviceColors.ts`, `globals.css`).
+
+### Les boutons pleins (tranché le 20/09/2026 au soir)
+
+Timothée : « garder les boutons en noir (encre) par contre le bouton mode louange
+qu'il y a dans les setlists les mettre de la même couleur du culte qui le concerne
+(franco, inter groupe, le groupe etc…) et ça pour tous les boutons colorés qu'il y
+a ». Portée confirmée le même soir :
+
+- **Par défaut, un bouton plein est en encre** (`#1c1c1e`, libellé blanc ; en
+  sombre, l'inverse : bouton clair, libellé encre — c'était l'option proposée le
+  15/09/2026, « Accent des actions »). Le
+  rouge du logo sur les boutons pleins (décision du 15/09/2026) est abandonné :
+  « bouton urgence ».
+- **Quand l'écran appartient à un culte ou à une section, le bouton plein prend sa
+  couleur** : « Mode louange » d'une setlist (`categoryColor(category)`),
+  « S'inscrire » sur l'évènement d'une section. Sans culte (évènement de toute
+  l'église, nouvelle setlist, connexion) : encre.
+- **Contraste** : libellé blanc à 4,5 au moins sur toutes les couleurs de
+  `serviceColors.ts` (5,3 à 7,6), sauf Intergroupe `#a87b0f` (3,8). Tranché :
+  **le fond du bouton Intergroupe est `#966d0d`** (la même teinte à 89 %, 4,7) ;
+  l'ocre reste l'ocre partout ailleurs, `serviceColors.ts` n'est pas touché. Une
+  catégorie inconnue retombe sur le gris `#64748b` (4,8).
+
+Planches : C · Culte Franco, C · Intergroupe, C · Groupe Paix, C · EDD 中班,
+E · Toute l'église (encre), E · Une section (couleur).
+
+### Les quatre écarts, tranchés le 20/09/2026 (nuit)
+
+| Écart | Décision | Par |
+| --- | --- | --- |
+| Où reste le rouge du logo ? | « G reco. » de la pilule d'outils passe **en encre**. Le rouge ne reste que sur le logo (et le label contextuel de la navbar, inchangé) | Timothée |
+| Tonalité transposée dans une setlist | L'information reste, **en texte** : « orig. A » en gris (11 px) sous la pastille, seulement quand la tonalité jouée diffère de l'originale. La couleur de la pastille dit la langue, le texte dit d'où l'on vient ; il prend la place laissée par le badge 中文. Plus parlant que l'ancienne teinte, qui disait « différent » sans dire de quoi | délégué à Claude (« choisis à ma place ») |
+| Pastilles de structure | **Rondes.** Un rond et un carré de 44 px occupent la même case : la forme ne fait rien tenir de plus, c'est la taille. **32 px sous 640 px de large, 44 px au-delà** (la taille en place). Le bandeau n'est pas cliquable (`SongView.tsx` : des `<span>`), donc pas de plancher tactile. À 32 px, neuf étapes tiennent sur une rangée à 390 px, douze sur deux ; à 44 px, douze sur une rangée dès la tablette (810 px) | Timothée (« c'est mieux en rond ou sinon on peut changer de forme ») → Claude |
+| Mode sombre | **Oui.** Voir ci-dessous | Timothée |
+
+Relevé à l'appui : 370 chants, médiane 4 sections, 90 % en ont 6 au plus, maximum
+10 ; une structure jouée en compte couramment 8 à 12 avec les reprises. Appareils
+des tests : 412 px (Pixel 7), 810 px (iPad), 1280 px.
+
+### 5C1 en sombre
+
+Les tokens sombres qui existent déjà dans `globals.css` sont repris tels quels :
+fond noir pur `#000000` (Q6 du 15/09), encre `#f2f2f7`, gris `#98989f`, filet
+`rgba(84,84,88,.65)`, accords `#8fb0ff` (neutres = encre en vue par section),
+sections `--sec-*` et leurs teintes, langues `--fr-accent` `#a8bff5` et
+`--zh-accent` `#f2b8b5`.
+
+Ce que 5C1 ajoute :
+
+- **L'élévation par la surface, pas par l'ombre.** Sur du noir une ombre ne se voit
+  pas : ce qui se touche (recherche, pilule d'outils, boutons, barre du bas) passe
+  sur `#1c1c1e` avec un liseré `rgba(255,255,255,.10)`.
+- **Bouton plein : l'encre s'inverse**, bouton `#f2f2f7`, libellé `#1c1c1e` ;
+  onglet actif de la barre du bas de même. Bouton d'un culte : sa vraie couleur,
+  libellé blanc, liseré `rgba(255,255,255,.14)`.
+- **Les couleurs de service en texte.** `serviceColors.ts` n'a pas de variante
+  sombre, et sur du noir ces couleurs sont illisibles en texte (`#2d5a65` : 2,8
+  pour 4,5 exigé) — c'est déjà un défaut du sombre du lot 4 (vignette de date,
+  libellé de catégorie). **Elles sont éclaircies à l'affichage**
+  (`color-mix(in srgb, <couleur> 55%, white)`) pour le texte et les filets ; les
+  fonds (boutons, teintes) gardent la vraie couleur. Le fichier gelé n'est pas
+  touché.
+
+Planches : page « 5C1 · retours 20-09 », rangées « Structure » (téléphone,
+tablette, ordinateur) et « Mode sombre » (A, B, C, D, E), version 12.
+
+### Reste à confirmer au go
+
+- **« Évènements »** est le libellé le plus long de la barre du bas : à l'étroit
+  dans la pastille active à 390 px, à vérifier à 320 px (sans objet tant que la
+  section est coupée en ligne : quatre onglets).
+
+### Tranches (après le go, test d'abord, trois appareils, clair et sombre)
+
+| Tranche | Contenu | Où |
+| --- | --- | --- |
+| V1 fondations | tokens 5C1 (fond blanc, filets, ombre des commandes) ; sombre : surface `#1c1c1e` + liseré à la place de l'ombre, couleurs de service éclaircies en texte | `globals.css`, `tailwind.config.ts` |
+| V2 listes | groupes en cartes → filets ; pastille de tonalité à droite, bleu / rouge, « orig. X » dessous dans une setlist | `Group`, `Tile`, `SongListClient`, `SetlistCard` |
+| V3 chant et setlist | « G reco. » en encre ; bandeau à 32 px sous 640 px ; « Mode louange » à la couleur du culte, 44 px ; liste « comme aujourd'hui » en abrégé | `SetlistDetailClient`, `ListView`, `button.tsx` (variante pleine encre / couleur) |
+| V4 planning et évènements | carré retiré ; boutons pleins en encre, couleur de la section sur l'évènement d'une section | `planning/page.tsx`, pages du planning, `EvenementClient` |
+| V5 balayage | pages secondaires, captures des trois appareils, suite complète | specs `look-*` |

@@ -511,6 +511,40 @@ Chaque tour : quatre questions, le pari de Claude en première option.
   scène en même temps (la scène est unique, le contrôle de chevauchement l'est
   aussi).
 
+### Deux publics, une seule app, et la mise en ligne (20/09/2026)
+
+Timothée, le 20/09/2026 : « je veux faire une super app qui permet aux
+responsables de faire tout leur back office dessus (planning, tâches, création
+d'évènements et bien plus encore dessus), mais aussi à l'assemblée d'avoir une
+application sur laquelle elle peut suivre ce qu'il se passe à l'église, leur
+service, la louange, les évènements qu'il va y avoir, s'inscrire à des évènements
+et tout. Le tout sur une seule application pour pas qu'on s'éparpille trop et
+qu'on utilise trop d'outils différents. »
+
+- **Deux publics** : les **responsables**, qui y font leur back-office, et
+  l'**assemblée**, qui y suit la vie de l'église. Toute fonctionnalité se range
+  d'un côté ou de l'autre ; la liste du back-office du moment est dans
+  `spec-mise-en-ligne.md` (D1).
+- **Le back-office n'est pas encore en ligne** : tout le code part sur `main`,
+  un interrupteur le coupe sur le site public ; il reste actif en local. Le soir,
+  Timothée y range aussi **la grille du planning, même en lecture, et toute la
+  section Évènements** (« je le compte comme back office aussi ») : en ligne, le
+  planning garde le tableau d'aujourd'hui et la barre du bas a quatre onglets.
+- **Une seule mise en ligne** : le look 5C1 « Encre · Relief » est codé d'abord,
+  puis tout part d'un coup. Christelle : « comme on s'est tous habitué à certains
+  trucs, vaut mieux pas trop changer et perdre les gens ».
+- **Les annonces sont retirées** : « jusqu'à présent on l'a jamais utilisée ».
+- **Look** : 5C1, avec les retours de Christelle vue par vue, et sa règle « une
+  forme ne sert qu'à une information » (tonalité en rectangle arrondi, structure
+  en pastille ronde) : `spec-look.md`, § 20/09/2026.
+- **Boutons pleins** (tranché le soir, sur planche) : **en encre**, sauf quand
+  l'écran appartient à un culte ou à une section, où le bouton en prend la
+  couleur (« Mode louange » d'une setlist). Le rouge du logo quitte les boutons :
+  Christelle y voyait un « bouton urgence ».
+- **Pas de mode louange sur un chant seul** : il n'existe que dans une setlist.
+  La planche du 19/09 l'avait inventé sur la page du chant ; Timothée l'a relevé,
+  il n'est pas ajouté.
+
 ## Historique des changements d'avis
 
 | Date | Avant | Après |
@@ -526,3 +560,7 @@ Chaque tour : quatre questions, le pari de Claude en première option.
 | 18/09/2026 | Plannings remplis dans l'app « plus tard », Google Sheets en attendant. | On ouvre maintenant : grille dans l'app, Sheet en archive, bascule planning par planning. |
 | 18/09/2026 | Petit déj lu depuis le Google Sheet (lot 1b). | Inscription dans l'app, compte obligatoire, libellé libre ; le Sheet reste lu en repli. |
 | 18/09/2026 | Pôles cochés à la main sur chaque profil. | L'organigramme les donne : placer quelqu'un dans une team lui donne son pôle. |
+| 14/09/2026 → 20/09/2026 | Annonces fusionnées dans le calendrier des évènements, migration par bouton admin. | Section Annonces retirée, migration jamais lancée : « jusqu'à présent on l'a jamais utilisée » (Timothée). |
+| 15/09/2026 → 20/09/2026 | Boutons pleins au rouge du logo. | Boutons pleins en encre ; couleur du culte ou de la section quand l'écran lui appartient. |
+| 15/09/2026 → 20/09/2026 | Look : direction A « Réglages » (lot 4), codée. | Direction 5C1 « Encre · Relief », avec les retours de Christelle ; le lot 4 ne part pas en ligne tel quel. |
+| 19/09/2026 → 20/09/2026 | Toute la branche part en ligne d'un bloc. | Le back-office reste coupé en ligne par un interrupteur ; le reste part, après 5C1. |
