@@ -160,25 +160,32 @@ test.describe("modes d'affichage de la vue partitions", () => {
   }
   const song1Sections = (page: Page) => page.locator('[data-outline-item="1"] [data-section]');
 
-  test("par défaut, chaque section une fois : le refrain repris n'est imprimé qu'une fois, sa nuance dans le bandeau", async ({ page }) => {
+  // Défaut « Ordre joué » depuis le 20/09/2026 (Timothée, après la mise en
+  // ligne) : les paroles suivent la structure de la présidence, reprises
+  // comprises. « Sections uniques » reste un choix du menu.
+  test("par défaut, l'ordre joué : le refrain repris est réimprimé, sa nuance sur chaque reprise", async ({ page }) => {
     await openPartitions(page);
+    await expect(song1Sections(page)).toHaveCount(3);
+    await expect(song1Sections(page).nth(1)).toHaveAttribute("data-section-uids", "chorus-3-1");
+    await expect(song1Sections(page).nth(2)).toHaveAttribute("data-section-uids", "chorus-3-2");
+    await expect(page.locator('[data-outline-item="1"] [data-section] [data-nuance]')).toHaveText(["f", "f"]);
+    expect(await page.evaluate(() => localStorage.getItem("partition-layout")), "le défaut n'est pas un choix : rien n'est retenu").toBeNull();
+  });
+
+  test("« Sections uniques » : le refrain repris n'est imprimé qu'une fois, sa nuance dans le bandeau ; le choix est retenu sur l'appareil", async ({ page }) => {
+    await openPartitions(page);
+    await choose(page, "Sections uniques");
     await expect(song1Sections(page)).toHaveCount(2);
     await expect(song1Sections(page).nth(1)).toHaveAttribute("data-section-uids", "chorus-3-1 chorus-3-2");
     await expect(page.locator('[data-outline-item="1"] [data-section] [data-nuance]')).toHaveCount(0);
     await expect(page.getByRole("list", { name: "Structure" }).first().locator("[data-nuance]")).toHaveText("f");
-  });
-
-  test("« Ordre joué » réimprime le refrain ; le choix est retenu sur l'appareil", async ({ page }) => {
-    await openPartitions(page);
-    await choose(page, "Ordre joué");
-    await expect(song1Sections(page)).toHaveCount(3);
-    expect(await page.evaluate(() => localStorage.getItem("partition-layout"))).toBe("played");
+    expect(await page.evaluate(() => localStorage.getItem("partition-layout"))).toBe("unique");
   });
 
   test("le choix retenu s'applique à l'ouverture", async ({ page }) => {
-    await page.addInitScript(() => localStorage.setItem("partition-layout", "played"));
+    await page.addInitScript(() => localStorage.setItem("partition-layout", "unique"));
     await openPartitions(page);
-    await expect(song1Sections(page)).toHaveCount(3);
+    await expect(song1Sections(page)).toHaveCount(2);
   });
 
   test("« Structure seule » : bandeau sans paroles ; sur un scan 简谱, pas de scan", async ({ page }) => {
@@ -198,6 +205,7 @@ test.describe("modes d'affichage de la vue partitions", () => {
   });
 
   test("mode Adapter : ordre joué forcé, le bandeau reste", async ({ page }) => {
+    await page.addInitScript(() => localStorage.setItem("partition-layout", "unique"));
     await openPartitions(page);
     await expect(song1Sections(page)).toHaveCount(2);
     await page.getByRole("button", { name: "Adapter" }).click();
@@ -208,6 +216,7 @@ test.describe("modes d'affichage de la vue partitions", () => {
   test.describe("sommaire (ordinateur)", () => {
     test.use({ viewport: { width: 1440, height: 900 } });
     test("en sections uniques, « Refrain ×2 » mène à l'unique refrain imprimé et le marque", async ({ page }) => {
+      await page.addInitScript(() => localStorage.setItem("partition-layout", "unique"));
       await openPartitions(page);
       const outline = page.getByRole("navigation", { name: "Déroulé" });
       await outline.getByRole("button", { name: "Refrain ×2" }).click();

@@ -754,7 +754,7 @@
         "for": "Musiciens, choristes, batteurs",
         "body": "Dans une setlist, **Partitions** affiche tous les chants à la suite. En tête de chacun, un **bandeau** montre la structure en abrégé (I, C1, R, P…), la nuance sous chaque étape et les notes numérotées.",
         "points": [
-          "Le menu **Affichage** choisit entre **Ordre joué**, **Sections uniques** (chaque section une seule fois, par défaut) et **Structure seule** (pour les batteurs).",
+          "Le menu **Affichage** choisit entre **Ordre joué** (par défaut : les paroles suivent la structure, reprises comprises), **Sections uniques** (chaque section une seule fois) et **Structure seule** (pour les batteurs).",
           "La présidence peut ajouter une **Dernière phrase** (Dp) dans l'éditeur : elle s'affiche comme une vraie section.",
           "**PDF** : choisis **Classique**, **Couleurs par section** ou **Compact** (le bandeau et chaque section une seule fois)."
         ],

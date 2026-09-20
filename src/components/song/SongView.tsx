@@ -775,8 +775,9 @@ export function SongView({
       </div>
 
       {/* Bandeau de structure (coup d'œil) : notes et transitions y passent
-          dès que le corps ne les porte plus (sections uniques, structure seule). */}
-      <StructureStrip steps={steps} songKey={ast.metadata.key} details={layout !== "played"} className="pt-2 pb-3" />
+          dès que le corps ne les porte plus (sections uniques, structure seule,
+          structure perso — même en ordre joué, défaut depuis le 20/09/2026). */}
+      <StructureStrip steps={steps} songKey={ast.metadata.key} details={layout !== "played" || personalSteps !== null} className="pt-2 pb-3" />
 
       {/* Corps : ordre joué, ou chaque section une fois (les réglages
           d'occurrence restent dans le bandeau), ou rien du tout. */}

@@ -141,7 +141,7 @@ export function SetlistDetailClient() {
   // Couleurs par section — préférence par appareil partagée (fiche chant, mode louange).
   const [chartStyle, setChartStyle] = useState(true);
   // Coup d'œil : ordre joué / sections uniques / structure seule — par appareil.
-  const [layout, setLayout] = useState<PartitionLayout>("unique");
+  const [layout, setLayout] = useState<PartitionLayout>("played");
   // Partition 简谱 : suivre le choix du responsable, l'imposer, ou l'ignorer —
   // par appareil, comme en mode louange.
   const [jianpuPref, setJianpuPrefState] = useState<JianpuPref>("auto");
