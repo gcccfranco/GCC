@@ -31,7 +31,7 @@ export function CreateSetlistClient() {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-3 px-4">
         <p className="text-sm text-muted-foreground">{t("setlists.list.loginRequired")}</p>
-        <Link href="/login?from=/setlists/new" className="text-sm text-primary hover:underline">
+        <Link href="/login?from=/setlists/new" className="text-sm text-foreground hover:underline">
           {t("common.header.login")}
         </Link>
       </div>
@@ -42,7 +42,7 @@ export function CreateSetlistClient() {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-3 px-4">
         <p className="text-sm text-muted-foreground">{t("setlists.list.profileRequired")}</p>
-        <Link href="/profil" className="text-sm text-primary hover:underline">
+        <Link href="/profil" className="text-sm text-foreground hover:underline">
           {t("common.header.profile")}
         </Link>
       </div>

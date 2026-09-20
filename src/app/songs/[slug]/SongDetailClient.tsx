@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
-import { MoreHorizontal, Download, Play, X, TriangleAlert , Music, Music2, Settings } from "lucide-react";
+import { MoreHorizontal, Download, Play, X, TriangleAlert , Music, Music2, Settings, ChevronDown, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -12,6 +12,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { getChartStylePref, setChartStylePref } from "@/lib/chartStylePref";
+import { getPersonalKeys, setPersonalKey } from "@/lib/setlist/personalKeys";
+import { getFontScalePref, setFontScalePref, MIN_FONT_SCALE, MAX_FONT_SCALE } from "@/lib/fontScalePref";
 import { SongView } from "@/components/song/SongView";
 import { JianpuSheet } from "@/components/jianpu/JianpuSheet";
 import { useJianpuScore } from "@/lib/jianpu/images";
@@ -28,6 +30,10 @@ import { useSearchParams } from "next/navigation";
 import type { SectionItem } from "@/types/song";
 import type { SectionNuance } from "@/types/setList";
 import { ReportDialog } from "@/components/report/ReportDialog";
+import { PdfChoiceSheet } from "@/components/pdf/PdfChoiceSheet";
+import { IdeesSheet } from "@/components/harmonie/IdeesSheet";
+import { useAccesHarmonie, useInstrument } from "@/lib/harmonie/useHarmonie";
+import { pdfFileName, type PdfStyle } from "@/lib/pdfStylePref";
 
 interface SongDetailClientProps {
   song: Song;
@@ -54,6 +60,9 @@ function safeParseParam<T>(raw: string | null, fallback: T): T {
     const jianpuScore = useJianpuScore(song.slug);
     const [showScore, setShowScore] = useState(false);
     const originalKey = ast.metadata.key;
+    // Tonalité la plus chantée à GCC : la page y démarre, l'originale reste proposée.
+    const recommendedKey = ast.metadata.recommendedKey;
+    const defaultKey = recommendedKey ?? originalKey;
     const youtubeId = song.youtubeUrl ? extractYouTubeId(song.youtubeUrl) : null;
     const scrollVisible = useScrollDirection();
     // Barre d'outils rappelée d'un tap sur la partition (tablette au pupitre :
@@ -73,6 +82,11 @@ function safeParseParam<T>(raw: string | null, fallback: T): T {
     const [downloading, setDownloading] = useState(false);
     const [backPath, setBackPath] = useState("/songs");
     const [showReport, setShowReport] = useState(false);
+    const [showPdfChoice, setShowPdfChoice] = useState(false);
+    // Idées d'harmonie (lot 9) : pianistes, guitaristes et admins seulement.
+    const [showIdees, setShowIdees] = useState(false);
+    const accesHarmonie = useAccesHarmonie();
+    const [instrumentHarmonie] = useInstrument(accesHarmonie);
     const searchParams = useSearchParams();
     useEffect(() => {
       const saved = sessionStorage.getItem("lastListPath");
@@ -143,11 +157,30 @@ function safeParseParam<T>(raw: string | null, fallback: T): T {
       setCustomize(prev => ({...prev, structure: structure}))
     },[]);
 
+    // Ouverte depuis une setlist : la tonalité choisie ici est retenue pour ce
+    // chant dans cette setlist, sur cet appareil (reprise en mode louange).
+    const fromSetlist = useMemo(() => safeParseParam<string | null>(searchParams.get("setlist"), null), [searchParams]);
+    // Depuis une setlist, l'absence de `key` veut dire la tonalité originale.
+    const setlistKey = useMemo(
+      () => safeParseParam<string>(searchParams.get("key"), fromSetlist ? originalKey : defaultKey),
+      [searchParams, fromSetlist, originalKey, defaultKey]
+    );
+
+    // Tant que la tonalité de départ n'est pas appliquée, l'état porte encore la
+    // tonalité d'origine : l'enregistrer écraserait le choix retenu.
+    const [keyReady, setKeyReady] = useState(false);
+
     useEffect(() => {
-      const songKey = safeParseParam<string>(searchParams.get("key"), originalKey);
+      const songKey = (fromSetlist && getPersonalKeys(fromSetlist)[song.slug]) || setlistKey;
       const diff = semitonesTo(originalKey, songKey);
       setCustomize(prev => ({ ...prev, currentKey: songKey, semitones: diff }));
+      setKeyReady(true);
     }, []); // une seule fois au montage
+
+    useEffect(() => {
+      if (!fromSetlist || !keyReady) return;
+      setPersonalKey(fromSetlist, song.slug, customize.currentKey === setlistKey ? null : customize.currentKey);
+    }, [fromSetlist, keyReady, song.slug, setlistKey, customize.currentKey]);
 
     const displayedAST = useMemo(
       () => transposeAST(ast, customize.semitones, customize.currentKey),
@@ -157,16 +190,12 @@ function safeParseParam<T>(raw: string | null, fallback: T): T {
     // Taille de texte (zoom, persistée) — chargée après montage pour éviter
     // un écart d'hydratation (le composant est rendu côté serveur).
     const [fontScale, setFontScale] = useState(1);
-    useEffect(() => {
-      try {
-        const v = parseFloat(localStorage.getItem("song-font-scale") ?? "1");
-        if (v >= 0.8 && v <= 1.5) setFontScale(v);
-      } catch { /* stockage indisponible */ }
-    }, []);
+    // Même taille que le mode louange (fontScalePref).
+    useEffect(() => setFontScale(getFontScalePref()), []);
     const changeFontScale = (delta: number) => {
       setFontScale((s) => {
-        const next = Math.min(1.5, Math.max(0.8, Math.round((s + delta) * 10) / 10));
-        try { localStorage.setItem("song-font-scale", String(next)); } catch { /* privé */ }
+        const next = Math.min(MAX_FONT_SCALE, Math.max(MIN_FONT_SCALE, Math.round((s + delta) * 10) / 10));
+        setFontScalePref(next);
         return next;
       });
     };
@@ -180,7 +209,7 @@ function safeParseParam<T>(raw: string | null, fallback: T): T {
       setChartStylePref(v);
     };
 
-    async function handleDownload() {
+    async function handleDownload(style: PdfStyle) {
       setDownloading(true);
       try {
         // Chargés à la demande : @react-pdf/renderer est lourd et ne doit pas
@@ -199,12 +228,13 @@ function safeParseParam<T>(raw: string | null, fallback: T): T {
             sectionNotes={sectionsNote}
             sectionNuances={sectionsNuance}
             language={i18n.language}
+            sectionStyle={style === "colors" ? "colors" : "classic"}
           />
         ).toBlob();
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `${song.slug}-${customize.currentKey}.pdf`;
+        a.download = pdfFileName(`${song.slug}-${customize.currentKey}`, style);
         a.click();
         URL.revokeObjectURL(url);
       } finally {
@@ -212,17 +242,22 @@ function safeParseParam<T>(raw: string | null, fallback: T): T {
       }
     }
 
-    return (
+    // « (orig.) » / « (reco.) » après une tonalité, dans la liste et sur ordinateur.
+  const keySuffix = (k: string) =>
+    (k === originalKey ? " " + t("customize.panel.keyOriginal") : "") +
+    (k === recommendedKey ? " " + t("customize.panel.keyRecommended") : "");
+
+  return (
       <div className="min-h-screen print:min-h-0 bg-background" style={{ width: `${100 / fontScale}%` }}>
         {/* Barre de contrôles */}
-        <div className={`print:hidden fixed left-0 right-0 top-[var(--nav-h)] z-10 bg-background/95 backdrop-blur border-b border-border transition-transform duration-300 ${ scrollVisible || barPinned ? "translate-y-0" : "-translate-y-[calc(100%+var(--nav-h))]"}`}>
-          <div className = "max-w-3xl mx-auto w-full flex flex-nowrap gap-0.5 items-center py-2 px-1">
+        <div data-testid="barre-outils" className={`print:hidden fixed left-0 right-0 top-[var(--nav-h)] z-10 material-chrome shadow-[0_1px_0_hsl(var(--border))] transition-transform duration-300 ${ scrollVisible || barPinned ? "translate-y-0" : "-translate-y-[calc(100%+var(--nav-h))]"}`}>
+          <div className = "max-w-3xl mx-auto w-full flex flex-nowrap gap-1 items-center py-2 px-1.5">
             <Button
               asChild
-              variant="outline"
-              className="h-9 sm:h-8 px-2.5 rounded-md text-xs font-semibold text-muted-foreground hover:text-foreground mr-1"
+              variant="secondary"
+              className="h-9 lg:h-8 px-2.5 rounded-full text-xs font-semibold text-muted-foreground hover:text-foreground"
             >
-              <Link href={backPath}>
+              <Link aria-label={t("songs.detail.backToAll")} href={backPath}>
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M19 12H5m6-7l-7 7 7 7" />
                 </svg>
@@ -230,11 +265,11 @@ function safeParseParam<T>(raw: string | null, fallback: T): T {
               </Link>
             </Button>
             {/* Transposition rapide */}
-            <div className="flex items-center gap-0.5 flex-1 min-w-0 sm:flex-none">
+            <div data-testid="pilule-tonalite" className="raised flex items-center gap-0.5 flex-1 min-w-0 sm:flex-none rounded-full p-0.5">
               <Button
-                variant="outline"
+                variant="ghost"
                 size="icon-lg"
-                className="h-9 w-9 sm:h-8 sm:w-8 rounded-md text-xs font-bold"
+                className="h-9 w-9 lg:h-8 lg:w-8 rounded-full text-sm font-bold"
                 onClick={() =>
                   setCustomize((c) => {
                     const s = c.semitones - 1;
@@ -244,27 +279,38 @@ function safeParseParam<T>(raw: string | null, fallback: T): T {
               >
                 −
               </Button>
-                <select
-                  value={customize.currentKey}
-                  onChange={(e) => setCustomize((c) => {
-                    const key = e.target.value;
-                    const diff = semitonesTo(originalKey, key);
-                    return { ...c, semitones: diff, currentKey: key };
-                    })
-                  }
-                  className="flex-1 min-w-0 h-9 sm:h-8 px-2 border border-border rounded-md bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
-                >
-                  {keyOptions(customize.currentKey).map((k) => (
-                    <option key={k} value={k}>
-                      {k}
-                      {k === originalKey ? " " + t("customize.panel.keyOriginal") : ""}
-                    </option>
-                  ))}
-                </select>
+                {/* Fermé : la tonalité seule sur tactile (le suffixe rognait « E ( » à
+                    six commandes), tonalité + suffixe sur ordinateur ; la liste native,
+                    transparente par-dessus, garde ses libellés complets. */}
+                <span className="relative flex-1 min-w-0 h-9 lg:h-8 flex items-center justify-center gap-0.5 px-1.5 rounded-full text-foreground text-sm font-semibold focus-within:ring-2 focus-within:ring-ring/30">
+                  <span data-testid="tonalite-courante" className="truncate" aria-hidden>
+                    {customize.currentKey}
+                    <span className="hidden lg:inline">{keySuffix(customize.currentKey)}</span>
+                  </span>
+                  <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-60" aria-hidden />
+                  <select
+                    aria-label={t("customize.panel.key")}
+                    value={customize.currentKey}
+                    onChange={(e) => setCustomize((c) => {
+                      const key = e.target.value;
+                      const diff = semitonesTo(originalKey, key);
+                      return { ...c, semitones: diff, currentKey: key };
+                      })
+                    }
+                    className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+                  >
+                    {keyOptions(customize.currentKey, originalKey).map((k) => (
+                      <option key={k} value={k}>
+                        {k}
+                        {keySuffix(k)}
+                      </option>
+                    ))}
+                  </select>
+                </span>
               <Button
-                variant="outline"
+                variant="ghost"
                 size="icon-lg"
-                className="h-9 w-9 sm:h-8 sm:w-8 rounded-md text-xs font-bold"
+                className="h-9 w-9 lg:h-8 lg:w-8 rounded-full text-sm font-bold"
                 onClick={() =>
                   setCustomize((c) => {
                     const s = c.semitones + 1;
@@ -274,16 +320,16 @@ function safeParseParam<T>(raw: string | null, fallback: T): T {
               >
                 +
               </Button>
-              {/* Retour à la tonalité d'origine d'un tap (visible si transposé) */}
-              {customize.semitones !== 0 && (
+              {/* Retour à la tonalité par défaut (recommandée, sinon d'origine) d'un tap */}
+              {customize.currentKey !== defaultKey && (
                 <Button
-                  variant="outline"
+                  variant="ghost"
                   size="icon-lg"
-                  className="h-9 w-9 sm:h-8 sm:w-8 rounded-md text-muted-foreground"
-                  aria-label={t("customize.panel.keyOriginal")}
-                  title={t("customize.panel.keyOriginal")}
+                  className="h-9 w-9 lg:h-8 lg:w-8 rounded-full text-muted-foreground"
+                  aria-label={t(recommendedKey ? "customize.panel.keyBackToRecommended" : "customize.panel.keyOriginal")}
+                  title={t(recommendedKey ? "customize.panel.keyBackToRecommended" : "customize.panel.keyOriginal")}
                   onClick={() =>
-                    setCustomize((c) => ({ ...c, semitones: 0, currentKey: originalKey }))
+                    setCustomize((c) => ({ ...c, semitones: semitonesTo(originalKey, defaultKey), currentKey: defaultKey }))
                   }
                 >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -294,13 +340,13 @@ function safeParseParam<T>(raw: string | null, fallback: T): T {
               )}
             </div>
 
-            <div className="ml-auto flex gap-1 sm:gap-1.5 items-center justify-end">
+            <div className="raised ml-auto flex gap-0.5 items-center justify-end rounded-full p-0.5">
               {/* Taille du texte */}
               <div className="flex items-center">
                 <Button
-                  variant="outline"
+                  variant="ghost"
                   size="icon-lg"
-                  className="h-9 w-9 sm:h-8 sm:w-8 rounded-md rounded-r-none border-r-0 text-[11px] font-bold"
+                  className="h-9 w-9 lg:h-8 lg:w-8 rounded-full text-xs font-bold"
                   onClick={() => changeFontScale(-0.1)}
                   disabled={fontScale <= 0.8}
                   aria-label={t("performance.textSmaller")}
@@ -308,9 +354,9 @@ function safeParseParam<T>(raw: string | null, fallback: T): T {
                   A−
                 </Button>
                 <Button
-                  variant="outline"
+                  variant="ghost"
                   size="icon-lg"
-                  className="h-9 w-9 sm:h-8 sm:w-8 rounded-md rounded-l-none text-[13px] font-bold"
+                  className="h-9 w-9 lg:h-8 lg:w-8 rounded-full text-sm font-bold"
                   onClick={() => changeFontScale(0.1)}
                   disabled={fontScale >= 1.5}
                   aria-label={t("performance.textLarger")}
@@ -320,12 +366,12 @@ function safeParseParam<T>(raw: string | null, fallback: T): T {
               </div>
 
               {/* Accords */}
-              <button
+              <button aria-label={t("songs.detail.chords") || "Accords"}
                 onClick={() => setCustomize((c) => ({ ...c, showChords: !c.showChords }))}
-                className={`h-9 sm:h-8 px-2.5 rounded-md border text-xs font-semibold flex items-center gap-1.5 transition-all duration-150 ${
+                className={`h-9 min-w-9 lg:h-8 lg:min-w-8 px-2.5 rounded-full text-xs font-semibold flex items-center justify-center gap-1.5 transition-all duration-150 ${
                       customize.showChords
-                        ? "border-transparent bg-primary/10 text-primary"
-                        : "border-border bg-card text-muted-foreground hover:text-foreground"
+                        ? "bg-card text-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground"
                     }`}
               >
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/><path d="M9 18V5l12-2v13"/></svg>
@@ -334,12 +380,12 @@ function safeParseParam<T>(raw: string | null, fallback: T): T {
 
               {/* Pinyin (chants zh) */}
               {isZh && (
-                    <button
+                    <button aria-label={t("songs.detail.pinyin") || "Pinyin"}
                       onClick={() => setCustomize((c) => ({ ...c, showPinyin: !c.showPinyin }))}
-                      className={`h-9 sm:h-8 px-2.5 rounded-md border text-xs font-semibold flex items-center gap-1.5 transition-all duration-150 ${
+                      className={`h-9 min-w-9 lg:h-8 lg:min-w-8 px-2.5 rounded-full text-xs font-semibold flex items-center justify-center gap-1.5 transition-all duration-150 ${
                         customize.showPinyin
-                          ? "border-transparent bg-primary/10 text-primary"
-                          : "border-border bg-card text-muted-foreground hover:text-foreground"
+                          ? "bg-card text-foreground shadow-sm"
+                          : "text-muted-foreground hover:text-foreground"
                       }`}
                     >
                       <span className="font-bold">拼</span>
@@ -349,12 +395,12 @@ function safeParseParam<T>(raw: string | null, fallback: T): T {
 
               {/* Partition 简谱 (chants zh qui en ont une) */}
               {jianpuScore && (
-                <button
+                <button aria-label={"简谱"}
                   onClick={() => setShowScore((v) => !v)}
-                  className={`h-9 sm:h-8 px-2.5 rounded-md border text-xs font-semibold flex items-center gap-1.5 transition-all duration-150 ${
+                  className={`h-9 min-w-9 lg:h-8 lg:min-w-8 px-2.5 rounded-full text-xs font-semibold flex items-center justify-center gap-1.5 transition-all duration-150 ${
                     showScore
-                      ? "border-transparent bg-primary/10 text-primary"
-                      : "border-border bg-card text-muted-foreground hover:text-foreground"
+                      ? "bg-card text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   <span className="font-bold">谱</span>
@@ -366,9 +412,9 @@ function safeParseParam<T>(raw: string | null, fallback: T): T {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
-                    variant="outline"
+                    variant="ghost"
                     size="icon-lg"
-                    className="h-9 w-9 sm:h-8 sm:w-8 rounded-md text-muted-foreground"
+                    className="h-9 w-9 lg:h-8 lg:w-8 rounded-full text-muted-foreground"
                     aria-label={t("common.moreActions")}
                   >
                     <MoreHorizontal className="h-4 w-4" />
@@ -408,10 +454,16 @@ function safeParseParam<T>(raw: string | null, fallback: T): T {
                     <Settings className="h-3.5 w-3.5 text-muted-foreground" />
                     {t("songs.detail.customize")}
                   </DropdownMenuItem>
-                  <DropdownMenuItem disabled={downloading} onClick={() => handleDownload()}>
+                  <DropdownMenuItem disabled={downloading} onClick={() => setShowPdfChoice(true)}>
                     <Download className="h-3.5 w-3.5 text-muted-foreground" />
                     {downloading ? "…" : t("songs.detail.downloadPdf") || "PDF"}
                   </DropdownMenuItem>
+                  {accesHarmonie.peut && (
+                    <DropdownMenuItem onClick={() => setShowIdees(true)}>
+                      <Sparkles className="h-3.5 w-3.5 text-muted-foreground" />
+                      {t("harmonie.idees")}
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuItem onClick= {() => setShowReport(true)}>
                     <TriangleAlert className='h-3.5 w-3.5 text-muted-foreground'/>
                     {t('songs.detail.report')}
@@ -483,6 +535,24 @@ function safeParseParam<T>(raw: string | null, fallback: T): T {
           />
         )}
         
+        {/* Idées d'harmonie du chant (lot 9) */}
+        <IdeesSheet
+          open={showIdees}
+          onClose={() => setShowIdees(false)}
+          slug={song.slug}
+          titre={song.title}
+          sections={displayedAST.sections}
+          tonalite={customize.currentKey}
+          tonaliteOrigine={originalKey}
+          instrument={instrumentHarmonie}
+        />
+
+        <PdfChoiceSheet
+          open={showPdfChoice}
+          onClose={() => setShowPdfChoice(false)}
+          forSetlist={false}
+          onDownload={handleDownload}
+        />
         {/* Signalement */}
         <ReportDialog
           open={showReport}

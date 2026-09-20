@@ -381,7 +381,7 @@ export function AnnotationCanvas({ data, onChange, zoom, pan, onZoomPanChange }:
 
       {/* Panneau d'outils — bord droit, centré */}
       <div
-        className="absolute top-1/2 -translate-y-1/2 flex flex-col gap-1.5 bg-background/90 backdrop-blur border border-border rounded-xl p-2 shadow-lg max-h-[85vh] overflow-y-auto"
+        className="absolute top-1/2 -translate-y-1/2 flex flex-col gap-1.5 material-panel border border-border rounded-xl p-2 shadow-lg max-h-[85vh] overflow-y-auto"
         style={{ zIndex: 11, right: "calc(0.75rem + var(--sar, 0px))" }}
         onPointerDown={(e) => e.stopPropagation()}
         onPointerUp={(e) => e.stopPropagation()}
@@ -395,7 +395,7 @@ export function AnnotationCanvas({ data, onChange, zoom, pan, onZoomPanChange }:
           aria-label={t("performance.tools.resetZoom")}
           onClick={resetZoom}
           disabled={zoom === 1}
-          className="w-11 h-6 flex items-center justify-center rounded-lg text-[10px] font-semibold tabular-nums text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-40 disabled:hover:bg-transparent transition-colors"
+          className="w-11 h-6 flex items-center justify-center rounded-lg text-xs font-semibold tabular-nums text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-40 disabled:hover:bg-transparent transition-colors"
         >
           {Math.round(zoom * 100)}%
         </button>

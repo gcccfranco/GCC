@@ -2,26 +2,33 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { CalendarDays, CheckCircle2, ChevronDown, ChevronUp, DoorOpen, ExternalLink, FileText, Inbox, MessageSquareHeart, Play, Search, ShieldCheck, Trash2, UserRound, Users, X, type LucideIcon } from "lucide-react";
+import { CalendarDays, CheckCircle2, ChevronDown, ChevronUp, DoorOpen, ExternalLink, FileText, Inbox, MessageSquareHeart, Network, Play, Search, ShieldCheck, Trash2, UserRound, Users, X, type LucideIcon } from "lucide-react";
 import { useProfile, listProfiles, saveProfile, getRegistrationOpen, setRegistrationOpen } from "@/lib/firebase/users";
 import { getSongProposals, setProposalStatus, deleteSongProposal } from "@/lib/firebase/songProposals";
 import type { SongProposal } from "@/types/songProposal";
 import { getReports, setReportStatus, deleteReport } from "@/lib/firebase/reports";
 import type { Report } from "@/types/report";
 import { isAdminUser } from "@/lib/access";
+import { authHeader } from "@/lib/firebase/setlists";
 import {
   loadPlanningData,
   collectPlanningNames,
   deriveServiceRolesFromPlanning,
   type PlanningData,
+  normalizeName,
 } from "@/lib/planning/names";
 import { ProfileFields, type ProfileFormValue } from "@/components/auth/ProfileFields";
 import { SurveyResults } from "@/components/admin/SurveyResults";
-import { SERVICE_ROLE_LABELS, SERVICE_LIEUX, GROUPES, type ServiceRole, type UserProfile } from "@/types/user";
+import { SERVICE_ROLE_LABELS, SERVICE_LIEUX, GROUPES, POLE_LABELS, type ServiceRole, type UserProfile } from "@/types/user";
+import { listEquipes } from "@/lib/firebase/equipes";
+import { EQUIPES, polesDesEquipes } from "@/lib/equipes/organigramme";
+import type { Equipe } from "@/types/equipe";
 import { EDD_CLASSES } from "@/lib/planning/utils";
 import { ANNONCE_SECTIONS } from "@/types/annonce";
 import { NOTIFY_ALL, NOTIFY_GROUPS, audienceLabel } from "@/lib/push/audiences";
+import { GRILLES } from "@/lib/planning/grilles";
 import { categoryColor, categoryLabel } from "@/lib/serviceColors";
+import { BACK_OFFICE } from "@/lib/backOffice";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -35,20 +42,64 @@ function profileToForm(p: UserProfile): ProfileFormValue {
   };
 }
 
-function normalize(s: string): string {
-  return s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-}
-
 function Pill({ label, color }: { label: string; color?: string }) {
   return (
     <span
-      className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+      className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
         color ? "" : "bg-muted text-muted-foreground"
       }`}
       style={color ? { background: `${color}15`, color, border: `1px solid ${color}4d` } : undefined}
     >
       {label}
     </span>
+  );
+}
+
+/** Pôles d'un membre, en lecture seule : ils viennent des équipes (lot 16, D9). */
+function PolesDuMembre({ profile, equipes }: { profile: UserProfile; equipes: Equipe[] }) {
+  const siennes = equipes.filter((e) => e.membres.some((m) => m.uid === profile.uid));
+  const poles = polesDesEquipes(profile.uid, equipes);
+  const coches = (profile.poles ?? []).filter((x) => !poles.includes(x));
+  return (
+    <>
+      <p className="text-xs text-foreground">
+        {poles.length > 0 ? poles.map((x) => POLE_LABELS[x]).join(" · ") : "Aucun"}
+        {siennes.length > 0 && (
+          <>
+            {" — via "}
+            <Link href="/equipes" className="underline underline-offset-2">
+              {siennes.map((e) => EQUIPES.find((d) => d.id === e.id)?.nom ?? e.id).join(", ")}
+            </Link>
+          </>
+        )}
+      </p>
+      {coches.length > 0 && (
+        <p className="text-xs text-amber-700 dark:text-amber-400">
+          Coché hors organigramme : {coches.map((x) => POLE_LABELS[x]).join(" · ")} — à régler depuis l&apos;onglet Équipes.
+        </p>
+      )}
+    </>
+  );
+}
+
+/** Liste courte en puces ambre, comme « Planning sans compte ». */
+function ListePuces({ titre, aide, items }: { titre: string; aide: string; items: string[] }) {
+  if (items.length === 0) return null;
+  return (
+    <div className="space-y-1.5">
+      <h3 className="text-xs font-semibold text-muted-foreground">{titre}</h3>
+      <p className="text-xs text-muted-foreground">{aide}</p>
+      <div className="flex flex-wrap gap-1.5">
+        {items.map((n) => (
+          <span
+            key={n}
+            className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300"
+          >
+            {n}
+          </span>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -60,7 +111,14 @@ function isRecent(d?: Date): boolean {
   return !!d && Date.now() - d.getTime() < NEW_DAYS * 86_400_000;
 }
 
-type AdminTab = "reception" | "membres" | "inscriptions" | "planning" | "questionnaire";
+type AdminTab = "reception" | "membres" | "inscriptions" | "planning" | "equipes" | "questionnaire";
+
+/** Compte rendu de /api/equipes/importer (lot 16). */
+type ImportEquipes = {
+  equipes: number; membres: number; rattaches: number;
+  nonRattaches: string[]; inconnues: string[];
+  polesHorsOrganigramme: { uid: string; nom: string; poles: string[] }[];
+};
 
 export default function AdminPage() {
   const { user, loading } = useProfile();
@@ -82,6 +140,38 @@ export default function AdminPage() {
   const [form, setForm] = useState<ProfileFormValue | null>(null);
   const [annonceRights, setAnnonceRights] = useState<string[]>([]);
   const [notifyRights, setNotifyRights] = useState<string[]>([]);
+  const [equipesRight, setEquipesRight] = useState(false);
+  const [equipes, setEquipes] = useState<Equipe[]>([]);
+  // Import initial d’un planning (lot 17, G4) : compte rendu de /api/admin/importer-planning.
+  const [importPlanningEnCours, setImportPlanningEnCours] = useState<string | null>(null);
+  const [importPlanningResultat, setImportPlanningResultat] = useState("");
+
+  async function importerPlanning(key: string) {
+    setImportPlanningEnCours(key);
+    setImportPlanningResultat("");
+    try {
+      const res = await fetch("/api/admin/importer-planning", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(await authHeader()) },
+        body: JSON.stringify({ key }),
+      });
+      const json = (await res.json()) as { importes?: number; ignores?: number; nomsNonRattaches?: string[]; error?: string };
+      if (!res.ok) throw new Error(json.error ?? "Import impossible");
+      const noms = json.nomsNonRattaches ?? [];
+      setImportPlanningResultat(
+        `${json.importes ?? 0} dimanches importés, ${json.ignores ?? 0} déjà dans l'app.` +
+          (noms.length ? ` Noms sans compte : ${noms.join(", ")}.` : " Tous les noms ont un compte.")
+      );
+    } catch (e) {
+      setImportPlanningResultat(e instanceof Error ? e.message : "Import impossible");
+    } finally {
+      setImportPlanningEnCours(null);
+    }
+  }
+  const [importEtat, setImportEtat] = useState<"" | "busy" | "fait">("");
+  const [importErreur, setImportErreur] = useState("");
+  const [importResultat, setImportResultat] = useState<ImportEquipes | null>(null);
+  const [planningRights, setPlanningRights] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [query, setQuery] = useState("");
@@ -99,6 +189,7 @@ export default function AdminPage() {
     listProfiles().then(setProfiles).finally(() => setLoadingProfiles(false));
     getSongProposals().then(setProposals).finally(() => setLoadingProposals(false));
     getReports().then(setReports).finally(() => setLoadingReports(false));
+    listEquipes().then(setEquipes);
     loadPlanningData().then((d) => {
       setPlanningData(d);
       setPlanningNames(collectPlanningNames(d));
@@ -110,13 +201,13 @@ export default function AdminPage() {
     : undefined;
 
   const displayed = useMemo(() => {
-    const q = normalize(query.trim());
+    const q = normalizeName(query.trim());
     const byName = (a: UserProfile, b: UserProfile) =>
       a.lastName.localeCompare(b.lastName, "fr") || a.firstName.localeCompare(b.firstName, "fr");
     return profiles
       .filter((p) => {
         if (q) {
-          const hay = normalize(`${p.firstName} ${p.lastName} ${p.email} ${p.planningName}`);
+          const hay = normalizeName(`${p.firstName} ${p.lastName} ${p.email} ${p.planningName}`);
           if (!hay.includes(q)) return false;
         }
         if (filter === "Tous") return true;
@@ -148,9 +239,9 @@ export default function AdminPage() {
   // par nom de planning, cf. src/lib/push/recipients.ts). Visibilité pour l'admin.
   const unlinkedNames = useMemo(() => {
     const linked = new Set(
-      profiles.map((p) => normalize(p.planningName.trim())).filter(Boolean)
+      profiles.map((p) => normalizeName(p.planningName.trim())).filter(Boolean)
     );
-    return planningNames.filter((n) => !linked.has(normalize(n.trim())));
+    return planningNames.filter((n) => !linked.has(normalizeName(n.trim())));
   }, [planningNames, profiles]);
 
   if (loading) {
@@ -175,6 +266,49 @@ export default function AdminPage() {
     );
   }
 
+  /** Lot 16 : reprend l'onglet ORGANIGRAMME et repose les pôles (idempotent). */
+  async function importerOrganigramme() {
+    if (!window.confirm("Importer l'organigramme du Sheet ? La liste des membres de chaque équipe sera remplacée par celle du Sheet.")) return;
+    setImportEtat("busy");
+    setImportErreur("");
+    try {
+      const res = await fetch("/api/equipes/importer", { method: "POST", headers: await authHeader() });
+      const json = (await res.json().catch(() => ({}))) as Partial<ImportEquipes> & { error?: string };
+      if (!res.ok) throw new Error(json.error ?? `Erreur ${res.status}`);
+      setImportResultat({
+        equipes: json.equipes ?? 0, membres: json.membres ?? 0, rattaches: json.rattaches ?? 0,
+        nonRattaches: json.nonRattaches ?? [], inconnues: json.inconnues ?? [],
+        polesHorsOrganigramme: json.polesHorsOrganigramme ?? [],
+      });
+      setImportEtat("fait");
+      listEquipes().then(setEquipes);
+      listProfiles().then(setProfiles);
+    } catch (e) {
+      setImportErreur(e instanceof Error ? e.message : "Import impossible.");
+      setImportEtat("");
+    }
+  }
+
+  /** Retire le pôle d'un compte qui n'est dans aucune équipe (D10) : le serveur
+   *  recalcule depuis les équipes, donc il n'en reste aucun. */
+  async function decocherPoles(uid: string) {
+    setImportErreur("");
+    try {
+      const res = await fetch("/api/equipes/poles", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(await authHeader()) },
+        body: JSON.stringify({ uids: [uid] }),
+      });
+      if (!res.ok) throw new Error(`Erreur ${res.status}`);
+      setImportResultat((prev) =>
+        prev ? { ...prev, polesHorsOrganigramme: prev.polesHorsOrganigramme.filter((h) => h.uid !== uid) } : prev,
+      );
+      listProfiles().then(setProfiles);
+    } catch {
+      setImportErreur("Impossible de retirer le pôle.");
+    }
+  }
+
   async function toggleRegistration() {
     if (regOpen === null) return;
     setTogglingReg(true);
@@ -194,6 +328,8 @@ export default function AdminPage() {
     setForm(profileToForm(p));
     setAnnonceRights(p.annonces ?? []);
     setNotifyRights(p.notify ?? []);
+    setEquipesRight(p.equipes ?? false);
+    setPlanningRights(p.plannings ?? []);
     setError("");
   }
 
@@ -202,8 +338,12 @@ export default function AdminPage() {
     setSaving(true);
     setError("");
     try {
-      const updated: UserProfile = { ...p, ...form, annonces: annonceRights, notify: notifyRights };
-      await saveProfile(updated);
+      // Seuls les champs tenus ici sont écrits (saveProfile n’envoie que le
+      // masque) : `poles` vient des équipes (lot 16, D9) et n’est jamais renvoyé,
+      // même périmé. Jusqu’au 19/09/2026 le document entier était remplacé.
+      const patch = { uid: p.uid, ...form, annonces: annonceRights, notify: notifyRights, equipes: equipesRight, plannings: planningRights };
+      await saveProfile(patch);
+      const updated: UserProfile = { ...p, ...patch };
       setProfiles((prev) => prev.map((x) => (x.uid === p.uid ? updated : x)));
       setEditingUid(null);
       setForm(null);
@@ -278,6 +418,7 @@ export default function AdminPage() {
     { key: "membres", label: "Membres", Icon: Users, count: profiles.length, always: true },
     { key: "inscriptions", label: "Inscriptions", Icon: DoorOpen },
     { key: "planning", label: "Planning", Icon: CalendarDays, count: unlinkedNames.length },
+    { key: "equipes", label: "Équipes", Icon: Network },
     { key: "questionnaire", label: "Questionnaire", Icon: MessageSquareHeart },
   ];
 
@@ -285,7 +426,7 @@ export default function AdminPage() {
     <div className="min-h-screen bg-background">
       <div className="max-w-2xl mx-auto px-4 pt-6 pb-10 space-y-5">
         <div className="flex items-center gap-2">
-          <ShieldCheck className="h-5 w-5 text-primary" />
+          <ShieldCheck className="h-5 w-5 text-muted-foreground" />
           <h1 className="text-lg font-bold text-foreground">Administration</h1>
         </div>
 
@@ -307,14 +448,14 @@ export default function AdminPage() {
                 className={`shrink-0 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[13px] font-semibold transition-colors ${
                   active
                     ? "bg-foreground text-background"
-                    : "bg-card border border-border text-muted-foreground hover:text-foreground"
+                    : "bg-secondary text-muted-foreground hover:text-foreground"
                 }`}
               >
                 <Icon className="h-3.5 w-3.5" />
                 {label}
                 {showCount && (
                   <span
-                    className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
+                    className={`text-xs px-1.5 py-0.5 rounded-full font-bold ${
                       active
                         ? "bg-white/20 text-white"
                         : always
@@ -334,11 +475,11 @@ export default function AdminPage() {
         {tab === "reception" && (
         <div className="rounded-xl bg-card shadow-soft p-5 space-y-3">
           <div className="flex items-center justify-between">
-            <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+            <h2 className="text-sm font-semibold text-muted-foreground">
               Signalements
             </h2>
             {pendingReports.length > 0 && (
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-secondary text-foreground">
+              <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-secondary text-foreground">
                 {pendingReports.length} en attente
               </span>
             )}
@@ -362,7 +503,7 @@ export default function AdminPage() {
                 return (
                   <div
                     key={r.id}
-                    className={`rounded-xl border border-border bg-background ${
+                    className={`rounded-xl bg-card ${
                       r.status !== "pending" ? "opacity-60" : ""
                     }`}
                   >
@@ -448,7 +589,7 @@ export default function AdminPage() {
                             type="button"
                             onClick={() => handleReportDelete(r)}
                             disabled={busy}
-                            className="h-9 w-9 rounded-lg border border-border text-muted-foreground hover:text-destructive flex items-center justify-center disabled:opacity-50"
+                            className="h-9 w-9 rounded-full bg-secondary text-muted-foreground hover:text-destructive flex items-center justify-center disabled:opacity-50"
                             aria-label="Supprimer le signalement"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
@@ -480,11 +621,11 @@ export default function AdminPage() {
         {tab === "reception" && (
         <div className="rounded-xl bg-card shadow-soft p-5 space-y-3">
           <div className="flex items-center justify-between">
-            <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+            <h2 className="text-sm font-semibold text-muted-foreground">
               Propositions de chants
             </h2>
             {pendingProposals.length > 0 && (
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-secondary text-foreground">
+              <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-secondary text-foreground">
                 {pendingProposals.length} en attente
               </span>
             )}
@@ -508,7 +649,7 @@ export default function AdminPage() {
                 return (
                   <div
                     key={p.id}
-                    className={`rounded-xl border border-border bg-background ${
+                    className={`rounded-xl bg-card ${
                       p.status !== "pending" ? "opacity-60" : ""
                     }`}
                   >
@@ -588,7 +729,7 @@ export default function AdminPage() {
                             type="button"
                             onClick={() => handleProposalDelete(p)}
                             disabled={busy}
-                            className="h-9 w-9 rounded-lg border border-border text-muted-foreground hover:text-destructive flex items-center justify-center disabled:opacity-50"
+                            className="h-9 w-9 rounded-full bg-secondary text-muted-foreground hover:text-destructive flex items-center justify-center disabled:opacity-50"
                             aria-label="Supprimer la proposition"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
@@ -619,7 +760,7 @@ export default function AdminPage() {
         {/* ── Inscriptions ── */}
         {tab === "inscriptions" && (
         <div className="rounded-xl bg-card shadow-soft p-5 space-y-3">
-          <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+          <h2 className="text-sm font-semibold text-muted-foreground">
             Inscriptions
           </h2>
           <div className="flex items-center justify-between gap-3">
@@ -653,7 +794,7 @@ export default function AdminPage() {
         {tab === "membres" && (
         <div className="rounded-xl bg-card shadow-soft p-5 space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+            <h2 className="text-sm font-semibold text-muted-foreground">
               Membres
             </h2>
             <span className="text-xs text-muted-foreground">
@@ -734,7 +875,7 @@ export default function AdminPage() {
               {displayed.map((p) => {
                 const isEditing = editingUid === p.uid;
                 return (
-                  <div key={p.uid} className="rounded-xl border border-border bg-background">
+                  <div key={p.uid} className="rounded-xl bg-card">
                     <button
                       onClick={() => (isEditing ? setEditingUid(null) : startEdit(p))}
                       className="w-full flex items-start gap-3 px-4 py-3 text-left"
@@ -746,7 +887,7 @@ export default function AdminPage() {
                         <p className="text-sm font-semibold text-foreground truncate">
                           {p.firstName} {p.lastName}
                           {isAdminUser(p) && (
-                            <span className="ml-2 text-[10px] font-bold text-muted-foreground uppercase">admin</span>
+                            <span className="ml-2 text-xs font-semibold text-muted-foreground">admin</span>
                           )}
                         </p>
                         <p className="text-xs text-muted-foreground truncate">
@@ -784,10 +925,72 @@ export default function AdminPage() {
                           deriveFromPlanning={deriveFromPlanning}
                         />
 
+                        {/* Back-office coupé (lot 18) : ces trois droits n'ont pas d'objet en ligne. */}
+                        {BACK_OFFICE && (<>
+                        {/* Pôles : donnés par les équipes depuis le lot 16 (D9) — plus aucune
+                            case ici, l'organigramme est la seule vérité. */}
+                        <div className="rounded-lg border border-dashed border-border p-3 space-y-1">
+                          <p className="text-sm font-semibold text-muted-foreground">
+                            Pôles (donnés par les équipes ; Louange : automatique avec un rôle de service) :
+                          </p>
+                          <PolesDuMembre profile={p} equipes={equipes} />
+                        </div>
+
+                        {/* Droit de tenir l'organigramme (lot 16, D4) — réservé aux admins */}
+                        <div className="rounded-lg border border-dashed border-border p-3">
+                          <p className="text-sm font-semibold text-muted-foreground mb-2">
+                            Peut modifier l&apos;organigramme :
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() => setEquipesRight((v) => !v)}
+                            className={`px-3 py-1.5 rounded-lg border text-xs font-semibold transition-colors ${
+                              equipesRight
+                                ? "bg-secondary border-foreground/30 text-foreground"
+                                : "bg-background border-border text-muted-foreground hover:text-foreground"
+                            }`}
+                          >
+                            {equipesRight ? "✓ " : ""}Équipes (tout l&apos;organigramme)
+                          </button>
+                        </div>
+
+                        {/* Qui remplit les plannings dans l'app (lot 17) — réservé aux admins.
+                            Ne donne pas le droit de PUBLIER un trimestre (droits de notification). */}
+                        <div className="rounded-lg border border-dashed border-border p-3">
+                          <p className="text-sm font-semibold text-muted-foreground mb-2">
+                            Peut remplir les plannings :
+                          </p>
+                          <div className="flex flex-wrap gap-2">
+                            {GRILLES.map((pl) => {
+                              const checked = planningRights.includes(pl.key);
+                              const color = pl.couleur;
+                              return (
+                                <button
+                                  key={pl.key}
+                                  type="button"
+                                  onClick={() =>
+                                    setPlanningRights((prev) =>
+                                      checked ? prev.filter((x) => x !== pl.key) : [...prev, pl.key]
+                                    )
+                                  }
+                                  className={`px-3 py-1.5 rounded-lg border text-xs font-semibold transition-colors ${
+                                    checked ? "" : "bg-background border-border text-muted-foreground hover:text-foreground"
+                                  }`}
+                                  style={checked ? { background: `${color}15`, borderColor: color, color } : undefined}
+                                >
+                                  {checked ? "✓ " : ""}{pl.label}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                        </>)}
+
+                        {BACK_OFFICE && (<>
                         {/* Droits de publication d'annonces — réservé aux admins */}
                         <div className="rounded-lg border border-dashed border-border p-3">
-                          <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2">
-                            Peut publier des annonces pour :
+                          <p className="text-sm font-semibold text-muted-foreground mb-2">
+                            Peut créer des évènements et des infos pour :
                           </p>
                           <div className="flex flex-wrap gap-2">
                             {ANNONCE_SECTIONS.map((s) => {
@@ -813,10 +1016,11 @@ export default function AdminPage() {
                             })}
                           </div>
                         </div>
+                        </>)}
 
                         {/* Droits d'envoi de notifications manuelles — réservé aux admins */}
                         <div className="rounded-lg border border-dashed border-border p-3">
-                          <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2">
+                          <p className="text-sm font-semibold text-muted-foreground mb-2">
                             Peut envoyer des notifications à :
                           </p>
                           <div className="flex flex-wrap gap-2">
@@ -871,9 +1075,37 @@ export default function AdminPage() {
         )}
 
         {/* ── Noms du planning sans compte ── */}
+        {BACK_OFFICE && tab === "planning" && (
+        <div className="rounded-xl bg-card shadow-soft p-5 space-y-3">
+          <h2 className="text-sm font-semibold text-muted-foreground">Importer depuis le Google Sheet</h2>
+          <p className="text-xs text-muted-foreground">
+            Recopie dans l&apos;app les dimanches du Sheet qui n&apos;y sont pas encore (les dimanches déjà
+            écrits dans l&apos;app ne bougent pas : relancer ne fait jamais de doublon). Une entrée
+            d&apos;historique par import. Ensuite, le Sheet n&apos;est plus qu&apos;une archive : on exporte en CSV depuis la grille.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {GRILLES.map((g) => (
+              <button
+                key={g.key}
+                type="button"
+                disabled={importPlanningEnCours === g.key}
+                onClick={() => void importerPlanning(g.key)}
+                className="px-3 py-1.5 rounded-lg border text-xs font-semibold bg-background border-border text-muted-foreground hover:text-foreground disabled:opacity-60"
+                style={{ borderColor: g.couleur, color: g.couleur }}
+              >
+                {importPlanningEnCours === g.key ? "Import…" : `Importer le ${g.label} depuis le Google Sheet`}
+              </button>
+            ))}
+          </div>
+          {importPlanningResultat && (
+            <p className="text-sm text-foreground" aria-live="polite">{importPlanningResultat}</p>
+          )}
+        </div>
+        )}
+
         {tab === "planning" && (
         <div className="rounded-xl bg-card shadow-soft p-5 space-y-3">
-          <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+          <h2 className="text-sm font-semibold text-muted-foreground">
             Planning sans compte ({unlinkedNames.length})
           </h2>
           <p className="text-xs text-muted-foreground">
@@ -896,6 +1128,74 @@ export default function AdminPage() {
                   {n}
                 </span>
               ))}
+            </div>
+          )}
+        </div>
+        )}
+
+        {/* ── Organigramme → Équipes (lot 16) ── */}
+        {BACK_OFFICE && tab === "equipes" && (
+        <div className="rounded-xl bg-card shadow-soft p-5 space-y-3">
+          <h2 className="text-sm font-semibold text-muted-foreground">
+            Organigramme → Équipes
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            L&apos;onglet ORGANIGRAMME du Google Sheet devient les 13 équipes de l&apos;app, et
+            l&apos;appartenance à une équipe donne son pôle — plus aucune case à cocher sur un profil.
+            La liste des membres de chaque équipe sera <strong>remplacée</strong> par celle du Sheet ;
+            le relancer ne crée pas de doublon. Les équipes se modifient ensuite depuis{" "}
+            <Link href="/equipes" className="underline underline-offset-2">Équipes</Link>.
+          </p>
+          <div className="flex flex-wrap items-center gap-3">
+            <Button onClick={importerOrganigramme} disabled={importEtat === "busy"} variant="outline" className="h-11">
+              {importEtat === "busy" ? "…" : "Importer l'organigramme du Sheet"}
+            </Button>
+            {importErreur && <p className="text-sm text-destructive">{importErreur}</p>}
+          </div>
+
+          {importResultat && (
+            <div className="space-y-3">
+              <p className="text-sm text-foreground">
+                {importResultat.equipes} équipes, {importResultat.membres} membres,{" "}
+                {importResultat.rattaches} rattachés à un compte.
+              </p>
+              <ListePuces
+                titre={`Noms non rattachés (${importResultat.nonRattaches.length})`}
+                aide="Ces personnes apparaissent dans l'organigramme mais ne reçoivent rien et n'ont pas de pôle."
+                items={importResultat.nonRattaches}
+              />
+              <ListePuces
+                titre={`Équipes inconnues (${importResultat.inconnues.length})`}
+                aide="Ces blocs du Sheet ne figurent pas dans la table des 13 équipes : rien n'a été créé."
+                items={importResultat.inconnues}
+              />
+              {importResultat.polesHorsOrganigramme.length > 0 && (
+                <div className="space-y-1.5">
+                  <h3 className="text-xs font-semibold text-muted-foreground">
+                    Pôle coché hors organigramme ({importResultat.polesHorsOrganigramme.length})
+                  </h3>
+                  <p className="text-xs text-muted-foreground">
+                    Ces comptes gardent un pôle sans figurer dans aucune équipe. Place-les dans une
+                    équipe, ou décoche ici — c&apos;est le seul endroit où on peut le faire.
+                  </p>
+                  <div className="space-y-1.5">
+                    {importResultat.polesHorsOrganigramme.map((h) => (
+                      <div key={h.uid} className="flex items-center justify-between gap-2">
+                        <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300">
+                          {h.nom} · {h.poles.join(" · ")}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => decocherPoles(h.uid)}
+                          className="text-xs font-semibold text-muted-foreground hover:text-destructive"
+                        >
+                          Décocher
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>

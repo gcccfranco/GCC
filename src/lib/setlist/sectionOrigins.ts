@@ -24,6 +24,39 @@ function originOf(origins: Record<string, string>, sectionId: string): string | 
   return current;
 }
 
+/** L'entrée de structure `ov` (`<id>-<rang>`, ou l'id seul pour les anciennes
+ *  setlists) désigne-t-elle un passage de la section `sectionId` — elle-même ou
+ *  l'une de ses copies ? */
+function isOccurrenceOf(ov: string, sectionId: string, origins: Record<string, string>): boolean {
+  return [ov, ov.replace(/-\d+$/, "")].some(
+    (id) => id === sectionId || originOf(origins, id) === sectionId,
+  );
+}
+
+/** Structure à suivre quand la version affichée contient des sections copiées
+ *  (« Seulement ce passage » de Ma version) : chaque copie prend la place du
+ *  passage « au même endroit » chez le lecteur — le dernier passage retouché
+ *  reste le dernier, les autres se repèrent par leur rang depuis le début, et
+ *  un rang qui n'existe pas chez le lecteur ne s'affiche pas. L'auteur, lui,
+ *  retrouve sa propre structure inchangée. */
+export function structureWithCopies(
+  reader: string[],
+  author: string[],
+  origins: Record<string, string>,
+): string[] {
+  const out = [...reader];
+  for (const [copy, origin] of Object.entries(origins)) {
+    const passages = author.filter((ov) => isOccurrenceOf(ov, origin, origins));
+    const rank = passages.findIndex((ov) => isOccurrenceOf(ov, copy, origins));
+    if (rank === -1) continue;
+    const here = out.flatMap((ov, i) => (isOccurrenceOf(ov, origin, origins) ? [i] : []));
+    const at = rank === passages.length - 1 ? here[here.length - 1] : here[rank];
+    if (at === undefined) continue;
+    out[at] = `${copy}-${at}`;
+  }
+  return out;
+}
+
 /** Champs à écrire pour rétablir le chant original : la structure et les
  *  réglages par section (notes, transitions, nuances, modulations) quittent les
  *  sections matérialisées pour celles dont elles ont été copiées. */

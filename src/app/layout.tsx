@@ -1,16 +1,12 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import { I18nProvider } from "@/lib/I18nProvider";
 import { Navbar } from "@/components/layout/Navbar";
 import { MobileTabBar } from "@/components/layout/MobileTabBar";
+import { Accueil } from "@/components/onboarding/Accueil";
 import { PageTransition } from "@/components/layout/PageTransition";
+import { LyricsCopyListener } from "@/components/song/LyricsCopyListener";
 import "./globals.css";
-
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   title: "GCC Louange",
@@ -25,7 +21,12 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#EA580C",
+  // Égale au fond, par schéma : plus de barre orange sur Android ni de saut
+  // de luminosité au lancement (audit D5).
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#000000" },
+  ],
   width: "device-width",
   initialScale: 1,
   // Pinch-zoom désactivé : sur iOS, un zoom pincé décroche les éléments
@@ -44,14 +45,16 @@ export default function RootLayout({
   return (
     <html lang="fr" suppressHydrationWarning>
       <head>
-        <link rel="manifest" href="/manifest.webmanifest" />
+        {/* Le manifeste vient de src/app/manifest.ts, que Next lie lui-même :
+            aucun lien de manifeste écrit ici (deux manifestes se contredisaient
+            jusqu'au 19/09/2026). */}
         <link rel="icon" href="/icon.png" type="image/png" />
         <meta name="mobile-web-app-capable" content="yes" />
         {/* Service worker push-only (public/sw.js) — requis pour les notifications
             Web Push sur PWA iOS/Android. Il ne fait plus de cache hors-ligne. */}
         <script dangerouslySetInnerHTML={{ __html: `if('serviceWorker'in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js').catch(function(){})})}` }} />
       </head>
-      <body className={`${inter.variable} font-sans antialiased min-h-screen bg-background`}>
+      <body className="font-sans antialiased min-h-screen bg-background">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <I18nProvider>
             <Navbar />
@@ -59,6 +62,8 @@ export default function RootLayout({
               <PageTransition>{children}</PageTransition>
             </main>
             <MobileTabBar />
+            <LyricsCopyListener />
+            <Accueil />
           </I18nProvider>
         </ThemeProvider>
       </body>

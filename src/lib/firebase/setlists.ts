@@ -37,6 +37,8 @@ export interface FSSetlist {
   isDraft?: boolean;
   isPrivate?: boolean;
   ownerId?: string | null;
+  /** Lien de la présentation (PPT) de la régie — écrit par /api/setlist/presentation. */
+  presentationUrl?: string;
 }
 
 // ─── Firestore REST API ───────────────────────────────────────────────────────
@@ -291,7 +293,29 @@ export async function updateSetlist(
 
 export async function deleteSetlist(id: string): Promise<void> {
   const headers = await authHeader();
-  await fetch(`${FS_BASE}/setlists/${id}`, { method: "DELETE", headers });
+  const res = await fetch(`${FS_BASE}/setlists/${id}`, { method: "DELETE", headers });
+  // Sans ce contrôle, un refus des règles (403) se résolvait comme une
+  // réussite : la fiche redirigeait vers une liste où la setlist était encore
+  // là (docs/spec-suppression-groupee.md, R2).
+  await checkRest(res);
+}
+
+/** Supprime plusieurs setlists l'une après l'autre, et **continue après un
+ *  échec** : une suppression Firestore ne s'annule pas, seule la réussite
+ *  partielle est honnête (docs/spec-suppression-groupee.md, R2). Séquentiel
+ *  pour garder l'ordre de la liste et ne pas lancer dix DELETE d'un coup. */
+export async function deleteSetlists(ids: string[]): Promise<{ ok: string[]; ko: string[] }> {
+  const ok: string[] = [];
+  const ko: string[] = [];
+  for (const id of ids) {
+    try {
+      await deleteSetlist(id);
+      ok.push(id);
+    } catch {
+      ko.push(id);
+    }
+  }
+  return { ok, ko };
 }
 
 /** Duplique une setlist en copie privée appartenant au duplicateur.

@@ -349,6 +349,7 @@ console.log(
     artist: ast.metadata.artist,
     language: "fr",
     originalKey: ast.metadata.key,
+    recommendedKey: null,
     tempo: null,
     themes: [],
     youtubeUrl: null,

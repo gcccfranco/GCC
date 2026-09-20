@@ -121,7 +121,7 @@ function QuestionBlock({
       ) : (
         <>
           {(showTexts ? texts : texts.slice(0, 3)).map((x, i) => (
-            <div key={i} className="rounded-lg border border-border bg-background px-3 py-2">
+            <div key={i} className="rounded-lg border border-transparent bg-secondary px-3 py-2">
               <p className="text-xs text-foreground whitespace-pre-wrap">{x.text}</p>
               <p className="text-[11px] text-muted-foreground mt-1">— {x.name}</p>
             </div>
@@ -215,7 +215,7 @@ export function SurveyResults() {
           className={`px-3 py-1.5 rounded-lg border text-xs font-semibold transition-colors ${
             includeDrafts
               ? "bg-background border-border text-muted-foreground hover:text-foreground"
-              : "border-primary bg-primary/10 text-primary"
+              : "border-primary bg-secondary text-foreground"
           }`}
         >
           {includeDrafts

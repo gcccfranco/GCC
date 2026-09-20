@@ -22,6 +22,9 @@ export type SongHeaderBlock = {
   songSlug?: string;
   /** Capo appliqué (frets) : les accords des sections sont déjà transposés */
   capo?: number;
+  /** Tonalité de la setlist, quand une autre a été choisie sur cet appareil
+   *  (page du chant) : `songKey` est alors la tonalité choisie. */
+  setlistKey?: string;
   /** Fusion en structure mixte : titres + tonalités des chants fusionnés */
   fusionSongs?: { title: string; key: string; language: "fr" | "zh" }[];
 };
@@ -70,6 +73,8 @@ export type JianpuSheetBlock = {
   pageIndex: number;
   /** Capo du chant : le calque affiche alors les positions. */
   capo?: number;
+  /** Tonalité de la setlist, quand une autre a été choisie sur cet appareil. */
+  setlistKey?: string;
   /** Rang du chant dans la setlist, repris par le bandeau de structure. */
   position: number;
   /** Structure jouée : le scan ne la porte pas (il ignore l'ordre et les
@@ -107,6 +112,8 @@ export function buildPerformanceBlocks(
   capos?: Record<string, number>,
   jianpuSheets?: JianpuManifest,
   jianpuPref: JianpuPref = "auto",
+  /** Tonalités choisies sur cet appareil (page du chant), par slug. */
+  personalKeys?: Record<string, string>,
 ): PerformanceBlock[] {
   const blocks: PerformanceBlock[] = [];
   // Le responsable coche le 简谱 par chant ; la préférence de l'appareil peut
@@ -228,10 +235,16 @@ export function buildPerformanceBlocks(
     const baseAst = itemAst(item, content);
     if (!baseAst) continue;
     // Tonalité jouée (affichée) — après capo, ast.metadata.key devient la
-    // tonalité des shapes, on fige donc la clé d'affichage ici.
-    const playedKey = item.keyOverride ?? baseAst.metadata.key;
+    // tonalité des shapes, on fige donc la clé d'affichage ici. Une tonalité
+    // choisie sur cet appareil remplace celle de la setlist ; les modulations
+    // suivent le même écart.
+    const setlistKey = item.keyOverride ?? baseAst.metadata.key;
+    const chosenKey = personalKeys?.[item.songSlug];
+    const personalKey = chosenKey && chosenKey !== setlistKey ? chosenKey : undefined;
+    const playedKey = personalKey ?? setlistKey;
+    const personalShift = personalKey ? semitonesTo(setlistKey, personalKey) : 0;
     const capo = capos?.[item.songSlug] ?? 0;
-    const ast = applyCapo(getTransposed(baseAst, item.keyOverride), playedKey, capo);
+    const ast = applyCapo(getTransposed(baseAst, personalKey ?? item.keyOverride), playedKey, capo);
     const sections = resolveSections(ast, item.structureOverride);
     blocks.push({
       kind: "song-header",
@@ -244,11 +257,14 @@ export function buildPerformanceBlocks(
       language: ast.metadata.language,
       songSlug: item.songSlug,
       capo: capo || undefined,
+      setlistKey: personalKey ? setlistKey : undefined,
     });
     // ── Partition 简谱 : la page entière remplace les sections ──
     // La structure de l'item reste décrite (elle sert à la liste de la
     // setlist) mais ne découpe pas la partition, qui est un scan indivisible.
-    const occurrences = resolveSectionOccurrences(sections, item);
+    const occurrences = resolveSectionOccurrences(sections, item).map((o) =>
+      personalShift && o.targetKey ? { ...o, targetKey: getTransposedKey(o.targetKey, personalShift) } : o,
+    );
     const sheet = wantsSheet(item) ? jianpuSheets?.[item.songSlug] : undefined;
     if (sheet) {
       // Avec un capo, la tonalité jouée est passée même si elle est celle du
@@ -266,6 +282,7 @@ export function buildPerformanceBlocks(
           songKey: playedKey,
           playedKey: overlayKey,
           capo: capo || undefined,
+          setlistKey: personalKey ? setlistKey : undefined,
           position: item.position,
           // Une modulation vers la tonalité déjà jouée n'en est pas une.
           steps: occurrences.map((o) =>

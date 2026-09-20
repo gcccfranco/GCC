@@ -1,9 +1,12 @@
 "use client";
 
+import { PageTitle } from "@/components/layout/PageTitle";
+import { Tile } from "@/components/ui/tile";
+
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
-import { CalendarDays, Clock, ListMusic, Lock, MapPin, UserPen } from "lucide-react";
+import { Clock, ListMusic, Lock, MapPin, UserPen } from "lucide-react";
 import { useProfile } from "@/lib/firebase/users";
 import { getSetlists, type FSSetlist } from "@/lib/firebase/setlists";
 import {
@@ -195,33 +198,30 @@ export default function MesServicesPage() {
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-2xl mx-auto px-4 pt-6 pb-10 space-y-4">
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <CalendarDays className="h-5 w-5 text-primary" />
-            <h1 className="text-lg font-bold text-foreground">{t("mesServices.title")}</h1>
-          </div>
-          {upcomingCount > 0 && (
-            <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-secondary text-foreground">
-              {t("mesServices.upcomingCount", { count: upcomingCount })}
-            </span>
-          )}
-        </div>
-        <p className="text-sm text-muted-foreground">
-          {t("mesServices.subtitle", { name: profile.planningName })}
-        </p>
+        <PageTitle
+          title={t("mesServices.title")}
+          subtitle={t("mesServices.subtitle", { name: profile.planningName })}
+          action={
+            upcomingCount > 0 && (
+              <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-secondary text-foreground">
+                {t("mesServices.upcomingCount", { count: upcomingCount })}
+              </span>
+            )
+          }
+        />
 
         <PushPrompt />
 
         {/* Onglets À venir / Passés */}
-        <div className="flex rounded-xl border border-border overflow-hidden text-sm">
-          {(["upcoming", "past"] as Tab[]).map((tb, i) => (
+        <div className="flex rounded-lg bg-secondary p-0.5 gap-0.5 text-sm">
+          {(["upcoming", "past"] as Tab[]).map((tb) => (
             <button
               key={tb}
               onClick={() => setTab(tb)}
-              className={`flex-1 px-3 py-2.5 font-medium transition-colors ${i === 1 ? "border-l border-border" : ""} ${
+              className={`flex-1 px-3 py-2 rounded-md font-semibold transition-colors ${
                 tab === tb
-                  ? "bg-foreground text-background"
-                  : "bg-background text-muted-foreground hover:bg-muted/50"
+                  ? "bg-card text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
               }`}
             >
               {tb === "upcoming" ? t("mesServices.tabUpcoming") : t("mesServices.tabPast")}
@@ -243,46 +243,41 @@ export default function MesServicesPage() {
           <div className="space-y-5">
             {months.map((month) => (
               <div key={month.label}>
-                <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 px-1">
+                <p className="text-sm font-semibold text-muted-foreground mb-1.5 px-4 capitalize">
                   {month.label}
                 </p>
-                <div className="space-y-2">
+                <ul className="rounded-xl bg-card">
                   {month.items.map((e) => {
                     const color = serviceColor(e.service);
                     const cat = serviceCategory(e.service);
                     const lookupDate = e.setlistDate ?? e.date;
                     const setlistId = cat ? findSetlistId(lookupDate, cat, e.leader, e.moment) : undefined;
                     const dUntil = tab === "upcoming" ? daysUntil(e.date, todayStr) : -1;
-                    const thisWeek = dUntil >= 0 && dUntil <= 6;
+                    const jour = new Date(e.date + "T12:00:00");
+                    const mois = new Intl.DateTimeFormat(i18n.language === "zh-CN" ? "zh-CN" : "fr-FR", { month: "short" }).format(jour);
                     return (
-                      <div
+                      <li
                         key={`${e.date}|${e.service}|${e.setlistDate ?? ""}|${e.moment ?? ""}`}
-                        className={`flex items-center gap-3 rounded-xl border bg-card px-4 py-3 border-l-4 ${
-                          thisWeek ? "border-border ring-1 ring-ring/20" : "border-border"
-                        }`}
-                        style={{ borderLeftColor: color }}
+                        className="group-row relative flex items-center gap-3 px-4 py-3"
                       >
+                        <Tile color={color} big={jour.getDate()} small={mois} size="lg" />
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <p className="text-sm font-semibold text-foreground capitalize">
-                              {fdJour(e.date, i18n.language)}
-                            </p>
+                            <p className="text-base font-semibold text-foreground">{e.service}</p>
                             {dUntil === 0 && (
-                              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground uppercase">
+                              <span className="text-xs font-bold px-1.5 py-0.5 rounded-full bg-foreground text-background">
                                 {t("mesServices.today")}
                               </span>
                             )}
                             {dUntil > 0 && dUntil <= 14 && (
-                              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary">
+                              <span className="text-xs font-semibold px-1.5 py-0.5 rounded-full bg-secondary text-foreground">
                                 {t("mesServices.inDays", { count: dUntil })}
                               </span>
                             )}
                           </div>
-                          <p className="text-xs font-medium mt-0.5" style={{ color }}>
-                            {e.service}
-                          </p>
+                          <p className="text-sm text-muted-foreground capitalize">{fdJour(e.date, i18n.language)}</p>
                           {(e.time || e.location) && (
-                            <p className="text-[11px] text-muted-foreground mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5">
+                            <p className="text-xs text-muted-foreground mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5">
                               {e.time && (
                                 <span className="inline-flex items-center gap-1">
                                   <Clock className="h-3 w-3" />
@@ -298,30 +293,32 @@ export default function MesServicesPage() {
                             </p>
                           )}
                         </div>
-                        <div className="flex flex-wrap gap-1.5 justify-end items-center">
-                          {e.roles.map((r) => (
-                            <span
-                              key={r}
-                              className="text-[11px] font-semibold px-2 py-0.5 rounded-full"
-                              style={{ background: `${color}15`, color, border: `1px solid ${color}4d` }}
-                            >
-                              {r}
-                            </span>
-                          ))}
+                        <div className="flex flex-col items-end gap-1.5 shrink-0">
+                          <div className="flex flex-wrap gap-1 justify-end">
+                            {e.roles.map((r) => (
+                              <span
+                                key={r}
+                                className="text-xs font-semibold px-2 py-0.5 rounded-full"
+                                style={{ background: `color-mix(in srgb, ${color} 13%, transparent)`, color }}
+                              >
+                                {r}
+                              </span>
+                            ))}
+                          </div>
                           {setlistId && (
                             <Link
                               href={`/setlists/${setlistId}`}
-                              className="flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/30 hover:bg-primary/20 transition-colors"
+                              className="flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full bg-secondary text-foreground hover:bg-secondary/80 transition-colors"
                             >
                               <ListMusic className="h-3 w-3" />
                               {t("mesServices.setlist")}
                             </Link>
                           )}
                         </div>
-                      </div>
+                      </li>
                     );
                   })}
-                </div>
+                </ul>
               </div>
             ))}
           </div>

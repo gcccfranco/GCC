@@ -2,18 +2,29 @@
 
 import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
-import { PlanningTable } from "@/components/planning/PlanningTable"
+import { PlanningGrille } from "@/components/planning/PlanningGrille"
 import { getCurrentEddPeriode, EDD_PERIODES, EDD_CLASSES } from "@/lib/planning/utils"
 import { EDD_FALLBACK } from "@/lib/planning/data"
 import { fetchEDD } from "@/lib/planning/sheets"
+import { GRILLES_EDD, lignesSimples } from "@/lib/planning/grilles"
+import { useGrilleApp } from "@/lib/planning/useGrilleApp"
+import { useProfile } from "@/lib/firebase/users"
+import { canEditPlanning } from "@/lib/access"
 import { PLANNING_COLORS } from "@/lib/serviceColors"
 import type { EddDataStructure, EddPeriode, EddClasse } from "@/lib/planning/utils"
+import { BACK_OFFICE } from "@/lib/backOffice"
+import { AncienTableau } from "./AncienTableau"
+
+// EDD : une grille par classe (中班, 大班, 高班), cinq cases par dimanche,
+// remplie dans l'app depuis le 19/09/2026 (lot 17, G6) par qui a le droit sur
+// la classe ; la période se choisit comme avant.
 
 const COLOR = PLANNING_COLORS.edd
 const PERIODE_KEYS = ["p1", "p2", "p3", "p4", "p5", "p6"] as const
 
-export default function EddPage() {
+function EddPage() {
   const { t } = useTranslation()
+  const { user, profile } = useProfile()
   const [eddData, setEddData] = useState<EddDataStructure>(EDD_FALLBACK)
   const [periode, setPeriode] = useState<EddPeriode>(getCurrentEddPeriode())
   const [classe, setClasse] = useState<EddClasse>("中班")
@@ -23,7 +34,10 @@ export default function EddPage() {
     fetchEDD().then(d => setEddData(d)).finally(() => setLoading(false))
   }, [])
 
+  const definition = GRILLES_EDD.find((g) => g.sousTitre === classe) ?? GRILLES_EDD[0]
   const rows = eddData[periode]?.classes?.[classe] ?? []
+  const peutModifier = canEditPlanning(user, profile, definition.key)
+  const { datesDansLApp, nomsDesComptes } = useGrilleApp(definition.key, peutModifier)
 
   return (
     <div className="max-w-full space-y-4 mx-auto">
@@ -62,17 +76,18 @@ export default function EddPage() {
         ))}
       </div>
 
-      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-        <div className="w-3 h-3 rounded-sm" style={{ background: `${COLOR}26`, border: `1px solid ${COLOR}4d` }} />
-        {t("planning.legendCurrentSunday")}
-      </div>
-
-      <PlanningTable
-        cols={[t("planning.roles.date"), t("planning.roles.presidence"), t("planning.roles.suppleant"), t("planning.roles.piano"), t("planning.roles.cajon"), t("planning.roles.guitare")]}
-        rows={rows}
-        color={COLOR}
-        minWidth={480}
+      <PlanningGrille
+        key={definition.key}
+        definition={definition}
+        periode={`${t(`planning.edd.${PERIODE_KEYS[EDD_PERIODES.indexOf(periode)]}`)} ${new Date().getFullYear()}`}
+        lignes={lignesSimples(rows)}
+        peutModifier={peutModifier}
+        datesDansLApp={datesDansLApp}
+        nomsDesComptes={nomsDesComptes}
       />
     </div>
   )
 }
+
+// Back-office coupé (lot 18) : le tableau d'avant, lu dans le Sheet seul.
+export default BACK_OFFICE ? EddPage : AncienTableau

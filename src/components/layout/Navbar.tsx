@@ -5,13 +5,17 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useTranslation } from "react-i18next";
-import { Menu, X, Sun, Moon, Globe, LogIn, LogOut, ChevronDown, UserRound, Bell, BookOpen, MessageSquareHeart, TriangleAlert } from "lucide-react";
+import { useSetLanguage } from "@/lib/I18nProvider";
+import { Sun, Moon, Globe, LogIn, LogOut, ChevronDown, UserRound, Bell, BookOpen, MessageSquareHeart, TriangleAlert, Megaphone, ShieldCheck, Network, Sparkles } from "lucide-react";
+import { useAccesHarmonie } from "@/lib/harmonie/useHarmonie";
 import { useTheme } from "next-themes";
 import { useAuth, logOut } from "@/lib/firebase/auth";
 import { useProfile } from "@/lib/firebase/users";
-import { isAdminUser } from "@/lib/access";
+import { isAdminUser, polesDe } from "@/lib/access";
 import { useScrollDirection } from "@/hooks/useScrollDirection";
 import { useNotifications, type NotificationItem } from "@/hooks/useNotifications";
+import { BACK_OFFICE } from "@/lib/backOffice";
+import { saveNotifLang } from "@/lib/firebase/notifPrefs";
 import { ReportDialog } from "@/components/report/ReportDialog";
 import {
   DropdownMenu,
@@ -29,8 +33,25 @@ const NOTIF_KIND_KEYS: Record<NotificationItem["kind"], string> = {
   "manual": "notifications.manual",
   "reminder": "notifications.reminder",
   "broadcast": "notifications.broadcast",
+  "presentation": "notifications.presentation",
+  "scene": "notifications.scene",
+  "evenement": "notifications.evenement",
+  "tache": "notifications.tache",
 };
 
+// Bouton d'icône de la barre : rond, sans bordure, réponse dès l'appui.
+const ICON_BUTTON =
+  "h-10 w-10 shrink-0 rounded-full bg-secondary text-foreground/80 hover:text-foreground transition-[background-color,color,transform] duration-150 active:scale-[.94] flex items-center justify-center cursor-pointer";
+const SECTION_LINK = "px-3 py-[7px] rounded-full text-sm font-semibold transition-colors duration-150 whitespace-nowrap";
+const sectionClass = (active: boolean) =>
+  `${SECTION_LINK} ${active ? "bg-secondary text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-secondary"}`;
+
+/**
+ * Navbar « GCC » + label de section (décisions du 15/09/2026, docs/spec-look.md).
+ * Sur ordinateur : les sections, la cloche, la langue, le thème et un menu
+ * compte. Sur tactile : la barre du bas porte les sections et « Moi » range
+ * le reste ; il ne reste ici que la cloche et la langue (Connexion sans compte).
+ */
 export function Navbar() {
   const { t, i18n } = useTranslation();
   const pathname = usePathname() || "";
@@ -42,37 +63,29 @@ export function Navbar() {
   const dark = mounted && resolvedTheme === "dark";
   const toggleTheme = () => setTheme(dark ? "light" : "dark");
 
-  const [isOpen, setIsOpen] = useState(false);
-  const [isClosing, setIsClosing] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
   const { items: notifItems, unreadCount, markAllSeen } = useNotifications();
-  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const currentLang = i18n.language;
   const isZh = currentLang === "zh-CN";
   const scrollVisible = useScrollDirection();
 
-  const closeMenu = () => {
-    if (!isOpen) return;
-    setIsClosing(true);
-    closeTimerRef.current = setTimeout(() => {
-      setIsOpen(false);
-      setIsClosing(false);
-    }, 160);
-  };
-
-  // Close mobile menu and dropdown on route change
+  // Bord de défilement (apple-design § 12) : le filet sous la barre n'apparaît
+  // que quand du contenu passe dessous.
+  const [atTop, setAtTop] = useState(true);
   useEffect(() => {
-    closeMenu();
-    setDropdownOpen(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pathname]);
-
-  useEffect(() => {
-    return () => { if (closeTimerRef.current) clearTimeout(closeTimerRef.current); };
+    const onScroll = () => setAtTop(window.scrollY < 4);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  // Changement de route (barre du bas, retour…) : fermer le menu Louange.
+  useEffect(() => {
+    setDropdownOpen(false);
+  }, [pathname]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -90,42 +103,52 @@ export function Navbar() {
     };
   }, [dropdownOpen]);
 
+  const setLanguage = useSetLanguage();
   const toggleLanguage = () => {
-    const nextLang = currentLang === "zh-CN" ? "fr" : "zh-CN";
-    i18n.changeLanguage(nextLang);
-    localStorage.setItem("i18nextLng", nextLang);
+    setLanguage(currentLang === "zh-CN" ? "fr" : "zh-CN");
   };
+
+  // Langue mémorisée côté serveur (notifPrefs/{uid}.lang) : les rappels du
+  // cron partent dans la langue de l'interface. Écrite à la connexion puis à
+  // chaque changement, une fois par valeur et par compte.
+  const sentLangRef = useRef("");
+  useEffect(() => {
+    if (!user) return;
+    const key = `${user.uid}|${currentLang}`;
+    if (sentLangRef.current === key) return;
+    sentLangRef.current = key;
+    saveNotifLang(user.uid, currentLang === "zh-CN" ? "zh-CN" : "fr").catch(() => {});
+  }, [user, currentLang]);
 
   const isActiveSongs = pathname.startsWith("/songs");
   const isActiveSetlists = pathname.startsWith("/setlists");
   const isActiveLouange = isActiveSongs || isActiveSetlists;
   const isActivePlanning = pathname.startsWith("/planning");
   const isActiveMesServices = pathname.startsWith("/mes-services");
-  const isActiveAnnonces = pathname.startsWith("/annonces");
-  const isActiveAdmin = pathname.startsWith("/admin");
-  const isActiveNotifier = pathname.startsWith("/notifier");
+  const isActiveEvenements = pathname.startsWith("/evenements");
+  const isActiveTaches = pathname.startsWith("/taches");
   const admin = isAdminUser(user);
   const canNotify = admin || (profile?.notify?.length ?? 0) > 0;
   const headerLabel = isActivePlanning
     ? t("common.header.planning")
     : isActiveMesServices
       ? t("common.header.service")
-      : isActiveAnnonces
-        ? t("common.header.annonces")
-        : t("common.header.louange");
+      : isActiveEvenements
+          ? t("common.header.evenements")
+          : isActiveTaches
+            ? t("common.header.taches")
+            : t("common.header.louange");
+  const displayName = [profile?.firstName, profile?.lastName].filter(Boolean).join(" ") || user?.email || "";
+  const initial = (profile?.firstName || user?.email || "?").trim().charAt(0).toUpperCase();
 
   return (
     <>
-      {/* Backdrop derrière le menu mobile */}
-      {(isOpen || isClosing) && (
-        <div
-          className={`fixed top-[var(--nav-h)] inset-x-0 bottom-0 z-40 bg-black/20 lg:hidden ${isClosing ? "animate-out fade-out duration-150" : "animate-in fade-in duration-200"}`}
-          onClick={closeMenu}
-        />
-      )}
-
-      <header className={`fixed top-0 z-50 w-full h-[var(--nav-h)] border-b border-border/50 bg-background/82 backdrop-saturate-[1.2] backdrop-blur-[14px] print:hidden transition-transform duration-300 ${scrollVisible ? "translate-y-0" : "-translate-y-full"}`}>
-        <div className="max-w-[1080px] mx-auto px-4 h-full flex items-center gap-3.5">
+      <header
+        className={`fixed top-0 z-50 w-full h-[var(--nav-h)] material-chrome print:hidden transition-[transform,box-shadow] duration-300 ${
+          scrollVisible ? "translate-y-0" : "-translate-y-full"
+        } ${atTop ? "" : "shadow-[0_1px_0_hsl(var(--border))]"}`}
+      >
+        <div className="max-w-[1080px] mx-auto px-4 h-full flex items-center gap-3">
           {/* Brand */}
           <Link href={user ? "/planning" : "/songs"} className="flex items-center gap-2.5 shrink-0">
             <div className="relative h-9 w-9 rounded-full overflow-hidden bg-white shadow-sm">
@@ -138,49 +161,38 @@ export function Navbar() {
                 priority
               />
             </div>
-            <span className="font-bold text-[17px] tracking-[-0.3px] text-foreground min-w-[111px] whitespace-nowrap flex items-center gap-1">
+            <span className="font-bold text-lg text-foreground min-w-[111px] whitespace-nowrap flex items-center gap-1">
               GCC{" "}
               <span
                 key={headerLabel}
-                className="text-primary animate-in fade-in duration-150"
+                className="text-brand animate-in fade-in duration-150"
               >
                 {headerLabel}
               </span>
             </span>
           </Link>
 
-          {/* Desktop nav links */}
-          <nav className="hidden lg:flex items-center gap-1 ml-2">
+          {/* Sections (ordinateur) */}
+          <nav className="hidden lg:flex items-center gap-1 ml-2" aria-label={t("common.aria.sections")}>
             {!authLoading && user && (
-              <Link
-                href="/planning"
-                className={`w-[80px] px-3 py-[7px] rounded-[9px] text-[13.5px] font-semibold transition-all duration-150 ${
-                  isActivePlanning
-                    ? "bg-secondary text-foreground text-center"
-                    : "text-muted-foreground hover:text-foreground hover:bg-secondary"
-                }`}
-              >
+              <Link href="/planning" className={sectionClass(isActivePlanning)}>
                 {t("common.header.planning")}
               </Link>
             )}
-
             {/* Louange : menu déroulant (connecté) ou lien direct vers les chants (visiteur) */}
             {!authLoading && user ? (
               <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setDropdownOpen((v) => !v)}
                   aria-expanded={dropdownOpen}
-                  className={`flex w-[96px] items-center gap-1 px-3 py-[7px] rounded-[9px] text-[13.5px] font-semibold transition-all duration-150 cursor-pointer ${
-                    isActiveLouange
-                      ? "bg-secondary text-foreground text-center"
-                      : "text-muted-foreground hover:text-foreground hover:bg-secondary text-center"
-                  }`}
+                  className={`${sectionClass(isActiveLouange)} flex items-center gap-1 cursor-pointer`}
                 >
                   {t("common.header.louange")}
                   <ChevronDown
                     className={`h-3 w-3 opacity-60 transition-transform duration-150 ${
                       dropdownOpen ? "rotate-180" : ""
                     }`}
+                    aria-hidden
                   />
                 </button>
                 <div
@@ -190,11 +202,11 @@ export function Navbar() {
                       : "opacity-0 invisible -translate-y-1"
                   }`}
                 >
-                  <div className="bg-card border border-border rounded-xl shadow-lg py-1 min-w-[140px]">
+                  <div className="bg-popover border border-border rounded-xl shadow-lg py-1 min-w-[160px]">
                     <Link
                       href="/songs"
                       onClick={() => setDropdownOpen(false)}
-                      className={`flex items-center px-3 py-2 text-[13px] font-semibold transition-colors ${
+                      className={`flex items-center px-3 py-2 text-sm font-semibold transition-colors ${
                         isActiveSongs ? "text-foreground bg-secondary" : "text-muted-foreground hover:text-foreground hover:bg-secondary"
                       }`}
                     >
@@ -203,7 +215,7 @@ export function Navbar() {
                     <Link
                       href="/setlists"
                       onClick={() => setDropdownOpen(false)}
-                      className={`flex items-center px-3 py-2 text-[13px] font-semibold transition-colors ${
+                      className={`flex items-center px-3 py-2 text-sm font-semibold transition-colors ${
                         isActiveSetlists ? "text-foreground bg-secondary" : "text-muted-foreground hover:text-foreground hover:bg-secondary"
                       }`}
                     >
@@ -213,67 +225,26 @@ export function Navbar() {
                 </div>
               </div>
             ) : (
-              <Link
-                href="/songs"
-                className={`px-3 py-[7px] rounded-[9px] text-[13.5px] font-semibold transition-all duration-150 ${
-                  isActiveSongs
-                    ? "bg-secondary text-foreground"
-                    : "text-muted-foreground hover:text-foreground hover:bg-secondary"
-                }`}
-              >
-                {t("common.header.louange")}
+              !authLoading && (
+                <Link href="/songs" className={sectionClass(isActiveSongs)}>
+                  {t("common.header.songs")}
+                </Link>
+              )
+            )}
+            {BACK_OFFICE && !authLoading && (
+              <Link href="/evenements" className={sectionClass(isActiveEvenements)}>
+                {t("common.header.evenements")}
               </Link>
             )}
-
             {!authLoading && user && (
-              <Link
-                href="/mes-services"
-                className={`px-3 py-[7px] rounded-[9px] text-[13.5px] font-semibold transition-all duration-150 whitespace-nowrap ${
-                  isActiveMesServices
-                    ? "bg-secondary text-foreground"
-                    : "text-muted-foreground hover:text-foreground hover:bg-secondary"
-                }`}
-              >
+              <Link href="/mes-services" className={sectionClass(isActiveMesServices)}>
                 {t("common.header.myServices")}
               </Link>
             )}
-
-            {!authLoading && user && (
-              <Link
-                href="/annonces"
-                className={`relative px-3 py-[7px] rounded-[9px] text-[13.5px] font-semibold transition-all duration-150 whitespace-nowrap ${
-                  isActiveAnnonces
-                    ? "bg-secondary text-foreground"
-                    : "text-muted-foreground hover:text-foreground hover:bg-secondary"
-                }`}
-              >
-                {t("common.header.annonces")}
-              </Link>
-            )}
-
-            {!authLoading && canNotify && (
-              <Link
-                href="/notifier"
-                className={`px-3 py-[7px] rounded-[9px] text-[13.5px] font-semibold transition-all duration-150 whitespace-nowrap ${
-                  isActiveNotifier
-                    ? "bg-secondary text-foreground"
-                    : "text-muted-foreground hover:text-foreground hover:bg-secondary"
-                }`}
-              >
-                {t("common.header.notify")}
-              </Link>
-            )}
-
-            {!authLoading && admin && (
-              <Link
-                href="/admin"
-                className={`px-3 py-[7px] rounded-[9px] text-[13.5px] font-semibold transition-all duration-150 whitespace-nowrap ${
-                  isActiveAdmin
-                    ? "bg-secondary text-foreground"
-                    : "text-muted-foreground hover:text-foreground hover:bg-secondary"
-                }`}
-              >
-                {t("common.header.admin")}
+            {/* Tâches (lot 7) : pour les membres d'un pôle et les admins. */}
+            {BACK_OFFICE && !authLoading && user && (admin || polesDe(profile).length > 0) && (
+              <Link href="/taches" className={sectionClass(isActiveTaches)}>
+                {t("common.header.taches")}
               </Link>
             )}
           </nav>
@@ -284,13 +255,10 @@ export function Navbar() {
             {!authLoading && user && (
               <DropdownMenu onOpenChange={(open) => { if (open) markAllSeen(); }}>
                 <DropdownMenuTrigger asChild>
-                  <button
-                    aria-label={t("notifications.title")}
-                    className="relative h-[34px] w-[34px] rounded-[9px] border border-border bg-card text-muted-foreground hover:text-foreground hover:border-muted-foreground/50 transition-all duration-150 active:scale-[.96] flex items-center justify-center cursor-pointer"
-                  >
-                    <Bell className="h-[15px] w-[15px]" />
+                  <button aria-label={t("notifications.title")} className={`relative ${ICON_BUTTON}`}>
+                    <Bell className="h-[18px] w-[18px]" />
                     {unreadCount > 0 && (
-                      <span className="absolute -top-1 -right-1 min-w-4 h-4 px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center">
+                      <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center">
                         {unreadCount > 9 ? "9+" : unreadCount}
                       </span>
                     )}
@@ -334,292 +302,110 @@ export function Navbar() {
               </DropdownMenu>
             )}
 
-            {/* Lang toggle */}
+            {/* Langue : partout, pour les sinophones sans compte aussi */}
             <button
               onClick={toggleLanguage}
               aria-label={isZh ? "Changer en français" : "切换为中文"}
-              className="h-[34px] min-w-[34px] px-2 rounded-[9px] border border-border bg-card text-muted-foreground hover:text-foreground hover:border-muted-foreground/50 transition-all duration-150 active:scale-[.96] flex items-center justify-center gap-1.5 text-[12.5px] font-semibold cursor-pointer"
+              className={`${ICON_BUTTON} w-auto min-w-10 px-3 gap-1.5 text-sm font-semibold`}
             >
-              <Globe className="h-3.5 w-3.5" />
-              <span>{isZh ? "中文" : "FR"}</span>
+              <Globe className="h-4 w-4" aria-hidden />
+              <span className={user ? "" : "hidden min-[400px]:inline"}>{isZh ? "中文" : "FR"}</span>
             </button>
 
-            {/* Dark mode toggle */}
+            {/* Thème : sur ordinateur ; sur tactile, un membre le trouve dans « Moi » */}
             <button
               onClick={toggleTheme}
-              aria-label={dark ? "Mode clair" : "Mode sombre"}
-              className="h-[34px] w-[34px] rounded-[9px] border border-border bg-card text-muted-foreground hover:text-foreground hover:border-muted-foreground/50 transition-all duration-150 active:scale-[.96] flex items-center justify-center cursor-pointer"
+              aria-label={dark ? t("common.aria.modeClair") : t("common.aria.modeSombre")}
+              className={`${ICON_BUTTON} ${user ? "hidden lg:flex" : "hidden sm:flex"}`}
             >
-              {dark ? <Sun className="h-[15px] w-[15px]" /> : <Moon className="h-[15px] w-[15px]" />}
+              {dark ? <Sun className="h-[18px] w-[18px]" /> : <Moon className="h-[18px] w-[18px]" />}
             </button>
 
-            {/* Signaler un problème — accès discret */}
-            {!authLoading && user && (
-              <button
-                onClick={() => setReportOpen(true)}
-                title={t("common.report")}
-                aria-label={t("common.report")}
-                className="hidden lg:flex h-[34px] w-[34px] rounded-[9px] border border-border bg-card text-muted-foreground hover:text-foreground hover:border-muted-foreground/50 transition-all duration-150 active:scale-[.96] items-center justify-center cursor-pointer"
-              >
-                <TriangleAlert className="h-[15px] w-[15px]" />
-              </button>
-            )}
-
-            {/* Guide d'utilisation — accès discret */}
-            {!authLoading && user && (
-              <Link
-                href="/guide"
-                title={t("common.header.guide")}
-                aria-label={t("common.header.guide")}
-                className={`hidden lg:flex h-[34px] w-[34px] rounded-[9px] border transition-all duration-150 active:scale-[.96] items-center justify-center ${
-                  pathname.startsWith("/guide")
-                    ? "border-border bg-secondary text-foreground"
-                    : "border-border bg-card text-muted-foreground hover:text-foreground hover:border-muted-foreground/50"
-                }`}
-              >
-                <BookOpen className="h-[15px] w-[15px]" />
-              </Link>
-            )}
-
-            {/* Questionnaire de satisfaction — accès discret */}
-            {!authLoading && user && (
-              <Link
-                href="/questionnaire"
-                title={t("survey.title")}
-                aria-label={t("survey.title")}
-                className={`hidden lg:flex h-[34px] w-[34px] rounded-[9px] border transition-all duration-150 active:scale-[.96] items-center justify-center ${
-                  pathname.startsWith("/questionnaire")
-                    ? "border-border bg-secondary text-foreground"
-                    : "border-border bg-card text-muted-foreground hover:text-foreground hover:border-muted-foreground/50"
-                }`}
-              >
-                <MessageSquareHeart className="h-[15px] w-[15px]" />
-              </Link>
-            )}
-
-            {/* Auth */}
-            {!authLoading && user && (
-              <Link
-                href="/profil"
-                title={t("common.header.profile")}
-                className={`hidden lg:flex h-[34px] w-[34px] rounded-[9px] border transition-all duration-150 active:scale-[.96] items-center justify-center ${
-                  pathname.startsWith("/profil")
-                    ? "border-border bg-secondary text-foreground"
-                    : "border-border bg-card text-muted-foreground hover:text-foreground hover:border-muted-foreground/50"
-                }`}
-              >
-                <UserRound className="h-[15px] w-[15px]" />
-              </Link>
-            )}
+            {/* Compte (ordinateur) ou Connexion */}
             {!authLoading && (
               user ? (
-                <button
-                  onClick={() => logOut()}
-                  className="hidden lg:flex h-[34px] min-w-[34px] px-2 rounded-[9px] border border-border bg-card text-muted-foreground hover:text-foreground hover:border-muted-foreground/50 transition-all duration-150 active:scale-[.96] items-center justify-center gap-1.5 text-[12.5px] font-semibold cursor-pointer"
-                  title={user.email ?? undefined}
-                >
-                  <LogOut className="h-3.5 w-3.5" />
-                  <span className="hidden md:inline">{t("common.header.logout")}</span>
-                </button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      aria-label={t("common.header.account")}
+                      title={displayName}
+                      className="hidden lg:flex h-9 w-9 shrink-0 rounded-full bg-foreground text-background text-sm font-bold items-center justify-center transition-transform duration-150 active:scale-[.94] cursor-pointer"
+                    >
+                      {initial}
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-64">
+                    <DropdownMenuLabel>
+                      <div className="font-semibold truncate">{displayName}</div>
+                      {profile?.planningName && (
+                        <div className="text-xs font-normal text-muted-foreground truncate">{profile.planningName}</div>
+                      )}
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link href="/profil"><UserRound aria-hidden />{t("common.header.profile")}</Link>
+                    </DropdownMenuItem>
+                    {BACK_OFFICE && (
+                      <DropdownMenuItem asChild>
+                        <Link href="/equipes"><Network aria-hidden />{t("equipes.title")}</Link>
+                      </DropdownMenuItem>
+                    )}
+                    <HarmonieMenuItem label={t("harmonie.titre")} />
+                    <DropdownMenuItem asChild>
+                      <Link href="/guide"><BookOpen aria-hidden />{t("common.header.guide")}</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/questionnaire"><MessageSquareHeart aria-hidden />{t("survey.title")}</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onSelect={() => setReportOpen(true)}>
+                      <TriangleAlert aria-hidden />{t("common.report")}
+                    </DropdownMenuItem>
+                    {(canNotify || admin) && <DropdownMenuSeparator />}
+                    {canNotify && (
+                      <DropdownMenuItem asChild>
+                        <Link href="/notifier"><Megaphone aria-hidden />{t("common.header.notify")}</Link>
+                      </DropdownMenuItem>
+                    )}
+                    {admin && (
+                      <DropdownMenuItem asChild>
+                        <Link href="/admin"><ShieldCheck aria-hidden />{t("common.header.admin")}</Link>
+                      </DropdownMenuItem>
+                    )}
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onSelect={() => logOut()} className="text-destructive focus:text-destructive">
+                      <LogOut aria-hidden />{t("common.header.logout")}
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               ) : (
                 <Link
+                  aria-label={t("common.header.login")}
                   href="/login"
-                  className="flex h-[34px] px-3 rounded-[9px] bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-150 active:scale-[.96] items-center justify-center gap-1.5 text-[12.5px] font-semibold"
+                  className="flex h-10 px-4 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-[background-color,transform] duration-150 active:scale-[.96] items-center justify-center gap-1.5 text-sm font-semibold"
                 >
-                  <LogIn className="h-3.5 w-3.5" />
-                  <span className="hidden sm:inline">{t("common.header.login")}</span>
+                  <LogIn className="h-4 w-4" aria-hidden />
+                  <span className="max-[359px]:hidden">{t("common.header.login")}</span>
                 </Link>
               )
             )}
-
-            {/* Mobile hamburger */}
-            <button
-              onClick={() => (isOpen ? closeMenu() : setIsOpen(true))}
-              aria-label="Toggle menu"
-              className="lg:hidden h-[34px] w-[34px] rounded-[9px] border border-border bg-card text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors duration-150 flex items-center justify-center cursor-pointer"
-            >
-              {isOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
-            </button>
           </div>
         </div>
-
-        {/* Mobile Menu Panel */}
-        {(isOpen || isClosing) && (
-          <div
-            className={`absolute top-14 left-0 right-0 border-b border-border bg-background/95 backdrop-blur-md px-4 py-4 space-y-4 flex flex-col lg:hidden z-50 ${
-              isClosing
-                ? "animate-out slide-out-to-top-2 duration-150"
-                : "animate-in slide-in-from-top-2 duration-200"
-            }`}
-          >
-            <div className="flex flex-col gap-1">
-              {!authLoading && user && (
-                <>
-                  <span className="px-3 pt-1 pb-0.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                    {t("common.header.planning")}
-                  </span>
-                  <Link
-                    href="/planning"
-                    className={`pl-5 pr-3 py-2 rounded-lg text-sm font-semibold transition-colors ${
-                      isActivePlanning ? "bg-secondary text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                    }`}
-                  >
-                    {t("common.header.planning")}
-                  </Link>
-                </>
-              )}
-              {!authLoading && user && (
-                <Link
-                  href="/mes-services"
-                  className={`pl-5 pr-3 py-2 rounded-lg text-sm font-semibold transition-colors ${
-                    isActiveMesServices ? "bg-secondary text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                  }`}
-                >
-                  {t("common.header.myServices")}
-                </Link>
-              )}
-              {!authLoading && user && (
-                <Link
-                  href="/annonces"
-                  className={`relative flex items-center gap-2 pl-5 pr-3 py-2 rounded-lg text-sm font-semibold transition-colors ${
-                    isActiveAnnonces ? "bg-secondary text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                  }`}
-                >
-                  {t("common.header.annonces")}
-                </Link>
-              )}
-              {!authLoading && canNotify && (
-                <Link
-                  href="/notifier"
-                  className={`pl-5 pr-3 py-2 rounded-lg text-sm font-semibold transition-colors ${
-                    isActiveNotifier ? "bg-secondary text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                  }`}
-                >
-                  {t("common.header.notify")}
-                </Link>
-              )}
-              {!authLoading && admin && (
-                <Link
-                  href="/admin"
-                  className={`pl-5 pr-3 py-2 rounded-lg text-sm font-semibold transition-colors ${
-                    isActiveAdmin ? "bg-secondary text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                  }`}
-                >
-                  {t("common.header.admin")}
-                </Link>
-              )}
-              <span className="px-3 pt-2 pb-0.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                {t("common.header.louange")}
-              </span>
-              <Link
-                href="/songs"
-                className={`pl-5 pr-3 py-2 rounded-lg text-sm font-semibold transition-colors ${
-                  isActiveSongs ? "bg-secondary text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                }`}
-              >
-                {t("common.header.songs")}
-              </Link>
-              {!authLoading && user && (
-                <Link
-                  href="/setlists"
-                  className={`pl-5 pr-3 py-2 rounded-lg text-sm font-semibold transition-colors ${
-                    isActiveSetlists ? "bg-secondary text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                  }`}
-                >
-                  {t("common.header.setlists")}
-                </Link>
-              )}
-            </div>
-
-            <hr className="border-border/50" />
-
-            <div className="flex items-center justify-between px-3">
-              <span className="text-xs text-muted-foreground font-medium">Language / 语言</span>
-              <button
-                onClick={toggleLanguage}
-                className="text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-border bg-background hover:bg-muted text-muted-foreground hover:text-foreground transition-all duration-200 flex items-center gap-1 cursor-pointer"
-              >
-                <Globe className="h-3.5 w-3.5" />
-                <span>{isZh ? "中文" : "Français"}</span>
-              </button>
-            </div>
-
-            <div className="flex items-center justify-between px-3">
-              <span className="text-xs text-muted-foreground font-medium">Theme / 主题</span>
-              <button
-                onClick={toggleTheme}
-                className="p-2 rounded-lg border border-border bg-background hover:bg-muted text-muted-foreground hover:text-foreground transition-all duration-200 cursor-pointer"
-              >
-                {dark ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
-              </button>
-            </div>
-
-            <hr className="border-border/50" />
-
-            <div className="px-1 space-y-2">
-              {!authLoading && (
-                user ? (
-                  <>
-                    <button
-                      onClick={() => { closeMenu(); setReportOpen(true); }}
-                      className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg border border-border bg-background hover:bg-muted text-foreground text-sm font-semibold transition-all duration-200 cursor-pointer"
-                    >
-                      <TriangleAlert className="h-4 w-4" />
-                      {t("common.report")}
-                    </button>
-                    <Link
-                      href="/guide"
-                      className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg border border-border bg-background hover:bg-muted text-foreground text-sm font-semibold transition-all duration-200"
-                    >
-                      <BookOpen className="h-4 w-4" />
-                      {t("common.header.guide")}
-                    </Link>
-                    <Link
-                      href="/questionnaire"
-                      className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg border border-border bg-background hover:bg-muted text-foreground text-sm font-semibold transition-all duration-200"
-                    >
-                      <MessageSquareHeart className="h-4 w-4" />
-                      {t("survey.title")}
-                    </Link>
-                    <Link
-                      href="/profil"
-                      className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg border border-border bg-background hover:bg-muted text-foreground text-sm font-semibold transition-all duration-200"
-                    >
-                      <UserRound className="h-4 w-4" />
-                      {t("common.header.profile")}
-                    </Link>
-                    <button
-                      onClick={() => logOut()}
-                      className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg border border-destructive/20 bg-destructive/5 hover:bg-destructive/10 text-destructive text-sm font-semibold transition-all duration-200 cursor-pointer"
-                    >
-                      <LogOut className="h-4 w-4" />
-                      {t("common.header.logout")}
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <Link
-                      href="/login"
-                      className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg border border-border bg-background hover:bg-muted text-foreground text-sm font-semibold transition-all duration-200"
-                    >
-                      <LogIn className="h-4 w-4" />
-                      {t("common.header.login")}
-                    </Link>
-                    <Link
-                      href="/signup"
-                      className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-all duration-200"
-                    >
-                      {t("common.header.signup")}
-                    </Link>
-                  </>
-                )
-              )}
-            </div>
-          </div>
-        )}
       </header>
 
       <ReportDialog open={reportOpen} onClose={() => setReportOpen(false)} kind="site" />
     </>
+  );
+}
+
+/** Entrée « Harmonie » du menu du compte (ordinateur). Rendue seulement une
+ *  fois le menu ouvert, donc l'accès (qui lit les plannings pour trouver
+ *  l'instrument) n'est calculé qu'à ce moment-là, jamais à chaque page. */
+function HarmonieMenuItem({ label }: { label: string }) {
+  const acces = useAccesHarmonie();
+  if (acces.chargement || !acces.peut) return null;
+  return (
+    <DropdownMenuItem asChild>
+      <Link href="/harmonie"><Sparkles aria-hidden />{label}</Link>
+    </DropdownMenuItem>
   );
 }

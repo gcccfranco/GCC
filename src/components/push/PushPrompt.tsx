@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { BellRing, X } from "lucide-react";
 import { useProfile } from "@/lib/firebase/users";
 import {
@@ -17,6 +18,7 @@ const DISMISS_KEY = "pushPromptDismissed";
  *  (serviceRoles non vide) mais pas encore abonnées. Push uniquement → c'est le
  *  levier d'adoption. Rejetable (localStorage). Gère la contrainte iOS (PWA). */
 export function PushPrompt() {
+  const { t } = useTranslation();
   const { user, profile } = useProfile();
   const [show, setShow] = useState(false);
   const [needsInstall, setNeedsInstall] = useState(false);
@@ -59,7 +61,7 @@ export function PushPrompt() {
       await subscribeToPush(user.uid);
       setShow(false);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Une erreur est survenue");
+      setError(e instanceof Error ? e.message : t("push.error"));
     } finally {
       setBusy(false);
     }
@@ -69,24 +71,22 @@ export function PushPrompt() {
     <div className="relative rounded-xl border border-primary/30 bg-primary/5 px-4 py-3">
       <button
         onClick={dismiss}
-        aria-label="Fermer"
+        aria-label={t("signalement.fermer")}
         className="absolute right-2 top-2 text-muted-foreground hover:text-foreground"
       >
         <X className="h-4 w-4" />
       </button>
       <div className="flex items-start gap-3 pr-5">
-        <BellRing className="h-5 w-5 text-primary mt-0.5 shrink-0" />
+        <BellRing className="h-5 w-5 text-muted-foreground mt-0.5 shrink-0" />
         <div className="flex-1">
-          <p className="text-sm font-semibold text-foreground">Active les rappels de service</p>
+          <p className="text-sm font-semibold text-foreground">{t("push.promptTitle")}</p>
           {needsInstall ? (
             <p className="text-xs text-muted-foreground mt-0.5">
-              Sur iPhone/iPad : ajoute d&apos;abord le site à l&apos;écran d&apos;accueil (Partager →
-              « Sur l&apos;écran d&apos;accueil »), puis rouvre-le depuis l&apos;icône pour activer les
-              notifications.
+              {t("push.iosInstall")}
             </p>
           ) : (
             <p className="text-xs text-muted-foreground mt-0.5">
-              Reçois un rappel avant chaque service et une alerte quand une setlist est prête.
+              {t("push.promptText")}
             </p>
           )}
           {error && <p className="text-xs text-destructive mt-1">{error}</p>}
@@ -94,9 +94,9 @@ export function PushPrompt() {
             <button
               onClick={enable}
               disabled={busy}
-              className="mt-2 h-8 px-3 rounded-[8px] bg-primary text-primary-foreground text-[12.5px] font-semibold disabled:opacity-50"
+              className="mt-2 h-8 px-3 rounded-full bg-primary text-primary-foreground text-sm font-semibold disabled:opacity-50"
             >
-              {busy ? "…" : "Activer les notifications"}
+              {busy ? "…" : t("accueil.notifs.activer")}
             </button>
           )}
         </div>

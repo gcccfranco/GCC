@@ -1,5 +1,6 @@
 {
   "common": {
+    "noAccess": "此页面仅限乐手查看。",
     "header": {
       "title": "GCC 敬拜",
       "songs": "诗歌",
@@ -15,7 +16,11 @@
       "signup": "注册账号",
       "guide": "使用指南",
       "notify": "通知",
-      "admin": "管理"
+      "admin": "管理",
+      "evenements": "活动",
+      "moi": "我",
+      "account": "账户",
+      "taches": "任务"
     },
     "buttons": {
       "reset": "重置",
@@ -52,6 +57,14 @@
       "title": "页面不存在",
       "body": "该页面不存在或已被移动。",
       "cta": "查看诗歌"
+    },
+    "aria": {
+      "navigationPrincipale": "主导航",
+      "sections": "栏目",
+      "modeClair": "浅色模式",
+      "modeSombre": "深色模式",
+      "indexAlphabetique": "字母索引",
+      "allerA": "跳到 {{lettre}}"
     }
   },
   "songs": {
@@ -78,7 +91,10 @@
       "report": "报告"
     },
     "view": {
-      "jianpuWarning": "简谱模式下无法修改歌谱结构（诗歌将完整显示）。"
+      "jianpuWarning": "简谱模式下无法修改歌谱结构（诗歌将完整显示）。",
+      "structure": "结构",
+      "firstTime": "第1次",
+      "nthTime": "第{{n}}次"
     },
     "sections": {
       "verse": "主歌",
@@ -137,7 +153,20 @@
       "searchPlaceholder": "按标题、带领人或日期搜索…",
       "myServicesFilter": "我的服侍",
       "mainMeetings": "主要聚会",
-      "groupsLabel": "团契小组"
+      "groupsLabel": "团契小组",
+      "emptyUpcomingHint": "主领准备好歌单后，你服侍的歌单会显示在这里。",
+      "select": "选择",
+      "selectCancel": "取消",
+      "deleteSelected": "删除（{{n}}）",
+      "deleteDone_one": "已删除 {{count}} 个歌单。",
+      "deleteDone_other": "已删除 {{count}} 个歌单。",
+      "deleteFailed_one": "{{titles}} 无法删除。",
+      "deleteFailed_other": "{{titles}} 无法删除。",
+      "deleteSelectedTitle_one": "删除这个歌单？",
+      "deleteSelectedTitle_other": "删除 {{count}} 个歌单？",
+      "deleteSelectedBody": "此操作无法撤销。",
+      "deleteMore_one": "……还有 {{count}} 个",
+      "deleteMore_other": "……还有 {{count}} 个"
     },
     "detail": {
       "backToAll": "←",
@@ -156,6 +185,25 @@
       "back": "← 返回",
       "leaderLabel": "主席：",
       "loadingCharts": "正在加载歌谱…",
+      "copyLyrics": "复制歌词",
+      "copyLyricsDone": "已复制",
+      "outline": "流程",
+      "presentation": "幻灯片",
+      "presentationAdd": "添加幻灯片链接",
+      "presentationChange": "更改链接",
+      "presentationLabel": "幻灯片链接",
+      "presentationSave": "保存",
+      "presentationRemove": "移除链接",
+      "presentationInvalid": "链接必须以 https:// 开头",
+      "presentationError": "保存失败，请重试。",
+      "presentationNotified": "已通知司会。",
+      "presentationUnlinked": "无人收到通知：司会的名字未关联任何账号。",
+      "layout": {
+        "label": "显示",
+        "played": "演奏顺序",
+        "unique": "每段只显示一次",
+        "structure": "仅显示结构"
+      },
       "performanceMode": "敬拜模式",
       "duplicate": "复制",
       "duplicateCopySuffix": "（副本）",
@@ -202,6 +250,13 @@
       "notesPlaceholder": "主题、背景等…",
       "searchSongsPlaceholder": "搜索并添加诗歌…",
       "songOriginalKey": "{{key}} (原调)",
+      "publish": "发布",
+      "done": "完成",
+      "autoSaving": "正在保存…",
+      "autoSaved": "已保存",
+      "draftSaved": "草稿已保存",
+      "notSaved": "未保存：{{reason}}",
+      "songKeyLabel": "{{title}} 的调",
       "allSongsAdded": "所有诗歌已添加完毕。",
       "emptySongs": "尚未添加诗歌 — 请使用上方搜索框添加。",
       "errorTitle": "错误",
@@ -209,11 +264,7 @@
       "draftSaving": "正在保存…",
       "publishButton": "发布歌单",
       "publishing": "正在发布…",
-      "createButton": "创建歌单",
-      "creating": "正在创建…",
-      "saveButton": "保存修改",
       "saveDraftButton": "保存草稿",
-      "saving": "正在保存…",
       "errorDefault": "创建歌单失败，请重试。",
       "errorSaveDefault": "保存歌单失败，请重试。",
       "structure": "结构",
@@ -230,6 +281,18 @@
       "unfuseButton": "拆分",
       "fusionExpand": "查看诗歌",
       "mixedStructureLabel": "混合",
+      "lastPhrase": {
+        "add": "最后一句",
+        "title": "最后一句（Dp）",
+        "hint": "把某一段的最后几行连同和弦，作为一个「Dp」步骤加到结构末尾。",
+        "section": "段落",
+        "lines": "行数",
+        "nLines_one": "{{count}} 行",
+        "nLines_other": "{{count}} 行",
+        "preview": "预览",
+        "empty": "这一段没有可唱的歌词行。",
+        "confirm": "添加"
+      },
       "mixedStructureToggle": "混合各诗歌的段落顺序",
       "mixedStructureTitle": "混合结构",
       "mixedStructureReset": "重置",
@@ -241,7 +304,53 @@
       "transitionLabel": "过渡",
       "keyChangeHint": "该段落将转调显示为所选调（再次点击可取消）。",
       "jianpuSheet": "简谱",
-      "jianpuSheetHint": "以简谱演奏这首歌"
+      "jianpuSheetHint": "以简谱演奏这首歌",
+      "transitionPlaceholder": "过渡内容…"
+    },
+    "history": {
+      "heading": "修改记录",
+      "modifiedBy": "{{name}} {{when}}修改",
+      "createdBy": "{{name}} {{when}}创建",
+      "someone": "有人",
+      "more": "查看更多",
+      "all": "查看全部",
+      "created": "创建了歌单",
+      "notes": "修改了歌单备注",
+      "order": "调整了歌曲顺序",
+      "transitions": "修改了歌曲之间的过渡",
+      "title": "歌单名称：{{from}} → {{to}}",
+      "leader": "主席：{{from}} → {{to}}",
+      "category": "类型/聚会：{{from}} → {{to}}",
+      "date": "日期：{{from}} → {{to}}",
+      "private": "设为私密",
+      "shared": "设为公开",
+      "songAdded": "添加了 {{song}}",
+      "songRemoved": "移除了 {{song}}",
+      "fused": "合并了 {{songs}}",
+      "unfused": "拆分了 {{songs}}",
+      "key": "{{song}} 的调：{{from}} → {{to}}",
+      "structure": "修改了 {{song}} 的结构",
+      "sectionNotes": "修改了 {{song}} 的段落备注",
+      "sectionTransitions": "修改了 {{song}} 的段落过渡",
+      "nuances": "修改了 {{song}} 的强弱",
+      "sectionKeys": "修改了 {{song}} 的升调",
+      "songNote": "修改了 {{song}} 的备注",
+      "adapted": "修改了 {{song}} 的改编（和弦或歌词）",
+      "lastPhrase": "已为 {{song}} 添加最后一句",
+      "jianpuOn": "{{song}} 改用简谱",
+      "jianpuOff": "{{song}} 改用歌词",
+      "moment": {
+        "matin": "上午",
+        "soir": "晚上"
+      },
+      "before": "之前",
+      "after": "之后",
+      "removed": "移除",
+      "added": "新增",
+      "moved": "移动",
+      "showBeforeAfter": "查看前后对比",
+      "hideBeforeAfter": "收起前后对比",
+      "songs": "歌单的歌曲"
     },
     "contentEdit": {
       "toggle": "调整",
@@ -277,6 +386,23 @@
       "conflict": "敬拜单已被他人修改——请检查后重试。",
       "emptyColumn": "空列",
       "modifiedHidden": "简谱已覆盖修改内容"
+    },
+    "myVersion": {
+      "toggle": "我的版本",
+      "hint": "我的版本：点击一行即可修改和弦或歌词。只有你自己能看到这些修改，且仅限这份敬拜单。",
+      "badge": "我的版本",
+      "badgeHidden": "简谱已覆盖我的版本",
+      "revert": "恢复主领版本",
+      "revertConfirm": "你对这首诗歌的版本将会丢失。主领的敬拜单不受影响。",
+      "sections": "段落",
+      "sectionsHint": "选择你要看的段落及其顺序，仅对你自己有效。结构条和列表仍显示主领的结构。",
+      "reset": "重置",
+      "save": "保存",
+      "share": "分享我的版本",
+      "version": "版本",
+      "presidence": "主领",
+      "me": "我",
+      "badgeOther": "{{name}} 的版本"
     }
   },
   "customize": {
@@ -284,6 +410,8 @@
       "title": "个性化设置",
       "key": "调性升降",
       "keyOriginal": "(原调)",
+      "keyRecommended": "(推荐)",
+      "keyBackToRecommended": "回到推荐调",
       "keyShift_one": "{{count}} 个半音",
       "keyShift_other": "{{count}} 个半音",
       "display": "显示设置",
@@ -313,6 +441,19 @@
     "songList": "歌曲列表",
     "settings": "设置",
     "view": "视图",
+    "rolePrompt": {
+      "title": "你的角色是？",
+      "description": "显示内容会根据你的角色调整，之后可在“设置”中更改。",
+      "none": "无",
+      "hints": {
+        "pianiste": "歌词和和弦",
+        "guitariste": "歌词、和弦和变调夹",
+        "presidence": "歌词，不显示和弦",
+        "choriste": "歌词，不显示和弦",
+        "batteur": "大字显示歌曲结构",
+        "none": "我自己设置"
+      }
+    },
     "roles": {
       "pianiste": "钢琴手",
       "guitariste": "吉他手",
@@ -323,6 +464,10 @@
     "chords": "和弦",
     "capo": "变调夹",
     "capoBadge": "变调夹 {{n}} 品",
+    "key": "调",
+    "personalKey": "歌单：{{key}}",
+    "personalKeyHint": "本设备：{{key}}，歌单：{{setlistKey}}",
+    "personalKeyReset": "改回 {{key}}",
     "capoLower": "降低变调夹",
     "capoRaise": "升高变调夹",
     "transitions": "过渡提示",
@@ -369,7 +514,11 @@
     "setlistUpdated": "歌单已更新",
     "manual": "通知",
     "reminder": "提醒",
-    "broadcast": "群发通知"
+    "broadcast": "群发通知",
+    "presentation": "幻灯片已就绪",
+    "scene": "舞台",
+    "evenement": "活动",
+    "tache": "任务"
   },
   "profile": {
     "title": "我的资料",
@@ -502,7 +651,7 @@
         "for": "所有人可查看 · 按权限可创建",
         "body": "歌单汇集某次聚会或崇拜的诗歌。你会看到你的资料有权访问的服事的歌单。",
         "points": [
-          "打开一个歌单可浏览诗歌、进入**敬拜模式**，或下载**单个 PDF**（封面页＋所有诗歌依次排列）。",
+          "打开一个歌单可浏览诗歌、进入**敬拜模式**，或下载 **PDF**（见「乐谱视图与一览结构」）。",
           "每首诗歌都保留自己的调、模式（标准／简谱）以及本次崇拜的备注。",
           "「**复制**」可生成你自己的副本；「**分享**」可复制其链接。",
           "拥有**音乐人／主领**（创建和修改）或**领唱**（创建）权限时，你可编排你所服事的歌单——见下方「编排歌单」。"
@@ -535,23 +684,12 @@
           "不同颜色用于区分服事类型。"
         ]
       },
-      "annonces": {
-        "title": "公告",
-        "for": "所有人可查看 · 按权限可发布",
-        "body": "「**公告**」标签汇集团队信息：排练、通知、小组或主日学班级的信息。",
-        "points": [
-          "置顶公告会保留在最上方；链接可点击。",
-          "公告按版块分类（崇拜、小组、主日学）。",
-          "若负责人授予你某个版块的权限，你便可在该版块发布、修改或删除公告。"
-        ],
-        "tip": "新公告也可能触发通知（见下文）。"
-      },
       "notifications": {
         "title": "通知与提醒",
         "body": "顶部的**铃铛**会显示最新动态。在手机上，即使关闭网站，你也可以接收**推送通知**。",
         "points": [
           "在你的**个人资料**中，用「通知」开关启用它们。",
-          "三种类型，可分别启用：**服事提醒**（提前 7 天、3 天和 1 天，以及 Campus 排练）、**歌单就绪**和**公告**。",
+          "四种类型，可分别启用：**服事提醒**（提前 7 天、3 天和 1 天，以及 Campus 排练）、**歌单就绪**、**活动**和**任务**。",
           "在 iPhone 上，请先把网站安装到主屏幕（PWA），才能启用推送。"
         ],
         "tip": "负责人也可以向你发送定向通知（见「角色与负责人」）。"
@@ -586,6 +724,87 @@
           "中文 / FR 按钮可切换整个界面的语言。",
           "月亮／太阳按钮可在浅色和深色主题之间切换。",
           "资料一旦完善，只有负责人可以修改：如有错误请告知他们。"
+        ]
+      },
+      "evenements": {
+        "title": "活动",
+        "for": "所有人可查看 · 按权限可创建",
+        "body": "「**活动**」标签汇集教会日历：外出、特别聚会和通知。未登录时可看到全教会的活动；登录后还能看到你所在小组和部门的活动。",
+        "points": [
+          "打开一个活动可查看地点、时间和剩余名额，然后点「**报名**」，可带上同行的人。",
+          "置顶的**通知**显示在日历最上方，取代以前的公告。",
+          "拥有某个小组的公告权限，或属于某个部门时，你可以为小组**创建**活动，或创建**部门会议**。",
+          "你报名的活动会在前一天收到提醒。"
+        ],
+        "tip": "组织者可在活动页面查看报名名单和**二维码**。"
+      },
+      "scene": {
+        "title": "舞台安排",
+        "for": "登录成员 · 演出顺序由统筹负责",
+        "body": "大型节日（圣诞节）前，「**活动**」中会出现舞台安排标签，用来预约主日的舞台排练并准备演出顺序。",
+        "points": [
+          "**排练**：选择主日、时间、内容和参与者；与已有时段重叠会被拒绝。",
+          "你可以修改或删除自己的时段；统筹可以调整所有时段。",
+          "**节目单**：当天的演出顺序，由统筹维护。",
+          "你的排练会和服侍一起提醒。"
+        ]
+      },
+      "partitions": {
+        "title": "乐谱视图与一览结构",
+        "for": "乐手、和声、鼓手",
+        "body": "在歌单中，「**乐谱**」依次显示所有诗歌。每首诗歌上方有一条**结构条**：缩写的结构（I、C1、R、P…）、每一步下方的力度，以及编号的备注。",
+        "points": [
+          "「**显示**」菜单可选择**演奏顺序**、**每段一次**（默认）或**仅结构**（适合鼓手）。",
+          "主领可在编辑器中加入**最后一句**（Dp），它会像真正的段落一样显示。",
+          "**PDF**：可选择**经典**、**按段落着色**或**紧凑**（结构条加每段一次）。"
+        ],
+        "tip": "显示方式会保存在你的设备上。"
+      },
+      "harmonie": {
+        "title": "和声",
+        "for": "钢琴手和吉他手",
+        "body": "一个**重新配和声**的灵感目录：代理和弦、色彩音、低音线、过门、结尾、转调……每张卡片说明改动是什么、为什么好听、什么时候别用，以及钢琴和吉他怎么弹。",
+        "points": [
+          "**从这里开始**：十张卡片，由浅入深。",
+          "按**感觉**（史诗、柔和……）、按歌曲**段落**、按难度筛选。",
+          "在一首歌里，**和声灵感**（⋯ 菜单）只提示适合这首歌的做法，并写出实际和弦。",
+          "不合适？**不适合这首歌**会为所有人移除该建议。",
+          "也可以添加自己的**灵感**，团队都能看到。"
+        ],
+        "tip": "建议只根据和弦计算，网站听不到旋律，所以标了「请弹奏确认」。"
+      },
+      "maVersion": {
+        "title": "我的版本",
+        "for": "所有能看到歌单的人",
+        "body": "在乐谱视图中，你可以为这个歌单做一首诗歌的**我的版本**：选择段落和顺序、修改和弦与歌词。别人看到的不会改变。",
+        "points": [
+          "「**段落**」：保留并排列你需要的段落。",
+          "点一行即可修改它的和弦或歌词。",
+          "「**分享我的版本**」会以你的名字提供给其他人；每个人自己选择跟随哪个版本。",
+          "敬拜模式会跟随你选择的版本。"
+        ],
+        "tip": "结构条、PDF 和演示链接仍然使用主领的版本。"
+      },
+      "taches": {
+        "title": "部门任务",
+        "for": "美工、媒体、组织、敬拜、活动部门的成员",
+        "body": "每个部门在「**任务**」中跟进自己的任务：谁做什么、什么时候完成。你只能看到自己部门的任务。",
+        "points": [
+          "完成后勾选任务；如果任务有设置，会通知下一个部门或主日的音控/投影。",
+          "任务可以**每周**、**每两周**或**每月**重复。",
+          "截止前 3 天和 1 天会收到提醒，未完成时第二天还会再提醒一次。",
+          "**部门会议**在「活动」中创建。"
+        ],
+        "tip": "「我」中的「我的任务」显示你还要做的事。"
+      },
+      "moi": {
+        "title": "「我」和设置",
+        "for": "所有成员",
+        "body": "「**我**」标签汇集与你有关的内容：你的服侍、任务、个人资料、本指南和设置。",
+        "points": [
+          "**语言**：法语或中文；提醒会以你选择的语言发送。",
+          "**主题**：浅色或深色。",
+          "「**报告问题**」会发消息给管理员。"
         ]
       }
     },
@@ -644,11 +863,6 @@
           "tab": "我的服事标签"
         }
       },
-      "annonces": {
-        "labels": {
-          "tab": "公告标签"
-        }
-      },
       "notifications": {
         "labels": {
           "toggle": "通知开关"
@@ -664,7 +878,8 @@
           "planningName": "服事名称"
         }
       }
-    }
+    },
+    "commentCaMarche": "如何使用？"
   },
   "annonces": {
     "title": "公告",
@@ -727,11 +942,13 @@
       "accueil": "首页",
       "culte": "法语崇拜",
       "table": "圣餐预备",
+      "petitDej": "早餐",
       "groupes": "团契",
       "edd": "主日学",
       "campus": "夏令营",
       "intergroupe": "联合聚会",
-      "interfranco": "法语团契聚会"
+      "interfranco": "法语团契聚会",
+      "scene": "舞台"
     },
     "roles": {
       "date": "日期",
@@ -748,12 +965,20 @@
       "ppt": "投影",
       "orateur": "讲员",
       "trad": "翻译",
+      "sainteCene": "圣餐",
       "musiciens": "乐手",
       "suppleant": "替补",
       "cajon": "箱鼓",
       "cajonBatt": "箱鼓/鼓",
       "theme": "主题",
-      "pianiste": "钢琴"
+      "pianiste": "钢琴",
+      "equipe": "团队",
+      "petitDej": "早餐",
+      "chant1": "诗歌 1",
+      "chant2": "诗歌 2",
+      "chant3": "诗歌 3",
+      "chant4": "诗歌 4",
+      "repetition": "排练"
     },
     "table": {
       "myName": "我的名字…",
@@ -761,6 +986,31 @@
       "noData": "暂无数据",
       "thisWeek": "本周",
       "clear": "清除"
+    },
+    "grille": {
+      "modifier": "修改",
+      "termine": "完成",
+      "enregistre": "已保存",
+      "plusTot": "查看更早",
+      "plusTard": "查看更晚",
+      "aVenir": "服事表待定",
+      "periode": "{{du}}至{{au}}",
+      "nonPublie": "尚未发布",
+      "pasDispo": "某个主日无法服事？请联系负责排表的同工。",
+      "droitRetire": "服务器拒绝保存：你已没有修改此服事表的权限，或规则尚未发布。",
+      "horsLigne": "无法修改：网络不可用。",
+      "recharger": "重新加载",
+      "historique": "修改记录",
+      "remplace": "{{auteur}} 把 {{date}} 的{{colonne}}从 {{avant}} 改为 {{apres}}",
+      "ajoute": "{{auteur}} 把 {{apres}} 安排在 {{date}} 的{{colonne}}",
+      "efface": "{{auteur}} 清空了 {{date}} 的{{colonne}}",
+      "exporter": "导出 CSV",
+      "exporterPdf": "导出 PDF",
+      "importe": "{{auteur}} 从 Google 表格导入了 {{count}} 个主日",
+      "periodeAnnee": "{{annee}} 年"
+    },
+    "horaires": {
+      "culte": "主日 10:30"
     },
     "pages": {
       "culte": "法语崇拜",
@@ -797,11 +1047,87 @@
       "presChoristes": "司会与和声",
       "musiciens": "乐手",
       "chants": "诗歌",
-      "chantN": "诗歌 {{n}}"
+      "chantN": "诗歌 {{n}}",
+      "grille": "表格"
     },
     "verse": {
       "text": "「无论做什么，都要从心里做，像是给主做的，不是给人做的，因为你们知道从主那里必得着基业为赏赐。你们所侍奉的乃是主基督。」",
       "ref": "— 歌罗西书 3:23-24"
+    },
+    "programmes": {
+      "newTitle": "新建节目",
+      "editTitle": "修改「{{nom}}」",
+      "nom": "名称",
+      "nomHint": "简短：这是页签的名称（如「圣诞」）。",
+      "jourJ": "正日",
+      "debut": "开放预约日期",
+      "debutHint": "从此日期起的主日可预约，直到正日前的最后一个主日。",
+      "create": "创建节目",
+      "save": "保存",
+      "cancel": "取消",
+      "edit": "修改",
+      "delete": "删除",
+      "confirmDelete": "删除「{{nom}}」及其所有排练时段？",
+      "show": "显示",
+      "hide": "隐藏",
+      "shown": "已显示",
+      "hidden": "已隐藏",
+      "archived": "已归档",
+      "waiting": "等待中",
+      "jourJLabel": "正日：{{date}}",
+      "reservations": "预约：{{from}} 至 {{to}}",
+      "error": "无法保存。请检查网络连接及 Firestore 规则是否已发布。"
+    },
+    "programme": {
+      "notFound": "找不到该节目。",
+      "entrainements": "排练",
+      "programmeTab": "{{nom}}节目",
+      "ordreTitle": "正日出场顺序",
+      "sunday": "{{date}} 主日",
+      "reserver": "预约时段",
+      "sceneLibre": "舞台空闲",
+      "showPast": "查看过去的主日（{{n}}）",
+      "hidePast": "隐藏过去的主日",
+      "newTitle": "新时段",
+      "editTitle": "修改时段",
+      "dimanche": "主日",
+      "debut": "开始",
+      "fin": "结束",
+      "quoi": "内容",
+      "qui": "参与者",
+      "note": "备注",
+      "noteHint": "可选：音响、器材、说明…",
+      "save": "保存",
+      "cancel": "取消",
+      "edit": "修改",
+      "remove": "删除",
+      "confirmRemove": "删除此时段？",
+      "overlap": "此时段与 {{slot}} 重叠。请选择其他时间。",
+      "conflict": "时间重叠",
+      "invalidTime": "结束时间须晚于开始时间，以一刻钟为单位。",
+      "needQui": "请至少选择一个团体。",
+      "error": "无法保存。请检查网络连接后重试。",
+      "noPassage": "暂无出场安排。",
+      "addPassage": "添加节目",
+      "newPassage": "新节目",
+      "editPassage": "修改节目",
+      "titre": "标题",
+      "titreHint": "诗歌、短剧、舞蹈的名称…",
+      "confirmRemovePassage": "删除此节目？",
+      "move": "移动"
+    },
+    "scene": {
+      "noCurrent": "暂无进行中的节目。",
+      "others": "已隐藏的节目",
+      "editProgramme": "修改节目信息",
+      "newProgramme": "新建节目",
+      "passed": "「{{nom}}」已经过去了——感谢大家！",
+      "passedHint": "舞台预约和节目单已关闭。",
+      "nextSoon": "下一个节目：{{nom}}，{{date}} 起可预约。",
+      "willArchive": "此节目将于 {{date}} 归档。",
+      "autoChosen": "自动选择：自 {{date}} 起开放预约。",
+      "viewOrdre": "查看出场顺序",
+      "hideOrdre": "隐藏出场顺序"
     }
   },
   "survey": {
@@ -1206,5 +1532,539 @@
         "placeholder": "什么都欢迎。"
       }
     }
+  },
+  "evenements": {
+    "title": "活动",
+    "tabs": {
+      "calendrier": "日历"
+    },
+    "types": {
+      "sport": "运动",
+      "loisir": "休闲",
+      "musique": "音乐",
+      "eglise": "教会",
+      "info": "通知"
+    },
+    "pourEglise": "全教会",
+    "infos": "置顶",
+    "none": "暂无即将举行的活动。",
+    "past": "过去的活动",
+    "hidePast": "隐藏过去的活动",
+    "places_one": "剩余 {{count}} 个名额",
+    "places_other": "剩余 {{count}} 个名额",
+    "complet": "已满",
+    "closed": "报名已截止",
+    "inscription": "报名",
+    "organisePar": "组织者：{{nom}}",
+    "contact": "联系：{{contact}}",
+    "notFound": "找不到该活动。",
+    "loginToRegister": "登录后即可报名。",
+    "login": "登录",
+    "loginHint": "教会成员？登录后可查看所在小组的活动并报名。",
+    "du": "{{from}} 至 {{to}}",
+    "nouveau": "新建活动",
+    "modifier": "修改",
+    "dupliquer": "复制",
+    "supprimer": "删除",
+    "confirmDelete": "删除「{{titre}}」？报名信息将丢失。",
+    "reserved": "此页面仅限协调组和各小组负责人。",
+    "form": {
+      "titre": "活动名称",
+      "type": "类别",
+      "pour": "对象",
+      "date": "日期",
+      "heure": "时间",
+      "heureFin": "活动结束（时间）",
+      "dateFin": "活动结束（日期）",
+      "lieu": "地点",
+      "description": "说明",
+      "places": "名额",
+      "placesHint": "留空表示不限",
+      "ouverte": "开放报名",
+      "sansCompte": "允许无账号者报名",
+      "epingle": "置顶",
+      "expiresAt": "显示至",
+      "contact": "负责人",
+      "contactHint": "姓名、电话…",
+      "prevenir": "通知成员",
+      "addLink": "添加链接",
+      "lienLabel": "名称",
+      "lienUrl": "网址",
+      "removeLink": "删除链接",
+      "addImage": "添加图片",
+      "removeImage": "删除图片",
+      "create": "创建活动",
+      "save": "保存",
+      "cancel": "取消",
+      "errorTitre": "标题为必填项。",
+      "errorDate": "日期为必填项。",
+      "errorDateFin": "结束日期须晚于开始日期。",
+      "errorSave": "无法保存。请检查网络连接及 Firestore 规则是否已发布。",
+      "plusOptions": "更多选项",
+      "banniere": "添加横幅图片",
+      "inscriptions": "报名",
+      "mode": {
+        "auto": "自动",
+        "ouvertes": "开放",
+        "fermees": "关闭"
+      },
+      "modeAide": {
+        "ouvertes": "始终开放，直到名额满。",
+        "fermees": "关闭：任何人都无法报名。"
+      },
+      "insDebut": "报名开始",
+      "insDebutHeure": "报名开始时间",
+      "insDebutAide": "留空：发布后即可报名",
+      "insFin": "报名截止",
+      "insFinHeure": "报名截止时间",
+      "insFinAide": "留空：活动开始时截止",
+      "errorInsFin": "报名截止时间早于开始时间。",
+      "lienExterne": "外部报名链接",
+      "lienExterneAide": "如 Google Forms、Sheets…… 应用不再统计名额和报名人数，也不会在前一天发送提醒。二维码仍然指向本活动页面。",
+      "lienExterneOccupe_one": "本活动在应用内已有 {{count}} 人报名。请先在报名面板中移除，再改用外部表单。",
+      "lienExterneOccupe_other": "本活动在应用内已有 {{count}} 人报名。请先在报名面板中移除，再改用外部表单。",
+      "placesExterne": "报名在外部表单进行：这些设置不适用。"
+    },
+    "jeParticipe": "我要参加",
+    "tuParticipes": "你已报名",
+    "meDesinscrire": "取消报名",
+    "invitesLabel": "同行人数",
+    "invites_one": "{{count}} 位同行",
+    "invites_other": "{{count}} 位同行",
+    "tonNom": "你的姓名",
+    "inscriptionEnregistree": "报名成功，到时见！",
+    "inscrits": "已报名",
+    "retirer": "移除",
+    "confirmRetirer": "移除 {{nom}} 的报名？",
+    "fermerInscriptions": "截止报名",
+    "ouvrirInscriptions": "开放报名",
+    "sansCompteTag": "无账号",
+    "inscriptionError": "报名失败，请重试。",
+    "qr": "二维码",
+    "qrAlt": "{{label}} 的二维码",
+    "inscrit": "已报名",
+    "sinscrire": "报名",
+    "plusInfos": "详情联系：{{nom}}",
+    "dejaInscrits_one": "已有 {{count}} 人报名",
+    "dejaInscrits_other": "已有 {{count}} 人报名",
+    "confirmer": "确认",
+    "annuler": "取消",
+    "panneauInscriptions": "报名",
+    "ouvertes": "开放",
+    "fermees": "已关闭",
+    "voirInscrits": "查看报名（{{count}}）",
+    "masquerInscrits": "收起报名名单",
+    "lienFiche": "活动链接",
+    "pourPole": "{{pole}}部门",
+    "noneHint": "点「新建活动」添加下一个活动。",
+    "bientot": "即将开放",
+    "reglageInscriptions": "报名",
+    "aHeure": "{{jour}} {{heure}}",
+    "raison": {
+      "pasEncore": "{{quand}} 开始报名",
+      "terminee": "报名已于 {{quand}} 截止",
+      "commencee": "报名已关闭：活动已开始",
+      "fermee": "组织者已关闭报名",
+      "externe": "通过外部表单报名"
+    },
+    "lienInscription": "报名链接",
+    "externe": "外部表单",
+    "taches": {
+      "titre": "任务",
+      "vide": "此活动还没有任务。"
+    },
+    "copierTaches_one": "是否同时复制它的 {{count}} 个任务（保持相同提前天数）？",
+    "copierTaches_other": "是否同时复制它的 {{count}} 个任务（保持相同提前天数）？"
+  },
+  "moi": {
+    "title": "我",
+    "settings": "设置",
+    "language": "语言",
+    "theme": "主题",
+    "light": "浅色",
+    "dark": "深色",
+    "french": "Français"
+  },
+  "pdf": {
+    "choice": {
+      "title": "下载哪种 PDF？",
+      "classic": "经典",
+      "classicHelp": "常用的乐谱版式。",
+      "colors": "按段落着色",
+      "colorsHelp": "每个段落用自己的颜色框出，与屏幕显示一致。",
+      "compact": "紧凑",
+      "compactHelp": "先是结构条，每个段落只出现一次。",
+      "download": "下载",
+      "preparing": "正在生成…"
+    }
+  },
+  "taches": {
+    "title": "任务",
+    "mesTaches": "我的任务",
+    "aFairePourMoi": "我要做的",
+    "poles": "部门",
+    "pole": {
+      "da": "美工",
+      "media": "媒体",
+      "orga": "组织",
+      "louange": "敬拜",
+      "evenement": "活动"
+    },
+    "subtitle": "部门任务",
+    "aucunPole": "你不属于任何部门：任务只对部门成员开放。",
+    "pasMembre": "你不属于这个部门。",
+    "rienAFaire": "目前没有要做的事。",
+    "vide": "还没有任务。点击「新任务」添加第一个。",
+    "nouvelle": "新任务",
+    "modifier": "修改任务",
+    "groupes": {
+      "enRetard": "已逾期",
+      "cetteSemaine": "本周",
+      "plusTard": "以后",
+      "faites": "已完成"
+    },
+    "pourTous": "整个部门",
+    "faitePar": "{{nom}} 已完成",
+    "commenceePar": "{{nom}} 已开始",
+    "enCoursDepuis_one": "进行中 {{count}} 天",
+    "enCoursDepuis_other": "进行中 {{count}} 天",
+    "enCoursAujourdhui": "今天开始",
+    "enCoursSansDate": "进行中",
+    "anAide": "每年同一天。",
+    "cocher": "{{titre}}，{{date}}",
+    "ouvrirLien": "打开链接",
+    "champs": {
+      "titre": "标题",
+      "responsable": "负责人",
+      "echeance": "截止日期",
+      "repetition": "重复",
+      "rang": "每月第几周",
+      "lien": "链接",
+      "note": "备注",
+      "prevenir": "完成后通知",
+      "evenement": "活动",
+      "pole": "部门"
+    },
+    "rythme": {
+      "aucun": "仅一次",
+      "semaine": "每周",
+      "2semaines": "每两周",
+      "mois": "每月",
+      "an": "每年"
+    },
+    "rang": {
+      "1": "第 1 周",
+      "2": "第 2 周",
+      "3": "第 3 周",
+      "4": "第 4 周",
+      "-1": "最后一周"
+    },
+    "prevenirPersonne": "不通知",
+    "prevenirPole": "{{pole}}部门",
+    "prevenirRegie": "{{service}}的音控/投影（下一个主日）",
+    "enregistrer": "保存",
+    "supprimer": "删除",
+    "annuler": "取消",
+    "confirmerSuppression": "删除这个任务及其全部记录？",
+    "erreur": "保存失败，请重试。",
+    "titreRequis": "请填写任务标题。",
+    "echeanceRequise": "请选择截止日期。",
+    "regiePrevenue": "已通知音控/投影。",
+    "polePrevenu": "已通知{{pole}}部门。",
+    "personnePrevenue": "没有通知任何人：没有与账号关联的音控/投影。",
+    "pourEvenement": "用于 {{titre}}",
+    "detacherEvenement": "取消关联活动"
+  },
+  "accueil": {
+    "nom": "欢迎使用 GCC",
+    "passer": "跳过",
+    "suivant": "下一步",
+    "retour": "返回",
+    "commencer": "开始使用",
+    "etape": "第 {{n}} 步，共 {{total}} 步",
+    "bienvenue": {
+      "titre": "欢迎使用 GCC",
+      "texte": "教会的应用：诗歌和歌单、服侍排班，以及教会活动。"
+    },
+    "ou": {
+      "titre": "在哪里找到",
+      "chants": "所有诗歌，法语和中文，可选你需要的调。",
+      "setlists": "每场聚会安排的诗歌和顺序。",
+      "planning": "每个主日谁来服侍。",
+      "evenements": "教会日历和活动报名。",
+      "moi": "我的服侍、个人资料和设置。"
+    },
+    "presidence": {
+      "titre": "准备歌单",
+      "texte": "在「歌单」中为你的聚会创建歌单：诗歌、顺序和调。团队马上就能看到。"
+    },
+    "musicien": {
+      "titre": "主日前的练习",
+      "texte": "打开你服侍的歌单。「敬拜模式」逐首大字显示，演奏时无需操作。"
+    },
+    "autre": {
+      "titre": "教会生活",
+      "texte": "排班表显示每个主日谁来服侍。在「活动」中报名参加教会的活动。"
+    },
+    "notifs": {
+      "titre": "不要错过你的服侍",
+      "texte": "在每次服侍前收到提醒，也能收到教会的消息。",
+      "activer": "开启通知",
+      "actives": "通知已开启。",
+      "iphone": "在 iPhone 上，请先把 GCC 添加到主屏幕（点「分享」，再点「添加到主屏幕」），之后可在「我」中开启通知。",
+      "erreur": "无法开启通知，你可以稍后在「我」中重试。"
+    },
+    "fin": {
+      "titre": "准备好了",
+      "texte": "使用指南详细介绍每个页面，随时可以在「我」中找到。",
+      "guide": "打开使用指南"
+    }
+  },
+  "signalement": {
+    "titre": "报告问题",
+    "fermer": "关闭",
+    "connecte": "登录后才能报告问题。",
+    "seConnecter": "登录",
+    "envoye": "报告已发送，谢谢。",
+    "resume": "摘要",
+    "resumeChant": "关于「{{titre}}」的问题",
+    "resumePlaceholder": "用一句话描述问题…",
+    "details": "详情",
+    "optionnel": "（可选）",
+    "detailsPlaceholder": "描述问题…",
+    "erreur": "发送失败，请稍后再试。",
+    "annuler": "取消",
+    "envoi": "发送中…",
+    "envoyer": "发送"
+  },
+  "push": {
+    "error": "出现错误",
+    "title": "通知",
+    "description": "服侍前的提醒（提前 1 周和 3 天），以及歌单准备好时的通知。",
+    "unsupported": "此设备或浏览器不支持通知。",
+    "iosInstall": "在 iPhone 或 iPad 上：请先把网站添加到主屏幕（点「分享」，再点「添加到主屏幕」），然后从图标打开，才能开启通知。",
+    "blocked": "你的浏览器屏蔽了本网站的通知。要重新开启：点击地址栏左侧的图标，选择「通知」，设为「允许」，然后刷新页面。",
+    "promptTitle": "开启服侍提醒",
+    "promptText": "在每次服侍前收到提醒，歌单准备好时也会通知你。"
+  },
+  "proposition": {
+    "titre": "推荐新诗歌",
+    "description": "你的推荐会发送给管理员，由他们加入诗歌库。",
+    "envoyee": "谢谢。你的推荐已发送给管理员。",
+    "nom": "诗歌名称",
+    "nomExemple": "例如：你是信实的",
+    "youtube": "YouTube 链接",
+    "partition": "PDF 乐谱链接",
+    "partitionExemple": "https://…（Google Drive 等）",
+    "envoyer": "发送给管理员",
+    "utilisateur": "用户",
+    "erreurNom": "请填写诗歌名称。",
+    "erreurYoutube": "请添加诗歌的 YouTube 链接。",
+    "erreurYoutubeLien": "YouTube 链接必须以 http:// 或 https:// 开头",
+    "erreurPartitionLien": "乐谱链接必须以 http:// 或 https:// 开头",
+    "erreurEnvoi": "无法发送，请检查网络后重试。"
+  },
+  "jianpu": {
+    "jouerEn": "按 {{key}} 调演奏。",
+    "accordsOrigine": "简谱的数字在任何调都正确，但这份乐谱上印的和弦是原调的，不会随移调改变。",
+    "partiel": "只有<bleu>蓝色</bleu>的和弦已移调。其他和弦仍是原调（{{key}}），不会随移调改变；数字仍然正确。",
+    "partielIndication": "只有<bleu>蓝色</bleu>的和弦已移调。其他和弦仍是原调（{{key}}），和页面上方的「1={{key}}」一样，不会随移调改变；数字仍然正确。",
+    "accords": "和弦：",
+    "deuxTonalites": "{{a}} 和 {{b}}",
+    "toutesTonalites": "所有调",
+    "seule": "仅 {{key}}"
+  },
+  "harmonie": {
+    "titre": "和声",
+    "sousTitre": "为钢琴和吉他提供的重新配和声灵感。",
+    "idees": "和声灵感",
+    "parcours": "从这里开始",
+    "aVerifier": "请弹奏确认",
+    "essayer": "在我的版本中试试",
+    "appliquer": "应用到歌单",
+    "neMarchePas": "不适合这首歌",
+    "remettre": "恢复这个建议",
+    "toutesRepetitions": "所有重复",
+    "seulementCePassage": "仅此处",
+    "reporterJianpu": "请在简谱上改为：{{quoi}}",
+    "bandeauModulation": "{{section}}：升到 {{ton}}",
+    "nouveau": "新",
+    "endroits_one": "{{count}} 处",
+    "endroits_other": "{{count}} 处",
+    "ecartees_one": "{{count}} 条已移除",
+    "ecartees_other": "{{count}} 条已移除",
+    "montrer": "指出位置",
+    "resteEnD": "只有「改前 → 改后」跟随所选调，卡片其余部分仍写在 {{ton}} 调。",
+    "formesEcrites": "和弦指法写在 {{ton}} 调。",
+    "formesSonnent": "这些指法（写在 {{ton}} 调）实际响在 {{sonne}} 调。",
+    "foisEnSetlist": "在歌单中出现 {{count}} 次",
+    "capoTitre": "变调夹",
+    "degre": "级数 {{degre}}",
+    "ariaDoigte": "吉他指法 {{doigte}}",
+    "ariaClavier": "钢琴音：{{notes}}",
+    "voirPlus": "查看更多",
+    "aRelire": "待校对",
+    "aRelireTout": "这些卡片仍在校对中，内容可能会改动。",
+    "instrument": {
+      "piano": "钢琴",
+      "guitare": "吉他"
+    },
+    "niveau": {
+      "facile": "简单",
+      "intermediaire": "中等",
+      "avance": "进阶",
+      "titre": "难度"
+    },
+    "sensation": {
+      "titre": "感觉",
+      "epique": "史诗",
+      "majeste": "庄严",
+      "tension": "张力",
+      "repos": "安息",
+      "surprise": "意外",
+      "suspendu": "悬浮飘渺",
+      "emerveillement": "惊叹",
+      "douceur": "柔和亲密",
+      "tendresse": "温柔怀旧",
+      "gravite": "肃穆默想",
+      "lumiere": "光明盼望",
+      "joie": "喜乐激昂"
+    },
+    "moment": {
+      "titre": "段落",
+      "intro": "前奏",
+      "couplet": "主歌",
+      "montee": "过门",
+      "refrain": "副歌",
+      "pont": "桥段",
+      "fin": "结尾",
+      "transition": "过渡"
+    },
+    "surete": {
+      "tres-sure": "很稳妥",
+      "sure": "稳妥",
+      "a-ecouter": "需试听"
+    },
+    "avantApres": "改前 → 改后",
+    "pourquoi": "为什么好听",
+    "eviter": "什么时候别用",
+    "auPiano": "钢琴弹法",
+    "aLaGuitare": "吉他弹法",
+    "repertoire": "曲库中的例子",
+    "repertoireCompte_one": "{{count}} 首歌已经这样弹",
+    "repertoireCompte_other": "{{count}} 首歌已经这样弹",
+    "tonalite": "调",
+    "capo": "变调夹 {{n}}",
+    "sansCapo": "不用变调夹",
+    "aucuneFiche": "没有符合条件的卡片。",
+    "effacerFiltres": "显示全部",
+    "retour": "和声",
+    "idee": {
+      "ajouter": "添加灵感",
+      "titre": "团队的灵感",
+      "texte": "灵感内容",
+      "avant": "改前（和弦）",
+      "apres": "改后（和弦）",
+      "fiche": "相关卡片",
+      "aucune": "暂时还没有灵感。",
+      "supprimer": "删除",
+      "modifier": "修改",
+      "enregistrer": "保存",
+      "annuler": "取消"
+    },
+    "modulation": {
+      "titre": "让最后一遍副歌升调",
+      "ou": "{{section}} 升到 {{ton}}"
+    },
+    "transition": {
+      "titre": "接下一首"
+    }
+  },
+  "equipes": {
+    "title": "团队",
+    "sousTitre": "GCC 法语堂 2026 组织架构",
+    "onglet": {
+      "equipes": "团队",
+      "musiciens": "乐手"
+    },
+    "team": {
+      "orga": "统筹组",
+      "comite-franco": "法语堂委员会",
+      "da": "美工组",
+      "medias": "媒体组",
+      "developpement": "开发组",
+      "regie": "音控组",
+      "traduction": "翻译组",
+      "theologie": "神学组",
+      "evenementiel": "活动组",
+      "decoration": "布置组",
+      "accueil-j1": "迎新组",
+      "louange": "敬拜组",
+      "edd": "主日学"
+    },
+    "soustitre": {
+      "orga": "总协调",
+      "comite-franco": "",
+      "da": "美术设计",
+      "medias": "摄影、录像",
+      "developpement": "GCCLouange、网站、电子歌本",
+      "regie": "音响与投影",
+      "traduction": "",
+      "theologie": "",
+      "evenementiel": "",
+      "decoration": "",
+      "accueil-j1": "夏令营",
+      "louange": "法语堂 / 联合",
+      "edd": "主日学"
+    },
+    "donnePole": "归入{{pole}}部门",
+    "referent": "负责人",
+    "essai": "试用中",
+    "membres_one": "{{count}} 人",
+    "membres_other": "{{count}} 人",
+    "aucunMembre": "目前没有成员。",
+    "modifier": "修改",
+    "enregistrer": "保存",
+    "annuler": "取消",
+    "ajouterMembre": "添加成员",
+    "nomLibre": "添加「{{nom}}」（没有账号）",
+    "retirer": "移除 {{nom}}",
+    "mention": "备注",
+    "poleEquipe": "这个团队带来的部门",
+    "aucunPole": "无",
+    "erreur": "保存失败。",
+    "fiche": {
+      "equipes": "所属团队",
+      "services": "服事",
+      "planning": "排班中的岗位",
+      "rien": "没有可显示的内容。",
+      "fermer": "关闭",
+      "admin": "在管理后台打开"
+    },
+    "colonne": {
+      "paix": "和平",
+      "bonte": "恩慈",
+      "fidelite": "信实",
+      "campus": "夏令营",
+      "edd": "主日学",
+      "franco": "法语堂",
+      "intergroupe": "联合",
+      "interfranco": "法语联合"
+    },
+    "role": {
+      "presidence": "主领",
+      "choriste": "唱诗",
+      "piano": "钢琴",
+      "guitare": "吉他",
+      "batterie": "架子鼓",
+      "cajon": "木箱鼓",
+      "cajonBatterie": "木箱鼓/架子鼓",
+      "sono": "音响",
+      "ppt": "投影",
+      "musicien": "乐手",
+      "regie": "音控"
+    },
+    "matriceVide": "目前没有人在排班中。",
+    "nom": "姓名"
   }
 }

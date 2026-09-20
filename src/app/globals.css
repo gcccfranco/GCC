@@ -6,6 +6,47 @@
   .no-scrollbar::-webkit-scrollbar { display: none; }
   .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
+  /* Deux matériaux (docs/spec-look.md) : « chrome » fin pour les barres qui
+     laissent passer le contenu, « panneau » quasi opaque pour menus et
+     feuilles. Une seule surface translucide à la fois : jamais l'un dans
+     l'autre. */
+  .material-chrome {
+    background-color: hsl(var(--background) / 0.8);
+    -webkit-backdrop-filter: blur(20px) saturate(1.4);
+    backdrop-filter: blur(20px) saturate(1.4);
+  }
+  /* Lignes d'une liste : un filet d'un bord à l'autre, aligné sur le titre de la page (5C1). */
+  .group-row + .group-row::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: var(--row-inset, 0px);
+    right: var(--row-inset, 0px);
+    height: 1px;
+    background: hsl(var(--border));
+  }
+  /* Barre du bas flottante (5C1) : verre sur la surface en relief, avec son ombre
+     (clair) ou son liseré (sombre). */
+  .material-bar {
+    background-color: hsl(var(--raised) / 0.82);
+    -webkit-backdrop-filter: blur(22px) saturate(1.5);
+    backdrop-filter: blur(22px) saturate(1.5);
+    box-shadow: 0 14px 40px rgba(28, 28, 30, 0.2), 0 2px 6px rgba(28, 28, 30, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  }
+  .dark .material-bar {
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1), 0 14px 40px rgba(0, 0, 0, 0.8);
+  }
+  .material-panel {
+    background-color: hsl(var(--card) / 0.97);
+    -webkit-backdrop-filter: blur(24px);
+    backdrop-filter: blur(24px);
+  }
+  @media (prefers-reduced-transparency: reduce) {
+    .material-chrome { background-color: hsl(var(--background)); backdrop-filter: none; -webkit-backdrop-filter: none; }
+    .material-bar { background-color: hsl(var(--raised)); backdrop-filter: none; -webkit-backdrop-filter: none; }
+    .material-panel { background-color: hsl(var(--card)); backdrop-filter: none; -webkit-backdrop-filter: none; }
+  }
+
   /* Masqué uniquement sur un vrai poste desktop (pointeur fin = souris ET écran
      large). Une tablette tactile en paysage (≥1024px mais pointeur grossier)
      n'est PAS masquée → elle garde la nav à portée de pouce, contrairement à
@@ -15,33 +56,50 @@
   }
 }
 
+/* Taille par défaut des paroles et accords (page chant, vue partitions, mode
+   louange) : lisible de loin — +10 % sur téléphone, +20 % dès la tablette.
+   Écran seulement : l'impression garde la taille d'origine. Décision de
+   Timothée du 13/09/2026 sur captures (docs/spec-mode-louange.md). */
+:root { --lyric-size: 0.88rem; }
+@media screen { :root { --lyric-size: calc(0.88rem * 1.1); } }
+@media screen and (min-width: 768px) { :root { --lyric-size: calc(0.88rem * 1.2); } }
+
 @layer base {
   :root {
     /* Hauteur de la navbar — source unique pour tous les offsets fixed/sticky */
     --nav-h: 58px;
-    /* Warm-neutral light surfaces (design system) */
-    --background: 38 26% 98%;        /* #fbfaf8 */
-    --foreground: 223 14% 10%;       /* #16181d */
+    /* Direction 5C1 « Encre · Relief » (docs/spec-look.md, § 20/09/2026) : fond
+       blanc, encre, listes en filets ; ce qui se touche porte une ombre. Les
+       boutons pleins sont en encre, le rouge du logo ne reste que sur le logo
+       et le label de la navbar (`--brand`). */
+    --background: 0 0% 100%;         /* #ffffff */
+    --foreground: 240 3.4% 11.4%;    /* #1c1c1e */
     --card: 0 0% 100%;
-    --card-foreground: 223 14% 10%;
+    --card-foreground: 240 3.4% 11.4%;
     --popover: 0 0% 100%;
-    --popover-foreground: 223 14% 10%;
-    --primary: 21 93% 46%;           /* #e0560a */
+    --popover-foreground: 240 3.4% 11.4%;
+    --primary: 240 3.4% 11.4%;       /* #1c1c1e encre : boutons pleins */
     --primary-foreground: 0 0% 100%;
-    --secondary: 40 21% 94%;         /* #f4f2ee */
-    --secondary-foreground: 223 10% 25%;
-    --muted: 40 21% 94%;             /* #f4f2ee */
-    --muted-foreground: 219 6% 45%;  /* #6b7079 */
-    --accent: 40 21% 94%;            /* gris chaud discret — survol menus (sobre) */
-    --accent-foreground: 223 14% 10%;
+    --brand: 3.4 73.2% 46.9%;        /* #cf2a20 rouge du logo */
+    --secondary: 240 8.3% 95.3%;     /* #f2f2f4 : sélection, segmenté, champs */
+    --secondary-foreground: 240 3.4% 11.4%;
+    --muted: 240 8.3% 95.3%;
+    --muted-foreground: 240 2.7% 43.5%; /* #6c6c72 */
+    --accent: 240 8.3% 95.3%;        /* survol des menus */
+    --accent-foreground: 240 3.4% 11.4%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
-    --border: 45 7% 89%;             /* #e5e4e1 légèrement neutralisé */
-    --input: 45 7% 89%;
-    --ring: 223 14% 10%;             /* focus encre — l'orange reste aux actions */
-    --radius: 0.75rem;
-    /* Cartes : ombre douce sans bordure (direction « Sobre sur crème ») */
-    --shadow-soft: 0 1px 2px rgba(23, 20, 15, 0.05), 0 2px 10px rgba(23, 20, 15, 0.07);
+    --border: 240 2% 89.5%;          /* filet, #e4e4e5 = rgba(60,60,67,.14) sur blanc */
+    --input: 240 2% 89.5%;
+    --ring: 240 3.4% 11.4%;          /* focus encre */
+    --radius: 0.75rem;               /* 12 : groupes et champs ; 8 : petits contrôles ; pilules : rounded-full */
+    /* Les listes n'ont pas d'ombre : ce sont des filets. */
+    --shadow-soft: 0 0 0 0 transparent;
+    /* Ce qui se touche (recherche, pilule d'outils, boutons, barre du bas). */
+    --raised: 0 0% 100%;
+    --shadow-raised: 0 4px 14px rgba(28, 28, 30, 0.1), 0 1px 2px rgba(28, 28, 30, 0.06);
+    /* Teinte d'une vignette de service. */
+    --svc-tint: 13%;
 
     /* Semantic music colors */
     --chord-color: #3f63cf;   /* bleu PDF FR */
@@ -71,26 +129,33 @@
   }
 
   .dark {
-    --background: 224 24% 6%;        /* #0c0e13 */
-    --foreground: 220 8% 92%;        /* #ecedf0 */
-    --card: 220 20% 12%;             /* #181c24 — surface élevée (cartes sans bordure) */
-    --card-foreground: 220 8% 92%;
-    --popover: 224 18% 10%;
-    --popover-foreground: 220 8% 92%;
-    --primary: 21 96% 54%;           /* #f4751f */
-    --primary-foreground: 24 15% 10%;
-    --secondary: 220 20% 13%;        /* #1b1f28 */
-    --secondary-foreground: 220 8% 80%;
-    --muted: 220 20% 13%;
-    --muted-foreground: 220 6% 61%;  /* #9298a3 */
-    --accent: 220 20% 13%;
-    --accent-foreground: 220 8% 92%;
+    /* Sombre : noir pur (décision Q6 du 15/09/2026). Sur du noir une ombre ne se
+       voit pas : ce qui se touche s'élève par une surface plus claire et un
+       liseré. L'encre s'inverse sur les boutons pleins. */
+    --background: 0 0% 0%;           /* #000000 */
+    --foreground: 240 23.8% 95.9%;   /* #f2f2f7 */
+    --card: 240 3.4% 11.4%;          /* #1c1c1e — groupe */
+    --card-foreground: 240 23.8% 95.9%;
+    --popover: 240 3.4% 11.4%;
+    --popover-foreground: 240 23.8% 95.9%;
+    --primary: 240 23.8% 95.9%;      /* #f2f2f7 encre inversée */
+    --primary-foreground: 240 3.4% 11.4%; /* #1c1c1e */
+    --brand: 3.8 100% 69%;           /* #ff6b61 rouge du logo, éclairci */
+    --secondary: 240 2.2% 17.6%;     /* #2c2c2e */
+    --secondary-foreground: 240 23.8% 95.9%;
+    --muted: 240 2.2% 17.6%;
+    --muted-foreground: 240 3.5% 61%; /* #98989f */
+    --accent: 240 2.2% 17.6%;
+    --accent-foreground: 240 23.8% 95.9%;
     --destructive: 0 63% 31%;
     --destructive-foreground: 210 40% 98%;
-    --border: 220 16% 18%;           /* #262b35 — inchangé : le mode louange s'appuie dessus */
-    --input: 220 16% 18%;
-    --ring: 220 8% 92%;              /* focus blanc cassé — l'orange reste aux actions */
-    --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.5), 0 3px 12px rgba(0, 0, 0, 0.35);
+    --border: 240 1.8% 22%;          /* #373739 — filet des groupes ; le mode louange s'en sert aussi */
+    --input: 240 1.8% 22%;
+    --ring: 240 23.8% 95.9%;         /* focus blanc cassé */
+    --shadow-soft: 0 0 0 0 transparent;
+    --raised: 240 3.4% 11.4%;        /* #1c1c1e */
+    --shadow-raised: 0 0 0 1px rgba(255, 255, 255, 0.1);
+    --svc-tint: 26%;
 
     --chord-color: #8fb0ff;   /* bleu PDF FR dark */
     --jianpu-color: #ff7d72;
@@ -118,6 +183,17 @@
     }
 }
 
+/* Mouvement réduit, partout : les glissements et zooms deviennent des
+   changements quasi instantanés ; les fondus courts restent lisibles. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 @layer base {
   * {
     @apply border-border;
@@ -131,8 +207,28 @@
 }
 
 @layer utilities {
+  /* Texte dans une couleur de service (`--svc`). serviceColors.ts n'a pas de
+     variante sombre : sur du noir ses couleurs sont illisibles (#2d5a65 : 2,8
+     pour 4,5 exigé), on les éclaircit à l'affichage, sans toucher au fichier. */
+  .svc-ink { color: var(--svc); }
+  .dark .svc-ink { color: color-mix(in srgb, var(--svc) 55%, white); }
+  .svc-line { border-left-color: var(--svc); }
+  .dark .svc-line { border-left-color: color-mix(in srgb, var(--svc) 55%, white); }
+  /* Commande en relief : surface + ombre (clair) ou surface + liseré (sombre). */
+  .raised {
+    background-color: hsl(var(--raised));
+    box-shadow: var(--shadow-raised);
+  }
   .shadow-soft {
     box-shadow: var(--shadow-soft);
+  }
+
+  /* Harmonie (lot 9) : la section visée par une idée s'entoure un instant
+     quand on touche « Montrer ». */
+  .harmonie-surligne {
+    outline: 2px solid var(--chord-color);
+    outline-offset: 3px;
+    border-radius: 12px;
   }
 
   .font-chord {
@@ -166,25 +262,6 @@
   }
 }
 
-/* ── Wizard éditeur de setlist : transition d'étape ── */
-@keyframes wiz-in-fwd {
-  from { opacity: 0; transform: translateX(16px); }
-  to   { opacity: 1; transform: translateX(0); }
-}
-@keyframes wiz-in-back {
-  from { opacity: 0; transform: translateX(-16px); }
-  to   { opacity: 1; transform: translateX(0); }
-}
-@keyframes wiz-fade {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-.wiz-fwd  { animation: wiz-in-fwd 220ms cubic-bezier(0.22, 0.61, 0.36, 1); }
-.wiz-back { animation: wiz-in-back 220ms cubic-bezier(0.22, 0.61, 0.36, 1); }
-@media (prefers-reduced-motion: reduce) {
-  .wiz-fwd, .wiz-back { animation: wiz-fade 160ms ease; }
-}
-
 @media print {
   @page {
     margin: 1.5cm 2cm;
@@ -205,4 +282,11 @@
   .song-zoom {
     zoom: 1 !important;
   }
+}
+
+/* Accueil de première connexion (lot 8) : l'écran suivant arrive d'un léger
+   glissé ; rien sous prefers-reduced-motion (classe motion-safe). */
+@keyframes accueil-in {
+  from { opacity: 0; transform: translateX(12px); }
+  to { opacity: 1; transform: translateX(0); }
 }

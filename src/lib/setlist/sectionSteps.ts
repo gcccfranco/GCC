@@ -14,6 +14,24 @@ export type SectionOccurrence = {
   targetKey?: string;
 };
 
+/** Deux passages consécutifs d'une section se replient en « ×2 » quand rien ne
+ *  les distingue : même libellé, même note, mêmes nuances, même modulation.
+ *  Deux refrains dont l'un est mf et l'autre ff ne sont pas la même chose
+ *  jouée deux fois (décision du 13/09/2026). */
+export function isRepeatOf(
+  a: { label: string; note?: string; nuance?: SectionNuance; targetKey?: string },
+  b: { label: string; note?: string; nuance?: SectionNuance; targetKey?: string },
+): boolean {
+  const tags = (n?: SectionNuance) => (n?.tags ?? []).join(",");
+  return (
+    a.label === b.label &&
+    (a.note ?? "") === (b.note ?? "") &&
+    tags(a.nuance) === tags(b.nuance) &&
+    (a.nuance?.note ?? "") === (b.nuance?.note ?? "") &&
+    (a.targetKey ?? "") === (b.targetKey ?? "")
+  );
+}
+
 /** Notes, nuances, transitions et modulations sont mémorisées tantôt par uid
  *  de section, tantôt par occurrence (`id:n`), tantôt par id — selon l'âge de
  *  la setlist. Les trois clés sont essayées dans cet ordre, une seule fois

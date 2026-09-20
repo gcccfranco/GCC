@@ -27,6 +27,14 @@ export type FusionMixedSection = {
   keyChange?: string;
 };
 
+/** Retouches d'accords sur une partition 简谱 scannée (lot 9, docs/spec-harmonie.md). */
+export type JianpuChords = {
+  /** Index de l'étiquette dans `chords.json` → nouveau texte ; « » = effacé. */
+  changed?: Record<number, string>;
+  /** Accords ajoutés, en coordonnées du scan. */
+  added?: { page: number; x: number; y: number; c: string }[];
+};
+
 export type SetlistItem = {
   type?: "fusion" | "transition";
   songSlug: string;
@@ -56,6 +64,11 @@ export type SetlistItem = {
    *  d'origine. Permet à « Rétablir l'original » de re-pointer la structure
    *  vers les sections du chant au lieu de les perdre. */
   sectionOrigins?: Record<string, string>;
+  /** Accords retouchés sur le scan 简谱 par la présidence (mode Adapter, lot 9) :
+   *  index d'étiquette de `public/jianpu/chords.json` → texte en tonalité
+   *  d'origine (« » = effacé), plus les accords ajoutés en coordonnées du scan.
+   *  `public/jianpu/chords.json` (calques certifiés) n'est jamais écrit. */
+  jianpuChords?: JianpuChords;
   notes: string;
   fusionSongs?: FusionSong[];
   mixedStructure?: FusionMixedSection[] | null;

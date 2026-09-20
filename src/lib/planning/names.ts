@@ -1,19 +1,21 @@
 import type { CampusSeance, EddDataStructure } from "./utils"
 import { EDD_CLASSES, EDD_PERIODES } from "./utils"
 import {
-  CULTE_FALLBACK, DEJEUNER_FALLBACK, PAIX_FALLBACK, FIDELITE_FALLBACK,
+  DEJEUNER_FALLBACK, PAIX_FALLBACK, FIDELITE_FALLBACK,
   FIDELITE_MUSIC_FALLBACK, BONTE_FALLBACK, EDD_FALLBACK, CAMP_LOUANGE_FALLBACK,
 } from "./data"
 import {
   fetchCulte, fetchDejeuner, fetchPaix, fetchFidelite,
   fetchFideliteMusic, fetchBonte, fetchEDD, fetchCampus, inferYear,
-  fetchIntergroupe, fetchInterfranco,
+  fetchIntergroupe, fetchInterfranco, fetchPetitDej,
 } from "./sheets"
 import type { ServiceRole } from "@/types/user"
 
 export interface PlanningData {
   culte: string[][]
   dejeuner: string[][]
+  /** Petit déj (lot 1b) : [date ISO, noms] ; vide tant que la case ne l'est pas. */
+  petitDej: string[][]
   paix: string[][]
   fidelite: string[][]
   fideliteMusic: string[][]
@@ -25,16 +27,19 @@ export interface PlanningData {
 }
 
 export async function loadPlanningData(): Promise<PlanningData> {
-  const [culte, dejeuner, paix, fidelite, fideliteMusic, bonte, edd, campus, intergroupe, interfranco] =
+  const [culte, dejeuner, petitDej, paix, fidelite, fideliteMusic, bonte, edd, campus, intergroupe, interfranco] =
     await Promise.all([
-      fetchCulte(), fetchDejeuner(), fetchPaix(), fetchFidelite(),
+      fetchCulte(), fetchDejeuner(), fetchPetitDej(), fetchPaix(), fetchFidelite(),
       fetchFideliteMusic(), fetchBonte(), fetchEDD(),
       fetchCampus().then(c => c.louange).catch(() => [] as CampusSeance[]),
       fetchIntergroupe(), fetchInterfranco(),
     ])
   return {
-    culte: culte.length ? culte : CULTE_FALLBACK,
+    // G5 (19/09/2026) : plus de repli sur CULTE_FALLBACK (données de 2026, D4).
+    culte,
     dejeuner: dejeuner.length ? dejeuner : DEJEUNER_FALLBACK,
+    // Pas de données de secours : le petit déj n'apparaît que s'il est lu.
+    petitDej,
     paix: paix.length ? paix : PAIX_FALLBACK,
     fidelite: fidelite.length ? fidelite : FIDELITE_FALLBACK,
     fideliteMusic: fideliteMusic.length ? fideliteMusic : FIDELITE_MUSIC_FALLBACK,
@@ -74,7 +79,7 @@ export function normalizeName(s: string): string {
 }
 
 /** Découpe une cellule de planning en noms : gère "A, B", "Piano: X, Guitare: Y"… */
-function splitNames(cell: string): string[] {
+export function splitNames(cell: string): string[] {
   return cell
     .replace(/"+/g, "")
     .split(/[,，;；/]/)
@@ -93,10 +98,12 @@ function cellHasName(cell: string | undefined, name: string): boolean {
 }
 
 // Colonnes "personnes" de chaque planning : index → rôle affiché
-const CULTE_ROLES: [number, string][] = [
+// Exporté : le lot 17 compare ces index à ceux des colonnes de la grille
+// (src/lib/planning/grilles.ts) pour que grille et Sheet ne divergent jamais.
+export const CULTE_ROLES: [number, string][] = [
   [1, "Présidence"], [2, "Choriste"], [3, "Choriste"], [4, "Piano"],
   [5, "Guitare"], [6, "Batterie"], [7, "Sono"], [8, "PPT"],
-  [9, "Orateur"], [10, "Traduction"],
+  [9, "Orateur"], [10, "Traduction"], [11, "Sainte cène"],
 ]
 
 const GROUPE_ROLES: [number, string][] = [[1, "Présidence"], [2, "Musicien"], [3, "Orateur"]]
@@ -254,6 +261,7 @@ export function findMyServices(data: PlanningData, name: string): ServiceEntry[]
 
   scan(data.culte, "Culte Franco", CULTE_ROLES)
   scan(data.dejeuner, "Prépa. Table", [[1, "Équipe"]])
+  scan(data.petitDej, "Petit déj", [[1, "Équipe"]])
   scan(data.paix, "Groupe Paix", GROUPE_ROLES)
   scan(data.bonte, "Groupe Bonté", GROUPE_ROLES)
   scan(data.fidelite, "Groupe Fidélité", FIDELITE_ROLES)
@@ -354,9 +362,9 @@ export function setlistSeances(data: PlanningData): SetlistSeance[] {
 
 // ─── Personnes de service à une date — tous services (côté serveur) ────────────
 
-// Colonnes culte pour le ciblage notifications : CULTE_ROLE_MAP + Orateur/Traduction
-// (inclus pour les rappels « tu sers » ; serviceRole null → exclus de « setlist prête »).
-const CULTE_NOTIFY_MAP: [number, ServiceRole | null][] = [...CULTE_ROLE_MAP, [9, null], [10, null]]
+// Colonnes culte pour le ciblage notifications : CULTE_ROLE_MAP + Orateur/Traduction/
+// Sainte cène (inclus pour les rappels « tu sers » ; serviceRole null → exclus de « setlist prête »).
+const CULTE_NOTIFY_MAP: [number, ServiceRole | null][] = [...CULTE_ROLE_MAP, [9, null], [10, null], [11, null]]
 const INTERGROUPE_NOTIFY_MAP: [number, ServiceRole | null][] = [...INTERGROUPE_ROLE_MAP, [10, null], [11, null]]
 const INTERFRANCO_NOTIFY_MAP: [number, ServiceRole | null][] = [...INTERFRANCO_ROLE_MAP, [9, null], [10, null]]
 
@@ -403,10 +411,12 @@ export function servantsForDate(data: PlanningData, dateISO: string): Servant[] 
     const classes = data.edd[pk]?.classes ?? {}
     for (const cls of EDD_CLASSES) scan(classes[cls] ?? [], cls, EDD_ROLE_MAP)
   }
-  // Prépa. Table : présence simple, sans catégorie de setlist ni rôle.
-  for (const r of data.dejeuner) {
-    if (r[0] !== dateISO) continue
-    for (const name of splitNames(r[1] ?? "")) out.push({ name, category: null, serviceRole: null, leader: "" })
+  // Prépa. Table et petit déj : présence simple, sans catégorie de setlist ni rôle.
+  for (const rows of [data.dejeuner, data.petitDej]) {
+    for (const r of rows) {
+      if (r[0] !== dateISO) continue
+      for (const name of splitNames(r[1] ?? "")) out.push({ name, category: null, serviceRole: null, leader: "" })
+    }
   }
   // Campus : date via le label ; matin/soir distingués par le leader (président).
   for (const s of data.campus) {

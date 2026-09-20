@@ -111,6 +111,14 @@ export async function sendPushToUids(
   return { sent, failed, recipients: unique.length };
 }
 
+/** uid distincts de tous les abonnés push : pour diffuser à tout le monde en
+ *  fournées par langue (sendPushToUids), là où sendPushToAll ne sait envoyer
+ *  qu'un seul texte. */
+export async function allSubscriberUids(): Promise<string[]> {
+  const snap = await adminDb().collection("pushSubscriptions").get();
+  return [...new Set(snap.docs.map((d) => d.data().uid as string | undefined).filter((u): u is string => !!u))];
+}
+
 /** Diffuse `payload` à TOUS les abonnés (toutes notifications activées). */
 export async function sendPushToAll(
   payload: PushPayload

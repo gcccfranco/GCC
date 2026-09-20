@@ -1,6 +1,7 @@
 "use client";
 
 import { Fragment } from "react";
+import { BACK_OFFICE } from "@/lib/backOffice";
 import { useTranslation } from "react-i18next";
 import {
   BookOpen,
@@ -10,30 +11,49 @@ import {
   ListMusic,
   ListPlus,
   CalendarDays,
-  Megaphone,
+  CalendarClock,
+  Ticket,
+  FileMusic,
+  PenLine,
+  ListChecks,
+  UserRound,
   Bell,
   AlertCircle,
   ShieldCheck,
   UserCog,
   Lightbulb,
+  Sparkles,
 } from "lucide-react";
 import { RequireAuth } from "@/components/auth/RequireAuth";
 import { GuideFigure } from "@/components/guide/GuideFigure";
 import { FIGURES } from "@/lib/guide/figures";
 
-const SECTIONS = [
+// Les ancres (#songs, #setlists, #planning, #evenements…) sont visées par les
+// liens « Comment ça marche ? » des pages (lot 8).
+const TOUTES_LES_SECTIONS = [
   { key: "songs", Icon: Music },
   { key: "customize", Icon: SlidersHorizontal },
   { key: "performance", Icon: Pencil },
   { key: "setlists", Icon: ListMusic },
+  { key: "partitions", Icon: FileMusic },
+  { key: "maVersion", Icon: PenLine },
   { key: "compose", Icon: ListPlus },
   { key: "planning", Icon: CalendarDays },
-  { key: "annonces", Icon: Megaphone },
+  { key: "evenements", Icon: Ticket },
+  { key: "scene", Icon: CalendarClock },
+  { key: "harmonie", Icon: Sparkles },
+  { key: "taches", Icon: ListChecks },
   { key: "notifications", Icon: Bell },
   { key: "report", Icon: AlertCircle },
   { key: "roles", Icon: ShieldCheck },
+  { key: "moi", Icon: UserRound },
   { key: "account", Icon: UserCog },
 ] as const;
+
+// Back-office coupé (lot 18, docs/spec-mise-en-ligne.md) : le guide ne décrit pas
+// des sections qui ne sont pas en ligne.
+const COUPEES: readonly string[] = ["evenements", "scene", "taches"];
+const SECTIONS = TOUTES_LES_SECTIONS.filter((s) => BACK_OFFICE || !COUPEES.includes(s.key));
 
 /** Rend un texte en mettant en gras les termes entre **doubles astérisques**. */
 function RichText({ text }: { text: string }) {
@@ -61,7 +81,7 @@ export default function GuidePage() {
         <div className="max-w-2xl mx-auto px-4 pt-6 pb-16 space-y-6">
           <header className="space-y-1.5">
             <div className="flex items-center gap-2">
-              <BookOpen className="h-5 w-5 text-primary" />
+              <BookOpen className="h-5 w-5 text-muted-foreground" />
               <h1 className="text-lg font-bold text-foreground">{t("guide.title")}</h1>
             </div>
             <p className="text-sm text-muted-foreground">{t("guide.subtitle")}</p>
@@ -69,7 +89,7 @@ export default function GuidePage() {
 
           {/* Sommaire */}
           <nav className="rounded-xl bg-card shadow-soft p-3">
-            <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-2">
+            <p className="text-sm font-semibold text-muted-foreground mb-2">
               {t("guide.tocTitle")}
             </p>
             <ul className="flex flex-col gap-0.5">
@@ -79,7 +99,7 @@ export default function GuidePage() {
                     href={`#${key}`}
                     className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm font-medium text-foreground/80 hover:text-foreground hover:bg-secondary transition-colors"
                   >
-                    <Icon className="h-4 w-4 text-primary shrink-0" />
+                    <Icon className="h-4 w-4 text-muted-foreground shrink-0" />
                     {t(`guide.sections.${key}.title`)}
                   </a>
                 </li>
@@ -105,11 +125,11 @@ export default function GuidePage() {
                 >
                   <div className="flex flex-wrap items-center gap-2">
                     <h2 className="flex items-center gap-2 text-base font-bold text-foreground">
-                      <Icon className="h-[18px] w-[18px] text-primary shrink-0" />
+                      <Icon className="h-[18px] w-[18px] text-muted-foreground shrink-0" />
                       {t(`guide.sections.${key}.title`)}
                     </h2>
                     {forWhom && (
-                      <span className="inline-flex items-center rounded-full border border-border bg-secondary px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+                      <span className="inline-flex items-center rounded-full bg-secondary px-2 py-0.5 text-xs font-medium text-muted-foreground">
                         {forWhom}
                       </span>
                     )}
@@ -141,7 +161,7 @@ export default function GuidePage() {
 
                   {tip && (
                     <div className="flex gap-2 rounded-lg bg-secondary/60 px-3 py-2 text-xs leading-relaxed text-muted-foreground">
-                      <Lightbulb className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
+                      <Lightbulb className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                       <span>
                         <RichText text={tip} />
                       </span>

@@ -1,9 +1,10 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { adminDb, verifyIdToken } from "@/lib/push/admin";
 import { sendPushToUids } from "@/lib/push/send";
-import { loadPlanningNameIndex, resolveNamesToUids, filterUidsByNotifPref } from "@/lib/push/recipients";
+import { loadPlanningNameIndex, resolveNamesToUids, filterUidsByNotifPref, loadNotifLangs } from "@/lib/push/recipients";
+import { setlistReadyMessage } from "@/lib/push/messages";
 import { loadPlanningData, servantsForDate, normalizeName } from "@/lib/planning/names";
-import { ADMIN_EMAILS, categoryLevel } from "@/lib/access";
+import { isAdminEmail, categoryLevel } from "@/lib/access";
 import type { ServiceRole } from "@/types/user";
 
 export const runtime = "nodejs";
@@ -83,7 +84,7 @@ export async function POST(req: NextRequest) {
   }
 
   // 4. Autorisation : propriétaire, admin, ou exécutant du Culte Franco
-  const isAdmin = !!email && ADMIN_EMAILS.includes(email);
+  const isAdmin = isAdminEmail(email);
   const isOwner = sl.ownerId === uid;
   let isPerformer = false;
   if (!isAdmin && !isOwner) {
@@ -139,13 +140,22 @@ export async function POST(req: NextRequest) {
   }
   const prefUids = await filterUidsByNotifPref(uids, "setlists");
 
-  // 7. Envoi
-  const result = await sendPushToUids(prefUids, {
-    title: `Setlist prête — ${sl.title || sl.category}`,
-    body: `${sl.leader || "Le responsable"} a préparé la setlist (${songCount} chants).`,
-    url: `/setlists/${setlistId}`,
-    tag: `setlist-${setlistId}`,
-  });
+  // 7. Envoi, une fournée par langue (lot 8) : chacun lit le message dans la
+  // sienne. Resté en français seul jusqu'au 19/09/2026.
+  const langs = await loadNotifLangs(prefUids);
+  const result = { sent: 0, failed: 0, recipients: 0 };
+  for (const lang of ["fr", "zh-CN"] as const) {
+    const groupe = prefUids.filter((u) => (langs.get(u) ?? "fr") === lang);
+    if (!groupe.length) continue;
+    const r = await sendPushToUids(groupe, {
+      ...setlistReadyMessage({ title: sl.title ?? "", leader: sl.leader ?? "", songCount, category: sl.category }, lang),
+      url: `/setlists/${setlistId}`,
+      tag: `setlist-${setlistId}`,
+    });
+    result.sent += r.sent;
+    result.failed += r.failed;
+    result.recipients += r.recipients;
+  }
 
   // En auto sans destinataire joignable, on ne mémorise rien : la prochaine
   // sauvegarde réessaiera et le bouton manuel reste utilisable.

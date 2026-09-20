@@ -14,6 +14,9 @@ export const PLANNING_COLORS = {
   paix: "#6b4a8e",
   fidelite: "#a03030",
   bonte: "#8b4a2e",
+  // Programmes de scène (lot 3 bis, 14/09/2026) : ajout validé par Timothée,
+  // les neuf valeurs ci-dessus restent gelées.
+  scene: "#3f51a3",
 } as const;
 
 export const CATEGORY_COLORS: Record<string, string> = {
@@ -48,6 +51,8 @@ export function serviceColor(service: string): string {
   if (service.startsWith("EDD")) return "#3b6d11";
   if (service.startsWith("Campus")) return "#2471a3";
   if (service === "Culte Franco") return "#2d5a65";
-  if (service === "Prépa. Table") return "#c87941";
+  // Petit déj (lot 1b) : même orange que la Prépa. Table, même famille ;
+  // aucune couleur nouvelle n'est introduite (palette gelée).
+  if (service === "Prépa. Table" || service === "Petit déj") return "#c87941";
   return CATEGORY_COLORS[service] ?? "#64748b";
 }

@@ -29,6 +29,14 @@ export type EddRole = (typeof EDD_ROLES)[number];
 export const GROUPES = ["Groupe Paix", "Groupe Fidélité", "Groupe Bonté"] as const;
 export type Groupe = (typeof GROUPES)[number];
 
+// Pôles, attribués par un admin. « événement » donne aussi la coordination des
+// programmes de scène (lot 3 bis, isCoordination) ; DA, Média et Orga servent
+// aux tâches par pôle (lot 7). Louange n'est pas coché : il découle des rôles de
+// service (polesDe dans src/lib/access.ts, isTachePole dans firestore.rules).
+export const POLES = ["da", "media", "orga", "evenement"] as const;
+export type Pole = (typeof POLES)[number];
+export const POLE_LABELS: Record<Pole, string> = { da: "DA", media: "Média", orga: "Orga", evenement: "Événement" };
+
 export interface UserProfile {
   uid: string;
   email: string;
@@ -41,12 +49,26 @@ export interface UserProfile {
    *  précise ses rôles (présidence / choriste / musicien / régie). Source unique des
    *  permissions — le niveau view/create/edit en est dérivé (cf. src/lib/access.ts). */
   serviceRoles: Record<string, ServiceRole[]>;
-  /** Sections où la personne peut publier des annonces — attribué par les admins uniquement */
+  /** Sections pour lesquelles la personne crée des évènements et des infos du
+   *  calendrier (ancien droit de publier des annonces, lot 6) — attribué par les
+   *  admins uniquement. Cf. canCreateEvenement (src/lib/access.ts). */
   annonces: string[];
   /** Audiences vers lesquelles la personne peut envoyer une notification manuelle
    *  (catégories culte/groupe/EDD, ou "*" pour tout le monde) — attribué par les
    *  admins uniquement. Cf. src/lib/push/audiences.ts. */
   notify: string[];
+  /** Droit de tenir l'organigramme (lot 16) : ajouter, retirer et déplacer
+   *  n'importe qui dans n'importe quelle équipe — attribué par les admins
+   *  uniquement. Cf. canEditerEquipes (src/lib/access.ts). */
+  equipes?: boolean;
+  /** Pôles de coordination (« evenement » : programmes de scène) — attribués par
+   *  les admins uniquement. Absent = aucun. */
+  poles?: Pole[];
+  /** Plannings que la personne peut remplir dans l'app (clés de
+   *  PUBLISHABLE_PLANNINGS, ex. « culte ») — attribué par les admins uniquement,
+   *  planning par planning (lot 17). Absent = aucun.
+   *  Cf. canEditPlanning (src/lib/access.ts). */
+  plannings?: string[];
   /** Date d'inscription = createTime du document Firestore users/{uid}, en lecture
    *  seule (jamais persisté comme champ). Renseigné pour tous les profils existants. */
   createdAt?: Date;
@@ -57,18 +79,28 @@ export interface UserProfile {
 // édition). Le serveur filtre les envois automatiques selon ces préférences ;
 // absence de doc/champ = activé. Les envois manuels (notifier/broadcast) ne sont
 // PAS filtrés. Cf. src/lib/firebase/notifPrefs.ts + src/lib/push/recipients.ts.
-export const NOTIF_TYPES = ["reminders", "setlists", "annonces"] as const;
+// « annonces » retiré le 19/09/2026 : les annonces sont fondues dans les
+// évènements depuis le lot 6, plus aucun expéditeur ne consultait cette
+// préférence ; un champ `annonces` encore présent dans notifPrefs/{uid} est
+// simplement ignoré à la lecture.
+export const NOTIF_TYPES = ["reminders", "setlists", "evenements", "taches"] as const;
 export type NotifType = (typeof NOTIF_TYPES)[number];
 export type NotifPrefs = Record<NotifType, boolean>;
 
 export const DEFAULT_NOTIF_PREFS: NotifPrefs = {
   reminders: true,
   setlists: true,
-  annonces: true,
+  evenements: true,
+  taches: true,
 };
+
+/** Langue des envois automatiques (rappels), mémorisée dans notifPrefs/{uid}.lang
+ *  par la navbar à la connexion et à chaque changement ; absente = français. */
+export type NotifLang = "fr" | "zh-CN";
 
 export const NOTIF_TYPE_LABELS: Record<NotifType, string> = {
   reminders: "Rappels de service",
   setlists: "Setlist prête",
-  annonces: "Annonces",
+  evenements: "Évènements",
+  taches: "Tâches",
 };

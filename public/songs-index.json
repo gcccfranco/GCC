@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-18T19:29:01.776Z",
+  "generatedAt": "2026-09-20T08:18:49.728Z",
   "songs": [
     {
       "slug": "abba-pere",
@@ -8,6 +8,7 @@
       "artist": "Samuel Olivier",
       "language": "fr",
       "originalKey": "A",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "adoration"
@@ -59,12 +60,13 @@
       "artist": "Hillsong",
       "language": "fr",
       "originalKey": "C",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "adoration",
         "foi"
       ],
-      "youtubeUrl": null,
+      "youtubeUrl": "https://www.youtube.com/watch?v=jRNH-r8ltbg",
       "spotifyUrl": null,
       "appleMusicUrl": null,
       "hasJianpu": false,
@@ -101,6 +103,7 @@
       "artist": "周巽倩",
       "language": "zh",
       "originalKey": "C",
+      "recommendedKey": null,
       "tempo": 64,
       "themes": [
         "圣诞",
@@ -151,6 +154,7 @@
       "artist": "Sandy Yu / Gather Worship",
       "language": "zh",
       "originalKey": "G",
+      "recommendedKey": null,
       "tempo": 68,
       "themes": [
         "敬拜",
@@ -206,9 +210,10 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "D",
+      "recommendedKey": null,
       "tempo": 70,
       "themes": [],
-      "youtubeUrl": null,
+      "youtubeUrl": "https://www.youtube.com/watch?v=MP_0qHJW-Gw",
       "spotifyUrl": null,
       "appleMusicUrl": null,
       "hasJianpu": false,
@@ -238,6 +243,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "G",
+      "recommendedKey": null,
       "tempo": 62,
       "themes": [],
       "youtubeUrl": null,
@@ -265,6 +271,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "D",
+      "recommendedKey": null,
       "tempo": 70,
       "themes": [],
       "youtubeUrl": null,
@@ -292,6 +299,7 @@
       "artist": "约书亚乐团",
       "language": "zh",
       "originalKey": "A",
+      "recommendedKey": null,
       "tempo": 66,
       "themes": [
         "宣告",
@@ -338,6 +346,7 @@
       "artist": "邓晓云 / 游智婷",
       "language": "zh",
       "originalKey": "C",
+      "recommendedKey": null,
       "tempo": 66,
       "themes": [
         "敬拜",
@@ -381,6 +390,7 @@
       "artist": "Chris Tomlin",
       "language": "fr",
       "originalKey": "C#",
+      "recommendedKey": "A",
       "tempo": 72,
       "themes": [
         "adoration",
@@ -435,12 +445,13 @@
       "artist": "Hillsong",
       "language": "fr",
       "originalKey": "E",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "croix",
         "adoration"
       ],
-      "youtubeUrl": null,
+      "youtubeUrl": "https://www.youtube.com/watch?v=U5eof6t4TZ0",
       "spotifyUrl": null,
       "appleMusicUrl": null,
       "hasJianpu": false,
@@ -489,12 +500,13 @@
       "artist": "Steve Thompson, Chris Christensen & Thierry Ostrini",
       "language": "fr",
       "originalKey": "Am",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "adoration",
         "croix"
       ],
-      "youtubeUrl": null,
+      "youtubeUrl": "https://www.youtube.com/watch?v=DapXAOupsCI",
       "spotifyUrl": null,
       "appleMusicUrl": null,
       "hasJianpu": false,
@@ -524,12 +536,13 @@
       "artist": "Bethel Music",
       "language": "fr",
       "originalKey": "E",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "adoration",
         "grace"
       ],
-      "youtubeUrl": null,
+      "youtubeUrl": "https://www.youtube.com/watch?v=FJ3arrDOq5E",
       "spotifyUrl": null,
       "appleMusicUrl": null,
       "hasJianpu": false,
@@ -571,13 +584,14 @@
       "artist": "Église Momentum",
       "language": "fr",
       "originalKey": "C",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "adoration",
         "croix",
         "grace"
       ],
-      "youtubeUrl": null,
+      "youtubeUrl": "https://www.youtube.com/watch?v=iU7zClg0Y0c",
       "spotifyUrl": null,
       "appleMusicUrl": null,
       "hasJianpu": false,
@@ -614,12 +628,13 @@
       "artist": "Hillsong",
       "language": "fr",
       "originalKey": "D",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "adoration",
         "grace"
       ],
-      "youtubeUrl": null,
+      "youtubeUrl": "https://www.youtube.com/watch?v=avSmWKQkznc",
       "spotifyUrl": null,
       "appleMusicUrl": null,
       "hasJianpu": false,
@@ -661,6 +676,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "D",
+      "recommendedKey": null,
       "tempo": 62,
       "themes": [],
       "youtubeUrl": null,
@@ -693,6 +709,7 @@
       "artist": "Frederick A. Graves",
       "language": "fr",
       "originalKey": "D",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "croix",
@@ -736,12 +753,13 @@
       "artist": "Hillsong",
       "language": "fr",
       "originalKey": "G",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "adoration",
         "saintete"
       ],
-      "youtubeUrl": null,
+      "youtubeUrl": "https://www.youtube.com/watch?v=KxR0sYnzhmk",
       "spotifyUrl": null,
       "appleMusicUrl": null,
       "hasJianpu": false,
@@ -789,12 +807,13 @@
       "artist": "Maxime Jean-Louis, Tendry Rajaonson & David Roys-Dossou",
       "language": "fr",
       "originalKey": "B",
+      "recommendedKey": null,
       "tempo": 95,
       "themes": [
         "foi",
         "esperance"
       ],
-      "youtubeUrl": null,
+      "youtubeUrl": "https://www.youtube.com/watch?v=fvsMqaiCJKA",
       "spotifyUrl": null,
       "appleMusicUrl": null,
       "hasJianpu": false,
@@ -831,12 +850,13 @@
       "artist": "Lenny Leblanc & Paul Baloche",
       "language": "fr",
       "originalKey": "A",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "adoration",
         "croix"
       ],
-      "youtubeUrl": null,
+      "youtubeUrl": "https://www.youtube.com/watch?v=ih8czXkw8hs",
       "spotifyUrl": null,
       "appleMusicUrl": null,
       "hasJianpu": false,
@@ -868,12 +888,13 @@
       "artist": "Sinach",
       "language": "fr",
       "originalKey": "D",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "adoration",
         "foi"
       ],
-      "youtubeUrl": null,
+      "youtubeUrl": "https://www.youtube.com/watch?v=yfDUzfbITz8",
       "spotifyUrl": null,
       "appleMusicUrl": null,
       "hasJianpu": false,
@@ -937,11 +958,12 @@
       "artist": "Charly & Isabelle Siounath",
       "language": "fr",
       "originalKey": "A",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "adoration"
       ],
-      "youtubeUrl": null,
+      "youtubeUrl": "https://www.youtube.com/watch?v=w9CH4M7jl4c",
       "spotifyUrl": null,
       "appleMusicUrl": null,
       "hasJianpu": false,
@@ -966,6 +988,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "D",
+      "recommendedKey": null,
       "tempo": 130,
       "themes": [],
       "youtubeUrl": null,
@@ -993,6 +1016,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "A",
+      "recommendedKey": null,
       "tempo": 72,
       "themes": [],
       "youtubeUrl": "https://www.youtube.com/watch?v=0YJZUyVOQVY",
@@ -1025,11 +1049,12 @@
       "artist": "François Reymond",
       "language": "fr",
       "originalKey": "C",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "adoration"
       ],
-      "youtubeUrl": null,
+      "youtubeUrl": "https://www.youtube.com/watch?v=sSe4_okuXOo",
       "spotifyUrl": null,
       "appleMusicUrl": null,
       "hasJianpu": false,
@@ -1049,12 +1074,13 @@
       "artist": "Matt Redman",
       "language": "fr",
       "originalKey": "D",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "adoration",
         "action-de-grace"
       ],
-      "youtubeUrl": null,
+      "youtubeUrl": "https://www.youtube.com/watch?v=KMK1lMEcvlM",
       "spotifyUrl": null,
       "appleMusicUrl": null,
       "hasJianpu": false,
@@ -1097,12 +1123,13 @@
       "artist": "Chris Christensen & Thierry Ostrini",
       "language": "fr",
       "originalKey": "E",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "action-de-grace",
         "adoration"
       ],
-      "youtubeUrl": null,
+      "youtubeUrl": "https://www.youtube.com/watch?v=87mrPhS40Mg",
       "spotifyUrl": null,
       "appleMusicUrl": null,
       "hasJianpu": false,
@@ -1127,12 +1154,13 @@
       "artist": "Matt Redman",
       "language": "fr",
       "originalKey": "A",
+      "recommendedKey": "G",
       "tempo": null,
       "themes": [
         "adoration",
         "action-de-grace"
       ],
-      "youtubeUrl": null,
+      "youtubeUrl": "https://www.youtube.com/watch?v=3f-HiJOboi8",
       "spotifyUrl": null,
       "appleMusicUrl": null,
       "hasJianpu": false,
@@ -1174,6 +1202,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "E",
+      "recommendedKey": null,
       "tempo": 64,
       "themes": [],
       "youtubeUrl": null,
@@ -1219,6 +1248,7 @@
       "artist": "橄榄枝音乐",
       "language": "zh",
       "originalKey": "Eb",
+      "recommendedKey": null,
       "tempo": 147,
       "themes": [],
       "youtubeUrl": null,
@@ -1246,6 +1276,7 @@
       "artist": "Tasha Cobbs Leonard",
       "language": "fr",
       "originalKey": "C",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "adoration",
@@ -1284,6 +1315,7 @@
       "artist": "盛晓玫",
       "language": "zh",
       "originalKey": "D",
+      "recommendedKey": null,
       "tempo": 144,
       "themes": [
         "敬拜",
@@ -1315,6 +1347,7 @@
       "artist": "何俊杰",
       "language": "zh",
       "originalKey": "G",
+      "recommendedKey": "F",
       "tempo": 146,
       "themes": [
         "赞美",
@@ -1356,12 +1389,13 @@
       "artist": "Hillsong",
       "language": "fr",
       "originalKey": "D",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "adoration",
         "resurrection"
       ],
-      "youtubeUrl": null,
+      "youtubeUrl": "https://www.youtube.com/watch?v=l7P0Q6qI7cw",
       "spotifyUrl": null,
       "appleMusicUrl": null,
       "hasJianpu": false,
@@ -1418,12 +1452,13 @@
       "artist": "Paul Baloche",
       "language": "fr",
       "originalKey": "A",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "croix",
         "grace"
       ],
-      "youtubeUrl": null,
+      "youtubeUrl": "https://www.youtube.com/watch?v=sOsT-aZh43A",
       "spotifyUrl": null,
       "appleMusicUrl": null,
       "hasJianpu": false,
@@ -1465,11 +1500,12 @@
       "artist": "Pat Berning",
       "language": "fr",
       "originalKey": "A",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "famille-de-dieu"
       ],
-      "youtubeUrl": null,
+      "youtubeUrl": "https://www.youtube.com/watch?v=E0RAxg9bTY8",
       "spotifyUrl": null,
       "appleMusicUrl": null,
       "hasJianpu": false,
@@ -1494,6 +1530,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "G",
+      "recommendedKey": null,
       "tempo": 72,
       "themes": [],
       "youtubeUrl": null,
@@ -1526,6 +1563,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "G",
+      "recommendedKey": null,
       "tempo": 130,
       "themes": [],
       "youtubeUrl": null,
@@ -1565,12 +1603,13 @@
       "artist": "Ed Kerr & Paul Baloche",
       "language": "fr",
       "originalKey": "A",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "adoration",
         "action-de-grace"
       ],
-      "youtubeUrl": null,
+      "youtubeUrl": "https://www.youtube.com/watch?v=NC7szyvf8u0&t=39s",
       "spotifyUrl": null,
       "appleMusicUrl": null,
       "hasJianpu": false,
@@ -1602,12 +1641,13 @@
       "artist": "Karen Lafferty",
       "language": "fr",
       "originalKey": "D",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "foi",
         "engagement"
       ],
-      "youtubeUrl": null,
+      "youtubeUrl": "https://www.youtube.com/watch?v=EUHJT60Msbw",
       "spotifyUrl": null,
       "appleMusicUrl": null,
       "hasJianpu": false,
@@ -1649,6 +1689,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "A",
+      "recommendedKey": null,
       "tempo": 68,
       "themes": [],
       "youtubeUrl": null,
@@ -1693,12 +1734,13 @@
       "artist": "Matthieu Marvane & Paul Baloche",
       "language": "fr",
       "originalKey": "C",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "adoration",
         "saintete"
       ],
-      "youtubeUrl": null,
+      "youtubeUrl": "https://www.youtube.com/watch?v=dEgy7JS7uCM",
       "spotifyUrl": null,
       "appleMusicUrl": null,
       "hasJianpu": false,
@@ -1740,6 +1782,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "C",
+      "recommendedKey": null,
       "tempo": 72,
       "themes": [
         "复兴",
@@ -1786,12 +1829,13 @@
       "artist": "Hillsong",
       "language": "fr",
       "originalKey": "C",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "saint-esprit",
         "adoration"
       ],
-      "youtubeUrl": null,
+      "youtubeUrl": "https://www.youtube.com/watch?v=016kYVQCMW0",
       "spotifyUrl": null,
       "appleMusicUrl": null,
       "hasJianpu": false,
@@ -1835,6 +1879,7 @@
       "artist": "Maxime Jean-Louis & Victor Mitraud",
       "language": "fr",
       "originalKey": "F",
+      "recommendedKey": null,
       "tempo": 115,
       "themes": [
         "engagement",
@@ -1887,6 +1932,7 @@
       "artist": "Chris Tomlin",
       "language": "fr",
       "originalKey": "G",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "adoration"
@@ -1928,6 +1974,7 @@
       "artist": "Maxime Jean-Louis & Tendry Rajaonson",
       "language": "fr",
       "originalKey": "A",
+      "recommendedKey": null,
       "tempo": 154,
       "themes": [
         "foi",
@@ -1965,6 +2012,7 @@
       "artist": "游智婷",
       "language": "zh",
       "originalKey": "D",
+      "recommendedKey": null,
       "tempo": 66,
       "themes": [],
       "youtubeUrl": null,
@@ -1997,6 +2045,7 @@
       "artist": "郑懋柔、游智婷",
       "language": "zh",
       "originalKey": "F",
+      "recommendedKey": null,
       "tempo": 69,
       "themes": [
         "敬拜",
@@ -2045,6 +2094,7 @@
       "artist": "曾祥怡、游智婷",
       "language": "zh",
       "originalKey": "E",
+      "recommendedKey": null,
       "tempo": 68,
       "themes": [],
       "youtubeUrl": null,
@@ -2082,12 +2132,13 @@
       "artist": "Maxime Jean-Louis",
       "language": "fr",
       "originalKey": "A",
+      "recommendedKey": null,
       "tempo": 80,
       "themes": [
         "adoration",
         "salut"
       ],
-      "youtubeUrl": null,
+      "youtubeUrl": "https://www.youtube.com/watch?v=hF4Smyek9zI",
       "spotifyUrl": null,
       "appleMusicUrl": null,
       "hasJianpu": false,
@@ -2129,6 +2180,7 @@
       "artist": "François Reymond",
       "language": "fr",
       "originalKey": "A",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "adoration",
@@ -2177,12 +2229,13 @@
       "artist": "Hillsong",
       "language": "fr",
       "originalKey": "D",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "adoration",
         "engagement"
       ],
-      "youtubeUrl": null,
+      "youtubeUrl": "https://www.youtube.com/watch?v=Gv_eU1Rdyh4",
       "spotifyUrl": null,
       "appleMusicUrl": null,
       "hasJianpu": false,
@@ -2244,6 +2297,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "D",
+      "recommendedKey": null,
       "tempo": 66,
       "themes": [],
       "youtubeUrl": null,
@@ -2281,6 +2335,7 @@
       "artist": "郑楷",
       "language": "zh",
       "originalKey": "E",
+      "recommendedKey": null,
       "tempo": 72,
       "themes": [],
       "youtubeUrl": null,
@@ -2308,6 +2363,7 @@
       "artist": "美国黑人灵歌",
       "language": "zh",
       "originalKey": "G",
+      "recommendedKey": null,
       "tempo": 90,
       "themes": [],
       "youtubeUrl": null,
@@ -2330,9 +2386,10 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "E",
+      "recommendedKey": null,
       "tempo": 152,
       "themes": [],
-      "youtubeUrl": null,
+      "youtubeUrl": "https://www.youtube.com/watch?v=_xJkYVZ50p0",
       "spotifyUrl": null,
       "appleMusicUrl": null,
       "hasJianpu": false,
@@ -2367,6 +2424,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "G",
+      "recommendedKey": null,
       "tempo": 140,
       "themes": [],
       "youtubeUrl": null,
@@ -2418,6 +2476,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "D",
+      "recommendedKey": null,
       "tempo": 70,
       "themes": [],
       "youtubeUrl": null,
@@ -2462,6 +2521,7 @@
       "artist": "Hillsong",
       "language": "fr",
       "originalKey": "A",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "grace",
@@ -2527,6 +2587,7 @@
       "artist": "Hillsong",
       "language": "fr",
       "originalKey": "C",
+      "recommendedKey": null,
       "tempo": 116,
       "themes": [
         "salut",
@@ -2584,6 +2645,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "D",
+      "recommendedKey": null,
       "tempo": 150,
       "themes": [],
       "youtubeUrl": null,
@@ -2646,6 +2708,7 @@
       "artist": "Hillsong",
       "language": "fr",
       "originalKey": "E",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "adoration",
@@ -2703,6 +2766,7 @@
       "artist": "Hillsong",
       "language": "fr",
       "originalKey": "G",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "grace",
@@ -2746,6 +2810,7 @@
       "artist": "Marie-Laure N'Doumi",
       "language": "fr",
       "originalKey": "C",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "foi",
@@ -2805,6 +2870,7 @@
       "artist": "Dan Luiten",
       "language": "fr",
       "originalKey": "G",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "adoration",
@@ -2853,6 +2919,7 @@
       "artist": "Hillsong",
       "language": "fr",
       "originalKey": "G",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "adoration"
@@ -2899,6 +2966,7 @@
       "artist": "Horizon Louange",
       "language": "fr",
       "originalKey": "G#",
+      "recommendedKey": "A",
       "tempo": 125,
       "themes": [
         "adoration",
@@ -2948,6 +3016,7 @@
       "artist": "Carl Boberg",
       "language": "fr",
       "originalKey": "G",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "adoration",
@@ -2990,6 +3059,7 @@
       "artist": "Hillsong",
       "language": "fr",
       "originalKey": "G",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "adoration",
@@ -3021,6 +3091,7 @@
       "artist": "Elevation Worship",
       "language": "fr",
       "originalKey": "D",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "adoration"
@@ -3067,6 +3138,7 @@
       "artist": "Chris Tomlin",
       "language": "fr",
       "originalKey": "G",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "saintete",
@@ -3105,6 +3177,7 @@
       "artist": "Dan Luiten",
       "language": "fr",
       "originalKey": "D",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "adoration"
@@ -3151,6 +3224,7 @@
       "artist": "Inconnu",
       "language": "fr",
       "originalKey": "A",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "adoration",
@@ -3207,6 +3281,7 @@
       "artist": "MAXIME JEAN-LOUIS & TENDRY RAJAONSON",
       "language": "fr",
       "originalKey": "E",
+      "recommendedKey": null,
       "tempo": 80,
       "themes": [
         "adoration",
@@ -3254,6 +3329,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "F",
+      "recommendedKey": null,
       "tempo": 72,
       "themes": [
         "grace",
@@ -3290,6 +3366,7 @@
       "artist": "Geoff Moore & Steven Curtis Chapman",
       "language": "fr",
       "originalKey": "D",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "adoration",
@@ -3340,6 +3417,7 @@
       "artist": "Hillsong",
       "language": "fr",
       "originalKey": "F",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "grace",
@@ -3389,6 +3467,7 @@
       "artist": "Be Witness",
       "language": "fr",
       "originalKey": "E",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "adoration",
@@ -3436,6 +3515,7 @@
       "artist": "Chris Christensen & Thierry Ostrini",
       "language": "fr",
       "originalKey": "G",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "adoration",
@@ -3479,6 +3559,7 @@
       "artist": "Hillsong",
       "language": "fr",
       "originalKey": "C",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "adoration",
@@ -3538,6 +3619,7 @@
       "artist": "Hillsong",
       "language": "fr",
       "originalKey": "C",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "adoration"
@@ -3584,6 +3666,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "F",
+      "recommendedKey": null,
       "tempo": 72,
       "themes": [
         "信心",
@@ -3615,6 +3698,7 @@
       "artist": "Brian Doerksen",
       "language": "fr",
       "originalKey": "E",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "saintete",
@@ -3653,6 +3737,7 @@
       "artist": "Maxime Jean-Louis & Tendry Rajaonson",
       "language": "fr",
       "originalKey": "C",
+      "recommendedKey": null,
       "tempo": 83,
       "themes": [
         "adoration",
@@ -3701,6 +3786,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "C",
+      "recommendedKey": null,
       "tempo": 120,
       "themes": [],
       "youtubeUrl": null,
@@ -3735,6 +3821,7 @@
       "artist": "游智婷",
       "language": "zh",
       "originalKey": "G",
+      "recommendedKey": null,
       "tempo": 75,
       "themes": [],
       "youtubeUrl": null,
@@ -3762,6 +3849,7 @@
       "artist": "Hillsong",
       "language": "fr",
       "originalKey": "C",
+      "recommendedKey": "G",
       "tempo": 72,
       "themes": [
         "adoration",
@@ -3817,6 +3905,7 @@
       "artist": "Hillsong",
       "language": "fr",
       "originalKey": "F",
+      "recommendedKey": null,
       "tempo": 60,
       "themes": [
         "croix",
@@ -3877,6 +3966,7 @@
       "artist": "John Newton",
       "language": "fr",
       "originalKey": "E",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "grace",
@@ -3914,6 +4004,7 @@
       "artist": "Hillsong",
       "language": "fr",
       "originalKey": "A",
+      "recommendedKey": null,
       "tempo": 149,
       "themes": [
         "adoration",
@@ -3962,6 +4053,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "Bb",
+      "recommendedKey": null,
       "tempo": 132,
       "themes": [],
       "youtubeUrl": null,
@@ -4001,6 +4093,7 @@
       "artist": "Maxime Jean-Louis, Raphaëlle Pierre & Tendry Rajaonson",
       "language": "fr",
       "originalKey": "C",
+      "recommendedKey": null,
       "tempo": 72,
       "themes": [
         "adoration",
@@ -4049,6 +4142,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "G",
+      "recommendedKey": null,
       "tempo": 72,
       "themes": [
         "恩典",
@@ -4085,6 +4179,7 @@
       "artist": "Johnny Pilgrem, Adrian Price, Fiona Price & Naomi Pilgrem",
       "language": "fr",
       "originalKey": "A",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "grace",
@@ -4133,6 +4228,7 @@
       "artist": "游智婷",
       "language": "zh",
       "originalKey": "F",
+      "recommendedKey": null,
       "tempo": 68,
       "themes": [
         "敬拜",
@@ -4169,6 +4265,7 @@
       "artist": "Hillsong",
       "language": "fr",
       "originalKey": "D",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "croix",
@@ -4218,6 +4315,7 @@
       "artist": "Hillsong",
       "language": "fr",
       "originalKey": "D",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "adoration",
@@ -4265,6 +4363,7 @@
       "artist": "Thierry Ostrini & Chris Christensen",
       "language": "fr",
       "originalKey": "D",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "adoration",
@@ -4308,6 +4407,7 @@
       "artist": "Inconnu",
       "language": "fr",
       "originalKey": "G",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "adoration",
@@ -4333,6 +4433,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "D",
+      "recommendedKey": null,
       "tempo": 66,
       "themes": [],
       "youtubeUrl": null,
@@ -4365,6 +4466,7 @@
       "artist": "盛晓玫",
       "language": "zh",
       "originalKey": "C",
+      "recommendedKey": null,
       "tempo": 63,
       "themes": [
         "门徒",
@@ -4396,6 +4498,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "D",
+      "recommendedKey": null,
       "tempo": 74,
       "themes": [],
       "youtubeUrl": null,
@@ -4435,6 +4538,7 @@
       "artist": "Dan Luiten",
       "language": "fr",
       "originalKey": "E",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "adoration",
@@ -4478,6 +4582,7 @@
       "artist": "Inconnu",
       "language": "fr",
       "originalKey": "B",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "saint-esprit",
@@ -4525,6 +4630,7 @@
       "artist": "Judith Schnegg",
       "language": "fr",
       "originalKey": "G",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "adoration",
@@ -4568,6 +4674,7 @@
       "artist": "Maxime Jean-Louis, Raphaëlle Pierre & Tendry Rajaonson",
       "language": "fr",
       "originalKey": "D",
+      "recommendedKey": null,
       "tempo": 70,
       "themes": [
         "foi",
@@ -4627,6 +4734,7 @@
       "artist": "Impact",
       "language": "fr",
       "originalKey": "C",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "adoration",
@@ -4674,6 +4782,7 @@
       "artist": "Maxime Jean-Louis, David Roys-Dossou & Tendry Rajaonson",
       "language": "fr",
       "originalKey": "F",
+      "recommendedKey": null,
       "tempo": 147,
       "themes": [
         "grace",
@@ -4735,6 +4844,7 @@
       "artist": "Hillsong",
       "language": "fr",
       "originalKey": "F",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "foi",
@@ -4783,6 +4893,7 @@
       "artist": "Be Witness",
       "language": "fr",
       "originalKey": "A",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "adoration",
@@ -4843,6 +4954,7 @@
       "artist": "Sébastien Desmarais",
       "language": "fr",
       "originalKey": "C",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "adoration",
@@ -4883,6 +4995,7 @@
       "artist": "Nicolas Ternisien",
       "language": "fr",
       "originalKey": "G",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "adoration",
@@ -4930,6 +5043,7 @@
       "artist": "Claude Fraysse",
       "language": "fr",
       "originalKey": "D",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "adoration",
@@ -4962,6 +5076,7 @@
       "artist": "Rick Founds",
       "language": "fr",
       "originalKey": "G",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "adoration",
@@ -4992,6 +5107,7 @@
       "artist": "Hillsong",
       "language": "fr",
       "originalKey": "F",
+      "recommendedKey": null,
       "tempo": 74,
       "themes": [
         "foi",
@@ -5039,6 +5155,7 @@
       "artist": "Matt Redman",
       "language": "fr",
       "originalKey": "Eb",
+      "recommendedKey": "D",
       "tempo": null,
       "themes": [
         "adoration",
@@ -5081,6 +5198,7 @@
       "artist": "Impact",
       "language": "fr",
       "originalKey": "C",
+      "recommendedKey": "Ab",
       "tempo": 94,
       "themes": [
         "consecration",
@@ -5135,6 +5253,7 @@
       "artist": "Luc Dumont",
       "language": "fr",
       "originalKey": "C",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "adoration",
@@ -5166,6 +5285,7 @@
       "artist": "Charity Gayle",
       "language": "fr",
       "originalKey": "E",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "mission",
@@ -5215,6 +5335,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "G",
+      "recommendedKey": null,
       "tempo": 152,
       "themes": [],
       "youtubeUrl": null,
@@ -5252,6 +5373,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "F",
+      "recommendedKey": null,
       "tempo": 150,
       "themes": [],
       "youtubeUrl": null,
@@ -5284,6 +5406,7 @@
       "artist": "盛晓玫",
       "language": "zh",
       "originalKey": "C",
+      "recommendedKey": null,
       "tempo": 96,
       "themes": [
         "信心",
@@ -5322,6 +5445,7 @@
       "artist": "余盈盈",
       "language": "zh",
       "originalKey": "E",
+      "recommendedKey": null,
       "tempo": 142,
       "themes": [
         "赞美",
@@ -5353,6 +5477,7 @@
       "artist": "约书亚乐团",
       "language": "zh",
       "originalKey": "F",
+      "recommendedKey": null,
       "tempo": 57,
       "themes": [],
       "youtubeUrl": null,
@@ -5385,6 +5510,7 @@
       "artist": "生命河灵粮堂",
       "language": "zh",
       "originalKey": "A",
+      "recommendedKey": null,
       "tempo": 74,
       "themes": [],
       "youtubeUrl": null,
@@ -5419,6 +5545,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "D",
+      "recommendedKey": null,
       "tempo": 72,
       "themes": [],
       "youtubeUrl": null,
@@ -5451,6 +5578,7 @@
       "artist": "Elevation Worship",
       "language": "fr",
       "originalKey": "D",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "adoration",
@@ -5504,6 +5632,7 @@
       "artist": "Hillsong",
       "language": "fr",
       "originalKey": "F",
+      "recommendedKey": null,
       "tempo": 96,
       "themes": [
         "adoration",
@@ -5559,6 +5688,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "Bb",
+      "recommendedKey": null,
       "tempo": 66,
       "themes": [],
       "youtubeUrl": null,
@@ -5596,6 +5726,7 @@
       "artist": "Antydot",
       "language": "fr",
       "originalKey": "Eb",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "esperance",
@@ -5644,6 +5775,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "A",
+      "recommendedKey": null,
       "tempo": 138,
       "themes": [],
       "youtubeUrl": null,
@@ -5678,6 +5810,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "F",
+      "recommendedKey": null,
       "tempo": 68,
       "themes": [],
       "youtubeUrl": null,
@@ -5715,6 +5848,7 @@
       "artist": "Kari Jobe",
       "language": "fr",
       "originalKey": "B",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "esperance",
@@ -5763,13 +5897,14 @@
       "artist": "Hillsong",
       "language": "fr",
       "originalKey": "F",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "croix",
         "adoration",
         "engagement"
       ],
-      "youtubeUrl": null,
+      "youtubeUrl": "https://www.youtube.com/watch?v=vspHmEGzYI4",
       "spotifyUrl": null,
       "appleMusicUrl": null,
       "hasJianpu": false,
@@ -5813,13 +5948,14 @@
       "artist": "Hillsong",
       "language": "fr",
       "originalKey": "C",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "foi",
         "esperance",
         "adoration"
       ],
-      "youtubeUrl": null,
+      "youtubeUrl": "https://www.youtube.com/watch?v=kddtHCTLGgs",
       "spotifyUrl": null,
       "appleMusicUrl": null,
       "hasJianpu": false,
@@ -5875,6 +6011,7 @@
       "artist": "Dan Luiten & Jérémie Poulet",
       "language": "fr",
       "originalKey": "E",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "adoration",
@@ -5922,6 +6059,7 @@
       "artist": "Samuel Olivier",
       "language": "fr",
       "originalKey": "F",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "grace",
@@ -5964,6 +6102,7 @@
       "artist": "Hillsong",
       "language": "fr",
       "originalKey": "D",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "croix",
@@ -6007,6 +6146,7 @@
       "artist": "Maxime Jean-Louis & Tendry Rajaonson",
       "language": "fr",
       "originalKey": "B",
+      "recommendedKey": null,
       "tempo": 145,
       "themes": [
         "adoration",
@@ -6073,6 +6213,7 @@
       "artist": "John Wimber",
       "language": "fr",
       "originalKey": "D",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "adoration",
@@ -6111,6 +6252,7 @@
       "artist": "Sinach",
       "language": "fr",
       "originalKey": "C",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "adoration",
@@ -6153,6 +6295,7 @@
       "artist": "Raphaëlle Pierre, Maxime Jean-Louis, Tendry Rajaonson",
       "language": "fr",
       "originalKey": "E",
+      "recommendedKey": null,
       "tempo": 76,
       "themes": [
         "foi",
@@ -6195,6 +6338,7 @@
       "artist": "Mirella",
       "language": "fr",
       "originalKey": "C",
+      "recommendedKey": "D",
       "tempo": 85,
       "themes": [
         "adoration",
@@ -6242,6 +6386,7 @@
       "artist": "Hillsong",
       "language": "fr",
       "originalKey": "E",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "noël",
@@ -6284,6 +6429,7 @@
       "artist": "Dan Luiten & Jérémie Poulet",
       "language": "fr",
       "originalKey": "G",
+      "recommendedKey": null,
       "tempo": 71,
       "themes": [
         "grace",
@@ -6332,6 +6478,7 @@
       "artist": "Tim Hughes",
       "language": "fr",
       "originalKey": "D",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "adoration",
@@ -6374,6 +6521,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "Bb",
+      "recommendedKey": null,
       "tempo": 148,
       "themes": [],
       "youtubeUrl": null,
@@ -6411,6 +6559,7 @@
       "artist": "Glorious",
       "language": "fr",
       "originalKey": "G",
+      "recommendedKey": null,
       "tempo": 124,
       "themes": [
         "adoration",
@@ -6454,6 +6603,7 @@
       "artist": "Inconnu",
       "language": "fr",
       "originalKey": "C",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "noël",
@@ -6497,6 +6647,7 @@
       "artist": "曾祥怡",
       "language": "zh",
       "originalKey": "C",
+      "recommendedKey": null,
       "tempo": 66,
       "themes": [],
       "youtubeUrl": null,
@@ -6524,6 +6675,7 @@
       "artist": "Henry Smith",
       "language": "fr",
       "originalKey": "F",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "action-de-grace"
@@ -6558,6 +6710,7 @@
       "artist": "Sammy Zoccola",
       "language": "fr",
       "originalKey": "F",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "engagement",
@@ -6603,6 +6756,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "F",
+      "recommendedKey": null,
       "tempo": 160,
       "themes": [],
       "youtubeUrl": null,
@@ -6640,6 +6794,7 @@
       "artist": "École Pierre",
       "language": "fr",
       "originalKey": "D",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "engagement"
@@ -6693,6 +6848,7 @@
       "artist": "David Durham",
       "language": "fr",
       "originalKey": "D",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "foi",
@@ -6736,6 +6892,7 @@
       "artist": "Hillsong",
       "language": "fr",
       "originalKey": "G",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "foi",
@@ -6791,6 +6948,7 @@
       "artist": "Reuben Morgan",
       "language": "fr",
       "originalKey": "E",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "resurrection",
@@ -6827,14 +6985,15 @@
       "titlePinyin": null,
       "artist": "Impact",
       "language": "fr",
-      "originalKey": "G",
+      "originalKey": "D",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "adoration",
         "foi",
         "esperance"
       ],
-      "youtubeUrl": null,
+      "youtubeUrl": "https://www.youtube.com/watch?v=0aTLfEWuKUc",
       "spotifyUrl": null,
       "appleMusicUrl": null,
       "hasJianpu": false,
@@ -6876,6 +7035,7 @@
       "artist": "Pierre-Nicolas de Katow",
       "language": "fr",
       "originalKey": "C",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "adoration",
@@ -6913,6 +7073,7 @@
       "artist": "Thierry Ostrini",
       "language": "fr",
       "originalKey": "C",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "salut",
@@ -6950,6 +7111,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "G",
+      "recommendedKey": null,
       "tempo": 65,
       "themes": [
         "敬拜",
@@ -6980,6 +7142,7 @@
       "artist": "Eglise Nouvelle Vie",
       "language": "fr",
       "originalKey": "A",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "noël",
@@ -7022,6 +7185,7 @@
       "artist": "施弘美",
       "language": "zh",
       "originalKey": "A",
+      "recommendedKey": null,
       "tempo": 82,
       "themes": [],
       "youtubeUrl": null,
@@ -7057,6 +7221,7 @@
       "artist": "Robert & Lea Sutanto",
       "language": "zh",
       "originalKey": "D",
+      "recommendedKey": null,
       "tempo": 67,
       "themes": [],
       "youtubeUrl": null,
@@ -7089,6 +7254,7 @@
       "artist": "曾祥怡",
       "language": "zh",
       "originalKey": "E",
+      "recommendedKey": null,
       "tempo": 72,
       "themes": [
         "赞美",
@@ -7120,6 +7286,7 @@
       "artist": "Inconnu",
       "language": "zh",
       "originalKey": "F",
+      "recommendedKey": null,
       "tempo": 80,
       "themes": [],
       "youtubeUrl": null,
@@ -7149,6 +7316,7 @@
       "artist": "曾祥怡",
       "language": "zh",
       "originalKey": "F",
+      "recommendedKey": null,
       "tempo": 72,
       "themes": [],
       "youtubeUrl": null,
@@ -7193,6 +7361,7 @@
       "artist": "Inconnu",
       "language": "zh",
       "originalKey": "D",
+      "recommendedKey": null,
       "tempo": 80,
       "themes": [],
       "youtubeUrl": null,
@@ -7234,6 +7403,7 @@
       "artist": "蔡佳灵",
       "language": "zh",
       "originalKey": "D",
+      "recommendedKey": null,
       "tempo": 68,
       "themes": [
         "赞美",
@@ -7282,6 +7452,7 @@
       "artist": "Dennis L. Jernigan",
       "language": "zh",
       "originalKey": "D",
+      "recommendedKey": null,
       "tempo": 80,
       "themes": [],
       "youtubeUrl": null,
@@ -7316,6 +7487,7 @@
       "artist": "曾祥怡",
       "language": "zh",
       "originalKey": "F",
+      "recommendedKey": null,
       "tempo": 64,
       "themes": [
         "宣告",
@@ -7352,6 +7524,7 @@
       "artist": "施弘美",
       "language": "zh",
       "originalKey": "F",
+      "recommendedKey": null,
       "tempo": 78,
       "themes": [
         "宣告",
@@ -7383,6 +7556,7 @@
       "artist": "Be Witness",
       "language": "fr",
       "originalKey": "Bb",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "noël"
@@ -7431,6 +7605,7 @@
       "artist": "Hillsong",
       "language": "fr",
       "originalKey": "C",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "adoration",
@@ -7473,6 +7648,7 @@
       "artist": "Collectif Cieux Ouverts",
       "language": "fr",
       "originalKey": "F",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "adoration",
@@ -7526,6 +7702,7 @@
       "artist": "Graham Kendrick",
       "language": "fr",
       "originalKey": "F",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "foi",
@@ -7564,6 +7741,7 @@
       "artist": "Glorious",
       "language": "fr",
       "originalKey": "Bb",
+      "recommendedKey": "A",
       "tempo": 130,
       "themes": [
         "mission",
@@ -7607,6 +7785,7 @@
       "artist": "Doug Horley",
       "language": "fr",
       "originalKey": "G",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "adoration",
@@ -7642,6 +7821,7 @@
       "artist": "Maxime Jean-Louis, David Roys-Dossou & Victor Mitraud",
       "language": "fr",
       "originalKey": "E",
+      "recommendedKey": null,
       "tempo": 133,
       "themes": [
         "foi",
@@ -7700,6 +7880,7 @@
       "artist": "Hillsong",
       "language": "fr",
       "originalKey": "D",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "foi",
@@ -7742,6 +7923,7 @@
       "artist": "Hillsong",
       "language": "fr",
       "originalKey": "G",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "adoration",
@@ -7772,6 +7954,7 @@
       "artist": "游智婷",
       "language": "zh",
       "originalKey": "F",
+      "recommendedKey": null,
       "tempo": 100,
       "themes": [
         "十字架",
@@ -7815,6 +7998,7 @@
       "artist": "Hillsong",
       "language": "fr",
       "originalKey": "C",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "foi"
@@ -7863,6 +8047,7 @@
       "artist": "Paul Baloche",
       "language": "fr",
       "originalKey": "E",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "adoration",
@@ -7903,6 +8088,7 @@
       "artist": "Joel Houston",
       "language": "fr",
       "originalKey": "B",
+      "recommendedKey": null,
       "tempo": 73,
       "themes": [
         "adoration",
@@ -7956,6 +8142,7 @@
       "artist": "Maxime Jean-Louis & Tendry Rajaonson",
       "language": "fr",
       "originalKey": "Ab",
+      "recommendedKey": null,
       "tempo": 81,
       "themes": [
         "adoration",
@@ -8003,6 +8190,7 @@
       "artist": "林婉容",
       "language": "zh",
       "originalKey": "D",
+      "recommendedKey": null,
       "tempo": 60,
       "themes": [
         "依靠",
@@ -8046,6 +8234,7 @@
       "artist": "Inconnu",
       "language": "fr",
       "originalKey": "G",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "adoration"
@@ -8075,6 +8264,7 @@
       "artist": "Maxime Jean-Louis",
       "language": "fr",
       "originalKey": "B",
+      "recommendedKey": "D",
       "tempo": 80,
       "themes": [
         "foi",
@@ -8124,6 +8314,7 @@
       "artist": "Chris Tomlin",
       "language": "fr",
       "originalKey": "Bb",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "noël",
@@ -8172,6 +8363,7 @@
       "artist": "CrazyHope",
       "language": "fr",
       "originalKey": "C",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "adoration",
@@ -8215,6 +8407,7 @@
       "artist": "Inconnu",
       "language": "fr",
       "originalKey": "F",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "croix",
@@ -8264,6 +8457,7 @@
       "artist": "Hillsong",
       "language": "fr",
       "originalKey": "C",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "esperance",
@@ -8311,6 +8505,7 @@
       "artist": "Hillsong",
       "language": "fr",
       "originalKey": "G",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "engagement",
@@ -8363,6 +8558,7 @@
       "artist": "Maverick City Music",
       "language": "fr",
       "originalKey": "C",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "foi",
@@ -8410,6 +8606,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "G",
+      "recommendedKey": null,
       "tempo": 172,
       "themes": [],
       "youtubeUrl": null,
@@ -8447,6 +8644,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "F",
+      "recommendedKey": null,
       "tempo": 146,
       "themes": [
         "赞美",
@@ -8490,6 +8688,7 @@
       "artist": "张思言",
       "language": "zh",
       "originalKey": "A",
+      "recommendedKey": null,
       "tempo": 66,
       "themes": [],
       "youtubeUrl": null,
@@ -8527,6 +8726,7 @@
       "artist": "基恩敬拜",
       "language": "zh",
       "originalKey": "D",
+      "recommendedKey": null,
       "tempo": 74,
       "themes": [],
       "youtubeUrl": null,
@@ -8554,6 +8754,7 @@
       "artist": "杨家宁词 / 李宗唐曲",
       "language": "zh",
       "originalKey": "E",
+      "recommendedKey": null,
       "tempo": 70,
       "themes": [
         "转化",
@@ -8612,6 +8813,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "D",
+      "recommendedKey": null,
       "tempo": 66,
       "themes": [],
       "youtubeUrl": null,
@@ -8639,6 +8841,7 @@
       "artist": "Chris Tomlin",
       "language": "zh",
       "originalKey": "E",
+      "recommendedKey": null,
       "tempo": 80,
       "themes": [],
       "youtubeUrl": null,
@@ -8685,6 +8888,7 @@
       "artist": "Wayne Perrin & Cathy Perrin",
       "language": "fr",
       "originalKey": "C",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "adoration",
@@ -8720,6 +8924,7 @@
       "artist": "Hillsong",
       "language": "fr",
       "originalKey": "D",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "adoration",
@@ -8787,6 +8992,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "D",
+      "recommendedKey": null,
       "tempo": 104,
       "themes": [],
       "youtubeUrl": null,
@@ -8819,6 +9025,7 @@
       "artist": "游智婷",
       "language": "zh",
       "originalKey": "C",
+      "recommendedKey": null,
       "tempo": 100,
       "themes": [
         "宣告",
@@ -8862,6 +9069,7 @@
       "artist": "Hillsong",
       "language": "fr",
       "originalKey": "C",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "grace",
@@ -8905,6 +9113,7 @@
       "artist": "Phil Wickham",
       "language": "fr",
       "originalKey": "D",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "grace",
@@ -8960,6 +9169,7 @@
       "artist": "Matt Redman",
       "language": "fr",
       "originalKey": "F",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "adoration",
@@ -9002,6 +9212,7 @@
       "artist": "Gauthier Kulula",
       "language": "fr",
       "originalKey": "C",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "adoration",
@@ -9046,6 +9257,7 @@
       "artist": "Horizon Louange",
       "language": "fr",
       "originalKey": "E",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "adoration",
@@ -9099,6 +9311,7 @@
       "artist": "Elvire Dieny",
       "language": "fr",
       "originalKey": "E",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "famille-de-dieu",
@@ -9142,6 +9355,7 @@
       "artist": "曾祥怡",
       "language": "zh",
       "originalKey": "G",
+      "recommendedKey": null,
       "tempo": 148,
       "themes": [
         "爱",
@@ -9191,6 +9405,7 @@
       "artist": "游智婷",
       "language": "zh",
       "originalKey": "G",
+      "recommendedKey": null,
       "tempo": 115,
       "themes": [],
       "youtubeUrl": null,
@@ -9223,6 +9438,7 @@
       "artist": "曾祥怡",
       "language": "zh",
       "originalKey": "Bb",
+      "recommendedKey": null,
       "tempo": 66,
       "themes": [
         "敬拜",
@@ -9264,6 +9480,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "G",
+      "recommendedKey": null,
       "tempo": 130,
       "themes": [
         "赞美",
@@ -9300,6 +9517,7 @@
       "artist": "Chris Christensen & Thierry Ostrini",
       "language": "fr",
       "originalKey": "C",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "adoration",
@@ -9342,6 +9560,7 @@
       "artist": "Sylvain Freymond",
       "language": "fr",
       "originalKey": "Am",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "adoration",
@@ -9372,6 +9591,7 @@
       "artist": "Hillsong",
       "language": "fr",
       "originalKey": "G",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "adoration",
@@ -9424,6 +9644,7 @@
       "artist": "Glorious",
       "language": "fr",
       "originalKey": "E",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "esperance",
@@ -9467,6 +9688,7 @@
       "artist": "Hillsong",
       "language": "fr",
       "originalKey": "E",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "croix",
@@ -9529,6 +9751,7 @@
       "artist": "Luc Leblanc",
       "language": "fr",
       "originalKey": "G",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "saint-esprit",
@@ -9554,6 +9777,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "G",
+      "recommendedKey": null,
       "tempo": 84,
       "themes": [
         "喜乐",
@@ -9585,6 +9809,7 @@
       "artist": "Cody Carnes",
       "language": "fr",
       "originalKey": "D",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "adoration",
@@ -9627,6 +9852,7 @@
       "artist": "Maxime Jean-Louis, Tendry Rajaonson & Raphaëlle Pierre",
       "language": "fr",
       "originalKey": "D",
+      "recommendedKey": null,
       "tempo": 110,
       "themes": [
         "foi",
@@ -9669,6 +9895,7 @@
       "artist": "曾祥怡、游智婷",
       "language": "zh",
       "originalKey": "G",
+      "recommendedKey": null,
       "tempo": 70,
       "themes": [
         "敬拜",
@@ -9717,6 +9944,7 @@
       "artist": "Israel Houghton, David Binion & Joshua Dufrene",
       "language": "fr",
       "originalKey": "E",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "resurrection",
@@ -9791,6 +10019,7 @@
       "artist": "Hillsong",
       "language": "fr",
       "originalKey": "D",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "adoration",
@@ -9842,6 +10071,7 @@
       "artist": "曾祥怡",
       "language": "zh",
       "originalKey": "F",
+      "recommendedKey": null,
       "tempo": 66,
       "themes": [
         "敬拜",
@@ -9883,6 +10113,7 @@
       "artist": "陈琰冰",
       "language": "zh",
       "originalKey": "D",
+      "recommendedKey": null,
       "tempo": 76,
       "themes": [
         "敬拜",
@@ -9931,6 +10162,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "G",
+      "recommendedKey": null,
       "tempo": 105,
       "themes": [],
       "youtubeUrl": null,
@@ -9970,6 +10202,7 @@
       "artist": "蔡佳灵、纪文惠",
       "language": "zh",
       "originalKey": "D",
+      "recommendedKey": null,
       "tempo": 74,
       "themes": [],
       "youtubeUrl": null,
@@ -10007,6 +10240,7 @@
       "artist": "生命河灵粮堂",
       "language": "zh",
       "originalKey": "G",
+      "recommendedKey": null,
       "tempo": 82,
       "themes": [],
       "youtubeUrl": null,
@@ -10039,6 +10273,7 @@
       "artist": "Jesus Culture",
       "language": "fr",
       "originalKey": "C",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "saint-esprit",
@@ -10088,6 +10323,7 @@
       "artist": "Victor Mitraud & Maxime Jean-Louis",
       "language": "fr",
       "originalKey": "F#",
+      "recommendedKey": null,
       "tempo": 126,
       "themes": [
         "adoration",
@@ -10131,6 +10367,7 @@
       "artist": "Hillsong",
       "language": "fr",
       "originalKey": "A",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "adoration",
@@ -10179,6 +10416,7 @@
       "artist": "Inconnu",
       "language": "fr",
       "originalKey": "G",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "engagement",
@@ -10216,6 +10454,7 @@
       "artist": "Graham Kendrick",
       "language": "fr",
       "originalKey": "A",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "adoration",
@@ -10260,6 +10499,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "G",
+      "recommendedKey": null,
       "tempo": 67,
       "themes": [],
       "youtubeUrl": null,
@@ -10292,6 +10532,7 @@
       "artist": "约书亚乐团",
       "language": "zh",
       "originalKey": "G",
+      "recommendedKey": null,
       "tempo": 76,
       "themes": [
         "感谢",
@@ -10342,6 +10583,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "A",
+      "recommendedKey": null,
       "tempo": 134,
       "themes": [],
       "youtubeUrl": null,
@@ -10391,6 +10633,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "F",
+      "recommendedKey": null,
       "tempo": 66,
       "themes": [],
       "youtubeUrl": null,
@@ -10423,6 +10666,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "C",
+      "recommendedKey": null,
       "tempo": 66,
       "themes": [],
       "youtubeUrl": null,
@@ -10462,6 +10706,7 @@
       "artist": "Robert & Lea Sutanto",
       "language": "zh",
       "originalKey": "E",
+      "recommendedKey": null,
       "tempo": 68,
       "themes": [],
       "youtubeUrl": null,
@@ -10489,6 +10734,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "D",
+      "recommendedKey": null,
       "tempo": 74,
       "themes": [],
       "youtubeUrl": null,
@@ -10528,6 +10774,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "A",
+      "recommendedKey": "G",
       "tempo": 66,
       "themes": [],
       "youtubeUrl": "https://www.youtube.com/watch?v=TaCqFTGNKGQ",
@@ -10570,6 +10817,7 @@
       "artist": "GwonHeui Lee",
       "language": "zh",
       "originalKey": "A",
+      "recommendedKey": null,
       "tempo": 72,
       "themes": [],
       "youtubeUrl": null,
@@ -10617,6 +10865,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "E",
+      "recommendedKey": null,
       "tempo": 146,
       "themes": [],
       "youtubeUrl": null,
@@ -10656,6 +10905,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "F",
+      "recommendedKey": null,
       "tempo": 68,
       "themes": [],
       "youtubeUrl": null,
@@ -10693,6 +10943,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "E",
+      "recommendedKey": null,
       "tempo": 154,
       "themes": [],
       "youtubeUrl": null,
@@ -10730,6 +10981,7 @@
       "artist": "Inconnu",
       "language": "zh",
       "originalKey": "D",
+      "recommendedKey": null,
       "tempo": 65,
       "themes": [],
       "youtubeUrl": null,
@@ -10769,6 +11021,7 @@
       "artist": "王子音乐",
       "language": "zh",
       "originalKey": "F",
+      "recommendedKey": null,
       "tempo": 80,
       "themes": [],
       "youtubeUrl": null,
@@ -10803,6 +11056,7 @@
       "artist": "Impact",
       "language": "fr",
       "originalKey": "C",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "adoration",
@@ -10853,6 +11107,7 @@
       "artist": "Maxime Jean-Louis & Tendry Rajaonson",
       "language": "fr",
       "originalKey": "F",
+      "recommendedKey": null,
       "tempo": 92,
       "themes": [
         "adoration",
@@ -10896,6 +11151,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "F",
+      "recommendedKey": null,
       "tempo": 67,
       "themes": [],
       "youtubeUrl": null,
@@ -10928,6 +11184,7 @@
       "artist": "Écriture",
       "language": "fr",
       "originalKey": "Bb",
+      "recommendedKey": null,
       "tempo": 132,
       "themes": [
         "foi",
@@ -10976,6 +11233,7 @@
       "artist": "Pierre-Nicolas de Katow",
       "language": "fr",
       "originalKey": "F",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "foi",
@@ -11028,6 +11286,7 @@
       "artist": "盛晓玫",
       "language": "zh",
       "originalKey": "C",
+      "recommendedKey": null,
       "tempo": 118,
       "themes": [],
       "youtubeUrl": null,
@@ -11056,6 +11315,7 @@
       "artist": "EXO",
       "language": "fr",
       "originalKey": "G",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "adoration",
@@ -11093,6 +11353,7 @@
       "artist": "Dan Luiten",
       "language": "fr",
       "originalKey": "E",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "adoration"
@@ -11139,6 +11400,7 @@
       "artist": "Paul Baloche",
       "language": "fr",
       "originalKey": "G",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "adoration",
@@ -11181,6 +11443,7 @@
       "artist": "MAXIME JEAN-LOUIS, TENDRY RAJAONSON",
       "language": "fr",
       "originalKey": "G",
+      "recommendedKey": "Eb",
       "tempo": null,
       "themes": [
         "croix",
@@ -11252,6 +11515,7 @@
       "artist": "Hillsong",
       "language": "fr",
       "originalKey": "A",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "adoration",
@@ -11307,6 +11571,7 @@
       "artist": "Hillsong",
       "language": "fr",
       "originalKey": "A",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "adoration",
@@ -11349,6 +11614,7 @@
       "artist": "Dan Luiten",
       "language": "fr",
       "originalKey": "D",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "adoration",
@@ -11394,6 +11660,7 @@
       "artist": "Hillsong",
       "language": "fr",
       "originalKey": "E",
+      "recommendedKey": null,
       "tempo": 128,
       "themes": [
         "foi",
@@ -11446,6 +11713,7 @@
       "artist": "Brian Johnson & Jeremy Riddle",
       "language": "fr",
       "originalKey": "G",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "adoration",
@@ -11494,6 +11762,7 @@
       "artist": "Église Momentum",
       "language": "fr",
       "originalKey": "C",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "adoration",
@@ -11542,6 +11811,7 @@
       "artist": "Hillsong",
       "language": "fr",
       "originalKey": "C",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "adoration"
@@ -11593,6 +11863,7 @@
       "artist": "Tabitha Lemaire",
       "language": "fr",
       "originalKey": "E",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "adoration"
@@ -11634,6 +11905,7 @@
       "artist": "Impact",
       "language": "fr",
       "originalKey": "D",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "adoration",
@@ -11676,6 +11948,7 @@
       "artist": "Hillsong",
       "language": "fr",
       "originalKey": "B",
+      "recommendedKey": null,
       "tempo": 77,
       "themes": [
         "grace",
@@ -11741,6 +12014,7 @@
       "artist": "Pierre-Nicolas de Katow",
       "language": "fr",
       "originalKey": "A",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "adoration",
@@ -11786,6 +12060,7 @@
       "artist": "JEM",
       "language": "fr",
       "originalKey": "G",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "saint-esprit",
@@ -11823,6 +12098,7 @@
       "artist": "Hillsong",
       "language": "fr",
       "originalKey": "Bb",
+      "recommendedKey": "C",
       "tempo": 70,
       "themes": [
         "saint-esprit",
@@ -11863,6 +12139,7 @@
       "artist": "Hillsong",
       "language": "fr",
       "originalKey": "G",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "grace",
@@ -11905,6 +12182,7 @@
       "artist": "Patricia Morgan & Dave Bankhead",
       "language": "fr",
       "originalKey": "G",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "adoration",
@@ -11935,6 +12213,7 @@
       "artist": "Inconnu",
       "language": "fr",
       "originalKey": "C",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "saint-esprit",
@@ -12006,6 +12285,7 @@
       "artist": "Hillsong",
       "language": "fr",
       "originalKey": "A",
+      "recommendedKey": null,
       "tempo": 135,
       "themes": [
         "saint-esprit",
@@ -12053,6 +12333,7 @@
       "artist": "Lincoln Brewster & Paul Baloche",
       "language": "fr",
       "originalKey": "D",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "foi",
@@ -12106,6 +12387,7 @@
       "artist": "郑懋柔词 / 游智婷曲",
       "language": "zh",
       "originalKey": "E",
+      "recommendedKey": null,
       "tempo": 75,
       "themes": [],
       "youtubeUrl": null,
@@ -12148,6 +12430,7 @@
       "artist": "火把音乐",
       "language": "zh",
       "originalKey": "E",
+      "recommendedKey": null,
       "tempo": 68,
       "themes": [],
       "youtubeUrl": null,
@@ -12187,6 +12470,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "F",
+      "recommendedKey": null,
       "tempo": 70,
       "themes": [
         "依靠",
@@ -12223,6 +12507,7 @@
       "artist": "Inconnu",
       "language": "zh",
       "originalKey": "C",
+      "recommendedKey": null,
       "tempo": 74,
       "themes": [],
       "youtubeUrl": null,
@@ -12262,6 +12547,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "G",
+      "recommendedKey": null,
       "tempo": 72,
       "themes": [],
       "youtubeUrl": "https://www.youtube.com/watch?v=4j8abyGAmj0",
@@ -12294,6 +12580,7 @@
       "artist": "约书亚乐团",
       "language": "zh",
       "originalKey": "G",
+      "recommendedKey": null,
       "tempo": 65,
       "themes": [],
       "youtubeUrl": null,
@@ -12321,6 +12608,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "D",
+      "recommendedKey": null,
       "tempo": 144,
       "themes": [],
       "youtubeUrl": null,
@@ -12360,6 +12648,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "A",
+      "recommendedKey": null,
       "tempo": 88,
       "themes": [],
       "youtubeUrl": null,
@@ -12394,6 +12683,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "A",
+      "recommendedKey": null,
       "tempo": 66,
       "themes": [],
       "youtubeUrl": null,
@@ -12431,6 +12721,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "F",
+      "recommendedKey": null,
       "tempo": 68,
       "themes": [],
       "youtubeUrl": null,
@@ -12475,6 +12766,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "D",
+      "recommendedKey": null,
       "tempo": 72,
       "themes": [],
       "youtubeUrl": null,
@@ -12502,6 +12794,7 @@
       "artist": "有情天音乐",
       "language": "zh",
       "originalKey": "Bb",
+      "recommendedKey": null,
       "tempo": 128,
       "themes": [],
       "youtubeUrl": null,
@@ -12536,6 +12829,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "G",
+      "recommendedKey": null,
       "tempo": 66,
       "themes": [],
       "youtubeUrl": "https://www.youtube.com/watch?v=kvrRtRe9AoU",
@@ -12581,6 +12875,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "D",
+      "recommendedKey": null,
       "tempo": 72,
       "themes": [],
       "youtubeUrl": null,
@@ -12620,6 +12915,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "F",
+      "recommendedKey": null,
       "tempo": 70,
       "themes": [],
       "youtubeUrl": null,
@@ -12652,6 +12948,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "A",
+      "recommendedKey": "Ab",
       "tempo": 70,
       "themes": [],
       "youtubeUrl": "https://www.youtube.com/watch?v=CigLPfxQ7Sc",
@@ -12691,6 +12988,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "E",
+      "recommendedKey": null,
       "tempo": 120,
       "themes": [],
       "youtubeUrl": null,
@@ -12730,6 +13028,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "F",
+      "recommendedKey": null,
       "tempo": 67,
       "themes": [],
       "youtubeUrl": "https://www.youtube.com/watch?v=ozwcBC4Or8o",
@@ -12776,6 +13075,7 @@
       "artist": "City to City Taiwan",
       "language": "zh",
       "originalKey": "D",
+      "recommendedKey": null,
       "tempo": 110,
       "themes": [],
       "youtubeUrl": null,
@@ -12818,6 +13118,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "G",
+      "recommendedKey": null,
       "tempo": 158,
       "themes": [],
       "youtubeUrl": null,
@@ -12855,6 +13156,7 @@
       "artist": "祝瑞莲",
       "language": "zh",
       "originalKey": "D",
+      "recommendedKey": null,
       "tempo": 80,
       "themes": [],
       "youtubeUrl": null,
@@ -12884,6 +13186,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "F",
+      "recommendedKey": null,
       "tempo": 70,
       "themes": [],
       "youtubeUrl": null,
@@ -12921,6 +13224,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "A",
+      "recommendedKey": null,
       "tempo": 66,
       "themes": [],
       "youtubeUrl": null,
@@ -12953,6 +13257,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "G",
+      "recommendedKey": null,
       "tempo": 145,
       "themes": [
         "喜乐",
@@ -13003,6 +13308,7 @@
       "artist": "葛兆昕、陈慧琴",
       "language": "zh",
       "originalKey": "C",
+      "recommendedKey": null,
       "tempo": 72,
       "themes": [],
       "youtubeUrl": null,
@@ -13038,6 +13344,7 @@
       "artist": "约书亚乐团",
       "language": "zh",
       "originalKey": "E",
+      "recommendedKey": null,
       "tempo": 66,
       "themes": [],
       "youtubeUrl": null,
@@ -13065,6 +13372,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "C",
+      "recommendedKey": null,
       "tempo": 70,
       "themes": [],
       "youtubeUrl": null,
@@ -13102,6 +13410,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "F",
+      "recommendedKey": null,
       "tempo": 150,
       "themes": [],
       "youtubeUrl": null,
@@ -13134,6 +13443,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "D",
+      "recommendedKey": null,
       "tempo": 74,
       "themes": [],
       "youtubeUrl": null,
@@ -13166,6 +13476,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "C",
+      "recommendedKey": null,
       "tempo": 152,
       "themes": [],
       "youtubeUrl": null,
@@ -13203,6 +13514,7 @@
       "artist": "小羊诗歌",
       "language": "zh",
       "originalKey": "D",
+      "recommendedKey": null,
       "tempo": 75,
       "themes": [
         "敬拜",
@@ -13253,6 +13565,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "D",
+      "recommendedKey": null,
       "tempo": 76,
       "themes": [],
       "youtubeUrl": null,
@@ -13311,6 +13624,7 @@
       "artist": "柳子骏",
       "language": "zh",
       "originalKey": "G",
+      "recommendedKey": null,
       "tempo": 69,
       "themes": [],
       "youtubeUrl": null,
@@ -13357,6 +13671,7 @@
       "artist": "Andre Hermanto",
       "language": "zh",
       "originalKey": "A",
+      "recommendedKey": null,
       "tempo": 65,
       "themes": [
         "赞美",
@@ -13407,6 +13722,7 @@
       "artist": "约书亚乐团",
       "language": "zh",
       "originalKey": "G",
+      "recommendedKey": null,
       "tempo": 77,
       "themes": [],
       "youtubeUrl": null,
@@ -13446,6 +13762,7 @@
       "artist": "盛晓玫",
       "language": "zh",
       "originalKey": "A",
+      "recommendedKey": null,
       "tempo": 67,
       "themes": [],
       "youtubeUrl": null,
@@ -13480,6 +13797,7 @@
       "artist": "游智婷",
       "language": "zh",
       "originalKey": "C",
+      "recommendedKey": null,
       "tempo": 170,
       "themes": [
         "赞美",
@@ -13515,6 +13833,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "F",
+      "recommendedKey": null,
       "tempo": 70,
       "themes": [],
       "youtubeUrl": null,
@@ -13547,6 +13866,7 @@
       "artist": "曾祥怡词 / 游智婷曲",
       "language": "zh",
       "originalKey": "D",
+      "recommendedKey": null,
       "tempo": 64,
       "themes": [
         "感恩",
@@ -13590,6 +13910,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "D",
+      "recommendedKey": "E",
       "tempo": 75,
       "themes": [
         "感恩",
@@ -13640,6 +13961,7 @@
       "artist": "曾祥怡词 / 陈麒安曲",
       "language": "zh",
       "originalKey": "F",
+      "recommendedKey": null,
       "tempo": 158,
       "themes": [
         "宣告",
@@ -13678,6 +14000,7 @@
       "artist": "游智婷",
       "language": "zh",
       "originalKey": "F",
+      "recommendedKey": null,
       "tempo": 110,
       "themes": [],
       "youtubeUrl": null,
@@ -13710,6 +14033,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "G",
+      "recommendedKey": null,
       "tempo": 165,
       "themes": [],
       "youtubeUrl": null,
@@ -13747,6 +14071,7 @@
       "artist": "Samuel Olivier",
       "language": "fr",
       "originalKey": "A",
+      "recommendedKey": null,
       "tempo": null,
       "themes": [
         "adoration",
@@ -13795,6 +14120,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "F",
+      "recommendedKey": null,
       "tempo": 153,
       "themes": [
         "赞美",
@@ -13843,6 +14169,7 @@
       "artist": "曾祥怡",
       "language": "zh",
       "originalKey": "Bb",
+      "recommendedKey": null,
       "tempo": 148,
       "themes": [],
       "youtubeUrl": null,
@@ -13887,6 +14214,7 @@
       "artist": "曾祥怡",
       "language": "zh",
       "originalKey": "A",
+      "recommendedKey": null,
       "tempo": 77,
       "themes": [],
       "youtubeUrl": null,
@@ -13938,6 +14266,7 @@
       "artist": "林婉容",
       "language": "zh",
       "originalKey": "E",
+      "recommendedKey": null,
       "tempo": 80,
       "themes": [
         "宣告",
@@ -13976,6 +14305,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "D",
+      "recommendedKey": null,
       "tempo": 60,
       "themes": [],
       "youtubeUrl": null,
@@ -14008,6 +14338,7 @@
       "artist": "曾祥怡",
       "language": "zh",
       "originalKey": "C",
+      "recommendedKey": null,
       "tempo": 70,
       "themes": [],
       "youtubeUrl": null,
@@ -14035,6 +14366,7 @@
       "artist": "张敬雅",
       "language": "zh",
       "originalKey": "D",
+      "recommendedKey": null,
       "tempo": 80,
       "themes": [
         "敬拜",
@@ -14073,6 +14405,7 @@
       "artist": "林婉容",
       "language": "zh",
       "originalKey": "F",
+      "recommendedKey": null,
       "tempo": 75,
       "themes": [
         "奉献",
@@ -14116,6 +14449,7 @@
       "artist": "生命河灵粮堂",
       "language": "zh",
       "originalKey": "F",
+      "recommendedKey": null,
       "tempo": 68,
       "themes": [],
       "youtubeUrl": null,
@@ -14143,6 +14477,7 @@
       "artist": "Sidney Mohede / 潘都芸译",
       "language": "zh",
       "originalKey": "C",
+      "recommendedKey": null,
       "tempo": 137,
       "themes": [
         "信心",
@@ -14198,6 +14533,7 @@
       "artist": "Niko Njotorahardjo / 蒋忠译",
       "language": "zh",
       "originalKey": "E",
+      "recommendedKey": null,
       "tempo": 92,
       "themes": [
         "赞美",
@@ -14228,6 +14564,7 @@
       "artist": "曾祥怡词 / 游智婷曲",
       "language": "zh",
       "originalKey": "E",
+      "recommendedKey": null,
       "tempo": 65,
       "themes": [
         "爱慕",
@@ -14264,6 +14601,7 @@
       "artist": "Anlan 凡口草",
       "language": "zh",
       "originalKey": "F",
+      "recommendedKey": null,
       "tempo": 80,
       "themes": [
         "奉献",
@@ -14300,6 +14638,7 @@
       "artist": "游智婷词 / 游智婷、曾祥怡曲",
       "language": "zh",
       "originalKey": "C",
+      "recommendedKey": null,
       "tempo": 66,
       "themes": [
         "敬拜",
@@ -14335,6 +14674,7 @@
       "artist": "游智婷词 / 陈麟安曲",
       "language": "zh",
       "originalKey": "A",
+      "recommendedKey": null,
       "tempo": 126,
       "themes": [
         "圣诞",
@@ -14385,6 +14725,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "A",
+      "recommendedKey": null,
       "tempo": 61,
       "themes": [],
       "youtubeUrl": null,
@@ -14417,6 +14758,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "F",
+      "recommendedKey": null,
       "tempo": 156,
       "themes": [],
       "youtubeUrl": null,
@@ -14449,6 +14791,7 @@
       "artist": "Phil Wickham / Brian Johnson",
       "language": "zh",
       "originalKey": "D",
+      "recommendedKey": null,
       "tempo": 71,
       "themes": [],
       "youtubeUrl": null,
@@ -14495,6 +14838,7 @@
       "artist": "林婉容",
       "language": "zh",
       "originalKey": "D",
+      "recommendedKey": null,
       "tempo": 65,
       "themes": [
         "敬拜",
@@ -14533,6 +14877,7 @@
       "artist": "盛晓玫",
       "language": "zh",
       "originalKey": "A",
+      "recommendedKey": null,
       "tempo": 66,
       "themes": [],
       "youtubeUrl": null,
@@ -14560,6 +14905,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "D",
+      "recommendedKey": null,
       "tempo": 76,
       "themes": [],
       "youtubeUrl": null,
@@ -14594,6 +14940,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "D",
+      "recommendedKey": null,
       "tempo": 74,
       "themes": [],
       "youtubeUrl": null,
@@ -14626,6 +14973,7 @@
       "artist": "Inconnu",
       "language": "zh",
       "originalKey": "D",
+      "recommendedKey": null,
       "tempo": 80,
       "themes": [],
       "youtubeUrl": null,
@@ -14660,6 +15008,7 @@
       "artist": "泥土音乐",
       "language": "zh",
       "originalKey": "D",
+      "recommendedKey": null,
       "tempo": 78,
       "themes": [
         "盼望",
@@ -14691,6 +15040,7 @@
       "artist": "小羊诗歌",
       "language": "zh",
       "originalKey": "A",
+      "recommendedKey": null,
       "tempo": 78,
       "themes": [],
       "youtubeUrl": null,
@@ -14725,6 +15075,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "A",
+      "recommendedKey": null,
       "tempo": 146,
       "themes": [],
       "youtubeUrl": null,
@@ -14757,6 +15108,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "D",
+      "recommendedKey": null,
       "tempo": 69,
       "themes": [],
       "youtubeUrl": null,
@@ -14789,6 +15141,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "G",
+      "recommendedKey": null,
       "tempo": 125,
       "themes": [],
       "youtubeUrl": null,
@@ -14829,6 +15182,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "F",
+      "recommendedKey": null,
       "tempo": 150,
       "themes": [],
       "youtubeUrl": "https://www.youtube.com/watch?v=nJBLeMrhu9w",
@@ -14861,6 +15215,7 @@
       "artist": "万美兰词 / 游智婷曲",
       "language": "zh",
       "originalKey": "D",
+      "recommendedKey": null,
       "tempo": 80,
       "themes": [
         "赞美",
@@ -14892,6 +15247,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "C",
+      "recommendedKey": null,
       "tempo": 70,
       "themes": [
         "赞美",
@@ -14928,6 +15284,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "G",
+      "recommendedKey": null,
       "tempo": 152,
       "themes": [],
       "youtubeUrl": null,
@@ -14967,6 +15324,7 @@
       "artist": "吕小敏",
       "language": "zh",
       "originalKey": "F",
+      "recommendedKey": null,
       "tempo": 80,
       "themes": [],
       "youtubeUrl": null,
@@ -14994,6 +15352,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "F",
+      "recommendedKey": null,
       "tempo": 62,
       "themes": [],
       "youtubeUrl": null,
@@ -15026,6 +15385,7 @@
       "artist": "Les Garrett",
       "language": "zh",
       "originalKey": "E",
+      "recommendedKey": null,
       "tempo": 83,
       "themes": [],
       "youtubeUrl": null,
@@ -15053,6 +15413,7 @@
       "artist": "吕小敏",
       "language": "zh",
       "originalKey": "D",
+      "recommendedKey": null,
       "tempo": 80,
       "themes": [],
       "youtubeUrl": null,
@@ -15087,6 +15448,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "D",
+      "recommendedKey": null,
       "tempo": 70,
       "themes": [],
       "youtubeUrl": null,
@@ -15114,6 +15476,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "C",
+      "recommendedKey": null,
       "tempo": 68,
       "themes": [],
       "youtubeUrl": null,
@@ -15151,9 +15514,10 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "G",
+      "recommendedKey": null,
       "tempo": 76,
       "themes": [],
-      "youtubeUrl": null,
+      "youtubeUrl": "https://www.youtube.com/watch?v=8Y6e0xJlROI",
       "spotifyUrl": null,
       "appleMusicUrl": null,
       "hasJianpu": false,
@@ -15189,6 +15553,7 @@
       "artist": "曾祥怡",
       "language": "zh",
       "originalKey": "E",
+      "recommendedKey": null,
       "tempo": 138,
       "themes": [],
       "youtubeUrl": null,
@@ -15216,6 +15581,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "G",
+      "recommendedKey": null,
       "tempo": 80,
       "themes": [
         "力量",
@@ -15247,6 +15613,7 @@
       "artist": "约书亚乐团",
       "language": "zh",
       "originalKey": "F",
+      "recommendedKey": null,
       "tempo": 78,
       "themes": [
         "奉献",
@@ -15290,6 +15657,7 @@
       "artist": "曾祥怡",
       "language": "zh",
       "originalKey": "D",
+      "recommendedKey": null,
       "tempo": 66,
       "themes": [],
       "youtubeUrl": "https://www.youtube.com/watch?v=IKGazOdWmH4",
@@ -15322,6 +15690,7 @@
       "artist": "赞美之泉",
       "language": "zh",
       "originalKey": "C",
+      "recommendedKey": null,
       "tempo": 110,
       "themes": [],
       "youtubeUrl": null,
@@ -15354,6 +15723,7 @@
       "artist": "葛兆昕",
       "language": "zh",
       "originalKey": "C",
+      "recommendedKey": null,
       "tempo": 80,
       "themes": [],
       "youtubeUrl": null,

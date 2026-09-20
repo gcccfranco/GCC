@@ -10,6 +10,7 @@ import {
 } from "@/types/user";
 import { RESTRICTED_CATEGORIES } from "@/lib/firebase/setlists";
 import { EDD_CLASSES } from "@/lib/planning/utils";
+import { normalizeName } from "@/lib/planning/names";
 import { categoryColor, categoryLabel } from "@/lib/serviceColors";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -54,7 +55,7 @@ function CheckPill({
       onClick={onToggle}
       className={`px-3 py-2 min-h-11 rounded-lg border text-sm font-medium transition-all duration-150 active:scale-[.97] ${
         checked && !color
-          ? "bg-primary/10 border-primary text-primary"
+          ? "bg-primary/10 border-primary text-foreground"
           : checked
           ? ""
           : "bg-background border-border text-muted-foreground hover:text-foreground"
@@ -155,7 +156,7 @@ export function ServiceGrid({
           <button
             type="button"
             onClick={() => setSr(deriveFromPlanning(value.planningName))}
-            className="shrink-0 text-xs font-semibold text-primary hover:underline whitespace-nowrap"
+            className="shrink-0 text-xs font-semibold text-foreground hover:underline whitespace-nowrap"
           >
             {t("profile.fields.prefillFromPlanning")}
           </button>
@@ -211,10 +212,6 @@ export function ServiceGrid({
 
 // ─── Nom de planning ──────────────────────────────────────────────────────────
 
-function normalizeName(s: string): string {
-  return s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();
-}
-
 function NameOption({
   active,
   label,
@@ -232,7 +229,7 @@ function NameOption({
       onClick={onClick}
       className={`w-full text-left px-3 py-2 text-sm transition-colors ${
         active
-          ? "bg-primary/10 text-primary font-medium"
+          ? "bg-secondary text-foreground font-medium"
           : muted
           ? "text-muted-foreground hover:bg-muted"
           : "text-foreground hover:bg-muted"
@@ -297,7 +294,7 @@ export function PlanningNameField({
       </button>
 
       {open && (
-        <div className="mt-1 rounded-lg border border-border bg-background shadow-sm overflow-hidden">
+        <div className="mt-1 rounded-lg border border-transparent bg-secondary shadow-sm overflow-hidden">
           <div className="p-2 border-b border-border">
             <div className="relative">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />

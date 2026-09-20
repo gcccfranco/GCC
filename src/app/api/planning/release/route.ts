@@ -1,9 +1,10 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { adminDb, verifyIdToken } from "@/lib/push/admin";
-import { sendPushToUids, sendPushToAll } from "@/lib/push/send";
+import { sendPushToUids, allSubscriberUids } from "@/lib/push/send";
 import { recordNotification } from "@/lib/push/notifications";
-import { uidsForCategory } from "@/lib/push/recipients";
-import { ADMIN_EMAILS } from "@/lib/access";
+import { uidsForCategory, loadNotifLangs } from "@/lib/push/recipients";
+import { planningReleaseMessage } from "@/lib/push/messages";
+import { isAdminEmail } from "@/lib/access";
 import { NOTIFY_ALL } from "@/lib/push/audiences";
 import { getPlanning, canPublishPlanning, TRI_ORDER } from "@/lib/planning/releases";
 
@@ -50,7 +51,7 @@ export async function POST(req: NextRequest) {
   const doPublish = publish !== false;
 
   // 3. Droits de l'expéditeur
-  const isAdmin = !!email && ADMIN_EMAILS.includes(email);
+  const isAdmin = isAdminEmail(email);
   let rights: string[] = [];
   if (!isAdmin) {
     const me = (await adminDb().collection("users").doc(uid).get()).data() as
@@ -81,22 +82,24 @@ export async function POST(req: NextRequest) {
   let notified = false;
   let sent = 0;
   if (doPublish && !already) {
-    const payload = {
-      title: `Planning ${tri} en ligne`,
-      body: `Le planning ${planning.label} du ${tri} est disponible.`,
-      url: "/planning",
-      tag: `release-${planning.key}-${yr}-${tri}`,
-    };
-    const base = { title: payload.title, body: payload.body, url: payload.url };
-    if (planning.notifyAudience === NOTIFY_ALL) {
-      const result = await sendPushToAll(payload);
-      sent = result.sent;
-      await recordNotification({ ...base, kind: "broadcast", everyone: true });
-    } else {
-      const catUids = await uidsForCategory(planning.notifyAudience);
-      const result = await sendPushToUids(catUids, payload);
-      sent = result.sent;
-      await recordNotification({ ...base, kind: "broadcast", recipients: catUids });
+    // Une fournée par langue (lot 8) : resté en français seul jusqu'au 19/09/2026.
+    const tous = planning.notifyAudience === NOTIFY_ALL;
+    const cible = tous ? await allSubscriberUids() : await uidsForCategory(planning.notifyAudience);
+    const langs = await loadNotifLangs(cible);
+    const tag = `release-${planning.key}-${yr}-${tri}`;
+    for (const lang of ["fr", "zh-CN"] as const) {
+      const groupe = cible.filter((u) => (langs.get(u) ?? "fr") === lang);
+      if (!groupe.length) continue;
+      const message = planningReleaseMessage({ label: planning.label, tri }, lang);
+      const result = await sendPushToUids(groupe, { ...message, url: "/planning", tag });
+      sent += result.sent;
+      // Cloche : une entrée par fournée pour une catégorie ; « tout le monde »
+      // garde son entrée unique (visible aussi de qui n'a pas d'abonnement push).
+      if (!tous) await recordNotification({ ...message, url: "/planning", kind: "broadcast", recipients: groupe });
+    }
+    if (tous) {
+      const fr = planningReleaseMessage({ label: planning.label, tri }, "fr");
+      await recordNotification({ ...fr, url: "/planning", kind: "broadcast", everyone: true });
     }
     notified = true;
   }

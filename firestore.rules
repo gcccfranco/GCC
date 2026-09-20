@@ -8,10 +8,28 @@ rules_version = '2';
 //   création : le créateur doit se déclarer propriétaire (ownerId = uid, figé ensuite) ;
 //   modification/suppression réservées au créateur (ownerId), aux musiciens et à la
 //   présidence du même service, et aux admins.
+//   Exception : le lien de présentation (presentationUrl) peut aussi être posé par
+//   la régie inscrite au planning ce jour-là — via /api/setlist/presentation
+//   (Firebase Admin, qui lit le planning), jamais par le client. Aucune règle ici.
+//   Historique (setlists/{id}/history) : lu par les connectés, écrit par qui peut
+//   modifier la setlist, chacun sur ses propres entrées.
 // - Profils (users/{uid}) : chacun crée le sien à l'inscription ; une fois créé,
 //   seuls les admins peuvent le modifier.
+// - Évènements (evenements/{id}, lot 6) : « pour = eglise » public, le reste
+//   pour les connectés ; inscriptions lues par les connectés, écrites par le
+//   serveur seulement.
+// - Programmes de scène (programmes/{id}, lot 3 bis) : lus par les connectés ;
+//   écrits par la coordination (pôle « événement » du profil + admins). Créneaux
+//   (programmes/{id}/creneaux) : tout connecté en pose un à son nom ; auteur +
+//   coordination le modifient ou le retirent.
+// - Organigramme (equipes/{id}, lot 16) : lu par les connectés ; écrit par les
+//   admins et par les comptes portant le droit `equipes`. Les pôles qui en
+//   découlent (users/{uid}.poles) restent écrits par le serveur seul.
 // - config/app : état des inscriptions (registrationOpen), lisible publiquement,
 //   modifiable par les admins depuis la page /admin.
+// - Plannings remplis dans l'app (plannings/{key}/dimanches, lot 17) : lus
+//   publiquement (pages planning consultées sans compte) ; écrits par les
+//   admins et par les profils dont `plannings` porte la clé du planning.
 //
 // La liste des admins doit rester synchronisée avec ADMIN_EMAILS dans src/lib/access.ts.
 
@@ -56,7 +74,10 @@ service cloud.firestore {
         isAdmin()
         || (request.auth.uid == uid
             && request.resource.data.get('annonces', []) == []
-            && request.resource.data.get('notify', []) == [])
+            && request.resource.data.get('notify', []) == []
+            && request.resource.data.get('poles', []) == []
+            && request.resource.data.get('equipes', false) == false
+            && request.resource.data.get('plannings', []) == [])
       );
       // Une fois le profil créé, seuls les admins peuvent le modifier.
       allow update: if isAdmin();
@@ -76,6 +97,97 @@ service cloud.firestore {
       allow update, delete: if signedIn() && (
         isAdmin() || resource.data.authorId == request.auth.uid
       );
+    }
+
+    // Organigramme (lot 16, docs/spec-organigramme.md). Lu par tout membre
+    // connecté (l'écran est nominatif : rien sans compte) ; écrit par les admins
+    // et par les comptes à qui un admin a donné le droit `equipes` sur leur
+    // profil (D4, rouverte par Timothée le 18/09/2026 : « pouvoir donner la
+    // possibilité à certains de modifier tout l'organigramme »).
+    // `users/{uid}.poles` n'est PAS ouvert pour autant : placer quelqu'un dans
+    // une équipe passe par /api/equipes/poles (Admin SDK, qui revérifie ce même
+    // droit) — `allow update` sur users/{uid} reste aux admins.
+    // Miroir client : canVoirEquipes / canEditerEquipes (src/lib/access.ts).
+    function isEquipier() {
+      return isAdmin() || (hasProfile() && profile().get('equipes', false) == true);
+    }
+
+    match /equipes/{id} {
+      allow read: if signedIn();
+      allow create, update, delete: if signedIn() && isEquipier();
+    }
+
+    // Programmes de scène (lot 3 bis, docs/spec-programme-scene.md). Miroir :
+    // isCoordination / canEditCreneau dans src/lib/access.ts.
+    function isCoordination() {
+      return isAdmin() || (hasProfile() && 'evenement' in profile().get('poles', []));
+    }
+
+    // Tâches par pôle (lot 7, docs/spec-taches.md). Chacun ne voit, crée,
+    // modifie et coche que les tâches de ses pôles ; les admins voient tout.
+    // Louange = avoir au moins un rôle de service. Miroir : polesDe /
+    // isPoleMember (src/lib/access.ts).
+    function isTachePole(pole) {
+      return isAdmin() || (hasProfile() && (
+        pole in profile().get('poles', [])
+        || (pole == 'louange' && profile().get('serviceRoles', {}).size() > 0)
+      ));
+    }
+
+    match /poles/{pole}/taches/{id} {
+      allow read, update, delete: if signedIn() && isTachePole(pole);
+      allow create: if signedIn() && isTachePole(pole)
+        && request.resource.data.auteurUid == request.auth.uid
+        && request.resource.data.pole == pole;
+
+      match /fois/{date} {
+        allow read, write: if signedIn() && isTachePole(pole);
+      }
+    }
+
+    match /programmes/{id} {
+      allow read: if signedIn();
+      allow create, update, delete: if isCoordination();
+
+      match /creneaux/{cid} {
+        allow read: if signedIn();
+        allow create: if signedIn() && request.resource.data.auteurUid == request.auth.uid;
+        allow update, delete: if signedIn() && (
+          isCoordination() || resource.data.auteurUid == request.auth.uid
+        );
+      }
+    }
+
+    // Évènements (lot 6, docs/spec-evenements.md). « pour = eglise » : lisible par
+    // tout le monde (calendrier public ; la requête filtre sur pour) ; les autres
+    // par les connectés. Création : coordination, ou membre dont le droit
+    // d'annonces couvre la section visée, à son nom, compteur à zéro.
+    // Modification et suppression : organisateur + coordination, sans toucher
+    // au compteur. Le compteur `inscrits` et les inscriptions ne s'écrivent
+    // que par le serveur (Admin SDK, /api/evenements/*). Miroir : canSeeEvenement,
+    // canCreateEvenement, canEditEvenement (src/lib/access.ts).
+    match /evenements/{id} {
+      allow read: if resource.data.pour == 'eglise' || signedIn();
+      // Réunion de pôle (lot 7) : « pole:<id> », créée par un membre du pôle.
+      allow create: if signedIn()
+        && request.resource.data.organisateurUid == request.auth.uid
+        && request.resource.data.inscrits == 0
+        && (isCoordination()
+            || (hasProfile() && request.resource.data.pour in profile().get('annonces', []))
+            || (request.resource.data.pour.matches('pole:[a-z]+')
+                && isTachePole(request.resource.data.pour.split(':')[1])));
+      allow update: if signedIn()
+        && request.resource.data.inscrits == resource.data.inscrits
+        && (isCoordination() || resource.data.organisateurUid == request.auth.uid);
+      allow delete: if signedIn() && (isCoordination() || resource.data.organisateurUid == request.auth.uid);
+
+      match /inscriptions/{iid} {
+        // Tout membre connecté voit qui est inscrit (17/09/2026) ; sans compte,
+        // le compteur `inscrits` de l'évènement seulement. Miroir : canSeeInscrits
+        // (src/lib/access.ts).
+        allow read: if signedIn();
+        allow write: if false;
+      }
     }
 
     // Propositions de chants envoyées par les membres (inbox de modération /admin).
@@ -114,22 +226,89 @@ service cloud.firestore {
       // Création : le créateur doit se déclarer propriétaire (ownerId = uid)
       allow create: if signedIn()
         && request.resource.data.get('ownerId', null) == request.auth.uid;
-      // Modification : ownerId ne change jamais ; un musicien/présidence du service
-      // ne peut déplacer la setlist que vers une catégorie où il sert aussi.
+      // Modification : ownerId ne change jamais ; qui peut modifier =
+      // canEditSetlistDoc (le propriétaire ; sinon, setlist non privée, un
+      // admin ou un musicien/présidence du service) — jusqu'au 19/09/2026 la
+      // règle ignorait `isPrivate`, contrairement au client. Un musicien/
+      // présidence ne déplace la setlist que vers une catégorie où il sert aussi.
       allow update: if signedIn()
         && request.resource.data.get('ownerId', null) == resource.data.get('ownerId', null)
+        && canEditSetlistDoc(resource.data)
         && (
           resource.data.get('ownerId', '') == request.auth.uid
           || isAdmin()
-          || (hasProfile() && isEditorOf(resource.data.category)
-              && (request.resource.data.category == resource.data.category
-                  || isEditorOf(request.resource.data.category)))
+          || request.resource.data.category == resource.data.category
+          || isEditorOf(request.resource.data.category)
         );
-      allow delete: if signedIn() && (
-        resource.data.get('ownerId', '') == request.auth.uid
-        || isAdmin()
-        || (hasProfile() && isEditorOf(resource.data.category))
-      );
+      // Suppression : exactement le droit de modification (lot 10).
+      allow delete: if signedIn() && canEditSetlistDoc(resource.data);
+
+      // Historique des modifications (docs/spec-setlist.md) : lu par tout
+      // connecté, comme la setlist ; écrit par qui peut la modifier
+      // (canEditSetlistDoc), sous son propre nom et sur ses propres entrées.
+      match /history/{entryId} {
+        allow read: if signedIn();
+        allow create: if signedIn()
+          && request.resource.data.authorUid == request.auth.uid
+          && canEditSetlistDoc(get(/databases/$(database)/documents/setlists/$(id)).data);
+        allow update: if signedIn()
+          && resource.data.authorUid == request.auth.uid
+          && request.resource.data.authorUid == request.auth.uid
+          && canEditSetlistDoc(get(/databases/$(database)/documents/setlists/$(id)).data);
+      }
+
+      // Versions perso d'un chant (docs/spec-version-perso.md) : un document
+      // par personne, lu par tout connecté (versions partagées), écrit par
+      // son propriétaire seul. Miroir client : canHaveSetlistVersion
+      // (src/lib/access.ts) = qui voit la setlist.
+      match /versions/{uid} {
+        allow read: if signedIn();
+        allow create, update: if signedIn()
+          && request.auth.uid == uid
+          && request.resource.data.authorUid == uid;
+        allow delete: if signedIn() && request.auth.uid == uid;
+      }
+    }
+
+    // Miroir de canEditSetlist (src/lib/access.ts) : une setlist privée ne se
+    // modifie que par son propriétaire.
+    function canEditSetlistDoc(setlist) {
+      return setlist.get('ownerId', '') == request.auth.uid
+        || (!setlist.get('isPrivate', false)
+            && (isAdmin() || (hasProfile() && isEditorOf(setlist.category))));
+    }
+
+    // Harmonie (lot 9, docs/spec-harmonie.md). Le catalogue lui-même est un
+    // fichier public (public/harmonie-index.json) : rien ici. Restent ce que
+    // l'équipe écrit autour d'un chant, lisible de tout membre connecté (le
+    // filtrage pianiste / guitariste est côté navigateur, comme le reste du
+    // site — choix de confiance assumé).
+    match /harmonie/{songSlug} {
+      allow read: if signedIn();
+      // Le document parent n'est jamais écrit : seules les sous-collections le sont.
+      allow write: if false;
+
+      // Une idée automatique qui ne marche pas sur ce chant : elle disparaît
+      // pour tout le monde. Son auteur ou un admin peut la remettre.
+      match /rejets/{rid} {
+        allow read: if signedIn();
+        allow create: if signedIn() && request.resource.data.uid == request.auth.uid;
+        // Réécrire le même refus (double tap, état local en retard) ne doit pas
+        // échouer ; changer son auteur, si.
+        allow update: if signedIn() && resource.data.uid == request.auth.uid
+                      && request.resource.data.uid == resource.data.uid;
+        allow delete: if signedIn() && (resource.data.uid == request.auth.uid || isAdmin());
+      }
+
+      // Idées de l'équipe, attachées au chant. Modifiables par leur auteur ;
+      // les admins peuvent supprimer.
+      match /idees/{iid} {
+        allow read: if signedIn();
+        allow create: if signedIn() && request.resource.data.uid == request.auth.uid;
+        allow update: if signedIn() && resource.data.uid == request.auth.uid
+                      && request.resource.data.uid == resource.data.uid;
+        allow delete: if signedIn() && (resource.data.uid == request.auth.uid || isAdmin());
+      }
     }
 
     // Annotations dessinées en Mode Louange (personnelles).
@@ -171,6 +350,14 @@ service cloud.firestore {
       allow write: if signedIn() && request.auth.uid == uid;
     }
 
+    // Accueil de première connexion déjà vu (lot 8, docs/spec-nouveaux-membres.md) :
+    // doc auto-géré par l'intéressé (le profil users/{uid} est verrouillé).
+    // Miroir : src/lib/firebase/onboarding.ts (aucun droit dans access.ts, chacun
+    // n'écrit que le sien).
+    match /onboarding/{uid} {
+      allow read, write: if signedIn() && request.auth.uid == uid;
+    }
+
     match /config/app {
       // La page d'inscription lit registrationOpen sans être connectée
       allow read: if true;
@@ -185,6 +372,43 @@ service cloud.firestore {
     match /planningReleases/{id} {
       allow read: if true;
       allow write: if false;
+    }
+
+    // Planning rempli dans l'app (lot 17, docs/spec-planning-grille.md). Un
+    // document par dimanche, une case par champ : une écriture ne porte que sur
+    // sa colonne (updateMask), donc deux personnes ne s'effacent jamais.
+    // Lecture PUBLIQUE, comme planningReleases : les pages planning se
+    // consultent sans compte, et le CSV gviz du Google Sheet l'est déjà.
+    // Écriture : les admins, et les profils dont `plannings` porte la clé.
+    // Miroir client : canEditPlanning (src/lib/access.ts).
+    function peutEcrirePlanning(key) {
+      return isAdmin() || (hasProfile() && key in profile().get('plannings', []));
+    }
+
+    match /plannings/{key} {
+      allow read: if true;
+      allow write: if false;
+
+      match /dimanches/{date} {
+        allow read: if true;
+        allow create, update: if peutEcrirePlanning(key)
+          && request.resource.data.date == date;
+        // On vide les cases, on ne supprime pas un dimanche.
+        allow delete: if false;
+      }
+
+      // Historique nommé : lu par tout connecté, écrit par qui peut remplir,
+      // sous son propre nom et sur ses propres entrées (patron de
+      // setlists/{id}/history).
+      match /history/{entryId} {
+        allow read: if signedIn();
+        allow create: if peutEcrirePlanning(key)
+          && request.resource.data.authorUid == request.auth.uid;
+        allow update: if peutEcrirePlanning(key)
+          && resource.data.authorUid == request.auth.uid
+          && request.resource.data.authorUid == request.auth.uid;
+        allow delete: if false;
+      }
     }
   }
 }

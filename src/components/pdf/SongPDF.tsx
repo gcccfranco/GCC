@@ -1,17 +1,22 @@
 import {
   Document, Page, Text, View, StyleSheet, Font, Image,
 } from "@react-pdf/renderer";
+import type { ReactNode } from "react";
 import type { ChordProAST, ChordProSection, Token } from "@/types/chordPro";
 import { formatSectionName } from "@/lib/chordpro/parser";
 import { resolveStructureOverride } from "@/lib/chordpro/structure";
-import { altSpellingKey, semitonesTo, transposeChord, transposeLabel } from "@/lib/transpose";
+import { altSpellingKey, semitonesTo, transposeLabel } from "@/lib/transpose";
 import { transposeSection } from "@/lib/transposeAST";
 import frTranslations from "@/locales/fr.json";
 import zhTranslations from "@/locales/zh-CN.json";
 import { measureLyric, measureChord } from "@/lib/chordpro/measureText";
 import type { SectionNuance } from "@/types/setList";
 import type { JianpuChords, JianpuPage } from "@/lib/jianpu/images";
-import { nuanceLabel, NUANCE_COLOR } from "@/lib/setlist/nuances";
+import { nuanceLabel } from "@/lib/setlist/nuances";
+import { nuancePdfColors, sectionPdfPalette } from "@/lib/pdf/colors";
+import { compactPlan, stripGroups } from "@/lib/pdf/compact";
+import type { SectionOccurrence } from "@/lib/setlist/sectionSteps";
+import { StructureStripPDF, estimateStripHeight } from "@/components/pdf/StructureStripPDF";
 
 // ─── Fonts ────────────────────────────────────────────────────────────────────
 
@@ -55,7 +60,17 @@ type Theme = {
   accent: string;
   boxFill: string;
   boxBorder: string;
+  /** Chiffres 简谱 (par défaut C.jianpu). */
+  jianpu?: string;
 };
+
+/** Classique : une couleur par langue. Couleurs par section : cadre fin à la
+ *  couleur du type de section, accords et 简谱 en noir, comme l'écran
+ *  (SongView, getChartSectionStyle — docs/spec-export-pdf.md). */
+export type PdfSectionStyle = "classic" | "colors";
+
+// Encre des accords et du 简谱 en couleurs par section (--foreground clair).
+const INK = "#1c1c1e";
 
 const BLUE_THEME: Theme = {
   accent:    "#3f63cf",
@@ -396,7 +411,7 @@ function JianpuLine({ tokens, jianpu, pinyin, showChords, showPinyin, theme }: {
       {cols.map((col, i) => (
         <View key={i} style={{ width: JP_CELL, flexDirection: "column", alignItems: "center" }}>
           {showChords && <ChordSmall chord={col.chord} theme={theme} />}
-          <Text style={{ fontSize: JIANPU_SIZE, color: C.jianpu, fontFamily: "SpaceGrotesk",
+          <Text style={{ fontSize: JIANPU_SIZE, color: theme.jianpu ?? C.jianpu, fontFamily: "SpaceGrotesk",
                          fontWeight: 300, textAlign: "center", minHeight: 14 }}>
             {col.num}
           </Text>
@@ -416,13 +431,13 @@ function JianpuLine({ tokens, jianpu, pinyin, showChords, showPinyin, theme }: {
 
 // ─── Section ──────────────────────────────────────────────────────────────────
 
-function TransitionPDFBlock({ text }: { text: string }) {
+function TransitionPDFBlock({ text, marginTop = -4 }: { text: string; marginTop?: number }) {
   const hasCJK = /[一-鿿㐀-䶿]/.test(text);
   return (
     <View style={{
       flexDirection: "row",
       alignItems: "flex-start",
-      marginTop: -4,
+      marginTop,
       marginBottom: 8,
       paddingHorizontal: 8,
       paddingVertical: 5,
@@ -439,7 +454,7 @@ function TransitionPDFBlock({ text }: { text: string }) {
   );
 }
 
-function SectionBlock({ section, isZh, useJianpu, showChords, showPinyin, note, nuance, keyChange, theme, uiLang, sourceLabel, sourceLabelFont }: {
+function SectionBlock({ section, isZh, useJianpu, showChords, showPinyin, note, nuance, keyChange, theme, uiLang, sourceLabel, sourceLabelFont, sectionStyle = "classic" }: {
   section: ChordProSection;
   isZh: boolean;
   useJianpu: boolean;
@@ -453,13 +468,23 @@ function SectionBlock({ section, isZh, useJianpu, showChords, showPinyin, note, 
   uiLang: string;
   sourceLabel?: string;
   sourceLabelFont?: string;
+  sectionStyle?: PdfSectionStyle;
 }) {
   const labelFont = isZh && uiLang === "zh-CN" ? "SourceHanSansCN" : "SpaceGrotesk";
   const label = sectionName(section, uiLang).toUpperCase();
   const boxType: BoxStyle = SECTION_BOX[section.type] ?? "none";
+  const colors = sectionStyle === "colors";
+  const labelColor = colors ? sectionPdfPalette(section.type).color : theme.accent;
+  const lineTheme: Theme = colors ? { ...theme, accent: INK, jianpu: INK } : theme;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const boxView: any = boxType === "filled"
+  const boxView: any = colors
+    ? {
+        borderWidth: 1, borderColor: labelColor, borderRadius: 8,
+        paddingTop: 8, paddingBottom: 9, paddingHorizontal: 12,
+        marginBottom: 8,
+      }
+    : boxType === "filled"
     ? {
         borderTopWidth: 0.5,   borderTopColor: theme.boxBorder,
         borderRightWidth: 0.5, borderRightColor: theme.boxBorder,
@@ -496,13 +521,13 @@ function SectionBlock({ section, isZh, useJianpu, showChords, showPinyin, note, 
       <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between",
                      marginBottom: 5 }}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 7 }}>
-          <View style={{ width: 11, height: 1.5, backgroundColor: theme.accent }} />
-          <Text style={{ fontSize: 7.5, fontWeight: 700, color: theme.accent, fontFamily: labelFont,
+          <View style={{ width: 11, height: 1.5, backgroundColor: labelColor }} />
+          <Text style={{ fontSize: 7.5, fontWeight: 700, color: labelColor, fontFamily: labelFont,
                          letterSpacing: 1.4 }}>
             {label}
           </Text>
           {keyChange ? (
-            <Text style={{ fontSize: 8, fontWeight: 700, color: theme.accent,
+            <Text style={{ fontSize: 8, fontWeight: 700, color: labelColor,
                            fontFamily: uiLang === "zh-CN" ? "SourceHanSansCN" : "SpaceGrotesk" }}>
               {uiLang === "zh-CN" ? `升调（${keyChange}）` : `Modulation (${keyChange})`}
             </Text>
@@ -515,18 +540,25 @@ function SectionBlock({ section, isZh, useJianpu, showChords, showPinyin, note, 
           ) : null}
         </View>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-          {nuance?.tags.map((id) => (
-            <Text
-              key={id}
-              style={{ fontSize: 7.5, color: NUANCE_COLOR, fontFamily: "LiberationSans", fontWeight: 700,
-                       borderWidth: 0.5, borderColor: NUANCE_COLOR, borderRadius: 3,
-                       paddingHorizontal: 3, paddingVertical: 1 }}
-            >
-              {nuanceLabel(id)}
-            </Text>
-          ))}
+          {/* Nuancier gris de l'écran : fond du clair au foncé selon l'intensité,
+              indications en contour (docs/spec-export-pdf.md, Q2). */}
+          {nuance?.tags.map((id) => {
+            const c = nuancePdfColors(id);
+            return (
+              <Text
+                key={id}
+                style={{ fontSize: 7.5, color: c.color, fontFamily: "LiberationSans", fontWeight: 700,
+                         borderRadius: 3, paddingHorizontal: 3, paddingVertical: 1,
+                         ...("background" in c
+                           ? { backgroundColor: c.background }
+                           : { borderWidth: 0.5, borderColor: c.border }) }}
+              >
+                {nuanceLabel(id)}
+              </Text>
+            );
+          })}
           {nuance?.note ? (
-            <Text style={{ fontSize: 8, color: NUANCE_COLOR, fontFamily: labelFont, fontWeight: 400 }}>
+            <Text style={{ fontSize: 8, color: "#57534e", fontFamily: labelFont, fontWeight: 400 }}>
               {nuance.note}
             </Text>
           ) : null}
@@ -547,16 +579,16 @@ function SectionBlock({ section, isZh, useJianpu, showChords, showPinyin, note, 
           if (isZh && useJianpu) {
             return (
               <JianpuLine key={li} tokens={line.tokens} jianpu={line.jianpu} pinyin={line.pinyin}
-                          showChords={showChords} showPinyin={showPinyin} theme={theme} />
+                          showChords={showChords} showPinyin={showPinyin} theme={lineTheme} />
             );
           }
           if (isZh) {
             return (
               <ZhLine key={li} tokens={line.tokens} pinyin={line.pinyin}
-                      showChords={showChords} showPinyin={showPinyin} theme={theme} />
+                      showChords={showChords} showPinyin={showPinyin} theme={lineTheme} />
             );
           }
-          return <FrLine key={li} tokens={line.tokens} showChords={showChords} theme={theme} />;
+          return <FrLine key={li} tokens={line.tokens} showChords={showChords} theme={lineTheme} />;
         })}
       </View>
     </View>
@@ -589,6 +621,72 @@ function OrdreLine({ sections, theme, uiLang, isZh }: {
   );
 }
 
+// ─── Compact : bandeau + sections uniques ────────────────────────────────────
+
+/** Bandeau du compact : étapes repliées (« ×2 ») avec les libellés de la
+ *  langue de l'interface, comme à l'écran. */
+export function CompactStrip({ steps, songKey, uiLang, details }: {
+  steps: SectionOccurrence[];
+  songKey?: string;
+  uiLang: string;
+  details: boolean;
+}) {
+  return (
+    <StructureStripPDF
+      groups={stripGroups(steps, (section) => sectionName(section, uiLang))}
+      songKey={songKey}
+      details={details}
+    />
+  );
+}
+
+/** Hauteur à réserver au bandeau au-dessus d'un scan 简谱. */
+export function compactStripHeight(steps: SectionOccurrence[], uiLang: string): number {
+  return estimateStripHeight(stripGroups(steps, (section) => sectionName(section, uiLang)), true);
+}
+
+function CompactBody({ sections, item, songKey, isZh, useJianpu, showChords, showPinyin, theme, uiLang, sectionStyle }: {
+  sections: ChordProSection[];
+  item: Parameters<typeof compactPlan>[1];
+  songKey?: string;
+  isZh: boolean;
+  useJianpu: boolean;
+  showChords: boolean;
+  showPinyin: boolean;
+  theme: Theme;
+  uiLang: string;
+  sectionStyle: PdfSectionStyle;
+}) {
+  const { steps, prints } = compactPlan(sections, item, songKey);
+  return (
+    <>
+      <CompactStrip steps={steps} songKey={songKey} uiLang={uiLang} details />
+      {/* Chaque section une fois : notes, nuances et transitions d'occurrence
+          sont dans le bandeau, pas dans le corps. */}
+      {prints.map(({ step }, i) => {
+        const keyChange = step.targetKey && step.targetKey !== songKey ? step.targetKey : undefined;
+        const shownSection = keyChange && songKey
+          ? transposeSection(step.section, semitonesTo(songKey, keyChange), keyChange)
+          : step.section;
+        return (
+          <SectionBlock
+            key={`${step.section.uid ?? step.section.id}-${i}`}
+            section={shownSection}
+            isZh={isZh}
+            useJianpu={useJianpu}
+            showChords={showChords}
+            showPinyin={showPinyin}
+            keyChange={keyChange}
+            theme={theme}
+            uiLang={uiLang}
+            sectionStyle={sectionStyle}
+          />
+        );
+      })}
+    </>
+  );
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export interface SongPDFProps {
@@ -605,6 +703,12 @@ export interface SongPDFProps {
   /** Optional override for the footer center label (e.g. setlist title). */
   footerCenter?: string;
   language?: string;
+  sectionStyle?: PdfSectionStyle;
+  /** « unique » (PDF compact) : bandeau à la place de la ligne ORDRE, puis
+   *  chaque section une fois — comme la vue partitions en « Sections uniques ». */
+  layout?: "played" | "unique";
+  /** Transition de la setlist jouée après ce chant (compact) : en bas de page. */
+  trailingTransition?: string;
 }
 
 export function SongPDFPage({
@@ -619,6 +723,9 @@ export function SongPDFPage({
   sectionKeys = {},
   footerCenter,
   language = "fr",
+  sectionStyle = "classic",
+  layout = "played",
+  trailingTransition,
 }: SongPDFProps) {
   const isZh = ast.metadata.language === "zh";
   const uiLang = language;
@@ -683,6 +790,20 @@ export function SongPDFPage({
         <View style={{ height: 0.5, backgroundColor: C.rule, marginTop: 10, marginBottom: 0 }} />
       </View>
 
+      {layout === "unique" ? (
+        <CompactBody
+          sections={sections}
+          item={{ sectionNotes, sectionTransitions, sectionNuances, sectionKeys }}
+          songKey={ast.metadata.key}
+          isZh={isZh}
+          useJianpu={canUseJianpu}
+          showChords={showChords}
+          showPinyin={isZh ? showPinyin : false}
+          theme={theme}
+          uiLang={uiLang}
+          sectionStyle={sectionStyle}
+        />
+      ) : (<>
       {/* ── ORDRE line ── */}
       <OrdreLine sections={sections} theme={theme} uiLang={uiLang} isZh={isZh} />
 
@@ -715,12 +836,16 @@ export function SongPDFPage({
               keyChange={keyChange}
               theme={theme}
               uiLang={uiLang}
+              sectionStyle={sectionStyle}
             />,
           ];
           if (transition) items.push(<TransitionPDFBlock key={`tr-${section.uid ?? section.id}-${i}`} text={transition} />);
           return items;
         });
       })()}
+      </>)}
+
+      {trailingTransition ? <TransitionPDFBlock text={trailingTransition} marginTop={4} /> : null}
 
       {/* ── Footer ── */}
       <View style={styles.footer} fixed>
@@ -756,11 +881,19 @@ export function FusionPDFPage({
   mixedStructure,
   showChords,
   footerCenter,
+  sectionStyle = "classic",
+  withStrip = false,
+  trailingTransition,
 }: {
   songs: FusionPDFSong[];
   mixedStructure: Array<{ songSlug: string; sectionId: string; note?: string; transition?: string; nuance?: SectionNuance; keyChange?: string }>;
   showChords: boolean;
   footerCenter?: string;
+  sectionStyle?: PdfSectionStyle;
+  /** PDF compact : bandeau au-dessus de la structure mélangée (toujours dans
+   *  l'ordre joué, comme à l'écran). */
+  withStrip?: boolean;
+  trailingTransition?: string;
 }) {
   const songMap = Object.fromEntries(songs.map((s) => [s.slug, s]));
 
@@ -815,6 +948,14 @@ export function FusionPDFPage({
         <View style={{ height: 0.5, backgroundColor: C.rule, marginTop: 10, marginBottom: 0 }} />
       </View>
 
+      {withStrip && (
+        <CompactStrip
+          steps={mixedSections.map((m) => ({ section: m.section, note: m.note ?? "", transition: m.transition ?? "", nuance: m.nuance, targetKey: m.keyChange }))}
+          uiLang="fr"
+          details={false}
+        />
+      )}
+
       {mixedSections.flatMap(({ section, note, nuance, keyChange, transition, isZh, theme, sourceLabel, sourceLabelFont }, idx) => {
         const items = [
           <SectionBlock
@@ -831,11 +972,14 @@ export function FusionPDFPage({
             uiLang="fr"
             sourceLabel={sourceLabel}
             sourceLabelFont={sourceLabelFont}
+            sectionStyle={sectionStyle}
           />,
         ];
         if (transition) items.push(<TransitionPDFBlock key={`tr-${idx}`} text={transition} />);
         return items;
       })}
+
+      {trailingTransition ? <TransitionPDFBlock text={trailingTransition} marginTop={4} /> : null}
 
       <View style={styles.footer} fixed>
         <Text style={[styles.footerText, { fontFamily: "LiberationSans", fontWeight: 700,
@@ -955,6 +1099,9 @@ export function JianpuPDFPage({
   playedKey,
   headerHeight = 0,
   footerCenter,
+  strip,
+  stripHeight = 0,
+  trailingTransition,
 }: {
   src: string;
   page: JianpuPage;
@@ -966,8 +1113,14 @@ export function JianpuPDFPage({
   /** Hauteur réservée à l'en-tête (0 = page suivante d'un scan multi-pages). */
   headerHeight?: number;
   footerCenter?: string;
+  /** PDF compact : bandeau de structure sous l'en-tête (première page). */
+  strip?: ReactNode;
+  /** Place réservée au bandeau, retirée de la hauteur du scan. */
+  stripHeight?: number;
+  /** Transition jouée après ce chant (compact, dernière page du scan). */
+  trailingTransition?: string;
 }) {
-  const availH = SHEET_BOX_H - headerHeight;
+  const availH = SHEET_BOX_H - headerHeight - stripHeight - (trailingTransition ? 30 : 0);
   const k = Math.min(SHEET_BOX_W / page.w, availH / page.h);
   const imgW = page.w * k;
   const imgH = page.h * k;
@@ -1005,10 +1158,11 @@ export function JianpuPDFPage({
             )}
           </View>
           <View style={{ height: 0.5, backgroundColor: C.rule, marginTop: 8 }} />
+          {strip}
         </View>
       )}
 
-      <View style={{ alignItems: "center", marginTop: headerHeight > 0 ? 10 : 0 }}>
+      <View style={{ alignItems: "center", marginTop: headerHeight > 0 && !strip ? 10 : 0 }}>
         <View style={{ width: imgW, height: imgH, position: "relative" }}>
           <Image src={src} style={{ width: imgW, height: imgH }} />
 
@@ -1073,6 +1227,8 @@ export function JianpuPDFPage({
           </Text>
         )}
       </View>
+
+      {trailingTransition ? <TransitionPDFBlock text={trailingTransition} marginTop={8} /> : null}
 
       <View style={styles.footer} fixed>
         <Text style={[styles.footerText, { fontFamily: "LiberationSans", fontWeight: 700,

@@ -41,6 +41,8 @@ export type ChordProAST = {
     titlePinyin: string | null;
     artist: string;
     key: string;
+    /** Tonalité la plus chantée à GCC, validée ({recommended_key}) — null si aucune. */
+    recommendedKey: string | null;
     jianpuKey: string | null;
     tempo: number | null;
     language: Language;

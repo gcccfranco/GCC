@@ -3,7 +3,7 @@ import { adminDb, verifyIdToken } from "@/lib/push/admin";
 import { sendPushToUids, sendPushToAll } from "@/lib/push/send";
 import { recordNotification } from "@/lib/push/notifications";
 import { uidsForCategory, uidsForCategories } from "@/lib/push/recipients";
-import { ADMIN_EMAILS } from "@/lib/access";
+import { isAdminEmail } from "@/lib/access";
 import { NOTIFY_ALL, isValidAudience } from "@/lib/push/audiences";
 import { createHash } from "node:crypto";
 
@@ -69,7 +69,7 @@ export async function POST(req: NextRequest) {
   }
 
   // 3. Droits de l'expéditeur
-  const isAdmin = !!email && ADMIN_EMAILS.includes(email);
+  const isAdmin = isAdminEmail(email);
   let rights: string[] = [];
   if (!isAdmin) {
     const me = (await adminDb().collection("users").doc(uid).get()).data() as

@@ -25,19 +25,22 @@ test.describe("sélecteur de tonalité", () => {
   // Une tonalité qui s'écrit autrement ne doit pas disparaître de la liste :
   // un `<select>` dont la valeur n'est dans aucune option s'affiche **vide**,
   // et le chant perdrait sa tonalité à l'écran sans que rien ne le dise.
-  for (const [slug, tonalité] of [
-    ["a-jamais-tu-es-saint", "C#"],
-    ["dieu-sauveur", "G#"],
-    ["a-l-agneau", "Am"], // pas une des douze : ni majeure, ni enharmonique
+  //
+  // Depuis le 14/09/2026, les deux premiers démarrent dans leur tonalité
+  // recommandée (A) : leur originale doit rester proposée quand même.
+  for (const [slug, tonalité, départ] of [
+    ["a-jamais-tu-es-saint", "C#", "A"],
+    ["dieu-sauveur", "G#", "A"],
+    ["a-l-agneau", "Am", "Am"], // pas une des douze : ni majeure, ni enharmonique
   ] as const) {
     test(`${slug} garde sa tonalité « ${tonalité} » dans la liste`, async ({ page }) => {
       const select = await ouvrir(page, slug);
+      await expect(select).toHaveValue(départ);
       const noms = await options(select);
       expect(noms).toContain(tonalité);
       // les douze plus la sienne, et rien d'autre — comparé trié, l'ordre de
       // la liste restant chromatique et non alphabétique.
       expect([...noms].sort()).toEqual([...DOUZE, tonalité].sort());
-      await expect(select).toHaveValue(tonalité);
     });
   }
 

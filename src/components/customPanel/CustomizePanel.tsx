@@ -167,7 +167,7 @@ export function CustomizePanel({
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/30" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/35" onClick={onClose} />
 
       {/* Panel */}
       <div className="relative w-full max-w-sm h-full bg-background border-l border-border flex flex-col shadow-xl overflow-hidden">

@@ -1,8 +1,21 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { BACK_OFFICE } from "@/lib/backOffice";
 import { adminDb } from "@/lib/push/admin";
 import { sendPushToUids } from "@/lib/push/send";
 import { recordNotification } from "@/lib/push/notifications";
-import { loadPlanningNameIndex, resolveNamesToUids, filterUidsByNotifPref } from "@/lib/push/recipients";
+import { loadPlanningNameIndex, filterUidsByNotifPref, loadNotifLangs, uidsForCategories } from "@/lib/push/recipients";
+import { reminderBody, reminderServicesFor, reminderTitle, type ReminderService } from "@/lib/push/reminderMessage";
+import { quiCategories, sceneReminder } from "@/lib/scene/rappels";
+import { avecLignes, evenementReminder, ligneOuverture, ouvertureDuJour, ouverturesTitre } from "@/lib/evenements/rappel";
+import { destinatairesEvenement } from "@/lib/evenements/serveur";
+import type { NotifLang } from "@/types/user";
+import type { Evenement } from "@/types/evenement";
+import { corpsAvecTaches, rappelsDuJour, rappelTachesTitre, type RappelTache } from "@/lib/taches/messages";
+import { poleDuPour, polesDe } from "@/lib/access";
+import { membresDuPole } from "@/lib/taches/serveur";
+import type { Fois, Tache, TachePole } from "@/types/tache";
+import type { Creneau, Programme } from "@/types/programme";
+import { currentProgramme } from "@/lib/scene/dimanches";
 import {
   loadPlanningData,
   servantsForDate,
@@ -15,8 +28,11 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
 // Rappels — exécuté chaque jour par Vercel Cron (cf. vercel.json).
-// - Service (tous services sauf Campus) : rappel à J-7, J-3 puis J-1.
-// - Répétition Campus : mêmes échéances, message avec heure + lieu.
+// À J-7, J-3 puis J-1, UNE notification par personne qui liste ses services du
+// jour avec le rôle (docs/spec-planning-petits-lots.md, lot 1c) : services de
+// tous les plannings sauf les séances Campus, plus la répétition Campus (heure
+// et lieu) et les entraînements sur scène des programmes affichés (lot 3 bis :
+// auteur + membres du « qui ») fondus dans le même message. Langue : notifPrefs/{uid}.lang.
 // Idempotent : un document notifLog par (échéance, date, uid) évite tout doublon.
 
 const REMINDERS: { tag: "J7" | "J3" | "J1"; days: number }[] = [
@@ -29,20 +45,6 @@ const REMINDERS: { tag: "J7" | "J3" | "J1"; days: number }[] = [
 // (≥ 09:00 à Paris), heure à laquelle la date UTC est déjà la date du jour à Paris.
 function isoInDays(days: number): string {
   return new Date(Date.now() + days * 86_400_000).toISOString().slice(0, 10);
-}
-
-function whenLabel(tag: "J7" | "J3" | "J1"): string {
-  return tag === "J7" ? "dans 1 semaine" : tag === "J3" ? "dans 3 jours" : "demain";
-}
-
-function formatFr(dateISO: string): string {
-  const d = new Date(`${dateISO}T12:00:00Z`);
-  return new Intl.DateTimeFormat("fr-FR", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    timeZone: "Europe/Paris",
-  }).format(d);
 }
 
 /** Retient les uid pas encore notifiés pour cette clé notifLog `${prefix}-${uid}`. */
@@ -74,6 +76,90 @@ async function markNotified(
   await batch.commit();
 }
 
+/** Créneaux sur scène du programme affiché aujourd'hui, pour ces dates (ISO).
+ *  Lot 12 : le programme n'est plus celui qui porte `visible` mais celui que
+ *  `currentProgramme` désigne — la même règle que la page et que l'onglet, sans
+ *  quoi un programme choisi automatiquement n'enverrait aucun rappel. */
+async function sceneCreneaux(db: FirebaseFirestore.Firestore, dates: string[], today: string): Promise<Creneau[]> {
+  // Trié par jour J croissant, comme `listProgrammes` : `currentProgramme` s'y fie.
+  const snap = await db.collection("programmes").orderBy("jourJ").get();
+  const programmes = snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<Programme, "id">) }));
+  const current = currentProgramme(programmes, today);
+  if (!current) return [];
+  const creneaux = await db.collection("programmes").doc(current.id).collection("creneaux")
+    .where("dimanche", "in", dates).get();
+  return creneaux.docs.map((c) => ({ id: c.id, ...c.data() } as Creneau));
+}
+
+/** Rappels de tâches du jour (lot 7, docs/spec-taches.md) : J-3, J-1 et le
+ *  lendemain d'une échéance sans document, plus les fois « en cours » et en
+ *  retard (lot 13, chaque matin), au responsable ou à tout le pôle,
+ *  préférence « Tâches », une fois par (rappel, destinataire). Renvoie, pour
+ *  chaque destinataire, ses rappels et les clés notifLog à marquer. */
+async function rappelsTaches(
+  db: FirebaseFirestore.Firestore,
+  today: string,
+): Promise<Map<string, { rappels: RappelTache[]; keys: string[] }>> {
+  const snap = await db.collectionGroup("taches").get();
+  const items = await Promise.all(
+    snap.docs.map(async (doc) => {
+      const pole = doc.ref.parent.parent?.id as TachePole;
+      const tache = { ...(doc.data() as Omit<Tache, "id">), id: doc.id, pole };
+      // `etat` et `debutLe` manquent aux documents d'avant le lot 13 : terminés.
+      const fois = (await doc.ref.collection("fois").get()).docs.map((f) => {
+        const d = f.data() as Partial<Fois>;
+        return { parUid: "", parNom: "", le: "", ...d, date: f.id, etat: d.etat ?? "terminee", debutLe: d.debutLe ?? "" };
+      });
+      return { tache, fois };
+    }),
+  );
+  const rappels = rappelsDuJour(items, today);
+  const out = new Map<string, { rappels: RappelTache[]; keys: string[] }>();
+  if (!rappels.length) return out;
+
+  const users = await db.collection("users").get();
+  const membres = (pole: TachePole) => users.docs.filter((d) => (polesDe(d.data()) as string[]).includes(pole)).map((d) => d.id);
+  for (const r of rappels) {
+    // « en cours » revient chaque matin : le jour d'envoi entre dans la clé,
+    // sinon la ligne ne sortirait qu'une seule fois (lot 13).
+    const key = r.quand === "encours"
+      ? `rappel-tache-encours-${r.tache.pole}-${r.tache.id}-${r.date}-${today}`
+      : `rappel-tache-${r.quand}-${r.tache.pole}-${r.tache.id}-${r.date}`;
+    const cibles = r.tache.responsableUid ? [r.tache.responsableUid] : membres(r.tache.pole);
+    for (const u of await freshUids(db, await filterUidsByNotifPref(cibles, "taches"), key)) {
+      const entry = out.get(u) ?? { rappels: [], keys: [] };
+      entry.rappels.push(r);
+      entry.keys.push(key);
+      out.set(u, entry);
+    }
+  }
+  return out;
+}
+
+/** Évènements dont les inscriptions s'ouvrent aujourd'hui (docs/spec-inscriptions-periode.md),
+ *  par membre concerné, préférence « Évènements », pas encore prévenu. */
+async function ouverturesDuJour(
+  db: FirebaseFirestore.Firestore,
+  today: string
+): Promise<Map<string, { evenements: Evenement[]; keys: string[] }>> {
+  const out = new Map<string, { evenements: Evenement[]; keys: string[] }>();
+  // « AAAA-MM-JJ » et « AAAA-MM-JJTHH:MM » du jour sont entre `today` et `today~`.
+  const snap = await db.collection("evenements").where("inscriptionDebut", ">=", today).where("inscriptionDebut", "<", `${today}~`).get();
+  for (const doc of snap.docs) {
+    const e = { id: doc.id, ...doc.data() } as Evenement;
+    if (!ouvertureDuJour(e, today)) continue;
+    const key = `ouverture-inscriptions-${e.id}`;
+    const uids = (await destinatairesEvenement(db, e)).filter((u) => u !== e.organisateurUid);
+    for (const u of await freshUids(db, await filterUidsByNotifPref(uids, "evenements"), key)) {
+      const entry = out.get(u) ?? { evenements: [], keys: [] };
+      entry.evenements.push(e);
+      entry.keys.push(key);
+      out.set(u, entry);
+    }
+  }
+  return out;
+}
+
 export async function GET(req: NextRequest) {
   const secret = process.env.CRON_SECRET;
   const authz = req.headers.get("authorization");
@@ -83,80 +169,153 @@ export async function GET(req: NextRequest) {
 
   const db = adminDb();
   const [planning, index] = await Promise.all([loadPlanningData(), loadPlanningNameIndex()]);
+  // Back-office coupé (lot 18, docs/spec-mise-en-ligne.md) : le rappel du matin ne
+  // parle que des services — ni scène, ni tâches, ni évènements.
+  const creneaux = BACK_OFFICE ? await sceneCreneaux(db, REMINDERS.map((r) => isoInDays(r.days)), isoInDays(0)) : [];
+  // Rappels de tâches : ajoutés à la première notification de service de la
+  // personne aujourd'hui, sinon envoyés seuls après la boucle.
+  const taches: Awaited<ReturnType<typeof rappelsTaches>> = BACK_OFFICE ? await rappelsTaches(db, isoInDays(0)) : new Map();
+  const marquerTaches = async (u: string) => {
+    const entry = taches.get(u);
+    if (!entry) return;
+    taches.delete(u);
+    for (const key of entry.keys) await markNotified(db, [u], key, { kind: "tache" });
+  };
+  // Ouvertures d'inscriptions du jour : même principe que les tâches.
+  const ouvertures: Awaited<ReturnType<typeof ouverturesDuJour>> = BACK_OFFICE ? await ouverturesDuJour(db, isoInDays(0)) : new Map();
+  const lignesOuvertures = (u: string, lang: NotifLang) => (ouvertures.get(u)?.evenements ?? []).map((e) => ligneOuverture(e, lang));
+  const marquerOuvertures = async (u: string) => {
+    const entry = ouvertures.get(u);
+    if (!entry) return;
+    ouvertures.delete(u);
+    for (const key of entry.keys) await markNotified(db, [u], key, { kind: "ouverture" });
+  };
 
-  const summary: Record<string, { date: string; service: number; repet: number }> = {};
+  const summary: Record<string, { date: string; sent: number }> = {};
 
   for (const { tag, days } of REMINDERS) {
     const date = isoInDays(days);
-    const when = whenLabel(tag);
 
-    // ── Rappels de service (tous services sauf Campus) ──
-    // Campus exclu : pendant la semaine du campus on sert tous les jours, le
-    // « tu sers demain » est du bruit. Les rappels de répétition ci-dessous
-    // suffisent.
+    // Personnes de service ce jour-là (Campus exclu : pendant la semaine du
+    // campus on sert tous les jours, le rappel serait du bruit) ou en
+    // répétition Campus. Chaque compte reçoit un message avec SES services.
     const names = [
-      ...new Set(
-        servantsForDate(planning, date)
-          .filter((s) => s.category !== "Campus")
-          .map((s) => s.name)
-      ),
+      ...new Set([
+        ...servantsForDate(planning, date).filter((s) => s.category !== "Campus").map((s) => s.name),
+        ...rehearsalsForDate(planning, date).map((r) => r.name),
+      ]),
     ];
-    const { uids } = resolveNamesToUids(names, index);
-    const prefUids = await filterUidsByNotifPref(uids, "reminders");
-    const fresh = await freshUids(db, prefUids, `rappel-${tag}-${date}`);
-    if (fresh.length) {
-      await sendPushToUids(fresh, {
-        title: "Rappel de service",
-        body: `Tu sers ${when} (${formatFr(date)}).`,
-        url: "/mes-services",
-        tag: `rappel-${tag}-${date}`,
-      });
-      await recordNotification({
-        title: "Rappel de service",
-        body: `Tu sers ${when} (${formatFr(date)}).`,
-        url: "/mes-services",
-        kind: "reminder",
-        recipients: fresh,
-      });
-      await markNotified(db, fresh, `rappel-${tag}-${date}`, { tag, date, kind: "service" });
+    const byUid = new Map<string, ReminderService[]>();
+    for (const name of names) {
+      const services = reminderServicesFor(planning, name, date);
+      if (!services.length) continue;
+      for (const u of index.get(normalizeName(name)) ?? []) if (!byUid.has(u)) byUid.set(u, services);
     }
-
-    // ── Rappels de répétition Campus (heure + lieu, message par personne) ──
-    const rehByUid = new Map<string, { time: string; location: string }>();
-    for (const r of rehearsalsForDate(planning, date)) {
-      for (const u of index.get(normalizeName(r.name)) ?? []) {
-        if (!rehByUid.has(u)) rehByUid.set(u, { time: r.time, location: r.location });
+    // Entraînements sur scène ce jour-là : l'auteur et les membres ayant un
+    // rôle dans le « qui » (quand il correspond à une catégorie de l'app).
+    for (const c of creneaux.filter((x) => x.dimanche === date)) {
+      const entry = sceneReminder(c);
+      const uids = new Set([c.auteurUid, ...(await uidsForCategories(quiCategories(c.qui)))]);
+      for (const u of uids) {
+        if (!u) continue;
+        const mine = byUid.get(u);
+        if (mine) mine.push(entry); else byUid.set(u, [entry]);
       }
     }
-    const rehPrefUids = await filterUidsByNotifPref([...rehByUid.keys()], "reminders");
-    const rehFresh = await freshUids(db, rehPrefUids, `repet-${tag}-${date}`);
-    if (rehFresh.length) {
+
+    const prefix = `rappel-${tag}-${date}`;
+    const prefUids = await filterUidsByNotifPref([...byUid.keys()], "reminders");
+    const fresh = await freshUids(db, prefUids, prefix);
+    if (fresh.length) {
+      const langs = await loadNotifLangs(fresh);
       await Promise.all(
-        rehFresh.map((u) => {
-          const m = rehByUid.get(u)!;
-          const extra = `${m.time ? ` à ${m.time}` : ""}${m.location ? `, ${m.location}` : ""}`;
-          return sendPushToUids([u], {
-            title: "Répétition Campus",
-            body: `Répétition ${when} (${formatFr(date)})${extra}.`,
+        fresh.map(async (u) => {
+          const lang = langs.get(u) ?? "fr";
+          const payload = {
+            title: reminderTitle(lang),
+            body: avecLignes(corpsAvecTaches(reminderBody(date, tag, byUid.get(u)!, lang), taches.get(u)?.rappels ?? [], lang), lignesOuvertures(u, lang)),
             url: "/mes-services",
-            tag: `repet-${tag}-${date}`,
-          });
+            tag: prefix,
+          };
+          await marquerTaches(u);
+          await marquerOuvertures(u);
+          await sendPushToUids([u], payload);
+          // Une entrée de cloche par destinataire : le corps est personnel.
+          await recordNotification({ ...payload, kind: "reminder", recipients: [u] });
         })
       );
-      // Entrée de cloche unique pour la fournée (le détail heure/lieu reste dans
-      // le push individuel ; la cloche affiche un libellé générique).
-      await recordNotification({
-        title: "Répétition Campus",
-        body: `Répétition ${when} (${formatFr(date)}).`,
-        url: "/mes-services",
-        kind: "reminder",
-        recipients: rehFresh,
-      });
-      await markNotified(db, rehFresh, `repet-${tag}-${date}`, { tag, date, kind: "repet" });
+      await markNotified(db, fresh, prefix, { tag, date, kind: "service" });
     }
 
-    summary[tag] = { date, service: fresh.length, repet: rehFresh.length };
+    summary[tag] = { date, sent: fresh.length };
   }
 
-  return NextResponse.json({ ok: true, summary });
+  // Tâches des personnes sans notification de service aujourd'hui.
+  const tachesSeules = [...taches.keys()];
+  if (tachesSeules.length) {
+    const langs = await loadNotifLangs(tachesSeules);
+    for (const u of tachesSeules) {
+      const lang = langs.get(u) ?? "fr";
+      const payload = {
+        title: rappelTachesTitre(lang),
+        body: avecLignes(corpsAvecTaches("", taches.get(u)!.rappels, lang), lignesOuvertures(u, lang)),
+        url: "/taches",
+        tag: `rappel-taches-${isoInDays(0)}`,
+      };
+      await marquerTaches(u);
+      await marquerOuvertures(u);
+      await sendPushToUids([u], payload);
+      await recordNotification({ ...payload, kind: "tache", recipients: [u] });
+    }
+  }
+
+  // Ouvertures d'inscriptions des membres sans autre notification aujourd'hui.
+  const ouverturesSeules = [...ouvertures.keys()];
+  if (ouverturesSeules.length) {
+    const langs = await loadNotifLangs(ouverturesSeules);
+    for (const u of ouverturesSeules) {
+      const lang = langs.get(u) ?? "fr";
+      const evs = ouvertures.get(u)!.evenements;
+      const payload = {
+        title: ouverturesTitre(lang),
+        body: avecLignes("", lignesOuvertures(u, lang)),
+        url: evs.length === 1 ? `/evenements/${evs[0].id}` : "/evenements",
+        tag: `ouvertures-inscriptions-${isoInDays(0)}`,
+      };
+      await marquerOuvertures(u);
+      await sendPushToUids([u], payload);
+      await recordNotification({ ...payload, kind: "evenement", recipients: [u] });
+    }
+  }
+
+  // Évènements de demain (lot 6) : un rappel à chaque inscrit ayant un compte,
+  // préférence « Évènements », une fois par (évènement, uid).
+  const demain = isoInDays(1);
+  let evenementsSent = 0;
+  const evs = BACK_OFFICE ? (await db.collection("evenements").where("date", "==", demain).get()).docs : [];
+  for (const doc of evs) {
+    const e = { id: doc.id, ...doc.data() } as Evenement;
+    // Réunion de pôle (lot 7) : pas d'inscriptions, tout le pôle est rappelé.
+    const pole = poleDuPour(e.pour);
+    const inscrits = pole
+      ? await membresDuPole(pole)
+      : (await doc.ref.collection("inscriptions").get()).docs
+          .map((i) => i.data().uid as string | null)
+          .filter((u): u is string => !!u);
+    const prefix = `rappel-evenement-${e.id}`;
+    const fresh = await freshUids(db, await filterUidsByNotifPref(inscrits, "evenements"), prefix);
+    if (!fresh.length) continue;
+    const langs = await loadNotifLangs(fresh);
+    await Promise.all(
+      fresh.map(async (u) => {
+        const payload = { ...evenementReminder(e, langs.get(u) ?? "fr"), url: `/evenements/${e.id}`, tag: prefix };
+        await sendPushToUids([u], payload);
+        await recordNotification({ ...payload, kind: "evenement", recipients: [u] });
+      })
+    );
+    await markNotified(db, fresh, prefix, { date: demain, kind: "evenement", evenementId: e.id });
+    evenementsSent += fresh.length;
+  }
+
+  return NextResponse.json({ ok: true, summary, taches: tachesSeules.length, ouvertures: ouverturesSeules.length, evenements: { date: demain, sent: evenementsSent } });
 }

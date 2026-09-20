@@ -1,5 +1,8 @@
 import { Document } from "@react-pdf/renderer";
-import { SongPDFPage, FusionPDFPage, TransitionPDFPage, JianpuPDFPage, type FusionPDFSong } from "@/components/pdf/SongPDF";
+import { SongPDFPage, FusionPDFPage, TransitionPDFPage, JianpuPDFPage, CompactStrip, compactStripHeight, type FusionPDFSong, type PdfSectionStyle } from "@/components/pdf/SongPDF";
+import { compactTransitions } from "@/lib/pdf/compact";
+import { resolveStructureOverride } from "@/lib/chordpro/structure";
+import { resolveSectionOccurrences } from "@/lib/setlist/sectionSteps";
 import { type JianpuChordsManifest, type JianpuManifest } from "@/lib/jianpu/images";
 import { sheetEnabled, type JianpuPref } from "@/lib/jianpu/preference";
 import { transposeAST } from "@/lib/transposeAST";
@@ -21,6 +24,8 @@ export function SetlistFullPDF({
   jianpuChords,
   jianpuImages,
   jianpuPref = "auto",
+  sectionStyle = "classic",
+  layout = "played",
 }: {
   setlist: FSSetlist;
   contents: Record<string, SongContent>;
@@ -33,15 +38,22 @@ export function SetlistFullPDF({
    *  react-pdf ne lit pas le WebP dans lequel les scans sont servis. */
   jianpuImages?: Record<string, string>;
   jianpuPref?: JianpuPref;
+  sectionStyle?: PdfSectionStyle;
+  /** « unique » = PDF compact (docs/spec-export-pdf.md) : bandeau + sections
+   *  uniques ; une transition finit la page du chant d'avant. */
+  layout?: "played" | "unique";
 }) {
   const sorted = [...setlist.items].sort((a, b) => a.position - b.position);
   const footer = `${setlist.title} - ${setlist.leader}`;
+  const compact = layout === "unique";
+  const transitions = compact ? compactTransitions(sorted) : null;
 
   return (
     <Document title={setlist.title}>
       {sorted.flatMap((item, idx) => {
         if (item.type === "transition") {
           if (!item.transitionText) return [];
+          if (transitions && !transitions.standalone.has(idx)) return [];
           return [
             <TransitionPDFPage
               key={`transition-${idx}`}
@@ -74,6 +86,9 @@ export function SetlistFullPDF({
                 mixedStructure={item.mixedStructure}
                 showChords={showChords}
                 footerCenter={footer}
+                sectionStyle={sectionStyle}
+                withStrip={compact}
+                trailingTransition={transitions?.attached.get(idx)}
               />
             ];
           }
@@ -91,6 +106,9 @@ export function SetlistFullPDF({
               sectionNuances={fs.sectionNuances}
               sectionKeys={fs.sectionKeys}
               footerCenter={footer}
+              sectionStyle={sectionStyle}
+              layout={layout}
+              trailingTransition={fsIdx === fusionSongsData.length - 1 ? transitions?.attached.get(idx) : undefined}
             />
           ));
         }
@@ -112,6 +130,13 @@ export function SetlistFullPDF({
         if (sheet && sheetSrcs?.every(Boolean)) {
           const playedKey =
             item.keyOverride && item.keyOverride !== baseAst.metadata.key ? item.keyOverride : null;
+          // Compact : le bandeau au-dessus du scan, comme la vue partitions.
+          const steps = compact
+            ? resolveSectionOccurrences(
+                item.structureOverride?.length ? resolveStructureOverride(ast.sections, item.structureOverride) : ast.sections,
+                item,
+              )
+            : [];
           return sheet.pages.map((page, pageIdx) => (
             <JianpuPDFPage
               key={`${item.songSlug}-${idx}-jianpu-${pageIdx}`}
@@ -124,6 +149,11 @@ export function SetlistFullPDF({
               playedKey={playedKey}
               headerHeight={pageIdx === 0 ? 56 : 0}
               footerCenter={footer}
+              strip={compact && pageIdx === 0
+                ? <CompactStrip steps={steps} songKey={ast.metadata.key} uiLang="fr" details />
+                : undefined}
+              stripHeight={compact && pageIdx === 0 ? compactStripHeight(steps, "fr") : 0}
+              trailingTransition={pageIdx === sheet.pages.length - 1 ? transitions?.attached.get(idx) : undefined}
             />
           ));
         }
@@ -141,6 +171,9 @@ export function SetlistFullPDF({
             sectionNuances={item.sectionNuances ?? {}}
             sectionKeys={item.sectionKeys ?? {}}
             footerCenter={footer}
+            sectionStyle={sectionStyle}
+            layout={layout}
+            trailingTransition={transitions?.attached.get(idx)}
           />
         ];
       })}

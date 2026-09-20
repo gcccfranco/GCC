@@ -85,7 +85,7 @@ export function PlanningTable({ cols, rows, color, dateBadge, minWidth = 480, gr
             value={name}
             onChange={(e) => updateName(e.target.value)}
             placeholder={t("planning.table.myName")}
-            className="w-full h-10 sm:h-8 pl-8 pr-8 rounded-lg border border-border bg-card text-foreground text-[16px] sm:text-xs focus:outline-none focus:ring-2 focus:ring-ring/20"
+            className="w-full h-10 sm:h-8 pl-8 pr-8 rounded-full border border-transparent bg-secondary text-foreground text-[16px] sm:text-sm focus:outline-none focus:ring-2 focus:ring-ring/20"
           />
           {name && (
             <button
@@ -100,10 +100,10 @@ export function PlanningTable({ cols, rows, color, dateBadge, minWidth = 480, gr
         {hasName && (
           <button
             onClick={() => setOnlyMine((v) => !v)}
-            className={`h-10 sm:h-8 px-3 rounded-lg border text-xs font-semibold transition-all duration-150 cursor-pointer ${
-              onlyMine ? "text-white border-transparent" : "bg-card border-border text-muted-foreground hover:text-foreground"
+            className={`h-10 sm:h-8 px-3 rounded-full text-sm font-semibold transition-[background-color,color,transform] duration-150 active:scale-[.96] cursor-pointer ${
+              onlyMine ? "text-white" : "bg-secondary text-muted-foreground hover:text-foreground"
             }`}
-            style={onlyMine ? { background: color, borderColor: color } : undefined}
+            style={onlyMine ? { background: color } : undefined}
           >
             {t("planning.table.myDates")}
           </button>
@@ -131,7 +131,7 @@ export function PlanningTable({ cols, rows, color, dateBadge, minWidth = 480, gr
                 <Fragment key={row[0]}>
                   {sep && (
                     <tr style={{ background: `${color}15` }}>
-                      <td colSpan={cols.length} className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider" style={{ color }}>
+                      <td colSpan={cols.length} className="px-3 py-1.5 text-xs font-bold uppercase tracking-wider" style={{ color }}>
                         {sep}
                       </td>
                     </tr>
@@ -145,7 +145,7 @@ export function PlanningTable({ cols, rows, color, dateBadge, minWidth = 480, gr
                   >
                     <td className="w-[100px] px-3 py-2 font-semibold whitespace-nowrap" style={{ color }}>
                       <div>{isThis ? (
-                        <span className="inline-block text-[9px] font-bold px-1.5 py-0.5 rounded text-white mt-0.5" style={{ background: color }}>{t("planning.table.thisWeek")}</span>
+                        <span className="inline-block text-xs font-bold px-1.5 py-0.5 rounded text-white mt-0.5" style={{ background: color }}>{t("planning.table.thisWeek")}</span>
                       ) : fdShort(row[0])}</div>
                       {dateBadge?.(row, rows)}
                     </td>
@@ -207,7 +207,7 @@ export function PlanningTable({ cols, rows, color, dateBadge, minWidth = 480, gr
                 >
                   <span className="text-sm font-bold" style={{ color }}>{fdShort(row[0])}</span>
                   {isThis && (
-                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded text-white" style={{ background: color }}>
+                    <span className="text-xs font-bold px-1.5 py-0.5 rounded text-white" style={{ background: color }}>
                       Cette semaine
                     </span>
                   )}

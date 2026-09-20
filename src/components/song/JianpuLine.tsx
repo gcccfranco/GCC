@@ -1,6 +1,7 @@
 "use client";
 
 import type { ChordProLine, Token } from "@/types/chordPro";
+import { pinyin_font } from "@/components/song/pinyinFont";
 
 function isCJK(char: string): boolean {
   const cp = char.codePointAt(0) ?? 0;
@@ -61,7 +62,7 @@ export function JianpuLine({ line, showChords = true, showPinyin = true }: Jianp
   });
 
   return (
-    <div data-copy-line className="font-mono my-1 select-text">
+    <div data-copy-line data-copy-pinyin={line.pinyin ?? undefined} className="font-mono my-1 select-text">
       {/* Chord row: each chord absolutely positioned over its column */}
       {showChords && chords.length > 0 && (
         <div data-copy-ignore className="relative" style={{ height: "1.5em" }}>
@@ -96,7 +97,7 @@ export function JianpuLine({ line, showChords = true, showPinyin = true }: Jianp
               {col.char}
             </span>
             {showPinyin && (
-              <span data-copy-ignore className="text-muted-foreground leading-snug" style={{ fontSize: "0.65rem" }}>
+              <span data-copy-ignore className={`text-muted-foreground leading-snug ${pinyin_font.className}`} style={{ fontSize: "0.65rem" }}>
                 {col.pinyin}
               </span>
             )}

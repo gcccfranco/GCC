@@ -3,7 +3,9 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { Trash2, List, Music, Pencil, SlidersHorizontal, Languages, Play, MoreHorizontal, Download, Copy, Share2, BellRing } from "lucide-react";
+import { Trash2, List, Music, Pencil, SlidersHorizontal, PenLine, Languages, Play, MoreHorizontal, Download, Copy, Share2, BellRing } from "lucide-react";
+import { categoryColor } from "@/lib/serviceColors";
+import { serviceButtonFill } from "@/lib/serviceButton";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -29,22 +31,37 @@ import {
 } from "@/components/ui/alert-dialog";
 import { getSetlist, deleteSetlist, duplicateSetlist, updateSetlist, authHeader, type FSSetlist } from "@/lib/firebase/setlists";
 import { useProfile } from "@/lib/firebase/users";
-import { canSeeSetlist, canEditSetlist, canDuplicateSetlist } from "@/lib/access";
+import { canSeeSetlist, canEditSetlist, canDeleteSetlist, canDuplicateSetlist, canSetPresentationLink, canHaveSetlistVersion } from "@/lib/access";
 import { useTranslation } from "react-i18next";
 import type { SongIndexEntry } from "@/types/song";
-import type { SetlistItem } from "@/types/setList";
+import type { JianpuChords, SetlistItem } from "@/types/setList";
 import type { ChordProLine } from "@/types/chordPro";
 import { formatDate } from "@/lib/utils/formatDate";
 import { useScrollDirection } from "@/hooks/useScrollDirection";
 import { ListView } from "./_components/ListView";
 import { PartitionsView } from "./_components/PartitionView";
+import { SetlistOutline } from "./_components/SetlistOutline";
+import { PresentationLink } from "./_components/PresentationLink";
+import { SetlistHistory } from "./_components/SetlistHistory";
+import { continuePass, historyAuthor, recordHistory, type HistoryPass } from "@/lib/firebase/setlistHistory";
+import { getSetlistVersions, saveSetlistVersions, type SetlistVersions, type VersionItem } from "@/lib/firebase/setlistVersions";
+import { MyStructureSheet, type MyStructureTarget } from "@/components/setlists/MyStructureSheet";
+import { songVersionView, type SongVersionView } from "@/lib/setlist/versionChoice";
 import { getChartStylePref, setChartStylePref } from "@/lib/chartStylePref";
+import { getPartitionLayoutPref, setPartitionLayoutPref, type PartitionLayout } from "@/lib/partitionLayoutPref";
+import { getPinyinPref, setPinyinPref } from "@/lib/pinyinPref";
 import { jianpuPngDataUrl, loadJianpuChords, loadJianpuManifest, useJianpuManifest } from "@/lib/jianpu/images";
 import { getJianpuPref, setJianpuPref, sheetEnabled, type JianpuPref } from "@/lib/jianpu/preference";
+import { aDesRetouches } from "@/lib/jianpu/retouches";
 import { fetchSongAST, type SongContent} from "@/lib/api/songs";
 import { PerformanceMode } from "@/components/performance/PerformanceMode";
 import { EditLineSheet, type EditLineTarget } from "@/components/setlists/EditLineSheet";
+import { PdfChoiceSheet } from "@/components/pdf/PdfChoiceSheet";
+import { pdfFileName, type PdfStyle } from "@/lib/pdfStylePref";
 import { itemAst } from "@/lib/chordpro/itemContent";
+import { IdeesSheet } from "@/components/harmonie/IdeesSheet";
+import { appliquerDansLaSource } from "@/lib/harmonie/appliquer";
+import { useAccesHarmonie, useInstrument } from "@/lib/harmonie/useHarmonie";
 import { semitonesTo } from "@/lib/transpose";
 import {
   replaceSourceLine,
@@ -64,6 +81,19 @@ type LineEditState = EditLineTarget & {
    *  pour cette occurrence (sinon toutes les répétitions changeraient). */
   repeatedSectionId?: string;
   structIndex?: number;
+};
+
+/** Sur quoi appliquer l'édition d'une ligne : le source (et les index de
+ *  lignes) après une éventuelle copie d'occurrence, plus ce qu'il faut
+ *  enregistrer à côté — sur l'item de la setlist (Adapter) ou dans ma version
+ *  (« Seulement ce passage »). */
+type EditBase = {
+  source: string;
+  srcLine: number;
+  pinyinSrcLine?: number;
+  jianpuSrcLine?: number;
+  extra?: Partial<SetlistItem>;
+  mine?: Partial<VersionItem>;
 };
 
 
@@ -94,14 +124,24 @@ export function SetlistDetailClient() {
     return () => ro.disconnect();
   }, [setlist]); // la barre n'existe qu'une fois la setlist chargée
   const [songsMap, setSongsMap] = useState<Record<string, SongIndexEntry>>({});
+  // Relit l'historique après une adaptation écrite depuis cette page.
+  const [historyVersion, setHistoryVersion] = useState(0);
+  // Adaptations successives depuis cette page : un seul passage (adapter puis
+  // rétablir ne laisse rien), tant que personne d'autre n'a touché la setlist.
+  const historyPassRef = useRef<HistoryPass | null>(null);
   const [contents, setContents] = useState<Record<string, SongContent>>({});
   const [loadingSetlist, setLoadingSetlist] = useState(true);
   const [loadingContent, setLoadingContent] = useState(false);
   const [showChords, setShowChords] = useState(true);
+  // Accords changés sur cette page juste avant le mode louange : ils
+  // l'emportent alors sur le rôle mémorisé (reprise des réglages).
+  const [chordsTouched, setChordsTouched] = useState(false);
   // Affichage du pinyin en vue partitions — préférence persistée (par appareil).
   const [showPinyin, setShowPinyin] = useState(true);
   // Couleurs par section — préférence par appareil partagée (fiche chant, mode louange).
   const [chartStyle, setChartStyle] = useState(true);
+  // Coup d'œil : ordre joué / sections uniques / structure seule — par appareil.
+  const [layout, setLayout] = useState<PartitionLayout>("unique");
   // Partition 简谱 : suivre le choix du responsable, l'imposer, ou l'ignorer —
   // par appareil, comme en mode louange.
   const [jianpuPref, setJianpuPrefState] = useState<JianpuPref>("auto");
@@ -109,6 +149,7 @@ export function SetlistDetailClient() {
   const [deleting, setDeleting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [downloading, setDownloading] = useState(false);
+  const [showPdfChoice, setShowPdfChoice] = useState(false);
   const [performanceMode, setPerformanceMode] = useState(false);
   const [duplicating, setDuplicating] = useState(false);
   const [shareFeedback, setShareFeedback] = useState<string | null>(null);
@@ -120,6 +161,62 @@ export function SetlistDetailClient() {
   const [editTarget, setEditTarget] = useState<LineEditState | null>(null);
   const [savingLine, setSavingLine] = useState(false);
   const [confirmRevert, setConfirmRevert] = useState<number | null>(null);
+  // Versions perso des chants (docs/spec-version-perso.md) : un document par
+  // personne, chargé avec la setlist. La mienne remplace les accords et
+  // paroles de la présidence dans la vue partitions, le sommaire et le mode
+  // louange — jamais dans la liste, le PDF ni l'historique.
+  const [versions, setVersions] = useState<Record<string, SetlistVersions>>({});
+  // Mode « Ma version » : mêmes gestes qu'Adapter, écrits dans mon document.
+  const [editMine, setEditMine] = useState(false);
+  // Retouche d'une section répétée en « Ma version » : toutes les répétitions
+  // (défaut, comme avant le lot 9) ou ce seul passage (docs/spec-harmonie.md).
+  const [repeatScope, setRepeatScope] = useState<"all" | "one">("all");
+  const myItems = user ? versions[user.uid]?.items : undefined;
+  /** Item en mode « Ma version » : mes accords et paroles à la place de ceux de la présidence. */
+  function withMine(item: SetlistItem): SetlistItem {
+    const content = myItems?.[item.songSlug]?.content;
+    return withMyJianpu(content ? { ...item, contentOverride: content } : item);
+  }
+  /** Mes retouches d'accords sur un scan 简谱 (lot 9) remplacent celles de la
+   *  présidence, comme mes accords et mes paroles. */
+  function withMyJianpu(item: SetlistItem): SetlistItem {
+    const jianpuChords = myItems?.[item.songSlug]?.jianpuChords;
+    return aDesRetouches(jianpuChords) ? { ...item, jianpuChords } : item;
+  }
+  /** Version d'un chant pour moi : la présidence, la mienne, ou celle d'un
+   *  autre partagée et choisie. */
+  function viewOf(item: SetlistItem): SongVersionView | undefined {
+    return user
+      ? songVersionView(item.songSlug, user.uid, versions, {
+          structure: item.structureOverride,
+          sectionIds: contents[item.songSlug]?.ast.sections.map((s) => s.id),
+        })
+      : undefined;
+  }
+  /** Item tel qu'affiché : les accords et paroles de la version choisie. */
+  function withChosen(item: SetlistItem): SetlistItem {
+    const content = viewOf(item)?.content;
+    return withMyJianpu(content ? { ...item, contentOverride: content } : item);
+  }
+  /** Structure que suit le corps du chant en « Ma version » : la mienne si
+   *  j'en ai une, sinon celle de la présidence. */
+  function myStructure(item: SetlistItem): string[] | null {
+    return myItems?.[item.songSlug]?.structure ?? item.structureOverride ?? null;
+  }
+  /** Pour le sommaire et le mode louange : ma structure remplace aussi celle
+   *  de la présidence, sans ses notes, nuances et transitions d'occurrence
+   *  (elles restent dans le bandeau de la vue partitions). */
+  function withMineStructure(item: SetlistItem): SetlistItem {
+    const structure = viewOf(item)?.bodyStructure;
+    if (!structure?.length) return item;
+    // Les réglages d'occurrence de la présidence ne suivent que si je garde sa
+    // structure (un passage retouché seul ne la change pas vraiment).
+    return myItems?.[item.songSlug]?.structure?.length
+      ? { ...item, structureOverride: structure, sectionNotes: {}, sectionTransitions: {}, sectionNuances: {} }
+      : { ...item, structureOverride: structure };
+  }
+  // Feuille « Sections » de ma version : chant en cours de réglage.
+  const [structureTarget, setStructureTarget] = useState<(MyStructureTarget & { itemIndex: number }) | null>(null);
 
   useEffect(() => {
     const saved = sessionStorage.getItem("lastListPath");
@@ -130,13 +227,18 @@ export function SetlistDetailClient() {
   }, []);
   // Restaure la préférence d'affichage du pinyin (masqué si "0").
   useEffect(() => {
-    setShowPinyin(localStorage.getItem("gcc.showPinyin") !== "0");
+    setShowPinyin(getPinyinPref());
     setChartStyle(getChartStylePref());
     setJianpuPrefState(getJianpuPref());
+    setLayout(getPartitionLayoutPref());
   }, []);
   const toggleChartStyle = (v: boolean) => {
     setChartStyle(v);
     setChartStylePref(v);
+  };
+  const changeLayout = (v: PartitionLayout) => {
+    setLayout(v);
+    setPartitionLayoutPref(v);
   };
   const changeJianpuPref = (v: JianpuPref) => {
     setJianpuPrefState(v);
@@ -149,9 +251,8 @@ export function SetlistDetailClient() {
   );
   function togglePinyin() {
     setShowPinyin((v) => {
-      const next = !v;
-      try { localStorage.setItem("gcc.showPinyin", next ? "1" : "0"); } catch { /* stockage indisponible */ }
-      return next;
+      setPinyinPref(!v);
+      return !v;
     });
   }
   // Load setlist + songs index (wait for auth so private setlists get auth headers)
@@ -162,8 +263,11 @@ export function SetlistDetailClient() {
     Promise.all([
       getSetlist(id),
       fetch("/songs-index.json").then((r) => r.json()),
-    ]).then(([sl, index]) => {
+      // Règles pas publiées, hors-ligne… : la présidence seule, sans erreur.
+      getSetlistVersions(id).catch(() => ({})),
+    ]).then(([sl, index, v]) => {
       setSetlist(sl);
+      setVersions(v);
       const map: Record<string, SongIndexEntry> = {};
       for (const s of index.songs ?? []) map[s.slug] = s;
       setSongsMap(map);
@@ -199,7 +303,7 @@ export function SetlistDetailClient() {
     if (setlist) loadContents(setlist.items);
   }
 
-  async function handleDownload() {
+  async function handleDownload(style: PdfStyle = "classic") {
     if (!setlist) return;
     setDownloading(true);
     try {
@@ -263,12 +367,14 @@ export function SetlistDetailClient() {
             jianpuChords={sheetChords}
             jianpuImages={sheetImages}
             jianpuPref={jianpuPref}
+            sectionStyle={style === "classic" ? "classic" : "colors"}
+            layout={style === "compact" ? "unique" : "played"}
           />
         ).toBlob();
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `${setlist.title}-partitions.pdf`;
+        a.download = pdfFileName(setlist.title, style, "partitions");
         a.click();
         URL.revokeObjectURL(url);
       }
@@ -359,11 +465,20 @@ export function SetlistDetailClient() {
     }
   }
 
+  // ── Idées d'harmonie (lot 9) ────────────────────────────────────────────────
+  // Réservées aux pianistes et guitaristes (et aux admins) ; « Essayer dans Ma
+  // version » n'apparaît que dans le mode « Ma version », seul endroit où une
+  // retouche ne touche personne d'autre.
+  const accesHarmonie = useAccesHarmonie();
+  const [instrumentHarmonie] = useInstrument(accesHarmonie);
+  const [ideesTarget, setIdeesTarget] = useState<number | null>(null);
+
   // ── Adapter le chant (accords/paroles par setlist) ──────────────────────────
 
-  /** Source ChordPro de travail d'un item : version modifiée sinon original. */
+  /** Source ChordPro de travail d'un item : version modifiée sinon original
+   *  (en mode « Ma version » : la mienne d'abord). */
   function sourceForItem(item: SetlistItem): string | null {
-    return item.contentOverride ?? contents[item.songSlug]?.source ?? null;
+    return (editMine ? withMine(item) : item).contentOverride ?? contents[item.songSlug]?.source ?? null;
   }
 
   function handleSelectLine(itemIndex: number, line: ChordProLine, sectionUid?: string) {
@@ -379,15 +494,15 @@ export function SetlistDetailClient() {
       );
       return;
     }
-    const baseAst = itemAst(item, contents[item.songSlug]);
+    const baseAst = itemAst(editMine ? withMine(item) : item, contents[item.songSlug]);
     if (!baseAst) return;
     const origKey = baseAst.metadata.key;
 
-    // Section répétée par la structure ? On note l'occurrence tapée pour que
-    // l'édition matérialise une copie au lieu de toucher toutes les répétitions.
+    // Section répétée par la structure ? On note l'occurrence tapée : Adapter
+    // matérialise une copie, « Ma version » propose le choix à l'enregistrement.
     let repeatedSectionId: string | undefined;
     let structIndex: number | undefined;
-    const struct = item.structureOverride;
+    const struct = editMine ? myStructure(item) : item.structureOverride;
     if (struct && sectionUid) {
       const sec = baseAst.sections.find((s) => s.lines.some((l) => l.srcLine === line.srcLine));
       if (sec) {
@@ -411,6 +526,7 @@ export function SetlistDetailClient() {
       item.keyOverride ??
       origKey;
 
+    setRepeatScope("all");
     setEditTarget({
       itemIndex,
       raw: source.split("\n")[line.srcLine] ?? "",
@@ -475,6 +591,12 @@ export function SetlistDetailClient() {
       await updateSetlist(id, { items });
       setSetlist({ ...base, items });
       setEditTarget(null);
+      const author = historyAuthor(profile);
+      if (author) {
+        historyPassRef.current = continuePass(historyPassRef.current, id, author, base);
+        await recordHistory(historyPassRef.current, { ...base, items }, (slug) => songsMap[slug]?.sections);
+        setHistoryVersion((v) => v + 1);
+      }
     } catch {
       flashFeedback(t("setlists.contentEdit.saveError", { defaultValue: "Échec de l'enregistrement — réessaie." }));
     } finally {
@@ -482,13 +604,83 @@ export function SetlistDetailClient() {
     }
   }
 
+  /** Réécrit mon document de versions — jamais la setlist : ni relecture,
+   *  ni historique. */
+  async function saveMine(items: Record<string, VersionItem>, choices: Record<string, string>) {
+    if (!user) return;
+    setSavingLine(true);
+    try {
+      const doc: SetlistVersions = {
+        authorUid: user.uid,
+        authorName: historyAuthor(profile)?.name ?? "",
+        items,
+        choices,
+      };
+      await saveSetlistVersions(id, user.uid, doc);
+      setVersions((v) => ({ ...v, [user.uid]: doc }));
+      setEditTarget(null);
+      setStructureTarget(null);
+    } catch {
+      flashFeedback(t("setlists.contentEdit.saveError", { defaultValue: "Échec de l'enregistrement — réessaie." }));
+    } finally {
+      setSavingLine(false);
+    }
+  }
+
+  /** Modifie ma version d'un chant (accords et paroles, structure, partage).
+   *  Une version revenue à la présidence sur tout est retirée. */
+  async function persistMine(songSlug: string, patch: Partial<VersionItem>) {
+    if (!user) return;
+    const prev = versions[user.uid];
+    const items = { ...(prev?.items ?? {}) };
+    const next = { ...(items[songSlug] ?? { content: null, structure: null, shared: false }), ...patch };
+    if (next.content === null && next.structure === null && !aDesRetouches(next.jianpuChords)) {
+      delete items[songSlug];
+    }
+    else items[songSlug] = next;
+    await saveMine(items, prev?.choices ?? {});
+  }
+
+  /** Retient la version choisie pour un chant (« presidence » ou l'uid de son auteur). */
+  async function persistChoice(songSlug: string, value: string) {
+    if (!user) return;
+    const prev = versions[user.uid];
+    await saveMine(prev?.items ?? {}, { ...(prev?.choices ?? {}), [songSlug]: value });
+  }
+
+  /** Retouche d'accords sur un scan 简谱 (lot 9, docs/spec-harmonie.md) : dans
+   *  l'item de la setlist pour la présidence — donc dans l'historique, avec la
+   *  phrase des autres retouches d'Adapter —, dans ma version pour moi. Le
+   *  calque publié (`public/jianpu/chords.json`) n'est jamais écrit. */
+  async function handleEditJianpu(itemIndex: number, next: JianpuChords) {
+    if (!setlist) return;
+    const item = setlist.items[itemIndex];
+    if (editMine) {
+      await persistMine(item.songSlug, { jianpuChords: next });
+      return;
+    }
+    await persistOverride(itemIndex, item.contentOverride ?? undefined, { jianpuChords: next });
+  }
+
   /** Applique un nouveau source complet : no-op si rien n'a changé, retrait
    *  automatique de l'override s'il redevient identique au chant original. */
-  async function applyNewSource(itemIndex: number, next: string, extra?: Partial<SetlistItem>) {
+  async function applyNewSource(
+    itemIndex: number,
+    next: string,
+    extra?: Partial<SetlistItem>,
+    mine?: Partial<VersionItem>
+  ) {
     if (!setlist) return;
     const current = sourceForItem(setlist.items[itemIndex]);
-    if (next === current && !extra) {
+    if (next === current && !extra && !mine) {
       setEditTarget(null);
+      return;
+    }
+    if (editMine) {
+      // Ma version : retirée d'elle-même si elle redevient celle de la présidence.
+      const item = setlist.items[itemIndex];
+      const presidency = item.contentOverride ?? contents[item.songSlug]?.source;
+      await persistMine(item.songSlug, { content: next === presidency ? null : next, ...mine });
       return;
     }
     const original = contents[setlist.items[itemIndex].songSlug]?.source;
@@ -500,17 +692,7 @@ export function SetlistDetailClient() {
    *  l'édition ne touche pas les autres répétitions. Renvoie le source (et les
    *  index de lignes) sur lesquels appliquer l'édition, plus les champs d'item
    *  à persister (structure et notes/transitions re-clés). */
-  function materializeIfRepeated(
-    item: SetlistItem,
-    source: string,
-    t: LineEditState
-  ): {
-    source: string;
-    srcLine: number;
-    pinyinSrcLine?: number;
-    jianpuSrcLine?: number;
-    extra?: Partial<SetlistItem>;
-  } {
+  function materializeIfRepeated(item: SetlistItem, source: string, t: LineEditState): EditBase {
     const passthrough = {
       source,
       srcLine: t.srcLine,
@@ -565,6 +747,46 @@ export function SetlistDetailClient() {
     };
   }
 
+  /** « Seulement ce passage » (Ma version) : la section répétée est copiée dans
+   *  mon source et ma structure fait pointer cette occurrence vers la copie —
+   *  le mécanisme d'Adapter, écrit dans mon document. */
+  function materializeMine(item: SetlistItem, source: string, t: LineEditState): EditBase | null {
+    const struct = myStructure(item);
+    if (t.repeatedSectionId === undefined || t.structIndex === undefined || !struct) return null;
+    const mat = materializeSectionCopy(source, t.repeatedSectionId);
+    if (!mat) return null;
+    return {
+      source: mat.source,
+      srcLine: t.srcLine + mat.lineOffset,
+      pinyinSrcLine: t.pinyinSrcLine !== undefined ? t.pinyinSrcLine + mat.lineOffset : undefined,
+      jianpuSrcLine: t.jianpuSrcLine !== undefined ? t.jianpuSrcLine + mat.lineOffset : undefined,
+      mine: {
+        structure: struct.map((ov, k) => (k === t.structIndex ? `${mat.newSectionId}-${t.structIndex}` : ov)),
+        // Provenance de la copie : elle situe le passage chez qui lit ma
+        // version partagée avec une autre structure.
+        sectionOrigins: {
+          ...myItems?.[item.songSlug]?.sectionOrigins,
+          [mat.newSectionId]: t.repeatedSectionId,
+        },
+      },
+    };
+  }
+
+  /** Base d'une édition de ligne : Adapter copie toujours l'occurrence tapée,
+   *  « Ma version » seulement si la retouche ne vise que ce passage. */
+  function editBase(item: SetlistItem, source: string, t: LineEditState): EditBase {
+    if (!editMine) return materializeIfRepeated(item, source, t);
+    const one = repeatScope === "one" ? materializeMine(item, source, t) : null;
+    return (
+      one ?? {
+        source,
+        srcLine: t.srcLine,
+        pinyinSrcLine: t.pinyinSrcLine,
+        jianpuSrcLine: t.jianpuSrcLine,
+      }
+    );
+  }
+
   async function handleSaveLine(newRaw: string) {
     if (!setlist || !editTarget) return;
     const source = sourceForItem(setlist.items[editTarget.itemIndex]);
@@ -574,42 +796,56 @@ export function SetlistDetailClient() {
       setEditTarget(null);
       return;
     }
-    const m = materializeIfRepeated(setlist.items[editTarget.itemIndex], source, editTarget);
+    const m = editBase(setlist.items[editTarget.itemIndex], source, editTarget);
     let next = replaceSourceLine(m.source, m.srcLine, newRaw);
     // Le pinyin est désormais inline dans la ligne → la ligne séparée disparaît.
     if (m.pinyinSrcLine !== undefined) {
       next = deleteSourceLines(next, [m.pinyinSrcLine]);
     }
-    await applyNewSource(editTarget.itemIndex, next, m.extra);
+    await applyNewSource(editTarget.itemIndex, next, m.extra, m.mine);
   }
 
   async function handleInsertAfter(newRaw: string) {
     if (!setlist || !editTarget) return;
     const source = sourceForItem(setlist.items[editTarget.itemIndex]);
     if (!source) return;
-    const m = materializeIfRepeated(setlist.items[editTarget.itemIndex], source, editTarget);
+    const m = editBase(setlist.items[editTarget.itemIndex], source, editTarget);
     const at = Math.max(m.srcLine, m.pinyinSrcLine ?? -1);
-    await applyNewSource(editTarget.itemIndex, insertSourceLineAfter(m.source, at, newRaw), m.extra);
+    await applyNewSource(editTarget.itemIndex, insertSourceLineAfter(m.source, at, newRaw), m.extra, m.mine);
   }
 
   async function handleDeleteLine() {
     if (!setlist || !editTarget) return;
     const source = sourceForItem(setlist.items[editTarget.itemIndex]);
     if (!source) return;
-    const m = materializeIfRepeated(setlist.items[editTarget.itemIndex], source, editTarget);
+    const m = editBase(setlist.items[editTarget.itemIndex], source, editTarget);
     const idxs = [m.srcLine];
     if (m.pinyinSrcLine !== undefined) idxs.push(m.pinyinSrcLine);
     if (m.jianpuSrcLine !== undefined) idxs.push(m.jianpuSrcLine);
-    await applyNewSource(editTarget.itemIndex, deleteSourceLines(m.source, idxs), m.extra);
+    await applyNewSource(editTarget.itemIndex, deleteSourceLines(m.source, idxs), m.extra, m.mine);
   }
 
   async function handleRevert(itemIndex: number) {
     setConfirmRevert(null);
     if (!setlist) return;
+    if (editMine) {
+      await persistMine(setlist.items[itemIndex].songSlug, {
+        content: null,
+        structure: null,
+        // Mes passages retouchés seuls disparaissent avec mon contenu.
+        sectionOrigins: undefined,
+        jianpuChords: undefined,
+      });
+      return;
+    }
     // Les sections matérialisées disparaissent avec le contenu adapté : la
     // structure doit repointer vers les sections d'origine, sinon les
-    // occurrences modifiées sortent de la setlist.
-    await persistOverride(itemIndex, undefined, revertSectionOrigins(setlist.items[itemIndex]));
+    // occurrences modifiées sortent de la setlist. Les retouches du scan
+    // partent avec le reste : ce sont des accords adaptés comme les autres.
+    await persistOverride(itemIndex, undefined, {
+      ...revertSectionOrigins(setlist.items[itemIndex]),
+      jianpuChords: {},
+    });
   }
 
   if (loadingSetlist) {
@@ -624,7 +860,7 @@ export function SetlistDetailClient() {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-3 px-4">
         <p className="text-sm text-muted-foreground">{t("setlists.detail.loginRequired")}</p>
-        <Link href={`/login?from=/setlists/${id}`} className="text-sm text-primary hover:underline">
+        <Link href={`/login?from=/setlists/${id}`} className="text-sm text-foreground hover:underline">
           {t("common.header.login")}
         </Link>
       </div>
@@ -646,7 +882,7 @@ export function SetlistDetailClient() {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-3">
         <p className="text-sm text-muted-foreground">{t("setlists.detail.notFound")}</p>
-        <Link href={backPath} className="text-sm text-primary hover:underline">{t("setlists.detail.back")}</Link>
+        <Link href={backPath} className="text-sm text-foreground hover:underline">{t("setlists.detail.back")}</Link>
       </div>
     );
   }
@@ -656,13 +892,25 @@ export function SetlistDetailClient() {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-3 px-4">
         <p className="text-sm text-muted-foreground">{t("setlists.detail.noAccess")}</p>
-        <Link href="/setlists" className="text-sm text-primary hover:underline">{t("setlists.detail.back")}</Link>
+        <Link href="/setlists" className="text-sm text-foreground hover:underline">{t("setlists.detail.back")}</Link>
       </div>
     );
   }
 
-  // Modification/suppression : créateur + musiciens du même service
+  // Modification : créateur + musiciens du même service
   const canEdit = canEditSetlist(user, profile, setlist);
+  // Suppression : le même droit, sous son nom — la liste (lot 10) s'en sert aussi
+  const canDelete = canDeleteSetlist(user, profile, setlist);
+  // Items affichés : la version choisie (en mode « Ma version » : la mienne)
+  // remplace celle de la présidence — accords et paroles pour la vue
+  // partitions (qui applique ma structure au corps seul), ma structure
+  // comprise pour le sommaire et le mode louange. Mode Adapter : la
+  // présidence seule.
+  const displayItems = editPartitions ? setlist.items : setlist.items.map(editMine ? withMine : withChosen);
+  const stageItems = editPartitions ? setlist.items : displayItems.map(withMineStructure);
+  const versionViews = editPartitions
+    ? undefined
+    : Object.fromEntries(setlist.items.filter((it) => it.songSlug).map((it) => [it.songSlug, viewOf(it)!]));
   const canDuplicate = canDuplicateSetlist(user, profile, setlist);
   // Notif « setlist prête » : pour toute setlist modifiable par l'utilisateur,
   // contenant au moins 4 vrais chants (hors transitions). Toutes catégories.
@@ -677,14 +925,14 @@ export function SetlistDetailClient() {
   return (
     <div className="min-h-screen bg-background">
       {/* Top bar — même style que SongDetailClient */}
-      <div ref={toolbarRef} className={`print:hidden fixed left-0 right-0 top-[var(--nav-h)] z-10 bg-background/95 backdrop-blur border-b border-border transition-transform duration-300 ${ scrollVisible ? "translate-y-0" : "-translate-y-[calc(100%+var(--nav-h))]"}`}>
+      <div ref={toolbarRef} className={`print:hidden fixed left-0 right-0 top-[var(--nav-h)] z-10 material-chrome shadow-[0_1px_0_hsl(var(--border))] transition-transform duration-300 ${ scrollVisible ? "translate-y-0" : "-translate-y-[calc(100%+var(--nav-h))]"}`}>
         <div className="max-w-[1080px] mx-auto px-4">
           <div className="flex items-center gap-2 py-[9px] flex-wrap">
 
             {/* ← Retour */}
-            <Link
+            <Link aria-label={t("songs.detail.backToAll")}
               href={backPath}
-              className="h-8 px-2.5 mr-1 rounded-[8px] border border-border bg-card text-muted-foreground hover:text-foreground text-[12.5px] font-semibold flex items-center gap-0.5 transition-all duration-150"
+              className="h-8 px-2.5 mr-1 rounded-full bg-secondary text-muted-foreground hover:text-foreground text-sm font-semibold flex items-center gap-0.5 transition-[background-color,color,transform] duration-150 active:scale-[.96]"
             >
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M19 12H5m6-7l-7 7 7 7" />
@@ -693,21 +941,21 @@ export function SetlistDetailClient() {
             </Link>
 
             {/* Vue toggle — pill identique au transpose pill */}
-            <div className="flex items-center gap-0 border border-border rounded-[10px] bg-card overflow-hidden">
-              <button
+            <div className="flex items-center gap-0.5 rounded-full bg-secondary p-0.5">
+              <button aria-label={t("setlists.detail.tabList")}
                 onClick={() => setView("liste")}
-                className={`flex items-center gap-1.5 px-3 h-[34px] text-[12.5px] font-semibold transition-colors ${
-                  view === "liste" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground"
+                className={`flex items-center gap-1.5 px-3 h-8 rounded-full text-sm font-semibold transition-colors ${
+                  view === "liste" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 <List className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">{t("setlists.detail.tabList")}</span>
               </button>
-              <div className="w-px h-5 bg-border" />
-              <button
+              
+              <button aria-label={t("setlists.detail.tabCharts")}
                 onClick={switchToPartitions}
-                className={`flex items-center gap-1.5 px-3 h-[34px] text-[12.5px] font-semibold transition-colors ${
-                  view === "partitions" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground"
+                className={`flex items-center gap-1.5 px-3 h-8 rounded-full text-sm font-semibold transition-colors ${
+                  view === "partitions" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 <Music className="h-3.5 w-3.5" />
@@ -720,15 +968,16 @@ export function SetlistDetailClient() {
 
               {/* Adapter le chant (accords/paroles par setlist) — vue partitions */}
               {view === "partitions" && canEdit && (
-                <button
+                <button aria-label={t("setlists.contentEdit.toggle", { defaultValue: "Adapter" })}
                   onClick={() => {
                     setEditPartitions((e) => !e);
+                    setEditMine(false);
                     setEditTarget(null);
                   }}
-                  className={`h-8 px-2.5 rounded-[8px] border text-[12.5px] font-semibold flex items-center gap-1.5 transition-all duration-150 ${
+                  className={`h-8 px-2.5 rounded-full text-sm font-semibold flex items-center gap-1.5 transition-[background-color,color,transform] duration-150 active:scale-[.96] ${
                     editPartitions
-                      ? "border-transparent bg-primary/10 text-primary"
-                      : "border-border bg-card text-muted-foreground hover:text-foreground"
+                      ? "bg-foreground text-background"
+                      : "bg-secondary text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   <SlidersHorizontal className="h-3.5 w-3.5" />
@@ -738,14 +987,36 @@ export function SetlistDetailClient() {
                 </button>
               )}
 
+              {/* Ma version (accords/paroles pour soi) — vue partitions, tout connecté */}
+              {view === "partitions" && canHaveSetlistVersion(user, profile, setlist) && (
+                <button aria-label={t("setlists.myVersion.toggle")}
+                  onClick={() => {
+                    setEditMine((m) => !m);
+                    setEditPartitions(false);
+                    setEditTarget(null);
+                  }}
+                  className={`h-8 px-2.5 rounded-full text-sm font-semibold flex items-center gap-1.5 transition-[background-color,color,transform] duration-150 active:scale-[.96] ${
+                    editMine
+                      ? "bg-foreground text-background"
+                      : "bg-secondary text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <PenLine className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline">{t("setlists.myVersion.toggle")}</span>
+                </button>
+              )}
+
               {/* Accords (pertinent uniquement en vue partitions) */}
               {view === "partitions" && (
-                <button
-                  onClick={() => setShowChords((s) => !s)}
-                  className={`h-8 px-2.5 rounded-[8px] border text-[12.5px] font-semibold flex items-center gap-1.5 transition-all duration-150 ${
+                <button aria-label={t("songs.detail.chords")}
+                  onClick={() => {
+                    setShowChords((s) => !s);
+                    setChordsTouched(true);
+                  }}
+                  className={`h-8 px-2.5 rounded-full text-sm font-semibold flex items-center gap-1.5 transition-[background-color,color,transform] duration-150 active:scale-[.96] ${
                     showChords
-                      ? "border-transparent bg-primary/10 text-primary"
-                      : "border-border bg-card text-muted-foreground hover:text-foreground"
+                      ? "bg-foreground text-background"
+                      : "bg-secondary text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/><path d="M9 18V5l12-2v13"/></svg>
@@ -755,12 +1026,12 @@ export function SetlistDetailClient() {
 
               {/* Pinyin (chants zh, vue partitions) — préférence persistée */}
               {view === "partitions" && hasZhSong && (
-                <button
+                <button aria-label={t("setlists.detail.pinyin", { defaultValue: "Pinyin" })}
                   onClick={togglePinyin}
-                  className={`h-8 px-2.5 rounded-[8px] border text-[12.5px] font-semibold flex items-center gap-1.5 transition-all duration-150 ${
+                  className={`h-8 px-2.5 rounded-full text-sm font-semibold flex items-center gap-1.5 transition-[background-color,color,transform] duration-150 active:scale-[.96] ${
                     showPinyin
-                      ? "border-transparent bg-primary/10 text-primary"
-                      : "border-border bg-card text-muted-foreground hover:text-foreground"
+                      ? "bg-foreground text-background"
+                      : "bg-secondary text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   <Languages className="h-3.5 w-3.5" />
@@ -783,7 +1054,10 @@ export function SetlistDetailClient() {
                   if (setlist) await loadContents(setlist.items);
                   setPerformanceMode(true);
                 }}
-                className="h-8 px-3 rounded-[8px] bg-primary text-primary-foreground text-[12.5px] font-semibold flex items-center gap-1.5 hover:bg-primary/90 transition-all duration-150"
+                aria-label={t("setlists.detail.performanceMode")}
+                // 5C1 : un bouton plein est en encre, sauf sur l'écran d'un culte, où il en prend la couleur.
+                style={{ backgroundColor: serviceButtonFill(categoryColor(setlist?.category ?? "")) }}
+                className="h-8 px-3 rounded-full text-white text-[12.5px] font-semibold flex items-center gap-1.5 hover:brightness-95 dark:ring-1 dark:ring-white/15 transition-all duration-150"
               >
                 <Play className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">{t("setlists.detail.performanceMode")}</span>
@@ -811,6 +1085,17 @@ export function SetlistDetailClient() {
                       >
                         {t("performance.chartStyle")}
                       </DropdownMenuCheckboxItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
+                        {t("setlists.detail.layout.label")}
+                      </DropdownMenuLabel>
+                      <DropdownMenuRadioGroup value={layout} onValueChange={(v) => changeLayout(v as PartitionLayout)}>
+                        {(["played", "unique", "structure"] as const).map((v) => (
+                          <DropdownMenuRadioItem key={v} value={v} onSelect={(e) => e.preventDefault()}>
+                            {t(`setlists.detail.layout.${v}`)}
+                          </DropdownMenuRadioItem>
+                        ))}
+                      </DropdownMenuRadioGroup>
                       {hasJianpuSheets && (
                         <>
                           <DropdownMenuSeparator />
@@ -869,11 +1154,15 @@ export function SetlistDetailClient() {
                     <Share2 className="h-3.5 w-3.5 text-muted-foreground" />
                     {t("setlists.detail.share")}
                   </DropdownMenuItem>
-                  <DropdownMenuItem disabled={downloading} onClick={() => handleDownload()}>
+                  <DropdownMenuItem
+                    disabled={downloading}
+                    // Vue liste : le PDF liste, sans choix ; vue partitions : « Quel PDF ? ».
+                    onClick={() => (view === "liste" ? handleDownload() : setShowPdfChoice(true))}
+                  >
                     <Download className="h-3.5 w-3.5 text-muted-foreground" />
                     {downloading ? "…" : t("songs.detail.downloadPdf")}
                   </DropdownMenuItem>
-                  {canEdit && (
+                  {canDelete && (
                     <>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem
@@ -903,6 +1192,7 @@ export function SetlistDetailClient() {
               <p className="text-muted-foreground capitalize mt-1 text-sm">
                 {formatDate(setlist.date, i18n.language)}
               </p>
+              <SetlistHistory key={historyVersion} setlistId={id} songsMap={songsMap} />
             </div>
             <span className="text-xs px-2 py-0.5 rounded border border-border text-muted-foreground shrink-0 mt-1">
               {t("common.languages." + setlist.language, { defaultValue: setlist.language })}
@@ -918,7 +1208,7 @@ export function SetlistDetailClient() {
           </div>
           {/* Qui peut modifier — rend visible la logique de access.ts */}
           <div className="mt-3 flex items-center gap-2 flex-wrap">
-            <Badge variant={canEdit ? "default" : "secondary"}>
+            <Badge variant="secondary">
               {canEdit ? t("setlists.detail.canEdit") : t("setlists.detail.readOnly")}
             </Badge>
             <span className="text-xs text-muted-foreground">
@@ -929,6 +1219,17 @@ export function SetlistDetailClient() {
                   })}
             </span>
           </div>
+          <PresentationLink
+            setlistId={id}
+            url={setlist.presentationUrl}
+            canChange={canSetPresentationLink(
+              user,
+              profile,
+              setlist,
+              !!profile?.serviceRoles[setlist.category]?.includes("regie"),
+            )}
+            onSaved={(presentationUrl) => setSetlist({ ...setlist, presentationUrl })}
+          />
           {setlist.notes && (
             <p className="mt-3 text-sm text-muted-foreground italic">{setlist.notes}</p>
           )}
@@ -940,7 +1241,7 @@ export function SetlistDetailClient() {
             {t("setlists.detail.emptyItems")}
           </p>
         ) : view === "liste" ? (
-          <ListView items={setlist.items} songsMap={songsMap} jianpuPref={jianpuPref} />
+          <ListView setlistId={id} items={setlist.items} songsMap={songsMap} jianpuPref={jianpuPref} />
         ) : (
           <>
             {editPartitions && (
@@ -951,23 +1252,132 @@ export function SetlistDetailClient() {
                 })}
               </p>
             )}
+            {editMine && (
+              <p className="mb-4 text-xs text-muted-foreground bg-primary/5 border border-primary/20 rounded-lg px-3 py-2 print:hidden">
+                {t("setlists.myVersion.hint")}
+              </p>
+            )}
+            {!loadingContent && <SetlistOutline items={stageItems} contents={contents} />}
             <PartitionsView
-              items={setlist.items}
+              items={displayItems}
               contents={contents}
               loading={loadingContent}
               showChordsGlobal={showChords}
               showPinyinGlobal={showPinyin}
               chartStyle={chartStyle}
               jianpuPref={jianpuPref}
-              editMode={editPartitions}
+              layout={layout}
+              editMode={editPartitions || editMine}
+              versions={versionViews}
+              editMine={editMine}
               onSelectLine={handleSelectLine}
               onRevert={(itemIndex) => setConfirmRevert(itemIndex)}
+              onEditStructure={(itemIndex) => {
+                const item = setlist.items[itemIndex];
+                const ast = itemAst(withMine(item), contents[item.songSlug]);
+                if (!ast) return;
+                setStructureTarget({
+                  itemIndex,
+                  ast,
+                  structure: myItems?.[item.songSlug]?.structure ?? null,
+                  presidency: item.structureOverride,
+                });
+              }}
+              onChooseVersion={(itemIndex, value) => persistChoice(setlist.items[itemIndex].songSlug, value)}
+              onShare={(itemIndex, shared) => persistMine(setlist.items[itemIndex].songSlug, { shared })}
+              onEditJianpu={handleEditJianpu}
+              onIdees={accesHarmonie.peut ? (itemIndex) => setIdeesTarget(itemIndex) : undefined}
             />
           </>
         )}
       </div>
 
+      {/* Idées d'harmonie du chant (lot 9) */}
+      {ideesTarget !== null && setlist?.items[ideesTarget] && (() => {
+        const item = setlist.items[ideesTarget];
+        const ast = itemAst(editMine ? withMine(item) : item, contents[item.songSlug]);
+        if (!ast) return null;
+        const tonalite = item.keyOverride ?? ast.metadata.key;
+        // Le chant suivant, pour la transition : les fusions et les items sans
+        // chant sont sautés (la spec les exclut).
+        const suivantItem = setlist.items
+          .slice(ideesTarget + 1)
+          .find((i) => i.songSlug && i.type !== "fusion");
+        const suivantAst = suivantItem ? itemAst(suivantItem, contents[suivantItem.songSlug]) : null;
+        const suivant =
+          suivantItem && suivantAst
+            ? {
+                titre: songsMap[suivantItem.songSlug]?.title ?? suivantItem.songSlug,
+                tonalite: suivantItem.keyOverride ?? suivantAst.metadata.key,
+              }
+            : undefined;
+        return (
+          <IdeesSheet
+            open
+            onClose={() => setIdeesTarget(null)}
+            slug={item.songSlug}
+            titre={songsMap[item.songSlug]?.title ?? item.songSlug}
+            sections={ast.sections}
+            tonalite={tonalite}
+            tonaliteOrigine={ast.metadata.key}
+            instrument={instrumentHarmonie}
+            suivant={item.type === "fusion" ? undefined : suivant}
+            onModuler={
+              canEdit && !editMine && item.type !== "fusion"
+                ? (_m, prop) => {
+                    // Le 升调 existant porte la montée ; l'accord d'approche se
+                    // pose à la fin de la section d'avant, dans le chant adapté.
+                    const sectionKeys = { ...(item.sectionKeys ?? {}), [prop.sectionUid]: prop.tonaliteCible };
+                    const source = sourceForItem(item);
+                    const next =
+                      source && prop.endroitApproche && prop.approche.length
+                        ? appliquerDansLaSource(
+                            source,
+                            prop.endroitApproche,
+                            [...prop.endroitApproche.accords, ...prop.approche],
+                            semitonesTo(ast.metadata.key, tonalite),
+                            ast.metadata.key,
+                          )
+                        : source;
+                    void applyNewSource(ideesTarget, next ?? "", { sectionKeys });
+                    setIdeesTarget(null);
+                  }
+                : undefined
+            }
+            onEssayer={
+              editMine
+                ? (s, apres) => {
+                    const source = sourceForItem(item);
+                    if (!source) return;
+                    const demiTons = semitonesTo(ast.metadata.key, tonalite);
+                    void applyNewSource(
+                      ideesTarget,
+                      appliquerDansLaSource(source, s.endroits[0], apres, demiTons, ast.metadata.key),
+                    );
+                    // Chant affiché en scan 简谱 : la retouche va bien dans la
+                    // version texte, mais elle ne se verra pas sur l'image —
+                    // on le dit, avec le changement à reporter à la main.
+                    if (sheetEnabled(jianpuPref, item.jianpuSheet)) {
+                      flashFeedback(
+                        t("harmonie.reporterJianpu", { quoi: `${s.endroits[0].accords.join(" – ")} → ${apres.join(" – ")}` }),
+                      );
+                    }
+                    setIdeesTarget(null);
+                  }
+                : undefined
+            }
+          />
+        );
+      })()}
+
       {/* Confirmation de suppression */}
+      <PdfChoiceSheet
+        open={showPdfChoice}
+        onClose={() => setShowPdfChoice(false)}
+        forSetlist
+        onDownload={handleDownload}
+      />
+
       <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -998,10 +1408,22 @@ export function SetlistDetailClient() {
       <EditLineSheet
         target={editTarget}
         saving={savingLine}
+        repeatScope={editMine && editTarget?.repeatedSectionId !== undefined ? repeatScope : undefined}
+        onRepeatScope={setRepeatScope}
         onClose={() => setEditTarget(null)}
         onSaveLine={handleSaveLine}
         onInsertAfter={handleInsertAfter}
         onDeleteLine={handleDeleteLine}
+      />
+
+      {/* Feuille « Sections » de ma version */}
+      <MyStructureSheet
+        target={structureTarget}
+        saving={savingLine}
+        onClose={() => setStructureTarget(null)}
+        onSave={(structure) =>
+          structureTarget && persistMine(setlist.items[structureTarget.itemIndex].songSlug, { structure })
+        }
       />
 
       {/* Confirmation de rétablissement de l'original */}
@@ -1009,13 +1431,17 @@ export function SetlistDetailClient() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {t("setlists.contentEdit.revert", { defaultValue: "Rétablir l'original" })}
+              {editMine
+                ? t("setlists.myVersion.revert")
+                : t("setlists.contentEdit.revert", { defaultValue: "Rétablir l'original" })}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              {t("setlists.contentEdit.revertConfirm", {
-                defaultValue:
-                  "Toutes les modifications d'accords et de paroles de ce chant pour cette setlist seront perdues.",
-              })}
+              {editMine
+                ? t("setlists.myVersion.revertConfirm")
+                : t("setlists.contentEdit.revertConfirm", {
+                    defaultValue:
+                      "Toutes les modifications d'accords et de paroles de ce chant pour cette setlist seront perdues.",
+                  })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -1033,9 +1459,9 @@ export function SetlistDetailClient() {
       {/* Mode Louange */}
       {performanceMode && (
         <PerformanceMode
-          items={setlist.items}
+          items={stageItems}
           contents={contents}
-          initialShowChords={showChords}
+          initialShowChords={chordsTouched ? showChords : undefined}
           setlistId={id}
           setlistTitle={setlist.title}
           onClose={() => {
