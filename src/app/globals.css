@@ -68,6 +68,13 @@
   :root {
     /* Hauteur de la navbar — source unique pour tous les offsets fixed/sticky */
     --nav-h: 58px;
+    /* Zone sûre du bas (indicateur d'accueil de l'iPhone), lue par la barre d'onglets. */
+    --sab: env(safe-area-inset-bottom, 0px);
+    /* Écart entre la barre d'onglets flottante et le bas de l'écran : 14 px sans
+       zone sûre ; avec, la barre se pose DANS la zone sûre, 8 px au-dessus de
+       l'indicateur d'accueil (qui finit à 13 px du bord). Jamais marge + zone
+       sûre empilées : cela faisait 48 px sur iPhone (retour du 20/09/2026). */
+    --tabbar-bottom: max(14px, min(21px, var(--sab)));
     /* Direction 5C1 « Encre · Relief » (docs/spec-look.md, § 20/09/2026) : fond
        blanc, encre, listes en filets ; ce qui se touche porte une ombre. Les
        boutons pleins sont en encre, le rouge du logo ne reste que sur le logo
