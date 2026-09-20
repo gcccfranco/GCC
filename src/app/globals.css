@@ -15,6 +15,22 @@
     -webkit-backdrop-filter: blur(20px) saturate(1.4);
     backdrop-filter: blur(20px) saturate(1.4);
   }
+  /* En haut de page rien ne passe sous les barres : elles s'effacent (fond, flou,
+     filet) et laissent voir le halo ; le voile revient dès qu'on défile (5C1, V6 bis).
+     `data-at-top` est posé sur <html> dès l'en-tête (layout.tsx), puis tenu par la
+     Navbar. `.material-steady` garde son voile partout : les deux barres du mode
+     louange, posées sur les paroles.
+     Le fondu ne vit qu'ici : posé sur `.material-chrome`, il écraserait le
+     `transition-transform` qui fait glisser les barres au défilement. En haut de page
+     elles ne glissent jamais ; le voile s'efface donc en douceur au retour en haut, et
+     revient d'un coup quand on repart, là où il faut lire tout de suite. */
+  html[data-at-top] .material-chrome:not(.material-steady) {
+    background-color: transparent;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    box-shadow: none;
+    transition: background-color 200ms ease;
+  }
   /* Lignes d'une liste : un filet d'un bord à l'autre, aligné sur le titre de la page (5C1). */
   .group-row + .group-row::before {
     content: "";
@@ -37,15 +53,17 @@
     box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1), 0 14px 40px rgba(0, 0, 0, 0.8);
   }
   /* Halo d'en-tête (5C1, V6) : l'ellipse floue des planches, couleur par `--halo`.
-     Premier enfant du conteneur plein écran de la page, passé en `relative` ; le
-     contenu qui suit est `relative` lui aussi, pour se peindre au-dessus. Le calque
-     remonte sous la navbar (translucide) et coupe ce qui dépasse : le halo du chant
-     déborde à droite, il ne doit pas élargir la page. */
+     Premier enfant du conteneur plein écran de la page, passé en `relative flow-root`
+     (sans `flow-root`, la marge haute du contenu traverse le conteneur et descend le
+     halo avec lui) ; le contenu qui suit est `relative` lui aussi, pour se peindre
+     au-dessus. Le calque remonte sous la navbar et coupe ce qui dépasse : le halo du
+     chant déborde à droite, il ne doit pas élargir la page. Jamais `100vw` : sur
+     ordinateur il compterait la barre de défilement. */
   .halo {
     position: absolute;
     top: calc(-1 * var(--nav-h));
     left: 0;
-    width: 100vw;
+    right: 0;
     height: 320px;
     overflow: hidden;
     pointer-events: none;
@@ -65,10 +83,14 @@
   /* Fiche d'une setlist, puis page d'un chant (à droite) : géométries des planches C et B. */
   .halo-fiche::before { left: -40px; top: -60px; width: 300px; height: 220px; opacity: 0.14; filter: blur(44px); }
   .halo-chant::before { left: auto; right: -80px; top: -60px; width: 300px; height: 220px; opacity: 0.12; filter: blur(44px); }
-  /* Téléphone et tablette seulement (tranché le 20/09/2026), et rien à l'impression.
-     Une souris = un ordinateur, quelle que soit la largeur de la fenêtre : `100vw`
-     y compterait la barre de défilement et le calque élargirait la page. */
-  @media (pointer: fine) { .halo { display: none; } }
+  /* Grand écran (ordinateur, tablette en paysage ; tranché le 20/09/2026 au soir) : la
+     colonne de contenu est centrée, le halo des planches resterait coincé dans le coin.
+     Agrandi à l'écran, il repasse sous le logo et atteint le titre. */
+  @media (min-width: 1024px) {
+    .halo { height: 560px; }
+    .halo::before, .halo-fiche::before { left: -140px; top: -200px; width: 860px; height: 560px; filter: blur(90px); }
+    .halo-chant::before { left: auto; right: -140px; top: -200px; width: 860px; height: 560px; filter: blur(90px); }
+  }
   @media print { .halo { display: none; } }
   .material-panel {
     background-color: hsl(var(--card) / 0.97);

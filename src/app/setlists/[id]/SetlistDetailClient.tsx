@@ -936,7 +936,7 @@ export function SetlistDetailClient() {
       i.fusionSongs?.some((fs) => songsMap[fs.songSlug]?.language === "zh")
   );
   return (
-    <div className="relative min-h-screen bg-background">
+    <div className="relative flow-root min-h-screen bg-background">
       <Halo variant="fiche" color={categoryColor(setlist?.category ?? "")} />
       {/* Top bar — même style que SongDetailClient */}
       <div ref={toolbarRef} data-testid="barre-outils" className={`print:hidden fixed left-0 right-0 top-[var(--nav-h)] z-10 material-chrome shadow-[0_1px_0_hsl(var(--border))] transition-transform duration-300 ${ scrollVisible ? "translate-y-0" : "-translate-y-[calc(100%+var(--nav-h))]"}`}>

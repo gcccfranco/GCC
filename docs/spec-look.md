@@ -446,10 +446,95 @@ Trois constats :
   contre 236 juste dessous), qui s'efface vers la droite. La planche n'avait pas de
   navbar. Seule vraie correction : une navbar transparente en haut de page, dont le
   voile n'apparaît qu'au défilement (grands titres d'iOS) — changement de la navbar,
-  **hors V6, à trancher par Timothée**.
+  hors V6. **Tranché par Timothée le 20/09/2026 : « on laisse la barre telle quelle
+  est ».** La couture reste, la navbar n'est pas touchée.
 - **Sombre** : Chants prend le jeton sombre des accords (`#8fb0ff`), plus lisible
   sur noir que le bleu clair des planches sombres (qui réutilisaient la valeur du
   clair). Les couleurs de service n'ont pas de sombre : sur noir, le halo d'une
   setlist est presque invisible, comme sur la planche R-N-C.
+- **Halo plus bas sur un chant et une setlist** (vu en ligne après la poussée du
+  20/09/2026, `8c255ca`) : le calque commence à `y = 48` sur la page d'un chant au
+  lieu de `0`. La marge haute du contenu (`mt-[48px]`, `marginTop: toolbarH` sur la
+  fiche d'une setlist — déduit du même mécanisme, non mesuré) fusionne à travers le
+  conteneur, qui descend d'autant, et le halo avec lui. Le test de position ne
+  portait que sur `/songs`. Rendu = celui des captures montrées à Timothée ; remonté
+  à `0`, le halo passerait presque entier sous les deux barres translucides (navbar
+  + barre d'outils). **À trancher** : garder ce rendu et le rendre volontaire (test
+  de position par page), ou coller à la planche (`display: flow-root` sur le
+  conteneur annule la fusion).
 - **Piège Tailwind** : une classe de `@layer utilities` n'est gardée que si son nom
   est écrit en toutes lettres dans le code ; `halo-${variant}` était purgé.
+
+### Barres et halo : réouvert le 20/09/2026 au soir (V6 bis)
+
+Statut : **go de Timothée le 20/09/2026 (« Go, il faudrait un halo pour les gens sur
+tablette et sur ordi aussi. je suis OK avec ce que tu as décidé ») : option C, halo
+agrandi sur ordinateur, décalage de 48 px corrigé. CODÉ le jour même, test d'abord,
+NON commité, à valider en local. Voir « Avancement V6 bis » plus bas.**
+
+Timothée, en voyant le Planning en ligne sur son téléphone : le dégradé aussi
+« sur tablette et ordinateur » ; « la bande en haut avec le logo de l'église » et
+« la barre pour les planning » ne devraient pas rester blanches mais prendre « la
+même couleur de fond que le reste du site » ; « élargir le dégradé à la bande » ;
+« tout ce qui y ressemble doit être modifié aussi ». Cela rouvre « on laisse la
+barre telle quelle est » du même jour.
+
+Tranché par questions (20/09/2026) :
+
+- **Toutes les barres `.material-chrome`** changent ensemble, par le seul réglage
+  de `globals.css` : navbar, onglets de section (Planning, Évènements), barre
+  d'outils d'un chant et d'une setlist, barre de la liste des setlists, barre de
+  l'éditeur de setlist.
+- **Le mode louange garde ses deux barres** telles quelles (pas de dégradé derrière
+  elles : les rendre plus fines n'apporterait rien et gênerait la lecture).
+
+Le halo n'a pas à être agrandi sur téléphone : il part déjà du haut de l'écran,
+c'est le blanc à 80 % des barres qui le masque. Alléger les barres l'« étend ».
+
+Planche : https://claude.ai/artifact/HNDu1pSHipBnuG7MuDCqbR, page **« V6 · barres et
+halo 20-09 »** (version 14, 20 planches ; générateur dans le scratchpad `barres/gen.py`).
+Quatre colonnes, une seule variable, le fond des barres :
+
+| | Fond des barres | Au repos | Quand du contenu défile dessous |
+| --- | --- | --- | --- |
+| Aujourd'hui | blanc 80 %, flou 20 px | barres blanches sur page teintée, couture nette | lisible |
+| A « verre léger » | blanc 45 %, flou 20 px, saturation 1,6 | le halo traverse les barres, couture adoucie | taches de couleur un peu présentes |
+| B « verre très léger » | blanc 18 %, flou 22 px, saturation 1,7 | halo presque intact dans les barres | taches nettement présentes sous le nom et les commandes |
+| C « rien en haut » | transparent en haut de page ; voile d'aujourd'hui dès qu'on défile | aucune barre visible, le halo est continu | identique à aujourd'hui |
+
+Rangées : Planning (navbar + onglets), Chants (navbar seule), un chant au repos,
+un chant défilé (le cas le plus dur : titre gras sous la navbar, pastilles de
+couleur sous la barre d'outils), ordinateur.
+
+**Ordinateur** : la colonne de contenu est centrée. À la taille du téléphone le
+halo reste coincé dans le coin, loin du titre ; agrandi en proportion de l'écran
+(860 × 560, flou 90 px sur 1280 px de large) il retrouve la composition du
+téléphone. Les deux sont sur la planche. Conséquence à prévoir : la règle
+`@media (pointer: fine) { .halo { display: none } }` saute, donc le calque ne peut
+plus faire `100vw` (barre de défilement classique) — à régler dans le lot.
+
+À corriger dans le même lot, quel que soit le choix : le halo 48 px trop bas sur
+un chant et une setlist (ci-dessus) ; avec une barre transparente son bord coupé
+se verrait.
+
+Recommandation : **C**. C'est la seule qui donne le halo plein en haut de page
+sans rien coûter à la lisibilité quand on défile, et c'est le comportement des
+grands titres d'iOS que l'équipe connaît. Elle demande un état « en haut de page »
+par barre (la navbar l'a déjà : `atTop`), donc plus de code que A ou B, qui
+tiennent en une ligne de CSS.
+
+#### Avancement V6 bis (20/09/2026)
+
+| Fait | Où | Tests |
+| --- | --- | --- |
+| **Barres, option C** : `html[data-at-top] .material-chrome:not(.material-steady)` efface fond, flou et filet ; fondu de 200 ms sur le fond ; `.material-steady` sur les deux barres du mode louange. L'attribut est posé avant le premier affichage par une ligne de script dans l'en-tête (sinon le voile blanc clignote à chaque chargement, le temps que React démarre), puis tenu à jour par la Navbar (`atTop`, seuil 4 px, qu'elle avait déjà) | `globals.css`, `layout.tsx`, `Navbar.tsx`, `PerformanceMode.tsx` | `look-barres.spec.ts` (8 tests × 3) |
+| **Halo sur ordinateur**, agrandi à partir de 1024 px (860 × 560, −140 / −200, flou 90 px, calque de 560 px), à gauche comme à droite (chant) ; la règle `@media (pointer: fine)` part | `globals.css` | `look-halo.spec.ts` (10 tests × 3) |
+| **Plus de `100vw`** : le calque fait `left: 0; right: 0` ; sur la page d'un chant, dont le conteneur change de largeur avec la taille du texte, le halo s'accroche à un conteneur à part, large comme la fenêtre | `globals.css`, `SongDetailClient` | `look-halo-defilement.spec.ts` (barre de défilement de 15 px rendue à Playwright ; contre-épreuve faite : avec `100vw` la page s'élargit de 15 px exactement) ; texte à 0,8 et 1,5 |
+| **Décalage de 48 px corrigé** : `flow-root` sur le conteneur du halo (chant, setlist) ; la position `x = 0, y = 0, largeur = fenêtre` est maintenant vérifiée sur les quatre écrans, plus seulement sur Chants | `SongDetailClient`, `SetlistDetailClient` | `look-halo.spec.ts` |
+
+Le décalage sur la fiche d'une setlist, seulement déduit jusque-là, a été mesuré : les
+tests de position étaient rouges sur un chant **et** sur une setlist avant le correctif.
+
+Piège de capture : à `deviceScaleFactor` 2 et plus, le Chromium sans tête de Playwright
+n'applique pas le flou d'arrière-plan (le texte sous une barre voilée paraît net). Pour
+juger un `backdrop-filter`, capturer à ×1 ou regarder sur un vrai appareil.

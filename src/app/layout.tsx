@@ -53,6 +53,9 @@ export default function RootLayout({
         {/* Service worker push-only (public/sw.js) — requis pour les notifications
             Web Push sur PWA iOS/Android. Il ne fait plus de cache hors-ligne. */}
         <script dangerouslySetInnerHTML={{ __html: `if('serviceWorker'in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js').catch(function(){})})}` }} />
+        {/* Une page s'ouvre en haut : les barres sont effacées dès le premier affichage,
+            sans attendre que la Navbar démarre et prenne le relais (`data-at-top`, globals.css). */}
+        <script dangerouslySetInnerHTML={{ __html: `document.documentElement.setAttribute('data-at-top','')` }} />
       </head>
       <body className="font-sans antialiased min-h-screen bg-background">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>

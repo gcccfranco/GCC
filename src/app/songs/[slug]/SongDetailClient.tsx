@@ -249,8 +249,11 @@ function safeParseParam<T>(raw: string | null, fallback: T): T {
     (k === recommendedKey ? " " + t("customize.panel.keyRecommended") : "");
 
   return (
-      <div className="relative min-h-screen print:min-h-0 bg-background" style={{ width: `${100 / fontScale}%` }}>
-        <Halo variant="chant" color="var(--sec-chorus)" />
+    // Le halo s'accroche à ce conteneur, large comme la fenêtre : celui d'en dessous
+    // change de largeur avec la taille du texte.
+    <div className="relative flow-root">
+      <Halo variant="chant" color="var(--sec-chorus)" />
+      <div className="min-h-screen print:min-h-0 bg-background" style={{ width: `${100 / fontScale}%` }}>
         {/* Barre de contrôles */}
         <div data-testid="barre-outils" className={`print:hidden fixed left-0 right-0 top-[var(--nav-h)] z-10 material-chrome shadow-[0_1px_0_hsl(var(--border))] transition-transform duration-300 ${ scrollVisible || barPinned ? "translate-y-0" : "-translate-y-[calc(100%+var(--nav-h))]"}`}>
           <div className = "max-w-3xl mx-auto w-full flex flex-nowrap gap-1 items-center py-2 px-1.5">
@@ -564,6 +567,7 @@ function safeParseParam<T>(raw: string | null, fallback: T): T {
           songTitle={song.title}
         />
 
+      </div>
     </div>
     );
   }

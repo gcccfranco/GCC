@@ -81,6 +81,10 @@ export function Navbar() {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+  // Toutes les barres `.material-chrome` s'effacent en haut de page (globals.css).
+  useEffect(() => {
+    document.documentElement.toggleAttribute("data-at-top", atTop);
+  }, [atTop]);
 
   // Changement de route (barre du bas, retour…) : fermer le menu Louange.
   useEffect(() => {
