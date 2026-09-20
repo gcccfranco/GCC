@@ -237,6 +237,18 @@ export function SetlistDetailClient() {
     setChartStyle(v);
     setChartStylePref(v);
   };
+  // Adapter (la setlist) et Ma version (pour soi) s'excluent ; la barre d'outils
+  // et, sur téléphone étroit, le menu « ⋯ » passent par ici.
+  const toggleAdapter = () => {
+    setEditPartitions((e) => !e);
+    setEditMine(false);
+    setEditTarget(null);
+  };
+  const toggleMaVersion = () => {
+    setEditMine((m) => !m);
+    setEditPartitions(false);
+    setEditTarget(null);
+  };
   const changeLayout = (v: PartitionLayout) => {
     setLayout(v);
     setPartitionLayoutPref(v);
@@ -927,41 +939,47 @@ export function SetlistDetailClient() {
     <div className="relative min-h-screen bg-background">
       <Halo variant="fiche" color={categoryColor(setlist?.category ?? "")} />
       {/* Top bar — même style que SongDetailClient */}
-      <div ref={toolbarRef} className={`print:hidden fixed left-0 right-0 top-[var(--nav-h)] z-10 material-chrome shadow-[0_1px_0_hsl(var(--border))] transition-transform duration-300 ${ scrollVisible ? "translate-y-0" : "-translate-y-[calc(100%+var(--nav-h))]"}`}>
+      <div ref={toolbarRef} data-testid="barre-outils" className={`print:hidden fixed left-0 right-0 top-[var(--nav-h)] z-10 material-chrome shadow-[0_1px_0_hsl(var(--border))] transition-transform duration-300 ${ scrollVisible ? "translate-y-0" : "-translate-y-[calc(100%+var(--nav-h))]"}`}>
         <div className="max-w-[1080px] mx-auto px-4">
-          <div className="flex items-center gap-2 py-[9px] flex-wrap">
+          {/* Une seule ligne sur téléphone (retour du 20/09/2026) : 9 commandes de 32 px
+              tiennent à partir de 390 px ; en dessous, « Adapter » et « Ma version »
+              passent dans le menu « ⋯ ». Les libellés n'arrivent qu'à 1024 px (`lg`) :
+              icônes sur tout téléphone, portrait comme paysage (jusqu'à 956 px), et sur
+              iPad en portrait ; libellés sur iPad en paysage et ordinateur. `flex-wrap`
+              reste le filet de sécurité. */}
+          <div className="flex items-center gap-1.5 sm:gap-2 py-[9px] flex-wrap">
 
             {/* ← Retour */}
             <Link aria-label={t("songs.detail.backToAll")}
               href={backPath}
-              className="h-8 px-2.5 mr-1 rounded-full bg-secondary text-muted-foreground hover:text-foreground text-sm font-semibold flex items-center gap-0.5 transition-[background-color,color,transform] duration-150 active:scale-[.96]"
+              className="h-8 px-2.5 sm:mr-1 rounded-full bg-secondary text-muted-foreground hover:text-foreground text-sm font-semibold flex items-center gap-0.5 transition-[background-color,color,transform] duration-150 active:scale-[.96]"
             >
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M19 12H5m6-7l-7 7 7 7" />
               </svg>
-              <span className="hidden sm:inline">{t("songs.detail.backToAll")}</span>
+              <span className="hidden lg:inline">{t("songs.detail.backToAll")}</span>
             </Link>
 
             {/* Vue toggle — pill identique au transpose pill */}
             <div className="flex items-center gap-0.5 rounded-full bg-secondary p-0.5">
               <button aria-label={t("setlists.detail.tabList")}
                 onClick={() => setView("liste")}
-                className={`flex items-center gap-1.5 px-3 h-8 rounded-full text-sm font-semibold transition-colors ${
+                className={`flex items-center gap-1.5 px-2.5 sm:px-3 h-8 rounded-full text-sm font-semibold transition-colors ${
                   view === "liste" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 <List className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">{t("setlists.detail.tabList")}</span>
+                <span className="hidden lg:inline">{t("setlists.detail.tabList")}</span>
               </button>
               
               <button aria-label={t("setlists.detail.tabCharts")}
                 onClick={switchToPartitions}
-                className={`flex items-center gap-1.5 px-3 h-8 rounded-full text-sm font-semibold transition-colors ${
+                className={`flex items-center gap-1.5 px-2.5 sm:px-3 h-8 rounded-full text-sm font-semibold transition-colors ${
                   view === "partitions" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 <Music className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">{t("setlists.detail.tabCharts")}</span>
+                <span className="hidden lg:inline">{t("setlists.detail.tabCharts")}</span>
               </button>
             </div>
 
@@ -971,19 +989,15 @@ export function SetlistDetailClient() {
               {/* Adapter le chant (accords/paroles par setlist) — vue partitions */}
               {view === "partitions" && canEdit && (
                 <button aria-label={t("setlists.contentEdit.toggle", { defaultValue: "Adapter" })}
-                  onClick={() => {
-                    setEditPartitions((e) => !e);
-                    setEditMine(false);
-                    setEditTarget(null);
-                  }}
-                  className={`h-8 px-2.5 rounded-full text-sm font-semibold flex items-center gap-1.5 transition-[background-color,color,transform] duration-150 active:scale-[.96] ${
+                  onClick={toggleAdapter}
+                  className={`max-[389px]:hidden h-8 px-2.5 rounded-full text-sm font-semibold flex items-center gap-1.5 transition-[background-color,color,transform] duration-150 active:scale-[.96] ${
                     editPartitions
                       ? "bg-foreground text-background"
                       : "bg-secondary text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   <SlidersHorizontal className="h-3.5 w-3.5" />
-                  <span className="hidden sm:inline">
+                  <span className="hidden lg:inline">
                     {t("setlists.contentEdit.toggle", { defaultValue: "Adapter" })}
                   </span>
                 </button>
@@ -992,19 +1006,15 @@ export function SetlistDetailClient() {
               {/* Ma version (accords/paroles pour soi) — vue partitions, tout connecté */}
               {view === "partitions" && canHaveSetlistVersion(user, profile, setlist) && (
                 <button aria-label={t("setlists.myVersion.toggle")}
-                  onClick={() => {
-                    setEditMine((m) => !m);
-                    setEditPartitions(false);
-                    setEditTarget(null);
-                  }}
-                  className={`h-8 px-2.5 rounded-full text-sm font-semibold flex items-center gap-1.5 transition-[background-color,color,transform] duration-150 active:scale-[.96] ${
+                  onClick={toggleMaVersion}
+                  className={`max-[389px]:hidden h-8 px-2.5 rounded-full text-sm font-semibold flex items-center gap-1.5 transition-[background-color,color,transform] duration-150 active:scale-[.96] ${
                     editMine
                       ? "bg-foreground text-background"
                       : "bg-secondary text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   <PenLine className="h-3.5 w-3.5" />
-                  <span className="hidden sm:inline">{t("setlists.myVersion.toggle")}</span>
+                  <span className="hidden lg:inline">{t("setlists.myVersion.toggle")}</span>
                 </button>
               )}
 
@@ -1022,7 +1032,7 @@ export function SetlistDetailClient() {
                   }`}
                 >
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/><path d="M9 18V5l12-2v13"/></svg>
-                  <span className="hidden sm:inline">{t("songs.detail.chords")}</span>
+                  <span className="hidden lg:inline">{t("songs.detail.chords")}</span>
                 </button>
               )}
 
@@ -1037,7 +1047,7 @@ export function SetlistDetailClient() {
                   }`}
                 >
                   <Languages className="h-3.5 w-3.5" />
-                  <span className="hidden sm:inline">{t("setlists.detail.pinyin", { defaultValue: "Pinyin" })}</span>
+                  <span className="hidden lg:inline">{t("setlists.detail.pinyin", { defaultValue: "Pinyin" })}</span>
                 </button>
               )}
 
@@ -1059,10 +1069,10 @@ export function SetlistDetailClient() {
                 aria-label={t("setlists.detail.performanceMode")}
                 // 5C1 : un bouton plein est en encre, sauf sur l'écran d'un culte, où il en prend la couleur.
                 style={{ backgroundColor: serviceButtonFill(categoryColor(setlist?.category ?? "")) }}
-                className="h-8 px-3 rounded-full text-white text-[12.5px] font-semibold flex items-center gap-1.5 hover:brightness-95 dark:ring-1 dark:ring-white/15 transition-all duration-150"
+                className="h-8 px-2.5 sm:px-3 rounded-full text-white text-[12.5px] font-semibold flex items-center gap-1.5 hover:brightness-95 dark:ring-1 dark:ring-white/15 transition-all duration-150"
               >
                 <Play className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">{t("setlists.detail.performanceMode")}</span>
+                <span className="hidden lg:inline">{t("setlists.detail.performanceMode")}</span>
               </button>
 
               {/* Menu ⋯ : Modifier / Prévenir l'équipe / Dupliquer / Partager / PDF / Supprimer */}
@@ -1080,6 +1090,18 @@ export function SetlistDetailClient() {
                 <DropdownMenuContent align="end" className="w-56">
                   {view === "partitions" && (
                     <>
+                      {/* Téléphone étroit : les deux modes d'édition, sortis de la barre. */}
+                      {canEdit && (
+                        <DropdownMenuCheckboxItem className="min-[390px]:hidden" checked={editPartitions} onCheckedChange={toggleAdapter}>
+                          {t("setlists.contentEdit.toggle", { defaultValue: "Adapter" })}
+                        </DropdownMenuCheckboxItem>
+                      )}
+                      {canHaveSetlistVersion(user, profile, setlist) && (
+                        <DropdownMenuCheckboxItem className="min-[390px]:hidden" checked={editMine} onCheckedChange={toggleMaVersion}>
+                          {t("setlists.myVersion.toggle")}
+                        </DropdownMenuCheckboxItem>
+                      )}
+                      {(canEdit || canHaveSetlistVersion(user, profile, setlist)) && <DropdownMenuSeparator className="min-[390px]:hidden" />}
                       <DropdownMenuCheckboxItem
                         checked={chartStyle}
                         onCheckedChange={toggleChartStyle}

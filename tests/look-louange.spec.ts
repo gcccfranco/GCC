@@ -84,6 +84,89 @@ test.describe("louange (T3) : page du chant", () => {
   }
 });
 
+// Retour de Timothée du 20/09/2026 : en vue partitions, la barre d'outils de la
+// setlist passait sur deux lignes sur son iPhone (402 pt) — 374 pt de commandes
+// pour 370 pt de large. Une seule ligne à toute largeur de téléphone ; sous
+// 390 pt, « Adapter » et « Ma version » vivent dans le menu « ⋯ ». Même défaut sur
+// tablette, l'appareil du pupitre : les libellés texte arrivaient dès 640 px et ne
+// ne tiennent pas (iPad en portrait : 768 à 834 px). En paysage aussi (demande du
+// soir même) : un téléphone reste en icônes dans les deux sens, jusqu'à 956 px de
+// large ; les libellés n'arrivent qu'à 1024 px, l'iPad en paysage.
+test.describe("louange : barre d'outils de la setlist, une seule ligne sur téléphone et tablette", () => {
+  test.use(phone);
+
+  const SETLIST_ID = "setlist-barre";
+  const item = (over: Record<string, unknown>) => ({
+    keyOverride: null, showChords: true, showPinyin: true, useJianpu: false,
+    structureOverride: null, sectionNotes: {}, notes: "", ...over,
+  });
+  // Le pire cas : on peut modifier (Adapter), avoir sa version, et un chant 中文 ajoute « Pinyin ».
+  const setlist = {
+    title: "高班", leader: "David C.", category: "Culte Francophone", date: "2026-09-20",
+    language: "mixed", notes: "", ownerId: "uid-owner", isPrivate: false,
+    items: [item({ songSlug: "abba-pere", position: 1 }), item({ songSlug: "爱的约定", position: 2 })],
+  };
+  const AIDE_ADAPTER = /Mode adaptation/;
+  const AIDE_MA_VERSION = /^Ma version :/;
+
+  const ECRANS: [number, number, string][] = [
+    [320, 568, "portrait"], [360, 740, "portrait"], [375, 667, "portrait"], [390, 844, "portrait"], [402, 874, "portrait"], [430, 932, "portrait"],
+    [768, 1024, "iPad portrait"], [820, 1180, "iPad portrait"],
+    [568, 320, "paysage"], [667, 375, "paysage"], [844, 390, "paysage"], [874, 402, "paysage"], [932, 430, "paysage"], [956, 440, "paysage"],
+    [1024, 768, "iPad paysage"], [1180, 820, "iPad paysage"], [1366, 1024, "iPad paysage"],
+  ];
+  for (const [largeur, hauteur, sens] of ECRANS) {
+    test(`${largeur} × ${hauteur} (${sens}) : toutes les commandes sur une ligne, rien ne dépasse`, async ({ page }) => {
+      await page.setViewportSize({ width: largeur, height: hauteur });
+      await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: setlist }, `/setlists/${SETLIST_ID}`);
+      await page.getByRole("button", { name: "Partitions" }).click();
+      const barre = page.getByTestId("barre-outils");
+      await expect(barre.getByRole("button", { name: "Pinyin" })).toBeVisible();
+
+      const boites = await barre.locator("a, button").evaluateAll((els) =>
+        els
+          .filter((el) => (el as HTMLElement).offsetParent !== null)
+          .map((el) => {
+            const r = el.getBoundingClientRect();
+            return { nom: el.getAttribute("aria-label") ?? "", milieu: r.top + r.height / 2, gauche: r.left, droite: r.right, h: r.height, l: r.width };
+          }),
+      );
+      expect(boites.length, "retour, liste, partitions, accords, pinyin, mode louange, ⋯ au moins").toBeGreaterThanOrEqual(7);
+      const milieux = boites.map((b) => b.milieu);
+      expect(Math.max(...milieux) - Math.min(...milieux), `une seule ligne : ${JSON.stringify(boites.map((b) => [b.nom, Math.round(b.milieu)]))}`).toBeLessThan(4);
+      for (const b of boites) {
+        expect.soft(b.gauche, `${b.nom} ne sort pas à gauche`).toBeGreaterThanOrEqual(0);
+        expect.soft(b.droite, `${b.nom} ne sort pas à droite`).toBeLessThanOrEqual(largeur);
+        expect.soft(Math.min(b.h, b.l), `${b.nom} : pas plus petit qu'avant (32 px)`).toBeGreaterThanOrEqual(32);
+      }
+      // Icônes seules sur téléphone (dans les deux sens) et iPad en portrait ; libellés à partir de 1024 px.
+      await expect(barre.getByText("Mode Louange", { exact: true })).toBeVisible({ visible: largeur >= 1024 });
+      // La barre seule : à 320 px une longue ligne d'accords du corps (« Dm7(b5)/G ») dépasse de 4 px, c'est une autre histoire.
+      expect(await barre.evaluate((el) => el.scrollWidth <= el.clientWidth), "la barre ne déborde pas").toBe(true);
+
+      if (largeur >= 390) {
+        // Assez de place : les deux modes restent dans la barre, comme avant.
+        await barre.getByRole("button", { name: "Adapter" }).click();
+        await expect(page.getByText(AIDE_ADAPTER)).toBeVisible();
+        await barre.getByRole("button", { name: "Ma version" }).click();
+        await expect(page.getByText(AIDE_MA_VERSION)).toBeVisible();
+      } else {
+        // Téléphone étroit : ils passent dans le menu « ⋯ », et y marchent pareil.
+        await expect(barre.getByRole("button", { name: "Adapter" })).toBeHidden();
+        await expect(barre.getByRole("button", { name: "Ma version" })).toBeHidden();
+        await barre.getByRole("button", { name: "Plus d'actions" }).click();
+        await page.getByRole("menuitemcheckbox", { name: "Adapter" }).click();
+        await expect(page.getByText(AIDE_ADAPTER)).toBeVisible();
+        await barre.getByRole("button", { name: "Plus d'actions" }).click();
+        await expect(page.getByRole("menuitemcheckbox", { name: "Adapter" })).toHaveAttribute("aria-checked", "true");
+        await page.getByRole("menuitemcheckbox", { name: "Ma version" }).click();
+        await expect(page.getByText(AIDE_MA_VERSION)).toBeVisible();
+        await expect(page.getByText(AIDE_ADAPTER), "les deux modes s'excluent, comme dans la barre").toHaveCount(0);
+      }
+    });
+  }
+});
+
 test.describe("louange (T3) : barre d'outils du chant, téléphone et tablette", () => {
   test.beforeEach(({}, info) => {
     test.skip(info.project.name === "ordinateur", "cibles tactiles : téléphone et tablette seulement");
