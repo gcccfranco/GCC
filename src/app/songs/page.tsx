@@ -2,6 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { getSongSlugs, loadSong } from "@/lib/content/loadSongs";
 import { SongListClient } from "./SongListClient";
+import { Halo } from "@/components/layout/Halo";
 import type { SongIndexEntry, Theme } from "@/types/song";
 
 export const dynamic = "force-static";
@@ -18,8 +19,9 @@ export default async  function SongsPage() {
   const themes: Theme[] = JSON.parse(fs.readFileSync(themesPath, "utf-8")).themes;
 
   return (
-    <div className="min-h-screen bg-background">
-      <main className="max-w-2xl mx-auto px-4 py-6">
+    <div className="relative min-h-screen bg-background">
+      <Halo color="var(--chord-color)" />
+      <main className="relative max-w-2xl mx-auto px-4 py-6">
         <SongListClient songs={songs} themes={themes} />
       </main>
     </div>

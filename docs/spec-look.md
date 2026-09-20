@@ -371,3 +371,85 @@ V5 (balayage des pages secondaires) : les blocs `bg-card` hors listes (formulair
 administration) se fondent dans le blanc en clair et restent des panneaux en
 sombre. À regarder page par page avec Timothée pendant sa validation.
 
+### Le halo d'en-tête, oublié (constat du 20/09/2026, après la mise en ligne)
+
+Statut : **tranché et go de Timothée le 20/09/2026 (« téléphone et tablette seule
+je pense, je suis OK avec tout le reste ») ; voir « Tranché » plus bas.**
+
+Timothée : « il y a un dégradé en haut qui n'est pas présent sur le site
+actuellement alors qu'on a push le nouveau design ». Ce n'est ni le déploiement ni
+le cache : le halo est sur les planches de 5C1 depuis le début (hérité de la
+famille « Verre »), mais « Ce qu'est 5C1 » ci-dessus ne le décrit pas et aucune
+tranche V1–V5 ne le porte. Il n'a jamais été codé (aucune trace dans `src/`).
+
+Ce que montrent les planches (téléphone, 390 px) : une ellipse floue posée en
+absolu dans l'en-tête, qui déborde du coin de l'écran et défile avec la page.
+
+| Planche | Couleur | Place | Taille, flou |
+| --- | --- | --- | --- |
+| A · Chants | bleu des accords `#3f63cf` à 10 % | haut gauche (`left −60`, `top −80`) | 320 × 240, 40 px |
+| B · Chant | orange du refrain `#e0560a` à 12 % | haut **droite** (`right −80`, `top −60`) | 300 × 220, 44 px |
+| C · Setlist | couleur du culte à 14 % (Franco `#2d5a65`, Intergroupe `#a87b0f`, Paix `#6b4a8e`, EDD `#3b6d11`) | haut gauche (`left −40`, `top −60`) | 300 × 220, 44 px |
+| D · Planning | `#2d5a65` à 10 % | haut gauche, comme A | 320 × 240, 40 px |
+| E · Évènements, rangée Structure | pas de halo | | |
+| Sombre (A, C) | mêmes valeurs, sur noir | | |
+
+| Tranche | Contenu | Où |
+| --- | --- | --- |
+| V6 halo | le halo des quatre écrans ci-dessus : un utilitaire `.halo` (couleur par `--halo`), décoratif (`aria-hidden`, `pointer-events: none`, masqué à l'impression). La navbar est fixe en `material-chrome` (fond à 80 %) : le halo part du haut de la page et se voit à travers, comme sur la planche qui n'a pas de navbar | `globals.css`, `SongListClient`, `SongDetailClient`, `SetlistDetailClient`, `planning/page.tsx` |
+
+Réussite, vérifiable sur les trois appareils, clair et sombre :
+
+- présent sur Chants, un chant, une setlist, Planning ; absent ailleurs ;
+- une setlist prend la couleur de **sa** catégorie (`categoryColor`), vue sur deux
+  cultes différents ;
+- aucun défilement horizontal : le halo du chant déborde à droite
+  (`scrollWidth === clientWidth`) ;
+- ne capte ni clic ni lecteur d'écran ; invisible en mode louange et à l'impression ;
+- les couleurs gelées sont lues, jamais modifiées.
+
+Tranché par Timothée le 20/09/2026 :
+
+1. **Téléphone et tablette seulement**, pas de halo sur ordinateur (la planche ne
+   le montrait que sur téléphone ; la recommandation était les trois appareils).
+2. **Pages hors planche** (liste des setlists, Moi, Harmonie, Mes services,
+   connexion) : rien, fidèle à la planche.
+3. **Planning** : on garde la planche (`#2d5a65` à 10 %), même si la page couvre
+   tous les cultes.
+
+#### Avancement V6 (20/09/2026)
+
+CODÉ le jour même, test d'abord (vu rouge puis vert sur les trois appareils),
+captures regardées en clair et en sombre ; NON commité, à valider en local.
+
+| Fait | Où | Tests |
+| --- | --- | --- |
+| utilitaire `.halo` + variantes `.halo-fiche`, `.halo-chant` (géométries des planches A/D, C, B) ; primitive `Halo` (`color`, `variant`) ; posé sur Chants (`--chord-color`), un chant (`--sec-chorus`), une setlist (`categoryColor`), Planning (`PLANNING_COLORS.culte`) | `globals.css`, `src/components/layout/Halo.tsx`, `songs/page.tsx`, `SongDetailClient`, `SetlistDetailClient`, `planning/layout.tsx` + `page.tsx` | `look-halo.spec.ts` (10 tests × 3 appareils : 26 verts, 4 propres à un appareil) |
+
+Comment il tient : le conteneur plein écran de la page passe en `relative`, le
+halo est son premier enfant (absolu, remonté de `--nav-h`, large de `100vw`,
+`overflow: hidden` : le halo du chant déborde à droite sans élargir la page), et
+le contenu qui suit est `relative` pour se peindre au-dessus. Pas de `z-index`
+négatif (le fond `bg-background` de la page le cacherait) ni de contexte
+d'empilement (il piégerait le mode louange sous la navbar). « Ordinateur » =
+`(pointer: fine)`, une souris, **quelle que soit la largeur** : une tablette en
+paysage garde le halo, une fenêtre d'ordinateur étroite ne l'a pas. La règle du
+dépôt pour la barre d'onglets (`… and (min-width: 1024px)`) ne convenait pas ici :
+`100vw` compte la barre de défilement classique d'un ordinateur, et sous 1024 px
+le calque élargissait la page d'une quinzaine de pixels (trouvé à la relecture,
+test « fenêtre étroite »).
+
+Trois constats :
+
+- **Couture sous la navbar** : le voile blanc à 80 % de la navbar atténue le halo là
+  où il est le plus fort ; la navbar fait une bande plus claire à bord net (251
+  contre 236 juste dessous), qui s'efface vers la droite. La planche n'avait pas de
+  navbar. Seule vraie correction : une navbar transparente en haut de page, dont le
+  voile n'apparaît qu'au défilement (grands titres d'iOS) — changement de la navbar,
+  **hors V6, à trancher par Timothée**.
+- **Sombre** : Chants prend le jeton sombre des accords (`#8fb0ff`), plus lisible
+  sur noir que le bleu clair des planches sombres (qui réutilisaient la valeur du
+  clair). Les couleurs de service n'ont pas de sombre : sur noir, le halo d'une
+  setlist est presque invisible, comme sur la planche R-N-C.
+- **Piège Tailwind** : une classe de `@layer utilities` n'est gardée que si son nom
+  est écrit en toutes lettres dans le code ; `halo-${variant}` était purgé.

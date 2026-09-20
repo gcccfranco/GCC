@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { Trash2, List, Music, Pencil, SlidersHorizontal, PenLine, Languages, Play, MoreHorizontal, Download, Copy, Share2, BellRing } from "lucide-react";
 import { categoryColor } from "@/lib/serviceColors";
+import { Halo } from "@/components/layout/Halo";
 import { serviceButtonFill } from "@/lib/serviceButton";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -923,7 +924,8 @@ export function SetlistDetailClient() {
       i.fusionSongs?.some((fs) => songsMap[fs.songSlug]?.language === "zh")
   );
   return (
-    <div className="min-h-screen bg-background">
+    <div className="relative min-h-screen bg-background">
+      <Halo variant="fiche" color={categoryColor(setlist?.category ?? "")} />
       {/* Top bar — même style que SongDetailClient */}
       <div ref={toolbarRef} className={`print:hidden fixed left-0 right-0 top-[var(--nav-h)] z-10 material-chrome shadow-[0_1px_0_hsl(var(--border))] transition-transform duration-300 ${ scrollVisible ? "translate-y-0" : "-translate-y-[calc(100%+var(--nav-h))]"}`}>
         <div className="max-w-[1080px] mx-auto px-4">
@@ -1181,7 +1183,7 @@ export function SetlistDetailClient() {
         </div>
       </div>
 
-      <div className="max-w-2xl mx-auto px-4 py-8 print:px-0 print:py-4" style={{ marginTop: toolbarH }}>
+      <div className="relative max-w-2xl mx-auto px-4 py-8 print:px-0 print:py-4" style={{ marginTop: toolbarH }}>
         {/* Header setlist */}
         <div className="mb-8 pb-5 border-b border-border print:mb-4">
           <div className="flex items-start gap-3">

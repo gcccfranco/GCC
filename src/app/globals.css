@@ -36,6 +36,40 @@
   .dark .material-bar {
     box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1), 0 14px 40px rgba(0, 0, 0, 0.8);
   }
+  /* Halo d'en-tête (5C1, V6) : l'ellipse floue des planches, couleur par `--halo`.
+     Premier enfant du conteneur plein écran de la page, passé en `relative` ; le
+     contenu qui suit est `relative` lui aussi, pour se peindre au-dessus. Le calque
+     remonte sous la navbar (translucide) et coupe ce qui dépasse : le halo du chant
+     déborde à droite, il ne doit pas élargir la page. */
+  .halo {
+    position: absolute;
+    top: calc(-1 * var(--nav-h));
+    left: 0;
+    width: 100vw;
+    height: 320px;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .halo::before {
+    content: "";
+    position: absolute;
+    left: -60px;
+    top: -80px;
+    width: 320px;
+    height: 240px;
+    border-radius: 50%;
+    background: var(--halo);
+    opacity: 0.1;
+    filter: blur(40px);
+  }
+  /* Fiche d'une setlist, puis page d'un chant (à droite) : géométries des planches C et B. */
+  .halo-fiche::before { left: -40px; top: -60px; width: 300px; height: 220px; opacity: 0.14; filter: blur(44px); }
+  .halo-chant::before { left: auto; right: -80px; top: -60px; width: 300px; height: 220px; opacity: 0.12; filter: blur(44px); }
+  /* Téléphone et tablette seulement (tranché le 20/09/2026), et rien à l'impression.
+     Une souris = un ordinateur, quelle que soit la largeur de la fenêtre : `100vw`
+     y compterait la barre de défilement et le calque élargirait la page. */
+  @media (pointer: fine) { .halo { display: none; } }
+  @media print { .halo { display: none; } }
   .material-panel {
     background-color: hsl(var(--card) / 0.97);
     -webkit-backdrop-filter: blur(24px);

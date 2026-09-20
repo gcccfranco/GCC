@@ -25,6 +25,7 @@ import { buildDefaultStructure } from "@/lib/chordpro/structure";
 import { parseChordPro } from "@/lib/chordpro/parser";
 import { transposeAST } from "@/lib/transposeAST";
 import { useScrollDirection } from "@/hooks/useScrollDirection";
+import { Halo } from "@/components/layout/Halo";
 import { keyOptions, semitonesTo, getTransposedKey } from "@/lib/transpose";
 import { useSearchParams } from "next/navigation";
 import type { SectionItem } from "@/types/song";
@@ -248,7 +249,8 @@ function safeParseParam<T>(raw: string | null, fallback: T): T {
     (k === recommendedKey ? " " + t("customize.panel.keyRecommended") : "");
 
   return (
-      <div className="min-h-screen print:min-h-0 bg-background" style={{ width: `${100 / fontScale}%` }}>
+      <div className="relative min-h-screen print:min-h-0 bg-background" style={{ width: `${100 / fontScale}%` }}>
+        <Halo variant="chant" color="var(--sec-chorus)" />
         {/* Barre de contrôles */}
         <div data-testid="barre-outils" className={`print:hidden fixed left-0 right-0 top-[var(--nav-h)] z-10 material-chrome shadow-[0_1px_0_hsl(var(--border))] transition-transform duration-300 ${ scrollVisible || barPinned ? "translate-y-0" : "-translate-y-[calc(100%+var(--nav-h))]"}`}>
           <div className = "max-w-3xl mx-auto w-full flex flex-nowrap gap-1 items-center py-2 px-1.5">
@@ -477,7 +479,7 @@ function safeParseParam<T>(raw: string | null, fallback: T): T {
           
         </div>
         {youtubeId && showVideo && (
-            <div className="print:hidden border-b border-border bg-black/5 px-4 py-3 flex justify-center mt-[82px]">
+            <div className="relative print:hidden border-b border-border bg-black/5 px-4 py-3 flex justify-center mt-[82px]">
               <div className="w-full max-w-xl aspect-video">
                 <iframe
                   src={`https://www.youtube.com/embed/${youtubeId}`}
