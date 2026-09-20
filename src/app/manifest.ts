@@ -10,8 +10,8 @@ export default function manifest(): MetadataRoute.Manifest {
     description: "L'app de l'église GCC : chants, setlists, planning, évènements",
     start_url: "/planning",
     display: "standalone",
-    background_color: "#f2f2ef",
-    theme_color: "#f2f2ef",
+    background_color: "#ffffff",
+    theme_color: "#ffffff",
     orientation: "portrait",
     icons: [
       {

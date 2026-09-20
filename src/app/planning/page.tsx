@@ -33,8 +33,8 @@ function InfoRow({ label, value }: { label: string; value: string }) {
 
 function SectionBlock({ dot, label, children }: { dot: string; label: string; children: React.ReactNode }) {
   return (
-    <div className="flex gap-3 px-4 py-3 border-b border-border last:border-b-0">
-      <div data-testid="carre-service" className="w-2.5 h-2.5 rounded-[3px] mt-[6px] shrink-0" style={{ background: dot }} />
+    // 5C1 : un filet à la couleur du service, plus de petit carré (retour de Christelle, 20/09/2026).
+    <div data-testid="service-dimanche" className="svc-line mb-2 flex gap-3 border-l-[3px] py-2 pl-3.5 last:mb-0" style={{ "--svc": dot } as React.CSSProperties}>
       <div className="w-24 shrink-0 text-sm font-semibold text-foreground pt-px">{label}</div>
       <div className="flex-1 space-y-1">{children}</div>
     </div>
@@ -163,10 +163,10 @@ export default function PlanningAccueil() {
 
       {/* Ce dimanche */}
       <section aria-labelledby="ce-dimanche">
-        <h2 id="ce-dimanche" className="mb-1.5 px-4 text-sm font-semibold text-muted-foreground">
+        <h2 id="ce-dimanche" className="mb-2 text-sm font-semibold text-muted-foreground">
           {t("planning.thisSunday", { date: sunLabel })}
         </h2>
-        <div className="rounded-xl bg-card overflow-hidden">
+        <div>
           {/* Culte Franco */}
           <SectionBlock dot="#2d5a65" label={t("planning.tabs.culte")}>
             {cRow ? (

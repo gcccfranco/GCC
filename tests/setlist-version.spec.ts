@@ -191,7 +191,8 @@ test("ma structure : le corps la suit, le bandeau, le sommaire et la liste reste
   await capture(page, "v2-ma-structure");
 
   await page.getByRole("button", { name: "Liste" }).click();
-  await expect(page.getByText("Interlude").first(), "la vue liste garde la présidence").toBeVisible();
+  // 5C1 (20/09/2026) : la liste écrit la structure en abrégé — l'interlude de la présidence y est « Pm ».
+  await expect(page.getByRole("listitem").filter({ hasText: "Abba Père" }).first(), "la vue liste garde la présidence").toContainText("Pm");
 });
 
 test("la feuille « Sections » enregistre ma structure sans toucher la setlist", async ({ page }) => {

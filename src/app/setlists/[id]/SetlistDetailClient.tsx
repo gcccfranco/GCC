@@ -4,6 +4,8 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { Trash2, List, Music, Pencil, SlidersHorizontal, PenLine, Languages, Play, MoreHorizontal, Download, Copy, Share2, BellRing } from "lucide-react";
+import { categoryColor } from "@/lib/serviceColors";
+import { serviceButtonFill } from "@/lib/serviceButton";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -1053,7 +1055,9 @@ export function SetlistDetailClient() {
                   setPerformanceMode(true);
                 }}
                 aria-label={t("setlists.detail.performanceMode")}
-                className="h-8 px-3 rounded-full bg-primary text-primary-foreground text-[12.5px] font-semibold flex items-center gap-1.5 hover:bg-primary/90 transition-all duration-150"
+                // 5C1 : un bouton plein est en encre, sauf sur l'écran d'un culte, où il en prend la couleur.
+                style={{ backgroundColor: serviceButtonFill(categoryColor(setlist?.category ?? "")) }}
+                className="h-8 px-3 rounded-full text-white text-[12.5px] font-semibold flex items-center gap-1.5 hover:brightness-95 dark:ring-1 dark:ring-white/15 transition-all duration-150"
               >
                 <Play className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">{t("setlists.detail.performanceMode")}</span>

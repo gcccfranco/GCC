@@ -265,7 +265,7 @@ function safeParseParam<T>(raw: string | null, fallback: T): T {
               </Link>
             </Button>
             {/* Transposition rapide */}
-            <div data-testid="pilule-tonalite" className="flex items-center gap-0.5 flex-1 min-w-0 sm:flex-none rounded-full bg-secondary p-0.5">
+            <div data-testid="pilule-tonalite" className="raised flex items-center gap-0.5 flex-1 min-w-0 sm:flex-none rounded-full p-0.5">
               <Button
                 variant="ghost"
                 size="icon-lg"
@@ -340,7 +340,7 @@ function safeParseParam<T>(raw: string | null, fallback: T): T {
               )}
             </div>
 
-            <div className="ml-auto flex gap-0.5 items-center justify-end rounded-full bg-secondary p-0.5">
+            <div className="raised ml-auto flex gap-0.5 items-center justify-end rounded-full p-0.5">
               {/* Taille du texte */}
               <div className="flex items-center">
                 <Button

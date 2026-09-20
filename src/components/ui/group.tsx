@@ -1,7 +1,7 @@
 "use client";
 
-// Liste groupée (direction A « Réglages », docs/spec-look.md) : un bloc aux
-// coins arrondis sur le fond gris, des lignes séparées par un filet en retrait.
+// Liste (direction 5C1 « Encre · Relief », docs/spec-look.md § 20/09/2026) : pas
+// de boîte, des lignes séparées par un filet, alignées sur le titre de la page.
 // Une ligne est un lien, un bouton ou une simple rangée selon ce qu'on lui donne.
 
 import Link from "next/link";
@@ -19,8 +19,8 @@ export function Group({
 }) {
   return (
     <section className={className}>
-      {title && <h2 className="mb-1.5 px-4 text-sm font-semibold text-muted-foreground">{title}</h2>}
-      <div className="overflow-hidden rounded-xl bg-card">{children}</div>
+      {title && <h2 className="mb-1.5 text-sm font-semibold text-muted-foreground">{title}</h2>}
+      <div>{children}</div>
     </section>
   );
 }
@@ -40,7 +40,9 @@ type RowProps = {
 export function GroupRow({ href, onClick, leading, trailing, chevron, destructive, className, children }: RowProps) {
   const interactive = Boolean(href || onClick);
   const classes = cn(
-    "group-row relative flex w-full min-h-[52px] items-center gap-3 px-4 py-2.5 text-left text-base",
+    // Le texte s'aligne sur le titre de la page ; la ligne déborde de 12 px de
+    // chaque côté pour que le retour à l'appui ne colle pas au texte.
+    "group-row relative -mx-3 flex w-[calc(100%+1.5rem)] min-h-[52px] items-center gap-3 rounded-xl px-3 py-2.5 text-left text-base [--row-inset:0.75rem]",
     interactive && "transition-colors duration-150 active:bg-secondary/70 cursor-pointer",
     destructive ? "text-destructive" : "text-foreground",
     className,

@@ -24,7 +24,7 @@ export const viewport: Viewport = {
   // Égale au fond, par schéma : plus de barre orange sur Android ni de saut
   // de luminosité au lancement (audit D5).
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f2f2ef" },
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
     { media: "(prefers-color-scheme: dark)", color: "#000000" },
   ],
   width: "device-width",

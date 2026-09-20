@@ -32,7 +32,7 @@ export function SetlistCard({
   const mois = new Intl.DateTimeFormat(i18n.language === "zh-CN" ? "zh-CN" : "fr-FR", { month: "short" }).format(jour);
   const chants = setlist.items.filter((i) => i.type !== "transition").length;
 
-  const classe = "flex min-h-[64px] items-center gap-3 px-4 py-2.5 transition-colors duration-150 active:bg-secondary/70";
+  const classe = "-mx-3 flex min-h-[64px] w-[calc(100%+1.5rem)] items-center gap-3 rounded-xl px-3 py-2.5 transition-colors duration-150 active:bg-secondary/70";
   const contenu = (
     <>
       <Tile color={color} big={jour.getDate()} small={mois} size="lg" />

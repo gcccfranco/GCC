@@ -25,7 +25,8 @@ const couleur = (l: ReturnType<Page["locator"]>) => l.evaluate((el) => getComput
 test.describe("planning (T4)", () => {
   test.use(phone);
 
-  test("accueil : grand titre, prochain service en vignette de date, services marqués d'un carré de couleur", async ({ page }) => {
+  // 5C1, retour de Christelle (vue D) : le filet de couleur suffit, le petit carré part.
+  test("accueil : grand titre, prochain service en vignette de date, services marqués d'un filet de couleur, sans carré", async ({ page }) => {
     await open(page, "/planning");
     await expect(page.getByRole("heading", { level: 1, name: "Planning" })).toBeVisible();
     // Le lien du prochain service (pas l'onglet « Culte Franco » de la barre de section).
@@ -35,8 +36,10 @@ test.describe("planning (T4)", () => {
     expect(await couleur(prochain.getByTestId("tuile"))).toBe(CULTE_COULEUR);
     const dimanche = page.getByRole("region", { name: /Ce dimanche/ });
     await expect(dimanche.getByText("Ruth K.")).toBeVisible();
-    const carre = dimanche.getByTestId("carre-service").first();
-    expect(await carre.evaluate((el) => getComputedStyle(el).borderRadius)).toBe("3px");
+    await expect(dimanche.getByTestId("carre-service")).toHaveCount(0);
+    const service = dimanche.getByTestId("service-dimanche").first();
+    expect(await service.evaluate((el) => getComputedStyle(el).borderLeftWidth)).toBe("3px");
+    expect(await service.evaluate((el) => getComputedStyle(el).borderLeftColor)).toBe(CULTE_COULEUR);
   });
 
   test("onglets de section : neutres, l'onglet courant prend sa couleur", async ({ page }) => {

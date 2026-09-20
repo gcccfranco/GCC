@@ -1,5 +1,7 @@
 // Vignette teintée (décision D1 du 15/09/2026) : fond à ~13 % de la couleur,
-// texte dans la couleur. Tonalité d'un chant, date d'une setlist ou d'un service.
+// texte dans la couleur. Date d'une setlist ou d'un service. En sombre le texte
+// est éclairci (`.svc-ink`, globals.css) : serviceColors.ts n'a pas de variante
+// sombre et ses couleurs ne se lisent pas sur du noir.
 
 import { cn } from "@/lib/utils";
 
@@ -21,11 +23,11 @@ export function Tile({
     <span
       data-testid="tuile"
       className={cn(
-        "flex shrink-0 flex-col items-center justify-center rounded-lg font-bold leading-none tabular-nums",
+        "svc-ink flex shrink-0 flex-col items-center justify-center rounded-lg font-bold leading-none tabular-nums",
         size === "lg" ? "h-11 w-11" : "h-10 w-10",
         className,
       )}
-      style={{ background: `color-mix(in srgb, ${color} 13%, transparent)`, color }}
+      style={{ background: `color-mix(in srgb, ${color} var(--svc-tint), transparent)`, "--svc": color } as React.CSSProperties}
     >
       <span className="text-[15px]">{big}</span>
       {small && <span className="mt-0.5 text-xs font-semibold">{small}</span>}

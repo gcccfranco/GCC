@@ -228,7 +228,8 @@ défile avec la page (pas de repli animé, choix de simplicité).
 
 Statut : **direction choisie par Timothée le 20/09/2026 ; retours de Christelle
 reçus le même jour ; boutons, tonalité transposée, taille des pastilles et mode
-sombre tranchés le soir ; rien n'est codé, la spec attend le go.**
+sombre tranchés le soir ; go le 20/09/2026, V1 à V4 CODÉES le jour même (voir
+« Avancement 5C1 »), à valider en local.**
 
 Timothée : « Pour la DA du site on va aller sur la 5C1 de cet artefact. »
 Planche : https://claude.ai/artifact/HNDu1pSHipBnuG7MuDCqbR — page « Pistes de
@@ -345,3 +346,28 @@ tablette, ordinateur) et « Mode sombre » (A, B, C, D, E), version 12.
 | V3 chant et setlist | « G reco. » en encre ; bandeau à 32 px sous 640 px ; « Mode louange » à la couleur du culte, 44 px ; liste « comme aujourd'hui » en abrégé | `SetlistDetailClient`, `ListView`, `button.tsx` (variante pleine encre / couleur) |
 | V4 planning et évènements | carré retiré ; boutons pleins en encre, couleur de la section sur l'évènement d'une section | `planning/page.tsx`, pages du planning, `EvenementClient` |
 | V5 balayage | pages secondaires, captures des trois appareils, suite complète | specs `look-*` |
+
+### Avancement 5C1 (20/09/2026)
+
+Go de Timothée le 20/09/2026. Test d'abord à chaque tranche, vu rouge puis vert
+sur ordinateur, téléphone et tablette ; captures clair et sombre regardées sur les
+trois appareils.
+
+| Tranche | Fait | Tests |
+| --- | --- | --- |
+| V1 fondations | fond blanc, `--secondary` `#f2f2f4`, filet `#e4e4e5` ; **`--primary` devient l'encre** (s'inverse en sombre) : tous les boutons pleins d'un coup, sans toucher 31 fichiers ; **`--brand`** = rouge du logo, pour le seul label de la navbar ; `--raised` + `--shadow-raised` et l'utilitaire `.raised` (ombre en clair, liseré en sombre) ; `theme-color` et manifeste en blanc | `look-fondations.spec.ts` |
+| V2 listes | `Group` sans boîte : lignes en filets alignées sur le titre, retour à l'appui en pastille débordante ; liste des chants et des setlists de même ; **`KeyPill`** (nouvelle primitive) à droite, bleu / rouge, sans chevron ; recherche en relief ; vignette de date lisible en sombre (`.svc-ink`) | `look-louange.spec.ts` |
+| V3 chant et setlist | pilules de la barre d'outils en relief ; bandeau de structure à 32 px sous 640 px ; « Mode Louange » à la couleur du culte (`serviceButtonFill`, Intergroupe `#966d0d`), liseré en sombre ; liste de la setlist en abrégé, `KeyPill` avec « orig. X », plus de libellé 中文 | `look-louange.spec.ts`, `coup-d-oeil.spec.ts` |
+| V4 planning et évènements | « Ce dimanche » : filet à la couleur du service (`.svc-line`), plus de carré ni de boîte ; « S'inscrire » en encre, à la couleur de la section sur l'évènement d'une section | `look-planning.spec.ts`, `evenements.spec.ts` |
+| Barre du bas | flottante, en verre (`.material-bar`), onglet courant en pastille d'encre ; centrée et bornée à 560 px à partir de la tablette ; les cinq libellés tiennent à 320 px (`flex-auto`) | `look-navigation.spec.ts` |
+
+Un constat qui corrige la spec : sur le vrai site, « Mode Louange » est la pilule
+de la barre d'outils de la setlist (32 px, icône seule sur téléphone), pas un
+grand bouton de 44 px — c'était la planche. Sa place est gelée : seule sa couleur
+change. Et « Ce dimanche » n'avait que le carré, pas de filet : le filet de la vue
+D validée par Christelle est donc ajouté, le carré retiré.
+
+V5 (balayage des pages secondaires) : les blocs `bg-card` hors listes (formulaires,
+administration) se fondent dans le blanc en clair et restent des panneaux en
+sombre. À regarder page par page avec Timothée pendant sa validation.
+

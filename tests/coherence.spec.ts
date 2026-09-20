@@ -100,7 +100,7 @@ test("manifeste : une seule source, celle de l'app, au nom et à la couleur du l
   const m = (await res.json()) as { name: string; short_name: string; theme_color: string; start_url: string };
   expect(m.name).toBe("GCC");
   expect(m.short_name).toBe("GCC");
-  expect(m.theme_color).toBe("#f2f2ef");
+  expect(m.theme_color).toBe("#ffffff"); // fond blanc de 5C1 (docs/spec-look.md § 20/09/2026)
   expect(m.start_url).toBe("/planning");
   const layout = lire("src/app/layout.tsx");
   expect(layout).not.toContain('rel="manifest"');

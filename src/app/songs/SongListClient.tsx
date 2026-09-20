@@ -5,8 +5,8 @@ import { LienHarmonie } from "@/components/harmonie/LienHarmonie";
 import { useState, useMemo, useEffect, useLayoutEffect, useRef } from "react";
 import Link from "next/link";
 import Fuse from "fuse.js";
-import { Search, X, ChevronRight } from "lucide-react";
-import { Tile } from "@/components/ui/tile";
+import { Search, X } from "lucide-react";
+import { KeyPill } from "@/components/ui/key-pill";
 import { PageTitle } from "@/components/layout/PageTitle";
 import { useTranslation } from "react-i18next";
 import type { SongIndexEntry, Theme } from "@/types/song";
@@ -228,7 +228,7 @@ export function SongListClient({ songs, themes }: SongListClientProps) {
           placeholder={t("songs.list.searchPlaceholder")}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          className="w-full h-[46px] pl-[42px] pr-10 border border-transparent rounded-xl bg-card text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-ring/50 focus:ring-[3px] focus:ring-ring/10 text-[16px] transition-all duration-150 [&::-webkit-search-cancel-button]:hidden"
+          className="raised w-full h-[46px] pl-[42px] pr-10 border border-transparent rounded-full text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-ring/50 focus:ring-[3px] focus:ring-ring/10 text-[16px] transition-all duration-150 [&::-webkit-search-cancel-button]:hidden"
         />
         {query && (
           <button
@@ -325,25 +325,21 @@ export function SongListClient({ songs, themes }: SongListClientProps) {
           {t("songs.list.noSongsFound")}
         </p>
       ) : (
-        <ul className="rounded-xl bg-card [&>li:first-child>a]:rounded-t-xl [&>li:last-child>a]:rounded-b-xl">
+        <ul>
           {filtered.map((song) => (
             <li key={song.slug} id={`song-li-${song.slug}`} className="group-row relative scroll-mt-[calc(var(--nav-h)+8px)]">
               <Link
                 href={`/songs/${song.slug}`}
-                className="flex min-h-[60px] items-center gap-3 px-4 py-2.5 transition-colors duration-150 active:bg-secondary/70"
+                className="-mx-3 flex min-h-[60px] items-center gap-3 rounded-xl px-3 py-2.5 transition-colors duration-150 active:bg-secondary/70"
               >
-                {/* Vignette : tonalité recommandée (sinon d'origine), teinte de la langue */}
-                <Tile
-                  color={song.language === "zh" ? "var(--zh-accent)" : "var(--fr-accent)"}
-                  big={song.recommendedKey ?? song.originalKey}
-                />
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-base font-semibold text-foreground">{song.title}</span>
                   <span className="block truncate text-sm text-muted-foreground">
                     {song.titlePinyin ? `${song.titlePinyin} · ${song.artist}` : song.artist}
                   </span>
                 </span>
-                <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/60" aria-hidden />
+                {/* Tonalité recommandée (sinon d'origine), à droite, teinte de la langue */}
+                <KeyPill tonalite={song.recommendedKey ?? song.originalKey} langue={song.language === "zh" ? "zh" : "fr"} />
               </Link>
             </li>
           ))}

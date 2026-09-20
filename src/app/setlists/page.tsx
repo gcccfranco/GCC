@@ -425,7 +425,7 @@ export default function SetlistsPage() {
             )}
           </div>
         ) : (
-          <ul className="rounded-xl bg-card [&>li:first-child>*]:rounded-t-xl [&>li:last-child>*]:rounded-b-xl">
+          <ul>
             {displayed.map((s) => (
               <li key={s.id} className="group-row relative">
                 <SetlistCard

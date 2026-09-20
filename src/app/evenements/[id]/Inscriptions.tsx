@@ -17,6 +17,8 @@ import type { User } from "firebase/auth"
 import { canSeeInscrits } from "@/lib/access"
 import { getInscription, listInscriptions, updateEvenement } from "@/lib/firebase/evenements"
 import { desinscrire, inscrire } from "@/lib/evenements/inscription"
+import { categoryColor } from "@/lib/serviceColors"
+import { serviceButtonFill } from "@/lib/serviceButton"
 import { aCommence, modeInscriptions, nowIsoParis, placesRestantes, refusInscription } from "@/lib/evenements/agenda"
 import { PLANNING_COLORS } from "@/lib/serviceColors"
 import type { Evenement, Inscription, ModeInscriptions } from "@/types/evenement"
@@ -28,6 +30,10 @@ const COLOR = PLANNING_COLORS.scene
 const INVITES = [0, 1, 2, 3, 4, 5]
 
 /** Qui est inscrit : nom, invités, « sans compte » ; « Retirer » pour qui gère. */
+/** 5C1 : un bouton plein est en encre ; sur l'évènement d'une section il en prend la couleur. */
+const pleinDe = (pour: string): React.CSSProperties | undefined =>
+  pour === "eglise" ? undefined : { backgroundColor: serviceButtonFill(categoryColor(pour)), color: "#ffffff" }
+
 function ListeInscrits({ liste, busy, onRetirer }: { liste: Inscription[]; busy?: boolean; onRetirer?: (i: Inscription) => void }) {
   const { t } = useTranslation()
   return (
@@ -83,7 +89,7 @@ export function Inscriptions({ evenement: e, user, organisateur, onInscrits }: {
   if (refus === "externe") {
     return (
       <section className="space-y-3" aria-label={t("evenements.inscription")}>
-        <a href={e.lienExterne} target="_blank" rel="noopener noreferrer" className={buttonVariants({ size: "lg", className: "w-full" })}>
+        <a href={e.lienExterne} target="_blank" rel="noopener noreferrer" style={pleinDe(e.pour)} className={buttonVariants({ size: "lg", className: "w-full" })}>
           {t("evenements.sinscrire")}
         </a>
         <p className="text-center text-sm text-muted-foreground">{raison(e, refus)}</p>
@@ -151,7 +157,7 @@ export function Inscriptions({ evenement: e, user, organisateur, onInscrits }: {
             </div>
           </form>
         ) : (
-          <Button size="lg" className="w-full" onClick={() => setChoosing(true)}>{t("evenements.sinscrire")}</Button>
+          <Button size="lg" className="w-full" style={pleinDe(e.pour)} onClick={() => setChoosing(true)}>{t("evenements.sinscrire")}</Button>
         )
       ) : (
         <p className="text-sm">

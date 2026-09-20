@@ -164,7 +164,7 @@ export function Navbar() {
               GCC{" "}
               <span
                 key={headerLabel}
-                className="text-primary animate-in fade-in duration-150"
+                className="text-brand animate-in fade-in duration-150"
               >
                 {headerLabel}
               </span>

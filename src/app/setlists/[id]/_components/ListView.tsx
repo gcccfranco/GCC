@@ -2,7 +2,8 @@ import { useState } from "react";
 import type { SetlistItem } from "@/types/setList";
 import type { SongIndexEntry } from "@/types/song";
 import { useTranslation } from "react-i18next";
-import { formatSectionName } from "@/lib/chordpro/parser";
+import { abbreviateSection } from "@/lib/chordpro/abbreviations";
+import { KeyPill } from "@/components/ui/key-pill";
 import Link from "next/link";
 import { Link2, MessageSquare, ChevronDown, ChevronUp } from "lucide-react";
 import type { SectionSummary } from "@/types/song";
@@ -32,13 +33,13 @@ function sectionNamesFor(
     return structureOverride.map((ov) => {
       const baseId = ov.replace(/-\d+$/, "");
       const s = allSections.find((sec) => sec.uid === ov || sec.id === ov || sec.id === baseId);
-      if (s) return { name: formatSectionName(s, t), keyChange: sectionKeys[ov] ?? sectionKeys[s.id] };
+      if (s) return { name: abbreviateSection(s), keyChange: sectionKeys[ov] ?? sectionKeys[s.id] };
       const type = ov.replace(/(-\d+)+$/, "");
-      return { name: t(`songs.sections.${type}`, { defaultValue: type }), keyChange: sectionKeys[ov] };
+      return { name: abbreviateSection({ type }), keyChange: sectionKeys[ov] };
     });
   }
   return allSections.map((s, i) => ({
-    name: formatSectionName(s, t),
+    name: abbreviateSection(s),
     keyChange: sectionKeys[`${s.id}-${i}`] ?? sectionKeys[s.id],
   }));
 }
@@ -102,7 +103,7 @@ export function ListView({
                       for (const ms of item.mixedStructure) {
                         const song = songsMap[ms.songSlug];
                         const sec = song?.sections?.find((s) => s.id === ms.sectionId || s.uid === ms.sectionId);
-                        const name = sec ? formatSectionName(sec, t) : ms.sectionId;
+                        const name = sec ? abbreviateSection(sec) : ms.sectionId;
                         const title = song?.title ?? ms.songSlug;
                         const color = ms.transition
                           ? TRANSITION_COLORS[tci++ % TRANSITION_COLORS.length]
@@ -258,17 +259,17 @@ export function ListView({
                   ? item.structureOverride.map((ov) => {
                       const baseId = ov.replace(/-\d+$/, "");
                       const s = allSections.find((sec) => sec.uid === ov || sec.id === ov || sec.id === baseId);
-                      if (s) return { name: formatSectionName(s, t), transition: st[ov] ?? st[s.id], keyChange: sk[ov] ?? sk[s.id] };
+                      if (s) return { name: abbreviateSection(s), transition: st[ov] ?? st[s.id], keyChange: sk[ov] ?? sk[s.id] };
                       // Section non résolue (ex. copie « Mode Adapter » absente de
                       // l'index) : traduire le type plutôt que montrer l'uid brut.
                       const type = ov.replace(/(-\d+)+$/, "");
-                      return { name: t(`songs.sections.${type}`, { defaultValue: type }), transition: st[ov], keyChange: sk[ov] };
+                      return { name: abbreviateSection({ type }), transition: st[ov], keyChange: sk[ov] };
                     })
                   : allSections.map((s, i) => {
                       // La transition est stockée sous la clé `${id}-${index}` (cf.
                       // makeDefaultSections/buildSetlistItems) = l'uid de section de l'AST.
                       // L'index JSON n'expose pas ce `uid` → on le reconstruit à partir de l'ordre.
-                      return { name: formatSectionName(s, t), transition: st[`${s.id}-${i}`] ?? st[s.id], keyChange: sk[`${s.id}-${i}`] ?? sk[s.id] };
+                      return { name: abbreviateSection(s), transition: st[`${s.id}-${i}`] ?? st[s.id], keyChange: sk[`${s.id}-${i}`] ?? sk[s.id] };
                     });
                 // Une couleur distincte par transition, dans l'ordre du fil.
                 let tci = 0;
@@ -310,16 +311,11 @@ export function ListView({
               })()}
               {item.notes && <p className="text-xs text-muted-foreground italic mt-0.5">{item.notes}</p>}
             </div>
-            <div className="shrink-0 text-right">
-              <span className={`font-mono text-xs px-2 py-0.5 rounded font-bold ${
-                transposed ? "bg-secondary text-foreground border border-transparent" : "bg-muted text-foreground"
-              }`}>
-                {displayKey}
-              </span>
-              {song?.language === "zh" && (
-                <p className="text-xs text-muted-foreground mt-0.5">{t("common.languages.zh")}</p>
-              )}
-            </div>
+            <KeyPill
+              tonalite={displayKey}
+              langue={song?.language === "zh" ? "zh" : "fr"}
+              origine={transposed ? song?.originalKey : undefined}
+            />
           </li>
         );
         });

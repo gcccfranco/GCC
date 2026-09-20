@@ -487,19 +487,21 @@ export function StructureStrip({
             {t("performance.capoBadge", { n: capo })}
           </span>
         ) : null}
-        <ol aria-label={t("songs.view.structure")} className="flex flex-wrap items-start gap-x-3 gap-y-3">
+        {/* Pastilles rondes ; la taille suit l'écran : 32 px sous 640 px (neuf étapes
+            sur une rangée à 390 px), 44 px au-delà. Non cliquables : pas de plancher tactile. */}
+        <ol aria-label={t("songs.view.structure")} className="flex flex-wrap items-start gap-x-1.5 gap-y-2 sm:gap-x-3 sm:gap-y-3">
           {groups.map((g, i) => {
             const targetKey = g.step.targetKey && g.step.targetKey !== songKey ? g.step.targetKey : undefined;
             const n = noteNumber.get(g);
             return (
               <li key={i} className="flex flex-col items-center gap-1.5">
-                <span className="relative inline-flex h-11 min-w-11 items-center justify-center rounded-full px-2.5" style={{ background: tintOf(g.step.section.type), color: colorOf(g.step.section.type) }}>
-                  <span className="inline-flex items-baseline text-[17px] font-bold leading-none tracking-[0.02em]">
+                <span className="relative inline-flex h-8 min-w-8 items-center justify-center rounded-full px-2 sm:h-11 sm:min-w-11 sm:px-2.5" style={{ background: tintOf(g.step.section.type), color: colorOf(g.step.section.type) }}>
+                  <span className="inline-flex items-baseline text-[14px] font-bold leading-none tracking-[0.02em] sm:text-[17px]">
                     <abbr title={g.full} className="no-underline [text-decoration:none]">{g.abbr}</abbr>
-                    {g.repeat > 1 && <span className="ml-px text-[13px] font-semibold">×{g.repeat}</span>}
+                    {g.repeat > 1 && <span className="ml-px text-[11px] font-semibold sm:text-[13px]">×{g.repeat}</span>}
                   </span>
                   {n !== undefined && (
-                    <span aria-label={`${n}`} className={`absolute -right-1 -top-1 ${numberBadge}`}>{n}</span>
+                    <span aria-label={`${n}`} className={`absolute -right-1 -top-1 max-sm:h-4 max-sm:min-w-4 ${numberBadge}`}>{n}</span>
                   )}
                 </span>
                 {targetKey && <span className="font-mono text-[12px] leading-none text-muted-foreground">→ {targetKey}</span>}

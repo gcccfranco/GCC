@@ -363,6 +363,16 @@ test("période P1 : un évènement d'avant la période se lit avec l'ancien inte
   expect(refusInscription({ ...FOOT, inscriptionOuverte: true }, 0, "2026-10-01T10:00")).toBeNull();
 });
 
+// 5C1 (docs/spec-look.md § 20/09/2026) : un bouton plein est en encre ; sur
+// l'évènement d'une section il prend la couleur de la section.
+test("« S'inscrire » : en encre pour toute l'église, à la couleur de la section pour l'évènement d'une section", async ({ page }) => {
+  const fond = () => page.getByRole("button", { name: "S'inscrire" }).evaluate((b) => getComputedStyle(b).backgroundColor);
+  await member(page, JO, "/evenements/foot");
+  expect(await fond()).toBe("rgb(28, 28, 30)");
+  await member(page, JO, "/evenements/paix");
+  expect(await fond()).toBe("rgb(107, 74, 142)"); // Groupe Paix, #6b4a8e
+});
+
 test("membre : « S'inscrire » puis invités et « Confirmer » envoie au serveur avec son jeton, puis affiche « Inscrit »", async ({ page }) => {
   await member(page, JO, "/evenements/foot");
   let sent: { body: { evenementId: string; invites: number }; auth?: string } | null = null;

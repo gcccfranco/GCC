@@ -59,14 +59,15 @@ export function MobileTabBar() {
   return (
     <>
       {/* Cale en flux : le contenu ne finit pas caché derrière la barre */}
-      <div aria-hidden className="hide-on-desktop h-[calc(56px+env(safe-area-inset-bottom))] print:hidden" />
+      <div aria-hidden className="hide-on-desktop h-[calc(92px+env(safe-area-inset-bottom))] print:hidden" />
       <nav
         aria-label={t("common.aria.navigationPrincipale")}
-        className={`hide-on-desktop print:hidden fixed bottom-0 inset-x-0 z-40 material-chrome border-t border-border pb-[env(safe-area-inset-bottom)] transition-transform duration-300 ${
-          scrollVisible ? "translate-y-0" : "translate-y-full"
+        // 5C1 : la barre flotte, en verre ; l'onglet courant est une pastille d'encre.
+        className={`hide-on-desktop print:hidden fixed inset-x-2 bottom-[calc(14px+env(safe-area-inset-bottom))] z-40 rounded-[32px] material-bar transition-transform duration-300 min-[360px]:inset-x-3.5 sm:left-1/2 sm:right-auto sm:w-[560px] sm:max-w-[calc(100%-28px)] sm:-translate-x-1/2 ${
+          scrollVisible ? "translate-y-0" : "translate-y-[calc(100%+28px+env(safe-area-inset-bottom))]"
         }`}
       >
-        <div className="flex h-[56px]">
+        <div className="flex h-16 gap-0.5 p-1.5">
           {tabs.map(({ href, key, Icon, match }) => {
             const active = match.some((m) => pathname === m || pathname.startsWith(`${m}/`));
             return (
@@ -74,8 +75,9 @@ export function MobileTabBar() {
                 key={href}
                 href={href}
                 aria-current={active ? "page" : undefined}
-                className={`flex-1 flex flex-col items-center justify-center gap-0.5 text-xs font-semibold transition-colors active:bg-secondary/60 ${
-                  active ? "text-foreground" : "text-muted-foreground"
+                // `flex-auto` : un libellé long (« Évènements ») prend la place qu'il lui faut, même à 320 px.
+                className={`flex flex-auto flex-col items-center justify-center gap-0.5 whitespace-nowrap rounded-[26px] px-1.5 text-xs font-semibold transition-[background-color,color,transform] duration-150 active:scale-[.97] ${
+                  active ? "bg-primary text-primary-foreground" : "text-muted-foreground"
                 }`}
               >
                 <Icon className="h-[22px] w-[22px]" strokeWidth={active ? 2.2 : 1.9} aria-hidden />

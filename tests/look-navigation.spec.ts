@@ -22,14 +22,21 @@ test.describe("navigation par sections (T2), téléphone", () => {
 
   // Cinq onglets depuis le 16/09/2026 : « Louange » cachait les setlists, qui
   // n'étaient plus joignables sur tactile (audit avant/après du lot 4).
-  test("connecté : barre du bas Chants · Setlists · Planning · Évènements · Moi, l'onglet courant en encre", async ({ page }) => {
+  // 5C1 : la barre flotte, en verre ; l'onglet courant est une pastille d'encre, libellé blanc.
+  test("connecté : barre du bas Chants · Setlists · Planning · Évènements · Moi, flottante, l'onglet courant en pastille d'encre", async ({ page }) => {
     await signInAs(page, MEMBRE, {}, "/songs");
     await page.getByRole("searchbox").waitFor();
     await expect(barreDuBas(page).getByRole("link")).toHaveText(["Chants", "Setlists", "Planning", "Évènements", "Moi"]);
     const chants = barreDuBas(page).getByRole("link", { name: "Chants" });
     await expect(chants).toHaveAttribute("aria-current", "page");
-    // Couleur lue une fois la transition finie : encre, pas rouge.
-    await expect.poll(() => chants.evaluate((a) => getComputedStyle(a).color), { message: "onglet actif en encre, pas en rouge" }).toBe(ENCRE);
+    // Couleurs lues une fois la transition finie : pastille d'encre, libellé blanc.
+    await expect.poll(() => chants.evaluate((a) => getComputedStyle(a).backgroundColor), { message: "onglet actif en pastille d'encre" }).toBe(ENCRE);
+    expect(await chants.evaluate((a) => getComputedStyle(a).color)).toBe("rgb(255, 255, 255)");
+    const autre = barreDuBas(page).getByRole("link", { name: "Planning" });
+    expect(await autre.evaluate((a) => getComputedStyle(a).backgroundColor), "les autres onglets n'ont pas de fond").toBe("rgba(0, 0, 0, 0)");
+    const barre = await barreDuBas(page).boundingBox();
+    expect(barre!.x, "la barre ne touche pas le bord : elle flotte").toBeGreaterThan(4);
+    expect(parseFloat(await barreDuBas(page).evaluate((n) => getComputedStyle(n).borderTopLeftRadius))).toBeGreaterThanOrEqual(28);
   });
 
   test("« Moi » regroupe mes services, le profil, le guide, le questionnaire, le signalement, les réglages et la déconnexion", async ({ page }) => {
@@ -89,6 +96,23 @@ test.describe("navigation par sections (T2), onglets de section", () => {
 
 test.describe("navigation par sections (T2), 320 px", () => {
   test.use({ viewport: { width: 320, height: 568 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 });
+
+  // « Évènements » est le libellé le plus long : dans une barre flottante, plus étroite, il doit encore tenir.
+  test("les cinq libellés de la barre du bas tiennent sans être rognés", async ({ page }) => {
+    await signInAs(page, MEMBRE, {}, "/songs");
+    await page.getByRole("searchbox").waitFor();
+    const onglets = barreDuBas(page).getByRole("link");
+    await expect(onglets).toHaveCount(5);
+    const mesures = await onglets.evaluateAll((els) => els.map((el) => {
+      const r = el.getBoundingClientRect();
+      return { nom: el.textContent?.trim(), rogne: el.scrollWidth > el.clientWidth, gauche: r.left, droite: r.right };
+    }));
+    for (const m of mesures) {
+      expect.soft(m.rogne, `${m.nom} est rogné`).toBe(false);
+      expect.soft(m.gauche, `${m.nom} déborde à gauche`).toBeGreaterThanOrEqual(0);
+      expect.soft(m.droite, `${m.nom} déborde à droite`).toBeLessThanOrEqual(320);
+    }
+  });
 
   for (const lang of ["fr", "zh-CN"]) {
     test(`toutes les commandes de la navbar restent dans l'écran (${lang})`, async ({ page }) => {
