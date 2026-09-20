@@ -170,7 +170,7 @@ test("admin : l'adresse est reconnue quelle que soit sa casse, partout", () => {
   expect(isAdminEmail(null)).toBe(false);
   for (const rel of [
     "src/lib/equipes/serveur.ts", "src/app/api/planning/release/route.ts", "src/app/api/push/notify-audience/route.ts",
-    "src/app/api/admin/migrer-annonces/route.ts", "src/app/api/push/notify-setlist/route.ts",
+    "src/app/api/push/notify-setlist/route.ts",
   ]) {
     expect(lire(rel), rel).not.toContain("ADMIN_EMAILS.includes(");
   }

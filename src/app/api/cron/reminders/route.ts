@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { BACK_OFFICE } from "@/lib/backOffice";
 import { adminDb } from "@/lib/push/admin";
 import { sendPushToUids } from "@/lib/push/send";
 import { recordNotification } from "@/lib/push/notifications";
@@ -168,10 +169,12 @@ export async function GET(req: NextRequest) {
 
   const db = adminDb();
   const [planning, index] = await Promise.all([loadPlanningData(), loadPlanningNameIndex()]);
-  const creneaux = await sceneCreneaux(db, REMINDERS.map((r) => isoInDays(r.days)), isoInDays(0));
+  // Back-office coupé (lot 18, docs/spec-mise-en-ligne.md) : le rappel du matin ne
+  // parle que des services — ni scène, ni tâches, ni évènements.
+  const creneaux = BACK_OFFICE ? await sceneCreneaux(db, REMINDERS.map((r) => isoInDays(r.days)), isoInDays(0)) : [];
   // Rappels de tâches : ajoutés à la première notification de service de la
   // personne aujourd'hui, sinon envoyés seuls après la boucle.
-  const taches = await rappelsTaches(db, isoInDays(0));
+  const taches: Awaited<ReturnType<typeof rappelsTaches>> = BACK_OFFICE ? await rappelsTaches(db, isoInDays(0)) : new Map();
   const marquerTaches = async (u: string) => {
     const entry = taches.get(u);
     if (!entry) return;
@@ -179,7 +182,7 @@ export async function GET(req: NextRequest) {
     for (const key of entry.keys) await markNotified(db, [u], key, { kind: "tache" });
   };
   // Ouvertures d'inscriptions du jour : même principe que les tâches.
-  const ouvertures = await ouverturesDuJour(db, isoInDays(0));
+  const ouvertures: Awaited<ReturnType<typeof ouverturesDuJour>> = BACK_OFFICE ? await ouverturesDuJour(db, isoInDays(0)) : new Map();
   const lignesOuvertures = (u: string, lang: NotifLang) => (ouvertures.get(u)?.evenements ?? []).map((e) => ligneOuverture(e, lang));
   const marquerOuvertures = async (u: string) => {
     const entry = ouvertures.get(u);
@@ -289,8 +292,8 @@ export async function GET(req: NextRequest) {
   // préférence « Évènements », une fois par (évènement, uid).
   const demain = isoInDays(1);
   let evenementsSent = 0;
-  const evs = await db.collection("evenements").where("date", "==", demain).get();
-  for (const doc of evs.docs) {
+  const evs = BACK_OFFICE ? (await db.collection("evenements").where("date", "==", demain).get()).docs : [];
+  for (const doc of evs) {
     const e = { id: doc.id, ...doc.data() } as Evenement;
     // Réunion de pôle (lot 7) : pas d'inscriptions, tout le pôle est rappelé.
     const pole = poleDuPour(e.pour);

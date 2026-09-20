@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { adminDb } from "@/lib/push/admin";
 import { HttpError, errorResponse, optionalUser } from "@/lib/evenements/serveur";
 import { exigerDroitEquipes, lireEquipes, recalculerPoles } from "@/lib/equipes/serveur";
+import { BACK_OFFICE } from "@/lib/backOffice"
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -14,6 +15,8 @@ export const dynamic = "force-dynamic";
 // comptes à recalculer.
 
 export async function POST(req: NextRequest) {
+  // Back-office coupé (lot 18, docs/spec-mise-en-ligne.md) : la route n'existe pas en ligne.
+  if (!BACK_OFFICE) return new Response(null, { status: 404 })
   try {
     const user = await optionalUser(req);
     await exigerDroitEquipes(user);

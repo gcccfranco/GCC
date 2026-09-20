@@ -1,7 +1,14 @@
 import type { EddDataStructure, EddPeriode, CampusSeance } from "./utils"
 import { EDD_CLASSES, EDD_PERIODES, getMois } from "./utils"
 import { fetchGrille } from "./grille"
+import { BACK_OFFICE } from "@/lib/backOffice"
 import { CLES_EDD, fusionnerLignes } from "./grilles"
+
+/** Les dimanches écrits dans l'app. Back-office coupé (lot 18) : aucun — le site
+ *  en ligne lit le Google Sheet seul. Local et en ligne partagent le même
+ *  Firestore : sans cela, un dimanche saisi en local masquerait le Sheet en ligne. */
+const grilleDeLApp = (key: string) => (BACK_OFFICE ? fetchGrille(key) : Promise.resolve([] as string[][]))
+
 
 const SHEET_ID = "1khxUvrKSnrqtkkdCsmXiCjW3TjWcSV38otYOGMO5klU"
 const BASE_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=`
@@ -106,7 +113,7 @@ export async function lireCulteSheet(): Promise<string[][]> {
 }
 
 export async function fetchCulte(): Promise<string[][]> {
-  return fusionnerLignes(await fetchGrille("culte"), await lireCulteSheet())
+  return fusionnerLignes(await grilleDeLApp("culte"), await lireCulteSheet())
 }
 
 // Prépa. Table + petit déjeuner : l'onglet Franco_Table_PtD porte deux paires
@@ -149,7 +156,7 @@ export async function lireTableSheet(): Promise<string[][]> {
 
 /** [date, équipe, petit déj] : la grille « table » réunie au Sheet. */
 export async function fetchTable(): Promise<string[][]> {
-  return fusionnerLignes(await fetchGrille("table"), await lireTableSheet())
+  return fusionnerLignes(await grilleDeLApp("table"), await lireTableSheet())
 }
 
 /** [date, équipe] des dimanches où une équipe est inscrite. */
@@ -190,19 +197,19 @@ export async function lireFideliteMusiciensSheet(): Promise<string[][]> {
 }
 
 export async function fetchPaix(): Promise<string[][]> {
-  return fusionnerLignes(await fetchGrille("paix"), await lirePaixSheet())
+  return fusionnerLignes(await grilleDeLApp("paix"), await lirePaixSheet())
 }
 
 export async function fetchFidelite(): Promise<string[][]> {
-  return fusionnerLignes(await fetchGrille("fidelite"), await lireFideliteSheet())
+  return fusionnerLignes(await grilleDeLApp("fidelite"), await lireFideliteSheet())
 }
 
 export async function fetchFideliteMusic(): Promise<string[][]> {
-  return fusionnerLignes(await fetchGrille("fideliteMusiciens"), await lireFideliteMusiciensSheet())
+  return fusionnerLignes(await grilleDeLApp("fideliteMusiciens"), await lireFideliteMusiciensSheet())
 }
 
 export async function fetchBonte(): Promise<string[][]> {
-  return fusionnerLignes(await fetchGrille("bonte"), await lireBonteSheet())
+  return fusionnerLignes(await grilleDeLApp("bonte"), await lireBonteSheet())
 }
 
 // Intergroupe / Interfranco : 1 séance par trimestre (4 lignes/an). Structure
@@ -226,11 +233,11 @@ export async function lireInterfrancoSheet(): Promise<string[][]> {
 }
 
 export async function fetchIntergroupe(): Promise<string[][]> {
-  return fusionnerLignes(await fetchGrille("intergroupe"), await lireIntergroupeSheet())
+  return fusionnerLignes(await grilleDeLApp("intergroupe"), await lireIntergroupeSheet())
 }
 
 export async function fetchInterfranco(): Promise<string[][]> {
-  return fusionnerLignes(await fetchGrille("interfranco"), await lireInterfrancoSheet())
+  return fusionnerLignes(await grilleDeLApp("interfranco"), await lireInterfrancoSheet())
 }
 
 // EDD : l'onglet énumère les dimanches classe par classe (le nom de la classe
@@ -261,7 +268,7 @@ export async function fetchEDD(): Promise<EddDataStructure> {
     res[k] = { label: k, classes: { "中班": [], "大班": [], "高班": [] } }
   }
   await Promise.all(EDD_CLASSES.map(async classe => {
-    const rows = fusionnerLignes(await fetchGrille(CLES_EDD[classe]), await lireEddSheet(classe))
+    const rows = fusionnerLignes(await grilleDeLApp(CLES_EDD[classe]), await lireEddSheet(classe))
     for (const r of rows) res[periodeEdd(r[0])].classes[classe].push(r)
   }))
   return res
@@ -306,8 +313,8 @@ export function seanceCampus(row: string[], moment: "Matin" | "Soir"): CampusSea
 /** Les deux grilles du Campus (matin, soir) réunies au Sheet, dans la forme de leur définition. */
 export async function fetchCampusGrilles(): Promise<{ matin: string[][]; soir: string[][] }> {
   const [matin, soir] = await Promise.all([
-    Promise.all([fetchGrille("campusMatin"), lireCampusSheet("Matin")]).then(([g, s]) => fusionnerLignes(g, s)),
-    Promise.all([fetchGrille("campusSoir"), lireCampusSheet("Soir")]).then(([g, s]) => fusionnerLignes(g, s)),
+    Promise.all([grilleDeLApp("campusMatin"), lireCampusSheet("Matin")]).then(([g, s]) => fusionnerLignes(g, s)),
+    Promise.all([grilleDeLApp("campusSoir"), lireCampusSheet("Soir")]).then(([g, s]) => fusionnerLignes(g, s)),
   ])
   return { matin, soir }
 }
@@ -315,7 +322,7 @@ export async function fetchCampusGrilles(): Promise<{ matin: string[][]; soir: s
 export async function fetchCampus(): Promise<{ louange: CampusSeance[]; entrainement: CampusSeance[] }> {
   const seances: { key: string; obj: CampusSeance }[] = []
   for (const [moment, key] of [["Matin", "campusMatin"], ["Soir", "campusSoir"]] as const) {
-    const rows = fusionnerLignes(await fetchGrille(key), await lireCampusSheet(moment))
+    const rows = fusionnerLignes(await grilleDeLApp(key), await lireCampusSheet(moment))
     // Tri chronologique : date ISO de la séance + matin avant soir. La chaîne
     // d'affichage "JJ/MM" ne se trie pas correctement (ex. "10/6" avant "2/6").
     for (const row of rows) seances.push({ key: `${row[0]} ${moment === "Soir" ? "1" : "0"}`, obj: seanceCampus(row, moment) })

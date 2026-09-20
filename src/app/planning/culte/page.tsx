@@ -19,6 +19,8 @@ import {
   triVisibilities,
 } from "@/lib/planning/releases"
 import { FilterButtons } from "@/components/planning/FilterButtons"
+import { BACK_OFFICE } from "@/lib/backOffice"
+import { AncienTableau } from "./AncienTableau"
 
 // Lot 17 / G1 : la grille s'affiche **trimestre par trimestre** (Timothée,
 // 18/09/2026 : « L'affichage du planning doit être affiché trimestre par
@@ -32,7 +34,7 @@ import { FilterButtons } from "@/components/planning/FilterButtons"
 
 const CULTE = PUBLISHABLE_PLANNINGS.find(p => p.key === "culte")!
 
-export default function CultePage() {
+function CultePage() {
   const { t } = useTranslation()
   const { user, profile } = useProfile()
   const { rows, status } = useSheet<string[]>(fetchCulte, [])
@@ -93,3 +95,6 @@ export default function CultePage() {
     </div>
   )
 }
+
+// Back-office coupé (lot 18) : le tableau d'avant, lu dans le Sheet seul.
+export default BACK_OFFICE ? CultePage : AncienTableau

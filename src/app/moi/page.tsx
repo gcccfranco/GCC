@@ -18,6 +18,7 @@ import { useAuth, logOut } from "@/lib/firebase/auth";
 import { useProfile } from "@/lib/firebase/users";
 import { isAdminUser, polesDe } from "@/lib/access";
 import { useTaches } from "@/lib/taches/useTaches";
+import { BACK_OFFICE } from "@/lib/backOffice";
 import { aFairePour, lignesDeTache } from "@/lib/taches/echeances";
 import { todayIso } from "@/lib/scene/dimanches";
 import { TACHE_POLES } from "@/types/tache";
@@ -54,11 +55,11 @@ function MoiClient() {
 
       <Group>
         <GroupRow href="/mes-services" leading={<CalendarDays />} chevron>{t("common.header.myServices")}</GroupRow>
-        <GroupRow href="/equipes" leading={<Network />} chevron>{t("equipes.title")}</GroupRow>
+        {BACK_OFFICE && <GroupRow href="/equipes" leading={<Network />} chevron>{t("equipes.title")}</GroupRow>}
         {!harmonie.chargement && harmonie.peut && (
           <GroupRow href="/harmonie" leading={<Sparkles />} chevron>{t("harmonie.titre")}</GroupRow>
         )}
-        {poles.length > 0 && (
+        {BACK_OFFICE && poles.length > 0 && (
           <GroupRow href="/taches" leading={<ListChecks />} trailing={mesTaches > 0 ? String(mesTaches) : undefined} chevron>
             {t("taches.mesTaches")}
           </GroupRow>

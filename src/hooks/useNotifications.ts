@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
+import { BACK_OFFICE } from "@/lib/backOffice";
 import { getEvenementsSince } from "@/lib/firebase/evenements";
 import { getSetlistsSince } from "@/lib/firebase/setlists";
 import { getNotifsSince } from "@/lib/firebase/notifications";
@@ -63,7 +64,8 @@ export function useNotifications() {
     try {
       const since = latestTsRef.current;
       const [evenements, setlists, notifs] = await Promise.all([
-        getEvenementsSince(since, MAX_ITEMS),
+        // Back-office coupé (lot 18) : la section Évènements n'est pas en ligne.
+        BACK_OFFICE ? getEvenementsSince(since, MAX_ITEMS) : Promise.resolve([]),
         getSetlistsSince(since, MAX_ITEMS),
         getNotifsSince(since, MAX_ITEMS),
       ]);

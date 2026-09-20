@@ -26,6 +26,7 @@ PW_SLUGS=all npm test             # les 80 partitions 简谱 certifiées (~2 min
 PW_CHANTS_ZH=all npm test -- tests/lignes-chinoises.spec.ts --project=telephone --workers=2
                                   # lignes chinoises coupées, les 188 chants (~4 min)
 npm run jianpu:audit <slug>       # planche d'audit visuel d'une 简谱, dans le navigateur
+npm test -- tests/back-office-coupe.spec.ts   # le site tel qu'en ligne : second serveur (PW_PORT + 1) sans l'interrupteur
 ```
 **Tout test passe par Playwright, y compris la vérification à l'œil des
 简谱** : la planche `npm run jianpu:audit <slug>` rend la page transposée
@@ -40,6 +41,7 @@ ils ne voient pas le composant réel. Détail du protocole dans
   Playwright tourne sur **ordinateur, téléphone et tablette** (un projet par
   appareil dans `playwright.config.ts`, tous sous Chromium : WebKit écarté). Les captures regardées à l'œil aussi :
   les trois tailles. Un test propre à un appareil le dit dans son titre.
+- **Deux serveurs de test** : le second (`PW_PORT + 1`, interrupteur du back-office coupé) a son propre dossier de build `.next-coupe` — Next 16 refuse deux `next dev` dans le même dossier. Au démarrage il peut réécrire une ligne de `next-env.d.ts` (chemin des types) : **ne pas la commiter**, un `npm run dev` ordinaire la remet.
 - `tests/helpers/jianpu.ts` : ouvrir un chant, afficher sa 简谱, lire le calque.
 - La page chant lit ses paramètres d'URL en **JSON** : `?key=%22F%22`, pas `?key=F`.
 - Viser `localhost` et non `127.0.0.1` : `next dev` bloque ses ressources en
@@ -56,6 +58,7 @@ ils ne voient pas le composant réel. Détail du protocole dans
 - **Planning** : Google Sheet public lu en CSV (`src/lib/planning/sheets.ts`) + données statiques (`data.ts`)
 - **PWA** : service worker `public/sw.js` — push + cache hors-ligne. Cache versionné (`gcc-louange-vN`, purgé à l'activation). **Rien n'est mis en cache sur un serveur local** (`localhost`, `127.0.0.1`, réseau local) : en développement les fichiers de Next n'ont pas de nom hashé, et le cache servait l'ancien code après chaque modification (16/09/2026). Stratégies : HTML **network-first** (le déploiement en ligne gagne toujours → pas de page périmée), `/_next/static/*` **cache-first** (content-hashé, immuable), polices + `songs-index.json` + `/api/song/*` **stale-while-revalidate**, reste réseau-seul. Firestore/Sheets/YouTube (autres origines) jamais mis en cache.
 - **Hébergement** : Vercel. La CI GitHub (`.github/workflows/deploy.yml`) fait typecheck + validate.
+- **Interrupteur du back-office** (lot 18, 20/09/2026, `docs/spec-mise-en-ligne.md`) : `BACK_OFFICE` (`src/lib/backOffice.ts`) = `NEXT_PUBLIC_BACK_OFFICE === "1"`. Posé à `1` dans `.env.local`, **absent sur Vercel** : en ligne, tâches, équipes, planning en grille, section Évènements, scène et blocs admin associés sont coupés (entrées masquées, pages et routes en 404, planning = `AncienTableau.tsx` lu dans le Sheet seul, rappel du matin réduit aux services). Toute nouvelle fonctionnalité de back-office passe derrière cette constante. ⚠ Local et en ligne partagent le même Firestore.
 
 ## Formats importants
 - ChordPro : `[accord]paroles` dans les lignes, `{directive: valeur}` en en-tête — guidelines détaillées dans `CHORDPRO_GUIDELINES.md`

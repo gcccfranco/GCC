@@ -6,6 +6,7 @@ import { loadNotifLangs } from "@/lib/push/recipients";
 import { conflictKey, conflictMessage } from "@/lib/scene/conflit";
 import { overlaps } from "@/lib/scene/dimanches";
 import type { Creneau } from "@/types/programme";
+import { BACK_OFFICE } from "@/lib/backOffice"
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -18,6 +19,8 @@ export const dynamic = "force-dynamic";
 const ID = /^[\w-]+$/;
 
 export async function POST(req: NextRequest) {
+  // Back-office coupé (lot 18, docs/spec-mise-en-ligne.md) : la route n'existe pas en ligne.
+  if (!BACK_OFFICE) return new Response(null, { status: 404 })
   const authz = req.headers.get("authorization") ?? "";
   const token = authz.startsWith("Bearer ") ? authz.slice(7) : "";
   if (!token) return NextResponse.json({ error: "Non authentifié" }, { status: 401 });

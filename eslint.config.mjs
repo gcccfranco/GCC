@@ -8,7 +8,7 @@ const eslintConfig = [
     // `.claude/**` : skills vendorisés (code tiers, dont des `.cjs` pour
     // lesquels eslint-config-next n'enregistre pas ses plugins) ;
     // `graphify-out/**` : graphe généré.
-    ignores: [".next/**", "node_modules/**", "public/sw.js", ".claude/**", "graphify-out/**"],
+    ignores: [".next/**", ".next-coupe/**", "node_modules/**", "public/sw.js", ".claude/**", "graphify-out/**"],
   },
   {
     // Même périmètre que celui où eslint-config-next enregistre ses plugins :

@@ -7,6 +7,7 @@ import { loadPlanningData, servantsForDate } from "@/lib/planning/names";
 import { dimancheApres } from "@/lib/taches/echeances";
 import { tacheFaiteMessage } from "@/lib/taches/messages";
 import { ID, appelantDuPole, estPole, lireTache, membresDuPole, premiereFois } from "@/lib/taches/serveur";
+import { BACK_OFFICE } from "@/lib/backOffice"
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -17,6 +18,8 @@ export const dynamic = "force-dynamic";
 // Réponse : `notified`, `linked` (au moins un compte trouvé), `cible`.
 
 export async function POST(req: NextRequest) {
+  // Back-office coupé (lot 18, docs/spec-mise-en-ligne.md) : la route n'existe pas en ligne.
+  if (!BACK_OFFICE) return new Response(null, { status: 404 })
   const { pole, tacheId, date } = (await req.json().catch(() => ({}))) as { pole?: string; tacheId?: string; date?: string };
   if (!estPole(pole) || typeof tacheId !== "string" || !ID.test(tacheId) || typeof date !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
     return NextResponse.json({ error: "Requête incomplète" }, { status: 400 });

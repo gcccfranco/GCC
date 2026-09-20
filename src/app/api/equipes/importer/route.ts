@@ -6,6 +6,7 @@ import { EQUIPES, parseOrganigramme, rattacherNoms } from "@/lib/equipes/organig
 import { fetchSheet } from "@/lib/planning/sheets";
 import { POLE_LABELS, type Pole } from "@/types/user";
 import type { MembreEquipe } from "@/types/equipe";
+import { BACK_OFFICE } from "@/lib/backOffice"
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -19,6 +20,8 @@ export const dynamic = "force-dynamic";
 type ProfilDoc = { planningName?: string; firstName?: string; lastName?: string; poles?: Pole[] };
 
 export async function POST(req: NextRequest) {
+  // Back-office coupé (lot 18, docs/spec-mise-en-ligne.md) : la route n'existe pas en ligne.
+  if (!BACK_OFFICE) return new Response(null, { status: 404 })
   try {
     const user = await optionalUser(req);
     await exigerDroitEquipes(user);

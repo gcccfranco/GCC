@@ -13,6 +13,8 @@ import { GRILLE_TABLE, lignesSimples } from "@/lib/planning/grilles"
 import { useGrilleApp } from "@/lib/planning/useGrilleApp"
 import { useProfile } from "@/lib/firebase/users"
 import { canEditPlanning } from "@/lib/access"
+import { BACK_OFFICE } from "@/lib/backOffice"
+import { AncienTableau } from "./AncienTableau"
 
 // Prépa. Table du Seigneur + petit déjeuner : une grille à deux cases par
 // dimanche, remplie dans l'app depuis le 19/09/2026 (lot 17, G6) par qui en a
@@ -21,7 +23,7 @@ import { canEditPlanning } from "@/lib/access"
 
 const REPLI = DEJEUNER_FALLBACK.map((r) => [r[0], r[1], ""])
 
-export default function TablePage() {
+function TablePage() {
   const { t } = useTranslation()
   const { user, profile } = useProfile()
   const { rows, status } = useSheet<string[]>(fetchTable, REPLI)
@@ -51,3 +53,6 @@ export default function TablePage() {
     </div>
   )
 }
+
+// Back-office coupé (lot 18) : le tableau d'avant, lu dans le Sheet seul.
+export default BACK_OFFICE ? TablePage : AncienTableau

@@ -4,6 +4,7 @@ import { recordNotification } from "@/lib/push/notifications";
 import { filterUidsByNotifPref, loadNotifLangs } from "@/lib/push/recipients";
 import { nouvelleTacheMessage } from "@/lib/taches/messages";
 import { ID, appelantDuPole, estPole, lireTache, premiereFois } from "@/lib/taches/serveur";
+import { BACK_OFFICE } from "@/lib/backOffice"
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -13,6 +14,8 @@ export const dynamic = "force-dynamic";
 // préférence « Tâches ». Rien pour les fois suivantes d'une tâche répétée.
 
 export async function POST(req: NextRequest) {
+  // Back-office coupé (lot 18, docs/spec-mise-en-ligne.md) : la route n'existe pas en ligne.
+  if (!BACK_OFFICE) return new Response(null, { status: 404 })
   const { pole, tacheId } = (await req.json().catch(() => ({}))) as { pole?: string; tacheId?: string };
   if (!estPole(pole) || typeof tacheId !== "string" || !ID.test(tacheId)) {
     return NextResponse.json({ error: "Requête incomplète" }, { status: 400 });

@@ -8,12 +8,14 @@ import { GRILLE_INTERGROUPE, lignesSimples } from "@/lib/planning/grilles"
 import { useGrilleApp } from "@/lib/planning/useGrilleApp"
 import { useProfile } from "@/lib/firebase/users"
 import { canEditPlanning } from "@/lib/access"
+import { BACK_OFFICE } from "@/lib/backOffice"
+import { AncienTableau } from "./AncienTableau"
 
 // Une séance par trimestre, pas de publication par trimestre : toute l'année
 // s'affiche. Rempli dans l'app depuis le 19/09/2026 (lot 17, G6) par qui en a
 // le droit (canEditPlanning), le Sheet restant la source des dates non écrites.
 
-export default function IntergroupePage() {
+function IntergroupePage() {
   const { t } = useTranslation()
   const { user, profile } = useProfile()
   // Pas de fallback compilé : une liste vide est un état valide (aucun
@@ -40,3 +42,6 @@ export default function IntergroupePage() {
     </div>
   )
 }
+
+// Back-office coupé (lot 18) : le tableau d'avant, lu dans le Sheet seul.
+export default BACK_OFFICE ? IntergroupePage : AncienTableau

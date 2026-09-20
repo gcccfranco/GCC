@@ -4,6 +4,7 @@ import { aCommence, nowIsoParis } from "@/lib/evenements/agenda";
 import { canEditEvenement } from "@/lib/access";
 import { HttpError, ID, errorResponse, optionalUser } from "@/lib/evenements/serveur";
 import type { Evenement } from "@/types/evenement";
+import { BACK_OFFICE } from "@/lib/backOffice"
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -13,6 +14,8 @@ export const dynamic = "force-dynamic";
 // (sans compte compris). Compteur et place dans la même transaction.
 
 export async function POST(req: NextRequest) {
+  // Back-office coupé (lot 18, docs/spec-mise-en-ligne.md) : la route n'existe pas en ligne.
+  if (!BACK_OFFICE) return new Response(null, { status: 404 })
   try {
     const user = await optionalUser(req);
     if (!user) throw new HttpError(401, "Non authentifié");

@@ -1,17 +1,19 @@
 "use client"
 
+// Le tableau d'avant la grille (version e8e2ed0 de cette page), servi tant que le
+// back-office est coupé (lot 18, docs/spec-mise-en-ligne.md) : la grille du lot 17
+// fait partie du back-office. Lit le Google Sheet seul.
+
 import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { FilterButtons } from "@/components/planning/FilterButtons"
-import { PlanningGrille } from "@/components/planning/PlanningGrille"
+import { PlanningTable } from "@/components/planning/PlanningTable"
 import { StaleBanner } from "@/components/planning/StaleBanner"
-import { getCurrentTri, getTri } from "@/lib/planning/utils"
+import { filterByTri, getCurrentTri } from "@/lib/planning/utils"
 import { PAIX_FALLBACK, FIDELITE_FALLBACK, FIDELITE_MUSIC_FALLBACK, BONTE_FALLBACK } from "@/lib/planning/data"
 import { fetchPaix, fetchFidelite, fetchFideliteMusic, fetchBonte } from "@/lib/planning/sheets"
-import { GRILLE_BONTE, GRILLE_FIDELITE, GRILLE_FIDELITE_MUSICIENS, GRILLE_PAIX, lignesPubliees } from "@/lib/planning/grilles"
-import { useGrilleApp } from "@/lib/planning/useGrilleApp"
 import { useProfile } from "@/lib/firebase/users"
-import { canEditPlanning, isAdminUser } from "@/lib/access"
+import { isAdminUser } from "@/lib/access"
 import { PLANNING_COLORS } from "@/lib/serviceColors"
 import {
   PUBLISHABLE_PLANNINGS,
@@ -20,14 +22,6 @@ import {
   triVisibilities,
   TRI_ORDER,
 } from "@/lib/planning/releases"
-import { BACK_OFFICE } from "@/lib/backOffice"
-import { AncienTableau } from "./AncienTableau"
-
-// Les trois groupes, remplis dans l'app depuis le 19/09/2026 (lot 17, G6) :
-// une grille par groupe, plus celle des musiciens de Fidélité ; la publication
-// par trimestre (planningReleases/{groupe}) s'applique ligne par ligne comme au
-// Culte. Les données de secours de 2026 restent tant que ces onglets ne sont
-// pas importés dans l'app (D4 ne vaut que pour le Culte, pour l'instant).
 
 type Groupe = "paix" | "fidelite" | "bonte"
 type FidSub = "groupe" | "musiciens"
@@ -40,7 +34,7 @@ const GRP_COLORS: Record<Groupe, string> = {
 
 const GRP_INACTIVE = "bg-card text-muted-foreground border-border hover:text-foreground"
 
-function GroupesPage() {
+export function AncienTableau() {
   const { t } = useTranslation()
   const { user, profile } = useProfile()
   const [paix, setPaix] = useState(PAIX_FALLBACK)
@@ -76,15 +70,6 @@ function GroupesPage() {
   }, [])
 
   const color = GRP_COLORS[grp]
-  const definition =
-    grp === "paix" ? GRILLE_PAIX
-    : grp === "bonte" ? GRILLE_BONTE
-    : fidSub === "musiciens" ? GRILLE_FIDELITE_MUSICIENS
-    : GRILLE_FIDELITE
-  const rows = grp === "paix" ? paix : grp === "bonte" ? bonte : fidSub === "musiciens" ? fidM : fid
-
-  const peutModifier = canEditPlanning(user, profile, definition.key)
-  const { datesDansLApp, nomsDesComptes } = useGrilleApp(definition.key, peutModifier)
 
   // Trimestres futurs non publiés du groupe actif : masqués aux membres, marqués aux publieurs.
   const planning = PUBLISHABLE_PLANNINGS.find(p => p.key === grp)!
@@ -93,8 +78,19 @@ function GroupesPage() {
   const visibleTris = vis.filter(v => v.visible).map(v => v.tri)
   const unpublishedTris = vis.filter(v => v.unpublished).map(v => v.tri)
   const effTri = visibleTris.includes(tri) ? tri : getCurrentTri()
-  const lignes = lignesPubliees(rows, pubByGrp[grp] ?? [], getCurrentTri(), new Date().getFullYear(), canPublish)
-    .filter((l) => getTri(l.row[0]) === effTri)
+
+  const data = (() => {
+    if (grp === "fidelite" && fidSub === "musiciens") return filterByTri(fidM, effTri)
+    if (grp === "paix") return filterByTri(paix, effTri)
+    if (grp === "fidelite") return filterByTri(fid, effTri)
+    return filterByTri(bonte, effTri)
+  })()
+
+  const cols = (() => {
+    if (grp === "fidelite" && fidSub === "musiciens") return [t("planning.roles.date"), t("planning.roles.presidence"), t("planning.roles.piano"), t("planning.roles.guitare"), t("planning.roles.batterie")]
+    if (grp === "fidelite") return [t("planning.roles.date"), t("planning.roles.presidence"), t("planning.roles.orateur"), t("planning.roles.theme"), t("planning.roles.pianiste")]
+    return [t("planning.roles.date"), t("planning.roles.presidence"), t("planning.roles.musiciens"), t("planning.roles.orateur"), t("planning.roles.theme")]
+  })()
 
   return (
     <div className="max-w-full space-y-4 mx-auto">
@@ -139,18 +135,12 @@ function GroupesPage() {
 
       <FilterButtons options={visibleTris} active={effTri} onChange={setTri} color={color} unpublished={unpublishedTris} />
 
-      <PlanningGrille
-        key={definition.key}
-        definition={definition}
-        periode={`${effTri} ${new Date().getFullYear()}`}
-        lignes={lignes}
-        peutModifier={peutModifier}
-        datesDansLApp={datesDansLApp}
-        nomsDesComptes={nomsDesComptes}
-      />
+      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+        <div className="w-3 h-3 rounded-sm" style={{ background: `${color}26`, border: `1px solid ${color}4d` }} />
+        {t("planning.legendCurrentSunday")}
+      </div>
+
+      <PlanningTable cols={cols} rows={data} color={color} minWidth={480} />
     </div>
   )
 }
-
-// Back-office coupé (lot 18) : le tableau d'avant, lu dans le Sheet seul.
-export default BACK_OFFICE ? GroupesPage : AncienTableau

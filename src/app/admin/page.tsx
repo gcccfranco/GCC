@@ -28,6 +28,7 @@ import { ANNONCE_SECTIONS } from "@/types/annonce";
 import { NOTIFY_ALL, NOTIFY_GROUPS, audienceLabel } from "@/lib/push/audiences";
 import { GRILLES } from "@/lib/planning/grilles";
 import { categoryColor, categoryLabel } from "@/lib/serviceColors";
+import { BACK_OFFICE } from "@/lib/backOffice";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -124,7 +125,6 @@ export default function AdminPage() {
   const admin = isAdminUser(user);
 
   const [regOpen, setRegOpen] = useState<boolean | null>(null);
-  const [migration, setMigration] = useState<"" | "busy" | string>("");
   const [togglingReg, setTogglingReg] = useState(false);
   const [profiles, setProfiles] = useState<UserProfile[]>([]);
   const [loadingProfiles, setLoadingProfiles] = useState(true);
@@ -264,20 +264,6 @@ export default function AdminPage() {
         )}
       </div>
     );
-  }
-
-  /** Lot 6 : copie chaque annonce en évènement « info » (idempotent côté serveur). */
-  async function migrerAnnonces() {
-    if (!window.confirm("Copier toutes les annonces dans le calendrier des évènements ? Relancer ne crée pas de doublon.")) return;
-    setMigration("busy");
-    try {
-      const res = await fetch("/api/admin/migrer-annonces", { method: "POST", headers: await authHeader() });
-      const json = (await res.json().catch(() => ({}))) as { migrated?: number; skipped?: number; error?: string };
-      if (!res.ok) throw new Error(json.error ?? `Erreur ${res.status}`);
-      setMigration(`${json.migrated ?? 0} annonces migrées, ${json.skipped ?? 0} déjà présentes.`);
-    } catch (e) {
-      setMigration(e instanceof Error ? e.message : "Migration impossible.");
-    }
   }
 
   /** Lot 16 : reprend l'onglet ORGANIGRAMME et repose les pôles (idempotent). */
@@ -804,24 +790,6 @@ export default function AdminPage() {
         </div>
         )}
 
-        {/* ── Annonces → calendrier (lot 6) ── */}
-        {tab === "inscriptions" && (
-        <div className="rounded-xl bg-card shadow-soft p-5 space-y-3">
-          <h2 className="text-sm font-semibold text-muted-foreground">
-            Annonces → Évènements
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            Les annonces vivent désormais dans le calendrier des évènements (entrées « info » épinglées). Ce bouton copie les anciennes annonces ; le relancer ne crée pas de doublon.
-          </p>
-          <div className="flex flex-wrap items-center gap-3">
-            <Button onClick={migrerAnnonces} disabled={migration === "busy"} variant="outline" className="h-11">
-              {migration === "busy" ? "…" : "Migrer les annonces vers le calendrier"}
-            </Button>
-            {migration && migration !== "busy" && <p className="text-sm text-foreground">{migration}</p>}
-          </div>
-        </div>
-        )}
-
         {/* ── Membres ── */}
         {tab === "membres" && (
         <div className="rounded-xl bg-card shadow-soft p-5 space-y-4">
@@ -957,6 +925,8 @@ export default function AdminPage() {
                           deriveFromPlanning={deriveFromPlanning}
                         />
 
+                        {/* Back-office coupé (lot 18) : ces trois droits n'ont pas d'objet en ligne. */}
+                        {BACK_OFFICE && (<>
                         {/* Pôles : donnés par les équipes depuis le lot 16 (D9) — plus aucune
                             case ici, l'organigramme est la seule vérité. */}
                         <div className="rounded-lg border border-dashed border-border p-3 space-y-1">
@@ -1014,7 +984,9 @@ export default function AdminPage() {
                             })}
                           </div>
                         </div>
+                        </>)}
 
+                        {BACK_OFFICE && (<>
                         {/* Droits de publication d'annonces — réservé aux admins */}
                         <div className="rounded-lg border border-dashed border-border p-3">
                           <p className="text-sm font-semibold text-muted-foreground mb-2">
@@ -1044,6 +1016,7 @@ export default function AdminPage() {
                             })}
                           </div>
                         </div>
+                        </>)}
 
                         {/* Droits d'envoi de notifications manuelles — réservé aux admins */}
                         <div className="rounded-lg border border-dashed border-border p-3">
@@ -1102,7 +1075,7 @@ export default function AdminPage() {
         )}
 
         {/* ── Noms du planning sans compte ── */}
-        {tab === "planning" && (
+        {BACK_OFFICE && tab === "planning" && (
         <div className="rounded-xl bg-card shadow-soft p-5 space-y-3">
           <h2 className="text-sm font-semibold text-muted-foreground">Importer depuis le Google Sheet</h2>
           <p className="text-xs text-muted-foreground">
@@ -1161,7 +1134,7 @@ export default function AdminPage() {
         )}
 
         {/* ── Organigramme → Équipes (lot 16) ── */}
-        {tab === "equipes" && (
+        {BACK_OFFICE && tab === "equipes" && (
         <div className="rounded-xl bg-card shadow-soft p-5 space-y-3">
           <h2 className="text-sm font-semibold text-muted-foreground">
             Organigramme → Équipes

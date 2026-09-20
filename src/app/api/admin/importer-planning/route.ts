@@ -8,6 +8,7 @@ import { fetchGrille, oublierGrille } from "@/lib/planning/grille";
 import { lireSheetDe } from "@/lib/planning/sheets";
 import { documentDimanche, nomsNonRattaches, planifierImport } from "@/lib/planning/import";
 import { normalizeName } from "@/lib/planning/names";
+import { BACK_OFFICE } from "@/lib/backOffice"
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -20,6 +21,8 @@ export const maxDuration = 60;
 // doublon (les dimanches déjà écrits sont ignorés).
 
 export async function POST(req: NextRequest) {
+  // Back-office coupé (lot 18, docs/spec-mise-en-ligne.md) : la route n'existe pas en ligne.
+  if (!BACK_OFFICE) return new Response(null, { status: 404 })
   try {
     const user = await optionalUser(req);
     if (!user) throw new HttpError(401, "Non authentifié");

@@ -3,6 +3,7 @@ import { adminDb } from "@/lib/push/admin";
 import { nowIsoParis, refusInscription, type RefusInscription } from "@/lib/evenements/agenda";
 import { HttpError, ID, errorResponse, optionalUser } from "@/lib/evenements/serveur";
 import type { Evenement } from "@/types/evenement";
+import { BACK_OFFICE } from "@/lib/backOffice"
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -25,6 +26,8 @@ const REFUS: Record<RefusInscription, string> = {
 };
 
 export async function POST(req: NextRequest) {
+  // Back-office coupé (lot 18, docs/spec-mise-en-ligne.md) : la route n'existe pas en ligne.
+  if (!BACK_OFFICE) return new Response(null, { status: 404 })
   try {
     const user = await optionalUser(req);
     const body = (await req.json().catch(() => ({}))) as { evenementId?: unknown; invites?: unknown; nom?: unknown };

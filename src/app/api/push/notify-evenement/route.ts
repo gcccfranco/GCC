@@ -7,6 +7,7 @@ import { nouvelEvenementMessage } from "@/lib/evenements/rappel";
 import { canCreateEvenement, canEditEvenement } from "@/lib/access";
 import { destinatairesEvenement } from "@/lib/evenements/serveur";
 import type { Evenement } from "@/types/evenement";
+import { BACK_OFFICE } from "@/lib/backOffice"
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -17,6 +18,8 @@ export const dynamic = "force-dynamic";
 // désactivé « Évènements ». Une seule fois par évènement (notifLog).
 
 export async function POST(req: NextRequest) {
+  // Back-office coupé (lot 18, docs/spec-mise-en-ligne.md) : la route n'existe pas en ligne.
+  if (!BACK_OFFICE) return new Response(null, { status: 404 })
   const authz = req.headers.get("authorization") ?? "";
   const token = authz.startsWith("Bearer ") ? authz.slice(7) : "";
   if (!token) return NextResponse.json({ error: "Non authentifié" }, { status: 401 });

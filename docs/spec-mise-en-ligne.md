@@ -19,8 +19,9 @@ le calendrier des évènements et l'inscription partent aussi » :
 
 > « Je le compte comme back office aussi. »
 
-Statut : **cinq décisions de Timothée prises le 20/09/2026 ; spec écrite le
-20/09/2026 ; rien n'est codé, rien n'est fusionné, la spec attend le go.**
+Statut : **cinq décisions de Timothée prises le 20/09/2026 ; go le 20/09/2026 ;
+interrupteur et retrait des annonces CODÉS le jour même (voir « Avancement »), à
+valider en local ; rien n'est fusionné dans `main`, qui attend un go explicite.**
 
 ## Décisions du 20/09/2026
 
@@ -180,3 +181,53 @@ La suite existante tourne interrupteur ouvert et ne change pas.
    19/09/2026) ? Coupés, ils sont ignorés en ligne ; à savoir avant d'ouvrir.
 4. **L'accueil de première connexion** présente l'app par ses sections : coupé, il
    aura un écran de moins. À relire une fois codé.
+
+## Avancement (20/09/2026)
+
+Go de Timothée le 20/09/2026. `origin/main` fusionné dans la branche (`eecf519`,
+22 liens YouTube de David, 370 chants valides, index régénérés). Codé le jour
+même, test d'abord, sur ordinateur, téléphone et tablette.
+
+| Point | Fait | Où |
+| --- | --- | --- |
+| L'interrupteur | `BACK_OFFICE = process.env.NEXT_PUBLIC_BACK_OFFICE === "1"` ; `.env.local` le pose à `1` (fichier local, non suivi) | `src/lib/backOffice.ts` |
+| Entrées | barre du bas à quatre onglets (Chants seul pour un visiteur), navbar sans Évènements ni Tâches, menu compte et « Moi » sans Équipes ni Mes tâches | `MobileTabBar`, `Navbar`, `moi/page.tsx` |
+| La cloche | **reste** : elle porte aussi les setlists et « Présentation prête ». Coupée, elle ne lit plus les évènements | `useNotifications.ts` |
+| Pages en 404 | au niveau serveur : `evenements/layout.tsx` (toute la section, fiches et scène), `equipes/page.tsx`, `annonces/page.tsx`, et un nouveau `taches/layout.tsx` (les pages des tâches sont des composants client) | — |
+| Routes en 404 | une garde en tête des neuf gestionnaires | `api/taches/*`, `api/equipes/*`, `api/admin/importer-planning`, `api/scene/conflit`, `api/evenements/*`, `api/push/notify-evenement` |
+| Planning | `sheets.ts` : les douze appels à `fetchGrille` passent par `grilleDeLApp`, qui ne lit rien quand c'est coupé. Les sept pages servent `AncienTableau.tsx` | `src/lib/planning/sheets.ts`, `src/app/planning/*/` |
+| Rappel du matin | coupé : ni scène, ni tâches, ni « Inscriptions ouvertes », ni veille d'évènement | `api/cron/reminders/route.ts` |
+| Accueil et guide | l'accueil ne présente pas Évènements ; le guide ne décrit ni Évènements, ni Scène, ni Tâches | `Accueil.tsx`, `guide/page.tsx` |
+| Administration | coupés : pôles, droit sur l'organigramme, droit de remplir les plannings, droit de créer des évènements, import des plannings, import de l'organigramme | `admin/page.tsx` |
+| Annonces (D4) | bloc « Annonces → Évènements », fonction et route `migrer-annonces` retirés | `admin/page.tsx`, `api/admin/migrer-annonces/` |
+
+**Écarts avec la spec, assumés :**
+
+- **Le tableau vient de la branche, pas de `main`.** Sur `main` ces pages sont dans
+  l'ancien habillage (textes de 9 px), contraire au nouveau look. La branche les a
+  eues en tableau *dans le nouveau look* juste avant le lot 17, avec la sainte cène
+  et le petit déj : c'est cette version (`de882b7` pour culte, table, campus ;
+  `e8e2ed0` pour EDD, groupes, Interfranco, Intergroupe) qui est reprise, dans un
+  `AncienTableau.tsx` à côté de chaque page. Une page = `BACK_OFFICE ? Grille :
+  AncienTableau`, sans mélanger les deux rendus.
+- **`src/types/annonce.ts` reste** : `ANNONCE_SECTIONS` est encore importé par
+  l'administration et trois écrans d'évènements.
+- **Deux tests existants changés** parce que la fonctionnalité disparaît (D4) :
+  `evenements.spec.ts` (la migration → « l'administration ne propose plus de
+  migration ») et `coherence.spec.ts` (la route retirée d'une liste de fichiers).
+- **Le rappel du matin n'a pas de test** : sa route parle à `firebase-admin` et le
+  dépôt ne teste aucune route de cron. Les quatre gardes ont été relues, pas
+  exécutées.
+
+**Tests** : `tests/back-office-coupe.spec.ts`, 66 tests sur les trois appareils,
+contre un second serveur (`PW_PORT + 1`, `NEXT_PUBLIC_BACK_OFFICE=0`). Next 16
+verrouille `.next/dev` : ce second `next dev` a son dossier de build
+(`NEXT_DIST_DIR=.next-coupe`, une ligne dans `next.config.ts`, ignoré par git,
+ESLint et `tsconfig`). Le premier serveur force l'interrupteur à `1` : la suite
+existante ne dépend pas du `.env.local` de la machine. Build de production
+interrupteur coupé : compilé et typé.
+
+**Remarqué sans y toucher** : l'ancien tableau « Table » réaffecte une variable
+pendant le rendu (avertissement ESLint d'origine) ; dans une fusion de chants, la
+tonalité de la liste reste l'ancienne pastille neutre.
+

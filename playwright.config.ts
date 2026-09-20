@@ -6,6 +6,9 @@ export const PORT = Number(process.env.PW_PORT ?? 3100);
 // développement en cross-origin, et la page arrive alors **non hydratée** —
 // elle s'affiche mais aucun bouton ne répond.
 export const BASE_URL = `http://localhost:${PORT}`;
+/** Second serveur, lancé SANS l'interrupteur du back-office (lot 18,
+ *  docs/spec-mise-en-ligne.md) : ce que verra le site en ligne. */
+export const BASE_URL_COUPE = `http://localhost:${PORT + 1}`;
 
 export default defineConfig({
   testDir: "./tests",
@@ -29,14 +32,29 @@ export default defineConfig({
     { name: "telephone", use: { ...devices["Pixel 7"] } },
     { name: "tablette", use: { ...devices["iPad (gen 7)"], defaultBrowserType: "chromium" } },
   ],
-  webServer: {
-    command: `npm run dev -- -p ${PORT}`,
-    url: BASE_URL,
-    reuseExistingServer: true,
-    // `next dev` compile la page à la première requête : la partition 简谱
-    // charge un scan de 1 à 2 Mo, la compilation initiale est lente.
-    timeout: 180_000,
-    stdout: "ignore",
-    stderr: "pipe",
-  },
+  webServer: [
+    {
+      command: `npm run dev -- -p ${PORT}`,
+      url: BASE_URL,
+      reuseExistingServer: true,
+      // `next dev` compile la page à la première requête : la partition 简谱
+      // charge un scan de 1 à 2 Mo, la compilation initiale est lente.
+      timeout: 180_000,
+      stdout: "ignore",
+      stderr: "pipe",
+      // La suite existante teste le back-office : interrupteur ouvert, quoi que dise `.env.local`.
+      env: { NEXT_PUBLIC_BACK_OFFICE: "1" },
+    },
+    {
+      // Interrupteur coupé. Next 16 verrouille `.next/dev` : un second `next dev`
+      // dans le même dossier a besoin de son propre dossier de build.
+      command: `npm run dev -- -p ${PORT + 1}`,
+      url: BASE_URL_COUPE,
+      reuseExistingServer: true,
+      timeout: 180_000,
+      stdout: "ignore",
+      stderr: "pipe",
+      env: { NEXT_PUBLIC_BACK_OFFICE: "0", NEXT_DIST_DIR: ".next-coupe" },
+    },
+  ],
 });

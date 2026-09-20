@@ -548,23 +548,13 @@ test("QR code : un simple membre n'a pas le bouton", async ({ page }) => {
   await expect(page.getByRole("img", { name: /QR code/ })).toHaveCount(0);
 });
 
-test("migration : l'admin lance la migration des annonces depuis l'administration", async ({ page }) => {
+// 20/09/2026 (lot 18, D4) : la section Annonces est retirée (« jusqu'à présent on l'a
+// jamais utilisée »). La migration n'a jamais été lancée : son bouton et sa route partent.
+test("annonces retirées : l'administration ne propose plus de migration, la route n'existe plus", async ({ page, request }) => {
   await member(page, TIM, "/admin");
-  let called: string | undefined;
-  await page.route("**/api/admin/migrer-annonces", (route) => {
-    called = route.request().headers()["authorization"];
-    return route.fulfill({ json: { ok: true, migrated: 3, skipped: 1 } });
-  });
-  page.on("dialog", (d) => d.accept());
   await page.getByRole("button", { name: "Inscriptions", exact: true }).click();
-  await page.getByRole("button", { name: "Migrer les annonces vers le calendrier" }).click();
-  await expect(page.getByText("3 annonces migrées")).toBeVisible();
-  expect(called).toMatch(/^Bearer /);
-});
-
-test("route de migration : refusée sans jeton", async ({ request }) => {
-  const res = await request.post("/api/admin/migrer-annonces");
-  expect(res.status()).toBe(401);
+  await expect(page.getByRole("button", { name: /Migrer les annonces/ })).toHaveCount(0);
+  expect((await request.post("/api/admin/migrer-annonces/")).status()).toBe(404);
 });
 
 // ─── Lot 6 bis : look de la maquette de Timothée (16/09/2026, spec-evenements-look.md) ──

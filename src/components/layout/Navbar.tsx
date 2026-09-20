@@ -14,6 +14,7 @@ import { useProfile } from "@/lib/firebase/users";
 import { isAdminUser, polesDe } from "@/lib/access";
 import { useScrollDirection } from "@/hooks/useScrollDirection";
 import { useNotifications, type NotificationItem } from "@/hooks/useNotifications";
+import { BACK_OFFICE } from "@/lib/backOffice";
 import { saveNotifLang } from "@/lib/firebase/notifPrefs";
 import { ReportDialog } from "@/components/report/ReportDialog";
 import {
@@ -230,7 +231,7 @@ export function Navbar() {
                 </Link>
               )
             )}
-            {!authLoading && (
+            {BACK_OFFICE && !authLoading && (
               <Link href="/evenements" className={sectionClass(isActiveEvenements)}>
                 {t("common.header.evenements")}
               </Link>
@@ -241,7 +242,7 @@ export function Navbar() {
               </Link>
             )}
             {/* Tâches (lot 7) : pour les membres d'un pôle et les admins. */}
-            {!authLoading && user && (admin || polesDe(profile).length > 0) && (
+            {BACK_OFFICE && !authLoading && user && (admin || polesDe(profile).length > 0) && (
               <Link href="/taches" className={sectionClass(isActiveTaches)}>
                 {t("common.header.taches")}
               </Link>
@@ -344,9 +345,11 @@ export function Navbar() {
                     <DropdownMenuItem asChild>
                       <Link href="/profil"><UserRound aria-hidden />{t("common.header.profile")}</Link>
                     </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link href="/equipes"><Network aria-hidden />{t("equipes.title")}</Link>
-                    </DropdownMenuItem>
+                    {BACK_OFFICE && (
+                      <DropdownMenuItem asChild>
+                        <Link href="/equipes"><Network aria-hidden />{t("equipes.title")}</Link>
+                      </DropdownMenuItem>
+                    )}
                     <HarmonieMenuItem label={t("harmonie.titre")} />
                     <DropdownMenuItem asChild>
                       <Link href="/guide"><BookOpen aria-hidden />{t("common.header.guide")}</Link>

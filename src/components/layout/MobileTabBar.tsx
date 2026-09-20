@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { BACK_OFFICE } from "@/lib/backOffice";
 import { useTranslation } from "react-i18next";
 import { CalendarDays, ListMusic, Music, Ticket, UserRound, type LucideIcon } from "lucide-react";
 import { useAuth } from "@/lib/firebase/auth";
@@ -54,7 +55,8 @@ export function MobileTabBar() {
   }, []);
 
   if (!mounted || loading || fullscreen) return null;
-  const tabs = user ? MEMBER_TABS : VISITOR_TABS;
+  // Back-office coupé (lot 18) : la section Évènements n'est pas en ligne.
+  const tabs = (user ? MEMBER_TABS : VISITOR_TABS).filter((tab) => BACK_OFFICE || tab.href !== "/evenements");
 
   return (
     <>

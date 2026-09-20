@@ -1,6 +1,7 @@
 "use client";
 
 import { Fragment } from "react";
+import { BACK_OFFICE } from "@/lib/backOffice";
 import { useTranslation } from "react-i18next";
 import {
   BookOpen,
@@ -29,7 +30,7 @@ import { FIGURES } from "@/lib/guide/figures";
 
 // Les ancres (#songs, #setlists, #planning, #evenements…) sont visées par les
 // liens « Comment ça marche ? » des pages (lot 8).
-const SECTIONS = [
+const TOUTES_LES_SECTIONS = [
   { key: "songs", Icon: Music },
   { key: "customize", Icon: SlidersHorizontal },
   { key: "performance", Icon: Pencil },
@@ -48,6 +49,11 @@ const SECTIONS = [
   { key: "moi", Icon: UserRound },
   { key: "account", Icon: UserCog },
 ] as const;
+
+// Back-office coupé (lot 18, docs/spec-mise-en-ligne.md) : le guide ne décrit pas
+// des sections qui ne sont pas en ligne.
+const COUPEES: readonly string[] = ["evenements", "scene", "taches"];
+const SECTIONS = TOUTES_LES_SECTIONS.filter((s) => BACK_OFFICE || !COUPEES.includes(s.key));
 
 /** Rend un texte en mettant en gras les termes entre **doubles astérisques**. */
 function RichText({ text }: { text: string }) {
