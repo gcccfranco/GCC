@@ -736,3 +736,27 @@ de la barre elle-même**. Mesuré sur le Planning : le calque finissait à 121 p
 105 px (le bas de la barre de section) et son flou plein s'arrête à 89 px — le flou remonte
 donc de 16 px, et sa partie pleine de 32 px. Le bord reste fondu : aucun trait ne revient,
 et plus rien ne brouille le haut du contenu.
+
+#### V7 quinquies : plus de flou du tout (21/09/2026)
+
+Timothée, après le troisième essai : « bon le problème est toujours là […] peut-être
+qu'on peut juste tout simplement retirer le flou ? »
+
+Vérifié avant de toucher : le CSS servi en ligne portait bien la dernière règle (le flou
+sous `html[data-defile]` seulement, sans déborder de la barre). Ce n'était donc pas un
+déploiement en retard — le flou le gênait quelle que soit sa forme. Trois essais en une
+journée : plein, puis au défilement seul, puis sans dépasser la barre. La séparation entre
+zone floue et zone nette se voit toujours, aussi douce soit-elle.
+
+**Les barres ne portent donc plus rien** : ni voile, ni filet, ni flou. Le halo les
+traverse, le contenu passe dessous tel qu'il est. Le calque `::before`, l'attribut
+`data-defile` et la bascule de la Navbar disparaissent.
+
+Le mode louange (`.material-steady`) garde voile et flou : ses deux barres sont posées sur
+les paroles et doivent s'en détacher pour rester lisibles.
+
+**Conséquence assumée** : une fois la page défilée, le texte de la liste passe derrière le
+logo et les boutons de la barre, sans rien pour l'en séparer. Si cela gêne à l'usage, le
+recours n'est plus le flou mais un fond plein sur les barres — ce que fait iOS lui-même
+quand on désactive la transparence, et ce que `prefers-reduced-transparency` applique déjà
+ici.

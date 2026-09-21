@@ -27,22 +27,12 @@ const FICHE = {
   items: [chant({ songSlug: "beni-soit-ton-nom", position: 1 }), chant({ songSlug: "abba-pere", position: 2 })],
 };
 
-/** Le matériau de chaque barre de la page (hors mode louange), tel que le navigateur le
- *  calcule. Le flou vit sur le calque `::before`, qui déborde sous la barre pour s'y
- *  fondre (V7 bis) ; la barre elle-même ne porte que son contenu. */
+/** Le matériau de chaque barre de la page (hors mode louange), tel que le navigateur le calcule. */
 const barres = (page: Page) =>
   page.locator(".material-chrome:not(.material-steady)").evaluateAll((els) =>
     els.map((el) => {
       const s = getComputedStyle(el);
-      const calque = getComputedStyle(el, "::before");
-      return {
-        fond: s.backgroundColor,
-        flou: calque.backdropFilter,
-        filet: s.boxShadow,
-        glisse: s.transitionProperty,
-        masque: calque.maskImage,
-        deborde: calque.bottom,
-      };
+      return { fond: s.backgroundColor, flou: s.backdropFilter, filet: s.boxShadow, glisse: s.transitionProperty };
     })
   );
 const VERRE = { fond: RIEN, filet: "none" };
@@ -63,9 +53,7 @@ async function capture(page: Page, name: string) {
 }
 
 async function enHautPuisDefile(page: Page, combien: number, nom: string) {
-  // En haut de page : ni voile, ni filet, ni flou. Rien ne passe sous les barres, il n'y
-  // a donc rien à en séparer — et le calque déborde de 16 px, il brouillerait le haut du
-  // contenu pour rien (retour de Timothée du 21/09/2026 : « le flou est trop présent »).
+  // Ni voile, ni filet, ni flou.
   await expect.poll(() => verre(page)).toEqual(Array(combien).fill(VERRE));
   for (const b of await barres(page)) expect(b.flou).toBe("none");
   await capture(page, `barres-${nom}-en-haut`);
@@ -73,17 +61,9 @@ async function enHautPuisDefile(page: Page, combien: number, nom: string) {
   // contenu : toujours ni voile ni filet, c'est le flou qui les sépare de ce qui passe dessous.
   await defiler(page, 600);
   await defiler(page, 560);
+  // Défilées, elles ne portent toujours rien : le contenu passe dessous tel qu'il est.
   await expect.poll(() => verre(page)).toEqual(Array(combien).fill(VERRE));
-  // Le flou arrive avec l'événement de défilement, pas avec `scrollTo` : on l'attend.
-  await expect.poll(async () => (await barres(page)).every((b) => b.flou.includes("blur(20px)"))).toBe(true);
-  for (const b of await barres(page)) {
-    expect(b.flou).toContain("blur(20px)");
-    // Le bord bas ne tranche pas, et ne mord pas sur le contenu : le flou s'éteint en
-    // dégradé DANS la barre, sur ses 16 derniers pixels (retour du 21/09/2026 :
-    // « ton flou est toujours trop bas, remonte-le un peu »).
-    expect(b.masque).toContain("linear-gradient");
-    expect(b.deborde).toBe("0px");
-  }
+  for (const b of await barres(page)) expect(b.flou).toBe("none");
   // Et elles glissent toujours quand on défile.
   for (const b of await barres(page)) expect(b.glisse).toContain("transform");
   await capture(page, `barres-${nom}-defile`);
@@ -138,13 +118,13 @@ test.describe("barres (5C1, V7) : ni voile ni filet, en haut de page comme défi
   });
 
   // Qui demande moins de transparence garde des barres pleines : le flou part, le fond revient.
-  test("transparence réduite : les barres redeviennent pleines", async ({ page }) => {
+  test("transparence réduite : les barres prennent un fond plein", async ({ page }) => {
     await page.goto("/songs");
     await page.getByRole("searchbox").waitFor();
     // Playwright n'émule pas ce réglage : on le demande à Chromium.
     const cdp = await page.context().newCDPSession(page);
     await cdp.send("Emulation.setEmulatedMedia", { features: [{ name: "prefers-reduced-transparency", value: "reduce" }] });
-    await expect.poll(async () => (await barres(page)).map(({ fond, flou, masque }) => ({ fond, flou, masque }))).toEqual([{ fond: "rgb(255, 255, 255)", flou: "none", masque: "none" }]);
+    await expect.poll(async () => (await barres(page)).map(({ fond, flou }) => ({ fond, flou }))).toEqual([{ fond: "rgb(255, 255, 255)", flou: "none" }]);
   });
 
   test("le mode louange garde ses deux barres voilées", async ({ page }) => {

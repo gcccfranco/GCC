@@ -10,37 +10,13 @@
      laissent passer le contenu, « panneau » quasi opaque pour menus et
      feuilles. Une seule surface translucide à la fois : jamais l'un dans
      l'autre.
-     Les barres : un flou seul, ni voile ni filet (5C1, V7, 21/09/2026). Le halo, fixe,
-     les traverse à tout moment ; seul le flou les sépare de ce qui passe dessous.
-     Le flou est porté par un calque, pas par la barre (V7 bis) : il s'éteint en dégradé
-     sur les 16 derniers pixels de la barre, pour que le bord ne tranche pas le contenu
-     en deux (net / flou) comme le ferait un filet. Il ne dépasse JAMAIS la barre : en
-     débordant, il brouillait le haut du contenu (« le flou est trop bas », 21/09/2026).
-     Le masque doit porter sur le calque seul : posé sur la barre, il effacerait aussi
-     le bas du logo et des boutons.
-     `z-index: -1` le garde sous ce contenu — les barres ont toutes leur propre plan
-     (`z-10`, `z-40`, `z-50`), il n'en sort pas.
-     Le flou n'existe que lorsque du contenu passe dessous (V7 quater, 21/09/2026) : en
-     haut de page il n'y a rien à séparer, et comme le calque déborde de 16 px, il
-     brouillait le haut du contenu sans raison. `data-defile` est posé par la Navbar dès
-     qu'on quitte le haut ; sans lui — avant que React ne démarre, ou sans JavaScript —
-     il n'y a pas de flou, ce qui est justement l'état d'une page qu'on vient d'ouvrir.
-     `.material-steady` reprend le voile et le flou sur la barre elle-même : les deux
-     barres du mode louange, posées sur les paroles, qui gardent aussi leur filet. */
-  .material-chrome:not(.material-steady)::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    pointer-events: none;
-    -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 16px), transparent);
-    mask-image: linear-gradient(to bottom, #000 calc(100% - 16px), transparent);
-    transition: backdrop-filter 200ms ease, -webkit-backdrop-filter 200ms ease;
-  }
-  html[data-defile] .material-chrome:not(.material-steady)::before {
-    -webkit-backdrop-filter: blur(20px) saturate(1.4);
-    backdrop-filter: blur(20px) saturate(1.4);
-  }
+     Les barres ne portent plus rien : ni voile, ni filet, ni flou (V7 quinquies,
+     21/09/2026). Le halo les traverse, le contenu passe dessous tel qu'il est. Trois
+     essais de flou ont été faits — plein, puis au défilement seul, puis sans déborder
+     de la barre — et chacun restait trop présent à l'œil de Timothée : la séparation
+     nette entre le flou et le reste se voit toujours, quelle qu'en soit la douceur.
+     `.material-steady` garde voile et flou : les deux barres du mode louange sont
+     posées sur les paroles, et doivent s'en détacher pour rester lisibles. */
   .material-steady {
     background-color: hsl(var(--background) / 0.8);
     -webkit-backdrop-filter: blur(20px) saturate(1.4);
@@ -133,8 +109,6 @@
      Next élimine les deux et le flou reste (constaté le 21/09/2026). */
   @media (prefers-reduced-transparency: reduce) {
     .material-chrome { background-color: hsl(var(--background)); -webkit-backdrop-filter: none; backdrop-filter: none; }
-    html[data-defile] .material-chrome:not(.material-steady)::before { -webkit-backdrop-filter: none; backdrop-filter: none; }
-    .material-chrome:not(.material-steady)::before { -webkit-mask-image: none; mask-image: none; }
     .material-bar { background-color: hsl(var(--raised)); -webkit-backdrop-filter: none; backdrop-filter: none; }
     .material-panel { background-color: hsl(var(--card)); -webkit-backdrop-filter: none; backdrop-filter: none; }
   }
