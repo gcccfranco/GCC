@@ -5,7 +5,6 @@ import { Navbar } from "@/components/layout/Navbar";
 import { MobileTabBar } from "@/components/layout/MobileTabBar";
 import { Accueil } from "@/components/onboarding/Accueil";
 import { PageTransition } from "@/components/layout/PageTransition";
-import { ThemeColorDuFond } from "@/components/layout/ThemeColor";
 import { LyricsCopyListener } from "@/components/song/LyricsCopyListener";
 import "./globals.css";
 
@@ -16,21 +15,22 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     title: "GCC Louange",
-    // La page monte sous l'heure et la batterie au lieu de s'arrêter sous une bande
-    // blanche (V7, T6) ; elle se réserve la place avec `env(safe-area-inset-top)`.
-    // iOS lit ce réglage à l'installation de l'icône : réinstaller pour le voir changer.
-    statusBarStyle: "black-translucent",
+    // La page s'arrête sous la barre d'état. `black-translucent` la faisait monter
+    // jusque sous l'heure (V7, T6), mais iOS pose alors SON propre voile derrière
+    // l'heure et la batterie pour les garder lisibles — un flou qu'on ne peut pas
+    // retirer, et que Timothée n'a pas voulu (21/09/2026). Repli assumé.
+    statusBarStyle: "default",
   },
   formatDetection: { telephone: false },
 };
 
 export const viewport: Viewport = {
-  // Une seule balise, sans `media` : la barre d'état d'Android prend la teinte du haut
-  // de l'écran (fond + halo), posée à l'affichage par `ThemeColor` (V7, T6). Deux
-  // balises `media` auraient gagné sur elle selon l'ordre du DOM. Le premier rendu part
-  // du fond, blanc ou noir, comme avant (audit D5) : jamais de barre orange ni de saut
-  // de luminosité au lancement.
-  themeColor: "#ffffff",
+  // Égale au fond, par schéma : plus de barre orange sur Android ni de saut
+  // de luminosité au lancement (audit D5).
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#000000" },
+  ],
   width: "device-width",
   initialScale: 1,
   // Pinch-zoom désactivé : sur iOS, un zoom pincé décroche les éléments
@@ -57,9 +57,6 @@ export default function RootLayout({
         {/* Service worker push-only (public/sw.js) — requis pour les notifications
             Web Push sur PWA iOS/Android. Il ne fait plus de cache hors-ligne. */}
         <script dangerouslySetInnerHTML={{ __html: `if('serviceWorker'in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js').catch(function(){})})}` }} />
-        {/* Le fond sombre avant que React ne démarre : sinon la barre d'état d'Android
-            s'allume en blanc à chaque lancement, le temps du premier rendu. */}
-        <script dangerouslySetInnerHTML={{ __html: `if(matchMedia('(prefers-color-scheme: dark)').matches){document.querySelector('meta[name=theme-color]')?.setAttribute('content','#000000')}` }} />
       </head>
       <body className="font-sans antialiased min-h-screen bg-background">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
@@ -69,7 +66,6 @@ export default function RootLayout({
               <PageTransition>{children}</PageTransition>
             </main>
             <MobileTabBar />
-            <ThemeColorDuFond />
             <LyricsCopyListener />
             <Accueil />
           </I18nProvider>

@@ -760,3 +760,23 @@ logo et les boutons de la barre, sans rien pour l'en séparer. Si cela gêne à 
 recours n'est plus le flou mais un fond plein sur les barres — ce que fait iOS lui-même
 quand on désactive la transparence, et ce que `prefers-reduced-transparency` applique déjà
 ici.
+
+#### Repli de T6 : la page redescend sous la barre d'état (21/09/2026)
+
+Timothée, après l'essai sur son iPhone : « retire le truc avec la zone de l'heure parce
+que t'arrives pas à retirer le flou qu'il y a ».
+
+Ce flou-là n'est pas le nôtre : dès que la page passe sous la barre d'état
+(`black-translucent`), **iOS pose son propre voile derrière l'heure et la batterie** pour
+les garder lisibles quel que soit le fond. Il n'est pas retirable depuis une page web.
+C'était la contrepartie inconnue de T6, et elle ne convient pas.
+
+`statusBarStyle` revient donc à `default` : la page s'arrête sous la barre d'état. Comme
+annoncé, le reste retombe tout seul — `--sat` disparaît de `--nav-h`, du décalage des
+halos et de la navbar, qui reprend ses 58 px fixes. Aucune autre trace.
+
+**T6 est annulée en entier, Android compris** (« même sur android on enlève »,
+21/09/2026). La balise `theme-color` retrouve ses deux déclarations `media` d'origine
+(blanc en clair, noir en sombre) ; `ThemeColor.tsx`, l'effet du halo, le script d'en-tête
+et `look-zone-heure.spec.ts` disparaissent. Il ne reste aucune trace de la tranche : la
+barre d'état est exactement ce qu'elle était avant le 21/09/2026.
