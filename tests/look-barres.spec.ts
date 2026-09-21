@@ -1,13 +1,12 @@
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 
-// 5C1, tranche V6 bis (docs/spec-look.md § « Barres et halo : réouvert… », option C) :
-// en haut de page rien ne passe sous les barres `.material-chrome`, elles s'effacent et
-// laissent voir le halo ; dès qu'on défile elles reprennent leur voile (blanc à 80 %,
-// flou de 20 px). Le mode louange garde ses deux barres voilées (tranché le 20/09/2026).
+// 5C1, tranche V7 (docs/spec-look.md § « V7 », 21/09/2026 ; remplace l'option C de V6 bis) :
+// les barres `.material-chrome` n'ont plus ni voile ni filet, en haut de page comme
+// défilées. Un flou seul les sépare de ce qui passe dessous, et le halo, fixe, les
+// traverse. Le mode louange garde ses deux barres voilées (tranché le 20/09/2026).
 const RIEN = "rgba(0, 0, 0, 0)";
 const VOILE = "rgba(255, 255, 255, 0.8)";
-const VOILE_SOMBRE = "rgba(0, 0, 0, 0.8)";
 
 const MUSICIEN: FakeProfile = {
   uid: "uid-musicien",
@@ -34,7 +33,8 @@ const barres = (page: Page) =>
       return { fond: s.backgroundColor, flou: s.backdropFilter, filet: s.boxShadow, glisse: s.transitionProperty };
     })
   );
-const EFFACEE = { fond: RIEN, flou: "none", filet: "none" };
+const VERRE = { fond: RIEN, filet: "none" };
+const verre = async (page: Page) => (await barres(page)).map(({ fond, filet }) => ({ fond, filet }));
 
 /** Défile, même sur une page trop courte pour cela (planning vide, setlist de deux chants). */
 async function defiler(page: Page, y: number) {
@@ -45,38 +45,39 @@ async function defiler(page: Page, y: number) {
 /** Capture à regarder à l'œil (PW_CAPTURES=<dossier>), une par appareil. */
 async function capture(page: Page, name: string) {
   const dir = process.env.PW_CAPTURES;
-  if (dir) await page.screenshot({ path: `${dir}/${name}-${test.info().project.name}.png` });
+  if (!dir) return;
+  await page.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished.catch(() => {}))));
+  await page.screenshot({ path: `${dir}/${name}-${test.info().project.name}.png` });
 }
 
 async function enHautPuisDefile(page: Page, combien: number, nom: string) {
-  // En haut de page : aucune barre, ni fond, ni flou, ni filet.
-  await expect.poll(async () => (await barres(page)).map(({ fond, flou, filet }) => ({ fond, flou, filet }))).toEqual(Array(combien).fill(EFFACEE));
+  // En haut de page : ni voile ni filet.
+  await expect.poll(() => verre(page)).toEqual(Array(combien).fill(VERRE));
   await capture(page, `barres-${nom}-en-haut`);
-  // On défile : le voile d'aujourd'hui revient sur chacune.
+  // On défile, puis on remonte d'un cran pour que les barres reviennent, posées sur du
+  // contenu : toujours ni voile ni filet, c'est le flou qui les sépare de ce qui passe dessous.
   await defiler(page, 600);
-  await expect.poll(async () => (await barres(page)).map((b) => b.fond)).toEqual(Array(combien).fill(VOILE));
+  await defiler(page, 560);
+  await expect.poll(() => verre(page)).toEqual(Array(combien).fill(VERRE));
   for (const b of await barres(page)) expect(b.flou).toContain("blur(20px)");
-  // Et elles glissent toujours quand on défile : le fondu du voile ne doit pas écraser leur `transition-transform`.
+  // Et elles glissent toujours quand on défile.
   for (const b of await barres(page)) expect(b.glisse).toContain("transform");
   await capture(page, `barres-${nom}-defile`);
-  // De retour en haut : elles s'effacent de nouveau.
-  await defiler(page, 0);
-  await expect.poll(async () => (await barres(page)).map((b) => b.fond)).toEqual(Array(combien).fill(RIEN));
 }
 
-test.describe("barres (5C1, V6 bis) : effacées en haut de page, voilées dès qu'on défile", () => {
+test.describe("barres (5C1, V7) : ni voile ni filet, en haut de page comme défilées", () => {
   test("Chants : la navbar", async ({ page }) => {
     await page.goto("/songs");
     await page.getByRole("searchbox").waitFor();
     await enHautPuisDefile(page, 1, "chants");
   });
 
-  // Sans cela, à chaque chargement le voile blanc se montre puis s'efface, le temps que React démarre.
-  test("dès le premier affichage, avant que React ne démarre, la navbar est déjà effacée", async ({ page }) => {
+  // Le matériau ne dépend plus de React : aucun voile blanc ne se montre le temps qu'il démarre.
+  test("dès le premier affichage, avant que React ne démarre, la navbar n'a ni voile ni filet", async ({ page }) => {
     await page.route(/\/_next\/.*\.js(\?|$)/, (route) => route.abort());
     await page.goto("/songs");
     await page.locator("header").first().waitFor();
-    expect((await barres(page)).map(({ fond, flou, filet }) => ({ fond, flou, filet }))).toEqual([EFFACEE]);
+    expect(await verre(page)).toEqual([VERRE]);
   });
 
   test("Planning : la navbar et la barre des onglets", async ({ page }) => {
@@ -102,15 +103,27 @@ test.describe("barres (5C1, V6 bis) : effacées en haut de page, voilées dès q
     await enHautPuisDefile(page, 2, "setlist");
   });
 
-  test("en sombre, le voile du défilement est noir à 80 %", async ({ page }) => {
+  test("en sombre non plus, ni voile ni filet", async ({ page }) => {
     await page.goto("/songs");
     await page.getByRole("searchbox").waitFor();
     await page.emulateMedia({ colorScheme: "dark" });
     await defiler(page, 600);
-    await expect.poll(async () => (await barres(page)).map((b) => b.fond)).toEqual([VOILE_SOMBRE]);
+    await defiler(page, 560);
+    await expect.poll(() => verre(page)).toEqual([VERRE]);
+    await capture(page, "barres-chants-sombre-defile");
   });
 
-  test("le mode louange garde ses deux barres voilées, même en haut de page", async ({ page }) => {
+  // Qui demande moins de transparence garde des barres pleines : le flou part, le fond revient.
+  test("transparence réduite : les barres redeviennent pleines", async ({ page }) => {
+    await page.goto("/songs");
+    await page.getByRole("searchbox").waitFor();
+    // Playwright n'émule pas ce réglage : on le demande à Chromium.
+    const cdp = await page.context().newCDPSession(page);
+    await cdp.send("Emulation.setEmulatedMedia", { features: [{ name: "prefers-reduced-transparency", value: "reduce" }] });
+    await expect.poll(async () => (await barres(page)).map(({ fond, flou }) => ({ fond, flou }))).toEqual([{ fond: "rgb(255, 255, 255)", flou: "none" }]);
+  });
+
+  test("le mode louange garde ses deux barres voilées", async ({ page }) => {
     await sansSheet(page);
     await page.addInitScript(() => localStorage.setItem("perf-role-preset", "pianiste"));
     await signInAs(page, MUSICIEN, { "setlists/culte": FICHE }, "/setlists/culte");
@@ -118,8 +131,6 @@ test.describe("barres (5C1, V6 bis) : effacées en haut de page, voilées dès q
     await expect(page.getByText("Mise en page…")).toHaveCount(0);
     const voilees = page.locator(".material-chrome.material-steady");
     await expect(voilees).toHaveCount(2); // la barre du haut et celle du bas
-    expect(await page.evaluate(() => window.scrollY)).toBe(0);
-    expect(await page.evaluate(() => document.documentElement.hasAttribute("data-at-top"))).toBe(true);
     for (const fond of await voilees.evaluateAll((els) => els.map((el) => getComputedStyle(el).backgroundColor))) expect(fond).toBe(VOILE);
   });
 });

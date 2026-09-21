@@ -17,7 +17,6 @@ import { findMyServices, type PlanningData } from "@/lib/planning/names"
 import { PLANNING_COLORS, serviceColor } from "@/lib/serviceColors"
 import { ChevronRight } from "lucide-react"
 import { PageTitle } from "@/components/layout/PageTitle"
-import { Halo } from "@/components/layout/Halo"
 import { Tile } from "@/components/ui/tile"
 
 function val(v: string) { return v?.trim() || "—" }
@@ -131,8 +130,6 @@ export default function PlanningAccueil() {
   const eddGb = eddP?.["高班"]?.find(r => r[0] === sun) ?? null
 
   return (
-    <>
-    <Halo color={PLANNING_COLORS.culte} />
     <div className="relative max-w-2xl mx-auto space-y-6">
       <PageTitle title={t("common.header.planning")} />
 
@@ -267,6 +264,5 @@ export default function PlanningAccueil() {
       </blockquote>
       <GuideLien section="planning" />
     </div>
-    </>
   )
 }

@@ -538,3 +538,107 @@ tests de position étaient rouges sur un chant **et** sur une setlist avant le c
 Piège de capture : à `deviceScaleFactor` 2 et plus, le Chromium sans tête de Playwright
 n'applique pas le flou d'arrière-plan (le texte sous une barre voilée paraît net). Pour
 juger un `backdrop-filter`, capturer à ×1 ou regarder sur un vrai appareil.
+
+### V7 : halo fixe, barres sans filet, menu des plannings (21/09/2026)
+
+Statut : **tranché par questions le 21/09/2026, ATTEND LE GO. Rien n'est codé.**
+
+Timothée, captures de son iPhone (app installée, site en ligne) : « je ne veux pas
+qu'il y ait les traits horizontaux qui apparaissent et que ça devienne blanc quand on
+scroll vers le bas sur la page de planning » ; « élargir le dégradé aux endroits que je
+t'ai entourés » (zone de l'heure, barres du Planning une fois défilé, zone blanche qui
+apparaît quand on tire la page) ; « un dégradé sur les pages setlists et moi » ; la
+rangée des plannings, « comment faire pour que ce soit mieux au lieu de scroller vers
+la gauche ou la droite » ; puis : la pastille coupée de « Récemment consultés »,
+« ça fait moche ».
+
+Cela rouvre l'option C de V6 bis : le voile blanc à 80 % et le filet qui reviennent
+d'un coup à 4 px de défilement sont exactement ce qu'il ne veut plus.
+
+#### Constat dans le code
+
+| Ce qu'il voit | Cause |
+| --- | --- |
+| Traits + bandes blanches au défilement | `html[data-at-top]` (`globals.css`) : hors du haut de page, chaque barre `.material-chrome` reprend voile 80 % + filet |
+| Zone de l'heure blanche, cassure nette | `statusBarStyle: "default"` (`layout.tsx`) : iOS réserve la zone et la peint en blanc, la page commence dessous |
+| Blanc au-dessus du halo quand on tire la page | rebond d'iOS : le halo est `absolute`, il descend avec la page et son bord coupé apparaît ; rien ne se peint au-dessus du haut d'une page, sauf un élément `fixed` |
+| Pas de halo sur Setlists ni Moi | pas de `<Halo>` (seuls Chants, un chant, une setlist, l'accueil du Planning) |
+| Rangée des plannings à faire glisser | 8 destinations, 3,5 visibles à 390 px |
+| Pastille coupée | `overflow-x-auto` tranche au bord de la colonne (`SongListClient`) |
+
+#### Tranché (21/09/2026)
+
+1. **Le halo reste en haut de l'écran** (fixe) : barres teintées à tout moment, zone
+   de rebond couverte. Contrepartie acceptée : la lueur reste derrière le haut du
+   contenu, même au milieu d'une liste ou d'un chant.
+2. **Plannings : un menu.** Sous 1024 px, une seule pastille teintée à la couleur du
+   planning ouvert ; un toucher déroule les 8. À partir de 1024 px les 8 tiennent : la
+   rangée d'aujourd'hui reste. (Écartés : pastilles sur plusieurs rangées, mesuré à 3
+   rangées sur un iPhone dont une orpheline ; sommaire en tuiles sur l'accueil, qui
+   pousse « Ce dimanche » sous le pli ; tri « mes plannings d'abord », qui glisse encore.)
+3. **Couleurs** : Setlists = bleu des accords, comme Chants (même section) ; Moi =
+   gris d'encre.
+4. **« Récemment consultés »** : une ligne qui glisse toujours, bord fondu au lieu du
+   bord tranché (préféré aux deux lignes que je recommandais).
+
+À confirmer au go (annoncé comme hypothèse, pas contredit, pas confirmé non plus) :
+(a) « ni filet ni blanc » vaut pour **toutes** les barres `.material-chrome`, sauf le
+mode louange, comme en V6 bis ; (b) les sous-pages du Planning reçoivent un halo à la
+couleur de leur service (Accueil et Groupes : le bleu-vert du Planning) — aujourd'hui
+le halo disparaît dès qu'on ouvre « Culte Franco ».
+
+#### Tranches (test d'abord, trois appareils, clair et sombre)
+
+| | Quoi | Critères vérifiables |
+| --- | --- | --- |
+| **T1 halo fixe** | `.halo` passe en `position: fixed; top: 0`. `PageTransition` : fondu d'opacité seule — l'animation `enter` de tailwindcss-animate porte un `transform`, donc pendant 200 ms l'ancêtre redevient le repère des éléments fixes et le halo sauterait de 58 px. Le `flow-root` et le conteneur à part du chant (V6 bis) deviennent sans objet : à retirer s'ils le sont vraiment | après 600 px de défilement, sur Chants / un chant / une setlist / Planning : rectangle du halo = `x 0, y 0, largeur fenêtre` ; la page ne s'élargit pas (test de la barre de défilement gardé) ; masqué à l'impression |
+| **T2 barres** | `.material-chrome:not(.material-steady)` : flou seul, plus de filet, bord bas fondu (masque ~16 px, le « bord de défilement » d'iOS 26 plutôt qu'un trait). Voile : 0 si la lisibilité tient, sinon le plus faible possible, à régler sur captures ×1. Si le voile est nul, `data-at-top` ne sert plus : le script de `layout.tsx`, la bascule de `Navbar.tsx` et la règle CSS partent. Mode louange intact. `prefers-reduced-transparency` : fond plein, inchangé | aucune barre hors mode louange n'a de `box-shadow`, au repos comme défilée ; fond d'alpha ≤ 0,3 une fois défilée ; `backdrop-filter` présent ; pire cas jugé à l'œil : un chant défilé (titre gras sous la navbar, pastilles de couleur sous la barre d'outils) |
+| **T3 halos manquants** | Setlists (`var(--chord-color)`), Moi (encre, opacité réglée à l'œil pour se lire comme une lumière, pas comme une salissure), sous-pages du Planning si (b) est confirmé : un seul `<Halo>` dans `planning/layout.tsx`, couleur selon la route | `data-testid="halo"` présent et coloré sur chaque page ; position comme T1 |
+| **T4 menu des plannings** | Sous 1024 px : bouton-pastille (point de couleur, nom, chevron) + le `DropdownMenu` shadcn déjà dans le projet (clavier, focus, collisions gérés) ; lignes ≥ 44 px, point de couleur, coche sur le courant, `aria-current="page"`, fermeture à la sélection. Même place et même effacement au défilement que la barre actuelle. À partir de 1024 px : `SectionTabs` tel quel. Évènements : inchangé. Libellé d'accessibilité en fr et 中文 | à 412 et 768 px : un bouton, 8 liens dans le menu, navigation effective, rien ne défile horizontalement ; à 1280 px : la rangée d'aujourd'hui ; `look-planning` et `look-navigation` (qui cliquent les pastilles) adaptés |
+| **T5 récents** | masque en dégradé sur le conteneur qui glisse, du côté où il reste des pastilles : droite au départ, les deux au milieu, gauche à la fin (un petit écouteur de défilement sur l'élément, deux booléens) | à `scrollLeft = 0` pas de fondu à gauche ; après glissement, fondu à gauche ; en bout de course, plus de fondu à droite ; captures × 3 |
+| **T6 zone de l'heure** (à part) | `statusBarStyle: "black-translucent"` ; `--sat: env(safe-area-inset-top)` ; `--nav-h = 58px + --sat` (tous les décalages le lisent déjà) ; navbar avec `padding-top: var(--sat)` ; ellipse du halo décalée de `--sat` pour garder sa composition par rapport à la navbar ; revue de chaque élément `fixed top-0` ou plein écran (le mode louange et l'accueil de première connexion lisent déjà la zone sûre) | Playwright : `--sat` simulé (comme `--sab` le 20/09), aucune commande sous la zone. **Le vrai critère est sur l'iPhone de Timothée** |
+
+**T6 est incertaine** et ne part pas avec le reste. Les sources se contredisent : avec
+`black-translucent`, iOS écrirait l'heure et la batterie **en blanc** (illisibles sur
+notre fond clair) ou les adapterait au fond ; un article signale un changement de
+WebKit en août 2026 sur cette zone. Playwright ne voit pas la barre d'état. Donc :
+branche à part, lien d'aperçu Vercel, icône **réinstallée** sur l'écran d'accueil (iOS
+lit ce réglage à l'installation). Heure lisible en clair et en sombre → on garde ;
+sinon retour à `default`, et rien d'autre n'est à défaire.
+
+Commits : un pour le lot T1–T5 ; T6 seule, sur sa branche.
+
+#### Hors du lot
+
+Le look des lignes du menu au-delà de 5C1 ; la rangée d'onglets d'Évènements ; les
+autres rangées qui glissent (bandeau de structure…) ; tout halo sur d'autres pages que
+celles nommées ci-dessus (Mes services, Harmonie, Guide, Admin).
+
+#### Avancement V7 (21/09/2026)
+
+Go de Timothée le 21/09/2026 (« A et B confirmé go ») : les deux hypothèses sont
+retenues — toutes les barres `.material-chrome` sauf le mode louange, et un halo sur
+les sous-pages du Planning à la couleur de leur service.
+
+| Fait | Où | Tests |
+| --- | --- | --- |
+| **T1 halo fixe** : `.halo` passe en `position: fixed; top: 0` — il reste en haut de l'écran quand la page défile et quand iOS la laisse rebondir. Le fondu d'entrée des pages devient `.page-fade` (opacité seule) : le `animate-in` de tailwindcss-animate porte un `transform`, qui aurait fait de la page le repère des éléments fixes pendant 200 ms, le halo sautant de 58 px. Les `flow-root` et le conteneur à part de la page d'un chant (V6 bis) sont retirés : sans lui, le halo ne dépend plus des marges du contenu | `globals.css`, `PageTransition.tsx`, `Halo.tsx`, `SongDetailClient`, `SetlistDetailClient` | `look-halo.spec.ts` : position vérifiée **après 600 px de défilement** sur les quatre écrans, + « le fondu d'entrée ne porte que l'opacité » (contre-épreuve : `matrix(1, 0, 0, 1, 0, 0)` avant correctif) |
+| **T2 barres** : `.material-chrome` n'a plus que le flou ; ni voile ni filet, en haut de page comme défilées. Le voile part dans `.material-steady`, que portent les deux barres du mode louange. Tout le dispositif `data-at-top` disparaît (script d'en-tête, bascule de la Navbar, règle CSS) : le matériau ne dépend plus de React, donc plus de voile blanc le temps qu'il démarre | `globals.css`, `layout.tsx`, `Navbar.tsx`, `setlists/page.tsx`, `SongDetailClient`, `SetlistDetailClient`, `SectionTabs`, `SetlistForm` | `look-barres.spec.ts` (9 × 3), y compris transparence réduite |
+| **T3 halos manquants** : Setlists au bleu des accords (même section que Chants), Moi à l'encre et plus discret (`.halo-moi`, 8 %), Planning porté par la mise en page de la section et coloré par le planning ouvert (`PlanningHalo`, table `PLANNING_TABS` comme source unique) | `setlists/page.tsx`, `moi/page.tsx`, `planning/layout.tsx`, `PlanningHalo.tsx`, `PlanningTabs.tsx`, `globals.css` | `look-halo.spec.ts` : Setlists, Moi, Campus, EDD, et « un seul halo par page » |
+| **T4 menu des plannings** : sous 1024 px, `SectionTabs` remplace la rangée par une pastille (point de couleur, nom du planning ouvert, chevron) qui déroule les huit dans le `DropdownMenu` du projet ; lignes de 44 px, point de couleur, coche et `aria-current` sur le courant. À partir de 1024 px, la rangée d'aujourd'hui. Évènements n'est pas touché (pas de `menuLabel`) | `SectionTabs.tsx`, `PlanningTabs.tsx`, `fr.json`, `zh-CN.json` | `look-planning-menu.spec.ts` (12), plus `look-planning` et `look-navigation` adaptés |
+| **T5 récents** : la rangée s'estompe du côté où il reste des chants (`useFonduLateral` + `.fondu-lateral`, masque de 24 px) au lieu de trancher une pastille en deux | `useFonduLateral.ts`, `globals.css`, `SongListClient.tsx` | `look-recents.spec.ts` (3 × 3) |
+
+Pièges rencontrés :
+
+- **`-webkit-backdrop-filter` avant la propriété standard.** Dans l'autre ordre, le
+  compilateur CSS de Next élimine les deux et le flou survit à
+  `prefers-reduced-transparency` — le test de transparence réduite l'a montré.
+- **Capturer et mesurer un menu pendant son ouverture ment** : `zoom-in-95 fade-in-0`
+  donne 41,8 px au lieu de 44 et un panneau translucide (la première planche du menu
+  était illisible pour cette seule raison). Attendre `document.getAnimations()`.
+- Sur un écran à 2,625, une ligne de 44 px se mesure 43,99999 : arrondir.
+- `look-planning.spec.ts` force 390 px sur les trois appareils (`test.use(phone)`) :
+  son test d'onglets portait donc sur le menu, pas sur la rangée.
+
+**T6 (zone de l'heure) n'est pas faite** : elle part seule, sur sa branche, après un
+essai sur l'iPhone de Timothée (voir ci-dessus).

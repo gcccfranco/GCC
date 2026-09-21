@@ -103,13 +103,16 @@ test.describe("navigation par sections (T2), barre du bas sur téléphone et tab
 });
 
 test.describe("navigation par sections (T2), onglets de section", () => {
-  // Cible tactile (16/09/2026) : les pilules faisaient 30 px de haut.
+  // Cible tactile (16/09/2026) : les pilules faisaient 30 px de haut. Depuis V7
+  // (21/09/2026), sous 1024 px c'est la pastille du menu qui se touche.
   test("une pilule de section fait au moins 40 px de haut, sur chaque appareil", async ({ page }) => {
     await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
     await signInAs(page, MEMBRE, {}, "/planning");
-    const pilule = page.getByRole("link", { name: "Culte Franco" });
+    const pilule = test.info().project.name === "ordinateur"
+      ? page.getByTestId("onglets-section").getByRole("link", { name: "Culte Franco" })
+      : page.getByTestId("menu-plannings");
     await pilule.waitFor();
-    await page.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished)));
+    await page.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished.catch(() => {}))));
     const box = await pilule.boundingBox();
     expect(box!.height).toBeGreaterThanOrEqual(40);
   });

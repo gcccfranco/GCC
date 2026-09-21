@@ -69,7 +69,7 @@ test.describe("louange (T3) : page du chant", () => {
       await barre.waitFor();
       // Pendant l'animation d'entrée de la page, un ancêtre transformé fait
       // office de repère pour la barre fixée : mesurer une fois l'animation finie.
-      await page.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished)));
+      await page.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished.catch(() => {}))));
       const [b, h] = await Promise.all([barre.boundingBox(), page.locator("header").boundingBox()]);
       expect(Math.round(b!.y), "la barre reste collée sous la navbar").toBe(Math.round(h!.y + h!.height));
       const pilule = page.getByTestId("pilule-tonalite");
@@ -179,7 +179,7 @@ test.describe("louange (T3) : barre d'outils du chant, téléphone et tablette",
       await page.goto(`/songs/${encodeURIComponent(slug)}`);
       const barre = page.getByTestId("barre-outils");
       await barre.waitFor();
-      await page.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished)));
+      await page.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished.catch(() => {}))));
       const commandes = barre.locator("button, select");
       const n = await commandes.count();
       expect(n).toBeGreaterThan(0);
@@ -207,7 +207,7 @@ test.describe("louange (T3) : sélecteur de tonalité, téléphone et tablette",
     const barre = page.getByTestId("barre-outils");
     await barre.waitFor();
     await expect(barre.getByRole("button", { name: "简谱" }), "chant à six commandes").toBeVisible();
-    await page.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished)));
+    await page.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished.catch(() => {}))));
     const tonalite = page.getByTestId("tonalite-courante");
     // innerText : le suffixe « (orig.) » existe dans le DOM mais n'est affiché que sur ordinateur.
     await expect(tonalite).toHaveText("E", { useInnerText: true });

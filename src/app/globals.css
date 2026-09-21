@@ -9,27 +9,25 @@
   /* Deux matériaux (docs/spec-look.md) : « chrome » fin pour les barres qui
      laissent passer le contenu, « panneau » quasi opaque pour menus et
      feuilles. Une seule surface translucide à la fois : jamais l'un dans
-     l'autre. */
+     l'autre.
+     Les barres : un flou seul, ni voile ni filet (5C1, V7, 21/09/2026). Le halo, fixe,
+     les traverse à tout moment ; seul le flou les sépare de ce qui passe dessous.
+     `.material-steady` ajoute le voile : les deux barres du mode louange, posées sur
+     les paroles, qui gardent aussi leur filet. */
   .material-chrome {
-    background-color: hsl(var(--background) / 0.8);
     -webkit-backdrop-filter: blur(20px) saturate(1.4);
     backdrop-filter: blur(20px) saturate(1.4);
   }
-  /* En haut de page rien ne passe sous les barres : elles s'effacent (fond, flou,
-     filet) et laissent voir le halo ; le voile revient dès qu'on défile (5C1, V6 bis).
-     `data-at-top` est posé sur <html> dès l'en-tête (layout.tsx), puis tenu par la
-     Navbar. `.material-steady` garde son voile partout : les deux barres du mode
-     louange, posées sur les paroles.
-     Le fondu ne vit qu'ici : posé sur `.material-chrome`, il écraserait le
-     `transition-transform` qui fait glisser les barres au défilement. En haut de page
-     elles ne glissent jamais ; le voile s'efface donc en douceur au retour en haut, et
-     revient d'un coup quand on repart, là où il faut lire tout de suite. */
-  html[data-at-top] .material-chrome:not(.material-steady) {
-    background-color: transparent;
-    -webkit-backdrop-filter: none;
-    backdrop-filter: none;
-    box-shadow: none;
-    transition: background-color 200ms ease;
+  .material-steady {
+    background-color: hsl(var(--background) / 0.8);
+  }
+  /* Rangée qui glisse (V7) : elle s'estompe du côté où il reste quelque chose à voir,
+     au lieu de trancher une pastille en deux au bord de la colonne. Les deux largeurs
+     sont posées par `useFonduLateral` ; à 0 le dégradé est de longueur nulle, donc rien
+     n'est masqué. */
+  .fondu-lateral {
+    -webkit-mask-image: linear-gradient(to right, transparent 0, #000 var(--fondu-gauche, 0px), #000 calc(100% - var(--fondu-droite, 0px)), transparent 100%);
+    mask-image: linear-gradient(to right, transparent 0, #000 var(--fondu-gauche, 0px), #000 calc(100% - var(--fondu-droite, 0px)), transparent 100%);
   }
   /* Lignes d'une liste : un filet d'un bord à l'autre, aligné sur le titre de la page (5C1). */
   .group-row + .group-row::before {
@@ -53,15 +51,16 @@
     box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1), 0 14px 40px rgba(0, 0, 0, 0.8);
   }
   /* Halo d'en-tête (5C1, V6) : l'ellipse floue des planches, couleur par `--halo`.
-     Premier enfant du conteneur plein écran de la page, passé en `relative flow-root`
-     (sans `flow-root`, la marge haute du contenu traverse le conteneur et descend le
-     halo avec lui) ; le contenu qui suit est `relative` lui aussi, pour se peindre
-     au-dessus. Le calque remonte sous la navbar et coupe ce qui dépasse : le halo du
-     chant déborde à droite, il ne doit pas élargir la page. Jamais `100vw` : sur
-     ordinateur il compterait la barre de défilement. */
+     Fixe depuis V7 (21/09/2026) : il reste en haut de l'écran quand la page défile, et
+     quand iOS la laisse rebondir — rien d'autre qu'un élément fixe ne se peint au-dessus
+     du haut d'une page. Posé avant le contenu, qui est `relative` pour se peindre
+     au-dessus. Aucun ancêtre ne doit être transformé, il deviendrait son repère : d'où
+     `.page-fade`, plus bas. Le calque coupe ce qui dépasse : le halo du chant déborde à
+     droite, il ne doit pas élargir la page. Jamais `100vw` : sur ordinateur il compterait
+     la barre de défilement. */
   .halo {
-    position: absolute;
-    top: calc(-1 * var(--nav-h));
+    position: fixed;
+    top: 0;
     left: 0;
     right: 0;
     height: 320px;
@@ -82,6 +81,9 @@
   }
   /* Fiche d'une setlist, puis page d'un chant (à droite) : géométries des planches C et B. */
   .halo-fiche::before { left: -40px; top: -60px; width: 300px; height: 220px; opacity: 0.14; filter: blur(44px); }
+  /* « Moi » (V7) : l'écran n'appartient à aucune section, donc l'encre — plus discrète
+     que les couleurs, un gris franc se lirait comme une salissure et non comme une lumière. */
+  .halo-moi::before { opacity: 0.08; }
   .halo-chant::before { left: auto; right: -80px; top: -60px; width: 300px; height: 220px; opacity: 0.12; filter: blur(44px); }
   /* Grand écran (ordinateur, tablette en paysage ; tranché le 20/09/2026 au soir) : la
      colonne de contenu est centrée, le halo des planches resterait coincé dans le coin.
@@ -92,15 +94,22 @@
     .halo-chant::before { left: auto; right: -140px; top: -200px; width: 860px; height: 560px; filter: blur(90px); }
   }
   @media print { .halo { display: none; } }
+  /* Fondu d'entrée des pages (PageTransition) : l'opacité seule. Le `animate-in` de
+     tailwindcss-animate porte un `transform`, qui ferait de la page le repère des
+     éléments fixes le temps du fondu : le halo sauterait de la hauteur de la navbar. */
+  .page-fade { animation: page-fade 200ms ease; }
+  @keyframes page-fade { from { opacity: 0; } }
   .material-panel {
     background-color: hsl(var(--card) / 0.97);
     -webkit-backdrop-filter: blur(24px);
     backdrop-filter: blur(24px);
   }
+  /* `-webkit-` avant la propriété standard : dans l'autre ordre, le compilateur CSS de
+     Next élimine les deux et le flou reste (constaté le 21/09/2026). */
   @media (prefers-reduced-transparency: reduce) {
-    .material-chrome { background-color: hsl(var(--background)); backdrop-filter: none; -webkit-backdrop-filter: none; }
-    .material-bar { background-color: hsl(var(--raised)); backdrop-filter: none; -webkit-backdrop-filter: none; }
-    .material-panel { background-color: hsl(var(--card)); backdrop-filter: none; -webkit-backdrop-filter: none; }
+    .material-chrome { background-color: hsl(var(--background)); -webkit-backdrop-filter: none; backdrop-filter: none; }
+    .material-bar { background-color: hsl(var(--raised)); -webkit-backdrop-filter: none; backdrop-filter: none; }
+    .material-panel { background-color: hsl(var(--card)); -webkit-backdrop-filter: none; backdrop-filter: none; }
   }
 
   /* Masqué uniquement sur un vrai poste desktop (pointeur fin = souris ET écran

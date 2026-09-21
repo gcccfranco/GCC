@@ -18,6 +18,7 @@ import Link from "next/link";
 import { PageTitle } from "@/components/layout/PageTitle";
 import { SetlistCard } from "@/components/setlists/SetlistCard";
 import { PullToRefresh } from "@/components/layout/PullToRefresh";
+import { Halo } from "@/components/layout/Halo";
 import { formatDate } from "@/lib/utils/formatDate";
 import {
   AlertDialog,
@@ -255,9 +256,10 @@ export default function SetlistsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="relative min-h-screen bg-background">
       <PullToRefresh />
-      <div className="max-w-4xl mx-auto px-4 pt-6 pb-10">
+      <Halo color="var(--chord-color)" />
+      <div className="relative max-w-4xl mx-auto px-4 pt-6 pb-10">
         <PageTitle title={t("common.header.setlists")} />
 
         {/* ── Onglets ── */}
@@ -383,7 +385,7 @@ export default function SetlistsPage() {
              PageTransition, donc sur le bas du **document** et non de l'écran
              (docs/spec-suppression-groupee.md, R3). */}
         {selectionMode && (
-          <div className="sticky top-[var(--nav-h)] z-10 -mx-4 mb-4 flex items-center gap-2 material-chrome shadow-[0_1px_0_hsl(var(--border))] px-4 py-2.5">
+          <div className="sticky top-[var(--nav-h)] z-10 -mx-4 mb-4 flex items-center gap-2 material-chrome px-4 py-2.5">
             <button
               type="button"
               disabled={selection.length === 0 || enCours}

@@ -11,6 +11,7 @@ import { BookOpen, CalendarDays, Globe, ListChecks, LogOut, Megaphone, MessageSq
 import { useAccesHarmonie } from "@/lib/harmonie/useHarmonie";
 import { RequireAuth } from "@/components/auth/RequireAuth";
 import { PageTitle } from "@/components/layout/PageTitle";
+import { Halo } from "@/components/layout/Halo";
 import { Group, GroupRow } from "@/components/ui/group";
 import { ReportDialog } from "@/components/report/ReportDialog";
 import { useSetLanguage } from "@/lib/I18nProvider";
@@ -50,7 +51,9 @@ function MoiClient() {
     : 0;
 
   return (
-    <div className="max-w-2xl mx-auto px-4 pt-6 pb-10 space-y-6">
+    <div className="relative">
+      <Halo variant="moi" color="hsl(var(--foreground))" />
+      <div className="relative max-w-2xl mx-auto px-4 pt-6 pb-10 space-y-6">
       <PageTitle title={t("moi.title")} subtitle={name || user?.email} />
 
       <Group>
@@ -108,6 +111,7 @@ function MoiClient() {
       </Group>
 
       <ReportDialog open={reportOpen} onClose={() => setReportOpen(false)} kind="site" />
+      </div>
     </div>
   );
 }

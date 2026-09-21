@@ -3,6 +3,7 @@
 import { GuideLien } from "@/components/guide/GuideLien";
 import { LienHarmonie } from "@/components/harmonie/LienHarmonie";
 import { useState, useMemo, useEffect, useLayoutEffect, useRef } from "react";
+import { useFonduLateral } from "@/hooks/useFonduLateral";
 import Link from "next/link";
 import Fuse from "fuse.js";
 import { Search, X } from "lucide-react";
@@ -145,6 +146,8 @@ export function SongListClient({ songs, themes }: SongListClientProps) {
   }, [query, langFilter, themeFilter, fuse, songs]);
 
   // Récents : slugs → entrées (dans l'ordre de consultation)
+  // La rangée s'estompe du côté où il reste des chants (V7) plutôt que d'en couper un.
+  const rangeeRecents = useFonduLateral<HTMLDivElement>(recentSlugs.length);
   const recentSongs = useMemo(() => {
     const map = new Map(songs.map((s) => [s.slug, s]));
     return recentSlugs.map((slug) => map.get(slug)).filter((s): s is SongIndexEntry => !!s);
@@ -291,7 +294,7 @@ export function SongListClient({ songs, themes }: SongListClientProps) {
           <p className="text-sm font-semibold text-muted-foreground mb-1.5">
             {t("songs.list.recent", { defaultValue: "Récemment consultés" })}
           </p>
-          <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
+          <div ref={rangeeRecents} data-testid="recents" className="flex gap-2 overflow-x-auto pb-1 fondu-lateral" style={{ scrollbarWidth: "none" }}>
             {recentSongs.map((song) => (
               <Link
                 key={song.slug}

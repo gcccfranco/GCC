@@ -541,7 +541,7 @@ export function SetlistForm({ mode, setlistId, songs, initial }: SetlistFormProp
     <div className="min-h-screen bg-background">
 
       {/* ── Header sticky ── */}
-      <div className={`sticky top-[var(--nav-h)] z-10 material-chrome shadow-[0_1px_0_hsl(var(--border))] px-4 py-2.5 flex items-center gap-3 transition-transform duration-300 ${scrollVisible ? "translate-y-0" : "-translate-y-[calc(100%+var(--nav-h))]"}`}>
+      <div className={`sticky top-[var(--nav-h)] z-10 material-chrome px-4 py-2.5 flex items-center gap-3 transition-transform duration-300 ${scrollVisible ? "translate-y-0" : "-translate-y-[calc(100%+var(--nav-h))]"}`}>
         {isEdit ? (
           <button
             type="button"
