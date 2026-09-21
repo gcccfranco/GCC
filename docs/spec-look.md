@@ -642,3 +642,71 @@ Pièges rencontrés :
 
 **T6 (zone de l'heure) n'est pas faite** : elle part seule, sur sa branche, après un
 essai sur l'iPhone de Timothée (voir ci-dessus).
+
+#### V7 bis : le bord des barres, et la zone de l'heure (21/09/2026)
+
+Deux demandes de Timothée après la mise en ligne de V7.
+
+**Le bord du flou (« fais-le »)** : les traits avaient disparu, mais le flou s'arrêtait
+net sous la barre, ce qui redessinait une ligne. Le flou quitte la barre pour un calque
+`::before` qui déborde de 16 px sous elle et s'y éteint en dégradé — le « bord de
+défilement » d'iOS plutôt qu'un filet. Le masque doit porter sur ce calque seul : posé
+sur la barre, il aurait effacé aussi le bas du logo et des boutons. `z-index: -1` le
+garde sous le contenu de la barre, et il n'en sort pas : chaque barre a déjà son propre
+plan (`z-10`, `z-40`, `z-50`). `.material-steady` (mode louange) garde flou et voile sur
+la barre elle-même. ⚠ Le Chromium sans tête de Playwright ne rend pas ce calque
+fidèlement : les tests vérifient les valeurs (flou, masque, débordement de 16 px), le
+rendu se juge sur un vrai appareil.
+
+**La zone de l'heure (T6), sur les deux systèmes.** Le même code sert iOS et Android,
+sans condition d'appareil :
+
+| | Ce que fait le système | Ce qu'on fait |
+| --- | --- | --- |
+| iPhone, app installée | `black-translucent` laisse la page monter sous l'heure, et déclare la place prise par `env(safe-area-inset-top)` | `--sat` entre dans `--nav-h` : la navbar grandit d'autant, son contenu descend, et tous les décalages de l'app suivent sans en rien savoir. Le halo décale son ellipse de `--sat` pour garder sa composition |
+| Android, app installée | La page ne monte pas sous la barre d'état : le système la peint avec `theme-color` | Une seule balise `theme-color`, sans `media`, que chaque écran accorde à la teinte de son halo (fond + halo à son opacité, relus sur la page pour suivre le thème) |
+| Navigateur, ordinateur | Pas de zone sûre | `--sat` vaut 0 : rien ne bouge |
+
+⚠ **iOS lit `apple-mobile-web-app-status-bar-style` à l'installation de l'icône** :
+pour voir le changement, retirer l'icône de l'écran d'accueil et la réinstaller.
+⚠ À vérifier sur l'iPhone de Timothée : la couleur de l'heure et de la batterie. Les
+sources se contredisent (blanc toujours, ou adapté au fond) et un article signale un
+changement de WebKit en août 2026. Si l'heure devient illisible en clair, il suffit de
+remettre `statusBarStyle: "default"` dans `layout.tsx` : rien d'autre n'est à défaire,
+`--sat` retombe à 0 tout seul.
+
+Tests : `look-zone-heure.spec.ts` (7 × 3), zone sûre simulée sur `--sat` comme
+`look-navigation` le fait déjà avec `--sab`.
+
+#### V7 ter : choisir un planning, tranché sur planche (21/09/2026)
+
+Timothée : « Est-ce qu'une liste déroulante comme ça c'est la meilleure idée ? Propose-moi
+toutes les possibilités. » Huit façons d'atteindre les huit plannings sur un téléphone,
+sur la planche (page « V7 · choisir un planning 21-09 ») : 0 la rangée qui glisse
+(l'existant), A le menu déroulant (ce qui venait d'être codé), B une feuille par le bas,
+C une grille de tuiles, D la rangée plus un bouton « tous », E la rangée triée par mes
+services, F deux niveaux par famille, G un sommaire sur l'accueil.
+
+**Tranché : « C (sans les points de couleur) pour le téléphone, 0 ou A pour l'ordinateur
+et la tablette. »** Donc :
+
+- **Sous 768 px** : la pastille ouvre une feuille qui monte du bas (le `Drawer` du projet,
+  celui du choix de PDF), huit tuiles teintées sur deux colonnes. **Pas de point de
+  couleur** : le fond de la tuile porte déjà le service — une forme, une information.
+- **À partir de 768 px** : la rangée d'onglets, comme aujourd'hui. Mesuré : les huit font
+  **778 px**, et une tablette en portrait en offre exactement 778 — ça tient. Entre 768 et
+  810 px elle déborde de peu : le fondu latéral des chants récents lui est appliqué, elle
+  s'estompe au lieu de trancher un onglet. Le menu déroulant (A) disparaît donc
+  entièrement : `look-planning-menu.spec.ts` est remplacé par `look-planning-feuille.spec.ts`.
+
+**Contraste des tuiles.** À leur valeur pleine, deux couleurs de service ne se lisent pas
+sur leur propre fond teinté : Prépa. Table 2,9 et Intergroupe 3,3, pour 4,5 exigés. Le
+libellé reprend donc la couleur **assombrie à 75 %** en clair (pire cas 4,8), et éclaircie
+à 55 % en sombre comme `.svc-ink` (pire cas 6,7) — nouvelle classe `.svc-tuile`, qui ne
+touche pas `.svc-ink` ni `serviceColors.ts`, tous deux gelés. Le test ne vérifie pas une
+valeur de couleur mais le **rapport de contraste mesuré**, sur les huit tuiles, dans les
+deux thèmes.
+
+⚠ Défaut préexistant relevé au passage, **non corrigé** (hors de ce lot) : les vignettes
+`Tile` utilisent `.svc-ink` sur un fond teinté et souffrent du même écart pour ces deux
+couleurs.

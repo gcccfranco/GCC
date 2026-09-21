@@ -13,18 +13,18 @@ const fondDe = (page: Page) => page.evaluate(() => getComputedStyle(document.bod
 test.describe("fondations du nouveau look (T1)", () => {
   test("couleur système et fond : blanc en clair, noir pur en sombre", async ({ page }) => {
     await page.goto("/login");
+    // Une seule balise, sans `media`, posée à l'affichage (V7, T6) : deux balises `media`
+    // auraient gagné sur elle, et la barre d'état d'Android ne suivrait plus l'écran.
     const metas = await page
       .locator('meta[name="theme-color"]')
       .evaluateAll((ms) => ms.map((m) => [m.getAttribute("media"), m.getAttribute("content")]));
-    expect(metas).toEqual(
-      expect.arrayContaining([
-        ["(prefers-color-scheme: light)", "#ffffff"],
-        ["(prefers-color-scheme: dark)", "#000000"],
-      ])
-    );
+    expect(metas).toEqual([[null, "#ffffff"]]);
     expect(await fondDe(page)).toBe(FOND_CLAIR);
     await page.emulateMedia({ colorScheme: "dark" });
     await expect.poll(() => fondDe(page)).toBe(FOND_SOMBRE);
+    await expect
+      .poll(() => page.locator('meta[name="theme-color"]').first().getAttribute("content"))
+      .toBe("#000000");
   });
 
   test("le bouton plein est en encre, s'inverse en sombre, et répond à l'appui", async ({ page }) => {

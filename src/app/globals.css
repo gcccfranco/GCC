@@ -12,14 +12,30 @@
      l'autre.
      Les barres : un flou seul, ni voile ni filet (5C1, V7, 21/09/2026). Le halo, fixe,
      les traverse à tout moment ; seul le flou les sépare de ce qui passe dessous.
-     `.material-steady` ajoute le voile : les deux barres du mode louange, posées sur
-     les paroles, qui gardent aussi leur filet. */
-  .material-chrome {
+     Le flou est porté par un calque, pas par la barre (V7 bis) : il déborde de 16 px
+     sous elle et s'y éteint en dégradé, pour que le bord ne tranche pas le contenu en
+     deux (net / flou) comme le ferait un filet. Le masque doit donc porter sur le
+     calque seul : posé sur la barre, il effacerait aussi le bas du logo et des boutons.
+     `z-index: -1` le garde sous ce contenu — les barres ont toutes leur propre plan
+     (`z-10`, `z-40`, `z-50`), il n'en sort pas.
+     `.material-steady` reprend le voile et le flou sur la barre elle-même : les deux
+     barres du mode louange, posées sur les paroles, qui gardent aussi leur filet. */
+  .material-chrome:not(.material-steady)::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    bottom: -16px;
+    z-index: -1;
+    pointer-events: none;
     -webkit-backdrop-filter: blur(20px) saturate(1.4);
     backdrop-filter: blur(20px) saturate(1.4);
+    -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 16px), transparent);
+    mask-image: linear-gradient(to bottom, #000 calc(100% - 16px), transparent);
   }
   .material-steady {
     background-color: hsl(var(--background) / 0.8);
+    -webkit-backdrop-filter: blur(20px) saturate(1.4);
+    backdrop-filter: blur(20px) saturate(1.4);
   }
   /* Rangée qui glisse (V7) : elle s'estompe du côté où il reste quelque chose à voir,
      au lieu de trancher une pastille en deux au bord de la colonne. Les deux largeurs
@@ -71,7 +87,7 @@
     content: "";
     position: absolute;
     left: -60px;
-    top: -80px;
+    top: calc(-80px + var(--sat));
     width: 320px;
     height: 240px;
     border-radius: 50%;
@@ -80,18 +96,18 @@
     filter: blur(40px);
   }
   /* Fiche d'une setlist, puis page d'un chant (à droite) : géométries des planches C et B. */
-  .halo-fiche::before { left: -40px; top: -60px; width: 300px; height: 220px; opacity: 0.14; filter: blur(44px); }
+  .halo-fiche::before { left: -40px; top: calc(-60px + var(--sat)); width: 300px; height: 220px; opacity: 0.14; filter: blur(44px); }
   /* « Moi » (V7) : l'écran n'appartient à aucune section, donc l'encre — plus discrète
      que les couleurs, un gris franc se lirait comme une salissure et non comme une lumière. */
   .halo-moi::before { opacity: 0.08; }
-  .halo-chant::before { left: auto; right: -80px; top: -60px; width: 300px; height: 220px; opacity: 0.12; filter: blur(44px); }
+  .halo-chant::before { left: auto; right: -80px; top: calc(-60px + var(--sat)); width: 300px; height: 220px; opacity: 0.12; filter: blur(44px); }
   /* Grand écran (ordinateur, tablette en paysage ; tranché le 20/09/2026 au soir) : la
      colonne de contenu est centrée, le halo des planches resterait coincé dans le coin.
      Agrandi à l'écran, il repasse sous le logo et atteint le titre. */
   @media (min-width: 1024px) {
     .halo { height: 560px; }
-    .halo::before, .halo-fiche::before { left: -140px; top: -200px; width: 860px; height: 560px; filter: blur(90px); }
-    .halo-chant::before { left: auto; right: -140px; top: -200px; width: 860px; height: 560px; filter: blur(90px); }
+    .halo::before, .halo-fiche::before { left: -140px; top: calc(-200px + var(--sat)); width: 860px; height: 560px; filter: blur(90px); }
+    .halo-chant::before { left: auto; right: -140px; top: calc(-200px + var(--sat)); width: 860px; height: 560px; filter: blur(90px); }
   }
   @media print { .halo { display: none; } }
   /* Fondu d'entrée des pages (PageTransition) : l'opacité seule. Le `animate-in` de
@@ -108,6 +124,7 @@
      Next élimine les deux et le flou reste (constaté le 21/09/2026). */
   @media (prefers-reduced-transparency: reduce) {
     .material-chrome { background-color: hsl(var(--background)); -webkit-backdrop-filter: none; backdrop-filter: none; }
+    .material-chrome:not(.material-steady)::before { -webkit-backdrop-filter: none; backdrop-filter: none; -webkit-mask-image: none; mask-image: none; }
     .material-bar { background-color: hsl(var(--raised)); -webkit-backdrop-filter: none; backdrop-filter: none; }
     .material-panel { background-color: hsl(var(--card)); -webkit-backdrop-filter: none; backdrop-filter: none; }
   }
@@ -131,8 +148,13 @@
 
 @layer base {
   :root {
-    /* Hauteur de la navbar — source unique pour tous les offsets fixed/sticky */
-    --nav-h: 58px;
+    /* Zone sûre du haut : l'heure et la batterie. 0 partout sauf dans l'app installée
+       sur iPhone, où la page monte sous la barre d'état (V7, T6). */
+    --sat: env(safe-area-inset-top, 0px);
+    /* Hauteur de la navbar — source unique pour tous les offsets fixed/sticky. La zone
+       sûre y est comprise : le contenu de la page descend donc d'autant, sans qu'aucun
+       décalage n'ait à la connaître. */
+    --nav-h: calc(58px + var(--sat));
     /* Zone sûre du bas (indicateur d'accueil de l'iPhone), lue par la barre d'onglets. */
     --sab: env(safe-area-inset-bottom, 0px);
     /* Écart entre la barre d'onglets flottante et le bas de l'écran : 14 px sans
@@ -286,6 +308,16 @@
   .dark .svc-ink { color: color-mix(in srgb, var(--svc) 55%, white); }
   .svc-line { border-left-color: var(--svc); }
   .dark .svc-line { border-left-color: color-mix(in srgb, var(--svc) 55%, white); }
+  /* Tuile d'un service (V7 ter) : le fond porte la couleur, le libellé la reprend
+     assombrie — à sa valeur pleine, l'ocre de l'Intergroupe et l'orange de la Prépa.
+     Table ne donnent que 3,3 et 2,9 sur leur propre fond, pour 4,5 exigés. À 75 % le
+     pire cas remonte à 4,8, et la couleur reste reconnaissable. En sombre, c'est
+     l'inverse : on éclaircit, comme `.svc-ink`. */
+  .svc-tuile {
+    background-color: color-mix(in srgb, var(--svc) var(--svc-tint), transparent);
+    color: color-mix(in srgb, var(--svc) 75%, black);
+  }
+  .dark .svc-tuile { color: color-mix(in srgb, var(--svc) 55%, white); }
   /* Commande en relief : surface + ombre (clair) ou surface + liseré (sombre). */
   .raised {
     background-color: hsl(var(--raised));

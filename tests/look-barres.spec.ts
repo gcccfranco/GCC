@@ -4,7 +4,9 @@ import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 // 5C1, tranche V7 (docs/spec-look.md § « V7 », 21/09/2026 ; remplace l'option C de V6 bis) :
 // les barres `.material-chrome` n'ont plus ni voile ni filet, en haut de page comme
 // défilées. Un flou seul les sépare de ce qui passe dessous, et le halo, fixe, les
-// traverse. Le mode louange garde ses deux barres voilées (tranché le 20/09/2026).
+// traverse. Depuis V7 bis, ce flou vit sur un calque qui déborde de 16 px sous la barre
+// et s'y éteint en dégradé : plus de bord net entre flou et net (le « scroll edge » d'iOS).
+// Le mode louange garde ses deux barres voilées (tranché le 20/09/2026).
 const RIEN = "rgba(0, 0, 0, 0)";
 const VOILE = "rgba(255, 255, 255, 0.8)";
 
@@ -25,12 +27,22 @@ const FICHE = {
   items: [chant({ songSlug: "beni-soit-ton-nom", position: 1 }), chant({ songSlug: "abba-pere", position: 2 })],
 };
 
-/** Le matériau de chaque barre de la page (hors mode louange), tel que le navigateur le calcule. */
+/** Le matériau de chaque barre de la page (hors mode louange), tel que le navigateur le
+ *  calcule. Le flou vit sur le calque `::before`, qui déborde sous la barre pour s'y
+ *  fondre (V7 bis) ; la barre elle-même ne porte que son contenu. */
 const barres = (page: Page) =>
   page.locator(".material-chrome:not(.material-steady)").evaluateAll((els) =>
     els.map((el) => {
       const s = getComputedStyle(el);
-      return { fond: s.backgroundColor, flou: s.backdropFilter, filet: s.boxShadow, glisse: s.transitionProperty };
+      const calque = getComputedStyle(el, "::before");
+      return {
+        fond: s.backgroundColor,
+        flou: calque.backdropFilter,
+        filet: s.boxShadow,
+        glisse: s.transitionProperty,
+        masque: calque.maskImage,
+        deborde: calque.bottom,
+      };
     })
   );
 const VERRE = { fond: RIEN, filet: "none" };
@@ -59,7 +71,12 @@ async function enHautPuisDefile(page: Page, combien: number, nom: string) {
   await defiler(page, 600);
   await defiler(page, 560);
   await expect.poll(() => verre(page)).toEqual(Array(combien).fill(VERRE));
-  for (const b of await barres(page)) expect(b.flou).toContain("blur(20px)");
+  for (const b of await barres(page)) {
+    expect(b.flou).toContain("blur(20px)");
+    // Le bord bas ne tranche pas : le flou déborde de 16 px et s'y éteint en dégradé.
+    expect(b.masque).toContain("linear-gradient");
+    expect(b.deborde).toBe("-16px");
+  }
   // Et elles glissent toujours quand on défile.
   for (const b of await barres(page)) expect(b.glisse).toContain("transform");
   await capture(page, `barres-${nom}-defile`);
@@ -120,7 +137,7 @@ test.describe("barres (5C1, V7) : ni voile ni filet, en haut de page comme défi
     // Playwright n'émule pas ce réglage : on le demande à Chromium.
     const cdp = await page.context().newCDPSession(page);
     await cdp.send("Emulation.setEmulatedMedia", { features: [{ name: "prefers-reduced-transparency", value: "reduce" }] });
-    await expect.poll(async () => (await barres(page)).map(({ fond, flou }) => ({ fond, flou }))).toEqual([{ fond: "rgb(255, 255, 255)", flou: "none" }]);
+    await expect.poll(async () => (await barres(page)).map(({ fond, flou, masque }) => ({ fond, flou, masque }))).toEqual([{ fond: "rgb(255, 255, 255)", flou: "none", masque: "none" }]);
   });
 
   test("le mode louange garde ses deux barres voilées", async ({ page }) => {
