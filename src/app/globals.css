@@ -72,7 +72,7 @@
     content: "";
     position: absolute;
     left: -60px;
-    top: -80px;
+    top: calc(-80px + var(--sat));
     width: 320px;
     height: 240px;
     border-radius: 50%;
@@ -81,18 +81,18 @@
     filter: blur(40px);
   }
   /* Fiche d'une setlist, puis page d'un chant (à droite) : géométries des planches C et B. */
-  .halo-fiche::before { left: -40px; top: -60px; width: 300px; height: 220px; opacity: 0.14; filter: blur(44px); }
+  .halo-fiche::before { left: -40px; top: calc(-60px + var(--sat)); width: 300px; height: 220px; opacity: 0.14; filter: blur(44px); }
   /* « Moi » (V7) : l'écran n'appartient à aucune section, donc l'encre — plus discrète
      que les couleurs, un gris franc se lirait comme une salissure et non comme une lumière. */
   .halo-moi::before { opacity: 0.08; }
-  .halo-chant::before { left: auto; right: -80px; top: -60px; width: 300px; height: 220px; opacity: 0.12; filter: blur(44px); }
+  .halo-chant::before { left: auto; right: -80px; top: calc(-60px + var(--sat)); width: 300px; height: 220px; opacity: 0.12; filter: blur(44px); }
   /* Grand écran (ordinateur, tablette en paysage ; tranché le 20/09/2026 au soir) : la
      colonne de contenu est centrée, le halo des planches resterait coincé dans le coin.
      Agrandi à l'écran, il repasse sous le logo et atteint le titre. */
   @media (min-width: 1024px) {
     .halo { height: 560px; }
-    .halo::before, .halo-fiche::before { left: -140px; top: -200px; width: 860px; height: 560px; filter: blur(90px); }
-    .halo-chant::before { left: auto; right: -140px; top: -200px; width: 860px; height: 560px; filter: blur(90px); }
+    .halo::before, .halo-fiche::before { left: -140px; top: calc(-200px + var(--sat)); width: 860px; height: 560px; filter: blur(90px); }
+    .halo-chant::before { left: auto; right: -140px; top: calc(-200px + var(--sat)); width: 860px; height: 560px; filter: blur(90px); }
   }
   @media print { .halo { display: none; } }
   /* Fondu d'entrée des pages (PageTransition) : l'opacité seule. Le `animate-in` de
@@ -132,8 +132,14 @@
 
 @layer base {
   :root {
+    /* Zone sûre du haut : 0 partout, SAUF pour une icône installée pendant les quelques
+       heures du 21/09/2026 où la page montait sous la barre d'état. iOS fige ce réglage
+       à l'installation et ne le relit jamais : ces appareils passent donc toujours sous
+       l'heure, et sans cette réserve le logo et les boutons se retrouvent derrière elle.
+       Défense, pas décor — elle ne coûte rien aux autres. */
+    --sat: env(safe-area-inset-top, 0px);
     /* Hauteur de la navbar — source unique pour tous les offsets fixed/sticky. */
-    --nav-h: 58px;
+    --nav-h: calc(58px + var(--sat));
     /* Zone sûre du bas (indicateur d'accueil de l'iPhone), lue par la barre d'onglets. */
     --sab: env(safe-area-inset-bottom, 0px);
     /* Écart entre la barre d'onglets flottante et le bas de l'écran : 14 px sans
