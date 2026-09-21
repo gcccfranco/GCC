@@ -63,14 +63,19 @@ async function capture(page: Page, name: string) {
 }
 
 async function enHautPuisDefile(page: Page, combien: number, nom: string) {
-  // En haut de page : ni voile ni filet.
+  // En haut de page : ni voile, ni filet, ni flou. Rien ne passe sous les barres, il n'y
+  // a donc rien à en séparer — et le calque déborde de 16 px, il brouillerait le haut du
+  // contenu pour rien (retour de Timothée du 21/09/2026 : « le flou est trop présent »).
   await expect.poll(() => verre(page)).toEqual(Array(combien).fill(VERRE));
+  for (const b of await barres(page)) expect(b.flou).toBe("none");
   await capture(page, `barres-${nom}-en-haut`);
   // On défile, puis on remonte d'un cran pour que les barres reviennent, posées sur du
   // contenu : toujours ni voile ni filet, c'est le flou qui les sépare de ce qui passe dessous.
   await defiler(page, 600);
   await defiler(page, 560);
   await expect.poll(() => verre(page)).toEqual(Array(combien).fill(VERRE));
+  // Le flou arrive avec l'événement de défilement, pas avec `scrollTo` : on l'attend.
+  await expect.poll(async () => (await barres(page)).every((b) => b.flou.includes("blur(20px)"))).toBe(true);
   for (const b of await barres(page)) {
     expect(b.flou).toContain("blur(20px)");
     // Le bord bas ne tranche pas : le flou déborde de 16 px et s'y éteint en dégradé.

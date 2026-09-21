@@ -710,3 +710,22 @@ deux thèmes.
 ⚠ Défaut préexistant relevé au passage, **non corrigé** (hors de ce lot) : les vignettes
 `Tile` utilisent `.svc-ink` sur un fond teinté et souffrent du même écart pour ces deux
 couleurs.
+
+#### V7 quater : le flou n'apparaît qu'au défilement (21/09/2026)
+
+Timothée, après la mise en ligne : « le flou en haut est trop présent alors que je suis
+en haut de la page ». Le calque déborde de 16 px **sous** la barre pour y fondre son
+bord : en haut de page, il n'avait donc rien à séparer et brouillait le haut du contenu
+pour rien.
+
+Le flou n'est plus posé que sur `html[data-defile]`, attribut que la Navbar met dès qu'on
+quitte le haut (seuil de 4 px), avec un fondu de 200 ms. Le masque et le débordement, eux,
+restent en place : ils ne se voient pas sans flou.
+
+C'est l'inverse de `data-at-top` (V6 bis, retiré en V7) : **l'absence d'attribut vaut
+« en haut de page »**. Sans JavaScript, ou avant que React ne démarre, il n'y a donc pas
+de flou — ce qui est justement l'état d'une page qu'on vient d'ouvrir. Aucun script d'en-tête
+n'est nécessaire, contrairement à V6 bis où il fallait devancer le voile blanc.
+
+Le mode louange (`.material-steady`) garde son flou et son voile en permanence : ses barres
+sont posées sur les paroles.

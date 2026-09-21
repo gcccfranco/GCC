@@ -72,6 +72,18 @@ export function Navbar() {
   const isZh = currentLang === "zh-CN";
   const scrollVisible = useScrollDirection();
 
+  // Le flou des barres ne sert qu'à séparer la barre de ce qui passe dessous : il
+  // n'apparaît donc qu'une fois la page quittée du haut (V7 quater, globals.css).
+  useEffect(() => {
+    const onScroll = () => document.documentElement.toggleAttribute("data-defile", window.scrollY > 4);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      document.documentElement.removeAttribute("data-defile");
+    };
+  }, []);
+
   // Changement de route (barre du bas, retour…) : fermer le menu Louange.
   useEffect(() => {
     setDropdownOpen(false);
