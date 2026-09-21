@@ -108,9 +108,11 @@ test.describe("navigation par sections (T2), onglets de section", () => {
   test("une pilule de section fait au moins 40 px de haut, sur chaque appareil", async ({ page }) => {
     await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
     await signInAs(page, MEMBRE, {}, "/planning");
-    const pilule = test.info().project.name === "ordinateur"
-      ? page.getByTestId("onglets-section").getByRole("link", { name: "Culte Franco" })
-      : page.getByTestId("menu-plannings");
+    // Le téléphone a la pastille qui ouvre la feuille ; dès la tablette, les huit
+    // onglets tiennent sur la rangée (V7 ter).
+    const pilule = test.info().project.name === "telephone"
+      ? page.getByTestId("menu-plannings")
+      : page.getByTestId("onglets-section").getByRole("link", { name: "Culte Franco" });
     await pilule.waitFor();
     await page.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished.catch(() => {}))));
     const box = await pilule.boundingBox();
