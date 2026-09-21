@@ -12,10 +12,12 @@
      l'autre.
      Les barres : un flou seul, ni voile ni filet (5C1, V7, 21/09/2026). Le halo, fixe,
      les traverse à tout moment ; seul le flou les sépare de ce qui passe dessous.
-     Le flou est porté par un calque, pas par la barre (V7 bis) : il déborde de 16 px
-     sous elle et s'y éteint en dégradé, pour que le bord ne tranche pas le contenu en
-     deux (net / flou) comme le ferait un filet. Le masque doit donc porter sur le
-     calque seul : posé sur la barre, il effacerait aussi le bas du logo et des boutons.
+     Le flou est porté par un calque, pas par la barre (V7 bis) : il s'éteint en dégradé
+     sur les 16 derniers pixels de la barre, pour que le bord ne tranche pas le contenu
+     en deux (net / flou) comme le ferait un filet. Il ne dépasse JAMAIS la barre : en
+     débordant, il brouillait le haut du contenu (« le flou est trop bas », 21/09/2026).
+     Le masque doit porter sur le calque seul : posé sur la barre, il effacerait aussi
+     le bas du logo et des boutons.
      `z-index: -1` le garde sous ce contenu — les barres ont toutes leur propre plan
      (`z-10`, `z-40`, `z-50`), il n'en sort pas.
      Le flou n'existe que lorsque du contenu passe dessous (V7 quater, 21/09/2026) : en
@@ -29,7 +31,6 @@
     content: "";
     position: absolute;
     inset: 0;
-    bottom: -16px;
     z-index: -1;
     pointer-events: none;
     -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 16px), transparent);

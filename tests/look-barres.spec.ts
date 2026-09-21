@@ -78,9 +78,11 @@ async function enHautPuisDefile(page: Page, combien: number, nom: string) {
   await expect.poll(async () => (await barres(page)).every((b) => b.flou.includes("blur(20px)"))).toBe(true);
   for (const b of await barres(page)) {
     expect(b.flou).toContain("blur(20px)");
-    // Le bord bas ne tranche pas : le flou déborde de 16 px et s'y éteint en dégradé.
+    // Le bord bas ne tranche pas, et ne mord pas sur le contenu : le flou s'éteint en
+    // dégradé DANS la barre, sur ses 16 derniers pixels (retour du 21/09/2026 :
+    // « ton flou est toujours trop bas, remonte-le un peu »).
     expect(b.masque).toContain("linear-gradient");
-    expect(b.deborde).toBe("-16px");
+    expect(b.deborde).toBe("0px");
   }
   // Et elles glissent toujours quand on défile.
   for (const b of await barres(page)) expect(b.glisse).toContain("transform");

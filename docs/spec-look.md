@@ -729,3 +729,10 @@ n'est nécessaire, contrairement à V6 bis où il fallait devancer le voile blan
 
 Le mode louange (`.material-steady`) garde son flou et son voile en permanence : ses barres
 sont posées sur les paroles.
+
+**Puis, le même jour : « ton flou est toujours trop bas, remonte-le un peu ».** Le calque
+ne déborde plus du tout sous la barre : il s'éteint en dégradé sur les **16 derniers pixels
+de la barre elle-même**. Mesuré sur le Planning : le calque finissait à 121 px, il finit à
+105 px (le bas de la barre de section) et son flou plein s'arrête à 89 px — le flou remonte
+donc de 16 px, et sa partie pleine de 32 px. Le bord reste fondu : aucun trait ne revient,
+et plus rien ne brouille le haut du contenu.
