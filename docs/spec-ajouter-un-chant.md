@@ -43,10 +43,10 @@ passe. Exigence : fidélité totale (structure, accords, paroles) — d'où une
 
 3. **Conversion (manuelle)**
    Session Claude Code : l'agent lit `content/inbox/`, suit
-   `../Guidelines Chordpro/00-runbook-agents.md` (mission B « créer un
-   .cho », + mission C « créer le 简谱 » si jianpu détecté) : scripts
-   pixel, zooms, règles éditoriales (`CHORDPRO_GUIDELINES.md`), test
-   d'alignement. Résultat : commit du `.cho` sur une **branche** (jamais
+   `docs/chants/00-nouveau-chant.md` (le runbook : `.cho` mesuré par
+   `scripts/cho/check.py`, calque 简谱 par `docs/chants/03-calque-jianpu.md`
+   si la partition est un scan 简谱, rapport des `# à vérifier`).
+   Résultat : commit du `.cho` sur une **branche** (jamais
    main), déplacement de la partition de `inbox/` vers `Partitions/` (ou
    suppression de l'inbox au merge).
 
@@ -93,9 +93,10 @@ passe. Exigence : fidélité totale (structure, accords, paroles) — d'où une
 
 ## Références
 
-- `../Guidelines Chordpro/00-runbook-agents.md` — runbook de l'agent
-  (missions B et C, critères d'acceptation) ;
-- `../Guidelines Chordpro/05-creer-un-cho.md` — création d'un .cho ;
-- `../Guidelines Chordpro/04-transcription-jianpu.md` — transcription 简谱 ;
-- `CHORDPRO_GUIDELINES.md` — règles éditoriales du projet ;
+- `docs/chants/00-nouveau-chant.md` — runbook de l'agent (depuis le
+  26/09/2026 ; remplace le dossier `Guidelines Chordpro/` et
+  `CHORDPRO_GUIDELINES.md`) ;
+- `docs/chants/01-format-cho.md`, `02-placement-accords.md`,
+  `03-calque-jianpu.md` — format, placement mesuré, calque 简谱 ;
+- `docs/spec-guidelines-cho.md` — décisions ;
 - `src/lib/report/` — service email réutilisable pour la notification.

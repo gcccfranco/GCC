@@ -969,6 +969,17 @@ porte le nom « GCC » et le menu par sections dont ces modules ont besoin.
   à un agent en arbre isolé, relu et intégré le soir même (`e13662e`). Docs corrigées (cette feuille, `CLAUDE.md`, trois specs,
   la vision). Look : 5 → 5A/5B/5C → 5C1/5C2/5C3 sur la planche, choix attendu.
 
+- 26/09/2026 : **règles et outillage « Nouveau chant »** (`docs/spec-guidelines-cho.md`).
+  Inventaire des 372 `.cho` et 795 partitions, trois audits par coordonnées (12 chants :
+  fr couche texte 95 % même syllabe, zh scans 97,6 %, zh vectoriels 93,5 %, scan Word
+  36/40 sur un autre mot), grill de 40 questions toutes tranchées par Timothée. Une seule
+  source dans le repo : `docs/chants/00-nouveau-chant.md` (runbook), `01-format-cho.md`,
+  `02-placement-accords.md`, `03-calque-jianpu.md` ; `CHORDPRO_GUIDELINES.md`, le dossier
+  hors repo `Guidelines Chordpro/` et la Mission C obsolète retirés (skill `chord-placement`
+  = pointeur). Outils `scripts/cho/` (`inspect`, `lint`, `pinyin`, `check`, `draft`) et
+  `tests/nouveau-chant.spec.ts` (`PW_CHANT`). Aucun `.cho` modifié : les écarts du corpus
+  sont dans `docs/chants/audit-corpus-2026-09-26.md`, chantier séparé.
+
 ## 7. Relecture adversariale (14/09/2026)
 
 Relecteur à contexte vierge (skill `doubt-driven-development`), chargé de

@@ -27,6 +27,7 @@ PW_CHANTS_ZH=all npm test -- tests/lignes-chinoises.spec.ts --project=telephone 
                                   # lignes chinoises coupées, les 188 chants (~4 min)
 npm run jianpu:audit <slug>       # planche d'audit visuel d'une 简谱, dans le navigateur
 npm test -- tests/back-office-coupe.spec.ts   # le site tel qu'en ligne : second serveur (PW_PORT + 1) sans l'interrupteur
+PW_CHANT=<slug> npm test -- tests/nouveau-chant.spec.ts   # un chant : sections, accords, +1 demi-ton, captures 3 appareils
 ```
 **Tout test passe par Playwright, y compris la vérification à l'œil des
 简谱** : la planche `npm run jianpu:audit <slug>` rend la page transposée
@@ -61,7 +62,8 @@ ils ne voient pas le composant réel. Détail du protocole dans
 - **Interrupteur du back-office** (lot 18, 20/09/2026, `docs/spec-mise-en-ligne.md`) : `BACK_OFFICE` (`src/lib/backOffice.ts`) = `NEXT_PUBLIC_BACK_OFFICE === "1"`. Posé à `1` dans `.env.local`, **absent sur Vercel** : en ligne, tâches, équipes, planning en grille, section Évènements, scène et blocs admin associés sont coupés (entrées masquées, pages et routes en 404, planning = `AncienTableau.tsx` lu dans le Sheet seul, rappel du matin réduit aux services). Toute nouvelle fonctionnalité de back-office passe derrière cette constante. ⚠ Local et en ligne partagent le même Firestore.
 
 ## Formats importants
-- ChordPro : `[accord]paroles` dans les lignes, `{directive: valeur}` en en-tête — guidelines détaillées dans `CHORDPRO_GUIDELINES.md`
+- ChordPro : `[accord]paroles` dans les lignes, `{directive: valeur}` en en-tête — règles complètes dans `docs/chants/01-format-cho.md` (format, tables) et `docs/chants/02-placement-accords.md` (placement mesuré)
+- **Nouveau chant depuis une partition** (fr ou zh, `.cho` + calque 简谱) : suivre `docs/chants/00-nouveau-chant.md`, seul point d'entrée ; outils `scripts/cho/` (`inspect`, `lint`, `pinyin`, `check`, `draft`) ; décisions dans `docs/spec-guidelines-cho.md`. Aucun accord ne se place à l'œil : `check.py` mesure, et tout doute s'écrit `{needs_review: …}`
 - Tonalité recommandée : `{recommended_key: D}` en en-tête, sous `{key}` — la plus chantée à GCC, **validée par Timothée** (`docs/tonalites-recommandees.md`, recalcul en lecture seule : `npx tsx scripts/recommended-keys.ts`) ; affichée par défaut, et un chant ajouté à une setlist y démarre
 - Chinois : `[C]caractères   pinyin` (3 espaces min entre chars et pinyin)
 - Jianpu simple : `{jianpu: 3 3 5 6 5}` sur la ligne juste au-dessus des paroles
