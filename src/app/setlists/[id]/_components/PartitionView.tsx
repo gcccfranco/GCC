@@ -470,7 +470,6 @@ function NormalSongItem({
       )}
     </>
   );
-
   return (
     <div data-outline-item={item.position} className="print:break-before-page first:print:break-before-auto">
       {jianpuScore ? (
