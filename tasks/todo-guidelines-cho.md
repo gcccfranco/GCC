@@ -47,3 +47,9 @@
 - [x] D2 Page artefact du rapport (lecture sur téléphone), lien dans le rapport
 
 ## Point d'étape D : commit D, relecture de Timothée
+
+## Lot E — Famille « gravure fr » (hymnaire, export Finale ; go de Timothée le 26/09/2026 au soir)
+- [x] E1 Règles : solfège → lettres, tonalité déduite de l'armure + `{needs_review}`, couplets empilés (rangée n de chaque système) et phrase commune, syllabation gravée, gravure à plusieurs voix (01, 02, 00)
+- [x] E2 Outillage : famille `gravure-fr` dans `inspect.py`, voie notes → syllabes gravées dans `check.py`, `draft.py` (agent, brief `scratchpad/brief-gravure-fr.md`) ; non-régression sur les 12 chants de référence
+- [x] E3 Création réelle de « Que ma bouche chante ta louange » (source `19.11-L-085.-…-Partitura-Coro.pdf`, C) en suivant le runbook : draft, lint, check, validate, build:index, spec Playwright 3 appareils, rapport
+- [x] E4 Commité le 26/09/2026 au soir (chant relu et corrigé par Timothée)

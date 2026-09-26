@@ -88,6 +88,40 @@ HANZI_RE = re.compile(r"[㐀-䶿一-鿿]")
 FULLWIDTH = "，。！？；：、（）「」『』…—"
 HALFWIDTH_PUNCT = re.compile(r"[,.!?;:]")
 
+# Noms en solfège des gravures françaises (01-format-cho.md « Accords ») :
+# la hauteur change de nom, le suffixe reste (Lam → Am, Sib → Bb, Sol7 → G7).
+SOLFEGE = {"Do": "C", "Ré": "D", "Re": "D", "Mi": "E", "Fa": "F", "Sol": "G", "La": "A", "Si": "B"}
+SOLFEGE_RE = re.compile(r"^(Sol|Do|Ré|Re|Mi|Fa|La|Si)(.*)$")
+
+
+def solfege_to_letter(name: str) -> str:
+    """Nom en lettres d'un accord gravé en solfège : `Lam` → `Am`, `Sib` → `Bb`,
+    `Sol7/Si` → `G7/B`, `(Do)` → `(C)`. Un nom déjà valide en lettres revient
+    tel quel (`Fadd9` commence par « Fa » mais n'est pas du solfège)."""
+    def one(tok):
+        m = SOLFEGE_RE.match(tok)
+        if not m or CHORD_RE.match(tok):
+            return tok
+        return SOLFEGE[m.group(1)] + m.group(2)
+    return "".join(one(p) for p in re.split(r"([/\s()]+)", name))
+
+
+def is_solfege(name: str) -> bool:
+    """Vrai si `name` n'est pas un accord en lettres mais le devient une fois
+    le solfège traduit (`Lam`, `Fa#`, `Mi7`) ; faux pour `Am`, `De`, `Sois`."""
+    r = normalize_chord(name)
+    return not r["valid"] and r["reason"].startswith("nom en solfège")
+
+
+def _invalid_chord(name: str, canon: str, reason: str) -> dict:
+    """Échec de normalisation ; si le nom est du solfège, le dire (E09 parlant)."""
+    conv = solfege_to_letter(name)
+    if conv != name:
+        r = normalize_chord(conv)
+        if r["valid"]:
+            return dict(canon=name, valid=False, changed=False, reason=f"nom en solfège : écrire « {r['canon']} »")
+    return dict(canon=canon, valid=False, changed=False, reason=reason)
+
 
 def has_hanzi(s: str) -> bool:
     return bool(HANZI_RE.search(s))
@@ -130,7 +164,7 @@ def normalize_chord(raw: str) -> dict:
                     changed=a["changed"] or b["changed"], reason=(a["reason"] or b["reason"]))
     root, suffix = split_root(name)
     if root is None:
-        return dict(canon=name, valid=False, changed=False, reason="pas de hauteur reconnue")
+        return _invalid_chord(name, name, "pas de hauteur reconnue")
     canon = suffix
     for rx, rep in SPELLINGS:
         canon = rx.sub(rep, canon)
@@ -139,9 +173,9 @@ def normalize_chord(raw: str) -> dict:
     if root2 != root or (len(root) == 1 and canon[1:2] in "#b" and suffix[:1] not in "#b"):
         return dict(canon=name, valid=False, changed=False,
                     reason=f"normalisation ambiguë ({name} → {canon} changerait la hauteur)")
-    valid = bool(CHORD_RE.match(canon))
-    return dict(canon=canon, valid=valid, changed=(canon != name) and valid,
-                reason="" if valid else "hors de l'orthographe autorisée")
+    if not CHORD_RE.match(canon):
+        return _invalid_chord(name, canon, "hors de l'orthographe autorisée")
+    return dict(canon=canon, valid=True, changed=(canon != name), reason="")
 
 
 def themes_fr() -> list:
@@ -491,10 +525,17 @@ def pdf_profile(doc) -> dict:
     if nchars == 0:
         return dict(kind="pdf-image", famille=None, langue=None, hanzi_lisibles=None, fonts=fonts, warnings=warnings)
     famille = "inconnue"
+    music = music_font(fonts)
+    cjk_font = any(h in f for f in fonts for h in CJK_FONT_HINTS)
+    latin_words = len(re.findall(r"[A-Za-zÀ-ÿ]{3,}", text))
     if FPDF_FOOTER in text or ("FPDF" in creator and any("Helvetica" in f for f in fonts)):
         famille = "eglise-fpdf"
     elif "shir.fr" in text or "shir.fr" in creator or "ChordPro" in creator:
         famille = "shirfr"
+    elif music and not has_hanzi(text) and not cjk_font and latin_words >= 20:
+        # gravure (Finale, Sibelius…) à paroles latines ; finale-zh reste aux hanzi,
+        # lisibles ou non (police CJK présente)
+        famille = "gravure-fr"
     elif "Maestro" in fonts:
         famille = "finale-zh"
     langue = "zh" if has_hanzi(text) else ("fr" if re.search(r"[A-Za-zÀ-ÿ]{3,}", text) else "?")
@@ -807,3 +848,360 @@ def extract_zh(doc) -> dict:
             meta["artist"] = m.group(1).strip()
     return dict(systems=systems, labels=labels, voltas=voltas, hints=hints, meta=meta,
                 warnings=warnings, hanzi_ok=lyric_font is not None)
+
+
+# ---- gravure fr : hymnaires exportés de Finale ou Sibelius (Éditions de l'Emmanuel…)
+# accord (solfège) → tête de note → syllabe gravée, dans chaque rangée de couplet
+MUSIC_FONTS = ("Petrucci", "Maestro", "Opus", "Bravura", "Sonata", "MusGlyphs", "Emmentaler")
+NOT_MUSIC_RE = re.compile(r"Text|Chords")  # OpusTextStd, OpusChordsStd : du texte, pas des notes
+CJK_FONT_HINTS = ("LiHei", "LiSong", "PingFang", "Hiragino", "STHeiti", "STSong", "STKai", "STFang", "STXihei",
+                  "SimSun", "SimHei", "MingLiU", "KaiTi", "FangSong", "YaHei", "DengXian", "Songti", "Heiti",
+                  "AdobeSong", "AdobeHeiti", "AdobeKaiti", "AdobeFangsong", "CJK", "SourceHan", "NotoSansSC",
+                  "NotoSerifSC", "NotoSansTC", "NotoSerifTC", "WenQuanYi", "LiGothic", "DFKai")
+GRAVURE_LABEL_RE = re.compile(r"^(COUPLETS?|REFRAIN|PONT|FINAL|CODA|INTRO|INTERLUDE)\b", re.I)
+GRAVURE_LABEL_KIND = {"couplet": "couplet", "couplets": "couplet", "refrain": "refrain", "pont": "pont",
+                      "final": "final", "coda": "final", "intro": "intro", "interlude": "interlude"}
+# seuils (pt) de 02-placement-accords.md : accord → tête ; tête → syllabe exact / à relire
+GRAVURE_NOTE_PT, GRAVURE_SYL_PT, GRAVURE_SYL_RELIRE_PT = 5.0, 6.0, 12.0
+MAJOR_SHARPS = ["C", "G", "D", "A", "E", "B", "F#", "C#"]
+MAJOR_FLATS = ["C", "F", "Bb", "Eb", "Ab", "Db", "Gb", "Cb"]
+RELATIVE_MINOR = {"C": "Am", "G": "Em", "D": "Bm", "A": "F#m", "E": "C#m", "B": "G#m", "F#": "D#m", "C#": "A#m",
+                  "F": "Dm", "Bb": "Gm", "Eb": "Cm", "Ab": "Fm", "Db": "Bbm", "Gb": "Ebm", "Cb": "Abm"}
+
+
+def music_font(fonts):
+    """Police de musique la plus fréquente (têtes de notes), hors variantes texte."""
+    for f, _ in Counter(fonts).most_common():
+        if any(m in f for m in MUSIC_FONTS) and not NOT_MUSIC_RE.search(f):
+            return f
+    return None
+
+
+def key_from_signature(sharps: int, flats: int, final):
+    """Tonalité déduite de l'armure et de l'accord final (01-format-cho.md) : la
+    majeure de l'armure si l'accord final en est la tonique, sa relative
+    mineure si c'est la sienne, sinon None (à trancher à la main)."""
+    if (sharps and flats) or sharps > 7 or flats > 7 or not final:
+        return None
+    major = MAJOR_SHARPS[sharps] if sharps else MAJOR_FLATS[flats]
+    root, suffix = split_root(final)
+    if root is None:
+        return None
+    tonic = root + ("m" if re.match(r"m(?!aj)", suffix) else "")
+    if tonic == major:
+        return major
+    if tonic == RELATIVE_MINOR[major]:
+        return tonic
+    return None
+
+
+def gravure_chord(text: str):
+    """Nom en lettres si `text` est un accord gravé (solfège ou lettres), sinon None."""
+    t = text.strip()
+    if not t:
+        return None
+    r = normalize_chord(solfege_to_letter(t))
+    return r["canon"] if r["valid"] else None
+
+
+def _gravure_tokens(span) -> list:
+    """Morceaux d'un span de texte : coupure sur les blancs, le caractère de
+    contrôle \\x01 et les tirets (un tiret devient un jeton « - » à part), avec
+    la position de chaque morceau (`chan-te ta lou -` → chan · - · te · ta · lou · -)."""
+    toks, cur = [], []
+
+    def flush():
+        if cur:
+            toks.append(dict(text="".join(c["c"] for c in cur), x0=cur[0]["x0"], x1=cur[-1]["x1"], chars=list(cur)))
+            del cur[:]
+    for ch in span["chars"]:
+        if ch["c"].isspace() or ch["c"] == "\x01":
+            flush()
+        elif ch["c"] == "-":
+            flush()
+            toks.append(dict(text="-", x0=ch["x0"], x1=ch["x1"], chars=[ch]))
+        else:
+            cur.append(ch)
+    flush()
+    return toks
+
+
+def _gravure_pieces(spans, lyric_size) -> list:
+    """Morceaux de texte à la taille des paroles : texte NFKC (ﬁ → fi), apostrophe
+    droite, étendue des lettres seules (sans ponctuation) pour mesurer le centre."""
+    out = []
+    for s in spans:
+        if abs(s["size"] - lyric_size) > 1.0:
+            continue
+        for t in _gravure_tokens(s):
+            letters = [c for c in t["chars"] if c["c"].isalnum()]
+            out.append(dict(p=s["p"], y0=s["y0"], bold=s["bold"], x0=t["x0"], x1=t["x1"], cont=False,
+                            text=unicodedata.normalize("NFKC", t["text"]).replace("’", "'"),
+                            lx0=letters[0]["x0"] if letters else None, lx1=letters[-1]["x1"] if letters else None))
+    return out
+
+
+def _gravure_rows(pieces) -> list:
+    """Rangées d'un système : morceaux groupés par y (± 1,5 pt) puis triés par x ;
+    dédoublonnés (le faux gras de Finale grave « Sois » deux fois au même x) ;
+    tirets absorbés (`Sei-`, `é -`, `-` seul : la syllabe continue le mot) ;
+    numéro `1.` en tête retiré (rangée de couplet)."""
+    rows = []
+    for pc in sorted(pieces, key=lambda q: (q["y0"], q["x0"])):
+        for r in rows:
+            if abs(r["y"] - pc["y0"]) <= 1.5:
+                r["raw"].append(pc)
+                break
+        else:
+            rows.append(dict(y=pc["y0"], raw=[pc]))
+    for r in rows:
+        items, num = [], None
+        for pc in sorted(r["raw"], key=lambda q: q["x0"]):
+            if pc["text"] == "-":
+                if items:
+                    items[-1]["cont"] = True
+                continue
+            if items and items[-1]["text"] == pc["text"] and abs(items[-1]["x0"] - pc["x0"]) < 1.0:
+                continue
+            if not items and num is None and re.match(r"^\d+\.$", pc["text"]):
+                num = int(pc["text"][:-1])
+                continue
+            items.append(pc)
+        r["num"], r["pieces"] = num, items
+        r["bold"] = bool(items) and all(pc["bold"] for pc in items)
+    return rows
+
+
+def _gravure_row_text(pieces) -> str:
+    """Texte d'une rangée, mots entiers (tirets de syllabation retirés) ; chaque
+    morceau reçoit idx (début dans le texte), start/end (ses lettres seules)."""
+    text = ""
+    for k, pc in enumerate(pieces):
+        if k and not pieces[k - 1]["cont"]:
+            text += " "
+        pc["idx"] = len(text)
+        letters = [i for i, c in enumerate(pc["text"]) if c.isalnum()]
+        pc["start"] = pc["idx"] + letters[0] if letters else None
+        pc["end"] = pc["idx"] + letters[-1] + 1 if letters else None
+        text += pc["text"]
+    return text
+
+
+def _gravure_syllable(chord, pieces) -> dict:
+    """La syllabe gravée sous la note de l'accord dans une rangée : la plus proche
+    par x0 ou par centre des lettres (Finale centre les syllabes larges et cale
+    à gauche la première d'une rangée numérotée). ≤ 6 pt : exact ; 6–12 pt : à
+    relire ; au-delà : aucune syllabe sous la note (tenue) → après la précédente."""
+    syl = [q for q in pieces if q.get("start") is not None]
+    if not syl or chord.get("note_x") is None:
+        return dict(idx=None)
+    nx, ncx = chord["note_x"], chord["note_cx"]
+
+    def dist(q):
+        return min(abs(q["lx0"] - nx), abs((q["lx0"] + q["lx1"]) / 2 - ncx))
+    q = min(syl, key=dist)
+    d = round(dist(q), 1)
+    out = dict(syl=q["text"], d_syl=d, held=False, uncertain=False, why="")
+    if d <= GRAVURE_SYL_PT:
+        out.update(idx=q["start"], end=q["end"])
+    elif d <= GRAVURE_SYL_RELIRE_PT:
+        out.update(idx=q["start"], end=q["end"], uncertain=True, why=f"syllabe « {q['text']} » à {d:.1f} pt de la note")
+    else:
+        prev = [q2 for q2 in syl if q2["lx0"] < nx]
+        if prev:
+            q2 = prev[-1]
+            out.update(idx=q2["end"], end=q2["end"], syl=q2["text"], held=True, uncertain=True,
+                       why=f"aucune syllabe sous la note (« {q2['text']} » tenue) ; la plus proche « {q['text']} » est à {d:.1f} pt")
+        else:
+            out.update(idx=q["start"], end=q["end"], uncertain=True,
+                       why=f"aucune syllabe sous la note ; la plus proche « {q['text']} » est à {d:.1f} pt")
+    if chord.get("between"):
+        out["uncertain"] = True
+        out["why"] = f"label entre deux notes (la plus proche à {chord['d_note']:.1f} pt)" + (" ; " + out["why"] if out["why"] else "")
+    return out
+
+
+def extract_gravure_fr(doc) -> dict:
+    """Systèmes d'une gravure fr : accords (Helvetica au-dessus de la portée, en
+    solfège ou en lettres), têtes de notes de la portée du chant (police de
+    musique, un x par caractère), rangées de paroles numérotées `1.` `2.` …
+    (couplets empilés) ou rangée unique, phrase commune gravée en gras une fois
+    par système et rattachée à chaque rangée, libellés COUPLETS / REFRAIN.
+    Chaque accord reçoit sa tête (≤ 5 pt par le bord gauche ou par le centre,
+    sinon « entre deux notes ») et, dans chaque rangée, la syllabe sous cette
+    tête (`_gravure_syllable`). Métadonnées :
+    titre (plus grand corps), tempo, auteur des crédits, armure + accord final.
+    Logique mesurée sur « Que ma bouche chante ta louange » (Emmanuel, 26/09/2026)."""
+    spans = []
+    for pno, page in enumerate(doc):
+        for b in page.get_text("rawdict")["blocks"]:
+            if b["type"] != 0:
+                continue
+            for l in b["lines"]:
+                for s in l["spans"]:
+                    spans.append(dict(p=pno + 1, font=s["font"], size=round(s["size"], 1),
+                                      bold=("Bold" in s["font"] or bool(s["flags"] & 16)),
+                                      x0=s["bbox"][0], y0=s["bbox"][1], x1=s["bbox"][2], y1=s["bbox"][3],
+                                      text="".join(c["c"] for c in s["chars"]),
+                                      chars=[dict(c=c["c"], x0=c["bbox"][0], x1=c["bbox"][2]) for c in s["chars"]]))
+    warnings, meta = [], {}
+    fonts = Counter(s["font"] for s in spans for c in s["chars"] if not c["c"].isspace())
+    music = music_font(fonts)
+    if music is None:
+        warnings.append("aucune police de musique (Petrucci, Maestro, Opus…) : pas de têtes de notes à mesurer")
+    mspans = [s for s in spans if s["font"] == music]
+    notes = [dict(p=s["p"], x=c["x0"], cx=(c["x0"] + c["x1"]) / 2, y0=s["y0"], g=c["c"])
+             for s in mspans for c in s["chars"] if c["c"] in NOTEHEADS]
+    clefs = [dict(p=s["p"], x=s["x0"], x1=s["x1"], y0=s["y0"], g=s["text"].strip())
+             for s in mspans if s["text"].strip() in ("&", "?")]
+    accidentals = [dict(p=s["p"], x=c["x0"], y0=s["y0"], g=c["c"]) for s in mspans for c in s["chars"] if c["c"] in "#b"]
+    timesig = [dict(p=s["p"], x=s["x0"], y0=s["y0"]) for s in mspans if s["text"].strip() in ("c", "C") or s["text"].strip().isdigit()]
+    tspans = [s for s in spans if s["font"] != music]
+    sizes = Counter(s["size"] for s in tspans for c in s["chars"] if not c["c"].isspace())
+    lyric_size = sizes.most_common(1)[0][0] if sizes else 0
+    pieces = _gravure_pieces(tspans, lyric_size)
+    labels = []
+    for s in tspans:
+        m = GRAVURE_LABEL_RE.match(s["text"].strip())
+        if m and s["bold"] and s["size"] < lyric_size - 0.3:
+            labels.append(dict(p=s["p"], x=s["x0"], y0=s["y0"], text=s["text"].strip(), kind=GRAVURE_LABEL_KIND[m.group(1).lower()]))
+    systems = []
+    for pno, page in enumerate(doc):
+        p = pno + 1
+        trebles = sorted([c for c in clefs if c["p"] == p and c["g"] == "&"], key=lambda c: c["y0"])
+        basses = sorted([c for c in clefs if c["p"] == p and c["g"] == "?"], key=lambda c: c["y0"])
+        for i, cl in enumerate(trebles):
+            y_top = cl["y0"] - 30
+            y_bot = trebles[i + 1]["y0"] - 30 if i + 1 < len(trebles) else page.rect.height
+            bass = next((b for b in basses if cl["y0"] < b["y0"] < y_bot), None)
+            pcs = [q for q in pieces if q["p"] == p and y_top <= q["y0"] < y_bot]
+            chords = []
+            for q in pcs:
+                if q["y0"] < cl["y0"] + 8 and not q["bold"]:
+                    name = gravure_chord(q["text"])
+                    if name:
+                        cx = (q["lx0"] + q["lx1"]) / 2 if q["lx0"] is not None else (q["x0"] + q["x1"]) / 2
+                        chords.append(dict(name=name, raw=q["text"], x=round(q["x0"], 1), cx=cx, y0=q["y0"]))
+            chords.sort(key=lambda c: c["x"])
+            lyr = [q for q in pcs if q["y0"] >= cl["y0"] + 20 and (bass is None or q["y0"] < bass["y0"] + 15)]
+            rows = _gravure_rows(lyr)
+            numbered = sorted([r for r in rows if r["num"] is not None], key=lambda r: r["num"])
+            if numbered:
+                main, common = numbered, [q for r in rows if r["num"] is None and r["bold"] for q in r["pieces"]]
+                for r in rows:
+                    if r["num"] is None and not r["bold"] and r["pieces"]:
+                        warnings.append(f"p{p} système {len(systems) + 1} : rangée sans numéro ignorée « "
+                                        + " ".join(q["text"] for q in r["pieces"]) + " »")
+            else:
+                main, common = sorted([r for r in rows if r["pieces"]], key=lambda r: r["y"]), []
+            for k, r in enumerate(main):
+                r["n"] = k + 1
+                own = sorted(r["pieces"], key=lambda q: q["x0"])
+                extra = sorted(common, key=lambda q: q["x0"])
+                if extra and own and extra[0]["x0"] < own[-1]["x0"]:
+                    warnings.append(f"p{p} système {len(systems) + 1} rangée {k + 1} : la phrase commune chevauche la rangée en x")
+                r["pieces"] = [dict(q) for q in sorted(own + extra, key=lambda q: q["x0"])]
+                r["text"] = _gravure_row_text(r["pieces"])
+            n_bot = (main[0]["y"] - 3) if main else (bass["y0"] - 30 if bass else y_bot)
+            tn = sorted([n for n in notes if n["p"] == p and y_top <= n["y0"] < n_bot], key=lambda n: n["x"])
+            if not tn:
+                warnings.append(f"p{p} système {len(systems) + 1} : aucune tête de note sur la portée du chant")
+            for c in chords:
+                if tn:
+                    # Finale centre le label sur la tête (« Lam » : bord gauche à 6,5 pt,
+                    # centre à 1 pt) : la plus petite des deux distances fait foi
+                    def d_of(n, c=c):
+                        return min(abs(n["x"] - c["x"]), abs(n["cx"] - c["cx"]))
+                    n = min(tn, key=d_of)
+                    c["note_x"], c["note_cx"], c["d_note"] = round(n["x"], 1), n["cx"], round(d_of(n), 1)
+                    c["between"] = c["d_note"] > GRAVURE_NOTE_PT
+                else:
+                    c["note_x"], c["note_cx"], c["d_note"], c["between"] = None, None, None, True
+                c["rows"] = {r["n"]: _gravure_syllable(c, r["pieces"]) for r in main}
+            systems.append(dict(p=p, i=len(systems) + 1, clef=cl, chords=chords, rows=main, notes=tn, label=""))
+    if not systems:
+        warnings.append("aucune clé de sol dans la police de musique : aucun système")
+    # sections : un libellé (COUPLETS, REFRAIN…) ouvre un bloc de systèmes
+    events = sorted([(l["p"], l["y0"], "label", l) for l in labels] + [(s["p"], s["clef"]["y0"], "system", s) for s in systems],
+                    key=lambda e: (e[0], e[1]))
+    blocks, cur = [], None
+    for p, y, what, obj in events:
+        if what == "label":
+            cur = dict(kind=obj["kind"], text=obj["text"], systems=[])
+            blocks.append(cur)
+        else:
+            if cur is None:
+                cur = dict(kind="couplet", text="", systems=[])
+                blocks.append(cur)
+            cur["systems"].append(obj)
+            obj["label"] = cur["text"]
+    blocks = [b for b in blocks if b["systems"]]
+    counts, seen, structure = Counter(), Counter(), []
+    for b in blocks:
+        b["nrows"] = max((len(s["rows"]) for s in b["systems"]), default=0)
+        counts[b["kind"]] += b["nrows"]
+    for b in blocks:
+        b["labels"] = []
+        for n in range(1, b["nrows"] + 1):
+            seen[b["kind"]] += 1
+            fr = SECTIONS[b["kind"]][1]
+            label = f"{fr} {seen[b['kind']]}" if counts[b["kind"]] > 1 else fr
+            b["labels"].append(label)
+            structure.append(dict(kind=b["kind"], label=label))
+    # métadonnées
+    page_text = "\n".join(page.get_text("text") for page in doc)
+    big = [s for s in spans if s["p"] == 1 and s["font"] != music and s["text"].strip()]
+    if big:
+        mx = max(s["size"] for s in big)
+        title = max([s for s in big if s["size"] == mx], key=lambda s: len(s["text"].strip()))
+        meta["title"] = title["text"].strip().replace("’", "'")
+    m = re.search(r"[q♩]\s*=\s*(\d{2,3})", page_text)
+    if m:
+        meta["tempo"] = m.group(1)
+    m = re.search(r"(?:Paroles et musique|Paroles & musique|Musique|Auteur)\s*:\s*([^(\n]+)", page_text)
+    if m:
+        meta["artist"] = m.group(1).strip().replace("’", "'")
+    meta["solfege"] = any(c["raw"] != c["name"] and SOLFEGE_RE.match(c["raw"]) for s in systems for c in s["chords"])
+    meta["key_graved"] = bool(re.search(r"\b1\s*=\s*[A-G]|Tonalit[ée]\s*:", page_text))
+    sharps = flats = 0
+    if systems:
+        first = systems[0]
+        cl = first["clef"]
+        stop = min([t["x"] for t in timesig if t["p"] == first["p"] and abs(t["y0"] - cl["y0"]) < 25]
+                   + [n["x"] for n in first["notes"][:1]] + [cl["x1"] + 60])
+        arm = [a for a in accidentals if a["p"] == first["p"] and abs(a["y0"] - cl["y0"]) < 25 and cl["x1"] - 2 <= a["x"] < stop]
+        sharps, flats = sum(1 for a in arm if a["g"] == "#"), sum(1 for a in arm if a["g"] == "b")
+    last = next((s for s in reversed(systems) if s["chords"]), None)
+    meta["armure"] = dict(dieses=sharps, bemols=flats)
+    meta["final"] = last["chords"][-1]["name"] if last else None
+    meta["final_raw"] = last["chords"][-1]["raw"] if last else None
+    meta["key"] = key_from_signature(sharps, flats, meta["final"]) if not meta["key_graved"] else None
+    return dict(systems=systems, blocks=blocks, structure=structure, labels=labels, meta=meta,
+                warnings=warnings, lyric_size=lyric_size, music=music)
+
+
+def gravure_lines(ex) -> list:
+    """Lignes chantées dans l'ordre du .cho (01-format-cho.md, couplets empilés) :
+    couplet n = rangée n de chaque système du bloc, bout à bout, une ligne par
+    système, phrase commune comprise ; refrain = ses systèmes. Chaque accord
+    porte l'index (idx, end_idx) de la syllabe gravée sous sa note."""
+    out = []
+    for b in ex["blocks"]:
+        for n in range(1, b["nrows"] + 1):
+            for s in b["systems"]:
+                row = next((r for r in s["rows"] if r["n"] == n), None)
+                if row is None:
+                    ex["warnings"].append(f"p{s['p']} système {s['i']} : pas de rangée {n}")
+                    continue
+                chords = []
+                for c in s["chords"]:
+                    m = c["rows"].get(n) or {}
+                    if m.get("idx") is None:
+                        ex["warnings"].append(f"p{s['p']} système {s['i']} : accord {c['raw']} x={c['x']:.1f} sans syllabe (pas de tête de note)")
+                        continue
+                    chords.append(dict(name=c["name"], raw=c["raw"], x=c["x"], note_x=c["note_x"], d_note=c["d_note"],
+                                       idx=m["idx"], end_idx=m["end"], syl=m["syl"], d_syl=m["d_syl"],
+                                       uncertain=m["uncertain"], held=m["held"], why=m["why"]))
+                out.append(dict(kind=b["kind"], label=b["labels"][n - 1], n=n, page=s["p"], system=s["i"],
+                                y=row["y"], text=row["text"], chords=chords))
+    return out

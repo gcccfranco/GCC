@@ -23,6 +23,10 @@ mo[A]i · soleil[A]. · T'aim[A]er   labels au-dessus de « i », « . », « e 
   tapé sous lequel le label commence. Il n'y a pas de « même syllabe » :
   `pou[A]ssière` et `[A]poussière` sont deux placements différents, seul
   celui de la partition est juste.
+- Français, gravure (export Finale, hymnaire) : les syllabes sont gravées
+  une par une, chacune avec sa position ; l'accord est au-dessus d'une note
+  et se pose devant la syllabe gravée sous cette note, dans chaque rangée de
+  couplet (`De toi Sei[C]gneur`).
 - Français, image (scan, photo) : la lettre la plus proche du label, avec la
   réserve de fidélité de la source (voir plus bas).
 - Un mot gravé coupé par un tiret du transcripteur (`sa - lut`) s'écrit
@@ -61,7 +65,8 @@ savoir pour lire son rapport :
 | Famille | Ce qu'on mesure | Exact | À relire | Décalé |
 |---|---|---|---|---|
 | PDF fr rendu ChordPro (église « Église Protestante Chinoise de Paris © », shir.fr) | le caractère tapé sous lequel le label commence | même caractère (ou même position en l'air) | — | tout autre caractère, même dans la même syllabe ; `[X]mot` là où la partition a `[X] mot` |
-| PDF zh ou fr vectoriel (exports Finale : polices Maestro + LiHeiPro) | label → tête de note (≤ 3,5 pt) → caractère centré sous la note (≤ 4 pt) | note et caractère trouvés | label sans note à ± 3,5 pt (en l'air), ou caractère à 4–8 pt de la note | autre caractère |
+| PDF zh vectoriel (exports Finale : polices Maestro + LiHeiPro) | label → tête de note (≤ 3,5 pt) → caractère centré sous la note (≤ 4 pt) | note et caractère trouvés | label sans note à ± 3,5 pt (en l'air), ou caractère à 4–8 pt de la note | autre caractère |
+| Gravure fr (export Finale ou Sibelius : police de musique Petrucci, Maestro, Opus… + Helvetica ; accords en solfège ; couplets empilés) | label → tête de note (≤ 5 pt) → dans **chaque** rangée, la syllabe gravée dont le début est le plus proche de la note (≤ 6 pt) | note et syllabe trouvées | syllabe à 6–12 pt, ou label entre deux notes | autre syllabe |
 | Scan 简谱 (repère `public/jianpu/<slug>-p1.webp`, 1 360–1 600 px de large) | bord gauche de l'étiquette du calque ↔ bord gauche du caractère de la bande paroles | ≤ 20 px | 20–45 px | > 45 px |
 | Image fr (scan, photo, capture) | bord gauche du label ↔ lettre estimée par position relative dans le mot | ≤ 20 px × largeur/1786 | 20–45 px × largeur/1786 | au-delà |
 

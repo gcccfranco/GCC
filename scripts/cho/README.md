@@ -6,7 +6,7 @@ Tous les scripts : `--help`, chemins relatifs au dépôt, `--json` pour la machi
 
 | Script | Rôle |
 |---|---|
-| `inspect.py <source>` | Nature d'une partition : texte/image, fr/zh, famille (église FPDF, shir.fr, Finale zh, scan 简谱, feuille Word, capture monospace), voie recommandée, avertissements (logo, hanzi illisibles, inclinaison, étiquettes petites, plusieurs tonalités dans le nom). |
+| `inspect.py <source>` | Nature d'une partition : texte/image, fr/zh, famille (église FPDF, shir.fr, Finale zh, gravure fr, scan 简谱, feuille Word, capture monospace), voie recommandée, avertissements (logo, hanzi illisibles, inclinaison, étiquettes petites, plusieurs tonalités dans le nom), notes (accords en solfège, tonalité non gravée). |
 | `lint.py <slug> \| --all` | Règles statiques d'un `.cho` (en-tête, thèmes, libellés canoniques, orthographe des accords, espaceurs, espaces et ponctuation zh, pinyin, pronoms). `--all` = tout le corpus + tableau code → nombre. |
 | `pinyin.py "<ligne>" \| --file <.cho>` | Pinyin d'une ligne (un groupe par hanzi, exceptions de `docs/chants/01-format-cho.md`) ; `--file` réécrit le `.cho` sur stdout. |
 | `check.py <slug> [--source <fichier>]` | Mesure chaque accord de la source et le compare au `.cho` : exact · à relire · décalé · absent du .cho · absent de la source · nom différent ; puis structure, paroles, pinyin. Trois voies : texte (PDF fr/zh à couche texte), scan-zh (calque `chords.json` + `public/jianpu/<slug>-p1.webp`), image-fr. |

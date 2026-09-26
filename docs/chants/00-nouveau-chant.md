@@ -55,8 +55,8 @@ python3 scripts/cho/inspect.py "../Partitions/<source>"
 ```
 
 Le JSON nomme la famille et la **voie** : `texte` (PDF à couche texte : église,
-shir.fr, exports Finale), `scan-zh` (scan 简谱), `image-fr` (scan, photo,
-capture d'écran). Lire les avertissements et s'arrêter dès que l'un d'eux
+shir.fr, exports Finale chinois, gravures françaises d'hymnaire), `scan-zh`
+(scan 简谱), `image-fr` (scan, photo, capture d'écran). Lire les avertissements et s'arrêter dès que l'un d'eux
 dit que la source ne porte pas l'information : inclinaison > 3°, étiquettes
 < 15 px, hanzi illisibles sans autre source. Dans ce cas, demander un
 meilleur scan à Timothée, avec le chiffre mesuré. Une source de basse

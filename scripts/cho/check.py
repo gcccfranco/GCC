@@ -10,7 +10,9 @@ paroles, pinyin. Trois voies, une par famille de source
 
 - texte   : PDF à couche texte fr (église FPDF, shir.fr — rendus ChordPro,
             l'accord est à l'x exact d'un caractère : ce caractère fait
-            foi, au caractère près) ou zh Finale (accord → tête de note → caractère) ;
+            foi, au caractère près), zh Finale (accord → tête de note → caractère)
+            ou gravure fr (hymnaire Finale/Sibelius, couplets empilés : accord en
+            solfège → tête de note → syllabe gravée de chaque rangée) ;
 - scan-zh : scan 简谱 — étiquettes du calque `public/jianpu/chords.json`
             contre les caractères de la bande paroles de
             `public/jianpu/<slug>-p1.webp` (seuils 20 / 45 px) ;
@@ -337,6 +339,30 @@ def judge_fr(S, words, sc, p, m):
     return DECALE, f"source sur « {src} », .cho sur « {dst} »"
 
 
+def judge_gravure(S, sc, m):
+    """Classe un accord d'une gravure fr (02-placement-accords.md) : exact = le
+    .cho pose l'accord sur la syllabe gravée sous la note (l'un de ses
+    caractères) ; à relire = syllabe à 6–12 pt de la note, label entre deux
+    notes, ou aucune syllabe sous la note (tenue) ; décalé = autre syllabe, ou
+    accord en l'air d'un seul côté. m = position .cho ramenée à la source."""
+    if m is None:
+        return DECALE, "ligne du .cho sans correspondance dans la source"
+    on, end = sc["on"], sc.get("syl_end", sc["on"])
+    at = lambda k: S[int(k)] if int(k) < len(S) else "la fin de ligne"
+    if isinstance(on, float) or isinstance(m, float):
+        if isinstance(on, float) and isinstance(m, float) and abs(on - m) <= 1:
+            return (RELIRE, sc["why"]) if sc.get("uncertain") else (EXACT, "")
+        if isinstance(m, float):
+            return DECALE, f"la partition pose l'accord sur la syllabe « {sc['syl']} », le .cho le met en l'air"
+        return DECALE, f"la partition pose l'accord après « {sc['syl']} » (tenue, en l'air), le .cho devant « {at(m)} »"
+    inside = (m == on) if sc.get("held") else (on <= m < max(end, on + 1))
+    if sc.get("uncertain"):
+        return RELIRE, sc["why"] + ("" if inside else f" ; le .cho le pose devant « {at(m)} » ({ctx_fr(S, int(m), 6)})")
+    if inside:
+        return EXACT, ""
+    return DECALE, f"la partition pose l'accord sur la syllabe « {sc['syl']} », le .cho devant « {at(m)} » ({ctx_fr(S, int(m), 6)})"
+
+
 def judge_zh(S, sc, cc, c2s):
     """Classe un accord zh apparié (voie texte) : accord sur la note d'un
     caractère, ou en l'air entre deux caractères."""
@@ -416,6 +442,22 @@ def suggest_fr(S, words, s2c, sc, line, chord):
     return window(rebuild_line(line, chord, rev.get(start_local, start_local)), chord["name"])
 
 
+def suggest_gravure(S, s2c, sc, line, chord):
+    """La ligne .cho avec l'accord devant la syllabe gravée sous sa note (ou
+    juste après la précédente, tenue)."""
+    on = sc["on"]
+    if isinstance(on, float) or not (0 <= on < len(S)):
+        return ""
+    j = s2c[on]
+    if j < 0 or not (line["u0"] <= j < line["u1"]):
+        return ""
+    rev = {}
+    for i, mi in enumerate(line["map"]):
+        rev.setdefault(mi, i)
+    local = j - line["u0"]
+    return window(rebuild_line(line, chord, rev.get(local, local)), chord["name"])
+
+
 def suggest_zh(S, s2c, sc, line, chord):
     rev = {}
     for i, mi in enumerate(line["map"]):
@@ -489,12 +531,28 @@ def source_lines_zh(ex):
     return lines, instr
 
 
+def source_lines_gravure(ex):
+    """Gravure fr : une ligne par (couplet n, système), phrase commune comprise ;
+    chaque accord porte l'index de la syllabe gravée sous sa note et sa fin."""
+    lines = []
+    for L in _cho.gravure_lines(ex):
+        chords = [dict(name=c["name"], raw=c["raw"], idx=c["idx"], end_idx=c["end_idx"], x=c["x"], dist=c["d_syl"],
+                       note_x=c["note_x"], d_note=c["d_note"], syl=c["syl"], uncertain=c["uncertain"],
+                       held=c["held"], why=c["why"]) for c in L["chords"]]
+        lines.append(dict(text=L["text"], chords=chords, page=L["page"], y=L["y"], label=L["label"]))
+    return lines, []
+
+
 def check_text(cho, doc, famille, lang, warnings):
+    gravure = famille == "gravure-fr"
     if lang == "zh":
         ex = _cho.extract_zh(doc)
         src_lines, src_instr = source_lines_zh(ex)
         if not ex.get("hanzi_ok"):
             warnings.append("hanzi illisibles dans la couche texte : accords non comparés aux paroles")
+    elif gravure:
+        ex = _cho.extract_gravure_fr(doc)
+        src_lines, src_instr = source_lines_gravure(ex)
     else:
         ex = _cho.extract_fr(doc)
         src_lines, src_instr = source_lines_fr(ex)
@@ -517,6 +575,11 @@ def check_text(cho, doc, famille, lang, warnings):
                     c["prev"] = u0 + c["prev_k"] if c["prev_k"] is not None else None
                     c["next"] = u0 + c["next_k"] if c["next_k"] is not None else None
                     c["pos"] = (c["prev"] + 0.5) if c["prev"] is not None else (u0 - 0.5)
+        elif gravure:
+            for c in L["chords"]:
+                # source = début de la syllabe gravée ; sa fin délimite « même syllabe »
+                c["on"] = c["pos"]
+                c["syl_end"] = L["u0"] + L["map"][c["end_idx"]]
     C = Stream(lang)
     for it in _cho.sung_lines(cho):
         C.add_line(dict(text=it["text"], chords=it["chords"], lineno=it["lineno"], raw=it["lyric"], item=it))
@@ -582,7 +645,12 @@ def check_text(cho, doc, famille, lang, warnings):
                              suggest=window(rebuild_line(L, c, c["idx"]).replace(f"[{c['name']}]", f"[{sc['name']}]"), sc["name"]))
                     results.append(r)
                     continue
-                if lang == "fr":
+                if gravure:
+                    cls, why = judge_gravure(S.text, sc, cp[j])
+                    detail = (f"source : {sc['raw']} x={fnum(sc['x'])} → tête x={fnum(sc['note_x'])} → syllabe « {sc['syl']} » "
+                              f"({ctx_fr(S.text, sc['pos'], 6)})" + (f" — {why}" if why and cls != EXACT else ""))
+                    sug = suggest_gravure(S.text, s2c, sc, L, c) if cls != EXACT else ""
+                elif lang == "fr":
                     cls, why = judge_fr(S.text, words, sc, sc["pos"], cp[j])
                     detail = f"source : x={fnum(sc['x'])} sur « {ctx_fr(S.text, sc['pos'], 6)} »" + (f" — {why}" if why and cls != EXACT else "")
                     sug = suggest_fr(S.text, words, s2c, sc, L, c) if cls != EXACT else ""
@@ -652,9 +720,14 @@ WORD_KIND = {"couplet": "verse", "refrain": "chorus", "pont": "bridge", "intro":
              "pre-refrain": "prechorus", "pre-chorus": "prechorus", "chorus": "chorus", "verse": "verse", "bridge": "bridge"}
 
 
+GRAVURE_KIND = {"couplet": "verse", "refrain": "chorus", "pont": "bridge", "final": "outro", "intro": "intro", "interlude": "interlude"}
+
+
 def structure_text(ex, cho, lang, famille):
     src = []
-    if lang == "fr":
+    if famille == "gravure-fr":
+        src = [dict(kind=GRAVURE_KIND[s["kind"]], label=s["label"]) for s in ex["structure"]]
+    elif lang == "fr":
         items = ex["items"]
         seen_sung = False
         in_bar = None

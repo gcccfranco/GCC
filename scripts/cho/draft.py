@@ -16,6 +16,11 @@ Usage (depuis GCCLouange/) :
     python3 scripts/cho/draft.py "../Partitions/Abba Père.pdf" > /tmp/abba.cho
     python3 scripts/cho/draft.py "../Partitions/荣耀的呼召.pdf" --lang zh --key F --slug 荣耀的呼召
 
+Gravure fr (hymnaire Finale/Sibelius, famille `gravure-fr` d'inspect.py) :
+couplets empilés dépliés (couplet n = rangée n de chaque système), accords
+traduits du solfège, phrase commune répétée, tonalité déduite de l'armure et
+de l'accord final — toujours signalée par un `{needs_review}`.
+
 Une image ou un scan → message et code 2 (pas de voie texte).
 """
 from __future__ import annotations
@@ -366,6 +371,69 @@ def place_zh(chars, pchars, pchords, lead=None):
     return f"{out}   {py}", notes
 
 
+# --------------------------------------------------------------------------- gravure fr
+def place_gravure(L):
+    """Ligne ChordPro d'une gravure : `[X]` devant la syllabe gravée sous la
+    note (sa première lettre) ; tenue → juste après la syllabe précédente ;
+    tout accord incertain (label entre deux notes, syllabe à 6–12 pt, tenue)
+    est signalé."""
+    text = L["text"]
+    inserts, notes = [], []
+    for c in L["chords"]:
+        inserts.append((c["idx"], f"[{c['name']}]"))
+        if c["uncertain"]:
+            notes.append(f"{c['raw']} x={c['x']:.1f} posé sur « {c['syl']} » : {c['why']}")
+    out, pos = "", 0
+    for at, tok in sorted(inserts, key=lambda t: t[0]):
+        out += text[pos:at] + tok
+        pos = at
+    return out + text[pos:], notes
+
+
+def draft_gravure(ex, meta, key, source):
+    """Couplets empilés (01-format-cho.md) : couplet n = rangée n de chaque
+    système, une ligne par système, mots entiers, accords en lettres devant la
+    syllabe mesurée, phrase commune répétée ; refrain = ses systèmes. Tonalité
+    déduite de l'armure et de l'accord final, toujours signalée."""
+    m = ex["meta"]
+    key = key or m.get("key") or ""
+    out = header(dict(meta, title=title_case(meta.get("title", ""))), "fr", key, source)
+    if not m.get("key_graved"):
+        arm = m["armure"]
+        desc = "aucune altération" if not (arm["dieses"] or arm["bemols"]) else f"{arm['dieses']} dièse(s), {arm['bemols']} bémol(s)"
+        fin = m.get("final") or "aucun"
+        if m.get("final_raw") and m["final_raw"] != fin:
+            fin = f"{m['final_raw']} → {fin}"
+        out.insert(next(i for i, l in enumerate(out) if l.startswith("{key:")),
+                   review(f"tonalité déduite de l'armure ({desc}) et de l'accord final ({fin}) : "
+                          f"{m['key'] or 'non déduite, à lire à la main'} — la partition ne la grave pas en toutes lettres"))
+    out.append("")
+    out.append(review("le refrain revient-il après chaque couplet ? la partition ne le grave pas"))
+    lines = _cho.gravure_lines(ex)
+    section = None
+    for q, L in enumerate(lines):
+        if section is None or L["label"] != section[2]:
+            if section:
+                out.append(section[1])
+                out.append("")
+            directive = _cho.SECTIONS[L["kind"]][0]
+            section = (f"{{{directive}: {L['label']}}}", f"{{{directive.replace('start_of_', 'end_of_')}}}", L["label"])
+            out.append(section[0])
+        line, notes = place_gravure(L)
+        for n in notes:
+            out.append(review(n))
+        out.append(line)
+        nxt = lines[q + 1] if q + 1 < len(lines) else None
+        if nxt and nxt["label"] == L["label"] and not re.search(r"[.!?;:]$", L["text"].rstrip()):
+            # une ligne = un système ; la phrase continue sur le suivant (01-format-cho.md :
+            # un mot ou une expression ne se coupe pas sur deux lignes) → à regrouper à la main
+            out.append(review(f"fin de système sans ponctuation : la phrase continue sur la ligne suivante "
+                              f"(« {' '.join(L['text'].split()[-2:])} » / « {' '.join(nxt['text'].split()[:2])} ») — regrouper si un mot ou une expression est coupé"))
+    if section:
+        out.append(section[1])
+    return out
+
+
 # --------------------------------------------------------------------------- main
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -395,6 +463,9 @@ def main(argv=None):
             print("hanzi illisibles dans la couche texte : pas de brouillon possible", file=sys.stderr)
             return 2
         out = draft_zh(ex, ex["meta"], args.key, path)
+    elif info["famille"] == "gravure-fr":
+        ex = _cho.extract_gravure_fr(doc)
+        out = draft_gravure(ex, ex["meta"], args.key, path)
     else:
         ex = _cho.extract_fr(doc)
         out = draft_fr(ex, ex["meta"], args.key, path)

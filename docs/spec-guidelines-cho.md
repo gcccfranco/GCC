@@ -208,3 +208,9 @@ session `chantier-guidelines-cho`).
   « équivalents » (même syllabe, autre caractère) soient **exactement comme la
   partition** : `check.py` les classe désormais « décalé » avec le caractère
   attendu, `draft.py` pose l'accord devant le caractère exact, 01/02 mis à jour.
+- 26/09/2026 au soir, lot E : Timothée apporte une gravure chorale d'hymnaire
+  (Éditions de l'Emmanuel, export Finale, accords en solfège, quatre couplets
+  empilés, phrase commune en gras) : famille absente des règles et de
+  l'outillage. Règles ajoutées (solfège, tonalité par armure, couplets
+  empilés, syllabation gravée), famille `gravure-fr` ajoutée aux scripts,
+  chant « Que ma bouche chante ta louange » créé par le runbook comme épreuve.

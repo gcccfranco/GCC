@@ -12,8 +12,11 @@ Usage (depuis GCCLouange/) :
     python3 scripts/cho/inspect.py "../Partitions/Abba Père.pdf"
     python3 scripts/cho/inspect.py "../Partitions/安静 简谱.jpg" --json
 
-Familles : eglise-fpdf · shirfr · finale-zh · scan-jianpu · word-scan ·
-capture-mono · inconnue. Voies : texte · scan-zh · image-fr.
+Familles : eglise-fpdf · shirfr · finale-zh · gravure-fr (hymnaire Finale ou
+Sibelius : police de musique + paroles latines, accords en solfège) ·
+scan-jianpu · word-scan · capture-mono · inconnue. Voies : texte · scan-zh ·
+image-fr. `notes` (JSON) : ce que la voie devra faire de plus (accords en
+solfège, tonalité non gravée).
 """
 from __future__ import annotations
 
@@ -216,6 +219,13 @@ def inspect_pdf_text(path: str, res: dict):
     res["hanzi_lisibles"] = prof["hanzi_lisibles"]
     res["voie"] = "texte"
     res["avertissements"] += prof["warnings"]
+    if prof["famille"] == "gravure-fr":
+        ex = _cho.extract_gravure_fr(doc)
+        if ex["meta"].get("solfege"):
+            res["notes"].append("accords en solfège")
+        if not ex["meta"].get("key_graved"):
+            res["notes"].append("tonalité non gravée : armure + accord final")
+        res["avertissements"] += ex["warnings"]
     for info in page.get_images(full=True):
         for r in page.get_image_rects(info[0]):
             if r.width < 100 and r.height < 100:
@@ -231,7 +241,7 @@ def inspect_pdf_text(path: str, res: dict):
 def inspect_source(path: str) -> dict:
     res = dict(source=_cho.rel(path), kind=None, pages=None, largeur=None, hauteur=None, unite=None,
                langue="?", famille="inconnue", hanzi_lisibles=None, inclinaison_deg=None,
-               hauteur_etiquettes_px=None, voie=None, avertissements=[])
+               hauteur_etiquettes_px=None, voie=None, notes=[], avertissements=[])
     keys = key_tokens(path)
     if len(set(keys)) > 1:
         res["avertissements"].append(f"plusieurs tonalités possibles dans le nom : {', '.join(keys)} — Timothée dit laquelle")
@@ -279,6 +289,8 @@ def main(argv=None):
             extra.append(f"grille monospace {res['grille_monospace']['score']} (pas {res['grille_monospace']['pas_px']} px)")
         if extra:
             print("   " + " · ".join(extra))
+        for n in res["notes"]:
+            print(f"   · {n}")
         for w in res["avertissements"]:
             print(f"   ⚠ {w}")
     return 0 if res["voie"] else 2

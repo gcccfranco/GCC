@@ -36,7 +36,7 @@ Dans cet ordre, une directive par ligne, puis une ligne vide :
 | `title` | titre exact de la partition, en casse de phrase (capitale initiale, noms propres et pronoms divins en capitale, le reste en minuscules : `La croix seule me suffit`, `Ô Jésus mon Sauveur`), même si la partition le grave en capitales ; pronoms 你/他 | — |
 | `title_pinyin` | pinyin du titre (`pinyin.py`), initiale mise en capitale à la main | — |
 | `artist` | le nom sous lequel le chant est connu : l'interprète ou le groupe (Samuel Olivier, Hillsong, 赞美之泉). Les auteurs gravés (詞/曲, « paroles et musique ») ne sont repris que s'ils sont aussi l'interprète. Si la partition fournie ne nomme pas le groupe : le prendre sur une autre feuille du même chant dans `Partitions/`, ou du groupe connu de l'auteur, et le dire dans le rapport | ligne omise |
-| `key` | tonalité gravée sur la partition fournie (`1= F`, case « D », armure) ; majuscule, `b`/`#` ; mineure : `Am` | — |
+| `key` | tonalité gravée sur la partition fournie (`1= F`, case « D », « Tonalité : A ») ; majuscule, `b`/`#` ; mineure : `Am`. Rien de gravé (gravure chorale, hymnaire) : déduite de l'**armure** et de l'**accord final** (armure vide et dernier accord `Do` → `C` ; armure vide et dernier accord `Lam` → `Am` ; un bémol et dernier accord `Fa` → `F`), et toujours un `{needs_review: tonalité déduite de l'armure et de l'accord final}` dans l'en-tête | — |
 | `tempo` | le `♩=` de la partition, ou la valeur donnée par Timothée | ligne omise |
 | `language` | `fr` ou `zh` | — |
 | `themes` | 1 à 3 `name_fr` de `content/themes.json`, séparés par `, `, **même pour un chant chinois** (le filtre du site ne reconnaît que ces noms). Critère : ce que le chant dit d'abord (à qui il s'adresse, ce qu'il affirme), thème principal en premier ; les autres thèmes défendables vont dans le rapport, pas dans le fichier | — |
@@ -106,6 +106,15 @@ une parole.
   2), chacune avec ses accords **mesurés**, jamais recopiés de l'autre rangée.
 - Deux strophes d'un même couplet séparées par une ligne vide sur la
   partition : une seule section, la ligne vide conservée.
+- **Couplets empilés** (gravure d'hymne : rangées `1.` `2.` `3.` `4.` sous la
+  même mélodie, souvent en italique une rangée sur deux pour la lisibilité) :
+  le couplet n est la **rangée n de chaque système, mise bout à bout** dans
+  l'ordre des systèmes ; ses accords sont ceux gravés au-dessus de la mélodie,
+  posés sur la syllabe de sa rangée. Une phrase gravée une seule fois en gras
+  à côté des rangées (« que ma bouche chante ta louange ») appartient à
+  chaque couplet et s'y répète. L'italique n'est pas une autre voix.
+- Gravure à plusieurs voix (soprano, alto, ténor, basse) : seule la portée
+  qui porte les paroles compte ; pas de calque.
 
 ## Lignes chantées
 
@@ -116,7 +125,9 @@ une parole.
 - L'accord s'écrit `[X]` **devant le caractère** au-dessus duquel la
   partition le met, au caractère près ; les positions déduites du rythme
   (levée, tenue, syncope) sont dans `02-placement-accords.md`. Un mot gravé
-  coupé par un tiret du transcripteur (`sa - lut`) s'écrit entier : `sa[F]lut`.
+  coupé par des tirets, syllabation d'hymnaire (`Sei - gneur`, `at - ten - dons`)
+  ou tiret du transcripteur (`sa - lut`), s'écrit entier, l'accord devant la
+  même syllabe : `Sei[C]gneur`, `sa[F]lut`.
 - Français : pronoms divins en capitale comme sur la partition (`Tu`, `Ton`),
   apostrophe droite `'`, ponctuation de la partition ; aucune espace en fin de
   ligne.
@@ -148,6 +159,10 @@ L'accord s'écrit **tel que gravé**, à l'orthographe près d'un même symbole 
 
 - Altérations et basses telles que gravées : `Bb` reste `Bb`, `C#/F` reste
   `C#/F` (c'est une grille, pas une gravure enharmonique).
+- Noms en **solfège** (gravures françaises) → lettres, suffixe conservé :
+  `Do` C · `Ré` D · `Mi` E · `Fa` F · `Sol` G · `La` A · `Si` B ; `Lam` → `Am`,
+  `Rém` → `Dm`, `Sib` → `Bb`, `Fa#` → `F#`, `Sol7` → `G7`. Un `.cho` n'écrit
+  jamais de solfège.
 - Accord entre parenthèses sur la partition (optionnel, passage) → `[(C/E)]`.
 - Alternative gravée « G或G/B », « Edim 可用 C/E 代替 » → `[G (G/B)]`,
   `[Edim (C/E)]` : l'accord principal, puis l'alternative entre parenthèses
