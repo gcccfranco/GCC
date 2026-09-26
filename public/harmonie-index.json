@@ -1,5 +1,5 @@
 {
-  "genereLe": "2026-09-20T08:18:49.915Z",
+  "genereLe": "2026-09-26T16:14:19.117Z",
   "fiches": [
     {
       "id": "substitutions/2m7-pour-4",
@@ -112,7 +112,7 @@
       "repertoire": "*Quand Tu\nparles* (refrain : « Et quand Tu parles, cent milliards de galaxies », D –\nBm) · *Nous voici* (couplet, en Bb : Bb – Gm) · *Abba Père* (interlude, en A :\nA – F#m) · 握手 · 大声敬拜.",
       "regle": "Portée : dans une section · motif `1 → 1` (deux 1 à la suite, le\nsecond n'étant pas le dernier accord de la section) · remplacement `1 → 6m` ·\nsûreté : **sûre**.",
       "exemples": [
-        "Ta parole",
+        "Ta-parole-écriture",
         "a-jamais-tu-es-saint",
         "a-la-croix",
         "abba-pere",
@@ -122,6 +122,7 @@
         "au-nom-de-jesus",
         "aucun-autre-nom",
         "aupres-de-dieu",
+        "avec-nous",
         "benediction",
         "cherchez-d-abord",
         "combien-dieu-est-grand",
@@ -288,7 +289,7 @@
       "repertoire": "*Ta\nparole* (couplet, en Bb : Eb – Fsus4 – F) · *À la croix* (couplet, en E :\nA2 – B) · *Roi des Rois* · 爱赢了 · 爱的彰显.",
       "regle": "Portée : dans une section · motif `2m → 5` (2m ou 2m7) ·\nremplacement `4 → 5` · sûreté : **sûre**. Jamais proposée sur un passage où\nS1 vient d'être essayée (les deux fiches se renverraient la balle).",
       "exemples": [
-        "Ta parole",
+        "Ta-parole-écriture",
         "a-la-croix",
         "abba-pere",
         "abrite-moi",
@@ -298,6 +299,7 @@
         "au-nom-de-jesus",
         "aucun-autre-nom",
         "aupres-de-dieu",
+        "avec-nous",
         "benis-dieu-10000-raisons",
         "benis-l-eternel",
         "ce-nom-si-merveilleux",
@@ -1003,6 +1005,7 @@
       "repertoire": "*Il\nm'aime* (refrain, en G : CM7 « Il m'aime ») · *Le Fils de Dieu* (couplet :\nGM7, puis DM7 « pour toujours ») · *Quand je contemple* (refrain, en C : FM7\n« Oh ! Je T'adore ») · *Jireh* (intro : Gmaj7) · 一切都更新 (主歌, en C :\nCmaj7) · 你是我的平安 (前奏 : Dmaj7).",
       "regle": "Portée : Couplet, Pont · motif `4` · remplacement `4maj7` · sûreté :\n**sûre** (sur le `1` : **à écouter**).",
       "exemples": [
+        "avec-nous",
         "jireh",
         "为我而来",
         "主的喜乐是我力量",
@@ -1090,6 +1093,7 @@
         "au-dessus-de-tout",
         "au-nom-de-jesus",
         "aupres-de-dieu",
+        "avec-nous",
         "beni-soit-ton-nom",
         "benis-l-eternel",
         "ce-nom-si-merveilleux",
@@ -1423,12 +1427,13 @@
       "repertoire": "*Amour sans\nfin* (pré-refrain : G – A – Bm) · *Ta parole* (refrain, en Bb : Eb – F – Gm) ·\n*Abba Père* (refrain, en A : D – E – F#m « Abba Père, je suis à Toi ») ·\n*Abrite-moi* (refrain, en C : F – G – Am) · 你坐着为王 (副歌, en F : Bb – C –\nDm) · 使命 (主歌, en A : D – E – F#m).",
       "regle": "Portée : dans une section · motif `4 → 6m` · remplacement\n`4 – 5 → 6m` · sûreté : **à écouter**.",
       "exemples": [
-        "Ta parole",
+        "Ta-parole-écriture",
         "a-la-croix",
         "abba-pere",
         "abrite-moi",
         "amour-sans-fin",
         "au-nom-de-jesus",
+        "avec-nous",
         "benis-dieu-10000-raisons",
         "ce-nom-si-merveilleux",
         "chaine-d-amour",
@@ -1594,7 +1599,7 @@
       "repertoire": "*Ta parole*\n(refrain, en Bb : F/A – Bb « pour révéler le Christ ») · *Dieu est parmi nous*\n(refrain, en G : D/F# – G) · *Christ est la lumière* (couplet, en C : G/B – C) ·\n*Au dessus de tout* (couplet, en A : E/G# – A) · 医治我 (主歌, en A : E/G# – A)\n· 一生敬拜你 (主歌, en C : G/B – C).",
       "regle": "Portée : dans une section · motif `5 → 1` · remplacement\n`5/7 → 1` · sûreté : **à écouter**.",
       "exemples": [
-        "Ta parole",
+        "Ta-parole-écriture",
         "au-dessus-de-tout",
         "aucun-autre-nom",
         "aucune-peur",
@@ -2167,7 +2172,7 @@
       "repertoire": "*Dieu est parmi nous* (refrain, en G : Dsus4 « Il est parmi nous ») · *Ouvre\nles yeux de mon cœur* (refrain, en E : Bsus) · *Libéré* (couplet, en G : Dsus4)\n· 你是我的平安 (副歌 : Asus4) · 你的同在 (副歌 : Asus4) · 一切都更新 (副歌 1, en\nC : Gsus4).",
       "regle": "Portée : fin de la section qui précède un refrain · motif `5`\nfinal · remplacement `5sus4 → 5` · sûreté : **sûre**.",
       "exemples": [
-        "Ta parole",
+        "Ta-parole-écriture",
         "a-la-croix",
         "coeur-a-coeur",
         "dieu-de-l-impossible",

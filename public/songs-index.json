@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-20T08:18:49.728Z",
+  "generatedAt": "2026-09-26T16:14:18.872Z",
   "songs": [
     {
       "slug": "abba-pere",
@@ -978,6 +978,51 @@
           "id": "chorus-2",
           "name": "Refrain",
           "type": "chorus"
+        }
+      ]
+    },
+    {
+      "slug": "avec-nous",
+      "title": "Avec nous (Emmanuel)",
+      "titlePinyin": null,
+      "artist": "Parfaitement Imparfait",
+      "language": "fr",
+      "originalKey": "E",
+      "recommendedKey": null,
+      "tempo": 94,
+      "themes": [],
+      "youtubeUrl": "https://www.youtube.com/watch?v=oV5RBQ9RPo8",
+      "spotifyUrl": null,
+      "appleMusicUrl": null,
+      "hasJianpu": false,
+      "jianpuKey": null,
+      "sections": [
+        {
+          "id": "intro-1",
+          "name": "Intro",
+          "type": "intro"
+        },
+        {
+          "id": "verse-2",
+          "name": "Couplet 1",
+          "type": "verse",
+          "number": "1"
+        },
+        {
+          "id": "chorus-3",
+          "name": "chorus",
+          "type": "chorus"
+        },
+        {
+          "id": "verse-4",
+          "name": "Couplet 2",
+          "type": "verse",
+          "number": "2"
+        },
+        {
+          "id": "bridge-5",
+          "name": "Pont",
+          "type": "bridge"
         }
       ]
     },
@@ -11178,7 +11223,7 @@
       ]
     },
     {
-      "slug": "Ta parole",
+      "slug": "Ta-parole-écriture",
       "title": "Ta parole",
       "titlePinyin": null,
       "artist": "Écriture",
