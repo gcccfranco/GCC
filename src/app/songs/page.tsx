@@ -17,7 +17,6 @@ export default async  function SongsPage() {
 
   const themesPath = path.join(process.cwd(), "content", "themes.json");
   const themes: Theme[] = JSON.parse(fs.readFileSync(themesPath, "utf-8")).themes;
-
   return (
     <div className="relative min-h-screen bg-background">
       <Halo color="var(--chord-color)" />
