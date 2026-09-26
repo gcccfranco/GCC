@@ -204,7 +204,6 @@ export function SongListClient({ songs, themes }: SongListClientProps) {
   }
 
   const usedThemeSlugs = new Set(songs.flatMap((s) => s.themes));
-  console.log("usedThemeSlugs",usedThemeSlugs)
   const availableThemes = themes.filter((t) => usedThemeSlugs.has(t.slug));
   const hasFilter = query.trim() !== "" || langFilter !== "all" || themeFilter !== "";
 

@@ -63,7 +63,6 @@ export function parseLyricLine(rawLine: string, language: string = "fr"): { toke
   if (lastIndex < lyricPart.length) {
     tokens.push({ type: "lyric", value: lyricPart.slice(lastIndex) });
   }
-
   return { tokens, pinyin: pinyinPart };
 }
 
