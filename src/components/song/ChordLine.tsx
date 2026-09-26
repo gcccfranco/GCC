@@ -93,7 +93,6 @@ interface ChordLineProps {
 
 export function ChordLine({ tokens, showChords = true, hideLyrics = false, fontSize, chordEm = 0.9, chord_font, fr_lyric_font }: ChordLineProps) {
   const segments = toSegments(tokens);
-  console.log("tokens",tokens)
   const hasAnyChord = showChords && segments.some((s) => s.chord !== null);
   return (
     <div
