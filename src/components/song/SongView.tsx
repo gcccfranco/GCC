@@ -170,7 +170,9 @@ function isCJK(ch: string) {
   return (cp >= 0x4e00 && cp <= 0x9fff) || (cp >= 0x3400 && cp <= 0x4dbf);
 }
 
-const ZH_PUNCTUATION = /^[，。、；：！？」』）…,.;:!?)]$/;
+// Le guillemet fermant « ” » y est depuis le 27/09/2026 : sur 你的同在 (téléphone),
+// « 你。”[A] » coupait entre 。 et ”, qui ouvrait seul la rangée suivante avec son accord.
+const ZH_PUNCTUATION = /^[，。、；：！？」』）”…,.;:!?)]$/;
 
 interface ZhLineProps {
   tokens: Token[];
@@ -303,6 +305,11 @@ function ZhLine({ tokens, pinyin, showChords, showPinyin, hideLyrics = false, ch
                       color: "var(--jianpu-color, #b3261d)",
                       visibility: col.chord ? "visible" : "hidden",
                       whiteSpace: "nowrap",
+                      // Deux accords longs sur deux caractères voisins se touchaient
+                      // (« Am7/EDsus4 », relevé le 26/09/2026 sur 向主欢呼) : la colonne
+                      // s'élargit bien à l'accord, mais rien ne séparait deux étiquettes.
+                      // Symétrique, pour que l'accord reste centré sur son caractère.
+                      paddingInline: "0.25em",
                     }}
                     className={chord_font.className}
                   >
