@@ -21,3 +21,15 @@ test("ZH : « 预备副歌/Pre-Refrain » sous une directive verse s'affiche Pr�
   await page.reload();
   await expect.poll(() => sectionLabels(page)).toEqual(["前奏", "主歌", "副歌前奏", "副歌", "桥段"]);
 });
+
+// « Final » écrit sous une directive outro se lit « Final », pas « Outro »
+// (décision de Timothée du 26/09/2026, chantier docs/spec-guidelines-cho.md) ;
+// le type reste outro (ids, couleurs, setlists).
+test("FR : « Final » écrit sous une directive outro s'affiche Final, en FR comme en 中文 (Christ est la lumière)", async ({ page }) => {
+  await page.goto("/songs/christ-est-la-lumiere");
+  await expect.poll(() => sectionLabels(page)).toEqual(["COUPLET 1", "REFRAIN", "COUPLET 2", "PONT", "FINAL"]);
+
+  await page.evaluate(() => localStorage.setItem("i18nextLng", "zh-CN"));
+  await page.reload();
+  await expect.poll(() => sectionLabels(page)).toEqual(["主歌 1", "副歌", "主歌 2", "桥段", "结尾"]);
+});

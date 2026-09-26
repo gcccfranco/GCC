@@ -108,7 +108,8 @@
       "tag": "Tag",
       "interlude": "Interlude",
       "instrumental": "Instrumental",
-      "coda": "Coda"
+      "coda": "Coda",
+      "final": "Final"
     }
   },
   "login": {
