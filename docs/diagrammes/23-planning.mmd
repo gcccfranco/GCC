@@ -1,0 +1,22 @@
+sequenceDiagram
+  autonumber
+  actor U as Utilisateur
+  participant P as /planning
+  participant SH as Google Sheet (CSV gviz)
+  participant FS as Firestore REST
+  participant API as /api/planning/<br/>release
+  U->>P: ouvre Planning (sans compte possible)
+  par un appel par onglet
+    P->>SH: GET CSV : Culte, Déjeuner, Paix, Fidélité, EDD, Campus…
+  end
+  P->>P: parseCSV → lignes, repère ses services grâce au nom du planning
+  alt interrupteur du back-office allumé (local)
+    P->>FS: plannings/clé/dimanches (grille écrite dans l'app)
+    P->>P: fusion, la grille de l'app passe devant le Sheet
+    U->>FS: PATCH d'une cellule (si le planning est coché dans son profil)
+  else en ligne
+    P-->>U: ancien tableau, lu dans le Sheet seul
+  end
+  U->>API: publier un trimestre (admin, ou droit notify sur ce planning)
+  API->>FS: planningReleases/clé_année, via Firebase Admin
+  API-->>U: à la 1re publication seulement : push (Culte → tout le monde, groupe → ses membres)

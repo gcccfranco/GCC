@@ -1,0 +1,26 @@
+sequenceDiagram
+  autonumber
+  participant C as Client (éditeur ou bouton Prévenir)
+  participant API as /api/push/<br/>notify-setlist
+  participant AD as Firebase Admin
+  participant SH as Google Sheet
+  participant PS as Service push
+  participant SW as Service worker
+  actor M as Membre de l'équipe
+  C->>API: POST setlistId, auto + Bearer
+  API->>AD: verifyIdToken
+  API->>AD: lit setlists/id
+  API->>API: refus si privée, moins de 4 chants, ou appelant ni propriétaire, ni admin, ni exécutant
+  API->>AD: notifLog/setlist-id (auto : une seule fois, manuel : 1 fois par 24 h)
+  API->>SH: planning CSV → qui sert à cette date (musiciens, choristes, régie)
+  API->>AD: noms du planning → uid, filtre notifPrefs, langues
+  API->>AD: pushSubscriptions de ces uid
+  API->>PS: web-push, message chiffré signé VAPID (titre, corps, url, tag)
+  alt réponse 404 ou 410
+    API->>AD: supprime l'abonnement périmé
+  end
+  API->>AD: met à jour notifLog
+  PS-->>SW: événement push
+  SW->>M: showNotification
+  M->>SW: clic
+  SW->>M: onglet de l'app mis au premier plan sur l'url, sinon nouvelle fenêtre

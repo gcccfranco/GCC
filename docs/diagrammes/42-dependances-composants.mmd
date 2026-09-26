@@ -1,0 +1,74 @@
+%% Généré par scripts/diagrammes/generer.ts (dependency-cruiser). Ne pas modifier à la main.
+flowchart LR
+  subgraph C0["src/components"]
+    n0["components/admin<br/>1 fichier"]
+    n1["components/auth<br/>2 fichiers"]
+    n2["components/customPanel<br/>1 fichier"]
+    n3["components/evenements<br/>4 fichiers"]
+    n4["components/guide<br/>2 fichiers"]
+    n5["components/harmonie<br/>5 fichiers"]
+    n6["components/jianpu<br/>3 fichiers"]
+    n7["components/layout<br/>7 fichiers"]
+    n8["components/onboarding<br/>1 fichier"]
+    n9["components/pdf<br/>6 fichiers"]
+    n10["components/performance<br/>2 fichiers"]
+    n11["components/planning<br/>7 fichiers"]
+    n12["components/push<br/>2 fichiers"]
+    n13["components/report<br/>1 fichier"]
+    n14["components/setlists<br/>7 fichiers"]
+    n15["components/song<br/>6 fichiers"]
+    n16["components/songs<br/>1 fichier"]
+    n17["components/taches<br/>3 fichiers"]
+    n18["components/ui<br/>15 fichiers"]
+  end
+  subgraph C1["Modules partagés"]
+    n19["src/hooks<br/>5 fichiers"]
+    n20["src/lib<br/>117 fichiers"]
+  end
+  n0 -->|1| n20
+  n1 -->|2| n18
+  n1 -->|5| n20
+  n2 -->|2| n20
+  n3 -->|1| n7
+  n3 -->|4| n18
+  n3 -->|11| n20
+  n4 -->|1| n20
+  n5 -->|2| n18
+  n5 -->|1| n19
+  n5 -->|13| n20
+  n6 -->|1| n14
+  n6 -->|1| n15
+  n6 -->|1| n18
+  n6 -->|1| n19
+  n6 -->|5| n20
+  n7 -->|1| n13
+  n7 -->|2| n18
+  n7 -->|6| n19
+  n7 -->|9| n20
+  n8 -->|1| n18
+  n8 -->|4| n20
+  n9 -->|2| n18
+  n9 -->|1| n19
+  n9 -->|19| n20
+  n10 -->|2| n6
+  n10 -->|2| n15
+  n10 -->|3| n18
+  n10 -->|13| n20
+  n11 -->|2| n7
+  n11 -->|1| n9
+  n11 -->|15| n20
+  n12 -->|2| n18
+  n12 -->|5| n20
+  n13 -->|3| n20
+  n14 -->|1| n15
+  n14 -->|10| n18
+  n14 -->|4| n19
+  n14 -->|25| n20
+  n16 -->|3| n18
+  n15 -->|8| n20
+  n16 -->|1| n19
+  n16 -->|2| n20
+  n17 -->|3| n18
+  n17 -->|1| n19
+  n17 -->|3| n20
+  n18 -->|15| n20

@@ -1,0 +1,578 @@
+{
+  "titre": "Atlas GCC Louange",
+  "introduction": [
+    "Site de partitions de louange bilingue (français et chinois) devenu l'app de l'église GCC : chants ChordPro, setlists, planning, notifications. Next.js 16 (App Router) hébergé sur Vercel, Firebase Auth et Firestore consommé en REST, service worker écrit à la main.",
+    "Chaque diagramme décrit le code tel qu'il est aujourd'hui, avec les fichiers qui le portent. Ce qui n'a pas pu être vérifié est signalé comme incertain plutôt que deviné."
+  ],
+  "fonctionnalites": [
+    {
+      "nom": "Chants ChordPro FR / 中文",
+      "etat": "present",
+      "detail": "370 fichiers .cho (182 FR, 188 中文), pages pré-rendues au build, recherche Fuse.js."
+    },
+    {
+      "nom": "Page chant et transposition",
+      "etat": "present",
+      "detail": "Analyse et transposition dans le navigateur, tonalité recommandée par défaut."
+    },
+    {
+      "nom": "Setlists",
+      "etat": "present",
+      "detail": "Éditeur à enregistrement automatique, historique, versions perso, mode Adapter."
+    },
+    {
+      "nom": "Mode louange (live)",
+      "etat": "present",
+      "detail": "Plein écran, écran maintenu allumé, annotations dessinées."
+    },
+    {
+      "nom": "Notifications push",
+      "etat": "present",
+      "detail": "Web Push VAPID, un cron quotidien, cloche dans l'app."
+    },
+    {
+      "nom": "Export PDF",
+      "etat": "present",
+      "detail": "Fabriqué dans le navigateur ; bleu en FR, rouge en 中文 dans le style classique."
+    },
+    {
+      "nom": "Pipeline 简谱",
+      "etat": "present",
+      "detail": "Scripts Python lancés à la main, 185 partitions avec calque d'accords."
+    },
+    {
+      "nom": "PWA : service worker, cache, installation",
+      "etat": "present",
+      "detail": "Cache maison ; installation guidée par un texte sur iPhone."
+    },
+    {
+      "nom": "Comptes, rôles, droits",
+      "etat": "present",
+      "detail": "Firebase Auth, profils Firestore, droits en double (client et règles)."
+    },
+    {
+      "nom": "Planning",
+      "etat": "present",
+      "detail": "Google Sheet lu en CSV ; la grille écrite dans l'app relève du back-office."
+    },
+    {
+      "nom": "Signalements",
+      "etat": "present",
+      "detail": "Firestore + push aux admins, sans email."
+    },
+    {
+      "nom": "Harmonie",
+      "etat": "present",
+      "detail": "Fiches compilées au build, suggestions par chant, idées de l'équipe."
+    },
+    {
+      "nom": "Interface FR / 中文",
+      "etat": "present",
+      "detail": "i18next, fr.json et zh-CN.json, langue gardée sur l'appareil."
+    },
+    {
+      "nom": "Évènements, tâches, équipes, scène",
+      "etat": "back-office",
+      "detail": "Codés, mais coupés en ligne par l'interrupteur du back-office."
+    },
+    {
+      "nom": "Import ou transcription automatique en ChordPro",
+      "etat": "absent",
+      "detail": "Spec « en attente » ; seule la proposition d'un chant existe."
+    },
+    {
+      "nom": "Android : TWA / Bubblewrap",
+      "etat": "absent",
+      "detail": "Rien dans le dépôt."
+    },
+    {
+      "nom": "iOS : Capacitor",
+      "etat": "absent",
+      "detail": "Rien dans le dépôt."
+    }
+  ],
+  "sections": [
+    {
+      "id": "ensemble",
+      "titre": "Vue d'ensemble",
+      "diagrammes": [
+        {
+          "id": "01-architecture",
+          "titre": "Architecture",
+          "resume": "Les chants sont des fichiers du dépôt, transformés en pages statiques au build. Tout ce qui change (setlists, profils, abonnements push) vit dans Firestore, que le navigateur lit en REST avec le jeton Firebase Auth. Les 17 routes API font ce que le client ne doit pas faire seul : envoyer des push, écrire avec des droits élevés, servir le contenu d'un chant. Le service worker ne met en cache que ce qui vient du site lui-même.",
+          "fichiers": [
+            "next.config.ts",
+            "vercel.json",
+            "src/app/layout.tsx",
+            "public/sw.js",
+            "src/lib/firebase/config.ts",
+            "src/lib/firebase/setlists.ts",
+            "src/lib/push/admin.ts",
+            "src/lib/planning/sheets.ts",
+            ".github/workflows/deploy.yml"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "parcours",
+      "titre": "Parcours",
+      "diagrammes": [
+        {
+          "id": "02-parcours",
+          "titre": "De l'ouverture de l'app au culte",
+          "resume": "Le chemin d'un membre de l'équipe louange. Sans compte, on voit les chants ; la connexion ouvre les setlists, le planning personnel et les notifications. La setlist se prépare en semaine, l'équipe est prévenue par push, et le jour J elle se joue en mode louange.",
+          "fichiers": [
+            "src/app/manifest.ts",
+            "src/components/layout/MobileTabBar.tsx",
+            "src/app/(auth)/login/page.tsx",
+            "src/app/(auth)/signup/page.tsx",
+            "src/components/onboarding/Accueil.tsx",
+            "src/lib/access.ts",
+            "src/components/setlists/SetlistForm.tsx",
+            "src/components/performance/PerformanceMode.tsx"
+          ],
+          "incertain": [
+            "En ligne, une personne sans compte n'a qu'un onglet (Chants) : la page /planning s'ouvre quand même si on y arrive par l'icône ou un lien."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fonctionnalites",
+      "titre": "Fonctionnalités, de bout en bout",
+      "diagrammes": [
+        {
+          "id": "10-publication-chants",
+          "titre": "Publier un chant",
+          "resume": "Un chant est un fichier ChordPro écrit à la main et poussé sur main. Deux chemins partent alors en parallèle : la CI GitHub vérifie (types, lint, validation des .cho), Vercel reconstruit le site. Au build, trois scripts produisent l'index des chants, les largeurs de glyphes du PDF et l'index Harmonie, puis Next.js pré-rend une page par chant.",
+          "fichiers": [
+            "content/songs/",
+            "docs/chants/01-format-cho.md",
+            "scripts/build-index.ts",
+            "scripts/build-glyph-widths.ts",
+            "scripts/build-harmonie.ts",
+            "scripts/validate-songs.ts",
+            "src/app/songs/[slug]/page.tsx",
+            ".github/workflows/deploy.yml",
+            "package.json"
+          ],
+          "incertain": [
+            "Le déploiement déclenché par l'intégration Git de Vercel n'est décrit nulle part dans le dépôt : vercel.json ne fixe que la commande de build et le cron. Qu'une CI rouge n'empêche pas la mise en ligne est déduit, à confirmer dans les réglages Vercel."
+          ]
+        },
+        {
+          "id": "11-recherche-chants",
+          "titre": "Trouver un chant",
+          "resume": "La liste est une page statique qui reçoit les 370 chants au build : aucun appel réseau au chargement. La recherche floue (Fuse.js) porte sur le titre, le pinyin et l'artiste, puis les filtres langue et thème s'appliquent. Filtres, récents et position de défilement survivent au retour grâce à l'URL et au stockage du navigateur.",
+          "fichiers": [
+            "src/app/songs/page.tsx",
+            "src/app/songs/SongListClient.tsx",
+            "src/lib/content/loadSongs.ts",
+            "content/themes.json",
+            "src/types/song.ts"
+          ]
+        },
+        {
+          "id": "12-page-chant",
+          "titre": "Afficher et transposer un chant",
+          "resume": "La page arrive avec la source ChordPro complète : analyse et transposition se font dans le navigateur, sans appel réseau quand on change de tonalité. La tonalité par défaut est la recommandée, la plus chantée à GCC. Pour les 185 chants qui ont une partition 简谱, le scan s'affiche avec un calque qui réécrit les accords dans la tonalité choisie.",
+          "fichiers": [
+            "src/app/songs/[slug]/page.tsx",
+            "src/app/songs/[slug]/SongDetailClient.tsx",
+            "src/lib/chordpro/parser.ts",
+            "src/lib/transposeAST.ts",
+            "src/lib/transpose.ts",
+            "src/components/song/SongView.tsx",
+            "src/components/jianpu/JianpuSheet.tsx",
+            "src/lib/jianpu/images.ts"
+          ]
+        },
+        {
+          "id": "13-connexion",
+          "titre": "Compte, profil et droits",
+          "resume": "L'identité passe par Firebase Auth (email et mot de passe). Le profil (nom tel qu'il est écrit dans le planning, rôles par service, droits) est un document users/uid. Les droits sont calculés deux fois : dans l'interface par src/lib/access.ts, côté Firestore par firestore.rules, qu'il faut publier à la main dans la console Firebase.",
+          "fichiers": [
+            "src/lib/firebase/auth.ts",
+            "src/lib/firebase/users.ts",
+            "src/lib/access.ts",
+            "firestore.rules",
+            "src/app/(auth)/signup/page.tsx",
+            "src/app/(auth)/login/page.tsx",
+            "src/app/(auth)/profil/page.tsx"
+          ]
+        },
+        {
+          "id": "14-setlist-edition",
+          "titre": "Planifier une setlist",
+          "resume": "L'éditeur enregistre tout seul, deux secondes après chaque changement : un brouillon invisible à la création, puis des modifications suivies dans un historique. À la publication et en quittant l'éditeur, il demande au serveur de prévenir l'équipe ; le serveur n'envoie qu'une fois, et seulement à partir de quatre chants.",
+          "fichiers": [
+            "src/components/setlists/SetlistForm.tsx",
+            "src/app/setlists/new/CreateSetlistClient.tsx",
+            "src/app/setlists/[id]/edit/EditSetlistClient.tsx",
+            "src/lib/firebase/setlists.ts",
+            "src/lib/firebase/setlistHistory.ts",
+            "src/lib/setlist/history.ts",
+            "src/app/api/push/notify-setlist/route.ts"
+          ]
+        },
+        {
+          "id": "15-setlist-live",
+          "titre": "La setlist en live",
+          "resume": "Sur la page d'une setlist, la vue Partitions charge chaque chant par /api/song, puis applique les adaptations (mode Adapter, Ma version) et les tonalités. Le mode louange découpe le tout en pages plein écran, garde l'écran allumé et enregistre les annotations dessinées dans Firestore.",
+          "fichiers": [
+            "src/app/setlists/[id]/SetlistDetailClient.tsx",
+            "src/lib/api/songs.ts",
+            "src/app/api/song/[slug]/route.ts",
+            "src/lib/chordpro/itemContent.ts",
+            "src/lib/firebase/setlistVersions.ts",
+            "src/components/performance/PerformanceMode.tsx",
+            "src/lib/performance/blocks.ts",
+            "src/lib/firebase/annotations.ts"
+          ]
+        },
+        {
+          "id": "16-push-abonnement",
+          "titre": "S'abonner aux notifications",
+          "resume": "Le navigateur crée un abonnement auprès de son service push (Apple, Google ou Mozilla) avec la clé publique VAPID, puis l'enregistre dans Firestore sous un identifiant tiré du compte et de l'appareil. Sur iPhone, le push n'existe que dans l'app installée sur l'écran d'accueil : l'interface le dit et s'arrête là.",
+          "fichiers": [
+            "src/lib/push/client.ts",
+            "src/components/push/PushToggle.tsx",
+            "src/components/push/PushPrompt.tsx",
+            "src/components/onboarding/Accueil.tsx",
+            "src/lib/firebase/notifPrefs.ts",
+            "public/sw.js"
+          ]
+        },
+        {
+          "id": "17-push-setlist",
+          "titre": "Notification « Setlist prête »",
+          "resume": "Le serveur vérifie l'appelant et la setlist, retrouve dans le Google Sheet qui sert ce jour-là, relie ces noms aux comptes, puis envoie un push à chaque appareil abonné. Les abonnements morts (404, 410) sont supprimés au passage. Au clic, le service worker ramène l'app au premier plan sur la bonne page.",
+          "fichiers": [
+            "src/app/api/push/notify-setlist/route.ts",
+            "src/lib/push/send.ts",
+            "src/lib/push/recipients.ts",
+            "src/lib/push/messages.ts",
+            "src/lib/planning/names.ts",
+            "public/sw.js"
+          ]
+        },
+        {
+          "id": "18-rappels-cron",
+          "titre": "Rappels quotidiens",
+          "resume": "Un seul cron Vercel, chaque jour à 08:00 UTC. Il lit le planning, compose pour chaque personne un seul message qui liste ses services à J-7, J-3 et J-1, dans sa langue, et note chaque envoi pour ne jamais doubler. Les rappels du back-office (scène, tâches, évènements) ne partent que si l'interrupteur est allumé.",
+          "fichiers": [
+            "vercel.json",
+            "src/app/api/cron/reminders/route.ts",
+            "src/lib/push/reminderMessage.ts",
+            "src/lib/push/notifications.ts",
+            "src/lib/push/recipients.ts",
+            "src/lib/backOffice.ts"
+          ]
+        },
+        {
+          "id": "19-pdf",
+          "titre": "Exporter en PDF",
+          "resume": "Le PDF est fabriqué dans le navigateur par @react-pdf/renderer, chargé seulement au clic. En style classique, la couleur suit la langue du chant : bleu pour le français, rouge pour le chinois ; le style « couleurs par section » reprend les couleurs de l'écran. Pour une setlist, les scans 简谱, servis en WebP que react-pdf ne sait pas lire, sont ré-encodés en PNG.",
+          "fichiers": [
+            "src/components/pdf/SongPDF.tsx",
+            "src/components/pdf/SetlistFullPDF.tsx",
+            "src/components/pdf/SetlistOverviewPDF.tsx",
+            "src/components/pdf/PlanningPDF.tsx",
+            "src/components/pdf/PdfChoiceSheet.tsx",
+            "src/lib/pdfStylePref.ts",
+            "src/lib/pdf/colors.ts",
+            "public/fonts/"
+          ]
+        },
+        {
+          "id": "20-jianpu-pipeline",
+          "titre": "Pipeline 简谱",
+          "resume": "Les partitions chinoises sont des scans : les chiffres restent des pixels, justes dans toutes les tonalités. Des scripts Python découpent chaque page, lisent les étiquettes d'accords en les choisissant parmi les accords du .cho, et publient leurs positions dans chords.json ; une vérité terrain relue à l'œil passe devant la lecture automatique. Rien de cela ne tourne au build : les fichiers produits sont commités, et le navigateur se contente de masquer puis réécrire chaque accord.",
+          "fichiers": [
+            "scripts/jianpu/LOOP.md",
+            "scripts/jianpu/build-images.py",
+            "scripts/jianpu/segment.py",
+            "scripts/jianpu/classify.py",
+            "scripts/jianpu/match.py",
+            "scripts/jianpu/build-chords.py",
+            "scripts/jianpu/freeze.py",
+            "scripts/jianpu/audit-browser.ts",
+            "public/jianpu/",
+            "src/components/jianpu/JianpuSheet.tsx"
+          ],
+          "incertain": [
+            "Les scans sources vivent hors du dépôt (build-images.py les attend dans ../Partitions) : les premières étapes ne se refont pas depuis un clone seul."
+          ]
+        },
+        {
+          "id": "21-pwa-cache",
+          "titre": "Service worker, cache et hors-ligne",
+          "resume": "Le service worker est enregistré par un script en ligne dans layout.tsx. Les pages passent d'abord par le réseau pour ne jamais servir un déploiement périmé ; les fichiers hashés de Next.js viennent d'abord du cache ; l'index des chants, les polices et le contenu des chants sont servis tout de suite puis rafraîchis en fond. Sur un serveur local, rien n'est mis en cache.",
+          "fichiers": [
+            "public/sw.js",
+            "src/app/layout.tsx",
+            "src/app/manifest.ts",
+            "vercel.json"
+          ],
+          "incertain": [
+            "Ce qui marche hors ligne dépend des pages déjà visitées : seules /songs/ et songs-index.json sont préchargées à l'installation."
+          ]
+        },
+        {
+          "id": "22-ajout-chant",
+          "titre": "Ajouter un chant : ce qui existe vraiment",
+          "resume": "Il n'y a ni import ni transcription automatique dans le code. Un membre peut proposer un chant (titre, lien YouTube, lien vers le PDF), et la proposition arrive dans /admin. La conversion en .cho se fait ensuite à la main, hors du site : la spec qui l'automatiserait est « en attente » depuis le 10 juin 2026.",
+          "fichiers": [
+            "src/components/songs/SongProposalDrawer.tsx",
+            "src/lib/firebase/songProposals.ts",
+            "src/app/admin/page.tsx",
+            "docs/spec-ajouter-un-chant.md",
+            "docs/chants/01-format-cho.md"
+          ],
+          "incertain": [
+            "L'étape « l'admin fait convertir le chant » n'existe dans aucun code : elle décrit la pratique (session Claude Code, skill chord-placement), pas un mécanisme."
+          ]
+        },
+        {
+          "id": "23-planning",
+          "titre": "Planning",
+          "resume": "Le planning vient d'un Google Sheet public, lu en CSV onglet par onglet, directement depuis le navigateur. En local, où l'interrupteur du back-office est allumé, une grille écrite dans l'app (Firestore) passe devant le Sheet ; en ligne, seul le Sheet compte. Publier un trimestre révèle son onglet aux membres et, la première fois seulement, envoie un push.",
+          "fichiers": [
+            "src/app/planning/page.tsx",
+            "src/lib/planning/sheets.ts",
+            "src/lib/planning/grille.ts",
+            "src/lib/firebase/planningGrille.ts",
+            "src/app/api/planning/release/route.ts",
+            "src/lib/planning/names.ts",
+            "src/lib/backOffice.ts"
+          ]
+        },
+        {
+          "id": "24-signalement",
+          "titre": "Signaler un problème",
+          "resume": "Un membre connecté peut signaler un problème sur un chant ou sur le site. Le serveur limite le débit par IP, valide le texte, enregistre le signalement dans Firestore et prévient les admins par push. Aucun email n'est envoyé.",
+          "fichiers": [
+            "src/components/report/ReportDialog.tsx",
+            "src/app/api/report/route.ts",
+            "src/lib/report/reportValidator.ts",
+            "src/lib/push/recipients.ts",
+            "src/lib/firebase/reports.ts",
+            "src/app/admin/page.tsx"
+          ]
+        },
+        {
+          "id": "25-evenements",
+          "titre": "Évènements : s'inscrire",
+          "resume": "Fonction du back-office, coupée en ligne : pages et routes répondent 404 tant que l'interrupteur n'est pas posé sur Vercel. L'inscription passe par une route serveur pour que la place et le compteur s'écrivent dans une même transaction ; on peut s'inscrire sans compte si l'organisateur l'autorise.",
+          "fichiers": [
+            "src/app/evenements/[id]/",
+            "src/app/api/evenements/inscription/route.ts",
+            "src/lib/evenements/agenda.ts",
+            "src/lib/evenements/serveur.ts",
+            "src/lib/firebase/evenements.ts",
+            "src/lib/backOffice.ts"
+          ]
+        },
+        {
+          "id": "26-harmonie",
+          "titre": "Harmonie",
+          "resume": "Les fiches d'harmonie sont écrites en Markdown dans docs/harmonie et compilées au build ; une coquille dans une fiche fait échouer le build. Sur un chant, les suggestions sont calculées dans le navigateur à partir de ces règles ; l'équipe peut écarter une suggestion pour tout le monde ou écrire ses propres idées, gardées dans Firestore.",
+          "fichiers": [
+            "scripts/build-harmonie.ts",
+            "docs/harmonie/",
+            "public/harmonie-index.json",
+            "src/lib/harmonie/useHarmonie.ts",
+            "src/lib/harmonie/suggestions.ts",
+            "src/lib/firebase/harmonie.ts",
+            "src/components/harmonie/IdeesSheet.tsx"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "donnees",
+      "titre": "Modèle de données",
+      "diagrammes": [
+        {
+          "id": "30-donnees-chant",
+          "titre": "Un chant",
+          "resume": "Un chant n'est pas en base : c'est un fichier .cho, analysé en arbre (sections, lignes, jetons accord ou paroles). Au build, un résumé de chaque chant part dans songs-index.json. Les partitions 简谱 sont à part, dans public/jianpu : pages WebP et calque des accords.",
+          "fichiers": [
+            "src/types/song.ts",
+            "src/types/chordPro.ts",
+            "src/lib/chordpro/parser.ts",
+            "src/lib/content/loadSongs.ts",
+            "content/themes.json",
+            "src/lib/jianpu/images.ts"
+          ]
+        },
+        {
+          "id": "31-donnees-louange",
+          "titre": "Setlists, comptes et travail autour des chants",
+          "resume": "Une setlist est un seul document Firestore : ses chants forment un tableau, chacun avec tonalité, structure, notes, nuances et parfois une source ChordPro adaptée. L'historique et les versions perso sont des sous-collections. Les chants sont désignés par leur slug, sans lien vérifié par la base.",
+          "fichiers": [
+            "src/lib/firebase/setlists.ts",
+            "src/types/setList.ts",
+            "src/types/user.ts",
+            "src/lib/firebase/setlistHistory.ts",
+            "src/lib/firebase/setlistVersions.ts",
+            "src/lib/firebase/annotations.ts",
+            "src/lib/firebase/harmonie.ts",
+            "firestore.rules"
+          ],
+          "incertain": [
+            "Champs principaux seulement, relevés dans les types et les fonctions fromFs* : Firestore n'impose pas de schéma."
+          ]
+        },
+        {
+          "id": "32-donnees-notifications",
+          "titre": "Notifications",
+          "resume": "Chaque appareil abonné est un document ; les préférences et la langue des envois sont dans notifPrefs. notifLog empêche les doublons, et notifications alimente la cloche pour les envois qui n'ont pas d'autre trace.",
+          "fichiers": [
+            "src/lib/push/client.ts",
+            "src/lib/push/send.ts",
+            "src/lib/push/notifications.ts",
+            "src/lib/firebase/notifPrefs.ts",
+            "src/lib/firebase/onboarding.ts",
+            "src/app/api/planning/release/route.ts"
+          ]
+        },
+        {
+          "id": "33-donnees-back-office",
+          "titre": "Back-office",
+          "resume": "Évènements et inscriptions, programmes de scène, tâches par pôle, équipes, grilles de planning. Ces collections sont partagées entre le local et la production, qui utilisent le même projet Firestore.",
+          "fichiers": [
+            "src/types/evenement.ts",
+            "src/types/programme.ts",
+            "src/types/tache.ts",
+            "src/types/equipe.ts",
+            "src/lib/firebase/planningGrille.ts",
+            "firestore.rules"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "dependances",
+      "titre": "Dépendances du code",
+      "diagrammes": [
+        {
+          "id": "40-dependances-couches",
+          "titre": "Les grandes zones",
+          "genere": "couches",
+          "resume": "Qui importe qui, par grandes zones du dépôt, imports de type compris. Chaque nombre compte des imports. Les pages s'appuient sur les composants, qui s'appuient sur src/lib ; les scripts de build réutilisent le parseur de l'app.",
+          "fichiers": [
+            "scripts/diagrammes/generer.ts",
+            "tsconfig.json"
+          ]
+        },
+        {
+          "id": "41-dependances-lib",
+          "titre": "Entre les modules de src/lib",
+          "genere": "lib",
+          "resume": "Les dossiers de src/lib entre eux, imports de type exclus. firebase/setlists.ts sert de client REST à presque tous les autres, d'où les flèches qui convergent vers firebase. Les dossiers sans aucun lien avec les autres ne sont pas dessinés.",
+          "fichiers": [
+            "src/lib/",
+            "src/lib/firebase/setlists.ts"
+          ]
+        },
+        {
+          "id": "42-dependances-composants",
+          "titre": "Composants",
+          "genere": "composants",
+          "resume": "Les dossiers de src/components entre eux, et vers src/lib et src/hooks regroupés. Imports de type exclus.",
+          "fichiers": [
+            "src/components/",
+            "src/hooks/"
+          ]
+        },
+        {
+          "id": "43-dependances-api",
+          "titre": "Routes API",
+          "genere": "api",
+          "resume": "Ce que chaque groupe de routes API importe dans src/lib : la partie serveur du site. Presque tout passe par push/admin.ts, qui initialise Firebase Admin.",
+          "fichiers": [
+            "src/app/api/",
+            "src/lib/push/admin.ts"
+          ]
+        }
+      ]
+    }
+  ],
+  "incertitudes": [
+    "Déploiement : le déclenchement par l'intégration Git de Vercel, et le fait qu'une CI rouge n'empêche pas la mise en ligne, sont déduits ; rien dans le dépôt ne le décrit.",
+    "Tâches, équipes et programmes de scène n'ont pas de diagramme de séquence : ils sont coupés en ligne et n'apparaissent ici que dans le modèle de données du back-office et dans les dépendances.",
+    "Modèles de données : champs principaux seulement. Firestore n'impose pas de schéma, un document ancien peut porter des champs qui n'y figurent pas.",
+    "Conversion d'un chant proposé en .cho : pratique manuelle, absente du code.",
+    "Pipeline 简谱 : les scans sources sont hors du dépôt, les étapes amont ne se vérifient pas depuis un clone.",
+    "Graphes de dépendances : les import() dynamiques (PDF à la demande) comptent comme des imports ordinaires ; les modules de node_modules sont exclus."
+  ],
+  "bizarreries": [
+    {
+      "titre": "Un jeton Google suivi par git",
+      "genre": "sécurité",
+      "detail": "token.pickle contient des identifiants OAuth Google (portée drive.readonly) et est commité depuis 5129cfa. Si le dépôt est public ou partagé, révoquer ce jeton dans le compte Google, puis le retirer du suivi, et de l'historique si besoin."
+    },
+    {
+      "titre": "Resend : dans la doc, pas dans le code",
+      "genre": "doc périmée",
+      "detail": "CLAUDE.md annonce des signalements par email via Resend. Aucun code n'envoie d'email et Resend n'est pas dans package.json : /api/report écrit dans Firestore et envoie un push aux admins."
+    },
+    {
+      "titre": "17 routes API, pas 18",
+      "genre": "doc périmée",
+      "detail": "CLAUDE.md cite /api/admin/migrer-annonces, qui n'existe plus."
+    },
+    {
+      "titre": "songs-index.json ne sert pas à la liste",
+      "genre": "doc périmée",
+      "detail": "La doc dit que la liste et la recherche lisent songs-index.json ; en réalité /songs reçoit les chants au build. L'index sert à l'éditeur et à la page d'une setlist, et à Harmonie."
+    },
+    {
+      "titre": "Un détour par chant dans une setlist",
+      "genre": "performance",
+      "detail": "Avec trailingSlash: true, /api/song/slug redirige vers /api/song/slug/ (308, vérifié en ligne). fetchSongAST appelle l'adresse sans barre finale : un aller-retour de plus pour chaque chant de la vue Partitions."
+    },
+    {
+      "titre": "Le client REST de Firestore s'appelle setlists.ts",
+      "genre": "structure",
+      "detail": "FS_BASE, authHeader et toFsFields vivent dans src/lib/firebase/setlists.ts et sont importés par 30 fichiers, push et évènements compris ; annotations.ts en garde sa propre copie. L'identifiant du projet Firebase est écrit en dur dans 7 fichiers, alors que la config Firebase le reçoit d'ailleurs."
+    },
+    {
+      "titre": "Firebase Admin rangé dans push/",
+      "genre": "structure",
+      "detail": "src/lib/push/admin.ts initialise l'Admin SDK pour 14 routes API, dont beaucoup n'envoient aucun push. Le même dossier mélange modules serveur (admin.ts, send.ts) et module navigateur (client.ts) : seul un commentaire empêche d'importer les premiers côté client."
+    },
+    {
+      "titre": "Hors ligne, le live n'est pas garanti",
+      "genre": "hors-ligne",
+      "detail": "Le service worker n'écrit jamais en cache les setlists (Firestore) ni les scans 简谱 (/jianpu/*). Une setlist qui n'était pas ouverte avant la coupure ne s'affiche pas, ses scans non plus."
+    },
+    {
+      "titre": "L'app installée démarre là où rien n'est préchargé",
+      "genre": "hors-ligne",
+      "detail": "start_url vaut /planning, mais l'installation ne précharge que /songs/ et l'index des chants : un premier lancement hors ligne retombe sur /songs/."
+    },
+    {
+      "titre": "Du code mort visible",
+      "genre": "code mort",
+      "detail": "hasJianpu vaut faux pour les 370 chants (le format {jianpu:} en ligne n'est plus utilisé) et n'est lu nulle part ; le type Setlist de src/types/setList.ts n'est importé nulle part, c'est FSSetlist qui sert."
+    },
+    {
+      "titre": "Des fichiers générés aussi commités",
+      "genre": "structure",
+      "detail": "songs-index.json, harmonie-index.json et glyphWidths.json sont recréés à chaque build mais suivis par git : ils divergent dès qu'un .cho est poussé sans les régénérer."
+    },
+    {
+      "titre": "Pipeline 简谱 sans liste de dépendances",
+      "genre": "outillage",
+      "detail": "Les scripts Python s'appuient sur Pillow et NumPy, sans requirements.txt pour les installer."
+    },
+    {
+      "titre": "Un nom de fichier à part",
+      "genre": "contenu",
+      "detail": "content/songs/Ta parole.cho est le seul fichier avec une espace et une majuscule ; son slug les garde dans l'URL."
+    }
+  ]
+}

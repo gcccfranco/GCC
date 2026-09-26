@@ -1,0 +1,16 @@
+sequenceDiagram
+  autonumber
+  participant B as build-harmonie.ts (au build)
+  participant V as Vercel (public/)
+  actor U as Musicien·ne
+  participant D as Page chant (IdeesSheet)
+  participant FS as Firestore REST
+  B->>B: lit docs/harmonie/*.md, vérifie le vocabulaire (coquille = build en échec)
+  B->>V: public/harmonie-index.json (fiches + exemples du répertoire)
+  U->>D: Idées d'harmonie sur un chant
+  D->>D: useAccesHarmonie (canUseHarmonie dans access.ts)
+  D->>V: GET /harmonie-index.json
+  D->>D: suggestionsPour : règles appliquées aux accords du chant
+  D->>FS: harmonie/slug/rejets et harmonie/slug/idees
+  D-->>U: suggestions moins les rejets, idées de l'équipe
+  U->>FS: écarte une suggestion (rejets) ou écrit une idée (idees)

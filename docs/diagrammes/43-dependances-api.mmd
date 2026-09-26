@@ -1,0 +1,66 @@
+%% Généré par scripts/diagrammes/generer.ts (dependency-cruiser). Ne pas modifier à la main.
+flowchart LR
+  subgraph C0["Routes API"]
+    n0["/api/admin<br/>1 fichier"]
+    n1["/api/cron<br/>1 fichier"]
+    n2["/api/equipes<br/>2 fichiers"]
+    n3["/api/evenements<br/>2 fichiers"]
+    n4["/api/planning<br/>1 fichier"]
+    n5["/api/push<br/>4 fichiers"]
+    n6["/api/report<br/>1 fichier"]
+    n7["/api/scene<br/>1 fichier"]
+    n8["/api/setlist<br/>1 fichier"]
+    n9["/api/song<br/>1 fichier"]
+    n10["/api/taches<br/>2 fichiers"]
+  end
+  subgraph C1["src/lib"]
+    n11["lib/(racine)<br/>15 fichiers"]
+    n12["lib/content<br/>1 fichier"]
+    n13["lib/equipes<br/>3 fichiers"]
+    n14["lib/evenements<br/>5 fichiers"]
+    n15["lib/planning<br/>12 fichiers"]
+    n16["lib/push<br/>8 fichiers"]
+    n17["lib/report<br/>2 fichiers"]
+    n18["lib/scene<br/>4 fichiers"]
+    n19["lib/setlist<br/>12 fichiers"]
+    n20["lib/taches<br/>5 fichiers"]
+  end
+  n0 -->|2| n11
+  n0 -->|1| n14
+  n0 -->|5| n15
+  n0 -->|2| n16
+  n1 -->|2| n11
+  n1 -->|2| n14
+  n1 -->|1| n15
+  n1 -->|5| n16
+  n1 -->|2| n18
+  n1 -->|2| n20
+  n2 -->|2| n11
+  n2 -->|3| n13
+  n2 -->|2| n14
+  n2 -->|1| n15
+  n2 -->|2| n16
+  n3 -->|3| n11
+  n3 -->|4| n14
+  n3 -->|2| n16
+  n4 -->|1| n11
+  n4 -->|1| n15
+  n4 -->|6| n16
+  n5 -->|4| n11
+  n5 -->|2| n14
+  n5 -->|1| n15
+  n5 ==>|15| n16
+  n6 -->|3| n16
+  n6 -->|1| n17
+  n7 -->|1| n11
+  n7 -->|4| n16
+  n7 -->|2| n18
+  n8 -->|1| n11
+  n8 -->|1| n15
+  n8 -->|4| n16
+  n8 -->|1| n19
+  n9 -->|1| n12
+  n10 -->|2| n11
+  n10 -->|1| n15
+  n10 -->|7| n16
+  n10 -->|5| n20

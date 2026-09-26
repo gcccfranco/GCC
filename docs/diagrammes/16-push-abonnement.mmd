@@ -1,0 +1,26 @@
+sequenceDiagram
+  autonumber
+  actor U as Utilisateur
+  participant UI as Accueil ou Moi (PushToggle)
+  participant SW as Service worker
+  participant PS as Service push du navigateur
+  participant FS as Firestore REST
+  U->>UI: Activer les notifications
+  alt iPhone ou iPad hors PWA installée
+    UI-->>U: « Ajoute d'abord GCC à l'écran d'accueil »
+  else navigateur compatible
+    UI->>U: Notification.requestPermission()
+    U-->>UI: autorisé
+    UI->>SW: navigator.serviceWorker.ready
+    UI->>PS: pushManager.subscribe (clé publique VAPID)
+    PS-->>UI: endpoint + clés p256dh et auth
+    UI->>UI: id = uid + SHA-256 de l'endpoint
+    UI->>FS: PATCH pushSubscriptions/id + jeton
+  end
+  opt réglages
+    U->>UI: types (rappels, setlists…) et langue
+    UI->>FS: PATCH notifPrefs/uid
+  end
+  U->>UI: Désactiver
+  UI->>PS: unsubscribe
+  UI->>FS: DELETE pushSubscriptions/id

@@ -1,0 +1,48 @@
+flowchart LR
+  subgraph APPAREIL["Appareil : navigateur ou PWA installée"]
+    UI["Pages Next.js<br/>(React, rendu côté client)"]
+    LS[("Stockage local<br/>préférences, récents, langue")]
+    SW["Service worker<br/>public/sw.js"]
+    CACHE[("Cache du service worker")]
+  end
+
+  subgraph VERCEL["Vercel"]
+    STATIC["Pages pré-rendues<br/>+ fichiers de public/"]
+    API["17 routes API<br/>/api/* (Node.js)"]
+    CRON["Cron quotidien<br/>08:00 UTC"]
+  end
+
+  subgraph FIREBASE["Firebase"]
+    AUTH["Firebase Auth<br/>email + mot de passe"]
+    FS[("Firestore<br/>setlists, profils, push…")]
+  end
+
+  SHEET["Google Sheet du planning<br/>(CSV public)"]
+  PUSHSRV["Services push des navigateurs<br/>Apple · Google · Mozilla"]
+  YT["YouTube<br/>(lecteur intégré)"]
+
+  subgraph DEPOT["Dépôt GitHub"]
+    CHO["content/songs/*.cho<br/>370 chants ChordPro"]
+    JPY["scripts/jianpu<br/>Python, lancé à la main"]
+    CI["CI GitHub Actions<br/>tsc · lint · validate"]
+  end
+
+  UI -->|"GET même origine"| SW
+  SW <-->|"lit / écrit"| CACHE
+  SW -->|"réseau"| STATIC
+  SW -->|"GET /api/song"| API
+  UI --- LS
+  UI -->|"REST + jeton, jamais en cache"| FS
+  UI -->|"connexion"| AUTH
+  UI -->|"POST + jeton"| API
+  UI -->|"CSV"| SHEET
+  UI -.->|"iframe"| YT
+  API -->|"Admin SDK"| FS
+  API -->|"vérifie le jeton"| AUTH
+  API -->|"web-push (VAPID)"| PUSHSRV
+  PUSHSRV -->|"événement push"| SW
+  CRON -->|"GET + secret"| API
+  API -->|"CSV (rappels, destinataires)"| SHEET
+  CHO -->|"build Vercel"| STATIC
+  JPY -->|"WebP + chords.json commités"| STATIC
+  CHO -->|"push sur main"| CI

@@ -1,0 +1,24 @@
+flowchart TD
+  A(["Ouvre GCC"]) --> B{"Depuis l'icône<br/>de la PWA ?"}
+  B -->|"oui"| C["Démarre sur /planning<br/>(start_url du manifeste)"]
+  B -->|"non"| D["Page ouverte depuis<br/>un lien ou un favori"]
+  C --> E{"Connecté ?"}
+  D --> E
+  E -->|"non"| F["Sans compte : chants<br/>et planning public"]
+  F -->|"Se connecter"| G["/login ou /signup<br/>Firebase Auth"]
+  G --> H{"Profil complet ?"}
+  H -->|"non"| I["/profil : nom du planning,<br/>rôles, lieux de service"]
+  H -->|"oui"| J["Accueil de 1re connexion<br/>une fois par compte"]
+  I --> J
+  J --> K["Active les notifications<br/>(iPhone : installer d'abord)"]
+  E -->|"oui"| L["Onglets : Chants · Setlists<br/>· Planning · Moi"]
+  K --> L
+  L --> M{"Peut créer une setlist<br/>pour ce service ?"}
+  M -->|"oui"| N["Crée la setlist : chants,<br/>tonalités, structure, notes"]
+  N --> O["Enregistrement auto<br/>+ historique"]
+  O --> P["Équipe prévenue par push<br/>dès 4 chants"]
+  M -->|"non"| Q["Reçoit « Setlist prête »<br/>et rappels J-7 · J-3 · J-1"]
+  P --> Q
+  Q --> R["Ouvre la setlist :<br/>vue partitions"]
+  R --> S["Prépare : Ma version,<br/>PDF, annotations"]
+  S --> T(["Le jour J : mode louange<br/>plein écran, écran allumé"])

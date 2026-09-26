@@ -1,0 +1,16 @@
+sequenceDiagram
+  autonumber
+  actor U as Visiteur ou membre
+  participant E as /evenements/id
+  participant FS as Firestore REST
+  participant API as /api/evenements/<br/>inscription
+  participant AD as Firebase Admin
+  Note over E,API: Back-office : page et route répondent 404 en ligne (interrupteur coupé sur Vercel)
+  U->>E: ouvre la fiche
+  E->>FS: GET evenements/id
+  U->>E: S'inscrire, avec 0 à 5 invités
+  E->>API: POST evenementId, invites, nom (+ jeton si connecté)
+  API->>AD: transaction : relit l'évènement et l'inscription existante
+  API->>API: refus si fermé, pas encore ouvert, terminé, commencé, complet, formulaire externe ou compte exigé
+  API->>AD: écrit inscriptions/uid (ou id aléatoire sans compte) + compteur inscrits
+  API-->>E: nombre d'inscrits + ma place
