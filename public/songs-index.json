@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-26T20:10:42.300Z",
+  "generatedAt": "2026-09-26T22:02:34.445Z",
   "songs": [
     {
       "slug": "abba-pere",
@@ -3177,6 +3177,50 @@
       ]
     },
     {
+      "slug": "定睛在耶稣身上",
+      "title": "定睛在耶稣身上",
+      "titlePinyin": "Dìng jīng zài yē sū shēn shàng",
+      "artist": "赞美之泉",
+      "language": "zh",
+      "originalKey": "C",
+      "recommendedKey": null,
+      "tempo": 160,
+      "themes": [
+        "foi",
+        "engagement"
+      ],
+      "youtubeUrl": null,
+      "spotifyUrl": null,
+      "appleMusicUrl": null,
+      "hasJianpu": false,
+      "jianpuKey": null,
+      "sections": [
+        {
+          "id": "intro-1",
+          "name": "前奏 1/Intro 1",
+          "type": "intro",
+          "number": "1"
+        },
+        {
+          "id": "intro-2",
+          "name": "前奏 2/Intro 2 (x2)",
+          "type": "intro",
+          "number": "2",
+          "suffix": "(x2)"
+        },
+        {
+          "id": "verse-3",
+          "name": "主歌/Couplet",
+          "type": "verse"
+        },
+        {
+          "id": "chorus-4",
+          "name": "副歌/Refrain",
+          "type": "chorus"
+        }
+      ]
+    },
+    {
       "slug": "donne-nous-des-mains-pures",
       "title": "Donne-nous des mains pures",
       "titlePinyin": null,
@@ -4214,6 +4258,57 @@
           "id": "bridge-3",
           "name": "桥段/Pont",
           "type": "bridge"
+        }
+      ]
+    },
+    {
+      "slug": "恒久恒久以前",
+      "title": "恒久恒久以前",
+      "titlePinyin": "Héng jiǔ héng jiǔ yǐ qián",
+      "artist": "火把音乐",
+      "language": "zh",
+      "originalKey": "B",
+      "recommendedKey": null,
+      "tempo": 132,
+      "themes": [
+        "noël",
+        "salut",
+        "adoration"
+      ],
+      "youtubeUrl": null,
+      "spotifyUrl": null,
+      "appleMusicUrl": null,
+      "hasJianpu": false,
+      "jianpuKey": null,
+      "sections": [
+        {
+          "id": "verse-1",
+          "name": "主歌 1/Couplet 1",
+          "type": "verse",
+          "number": "1"
+        },
+        {
+          "id": "verse-2",
+          "name": "主歌 2/Couplet 2",
+          "type": "verse",
+          "number": "2"
+        },
+        {
+          "id": "prechorus-3",
+          "name": "预备副歌/Pré-Refrain",
+          "type": "prechorus"
+        },
+        {
+          "id": "chorus-4",
+          "name": "副歌 1/Refrain 1",
+          "type": "chorus",
+          "number": "1"
+        },
+        {
+          "id": "chorus-5",
+          "name": "副歌 2/Refrain 2",
+          "type": "chorus",
+          "number": "2"
         }
       ]
     },
@@ -11070,6 +11165,56 @@
       ]
     },
     {
+      "slug": "十字架",
+      "title": "十字架",
+      "titlePinyin": "Shí zì jià",
+      "artist": "Inconnu",
+      "language": "zh",
+      "originalKey": "E",
+      "recommendedKey": null,
+      "tempo": null,
+      "themes": [
+        "croix",
+        "adoration"
+      ],
+      "youtubeUrl": null,
+      "spotifyUrl": null,
+      "appleMusicUrl": null,
+      "hasJianpu": false,
+      "jianpuKey": null,
+      "sections": [
+        {
+          "id": "verse-1",
+          "name": "主歌 1/Couplet 1",
+          "type": "verse",
+          "number": "1"
+        },
+        {
+          "id": "verse-2",
+          "name": "主歌 2/Couplet 2",
+          "type": "verse",
+          "number": "2"
+        },
+        {
+          "id": "verse-3",
+          "name": "主歌 3/Couplet 3",
+          "type": "verse",
+          "number": "3"
+        },
+        {
+          "id": "verse-4",
+          "name": "主歌 4/Couplet 4",
+          "type": "verse",
+          "number": "4"
+        },
+        {
+          "id": "chorus-5",
+          "name": "副歌/Refrain",
+          "type": "chorus"
+        }
+      ]
+    },
+    {
       "slug": "十字架的传达者",
       "title": "十字架的传达者",
       "titlePinyin": "Shí zì jià de chuán dá zhě",
@@ -11745,6 +11890,92 @@
           "id": "final-5",
           "name": "Final",
           "type": "other"
+        }
+      ]
+    },
+    {
+      "slug": "triomphe",
+      "title": "Triomphe",
+      "titlePinyin": null,
+      "artist": "Église Momentum",
+      "language": "fr",
+      "originalKey": "B",
+      "recommendedKey": null,
+      "tempo": 120,
+      "themes": [
+        "croix",
+        "salut",
+        "adoration"
+      ],
+      "youtubeUrl": null,
+      "spotifyUrl": null,
+      "appleMusicUrl": null,
+      "hasJianpu": false,
+      "jianpuKey": null,
+      "sections": [
+        {
+          "id": "intro-1",
+          "name": "Intro",
+          "type": "intro"
+        },
+        {
+          "id": "chorus-2",
+          "name": "Refrain 1",
+          "type": "chorus",
+          "number": "1"
+        },
+        {
+          "id": "verse-3",
+          "name": "Couplet 1",
+          "type": "verse",
+          "number": "1"
+        },
+        {
+          "id": "prechorus-4",
+          "name": "Pré-Refrain 1",
+          "type": "prechorus",
+          "number": "1"
+        },
+        {
+          "id": "chorus-5",
+          "name": "Refrain 2",
+          "type": "chorus",
+          "number": "2"
+        },
+        {
+          "id": "verse-6",
+          "name": "Couplet 2",
+          "type": "verse",
+          "number": "2"
+        },
+        {
+          "id": "prechorus-7",
+          "name": "Pré-Refrain 2",
+          "type": "prechorus",
+          "number": "2"
+        },
+        {
+          "id": "chorus-8",
+          "name": "Refrain 3",
+          "type": "chorus",
+          "number": "3"
+        },
+        {
+          "id": "bridge-9",
+          "name": "Pont",
+          "type": "bridge"
+        },
+        {
+          "id": "chorus-10",
+          "name": "Refrain 4",
+          "type": "chorus",
+          "number": "4"
+        },
+        {
+          "id": "outro-11",
+          "name": "Final (x2)",
+          "type": "outro",
+          "suffix": "(x2)"
         }
       ]
     },
@@ -13918,6 +14149,44 @@
           "id": "bridge-3",
           "name": "桥段/Pont",
           "type": "bridge"
+        }
+      ]
+    },
+    {
+      "slug": "向主欢呼",
+      "title": "向主欢呼",
+      "titlePinyin": "Xiàng zhǔ huān hū",
+      "artist": "Hillsong",
+      "language": "zh",
+      "originalKey": "G",
+      "recommendedKey": null,
+      "tempo": 76,
+      "themes": [
+        "adoration",
+        "action-de-grace"
+      ],
+      "youtubeUrl": null,
+      "spotifyUrl": null,
+      "appleMusicUrl": null,
+      "hasJianpu": false,
+      "jianpuKey": null,
+      "sections": [
+        {
+          "id": "verse-1",
+          "name": "主歌 1/Couplet 1",
+          "type": "verse",
+          "number": "1"
+        },
+        {
+          "id": "verse-2",
+          "name": "主歌 2/Couplet 2",
+          "type": "verse",
+          "number": "2"
+        },
+        {
+          "id": "chorus-3",
+          "name": "副歌/Refrain",
+          "type": "chorus"
         }
       ]
     },

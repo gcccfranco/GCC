@@ -113,6 +113,10 @@ une parole.
   posés sur la syllabe de sa rangée. Une phrase gravée une seule fois en gras
   à côté des rangées (« que ma bouche chante ta louange ») appartient à
   chaque couplet et s'y répète. L'italique n'est pas une autre voix.
+- **Refrain des couplets empilés**, gravé une seule fois sous les rangées :
+  il se chante après chaque couplet, mais s'écrit **une fois, après le
+  dernier couplet**, sans `{needs_review}` (Que ma bouche chante ta louange,
+  十字架 ; décision du 26/09/2026).
 - Gravure à plusieurs voix (soprano, alto, ténor, basse) : seule la portée
   qui porte les paroles compte ; pas de calque.
 
@@ -193,6 +197,10 @@ L'accord s'écrit **tel que gravé**, à l'orthographe près d'un même symbole 
 | 之处 | zhī chù |
 | 应许 | yīng xǔ |
 | 子粒 | zǐ lì |
+| 不住 | bù zhù |
+| 钉十架 | dìng shí jià |
+| 钉死 | dìng sǐ |
+| 人子 | rén zǐ |
 
 ## Source
 

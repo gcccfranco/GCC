@@ -107,10 +107,10 @@ autre tonalité) :
 
 | Ce qu'on voit | Champ | Forme |
 |---|---|---|
-| accord lu faux | `corrections` | `{"x,y": "Accord"}` avec le `x,y` de l'étiquette dans `labels` |
+| accord lu faux | `corrections` | `{"y,x": "Accord"}` — **y d'abord** (rangée), puis x de l'étiquette dans `labels` ; c'est la clé que construit `build-chords.py` |
 | accord non détecté, rangée présente | `extra_labels` | `[{"x": …, "y": …, "w": …, "h": …, "c": "Accord"}]`, boîte mesurée sur le webp |
 | accord gravé qui n'est pas dans le `.cho` | `extra_chords` | `["D7/G", …]` puis relire ; le `.cho` est moins précis que la gravure, la gravure a raison |
-| amas qui n'est pas un accord (segno, 【Chorus】, « D.S. ») | `not_labels` | `["x,y", …]` |
+| amas qui n'est pas un accord (segno, 【Chorus】, « D.S. ») | `not_labels` | `["y,x", …]`, même clé |
 | rangée entière qui n'est pas des accords | `not_rows` | `[y, …]` |
 | rangée d'accords dans une **autre** tonalité (capo, seconde version) | `mask_rows` | `[y, …]` : masquée, rien n'est réécrit |
 | second jeu d'accords à proposer au sélecteur | `alt_labels` / `alt`, `opt` | voir LOOP.md, itérations 54 et 64 |

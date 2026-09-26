@@ -1,0 +1,179 @@
+{
+ "slug": "十字架",
+ "not_rows": [
+  616,
+  1119
+ ],
+ "not_rows_verified": "les rangées y=616 et y=1119 sont la 4e rangée de paroles des systèmes 1 et 2 (« 我不能别 有所夸 但夸救主 十架 », « 世界对我 已钉死 我以死对 世界 ») : couplets empilés, aucun accord, onze et huit amas qui gonflaient le dénominateur. Vu au zoom. 2026-09-26",
+ "not_labels": [
+  "206,773"
+ ],
+ "not_labels_verified": "amas (773..776) de la rangée d'accords du 1er système : grain de poussière du scan entre E et B, lu « A » à -0,42. Vu au zoom ×4. 2026-09-26",
+ "extra_labels": [
+  {
+   "x": 70,
+   "y": 1220,
+   "w": 20,
+   "h": 26,
+   "c": "E"
+  },
+  {
+   "x": 343,
+   "y": 1221,
+   "w": 24,
+   "h": 26,
+   "c": "A"
+  },
+  {
+   "x": 609,
+   "y": 1226,
+   "w": 20,
+   "h": 26,
+   "c": "E"
+  },
+  {
+   "x": 922,
+   "y": 1228,
+   "w": 22,
+   "h": 26,
+   "c": "B"
+  }
+ ],
+ "extra_labels_verified": "rangée d'accords du 3e système (y≈1220) typée « numbers » — invisible à read(), retenue en mode D (rangée cachée). Proposée par propose-extra --all --hidden, relue au zoom : E(70) A(343) E(609) B(922) ; boîtes mesurées sur l'encre, bas aligné sur la ligne de base de chaque lettre (la rangée descend de 8 px de gauche à droite). 2026-09-26",
+ "key_label": {
+  "x": 131,
+  "y": 155,
+  "w": 87,
+  "h": 39
+ },
+ "key_label_verified": "cadre posé à la main : la page grave « 1=E6/8 » sans espace, measure-keylabel ne trouve aucune candidate (le « = » n'est pas isolé, amas 159..316). Colonnes mesurées sur l'encre : « 1 » 131..144, « = » 159..185, « E » 193..217, « 6/8 » à partir de 226 ; cadre = « 1=E » seul, fraction 6/8 hors cadre. Lettre gravée E = printedKey. Vu au zoom ×4. 2026-09-26",
+ "verified": "planche navigateur (npm run jianpu:audit) relue tranche par tranche, 7/7, en E→F : les 4 rangées d'accords (y≈206, 713, 1220, 1412) sont cadrées de rouge et les 18 étiquettes réécrites (E→F, A→Bb, B→C), aucune restée en E ; le cadre « 1=E » devient « 1=F », la fraction « 6/8 » qui le suit reste lisible. Défauts corrigés à l'œil avant la planche : rangée du 3e système (y≈1220) typée « numbers » (extra_labels), 4e rangée de paroles des systèmes 1 et 2 prise pour des accords (not_rows), grain de poussière lu « A » (not_labels), cadre de tonalité posé à la main. Thème clair seul regardé. Scan de basse définition (1127 px de large, étiquettes de 26 px). 2026-09-26",
+ "frozen_labels": [
+  {
+   "x": 55,
+   "y": 206,
+   "w": 20,
+   "h": 30,
+   "c": "E"
+  },
+  {
+   "x": 326,
+   "y": 206,
+   "w": 23,
+   "h": 30,
+   "c": "A"
+  },
+  {
+   "x": 601,
+   "y": 206,
+   "w": 20,
+   "h": 30,
+   "c": "E"
+  },
+  {
+   "x": 869,
+   "y": 206,
+   "w": 22,
+   "h": 30,
+   "c": "B"
+  },
+  {
+   "x": 47,
+   "y": 713,
+   "w": 20,
+   "h": 34,
+   "c": "E"
+  },
+  {
+   "x": 328,
+   "y": 713,
+   "w": 23,
+   "h": 34,
+   "c": "A"
+  },
+  {
+   "x": 606,
+   "y": 713,
+   "w": 20,
+   "h": 34,
+   "c": "E"
+  },
+  {
+   "x": 878,
+   "y": 713,
+   "w": 22,
+   "h": 34,
+   "c": "B"
+  },
+  {
+   "x": 967,
+   "y": 713,
+   "w": 20,
+   "h": 34,
+   "c": "E"
+  },
+  {
+   "x": 62,
+   "y": 1412,
+   "w": 20,
+   "h": 30,
+   "c": "E"
+  },
+  {
+   "x": 332,
+   "y": 1412,
+   "w": 24,
+   "h": 30,
+   "c": "A"
+  },
+  {
+   "x": 604,
+   "y": 1412,
+   "w": 20,
+   "h": 30,
+   "c": "E"
+  },
+  {
+   "x": 866,
+   "y": 1412,
+   "w": 22,
+   "h": 30,
+   "c": "B"
+  },
+  {
+   "x": 936,
+   "y": 1412,
+   "w": 20,
+   "h": 30,
+   "c": "E"
+  },
+  {
+   "x": 70,
+   "y": 1220,
+   "w": 20,
+   "h": 26,
+   "c": "E"
+  },
+  {
+   "x": 343,
+   "y": 1221,
+   "w": 24,
+   "h": 26,
+   "c": "A"
+  },
+  {
+   "x": 609,
+   "y": 1226,
+   "w": 20,
+   "h": 26,
+   "c": "E"
+  },
+  {
+   "x": 922,
+   "y": 1228,
+   "w": 22,
+   "h": 26,
+   "c": "B"
+  }
+ ]
+}

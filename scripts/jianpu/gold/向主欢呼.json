@@ -1,0 +1,370 @@
+{
+ "slug": "向主欢呼",
+ "corrections": {
+  "240,64": "G",
+  "240,405": "D或D/F#",
+  "240,1182": "C",
+  "579,63": "G/B",
+  "579,224": "C",
+  "579,446": "G/D",
+  "579,1024": "Am7/E",
+  "876,70": "G/B",
+  "876,238": "C",
+  "876,467": "G/D",
+  "876,1032": "F/Eb",
+  "1168,84": "G",
+  "1168,496": "C",
+  "1168,825": "G",
+  "1442,485": "C",
+  "1442,1192": "D/F#",
+  "1716,73": "G",
+  "1716,582": "C",
+  "1716,1046": "G",
+  "1990,852": "C",
+  "1990,1241": "G"
+ },
+ "corrections_verified": "21 amas relus au zoom (propose-extra --all --hidden, 2026-09-26) : lus sous le seuil mais justes (G, C, G/B, G/D, Am7/E, F/Eb, D/F#) ; l'amas x=405 du système 1 est l'alternative gravée « D或D/F# », lue « Dsus4 » par le matcher, publiée en composite entière.",
+ "not_rows": [
+  1474
+ ],
+ "not_rows_verified": "y=1474 : trois amas de 4 à 9 px, les arcs de liaison au-dessus des chiffres du système 5 (7 65 5 et 7 — 2̇), pas une rangée d'accords.",
+ "key_label": {
+  "x": 14,
+  "y": 165,
+  "w": 78,
+  "h": 24
+ },
+ "key_label_verified": "measure-keylabel, candidate #1 sur 3 (les deux autres : le 4/4 et la rangée d'accords du système 2) ; crop 2× relu : le cadre couvre « 1=  G » sans le 4/4 ni la mention de série « [有4张：G、A、Bb、C调] » ; lettre gravée G = printedKey G, 2026-09-26",
+ "verified": "planche navigateur (npm run jianpu:audit) relue tranche par tranche, 7/7, en G→Ab thème clair puis G→Bb thème sombre : 47 accords sur 7 rangées (une par système de chiffres, 7 systèmes comptés à la main), tous cadrés de rouge et réécrits, aucun resté en G ; l'alternative « D或D/F# » réécrite en entier (Eb或Eb/G, F或F/A) ; F/Eb → Gb/E en Ab (orthographe de grille) ; cadre « 1= G » → « 1=Ab » / « 1=Bb ». Hors calque, et justes transposés : la mention de série « [有4张：G、A、Bb、C调] » (décrit les éditions), 【Chorus】, le titre anglais, le tempo et les crédits. Filigrane (agneau 灵栖清泉) sans effet sur le découpage : bandes.py 0 bande nue, propose-extra --all --hidden 0 amas restant. 2026-09-26",
+ "frozen_labels": [
+  {
+   "x": 64,
+   "y": 240,
+   "w": 19,
+   "h": 28,
+   "c": "G"
+  },
+  {
+   "x": 405,
+   "y": 240,
+   "w": 126,
+   "h": 28,
+   "c": "D或D/F#"
+  },
+  {
+   "x": 748,
+   "y": 240,
+   "w": 42,
+   "h": 28,
+   "c": "Em"
+  },
+  {
+   "x": 954,
+   "y": 240,
+   "w": 18,
+   "h": 28,
+   "c": "D"
+  },
+  {
+   "x": 1182,
+   "y": 240,
+   "w": 16,
+   "h": 28,
+   "c": "C"
+  },
+  {
+   "x": 63,
+   "y": 579,
+   "w": 54,
+   "h": 31,
+   "c": "G/B"
+  },
+  {
+   "x": 224,
+   "y": 579,
+   "w": 16,
+   "h": 31,
+   "c": "C"
+  },
+  {
+   "x": 446,
+   "y": 579,
+   "w": 57,
+   "h": 31,
+   "c": "G/D"
+  },
+  {
+   "x": 639,
+   "y": 579,
+   "w": 42,
+   "h": 31,
+   "c": "Em"
+  },
+  {
+   "x": 885,
+   "y": 579,
+   "w": 12,
+   "h": 31,
+   "c": "F"
+  },
+  {
+   "x": 1024,
+   "y": 579,
+   "w": 98,
+   "h": 31,
+   "c": "Am7/E"
+  },
+  {
+   "x": 1217,
+   "y": 579,
+   "w": 86,
+   "h": 31,
+   "c": "Dsus4"
+  },
+  {
+   "x": 1376,
+   "y": 579,
+   "w": 36,
+   "h": 31,
+   "c": "D7"
+  },
+  {
+   "x": 70,
+   "y": 876,
+   "w": 54,
+   "h": 31,
+   "c": "G/B"
+  },
+  {
+   "x": 238,
+   "y": 876,
+   "w": 16,
+   "h": 31,
+   "c": "C"
+  },
+  {
+   "x": 467,
+   "y": 876,
+   "w": 57,
+   "h": 31,
+   "c": "G/D"
+  },
+  {
+   "x": 630,
+   "y": 876,
+   "w": 42,
+   "h": 31,
+   "c": "Em"
+  },
+  {
+   "x": 878,
+   "y": 876,
+   "w": 12,
+   "h": 31,
+   "c": "F"
+  },
+  {
+   "x": 1032,
+   "y": 876,
+   "w": 64,
+   "h": 31,
+   "c": "F/Eb"
+  },
+  {
+   "x": 1213,
+   "y": 876,
+   "w": 86,
+   "h": 31,
+   "c": "Dsus4"
+  },
+  {
+   "x": 1378,
+   "y": 876,
+   "w": 37,
+   "h": 31,
+   "c": "D7"
+  },
+  {
+   "x": 84,
+   "y": 1168,
+   "w": 19,
+   "h": 24,
+   "c": "G"
+  },
+  {
+   "x": 272,
+   "y": 1168,
+   "w": 42,
+   "h": 24,
+   "c": "Em"
+  },
+  {
+   "x": 496,
+   "y": 1168,
+   "w": 16,
+   "h": 24,
+   "c": "C"
+  },
+  {
+   "x": 682,
+   "y": 1168,
+   "w": 18,
+   "h": 24,
+   "c": "D"
+  },
+  {
+   "x": 825,
+   "y": 1168,
+   "w": 19,
+   "h": 24,
+   "c": "G"
+  },
+  {
+   "x": 1014,
+   "y": 1168,
+   "w": 42,
+   "h": 24,
+   "c": "Em"
+  },
+  {
+   "x": 1230,
+   "y": 1168,
+   "w": 90,
+   "h": 24,
+   "c": "Cmaj7"
+  },
+  {
+   "x": 1424,
+   "y": 1168,
+   "w": 18,
+   "h": 24,
+   "c": "D"
+  },
+  {
+   "x": 58,
+   "y": 1442,
+   "w": 42,
+   "h": 24,
+   "c": "Em"
+  },
+  {
+   "x": 485,
+   "y": 1442,
+   "w": 16,
+   "h": 24,
+   "c": "C"
+  },
+  {
+   "x": 840,
+   "y": 1442,
+   "w": 18,
+   "h": 24,
+   "c": "D"
+  },
+  {
+   "x": 1004,
+   "y": 1442,
+   "w": 41,
+   "h": 24,
+   "c": "Em"
+  },
+  {
+   "x": 1192,
+   "y": 1442,
+   "w": 68,
+   "h": 24,
+   "c": "D/F#"
+  },
+  {
+   "x": 1394,
+   "y": 1442,
+   "w": 37,
+   "h": 24,
+   "c": "D7"
+  },
+  {
+   "x": 73,
+   "y": 1716,
+   "w": 19,
+   "h": 24,
+   "c": "G"
+  },
+  {
+   "x": 306,
+   "y": 1716,
+   "w": 42,
+   "h": 24,
+   "c": "Em"
+  },
+  {
+   "x": 582,
+   "y": 1716,
+   "w": 16,
+   "h": 24,
+   "c": "C"
+  },
+  {
+   "x": 816,
+   "y": 1716,
+   "w": 18,
+   "h": 24,
+   "c": "D"
+  },
+  {
+   "x": 1046,
+   "y": 1716,
+   "w": 19,
+   "h": 24,
+   "c": "G"
+  },
+  {
+   "x": 1279,
+   "y": 1716,
+   "w": 42,
+   "h": 24,
+   "c": "Em"
+  },
+  {
+   "x": 64,
+   "y": 1990,
+   "w": 90,
+   "h": 24,
+   "c": "Cmaj7"
+  },
+  {
+   "x": 261,
+   "y": 1990,
+   "w": 18,
+   "h": 24,
+   "c": "D"
+  },
+  {
+   "x": 425,
+   "y": 1990,
+   "w": 42,
+   "h": 24,
+   "c": "Em"
+  },
+  {
+   "x": 852,
+   "y": 1990,
+   "w": 16,
+   "h": 24,
+   "c": "C"
+  },
+  {
+   "x": 1036,
+   "y": 1990,
+   "w": 37,
+   "h": 24,
+   "c": "D7"
+  },
+  {
+   "x": 1241,
+   "y": 1990,
+   "w": 19,
+   "h": 24,
+   "c": "G"
+  }
+ ]
+}

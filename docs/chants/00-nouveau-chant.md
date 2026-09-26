@@ -142,6 +142,11 @@ Fini quand : `gold/<slug>.json` porte `verified` et `frozen_labels`, et
 python3 scripts/cho/check.py <slug>
 ```
 
+Scan 简谱 dont le nom de fichier n'a pas de hanzi (`676430ca….png`) :
+`inspect.py` (que `check.py` appelle) déduit la langue de la source de son
+nom, et le scan serait mesuré comme une image française ; passer `--source public/jianpu/<slug>-p1.webp`
+(constaté le 26/09/2026 sur 恒久恒久以前, 定睛在耶稣身上, 向主欢呼).
+
 Le rapport classe chaque accord : exact, à relire, décalé, absent du `.cho`,
 absent de la source, nom différent (seuils par famille dans 02). Corriger
 tout **décalé**, **absent** et **nom différent** ; trancher chaque **à
