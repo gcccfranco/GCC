@@ -49,7 +49,8 @@ syllabe, **mesuré** ; (2) structure dépliée identique à la partition ;
   (runbook, point d'entrée), `01-format-cho.md`, `02-placement-accords.md`,
   `03-calque-jianpu.md`, `audit-corpus-2026-09-26.md` ; scripts dans
   `scripts/cho/`. `CHORDPRO_GUIDELINES.md` supprimé, `CLAUDE.md` mis à jour ;
-  skill `.claude/skills/chord-placement/SKILL.md` réduit à un pointeur ;
+  skill `.claude/skills/chord-placement/SKILL.md` réduit à un pointeur, puis
+  supprimé le même jour (doublon du `CLAUDE.md`, qui pointe déjà le runbook) ;
   dossier hors repo `../Guidelines Chordpro/` réduit à un README pointeur.
 - `scripts/jianpu/LOOP.md` reste l'artefact de la boucle 简谱 (pourquoi +
   journal) ; le runbook liste la suite exacte des commandes pour **une** page

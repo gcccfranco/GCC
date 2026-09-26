@@ -590,7 +590,7 @@ Il n'y a ni import ni transcription automatique dans le code. Un membre peut pro
 
 **Fichiers clés** : `src/components/songs/SongProposalDrawer.tsx`, `src/lib/firebase/songProposals.ts`, `src/app/admin/page.tsx`, `docs/spec-ajouter-un-chant.md`, `CHORDPRO_GUIDELINES.md`
 
-> **Incertain** : L'étape « l'admin fait convertir le chant » n'existe dans aucun code : elle décrit la pratique (session Claude Code, skill chord-placement), pas un mécanisme.
+> **Incertain** : L'étape « l'admin fait convertir le chant » n'existe dans aucun code : elle décrit la pratique (session Claude Code, runbook docs/chants/00-nouveau-chant.md), pas un mécanisme.
 
 ```mermaid
 sequenceDiagram

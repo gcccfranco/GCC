@@ -331,7 +331,7 @@
             "docs/chants/01-format-cho.md"
           ],
           "incertain": [
-            "L'étape « l'admin fait convertir le chant » n'existe dans aucun code : elle décrit la pratique (session Claude Code, skill chord-placement), pas un mécanisme."
+            "L'étape « l'admin fait convertir le chant » n'existe dans aucun code : elle décrit la pratique (session Claude Code, runbook docs/chants/00-nouveau-chant.md), pas un mécanisme."
           ]
         },
         {
