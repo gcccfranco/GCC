@@ -780,3 +780,35 @@ halos et de la navbar, qui reprend ses 58 px fixes. Aucune autre trace.
 (blanc en clair, noir en sombre) ; `ThemeColor.tsx`, l'effet du halo, le script d'en-tête
 et `look-zone-heure.spec.ts` disparaissent. Il ne reste aucune trace de la tranche : la
 barre d'état est exactement ce qu'elle était avant le 21/09/2026.
+
+### V8 : le texte ne passe plus derrière les barres (27/09/2026)
+
+Retour de Timothée (captures iPhone du 27/09) : « problème de lisibilité au niveau de la
+barre d'outils et de la barre de navigation, des fois en fonction du responsive ça veut pas
+cacher du texte ». C'est la conséquence assumée de V7 (plus haut) qui gêne à l'usage : titres,
+paroles et lignes de la liste traversent le logo et les boutons. Le même jour, David avait
+essayé un fond blanc sur la navbar et la barre du planning (`767e0e1`, en ligne) : le texte
+était caché, mais le halo s'arrêtait net sous la navbar.
+
+**Tranché sur planche** (artefact « Barres et texte », 3 versions capturées sur le site à
+402 px : aujourd'hui, A fond plein, B fond plein qui garde le halo) : **B**, go donné le
+27/09/2026.
+
+- Chaque barre `.material-chrome` (hors mode louange) reçoit en premier enfant un fond opaque,
+  `FondDeBarre`, qui **repeint ce qu'il cache** : le fond de la page et une copie de son
+  halo. Tant que rien n'est dessous, la barre ne se voit pas ; défilée, plus rien ne
+  transparaît.
+- Sous la **dernière** barre, le contenu s'efface sur **12 px** au lieu d'être tranché (le
+  *scroll edge* d'iOS). Ni voile, ni flou, ni filet : V7 les a écartés. La navbar ne fond pas
+  quand une barre est posée sous elle ; elle déborde d'1 px sur celle-ci, sinon un fil pâle
+  passait à la jonction sur les écrans à densité fractionnaire (×2,625).
+- La couleur du halo est publiée sur `:root` par `Halo` (`<style>` rendu côté serveur : rien
+  n'attend React) ; sa forme (page, fiche, chant, moi) est lue par `:has()`. La copie est
+  fixe comme l'original, coupée au bord du fond par `clip-path` ; dans une barre qui glisse
+  (transformée, donc repère des éléments fixes), elle remonte de `--barre-top`.
+- Barres concernées : navbar, onglets du planning et des évènements, barres d'outils d'un
+  chant et d'une setlist, éditeur de setlist, barre de sélection de la liste des setlists.
+  L'essai de David sur la navbar et la barre du planning est remplacé.
+
+Tests : `look-barres.spec.ts` (V8), deux comparaisons au pixel par écran — le fond repeint
+exactement la page sans barre, et la zone des barres défilée est identique au haut de page.

@@ -17,6 +17,7 @@ import { useNotifications, type NotificationItem } from "@/hooks/useNotification
 import { BACK_OFFICE } from "@/lib/backOffice";
 import { saveNotifLang } from "@/lib/firebase/notifPrefs";
 import { ReportDialog } from "@/components/report/ReportDialog";
+import { FondDeBarre } from "@/components/layout/FondDeBarre";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -134,11 +135,12 @@ export function Navbar() {
   return (
     <>
       <header
-        className={`fixed top-0 z-50 w-full h-[var(--nav-h)] pt-[var(--sat)] bg-background print:hidden transition-transform duration-300 ${
+        className={`fixed top-0 z-50 w-full h-[var(--nav-h)] pt-[var(--sat)] material-chrome print:hidden transition-transform duration-300 ${
           scrollVisible ? "translate-y-0" : "-translate-y-full"
-        } `}
+        }`}
       >
-        <div className="max-w-[1080px] mx-auto px-4 h-full flex items-center gap-3 ">
+        <FondDeBarre />
+        <div className="max-w-[1080px] mx-auto px-4 h-full flex items-center gap-3">
           {/* Brand */}
           <Link href={user ? "/planning" : "/songs"} className="flex items-center gap-2.5 shrink-0">
             <div className="relative h-9 w-9 rounded-full overflow-hidden shadow-sm">

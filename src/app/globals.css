@@ -10,11 +10,12 @@
      laissent passer le contenu, « panneau » quasi opaque pour menus et
      feuilles. Une seule surface translucide à la fois : jamais l'un dans
      l'autre.
-     Les barres ne portent plus rien : ni voile, ni filet, ni flou (V7 quinquies,
-     21/09/2026). Le halo les traverse, le contenu passe dessous tel qu'il est. Trois
+     Les barres ne portent ni voile, ni filet, ni flou (V7 quinquies, 21/09/2026). Trois
      essais de flou ont été faits — plein, puis au défilement seul, puis sans déborder
      de la barre — et chacun restait trop présent à l'œil de Timothée : la séparation
      nette entre le flou et le reste se voit toujours, quelle qu'en soit la douceur.
+     Depuis V8 (27/09/2026), le contenu ne passe plus dessous : chacune a un fond opaque
+     qui repeint la page et son halo (`.barre-fond`, plus bas).
      `.material-steady` garde voile et flou : les deux barres du mode louange sont
      posées sur les paroles, et doivent s'en détacher pour rester lisibles. */
   .material-steady {
@@ -80,21 +81,47 @@
     opacity: 0.1;
     filter: blur(40px);
   }
-  /* Fiche d'une setlist, puis page d'un chant (à droite) : géométries des planches C et B. */
-  .halo-fiche::before { left: -40px; top: calc(-60px + var(--sat)); width: 300px; height: 220px; opacity: 0.14; filter: blur(44px); }
+  /* Fiche d'une setlist, puis page d'un chant (à droite) : géométries des planches C et B.
+     Chaque variante vaut aussi pour la copie que repeignent les barres (V8) : celle-ci ne
+     porte pas la classe de la page, elle la lit par `:has()`. */
+  .halo-fiche::before, :root:has(.halo-fiche) .barre-halo::before { left: -40px; top: calc(-60px + var(--sat)); width: 300px; height: 220px; opacity: 0.14; filter: blur(44px); }
   /* « Moi » (V7) : l'écran n'appartient à aucune section, donc l'encre — plus discrète
      que les couleurs, un gris franc se lirait comme une salissure et non comme une lumière. */
-  .halo-moi::before { opacity: 0.08; }
-  .halo-chant::before { left: auto; right: -80px; top: calc(-60px + var(--sat)); width: 300px; height: 220px; opacity: 0.12; filter: blur(44px); }
+  .halo-moi::before, :root:has(.halo-moi) .barre-halo::before { opacity: 0.08; }
+  .halo-chant::before, :root:has(.halo-chant) .barre-halo::before { left: auto; right: -80px; top: calc(-60px + var(--sat)); width: 300px; height: 220px; opacity: 0.12; filter: blur(44px); }
   /* Grand écran (ordinateur, tablette en paysage ; tranché le 20/09/2026 au soir) : la
      colonne de contenu est centrée, le halo des planches resterait coincé dans le coin.
      Agrandi à l'écran, il repasse sous le logo et atteint le titre. */
   @media (min-width: 1024px) {
     .halo { height: 560px; }
-    .halo::before, .halo-fiche::before { left: -140px; top: calc(-200px + var(--sat)); width: 860px; height: 560px; filter: blur(90px); }
-    .halo-chant::before { left: auto; right: -140px; top: calc(-200px + var(--sat)); width: 860px; height: 560px; filter: blur(90px); }
+    .halo::before, .halo-fiche::before, :root:has(.halo-fiche) .barre-halo::before { left: -140px; top: calc(-200px + var(--sat)); width: 860px; height: 560px; filter: blur(90px); }
+    .halo-chant::before, :root:has(.halo-chant) .barre-halo::before { left: auto; right: -140px; top: calc(-200px + var(--sat)); width: 860px; height: 560px; filter: blur(90px); }
   }
   @media print { .halo { display: none; } }
+  /* Fond des barres (V8, 27/09/2026, `FondDeBarre`) : le texte passait derrière le logo et
+     les boutons. Opaque, il repeint ce qu'il cache, le fond de la page et une copie de son
+     halo : tant que rien n'est dessous, la barre ne se voit pas. Sous la dernière barre, le
+     contenu s'efface sur 12 px au lieu d'être tranché net. */
+  .barre-fond {
+    position: absolute;
+    inset: 0 0 -12px 0;
+    z-index: -1;
+    pointer-events: none;
+    background-color: hsl(var(--background));
+    /* La copie du halo est fixe comme l'original, donc toujours à sa place, même sous une
+       barre qui colle en cours de défilement : `clip-path` la coupe au bord du fond, ce que
+       `overflow` ne sait pas faire d'un élément fixe. */
+    clip-path: inset(0);
+    -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 12px), transparent);
+    mask-image: linear-gradient(to bottom, #000 calc(100% - 12px), transparent);
+  }
+  /* Une barre posée sous la navbar porte le fondu : celui de la navbar mangerait son haut.
+     La navbar déborde d'1 px sur elle : à une densité fractionnaire (×2,625), la jonction
+     tombe au milieu d'un pixel et un fil pâle passait entre les deux fonds. */
+  :root:has(.sous-navbar) .barre-fond:not(.sous-navbar) { bottom: -1px; -webkit-mask-image: none; mask-image: none; }
+  /* Une barre qui glisse au défilement est transformée, donc le repère de la copie fixe :
+     celle-ci remonte de la hauteur où la barre est posée (`--barre-top`, sur la barre). */
+  .barre-halo { top: calc(-1 * var(--barre-top, 0px)); }
   /* Fondu d'entrée des pages (PageTransition) : l'opacité seule. Le `animate-in` de
      tailwindcss-animate porte un `transform`, qui ferait de la page le repère des
      éléments fixes le temps du fondu : le halo sauterait de la hauteur de la navbar. */

@@ -6,6 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import { Trash2, List, Music, Pencil, SlidersHorizontal, PenLine, Languages, Play, MoreHorizontal, Download, Copy, Share2, BellRing } from "lucide-react";
 import { categoryColor } from "@/lib/serviceColors";
 import { Halo } from "@/components/layout/Halo";
+import { FondDeBarre } from "@/components/layout/FondDeBarre";
 import { serviceButtonFill } from "@/lib/serviceButton";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -939,7 +940,8 @@ export function SetlistDetailClient() {
     <div className="relative min-h-screen bg-background">
       <Halo variant="fiche" color={categoryColor(setlist?.category ?? "")} />
       {/* Top bar — même style que SongDetailClient */}
-      <div ref={toolbarRef} data-testid="barre-outils" className={`print:hidden fixed left-0 right-0 top-[var(--nav-h)] z-10 material-chrome transition-transform duration-300 ${ scrollVisible ? "translate-y-0" : "-translate-y-[calc(100%+var(--nav-h))]"}`}>
+      <div ref={toolbarRef} data-testid="barre-outils" className={`print:hidden fixed left-0 right-0 top-[var(--nav-h)] [--barre-top:var(--nav-h)] z-10 material-chrome transition-transform duration-300 ${ scrollVisible ? "translate-y-0" : "-translate-y-[calc(100%+var(--nav-h))]"}`}>
+        <FondDeBarre sousNavbar />
         <div className="max-w-[1080px] mx-auto px-4">
           {/* Une seule ligne sur téléphone (retour du 20/09/2026) : 9 commandes de 32 px
               tiennent à partir de 390 px ; en dessous, « Adapter » et « Ma version »

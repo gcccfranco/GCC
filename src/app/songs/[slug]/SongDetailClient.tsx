@@ -26,6 +26,7 @@ import { parseChordPro } from "@/lib/chordpro/parser";
 import { transposeAST } from "@/lib/transposeAST";
 import { useScrollDirection } from "@/hooks/useScrollDirection";
 import { Halo } from "@/components/layout/Halo";
+import { FondDeBarre } from "@/components/layout/FondDeBarre";
 import { keyOptions, semitonesTo, getTransposedKey } from "@/lib/transpose";
 import { useSearchParams } from "next/navigation";
 import type { SectionItem } from "@/types/song";
@@ -252,7 +253,8 @@ function safeParseParam<T>(raw: string | null, fallback: T): T {
       <div className="relative min-h-screen print:min-h-0 bg-background" style={{ width: `${100 / fontScale}%` }}>
         <Halo variant="chant" color="var(--sec-chorus)" />
         {/* Barre de contrôles */}
-        <div data-testid="barre-outils" className={`print:hidden fixed left-0 right-0 top-[var(--nav-h)] z-10 material-chrome transition-transform duration-300 ${ scrollVisible || barPinned ? "translate-y-0" : "-translate-y-[calc(100%+var(--nav-h))]"}`}>
+        <div data-testid="barre-outils" className={`print:hidden fixed left-0 right-0 top-[var(--nav-h)] [--barre-top:var(--nav-h)] z-10 material-chrome transition-transform duration-300 ${ scrollVisible || barPinned ? "translate-y-0" : "-translate-y-[calc(100%+var(--nav-h))]"}`}>
+          <FondDeBarre sousNavbar />
           <div className = "max-w-3xl mx-auto w-full flex flex-nowrap gap-1 items-center py-2 px-1.5">
             <Button
               asChild

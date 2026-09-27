@@ -19,6 +19,7 @@ import { PageTitle } from "@/components/layout/PageTitle";
 import { SetlistCard } from "@/components/setlists/SetlistCard";
 import { PullToRefresh } from "@/components/layout/PullToRefresh";
 import { Halo } from "@/components/layout/Halo";
+import { FondDeBarre } from "@/components/layout/FondDeBarre";
 import { formatDate } from "@/lib/utils/formatDate";
 import {
   AlertDialog,
@@ -386,6 +387,7 @@ export default function SetlistsPage() {
              (docs/spec-suppression-groupee.md, R3). */}
         {selectionMode && (
           <div className="sticky top-[var(--nav-h)] z-10 -mx-4 mb-4 flex items-center gap-2 material-chrome px-4 py-2.5">
+            <FondDeBarre sousNavbar />
             <button
               type="button"
               disabled={selection.length === 0 || enCours}

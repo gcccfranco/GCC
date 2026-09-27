@@ -7,5 +7,12 @@
 const CLASSES = { page: "halo", fiche: "halo halo-fiche", chant: "halo halo-chant", moi: "halo halo-moi" };
 
 export function Halo({ color, variant = "page" }: { color: string; variant?: keyof typeof CLASSES }) {
-  return <div aria-hidden="true" data-testid="halo" className={CLASSES[variant]} style={{ "--halo": color } as React.CSSProperties} />;
+  return (
+    <>
+      {/* Les barres repeignent ce halo sous leurs boutons (V8, `FondDeBarre`) : elles en lisent
+          la couleur ici, dès le premier affichage. La forme, elles la lisent par `:has()`. */}
+      <style>{`:root{--halo:${color}}`}</style>
+      <div aria-hidden="true" data-testid="halo" className={CLASSES[variant]} style={{ "--halo": color } as React.CSSProperties} />
+    </>
+  );
 }

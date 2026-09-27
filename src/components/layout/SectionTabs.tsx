@@ -13,6 +13,7 @@ import { usePathname } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
 import { ChevronDown } from "lucide-react"
 import { useScrollDirection } from "@/hooks/useScrollDirection"
+import { FondDeBarre } from "@/components/layout/FondDeBarre"
 import { useFonduLateral } from "@/hooks/useFonduLateral"
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer"
 import { useStandaloneScrollLock } from "@/hooks/useStandaloneScrollLock"
@@ -50,7 +51,8 @@ export function SectionTabs({ tabs, rootHref, menuLabel }: { tabs: SectionTab[];
   const courant = tabs.find((tab) => isTabActive(tab.href)) ?? tabs[0]
 
   return (
-    <div data-testid="barre-section" className={`sticky top-[calc(var(--nav-h)-1px)] z-40 !bg-background print:hidden transition-transform duration-300 ${scrollVisible ? "translate-y-0" : "-translate-y-[calc(100%+var(--nav-h))]"}`}>
+    <div data-testid="barre-section" className={`sticky top-[calc(var(--nav-h)-1px)] [--barre-top:calc(var(--nav-h)-1px)] z-40 material-chrome print:hidden transition-transform duration-300 ${scrollVisible ? "translate-y-0" : "-translate-y-[calc(100%+var(--nav-h))]"}`}>
+      <FondDeBarre sousNavbar />
       <div className="max-w-[1080px] mx-auto px-4">
         {menuLabel && (
           <div className="md:hidden py-1">
