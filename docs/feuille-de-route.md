@@ -703,6 +703,21 @@ choix attendu avant toute spec. **Restent à trancher** : lot 15 (petit déj, sp
 tonalités mineures, les six écarts assumés du rapport, la mise en ligne (push, fusion
 dans `main`), et la tenue en charge (quotas Firestore, lecture du Sheet).
 
+### S. Retours de Timothée du 27/09/2026 (captures iPhone)
+
+1. **Texte derrière les barres** (navbar, barre d'outils) → V8 de `spec-look.md`, option B
+   tranchée sur planche, go donné, codé, commité et poussé le 27/09/2026.
+2. **Texte agrandi, la page glisse à gauche et à droite** et 3. **accord de fin de ligne au
+   niveau des paroles** (fr) : régressions de `dda9a9a` (26/09, David, « infi - nie » →
+   « infinie » accords masqués). Go donné, corrigé le 27/09/2026 en gardant sa fonction
+   (`tests/lignes-accords.spec.ts`), commité et poussé le 27/09/2026.
+4. **Fusions et Dernière phrase (Dp)**, signalé le même jour, diagnostiqué, **tranché le
+   27/09/2026** (quatre décisions, `docs/spec-fusions-dp.md`), **prévu la semaine suivante** :
+   une fusion à structure mélangée ignore « Structure seule » (toujours l'ordre joué) ; pas de
+   Dp sur une fusion (choix du lot 3, « absent = pas de Dp (fusions) ») ; la liste écrit
+   « other » pour une Dp créée avant `226da23` ; un chant ouvert depuis la setlist perd sa
+   version adaptée (Dp et mode Adapter), le lien ne la transmet pas.
+
 ## 4. Carte des modules de l'app « GCC »
 
 À valider par Timothée avant toute spec de module (les modules existants ne
@@ -979,6 +994,11 @@ porte le nom « GCC » et le menu par sections dont ces modules ont besoin.
   = pointeur). Outils `scripts/cho/` (`inspect`, `lint`, `pinyin`, `check`, `draft`) et
   `tests/nouveau-chant.spec.ts` (`PW_CHANT`). Aucun `.cho` modifié : les écarts du corpus
   sont dans `docs/chants/audit-corpus-2026-09-26.md`, chantier séparé.
+
+- 27/09/2026 : **retours iPhone de Timothée** (§ 3 S). Barres opaques qui repeignent la
+  page et son halo (V8, planche « Barres et texte », option B) ; accords de fin de ligne et
+  débordement du texte agrandi corrigés (régressions de `dda9a9a`) ; poussé. Fusions et Dp
+  tranchés (`spec-fusions-dp.md`), prévus la semaine suivante.
 
 ## 7. Relecture adversariale (14/09/2026)
 
