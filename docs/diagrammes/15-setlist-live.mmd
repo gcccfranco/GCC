@@ -1,0 +1,30 @@
+sequenceDiagram
+  autonumber
+  actor M as Musicien·ne
+  participant D as SetlistDetailClient
+  participant FS as Firestore REST
+  participant V as Vercel
+  participant PM as PerformanceMode
+  participant N as API du navigateur
+  M->>D: ouvre /setlists/id/
+  par chargement
+    D->>FS: GET setlists/id (jeton)
+    D->>V: GET /songs-index.json
+    D->>FS: versions perso (setlists/id/versions)
+  end
+  alt réseau coupé
+    D-->>M: erreur + Réessayer (la setlist n'est jamais en cache)
+  end
+  M->>D: vue Partitions
+  loop chaque chant absent
+    D->>V: GET /api/song/slug (stale-while-revalidate)
+  end
+  D->>D: itemAst : Adapter ou Ma version, puis transposition par chant
+  M->>D: Mode louange
+  D->>N: requestFullscreen
+  D->>PM: items, contenus, manifeste 简谱
+  PM->>PM: buildPerformanceBlocks → pages
+  PM->>N: wakeLock.request("screen")
+  PM->>FS: annotations userId__setlistId__page
+  M->>PM: glisse d'une page à l'autre, dessine
+  PM->>FS: saveAnnotation (traits vectoriels)

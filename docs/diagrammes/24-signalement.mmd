@@ -1,0 +1,20 @@
+sequenceDiagram
+  autonumber
+  actor U as Membre connecté
+  participant R as ReportDialog
+  participant API as /api/report
+  participant AD as Firebase Admin
+  participant PS as Service push
+  actor A as Admins
+  U->>R: Signaler (un chant ou le site) : titre, description
+  R->>API: POST + Bearer
+  API->>API: 5 signalements par 10 min et par IP (mémoire de l'instance)
+  API->>AD: verifyIdToken
+  API->>API: validateReport (longueurs partagées avec le formulaire)
+  API->>AD: users/uid → nom affiché
+  API->>AD: reports.add (status pending)
+  API->>AD: uid des admins (liste d'emails dans access.ts)
+  API->>PS: push « Signalement… » vers /admin
+  PS-->>A: notification
+  A->>AD: /admin : change le statut (REST côté client)
+  Note over API: Aucun email : Resend n'apparaît pas dans le code

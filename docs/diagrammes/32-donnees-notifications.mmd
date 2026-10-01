@@ -1,0 +1,51 @@
+erDiagram
+  USERS ||--o{ PUSH_SUBSCRIPTIONS : "un par appareil"
+  USERS ||--o| NOTIF_PREFS : "notifPrefs/uid"
+  USERS ||--o{ NOTIFICATIONS : "recipients"
+  USERS ||--o{ NOTIF_LOG : "anti-doublon des rappels"
+  SETLISTS ||--o| NOTIF_LOG : "setlist-id"
+  USERS ||--o| ONBOARDING : "accueil vu"
+  USERS {
+    string uid PK
+  }
+  SETLISTS {
+    string id PK
+  }
+  PUSH_SUBSCRIPTIONS {
+    string id PK "uid__sha256(endpoint)"
+    string uid FK
+    string endpoint
+    string p256dh
+    string auth
+    string ua
+    string createdAt
+  }
+  NOTIF_PREFS {
+    string uid PK
+    bool reminders
+    bool setlists
+    bool evenements
+    bool taches
+    string lang "fr ou zh-CN"
+  }
+  NOTIFICATIONS {
+    string kind "manual, reminder, broadcast…"
+    string title
+    string body
+    string url
+    string_list recipients
+    bool everyone
+    timestamp createdAt
+  }
+  NOTIF_LOG {
+    string id PK "par envoi : setlist, échéance…"
+    number lastSentAt
+    number recipients
+  }
+  ONBOARDING {
+    string uid PK
+  }
+  PLANNING_RELEASES {
+    string id PK "clé_année"
+    string_list published "trimestres visibles"
+  }

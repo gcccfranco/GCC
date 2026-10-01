@@ -6,7 +6,7 @@ import { SectionTabs } from "@/components/layout/SectionTabs"
 
 // `key` = clé i18n (planning.tabs.*), `color` = couleur de service reprise par
 // l'indicateur d'onglet actif (source unique : PLANNING_COLORS).
-const TABS: { key: string; href: string; color?: string }[] = [
+export const PLANNING_TABS: { key: string; href: string; color?: string }[] = [
   { key: "accueil", href: "/planning" },
   { key: "culte", href: "/planning/culte", color: PLANNING_COLORS.culte },
   { key: "table", href: "/planning/table", color: PLANNING_COLORS.table },
@@ -22,7 +22,8 @@ export function PlanningTabs() {
   return (
     <SectionTabs
       rootHref="/planning"
-      tabs={TABS.map((tab) => ({ href: tab.href, label: t(`planning.tabs.${tab.key}`), color: tab.color }))}
+      menuLabel={t("planning.choisirPlanning")}
+      tabs={PLANNING_TABS.map((tab) => ({ href: tab.href, label: t(`planning.tabs.${tab.key}`), color: tab.color }))}
     />
   )
 }

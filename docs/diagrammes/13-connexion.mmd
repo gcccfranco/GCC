@@ -1,0 +1,28 @@
+sequenceDiagram
+  autonumber
+  actor U as Utilisateur
+  participant P as Pages /signup · /login · /profil
+  participant A as Firebase Auth
+  participant FS as Firestore (REST)
+  participant R as firestore.rules
+  U->>P: /signup
+  P->>FS: GET config/app sans jeton → registrationOpen
+  alt inscriptions fermées
+    P-->>U: formulaire bloqué
+  else ouvertes
+    U->>P: email, mot de passe, prénom, nom, nom du planning…
+    P->>A: createUserWithEmailAndPassword
+    A-->>P: uid + jeton d'identité
+    P->>FS: PATCH users/uid (saveProfile) + Bearer
+    FS->>R: contrôle (propriétaire ou admin)
+    P-->>U: redirection vers /setlists
+  end
+  U->>P: /login
+  P->>A: signInWithEmailAndPassword
+  P->>FS: GET users/uid
+  alt pas de profil
+    P-->>U: /profil pour le compléter
+  else profil trouvé
+    P-->>U: page d'origine (?from=)
+  end
+  Note over P,R: Chaque écran calcule les droits avec src/lib/access.ts, et firestore.rules refait le contrôle côté serveur. La liste des admins existe en double.

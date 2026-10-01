@@ -15,6 +15,10 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     title: "GCC Louange",
+    // La page s'arrête sous la barre d'état. `black-translucent` la faisait monter
+    // jusque sous l'heure (V7, T6), mais iOS pose alors SON propre voile derrière
+    // l'heure et la batterie pour les garder lisibles — un flou qu'on ne peut pas
+    // retirer, et que Timothée n'a pas voulu (21/09/2026). Repli assumé.
     statusBarStyle: "default",
   },
   formatDetection: { telephone: false },

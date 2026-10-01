@@ -1,0 +1,29 @@
+sequenceDiagram
+  autonumber
+  actor Pr as Présidence
+  participant F as SetlistForm
+  participant I as /songs-index.json
+  participant FS as Firestore REST
+  participant H as setlists/id/history
+  participant API as /api/push/<br/>notify-setlist
+  Pr->>F: /setlists/new
+  F->>I: GET (chants et leurs sections)
+  Pr->>F: titre, catégorie, date, chants (Fuse.js), tonalités, structure, notes
+  loop 2 s après chaque changement
+    F->>FS: 1re fois POST setlists (isDraft true), ensuite PATCH
+  end
+  Pr->>F: Publier
+  F->>FS: PATCH setlists/id (isDraft false)
+  F->>H: recordCreation
+  opt setlist non privée
+    F->>API: POST setlistId, auto true + jeton
+  end
+  Pr->>F: /setlists/id/edit, plus tard
+  loop 2 s après chaque changement
+    F->>FS: PATCH setlists/id (updateMask)
+    F->>H: recordHistory (différences, une entrée par passage de 15 min)
+  end
+  Pr->>F: quitte l'éditeur
+  F->>FS: dernier PATCH en attente
+  F->>API: POST setlistId, auto true
+  API-->>F: n'envoie qu'une fois, et seulement dès 4 chants

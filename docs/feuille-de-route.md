@@ -99,6 +99,8 @@ annonces retirées, 5C1 d'abord puis une seule mise en ligne
 | 19/09/2026 | **Lot cohérence** : cinq bugs (profil qui effaçait `poles` / `equipes` / `plannings` d’un admin, réunions de pôle absentes de la cloche, Équipes et Harmonie injoignables, deux manifestes PWA, préférence « Annonces » morte) et les petites incohérences (setlist privée modifiable en REST, quatre `normalize`, deux pushs en français seul, casse des e-mails admin, `fontkit`) | `users.ts`, `useNotifications`, `Navbar`, `/moi`, `manifest.ts`, `types/user.ts`, `firestore.rules`, `push/messages.ts`, `tests/coherence.spec.ts` | `e2d4c54` ; **`firestore.rules` à republier** (setlists) |
 | 19/09/2026 | Lot 17 **G4, G5, G6** : export CSV et PDF de toute grille, import initial par bouton admin, fin du repli 2026 du Culte, **les onze grilles remplies dans l’app** (Table + petit déj, EDD par classe, Campus matin / soir, Intergroupe, Interfranco, trois groupes, musiciens de Fidélité) (`spec-planning-grille.md`, « 19/09/2026 ») | `lib/planning/{grilles,sheets,csv,import,useGrilleApp}.ts`, `PlanningGrille`, `PlanningPDF`, pages du planning, `api/admin/importer-planning`, admin | à valider en local ; aucune règle à publier |
 | 19/09/2026 | Lot 14 **Tâches ↔ évènements** : champ `evenement` facultatif sur la tâche, carte « Tâches » sous la fiche d'un évènement daté (membres d'un pôle et admins), « pour Noël 2026 » sur la ligne, copie des tâches à la duplication avec glissement des échéances ; une tâche liée ne se répète pas (`spec-taches-evenements.md`) | `types/tache.ts`, `TacheForm`, `TacheLigne`, `evenements/[id]/TachesEvenement.tsx`, `NouveauClient`, `lib/taches/echeances.ts` | `e13662e` ; à valider en local ; aucune règle à publier |
+| 20/09/2026 | **Retours de Timothée après la mise en ligne** : barre d'onglets posée à 21 px du bas sur iPhone (elle flottait à 48 pt : marge ET zone sûre empilées) ; vue partitions ouverte en **« Ordre joué »** par défaut (« Sections uniques » reste au menu « ⋯ », Batteur → « Structure seule », PDF compact inchangé), et le bandeau porte les notes de la présidence quand le corps suit une structure perso ; 990 doublons iCloud « … 2 » retirés ; `performance-mode.spec.ts` stabilisé (le scroll-into-view de Playwright déplaçait la page pendant la transition du plein écran : artefact de test, pas un bug du site) | `globals.css`, `MobileTabBar.tsx`, `partitionLayoutPref.ts`, `SetlistDetailClient.tsx`, `SongView.tsx`, locales, `spec-coup-d-oeil.md`, `intent/vision-site.md` | `d03a150`, `e4a3089`, `ad47eb0` ; en ligne le 20/09/2026 |
+| 20/09/2026 | **Barre d'outils de la setlist sur une seule ligne** (retour de Timothée, soir) : en vue partitions elle passait sur deux lignes sur son iPhone (374 pt de commandes pour 370 pt) et sur iPad en portrait (libellés texte dès 640 px). À partir de 390 px les neuf commandes tiennent (espacements entre groupes resserrés, aucune cible rétrécie) ; sous 390 px, « Adapter » et « Ma version » passent en tête du menu « ⋯ » ; **paysage compris** : les libellés n'apparaissent qu'à 1024 px, donc icônes sur tout téléphone dans les deux sens (jusqu'à 956 px) et sur iPad en portrait, libellés sur iPad en paysage et ordinateur | `SetlistDetailClient.tsx`, `tests/look-louange.spec.ts` (17 écrans, portrait et paysage, × trois appareils) | à valider par Timothée |
 
 ## 2. À construire, dans l'ordre validé le 14/09/2026
 
@@ -705,6 +707,21 @@ choix attendu avant toute spec. **Restent à trancher** : lot 15 (petit déj, sp
 tonalités mineures, les six écarts assumés du rapport, la mise en ligne (push, fusion
 dans `main`), et la tenue en charge (quotas Firestore, lecture du Sheet).
 
+### S. Retours de Timothée du 27/09/2026 (captures iPhone)
+
+1. **Texte derrière les barres** (navbar, barre d'outils) → V8 de `spec-look.md`, option B
+   tranchée sur planche, go donné, codé, commité et poussé le 27/09/2026.
+2. **Texte agrandi, la page glisse à gauche et à droite** et 3. **accord de fin de ligne au
+   niveau des paroles** (fr) : régressions de `dda9a9a` (26/09, David, « infi - nie » →
+   « infinie » accords masqués). Go donné, corrigé le 27/09/2026 en gardant sa fonction
+   (`tests/lignes-accords.spec.ts`), commité et poussé le 27/09/2026.
+4. **Fusions et Dernière phrase (Dp)**, signalé le même jour, diagnostiqué, **tranché le
+   27/09/2026** (quatre décisions, `docs/spec-fusions-dp.md`), **prévu la semaine suivante** :
+   une fusion à structure mélangée ignore « Structure seule » (toujours l'ordre joué) ; pas de
+   Dp sur une fusion (choix du lot 3, « absent = pas de Dp (fusions) ») ; la liste écrit
+   « other » pour une Dp créée avant `226da23` ; un chant ouvert depuis la setlist perd sa
+   version adaptée (Dp et mode Adapter), le lien ne la transmet pas.
+
 ## 4. Carte des modules de l'app « GCC »
 
 À valider par Timothée avant toute spec de module (les modules existants ne
@@ -970,6 +987,22 @@ porte le nom « GCC » et le menu par sections dont ces modules ont besoin.
   de dépense avant d'écrire une ligne : tranches faites à la main), puis **lot 14** confié
   à un agent en arbre isolé, relu et intégré le soir même (`e13662e`). Docs corrigées (cette feuille, `CLAUDE.md`, trois specs,
   la vision). Look : 5 → 5A/5B/5C → 5C1/5C2/5C3 sur la planche, choix attendu.
+
+- 26/09/2026 : **règles et outillage « Nouveau chant »** (`docs/spec-guidelines-cho.md`).
+  Inventaire des 372 `.cho` et 795 partitions, trois audits par coordonnées (12 chants :
+  fr couche texte 95 % même syllabe, zh scans 97,6 %, zh vectoriels 93,5 %, scan Word
+  36/40 sur un autre mot), grill de 40 questions toutes tranchées par Timothée. Une seule
+  source dans le repo : `docs/chants/00-nouveau-chant.md` (runbook), `01-format-cho.md`,
+  `02-placement-accords.md`, `03-calque-jianpu.md` ; `CHORDPRO_GUIDELINES.md`, le dossier
+  hors repo `Guidelines Chordpro/` et la Mission C obsolète retirés (skill `chord-placement`
+  = pointeur). Outils `scripts/cho/` (`inspect`, `lint`, `pinyin`, `check`, `draft`) et
+  `tests/nouveau-chant.spec.ts` (`PW_CHANT`). Aucun `.cho` modifié : les écarts du corpus
+  sont dans `docs/chants/audit-corpus-2026-09-26.md`, chantier séparé.
+
+- 27/09/2026 : **retours iPhone de Timothée** (§ 3 S). Barres opaques qui repeignent la
+  page et son halo (V8, planche « Barres et texte », option B) ; accords de fin de ligne et
+  débordement du texte agrandi corrigés (régressions de `dda9a9a`) ; poussé. Fusions et Dp
+  tranchés (`spec-fusions-dp.md`), prévus la semaine suivante.
 
 ## 7. Relecture adversariale (14/09/2026)
 

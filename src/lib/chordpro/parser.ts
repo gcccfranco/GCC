@@ -63,7 +63,6 @@ export function parseLyricLine(rawLine: string, language: string = "fr"): { toke
   if (lastIndex < lyricPart.length) {
     tokens.push({ type: "lyric", value: lyricPart.slice(lastIndex) });
   }
-
   return { tokens, pinyin: pinyinPart };
 }
 
@@ -168,6 +167,8 @@ const SECTION_NAME_KINDS: [RegExp, string][] = [
   [/outro|ending|结尾|尾奏/i, "outro"],
   [/coda/i, "coda"],
   [/\btag\b/i, "tag"],
+  // « Final » sous une directive outro se lit « Final » (26/09/2026) ; le type reste outro.
+  [/\bfinal\b/i, "final"],
 ];
 
 // Types dont le libellé vient de la traduction du type : c'est là qu'un nom

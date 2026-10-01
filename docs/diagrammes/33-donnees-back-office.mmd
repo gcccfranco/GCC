@@ -1,0 +1,78 @@
+erDiagram
+  USERS ||--o{ EVENEMENTS : "organisateurUid"
+  EVENEMENTS ||--o{ INSCRIPTIONS : "sous-collection"
+  USERS |o--o{ INSCRIPTIONS : "uid, ou sans compte"
+  PROGRAMMES ||--o{ CRENEAUX : "sous-collection"
+  POLES ||--o{ TACHES : "poles/pole/taches"
+  TACHES ||--o{ FOIS : "fois/date"
+  TACHES }o--o| EVENEMENTS : "evenement lié"
+  EQUIPES }o--o| POLES : "pole"
+  PLANNINGS ||--o{ DIMANCHES : "dimanches/date"
+  PLANNINGS ||--o{ PLANNING_HISTORY : "history"
+  USERS {
+    string uid PK
+    string_list poles
+    string_list plannings
+  }
+  EVENEMENTS {
+    string id PK
+    string titre
+    string type
+    string pour "église, section ou pôle"
+    string date
+    string lieu
+    number placesMax
+    string inscriptions "automatique, ouvertes, fermées"
+    bool sansCompte
+    string lienExterne
+    number inscrits
+  }
+  INSCRIPTIONS {
+    string id PK "uid ou aléatoire"
+    string nom
+    number invites "0 à 5"
+    string createdAt
+  }
+  PROGRAMMES {
+    string id PK
+    string nom
+    string jourJ
+    bool visible
+    list passages "quoi, qui, titre"
+  }
+  CRENEAUX {
+    string dimanche
+    string debut
+    string fin
+    string quoi
+    string_list qui
+  }
+  POLES {
+    string pole PK
+  }
+  TACHES {
+    string titre
+    string responsableUid
+    string echeance
+    map repetition "semaine, mois, an…"
+    map prevenir
+  }
+  FOIS {
+    string date PK
+    string etat "encours ou terminee"
+    string parNom
+  }
+  EQUIPES {
+    string id PK
+    list membres "nom, uid, référent, essai"
+  }
+  PLANNINGS {
+    string key PK "culte, groupes…"
+  }
+  DIMANCHES {
+    string date PK
+    map colonnes "un champ par colonne"
+  }
+  PLANNING_HISTORY {
+    string id PK
+  }

@@ -1,0 +1,27 @@
+sequenceDiagram
+  autonumber
+  actor Auteur as Auteur·e du chant
+  participant Git as Dépôt GitHub
+  participant CI as CI GitHub Actions
+  participant VB as Build Vercel
+  participant IDX as npm run build:index
+  participant NX as next build
+  participant WEB as Site en ligne
+  Auteur->>Auteur: écrit ou corrige content/songs/slug.cho (ChordPro)
+  Note right of Auteur: à la main (guide CHORDPRO_GUIDELINES.md)
+  Auteur->>Git: git push sur main
+  par Contrôles
+    Git->>CI: déclenche le workflow CI
+    CI->>CI: npm ci · build:index · tsc · lint · validate · test:editsource
+  and Déploiement
+    Git->>VB: déclenche un déploiement (intégration Git, réglée hors dépôt)
+    VB->>IDX: npm run build, 1re étape
+    IDX->>IDX: build-glyph-widths → glyphWidths.json (largeurs pour le PDF)
+    IDX->>IDX: build-index : parse chaque .cho → public/songs-index.json
+    IDX->>IDX: build-harmonie : docs/harmonie/*.md → public/harmonie-index.json
+    VB->>NX: 2e étape
+    NX->>NX: /songs (force-static) lit tous les .cho
+    NX->>NX: /songs/slug : une page par chant (generateStaticParams)
+    NX-->>WEB: pages, fichiers de public/, routes API
+  end
+  Note over CI,WEB: Aucun lien entre la CI et le déploiement dans le dépôt : une CI rouge n'empêche pas la mise en ligne (à confirmer dans les réglages Vercel)

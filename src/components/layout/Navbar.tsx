@@ -17,6 +17,7 @@ import { useNotifications, type NotificationItem } from "@/hooks/useNotification
 import { BACK_OFFICE } from "@/lib/backOffice";
 import { saveNotifLang } from "@/lib/firebase/notifPrefs";
 import { ReportDialog } from "@/components/report/ReportDialog";
+import { FondDeBarre } from "@/components/layout/FondDeBarre";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -71,16 +72,6 @@ export function Navbar() {
   const currentLang = i18n.language;
   const isZh = currentLang === "zh-CN";
   const scrollVisible = useScrollDirection();
-
-  // Bord de défilement (apple-design § 12) : le filet sous la barre n'apparaît
-  // que quand du contenu passe dessous.
-  const [atTop, setAtTop] = useState(true);
-  useEffect(() => {
-    const onScroll = () => setAtTop(window.scrollY < 4);
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
 
   // Changement de route (barre du bas, retour…) : fermer le menu Louange.
   useEffect(() => {
@@ -144,14 +135,15 @@ export function Navbar() {
   return (
     <>
       <header
-        className={`fixed top-0 z-50 w-full h-[var(--nav-h)] material-chrome print:hidden transition-[transform,box-shadow] duration-300 ${
+        className={`fixed top-0 z-50 w-full h-[var(--nav-h)] pt-[var(--sat)] material-chrome print:hidden transition-transform duration-300 ${
           scrollVisible ? "translate-y-0" : "-translate-y-full"
-        } ${atTop ? "" : "shadow-[0_1px_0_hsl(var(--border))]"}`}
+        }`}
       >
+        <FondDeBarre />
         <div className="max-w-[1080px] mx-auto px-4 h-full flex items-center gap-3">
           {/* Brand */}
           <Link href={user ? "/planning" : "/songs"} className="flex items-center gap-2.5 shrink-0">
-            <div className="relative h-9 w-9 rounded-full overflow-hidden bg-white shadow-sm">
+            <div className="relative h-9 w-9 rounded-full overflow-hidden shadow-sm">
               <Image
                 src="/logo.png"
                 alt="GCC Logo"

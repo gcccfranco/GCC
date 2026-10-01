@@ -1,0 +1,16 @@
+sequenceDiagram
+  autonumber
+  actor U as Membre connecté
+  participant D as SongProposalDrawer (/songs)
+  participant FS as Firestore REST
+  actor A as Admin
+  participant CC as Session Claude Code (manuelle)
+  participant G as Dépôt GitHub
+  U->>D: Proposer un chant : titre, lien YouTube, lien du PDF
+  D->>FS: POST songProposals (status pending)
+  A->>FS: /admin : lit les propositions
+  A->>CC: fait convertir la partition en .cho
+  Note over CC: Hors code. Aucune conversion automatique : la spec « Ajouter un chant » est en attente (docs/spec-ajouter-un-chant.md)
+  CC->>G: commit content/songs/slug.cho
+  G-->>U: en ligne au déploiement suivant (voir « Publier un chant »)
+  A->>FS: met à jour le statut de la proposition

@@ -1,0 +1,25 @@
+sequenceDiagram
+  autonumber
+  actor U as Utilisateur
+  participant D as Page chant ou setlist
+  participant RP as @react-pdf/renderer
+  participant T as SongPDF · SetlistFullPDF · SetlistOverviewPDF
+  participant V as Vercel (public/)
+  U->>D: Télécharger en PDF
+  D-->>U: Classique · Couleurs par section · Compact (setlist seulement)
+  D->>D: retient le choix (localStorage pdf-style)
+  D->>RP: import() à la demande (bibliothèque lourde)
+  D->>T: import() à la demande
+  T->>V: polices /fonts (Space Grotesk, Inter, Liberation Sans, Source Han Sans…)
+  alt Classique
+    T->>T: couleur selon la langue du chant : bleu (FR), rouge (中文)
+  else Couleurs par section
+    T->>T: cadre à la couleur de la section, accords et 简谱 en noir
+  end
+  opt setlist complète avec scans 简谱
+    D->>V: GET /jianpu/slug-pN.webp
+    D->>D: canvas → PNG (react-pdf ne lit pas le WebP)
+  end
+  RP-->>D: pdf(document).toBlob()
+  D-->>U: fichier slug-tonalité.pdf (suffixe -couleurs ou -compact)
+  Note over D,T: Tout se fait dans le navigateur : aucune route API ne produit de PDF

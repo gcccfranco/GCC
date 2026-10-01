@@ -33,7 +33,7 @@ export function materializeLastPhrase(
   );
   const lines = source.split("\n");
   const block = [...new Set(indices)].sort((a, b) => a - b).map((i) => lines[i]);
-  const next = `${source.trimEnd()}\n\n{start_of_other: Dernière phrase – ${label}}\n${block.join("\n")}\n{end_of_other}\n`;
+  const next = `${source.trimEnd()}\n\n{start_of_Dp: Dernière phrase – ${label}}\n${block.join("\n")}\n{end_of_Dp}\n`;
   const added = parseChordPro(next).sections.at(-1);
   return added ? { source: next, sectionId: added.id } : null;
 }
@@ -62,7 +62,7 @@ export function isLastPhraseOnly(original: string, override: string): boolean {
   return true;
 }
 
-const DP_BLOCK = /\n*\{start_of_other\s*:\s*[^}]*(?:derni[eè]re phrase|最后一句)[^}]*\}[\s\S]*?\{end_of_other\}/gi;
+const DP_BLOCK = /\n*\{start_of_Dp\s*:\s*[^}]*(?:derni[eè]re phrase|最后一句)[^}]*\}[\s\S]*?\{end_of_Dp\}/gi;
 
 /** Le source sans ses sections « Dernière phrase », et leur nombre — pour que
  *  l'historique distingue « Dernière phrase ajoutée » d'une adaptation. */

@@ -61,11 +61,11 @@ export function MobileTabBar() {
   return (
     <>
       {/* Cale en flux : le contenu ne finit pas caché derrière la barre */}
-      <div aria-hidden className="hide-on-desktop h-[calc(92px+env(safe-area-inset-bottom))] print:hidden" />
+      <div aria-hidden className="hide-on-desktop h-[calc(78px+var(--tabbar-bottom))] print:hidden" />
       <nav
         aria-label={t("common.aria.navigationPrincipale")}
         // 5C1 : la barre flotte, en verre ; l'onglet courant est une pastille d'encre.
-        className={`hide-on-desktop print:hidden fixed inset-x-2 bottom-[calc(14px+env(safe-area-inset-bottom))] z-40 rounded-[32px] material-bar transition-transform duration-300 min-[360px]:inset-x-3.5 sm:left-1/2 sm:right-auto sm:w-[560px] sm:max-w-[calc(100%-28px)] sm:-translate-x-1/2 ${
+        className={`hide-on-desktop print:hidden fixed inset-x-2 bottom-[var(--tabbar-bottom)] z-40 rounded-[32px] material-bar transition-transform duration-300 min-[360px]:inset-x-3.5 sm:left-1/2 sm:right-auto sm:w-[560px] sm:max-w-[calc(100%-28px)] sm:-translate-x-1/2 ${
           scrollVisible ? "translate-y-0" : "translate-y-[calc(100%+28px+env(safe-area-inset-bottom))]"
         }`}
       >

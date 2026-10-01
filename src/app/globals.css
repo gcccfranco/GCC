@@ -9,11 +9,27 @@
   /* Deux matériaux (docs/spec-look.md) : « chrome » fin pour les barres qui
      laissent passer le contenu, « panneau » quasi opaque pour menus et
      feuilles. Une seule surface translucide à la fois : jamais l'un dans
-     l'autre. */
-  .material-chrome {
+     l'autre.
+     Les barres ne portent ni voile, ni filet, ni flou (V7 quinquies, 21/09/2026). Trois
+     essais de flou ont été faits — plein, puis au défilement seul, puis sans déborder
+     de la barre — et chacun restait trop présent à l'œil de Timothée : la séparation
+     nette entre le flou et le reste se voit toujours, quelle qu'en soit la douceur.
+     Depuis V8 (27/09/2026), le contenu ne passe plus dessous : chacune a un fond opaque
+     qui repeint la page et son halo (`.barre-fond`, plus bas).
+     `.material-steady` garde voile et flou : les deux barres du mode louange sont
+     posées sur les paroles, et doivent s'en détacher pour rester lisibles. */
+  .material-steady {
     background-color: hsl(var(--background) / 0.8);
     -webkit-backdrop-filter: blur(20px) saturate(1.4);
     backdrop-filter: blur(20px) saturate(1.4);
+  }
+  /* Rangée qui glisse (V7) : elle s'estompe du côté où il reste quelque chose à voir,
+     au lieu de trancher une pastille en deux au bord de la colonne. Les deux largeurs
+     sont posées par `useFonduLateral` ; à 0 le dégradé est de longueur nulle, donc rien
+     n'est masqué. */
+  .fondu-lateral {
+    -webkit-mask-image: linear-gradient(to right, transparent 0, #000 var(--fondu-gauche, 0px), #000 calc(100% - var(--fondu-droite, 0px)), transparent 100%);
+    mask-image: linear-gradient(to right, transparent 0, #000 var(--fondu-gauche, 0px), #000 calc(100% - var(--fondu-droite, 0px)), transparent 100%);
   }
   /* Lignes d'une liste : un filet d'un bord à l'autre, aligné sur le titre de la page (5C1). */
   .group-row + .group-row::before {
@@ -36,15 +52,92 @@
   .dark .material-bar {
     box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1), 0 14px 40px rgba(0, 0, 0, 0.8);
   }
+  /* Halo d'en-tête (5C1, V6) : l'ellipse floue des planches, couleur par `--halo`.
+     Fixe depuis V7 (21/09/2026) : il reste en haut de l'écran quand la page défile, et
+     quand iOS la laisse rebondir — rien d'autre qu'un élément fixe ne se peint au-dessus
+     du haut d'une page. Posé avant le contenu, qui est `relative` pour se peindre
+     au-dessus. Aucun ancêtre ne doit être transformé, il deviendrait son repère : d'où
+     `.page-fade`, plus bas. Le calque coupe ce qui dépasse : le halo du chant déborde à
+     droite, il ne doit pas élargir la page. Jamais `100vw` : sur ordinateur il compterait
+     la barre de défilement. */
+  .halo {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 320px;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .halo::before {
+    content: "";
+    position: absolute;
+    left: -60px;
+    top: calc(-80px + var(--sat));
+    width: 320px;
+    height: 240px;
+    border-radius: 50%;
+    background: var(--halo);
+    opacity: 0.1;
+    filter: blur(40px);
+  }
+  /* Fiche d'une setlist, puis page d'un chant (à droite) : géométries des planches C et B.
+     Chaque variante vaut aussi pour la copie que repeignent les barres (V8) : celle-ci ne
+     porte pas la classe de la page, elle la lit par `:has()`. */
+  .halo-fiche::before, :root:has(.halo-fiche) .barre-halo::before { left: -40px; top: calc(-60px + var(--sat)); width: 300px; height: 220px; opacity: 0.14; filter: blur(44px); }
+  /* « Moi » (V7) : l'écran n'appartient à aucune section, donc l'encre — plus discrète
+     que les couleurs, un gris franc se lirait comme une salissure et non comme une lumière. */
+  .halo-moi::before, :root:has(.halo-moi) .barre-halo::before { opacity: 0.08; }
+  .halo-chant::before, :root:has(.halo-chant) .barre-halo::before { left: auto; right: -80px; top: calc(-60px + var(--sat)); width: 300px; height: 220px; opacity: 0.12; filter: blur(44px); }
+  /* Grand écran (ordinateur, tablette en paysage ; tranché le 20/09/2026 au soir) : la
+     colonne de contenu est centrée, le halo des planches resterait coincé dans le coin.
+     Agrandi à l'écran, il repasse sous le logo et atteint le titre. */
+  @media (min-width: 1024px) {
+    .halo { height: 560px; }
+    .halo::before, .halo-fiche::before, :root:has(.halo-fiche) .barre-halo::before { left: -140px; top: calc(-200px + var(--sat)); width: 860px; height: 560px; filter: blur(90px); }
+    .halo-chant::before, :root:has(.halo-chant) .barre-halo::before { left: auto; right: -140px; top: calc(-200px + var(--sat)); width: 860px; height: 560px; filter: blur(90px); }
+  }
+  @media print { .halo { display: none; } }
+  /* Fond des barres (V8, 27/09/2026, `FondDeBarre`) : le texte passait derrière le logo et
+     les boutons. Opaque, il repeint ce qu'il cache, le fond de la page et une copie de son
+     halo : tant que rien n'est dessous, la barre ne se voit pas. Sous la dernière barre, le
+     contenu s'efface sur 12 px au lieu d'être tranché net. */
+  .barre-fond {
+    position: absolute;
+    inset: 0 0 -12px 0;
+    z-index: -1;
+    pointer-events: none;
+    background-color: hsl(var(--background));
+    /* La copie du halo est fixe comme l'original, donc toujours à sa place, même sous une
+       barre qui colle en cours de défilement : `clip-path` la coupe au bord du fond, ce que
+       `overflow` ne sait pas faire d'un élément fixe. */
+    clip-path: inset(0);
+    -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 12px), transparent);
+    mask-image: linear-gradient(to bottom, #000 calc(100% - 12px), transparent);
+  }
+  /* Une barre posée sous la navbar porte le fondu : celui de la navbar mangerait son haut.
+     La navbar déborde d'1 px sur elle : à une densité fractionnaire (×2,625), la jonction
+     tombe au milieu d'un pixel et un fil pâle passait entre les deux fonds. */
+  :root:has(.sous-navbar) .barre-fond:not(.sous-navbar) { bottom: -1px; -webkit-mask-image: none; mask-image: none; }
+  /* Une barre qui glisse au défilement est transformée, donc le repère de la copie fixe :
+     celle-ci remonte de la hauteur où la barre est posée (`--barre-top`, sur la barre). */
+  .barre-halo { top: calc(-1 * var(--barre-top, 0px)); }
+  /* Fondu d'entrée des pages (PageTransition) : l'opacité seule. Le `animate-in` de
+     tailwindcss-animate porte un `transform`, qui ferait de la page le repère des
+     éléments fixes le temps du fondu : le halo sauterait de la hauteur de la navbar. */
+  .page-fade { animation: page-fade 200ms ease; }
+  @keyframes page-fade { from { opacity: 0; } }
   .material-panel {
     background-color: hsl(var(--card) / 0.97);
     -webkit-backdrop-filter: blur(24px);
     backdrop-filter: blur(24px);
   }
+  /* `-webkit-` avant la propriété standard : dans l'autre ordre, le compilateur CSS de
+     Next élimine les deux et le flou reste (constaté le 21/09/2026). */
   @media (prefers-reduced-transparency: reduce) {
-    .material-chrome { background-color: hsl(var(--background)); backdrop-filter: none; -webkit-backdrop-filter: none; }
-    .material-bar { background-color: hsl(var(--raised)); backdrop-filter: none; -webkit-backdrop-filter: none; }
-    .material-panel { background-color: hsl(var(--card)); backdrop-filter: none; -webkit-backdrop-filter: none; }
+    .material-chrome { background-color: hsl(var(--background)); -webkit-backdrop-filter: none; backdrop-filter: none; }
+    .material-bar { background-color: hsl(var(--raised)); -webkit-backdrop-filter: none; backdrop-filter: none; }
+    .material-panel { background-color: hsl(var(--card)); -webkit-backdrop-filter: none; backdrop-filter: none; }
   }
 
   /* Masqué uniquement sur un vrai poste desktop (pointeur fin = souris ET écran
@@ -66,8 +159,21 @@
 
 @layer base {
   :root {
-    /* Hauteur de la navbar — source unique pour tous les offsets fixed/sticky */
-    --nav-h: 58px;
+    /* Zone sûre du haut : 0 partout, SAUF pour une icône installée pendant les quelques
+       heures du 21/09/2026 où la page montait sous la barre d'état. iOS fige ce réglage
+       à l'installation et ne le relit jamais : ces appareils passent donc toujours sous
+       l'heure, et sans cette réserve le logo et les boutons se retrouvent derrière elle.
+       Défense, pas décor — elle ne coûte rien aux autres. */
+    --sat: env(safe-area-inset-top, 0px);
+    /* Hauteur de la navbar — source unique pour tous les offsets fixed/sticky. */
+    --nav-h: calc(58px + var(--sat));
+    /* Zone sûre du bas (indicateur d'accueil de l'iPhone), lue par la barre d'onglets. */
+    --sab: env(safe-area-inset-bottom, 0px);
+    /* Écart entre la barre d'onglets flottante et le bas de l'écran : 14 px sans
+       zone sûre ; avec, la barre se pose DANS la zone sûre, 8 px au-dessus de
+       l'indicateur d'accueil (qui finit à 13 px du bord). Jamais marge + zone
+       sûre empilées : cela faisait 48 px sur iPhone (retour du 20/09/2026). */
+    --tabbar-bottom: max(14px, min(21px, var(--sab)));
     /* Direction 5C1 « Encre · Relief » (docs/spec-look.md, § 20/09/2026) : fond
        blanc, encre, listes en filets ; ce qui se touche porte une ombre. Les
        boutons pleins sont en encre, le rouge du logo ne reste que sur le logo
@@ -214,6 +320,16 @@
   .dark .svc-ink { color: color-mix(in srgb, var(--svc) 55%, white); }
   .svc-line { border-left-color: var(--svc); }
   .dark .svc-line { border-left-color: color-mix(in srgb, var(--svc) 55%, white); }
+  /* Tuile d'un service (V7 ter) : le fond porte la couleur, le libellé la reprend
+     assombrie — à sa valeur pleine, l'ocre de l'Intergroupe et l'orange de la Prépa.
+     Table ne donnent que 3,3 et 2,9 sur leur propre fond, pour 4,5 exigés. À 75 % le
+     pire cas remonte à 4,8, et la couleur reste reconnaissable. En sombre, c'est
+     l'inverse : on éclaircit, comme `.svc-ink`. */
+  .svc-tuile {
+    background-color: color-mix(in srgb, var(--svc) var(--svc-tint), transparent);
+    color: color-mix(in srgb, var(--svc) 75%, black);
+  }
+  .dark .svc-tuile { color: color-mix(in srgb, var(--svc) 55%, white); }
   /* Commande en relief : surface + ombre (clair) ou surface + liseré (sombre). */
   .raised {
     background-color: hsl(var(--raised));

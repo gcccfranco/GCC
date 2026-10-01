@@ -1,0 +1,280 @@
+{
+ "slug": "定睛在耶稣身上",
+ "corrections": {
+  "834,51": "C/E",
+  "1116,953": "C/E",
+  "1116,1289": "F/G",
+  "1391,209": "F/G",
+  "1391,284": "G",
+  "1391,898": "G",
+  "1686,632": "F/G",
+  "1686,731": "G",
+  "1686,1381": "G",
+  "1970,1106": "F/G"
+ },
+ "corrections_verified": "dix amas lus au zoom sur la planche propose-extra --all --hidden (_extra-1.png) et sur des crops 2× de chaque système, confrontés au gravé : C/E ×2, F/G ×4, G ×4, 2026-09-26",
+ "not_labels": [
+  "291,843",
+  "291,883",
+  "1391,490"
+ ],
+ "not_labels_verified": "« C » (291,843) et « （Am） » (291,883) : les deux moitiés de l'étiquette gravée « C（Am） », republiée en une composite entière dans extra_labels ; « 【Chorus】 » (1391,490) : titre de section gravé sur la rangée d'accords du système 5 — zooms relus à l'œil, 2026-09-26",
+ "extra_labels": [
+  {
+   "x": 843,
+   "y": 288,
+   "w": 124,
+   "h": 28,
+   "c": "C (Am)"
+  }
+ ],
+ "extra_labels_verified": "boîte mesurée sur les pixels du webp (encre x 843–966, y 288–315, parenthèses pleine chasse comprises) ; « C（Am） » gravé = alternative, écrite comme dans le .cho `[C (Am)]`, composite entière (transposeLabel réécrit les deux noms), 2026-09-26",
+ "key_label": {
+  "x": 14,
+  "y": 179,
+  "w": 77,
+  "h": 25
+ },
+ "key_label_verified": "mesure measure-keylabel (candidate #2 sur 2, ancrage sur le « = »), zoom _kl-1.png relu à l’œil : cadre « 1=  C » (encre x 14–90, y 179–202), la #1 était le « ♩ = 160 » ; lettre gravée C = printedKey = {key} du .cho, 2026-09-26",
+ "verified": "transposé C→C# (thème clair) et C→Eb (thème sombre) dans Chromium (npm run jianpu:audit, 6 tranches relues à chaque fois) : 34 accords sur les 7 rangées d'accords (7 systèmes de chiffres comptés à la main, un par rangée), tous encadrés et justes dans la tonalité transposée, dont la composite « C（Am） » → « Db (Bbm) » / « Eb (Cm) », plus le cadre « 1= C » → « 1=C# » / « 1=Eb » ; « 【Chorus】 », « ♩=160 », « 宣告地、赞美地 » laissés intacts ; « F/G  G » serrés (systèmes 5 et 6) : F/G transposé écrit plus petit ou collé à son voisin, lisible · 2026-09-26",
+ "frozen_labels": [
+  {
+   "x": 45,
+   "y": 291,
+   "w": 17,
+   "h": 25,
+   "c": "C"
+  },
+  {
+   "x": 438,
+   "y": 291,
+   "w": 12,
+   "h": 25,
+   "c": "F"
+  },
+  {
+   "x": 1232,
+   "y": 291,
+   "w": 12,
+   "h": 25,
+   "c": "F"
+  },
+  {
+   "x": 84,
+   "y": 550,
+   "w": 18,
+   "h": 24,
+   "c": "C"
+  },
+  {
+   "x": 393,
+   "y": 550,
+   "w": 19,
+   "h": 24,
+   "c": "G"
+  },
+  {
+   "x": 735,
+   "y": 550,
+   "w": 48,
+   "h": 24,
+   "c": "Am"
+  },
+  {
+   "x": 1050,
+   "y": 550,
+   "w": 43,
+   "h": 24,
+   "c": "Em"
+  },
+  {
+   "x": 1302,
+   "y": 550,
+   "w": 13,
+   "h": 24,
+   "c": "F"
+  },
+  {
+   "x": 51,
+   "y": 834,
+   "w": 49,
+   "h": 24,
+   "c": "C/E"
+  },
+  {
+   "x": 360,
+   "y": 834,
+   "w": 48,
+   "h": 24,
+   "c": "Dm"
+  },
+  {
+   "x": 712,
+   "y": 834,
+   "w": 20,
+   "h": 24,
+   "c": "G"
+  },
+  {
+   "x": 953,
+   "y": 834,
+   "w": 18,
+   "h": 24,
+   "c": "C"
+  },
+  {
+   "x": 1260,
+   "y": 834,
+   "w": 20,
+   "h": 24,
+   "c": "G"
+  },
+  {
+   "x": 46,
+   "y": 1116,
+   "w": 49,
+   "h": 28,
+   "c": "Am"
+  },
+  {
+   "x": 356,
+   "y": 1116,
+   "w": 43,
+   "h": 28,
+   "c": "Em"
+  },
+  {
+   "x": 631,
+   "y": 1116,
+   "w": 12,
+   "h": 28,
+   "c": "F"
+  },
+  {
+   "x": 953,
+   "y": 1116,
+   "w": 49,
+   "h": 28,
+   "c": "C/E"
+  },
+  {
+   "x": 1289,
+   "y": 1116,
+   "w": 50,
+   "h": 28,
+   "c": "F/G"
+  },
+  {
+   "x": 48,
+   "y": 1391,
+   "w": 20,
+   "h": 35,
+   "c": "G"
+  },
+  {
+   "x": 209,
+   "y": 1391,
+   "w": 51,
+   "h": 35,
+   "c": "F/G"
+  },
+  {
+   "x": 284,
+   "y": 1391,
+   "w": 19,
+   "h": 35,
+   "c": "G"
+  },
+  {
+   "x": 414,
+   "y": 1391,
+   "w": 18,
+   "h": 35,
+   "c": "C"
+  },
+  {
+   "x": 898,
+   "y": 1391,
+   "w": 19,
+   "h": 35,
+   "c": "G"
+  },
+  {
+   "x": 1376,
+   "y": 1391,
+   "w": 48,
+   "h": 35,
+   "c": "Am"
+  },
+  {
+   "x": 372,
+   "y": 1686,
+   "w": 12,
+   "h": 25,
+   "c": "F"
+  },
+  {
+   "x": 632,
+   "y": 1686,
+   "w": 50,
+   "h": 25,
+   "c": "F/G"
+  },
+  {
+   "x": 731,
+   "y": 1686,
+   "w": 19,
+   "h": 25,
+   "c": "G"
+  },
+  {
+   "x": 890,
+   "y": 1686,
+   "w": 17,
+   "h": 25,
+   "c": "C"
+  },
+  {
+   "x": 1381,
+   "y": 1686,
+   "w": 19,
+   "h": 25,
+   "c": "G"
+  },
+  {
+   "x": 321,
+   "y": 1970,
+   "w": 48,
+   "h": 25,
+   "c": "Am"
+  },
+  {
+   "x": 893,
+   "y": 1970,
+   "w": 12,
+   "h": 25,
+   "c": "F"
+  },
+  {
+   "x": 1106,
+   "y": 1970,
+   "w": 49,
+   "h": 25,
+   "c": "F/G"
+  },
+  {
+   "x": 1410,
+   "y": 1970,
+   "w": 17,
+   "h": 25,
+   "c": "C"
+  },
+  {
+   "x": 843,
+   "y": 288,
+   "w": 124,
+   "h": 28,
+   "c": "C (Am)"
+  }
+ ]
+}

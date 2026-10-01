@@ -1,0 +1,28 @@
+sequenceDiagram
+  autonumber
+  actor U as Utilisateur
+  participant SW as Service worker
+  participant V as Vercel
+  participant D as SongDetailClient
+  participant P as Parser + transposeAST
+  participant J as JianpuSheet
+  participant S as localStorage
+  U->>SW: ouvre /songs/slug/?key="F" (paramètres en JSON)
+  SW->>V: network-first
+  V-->>D: HTML pré-rendu, Song + source ChordPro complète en props
+  D->>P: parseChordPro(source) → sections, lignes, accords, pinyin
+  D->>D: tonalité = ?key, sinon recommended_key, sinon key
+  D->>P: transposeAST(ast, demi-tons)
+  D->>S: récents, taille du texte, couleurs par section, pinyin, tonalités perso
+  D-->>U: SongView : accords au-dessus des paroles, sections colorées
+  opt partition 简谱 disponible (185 chants)
+    D->>V: GET /jianpu/index.json (manifeste, une fois par session)
+    J->>V: GET /jianpu/chords.json + slug-p1.webp
+    J->>J: masque chaque étiquette gravée, réécrit l'accord transposé
+    J-->>U: scan + calque des accords
+  end
+  opt lien YouTube dans le .cho
+    D-->>U: iframe youtube.com/embed
+  end
+  U->>D: change de tonalité ou de structure
+  D->>D: URL mise à jour, nouveau rendu (aucun appel réseau)

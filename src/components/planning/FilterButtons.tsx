@@ -16,7 +16,7 @@ interface FilterButtonsProps {
 export function FilterButtons({ options, active, onChange, className, color, unpublished }: FilterButtonsProps) {
   const { t } = useTranslation()
   return (
-    <div className={`flex gap-2 overflow-x-auto pb-1 scrollbar-none ${className ?? ""}`}>
+    <div className={`flex gap-2 overflow-x-auto py-1.5 scrollbar-none ${className ?? ""}`}>
       {options.map(opt => {
         const unpub = unpublished?.includes(opt)
         return (

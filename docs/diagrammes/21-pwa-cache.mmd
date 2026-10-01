@@ -1,0 +1,28 @@
+sequenceDiagram
+  autonumber
+  participant N as Navigateur
+  participant SW as public/sw.js
+  participant C as Cache du service worker
+  participant V as Vercel
+  N->>V: 1re visite
+  N->>SW: register('/sw.js') au chargement (layout.tsx)
+  SW->>SW: install
+  alt hors serveur local
+    SW->>C: précharge /songs/ et /songs-index.json
+  end
+  SW->>SW: skipWaiting puis activate
+  SW->>C: supprime les anciens caches (tous, en local)
+  SW->>N: clients.claim
+  N->>SW: requête GET de même origine
+  alt navigation HTML
+    SW->>V: network-first
+    SW->>C: garde une copie
+    Note right of SW: hors ligne : la copie, sinon /songs/
+  else /_next/static/*
+    SW->>C: cache-first (fichiers hashés)
+  else polices, songs-index.json, /api/song/*, icônes
+    SW->>C: stale-while-revalidate
+  else tout le reste, dont /jianpu/*
+    SW->>V: réseau, repli sur le cache s'il existe
+  end
+  Note over N,V: Firestore, Google Sheets, YouTube : autre origine, jamais interceptés. Installation : /manifest.webmanifest (start_url /planning) + texte d'aide sur iPhone, pas de beforeinstallprompt.

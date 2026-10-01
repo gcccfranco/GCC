@@ -1,0 +1,21 @@
+sequenceDiagram
+  autonumber
+  participant VC as Vercel Cron
+  participant R as /api/cron/reminders
+  participant SH as Google Sheet
+  participant AD as Firebase Admin
+  participant PS as Service push
+  VC->>R: GET chaque jour à 08:00 UTC (vercel.json)
+  R->>R: refuse tout appel sans le secret du cron (401)
+  R->>SH: planning CSV, tous les onglets
+  R->>AD: index nom du planning → uid, notifPrefs (rappels, langue)
+  loop J-7, J-3, J-1
+    R->>R: services de chacun à cette date → un seul message par personne
+    R->>AD: notifLog échéance-date-uid déjà écrit ?
+    R->>PS: push FR ou 中文
+    R->>AD: notifLog + entrée de cloche (notifications)
+  end
+  opt interrupteur du back-office allumé (local seulement)
+    R->>AD: scène, tâches, ouvertures d'inscriptions, évènements du lendemain
+    R->>PS: rappels correspondants
+  end

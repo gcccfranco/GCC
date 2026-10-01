@@ -10,7 +10,7 @@ const CULTE = csv([
 const RUTH: FakeProfile = { uid: "uid-ruth", email: "ruth@example.com", planningName: "Ruth K." };
 const phone = { viewport: { width: 390, height: 664 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 };
 const CULTE_COULEUR = "rgb(45, 90, 101)"; // PLANNING_COLORS.culte
-const MUET = "rgb(108, 108, 114)"; // --muted-foreground
+const ENCRE = "rgb(28, 28, 30)"; // --foreground
 
 async function open(page: Page, to: string) {
   await page.clock.setFixedTime(new Date("2026-09-18T10:00:00"));
@@ -42,15 +42,18 @@ test.describe("planning (T4)", () => {
     expect(await service.evaluate((el) => getComputedStyle(el).borderLeftColor)).toBe(CULTE_COULEUR);
   });
 
-  test("onglets de section : neutres, l'onglet courant prend sa couleur", async ({ page }) => {
+  // Sous 1024 px, la rangée d'onglets est devenue un menu (V7, 21/09/2026) : ce describe
+  // tourne à 390 px. La rangée elle-même est vérifiée sur grand écran dans look-planning-menu.
+  test("barre de section : la pastille porte le planning ouvert, dans sa couleur", async ({ page }) => {
     await open(page, "/planning/culte");
-    const onglets = page.getByRole("navigation").filter({ has: page.getByRole("link", { name: "Accueil" }) });
-    const culte = onglets.getByRole("link", { name: "Culte Franco" });
-    const campus = onglets.getByRole("link", { name: "Campus" });
-    await expect(culte).toHaveAttribute("aria-current", "page");
-    expect(await couleur(culte)).toBe(CULTE_COULEUR);
-    expect(await culte.evaluate((el) => getComputedStyle(el).backgroundColor), "l'onglet courant est teinté").not.toBe("rgba(0, 0, 0, 0)");
-    expect(await couleur(campus), "les autres onglets restent neutres").toBe(MUET);
+    const pastille = page.getByTestId("menu-plannings");
+    await expect(pastille).toContainText("Culte Franco");
+    expect(await couleur(pastille)).toBe(CULTE_COULEUR);
+    expect(await pastille.evaluate((el) => getComputedStyle(el).backgroundColor), "la pastille est teintée").not.toBe("rgba(0, 0, 0, 0)");
+    // L'accueil n'est le planning d'aucun service : la pastille y reste neutre.
+    await open(page, "/planning");
+    await expect(pastille).toContainText("Accueil");
+    expect(await couleur(pastille)).toBe(ENCRE);
   });
 
   test("Mes services : chaque service porte sa date en vignette, dans sa couleur", async ({ page }) => {

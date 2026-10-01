@@ -1,0 +1,23 @@
+sequenceDiagram
+  autonumber
+  participant SRC as Scans PDF ou images (hors dépôt)
+  participant BI as build-images.py
+  participant LEC as segment · classify · match
+  participant GOLD as gold/slug.json
+  participant BC as build-chords.py
+  participant AUD as npm run jianpu:audit
+  participant PUB as public/jianpu/
+  participant JS as JianpuSheet (navigateur)
+  SRC->>BI: inventaire.json → pages
+  BI->>PUB: slug-pN.webp + index.json (manifeste, 185 chants)
+  BI->>LEC: pages
+  LEC->>LEC: découpe en rangées : accords, chiffres, paroles
+  LEC->>LEC: lit chaque étiquette parmi les accords du .cho
+  LEC->>BC: lectures, publiées seulement si complètes
+  GOLD->>BC: vérité terrain relue à l'œil, prioritaire
+  BC->>PUB: chords.json (position + accord gravé de chaque étiquette)
+  PUB->>AUD: page transposée rendue dans Chromium (Playwright)
+  AUD-->>GOLD: relecture à l'œil → verified, puis freeze.py gèle le calque
+  Note over SRC,AUD: Lancé à la main, hors du build npm. Les fichiers produits sont commités.
+  JS->>PUB: index.json, chords.json, pages WebP
+  JS->>JS: le chiffre reste une image, seuls les accords sont réécrits

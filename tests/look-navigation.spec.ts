@@ -79,16 +79,42 @@ test.describe("navigation par sections (T2), barre du bas sur téléphone et tab
     await expect(page.getByRole("heading", { level: 1, name: "Setlists" })).toBeVisible();
     await expect(barreDuBas(page).getByRole("link", { name: "Setlists" })).toHaveAttribute("aria-current", "page");
   });
+
+  // Retour de Timothée du 20/09/2026 : sur iPhone la barre flottait à 48 px du
+  // bas (marge de 14 px ET zone sûre de 34 px empilées), avec une bande de
+  // contenu visible dessous. Chromium n'a pas de zone sûre : on la simule par
+  // `--sab`, que le CSS lit à la place de `env(safe-area-inset-bottom)`.
+  test("iPhone (zone sûre de 34 px) : la barre se pose à 21 px du bas, juste au-dessus de l'indicateur d'accueil", async ({ page }) => {
+    await signInAs(page, MEMBRE, {}, "/songs");
+    await page.getByRole("searchbox").waitFor();
+    const sousLaBarre = () => barreDuBas(page).evaluate((n) => window.innerHeight - n.getBoundingClientRect().bottom);
+    const cale = () => barreDuBas(page).locator("xpath=preceding-sibling::div[1]").evaluate((n) => n.getBoundingClientRect().height);
+    expect(await sousLaBarre(), "sans zone sûre : 14 px, inchangé").toBeCloseTo(14, 0);
+    expect(await cale(), "cale = barre (64) + respiration (14) + écart du bas (14)").toBeCloseTo(92, 0);
+
+    await page.evaluate(() => document.documentElement.style.setProperty("--sab", "34px"));
+    await expect.poll(sousLaBarre, { message: "8 px au-dessus de l'indicateur d'accueil, qui finit à 13 px du bord" }).toBeCloseTo(21, 0);
+    expect(await cale(), "la cale suit : 64 + 14 + 21").toBeCloseTo(99, 0);
+
+    // iPad : zone sûre de 20 px, la barre s'y pose telle quelle.
+    await page.evaluate(() => document.documentElement.style.setProperty("--sab", "20px"));
+    await expect.poll(sousLaBarre).toBeCloseTo(20, 0);
+  });
 });
 
 test.describe("navigation par sections (T2), onglets de section", () => {
-  // Cible tactile (16/09/2026) : les pilules faisaient 30 px de haut.
+  // Cible tactile (16/09/2026) : les pilules faisaient 30 px de haut. Depuis V7
+  // (21/09/2026), sous 1024 px c'est la pastille du menu qui se touche.
   test("une pilule de section fait au moins 40 px de haut, sur chaque appareil", async ({ page }) => {
     await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
     await signInAs(page, MEMBRE, {}, "/planning");
-    const pilule = page.getByRole("link", { name: "Culte Franco" });
+    // Le téléphone a la pastille qui ouvre la feuille ; dès la tablette, les huit
+    // onglets tiennent sur la rangée (V7 ter).
+    const pilule = test.info().project.name === "telephone"
+      ? page.getByTestId("menu-plannings")
+      : page.getByTestId("onglets-section").getByRole("link", { name: "Culte Franco" });
     await pilule.waitFor();
-    await page.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished)));
+    await page.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished.catch(() => {}))));
     const box = await pilule.boundingBox();
     expect(box!.height).toBeGreaterThanOrEqual(40);
   });

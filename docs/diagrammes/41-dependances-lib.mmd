@@ -1,0 +1,58 @@
+%% Généré par scripts/diagrammes/generer.ts (dependency-cruiser). Ne pas modifier à la main.
+flowchart LR
+  n0["lib/(racine)<br/>15 fichiers"]
+  n1["lib/api<br/>1 fichier"]
+  n2["lib/chordpro<br/>7 fichiers"]
+  n3["lib/content<br/>1 fichier"]
+  n4["lib/equipes<br/>3 fichiers"]
+  n5["lib/evenements<br/>5 fichiers"]
+  n6["lib/firebase<br/>20 fichiers"]
+  n7["lib/harmonie<br/>9 fichiers"]
+  n8["lib/jianpu<br/>4 fichiers"]
+  n9["lib/pdf<br/>2 fichiers"]
+  n10["lib/performance<br/>1 fichier"]
+  n11["lib/planning<br/>12 fichiers"]
+  n12["lib/push<br/>8 fichiers"]
+  n13["lib/scene<br/>4 fichiers"]
+  n14["lib/setlist<br/>12 fichiers"]
+  n15["lib/taches<br/>5 fichiers"]
+  n0 -->|1| n11
+  n1 -->|1| n2
+  n2 -->|1| n0
+  n3 -->|1| n2
+  n4 -->|1| n0
+  n4 -->|1| n5
+  n4 -->|3| n11
+  n4 -->|1| n12
+  n5 -->|2| n0
+  n5 -->|2| n6
+  n5 -->|3| n12
+  n5 -->|1| n15
+  n6 -->|1| n5
+  n6 -->|2| n11
+  n6 -->|1| n14
+  n7 -->|6| n0
+  n7 -->|1| n2
+  n7 -->|1| n6
+  n7 -->|1| n11
+  n8 -->|1| n0
+  n9 -->|1| n2
+  n9 -->|3| n14
+  n10 -->|2| n0
+  n10 -->|2| n2
+  n10 -->|1| n8
+  n10 -->|1| n14
+  n11 -->|2| n0
+  n11 -->|1| n6
+  n11 -->|1| n12
+  n12 -->|2| n0
+  n12 -->|1| n6
+  n12 -->|3| n11
+  n13 -->|1| n6
+  n13 -->|1| n12
+  n14 -->|1| n0
+  n14 -->|8| n2
+  n14 -->|1| n11
+  n15 -->|1| n0
+  n15 -->|2| n6
+  n15 -->|2| n12

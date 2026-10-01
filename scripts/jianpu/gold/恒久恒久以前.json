@@ -1,0 +1,287 @@
+{
+ "slug": "恒久恒久以前",
+ "face": "verdana-bold",
+ "face_verified": "planche d'élection (face-plate.py) et lecture rejouée sous quatre fontes, 2026-09-26. La gravure est une linéale régulière qu'aucune fonte du banc ne reproduit ; ce qui tranche est le mode C : sous helvetica-neue (défaut), deux « G#m » (885,1224 et 1392,1197) sont lus « C#m » à +0,55/+0,56, unanimes, donc publiés faux. Sous verdana-bold, que sweep-key élit (26/46, marge +15 %), les 16 lectures gardées sont toutes justes et les « B/D# » sont lus justes à +0,45 (non unanimes, d'où les corrections).",
+ "corrections": {
+  "256,43": "B/D#",
+  "256,1232": "B/D#",
+  "885,228": "B/D#",
+  "885,898": "B/F#",
+  "885,1224": "G#m",
+  "1150,65": "B/D#",
+  "1392,98": "B/D#",
+  "1392,1197": "G#m",
+  "1711,461": "B/D#",
+  "1980,394": "B/D#"
+ },
+ "corrections_verified": "chaque amas relu sur les crops 2× des sept systèmes : les sept « B/D# » lus justes mais non unanimes, les deux « G#m » lus justes mais non unanimes, et le « B/F# » du pré-refrain (885,898) que verdana-bold lisait « B/D# ».",
+ "not_labels": [
+  "885,46",
+  "1392,223"
+ ],
+ "not_labels_verified": "les titres de section 【Pre-Chorus】 (885,46) et 【Chorus】 (1392,223), gravés dans la rangée d'accords.",
+ "not_rows": [
+  560,
+  1443,
+  1754
+ ],
+ "not_rows_verified": "y=1443 et y=1754 ne sont pas des rangées d'accords : les sommets des arcs de liaison du refrain et le filet du crochet de 1re fin avec ses arcs (amas de 1 à 50 px). y=560 est la vraie rangée d'accords du 2e système, mais soudée sur 54 px de haut : E et F# gravés à y=582, G#m ⌐1, B/D# et G#m ⌐2 gravés plus haut (y=560) au-dessus des crochets de 1re et 2e fin, dont le filet (y=601) et les coins entrent dans les amas. Publiée avec la boîte de rangée, elle effacerait les crochets ; ses cinq accords sont reposés à la main dans extra_labels.",
+ "extra_labels": [
+  {
+   "x": 63,
+   "y": 582,
+   "w": 13,
+   "h": 23,
+   "c": "E"
+  },
+  {
+   "x": 379,
+   "y": 582,
+   "w": 32,
+   "h": 23,
+   "c": "F#"
+  },
+  {
+   "x": 732,
+   "y": 560,
+   "w": 67,
+   "h": 24,
+   "c": "G#m"
+  },
+  {
+   "x": 998,
+   "y": 560,
+   "w": 71,
+   "h": 24,
+   "c": "B/D#"
+  },
+  {
+   "x": 1359,
+   "y": 560,
+   "w": 67,
+   "h": 24,
+   "c": "G#m"
+  }
+ ],
+ "extra_labels_verified": "les cinq accords de la rangée soudée y=560, boîtes mesurées sur l'encre du webp (bande des capitales, du haut de la lettre à la ligne de base ; la barre oblique de B/D# descend en dessous), coin du crochet ⌐1 (x=717) et filet (y=601) laissés hors boîte.",
+ "key_label": {
+  "x": 14,
+  "y": 173,
+  "w": 81,
+  "h": 26
+ },
+ "key_label_verified": "candidate #2 de measure-keylabel (x=14 y=173 w=81 h=26), élue à l'œil sur la planche : « 1=  B », lettre gravée **B** = printedKey B = {key} du .cho ; la #1 était la ligne de tempo ♩=132. Boîte confrontée à l'encre (x 14→94, y 173→198) : elle s'arrête avant le chiffrage 4/4 (x=123). Le titre « 恒久恒久以前（B原调）» et la mention « [有多张，原调B] » décrivent la source (tonalité d'origine) et restent vraies transposées : pas de title_key (précédents 谢谢你成为我的家, 我需要有你在我生命中). 2026-09-26",
+ "verified": "planche navigateur (npm run jianpu:audit) relue tranche par tranche, 6/6, en B→C, thème clair, 2026-09-26 : les 7 rangées d'accords (y=256, 560/582, 885, 1150, 1392, 1711, 1980 — une par système, 7 systèmes comptés sur la page) sont cadrées de rouge et leurs 30 étiquettes réécrites juste (B/D#→C/E ×8, E→F ×7, F#→G ×6, G#m→Am ×5, B/F#→C/G, C#m→Dm ×2, B→C), le cadre « 1= B » devient « 1=C ». Les crochets de 1re et 2e fin (2e et 6e/7e systèmes), les arcs de liaison, 【Pre-Chorus】 et 【Chorus】 restent gravés et intacts ; «（B原调）» du titre et « [有多张，原调B] » décrivent la source et restent tels quels.",
+ "frozen_labels": [
+  {
+   "x": 43,
+   "y": 256,
+   "w": 71,
+   "h": 24,
+   "c": "B/D#"
+  },
+  {
+   "x": 393,
+   "y": 256,
+   "w": 13,
+   "h": 24,
+   "c": "E"
+  },
+  {
+   "x": 639,
+   "y": 256,
+   "w": 31,
+   "h": 24,
+   "c": "F#"
+  },
+  {
+   "x": 998,
+   "y": 256,
+   "w": 66,
+   "h": 24,
+   "c": "G#m"
+  },
+  {
+   "x": 1232,
+   "y": 256,
+   "w": 71,
+   "h": 24,
+   "c": "B/D#"
+  },
+  {
+   "x": 228,
+   "y": 885,
+   "w": 71,
+   "h": 33,
+   "c": "B/D#"
+  },
+  {
+   "x": 564,
+   "y": 885,
+   "w": 13,
+   "h": 33,
+   "c": "E"
+  },
+  {
+   "x": 898,
+   "y": 885,
+   "w": 66,
+   "h": 33,
+   "c": "B/F#"
+  },
+  {
+   "x": 1224,
+   "y": 885,
+   "w": 66,
+   "h": 33,
+   "c": "G#m"
+  },
+  {
+   "x": 65,
+   "y": 1150,
+   "w": 71,
+   "h": 24,
+   "c": "B/D#"
+  },
+  {
+   "x": 456,
+   "y": 1150,
+   "w": 13,
+   "h": 24,
+   "c": "E"
+  },
+  {
+   "x": 844,
+   "y": 1150,
+   "w": 32,
+   "h": 24,
+   "c": "F#"
+  },
+  {
+   "x": 98,
+   "y": 1392,
+   "w": 71,
+   "h": 39,
+   "c": "B/D#"
+  },
+  {
+   "x": 458,
+   "y": 1392,
+   "w": 13,
+   "h": 39,
+   "c": "E"
+  },
+  {
+   "x": 807,
+   "y": 1392,
+   "w": 31,
+   "h": 39,
+   "c": "F#"
+  },
+  {
+   "x": 1197,
+   "y": 1392,
+   "w": 66,
+   "h": 39,
+   "c": "G#m"
+  },
+  {
+   "x": 76,
+   "y": 1711,
+   "w": 13,
+   "h": 24,
+   "c": "E"
+  },
+  {
+   "x": 461,
+   "y": 1711,
+   "w": 71,
+   "h": 24,
+   "c": "B/D#"
+  },
+  {
+   "x": 849,
+   "y": 1711,
+   "w": 62,
+   "h": 24,
+   "c": "C#m"
+  },
+  {
+   "x": 1205,
+   "y": 1711,
+   "w": 31,
+   "h": 24,
+   "c": "F#"
+  },
+  {
+   "x": 56,
+   "y": 1980,
+   "w": 63,
+   "h": 24,
+   "c": "C#m"
+  },
+  {
+   "x": 394,
+   "y": 1980,
+   "w": 71,
+   "h": 24,
+   "c": "B/D#"
+  },
+  {
+   "x": 728,
+   "y": 1980,
+   "w": 13,
+   "h": 24,
+   "c": "E"
+  },
+  {
+   "x": 970,
+   "y": 1980,
+   "w": 31,
+   "h": 24,
+   "c": "F#"
+  },
+  {
+   "x": 1311,
+   "y": 1980,
+   "w": 16,
+   "h": 24,
+   "c": "B"
+  },
+  {
+   "x": 63,
+   "y": 582,
+   "w": 13,
+   "h": 23,
+   "c": "E"
+  },
+  {
+   "x": 379,
+   "y": 582,
+   "w": 32,
+   "h": 23,
+   "c": "F#"
+  },
+  {
+   "x": 732,
+   "y": 560,
+   "w": 67,
+   "h": 24,
+   "c": "G#m"
+  },
+  {
+   "x": 998,
+   "y": 560,
+   "w": 71,
+   "h": 24,
+   "c": "B/D#"
+  },
+  {
+   "x": 1359,
+   "y": 560,
+   "w": 67,
+   "h": 24,
+   "c": "G#m"
+  }
+ ]
+}

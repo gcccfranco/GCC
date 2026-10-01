@@ -11,9 +11,19 @@ constats de la relecture : `feuille-de-route.md` § 7 (1, 2, 3, 5, 8, 16, 17).
 
 Suivre la structure de la présidence sans faire défiler la partition. Dans la
 vue partitions d'une setlist, chaque chant montre en tête un **bandeau**
-(structure abrégée, nuance sous chaque étape) et, par défaut, **chaque
+(structure abrégée, nuance sous chaque étape) et, au choix, **chaque
 section une seule fois**. Les batteurs n'ont que le bandeau. La présidence
 peut ajouter une **« Dernière phrase » (Dp)** dans l'éditeur.
+
+> **Révision du 20/09/2026 (Timothée, après la mise en ligne)** : la vue
+> s'ouvre en **« Ordre joué »**, plus en « Sections uniques ». Sur son
+> téléphone, le bandeau disait `C1 R C2 R P R` et le corps n'imprimait que
+> `C1, R, C2, P` : lu comme une panne (« les paroles n'affichent pas les bonnes
+> sections »), rien à l'écran ne disant que le corps était condensé.
+> « Sections uniques » reste dans le menu « ⋯ », retenu par appareil ; un
+> appareil qui avait déjà choisi garde son choix ; Batteur → « Structure
+> seule » inchangé ; PDF compact inchangé. Partout où ce document écrit
+> « défaut uniques », lire « défaut ordre joué ».
 
 ## Ce que le code montre (14/09/2026)
 
@@ -52,7 +62,8 @@ peut ajouter une **« Dernière phrase » (Dp)** dans l'éditeur.
    de leur étape. Grille qui passe à la ligne sur téléphone.
 3. **Menu d'affichage** de la vue partitions (menu « ⋯ », groupe
    « Affichage ») : **Ordre joué / Sections uniques / Structure seule** ;
-   `localStorage` `partition-layout` ; défaut « uniques », ou « structure » si
+   `localStorage` `partition-layout` ; défaut « ordre joué » (« uniques »
+   jusqu'au 20/09/2026), ou « structure » si
    `perf-role-preset` = batteur et aucun choix. Mode Adapter : ordre joué
    forcé, bandeau conservé.
    - *Sections uniques* : première occurrence de chaque (section, tonalité
@@ -135,7 +146,8 @@ npm test            # suite complète avant de rendre la main
 ## Critères de réussite
 
 - Abba Père avec C1 · R · R : bandeau « C1 · R ×2 », plus de ligne ORDRE,
-  refrain imprimé une fois par défaut ; « Ordre joué » le réimprime.
+  refrain réimprimé par défaut (ordre joué, depuis le 20/09/2026) ; « Sections
+  uniques » ne l'imprime qu'une fois.
 - Rôle Batteur mémorisé sur l'appareil : la vue partitions s'ouvre en
   « Structure seule ».
 - Dp ajouté depuis l'éditeur : la setlist montre « Dp » dans le bandeau et la

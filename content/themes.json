@@ -17,6 +17,7 @@
     { "slug": "royaume", "name_fr": "Royaume", "name_zh": "国度" },
     { "slug": "noel", "name_fr": "Noël", "name_zh": "圣诞" },
     { "slug": "paques", "name_fr": "Pâques", "name_zh": "复活节" },
-    { "slug": "pentecote", "name_fr": "Pentecôte", "name_zh": "五旬节" }
+    { "slug": "pentecote", "name_fr": "Pentecôte", "name_zh": "五旬节" },
+    {"slug": "noel_fidelite", "name_fr": "Groupe fidélité", "name_zh":"信实团契"}
   ]
 }

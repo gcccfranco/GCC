@@ -22,7 +22,7 @@ function mesurer(page: Page): Promise<Mesure> {
   return page.evaluate(() => {
     // Une parole : caractère chinois, ou lettre latine (« Merry Christmas »).
     const PAROLE = /\p{L}/u;
-    const PONCTUATION = /^[，。、；：！？」』）…,.;:!?)]$/; // la liste de ZhLine (SongView.tsx)
+    const PONCTUATION = /^[，。、；：！？」』）”…,.;:!?)]$/; // la liste de ZhLine (SongView.tsx)
     // Boîte du texte lui-même (pas de la boîte CSS, que `line-height` rogne).
     const boiteTexte = (el: Element | undefined) => {
       if (!el?.firstChild) return null;

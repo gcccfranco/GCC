@@ -1,0 +1,74 @@
+erDiagram
+  FICHIER_CHO ||--|| CHANT : "parsé en"
+  CHANT ||--|{ SECTION : contient
+  SECTION ||--|{ LIGNE : contient
+  LIGNE ||--|{ JETON : "accords et paroles"
+  CHANT }o--o{ THEME : "themes.json"
+  CHANT ||--|| ENTREE_INDEX : "résumé dans songs-index.json"
+  CHANT ||--o| PARTITION_JIANPU : "scan (185 chants)"
+  PARTITION_JIANPU ||--|{ PAGE_SCAN : "pages WebP"
+  PARTITION_JIANPU ||--o| CALQUE_ACCORDS : "chords.json"
+  CALQUE_ACCORDS ||--|{ ETIQUETTE : labels
+  FICHIER_CHO {
+    string chemin "content/songs/slug.cho"
+    string entete "title, key, recommended_key, language…"
+  }
+  CHANT {
+    string slug PK "nom du fichier"
+    string title
+    string titlePinyin "chants ZH"
+    string artist
+    string language "fr ou zh"
+    string originalKey "directive key"
+    string recommendedKey "la plus chantée à GCC"
+    number tempo
+    string_list themes
+    string youtubeUrl
+    bool hasJianpu "faux pour les 370"
+    string chordProSource
+  }
+  SECTION {
+    string id
+    string type "verse, chorus, bridge…"
+    string name
+    string number
+    string uid
+  }
+  LIGNE {
+    string pinyin
+    string jianpu "ancien format, plus rendu"
+  }
+  JETON {
+    string type "chord ou lyric"
+    string value
+  }
+  THEME {
+    string slug PK
+    string name_fr
+    string name_zh
+  }
+  ENTREE_INDEX {
+    string slug PK
+    list sections "id, nom, type"
+  }
+  PARTITION_JIANPU {
+    string slug PK "clé de index.json"
+    string source "PDF ou images"
+  }
+  PAGE_SCAN {
+    string file "slug-pN.webp"
+    number w
+    number h
+  }
+  CALQUE_ACCORDS {
+    string printedKey "tonalité gravée"
+    number labelH
+    bool complete
+  }
+  ETIQUETTE {
+    number x
+    number y
+    string c "accord gravé"
+    number alt "autre tonalité"
+    bool opt "lecture alternative"
+  }

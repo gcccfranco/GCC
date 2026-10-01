@@ -130,7 +130,7 @@ export default function PlanningAccueil() {
   const eddGb = eddP?.["高班"]?.find(r => r[0] === sun) ?? null
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
+    <div className="relative max-w-2xl mx-auto space-y-6">
       <PageTitle title={t("common.header.planning")} />
 
       <StaleBanner show={stale} />

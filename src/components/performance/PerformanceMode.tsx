@@ -1155,7 +1155,7 @@ export function PerformanceMode({
       >
         {/* Top bar */}
         <div
-          className="absolute top-0 left-0 right-0 pointer-events-auto material-chrome shadow-[0_1px_0_hsl(var(--border))] px-4 py-3 flex items-center gap-3"
+          className="absolute top-0 left-0 right-0 pointer-events-auto material-chrome material-steady shadow-[0_1px_0_hsl(var(--border))] px-4 py-3 flex items-center gap-3"
           style={{
             paddingTop: "calc(0.75rem + var(--sat, 0px))",
             paddingLeft: "calc(1rem + var(--sal, 0px))",
@@ -1202,7 +1202,7 @@ export function PerformanceMode({
 
         {/* Bottom bar */}
         <div
-          className="absolute bottom-0 left-0 right-0 pointer-events-auto material-chrome shadow-[0_-1px_0_hsl(var(--border))] px-3 py-2.5 flex items-center gap-1.5 flex-wrap"
+          className="absolute bottom-0 left-0 right-0 pointer-events-auto material-chrome material-steady shadow-[0_-1px_0_hsl(var(--border))] px-3 py-2.5 flex items-center gap-1.5 flex-wrap"
           style={{
             paddingBottom: "calc(0.625rem + var(--sab, 0px))",
             paddingLeft: "calc(0.75rem + var(--sal, 0px))",

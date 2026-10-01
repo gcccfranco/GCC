@@ -1,0 +1,23 @@
+sequenceDiagram
+  autonumber
+  actor U as Utilisateur
+  participant SW as Service worker
+  participant V as Vercel
+  participant L as SongListClient
+  participant F as Fuse.js
+  participant S as Stockage du navigateur
+  U->>SW: ouvre /songs/
+  SW->>V: network-first
+  V-->>SW: HTML pré-rendu, les 370 chants en props (sans la source)
+  SW-->>U: page (hors ligne : la copie en cache)
+  L->>S: recentSongs (localStorage), songsScrollPos (sessionStorage)
+  L->>L: reprend ?q, ?lang, ?theme de l'URL
+  U->>L: tape une recherche
+  L->>F: search(q) sur title, titlePinyin, artist (seuil 0,4)
+  F-->>L: résultats par pertinence
+  L->>L: filtre langue (fr / zh) puis thème (content/themes.json)
+  L->>S: replaceState de l'URL + lastListPath
+  U->>L: touche un chant
+  L->>S: position de défilement
+  L-->>U: navigation vers /songs/slug/
+  Note over L,F: La liste ne lit pas songs-index.json : elle reçoit les chants au build

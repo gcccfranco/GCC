@@ -1,0 +1,97 @@
+erDiagram
+  USERS ||--o{ SETLISTS : "ownerId"
+  SETLISTS ||--|{ SETLIST_ITEM : "items (tableau)"
+  SETLIST_ITEM }o--|| CHANT : "songSlug"
+  SETLISTS ||--o{ HISTORY : "sous-collection history"
+  SETLISTS ||--o{ VERSIONS : "sous-collection versions"
+  USERS ||--o{ VERSIONS : "une par personne"
+  USERS ||--o{ ANNOTATIONS : "userId dans l'id"
+  SETLISTS ||--o{ ANNOTATIONS : "setlistId dans l'id"
+  CHANT ||--o{ HARMONIE_IDEE : "harmonie/slug/idees"
+  CHANT ||--o{ HARMONIE_REJET : "harmonie/slug/rejets"
+  USERS ||--o{ SONG_PROPOSALS : "authorId"
+  USERS ||--o{ REPORTS : "authorId"
+  USERS {
+    string uid PK
+    string email
+    string firstName
+    string lastName
+    string planningName "lien avec le Sheet"
+    map serviceRoles "catégorie → rôles"
+    string_list notify "audiences autorisées"
+    string_list poles
+    string_list plannings "droits d'écriture"
+    bool equipes
+  }
+  SETLISTS {
+    string id PK
+    string title
+    string leader
+    string category "culte, groupe, EDD…"
+    string date
+    string moment "matin ou soir"
+    string language "fr, zh ou mixed"
+    bool isDraft
+    bool isPrivate
+    string ownerId FK
+    string presentationUrl
+    timestamp createdAt
+    timestamp updatedAt
+  }
+  SETLIST_ITEM {
+    string type "chant, fusion ou transition"
+    string songSlug FK
+    string keyOverride
+    string_list structureOverride
+    map sectionNotes
+    map sectionNuances
+    map sectionKeys
+    string contentOverride "mode Adapter"
+    bool useJianpu
+    map jianpuChords "retouches du calque"
+    list fusionSongs
+  }
+  HISTORY {
+    string id PK "heure-uid"
+    string authorUid
+    string authorName
+    timestamp at
+    list changes
+  }
+  VERSIONS {
+    string uid PK
+    string authorName
+    map items "content, structure, shared"
+    map choices
+  }
+  ANNOTATIONS {
+    string id PK "userId__setlistId__page"
+    string strokes "traits en JSON"
+  }
+  CHANT {
+    string slug PK "fichier .cho, hors Firestore"
+  }
+  HARMONIE_IDEE {
+    string uid
+    string instrument
+    string texte
+    string ficheId
+  }
+  HARMONIE_REJET {
+    string suggestion
+    string uid
+  }
+  SONG_PROPOSALS {
+    string title
+    string youtubeUrl
+    string pdfUrl
+    string status
+    string authorId FK
+  }
+  REPORTS {
+    string kind "song ou site"
+    string title
+    string songSlug
+    string status
+    string authorId FK
+  }
