@@ -874,6 +874,8 @@ export interface FusionPDFSong {
   sectionNuances?: Record<string, SectionNuance>;
   /** Modulation (升调) par section : uid → tonalité cible d'affichage. */
   sectionKeys?: Record<string, string>;
+  /** Structure du chant dans la fusion « à la suite ». */
+  structureOverride?: string[] | null;
 }
 
 export function FusionPDFPage({

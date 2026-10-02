@@ -76,7 +76,9 @@ Réussite :
 - **Chants les plus joués** : `scripts/recommended-keys.ts` les compte sur
   les setlists (compte de service, hors ligne) ; côté navigateur,
   `getSetlists()` lit toutes les setlists (règles : `read: if signedIn()`).
-- **Fusions** : exclues d'Adapter et du Dp ; on fait pareil.
+- **Fusions** : exclues d'Adapter et du Dp ; on fait pareil. *(Revu le 01/10/2026 : la Dp
+  existe sur une fusion, et chaque chant d'une fusion a ses idées, en lecture —
+  `spec-fusions-dp.md`.)*
 
 ## Décisions (entretien du 17/09/2026)
 
@@ -166,7 +168,10 @@ Invisibles pour les autres. Jamais en mode louange.
 - **« Ne marche pas sur ce chant »** : tout pianiste ou guitariste ; la
   suggestion disparaît **pour tout le monde** sur ce chant, avec son nom ;
   **annulable par son auteur ou un admin**.
-- **Fusions** : ni suggestions ni transition.
+- **Fusions** : ni suggestions ni transition. *(Revu le 01/10/2026 à la demande de Timothée :
+  un bouton « Idées d'harmonie · <titre> » par chant de la fusion, suggestions et idées de
+  l'équipe en lecture ; toujours ni transition, ni Essayer, ni Appliquer — `spec-fusions-dp.md`,
+  T5.)*
 
 **Ma version : retoucher un seul passage.** À l'enregistrement d'une retouche
 dans une section répétée : **« Toutes les répétitions »** (par défaut, comme

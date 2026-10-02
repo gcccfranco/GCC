@@ -12,14 +12,19 @@ export function playedSections(item: SetlistItem, contents: Record<string, SongC
     structure?.length ? resolveStructureOverride(sections, structure) : sections;
 
   if (item.type === "fusion" && item.fusionSongs) {
+    // Chaque chant dans sa version adaptée s'il en a une (sa Dernière phrase).
+    const fusionAst = (slug: string) => {
+      const fs = item.fusionSongs!.find((f) => f.songSlug === slug);
+      return itemAst(fs ?? {}, contents[slug]);
+    };
     if (item.mixedStructure?.length) {
       return item.mixedStructure.flatMap((ms) => {
-        const section = contents[ms.songSlug]?.ast.sections.find((s) => s.id === ms.sectionId);
+        const section = fusionAst(ms.songSlug)?.sections.find((s) => s.id === ms.sectionId);
         return section ? [section] : [];
       });
     }
     return item.fusionSongs.flatMap((fs) => {
-      const ast = contents[fs.songSlug]?.ast;
+      const ast = itemAst(fs, contents[fs.songSlug]);
       return ast ? resolve(ast.sections, fs.structureOverride) : [];
     });
   }

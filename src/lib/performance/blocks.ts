@@ -135,8 +135,8 @@ export function buildPerformanceBlocks(
     if (item.type === "fusion" && item.fusionSongs) {
       const asts: Record<string, ChordProAST> = {};
       for (const fs of item.fusionSongs) {
-        const content = contents[fs.songSlug];
-        if (content) asts[fs.songSlug] = getTransposed(content.ast, fs.keyOverride);
+        const ast = itemAst(fs, contents[fs.songSlug]);
+        if (ast) asts[fs.songSlug] = getTransposed(ast, fs.keyOverride);
       }
 
       if (item.mixedStructure?.length) {

@@ -6,8 +6,8 @@ fusionnés. Un autre problème avec le dp : affiché que dans le mode avec tous 
 c'est écrit *other* et pas *dp* dans la liste des chants, pas affiché quand on clique sur le
 chant dans la setlist. »
 
-Quatre décisions prises le même jour (recommandations acceptées). Lot prévu la semaine
-suivante (Timothée, 27/09/2026) : **attend le go**.
+Quatre décisions prises le même jour (recommandations acceptées). **Go donné le 01/10/2026**
+(« Fait la spec »), codé le jour même : voir « Avancement » en fin de document.
 
 ## Diagnostic
 
@@ -51,3 +51,53 @@ suivante (Timothée, 27/09/2026) : **attend le go**.
 
 - Les règles Firestore ne valident pas la forme des éléments : rien à republier.
 - Le mode louange reprend la vue partitions : il suit sans code à part.
+
+## Avancement (01/10/2026)
+
+T1 à T4 codées, plus une tranche demandée le même jour (T5). Tests :
+`tests/fusions-dp.spec.ts` (21 tests × 3 appareils, chant FR Abba Père + chant ZH 一生爱你),
+vus rouges avant chaque tranche ; `coup-d-oeil.spec.ts` remis au format `start_of_Dp`.
+**Non commité, à valider en local.**
+
+- **T1** : la liste lit les sections dans la version adaptée (`itemSections`, partagé avec
+  l'éditeur) ; `DP_BLOCK` reconnaît `start_of_other` et `start_of_Dp`.
+- **T2** : le lien de la liste porte `item` (position) pour un chant seul **et** pour un chant
+  de fusion à la suite (qui ne portait jusque-là aucun réglage) ; la page du chant relit la
+  setlist et parse la version adaptée. Sans session ou si la lecture échoue : le chant
+  d'origine. Une fusion mélangée n'a pas de lien par chant dans la liste (inchangé).
+- **T3** : la fusion mélangée suit le menu Affichage ; « Sections uniques » dédoublonne par
+  chant, section et tonalité ; le bandeau porte alors notes et transitions.
+- **T4** : `FusionSong.contentOverride` ; bouton « Dernière phrase » dans la carte de chaque
+  chant (structure par chant) et dans l'éditeur du mélange (la Dp s'ajoute à la suite).
+  Lue partout par `itemAst` : vue partitions, PDF, copie des paroles, historique (« Dernière
+  phrase ajoutée à … », comme un chant seul), liste, **et mode louange** : contrairement à
+  « Hors lot », `blocks.ts` a son propre code de fusion, il a fallu le changer aussi.
+- **T5, idées d'harmonie sur une fusion** (Timothée, 01/10/2026 : « Absence des idées
+  d'harmonies pour les chants fusionnés ») : un bouton « Idées d'harmonie · <titre> » par chant
+  de la fusion ouvre la feuille de ce chant, dans sa tonalité et sa version adaptée. Elles se
+  lisent ; « Essayer dans Ma version » et « Appliquer à la setlist » restent réservés aux
+  chants seuls (ils modifient l'élément). Revient sur « pas de suggestions sur les fusions »
+  (`spec-harmonie.md`, points complétés).
+
+**Relecture du 01/10/2026** (deux relectures indépendantes, standards et conformité à la
+spec), corrigé le jour même :
+
+- **Une Dp retirée de la structure se jouait encore** (défaut des chants seuls depuis le
+  lot 3, étendu aux fusions par T4) : la structure revenue « par défaut » s'écrivait `null`,
+  et le défaut d'une version adaptée contient sa Dp. Une version adaptée écrit désormais
+  toujours sa structure (`buildSetlistItems`, chant seul et chant de fusion).
+- **Fusion mélangée** : la Dp va au mélange seulement, plus à la structure propre du chant
+  (elle y créait un faux « Structure modifiée » dans l'historique).
+- **Page du chant** : elle reprend aussi les accords retouchés sur le scan (mode Adapter).
+- **Liste** : dans une fusion mélangée, chaque titre ouvre la page du chant (T2 complète).
+- Tests ajoutés : Dp d'un chant chinois dans une fusion, page sans session (chant
+  d'origine), Dp retirée, lien d'une fusion mélangée, retouches du scan sur la page.
+
+Limites connues, laissées telles quelles :
+
+- La tonalité choisie sur la page d'un chant de fusion est retenue pour ce chant dans la
+  setlist (comme pour un chant seul), mais le mode louange d'une fusion ne la lit pas.
+- Sur la page d'un chant de fusion mélangée, la Dp ne s'affiche pas : elle appartient au
+  mélange, la page montre la structure propre du chant.
+- PDF : aucun test ne lit le PDF produit ; le rendu suit `itemAst` comme la vue partitions.
+

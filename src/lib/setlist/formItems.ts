@@ -97,7 +97,7 @@ function resolveNuance(
  *  setlist si elle existe (elle peut contenir des sections matérialisées,
  *  absentes de l'index des chants), sinon celles du chant. L'uid reprend la
  *  convention de toFormItem — `<id>-<rang>` — pour les sections de l'index. */
-function itemSections(song: SongIndexEntry, contentOverride?: string | null): SectionSummary[] {
+export function itemSections(song: SongIndexEntry, contentOverride?: string | null): SectionSummary[] {
   if (!contentOverride) return song.sections ?? [];
   return parseChordPro(contentOverride).sections.map((s, index) => ({
     id: s.id,
@@ -168,7 +168,7 @@ export function buildFormItems(
         const songs: FormItem[] = item.fusionSongs.flatMap((fs) => {
           const song = songsMap[fs.songSlug];
           if (!song) return [];
-          return [toFormItem(song, fs.keyOverride, "", fs.structureOverride, fs.sectionNotes, {}, fs.sectionNuances, fs.sectionKeys)];
+          return [toFormItem(song, fs.keyOverride, "", fs.structureOverride, fs.sectionNotes, {}, fs.sectionNuances, fs.sectionKeys, false, { contentOverride: fs.contentOverride })];
         });
         if (songs.length === 0) return [];
 
@@ -177,9 +177,10 @@ export function buildFormItems(
           mixedStructure = item.mixedStructure.flatMap((ms): FusionMixedSectionForm[] => {
             const song = songsMap[ms.songSlug];
             if (!song) return [];
-            const section = (song.sections ?? []).find((s) => s.id === ms.sectionId);
-            if (!section) return [];
             const fusionSong = item.fusionSongs!.find((fs) => fs.songSlug === ms.songSlug);
+            // Une Dernière phrase n'existe que dans la version adaptée du chant.
+            const section = itemSections(song, fusionSong?.contentOverride).find((s) => s.id === ms.sectionId);
+            if (!section) return [];
             const nuance = ms.nuance ?? fusionSong?.sectionNuances?.[ms.sectionId];
             return [{
               uid: nextUid(),

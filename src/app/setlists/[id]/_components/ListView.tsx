@@ -9,6 +9,7 @@ import { Link2, MessageSquare, ChevronDown, ChevronUp } from "lucide-react";
 import type { SectionSummary } from "@/types/song";
 import { useJianpuManifest } from "@/lib/jianpu/images";
 import { sheetEnabled, type JianpuPref } from "@/lib/jianpu/preference";
+import { itemSections } from "@/lib/setlist/formItems";
 
 /** Palette rotative pour relier chaque transition à son occurrence dans le fil :
  *  la section colorée et sa note en dessous partagent la même couleur. */
@@ -42,6 +43,39 @@ function sectionNamesFor(
     name: abbreviateSection(s),
     keyChange: sectionKeys[`${s.id}-${i}`] ?? sectionKeys[s.id],
   }));
+}
+
+/** Lien vers la page du chant : ses réglages, la setlist et la position de
+ *  l'élément — la page y relit la version adaptée (Dernière phrase, mode
+ *  Adapter). Un chant peut revenir deux fois : la position les distingue. */
+function songHref(
+  slug: string,
+  s: Pick<SetlistItem, "structureOverride" | "sectionNotes" | "sectionNuances" | "keyOverride" | "sectionKeys">,
+  setlistId: string,
+  position: number,
+) {
+  return {
+    pathname: `/songs/${slug}`,
+    query: {
+      ...(s.structureOverride && {
+        structure: JSON.stringify(s.structureOverride),
+      }),
+      ...(s.sectionNotes && {
+        sectionNotes: JSON.stringify(s.sectionNotes),
+      }),
+      ...(s.sectionNuances && Object.keys(s.sectionNuances).length > 0 && {
+        sectionNuances: JSON.stringify(s.sectionNuances),
+      }),
+      ...(s.keyOverride && {
+        key: JSON.stringify(s.keyOverride)
+      }),
+      ...(s.sectionKeys && {
+        sectionKeys: JSON.stringify(s.sectionKeys)
+      }),
+      setlist: JSON.stringify(setlistId),
+      item: JSON.stringify(position),
+    },
+  };
 }
 
 export function ListView({
@@ -102,13 +136,14 @@ export function ListView({
                       let tci = 0;
                       for (const ms of item.mixedStructure) {
                         const song = songsMap[ms.songSlug];
-                        const sec = song?.sections?.find((s) => s.id === ms.sectionId || s.uid === ms.sectionId);
+                        const fusionSong = item.fusionSongs!.find((fs) => fs.songSlug === ms.songSlug);
+                        // Version adaptée du chant : sa Dernière phrase n'est pas dans l'index.
+                        const sec = song && itemSections(song, fusionSong?.contentOverride).find((s) => s.id === ms.sectionId || s.uid === ms.sectionId);
                         const name = sec ? abbreviateSection(sec) : ms.sectionId;
                         const title = song?.title ?? ms.songSlug;
                         const color = ms.transition
                           ? TRANSITION_COLORS[tci++ % TRANSITION_COLORS.length]
                           : undefined;
-                        const fusionSong = item.fusionSongs!.find((fs) => fs.songSlug === ms.songSlug);
                         const entry = { name, color, keyChange: ms.keyChange ?? fusionSong?.sectionKeys?.[ms.sectionId] };
                         const last = runs[runs.length - 1];
                         if (last && last.slug === ms.songSlug) last.names.push(entry);
@@ -120,7 +155,16 @@ export function ListView({
                           <div className="space-y-0.5">
                             {runs.map((run, i) => (
                               <p key={i} className="text-[11px] leading-tight">
-                                <span className="font-medium text-muted-foreground/90">{run.title}</span>
+                                {(() => {
+                                  const fs = item.fusionSongs!.find((f) => f.songSlug === run.slug);
+                                  return fs ? (
+                                    <Link href={songHref(run.slug, fs, setlistId, item.position)} className="font-medium text-muted-foreground/90 hover:text-foreground hover:underline">
+                                      {run.title}
+                                    </Link>
+                                  ) : (
+                                    <span className="font-medium text-muted-foreground/90">{run.title}</span>
+                                  );
+                                })()}
                                 <span className="text-muted-foreground/40"> · </span>
                                 <span className="text-muted-foreground/60">
                                   {run.names.map((n, j) => (
@@ -161,11 +205,11 @@ export function ListView({
                       const song = songsMap[fs.songSlug];
                       const displayKey = fs.keyOverride ?? song?.originalKey ?? "?";
                       const transposed = !!fs.keyOverride && fs.keyOverride !== song?.originalKey;
-                      const names = song?.sections ? sectionNamesFor(song.sections, fs.structureOverride, t, fs.sectionKeys) : [];
+                      const names = song?.sections ? sectionNamesFor(itemSections(song, fs.contentOverride), fs.structureOverride, t, fs.sectionKeys) : [];
                       return (
                         <div key={fs.songSlug}>
                           <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground/80">
-                            <Link href={`/songs/${fs.songSlug}`} className="hover:text-foreground hover:underline">
+                            <Link href={songHref(fs.songSlug, fs, setlistId, item.position)} className="hover:text-foreground hover:underline">
                               {song?.title ?? fs.songSlug}
                             </Link>
                             <span className={`font-mono text-xs px-1 py-0.5 rounded ${
@@ -212,27 +256,7 @@ export function ListView({
             </span>
             <div className="flex-1 min-w-0">
               <div className="flex items-baseline gap-2 flex-wrap">
-                <Link href={{
-                  pathname:`/songs/${item.songSlug}`,
-                  query: {
-                    ...(item.structureOverride && {
-                      structure: JSON.stringify(item.structureOverride),
-                    }),
-                    ...(item.sectionNotes && {
-                      sectionNotes: JSON.stringify(item.sectionNotes),
-                    }),
-                    ...(item.sectionNuances && Object.keys(item.sectionNuances).length > 0 && {
-                      sectionNuances: JSON.stringify(item.sectionNuances),
-                    }),
-                    ...(item.keyOverride && {
-                      key: JSON.stringify(item.keyOverride)
-                    }),
-                    ...(item.sectionKeys && {
-                      sectionKeys: JSON.stringify(item.sectionKeys)
-                    }),
-                    setlist: JSON.stringify(setlistId),
-                  },
-                }}
+                <Link href={songHref(item.songSlug, item, setlistId, item.position)}
                   className="font-semibold text-sm text-foreground hover:text-foreground">
                   {song?.title ?? item.songSlug}
                 </Link>
@@ -250,7 +274,9 @@ export function ListView({
               </div>
               {song?.artist && <p className="text-xs text-muted-foreground">{song.artist}</p>}
               {song?.sections && song.sections.length > 0 && (() => {
-                const allSections = song.sections!;
+                // Version adaptée : ses sections (copies, « Dernière phrase »)
+                // n'existent pas dans l'index du chant.
+                const allSections = itemSections(song, item.contentOverride);
                 const st = item.sectionTransitions ?? {};
                 const sk = item.sectionKeys ?? {};
                 // Chaque section → nom affichable + transition interne éventuelle.
