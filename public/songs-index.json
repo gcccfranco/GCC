@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-26T22:19:01.564Z",
+  "generatedAt": "2026-10-02T11:46:46.380Z",
   "songs": [
     {
       "slug": "abba-pere",
@@ -990,7 +990,10 @@
       "originalKey": "E",
       "recommendedKey": null,
       "tempo": 94,
-      "themes": [],
+      "themes": [
+        "noel",
+        "noel_fidelite"
+      ],
       "youtubeUrl": "https://www.youtube.com/watch?v=oV5RBQ9RPo8",
       "spotifyUrl": null,
       "appleMusicUrl": null,
@@ -2367,7 +2370,12 @@
           "type": "chorus"
         },
         {
-          "id": "bridge-4",
+          "id": "intro-4",
+          "name": "间奏/Interlude",
+          "type": "intro"
+        },
+        {
+          "id": "bridge-5",
           "name": "桥段/Pont",
           "type": "bridge"
         }
@@ -3512,7 +3520,7 @@
         "grace",
         "foi"
       ],
-      "youtubeUrl": null,
+      "youtubeUrl": "https://www.youtube.com/watch?v=SBrKQN5lAMg",
       "spotifyUrl": null,
       "appleMusicUrl": null,
       "hasJianpu": false,
@@ -4278,9 +4286,10 @@
       "recommendedKey": null,
       "tempo": 132,
       "themes": [
-        "noël",
+        "noel",
         "salut",
-        "adoration"
+        "adoration",
+        "noel_fidelite"
       ],
       "youtubeUrl": null,
       "spotifyUrl": null,
@@ -6354,6 +6363,45 @@
       ]
     },
     {
+      "slug": "le-dieu-fidele",
+      "title": "Le Dieu fidèle",
+      "titlePinyin": null,
+      "artist": "Glorious",
+      "language": "fr",
+      "originalKey": "A",
+      "recommendedKey": null,
+      "tempo": null,
+      "themes": [
+        "adoration",
+        "foi",
+        "mission"
+      ],
+      "youtubeUrl": null,
+      "spotifyUrl": null,
+      "appleMusicUrl": null,
+      "hasJianpu": false,
+      "jianpuKey": null,
+      "sections": [
+        {
+          "id": "verse-1",
+          "name": "Couplet 1",
+          "type": "verse",
+          "number": "1"
+        },
+        {
+          "id": "chorus-2",
+          "name": "Refrain",
+          "type": "chorus"
+        },
+        {
+          "id": "verse-3",
+          "name": "Couplet 2",
+          "type": "verse",
+          "number": "2"
+        }
+      ]
+    },
+    {
       "slug": "le-fils-de-dieu",
       "title": "Le Fils de Dieu",
       "titlePinyin": null,
@@ -8076,7 +8124,7 @@
         "adoration",
         "action-de-grace"
       ],
-      "youtubeUrl": null,
+      "youtubeUrl": "https://www.youtube.com/watch?v=x65OYYOIMzU",
       "spotifyUrl": null,
       "appleMusicUrl": null,
       "hasJianpu": false,
@@ -8560,7 +8608,7 @@
         "croix",
         "adoration"
       ],
-      "youtubeUrl": null,
+      "youtubeUrl": "https://www.youtube.com/watch?v=ZFhxi75jEHI",
       "spotifyUrl": null,
       "appleMusicUrl": null,
       "hasJianpu": false,
@@ -8868,7 +8916,7 @@
     },
     {
       "slug": "亲眼看见你",
-      "title": "亲眼看见祢",
+      "title": "亲眼看见你",
       "titlePinyin": "Qīn yǎn kàn jiàn nǐ",
       "artist": "基恩敬拜",
       "language": "zh",
@@ -8991,7 +9039,7 @@
       "recommendedKey": null,
       "tempo": 80,
       "themes": [],
-      "youtubeUrl": null,
+      "youtubeUrl": "https://www.youtube.com/watch?v=z__yBmjwW1Q",
       "spotifyUrl": null,
       "appleMusicUrl": null,
       "hasJianpu": false,
@@ -11184,7 +11232,7 @@
         "croix",
         "adoration"
       ],
-      "youtubeUrl": null,
+      "youtubeUrl": "https://www.youtube.com/watch?v=HQncR2It1Cw",
       "spotifyUrl": null,
       "appleMusicUrl": null,
       "hasJianpu": false,
@@ -12837,7 +12885,7 @@
       "slug": "为我而来",
       "title": "为我而来",
       "titlePinyin": "Wèi wǒ ér lái",
-      "artist": "Inconnu",
+      "artist": "火把音乐",
       "language": "zh",
       "originalKey": "C",
       "recommendedKey": null,
@@ -13011,7 +13059,7 @@
     },
     {
       "slug": "我的生命献给你",
-      "title": "我的生命献给祢",
+      "title": "我的生命献给你",
       "titlePinyin": "Wǒ de shēng mìng xiàn gěi nǐ",
       "artist": "赞美之泉",
       "language": "zh",
@@ -13102,7 +13150,7 @@
       "recommendedKey": null,
       "tempo": 72,
       "themes": [],
-      "youtubeUrl": null,
+      "youtubeUrl": "https://www.youtube.com/watch?v=fUijjKO3lYU",
       "spotifyUrl": null,
       "appleMusicUrl": null,
       "hasJianpu": false,
@@ -13746,7 +13794,7 @@
       "recommendedKey": null,
       "tempo": 150,
       "themes": [],
-      "youtubeUrl": null,
+      "youtubeUrl": "https://www.youtube.com/watch?v=Bs-pQZ9b0OU",
       "spotifyUrl": null,
       "appleMusicUrl": null,
       "hasJianpu": false,
