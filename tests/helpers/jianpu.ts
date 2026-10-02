@@ -53,7 +53,7 @@ export function partialSlugs(): string[] {
 export async function openSheet(
   page: Page,
   slug: string,
-  opts: { key?: string; dark?: boolean } = {}
+  opts: { key?: string; dark?: boolean; gravure?: boolean } = {}
 ): Promise<Locator> {
   if (opts.dark) {
     await page.addInitScript(() => localStorage.setItem("theme", "dark"));
@@ -82,6 +82,10 @@ export async function openSheet(
   // Les accords réécrits sont mesurés en cqw : une fonte pas encore chargée
   // décale toutes les largeurs.
   await page.evaluate(() => document.fonts.ready);
+  // La gravure seule, sans le calque. Ouvrir la page sans tonalité ne suffit
+  // plus : un scan gravé dans une autre tonalité que son .cho y est réécrit
+  // dans celle du .cho (有一位神, 01/10/2026).
+  if (opts.gravure) await page.addStyleTag({ content: "[data-jianpu-calque]{display:none!important}" });
   return pages;
 }
 
@@ -235,9 +239,9 @@ export function pagesManquantes(): string[] {
     .filter((f) => !fs.existsSync(path.join(ROOT, "public/jianpu", f)));
 }
 
-/** Tonalité du `.cho`. La page ne passe une tonalité jouée au calque que si
- *  elle diffère de celle-là : viser par erreur la tonalité d'origine éteint
- *  le calque et le test mesure alors autre chose. */
+/** Tonalité du `.cho`. Sans autre tonalité demandée, le calque transpose de la
+ *  gravure vers celle-là : viser par erreur la tonalité d'origine éteint le
+ *  calque quand la gravure y est déjà, et le test mesure alors autre chose. */
 export function songKey(slug: string): string | undefined {
   const index = JSON.parse(fs.readFileSync(path.join(ROOT, "public/songs-index.json"), "utf8"));
   return index.songs.find((s: { slug: string }) => s.slug === slug)?.originalKey;

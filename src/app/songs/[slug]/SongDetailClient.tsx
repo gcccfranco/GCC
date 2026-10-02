@@ -511,6 +511,7 @@ function safeParseParam<T>(raw: string | null, fallback: T): T {
               title={song.title}
               slug={song.slug}
               playedKey={customize.currentKey !== originalKey ? customize.currentKey : null}
+              originalKey={originalKey}
             />
           ) : (
             <SongView

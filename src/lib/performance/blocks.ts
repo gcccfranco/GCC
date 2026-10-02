@@ -68,6 +68,8 @@ export type JianpuSheetBlock = {
   /** Tonalité jouée, si elle diffère de celle du chant : le calque
    *  d'accords s'y transpose. */
   playedKey: string | null;
+  /** Tonalité du `.cho`, jouée quand `playedKey` est nul. */
+  originalKey: string;
   /** Page du scan rendue par ce bloc : une page de partition = une page
    *  d'écran, un scan de deux pages en occupe donc deux. */
   pageIndex: number;
@@ -281,6 +283,7 @@ export function buildPerformanceBlocks(
           songSlug: item.songSlug,
           songKey: playedKey,
           playedKey: overlayKey,
+          originalKey: baseAst.metadata.key,
           capo: capo || undefined,
           setlistKey: personalKey ? setlistKey : undefined,
           position: item.position,

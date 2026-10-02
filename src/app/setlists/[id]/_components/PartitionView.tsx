@@ -508,6 +508,7 @@ function NormalSongItem({
             title={ast.metadata.title}
             slug={item.songSlug}
             playedKey={item.keyOverride && item.keyOverride !== songKey ? item.keyOverride : null}
+            originalKey={songKey}
             chordEdits={item.jianpuChords}
             onEditChords={
               editMode && onEditJianpu ? (next) => onEditJianpu(origIndex, next) : undefined

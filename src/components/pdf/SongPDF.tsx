@@ -11,7 +11,7 @@ import frTranslations from "@/locales/fr.json";
 import zhTranslations from "@/locales/zh-CN.json";
 import { measureLyric, measureChord } from "@/lib/chordpro/measureText";
 import type { SectionNuance } from "@/types/setList";
-import type { JianpuChords, JianpuPage } from "@/lib/jianpu/images";
+import { cleJouee, type JianpuChords, type JianpuPage } from "@/lib/jianpu/images";
 import { nuanceLabel } from "@/lib/setlist/nuances";
 import { nuancePdfColors, sectionPdfPalette } from "@/lib/pdf/colors";
 import { compactPlan, stripGroups } from "@/lib/pdf/compact";
@@ -1096,7 +1096,8 @@ export function JianpuPDFPage({
   chords,
   title,
   titlePinyin,
-  playedKey,
+  playedKey: demandee,
+  originalKey,
   headerHeight = 0,
   footerCenter,
   strip,
@@ -1108,8 +1109,10 @@ export function JianpuPDFPage({
   chords?: JianpuChords | null;
   title: string;
   titlePinyin?: string | null;
-  /** Tonalité jouée, si elle diffère de celle imprimée sur le scan. */
+  /** Tonalité choisie, si elle diffère de celle du .cho. */
   playedKey?: string | null;
+  /** Tonalité du `.cho`, jouée quand `playedKey` est absent (voir `cleJouee`). */
+  originalKey: string | null | undefined;
   /** Hauteur réservée à l'en-tête (0 = page suivante d'un scan multi-pages). */
   headerHeight?: number;
   footerCenter?: string;
@@ -1127,6 +1130,7 @@ export function JianpuPDFPage({
   // Le calque est relevé sur une image d'une autre définition que le scan
   // affiché : tout est ramené à l'échelle du rendu.
   const ck = chords ? imgW / chords.w : 0;
+  const playedKey = cleJouee(demandee, originalKey, chords?.printedKey ?? undefined);
   const overlayOn = Boolean(chords && playedKey);
   const partial = Boolean(overlayOn && chords?.complete === false);
   const semitones = chords && playedKey ? semitonesTo(chords.printedKey, playedKey) : 0;

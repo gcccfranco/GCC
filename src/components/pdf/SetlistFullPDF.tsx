@@ -147,6 +147,7 @@ export function SetlistFullPDF({
               title={ast.metadata.title}
               titlePinyin={ast.metadata.titlePinyin}
               playedKey={playedKey}
+              originalKey={baseAst.metadata.key}
               headerHeight={pageIdx === 0 ? 56 : 0}
               footerCenter={footer}
               strip={compact && pageIdx === 0
