@@ -14,14 +14,13 @@ import { RequireAuth } from "@/components/auth/RequireAuth";
 import { Group, GroupRow } from "@/components/ui/group";
 import { Pilules } from "@/components/harmonie/Pilules";
 import { Clavier, DiagrammeGuitare, doigtesDe, notesDe } from "@/components/harmonie/Diagrammes";
-import { ParagrapheFiche, TexteFiche } from "@/components/harmonie/TexteFiche";
+import { ParagrapheFiche, TexteFiche, TON_DES_FICHES } from "@/components/harmonie/TexteFiche";
 import { useAccesHarmonie, useCatalogue, useInstrument } from "@/lib/harmonie/useHarmonie";
 import { getSetlists } from "@/lib/firebase/setlists";
 import { ALL_KEYS, getTransposedKey, semitonesTo } from "@/lib/transpose";
 import type { Instrument } from "@/types/harmonie";
 
 /** Les fiches sont écrites dans cette tonalité. */
-const TON_DES_FICHES = "D";
 
 type Entree = { slug: string; title: string; titlePinyin: string | null; language: string };
 
