@@ -65,7 +65,10 @@ test("le parcours « Par où commencer » mène à sa première fiche", async ({
 
 test("les filtres réduisent la liste, et « Tout afficher » la rend", async ({ page }) => {
   await ouvrir(page, JO, "/harmonie");
-  const fiches = page.locator("[data-harmonie] a[href^='/harmonie/']");
+  // Les lignes du cours et des sons du RD-2000 ne sont pas des fiches, et elles
+  // arrivent après elles : les compter faussait le total de départ. Préfixes et
+  // non égalités : le site écrit ces liens avec une barre finale.
+  const fiches = page.locator("[data-harmonie] a[href^='/harmonie/']:not([href^='/harmonie/cours']):not([href^='/harmonie/rd2000'])");
   await expect(fiches.first(), "le catalogue est chargé avant de compter").toBeVisible();
   const total = await fiches.count();
   await page.getByRole("group", { name: "Sensation" }).getByRole("button", { name: "Tension" }).click();
@@ -93,6 +96,25 @@ test("changer de tonalité transpose les accords de la fiche", async ({ page }) 
   await avant.getByLabel("Tonalité").selectOption("F");
   await expect(avant.getByText("Gm7 → C", { exact: true }), "la même fiche en F").toBeVisible();
   await expect(avant.getByText("Em7 → A", { exact: true })).toHaveCount(0);
+});
+
+test("les filets d'une fiche sont ceux des listes, pas la couleur du texte", async ({ page }) => {
+  await ouvrir(page, JO, "/harmonie/substitutions/2m7-pour-4");
+  // Le jeton `--filet` n'était défini nulle part : ces filets prenaient la
+  // couleur du texte, un trait noir là où les listes ont un gris clair.
+  const eviter = page.locator("section", { has: page.getByRole("heading", { name: "Quand l'éviter" }) });
+  const filets = [page.locator("#ton-fiche").locator(".."), eviter.locator("li").nth(1)];
+  const attendu = await page.evaluate(() => {
+    const temoin = document.createElement("div");
+    temoin.style.borderTopColor = "hsl(var(--border))";
+    document.body.append(temoin);
+    const couleur = getComputedStyle(temoin).borderTopColor;
+    temoin.remove();
+    return couleur;
+  });
+  for (const filet of filets) {
+    expect(await filet.evaluate((el) => getComputedStyle(el).borderTopColor)).toBe(attendu);
+  }
 });
 
 test("un guitariste voit la partie guitare, avec son diagramme", async ({ page }) => {

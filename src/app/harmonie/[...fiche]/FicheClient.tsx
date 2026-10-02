@@ -132,7 +132,7 @@ function Fiche() {
           <div className="px-4 py-3 text-[17px] leading-relaxed">
             <ParagrapheFiche texte={fiche.avantApres} demiTons={demiTons} tonalite={tonalite} />
           </div>
-          <div className="flex flex-wrap items-center gap-3 border-t border-[var(--filet)] px-4 py-2.5">
+          <div className="flex flex-wrap items-center gap-3 border-t border-border px-4 py-2.5">
             <label className="text-[13px] text-muted-foreground" htmlFor="ton-fiche">{t("harmonie.tonalite")}</label>
             <select
               id="ton-fiche"
@@ -144,7 +144,7 @@ function Fiche() {
             </select>
           </div>
           {demiTons !== 0 && (
-            <p className="border-t border-[var(--filet)] px-4 py-2 text-[13px] text-muted-foreground">
+            <p className="border-t border-border px-4 py-2 text-[13px] text-muted-foreground">
               {t("harmonie.resteEnD", { ton: TON_DES_FICHES })}
             </p>
           )}
@@ -159,7 +159,7 @@ function Fiche() {
 
       {fiche.eviter.length > 0 && (
         <Group title={t("harmonie.eviter")}>
-          <ul className="divide-y divide-[var(--filet)]">
+          <ul className="divide-y divide-border">
             {fiche.eviter.map((e, i) => (
               <li key={i} className="px-4 py-2.5 text-[15px] leading-relaxed">
                 <TexteFiche texte={e.replace(/\s*\n\s*/g, " ")} demiTons={0} tonalite={TON_DES_FICHES} />
@@ -192,7 +192,7 @@ function Fiche() {
           )}
           <ParagrapheFiche className="px-4 py-3 text-[15px] leading-relaxed" texte={texteInstrument} demiTons={0} tonalite={TON_DES_FICHES} />
           {instrument === "guitare" && doigtesDe(texteInstrument).length > 0 && (
-            <div className="flex flex-wrap gap-4 border-t border-[var(--filet)] px-4 py-3 text-foreground">
+            <div className="flex flex-wrap gap-4 border-t border-border px-4 py-3 text-foreground">
               {doigtesDe(texteInstrument).map((d, i) => (
                 <figure key={i} className="text-center">
                   <DiagrammeGuitare doigte={d} capo={capo} label={t("harmonie.ariaDoigte", { doigte: d })} />
@@ -202,7 +202,7 @@ function Fiche() {
             </div>
           )}
           {instrument === "piano" && notesDe(texteInstrument).length > 0 && (
-            <div className="flex flex-wrap gap-4 border-t border-[var(--filet)] px-4 py-3 text-foreground">
+            <div className="flex flex-wrap gap-4 border-t border-border px-4 py-3 text-foreground">
               {notesDe(texteInstrument).slice(0, 4).map((notes, i) => (
                 <figure key={i} className="text-center">
                   <Clavier notes={notes} label={t("harmonie.ariaClavier", { notes: notes.join(" ") })} />
@@ -221,7 +221,7 @@ function Fiche() {
           )}
           {exemples.length > 0 && (
             <>
-              <p className="border-t border-[var(--filet)] px-4 py-2 text-[13px] text-muted-foreground">
+              <p className="border-t border-border px-4 py-2 text-[13px] text-muted-foreground">
                 {t("harmonie.repertoireCompte", { count: exemples.length })}
               </p>
               {(tousLesExemples ? exemples : exemples.slice(0, 8)).map(({ slug, chant, fois }) => (
