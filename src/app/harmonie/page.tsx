@@ -13,14 +13,23 @@ import { PageTitle } from "@/components/layout/PageTitle";
 import { Group, GroupRow } from "@/components/ui/group";
 import { Pilules } from "@/components/harmonie/Pilules";
 import { useAccesHarmonie, useCatalogue, useInstrument } from "@/lib/harmonie/useHarmonie";
+import { useCoursIndex, useCoursProgres } from "@/lib/harmonie/useCours";
+import { GraduationCap, Piano } from "lucide-react";
+import { useRd2000 } from "@/lib/harmonie/rd2000";
 import { MOMENTS, SENSATIONS, type Fiche, type Instrument, type Niveau } from "@/types/harmonie";
 
 const NIVEAUX: Niveau[] = ["facile", "intermediaire", "avance"];
 
 function HarmonieClient() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const acces = useAccesHarmonie();
   const { fiches, parcours, chargement } = useCatalogue();
+  const { chapitres } = useCoursIndex();
+  const lecons = chapitres.filter((c) => c.niveau !== null);
+  const { fini } = useCoursProgres();
+  const faits = lecons.filter((c) => fini[c.id]).length;
+  // Sons du RD-2000 (docs/spec-sons-rd2000.md) : pour les pianistes seulement.
+  const { donnees: rd2000 } = useRd2000(acces.piano);
   const [instrument, setInstrument] = useInstrument(acces);
   const [sensation, setSensation] = useState<string | null>(null);
   const [moment, setMoment] = useState<string | null>(null);
@@ -60,6 +69,33 @@ function HarmonieClient() {
     <div className="mx-auto max-w-2xl px-4 pt-6 pb-10 space-y-6" data-harmonie>
       <PageTitle title={t("harmonie.titre")} />
       <p className="text-[15px] text-muted-foreground">{t("harmonie.sousTitre")}</p>
+
+      {/* Cours et sons du clavier : en tête, au-dessus des fiches. */}
+      {(lecons.length > 0 || rd2000) && (
+        <Group>
+          {lecons.length > 0 && (
+            <GroupRow href="/harmonie/cours" chevron leading={<GraduationCap aria-hidden />}>
+              <span className="block truncate font-medium">{t("harmonie.cours.ligne")}</span>
+              <span className="block truncate text-[13px] text-muted-foreground">
+                {faits > 0
+                  ? t("harmonie.cours.progres", { fait: faits, total: lecons.length })
+                  : t("harmonie.cours.chapitres", { count: lecons.length })}
+              </span>
+            </GroupRow>
+          )}
+          {acces.piano && rd2000 && (
+            <GroupRow href="/harmonie/rd2000" chevron leading={<Piano aria-hidden />}>
+              <span className="block truncate font-medium">{t("harmonie.rd2000.titre")}</span>
+              <span className="block truncate text-[13px] text-muted-foreground">
+                {t("harmonie.rd2000.resume", {
+                  essentiels: rd2000.sons.filter((s) => s.louange === 3).length,
+                  total: rd2000.sons.length.toLocaleString(i18n.language),
+                })}
+              </span>
+            </GroupRow>
+          )}
+        </Group>
+      )}
 
       {acces.piano && acces.guitare && (
         <Pilules

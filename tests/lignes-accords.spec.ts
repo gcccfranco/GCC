@@ -23,7 +23,8 @@ function accordsAuNiveauDesParoles(page: Page): Promise<string[]> {
     for (const ligne of Array.from(document.querySelectorAll<HTMLElement>("[data-copy-line]"))) {
       // ZhLine : colonnes alignées en haut ; ChordLine : alignées en bas.
       const zh = ligne.classList.contains("items-start");
-      const colonnes = Array.from(zh ? ligne.querySelectorAll<HTMLElement>("span[style*='column']") : ligne.children) as HTMLElement[];
+      // ChordLine : une colonne par morceau, regroupées par mot depuis le 02/10/2026.
+      const colonnes = Array.from(ligne.querySelectorAll<HTMLElement>(zh ? "span[style*='column']" : "span.flex-col"));
       const cases = colonnes.map((c) => {
         const enfants = Array.from(c.children) as HTMLElement[];
         const accord = zh
@@ -97,3 +98,38 @@ test("grace-infinie — accords masqués, les syllabes se recollent", async ({ p
   expect(lignes).toContain("Grâce infinie qui m'a sauvé,");
   expect(lignes.join("\n")).not.toMatch(/\s-\s/);
 });
+
+/** Mots coupés entre deux rangées : deux morceaux d'un même mot, séparés par un
+ *  accord (« dou[A]leurs »), qui ne finissent pas sur la même rangée. */
+function motsCoupes(page: Page): Promise<string[]> {
+  return page.evaluate(() => {
+    const out: string[] = [];
+    for (const ligne of Array.from(document.querySelectorAll<HTMLElement>("[data-copy-line].items-end"))) {
+      const morceaux = Array.from(ligne.querySelectorAll<HTMLElement>("span.flex-col"));
+      for (let i = 1; i < morceaux.length; i++) {
+        const avant = morceaux[i - 1].lastElementChild?.textContent ?? "";
+        if (!avant.trim() || /\s$/.test(avant)) continue;
+        const [a, b] = [morceaux[i - 1], morceaux[i]].map((m) => m.getBoundingClientRect().bottom);
+        if (Math.abs(a - b) > 2) out.push(`${avant}|${morceaux[i].lastElementChild?.textContent}`);
+      }
+    }
+    return out;
+  });
+}
+
+// Retour de Timothée du 01/10/2026 (téléphone) : « mes dou » en fin de rangée,
+// « [A]leurs, » au début de la suivante. Une ligne ne passe à la ligne qu'entre
+// deux mots, à la taille de départ comme texte agrandi au maximum.
+for (const slug of ["abba-pere", "tu-m-aimes"]) {
+  test(`${slug} — un accord au milieu d'un mot ne le coupe jamais en deux rangées`, async ({ page }) => {
+    await ouvrir(page, slug);
+    expect(await motsCoupes(page), "taille de départ").toEqual([]);
+    const dir = process.env.PW_CAPTURES;
+    if (dir) await page.screenshot({ path: `${dir}/mots-${slug}-${test.info().project.name}.png` });
+    const plus = page.getByRole("button", { name: "Agrandir le texte" }).first();
+    while (await plus.isEnabled()) await plus.click();
+    await page.waitForTimeout(300);
+    expect(await motsCoupes(page), "texte agrandi au maximum").toEqual([]);
+  });
+}
+

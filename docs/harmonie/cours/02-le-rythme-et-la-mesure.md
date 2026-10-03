@@ -1,0 +1,92 @@
+# 2. Le rythme et la mesure
+
+| Id | Partie | Niveau | Statut |
+| --- | --- | --- | --- |
+| le-rythme-et-la-mesure | 1 | 1 | validée |
+
+Le rythme tient une équipe ensemble : une louange survit à une fausse note, rarement à un tempo instable. Le rythme est la responsabilité de chaque musicien.
+
+## 2.1 Pulsation et tempo
+
+- La **pulsation** est le battement régulier que l'on frappe du pied.
+- Le **tempo** est sa vitesse, en battements par minute (BPM).
+- Le **métronome** (ou le click) donne ce tempo de façon fixe. Travailler avec lui est la meilleure école du rythme.
+
+| Caractère | Tempo indicatif | Terme italien | En louange |
+| --- | --- | --- | --- |
+| Très lent | 50 à 65 BPM | Largo, Adagio | Prière, adoration profonde, invitation |
+| Lent | 65 à 80 BPM | Andante | Ballades de louange, chants méditatifs |
+| Modéré | 80 à 110 BPM | Moderato | Beaucoup de chants actuels, pop worship |
+| Rapide | 110 à 140 BPM | Allegro | Chants de célébration, ouverture de culte |
+| Très rapide | 140 BPM et plus | Presto | Gospel rapide, louange festive |
+
+## 2.2 Les figures de notes et les silences
+
+| Figure | Anglais | Durée en 4/4 | Silence correspondant |
+| --- | --- | --- | --- |
+| Ronde | Whole note | 4 temps | Pause |
+| Blanche | Half note | 2 temps | Demi-pause |
+| Noire | Quarter note | 1 temps | Soupir |
+| Croche | Eighth note | 1/2 temps | Demi-soupir |
+| Double croche | Sixteenth note | 1/4 de temps | Quart de soupir |
+| Triple croche | Thirty-second note | 1/8 de temps | Huitième de soupir |
+
+Le silence n'est pas une absence de musique. En louange, un silence bien placé laisse entendre la voix de l'assemblée.
+
+## 2.3 Allonger et diviser les durées
+
+| Signe | Effet | Exemple |
+| --- | --- | --- |
+| Point | Ajoute la moitié de la durée | Blanche pointée = 3 temps |
+| Double point | Ajoute la moitié, puis le quart | Noire doublement pointée = 1,75 temps |
+| Liaison de prolongation | Additionne deux notes de même hauteur | Ronde liée à une noire = 5 temps |
+| Triolet | Trois notes à la place de deux | Triolet de croches = 3 croches dans 1 temps |
+| Point d'orgue | Tenir librement, jusqu'au signal | Dernier accord d'un chant |
+
+## 2.4 Les mesures
+
+Le chiffre du haut indique le nombre de temps par mesure. Le chiffre du bas indique l'unité de temps (4 = noire, 8 = croche).
+
+| Mesure | Famille | Comptage | Sensation | En louange |
+| --- | --- | --- | --- | --- |
+| 4/4 | Binaire simple | 1 2 3 4 | Stable, universelle | Environ 9 chants sur 10 |
+| 3/4 | Ternaire simple | 1 2 3 | Valse, balancement | Nombreux cantiques et hymnes |
+| 2/4 | Binaire simple | 1 2 | Marche | Rare, chants rapides |
+| 6/8 | Binaire composée | 1-2-3 4-5-6 (2 grands temps) | Berceuse, roulis | Ballades douces |
+| 12/8 | Binaire composée | 4 grands temps de 3 croches | Balancé profond | Ballades gospel et soul |
+| 2/2 | Alla breve | 1 2 (blanches) | Rapide mais aéré | Hymnes anciens rapides |
+
+**Mesure simple ou composée ?** Dans une mesure simple, chaque temps se divise en deux. Dans une mesure composée (6/8, 12/8), chaque temps se divise en trois.
+
+## 2.5 La subdivision : binaire ou ternaire
+
+La subdivision est la façon dont chaque temps se découpe. Deux chants au même tempo sonnent très différemment selon qu'ils sont binaires ou ternaires.
+
+| Subdivision | Découpage | Caractère | Style |
+| --- | --- | --- | --- |
+| Croches droites (straight 8) | Chaque temps en 2 parts égales | Pop, simple, porteur | Worship pop et rock |
+| Doubles croches (straight 16) | Chaque temps en 4 | Mouvement léger | Worship moderne, gospel mid-tempo |
+| Shuffle, swing | Chaque temps en 3, on joue la 1re et la 3e part | Balancé, chaleureux | Gospel, blues |
+
+## 2.6 Syncope, contretemps et anticipation
+
+- Le **contretemps** est une note jouée sur le « et » entre deux temps.
+- La **syncope** est une note attaquée sur une partie faible et prolongée sur la partie forte suivante.
+- L'**anticipation** (en anglais : push) consiste à jouer l'accord suivant une croche avant la barre de mesure. Elle est omniprésente en louange moderne et se note souvent ^ ou > sur les grilles.
+
+## 2.7 Articulations et accents
+
+| Signe | Nom | Effet |
+| --- | --- | --- |
+| Point au-dessus de la note | Staccato | Note courte, détachée |
+| Trait au-dessus | Tenuto | Note tenue sur toute sa valeur |
+| > | Accent | Note attaquée plus fort |
+| Arc sur plusieurs notes | Legato | Notes liées sans coupure |
+| Diamant ◆ (grilles) | Tenue | Jouer l'accord une fois et le laisser sonner |
+
+## 2.8 Exercices
+
+1. Métronome à 70 BPM : frappe les temps 2 et 4 dans les mains, puis joue un accord sur chaque temps.
+2. Compte à voix haute « 1 et 2 et 3 et 4 et » en jouant des croches, puis « 1 i et a » (1-e-&-a) en doubles croches.
+3. Règle le métronome sur la moitié du tempo (il ne clique que sur 2 et 4) et garde le tempo sans accélérer.
+4. Joue le même accord en straight 8, puis en shuffle, puis en 6/8 : écoute comment l'émotion change.

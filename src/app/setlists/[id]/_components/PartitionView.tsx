@@ -109,8 +109,9 @@ export function PartitionsView({
   /** Retouche d'accords sur un scan 简谱 (lot 9) : l'item pour la présidence,
    *  ma version pour moi — la page tranche. */
   onEditJianpu?: (itemIndex: number, next: JianpuChords) => void;
-  /** Idées d'harmonie du chant (lot 9) — absent si la personne n'y a pas droit. */
-  onIdees?: (itemIndex: number) => void;
+  /** Idées d'harmonie du chant (lot 9) — absent si la personne n'y a pas droit.
+   *  Fusion : `slug` dit lequel de ses chants. */
+  onIdees?: (itemIndex: number, slug?: string) => void;
 }) {
   const { t } = useTranslation();
   if (loading) {
@@ -134,21 +135,56 @@ export function PartitionsView({
 
         // ── Fusion item ──
         if (item.type === "fusion" && item.fusionSongs) {
-          // Préparer les ASTs transposés par slug
+          // Préparer les ASTs transposés par slug — la version adaptée de
+          // chaque chant s'il en a une (sa Dernière phrase).
           const transposedAsts: Record<string, ChordProAST> = {};
           for (const fs of item.fusionSongs) {
-            const content = contents[fs.songSlug];
-            if (!content) continue;
-            let ast = content.ast;
+            let ast = itemAst(fs, contents[fs.songSlug]);
+            if (!ast) continue;
             if (fs.keyOverride && fs.keyOverride !== ast.metadata.key) {
               const semitones = semitonesTo(ast.metadata.key, fs.keyOverride);
               ast = transposeAST(ast, semitones, fs.keyOverride);
             }
             transposedAsts[fs.songSlug] = ast;
           }
+          // Idées d'harmonie : celles de chaque chant de la fusion.
+          const ideesFusion = onIdees && (
+            <div className="flex flex-wrap gap-x-3 gap-y-1 mb-2 print:hidden">
+              {item.fusionSongs.map((fs) => transposedAsts[fs.songSlug] && (
+                <button
+                  key={fs.songSlug}
+                  type="button"
+                  onClick={() => onIdees(origIndex, fs.songSlug)}
+                  className="text-[11px] text-muted-foreground underline hover:text-foreground"
+                >
+                  {t("harmonie.idees")} · {transposedAsts[fs.songSlug].metadata.title}
+                </button>
+              ))}
+            </div>
+          );
 
           // ── Structure mélangée ──
           if (item.mixedStructure && item.mixedStructure.length > 0) {
+            const passages = item.mixedStructure.flatMap((ms) => {
+              const ast = transposedAsts[ms.songSlug];
+              const section = ast?.sections.find((s) => s.id === ms.sectionId);
+              if (!ast || !section) return [];
+              const fusionSong = item.fusionSongs!.find((fs) => fs.songSlug === ms.songSlug);
+              // Modulation (升调) : section transposée dans sa tonalité cible.
+              const targetKey = ms.keyChange ?? fusionSong?.sectionKeys?.[ms.sectionId];
+              const keyChange = targetKey && targetKey !== ast.metadata.key ? targetKey : undefined;
+              return [{ ms, ast, section, fusionSong, targetKey, keyChange }];
+            });
+            // Coup d'œil, comme un chant seul : ordre joué, chaque section une
+            // fois (par chant et par tonalité), ou le bandeau seul.
+            const shownPassages =
+              layout === "structure"
+                ? []
+                : layout === "unique"
+                  ? passages.filter((p, i) => passages.findIndex((q) =>
+                      q.ms.songSlug === p.ms.songSlug && q.section.id === p.section.id && q.keyChange === p.keyChange) === i)
+                  : passages;
+            const withDetails = layout === "played";
             return (
               <div key={`fusion-${idx}`} data-outline-item={item.position} className="print:break-before-page first:print:break-before-auto">
                 {/* En-tête fusion */}
@@ -174,35 +210,24 @@ export function PartitionsView({
                   </div>
                 </div>
 
-                {/* Structure mélangée : toujours l'ordre joué, avec le bandeau. */}
+                {ideesFusion}
+                {/* Le bandeau porte notes et transitions dès que le corps ne les porte plus. */}
                 <StructureStrip
                   className="pt-2 pb-1"
-                  steps={item.mixedStructure.flatMap((ms): SectionOccurrence[] => {
-                    const section = transposedAsts[ms.songSlug]?.sections.find((s) => s.id === ms.sectionId);
-                    if (!section) return [];
-                    const fusionSong = item.fusionSongs!.find((fs) => fs.songSlug === ms.songSlug);
-                    return [{
-                      section,
-                      note: ms.note ?? fusionSong?.sectionNotes?.[ms.sectionId] ?? "",
-                      transition: ms.transition ?? "",
-                      nuance: ms.nuance ?? fusionSong?.sectionNuances?.[ms.sectionId],
-                      targetKey: ms.keyChange ?? fusionSong?.sectionKeys?.[ms.sectionId],
-                    }];
-                  })}
+                  details={layout !== "played"}
+                  steps={passages.map(({ ms, section, fusionSong, targetKey }): SectionOccurrence => ({
+                    section,
+                    note: ms.note ?? fusionSong?.sectionNotes?.[ms.sectionId] ?? "",
+                    transition: ms.transition ?? "",
+                    nuance: ms.nuance ?? fusionSong?.sectionNuances?.[ms.sectionId],
+                    targetKey,
+                  }))}
                 />
                 <div className="max-w-2xl print:max-w-none pt-2">
-                  {item.mixedStructure.map((ms, msIdx) => {
-                    const ast = transposedAsts[ms.songSlug];
-                    if (!ast) return null;
-                    const section = ast.sections.find((s) => s.id === ms.sectionId);
-                    if (!section) return null;
-                    const fusionSong = item.fusionSongs!.find((fs) => fs.songSlug === ms.songSlug);
+                  {shownPassages.map(({ ms, ast, section, fusionSong, keyChange }, msIdx) => {
                     const sectionNote = ms.note ?? fusionSong?.sectionNotes?.[ms.sectionId];
                     const sectionNuance = ms.nuance ?? fusionSong?.sectionNuances?.[ms.sectionId];
                     const showSongLabel = item.fusionSongs!.length > 1;
-                    // Modulation (升调) : section transposée dans sa tonalité cible.
-                    const targetKey = ms.keyChange ?? fusionSong?.sectionKeys?.[ms.sectionId];
-                    const keyChange = targetKey && targetKey !== ast.metadata.key ? targetKey : undefined;
                     const shownSection = keyChange && ast.metadata.key
                       ? transposeSection(section, semitonesTo(ast.metadata.key, keyChange), keyChange)
                       : section;
@@ -214,14 +239,14 @@ export function PartitionsView({
                           showChords={showChordsGlobal && item.showChords}
                           showPinyin={showPinyinGlobal && ast.metadata.language === "zh"}
                           useJianpu={false}
-                          note={sectionNote}
-                          nuance={sectionNuance}
+                          note={withDetails ? sectionNote : undefined}
+                          nuance={withDetails ? sectionNuance : undefined}
                           keyChange={keyChange}
                           songSourceLabel={showSongLabel ? ast.metadata.title : undefined}
                           chartStyle={chartStyle}
                           occurrenceUids={[section.uid]}
                         />
-                        {ms.transition && <TransitionNote text={ms.transition} />}
+                        {withDetails && ms.transition && <TransitionNote text={ms.transition} />}
                       </div>
                     );
                   })}
@@ -243,6 +268,7 @@ export function PartitionsView({
                 </span>
                 <CopyLyricsButton sections={playedSections(item, contents)} />
               </div>
+              {ideesFusion}
               <div className="space-y-8">
                 {item.fusionSongs.map((fs, fsIdx) => {
                   const ast = transposedAsts[fs.songSlug];
@@ -508,6 +534,7 @@ function NormalSongItem({
             title={ast.metadata.title}
             slug={item.songSlug}
             playedKey={item.keyOverride && item.keyOverride !== songKey ? item.keyOverride : null}
+            originalKey={songKey}
             chordEdits={item.jianpuChords}
             onEditChords={
               editMode && onEditJianpu ? (next) => onEditJianpu(origIndex, next) : undefined

@@ -88,6 +88,19 @@ function toSegments(tokens: Token[], joinSyllables: boolean): Segment[] {
   return segments;
 }
 
+/** Les morceaux d'un même mot (« dou[A]leurs, ») forment un bloc insécable :
+ *  la ligne ne passe à la ligne qu'entre deux mots. Sur téléphone, « mes dou »
+ *  finissait une rangée et « leurs, » ouvrait la suivante (01/10/2026). */
+function toWords(segments: Segment[]): { seg: Segment; i: number }[][] {
+  const words: { seg: Segment; i: number }[][] = [];
+  segments.forEach((seg, i) => {
+    const last = words.at(-1);
+    if (last && !/\s$/.test(last[last.length - 1].seg.lyric)) last.push({ seg, i });
+    else words.push([{ seg, i }]);
+  });
+  return words;
+}
+
 interface ChordLineProps {
   tokens: Token[];
   showChords?: boolean;
@@ -115,7 +128,9 @@ export function ChordLine({ tokens, showChords = true, hideLyrics = false, fontS
         lineHeight: segments.every(s => !s.lyric?.trim()) ? "0" : undefined,
       }}  
     >
-      {segments.map((seg, i) => {
+      {toWords(segments).map((word) => (
+      <span key={word[0].i} className="inline-flex items-end">
+      {word.map(({ seg, i }) => {
         const chordLen = seg.chord?.length ?? 0;
         const lyricLen = [...(seg.lyric)].length;
         const minWidth =
@@ -157,6 +172,8 @@ export function ChordLine({ tokens, showChords = true, hideLyrics = false, fontS
           </span>
         );
       })}
+      </span>
+      ))}
     </div>
   );
 }

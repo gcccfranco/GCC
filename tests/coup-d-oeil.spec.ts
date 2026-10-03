@@ -245,22 +245,22 @@ Qui fi[D]nit [G]là
 
 test("Dernière phrase : les N dernières lignes de la section, accords compris, en section « autre » à la fin", () => {
   const one = materializeLastPhrase(SOURCE, "chorus-2", 1, "R")!;
-  expect(one.sectionId).toBe("other-3");
-  expect(one.source).toBe(`${SOURCE.trimEnd()}\n\n{start_of_other: Dernière phrase – R}\nQui fi[D]nit [G]là\n{end_of_other}\n`);
+  expect(one.sectionId).toBe("Dp-3");
+  expect(one.source).toBe(`${SOURCE.trimEnd()}\n\n{start_of_Dp: Dernière phrase – R}\nQui fi[D]nit [G]là\n{end_of_Dp}\n`);
   expect(materializeLastPhrase(SOURCE, "chorus-2", 2, "R")!.source).toContain(
-    "{start_of_other: Dernière phrase – R}\nUn [G]refrain\nQui fi[D]nit [G]là\n{end_of_other}",
+    "{start_of_Dp: Dernière phrase – R}\nUn [G]refrain\nQui fi[D]nit [G]là\n{end_of_Dp}",
   );
   expect(materializeLastPhrase(SOURCE, "chorus-2", 5, "R")!.source, "au plus toute la section").toContain(
-    "\nUn [G]refrain\nQui fi[D]nit [G]là\n{end_of_other}",
+    "\nUn [G]refrain\nQui fi[D]nit [G]là\n{end_of_Dp}",
   );
   expect(materializeLastPhrase(SOURCE, "bridge-9", 1, "P")).toBeNull();
-  expect(materializeLastPhrase(one.source, "verse-1", 1, "C")!.sectionId, "un second Dp").toBe("other-4");
+  expect(materializeLastPhrase(one.source, "verse-1", 1, "C")!.sectionId, "un second Dp").toBe("Dp-4");
 });
 
 test("Dernière phrase (中文) : la ligne {jianpu:} et le pinyin suivent leur ligne", () => {
   const zh = "{title: 测试}\n{key: C}\n{language: zh}\n\n{start_of_chorus: 副歌}\n{jianpu: 1 2 3}\n[C]一生爱你   yī shēng ài nǐ\n{jianpu: 5 6 5}\n[G]一生敬拜你   yī shēng jìng bài nǐ\n{end_of_chorus}\n";
   expect(materializeLastPhrase(zh, "chorus-1", 1, "R")!.source).toContain(
-    "{start_of_other: Dernière phrase – R}\n{jianpu: 5 6 5}\n[G]一生敬拜你   yī shēng jìng bài nǐ\n{end_of_other}",
+    "{start_of_Dp: Dernière phrase – R}\n{jianpu: 5 6 5}\n[G]一生敬拜你   yī shēng jìng bài nǐ\n{end_of_Dp}",
   );
 });
 
@@ -297,7 +297,7 @@ test("éditeur : la Dernière phrase du refrain s'enregistre, puis s'affiche « 
     .poll(() => {
       const items = db.doc(`setlists/${SETLIST_ID}`)?.items as { contentOverride?: string; structureOverride?: string[] }[] | undefined;
       const first = items?.[0];
-      return !!first?.contentOverride?.includes("{start_of_other: Dernière phrase – R}") && (first.structureOverride?.at(-1) ?? "").startsWith("other-7");
+      return !!first?.contentOverride?.includes("{start_of_Dp: Dernière phrase – R}") && (first.structureOverride?.at(-1) ?? "").startsWith("Dp-7");
     }, { timeout: 10_000 })
     .toBe(true);
 

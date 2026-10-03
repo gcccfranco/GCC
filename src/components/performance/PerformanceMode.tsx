@@ -99,6 +99,7 @@ function BlockRenderer({
         title={block.songTitle}
         slug={block.songSlug}
         playedKey={block.playedKey}
+        originalKey={block.originalKey}
         capo={block.capo}
         pageIndex={block.pageIndex}
         layout={fit ? "fit" : "flow"}

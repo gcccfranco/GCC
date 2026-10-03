@@ -36,6 +36,9 @@ import { PdfChoiceSheet } from "@/components/pdf/PdfChoiceSheet";
 import { IdeesSheet } from "@/components/harmonie/IdeesSheet";
 import { useAccesHarmonie, useInstrument } from "@/lib/harmonie/useHarmonie";
 import { pdfFileName, type PdfStyle } from "@/lib/pdfStylePref";
+import { getSetlist } from "@/lib/firebase/setlists";
+import { useAuth } from "@/lib/firebase/auth";
+import type { JianpuChords } from "@/types/setList";
 
 interface SongDetailClientProps {
   song: Song;
@@ -54,9 +57,43 @@ function safeParseParam<T>(raw: string | null, fallback: T): T {
 
 
 
+/** Version adaptée du chant pour un élément de setlist (Dernière phrase, mode
+ *  Adapter, accords retouchés sur le scan) : la page, ouverte depuis la liste,
+ *  la relit dans la setlist. Sans session ou si la lecture échoue : rien, le
+ *  chant d'origine. */
+function useVersionDeLaSetlist(slug: string, setlistId: string | null, position: number | null) {
+  const { user } = useAuth();
+  const [version, setVersion] = useState<{ source: string | null; retouches?: JianpuChords } | null>(null);
+  useEffect(() => {
+    if (!setlistId || position === null || !user) return;
+    let vivant = true;
+    getSetlist(setlistId)
+      .then((setlist) => {
+        const item = setlist?.items.find((i) => i.position === position);
+        if (!vivant || !item) return;
+        if (item.type === "fusion") {
+          const fs = item.fusionSongs?.find((f) => f.songSlug === slug);
+          if (fs?.contentOverride) setVersion({ source: fs.contentOverride });
+        } else if (item.songSlug === slug && (item.contentOverride || item.jianpuChords)) {
+          setVersion({ source: item.contentOverride ?? null, retouches: item.jianpuChords });
+        }
+      })
+      .catch(() => { /* le chant d'origine */ });
+    return () => { vivant = false; };
+  }, [slug, setlistId, position, user]);
+  return version;
+}
+
   export function SongDetailClient({ song }: SongDetailClientProps) {
     const { t, i18n } = useTranslation();
-    const ast = useMemo(() => parseChordPro(song.chordProSource), [song.chordProSource]);
+    const searchParams = useSearchParams();
+    const versionSetlist = useVersionDeLaSetlist(
+      song.slug,
+      safeParseParam<string | null>(searchParams.get("setlist"), null),
+      safeParseParam<number | null>(searchParams.get("item"), null),
+    );
+    const sourceAdaptee = versionSetlist?.source;
+    const ast = useMemo(() => parseChordPro(sourceAdaptee ?? song.chordProSource), [sourceAdaptee, song.chordProSource]);
     const isZh = song.language === "zh";
     // Partition 简谱 en image (scan d'origine) — absente pour la plupart des chants
     const jianpuScore = useJianpuScore(song.slug);
@@ -89,7 +126,6 @@ function safeParseParam<T>(raw: string | null, fallback: T): T {
     const [showIdees, setShowIdees] = useState(false);
     const accesHarmonie = useAccesHarmonie();
     const [instrumentHarmonie] = useInstrument(accesHarmonie);
-    const searchParams = useSearchParams();
     useEffect(() => {
       const saved = sessionStorage.getItem("lastListPath");
       if (saved) setBackPath(saved);
@@ -157,7 +193,10 @@ function safeParseParam<T>(raw: string | null, fallback: T): T {
         };
       });
       setCustomize(prev => ({...prev, structure: structure}))
-    },[]);
+      // Rejoué quand la version adaptée arrive de la setlist : sa Dernière
+      // phrase prend alors son nom dans le panneau.
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    },[ast]);
 
     // Ouverte depuis une setlist : la tonalité choisie ici est retenue pour ce
     // chant dans cette setlist, sur cet appareil (reprise en mode louange).
@@ -511,6 +550,8 @@ function safeParseParam<T>(raw: string | null, fallback: T): T {
               title={song.title}
               slug={song.slug}
               playedKey={customize.currentKey !== originalKey ? customize.currentKey : null}
+              originalKey={originalKey}
+              chordEdits={versionSetlist?.retouches}
             />
           ) : (
             <SongView

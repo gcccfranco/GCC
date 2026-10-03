@@ -106,6 +106,20 @@ ils ne voient pas le composant réel. Détail du protocole dans
 - Définir des critères de succès vérifiables avant de commencer.
 - Pour les tâches multi-étapes, énoncer un plan bref avec vérification à chaque étape.
 
+## Agent skills
+
+### Issue tracker
+
+Pas d'issues GitHub : le travail se suit dans `docs/feuille-de-route.md` et une spec par lot dans `docs/spec-*.md`. Voir `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Les cinq étiquettes par défaut : `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. Voir `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Un seul contexte : `CONTEXT.md` et `docs/adr/` à la racine, créés au besoin. Voir `docs/agents/domain.md`.
+
 ## graphify
 
 This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.

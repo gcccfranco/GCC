@@ -722,6 +722,49 @@ dans `main`), et la tenue en charge (quotas Firestore, lecture du Sheet).
    « other » pour une Dp créée avant `226da23` ; un chant ouvert depuis la setlist perd sa
    version adaptée (Dp et mode Adapter), le lien ne la transmet pas.
 
+### T. Demandes de Timothée du 01/10/2026
+
+1. **Go pour les fusions et la Dp** (« Fait la spec ») : T1 à T4 de `spec-fusions-dp.md`
+   codées le jour même, non commitées, à valider en local (§ Avancement de la spec).
+2. **Idées d'harmonie absentes sur les chants fusionnés** : un bouton par chant de la fusion,
+   même feuille qu'un chant seul, en lecture (T5 de `spec-fusions-dp.md`). Revient sur
+   « pas de suggestions sur les fusions » du lot 9.
+3. **Des cours dans Harmonie, validés par chacun à son rythme**, d'après son document
+   « Cours Complet de Théorie Musicale pour Musiciens de Louange » (Claude Docs, 29/09/2026) :
+   spec `docs/spec-cours-harmonie.md`, questions à trancher, pas de code avant le go.
+4. **Les sons du piano sur le site, d'après un tableau XLSX** : le fichier déposé
+   (« 20260709 Liste Maîtres de stage 09072026.xlsx ») est une liste de maîtres de stage en
+   pharmacie, sans aucun son ; rien n'en a été lu au-delà des en-têtes. En attente du bon
+   fichier (et du modèle de clavier).
+5. **有一位神 : « le .cho et le .json ne sont pas sur la même gamme »**. Le .cho est en D, le
+   scan est la version « C调 » de la gravure (original en D). Défaut réel, pas propre à ce
+   chant : les pages ne passaient de tonalité au calque que si elle différait de celle du
+   .cho, alors que le calque transpose depuis la tonalité gravée. Les **14 scans** gravés dans
+   une autre tonalité que leur .cho montraient donc leurs accords d'origine dans la tonalité
+   du .cho (page du chant, vue partitions, mode louange, PDF). Corrigé le 01/10/2026
+   (`originalKey`, `tests/jianpu-tonalite-cho.spec.ts`), non commité.
+
+**Suite du 02/10/2026** (commité le 02/10/2026, avec les correctifs du jour) :
+- **Cours** : les 10 questions tranchées (chapitre = leçon, « J'ai fini », ordre libre,
+  **pianistes et guitaristes**, progression vue par soi **et les admins**, texte dans le dépôt
+  validé d'office, 中文 plus tard, en ligne). Go : C0, C1, C2, C4 codées
+  (`spec-cours-harmonie.md` § Avancement). **Annexe 25 retirée** (« on le fera pas »).
+  `firestore.rules` (`coursProgres`) **à publier**.
+- **Sons du piano** : le bon fichier, `RD2000 Catalogue Sons.xlsx` (Roland RD-2000). Spec
+  `spec-sons-rd2000.md`, questions tranchées (dans Harmonie, pianistes + admins, MIDI affiché,
+  le classeur reste la source). « Fais tes recherches et corrige les incohérences » : copie
+  corrigée contre la doc Roland (1 141 cellules, notes ★ intactes, MIDI vérifié sur les 1 155
+  sons) et `RD2000 corrections.md` ; six points à confirmer. Go : S0 à S4 codées.
+- **Les 14 scans** (« corrige ça ») : les 3 dont un 简谱 existe dans la tonalité du .cho sont
+  remplacés (你是我的一切 D, 好喜欢与你在一起 Bb, 敬拜的心 F ; calques certifiés, numéros des
+  étiquettes gardés) ; pour les 9 autres, Timothée : « il te suffit de transposer le JSON » —
+  c'est ce que fait l'affichage depuis le 01/10 ; 从心合一 et 无价至宝 laissés. ⚠ Une retouche
+  d'accord déjà posée sur l'un des 3 scans remplacés se lirait décalée (texte stocké dans
+  l'ancienne tonalité gravée) : à vérifier dans Firestore.
+- **Relevés du 01/10 corrigés** : mot coupé par un accord sur téléphone (« dou » / « leurs »,
+  `ChordLine` regroupe les morceaux d'un mot), `**` bruts dans une idée d'harmonie (rendue comme
+  la fiche), PDF d'une fusion dont un chant manque (chaque page garde sa structure).
+
 ## 4. Carte des modules de l'app « GCC »
 
 À valider par Timothée avant toute spec de module (les modules existants ne
@@ -1003,6 +1046,16 @@ porte le nom « GCC » et le menu par sections dont ces modules ont besoin.
   page et son halo (V8, planche « Barres et texte », option B) ; accords de fin de ligne et
   débordement du texte agrandi corrigés (régressions de `dda9a9a`) ; poussé. Fusions et Dp
   tranchés (`spec-fusions-dp.md`), prévus la semaine suivante.
+
+- 01/10/2026 : **demandes de Timothée** (§ 3 T). Go fusions et Dp : T1 à T4 codées, plus
+  les idées d'harmonie par chant de fusion ; 有一位神 et les 13 autres scans gravés dans une
+  autre tonalité que leur .cho corrigés ; spec des cours d'Harmonie écrite ; sons du piano en
+  attente du bon fichier. Rien commité.
+
+- 02/10/2026 : **suite des demandes du 01/10** (§ 3 T) : cours d'Harmonie (C0–C2, C4) et sons
+  du RD-2000 (S0–S4) codés sur go, avec des agents pour l'import du cours, la correction du
+  classeur et le remplacement de trois scans ; trois défauts relevés la veille corrigés. Rien
+  commité.
 
 ## 7. Relecture adversariale (14/09/2026)
 

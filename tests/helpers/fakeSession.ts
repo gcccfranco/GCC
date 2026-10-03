@@ -67,6 +67,38 @@ function jsFields(fields: FsFields): Record<string, unknown> {
   return Object.fromEntries(Object.entries(fields).map(([k, v]) => [k, jsValue(v)]));
 }
 
+/** Segments d'un chemin de champ Firestore : « a.b », un segment entre accents
+ *  graves s'il n'est pas un identifiant (« fini.`tous-les-accords` »). */
+function cheminDeChamp(f: string): string[] {
+  return [...f.matchAll(/`([^`]+)`|([^.`]+)/g)].map((m) => m[1] ?? m[2]);
+}
+
+type MapValue = { mapValue?: { fields?: FsFields } };
+
+function lireAuChemin(fields: FsFields, chemin: string[]): unknown {
+  let courant: FsFields | undefined = fields;
+  for (let i = 0; i < chemin.length; i++) {
+    const v: unknown = courant?.[chemin[i]];
+    if (v === undefined || i === chemin.length - 1) return v;
+    courant = (v as MapValue).mapValue?.fields;
+  }
+  return undefined;
+}
+
+function ecrireAuChemin(fields: FsFields, chemin: string[], valeur: unknown): void {
+  let courant = fields;
+  for (const segment of chemin.slice(0, -1)) {
+    const v = courant[segment] as MapValue | undefined;
+    if (!v?.mapValue) courant[segment] = { mapValue: { fields: {} } };
+    const map = (courant[segment] as MapValue).mapValue!;
+    map.fields ??= {};
+    courant = map.fields;
+  }
+  const dernier = chemin[chemin.length - 1];
+  if (valeur === undefined) delete courant[dernier];
+  else courant[dernier] = valeur;
+}
+
 /** Base simulée : documents lus, écrits et interrogés par la page pendant le test. */
 export type FakeDb = {
   /** Écritures reçues, dans l'ordre (PATCH, POST, DELETE). */
@@ -173,10 +205,16 @@ export async function fakeFirestore(
       return json(route, docJson(path));
     }
     // PATCH : champs du masque remplacés (ou retirés s'ils manquent au corps).
+    // Un chemin peut descendre dans une map (« fini.`tous-les-accords` ») : on
+    // n'y touche qu'à ce champ, comme Firestore. Le reste du corps s'ajoute.
     const mask = url.searchParams.getAll("updateMask.fieldPaths");
-    const next: FsFields = mask.length ? { ...store.get(tail) } : {};
-    for (const f of mask) delete next[f];
-    Object.assign(next, fields);
+    const next: FsFields = mask.length ? structuredClone(store.get(tail) ?? {}) : {};
+    const premiers = new Set(mask.map((f) => cheminDeChamp(f)[0]));
+    for (const f of mask) {
+      const chemin = cheminDeChamp(f);
+      ecrireAuChemin(next, chemin, lireAuChemin(fields, chemin));
+    }
+    for (const [k, v] of Object.entries(fields)) if (!premiers.has(k)) next[k] = v;
     store.set(tail, next);
     writes.push({ method, path: tail, data: jsFields(fields) });
     return json(route, docJson(tail));

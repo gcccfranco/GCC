@@ -57,7 +57,7 @@ test("« Ne marche pas sur ce chant » retire l'idée pour tout le monde", () =>
 });
 
 test("cinq au plus : cinq fiches différentes, les plus sûres, dans l'ordre du chant", () => {
-  const source = fs.readFileSync(path.join(process.cwd(), "content", "songs", "Ta parole.cho"), "utf-8");
+  const source = fs.readFileSync(path.join(process.cwd(), "content", "songs", "Ta-parole-écriture.cho"), "utf-8");
   const vrai = suggestionsPour(parseChordPro(source).sections, "Bb", fiches);
   const { premieres, suite } = cinqPremieres(vrai, "piano");
   expect(premieres).toHaveLength(5);
@@ -95,7 +95,7 @@ test("le tag vise le dernier refrain", () => {
 });
 
 test("un vrai chant du répertoire reçoit des idées, pas un tas", () => {
-  const source = fs.readFileSync(path.join(process.cwd(), "content", "songs", "Ta parole.cho"), "utf-8");
+  const source = fs.readFileSync(path.join(process.cwd(), "content", "songs", "Ta-parole-écriture.cho"), "utf-8");
   const vrai = parseChordPro(source);
   const idees = suggestionsPour(vrai.sections, vrai.metadata.key, fiches);
   expect(idees.length, "au moins quelques idées").toBeGreaterThan(3);

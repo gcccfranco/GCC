@@ -20,6 +20,9 @@ const NOEL = {
   createdBy: "uid-alice",
   updatedAt: "2026-09-14T20:00:00Z",
 };
+/** Avant le `debut` de NOEL : une fois ses réservations ouvertes (le 01/10/2026
+ *  en vrai), le programme s'affiche de lui-même, masqué ou non. */
+const AVANT_OUVERTURE = new Date("2026-09-20T10:00:00");
 
 const JO: FakeProfile = { uid: "uid-jo", email: "jo@example.com", firstName: "Jo", lastName: "L." };
 const ALICE: FakeProfile = {
@@ -50,6 +53,7 @@ test("section Évènements : entrée dans le menu principal, onglet nommé comme
 });
 
 test("section Évènements : sans programme affiché, un membre n'a ni onglet ni programme", async ({ page }) => {
+  await page.clock.setFixedTime(AVANT_OUVERTURE);
   await signInAs(page, JO, { "programmes/noel": { ...NOEL, visible: false } }, "/evenements/scene");
   await expect(page.getByText("Aucun programme en cours.")).toBeVisible();
   await expect(page.getByRole("link", { name: "Noël", exact: true })).toHaveCount(0);
@@ -73,6 +77,7 @@ test("coordination : onglet « Scène » sans programme, formulaire direct, l'on
 });
 
 test("coordination : masquer rend l'onglet « Scène », le programme attend dans les masqués, Afficher le ramène", async ({ page }) => {
+  await page.clock.setFixedTime(AVANT_OUVERTURE);
   const db = await signInAs(page, ALICE, { "programmes/noel": NOEL }, "/evenements/scene");
   await page.getByRole("button", { name: "Masquer" }).click();
   await expect(page.getByRole("link", { name: "Scène", exact: true })).toBeVisible();

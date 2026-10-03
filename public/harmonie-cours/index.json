@@ -1,0 +1,513 @@
+{
+  "genereLe": "2026-10-02T11:46:46.696Z",
+  "chapitres": [
+    {
+      "id": "mode-d-emploi",
+      "numero": null,
+      "titre": "Mode d'emploi",
+      "partie": 0,
+      "niveau": null,
+      "statut": "validée",
+      "sousParties": [
+        "Pourquoi apprendre la théorie quand on sert Dieu",
+        "Les quatre niveaux de progression",
+        "Ce qui te concerne en priorité selon ton instrument",
+        "Conventions utilisées dans tout le cours",
+        "Comment travailler avec ce cours"
+      ],
+      "exercices": 0
+    },
+    {
+      "id": "le-son-les-notes-et-le-clavier",
+      "numero": 1,
+      "titre": "Le son, les notes et le clavier",
+      "partie": 1,
+      "niveau": 1,
+      "statut": "validée",
+      "sousParties": [
+        "1.1 Les quatre propriétés du son",
+        "1.2 Les sept notes naturelles",
+        "1.3 Ton et demi-ton",
+        "1.4 Les altérations",
+        "1.5 L'enharmonie : un son, deux noms",
+        "1.6 Les octaves et la numérotation",
+        "1.7 Les registres et leur rôle",
+        "1.8 Exercices"
+      ],
+      "exercices": 3
+    },
+    {
+      "id": "le-rythme-et-la-mesure",
+      "numero": 2,
+      "titre": "Le rythme et la mesure",
+      "partie": 1,
+      "niveau": 1,
+      "statut": "validée",
+      "sousParties": [
+        "2.1 Pulsation et tempo",
+        "2.2 Les figures de notes et les silences",
+        "2.3 Allonger et diviser les durées",
+        "2.4 Les mesures",
+        "2.5 La subdivision : binaire ou ternaire",
+        "2.6 Syncope, contretemps et anticipation",
+        "2.7 Articulations et accents",
+        "2.8 Exercices"
+      ],
+      "exercices": 4
+    },
+    {
+      "id": "lire-la-musique",
+      "numero": 3,
+      "titre": "Lire la musique",
+      "partie": 1,
+      "niveau": 1,
+      "statut": "validée",
+      "sousParties": [
+        "3.1 Les types de documents",
+        "3.2 La portée et les clés",
+        "3.3 L'armure",
+        "3.4 Lire une grille d'accords",
+        "3.5 Les signes de navigation",
+        "3.6 Nuances et changements de tempo",
+        "3.7 Lire le jianpu 简谱",
+        "3.8 Exercices"
+      ],
+      "exercices": 3
+    },
+    {
+      "id": "les-intervalles",
+      "numero": 4,
+      "titre": "Les intervalles",
+      "partie": 1,
+      "niveau": 1,
+      "statut": "validée",
+      "sousParties": [
+        "4.1 Nommer un intervalle en deux étapes",
+        "4.2 Tableau complet des intervalles",
+        "4.3 Consonance et dissonance",
+        "4.4 Le renversement des intervalles",
+        "4.5 Les intervalles composés",
+        "4.6 Les intervalles enharmoniques",
+        "4.7 Les intervalles dans la pratique",
+        "4.8 Exercices"
+      ],
+      "exercices": 3
+    },
+    {
+      "id": "les-gammes-et-les-tonalites",
+      "numero": 5,
+      "titre": "Les gammes et les tonalités",
+      "partie": 1,
+      "niveau": 1,
+      "statut": "validée",
+      "sousParties": [
+        "5.1 La gamme majeure",
+        "5.2 Les 12 tonalités majeures",
+        "5.3 Le cercle des quintes",
+        "5.4 Les trois gammes mineures",
+        "5.5 Relatif et parallèle",
+        "5.6 Les pentatoniques et le blues",
+        "5.7 Les autres gammes à connaître",
+        "5.8 Trouver la tonalité d'un chant",
+        "5.9 Exercices"
+      ],
+      "exercices": 3
+    },
+    {
+      "id": "tous-les-accords",
+      "numero": 6,
+      "titre": "Tous les accords",
+      "partie": 2,
+      "niveau": 2,
+      "statut": "validée",
+      "sousParties": [
+        "6.1 Le principe de construction",
+        "6.2 Les triades (3 sons)",
+        "6.3 Les tétrades (4 sons)",
+        "6.4 Les accords « ajoutés » (sans septième)",
+        "6.5 Les extensions (9, 11, 13)",
+        "6.6 Les accords altérés (famille dominante)",
+        "6.7 Les accords renversés et les « slash chords »",
+        "6.8 Accords superposés, quartaux et clusters",
+        "6.9 Lire tous les symboles",
+        "6.10 Les émotions des accords",
+        "6.11 Les palettes émotionnelles",
+        "6.12 Ce qui change l'émotion d'un accord",
+        "6.13 Choisir l'accord selon le texte",
+        "6.14 Exercices"
+      ],
+      "exercices": 5
+    },
+    {
+      "id": "l-harmonie-diatonique",
+      "numero": 7,
+      "titre": "L'harmonie diatonique",
+      "partie": 2,
+      "niveau": 2,
+      "statut": "validée",
+      "sousParties": [
+        "7.1 Les accords de la gamme majeure",
+        "7.2 Les accords des gammes mineures",
+        "7.3 Les trois fonctions tonales",
+        "7.4 Les substitutions de fonction",
+        "7.5 Où va chaque accord ?",
+        "7.6 Harmoniser une note de la mélodie",
+        "7.7 Chiffres romains ou Nashville en mineur",
+        "7.8 Exercices"
+      ],
+      "exercices": 3
+    },
+    {
+      "id": "renversements-et-voicings",
+      "numero": 8,
+      "titre": "Renversements et voicings",
+      "partie": 2,
+      "niveau": 3,
+      "statut": "validée",
+      "sousParties": [
+        "8.1 Les renversements",
+        "8.2 La loi du registre",
+        "8.3 Les voicings de main gauche",
+        "8.4 Les voicings de main droite en louange",
+        "8.5 Les voicings jazz et gospel",
+        "8.6 Adapter le voicing au moment",
+        "8.7 Pads et synthés",
+        "8.8 Guitares et basse : partager l'espace",
+        "8.9 Exercices"
+      ],
+      "exercices": 3
+    },
+    {
+      "id": "les-cadences",
+      "numero": 9,
+      "titre": "Les cadences",
+      "partie": 2,
+      "niveau": 2,
+      "statut": "validée",
+      "sousParties": [
+        "9.1 Toutes les cadences",
+        "9.2 Choisir la cadence selon le texte",
+        "9.3 Les cadences et le moment du culte",
+        "9.4 Exercices"
+      ],
+      "exercices": 3
+    },
+    {
+      "id": "les-progressions-d-accords",
+      "numero": 10,
+      "titre": "Les progressions d'accords",
+      "partie": 2,
+      "niveau": 2,
+      "statut": "validée",
+      "sousParties": [
+        "10.1 Lumière : joie, confiance, célébration",
+        "10.2 Intimité : prière, repentance, tendresse",
+        "10.3 Puissance : proclamation, autorité, victoire",
+        "10.4 Émerveillement : gloire, sainteté, mystère",
+        "10.5 Gospel et soul",
+        "10.6 Tonalités mineures (en La mineur)",
+        "10.7 Boucles pour la louange spontanée",
+        "10.8 Choisir une progression selon le texte",
+        "10.9 Les progressions à manier avec prudence",
+        "10.10 Ce qu'il faut éviter",
+        "10.11 Exercices"
+      ],
+      "exercices": 4
+    },
+    {
+      "id": "conduite-des-voix-et-liaisons-d-accords",
+      "numero": 11,
+      "titre": "Conduite des voix et liaisons d'accords",
+      "partie": 2,
+      "niveau": 3,
+      "statut": "validée",
+      "sousParties": [
+        "11.1 Les quatre mouvements entre deux voix",
+        "11.2 Les notes communes",
+        "11.3 Le déplacement minimal",
+        "11.4 Les notes guides",
+        "11.5 Les renversements comme outil de liaison",
+        "11.6 Les voicings et leur mobilité",
+        "11.7 Les quatre gestes de liaison à la main droite",
+        "11.8 Les trois lois du mouvement",
+        "11.9 La substitution par tierce",
+        "11.10 L'insertion ii – V",
+        "11.11 Les suspensions",
+        "11.12 Les pédales",
+        "11.13 Les lignes de basse",
+        "11.14 Les liaisons chromatiques : vue d'ensemble",
+        "11.15 Les slash chords comme liaison",
+        "11.16 Le mouvement parallèle",
+        "11.17 Les approches chromatiques",
+        "11.18 Les liaisons en tonalité mineure",
+        "11.19 La tierce picarde : du mineur vers la lumière",
+        "11.20 Catalogue par distance : « je suis sur C, je dois aller sur… »",
+        "11.21 Les cinq options universelles",
+        "11.22 Les turnarounds (revenir au début)",
+        "11.23 Les intros et les vamps",
+        "11.24 Du couplet au refrain",
+        "11.25 Du refrain au pont",
+        "11.26 Les montées vers le dernier refrain",
+        "11.27 Les fins",
+        "11.28 Harmoniser en direct (louange spontanée)",
+        "11.29 Quand le clavier porte aussi la basse",
+        "11.30 La grille de décision en live",
+        "11.31 Les accords pivots entre tonalités",
+        "11.32 Dominantes, substituts tritoniques et ii dans les 12 tonalités",
+        "11.33 Combien de temps as-tu ?",
+        "11.34 Les erreurs de liaison à éviter",
+        "11.35 Pour les autres musiciens",
+        "11.36 Exercices"
+      ],
+      "exercices": 9
+    },
+    {
+      "id": "l-harmonie-chromatique",
+      "numero": 12,
+      "titre": "L'harmonie chromatique",
+      "partie": 2,
+      "niveau": 4,
+      "statut": "validée",
+      "sousParties": [
+        "12.1 Les dominantes secondaires",
+        "12.2 Les emprunts modaux",
+        "12.3 La substitution tritonique",
+        "12.4 Les accords diminués",
+        "12.5 Les médiantes chromatiques",
+        "12.6 Les lignes chromatiques intérieures (line clichés)",
+        "12.7 L'accord augmenté de passage",
+        "12.8 Les résolutions surprenantes de V7",
+        "12.9 Pour aller plus loin (usage rare en louange)",
+        "12.10 Les règles d'usage en louange",
+        "12.11 Exercices"
+      ],
+      "exercices": 3
+    },
+    {
+      "id": "les-modes",
+      "numero": 13,
+      "titre": "Les modes",
+      "partie": 2,
+      "niveau": 4,
+      "statut": "validée",
+      "sousParties": [
+        "13.1 Les sept modes de la gamme majeure",
+        "13.2 Le caractère et l'usage de chaque mode",
+        "13.3 Les vamps modaux",
+        "13.4 Les modes de la mineure mélodique",
+        "13.5 Le mode utile de la mineure harmonique",
+        "13.6 Quelle gamme sur quel accord",
+        "13.7 Exercices"
+      ],
+      "exercices": 3
+    },
+    {
+      "id": "la-modulation",
+      "numero": 14,
+      "titre": "La modulation",
+      "partie": 2,
+      "niveau": 4,
+      "statut": "validée",
+      "sousParties": [
+        "14.1 Pourquoi moduler",
+        "14.2 Toutes les techniques",
+        "14.3 Les modulations les plus utilisées à l'église",
+        "14.4 Moduler en live, pas à pas",
+        "14.5 Enchaîner deux chants",
+        "14.6 Les erreurs à éviter",
+        "14.7 Exercices"
+      ],
+      "exercices": 3
+    },
+    {
+      "id": "le-nashville-number-system-et-la-transposition",
+      "numero": 15,
+      "titre": "Le Nashville Number System et la transposition",
+      "partie": 3,
+      "niveau": 2,
+      "statut": "validée",
+      "sousParties": [
+        "15.1 Le principe",
+        "15.2 Les symboles",
+        "15.3 Exemple de grille",
+        "15.4 Transposer à vue",
+        "15.5 Les transpositions les plus fréquentes",
+        "15.6 Le capo pour les guitaristes",
+        "15.7 Nashville, jianpu et chiffres romains",
+        "15.8 Exercices"
+      ],
+      "exercices": 3
+    },
+    {
+      "id": "les-patterns-d-accompagnement",
+      "numero": 16,
+      "titre": "Les patterns d'accompagnement",
+      "partie": 3,
+      "niveau": 2,
+      "statut": "validée",
+      "sousParties": [
+        "16.1 Lire les grilles rythmiques",
+        "16.2 Les patterns de piano",
+        "16.3 Les patterns de guitare acoustique",
+        "16.4 Les patterns de basse",
+        "16.5 Construire la densité au fil du chant",
+        "16.6 Exercices"
+      ],
+      "exercices": 3
+    },
+    {
+      "id": "jouer-en-groupe",
+      "numero": 17,
+      "titre": "Jouer en groupe",
+      "partie": 3,
+      "niveau": 3,
+      "statut": "validée",
+      "sousParties": [
+        "17.1 Les rôles de chaque instrument",
+        "17.2 Le partage des fréquences",
+        "17.3 Les règles d'or du jeu en équipe",
+        "17.4 Les cinq niveaux de dynamique",
+        "17.5 Les signaux de main",
+        "17.6 Le retour (in-ear, moniteur)",
+        "17.7 Une répétition efficace",
+        "17.8 L'attitude du cœur",
+        "17.9 Exercices"
+      ],
+      "exercices": 3
+    },
+    {
+      "id": "la-structure-des-chants-et-l-arrangement",
+      "numero": 18,
+      "titre": "La structure des chants et l'arrangement",
+      "partie": 3,
+      "niveau": 3,
+      "statut": "validée",
+      "sousParties": [
+        "18.1 Les sections d'un chant",
+        "18.2 Les structures courantes",
+        "18.3 L'arc dynamique d'un chant",
+        "18.4 Les introductions",
+        "18.5 Les fins",
+        "18.6 Arranger un chant, pas à pas",
+        "18.7 Construire un temps de louange",
+        "18.8 Exercices"
+      ],
+      "exercices": 3
+    },
+    {
+      "id": "les-voix-les-tessitures-et-le-choix-de-la-tonalite",
+      "numero": 19,
+      "titre": "Les voix, les tessitures et le choix de la tonalité",
+      "partie": 3,
+      "niveau": 3,
+      "statut": "validée",
+      "sousParties": [
+        "19.1 Les tessitures",
+        "19.2 La zone de l'assemblée",
+        "19.3 Choisir la tonalité en quatre étapes",
+        "19.4 Les harmonies vocales",
+        "19.5 Protéger sa voix",
+        "19.6 Exercices"
+      ],
+      "exercices": 3
+    },
+    {
+      "id": "la-reharmonisation",
+      "numero": 20,
+      "titre": "La réharmonisation",
+      "partie": 3,
+      "niveau": 4,
+      "statut": "validée",
+      "sousParties": [
+        "20.1 La méthode, pas à pas",
+        "20.2 Une seule note, de nombreux accords",
+        "20.3 La boîte à outils",
+        "20.4 Un exemple sur quatre niveaux",
+        "20.5 Les vérifications avant dimanche",
+        "20.6 Exercices"
+      ],
+      "exercices": 3
+    },
+    {
+      "id": "le-gospel",
+      "numero": 21,
+      "titre": "Le gospel",
+      "partie": 3,
+      "niveau": 4,
+      "statut": "validée",
+      "sousParties": [
+        "21.1 L'esprit du gospel",
+        "21.2 Les accords typiques",
+        "21.3 Les accords de passage",
+        "21.4 Les basses qui marchent (walk-ups et walk-downs)",
+        "21.5 Le cercle gospel : 3 – 6 – 2 – 5 – 1",
+        "21.6 Les fins d'église",
+        "21.7 Les rythmes gospel",
+        "21.8 Doser le gospel dans la louange",
+        "21.9 Exercices"
+      ],
+      "exercices": 3
+    },
+    {
+      "id": "improvisation-et-louange-spontanee",
+      "numero": 22,
+      "titre": "Improvisation et louange spontanée",
+      "partie": 3,
+      "niveau": 4,
+      "statut": "validée",
+      "sousParties": [
+        "22.1 Les notes toujours sûres",
+        "22.2 Les types de fills",
+        "22.3 Répondre au chanteur",
+        "22.4 Accompagner un chant que tu ne connais pas",
+        "22.5 Porter un moment spontané",
+        "22.6 Accompagner la prière et la parole",
+        "22.7 Être sensible",
+        "22.8 Exercices"
+      ],
+      "exercices": 3
+    },
+    {
+      "id": "l-oreille-musicale-et-la-transcription",
+      "numero": 23,
+      "titre": "L'oreille musicale et la transcription",
+      "partie": 3,
+      "niveau": 4,
+      "statut": "validée",
+      "sousParties": [
+        "23.1 Oreille absolue, oreille relative",
+        "23.2 L'ordre d'apprentissage",
+        "23.3 Reconnaître les accords à l'oreille",
+        "23.4 Reconnaître les fonctions dans un chant",
+        "23.5 Transcrire un chant, pas à pas",
+        "23.6 Dix minutes par jour",
+        "23.7 Exercices"
+      ],
+      "exercices": 3
+    },
+    {
+      "id": "annexe-12-tonalites",
+      "numero": 24,
+      "titre": "Annexe : les 12 tonalités",
+      "partie": 4,
+      "niveau": null,
+      "statut": "validée",
+      "sousParties": [
+        "24.1 Accords diatoniques et emprunts courants",
+        "24.2 Dominantes secondaires",
+        "24.3 Diminués de passage montants"
+      ],
+      "exercices": 0
+    },
+    {
+      "id": "annexe-glossaire",
+      "numero": 26,
+      "titre": "Annexe : glossaire",
+      "partie": 4,
+      "niveau": null,
+      "statut": "validée",
+      "sousParties": [],
+      "exercices": 0
+    }
+  ]
+}

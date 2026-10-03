@@ -1,0 +1,86 @@
+# 13. Les modes
+
+| Id | Partie | Niveau | Statut |
+| --- | --- | --- | --- |
+| les-modes | 2 | 4 | validée |
+
+Un mode est une gamme majeure jouée à partir d'un autre degré. Le plus simple pour l'entendre : compare-le au majeur ou au mineur, et repère la seule note qui change. Cette note caractéristique donne au mode toute sa couleur.
+
+## 13.1 Les sept modes de la gamme majeure
+
+Tous les exemples partent de Do, pour comparer les couleurs sur la même tonique.
+
+| Mode | Degré d'origine | Notes sur Do | Comparé à… | Note caractéristique | Accord type | Enchaînement typique |
+| --- | --- | --- | --- | --- | --- | --- |
+| Lydien | IV | Do Ré Mi **Fa#** Sol La Si | Majeur | #4 | Cmaj7(#11) | C – D/C |
+| Ionien | I | Do Ré Mi Fa Sol La Si | — (c'est le majeur) | 7 majeure | Cmaj7 | C – F – G |
+| Mixolydien | V | Do Ré Mi Fa Sol La **Sib** | Majeur | b7 | C7 | C – Bb – F |
+| Dorien | II | Do Ré Mib Fa Sol **La** Sib | Mineur | 6 majeure | Cm7, Cm6 | Cm – F |
+| Éolien | VI | Do Ré Mib Fa Sol Lab Sib | — (c'est le mineur naturel) | b6 | Cm | Cm – Ab – Bb |
+| Phrygien | III | Do **Réb** Mib Fa Sol Lab Sib | Mineur | b2 | Cm7 | Cm – Db |
+| Locrien | VII | Do Réb Mib Fa **Solb** Lab Sib | Mineur | b2 et b5 | Cm7(b5) | Rarement un centre tonal |
+
+Les modes sont rangés ici du plus lumineux au plus sombre. Chaque pas vers le bas ajoute un bémol.
+
+## 13.2 Le caractère et l'usage de chaque mode
+
+| Mode | Émotion | En louange |
+| --- | --- | --- |
+| Lydien | Émerveillement, lumière, ciel ouvert | Intros d'adoration, moments de sainteté, pads planants |
+| Ionien | Joie, stabilité | La base de presque tout le répertoire |
+| Mixolydien | Fête, force, terre | Chants de célébration, rock worship, gospel |
+| Dorien | Mineur plein d'espérance | Couplets introspectifs qui gardent la lumière |
+| Éolien | Gravité, recueillement | Repentance, intercession, lamentation |
+| Phrygien | Drame, exotisme | Très rare : lamentation brève |
+| Locrien | Instabilité | Seulement comme accord de passage (ø) |
+
+## 13.3 Les vamps modaux
+
+Pour installer un mode, il suffit souvent de deux accords qui font entendre la note caractéristique, sur une basse fixe.
+
+| Mode | Vamp sur Do | Note caractéristique entendue |
+| --- | --- | --- |
+| Lydien | C – D/C | Fa# (dans D) |
+| Ionien | C – F/C | Fa naturel et Si |
+| Mixolydien | C – Bb/C | Sib (dans Bb) |
+| Dorien | Cm7 – F/C | La naturel (dans F) |
+| Éolien | Cm – Ab/C | Lab (dans Ab) |
+| Phrygien | Cm – Db/C | Réb (dans Db) |
+
+## 13.4 Les modes de la mineure mélodique
+
+Ces modes nourrissent le jazz et le gospel. Exemple sur Do mineur mélodique : Do Ré Mib Fa Sol La Si.
+
+| Degré | Nom | Accord associé | Usage |
+| --- | --- | --- | --- |
+| I | Mineur mélodique | Cm(maj7), Cm6 | Mineur mystérieux, fin sophistiquée |
+| II | Dorien b2 | Dm7 (sus b9) | Rare |
+| III | Lydien augmenté | Ebmaj7(#5) | Couleur flottante |
+| IV | Lydien dominant | F7(#11) | Dominante lumineuse, très utilisée en gospel |
+| V | Mixolydien b6 | G7(b13) | Dominante douce-amère |
+| VI | Locrien #2 | Am7(b5) avec 9 | Le meilleur son sur un ø |
+| VII | Altéré (super-locrien) | B7alt | Tension maximale avant un accord de résolution |
+
+## 13.5 Le mode utile de la mineure harmonique
+
+Le 5e mode de la mineure harmonique s'appelle **phrygien dominant**. En La mineur harmonique, il part de Mi : Mi Fa Sol# La Si Do Ré. Il colore l'accord E7(b9) qui résout vers Am. C'est le son du V7 dramatique en mineur.
+
+## 13.6 Quelle gamme sur quel accord
+
+| Accord | Gamme par défaut | Plus coloré | Toujours sûr |
+| --- | --- | --- | --- |
+| maj7, add9 | Ionien | Lydien | Pentatonique majeure de l'accord |
+| 7 qui résout vers un majeur | Mixolydien | Lydien dominant, bebop | Pentatonique majeure |
+| 7 qui résout vers un mineur | Phrygien dominant | Diminuée demi-ton / ton, altérée | Arpège de l'accord |
+| 7sus4 | Mixolydien | — | Pentatonique mineure une quinte au-dessus |
+| m7 | Dorien | Éolien, phrygien | Pentatonique mineure |
+| m7(b5) | Locrien | Locrien #2 | Arpège de l'accord |
+| dim7 | Diminuée ton / demi-ton | — | Arpège de l'accord |
+| m(maj7) | Mineur mélodique | — | Arpège de l'accord |
+| aug | Par tons | — | Arpège de l'accord |
+
+## 13.7 Exercices
+
+1. Joue les sept modes sur Do, du lydien au locrien. Écoute la lumière baisser à chaque bémol ajouté.
+2. Installe un vamp lydien (C – D/C) pendant deux minutes, comme pour une intro d'adoration.
+3. Guitaristes et claviers : improvise en dorien sur Dm7 – G, puis en mixolydien sur C – Bb.

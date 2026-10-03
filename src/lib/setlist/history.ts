@@ -114,6 +114,12 @@ function sectionNoteList(steps: Step[], notes: Record<string, string> | undefine
   }));
 }
 
+/** Sections d'un chant tel qu'il est joué : celles de sa version adaptée s'il
+ *  en a une (copies du mode Adapter, « Dernière phrase »), sinon l'index. */
+function sectionsDeLaVersion(slug: string, contentOverride: string | null | undefined, sectionsOf: SectionsOf) {
+  return contentOverride ? parseChordPro(contentOverride).sections : sectionsOf(slug);
+}
+
 type MixSetting = "structure" | "sectionNotes" | "sectionTransitions" | "nuances" | "sectionKeys";
 type FusionState = { songs: string[]; labels?: string[]; notes?: SectionNote[] } & Record<MixSetting, string>;
 
@@ -156,7 +162,9 @@ function readItems(items: SetlistItem[], sectionsOf?: SectionsOf) {
       order.push(unit);
       fusions.set(unit, readFusion(item, sectionsOf));
       for (const f of item.fusionSongs ?? []) {
-        const steps = sectionsOf && playedSteps(sectionsOf(f.songSlug), f.structureOverride);
+        // Comme un chant seul : sa Dernière phrase compte à part.
+        const adapted = withoutLastPhrases(f.contentOverride ?? "");
+        const steps = sectionsOf && playedSteps(sectionsDeLaVersion(f.songSlug, f.contentOverride, sectionsOf), f.structureOverride);
         songs.set(f.songSlug, {
           container: unit,
           key: f.keyOverride ?? null,
@@ -170,8 +178,8 @@ function readItems(items: SetlistItem[], sectionsOf?: SectionsOf) {
           nuances: norm(f.sectionNuances),
           sectionKeys: norm(f.sectionKeys),
           songNote: "",
-          adapted: "",
-          lastPhrase: "0",
+          adapted: norm(adapted.source),
+          lastPhrase: String(adapted.count),
         });
       }
     } else {
@@ -181,10 +189,7 @@ function readItems(items: SetlistItem[], sectionsOf?: SectionsOf) {
       const adapted = withoutLastPhrases(item.contentOverride ?? "");
       // Chant adapté : ses sections (copies, « Dernière phrase ») sont dans la
       // version adaptée, pas dans l'index.
-      const steps = sectionsOf && playedSteps(
-        item.contentOverride ? parseChordPro(item.contentOverride).sections : sectionsOf(item.songSlug),
-        item.structureOverride,
-      );
+      const steps = sectionsOf && playedSteps(sectionsDeLaVersion(item.songSlug, item.contentOverride, sectionsOf), item.structureOverride);
       songs.set(item.songSlug, {
         container: "",
         key: item.keyOverride ?? null,
@@ -216,14 +221,15 @@ function fusionLabels(item: SetlistItem, sectionsOf?: SectionsOf): string[] | un
   const labels: string[] = [];
   if (item.mixedStructure?.length) {
     for (const ms of item.mixedStructure) {
-      const section = sectionsOf(ms.songSlug)?.find((s) => s.id === ms.sectionId);
+      const adapte = item.fusionSongs?.find((f) => f.songSlug === ms.songSlug)?.contentOverride;
+      const section = sectionsDeLaVersion(ms.songSlug, adapte, sectionsOf)?.find((s) => s.id === ms.sectionId);
       if (!section) return undefined;
       labels.push(`${slugs.indexOf(ms.songSlug) + 1} ${abbreviateSection(section)}`);
     }
     return labels;
   }
   for (const [i, f] of (item.fusionSongs ?? []).entries()) {
-    const own = playedSteps(sectionsOf(f.songSlug), f.structureOverride);
+    const own = playedSteps(sectionsDeLaVersion(f.songSlug, f.contentOverride, sectionsOf), f.structureOverride);
     if (!own) return undefined;
     labels.push(...own.map((step) => `${i + 1} ${step.label}`));
   }

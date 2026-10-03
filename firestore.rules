@@ -64,6 +64,14 @@ service cloud.firestore {
       return "musicien" in roles || "presidence" in roles;
     }
 
+    // Cours d'Harmonie (docs/spec-cours-harmonie.md, C2 et C4) : ce que chacun a
+    // fini, champ par champ. Écrit par l'intéressé seul ; lu par lui et par les
+    // admins (tableau de l'équipe). Miroir client : canSeeTeamCoursProgres (access.ts).
+    match /coursProgres/{uid} {
+      allow read: if signedIn() && (request.auth.uid == uid || isAdmin());
+      allow write: if signedIn() && request.auth.uid == uid;
+    }
+
     match /users/{uid} {
       // Lecture par tout connecté (les règles setlists et le client lisent les profils)
       allow read: if signedIn();

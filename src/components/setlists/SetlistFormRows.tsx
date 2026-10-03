@@ -313,7 +313,7 @@ export function SortableSectionRow({
 // ─── Structure editor ─────────────────────────────────────────────────────────
 
 /** Ce qu'il faut pour matérialiser une « Dernière phrase » (Dp) : le chant,
- *  sa version adaptée et sa tonalité ; absent = pas de Dp (fusions). */
+ *  sa version adaptée et sa tonalité ; absent = pas de bouton Dp. */
 export type LastPhraseTarget = {
   song: SongIndexEntry;
   contentOverride?: string | null;
@@ -565,13 +565,17 @@ function SortableMixedRow({
 function MixedStructureEditor({
   fusionItem,
   onChangeMixed,
+  onPatchSong,
 }: {
   fusionItem: FormFusionItem;
   onChangeMixed: (mixed: FusionMixedSectionForm[] | null) => void;
+  onPatchSong: (songUid: string, update: Partial<FormItem>) => void;
 }) {
   const { t } = useTranslation();
   const sensors = useDefaultSensors();
   const mixed = fusionItem.mixedStructure!;
+  // « Dernière phrase » d'un chant de la fusion : elle s'ajoute à la suite du mélange.
+  const [dpSong, setDpSong] = useState<FormItem | null>(null);
 
   function handleDragEnd(e: DragEndEvent) {
     const { active, over } = e;
@@ -634,10 +638,44 @@ function MixedStructureEditor({
                   {si.name}
                 </button>
               ))}
+              <button
+                type="button"
+                onClick={() => setDpSong(song)}
+                className="flex items-center gap-0.5 text-[11px] px-2 py-0.5 rounded border border-dashed border-border hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <Plus className="h-2.5 w-2.5" />
+                {t("setlists.form.lastPhrase.add")}
+              </button>
             </div>
           </div>
         ))}
       </div>
+      {dpSong && (() => {
+        const sections = dpSong.song.sections ?? [];
+        const known = new Set(sections.map((s) => s.id));
+        // Proposée d'office : le dernier passage de ce chant dans le mélange.
+        const defaultSectionId =
+          [...mixed].reverse().find((m) => m.songSlug === dpSong.song.slug && known.has(m.sectionId))?.sectionId ??
+          sections[0]?.id ?? "";
+        return (
+          <LastPhraseSheet
+            open
+            onClose={() => setDpSong(null)}
+            song={dpSong.song}
+            contentOverride={dpSong.contentOverride}
+            keyOverride={dpSong.keyOverride}
+            sections={sections}
+            defaultSectionId={defaultSectionId}
+            onAdd={({ contentOverride, sectionId, name }) => {
+              // À la suite du mélange seulement : la structure propre du chant
+              // n'est pas jouée tant que le mélange est actif.
+              onPatchSong(dpSong.uid, { contentOverride });
+              addSection(dpSong, { uid: nextUid(), sectionId, name, note: "", transition: "", nuanceTags: [], nuanceNote: "", keyChange: "" });
+              setDpSong(null);
+            }}
+          />
+        );
+      })()}
 
       {/* Liste drag & drop */}
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
@@ -920,11 +958,14 @@ function FusionSongCard({
   item,
   onKeyChange,
   onSectionItemsChange,
+  onLastPhrase,
   hasMixed,
 }: {
   item: FormItem;
   onKeyChange: (key: string | null) => void;
   onSectionItemsChange: (items: FormSectionItem[]) => void;
+  /** « Dernière phrase » ajoutée : version adaptée + nouvelle étape, ensemble. */
+  onLastPhrase: LastPhraseTarget["onAdd"];
   hasMixed?: boolean;
 }) {
   const { t } = useTranslation();
@@ -937,7 +978,7 @@ function FusionSongCard({
     item.sectionItems.some((si, i) => si.sectionId !== allSections[i]?.id);
 
   return (
-    <div className="bg-background rounded border border-border">
+    <div data-fusion-song className="bg-background rounded border border-border">
       <div className="flex items-start gap-2 p-2.5">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5 flex-wrap">
@@ -1006,6 +1047,7 @@ function FusionSongCard({
           sectionItems={item.sectionItems}
           onChange={onSectionItemsChange}
           hideNotes
+          lastPhrase={{ song: item.song, contentOverride: item.contentOverride, keyOverride: item.keyOverride, onAdd: onLastPhrase }}
         />
       )}
     </div>
@@ -1135,7 +1177,7 @@ export function FusionRow({
 
       {/* Éditeur de structure mélangée */}
       {hasMixed && (
-        <MixedStructureEditor fusionItem={item} onChangeMixed={onChangeMixed} />
+        <MixedStructureEditor fusionItem={item} onChangeMixed={onChangeMixed} onPatchSong={onPatchSong} />
       )}
 
       {/* Chants de la fusion (dépliés) */}
@@ -1147,6 +1189,9 @@ export function FusionRow({
               item={song}
               onKeyChange={(key) => onPatchSong(song.uid, { keyOverride: key })}
               onSectionItemsChange={(sectionItems) => onPatchSong(song.uid, { sectionItems })}
+              onLastPhrase={({ contentOverride, step }) =>
+                onPatchSong(song.uid, { contentOverride, sectionItems: [...song.sectionItems, step] })
+              }
               hasMixed={item.mixedStructure !== null}
             />
           ))}

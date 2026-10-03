@@ -486,6 +486,8 @@ export function SetlistDetailClient() {
   const accesHarmonie = useAccesHarmonie();
   const [instrumentHarmonie] = useInstrument(accesHarmonie);
   const [ideesTarget, setIdeesTarget] = useState<number | null>(null);
+  // Dans une fusion : celui de ses chants dont on lit les idées.
+  const [ideesChant, setIdeesChant] = useState<string | null>(null);
 
   // ── Adapter le chant (accords/paroles par setlist) ──────────────────────────
 
@@ -1312,7 +1314,7 @@ export function SetlistDetailClient() {
               onChooseVersion={(itemIndex, value) => persistChoice(setlist.items[itemIndex].songSlug, value)}
               onShare={(itemIndex, shared) => persistMine(setlist.items[itemIndex].songSlug, { shared })}
               onEditJianpu={handleEditJianpu}
-              onIdees={accesHarmonie.peut ? (itemIndex) => setIdeesTarget(itemIndex) : undefined}
+              onIdees={accesHarmonie.peut ? (itemIndex, slug) => { setIdeesTarget(itemIndex); setIdeesChant(slug ?? null); } : undefined}
             />
           </>
         )}
@@ -1321,9 +1323,16 @@ export function SetlistDetailClient() {
       {/* Idées d'harmonie du chant (lot 9) */}
       {ideesTarget !== null && setlist?.items[ideesTarget] && (() => {
         const item = setlist.items[ideesTarget];
-        const ast = itemAst(editMine ? withMine(item) : item, contents[item.songSlug]);
+        // Fusion : les idées du chant touché, dans sa tonalité et sa version
+        // adaptée. Elles se lisent ; rien ne s'applique à la fusion.
+        const chantFusion = item.type === "fusion" ? item.fusionSongs?.find((fs) => fs.songSlug === ideesChant) : undefined;
+        if (item.type === "fusion" && !chantFusion) return null;
+        const slug = chantFusion?.songSlug ?? item.songSlug;
+        const ast = chantFusion
+          ? itemAst(chantFusion, contents[slug])
+          : itemAst(editMine ? withMine(item) : item, contents[item.songSlug]);
         if (!ast) return null;
-        const tonalite = item.keyOverride ?? ast.metadata.key;
+        const tonalite = (chantFusion ?? item).keyOverride ?? ast.metadata.key;
         // Le chant suivant, pour la transition : les fusions et les items sans
         // chant sont sautés (la spec les exclut).
         const suivantItem = setlist.items
@@ -1340,9 +1349,9 @@ export function SetlistDetailClient() {
         return (
           <IdeesSheet
             open
-            onClose={() => setIdeesTarget(null)}
-            slug={item.songSlug}
-            titre={songsMap[item.songSlug]?.title ?? item.songSlug}
+            onClose={() => { setIdeesTarget(null); setIdeesChant(null); }}
+            slug={slug}
+            titre={songsMap[slug]?.title ?? slug}
             sections={ast.sections}
             tonalite={tonalite}
             tonaliteOrigine={ast.metadata.key}
@@ -1371,7 +1380,7 @@ export function SetlistDetailClient() {
                 : undefined
             }
             onEssayer={
-              editMine
+              editMine && !chantFusion
                 ? (s, apres) => {
                     const source = sourceForItem(item);
                     if (!source) return;

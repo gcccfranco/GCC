@@ -15,12 +15,18 @@ function buildSectionNuances(
   return Object.fromEntries(entries);
 }
 
+/** Structure à ne pas écrire : celle du chant, dans l'ordre. Jamais pour une
+ *  version adaptée — sa structure par défaut serait la sienne, Dernière phrase
+ *  comprise, et une Dp retirée de la structure se jouerait encore. */
+function defaultStructure(item: FormItem, currentIds: string[], allIds: string[]): boolean {
+  return !item.contentOverride && JSON.stringify(currentIds) === JSON.stringify(allIds);
+}
+
 function formItemToFusionSong(item: FormItem): FusionSong {
   const allIds = (item.song.sections ?? []).map((s) => s.id);
   const currentIds = item.sectionItems.map((s) => s.sectionId);
   const currentUid = item.sectionItems.map((s) => s.uid);
-  const structureOverride =
-    JSON.stringify(currentIds) === JSON.stringify(allIds) ? null : currentUid;
+  const structureOverride = defaultStructure(item, currentIds, allIds) ? null : currentUid;
   const sectionNotes = Object.fromEntries(
     item.sectionItems.filter((s) => s.note.trim()).map((s) => [s.uid, s.note.trim()])
   );
@@ -35,6 +41,8 @@ function formItemToFusionSong(item: FormItem): FusionSong {
     sectionNotes,
     ...(Object.keys(sectionNuances).length > 0 ? { sectionNuances } : {}),
     ...(Object.keys(sectionKeys).length > 0 ? { sectionKeys } : {}),
+    // Version adaptée (sa Dernière phrase) : reconduite telle quelle.
+    ...(item.contentOverride ? { contentOverride: item.contentOverride } : {}),
   };
 }
 
@@ -86,8 +94,7 @@ export function buildSetlistItems(items: FormListItem[]): SetlistItem[] {
     const allIds = (item.song.sections ?? []).map((s) => s.id);
     const currentIds = item.sectionItems.map((s) => s.sectionId);
     const currentUid = item.sectionItems.map((s) => s.uid);
-    const structureOverride =
-      JSON.stringify(currentIds) === JSON.stringify(allIds) ? null : currentUid;
+    const structureOverride = defaultStructure(item, currentIds, allIds) ? null : currentUid;
     const sectionNotes = Object.fromEntries(
       item.sectionItems.filter((s) => s.note.trim()).map((s) => [s.uid, s.note.trim()])
     );

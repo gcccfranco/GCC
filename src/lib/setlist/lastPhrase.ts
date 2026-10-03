@@ -62,7 +62,8 @@ export function isLastPhraseOnly(original: string, override: string): boolean {
   return true;
 }
 
-const DP_BLOCK = /\n*\{start_of_Dp\s*:\s*[^}]*(?:derni[eè]re phrase|最后一句)[^}]*\}[\s\S]*?\{end_of_Dp\}/gi;
+// Deux formats : `start_of_other` jusqu'au 26/09/2026, `start_of_Dp` depuis (226da23).
+const DP_BLOCK = /\n*\{start_of_(Dp|other)\s*:\s*[^}]*(?:derni[eè]re phrase|最后一句)[^}]*\}[\s\S]*?\{end_of_\1\}/gi;
 
 /** Le source sans ses sections « Dernière phrase », et leur nombre — pour que
  *  l'historique distingue « Dernière phrase ajoutée » d'une adaptation. */

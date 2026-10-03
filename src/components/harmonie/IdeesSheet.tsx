@@ -28,6 +28,7 @@ import { useCatalogue } from "@/lib/harmonie/useHarmonie";
 import type { Endroit } from "@/lib/harmonie/motifs";
 import type { ChordProSection } from "@/types/chordPro";
 import type { Fiche, Instrument } from "@/types/harmonie";
+import { ParagrapheFiche, TON_DES_FICHES } from "@/components/harmonie/TexteFiche";
 
 export type Props = {
   open: boolean;
@@ -159,10 +160,14 @@ function Contenu({ slug, titre, sections, tonalite, tonaliteOrigine, instrument,
                 ) : (
                   // Les idées sans remplacement d'accords (tag, intro absente)
                   // disent ce qu'elles proposent, avec les mots de la fiche.
+                  // Rendus comme sur la fiche : gras, et accords dans la tonalité du chant.
                   s.fiche.avantApres && (
-                    <p className="mt-1.5 text-[15px] text-muted-foreground">
-                      {s.fiche.avantApres.replace(/\s*\n\s*/g, " ")}
-                    </p>
+                    <ParagrapheFiche
+                      className="mt-1.5 text-[15px] text-muted-foreground"
+                      texte={s.fiche.avantApres}
+                      demiTons={semitonesTo(TON_DES_FICHES, tonalite)}
+                      tonalite={tonalite}
+                    />
                   )
                 )}
                 <div className="mt-2 flex flex-wrap items-center gap-2">
