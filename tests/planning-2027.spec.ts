@@ -162,3 +162,20 @@ test("Paix 2027 : T1 publié, le membre voit 2027 et son T1 le 15/11/2026, pas l
   await expect(page.getByTestId("bandeau-annee")).toHaveCount(0);
   await expect(page.getByRole("button", { name: "T2", exact: true })).toHaveCount(0);
 });
+
+// ─── Les autres pages : Culte, Table, EDD ───────────────────────────────────
+
+test("Culte 2027 : l'écrivain du Culte voit le T1 2027 (13 dimanches, sainte cène le 03/01) ; un membre, non", async ({ page, browser }) => {
+  await ouvrir(page, { ...ECRIVAIN, plannings: ["culte"] }, "/planning/culte");
+  await page.getByRole("button", { name: "2027", exact: true }).click();
+  await expect.poll(() => datesAffichees(page)).toHaveLength(13);
+  await expect(page.getByTestId("bandeau-annee")).toContainText("2027 · brouillon");
+  const premier = page.locator("[data-date-cell='2027-01-03'], [data-date-carte='2027-01-03']").filter({ visible: true });
+  await expect(premier).toContainText("Sainte Cène");
+
+  const autre = await browser.newPage();
+  await ouvrir(autre, MEMBRE, "/planning/culte");
+  await expect(autre.getByTestId("grille-bandeau")).toBeVisible();
+  await expect(autre.getByRole("button", { name: "2027", exact: true })).toHaveCount(0);
+  await autre.close();
+});

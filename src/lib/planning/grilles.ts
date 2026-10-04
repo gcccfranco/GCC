@@ -15,7 +15,7 @@
 // `dimanches/{date}` ne porte qu'une ligne.
 
 import { PLANNING_COLORS } from "@/lib/serviceColors"
-import { TRI_ORDER, triVisibilities } from "./releases"
+import { TRI_ORDER, triRank, triVisibilities, triVisibilitiesAnnee } from "./releases"
 import { EDD_CLASSES, getAnnee, getTri } from "./utils"
 
 export type ColonneGrille = {
@@ -307,4 +307,37 @@ export function fusionnerLignes(app: string[][], sheet: string[][]): string[][] 
   const parDate = new Map(sheet.map((r) => [r[0], r]))
   for (const r of app) parDate.set(r[0], r)
   return [...parDate.values()].sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0))
+}
+
+/**
+ * Lot U2 : ce qu'une page publiée par trimestre (Culte, groupes) affiche pour
+ * l'année et le trimestre choisis — années du sélecteur, pilules (cadenas sur
+ * un trimestre non publié), lignes du trimestre, et si le trimestre est à
+ * venir (« Publier » / « Masquer ») ou encore un brouillon (bandeau).
+ */
+export function vueTrimestrielle(p: {
+  definition: DefinitionGrille
+  rows: string[][]
+  anneeCourante: number
+  triCourant: string
+  annee: number
+  tri: string
+  /** Trimestres publiés d'une année (l'année en cours et la suivante au moins). */
+  publies: (annee: number) => string[]
+  /** Qui remplit ou publie ce planning, et les admins (Q4). */
+  voitBrouillon: boolean
+}) {
+  const annees = anneesDuPlanning(p.anneeCourante, p.voitBrouillon || p.publies(p.anneeCourante + 1).length > 0)
+  const annee = annees.includes(p.annee) ? p.annee : p.anneeCourante
+  const vis = triVisibilitiesAnnee(annee, p.anneeCourante, p.publies(annee), p.triCourant, p.voitBrouillon)
+  const visibles = vis.filter((v) => v.visible).map((v) => v.tri)
+  const nonPublies = vis.filter((v) => v.unpublished).map((v) => v.tri)
+  const tri = visibles.includes(p.tri) ? p.tri : annee === p.anneeCourante ? p.triCourant : (visibles[0] ?? "")
+  const lignes = lignesPubliees(
+    lignesDeLAnnee(p.definition, annee, p.rows), p.publies(p.anneeCourante), p.triCourant, p.anneeCourante,
+    p.voitBrouillon, { [annee]: p.publies(annee) },
+  ).filter((l) => getTri(l.row[0]) === tri)
+  const aVenir = annee > p.anneeCourante || (annee === p.anneeCourante && triRank(tri) > triRank(p.triCourant))
+  const brouillon = annee > p.anneeCourante && p.voitBrouillon && nonPublies.length > 0
+  return { annees, annee, visibles, nonPublies, tri, lignes, aVenir, brouillon }
 }

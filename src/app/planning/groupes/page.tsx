@@ -5,10 +5,10 @@ import { useTranslation } from "react-i18next"
 import { FilterButtons } from "@/components/planning/FilterButtons"
 import { PlanningGrille } from "@/components/planning/PlanningGrille"
 import { StaleBanner } from "@/components/planning/StaleBanner"
-import { getCurrentTri, getTri } from "@/lib/planning/utils"
+import { getCurrentTri } from "@/lib/planning/utils"
 import { PAIX_FALLBACK, FIDELITE_FALLBACK, FIDELITE_MUSIC_FALLBACK, BONTE_FALLBACK } from "@/lib/planning/data"
 import { fetchPaix, fetchFidelite, fetchFideliteMusic, fetchBonte } from "@/lib/planning/sheets"
-import { GRILLE_BONTE, GRILLE_FIDELITE, GRILLE_FIDELITE_MUSICIENS, GRILLE_PAIX, anneesDuPlanning, dimanchesDe, lignesDeLAnnee, lignesPubliees } from "@/lib/planning/grilles"
+import { GRILLE_BONTE, GRILLE_FIDELITE, GRILLE_FIDELITE_MUSICIENS, GRILLE_PAIX, dimanchesDe, vueTrimestrielle } from "@/lib/planning/grilles"
 import { AnneeSelecteur } from "@/components/planning/AnneeSelecteur"
 import { BandeauAnnee } from "@/components/planning/BandeauAnnee"
 import { BoutonPublication } from "@/components/planning/BoutonPublication"
@@ -20,8 +20,6 @@ import {
   PUBLISHABLE_PLANNINGS,
   canPublishPlanning,
   getPublishedQuarters,
-  triRank,
-  triVisibilitiesAnnee,
 } from "@/lib/planning/releases"
 import { BACK_OFFICE } from "@/lib/backOffice"
 import { AncienTableau } from "./AncienTableau"
@@ -97,21 +95,12 @@ function GroupesPage() {
   const canPublish = canPublishPlanning(planning, isAdminUser(user), profile?.notify ?? [])
   // Q4 (lot U2) : le brouillon se montre à qui remplit ou publie ce planning, et aux admins.
   const voitBrouillon = canPublish || peutModifier
-  const publies = (y: number) => pubByGrp[`${grp}_${y}`] ?? []
-  const annees = anneesDuPlanning(anneeCourante, voitBrouillon || publies(anneeCourante + 1).length > 0)
-  const effAnnee = annees.includes(annee) ? annee : anneeCourante
-  const vis = triVisibilitiesAnnee(effAnnee, anneeCourante, publies(effAnnee), getCurrentTri(), voitBrouillon)
-  const visibleTris = vis.filter(v => v.visible).map(v => v.tri)
-  const unpublishedTris = vis.filter(v => v.unpublished).map(v => v.tri)
-  const effTri = visibleTris.includes(tri) ? tri : effAnnee === anneeCourante ? getCurrentTri() : visibleTris[0]
-  const lignes = lignesPubliees(
-    lignesDeLAnnee(definition, effAnnee, rows), publies(anneeCourante), getCurrentTri(), anneeCourante, voitBrouillon,
-    { [effAnnee]: publies(effAnnee) },
-  ).filter((l) => getTri(l.row[0]) === effTri)
-
-  // « Publier le T1 » / « Masquer le T1 » : un trimestre à venir, pour qui peut publier.
-  const aVenir = effAnnee > anneeCourante || (effAnnee === anneeCourante && triRank(effTri) > triRank(getCurrentTri()))
-  const brouillon = effAnnee > anneeCourante && voitBrouillon && unpublishedTris.length > 0
+  const {
+    annees, annee: effAnnee, visibles: visibleTris, nonPublies: unpublishedTris, tri: effTri, lignes, aVenir, brouillon,
+  } = vueTrimestrielle({
+    definition, rows, anneeCourante, triCourant: getCurrentTri(), annee, tri,
+    publies: (y) => pubByGrp[`${grp}_${y}`] ?? [], voitBrouillon,
+  })
 
   function changerAnnee(a: number) {
     setAnnee(a)
