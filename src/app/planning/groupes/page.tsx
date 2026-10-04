@@ -8,7 +8,8 @@ import { StaleBanner } from "@/components/planning/StaleBanner"
 import { getCurrentTri, getTri } from "@/lib/planning/utils"
 import { PAIX_FALLBACK, FIDELITE_FALLBACK, FIDELITE_MUSIC_FALLBACK, BONTE_FALLBACK } from "@/lib/planning/data"
 import { fetchPaix, fetchFidelite, fetchFideliteMusic, fetchBonte } from "@/lib/planning/sheets"
-import { GRILLE_BONTE, GRILLE_FIDELITE, GRILLE_FIDELITE_MUSICIENS, GRILLE_PAIX, lignesPubliees } from "@/lib/planning/grilles"
+import { GRILLE_BONTE, GRILLE_FIDELITE, GRILLE_FIDELITE_MUSICIENS, GRILLE_PAIX, anneesDuPlanning, lignesDeLAnnee, lignesPubliees } from "@/lib/planning/grilles"
+import { AnneeSelecteur } from "@/components/planning/AnneeSelecteur"
 import { useGrilleApp } from "@/lib/planning/useGrilleApp"
 import { useProfile } from "@/lib/firebase/users"
 import { canEditPlanning, isAdminUser } from "@/lib/access"
@@ -17,8 +18,7 @@ import {
   PUBLISHABLE_PLANNINGS,
   canPublishPlanning,
   getPublishedQuarters,
-  triVisibilities,
-  TRI_ORDER,
+  triVisibilitiesAnnee,
 } from "@/lib/planning/releases"
 import { BACK_OFFICE } from "@/lib/backOffice"
 import { AncienTableau } from "./AncienTableau"
@@ -52,6 +52,9 @@ function GroupesPage() {
   const [grp, setGrp] = useState<Groupe>("paix")
   const [fidSub, setFidSub] = useState<FidSub>("groupe")
   const [tri, setTri] = useState(getCurrentTri())
+  // Lot U2 : l'année choisie ; publication lue pour l'année en cours et la suivante.
+  const anneeCourante = new Date().getFullYear()
+  const [annee, setAnnee] = useState(anneeCourante)
   const [pubByGrp, setPubByGrp] = useState<Record<string, string[]>>({})
 
   useEffect(() => {
@@ -69,8 +72,8 @@ function GroupesPage() {
   useEffect(() => {
     const year = new Date().getFullYear()
     Promise.all(
-      (["paix", "fidelite", "bonte"] as Groupe[]).map(k =>
-        getPublishedQuarters(k, year).then(q => [k, q] as const)
+      (["paix", "fidelite", "bonte"] as Groupe[]).flatMap(k =>
+        [year, year + 1].map(y => getPublishedQuarters(k, y).then(q => [`${k}_${y}`, q] as const))
       )
     ).then(entries => setPubByGrp(Object.fromEntries(entries)))
   }, [])
@@ -89,17 +92,32 @@ function GroupesPage() {
   // Trimestres futurs non publiés du groupe actif : masqués aux membres, marqués aux publieurs.
   const planning = PUBLISHABLE_PLANNINGS.find(p => p.key === grp)!
   const canPublish = canPublishPlanning(planning, isAdminUser(user), profile?.notify ?? [])
-  const vis = triVisibilities(TRI_ORDER, pubByGrp[grp] ?? [], getCurrentTri(), canPublish)
+  // Q4 (lot U2) : le brouillon se montre à qui remplit ou publie ce planning, et aux admins.
+  const voitBrouillon = canPublish || peutModifier
+  const publies = (y: number) => pubByGrp[`${grp}_${y}`] ?? []
+  const annees = anneesDuPlanning(anneeCourante, voitBrouillon || publies(anneeCourante + 1).length > 0)
+  const effAnnee = annees.includes(annee) ? annee : anneeCourante
+  const vis = triVisibilitiesAnnee(effAnnee, anneeCourante, publies(effAnnee), getCurrentTri(), voitBrouillon)
   const visibleTris = vis.filter(v => v.visible).map(v => v.tri)
   const unpublishedTris = vis.filter(v => v.unpublished).map(v => v.tri)
-  const effTri = visibleTris.includes(tri) ? tri : getCurrentTri()
-  const lignes = lignesPubliees(rows, pubByGrp[grp] ?? [], getCurrentTri(), new Date().getFullYear(), canPublish)
-    .filter((l) => getTri(l.row[0]) === effTri)
+  const effTri = visibleTris.includes(tri) ? tri : effAnnee === anneeCourante ? getCurrentTri() : visibleTris[0]
+  const lignes = lignesPubliees(
+    lignesDeLAnnee(definition, effAnnee, rows), publies(anneeCourante), getCurrentTri(), anneeCourante, voitBrouillon,
+    { [effAnnee]: publies(effAnnee) },
+  ).filter((l) => getTri(l.row[0]) === effTri)
+
+  function changerAnnee(a: number) {
+    setAnnee(a)
+    setTri(a === anneeCourante ? getCurrentTri() : "T1")
+  }
 
   return (
     <div className="max-w-full space-y-4 mx-auto">
       <div className="flex flex-wrap gap-3 items-center justify-between">
-        <h2 className="text-base font-bold text-foreground">{t("planning.pages.groupes")}</h2>
+        <div className="flex items-center gap-3 flex-wrap">
+          <h2 className="text-base font-bold text-foreground">{t("planning.pages.groupes")}</h2>
+          <AnneeSelecteur annees={annees} annee={effAnnee} onChange={changerAnnee} />
+        </div>
         {loading && <span className="text-xs text-muted-foreground">{t("common.loading")}</span>}
       </div>
 
@@ -142,7 +160,7 @@ function GroupesPage() {
       <PlanningGrille
         key={definition.key}
         definition={definition}
-        periode={`${effTri} ${new Date().getFullYear()}`}
+        periode={`${effTri} ${effAnnee}`}
         lignes={lignes}
         peutModifier={peutModifier}
         datesDansLApp={datesDansLApp}

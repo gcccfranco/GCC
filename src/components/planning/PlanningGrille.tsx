@@ -3,8 +3,8 @@
 import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from "react"
 import { Download, History, Lock, User, X } from "lucide-react"
 import { useTranslation } from "react-i18next"
-import { currentSundayStr, fdLongL, fdShort, getMois, moisName } from "@/lib/planning/utils"
-import type { ColonneGrille, DefinitionGrille, LigneGrille } from "@/lib/planning/grilles"
+import { currentSundayStr, fdLongL, fdShort, getAnnee, getMois, moisName } from "@/lib/planning/utils"
+import { PREMIERE_ANNEE_APP, type ColonneGrille, type DefinitionGrille, type LigneGrille } from "@/lib/planning/grilles"
 import { phraseDuChangement } from "@/lib/planning/historique"
 import { colonnesExportees, nomFichier, versCSV } from "@/lib/planning/csv"
 import { ecrireCase } from "@/lib/firebase/planningGrille"
@@ -160,8 +160,11 @@ export function PlanningGrille({
         valeur: apres,
         auteur: auteur?.name ?? "",
         // Dimanche absent de la grille : ses autres cases viennent du Sheet, on
-        // les recopie une fois, sans quoi la fusion les perdrait.
-        semer: datesDansLApp.includes(date) || semes.current.has(date) ? undefined : ligneAffichee(l),
+        // les recopie une fois, sans quoi la fusion les perdrait. Dès 2027 (lot
+        // U2, Q2), rien à recopier : la case n'écrit qu'elle.
+        semer: getAnnee(date) >= PREMIERE_ANNEE_APP || datesDansLApp.includes(date) || semes.current.has(date)
+          ? undefined
+          : ligneAffichee(l),
       })
       semes.current.add(date)
       setEnregistre(true)
@@ -485,6 +488,7 @@ export function PlanningGrille({
             <div
               key={date}
               data-testid="grille-carte"
+              data-date-carte={date}
               className="rounded-xl border border-transparent bg-card shadow-soft overflow-hidden"
               style={{ borderColor: cetteSemaine ? couleur : undefined }}
             >
