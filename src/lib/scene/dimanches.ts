@@ -30,10 +30,11 @@ export function lastSundayBefore(jourJ: string): string {
   return toIso(t);
 }
 
-/** Vrai à partir du lendemain du dernier dimanche réservable : le volet
+/** Vrai à partir du lendemain du dernier jour réservable — la fermeture de la
+ *  saison (`fin`, lot U1), sinon le dernier dimanche avant le jour J : le volet
  *  Entraînements disparaît, le programme seul reste. */
-export function reservationsClosed(today: string, jourJ: string): boolean {
-  return today > lastSundayBefore(jourJ);
+export function reservationsClosed(today: string, jourJ: string, fin?: string): boolean {
+  return today > (fin ?? lastSundayBefore(jourJ));
 }
 
 /** Date locale du jour en ISO (le navigateur, donc l'horloge simulée des tests). */
@@ -74,12 +75,14 @@ export function programmeState(p: { debut: string; jourJ: string }, today: strin
  *  donc le premier retenu est l'échéance la plus proche. Les archivés sont
  *  écartés ; un programme épinglé par la coordination (`visible`) gagne ; sinon
  *  la bascule prend le premier programme ouvert — ou passé, dont le message de
- *  remerciement a la priorité sur sa semaine. */
-export function currentProgramme<T extends { debut: string; jourJ: string; visible: boolean }>(
+ *  remerciement a la priorité sur sa semaine. Lot U1 : un brouillon
+ *  (`ouvert === false`) n'est jamais affiché, même épinglé — la page, l'onglet
+ *  et le cron des rappels suivent ensemble. */
+export function currentProgramme<T extends { debut: string; jourJ: string; visible: boolean; ouvert?: boolean }>(
   programmes: T[],
   today: string,
 ): T | null {
-  const vivants = programmes.filter((p) => programmeState(p, today) !== "archived");
+  const vivants = programmes.filter((p) => p.ouvert !== false && programmeState(p, today) !== "archived");
   return vivants.find((p) => p.visible)
     ?? vivants.find((p) => programmeState(p, today) !== "soon")
     ?? null;
