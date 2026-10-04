@@ -68,7 +68,7 @@ test.describe("navigation par sections (T2), téléphone", () => {
 test.describe("navigation par sections (T2), barre du bas sur téléphone et tablette", () => {
   // La barre du bas est masquée sur un poste desktop (`.hide-on-desktop`).
   test.beforeEach(({}, info) => {
-    test.skip(info.project.name === "ordinateur", "téléphone et tablette seulement");
+    test.skip(info.project.name.startsWith("ordinateur"), "téléphone et tablette seulement");
   });
 
   test("les setlists sont à un tap depuis n'importe quelle page", async ({ page }) => {

@@ -173,7 +173,9 @@ test.describe("louange : barre d'outils de la setlist, une seule ligne sur tél�
 
 test.describe("louange (T3) : barre d'outils du chant, téléphone et tablette", () => {
   test.beforeEach(({}, info) => {
-    test.skip(info.project.name === "ordinateur", "cibles tactiles : téléphone et tablette seulement");
+    // Dès 1024 px (`lg`), la barre du chant passe à 32 px quel que soit le pointeur : l'iPad
+    // couché (projet tablette-paysage, lot U4) y est donc comme l'ordinateur — inchangé par U4.
+    test.skip((info.project.use.viewport?.width ?? 0) >= 1024, "cibles tactiles : téléphone et tablette en portrait seulement");
   });
 
   // Cibles tactiles (16/09/2026) : les boutons faisaient 32 px sur téléphone
@@ -200,7 +202,7 @@ test.describe("louange (T3) : barre d'outils du chant, téléphone et tablette",
 
 test.describe("louange (T3) : sélecteur de tonalité, téléphone et tablette", () => {
   test.beforeEach(({}, info) => {
-    test.skip(info.project.name === "ordinateur", "largeur tactile seulement");
+    test.skip((info.project.use.viewport?.width ?? 0) >= 1024, "largeur tactile seulement (sous 1024 px)");
   });
 
   // 16/09/2026 : sur un chant 中文 avec partition 简谱 (six commandes), le

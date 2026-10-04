@@ -942,7 +942,7 @@ export function SetlistDetailClient() {
     <div className="relative min-h-screen bg-background">
       <Halo variant="fiche" color={categoryColor(setlist?.category ?? "")} />
       {/* Top bar — même style que SongDetailClient */}
-      <div ref={toolbarRef} data-testid="barre-outils" className={`print:hidden fixed left-0 right-0 top-[var(--nav-h)] [--barre-top:var(--nav-h)] z-10 material-chrome transition-transform duration-300 ${ scrollVisible ? "translate-y-0" : "-translate-y-[calc(100%+var(--nav-h))]"}`}>
+      <div ref={toolbarRef} data-testid="barre-outils" className={`print:hidden fixed left-[var(--barre-laterale)] right-0 top-[var(--nav-h)] [--barre-top:var(--nav-h)] [--barre-left:var(--barre-laterale)] z-10 material-chrome transition-transform duration-300 ${ scrollVisible ? "translate-y-0" : "-translate-y-[calc(100%+var(--nav-h))]"}`}>
         <FondDeBarre sousNavbar />
         <div className="max-w-[1080px] mx-auto px-4">
           {/* Une seule ligne sur téléphone (retour du 20/09/2026) : 9 commandes de 32 px
@@ -1434,7 +1434,7 @@ export function SetlistDetailClient() {
 
       {/* Retour visuel du partage (lien copié / setlist privée) */}
       {shareFeedback && (
-        <div className="fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full bg-foreground text-background text-sm shadow-lg">
+        <div className="fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom))] left-[calc(50%+var(--barre-laterale)/2)] -translate-x-1/2 z-50 px-4 py-2 rounded-full bg-foreground text-background text-sm shadow-lg">
           {shareFeedback}
         </div>
       )}

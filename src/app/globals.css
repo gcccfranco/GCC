@@ -406,3 +406,31 @@
   from { opacity: 0; transform: translateX(12px); }
   to { opacity: 1; transform: translateX(0); }
 }
+
+/* ══ Lot U4 — navigation sur grand écran (docs/spec-navigation-grand-ecran.md) ══════════
+   Une seule barre, à gauche, sur ordinateur et tablette en paysage ; téléphone et tablette
+   en portrait inchangés. La disposition est décidée ICI, jamais par l'agent utilisateur :
+   ordinateur        = (pointer: fine) and (min-width: 1024px)
+   tablette paysage  = (pointer: coarse) and (orientation: landscape) and (min-width: 1024px)
+   sinon             = le modèle du téléphone (barre du haut + barre du bas).
+   Jetons lus par le reste du site :
+   --barre-laterale  place prise à gauche par la barre (0, 68 ou 248 px ; 0 à l'impression).
+                     `main` et chaque élément fixe calé sur la fenêtre s'en décalent.
+   --largeur-lecture borne d'une page de lecture, centrée dans la zone de contenu (U5…). */
+@layer base {
+  :root {
+    --barre-laterale: 0px;
+    --largeur-lecture: 1440px;
+  }
+  @media print {
+    :root { --barre-laterale: 0px; }
+  }
+}
+
+@layer utilities {
+  /* Le halo part du bord de la barre (jamais sous elle). Sa copie dans une barre transformée
+     (donc repère des fixes) se recale de la place où la barre est posée : `--barre-left`,
+     déclaré par la barre comme `--barre-top`. */
+  .halo { left: var(--barre-laterale); }
+  .barre-halo { left: calc(var(--barre-laterale) - var(--barre-left, 0px)); }
+}

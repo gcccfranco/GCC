@@ -6,6 +6,7 @@ import { MobileTabBar } from "@/components/layout/MobileTabBar";
 import { Accueil } from "@/components/onboarding/Accueil";
 import { PageTransition } from "@/components/layout/PageTransition";
 import { LyricsCopyListener } from "@/components/song/LyricsCopyListener";
+import { NotificationsProvider } from "@/components/layout/NotificationsPartagees";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -61,11 +62,17 @@ export default function RootLayout({
       <body className="font-sans antialiased min-h-screen bg-background">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <I18nProvider>
-            <Navbar />
-            <main className="pt-[var(--nav-h)]">
-              <PageTransition>{children}</PageTransition>
-            </main>
-            <MobileTabBar />
+            {/* Une seule cloche pour toutes les barres (lot U4, Q7). */}
+            <NotificationsProvider>
+              <Navbar />
+              {/* `--barre-laterale` : place de la barre latérale sur grand écran (0 ailleurs).
+                  Rien ici ne doit devenir repère ni pile (ni transform, filter, contain,
+                  container-type, z-index) : le mode louange doit couvrir les barres (Q9). */}
+              <main className="pt-[var(--nav-h)] pl-[var(--barre-laterale)]">
+                <PageTransition>{children}</PageTransition>
+              </main>
+              <MobileTabBar />
+            </NotificationsProvider>
             <LyricsCopyListener />
             <Accueil />
           </I18nProvider>
