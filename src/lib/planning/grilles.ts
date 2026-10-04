@@ -243,6 +243,12 @@ export function anneesDuPlanning(anneeCourante: number, suivanteVisible: boolean
   return out
 }
 
+/** Une case remplie cette année-là ? (plannings sans publication : un membre
+ *  voit l'année suivante dès sa première case, comme dans le Sheet — Q4). */
+export function anneeRemplie(rows: string[][], annee: number): boolean {
+  return rows.some((r) => getAnnee(r[0]) === annee && r.slice(1).some((c) => (c ?? "").trim()))
+}
+
 /** Toutes les grilles, dans l'ordre des onglets du planning. */
 export const GRILLES: DefinitionGrille[] = [
   GRILLE_CULTE, GRILLE_TABLE, ...GRILLES_EDD, GRILLE_CAMPUS_MATIN, GRILLE_CAMPUS_SOIR,

@@ -179,3 +179,33 @@ test("Culte 2027 : l'écrivain du Culte voit le T1 2027 (13 dimanches, sainte c�
   await expect(autre.getByRole("button", { name: "2027", exact: true })).toHaveCount(0);
   await autre.close();
 });
+
+test("Table 2027 : l'écrivain voit les 13 dimanches du T1 ; le membre voit 2027 dès une case remplie", async ({ page, browser }) => {
+  await ouvrir(page, { ...ECRIVAIN, plannings: ["table"] }, "/planning/table");
+  await page.getByRole("button", { name: "2027", exact: true }).click();
+  await page.getByRole("button", { name: "T1", exact: true }).click();
+  await expect.poll(() => datesAffichees(page)).toHaveLength(13);
+
+  const vide = await browser.newPage();
+  await ouvrir(vide, MEMBRE, "/planning/table");
+  await expect(vide.getByTestId("grille-bandeau")).toBeVisible();
+  await expect(vide.getByRole("button", { name: "2027", exact: true })).toHaveCount(0);
+  await vide.close();
+
+  const rempli = await browser.newPage();
+  await ouvrir(rempli, MEMBRE, "/planning/table", { "plannings/table/dimanches/2027-01-03": { date: "2027-01-03", equipe: "Équipe Z." } });
+  await rempli.getByRole("button", { name: "2027", exact: true }).click();
+  await rempli.getByRole("button", { name: "T1", exact: true }).click();
+  await expect(laCase(rempli, "2027-01-03", "equipe")).toContainText("Équipe Z.");
+  await rempli.close();
+});
+
+test("EDD 2027 : la classe 中班 montre les 9 dimanches de janvier-février 2027", async ({ page }) => {
+  await ouvrir(page, { ...ECRIVAIN, plannings: ["eddZhongban"] }, "/planning/edd");
+  await page.getByRole("button", { name: "2027", exact: true }).click();
+  await page.getByRole("button", { name: /Janv/ }).click();
+  await expect.poll(() => datesAffichees(page)).toHaveLength(9);
+  const dates = await datesAffichees(page);
+  expect(dates[0]).toBe("2027-01-03");
+  expect(dates[8]).toBe("2027-02-28");
+});

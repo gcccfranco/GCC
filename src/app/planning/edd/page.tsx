@@ -4,9 +4,11 @@ import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { PlanningGrille } from "@/components/planning/PlanningGrille"
 import { getCurrentEddPeriode, EDD_PERIODES, EDD_CLASSES } from "@/lib/planning/utils"
+import { AnneeSelecteur } from "@/components/planning/AnneeSelecteur"
+import { BandeauAnnee } from "@/components/planning/BandeauAnnee"
 import { EDD_FALLBACK } from "@/lib/planning/data"
-import { fetchEDD } from "@/lib/planning/sheets"
-import { GRILLES_EDD, lignesSimples } from "@/lib/planning/grilles"
+import { fetchEDD, periodeEdd } from "@/lib/planning/sheets"
+import { GRILLES_EDD, anneeRemplie, anneesDuPlanning, dimanchesDe, lignesDeLAnnee, lignesSimples } from "@/lib/planning/grilles"
 import { useGrilleApp } from "@/lib/planning/useGrilleApp"
 import { useProfile } from "@/lib/firebase/users"
 import { canEditPlanning } from "@/lib/access"
@@ -35,16 +37,33 @@ function EddPage() {
   }, [])
 
   const definition = GRILLES_EDD.find((g) => g.sousTitre === classe) ?? GRILLES_EDD[0]
-  const rows = eddData[periode]?.classes?.[classe] ?? []
   const peutModifier = canEditPlanning(user, profile, definition.key)
   const { datesDansLApp, nomsDesComptes } = useGrilleApp(definition.key, peutModifier)
+  // Lot U2 : `fetchEDD` range par période sans regarder l'année ; la page
+  // reprend toutes les lignes de la classe et garde l'année choisie.
+  const anneeCourante = new Date().getFullYear()
+  const [annee, setAnnee] = useState(anneeCourante)
+  const toutes = Object.values(eddData).flatMap((p) => p.classes?.[classe] ?? [])
+  const annees = anneesDuPlanning(anneeCourante, peutModifier || anneeRemplie(toutes, anneeCourante + 1))
+  const effAnnee = annees.includes(annee) ? annee : anneeCourante
+  const rows = lignesDeLAnnee(definition, effAnnee, toutes).filter((r) => periodeEdd(r[0]) === periode)
+  const suivante = effAnnee > anneeCourante && peutModifier
 
   return (
     <div className="max-w-full space-y-4 mx-auto">
       <div className="flex flex-wrap gap-3 items-center justify-between">
-        <h2 className="text-base font-bold text-foreground">{t("planning.pages.edd")}</h2>
+        <div className="flex items-center gap-3 flex-wrap">
+          <h2 className="text-base font-bold text-foreground">{t("planning.pages.edd")}</h2>
+          <AnneeSelecteur
+            annees={annees}
+            annee={effAnnee}
+            onChange={(a) => { setAnnee(a); setPeriode(a === anneeCourante ? getCurrentEddPeriode() : EDD_PERIODES[0]) }}
+          />
+        </div>
         {loading && <span className="text-xs text-muted-foreground">{t("common.loading")}</span>}
       </div>
+
+      <BandeauAnnee annee={effAnnee} brouillon={false} dimanches={suivante ? dimanchesDe(effAnnee).length : null} />
 
       <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
         {EDD_PERIODES.map((p, i) => (
@@ -79,7 +98,7 @@ function EddPage() {
       <PlanningGrille
         key={definition.key}
         definition={definition}
-        periode={`${t(`planning.edd.${PERIODE_KEYS[EDD_PERIODES.indexOf(periode)]}`)} ${new Date().getFullYear()}`}
+        periode={`${t(`planning.edd.${PERIODE_KEYS[EDD_PERIODES.indexOf(periode)]}`)} ${effAnnee}`}
         lignes={lignesSimples(rows)}
         peutModifier={peutModifier}
         datesDansLApp={datesDansLApp}
