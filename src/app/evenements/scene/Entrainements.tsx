@@ -1,29 +1,35 @@
 "use client"
 
-// Volet Entraînements : un bloc par dimanche réservable (« Scène libre » si
-// vide), réservation, modification et retrait selon les droits, chevauchements
-// refusés à l'enregistrement et marqués en rouge s'ils existent malgré tout.
+// Volet Entraînements. Lot U1 (docs/spec-scene-saison.md) : un bloc par jour
+// réservable à venir, en grille — l'heure, « Libre · Réserver », « Pris », ou la
+// réservation et son auteur. « Réserver » ouvre le formulaire sur ce créneau ;
+// « Modifier » propose les créneaux libres pour déplacer. Les chevauchements
+// restent refusés à l'enregistrement et marqués en rouge s'ils existent
+// malgré tout ; les jours passés attendent derrière un lien.
 
-import { useState } from "react"
+import { useState, type CSSProperties } from "react"
 import { useTranslation } from "react-i18next"
 import type { User } from "firebase/auth"
-import { canEditCreneau } from "@/lib/access"
+import { canEditCreneau, canReserverPour, isCoordination } from "@/lib/access"
 import { createCreneau, deleteCreneau, listCreneaux, updateCreneau } from "@/lib/firebase/programmes"
-import { overlaps, sundaysBetween, todayIso } from "@/lib/scene/dimanches"
-import { fdLongL } from "@/lib/planning/utils"
+import { overlaps, todayIso } from "@/lib/scene/dimanches"
+import {
+  commence, creneauxLibres, heureLocale, joursReservables, lignesDuJour, quiPermis, saisonDe, type Place,
+} from "@/lib/scene/saison"
 import { PLANNING_COLORS } from "@/lib/serviceColors"
-import type { Creneau, Programme } from "@/types/programme"
+import { QUI, type Creneau, type Programme } from "@/types/programme"
 import type { UserProfile } from "@/types/user"
 import { Button } from "@/components/ui/button"
+import { BadgeHorsGrille } from "./Apercu"
 import { CreneauForm, type CreneauValues } from "./CreneauForm"
+import { LigneJour } from "./LigneJour"
+import { titreDuJour } from "./libelles"
 
 const COLOR = PLANNING_COLORS.scene
 
-function Chip({ label, accent }: { label: string; accent?: boolean }) {
-  return accent
-    ? <span className="inline-block text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: `${COLOR}18`, color: COLOR }}>{label}</span>
-    : <span className="inline-block text-xs px-2 py-0.5 rounded-full bg-secondary text-foreground">{label}</span>
-}
+type Action = { type: "nouveau"; place: Place } | { type: "modifier"; creneau: Creneau }
+
+const memePlace = (a: { debut: string; fin: string }, b: { debut: string; fin: string }) => a.debut === b.debut && a.fin === b.fin
 
 export function Entrainements({ programme, creneaux, user, profile, onChanged, onConflict }: {
   programme: Programme
@@ -35,19 +41,28 @@ export function Entrainements({ programme, creneaux, user, profile, onChanged, o
   onConflict?: (a: Creneau, b: Creneau) => void
 }) {
   const { t, i18n } = useTranslation()
+  const saison = saisonDe(programme)
   const today = todayIso()
-  const dimanches = sundaysBetween(programme.debut, programme.jourJ)
-  const upcoming = dimanches.filter((d) => d >= today)
-  const past = dimanches.filter((d) => d < today)
+  const maintenant = heureLocale()
+  const coordination = isCoordination(user, profile)
+  // Les jours réservables, plus ceux d'une réservation hors grille (Q8) : rien ne disparaît.
+  const jours = [...new Set([...joursReservables(saison, programme.jourJ), ...creneaux.map((c) => c.dimanche)])].sort()
+  const upcoming = jours.filter((d) => d >= today)
+  const past = jours.filter((d) => d < today)
   const [showPast, setShowPast] = useState(false)
-  const [editing, setEditing] = useState<Creneau | null | "new">(null)
+  const [action, setAction] = useState<Action | null>(null)
 
   const conflicts = new Set(creneaux.filter((c) => creneaux.some((o) => o.id !== c.id && overlaps(c, o))).map((c) => c.id))
   const slotLabel = (c: Creneau) => `${c.debut} – ${c.fin} · ${c.quoi} · ${c.qui.join(", ")} (${c.auteurNom})`
   const auteurNom = profile ? `${profile.firstName} ${profile.lastName}`.trim() || profile.email : user.email ?? ""
+  // Q4 : la coordination n'est pas limitée ; un membre choisit parmi les groupes permis.
+  const quiOptions = coordination ? QUI : quiPermis(programme)
 
   async function save(values: CreneauValues): Promise<string | null> {
-    const editingId = editing && editing !== "new" ? editing.id : null
+    const editingId = action?.type === "modifier" ? action.creneau.id : null
+    if (!canReserverPour(user, profile, programme, values.qui)) {
+      return t("planning.saison.quiRefuse", { qui: values.qui.filter((q) => !quiPermis(programme).includes(q)).join(", ") })
+    }
     try {
       // Relecture juste avant d'écrire : la scène est unique, un chevauchement est refusé.
       const fresh = await listCreneaux(programme.id)
@@ -62,7 +77,7 @@ export function Entrainements({ programme, creneaux, user, profile, onChanged, o
       const mine = after.find((c) => c.id === id)
       const other = mine && after.find((c) => c.id !== id && overlaps(c, mine))
       if (mine && other) onConflict?.(mine, other)
-      setEditing(null)
+      setAction(null)
       await onChanged()
       return null
     } catch {
@@ -76,69 +91,115 @@ export function Entrainements({ programme, creneaux, user, profile, onChanged, o
     await onChanged()
   }
 
-  const initial: CreneauValues = editing && editing !== "new"
-    ? { dimanche: editing.dimanche, debut: editing.debut, fin: editing.fin, quoi: editing.quoi, qui: editing.qui, note: editing.note }
-    : { dimanche: upcoming[0] ?? "", debut: "17:00", fin: "18:00", quoi: "Séance louange", qui: [], note: "" }
+  /** « Modifier » : les créneaux libres de la saison, et l'actuel pour ne changer que le reste. */
+  function placesPour(c: Creneau): Place[] {
+    const libres = creneauxLibres(saison, programme.jourJ, creneaux, { sauf: c.id, today, maintenant })
+    const actuelle = { jour: c.dimanche, debut: c.debut, fin: c.fin }
+    if (libres.some((p) => p.jour === c.dimanche && memePlace(p, c))) return libres
+    return [...libres, actuelle].sort((a, b) => (a.jour + a.debut).localeCompare(b.jour + b.debut))
+  }
+
+  function formulaire(d: string, l: { debut: string; fin: string }, c?: Creneau) {
+    if (c && action?.type === "modifier" && action.creneau.id === c.id) {
+      return (
+        <CreneauForm
+          title={t("planning.programme.editTitle")}
+          places={placesPour(c)}
+          initial={{ dimanche: c.dimanche, debut: c.debut, fin: c.fin, quoi: c.quoi, qui: c.qui, note: c.note }}
+          quiOptions={[...new Set([...quiOptions, ...c.qui])]}
+          onSubmit={save}
+          onCancel={() => setAction(null)}
+        />
+      )
+    }
+    if (!c && action?.type === "nouveau" && action.place.jour === d && memePlace(action.place, l)) {
+      return (
+        <CreneauForm
+          title={t("planning.programme.newTitle")}
+          place={action.place}
+          initial={{ dimanche: d, debut: l.debut, fin: l.fin, quoi: "Séance louange", qui: [], note: "" }}
+          quiOptions={quiOptions}
+          onSubmit={save}
+          onCancel={() => setAction(null)}
+        />
+      )
+    }
+    return null
+  }
 
   const shown = [...(showPast ? past : []), ...upcoming]
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        {past.length > 0 ? (
-          <button type="button" className="text-xs font-semibold" style={{ color: COLOR }} onClick={() => setShowPast(!showPast)}>
-            {showPast ? t("planning.programme.hidePast") : t("planning.programme.showPast", { n: past.length })}
-          </button>
-        ) : <span />}
-        {upcoming.length > 0 && !editing && (
-          <Button size="sm" style={{ background: COLOR }} onClick={() => setEditing("new")}>{t("planning.programme.reserver")}</Button>
-        )}
-      </div>
-
-      {editing && (
-        <CreneauForm
-          title={editing === "new" ? t("planning.programme.newTitle") : t("planning.programme.editTitle")}
-          dimanches={editing === "new" ? upcoming : Array.from(new Set([editing.dimanche, ...upcoming])).sort()}
-          initial={initial}
-          onSubmit={save}
-          onCancel={() => setEditing(null)}
-        />
+      {past.length > 0 && (
+        <button type="button" className="text-xs font-semibold svc-ink" style={{ "--svc": COLOR } as CSSProperties} onClick={() => setShowPast(!showPast)}>
+          {showPast ? t("planning.programme.hidePast") : t("planning.programme.showPast", { n: past.length })}
+        </button>
       )}
 
-      {shown.map((d) => {
-        const label = t("planning.programme.sunday", { date: fdLongL(d, i18n.language) })
-        const rows = creneaux.filter((c) => c.dimanche === d)
-        return (
-          <section key={d} aria-label={label} className="bg-card shadow-soft rounded-xl overflow-hidden">
-            <div className="px-4 py-2.5 text-sm font-semibold text-white" style={{ background: d < today ? "#8b8fa8" : COLOR }}>{label}</div>
-            {rows.length === 0 && <p className="px-4 py-3 text-sm text-muted-foreground">{t("planning.programme.sceneLibre")}</p>}
-            {rows.map((c) => {
-              const conflict = conflicts.has(c.id)
-              return (
-                <div key={c.id} className="px-4 py-3 border-t border-border grid gap-1 sm:grid-cols-[auto_1fr_auto] sm:items-start sm:gap-3">
-                  <div className="font-bold tabular-nums whitespace-nowrap" style={conflict ? { color: "#b91c1c" } : undefined}>
-                    {c.debut} – {c.fin}
-                  </div>
-                  <div className="space-y-1">
-                    <div className="flex flex-wrap gap-1">
-                      <Chip label={c.quoi} accent />
-                      {c.qui.map((q) => <Chip key={q} label={q} />)}
-                      {conflict && <span className="inline-block text-xs px-2 py-0.5 rounded-full font-semibold bg-red-100 text-red-800">⚠ {t("planning.programme.conflict")}</span>}
-                    </div>
-                    <p className="text-xs text-muted-foreground">{c.auteurNom}{c.note ? ` — ${c.note}` : ""}</p>
-                  </div>
-                  {canEditCreneau(user, profile, c) && (
-                    <div className="flex gap-1 sm:justify-end">
-                      <Button size="sm" variant="ghost" onClick={() => setEditing(c)}>{t("planning.programme.edit")}</Button>
-                      <Button size="sm" variant="ghost" className="text-destructive" onClick={() => remove(c)}>{t("planning.programme.remove")}</Button>
-                    </div>
-                  )}
-                </div>
-              )
-            })}
-          </section>
-        )
-      })}
+      <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
+        {shown.map((d) => {
+          const label = titreDuJour(d, i18n.language)
+          return (
+            <section key={d} aria-label={label} className="bg-card shadow-soft rounded-xl overflow-hidden">
+              <div className="px-4 py-2.5 text-sm font-semibold text-white" style={{ background: d < today ? "#8b8fa8" : COLOR }}>{label}</div>
+              <ul className="p-3 space-y-2">
+                {lignesDuJour(saison, d, creneaux).map((l) => {
+                  if (l.type !== "reserve") {
+                    const ouvert = l.type === "libre" && !commence(d, l.debut, today, maintenant)
+                    return (
+                      <LigneJour
+                        key={`${l.type}-${l.debut}`}
+                        ligne={l}
+                        droite={ouvert && !formulaire(d, l) ? (
+                          <Button size="sm" variant="ghost" className="h-8 svc-ink" style={{ "--svc": COLOR } as CSSProperties}
+                            aria-label={t("planning.saison.reserverA", { debut: l.debut, fin: l.fin })}
+                            onClick={() => setAction({ type: "nouveau", place: { jour: d, debut: l.debut, fin: l.fin } })}>
+                            {t("planning.saison.reserver")}
+                          </Button>
+                        ) : undefined}
+                        sous={formulaire(d, l)}
+                      />
+                    )
+                  }
+                  const c = l.creneau
+                  const conflict = conflicts.has(c.id)
+                  return (
+                    <LigneJour
+                      key={c.id}
+                      ligne={l}
+                      conflit={conflict}
+                      badges={
+                        <>
+                          {conflict && <span className="inline-block text-xs px-2 py-0.5 rounded-full font-semibold bg-red-100 text-red-800">⚠ {t("planning.programme.conflict")}</span>}
+                          {coordination && l.horsGrille && <BadgeHorsGrille />}
+                        </>
+                      }
+                      droite={
+                        <>
+                          <span className="text-muted-foreground">{c.auteurNom}</span>
+                          {canEditCreneau(user, profile, c) && (
+                            <>
+                              <Button size="sm" variant="ghost" className="h-8" onClick={() => setAction({ type: "modifier", creneau: c })}>{t("planning.programme.edit")}</Button>
+                              <Button size="sm" variant="ghost" className="h-8 text-destructive" onClick={() => remove(c)}>{t("planning.programme.remove")}</Button>
+                            </>
+                          )}
+                        </>
+                      }
+                      sous={
+                        <>
+                          {c.note && <p className="mt-1 text-xs text-muted-foreground">{c.note}</p>}
+                          {formulaire(d, l, c)}
+                        </>
+                      }
+                    />
+                  )
+                })}
+              </ul>
+            </section>
+          )
+        })}
+      </div>
     </div>
   )
 }

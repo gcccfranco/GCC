@@ -1,9 +1,11 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
+import { signInAs, type FakeDb, type FakeProfile } from "./helpers/fakeSession";
 import { canReserverPour } from "../src/lib/access";
 import {
-  erreursSaison, FAMILLES, grilleDuJour, horsGrille, joursReservables, lignesDuJour, quiPermis, saisonDe,
+  commence, creneauxLibres, erreursSaison, FAMILLES, famillesDe, grilleDuJour, horsGrille, joursReservables,
+  lignesDuJour, quiDesFamilles, quiPermis, saisonDe,
 } from "../src/lib/scene/saison";
 import { currentProgramme, reservationsClosed } from "../src/lib/scene/dimanches";
 import { QUI } from "../src/types/programme";
@@ -207,4 +209,167 @@ test("règles Firestore : les créneaux passent par reservable(), miroir de canR
   expect(create).toContain("isCoordination() || reservable(id, request.resource.data.qui)");
   expect(update).toContain("reservable(id, request.resource.data.qui)");
   expect(del).not.toContain("reservable");
+});
+
+// ─── S3 : l'écran de la coordination ────────────────────────────────────────
+
+const JO: FakeProfile = { uid: "uid-jo", email: "jo@example.com", firstName: "Jo", lastName: "L." };
+const ALICE: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", poles: ["evenement"] };
+
+/** « Noël 2026 » de la Réussite, en brouillon. */
+const NOEL26 = {
+  ...NOEL,
+  nom: "Noël 2026",
+  fin: "2026-12-20",
+  plages: [{ jour: 6, debut: "10:00", fin: "12:00" }, { jour: 0, debut: "14:00", fin: "19:00" }],
+  duree: 60,
+  quiAutorises: SAISON.quiAutorises,
+  ouvert: false,
+};
+
+/** Lundi 5 octobre 2026 à 10:00, horloge posée avant la connexion. */
+async function ouvrir(page: Page, who: FakeProfile, docs: Record<string, Record<string, unknown>>, jour = "2026-10-05T10:00:00") {
+  await page.clock.setFixedTime(new Date(jour));
+  return signInAs(page, who, docs, "/evenements/scene");
+}
+
+const patches = (db: FakeDb, path = "programmes/noel") => db.writes.filter((w) => w.method === "PATCH" && w.path === path);
+const carte = (page: Page) => page.getByRole("region", { name: "Mettre en place la saison" });
+const apercu = (page: Page) => page.getByRole("region", { name: "Aperçu de ce que verront les groupes" });
+
+test("brouillon : un membre n'a ni onglet ni programme", async ({ page }) => {
+  await ouvrir(page, JO, { "programmes/noel": NOEL26 });
+  await expect(page.getByText("Aucun programme en cours.")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Noël 2026", exact: true })).toHaveCount(0);
+});
+
+test("brouillon : la coordination l'ouvre depuis sa ligne et voit la saison et l'aperçu", async ({ page }) => {
+  await ouvrir(page, ALICE, { "programmes/noel": NOEL26 });
+  await expect(page.getByRole("link", { name: "Scène", exact: true })).toBeVisible();
+  const ligne = page.getByRole("region", { name: "Programmes masqués" }).getByRole("listitem").filter({ hasText: "Noël 2026" });
+  await expect(ligne).toContainText("Brouillon");
+  await ligne.getByRole("button", { name: "Préparer la saison" }).click();
+  await expect(page.getByRole("heading", { name: "Noël 2026 · réservations" })).toBeVisible();
+  await expect(page.getByText("Jour J : jeudi 24 décembre", { exact: true })).toBeVisible();
+  await expect(carte(page).getByRole("button", { name: "sam.", exact: true, pressed: true })).toBeVisible();
+  await expect(carte(page).getByRole("button", { name: "dim.", exact: true, pressed: true })).toBeVisible();
+  await expect(carte(page).getByRole("button", { name: "lun.", exact: true, pressed: false })).toBeVisible();
+  await expect(carte(page).getByRole("button", { name: "sam. 10:00 – 12:00" })).toBeVisible();
+  await expect(carte(page).getByRole("button", { name: "dim. 14:00 – 19:00" })).toBeVisible();
+  await expect(carte(page).getByRole("button", { name: "1 h", exact: true, pressed: true })).toBeVisible();
+  await expect(carte(page).getByRole("button", { name: "Jeunes", pressed: true })).toBeVisible();
+  await expect(carte(page).getByRole("button", { name: "Chorale", pressed: false })).toBeVisible();
+  await expect(carte(page).getByRole("button", { name: "Tout membre connecté", pressed: false })).toBeVisible();
+  await expect(carte(page)).toContainText("Deux créneaux qui se chevauchent restent refusés ; la coordination et les admins peuvent tout déplacer.");
+  await expect(apercu(page).getByRole("heading", { name: "Samedi 10 octobre" })).toBeVisible();
+  await apercu(page).getByRole("button", { name: "Jour suivant" }).click();
+  await expect(apercu(page).getByRole("heading", { name: "Dimanche 11 octobre" })).toBeVisible();
+  await expect(apercu(page).getByRole("listitem")).toHaveText([/14:00\s*Libre/, /15:00\s*Libre/, /16:00\s*Libre/, /17:00\s*Libre/, /18:00\s*Libre/]);
+});
+
+test("« Ouvrir les réservations » écrit `ouvert: true` en un seul PATCH, et l'onglet prend le nom du programme", async ({ page }) => {
+  const db = await ouvrir(page, ALICE, { "programmes/noel": NOEL26 });
+  await page.getByRole("button", { name: "Préparer la saison" }).click();
+  await page.getByRole("button", { name: "Ouvrir les réservations" }).click();
+  await expect(page.getByText("Réservations ouvertes du 1er octobre au 20 décembre")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Noël 2026", exact: true })).toBeVisible();
+  expect(patches(db)).toHaveLength(1);
+  expect(patches(db)[0].data).toMatchObject({ ouvert: true });
+  expect(Object.keys(patches(db)[0].data).sort()).toEqual(["ouvert", "updatedAt"]);
+});
+
+test("une fois ouvert, un membre voit l'onglet, le samedi et le dimanche", async ({ page }) => {
+  await ouvrir(page, JO, { "programmes/noel": { ...NOEL26, ouvert: true } });
+  await expect(page.getByRole("link", { name: "Noël 2026", exact: true })).toBeVisible();
+  await expect(page.getByRole("region", { name: "Samedi 10 octobre" })).toBeVisible();
+  await expect(page.getByRole("region", { name: "Dimanche 11 octobre" })).toBeVisible();
+});
+
+test("saison ouverte : repliée en une ligne au-dessus des volets ; cocher « sam. » ajoute une plage, le samedi entre dans l'aperçu", async ({ page }) => {
+  const db = await ouvrir(page, ALICE, { "programmes/noel": NOEL });
+  await expect(page.getByText("Saison : 1er octobre → 20 décembre · dim. · 1 h · Tout membre connecté")).toBeVisible();
+  await page.getByRole("button", { name: "Modifier la saison" }).click();
+  await expect(apercu(page).getByRole("heading", { name: "Dimanche 11 octobre" })).toBeVisible();
+  await carte(page).getByRole("button", { name: "sam.", exact: true }).click();
+  await expect(carte(page).getByRole("button", { name: "sam. 14:00 – 19:00" })).toBeVisible();
+  await expect.poll(() => patches(db).at(-1)?.data.plages).toEqual([
+    { jour: 6, debut: "14:00", fin: "19:00" }, { jour: 0, debut: "14:00", fin: "19:00" },
+  ]);
+  await apercu(page).getByRole("button", { name: "Jour précédent" }).click();
+  await expect(apercu(page).getByRole("heading", { name: "Samedi 10 octobre" })).toBeVisible();
+  await expect(apercu(page).getByRole("listitem")).toHaveCount(5);
+});
+
+test("changer la durée met l'aperçu à jour", async ({ page }) => {
+  const db = await ouvrir(page, ALICE, { "programmes/noel": NOEL26 });
+  await page.getByRole("button", { name: "Préparer la saison" }).click();
+  await apercu(page).getByRole("button", { name: "Jour suivant" }).click();
+  await carte(page).getByRole("button", { name: "1 h 30", exact: true }).click();
+  await expect(apercu(page).getByRole("listitem")).toHaveText([/14:00\s*Libre/, /15:30\s*Libre/, /17:00\s*Libre/]);
+  expect(patches(db).at(-1)?.data).toMatchObject({ duree: 90 });
+});
+
+test("une fermeture le jour J ou après affiche l'erreur et n'écrit rien", async ({ page }) => {
+  const db = await ouvrir(page, ALICE, { "programmes/noel": NOEL26 });
+  await page.getByRole("button", { name: "Préparer la saison" }).click();
+  await carte(page).getByLabel("Fermeture des réservations").fill("2026-12-24");
+  await expect(carte(page).getByText("La fermeture doit être avant le jour J.")).toBeVisible();
+  expect(patches(db)).toHaveLength(0);
+});
+
+test("hors grille : passer à 1 h 30 avec une réservation à 15:00 la signale, elle reste en base, « Déplacer » la pose sur un créneau libre", async ({ page }) => {
+  const c1 = { ...resa("2026-10-11", "15:00", "16:00"), quoi: "Sketch", qui: ["Jeunes"], auteurUid: "uid-jo", auteurNom: "Jo L." };
+  const db = await ouvrir(page, ALICE, { "programmes/noel": { ...NOEL26, ouvert: true }, "programmes/noel/creneaux/c1": c1 });
+  await page.getByRole("button", { name: "Modifier la saison" }).click();
+  await carte(page).getByRole("button", { name: "1 h 30", exact: true }).click();
+  const hors = page.getByRole("region", { name: "1 réservation hors grille" });
+  await expect(hors).toContainText("Sketch · Jeunes");
+  expect(db.doc("programmes/noel/creneaux/c1")).toMatchObject({ debut: "15:00", fin: "16:00" });
+  await hors.getByRole("button", { name: "Déplacer" }).click();
+  await page.getByLabel("Jour", { exact: true }).selectOption({ label: "Dimanche 11 octobre" });
+  await page.getByLabel("Créneau", { exact: true }).selectOption({ label: "15:30 – 17:00" });
+  await page.getByRole("button", { name: "Enregistrer" }).click();
+  await expect(page.getByRole("region", { name: /hors grille/ })).toHaveCount(0);
+  expect(db.doc("programmes/noel/creneaux/c1")).toMatchObject({ dimanche: "2026-10-11", debut: "15:30", fin: "17:00", quoi: "Sketch" });
+});
+
+test("« Programme du jour J » ouvre l'ordre de passage depuis l'écran de la saison", async ({ page }) => {
+  await ouvrir(page, ALICE, { "programmes/noel": { ...NOEL26, passages: [{ quoi: "Chant", qui: ["Chorale"], titre: "Douce nuit" }] } });
+  await page.getByRole("button", { name: "Préparer la saison" }).click();
+  await page.getByRole("button", { name: "Programme du jour J" }).click();
+  await expect(page.getByRole("list", { name: "Ordre de Passage jour J" }).getByRole("listitem")).toContainText(["Douce nuit"]);
+});
+
+test("créer un programme : brouillon ouvert au jour de sa création, l'écran s'ouvre directement sur sa saison", async ({ page }) => {
+  const db = await ouvrir(page, ALICE, {});
+  await page.getByLabel("Nom").fill("Noël 2026");
+  await page.getByLabel("Jour J").fill("2026-12-24");
+  await expect(page.getByLabel("Début des réservations")).toHaveCount(0);
+  await page.getByRole("button", { name: "Créer le programme" }).click();
+  await expect(page.getByRole("heading", { name: "Noël 2026 · réservations" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Ouvrir les réservations" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Scène", exact: true })).toBeVisible();
+  const cree = db.writes.find((w) => w.method === "POST" && w.path.startsWith("programmes/"));
+  expect(cree?.data).toMatchObject({ nom: "Noël 2026", jourJ: "2026-12-24", debut: "2026-10-05", ouvert: false, visible: false });
+});
+
+test("créneaux libres : la grille à venir moins les créneaux pris ou commencés ; la réservation qu'on déplace ne se bloque pas elle-même", () => {
+  const s = { ...SAISON, fin: "2026-10-11" };
+  const c = resa("2026-10-11", "15:00", "16:00", "c");
+  const libres = creneauxLibres(s, NOEL.jourJ, [c], { today: "2026-10-10", maintenant: "10:30" });
+  expect(libres.map((l) => `${l.jour} ${l.debut}`)).toEqual([
+    "2026-10-10 11:00",
+    "2026-10-11 14:00", "2026-10-11 16:00", "2026-10-11 17:00", "2026-10-11 18:00",
+  ]);
+  const pourC = creneauxLibres(s, NOEL.jourJ, [c], { sauf: "c", today: "2026-10-10", maintenant: "10:30" });
+  expect(pourC.map((l) => `${l.jour} ${l.debut}`)).toContain("2026-10-11 15:00");
+  expect(commence("2026-10-10", "10:00", "2026-10-10", "10:00")).toBe(true);
+  expect(commence("2026-10-10", "11:00", "2026-10-10", "10:30")).toBe(false);
+  expect(commence("2026-10-09", "18:00", "2026-10-10", "08:00")).toBe(true);
+});
+
+test("familles d'une liste « qui » : celles dont tous les groupes sont permis ; et l'inverse", () => {
+  expect(famillesDe(SAISON.quiAutorises)).toEqual(["groupes", "edd", "jeunes", "louange"]);
+  expect(famillesDe([])).toEqual([]);
+  expect(quiDesFamilles(["jeunes", "louange"])).toEqual(["Franco", "敬拜团", "Jeunes"]);
 });

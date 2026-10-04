@@ -1,15 +1,19 @@
 "use client"
 
-// Formulaire d'un créneau sur scène (création ou modification) : dimanche à
-// venir, début et fin au quart d'heure, quoi (un), qui (un ou plusieurs), note.
+// Formulaire d'un créneau sur scène. Lot U1 : plus d'heure à taper. Une
+// nouvelle réservation rappelle le jour et le créneau pris dans la grille
+// (« Samedi 10 octobre · 10:00–11:00 ») ; « Modifier » propose les créneaux
+// libres de la saison, jour par jour (le créneau actuel compris), pour déplacer.
+// Puis quoi (un), qui (un ou plusieurs, limité aux groupes permis), note.
 
 import { useState, type FormEvent } from "react"
 import { useTranslation } from "react-i18next"
 import { QUI, QUOI } from "@/types/programme"
-import { fdLongL } from "@/lib/planning/utils"
+import type { Place } from "@/lib/scene/saison"
 import { PLANNING_COLORS } from "@/lib/serviceColors"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { titreDuJour } from "./libelles"
 
 export type CreneauValues = {
   dimanche: string
@@ -20,16 +24,19 @@ export type CreneauValues = {
   note: string
 }
 
-const quarter = (t: string) => /^\d{2}:\d{2}$/.test(t) && Number(t.slice(3)) % 15 === 0
-
 /** Cases « Qui » (un ou plusieurs), partagées par les créneaux et les passages. */
-export function QuiChecklist({ value, onChange }: { value: string[]; onChange: (qui: string[]) => void }) {
+export function QuiChecklist({ value, onChange, options = QUI }: {
+  value: string[]
+  onChange: (qui: string[]) => void
+  /** Groupes proposés (lot U1 : ceux que « Qui peut réserver » permet). */
+  options?: readonly string[]
+}) {
   const { t } = useTranslation()
   return (
     <fieldset className="space-y-1">
       <legend className="text-xs font-semibold">{t("planning.programme.qui")}</legend>
       <div className="flex flex-wrap gap-2">
-        {QUI.map((q) => {
+        {options.map((q) => {
           const checked = value.includes(q)
           return (
             <label key={q} className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold cursor-pointer ${checked ? "" : "bg-background border-border text-muted-foreground"}`}
@@ -45,11 +52,16 @@ export function QuiChecklist({ value, onChange }: { value: string[]; onChange: (
   )
 }
 
-export function CreneauForm({ title, dimanches, initial, onSubmit, onCancel }: {
+const cle = (p: { debut: string; fin: string }) => `${p.debut}-${p.fin}`
+
+export function CreneauForm({ title, place, places, initial, quiOptions, onSubmit, onCancel }: {
   title: string
-  /** Dimanches proposés (ISO), déjà limités à ceux à venir. */
-  dimanches: string[]
+  /** Nouvelle réservation : le créneau choisi dans la grille, rappelé en tête. */
+  place?: Place
+  /** Modifier ou déplacer : les créneaux proposés, jour par jour. */
+  places?: Place[]
   initial: CreneauValues
+  quiOptions: readonly string[]
   /** Renvoie un message d'erreur, ou null si le créneau est enregistré. */
   onSubmit: (values: CreneauValues) => Promise<string | null>
   onCancel: () => void
@@ -59,10 +71,11 @@ export function CreneauForm({ title, dimanches, initial, onSubmit, onCancel }: {
   const [error, setError] = useState("")
   const [busy, setBusy] = useState(false)
   const select = "w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
+  const jours = places ? [...new Set(places.map((p) => p.jour))] : []
+  const duJour = places?.filter((p) => p.jour === v.dimanche) ?? []
 
   async function submit(e: FormEvent) {
     e.preventDefault()
-    if (!quarter(v.debut) || !quarter(v.fin) || v.fin <= v.debut) { setError(t("planning.programme.invalidTime")); return }
     if (v.qui.length === 0) { setError(t("planning.programme.needQui")); return }
     setBusy(true); setError("")
     const err = await onSubmit({ ...v, note: v.note.trim() })
@@ -70,39 +83,56 @@ export function CreneauForm({ title, dimanches, initial, onSubmit, onCancel }: {
     if (err) setError(err)
   }
 
+  function choisirJour(jour: string) {
+    const premier = places?.find((p) => p.jour === jour)
+    if (premier) setV({ ...v, dimanche: jour, debut: premier.debut, fin: premier.fin })
+  }
+
+  function choisirCreneau(valeur: string) {
+    const p = duJour.find((x) => cle(x) === valeur)
+    if (p) setV({ ...v, debut: p.debut, fin: p.fin })
+  }
+
   return (
-    <form onSubmit={submit} className="bg-card shadow-soft rounded-xl p-4 space-y-3" aria-labelledby="creneau-form-title">
-      <h3 id="creneau-form-title" className="text-sm font-bold">{title}</h3>
+    <form onSubmit={submit} className="mt-2 bg-card shadow-soft rounded-xl p-4 space-y-3 text-left" aria-labelledby="creneau-form-title">
+      <div>
+        <h3 id="creneau-form-title" className="text-sm font-bold">{title}</h3>
+        {place && (
+          <p className="text-sm text-muted-foreground">
+            {t("planning.saison.place", { jour: titreDuJour(place.jour, i18n.language), debut: place.debut, fin: place.fin })}
+          </p>
+        )}
+      </div>
       {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
-      <div className="space-y-1">
-        <label htmlFor="creneau-dimanche" className="text-xs font-semibold">{t("planning.programme.dimanche")}</label>
-        <select id="creneau-dimanche" className={select} value={v.dimanche} onChange={(e) => setV({ ...v, dimanche: e.target.value })}>
-          {dimanches.map((d) => <option key={d} value={d}>{t("planning.programme.sunday", { date: fdLongL(d, i18n.language) })}</option>)}
-        </select>
-      </div>
-      <div className="grid grid-cols-2 gap-3">
-        <div className="space-y-1">
-          <label htmlFor="creneau-debut" className="text-xs font-semibold">{t("planning.programme.debut")}</label>
-          <Input id="creneau-debut" type="time" step={900} value={v.debut} onChange={(e) => setV({ ...v, debut: e.target.value })} required />
+      {places && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="space-y-1">
+            <label htmlFor="creneau-jour" className="text-xs font-semibold">{t("planning.saison.jour")}</label>
+            <select id="creneau-jour" className={select} value={v.dimanche} onChange={(e) => choisirJour(e.target.value)}>
+              {jours.map((d) => <option key={d} value={d}>{titreDuJour(d, i18n.language)}</option>)}
+            </select>
+          </div>
+          <div className="space-y-1">
+            <label htmlFor="creneau-place" className="text-xs font-semibold">{t("planning.saison.creneau")}</label>
+            <select id="creneau-place" className={select} value={cle(v)} onChange={(e) => choisirCreneau(e.target.value)}>
+              {duJour.map((p) => <option key={cle(p)} value={cle(p)}>{p.debut} – {p.fin}</option>)}
+            </select>
+          </div>
         </div>
-        <div className="space-y-1">
-          <label htmlFor="creneau-fin" className="text-xs font-semibold">{t("planning.programme.fin")}</label>
-          <Input id="creneau-fin" type="time" step={900} value={v.fin} onChange={(e) => setV({ ...v, fin: e.target.value })} required />
-        </div>
-      </div>
+      )}
       <div className="space-y-1">
         <label htmlFor="creneau-quoi" className="text-xs font-semibold">{t("planning.programme.quoi")}</label>
         <select id="creneau-quoi" className={select} value={v.quoi} onChange={(e) => setV({ ...v, quoi: e.target.value })}>
           {QUOI.map((q) => <option key={q} value={q}>{q}</option>)}
         </select>
       </div>
-      <QuiChecklist value={v.qui} onChange={(qui) => setV({ ...v, qui })} />
+      <QuiChecklist value={v.qui} options={quiOptions} onChange={(qui) => setV({ ...v, qui })} />
       <div className="space-y-1">
         <label htmlFor="creneau-note" className="text-xs font-semibold">{t("planning.programme.note")}</label>
         <Input id="creneau-note" value={v.note} maxLength={120} placeholder={t("planning.programme.noteHint")} onChange={(e) => setV({ ...v, note: e.target.value })} />
       </div>
       <div className="flex gap-2">
-        <Button type="submit" disabled={busy} style={{ background: PLANNING_COLORS.scene }}>{t("planning.programme.save")}</Button>
+        <Button type="submit" disabled={busy} className="text-white" style={{ background: PLANNING_COLORS.scene }}>{t("planning.programme.save")}</Button>
         <Button type="button" variant="ghost" onClick={onCancel}>{t("planning.programme.cancel")}</Button>
       </div>
     </form>

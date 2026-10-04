@@ -6,7 +6,7 @@ import {
   fromFsValue,
   type RawDoc,
 } from "./setlists";
-import type { Creneau, Passage, Programme } from "@/types/programme";
+import type { Creneau, Duree, Passage, Plage, Programme } from "@/types/programme";
 
 // Programmes de scène (lot 3 bis) : programmes/{id} et programmes/{id}/creneaux/{cid},
 // en REST comme le reste. Droits : firestore.rules (isCoordination) et
@@ -33,6 +33,12 @@ function fromFsProgramme(raw: RawDoc): Programme {
     passages: (data.passages as Passage[]) ?? [],
     createdBy: (data.createdBy as string) ?? "",
     updatedAt: (data.updatedAt as string) ?? "",
+    // Saison (lot U1) : seulement si le champ existe — absent = défaut de saisonDe.
+    ...(data.fin != null && { fin: data.fin as string }),
+    ...(data.plages != null && { plages: data.plages as Plage[] }),
+    ...(data.duree != null && { duree: data.duree as Duree }),
+    ...(data.quiAutorises != null && { quiAutorises: data.quiAutorises as string[] }),
+    ...(data.ouvert != null && { ouvert: data.ouvert as boolean }),
   };
 }
 

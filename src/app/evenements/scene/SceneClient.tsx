@@ -19,8 +19,9 @@ import {
   createProgramme, deleteProgramme, listCreneaux, listProgrammes, updateProgramme,
 } from "@/lib/firebase/programmes"
 import {
-  archiveDate, currentProgramme, lastSundayBefore, programmeState, reservationsClosed, sundaysBetween, todayIso,
+  archiveDate, currentProgramme, programmeState, reservationsClosed, todayIso,
 } from "@/lib/scene/dimanches"
+import { famillesDe, joursReservables, saisonDe } from "@/lib/scene/saison"
 import { reportConflict } from "@/lib/scene/reportConflict"
 import { fdFullL, fdLongL } from "@/lib/planning/utils"
 import { PLANNING_COLORS } from "@/lib/serviceColors"
@@ -29,14 +30,18 @@ import { Button } from "@/components/ui/button"
 import { Entrainements } from "./Entrainements"
 import { OrdrePassage } from "./OrdrePassage"
 import { ProgrammeForm, type ProgrammeValues } from "./ProgrammeForm"
+import { SaisonEcran } from "./SaisonEcran"
+import { dateCourte } from "./libelles"
 
 const COLOR = PLANNING_COLORS.scene
 type Volet = "entrainements" | "programme"
 
-async function fetchAll(): Promise<{ programmes: Programme[]; creneaux: Creneau[] }> {
+/** Les programmes, et les créneaux du programme montré : celui dont la
+ *  coordination a ouvert la saison (`focusId`, lot U1), sinon le programme affiché. */
+async function fetchAll(focusId: string | null): Promise<{ programmes: Programme[]; creneaux: Creneau[] }> {
   const programmes = await listProgrammes()
-  const current = currentProgramme(programmes, todayIso())
-  return { programmes, creneaux: current ? await listCreneaux(current.id) : [] }
+  const focus = programmes.find((p) => p.id === focusId) ?? currentProgramme(programmes, todayIso())
+  return { programmes, creneaux: focus ? await listCreneaux(focus.id) : [] }
 }
 
 export function SceneClient() {
@@ -49,17 +54,19 @@ export function SceneClient() {
   const [form, setForm] = useState<"new" | Programme | null>(null)
   const [ordre, setOrdre] = useState<string | null>(null)
   const [error, setError] = useState("")
+  /** Lot U1 : programme dont la coordination a ouvert l'écran de la saison. */
+  const [saisonOuverte, setSaisonOuverte] = useState<string | null>(null)
 
   const reload = useCallback(async () => {
-    const data = await fetchAll()
+    const data = await fetchAll(saisonOuverte)
     setProgrammes(data.programmes)
     setCreneaux(data.creneaux)
-  }, [])
+  }, [saisonOuverte])
 
   useEffect(() => {
     if (!user) return
-    fetchAll().then((data) => { setProgrammes(data.programmes); setCreneaux(data.creneaux) })
-  }, [user])
+    fetchAll(saisonOuverte).then((data) => { setProgrammes(data.programmes); setCreneaux(data.creneaux) })
+  }, [user, saisonOuverte])
 
   const coordination = isCoordination(user, profile)
   const today = todayIso()
@@ -93,8 +100,12 @@ export function SceneClient() {
         await updateProgramme(editing.id, values)
       } else {
         // Lot 12 : le programme créé n'est pas épinglé et ne vole l'onglet à
-        // personne ; il apparaîtra quand ses réservations ouvriront.
-        await createProgramme({ ...values, visible: false, passages: [], createdBy: user.uid, updatedAt: new Date().toISOString() })
+        // personne. Lot U1 : il part en brouillon, ouvert au jour de sa
+        // création, et l'écran s'ouvre directement sur sa saison.
+        const id = await createProgramme({
+          ...values, debut: todayIso(), ouvert: false, visible: false, passages: [], createdBy: user.uid, updatedAt: new Date().toISOString(),
+        })
+        setSaisonOuverte(id)
       }
       setForm(null)
     })
@@ -119,14 +130,36 @@ export function SceneClient() {
 
   if (profileLoading || !programmes || !user) return <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
 
-  const closed = current ? reservationsClosed(todayIso(), current.jourJ) : false
+  // Lot U1 : l'écran de la saison (brouillon, ou « Modifier la saison ») prend la page.
+  const edited = coordination ? programmes.find((p) => p.id === saisonOuverte) ?? null : null
+  if (edited) {
+    return <SaisonEcran programme={edited} creneaux={creneaux} onChanged={reload} onClose={() => setSaisonOuverte(null)} />
+  }
+
+  const closed = current ? reservationsClosed(todayIso(), current.jourJ, current.fin) : false
   const activeVolet: Volet = closed ? "programme" : volet
   // Sans aucun programme, la coordination voit directement le formulaire.
   const showForm = form !== null || (coordination && programmes.length === 0)
-  const formInitial: ProgrammeValues = form && form !== "new" ? { nom: form.nom, jourJ: form.jourJ, debut: form.debut } : { nom: "", jourJ: "", debut: "" }
+  const formInitial: ProgrammeValues = form && form !== "new" ? { nom: form.nom, jourJ: form.jourJ } : { nom: "", jourJ: "" }
+  const formApres = form && form !== "new" ? form.fin ?? form.debut : today
+
+  /** « Saison : 1er octobre → 20 décembre · sam., dim. · 1 h · Groupes, EDD » (Q12). */
+  function resumeSaison(p: Programme): string {
+    const s = saisonDe(p)
+    const familles = famillesDe(s.quiAutorises)
+    return t("planning.saison.resume", {
+      from: dateCourte(s.debut, i18n.language),
+      to: dateCourte(s.fin, i18n.language),
+      jours: s.jours.map((j) => t(`planning.saison.jourCourt.${j}`)).join(", "),
+      duree: t(`planning.saison.dureeCourte.${s.duree}`),
+      qui: s.quiAutorises.length === 0
+        ? t("planning.saison.tous")
+        : familles.map((f) => t(`planning.saison.familles.${f}`)).join(", "),
+    })
+  }
 
   return (
-    <div className="max-w-2xl space-y-4 mx-auto">
+    <div className="max-w-2xl lg:max-w-none space-y-4 mx-auto">
       <div className="flex flex-wrap gap-3 items-baseline justify-between">
         <h2 className="text-base font-bold text-foreground">{current ? current.nom : t("planning.tabs.scene")}</h2>
         {current && (
@@ -166,6 +199,7 @@ export function SceneClient() {
           key={form === "new" || form === null ? "new" : form.id}
           title={form && form !== "new" ? t("planning.programmes.editTitle", { nom: form.nom }) : t("planning.programmes.newTitle")}
           initial={formInitial}
+          apres={formApres}
           submitLabel={form && form !== "new" ? t("planning.programmes.save") : t("planning.programmes.create")}
           onSubmit={saveProgramme}
           onCancel={programmes.length === 0 && form === null ? undefined : () => setForm(null)}
@@ -192,6 +226,14 @@ export function SceneClient() {
         </section>
       ) : current ? (
         <>
+          {coordination && (
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-xl bg-secondary px-3 py-2 text-sm">
+              <span>{resumeSaison(current)}</span>
+              <button type="button" className="font-semibold underline-offset-4 hover:underline" onClick={() => setSaisonOuverte(current.id)}>
+                {t("planning.saison.modifierSaison")}
+              </button>
+            </div>
+          )}
           {!closed && (
             <div className="flex gap-2">
               {(["entrainements", "programme"] as Volet[]).map((v) => (
@@ -231,16 +273,22 @@ export function SceneClient() {
           <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{t("planning.scene.others")}</h3>
           <ul className="space-y-2">
             {others.map((p) => {
-              const dimanches = sundaysBetween(p.debut, p.jourJ)
+              const saison = saisonDe(p)
+              const jours = joursReservables(saison, p.jourJ)
               const st = programmeState(p, today)
+              const brouillon = p.ouvert === false
+              // Lot U1 : un brouillon n'est jamais affiché, même épinglé — il se prépare.
+              const badge = brouillon ? "planning.saison.brouillon"
+                : st === "archived" ? "planning.programmes.archived"
+                  : st === "open" ? "planning.programmes.waiting" : null
               return (
                 <li key={p.id} className="bg-card shadow-soft rounded-xl px-4 py-3 flex flex-wrap items-center justify-between gap-2">
                   <div className="text-sm">
                     <p className="font-semibold flex items-center gap-2">
                       {p.nom}
-                      {(st === "archived" || st === "open") && (
+                      {badge && (
                         <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: `${COLOR}18`, color: COLOR }}>
-                          {t(st === "archived" ? "planning.programmes.archived" : "planning.programmes.waiting")}
+                          {t(badge)}
                         </span>
                       )}
                     </p>
@@ -248,13 +296,18 @@ export function SceneClient() {
                       {t("planning.programmes.jourJLabel", { date: fdLongL(p.jourJ, i18n.language) })}
                       {" · "}
                       {t("planning.programmes.reservations", {
-                        from: dimanches[0] ? fdLongL(dimanches[0], i18n.language) : "—",
-                        to: fdLongL(lastSundayBefore(p.jourJ), i18n.language),
+                        from: jours[0] ? fdLongL(jours[0], i18n.language) : "—",
+                        to: fdLongL(jours.at(-1) ?? saison.fin, i18n.language),
                       })}
                     </p>
                   </div>
-                  <div className="flex gap-1">
-                    <Button size="sm" variant="outline" onClick={() => run(() => show(p.id))}>{t("planning.programmes.show")}</Button>
+                  <div className="flex flex-wrap gap-1">
+                    {brouillon || st !== "archived" ? (
+                      <Button size="sm" variant="outline" onClick={() => setSaisonOuverte(p.id)}>
+                        {t(brouillon ? "planning.saison.preparerSaison" : "planning.saison.modifierSaison")}
+                      </Button>
+                    ) : null}
+                    {!brouillon && <Button size="sm" variant="outline" onClick={() => run(() => show(p.id))}>{t("planning.programmes.show")}</Button>}
                     <Button size="sm" variant="ghost" onClick={() => setForm(p)}>{t("planning.programmes.edit")}</Button>
                     <Button size="sm" variant="ghost" className="text-destructive" onClick={() => remove(p)}>{t("planning.programmes.delete")}</Button>
                   </div>

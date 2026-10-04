@@ -212,3 +212,43 @@ export function quiPermis(p: { quiAutorises?: string[] }): string[] {
   const permis = p.quiAutorises ?? [];
   return permis.length === 0 ? [...QUI] : QUI.filter((q) => permis.includes(q));
 }
+
+/** Familles dont tous les groupes sont permis, dans l'ordre de l'écran. */
+export function famillesDe(quiAutorises: string[]): Famille[] {
+  return FAMILLES.filter((f) => f.qui.every((q) => quiAutorises.includes(q))).map((f) => f.cle);
+}
+
+/** Groupes permis par ces familles, dans l'ordre de QUI. */
+export function quiDesFamilles(cles: Famille[]): string[] {
+  const groupes = FAMILLES.filter((f) => cles.includes(f.cle)).flatMap((f) => [...f.qui] as string[]);
+  return QUI.filter((q) => groupes.includes(q));
+}
+
+/** Heure locale « HH:MM » (le navigateur, donc l'horloge simulée des tests). */
+export function heureLocale(now = new Date()): string {
+  return hhmm(now.getHours() * 60 + now.getMinutes());
+}
+
+/** Un créneau commencé (ou d'un jour passé) ne se réserve plus (Q11). */
+export function commence(jour: string, debut: string, today: string, maintenant: string): boolean {
+  return jour < today || (jour === today && debut <= maintenant);
+}
+
+/** Une place de la grille : un jour et un créneau. */
+export type Place = { jour: string; debut: string; fin: string };
+
+/** Créneaux de la grille encore réservables : à venir, pas commencés, sans
+ *  réservation qui les chevauche — sauf celle qu'on déplace (`sauf`). */
+export function creneauxLibres<C extends CreneauLike & { id: string }>(
+  saison: Pick<Saison, "debut" | "fin" | "plages" | "duree">,
+  jourJ: string,
+  creneaux: C[],
+  opts: { sauf?: string; today: string; maintenant: string },
+): Place[] {
+  const autres = creneaux.filter((c) => c.id !== opts.sauf);
+  return joursReservables(saison, jourJ)
+    .filter((jour) => jour >= opts.today)
+    .flatMap((jour) => grilleDuJour(saison, jour).map((g) => ({ jour, ...g })))
+    .filter((p) => !commence(p.jour, p.debut, opts.today, opts.maintenant))
+    .filter((p) => !autres.some((c) => c.dimanche === p.jour && c.debut < p.fin && p.debut < c.fin));
+}
