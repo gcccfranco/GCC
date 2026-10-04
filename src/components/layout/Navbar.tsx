@@ -102,7 +102,7 @@ export function Navbar() {
   return (
     <>
       <header
-        className={`fixed top-0 z-50 w-full h-[var(--nav-h)] pt-[var(--sat)] material-chrome print:hidden transition-transform duration-300 ${
+        className={`barre-haut fixed top-0 z-50 w-full h-[var(--nav-h)] pt-[var(--sat)] material-chrome print:hidden transition-transform duration-300 ${
           scrollVisible ? "translate-y-0" : "-translate-y-full"
         }`}
       >
