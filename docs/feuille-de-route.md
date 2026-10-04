@@ -128,7 +128,7 @@ s'affiche), un commit par lot, sur demande.
 | 12 | **Noël / Pâques : archivage et bascule automatiques** (Timothée, 18/09/2026) — tranché le 18/09/2026 | Après le jour J, l'onglet affiche **7 jours** « Noël, c'est passé » sans programme ni réservations, puis **s'archive** ; s'il existe un autre programme dont les réservations sont ouvertes, l'onglet **bascule dessus** et prend son nom. Alice garde Afficher/Masquer. **Un seul programme à la fois conservé** parce que `overlaps()` ne compare que les créneaux du programme courant : deux onglets simultanés laisseraient deux groupes réserver la scène à la même heure sans alerte | `SceneClient.tsx`, `lib/scene/dimanches.ts` | S |
 | 13 | **Tâches : rythme annuel, « en cours », relances** (Christelle, 18/09/2026) — tranché le 18/09/2026 | Rythme **« an »** ajouté à semaine / 2 semaines / mois (pas de bouton « dupliquer » : la tâche se regénère) ; trois états par échéance **À faire → En cours → Terminé** ; une tâche en cours reste dans la notification groupée du matin (« En cours depuis 3 jours ») **sans notification supplémentaire**, et **seulement après l'échéance dépassée** (règle du lot 1c). Aujourd'hui : fait / pas fait, rappels J-3, J-1 et **le lendemain** de l'échéance (rien le jour même, `messages.ts` l. 40-46), au responsable ou à tout le pôle | `types/tache.ts`, `lib/taches/*`, `cron/reminders` | M |
 | 14 | **Tâches ↔ évènements** (Christelle, 18/09/2026) — tranché le 18/09/2026 ; **go de Timothée le 19/09/2026 sur les lectures (a) et (e) de l’audit** : champ `evenement` facultatif sur la tâche + bloc « Tâches » sur la fiche, et glissement des échéances à la duplication (pas de champ « J-14 », pas de modèle, pas de back office) ; **codé le 19/09/2026** (`e13662e`, `spec-taches-evenements.md`, 15 tests × 3 appareils), à valider en local | Lien **à sens unique** : une tâche peut pointer un évènement, avec une échéance **relative au jour J** (« J-14 ») ; bloc « Tâches » sur la fiche, visible des seuls membres d'un pôle, avec « Nouvelle tâche » pré-remplie ; dupliquer un évènement annuel propose de **dupliquer ses tâches**, échéances recalculées. Pas de « back office » séparé : la page *Tâches* est déjà réservée aux pôles | `types/tache.ts`, `EvenementClient`, `/taches` | M |
-| 15 | **Petit déj dans l'app** (Christelle + Timothée, 18/09/2026 : « si c'est pas google sheets* » → « Le faire sur le site ») — tranché le 18/09/2026 | **Compte obligatoire** (« faut les forcer un peu à s'inscrire »). **Pas de compteur de places** : un dimanche est « Libre » ou porte une équipe ; s'inscrire ajoute une ligne pré-remplie à son nom, **réécrivable** (« Famille Chung ») ; chacun retire **sa** ligne, un admin n'importe laquelle. Notif du **mercredi** fondue dans le rappel du matin, seulement si le dimanche est libre, préférence « Petit déj » activée par défaut avec « Ne plus recevoir » dans le corps. Fusionné dans l'onglet **Table** (pas de 9ᵉ onglet). L'app fait foi, le Sheet reste lu en repli | `planning/table`, nouvelle collection Firestore, `reminderMessage.ts`, `notifPrefs` | M |
+| 15 | **Petit déj dans l'app** (Christelle + Timothée, 18/09/2026 : « si c'est pas google sheets* » → « Le faire sur le site ») — tranché le 18/09/2026 ; **révisé le 03/10/2026, devenu le lot U3** (§ 3.U ; `spec-petit-dej.md` révisée le 04/10/2026 : inscriptions seule source, plus de repli sur le Sheet, écrivains de la Table et admins posent et retirent des lignes pour d'autres ; ce qui suit dans cette ligne est l'état du 18/09) | **Compte obligatoire** (« faut les forcer un peu à s'inscrire »). **Pas de compteur de places** : un dimanche est « Libre » ou porte une équipe ; s'inscrire ajoute une ligne pré-remplie à son nom, **réécrivable** (« Famille Chung ») ; chacun retire **sa** ligne, un admin n'importe laquelle. Notif du **mercredi** fondue dans le rappel du matin, seulement si le dimanche est libre, préférence « Petit déj » activée par défaut avec « Ne plus recevoir » dans le corps. Fusionné dans l'onglet **Table** (pas de 9ᵉ onglet). L'app fait foi, le Sheet reste lu en repli | `planning/table`, nouvelle collection Firestore, `reminderMessage.ts`, `notifPrefs` | M |
 | 16 | **Organigramme, source des pôles** (Timothée, 18/09/2026 : « et aussi avoir un organigramme et tout ? ») — tranché le 18/09/2026 | Les 13 teams de l'onglet **ORGANIGRAMME** du Sheet (Orga, Comité Franco, DA, Médias, Développement, Régie, Traduction, Théologie, Événementiel, Décoration, Accueil J1, Louange, EDD), tenues **dans l'app** avec référent, membres et mention « en essai » ; placer quelqu'un dans une team **lui donne le pôle** (fin du cochage à la main). La matrice **TEAM MUSICIENS** n'est **pas** ressaisie : elle est **calculée** depuis `serviceRoles` (même information, 28 noms × 8 groupes), cases cliquables vers les fiches. Entrée « Équipes » dans *Moi*, pas un onglet de Planning | `/moi`, nouvelle page Équipes, `types/user.ts`, `access.ts` + `firestore.rules` | L |
 | 17 | **[G1–G3 codés le 18/09/2026 ; G4, G5, G6 codés le 19/09/2026 : tous les plannings se remplissent dans l'app et s'exportent en CSV ou en PDF ; affichage trimestre par trimestre depuis le 18/09 au soir]** **Planning en grille dans l'app** (Timothée, 18/09/2026 : « on ouvre maintenant ») — tranché le 18/09/2026 ; **planche cliquable publiée et VALIDÉE le 18/09/2026** (« Le planning comme ça c'est OK ») : https://claude.ai/artifact/BFqAet6GiSsY5z3FyX4LLn — la forme est arrêtée, spec `spec-planning-grille.md` | Trois tranches : **(1) grille en lecture** (`Franco_Louange` affiché comme le Sheet, Christelle écrit toujours dans Google, risque nul) ; **(2) écriture sur le seul Culte Franco** (import initial par bouton admin, rattachement des noms par `planningName`, liste des non-rattachés ; export **CSV** ; le Sheet devient l'archive) ; **(3) les groupes et le reste**, seulement après trois dimanches sans incident. **Apparence** : grille complète sur ordinateur et tablette, **une carte par dimanche sur téléphone** (option B, 11 colonnes ne tiennent pas dans 390 px). **Droits** : nouveau champ `plannings: string[]` sur le profil, **coché par un admin planning par planning** (« il faudrait que l'admin puisse choisir qui est autorisé à modifier les plannings et lesquels »), sur le modèle de `annonces` et `notify` ; les autres **lisent seulement** — qui n'est pas dispo envoie un message, comme aujourd'hui (seul le petit déj permet de se retirer soi-même). **Trimestre conservé** (groupe + période + jour) en **bandeau** au-dessus d'une grille continue, sans couper en quatre. Saisie libre acceptée pour les noms sans compte (« Pasteur ZHOU »). Enregistrement **case par case**, historique nommé, **pas de fenêtre de conflit** | `planning/*`, nouvelle collection Firestore, `sheets.ts`, `types/user.ts`, `access.ts` + `firestore.rules`, admin | XL |
 | 18 | **Mise en ligne, back-office coupé** (Timothée, 20/09/2026) — décisions prises le 20/09/2026, spec `spec-mise-en-ligne.md`, **attend le go** | Un interrupteur (`NEXT_PUBLIC_BACK_OFFICE`) coupe en ligne : tâches, équipes, **tout le planning en grille (lecture comprise)**, **toute la section Évènements**, scène, nouveaux blocs admin. Entrées masquées (barre du bas à quatre onglets), pages et routes en 404, planning = l'ancien tableau `PlanningTable` lu dans le Sheet seul, rappel du matin réduit aux services. Annonces retirées. **Après** le look 5C1 (`spec-look.md`, § 20/09/2026, tranches V1–V5), puis fusion dans `main` sur go explicite | `src/lib/backOffice.ts` (nouveau), navbar, barre du bas, « Moi », évènements, admin, `PlanningGrille`, `sheets.ts`, `cron/reminders`, `playwright.config.ts` | M |
@@ -765,6 +765,242 @@ dans `main`), et la tenue en charge (quotas Firestore, lecture du Sheet).
   `ChordLine` regroupe les morceaux d'un mot), `**` bruts dans une idée d'harmonie (rendue comme
   la fiche), PDF d'une fusion dont un chant manque (chaque page garde sa structure).
 
+### U. Demandes de Timothée du 03/10/2026 → Back-Office, grands écrans, petit déj, prototype
+
+**Mots de Timothée** : « Mets à jour la branche par rapport au main. Le planning du petit déjeuner.
+Toute la partie back-office dans un nouvel onglet/nouvelle partie du site. Avec un dashboard,
+calendrier etc… Pour avoir une vue globale de ce qui se passe et de ce qu'il y a à faire. Faire en
+sorte que le Dashboard soit personnalisable, avec des widgets et tout. Dans le Back-office, ajouter un
+onglet pour voir quels chants apparaissent le plus dans les setlists, avec le nombre de fois, le
+pourcentage etc… Je veux aussi que tu modifies les prototypes, le texte doit être en vecteur. » ;
+puis « Faire en sorte que la version sur ordi du site prenne toute la place qu'il y a sur l'écran du
+responsive, pour tablette aussi, il faut changer la disposition des pages » ; « il faut que tu me
+proposes des idées de design avant de tout coder […] sous forme d'artefact ou sur figma » ; « Avant de
+coder quoi que ce soit j'ai besoin que tu me montres tous les design ».
+
+**Fait le jour même** : `main` fusionné dans la branche (`1d2c140`, 11 commits, sans conflit ; typage,
+lint, 378 chants valides, `back-office-coupe` 70 verts × 3) ; doublons iCloud supprimés ; prototype
+Figma refait **en texte vectoriel** sur les trois pages (images sans texte + calques texte Inter /
+Noto Sans SC / Atkinson / Andika posés au pixel, flou sous la barre du bas ; 85 + 85 + 84 écrans),
+chaîne rangée dans `scripts/figma/` (README) ; **planche des designs** publiée :
+https://claude.ai/artifact/1d4ZW7Y9NVHcsLB9YrrbrA (14 écrans au départ, 34 dans la version 7 du soir,
+tableau de bord manipulable ; générateur dans `scripts/planche/`).
+
+**Tranché par l'entretien (deux tours)** :
+- Petit déj = **lot 15** (`spec-petit-dej.md`), avec deux changements : les inscriptions deviennent la
+  **seule source** (la case de la grille « Table » les affiche ; écrivains du planning Table et admins
+  ajoutent ou retirent des lignes ; plus de secours par le Sheet).
+- Une partie **« Back-Office »** (nom choisi par Timothée), visible de tout responsable (au moins un
+  droit), chacun n'y voyant que ses modules ; elle reprend tâches, équipes, planning en écriture,
+  gestion des évènements, scène, notifier, et **toute l'ancienne page Admin** (plus de section Admin),
+  plus trois nouveautés : tableau de bord, calendrier, statistiques des chants. Sur téléphone et
+  tablette en portrait : **sélecteur d'espace « App ↔ Back-Office »**.
+- **Tableau de bord** : disposition par personne enregistrée sur son compte, défaut selon le rôle ;
+  ajouter, retirer, réordonner (glisser **et** boutons), tailles, réglages par widget ; 10 widgets.
+- **Calendrier** : toutes les sources activables + « Seulement moi » ; Mois (ordinateur, tablette),
+  Agenda (téléphone) ; lecture, création depuis un jour, déplacement en glissant (évènements, tâches,
+  créneaux de scène, réunions de pôle ; confirmation, « Prévenir les inscrits »).
+- **Statistiques des chants** : **admins seulement** ; setlists publiées passées, un chant compté une
+  fois par setlist, fusions comptées, transitions ignorées ; nombre, %, dernière fois, tonalité la plus
+  jouée, tendance ; filtres période, service, langue, présidence ; « Jamais joués », « À redécouvrir ».
+- **Grands écrans** : Chants = liste et recherche à gauche, partition et tous les réglages à droite ;
+  avant de choisir, « Choisis un chant » et, pour un connecté, les chants de ses prochaines setlists ;
+  Setlist = sommaire à gauche, **toutes les partitions à la suite** à droite (copier-coller), page
+  « Modifier » gardée ; **2 colonnes seulement en mode louange** (un chant en 简谱 reste tel quel) ;
+  tablette : barre du bas en portrait, barre latérale repliable en paysage ; lecture plafonnée vers
+  1 440 px, grilles pleine largeur.
+- Mise en ligne : tout sur `ui/apple-design`, puis validation, **retrait de l'interrupteur** et fusion.
+- Ordre : petit déj → navigation grand écran → Chants et Setlist en deux volets + mode louange →
+  Back-Office (sélecteur, modules, Admin fusionnée, tableau de bord) → statistiques → calendrier.
+
+**Retours sur la planche (soir)** : **piste A** (une seule barre latérale), **réductible en icônes**
+sur ordinateur comme sur tablette ; **iPad paysage = ordinateur**, à l'identique ; **téléphone et
+tablette portrait = même modèle**, la tablette en plus grand ; **menu du Back-Office à 8 entrées** ;
+les setlists montrées sur la page Chants suivent **la règle de l'onglet Setlists** (`canSeeSetlist`) ;
+**barre du bas du Back-Office personnalisable** sur téléphone et tablette portrait (4 onglets au choix
+plus « Plus », enregistrés sur le compte ; la barre de l'App reste fixe) ; **widget Calendrier** en
+trois tailles (S les prochains jours, M la semaine, L le mois), sources réglables.
+
+**Décisions de la réunion de l'équipe (transmises le soir) et troisième tour** :
+- **Évènements** : le Sheet « [2026-2027] Calendrier des événements »
+  (`12FxK1sMrk08bFrVnL7BjCTJd6FXTqvRXyZoyDYhgPU8`) fait foi jusqu'en décembre 2026 ; le calendrier de
+  l'app le lit et se met à jour quand il change. **À partir de janvier 2027, les évènements se font
+  sur le site**, sans import.
+- **Planning 2027 dans le Back-Office** : colonnes et horaires de 2026 repris, **dates posées toutes
+  seules** (tous les dimanches de l'année).
+- **Export des plannings au modèle du Sheet** (celui de `SHEET_ID`, surtout les groupes) : **PDF et
+  .xlsx**, **tous les plannings**, chacun au modèle de son onglet ; **logo de l'église** sous son nom,
+  **pas de bas de page**.
+- **Réservations de la scène** dans le Back-Office : la coordination **définit la saison** (dates
+  d'ouverture et de fermeture, jours, plages horaires, durée d'un créneau, qui réserve) ; pas de
+  validation de chaque demande.
+- **Réunions** (pôles **et équipes de l'organigramme**) : une section **« Sujets à aborder »** (tout
+  membre en ajoute jusqu'au début ; l'auteur, l'organisateur et les admins en retirent ; l'organisateur
+  les ordonne et coche « traité ») ; **les sujets non traités restent en rouge**, et à la création
+  d'une nouvelle réunion on propose de **les reprendre** (oui : importés ; non : ils restent en rouge
+  dans l'ancienne) ; **lien Google Doc du compte rendu** collé par toute personne de la réunion ou un
+  admin, les membres prévenus par une ligne du rappel du matin ; rappel la veille, dans le rappel du
+  matin.
+- **Mise en ligne** : rien avant la fin ; la scène part en même temps que tout le Back-Office.
+- **Ordre des lots** (remplace celui des deux premiers tours) : scène → planning 2027 et export →
+  petit déj → navigation grand écran → Chants et Setlist en deux volets + mode louange → Back-Office
+  (sélecteur, modules, Admin fusionnée, tableau de bord) → statistiques → calendrier → évènements sur
+  le site en janvier 2027.
+
+**Demande du 04/10/2026** : « il faudrait aussi revoir l'onglet de création des setlists propose moi
+des idées. et pour les setlists, retire setlist B, C et F, propose moi autre choses à la place ».
+Planche version 8 (44 écrans) :
+- **Setlist sur téléphone et tablette portrait** : A, B, C, D et F écartés ; restent E (la liste qui
+  s'ouvre) et G (Liste et Partitions reliées) ; nouvelles : **H, le sommaire en tête** (une seule page :
+  la liste complète en haut, les partitions à la suite, pastilles qui descendent à la section,
+  « ↑ Sommaire » en fin de chant ; le grand écran empilé), **I, deux étages** (liste en haut, partitions
+  en bas, poignée à trois crans), **J, vue d'ensemble** (pincer la partition la rétrécit en cartes avec
+  les premières lignes). Toutes gardent les fonctions des vues Liste et Partitions.
+- **Créer une setlist** (l'éditeur, `SetlistForm.tsx`) : une entrée **« Pour quel service ? »** (les
+  prochains services sans setlist d'après le planning, préremplis ; « Autre setlist » ; « Repartir d'une
+  setlist passée », la duplication qui existe déjà), puis trois pistes : **1, la bibliothèque à côté**
+  (recherche et filtres à gauche, setlist à droite, glisser pour ajouter, réglages dépliés sous le
+  chant), **2, les réglages du chant à droite** (la setlist reste une liste courte ; tonalité,
+  structure, notes de section, fusion dans un volet à droite, en feuille sur téléphone et tablette),
+  **3, modifier sur la setlist même** (mode modification, « + » entre deux chants, partition à jour en
+  direct). Les chants passent avant le formulaire ; idées en plus : filtres langue, thème, tempo ;
+  « joué le … » dans la recherche (option) ; « Fusionner avec le chant suivant » à la place du mode
+  « Sélectionner » ; les chants déjà pris restent visibles, marqués « Dans la setlist ».
+
+**Tranché le 04/10/2026 (quatrième tour)** :
+- Setlist sur téléphone et tablette portrait : **G, Liste et Partitions reliées** (toucher un chant
+  ouvre les partitions à ce chant ; « Liste » ramène à la même ligne ; glisser d'une vue à l'autre).
+  E, H, I et J écartées.
+- Éditeur : **piste 3 écartée** ; Timothée veut voir **une fusion des pistes 1 et 2** (planche
+  version 10 : bibliothèque à gauche, setlist au milieu, réglages du chant à droite ; feuilles sur
+  téléphone et tablette ; pistes 1 et 2 gardées à côté pour comparer).
+- **« Pour quel service ? »** retenu comme entrée de la création.
+- **Pas de « joué le … »** dans la recherche des chants (les statistiques restent aux admins).
+- La fusion passe par un bouton **« Fusionner »** (à la place du mode « Sélectionner »).
+- Retenus aussi : filtres langue, thème et tempo ; chants déjà pris gardés dans la recherche avec
+  « Dans la setlist » ; aperçu des premières lignes ; « + » entre deux chants sur ordinateur.
+- L'éditeur devient le **lot 5 bis**, juste après « Chants et Setlist en deux volets ».
+
+**Tranché le 04/10/2026 (cinquième tour, fin de l'entretien)** :
+- Éditeur de setlist : **piste 2** (la setlist à gauche, les réglages du chant à droite ; la
+  bibliothèque s'ouvre à droite pour ajouter des chants ; feuilles sur téléphone et tablette). La
+  fusion des pistes 1 et 2 et la piste 1 sont écartées.
+- **« Fusionner »** : on choisit les chants à fusionner (pas d'office le chant suivant) ; le bouton
+  remplace le mode « Sélectionner ».
+- Barre latérale : **sur tablette en paysage, toujours réduite** (icônes) ; dans l'éditeur, réduite
+  d'office sur un écran d'ordinateur de moins de 1 440 px (question posée pour la fusion à trois
+  colonnes : à revoir dans la spec avec les deux colonnes de la piste 2).
+- Écrans réunions, réservations de la scène et export avec logo : **validés**.
+- Évènements jusqu'en décembre 2026 : l'app **relit le Sheet à chaque ouverture**, comme le planning.
+
+**Suite** : specs lot par lot, dans l'ordre : scène → planning 2027 et export → petit déj →
+navigation grand écran → Chants et Setlist en deux volets + mode louange + setlist G → éditeur (5 bis)
+→ Back-Office → statistiques → calendrier → évènements sur le site en janvier 2027. Chaque lot : spec,
+validation de Timothée, go explicite, code et tests Playwright sur les trois appareils, commit sur
+demande. À préciser dans les specs : où commence « Fusionner » (réglages du chant, liste) ; si la barre
+latérale de la tablette paysage peut se déplier à la demande. La planche montre encore la fusion, la
+piste 1 et un iPad paysage à barre dépliée, désormais écartés : à aligner aux lots 4 et 5 bis.
+
+**Specs écrites le 04/10/2026** (aucune validée, aucun go ; soumises à Timothée une à une, dans l'ordre ;
+chacune finit par ses questions ouvertes, avec une recommandation) :
+
+| Lot | Spec | Questions |
+| --- | --- | --- |
+| U1 scène, saison de réservation | `spec-scene-saison.md` | 6 |
+| U2 planning 2027 et export PDF / .xlsx | `spec-planning-2027.md` | 11 |
+| U3 petit déj (ex-lot 15, révisée) | `spec-petit-dej.md` | 8 |
+| U4 navigation grand écran | `spec-navigation-grand-ecran.md` | 8 |
+| U4 bis toutes les pages en grand (écrite le 05/10/2026, d'après la planche version 17) | `spec-pages-en-grand.md` | 5 |
+| U5 Chants et Setlist en deux volets, mode louange 2 colonnes, setlist G | `spec-deux-volets.md` | 9 |
+| U5 bis éditeur de setlist | `spec-editeur-setlist.md` | 10 |
+| U6 Back-Office | `spec-back-office.md` | 14 |
+| U7 statistiques | `spec-statistiques.md` | 7 |
+| U8 calendrier | `spec-calendrier.md` | 9 |
+| U9 évènements sur le site en janvier 2027 | `spec-evenements-2027.md` | 5 |
+
+Réponses proposées aux trois points laissés aux specs : « Fusionner » commence dans les réglages du chant,
+là seulement, et ouvre le choix des chants (U5 bis, Q1) ; la barre de la tablette paysage se déplie à la
+demande, par-dessus la page, et se referme après le choix (U4, question 1) ; l'éditeur ne réduit plus la
+barre d'office (U5 bis, Q2 : deux colonnes tiennent dès 1 280 px barre dépliée). **Planche alignée** :
+version 11 (31 écrans : fusion, piste 1 et iPad à barre dépliée retirés, piste 2 sur iPad paysage ajoutée),
+puis les écrans manquants de la piste 2 (bibliothèque, choix des chants à fusionner, liste sur téléphone).
+
+**Tranché le 04/10/2026 (suite)** :
+- **U2 validée, go** : réponses 1, 2, 4 à 11 « oui » (bibliothèque `write-excel-file` ajoutée ; export au modèle
+  du Sheet à la place du CSV et de l'ancien PDF ; nom chinois de l'église en Ma Shan Zheng ; heures « 13:00 » ;
+  Table en un tableau par trimestre ; dates d'Interfranco, Intergroupe et Campus qu'on peut retirer ; en-tête
+  des groupes sur tous les exports ; colonnes Percussion et Cours ajoutées) ; la 3 tombe : **le chantier sera
+  en ligne avant le 01/12/2026**.
+- P1 (dates du Sheet) codé et commité en local (`b483d9d`), **pas poussé** : « je t'ai pas dit de push sur le
+  main » — le correctif part sur `main` seulement quand Timothée le demande.
+- **Coder toutes les specs, avec des agents en parallèle** (« Lance plusieurs agents si besoin pour coder les
+  autres specs en même temps », « crée des agents pour coder les specs plus rapidement ») ; une question ouverte
+  sans réponse prend la recommandation de sa spec, comme pour U2. Chaque agent code dans une copie à part
+  (`git worktree`, ports de test à lui) ; son travail revient dans le dossier de Timothée **non commité**, pour
+  qu'il teste en local ; aucun push. Vagues : U1, U2, U4 d'abord ; puis U3 (après U2), U5 et U5 bis (après U4),
+  U6 (après U4) ; puis U7 et U8 (après U6) ; U9 en dernier.
+- **Prototypes Figma après le code**, pas avant (« je veux que tu codes d'abord les specs et après tu fais les
+  prototypes figma pas l'inverse ») : capturés sur le site codé, texte en vecteur, comme le 03/10.
+- **Accueil sur grand écran** (« qu'est ce que tu as prévu pour la page d'accueil en mode ordinateur et paysage
+  tablette ? ») : rien n'était prévu (Planning › Accueil restait une colonne de 672 px). Pistes dessinées sur la
+  planche, version 14 : **A** « Ce dimanche » et « Pour moi » côte à côte (recommandée), **B** grille de cartes
+  « pour moi » d'abord, **C** la colonne d'aujourd'hui ; ordinateur et iPad paysage. Choix attendu.
+  Version 15 (« revois peut-être les dispositions en mode portrait tablette et téléphone ») : A et B aussi en
+  tablette portrait (deux colonnes : prochain service et setlist côte à côte, puis « Ce dimanche » ; la page
+  tient presque dans le premier écran) et sur téléphone (page entière, trait au bas du premier écran), plus le
+  téléphone d'aujourd'hui pour comparer. Sur téléphone, **A** ramasse « Pour moi » en une carte (prochain
+  service et setlist, « Ensuite » reste dans Mes services) pour que « Ce dimanche » entre dans le premier
+  écran ; **B** garde les cartes complètes et résume « Ce dimanche » en une carte. Groupes et EDD : une ligne
+  par groupe dans A et B, le détail reste dans leur onglet. Sans service à venir, « Pour moi » disparaît.
+- **Toutes les pages en pleine largeur** sur ordinateur et iPad paysage (« il faudrait que toutes les pages du
+  site ait une version ordinateur qui prend toute la taille de l'écran pareil pour l'ipad en paysage ») : les
+  pages hors des specs (Setlists, Mes services, Moi, profil, guide, évènements, Harmonie, équipes, Mes tâches,
+  connexion, contenu du Back-Office) sont dessinées sur la planche ; une spec de plus, **U4 bis — toutes les
+  pages en grand**, suivra le choix des designs, à coder après U4. Règle proposée : une liste passe en deux volets
+  (liste + détail), une lecture garde une colonne lisible accompagnée d'un sommaire, les grilles prennent toute la
+  largeur, plus de colonne étroite au milieu de l'écran.
+  Planche version 16 (05/10/2026, 82 écrans) : 36 écrans en rangées R8 à R14, chaque page sur ordinateur, iPad
+  paysage et tablette portrait (un volet qui utilise la largeur) ; téléphone inchangé. Pages : Setlists,
+  Évènements, Harmonie (catalogue, cours, sons du RD-2000), Mes services, Mes tâches, Moi, Mon profil, Guide,
+  Équipes, Connexion et inscription, Back-Office › Messages › Réception. Onze questions à trancher, une par page
+  (aperçu avant d'ouvrir une setlist, « Nouvel évènement » en encre, filtres d'Harmonie, équipe dans Mes services,
+  fiche d'une tâche, carte du compte dans Moi, notifications dans Réglages, captures du guide, ordre des équipes,
+  titre de la connexion, filtres de la Réception).
+
+**Tranché le 05/10/2026** (réponses à la planche version 16) :
+- **Accueil = piste A** sur ordinateur, iPad paysage, tablette portrait et téléphone (« Accueil : A ; Accueil
+  téléphone : A ») : « Ce dimanche » et « Pour moi » côte à côte sur grand écran ; en tablette portrait, prochain
+  service et setlist côte à côte puis « Ce dimanche » ; sur téléphone, « Pour moi » en une carte (prochain service
+  et sa setlist) pour que « Ce dimanche » entre dans le premier écran ; Groupes et EDD en une ligne par groupe.
+- **Les onze questions des pages en grand : recommandations** (« Je suis ok pour tout ») : aperçu à droite avant
+  d'ouvrir une setlist (grand écran) ; « Nouvel évènement » en encre ; filtres d'Harmonie en rangées ; équipe du
+  service dans Mes services ; fiche d'une tâche à lire avec « Modifier » ; carte du compte dans Moi ; notifications
+  dans Moi › Réglages (plus dans le profil) ; captures du guide refaites une fois le code fait ; Louange et EDD en
+  dernier dans Équipes ; « Connexion » au lieu de « Connexion présidents de séance » ; Réception en une liste avec
+  filtres « Tout · Signalements · Propositions ». Moi perd aussi Notifier et Admin, rangés au Back-Office (U6, B2).
+- **Équipes refaite** (« aucun écran est aussi grand, il faudrait pouvoir slide vers la gauche et vers la droite
+  pour en voir plus ») : l'organigramme tient dans la hauteur de l'écran et défile de gauche à droite.
+- **Téléphone pour toutes les pages** (« il manque aussi les rendus sur téléphone pour pas mal de choses ») :
+  dessinés sur la planche, avec les tablettes portrait qui manquaient (cours, sons du RD-2000, inscription).
+  Planche **version 17** (05/10/2026, 115 écrans) ; spec **U4 bis** écrite (`spec-pages-en-grand.md`, 5 questions).
+  Alignés au passage sur des décisions déjà prises : Mes tâches = « À faire pour moi », les pages des pôles au
+  Back-Office (U6, B3) ; agenda du téléphone en cartes à bannière (maquettes du 16/09) ; accords en noir dans la
+  vue par section (20/09).
+- **Planche version 17 validée** (« la planche me convient », 05/10/2026) ; les cinq questions de U4 bis
+  prennent leurs recommandations (verset gardé en bas de l'accueil, aperçu de setlist par l'adresse, fiche de
+  tâche en page sur téléphone, tableau d'une leçon en blocs empilés sur téléphone, filtres d'Harmonie avant
+  « Par où commencer »). Le design du chantier est fini ; suite = le code des specs, dans une nouvelle
+  conversation (point de reprise dans la mémoire de Claude).
+
+**Remarqué en écrivant les specs (04/10/2026), deux défauts déjà en ligne** :
+- **Accords retouchés sur un scan 简谱 effacés** : `FormItem` ne porte pas `jianpuChords`, `buildSetlistItems`
+  ne l'écrit pas et `updateSetlist` réécrit `items` en entier ; un enregistrement dans « Modifier » efface les
+  retouches de la présidence (mode Adapter). Correctif = T1 de U5 bis, ou à part si Timothée le veut avant.
+- **Services fantômes à partir du 01/11/2026** : `inferYear` (`sheets.ts:48-55`) range en novembre et décembre
+  les JJ/MM de janvier et février dans l'année suivante ; le Sheet gardant 2026, « Mes services » montrera
+  dès le 01/11 des services de janvier-février 2027 qui n'existent pas, et le rappel du matin en enverra dès
+  le 28/12. Correctif = P1 de U2, seul à pouvoir partir sur `main` avant le reste (U2, question 2).
+
 ## 4. Carte des modules de l'app « GCC »
 
 À valider par Timothée avant toute spec de module (les modules existants ne
@@ -1056,6 +1292,11 @@ porte le nom « GCC » et le menu par sections dont ces modules ont besoin.
   du RD-2000 (S0–S4) codés sur go, avec des agents pour l'import du cours, la correction du
   classeur et le remplacement de trois scans ; trois défauts relevés la veille corrigés. Rien
   commité.
+
+- 03–04/10/2026 : **chantier Back-Office, grands écrans, petit déj, setlist** (§ 3 U). `main` fusionné
+  (`1d2c140`), prototype Figma en texte vectoriel, planche des designs (version 10 puis 11), entretien en
+  cinq tours, puis les dix specs U1 à U9 écrites le 04/10 (U1 par Claude, les autres par des agents en
+  parallèle, relues et raccordées entre elles). Deux défauts déjà en ligne relevés. Rien codé, rien commité.
 
 ## 7. Relecture adversariale (14/09/2026)
 
