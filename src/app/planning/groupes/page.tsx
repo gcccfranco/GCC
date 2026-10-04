@@ -8,8 +8,10 @@ import { StaleBanner } from "@/components/planning/StaleBanner"
 import { getCurrentTri, getTri } from "@/lib/planning/utils"
 import { PAIX_FALLBACK, FIDELITE_FALLBACK, FIDELITE_MUSIC_FALLBACK, BONTE_FALLBACK } from "@/lib/planning/data"
 import { fetchPaix, fetchFidelite, fetchFideliteMusic, fetchBonte } from "@/lib/planning/sheets"
-import { GRILLE_BONTE, GRILLE_FIDELITE, GRILLE_FIDELITE_MUSICIENS, GRILLE_PAIX, anneesDuPlanning, lignesDeLAnnee, lignesPubliees } from "@/lib/planning/grilles"
+import { GRILLE_BONTE, GRILLE_FIDELITE, GRILLE_FIDELITE_MUSICIENS, GRILLE_PAIX, anneesDuPlanning, dimanchesDe, lignesDeLAnnee, lignesPubliees } from "@/lib/planning/grilles"
 import { AnneeSelecteur } from "@/components/planning/AnneeSelecteur"
+import { BandeauAnnee } from "@/components/planning/BandeauAnnee"
+import { BoutonPublication } from "@/components/planning/BoutonPublication"
 import { useGrilleApp } from "@/lib/planning/useGrilleApp"
 import { useProfile } from "@/lib/firebase/users"
 import { canEditPlanning, isAdminUser } from "@/lib/access"
@@ -18,6 +20,7 @@ import {
   PUBLISHABLE_PLANNINGS,
   canPublishPlanning,
   getPublishedQuarters,
+  triRank,
   triVisibilitiesAnnee,
 } from "@/lib/planning/releases"
 import { BACK_OFFICE } from "@/lib/backOffice"
@@ -106,6 +109,10 @@ function GroupesPage() {
     { [effAnnee]: publies(effAnnee) },
   ).filter((l) => getTri(l.row[0]) === effTri)
 
+  // « Publier le T1 » / « Masquer le T1 » : un trimestre à venir, pour qui peut publier.
+  const aVenir = effAnnee > anneeCourante || (effAnnee === anneeCourante && triRank(effTri) > triRank(getCurrentTri()))
+  const brouillon = effAnnee > anneeCourante && voitBrouillon && unpublishedTris.length > 0
+
   function changerAnnee(a: number) {
     setAnnee(a)
     setTri(a === anneeCourante ? getCurrentTri() : "T1")
@@ -119,9 +126,24 @@ function GroupesPage() {
           <AnneeSelecteur annees={annees} annee={effAnnee} onChange={changerAnnee} />
         </div>
         {loading && <span className="text-xs text-muted-foreground">{t("common.loading")}</span>}
+        {canPublish && effTri && aVenir && (
+          <BoutonPublication
+            planningKey={planning.key}
+            planningLabel={planning.label}
+            annee={effAnnee}
+            tri={effTri}
+            publie={!unpublishedTris.includes(effTri)}
+            onChange={(published) => setPubByGrp((prev) => ({ ...prev, [`${grp}_${effAnnee}`]: published }))}
+          />
+        )}
       </div>
 
       <StaleBanner show={stale} />
+      <BandeauAnnee
+        annee={effAnnee}
+        brouillon={brouillon}
+        dimanches={brouillon && definition.dates === "dimanches" ? dimanchesDe(effAnnee).length : null}
+      />
 
       <div className="flex gap-2">
         {(["paix","fidelite","bonte"] as Groupe[]).map(g => (

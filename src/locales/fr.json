@@ -1153,6 +1153,8 @@
     },
     "publier": "Publier le {{tri}}",
     "masquer": "Masquer le {{tri}}",
+    "publierConfirm": "Publier le {{tri}} {{annee}} de {{planning}} ? Tous ses membres le verront et recevront une notification.",
+    "publierEchec": "La publication a échoué. Réessaie.",
     "export": {
       "bouton": "Exporter (modèle du Sheet)",
       "titre": "Exporter",

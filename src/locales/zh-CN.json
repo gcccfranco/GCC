@@ -1153,6 +1153,8 @@
     },
     "publier": "发布 {{tri}}",
     "masquer": "隐藏 {{tri}}",
+    "publierConfirm": "发布{{planning}} {{annee}} 年 {{tri}}？所有成员都将看到并收到通知。",
+    "publierEchec": "发布失败，请重试。",
     "export": {
       "bouton": "导出（表格样式）",
       "titre": "导出",

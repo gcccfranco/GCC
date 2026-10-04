@@ -109,3 +109,56 @@ test("Paix 2027 : une case s'écrit seule (rien recopié) et tient au rechargeme
   await page.getByRole("button", { name: "T1", exact: true }).click();
   await expect(laCase(page, "2027-01-10", "presidence")).toContainText("Invité A.");
 });
+
+// ─── Brouillon et publication (Q4) ──────────────────────────────────────────
+
+const PUBLIEUR: FakeProfile = { uid: "uid-publieur", email: "publieur@example.com", planningName: "Publieur P.", notify: ["Groupe Paix"] };
+const CASE_2027 = { "plannings/paix/dimanches/2027-01-10": { date: "2027-01-10", presidence: "Invité A." } };
+
+test("Paix 2027 : un membre ne voit pas 2027 tant que rien n'est publié", async ({ page }) => {
+  await ouvrir(page, MEMBRE, "/planning/groupes", CASE_2027);
+  await expect(page.getByTestId("grille-bandeau")).toContainText("Paix");
+  await expect(page.getByRole("button", { name: "2027", exact: true })).toHaveCount(0);
+  await expect(page.getByText("Invité A.")).toHaveCount(0);
+});
+
+test("Paix 2027 : l'écrivain sans droit de publier voit le brouillon, marqué, et le bandeau", async ({ page }) => {
+  await ouvrir(page, ECRIVAIN, "/planning/groupes", CASE_2027);
+  await page.getByRole("button", { name: "2027", exact: true }).click();
+  const bandeau = page.getByTestId("bandeau-annee");
+  await expect(bandeau).toContainText("2027 · brouillon");
+  await expect(bandeau).toContainText("les 52 dimanches de 2027 sont déjà posés");
+  await expect(laCase(page, "2027-01-10", "presidence")).toContainText("Invité A.");
+  await expect(page.locator("[data-non-publie='2027-01-10']").filter({ visible: true })).toHaveCount(1);
+  await expect(page.getByRole("button", { name: "Publier le T1" }), "publier demande le droit notify").toHaveCount(0);
+});
+
+test("Paix 2027 : « Publier le T1 » appelle la route avec l'année, puis propose « Masquer le T1 »", async ({ page }) => {
+  const db = await ouvrir(page, PUBLIEUR, "/planning/groupes", CASE_2027);
+  const corps: unknown[] = [];
+  // Route simulée : jamais de vraie notification.
+  await page.route("**/api/planning/release", async (route) => {
+    const body = route.request().postDataJSON() as { tri: string; publish: boolean };
+    corps.push(body);
+    const published = body.publish ? [body.tri] : [];
+    db.set("planningReleases/paix_2027", { published });
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: true, published, notified: body.publish, sent: 0 }) });
+  });
+  page.on("dialog", (d) => void d.accept());
+  await page.getByRole("button", { name: "2027", exact: true }).click();
+  await page.getByRole("button", { name: "Publier le T1" }).click();
+  await expect(page.getByRole("button", { name: "Masquer le T1" })).toBeVisible();
+  expect(corps).toEqual([{ key: "paix", tri: "T1", publish: true, year: 2027 }]);
+  await expect(page.locator("[data-non-publie='2027-01-10']").filter({ visible: true })).toHaveCount(0);
+});
+
+test("Paix 2027 : T1 publié, le membre voit 2027 et son T1 le 15/11/2026, pas le T2", async ({ page }) => {
+  await ouvrir(page, MEMBRE, "/planning/groupes", {
+    ...CASE_2027,
+    "planningReleases/paix_2027": { published: ["T1"] },
+  });
+  await page.getByRole("button", { name: "2027", exact: true }).click();
+  await expect(laCase(page, "2027-01-10", "presidence")).toContainText("Invité A.");
+  await expect(page.getByTestId("bandeau-annee")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "T2", exact: true })).toHaveCount(0);
+});
