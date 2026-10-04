@@ -1,285 +1,327 @@
-# Spec : inscription au petit déj dans l'app (lot 15)
+# Spec : lot U3 (ex-lot 15) — inscription au petit déj dans l'app
+
+Spec écrite le 18/09/2026, révisée le 04/10/2026 ; rien n'est codé. Attend la validation de Timothée, puis son go.
+
+Révisée le 04/10/2026 : les inscriptions deviennent la seule source (plus de repli sur le Sheet), la case « Petit déj »
+de la grille Table les affiche, les écrivains du planning Table et les admins posent et retirent des lignes pour
+d'autres, les noms à venir de la grille sont repris une fois ; d'où un document par ligne, une règle « écrivain Table »,
+un rattachement par compte, une reprise, le lot derrière l'interrupteur. Chemins revérifiés sur le code du 04/10.
+
+## Mots
 
 Christelle et Timothée, WhatsApp du 18/09/2026 :
 
-> « du coup tout le monde doit se créer un compte alors ? ou est-ce que tu
-> laisses petit dej visible et inscription sans connexion » — « faut les forcer
-> un peu à s'inscrire » — « ouais » ; « si c'est pas google sheets* » — « Le
-> faire sur le site » ; « Soit onglet petit dej et les gens choisissent la date
-> pour s'inscrire » ; « et tant qu'il reste des places toutes les semaines ça
-> envoie une notif aux gens pour s'inscrire au petit dej » ; « Après le truc
+> « du coup tout le monde doit se créer un compte alors ? ou est-ce que tu laisses petit dej visible et inscription
+> sans connexion » — « faut les forcer un peu à s'inscrire » — « ouais » ; « si c'est pas google sheets* » — « Le
+> faire sur le site » ; « Soit onglet petit dej et les gens choisissent la date pour s'inscrire » ; « et tant qu'il
+> reste des places toutes les semaines ça envoie une notif aux gens pour s'inscrire au petit dej » ; « Après le truc
 > c'est que le petit déj pas tout le monde est chaud pour faire ».
 
-Statut : **spec écrite le 18/09/2026, rien n'est codé ; attend le go de Timothée.**
+Timothée, 03/10/2026 : « Le planning du petit déjeuner. » Tranché au deuxième tour de l'entretien
+(`feuille-de-route.md` § 3.U) : T8 à T11. Écran validé : planche des designs, version 10, « Petit déj · Planning ›
+Table (téléphone) » (`petit-dej-telephone`).
 
-## Ce que le code montre (18/09/2026)
+## Ce que le code montre (04/10/2026)
 
-- Le petit déj est **lu, jamais écrit** : `parsePetitDej`
-  (`src/lib/planning/sheets.ts` l. 117-133) prend les paires DATE / NOM de
-  l'onglet `Franco_Table_PtD` (colonnes 17-18 pour janvier → juin, 19-20 pour
-  juillet → décembre), coupe les cases sur « & » et rend des lignes
-  `[date ISO, noms]`. `fetchPetitDej` (l. 135-138) réutilise l'onglet de la
-  Prépa. Table, donc le cache mémoire évite un second appel.
-- `PlanningData.petitDej` (`src/lib/planning/names.ts` l. 17-18) n'a **aucune
-  donnée de secours** (l. 40-41) : il n'apparaît que s'il est lu.
-- Le petit déj est **déjà un service à part entière** :
-  `scan(data.petitDej, "Petit déj", [[1, "Équipe"]])` (`names.ts` l. 261) le met
-  dans « Ce dimanche », « Mes services » et les rappels ; « Équipe » est un rôle
-  muet (`SILENT_ROLES`, `src/lib/push/reminderMessage.ts` l. 26) et « Petit
-  déj » se traduit déjà 早餐 (l. 50). `servantsForDate` (`names.ts` l. 411-412)
-  le compte comme une présence simple, sans catégorie ni rôle.
-- Écrans : « Ce dimanche » n'affiche la ligne que si la case est remplie
-  (`src/app/planning/page.tsx` l. 59, 76, 107, 200-205). L'onglet **Table**
-  (`src/app/planning/table/page.tsx`) ne lit que `fetchDejeuner` : il ignore le
-  petit déj, alors que c'est **le même onglet du Sheet**. Il filtre par
-  trimestre (`filterByTri`, `getCurrentTri`, `src/lib/planning/utils.ts`
-  l. 22-29) et marque le dimanche en cours (`currentSundayStr`, l. 62-68).
-- **Aucune couleur à ajouter** : `serviceColor` (`src/lib/serviceColors.ts`
-  l. 54-56) donne déjà au « Petit déj » l'orange de la Prépa. Table (`#c87941`)
-  « aucune couleur nouvelle n'est introduite (palette gelée) ». Le fichier gelé
-  n'est pas touché.
-- Préférences de notification : `NOTIF_TYPES` (`src/types/user.ts` l. 73) pilote
-  tout — la lecture (`src/lib/firebase/notifPrefs.ts` l. 16), les valeurs par
-  défaut (l. 77-83), les libellés (l. 89-95) et la liste de bascules
-  (`src/components/push/PushToggle.tsx` l. 133-141, construite par `.map`). Côté
-  serveur, `filterUidsByNotifPref` (`src/lib/push/recipients.ts` l. 87-93)
-  **garde tout uid qui n'a pas explicitement mis le type à `false`** : un type
-  nouveau est donc actif par défaut, sans migration.
-- Le cron est **unique et quotidien** (`vercel.json` : `0 8 * * *`, Hobby = 2
-  crons au plus). `src/app/api/cron/reminders/route.ts` sait déjà fondre une
-  ligne dans le message du matin : les tâches (l. 160-166, 219) et les
-  ouvertures d'inscriptions (l. 167-175, 219) sont des `Map<uid, …>` ajoutées au
-  rappel de service, et envoyées seules seulement si la personne n'a rien
-  d'autre ce jour-là (l. 236-272). L'anti-doublon est un document `notifLog`
-  par clé et par uid (l. 48-75). `db.collectionGroup("taches").get()` sans
-  filtre (l. 96) montre qu'une lecture de groupe de collections passe telle
-  quelle.
-- `firestore.rules` : `evenements/{id}/inscriptions` existe déjà (l. 158-164) —
-  une sous-collection nommée `inscriptions` ailleurs se mélangerait dans une
-  requête de groupe. `setlists/{id}/versions/{uid}` (l. 238-244) est le patron
-  exact d'un document par personne écrit par son propriétaire.
-- Écriture client : tout passe par REST (`FS_BASE`,
-  `src/lib/firebase/setlists.ts` l. 48) ; `src/lib/firebase/harmonie.ts`
-  l. 46-63 montre le `runQuery` et le `DELETE` d'une sous-collection.
+- **Deux sources, aucune inscription.** `fetchTable` (`src/lib/planning/sheets.ts:158-160`) fusionne dimanche par
+  dimanche la grille « table » de l'app et l'onglet `Franco_Table_PtD` (`fusionnerLignes`,
+  `src/lib/planning/grilles.ts:237-241`) : colonne 1 l'équipe, colonne 2 le petit déj (`GRILLE_TABLE`, l. 135-142),
+  pris dans le bloc « PETIT DÉJEUNER » du Sheet (`parsePetitDej`, `sheets.ts:131-141`) ou tapé dans la grille par un
+  porteur du droit `table`. `fetchPetitDej` (l. 168-170) en tire `[date, noms]` pour `loadPlanningData`
+  (`src/lib/planning/names.ts:29-52`, douze appelants) et « Ce dimanche » (`src/app/planning/page.tsx:77`).
+- **Interrupteur coupé** (en ligne) : `grilleDeLApp` (`sheets.ts:7-10`) ne lit pas la grille, le petit déj vient du
+  Sheet ; la page Table sert `AncienTableau` (`src/app/planning/table/page.tsx:58`), Prépa. Table seule
+  (`AncienTableau.tsx:21`). **Ouvert** (local) : `PlanningGrille` (`table/page.tsx:26-55`), « Modifier » pour qui a le
+  droit (`canEditPlanning`, `src/lib/access.ts:185-192`), export ; une case s'écrit dans
+  `plannings/table/dimanches/{date}` (`ecrireCase`, `src/lib/firebase/planningGrille.ts:31-51`), qui recopie les
+  autres cases d'un dimanche absent (`semer`, l. 38-42) ; l'import G4 écrit toutes les colonnes (`documentDimanche`,
+  `src/lib/planning/import.ts:25-34`).
+- **Le planning exige un compte** : `RequireAuth` (`src/app/planning/layout.tsx:8`). La ligne « Sans compte » du
+  18/09 ne pouvait pas exister ; les commentaires « consultées sans compte » (`firestore.rules:30-31`, l. 388-389 ;
+  `src/lib/planning/grille.ts:3-5`) sont périmés, on n'y touche pas ici.
+- **Un service, rattaché par le nom seulement.** `findMyServices` (`names.ts:264`) et `servantsForDate`
+  (l. 414-420) lisent la colonne 1 ; « Ce dimanche » n'affiche le petit déj que s'il est rempli
+  (`planning/page.tsx:201-206`) ; rôle « Équipe » muet, 早餐 (`src/lib/push/reminderMessage.ts:25`, l. 50) ; orange
+  de la Table (`src/lib/serviceColors.ts:54-56`, gelé). Un compte sans `planningName` n'a rien : « Mes services » lui
+  dit de choisir son nom (`src/app/mes-services/page.tsx:184`), « Ce dimanche » ne cherche pas son service
+  (`planning/page.tsx:91`), le cron tire ses destinataires des noms de `servantsForDate`
+  (`src/app/api/cron/reminders/route.ts:202-212`). L'assemblée n'a en général pas de nom de planning.
+- **Droit d'écrire un planning** : `plannings: string[]` coché par un admin (`src/types/user.ts:67-71`) ; côté
+  serveur, `peutEcrirePlanning(key)` (`firestore.rules:392-394`) lit le profil (l. 51-57) : une lecture facturée par
+  requête, même citée deux fois (page « Firestore pricing » ; gratuit : 50 000 lectures par jour).
+- **REST** : `fetchGrille` lit `plannings/*` sans jeton (`grille.ts:37-82`, `read: if true`, `firestore.rules:396-401`)
+  pour les pages et le cron, et rend le dernier cache ou rien sur erreur (l. 66, 79-80) ; `ajouterIdee` (POST, id
+  automatique), `modifierIdee` (`updateMask`), `supprimerIdee` (`src/lib/firebase/harmonie.ts:124-154`).
+- **Préférences** : `NOTIF_TYPES`, `DEFAULT_NOTIF_PREFS`, `NOTIF_TYPE_LABELS` (`types/user.ts:86-106`, libellés en
+  français seulement), bascules `src/components/push/PushToggle.tsx:133-143` ; `filterUidsByNotifPref`
+  (`src/lib/push/recipients.ts:87-93`) garde tout uid qui n'a pas mis le type à `false` : actif par défaut.
+- **Rappel du matin** (un seul cron, `vercel.json`, 08:00 UTC) : tâches et ouvertures d'inscriptions sont des
+  `Map<uid, …>` fondues dans la première notification de service (`route.ts:177-192`, l. 236), envoyées seules sinon
+  (l. 253-289), anti-doublon `notifLog` (l. 50-77), coupées avec l'interrupteur (l. 174-185) ; les créneaux de scène
+  sont rattachés **par `auteurUid`** (l. 214-224).
 
-## Décisions de Timothée (18/09/2026) — à ne pas rouvrir
+## Décisions de Timothée — à ne pas rouvrir
 
 | # | Décision |
 | --- | --- |
-| T1 | **Compte obligatoire** pour s'inscrire (« faut les forcer un peu à s'inscrire »). Sans compte, on lit, on ne s'inscrit pas. |
+| T1 | **Compte obligatoire** pour s'inscrire (« faut les forcer un peu à s'inscrire »). *(Le planning entier exige déjà un compte.)* |
 | T2 | **Pas de compteur de places** (« ça peut être une personne ou 4 c'est variable ») : un dimanche est **« Libre »** ou porte une **équipe**. |
 | T3 | S'inscrire ajoute une **ligne pré-remplie à son nom**, **réécrivable librement** (« Famille Chung », « Les jeunes du Campus »). |
-| T4 | Chacun retire **sa** ligne tant que le dimanche n'est pas passé ; un admin retire n'importe laquelle. **Seul endroit du site où l'on se retire soi-même** — pour le planning, qui n'est pas dispo envoie un message. |
-| T5 | Notification **le mercredi**, **fondue dans le rappel groupé du matin** (jamais une notification de plus, règle du lot 1c), seulement si le dimanche qui vient est **libre**, préférence « Petit déj » **activée par défaut**, « Ne plus recevoir » dans le corps. |
-| T6 | **Pas de 9e onglet** : le petit déj vit dans l'onglet **Table** du planning — c'est déjà le même onglet du Sheet (`Franco_Table_PtD`). |
-| T7 | **L'app fait foi** pour les dimanches à venir ; le Sheet reste lu **en repli** pour les dates que personne n'a prises dans l'app. |
+| T4 | Chacun retire **sa** ligne tant que le dimanche n'est pas passé. **Seul endroit du site où l'on se retire soi-même** — pour le planning, qui n'est pas dispo envoie un message. ~~Un admin retire n'importe laquelle~~ : élargi le 03/10/2026 par T10. |
+| T5 | Notification **le mercredi**, **fondue dans le rappel du matin** (jamais une notification de plus), seulement si le dimanche qui vient est **libre**, préférence « Petit déj » **activée par défaut**, « Ne plus recevoir » dans le corps. |
+| T6 | **Pas de 9e onglet** : le petit déj vit dans l'onglet **Table** du planning (redit le 18/09 : le Planning reste à 8 onglets). |
+| ~~T7~~ | ~~**L'app fait foi** pour les dimanches à venir ; le Sheet reste lu **en repli**.~~ Remplacée le 03/10/2026 par T8. |
+| T8 | *03/10/2026.* Les inscriptions sont la **seule source** ; **plus de secours par le Sheet**. |
+| T9 | *03/10/2026.* La **case « Petit déj » de la grille Table** affiche les inscriptions. |
+| T10 | *03/10/2026.* Les **écrivains du planning Table et les admins** ajoutent ou retirent des lignes, pour d'autres aussi. |
+| T11 | *03/10/2026.* Les **noms à venir déjà présents dans la grille** sont repris en lignes, une seule fois. |
+| T12 | *03–04/10/2026.* Rien ne part en ligne avant la fin du chantier : on retire alors l'interrupteur et on fusionne sur `main`. |
 
 ## Décisions prises ici, avec la raison lue dans le code
 
 | # | Décision |
 | --- | --- |
-| Q1 | **Une sous-collection, un document par personne** : `petitDej/{AAAA-MM-JJ}/equipe/{uid}`, et non un document par dimanche avec un tableau. Un tableau se réécrit en entier (`PATCH` REST, aucune transaction dans ce projet) : deux personnes qui se retirent en même temps s'effacent l'une l'autre. Avec l'uid pour nom de document, s'inscrire est un `PATCH` isolé, se retirer un `DELETE` d'un seul chemin, et une seconde inscription écrase la sienne au lieu de créer un doublon — le patron de `setlists/{id}/versions/{uid}` (`firestore.rules` l. 238-244). La sous-collection s'appelle **`equipe`** et non `inscriptions`, parce que `evenements/{id}/inscriptions` existe déjà (l. 158-164) et qu'une requête de groupe les mélangerait. |
-| Q2 | **Aucune limite d'avance au-delà de ce que l'onglet montre** : les quatre trimestres de l'année en cours (`filterByTri`, `getCurrentTri`). Une seconde borne (« huit semaines ») serait une règle invisible qui afficherait un dimanche sans laisser le prendre. La seule borne est le **passé** : un dimanche `< currentSundayStr()` ne se prend ni ne se libère (le dimanche même reste ouvert jusqu'à ce qu'il soit passé). |
-| Q3 | **Repli explicite, dimanche par dimanche** : `app.length ? app : sheet`. Un dimanche est **« Libre »** seulement si **ni** l'app **ni** le Sheet ne portent de nom — la notification du mercredi ne peut donc pas contredire le tableau. Une ligne venue du Sheet s'affiche avec la mention **« au tableau »** et ne se retire pas depuis l'app. Parce que la première inscription de l'app **remplace** l'affichage du Sheet, la confirmation nomme ce qu'elle remplace : « Le tableau indique déjà : Julien. Tu prends la suite ? » — une phrase, pas un écran. |
-| Q4 | **Oui, le petit déj reste un service comme les autres** (« Mes services », rappels J-7 / J-3 / J-1) : c'est déjà le cas (`names.ts` l. 261) et le supprimer serait une régression. Mais le rattachement se fait aujourd'hui sur le **texte** de la case : une ligne réécrite « Famille Chung » ne correspondrait plus à personne. La ligne de l'app garde donc le **nom de planning de son auteur** dans une **colonne cachée** (index 2), et le petit déj se scanne sur les colonnes 1 **et** 2. Les doublons éventuels se replient déjà (`groupEntries` de « Mes services », `reminderServicesFor`). `servantsForDate` continue de ne lire que la colonne 1 : elle sert au rattachement setlist / régie, où le petit déj n'entre pas. |
-| Q5 | **Libellé « Petit déj »** dans les réglages (`NOTIF_TYPE_LABELS` est en français pour les cinq types existants : on ne crée pas une exception). Corps du mercredi, une ligne de plus dans le message du matin : FR « Dimanche 20 septembre : personne pour le petit déj. » / 中文 « 9月20日星期日：还没有人负责早餐。» ; puis « Ne plus recevoir : Moi › Mon profil › Notifications › Petit déj » / « 不再接收：我 › 我的资料 › 通知 › 早餐 ». Un push ne porte pas de lien cliquable dans son corps : on dit **où** couper, et la notification ouvre `/planning/table`. |
-| Q6 | **Un admin n'inscrit pas quelqu'un à sa place.** Écrire sous l'uid d'un autre demanderait une route serveur (Admin SDK), comme `evenements/{id}/inscriptions` dont les règles interdisent toute écriture client (l. 163) — beaucoup de machinerie pour un besoin que le texte libre couvre déjà : l'admin pose **sa** ligne et écrit « Famille Chung ». Ce qu'il gagne, et qui suffit : **retirer** et **réécrire** n'importe quelle ligne. |
+| ~~Q1~~ | ~~Sous-collection `petitDej/{date}/equipe/{uid}`, un document par personne.~~ Remplacée le 04/10/2026 par Q7 : un écrivain pose la ligne d'un autre (T10), l'uid ne peut plus nommer le document. |
+| Q2 | **Seule borne : le passé.** Un dimanche `< currentSundayStr()` (`src/lib/planning/utils.ts:62-68`) ne se prend ni ne se libère, pour personne ; le dimanche même reste ouvert jusqu'à ce qu'il soit passé. Pas de limite d'avance au-delà de ce que l'onglet montre. *(Gardée.)* |
+| ~~Q3~~ | ~~Repli dimanche par dimanche, mention « au tableau », « Le tableau indique déjà : Julien. Tu prends la suite ? ».~~ Tombe avec T7 (03/10/2026). |
+| Q4 | **Le petit déj reste un service** : « Ce dimanche », « Mes services », rappels J-7 / J-3 / J-1. *(Gardée.)* ~~Colonne cachée portant le nom de planning de l'auteur~~ : remplacée le 04/10/2026 par Q9. |
+| Q5 | **Libellé « Petit déj »** dans les réglages ; le mercredi, une ligne de plus : FR « Dimanche 20 septembre : personne pour le petit déj. » / 中文 « 9月20日星期日：还没有人负责早餐。» ; puis « Ne plus recevoir : Moi › Mon profil › Notifications › Petit déj » / « 不再接收：我 › 我的资料 › 通知 › 早餐 ». Un push n'a pas de lien dans son corps : on dit où couper ; seule, la notification ouvre `/planning/table`. *(Gardée ; traduction de la liste : question 7.)* |
+| ~~Q6~~ | ~~Un admin n'inscrit pas quelqu'un à sa place.~~ Remplacée le 03/10/2026 par T10. Aucune route serveur pour autant : la règle le permet (Q8). |
+| Q7 | **Un document par ligne, collection plate** : `petitDej/{id}`, id automatique (POST, comme `ajouterIdee`). Plate plutôt qu'une sous-collection par dimanche : lire un groupe de collections exige une règle `match /{path=**}/…` que la version du 18/09 n'avait pas (sa lecture dans le navigateur aurait été refusée), et la base simulée des tests (`tests/helpers/fakeSession.ts:146-230` : POST, PATCH, DELETE, `runQuery` sur une collection) ne le fait pas. Chaque ligne étant son document, deux personnes ne s'effacent jamais. |
+| Q8 | **Droits** : poser **sa** ligne, tout connecté (T1) ; poser une ligne pour quelqu'un, réécrire ou retirer n'importe laquelle : `peutEcrirePlanning('table')`, le droit qui remplit déjà la grille Table. Aucun droit nouveau. Au plus une lecture facturée par écriture (le profil). Miroir client : `canGererPetitDej`, `canEditPetitDej`. La borne du passé reste côté client (Q2), comme le reste du filtrage du site. |
+| Q9 | **Rattachement par le compte** (question 4) : une ligne posée par « Je m'inscris » porte l'`uid` de l'inscrit et compte pour lui dans « Mes services », « Ce dimanche » et les rappels, même réécrite (« Famille Chung ») et sans nom de planning, sur le patron des créneaux de scène (`route.ts:214-224`). Une ligne posée par un écrivain ou par la reprise (`uid` vide) se rattache par son **texte**, comme une case de planning. La colonne cachée du 18/09 ne servait qu'aux comptes ayant un nom de planning et ratait les rappels : le cron tire ses noms de `servantsForDate`, que le 18/09 laissait sur la colonne 1. |
+| Q10 | **Une lecture, sans jeton** (question 3) : `lirePetitDej()` lit la collection en REST public, comme `fetchGrille` : pages et cron, même code, cache de cinq minutes oublié après chaque écriture. **Une lecture en échec n'est pas « personne »** : la carte le dit, sans « Libre » ni bouton, et la ligne du mercredi ne part pas. |
+| Q11 | **Les dimanches de la carte** : tous ceux du trimestre choisi (`sundaysBetween`, `src/lib/scene/dimanches.ts:17-25`), pas les lignes du Sheet. « Je m'inscris » seulement sur un dimanche à venir sans ligne (planche) ; juste avant d'écrire, l'app relit le dimanche et, si quelqu'un vient de s'inscrire, le dit et n'écrit rien (patron des créneaux de scène). |
+| Q12 | **La case de la grille affiche, sans se modifier** (T9 ; question 1) : un champ `lectureSeule` sur `ColonneGrille` (`grilles.ts:21-30`), posé sur la colonne `petitDej`. `PlanningGrille` l'affiche en texte même en « Modifier » (`laCase`, `PlanningGrille.tsx:212-230`) ; `semer`, `documentDimanche` et `nomsNonRattaches` (`import.ts:41-57`) la sautent. `fetchTable` y met les lignes, jointes par « , » : l'export CSV et PDF suit, celui de U2 (`docs/spec-planning-2027.md`) aussi. Tranche l'écart (2) de `spec-planning-grille.md`. |
+| Q13 | **La reprise** (T11 ; question 5) : un bouton admin sur le patron de l'import G4 (`src/app/api/admin/importer-planning/route.ts`). Elle lit la grille **telle qu'elle s'affichait avant ce lot** (`fusionnerLignes(fetchGrille("table"), lireTableSheet())`, colonne 2), garde les dimanches ≥ `currentSundayStr()` dont la case est remplie et qui n'ont aucune ligne, et écrit **une ligne par case**, texte tel quel, `uid` vide. Relancer n'écrit rien de plus ; seul risque, un dimanche repris puis libéré reprendrait son nom : d'où une seule reprise. |
+| Q14 | **Derrière l'interrupteur** (question 6) : coupé, rien ne change (petit déj lu dans le Sheet, `AncienTableau`, ni carte, ni ligne du mercredi, ni bascule « Petit déj », route de reprise en 404). Ouvert, les lignes sont la seule source. Même raison que `grilleDeLApp` : Firestore est partagé entre le local et le site en ligne. |
+| Q15 | **Contraste** : « Je m'inscris » prend le fond `serviceButtonFill(PLANNING_COLORS.table)` (5C1 : bouton à la couleur de l'écran). Un libellé blanc sur `#c87941` ne donne que 3,35:1 (AA : 4,5) : une entrée de plus dans `FONDS_FONCES` (`src/lib/serviceButton.ts:10-12`), la teinte assombrie comme l'Intergroupe (≈ 83 %, `#a66436`, 4,67:1, à confirmer par le test). Date passée en `text-muted-foreground` (5,2:1), pas le gris de la planche (`#c7c7cc`, 1,7:1). `serviceColors.ts` n'est pas touché. |
 
 ## Objectif
 
-1. On s'inscrit au petit déj **dans l'app**, avec un compte, depuis l'onglet
-   **Table** du planning, sur le dimanche de son choix.
-2. Un dimanche est **« Libre »** ou porte une **équipe** ; la ligne se **réécrit**
-   librement et se **retire** par celui qui l'a posée (ou un admin).
-3. Le petit déj reste un **service** : « Ce dimanche », « Mes services »,
-   rappels J-7 / J-3 / J-1, en français et en 中文.
-4. Le **mercredi**, si le dimanche qui vient est libre, une **ligne de plus** dans
-   le rappel du matin — jamais une notification de plus.
+1. Chacun s'inscrit au petit déj dans l'app, depuis Planning › Table : « Je m'inscris » sur un dimanche libre ; sa
+   ligne se réécrit et se retire.
+2. Les lignes sont la seule source : carte, case de la grille, « Ce dimanche », « Mes services », rappels, export.
+3. Les écrivains du planning Table et les admins posent, réécrivent et retirent des lignes pour d'autres.
+4. Une reprise, une fois, change en lignes les noms à venir de la grille.
+5. Le mercredi, si le dimanche qui vient est libre, une ligne de plus dans le rappel du matin.
 
-Réussite : sur un dimanche à venir sans nom, l'onglet Table affiche « Libre » ;
-un membre connecté clique « Je m'inscris », la ligne apparaît à son nom, il la
-réécrit « Famille Chung », elle est encore là après rechargement, il la retire
-et le dimanche redevient « Libre » ; un second membre pose sa ligne sans effacer
-la première ; un visiteur sans compte lit les deux lignes et ne voit aucun
-bouton ; le dimanche pris disparaît de la liste des dimanches libres et le
-mercredi n'en parle plus ; le mercredi d'un dimanche libre, le rappel du matin
-de chaque membre porte **une ligne de plus** et **pas une notification de plus**.
+Réussite : un dimanche à venir sans ligne affiche « Libre » et « Je m'inscris » ; un membre clique, la ligne apparaît
+à son nom, il la réécrit « Famille Chung » (elle tient au rechargement), la retire, et le dimanche redevient « Libre » ;
+la ligne d'un autre n'a aucun bouton pour lui ; un écrivain du planning Table ajoute « Les jeunes du Campus » et retire
+n'importe quelle ligne ; la case de la grille montre les mêmes textes sans se modifier ; un nom du Sheet n'apparaît
+plus nulle part ; « Famille Chung » reste dans « Mes services » de son auteur, même sans nom de planning ; la reprise
+crée une ligne par dimanche à venir porté par la grille, et rien la seconde fois ; le mercredi d'un dimanche libre,
+une ligne de plus dans le rappel du matin, pas une notification de plus ; coupé, le site est celui d'aujourd'hui.
 
-## Modèle
+## Modèle et règles
 
-`petitDej/{AAAA-MM-JJ}/equipe/{uid}` — le document parent n'est jamais écrit
-(comme `harmonie/{slug}`).
+`petitDej/{id}`, id automatique, une ligne par document ; `nom` pré-rempli au nom de planning, sinon « Prénom N. » :
 
-| Champ | Type | Sens |
-| --- | --- | --- |
-| `uid` | `string` | auteur de la ligne, égal au nom du document |
-| `nom` | `string` | texte affiché, pré-rempli au nom de la personne, réécrivable |
-| `planningName` | `string` | nom de planning de l'auteur au moment de l'inscription, pour « Mes services » et les rappels ; `""` s'il n'en a pas |
-| `dimanche` | `string` | `AAAA-MM-JJ`, recopié pour lire sans découper le nom du document |
-| `creeLe`, `modifieLe` | `string` | ISO |
+```ts
+/** Une ligne du petit déj : une équipe, un dimanche (docs/spec-petit-dej.md). */
+export type LignePetitDej = {
+  id: string
+  dimanche: string   // AAAA-MM-JJ
+  nom: string        // texte affiché, 1 à 80 caractères, réécrivable
+  uid: string        // l'inscrit par « Je m'inscris » ; "" : posée par un écrivain ou par la reprise
+  auteurUid: string  // qui a posé la ligne
+  creeLe: string     // ISO
+  modifieLe: string  // ISO
+}
+```
 
-- **Lecture** : client, `runQuery` sur le groupe de collections `equipe`
-  (`allDescendants: true`), filtré en mémoire — au plus 52 dimanches par an ;
-  serveur (cron), `db.collectionGroup("equipe").get()`, comme les tâches
-  (`route.ts` l. 96).
-- **Fusion** (pure, testable), `src/lib/petitdej/fusion.ts` :
-  `fusionnerPetitDej(sheet: string[][], app: LignePetitDej[]): string[][]` rend
-  des lignes `[dimanche, texte affiché, noms de planning]` — les lignes de l'app
-  si le dimanche en porte au moins une, sinon la ligne du Sheet (colonne 2 =
-  colonne 1, un nom du Sheet **est** un nom de planning).
-- **Branchement** : `loadPlanningData(petitDejApp: string[][] = [])` fusionne à
-  l'assemblage ; les dix appelants qui ne passent rien gardent le comportement
-  d'aujourd'hui.
-- **Rattachement** : `names.ts` l. 261 devient
-  `scan(data.petitDej, "Petit déj", [[1, "Équipe"], [2, "Équipe"]])`.
-- **Préférence** : `"petitDej"` ajouté à `NOTIF_TYPES`, `DEFAULT_NOTIF_PREFS`
-  (`true`) et `NOTIF_TYPE_LABELS` (« Petit déj ») ; la bascule apparaît seule
-  dans `PushToggle` et `filterUidsByNotifPref` la respecte sans migration.
-
-Règle proposée (`firestore.rules`) :
+Règle proposée (`firestore.rules`, placée après `peutEcrirePlanning`) :
 
 ```
-// Petit déj (lot 15, docs/spec-petit-dej.md) : un dimanche porte une ou
-// plusieurs lignes, une par personne — le nom du document EST l'uid, pour
-// qu'un retrait n'écrase jamais la ligne d'un autre. Sous-collection
-// « equipe » et non « inscriptions » : evenements/{id}/inscriptions existe
-// déjà et une requête de groupe les mélangerait. Chacun écrit et retire la
-// sienne ; un admin retire ou réécrit n'importe laquelle. La borne « dimanche
-// passé » reste côté client (canEditPetitDej, src/lib/access.ts), comme le
-// reste du filtrage du site. Miroir : src/lib/access.ts.
-match /petitDej/{dimanche} {
-  allow read: if signedIn();
-  allow write: if false;
-
-  match /equipe/{uid} {
-    allow read: if signedIn();
-    allow create: if signedIn() && request.auth.uid == uid
-      && request.resource.data.uid == uid
-      && request.resource.data.dimanche == dimanche;
-    allow update: if signedIn()
-      && request.resource.data.dimanche == dimanche
-      && (
-        (request.auth.uid == uid && request.resource.data.uid == uid)
-        || (isAdmin() && request.resource.data.uid == resource.data.uid)
-      );
-    allow delete: if signedIn() && (request.auth.uid == uid || isAdmin());
-  }
+// Petit déj (lot U3, docs/spec-petit-dej.md). Lecture publique, comme plannings/*. Sa ligne : tout connecté ;
+// une ligne pour quelqu'un (uid vide), réécrire ou retirer : écrivains du planning Table et admins. Dimanche,
+// inscrit et auteur figés ; borne du passé côté client. Miroir : canGererPetitDej, canEditPetitDej (access.ts).
+match /petitDej/{id} {
+  allow read: if true;
+  allow create: if signedIn()
+    && request.resource.data.auteurUid == request.auth.uid
+    && request.resource.data.dimanche.matches('[0-9]{4}-[0-9]{2}-[0-9]{2}')
+    && request.resource.data.nom.size() > 0 && request.resource.data.nom.size() <= 80
+    && (request.resource.data.uid == request.auth.uid
+        || (request.resource.data.uid == '' && peutEcrirePlanning('table')));
+  allow update: if signedIn()
+    && request.resource.data.dimanche == resource.data.dimanche
+    && request.resource.data.uid == resource.data.uid
+    && request.resource.data.auteurUid == resource.data.auteurUid
+    && request.resource.data.nom.size() > 0 && request.resource.data.nom.size() <= 80
+    && (resource.data.uid == request.auth.uid || peutEcrirePlanning('table'));
+  allow delete: if signedIn()
+    && (resource.data.uid == request.auth.uid || peutEcrirePlanning('table'));
 }
 ```
 
 Miroir client (`src/lib/access.ts`), en double comme le veut le CLAUDE.md :
 
 ```ts
-/** Réécrire ou retirer une ligne de petit déj : son auteur tant que le dimanche
- *  n'est pas passé, un admin toujours. Miroir serveur :
- *  petitDej/{dimanche}/equipe/{uid} dans firestore.rules. */
-export function canEditPetitDej(
-  user: AuthUser | null,
-  ligne: { uid: string; dimanche: string },
-  dimancheEnCours: string,
-): boolean
+/** Poser une ligne pour quelqu'un, réécrire ou retirer n'importe laquelle : canEditPlanning(user, profile, "table"). */
+export function canGererPetitDej(user: AuthUser | null, profile: { plannings?: string[] } | null): boolean
+/** Réécrire ou retirer une ligne : l'inscrit (ligne.uid) ou canGererPetitDej, tant que le dimanche n'est pas passé. */
+export function canEditPetitDej(user: AuthUser | null, profile: { plannings?: string[] } | null,
+  ligne: { uid: string; dimanche: string }, dimancheEnCours: string): boolean
 ```
+
+Lecture : `lirePetitDej()` (REST public, `runQuery` sur `petitDej` trié par `dimanche`, erreur si la lecture
+échoue) ; `rangeesPetitDej(lignes)` rend `[dimanche, textes joints par « , »]`, la forme de `PlanningData.petitDej`
+(`names.ts:17-18`) : `loadPlanningData` et ses douze appelants ne changent pas. Ouvert, `fetchPetitDej` = ces
+rangées (vide si la lecture échoue) et `fetchTable` met les lignes en colonne 2 ; coupé, les deux restent au Sheet.
 
 ## Écrans
 
-**Onglet Table** (`/planning/table`) — le tableau « Prépa. Table » ne bouge pas ;
-un second tableau **« Petit déj »** s'ajoute en dessous, même forme, même
-filtre T1–T4, même orange, même pastille « Cette semaine ».
+**Planning › Table** (`/planning/table`, interrupteur ouvert ; planche `petit-dej-telephone`). Sous les boutons
+T1–T4, gardés, la carte **« Petit déj »** : icône tasse sur fond teinté de la Table, titre, « Trimestre 4 » à droite
+(le trimestre choisi). Une rangée par dimanche du trimestre : date courte (« 4 oct. », « 1er nov. » ; 中文
+« 10月4日 »), le texte ou « Libre » en ambre (`text-amber-700`, 5:1), les boutons. Sous la liste, l'astuce.
 
 | Cas | Ce qu'on voit |
 | --- | --- |
-| Dimanche libre, connecté | « Libre » en gris et le bouton **« Je m'inscris »** |
-| Ma ligne | le texte, modifiable sur place (enregistré à la sortie du champ), et **« Retirer »** |
-| La ligne d'un autre | le texte seul ; **« Retirer »** pour un admin |
-| Ligne du Sheet | le texte et la mention **« au tableau »**, aucun bouton de retrait ; « Je m'inscris » demande « Le tableau indique déjà : Julien. Tu prends la suite ? » |
-| Dimanche passé | lecture seule, aucun bouton |
-| Sans compte | les lignes, « Libre », et **« Connecte-toi pour t'inscrire »** (lien) |
+| Dimanche à venir sans ligne | « Libre » et **« Je m'inscris »** (bouton plein, Q15) |
+| Ma ligne, dimanche à venir | le texte, **✎** (réécrire sur place ; Entrée ou sortie du champ enregistre, Échap annule, vide refusé) et **« Retirer »** (« Retirer cette ligne ? ») |
+| La ligne d'un autre | le texte seul |
+| Écrivain du planning Table, admin | en plus, **＋ « Ajouter une ligne »** sur chaque dimanche à venir (champ libre, noms des comptes suggérés par `useGrilleApp`), ✎ et « Retirer » sur toutes les lignes à venir |
+| Plusieurs lignes | empilées sous la date, chacune avec ses boutons |
+| Dimanche passé | date en gris secondaire, texte, aucun bouton |
+| Lecture impossible | « Inscriptions illisibles pour l'instant. », ni « Libre » ni bouton |
 
-- **« Ce dimanche »** (`/planning`) : inchangé, sinon que la ligne peut venir de
-  l'app. La règle d'aujourd'hui tient — pas de ligne quand personne n'est
-  inscrit (on n'écrit pas « Libre » sur cette page).
-- **« Mes services »** : inchangé (le petit déj y est déjà une carte).
-- **Profil › Notifications** : la bascule **« Petit déj »**, active par défaut.
+Dessous, la grille d'aujourd'hui (`PlanningGrille`), sa colonne Petit déj en lecture (Q12 ; question 8). Téléphone :
+la planche ; tablette portrait : la même, plus grande ; tablette paysage et ordinateur : la carte en largeur de lecture
+(`max-w-lg`, celle de l'ancien tableau), la grille en pleine largeur. **Non dessinés** : la vue d'un écrivain, la
+tablette, l'ordinateur, l'erreur de lecture ; décrits d'après l'écran voisin.
 
-## Ce qui sera construit — quatre tranches
+- **« Ce dimanche »** (`/planning`) : inchangé ; la ligne « Petit déj » n'apparaît que s'il y a au moins une ligne.
+  Le prochain service de la personne compte ses lignes (Q9).
+- **« Mes services »** : inchangé pour qui a un nom de planning ; un compte sans nom de planning qui a des lignes
+  voit la page avec ses petits déj (sous-titre : prénom et nom), au lieu de « choisis ton nom » (question 4).
+- **Mon profil › Notifications** : la bascule « Petit déj », active par défaut.
+- **Administration › Planning** : « Reprendre les noms du petit déj », à côté des imports (`src/app/admin/page.tsx:1078-1104`),
+  compte rendu « 9 dimanches repris, 3 déjà inscrits. » (français) ; il suivra l'import au Back-Office (U6).
 
-### PD1 — Modèle, droits, fusion
-`src/types/petitDej.ts` ; `src/lib/firebase/petitDej.ts` (REST : lire le groupe
-`equipe`, s'inscrire, renommer, retirer) ; `src/lib/petitdej/serveur.ts`
-(Admin, pour le cron) ; `fusionnerPetitDej` ; `loadPlanningData` avec son
-argument facultatif ; `names.ts` l. 261 sur deux colonnes ; règle Firestore et
-`canEditPetitDej` en double.
+Libellés `planning.petitDej.*`, à relire en 中文 par Timothée ; le titre reprend `planning.tabs.petitDej` (早餐),
+les refus d'écriture `planning.grille.droitRetire` et `horsLigne` :
 
-### PD2 — Onglet Table
-Second tableau « Petit déj » dans `src/app/planning/table/page.tsx` (lecture
-fusionnée, « Libre », « Je m'inscris », champ de texte en ligne, « Retirer »,
-mention « au tableau », confirmation de reprise), libellés FR et 中文
-(`planning.petitDej.*` dans `src/locales/fr.json` et `zh-CN.json`).
+| Clé | FR | 中文 |
+| --- | --- | --- |
+| `trimestre` | Trimestre {{n}} | 第{{n}}季度 |
+| `libre` | Libre | 空闲 |
+| `inscrire` | Je m'inscris | 我来报名 |
+| `modifier` | Modifier (étiquette du ✎) | 修改 |
+| `retirer` / `confirmerRetrait` | Retirer / Retirer cette ligne ? | 移除 / 移除这一行？ |
+| `ajouter` | Ajouter une ligne | 添加一行 |
+| `astuce` | Tu peux écrire « Famille … » à la place de ton nom. | 可以写“某某家庭”代替你的名字。 |
+| `vientDeSInscrire` | {{nom}} vient de s'inscrire. | {{nom}} 刚刚报名了。 |
+| `illisible` | Inscriptions illisibles pour l'instant. | 暂时无法读取报名。 |
 
-### PD3 — Ce dimanche et Mes services
-Les lignes de l'app rejoignent `petitDej` dans `src/app/planning/page.tsx` et
-dans le chargement de `/mes-services` ; une ligne réécrite reste rattachée à son
-auteur par la colonne cachée.
+## Ce qui sera construit — cinq tranches
 
-### PD4 — Le mercredi
-`"petitDej"` dans `NOTIF_TYPES` / `DEFAULT_NOTIF_PREFS` / `NOTIF_TYPE_LABELS` ;
-`src/lib/petitdej/rappel.ts` (pur) : `estMercredi(today)`,
-`prochainDimanche(today)`, `lignePetitDej(dimanche, lang)`, `petitDejTitre(lang)`,
-`ligneNePlusRecevoir(lang)` ; dans `cron/reminders`, une `Map<uid, …>` bâtie sur
-le modèle des ouvertures d'inscriptions (l. 167-175), fondue par `avecLignes`
-dans le message du matin (l. 219), envoyée seule à ceux qui n'ont rien d'autre
-(l. 255-272), anti-doublon `petit-dej-<dimanche>`, destinataires = tous les
-comptes filtrés par la préférence, `url: "/planning/table"`.
+U3 se code après U2 : si U2 a touché à `fetchTable`, à l'export ou à `PlanningGrille`, U3 s'y branche sans les refaire.
+
+- **PD1 — Modèle, droits, lecture.** `src/types/petitDej.ts` ; `src/lib/petitdej/lignes.ts` (lecture REST publique,
+  cache, `oublierPetitDej` ; pures : `rangeesPetitDej`, `estLibre`, `servicesPetitDejDuCompte`, `planifierReprise`) ;
+  `src/lib/firebase/petitDej.ts` (REST avec jeton : `inscrire`, `ajouterLigne`, `renommerLigne`, `retirerLigne`) ;
+  règle `petitDej/{id}` et `canGererPetitDej` / `canEditPetitDej` en double ; `fetchPetitDej`, `fetchTable` derrière
+  `BACK_OFFICE`.
+- **PD2 — Onglet Table.** La carte (`src/components/planning/PetitDejCarte.tsx`) en tête de `table/page.tsx` ;
+  `lectureSeule` respecté par `laCase`, `semer`, `documentDimanche`, `nomsNonRattaches` ; l'entrée Table de
+  `FONDS_FONCES` ; libellés FR et 中文.
+- **PD3 — Ce dimanche, Mes services, rappels.** `servicesPetitDejDuCompte` dans `planning/page.tsx` (prochain service,
+  sans doublon) et `mes-services/page.tsx` (liste ; page ouverte sans nom de planning) ; dans le cron, « Petit déj »
+  ajouté par `uid` aux dates J-7, J-3, J-1, sans doublon, sur le patron des créneaux de scène.
+- **PD4 — Le mercredi.** `"petitDej"` dans `NOTIF_TYPES`, `DEFAULT_NOTIF_PREFS` (`true`), `NOTIF_TYPE_LABELS` ;
+  `src/lib/petitdej/rappel.ts` (pur : `estMercredi`, `prochainDimanche`, `lignesMercredi`, `petitDejTitre`) ; dans le
+  cron, une `Map<uid, lignes>` fondue par `avecLignes` (`route.ts:236`), seule sinon, anti-doublon
+  `petit-dej-libre-<dimanche>`, tous les comptes filtrés par la préférence, `url: "/planning/table"`, rien si la
+  lecture a échoué.
+- **PD5 — La reprise.** `planifierReprise` ; `src/app/api/admin/reprendre-petit-dej/route.ts` (POST, admins,
+  firebase-admin, un lot d'écritures, `{ reprises, ignores }`, 404 coupé) ; le bouton de l'administration.
 
 ## Tests (Playwright, trois appareils, écrits avant le code)
 
-Dans `tests/planning-petit-dej.spec.ts` — les quatre tests du lot 1b doivent
-rester verts.
+Dans `tests/planning-petit-dej.spec.ts`, base simulée (`signInAs` + documents `petitDej/*`), horloge fixée :
 
-- **Fusion** (pur) : app seule ; Sheet seul ; les deux sur le même dimanche →
-  l'app gagne ; deux lignes d'app sur un dimanche ; dimanche sans rien → libre ;
-  la colonne 2 porte le nom de planning de l'auteur, la colonne 1 le texte libre.
-- **Droits** (pur) : son auteur peut réécrire et retirer un dimanche à venir ;
-  pas un autre membre ; un admin, oui ; personne sur un dimanche passé.
-- **Onglet Table** : « Libre » sur un dimanche vide ; « Je m'inscris » pose la
-  ligne à mon nom ; la réécrire en « Famille Chung » tient après rechargement ;
-  « Retirer » rend « Libre » ; la ligne d'un autre n'a pas de bouton ; la ligne
-  du Sheet porte « au tableau » ; sans compte, aucun bouton et le lien de
-  connexion ; capture regardée à l'œil sur les trois appareils.
-- **Ce dimanche / Mes services** : une ligne posée dans l'app apparaît dans
-  « Ce dimanche » et dans « Mes services » ; réécrite « Famille Chung », elle y
-  reste (colonne cachée) ; rien dans « Ce dimanche » quand personne n'est
-  inscrit.
-- **Rappels** : `reminderBody` donne toujours « Dimanche 20 septembre (demain) :
-  Petit déj » et 早餐 pour l'inscrit de l'app.
-- **Mercredi** (fonctions pures) : `estMercredi` ; `prochainDimanche` un
-  mercredi = J+4 ; ligne produite si le dimanche est libre, rien s'il est pris
-  dans l'app, rien s'il est pris au tableau, rien un jeudi ; texte FR et 中文,
-  avec le « Ne plus recevoir ».
-- **Préférence** : la bascule « Petit déj » apparaît dans le profil, active par
-  défaut ; mise à `false`, `filterUidsByNotifPref` écarte l'uid.
+- **Pur** : `rangeesPetitDej` (textes joints par « , » dans l'ordre d'inscription, dimanche sans ligne absent) ;
+  droits (l'inscrit sur sa ligne à venir oui, un autre membre non, écrivain `table` oui, admin oui, personne un
+  dimanche passé) ; `servicesPetitDejDuCompte` (« Famille Chung » reste un service de son inscrit, pas de doublon si
+  le texte porte déjà son nom de planning) ; `planifierReprise` (à venir seulement, case vide ou dimanche déjà pris
+  ignorés, relancer = rien, une ligne par case) ; le mercredi (`prochainDimanche` = J+4, ligne si libre, rien s'il
+  est pris, si la lecture a échoué ou un jeudi ; FR et 中文 avec « Ne plus recevoir »).
+- **Carte** : « Libre » et « Je m'inscris » ; le clic écrit `uid` et `auteurUid` = moi ; ✎ « Famille Chung » tient au
+  rechargement ; « Retirer » rend « Libre » ; aucun bouton sur la ligne d'un autre ni un dimanche passé ; une ligne
+  arrivée entre-temps : message, aucune écriture ; un écrivain `table` ajoute « Les jeunes du Campus » (`uid` vide)
+  et retire la ligne d'un autre, un membre n'a pas de ＋ ; lecture en échec : ni « Libre » ni bouton ; un nom du
+  Sheet n'apparaît pas ; 中文 (« 空闲 », « 我来报名 ») ; captures regardées sur les trois appareils.
+- **Grille** : la case Petit déj montre les lignes, n'est pas un bouton en « Modifier », n'est pas recopiée par
+  `semer` ; l'export CSV porte les lignes.
+- **Ailleurs** : une ligne apparaît dans « Ce dimanche », rien sans ligne ; « Famille Chung » reste dans « Mes
+  services » de son inscrit ; un compte sans nom de planning voit ses petits déj ; `reminderBody` donne toujours
+  « Dimanche 20 septembre (demain) : Petit déj » et 早餐 ; la bascule « Petit déj » est active par défaut et
+  l'éteindre écrit `notifPrefs/{uid}.petitDej = false` ; le bouton de reprise appelle la route (simulée, comme
+  `planning-import.spec.ts`) et affiche son compte rendu.
+
+**Tests changés parce que la source change (T8), pas affaiblis** : les 4 tests d'écran du lot 1b (Ce dimanche ×2, Mes
+services, 中文) passent dans `back-office-coupe.spec.ts`, où le petit déj vient encore du Sheet, plus « la page Table
+n'a pas de carte Petit déj » ; les tests 1 à 3 de `planning-table.spec.ts` lisent la case dans les lignes ; les 3
+tests purs du lot 1b restent. **Vérifiable seulement en ligne** : le cron et la route de reprise, relus mais pas
+exécutés, comme le reste du cron.
 
 ## Hors périmètre
 
-- Toujours : l'app fait foi, le Sheet en repli ; FR + 中文 ; trois appareils ;
-  **une seule notification par personne et par jour**.
-- Demander avant : un compteur de places et un état « Complet » (T2 dit le
-  contraire aujourd'hui) ; inscrire quelqu'un à sa place (route serveur Admin,
-  Q6) ; une relance le samedi ; une liste des dimanches libres ailleurs que dans
-  l'onglet Table.
-- Jamais : une notification de plus (règle du lot 1c) ; écrire dans le Google
-  Sheet depuis l'app ; une couleur nouvelle dans `serviceColors.ts` (gelé, et le
-  « Petit déj » y a déjà l'orange de la Table) ; se retirer soi-même ailleurs
-  dans le planning (écarté le 18/09/2026).
+- Toujours : les lignes, seule source (interrupteur ouvert) ; FR + 中文 pour l'assemblée ; trois appareils ; une
+  notification par personne et par jour.
+- Demander avant : un compteur de places ou « Complet » (T2) ; inscrire un compte choisi à la place d'un texte ; « Je
+  m'inscris » sur un dimanche déjà pris ; une relance le samedi ; un historique nommé des lignes ; toute dépendance
+  npm (aucune prévue : la tasse est dans lucide).
+- Jamais : une notification de plus ; écrire dans le Google Sheet ; relire le Sheet du petit déj interrupteur ouvert ;
+  une couleur nouvelle dans `serviceColors.ts` ; se retirer soi-même ailleurs dans le planning.
+- Ailleurs, en relisant `lirePetitDej` et `estLibre` : widget « Petit déj », carte compacte « Prépa. Table » et
+  planning de l'App en lecture (`docs/spec-back-office.md`, U6) ; source « Petit déj » du calendrier
+  (`docs/spec-calendrier.md`, U8) ; export PDF et .xlsx au modèle du Sheet (`docs/spec-planning-2027.md`, U2) ;
+  barre latérale et largeurs (`docs/spec-navigation-grand-ecran.md`, U4).
+
+## À la mise en ligne
+
+1. Timothée publie la règle `petitDej` **avant** la validation en local : les essais locaux écrivent dans le vrai
+   Firestore, sous les vraies règles. Une ligne posée en local existe vraiment : à retirer si c'était un essai.
+2. Le jour du retrait de l'interrupteur (fin du chantier), un admin lance la reprise, une fois.
 
 ## Commandes
 
 ```bash
-npm test -- tests/planning-petit-dej.spec.ts   # PW_PORT=3000 si un next dev tourne déjà
+npm test -- tests/planning-petit-dej.spec.ts tests/planning-table.spec.ts   # PW_PORT=3000 si un next dev tourne déjà
+npm test -- tests/back-office-coupe.spec.ts   # le site tel qu'en ligne, interrupteur coupé
 npx tsc --noEmit
 npm run lint
 ```
 
+## Questions ouvertes
+
+1. **Les écrivains gèrent les lignes dans la carte**, la case de la grille ne fait qu'afficher (T9) ? *Recommandation :
+   oui* — un seul endroit ; une case qui gère une liste serait une exception dans `PlanningGrille`. U6 met le planning
+   de l'App en lecture mais garde cette carte dans l'App, commandes des écrivains comprises (`spec-back-office.md`, Q14).
+2. **Une ligne posée pour quelqu'un** ne se retire que par les écrivains et les admins ; la personne nommée prévient,
+   comme pour le reste du planning ? *Recommandation : oui* — on retire ce qu'on a posé soi-même (T4), et cette ligne
+   n'est liée à aucun compte.
+3. **Lecture publique des lignes** (textes et identifiants de compte lisibles sans connexion par l'API, comme
+   `plannings/*` ; les noms sont déjà dans le Sheet public) ? *Recommandation : oui* — sinon deux lecteurs (navigateur
+   avec jeton, serveur avec firebase-admin) et trois appelants de `loadPlanningData` à changer.
+4. **Rattachement par le compte** : une inscription compte pour son auteur dans « Mes services », « Ce dimanche » et
+   les rappels, même réécrite et sans nom de planning, et « Mes services » s'ouvre alors avec ses seuls petits déj ?
+   *Recommandation : oui* — sinon l'assemblée, en général sans nom de planning, n'a ni « Mes services » ni rappel.
+5. **La reprise une seule fois, le jour de la mise en ligne**, pas pendant la validation en local (Firestore partagé) ?
+   En local, les dimanches que seul le Sheet porte paraissent donc « Libre ». *Recommandation : oui.*
+6. **Tout le lot derrière l'interrupteur** : coupé, le petit déj d'aujourd'hui (lu dans le Sheet), sans carte ni ligne
+   du mercredi, jusqu'à la fin du chantier ? *Recommandation : oui* — même raison que la grille : Firestore partagé.
+7. **Traduire la liste « Recevoir »** de Mon profil (titre et libellés en français seulement aujourd'hui, même en
+   中文), puisque l'assemblée y verra « Petit déj » ? *Recommandation : oui* (six clés : le titre et les cinq types) ;
+   sinon « Petit déj » reste en français comme les autres (Q5).
+8. **La grille reste sous la carte dans ce lot** ; la carte compacte « Prépa. Table du Seigneur » de la planche
+   (lecture seule) vient avec U6, qui sépare l'écriture de la lecture ? *Recommandation : oui* — U3 passe avant U6, et
+   la grille garde la saisie de la colonne Équipe.
+
 ## Avancement
 
-Rien n'est codé : la spec attend le go de Timothée.
+Rien n'est codé : la spec attend la validation de Timothée, puis son go.

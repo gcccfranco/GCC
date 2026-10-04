@@ -1,0 +1,300 @@
+# Spec : lot U8 — calendrier du Back-Office
+
+Spec écrite le 04/10/2026 ; rien n'est codé. Attend la validation de Timothée, puis son go.
+
+Lot U8 de `feuille-de-route.md` § 3.U. Specs voisines, à raccorder : **U6** (`spec-back-office.md`)
+fixe l'adresse `/back-office/calendrier` (sans page d'attente : U8 crée la page et ajoute l'entrée,
+dont U6 garde le rang), l'entrée (`estResponsable`),
+le cadre des widgets (`backOffice/{uid}`, réglages `sources` et `seulementMoi`) et les réunions
+d'équipe (`pour: "equipe:<id>"`) ; **U1** (`spec-scene-saison.md`) cale les créneaux sur une grille
+réglée par la coordination (`lignesDuJour`, `canReserverPour`) ; **U3** (`spec-petit-dej.md`) range le
+petit déj dans `petitDej/{id}` (`lirePetitDej`, `estLibre`) ; **U4** (`spec-navigation-grand-ecran.md`)
+décide la disposition en CSS. **Partage avec U9** (`spec-evenements-2027.md`) : U8 construit le
+calendrier, son widget et le lecteur du Sheet des évènements (août → décembre 2026, lecture seule) ;
+U9 fixe la bascule du 1er janvier 2027, ce que l'assemblée voit avant, et ce que devient le lecteur.
+
+## Mots de Timothée
+
+> « Toute la partie back-office dans un nouvel onglet/nouvelle partie du site. Avec un dashboard,
+> calendrier etc… Pour avoir une vue globale de ce qui se passe et de ce qu'il y a à faire. »
+> (03/10/2026)
+
+Sur les évènements (réunion de l'équipe, transmise le 03/10/2026) : jusqu'en décembre, l'app lit le
+Sheet et se met à jour quand il change, « scans de la page ».
+
+## Ce que le code montre (04/10/2026)
+
+- **Pas de grille.** La section Évènements n'a qu'un agenda en liste
+  (`src/app/evenements/CalendrierClient.tsx` l. 57-94, groupes par mois de
+  `src/lib/evenements/agenda.ts` l. 49-58), coupé en ligne (`src/app/evenements/layout.tsx` l. 10).
+- **Chaque source a déjà son lecteur REST** : séances du planning avec leur présidence
+  (`setlistSeances`, `src/lib/planning/names.ts` l. 331-361, sur `loadPlanningData` l. 29-55) et mes
+  services (`findMyServices` l. 247) ; la publication par trimestre n'est filtrée que par les pages
+  de grille (`lignesPubliees`, `src/lib/planning/grilles.ts` l. 207), pas par « Mes services » ;
+  évènements et réunions (`listEvenements`, `src/lib/firebase/evenements.ts` l. 87-96 ; réunion =
+  `pour: "pole:<pôle>"`, `src/types/evenement.ts` l. 12) ; tâches (`listTaches`, une requête de plus
+  par tâche pour ses fois, `src/lib/firebase/taches.ts` l. 70-79 ; échéances `echeancesDe`,
+  `src/lib/taches/echeances.ts` l. 35 ; « Mes tâches » `aFairePour` l. 128) ; créneaux de scène
+  (`listCreneaux`, `src/lib/firebase/programmes.ts` l. 141) ; setlists publiées (`getSetlists` écarte
+  brouillons et privées, `src/lib/firebase/setlists.ts` l. 137-155).
+- **Les droits de modification existent**, client et règles : évènement et réunion = organisateur +
+  coordination (`canEditEvenement`, `src/lib/access.ts` l. 170-177 ; `firestore.rules` l. 187-189),
+  donc un membre du pôle ne modifie pas une réunion qu'il n'a pas créée ; tâche = membres du pôle +
+  admins (`isPoleMember` l. 55-62 ; règles l. 145-153) ; créneau = auteur + coordination
+  (`canEditCreneau` l. 98-104 ; règles l. 160-166).
+- **Lire un Sheet public** : `fetchSheet` (`src/lib/planning/sheets.ts` l. 79-92) passe par gviz,
+  garde 5 minutes en mémoire (l. 76), ressert la dernière copie si le réseau tombe (l. 87-90) ;
+  `useSheet` et `StaleBanner` signalent un planning périmé (`src/lib/planning/useSheet.ts` l. 7-17).
+- **Le Sheet des évènements, lu le 04/10/2026**, est public : « Aperçu annuel », puis un onglet par
+  mois d'« Août 2026 » à « Septembre 2027 ». Un mois = une grille lundi → dimanche, quatre colonnes
+  par jour (Nom, Heure, Lieu, Resp.), semaines de trois lignes (numéros de jour, puis deux lignes
+  d'entrées) ; à droite une liste « Aperçu des événements » (Date, Jour, Nom, Heure, Lieu,
+  Responsable, Nb inscrits, Clé) ; dessous des blocs « INSCRIPTIONS » (« Nom Prénom »,
+  « Téléphone (optionnel) »). Heures en texte libre (« 20h », « 19h-21h »). Sept entrées dans les
+  grilles d'octobre à décembre, **trois seulement** dans les listes et l'aperçu (celles qui ont un
+  responsable) ; onglets de 2027 vides. **gviz perd les noms** : les numéros de jour dominent la
+  colonne « Nom » et gviz en efface le texte (vérifié sur « Octobre 2026 ») ; l'export
+  `…/export?format=csv&gid=<onglet>` rend le texte brut et répond au navigateur (CORS ouvert).
+- **Rappel du matin** (`src/app/api/cron/reminders/route.ts`) : tâches et ouvertures d'inscriptions
+  s'y fondent (l. 177-192, `avecLignes` de `src/lib/evenements/rappel.ts` l. 67), envoyées seules à
+  qui n'a rien d'autre (l. 253-289). Le rappel de la veille d'un évènement part **à part**
+  (l. 291-318 ; U6 R3 le fond dans le rappel du matin), sous une clé sans date (l. 305) : après un
+  déplacement, il ne repart pas si l'ancienne veille est passée.
+- **Formulaires et glisser** : `EvenementForm` par `src/app/evenements/nouveau/NouveauClient.tsx`
+  (sans date pré-remplie ; `?from=` duplique, l. 26) ; `TacheForm` (`src/components/taches/TacheForm.tsx`
+  l. 35-48) ; `@dnd-kit` installé (`package.json` l. 20-22), capteurs sans clavier (`src/lib/dnd/sensors.ts`).
+- **Couleurs gelées** : `src/lib/serviceColors.ts` l. 7-33 (scène `#3f51a3`), « Petit déj » `#c87941`
+  (l. 56) ; les évènements sont aujourd'hui en indigo scène (`src/app/evenements/EvenementCard.tsx` l. 22).
+
+## Décisions de Timothée — à ne pas rouvrir
+
+| Date | Décision |
+| --- | --- |
+| 03/10/2026 | Un calendrier dans le Back-Office, ouvert à tout responsable, chacun n'y voyant que ses modules (U6). |
+| 03/10/2026 | Toutes les sources activables, plus « Seulement moi ». Mois sur ordinateur et tablette, Agenda sur téléphone ; Semaine plus tard. Lecture, création depuis un jour, déplacement en glissant. |
+| 03/10/2026 | On glisse les évènements (organisateur, coordination, admins ; case « Prévenir les inscrits »), les tâches, les créneaux de scène, les réunions de pôle ; pas les services, les setlists, le petit déj. Confirmation à chaque fois. |
+| 03/10/2026 | Widget Calendrier au tableau de bord : S les prochains jours, M la semaine, L le mois ; sources réglables. |
+| 03/10/2026 | Le Sheet « [2026-2027] Calendrier des événements » fait foi jusqu'en décembre 2026 ; à partir de janvier 2027, les évènements se font sur le site, sans import (U9). |
+| 04/10/2026 | L'app relit ce Sheet à chaque ouverture, comme le planning. |
+| 04/10/2026 | Tablette en paysage : barre latérale toujours réduite. Tout part en ligne ensemble à la fin du chantier. |
+
+## Décisions proposées ici
+
+| # | Proposition | Raison lue dans le code |
+| --- | --- | --- |
+| Q1 | **Sept sources** (tableau du § Modèle). Services, scène et petit déj prennent les couleurs de `serviceColors.ts` ; tâches, évènements et réunions celles de la planche, rangées avec le calendrier. | Aucune valeur gelée ne bouge (`serviceColors.ts` l. 7-33, 56). |
+| Q2 | **Qui voit quoi** : la page suit l'entrée du Back-Office (`estResponsable`, U6) ; chaque source garde sa règle (`canSeeEvenement`, `isPoleMember`, `canSeeSetlist`) ; services, Sheet, scène et petit déj pour tout responsable. Une pastille n'apparaît que si la personne a quelque chose à y voir (Tâches : un pôle ; Réunions : un pôle ou une équipe ; admin toujours). | Aucun droit nouveau, donc rien à doubler dans `firestore.rules`. |
+| Q3 | **« Seulement moi »** : mes services (`findMyServices`), mes tâches (`aFairePour` : responsable moi, ou mon pôle sans responsable), les réunions de mes pôles et équipes et celles que j'organise, les évènements que j'organise ou où je suis inscrit, les créneaux dont je suis l'auteur ou dont le « qui » est une de mes catégories (`quiCategories`, `src/lib/scene/rappels.ts` l. 26), mes lignes de petit déj (`uid` = moi), les setlists que j'ai créées. Les entrées du Sheet sortent : leurs noms sont du texte libre, reliés à aucun compte. | Ces fonctions servent déjà « Mes services », « Mes tâches » et les rappels. |
+| Q4 | **Créer depuis un jour** : les deux boutons de la planche. « Nouvel évènement le JJ/MM » ouvre `/back-office/evenements/nouveau?date=` (U6), formulaire existant, publics de `creatableEvenementPours` (un membre de pôle y crée une réunion) ; « Nouvelle tâche pour le JJ/MM » ouvre `TacheForm` avec l'échéance, choix parmi mes pôles. Un bouton n'apparaît qu'à qui a le droit. Pas de créneau de scène ici : il se réserve dans l'écran de U1. | Les deux formulaires existent ; `NouveauClient` lit déjà un paramètre. |
+| Q5 | **Glisser en vue Mois** (ordinateur, tablettes), à la souris comme au doigt (`useDefaultSensors`). Partout, et seul moyen sur téléphone : **« Déplacer… »** dans la fiche de l'entrée (un champ date ; pour un créneau, le choix des créneaux libres de U1), même confirmation. | WCAG 2.5.7 veut une voie sans glisser ; l'agenda du téléphone n'a pas de case où déposer. |
+| Q6 | **Ce qui bouge** : la date, jamais l'heure. Un évènement décale du même nombre de jours `date`, `dateFin`, `inscriptionDebut` et `inscriptionFin`. Une tâche unique change d'`echeance` ; **une tâche répétée ne se glisse pas** (« Change la répétition dans la tâche »). **Un créneau se pose sur un créneau libre de la grille du jour visé** (`lignesDuJour`, U1) : la confirmation propose les créneaux libres de ce jour, la même heure d'office si elle est libre ; jour sans plage ou sans place libre = refus ; l'auteur doit passer `canReserverPour`, la coordination non. On ne dépose jamais avant aujourd'hui ; une entrée passée ne bouge pas, sauf une tâche pas terminée. | Une fois porte sa date d'échéance pour nom (`src/types/tache.ts` l. 49-51) : en déplacer une seule demanderait des exceptions. U1 : « Déplacer la pose sur un créneau libre », règle `reservable()`. |
+| Q7 | **« Prévenir les inscrits » = une ligne du rappel du lendemain matin**, pas une notification de plus : « Changement : Foot au parc passe au vendredi 9 octobre, 19:00. » / « 活动改期：Foot au parc 改到 10月9日 19:00。». Inscrits avec compte, préférence « Évènements », sauf l'auteur du geste. Pour une réunion : « Prévenir les membres de la réunion » (pôle ou équipe, `destinatairesEvenement`). La confirmation le dit : « Ils le liront dans le rappel de demain matin. » | Une seule notification par personne et par jour ; le patron existe (ouvertures d'inscriptions, `route.ts` l. 185-192, 272-289). |
+| Q8 | **Le rappel de la veille suit la nouvelle date** : sous la forme que lui donne U6 (ligne du rappel du matin, R3), sa clé anti-doublon prend la date (`rappel-evenement-<id>-<date>-<uid>`). | Clé sans date aujourd'hui (`route.ts` l. 305). |
+| Q9 | **Lire le Sheet** par l'export brut de l'onglet de chaque mois affiché (cinq onglets connus, août → décembre 2026) ; ni gviz, ni l'aperçu annuel, ni les blocs « Inscriptions ». À chaque ouverture, avec le cache de 5 minutes (un rechargement relit toujours) et la dernière copie en cas de panne, comme le planning ; sans copie, un bandeau « Sheet des évènements injoignable » et les autres sources s'affichent. | `sheets.ts` l. 76-91 ; gviz et l'aperçu perdent des entrées (§ précédent). |
+| Q10 | **Entrées du Sheet en lecture seule** : ni glisser, ni « Déplacer… » ; leur fiche dit « Lu dans le Sheet des évènements » et ouvre l'onglet du mois. « 20h » s'écrit « 20:00 », « 19h-21h » « 19:00 – 21:00 » ; tout autre texte reste tel quel, sans heure. | Le site écrit les heures « 12:00 » (`spec-evenements-look.md`, 17/09/2026). |
+| Q11 | **Pastilles retenues par appareil** (sources allumées, « Seulement moi ») ; d'office tout allumé sauf Setlists. Les sources d'un widget vivent dans ses réglages (`backOffice/{uid}`, `reglages.sources` et `seulementMoi`, U6). | Comme la préférence d'appareil « chart-style » ; rien à ajouter aux règles. |
+
+## Objectif
+
+Voir d'un coup ce qui se passe et ce qu'il y a à faire : filtrer par source et sur soi, ajouter une
+tâche ou un évènement sur un jour, déplacer avec confirmation ; un aperçu en trois tailles au tableau de bord.
+
+## Réussite
+
+Horloge au 01/10/2026, Sheet et Firestore simulés. Sur ordinateur, un admin ouvre le calendrier :
+octobre en grille, le culte du 4 et sa présidence, une entrée du Sheet le 6 (« 19:00 – 21:00 »), une
+réunion le 3, une tâche unique le 15, scène et petit déj le dimanche. « Tâches » éteinte, elles
+disparaissent, même après rechargement ; « Seulement moi » ne laisse que les siennes. Le 11 ouvre le
+panneau (culte, setlist, cases vides, deux boutons). La tâche glissée du 15 au 14 demande
+confirmation : « Déplacer » écrit l'échéance du 14, « Annuler » rien. Le créneau du 4 glissé au 11
+propose les créneaux libres du 11 (grille de U1). Un évènement à quatre inscrits glissé : « Prévenir
+les inscrits (4) » cochée, `deplacement` écrit, une ligne « Changement : … » au rappel du lendemain
+(message testé pur, envoi vérifié en ligne). Entrée du Sheet, service, setlist, petit déj, tâche
+répétée ne bougent pas. Sur téléphone, l'agenda part d'aujourd'hui, « Déplacer… » mène à la même
+confirmation. Sheet coupé : bandeau, le reste s'affiche. Le widget M montre la semaine et ses points.
+
+## Modèle
+
+| Source (pastille) | Entrées | Couleur | Se déplace |
+| --- | --- | --- | --- |
+| Services | une par séance (`setlistSeances`) : « Culte · présidence » ; trimestres non publiés compris, comme « Mes services » ; pas la Prépa. Table (absente de la planche) | catégorie (`categoryColor`), pastille pleine | non |
+| Évènements (Sheet) | entrées du Sheet et évènements de l'app hors réunions ; une info sans date n'y est pas | planche : fond `#fff3d6`, point `#e0a100` | app oui, Sheet jamais |
+| Tâches | chaque échéance (`echeancesDe`) | planche : gris `#f2f2f4`, point `#8e8e93` | tâche unique seulement |
+| Réunions | évènements `pole:<pôle>` et `equipe:<id>` (U6) ; la planche dit « Réunions de pôle » sur la page, « Réunions » au widget : « Réunions » partout | planche : `#6b4a8e` sur `#f0ecf9` (question 1) | oui |
+| Scène | créneaux du programme affiché (`currentProgramme`, brouillons écartés par U1), pas les places libres | `PLANNING_COLORS.scene` | sur un créneau libre (U1) |
+| Petit déj | lignes de `lirePetitDej` (U3) ; « Libre » (`estLibre`) un dimanche à venir sans ligne ; lecture en échec : rien, jamais « Libre » | `serviceColor("Petit déj")`, teinté | non |
+| Setlists (éteinte d'office) | setlists publiées que je vois | catégorie | non |
+
+Dans un jour : Services, Évènements, Réunions, Scène, Tâches, Petit déj, Setlists, puis l'heure.
+Contrat commun (une seule fonction pure produit la liste ; grille, agenda, panneau et widget la
+lisent) :
+
+```ts
+type SourceCalendrier = "services" | "evenements" | "taches" | "reunions" | "scene" | "petitDej" | "setlists"
+
+interface EntreeCalendrier {
+  source: SourceCalendrier
+  cle: string          // `${source}:${id}:${date}` : une tâche répétée a une entrée par échéance
+  date: string         // AAAA-MM-JJ ; un évènement sur plusieurs jours a une entrée par jour
+  heure: string        // « HH:MM » ou ""
+  heureFin: string
+  titre: string
+  detail: string       // « Présidence : … », « 20:00 · Salle 2 », « DA · échéance »
+  couleur: string
+  duSheet: boolean     // lecture seule
+  moi: boolean         // gardée par « Seulement moi »
+  deplacable: boolean  // droits existants (Q2) et règles de Q6
+  lien: string         // fiche, page du pôle, setlist, onglet du Sheet
+}
+
+// Lecteur du Sheet (pur sur les lignes CSV) : U9 n'ajoute aucun onglet.
+const ONGLETS_SHEET = { "2026-08": 1458766095, "2026-09": 981833936, "2026-10": 439766955,
+  "2026-11": 1033601810, "2026-12": 484545153 }   // mois → gid de l'onglet
+interface EntreeSheet { date: string; titre: string; heure: string; heureFin: string;
+  horaire: string; lieu: string; responsable: string }
+
+// evenements/{id} : champ facultatif, écrit au déplacement quand la case est cochée.
+deplacement?: { de: string; vers: string; le: string; parUid: string }
+```
+
+- **Le lecteur** vérifie le titre de l'onglet (« OCTOBRE 2026 — … »), prend les numéros de jour de
+  chaque semaine, lit les deux lignes d'entrées sous chaque jour et s'arrête à « INSCRIPTIONS ».
+- **Droits** : `peutDeplacer(user, profile, entree)` (pur) assemble `canEditEvenement`,
+  `isPoleMember`, `canEditCreneau` et `canReserverPour` (U1). `access.ts` ne gagne aucun droit,
+  `firestore.rules` ne bouge pas pour U8 : rien à publier.
+- **Cron** : `deplacementsAPrevenir(evenements, today)` garde les `deplacement.le` des deux derniers
+  jours (un matin manqué ne perd rien) ; clé `deplacement-<id>-<vers>-<uid>` ; ligne fondue par
+  `avecLignes`, envoyée seule sinon (vers la fiche) ; derrière `BACK_OFFICE` comme les autres lignes.
+- **Préférences** : `localStorage` « calendrier » (sources, « Seulement moi »), lu sous `try`.
+
+## Écrans
+
+`/back-office/calendrier`, sous le gabarit de U6 (404 interrupteur coupé, « Réservé aux
+responsables »). Grille en pleine largeur (U4 Q10). La vue d'office suit la disposition de U4 (mêmes
+requêtes média, lues au montage ; un squelette avant). FR et 中文, comme le Back-Office (U6 Q16).
+
+- **Ordinateur** (`bo-calendrier`). En-tête « Octobre 2026 », ‹ ›, « Aujourd'hui », à droite « Mois |
+  Agenda ». Pastilles : Services · Évènements (Sheet) · Tâches · Réunions · Scène · Petit déj ·
+  Setlists (✓ allumée, barrée éteinte), puis « Seulement moi ». Grille lun. → dim. sur six semaines,
+  hors du mois en gris, aujourd'hui en pastille rouge, jour choisi grisé ; une entrée = icône de sa
+  source + libellé tronqué ; trois entrées puis « +N » (ouvre le panneau). Panneau de droite
+  (300 px) : « Dimanche 11 octobre », une carte par entrée (source en couleur, titre, détail,
+  avertissement orange « Cases vides : Batterie, Basse », calcul du widget de U6), en bas « Nouvel
+  évènement le 11/10 » (plein, encre) et « Nouvelle tâche pour le 11/10 ». Une carte ouvre sa fiche ;
+  « Déplacer… » sur les entrées déplaçables. Glisser : l'entrée se soulève, la case visée dit
+  « Déposer pour déplacer », l'original reste en pointillé. « Agenda » : la liste du téléphone.
+- **Tablette paysage** : la même page, barre latérale réduite. **Tablette portrait** : Mois d'office ;
+  toucher un jour ouvre le panneau du jour **en feuille** (non dessiné, question 4).
+- **Téléphone** (`bo-telephone-calendrier`). « Octobre », « Mois | Agenda » (Agenda d'office).
+  Pastilles « Tout » · « Seulement moi » · « Sources » (feuille des sept sources, non dessinée). Liste
+  par jour depuis aujourd'hui (« Aujourd'hui · jeudi 1er octobre »), jours vides sautés ; une carte
+  par entrée : vignette colorée à icône, titre, détail (« DA · échéance », « 20:00 · Salle 2 »,
+  « Présidence : … », « 17:00 – 18:30 », « Libre », « 19:00 · 4 inscrits sur 10 »). Toucher une
+  carte ouvre sa feuille (détail, « Ouvrir », « Déplacer… »). En bas, « Afficher novembre ». Mois sur
+  téléphone et bouton « + » : non dessinés (questions 3 et 5).
+- **Confirmation** (partout) : « Déplacer « Chants de Noël » du jeudi 15 au mercredi 14 octobre ? »,
+  case « Prévenir les inscrits (4) » cochée d'office s'il y en a (« Prévenir les membres de la
+  réunion » pour une réunion), tâches liées nommées (« ne bougent pas »), pour un créneau les
+  créneaux libres du jour visé (la même heure cochée si elle est libre), « Annuler » · « Déplacer ».
+  Refus en une phrase : « Aucun créneau libre ce jour-là », « La scène n'est pas ouverte ce
+  jour-là », « Pas avant aujourd'hui ».
+- **Widget Calendrier** (`bo-tableau-de-bord`, cadre de U6). En-tête « Calendrier », à droite
+  « Prochains jours » (S), « Cette semaine » (M) ou le mois (L). S : trois jours à venir au plus
+  (sur quatorze), une ligne par jour (« Sam. 3 · Réunion DA · 20:00 »). M : les sept jours de la
+  semaine, un point coloré par entrée (quatre au plus), puis les lignes des jours qui restent.
+  L : grille du mois à points, légende. Réglages : Services, Évènements, Tâches, Réunions, Scène,
+  Petit déj, Seulement moi. Toucher un jour ouvre la page sur ce jour.
+
+## Ce qui sera construit
+
+Chaque tranche : tests d'abord, vus rouges puis verts sur les trois appareils, `npx tsc --noEmit`,
+`npm run lint`.
+
+| # | Tranche | Vérification |
+| --- | --- | --- |
+| C1 | Lecteur du Sheet : `ONGLETS_SHEET`, lecture par export, `lireMoisSheet`, `heureDuSheet`, cache, panne | fixture anonymisée : entrées et heures justes, aucun téléphone lu, bandeau si panne |
+| C2 | Sources (pur) : `entreesCalendrier(debut, fin, …)`, « Seulement moi », ordre, `peutDeplacer` | tests purs, une ligne par source et par droit |
+| C3 | Page en Mois (ordinateur, tablettes) : la page et l'entrée « Calendrier » du menu (U6 Q17) ; pastilles retenues, grille, « +N », panneau ou feuille, fiche du Sheet en lecture seule | rendu sur ordinateur et tablettes, captures regardées |
+| C4 | Agenda (téléphone, et au choix en grand), feuille « Sources », Mois à points sur téléphone | rendu sur les trois appareils |
+| C5 | Créer depuis un jour : boutons, `?date=` dans `NouveauClient`, `TacheForm` pré-rempli | formulaires ouverts avec la date, boutons absents sans droit |
+| C6 | Déplacer : glisser (Mois), « Déplacer… », confirmation, écritures, refus (Q6, U1) | écritures attendues, rien sans confirmation, refus nommés |
+| C7 | Prévenir : champ `deplacement`, ligne du matin FR et 中文, clé datée du rappel de la veille | fonctions pures du message et du choix des destinataires |
+| C8 | Widget Calendrier S, M, L dans le cadre de U6 ; entrées du Sheet dans « Prochains évènements » (widget 3 de U6 : « ceux du Sheet avec U8 ») | trois tailles, réglage des sources, lien vers la page ; Sheet dans le widget 3 |
+
+## Tests
+
+Playwright, trois appareils, écrits avant le code ; Firestore simulé (`tests/helpers/fakeSession.ts`),
+Sheet simulé (`page.route(/docs\.google\.com\/spreadsheets/, …)`), horloge simulée (`page.clock`).
+
+- `tests/calendrier-sheet.spec.ts` (C1), sur `tests/fixtures/sheet-evenements-mois.csv` (structure
+  d'un vrai onglet, titres et noms inventés, un téléphone dans un bloc) : dates et heures (« 20h »,
+  « 19h-21h », texte libre) ; le téléphone n'apparaît jamais ; mauvais titre d'onglet = aucune
+  entrée ; l'adresse appelée est l'export par gid, jamais gviz ; deux ouvertures à moins de
+  5 minutes = une requête, au-delà = deux ; réseau coupé = bandeau et autres sources affichées.
+- `tests/calendrier.spec.ts` (C2 à C5 ; ajouté au `testMatch` du projet `tablette-paysage` de U4) :
+  Mois d'office sur ordinateur et tablettes, Agenda sur téléphone ; une pastille éteinte retire sa
+  source, même après rechargement ; « Seulement moi » ; panneau (ordinateur) et feuille (tablette
+  portrait) du jour ; « +N » ; une entrée du Sheet n'a ni poignée ni « Déplacer… » et ouvre l'onglet
+  du mois ; ni pastille Tâches ni « Nouvelle tâche » sans pôle ; création à la date du jour choisi ; 中文.
+- `tests/calendrier-deplacer.spec.ts` (C6, C7) : glisser une tâche unique (ordinateur, tablette),
+  confirmer = PATCH de l'échéance, annuler = rien ; rien ne se soulève pour une tâche répétée, une
+  entrée du Sheet, un service, une setlist, le petit déj, un évènement passé ; pas de dépôt avant
+  aujourd'hui ; l'organisateur glisse un évènement : case cochée avec le nombre, dates et bornes
+  d'inscription décalées, `deplacement` écrit ; un membre qui n'organise pas ne le soulève pas ;
+  réunion : « Prévenir les membres de la réunion » ; créneau : la confirmation propose les créneaux
+  libres du jour visé (grille de U1), refus sans place libre, jour fermé ou groupe non permis ;
+  « Déplacer… » au clavier ; téléphone : « Déplacer… » (test propre au téléphone, il le dit dans
+  son titre). Purs : ligne FR et 中文, fenêtre de deux jours, clés, clé datée de la veille.
+- `tests/calendrier-widget.spec.ts` (C8) : S, M, L à partir des mêmes entrées ; une source éteinte
+  dans les réglages disparaît du widget ; toucher un jour ouvre la page sur ce jour ; le widget 3
+  de U6 montre les entrées du Sheet.
+- `tests/back-office-coupe.spec.ts` : la page du calendrier répond 404 interrupteur coupé.
+
+## Hors périmètre
+
+- **Toujours** : derrière `BACK_OFFICE` tant qu'il existe ; droits existants seulement ; confirmation
+  à chaque déplacement ; la grille de U1 pour un créneau ; heures « 12:00 » ; Firestore en REST ;
+  trois appareils ; FR et 中文 (U6 Q16).
+- **Demander avant** : la vue Semaine ; glisser dans l'agenda ; déplacer une seule fois d'une tâche
+  répétée ; décaler les tâches liées avec leur évènement ; lire « Nb inscrits » du Sheet ; réserver
+  un créneau de scène depuis le calendrier ; export .ics ; une dépendance npm (aucune n'est prévue) ;
+  une couleur de plus.
+- **Jamais** : écrire dans le Sheet ; lire les blocs « Inscriptions » (noms, téléphones) ; lire ce
+  Sheet par gviz ; une notification de plus pour un déplacement ; toucher `serviceColors.ts` ;
+  déplacer un service, une setlist, un petit déj ou une entrée du Sheet.
+
+## Questions ouvertes
+
+1. La planche peint les réunions en violet `#6b4a8e`, la couleur gelée du Groupe Paix. On garde ?
+   Recommandation : oui ; la réunion est teintée, le service du Groupe Paix plein (« une forme, une
+   information »).
+2. Le jaune des évènements (`#e0a100`, fond `#fff3d6`) est une couleur nouvelle, rangée avec le
+   calendrier et non dans `serviceColors.ts`, alors que la section Évènements les peint en indigo
+   scène. D'accord ? Recommandation : oui, c'est la planche.
+3. Le sélecteur « Mois | Agenda » est sur la planche du téléphone, l'écran Mois du téléphone non. Mois
+   sur téléphone = la grille à points du widget L, la liste du jour touché dessous ? Recommandation :
+   oui.
+4. Deux écrans non dessinés : sur tablette portrait, le panneau du jour en feuille ; au-delà de
+   trois entrées dans une case, « +N » ouvre ce panneau. D'accord ? Recommandation : oui.
+5. Créer sur téléphone (non dessiné) : un « + » à côté de « Mois | Agenda » propose « Nouvel
+   évènement » et « Nouvelle tâche » pour le jour affiché ? Recommandation : oui.
+6. Le dimanche, une seule entrée « EDD » (les trois classes dans sa fiche) plutôt que trois ?
+   Recommandation : oui, sinon « +N » chaque dimanche.
+7. Un évènement déplacé laisse ses tâches liées (lot 14) à leur date, la confirmation les nomme ?
+   Recommandation : oui pour ce lot.
+8. La planche montre « Nouvel évènement le 11/10 » en 2026, quand le Sheet fait foi : le bouton reste,
+   le formulaire renvoie au Sheet un évènement « Toute l'église » de 2026 (U9) ? Recommandation : oui.
+9. Une réunion se déplace par son organisateur et la coordination seulement (règle d'aujourd'hui,
+   que U6 garde), pas par tous ses membres ? Recommandation : oui, aucune règle à publier.
+
+## Commandes
+
+```bash
+npm test -- tests/calendrier-sheet.spec.ts tests/calendrier.spec.ts tests/calendrier-deplacer.spec.ts tests/calendrier-widget.spec.ts
+npm test -- tests/back-office-coupe.spec.ts   # second serveur, interrupteur coupé
+npx tsc --noEmit && npm run lint               # PW_PORT=3000 si un next dev tourne déjà
+```
+
+## Avancement
+
+Rien n'est codé : la spec attend la validation de Timothée, puis son go.

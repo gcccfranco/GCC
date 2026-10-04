@@ -1,0 +1,244 @@
+# Spec : lot U7 — statistiques des chants (admins)
+
+Spec écrite le 04/10/2026 ; rien n'est codé. Attend la validation de Timothée, puis son go.
+
+Lot U7 du chantier U (`feuille-de-route.md` § 3.U), après U6 (`docs/spec-back-office.md`), avant U8
+(`docs/spec-calendrier.md`) ; dispositions : U4 (`docs/spec-navigation-grand-ecran.md`). Écran de la
+planche validée (version 10, https://claude.ai/artifact/1d4ZW7Y9NVHcsLB9YrrbrA) : **`bo-statistiques`**.
+
+## Mots de Timothée
+
+> « Dans le Back-office, ajouter un onglet pour voir quels chants apparaissent le plus dans les setlists,
+> avec le nombre de fois, le pourcentage etc… » (03/10/2026)
+
+## Ce que le code montre (04/10/2026)
+
+- **Une setlist** (`FSSetlist`, `src/lib/firebase/setlists.ts:23-42`) : `category` (le service), `date`
+  (`AAAA-MM-JJ`, `SetlistForm.tsx:95`), `leader` (la présidence : **un texte**, pris dans le planning ou
+  saisi, `SetlistForm.tsx:197-214`), `items`, `isPrivate`, `isDraft` (brouillon écrit jusqu'à « Publier »,
+  l. 264, 482 ; abandonné, il reste). Un élément (`src/types/setList.ts:41-79`) est un chant (`songSlug`,
+  `keyOverride`), une fusion (`fusionSongs`, chacun son `keyOverride`, l. 10-21) ou une transition ; les
+  deux dernières ont `songSlug: ""` (`src/lib/setlist/buildSetlistItems.ts:54, 69`).
+- **Lecture** : `getSetlists()` (`setlists.ts:137-155`) lit **toute** la collection (`runQuery` sans
+  limite) et écarte privées et brouillons (l. 154) ; l'onglet Setlists, Mes services et Harmonie
+  l'appellent à chaque visite. Sur une erreur HTTP, elle rend `[]` (l. 149). Règles : `read: if
+  signedIn()` sur toutes les setlists (`firestore.rules:232-233`), choix assumé du CLAUDE.md ; un admin
+  voit toute setlist non privée (`canSeeSetlist`, `src/lib/access.ts:276`).
+- **Passée** : « Archives » prend `date < aujourd'hui` (`src/app/setlists/page.tsx:49, 128`). **Volume** :
+  92 setlists hors brouillons du 24/05 au 20/09/2026 (`docs/tonalites-recommandees.md:10-11`), ~5 par
+  semaine : une centaine aujourd'hui, ~280 de plus par an. **L'historique commence le 24/05/2026.**
+- **Tonalité** : un chant ajouté prend `keyOverride: recommendedKey ?? null` (`SetlistForm.tsx:391`) ; la
+  liste affiche `keyOverride ?? originalKey` (`ListView.tsx:206, 250`). Des originales en `C#`, `G#`
+  côtoient les noms en bémols du sélecteur (`src/lib/transpose.ts:268-270`) ; `noteToIndex` (l. 18-25).
+- **Deux comptes existent, chacun ses règles.** `scripts/recommended-keys.ts` n'écarte que les brouillons
+  (l. 46 : privées et setlists à venir comprises ; son « 92 … au 20/09 » date du 14/09), compte les chants
+  de fusion, ignore les transitions (l. 49-53) et compte deux fois un chant repris. Harmonie
+  (`src/app/harmonie/[...fiche]/FicheClient.tsx:53-58`) ne compte que `it.songSlug` (pas les chants de
+  fusion) et affiche « N fois en setlist » aux pianistes et guitaristes (l. 230-233 ; lot 9,
+  `spec-harmonie.md:119-120`).
+- **Index** : `public/songs-index.json`, 378 chants (186 `fr`, 192 `zh`), slug = nom du fichier
+  (`src/lib/content/loadSongs.ts:48`), trié A→Z, pinyin pour le chinois (`scripts/build-index.ts:26-36`).
+  Pas d'anciens slugs : un `.cho` renommé est un nouveau chant ; la setlist montre alors le slug
+  (`ListView.tsx:261`).
+- **Filtres existants** : `ALL_CATEGORIES`, 10 catégories (`setlists.ts:8-19`), en « cultes / groupes »
+  dans l'onglet Setlists (`setlists/page.tsx:340-359`) ; `normalizeName` plie accents, casse et
+  ponctuation (`src/lib/planning/names.ts:62-79`).
+- **Droits** : `ADMIN_EMAILS`, `isAdminUser` (`access.ts:12-16, 27-29`), miroir `isAdmin()`
+  (`firestore.rules:43-49`) ; filtre client sans règle déjà assumé : `canUseHarmonie` (`access.ts:194-202`) ;
+  `/admin` refuse le non-admin : « Page réservée aux administrateurs. » (`src/app/admin/page.tsx:255-266`).
+- **Interrupteur** : `BACK_OFFICE` (`src/lib/backOffice.ts:5`), `notFound()` côté serveur
+  (`src/app/equipes/page.tsx:11`), adresses en 404 listées dans `tests/back-office-coupe.spec.ts:56`.
+- **Planche** : widget « Chants les plus joués » au tableau de bord (cinq premiers, réglage Période) ;
+  entrée « Statistiques · admins » dans « Plus » et dans la barre personnalisable. **Son « 92 » vient du
+  calcul des tonalités** (privées et setlists à venir comprises) : la page en comptera moins.
+
+## Décisions de Timothée — à ne pas rouvrir
+
+| # | Date | Décision |
+| --- | --- | --- |
+| T1 | 03/10/2026 | **Admins seulement.** |
+| T2 | 03/10/2026 | Setlists **publiées passées** : ni brouillons, ni privées. |
+| T3 | 03/10/2026 | Un chant compté **une fois par setlist** ; chants de fusion comptés ; transitions ignorées. |
+| T4 | 03/10/2026 | Colonnes : rang, chant, nombre, %, dernière fois, tonalité la plus jouée, tendance. |
+| T5 | 03/10/2026 | Filtres : période, service, langue, présidence. Listes « Jamais joués » et « À redécouvrir ». |
+| T6 | 03/10/2026 (soir) | Menu du Back-Office à 8 entrées, dont « Statistiques » ; planche validée. |
+| T7 | 04/10/2026 | Pas de « joué le … » dans l'éditeur de setlist : les données de jeu restent aux admins. |
+| T8 | 04/10/2026 | Tout part en ligne à la fin du chantier : l'interrupteur `BACK_OFFICE` est retiré, la branche fusionnée sur `main`. |
+
+## Décisions proposées ici
+
+| # | Proposition | Raison lue dans le code |
+| --- | --- | --- |
+| Q1 | **Calcul dans le navigateur** : `getSetlists()` tel quel, `/songs-index.json`, une fonction pure. Pas de route serveur. | Les setlists sont déjà lisibles de tout connecté et l'onglet Setlists les lit toutes à chaque visite : ouvrir la page coûte **une visite de l'onglet Setlists** (une lecture par document, ~100 à 150 aujourd'hui ; quota gratuit 50 000 par jour). Une route `firebase-admin` lirait autant, ne cacherait rien (les setlists restent lisibles) et ferait une route de plus à garder et à tester. Au-delà de ~1 000 setlists : lire à partir d'une date (`where date >=`) ou un instantané du cron, à rouvrir alors. |
+| Q2 | **Droit** : `canVoirStatistiques(user) = isAdminUser(user)` dans `access.ts`, **sans règle Firestore**. Non-admin : entrée absente partout (menu, « Plus », barre personnalisable, catalogue des widgets) ; adresse tapée : « Page réservée aux administrateurs. ». Sans compte : la connexion (`RequireAuth`). | Rien de nouveau n'est écrit ni lu : rien à protéger côté serveur (précédent `canUseHarmonie`). Message repris de `/admin`. |
+| Q3 | **Publiée** = `!isDraft && !isPrivate`, le filtre de `getSetlists`. **Passée** = `date` (ses dix premiers caractères) `< aujourd'hui`, la règle de « Archives » : la setlist d'un dimanche compte dès le lundi. Sans date valide : pas comptée. | Exactement ce que l'admin voit déjà dans l'onglet Setlists. |
+| Q4 | **Chants d'une setlist** : les éléments dans l'ordre ; transition ignorée ; fusion = chacun de ses `fusionSongs` ; **chaque slug une fois**, même s'il revient seul et dans une fusion ; sa tonalité est celle de sa **première** apparition. | T3 ; la marche de `recommended-keys.ts:49-53`, sans le double compte. |
+| Q5 | **Tonalité jouée** = `keyOverride`, sinon l'originale de l'index ; modulations (`sectionKeys`) ignorées. Deux orthographes d'une même hauteur (`C#`, `Db`) se regroupent sous la plus fréquente (`noteToIndex` ; un nom inconnu comme `Am` reste à part). Ex aequo : toutes, séparées par « / », la plus récente d'abord (la planche montre « Db / C »). | `null` = l'originale (`SetlistForm.tsx:391`) — celle d'**aujourd'hui** : un `.cho` changé de tonalité déplace ses anciennes setlists, limite acceptée. |
+| Q6 | **%** = setlists où figure le chant / setlists comptées (après période, service, présidence), arrondi à l'unité ; « < 1 % » plutôt que « 0 % ». | La planche le confirme : 12 / 92 → « 13 % », 11 / 92 → « 12 % ». |
+| Q7 | **Période** : 3, 6, 12 mois (de la même date N mois plus tôt jusqu'à hier), « Depuis le début », « Dates libres » (du … au …, bornes comprises, toujours avant aujourd'hui). **Par défaut : 12 mois**, comme la planche. | Aujourd'hui, « 12 mois » = tout l'historique. |
+| Q8 | **Service** = la catégorie, un seul choix, les 10 de `ALL_CATEGORIES` présentées comme dans l'onglet Setlists, plus toute catégorie inconnue trouvée dans les données. **Présidence** = le texte `leader`, regroupé par `normalizeName`, sous sa graphie la plus fréquente, A→Z. **Langue** = celle du **chant** (« FR et 中文 », « FR », « 中文 ») : elle retire des lignes, pas des setlists ; le % ne bouge pas. | `leader` n'est pas un compte. Les étiquettes FR / 中文 de la planche sont sur les chants. |
+| Q9 | **Rang et tri** : « # » = rang au nombre de setlists, ex aequo départagés par la dernière fois (la plus récente d'abord) puis le titre ; il suit le chant quand on trie. En-têtes cliquables : Chant, Setlists (par défaut), Dernière fois, Tendance (`aria-sort`). Toutes les lignes, sans pagination. | La planche numérote 1 à 12 même à égalité et ne montre pas de tri. |
+| Q10 | **Tendance** = setlists de la seconde moitié − setlists de la première, coupées à la date du milieu entre la première et la dernière setlist comptée. « +3 » en vert, « −1 » en rouge (couleurs déjà employées par le site), « = » ; « — » s'il y a moins de deux dates. | Comparer à la période d'avant laisserait la colonne vide : l'historique commence le 24/05/2026 (question 1). |
+| Q11 | **Jamais joués** = les chants de l'index absents des setlists comptées (mêmes filtres), dans l'ordre A→Z de l'index, avec leur dernière fois toutes dates confondues (mêmes service et présidence) ou « jamais ». **À redécouvrir** = au moins **3** setlists **avant** la période, **aucune pendant**, triés par ce nombre. « Depuis le début » n'a pas d'avant : la liste le dit. | Les pastilles de période gardent le même sens dans les trois vues. |
+| Q12 | **Chant supprimé ou renommé** (slug absent de l'index) : une ligne au nom du slug, mention « absent du recueil », sans lien ni langue ; écartée par un filtre de langue ; jamais dans « Jamais joués ». | Comme la liste d'une setlist (`ListView.tsx:261`) ; on ne cache pas des passages réels. |
+| Q13 | **Lien** : le titre ouvre `/songs/{slug}`. Vue, période, tri et filtres vivent dans l'URL : le retour retrouve l'écran. | Patron de l'onglet Setlists (`src/hooks/useSetlistsNavState.ts:10-16`). |
+| Q14 | **Français seul** ; **export** hors périmètre ; page derrière `BACK_OFFICE` (`notFound()`), garde retirée avec l'interrupteur en fin de chantier (T8). | L'administration est exclue du 中文 (`spec-nouveaux-membres.md:34-39`). |
+
+## Objectif
+
+Un admin voit, dans le Back-Office, quels chants reviennent le plus dans les setlists (nombre, part,
+dernière fois, tonalité la plus jouée, tendance), filtre par période, service, langue et présidence, et
+voit les chants jamais joués et ceux à redécouvrir. Personne d'autre ne voit ces chiffres ; rien n'est
+écrit dans la base.
+
+**Réussite** : horloge au 04/10/2026, setlists simulées (publiées passées, dont une avec un même chant
+seul et en fusion, une avec une transition, trois d'avant juillet ; un brouillon, une privée, une du
+11/10). Un admin ouvre Back-Office › Statistiques : « Setlists comptées » = les publiées passées ; le
+chant repris compte **1** ; chaque % = n / setlists comptées ; la tonalité suit `keyOverride` ou
+l'originale ; « Groupe Paix » réduit les setlists comptées, « 中文 » retire les lignes FR sans changer
+les % ; trier par « Dernière fois » laisse les rangs ; un titre ouvre la page du chant et le retour
+retrouve les filtres ; « À redécouvrir » sur 3 mois montre le chant joué trois fois avant juillet ; un
+responsable non admin ne voit l'entrée nulle part et l'adresse lui répond « Page réservée aux
+administrateurs. » ; interrupteur coupé, 404. Sur les trois appareils.
+
+## Modèle
+
+**Aucune donnée nouvelle, aucune écriture, aucune règle Firestore.** Entrées : `getSetlists()` (déjà
+réduite aux publiées), `/songs-index.json`, la date du jour, passée en argument (testable sans horloge).
+Calcul pur dans `src/lib/stats/chantsJoues.ts` :
+
+```ts
+export type Periode = { mois: 3 | 6 | 12 } | "debut" | { du: string; au: string }; // AAAA-MM-JJ, bornes comprises
+export type FiltresStats = { periode: Periode; service: string | null; langue: "fr" | "zh" | null; presidence: string | null }; // null = tout (Q8)
+export type LigneChant = {
+  slug: string; titre: string; langue: "fr" | "zh" | null;  // null = absent du recueil
+  rang: number; setlists: number; part: number;              // part de 0 à 1
+  derniereFois: string; tonalites: string[]; tendance: number | null; // plusieurs tonalités = ex aequo ; null = « — »
+};
+export type StatsChants = {
+  comptees: { nombre: number; du: string | null; au: string | null };
+  plusJoues: LigneChant[];
+  jamaisJoues: { slug: string; titre: string; langue: "fr" | "zh"; artiste: string; derniereFois: string | null }[];
+  aRedecouvrir: { slug: string; titre: string; langue: "fr" | "zh" | null; avant: number; derniereFois: string; tonalites: string[] }[];
+};
+export function chantsDeLaSetlist(s: Pick<FSSetlist, "items">): { slug: string; tonalite: string | null }[];
+export function statsChants(setlists: FSSetlist[], index: SongIndexEntry[], f: FiltresStats, aujourdhui: string): StatsChants;
+```
+
+- **Partagé avec `scripts/recommended-keys.ts`** : la marche dans les éléments (transitions ignorées,
+  fusions dépliées) et la règle « `keyOverride`, sinon l'originale », écrites une fois dans
+  `chantsDeLaSetlist`. Le script n'est **pas** touché dans U7 (question 5).
+- **Widget « Chants les plus joués »** (catalogue de U6) : `statsChants` avec sa période, cinq premières
+  lignes (question 4).
+
+## Écrans
+
+Planche : **`bo-statistiques`** (ordinateur). Téléphone, tablette et vues « Jamais joués » et « À
+redécouvrir » en sont **déduits**, sans nouvelle proposition visuelle. Look 5C1. Étiquettes FR (bleu) et
+中文 (rouge) gardées : la tonalité est ici un texte, l'étiquette seule dit la langue. Barres en CSS,
+décoratives (`aria-hidden`), nombres en texte : aucune bibliothèque de graphiques.
+
+**Ordinateur** (barre latérale dépliée ou réduite) et **tablette paysage** (barre réduite) : la planche à
+l'identique. Titre « Chants les plus joués », sous-titre « Visible par les admins seulement », sélecteur
+« Les plus joués · Jamais joués · À redécouvrir » à droite ; filtres « 3 mois », « 6 mois », « 12 mois »,
+« Depuis le début », « Dates libres » (ouvre « du … au … », champs date natifs), un trait, « Tous les
+services ▾ », « FR et 中文 ▾ », « Toutes les présidences ▾ » (des `<select>` en pastilles) ; cartes
+« Setlists comptées » (« publiées, du 24/05 au 20/09 ») et « Les 10 premiers » (« 12 · 13 % ») ; tableau
+pleine largeur : « # », « Chant » + étiquette, « Setlists », « % des setlists », « Dernière fois »
+(« 20/09 », l'année si ce n'est pas l'année en cours), « Tonalité la plus jouée », « Tendance ». La note
+« Aperçu : … » de la planche n'existe pas sur la page.
+
+**Tablette portrait** (barres du haut et du bas : U6) : même contenu en une colonne — sélecteur sous le
+titre, filtres sur deux lignes, cartes l'une sous l'autre, tableau complet (en-têtes sur deux lignes).
+
+**Téléphone** : sélecteur pleine largeur ; filtres repliés à la ligne ; « Setlists comptées » sur une
+ligne ; « Les 10 premiers » en barres plus courtes ; le tableau devient une liste (ligne 1 : rang, titre,
+étiquette ; ligne 2 : « 12 setlists · 13 % · 20/09 · Ab · +3 ») avec un menu « Trier par ».
+
+**Autres vues** : filtres et « Setlists comptées » gardés, « Les 10 premiers » effacé. « Jamais joués » :
+« N chants sur 378 », colonnes Chant, Artiste, Dernière fois (date ou « jamais »). « À redécouvrir » :
+#, Chant, Avant la période, Dernière fois, Tonalité la plus jouée.
+
+**États** : « Calcul… » ; aucune setlist lue → « Impossible de lire les setlists. » + « Réessayer » (la
+base en compte plus de cent : zéro veut dire un échec) ; période vide → « Aucune setlist publiée sur
+cette période. » ; « À redécouvrir » vide faute d'historique → « L'historique commence le 24/05/2026 :
+choisis une période plus courte. »
+
+**Entrée** : « Statistiques », 8e entrée du menu (icône `ChartColumn` de lucide, déjà installé), « Plus »
+(`bo-telephone-plus`), barre personnalisable (`bo-telephone-barre-perso`) ; admins seulement (menus : U6).
+
+## Ce qui sera construit — cinq tranches
+
+- **S1 — Le calcul** : `src/lib/stats/chantsJoues.ts`, tout le tableau Q3–Q12. Vérifiable seul :
+  `tests/statistiques-calcul.spec.ts`.
+- **S2 — Le droit et l'adresse** : `canVoirStatistiques` (`src/lib/access.ts`) ; la page (route proposée
+  `/back-office/statistiques`) : `notFound()` interrupteur coupé, `RequireAuth`, message au non-admin ;
+  l'entrée du menu pour les admins.
+- **S3 — « Les plus joués »** : `StatistiquesClient.tsx` — lecture, filtres, URL, deux cartes, tableau
+  trié, liens, états ; trois dispositions.
+- **S4 — « Jamais joués » et « À redécouvrir »** : les deux vues et leurs messages.
+- **S5 — Le widget** (si la question 4 dit oui) : nombre de setlists, cinq premiers, réglage Période
+  (3 / 6 / 12 mois / Depuis le début) ; admins seulement.
+
+## Tests (Playwright, trois appareils, écrits avant le code)
+
+`tests/statistiques-calcul.spec.ts`, fonctions pures importées de `src/lib/stats/` :
+- comptées : publiée passée oui ; brouillon, privée, setlist du jour, à venir, sans date : non ;
+- un chant seul et en fusion dans la même setlist : 1 ; chants de fusion comptés ; transitions non ;
+- tonalité : `keyOverride` sinon l'originale, première apparition, `C#` et `Db` regroupés, ex aequo
+  « Db / C » la plus récente d'abord ; % arrondi et « < 1 % » ; dernière fois ; rang ; tendance ;
+- filtres : bornes des périodes, service, présidence par `normalizeName`, langue sans effet sur le
+  dénominateur ; jamais joués ; à redécouvrir (rien depuis le début) ; slug absent de l'index.
+
+`tests/statistiques.spec.ts`, setlists simulées (`signInAs`, `fakeFirestore`), horloge fixée
+(`page.clock.setFixedTime`) :
+- un admin voit l'entrée, la page et les nombres du jeu d'essai ; chaque filtre change ce qu'il doit, et
+  rien d'autre ; trier par « Dernière fois » ou « Tendance » laisse les rangs ;
+- un titre ouvre `/songs/{slug}`, le retour retrouve vue et filtres ; « Jamais joués », « À
+  redécouvrir », messages vide et échec (lecture refusée simulée) ;
+- un responsable non admin (droit de planning) : aucune entrée, l'adresse affiche « Page réservée aux
+  administrateurs. » ; sans compte : la connexion ; captures regardées sur les trois appareils.
+
+`tests/back-office-coupe.spec.ts` : l'adresse répond 404, interrupteur coupé.
+
+## Hors périmètre
+
+- **Toujours** : admins seulement ; publiées passées ; une fois par setlist ; lecture REST seule, aucune
+  écriture ; trois appareils ; données simulées dans les tests.
+- **Demander avant** : un export (CSV, PDF) ; une route serveur ou un instantané du cron ; aligner
+  `scripts/recommended-keys.ts` ou le compteur d'Harmonie sur ce calcul ; tout chiffre de jeu hors du
+  Back-Office ; d'autres statistiques (présidences, tonalités, thèmes) ; une dépendance npm.
+- **Jamais** : « joué le … » dans l'éditeur ou la recherche des chants (T7) ; durcir les règles des
+  setlists sans nouvelle demande (choix assumé du CLAUDE.md) ; lire la base de production pour tester ;
+  toucher aux couleurs gelées.
+
+## Questions ouvertes
+
+1. **Tendance par moitiés de la période ?** Comparer à la période d'avant laisserait la colonne vide
+   jusqu'au 24/11/2026 sur 3 mois, jusqu'au 24/05/2028 sur 12 mois (le défaut). *Recommandation : oui.*
+2. **« À redécouvrir » = au moins 3 setlists avant la période, aucune pendant ?** Vide sur 12 mois jusqu'à fin
+   mai 2027 au moins, utile dès maintenant sur 3 mois. *Recommandation : oui.*
+3. **Le filtre de langue porte sur les chants** (le % garde toutes les setlists), et non sur la langue
+   de la setlist (`fr`, `zh`, `mixed`) ? *Recommandation : oui.*
+4. **Le widget « Chants les plus joués » se construit dans U7** (S5), réservé aux admins, U6 lui gardant
+   sa place au catalogue ? *Recommandation : oui, il a besoin du calcul de U7.*
+5. **`scripts/recommended-keys.ts` reste tel quel ?** Il compte aussi privées et setlists à venir, et deux
+   fois un chant repris : la tonalité la plus jouée de la page pourra différer un peu de la liste du
+   14/09. *Recommandation : oui ; l'aligner sur `chantsDeLaSetlist` le jour où on le relance.*
+6. **Harmonie garde « N fois en setlist »** pour les pianistes et guitaristes (lot 9), bien que les
+   données de jeu restent aux admins (T7) ? Son compte oublie les chants de fusion et inclut les setlists
+   à venir. *Recommandation : oui, tel quel ; T7 vise l'éditeur.*
+7. **Route `/back-office/statistiques` ?** *Recommandation : oui, si U6 retient le préfixe `/back-office`.*
+
+## Commandes
+
+```bash
+npm test -- tests/statistiques-calcul.spec.ts tests/statistiques.spec.ts   # PW_PORT=3000 si un next dev tourne déjà
+npm test -- tests/back-office-coupe.spec.ts                                  # second serveur, interrupteur coupé
+npx tsc --noEmit
+npm run lint
+```
+
+## Avancement
+
+Rien n'est codé : la spec attend la validation de Timothée, puis son go.
