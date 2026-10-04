@@ -156,14 +156,14 @@ export const EDD_FALLBACK: EddDataStructure = {
 }
 
 export const CAMP_LOUANGE_FALLBACK: CampusSeance[] = [
-  {d:'27/7 Soir',pres:'徐欢乐',ch:'Viviane, Paul',mu:'Piano: Jo, Guitare: Telle, Batterie: Steph',rg:'Sono: Denis, PPT: Lorenzo',ent:'',chants:['','','','']},
-  {d:'28/7 Matin',pres:'翁云丹',ch:'Daniela, Jonathan',mu:'Piano: Eva, Guitare: Éloïse, Batterie: Yiyi',rg:'Sono: Denis, PPT: Lorenzo',ent:'',chants:['','','','']},
-  {d:'28/7 Soir',pres:'周小秋',ch:'Oriane, Paul',mu:'Piano: Timo, Guitare: Éloïse, Batterie: Steph',rg:'Sono: Denis, PPT: Lorenzo',ent:'',chants:['','','','']},
-  {d:'29/7 Matin',pres:'徐欢乐',ch:'Viviane, Jonathan',mu:'Piano: Esther, Guitare: Telle, Batterie: Steph',rg:'Sono: Denis, PPT: Lorenzo',ent:'',chants:['','','','']},
-  {d:'29/7 Soir',pres:'Jonathan',ch:'翁云丹, Daniela',mu:'Piano: Eva, Guitare: Éloïse, Batterie: Lauriane',rg:'Sono: Denis, PPT: Lorenzo',ent:'',chants:['','','','']},
-  {d:'30/7 Matin',pres:'周小秋',ch:'Oriane, Paul',mu:'Piano: Timo, Guitare: Éloïse, Batterie: Steph',rg:'Sono: Denis, PPT: Lorenzo',ent:'',chants:['','','','']},
-  {d:'30/7 Soir',pres:'翁云丹',ch:'Daniela, Jonathan',mu:'Piano: Eva, Guitare: Éloïse, Batterie: Yiyi',rg:'Sono: Denis, PPT: Lorenzo',ent:'',chants:['','','','']},
-  {d:'31/7 Matin',pres:'Paul',ch:'徐欢乐, Viviane',mu:'Piano: Jo, Guitare: Telle, Batterie: Hewei',rg:'Sono: Denis, PPT: Lorenzo',ent:'',chants:['','','','']},
+  {d:'27/7 Soir',date:'2026-07-27',pres:'徐欢乐',ch:'Viviane, Paul',mu:'Piano: Jo, Guitare: Telle, Batterie: Steph',rg:'Sono: Denis, PPT: Lorenzo',ent:'',chants:['','','','']},
+  {d:'28/7 Matin',date:'2026-07-28',pres:'翁云丹',ch:'Daniela, Jonathan',mu:'Piano: Eva, Guitare: Éloïse, Batterie: Yiyi',rg:'Sono: Denis, PPT: Lorenzo',ent:'',chants:['','','','']},
+  {d:'28/7 Soir',date:'2026-07-28',pres:'周小秋',ch:'Oriane, Paul',mu:'Piano: Timo, Guitare: Éloïse, Batterie: Steph',rg:'Sono: Denis, PPT: Lorenzo',ent:'',chants:['','','','']},
+  {d:'29/7 Matin',date:'2026-07-29',pres:'徐欢乐',ch:'Viviane, Jonathan',mu:'Piano: Esther, Guitare: Telle, Batterie: Steph',rg:'Sono: Denis, PPT: Lorenzo',ent:'',chants:['','','','']},
+  {d:'29/7 Soir',date:'2026-07-29',pres:'Jonathan',ch:'翁云丹, Daniela',mu:'Piano: Eva, Guitare: Éloïse, Batterie: Lauriane',rg:'Sono: Denis, PPT: Lorenzo',ent:'',chants:['','','','']},
+  {d:'30/7 Matin',date:'2026-07-30',pres:'周小秋',ch:'Oriane, Paul',mu:'Piano: Timo, Guitare: Éloïse, Batterie: Steph',rg:'Sono: Denis, PPT: Lorenzo',ent:'',chants:['','','','']},
+  {d:'30/7 Soir',date:'2026-07-30',pres:'翁云丹',ch:'Daniela, Jonathan',mu:'Piano: Eva, Guitare: Éloïse, Batterie: Yiyi',rg:'Sono: Denis, PPT: Lorenzo',ent:'',chants:['','','','']},
+  {d:'31/7 Matin',date:'2026-07-31',pres:'Paul',ch:'徐欢乐, Viviane',mu:'Piano: Jo, Guitare: Telle, Batterie: Hewei',rg:'Sono: Denis, PPT: Lorenzo',ent:'',chants:['','','','']},
 ]
 
 export const CAMP_ENT_FALLBACK: CampusSeance[] = CAMP_LOUANGE_FALLBACK.map((s, i) => ({

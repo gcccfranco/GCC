@@ -18,7 +18,7 @@ const planning: PlanningData = {
   ...vide,
   culte: [["2026-09-20", "Paul W.", "Christelle Z.", "Inès L.", "Ruth K.", "Éloïse M.", "Stéphane Z.", "Anyi Y.", "Karémy X.", "Hewei", "", "Ruth K."]],
   dejeuner: [["2026-09-20", "Ruth K., Charlie B."]],
-  campus: [{ d: "20/9 Matin", pres: "Jonathan Z.", ch: "Ruth K.", mu: "", rg: "", ent: "2026-09-22", entTime: "17:00", entLieu: "Grande Salle", chants: [] }],
+  campus: [{ d: "20/9 Matin", date: "2026-09-20", pres: "Jonathan Z.", ch: "Ruth K.", mu: "", rg: "", ent: "2026-09-22", entTime: "17:00", entLieu: "Grande Salle", chants: [] }],
 };
 
 test("les services du jour d'une personne, rôles réunis, séance Campus exclue", () => {

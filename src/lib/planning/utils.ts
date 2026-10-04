@@ -82,6 +82,8 @@ export function getCurrentEddPeriode(): EddPeriode {
 
 export interface CampusSeance {
   d: string
+  /** Date de la séance (ISO YYYY-MM-DD), gardée telle que lue : le libellé « 27/7 » n'a pas d'année. */
+  date: string
   /** Président de la séance (colonne PRESIDENT du planning) */
   pres: string
   ch: string

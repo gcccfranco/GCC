@@ -6,7 +6,7 @@ import {
 } from "./data"
 import {
   fetchCulte, fetchDejeuner, fetchPaix, fetchFidelite,
-  fetchFideliteMusic, fetchBonte, fetchEDD, fetchCampus, inferYear,
+  fetchFideliteMusic, fetchBonte, fetchEDD, fetchCampus,
   fetchIntergroupe, fetchInterfranco, fetchPetitDej,
 } from "./sheets"
 import type { ServiceRole } from "@/types/user"
@@ -236,13 +236,6 @@ export interface ServiceEntry {
   moment?: "matin" | "soir"
 }
 
-/** Date d'une séance campus ("12/3 Matin") → ISO, même convention d'année que parseDate. */
-function campusDate(label: string): string | null {
-  const m = label.match(/^(\d{1,2})\/(\d{1,2})/)
-  if (!m) return null
-  return `${inferYear(+m[1], +m[2])}-${m[2].padStart(2, "0")}-${m[1].padStart(2, "0")}`
-}
-
 /** Toutes les dates où `name` apparaît dans les plannings, triées chronologiquement. */
 export function findMyServices(data: PlanningData, name: string): ServiceEntry[] {
   if (!name.trim()) return []
@@ -275,7 +268,7 @@ export function findMyServices(data: PlanningData, name: string): ServiceEntry[]
     }
   }
   for (const s of data.campus) {
-    const dt = campusDate(s.d)
+    const dt = s.date
     if (!dt) continue
     const moment = s.d.includes("Soir") ? "Campus (soir)" : "Campus (matin)"
     const seanceMoment: "matin" | "soir" = s.d.includes("Soir") ? "soir" : "matin"
@@ -350,7 +343,7 @@ export function setlistSeances(data: PlanningData): SetlistSeance[] {
     for (const cls of EDD_CLASSES) pushRows(classes[cls] ?? [], cls)
   }
   for (const s of data.campus) {
-    const date = campusDate(s.d)
+    const date = s.date
     if (!date) continue
     const moment: "matin" | "soir" = s.d.includes("Soir") ? "soir" : "matin"
     const leader = splitNames(s.pres)[0] ?? ""
@@ -420,7 +413,7 @@ export function servantsForDate(data: PlanningData, dateISO: string): Servant[] 
   }
   // Campus : date via le label ; matin/soir distingués par le leader (président).
   for (const s of data.campus) {
-    if (campusDate(s.d) !== dateISO) continue
+    if (s.date !== dateISO) continue
     const leader = splitNames(s.pres)[0] ?? ""
     const moment: "matin" | "soir" = s.d.includes("Soir") ? "soir" : "matin"
     for (const name of splitNames(s.pres)) out.push({ name, category: "Campus", serviceRole: "presidence", leader, moment })

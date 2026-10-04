@@ -40,19 +40,13 @@ export function parseCSV(txt: string): string[][] {
   return rows
 }
 
-/** Année pour une date JJ/MM sans année. Les feuilles ne couvrent que l'année
- *  en cours : on retourne donc l'année civile actuelle par défaut, et on ne
- *  bascule sur une année adjacente qu'au voisinage du nouvel an — jamais en
- *  milieu d'année. (L'ancienne heuristique « année la plus proche » projetait
- *  à tort une date de janvier vue en juillet sur l'année suivante.) */
-export function inferYear(_day: number, month: number): number {
-  const now = new Date()
-  const year = now.getFullYear()
-  const cur = now.getMonth() + 1 // mois courant, 1–12
-  if (cur >= 11 && month <= 2) return year + 1 // fin d'année → dates de début d'année à venir
-  if (cur <= 2 && month >= 11) return year - 1 // début d'année → dates de fin d'année écoulée
-  return year
-}
+/** Année des dates JJ/MM du Google Sheet : c'est le fichier du planning 2026
+ *  (« [2026 QG] Planning »), qui le restera — le planning 2027 se fait dans
+ *  l'app (lot U2, docs/spec-planning-2027.md). Deviner l'année d'après la date
+ *  du jour rangeait, dès le 1er novembre, les dimanches de janvier-février du
+ *  Sheet dans l'année suivante : services fantômes dans « Mes services » et les
+ *  rappels. */
+export const ANNEE_DU_SHEET = 2026
 
 export function parseDate(s: string): string | null {
   if (!s) return null
@@ -66,7 +60,7 @@ export function parseDate(s: string): string | null {
   if (m3) return `20${m3[3]}-${m3[2].padStart(2,"0")}-${m3[1].padStart(2,"0")}`
   // DD/MM sans année — format utilisé par la plupart des feuilles (Culte, Groupes, Déjeuner…)
   const m4 = s.match(/^(\d{1,2})\/(\d{1,2})$/)
-  if (m4) return `${inferYear(+m4[1], +m4[2])}-${m4[2].padStart(2,"0")}-${m4[1].padStart(2,"0")}`
+  if (m4) return `${ANNEE_DU_SHEET}-${m4[2].padStart(2,"0")}-${m4[1].padStart(2,"0")}`
   return null
 }
 
@@ -307,7 +301,7 @@ export function seanceCampus(row: string[], moment: "Matin" | "Soir"): CampusSea
     }
     entLieu = rest.join(" ").trim()
   }
-  return { d: `${label} ${moment}`, pres, ch, mu, rg, ent, entTime, entLieu, chants: [row[9]||"", row[10]||"", row[11]||"", row[12]||""] }
+  return { d: `${label} ${moment}`, date: row[0], pres, ch, mu, rg, ent, entTime, entLieu, chants: [row[9]||"", row[10]||"", row[11]||"", row[12]||""] }
 }
 
 /** Les deux grilles du Campus (matin, soir) réunies au Sheet, dans la forme de leur définition. */
