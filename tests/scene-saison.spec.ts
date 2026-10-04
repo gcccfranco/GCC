@@ -1,4 +1,7 @@
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import { expect, test } from "@playwright/test";
+import { canReserverPour } from "../src/lib/access";
 import {
   erreursSaison, FAMILLES, grilleDuJour, horsGrille, joursReservables, lignesDuJour, quiPermis, saisonDe,
 } from "../src/lib/scene/saison";
@@ -163,4 +166,45 @@ test("groupes proposés : tous sans limite, sinon ceux des familles permises, da
   expect(quiPermis({ quiAutorises: [] })).toEqual([...QUI]);
   expect(quiPermis({ quiAutorises: SAISON.quiAutorises })).not.toContain("Chorale");
   expect(quiPermis({ quiAutorises: ["Jeunes", "Franco"] })).toEqual(["Franco", "Jeunes"]);
+});
+
+// ─── S2 : droits, en double (access.ts et firestore.rules) ─────────────────
+
+const MEMBRE = { uid: "uid-jo", email: "jo@example.com" };
+const COORD = { uid: "uid-alice", email: "alice@example.com" };
+const POLE_EVENEMENT = { poles: ["evenement"] };
+const PERMIS = { ouvert: true, quiAutorises: SAISON.quiAutorises };
+
+test("réserver pour : liste vide → tout membre connecté, pour n'importe quel groupe", () => {
+  expect(canReserverPour(MEMBRE, null, { ouvert: true, quiAutorises: [] }, ["Chorale"])).toBe(true);
+  expect(canReserverPour(MEMBRE, null, {}, ["Gp Joie"]), "programme d'avant U1").toBe(true);
+  expect(canReserverPour(null, null, {}, ["Gp Joie"]), "rien sans compte").toBe(false);
+});
+
+test("réserver pour : un groupe d'une famille permise → oui ; « Chorale » hors familles → non", () => {
+  expect(canReserverPour(MEMBRE, null, PERMIS, ["Jeunes"])).toBe(true);
+  expect(canReserverPour(MEMBRE, null, PERMIS, ["Gp Paix", "EDD 中班"])).toBe(true);
+  expect(canReserverPour(MEMBRE, null, PERMIS, ["Chorale"])).toBe(false);
+  expect(canReserverPour(MEMBRE, null, PERMIS, ["Jeunes", "Chorale"])).toBe(false);
+});
+
+test("réserver pour : la coordination toujours, même un brouillon ; un membre jamais dans un brouillon", () => {
+  expect(canReserverPour(COORD, POLE_EVENEMENT, PERMIS, ["Chorale"])).toBe(true);
+  expect(canReserverPour(COORD, POLE_EVENEMENT, { ...PERMIS, ouvert: false }, ["Chorale"])).toBe(true);
+  expect(canReserverPour(MEMBRE, null, { ouvert: false, quiAutorises: [] }, ["Jeunes"])).toBe(false);
+});
+
+test("règles Firestore : les créneaux passent par reservable(), miroir de canReserverPour", () => {
+  const rules = readFileSync(path.join(process.cwd(), "firestore.rules"), "utf8");
+  const fonction = rules.slice(rules.indexOf("function reservable("), rules.indexOf("match /creneaux/{cid}"));
+  expect(fonction).toContain("p.get('ouvert', true) == true");
+  expect(fonction).toContain("p.get('quiAutorises', []).size() == 0 || qui.hasOnly(p.quiAutorises)");
+  const bloc = rules.slice(rules.indexOf("match /creneaux/{cid}"));
+  const create = bloc.slice(bloc.indexOf("allow create"), bloc.indexOf("allow update"));
+  const update = bloc.slice(bloc.indexOf("allow update"), bloc.indexOf("allow delete"));
+  const del = bloc.slice(bloc.indexOf("allow delete"), bloc.indexOf("}"));
+  expect(create).toContain("request.resource.data.auteurUid == request.auth.uid");
+  expect(create).toContain("isCoordination() || reservable(id, request.resource.data.qui)");
+  expect(update).toContain("reservable(id, request.resource.data.qui)");
+  expect(del).not.toContain("reservable");
 });
