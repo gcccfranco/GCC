@@ -1902,7 +1902,15 @@
     "iosInstall": "Sur iPhone ou iPad : ajoute d'abord le site à l'écran d'accueil (Partager, puis « Sur l'écran d'accueil »), puis ouvre-le depuis l'icône pour activer les notifications.",
     "blocked": "Les notifications sont bloquées pour ce site dans ton navigateur. Pour les réactiver : clique sur l'icône à gauche de l'adresse, puis Notifications, Autoriser, et recharge la page.",
     "promptTitle": "Active les rappels de service",
-    "promptText": "Reçois un rappel avant chaque service et une alerte quand une setlist est prête."
+    "promptText": "Reçois un rappel avant chaque service et une alerte quand une setlist est prête.",
+    "recevoir": "Recevoir",
+    "types": {
+      "reminders": "Rappels de service",
+      "setlists": "Setlist prête",
+      "evenements": "Évènements",
+      "taches": "Tâches",
+      "petitDej": "Petit déj"
+    }
   },
   "proposition": {
     "titre": "Proposer un nouveau chant",

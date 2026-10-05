@@ -1,6 +1,6 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
-import { fsDoc, signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { abonneAuxNotifications, fsDoc, signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { parsePetitDej } from "../src/lib/planning/sheets";
 import { findMyServices, type PlanningData } from "../src/lib/planning/names";
 import { reminderBody, reminderServicesFor, type ReminderService } from "../src/lib/push/reminderMessage";
@@ -14,6 +14,9 @@ import { documentDimanche, nomsNonRattaches } from "../src/lib/planning/import";
 import { serviceButtonFill } from "../src/lib/serviceButton";
 import { PLANNING_COLORS } from "../src/lib/serviceColors";
 import type { LignePetitDej } from "../src/types/petitDej";
+import { estMercredi, lignesMercredi, petitDejTitre, prochainDimanche } from "../src/lib/petitdej/rappel";
+import { avecLignes } from "../src/lib/evenements/rappel";
+import { DEFAULT_NOTIF_PREFS, NOTIF_TYPE_LABELS, NOTIF_TYPES } from "../src/types/user";
 
 // Lot 1b (docs/spec-planning-petits-lots.md) : le petit déj se lisait dans le
 // bloc « PETIT DÉJEUNER » de l'onglet Franco_Table_PtD (colonnes 17 DATE / 18 NOM
@@ -30,6 +33,10 @@ import type { LignePetitDej } from "../src/types/petitDej";
 // Tranche PD3 : une ligne posée par « Je m'inscris » compte pour son inscrit
 // (Q9) dans « Ton prochain service », « Mes services » (même sans nom de
 // planning) et les rappels J-7 / J-3 / J-1, sans doublon.
+// Tranche PD4 : le mercredi, si le dimanche qui vient est libre, une ligne de
+// plus dans le rappel du matin (T5, Q5) ; préférence « Petit déj », active par
+// défaut, dans Mon profil › Notifications, liste « Recevoir » traduite (question 7).
+// Le cron lui-même se relit, il ne s'exécute pas ici (comme le reste du cron).
 
 const csv = (rows: string[][]) => rows.map((r) => r.map((c) => `"${c}"`).join(",")).join("\n");
 
@@ -701,4 +708,82 @@ test("Mes services en 中文 : un compte sans nom de planning voit ses petits d�
   ]), SANS_NOM);
   await expect(page.getByRole("listitem").filter({ hasText: "Petit déj" })).toHaveCount(1);
   await expect(page.getByText(/Camille Exemple/)).toBeVisible();
+});
+
+// ─── U3 · PD4 : le mercredi (T5, Q5) ────────────────────────────────────────
+
+test("le mercredi : le dimanche qui vient est à J+4 ; les autres jours ne sont pas des mercredis", () => {
+  expect(estMercredi("2026-09-16")).toBe(true);
+  expect(estMercredi("2026-09-17"), "un jeudi").toBe(false);
+  expect(estMercredi("2026-09-20"), "un dimanche").toBe(false);
+  expect(prochainDimanche("2026-09-16")).toBe("2026-09-20");
+  expect(prochainDimanche("2026-09-30"), "d'un mois sur l'autre").toBe("2026-10-04");
+});
+
+test("lignesMercredi : dimanche libre, la ligne puis « Ne plus recevoir », en français et en 中文, fondues à la suite du rappel", () => {
+  const autreDimanche = [ligne({ id: "a", dimanche: "2026-09-27", nom: "Famille Martin" })];
+  const fr = lignesMercredi("2026-09-16", autreDimanche, "fr");
+  expect(fr, "une ligne d'un autre dimanche ne prend pas le 20").toEqual([
+    "Dimanche 20 septembre : personne pour le petit déj.",
+    "Ne plus recevoir : Moi › Mon profil › Notifications › Petit déj",
+  ]);
+  expect(lignesMercredi("2026-09-16", [], "zh-CN")).toEqual([
+    "9月20日星期日：还没有人负责早餐。",
+    "不再接收：我 › 我的资料 › 通知 › 早餐",
+  ]);
+  expect(
+    avecLignes("Samedi 19 septembre (dans 3 jours) : Groupe Paix (Piano)", fr),
+    "une notification, pas une de plus : le corps du rappel, puis les deux lignes",
+  ).toBe([
+    "Samedi 19 septembre (dans 3 jours) : Groupe Paix (Piano)",
+    "Dimanche 20 septembre : personne pour le petit déj.",
+    "Ne plus recevoir : Moi › Mon profil › Notifications › Petit déj",
+  ].join("\n"));
+  expect(petitDejTitre("fr"), "seule, la notification porte ce titre").toBe("Petit déj");
+  expect(petitDejTitre("zh-CN")).toBe("早餐");
+});
+
+test("lignesMercredi : rien si le dimanche est pris, si la lecture a échoué (Q10), ni un autre jour", () => {
+  const pris = [ligne({ id: "a", dimanche: "2026-09-20", nom: "Les jeunes du Campus" })];
+  expect(lignesMercredi("2026-09-16", pris, "fr"), "une ligne suffit à prendre le dimanche (T2)").toEqual([]);
+  expect(lignesMercredi("2026-09-16", null, "fr"), "une lecture en échec n'est pas « personne »").toEqual([]);
+  expect(lignesMercredi("2026-09-17", [], "fr"), "un jeudi").toEqual([]);
+  expect(lignesMercredi("2026-09-20", [], "zh-CN"), "un dimanche").toEqual([]);
+});
+
+test("préférence « Petit déj » : un type de notification, active par défaut", () => {
+  expect(NOTIF_TYPES).toContain("petitDej");
+  expect(DEFAULT_NOTIF_PREFS.petitDej).toBe(true);
+  expect(NOTIF_TYPE_LABELS.petitDej).toBe("Petit déj");
+});
+
+test("Mon profil › Notifications : la bascule « Petit déj » est active par défaut ; l'éteindre écrit notifPrefs/{uid}.petitDej = false", async ({ page }) => {
+  await abonneAuxNotifications(page);
+  const db = await signInAs(page, CHARLIE, {}, "/profil");
+  await expect(page.getByText("Recevoir", { exact: true })).toBeVisible();
+  const bascule = page.getByRole("switch", { name: "Petit déj" });
+  await expect(bascule, "aucun document notifPrefs : actif par défaut").toBeChecked();
+  await bascule.scrollIntoViewIfNeeded();
+  await capture(page, "profil-notifications-petit-dej");
+
+  await bascule.click();
+  await expect(bascule).not.toBeChecked();
+  await expect.poll(() => db.doc(`notifPrefs/${CHARLIE.uid}`)?.petitDej).toBe(false);
+  expect(db.doc(`notifPrefs/${CHARLIE.uid}`), "les autres préférences restent").toMatchObject({
+    reminders: true, setlists: true, evenements: true, taches: true,
+  });
+});
+
+test("Mon profil › Notifications en 中文 : la liste « Recevoir » est traduite ; une préférence éteinte le reste", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
+  await abonneAuxNotifications(page);
+  await signInAs(page, CHARLIE, { [`notifPrefs/${CHARLIE.uid}`]: { petitDej: false } }, "/profil");
+  await expect(page.getByText("接收", { exact: true })).toBeVisible();
+  for (const nom of ["服侍提醒", "歌单已准备好", "活动", "任务"]) {
+    await expect(page.getByRole("switch", { name: nom }), nom).toBeChecked();
+  }
+  await expect(page.getByRole("switch", { name: "早餐" }), "éteinte dans notifPrefs").not.toBeChecked();
+  await expect(page.getByText("Petit déj", { exact: true })).toHaveCount(0);
+  await page.getByRole("switch", { name: "早餐" }).scrollIntoViewIfNeeded();
+  await capture(page, "profil-notifications-petit-dej-zh");
 });

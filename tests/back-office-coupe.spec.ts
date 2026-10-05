@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { BASE_URL_COUPE } from "../playwright.config";
-import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { abonneAuxNotifications, signInAs, type FakeProfile } from "./helpers/fakeSession";
 
 // Lot 18 (docs/spec-mise-en-ligne.md) : ce que voit le site en ligne tant que le
 // back-office n'est pas ouvert. Ce serveur tourne SANS `NEXT_PUBLIC_BACK_OFFICE` ;
@@ -207,5 +207,13 @@ test.describe("back-office coupé : le petit déj vient encore du Sheet", () => 
     await ouvrir(page, "2026-09-20", "/planning");
     const dimanche = page.getByRole("region", { name: /本主日/ });
     await expect(dimanche.getByText("早餐", { exact: true })).toBeVisible();
+  });
+
+  // PD4 : coupé, ni ligne du mercredi (cron) ni bascule « Petit déj » dans Mon profil.
+  test("Mon profil › Notifications : pas de bascule « Petit déj » (PD4)", async ({ page }) => {
+    await abonneAuxNotifications(page);
+    await signInAs(page, CHARLIE, {}, "/profil");
+    await expect(page.getByRole("switch", { name: "Rappels de service" })).toBeChecked();
+    await expect(page.getByRole("switch", { name: "Petit déj" })).toHaveCount(0);
   });
 });

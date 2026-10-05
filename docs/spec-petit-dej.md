@@ -394,8 +394,35 @@ de poussé).
   Vus rouges (18 sur 27) avant le code, verts ensuite sur ordinateur, téléphone et tablette ; captures regardées aux
   trois tailles ; `tsc` et `lint` propres.
 
-Reste : PD4, PD5.
+**05/10/2026 — PD4 (le mercredi) : codée**, commit « feat(U3): PD4 » sur `lot/u3-petit-dej` (commits locaux, rien de
+poussé).
+
+- `"petitDej"` dans `NOTIF_TYPES`, `DEFAULT_NOTIF_PREFS` (`true`) et `NOTIF_TYPE_LABELS` (« Petit déj »),
+  `src/types/user.ts`. Mon profil › Notifications : la bascule « Petit déj », active par défaut, masquée interrupteur
+  coupé (`PushToggle.tsx`, Q14). Question 7 (recommandation : oui) : la liste « Recevoir » est traduite, six clés
+  `push.recevoir` et `push.types.*` (接收, 服侍提醒, 歌单已准备好, 活动, 任务, 早餐).
+- `src/lib/petitdej/rappel.ts` (pur) : `estMercredi`, `prochainDimanche` (le dimanche qui vient, J+4 un mercredi),
+  `lignesMercredi` (les deux lignes de Q5 en FR et 中文 ; rien un autre jour, rien si le dimanche a une ligne, rien si
+  la lecture a échoué), `petitDejTitre` (« Petit déj » / « 早餐 »).
+- Rappel du matin (`src/app/api/cron/reminders/route.ts`) : le mercredi d'un dimanche libre, tous les comptes
+  (`users`), filtrés par la préférence « Petit déj » et par l'anti-doublon `notifLog` `petit-dej-libre-<dimanche>` ;
+  les deux lignes s'ajoutent à la première notification de la personne ce jour-là (service, sinon tâches seules,
+  sinon ouvertures seules), sinon une notification seule par langue, `url: "/planning/table"`, une entrée de cloche
+  par langue. Lecture des inscriptions en échec : pas de ligne du mercredi. `markNotified` écrit par lots de 500 (la
+  limite d'un lot Firestore, atteinte en marquant tous les comptes). Coupé : rien. Relu, pas exécuté (comme le reste
+  du cron).
+- Tests : `tests/planning-petit-dej.spec.ts` (mercredi, J+4, lignes FR et 中文 fondues à la suite d'un rappel, rien si
+  pris / lecture en échec / un autre jour, type de notification par défaut ; Mon profil : bascule active par défaut,
+  l'éteindre écrit `notifPrefs/{uid}.petitDej = false`, les autres restent ; liste traduite en 中文, préférence éteinte
+  relue), `tests/back-office-coupe.spec.ts` (coupé : pas de bascule « Petit déj »), `tests/coherence.spec.ts` (la
+  liste des types compte `petitDej`). `tests/helpers/fakeSession.ts` : `abonneAuxNotifications` (abonnement push
+  simulé, sans service worker). Vus rouges (21) avant le code, verts ensuite sur ordinateur, téléphone et tablette ;
+  captures regardées aux trois tailles ; `tsc` et `lint` propres.
+
+Reste : PD5.
 
 À faire par Timothée : publier `firestore.rules` (règle `petitDej`) **avant** la validation en local ; relire les
-libellés 中文 de la carte (`planning.petitDej.*`). PD3 n'ajoute ni règle ni libellé. Remarque : à la fin d'un trimestre, la carte montre aussi ses
+libellés 中文 de la carte (`planning.petitDej.*`), de la liste « Recevoir » (`push.recevoir`, `push.types.*`) et des
+deux lignes du mercredi (`src/lib/petitdej/rappel.ts`). PD3 et PD4 n'ajoutent aucune règle (`notifPrefs/{uid}` accepte
+déjà le nouveau champ). Remarque : à la fin d'un trimestre, la carte montre aussi ses
 dimanches passés (Q11 : tous ceux du trimestre choisi), là où la planche n'en montrait qu'un.
