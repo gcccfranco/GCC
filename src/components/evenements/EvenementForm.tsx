@@ -23,6 +23,9 @@ import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
 
 const MAX_IMAGES = 3
+// Une réunion (lot U6, relecture) a toujours une date : jamais « Info » (sujets jusqu'au début,
+// rappel de la veille, réunions précédentes). Elle prend « Église » si elle était une info.
+const TYPE_REUNION: EvenementType = "eglise"
 const MAX_TOTAL_CHARS = 750_000
 
 export type EvenementValues = Omit<Evenement, "id" | "organisateurUid" | "organisateurNom" | "inscrits" | "createdAt" | "updatedAt" | "compteRendu">
@@ -64,7 +67,10 @@ export function EvenementForm({ initial, pours, creation, inscrits = 0, onSubmit
   onCancel: () => void
 }) {
   const { t } = useTranslation()
-  const [v, setV] = useState<EvenementValues>({ ...initial, pour: pours.includes(initial.pour) ? initial.pour : (pours[0] as EvenementValues["pour"]) })
+  const [v, setV] = useState<EvenementValues>(() => {
+    const pour = pours.includes(initial.pour) ? initial.pour : (pours[0] as EvenementValues["pour"])
+    return { ...initial, pour, ...(estReunion(pour) && initial.type === "info" ? { type: TYPE_REUNION } : {}) }
+  })
   const [prevenir, setPrevenir] = useState(initial.type !== "eglise")
   const [error, setError] = useState("")
   const [busy, setBusy] = useState(false)
@@ -160,13 +166,16 @@ export function EvenementForm({ initial, pours, creation, inscrits = 0, onSubmit
           <div className="space-y-1">
             <label htmlFor="ev-type" className={LABEL}>{t("evenements.form.type")}</label>
             <select id="ev-type" className={field} value={v.type} onChange={(e) => setType(e.target.value as EvenementType)}>
-              {EVENEMENT_TYPES.map((x) => <option key={x} value={x}>{t(`evenements.types.${x}`)}</option>)}
+              {EVENEMENT_TYPES.filter((x) => !reunion || x !== "info").map((x) => <option key={x} value={x}>{t(`evenements.types.${x}`)}</option>)}
             </select>
           </div>
           <div className="space-y-1">
             <label htmlFor="ev-pour" className={LABEL}>{t("evenements.form.pour")}</label>
             <select id="ev-pour" className={field} value={v.pour}
-              onChange={(e) => set({ pour: e.target.value as EvenementValues["pour"], ...(estReunion(e.target.value) ? sansInscription : {}) })}>
+              onChange={(e) => set({
+                pour: e.target.value as EvenementValues["pour"],
+                ...(estReunion(e.target.value) ? { ...sansInscription, ...(info ? { type: TYPE_REUNION } : {}) } : {}),
+              })}>
               {pours.map((p) => {
                 const pole = poleDuPour(p)
                 const equipe = equipeDuPour(p)

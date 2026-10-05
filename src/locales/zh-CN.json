@@ -1701,6 +1701,7 @@
     "dupliquer": "复制",
     "supprimer": "删除",
     "confirmDelete": "删除「{{titre}}」？报名信息将丢失。",
+    "erreurSuppression": "删除失败，请重试。",
     "reserved": "此页面仅限协调组和各小组负责人。",
     "form": {
       "titre": "活动名称",
@@ -2246,6 +2247,21 @@
       "musiciens": "乐手"
     },
     "team": {
+      "orga": "统筹组",
+      "comite-franco": "法语堂委员会",
+      "da": "美工组",
+      "medias": "媒体组",
+      "developpement": "开发组",
+      "regie": "音控组",
+      "traduction": "翻译组",
+      "theologie": "神学组",
+      "evenementiel": "活动组",
+      "decoration": "布置组",
+      "accueil-j1": "迎新组",
+      "louange": "敬拜组",
+      "edd": "主日学"
+    },
+    "court": {
       "orga": "统筹组",
       "comite-franco": "法语堂委员会",
       "da": "美工组",

@@ -44,9 +44,9 @@ export function ImportEquipes() {
     }
   }
 
-  /** Lot U6 (R4) : repose pôles, équipes et référents (`dansEquipes`,
-   *  `referentDe`) de tous les membres des équipes — une fois pour les profils
-   *  d'avant les réunions d'équipe. Idempotent : rien à confirmer. */
+  /** Lot U6 (R4) : pose équipes et référents (`dansEquipes`, `referentDe`) de
+   *  tous les membres des équipes — une fois pour les profils d'avant les
+   *  réunions d'équipe. Les pôles ne bougent pas. Idempotent : rien à confirmer. */
   async function recalculerOrganigramme() {
     setRecalcul("busy");
     setImportErreur("");
@@ -106,9 +106,10 @@ export function ImportEquipes() {
         {importErreur && <p className="text-sm text-destructive">{importErreur}</p>}
       </div>
       <p className="text-xs text-muted-foreground">
-        « Recalculer » repose, sans relire le Sheet, les pôles, les équipes et les référents de
-        chaque membre d&apos;une équipe : c&apos;est ce qui ouvre les réunions d&apos;équipe à leurs
-        membres et leur création aux référents. À lancer une fois pour les profils existants.
+        « Recalculer » repose, sans relire le Sheet, les équipes et les référents de chaque
+        membre d&apos;une équipe (ses pôles ne changent pas) : c&apos;est ce qui ouvre les réunions
+        d&apos;équipe à leurs membres et leur création aux référents. À lancer une fois pour les
+        profils existants.
       </p>
       {typeof recalcul === "number" && (
         <p className="text-sm text-foreground">{recalcul} profil{recalcul > 1 ? "s" : ""} mis à jour.</p>

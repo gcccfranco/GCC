@@ -4,22 +4,22 @@
 // setlist publiée, la présentation et les cases vides (planche `bo-telephone-accueil`).
 import { useTranslation } from "react-i18next";
 import { CalendarDays, Check, CircleAlert } from "lucide-react";
-import { getSetlists } from "@/lib/firebase/setlists";
 import { useProfile } from "@/lib/firebase/users";
 import { todayIso } from "@/lib/scene/dimanches";
 import { GRILLES_DU_SERVICE, ceDimanche, prochainsDimanches, servicesDuDimanche, type ServiceDuDimanche } from "@/lib/tableauDeBord/donnees";
-import { lireGrilles, useLecture } from "@/lib/tableauDeBord/lecture";
+import { lireGrilles, lireSetlists, useLecture } from "@/lib/tableauDeBord/lecture";
 import type { Widget } from "@/types/backOffice";
 import { CadreWidget, Message, Pastille, jourLong } from "./Cadre";
 
 export function WidgetDimanche({ widget }: { widget: Widget }) {
   const { t, i18n } = useTranslation();
   const { user, profile } = useProfile();
-  const dimanche = prochainsDimanches(todayIso(), 1)[0];
+  const today = todayIso();
+  const dimanche = prochainsDimanches(today, 1)[0];
   const services = servicesDuDimanche(widget.reglages, user, profile);
   const { valeur, erreur } = useLecture(async () => {
     const cles = services.flatMap((s) => GRILLES_DU_SERVICE[s].map((g) => g.key));
-    const [rows, setlists] = await Promise.all([lireGrilles(cles), getSetlists()]);
+    const [rows, setlists] = await Promise.all([lireGrilles(cles), lireSetlists(today)]);
     return ceDimanche(rows, setlists, services, dimanche);
   }, `${dimanche}|${services.join()}`);
   const seul = valeur?.length === 1 ? valeur[0] : null;

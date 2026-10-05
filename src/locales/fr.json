@@ -1701,6 +1701,7 @@
     "dupliquer": "Dupliquer",
     "supprimer": "Supprimer",
     "confirmDelete": "Supprimer « {{titre}} » ? Les inscriptions seront perdues.",
+    "erreurSuppression": "Suppression impossible. Réessaie.",
     "reserved": "Cette page est réservée à la coordination et aux responsables de section.",
     "form": {
       "titre": "Nom de l'évènement",
@@ -2262,6 +2263,21 @@
       "accueil-j1": "TEAM ACCUEIL J1",
       "louange": "TEAM LOUANGE",
       "edd": "TEAM EDD"
+    },
+    "court": {
+      "orga": "Orga",
+      "comite-franco": "Comité franco",
+      "da": "DA",
+      "medias": "Médias",
+      "developpement": "Développement",
+      "regie": "Régie",
+      "traduction": "Traduction",
+      "theologie": "Théologie",
+      "evenementiel": "Événementiel",
+      "decoration": "Décoration",
+      "accueil-j1": "Accueil J1",
+      "louange": "Louange",
+      "edd": "EDD"
     },
     "soustitre": {
       "orga": "Coordination générale",
