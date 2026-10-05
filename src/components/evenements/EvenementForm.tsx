@@ -25,7 +25,7 @@ import { Textarea } from "@/components/ui/textarea"
 const MAX_IMAGES = 3
 const MAX_TOTAL_CHARS = 750_000
 
-export type EvenementValues = Omit<Evenement, "id" | "organisateurUid" | "organisateurNom" | "inscrits" | "createdAt" | "updatedAt">
+export type EvenementValues = Omit<Evenement, "id" | "organisateurUid" | "organisateurNom" | "inscrits" | "createdAt" | "updatedAt" | "compteRendu">
 
 export const EMPTY_EVENEMENT: EvenementValues = {
   titre: "", type: "loisir", pour: "eglise", date: "", heure: "", heureFin: "", dateFin: "", lieu: "", description: "",

@@ -376,8 +376,43 @@ npm test && npx tsc --noEmit && npm run lint && graphify update .
 
 ## Avancement
 
+**05/10/2026 — R2 « Reprise » codée** (branche `lot/u6-back-office`, commit « feat(U6): R2 — reprise des sujets
+non traités… », après R1). Le reste (B1 à B6, R3, R4) n'est pas commencé.
+
+- **Question à la création** : `src/app/evenements/nouveau/NouveauClient.tsx`, donc par « Créer » comme par
+  « Dupliquer » (`?from=`). À l'envoi d'une réunion de pôle, avant toute écriture, `lireSujetsAReprendre`
+  (`src/lib/firebase/sujets.ts`) lit les réunions du même `pour` (`listReunionsDu`, égalité seule : pas d'index
+  composite) déjà commencées et leurs sujets rouges ; s'il y en a, la feuille `RepriseSujets.tsx` (planche
+  `bo-reunion-nouvelle-telephone`) attend « Non, les laisser » ou « Oui, les reprendre ». Oui : la réunion est
+  créée, puis chaque sujet est **recopié** (à son nom, `auteurNom` d'origine, `repriseDe` rempli, ordre 0, 1, 2…)
+  et **ensuite** marqué `reprisDans` dans l'ancienne (masque sur ce seul champ, règle de R1). Non : rien n'est
+  écrit, ils restent rouges et reviennent à la création suivante (question 11). Une lecture refusée = rien à
+  reprendre, la création ne bloque jamais.
+- **Purs** (`src/lib/reunions/sujets.ts`) : `sujetsAReprendre` (rouges des réunions commencées, la plus ancienne
+  d'abord, chacune dans son ordre), `copieReprise`, `reunionsPrecedentes`, `jourDuMois`.
+- **Fiche** `/evenements/<id>` d'une réunion : un sujet repris passe en gris, « repris le 7 novembre » ; sa copie
+  dit « repris du 3 octobre ». Carte **« Réunions précédentes »** (`ReunionsPrecedentes.tsx`, planche
+  `bo-reunion-avant`) sous les sujets : réunions du même pôle avant celle-ci, la plus récente d'abord, date vers
+  leur fiche, « Compte rendu » (lien) ou « pas de compte rendu ». **B3 posera les deux cartes sur la fiche du
+  Back-Office.**
+- **Modèle** : `Evenement.compteRendu?` (type `CompteRendu`) ajouté et **lu** seulement, pour cette carte ; exclu de
+  `EvenementValues` et retiré à la duplication et à la modification, pour que le formulaire ne le recopie ni ne
+  l'écrase. **R3** l'écrit (règle, carte, rappels).
+- **Tests** : `tests/reunions.spec.ts`, 11 tests de plus (36 × ordinateur, téléphone, tablette ; vus rouges, puis
+  verts) : précédentes, à reprendre, copie, règle `reprisDans`, libellés ; oui en dupliquant (copie, marquage,
+  « repris du / le »), non (rien d'écrit, reproposé à la création suivante), plusieurs réunions (ni un autre pôle,
+  ni une réunion à venir), rien à reprendre = pas de question, carte des précédentes ; captures
+  `test-results/reunions-captures/*-reprise.png`, `*-repris.png`, `*-precedentes.png`. `evenements.spec.ts`,
+  `taches-evenements.spec.ts`, `back-office-coupe.spec.ts` verts.
+- **Choix faits faute de réponse dans la spec** : la question est posée **à l'envoi** du formulaire (la date et le
+  public sont connus), avant la création ; Échap ne la ferme pas (il faut répondre) ; elle porte sur **toutes**
+  les réunions déjà commencées du même pôle (question 11), sans limite de date ; plusieurs réunions : « Les
+  réunions précédentes en ont laissé N : » et la date de chacune à côté du sujet ; la copie garde la date d'ajout
+  d'origine ; un sujet repris garde sa case « traité » ; « Réunions précédentes » les montre **toutes** (pas de
+  « voir plus ») et n'apparaît pas pour la première réunion d'un pôle ; année ajoutée à la date si elle diffère.
+
 **05/10/2026 — R1 « Sujets à aborder » codée** (branche `lot/u6-back-office`, commit « feat(U6): R1 — sujets à
-aborder… »). Le reste (B1 à B6, R2 à R4) n'est pas commencé.
+aborder… »).
 
 - **Données** : sous-collection `evenements/{id}/sujets/{sid}` (`src/types/reunion.ts`), lue et écrite en REST
   (`src/lib/firebase/sujets.ts` : lire, ajouter, changer `ordre` ou `traite` par masque, retirer) ; calculs purs
@@ -403,6 +438,7 @@ aborder… »). Le reste (B1 à B6, R2 à R4) n'est pas commencé.
   pendant ou après la réunion) ; rouge = `text-red-700` (`#b91c1c`, tout près du `#b3261d` de la planche ;
   le thème n'a pas de jeton « alerte » de ce ton) ; les sujets d'une réunion supprimée restent dans Firestore, illisibles (la règle relit la réunion).
 
-À faire par Timothée : **publier `firestore.rules`** (bloc des sujets, R1) ; relire le 中文 de `evenements.sujets`
+À faire par Timothée : **publier `firestore.rules`** (bloc des sujets, R1 ; R2 n'y change rien, le marquage
+`reprisDans` y est déjà) ; relire le 中文 de `evenements.sujets`, `evenements.reprise` et `evenements.precedentes`
 (`src/locales/zh-CN.json`). Après les tranches suivantes : republier les règles (compte rendu, réunions d'équipe,
 `backOffice/{uid}`, création des profils) et cliquer une fois « Recalculer depuis l'organigramme ».

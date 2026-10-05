@@ -12,6 +12,16 @@ export type EvenementType = (typeof EVENEMENT_TYPES)[number];
 export type EvenementPour = "eglise" | AnnonceSection | `pole:${TachePole}`;
 export const POUR_EGLISE = "eglise" as const;
 
+/** Lien du compte rendu d'une réunion (lot U6, docs/spec-back-office.md) :
+ *  collé par une personne de la réunion (R3), lu par « Réunions précédentes » (R2). */
+export interface CompteRendu {
+  url: string;
+  parUid: string;
+  parNom: string;
+  /** ISO. */
+  le: string;
+}
+
 export const MODES_INSCRIPTIONS = ["auto", "ouvertes", "fermees"] as const;
 export type ModeInscriptions = (typeof MODES_INSCRIPTIONS)[number];
 
@@ -58,6 +68,9 @@ export interface Evenement {
   epingle: boolean;
   /** ISO ; l'entrée est masquée après cette date (null = jamais). */
   expiresAt: string | null;
+  /** Réunion (lot U6) : son compte rendu ; absent ou null = pas de compte rendu.
+   *  Jamais écrit par le formulaire de l'évènement (EvenementValues l'exclut). */
+  compteRendu?: CompteRendu | null;
   /** Inscrits + invités — tenu par le serveur seulement. */
   inscrits: number;
   createdAt: string;

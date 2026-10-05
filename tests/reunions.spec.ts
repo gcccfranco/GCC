@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { estDeLaReunion, peutAjouterSujet, peutOrdonnerSujets, peutRetirerSujet } from "../src/lib/access";
-import { estRouge, reordonner, trierSujets } from "../src/lib/reunions/sujets";
+import { copieReprise, estRouge, reordonner, reunionsPrecedentes, sujetsAReprendre, trierSujets } from "../src/lib/reunions/sujets";
 import type { Evenement } from "../src/types/evenement";
 import type { Sujet } from "../src/types/reunion";
 
@@ -12,6 +12,10 @@ import type { Sujet } from "../src/types/reunion";
 // double (access.ts + firestore.rules), ajout jusqu'au début de la réunion,
 // retrait par l'auteur, l'organisateur ou un admin, ordre au glisser et au
 // clavier, « traité », non traités en rouge une fois la réunion commencée.
+// Tranche R2 (en fin de fichier) : à la création d'une réunion du même pôle
+// (« Créer » ou « Dupliquer »), « Reprendre les sujets non traités ? » ; oui =
+// recopiés dans la nouvelle (repriseDe) et marqués dans l'ancienne (reprisDans),
+// non = rien d'écrit, reproposés la fois suivante ; carte « Réunions précédentes ».
 
 const ROOT = path.resolve(__dirname, "..");
 const lire = (rel: string) => readFileSync(path.join(ROOT, rel), "utf8");
@@ -343,4 +347,216 @@ test("captures : la carte avant (organisatrice) et après le début (membre)", a
   await carte(page).getByRole("checkbox", { name: /^Traité : Affiche/ }).click();
   await expect(lignes(page).nth(1)).toContainText("non traité");
   await page.screenshot({ path: path.join(ROOT, "test-results", "reunions-captures", `${info.project.name}-apres.png`), fullPage: true });
+});
+
+// ─── R2 : reprise des sujets non traités, réunions précédentes ──────────────
+
+/** Une autre réunion (du pôle DA, sauf `pour` dans `extra`) à une autre date. */
+const autreReunion = (date: string, extra: Record<string, unknown> = {}) => ({ ...REUNION, titre: `Réunion DA du ${date}`, date, ...extra });
+
+/** Après la réunion du 3 octobre : trois sujets traités, « Budget impression » laissé. */
+const APRES = {
+  ...SUJETS,
+  "evenements/reunion-da/sujets/s1": { ...SUJETS["evenements/reunion-da/sujets/s1"], traite: true },
+  "evenements/reunion-da/sujets/s2": { ...SUJETS["evenements/reunion-da/sujets/s2"], traite: true },
+  "evenements/reunion-da/sujets/s3": { ...SUJETS["evenements/reunion-da/sujets/s3"], traite: true },
+};
+
+const R = (id: string, date: string, extra: Partial<Evenement> = {}) => ({ ...E, id, date, ...extra }) as Evenement;
+
+test("réunions précédentes : du même public, avant celle-ci (date et heure), la plus récente d'abord", () => {
+  const liste = [
+    R("juin", "2026-06-06"), R("nov", "2026-11-07"), R("sept", "2026-09-05"), E,
+    R("media", "2026-09-12", { pour: "pole:media" }), R("meme-jour-avant", "2026-10-03", { heure: "18:00" }),
+  ];
+  expect(reunionsPrecedentes(liste, E).map((r) => r.id)).toEqual(["meme-jour-avant", "sept", "juin"]);
+});
+
+test("à reprendre : les sujets rouges des réunions commencées, la plus ancienne d'abord, dans leur ordre", () => {
+  const lus = [
+    { reunion: E, sujets: [S("b", 1), S("a", 0), S("traite", 2, { traite: true }), S("repris", 3, { reprisDans: "x" })] },
+    { reunion: R("sept", "2026-09-05"), sujets: [S("vieux", 0)] },
+    { reunion: R("oct10", "2026-10-10"), sujets: [S("pas-encore", 0)] },
+  ];
+  const res = sujetsAReprendre(lus, "2026-10-04T10:00");
+  expect(res.map((x) => [x.reunion.id, x.reunion.date, x.sujet.id])).toEqual([
+    ["sept", "2026-09-05", "vieux"], ["reunion-da", "2026-10-03", "a"], ["reunion-da", "2026-10-03", "b"],
+  ]);
+});
+
+test("copie reprise : au nom de qui reprend, auteur d'origine affiché, ni traitée ni reprise, liée à l'ancienne", () => {
+  const a = {
+    reunion: { id: "reunion-da", date: "2026-10-03" },
+    sujet: S("s4", 3, { texte: "Budget", auteurUid: "uid-bruno", auteurNom: "Bruno M.", creeLe: "2026-10-01T12:00:00Z" }),
+  };
+  expect(copieReprise(a, "uid-alice", 0)).toEqual({
+    texte: "Budget", auteurUid: "uid-alice", auteurNom: "Bruno M.", creeLe: "2026-10-01T12:00:00Z", ordre: 0, traite: false,
+    reprisDans: null, repriseDe: { reunionId: "reunion-da", date: "2026-10-03" },
+  });
+});
+
+test("règles R2 : une personne de la réunion marque un sujet repris, une seule fois et rien d'autre ; une copie naît non reprise", () => {
+  const rules = lire("firestore.rules");
+  const debut = rules.indexOf("match /sujets/{sid}");
+  const bloc = rules.slice(debut, rules.indexOf("}", rules.indexOf("allow delete", debut)));
+  expect(bloc).toMatch(/estDeLaReunion\(reunion\(id\)\) && resource\.data\.reprisDans == null && changeSeulement\(\['reprisDans'\]\)/);
+  expect(bloc).toMatch(/allow create:[\s\S]*request\.resource\.data\.reprisDans == null/);
+});
+
+test("libellés R2 : reprise et réunions précédentes en français et en 中文, clé pour clé", () => {
+  const fr = JSON.parse(lire("src/locales/fr.json")).evenements;
+  const zh = JSON.parse(lire("src/locales/zh-CN.json")).evenements;
+  expect(fr.reprise.titre).toBe("Reprendre les sujets non traités ?");
+  expect(fr.precedentes.titre).toBe("Réunions précédentes");
+  for (const cle of ["reprise", "precedentes", "sujets"]) expect(Object.keys(zh[cle]).sort(), cle).toEqual(Object.keys(fr[cle]).sort());
+});
+
+const question = (page: Page) => page.getByRole("alertdialog", { name: "Reprendre les sujets non traités ?" });
+const precedentes = (page: Page) => page.getByRole("region", { name: "Réunions précédentes" });
+const sansPush = (page: Page) => page.route("**/api/push/notify-evenement", (route) => route.fulfill({ json: { ok: true } }));
+
+/** Nouvelle réunion du pôle DA par « Créer » (le seul public d'Alice). */
+async function creerReunion(page: Page, date: string) {
+  await page.goto("/evenements/nouveau");
+  await page.getByLabel("Nom de l'évènement").fill("Réunion DA");
+  await expect(page.getByLabel("Public")).toHaveValue("pole:da");
+  await page.getByLabel("Date", { exact: true }).fill(date);
+  await page.getByLabel("Horaire", { exact: true }).fill("20:00");
+  await page.getByRole("button", { name: "Créer l'évènement" }).click();
+}
+
+/** Id de la réunion créée pendant le test (dernière écrite). */
+const creee = (db: Awaited<ReturnType<typeof ouvrir>>) =>
+  db.writes.filter((w) => w.method === "POST" && /^evenements\/[^/]+$/.test(w.path)).pop()!.path.split("/")[1];
+
+test("reprise, oui : en dupliquant pour la prochaine, le sujet laissé est recopié, et n'est plus rouge dans l'ancienne", async ({ page }, info) => {
+  const db = await ouvrir(page, ALICE, "2026-10-04T10:00:00", APRES);
+  await sansPush(page);
+  await expect(lignes(page)).toHaveCount(4);
+  await page.getByRole("link", { name: "Dupliquer" }).click();
+  await page.getByLabel("Date", { exact: true }).fill("2026-11-07");
+  await page.getByRole("button", { name: "Créer l'évènement" }).click();
+
+  await expect(question(page)).toBeVisible();
+  await expect(question(page)).toContainText("La réunion du 3 octobre en a laissé 1 :");
+  await expect(question(page).getByRole("listitem")).toHaveText(["Budget impression du trimestre"]);
+  await expect(question(page)).toContainText("Sans reprise, ils restent en rouge dans l'ancienne réunion.");
+  // Sans l'animation d'ouverture : la capture montre la question posée, pas son fondu.
+  await page.screenshot({ path: path.join(ROOT, "test-results", "reunions-captures", `${info.project.name}-reprise.png`), animations: "disabled" });
+  await question(page).getByRole("button", { name: "Oui, les reprendre" }).click();
+
+  await page.waitForURL(/\/evenements\/fake-\d+\/?$/);
+  const nouvelle = creee(db);
+  expect(page.url()).toContain(`/evenements/${nouvelle}`);
+  // La copie, au nom d'Alice qui reprend, garde l'auteur d'origine et sa provenance.
+  const copies = db.writes.filter((w) => w.method === "POST" && w.path.startsWith(`evenements/${nouvelle}/sujets/`));
+  expect(copies.map((w) => w.data)).toEqual([{
+    texte: "Budget impression du trimestre", auteurUid: "uid-alice", auteurNom: "Bruno M.", creeLe: "2026-10-01T12:00:00Z",
+    ordre: 0, traite: false, reprisDans: null, repriseDe: { reunionId: "reunion-da", date: "2026-10-03" },
+  }]);
+  // L'original est marqué repris, et seulement ce champ.
+  expect(ecritures(db, "PATCH")).toEqual([{ method: "PATCH", path: "evenements/reunion-da/sujets/s4", data: { reprisDans: nouvelle } }]);
+  await expect(lignes(page)).toHaveCount(1);
+  await expect(lignes(page).nth(0)).toContainText("Budget impression du trimestre");
+  await expect(lignes(page).nth(0)).toContainText("Bruno M. · 01/10 · repris du 3 octobre");
+
+  // L'ancienne réunion : plus rouge, « repris le 7 novembre ».
+  await page.goto("/evenements/reunion-da");
+  await expect(lignes(page)).toHaveCount(4);
+  const repris = lignes(page).nth(3);
+  await expect(repris).toContainText("Bruno M. · 01/10 · repris le 7 novembre");
+  await expect(repris).not.toContainText("non traité");
+  await expect(repris.getByText("Budget impression du trimestre")).not.toHaveCSS("color", "rgb(185, 28, 28)");
+  await expect(carte(page)).not.toContainText("sujet non traité");
+  // En bas de page : sur téléphone et tablette, la barre du bas ne cache pas le sujet repris.
+  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+  await page.screenshot({ path: path.join(ROOT, "test-results", "reunions-captures", `${info.project.name}-repris.png`) });
+});
+
+test("reprise, non : rien n'est écrit, le sujet reste rouge et revient à la création suivante", async ({ page }) => {
+  const db = await ouvrir(page, ALICE, "2026-10-04T10:00:00", APRES);
+  await sansPush(page);
+  await expect(lignes(page)).toHaveCount(4);
+  for (const date of ["2026-11-07", "2026-12-05"]) {
+    await creerReunion(page, date);
+    await expect(question(page).getByRole("listitem")).toHaveText(["Budget impression du trimestre"]);
+    await question(page).getByRole("button", { name: "Non, les laisser" }).click();
+    await page.waitForURL(/\/evenements\/fake-\d+\/?$/);
+    await expect(page.getByRole("heading", { name: "Réunion DA" }).first()).toBeVisible();
+  }
+  expect(db.writes.filter((w) => w.path.includes("/sujets/"))).toEqual([]);
+  await page.goto("/evenements/reunion-da");
+  await expect(lignes(page).nth(3)).toContainText("Bruno M. · 01/10 · non traité");
+});
+
+test("reprise : les sujets laissés par plusieurs réunions du pôle, ni ceux d'un autre pôle, ni ceux d'une réunion à venir", async ({ page }) => {
+  const db = await ouvrir(page, ALICE, "2026-10-04T10:00:00", {
+    ...APRES,
+    "evenements/reunion-sept": autreReunion("2026-09-05"),
+    "evenements/reunion-sept/sujets/v1": sujet("Vidéo de rentrée", CLARA, "2026-09-01T09:00:00Z", 0),
+    "evenements/reunion-sept/sujets/v2": { ...sujet("Déjà repris", CLARA, "2026-09-01T10:00:00Z", 1), reprisDans: "reunion-da" },
+    "evenements/reunion-oct10": autreReunion("2026-10-10"),
+    "evenements/reunion-oct10/sujets/f1": sujet("Pas encore discuté", BRUNO, "2026-10-04T08:00:00Z", 0),
+    "evenements/reunion-media": autreReunion("2026-09-12", { pour: "pole:media", organisateurUid: "uid-noe" }),
+    "evenements/reunion-media/sujets/m1": sujet("Sujet du pôle Média", NOE, "2026-09-10T09:00:00Z", 0),
+  });
+  await sansPush(page);
+  await expect(lignes(page)).toHaveCount(4);
+  await creerReunion(page, "2026-11-07");
+  await expect(question(page)).toContainText("Les réunions précédentes en ont laissé 2 :");
+  await expect(question(page).getByRole("listitem")).toHaveText([/^Vidéo de rentrée.*5 septembre$/, /^Budget impression du trimestre.*3 octobre$/]);
+  await question(page).getByRole("button", { name: "Oui, les reprendre" }).click();
+  await page.waitForURL(/\/evenements\/fake-\d+\/?$/);
+  const nouvelle = creee(db);
+  const copies = db.writes.filter((w) => w.method === "POST" && w.path.startsWith(`evenements/${nouvelle}/sujets/`));
+  expect(copies.map((w) => [w.data.texte, w.data.ordre, (w.data.repriseDe as { reunionId: string }).reunionId])).toEqual([
+    ["Vidéo de rentrée", 0, "reunion-sept"], ["Budget impression du trimestre", 1, "reunion-da"],
+  ]);
+  expect(db.writes.filter((w) => w.method === "PATCH" && w.path.includes("/sujets/")).map((w) => [w.path, w.data])).toEqual([
+    ["evenements/reunion-sept/sujets/v1", { reprisDans: nouvelle }], ["evenements/reunion-da/sujets/s4", { reprisDans: nouvelle }],
+  ]);
+  await expect(lignes(page)).toHaveCount(2);
+  await attendreOrdre(page, ["Vidéo de rentrée", "Budget impression du trimestre"]);
+});
+
+test("reprise : sans sujet laissé, pas de question, la réunion se crée directement", async ({ page }) => {
+  const toutTraite = { ...APRES, "evenements/reunion-da/sujets/s4": { ...SUJETS["evenements/reunion-da/sujets/s4"], traite: true } };
+  const db = await ouvrir(page, ALICE, "2026-10-04T10:00:00", toutTraite);
+  await sansPush(page);
+  await expect(lignes(page)).toHaveCount(4);
+  await creerReunion(page, "2026-11-07");
+  await page.waitForURL(/\/evenements\/fake-\d+\/?$/);
+  await expect(question(page)).toHaveCount(0);
+  expect(db.writes.filter((w) => w.path.includes("/sujets/"))).toEqual([]);
+});
+
+test("réunions précédentes : celles du pôle avant celle-ci, la plus récente d'abord, avec leur compte rendu", async ({ page }, info) => {
+  const cr = (url: string) => ({ url, parUid: "uid-clara", parNom: "Clara P.", le: "2026-09-06T10:00:00Z" });
+  await ouvrir(page, BRUNO, "2026-10-02T18:00:00", {
+    ...SUJETS,
+    "evenements/reunion-juin": autreReunion("2026-06-06"),
+    "evenements/reunion-sept": autreReunion("2026-09-05", { compteRendu: cr("https://docs.google.com/document/d/sept") }),
+    "evenements/reunion-juil": autreReunion("2026-07-04", { compteRendu: cr("https://docs.google.com/document/d/juil") }),
+    "evenements/reunion-nov": autreReunion("2026-11-07"),
+    "evenements/reunion-media": autreReunion("2026-09-12", { pour: "pole:media" }),
+  });
+  const rangs = precedentes(page).getByRole("listitem");
+  await expect(rangs).toHaveCount(3);
+  await expect(rangs.nth(0)).toContainText("5 sept.");
+  await expect(rangs.nth(0).getByRole("link", { name: "Compte rendu" })).toHaveAttribute("href", "https://docs.google.com/document/d/sept");
+  await expect(rangs.nth(1)).toContainText("4 juil.");
+  await expect(rangs.nth(1).getByRole("link", { name: "Compte rendu" })).toHaveAttribute("href", "https://docs.google.com/document/d/juil");
+  await expect(rangs.nth(2)).toContainText("6 juin");
+  await expect(rangs.nth(2)).toContainText("pas de compte rendu");
+  await expect(rangs.nth(2).getByRole("link", { name: "Compte rendu" })).toHaveCount(0);
+  await page.screenshot({ path: path.join(ROOT, "test-results", "reunions-captures", `${info.project.name}-precedentes.png`), fullPage: true });
+  await rangs.nth(0).getByRole("link", { name: "5 sept.", exact: true }).click();
+  await page.waitForURL(/\/evenements\/reunion-sept\/?$/);
+  await expect(page.getByRole("heading", { name: "Réunion DA du 2026-09-05" })).toBeVisible();
+});
+
+test("réunions précédentes : pas de carte pour la première réunion du pôle", async ({ page }) => {
+  await ouvrir(page, BRUNO, "2026-10-02T18:00:00", { ...SUJETS, "evenements/reunion-nov": autreReunion("2026-11-07") });
+  await expect(lignes(page)).toHaveCount(4);
+  await expect(precedentes(page)).toHaveCount(0);
 });

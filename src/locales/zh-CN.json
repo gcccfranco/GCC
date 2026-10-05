@@ -1700,7 +1700,26 @@
       "annonceSaisi": "已拿起议题「{{texte}}」，位置 {{position}} / {{total}}。",
       "annonceDeplace": "议题「{{texte}}」在位置 {{position}} / {{total}}。",
       "annoncePose": "议题「{{texte}}」已放在位置 {{position}} / {{total}}。",
-      "annonceAnnule": "已取消移动，「{{texte}}」留在原位。"
+      "annonceAnnule": "已取消移动，「{{texte}}」留在原位。",
+      "reprisLe": "已沿用至{{date}}的会议",
+      "reprisSansDate": "已沿用至另一次会议",
+      "reprisDu": "沿用自{{date}}的会议"
+    },
+    "reprise": {
+      "titre": "沿用未讨论的议题吗？",
+      "uneReunion_one": "{{date}}的会议留下了 {{count}} 个议题：",
+      "uneReunion_other": "{{date}}的会议留下了 {{count}} 个议题：",
+      "plusieurs_one": "之前的会议留下了 {{count}} 个议题：",
+      "plusieurs_other": "之前的会议留下了 {{count}} 个议题：",
+      "non": "不，保留原处",
+      "oui": "是，沿用",
+      "noteUne": "不沿用的话，它们会在原来的会议中继续以红色显示。",
+      "notePlusieurs": "不沿用的话，它们会在原来的各次会议中继续以红色显示。"
+    },
+    "precedentes": {
+      "titre": "以往会议",
+      "compteRendu": "会议记录",
+      "sansCompteRendu": "无会议记录"
     },
     "copierTaches_one": "是否同时复制它的 {{count}} 个任务（保持相同提前天数）？",
     "copierTaches_other": "是否同时复制它的 {{count}} 个任务（保持相同提前天数）？"

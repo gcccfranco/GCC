@@ -13,7 +13,7 @@ import { useTranslation } from "react-i18next"
 import { useAuth } from "@/lib/firebase/auth"
 import { useProfile } from "@/lib/firebase/users"
 import { canEditEvenement, canSeeEvenement, estDeLaReunion, poleDuPour } from "@/lib/access"
-import { deleteEvenement, getEvenement } from "@/lib/firebase/evenements"
+import { deleteEvenement, getEvenement, listReunionsDu } from "@/lib/firebase/evenements"
 import { isInfo } from "@/lib/evenements/agenda"
 import { PLANNING_COLORS } from "@/lib/serviceColors"
 import type { Evenement } from "@/types/evenement"
@@ -23,6 +23,7 @@ import { Inscriptions, PanneauInscriptions } from "./Inscriptions"
 import { TachesEvenement } from "./TachesEvenement"
 import { QrCodeLink } from "@/components/evenements/QrCode"
 import { SujetsAborder } from "@/components/reunions/SujetsAborder"
+import { ReunionsPrecedentes } from "@/components/reunions/ReunionsPrecedentes"
 
 const COLOR = PLANNING_COLORS.scene
 const URL_RE = /(https?:\/\/[^\s]+)/g
@@ -56,6 +57,15 @@ export function EvenementClient() {
     if (authLoading) return
     getEvenement(id).then(setEvenement).catch(() => setEvenement(null))
   }, [id, authLoading])
+
+  // Lot U6 (R2) : les réunions du même pôle, pour « Réunions précédentes » et
+  // dater un sujet « repris le … ».
+  const pourReunion = user && evenement && poleDuPour(evenement.pour) ? evenement.pour : null
+  const [memePublic, setMemePublic] = useState<Evenement[]>([])
+  useEffect(() => {
+    if (!pourReunion) return
+    listReunionsDu(pourReunion).then(setMemePublic).catch(() => setMemePublic([]))
+  }, [pourReunion])
 
   if (authLoading || (user && profileLoading) || evenement === undefined) {
     return <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
@@ -134,9 +144,15 @@ export function EvenementClient() {
       )}
       </div>
 
-      {/* Lot U6 (R1) : les sujets d'une réunion de pôle, pour les personnes de la
-          réunion — la même carte pour les membres et pour qui la gère. */}
-      {user && poleDuPour(e.pour) && estDeLaReunion(user, profile, e) && <SujetsAborder evenement={e} user={user} profile={profile} />}
+      {/* Lot U6 (R1, R2) : les sujets d'une réunion de pôle et les réunions
+          précédentes, pour les personnes de la réunion — les mêmes cartes pour
+          les membres et pour qui la gère. */}
+      {user && poleDuPour(e.pour) && estDeLaReunion(user, profile, e) && (
+        <>
+          <SujetsAborder evenement={e} user={user} profile={profile} reunions={memePublic} />
+          <ReunionsPrecedentes courante={e} reunions={memePublic} />
+        </>
+      )}
 
       {/* Lot 14 : les tâches de mes pôles rattachées à l'évènement. Daté
           seulement (réunions de pôle comprises) : une info sans date n'a pas de délai. */}

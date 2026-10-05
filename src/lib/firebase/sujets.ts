@@ -1,5 +1,8 @@
 import { FS_BASE, authHeader, checkRest, toFsFields, fromFsValue, type RawDoc } from "./setlists";
 import type { Sujet } from "@/types/reunion";
+import { listReunionsDu } from "./evenements";
+import { aCommence } from "@/lib/evenements/agenda";
+import { copieReprise, sujetsAReprendre, type SujetAReprendre } from "@/lib/reunions/sujets";
 
 // Sujets d'une réunion (lot U6, R1) : evenements/{id}/sujets/{sid}, en REST
 // comme le reste. Droits : firestore.rules (match /sujets/{sid}) et
@@ -60,4 +63,48 @@ export async function retirerSujet(reunionId: string, sujetId: string): Promise<
   const headers = await authHeader();
   const res = await fetch(`${FS_BASE}/evenements/${reunionId}/sujets/${sujetId}`, { method: "DELETE", headers });
   await checkRest(res);
+}
+
+// ─── R2 : reprise des sujets non traités ────────────────────────────────────
+
+/** Le sujet a été repris dans la réunion `dans` : seul champ écrit (la règle
+ *  n'accepte que lui, et une seule fois). */
+export async function marquerRepris(reunionId: string, sujetId: string, dans: string): Promise<void> {
+  const headers = await authHeader();
+  const res = await fetch(`${FS_BASE}/evenements/${reunionId}/sujets/${sujetId}?updateMask.fieldPaths=reprisDans`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...headers },
+    body: JSON.stringify({ fields: toFsFields({ reprisDans: dans }) }),
+  });
+  await checkRest(res);
+}
+
+/** Sujets laissés par les réunions déjà commencées du public `pour`, à
+ *  proposer à la création d'une nouvelle. Une lecture refusée ou perdue compte
+ *  pour « rien à reprendre » : la création ne s'arrête jamais là-dessus. */
+export async function lireSujetsAReprendre(pour: string, nowIso: string): Promise<SujetAReprendre[]> {
+  try {
+    const commencees = (await listReunionsDu(pour)).filter((r) => aCommence(r, nowIso));
+    const lus = await Promise.all(commencees.map(async (reunion) => ({
+      reunion, sujets: await listSujets(reunion.id).catch(() => [] as Sujet[]),
+    })));
+    return sujetsAReprendre(lus, nowIso);
+  } catch {
+    return [];
+  }
+}
+
+/** « Oui, les reprendre » : chaque sujet est recopié dans la nouvelle réunion,
+ *  puis marqué repris dans l'ancienne — dans cet ordre, pour qu'un échec ne
+ *  perde jamais un sujet (copie ratée : il reste rouge et sera reproposé ;
+ *  marquage raté : la copie existe, l'original sera reproposé une fois de trop). */
+export async function reprendreSujets(liste: SujetAReprendre[], nouvelleId: string, parUid: string): Promise<void> {
+  for (const [ordre, a] of liste.entries()) {
+    try {
+      await ajouterSujet(nouvelleId, copieReprise(a, parUid, ordre));
+      await marquerRepris(a.reunion.id, a.sujet.id, nouvelleId);
+    } catch {
+      // On passe au suivant : la fiche de la nouvelle réunion montre ce qui a été repris.
+    }
+  }
 }

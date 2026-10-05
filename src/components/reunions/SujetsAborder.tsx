@@ -5,7 +5,8 @@
 // la réunion ajoute un sujet jusqu'au début ; l'auteur, l'organisateur et les
 // admins le retirent ; l'organisateur et les admins ordonnent (glisser, ou
 // clavier sur la poignée) et cochent « traité ». Une fois la réunion commencée,
-// un sujet ni traité ni repris passe en rouge.
+// un sujet ni traité ni repris passe en rouge. Un sujet repris dans une réunion
+// suivante (R2) passe en gris, « repris le 7 novembre » ; sa copie dit d'où elle vient.
 //
 // Une seule carte pour l'App et la gestion : sur la fiche d'aujourd'hui
 // (/evenements/<id>) ; B3 la posera aussi sur la fiche du Back-Office.
@@ -21,7 +22,7 @@ import { peutAjouterSujet, peutOrdonnerSujets, peutRetirerSujet } from "@/lib/ac
 import { useSensorsAvecClavier } from "@/lib/dnd/sensors"
 import { aCommence, nowIsoParis } from "@/lib/evenements/agenda"
 import { ajouterSujet, listSujets, majSujet, retirerSujet } from "@/lib/firebase/sujets"
-import { estRouge, ordreSuivant, reordonner, trierSujets } from "@/lib/reunions/sujets"
+import { estRouge, jourDuMois, ordreSuivant, reordonner, trierSujets } from "@/lib/reunions/sujets"
 import type { Evenement } from "@/types/evenement"
 import type { Sujet } from "@/types/reunion"
 import type { UserProfile } from "@/types/user"
@@ -33,9 +34,11 @@ function dateCourte(iso: string, lang: string): string {
   return new Date(iso).toLocaleDateString(lang === "zh-CN" ? "zh-CN" : "fr-FR", { day: "2-digit", month: "2-digit", timeZone: "Europe/Paris" })
 }
 
-function LigneSujet({ sujet, rouge, ordonner, retirer, onTraite, onRetirer }: {
+function LigneSujet({ sujet, rouge, provenance, ordonner, retirer, onTraite, onRetirer }: {
   sujet: Sujet
   rouge: boolean
+  /** « repris le 7 novembre » ou « repris du 3 octobre » (R2), sinon vide. */
+  provenance: string
   ordonner: boolean
   retirer: boolean
   onTraite: () => void
@@ -61,9 +64,11 @@ function LigneSujet({ sujet, rouge, ordonner, retirer, onTraite, onRetirer }: {
         </span>
       </button>
       <div className="min-w-0 flex-1 py-2">
-        <p className={`font-semibold leading-snug break-words ${sujet.traite ? "text-muted-foreground line-through" : rouge ? ROUGE : "text-foreground"}`}>{sujet.texte}</p>
+        <p className={`font-semibold leading-snug break-words ${sujet.traite ? "text-muted-foreground line-through" : sujet.reprisDans ? "text-muted-foreground" : rouge ? ROUGE : "text-foreground"}`}>{sujet.texte}</p>
         <p className="mt-0.5 text-sm text-muted-foreground">
           {sujet.auteurNom} · {dateCourte(sujet.creeLe, i18n.language)}{rouge ? ` · ${t("evenements.sujets.nonTraite")}` : ""}
+          {/* « repris le 7 novembre » ne se coupe pas au milieu de la date. */}
+          {provenance && <> · <span className="whitespace-nowrap">{provenance}</span></>}
         </p>
       </div>
       {retirer && (
@@ -76,12 +81,14 @@ function LigneSujet({ sujet, rouge, ordonner, retirer, onTraite, onRetirer }: {
   )
 }
 
-export function SujetsAborder({ evenement: e, user, profile }: {
+export function SujetsAborder({ evenement: e, user, profile, reunions = [] }: {
   evenement: Evenement
   user: { uid: string; email?: string | null }
   profile: UserProfile | null
+  /** Réunions du même public, pour dater « repris le … » (R2). */
+  reunions?: Pick<Evenement, "id" | "date">[]
 }) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const sensors = useSensorsAvecClavier()
   const [sujets, setSujets] = useState<Sujet[] | null>(null)
   const [texte, setTexte] = useState("")
@@ -104,6 +111,15 @@ export function SujetsAborder({ evenement: e, user, profile }: {
   const traites = liste.filter((s) => s.traite).length
   const rouges = liste.filter((s) => estRouge(e, s, now)).length
   const nom = profile ? `${profile.firstName} ${profile.lastName}`.trim() || profile.email : user.email ?? ""
+
+  /** Où le sujet a été repris, ou d'où vient sa copie (R2). */
+  function provenance(s: Sujet): string {
+    if (s.reprisDans) {
+      const dans = reunions.find((r) => r.id === s.reprisDans)
+      return dans ? t("evenements.sujets.reprisLe", { date: jourDuMois(dans.date, i18n.language) }) : t("evenements.sujets.reprisSansDate")
+    }
+    return s.repriseDe ? t("evenements.sujets.reprisDu", { date: jourDuMois(s.repriseDe.date, i18n.language) }) : ""
+  }
 
   /** Une écriture refusée ou perdue : on le dit, et on relit la vérité. */
   function echec() {
@@ -209,7 +225,7 @@ export function SujetsAborder({ evenement: e, user, profile }: {
           <SortableContext items={liste.map((s) => s.id)} strategy={verticalListSortingStrategy}>
             <ul aria-label={t("evenements.sujets.titre")} className="divide-y divide-border">
               {liste.map((s) => (
-                <LigneSujet key={s.id} sujet={s} rouge={estRouge(e, s, now)} ordonner={ordonner}
+                <LigneSujet key={s.id} sujet={s} rouge={estRouge(e, s, now)} provenance={provenance(s)} ordonner={ordonner}
                   retirer={peutRetirerSujet(user, e, s)} onTraite={() => basculer(s)} onRetirer={() => retirer(s)} />
               ))}
             </ul>
