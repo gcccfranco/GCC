@@ -1177,7 +1177,8 @@
       "brouillon": "草稿",
       "jour": "日子",
       "creneau": "时段",
-      "place": "{{jour}} · {{debut}}–{{fin}}",
+      "place": "{{jour}} · {{debut}} – {{fin}}",
+      "quiPermisTitre": "本季允许的团体",
       "quiRefuse": "此小组不能预约：{{qui}}。",
       "jourCourt": {
         "0": "周日",

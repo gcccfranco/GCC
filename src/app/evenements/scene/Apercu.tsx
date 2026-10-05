@@ -41,7 +41,11 @@ export function Apercu({ programme, creneaux, onChanged }: {
   // Le jour montré reste tant qu'il est réservable, même quand la saison change
   // (cocher « sam. » ne fait pas sauter l'aperçu) ; sinon le prochain à venir.
   const [choisi, setChoisi] = useState<string | null>(prochain)
+  // La feuille « Déplacer » garde son contenu pendant qu'elle se referme ;
+  // `fois` la remonte à neuf à chaque ouverture.
   const [deplace, setDeplace] = useState<Creneau | null>(null)
+  const [ouverte, setOuverte] = useState(false)
+  const [fois, setFois] = useState(0)
   const jour = choisi && jours.includes(choisi) ? choisi : prochain
   const i = jour ? jours.indexOf(jour) : -1
   const hors = horsGrille(saison, creneaux)
@@ -53,7 +57,7 @@ export function Apercu({ programme, creneaux, onChanged }: {
       const clash = fresh.find((o) => o.id !== c.id && overlaps(o, values))
       if (clash) return t("planning.programme.overlap", { slot: `${clash.debut} – ${clash.fin} · ${clash.quoi} · ${clash.qui.join(", ")} (${clash.auteurNom})` })
       await updateCreneau(programme.id, c.id, values)
-      setDeplace(null)
+      setOuverte(false)
       await onChanged()
       return null
     } catch {
@@ -114,27 +118,35 @@ export function Apercu({ programme, creneaux, onChanged }: {
                     </span>
                     <span className="ml-auto flex gap-1">
                       {depart && (
-                        <Button size="sm" variant="ghost" onClick={() => setDeplace(deplace?.id === c.id ? null : c)}>{t("planning.saison.deplacer")}</Button>
+                        <Button size="sm" variant="ghost" onClick={() => { setDeplace(c); setOuverte(true); setFois((n) => n + 1) }}>{t("planning.saison.deplacer")}</Button>
                       )}
                       <Button size="sm" variant="ghost" className="text-destructive" onClick={() => retirer(c)}>{t("planning.programme.remove")}</Button>
                     </span>
                   </div>
-                  {deplace?.id === c.id && depart && (
-                    <CreneauForm
-                      title={t("planning.saison.deplacerTitre")}
-                      places={places}
-                      initial={{ dimanche: depart.jour, debut: depart.debut, fin: depart.fin, quoi: c.quoi, qui: c.qui, note: c.note }}
-                      quiOptions={QUI}
-                      onSubmit={(values) => deplacer(c, values)}
-                      onCancel={() => setDeplace(null)}
-                    />
-                  )}
                 </li>
               )
             })}
           </ul>
         </section>
       )}
+
+      {deplace && (() => {
+        const places = creneauxLibres(saison, programme.jourJ, creneaux, { sauf: deplace.id, today, maintenant })
+        const depart = places.find((p) => p.jour === deplace.dimanche) ?? places[0]
+        return depart && (
+          <CreneauForm
+            key={fois}
+            open={ouverte}
+            title={t("planning.saison.deplacerTitre")}
+            submitLabel={t("planning.programme.save")}
+            places={places}
+            initial={{ dimanche: depart.jour, debut: depart.debut, fin: depart.fin, quoi: deplace.quoi, qui: deplace.qui, note: deplace.note }}
+            quiOptions={QUI}
+            onSubmit={(values) => deplacer(deplace, values)}
+            onCancel={() => setOuverte(false)}
+          />
+        )
+      })()}
     </div>
   )
 }

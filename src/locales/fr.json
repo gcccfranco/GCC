@@ -1177,7 +1177,8 @@
       "brouillon": "Brouillon",
       "jour": "Jour",
       "creneau": "Créneau",
-      "place": "{{jour}} · {{debut}}–{{fin}}",
+      "place": "{{jour}} · {{debut}} – {{fin}}",
+      "quiPermisTitre": "les groupes permis pour cette saison",
       "quiRefuse": "Ce groupe ne peut pas réserver : {{qui}}.",
       "jourCourt": {
         "0": "dim.",

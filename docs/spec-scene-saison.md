@@ -363,6 +363,29 @@ npm run lint
   `CreneauForm.tsx`, `LigneJour.tsx`) n'est pas testé, et 7 tests de `tests/programme-scene.spec.ts` × 3 (bouton
   « Réserver un créneau », formulaire 17:00–18:00, « Scène libre », « Voir les dimanches passés », chevauchement,
   retrait par la coordination, course perdue) sont rouges : ce sont ceux que S4 réécrit pour la grille.
+- 05/10/2026 : **S4 faite** (écran des membres), commit « feat(U1): S4 — l'écran des membres » sur
+  `lot/u1-scene-saison`, local, rien poussé. **Les quatre tranches du lot U1 sont codées.** Le wip de `b681429` côté
+  membres est repris et fini d'après les planches `scene-reserver-telephone` et `scene-reserver-feuille-telephone`
+  (v17) : en-tête « Noël 2026 · Jour J · Réservations : du 3 octobre au 20 décembre » (premier et dernier jour
+  réservables), volets de 44 px, « Voir les jours passés (n) », un bloc par jour (« Samedi 10 octobre »), lignes
+  « Libre · Réserver », « Pris », « Quoi · Qui » et l'auteur ; sur sa réservation (toutes pour la coordination),
+  « Modifier » et « Retirer » sous la ligne. « Réserver » ouvre une **feuille** (`CreneauForm.tsx`, en bas sur
+  téléphone, centrée et étroite au-delà, comme les tâches) : le jour et le créneau rappelés, Quoi et Qui en
+  pastilles, « Qui · les groupes permis pour cette saison » quand la saison limite, Note, Annuler · Réserver.
+  « Modifier » ouvre la même feuille avec Jour et Créneau (les créneaux libres de la saison) ; le « Déplacer » de la
+  coordination (hors grille, S3) passe dans cette feuille. Ordinateur : deux colonnes de jours ; tablette portrait et
+  téléphone : une. Tests : `tests/scene-saison.spec.ts` + 13 tests membres × 3 appareils, 8 vus rouges sur
+  ordinateur avant le code (les 5 autres décrivent du wip déjà juste : réservation d'un autre sans bouton, créneau
+  commencé, Retirer, droits de la coordination, fermeture) puis verts ; les 9 tests de `tests/programme-scene.spec.ts`
+  qui parlaient de « Réserver un créneau », du formulaire 17:00–18:00, de « Scène libre » et des « dimanches passés »
+  réécrits pour la grille (chevauchement refusé à la relecture, course perdue, retrait par la coordination ; 3 rouges
+  avant le code, ceux de la feuille) ;
+  `tests/evenements.spec.ts` (onglet de la scène) idem. Suites `scene-saison`, `programme-scene`, `evenements`,
+  `back-office-coupe` vertes sur les trois appareils ; `tsc` et `lint` sans erreur ; captures membres et feuille
+  regardées aux trois tailles. Choix : l'auteur s'affiche en entier (« Prénom Nom » du profil, la planche abrégeait
+  « Léa M. ») ; les groupes gardent l'ordre de `QUI` (EDD d'abord), comme S1. **Reste** : rien dans U1 ; la
+  fusion dans `ui/apple-design` et la suite complète à l'intégration.
 - Après le code : publier `firestore.rules` (règle des créneaux) ; à la mise en ligne, la coordination règle la
   saison de Noël 2026 puis l'ouvre. Téléphone des membres : planches `scene-reserver-telephone` et
-  `scene-reserver-feuille-telephone` (version 17).
+  `scene-reserver-feuille-telephone` (version 17). Timothée relit le 中文 (dont « 本季允许的团体 », les groupes
+  permis pour cette saison).

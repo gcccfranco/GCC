@@ -158,13 +158,25 @@ export function SceneClient() {
     })
   }
 
+  // Planche scene-reserver-telephone : « Réservations : du 3 octobre au 20
+  // décembre », du premier au dernier jour réservable, tant qu'on réserve.
+  const joursSaison = current ? joursReservables(saisonDe(current), current.jourJ) : []
+
   return (
     <div className="max-w-2xl lg:max-w-none space-y-4 mx-auto">
-      <div className="flex flex-wrap gap-3 items-baseline justify-between">
-        <h2 className="text-base font-bold text-foreground">{current ? current.nom : t("planning.tabs.scene")}</h2>
+      <div>
+        <h2 className="text-[26px] leading-tight font-bold tracking-tight text-foreground">{current ? current.nom : t("planning.tabs.scene")}</h2>
         {current && (
-          <p className="text-xs font-semibold" style={{ color: COLOR }}>
+          <p className="mt-1 text-[13px] font-semibold" style={{ color: COLOR }}>
             {t("planning.programmes.jourJLabel", { date: fdFullL(current.jourJ, i18n.language) })}
+          </p>
+        )}
+        {current && state !== "passed" && !closed && joursSaison.length > 0 && (
+          <p className="mt-0.5 text-[13.5px] text-muted-foreground">
+            {t("planning.programmes.reservations", {
+              from: dateCourte(joursSaison[0], i18n.language),
+              to: dateCourte(joursSaison.at(-1)!, i18n.language),
+            })}
           </p>
         )}
       </div>
@@ -241,7 +253,7 @@ export function SceneClient() {
                   key={v}
                   type="button"
                   onClick={() => setVolet(v)}
-                  className={`flex-1 py-2 px-4 rounded-xl border text-sm font-semibold transition-all duration-150 cursor-pointer ${
+                  className={`flex-1 h-11 px-4 rounded-xl border text-sm font-semibold transition-all duration-150 cursor-pointer ${
                     activeVolet === v ? "text-white border-transparent" : "bg-card border-border text-muted-foreground hover:text-foreground"
                   }`}
                   style={activeVolet === v ? { background: COLOR, borderColor: COLOR } : undefined}
