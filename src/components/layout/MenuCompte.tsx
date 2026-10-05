@@ -37,6 +37,7 @@ export function MenuCompte({
   side = "bottom",
   align = "end",
   sideOffset,
+  onSignaler,
 }: {
   /** Le bouton qui ouvre le menu (nommé « Compte »). */
   children: React.ReactNode;
@@ -44,6 +45,9 @@ export function MenuCompte({
   align?: "start" | "end";
   /** Écart entre le bouton et le menu (barre latérale : jusqu'à son bord). */
   sideOffset?: number;
+  /** Barre par-dessus la page (tablette en paysage) : « Signaler » lui passe la main. Elle se
+   *  referme avant d'ouvrir le formulaire : sous son calque modal, il ne répondrait pas. */
+  onSignaler?: () => void;
 }) {
   const { t } = useTranslation();
   const { user } = useAuth();
@@ -80,7 +84,7 @@ export function MenuCompte({
           <DropdownMenuItem asChild>
             <Link href="/questionnaire"><MessageSquareHeart aria-hidden />{t("survey.title")}</Link>
           </DropdownMenuItem>
-          <DropdownMenuItem onSelect={() => setReportOpen(true)}>
+          <DropdownMenuItem onSelect={() => (onSignaler ? onSignaler() : setReportOpen(true))}>
             <TriangleAlert aria-hidden />{t("common.report")}
           </DropdownMenuItem>
           {(canNotify || admin) && <DropdownMenuSeparator />}

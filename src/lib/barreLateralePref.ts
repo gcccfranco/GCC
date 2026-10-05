@@ -13,10 +13,21 @@ export function getBarreReduite(): boolean {
   }
 }
 
+const abonnes = new Set<() => void>();
+
+/** Pour `useSyncExternalStore` : prévenu à chaque `setBarreReduite`. */
+export function suivreBarreReduite(changement: () => void) {
+  abonnes.add(changement);
+  return () => {
+    abonnes.delete(changement);
+  };
+}
+
 export function setBarreReduite(reduite: boolean) {
   try { localStorage.setItem(CLE, reduite ? "reduite" : "depliee"); } catch { /* ignore */ }
   if (reduite) document.documentElement.dataset.barre = "reduite";
   else delete document.documentElement.dataset.barre;
+  abonnes.forEach((changement) => changement());
 }
 
 /** Ligne de script de l'en-tête : pose `data-barre` avant le premier affichage. */

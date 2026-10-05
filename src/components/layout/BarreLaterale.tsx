@@ -8,9 +8,10 @@
 // encore le CSS qui l'applique, d'après `<html data-barre="reduite">`.
 // Tablette en paysage (N4) : réduite toujours (CSS) ; « Déplier » pose la barre dépliée
 // PAR-DESSUS la page (feuille `vaul` par la gauche, sans mise à l'échelle), sur un voile ; elle
-// se referme au choix d'une entrée, sur un toucher du voile, par Échap ou « Réduire », et ne
-// retient rien.
+// se referme au choix d'une entrée, sur un toucher du voile, par Échap, « Réduire » ou à la
+// déconnexion, et ne retient rien.
 import { useEffect, useRef, useState, useSyncExternalStore, type Ref } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -22,9 +23,10 @@ import { useAuth } from "@/lib/firebase/auth";
 import { useSetLanguage } from "@/lib/I18nProvider";
 import { BACK_OFFICE } from "@/lib/backOffice";
 import { entreesBarre, estEntreeActive, labelDeSection } from "@/lib/navigation";
-import { getBarreReduite, setBarreReduite } from "@/lib/barreLateralePref";
+import { getBarreReduite, setBarreReduite, suivreBarreReduite } from "@/lib/barreLateralePref";
 import { Cloche } from "@/components/layout/Cloche";
 import { MenuCompte, useNomDuMembre } from "@/components/layout/MenuCompte";
+import { ReportDialog } from "@/components/report/ReportDialog";
 import { Drawer, DrawerOverlay, DrawerPortal, DrawerTitle } from "@/components/ui/drawer";
 import { useStandaloneScrollLock } from "@/hooks/useStandaloneScrollLock";
 
@@ -58,28 +60,29 @@ const suivreTablette = (changement: () => void) => {
 function useTablettePaysage() {
   return useSyncExternalStore(suivreTablette, () => window.matchMedia(TABLETTE_PAYSAGE).matches, () => false);
 }
+const rienASuivre = () => () => {};
 
 export function BarreLaterale() {
   const { t } = useTranslation();
   const pathname = usePathname() || "";
+  const { user } = useAuth();
   const tablette = useTablettePaysage();
-  const [mounted, setMounted] = useState(false);
-  // Réduite : sert aux infobulles seulement ; la mise en page, elle, suit le CSS dès l'en-tête.
-  const [reduite, setReduite] = useState(false);
-  useEffect(() => {
-    setMounted(true);
-    setReduite(getBarreReduite());
-  }, []);
-  const basculer = (v: boolean) => {
-    setBarreReduite(v);
-    setReduite(v);
-  };
+  // Lus hors de React, sans effet : monté (le thème ne se lit que dans le navigateur) et
+  // réduite (pour les infobulles seulement ; la mise en page, elle, suit le CSS dès l'en-tête).
+  const mounted = useSyncExternalStore(rienASuivre, () => true, () => false);
+  const reduite = useSyncExternalStore(suivreBarreReduite, getBarreReduite, () => false);
   // Tablette en paysage : la barre dépliée par-dessus la page, ouverte à la demande. Elle est
-  // ouverte SUR une page : une page choisie (entrée, logo, menu « Compte ») la referme.
+  // ouverte SUR une page et pour un compte : une page choisie (entrée, logo, menu « Compte ») ou
+  // la déconnexion la referme.
+  const ici = `${user?.uid ?? ""}|${pathname}`;
   const [ouverteSur, setOuverteSur] = useState<string | null>(null);
-  const ouverte = ouverteSur === pathname;
-  const setOuverte = (v: boolean) => setOuverteSur(v ? pathname : null);
+  const ouverte = ouverteSur === ici;
+  const setOuverte = (v: boolean) => setOuverteSur(v ? ici : null);
   const deplierRef = useRef<HTMLButtonElement>(null);
+  // « Signaler un problème » depuis la barre par-dessus : elle se referme d'abord, le formulaire
+  // s'ouvre une fois qu'elle est partie (sous son calque modal, il ne recevait ni toucher ni focus).
+  const signalerApres = useRef(false);
+  const [signaler, setSignaler] = useState(false);
   useStandaloneScrollLock(ouverte);
   // L'iPad tourné (debout, plus de barre latérale) la referme aussi.
   useEffect(() => suivreTablette(() => setOuverteSur(null)), []);
@@ -94,8 +97,8 @@ export function BarreLaterale() {
         <ContenuBarre
           mounted={mounted}
           enIcones={reduite || tablette}
-          onReduire={() => basculer(true)}
-          onDeplier={() => (tablette ? setOuverte(true) : basculer(false))}
+          onReduire={() => setBarreReduite(true)}
+          onDeplier={() => (tablette ? setOuverte(true) : setBarreReduite(false))}
           deplierRef={deplierRef}
         />
       </div>
@@ -108,18 +111,44 @@ export function BarreLaterale() {
             data-testid="barre-par-dessus"
             data-barre-conteneur
             aria-describedby={undefined}
-            // Le focus revient sur « Déplier » (sans `Trigger`, Radix ne saurait où le rendre).
+            // Le focus revient sur « Déplier » (sans `Trigger`, Radix ne saurait où le rendre),
+            // sauf si « Signaler » attend que la barre soit partie : c'est maintenant.
             onCloseAutoFocus={(e) => {
               e.preventDefault();
-              deplierRef.current?.focus();
+              if (signalerApres.current) {
+                signalerApres.current = false;
+                setSignaler(true);
+              } else deplierRef.current?.focus();
             }}
             className="barre-par-dessus print:hidden fixed inset-y-0 left-0 z-50 flex w-[248px] flex-col gap-3.5 overflow-y-auto px-3.5 pb-3.5 pt-[calc(18px+var(--sat))] outline-none"
           >
             <DrawerTitle className="sr-only">{t("common.aria.navigationPrincipale")}</DrawerTitle>
-            <ContenuBarre parDessus mounted={mounted} enIcones={false} onReduire={() => setOuverte(false)} onChoix={() => setOuverte(false)} />
+            <ContenuBarre
+              parDessus
+              mounted={mounted}
+              enIcones={false}
+              onReduire={() => setOuverte(false)}
+              onChoix={() => setOuverte(false)}
+              onSignaler={() => {
+                signalerApres.current = true;
+                setOuverte(false);
+              }}
+            />
           </DrawerPrimitive.Content>
         </DrawerPortal>
       </Drawer>
+      {signaler &&
+        createPortal(
+          <ReportDialog
+            open
+            kind="site"
+            onClose={() => {
+              setSignaler(false);
+              deplierRef.current?.focus();
+            }}
+          />,
+          document.body,
+        )}
     </>
   );
 }
@@ -133,6 +162,7 @@ function ContenuBarre({
   onReduire,
   onDeplier,
   onChoix,
+  onSignaler,
   deplierRef,
 }: {
   mounted: boolean;
@@ -143,6 +173,8 @@ function ContenuBarre({
   onDeplier?: () => void;
   /** Une entrée ou le logo touché (barre par-dessus : elle se referme). */
   onChoix?: () => void;
+  /** « Signaler un problème » du menu « Compte » (barre par-dessus, voir `MenuCompte`). */
+  onSignaler?: () => void;
   deplierRef?: Ref<HTMLButtonElement>;
 }) {
   const { t, i18n } = useTranslation();
@@ -241,7 +273,7 @@ function ContenuBarre({
           (user ? (
             <>
               <span className="contents" {...compte.ouvrir}>
-                <MenuCompte side="right" align="end" sideOffset={compte.sideOffset}>
+                <MenuCompte side="right" align="end" sideOffset={compte.sideOffset} onSignaler={onSignaler}>
                   <button
                     aria-label={t("common.header.account")}
                     title={displayName}

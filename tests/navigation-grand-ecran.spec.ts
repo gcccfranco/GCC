@@ -65,6 +65,28 @@ test.describe("navigation sur grand écran (U4) : une seule cloche", () => {
   });
 });
 
+test.describe("navigation sur grand écran (U4) : un seul profil lu", () => {
+  // Relecture du 05/10/2026 : navbar, barre latérale (barre fixe et menus « Compte ») et
+  // notifications lisent chacune le profil ; montées ensemble, elles partaient chacune
+  // chercher `users/{uid}` (jusqu'à 8 lectures Firestore au lieu d'une).
+  test("au premier chargement, le profil du membre n'est lu qu'une fois", async ({ page }) => {
+    await signInAs(page, MEMBRE, {}, "/songs");
+    await page.getByRole("searchbox").waitFor();
+    let lectures = 0;
+    page.on("request", (r) => {
+      if (r.method() === "GET" && /\/documents\/users\/u-ruth(\?|$)/.test(r.url())) lectures++;
+    });
+    await page.reload();
+    await page.getByRole("searchbox").waitFor();
+    // La session connue (entrée « Moi » du membre), le profil est demandé ; on laisse à
+    // chaque barre le temps de demander le sien.
+    await page.getByRole("link", { name: "Moi", exact: true }).filter({ visible: true }).first().waitFor();
+    await expect.poll(() => lectures, { message: "le profil a été lu" }).toBeGreaterThan(0);
+    await page.waitForTimeout(1500);
+    expect(lectures, "une seule lecture de users/u-ruth").toBe(1);
+  });
+});
+
 /** Ce qui est visible : barre du haut, barre du bas, barre latérale. */
 async function barresVisibles(page: Page) {
   return {
@@ -522,6 +544,22 @@ test.describe("navigation sur grand écran (U4) : réduire, déplier, s'en souve
     expect(await pxVar(page, "--barre-laterale")).toBe(68);
   });
 
+  // Relecture du 05/10/2026 : la navbar, qui n'est plus montrée ici, avait ce test (look-barres) ;
+  // la barre latérale prend sa place : fond et halo ne doivent rien attendre de React.
+  test("premier affichage sans React : la barre est peinte, le halo part de son bord, dépliée comme réduite", async ({ page }) => {
+    await page.route(/\/_next\/.*\.js(\?|$)/, (route) => route.abort());
+    await page.goto("/songs");
+    expect(await page.evaluate(() => Object.keys(document.querySelector("main")!).some((k) => k.startsWith("__react"))), "React n'a pas hydraté").toBe(false);
+    await expect(barreLaterale(page)).toBeVisible();
+    expect(await barreLaterale(page).evaluate((el) => getComputedStyle(el).backgroundColor), "fond de la barre").toBe("rgb(247, 247, 248)");
+    const halo = page.getByTestId("halo");
+    expect(Math.round((await halo.boundingBox())!.x), "dépliée : le halo part de 248 px").toBe(248);
+    expect(await halo.evaluate((el) => getComputedStyle(el, "::before").backgroundColor), "le halo a sa couleur").not.toBe("rgba(0, 0, 0, 0)");
+    await page.evaluate(() => localStorage.setItem("barre-laterale", "reduite"));
+    await page.goto("/songs");
+    expect(Math.round((await halo.boundingBox())!.x), "réduite : le halo part de 68 px").toBe(68);
+  });
+
   test("visiteur, barre réduite : langue, thème et « Connexion » en icônes", async ({ page }) => {
     await dejaReduite(page);
     await page.goto("/songs");
@@ -831,6 +869,49 @@ test.describe("navigation sur grand écran (U4) : tablette en paysage", () => {
     await expect(dessus.getByTestId("label-section")).toHaveText("敬拜");
     await expect(dessus.getByRole("button", { name: "收起侧边栏" })).toBeVisible();
   });
+
+  // Relecture du 05/10/2026 : la barre par-dessus est une modale (Radix) ; un formulaire ouvert
+  // hors d'elle, sous son calque, ne recevait ni toucher ni focus.
+  test("tablette en paysage : « Signaler un problème » depuis la barre par-dessus la referme, et le formulaire répond", async ({ page }) => {
+    await signInAs(page, MEMBRE, {}, "/songs");
+    await page.getByRole("searchbox").waitFor();
+    await expect(navigation(page).getByRole("link")).toHaveCount(5);
+    await deplier(page).tap();
+    await barreArrivee(page);
+    await sansIndicateurDeNext(page);
+    await barreParDessus(page).getByTestId("pied-barre").getByRole("button", { name: "Compte" }).tap();
+    await page.getByRole("menuitem", { name: "Signaler un problème" }).tap();
+    await expect(barreParDessus(page), "la barre s'efface d'abord").toHaveCount(0);
+    await expect(voile(page)).toHaveCount(0);
+    // Puis le formulaire, qui répond au toucher et au clavier…
+    const resume = page.locator('input[name="title"]');
+    await resume.tap();
+    await page.keyboard.type("Accord ");
+    // … sans que la barre partie lui reprenne le focus (Radix le rend à « Déplier »).
+    await animationsFinies(page);
+    await page.waitForTimeout(300);
+    await page.keyboard.type("faux");
+    await expect(resume).toHaveValue("Accord faux");
+    await expect(resume).toBeFocused();
+    await page.getByRole("button", { name: "Fermer", exact: true }).tap();
+    await expect(resume).toHaveCount(0);
+    expect(await focusActuel(page), "fermé : le focus revient sur « Déplier »").toBe("Déplier la barre latérale");
+  });
+
+  test("tablette en paysage : « Déconnexion » depuis la barre par-dessus la referme", async ({ page }) => {
+    await signInAs(page, MEMBRE, {}, "/songs");
+    await page.getByRole("searchbox").waitFor();
+    await expect(navigation(page).getByRole("link")).toHaveCount(5);
+    await deplier(page).tap();
+    await barreArrivee(page);
+    await sansIndicateurDeNext(page);
+    await barreParDessus(page).getByTestId("pied-barre").getByRole("button", { name: "Compte" }).tap();
+    await page.getByRole("menuitem", { name: "Déconnexion" }).tap();
+    await expect(barreParDessus(page)).toHaveCount(0);
+    await expect(voile(page)).toHaveCount(0);
+    await expect(navigation(page).getByRole("link"), "la barre réduite du visiteur").toHaveText(["Chants", "Évènements"]);
+    expect(await largeurBarre(page)).toBe(68);
+  });
 });
 
 // Captures à regarder à l'œil (PW_CAPTURES=<dossier>) : clair et sombre, membre et visiteur.
@@ -838,12 +919,13 @@ test("captures de la barre (PW_CAPTURES)", async ({ page }, info) => {
   const dir = process.env.PW_CAPTURES;
   test.skip(!dir, "seulement avec PW_CAPTURES");
   await sansSheet(page);
+  // Les entrées arrivent une fois la session connue : chaque capture les attend.
+  const entreesArrivees = () => page.getByRole("link", { name: "Évènements" }).filter({ visible: true }).first().waitFor();
   for (const theme of ["light", "dark"] as const) {
     await page.emulateMedia({ colorScheme: theme });
     await page.goto("/songs");
     await page.getByRole("searchbox").waitFor();
-    // Les entrées arrivent une fois la session connue.
-    await page.getByRole("link", { name: "Évènements" }).filter({ visible: true }).first().waitFor();
+    await entreesArrivees();
     await animationsFinies(page);
     await page.screenshot({ path: `${dir}/u4-visiteur-${theme}-${info.project.name}.png` });
   }
@@ -852,10 +934,12 @@ test("captures de la barre (PW_CAPTURES)", async ({ page }, info) => {
     await page.emulateMedia({ colorScheme: theme });
     await page.goto(`/setlists/${SETLIST_ID}`);
     await page.getByTestId("barre-outils").waitFor();
+    await entreesArrivees();
     await animationsFinies(page);
     await page.screenshot({ path: `${dir}/u4-setlist-${theme}-${info.project.name}.png` });
     await page.goto("/songs");
     await page.getByRole("searchbox").waitFor();
+    await entreesArrivees();
     await animationsFinies(page);
     await page.screenshot({ path: `${dir}/u4-chants-${theme}-${info.project.name}.png` });
   }
@@ -865,6 +949,7 @@ test("captures de la barre (PW_CAPTURES)", async ({ page }, info) => {
       await page.emulateMedia({ colorScheme: theme });
       await page.goto(`/setlists/${SETLIST_ID}`);
       await page.getByTestId("barre-outils").waitFor();
+      await entreesArrivees();
       await deplier(page).tap();
       await barreArrivee(page);
       await page.screenshot({ path: `${dir}/u4-par-dessus-setlist-${theme}-${info.project.name}.png` });
@@ -877,6 +962,7 @@ test("captures de la barre (PW_CAPTURES)", async ({ page }, info) => {
     await page.emulateMedia({ colorScheme: theme });
     await page.goto(`/setlists/${SETLIST_ID}`);
     await page.getByTestId("barre-outils").waitFor();
+    await entreesArrivees();
     await sansIndicateurDeNext(page);
     await animationsFinies(page);
     await page.screenshot({ path: `${dir}/u4-reduite-setlist-${theme}-${info.project.name}.png` });

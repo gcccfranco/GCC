@@ -310,8 +310,8 @@ npm run lint
   (fondations, rien ne change à l'écran), `2cfeda4` N2 commencé (barre latérale sur ordinateur), **non testé**.
   Agents arrêtés par Timothée le 04/10 au soir ; rien fusionné dans `ui/apple-design`, rien poussé. U4 bis
   (`spec-pages-en-grand.md`) se code après U4.
-- 05/10/2026 : **N2 faite** (commit « feat(U4): N2 — ordinateur : la barre latérale dépliée », sur
-  `lot/u4-navigation`, local, non poussé ; il complète le wip `2cfeda4`). `BarreLaterale` montée dans `layout.tsx`, montrée
+- 05/10/2026 : **N2 faite** (commit `2206b02` « feat(U4): N2 — ordinateur : la barre latérale dépliée », sur
+  `lot/u4-navigation`, local, non poussé ; il complète le wip `2cfeda4` ; fusion de `ui/apple-design` : `793201b`). `BarreLaterale` montée dans `layout.tsx`, montrée
   par le CSS seul sur ordinateur (pointeur fin, ≥ 1 024 px) : logo et label en fondu, place vide du sélecteur,
   entrées de `entreesBarre` (pastille d'encre, `aria-current`), pied membre (initiale → menu « Compte », nom,
   cloche, langue) ou visiteur (« Connexion », langue, thème), menus ouverts à côté de la barre ; navbar masquée
@@ -325,7 +325,7 @@ npm run lint
   Reste : N3 (réduire, déplier,
   s'en souvenir, infobulles, libellés « Réduire / Déplier la barre latérale »), N4 (tablette en paysage). N5 ne se
   fait pas (U5 bis, question 2). Rien à publier pour Timothée (ni règles ni données).
-- 05/10/2026 : **N3 faite** (commit « feat(U4): N3 — ordinateur : réduire, déplier, s'en souvenir », sur
+- 05/10/2026 : **N3 faite** (commit `9ec72b6` « feat(U4): N3 — ordinateur : réduire, déplier, s'en souvenir », sur
   `lot/u4-navigation`, local, non poussé). « Réduire la barre latérale » à droite du label (icône, infobulle),
   « Déplier la barre latérale » sous les entrées de la barre réduite. `getBarreReduite` / `setBarreReduite`
   (`src/lib/barreLateralePref.ts`, clé `barre-laterale` = `reduite` ou `depliee`, dépliée par défaut) ; une ligne de
@@ -340,7 +340,7 @@ npm run lint
   vus rouges puis verts ; captures regardées (ordinateur et ordinateur-1440, clair et sombre), conformes à la
   planche `ordinateur-barre-reduite`. Reste : N4 (tablette en paysage : la même présentation réduite, sous sa
   propre condition, plus « Déplier » par-dessus). À relire par Timothée : 收起侧边栏 / 展开侧边栏. Rien à publier.
-- 05/10/2026 : **N4 faite** (commit « feat(U4): N4 — tablette en paysage : barre réduite toujours, dépliée
+- 05/10/2026 : **N4 faite** (commit `f9d280a` « feat(U4): N4 — tablette en paysage : barre réduite toujours, dépliée
   par-dessus », sur `lot/u4-navigation`, local, non poussé). Question 1 prise à sa recommandation (oui).
   Tablette en paysage = `(pointer: coarse) and (orientation: landscape) and (min-width: 1024px)`, en CSS seul
   (bloc « Lot U4 » de `globals.css`) : `--barre-laterale` = 68 px quel que soit `data-barre`, `--nav-h` = `--sat`,
@@ -361,3 +361,28 @@ npm run lint
   leurs deux barres (tests des cas limites). Toutes les specs de `SPECS_GRAND_ECRAN` vertes sur
   tablette-paysage. **U4 est fini** (N5 ne se fait pas). Rien à publier pour Timothée (ni règles ni données) ;
   à regarder sur un vrai iPad couché : le glissé de la feuille et le toucher du voile.
+- 05/10/2026 : **relecture faite, U4 fini et relu** (commit « fix(U4): relecture — signaler et se déconnecter
+  depuis la barre par-dessus, un seul profil lu », sur `lot/u4-navigation`, local, non poussé). Commits du lot :
+  `016a633` N1, `2cfeda4` + `2206b02` N2, `9ec72b6` N3, `f9d280a` N4, puis ce commit. Corrigé, chaque fois avec un
+  test vu rouge puis vert (`navigation-grand-ecran.spec.ts`) :
+  - **« Signaler un problème » depuis la barre par-dessus** (tablette en paysage) : le formulaire s'ouvrait sous
+    le calque modal de la barre (Radix) et ne répondait ni au toucher ni au clavier. La barre se referme d'abord,
+    le formulaire s'ouvre une fois qu'elle est partie (`onSignaler` de `MenuCompte`), le focus reste dans le
+    formulaire, puis revient sur « Déplier » quand on le ferme.
+  - **« Déconnexion » depuis la barre par-dessus** la referme (elle est ouverte pour une page *et* un compte).
+  - **Un seul profil lu** : navbar, barre latérale, menus « Compte » et notifications lisaient chacun
+    `users/{uid}` au chargement (11 lectures Firestore mesurées, sur les cinq projets) ; `useProfile` partage
+    désormais la lecture en cours (`src/lib/firebase/users.ts`) : 1 lecture, pour toutes les pages.
+  - `BarreLaterale` lit « monté » et « réduite » par `useSyncExternalStore` (plus d'avertissement
+    `set-state-in-effect` ajouté par le lot : 53 avertissements, comme avant U4).
+  - Test ajouté : premier affichage sans React sur ordinateur, fond de la barre et halo au bord (248 puis 68 px),
+    à la place de celui de la navbar sauté sur ordinateur (`look-barres`). Les captures (`PW_CAPTURES`) attendent
+    toutes les entrées de la barre.
+  Laissé, à savoir : les entrées de la barre arrivent quand la session est connue, comme la barre du bas (qui,
+  elle, n'apparaît qu'à ce moment) ; rien ne bouge dans la page. **Perte temporaire jusqu'à U5** : barre
+  dépliée, le sommaire de la setlist ne s'affiche qu'à partir de 1 528 px de fenêtre (avant U4 : 1 280 px), donc
+  plus sur un portable de 1 280 à 1 440 px ; il revient en réduisant la barre (dès 1 348 px). « Réduite
+  d'office » n'est pas fait (question 8). Rien à publier (ni règles ni données). **À faire par Timothée** : relire
+  收起侧边栏 / 展开侧边栏 ; sur un vrai iPad couché, regarder le glissé de la barre par-dessus, le toucher du
+  voile et « Signaler un problème » depuis elle ; dire si la perte du sommaire jusqu'à U5 lui va ; donner le go
+  pour fusionner `lot/u4-navigation`.
