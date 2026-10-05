@@ -140,13 +140,19 @@ export const GRILLE_INTERFRANCO: DefinitionGrille = {
   ],
 }
 
-// Groupes (quatre onglets par trimestre dans le Sheet, quatre colonnes).
+// Groupes (quatre onglets par trimestre dans le Sheet, quatre colonnes, plus
+// PERCUSSION — lot U2, P5 — que le Sheet de 2026 n'a qu'à quelques trimestres
+// (Paix T4, Bonté T3 et T4) : masquée en lecture tant qu'aucune case de la
+// période ne la porte, comme la Sainte cène. MÉNAGES (Bonté, jamais rempli) est écarté.
 export const GRILLE_PAIX: DefinitionGrille = {
   key: "paix",
   label: "Groupe Paix",
   i18nTitre: "planning.groupes.paix",
   couleur: PLANNING_COLORS.paix,
-  colonnes: [col("presidence", "presidence", 1), col("musiciens", "musiciens", 2), col("orateur", "orateur", 3), col("theme", "theme", 4)],
+  colonnes: [
+    col("presidence", "presidence", 1), col("musiciens", "musiciens", 2), col("orateur", "orateur", 3), col("theme", "theme", 4),
+    col("percussion", "percussion", 5, true),
+  ],
   dates: "dimanches",
 }
 
@@ -155,7 +161,10 @@ export const GRILLE_BONTE: DefinitionGrille = {
   label: "Groupe Bonté",
   i18nTitre: "planning.groupes.bonte",
   couleur: PLANNING_COLORS.bonte,
-  colonnes: [col("presidence", "presidence", 1), col("musiciens", "musiciens", 2), col("orateur", "orateur", 3), col("theme", "theme", 4)],
+  colonnes: [
+    col("presidence", "presidence", 1), col("musiciens", "musiciens", 2), col("orateur", "orateur", 3), col("theme", "theme", 4),
+    col("percussion", "percussion", 5, true),
+  ],
   dates: "dimanches",
 }
 
@@ -188,7 +197,7 @@ export const GRILLE_TABLE: DefinitionGrille = {
   dates: "dimanches",
 }
 
-// EDD : une grille par classe, cinq colonnes (cf. `fetchEDD`).
+// EDD : une grille par classe, six colonnes (cf. `fetchEDD`) ; COURS ajouté au lot U2 (P5).
 export const CLES_EDD: Record<(typeof EDD_CLASSES)[number], string> = { "中班": "eddZhongban", "大班": "eddDaban", "高班": "eddGaoban" }
 
 export const GRILLES_EDD: DefinitionGrille[] = EDD_CLASSES.map((classe) => ({
@@ -198,7 +207,10 @@ export const GRILLES_EDD: DefinitionGrille[] = EDD_CLASSES.map((classe) => ({
   sousTitre: classe,
   couleur: PLANNING_COLORS.edd,
   dates: "dimanches",
-  colonnes: [col("presidence", "presidence", 1), col("suppleant", "suppleant", 2), col("piano", "piano", 3), col("cajon", "cajon", 4), col("guitare", "guitare", 5)],
+  colonnes: [
+    col("presidence", "presidence", 1), col("suppleant", "suppleant", 2), col("piano", "piano", 3), col("cajon", "cajon", 4),
+    col("guitare", "guitare", 5), col("cours", "cours", 6),
+  ],
 }))
 
 // Campus : une grille par moment (matin, soir), la répétition en texte libre

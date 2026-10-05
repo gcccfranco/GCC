@@ -126,10 +126,13 @@ export const CULTE_ROLES: [number, string][] = [
   [9, "Orateur"], [10, "Traduction"], [11, "Sainte cène"],
 ]
 
-const GROUPE_ROLES: [number, string][] = [[1, "Présidence"], [2, "Musicien"], [3, "Orateur"]]
+// Lot U2, P5 : Percussion (groupes, index 5) et Cours (EDD, index 6), colonnes
+// du Sheet de 2026 que l'app ignorait. Les lecteurs ne les rendent que derrière
+// l'interrupteur (`sheets.ts`) : en ligne, ces index restent vides.
+const GROUPE_ROLES: [number, string][] = [[1, "Présidence"], [2, "Musicien"], [3, "Orateur"], [5, "Percussion"]]
 const FIDELITE_ROLES: [number, string][] = [[1, "Présidence"], [2, "Orateur"], [4, "Piano"]]
 const FIDELITE_MUSIC_ROLES: [number, string][] = [[1, "Présidence"], [2, "Piano"], [3, "Guitare"], [4, "Batterie"]]
-const EDD_ROLES_COLS: [number, string][] = [[1, "Présidence"], [2, "Suppléant"], [3, "Piano"], [4, "Cajon"], [5, "Guitare"]]
+const EDD_ROLES_COLS: [number, string][] = [[1, "Présidence"], [2, "Suppléant"], [3, "Piano"], [4, "Cajon"], [5, "Guitare"], [6, "Cours"]]
 const INTERGROUPE_ROLES: [number, string][] = [
   [1, "Présidence"], [2, "Choriste"], [3, "Choriste"], [4, "Choriste"],
   [5, "Piano"], [6, "Guitare"], [7, "Cajon/Batterie"], [8, "Sono"], [9, "PPT"],
@@ -180,10 +183,11 @@ const CULTE_ROLE_MAP: [number, ServiceRole | null][] = [
   [1, "presidence"], [2, "chanteur"], [3, "chanteur"], [4, "musicien"],
   [5, "musicien"], [6, "musicien"], [7, "regie"], [8, "regie"],
 ]
-const GROUPE_ROLE_MAP: [number, ServiceRole | null][] = [[1, "presidence"], [2, "musicien"], [3, null]]
+const GROUPE_ROLE_MAP: [number, ServiceRole | null][] = [[1, "presidence"], [2, "musicien"], [3, null], [5, "musicien"]]
 const FIDELITE_ROLE_MAP: [number, ServiceRole | null][] = [[1, "presidence"], [2, null], [4, "musicien"]]
 const FIDELITE_MUSIC_ROLE_MAP: [number, ServiceRole | null][] = [[1, "presidence"], [2, "musicien"], [3, "musicien"], [4, "musicien"]]
-const EDD_ROLE_MAP: [number, ServiceRole | null][] = [[1, "presidence"], [2, null], [3, "musicien"], [4, "musicien"], [5, "musicien"]]
+// Cours (P5) : présence sans rôle de setlist, comme le suppléant.
+const EDD_ROLE_MAP: [number, ServiceRole | null][] = [[1, "presidence"], [2, null], [3, "musicien"], [4, "musicien"], [5, "musicien"], [6, null]]
 const INTERGROUPE_ROLE_MAP: [number, ServiceRole | null][] = [
   [1, "presidence"], [2, "chanteur"], [3, "chanteur"], [4, "chanteur"],
   [5, "musicien"], [6, "musicien"], [7, "musicien"], [8, "regie"], [9, "regie"],

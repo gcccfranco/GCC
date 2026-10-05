@@ -177,9 +177,14 @@ async function fetchMulti(sheets: string[], cols: number): Promise<string[][]> {
   return all.sort((a, b) => a[0] < b[0] ? -1 : 1)
 }
 
-export const lirePaixSheet = () => fetchMulti(["Paix_T1","Paix _T2","Paix _T3","Paix_T4"], 4)
+// Paix et Bonté : PERCUSSION en colonne 5 (lot U2, P5 ; Paix T4, Bonté T3 et
+// T4 en 2026), jamais MÉNAGES (colonne 6, vide). Lue derrière l'interrupteur
+// (Q14) : en ligne, l'ancien tableau, « Mes services » et les rappels lisent le
+// Sheet comme avant.
+const COLONNES_GROUPE = BACK_OFFICE ? 5 : 4
+export const lirePaixSheet = () => fetchMulti(["Paix_T1","Paix _T2","Paix _T3","Paix_T4"], COLONNES_GROUPE)
 export const lireFideliteSheet = () => fetchMulti(["Fidélité_T1","Fidélité_T2","Fidélité_T3","Fidélité_T4"], 4)
-export const lireBonteSheet = () => fetchMulti(["Bonté_T1","Bonté _T2","Bonté _T3","Bonté_T4"], 4)
+export const lireBonteSheet = () => fetchMulti(["Bonté_T1","Bonté _T2","Bonté _T3","Bonté_T4"], COLONNES_GROUPE)
 
 export async function lireFideliteMusiciensSheet(): Promise<string[][]> {
   const rows = await fetchSheet("Fidélité_Musicien")
@@ -235,7 +240,8 @@ export async function fetchInterfranco(): Promise<string[][]> {
 }
 
 // EDD : l'onglet énumère les dimanches classe par classe (le nom de la classe
-// en colonne 7 ouvre un bloc) ; cinq colonnes par ligne.
+// en colonne 7 ouvre un bloc) ; cinq colonnes par ligne, plus COURS (colonne 6,
+// lot U2, P5) derrière l'interrupteur, comme la percussion des groupes.
 export async function lireEddSheet(classe: (typeof EDD_CLASSES)[number]): Promise<string[][]> {
   const rows = await fetchSheet("EDD")
   const out: string[][] = []
@@ -246,7 +252,8 @@ export async function lireEddSheet(classe: (typeof EDD_CLASSES)[number]): Promis
     if (!dt) continue
     if (r[7] && (EDD_CLASSES as readonly string[]).includes(r[7].trim())) cls = r[7].trim()
     if (cls !== classe) continue
-    out.push([dt, r[1]||"", r[2]||"", r[3]||"", r[4]||"", r[5]||""])
+    const ligne = [dt, r[1]||"", r[2]||"", r[3]||"", r[4]||"", r[5]||""]
+    out.push(BACK_OFFICE ? [...ligne, r[6]||""] : ligne)
   }
   return out
 }

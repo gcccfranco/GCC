@@ -151,3 +151,44 @@ test.describe("back-office coupé : les dimanches d'Interfranco ne touchent pas 
     await expect(page.getByText("Groupe Paix", { exact: true })).toBeVisible();
   });
 });
+
+// Lot U2, P5 (docs/spec-planning-2027.md, question 4 et Q14) : Percussion (groupes)
+// et Cours (EDD) sont lus derrière l'interrupteur. En ligne, rien ne change :
+// l'ancien tableau, « Ce dimanche », « Mes services » et les rappels lisent le Sheet comme avant.
+test.describe("back-office coupé : Percussion et Cours attendent l'ouverture du back-office", () => {
+  const csv = (rows: string[][]) => rows.map((r) => r.map((c) => `"${c}"`).join(",")).join("\n");
+  const SHEETS: Record<string, string> = {
+    Paix_T4: csv([
+      ["DATE", "PRÉSIDENCE", "MUSICIENS", "ORATEUR", "THÈME", "PERCUSSION"],
+      ["22/11", "Ancien G.", "", "", "", "Batteur B."],
+      ["29/11", "Batteur B.", "", "", "", ""],
+    ]),
+    EDD: csv([
+      ["DATE", "PRESIDENCE", "SUPPLÉANT", "PIANO", "CAJON", "GUITARE", "COURS", ""],
+      ["22/11", "Ancien K.", "", "", "", "", "Batteur B.", "中班"],
+    ]),
+  };
+  const BATTEUR: FakeProfile = { uid: "uid-batteur", email: "batteur@example.com", planningName: "Batteur B." };
+  const ouvrir = async (page: Page, to: string) => {
+    await page.clock.setFixedTime(new Date("2026-11-15T10:00:00"));
+    await page.route(/docs\.google\.com\/spreadsheets/, (route) => {
+      const sheet = new URL(route.request().url()).searchParams.get("sheet") ?? "";
+      return route.fulfill({ status: 200, contentType: "text/csv", body: SHEETS[sheet] ?? "" });
+    });
+    await signInAs(page, BATTEUR, {}, to);
+  };
+
+  test("« Mes services » garde la présidence, sans Percussion ni Cours", async ({ page }) => {
+    await ouvrir(page, "/mes-services");
+    await expect(page.getByText("Groupe Paix", { exact: true }), "le 29/11 seulement").toHaveCount(1);
+    await expect(page.getByText("Percussion", { exact: true })).toHaveCount(0);
+    await expect(page.getByText("EDD 中班", { exact: true })).toHaveCount(0);
+  });
+
+  test("l'ancien tableau des groupes n'a pas de colonne de plus", async ({ page }) => {
+    await ouvrir(page, "/planning/groupes");
+    await expect(page.locator("[data-grille]"), "c'est bien l'ancien tableau").toHaveCount(0);
+    await expect(page.getByText("Ancien G.").filter({ visible: true }).first()).toBeVisible();
+    await expect(page.getByText("Batteur B.").filter({ visible: true }), "le 29/11 à la présidence seulement").toHaveCount(1);
+  });
+});

@@ -2,11 +2,14 @@ import { expect, test, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import {
-  GRILLE_BONTE, GRILLE_FIDELITE, GRILLE_FIDELITE_MUSICIENS, GRILLE_INTERFRANCO, GRILLE_PAIX, PREMIERE_ANNEE_APP,
-  dimanchesDe, lignesDeLAnnee, marquerDimanchesSpeciaux,
+  GRILLES, GRILLES_EDD, GRILLE_BONTE, GRILLE_FIDELITE, GRILLE_FIDELITE_MUSICIENS, GRILLE_INTERFRANCO, GRILLE_PAIX,
+  PREMIERE_ANNEE_APP, dimanchesDe, lignesDeLAnnee, marquerDimanchesSpeciaux,
 } from "../src/lib/planning/grilles";
-import { avecDimanchesSpeciaux, findMyServices, type PlanningData } from "../src/lib/planning/names";
-import { reminderServicesFor } from "../src/lib/push/reminderMessage";
+import {
+  avecDimanchesSpeciaux, collectPlanningNames, deriveServiceRolesFromPlanning, findMyServices, servantsForDate,
+  type PlanningData,
+} from "../src/lib/planning/names";
+import { reminderBody, reminderServicesFor } from "../src/lib/push/reminderMessage";
 
 // Lot U2 (docs/spec-planning-2027.md) : le planning 2027 se remplit dans
 // l'app, sur des dimanches posés d'office ; chaque trimestre reste un
@@ -34,10 +37,11 @@ test("dimanchesDe(2028) : 53 dimanches, dès le 02/01", () => {
 
 test("lignesDeLAnnee : tous les dimanches pour un planning hebdomadaire, cases vides comprises", () => {
   expect(PREMIERE_ANNEE_APP).toBe(2027);
-  const ecrit = ["2027-01-10", "Invité A.", "", "", ""];
-  const lignes = lignesDeLAnnee(GRILLE_PAIX, 2027, [["2026-12-27", "Ancien B.", "", "", ""], ecrit]);
+  const ecrit = ["2027-01-10", "Invité A.", "", "", "", ""];
+  const lignes = lignesDeLAnnee(GRILLE_PAIX, 2027, [["2026-12-27", "Ancien B.", "", "", "", ""], ecrit]);
   expect(lignes).toHaveLength(52);
-  expect(lignes[0]).toEqual(["2027-01-03", "", "", "", ""]);
+  // Date, puis présidence, musiciens, orateur, thème et percussion (P5).
+  expect(lignes[0]).toEqual(["2027-01-03", "", "", "", "", ""]);
   expect(lignes[1]).toEqual(ecrit);
   expect(lignes.some((r) => r[0].startsWith("2026"))).toBe(false);
 });
@@ -57,9 +61,22 @@ const SHEETS: Record<string, string> = {
     ["04/01", "Ancien B.", "Groupe C.", "Orateur D.", "Thème E."],
     ["11/01", "Ancien F.", "", "", ""],
   ]),
+  // P5 : la colonne PERCUSSION du T4 de 2026 (index 5), comme dans le Sheet.
   Paix_T4: csv([
-    ["DATE", "PRÉSIDENCE", "MUSICIENS", "ORATEUR", "THÈME"],
-    ["15/11", "Ancien G.", "", "", ""],
+    ["DATE", "PRÉSIDENCE", "MUSICIENS", "ORATEUR", "THÈME", "PERCUSSION"],
+    ["15/11", "Ancien G.", "", "", "", ""],
+    ["22/11", "Ancien G.", "", "", "", "Membre P."],
+  ]),
+  // P5 (relevé T0) : Bonté a aussi PERCUSSION au T4, puis MÉNAGES, jamais rempli.
+  "Bonté_T4": csv([
+    ["DATE", "PRÉSIDENCE", "MUSICIENS", "ORATEUR", "THÈME", "PERCUSSION", "MÉNAGES"],
+    ["22/11", "Ancien H.", "", "", "", "Batteur B.", "Ménage X."],
+  ]),
+  // P5 : COURS en colonne 6, la classe en colonne 7 ouvre son bloc.
+  EDD: csv([
+    ["DATE", "PRESIDENCE", "SUPPLÉANT", "PIANO", "CAJON", "GUITARE", "COURS", ""],
+    ["22/11", "Ancien K.", "", "", "", "", "Membre P.", "中班"],
+    ["29/11", "Ancien L.", "", "", "", "", "", ""],
   ]),
 };
 
@@ -345,4 +362,114 @@ test("Ce dimanche du 17/01/2027 montre l'Interfranco ; « Prochain service » sa
   await expect(prochain).toContainText("24 janvier");
   await expect(prochain).not.toContainText("17 janvier");
   await capture(page, "ce-dimanche-interfranco-2027");
+});
+
+// ─── Colonnes de 2026 manquantes (P5, question 4 et relevé T0) ──────────────
+//
+// Percussion (Paix, Bonté : index 5, seulement certains trimestres de 2026,
+// d'où une colonne optionnelle) et Cours (EDD : index 6) deviennent des
+// services : grilles, lecteurs du Sheet, « Mes services », rappels. Ménages
+// (Bonté, jamais rempli) reste écarté.
+
+test("P5 · les grilles portent Percussion (Paix, Bonté) et Cours (EDD), à l'index du Sheet ; pas Ménages", () => {
+  for (const g of [GRILLE_PAIX, GRILLE_BONTE]) {
+    const percussion = g.colonnes.find((c) => c.cle === "percussion");
+    expect(percussion, g.key).toEqual({ cle: "percussion", i18n: "planning.roles.percussion", index: 5, optionnelle: true });
+  }
+  for (const g of GRILLES_EDD) {
+    expect(g.colonnes.find((c) => c.cle === "cours"), g.key).toEqual({ cle: "cours", i18n: "planning.roles.cours", index: 6 });
+  }
+  expect(GRILLE_FIDELITE.colonnes.some((c) => c.cle === "percussion"), "Fidélité n'a pas de percussion").toBe(false);
+  expect(GRILLES.flatMap((g) => g.colonnes).some((c) => c.cle === "menages")).toBe(false);
+});
+
+test("P5 · Percussion et Cours : « Mes services », rappels (FR et 中文), notifications et profil", () => {
+  const vide: PlanningData = {
+    culte: [], dejeuner: [], petitDej: [], paix: [], fidelite: [], fideliteMusic: [], bonte: [],
+    edd: {}, campus: [], intergroupe: [], interfranco: [],
+  };
+  const planning: PlanningData = {
+    ...vide,
+    paix: [["2026-11-22", "Ancien G.", "", "", "", "Membre P."]],
+    bonte: [["2026-11-29", "Ancien H.", "", "", "", "Membre P."]],
+    edd: { P6_NovDec: { label: "P6_NovDec", classes: { "中班": [["2026-11-22", "Ancien K.", "", "", "", "", "Membre P."]], "大班": [], "高班": [] } } },
+  };
+  expect(findMyServices(planning, "Membre P.").map((e) => `${e.date} ${e.service} ${e.role}`)).toEqual([
+    "2026-11-22 EDD 中班 Cours",
+    "2026-11-22 Groupe Paix Percussion",
+    "2026-11-29 Groupe Bonté Percussion",
+  ]);
+  const rappels = reminderServicesFor(planning, "Membre P.", "2026-11-22");
+  expect(rappels).toEqual([
+    { service: "EDD 中班", roles: ["Cours"] },
+    { service: "Groupe Paix", roles: ["Percussion"] },
+  ]);
+  expect(reminderBody("2026-11-22", "J1", rappels, "fr")).toContain("EDD 中班 (Cours) · Groupe Paix (Percussion)");
+  expect(reminderBody("2026-11-22", "J1", rappels, "zh-CN")).toContain("主日学 中班（授课） · 和平团契（打击乐）");
+
+  // « Setlist prête » : la percussion joue (musicien) ; qui fait cours est présent sans rôle de setlist.
+  const servants = servantsForDate(planning, "2026-11-22").filter((s) => s.name === "Membre P.");
+  expect(servants).toEqual(expect.arrayContaining([
+    expect.objectContaining({ category: "Groupe Paix", serviceRole: "musicien", leader: "Ancien G." }),
+    expect.objectContaining({ category: "中班", serviceRole: null, leader: "Ancien K." }),
+  ]));
+  expect(deriveServiceRolesFromPlanning(planning, "Membre P.")).toEqual({
+    "Groupe Paix": ["musicien"], "Groupe Bonté": ["musicien"], "中班": [],
+  });
+  expect(collectPlanningNames(planning)).toContain("Membre P.");
+});
+
+test("P5 · Groupes 2026 : la Percussion du Sheet s'affiche (Paix et Bonté au T4), Ménages non", async ({ page }) => {
+  await ouvrir(page, MEMBRE, "/planning/groupes");
+  await expect(laCase(page, "2026-11-22", "presidence")).toContainText("Ancien G.");
+  await expect(laCase(page, "2026-11-22", "percussion")).toContainText("Membre P.");
+  await page.getByRole("button", { name: "Bonté", exact: true }).click();
+  await expect(laCase(page, "2026-11-22", "percussion")).toContainText("Batteur B.");
+  await expect(page.getByText("Ménage X.")).toHaveCount(0);
+  await expect(page.getByText("Ménages")).toHaveCount(0);
+  await capture(page, "p5-bonte-t4-percussion");
+});
+
+test("P5 · Paix 2027 : Percussion masquée en lecture tant qu'elle est vide, remplissable en modification", async ({ page }) => {
+  const db = await ouvrir(page, ECRIVAIN, "/planning/groupes");
+  await page.getByRole("button", { name: "2027", exact: true }).click();
+  await page.getByRole("button", { name: "T1", exact: true }).click();
+  await expect.poll(() => datesAffichees(page)).toHaveLength(13);
+  await expect(page.getByText("Percussion", { exact: true }).filter({ visible: true }), "colonne optionnelle, vide au T1").toHaveCount(0);
+
+  await page.getByRole("button", { name: "Modifier" }).click();
+  await laCase(page, "2027-01-10", "percussion").getByRole("button").click();
+  const champ = laCase(page, "2027-01-10", "percussion").getByLabel("Percussion", { exact: true });
+  await champ.fill("Batteur B.");
+  await champ.press("Enter");
+  await expect(laCase(page, "2027-01-10", "percussion")).toContainText("Batteur B.");
+  await expect.poll(() => db.doc("plannings/paix/dimanches/2027-01-10")?.percussion).toBe("Batteur B.");
+  expect(Object.keys(db.doc("plannings/paix/dimanches/2027-01-10")!).sort()).toEqual(["date", "modifieLe", "modifiePar", "percussion"]);
+  await capture(page, "p5-paix-2027-percussion");
+});
+
+test("P5 · EDD 2026 : la colonne Cours du Sheet s'affiche", async ({ page }) => {
+  await ouvrir(page, MEMBRE, "/planning/edd");
+  await expect(page.getByTestId("grille-bandeau")).toContainText("中班");
+  await expect(laCase(page, "2026-11-22", "presidence")).toContainText("Ancien K.");
+  await expect(laCase(page, "2026-11-22", "cours")).toContainText("Membre P.");
+  await capture(page, "p5-edd-cours");
+});
+
+test("P5 · « Mes services » liste la Percussion et le Cours", async ({ page }) => {
+  await ouvrir(page, { uid: "uid-perc", email: "perc@example.com", planningName: "Membre P." }, "/mes-services");
+  await expect(page.getByText("Groupe Paix", { exact: true })).toBeVisible();
+  await expect(page.getByText("Percussion", { exact: true })).toBeVisible();
+  await expect(page.getByText("EDD 中班", { exact: true })).toBeVisible();
+  await expect(page.getByText("Cours", { exact: true })).toBeVisible();
+  await capture(page, "p5-mes-services");
+});
+
+test("P5 · « Ce dimanche » montre la Percussion des groupes et le Cours de l'EDD", async ({ page }) => {
+  await ouvrir(page, MEMBRE, "/planning", {}, "2026-11-20T10:00:00");
+  const dimanche = page.getByRole("region", { name: /Ce dimanche/ });
+  await expect(dimanche.getByText("Batteur B.")).toBeVisible();
+  await expect(dimanche.getByText("Percussion", { exact: true })).toHaveCount(2);
+  await expect(dimanche.getByText("Cours", { exact: true })).toHaveCount(1);
+  await expect(dimanche.getByText("Membre P.")).toHaveCount(2);
 });
