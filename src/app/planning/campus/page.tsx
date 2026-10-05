@@ -11,8 +11,9 @@ import { PlanningGrille } from "@/components/planning/PlanningGrille"
 import { GRILLE_CAMPUS_MATIN, GRILLE_CAMPUS_SOIR, lignesSimples } from "@/lib/planning/grilles"
 import { useGrilleApp } from "@/lib/planning/useGrilleApp"
 import { useProfile } from "@/lib/firebase/users"
-import { canEditPlanning } from "@/lib/access"
+import { canEditPlanning, isAdminUser } from "@/lib/access"
 import { BACK_OFFICE } from "@/lib/backOffice"
+import { useGestionPlanning } from "@/lib/planning/gestion"
 import { AncienTableau } from "./AncienTableau"
 
 // Campus : les cartes Louange / Répétition restent la lecture ; le volet
@@ -48,8 +49,9 @@ function CampusPage() {
   const [sub, setSub] = useState<CampusSub>("louange")
   const [loading, setLoading] = useState(true)
 
-  const peutMatin = canEditPlanning(user, profile, GRILLE_CAMPUS_MATIN.key)
-  const peutSoir = canEditPlanning(user, profile, GRILLE_CAMPUS_SOIR.key)
+  const gestion = useGestionPlanning()
+  const peutMatin = gestion && canEditPlanning(user, profile, GRILLE_CAMPUS_MATIN.key)
+  const peutSoir = gestion && canEditPlanning(user, profile, GRILLE_CAMPUS_SOIR.key)
   const matinApp = useGrilleApp(GRILLE_CAMPUS_MATIN.key, peutMatin)
   const soirApp = useGrilleApp(GRILLE_CAMPUS_SOIR.key, peutSoir)
 
@@ -75,6 +77,7 @@ function CampusPage() {
   const data = sub === "louange" ? louange : entrainement
   const { days, order } = groupByDay(data)
   const annee = t("planning.grille.periodeAnnee", { annee: new Date().getFullYear() })
+  const exporter = { annee: new Date().getFullYear(), rang: 1, tout: isAdminUser(user) }
 
   return (
     // Le volet Grille porte treize colonnes : toute la largeur ; les cartes gardent leur colonne étroite.
@@ -107,7 +110,8 @@ function CampusPage() {
             lignes={lignesSimples(grilles.matin)}
             peutModifier={peutMatin}
             datesDansLApp={matinApp.datesDansLApp}
-            nomsDesComptes={matinApp.nomsDesComptes}
+            comptes={matinApp.comptes}
+            exporter={peutMatin ? exporter : undefined}
           />
           <PlanningGrille
             definition={GRILLE_CAMPUS_SOIR}
@@ -115,7 +119,8 @@ function CampusPage() {
             lignes={lignesSimples(grilles.soir)}
             peutModifier={peutSoir}
             datesDansLApp={soirApp.datesDansLApp}
-            nomsDesComptes={soirApp.nomsDesComptes}
+            comptes={soirApp.comptes}
+            exporter={peutSoir ? exporter : undefined}
           />
         </div>
       )}

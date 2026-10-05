@@ -1,13 +1,8 @@
-import { Suspense } from "react"
-import { RequireAuth } from "@/components/auth/RequireAuth"
-import { ModifierClient } from "./ModifierClient"
+import { redirect } from "next/navigation"
 
-export default function ModifierEvenementPage() {
-  return (
-    <RequireAuth>
-      <Suspense fallback={<div className="min-h-screen bg-background" />}>
-        <ModifierClient />
-      </Suspense>
-    </RequireAuth>
-  )
+// Lot U6, B3 (Q4) : modifier passe au Back-Office ; l'ancienne adresse y mène.
+// Interrupteur coupé, le gabarit `evenements/layout.tsx` répond 404 avant.
+export default async function AncienModifier({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
+  redirect(`/back-office/evenements/${encodeURIComponent(id)}/modifier`)
 }

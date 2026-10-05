@@ -171,7 +171,7 @@ test("en 中文, aucun texte français sur les écrans membres principaux", asyn
   await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
   const francais = textesFrancais();
   await signInAs(page, { ...MEMBRE, poles: ["da"] }, {}, "/moi");
-  for (const chemin of ["/moi", "/songs", "/taches", "/taches/da", "/setlists", "/evenements"]) {
+  for (const chemin of ["/moi", "/songs", "/taches", "/back-office/taches/da", "/setlists", "/evenements"]) {
     if (chemin !== "/moi") await page.goto(chemin);
     await expect(page.locator("html")).toHaveAttribute("lang", "zh-CN");
     await page.waitForTimeout(800);
@@ -200,7 +200,7 @@ test("en 中文, la proposition de chant n'a plus de français", async ({ page }
 
 test("en 中文, le formulaire de nouvelle tâche n'a plus de français", async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
-  await signInAs(page, { ...MEMBRE, poles: ["da"] }, {}, "/taches/da");
+  await signInAs(page, { ...MEMBRE, poles: ["da"] }, {}, "/back-office/taches/da");
   await page.getByRole("button", { name: "新任务" }).click();
   await expect(page.getByRole("dialog", { name: "新任务" })).toBeVisible();
   expect(await francaisAffiche(page, textesFrancais())).toEqual([]);

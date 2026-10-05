@@ -60,7 +60,7 @@ const ROLES_ZH: Record<string, string> = {
   Présidence: "司会", Choriste: "和声", Chant: "和声", Piano: "钢琴", Guitare: "吉他",
   Batterie: "架子鼓", Cajon: "箱鼓", "Cajon/Batterie": "箱鼓/鼓", Sono: "音控", PPT: "投影",
   Régie: "音控/投影", Orateur: "讲员", Traduction: "翻译", Musicien: "乐手",
-  Suppléant: "替补", "Sainte cène": "圣餐",
+  Suppléant: "替补", "Sainte cène": "圣餐", Percussion: "打击乐", Cours: "授课",
 };
 const WHEN: Record<NotifLang, Record<ReminderTag, string>> = {
   fr: { J7: "dans 1 semaine", J3: "dans 3 jours", J1: "demain" },

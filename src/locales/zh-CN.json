@@ -1027,7 +1027,10 @@
       "chant2": "诗歌 2",
       "chant3": "诗歌 3",
       "chant4": "诗歌 4",
-      "repetition": "排练"
+      "repetition": "排练",
+      "percussion": "打击乐",
+      "menages": "清洁",
+      "cours": "授课"
     },
     "table": {
       "myName": "我的名字…",
@@ -1037,14 +1040,13 @@
       "clear": "清除"
     },
     "grille": {
-      "modifier": "修改",
-      "termine": "完成",
       "enregistre": "已保存",
       "plusTot": "查看更早",
       "plusTard": "查看更晚",
       "aVenir": "服事表待定",
       "periode": "{{du}}至{{au}}",
       "nonPublie": "尚未发布",
+      "dimancheSpecial": "{{service}}主日：司会在{{service}}服事表中安排。",
       "pasDispo": "某个主日无法服事？请联系负责排表的同工。",
       "droitRetire": "服务器拒绝保存：你已没有修改此服事表的权限，或规则尚未发布。",
       "horsLigne": "无法修改：网络不可用。",
@@ -1058,8 +1060,22 @@
       "importe": "{{auteur}} 从 Google 表格导入了 {{count}} 个主日",
       "periodeAnnee": "{{annee}} 年"
     },
+    "petitDej": {
+      "trimestre": "第{{n}}季度",
+      "libre": "空闲",
+      "inscrire": "我来报名",
+      "modifier": "修改",
+      "retirer": "移除",
+      "confirmerRetrait": "移除这一行？",
+      "ajouter": "添加一行",
+      "astuce": "可以写“某某家庭”代替你的名字。",
+      "vientDeSInscrire": "{{nom}} 刚刚报名了。",
+      "illisible": "暂时无法读取报名。"
+    },
     "horaires": {
-      "culte": "主日 10:30"
+      "culte": "主日 10:30",
+      "groupes": "主日 13:00–14:30",
+      "fidelite": "主日 13:00–14:00"
     },
     "pages": {
       "culte": "法语崇拜",
@@ -1170,6 +1186,44 @@
       "viewOrdre": "查看出场顺序",
       "hideOrdre": "隐藏出场顺序"
     },
+    "annee": {
+      "label": "年份",
+      "brouillon": "{{annee}} · 草稿。各季度发布前，仅服事表负责人可见。",
+      "poses": "沿用 {{avant}} 年的栏目和时间；{{annee}} 年的 {{n}} 个主日已列出。",
+      "aucun": "{{annee}} 年尚未添加主日。",
+      "ajouter": "添加主日",
+      "ajouterSeance": "添加聚会",
+      "retirer": "移除此主日",
+      "retirerSeance": "移除此聚会",
+      "confirmerRetrait": "移除 {{date}}？该日所填内容将被清除。",
+      "choisirDate": "要添加的主日",
+      "dateSeance": "聚会日期",
+      "moment": "时段",
+      "special": "这个主日是{{service}}：司会取自其服事表。"
+    },
+    "publier": "发布 {{tri}}",
+    "masquer": "隐藏 {{tri}}",
+    "publierConfirm": "发布{{planning}} {{annee}} 年 {{tri}}？所有成员都将看到并收到通知。",
+    "publierEchec": "发布失败，请重试。",
+    "export": {
+      "bouton": "导出（表格样式）",
+      "titre": "导出",
+      "affiche": "{{periode}} · {{planning}}",
+      "annee": "全年 · {{planning}}",
+      "tout": "{{annee}} 年全部服事表",
+      "pdf": "PDF",
+      "xlsx": ".xlsx",
+      "enCours": "正在生成文件…",
+      "echec": "导出失败，请重试。"
+    },
+    "choisir": {
+      "bouton": "选择",
+      "chercher": "搜索姓名",
+      "sansCompte": "输入没有账号的名字…",
+      "avecRole": "担任此职",
+      "autres": "其他姓名",
+      "vider": "清空"
+      },
     "saison": {
       "label": "舞台",
       "titre": "{{nom}} · 预约",
@@ -1885,7 +1939,6 @@
     "title": "任务",
     "mesTaches": "我的任务",
     "aFairePourMoi": "我要做的",
-    "poles": "部门",
     "pole": {
       "da": "美工",
       "media": "媒体",
@@ -2028,7 +2081,15 @@
     "iosInstall": "在 iPhone 或 iPad 上：请先把网站添加到主屏幕（点「分享」，再点「添加到主屏幕」），然后从图标打开，才能开启通知。",
     "blocked": "你的浏览器屏蔽了本网站的通知。要重新开启：点击地址栏左侧的图标，选择「通知」，设为「允许」，然后刷新页面。",
     "promptTitle": "开启服侍提醒",
-    "promptText": "在每次服侍前收到提醒，歌单准备好时也会通知你。"
+    "promptText": "在每次服侍前收到提醒，歌单准备好时也会通知你。",
+    "recevoir": "接收",
+    "types": {
+      "reminders": "服侍提醒",
+      "setlists": "歌单已准备好",
+      "evenements": "活动",
+      "taches": "任务",
+      "petitDej": "早餐"
+    }
   },
   "proposition": {
     "titre": "推荐新诗歌",
@@ -2328,8 +2389,34 @@
     "seConnecter": "登录",
     "bonjour": "{{jour}} · {{prenom}}，你好",
     "menu": "你的模块",
-    "enAttente": "这部分将随后续开发移入后台。目前请在这里使用：",
-    "scene": "舞台",
-    "administration": "管理"
+    "sousParties": "子栏目",
+    "plannings": "排班表",
+    "planningReserve": "仅限该排班表的负责人。",
+    "adminReserve": "仅限管理员。",
+    "parties": {
+      "reception": "收件箱",
+      "notifier": "发送通知",
+      "questionnaire": "问卷",
+      "organigramme": "组织架构",
+      "personnes": "成员",
+      "inscriptions": "注册",
+      "import": "导入",
+      "plannings": "排班表",
+      "sansCompte": "无账号",
+      "evenements": "活动",
+      "reunions": "会议",
+      "scene": "舞台"
+    },
+    "gerer": "在后台管理",
+    "tachesDesPoles": "各部门的任务",
+    "sceneReserve": "仅限协调组。",
+    "aucunEvenement": "没有需要管理的活动。",
+    "aucuneReunion": "暂无会议。",
+    "nouvelleReunion": "新建会议",
+    "aVenir": "即将举行",
+    "reunionDePole": "部门会议 · {{pole}}",
+    "reunionDEquipe": "团队会议 · {{equipe}}",
+    "organiseePar": "组织者：{{nom}}",
+    "dupliquerProchaine": "复制为下一次"
   }
 }

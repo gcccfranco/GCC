@@ -1,17 +1,20 @@
 "use client";
 
-// Tâches (lot 7, docs/spec-taches.md) : ce qui reste à faire pour moi, puis
-// mes pôles. Chacun ne voit que les pôles dont il fait partie (admins : tous).
+// Tâches (lot 7, docs/spec-taches.md) : ce qui reste à faire pour moi, dans les
+// pôles dont je fais partie (admins : tous). Lot U6, B3 (question 3) : les pages
+// des pôles passent au Back-Office ; un responsable y va par « Les tâches des
+// pôles » (planche mes-taches-telephone), les autres cochent ici.
 
 import { useMemo, useState } from "react";
+import { ListChecks } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { RequireAuth } from "@/components/auth/RequireAuth";
 import { PageTitle } from "@/components/layout/PageTitle";
 import { Group, GroupRow } from "@/components/ui/group";
 import { TacheLigne } from "@/components/taches/TacheLigne";
 import { useProfile } from "@/lib/firebase/users";
-import { isAdminUser, polesDe } from "@/lib/access";
-import { aFairePour, lignesDeTache, resteAFaire, type Ligne } from "@/lib/taches/echeances";
+import { entreesBackOffice, isAdminUser, polesDe } from "@/lib/access";
+import { aFairePour, lignesDeTache, type Ligne } from "@/lib/taches/echeances";
 import { useTaches } from "@/lib/taches/useTaches";
 import { todayIso } from "@/lib/scene/dimanches";
 import { cyclerEtat } from "@/lib/firebase/taches";
@@ -67,16 +70,13 @@ function TachesClient() {
               ))
             )}
           </Group>
-          <Group title={t("taches.poles")}>
-            {poles.map((p) => {
-              const n = lignes.filter((l) => resteAFaire(l) && l.tache.pole === p).length;
-              return (
-                <GroupRow key={p} href={`/taches/${p}`} trailing={n > 0 ? String(n) : undefined} chevron>
-                  {t(`taches.pole.${p}`)}
-                </GroupRow>
-              );
-            })}
-          </Group>
+          {entreesBackOffice(user, profile).includes("taches") && (
+            <Group>
+              <GroupRow href="/back-office/taches" leading={<ListChecks />} trailing={t("backOffice.selecteur.backOffice")} chevron>
+                {t("backOffice.tachesDesPoles")}
+              </GroupRow>
+            </Group>
+          )}
         </>
       )}
     </div>

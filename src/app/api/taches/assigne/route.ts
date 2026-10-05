@@ -32,7 +32,9 @@ export async function POST(req: NextRequest) {
   const fresh = await premiereFois(await filterUidsByNotifPref([responsable], "taches"), key, { pole, tacheId });
   if (fresh.length) {
     const lang = (await loadNotifLangs(fresh)).get(responsable) ?? "fr";
-    const payload = { ...nouvelleTacheMessage(tache, lang), url: `/taches/${pole}`, tag: key };
+    // Lot U6, B3 : « À faire pour moi », ouvert à tout membre du pôle (la page du pôle est au
+    // Back-Office, fermée à qui n'est pas responsable).
+    const payload = { ...nouvelleTacheMessage(tache, lang), url: "/taches", tag: key };
     await sendPushToUids(fresh, payload);
     await recordNotification({ ...payload, kind: "tache", recipients: fresh });
   }

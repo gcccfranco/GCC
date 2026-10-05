@@ -44,7 +44,8 @@ export async function POST(req: NextRequest) {
   if ("pole" in tache.prevenir) {
     cible = "pole";
     uids = await membresDuPole(tache.prevenir.pole);
-    url = `/taches/${tache.prevenir.pole}`;
+    // Lot U6, B3 : « À faire pour moi » (la page du pôle est au Back-Office).
+    url = "/taches";
   } else {
     cible = "regie";
     const service = tache.prevenir.regie;

@@ -89,7 +89,10 @@ export interface UserProfile {
 // évènements depuis le lot 6, plus aucun expéditeur ne consultait cette
 // préférence ; un champ `annonces` encore présent dans notifPrefs/{uid} est
 // simplement ignoré à la lecture.
-export const NOTIF_TYPES = ["reminders", "setlists", "evenements", "taches"] as const;
+// « petitDej » (lot U3, docs/spec-petit-dej.md, PD4) : la ligne du mercredi quand
+// le dimanche qui vient n'a personne pour le petit déj ; bascule masquée tant que
+// le back-office est coupé (Q14).
+export const NOTIF_TYPES = ["reminders", "setlists", "evenements", "taches", "petitDej"] as const;
 export type NotifType = (typeof NOTIF_TYPES)[number];
 export type NotifPrefs = Record<NotifType, boolean>;
 
@@ -98,6 +101,7 @@ export const DEFAULT_NOTIF_PREFS: NotifPrefs = {
   setlists: true,
   evenements: true,
   taches: true,
+  petitDej: true,
 };
 
 /** Langue des envois automatiques (rappels), mémorisée dans notifPrefs/{uid}.lang
@@ -109,4 +113,5 @@ export const NOTIF_TYPE_LABELS: Record<NotifType, string> = {
   setlists: "Setlist prête",
   evenements: "Évènements",
   taches: "Tâches",
+  petitDej: "Petit déj",
 };

@@ -376,6 +376,121 @@ npm test && npx tsc --noEmit && npm run lint && graphify update .
 
 ## Avancement
 
+**05/10/2026 — B3 « Tâches et Évènements » codée** (branche `lot/u6-back-office`, après la fusion de
+`lot/u1-scene-saison`, commit « feat(U6): B3 — Tâches et Évènements… »). Faites : R1 à R4, B1 à B3. Restent B4 à B6
+(dans `lot/u6b-tableau-de-bord`). La route d'attente `src/app/back-office/[entree]/` est retirée (dernière entrée
+posée) avec ses libellés `backOffice.enAttente` et `backOffice.scene`.
+
+- **Tâches** : `/back-office/taches` mène au premier pôle ; `…/taches/<pôle>` = la page d'un pôle d'avant (déplacée
+  de `src/app/taches/[pole]/`), sous « Tâches » et un onglet par pôle (`tachesDuBackOffice`, `access.ts` : ses
+  pôles, Louange compris, ordre de `TACHE_POLES` ; tous pour un admin) ; le nom du pôle passe en titre de niveau 2.
+  **App** : `/taches` = « À faire pour moi » seul (question 3), la liste des pôles laisse place, pour qui a l'entrée
+  Tâches, à la ligne « Les tâches des pôles · Back-Office » (planche `mes-taches-telephone`). `/taches/<pôle>`
+  redirige. Les notifications « tâche confiée » et « tâche faite » ouvrent désormais `/taches` (un musicien du pôle
+  Louange n'est pas responsable : la page du pôle lui serait fermée) ; un lien déjà envoyé suit la redirection.
+- **Évènements** (`src/app/back-office/evenements/`) : titre et sous-parties `sousPartiesEvenements` (`access.ts`,
+  table Q2 : Évènements = admin, coordination, droit d'annonces ; Réunions = admin, un pôle `polesDe`,
+  `dansEquipes` ou `referentDe` ; Scène = coordination) sur les trois listes seulement ; qui n'a que des réunions
+  arrive sur Réunions. Listes (`ListeGestion.tsx`) en lignes compactes du calendrier (`EvenementCard`, prop `href`)
+  vers la fiche de gestion : Évènements = ceux qu'on gère (`canEditEvenement`), réunions à part ; Réunions = celles
+  de ses pôles et équipes (`estDeLaReunion`, toutes pour un admin) ; à venir puis « Évènements passés (n) ».
+  « Nouvel évènement » / « Nouvelle réunion » (`?reunion=1` : seuls les publics de réunion).
+  - `…/nouveau` et `…/<id>/modifier` : `NouveauClient` et `ModifierClient` déplacés ici, retour à la fiche de gestion.
+  - `…/<id>` : `EvenementClient espace="back-office"` ; évènement = carte de gestion (Modifier, Dupliquer,
+    Supprimer, inscriptions, QR) puis la fiche ; **réunion** = planche `bo-reunion-avant` (`EnTeteReunion.tsx` :
+    « Réunion de pôle · DA » ou « Réunion d'équipe · TEAM RÉGIE », titre, « Samedi 10 octobre · 20:00 · Salle 2 ·
+    organisée par … », « Modifier », « Dupliquer pour la prochaine », « Supprimer ») ; Sujets (et Tâches) à gauche,
+    Compte rendu et Réunions précédentes à droite, le compte rendu en tête sur téléphone et tablette. Ouverte à qui
+    gère, ou à une personne de la réunion (sans les boutons) ; sinon « Cette page est réservée… ».
+  - `…/scene` : `SceneClient gestion` (l'écran de la coordination de U1, tel quel : programmes, saison, ordre de
+    passage, volets), coordination seule (« Réservé à la coordination. »).
+- **App** : la fiche garde inscription, sujets, compte rendu, tâches ; la carte de gestion (organisateur,
+  coordination) garde le panneau des inscriptions et le QR, mais Modifier, Dupliquer, Supprimer laissent place à
+  « Gérer dans le Back-Office » (responsables seuls). « Nouvel évènement » du calendrier ouvre le formulaire du
+  Back-Office (responsables). La scène de l'App ne gère plus rien (ni Nouveau programme, ni Masquer, ni saison, ni
+  ordre de passage en écriture) ; la coordination y réserve comme les groupes et a « Gérer dans le Back-Office ».
+  `/evenements/nouveau` (avec `?from=`) et `/evenements/<id>/modifier` redirigent.
+- **Interrupteur coupé** : rien ne change (toute la section Évènements et `/taches` sont déjà en 404) ; neuf adresses
+  `/back-office/taches|evenements/…` de plus vérifiées en 404.
+- **Libellés** `backOffice.gerer`, `tachesDesPoles`, `sceneReserve`, `aucunEvenement`, `aucuneReunion`,
+  `nouvelleReunion`, `aVenir`, `reunionDePole`, `reunionDEquipe`, `organiseePar`, `dupliquerProchaine`,
+  `parties.evenements|reunions|scene` en FR et 中文 (在后台管理, 各部门的任务, 仅限协调组。, 没有需要管理的活动。,
+  暂无会议。, 新建会议, 即将举行, 部门会议 · …, 团队会议 · …, 组织者：…, 复制为下一次, 活动, 会议, 舞台) ;
+  `taches.poles` retirée.
+- **Tests** : `tests/back-office-admin.spec.ts`, bloc B3 (24 tests : `sousPartiesEvenements`, Tâches, App
+  « À faire pour moi », liens de la cloche, listes, fiches, création, modification, redirections, « Gérer dans le
+  Back-Office », Scène, 中文, captures `test-results/back-office-captures/b3-*.png`) écrits avant le code, vus rouges
+  (22 sur 24 ; les deux verts d'avance décrivent une absence), puis verts sur les cinq projets.
+  `back-office-coupe.spec.ts` étendu. Tests déplacés au Back-Office : `taches`, `taches-evenements`,
+  `nouveaux-membres` (pages des pôles), `evenements` (créer, modifier, dupliquer, supprimer, carte de gestion ; Steph,
+  l'organisateur des fixtures, reçoit le droit d'annonces d'une section pour être responsable), `reunions` (dupliquer,
+  créer), `programme-scene` et `scene-saison` (la coordination ouvre `/back-office/evenements/scene` ; l'onglet de
+  l'App se vérifie dans l'App, et le titre du programme en cours, même règle `currentProgramme`, au Back-Office),
+  `back-office-espace` (l'entrée Tâches mène au pôle).
+  Suites voisines vertes sur ordinateur, téléphone et tablette, sauf **un test instable d'avant B3** :
+  `reunions.spec.ts` « elle réordonne au clavier », téléphone seul, rouge une fois sur deux **aussi sur la fiche
+  d'avant B3** (contre-épreuve faite) : la flèche ne fait pas changer le sujet de place ; non touché.
+- **Choix faits faute de réponse dans la spec** : un organisateur qui n'est pas responsable (fiche d'avant le lot,
+  réunion Louange d'un musicien) ne voit plus ni Modifier ni « Gérer dans le Back-Office » : la coordination gère
+  à sa place ; le panneau des inscriptions et le QR restent aussi dans l'App (Q14 ne déplace que Modifier, Dupliquer,
+  Supprimer) ; « Supprimer » d'une réunion est à côté des deux boutons de la planche, en lien discret ; les titres
+  des sous-parties ne coiffent que les listes (une fiche prend la page, comme la planche) ; la scène du Back-Office
+  garde les volets Entraînements et Programme, comme l'écran d'avant ; l'équipe est nommée par son libellé
+  d'organigramme (« TEAM RÉGIE », comme R4) ; les tâches d'une réunion restent sous les sujets.
+- **À faire par Timothée** : rien dans `firestore.rules` (aucun droit ne change) ; relire le 中文 des libellés
+  ci-dessus.
+
+**05/10/2026 — B2 « Admin fusionnée » codée** (branche `lot/u6-back-office`, après la fusion de
+`lot/u2-planning-2027` et `lot/u3-petit-dej`, commit « feat(U6): B2 — Admin fusionnée… »). Faites : R1 à R4, B1,
+B2. Restent B3 (Tâches et Évènements), et B4 à B6 (dans `lot/u6b-tableau-de-bord`).
+
+- **Blocs de l'administration** sortis de `admin/page.tsx` dans `src/components/admin/` (un fichier par bloc, chacun
+  charge ses données) : `Reception` (signalements, propositions), `Personnes` (Membres : fiche, pôles, droits),
+  `InscriptionsComptes`, `ImportPlanning` (import du Sheet, « Reprendre les noms du petit déj »), `SansCompte`,
+  `ImportEquipes` (import de l'organigramme, « Recalculer »), et `commun.tsx` (`Pill`, `ListePuces`,
+  `ReserveAuxAdmins`). Notifier sort de `notifier/page.tsx` dans `src/components/messages/Notifier.tsx`.
+- **Pages** (table Q3, adresses Q4), titre et sous-parties en contrôle segmenté
+  (`src/components/backOffice/EnTeteEntree.tsx`, `nav` « Sous-parties », absent s'il n'y a qu'une sous-partie) :
+  - **Messages** (`/back-office/messages`) : Réception (admins), Notifier (`…/notifier`, droit `notify`),
+    Questionnaire (`…/questionnaire`, admins) ; qui ne fait que notifier arrive sur Notifier. Notifier y perd
+    « Publier un planning » (passé au Planning, « Publier le T… » de U2) et la destination « Annonces » (question 13).
+  - **Équipes** (`/back-office/equipes`) : Organigramme (`EquipesClient` en gestion, droit Équipes), Personnes,
+    Inscriptions, Import (admins). Dans l'App, `/equipes` se lit, même pour un admin (question 4) ; le lien
+    « Ouvrir dans l'administration » de la fiche mène à Équipes › Personnes.
+  - **Planning** (`/back-office/planning`) : mène au premier planning de la personne ; `…/<onglet>` pour
+    `planningsDuBackOffice` (`src/lib/access.ts` : ceux qu'on remplit ou publie, dans l'ordre des onglets ; tous pour
+    un admin), en pilules « Plannings » ; Import et Sans compte (admins). Les pages sont celles de l'App
+    (`src/app/planning/*/page.tsx`), rendues en gestion par le contexte `GestionPlanning`
+    (`src/lib/planning/gestion.ts`) : saisie, « Publier le T… », export et brouillon **au Back-Office seulement**.
+    La grille s'ouvre directement en modification pour qui la remplit (plus de bouton « Modifier » ni « Terminé » :
+    clés `planning.grille.modifier` et `termine` retirées). Pleine largeur.
+- **App** : le planning se lit (ni saisie, ni export, ni publication, ni brouillon, même pour qui en a le droit) ;
+  l'onglet Table montre la carte Petit déj (inchangée : « Je m'inscris », ＋, ✎, « Retirer ») et la carte compacte
+  « Prépa. Table du Seigneur » (l'équipe du dimanche qui vient), sans grille. Au Back-Office, la Table est la grille
+  seule (sa colonne Petit déj lit les inscriptions par `fetchTable`).
+- **Anciennes adresses** : `/admin` → `/back-office`, `/notifier` → `/back-office/messages/notifier` ; Moi et le
+  menu du compte n'ont plus Notifier ni Administration ; la notification d'un signalement ouvre Messages. **Interrupteur
+  coupé (en ligne), rien ne change** : `/admin` et `/notifier` restent les pages d'avant (`AncienneAdmin.tsx` assemble
+  les mêmes blocs en onglets), Moi et le menu les gardent, toutes les adresses `/back-office/…` répondent 404.
+- **Libellés** `backOffice.sousParties`, `plannings`, `planningReserve`, `adminReserve`, `parties.*` en FR et 中文
+  (收件箱, 发送通知, 问卷, 组织架构, 成员, 注册, 导入, 排班表, 无账号 ; « 仅限该排班表的负责人。 », « 仅限管理员。 ») ;
+  `backOffice.administration` retirée. Les anciens blocs restent en français (Q16).
+- **Tests** : `tests/back-office-admin.spec.ts` (nouveau, ajouté à `SPECS_GRAND_ECRAN`) écrit avant le code et vu
+  rouge (19 tests sur 19), puis vert sur les trois appareils et les deux grands écrans : `planningsDuBackOffice`,
+  chaque bloc à sa place avec ses droits, redirections, App en lecture, Table en cartes, Moi et menu du compte,
+  captures `test-results/back-office-captures/b2-*.png`. `back-office-coupe.spec.ts` : `/admin` et `/notifier`
+  inchangés, Moi garde Notifier et Admin, sept adresses du Back-Office en 404. Tests déplacés au Back-Office (saisie,
+  publication, export, brouillon) : `planning-grille`, `-2027`, `-campus`, `-edd`, `-groupes-grille`, `-table`,
+  `-export-modele`, `-import`, `-petit-dej`, `equipes`, `evenements` (inscriptions), `coherence` (fichiers déplacés).
+- **Choix faits faute de réponse dans la spec** : l'App montre ce que voit un membre (pas de brouillon, même pour qui
+  remplit ou publie) ; « Publier le T… » au Back-Office seulement ; les pilules gardent les libellés des onglets de
+  l'App (« Culte Franco », « Prépa. Table ») plutôt que ceux, plus courts, de la planche ; un planning qu'on ne
+  remplit ni ne publie répond « Page réservée aux responsables de ce planning. » au Back-Office (il se lit dans
+  l'App) ; Notifier, au Back-Office, garde « Planning » et « Mes services » comme destinations ; la Réception reste
+  l'écran d'aujourd'hui (la liste et le message côte à côte des planches `bo-reception-*` sont à
+  `spec-pages-en-grand.md`, Q15).
+- **À faire par Timothée** : rien dans `firestore.rules` (aucun droit ne change : chaque bloc garde sa règle).
+
 **05/10/2026 — B1 « Espace » codée** (branche `lot/u6-back-office`, après la fusion de `lot/u4-navigation`,
 commit « feat(U6): B1 — espace Back-Office… »). Faites : R1 à R4, B1. Restent B2 à B6.
 

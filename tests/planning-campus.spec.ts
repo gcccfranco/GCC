@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { lirePdf } from "./helpers/pdf";
 
 // Lot 17, tranche G6 « Campus » (Timothée, 19/09/2026 : « pouvoir modifier
 // tous les plannings sur le site ») : les cartes Louange / Entraînement
@@ -49,12 +50,15 @@ test("le volet Grille : matin puis soir, treize colonnes, la répétition en tex
 });
 
 test("avec le droit sur le matin : une case s'écrit, le soir reste en lecture, et les cartes suivent", async ({ page }) => {
-  const db = await open(page, RESPONSABLE, "/planning/campus");
+  const db = await open(page, RESPONSABLE, "/back-office/planning/campus");
   await page.getByRole("button", { name: "Grille", exact: true }).click();
-  await expect(page.getByRole("button", { name: "Modifier" })).toHaveCount(1);
-  await grille(page, "campusMatin").getByRole("button", { name: "Modifier" }).click();
+  // Lot U6, B2 : au Back-Office, la grille du matin s'ouvre en modification ; le soir, en lecture.
+  await expect(grille(page, "campusMatin").locator("[data-case]").getByRole("button").first()).toBeVisible();
+  await expect(grille(page, "campusSoir").locator("[data-case]").getByRole("button")).toHaveCount(0);
   await laCase(page, "campusMatin", "2026-09-20", "piano").getByRole("button").click();
-  const champ = laCase(page, "campusMatin", "2026-09-20", "piano").getByLabel("Piano", { exact: true });
+  // P9 (lot U2) : « Choisir », puis un nom écrit à la main.
+  await page.getByRole("button", { name: "Écrire un nom sans compte…" }).click();
+  const champ = page.getByRole("textbox", { name: "Piano", exact: true });
   await champ.fill("Esther C.");
   await champ.press("Enter");
   await expect(laCase(page, "campusMatin", "2026-09-20", "piano")).toContainText("Esther C.");
@@ -71,17 +75,40 @@ test("avec le droit sur le matin : une case s'écrit, le soir reste en lecture, 
   await expect(page.getByText(/Piano: Esther C\./)).toBeVisible();
 });
 
-test("« Exporter en CSV » de la grille du matin : nom du fichier et colonnes des chants", async ({ page }) => {
+// Lot U2, P7 : « Exporter (modèle du Sheet) » remplace le CSV et l'ancien PDF du
+// lot 17 (question 6) ; l'onglet Campus_Louange mêle matin et soir, dans l'ordre des dates.
+test("« Exporter (modèle du Sheet) » depuis la grille du matin : une page, matin et soir mêlés", async ({ page }) => {
+  await open(page, RESPONSABLE, "/back-office/planning/campus");
+  await page.getByRole("button", { name: "Grille", exact: true }).click();
+  await expect(grille(page, "campusSoir").getByRole("button", { name: /Exporter/ }), "le soir n'est pas à elle").toHaveCount(0);
+  await grille(page, "campusMatin").getByRole("button", { name: "Exporter (modèle du Sheet)" }).click();
+  const fenetre = page.getByRole("dialog", { name: "Exporter" });
+  await expect(fenetre.getByRole("radio")).toHaveText(["Toute l'année · Campus matin"]);
+  await fenetre.getByRole("radio", { name: "Toute l'année · Campus matin" }).click();
+  const [download] = await Promise.all([
+    page.waitForEvent("download", { timeout: 120_000 }),
+    fenetre.getByRole("button", { name: "PDF", exact: true }).click(),
+  ]);
+  expect(download.suggestedFilename()).toBe("Campus_matin_2026.pdf");
+  await download.saveAs(test.info().outputPath(download.suggestedFilename())); // à ouvrir à l'œil
+  const pdf = lirePdf(readFileSync(await download.path()));
+  expect(pdf.pages).toHaveLength(1);
+  expect(pdf.pages[0].largeur, "paysage").toBeGreaterThan(pdf.pages[0].hauteur);
+  // Une case trop longue passe à la ligne : on lit le texte de la page d'un seul tenant, sans les espaces.
+  const serre = (x: string) => x.replace(/\s+/g, "");
+  const texte = serre(pdf.pages[0].lignes.join(""));
+  for (const attendu of ["CAMPUS 2026", "20 — 27 Septembre 2026", "DATE SEANCE", "Paul W.", "Jonathan Z.", "Béni soit Ton Nom", "Amour extravagant", "17/09/2026 19:00 Grande salle"]) {
+    expect(texte, attendu).toContain(serre(attendu));
+  }
+  expect(texte.indexOf("PaulW."), "le matin du 20/09 avant le soir").toBeLessThan(texte.indexOf("JonathanZ."));
+  expect(texte.indexOf("JonathanZ."), "le soir du 20/09 avant le 27/09").toBeLessThan(texte.indexOf("VivianeH."));
+});
+
+test("un membre n'exporte pas le Campus", async ({ page }) => {
   await open(page, MEMBRE, "/planning/campus");
   await page.getByRole("button", { name: "Grille", exact: true }).click();
-  const [download] = await Promise.all([
-    page.waitForEvent("download"),
-    grille(page, "campusMatin").getByRole("button", { name: "Exporter en CSV" }).click(),
-  ]);
-  expect(download.suggestedFilename()).toBe("Campus_matin_2026-09-20_2026-09-27.csv");
-  const texte = readFileSync(await download.path(), "utf8");
-  expect(texte).toContain("Chant 1,Chant 2,Chant 3,Chant 4,Répétition");
-  expect(texte).toContain("20/09,Paul W.,Alice Q.,Inès L.,Timothée C.");
+  await expect(grille(page, "campusMatin").getByTestId("grille-bandeau")).toContainText("Matin");
+  await expect(page.getByRole("button", { name: /Exporter/ })).toHaveCount(0);
 });
 
 test("en 中文 : le volet et les colonnes des chants sont traduits", async ({ page }) => {

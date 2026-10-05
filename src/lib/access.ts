@@ -299,6 +299,31 @@ export function canEditPlanning(
   return isAdminUser(user) || (profile?.plannings ?? []).includes(key);
 }
 
+/** Petit déj (lot U3, docs/spec-petit-dej.md, Q8) : poser une ligne pour
+ *  quelqu'un, réécrire ou retirer n'importe laquelle — les écrivains du planning
+ *  Table et les admins, le droit qui remplit déjà la grille Table. Poser SA
+ *  ligne (« Je m'inscris ») : tout connecté. Miroir serveur : petitDej/{id}
+ *  dans firestore.rules. */
+export function canGererPetitDej(
+  user: { email?: string | null } | null,
+  profile: { plannings?: string[] } | null
+): boolean {
+  return canEditPlanning(user, profile, "table");
+}
+
+/** Réécrire ou retirer une ligne : l'inscrit (`ligne.uid`) ou canGererPetitDej,
+ *  tant que le dimanche n'est pas passé (Q2 : la borne du passé vaut pour tous,
+ *  côté client seulement, comme le reste du filtrage du site). */
+export function canEditPetitDej(
+  user: AuthUser | null,
+  profile: { plannings?: string[] } | null,
+  ligne: { uid: string; dimanche: string },
+  dimancheEnCours: string
+): boolean {
+  if (!user || ligne.dimanche < dimancheEnCours) return false;
+  return ligne.uid === user.uid || canGererPetitDej(user, profile);
+}
+
 /** Harmonie (lot 9, docs/spec-harmonie.md) : le catalogue et les « Idées
  *  d'harmonie » sont pour les **pianistes et les guitaristes**, plus les
  *  admins. L'instrument n'est pas dans le profil : il est écrit dans les
@@ -471,6 +496,31 @@ export function entreesBackOffice(user: AuthUser | null, profile: ProfilResponsa
   return ENTREES.filter((e) => visible[e] && !ENTREES_A_VENIR.includes(e));
 }
 
+/** Les onglets du planning (`/planning/<onglet>`), dans leur ordre. */
+export const ONGLETS_PLANNING = ["culte", "table", "groupes", "edd", "campus", "intergroupe", "interfranco"] as const;
+export type OngletPlanning = (typeof ONGLETS_PLANNING)[number];
+
+/** L'onglet qui porte une grille (clé de `GRILLES` ou de `PUBLISHABLE_PLANNINGS`). */
+function ongletDeLaGrille(key: string): OngletPlanning | null {
+  if (key === "paix" || key === "bonte" || key.startsWith("fidelite")) return "groupes";
+  if (key.startsWith("edd")) return "edd";
+  if (key.startsWith("campus")) return "campus";
+  return (ONGLETS_PLANNING as readonly string[]).includes(key) ? (key as OngletPlanning) : null;
+}
+
+/** Les plannings du Back-Office (lot U6, B2, table Q2) : ceux qu'on remplit (`plannings`) ou
+ *  publie (`canPublishPlanning`), dans l'ordre des onglets ; tous pour un admin. */
+export function planningsDuBackOffice(
+  user: { email?: string | null } | null,
+  profile: { plannings?: string[]; notify?: string[] } | null
+): OngletPlanning[] {
+  if (!user) return [];
+  if (isAdminUser(user)) return [...ONGLETS_PLANNING];
+  const publies = PUBLISHABLE_PLANNINGS.filter((p) => canPublishPlanning(p, false, profile?.notify ?? [])).map((p) => p.key);
+  const siens = new Set([...(profile?.plannings ?? []), ...publies].map(ongletDeLaGrille));
+  return ONGLETS_PLANNING.filter((o) => siens.has(o));
+}
+
 /** Les widgets qu'une personne peut ajouter à son tableau de bord (table des widgets), dans
  *  l'ordre du catalogue. Vide pour qui n'est pas responsable. */
 export function widgetsPermis(user: AuthUser | null, profile: UserProfile | null): WidgetId[] {
@@ -491,4 +541,34 @@ export function widgetsPermis(user: AuthUser | null, profile: UserProfile | null
     raccourcis: true,
   };
   return WIDGETS.filter((w) => permis[w] && !WIDGETS_A_VENIR.includes(w));
+}
+
+/** Les pôles de Back-Office › Tâches (lot U6, B3, table Q2) : ses pôles, Louange compris
+ *  (`polesDe`), dans l'ordre de TACHE_POLES ; tous pour un admin. */
+export function tachesDuBackOffice(
+  user: AuthUser | { email?: string | null } | null,
+  profile: { poles?: string[]; serviceRoles?: Record<string, unknown> } | null
+): TachePole[] {
+  if (!user) return [];
+  if (isAdminUser(user)) return [...TACHE_POLES];
+  const siens = polesDe(profile);
+  return TACHE_POLES.filter((p) => siens.includes(p));
+}
+
+/** Sous-parties de Back-Office › Évènements (lot U6, B3, table Q2) : Évènements (ceux qu'on
+ *  gère : admin, coordination, droit d'annonces) · Réunions (ses pôles, Louange compris, et
+ *  ses équipes ; toutes pour un admin) · Scène (coordination, U1). Affichage seulement. */
+export type SousPartieEvenements = "evenements" | "reunions" | "scene";
+export function sousPartiesEvenements(
+  user: AuthUser | null,
+  profile: (ProfilResponsable & { dansEquipes?: string[] }) | null
+): SousPartieEvenements[] {
+  if (!user) return [];
+  const admin = isAdminUser(user);
+  const coordination = isCoordination(user, profile);
+  const parties: SousPartieEvenements[] = [];
+  if (admin || coordination || nonVide(profile?.annonces)) parties.push("evenements");
+  if (admin || polesDe(profile).length > 0 || nonVide(profile?.dansEquipes) || nonVide(profile?.referentDe)) parties.push("reunions");
+  if (coordination) parties.push("scene");
+  return parties;
 }

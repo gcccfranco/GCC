@@ -6,7 +6,7 @@ import { recordNotification } from "@/lib/push/notifications";
 import { loadPlanningNameIndex, filterUidsByNotifPref, loadNotifLangs, uidsForCategories } from "@/lib/push/recipients";
 import { reminderServicesFor, type ReminderService } from "@/lib/push/reminderMessage";
 import { quiCategories, sceneReminder } from "@/lib/scene/rappels";
-import { ouvertureDuJour } from "@/lib/evenements/rappel";
+import { avecLignes, ouvertureDuJour } from "@/lib/evenements/rappel";
 import { destinatairesEvenement } from "@/lib/evenements/serveur";
 import type { Evenement } from "@/types/evenement";
 import type { Sujet } from "@/types/reunion";
@@ -16,6 +16,9 @@ import { estReunion, polesDe } from "@/lib/access";
 import type { Fois, Tache, TachePole } from "@/types/tache";
 import type { Creneau, Programme } from "@/types/programme";
 import { currentProgramme } from "@/lib/scene/dimanches";
+import { ajouterPetitDejAuxRappels, lirePetitDej } from "@/lib/petitdej/lignes";
+import { lignesMercredi, petitDejTitre, prochainDimanche } from "@/lib/petitdej/rappel";
+import type { LignePetitDej } from "@/types/petitDej";
 import {
   loadPlanningData,
   servantsForDate,
@@ -33,6 +36,9 @@ export const maxDuration = 60;
 // tous les plannings sauf les séances Campus, plus la répétition Campus (heure
 // et lieu) et les entraînements sur scène des programmes affichés (lot 3 bis :
 // auteur + membres du « qui ») fondus dans le même message. Langue : notifPrefs/{uid}.lang.
+// Le mercredi, si le dimanche qui vient n'a personne pour le petit déj (lot U3,
+// PD4) : une ligne de plus pour chaque compte, dans sa première notification du
+// jour, seule sinon.
 // Idempotent : un document notifLog par (échéance, date, uid) évite tout doublon.
 
 const REMINDERS: { tag: "J7" | "J3" | "J1"; days: number }[] = [
@@ -69,11 +75,14 @@ async function markNotified(
   prefix: string,
   meta: Record<string, unknown>
 ): Promise<void> {
-  const batch = db.batch();
-  for (const u of uids) {
-    batch.set(db.collection("notifLog").doc(`${prefix}-${u}`), { ...meta, uid: u, at: Date.now() });
+  // Par lots de 500, la limite de Firestore : la ligne du mercredi (PD4) marque tous les comptes.
+  for (let i = 0; i < uids.length; i += 500) {
+    const batch = db.batch();
+    for (const u of uids.slice(i, i + 500)) {
+      batch.set(db.collection("notifLog").doc(`${prefix}-${u}`), { ...meta, uid: u, at: Date.now() });
+    }
+    await batch.commit();
   }
-  await batch.commit();
 }
 
 /** Créneaux sur scène du programme affiché aujourd'hui, pour ces dates (ISO).
@@ -190,6 +199,21 @@ async function lignesEvenements(
   return out;
 }
 
+/** Le mercredi d'un dimanche libre (PD4, T5) : tous les comptes, préférence
+ *  « Petit déj », pas encore prévenus pour ce dimanche. Personne un autre jour,
+ *  ni si le dimanche a une ligne, ni si la lecture des inscriptions a échoué
+ *  (`lignes` à `null`, Q10). */
+async function petitDejDuMercredi(
+  db: FirebaseFirestore.Firestore,
+  today: string,
+  lignes: LignePetitDej[] | null,
+): Promise<{ cle: string; uids: Set<string> }> {
+  const cle = `petit-dej-libre-${prochainDimanche(today)}`;
+  if (!lignesMercredi(today, lignes, "fr").length) return { cle, uids: new Set() };
+  const comptes = (await db.collection("users").get()).docs.map((d) => d.id);
+  return { cle, uids: new Set(await freshUids(db, await filterUidsByNotifPref(comptes, "petitDej"), cle)) };
+}
+
 export async function GET(req: NextRequest) {
   const secret = process.env.CRON_SECRET;
   const authz = req.headers.get("authorization");
@@ -205,6 +229,14 @@ export async function GET(req: NextRequest) {
   const creneaux = BACK_OFFICE ? await sceneCreneaux(db, REMINDERS.map((r) => isoInDays(r.days)), today) : [];
   const taches: Awaited<ReturnType<typeof rappelsTaches>> = BACK_OFFICE ? await rappelsTaches(db, today) : new Map();
   const lignes: Awaited<ReturnType<typeof lignesEvenements>> = BACK_OFFICE ? await lignesEvenements(db, today) : new Map();
+  // Petit déj (lot U3, Q9) : les inscriptions, déjà lues par loadPlanningData
+  // (même cache) ; en échec, rien de plus que ce que les noms ont trouvé, et
+  // pas de ligne du mercredi (`null`, Q10).
+  const lusPetitDej = BACK_OFFICE ? await lirePetitDej().catch(() => null) : null;
+  const lignesPetitDej = lusPetitDej ?? [];
+  // Ligne du mercredi (PD4) : fondue dans la première notification de la
+  // personne aujourd'hui (services, tâches ou évènements), envoyée seule sinon.
+  const petitDej = BACK_OFFICE ? await petitDejDuMercredi(db, today, lusPetitDej) : { cle: "", uids: new Set<string>() };
 
   // Services de chacun, échéance par échéance (pas encore prévenus).
   const servicesDe = new Map<string, ServiceDuJour[]>();
@@ -228,6 +260,9 @@ export async function GET(req: NextRequest) {
       if (!services.length) continue;
       for (const u of index.get(normalizeName(name)) ?? []) if (!byUid.has(u)) byUid.set(u, services);
     }
+    // Petit déj : chaque inscrit par son compte, même réécrit (« Famille … ») ou
+    // sans nom de planning ; déjà trouvé par son nom, rien de plus.
+    ajouterPetitDejAuxRappels(byUid, lignesPetitDej, date);
     // Entraînements sur scène ce jour-là : l'auteur et les membres ayant un
     // rôle dans le « qui » (quand il correspond à une catégorie de l'app).
     for (const c of creneaux.filter((x) => x.dimanche === date)) {
@@ -246,16 +281,24 @@ export async function GET(req: NextRequest) {
     summary[tag] = { date, sent: fresh.length };
   }
 
-  // Un seul passage par personne : services, tâches et lignes d'évènements dans
-  // le même message (notificationsDuMatin), puis tout est marqué comme envoyé.
+  // Un seul passage par personne : services, tâches, lignes d'évènements et
+  // ligne du petit déj dans le même message (notificationsDuMatin), puis tout
+  // est marqué comme envoyé.
   const uids = [...new Set([...servicesDe.keys(), ...taches.keys(), ...lignes.keys()])];
   const langs = await loadNotifLangs(uids);
   await Promise.all(
     uids.map(async (u) => {
+      const lang = langs.get(u) ?? "fr";
       const mesServices = servicesDe.get(u) ?? [];
+      const avecPetitDej = petitDej.uids.delete(u);
       const notifications = notificationsDuMatin(
-        { services: mesServices, taches: taches.get(u)?.rappels ?? [], lignes: lignes.get(u)?.lignes ?? [] },
-        langs.get(u) ?? "fr",
+        {
+          services: mesServices,
+          taches: taches.get(u)?.rappels ?? [],
+          lignes: lignes.get(u)?.lignes ?? [],
+          autres: avecPetitDej ? lignesMercredi(today, lusPetitDej, lang) : [],
+        },
+        lang,
         today,
       );
       for (const { kind, ...payload } of notifications) {
@@ -266,8 +309,29 @@ export async function GET(req: NextRequest) {
       for (const s of mesServices) await markNotified(db, [u], `rappel-${s.tag}-${s.date}`, { tag: s.tag, date: s.date, kind: "service" });
       for (const key of taches.get(u)?.keys ?? []) await markNotified(db, [u], key, { kind: "tache" });
       for (const key of lignes.get(u)?.keys ?? []) await markNotified(db, [u], key, { kind: "evenement" });
+      if (avecPetitDej) await markNotified(db, [u], petitDej.cle, { kind: "petitDej" });
     })
   );
 
-  return NextResponse.json({ ok: true, summary, personnes: uids.length });
+  // Ligne du mercredi des comptes sans autre notification aujourd'hui : une
+  // notification par langue, ouverte sur Planning › Table (lot U3, Q5).
+  const petitDejSeuls = [...petitDej.uids];
+  if (petitDejSeuls.length) {
+    const langsSeuls = await loadNotifLangs(petitDejSeuls);
+    for (const lang of ["fr", "zh-CN"] as const) {
+      const dest = petitDejSeuls.filter((u) => (langsSeuls.get(u) ?? "fr") === lang);
+      if (!dest.length) continue;
+      const payload = {
+        title: petitDejTitre(lang),
+        body: avecLignes("", lignesMercredi(today, lusPetitDej, lang)),
+        url: "/planning/table",
+        tag: petitDej.cle,
+      };
+      await sendPushToUids(dest, payload);
+      await recordNotification({ ...payload, kind: "reminder", recipients: dest });
+    }
+    await markNotified(db, petitDejSeuls, petitDej.cle, { kind: "petitDej" });
+  }
+
+  return NextResponse.json({ ok: true, summary, personnes: uids.length, petitDej: petitDejSeuls.length });
 }
