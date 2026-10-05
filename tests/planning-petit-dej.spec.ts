@@ -37,6 +37,10 @@ import { DEFAULT_NOTIF_PREFS, NOTIF_TYPE_LABELS, NOTIF_TYPES } from "../src/type
 // plus dans le rappel du matin (T5, Q5) ; préférence « Petit déj », active par
 // défaut, dans Mon profil › Notifications, liste « Recevoir » traduite (question 7).
 // Le cron lui-même se relit, il ne s'exécute pas ici (comme le reste du cron).
+// Tranche PD5 : la reprise (T11, Q13), un bouton de l'administration qui appelle
+// POST /api/admin/reprendre-petit-dej (admins seulement). La route écrit avec
+// firebase-admin : simulée ici, comme l'import G4 (planning-import.spec.ts) ;
+// seul son refus sans jeton s'exécute. Coupée : 404 (back-office-coupe.spec.ts).
 
 const csv = (rows: string[][]) => rows.map((r) => r.map((c) => `"${c}"`).join(",")).join("\n");
 
@@ -786,4 +790,52 @@ test("Mon profil › Notifications en 中文 : la liste « Recevoir » est tradu
   await expect(page.getByText("Petit déj", { exact: true })).toHaveCount(0);
   await page.getByRole("switch", { name: "早餐" }).scrollIntoViewIfNeeded();
   await capture(page, "profil-notifications-petit-dej-zh");
+});
+
+// ─── U3 · PD5 : la reprise (T11, Q13), le bouton et la route ───────────────
+
+test("administration › Planning : « Reprendre les noms du petit déj » demande confirmation, appelle la route et affiche son compte rendu", async ({ page }) => {
+  await page.clock.setFixedTime(new Date("2026-09-19T10:00:00"));
+  await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
+  const appels: { methode: string; jeton: string }[] = [];
+  await page.route("**/api/admin/reprendre-petit-dej", (route) => {
+    appels.push({ methode: route.request().method(), jeton: route.request().headers()["authorization"] ?? "" });
+    return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: true, reprises: 9, ignores: 3 }) });
+  });
+  await signInAs(page, { ...ADMIN, firstName: "Admin", lastName: "A." }, {}, "/admin");
+  await page.getByRole("button", { name: /^Planning/ }).click();
+  const bouton = page.getByRole("button", { name: "Reprendre les noms du petit déj" });
+  await expect(bouton).toBeVisible();
+
+  page.once("dialog", (d) => void d.dismiss());
+  await bouton.click();
+  await expect(bouton, "annulé : la page reste prête").toBeEnabled();
+  expect(appels, "annulé : la route n'est pas appelée").toEqual([]);
+
+  page.once("dialog", (d) => void d.accept());
+  await bouton.click();
+  await expect(page.getByText("9 dimanches repris, 3 déjà inscrits.")).toBeVisible();
+  expect(appels).toHaveLength(1);
+  expect(appels[0].methode).toBe("POST");
+  expect(appels[0].jeton, "le jeton de l'admin part avec l'appel").toMatch(/^Bearer ./);
+  await bouton.scrollIntoViewIfNeeded();
+  await capture(page, "admin-reprise-petit-dej");
+});
+
+test("administration › Planning : un refus de la route s'affiche à la place du compte rendu", async ({ page }) => {
+  await page.clock.setFixedTime(new Date("2026-09-19T10:00:00"));
+  await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
+  await page.route("**/api/admin/reprendre-petit-dej", (route) =>
+    route.fulfill({ status: 500, contentType: "application/json", body: JSON.stringify({ error: "Erreur serveur" }) }));
+  await signInAs(page, { ...ADMIN, firstName: "Admin", lastName: "A." }, {}, "/admin");
+  await page.getByRole("button", { name: /^Planning/ }).click();
+  page.once("dialog", (d) => void d.accept());
+  await page.getByRole("button", { name: "Reprendre les noms du petit déj" }).click();
+  await expect(page.getByText("Erreur serveur")).toBeVisible();
+  await expect(page.getByText(/dimanches repris/)).toHaveCount(0);
+});
+
+test("la route de reprise existe interrupteur ouvert et refuse un appel sans jeton", async ({ request }) => {
+  const reponse = await request.post("/api/admin/reprendre-petit-dej/", { data: {} });
+  expect(reponse.status()).toBe(401);
 });

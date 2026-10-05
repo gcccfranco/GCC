@@ -419,10 +419,33 @@ poussé).
   simulé, sans service worker). Vus rouges (21) avant le code, verts ensuite sur ordinateur, téléphone et tablette ;
   captures regardées aux trois tailles ; `tsc` et `lint` propres.
 
-Reste : PD5.
+**05/10/2026 — PD5 (la reprise) : codée**, commit « feat(U3): PD5 » sur `lot/u3-petit-dej` (commits locaux, rien de
+poussé). **Le lot U3 est entièrement codé.**
+
+- `src/app/api/admin/reprendre-petit-dej/route.ts` (POST) : 404 interrupteur coupé ; sans jeton 401, un non-admin 403 ;
+  lit la grille telle qu'elle s'affichait avant U3 (`fusionnerLignes(fetchGrille("table"), lireTableSheet())`) et les
+  inscriptions relues en base (cache oublié avant et après : une seconde reprise voit les lignes de la première),
+  `planifierReprise` (PD1) au dimanche en cours, puis un seul lot firebase-admin : une ligne `petitDej/{id auto}` par
+  case, texte tel quel, `uid` vide, `auteurUid` = l'admin. Rend `{ ok, reprises, ignores }`. Lecture des inscriptions
+  en échec : erreur, rien n'est écrit (Q10).
+- Administration › Planning (`src/app/admin/page.tsx`), sous les imports, derrière `BACK_OFFICE` : « Reprendre les
+  noms du petit déj », une confirmation (« À faire une seule fois, le jour de la mise en ligne », la base étant
+  partagée), puis le compte rendu « 9 dimanches repris, 3 déjà inscrits. » ou le refus de la route. En français
+  seulement, comme le reste de l'administration.
+- Tests : `tests/planning-petit-dej.spec.ts` (le bouton : annuler n'appelle rien, accepter appelle la route en POST
+  avec le jeton et affiche le compte rendu ; un refus s'affiche ; la route existe ouverte et répond 401 sans jeton ;
+  `planifierReprise`, pure, depuis PD1), `tests/back-office-coupe.spec.ts` (coupé : la route répond 404, pas de bouton).
+  Vus rouges (9) avant le code, verts ensuite sur ordinateur, téléphone et tablette (les deux tests coupés sont des
+  gardes : verts aussi sans le code, ils tiennent le bouton et la route hors ligne) ; captures regardées aux trois
+  tailles ; `tsc` et `lint` propres. La route écrit avec firebase-admin : simulée côté page, relue, pas exécutée
+  (comme l'import G4 et le cron).
+
+Reste : rien dans U3. La reprise se lance **une fois, le jour du retrait de l'interrupteur** (§ « À la mise en ligne »),
+pas pendant la validation en local.
 
 À faire par Timothée : publier `firestore.rules` (règle `petitDej`) **avant** la validation en local ; relire les
 libellés 中文 de la carte (`planning.petitDej.*`), de la liste « Recevoir » (`push.recevoir`, `push.types.*`) et des
-deux lignes du mercredi (`src/lib/petitdej/rappel.ts`). PD3 et PD4 n'ajoutent aucune règle (`notifPrefs/{uid}` accepte
-déjà le nouveau champ). Remarque : à la fin d'un trimestre, la carte montre aussi ses
+deux lignes du mercredi (`src/lib/petitdej/rappel.ts`). PD3, PD4 et PD5 n'ajoutent aucune règle (`notifPrefs/{uid}`
+accepte déjà le nouveau champ ; la reprise écrit avec firebase-admin). Le jour de la mise en ligne, lancer la reprise
+une fois (Administration › Planning). Remarque : à la fin d'un trimestre, la carte montre aussi ses
 dimanches passés (Q11 : tous ceux du trimestre choisi), là où la planche n'en montrait qu'un.

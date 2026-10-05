@@ -60,7 +60,7 @@ test.describe("back-office coupé : une adresse tapée à la main tombe dans le 
     });
   }
 
-  for (const route of ["/api/taches/assigne", "/api/taches/fait", "/api/equipes/importer", "/api/equipes/poles", "/api/admin/importer-planning", "/api/scene/conflit", "/api/evenements/inscription", "/api/evenements/desinscription", "/api/push/notify-evenement"]) {
+  for (const route of ["/api/taches/assigne", "/api/taches/fait", "/api/equipes/importer", "/api/equipes/poles", "/api/admin/importer-planning", "/api/admin/reprendre-petit-dej", "/api/scene/conflit", "/api/evenements/inscription", "/api/evenements/desinscription", "/api/push/notify-evenement"]) {
     test(`${route} répond 404`, async ({ request }) => {
       const reponse = await request.post(`${BASE_URL_COUPE}${route}/`, { data: {} });
       expect(reponse.status()).toBe(404);
@@ -215,5 +215,15 @@ test.describe("back-office coupé : le petit déj vient encore du Sheet", () => 
     await signInAs(page, CHARLIE, {}, "/profil");
     await expect(page.getByRole("switch", { name: "Rappels de service" })).toBeChecked();
     await expect(page.getByRole("switch", { name: "Petit déj" })).toHaveCount(0);
+  });
+
+  // PD5 : coupé, l'administration ne propose pas la reprise (la route répond 404, plus haut).
+  test("Administration › Planning : pas de « Reprendre les noms du petit déj » (PD5)", async ({ page }) => {
+    await page.clock.setFixedTime(new Date("2026-09-19T10:00:00"));
+    await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
+    await signInAs(page, ADMIN, {}, "/admin");
+    await page.getByRole("button", { name: /^Planning/ }).click();
+    await expect(page.getByRole("heading", { name: /Planning sans compte/ })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Reprendre les noms du petit déj" })).toHaveCount(0);
   });
 });
