@@ -66,9 +66,10 @@ test.describe("navigation par sections (T2), téléphone", () => {
 });
 
 test.describe("navigation par sections (T2), barre du bas sur téléphone et tablette", () => {
-  // La barre du bas est masquée sur un poste desktop (`.hide-on-desktop`).
+  // La barre du bas est masquée sur un poste desktop et sur la tablette couchée, qui ont la
+  // barre latérale (lot U4, `.hide-on-desktop`).
   test.beforeEach(({}, info) => {
-    test.skip(info.project.name.startsWith("ordinateur"), "téléphone et tablette seulement");
+    test.skip(info.project.name.startsWith("ordinateur") || info.project.name === "tablette-paysage", "téléphone et tablette en portrait seulement");
   });
 
   test("les setlists sont à un tap depuis n'importe quelle page", async ({ page }) => {
@@ -165,8 +166,8 @@ test.describe("navigation par sections (T2), 320 px", () => {
 test.describe("navigation par sections (T2), ordinateur : la barre latérale (lot U4)", () => {
   test.use({ viewport: { width: 1280, height: 800 } });
   // Sur un poste desktop (pointeur fin + grand écran), la barre latérale remplace la barre
-  // du haut et celle du bas (docs/spec-navigation-grand-ecran.md, N2). Une tablette en
-  // paysage garde ses barres jusqu'à N4.
+  // du haut et celle du bas (docs/spec-navigation-grand-ecran.md, N2). La tablette en
+  // paysage aussi, toujours réduite (N4) : navigation-grand-ecran.spec.ts.
   test.beforeEach(({}, info) => {
     test.skip(!info.project.name.startsWith("ordinateur"), "poste desktop seulement");
   });

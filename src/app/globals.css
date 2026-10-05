@@ -445,6 +445,16 @@
        script de l'en-tête (layout.tsx), avant le premier affichage : rien ne saute. */
     :root[data-barre="reduite"] { --barre-laterale: 68px; }
   }
+  /* Tablette en paysage (N4) : la barre réduite, toujours (68 px) ; `data-barre` n'y compte pas.
+     Un iPad Pro 13 pouces debout (1 024 px, portrait) et un téléphone couché (< 1 024 px)
+     gardent le modèle du téléphone. */
+  @media screen and (pointer: coarse) and (orientation: landscape) and (min-width: 1024px) {
+    :root {
+      --barre-laterale: 68px;
+      --nav-h: var(--sat);
+      --recouvrement-navbar: 0px;
+    }
+  }
   @media print {
     :root { --barre-laterale: 0px; }
   }
@@ -471,6 +481,12 @@
     .barre-laterale { display: flex; }
     .barre-haut { display: none; }
   }
+  /* Tablette en paysage (N4) : la barre latérale aussi, et plus de barre du bas ni de sa cale. */
+  @media screen and (pointer: coarse) and (orientation: landscape) and (min-width: 1024px) {
+    .barre-laterale { display: flex; }
+    .barre-haut { display: none; }
+    .hide-on-desktop { display: none !important; }
+  }
 
   /* N3 — réduire, déplier (Q5, Q12, planche `ordinateur-barre-reduite`). Réduite : 68 px, logo,
      entrées en icônes de 44 px (nom gardé en `aria-label`, infobulle en `title`), « Déplier »
@@ -480,16 +496,44 @@
   .barre-si-reduite { display: none; }
   .barre-laterale .barre-texte { animation: barre-fondu 150ms ease-out; }
   @keyframes barre-fondu { from { opacity: 0; } }
+  /* Les règles valent pour la barre fixe seulement (`.barre-laterale`) : la barre dépliée
+     par-dessus la page de la tablette (N4, `.barre-par-dessus`) garde ses libellés. */
   @media screen and (pointer: fine) and (min-width: 1024px) {
     :root[data-barre="reduite"] .barre-laterale { padding-left: 10px; padding-right: 10px; align-items: center; }
-    :root[data-barre="reduite"] .barre-si-depliee,
-    :root[data-barre="reduite"] .barre-texte { display: none; }
-    :root[data-barre="reduite"] .barre-si-reduite { display: flex; }
-    :root[data-barre="reduite"] .barre-entree { width: 44px; height: 44px; padding: 0; justify-content: center; }
-    :root[data-barre="reduite"] .barre-pied { flex-direction: column; gap: 10px; border-top-width: 0; padding-left: 0; padding-right: 0; }
+    :root[data-barre="reduite"] .barre-laterale .barre-si-depliee,
+    :root[data-barre="reduite"] .barre-laterale .barre-texte { display: none; }
+    :root[data-barre="reduite"] .barre-laterale .barre-si-reduite { display: flex; }
+    :root[data-barre="reduite"] .barre-laterale .barre-entree { width: 44px; height: 44px; padding: 0; justify-content: center; }
+    :root[data-barre="reduite"] .barre-laterale .barre-pied { flex-direction: column; gap: 10px; border-top-width: 0; padding-left: 0; padding-right: 0; }
     /* L'initiale tout en bas, sous la cloche (planche) ; Tab garde l'ordre du document. */
-    :root[data-barre="reduite"] .barre-fin { order: 1; }
-    :root[data-barre="reduite"] .barre-connexion { flex: none; width: 36px; padding: 0; }
+    :root[data-barre="reduite"] .barre-laterale .barre-fin { order: 1; }
+    :root[data-barre="reduite"] .barre-laterale .barre-connexion { flex: none; width: 36px; padding: 0; }
+  }
+  /* Tablette en paysage (N4, planche `ipad-paysage-reduit`) : la même barre réduite, toujours. */
+  @media screen and (pointer: coarse) and (orientation: landscape) and (min-width: 1024px) {
+    :root .barre-laterale { padding-left: 10px; padding-right: 10px; align-items: center; }
+    .barre-laterale .barre-si-depliee,
+    .barre-laterale .barre-texte { display: none; }
+    .barre-laterale .barre-si-reduite { display: flex; }
+    .barre-laterale .barre-entree { width: 44px; height: 44px; padding: 0; justify-content: center; }
+    .barre-laterale .barre-pied { flex-direction: column; gap: 10px; border-top-width: 0; padding-left: 0; padding-right: 0; }
+    .barre-laterale .barre-fin { order: 1; }
+    .barre-laterale .barre-connexion { flex: none; width: 36px; padding: 0; }
+  }
+
+  /* N4 — la barre dépliée par-dessus la page (tablette en paysage) : la barre de la planche
+     `Main`, en lignes de 44 px au moins (toucher). Elle glisse depuis la gauche (vaul) ; en
+     mouvement réduit, fondu. `!important` : le glissé est posé par la feuille de style de vaul. */
+  .barre-par-dessus {
+    background-color: var(--barre-laterale-fond);
+    border-right: 1px solid var(--barre-laterale-filet);
+  }
+  .barre-par-dessus .barre-entree { min-height: 44px; }
+  .barre-par-dessus :focus-visible { outline: 2px solid hsl(var(--ring)); outline-offset: 2px; }
+  @keyframes barre-fondu-sortie { to { opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) {
+    .barre-par-dessus[data-state="open"] { animation-name: barre-fondu !important; }
+    .barre-par-dessus[data-state="closed"] { animation-name: barre-fondu-sortie !important; }
   }
 
   /* Sommaire de la setlist : à gauche de la colonne des partitions, seulement s'il tient dans
@@ -505,6 +549,10 @@
   /* Barre réduite (N3) : 1 280 + 68 px de fenêtre suffisent. */
   @media screen and (pointer: fine) and (min-width: 1348px) {
     :root[data-barre="reduite"] .sommaire-setlist { display: block; }
+  }
+  /* Tablette en paysage (N4), barre de 68 px : de même (un iPad Pro 13 pouces couché, 1 366 px). */
+  @media screen and (pointer: coarse) and (orientation: landscape) and (min-width: 1024px) and (max-width: 1347.98px) {
+    .sommaire-setlist { display: none; }
   }
 }
 

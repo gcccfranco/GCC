@@ -340,3 +340,24 @@ npm run lint
   vus rouges puis verts ; captures regardées (ordinateur et ordinateur-1440, clair et sombre), conformes à la
   planche `ordinateur-barre-reduite`. Reste : N4 (tablette en paysage : la même présentation réduite, sous sa
   propre condition, plus « Déplier » par-dessus). À relire par Timothée : 收起侧边栏 / 展开侧边栏. Rien à publier.
+- 05/10/2026 : **N4 faite** (commit « feat(U4): N4 — tablette en paysage : barre réduite toujours, dépliée
+  par-dessus », sur `lot/u4-navigation`, local, non poussé). Question 1 prise à sa recommandation (oui).
+  Tablette en paysage = `(pointer: coarse) and (orientation: landscape) and (min-width: 1024px)`, en CSS seul
+  (bloc « Lot U4 » de `globals.css`) : `--barre-laterale` = 68 px quel que soit `data-barre`, `--nav-h` = `--sat`,
+  barre du haut, barre du bas et sa cale masquées ; la même présentation réduite que l'ordinateur (règles
+  désormais limitées à la barre fixe `.barre-laterale`), sans « Réduire ». « Déplier » y ouvre la barre dépliée
+  **par-dessus** la page : feuille `vaul` par la gauche (`shouldScaleBackground={false}`, verrou PWA
+  `useStandaloneScrollLock`), 248 px, voile à 35 %, plan 50, lignes de 44 px au moins, fondu en mouvement
+  réduit. Elle se referme au choix d'une entrée ou du logo (elle est ouverte *sur* une page : changer de page
+  la ferme, menu « Compte » compris), sur un toucher du voile, par Échap, par « Réduire », et quand on tourne
+  l'iPad ; le focus revient sur « Déplier » ; rien n'est retenu. `BarreLaterale.tsx` : contenu sorti dans
+  `ContenuBarre`, rendu dans la barre fixe et dans la feuille. Sommaire de la setlist : sur la tablette couchée,
+  dès 1 348 px (iPad Pro 13 pouces couché, 1 366 px). Tests : `navigation-grand-ecran.spec.ts` (onze tests
+  « tablette en paysage », vus rouges puis verts : barre seule à 68 px même « dépliée » retenue, visiteur,
+  par-dessus sans bouger la page d'un pixel, Planning navigue et referme, Échap / voile / « Réduire » et retour
+  du focus, iPad tourné, mouvement réduit, setlist de 1 024 à 1 366 px, sommaire, éditeur, impression et zone
+  sûre, 中文), `look-navigation.spec.ts` (barre du bas : plus sur la tablette couchée), `look-louange.spec.ts`
+  (« une seule ligne » : iPad couché à droite de la barre de 68 px). iPad Pro debout et téléphone couché gardent
+  leurs deux barres (tests des cas limites). Toutes les specs de `SPECS_GRAND_ECRAN` vertes sur
+  tablette-paysage. **U4 est fini** (N5 ne se fait pas). Rien à publier pour Timothée (ni règles ni données) ;
+  à regarder sur un vrai iPad couché : le glissé de la feuille et le toucher du voile.

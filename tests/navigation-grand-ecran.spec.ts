@@ -1,4 +1,4 @@
-import { expect, test, type Page, type TestInfo } from "@playwright/test";
+import { expect, test, type Locator, type Page, type TestInfo } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 
 // Lot U4 — navigation sur grand écran (docs/spec-navigation-grand-ecran.md).
@@ -314,9 +314,11 @@ test.describe("navigation sur grand écran (U4) : rien ne passe sous la barre, o
   });
 });
 
-test.describe("navigation sur grand écran (U4) : dimanche, ordinateur", () => {
+test.describe("navigation sur grand écran (U4) : dimanche, ordinateur et tablette en paysage", () => {
   test("« Mode louange » couvre tout l'écran, barre comprise ; en quittant, la barre revient et la page est à sa place", async ({ page }, info) => {
-    test.skip(!estOrdinateur(info), "ordinateur seulement (la tablette en paysage vient en N4)");
+    test.skip(!aBarreLaterale(info), "ordinateur et tablette en paysage seulement");
+    // Ordinateur : la barre dépliée ; tablette en paysage : réduite, toujours (N4).
+    const bord = estOrdinateur(info) ? 248 : 68;
     await page.addInitScript(() => localStorage.setItem("perf-role-preset", "pianiste"));
     await ouvrirSetlist(page);
     const outils = page.getByTestId("barre-outils");
@@ -333,8 +335,8 @@ test.describe("navigation sur grand écran (U4) : dimanche, ordinateur", () => {
     await page.evaluate((to) => window.scrollTo(0, to), y);
     await expect(page.locator("[data-performance-mode]")).toHaveCount(0);
     await expect(barreLaterale(page)).toBeVisible();
-    await expect.poll(async () => Math.round((await outils.boundingBox())!.x)).toBe(248);
-    expect(await mainDuSite(page).evaluate((m) => getComputedStyle(m).paddingLeft)).toBe("248px");
+    await expect.poll(async () => Math.round((await outils.boundingBox())!.x)).toBe(bord);
+    expect(await mainDuSite(page).evaluate((m) => getComputedStyle(m).paddingLeft)).toBe(`${bord}px`);
   });
 });
 
@@ -601,6 +603,236 @@ test.describe("navigation sur grand écran (U4) : réduire, déplier, s'en souve
   });
 });
 
+// ── N4 : tablette en paysage ──────────────────────────────────────────────────────────────
+// La barre réduite, toujours (décision du 04/10/2026), sans « Réduire » ; ni barre du haut ni
+// barre du bas. « Déplier » pose la barre dépliée PAR-DESSUS la page (question 1 : oui), sur un
+// voile à 35 % ; elle se referme au choix d'une entrée, sur un toucher du voile, par Échap ou
+// « Réduire », et ne retient rien.
+
+const barreParDessus = (page: Page) => page.getByTestId("barre-par-dessus");
+const voile = (page: Page) => page.getByTestId("voile-barre");
+/** Boîte arrondie, pour comparer au pixel. */
+const boite = async (l: Locator) => {
+  const b = (await l.boundingBox())!;
+  return [b.x, b.y, b.width, b.height].map(Math.round);
+};
+/** Attendre que la barre par-dessus soit arrivée (glissé terminé). */
+const barreArrivee = async (page: Page) => {
+  await expect(barreParDessus(page)).toBeVisible();
+  await animationsFinies(page);
+  await expect.poll(async () => Math.round((await barreParDessus(page).boundingBox())!.x)).toBe(0);
+};
+
+test.describe("navigation sur grand écran (U4) : tablette en paysage", () => {
+  test.beforeEach(({}, info) => {
+    test.skip(!estTablettePaysage(info), "tablette en paysage seulement");
+  });
+
+  test("tablette en paysage : la barre réduite seule, 68 px, sans « Réduire » ; ni barre du haut ni barre du bas", async ({ page }) => {
+    // Même si l'appareil avait retenu « dépliée » : sur la tablette couchée, `data-barre` ne compte pas.
+    await page.addInitScript(() => localStorage.setItem("barre-laterale", "depliee"));
+    await signInAs(page, MEMBRE, {}, "/songs");
+    await page.getByRole("searchbox").waitFor();
+    await expect.poll(() => barresVisibles(page)).toEqual({ haut: false, bas: false, laterale: true });
+    expect(await largeurBarre(page)).toBe(68);
+    expect(await pxVar(page, "--barre-laterale")).toBe(68);
+    expect(await paddingGaucheMain(page), "la page commence au bord de la barre").toBe("68px");
+    expect(await mainDuSite(page).evaluate((m) => getComputedStyle(m).paddingTop), "plus de barre du haut").toBe("0px");
+    expect(await debordement(page)).toBe(0);
+    // La cale de la barre du bas part avec elle : rien ne réserve sa place en bas de page.
+    expect(await page.getByTestId("barre-du-bas").locator("xpath=preceding-sibling::div[1]").isVisible()).toBe(false);
+
+    const nav = navigation(page);
+    await expect(nav.getByRole("link")).toHaveCount(5);
+    for (const nom of ENTREES_MEMBRE) {
+      const lien = nav.getByRole("link", { name: nom, exact: true });
+      await expect(lien.getByText(nom, { exact: true })).toBeHidden();
+      expect((await boite(lien)).slice(2), `${nom} : 44 × 44`).toEqual([44, 44]);
+    }
+    await expect(nav.getByRole("link", { name: "Chants", exact: true })).toHaveAttribute("aria-current", "page");
+    await expect(reduire(page), "jamais « Réduire » : elle l'est toujours").toBeHidden();
+    await expect(deplier(page)).toBeVisible();
+    await expect(barreLaterale(page).getByTestId("label-section")).toBeHidden();
+    const pied = barreLaterale(page).getByTestId("pied-barre");
+    await expect(pied.getByRole("button", { name: "Notifications" })).toBeVisible();
+    await expect(pied.getByRole("button", { name: "Compte" })).toBeVisible();
+    await expect(pied.getByText("Ruth K.")).toBeHidden();
+  });
+
+  test("tablette en paysage, visiteur : Chants · Évènements, « Connexion », langue et thème en icônes", async ({ page }) => {
+    await page.goto("/songs");
+    await page.getByRole("searchbox").waitFor();
+    await expect(navigation(page).getByRole("link")).toHaveText(["Chants", "Évènements"]);
+    expect(await largeurBarre(page)).toBe(68);
+    const pied = barreLaterale(page).getByTestId("pied-barre");
+    for (const bouton of [pied.getByRole("link", { name: "Connexion" }), pied.getByRole("button", { name: "切换为中文" }), pied.getByRole("button", { name: /Mode (clair|sombre)/ })]) {
+      await expect(bouton).toBeVisible();
+      const b = (await bouton.boundingBox())!;
+      expect(b.x + b.width, "dans la barre").toBeLessThanOrEqual(68);
+    }
+  });
+
+  test("tablette en paysage : « Déplier » ouvre la barre par-dessus la page, qui ne bouge pas d'un pixel ; « Planning » navigue et referme", async ({ page }) => {
+    await sansSheet(page);
+    await signInAs(page, MEMBRE, {}, "/songs");
+    await page.getByRole("searchbox").waitFor();
+    await expect(navigation(page).getByRole("link")).toHaveCount(5);
+    await animationsFinies(page);
+    // Par CSS, pas par rôle : la barre ouverte, Radix cache la page aux lecteurs d'écran (modale).
+    const titre = page.locator("main h1");
+    const recherche = page.locator('main input[type="search"]');
+    const avant = { titre: await boite(titre), recherche: await boite(recherche), defilement: await page.evaluate(() => window.scrollY) };
+
+    await deplier(page).tap();
+    await barreArrivee(page);
+    expect(await boite(barreParDessus(page)), "la barre de la planche Main, de haut en bas").toEqual([0, 0, 248, 810]);
+    // La page n'a pas bougé : ni décalée, ni mise à l'échelle, ni défilée.
+    expect(await boite(titre)).toEqual(avant.titre);
+    expect(await boite(recherche)).toEqual(avant.recherche);
+    expect(await page.evaluate(() => window.scrollY)).toBe(avant.defilement);
+    expect(await paddingGaucheMain(page)).toBe("68px");
+    // Le voile à 35 %, sur toute la page.
+    await expect(voile(page)).toBeVisible();
+    expect(await voile(page).evaluate((el) => getComputedStyle(el).backgroundColor)).toBe("rgba(0, 0, 0, 0.35)");
+    expect(await boite(voile(page))).toEqual([0, 0, 1080, 810]);
+
+    // Dépliée : le label, les libellés, le nom, la langue ; des lignes de 44 px au moins.
+    const dessus = barreParDessus(page);
+    await expect(dessus.getByTestId("label-section")).toHaveText("Louange");
+    const nav = dessus.getByRole("navigation", { name: "Navigation principale" });
+    await expect(nav.getByRole("link")).toHaveText(ENTREES_MEMBRE);
+    await expect(nav.getByRole("link", { name: "Chants", exact: true })).toHaveAttribute("aria-current", "page");
+    for (const nom of ENTREES_MEMBRE) {
+      expect((await nav.getByRole("link", { name: nom, exact: true }).boundingBox())!.height, `${nom} : 44 px au moins`).toBeGreaterThanOrEqual(44);
+    }
+    await expect(dessus.getByRole("button", { name: "Réduire la barre latérale" })).toBeVisible();
+    await expect(dessus.getByRole("button", { name: "Déplier la barre latérale" })).toHaveCount(0);
+    const pied = dessus.getByTestId("pied-barre");
+    await expect(pied.getByText("Ruth K.")).toBeVisible();
+    await expect(pied.getByRole("button", { name: "切换为中文" })).toBeVisible();
+    await expect(pied.getByRole("button", { name: "Notifications" })).toBeVisible();
+
+    await nav.getByRole("link", { name: "Planning", exact: true }).tap();
+    await expect(page).toHaveURL(/\/planning\/?$/);
+    await expect(dessus).toHaveCount(0);
+    await expect(voile(page)).toHaveCount(0);
+    expect(await largeurBarre(page)).toBe(68);
+    await expect(navigation(page).getByRole("link", { name: "Planning", exact: true })).toHaveAttribute("aria-current", "page");
+    expect(await barreRetenue(page), "ne retient rien").toBeNull();
+  });
+
+  test("tablette en paysage : Échap, un toucher du voile et « Réduire » referment la barre, le focus revient sur « Déplier »", async ({ page }) => {
+    await signInAs(page, MEMBRE, {}, "/songs");
+    await page.getByRole("searchbox").waitFor();
+    await expect(navigation(page).getByRole("link")).toHaveCount(5);
+
+    await deplier(page).focus();
+    await page.keyboard.press("Enter");
+    await barreArrivee(page);
+    await page.keyboard.press("Escape");
+    await expect(barreParDessus(page)).toHaveCount(0);
+    expect(await focusActuel(page), "Échap : le focus revient").toBe("Déplier la barre latérale");
+
+    await deplier(page).tap();
+    await barreArrivee(page);
+    await page.touchscreen.tap(800, 400);
+    await expect(barreParDessus(page)).toHaveCount(0);
+    expect(await focusActuel(page), "toucher du voile : le focus revient").toBe("Déplier la barre latérale");
+    await expect(page, "le toucher n'a rien ouvert dessous").toHaveURL(/\/songs\/?$/);
+
+    await deplier(page).tap();
+    await barreArrivee(page);
+    await barreParDessus(page).getByRole("button", { name: "Réduire la barre latérale" }).tap();
+    await expect(barreParDessus(page)).toHaveCount(0);
+    expect(await focusActuel(page), "« Réduire » : le focus revient").toBe("Déplier la barre latérale");
+    expect(await largeurBarre(page)).toBe(68);
+    expect(await barreRetenue(page), "ne retient rien").toBeNull();
+  });
+
+  test("tablette en paysage : on tourne l'iPad, barre ouverte ; debout, barre du haut et barre du bas, la barre par-dessus est partie", async ({ page }) => {
+    await signInAs(page, MEMBRE, {}, "/songs");
+    await page.getByRole("searchbox").waitFor();
+    await deplier(page).tap();
+    await barreArrivee(page);
+    await page.setViewportSize({ width: 810, height: 1080 });
+    await expect(barreParDessus(page)).toHaveCount(0);
+    await expect.poll(() => barresVisibles(page)).toEqual({ haut: true, bas: true, laterale: false });
+    await page.setViewportSize({ width: 1080, height: 810 });
+    await expect.poll(() => barresVisibles(page)).toEqual({ haut: false, bas: false, laterale: true });
+  });
+
+  test("tablette en paysage, mouvement réduit : la barre arrive en fondu, sans glisser", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto("/songs");
+    await page.getByRole("searchbox").waitFor();
+    await deplier(page).tap();
+    await expect(barreParDessus(page)).toBeVisible();
+    expect(await barreParDessus(page).evaluate((el) => getComputedStyle(el).animationName)).toBe("barre-fondu");
+  });
+
+  test("tablette en paysage, setlist : barre d'outils et halo au bord de la barre, aucun défilement horizontal, iPad de 1 024 à 1 366 px", async ({ page }) => {
+    await ouvrirSetlist(page);
+    const outils = page.getByTestId("barre-outils");
+    await outils.waitFor();
+    await animationsFinies(page);
+    for (const [largeur, hauteur] of [[1024, 768], [1080, 810], [1180, 820], [1366, 1024]]) {
+      await page.setViewportSize({ width: largeur, height: hauteur });
+      await expect.poll(async () => Math.round((await outils.boundingBox())!.x), `${largeur} px : barre d'outils`).toBe(68);
+      expect(Math.round((await outils.boundingBox())!.width), `${largeur} px : jusqu'au bord droit`).toBe(largeur - 68);
+      expect(Math.round((await page.getByTestId("halo").boundingBox())!.x), `${largeur} px : halo`).toBe(68);
+      expect(await debordement(page), `${largeur} px`).toBe(0);
+    }
+  });
+
+  test("tablette en paysage, setlist : le sommaire tient sur un iPad Pro couché (1 366 px), pas sur un iPad (1 180 px)", async ({ page }) => {
+    await page.setViewportSize({ width: 1366, height: 1024 });
+    await ouvrirSetlist(page);
+    await page.getByRole("button", { name: "Partitions" }).click();
+    const sommaire = page.getByRole("navigation", { name: "Déroulé" });
+    // 1 366 px moins la barre de 68 : 1 298 px de contenu, plus que les 1 280 px où il tient.
+    await expect(sommaire).toBeVisible();
+    const s = (await sommaire.boundingBox())!;
+    expect(s.x, "jamais sous la barre").toBeGreaterThanOrEqual(68 + 16);
+    expect(s.x + s.width, "il ne mord pas sur les partitions").toBeLessThanOrEqual(68 + (1366 - 68) / 2 - 336 - 16);
+    await page.setViewportSize({ width: 1180, height: 820 });
+    await expect(sommaire).toBeHidden();
+  });
+
+  test("tablette en paysage, éditeur : la barre d'action commence au bord de la barre et laisse son pied visible", async ({ page }) => {
+    await sansSheet(page);
+    await signInAs(page, MUSICIEN, {}, "/setlists/new");
+    const publier = page.getByRole("button", { name: "Publier" });
+    await publier.waitFor();
+    await sansIndicateurDeNext(page);
+    expect(Math.round((await publier.locator("xpath=../..").boundingBox())!.x)).toBe(68);
+    const pied = (await barreLaterale(page).getByTestId("pied-barre").boundingBox())!;
+    expect(await auPoint(page, pied.x + pied.width / 2, pied.y + pied.height - 8, '[data-testid="pied-barre"]'), "le pied n'est pas recouvert").toBe(true);
+  });
+
+  test("tablette en paysage : impression sans barre ni marge ; zone sûre réservée en haut de la barre", async ({ page }) => {
+    await page.goto("/songs");
+    await page.getByRole("searchbox").waitFor();
+    await page.addStyleTag({ content: ":root { --sat: 24px !important; }" });
+    await expect.poll(async () => (await barreLaterale(page).locator("img").first().boundingBox())!.y).toBeGreaterThanOrEqual(24);
+    expect(await mainDuSite(page).evaluate((m) => getComputedStyle(m).paddingTop), "la page aussi descend sous l'heure").toBe("24px");
+    await page.emulateMedia({ media: "print" });
+    await expect(barreLaterale(page)).toBeHidden();
+    expect(await paddingGaucheMain(page)).toBe("0px");
+  });
+
+  test("tablette en paysage, 中文 : « 展开侧边栏 », puis la barre dépliée en 中文", async ({ page }) => {
+    await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
+    await signInAs(page, MEMBRE, {}, "/songs");
+    await page.getByRole("searchbox").waitFor();
+    await barreLaterale(page).getByRole("button", { name: "展开侧边栏" }).tap();
+    await barreArrivee(page);
+    const dessus = barreParDessus(page);
+    await expect(dessus.getByRole("navigation", { name: "主导航" }).getByRole("link")).toHaveText(["诗歌", "歌单", "排班表", "活动", "我"]);
+    await expect(dessus.getByTestId("label-section")).toHaveText("敬拜");
+    await expect(dessus.getByRole("button", { name: "收起侧边栏" })).toBeVisible();
+  });
+});
+
 // Captures à regarder à l'œil (PW_CAPTURES=<dossier>) : clair et sombre, membre et visiteur.
 test("captures de la barre (PW_CAPTURES)", async ({ page }, info) => {
   const dir = process.env.PW_CAPTURES;
@@ -626,6 +858,17 @@ test("captures de la barre (PW_CAPTURES)", async ({ page }, info) => {
     await page.getByRole("searchbox").waitFor();
     await animationsFinies(page);
     await page.screenshot({ path: `${dir}/u4-chants-${theme}-${info.project.name}.png` });
+  }
+  // N4 : la tablette couchée, barre dépliée par-dessus la setlist.
+  if (estTablettePaysage(info)) {
+    for (const theme of ["light", "dark"] as const) {
+      await page.emulateMedia({ colorScheme: theme });
+      await page.goto(`/setlists/${SETLIST_ID}`);
+      await page.getByTestId("barre-outils").waitFor();
+      await deplier(page).tap();
+      await barreArrivee(page);
+      await page.screenshot({ path: `${dir}/u4-par-dessus-setlist-${theme}-${info.project.name}.png` });
+    }
   }
   // N3 : la barre réduite (ordinateur), sur la setlist comme la planche `ordinateur-barre-reduite`.
   if (!estOrdinateur(info)) return;

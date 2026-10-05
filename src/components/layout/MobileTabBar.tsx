@@ -10,9 +10,9 @@ import { useScrollDirection } from "@/hooks/useScrollDirection";
 import { entreesBarre, estEntreeActive } from "@/lib/navigation";
 
 /**
- * Barre d'onglets fixée en bas d'écran, sur tout appareil tactile (téléphone
- * ET tablette, y compris iPad en paysage ≥1024px) ; masquée seulement sur un
- * poste desktop (souris + grand écran, via `.hide-on-desktop`). Masquée en
+ * Barre d'onglets fixée en bas d'écran, sur téléphone et tablette en portrait ;
+ * masquée (via `.hide-on-desktop`) sur un poste desktop (souris + grand écran)
+ * et sur la tablette en paysage, qui ont la barre latérale (lot U4). Masquée en
  * plein écran (vue partition / pupitre) pour ne jamais recouvrir une
  * partition ; le mode louange (z-9999) passe par-dessus de toute façon.
  */
