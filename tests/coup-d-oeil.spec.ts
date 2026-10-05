@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { ouvrirPartitions } from "./helpers/setlist";
 import { abbreviateSection } from "../src/lib/chordpro/abbreviations";
 import { uniqueSections } from "../src/lib/setlist/uniqueSections";
 import { isLastPhraseOnly, materializeLastPhrase } from "../src/lib/setlist/lastPhrase";
@@ -65,7 +66,7 @@ function setlist(over: Record<string, unknown> = {}) {
 
 async function openPartitions(page: Page, data = setlist()) {
   const db = await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: data }, `/setlists/${SETLIST_ID}`);
-  await page.getByRole("button", { name: "Partitions" }).click();
+  await ouvrirPartitions(page);
   return db;
 }
 
@@ -302,7 +303,7 @@ test("éditeur : la Dernière phrase du refrain s'enregistre, puis s'affiche « 
     .toBe(true);
 
   await page.goto(`/setlists/${SETLIST_ID}`);
-  await page.getByRole("button", { name: "Partitions" }).click();
+  await ouvrirPartitions(page);
   await expect(page.getByRole("list", { name: "Structure" }).first().getByRole("listitem").last()).toHaveText("Dp");
   const dp = page.locator('[data-outline-item="1"] [data-section]').last();
   await expect(dp).toContainText(/Abba .*Père.*Toi\./);

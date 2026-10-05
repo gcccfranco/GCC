@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { readFileSync } from "fs";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { ouvrirPartitions } from "./helpers/setlist";
 import { withoutLastPhrases } from "../src/lib/setlist/lastPhrase";
 import { diffSetlists } from "../src/lib/setlist/history";
 import { playedSections } from "../src/lib/setlist/playedSections";
@@ -146,7 +147,7 @@ const sectionsDeLaFusion = (page: Page) => page.locator('[data-outline-item="2"]
 async function partitionsAvecMode(page: Page, mode: "played" | "unique" | "structure") {
   await page.addInitScript((m) => localStorage.setItem("partition-layout", m), mode);
   await ouvrir(page, setlist([item({ songSlug: "一生爱你", position: 1 }), FUSION_MIXTE]));
-  await page.getByRole("button", { name: "Partitions" }).click();
+  await ouvrirPartitions(page);
   await expect(page.locator('[data-outline-item="1"]').getByRole("list", { name: "Structure" })).toBeVisible();
 }
 
@@ -249,7 +250,7 @@ test("éditeur, fusion mélangée : la Dernière phrase s'ajoute à la suite du 
 
 test("partitions, fusion à la suite : la Dernière phrase s'imprime avec ses accords, « Dp » au bandeau", async ({ page }) => {
   await ouvrir(page, setlist([item({ songSlug: "一生爱你", position: 1 }), FUSION_SUITE_DP]));
-  await page.getByRole("button", { name: "Partitions" }).click();
+  await ouvrirPartitions(page);
   const fusion = page.locator('[data-outline-item="2"]');
   await expect(fusion.getByRole("list", { name: "Structure" }).first().getByRole("listitem")).toHaveText(["R", "Dp"]);
   await expect(fusion.locator("[data-section]").nth(1)).toContainText("Bm");
@@ -258,7 +259,7 @@ test("partitions, fusion à la suite : la Dernière phrase s'imprime avec ses ac
 
 test("partitions, fusion mélangée : la Dernière phrase termine le mélange", async ({ page }) => {
   await ouvrir(page, setlist([item({ songSlug: "一生爱你", position: 1 }), FUSION_MIXTE_DP]));
-  await page.getByRole("button", { name: "Partitions" }).click();
+  await ouvrirPartitions(page);
   const fusion = page.locator('[data-outline-item="2"]');
   await expect(fusion.getByRole("list", { name: "Structure" }).getByRole("listitem").last()).toHaveText("Dp");
   await expect(fusion.locator("[data-section]")).toHaveCount(4);
@@ -310,7 +311,7 @@ test("idées d'harmonie : chaque chant d'une fusion a les siennes, mélangée ou
     return route.fulfill({ status: 200, contentType: "text/csv", body: sheet === "Franco_Louange" ? CULTE : "" });
   });
   await signInAs(page, MUSICIEN, { [SETLIST_DOC]: setlist([FUSION_SUITE_DP, { ...FUSION_MIXTE, position: 3 }]) }, `/setlists/${SETLIST_ID}`);
-  await page.getByRole("button", { name: "Partitions" }).click();
+  await ouvrirPartitions(page);
 
   const suite = page.locator('[data-outline-item="2"]');
   await expect(suite.getByRole("button", { name: /Idées d'harmonie/ })).toHaveCount(2);
@@ -366,7 +367,7 @@ test("partitions, fusion : la Dernière phrase d'un chant chinois s'imprime avec
       { songSlug: "一生爱你", keyOverride: null, structureOverride: ["chorus-3-0", "Dp-4-9"], sectionNotes: {}, contentOverride: DP_YISHENG },
     ],
   })]));
-  await page.getByRole("button", { name: "Partitions" }).click();
+  await ouvrirPartitions(page);
   const fusion = page.locator('[data-outline-item="1"]');
   await expect(fusion.getByRole("list", { name: "Structure" }).last().getByRole("listitem")).toHaveText(["R", "Dp"]);
   const dp = fusion.locator("[data-section]").last();

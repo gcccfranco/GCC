@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { ouvrirPartitions } from "./helpers/setlist";
 
 // Lot 9, tranche MV (docs/spec-harmonie.md) : dans « Ma version », une retouche
 // d'une section répétée vaut pour « Toutes les répétitions » (comme avant) ou
@@ -113,7 +114,7 @@ async function openPartitions(
   );
   await page.addInitScript(() => localStorage.setItem("perf-role-preset", "pianiste"));
   const db = await signInAs(page, who, { [SETLIST_DOC]: doc, ...extraDocs }, `/setlists/${SETLIST_ID}`);
-  await page.getByRole("button", { name: "Partitions" }).click();
+  await ouvrirPartitions(page);
   await expect(page.getByRole("heading", { name: "Abba Père" })).toBeVisible();
   return db;
 }

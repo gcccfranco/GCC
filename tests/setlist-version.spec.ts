@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { ouvrirListe, ouvrirPartitions } from "./helpers/setlist";
 
 // Version perso d'un chant dans une setlist (docs/spec-version-perso.md).
 // V1 : « Ma version » — accords et paroles retouchés pour soi, enregistrés
@@ -72,7 +73,7 @@ async function openPartitions(page: Page, extraDocs: Record<string, Record<strin
   );
   await page.addInitScript(() => localStorage.setItem("perf-role-preset", "pianiste"));
   const db = await signInAs(page, who, { [SETLIST_DOC]: SETLIST, ...extraDocs }, `/setlists/${SETLIST_ID}`);
-  await page.getByRole("button", { name: "Partitions" }).click();
+  await ouvrirPartitions(page);
   await expect(page.getByRole("heading", { name: "Abba Père" })).toBeVisible();
   return db;
 }
@@ -190,7 +191,7 @@ test("ma structure : le corps la suit, le bandeau, le sommaire et la liste reste
   await expect(outline(page).getByText("Pont")).toHaveCount(1);
   await capture(page, "v2-ma-structure");
 
-  await page.getByRole("button", { name: "Liste" }).click();
+  await ouvrirListe(page);
   // 5C1 (20/09/2026) : la liste écrit la structure en abrégé — l'interlude de la présidence y est « Pm ».
   await expect(page.getByRole("listitem").filter({ hasText: "Abba Père" }).first(), "la vue liste garde la présidence").toContainText("Pm");
 });
@@ -253,7 +254,7 @@ test("mode louange : ma structure, sans les notes d'occurrence de la présidence
     [SETLIST_DOC]: withNote,
     [VERSION_DOC]: myDoc({ "abba-pere": { content: null, structure: MY_STRUCTURE, shared: false } }),
   }, `/setlists/${SETLIST_ID}`);
-  await page.getByRole("button", { name: "Partitions" }).click();
+  await ouvrirPartitions(page);
   await expect(bodySections(page, 1)).toHaveCount(3);
   await expect(song(page, 1).getByText("doucement"), "la note reste dans le bandeau, pas dans le corps").toHaveCount(1);
   await expect(bodySections(page, 1).getByText("doucement")).toHaveCount(0);
@@ -317,7 +318,7 @@ test("une version partagée se choisit, et le choix suit mon compte jusqu'en mod
   expect(db.writes.filter((w) => w.path === SETLIST_DOC)).toHaveLength(0);
 
   await page.reload();
-  await page.getByRole("button", { name: "Partitions" }).click();
+  await ouvrirPartitions(page);
   await expect(lyricLine(page, "flottait"), "le choix est retrouvé au rechargement").toHaveCount(1);
   await page.getByRole("button", { name: /Mode Louange/ }).click();
   await expect(page.getByText("Mise en page…")).toHaveCount(0);

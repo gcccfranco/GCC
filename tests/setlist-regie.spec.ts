@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { ouvrirPartitions } from "./helpers/setlist";
 import { isOnDutyRegie, parsePresentationUrl } from "../src/lib/setlist/presentationLink";
 import type { Servant } from "../src/lib/planning/names";
 
@@ -48,7 +49,7 @@ function setlist(over: Record<string, unknown> = {}) {
 
 async function openPartitions(page: Page, profile = REGIE, data = setlist()) {
   await signInAs(page, profile, { [`setlists/${SETLIST_ID}`]: data }, `/setlists/${SETLIST_ID}`);
-  await page.getByRole("button", { name: "Partitions" }).click();
+  await ouvrirPartitions(page);
 }
 
 test("bouton « Copier les paroles » : ordre joué, reprises comprises, ligne vide entre sections (FR)", async ({ page }) => {

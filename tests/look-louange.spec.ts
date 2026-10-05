@@ -2,6 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import * as fs from "fs";
 import * as path from "path";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { ouvrirPartitions } from "./helpers/setlist";
 
 // Lot 4 « Nouveau look », tranche T3 : louange (docs/spec-look.md).
 const MUSICIEN: FakeProfile = {
@@ -123,7 +124,7 @@ test.describe("louange : barre d'outils de la setlist, une seule ligne sur tél�
     test(`${largeur} × ${hauteur} (${sens}) : toutes les commandes sur une ligne, rien ne dépasse`, async ({ page }) => {
       await page.setViewportSize({ width: largeur, height: hauteur });
       await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: setlist }, `/setlists/${SETLIST_ID}`);
-      await page.getByRole("button", { name: "Partitions" }).click();
+      await ouvrirPartitions(page);
       const barre = page.getByTestId("barre-outils");
       await expect(barre.getByRole("button", { name: "Pinyin" })).toBeVisible();
 

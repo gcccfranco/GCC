@@ -1,5 +1,6 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { ouvrirPartitions } from "./helpers/setlist";
 
 // Chantier Mode louange (docs/spec-mode-louange.md). Setlist et compte
 // simulés : aucune lecture ni écriture du Firestore de production.
@@ -225,7 +226,7 @@ test.describe("reprise des réglages", () => {
   test("pinyin masqué sur la page setlist → masqué en mode louange (ZH)", async ({ page }) => {
     await page.addInitScript(() => localStorage.setItem("perf-role-preset", "pianiste"));
     await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: setlist(ZH) }, `/setlists/${SETLIST_ID}`);
-    await page.getByRole("button", { name: "Partitions" }).click();
+    await ouvrirPartitions(page);
     await page.getByRole("button", { name: "Pinyin" }).click();
     await launch(page);
     await expect(lyricLines(page).first()).toBeVisible();
@@ -254,7 +255,7 @@ test.describe("reprise des réglages", () => {
     await expect(lyricLines(page)).toHaveCount(0);
     await quitter(page);
 
-    await page.getByRole("button", { name: "Partitions" }).click();
+    await ouvrirPartitions(page);
     await page.getByRole("button", { name: "Accords" }).click(); // masqués
     await page.getByRole("button", { name: "Accords" }).click(); // de nouveau affichés
     await launch(page);

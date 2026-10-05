@@ -1,6 +1,7 @@
 # Spec : lot U5 — Chants et Setlist en deux volets, mode louange en 2 colonnes, setlist G
 
-Spec écrite le 04/10/2026 ; rien n'est codé. Attend la validation de Timothée, puis son go.
+Spec écrite le 04/10/2026, validée avec le go du chantier U (04/10/2026, redit le 05/10/2026) ; les questions
+ouvertes prennent leur recommandation. Ce qui est codé : « Avancement », en fin de document.
 
 Lot U5 du chantier U (`feuille-de-route.md` § 3.U, « Suite »). Il vient après U4 (`spec-navigation-grand-ecran.md` :
 dispositions, barre latérale, `--barre-laterale`, `--largeur-lecture`) et avant U5 bis (`spec-editeur-setlist.md` :
@@ -302,4 +303,23 @@ graphify update .
 
 ## Avancement
 
-Rien n'est codé : la spec attend la validation de Timothée, puis son go.
+**T0 — faite le 05/10/2026** (branche `lot/u5-deux-volets`, commit `test(U5): T0 — ouvrirPartitions / ouvrirListe…`). Rien ne change à l'écran :
+aucun fichier de `src/` touché.
+- `tests/helpers/setlist.ts` : `ouvrirPartitions(page)` attend la setlist (la bascule ou un `[data-outline-item]`),
+  touche « Partitions » si la bascule est visible, puis attend le premier chant en partition ; `ouvrirListe(page)`
+  touche « Liste » si la bascule est là et attend que les partitions disparaissent, sinon (deux volets) ne fait rien.
+- Les douze specs d'« Existants touchés » passent par ces deux fonctions au lieu de viser le bouton par son nom
+  (`harmonie-setlist` : sa fonction locale `ouvrirPartitions` devient `openPartitions`, comme dans les autres specs).
+- Vérifié : ces douze specs sur ordinateur, téléphone et tablette, avant et après : mêmes résultats (586 verts,
+  5 sautés sur 591). `tsc` et ESLint propres. Pas de phase rouge propre à T0 (les specs changent de chemin, pas
+  d'attente) : la preuve est l'égalité avant / après. Le cas « deux volets », que l'app ne produit pas encore, a été
+  essayé hors dépôt sur des pages factices : bascule masquée par le CSS (non touchée, `getByRole` l'ignore), bascule
+  absente, partitions lentes à venir.
+- **Pas encore fait, à reprendre par les tranches suivantes** : faire entrer les specs du lot dans le `testMatch` des
+  projets `tablette-paysage` et `ordinateur-1440`. Ces projets arrivent avec U4 (`SPECS_GRAND_ECRAN` de
+  `playwright.config.ts`, branche `lot/u4-navigation`, pas encore fusionnée ici) et les quatre specs du lot naissent
+  avec T1 à T5 : chaque tranche ajoute la sienne à `SPECS_GRAND_ECRAN` une fois U4 fusionnée. `ouvrirListe` attend
+  aujourd'hui que les partitions quittent la page : T2 (G, Liste et Partitions reliées) l'ajustera si les deux vues
+  restent montées côte à côte.
+- Reste : T1 à T6.
+- À faire par Timothée : rien pour T0 (aucune règle, aucun écran).

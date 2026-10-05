@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { readFileSync } from "fs";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { ouvrirPartitions } from "./helpers/setlist";
 import { loadChords, openSheet, overlayLabels, songKey } from "./helpers/jianpu";
 
 // 有一位神, signalé par Timothée le 01/10/2026 : « le .cho et le .json ne sont
@@ -94,7 +95,7 @@ test.describe("scan gravé dans une autre tonalité que le .cho", () => {
 
   test("setlist, vue partitions : sans tonalité choisie, le scan suit le .cho (D)", async ({ page }) => {
     await ouvrirSetlist(page);
-    await page.getByRole("button", { name: "Partitions" }).click();
+    await ouvrirPartitions(page);
     await page.locator('[data-jianpu-page="0"] img').waitFor();
     await expect(page.locator("[data-jianpu-label]")).toHaveCount(CHORDS.labels.length);
     const { labels } = await overlayLabels(page);

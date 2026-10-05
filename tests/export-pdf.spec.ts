@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { ouvrirPartitions } from "./helpers/setlist";
 import { parsePdfStyle, pdfFileName } from "../src/lib/pdfStylePref";
 import { nuancePdfColors, sectionPdfPalette } from "../src/lib/pdf/colors";
 import { compactPlan, compactTransitions, stripGroups } from "../src/lib/pdf/compact";
@@ -188,7 +189,7 @@ test("setlist en vue liste : le PDF liste part directement, sans fenêtre", asyn
 
 test("setlist en vue partitions : trois choix, le classique garde son nom", async ({ page }) => {
   await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: setlist() }, `/setlists/${SETLIST_ID}`);
-  await page.getByRole("button", { name: "Partitions" }).click();
+  await ouvrirPartitions(page);
   await openMenu(page);
   await pdfEntry(page).click();
 
@@ -204,7 +205,7 @@ test("setlist en vue partitions : trois choix, le classique garde son nom", asyn
 
 test("setlist en vue partitions : le compact se télécharge sous son nom", async ({ page }) => {
   await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: setlist() }, `/setlists/${SETLIST_ID}`);
-  await page.getByRole("button", { name: "Partitions" }).click();
+  await ouvrirPartitions(page);
   await openMenu(page);
   await pdfEntry(page).click();
   const sheet = page.getByRole("dialog", { name: "Quel PDF ?" });
