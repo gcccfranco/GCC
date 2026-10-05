@@ -441,6 +441,9 @@
       --nav-h: var(--sat);
       --recouvrement-navbar: 0px;
     }
+    /* N3 : réduite (68 px) si cet appareil l'a choisi. `data-barre` est posé par la ligne de
+       script de l'en-tête (layout.tsx), avant le premier affichage : rien ne saute. */
+    :root[data-barre="reduite"] { --barre-laterale: 68px; }
   }
   @media print {
     :root { --barre-laterale: 0px; }
@@ -469,6 +472,26 @@
     .barre-haut { display: none; }
   }
 
+  /* N3 — réduire, déplier (Q5, Q12, planche `ordinateur-barre-reduite`). Réduite : 68 px, logo,
+     entrées en icônes de 44 px (nom gardé en `aria-label`, infobulle en `title`), « Déplier »
+     sous les entrées, cloche puis initiale en bas ; ni label, ni langue, ni nom, ni sélecteur.
+     Visiteur : « Connexion », langue et thème en icônes. Pas d'animation de largeur : la barre
+     bascule d'un coup, les libellés reviennent en fondu court (opacité seule). */
+  .barre-si-reduite { display: none; }
+  .barre-laterale .barre-texte { animation: barre-fondu 150ms ease-out; }
+  @keyframes barre-fondu { from { opacity: 0; } }
+  @media screen and (pointer: fine) and (min-width: 1024px) {
+    :root[data-barre="reduite"] .barre-laterale { padding-left: 10px; padding-right: 10px; align-items: center; }
+    :root[data-barre="reduite"] .barre-si-depliee,
+    :root[data-barre="reduite"] .barre-texte { display: none; }
+    :root[data-barre="reduite"] .barre-si-reduite { display: flex; }
+    :root[data-barre="reduite"] .barre-entree { width: 44px; height: 44px; padding: 0; justify-content: center; }
+    :root[data-barre="reduite"] .barre-pied { flex-direction: column; gap: 10px; border-top-width: 0; padding-left: 0; padding-right: 0; }
+    /* L'initiale tout en bas, sous la cloche (planche) ; Tab garde l'ordre du document. */
+    :root[data-barre="reduite"] .barre-fin { order: 1; }
+    :root[data-barre="reduite"] .barre-connexion { flex: none; width: 36px; padding: 0; }
+  }
+
   /* Sommaire de la setlist : à gauche de la colonne des partitions, seulement s'il tient dans
      la zone de contenu, soit 1 280 px comme avant le lot U4 (`xl`). Ordinateur, barre dépliée :
      1 280 + 248 px de fenêtre. U5 le remplace. */
@@ -478,6 +501,10 @@
   }
   @media screen and (pointer: fine) and (min-width: 1024px) and (max-width: 1527.98px) {
     .sommaire-setlist { display: none; }
+  }
+  /* Barre réduite (N3) : 1 280 + 68 px de fenêtre suffisent. */
+  @media screen and (pointer: fine) and (min-width: 1348px) {
+    :root[data-barre="reduite"] .sommaire-setlist { display: block; }
   }
 }
 

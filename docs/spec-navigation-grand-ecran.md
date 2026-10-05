@@ -325,3 +325,18 @@ npm run lint
   Reste : N3 (réduire, déplier,
   s'en souvenir, infobulles, libellés « Réduire / Déplier la barre latérale »), N4 (tablette en paysage). N5 ne se
   fait pas (U5 bis, question 2). Rien à publier pour Timothée (ni règles ni données).
+- 05/10/2026 : **N3 faite** (commit « feat(U4): N3 — ordinateur : réduire, déplier, s'en souvenir », sur
+  `lot/u4-navigation`, local, non poussé). « Réduire la barre latérale » à droite du label (icône, infobulle),
+  « Déplier la barre latérale » sous les entrées de la barre réduite. `getBarreReduite` / `setBarreReduite`
+  (`src/lib/barreLateralePref.ts`, clé `barre-laterale` = `reduite` ou `depliee`, dépliée par défaut) ; une ligne de
+  script dans l'en-tête (`layout.tsx`) pose `<html data-barre="reduite">` avant le premier affichage, et tout le
+  reste est du CSS (bloc « Lot U4 » de `globals.css`) : `--barre-laterale` = 68 px, entrées en icônes de 44 px (nom
+  en `aria-label`, infobulle native `title` seulement réduite), ni label, ni nom, ni langue d'un membre, ni place
+  du sélecteur ; cloche puis initiale en bas ; visiteur : « Connexion », langue et thème en icônes. Pas d'animation
+  de largeur, libellés en fondu de 150 ms. Le sommaire de la setlist revient dès 1 348 px de fenêtre barre réduite.
+  Tests : `navigation-grand-ecran.spec.ts` (réduire / déplier, choix retenu au rechargement et d'une page à l'autre,
+  scripts de Next bloqués : déjà 68 px, visiteur, Tab, menu « Compte », barre d'outils, halo et sommaire de la
+  setlist, impression, 中文) et `look-louange.spec.ts` (une ligne à côté de la barre réduite, 1 024 à 1 440 px),
+  vus rouges puis verts ; captures regardées (ordinateur et ordinateur-1440, clair et sombre), conformes à la
+  planche `ordinateur-barre-reduite`. Reste : N4 (tablette en paysage : la même présentation réduite, sous sa
+  propre condition, plus « Déplier » par-dessus). À relire par Timothée : 收起侧边栏 / 展开侧边栏. Rien à publier.

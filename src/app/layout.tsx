@@ -8,6 +8,7 @@ import { Accueil } from "@/components/onboarding/Accueil";
 import { PageTransition } from "@/components/layout/PageTransition";
 import { LyricsCopyListener } from "@/components/song/LyricsCopyListener";
 import { NotificationsProvider } from "@/components/layout/NotificationsPartagees";
+import { SCRIPT_BARRE_REDUITE } from "@/lib/barreLateralePref";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -59,6 +60,9 @@ export default function RootLayout({
         {/* Service worker push-only (public/sw.js) — requis pour les notifications
             Web Push sur PWA iOS/Android. Il ne fait plus de cache hors-ligne. */}
         <script dangerouslySetInnerHTML={{ __html: `if('serviceWorker'in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js').catch(function(){})})}` }} />
+        {/* Barre latérale réduite sur cet appareil (lot U4, N3) : `data-barre` posé avant le
+            premier affichage, sinon la page sauterait de 180 px à chaque chargement. */}
+        <script dangerouslySetInnerHTML={{ __html: SCRIPT_BARRE_REDUITE }} />
       </head>
       <body className="font-sans antialiased min-h-screen bg-background">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
