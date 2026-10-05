@@ -324,4 +324,29 @@ npm run lint
 
 ## Avancement
 
-Rien n'est codé : la spec attend la validation de Timothée, puis son go.
+Go de Timothée le 04/10/2026, redit le 05/10/2026 ; questions ouvertes = recommandations.
+
+**05/10/2026 — PD1 (modèle, droits, lecture) : codée**, commit « feat(U3): PD1 » sur `lot/u3-petit-dej` (partie
+de `lot/u2-planning-2027`, commits locaux, rien de poussé).
+
+- `src/types/petitDej.ts` (`LignePetitDej`) ; `src/lib/petitdej/lignes.ts` : `lirePetitDej` (REST public, `runQuery`
+  trié par `dimanche`, cache de cinq minutes, une lecture en échec est une erreur), `oublierPetitDej`, et les pures
+  `rangeesPetitDej`, `estLibre`, `servicesPetitDejDuCompte`, `planifierReprise` ; `src/lib/firebase/petitDej.ts`
+  (REST avec jeton : `inscrire` qui relit le dimanche avant d'écrire, `ajouterLigne`, `renommerLigne`, `retirerLigne`,
+  chacune oublie le cache).
+- Règle `petitDej/{id}` dans `firestore.rules` (celle de la spec, mot pour mot) ; miroir `canGererPetitDej` et
+  `canEditPetitDej` dans `src/lib/access.ts`.
+- `src/lib/planning/sheets.ts` : ouvert, `fetchPetitDej` = les rangées des inscriptions (vide si la lecture échoue)
+  et `fetchTable` met les inscriptions en colonne 2, même un dimanche que le Sheet ignore ; coupé, rien ne change
+  (aucune lecture de `petitDej`).
+- Tests : `tests/planning-petit-dej.spec.ts` (pures, droits, règle relue dans `firestore.rules`, lecture REST, Ce
+  dimanche, Mes services, 中文), `tests/planning-table.spec.ts` (case Petit déj et export CSV lus dans les lignes),
+  `tests/back-office-coupe.spec.ts` (les 4 écrans du lot 1b, Sheet compris, et aucune lecture des inscriptions).
+  Contre-épreuve : les 8 tests d'écran rouges avec l'ancien `sheets.ts` ; verts sur ordinateur, téléphone et
+  tablette (145 tests des trois fichiers), `tsc` et `lint` propres.
+
+Reste : PD2 (la carte, `lectureSeule` — d'ici là `semer` recopie dans la grille la colonne Petit déj, désormais celle
+des inscriptions, sans effet à l'affichage ; le test « coupé, la page Table n'a pas de carte Petit déj » ; les
+écritures de `firebase/petitDej.ts` se testent par la carte), PD3, PD4, PD5.
+
+À faire par Timothée : publier `firestore.rules` (règle `petitDej`) **avant** la validation en local.

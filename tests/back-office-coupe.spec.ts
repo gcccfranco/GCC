@@ -123,3 +123,66 @@ test.describe("back-office coupé : la Sainte cène reste un service à part ent
     await expect(page.getByText("Sainte cène", { exact: true })).toBeVisible();
   });
 });
+
+// Lot 1b, vu « comme en ligne » (venu de planning-petit-dej.spec.ts au lot U3) :
+// interrupteur coupé, le petit déj se lit encore dans le bloc « PETIT DÉJEUNER »
+// de Franco_Table_PtD, et les inscriptions `petitDej/*` ne sont jamais lues
+// (docs/spec-petit-dej.md, Q14 : Firestore est partagé entre local et en ligne).
+test.describe("back-office coupé : le petit déj vient encore du Sheet", () => {
+  const csv = (rows: string[][]) => rows.map((r) => r.map((c) => `"${c}"`).join(",")).join("\n");
+  const col = (cells: Record<number, string>) => Array.from({ length: 21 }, (_, i) => cells[i] ?? "");
+  const TABLE_PTD = csv([
+    col({ 1: "PRÉPARATION TABLE", 17: "PETIT DÉJEUNER 2026 DATE", 18: "NOM", 19: "DATE", 20: "DATE" }),
+    col({ 1: "13/09", 2: "Daniel F.", 3: "Lucas W.", 17: "15/03", 18: "Julien & Stéphane", 19: "13/09", 20: "" }),
+    col({ 1: "20/09", 2: "Ruth K.", 3: "Charlie B.", 17: "22/03", 18: "Alice Q.", 19: "20/09", 20: "Charlie B. & Isabelle L." }),
+  ]);
+  const CHARLIE: FakeProfile = { uid: "uid-charlie", email: "charlie@example.com", planningName: "Charlie B." };
+  // Une inscription en base pour le 20/09 : coupé, elle ne doit compter nulle part.
+  const INSCRIPTION = {
+    "petitDej/a": {
+      dimanche: "2026-09-20", nom: "Famille Martin", uid: "uid-autre", auteurUid: "uid-autre",
+      creeLe: "2026-09-09T08:00:00.000Z", modifieLe: "2026-09-09T08:00:00.000Z",
+    },
+  };
+  const ouvrir = async (page: Page, dimanche: string, to: string) => {
+    const vendredi = new Date(`${dimanche}T10:00:00`);
+    vendredi.setDate(vendredi.getDate() - 2);
+    await page.clock.setFixedTime(vendredi);
+    await page.route(/docs\.google\.com\/spreadsheets/, (route) => {
+      const sheet = new URL(route.request().url()).searchParams.get("sheet");
+      return route.fulfill({ status: 200, contentType: "text/csv", body: sheet === "Franco_Table_PtD" ? TABLE_PTD : "" });
+    });
+    const lectures = { petitDej: 0 };
+    page.on("request", (r) => { if (r.url().includes("firestore") && (r.postData() ?? "").includes('"petitDej"')) lectures.petitDej++; });
+    await signInAs(page, CHARLIE, INSCRIPTION, to);
+    return lectures;
+  };
+
+  test("Ce dimanche : la ligne Petit déj apparaît quand la case est remplie", async ({ page }) => {
+    const lectures = await ouvrir(page, "2026-09-20", "/planning");
+    const dimanche = page.getByRole("region", { name: /Ce dimanche/ });
+    await expect(dimanche.getByText("Petit déj", { exact: true })).toBeVisible();
+    await expect(dimanche.getByText("Charlie B., Isabelle L.")).toBeVisible();
+    await expect(dimanche.getByText("Famille Martin")).toHaveCount(0);
+    expect(lectures.petitDej, "aucune lecture des inscriptions").toBe(0);
+  });
+
+  test("Ce dimanche : pas de ligne Petit déj quand la case est vide", async ({ page }) => {
+    await ouvrir(page, "2026-09-13", "/planning");
+    const dimanche = page.getByRole("region", { name: /Ce dimanche/ });
+    await expect(dimanche.getByText("Daniel F.", { exact: false }), "la Prépa. Table reste").toBeVisible();
+    await expect(dimanche.getByText("Petit déj", { exact: true })).toHaveCount(0);
+  });
+
+  test("Mes services : le petit déj est un service à part entière", async ({ page }) => {
+    await ouvrir(page, "2026-09-20", "/mes-services");
+    await expect(page.getByText("Petit déj", { exact: true })).toBeVisible();
+  });
+
+  test("en 中文 : libellé traduit", async ({ page }) => {
+    await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
+    await ouvrir(page, "2026-09-20", "/planning");
+    const dimanche = page.getByRole("region", { name: /本主日/ });
+    await expect(dimanche.getByText("早餐", { exact: true })).toBeVisible();
+  });
+});
