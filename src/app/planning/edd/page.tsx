@@ -11,7 +11,7 @@ import { fetchEDD, periodeEdd } from "@/lib/planning/sheets"
 import { GRILLES_EDD, anneeRemplie, anneesDuPlanning, dimanchesDe, lignesDeLAnnee, lignesSimples } from "@/lib/planning/grilles"
 import { useGrilleApp } from "@/lib/planning/useGrilleApp"
 import { useProfile } from "@/lib/firebase/users"
-import { canEditPlanning } from "@/lib/access"
+import { canEditPlanning, isAdminUser } from "@/lib/access"
 import { PLANNING_COLORS } from "@/lib/serviceColors"
 import type { EddDataStructure, EddPeriode, EddClasse } from "@/lib/planning/utils"
 import { BACK_OFFICE } from "@/lib/backOffice"
@@ -103,6 +103,7 @@ function EddPage() {
         peutModifier={peutModifier}
         datesDansLApp={datesDansLApp}
         nomsDesComptes={nomsDesComptes}
+        exporter={peutModifier ? { annee: effAnnee, rang: EDD_PERIODES.indexOf(periode) + 1, tout: isAdminUser(user) } : undefined}
       />
     </div>
   )

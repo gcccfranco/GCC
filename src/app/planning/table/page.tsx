@@ -14,7 +14,7 @@ import { fetchTable } from "@/lib/planning/sheets"
 import { GRILLE_TABLE, anneeRemplie, anneesDuPlanning, dimanchesDe, lignesDeLAnnee, lignesSimples } from "@/lib/planning/grilles"
 import { useGrilleApp } from "@/lib/planning/useGrilleApp"
 import { useProfile } from "@/lib/firebase/users"
-import { canEditPlanning } from "@/lib/access"
+import { canEditPlanning, isAdminUser } from "@/lib/access"
 import { BACK_OFFICE } from "@/lib/backOffice"
 import { AncienTableau } from "./AncienTableau"
 
@@ -65,6 +65,7 @@ function TablePage() {
         peutModifier={peutModifier}
         datesDansLApp={datesDansLApp}
         nomsDesComptes={nomsDesComptes}
+        exporter={peutModifier ? { annee: effAnnee, rang: Number(tri.slice(1)), tout: isAdminUser(user) } : undefined}
       />
     </div>
   )

@@ -109,6 +109,8 @@ function CultePage() {
         peutModifier={peutModifier}
         datesDansLApp={datesDansLApp}
         nomsDesComptes={nomsDesComptes}
+        // P7 : les responsables du planning et les admins exportent (Q13).
+        exporter={voitBrouillon ? { annee: effAnnee, rang: Number(effTri.slice(1)) || 1, tout: isAdminUser(user) } : undefined}
         dateBadge={(row, all) =>
           isFirstSundayOfMonth(row[0], all) ? (
             <span className="inline-block text-xs font-bold px-1.5 py-0.5 rounded bg-red-50 text-red-700 border border-red-200 mt-0.5">

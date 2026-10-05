@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { lirePdf } from "./helpers/pdf";
 
 // Lot 17, tranche G6 « Table » (Timothée, 19/09/2026 : « pouvoir modifier tous
 // les plannings sur le site ») : la Prépa. Table du Seigneur et le petit déj
@@ -74,16 +75,30 @@ test("avec le droit « table » : une case s'écrit, l'autre case du dimanche es
   await expect(page.getByText("Esther C.")).toBeVisible();
 });
 
-test("« Exporter en CSV » : le trimestre affiché, deux colonnes, nom du fichier", async ({ page }) => {
-  await open(page, MEMBRE, "/planning/table");
+// Lot U2, P7 : « Exporter (modèle du Sheet) » remplace le CSV du lot 17 (question 6).
+test("« Exporter (modèle du Sheet) » : le trimestre affiché, Date · Équipe · Petit déj ; pas pour un membre", async ({ page, browser }) => {
+  await open(page, RESPONSABLE, "/planning/table");
+  await page.getByRole("button", { name: "Exporter (modèle du Sheet)" }).click();
+  const fenetre = page.getByRole("dialog", { name: "Exporter" });
+  await fenetre.getByRole("radio", { name: "T3 2026 · Prépa. Table" }).click();
   const [download] = await Promise.all([
-    page.waitForEvent("download"),
-    page.getByRole("button", { name: "Exporter en CSV" }).click(),
+    page.waitForEvent("download", { timeout: 120_000 }),
+    fenetre.getByRole("button", { name: "PDF", exact: true }).click(),
   ]);
-  expect(download.suggestedFilename()).toBe("Prépa._Table_2026-09-20_2026-09-27.csv");
-  const texte = readFileSync(await download.path(), "utf8");
-  expect(texte).toContain("Date,Équipe,Petit déj");
-  expect(texte).toContain('27/09,"Lydie, Samuel","Charlie, Isabelle"');
+  expect(download.suggestedFilename()).toBe("Prépa._Table_T3_2026.pdf");
+  await download.saveAs(test.info().outputPath(download.suggestedFilename())); // à ouvrir à l'œil
+  const lignes = lirePdf(readFileSync(await download.path())).pages[0].lignes;
+  for (const attendu of ["PRÉPARATION TABLE DÉJEUNER", "DÉJEUNER PRÉPARATION T3 2026", "DATE", "Équipe", "Petit déj", "Septembre"]) {
+    expect(lignes, attendu).toContain(attendu);
+  }
+  const i = lignes.indexOf("27/09");
+  expect(lignes.slice(i, i + 3)).toEqual(["27/09", "Lydie, Samuel", "Charlie, Isabelle"]);
+
+  const autre = await browser.newPage();
+  await open(autre, MEMBRE, "/planning/table");
+  await expect(autre.getByTestId("grille-bandeau")).toBeVisible();
+  await expect(autre.getByRole("button", { name: /Exporter/ })).toHaveCount(0);
+  await autre.close();
 });
 
 test("en 中文 : les deux colonnes sont traduites", async ({ page }) => {

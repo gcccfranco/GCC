@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { lirePdf } from "./helpers/pdf";
 import {
   GRILLES, GRILLES_EDD, GRILLE_BONTE, GRILLE_FIDELITE, GRILLE_FIDELITE_MUSICIENS, GRILLE_INTERFRANCO, GRILLE_PAIX,
   PREMIERE_ANNEE_APP, dimanchesDe, lignesDeLAnnee, marquerDimanchesSpeciaux,
@@ -327,14 +328,18 @@ test("Paix 2027 : l'export du trimestre porte « Interfranco » et « Intergroup
   await page.getByRole("button", { name: "2027", exact: true }).click();
   await page.getByRole("button", { name: "T1", exact: true }).click();
   await expect(laCase(page, "2027-01-17", "presidence")).toHaveText("Interfranco");
+  // P7 : l'export au modèle du Sheet a remplacé le CSV du lot 17 (question 6).
+  await page.getByRole("button", { name: "Exporter (modèle du Sheet)" }).click();
+  const fenetre = page.getByRole("dialog", { name: "Exporter" });
+  await fenetre.getByRole("radio", { name: "T1 2027 · Groupe Paix" }).click();
   const [download] = await Promise.all([
-    page.waitForEvent("download"),
-    page.getByRole("button", { name: "Exporter en CSV" }).click(),
+    page.waitForEvent("download", { timeout: 120_000 }),
+    fenetre.getByRole("button", { name: "PDF", exact: true }).click(),
   ]);
-  const texte = readFileSync(await download.path(), "utf8");
-  expect(texte).toContain("17/01,Interfranco,,Orateur O.,");
-  expect(texte).toContain("14/03,Intergroupe,,,");
-  expect(texte).not.toContain("Ancien Z.");
+  const lignes = lirePdf(readFileSync(await download.path())).pages[0].lignes;
+  expect(lignes.slice(lignes.indexOf("17/01"), lignes.indexOf("17/01") + 3)).toEqual(["17/01", "Interfranco", "Orateur O."]);
+  expect(lignes.slice(lignes.indexOf("14/03"), lignes.indexOf("14/03") + 2)).toEqual(["14/03", "Intergroupe"]);
+  expect(lignes).not.toContain("Ancien Z.");
 });
 
 test("Mes services (loadPlanningData) : le président de Paix posé avant l'Interfranco n'y est plus", async ({ page }) => {

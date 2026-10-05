@@ -192,3 +192,18 @@ test.describe("back-office coupé : Percussion et Cours attendent l'ouverture du
     await expect(page.getByText("Batteur B.").filter({ visible: true }), "le 29/11 à la présidence seulement").toHaveCount(1);
   });
 });
+
+// Lot U2, P7 : l'export au modèle du Sheet vit dans les pages du back-office.
+// En ligne, ni « Exporter (modèle du Sheet) », ni l'ancien export, même pour un admin.
+test.describe("back-office coupé : pas d'export au modèle du Sheet", () => {
+  for (const chemin of ["/planning/groupes", "/planning/edd", "/planning/table", "/planning/campus", "/planning/interfranco", "/planning/intergroupe"]) {
+    test(`${chemin} : aucun bouton « Exporter »`, async ({ page }) => {
+      await page.clock.setFixedTime(new Date("2026-11-15T10:00:00"));
+      await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
+      await signInAs(page, ADMIN, {}, chemin);
+      await expect(page.getByRole("main").first()).toBeVisible();
+      await expect(page.locator("[data-grille]"), "c'est bien l'ancien tableau").toHaveCount(0);
+      await expect(page.getByRole("button", { name: /Exporter/ })).toHaveCount(0);
+    });
+  }
+});

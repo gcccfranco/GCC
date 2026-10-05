@@ -7,7 +7,7 @@ import { fetchIntergroupe } from "@/lib/planning/sheets"
 import { GRILLE_INTERGROUPE, lignesSimples } from "@/lib/planning/grilles"
 import { useGrilleApp } from "@/lib/planning/useGrilleApp"
 import { useProfile } from "@/lib/firebase/users"
-import { canEditPlanning } from "@/lib/access"
+import { canEditPlanning, isAdminUser } from "@/lib/access"
 import { BACK_OFFICE } from "@/lib/backOffice"
 import { AncienTableau } from "./AncienTableau"
 
@@ -38,6 +38,7 @@ function IntergroupePage() {
         peutModifier={peutModifier}
         datesDansLApp={datesDansLApp}
         nomsDesComptes={nomsDesComptes}
+        exporter={peutModifier ? { annee: new Date().getFullYear(), rang: 1, tout: isAdminUser(user) } : undefined}
       />
     </div>
   )

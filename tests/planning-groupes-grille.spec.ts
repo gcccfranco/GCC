@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { lirePdf } from "./helpers/pdf";
 import { GRILLES, grilleDe } from "../src/lib/planning/grilles";
 import { PLANNINGS_APP } from "../src/lib/planning/grille";
 
@@ -105,7 +106,7 @@ test("groupes : les musiciens de Fidélité ont leur propre grille et leur propr
   expect(db.doc("plannings/fidelite/dimanches/2026-09-20")).toBeUndefined();
 });
 
-test("Intergroupe : se remplit dans l'app et s'exporte en CSV", async ({ page }) => {
+test("Intergroupe : se remplit dans l'app et s'exporte au modèle du Sheet", async ({ page }) => {
   const db = await open(page, profil(["intergroupe"]), "/planning/intergroupe");
   await page.getByRole("button", { name: "Modifier" }).click();
   await laCase(page, "2026-10-04", "choriste3").getByRole("button").click();
@@ -116,10 +117,16 @@ test("Intergroupe : se remplit dans l'app et s'exporte en CSV", async ({ page })
   expect(db.doc("plannings/intergroupe/dimanches/2026-10-04")?.choriste3).toBe("Daniela W.");
   await page.getByRole("button", { name: "Terminé" }).click();
 
+  // Lot U2, P7 : « Exporter (modèle du Sheet) » remplace le CSV du lot 17 (question 6).
+  await page.getByRole("button", { name: "Exporter (modèle du Sheet)" }).click();
+  const fenetre = page.getByRole("dialog", { name: "Exporter" });
+  await fenetre.getByRole("radio", { name: "Toute l'année · Intergroupe" }).click();
   const [download] = await Promise.all([
-    page.waitForEvent("download"),
-    page.getByRole("button", { name: "Exporter en CSV" }).click(),
+    page.waitForEvent("download", { timeout: 120_000 }),
+    fenetre.getByRole("button", { name: "PDF", exact: true }).click(),
   ]);
-  expect(download.suggestedFilename()).toBe("Intergroupe_2026-10-04_2026-10-04.csv");
-  expect(readFileSync(await download.path(), "utf8")).toContain("04/10,Paul W.,Alice Q.,Inès L.,Daniela W.,Jo M.");
+  expect(download.suggestedFilename()).toBe("Intergroupe_2026.pdf");
+  const lignes = lirePdf(readFileSync(await download.path())).pages[0].lignes;
+  const i = lignes.indexOf("04/10");
+  expect(lignes.slice(i, i + 6)).toEqual(["04/10", "Paul W.", "Alice Q.", "Inès L.", "Daniela W.", "Jo M."]);
 });

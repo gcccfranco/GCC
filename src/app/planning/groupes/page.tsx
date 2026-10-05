@@ -182,6 +182,8 @@ function GroupesPage() {
         datesDansLApp={datesDansLApp}
         nomsDesComptes={nomsDesComptes}
         dimanchesSpeciaux={dimanchesSpeciaux(interfranco, intergroupe)}
+        // P7 : les responsables du planning et les admins exportent (Q13).
+        exporter={voitBrouillon ? { annee: effAnnee, rang: Number(effTri.slice(1)) || 1, tout: isAdminUser(user) } : undefined}
       />
     </div>
   )

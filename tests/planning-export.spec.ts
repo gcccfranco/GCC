@@ -1,6 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
-import { readFileSync } from "node:fs";
-import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { expect, test } from "@playwright/test";
 import { GRILLE_CULTE } from "../src/lib/planning/grilles";
 import { BOM, colonnesExportees, dateJJMM, depuisCSV, nomFichier, versCSV } from "../src/lib/planning/csv";
 import { parseCSV, parseDate } from "../src/lib/planning/sheets";
@@ -52,45 +50,6 @@ test("nom du fichier : le planning et la plage de dates", () => {
 });
 
 // ─── Depuis la grille ───────────────────────────────────────────────────────
-
-const csvSheet = (rows: string[][]) => rows.map((r) => r.map((c) => `"${c}"`).join(",")).join("\n");
-const CULTE = csvSheet([
-  ["2026 DATE", "Présidence", "Choristes", "", "Pianiste", "Guitariste", "Batterie", "Sono + Live", "PPT", "Orateur", "Traducteur", "Sainte cène", "Notes"],
-  ["20/09", "Paul W.", "Christelle Z.", "Inès L.", "Ruth K.", "Éloïse M.", "Stéphane Z.", "Anyi Y.", "Karémy X.", "Hewei", "", "", ""],
-  ["27/09", "Jonathan Z.", "Daniela W.", "Alice Q.", "Eva C.", "Christelle C.", "Yiyi C.", "Lorenzo S.", "Denis F.", "Belka", "", "", ""],
-]);
-const MEMBRE: FakeProfile = { uid: "uid-membre", email: "membre@example.com", planningName: "Inès L." };
-
-async function open(page: Page, who: FakeProfile, to: string) {
-  await page.clock.setFixedTime(new Date("2026-09-18T10:00:00"));
-  await page.route(/docs\.google\.com\/spreadsheets/, (route) => {
-    const sheet = new URL(route.request().url()).searchParams.get("sheet");
-    return route.fulfill({ status: 200, contentType: "text/csv", body: sheet === "Franco_Louange" ? CULTE : "" });
-  });
-  return signInAs(page, who, {}, to);
-}
-
-test("grille : « Exporter en CSV » télécharge le trimestre affiché, recollable dans le Sheet", async ({ page }) => {
-  await open(page, MEMBRE, "/planning/culte");
-  const [download] = await Promise.all([
-    page.waitForEvent("download"),
-    page.getByRole("button", { name: "Exporter en CSV" }).click(),
-  ]);
-  expect(download.suggestedFilename()).toBe("Culte_Franco_2026-09-20_2026-09-27.csv");
-  const texte = readFileSync(await download.path(), "utf8");
-  expect(texte.startsWith(BOM)).toBe(true);
-  expect(texte).toContain("Date,Présidence,");
-  expect(texte).toContain("27/09,Jonathan Z.,Daniela W.,Alice Q.,Eva C.,Christelle C.");
-});
-
-test("grille : « Exporter en PDF » télécharge un PDF nommé comme le planning", async ({ page }) => {
-  await open(page, MEMBRE, "/planning/culte");
-  const [download] = await Promise.all([
-    page.waitForEvent("download", { timeout: 60_000 }),
-    page.getByRole("button", { name: "Exporter en PDF" }).click(),
-  ]);
-  expect(download.suggestedFilename()).toBe("Culte_Franco_2026-09-20_2026-09-27.pdf");
-  const octets = readFileSync(await download.path());
-  expect(octets.subarray(0, 4).toString()).toBe("%PDF");
-  expect(octets.length).toBeGreaterThan(1000);
-});
+// Lot U2, P7 (question 6 : oui) : « Exporter en CSV » et « Exporter en PDF »
+// ont laissé la place à « Exporter (modèle du Sheet) », testé dans
+// tests/planning-export-modele.spec.ts. Le module csv.ts reste (fonctions pures ci-dessus).
