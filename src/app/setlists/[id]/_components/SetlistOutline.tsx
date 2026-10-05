@@ -105,10 +105,12 @@ export function SetlistOutline({ items, contents }: { items: SetlistItem[]; cont
     <nav
       ref={navRef}
       aria-label={t("setlists.detail.outline")}
-      className="hidden xl:block fixed w-60 bottom-6 overflow-y-auto print:hidden transition-[top] duration-300"
-      // À gauche de la colonne des partitions (max-w-2xl centrée, 42rem), sous
-      // la barre d'outils de la setlist — ou en haut quand les barres sont cachées.
-      style={{ left: "max(1rem, calc(50% - 21rem - 17rem))", top: barsVisible ? "calc(var(--nav-h) + 5.5rem)" : "1.5rem" }}
+      className="sommaire-setlist fixed w-60 bottom-6 overflow-y-auto print:hidden transition-[top] duration-300"
+      // À gauche de la colonne des partitions (max-w-2xl centrée dans la zone de
+      // contenu, 42rem), jamais sous la barre latérale (lot U4), sous la barre
+      // d'outils de la setlist — ou en haut quand les barres sont cachées. Montré
+      // seulement s'il tient dans la zone de contenu (`.sommaire-setlist`, globals.css).
+      style={{ left: "max(calc(var(--barre-laterale) + 1rem), calc(50% + var(--barre-laterale) / 2 - 21rem - 17rem))", top: barsVisible ? "calc(var(--nav-h) + 5.5rem)" : "1.5rem" }}
     >
       <p className="px-2 mb-2 text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
         {t("setlists.detail.outline")}

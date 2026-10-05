@@ -64,7 +64,9 @@
       "modeClair": "浅色模式",
       "modeSombre": "深色模式",
       "indexAlphabetique": "字母索引",
-      "allerA": "跳到 {{lettre}}"
+      "allerA": "跳到 {{lettre}}",
+      "reduireBarre": "收起侧边栏",
+      "deplierBarre": "展开侧边栏"
     }
   },
   "songs": {

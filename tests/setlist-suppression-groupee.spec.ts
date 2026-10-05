@@ -291,9 +291,10 @@ test("la barre d'action est en tête de liste et reste à portée quand la liste
   await page.evaluate(() => window.scrollTo(0, 1500));
   await expect(boutonSupprimer(page)).toBeInViewport();
   const apres = (await boutonSupprimer(page).boundingBox())!;
-  const navbar = (await page.locator("header").boundingBox())!;
+  // Lot U4 : pas de navbar sur ordinateur (barre latérale), la page commence en haut.
+  const navbar = (await page.locator("header").boundingBox()) ?? { y: 0, height: 0 };
   expect(apres.y, "la barre n'est pas cachée derrière la navbar").toBeGreaterThanOrEqual(navbar.y + navbar.height - 1);
-  const onglets = page.getByRole("navigation", { name: "Navigation principale" });
+  const onglets = page.getByTestId("barre-du-bas");
   if (await onglets.isVisible()) {
     const bas = (await onglets.boundingBox())!;
     expect(apres.y + apres.height, "la barre ne recouvre pas la barre d'onglets").toBeLessThanOrEqual(bas.y + 1);

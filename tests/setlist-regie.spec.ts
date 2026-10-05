@@ -70,7 +70,9 @@ test("bouton « Copier les paroles » : ordre joué, reprises comprises, ligne v
 });
 
 test.describe("déroulé", () => {
-  test.use({ viewport: { width: 1440, height: 900 } });
+  // 1 600 px : le sommaire tient à côté de la barre latérale dépliée (lot U4 : 1 280 px de
+  // contenu, soit 1 528 px de fenêtre ; à 1 440 px il se masque).
+  test.use({ viewport: { width: 1600, height: 900 } });
 
   test("sur ordinateur, le sommaire liste chants et sections et y amène au clic", async ({ page }) => {
     await openPartitions(page);

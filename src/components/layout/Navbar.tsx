@@ -6,39 +6,18 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import { useSetLanguage } from "@/lib/I18nProvider";
-import { Sun, Moon, Globe, LogIn, LogOut, ChevronDown, UserRound, Bell, BookOpen, MessageSquareHeart, TriangleAlert, Megaphone, ShieldCheck, Network, Sparkles } from "lucide-react";
-import { useAccesHarmonie } from "@/lib/harmonie/useHarmonie";
+import { Sun, Moon, Globe, LogIn, ChevronDown } from "lucide-react";
 import { useTheme } from "next-themes";
-import { useAuth, logOut } from "@/lib/firebase/auth";
+import { useAuth } from "@/lib/firebase/auth";
 import { useProfile } from "@/lib/firebase/users";
 import { isAdminUser, polesDe } from "@/lib/access";
 import { useScrollDirection } from "@/hooks/useScrollDirection";
-import { useNotifications, type NotificationItem } from "@/hooks/useNotifications";
 import { BACK_OFFICE } from "@/lib/backOffice";
 import { saveNotifLang } from "@/lib/firebase/notifPrefs";
-import { ReportDialog } from "@/components/report/ReportDialog";
 import { FondDeBarre } from "@/components/layout/FondDeBarre";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-
-const NOTIF_KIND_KEYS: Record<NotificationItem["kind"], string> = {
-  "annonce": "notifications.annonce",
-  "setlist-created": "notifications.setlistCreated",
-  "setlist-updated": "notifications.setlistUpdated",
-  "manual": "notifications.manual",
-  "reminder": "notifications.reminder",
-  "broadcast": "notifications.broadcast",
-  "presentation": "notifications.presentation",
-  "scene": "notifications.scene",
-  "evenement": "notifications.evenement",
-  "tache": "notifications.tache",
-};
+import { labelDeSection } from "@/lib/navigation";
+import { Cloche } from "@/components/layout/Cloche";
+import { MenuCompte, useNomDuMembre } from "@/components/layout/MenuCompte";
 
 // Bouton d'icône de la barre : rond, sans bordure, réponse dès l'appui.
 const ICON_BUTTON =
@@ -52,6 +31,8 @@ const sectionClass = (active: boolean) =>
  * Sur ordinateur : les sections, la cloche, la langue, le thème et un menu
  * compte. Sur tactile : la barre du bas porte les sections et « Moi » range
  * le reste ; il ne reste ici que la cloche et la langue (Connexion sans compte).
+ * Lot U4 : sur ordinateur, la barre latérale la remplace ; masquée par `.barre-haut`,
+ * elle reste montée (elle mémorise la langue des rappels).
  */
 export function Navbar() {
   const { t, i18n } = useTranslation();
@@ -65,8 +46,6 @@ export function Navbar() {
   const toggleTheme = () => setTheme(dark ? "light" : "dark");
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [reportOpen, setReportOpen] = useState(false);
-  const { items: notifItems, unreadCount, markAllSeen } = useNotifications();
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const currentLang = i18n.language;
@@ -119,23 +98,13 @@ export function Navbar() {
   const isActiveEvenements = pathname.startsWith("/evenements");
   const isActiveTaches = pathname.startsWith("/taches");
   const admin = isAdminUser(user);
-  const canNotify = admin || (profile?.notify?.length ?? 0) > 0;
-  const headerLabel = isActivePlanning
-    ? t("common.header.planning")
-    : isActiveMesServices
-      ? t("common.header.service")
-      : isActiveEvenements
-          ? t("common.header.evenements")
-          : isActiveTaches
-            ? t("common.header.taches")
-            : t("common.header.louange");
-  const displayName = [profile?.firstName, profile?.lastName].filter(Boolean).join(" ") || user?.email || "";
-  const initial = (profile?.firstName || user?.email || "?").trim().charAt(0).toUpperCase();
+  const headerLabel = t(labelDeSection(pathname));
+  const { displayName, initial } = useNomDuMembre();
 
   return (
     <>
       <header
-        className={`fixed top-0 z-50 w-full h-[var(--nav-h)] pt-[var(--sat)] material-chrome print:hidden transition-transform duration-300 ${
+        className={`barre-haut fixed top-0 z-50 w-full h-[var(--nav-h)] pt-[var(--sat)] material-chrome print:hidden transition-transform duration-300 ${
           scrollVisible ? "translate-y-0" : "-translate-y-full"
         }`}
       >
@@ -244,55 +213,7 @@ export function Navbar() {
           {/* Actions — pushed to far right */}
           <div className="ml-auto flex items-center gap-2">
             {/* Notifications */}
-            {!authLoading && user && (
-              <DropdownMenu onOpenChange={(open) => { if (open) markAllSeen(); }}>
-                <DropdownMenuTrigger asChild>
-                  <button aria-label={t("notifications.title")} className={`relative ${ICON_BUTTON}`}>
-                    <Bell className="h-[18px] w-[18px]" />
-                    {unreadCount > 0 && (
-                      <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center">
-                        {unreadCount > 9 ? "9+" : unreadCount}
-                      </span>
-                    )}
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-80 max-w-[90vw]">
-                  <DropdownMenuLabel>{t("notifications.title")}</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <div className="max-h-96 overflow-y-auto">
-                    {notifItems.length === 0 ? (
-                      <p className="px-3 py-4 text-sm text-muted-foreground text-center">
-                        {t("notifications.empty")}
-                      </p>
-                    ) : (
-                      notifItems.map((n) => (
-                        <DropdownMenuItem key={n.id} asChild>
-                          <Link href={n.href} className="flex flex-col items-start gap-0.5">
-                            <span className="text-sm font-medium text-foreground truncate w-full">
-                              {n.title}
-                            </span>
-                            <span className="text-xs text-muted-foreground">
-                              {t(NOTIF_KIND_KEYS[n.kind])}
-                              {n.category && (
-                                <>
-                                  {" · "}
-                                  {t("categories." + n.category, { defaultValue: n.category })}
-                                </>
-                              )}
-                              {" · "}
-                              {new Intl.DateTimeFormat(isZh ? "zh-CN" : "fr-FR", {
-                                day: "numeric",
-                                month: "short",
-                              }).format(n.date)}
-                            </span>
-                          </Link>
-                        </DropdownMenuItem>
-                      ))
-                    )}
-                  </div>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
+            {!authLoading && user && <Cloche boutonClassName={ICON_BUTTON} />}
 
             {/* Langue : partout, pour les sinophones sans compte aussi */}
             <button
@@ -316,59 +237,15 @@ export function Navbar() {
             {/* Compte (ordinateur) ou Connexion */}
             {!authLoading && (
               user ? (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button
-                      aria-label={t("common.header.account")}
-                      title={displayName}
-                      className="hidden lg:flex h-9 w-9 shrink-0 rounded-full bg-foreground text-background text-sm font-bold items-center justify-center transition-transform duration-150 active:scale-[.94] cursor-pointer"
-                    >
-                      {initial}
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-64">
-                    <DropdownMenuLabel>
-                      <div className="font-semibold truncate">{displayName}</div>
-                      {profile?.planningName && (
-                        <div className="text-xs font-normal text-muted-foreground truncate">{profile.planningName}</div>
-                      )}
-                    </DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild>
-                      <Link href="/profil"><UserRound aria-hidden />{t("common.header.profile")}</Link>
-                    </DropdownMenuItem>
-                    {BACK_OFFICE && (
-                      <DropdownMenuItem asChild>
-                        <Link href="/equipes"><Network aria-hidden />{t("equipes.title")}</Link>
-                      </DropdownMenuItem>
-                    )}
-                    <HarmonieMenuItem label={t("harmonie.titre")} />
-                    <DropdownMenuItem asChild>
-                      <Link href="/guide"><BookOpen aria-hidden />{t("common.header.guide")}</Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link href="/questionnaire"><MessageSquareHeart aria-hidden />{t("survey.title")}</Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onSelect={() => setReportOpen(true)}>
-                      <TriangleAlert aria-hidden />{t("common.report")}
-                    </DropdownMenuItem>
-                    {(canNotify || admin) && <DropdownMenuSeparator />}
-                    {canNotify && (
-                      <DropdownMenuItem asChild>
-                        <Link href="/notifier"><Megaphone aria-hidden />{t("common.header.notify")}</Link>
-                      </DropdownMenuItem>
-                    )}
-                    {admin && (
-                      <DropdownMenuItem asChild>
-                        <Link href="/admin"><ShieldCheck aria-hidden />{t("common.header.admin")}</Link>
-                      </DropdownMenuItem>
-                    )}
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onSelect={() => logOut()} className="text-destructive focus:text-destructive">
-                      <LogOut aria-hidden />{t("common.header.logout")}
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <MenuCompte>
+                  <button
+                    aria-label={t("common.header.account")}
+                    title={displayName}
+                    className="hidden lg:flex h-9 w-9 shrink-0 rounded-full bg-foreground text-background text-sm font-bold items-center justify-center transition-transform duration-150 active:scale-[.94] cursor-pointer"
+                  >
+                    {initial}
+                  </button>
+                </MenuCompte>
               ) : (
                 <Link
                   aria-label={t("common.header.login")}
@@ -383,21 +260,6 @@ export function Navbar() {
           </div>
         </div>
       </header>
-
-      <ReportDialog open={reportOpen} onClose={() => setReportOpen(false)} kind="site" />
     </>
-  );
-}
-
-/** Entrée « Harmonie » du menu du compte (ordinateur). Rendue seulement une
- *  fois le menu ouvert, donc l'accès (qui lit les plannings pour trouver
- *  l'instrument) n'est calculé qu'à ce moment-là, jamais à chaque page. */
-function HarmonieMenuItem({ label }: { label: string }) {
-  const acces = useAccesHarmonie();
-  if (acces.chargement || !acces.peut) return null;
-  return (
-    <DropdownMenuItem asChild>
-      <Link href="/harmonie"><Sparkles aria-hidden />{label}</Link>
-    </DropdownMenuItem>
   );
 }

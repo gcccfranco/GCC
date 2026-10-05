@@ -1198,16 +1198,18 @@ export function SetlistDetailClient() {
     <div className="relative min-h-screen bg-background">
       <Halo variant="fiche" color={categoryColor(setlist?.category ?? "")} />
       {/* Top bar — même style que SongDetailClient */}
-      <div ref={toolbarRef} data-testid="barre-outils" className={`print:hidden fixed left-0 right-0 top-[var(--nav-h)] [--barre-top:var(--nav-h)] z-10 material-chrome transition-transform duration-300 ${ scrollVisible ? "translate-y-0" : "-translate-y-[calc(100%+var(--nav-h))]"}`}>
+      <div ref={toolbarRef} data-testid="barre-outils" className={`print:hidden fixed left-[var(--barre-laterale)] right-0 top-[var(--nav-h)] [--barre-top:var(--nav-h)] [--barre-left:var(--barre-laterale)] z-10 material-chrome transition-transform duration-300 ${ scrollVisible ? "translate-y-0" : "-translate-y-[calc(100%+var(--nav-h))]"}`}>
         <FondDeBarre sousNavbar />
         <div className="max-w-[1080px] mx-auto px-4">
           {/* Une seule ligne sur téléphone (retour du 20/09/2026) : 9 commandes de 32 px
               tiennent à partir de 390 px ; en dessous, « Adapter » et « Ma version »
-              passent dans le menu « ⋯ ». Les libellés n'arrivent qu'à 1024 px (`lg`) :
+              passent dans le menu « ⋯ ». Les libellés n'arrivent qu'à 1024 px :
               icônes sur tout téléphone, portrait comme paysage (jusqu'à 956 px), et sur
-              iPad en portrait ; libellés sur iPad en paysage et ordinateur. `flex-wrap`
-              reste le filet de sécurité. */}
-          <div className="flex items-center gap-1.5 sm:gap-2 py-[9px] flex-wrap">
+              iPad en portrait ; libellés sur iPad en paysage et ordinateur, à condition
+              de tenir à côté de la barre latérale (lot U4 : `.libelle-outil`, requête de
+              conteneur sur `.rangee-outils`, globals.css). `flex-wrap` reste le filet de
+              sécurité. */}
+          <div className="rangee-outils flex items-center gap-1.5 sm:gap-2 py-[9px] flex-wrap">
 
             {/* ← Retour */}
             <Link aria-label={t("songs.detail.backToAll")}
@@ -1217,7 +1219,7 @@ export function SetlistDetailClient() {
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M19 12H5m6-7l-7 7 7 7" />
               </svg>
-              <span className="hidden lg:inline">{t("songs.detail.backToAll")}</span>
+              <span className="libelle-outil">{t("songs.detail.backToAll")}</span>
             </Link>
 
             {/* Setlist G (docs/spec-deux-volets.md, Q3 et Q11) : la même barre côté Liste
@@ -1229,7 +1231,7 @@ export function SetlistDetailClient() {
                   className="h-8 px-2.5 rounded-full text-sm font-semibold flex items-center gap-1.5 transition-[background-color,color,transform] duration-150 active:scale-[.96] bg-secondary text-muted-foreground hover:text-foreground"
                 >
                   <SlidersHorizontal className="h-3.5 w-3.5" />
-                  <span className="hidden lg:inline">{t("setlists.detail.layout.label")}</span>
+                  <span className="libelle-outil">{t("setlists.detail.layout.label")}</span>
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="w-56">
@@ -1298,7 +1300,7 @@ export function SetlistDetailClient() {
                 }`}
               >
                 <PenLine className="h-3.5 w-3.5" />
-                <span className="hidden lg:inline">
+                <span className="libelle-outil">
                   {t("setlists.contentEdit.toggle", { defaultValue: "Adapter" })}
                 </span>
               </button>
@@ -1318,7 +1320,7 @@ export function SetlistDetailClient() {
               }`}
             >
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/><path d="M9 18V5l12-2v13"/></svg>
-              <span className="hidden lg:inline">{t("songs.detail.chords")}</span>
+              <span className="libelle-outil">{t("songs.detail.chords")}</span>
             </button>
 
             {/* Ma version (accords/paroles pour soi) — tout connecté */}
@@ -1333,7 +1335,7 @@ export function SetlistDetailClient() {
                 }`}
               >
                 <UserRound className="h-3.5 w-3.5" />
-                <span className="hidden lg:inline">{t("setlists.myVersion.toggle")}</span>
+                <span className="libelle-outil">{t("setlists.myVersion.toggle")}</span>
               </button>
             )}
 
@@ -1361,7 +1363,7 @@ export function SetlistDetailClient() {
                 className="h-8 px-2.5 sm:px-3 rounded-full text-white text-[12.5px] font-semibold flex items-center gap-1.5 hover:brightness-95 dark:ring-1 dark:ring-white/15 transition-all duration-150"
               >
                 <Play className="h-3.5 w-3.5" />
-                <span className="hidden lg:inline">{t("setlists.detail.performanceMode")}</span>
+                <span className="libelle-outil">{t("setlists.detail.performanceMode")}</span>
               </button>
 
               {/* Menu ⋯ : Modifier / Prévenir l'équipe / Dupliquer / Partager / PDF / Supprimer */}
@@ -1719,7 +1721,7 @@ export function SetlistDetailClient() {
 
       {/* Retour visuel du partage (lien copié / setlist privée) */}
       {shareFeedback && (
-        <div className="fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full bg-foreground text-background text-sm shadow-lg">
+        <div className="fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom))] left-[calc(50%+var(--barre-laterale)/2)] -translate-x-1/2 z-50 px-4 py-2 rounded-full bg-foreground text-background text-sm shadow-lg">
           {shareFeedback}
         </div>
       )}
