@@ -324,6 +324,22 @@ export function canEditPetitDej(
   return ligne.uid === user.uid || canGererPetitDej(user, profile);
 }
 
+/** Lot U2 (Q10, docs/spec-planning-2027.md) : les plannings dont les dates se
+ *  choisissent (`dates: "choisies"` dans grilles.ts) — les seuls où une date
+ *  posée par erreur se retire ; ailleurs, on vide les cases. */
+export const PLANNINGS_DATES_CHOISIES = ["interfranco", "intergroupe", "campusMatin", "campusSoir"] as const;
+
+/** Retirer une date (supprimer son document) : qui peut remplir ce planning,
+ *  sur un planning à dates choisies seulement.
+ *  Miroir serveur : `allow delete` de plannings/{key}/dimanches dans firestore.rules. */
+export function canRetirerDate(
+  user: { email?: string | null } | null,
+  profile: { plannings?: string[] } | null,
+  key: string
+): boolean {
+  return (PLANNINGS_DATES_CHOISIES as readonly string[]).includes(key) && canEditPlanning(user, profile, key);
+}
+
 /** Harmonie (lot 9, docs/spec-harmonie.md) : le catalogue et les « Idées
  *  d'harmonie » sont pour les **pianistes et les guitaristes**, plus les
  *  admins. L'instrument n'est pas dans le profil : il est écrit dans les

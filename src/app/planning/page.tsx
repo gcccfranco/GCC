@@ -4,7 +4,7 @@ import { GuideLien } from "@/components/guide/GuideLien"
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { useTranslation } from "react-i18next"
-import { currentSundayStr, fdLongL, moisName, EDD_PERIODES } from "@/lib/planning/utils"
+import { currentSundayStr, fdLongL, getCurrentTri, moisName, EDD_PERIODES } from "@/lib/planning/utils"
 import {
   FIDELITE_FALLBACK, FIDELITE_MUSIC_FALLBACK,
   PAIX_FALLBACK, BONTE_FALLBACK, DEJEUNER_FALLBACK, EDD_FALLBACK, CAMP_LOUANGE_FALLBACK
@@ -13,7 +13,7 @@ import { fetchCulte, fetchDejeuner, fetchPetitDej, fetchPaix, fetchFidelite, fet
 import { StaleBanner } from "@/components/planning/StaleBanner"
 import type { EddDataStructure, CampusSeance } from "@/lib/planning/utils"
 import { useProfile } from "@/lib/firebase/users"
-import { avecDimanchesSpeciaux, type PlanningData } from "@/lib/planning/names"
+import { avecDimanchesSpeciaux, sansBrouillon, trimestresPublies, type PlanningData } from "@/lib/planning/names"
 import { BACK_OFFICE } from "@/lib/backOffice"
 import { lirePetitDej, servicesDuCompte } from "@/lib/petitdej/lignes"
 import type { LignePetitDej } from "@/types/petitDej"
@@ -74,6 +74,14 @@ export default function PlanningAccueil() {
   // « Ce dimanche » s'appuie sur les fallbacks compilés : si les fetchs
   // échouent, on le signale pour ne pas laisser lire un planning périmé.
   const [stale, setStale] = useState(false)
+  // Lot U2 (Q4) : trimestres publiés, cette année et la suivante — le brouillon n'entre pas dans « Prochain service ».
+  const [publies, setPublies] = useState<Record<number, Record<string, string[]>>>({})
+
+  useEffect(() => {
+    if (!BACK_OFFICE) return
+    const an = new Date().getFullYear()
+    void Promise.all([trimestresPublies(an), trimestresPublies(an + 1)]).then(([courante, suivante]) => setPublies({ [an]: courante, [an + 1]: suivante }))
+  }, [])
 
   useEffect(() => {
     Promise.allSettled([
@@ -97,14 +105,14 @@ export default function PlanningAccueil() {
   const nextServices = useMemo(() => {
     if (!user || !profile) return null
     const lu: PlanningData = { culte, dejeuner: dej, petitDej, paix, fidelite: fid, fideliteMusic: fidM, bonte, edd, campus, intergroupe, interfranco }
-    // Lot U2 (Q5) : comme `loadPlanningData`, pas de président de groupe fantôme
-    // un dimanche d'Interfranco ou d'Intergroupe.
-    const data = BACK_OFFICE ? avecDimanchesSpeciaux(lu) : lu
+    // Lot U2 (Q4, Q5) : comme `loadPlanningData`, ni trimestre à venir non
+    // publié, ni président de groupe fantôme un dimanche d'Interfranco ou d'Intergroupe.
+    const data = BACK_OFFICE ? avecDimanchesSpeciaux(sansBrouillon(lu, new Date().getFullYear(), getCurrentTri(), publies)) : lu
     const today = new Date().toISOString().split("T")[0]
     const upcoming = servicesDuCompte(data, lignesPetitDej, user.uid, profile.planningName ?? "").filter(e => e.date >= today)
     if (!upcoming.length) return null
     return upcoming.filter(e => e.date === upcoming[0].date)
-  }, [user, profile, culte, dej, petitDej, lignesPetitDej, paix, fid, fidM, bonte, edd, campus, intergroupe, interfranco])
+  }, [user, profile, culte, dej, petitDej, lignesPetitDej, paix, fid, fidM, bonte, edd, campus, intergroupe, interfranco, publies])
 
   const sun = currentSundayStr()
   const sunParts = sun.split("-")

@@ -51,8 +51,6 @@ export async function exporterModele(format: "pdf" | "xlsx", p: {
   portee: Portee
   /** Planning affiché (clé de grille). */
   key: string
-  /** Libellé du planning (nom du fichier). */
-  label: string
   annee: number
   /** Page affichée : trimestre (1 à 4), période de l'EDD (1 à 6), 1 pour l'année. */
   rang: number
@@ -61,7 +59,7 @@ export async function exporterModele(format: "pdf" | "xlsx", p: {
 }): Promise<void> {
   const [lignes, logo] = await Promise.all([lignesDe(grillesAExporter(p.portee, p.key)), logoReduit()])
   const pages = pagesExport({ portee: p.portee, annee: p.annee, key: p.key, rang: p.rang, lignes })
-  const nom = nomFichierExport(p.portee, p.label, p.periodeCourte, p.annee, format)
+  const nom = nomFichierExport(p.portee, p.key, p.periodeCourte, p.annee, format)
   if (format === "pdf") {
     const [{ pdf }, { PlanningModelePDF }] = await Promise.all([
       import("@react-pdf/renderer"),

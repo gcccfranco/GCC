@@ -1,16 +1,18 @@
 "use client"
 
 import { Fragment, useEffect, useRef, useState, type MouseEvent, type ReactNode } from "react"
-import { ChevronDown, History, Lock, User, X } from "lucide-react"
+import { ChevronDown, History, Lock, Trash2, User, X } from "lucide-react"
 import { useTranslation } from "react-i18next"
-import { currentSundayStr, fdLongL, fdShort, getAnnee, getMois, moisName } from "@/lib/planning/utils"
+import { currentSundayStr, fdFullL, fdLongL, fdShort, getAnnee, getMois, moisName } from "@/lib/planning/utils"
 import { PREMIERE_ANNEE_APP, type ColonneGrille, type DefinitionGrille, type LigneGrille } from "@/lib/planning/grilles"
 import { phraseDuChangement } from "@/lib/planning/historique"
-import { ecrireCase } from "@/lib/firebase/planningGrille"
+import { ecrireCase, retirerDate } from "@/lib/firebase/planningGrille"
 import { getHistoriqueGrille, noterChangement, type EntreeGrille } from "@/lib/firebase/planningHistorique"
 import { historyAuthor } from "@/lib/firebase/setlistHistory"
 import { useProfile } from "@/lib/firebase/users"
 import { colonneDePersonnes, propositions, type CompteDuPlanning } from "@/lib/planning/choisir"
+import { splitNames } from "@/lib/planning/names"
+import { canRetirerDate } from "@/lib/access"
 import { ExportModele, type ExportPlanning } from "./ExportModele"
 import { ChoisirNom } from "./ChoisirNom"
 
@@ -49,6 +51,13 @@ export interface PlanningGrilleProps {
   /** Lot U2, P7 : « Exporter (modèle du Sheet) », pour les responsables du
    *  planning (qui remplit, qui publie) et les admins (Q13) ; absent = pas d'export. */
   exporter?: ExportPlanning
+  /** Texte d'une période sans ligne (« Aucun dimanche posé pour 2027. ») ;
+   *  absent : « Planning à venir ». */
+  vide?: string
+  /** Lot U2 (Q10) : planning à dates choisies (Interfranco, Intergroupe,
+   *  Campus). En modification, une date de l'année de l'app se retire, après
+   *  confirmation (canRetirerDate) ; la page relit alors ses lignes. */
+  retrait?: { libelle: string; onRetire: () => void }
 }
 
 
@@ -62,9 +71,11 @@ export function PlanningGrille({
   periode,
   dimanchesSpeciaux,
   exporter,
+  vide,
+  retrait,
 }: PlanningGrilleProps) {
   const { t, i18n } = useTranslation()
-  const { profile } = useProfile()
+  const { user, profile } = useProfile()
   const couleur = definition.couleur
   const sun = currentSundayStr()
 
@@ -198,6 +209,40 @@ export function PlanningGrille({
     }
   }
 
+  /** Une date posée par erreur (Q10) : seulement en modification, dès l'année de l'app. */
+  const peutRetirer = (date: string) =>
+    !!retrait && mode === "edition" && getAnnee(date) >= PREMIERE_ANNEE_APP && canRetirerDate(user, profile, definition.key)
+
+  async function retirer(date: string) {
+    if (!retrait || !window.confirm(t("planning.annee.confirmerRetrait", { date: fdFullL(date, i18n.language) }))) return
+    setRefus("")
+    try {
+      await retirerDate(definition, date)
+    } catch {
+      setRefus(typeof navigator !== "undefined" && navigator.onLine === false ? "horsLigne" : "droitRetire")
+      return
+    }
+    const auteur = historyAuthor(profile)
+    if (auteur) {
+      await noterChangement(definition.key, auteur, { kind: "dimanche", date, retire: true })
+      if (histoOuvert) await rechargerHistorique()
+    }
+    retrait.onRetire()
+  }
+
+  const boutonRetirer = (date: string, avecTexte: boolean) => (
+    <button
+      type="button"
+      onClick={() => void retirer(date)}
+      aria-label={retrait?.libelle}
+      title={retrait?.libelle}
+      className="inline-flex min-h-8 items-center gap-1 rounded-md px-1.5 text-[11px] font-semibold text-muted-foreground hover:bg-destructive/10 hover:text-destructive active:bg-destructive/10"
+    >
+      <Trash2 className="h-3.5 w-3.5" aria-hidden />
+      {avecTexte && retrait?.libelle}
+    </button>
+  )
+
   function terminer(l: LigneGrille, c: ColonneGrille, commit: boolean) {
     if (fini.current) return
     fini.current = true
@@ -243,7 +288,9 @@ export function PlanningGrille({
         </span>
       )
     }
-    if (modifiable && colonneDePersonnes(c.cle)) {
+    // Une case qui porte déjà plusieurs noms (équipe de la Table, musiciens)
+    // s'écrit en texte, préremplie : « Choisir » remplacerait tous les noms.
+    if (modifiable && colonneDePersonnes(c.cle) && splitNames(val).length <= 1) {
       // Lot U2, P9 : une case de personne s'ouvre sur « Choisir » ; vide, elle
       // le dit en pointillé gris (planche bo-planning-2027).
       const ouvrir = (e: MouseEvent<HTMLButtonElement>) =>
@@ -290,6 +337,7 @@ export function PlanningGrille({
 
   const phrase = (auteurNom: string, ch: EntreeGrille["changes"][number]) => {
     if (ch.kind === "import") return t("planning.grille.importe", { auteur: auteurNom, count: ch.count })
+    if (ch.kind === "dimanche") return t(`planning.grille.${phraseDuChangement(ch)}`, { auteur: auteurNom, date: fdLongL(ch.date, i18n.language) })
     const col = definition.colonnes.find((x) => x.cle === ch.colonne)
     return t(`planning.grille.${phraseDuChangement(ch)}`, {
       auteur: auteurNom,
@@ -411,7 +459,7 @@ export function PlanningGrille({
             {affichees.length === 0 && (
               <tr>
                 <td colSpan={colonnes.length + 1} className="px-4 py-8 text-center text-sm text-muted-foreground">
-                  {t("planning.grille.aVenir")}
+                  {vide ?? t("planning.grille.aVenir")}
                 </td>
               </tr>
             )}
@@ -456,6 +504,7 @@ export function PlanningGrille({
                         </span>
                       )}
                       {dateBadge?.(l.row, toutes)}
+                      {peutRetirer(date) && <div className="-ml-1.5 mt-0.5">{boutonRetirer(date, false)}</div>}
                     </td>
                     {colonnes.map((c) => (
                       <td key={c.cle} data-case={`${date}|${c.cle}`} className="px-3 py-2 text-foreground">
@@ -474,7 +523,7 @@ export function PlanningGrille({
       <div className="sm:hidden space-y-2.5">
         {affichees.length === 0 && (
           <p className="px-4 py-8 text-center text-sm text-muted-foreground border border-dashed border-border rounded-xl">
-            {t("planning.grille.aVenir")}
+            {vide ?? t("planning.grille.aVenir")}
           </p>
         )}
         {affichees.map((l) => {
@@ -505,6 +554,7 @@ export function PlanningGrille({
                   </span>
                 )}
                 {dateBadge?.(l.row, toutes)}
+                {peutRetirer(date) && <span className="ml-auto">{boutonRetirer(date, true)}</span>}
               </div>
               <div className="px-3.5 py-2.5 space-y-1">
                 {colonnes

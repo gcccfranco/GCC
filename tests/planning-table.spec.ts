@@ -72,9 +72,10 @@ test("la grille Table : l'équipe lue dans le Sheet, le petit déj dans les insc
 test("avec le droit « table » : une case s'écrit et tient au rechargement ; la case Petit déj n'est pas recopiée", async ({ page }) => {
   const db = await open(page, RESPONSABLE, "/back-office/planning/table", PETIT_DEJ);
   await laCase(page, "2026-09-27", "equipe").getByRole("button").click();
-  // P9 (lot U2) : « Choisir », puis un nom écrit à la main.
-  await page.getByRole("button", { name: "Écrire un nom sans compte…" }).click();
+  // Lot U2 (relecture) : une case qui porte déjà deux noms s'ouvre en texte,
+  // prérempli — « Choisir » remplacerait les deux.
   const champ = page.getByRole("textbox", { name: "Équipe", exact: true });
+  await expect(champ).toHaveValue("Lydie, Samuel");
   await champ.fill("Ruth K.");
   await champ.press("Enter");
   await expect(laCase(page, "2026-09-27", "equipe")).toContainText("Ruth K.");
@@ -114,7 +115,7 @@ test("« Exporter (modèle du Sheet) » : le trimestre affiché, Date · Équipe
     page.waitForEvent("download", { timeout: 120_000 }),
     fenetre.getByRole("button", { name: "PDF", exact: true }).click(),
   ]);
-  expect(download.suggestedFilename()).toBe("Prépa._Table_T3_2026.pdf");
+  expect(download.suggestedFilename()).toBe("Franco_Table_PtD_T3_2026.pdf");
   await download.saveAs(test.info().outputPath(download.suggestedFilename())); // à ouvrir à l'œil
   const lignes = lirePdf(readFileSync(await download.path())).pages[0].lignes;
   for (const attendu of ["PRÉPARATION TABLE DÉJEUNER", "DÉJEUNER PRÉPARATION T3 2026", "DATE", "Équipe", "Petit déj", "Septembre"]) {

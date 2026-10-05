@@ -131,7 +131,7 @@ function Choix({
     try {
       const { exporterModele } = await import("@/lib/planning/exporter")
       await exporterModele(format, {
-        portee, key: definition.key, label: definition.label, annee: exporter.annee, rang: exporter.rang, periodeCourte,
+        portee, key: definition.key, annee: exporter.annee, rang: exporter.rang, periodeCourte,
       })
       onFini()
     } catch {
