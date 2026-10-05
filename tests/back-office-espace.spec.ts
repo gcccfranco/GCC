@@ -123,8 +123,8 @@ test.describe("Back-Office (B1) : les entrées selon les droits (Q2)", () => {
 });
 
 test.describe("Back-Office (B1) : les widgets permis (table des widgets)", () => {
-  test("un admin : tous ceux de U6 (Calendrier et Chants les plus joués viendront avec U8 et U7)", () => {
-    expect(widgetsPermis(user(ADMIN), profil(ADMIN))).toEqual(["dimanche", "afaire", "setlists", "planning", "evenements", "petitdej", "scene", "comptes", "raccourcis"]);
+  test("un admin : tous ceux de U6 et Chants les plus joués (U7, S5) ; Calendrier viendra avec U8", () => {
+    expect(widgetsPermis(user(ADMIN), profil(ADMIN))).toEqual(["dimanche", "afaire", "setlists", "planning", "evenements", "chants", "petitdej", "scene", "comptes", "raccourcis"]);
   });
 
   test("Alice : ni Setlists à préparer (elle ne crée pas de setlist), ni Cases vides, ni Comptes", () => {

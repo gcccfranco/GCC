@@ -360,3 +360,35 @@ Questions ouvertes 1 à 7 : la recommandation de chacune est retenue (go du 04/1
   6. Ni tri ni rang dans « Jamais joués » (ordre du recueil, Q11) ; « À redécouvrir » numérote dans son ordre (Q11).
 - Reste : S5 (le widget « Chants les plus joués » du tableau de bord).
 - À faire par Timothée : rien pour S4 (aucune règle Firestore, aucune donnée) ; valider les deux vues en local.
+
+### 05/10/2026 — S5, le widget « Chants les plus joués » : faite (commit « feat(U7): S5 — … », branche `lot/u7-statistiques`, après fusion de `lot/u6b-tableau-de-bord`)
+
+- `src/components/backOffice/widgets/WidgetChants.tsx` (widget 7 de la table de U6, taille M) : `statsChants` sur la
+  période réglée, sans autre filtre ; en tête « 7 setlists », lien vers `/back-office/statistiques` sur la même période
+  (`?periode=3`, `6`, `debut` ; rien pour 12 mois) ; puis les cinq premiers comme la planche (`W_CHANTS`) : titre (lien
+  vers le chant, slug sans lien s'il est absent du recueil), barre CSS `aria-hidden`, nombre de setlists en texte.
+  États : chargement, « Lecture impossible pour l'instant. » (aucune setlist lue ou recueil illisible), « Aucune setlist
+  publiée sur cette période. ».
+- Réglage « Période » (`src/lib/tableauDeBord/reglages.ts`) : 3 mois, 6 mois, 12 mois (défaut), Depuis le début ; clé
+  `periode` (`3m`, `6m`, `12m`, `tout`) déjà prévue par U6 dans `Reglages`. `src/lib/access.ts` : « chants » sort de
+  `WIDGETS_A_VENIR` et suit `canVoirStatistiques` (admins seuls) ; le défaut d'un admin le place après « Prochains
+  évènements ». Libellés FR et 中文 (`tableauDeBord.chants.*`, `tableauDeBord.reglages.periode|mois|depuisLeDebut`).
+- `tests/statistiques.spec.ts` : 10 tests S5 (droit et défaut, réglage, cinq premiers et barres, « 3 mois » écrit et
+  lien suivi, « Depuis le début » jusqu'à la page, période vide, lecture impossible, responsable non admin, 中文,
+  captures), écrits avant le code et vus rouges (9 sur 10 ; le responsable non admin passait déjà), puis verts sur les
+  cinq projets. `tests/tableau-de-bord.spec.ts` et `tests/back-office-espace.spec.ts` (U6) : un admin a maintenant
+  « chants » dans ses widgets permis et dans son défaut. Avec `statistiques-calcul`, `tableau-de-bord`,
+  `back-office-espace` et `back-office-coupe` : 765 verts, 13 sautés, 1 rouge déjà connu et étranger à U7 (« l'ancien
+  tableau des groupes n'a pas de colonne de plus » sur ordinateur, venu de U2, noté dans `spec-back-office.md`).
+  Captures regardées aux cinq tailles, conformes à `W_CHANTS` de la planche.
+- Choix pris faute de réponse dans la spec :
+  1. **Le widget est traduit** (FR et 中文) comme tout le tableau de bord, bien que la page Statistiques soit en
+     français seul (Q14) ; titres des chants tels quels.
+  2. **« N setlists » est un lien** vers la page Statistiques sur la même période (la planche l'écrit en gris, sans
+     dire où il mène) ; masqué quand rien n'est compté.
+  3. Chaque ligne montre le **nombre** seul, comme la planche (pas le %).
+  4. « Aujourd'hui » = celui de la page (date UTC du navigateur), pour que le widget et la page donnent le même nombre.
+- Reste : rien pour U7. La garde `BACK_OFFICE` partira avec l'interrupteur en fin de chantier (T8).
+- À faire par Timothée : rien pour S5 (aucune règle Firestore : le réglage s'écrit dans `backOffice/{uid}`, règle de
+  U6) ; relire le 中文 (« {{count}} 份歌单 », « 时段 », « {{count}} 个月 », « 全部记录 », « 该时段没有已发布的歌单。 ») ;
+  valider le widget en local.

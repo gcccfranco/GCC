@@ -2302,6 +2302,10 @@
     "petitdej": {
       "libre": "空缺"
     },
+    "chants": {
+      "setlists_other": "{{count}} 份歌单",
+      "rien": "该时段没有已发布的歌单。"
+    },
     "scene": {
       "titre": "舞台 · {{nom}}",
       "aucunProgramme": "没有显示中的节目。",
@@ -2358,7 +2362,10 @@
       "nouveaux": "新账号",
       "raccourcis": "快捷方式",
       "semaines_other": "{{count}} 周",
-      "dimanches_other": "{{count}} 个主日"
+      "dimanches_other": "{{count}} 个主日",
+      "periode": "时段",
+      "mois_other": "{{count}} 个月",
+      "depuisLeDebut": "全部记录"
     }
   },
   "backOffice": {

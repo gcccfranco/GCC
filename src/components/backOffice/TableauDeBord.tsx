@@ -24,6 +24,7 @@ import type { Widget, WidgetId } from "@/types/backOffice";
 import { OutilsWidget, Poignee } from "./OutilsWidget";
 import { EditionWidgetContext, GRILLE_WIDGETS, Message } from "./widgets/Cadre";
 import { WidgetAFaire } from "./widgets/WidgetAFaire";
+import { WidgetChants } from "./widgets/WidgetChants";
 import { WidgetCasesVides } from "./widgets/WidgetCasesVides";
 import { WidgetComptes } from "./widgets/WidgetComptes";
 import { WidgetDimanche } from "./widgets/WidgetDimanche";
@@ -33,7 +34,7 @@ import { WidgetRaccourcis } from "./widgets/WidgetRaccourcis";
 import { WidgetScene } from "./widgets/WidgetScene";
 import { WidgetSetlists } from "./widgets/WidgetSetlists";
 
-/** Calendrier (U8) et Chants les plus joués (U7) arrivent avec leur lot (Q17). */
+/** Calendrier (U8) arrive avec son lot (Q17) ; Chants les plus joués : U7, S5. */
 const COMPOSANTS: Record<WidgetId, ((p: { widget: Widget }) => React.ReactNode) | null> = {
   dimanche: WidgetDimanche,
   calendrier: null,
@@ -41,7 +42,7 @@ const COMPOSANTS: Record<WidgetId, ((p: { widget: Widget }) => React.ReactNode) 
   setlists: WidgetSetlists,
   planning: WidgetCasesVides,
   evenements: WidgetEvenements,
-  chants: null,
+  chants: WidgetChants,
   petitdej: WidgetPetitDej,
   scene: WidgetScene,
   comptes: WidgetComptes,

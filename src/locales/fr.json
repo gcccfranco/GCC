@@ -2305,6 +2305,11 @@
     "petitdej": {
       "libre": "Libre"
     },
+    "chants": {
+      "setlists_one": "{{count}} setlist",
+      "setlists_other": "{{count}} setlists",
+      "rien": "Aucune setlist publiée sur cette période."
+    },
     "scene": {
       "titre": "Scène · {{nom}}",
       "aucunProgramme": "Aucun programme affiché.",
@@ -2363,7 +2368,11 @@
       "semaines_one": "{{count}} semaine",
       "semaines_other": "{{count}} semaines",
       "dimanches_one": "{{count}} dimanche",
-      "dimanches_other": "{{count}} dimanches"
+      "dimanches_other": "{{count}} dimanches",
+      "periode": "Période",
+      "mois_one": "{{count}} mois",
+      "mois_other": "{{count}} mois",
+      "depuisLeDebut": "Depuis le début"
     }
   },
   "backOffice": {

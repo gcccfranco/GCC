@@ -1,6 +1,8 @@
 import { expect, test, type Page, type TestInfo } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
-import { canVoirStatistiques, entreesBackOffice } from "../src/lib/access";
+import { canVoirStatistiques, entreesBackOffice, widgetsPermis } from "../src/lib/access";
+import { dispositionParDefaut } from "../src/lib/tableauDeBord/disposition";
+import { choisirReglage, groupesDeReglages } from "../src/lib/tableauDeBord/reglages";
 import type { UserProfile } from "../src/types/user";
 
 // Lot U7 (docs/spec-statistiques.md) — la page « Statistiques » du Back-Office.
@@ -499,5 +501,143 @@ test.describe("Statistiques (S4) : captures à regarder", () => {
     await expect(page.locator('[data-testid="ligne-redecouvrir"]:visible').first()).toBeVisible();
     await page.waitForTimeout(300); // la pastille du sélecteur finit sa transition
     await page.screenshot({ path: `test-results/statistiques-captures/${info.project.name}-s4-redecouvrir.png`, fullPage: true });
+  });
+});
+
+// ─── S5 : le widget « Chants les plus joués » du tableau de bord ──────────────
+// Spec, « Modèle » et question 4 ; table des widgets de U6 (n° 7) : admins seulement, taille M,
+// réglage Période 3 / 6 / 12 mois / Depuis le début (12 par défaut). Planche `bo-tableau-de-bord`
+// (build.py, W_CHANTS) : « N setlists » en tête, cinq premiers en barres, le nombre au bout.
+// Même jeu d'essai que S3, plus une setlist du 27/09 avec « À la croix » : six chants joués,
+// le sixième (« Abrite-moi ») sort des cinq premiers.
+
+const SETLISTS_WIDGET: Record<string, Record<string, unknown>> = {
+  ...SETLISTS,
+  "setlists/s7": setlist("2026-09-27", CULTE, "Marc L.", [chant("a-la-croix")]),
+};
+const SEUL_LE_WIDGET = (reglages: Record<string, unknown> = {}) => ({
+  "backOffice/uid-admin": { tableauDeBord: [{ id: "chants", taille: "m", reglages }], majLe: "2026-10-01T09:00:00Z" },
+});
+
+async function ouvrirTableauDeBord(page: Page, qui: FakeProfile, docs: Record<string, Record<string, unknown>>) {
+  await page.clock.setFixedTime(new Date("2026-10-04T10:00:00"));
+  await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
+  await page.route(/\/songs-index\.json/, (route) =>
+    route.fulfill({ contentType: "application/json", body: JSON.stringify({ generatedAt: "2026-10-01", songs: RECUEIL }) }));
+  const db = await signInAs(page, qui, docs, "/back-office");
+  await expect(page.getByTestId("grille-widgets")).toBeVisible();
+  return db;
+}
+const widgetChants = (page: Page) =>
+  page.getByTestId("grille-widgets").getByRole("region", { name: "Chants les plus joués", exact: true });
+const lignesWidget = (page: Page) =>
+  widgetChants(page).getByTestId("ligne-plus-joue").evaluateAll((els) => els.map((el) =>
+    [el.querySelector("[data-champ=titre]")?.textContent?.trim(), el.querySelector("[data-champ=setlists]")?.textContent?.trim()]));
+
+test.describe("Statistiques (S5) : le widget, règles pures", () => {
+  test("permis aux admins seuls ; dans le défaut d'un admin, après Prochains évènements, en M", () => {
+    expect(widgetsPermis(user(ADMIN), profil(ADMIN))).toContain("chants");
+    expect(widgetsPermis(user(RESPONSABLE), profil(RESPONSABLE))).not.toContain("chants");
+    const d = dispositionParDefaut(user(ADMIN), null);
+    expect(d.map((w) => w.id)).toEqual(["dimanche", "afaire", "setlists", "planning", "evenements", "chants", "petitdej", "raccourcis", "scene", "comptes"]);
+    expect(d.find((w) => w.id === "chants")).toEqual({ id: "chants", taille: "m", reglages: {} });
+    expect(dispositionParDefaut(user(RESPONSABLE), profil(RESPONSABLE)).map((w) => w.id)).not.toContain("chants");
+  });
+
+  test("réglage Période : 3 / 6 / 12 mois / Depuis le début, 12 mois par défaut", () => {
+    const groupes = groupesDeReglages("chants", {}, user(ADMIN), null);
+    expect(groupes.map((g) => [g.cle, g.plusieurs, g.choix.map((c) => c.valeur), g.actifs]))
+      .toEqual([["periode", false, ["3m", "6m", "12m", "tout"], ["12m"]]]);
+    expect(choisirReglage({}, groupes[0], "3m")).toEqual({ periode: "3m" });
+    expect(groupesDeReglages("chants", { periode: "tout" }, user(ADMIN), null)[0].actifs).toEqual(["tout"]);
+  });
+});
+
+test.describe("Statistiques (S5) : le widget, écrans", () => {
+  test.use({ serviceWorkers: "block" });
+
+  test("un admin : « 7 setlists » et les cinq premiers sur 12 mois, barres décoratives, liens", async ({ page }) => {
+    await ouvrirTableauDeBord(page, ADMIN, { ...SETLISTS_WIDGET, ...SEUL_LE_WIDGET() });
+    const w = widgetChants(page);
+    await expect(w.getByRole("link", { name: "7 setlists" })).toHaveAttribute("href", /^\/back-office\/statistiques\/?$/);
+    await expect(w.getByTestId("ligne-plus-joue")).toHaveCount(5);
+    expect(await lignesWidget(page)).toEqual([
+      ["À jamais Tu es saint", "4"], ["爱的约定", "3"], ["Abba Père", "3"], ["À la croix", "1"], ["ancien-chant", "1"],
+    ]);
+    await expect(w.getByRole("link", { name: "À jamais Tu es saint" })).toHaveAttribute("href", /^\/songs\/a-jamais-tu-es-saint\/?$/);
+    // Un chant absent du recueil : son slug, sans lien.
+    await expect(w.getByRole("link", { name: "ancien-chant" })).toHaveCount(0);
+    // Les barres : décoratives, la plus longue pour le premier.
+    const barres = w.locator("[data-barre]");
+    await expect(barres).toHaveCount(5);
+    await expect(barres.first()).toHaveAttribute("aria-hidden", "true");
+    const largeurs = await barres.evaluateAll((els) => els.map((e) => e.getBoundingClientRect().width));
+    expect(largeurs[0]).toBeGreaterThan(largeurs[1]);
+    expect(largeurs[1]).toBeCloseTo(largeurs[2], 0);
+    expect(largeurs[3]).toBeLessThan(largeurs[2]);
+  });
+
+  test("réglage « 3 mois » : le contenu change, le lien suit, le réglage s'écrit", async ({ page }) => {
+    const db = await ouvrirTableauDeBord(page, ADMIN, { ...SETLISTS_WIDGET, ...SEUL_LE_WIDGET() });
+    const w = widgetChants(page);
+    await expect(w.getByTestId("ligne-plus-joue")).toHaveCount(5);
+    await page.getByRole("button", { name: "Personnaliser" }).click();
+    await w.getByRole("button", { name: "Réglages du widget" }).click();
+    const periode = w.getByRole("group", { name: "Période" });
+    await expect(periode.getByRole("button")).toHaveText(["3 mois", "6 mois", "12 mois", "Depuis le début"]);
+    await expect(periode.getByRole("button", { name: "12 mois" })).toHaveAttribute("aria-pressed", "true");
+    await periode.getByRole("button", { name: "3 mois" }).click();
+    await expect(w.getByRole("link", { name: "4 setlists" })).toHaveAttribute("href", /^\/back-office\/statistiques\/?\?periode=3$/);
+    expect(await lignesWidget(page)).toEqual([["À jamais Tu es saint", "3"], ["爱的约定", "2"], ["À la croix", "1"], ["ancien-chant", "1"]]);
+    await expect.poll(() => (db.writes.filter((x) => x.path === "backOffice/uid-admin").at(-1)?.data.tableauDeBord as
+      { id: string; reglages: object }[] | undefined)?.find((x) => x.id === "chants")?.reglages).toEqual({ periode: "3m" });
+  });
+
+  test("« Depuis le début » enregistré : le lien ouvre la page sur la même période", async ({ page }) => {
+    await ouvrirTableauDeBord(page, ADMIN, { ...SETLISTS_WIDGET, ...SEUL_LE_WIDGET({ periode: "tout" }) });
+    const lien = widgetChants(page).getByRole("link", { name: "7 setlists" });
+    await expect(lien).toHaveAttribute("href", /^\/back-office\/statistiques\/?\?periode=debut$/);
+    await lien.click();
+    await expect(page.getByRole("button", { name: "Depuis le début" })).toHaveAttribute("aria-pressed", "true");
+    expect(await setlistsComptees(page)).toBe("7");
+  });
+
+  test("période vide et lecture impossible : un message, jamais des zéros", async ({ page }) => {
+    // Une seule setlist, à venir : rien de compté sur la période.
+    await ouvrirTableauDeBord(page, ADMIN, { "setlists/a-venir": SETLISTS["setlists/a-venir"], ...SEUL_LE_WIDGET() });
+    await expect(widgetChants(page).getByText("Aucune setlist publiée sur cette période.")).toBeVisible();
+    await expect(widgetChants(page).getByTestId("ligne-plus-joue")).toHaveCount(0);
+  });
+
+  test("aucune setlist lue : « Lecture impossible pour l'instant. »", async ({ page }) => {
+    await ouvrirTableauDeBord(page, ADMIN, SEUL_LE_WIDGET());
+    await expect(widgetChants(page).getByText("Lecture impossible pour l'instant.")).toBeVisible();
+  });
+
+  test("un responsable non admin : absent du catalogue, ignoré s'il est enregistré", async ({ page }) => {
+    await ouvrirTableauDeBord(page, RESPONSABLE, {
+      ...SETLISTS_WIDGET,
+      "backOffice/uid-pl": { tableauDeBord: [{ id: "chants", taille: "m", reglages: {} }, { id: "dimanche", taille: "m", reglages: {} }], majLe: "2026-10-01" },
+    });
+    await expect(page.getByTestId("grille-widgets").getByRole("region", { name: "Ce dimanche" })).toBeVisible();
+    await expect(widgetChants(page)).toHaveCount(0);
+    await page.getByRole("button", { name: "Personnaliser" }).click();
+    await expect(page.getByRole("region", { name: "Ajouter un widget" }).getByRole("button", { name: "Chants les plus joués" })).toHaveCount(0);
+  });
+
+  test("中文 : titre et nombre de setlists traduits", async ({ page }) => {
+    await page.addInitScript(() => { try { localStorage.setItem("i18nextLng", "zh-CN"); } catch {} });
+    await ouvrirTableauDeBord(page, ADMIN, { ...SETLISTS_WIDGET, ...SEUL_LE_WIDGET() });
+    const w = page.getByTestId("grille-widgets").getByRole("region", { name: "最常唱的诗歌" });
+    await expect(w.getByRole("link", { name: "7 份歌单" })).toBeVisible();
+    await expect(w.getByTestId("ligne-plus-joue")).toHaveCount(5);
+  });
+
+  test("captures du widget (à regarder), dans chaque disposition", async ({ page }, info) => {
+    await ouvrirTableauDeBord(page, ADMIN, { ...SETLISTS_WIDGET, ...SEUL_LE_WIDGET() });
+    await expect(widgetChants(page).getByTestId("ligne-plus-joue")).toHaveCount(5);
+    await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
+    await page.waitForTimeout(600);
+    await page.screenshot({ path: `test-results/statistiques-captures/${info.project.name}-s5-widget.png` });
   });
 });
