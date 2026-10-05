@@ -22,8 +22,13 @@ export function estSurLaListe(chemin: string, racine: string): boolean {
 }
 
 /** Sections dont le layout pose `DeuxVolets` : chaque tranche de U4 bis y ajoute la sienne
- *  (`/evenements`, `/mes-services`…) en même temps que son layout. Vide avec B0. */
-export const SECTIONS_EN_DEUX_VOLETS: readonly string[] = [];
+ *  (`/evenements`, `/mes-services`…) en même temps que son layout. */
+export const SECTIONS_EN_DEUX_VOLETS: readonly string[] = [
+  // B3 : le cours et les sons avant le catalogue, qui les contient (le premier préfixe gagne).
+  "/harmonie/cours",
+  "/harmonie/rd2000",
+  "/harmonie",
+];
 
 /** Clé du fondu de page (`PageTransition`) : la page entière se remonte à chaque adresse,
  *  sauf dans une section en deux volets, remontée seulement quand on en sort ; sinon sa

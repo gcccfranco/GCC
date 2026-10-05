@@ -43,9 +43,13 @@ test.describe("DeuxVolets : quel volet se montre (Q1, Q2, Q3)", () => {
     expect(cleDeTransition("/mes-services-bis", sections)).toBe("/mes-services-bis");
   });
 
-  test("B0 ne change aucun écran : aucune section n'est encore en deux volets", () => {
-    expect(SECTIONS_EN_DEUX_VOLETS).toEqual([]);
-    expect(cleDeTransition("/evenements/abc")).toBe("/evenements/abc");
+  test("les sections inscrites (B3 : Harmonie) ; le cours et les sons ne prennent pas la clé du catalogue", () => {
+    expect(SECTIONS_EN_DEUX_VOLETS).toEqual(expect.arrayContaining(["/harmonie", "/harmonie/cours", "/harmonie/rd2000"]));
+    expect(cleDeTransition("/harmonie/substitutions/2m7-pour-4")).toBe("/harmonie");
+    expect(cleDeTransition("/harmonie/cours/les-cadences")).toBe("/harmonie/cours");
+    expect(cleDeTransition("/harmonie/rd2000/S01")).toBe("/harmonie/rd2000");
+    // Une section pas encore passée en deux volets se remonte à chaque adresse, comme avant.
+    expect(cleDeTransition("/setlists/abc")).toBe("/setlists/abc");
   });
 });
 

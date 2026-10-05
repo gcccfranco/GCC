@@ -1921,7 +1921,8 @@
       "recettes": "按类别的通用设置",
       "exemples": "示例音色",
       "conseil": "建议：{{valeur}}",
-      "priorite": "优先级"
+      "priorite": "优先级",
+      "suite": "{{ecran}}（续）"
     },
     "cours": {
       "titre": "课程",

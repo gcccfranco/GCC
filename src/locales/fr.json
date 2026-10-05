@@ -1922,7 +1922,8 @@
       "recettes": "Recettes par famille",
       "exemples": "Sons d'exemple",
       "conseil": "Conseillé : {{valeur}}",
-      "priorite": "Priorité"
+      "priorite": "Priorité",
+      "suite": "{{ecran}} (suite)"
     },
     "cours": {
       "titre": "Cours",

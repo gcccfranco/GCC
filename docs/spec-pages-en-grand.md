@@ -262,3 +262,46 @@ npm test -- tests/pages-en-grand-*.spec.ts
   inscription, pas de ligne Petit déj » contredit Q14 (planche : « Libre » et « Je m'inscris ») : le réécrire comme ici.
 - Reste : B2 à B7.
 - À faire par Timothée : relire le 中文 ci-dessus ; rien à publier (aucune règle).
+
+**B3 — Harmonie, faite le 05/10/2026** (branche `lot/u4bis-pages-en-grand`, commit `feat(U4bis): B3 — Harmonie…`).
+Reprise après la coupure du matin : l'agent coupé n'avait laissé que `tests/pages-en-grand-harmonie.spec.ts` (non
+commité, aucun code) ; gardé, une attente corrigée (lire la fiche avant le toucher, pas après).
+- **Trois layouts de route** posent `DeuxVolets` (Q2) : `src/app/harmonie/(catalogue)/layout.tsx` (le groupe
+  `(catalogue)` tient le cours et les sons hors du layout du catalogue ; adresses inchangées), `harmonie/cours/layout.tsx`,
+  `harmonie/rd2000/layout.tsx`. Chaque `page.tsx` de liste rend `null` ; `/harmonie/cours`, `/harmonie/rd2000`, `/harmonie`
+  entrent dans `SECTIONS_EN_DEUX_VOLETS` (dans cet ordre : le premier préfixe gagne). L'accès est vérifié une fois, dans
+  le layout : sans droit, une seule phrase, ni liste ni fiche.
+- **Catalogue** (`components/harmonie/Catalogue.tsx`, contexte `catalogueContexte.ts`) : filtres et instrument vivent dans
+  le layout, donc restent d'une fiche à l'autre ; en grand, la première fiche de la liste filtrée à droite (Q3) et sa
+  ligne allumée (`GroupRow actif`, `aria-current="page"`) ; filtres au-dessus de « Par où commencer » partout
+  (question 5), en rangées grises qui défilent (`Pilules` : gris de la planche au lieu du blanc) ; tablette debout :
+  cours et sons en deux cartes, parcours en trois cartes, familles en cartes sur deux colonnes.
+- **Fiche** (`components/harmonie/FicheHarmonie.tsx`) : en cartes (planches `harmonie-*`) ; en grand, sans « Retour »,
+  Piano · Guitare dans l'en-tête, « Pourquoi » + « Quand l'éviter » à côté de l'instrument, répertoire sur deux colonnes
+  (trois dès 1 440 px) ; six exemples avant « Voir plus » (huit avant), comme la planche.
+- **Cours** (`components/harmonie/cours/` : `CoursHarmonie`, `SommaireCours`, `ChapitreHarmonie`) : coches partagées
+  par un contexte (« J'ai fini » allume la ligne à gauche) ; en grand, sans leçon choisie, le chapitre en cours (le premier
+  pas fini dans l'ordre conseillé) ; le chapitre ouvert s'allume et déplie ses parties (`nav` « Sommaire ») dans la liste,
+  plus de second sommaire à droite ; tablette debout : bouton « Sommaire » qui ouvre la liste du cours par-dessus la leçon
+  (Échap, fond, ✕, changement de chapitre la ferment) ; téléphone : le sommaire de la leçon en carte en tête, et un
+  tableau de plus de trois colonnes en blocs empilés sous 640 px (question 4 ; « Toutes les cadences »), barre de
+  progression du cours (planches téléphone et tablette).
+- **Sons du RD-2000** (`components/harmonie/rd2000/` : `Rd2000Harmonie`, `SonRd2000`, `contexte.ts`) : vue, recherche et
+  filtres dans le layout ; en grand, le premier son de la vue (« Par moment » : le premier moment ; « Tous les sons » : le
+  premier de la liste filtrée) ; réglages sur deux colonnes en grand par `couperEnDeuxColonnes` (`lib/harmonie/rd2000.ts`,
+  pure : moitié arrondie au-dessus à gauche, un écran plus long que la moitié s'y coupe et sa fin ouvre la seconde avec
+  « (suite) », jamais un morceau d'un seul réglage) ; tablette debout : un moment par carte, deux par rangée.
+- Partagés, ajouts sans effet ailleurs : `GroupRow` prend `actif` ; `PageTitle` prend `niveau` (le titre de la liste est un
+  `h2` en deux volets, l'`h1` est celui de droite).
+- Libellés : `harmonie.rd2000.suite` « {{ecran}} (suite) » / « {{ecran}}（续） » (中文 à relire).
+- Tests : `tests/pages-en-grand-harmonie.spec.ts` (16 tests, dont 2 purs) sur les cinq projets ; vus rouges (30 échecs
+  sur ordinateur, téléphone, tablette, tablette paysage avant le code), puis verts. Adaptés au nouvel écran :
+  `harmonie-cours.spec.ts` (« Prochain chapitre » cherché sous la leçon, la liste en a un aussi en grand ; sur tablette, le
+  sommaire s'ouvre par son bouton) et le test B0 de `pages-en-grand-fondations` (les sections ne sont plus vides).
+  `harmonie-catalogue`, `harmonie-cours`, `rd2000`, `coherence`, `harmonie-*` voisines, `fusions-dp`, `back-office-coupe` :
+  verts. Captures regardées aux cinq tailles et comparées aux planches `harmonie-*`.
+- Choix faute de réponse : la leçon sur tablette garde « ‹ Cours » (la planche dit « ‹ Harmonie » ; le cours reste le
+  parent) ; la partie lue n'est pas suivie au défilement dans la liste (la planche met 9.1 en gras) ; le parcours
+  s'efface toujours au premier filtre ; en grand, la ligne de la première fiche s'allume avant le premier toucher.
+- Reste : B2, B4 à B7.
+- À faire par Timothée : relire le 中文 « {{ecran}}（续） » ; rien à publier (aucune règle).
