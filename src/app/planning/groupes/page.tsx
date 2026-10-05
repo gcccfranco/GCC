@@ -93,7 +93,7 @@ function GroupesPage() {
   const rows = grp === "paix" ? paix : grp === "bonte" ? bonte : fidSub === "musiciens" ? fidM : fid
 
   const peutModifier = canEditPlanning(user, profile, definition.key)
-  const { datesDansLApp, nomsDesComptes } = useGrilleApp(definition.key, peutModifier)
+  const { datesDansLApp, comptes } = useGrilleApp(definition.key, peutModifier)
 
   // Trimestres futurs non publiés du groupe actif : masqués aux membres, marqués aux publieurs.
   const planning = PUBLISHABLE_PLANNINGS.find(p => p.key === grp)!
@@ -180,7 +180,7 @@ function GroupesPage() {
         lignes={lignes}
         peutModifier={peutModifier}
         datesDansLApp={datesDansLApp}
-        nomsDesComptes={nomsDesComptes}
+        comptes={comptes}
         dimanchesSpeciaux={dimanchesSpeciaux(interfranco, intergroupe)}
         // P7 : les responsables du planning et les admins exportent (Q13).
         exporter={voitBrouillon ? { annee: effAnnee, rang: Number(effTri.slice(1)) || 1, tout: isAdminUser(user) } : undefined}

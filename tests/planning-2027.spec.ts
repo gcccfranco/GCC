@@ -3,14 +3,15 @@ import { readFileSync } from "node:fs";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { lirePdf } from "./helpers/pdf";
 import {
-  GRILLES, GRILLES_EDD, GRILLE_BONTE, GRILLE_FIDELITE, GRILLE_FIDELITE_MUSICIENS, GRILLE_INTERFRANCO, GRILLE_PAIX,
-  PREMIERE_ANNEE_APP, dimanchesDe, lignesDeLAnnee, marquerDimanchesSpeciaux,
+  GRILLES, GRILLES_EDD, GRILLE_BONTE, GRILLE_CAMPUS_MATIN, GRILLE_CULTE, GRILLE_FIDELITE, GRILLE_FIDELITE_MUSICIENS,
+  GRILLE_INTERFRANCO, GRILLE_PAIX, GRILLE_TABLE, PREMIERE_ANNEE_APP, dimanchesDe, lignesDeLAnnee, marquerDimanchesSpeciaux,
 } from "../src/lib/planning/grilles";
 import {
   avecDimanchesSpeciaux, collectPlanningNames, deriveServiceRolesFromPlanning, findMyServices, servantsForDate,
   type PlanningData,
 } from "../src/lib/planning/names";
 import { reminderBody, reminderServicesFor } from "../src/lib/push/reminderMessage";
+import { colonneDePersonnes, propositions, type CompteDuPlanning } from "../src/lib/planning/choisir";
 
 // Lot U2 (docs/spec-planning-2027.md) : le planning 2027 se remplit dans
 // l'app, sur des dimanches posés d'office ; chaque trimestre reste un
@@ -101,6 +102,15 @@ const datesAffichees = (page: Page) =>
 const laCase = (page: Page, date: string, colonne: string) =>
   page.locator(`[data-case="${date}|${colonne}"]`).filter({ visible: true });
 
+/** P9 : « Choisir », puis « Écrire un nom sans compte… » ; le champ du menu porte le libellé de la colonne. */
+async function ecrireSansCompte(page: Page, date: string, colonne: string, libelle: string, valeur: string) {
+  await laCase(page, date, colonne).getByRole("button").click();
+  await page.getByRole("button", { name: "Écrire un nom sans compte…" }).click();
+  const champ = page.getByRole("textbox", { name: libelle, exact: true });
+  await champ.fill(valeur);
+  await champ.press("Enter");
+}
+
 /** Capture à regarder à l'œil (PW_CAPTURES=<dossier>), une par appareil. */
 async function capture(page: Page, name: string) {
   const dir = process.env.PW_CAPTURES;
@@ -123,10 +133,7 @@ test("Paix 2027 : une case s'écrit seule (rien recopié) et tient au rechargeme
   await page.getByRole("button", { name: "2027", exact: true }).click();
   await page.getByRole("button", { name: "T1", exact: true }).click();
   await page.getByRole("button", { name: "Modifier" }).click();
-  await laCase(page, "2027-01-10", "presidence").getByRole("button").click();
-  const champ = laCase(page, "2027-01-10", "presidence").getByLabel("Présidence", { exact: true });
-  await champ.fill("Invité A.");
-  await champ.press("Enter");
+  await ecrireSansCompte(page, "2027-01-10", "presidence", "Présidence", "Invité A.");
   await expect(laCase(page, "2027-01-10", "presidence")).toContainText("Invité A.");
   await expect.poll(() => db.doc("plannings/paix/dimanches/2027-01-10")?.presidence).toBe("Invité A.");
   const doc = db.doc("plannings/paix/dimanches/2027-01-10")!;
@@ -443,10 +450,7 @@ test("P5 · Paix 2027 : Percussion masquée en lecture tant qu'elle est vide, re
   await expect(page.getByText("Percussion", { exact: true }).filter({ visible: true }), "colonne optionnelle, vide au T1").toHaveCount(0);
 
   await page.getByRole("button", { name: "Modifier" }).click();
-  await laCase(page, "2027-01-10", "percussion").getByRole("button").click();
-  const champ = laCase(page, "2027-01-10", "percussion").getByLabel("Percussion", { exact: true });
-  await champ.fill("Batteur B.");
-  await champ.press("Enter");
+  await ecrireSansCompte(page, "2027-01-10", "percussion", "Percussion", "Batteur B.");
   await expect(laCase(page, "2027-01-10", "percussion")).toContainText("Batteur B.");
   await expect.poll(() => db.doc("plannings/paix/dimanches/2027-01-10")?.percussion).toBe("Batteur B.");
   expect(Object.keys(db.doc("plannings/paix/dimanches/2027-01-10")!).sort()).toEqual(["date", "modifieLe", "modifiePar", "percussion"]);
@@ -477,4 +481,188 @@ test("P5 · « Ce dimanche » montre la Percussion des groupes et le Cours de l'
   await expect(dimanche.getByText("Percussion", { exact: true })).toHaveCount(2);
   await expect(dimanche.getByText("Cours", { exact: true })).toHaveCount(1);
   await expect(dimanche.getByText("Membre P.")).toHaveCount(2);
+});
+
+// ─── P9 · « Choisir » une personne dans une case (question 5) ────────────────
+
+const COMPTES_P9: CompteDuPlanning[] = [
+  { nom: "Julien Z.", prenom: "Julien", nomDeFamille: "Zed", serviceRoles: { "Groupe Paix": ["presidence"] } },
+  { nom: "Éloïse M.", prenom: "Éloïse", nomDeFamille: "Martin", serviceRoles: { "Groupe Paix": ["musicien"] } },
+  { nom: "Alice Q.", prenom: "Alice", nomDeFamille: "Quinet", serviceRoles: { "Groupe Paix": ["presidence"], "中班": ["musicien"] } },
+  { nom: "Bruno R.", prenom: "Bruno", nomDeFamille: "Roux", serviceRoles: { "Culte Francophone": ["presidence", "chanteur"] } },
+  // Sans nom de planning : « Mes services » ne la retrouverait pas, « Choisir » ne la propose pas.
+  { nom: "", prenom: "Sans", nomDeFamille: "Nom", serviceRoles: { "Groupe Paix": ["presidence"] } },
+];
+
+test("P9 · propositions : d'abord les comptes qui ont le rôle de la colonne, puis les autres comptes et les noms de la grille", () => {
+  const rows = [
+    ["2027-01-03", "Invité A.", "Séance de louange", "Baptême", "Thème libre", ""],
+    ["2027-01-10", "alice q", "Interfranco", "", "", ""],
+  ];
+  expect(propositions(GRILLE_PAIX, "presidence", COMPTES_P9, rows, "")).toEqual([
+    { nom: "Alice Q.", duRole: true },
+    { nom: "Julien Z.", duRole: true },
+    { nom: "Bruno R.", duRole: false },
+    { nom: "Éloïse M.", duRole: false },
+    { nom: "Invité A.", duRole: false },
+  ]);
+  // Le rôle suit la colonne : musiciens → musicien du Groupe Paix.
+  expect(propositions(GRILLE_PAIX, "musiciens", COMPTES_P9, rows, "")[0]).toEqual({ nom: "Éloïse M.", duRole: true });
+  // … et la catégorie, le planning : la présidence du Culte n'est pas celle de Paix.
+  expect(propositions(GRILLE_CULTE, "presidence", COMPTES_P9, [], "").filter((p) => p.duRole).map((p) => p.nom)).toEqual(["Bruno R."]);
+  expect(propositions(GRILLE_CULTE, "choriste2", COMPTES_P9, [], "").filter((p) => p.duRole).map((p) => p.nom)).toEqual(["Bruno R."]);
+  expect(propositions(GRILLES_EDD[0], "piano", COMPTES_P9, [], "").filter((p) => p.duRole).map((p) => p.nom)).toEqual(["Alice Q."]);
+  // Sans rôle de setlist (orateur) ou sans catégorie (Table) : une seule liste, par ordre alphabétique.
+  expect(propositions(GRILLE_PAIX, "orateur", COMPTES_P9, [], "").some((p) => p.duRole)).toBe(false);
+  expect(propositions(GRILLE_TABLE, "equipe", COMPTES_P9, [], "").map((p) => p.nom)).toEqual(["Alice Q.", "Bruno R.", "Éloïse M.", "Julien Z."]);
+});
+
+test("P9 · recherche : sans accents ni casse, sur le nom de planning, le prénom ou le nom", () => {
+  expect(propositions(GRILLE_PAIX, "presidence", COMPTES_P9, [], "eloise").map((p) => p.nom)).toEqual(["Éloïse M."]);
+  expect(propositions(GRILLE_PAIX, "presidence", COMPTES_P9, [], "QUINET").map((p) => p.nom)).toEqual(["Alice Q."]);
+  expect(propositions(GRILLE_PAIX, "presidence", COMPTES_P9, [], "  ju ").map((p) => p.nom)).toEqual(["Julien Z."]);
+  expect(propositions(GRILLE_PAIX, "presidence", COMPTES_P9, [], "personne")).toEqual([]);
+});
+
+test("P9 · colonnes de personnes : le thème, les chants et la répétition restent du texte libre", () => {
+  expect(colonneDePersonnes("presidence")).toBe(true);
+  expect(colonneDePersonnes("orateur")).toBe(true);
+  expect(colonneDePersonnes("equipe")).toBe(true);
+  for (const cle of ["theme", "chant1", "chant4", "repetition"]) expect(colonneDePersonnes(cle), cle).toBe(false);
+  expect(GRILLE_CAMPUS_MATIN.colonnes.filter((c) => !colonneDePersonnes(c.cle)).map((c) => c.cle))
+    .toEqual(["chant1", "chant2", "chant3", "chant4", "repetition"]);
+});
+
+/** Les comptes de P9 en documents `users/…` (la page les lit pour qui remplit). */
+const DOCS_P9: Record<string, Record<string, unknown>> = {
+  ...Object.fromEntries(COMPTES_P9.map((c, i) => [`users/uid-p9-${i}`, {
+    email: `p9-${i}@example.com`, firstName: c.prenom, lastName: c.nomDeFamille, planningName: c.nom,
+    serviceRoles: c.serviceRoles, annonces: [], notify: [], poles: [],
+  }])),
+  // Un nom sans compte déjà dans la grille ; « Baptême » et « Séance de louange » n'en sont pas (relevé T0).
+  "plannings/paix/dimanches/2027-01-03": { date: "2027-01-03", presidence: "Invité A.", musiciens: "Séance de louange", orateur: "Baptême" },
+};
+
+/** Paix, T1 2027, en modification. */
+async function paix2027EnModification(page: Page) {
+  const db = await ouvrir(page, ECRIVAIN, "/planning/groupes", DOCS_P9);
+  await page.getByRole("button", { name: "2027", exact: true }).click();
+  await page.getByRole("button", { name: "T1", exact: true }).click();
+  await page.getByRole("button", { name: "Modifier" }).click();
+  return db;
+}
+
+test("P9 · « Choisir » : les comptes de la présidence de Paix d'abord, puis les autres ; un clic écrit le nom", async ({ page }) => {
+  const db = await paix2027EnModification(page);
+  const bouton = laCase(page, "2027-01-10", "presidence").getByRole("button", { name: "Choisir" });
+  await expect(bouton).toBeVisible();
+  await bouton.click();
+
+  const menu = page.getByRole("dialog", { name: "Présidence · 10/1" });
+  await expect(menu.getByPlaceholder("Chercher un nom")).toBeVisible();
+  await expect(menu.getByRole("option")).toHaveText([/^Alice Q\./, /^Julien Z\./, /^Bruno R\./, /^Écrivain E\./, /^Éloïse M\./, /^Invité A\./]);
+  await expect(menu.getByRole("option").nth(0)).toContainText("Présidence");
+  await expect(menu.getByText("Avec ce rôle")).toBeVisible();
+  await expect(menu.getByText("Autres noms")).toBeVisible();
+  for (const pas of ["Baptême", "Séance de louange", "Sans N"]) await expect(menu.getByText(pas)).toHaveCount(0);
+  await expect(menu.getByRole("button", { name: "Écrire un nom sans compte…" })).toBeVisible();
+  await expect(menu.getByRole("button", { name: "Vider la case" }), "case vide : rien à vider").toHaveCount(0);
+  await capture(page, "p9-choisir-menu");
+
+  await menu.getByPlaceholder("Chercher un nom").fill("eloise");
+  await expect(menu.getByRole("option")).toHaveText([/^Éloïse M\./]);
+  await menu.getByPlaceholder("Chercher un nom").fill("quinet");
+  await menu.getByRole("option", { name: /Alice Q\./ }).click();
+
+  await expect(menu).toHaveCount(0);
+  await expect(laCase(page, "2027-01-10", "presidence")).toContainText("Alice Q.");
+  await expect.poll(() => db.doc("plannings/paix/dimanches/2027-01-10")?.presidence).toBe("Alice Q.");
+  expect(Object.keys(db.doc("plannings/paix/dimanches/2027-01-10")!).sort()).toEqual(["date", "modifieLe", "modifiePar", "presidence"]);
+});
+
+test("P9 · « Choisir » au clavier : flèches et Entrée ; Échap ferme sans rien écrire", async ({ page }) => {
+  const db = await paix2027EnModification(page);
+  await laCase(page, "2027-01-24", "presidence").getByRole("button", { name: "Choisir" }).click();
+  const recherche = page.getByRole("dialog").getByPlaceholder("Chercher un nom");
+  // Ordinateur : la recherche a le focus. Feuille : on touche le champ (le clavier
+  // du téléphone ne s'ouvre pas tout seul sur la liste).
+  if (test.info().project.name === "ordinateur") await expect(recherche).toBeFocused();
+  else await recherche.click();
+  await recherche.press("Escape");
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  expect(db.doc("plannings/paix/dimanches/2027-01-24")).toBeUndefined();
+
+  await laCase(page, "2027-01-24", "presidence").getByRole("button", { name: "Choisir" }).click();
+  if (test.info().project.name !== "ordinateur") await recherche.click();
+  await recherche.press("ArrowDown");
+  await recherche.press("Enter");
+  await expect(laCase(page, "2027-01-24", "presidence")).toContainText("Julien Z.");
+  await expect.poll(() => db.doc("plannings/paix/dimanches/2027-01-24")?.presidence).toBe("Julien Z.");
+});
+
+test("P9 · « Écrire un nom sans compte… » reprend la recherche ; « Vider la case » efface", async ({ page }) => {
+  const db = await paix2027EnModification(page);
+  await laCase(page, "2027-01-10", "orateur").getByRole("button", { name: "Choisir" }).click();
+  const menu = page.getByRole("dialog", { name: "Orateur · 10/1" });
+  await menu.getByPlaceholder("Chercher un nom").fill("Pasteur Y.");
+  await expect(menu.getByRole("option")).toHaveCount(0);
+  await menu.getByRole("button", { name: "Écrire un nom sans compte…" }).click();
+  const champ = menu.getByRole("textbox", { name: "Orateur", exact: true });
+  await expect(champ).toHaveValue("Pasteur Y.");
+  await champ.press("Enter");
+  await expect(laCase(page, "2027-01-10", "orateur")).toContainText("Pasteur Y.");
+  await expect.poll(() => db.doc("plannings/paix/dimanches/2027-01-10")?.orateur).toBe("Pasteur Y.");
+
+  // Une case remplie : « Choisir » s'ouvre aussi dessus, avec « Vider la case ».
+  await laCase(page, "2027-01-10", "orateur").getByRole("button").click();
+  await page.getByRole("dialog").getByRole("button", { name: "Vider la case" }).click();
+  await expect(laCase(page, "2027-01-10", "orateur").getByRole("button", { name: "Choisir" })).toBeVisible();
+  await expect.poll(() => db.doc("plannings/paix/dimanches/2027-01-10")?.orateur).toBe("");
+});
+
+test("P9 · le thème n'a pas de « Choisir » : il s'écrit dans la case, comme au lot 17", async ({ page }) => {
+  const db = await paix2027EnModification(page);
+  await expect(laCase(page, "2027-01-10", "theme").getByRole("button", { name: "Choisir" })).toHaveCount(0);
+  await laCase(page, "2027-01-10", "theme").getByRole("button").click();
+  const champ = laCase(page, "2027-01-10", "theme").getByLabel("Thème", { exact: true });
+  await champ.fill("Psaumes");
+  await champ.press("Enter");
+  await expect.poll(() => db.doc("plannings/paix/dimanches/2027-01-10")?.theme).toBe("Psaumes");
+});
+
+test("P9 · ordinateur : le menu s'ouvre contre la case ; tablette et téléphone : en feuille, en bas de l'écran", async ({ page }) => {
+  await paix2027EnModification(page);
+  const bouton = laCase(page, "2027-01-10", "presidence").getByRole("button", { name: "Choisir" });
+  // Mesurée avant : menu ouvert, le reste de la page sort de l'arbre d'accessibilité.
+  const b = (await bouton.boundingBox())!;
+  await bouton.click();
+  const menu = page.getByRole("dialog", { name: "Présidence · 10/1" });
+  await expect(menu.getByPlaceholder("Chercher un nom")).toBeVisible();
+  // Laisse la feuille finir de monter.
+  await page.waitForTimeout(600);
+  const m = (await menu.boundingBox())!;
+  const hauteur = page.viewportSize()!.height;
+  if (test.info().project.name === "ordinateur") {
+    // Sous la case, ou au-dessus quand la place manque en bas de l'écran.
+    const contre = Math.min(Math.abs(m.y - (b.y + b.height)), Math.abs(m.y + m.height - b.y));
+    expect(contre, "contre la case, au-dessous ou au-dessus").toBeLessThan(12);
+    expect(Math.abs(m.x - b.x)).toBeLessThan(12);
+    expect(m.width).toBeLessThan(320);
+  } else {
+    expect(Math.abs(m.y + m.height - hauteur), "collée en bas de l'écran").toBeLessThan(4);
+  }
+  await capture(page, "p9-choisir-place");
+});
+
+test("P9 · en 中文 : « Choisir », la recherche et le nom sans compte traduits", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
+  await ouvrir(page, ECRIVAIN, "/planning/groupes", DOCS_P9);
+  await page.getByRole("button", { name: "2027", exact: true }).click();
+  await page.getByRole("button", { name: "T1", exact: true }).click();
+  await page.getByRole("button", { name: "修改", exact: true }).click();
+  await laCase(page, "2027-01-10", "presidence").getByRole("button", { name: "选择" }).click();
+  const menu = page.getByRole("dialog");
+  await expect(menu.getByPlaceholder("搜索姓名")).toBeVisible();
+  await expect(menu.getByRole("button", { name: "输入没有账号的名字…" })).toBeVisible();
+  await capture(page, "p9-choisir-zh");
 });

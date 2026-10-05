@@ -108,7 +108,7 @@ function CampusPage() {
             lignes={lignesSimples(grilles.matin)}
             peutModifier={peutMatin}
             datesDansLApp={matinApp.datesDansLApp}
-            nomsDesComptes={matinApp.nomsDesComptes}
+            comptes={matinApp.comptes}
             exporter={peutMatin ? exporter : undefined}
           />
           <PlanningGrille
@@ -117,7 +117,7 @@ function CampusPage() {
             lignes={lignesSimples(grilles.soir)}
             peutModifier={peutSoir}
             datesDansLApp={soirApp.datesDansLApp}
-            nomsDesComptes={soirApp.nomsDesComptes}
+            comptes={soirApp.comptes}
             exporter={peutSoir ? exporter : undefined}
           />
         </div>

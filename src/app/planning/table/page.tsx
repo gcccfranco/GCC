@@ -31,7 +31,7 @@ function TablePage() {
   const { rows, status } = useSheet<string[]>(fetchTable, REPLI)
   const [tri, setTri] = useState(getCurrentTri())
   const peutModifier = canEditPlanning(user, profile, GRILLE_TABLE.key)
-  const { datesDansLApp, nomsDesComptes } = useGrilleApp(GRILLE_TABLE.key, peutModifier)
+  const { datesDansLApp, comptes } = useGrilleApp(GRILLE_TABLE.key, peutModifier)
   // Lot U2 : l'année suivante s'ouvre à qui remplit, et à tous dès une case remplie.
   const anneeCourante = new Date().getFullYear()
   const [annee, setAnnee] = useState(anneeCourante)
@@ -64,7 +64,7 @@ function TablePage() {
         lignes={lignesSimples(filterByTri(lignesDeLAnnee(GRILLE_TABLE, effAnnee, rows), tri))}
         peutModifier={peutModifier}
         datesDansLApp={datesDansLApp}
-        nomsDesComptes={nomsDesComptes}
+        comptes={comptes}
         exporter={peutModifier ? { annee: effAnnee, rang: Number(tri.slice(1)), tout: isAdminUser(user) } : undefined}
       />
     </div>

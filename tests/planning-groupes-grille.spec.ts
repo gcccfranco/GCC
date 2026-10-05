@@ -98,7 +98,9 @@ test("groupes : les musiciens de Fidélité ont leur propre grille et leur propr
   await page.getByRole("button", { name: /Planning musiciens/ }).click();
   await page.getByRole("button", { name: "Modifier" }).click();
   await laCase(page, "2026-09-20", "guitare").getByRole("button").click();
-  const champ = laCase(page, "2026-09-20", "guitare").getByLabel("Guitare", { exact: true });
+  // P9 (lot U2) : « Choisir », puis un nom écrit à la main.
+  await page.getByRole("button", { name: "Écrire un nom sans compte…" }).click();
+  const champ = page.getByRole("textbox", { name: "Guitare", exact: true });
   await champ.fill("Éloïse M.");
   await champ.press("Enter");
   await expect(laCase(page, "2026-09-20", "guitare")).toContainText("Éloïse M.");
@@ -110,7 +112,9 @@ test("Intergroupe : se remplit dans l'app et s'exporte au modèle du Sheet", asy
   const db = await open(page, profil(["intergroupe"]), "/planning/intergroupe");
   await page.getByRole("button", { name: "Modifier" }).click();
   await laCase(page, "2026-10-04", "choriste3").getByRole("button").click();
-  const champ = laCase(page, "2026-10-04", "choriste3").getByLabel("Choriste 3", { exact: true });
+  // P9 (lot U2) : « Choisir », puis un nom écrit à la main.
+  await page.getByRole("button", { name: "Écrire un nom sans compte…" }).click();
+  const champ = page.getByRole("textbox", { name: "Choriste 3", exact: true });
   await champ.fill("Daniela W.");
   await champ.press("Enter");
   await expect(laCase(page, "2026-10-04", "choriste3")).toContainText("Daniela W.");

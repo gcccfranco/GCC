@@ -1,7 +1,7 @@
 "use client"
 
-import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from "react"
-import { History, Lock, User, X } from "lucide-react"
+import { Fragment, useEffect, useRef, useState, type MouseEvent, type ReactNode } from "react"
+import { ChevronDown, History, Lock, User, X } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { currentSundayStr, fdLongL, fdShort, getAnnee, getMois, moisName } from "@/lib/planning/utils"
 import { PREMIERE_ANNEE_APP, type ColonneGrille, type DefinitionGrille, type LigneGrille } from "@/lib/planning/grilles"
@@ -10,7 +10,9 @@ import { ecrireCase } from "@/lib/firebase/planningGrille"
 import { getHistoriqueGrille, noterChangement, type EntreeGrille } from "@/lib/firebase/planningHistorique"
 import { historyAuthor } from "@/lib/firebase/setlistHistory"
 import { useProfile } from "@/lib/firebase/users"
+import { colonneDePersonnes, propositions, type CompteDuPlanning } from "@/lib/planning/choisir"
 import { ExportModele, type ExportPlanning } from "./ExportModele"
+import { ChoisirNom } from "./ChoisirNom"
 
 // Grille d'un planning rempli dans l'app (lot 17, docs/spec-planning-grille.md).
 // Table sur ordinateur et tablette — colonne des dates FIGÉE au défilement
@@ -32,8 +34,8 @@ export interface PlanningGrilleProps {
   peutModifier: boolean
   /** Dimanches déjà écrits dans la grille de l'app — les autres viennent du Sheet. */
   datesDansLApp: readonly string[]
-  /** Noms de planning des comptes, pour l'autocomplétion (D12). */
-  nomsDesComptes: readonly string[]
+  /** Les comptes, pour « Choisir » (lot U2, P9 ; remplace l'autocomplétion D12). */
+  comptes: readonly CompteDuPlanning[]
   /** Badge optionnel à côté de la date (Sainte Cène), comme PlanningTable. */
   dateBadge?: (row: string[], allRows: string[][]) => ReactNode
   /** Période affichée, écrite dans le bandeau (le trimestre choisi par la page). */
@@ -54,7 +56,7 @@ export function PlanningGrille({
   lignes,
   peutModifier,
   datesDansLApp,
-  nomsDesComptes,
+  comptes,
   dateBadge,
   periode,
   dimanchesSpeciaux,
@@ -68,6 +70,8 @@ export function PlanningGrille({
   const [mode, setMode] = useState<"lecture" | "edition">("lecture")
   const [modifs, setModifs] = useState<Record<string, string>>({})
   const [edition, setEdition] = useState<{ date: string; cle: string; valeur: string } | null>(null)
+  // « Choisir » ouvert sur une case de personne (P9) ; la case cliquée pose le menu.
+  const [choix, setChoix] = useState<{ l: LigneGrille; c: ColonneGrille; ancre: DOMRect } | null>(null)
   const [refus, setRefus] = useState<"" | "droitRetire" | "horsLigne">("")
   const [enregistre, setEnregistre] = useState(false)
   const [histoOuvert, setHistoOuvert] = useState(false)
@@ -136,21 +140,6 @@ export function PlanningGrille({
       dansLaFenetre.some((l) => valeur(l.row[0], c, l.row).trim())
   )
   const largeurMin = 104 + 96 * colonnes.length
-  const listeId = `noms-${definition.key}`
-
-  const noms = useMemo(() => {
-    const vus = new Set<string>()
-    for (const l of lignes) {
-      for (const c of definition.colonnes) {
-        for (const part of (l.row[c.index] ?? "").split(/[,;/]/)) {
-          const n = part.trim()
-          if (n.length > 1 && !/\d/.test(n)) vus.add(n)
-        }
-      }
-    }
-    for (const n of nomsDesComptes) if (n.trim()) vus.add(n.trim())
-    return [...vus].sort((a, b) => a.localeCompare(b, "fr"))
-  }, [lignes, definition, nomsDesComptes])
 
   async function rechargerHistorique() {
     try {
@@ -220,7 +209,6 @@ export function PlanningGrille({
       <input
         autoFocus
         type="text"
-        list={listeId}
         aria-label={t(c.i18n)}
         value={edition?.valeur ?? ""}
         onChange={(e) => setEdition((ed) => (ed ? { ...ed, valeur: e.target.value } : ed))}
@@ -248,6 +236,34 @@ export function PlanningGrille({
           {val}
           <Lock className="h-3 w-3 text-muted-foreground" aria-hidden />
         </span>
+      )
+    }
+    if (mode === "edition" && colonneDePersonnes(c.cle)) {
+      // Lot U2, P9 : une case de personne s'ouvre sur « Choisir » ; vide, elle
+      // le dit en pointillé gris (planche bo-planning-2027).
+      const ouvrir = (e: MouseEvent<HTMLButtonElement>) =>
+        setChoix({ l, c, ancre: e.currentTarget.getBoundingClientRect() })
+      if (!val) {
+        return (
+          <button
+            type="button"
+            onClick={ouvrir}
+            className="inline-flex min-h-8 items-center gap-1 rounded-lg border-[1.5px] border-dashed border-border px-2 py-1 text-[13px] text-muted-foreground hover:bg-secondary active:bg-secondary"
+          >
+            {t("planning.choisir.bouton")}
+            <ChevronDown className="h-3 w-3" aria-hidden />
+          </button>
+        )
+      }
+      return (
+        <button
+          type="button"
+          onClick={ouvrir}
+          className="w-full min-h-8 rounded-md border border-dashed px-1.5 py-1 text-left hover:bg-secondary active:bg-secondary"
+          style={{ borderColor: `${couleur}55` }}
+        >
+          {val}
+        </button>
       )
     }
     if (mode === "edition") {
@@ -334,7 +350,7 @@ export function PlanningGrille({
         )}
         {peutModifier && (
           <button
-            onClick={() => { setEdition(null); setEnregistre(false); setMode((m) => (m === "edition" ? "lecture" : "edition")) }}
+            onClick={() => { setEdition(null); setChoix(null); setEnregistre(false); setMode((m) => (m === "edition" ? "lecture" : "edition")) }}
             className={`h-10 sm:h-8 px-3 rounded-full text-sm font-semibold transition-[background-color,color,transform] duration-150 active:scale-[.96] cursor-pointer ${
               mode === "edition" ? "text-white" : "bg-secondary text-muted-foreground hover:text-foreground"
             }`}
@@ -361,9 +377,22 @@ export function PlanningGrille({
 
 
       {peutModifier && (
-        <datalist id={listeId}>
-          {noms.map((n) => <option key={n} value={n} />)}
-        </datalist>
+        <ChoisirNom
+          ouverture={choix && {
+            titre: `${t(choix.c.i18n)} · ${fdShort(choix.l.row[0])}`,
+            libelle: t(choix.c.i18n),
+            valeur: valeur(choix.l.row[0], choix.c, choix.l.row),
+            ancre: choix.ancre,
+          }}
+          onFermer={() => setChoix(null)}
+          proposer={(recherche) => propositions(definition, choix?.c.cle ?? "", comptes, lignes.map((l) => l.row), recherche)}
+          onEcrire={(nom) => {
+            if (!choix) return
+            setChoix(null)
+            setEnregistre(false)
+            void enregistrer(choix.l, choix.c, nom.trim())
+          }}
+        />
       )}
 
       {/* ── Grille (ordinateur, tablette) ── */}

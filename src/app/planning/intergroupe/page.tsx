@@ -22,7 +22,7 @@ function IntergroupePage() {
   // intergroupe planifié), on n'affiche donc pas de bannière « périmé ».
   const { rows, status } = useSheet<string[]>(fetchIntergroupe, [])
   const peutModifier = canEditPlanning(user, profile, GRILLE_INTERGROUPE.key)
-  const { datesDansLApp, nomsDesComptes } = useGrilleApp(GRILLE_INTERGROUPE.key, peutModifier)
+  const { datesDansLApp, comptes } = useGrilleApp(GRILLE_INTERGROUPE.key, peutModifier)
 
   return (
     <div className="max-w-full space-y-4 mx-auto">
@@ -37,7 +37,7 @@ function IntergroupePage() {
         lignes={lignesSimples(rows)}
         peutModifier={peutModifier}
         datesDansLApp={datesDansLApp}
-        nomsDesComptes={nomsDesComptes}
+        comptes={comptes}
         exporter={peutModifier ? { annee: new Date().getFullYear(), rang: 1, tout: isAdminUser(user) } : undefined}
       />
     </div>

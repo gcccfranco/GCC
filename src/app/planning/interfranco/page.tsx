@@ -19,7 +19,7 @@ function InterfrancoPage() {
   const { user, profile } = useProfile()
   const { rows, status } = useSheet<string[]>(fetchInterfranco, [])
   const peutModifier = canEditPlanning(user, profile, GRILLE_INTERFRANCO.key)
-  const { datesDansLApp, nomsDesComptes } = useGrilleApp(GRILLE_INTERFRANCO.key, peutModifier)
+  const { datesDansLApp, comptes } = useGrilleApp(GRILLE_INTERFRANCO.key, peutModifier)
 
   return (
     <div className="max-w-full space-y-4 mx-auto">
@@ -34,7 +34,7 @@ function InterfrancoPage() {
         lignes={lignesSimples(rows)}
         peutModifier={peutModifier}
         datesDansLApp={datesDansLApp}
-        nomsDesComptes={nomsDesComptes}
+        comptes={comptes}
         exporter={peutModifier ? { annee: new Date().getFullYear(), rang: 1, tout: isAdminUser(user) } : undefined}
       />
     </div>

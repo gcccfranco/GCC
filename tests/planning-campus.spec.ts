@@ -55,7 +55,9 @@ test("avec le droit sur le matin : une case s'écrit, le soir reste en lecture, 
   await expect(page.getByRole("button", { name: "Modifier" })).toHaveCount(1);
   await grille(page, "campusMatin").getByRole("button", { name: "Modifier" }).click();
   await laCase(page, "campusMatin", "2026-09-20", "piano").getByRole("button").click();
-  const champ = laCase(page, "campusMatin", "2026-09-20", "piano").getByLabel("Piano", { exact: true });
+  // P9 (lot U2) : « Choisir », puis un nom écrit à la main.
+  await page.getByRole("button", { name: "Écrire un nom sans compte…" }).click();
+  const champ = page.getByRole("textbox", { name: "Piano", exact: true });
   await champ.fill("Esther C.");
   await champ.press("Enter");
   await expect(laCase(page, "campusMatin", "2026-09-20", "piano")).toContainText("Esther C.");

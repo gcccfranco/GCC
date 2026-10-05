@@ -48,7 +48,7 @@ function CultePage() {
   const [published, setPublished] = useState<Record<number, string[]>>({})
 
   const peutModifier = canEditPlanning(user, profile, "culte")
-  const { datesDansLApp, nomsDesComptes } = useGrilleApp("culte", peutModifier)
+  const { datesDansLApp, comptes } = useGrilleApp("culte", peutModifier)
 
   useEffect(() => {
     const year = new Date().getFullYear()
@@ -108,7 +108,7 @@ function CultePage() {
         lignes={lignes}
         peutModifier={peutModifier}
         datesDansLApp={datesDansLApp}
-        nomsDesComptes={nomsDesComptes}
+        comptes={comptes}
         // P7 : les responsables du planning et les admins exportent (Q13).
         exporter={voitBrouillon ? { annee: effAnnee, rang: Number(effTri.slice(1)) || 1, tout: isAdminUser(user) } : undefined}
         dateBadge={(row, all) =>

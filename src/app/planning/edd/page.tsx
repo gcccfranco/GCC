@@ -38,7 +38,7 @@ function EddPage() {
 
   const definition = GRILLES_EDD.find((g) => g.sousTitre === classe) ?? GRILLES_EDD[0]
   const peutModifier = canEditPlanning(user, profile, definition.key)
-  const { datesDansLApp, nomsDesComptes } = useGrilleApp(definition.key, peutModifier)
+  const { datesDansLApp, comptes } = useGrilleApp(definition.key, peutModifier)
   // Lot U2 : `fetchEDD` range par période sans regarder l'année ; la page
   // reprend toutes les lignes de la classe et garde l'année choisie.
   const anneeCourante = new Date().getFullYear()
@@ -102,7 +102,7 @@ function EddPage() {
         lignes={lignesSimples(rows)}
         peutModifier={peutModifier}
         datesDansLApp={datesDansLApp}
-        nomsDesComptes={nomsDesComptes}
+        comptes={comptes}
         exporter={peutModifier ? { annee: effAnnee, rang: EDD_PERIODES.indexOf(periode) + 1, tout: isAdminUser(user) } : undefined}
       />
     </div>
