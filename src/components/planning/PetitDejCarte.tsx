@@ -13,7 +13,7 @@ import { useEffect, useId, useRef, useState, type ReactNode } from "react"
 import { useTranslation } from "react-i18next"
 import { Coffee, Pencil, Plus } from "lucide-react"
 import { canEditPetitDej, canGererPetitDej } from "@/lib/access"
-import { ajouterLigne, inscrire, renommerLigne, retirerLigne } from "@/lib/firebase/petitDej"
+import { RefusDesRegles, ajouterLigne, inscrire, renommerLigne, retirerLigne } from "@/lib/firebase/petitDej"
 import { historyAuthor } from "@/lib/firebase/setlistHistory"
 import { useProfile } from "@/lib/firebase/users"
 import { lirePetitDej } from "@/lib/petitdej/lignes"
@@ -35,8 +35,9 @@ function dateCourte(iso: string, lang: string): string {
   return `${d === 1 ? "1er" : d} ${new Date(y, m - 1, d).toLocaleDateString("fr-FR", { month: "short" })}`
 }
 
-/** Une saisie en cours : réécrire une ligne (`id`), ou en ajouter une (`id` nul). */
-type Saisie = { dimanche: string; id: string | null; valeur: string }
+/** Une saisie en cours : réécrire une ligne (`id`), ou en ajouter une (`id` nul) ;
+ *  `inscription` : son propre nom, quand le profil n'en donne aucun. */
+type Saisie = { dimanche: string; id: string | null; valeur: string; inscription?: boolean }
 
 export function PetitDejCarte({ annee, tri, nomsDesComptes, onLignes }: {
   annee: number
@@ -85,9 +86,11 @@ export function PetitDejCarte({ annee, tri, nomsDesComptes, onLignes }: {
     setEnCours(true)
     try {
       await action()
-    } catch {
+    } catch (e) {
+      // Hors ligne, refus des règles (403), ou tout autre échec : trois messages.
       const horsLigne = typeof navigator !== "undefined" && navigator.onLine === false
-      setAnnonce({ dimanche, texte: t(`planning.grille.${horsLigne ? "horsLigne" : "droitRetire"}`) })
+      const cle = horsLigne ? "planning.grille.horsLigne" : e instanceof RefusDesRegles ? "planning.grille.droitRetire" : "planning.petitDej.echec"
+      setAnnonce({ dimanche, texte: t(cle) })
     } finally {
       setEnCours(false)
       await lire()
@@ -95,8 +98,15 @@ export function PetitDejCarte({ annee, tri, nomsDesComptes, onLignes }: {
   }
 
   function sInscrire(dimanche: string) {
+    const nom = historyAuthor(profile)?.name ?? ""
+    // Ni nom de planning ni prénom : le champ demande un nom. Jamais le début de
+    // l'adresse mail, les lignes se lisant sans connexion (Q10).
+    if (!nom) commencer({ dimanche, id: null, valeur: "", inscription: true })
+    else inscrireAuNom(dimanche, nom)
+  }
+
+  function inscrireAuNom(dimanche: string, nom: string) {
     if (!user) return
-    const nom = historyAuthor(profile)?.name || user.email?.split("@")[0] || ""
     void ecrire(dimanche, async () => {
       const r = await inscrire(dimanche, nom, user.uid)
       // Quelqu'un vient de prendre ce dimanche : rien n'est écrit (Q11).
@@ -123,7 +133,9 @@ export function PetitDejCarte({ annee, tri, nomsDesComptes, onLignes }: {
     const nom = saisie.valeur.trim()
     setSaisie(null)
     if (!enregistrer || !nom) return
-    if (id) {
+    if (saisie.inscription) {
+      inscrireAuNom(dimanche, nom)
+    } else if (id) {
       const avant = Array.isArray(lignes) ? lignes.find((l) => l.id === id)?.nom : undefined
       if (avant !== nom) void ecrire(dimanche, () => renommerLigne(id, nom))
     } else {
@@ -140,6 +152,7 @@ export function PetitDejCarte({ annee, tri, nomsDesComptes, onLignes }: {
       maxLength={NOM_MAX}
       aria-label={label}
       list={suggestions ? listeId : undefined}
+      placeholder={saisie?.inscription ? label : undefined}
       value={saisie?.valeur ?? ""}
       onChange={(e) => setSaisie((s) => (s ? { ...s, valeur: e.target.value } : s))}
       onKeyDown={(e) => {
@@ -190,7 +203,9 @@ export function PetitDejCarte({ annee, tri, nomsDesComptes, onLignes }: {
           {dateCourte(d, i18n.language)}
         </span>
         <div className="min-w-0 flex-1 space-y-1">
-          {siennes.length === 0 && (
+          {siennes.length === 0 && (saisie?.inscription && saisie.dimanche === d ? (
+            <div className="flex min-h-9 items-center">{champ(t("planning.petitDej.tonNom"), false)}</div>
+          ) : (
             <div className="flex min-h-9 items-center gap-2">
               {passe
                 ? <span className="text-muted-foreground">—</span>
@@ -201,10 +216,10 @@ export function PetitDejCarte({ annee, tri, nomsDesComptes, onLignes }: {
                 </button>
               )}
             </div>
-          )}
+          ))}
           {siennes.map(laLigne)}
           {ouvert && peutGerer && (
-            saisie && saisie.dimanche === d && saisie.id === null ? (
+            saisie && saisie.dimanche === d && saisie.id === null && !saisie.inscription ? (
               <div className="flex min-h-9 items-center">{champ(t("planning.petitDej.ajouter"), true)}</div>
             ) : (
               <button

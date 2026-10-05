@@ -458,13 +458,61 @@ poussé). **Le lot U3 est entièrement codé.**
   Campus » revient à la ligne dans sa case) ; nouveau test « Choisir » sans lignes du petit déj. Les deux vus rouges
   avant les correctifs, verts ensuite ; `tests/back-office-coupe.spec.ts` réunit les blocs coupés de U2 et de U3.
 
+**05/10/2026 — Relecture (deux relectures) : corrections**, commit « fix(U3): relecture » sur `lot/u3-petit-dej`
+(commits locaux, rien de poussé). **Le lot U3 est fini et relu.**
+
+- Reprise (constat important) : depuis PD2, un dimanche que l'app crée (case « équipe », import G4) n'a plus de colonne
+  `petitDej` ; dans `fusionnerLignes`, sa ligne de l'app masquait celle du Sheet et le nom du petit déj aurait été perdu
+  en silence. `grillePourReprise` (`src/lib/petitdej/lignes.ts`) : un petit déj vide dans l'app prend celui du Sheet,
+  dimanche par dimanche. Et un Sheet illisible (lecture vide) fait répondre la route **503 « Sheet du planning
+  illisible : rien n'est repris, relance plus tard. »**, affiché par l'administration, au lieu de « 0 dimanches
+  repris ». Effet de bord assumé : un petit déj vidé exprès dans la grille de l'app avant U3 reprend le nom du Sheet,
+  qui est ce que le site en ligne affiche aujourd'hui.
+- Carte : un échec d'écriture qui n'est pas un refus des règles (500, relecture du dimanche en échec…) dit
+  « Enregistrement impossible, réessaie. » / « 保存失败，请重试。 » ; le refus des règles (403, `RefusDesRegles` dans
+  `src/lib/firebase/petitDej.ts`) garde le message des droits, et hors ligne le sien.
+- Carte : un compte sans prénom ni nom de planning ne s'inscrit plus sous le début de son adresse mail (les lignes se
+  lisent sans connexion) : « Je m'inscris » ouvre un champ « Ton nom » / « 你的名字 » ; Entrée inscrit (ligne
+  rattachée à son compte, dimanche relu avant d'écrire comme avant), Échap annule, un nom vide est refusé.
+- Cycle d'imports `sheets.ts → lignes.ts → names.ts → sheets.ts` coupé : `servicesPetitDejDuCompte` et
+  `servicesDuCompte` passent dans `src/lib/petitdej/services.ts` (Ce dimanche et Mes services l'importent).
+- Tests (`tests/planning-petit-dej.spec.ts`) : `grillePourReprise` (le nom du Sheet n'est plus masqué, Sheet illisible
+  = rien), `lignes.ts` sans import de `names.ts`, échec 500 en FR et en 中文, refus 403, compte sans prénom (champ, Échap,
+  inscription, aucune adresse mail écrite). Vus rouges (4, plus le garde-fou du 403 déjà vert) avant le code, verts
+  ensuite ; contre-épreuve du compte sans prénom avec l'ancienne carte : rouge. `planning-petit-dej` et `planning-table`
+  verts sur ordinateur, téléphone et tablette (168), `back-office-coupe` vert ; `tsc` propre, `lint` sans erreur ;
+  captures du champ « Ton nom » regardées aux trois tailles.
+
+Constats de la relecture laissés tels quels, **à trancher par Timothée** :
+
+1. **La carte liste tous les dimanches du trimestre** (Q11) : à mi-trimestre, des rangées « — » passent avant le premier
+   dimanche libre (13 rangées fin septembre ; sur téléphone, « Je m'inscris » est sous la ligne de flottaison). La
+   planche n'en montrait qu'un passé. Garder Q11, ou ne garder que le dernier dimanche passé ?
+2. **Le mercredi, la ligne part presque toujours seule.** Les rappels de service tombent à J-7, J-3 et J-1 (un
+   dimanche, un jeudi, un samedi) : un mercredi, presque personne n'en a. La ligne « personne pour le petit déj » part
+   donc en notification « Petit déj » seule (une par personne et par jour, avec son entrée de cloche), sauf si la
+   personne a ce jour-là un autre rappel (service, tâches, ouvertures d'inscription), où elle se fond. C'est ce que disent Q5 et PD4 (« seule sinon »),
+   mais T5 dit « fondue dans le rappel du matin, jamais une notification de plus ». Accepter la notification seule,
+   changer de jour (le jeudi tombe avec J-3), ou ne l'envoyer que fondue (la plupart des comptes ne la recevraient
+   jamais) ?
+3. **Lecture publique de `petitDej`** (Q10, question ouverte 3) : sans connexion, l'API rend les noms mais aussi `uid`
+   et `auteurUid`, ce que `plannings/*` ne fait pas ; le CLAUDE.md décrit les lectures comme réservées aux connectés.
+   Garder (et l'écrire dans le CLAUDE.md comme choix assumé), ou passer à `read: if signedIn()` (le cron lirait par
+   firebase-admin, les pages avec jeton) ?
+4. Pas urgent : `lirePetitDej` lit toute la collection, sans borne de date (une lecture facturée par ligne à chaque
+   chargement, environ 52 lignes de plus par an). Bornable plus tard ; « Mes services › Passés » a besoin de
+   l'historique.
+5. Le cron (ligne du mercredi, anti-doublon `petit-dej-libre-<dimanche>`, petit déj ajouté aux rappels) et la route de
+   reprise ne s'exécutent pas dans les tests (« vérifiable seulement en ligne ») : regarder le premier mercredi et la
+   reprise.
+
 Reste : rien dans U3. La reprise se lance **une fois, le jour du retrait de l'interrupteur** (§ « À la mise en ligne »),
-pas pendant la validation en local.
+pas pendant la validation en local ; si elle répond « Sheet illisible », la relancer plus tard (sans risque).
 
 À faire par Timothée : publier `firestore.rules` (règle `petitDej`, et depuis la fusion la règle de U2 qui retire une
-date choisie) **avant** la validation en local ; relire les
-libellés 中文 de la carte (`planning.petitDej.*`), de la liste « Recevoir » (`push.recevoir`, `push.types.*`) et des
-deux lignes du mercredi (`src/lib/petitdej/rappel.ts`). PD3, PD4 et PD5 n'ajoutent aucune règle (`notifPrefs/{uid}`
-accepte déjà le nouveau champ ; la reprise écrit avec firebase-admin). Le jour de la mise en ligne, lancer la reprise
-une fois (Administration › Planning). Remarque : à la fin d'un trimestre, la carte montre aussi ses
-dimanches passés (Q11 : tous ceux du trimestre choisi), là où la planche n'en montrait qu'un.
+date choisie) **avant** la validation en local — la relecture n'ajoute aucune règle ; relire les libellés 中文 de la
+carte (`planning.petitDej.*`, dont les deux nouveaux : `echec` « 保存失败，请重试。 » et `tonNom` « 你的名字 »), de la
+liste « Recevoir » (`push.recevoir`, `push.types.*`) et des deux lignes du mercredi (`src/lib/petitdej/rappel.ts`) ;
+trancher les points 1 à 3 ci-dessus. PD3, PD4 et PD5 n'ajoutent aucune règle (`notifPrefs/{uid}` accepte déjà le
+nouveau champ ; la reprise écrit avec firebase-admin). Le jour de la mise en ligne, lancer la reprise une fois
+(Administration › Planning).

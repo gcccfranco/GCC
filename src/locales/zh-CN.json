@@ -1025,7 +1025,9 @@
       "ajouter": "添加一行",
       "astuce": "可以写“某某家庭”代替你的名字。",
       "vientDeSInscrire": "{{nom}} 刚刚报名了。",
-      "illisible": "暂时无法读取报名。"
+      "illisible": "暂时无法读取报名。",
+      "echec": "保存失败，请重试。",
+      "tonNom": "你的名字"
     },
     "horaires": {
       "culte": "主日 10:30",
