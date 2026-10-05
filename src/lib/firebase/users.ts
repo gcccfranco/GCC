@@ -130,6 +130,23 @@ export async function setRegistrationOpen(open: boolean): Promise<void> {
 // ─── Hook useProfile (cache partagé entre composants) ────────────────────────
 
 const profileCache = new Map<string, UserProfile | null>();
+/** Lectures en cours : les composants montés ensemble (barres, notifications, page) partagent
+ *  la même requête au lieu d'en lancer une chacun (relecture U4, 05/10/2026 : 11 lectures). */
+const profileEnCours = new Map<string, Promise<UserProfile | null>>();
+
+function lireProfil(uid: string): Promise<UserProfile | null> {
+  let lecture = profileEnCours.get(uid);
+  if (!lecture) {
+    lecture = getProfile(uid)
+      .then((p) => {
+        profileCache.set(uid, p);
+        return p;
+      })
+      .finally(() => profileEnCours.delete(uid));
+    profileEnCours.set(uid, lecture);
+  }
+  return lecture;
+}
 
 export function useProfile() {
   const { user, loading: authLoading } = useAuth();
@@ -149,11 +166,8 @@ export function useProfile() {
       return;
     }
     setProfileLoading(true);
-    getProfile(user.uid)
-      .then((p) => {
-        profileCache.set(user.uid, p);
-        setProfile(p);
-      })
+    lireProfil(user.uid)
+      .then(setProfile)
       .finally(() => setProfileLoading(false));
   }, [user, authLoading]);
 
