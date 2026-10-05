@@ -619,3 +619,15 @@ Rien ne change à l'écran, sauf l'app Android installée, qui tourne désormais
   中文 du lot (双栏, 目录, 复制全部歌词, 曲目列表, 选择一首诗歌, 接下来的歌单 et les sous-titres). Sur une tablette
   Android, réinstaller l'app (ou attendre la mise à jour du manifeste) pour qu'elle tourne en paysage. Prévenir
   l'équipe avant la mise en ligne (question 2 : un trait posé en une colonne ne s'affiche pas en deux colonnes).
+
+**Fusion de la version finale de U4 — revérifiée le 05/10/2026** (branche `lot/u5-deux-volets`, sur `d7f92a9`).
+`git merge --no-edit lot/u4-navigation` répond « Already up to date » : la version finale de U4 (`e2f9861`, sa
+relecture) est déjà dans la branche par la fusion `2af01de` (avant T4). Ni commit de fusion, ni conflit, ni correctif.
+- Vérifié sur l'état final : `tsc` propre ; ESLint 0 erreur, aucun avertissement nouveau (comptés fichier par fichier
+  contre `b6c19a7` sur les fichiers de `src/` touchés par le lot : autant ou moins) ; `deux-volets-finitions`,
+  `mode-louange-colonnes`, `coherence`, `setlist-deux-volets`, `chants-deux-volets`, `setlist-g`, plus
+  `navigation-grand-ecran` (U4) et `back-office-coupe` (second serveur, interrupteur coupé), sur les cinq projets :
+  407 verts, 269 sautés (tests d'une autre disposition ou d'un autre projet), aucun rouge.
+- **Reste** : rien pour U5, hors suite complète et `graphify update .` à l'intégration du chantier.
+- À faire par Timothée : inchangé (voir T6) — aucune règle à publier ; relire le 中文 du lot ; réinstaller l'app sur
+  une tablette Android ; prévenir l'équipe pour les traits en deux colonnes.
