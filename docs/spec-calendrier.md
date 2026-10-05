@@ -297,4 +297,24 @@ npx tsc --noEmit && npm run lint               # PW_PORT=3000 si un next dev tou
 
 ## Avancement
 
-Rien n'est codé : la spec attend la validation de Timothée, puis son go.
+Spec validée et go de code donné (04/10/2026, redit le 05/10/2026) ; questions ouvertes = recommandations.
+
+- **05/10/2026 — C1 faite** (branche `lot/u8-calendrier`, commit « feat(U8): C1 — lecteur du Sheet
+  des évènements ») : `src/lib/evenements/sheet.ts` (`SHEET_EVENEMENTS_ID`, `ONGLETS_SHEET`,
+  `lireCSV`, `heureDuSheet`, `lireMoisSheet`, `chargerMoisSheet`, `lireSheetEvenements`) ;
+  `tests/calendrier-sheet.spec.ts` (15 tests purs × 3 appareils, vus rouges sur une ébauche puis
+  verts) sur `tests/fixtures/sheet-evenements-mois.csv` (structure d'octobre, titres et noms
+  inventés). Export par gid, jamais gviz ; titre d'onglet vérifié (accents ignorés) ; lignes de
+  semaine reconnues à leurs seuls numéros de jour (six semaines en août) ; deux lignes d'entrées sous
+  chacune ; arrêt avant « INSCRIPTIONS » ; colonnes 1 à 28 seulement (l'aperçu n'est jamais lu).
+  Heures : « 20h », « 12h30 », « 18:45 », plages à tiret (« 19h-21h », « 19h30 - 20h15 »,
+  « 19H–22H ») ; tout autre texte sans heure, gardé dans `horaire`. Cache de 5 minutes en mémoire
+  (vidé au rechargement), dernière copie resservie en panne sans bandeau ; sans copie (réseau coupé
+  ou réponse en erreur) `injoignable: true` ; un onglet en panne n'efface pas les autres mois ; un
+  mois sans onglet n'appelle rien. Contrôle sur le vrai Sheet (05/10/2026, dates et heures seules
+  affichées) : les six entrées de novembre et décembre lues, heures justes.
+- **Reste de C1 pour C3** : le bandeau « Sheet des évènements injoignable » et « les autres sources
+  s'affichent » se vérifient sur la page (`injoignable` de `lireSheetEvenements`), avec
+  `page.route(/docs\.google\.com\/spreadsheets/, …)` qui coupe le Sheet.
+- **À suivre** : C2 → C8.
+- **Pour Timothée** : rien à publier (C1 ne touche ni `access.ts` ni `firestore.rules`).
