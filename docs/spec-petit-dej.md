@@ -440,10 +440,29 @@ poussé). **Le lot U3 est entièrement codé.**
   tailles ; `tsc` et `lint` propres. La route écrit avec firebase-admin : simulée côté page, relue, pas exécutée
   (comme l'import G4 et le cron).
 
+**05/10/2026 — Fusion de `lot/u2-planning-2027` (U2 fini et relu)** : commit de fusion puis « fix(U3): fusion » sur
+`lot/u3-petit-dej` (commits locaux, rien de poussé).
+
+- Conflits résolus en gardant les deux intentions : « Ton prochain service » (`src/app/planning/page.tsx`) compte les
+  lignes par le compte, même sans nom de planning (PD3), sur des données sans brouillon ni président fantôme (U2, Q4
+  et Q5) ; `src/lib/access.ts` porte `canGererPetitDej` / `canEditPetitDej` et `canRetirerDate` côte à côte ; dans
+  `PlanningGrille`, une colonne `lectureSeule` reste du texte en « Modifier » (ni cadenas, ni « Choisir » de U2 P9, ni
+  « + ») ; `useGrilleApp` rend désormais `comptes` (U2) : la page Table en tire les noms de planning que la carte
+  suggère.
+- Deux correctifs de fusion, que les deux specs demandaient déjà (Q12 ici, Q6 de U2) : l'export au modèle du Sheet
+  (PDF et .xlsx, `src/lib/planning/exporter.tsx`) lit la Table par `fetchTable`, donc la colonne Petit déj porte les
+  inscriptions (il lisait le Sheet) ; « Choisir » (`src/lib/planning/choisir.ts`) ne propose plus les lignes du petit
+  déj (« Famille … ») comme des noms.
+- Tests : `tests/planning-table.spec.ts` — l'export CSV du lot 17, remplacé par « Exporter (modèle du Sheet) » (U2,
+  question 6), vérifie la colonne Petit déj lue dans les inscriptions (PDF regardé : « Famille Martin, Les jeunes du
+  Campus » revient à la ligne dans sa case) ; nouveau test « Choisir » sans lignes du petit déj. Les deux vus rouges
+  avant les correctifs, verts ensuite ; `tests/back-office-coupe.spec.ts` réunit les blocs coupés de U2 et de U3.
+
 Reste : rien dans U3. La reprise se lance **une fois, le jour du retrait de l'interrupteur** (§ « À la mise en ligne »),
 pas pendant la validation en local.
 
-À faire par Timothée : publier `firestore.rules` (règle `petitDej`) **avant** la validation en local ; relire les
+À faire par Timothée : publier `firestore.rules` (règle `petitDej`, et depuis la fusion la règle de U2 qui retire une
+date choisie) **avant** la validation en local ; relire les
 libellés 中文 de la carte (`planning.petitDej.*`), de la liste « Recevoir » (`push.recevoir`, `push.types.*`) et des
 deux lignes du mercredi (`src/lib/petitdej/rappel.ts`). PD3, PD4 et PD5 n'ajoutent aucune règle (`notifPrefs/{uid}`
 accepte déjà le nouveau champ ; la reprise écrit avec firebase-admin). Le jour de la mise en ligne, lancer la reprise
