@@ -1,7 +1,7 @@
 "use client"
 
 // En-tête d'une réunion au Back-Office (lot U6, B3, planche bo-reunion-avant) :
-// « Réunion de pôle · DA » (ou « Réunion d'équipe · … »), le titre, « Samedi 3 octobre ·
+// « Réunion de pôle · DA » (ou « Réunion d'équipe · Régie », nom court de l'équipe), le titre, « Samedi 3 octobre ·
 // 20:00 · Salle 2 · organisée par Alice Q. » ; à droite, pour qui la gère, « Modifier »,
 // « Dupliquer pour la prochaine », et « Supprimer » (absent de la planche).
 import type { CSSProperties } from "react"
@@ -20,7 +20,7 @@ export function EnTeteReunion({ e, gestion, onSupprimer }: { e: Evenement; gesti
   const equipe = equipeDuPour(e.pour)
   const libelle = pole
     ? t("backOffice.reunionDePole", { pole: t(`taches.pole.${pole}`) })
-    : t("backOffice.reunionDEquipe", { equipe: t(`equipes.team.${equipe}`) })
+    : t("backOffice.reunionDEquipe", { equipe: t(`equipes.court.${equipe}`) })
   const ligne = [
     e.date ? titreDuJour(e.date, i18n.language) : "",
     e.heure,

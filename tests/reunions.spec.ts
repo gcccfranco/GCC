@@ -9,7 +9,7 @@ import {
 import { EQUIPES, rattachementDe } from "../src/lib/equipes/organigramme";
 import { recalculerDepuisOrganigramme, recalculerPoles } from "../src/lib/equipes/serveur";
 import { destinatairesEvenement } from "../src/lib/evenements/serveur";
-import { copieReprise, estRouge, reordonner, reunionsPrecedentes, sujetsAReprendre, trierSujets } from "../src/lib/reunions/sujets";
+import { copieReprise, estRouge, reordonner, reunionsALire, reunionsPrecedentes, sujetsAReprendre, trierSujets } from "../src/lib/reunions/sujets";
 import type { Evenement } from "../src/types/evenement";
 import type { Sujet } from "../src/types/reunion";
 import { lienCompteRendu, sourceDuLien } from "../src/lib/reunions/compteRendu";
@@ -418,6 +418,24 @@ test("règles R2 : une personne de la réunion marque un sujet repris, une seule
   const bloc = rules.slice(debut, rules.indexOf("}", rules.indexOf("allow delete", debut)));
   expect(bloc).toMatch(/estDeLaReunion\(reunion\(id\)\) && resource\.data\.reprisDans == null && changeSeulement\(\['reprisDans'\]\)/);
   expect(bloc).toMatch(/allow create:[\s\S]*request\.resource\.data\.reprisDans == null/);
+});
+
+// Relecture du lot U6 : le marquage « repris » ne vaut que pour une réunion du même public.
+test("règles R2 : « repris dans » désigne une réunion qui existe, du même pôle ou de la même équipe", () => {
+  const rules = lire("firestore.rules");
+  const debut = rules.indexOf("match /sujets/{sid}");
+  const bloc = rules.slice(debut, rules.indexOf("}", rules.indexOf("allow delete", debut)));
+  expect(bloc).toMatch(/changeSeulement\(\['reprisDans'\]\)\s*&& reunion\(request\.resource\.data\.reprisDans\)\.pour == reunion\(id\)\.pour/);
+});
+
+// Relecture du lot U6 : la reprise ne relit que les dernières réunions tenues.
+test("à reprendre : les sujets des six dernières réunions commencées seulement, ni d'une réunion à venir", () => {
+  const dates = ["2026-03-07", "2026-04-04", "2026-05-02", "2026-06-06", "2026-07-04", "2026-09-05", "2026-10-03", "2026-10-10"];
+  const liste = dates.map((d) => R(`r-${d}`, d));
+  expect(reunionsALire(liste, "2026-10-04T10:00").map((r) => r.date)).toEqual(
+    ["2026-10-03", "2026-09-05", "2026-07-04", "2026-06-06", "2026-05-02", "2026-04-04"],
+  );
+  expect(reunionsALire(liste.slice(0, 2), "2026-10-04T10:00").map((r) => r.date)).toEqual(["2026-04-04", "2026-03-07"]);
 });
 
 test("libellés R2 : reprise et réunions précédentes en français et en 中文, clé pour clé", () => {
@@ -840,13 +858,21 @@ test("recalculerPoles recopie aussi dansEquipes et referentDe sur le profil ; ri
   expect(ecrits).toHaveLength(2);
 });
 
-test("« Recalculer depuis l'organigramme » : tous les membres des équipes, et personne d'autre", async () => {
-  const { db, ecrits } = fausseBase({
-    "uid-rose": { poles: [] }, "uid-hugo": { poles: ["da"] },
+test("« Recalculer depuis l'organigramme » : tous les membres des équipes, et personne d'autre ; leurs pôles ne bougent pas", async () => {
+  const { db, ecrits, users } = fausseBase({
+    // Pôle DA coché à la main (lot 7) sur la référente de la Régie, équipe sans pôle : le recalcul
+    // de R4 ne pose que les équipes et les référents, il ne le retire pas (relecture du lot U6).
+    "uid-rose": { poles: ["da"] }, "uid-hugo": { poles: ["da"] },
     "uid-hors": { poles: ["orga"] }, // pôle coché hors organigramme (D10) : on n'y touche pas ici
   });
   expect(await recalculerDepuisOrganigramme(db)).toBe(2);
-  expect(ecrits.map((e) => e.uid).sort()).toEqual(["uid-hugo", "uid-rose"]);
+  expect(ecrits).toEqual([
+    { uid: "uid-hugo", data: { dansEquipes: ["da", "regie"], referentDe: [] } },
+    { uid: "uid-rose", data: { dansEquipes: ["regie"], referentDe: ["regie"] } },
+  ]);
+  expect(users["uid-rose"].poles).toEqual(["da"]);
+  // Relancé : rien n'a changé, rien n'est réécrit.
+  expect(await recalculerDepuisOrganigramme(db)).toBe(0);
 });
 
 test("destinataires d'une réunion d'équipe : les comptes dont le profil porte l'équipe", async () => {
@@ -891,6 +917,18 @@ test("règles R4 : membres (dansEquipes) de la réunion d'équipe, création par
   expect(profil).toMatch(/request\.resource\.data\.get\('referentDe', \[\]\) == \[\]/);
 });
 
+// Relecture du lot U6 : miroir exact de canCreateEvenement — une réunion de pôle ou d'équipe ne
+// passe pas par la branche « coordination » (qui ne crée que pour l'église et les sections).
+test("règles : réunions de pôle et d'équipe créées par leurs seuls ayants droit, même pour la coordination", () => {
+  const rules = lire("firestore.rules");
+  const create = rules.slice(rules.indexOf("match /evenements/{id}"), rules.indexOf("allow update", rules.indexOf("match /evenements/{id}")));
+  expect(create).toMatch(/request\.resource\.data\.pour\.matches\('pole:\[a-z\]\+'\)\s*&& isTachePole\(request\.resource\.data\.pour\.split\(':'\)\[1\]\)/);
+  expect(create).toMatch(/request\.resource\.data\.pour\.matches\('equipe:\[a-z0-9-\]\+'\)\s*&& \(isAdmin\(\) \|\| \(hasProfile\(\)/);
+  expect(create).toMatch(/!request\.resource\.data\.pour\.matches\('\(pole\|equipe\):\.\*'\)\s*&& \(isCoordination\(\)/);
+  // Plus de « isCoordination() || … » qui couvrirait tous les publics.
+  expect(create).not.toMatch(/&& \(isCoordination\(\)\s*\|\|\s*\(hasProfile\(\) && request\.resource\.data\.pour in profile\(\)\.get\('annonces', \[\]\)\)\s*\|\|\s*\(request/);
+});
+
 test("le cron : la veille d'une réunion d'équipe va à ses membres, comme celle d'une réunion de pôle", () => {
   const route = lire("src/app/api/cron/reminders/route.ts");
   expect(route).toMatch(/if \(estReunion\(e\.pour\)\) \{[\s\S]*?destinatairesEvenement\(db, e\)/);
@@ -917,7 +955,8 @@ test("référente : elle crée la réunion de son équipe, sans inscriptions, et
   await page.waitForURL(/\/evenements\/fake-\d+\/?$/);
   const ecrit = db.doc(`evenements/${creee(db)}`)!;
   expect(ecrit).toMatchObject({ pour: "equipe:regie", inscriptions: "fermees", organisateurUid: "uid-rose", placesMax: null });
-  await expect(page.getByText("TEAM RÉGIE").first()).toBeVisible();
+  // La fiche du Back-Office nomme l'équipe en court (relecture du lot U6).
+  await expect(page.getByText("Réunion d'équipe · Régie", { exact: true })).toBeVisible();
   await expect(carte(page).getByRole("heading", { name: "Sujets à aborder", exact: true })).toBeVisible();
 });
 

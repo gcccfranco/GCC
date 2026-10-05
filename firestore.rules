@@ -214,15 +214,19 @@ service cloud.firestore {
       // Réunion de pôle (lot 7) : « pole:<id> », créée par un membre du pôle.
       // Réunion d'équipe (lot U6, R4) : « equipe:<id> », créée par un référent
       // de l'équipe (`referentDe` du profil, recopié par le serveur) ou un admin.
+      // La coordination ne crée que pour l'église et les sections (relecture du
+      // lot U6 : miroir exact de canCreateEvenement).
       allow create: if signedIn()
         && request.resource.data.organisateurUid == request.auth.uid
         && request.resource.data.inscrits == 0
-        && (isCoordination()
-            || (hasProfile() && request.resource.data.pour in profile().get('annonces', []))
-            || (request.resource.data.pour.matches('pole:[a-z]+')
+        && ((request.resource.data.pour.matches('pole:[a-z]+')
                 && isTachePole(request.resource.data.pour.split(':')[1]))
-            || (request.resource.data.pour.matches('equipe:[a-z0-9-]+') && hasProfile()
-                && request.resource.data.pour.split(':')[1] in profile().get('referentDe', [])));
+            || (request.resource.data.pour.matches('equipe:[a-z0-9-]+')
+                && (isAdmin() || (hasProfile()
+                    && request.resource.data.pour.split(':')[1] in profile().get('referentDe', []))))
+            || (!request.resource.data.pour.matches('(pole|equipe):.*')
+                && (isCoordination()
+                    || (hasProfile() && request.resource.data.pour in profile().get('annonces', [])))));
       // Compte rendu d'une réunion (lot U6, R3) : toute personne de la réunion
       // colle (à son nom, un lien https://) ou retire le lien, et ne change que
       // lui. Miroir : estDeLaReunion et lienCompteRendu (src/lib/access.ts,
@@ -249,7 +253,8 @@ service cloud.firestore {
       // « jusqu'au début » se vérifie dans le navigateur (les règles ne lisent
       // pas une heure de Paris en texte, Q7). L'organisateur et les admins
       // changent l'ordre et « traité » ; une personne de la réunion marque un
-      // sujet repris dans la suivante (R2), une seule fois. Retrait : l'auteur,
+      // sujet repris dans la suivante (R2), une seule fois, et seulement dans une
+      // réunion qui existe, du même pôle ou de la même équipe. Retrait : l'auteur,
       // l'organisateur, un admin. Miroir : peutAjouterSujet, peutRetirerSujet,
       // peutOrdonnerSujets (src/lib/access.ts).
       match /sujets/{sid} {
@@ -257,7 +262,8 @@ service cloud.firestore {
         allow create: if signedIn() && estDeLaReunion(reunion(id)) && request.resource.data.auteurUid == request.auth.uid
           && request.resource.data.traite == false && request.resource.data.reprisDans == null;
         allow update: if signedIn() && ((organise(id) && changeSeulement(['ordre', 'traite']))
-          || (estDeLaReunion(reunion(id)) && resource.data.reprisDans == null && changeSeulement(['reprisDans'])));
+          || (estDeLaReunion(reunion(id)) && resource.data.reprisDans == null && changeSeulement(['reprisDans'])
+              && reunion(request.resource.data.reprisDans).pour == reunion(id).pour));
         allow delete: if signedIn() && (organise(id) || resource.data.auteurUid == request.auth.uid);
       }
     }
@@ -430,6 +436,12 @@ service cloud.firestore {
       allow read, write: if signedIn() && request.auth.uid == uid;
     }
 
+    // Back-Office de chacun (lot U6, B5, docs/spec-back-office.md, Q5) : disposition du
+    // tableau de bord et barre du bas, écrites par l'intéressé seul (le profil users/{uid}
+    // est verrouillé). Miroir : src/lib/firebase/backOffice.ts (aucun droit dans access.ts,
+    // chacun n'écrit que le sien ; `widgetsPermis` filtre l'affichage).
+    match /backOffice/{uid} { allow read, write: if signedIn() && request.auth.uid == uid; }
+
     match /config/app {
       // La page d'inscription lit registrationOpen sans être connectée
       allow read: if true;
@@ -465,8 +477,11 @@ service cloud.firestore {
         allow read: if true;
         allow create, update: if peutEcrirePlanning(key)
           && request.resource.data.date == date;
-        // On vide les cases, on ne supprime pas un dimanche.
-        allow delete: if false;
+        // On vide les cases, on ne supprime pas un dimanche — sauf une date
+        // posée par erreur, là seulement où les dates se choisissent (lot U2,
+        // Q10). Miroir client : canRetirerDate (src/lib/access.ts).
+        allow delete: if peutEcrirePlanning(key)
+          && key in ['interfranco', 'intergroupe', 'campusMatin', 'campusSoir'];
       }
 
       // Historique nommé : lu par tout connecté, écrit par qui peut remplir,

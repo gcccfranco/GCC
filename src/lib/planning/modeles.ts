@@ -357,10 +357,17 @@ export function grillesAExporter(portee: Portee, key: string): string[] {
   return m.dimanchesSpeciaux ? [...m.grilles, "interfranco", "intergroupe"] : m.grilles
 }
 
-/** « Groupe Paix » → `Groupe_Paix_T1_2027.pdf`, `Groupe_Paix_2027.pdf` ; tout : `Plannings_2027.pdf`. */
-export function nomFichierExport(portee: Portee, label: string, periode: string, an: number, extension: "pdf" | "xlsx"): string {
+/**
+ * Le nom du fichier, d'après l'onglet du Sheet — le fichier en porte toutes les
+ * grilles (les trois classes de l'EDD, matin et soir du Campus) —, sans accents
+ * ni ponctuation, que toute messagerie garde : Paix → `Paix_T1_2027.pdf`,
+ * `Paix_2027.pdf` ; EDD → `EDD_P1_2027.pdf` ; tout : `Plannings_2027.pdf`.
+ */
+export function nomFichierExport(portee: Portee, key: string, periode: string, an: number, extension: "pdf" | "xlsx"): string {
   if (portee === "tout") return `Plannings_${an}.${extension}`
-  const base = label.trim().replace(/\s+/g, "_")
+  const base = (modeleDe(key)?.onglet ?? key)
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^A-Za-z0-9]+/g, "_").replace(/^_+|_+$/g, "")
   return portee === "affiche" ? `${base}_${periode}_${an}.${extension}` : `${base}_${an}.${extension}`
 }
 

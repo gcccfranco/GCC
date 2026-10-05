@@ -15,20 +15,20 @@ const csv = (rows: string[][]) => rows.map((r) => r.map((c) => `"${c}"`).join(",
 
 const CULTE = csv([
   ["2026 DATE", "Présidence", "Choristes", "", "Pianiste", "Guitariste", "Batterie", "Sono + Live", "PPT", "Orateur", "Traducteur", "Sainte cène", "Notes"],
-  ["20/09", "Paul W.", "Christelle Z.", "Inès L.", "Ruth K.", "", "Stéphane Z.", "Anyi Y.", "Karémy X.", "Hewei", "", "", ""],
-  ["27/09", "Jonathan Z.", "Daniela W.", "Alice Q.", "Eva C.", "Christelle C.", "Yiyi C.", "Lorenzo S.", "Denis F.", "Belka", "", "", ""],
+  ["20/09", "Président A.", "Choriste B.", "Choriste C.", "Pianiste D.", "", "Batteur F.", "Sono G.", "Projection H.", "Orateur I.", "", "", ""],
+  ["27/09", "Président J.", "Choriste K.", "Alice Q.", "Pianiste M.", "Guitariste N.", "Batteur O.", "Sono P.", "Projection Q.", "Orateur R.", "", "", ""],
 ]);
 // Onglet Franco_Table_PtD : la date en colonne 1, l'équipe dans les colonnes 2 à 5.
 const TABLE = csv([
   ["", "PRÉPARATION TABLE"],
-  ["", "20/09", "Charlie", "Isabelle"],
-  ["", "27/09", "Lydie", "Samuel"],
-  ["", "04/10", "Ruth", "Marc"],
+  ["", "20/09", "Membre A.", "Membre B."],
+  ["", "27/09", "Membre C.", "Membre D."],
+  ["", "04/10", "Membre E.", "Membre F."],
 ]);
 
 const ADMIN: FakeProfile = { uid: "uid-admin", email: "tc328829@gmail.com", firstName: "Admin", lastName: "T." };
 /** Remplit le Culte Franco, rien d'autre. */
-const ECRIVAIN: FakeProfile = { uid: "uid-ecr", email: "ecr@example.com", firstName: "Christelle", lastName: "Z.", planningName: "Christelle Z.", plannings: ["culte"] };
+const ECRIVAIN: FakeProfile = { uid: "uid-ecr", email: "ecr@example.com", firstName: "Choriste", lastName: "B.", planningName: "Choriste B.", plannings: ["culte"] };
 /** Notifie le Groupe Paix (et publie donc son planning). */
 const NOTIFY: FakeProfile = { uid: "uid-no", email: "no@example.com", firstName: "Noé", lastName: "T.", notify: ["Groupe Paix"] };
 /** Tient l'organigramme, sans être admin. */
@@ -169,7 +169,7 @@ test.describe("B2 : Planning (plannings, Import, Sans compte)", () => {
     await expect(plannings(page).getByRole("link")).toHaveText(["Culte Franco"]);
     await expect(page.getByRole("link", { name: "Import" })).toHaveCount(0);
     // Pas de « Modifier » à toucher d'abord : les cases sont déjà des boutons.
-    await expect(laCase(page, "2026-09-27", "presidence").getByRole("button")).toHaveText("Jonathan Z.");
+    await expect(laCase(page, "2026-09-27", "presidence").getByRole("button")).toHaveText("Président J.");
     await expect(laCase(page, "2026-09-20", "guitare").getByRole("button", { name: /Choisir/ })).toBeVisible();
     await expect(page.locator('[data-grille="culte"]').getByRole("button", { name: "Modifier", exact: true })).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Exporter (modèle du Sheet)" })).toBeVisible();
@@ -200,7 +200,7 @@ test.describe("B2 : Planning (plannings, Import, Sans compte)", () => {
 
   test("dans l'App, le planning se lit : ni case à remplir, ni export, même pour qui le remplit", async ({ page }) => {
     await ouvrir(page, ECRIVAIN, "/planning/culte");
-    await expect(laCase(page, "2026-09-27", "presidence")).toHaveText("Jonathan Z.");
+    await expect(laCase(page, "2026-09-27", "presidence")).toHaveText("Président J.");
     await expect(laCase(page, "2026-09-27", "presidence").getByRole("button")).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Modifier", exact: true })).toHaveCount(0);
     await expect(page.getByRole("button", { name: /Exporter/ })).toHaveCount(0);
@@ -210,8 +210,8 @@ test.describe("B2 : Planning (plannings, Import, Sans compte)", () => {
     await ouvrir(page, ADMIN, "/planning/table");
     await expect(page.getByRole("region", { name: "Petit déj" })).toBeVisible();
     const table = page.getByRole("region", { name: "Prépa. Table du Seigneur" });
-    await expect(table).toContainText("Charlie, Isabelle");
-    await expect(table, "le prochain dimanche seulement").not.toContainText("Lydie");
+    await expect(table).toContainText("Membre A., Membre B.");
+    await expect(table, "le prochain dimanche seulement").not.toContainText("Membre C.");
     await expect(page.locator("[data-grille]")).toHaveCount(0);
     await expect(page.getByRole("button", { name: /Exporter/ })).toHaveCount(0);
   });
@@ -270,7 +270,7 @@ test("captures : Planning, Équipes, Messages au Back-Office ; la Table dans l'A
   await expect(page.getByRole("heading", { name: "Signalements" })).toBeVisible();
   await capture("messages");
   await page.goto("/planning/table");
-  await expect(page.getByRole("region", { name: "Prépa. Table du Seigneur" })).toContainText("Charlie, Isabelle");
+  await expect(page.getByRole("region", { name: "Prépa. Table du Seigneur" })).toContainText("Membre A., Membre B.");
   await capture("app-table");
 });
 
@@ -415,6 +415,69 @@ test.describe("B3 : Évènements", () => {
     await expect(page.getByRole("region", { name: "Compte rendu", exact: true })).toBeVisible();
     await expect(page.getByRole("region", { name: /^Sujets/ })).toBeVisible();
     await expect(page.getByRole("region", { name: "Réunions précédentes" })).toBeVisible();
+  });
+
+  // Relecture du lot U6 : on reste dans l'espace où l'on est.
+  test("fiche d'une réunion au Back-Office : une date des « Réunions précédentes » ouvre sa fiche au Back-Office", async ({ page }) => {
+    await ouvrirB3(page, DA_ORG, "/back-office/evenements/reu-da");
+    const precedente = page.getByRole("region", { name: "Réunions précédentes" }).getByRole("link", { name: "5 sept.", exact: true });
+    await expect(precedente).toHaveAttribute("href", /^\/back-office\/evenements\/reu-da-sept\/?$/);
+    await precedente.click();
+    await expect(page).toHaveURL(/\/back-office\/evenements\/reu-da-sept\/?$/);
+    await expect(page.getByRole("link", { name: "Dupliquer pour la prochaine" })).toBeVisible();
+  });
+
+  test("fiche d'une réunion d'équipe au Back-Office : « Réunion d'équipe · Régie » (nom court de l'équipe)", async ({ page }) => {
+    await ouvrirB3(page, REFERENTE, "/back-office/evenements/reu-regie", {
+      ...DOCS_EV,
+      "evenements/reu-regie": { ...REU, titre: "Réunion Régie", pour: "equipe:regie", organisateurUid: "uid-ref", organisateurNom: "Rose T." },
+    });
+    await expect(page.getByRole("heading", { level: 1, name: "Réunion Régie" })).toBeVisible();
+    await expect(page.getByText("Réunion d'équipe · Régie", { exact: true })).toBeVisible();
+  });
+
+  test("supprimer une réunion supprime aussi ses sujets", async ({ page }) => {
+    const sujet = (texte: string, ordre: number) => ({
+      texte, auteurUid: "uid-dora", auteurNom: "Dora P.", creeLe: "2026-10-01T09:00:00Z", ordre, traite: false, reprisDans: null, repriseDe: null,
+    });
+    const db = await ouvrirB3(page, DA_ORG, "/back-office/evenements/reu-da", {
+      ...DOCS_EV, "evenements/reu-da/sujets/s1": sujet("Affiche", 0), "evenements/reu-da/sujets/s2": sujet("Budget", 1),
+    });
+    await expect(page.getByRole("region", { name: /^Sujets/ }).getByText("Budget")).toBeVisible();
+    page.once("dialog", (d) => d.accept());
+    await page.getByRole("button", { name: "Supprimer" }).click();
+    await expect(page).toHaveURL(/\/back-office\/evenements\/reunions\/?$/);
+    expect(db.writes.filter((w) => w.method === "DELETE").map((w) => w.path).sort())
+      .toEqual(["evenements/reu-da", "evenements/reu-da/sujets/s1", "evenements/reu-da/sujets/s2"]);
+  });
+
+  test("supprimer : un refus le dit, et la fiche reste", async ({ page }) => {
+    await ouvrirB3(page, DA_ORG, "/back-office/evenements/reu-da");
+    await expect(page.getByRole("heading", { level: 1, name: "Réunion DA" })).toBeVisible();
+    // Posée après la base simulée, cette route passe avant elle.
+    await page.route(/\/documents\/evenements\/reu-da$/, (route) => route.request().method() === "DELETE"
+      ? route.fulfill({ status: 403, contentType: "application/json", body: JSON.stringify({ error: { code: 403, message: "refusé" } }) })
+      : route.fallback());
+    page.once("dialog", (d) => d.accept());
+    await page.getByRole("button", { name: "Supprimer" }).click();
+    await expect(page.getByRole("alert").filter({ hasText: "Suppression impossible. Réessaie." })).toBeVisible();
+    await expect(page).toHaveURL(/\/back-office\/evenements\/reu-da\/?$/);
+  });
+
+  test("une réunion n'est jamais une « Info » : pas de catégorie Info, la date reste demandée", async ({ page }) => {
+    await ouvrirB3(page, COORD, "/back-office/evenements/nouveau");
+    const categorie = page.getByLabel("Catégorie");
+    await categorie.selectOption("info");
+    await expect(page.getByLabel("Date", { exact: true })).toHaveCount(0);
+    // Passer à une réunion de pôle : la catégorie quitte « Info », la date revient.
+    await page.getByLabel("Public").selectOption("pole:evenement");
+    await expect(categorie).not.toHaveValue("info");
+    await expect(categorie.locator('option[value="info"]')).toHaveCount(0);
+    await expect(page.getByLabel("Date", { exact: true })).toBeVisible();
+    // « Nouvelle réunion » : pas d'Info non plus.
+    await page.goto("/back-office/evenements/nouveau?reunion=1");
+    await expect(page.getByLabel("Catégorie").locator('option[value="loisir"]')).toHaveCount(1);
+    await expect(page.getByLabel("Catégorie").locator('option[value="info"]')).toHaveCount(0);
   });
 
   test("fiche d'une réunion au Back-Office : un autre membre du pôle a les cartes, sans Modifier", async ({ page }) => {

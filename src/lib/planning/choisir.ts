@@ -90,7 +90,8 @@ export function propositions(
     ;(aLeRole ? duRole : autres).push({ nom, duRole: aLeRole })
   }
 
-  const personnes = definition.colonnes.filter((c) => colonneDePersonnes(c.cle))
+  // Une colonne en lecture seule (le petit déj, lot U3) n'écrit pas des noms de personnes.
+  const personnes = definition.colonnes.filter((c) => colonneDePersonnes(c.cle) && !c.lectureSeule)
   for (const r of rows) {
     for (const c of personnes) {
       for (const nom of splitNames(r[c.index] ?? "")) {

@@ -9,6 +9,14 @@ import type { LignePetitDej } from "@/types/petitDej";
 // canGererPetitDej / canEditPetitDej (src/lib/access.ts). Chaque écriture
 // oublie le cache de lecture (`oublierPetitDej`).
 
+/** Un refus des règles (HTTP 403) : la carte le distingue d'un autre échec. */
+export class RefusDesRegles extends Error {}
+
+async function verifier(res: Response): Promise<void> {
+  if (res.status === 403) throw new RefusDesRegles("Écriture refusée par les règles Firestore");
+  await checkRest(res);
+}
+
 async function poser(ligne: Pick<LignePetitDej, "dimanche" | "nom" | "uid" | "auteurUid">): Promise<string> {
   const now = new Date().toISOString();
   const res = await fetch(`${FS_BASE}/petitDej`, {
@@ -16,7 +24,7 @@ async function poser(ligne: Pick<LignePetitDej, "dimanche" | "nom" | "uid" | "au
     headers: { "Content-Type": "application/json", ...(await authHeader()) },
     body: JSON.stringify({ fields: toFsFields({ ...ligne, nom: ligne.nom.trim(), creeLe: now, modifieLe: now }) }),
   });
-  await checkRest(res);
+  await verifier(res);
   oublierPetitDej();
   return ((await res.json()) as RawDoc).name.split("/").pop()!;
 }
@@ -52,11 +60,11 @@ export async function renommerLigne(id: string, nom: string): Promise<void> {
     headers: { "Content-Type": "application/json", ...(await authHeader()) },
     body: JSON.stringify({ fields: toFsFields(data) }),
   });
-  await checkRest(res);
+  await verifier(res);
   oublierPetitDej();
 }
 
 export async function retirerLigne(id: string): Promise<void> {
-  await checkRest(await fetch(`${FS_BASE}/petitDej/${id}`, { method: "DELETE", headers: await authHeader() }));
+  await verifier(await fetch(`${FS_BASE}/petitDej/${id}`, { method: "DELETE", headers: await authHeader() }));
   oublierPetitDej();
 }
