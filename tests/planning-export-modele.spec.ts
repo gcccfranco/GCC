@@ -236,7 +236,8 @@ const DOCS_2027 = {
   "plannings/bonte/dimanches/2027-01-10": { date: "2027-01-10", presidence: "Brouillon B." },
 };
 
-async function ouvrir(page: Page, qui: FakeProfile, vers = "/planning/groupes", docs: Record<string, Record<string, unknown>> = DOCS_2027) {
+/** Lot U6, B2 (Q14) : on exporte au Back-Office ; un membre, lui, lit le planning dans l'App. */
+async function ouvrir(page: Page, qui: FakeProfile, vers = qui === MEMBRE ? "/planning/groupes" : "/back-office/planning/groupes", docs: Record<string, Record<string, unknown>> = DOCS_2027) {
   await page.clock.setFixedTime(new Date("2026-11-15T10:00:00"));
   // Le Sheet de 2026 ne dit rien de 2027 : réponses vides.
   await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));

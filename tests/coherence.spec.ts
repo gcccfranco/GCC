@@ -133,7 +133,8 @@ test("règles : la modification et la suppression d'une setlist passent par canE
 test("noms de planning : une seule normalisation, celle du serveur", () => {
   expect(normalizeName("Oriane H.")).toBe(normalizeName("Oriane H"));
   expect(normalizeName("  Chloé  W. ")).toBe(normalizeName("chloe w"));
-  for (const rel of ["src/components/auth/ProfileFields.tsx", "src/app/admin/page.tsx", "src/app/notifier/page.tsx"]) {
+  // Lot U6, B2 : les blocs de l'administration et Notifier ont déménagé dans src/components.
+  for (const rel of ["src/components/auth/ProfileFields.tsx", "src/components/admin/Personnes.tsx", "src/components/admin/SansCompte.tsx", "src/components/messages/Notifier.tsx"]) {
     const src = lire(rel);
     expect(src, rel).not.toMatch(/function normalize(Name)?\(/);
     expect(src, rel).toMatch(/normalizeName[\s\S]{0,40}from "@\/lib\/planning\/names"/);

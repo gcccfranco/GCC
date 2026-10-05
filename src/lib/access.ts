@@ -477,6 +477,31 @@ export function entreesBackOffice(user: AuthUser | null, profile: ProfilResponsa
   return ENTREES.filter((e) => visible[e] && !ENTREES_A_VENIR.includes(e));
 }
 
+/** Les onglets du planning (`/planning/<onglet>`), dans leur ordre. */
+export const ONGLETS_PLANNING = ["culte", "table", "groupes", "edd", "campus", "intergroupe", "interfranco"] as const;
+export type OngletPlanning = (typeof ONGLETS_PLANNING)[number];
+
+/** L'onglet qui porte une grille (clé de `GRILLES` ou de `PUBLISHABLE_PLANNINGS`). */
+function ongletDeLaGrille(key: string): OngletPlanning | null {
+  if (key === "paix" || key === "bonte" || key.startsWith("fidelite")) return "groupes";
+  if (key.startsWith("edd")) return "edd";
+  if (key.startsWith("campus")) return "campus";
+  return (ONGLETS_PLANNING as readonly string[]).includes(key) ? (key as OngletPlanning) : null;
+}
+
+/** Les plannings du Back-Office (lot U6, B2, table Q2) : ceux qu'on remplit (`plannings`) ou
+ *  publie (`canPublishPlanning`), dans l'ordre des onglets ; tous pour un admin. */
+export function planningsDuBackOffice(
+  user: { email?: string | null } | null,
+  profile: { plannings?: string[]; notify?: string[] } | null
+): OngletPlanning[] {
+  if (!user) return [];
+  if (isAdminUser(user)) return [...ONGLETS_PLANNING];
+  const publies = PUBLISHABLE_PLANNINGS.filter((p) => canPublishPlanning(p, false, profile?.notify ?? [])).map((p) => p.key);
+  const siens = new Set([...(profile?.plannings ?? []), ...publies].map(ongletDeLaGrille));
+  return ONGLETS_PLANNING.filter((o) => siens.has(o));
+}
+
 /** Les widgets qu'une personne peut ajouter à son tableau de bord (table des widgets), dans
  *  l'ordre du catalogue. Vide pour qui n'est pas responsable. */
 export function widgetsPermis(user: AuthUser | null, profile: UserProfile | null): WidgetId[] {

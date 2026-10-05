@@ -9,6 +9,7 @@ import { useGrilleApp } from "@/lib/planning/useGrilleApp"
 import { useProfile } from "@/lib/firebase/users"
 import { canEditPlanning, isAdminUser } from "@/lib/access"
 import { BACK_OFFICE } from "@/lib/backOffice"
+import { useGestionPlanning } from "@/lib/planning/gestion"
 import { AncienTableau } from "./AncienTableau"
 
 // Une séance par trimestre, pas de publication par trimestre : toute l'année
@@ -21,7 +22,8 @@ function IntergroupePage() {
   // Pas de fallback compilé : une liste vide est un état valide (aucun
   // intergroupe planifié), on n'affiche donc pas de bannière « périmé ».
   const { rows, status } = useSheet<string[]>(fetchIntergroupe, [])
-  const peutModifier = canEditPlanning(user, profile, GRILLE_INTERGROUPE.key)
+  const gestion = useGestionPlanning()
+  const peutModifier = gestion && canEditPlanning(user, profile, GRILLE_INTERGROUPE.key)
   const { datesDansLApp, comptes } = useGrilleApp(GRILLE_INTERGROUPE.key, peutModifier)
 
   return (

@@ -21,6 +21,7 @@ import {
 } from "@/lib/planning/releases"
 import { FilterButtons } from "@/components/planning/FilterButtons"
 import { BACK_OFFICE } from "@/lib/backOffice"
+import { useGestionPlanning } from "@/lib/planning/gestion"
 import { AncienTableau } from "./AncienTableau"
 
 // Lot 17 / G1 : la grille s'affiche **trimestre par trimestre** (Timothée,
@@ -47,7 +48,8 @@ function CultePage() {
   const [annee, setAnnee] = useState(anneeCourante)
   const [published, setPublished] = useState<Record<number, string[]>>({})
 
-  const peutModifier = canEditPlanning(user, profile, "culte")
+  const gestion = useGestionPlanning()
+  const peutModifier = gestion && canEditPlanning(user, profile, "culte")
   const { datesDansLApp, comptes } = useGrilleApp("culte", peutModifier)
 
   useEffect(() => {
@@ -56,7 +58,7 @@ function CultePage() {
       .then(entries => setPublished(Object.fromEntries(entries)))
   }, [])
 
-  const canPublish = canPublishPlanning(CULTE, isAdminUser(user), profile?.notify ?? [])
+  const canPublish = gestion && canPublishPlanning(CULTE, isAdminUser(user), profile?.notify ?? [])
   // Q4 (lot U2) : le brouillon se montre à qui remplit ou publie ce planning, et aux admins.
   const voitBrouillon = canPublish || peutModifier
   const {

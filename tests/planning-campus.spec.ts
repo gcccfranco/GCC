@@ -50,10 +50,11 @@ test("le volet Grille : matin puis soir, treize colonnes, la répétition en tex
 });
 
 test("avec le droit sur le matin : une case s'écrit, le soir reste en lecture, et les cartes suivent", async ({ page }) => {
-  const db = await open(page, RESPONSABLE, "/planning/campus");
+  const db = await open(page, RESPONSABLE, "/back-office/planning/campus");
   await page.getByRole("button", { name: "Grille", exact: true }).click();
-  await expect(page.getByRole("button", { name: "Modifier" })).toHaveCount(1);
-  await grille(page, "campusMatin").getByRole("button", { name: "Modifier" }).click();
+  // Lot U6, B2 : au Back-Office, la grille du matin s'ouvre en modification ; le soir, en lecture.
+  await expect(grille(page, "campusMatin").locator("[data-case]").getByRole("button").first()).toBeVisible();
+  await expect(grille(page, "campusSoir").locator("[data-case]").getByRole("button")).toHaveCount(0);
   await laCase(page, "campusMatin", "2026-09-20", "piano").getByRole("button").click();
   // P9 (lot U2) : « Choisir », puis un nom écrit à la main.
   await page.getByRole("button", { name: "Écrire un nom sans compte…" }).click();
@@ -77,7 +78,7 @@ test("avec le droit sur le matin : une case s'écrit, le soir reste en lecture, 
 // Lot U2, P7 : « Exporter (modèle du Sheet) » remplace le CSV et l'ancien PDF du
 // lot 17 (question 6) ; l'onglet Campus_Louange mêle matin et soir, dans l'ordre des dates.
 test("« Exporter (modèle du Sheet) » depuis la grille du matin : une page, matin et soir mêlés", async ({ page }) => {
-  await open(page, RESPONSABLE, "/planning/campus");
+  await open(page, RESPONSABLE, "/back-office/planning/campus");
   await page.getByRole("button", { name: "Grille", exact: true }).click();
   await expect(grille(page, "campusSoir").getByRole("button", { name: /Exporter/ }), "le soir n'est pas à elle").toHaveCount(0);
   await grille(page, "campusMatin").getByRole("button", { name: "Exporter (modèle du Sheet)" }).click();

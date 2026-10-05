@@ -6,7 +6,8 @@ import { EntreeEnAttente } from "./EntreeEnAttente";
 // mènent à l'écran d'aujourd'hui, sans page vide. Chaque tranche pose sa page à l'adresse
 // fixe (`/back-office/taches/page.tsx`…), qui l'emporte sur celle-ci ; la dernière la retire.
 // Calendrier (U8) et Statistiques (U7) arrivent avec leur lot : d'ici là, 404.
-const EN_ATTENTE: readonly Entree[] = ["planning", "taches", "evenements", "equipes", "messages"];
+// B2 a posé Planning, Équipes et Messages ; restent Tâches et Évènements (B3).
+const EN_ATTENTE: readonly Entree[] = ["taches", "evenements"];
 
 // Toute autre adresse répond 404 avant même le rendu (un `notFound()` dans la page arrive
 // après l'envoi du gabarit : la page « introuvable » partirait avec un statut 200).

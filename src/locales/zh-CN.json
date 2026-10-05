@@ -995,8 +995,6 @@
       "clear": "清除"
     },
     "grille": {
-      "modifier": "修改",
-      "termine": "完成",
       "enregistre": "已保存",
       "plusTot": "查看更早",
       "plusTard": "查看更晚",
@@ -2274,6 +2272,20 @@
     "menu": "你的模块",
     "enAttente": "这部分将随后续开发移入后台。目前请在这里使用：",
     "scene": "舞台",
-    "administration": "管理"
+    "sousParties": "子栏目",
+    "plannings": "排班表",
+    "planningReserve": "仅限该排班表的负责人。",
+    "adminReserve": "仅限管理员。",
+    "parties": {
+      "reception": "收件箱",
+      "notifier": "发送通知",
+      "questionnaire": "问卷",
+      "organigramme": "组织架构",
+      "personnes": "成员",
+      "inscriptions": "注册",
+      "import": "导入",
+      "plannings": "排班表",
+      "sansCompte": "无账号"
+    }
   }
 }

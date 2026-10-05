@@ -551,8 +551,9 @@ test("QR code : un simple membre n'a pas le bouton", async ({ page }) => {
 // 20/09/2026 (lot 18, D4) : la section Annonces est retirée (« jusqu'à présent on l'a
 // jamais utilisée »). La migration n'a jamais été lancée : son bouton et sa route partent.
 test("annonces retirées : l'administration ne propose plus de migration, la route n'existe plus", async ({ page, request }) => {
-  await member(page, TIM, "/admin");
-  await page.getByRole("button", { name: "Inscriptions", exact: true }).click();
+  // Lot U6, B2 : l'onglet Inscriptions de l'administration est Équipes › Inscriptions.
+  await member(page, TIM, "/back-office/equipes/inscriptions");
+  await expect(page.getByRole("heading", { name: "Inscriptions" })).toBeVisible();
   await expect(page.getByRole("button", { name: /Migrer les annonces/ })).toHaveCount(0);
   expect((await request.post("/api/admin/migrer-annonces/")).status()).toBe(404);
 });

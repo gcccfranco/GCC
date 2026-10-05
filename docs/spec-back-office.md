@@ -376,6 +376,57 @@ npm test && npx tsc --noEmit && npm run lint && graphify update .
 
 ## Avancement
 
+**05/10/2026 — B2 « Admin fusionnée » codée** (branche `lot/u6-back-office`, après la fusion de
+`lot/u2-planning-2027` et `lot/u3-petit-dej`, commit « feat(U6): B2 — Admin fusionnée… »). Faites : R1 à R4, B1,
+B2. Restent B3 (Tâches et Évènements), et B4 à B6 (dans `lot/u6b-tableau-de-bord`).
+
+- **Blocs de l'administration** sortis de `admin/page.tsx` dans `src/components/admin/` (un fichier par bloc, chacun
+  charge ses données) : `Reception` (signalements, propositions), `Personnes` (Membres : fiche, pôles, droits),
+  `InscriptionsComptes`, `ImportPlanning` (import du Sheet, « Reprendre les noms du petit déj »), `SansCompte`,
+  `ImportEquipes` (import de l'organigramme, « Recalculer »), et `commun.tsx` (`Pill`, `ListePuces`,
+  `ReserveAuxAdmins`). Notifier sort de `notifier/page.tsx` dans `src/components/messages/Notifier.tsx`.
+- **Pages** (table Q3, adresses Q4), titre et sous-parties en contrôle segmenté
+  (`src/components/backOffice/EnTeteEntree.tsx`, `nav` « Sous-parties », absent s'il n'y a qu'une sous-partie) :
+  - **Messages** (`/back-office/messages`) : Réception (admins), Notifier (`…/notifier`, droit `notify`),
+    Questionnaire (`…/questionnaire`, admins) ; qui ne fait que notifier arrive sur Notifier. Notifier y perd
+    « Publier un planning » (passé au Planning, « Publier le T… » de U2) et la destination « Annonces » (question 13).
+  - **Équipes** (`/back-office/equipes`) : Organigramme (`EquipesClient` en gestion, droit Équipes), Personnes,
+    Inscriptions, Import (admins). Dans l'App, `/equipes` se lit, même pour un admin (question 4) ; le lien
+    « Ouvrir dans l'administration » de la fiche mène à Équipes › Personnes.
+  - **Planning** (`/back-office/planning`) : mène au premier planning de la personne ; `…/<onglet>` pour
+    `planningsDuBackOffice` (`src/lib/access.ts` : ceux qu'on remplit ou publie, dans l'ordre des onglets ; tous pour
+    un admin), en pilules « Plannings » ; Import et Sans compte (admins). Les pages sont celles de l'App
+    (`src/app/planning/*/page.tsx`), rendues en gestion par le contexte `GestionPlanning`
+    (`src/lib/planning/gestion.ts`) : saisie, « Publier le T… », export et brouillon **au Back-Office seulement**.
+    La grille s'ouvre directement en modification pour qui la remplit (plus de bouton « Modifier » ni « Terminé » :
+    clés `planning.grille.modifier` et `termine` retirées). Pleine largeur.
+- **App** : le planning se lit (ni saisie, ni export, ni publication, ni brouillon, même pour qui en a le droit) ;
+  l'onglet Table montre la carte Petit déj (inchangée : « Je m'inscris », ＋, ✎, « Retirer ») et la carte compacte
+  « Prépa. Table du Seigneur » (l'équipe du dimanche qui vient), sans grille. Au Back-Office, la Table est la grille
+  seule (sa colonne Petit déj lit les inscriptions par `fetchTable`).
+- **Anciennes adresses** : `/admin` → `/back-office`, `/notifier` → `/back-office/messages/notifier` ; Moi et le
+  menu du compte n'ont plus Notifier ni Administration ; la notification d'un signalement ouvre Messages. **Interrupteur
+  coupé (en ligne), rien ne change** : `/admin` et `/notifier` restent les pages d'avant (`AncienneAdmin.tsx` assemble
+  les mêmes blocs en onglets), Moi et le menu les gardent, toutes les adresses `/back-office/…` répondent 404.
+- **Libellés** `backOffice.sousParties`, `plannings`, `planningReserve`, `adminReserve`, `parties.*` en FR et 中文
+  (收件箱, 发送通知, 问卷, 组织架构, 成员, 注册, 导入, 排班表, 无账号 ; « 仅限该排班表的负责人。 », « 仅限管理员。 ») ;
+  `backOffice.administration` retirée. Les anciens blocs restent en français (Q16).
+- **Tests** : `tests/back-office-admin.spec.ts` (nouveau, ajouté à `SPECS_GRAND_ECRAN`) écrit avant le code et vu
+  rouge (19 tests sur 19), puis vert sur les trois appareils et les deux grands écrans : `planningsDuBackOffice`,
+  chaque bloc à sa place avec ses droits, redirections, App en lecture, Table en cartes, Moi et menu du compte,
+  captures `test-results/back-office-captures/b2-*.png`. `back-office-coupe.spec.ts` : `/admin` et `/notifier`
+  inchangés, Moi garde Notifier et Admin, sept adresses du Back-Office en 404. Tests déplacés au Back-Office (saisie,
+  publication, export, brouillon) : `planning-grille`, `-2027`, `-campus`, `-edd`, `-groupes-grille`, `-table`,
+  `-export-modele`, `-import`, `-petit-dej`, `equipes`, `evenements` (inscriptions), `coherence` (fichiers déplacés).
+- **Choix faits faute de réponse dans la spec** : l'App montre ce que voit un membre (pas de brouillon, même pour qui
+  remplit ou publie) ; « Publier le T… » au Back-Office seulement ; les pilules gardent les libellés des onglets de
+  l'App (« Culte Franco », « Prépa. Table ») plutôt que ceux, plus courts, de la planche ; un planning qu'on ne
+  remplit ni ne publie répond « Page réservée aux responsables de ce planning. » au Back-Office (il se lit dans
+  l'App) ; Notifier, au Back-Office, garde « Planning » et « Mes services » comme destinations ; la Réception reste
+  l'écran d'aujourd'hui (la liste et le message côte à côte des planches `bo-reception-*` sont à
+  `spec-pages-en-grand.md`, Q15).
+- **À faire par Timothée** : rien dans `firestore.rules` (aucun droit ne change : chaque bloc garde sa règle).
+
 **05/10/2026 — B1 « Espace » codée** (branche `lot/u6-back-office`, après la fusion de `lot/u4-navigation`,
 commit « feat(U6): B1 — espace Back-Office… »). Faites : R1 à R4, B1. Restent B2 à B6.
 

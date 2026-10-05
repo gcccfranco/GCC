@@ -995,8 +995,6 @@
       "clear": "Effacer"
     },
     "grille": {
-      "modifier": "Modifier",
-      "termine": "Terminé",
       "enregistre": "Enregistré",
       "plusTot": "Voir plus tôt",
       "plusTard": "Voir plus tard",
@@ -2277,6 +2275,20 @@
     "menu": "Tes modules",
     "enAttente": "Cette partie arrive au Back-Office avec la suite du chantier. En attendant, elle est ici :",
     "scene": "Scène",
-    "administration": "Administration"
+    "sousParties": "Sous-parties",
+    "plannings": "Plannings",
+    "planningReserve": "Page réservée aux responsables de ce planning.",
+    "adminReserve": "Page réservée aux administrateurs.",
+    "parties": {
+      "reception": "Réception",
+      "notifier": "Notifier",
+      "questionnaire": "Questionnaire",
+      "organigramme": "Organigramme",
+      "personnes": "Personnes",
+      "inscriptions": "Inscriptions",
+      "import": "Import",
+      "plannings": "Plannings",
+      "sansCompte": "Sans compte"
+    }
   }
 }

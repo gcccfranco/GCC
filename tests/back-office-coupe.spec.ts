@@ -78,6 +78,33 @@ test.describe("back-office coupé : une adresse tapée à la main tombe dans le 
   }
 });
 
+// Lot U6 (B2) : en ligne, l'Admin et Notifier restent les pages d'aujourd'hui (le
+// Back-Office qui les accueille n'y répond pas) ; Moi et le menu du compte les gardent.
+test.describe("back-office coupé : l'administration et Notifier restent où ils sont", () => {
+  test("/admin et /notifier ne redirigent pas", async ({ page }) => {
+    await signInAs(page, ADMIN, {}, "/admin");
+    await expect(page.getByRole("heading", { name: "Administration" })).toBeVisible();
+    await expect(page).toHaveURL(/\/admin\/?$/);
+    await page.goto("/notifier");
+    await expect(page.getByRole("heading", { name: "Envoyer une notification" })).toBeVisible();
+    await expect(page).toHaveURL(/\/notifier\/?$/);
+  });
+
+  test("Moi garde Notifier et Administration", async ({ page }) => {
+    await signInAs(page, ADMIN, {}, "/moi");
+    const moi = page.getByRole("main");
+    await expect(moi.getByRole("link", { name: "Notifier" })).toBeVisible();
+    await expect(moi.getByRole("link", { name: "Admin" })).toBeVisible();
+  });
+
+  for (const chemin of ["/back-office/planning", "/back-office/planning/culte", "/back-office/planning/import", "/back-office/equipes", "/back-office/equipes/personnes", "/back-office/messages", "/back-office/messages/notifier"]) {
+    test(`${chemin} répond 404`, async ({ page }) => {
+      const reponse = await page.goto(chemin);
+      expect(reponse?.status()).toBe(404);
+    });
+  }
+});
+
 test.describe("back-office coupé : le planning reste le tableau d'aujourd'hui", () => {
   test("la page du Culte affiche un tableau lu dans le Sheet, sans grille, sans saisie ni export", async ({ page }) => {
     await page.clock.setFixedTime(new Date("2026-09-20T10:00:00"));
@@ -199,7 +226,9 @@ test.describe("back-office coupé : Percussion et Cours attendent l'ouverture du
     await ouvrir(page, "/planning/groupes");
     await expect(page.locator("[data-grille]"), "c'est bien l'ancien tableau").toHaveCount(0);
     await expect(page.getByText("Ancien G.").filter({ visible: true }).first()).toBeVisible();
-    await expect(page.getByText("Batteur B.").filter({ visible: true }), "le 29/11 à la présidence seulement").toHaveCount(1);
+    // Le pied de la barre latérale (lot U4) porte aussi le nom de planning : hors d'elle.
+    const page_ = page.locator("main").filter({ has: page.getByText("Ancien G.") }).last();
+    await expect(page_.getByText("Batteur B.").filter({ visible: true }), "le 29/11 à la présidence seulement").toHaveCount(1);
   });
 });
 

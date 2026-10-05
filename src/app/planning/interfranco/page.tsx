@@ -9,6 +9,7 @@ import { useGrilleApp } from "@/lib/planning/useGrilleApp"
 import { useProfile } from "@/lib/firebase/users"
 import { canEditPlanning, isAdminUser } from "@/lib/access"
 import { BACK_OFFICE } from "@/lib/backOffice"
+import { useGestionPlanning } from "@/lib/planning/gestion"
 import { AncienTableau } from "./AncienTableau"
 
 // Une séance par trimestre, pas de publication par trimestre : toute l'année
@@ -18,7 +19,8 @@ function InterfrancoPage() {
   const { t } = useTranslation()
   const { user, profile } = useProfile()
   const { rows, status } = useSheet<string[]>(fetchInterfranco, [])
-  const peutModifier = canEditPlanning(user, profile, GRILLE_INTERFRANCO.key)
+  const gestion = useGestionPlanning()
+  const peutModifier = gestion && canEditPlanning(user, profile, GRILLE_INTERFRANCO.key)
   const { datesDansLApp, comptes } = useGrilleApp(GRILLE_INTERFRANCO.key, peutModifier)
 
   return (

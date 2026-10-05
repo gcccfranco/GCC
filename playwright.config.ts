@@ -23,6 +23,8 @@ const SPECS_GRAND_ECRAN = [
   /coup-d-oeil\.spec\.ts/,
   // Lot U6 (spec-back-office.md, Tests) : l'espace Back-Office, B1.
   /back-office-espace\.spec\.ts/,
+  // B2 : Planning, Équipes, Messages rangés dans le Back-Office (pleine largeur, barre latérale).
+  /back-office-admin\.spec\.ts/,
 ];
 
 export default defineConfig({

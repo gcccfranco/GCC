@@ -22,6 +22,7 @@ import {
   getPublishedQuarters,
 } from "@/lib/planning/releases"
 import { BACK_OFFICE } from "@/lib/backOffice"
+import { useGestionPlanning } from "@/lib/planning/gestion"
 import { AncienTableau } from "./AncienTableau"
 
 // Les trois groupes, remplis dans l'app depuis le 19/09/2026 (lot 17, G6) :
@@ -44,6 +45,7 @@ const GRP_INACTIVE = "bg-card text-muted-foreground border-border hover:text-for
 function GroupesPage() {
   const { t } = useTranslation()
   const { user, profile } = useProfile()
+  const gestion = useGestionPlanning()
   const [paix, setPaix] = useState(PAIX_FALLBACK)
   const [fid, setFid] = useState(FIDELITE_FALLBACK)
   const [fidM, setFidM] = useState(FIDELITE_MUSIC_FALLBACK)
@@ -92,12 +94,12 @@ function GroupesPage() {
     : GRILLE_FIDELITE
   const rows = grp === "paix" ? paix : grp === "bonte" ? bonte : fidSub === "musiciens" ? fidM : fid
 
-  const peutModifier = canEditPlanning(user, profile, definition.key)
+  const peutModifier = gestion && canEditPlanning(user, profile, definition.key)
   const { datesDansLApp, comptes } = useGrilleApp(definition.key, peutModifier)
 
   // Trimestres futurs non publiés du groupe actif : masqués aux membres, marqués aux publieurs.
   const planning = PUBLISHABLE_PLANNINGS.find(p => p.key === grp)!
-  const canPublish = canPublishPlanning(planning, isAdminUser(user), profile?.notify ?? [])
+  const canPublish = gestion && canPublishPlanning(planning, isAdminUser(user), profile?.notify ?? [])
   // Q4 (lot U2) : le brouillon se montre à qui remplit ou publie ce planning, et aux admins.
   const voitBrouillon = canPublish || peutModifier
   const {

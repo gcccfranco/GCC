@@ -29,7 +29,7 @@ const FOND = serviceButtonFill(COULEUR)
 const NOM_MAX = 80
 
 /** « 4 oct. », « 1er nov. » ; 中文 « 10月4日 ». */
-function dateCourte(iso: string, lang: string): string {
+export function dateCourte(iso: string, lang: string): string {
   const [y, m, d] = iso.split("-").map(Number)
   if (lang === "zh-CN") return `${m}月${d}日`
   return `${d === 1 ? "1er" : d} ${new Date(y, m - 1, d).toLocaleDateString("fr-FR", { month: "short" })}`

@@ -13,6 +13,7 @@ import { useGrilleApp } from "@/lib/planning/useGrilleApp"
 import { useProfile } from "@/lib/firebase/users"
 import { canEditPlanning, isAdminUser } from "@/lib/access"
 import { BACK_OFFICE } from "@/lib/backOffice"
+import { useGestionPlanning } from "@/lib/planning/gestion"
 import { AncienTableau } from "./AncienTableau"
 
 // Campus : les cartes Louange / Répétition restent la lecture ; le volet
@@ -48,8 +49,9 @@ function CampusPage() {
   const [sub, setSub] = useState<CampusSub>("louange")
   const [loading, setLoading] = useState(true)
 
-  const peutMatin = canEditPlanning(user, profile, GRILLE_CAMPUS_MATIN.key)
-  const peutSoir = canEditPlanning(user, profile, GRILLE_CAMPUS_SOIR.key)
+  const gestion = useGestionPlanning()
+  const peutMatin = gestion && canEditPlanning(user, profile, GRILLE_CAMPUS_MATIN.key)
+  const peutSoir = gestion && canEditPlanning(user, profile, GRILLE_CAMPUS_SOIR.key)
   const matinApp = useGrilleApp(GRILLE_CAMPUS_MATIN.key, peutMatin)
   const soirApp = useGrilleApp(GRILLE_CAMPUS_SOIR.key, peutSoir)
 

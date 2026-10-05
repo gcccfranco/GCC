@@ -4,8 +4,11 @@
 // équipes telles qu'elles sont tenues, et la vue d'ensemble des musiciens, qui
 // est un calcul (D6) — elle n'est jamais ressaisie. L'édition ne s'affiche
 // qu'à qui a le droit (admins + droit « Équipes » du profil, D4).
+// Lot U6, B2 (question 4) : l'édition passe au Back-Office (Équipes ›
+// Organigramme, `gestion`) ; dans l'App, l'organigramme se lit, même un admin.
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { useTranslation } from "react-i18next";
 import { Pencil, X } from "lucide-react";
 import { PageTitle } from "@/components/layout/PageTitle";
@@ -31,7 +34,7 @@ const nomComplet = (p: UserProfile) =>
 const referentsDabord = (a: MembreEquipe, b: MembreEquipe) =>
   Number(b.referent) - Number(a.referent);
 
-export function EquipesClient() {
+export function EquipesClient({ gestion = false }: { gestion?: boolean }) {
   const { t } = useTranslation();
   const { user, profile } = useProfile();
   const [equipes, setEquipes] = useState<Equipe[]>([]);
@@ -46,12 +49,13 @@ export function EquipesClient() {
     loadPlanningData().then(setPlanning);
   }, []);
 
-  const peutEditer = canEditerEquipes(user, profile);
+  const peutEditer = gestion && canEditerEquipes(user, profile);
   const onglets = [t("equipes.onglet.equipes"), t("equipes.onglet.musiciens")];
 
   return (
-    <div className="max-w-5xl mx-auto px-4 pt-6 pb-10 space-y-5">
-      <PageTitle title={t("equipes.title")} subtitle={t("equipes.sousTitre")} />
+    <div className={gestion ? "space-y-5" : "max-w-5xl mx-auto px-4 pt-6 pb-10 space-y-5"}>
+      {/* Au Back-Office, le titre est celui de l'entrée (EnTeteEntree). */}
+      {!gestion && <PageTitle title={t("equipes.title")} subtitle={t("equipes.sousTitre")} />}
       <FilterButtons
         options={onglets}
         active={onglets[onglet === "equipes" ? 0 : 1]}
@@ -480,9 +484,9 @@ function FichePersonne({
             <p className="text-sm text-muted-foreground">{t("equipes.fiche.rien")}</p>
           )}
           {admin && p && (
-            <a href="/admin" className="block text-sm font-semibold text-foreground underline underline-offset-2">
+            <Link href="/back-office/equipes/personnes" className="block text-sm font-semibold text-foreground underline underline-offset-2">
               {t("equipes.fiche.admin")}
-            </a>
+            </Link>
           )}
         </div>
       </DrawerContent>
