@@ -11,7 +11,6 @@ import { useProfile } from "@/lib/firebase/users";
 import { getSetlists, type FSSetlist } from "@/lib/firebase/setlists";
 import {
   loadPlanningData,
-  findMyServices,
   normalizeName,
   serviceCategory,
   type PlanningData,
@@ -20,6 +19,9 @@ import {
 import { MOIS } from "@/lib/planning/utils";
 import { serviceColor } from "@/lib/serviceColors";
 import { PushPrompt } from "@/components/push/PushPrompt";
+import { BACK_OFFICE } from "@/lib/backOffice";
+import { lirePetitDej, servicesDuCompte, servicesPetitDejDuCompte } from "@/lib/petitdej/lignes";
+import type { LignePetitDej } from "@/types/petitDej";
 
 type Tab = "upcoming" | "past";
 
@@ -80,9 +82,14 @@ export default function MesServicesPage() {
   const [data, setData] = useState<PlanningData | null>(null);
   const [setlists, setSetlists] = useState<FSSetlist[]>([]);
   const [tab, setTab] = useState<Tab>("upcoming");
+  // Petits déj rattachés par le compte (U3, Q9) ; null tant qu'ils ne sont pas lus.
+  // Coupé, aucune lecture des inscriptions (Q14).
+  const [lignesPetitDej, setLignesPetitDej] = useState<LignePetitDej[] | null>(BACK_OFFICE ? null : []);
 
   useEffect(() => {
     loadPlanningData().then(setData);
+    // Même lecture que loadPlanningData (cache partagé) ; en échec, aucune ligne.
+    if (BACK_OFFICE) lirePetitDej().then(setLignesPetitDej, () => setLignesPetitDej([]));
   }, []);
 
   useEffect(() => {
@@ -140,10 +147,13 @@ export default function MesServicesPage() {
     return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
   }, []);
 
+  // Un compte sans nom de planning qui a des lignes voit la page avec ses petits déj (U3, question 4).
+  const aDesPetitsDej = !!user && !!lignesPetitDej && servicesPetitDejDuCompte(lignesPetitDej, user.uid, "").length > 0;
+
   const entries = useMemo(() => {
-    if (!data || !profile?.planningName) return [];
-    return groupEntries(findMyServices(data, profile.planningName));
-  }, [data, profile]);
+    if (!data || !user || !profile) return [];
+    return groupEntries(servicesDuCompte(data, lignesPetitDej ?? [], user.uid, profile.planningName ?? ""));
+  }, [data, user, profile, lignesPetitDej]);
 
   const shown = useMemo(
     () =>
@@ -159,7 +169,7 @@ export default function MesServicesPage() {
     [entries, todayStr]
   );
 
-  if (authLoading) {
+  if (authLoading || (profile && !profile.planningName && !lignesPetitDej)) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <p className="text-sm text-muted-foreground">{t("mesServices.loading")}</p>
@@ -181,7 +191,7 @@ export default function MesServicesPage() {
     );
   }
 
-  if (!profile || !profile.planningName) {
+  if (!profile || (!profile.planningName && !aDesPetitsDej)) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-3 px-4 text-center">
         <UserPen className="h-8 w-8 text-muted-foreground" />
@@ -200,7 +210,7 @@ export default function MesServicesPage() {
       <div className="max-w-2xl mx-auto px-4 pt-6 pb-10 space-y-4">
         <PageTitle
           title={t("mesServices.title")}
-          subtitle={t("mesServices.subtitle", { name: profile.planningName })}
+          subtitle={t("mesServices.subtitle", { name: profile.planningName || `${profile.firstName} ${profile.lastName}`.trim() })}
           action={
             upcomingCount > 0 && (
               <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-secondary text-foreground">

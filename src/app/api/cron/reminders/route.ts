@@ -16,6 +16,7 @@ import { membresDuPole } from "@/lib/taches/serveur";
 import type { Fois, Tache, TachePole } from "@/types/tache";
 import type { Creneau, Programme } from "@/types/programme";
 import { currentProgramme } from "@/lib/scene/dimanches";
+import { ajouterPetitDejAuxRappels, lirePetitDej } from "@/lib/petitdej/lignes";
 import {
   loadPlanningData,
   servantsForDate,
@@ -172,6 +173,9 @@ export async function GET(req: NextRequest) {
   // Back-office coupé (lot 18, docs/spec-mise-en-ligne.md) : le rappel du matin ne
   // parle que des services — ni scène, ni tâches, ni évènements.
   const creneaux = BACK_OFFICE ? await sceneCreneaux(db, REMINDERS.map((r) => isoInDays(r.days)), isoInDays(0)) : [];
+  // Petit déj (lot U3, Q9) : les inscriptions, déjà lues par loadPlanningData
+  // (même cache) ; en échec, rien de plus que ce que les noms ont trouvé.
+  const lignesPetitDej = BACK_OFFICE ? await lirePetitDej().catch(() => []) : [];
   // Rappels de tâches : ajoutés à la première notification de service de la
   // personne aujourd'hui, sinon envoyés seuls après la boucle.
   const taches: Awaited<ReturnType<typeof rappelsTaches>> = BACK_OFFICE ? await rappelsTaches(db, isoInDays(0)) : new Map();
@@ -211,6 +215,9 @@ export async function GET(req: NextRequest) {
       if (!services.length) continue;
       for (const u of index.get(normalizeName(name)) ?? []) if (!byUid.has(u)) byUid.set(u, services);
     }
+    // Petit déj : chaque inscrit par son compte, même réécrit (« Famille … ») ou
+    // sans nom de planning ; déjà trouvé par son nom, rien de plus.
+    ajouterPetitDejAuxRappels(byUid, lignesPetitDej, date);
     // Entraînements sur scène ce jour-là : l'auteur et les membres ayant un
     // rôle dans le « qui » (quand il correspond à une catégorie de l'app).
     for (const c of creneaux.filter((x) => x.dimanche === date)) {

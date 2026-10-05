@@ -8,7 +8,8 @@
 // src/lib/firebase/petitDej.ts. Le reste du module est pur.
 
 import type { LignePetitDej } from "@/types/petitDej"
-import { normalizeName, splitNames, type ServiceEntry } from "@/lib/planning/names"
+import { findMyServices, normalizeName, splitNames, type PlanningData, type ServiceEntry } from "@/lib/planning/names"
+import type { ReminderService } from "@/lib/push/reminderMessage"
 
 const FS_DOCS =
   "https://firestore.googleapis.com/v1/projects/gcclouange/databases/(default)/documents"
@@ -115,6 +116,33 @@ export function servicesPetitDejDuCompte(lignes: LignePetitDej[], uid: string, p
   const trouvesParLeNom = new Set(lignes.filter((l) => porteSonNom(l.nom)).map((l) => l.dimanche))
   const dates = new Set(lignes.filter((l) => l.uid === uid && !trouvesParLeNom.has(l.dimanche)).map((l) => l.dimanche))
   return [...dates].sort().map((date) => ({ date, service: "Petit déj", role: "Équipe", leader: "" }))
+}
+
+/**
+ * Les services d'un compte (PD3) : par son nom de planning (`findMyServices`,
+ * rien sans nom) et ses petits déj par `uid` (`servicesPetitDejDuCompte`), sans
+ * doublon, triés comme `findMyServices`. « Ton prochain service » et « Mes services ».
+ */
+export function servicesDuCompte(data: PlanningData, lignes: LignePetitDej[], uid: string, planningName: string): ServiceEntry[] {
+  return [
+    ...(planningName.trim() ? findMyServices(data, planningName) : []),
+    ...servicesPetitDejDuCompte(lignes, uid, planningName),
+  ].sort((a, b) => a.date.localeCompare(b.date) || a.service.localeCompare(b.service))
+}
+
+/**
+ * Rappels J-7 / J-3 / J-1 (PD3, Q9), sur le patron des créneaux de scène :
+ * « Petit déj » ajouté aux services de chaque inscrit (`uid`) du dimanche
+ * `date`, même sans nom de planning ; une seule fois (déjà trouvé par son nom
+ * de planning : rien de plus). Une ligne posée pour quelqu'un (`uid` vide) ne
+ * prévient personne par ce chemin. Les listes de `parUid` ne sont pas modifiées
+ * (le cron en partage une entre les comptes d'un même nom) : remplacées.
+ */
+export function ajouterPetitDejAuxRappels(parUid: Map<string, ReminderService[]>, lignes: LignePetitDej[], date: string): void {
+  for (const uid of new Set(lignes.filter((l) => l.dimanche === date && l.uid).map((l) => l.uid))) {
+    const siens = parUid.get(uid) ?? []
+    if (!siens.some((s) => s.service === "Petit déj")) parUid.set(uid, [...siens, { service: "Petit déj", roles: [] }])
+  }
 }
 
 /**

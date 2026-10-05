@@ -144,7 +144,7 @@ test.describe("back-office coupé : le petit déj vient encore du Sheet", () => 
       creeLe: "2026-09-09T08:00:00.000Z", modifieLe: "2026-09-09T08:00:00.000Z",
     },
   };
-  const ouvrir = async (page: Page, dimanche: string, to: string) => {
+  const ouvrir = async (page: Page, dimanche: string, to: string, qui: FakeProfile = CHARLIE, docs: Record<string, Record<string, unknown>> = INSCRIPTION) => {
     const vendredi = new Date(`${dimanche}T10:00:00`);
     vendredi.setDate(vendredi.getDate() - 2);
     await page.clock.setFixedTime(vendredi);
@@ -154,7 +154,7 @@ test.describe("back-office coupé : le petit déj vient encore du Sheet", () => 
     });
     const lectures = { petitDej: 0 };
     page.on("request", (r) => { if (r.url().includes("firestore") && (r.postData() ?? "").includes('"petitDej"')) lectures.petitDej++; });
-    await signInAs(page, CHARLIE, INSCRIPTION, to);
+    await signInAs(page, qui, docs, to);
     return lectures;
   };
 
@@ -187,6 +187,19 @@ test.describe("back-office coupé : le petit déj vient encore du Sheet", () => 
   test("Mes services : le petit déj est un service à part entière", async ({ page }) => {
     await ouvrir(page, "2026-09-20", "/mes-services");
     await expect(page.getByText("Petit déj", { exact: true })).toBeVisible();
+  });
+
+  // PD3 : coupé, une inscription en base ne rattache rien — ni « Mes services »
+  // ouvert sans nom de planning, ni prochain service.
+  test("un compte sans nom de planning garde « choisis ton nom », même inscrit en base (PD3)", async ({ page }) => {
+    const sansNom: FakeProfile = { uid: "uid-sans-nom", email: "sans-nom@example.com" };
+    const inscrit = { "petitDej/b": { ...INSCRIPTION["petitDej/a"], dimanche: "2026-09-27", uid: sansNom.uid, auteurUid: sansNom.uid } };
+    const lectures = await ouvrir(page, "2026-09-27", "/mes-services", sansNom, inscrit);
+    await expect(page.getByText(/Choisis ton nom de planning/)).toBeVisible();
+    await page.goto("/planning");
+    await expect(page.getByRole("region", { name: /Ce dimanche/ })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Ton prochain service" })).toHaveCount(0);
+    expect(lectures.petitDej, "aucune lecture des inscriptions").toBe(0);
   });
 
   test("en 中文 : libellé traduit", async ({ page }) => {

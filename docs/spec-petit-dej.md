@@ -371,8 +371,31 @@ de poussé).
   lecture des inscriptions). Vus rouges (12) avant le code, verts ensuite sur ordinateur, téléphone et tablette ;
   `planning-2027`, `planning-import`, `planning-groupes-grille` verts ; captures regardées aux trois tailles.
 
-Reste : PD3, PD4, PD5.
+**05/10/2026 — PD3 (Ce dimanche, Mes services, rappels) : codée**, commit « feat(U3): PD3 » sur `lot/u3-petit-dej`
+(commits locaux, rien de poussé).
+
+- `src/lib/petitdej/lignes.ts` : `servicesDuCompte` (services par le nom de planning, `findMyServices`, plus les petits
+  déj par `uid`, `servicesPetitDejDuCompte`, sans doublon, triés) et `ajouterPetitDejAuxRappels` (pur : « Petit déj »
+  ajouté aux services de chaque inscrit du jour, une fois ; une ligne à `uid` vide ne passe que par son texte).
+- « Ton prochain service » (`src/app/planning/page.tsx`) : compte les lignes de l'inscrit, même réécrites et sans nom
+  de planning. « Ce dimanche » inchangé (ligne Petit déj seulement s'il y a une ligne, depuis PD1).
+- « Mes services » (`src/app/mes-services/page.tsx`) : la liste compte les lignes de l'inscrit ; un compte sans nom de
+  planning qui a des lignes voit la page, sous-titre « Les dates où Prénom Nom apparaît dans les plannings. », au lieu
+  de « choisis ton nom » (attente de la lecture, pas d'éclair) ; sans ligne, « choisis ton nom » comme avant.
+- Rappel du matin (`src/app/api/cron/reminders/route.ts`) : aux dates J-7, J-3, J-1, `ajouterPetitDejAuxRappels` après
+  les noms, avant les créneaux de scène (même patron) ; lecture en échec : rien de plus. Préférence « Rappels »,
+  `notifLog` et une notification par personne inchangés. Relu, pas exécuté (comme le reste du cron).
+- Coupé : aucune lecture des inscriptions sur ces pages ni dans le cron ; tout reste comme avant (Sheet).
+- Tests : `tests/planning-petit-dej.spec.ts` (rappels : par le compte, sans doublon, `uid` vide ignoré, liste
+  partagée intacte, `reminderBody` « Dimanche 20 septembre (demain) : Petit déj » et 早餐 ; prochain service par le
+  compte, une seule fois, sans nom de planning, rien sans ligne à soi ; Mes services : « Famille Martin » plus la ligne
+  à son nom = deux services, compte sans nom avec et sans ligne, 中文), `tests/back-office-coupe.spec.ts` (coupé : un
+  compte sans nom de planning inscrit en base garde « choisis ton nom », pas de prochain service, aucune lecture).
+  Vus rouges (18 sur 27) avant le code, verts ensuite sur ordinateur, téléphone et tablette ; captures regardées aux
+  trois tailles ; `tsc` et `lint` propres.
+
+Reste : PD4, PD5.
 
 À faire par Timothée : publier `firestore.rules` (règle `petitDej`) **avant** la validation en local ; relire les
-libellés 中文 de la carte (`planning.petitDej.*`). Remarque : à la fin d'un trimestre, la carte montre aussi ses
+libellés 中文 de la carte (`planning.petitDej.*`). PD3 n'ajoute ni règle ni libellé. Remarque : à la fin d'un trimestre, la carte montre aussi ses
 dimanches passés (Q11 : tous ceux du trimestre choisi), là où la planche n'en montrait qu'un.
