@@ -22,6 +22,11 @@ export function moisVoisin(mois: string, delta: number): string {
   return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
 }
 
+/** Le dernier jour de `mois` (« AAAA-MM ») : « AAAA-MM-JJ ». */
+export function finDuMois(mois: string): string {
+  return addDays(`${moisVoisin(mois, 1)}-01`, -1);
+}
+
 /** Le libellé d'une entrée dans une case, tronqué ensuite par le CSS (planche
  *  bo-calendrier) : « Culte Franco · Lou M. », « Réunion DA 20:00 »,
  *  « Petit déj : libre » ou le nom inscrit. */
@@ -44,9 +49,17 @@ const locale = (lang: NotifLang) => (lang === "zh-CN" ? "zh-CN" : "fr-FR");
 const majuscule = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 const utc = (iso: string) => new Date(`${iso}T00:00:00Z`);
 
-/** « Octobre 2026 » ; « 2026年10月 ». */
-export function titreMois(mois: string, lang: NotifLang): string {
+/** « Octobre 2026 » ; « 2026年10月 ». Sans l'année (téléphone, planche
+ *  bo-telephone-calendrier) : « Octobre » ; « 10月 ». */
+export function titreMois(mois: string, lang: NotifLang, sansAnnee = false): string {
+  if (sansAnnee) return majuscule(nomMois(mois, lang));
   return majuscule(utc(`${mois}-01`).toLocaleDateString(locale(lang), { month: "long", year: "numeric", timeZone: "UTC" }));
+}
+
+/** « novembre » ; « 11月 » (« Afficher novembre », « 显示11月 »). */
+export function nomMois(mois: string, lang: NotifLang): string {
+  if (lang === "zh-CN") return `${Number(mois.slice(5, 7))}月`;
+  return utc(`${mois}-01`).toLocaleDateString("fr-FR", { month: "long", timeZone: "UTC" });
 }
 
 /** « Dimanche 11 octobre », « Jeudi 1er octobre » ; « 10月11日星期日 ». */

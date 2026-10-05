@@ -670,11 +670,16 @@ async function sheets(page: Page, opts: { evenementsCoupe?: boolean } = {}) {
   });
 }
 
-async function ouvrir(page: Page, profil: FakeProfile = P_ADMIN, opts: { evenementsCoupe?: boolean } = {}) {
-  await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
+async function ouvrir(
+  page: Page,
+  profil: FakeProfile = P_ADMIN,
+  opts: { evenementsCoupe?: boolean; docs?: Record<string, Record<string, unknown>>; maintenant?: string } = {},
+) {
+  await page.clock.setFixedTime(new Date(opts.maintenant ?? "2026-10-01T10:00:00"));
   await sheets(page, opts);
-  const db = await signInAs(page, profil, DOCS, "/back-office/calendrier");
-  await expect(page.getByRole("heading", { level: 1, name: "Octobre 2026" })).toBeVisible();
+  const db = await signInAs(page, profil, { ...DOCS, ...opts.docs }, "/back-office/calendrier");
+  // « Octobre 2026 » ; « Octobre » sur téléphone (planche bo-telephone-calendrier, C4).
+  await expect(page.getByRole("heading", { level: 1, name: /^Octobre( 2026)?$/ })).toBeVisible();
   await expect(page.getByTestId("calendrier")).not.toHaveAttribute("aria-busy", "true");
   return db;
 }
@@ -683,6 +688,29 @@ const jour = (page: Page, date: string) => page.locator(`[data-jour="${date}"]`)
 const pastilles = (page: Page) => page.getByRole("group", { name: "Sources affichées" });
 /** Panneau du jour : à droite sur ordinateur et tablette couchée, en feuille ailleurs. */
 const panneauADroite = (info: TestInfo) => info.project.name.startsWith("ordinateur") || info.project.name === "tablette-paysage";
+/** Téléphone (C4) : Agenda d'office, Mois à points, pastilles dans la feuille « Sources ». */
+const estTelephone = (info: TestInfo) => info.project.name === "telephone";
+const SANS_TELEPHONE = "grille étiquetée : ordinateur et tablettes ; le téléphone a l'agenda et le Mois à points (C4)";
+
+/** Les pastilles des sources : en rangée, ou dans la feuille « Sources » sur téléphone. */
+async function sourcesAffichees(page: Page, info: TestInfo) {
+  if (estTelephone(info)) {
+    await page.getByRole("button", { name: "Sources", exact: true }).click();
+    return page.getByRole("dialog", { name: "Sources" }).getByRole("group", { name: "Sources affichées" });
+  }
+  return pastilles(page);
+}
+/** « Mois | Agenda » : choisit la vue (sans effet si elle l'est déjà). */
+async function vue(page: Page, nom: "Mois" | "Agenda") {
+  const bouton = page.getByRole("group", { name: "Affichage" }).getByRole("button", { name: nom });
+  if ((await bouton.getAttribute("aria-pressed")) !== "true") await bouton.click();
+  await expect(bouton).toHaveAttribute("aria-pressed", "true");
+}
+async function fermerSources(page: Page, info: TestInfo) {
+  if (!estTelephone(info)) return;
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("dialog", { name: "Sources" })).toHaveCount(0);
+}
 
 test.describe("C3 : la page du calendrier en Mois", () => {
   test("l'entrée « Calendrier » du menu du Back-Office mène à la page", async ({ page }) => {
@@ -696,10 +724,11 @@ test.describe("C3 : la page du calendrier en Mois", () => {
     const lien = page.getByRole("link", { name: "Calendrier" }).filter({ visible: true }).first();
     await expect(lien).toHaveAttribute("href", /^\/back-office\/calendrier\/?$/);
     await lien.click();
-    await expect(page.getByRole("heading", { level: 1, name: "Octobre 2026" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: /^Octobre( 2026)?$/ })).toBeVisible();
   });
 
-  test("octobre en grille : culte du 4 et sa présidence, Sheet le 6, réunion le 3, tâche le 15, scène et petit déj le dimanche", async ({ page }) => {
+  test("octobre en grille : culte du 4 et sa présidence, Sheet le 6, réunion le 3, tâche le 15, scène et petit déj le dimanche (ordinateur et tablettes)", async ({ page }, info) => {
+    test.skip(estTelephone(info), SANS_TELEPHONE);
     await ouvrir(page);
     await expect(page.getByTestId("grille-mois").locator("[data-jour]")).toHaveCount(42);
     await expect(jour(page, "2026-10-04").locator('[data-source="services"]')).toContainText("Culte Franco · Lou M.");
@@ -715,19 +744,23 @@ test.describe("C3 : la page du calendrier en Mois", () => {
     await expect(jour(page, "2026-09-28")).toHaveAttribute("data-hors-mois", "true");
   });
 
-  test("Setlists éteinte d'office ; une pastille éteinte retire sa source, même après rechargement", async ({ page }) => {
+  test("Setlists éteinte d'office ; une pastille éteinte retire sa source, même après rechargement", async ({ page }, info) => {
     await ouvrir(page);
-    await expect(pastilles(page).getByRole("button", { name: "Setlists" })).toHaveAttribute("aria-pressed", "false");
-    const taches = pastilles(page).getByRole("button", { name: "Tâches" });
+    let groupe = await sourcesAffichees(page, info);
+    await expect(groupe.getByRole("button", { name: "Setlists" })).toHaveAttribute("aria-pressed", "false");
+    const taches = groupe.getByRole("button", { name: "Tâches" });
     await expect(taches).toHaveAttribute("aria-pressed", "true");
     await taches.click();
     await expect(taches).toHaveAttribute("aria-pressed", "false");
+    await fermerSources(page, info);
     await expect(jour(page, "2026-10-15").locator('[data-source="taches"]')).toHaveCount(0);
     // L'entrée du Sheet du même jour reste.
     await expect(jour(page, "2026-10-15").locator('[data-source="evenements"]')).toHaveCount(1);
     await page.reload();
     await expect(page.getByTestId("calendrier")).not.toHaveAttribute("aria-busy", "true");
-    await expect(pastilles(page).getByRole("button", { name: "Tâches" })).toHaveAttribute("aria-pressed", "false");
+    groupe = await sourcesAffichees(page, info);
+    await expect(groupe.getByRole("button", { name: "Tâches" })).toHaveAttribute("aria-pressed", "false");
+    await fermerSources(page, info);
     await expect(jour(page, "2026-10-15").locator('[data-source="evenements"]')).toHaveCount(1);
     await expect(jour(page, "2026-10-15").locator('[data-source="taches"]')).toHaveCount(0);
   });
@@ -748,7 +781,8 @@ test.describe("C3 : la page du calendrier en Mois", () => {
     await expect(jour(page, "2026-10-11").locator('[data-source="services"]')).toHaveCount(0);
   });
 
-  test("toucher un jour ouvre le panneau du jour (à droite sur grand écran, en feuille sinon)", async ({ page }, info) => {
+  test("toucher un jour ouvre le panneau du jour (à droite sur grand écran, en feuille sinon ; ordinateur et tablettes)", async ({ page }, info) => {
+    test.skip(estTelephone(info), SANS_TELEPHONE);
     await ouvrir(page);
     await jour(page, "2026-10-11").click();
     const panneau = panneauADroite(info)
@@ -767,7 +801,8 @@ test.describe("C3 : la page du calendrier en Mois", () => {
     await expect(page.getByRole("complementary", { name: "Jeudi 1er octobre" })).toBeVisible();
   });
 
-  test("trois entrées dans une case, puis « +N », qui ouvre le jour entier", async ({ page }, info) => {
+  test("trois entrées dans une case, puis « +N », qui ouvre le jour entier (ordinateur et tablettes)", async ({ page }, info) => {
+    test.skip(estTelephone(info), SANS_TELEPHONE);
     await ouvrir(page);
     const quatre = jour(page, "2026-10-04");
     await expect(quatre.locator("[data-source]")).toHaveCount(3);
@@ -781,7 +816,8 @@ test.describe("C3 : la page du calendrier en Mois", () => {
     await expect(panneau.getByRole("link")).toHaveCount(3 + n);
   });
 
-  test("une entrée du Sheet : lecture seule, ni « Déplacer… », elle ouvre l'onglet du mois", async ({ page }, info) => {
+  test("une entrée du Sheet : lecture seule, ni « Déplacer… », elle ouvre l'onglet du mois (ordinateur et tablettes)", async ({ page }, info) => {
+    test.skip(estTelephone(info), SANS_TELEPHONE);
     await ouvrir(page);
     await jour(page, "2026-10-06").click();
     const panneau = panneauADroite(info)
@@ -795,11 +831,13 @@ test.describe("C3 : la page du calendrier en Mois", () => {
     await expect(panneau.getByRole("button", { name: /Déplacer/ })).toHaveCount(0);
   });
 
-  test("sans pôle : ni pastille Tâches ni Réunions, et aucune tâche", async ({ page }) => {
+  test("sans pôle : ni pastille Tâches ni Réunions, et aucune tâche", async ({ page }, info) => {
     await ouvrir(page, P_PLANNINGS);
-    await expect(pastilles(page).getByRole("button", { name: "Services" })).toBeVisible();
-    await expect(pastilles(page).getByRole("button", { name: "Tâches" })).toHaveCount(0);
-    await expect(pastilles(page).getByRole("button", { name: "Réunions" })).toHaveCount(0);
+    const groupe = await sourcesAffichees(page, info);
+    await expect(groupe.getByRole("button", { name: "Services" })).toBeVisible();
+    await expect(groupe.getByRole("button", { name: "Tâches" })).toHaveCount(0);
+    await expect(groupe.getByRole("button", { name: "Réunions" })).toHaveCount(0);
+    await fermerSources(page, info);
     await expect(page.locator('[data-source="taches"]')).toHaveCount(0);
   });
 
@@ -812,37 +850,263 @@ test.describe("C3 : la page du calendrier en Mois", () => {
 
   test("‹ › changent de mois, « Aujourd'hui » y revient", async ({ page }) => {
     await ouvrir(page);
+    await vue(page, "Mois");
     await page.getByRole("button", { name: "Mois suivant" }).click();
-    await expect(page.getByRole("heading", { level: 1, name: "Novembre 2026" })).toBeVisible();
-    await expect(page.getByTestId("grille-mois").locator("[data-jour]").first()).toHaveAttribute("data-jour", "2026-10-26");
+    await expect(page.getByRole("heading", { level: 1, name: /^Novembre( 2026)?$/ })).toBeVisible();
+    await expect(page.locator("[data-jour]").first()).toHaveAttribute("data-jour", "2026-10-26");
     await page.getByRole("button", { name: "Aujourd'hui" }).click();
-    await expect(page.getByRole("heading", { level: 1, name: "Octobre 2026" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: /^Octobre( 2026)?$/ })).toBeVisible();
     await page.getByRole("button", { name: "Mois précédent" }).click();
-    await expect(page.getByRole("heading", { level: 1, name: "Septembre 2026" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: /^Septembre( 2026)?$/ })).toBeVisible();
   });
 
-  test("中文 : titre, pastilles et entrées", async ({ page }) => {
+  test("中文 : titre, pastilles et entrées", async ({ page }, info) => {
     await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
     await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
     await sheets(page);
     await signInAs(page, P_ADMIN, DOCS, "/back-office/calendrier");
-    await expect(page.getByRole("heading", { level: 1, name: "2026年10月" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: estTelephone(info) ? "10月" : "2026年10月" })).toBeVisible();
     await expect(page.getByTestId("calendrier")).not.toHaveAttribute("aria-busy", "true");
+    if (estTelephone(info)) await page.getByRole("button", { name: "来源", exact: true }).click();
     const groupe = page.getByRole("group", { name: "显示的来源" });
     await expect(groupe.getByRole("button", { name: "任务" })).toBeVisible();
+    if (estTelephone(info)) await page.keyboard.press("Escape");
     await expect(page.getByRole("button", { name: "只看我的" })).toBeVisible();
-    await expect(jour(page, "2026-10-11").locator('[data-source="petitDej"]')).toContainText("早餐：空闲");
+    // La case de la grille dit « 早餐：空闲 » ; la carte de l'agenda, « 早餐 » puis « 空闲 ».
+    await expect(jour(page, "2026-10-11").locator('[data-source="petitDej"]')).toContainText(estTelephone(info) ? "空闲" : "早餐：空闲");
   });
 });
 
 test.describe("C3 : captures à regarder", () => {
   // Comparées à la planche bo-calendrier (ordinateur) ; tablettes et téléphone à l'œil.
-  test("octobre, puis le dimanche 11 ouvert, dans chaque disposition", async ({ page }, info) => {
+  test("octobre, puis le dimanche 11 ouvert, dans chaque disposition (ordinateur et tablettes)", async ({ page }, info) => {
+    test.skip(estTelephone(info), SANS_TELEPHONE);
     await ouvrir(page);
     await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
     await page.screenshot({ path: `test-results/calendrier-captures/${info.project.name}-mois.png` });
     await jour(page, "2026-10-11").click();
     await page.waitForTimeout(400);
     await page.screenshot({ path: `test-results/calendrier-captures/${info.project.name}-jour.png` });
+  });
+});
+
+// ─── C4 : Agenda (téléphone, et au choix en grand), feuille « Sources », Mois à points ───
+
+/** Une tâche aujourd'hui (planche : « Fond PPT du culte », « DA · échéance ») et une sortie en novembre. */
+const DOCS_AGENDA: Record<string, Record<string, unknown>> = {
+  "poles/da/taches/ppt": {
+    titre: "Fond PPT du culte", responsableUid: null, responsableNom: "", echeance: "2026-10-01", repetition: null,
+    lien: "", note: "", prevenir: null, evenement: null, auteurUid: "u-autre", createdAt: MAINTENANT, updatedAt: MAINTENANT,
+  },
+  "evenements/marche": {
+    titre: "Marche d'automne", type: "sport", pour: "eglise", date: "2026-11-07", heure: "09:30", lieu: "Forêt",
+    organisateurUid: "u-autre", organisateurNom: "Autre", inscrits: 0, createdAt: MAINTENANT, updatedAt: MAINTENANT,
+  },
+};
+const agenda = (page: Page) => page.getByTestId("agenda");
+const titresDesJours = (page: Page) => agenda(page).getByRole("heading", { level: 2 }).allTextContents();
+
+test.describe("C4 : Agenda, feuille « Sources », Mois à points", () => {
+  test("vue d'office : Mois sur ordinateur et tablettes, Agenda sur téléphone", async ({ page }, info) => {
+    await ouvrir(page);
+    const choix = page.getByRole("group", { name: "Affichage" });
+    await expect(choix.getByRole("button", { name: "Agenda" })).toHaveAttribute("aria-pressed", String(estTelephone(info)));
+    await expect(choix.getByRole("button", { name: "Mois" })).toHaveAttribute("aria-pressed", String(!estTelephone(info)));
+    if (estTelephone(info)) {
+      await expect(agenda(page)).toBeVisible();
+      await expect(page.getByRole("heading", { level: 1, name: "Octobre", exact: true })).toBeVisible();
+    } else {
+      await expect(page.getByTestId("grille-mois")).toBeVisible();
+      await expect(agenda(page)).toHaveCount(0);
+    }
+  });
+
+  test("Agenda : part d'aujourd'hui, jours vides sautés, une carte par entrée (titre et détail)", async ({ page }) => {
+    await ouvrir(page, P_ADMIN, { docs: DOCS_AGENDA });
+    await vue(page, "Agenda");
+    const titres = await titresDesJours(page);
+    expect(titres[0]).toBe("Aujourd'hui · jeudi 1er octobre");
+    expect(titres).toContain("Samedi 3 octobre");
+    expect(titres).toContain("Dimanche 4 octobre");
+    // Rien le 2 : le jour est sauté.
+    expect(titres).not.toContain("Vendredi 2 octobre");
+    await expect(jour(page, "2026-10-01").locator('[data-source="taches"]')).toContainText("Fond PPT du culte");
+    await expect(jour(page, "2026-10-01").locator('[data-source="taches"]')).toContainText("DA · échéance");
+    await expect(jour(page, "2026-10-03").locator('[data-source="reunions"]')).toContainText("Réunion DA");
+    await expect(jour(page, "2026-10-03").locator('[data-source="reunions"]')).toContainText("20:00 · Salle 2");
+    // Le dimanche, dans l'ordre : service, évènements, scène, petit déj.
+    const dimanche = jour(page, "2026-10-04").locator("[data-source]");
+    await expect(dimanche.first()).toHaveAttribute("data-source", "services");
+    await expect(dimanche.first()).toContainText("Culte Franco");
+    await expect(dimanche.first()).toContainText("Présidence : Lou M.");
+    await expect(jour(page, "2026-10-04").locator('[data-source="scene"]')).toContainText("17:00 – 18:00");
+    await expect(jour(page, "2026-10-04").locator('[data-source="petitDej"]')).toContainText("Libre");
+    await expect(jour(page, "2026-10-22").locator('[data-source="evenements"]')).toContainText("19:00 · Gymnase · 4 inscrits sur 10");
+    // Pas de panneau du jour à côté de l'agenda.
+    await expect(page.getByRole("complementary")).toHaveCount(0);
+  });
+
+  test("Agenda : rien avant aujourd'hui", async ({ page }) => {
+    await ouvrir(page, P_ADMIN, { maintenant: "2026-10-05T10:00:00" });
+    await vue(page, "Agenda");
+    await expect(jour(page, "2026-10-04")).toHaveCount(0);
+    const titres = await titresDesJours(page);
+    expect(titres[0]).toBe("Mardi 6 octobre");
+  });
+
+  test("Agenda : toucher une carte ouvre sa feuille (date, détail, « Ouvrir »)", async ({ page }) => {
+    await ouvrir(page);
+    await vue(page, "Agenda");
+    await jour(page, "2026-10-03").getByRole("button", { name: /Réunion DA/ }).click();
+    const feuille = page.getByRole("dialog", { name: "Réunion DA" });
+    await expect(feuille).toContainText("Samedi 3 octobre");
+    await expect(feuille).toContainText("20:00 · Salle 2");
+    await expect(feuille.getByRole("link", { name: "Ouvrir" })).toHaveAttribute("href", /^\/evenements\/reu-da\/?$/);
+  });
+
+  test("Agenda : une entrée du Sheet, lecture seule, « Ouvrir » mène à l'onglet du mois, pas de « Déplacer… »", async ({ page }) => {
+    await ouvrir(page);
+    await vue(page, "Agenda");
+    await jour(page, "2026-10-06").getByRole("button", { name: /Soirée louange/ }).click();
+    const feuille = page.getByRole("dialog", { name: "Soirée louange" });
+    await expect(feuille).toContainText("Lu dans le Sheet des évènements");
+    await expect(feuille).toContainText("19:00 – 21:00");
+    const ouvrirLien = feuille.getByRole("link", { name: "Ouvrir" });
+    await expect(ouvrirLien).toHaveAttribute("href", /docs\.google\.com\/spreadsheets\/d\/[^/]+\/edit#gid=439766955$/);
+    await expect(ouvrirLien).toHaveAttribute("target", "_blank");
+    await expect(feuille.getByRole("button", { name: /Déplacer/ })).toHaveCount(0);
+  });
+
+  test("Agenda : « Afficher novembre » ajoute le mois suivant", async ({ page }) => {
+    await ouvrir(page, P_ADMIN, { docs: DOCS_AGENDA });
+    await vue(page, "Agenda");
+    await expect(jour(page, "2026-11-07")).toHaveCount(0);
+    await page.getByRole("button", { name: "Afficher novembre" }).click();
+    await expect(jour(page, "2026-11-07").locator('[data-source="evenements"]')).toContainText("Marche d'automne");
+    await expect(page.getByRole("button", { name: "Afficher décembre" })).toBeVisible();
+  });
+
+  test("Agenda : « Seulement moi » et les sources s'y appliquent", async ({ page }, info) => {
+    await ouvrir(page);
+    await vue(page, "Agenda");
+    await page.getByRole("button", { name: "Seulement moi" }).click();
+    await expect(jour(page, "2026-10-04").locator('[data-source="services"]')).toContainText("Lou M.");
+    await expect(jour(page, "2026-10-03")).toHaveCount(0);
+    await page.getByRole("button", { name: "Seulement moi" }).click();
+    const groupe = await sourcesAffichees(page, info);
+    await groupe.getByRole("button", { name: "Réunions" }).click();
+    await fermerSources(page, info);
+    await expect(jour(page, "2026-10-03")).toHaveCount(0);
+    await expect(jour(page, "2026-10-04").locator('[data-source="services"]')).toHaveCount(1);
+  });
+
+  test("téléphone : « Tout » · « Seulement moi » · « Sources », la feuille des sources (retenue au rechargement)", async ({ page }, info) => {
+    test.skip(!estTelephone(info), "propre au téléphone : ailleurs, les pastilles sont en rangée");
+    await ouvrir(page);
+    // Pas de rangée de pastilles sur la page : elles sont dans la feuille.
+    await expect(pastilles(page)).toHaveCount(0);
+    const tout = page.getByRole("button", { name: "Tout", exact: true });
+    const moi = page.getByRole("button", { name: "Seulement moi" });
+    await expect(tout).toHaveAttribute("aria-pressed", "true");
+    await moi.click();
+    await expect(moi).toHaveAttribute("aria-pressed", "true");
+    await expect(tout).toHaveAttribute("aria-pressed", "false");
+    await tout.click();
+    await expect(tout).toHaveAttribute("aria-pressed", "true");
+    await expect(moi).toHaveAttribute("aria-pressed", "false");
+
+    await page.getByRole("button", { name: "Sources", exact: true }).click();
+    const feuille = page.getByRole("dialog", { name: "Sources" });
+    const groupe = feuille.getByRole("group", { name: "Sources affichées" });
+    await expect(groupe.getByRole("button")).toHaveCount(7);
+    await expect(groupe.getByRole("button", { name: "Setlists" })).toHaveAttribute("aria-pressed", "false");
+    await groupe.getByRole("button", { name: "Scène" }).click();
+    await expect(groupe.getByRole("button", { name: "Scène" })).toHaveAttribute("aria-pressed", "false");
+    await page.keyboard.press("Escape");
+    await expect(page.locator('[data-source="scene"]')).toHaveCount(0);
+    await page.reload();
+    await expect(page.getByTestId("calendrier")).not.toHaveAttribute("aria-busy", "true");
+    await expect(page.locator('[data-source="scene"]')).toHaveCount(0);
+    await expect(jour(page, "2026-10-04").locator('[data-source="services"]')).toHaveCount(1);
+  });
+
+  test("téléphone : Mois à points, la liste du jour touché dessous", async ({ page }, info) => {
+    test.skip(!estTelephone(info), "propre au téléphone : ailleurs, la grille étiquetée (C3)");
+    await ouvrir(page);
+    await vue(page, "Mois");
+    const grille = page.getByTestId("grille-points");
+    await expect(grille.locator("[data-jour]")).toHaveCount(42);
+    // Un point par entrée (quatre au plus), aucun libellé.
+    const quatre = jour(page, "2026-10-04");
+    await expect(quatre.locator("[data-source]")).toHaveCount(4);
+    await expect(quatre.locator('[data-source="services"]')).toHaveCount(1);
+    await expect(quatre).not.toContainText("Culte");
+    await expect(jour(page, "2026-10-01")).toHaveAttribute("aria-current", "date");
+    // Une légende des sources affichées.
+    await expect(page.getByTestId("legende")).toContainText("Services");
+    // Le jour choisi (aujourd'hui d'office), puis le 11 touché : sa liste dessous, sans feuille.
+    const liste = page.getByTestId("jour-choisi");
+    await expect(liste.getByRole("heading", { level: 2 })).toHaveText("Aujourd'hui · jeudi 1er octobre");
+    await jour(page, "2026-10-11").click();
+    await expect(jour(page, "2026-10-11")).toHaveAttribute("aria-pressed", "true");
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+    await expect(liste.getByRole("heading", { level: 2 })).toHaveText("Dimanche 11 octobre");
+    await expect(liste.locator('[data-source="services"]')).toContainText("Présidence : Sam T.");
+    await expect(liste.locator('[data-source="scene"]')).toContainText("14:00 – 15:30");
+    await expect(liste.locator('[data-source="petitDej"]')).toContainText("Libre");
+    // Une carte ouvre sa feuille, comme dans l'agenda.
+    await liste.getByRole("button", { name: /Culte Franco/ }).click();
+    await expect(page.getByRole("dialog", { name: "Culte Franco" }).getByRole("link", { name: "Ouvrir" })).toBeVisible();
+  });
+
+  test("ordinateur et tablettes : l'Agenda au choix, sans ‹ ›, et retour au Mois", async ({ page }, info) => {
+    test.skip(estTelephone(info), "le téléphone part de l'agenda (test de la vue d'office)");
+    await ouvrir(page);
+    await vue(page, "Agenda");
+    await expect(agenda(page)).toBeVisible();
+    await expect(page.getByTestId("grille-mois")).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Mois suivant" })).toHaveCount(0);
+    // Les pastilles restent en rangée.
+    await expect(pastilles(page).getByRole("button", { name: "Tâches" })).toBeVisible();
+    await vue(page, "Mois");
+    await expect(page.getByTestId("grille-mois")).toBeVisible();
+  });
+
+  test("中文 : agenda, « 全部 », « 来源 », « 显示11月 »", async ({ page }) => {
+    await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
+    await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
+    await sheets(page);
+    await signInAs(page, P_ADMIN, { ...DOCS, ...DOCS_AGENDA }, "/back-office/calendrier");
+    await expect(page.getByTestId("calendrier")).not.toHaveAttribute("aria-busy", "true");
+    const choix = page.getByRole("group", { name: "视图" });
+    await choix.getByRole("button", { name: "日程" }).click();
+    expect((await titresDesJours(page))[0]).toBe("今天 · 10月1日星期四");
+    await expect(page.getByRole("button", { name: "显示11月" })).toBeVisible();
+    await expect(choix.getByRole("button", { name: "月", exact: true })).toBeVisible();
+  });
+});
+
+test.describe("C4 : captures à regarder", () => {
+  // Comparées à la planche bo-telephone-calendrier (téléphone) ; le reste à l'œil.
+  test("agenda, feuille d'une entrée, feuille des sources, Mois à points", async ({ page }, info) => {
+    await ouvrir(page, P_ADMIN, { docs: DOCS_AGENDA });
+    await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
+    const dossier = `test-results/calendrier-captures/${info.project.name}`;
+    await vue(page, "Agenda");
+    await page.screenshot({ path: `${dossier}-agenda.png` });
+    await jour(page, "2026-10-03").getByRole("button", { name: /Réunion DA/ }).click();
+    await page.waitForTimeout(400);
+    await page.screenshot({ path: `${dossier}-agenda-feuille.png` });
+    await page.keyboard.press("Escape");
+    if (estTelephone(info)) {
+      await page.getByRole("button", { name: "Sources", exact: true }).click();
+      await page.waitForTimeout(400);
+      await page.screenshot({ path: `${dossier}-sources.png` });
+      await page.keyboard.press("Escape");
+      await vue(page, "Mois");
+      await jour(page, "2026-10-11").click();
+      await page.waitForTimeout(400);
+      await page.screenshot({ path: `${dossier}-mois-points.png`, fullPage: true });
+    }
   });
 });

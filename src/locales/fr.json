@@ -28,7 +28,22 @@
     "rien": "Rien ce jour-là.",
     "duSheet": "Lu dans le Sheet des évènements",
     "sheetInjoignable": "Sheet des évènements injoignable : ses évènements n'apparaissent pas pour l'instant.",
-    "fermer": "Fermer"
+    "fermer": "Fermer",
+    "vue": { "aria": "Affichage", "mois": "Mois", "agenda": "Agenda" },
+    "tout": "Tout",
+    "sourcesFeuille": "Sources",
+    "ouvrir": "Ouvrir",
+    "agendaVide": "Rien de prévu jusqu'à fin {{mois}}.",
+    "afficherMois": "Afficher {{mois}}",
+    "legende": {
+      "services": "Services",
+      "evenements": "Évènements",
+      "reunions": "Réunions",
+      "scene": "Scène",
+      "taches": "Tâches",
+      "petitDej": "Petit déj",
+      "setlists": "Setlists"
+    }
   },
   "common": {
     "noAccess": "Cette page est réservée aux musiciens de l'équipe.",

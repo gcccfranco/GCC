@@ -27,7 +27,22 @@
     "rien": "这天没有安排。",
     "duSheet": "读取自活动表格（Sheet）",
     "sheetInjoignable": "无法读取活动表格（Sheet）：其中的活动暂时不显示。",
-    "fermer": "关闭"
+    "fermer": "关闭",
+    "vue": { "aria": "视图", "mois": "月", "agenda": "日程" },
+    "tout": "全部",
+    "sourcesFeuille": "来源",
+    "ouvrir": "打开",
+    "agendaVide": "到{{mois}}底都没有安排。",
+    "afficherMois": "显示{{mois}}",
+    "legende": {
+      "services": "服事",
+      "evenements": "活动",
+      "reunions": "会议",
+      "scene": "舞台",
+      "taches": "任务",
+      "petitDej": "早餐",
+      "setlists": "歌单"
+    }
   },
   "common": {
     "noAccess": "此页面仅限乐手查看。",

@@ -364,9 +364,31 @@ Spec validée et go de code donné (04/10/2026, redit le 05/10/2026) ; questions
   attend le calcul `casesVides` du widget 4 de U6 (sur `lignesDeLAnnee` de U2), absent de cette
   branche ; à brancher quand U2 et le widget de U6 seront fusionnés. « Déplacer… » (C6) et les deux
   boutons de création (C5) se posent dans `PanneauJour.tsx`.
-- **À suivre** : C4 → C8.
-- **Pour Timothée** : rien à publier (C1, C2 et C3 ne touchent pas `firestore.rules` ; C3 ouvre
+- **05/10/2026 — C4 faite** (même branche, commit « feat(U8): C4 — Agenda, feuille Sources, Mois à
+  points ») : « Mois | Agenda » à droite de l'en-tête partout ; vue d'office selon l'appareil
+  (Agenda sous 768 px, Mois ailleurs, tablette debout comprise), non retenue. **Agenda**
+  (`src/components/calendrier/Agenda.tsx`) : d'aujourd'hui à la fin du mois, jours vides sautés,
+  « Aujourd'hui · jeudi 1er octobre », une carte par entrée (vignette colorée à icône, titre,
+  détail), « Afficher novembre » ajoute un mois ; toucher une carte ouvre sa feuille (source, titre,
+  date, détail, « Lu dans le Sheet… », « Ouvrir » ; l'onglet du Sheet dans un nouvel onglet). Pas de
+  ‹ › ni de panneau du jour en Agenda. **Téléphone** : titre sans l'année de l'année en cours
+  (« Octobre », « 10月 ») ; « Tout » · « Seulement moi » · « Sources » (feuille des sources permises,
+  mêmes pastilles retenues) ; **Mois à points** (`GrillePoints.tsx`, question 3 : quatre points au
+  plus, aujourd'hui en rouge, jour choisi en encre, légende des sources du mois), ‹ › et
+  « Aujourd'hui » au-dessus de la grille, la liste du jour touché dessous (mêmes cartes), sans
+  feuille. `tests/calendrier.spec.ts` : 12 tests C4 (vus rouges, puis verts sur les cinq projets ;
+  ceux du téléphone le disent dans leur titre) ; les tests C3 de la grille étiquetée sont limités à
+  l'ordinateur et aux tablettes (le téléphone a l'agenda), les autres passent par la feuille
+  « Sources » sur téléphone. Captures regardées aux cinq tailles, l'agenda conforme à la planche
+  `bo-telephone-calendrier`.
+- **Choix de C4, faute de réponse dans la spec** : « Tout » = « Seulement moi » éteint (il ne
+  rallume pas les sources) ; l'Agenda part toujours d'aujourd'hui, même après ‹ › en Mois ; la vue
+  choisie n'est pas retenue au rechargement (seules les pastilles le sont, Q11) ; le Mois à points du
+  téléphone reprend la grille du widget L, que C8 pourra réutiliser.
+- **À suivre** : C5 → C8. « Déplacer… » (C6) se pose aussi dans `FeuilleEntree` (`Agenda.tsx`).
+- **Pour Timothée** : rien à publier (C1 à C4 ne touchent pas `firestore.rules` ; C3 ouvre
   seulement l'entrée de menu déjà prévue par U6) ; relire les mots 中文 de `calendrier` dans
   `src/locales/zh-CN.json` (`只看我的`, `活动（Sheet）`, `读取自活动表格（Sheet）`,
   `无法读取活动表格（Sheet）…`, `这天没有安排。`) et ceux de `src/lib/calendrier/entrees.ts` (`司会：`, `已报名 4/10`, `截止`, `舞台`,
-  `早餐`, `空闲`, `主日学`, `首`).
+  `早餐`, `空闲`, `主日学`, `首`) ; pour C4, `视图`, `月`, `日程`, `全部`, `来源`, `打开`,
+  `显示{{mois}}` (« 显示11月 »), `到{{mois}}底都没有安排。` et la légende (`calendrier.legende`).
