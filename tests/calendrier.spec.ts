@@ -813,7 +813,8 @@ test.describe("C3 : la page du calendrier en Mois", () => {
     const panneau = panneauADroite(info)
       ? page.getByRole("complementary", { name: "Dimanche 4 octobre" })
       : page.getByRole("dialog", { name: "Dimanche 4 octobre" });
-    await expect(panneau.getByRole("link")).toHaveCount(3 + n);
+    // Les cartes du jour (les boutons de création, C5, sont sous la liste).
+    await expect(panneau.getByRole("list").getByRole("link")).toHaveCount(3 + n);
   });
 
   test("une entrée du Sheet : lecture seule, ni « Déplacer… », elle ouvre l'onglet du mois (ordinateur et tablettes)", async ({ page }, info) => {
@@ -1108,5 +1109,129 @@ test.describe("C4 : captures à regarder", () => {
       await page.waitForTimeout(400);
       await page.screenshot({ path: `${dossier}-mois-points.png`, fullPage: true });
     }
+  });
+});
+
+// ─── C5 : créer depuis un jour ───
+
+/** Membre de deux pôles, sans section : une réunion de ses pôles, des tâches (Q4). */
+const P_POLES: FakeProfile = { uid: "u-da", email: "da@example.org", firstName: "Alix", lastName: "P.", poles: ["da", "media"] };
+/** Publie pour une section, sans pôle : un évènement, pas de tâche. */
+const P_SECTION: FakeProfile = { uid: "u-sec", email: "sec@example.org", firstName: "Noa", lastName: "R.", annonces: ["Groupe Paix"] };
+
+/** Le jour touché : le panneau ou la feuille du jour (ordinateur, tablettes) ; sur téléphone,
+ *  la feuille du « + » (question 5), sur le jour affiché. */
+async function creerDepuis(page: Page, info: TestInfo, date: string, titre: string) {
+  if (estTelephone(info)) {
+    await vue(page, "Mois");
+    await jour(page, date).click();
+    await page.getByRole("button", { name: "Créer", exact: true }).click();
+    return page.getByRole("dialog", { name: "Créer" });
+  }
+  await jour(page, date).click();
+  return panneauADroite(info) ? page.getByRole("complementary", { name: titre }) : page.getByRole("dialog", { name: titre });
+}
+
+test.describe("C5 : créer depuis un jour", () => {
+  test("« Nouvel évènement le 11/10 » ouvre le formulaire à la date du jour choisi", async ({ page }, info) => {
+    await ouvrir(page);
+    const ou = await creerDepuis(page, info, "2026-10-11", "Dimanche 11 octobre");
+    const lien = ou.getByRole("link", { name: "Nouvel évènement le 11/10" });
+    await expect(lien).toHaveAttribute("href", /^\/back-office\/evenements\/nouveau\/?\?date=2026-10-11$/);
+    await lien.click();
+    await expect(page).toHaveURL(/\/back-office\/evenements\/nouveau\/?\?date=2026-10-11$/);
+    await expect(page.getByLabel("Date", { exact: true })).toHaveValue("2026-10-11");
+  });
+
+  test("une adresse « ?date= » pré-remplit la date ; une date mal formée est ignorée", async ({ page }) => {
+    await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
+    await sheets(page);
+    await signInAs(page, P_ADMIN, DOCS, "/back-office/evenements/nouveau?date=2026-12-24");
+    await expect(page.getByLabel("Date", { exact: true })).toHaveValue("2026-12-24");
+    await page.goto("/back-office/evenements/nouveau?date=24-12");
+    await expect(page.getByLabel("Nom de l'évènement")).toBeVisible();
+    await expect(page.getByLabel("Date", { exact: true })).toHaveValue("");
+  });
+
+  test("« Nouvelle tâche pour le 11/10 » : échéance du jour, choix parmi mes pôles ; enregistrée, elle apparaît ce jour-là", async ({ page }, info) => {
+    const db = await ouvrir(page, P_POLES);
+    const ou = await creerDepuis(page, info, "2026-10-11", "Dimanche 11 octobre");
+    await ou.getByRole("button", { name: "Nouvelle tâche pour le 11/10" }).click();
+    const form = page.getByRole("dialog", { name: "Nouvelle tâche" });
+    await expect(form.getByLabel("Échéance")).toHaveValue("2026-10-11");
+    await expect(form.getByLabel("Pôle").locator("option")).toHaveText(["DA", "Média"]);
+    await form.getByLabel("Pôle").selectOption("media");
+    await form.getByLabel("Titre").fill("Affiche du concert");
+    await form.getByRole("button", { name: "Enregistrer" }).click();
+    await expect(form).toHaveCount(0);
+    const ecrite = db.writes.find((w) => w.method === "POST" && w.path.startsWith("poles/media/taches/"));
+    expect(ecrite?.data).toMatchObject({ titre: "Affiche du concert", echeance: "2026-10-11", pole: "media", repetition: null });
+    // Le calendrier relit ses sources : la tâche est sur le 11.
+    if (estTelephone(info)) {
+      await expect(page.getByTestId("jour-choisi").locator('[data-source="taches"]')).toContainText("Affiche du concert");
+    } else {
+      await expect(jour(page, "2026-10-11").locator('[data-source="taches"]')).toContainText("Affiche du concert");
+    }
+  });
+
+  test("sans droit, pas de bouton : ni tâche sans pôle, ni évènement sans section ni pôle", async ({ page }, info) => {
+    await ouvrir(page, P_PLANNINGS);
+    if (estTelephone(info)) {
+      await expect(page.getByRole("button", { name: "Créer", exact: true })).toHaveCount(0);
+    } else {
+      await jour(page, "2026-10-11").click();
+      await expect(page.getByRole("link", { name: /Nouvel évènement/ })).toHaveCount(0);
+      await expect(page.getByRole("button", { name: /Nouvelle tâche/ })).toHaveCount(0);
+    }
+  });
+
+  test("une section sans pôle : « Nouvel évènement » seul", async ({ page }, info) => {
+    await ouvrir(page, P_SECTION);
+    const ou = await creerDepuis(page, info, "2026-10-11", "Dimanche 11 octobre");
+    await expect(ou.getByRole("link", { name: "Nouvel évènement le 11/10" })).toBeVisible();
+    await expect(ou.getByRole("button", { name: /Nouvelle tâche/ })).toHaveCount(0);
+  });
+
+  test("téléphone : en Agenda, le « + » propose aujourd'hui", async ({ page }, info) => {
+    test.skip(!estTelephone(info), "propre au téléphone : ailleurs, les boutons du panneau du jour");
+    await ouvrir(page, P_POLES);
+    await expect(agenda(page)).toBeVisible();
+    await page.getByRole("button", { name: "Créer", exact: true }).click();
+    const feuille = page.getByRole("dialog", { name: "Créer" });
+    await expect(feuille.getByRole("link", { name: "Nouvel évènement le 01/10" })).toHaveAttribute(
+      "href",
+      /^\/back-office\/evenements\/nouveau\/?\?date=2026-10-01$/,
+    );
+    await expect(feuille.getByRole("button", { name: "Nouvelle tâche pour le 01/10" })).toBeVisible();
+  });
+
+  test("中文 : les deux boutons du jour", async ({ page }, info) => {
+    await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
+    await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
+    await sheets(page);
+    await signInAs(page, P_ADMIN, DOCS, "/back-office/calendrier");
+    await expect(page.getByTestId("calendrier")).not.toHaveAttribute("aria-busy", "true");
+    if (estTelephone(info)) {
+      await page.getByRole("button", { name: "新建", exact: true }).click();
+    } else {
+      await jour(page, "2026-10-11").click();
+    }
+    const jourAffiche = estTelephone(info) ? "10月1日" : "10月11日";
+    await expect(page.getByRole("link", { name: `新建${jourAffiche}的活动` })).toBeVisible();
+    await expect(page.getByRole("button", { name: `新建${jourAffiche}截止的任务` })).toBeVisible();
+  });
+});
+
+test.describe("C5 : captures à regarder", () => {
+  test("le jour et ses deux boutons ; le formulaire de tâche pré-rempli", async ({ page }, info) => {
+    await ouvrir(page, P_POLES);
+    await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
+    const dossier = `test-results/calendrier-captures/${info.project.name}`;
+    const ou = await creerDepuis(page, info, "2026-10-11", "Dimanche 11 octobre");
+    await page.waitForTimeout(400);
+    await page.screenshot({ path: `${dossier}-creer.png` });
+    await ou.getByRole("button", { name: "Nouvelle tâche pour le 11/10" }).click();
+    await page.waitForTimeout(400);
+    await page.screenshot({ path: `${dossier}-creer-tache.png` });
   });
 });

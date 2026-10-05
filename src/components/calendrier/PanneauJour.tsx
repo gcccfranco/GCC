@@ -4,10 +4,15 @@
 // de la source en couleur, titre, détail — qui ouvre sa fiche. Une entrée du Sheet
 // est en lecture seule : elle le dit et ouvre l'onglet du mois. Le même contenu
 // sert le panneau de droite (ordinateur, tablette couchée) et la feuille (ailleurs).
-// « Déplacer… » (C6) et les deux boutons de création (C5) viendront ici.
+// C5 : en bas, les deux boutons de création (`BoutonsCreation`), selon les droits.
+// « Déplacer… » (C6) viendra ici.
 
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
+import { Plus } from "lucide-react";
+import { jourCourt } from "@/lib/calendrier/grille";
+import { cn } from "@/lib/utils";
+import type { NotifLang } from "@/types/user";
 import type { EntreeCalendrier } from "@/lib/calendrier/entrees";
 import { COULEURS_CALENDRIER } from "@/lib/calendrier/entrees";
 import { couleurSource } from "./apparence";
@@ -60,5 +65,39 @@ export function ListeDuJour({ entrees }: { entrees: EntreeCalendrier[] }) {
         </li>
       ))}
     </ul>
+  );
+}
+
+const BOUTON =
+  "inline-flex h-10 w-full items-center justify-center gap-2 rounded-full px-4 text-sm font-semibold transition-opacity duration-150 hover:opacity-85 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground";
+
+/** « Nouvel évènement le 11/10 » (plein, encre) et « Nouvelle tâche pour le 11/10 » (planche
+ *  bo-calendrier, Q4) : chacun seulement pour qui a le droit. Le premier ouvre le formulaire
+ *  du Back-Office à cette date ; le second, le formulaire de tâche (`onNouvelleTache`). */
+export function BoutonsCreation({ date, lang, evenement, tache, onNouvelleTache }: {
+  date: string;
+  lang: NotifLang;
+  evenement: boolean;
+  tache: boolean;
+  onNouvelleTache: () => void;
+}) {
+  const { t } = useTranslation();
+  if (!evenement && !tache) return null;
+  const jour = jourCourt(date, lang);
+  return (
+    <div className="flex flex-col gap-2">
+      {evenement && (
+        <Link href={`/back-office/evenements/nouveau?date=${date}`} className={cn(BOUTON, "bg-foreground text-background")}>
+          <Plus aria-hidden className="h-4 w-4 shrink-0" />
+          {t("calendrier.nouvelEvenement", { date: jour })}
+        </Link>
+      )}
+      {tache && (
+        <button type="button" onClick={onNouvelleTache} className={cn(BOUTON, "bg-secondary text-foreground")}>
+          <Plus aria-hidden className="h-4 w-4 shrink-0" />
+          {t("calendrier.nouvelleTache", { date: jour })}
+        </button>
+      )}
+    </div>
   );
 }

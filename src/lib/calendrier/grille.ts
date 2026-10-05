@@ -68,6 +68,12 @@ export function titreJour(date: string, lang: NotifLang): string {
   return majuscule(lang === "zh-CN" ? texte : texte.replace(/ 1 /, " 1er "));
 }
 
+/** « 11/10 » ; « 10月11日 » (« Nouvel évènement le 11/10 », C5). */
+export function jourCourt(date: string, lang: NotifLang): string {
+  if (lang === "zh-CN") return `${Number(date.slice(5, 7))}月${Number(date.slice(8, 10))}日`;
+  return `${date.slice(8, 10)}/${date.slice(5, 7)}`;
+}
+
 /** « lun. » … « dim. » ; « 周一 » … « 周日 ». */
 export function joursDeLaSemaine(lang: NotifLang): string[] {
   return joursDeLaGrille("2026-06").slice(0, 7).map((d) => utc(d).toLocaleDateString(locale(lang), { weekday: "short", timeZone: "UTC" }));

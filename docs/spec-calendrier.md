@@ -385,10 +385,34 @@ Spec validée et go de code donné (04/10/2026, redit le 05/10/2026) ; questions
   rallume pas les sources) ; l'Agenda part toujours d'aujourd'hui, même après ‹ › en Mois ; la vue
   choisie n'est pas retenue au rechargement (seules les pastilles le sont, Q11) ; le Mois à points du
   téléphone reprend la grille du widget L, que C8 pourra réutiliser.
-- **À suivre** : C5 → C8. « Déplacer… » (C6) se pose aussi dans `FeuilleEntree` (`Agenda.tsx`).
+- **05/10/2026 — C5 faite** (même branche, après la fusion de `lot/u6-back-office` avec B3 ; commit
+  « feat(U8): C5 — créer depuis un jour ») : en bas du panneau du jour (et de sa feuille sur tablette
+  debout), « Nouvel évènement le 11/10 » (plein, encre) et « Nouvelle tâche pour le 11/10 »
+  (`BoutonsCreation`, `src/components/calendrier/PanneauJour.tsx` ; `jourCourt` dans `grille.ts`).
+  Le premier est un lien vers `/back-office/evenements/nouveau?date=AAAA-MM-JJ` : `NouveauClient`
+  pré-remplit la date (une date mal formée est ignorée), publics de `creatableEvenementPours`. Le
+  second ouvre `TacheForm` sur place, avec la nouvelle prop `echeance`, choix parmi mes pôles (tous
+  pour un admin) ; enregistrée, la tâche est écrite (`createTache`), le responsable nommé par un autre
+  est prévenu comme sur la page du pôle, et le calendrier relit ses sources. Chaque bouton seulement
+  pour qui a le droit (évènement : un public ouvert ; tâche : un pôle). **Question 5** : sur
+  téléphone, et en Agenda sur grand écran (pas de panneau), un « + » (« Créer ») à droite de « Mois |
+  Agenda » ouvre la feuille « Créer » avec les deux boutons pour le jour affiché (le jour touché du
+  Mois à points ; aujourd'hui en Agenda). `tests/calendrier.spec.ts` : 7 tests C5 + captures, vus
+  rouges puis verts sur les cinq projets (325 verts, 20 sautés pour tout le fichier) ; le test
+  « +N » compte désormais les cartes de la liste (les boutons sont des liens de plus). Captures
+  regardées : ordinateur 1440 conforme à la planche `bo-calendrier` (boutons en bas du panneau),
+  feuille du jour sur tablette debout, feuille « Créer » sur téléphone, formulaire de tâche pré-rempli.
+- **Choix de C5, faute de réponse dans la spec** : les boutons sont proposés pour tout jour, passé
+  compris (la spec ne borne que le déplacement) ; le « + » sert aussi l'Agenda sur grand écran ;
+  libellés 中文 `新建{{date}}的活动`, `新建{{date}}截止的任务`, `新建`, date « 10月11日 ». La
+  question 8 (en 2026, renvoyer au Sheet un évènement « Toute l'église ») est laissée à U9 : le
+  formulaire s'ouvre tel quel.
+- **À suivre** : C6 → C8. « Déplacer… » (C6) se pose aussi dans `FeuilleEntree` (`Agenda.tsx`).
 - **Pour Timothée** : rien à publier (C1 à C4 ne touchent pas `firestore.rules` ; C3 ouvre
   seulement l'entrée de menu déjà prévue par U6) ; relire les mots 中文 de `calendrier` dans
   `src/locales/zh-CN.json` (`只看我的`, `活动（Sheet）`, `读取自活动表格（Sheet）`,
   `无法读取活动表格（Sheet）…`, `这天没有安排。`) et ceux de `src/lib/calendrier/entrees.ts` (`司会：`, `已报名 4/10`, `截止`, `舞台`,
   `早餐`, `空闲`, `主日学`, `首`) ; pour C4, `视图`, `月`, `日程`, `全部`, `来源`, `打开`,
-  `显示{{mois}}` (« 显示11月 »), `到{{mois}}底都没有安排。` et la légende (`calendrier.legende`).
+  `显示{{mois}}` (« 显示11月 »), `到{{mois}}底都没有安排。` et la légende (`calendrier.legende`) ;
+  pour C5, `新建`, `新建{{date}}的活动`, `新建{{date}}截止的任务`. C5 ne touche ni `access.ts` ni
+  `firestore.rules` : rien à publier.
