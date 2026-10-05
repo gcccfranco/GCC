@@ -7,6 +7,8 @@ import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 // deviennent une grille remplie dans l'app, deux cases par dimanche.
 // Lot U3, PD1 (docs/spec-petit-dej.md, T8 et T9) : la case Petit déj affiche les
 // inscriptions (`petitDej/{id}`), seule source ; le petit déj du Sheet ne parle plus.
+// PD2 (Q12) : cette case affiche sans se modifier — pas de bouton en « Modifier »,
+// jamais recopiée par `semer`.
 
 const csv = (rows: string[][]) => rows.map((r) => r.map((c) => `"${c}"`).join(",")).join("\n");
 
@@ -51,6 +53,9 @@ async function open(page: Page, who: FakeProfile, to: string, docs: Record<strin
   return signInAs(page, who, docs, to);
 }
 
+/** La grille seule : la carte Petit déj au-dessus a ses propres « Modifier » (✎). */
+const grille = (page: Page) => page.locator('[data-grille="table"]');
+
 const laCase = (page: Page, date: string, colonne: string) =>
   page.locator(`[data-case="${date}|${colonne}"]`).filter({ visible: true });
 
@@ -63,12 +68,12 @@ test("la grille Table : l'équipe lue dans le Sheet, le petit déj dans les insc
     "Famille Martin, Les jeunes du Campus",
   );
   await expect(laCase(page, "2026-09-27", "petitDej"), "le nom du Sheet ne parle plus (T8)").not.toContainText("Charlie");
-  await expect(page.getByRole("button", { name: "Modifier" })).toHaveCount(0);
+  await expect(grille(page).getByRole("button", { name: "Modifier" })).toHaveCount(0);
 });
 
-test("avec le droit « table » : une case s'écrit, l'autre case du dimanche est recopiée, et tient au rechargement", async ({ page }) => {
-  const db = await open(page, RESPONSABLE, "/planning/table");
-  await page.getByRole("button", { name: "Modifier" }).click();
+test("avec le droit « table » : une case s'écrit et tient au rechargement ; la case Petit déj n'est pas recopiée", async ({ page }) => {
+  const db = await open(page, RESPONSABLE, "/planning/table", PETIT_DEJ);
+  await grille(page).getByRole("button", { name: "Modifier" }).click();
   await laCase(page, "2026-09-27", "equipe").getByRole("button").click();
   const champ = laCase(page, "2026-09-27", "equipe").getByLabel("Équipe", { exact: true });
   await champ.fill("Ruth K.");
@@ -78,7 +83,7 @@ test("avec le droit « table » : une case s'écrit, l'autre case du dimanche es
 
   const doc = db.doc("plannings/table/dimanches/2026-09-27")!;
   expect(doc.equipe).toBe("Ruth K.");
-  expect(doc.petitDej ?? "", "le petit déj du Sheet n'est plus recopié : les inscriptions sont la seule source (T8)").toBe("");
+  expect(doc, "la case Petit déj (les inscriptions) n'est jamais recopiée par `semer` (Q12)").not.toHaveProperty("petitDej");
   expect(doc.date).toBe("2026-09-27");
 
   await page.reload();
@@ -89,6 +94,15 @@ test("avec le droit « table » : une case s'écrit, l'autre case du dimanche es
   db.set("plannings/table/dimanches/2026-09-20", { date: "2026-09-20", equipe: "Esther C.", petitDej: "" });
   await page.goto("/planning");
   await expect(page.getByText("Esther C.")).toBeVisible();
+});
+
+test("en « Modifier », la case Petit déj montre les inscriptions sans être un bouton", async ({ page }) => {
+  await open(page, RESPONSABLE, "/planning/table", PETIT_DEJ);
+  await grille(page).getByRole("button", { name: "Modifier" }).click();
+  await expect(laCase(page, "2026-09-27", "equipe").getByRole("button"), "l'équipe reste une case à remplir").toHaveCount(1);
+  await expect(laCase(page, "2026-09-27", "petitDej")).toContainText("Famille Martin, Les jeunes du Campus");
+  await expect(laCase(page, "2026-09-27", "petitDej").getByRole("button")).toHaveCount(0);
+  await expect(laCase(page, "2026-09-20", "petitDej").getByRole("button"), "vide, pas de « + » non plus").toHaveCount(0);
 });
 
 test("« Exporter en CSV » : le trimestre affiché, deux colonnes, nom du fichier", async ({ page }) => {

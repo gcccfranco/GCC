@@ -215,7 +215,8 @@ export function PlanningGrille({
   function laCase(l: LigneGrille, c: ColonneGrille): ReactNode {
     const val = valeur(l.row[0], c, l.row)
     if (edition?.date === l.row[0] && edition.cle === c.cle) return champ(l, c)
-    if (mode === "edition") {
+    // Une colonne en lecture seule (le petit déj, géré dans sa carte) reste du texte.
+    if (mode === "edition" && !c.lectureSeule) {
       return (
         <button
           type="button"
@@ -513,8 +514,9 @@ export function PlanningGrille({
               <div className="px-3.5 py-2.5 space-y-1">
                 {colonnes
                   // En lecture, une case vide ne prend pas de place ; en
-                  // modification, toutes s'affichent pour pouvoir les remplir.
-                  .filter((c) => mode === "edition" || valeur(date, c, l.row).trim())
+                  // modification, toutes s'affichent pour pouvoir les remplir
+                  // (sauf celles en lecture seule, qui ne se remplissent pas ici).
+                  .filter((c) => (mode === "edition" && !c.lectureSeule) || valeur(date, c, l.row).trim())
                   .map((c) => (
                     <div key={c.cle} className="flex items-baseline gap-2 text-[13px]">
                       <span className="w-24 shrink-0 text-[11px] text-muted-foreground">{t(c.i18n)}</span>

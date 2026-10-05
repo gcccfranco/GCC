@@ -27,6 +27,10 @@ export type ColonneGrille = {
   index: number
   /** Colonne qui ne s'affiche en lecture que si une case de la période est remplie. */
   optionnelle?: boolean
+  /** Colonne remplie ailleurs, affichée sans se modifier (lot U3, Q12 : le petit
+   *  déj vient des inscriptions) : jamais un bouton en « Modifier », jamais semée,
+   *  importée ni comptée parmi les noms sans compte. */
+  lectureSeule?: boolean
 }
 
 export type DefinitionGrille = {
@@ -178,13 +182,14 @@ export const GRILLE_FIDELITE_MUSICIENS: DefinitionGrille = {
   dates: "dimanches",
 }
 
-// Prépa. Table du Seigneur + petit déjeuner : deux cases par dimanche.
+// Prépa. Table du Seigneur + petit déjeuner : deux cases par dimanche. Le petit
+// déj affiche les inscriptions (lot U3, T9) et se gère dans sa carte, au-dessus.
 export const GRILLE_TABLE: DefinitionGrille = {
   key: "table",
   label: "Prépa. Table",
   i18nTitre: "planning.pages.table",
   couleur: PLANNING_COLORS.table,
-  colonnes: [col("equipe", "equipe", 1), col("petitDej", "petitDej", 2)],
+  colonnes: [col("equipe", "equipe", 1), { ...col("petitDej", "petitDej", 2), lectureSeule: true }],
   dates: "dimanches",
 }
 

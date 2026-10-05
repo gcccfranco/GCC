@@ -1014,6 +1014,18 @@
       "importe": "{{auteur}} 从 Google 表格导入了 {{count}} 个主日",
       "periodeAnnee": "{{annee}} 年"
     },
+    "petitDej": {
+      "trimestre": "第{{n}}季度",
+      "libre": "空闲",
+      "inscrire": "我来报名",
+      "modifier": "修改",
+      "retirer": "移除",
+      "confirmerRetrait": "移除这一行？",
+      "ajouter": "添加一行",
+      "astuce": "可以写“某某家庭”代替你的名字。",
+      "vientDeSInscrire": "{{nom}} 刚刚报名了。",
+      "illisible": "暂时无法读取报名。"
+    },
     "horaires": {
       "culte": "主日 10:30",
       "groupes": "主日 13:00–14:30",

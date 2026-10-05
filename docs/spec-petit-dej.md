@@ -345,8 +345,34 @@ de `lot/u2-planning-2027`, commits locaux, rien de poussé).
   Contre-épreuve : les 8 tests d'écran rouges avec l'ancien `sheets.ts` ; verts sur ordinateur, téléphone et
   tablette (145 tests des trois fichiers), `tsc` et `lint` propres.
 
-Reste : PD2 (la carte, `lectureSeule` — d'ici là `semer` recopie dans la grille la colonne Petit déj, désormais celle
-des inscriptions, sans effet à l'affichage ; le test « coupé, la page Table n'a pas de carte Petit déj » ; les
-écritures de `firebase/petitDej.ts` se testent par la carte), PD3, PD4, PD5.
+**05/10/2026 — PD2 (onglet Table) : codée**, commit « feat(U3): PD2 » sur `lot/u3-petit-dej` (commits locaux, rien
+de poussé).
 
-À faire par Timothée : publier `firestore.rules` (règle `petitDej`) **avant** la validation en local.
+- `src/components/planning/PetitDejCarte.tsx`, sous les boutons T1–T4 de `src/app/planning/table/page.tsx` : tasse
+  sur fond teinté, « Trimestre n », une rangée par dimanche du trimestre et de l'année choisis (`dimanchesDe` +
+  `getTri`, mêmes dimanches que `sundaysBetween`), date courte (« 27 sept. », « 1er nov. », « 9月27日 »). « Libre » et
+  « Je m'inscris » (relit le dimanche avant d'écrire ; si quelqu'un vient de s'inscrire, « X vient de s'inscrire. »
+  et rien n'est écrit) ; ✎ sur place (Entrée ou sortie du champ enregistre, Échap annule, vide refusé, 80 caractères)
+  et « Retirer » (« Retirer cette ligne ? ») selon `canEditPetitDej` ; « ＋ Ajouter une ligne » pour
+  `canGererPetitDej`, noms des comptes suggérés ; dimanche passé : date grise, texte ou « — », aucun bouton ; lecture
+  en échec : « Inscriptions illisibles pour l'instant. », ni « Libre » ni bouton ; refus d'écriture : `droitRetire`
+  ou `horsLigne` sous le dimanche. Carte en `max-w-lg` à partir de 1024 px, pleine largeur en dessous.
+- Après chaque lecture de la carte, la page recalcule la colonne Petit déj de la grille (`avecPetitDej`, sorti de
+  `fetchTable` dans `src/lib/petitdej/lignes.ts`) : la case suit sans rechargement.
+- `lectureSeule` sur `ColonneGrille`, posé sur la colonne `petitDej` de `GRILLE_TABLE` : texte même en « Modifier »
+  (`laCase`, cartes du téléphone), jamais semée (`ecrireCase`), ni importée (`documentDimanche`), ni comptée
+  (`nomsNonRattaches`).
+- `FONDS_FONCES` : `#c87941` → `#a66436` (4,67:1 avec le blanc, vérifié par le test) ; `serviceColors.ts` intact.
+- Libellés `planning.petitDej.*` en FR et 中文 (tableau ci-dessus, à relire en 中文).
+- Tests : `tests/planning-petit-dej.spec.ts` (colonne en lecture seule, contraste, et huit tests de la carte :
+  s'inscrire, réécrire, retirer, autre / passé / membre sans ＋ / Sheet muet, ligne arrivée entre-temps, écrivain,
+  lecture en échec, 中文), `tests/planning-table.spec.ts` (case Petit déj ni bouton ni semée ; les « Modifier » de la
+  grille visés dans la grille, la carte ayant ses ✎), `tests/back-office-coupe.spec.ts` (coupé, pas de carte ni de
+  lecture des inscriptions). Vus rouges (12) avant le code, verts ensuite sur ordinateur, téléphone et tablette ;
+  `planning-2027`, `planning-import`, `planning-groupes-grille` verts ; captures regardées aux trois tailles.
+
+Reste : PD3, PD4, PD5.
+
+À faire par Timothée : publier `firestore.rules` (règle `petitDej`) **avant** la validation en local ; relire les
+libellés 中文 de la carte (`planning.petitDej.*`). Remarque : à la fin d'un trimestre, la carte montre aussi ses
+dimanches passés (Q11 : tous ceux du trimestre choisi), là où la planche n'en montrait qu'un.

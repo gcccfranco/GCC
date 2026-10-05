@@ -3,7 +3,7 @@ import { EDD_CLASSES, EDD_PERIODES, getMois } from "./utils"
 import { fetchGrille } from "./grille"
 import { BACK_OFFICE } from "@/lib/backOffice"
 import { CLES_EDD, fusionnerLignes } from "./grilles"
-import { lirePetitDej, rangeesPetitDej } from "@/lib/petitdej/lignes"
+import { avecPetitDej, lirePetitDej, rangeesPetitDej } from "@/lib/petitdej/lignes"
 
 /** Les dimanches écrits dans l'app. Back-office coupé (lot 18) : aucun — le site
  *  en ligne lit le Google Sheet seul. Local et en ligne partagent le même
@@ -160,10 +160,7 @@ const rangeesDesInscriptions = () => lirePetitDej().then(rangeesPetitDej, () => 
 export async function fetchTable(): Promise<string[][]> {
   const inscriptions = BACK_OFFICE ? rangeesDesInscriptions() : null
   const rows = fusionnerLignes(await grilleDeLApp("table"), await lireTableSheet())
-  if (!inscriptions) return rows
-  const parDate = new Map(rows.map((r) => [r[0], [r[0], r[1] ?? "", ""]]))
-  for (const [date, noms] of await inscriptions) parDate.set(date, [date, parDate.get(date)?.[1] ?? "", noms])
-  return [...parDate.values()].sort((a, b) => (a[0] < b[0] ? -1 : 1))
+  return inscriptions ? avecPetitDej(rows, await inscriptions) : rows
 }
 
 /** [date, équipe] des dimanches où une équipe est inscrite. */

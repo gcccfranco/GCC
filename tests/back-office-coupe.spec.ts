@@ -174,6 +174,16 @@ test.describe("back-office coupé : le petit déj vient encore du Sheet", () => 
     await expect(dimanche.getByText("Petit déj", { exact: true })).toHaveCount(0);
   });
 
+  test("la page Table n'a pas de carte Petit déj : l'ancien tableau, sans inscription (PD2)", async ({ page }) => {
+    const lectures = await ouvrir(page, "2026-09-20", "/planning/table");
+    await expect(page.getByRole("heading", { name: "Prépa. Table du Seigneur" })).toBeVisible();
+    await expect(page.getByText("Ruth K.", { exact: false }).filter({ visible: true }).first(), "le tableau du Sheet").toBeVisible();
+    await expect(page.getByRole("region", { name: "Petit déj" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Je m'inscris" })).toHaveCount(0);
+    await expect(page.getByText("Famille Martin")).toHaveCount(0);
+    expect(lectures.petitDej, "aucune lecture des inscriptions").toBe(0);
+  });
+
   test("Mes services : le petit déj est un service à part entière", async ({ page }) => {
     await ouvrir(page, "2026-09-20", "/mes-services");
     await expect(page.getByText("Petit déj", { exact: true })).toBeVisible();

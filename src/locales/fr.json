@@ -1014,6 +1014,18 @@
       "importe": "{{auteur}} a importé {{count}} dimanches depuis le Google Sheet",
       "periodeAnnee": "Année {{annee}}"
     },
+    "petitDej": {
+      "trimestre": "Trimestre {{n}}",
+      "libre": "Libre",
+      "inscrire": "Je m'inscris",
+      "modifier": "Modifier",
+      "retirer": "Retirer",
+      "confirmerRetrait": "Retirer cette ligne ?",
+      "ajouter": "Ajouter une ligne",
+      "astuce": "Tu peux écrire « Famille … » à la place de ton nom.",
+      "vientDeSInscrire": "{{nom}} vient de s'inscrire.",
+      "illisible": "Inscriptions illisibles pour l'instant."
+    },
     "horaires": {
       "culte": "Dimanche 10:30",
       "groupes": "Dimanche de 13:00 à 14:30",

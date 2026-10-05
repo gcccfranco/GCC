@@ -86,6 +86,15 @@ export function rangeesPetitDej(lignes: LignePetitDej[]): string[][] {
   return [...parDimanche].map(([dimanche, noms]) => [dimanche, noms.join(", ")])
 }
 
+/** La grille Table `[date, équipe, petit déj]` dont la colonne 2 devient les
+ *  rangées des inscriptions (T9), même un dimanche que la grille ignore : la
+ *  lecture (`fetchTable`) et la page, qui la suit après chaque écriture de la carte. */
+export function avecPetitDej(rows: string[][], rangees: string[][]): string[][] {
+  const parDate = new Map(rows.map((r) => [r[0], [r[0], r[1] ?? "", ""]]))
+  for (const [date, noms] of rangees) parDate.set(date, [date, parDate.get(date)?.[1] ?? "", noms])
+  return [...parDate.values()].sort((a, b) => (a[0] < b[0] ? -1 : 1))
+}
+
 /** Un dimanche sans aucune ligne (T2 : pas de compteur de places). */
 export function estLibre(lignes: LignePetitDej[], dimanche: string): boolean {
   return !lignes.some((l) => l.dimanche === dimanche)
