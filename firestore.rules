@@ -18,6 +18,12 @@ rules_version = '2';
 // - Évènements (evenements/{id}, lot 6) : « pour = eglise » public, le reste
 //   pour les connectés ; inscriptions lues par les connectés, écrites par le
 //   serveur seulement.
+//   Réunions d'équipe (« equipe:<id> », lot U6, R4) : créées par un référent de
+//   l'équipe, lues (sujets, compte rendu) par ses membres — `dansEquipes` et
+//   `referentDe` du profil, écrits par le serveur seul comme `poles`.
+//   Sujets d'une réunion de pôle ou d'équipe (evenements/{id}/sujets, lot U6) : lus et
+//   ajoutés par les personnes de la réunion ; ordre et « traité » par
+//   l'organisateur et les admins ; retirés par l'auteur, l'organisateur, un admin.
 // - Programmes de scène (programmes/{id}, lot 3 bis) : lus par les connectés ;
 //   écrits par la coordination (pôle « événement » du profil + admins). Créneaux
 //   (programmes/{id}/creneaux) : tout connecté en pose un à son nom — depuis le
@@ -86,7 +92,9 @@ service cloud.firestore {
             && request.resource.data.get('notify', []) == []
             && request.resource.data.get('poles', []) == []
             && request.resource.data.get('equipes', false) == false
-            && request.resource.data.get('plannings', []) == [])
+            && request.resource.data.get('plannings', []) == []
+            && request.resource.data.get('dansEquipes', []) == []
+            && request.resource.data.get('referentDe', []) == [])
       );
       // Une fois le profil créé, seuls les admins peuvent le modifier.
       allow update: if isAdmin();
@@ -178,6 +186,21 @@ service cloud.firestore {
       }
     }
 
+    // Réunions de pôle et d'équipe (lot U6, docs/spec-back-office.md) : est de
+    // la réunion le membre du pôle (isTachePole, Louange compris) ou de l'équipe
+    // (`dansEquipes` du profil, recopié par le serveur depuis l'organigramme, R4),
+    // l'organisateur, un admin ; seuls l'organisateur et les admins
+    // l'« organisent » (ordre des sujets, « traité »). Miroir : estDeLaReunion,
+    // peutOrdonnerSujets (access.ts).
+    function reunion(id) { return get(/databases/$(database)/documents/evenements/$(id)).data; }
+    function organise(id) { return isAdmin() || reunion(id).organisateurUid == request.auth.uid; }
+    function changeSeulement(champs) { return request.resource.data.diff(resource.data).affectedKeys().hasOnly(champs); }
+    function estDeLaReunion(e) {
+      return isAdmin() || e.organisateurUid == request.auth.uid
+        || (e.pour.matches('pole:[a-z]+') && isTachePole(e.pour.split(':')[1]))
+        || (e.pour.matches('equipe:[a-z0-9-]+') && hasProfile() && e.pour.split(':')[1] in profile().get('dansEquipes', []));
+    }
+
     // Évènements (lot 6, docs/spec-evenements.md). « pour = eglise » : lisible par
     // tout le monde (calendrier public ; la requête filtre sur pour) ; les autres
     // par les connectés. Création : coordination, ou membre dont le droit
@@ -189,16 +212,28 @@ service cloud.firestore {
     match /evenements/{id} {
       allow read: if resource.data.pour == 'eglise' || signedIn();
       // Réunion de pôle (lot 7) : « pole:<id> », créée par un membre du pôle.
+      // Réunion d'équipe (lot U6, R4) : « equipe:<id> », créée par un référent
+      // de l'équipe (`referentDe` du profil, recopié par le serveur) ou un admin.
       allow create: if signedIn()
         && request.resource.data.organisateurUid == request.auth.uid
         && request.resource.data.inscrits == 0
         && (isCoordination()
             || (hasProfile() && request.resource.data.pour in profile().get('annonces', []))
             || (request.resource.data.pour.matches('pole:[a-z]+')
-                && isTachePole(request.resource.data.pour.split(':')[1])));
+                && isTachePole(request.resource.data.pour.split(':')[1]))
+            || (request.resource.data.pour.matches('equipe:[a-z0-9-]+') && hasProfile()
+                && request.resource.data.pour.split(':')[1] in profile().get('referentDe', [])));
+      // Compte rendu d'une réunion (lot U6, R3) : toute personne de la réunion
+      // colle (à son nom, un lien https://) ou retire le lien, et ne change que
+      // lui. Miroir : estDeLaReunion et lienCompteRendu (src/lib/access.ts,
+      // src/lib/reunions/compteRendu.ts).
       allow update: if signedIn()
-        && request.resource.data.inscrits == resource.data.inscrits
-        && (isCoordination() || resource.data.organisateurUid == request.auth.uid);
+        && ((request.resource.data.inscrits == resource.data.inscrits
+             && (isCoordination() || resource.data.organisateurUid == request.auth.uid))
+          || (estDeLaReunion(resource.data) && changeSeulement(['compteRendu'])
+             && (request.resource.data.compteRendu == null
+                 || (request.resource.data.compteRendu.parUid == request.auth.uid
+                     && request.resource.data.compteRendu.url.matches('https://.+')))));
       allow delete: if signedIn() && (isCoordination() || resource.data.organisateurUid == request.auth.uid);
 
       match /inscriptions/{iid} {
@@ -207,6 +242,23 @@ service cloud.firestore {
         // (src/lib/access.ts).
         allow read: if signedIn();
         allow write: if false;
+      }
+
+      // « Sujets à aborder » (lot U6, R1) : lus et ajoutés par les personnes de
+      // la réunion, chacun à son nom, jamais déjà traités ni repris ; la borne
+      // « jusqu'au début » se vérifie dans le navigateur (les règles ne lisent
+      // pas une heure de Paris en texte, Q7). L'organisateur et les admins
+      // changent l'ordre et « traité » ; une personne de la réunion marque un
+      // sujet repris dans la suivante (R2), une seule fois. Retrait : l'auteur,
+      // l'organisateur, un admin. Miroir : peutAjouterSujet, peutRetirerSujet,
+      // peutOrdonnerSujets (src/lib/access.ts).
+      match /sujets/{sid} {
+        allow read: if signedIn() && estDeLaReunion(reunion(id));
+        allow create: if signedIn() && estDeLaReunion(reunion(id)) && request.resource.data.auteurUid == request.auth.uid
+          && request.resource.data.traite == false && request.resource.data.reprisDans == null;
+        allow update: if signedIn() && ((organise(id) && changeSeulement(['ordre', 'traite']))
+          || (estDeLaReunion(reunion(id)) && resource.data.reprisDans == null && changeSeulement(['reprisDans'])));
+        allow delete: if signedIn() && (organise(id) || resource.data.auteurUid == request.auth.uid);
       }
     }
 

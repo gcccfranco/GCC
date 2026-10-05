@@ -3,9 +3,12 @@ import { ThemeProvider } from "next-themes";
 import { I18nProvider } from "@/lib/I18nProvider";
 import { Navbar } from "@/components/layout/Navbar";
 import { MobileTabBar } from "@/components/layout/MobileTabBar";
+import { BarreLaterale } from "@/components/layout/BarreLaterale";
 import { Accueil } from "@/components/onboarding/Accueil";
 import { PageTransition } from "@/components/layout/PageTransition";
 import { LyricsCopyListener } from "@/components/song/LyricsCopyListener";
+import { NotificationsProvider } from "@/components/layout/NotificationsPartagees";
+import { SCRIPT_BARRE_REDUITE } from "@/lib/barreLateralePref";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -57,15 +60,26 @@ export default function RootLayout({
         {/* Service worker push-only (public/sw.js) — requis pour les notifications
             Web Push sur PWA iOS/Android. Il ne fait plus de cache hors-ligne. */}
         <script dangerouslySetInnerHTML={{ __html: `if('serviceWorker'in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js').catch(function(){})})}` }} />
+        {/* Barre latérale réduite sur cet appareil (lot U4, N3) : `data-barre` posé avant le
+            premier affichage, sinon la page sauterait de 180 px à chaque chargement. */}
+        <script dangerouslySetInnerHTML={{ __html: SCRIPT_BARRE_REDUITE }} />
       </head>
       <body className="font-sans antialiased min-h-screen bg-background">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <I18nProvider>
-            <Navbar />
-            <main className="pt-[var(--nav-h)]">
-              <PageTransition>{children}</PageTransition>
-            </main>
-            <MobileTabBar />
+            {/* Une seule cloche pour toutes les barres (lot U4, Q7). */}
+            <NotificationsProvider>
+              <Navbar />
+              {/* Ordinateur : une seule barre, à gauche ; montrée par le CSS (lot U4). */}
+              <BarreLaterale />
+              {/* `--barre-laterale` : place de la barre latérale sur grand écran (0 ailleurs).
+                  Rien ici ne doit devenir repère ni pile (ni transform, filter, contain,
+                  container-type, z-index) : le mode louange doit couvrir les barres (Q9). */}
+              <main className="pt-[var(--nav-h)] pl-[var(--barre-laterale)]">
+                <PageTransition>{children}</PageTransition>
+              </main>
+              <MobileTabBar />
+            </NotificationsProvider>
             <LyricsCopyListener />
             <Accueil />
           </I18nProvider>

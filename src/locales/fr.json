@@ -64,7 +64,9 @@
       "modeClair": "Mode clair",
       "modeSombre": "Mode sombre",
       "indexAlphabetique": "Index alphabétique",
-      "allerA": "Aller à {{lettre}}"
+      "allerA": "Aller à {{lettre}}",
+      "reduireBarre": "Réduire la barre latérale",
+      "deplierBarre": "Déplier la barre latérale"
     }
   },
   "songs": {
@@ -1750,6 +1752,65 @@
       "titre": "Tâches",
       "vide": "Aucune tâche pour cet évènement."
     },
+    "sujets": {
+      "titre": "Sujets à aborder",
+      "titreApres": "Sujets",
+      "aide": "Chaque personne de la réunion peut en ajouter jusqu'au début",
+      "traites_one": "{{count}} traité sur {{total}}",
+      "traites_other": "{{count}} traités sur {{total}}",
+      "nouveau": "Nouveau sujet",
+      "placeholder": "Ajouter un sujet…",
+      "ajouter": "Ajouter",
+      "vide": "Aucun sujet pour l'instant.",
+      "commencee": "La réunion a commencé : on n'ajoute plus de sujet.",
+      "deplacer": "Déplacer « {{texte}} »",
+      "traite": "Traité : {{texte}}",
+      "retirer": "Retirer « {{texte}} »",
+      "confirmRetirer": "Retirer le sujet « {{texte}} » ?",
+      "nonTraite": "non traité",
+      "noteAvant": "Un sujet non traité reste en rouge ; à la création de la réunion suivante, on te propose de le reprendre.",
+      "noteRouge_one": "{{count}} sujet non traité : il restera en rouge tant qu'on ne l'a pas repris dans une prochaine réunion.",
+      "noteRouge_other": "{{count}} sujets non traités : ils resteront en rouge tant qu'on ne les a pas repris dans une prochaine réunion.",
+      "erreur": "Échec de l'enregistrement. Réessaie.",
+      "erreurLecture": "Les sujets n'ont pas pu être chargés.",
+      "instructions": "Pour déplacer un sujet : Espace ou Entrée pour le saisir, flèches haut et bas pour le déplacer, Espace ou Entrée pour le poser, Échap pour annuler.",
+      "annonceSaisi": "Sujet « {{texte}} » saisi, position {{position}} sur {{total}}.",
+      "annonceDeplace": "Sujet « {{texte}} » en position {{position}} sur {{total}}.",
+      "annoncePose": "Sujet « {{texte}} » posé en position {{position}} sur {{total}}.",
+      "annonceAnnule": "Déplacement annulé : « {{texte}} » reste à sa place.",
+      "reprisLe": "repris le {{date}}",
+      "reprisSansDate": "repris dans une autre réunion",
+      "reprisDu": "repris du {{date}}"
+    },
+    "reprise": {
+      "titre": "Reprendre les sujets non traités ?",
+      "uneReunion_one": "La réunion du {{date}} en a laissé {{count}} :",
+      "uneReunion_other": "La réunion du {{date}} en a laissé {{count}} :",
+      "plusieurs_one": "Les réunions précédentes en ont laissé {{count}} :",
+      "plusieurs_other": "Les réunions précédentes en ont laissé {{count}} :",
+      "non": "Non, les laisser",
+      "oui": "Oui, les reprendre",
+      "noteUne": "Sans reprise, ils restent en rouge dans l'ancienne réunion.",
+      "notePlusieurs": "Sans reprise, ils restent en rouge dans les anciennes réunions."
+    },
+    "compteRendu": {
+      "titre": "Compte rendu",
+      "aide": "Après la réunion, toute personne de la réunion (ou un admin) colle ici le lien du Google Doc du récap ; les autres sont prévenus dans le rappel du matin.",
+      "lien": "Lien du compte rendu",
+      "placeholder": "https://docs.google.com/document/…",
+      "enregistrer": "Enregistrer le lien",
+      "invalide": "Colle un lien complet, qui commence par https://",
+      "ajoutePar": "{{source}} · ajouté par {{nom}} le {{date}}",
+      "ouvrir": "Ouvrir",
+      "retirer": "Retirer le lien du compte rendu",
+      "confirmRetirer": "Retirer le lien du compte rendu ?",
+      "erreur": "Échec de l'enregistrement. Réessaie."
+    },
+    "precedentes": {
+      "titre": "Réunions précédentes",
+      "compteRendu": "Compte rendu",
+      "sansCompteRendu": "pas de compte rendu"
+    },
     "copierTaches_one": "Copier aussi sa tâche, au même délai ?",
     "copierTaches_other": "Copier aussi ses {{count}} tâches, aux mêmes délais ?"
   },
@@ -2204,5 +2265,29 @@
     },
     "matriceVide": "Personne ne sert au planning pour l'instant.",
     "nom": "Nom"
+  },
+  "backOffice": {
+    "selecteur": {
+      "aria": "Choisir l'espace",
+      "app": "App",
+      "backOffice": "Back-Office"
+    },
+    "entrees": {
+      "tableau": "Tableau de bord",
+      "calendrier": "Calendrier",
+      "planning": "Planning",
+      "taches": "Tâches",
+      "evenements": "Évènements",
+      "equipes": "Équipes",
+      "messages": "Messages",
+      "statistiques": "Statistiques"
+    },
+    "reserve": "Réservé aux responsables.",
+    "seConnecter": "Se connecter",
+    "bonjour": "{{jour}} · bonjour {{prenom}}",
+    "menu": "Tes modules",
+    "enAttente": "Cette partie arrive au Back-Office avec la suite du chantier. En attendant, elle est ici :",
+    "scene": "Scène",
+    "administration": "Administration"
   }
 }

@@ -64,7 +64,9 @@
       "modeClair": "浅色模式",
       "modeSombre": "深色模式",
       "indexAlphabetique": "字母索引",
-      "allerA": "跳到 {{lettre}}"
+      "allerA": "跳到 {{lettre}}",
+      "reduireBarre": "收起侧边栏",
+      "deplierBarre": "展开侧边栏"
     }
   },
   "songs": {
@@ -1750,6 +1752,65 @@
       "titre": "任务",
       "vide": "此活动还没有任务。"
     },
+    "sujets": {
+      "titre": "待讨论议题",
+      "titreApres": "议题",
+      "aide": "参会的每个人在会议开始前都可以添加",
+      "traites_one": "已讨论 {{count}} / {{total}}",
+      "traites_other": "已讨论 {{count}} / {{total}}",
+      "nouveau": "新议题",
+      "placeholder": "添加议题…",
+      "ajouter": "添加",
+      "vide": "暂无议题。",
+      "commencee": "会议已开始，不能再添加议题。",
+      "deplacer": "移动「{{texte}}」",
+      "traite": "已讨论：{{texte}}",
+      "retirer": "移除「{{texte}}」",
+      "confirmRetirer": "确定移除议题「{{texte}}」吗？",
+      "nonTraite": "未讨论",
+      "noteAvant": "未讨论的议题会以红色显示；创建下一次会议时，会询问你是否沿用。",
+      "noteRouge_one": "{{count}} 个议题未讨论：在下一次会议沿用之前，会一直以红色显示。",
+      "noteRouge_other": "{{count}} 个议题未讨论：在下一次会议沿用之前，会一直以红色显示。",
+      "erreur": "保存失败，请重试。",
+      "erreurLecture": "议题加载失败。",
+      "instructions": "移动议题：按空格键或回车键拿起，用上下方向键移动，再按空格键或回车键放下，按 Esc 取消。",
+      "annonceSaisi": "已拿起议题「{{texte}}」，位置 {{position}} / {{total}}。",
+      "annonceDeplace": "议题「{{texte}}」在位置 {{position}} / {{total}}。",
+      "annoncePose": "议题「{{texte}}」已放在位置 {{position}} / {{total}}。",
+      "annonceAnnule": "已取消移动，「{{texte}}」留在原位。",
+      "reprisLe": "已沿用至{{date}}的会议",
+      "reprisSansDate": "已沿用至另一次会议",
+      "reprisDu": "沿用自{{date}}的会议"
+    },
+    "reprise": {
+      "titre": "沿用未讨论的议题吗？",
+      "uneReunion_one": "{{date}}的会议留下了 {{count}} 个议题：",
+      "uneReunion_other": "{{date}}的会议留下了 {{count}} 个议题：",
+      "plusieurs_one": "之前的会议留下了 {{count}} 个议题：",
+      "plusieurs_other": "之前的会议留下了 {{count}} 个议题：",
+      "non": "不，保留原处",
+      "oui": "是，沿用",
+      "noteUne": "不沿用的话，它们会在原来的会议中继续以红色显示。",
+      "notePlusieurs": "不沿用的话，它们会在原来的各次会议中继续以红色显示。"
+    },
+    "compteRendu": {
+      "titre": "会议记录",
+      "aide": "会议结束后，参会的任何人（或管理员）都可以在这里粘贴会议记录的 Google 文档链接；其他人会在早间提醒中收到通知。",
+      "lien": "会议记录链接",
+      "placeholder": "https://docs.google.com/document/…",
+      "enregistrer": "保存链接",
+      "invalide": "请粘贴以 https:// 开头的完整链接",
+      "ajoutePar": "{{source}} · {{nom}} 于{{date}}添加",
+      "ouvrir": "打开",
+      "retirer": "移除会议记录链接",
+      "confirmRetirer": "确定移除会议记录链接吗？",
+      "erreur": "保存失败，请重试。"
+    },
+    "precedentes": {
+      "titre": "以往会议",
+      "compteRendu": "会议记录",
+      "sansCompteRendu": "无会议记录"
+    },
     "copierTaches_one": "是否同时复制它的 {{count}} 个任务（保持相同提前天数）？",
     "copierTaches_other": "是否同时复制它的 {{count}} 个任务（保持相同提前天数）？"
   },
@@ -2201,5 +2262,29 @@
     },
     "matriceVide": "目前没有人在排班中。",
     "nom": "姓名"
+  },
+  "backOffice": {
+    "selecteur": {
+      "aria": "选择空间",
+      "app": "应用",
+      "backOffice": "后台"
+    },
+    "entrees": {
+      "tableau": "仪表盘",
+      "calendrier": "日历",
+      "planning": "排班表",
+      "taches": "任务",
+      "evenements": "活动",
+      "equipes": "团队",
+      "messages": "消息",
+      "statistiques": "统计"
+    },
+    "reserve": "仅限负责人。",
+    "seConnecter": "登录",
+    "bonjour": "{{jour}} · {{prenom}}，你好",
+    "menu": "你的模块",
+    "enAttente": "这部分将随后续开发移入后台。目前请在这里使用：",
+    "scene": "舞台",
+    "administration": "管理"
   }
 }

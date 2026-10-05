@@ -214,7 +214,9 @@ test.describe("modes d'affichage de la vue partitions", () => {
   });
 
   test.describe("sommaire (ordinateur)", () => {
-    test.use({ viewport: { width: 1440, height: 900 } });
+    // 1 600 px : le sommaire tient à côté de la barre latérale dépliée (lot U4 : 1 280 px de
+    // contenu, soit 1 528 px de fenêtre ; à 1 440 px il se masque).
+    test.use({ viewport: { width: 1600, height: 900 } });
     test("en sections uniques, « Refrain ×2 » mène à l'unique refrain imprimé et le marque", async ({ page }) => {
       await page.addInitScript(() => localStorage.setItem("partition-layout", "unique"));
       await openPartitions(page);

@@ -13,7 +13,7 @@ import { useTranslation } from "react-i18next"
 import { ImagePlus, Trash2 } from "lucide-react"
 import { compressImage } from "@/lib/utils/compressImage"
 import { categoryLabel } from "@/lib/serviceColors"
-import { poleDuPour } from "@/lib/access"
+import { equipeDuPour, estReunion, poleDuPour } from "@/lib/access"
 import { EVENEMENT_TYPES, type Evenement, type EvenementType } from "@/types/evenement"
 import { ChoixInscriptions } from "@/components/evenements/ChoixInscriptions"
 import { borneInscription, modeInscriptions } from "@/lib/evenements/agenda"
@@ -25,7 +25,7 @@ import { Textarea } from "@/components/ui/textarea"
 const MAX_IMAGES = 3
 const MAX_TOTAL_CHARS = 750_000
 
-export type EvenementValues = Omit<Evenement, "id" | "organisateurUid" | "organisateurNom" | "inscrits" | "createdAt" | "updatedAt">
+export type EvenementValues = Omit<Evenement, "id" | "organisateurUid" | "organisateurNom" | "inscrits" | "createdAt" | "updatedAt" | "compteRendu">
 
 export const EMPTY_EVENEMENT: EvenementValues = {
   titre: "", type: "loisir", pour: "eglise", date: "", heure: "", heureFin: "", dateFin: "", lieu: "", description: "",
@@ -70,8 +70,8 @@ export function EvenementForm({ initial, pours, creation, inscrits = 0, onSubmit
   const [busy, setBusy] = useState(false)
   const [compressing, setCompressing] = useState(false)
   const info = v.type === "info"
-  // Réunion de pôle (lot 7) : pas d'inscriptions.
-  const reunion = poleDuPour(v.pour) !== null
+  // Réunion de pôle (lot 7) ou d'équipe (lot U6, R4) : pas d'inscriptions.
+  const reunion = estReunion(v.pour)
   const sansInscription = { inscriptions: "fermees" as const, inscriptionDebut: "", inscriptionFin: "", sansCompte: false, placesMax: null, lienExterne: "" }
   const mode = modeInscriptions(v)
   // Lien externe (lot 11) : l'inscription se passe ailleurs, le reste du bloc
@@ -166,10 +166,11 @@ export function EvenementForm({ initial, pours, creation, inscrits = 0, onSubmit
           <div className="space-y-1">
             <label htmlFor="ev-pour" className={LABEL}>{t("evenements.form.pour")}</label>
             <select id="ev-pour" className={field} value={v.pour}
-              onChange={(e) => set({ pour: e.target.value as EvenementValues["pour"], ...(poleDuPour(e.target.value) ? sansInscription : {}) })}>
+              onChange={(e) => set({ pour: e.target.value as EvenementValues["pour"], ...(estReunion(e.target.value) ? sansInscription : {}) })}>
               {pours.map((p) => {
                 const pole = poleDuPour(p)
-                return <option key={p} value={p}>{p === "eglise" ? t("evenements.pourEglise") : pole ? t("evenements.pourPole", { pole: t(`taches.pole.${pole}`) }) : categoryLabel(p)}</option>
+                const equipe = equipeDuPour(p)
+                return <option key={p} value={p}>{p === "eglise" ? t("evenements.pourEglise") : pole ? t("evenements.pourPole", { pole: t(`taches.pole.${pole}`) }) : equipe ? t(`equipes.team.${equipe}`) : categoryLabel(p)}</option>
               })}
             </select>
           </div>

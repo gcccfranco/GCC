@@ -1,7 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { adminDb } from "@/lib/push/admin";
 import { HttpError, errorResponse, optionalUser } from "@/lib/evenements/serveur";
-import { exigerDroitEquipes, lireEquipes, recalculerPoles } from "@/lib/equipes/serveur";
+import { isAdminEmail } from "@/lib/access";
+import { exigerDroitEquipes, lireEquipes, recalculerDepuisOrganigramme, recalculerPoles } from "@/lib/equipes/serveur";
 import { BACK_OFFICE } from "@/lib/backOffice"
 
 export const runtime = "nodejs";
@@ -12,7 +13,8 @@ export const dynamic = "force-dynamic";
 // c'est cette route qui le repose, après avoir revérifié que l'appelant a bien
 // le droit de tenir l'organigramme. Elle n'écrit que `poles`, et seulement ce
 // que les équipes disent — l'appelant ne choisit pas les pôles, seulement les
-// comptes à recalculer.
+// comptes à recalculer. `{ tous: true }` (bouton admin « Recalculer depuis
+// l'organigramme », lot U6, R4) recalcule tous les membres des équipes : admins seuls.
 
 export async function POST(req: NextRequest) {
   // Back-office coupé (lot 18, docs/spec-mise-en-ligne.md) : la route n'existe pas en ligne.
@@ -20,7 +22,11 @@ export async function POST(req: NextRequest) {
   try {
     const user = await optionalUser(req);
     await exigerDroitEquipes(user);
-    const body = (await req.json().catch(() => ({}))) as { uids?: unknown };
+    const body = (await req.json().catch(() => ({}))) as { uids?: unknown; tous?: unknown };
+    if (body.tous === true) {
+      if (!isAdminEmail(user!.email)) throw new HttpError(403, "Réservé aux admins");
+      return NextResponse.json({ ok: true, maj: await recalculerDepuisOrganigramme(adminDb()) });
+    }
     const uids = Array.isArray(body.uids) ? body.uids.filter((u): u is string => typeof u === "string") : null;
     if (!uids) throw new HttpError(400, "Requête incomplète");
 

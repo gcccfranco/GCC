@@ -342,6 +342,21 @@ test("中文 : les noms d'équipe sont traduits, les noms de personnes ne le son
   await expect(page.getByTestId("equipe-theologie")).toContainText("Orga/Inscriptions");
 });
 
+test("admin : « Recalculer depuis l'organigramme » repose pôles, équipes et référents des profils existants (lot U6, R4)", async ({ page }) => {
+  await simulerSheets(page);
+  const envois: unknown[] = [];
+  await page.route("**/api/equipes/poles", (route) => {
+    envois.push(route.request().postDataJSON());
+    return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: true, maj: 12 }) });
+  });
+  await signInAs(page, { uid: "admin1", email: "tc328829@gmail.com", firstName: "Timothée", lastName: "C." }, DOCS, "/admin");
+  await page.getByRole("button", { name: /Équipes/ }).click();
+  await expect(page.getByText(/réunions d.équipe/)).toBeVisible();
+  await page.getByRole("button", { name: "Recalculer depuis l'organigramme" }).click();
+  await expect(page.getByText("12 profils mis à jour.")).toBeVisible();
+  expect(envois).toEqual([{ tous: true }]);
+});
+
 test("admin : le bouton d'import rend compte de ce qu'il n'a pas su rattacher", async ({ page }) => {
   await simulerSheets(page);
   await page.route("**/api/equipes/importer", (route) =>
