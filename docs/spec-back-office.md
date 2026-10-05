@@ -376,8 +376,51 @@ npm test && npx tsc --noEmit && npm run lint && graphify update .
 
 ## Avancement
 
+**05/10/2026 — R4 « Réunions d'équipe » codée** (branche `lot/u6-back-office`, commit « feat(U6): R4 — réunions
+d'équipe… », après R3). Les tranches R1 à R4 sont faites ; B1 à B6 ne sont pas commencées.
+
+- **Public** `equipe:<id>` (`EvenementPour`, ids de la table `EQUIPES`). `equipeDuPour` et `estReunion` (pôle ou
+  équipe) dans `src/lib/access.ts` ; partout où une réunion de pôle était reconnue (`poleDuPour`), une réunion
+  d'équipe l'est aussi : formulaire sans inscriptions, carte et fiche sans pied d'inscription, cartes Compte
+  rendu, Sujets et Réunions précédentes, question de reprise à la création, ouvertures d'inscriptions du cron.
+  Pastille et choix du public = le nom de l'équipe (`equipes.team.<id>` : « TEAM RÉGIE », « 音控组 »), aucun libellé
+  nouveau.
+- **Profil** : `dansEquipes` et `referentDe` (`src/types/user.ts`, lus par `fromFsProfile`) sont recopiés par
+  `recalculerPoles` (`src/lib/equipes/serveur.ts`) avec `poles`, d'après `rattachementDe`
+  (`src/lib/equipes/organigramme.ts`, pur, ordre de la table) ; un profil inchangé n'est pas réécrit. Ils suivent
+  donc l'import du Sheet et chaque enregistrement d'une équipe (`/api/equipes/poles`, membres d'avant et d'après).
+  La table des 13 équipes passe dans `src/lib/equipes/table.ts` (réexportée par `organigramme.ts`) pour que
+  `access.ts` la lise sans tirer la lecture du Sheet.
+- **Bouton admin « Recalculer depuis l'organigramme »** : onglet Équipes de `/admin`, à côté de l'import (Équipes ›
+  Import viendra avec B2) ; `POST /api/equipes/poles` `{ tous: true }`, **admins seuls** (403 sinon), qui appelle
+  `recalculerDepuisOrganigramme` : tous les membres des équipes, et personne d'autre (un pôle coché hors
+  organigramme reste, D10). Affiche « N profils mis à jour. ».
+- **Droits en double** : `canSeeEvenement`, `estDeLaReunion` (membres = `dansEquipes`, l'organisateur, un admin ;
+  ni la coordination ni un autre pôle), `canCreateEvenement` (référent ou admin), `creatableEvenementPours` (les
+  équipes dont on est référent, après les pôles ; les 13 pour un admin). `firestore.rules` : `estDeLaReunion` lit
+  `dansEquipes` (donc sujets et compte rendu suivent), `allow create` de `evenements/{id}` accepte un référent
+  (`referentDe`), et `users/{uid}` à la création refuse `dansEquipes` et `referentDe` non vides.
+- **Destinataires** (`destinatairesEvenement`, `src/lib/evenements/serveur.ts`) : les profils qui portent
+  l'équipe dans `dansEquipes` — « Prévenir », compte rendu et veille du rappel du matin. Le cron prend ces
+  destinataires pour la veille de toute réunion (pôle ou équipe).
+- **Tests** : `tests/reunions.spec.ts`, 15 tests de plus (vus rouges, puis verts, ordinateur, téléphone,
+  tablette) : `equipeDuPour` / `estReunion`, `rattachementDe`, `recalculerPoles` et « Recalculer » sur une base
+  Admin simulée, destinataires, droits (voir, en être, créer, publics), règles relues, cron relu ; une référente
+  crée la réunion de son équipe (sans inscriptions, sujets ensuite), un membre non référent ne peut pas, un
+  membre la voit dans l'agenda et y ajoute un sujet, un autre pôle et la coordination ne voient ni la fiche ni
+  l'agenda ; capture `test-results/reunions-captures/*-reunion-equipe.png`. `tests/equipes.spec.ts` : le bouton
+  admin envoie `{ tous: true }` et rend compte.
+- **Choix faits faute de réponse dans la spec** : la coordination ne voit pas une réunion d'équipe dont elle
+  n'est pas (comme une réunion de pôle) ; côté règles, `isCoordination()` peut toujours créer n'importe quel
+  évènement, réunions comprises (règle d'avant, inchangée ; le navigateur ne le propose pas) ; le recalcul de
+  tous est réservé aux admins, la propagation par équipe reste ouverte au droit `equipes` ; pas de libellé
+  « Réunion d'équipe · … » dans l'App (la fiche du Back-Office le portera avec B3, comme « Réunion de pôle · DA »).
+- **Instable avant R4, non touché** : `equipes.spec.ts` « admin : le bouton d'import rend compte… » échoue de
+  temps en temps (`getByText(/13 équipes/)` trouve aussi le paragraphe d'aide de l'import, écrit au lot 16, quand
+  le compte rendu arrive avant la vérification) ; vert à la relance.
+
 **05/10/2026 — R3 « Compte rendu et rappels » codée** (branche `lot/u6-back-office`, commit « feat(U6): R3 — compte
-rendu et rappels du matin… », après R2). Le reste (B1 à B6, R4) n'est pas commencé.
+rendu et rappels du matin… », après R2).
 
 - **Carte « Compte rendu »** (`src/components/reunions/CompteRenduCarte.tsx`), sur la fiche `/evenements/<id>` d'une
   réunion de pôle, **en tête** des cartes de réunion (au-dessus des sujets), pour toute personne de la réunion
@@ -484,5 +527,8 @@ aborder… »).
 `reprisDans` y est déjà ; **R3 : nouvelle branche de `allow update` sur `evenements/{id}`** pour le compte rendu) ;
 relire le 中文 de `evenements.sujets`, `evenements.reprise`, `evenements.precedentes`, `evenements.compteRendu`
 (`src/locales/zh-CN.json`) et des lignes du rappel (`src/lib/reunions/rappels.ts` : « 明天 20:00：… （1 个议题）»,
-« 会议记录已添加：… », titre « 活动提醒 »). Après les tranches suivantes : republier les règles (réunions
-d'équipe, `backOffice/{uid}`, création des profils) et cliquer une fois « Recalculer depuis l'organigramme ».
+« 会议记录已添加：… », titre « 活动提醒 »). **R4 : republier `firestore.rules`** (réunions
+d'équipe : `estDeLaReunion`, création par un référent, création des profils), **puis**, depuis l'app en local (même
+Firestore que le site en ligne ; le bouton est derrière `BACK_OFFICE`), cliquer une fois **« Recalculer depuis l'organigramme »** (Admin › Équipes) : sans cela, aucun profil
+existant n'a `dansEquipes` ni `referentDe`, et personne ne voit ni ne crée de réunion d'équipe. Après B5 :
+republier les règles (`backOffice/{uid}`).

@@ -3,6 +3,7 @@ import { aCommence } from "@/lib/evenements/agenda";
 import type { Evenement } from "@/types/evenement";
 import type { FSSetlist } from "@/lib/firebase/setlists";
 import { TACHE_POLES, type TachePole } from "@/types/tache";
+import { EQUIPES } from "@/lib/equipes/table";
 import {
   GROUPES,
   type AccessLevel,
@@ -108,6 +109,12 @@ export function canEditCreneau(
 // ─── Évènements (lot 6, docs/spec-evenements.md) — miroir : firestore.rules ───
 
 type EvenementDroits = { pour: string; organisateurUid: string };
+/** Profil lu par les droits des évènements : sections, pôles, et les équipes de
+ *  l'organigramme recopiées par le serveur (lot U6, R4 : `recalculerPoles`). */
+type ProfilEvenement = {
+  serviceRoles?: Record<string, unknown>; poles?: string[]; annonces?: string[];
+  dansEquipes?: string[]; referentDe?: string[];
+};
 
 /** Réunion de pôle (lot 7) : `pour` = « pole:<id> » ; null sinon. */
 export function poleDuPour(pour: string): TachePole | null {
@@ -115,13 +122,31 @@ export function poleDuPour(pour: string): TachePole | null {
   return (TACHE_POLES as readonly string[]).includes(id) ? (id as TachePole) : null;
 }
 
+/** Réunion d'équipe (lot U6, R4, Q8) : `pour` = « equipe:<id> » ; null sinon.
+ *  Même motif que les règles (`equipe:[a-z0-9-]+`). */
+export function equipeDuPour(pour: string): string | null {
+  const m = /^equipe:([a-z0-9-]+)$/.exec(pour);
+  return m ? m[1] : null;
+}
+
+/** Réunion = de pôle ou d'équipe : sans inscriptions, avec sujets et compte rendu. */
+export function estReunion(pour: string): boolean {
+  return poleDuPour(pour) !== null || equipeDuPour(pour) !== null;
+}
+
+/** Membre d'une équipe de l'organigramme, d'après son profil (`dansEquipes`). */
+function estDansEquipe(profile: ProfilEvenement | null, equipe: string): boolean {
+  return (profile?.dansEquipes ?? []).includes(equipe);
+}
+
 /** Qui voit un évènement : « toute l'église » = tout le monde, compte ou non ;
  *  une section = ses membres connectés (clé de serviceRoles), l'organisateur,
  *  la coordination ; une réunion de pôle = les membres du pôle, l'organisateur
- *  et les admins (lot 7). Un visiteur sans compte ne voit que « eglise ». */
+ *  et les admins (lot 7) ; une réunion d'équipe = les membres de l'équipe,
+ *  l'organisateur et les admins (lot U6, R4). Un visiteur sans compte ne voit que « eglise ». */
 export function canSeeEvenement(
   user: AuthUser | null,
-  profile: { serviceRoles?: Record<string, unknown>; poles?: string[] } | null,
+  profile: ProfilEvenement | null,
   e: EvenementDroits
 ): boolean {
   if (e.pour === "eglise") return true;
@@ -129,36 +154,46 @@ export function canSeeEvenement(
   if (e.organisateurUid === user.uid) return true;
   const pole = poleDuPour(e.pour);
   if (pole) return isPoleMember(user, profile, pole);
+  const equipe = equipeDuPour(e.pour);
+  if (equipe) return isAdminUser(user) || estDansEquipe(profile, equipe);
   if (isCoordination(user, profile)) return true;
   return e.pour in (profile?.serviceRoles ?? {});
 }
 
 /** Qui crée pour un public donné : la coordination pour tout ; un membre dont le
  *  droit d'annonces couvre la section (le droit d'annonces devient un droit de
- *  création pour sa section, tranché le 15/09/2026). */
+ *  création pour sa section, tranché le 15/09/2026) ; une réunion de pôle, ses
+ *  membres ; une réunion d'équipe, ses référents et les admins (lot U6, R4). */
 export function canCreateEvenement(
   user: AuthUser | null,
-  profile: { annonces?: string[]; poles?: string[]; serviceRoles?: Record<string, unknown> } | null,
+  profile: ProfilEvenement | null,
   pour: string
 ): boolean {
   if (!user) return false;
   const pole = poleDuPour(pour);
   if (pole) return isPoleMember(user, profile, pole);
+  const equipe = equipeDuPour(pour);
+  if (equipe) return isAdminUser(user) || (profile?.referentDe ?? []).includes(equipe);
   if (isCoordination(user, profile)) return true;
   return (profile?.annonces ?? []).includes(pour);
 }
 
 /** Publics pour lesquels la personne peut créer (vide = aucun bouton) : ses
- *  sections, puis ses pôles pour les réunions (lot 7 ; tous pour un admin). */
+ *  sections, puis ses pôles pour les réunions (lot 7), puis les équipes dont
+ *  elle est référente (lot U6, R4) — tous les pôles et équipes pour un admin. */
 export function creatableEvenementPours(
   user: AuthUser | null,
-  profile: { annonces?: string[]; poles?: string[]; serviceRoles?: Record<string, unknown> } | null,
+  profile: ProfilEvenement | null,
   sections: readonly string[]
 ): string[] {
   if (!user) return [];
-  const poles = (isAdminUser(user) ? [...TACHE_POLES] : polesDe(profile)).map((p) => `pole:${p}`);
-  if (isCoordination(user, profile)) return ["eglise", ...sections, ...poles];
-  return [...sections.filter((s) => (profile?.annonces ?? []).includes(s)), ...poles];
+  const admin = isAdminUser(user);
+  const poles = (admin ? [...TACHE_POLES] : polesDe(profile)).map((p) => `pole:${p}`);
+  const equipes = EQUIPES.map((e) => e.id)
+    .filter((id) => admin || (profile?.referentDe ?? []).includes(id))
+    .map((id) => `equipe:${id}`);
+  if (isCoordination(user, profile)) return ["eglise", ...sections, ...poles, ...equipes];
+  return [...sections.filter((s) => (profile?.annonces ?? []).includes(s)), ...poles, ...equipes];
 }
 
 /** Voir qui est inscrit (noms et invités) : tout membre connecté (Timothée,
@@ -184,18 +219,21 @@ export function canEditEvenement(
 // evenements/{id}, champ compteRendu seul) ; lien vérifié par lienCompteRendu.
 
 /** Personne de la réunion : membre du pôle (Louange compris, comme pour les
- *  tâches), l'organisateur, un admin. Comme dans les règles, l'organisateur et
- *  les admins passent même pour un évènement qui n'est pas une réunion : la
- *  carte des sujets ne s'affiche que sur une réunion (poleDuPour). */
+ *  tâches) ou de l'équipe (`dansEquipes`, R4), l'organisateur, un admin. Comme
+ *  dans les règles, l'organisateur et les admins passent même pour un évènement
+ *  qui n'est pas une réunion : la carte des sujets ne s'affiche que sur une
+ *  réunion (estReunion). */
 export function estDeLaReunion(
   user: AuthUser | null,
-  profile: { poles?: string[]; serviceRoles?: Record<string, unknown> } | null,
+  profile: ProfilEvenement | null,
   e: EvenementDroits
 ): boolean {
   if (!user) return false;
   if (isAdminUser(user) || e.organisateurUid === user.uid) return true;
   const pole = poleDuPour(e.pour);
-  return pole !== null && isPoleMember(user, profile, pole);
+  if (pole) return isPoleMember(user, profile, pole);
+  const equipe = equipeDuPour(e.pour);
+  return equipe !== null && estDansEquipe(profile, equipe);
 }
 
 /** Ajouter un sujet : une personne de la réunion, jusqu'au début. La borne se
@@ -203,7 +241,7 @@ export function estDeLaReunion(
  *  Paris écrite en texte (Q7, choix de confiance). */
 export function peutAjouterSujet(
   user: AuthUser | null,
-  profile: { poles?: string[]; serviceRoles?: Record<string, unknown> } | null,
+  profile: ProfilEvenement | null,
   e: EvenementDroits & Pick<Evenement, "type" | "date" | "heure">,
   nowIso: string
 ): boolean {

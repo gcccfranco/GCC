@@ -12,7 +12,7 @@ import { useParams, useRouter } from "next/navigation"
 import { useTranslation } from "react-i18next"
 import { useAuth } from "@/lib/firebase/auth"
 import { useProfile } from "@/lib/firebase/users"
-import { canEditEvenement, canSeeEvenement, estDeLaReunion, poleDuPour } from "@/lib/access"
+import { canEditEvenement, canSeeEvenement, estDeLaReunion, estReunion } from "@/lib/access"
 import { deleteEvenement, getEvenement, listReunionsDu } from "@/lib/firebase/evenements"
 import { isInfo } from "@/lib/evenements/agenda"
 import { PLANNING_COLORS } from "@/lib/serviceColors"
@@ -59,9 +59,9 @@ export function EvenementClient() {
     getEvenement(id).then(setEvenement).catch(() => setEvenement(null))
   }, [id, authLoading])
 
-  // Lot U6 (R2) : les réunions du même pôle, pour « Réunions précédentes » et
-  // dater un sujet « repris le … ».
-  const pourReunion = user && evenement && poleDuPour(evenement.pour) ? evenement.pour : null
+  // Lot U6 (R2) : les réunions du même pôle ou de la même équipe (R4), pour
+  // « Réunions précédentes » et dater un sujet « repris le … ».
+  const pourReunion = user && evenement && estReunion(evenement.pour) ? evenement.pour : null
   const [memePublic, setMemePublic] = useState<Evenement[]>([])
   useEffect(() => {
     if (!pourReunion) return
@@ -78,7 +78,7 @@ export function EvenementClient() {
   const e = evenement
   // Organisateur ou coordination : ceux qui gèrent l'évènement.
   const gestionnaire = canEditEvenement(user, profile, e)
-  const avecInscriptions = !isInfo(e) && !poleDuPour(e.pour)
+  const avecInscriptions = !isInfo(e) && !estReunion(e.pour)
 
   return (
     <div className="max-w-2xl mx-auto space-y-3">
@@ -145,10 +145,10 @@ export function EvenementClient() {
       )}
       </div>
 
-      {/* Lot U6 (R1, R2, R3) : le compte rendu en tête, les sujets d'une réunion
-          de pôle et les réunions précédentes, pour les personnes de la réunion —
-          les mêmes cartes pour les membres et pour qui la gère. */}
-      {user && poleDuPour(e.pour) && estDeLaReunion(user, profile, e) && (
+      {/* Lot U6 (R1 à R4) : le compte rendu en tête, les sujets d'une réunion
+          de pôle ou d'équipe et les réunions précédentes, pour les personnes de
+          la réunion — les mêmes cartes pour les membres et pour qui la gère. */}
+      {user && estReunion(e.pour) && estDeLaReunion(user, profile, e) && (
         <>
           <CompteRenduCarte evenement={e} user={user} profile={profile} onChange={(compteRendu) => setEvenement({ ...e, compteRendu })} />
           <SujetsAborder evenement={e} user={user} profile={profile} reunions={memePublic} />

@@ -3,7 +3,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { verifyIdToken } from "@/lib/push/admin";
 import { uidsForCategory } from "@/lib/push/recipients";
-import { poleDuPour } from "@/lib/access";
+import { equipeDuPour, poleDuPour } from "@/lib/access";
 import { membresDuPole } from "@/lib/taches/serveur";
 import type { Evenement } from "@/types/evenement";
 
@@ -32,9 +32,17 @@ export function errorResponse(e: unknown) {
 }
 
 /** Membres concernés par un évènement : toute l'église, les membres de la
- *  section visée, ou ceux du pôle pour une réunion (lot 7). */
+ *  section visée, ceux du pôle pour une réunion de pôle (lot 7), ceux de
+ *  l'équipe pour une réunion d'équipe (lot U6, R4 : `dansEquipes` du profil,
+ *  ce que lisent les règles). */
 export async function destinatairesEvenement(db: FirebaseFirestore.Firestore, e: Pick<Evenement, "pour">): Promise<string[]> {
   const pole = poleDuPour(e.pour);
+  const equipe = equipeDuPour(e.pour);
   if (e.pour === "eglise") return (await db.collection("users").get()).docs.map((d) => d.id);
+  if (equipe) {
+    return (await db.collection("users").get()).docs
+      .filter((d) => ((d.data().dansEquipes as string[] | undefined) ?? []).includes(equipe))
+      .map((d) => d.id);
+  }
   return pole ? membresDuPole(pole) : uidsForCategory(e.pour);
 }

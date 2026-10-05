@@ -14,7 +14,7 @@ import { isInfo, nowIsoParis, placesRestantes, refusInscription } from "@/lib/ev
 import { useRaisonInscription } from "@/components/evenements/ChoixInscriptions"
 import { fdFullL } from "@/lib/planning/utils"
 import { categoryColor, categoryLabel, PLANNING_COLORS } from "@/lib/serviceColors"
-import { poleDuPour } from "@/lib/access"
+import { equipeDuPour, estReunion, poleDuPour } from "@/lib/access"
 import type { Evenement } from "@/types/evenement"
 import { buttonVariants } from "@/components/ui/button"
 import { Tile } from "@/components/ui/tile"
@@ -40,7 +40,9 @@ export function TypePour({ e }: { e: Pick<Evenement, "type" | "pour"> }) {
           ? t("evenements.pourEglise")
           : poleDuPour(e.pour)
             ? t("evenements.pourPole", { pole: t(`taches.pole.${poleDuPour(e.pour)}`) })
-            : categoryLabel(e.pour)}
+            : equipeDuPour(e.pour)
+              ? t(`equipes.team.${equipeDuPour(e.pour)}`)
+              : categoryLabel(e.pour)}
       </span>
     </>
   )
@@ -111,11 +113,11 @@ export function PlusInfos({ e }: { e: Evenement }) {
 }
 
 /** Bas de la grande carte : l'état d'inscription, puis le compteur. Une info
- *  ou une réunion de pôle n'a pas d'inscriptions : rien. */
+ *  ou une réunion (de pôle ou d'équipe) n'a pas d'inscriptions : rien. */
 function PiedCarte({ e, inscrit }: { e: Evenement; inscrit: boolean }) {
   const { t } = useTranslation()
   const raison = useRaisonInscription()
-  if (isInfo(e) || poleDuPour(e.pour)) return null
+  if (isInfo(e) || estReunion(e.pour)) return null
   const places = placesRestantes(e)
   const refus = refusInscription(e, 0, nowIsoParis())
   // Lot 11 : inscription sur un formulaire externe — la pilule, et rien d'autre.

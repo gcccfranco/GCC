@@ -170,6 +170,8 @@ export default function AdminPage() {
   }
   const [importEtat, setImportEtat] = useState<"" | "busy" | "fait">("");
   const [importErreur, setImportErreur] = useState("");
+  // Lot U6 (R4) : « Recalculer depuis l'organigramme » — profils mis à jour, ou null.
+  const [recalcul, setRecalcul] = useState<"busy" | number | null>(null);
   const [importResultat, setImportResultat] = useState<ImportEquipes | null>(null);
   const [planningRights, setPlanningRights] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
@@ -286,6 +288,28 @@ export default function AdminPage() {
     } catch (e) {
       setImportErreur(e instanceof Error ? e.message : "Import impossible.");
       setImportEtat("");
+    }
+  }
+
+  /** Lot U6 (R4) : repose pôles, équipes et référents (`dansEquipes`,
+   *  `referentDe`) de tous les membres des équipes — une fois pour les profils
+   *  d'avant les réunions d'équipe. Idempotent : rien à confirmer. */
+  async function recalculerOrganigramme() {
+    setRecalcul("busy");
+    setImportErreur("");
+    try {
+      const res = await fetch("/api/equipes/poles", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(await authHeader()) },
+        body: JSON.stringify({ tous: true }),
+      });
+      const json = (await res.json().catch(() => ({}))) as { maj?: number; error?: string };
+      if (!res.ok) throw new Error(json.error ?? `Erreur ${res.status}`);
+      setRecalcul(json.maj ?? 0);
+      listProfiles().then(setProfiles);
+    } catch (e) {
+      setImportErreur(e instanceof Error ? e.message : "Recalcul impossible.");
+      setRecalcul(null);
     }
   }
 
@@ -1150,8 +1174,19 @@ export default function AdminPage() {
             <Button onClick={importerOrganigramme} disabled={importEtat === "busy"} variant="outline" className="h-11">
               {importEtat === "busy" ? "…" : "Importer l'organigramme du Sheet"}
             </Button>
+            <Button onClick={recalculerOrganigramme} disabled={recalcul === "busy"} variant="outline" className="h-11">
+              {recalcul === "busy" ? "…" : "Recalculer depuis l'organigramme"}
+            </Button>
             {importErreur && <p className="text-sm text-destructive">{importErreur}</p>}
           </div>
+          <p className="text-xs text-muted-foreground">
+            « Recalculer » repose, sans relire le Sheet, les pôles, les équipes et les référents de
+            chaque membre d&apos;une équipe : c&apos;est ce qui ouvre les réunions d&apos;équipe à leurs
+            membres et leur création aux référents. À lancer une fois pour les profils existants.
+          </p>
+          {typeof recalcul === "number" && (
+            <p className="text-sm text-foreground">{recalcul} profil{recalcul > 1 ? "s" : ""} mis à jour.</p>
+          )}
 
           {importResultat && (
             <div className="space-y-3">

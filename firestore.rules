@@ -18,7 +18,10 @@ rules_version = '2';
 // - Évènements (evenements/{id}, lot 6) : « pour = eglise » public, le reste
 //   pour les connectés ; inscriptions lues par les connectés, écrites par le
 //   serveur seulement.
-//   Sujets d'une réunion de pôle (evenements/{id}/sujets, lot U6) : lus et
+//   Réunions d'équipe (« equipe:<id> », lot U6, R4) : créées par un référent de
+//   l'équipe, lues (sujets, compte rendu) par ses membres — `dansEquipes` et
+//   `referentDe` du profil, écrits par le serveur seul comme `poles`.
+//   Sujets d'une réunion de pôle ou d'équipe (evenements/{id}/sujets, lot U6) : lus et
 //   ajoutés par les personnes de la réunion ; ordre et « traité » par
 //   l'organisateur et les admins ; retirés par l'auteur, l'organisateur, un admin.
 // - Programmes de scène (programmes/{id}, lot 3 bis) : lus par les connectés ;
@@ -88,7 +91,9 @@ service cloud.firestore {
             && request.resource.data.get('notify', []) == []
             && request.resource.data.get('poles', []) == []
             && request.resource.data.get('equipes', false) == false
-            && request.resource.data.get('plannings', []) == [])
+            && request.resource.data.get('plannings', []) == []
+            && request.resource.data.get('dansEquipes', []) == []
+            && request.resource.data.get('referentDe', []) == [])
       );
       // Une fois le profil créé, seuls les admins peuvent le modifier.
       allow update: if isAdmin();
@@ -169,16 +174,19 @@ service cloud.firestore {
       }
     }
 
-    // Réunions de pôle (lot U6, docs/spec-back-office.md) : est de la réunion
-    // le membre du pôle (isTachePole, Louange compris), l'organisateur, un
-    // admin ; seuls l'organisateur et les admins l'« organisent » (ordre des
-    // sujets, « traité »). Miroir : estDeLaReunion, peutOrdonnerSujets (access.ts).
+    // Réunions de pôle et d'équipe (lot U6, docs/spec-back-office.md) : est de
+    // la réunion le membre du pôle (isTachePole, Louange compris) ou de l'équipe
+    // (`dansEquipes` du profil, recopié par le serveur depuis l'organigramme, R4),
+    // l'organisateur, un admin ; seuls l'organisateur et les admins
+    // l'« organisent » (ordre des sujets, « traité »). Miroir : estDeLaReunion,
+    // peutOrdonnerSujets (access.ts).
     function reunion(id) { return get(/databases/$(database)/documents/evenements/$(id)).data; }
     function organise(id) { return isAdmin() || reunion(id).organisateurUid == request.auth.uid; }
     function changeSeulement(champs) { return request.resource.data.diff(resource.data).affectedKeys().hasOnly(champs); }
     function estDeLaReunion(e) {
       return isAdmin() || e.organisateurUid == request.auth.uid
-        || (e.pour.matches('pole:[a-z]+') && isTachePole(e.pour.split(':')[1]));
+        || (e.pour.matches('pole:[a-z]+') && isTachePole(e.pour.split(':')[1]))
+        || (e.pour.matches('equipe:[a-z0-9-]+') && hasProfile() && e.pour.split(':')[1] in profile().get('dansEquipes', []));
     }
 
     // Évènements (lot 6, docs/spec-evenements.md). « pour = eglise » : lisible par
@@ -192,13 +200,17 @@ service cloud.firestore {
     match /evenements/{id} {
       allow read: if resource.data.pour == 'eglise' || signedIn();
       // Réunion de pôle (lot 7) : « pole:<id> », créée par un membre du pôle.
+      // Réunion d'équipe (lot U6, R4) : « equipe:<id> », créée par un référent
+      // de l'équipe (`referentDe` du profil, recopié par le serveur) ou un admin.
       allow create: if signedIn()
         && request.resource.data.organisateurUid == request.auth.uid
         && request.resource.data.inscrits == 0
         && (isCoordination()
             || (hasProfile() && request.resource.data.pour in profile().get('annonces', []))
             || (request.resource.data.pour.matches('pole:[a-z]+')
-                && isTachePole(request.resource.data.pour.split(':')[1])));
+                && isTachePole(request.resource.data.pour.split(':')[1]))
+            || (request.resource.data.pour.matches('equipe:[a-z0-9-]+') && hasProfile()
+                && request.resource.data.pour.split(':')[1] in profile().get('referentDe', [])));
       // Compte rendu d'une réunion (lot U6, R3) : toute personne de la réunion
       // colle (à son nom, un lien https://) ou retire le lien, et ne change que
       // lui. Miroir : estDeLaReunion et lienCompteRendu (src/lib/access.ts,

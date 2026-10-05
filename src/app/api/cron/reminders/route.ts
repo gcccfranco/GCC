@@ -12,8 +12,7 @@ import type { Evenement } from "@/types/evenement";
 import type { Sujet } from "@/types/reunion";
 import { rappelsDuJour, type RappelTache } from "@/lib/taches/messages";
 import { nombreSujetsAAborder, notificationsDuMatin, type LigneEvenement, type ServiceDuJour } from "@/lib/reunions/rappels";
-import { poleDuPour, polesDe } from "@/lib/access";
-import { membresDuPole } from "@/lib/taches/serveur";
+import { estReunion, polesDe } from "@/lib/access";
 import type { Fois, Tache, TachePole } from "@/types/tache";
 import type { Creneau, Programme } from "@/types/programme";
 import { currentProgramme } from "@/lib/scene/dimanches";
@@ -138,8 +137,8 @@ async function rappelsTaches(
 }
 
 /** Lignes d'évènements du matin (préférence « Évènements »), par membre pas
- *  encore prévenu : la veille d'un évènement (lot 6 ; réunion de pôle : tout le
- *  pôle, avec le nombre de sujets à aborder, R3), le compte rendu d'une réunion
+ *  encore prévenu : la veille d'un évènement (lot 6 ; réunion de pôle ou
+ *  d'équipe : tout le pôle ou toute l'équipe, avec le nombre de sujets à aborder, R3, R4), le compte rendu d'une réunion
  *  collé depuis hier (R3 : les autres personnes de la réunion), les inscriptions
  *  qui s'ouvrent aujourd'hui (docs/spec-inscriptions-periode.md). */
 async function lignesEvenements(
@@ -159,10 +158,9 @@ async function lignesEvenements(
   // Évènements de demain. La clé reste celle du lot 6 : pas de doublon le jour du déploiement.
   for (const doc of (await db.collection("evenements").where("date", "==", isoInDays(1)).get()).docs) {
     const e = { id: doc.id, ...doc.data() } as Evenement;
-    const pole = poleDuPour(e.pour);
-    if (pole) {
+    if (estReunion(e.pour)) {
       const sujets = (await doc.ref.collection("sujets").get()).docs.map((s) => s.data() as Sujet);
-      await ajouter(await membresDuPole(pole), { kind: "veille", evenement: e, sujets: nombreSujetsAAborder(sujets) }, `rappel-evenement-${e.id}`);
+      await ajouter(await destinatairesEvenement(db, e), { kind: "veille", evenement: e, sujets: nombreSujetsAAborder(sujets) }, `rappel-evenement-${e.id}`);
     } else {
       const inscrits = (await doc.ref.collection("inscriptions").get()).docs
         .map((i) => i.data().uid as string | null)

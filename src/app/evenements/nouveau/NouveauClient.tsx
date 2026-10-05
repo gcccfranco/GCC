@@ -12,7 +12,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { useTranslation } from "react-i18next"
 import { useAuth } from "@/lib/firebase/auth"
 import { useProfile } from "@/lib/firebase/users"
-import { creatableEvenementPours, isAdminUser, poleDuPour, polesDe } from "@/lib/access"
+import { creatableEvenementPours, estReunion, isAdminUser, polesDe } from "@/lib/access"
 import { createEvenement, getEvenement } from "@/lib/firebase/evenements"
 import { createTache } from "@/lib/firebase/taches"
 import { lireSujetsAReprendre, reprendreSujets } from "@/lib/firebase/sujets"
@@ -68,7 +68,7 @@ export function NouveauClient() {
         creation
         onSubmit={async (values, prevenir) => {
           // Réponse avant d'écrire quoi que ce soit : sans réunion créée, rien n'est repris.
-          const laisses = poleDuPour(values.pour) ? await lireSujetsAReprendre(values.pour, nowIsoParis()) : []
+          const laisses = estReunion(values.pour) ? await lireSujetsAReprendre(values.pour, nowIsoParis()) : []
           const reprendre = laisses.length > 0 && await demanderReprise(laisses)
           const now = new Date().toISOString()
           const id = await createEvenement({ ...values, organisateurUid: user.uid, organisateurNom: nom, inscrits: 0, createdAt: now, updatedAt: now })

@@ -2,7 +2,13 @@ import { expect, test, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
-import { estDeLaReunion, peutAjouterSujet, peutOrdonnerSujets, peutRetirerSujet } from "../src/lib/access";
+import {
+  canCreateEvenement, canSeeEvenement, creatableEvenementPours, equipeDuPour, estDeLaReunion, estReunion, peutAjouterSujet,
+  peutOrdonnerSujets, peutRetirerSujet,
+} from "../src/lib/access";
+import { EQUIPES, rattachementDe } from "../src/lib/equipes/organigramme";
+import { recalculerDepuisOrganigramme, recalculerPoles } from "../src/lib/equipes/serveur";
+import { destinatairesEvenement } from "../src/lib/evenements/serveur";
 import { copieReprise, estRouge, reordonner, reunionsPrecedentes, sujetsAReprendre, trierSujets } from "../src/lib/reunions/sujets";
 import type { Evenement } from "../src/types/evenement";
 import type { Sujet } from "../src/types/reunion";
@@ -22,6 +28,10 @@ import type { RappelTache } from "../src/lib/taches/messages";
 // Tranche R3 (en fin de fichier) : lien du compte rendu (coller, ouvrir, retirer),
 // et le rappel du matin qui porte la veille de la réunion et le compte rendu en
 // lignes — une seule notification par personne et par jour, FR et 中文.
+// Tranche R4 (en fin de fichier) : réunions d'équipe de l'organigramme
+// (`pour: "equipe:<id>"`), créées par un référent ou un admin, vues et
+// nourries de sujets par les membres de l'équipe (`dansEquipes`, `referentDe`,
+// recopiés sur le profil par le serveur), invisibles pour les autres.
 
 const ROOT = path.resolve(__dirname, "..");
 const lire = (rel: string) => readFileSync(path.join(ROOT, rel), "utf8");
@@ -751,4 +761,181 @@ test("captures : le compte rendu collé, après la réunion (membre)", async ({ 
   await expect(lignes(page)).toHaveCount(4);
   await expect(compteRendu(page).getByRole("link", { name: "Ouvrir" })).toBeVisible();
   await page.screenshot({ path: path.join(ROOT, "test-results", "reunions-captures", `${info.project.name}-compte-rendu.png`), fullPage: true });
+});
+
+// ─── R4 : réunions d'équipe ─────────────────────────────────────────────────
+
+/** Réunion de l'équipe Régie (aucun pôle), samedi 3 octobre à 20:00, organisée par Rose, sa référente. */
+const REUNION_REGIE = { ...REUNION, titre: "Réunion Régie", pour: "equipe:regie", organisateurUid: "uid-rose", organisateurNom: "Rose T." };
+const ER = { ...REUNION_REGIE, id: "reunion-regie" } as unknown as Evenement;
+const ROSE: FakeProfile = { uid: "uid-rose", email: "rose@example.com", firstName: "Rose", lastName: "T.", dansEquipes: ["regie"], referentDe: ["regie"] };
+const HUGO: FakeProfile = { uid: "uid-hugo", email: "hugo@example.com", firstName: "Hugo", lastName: "B.", dansEquipes: ["regie"] };
+const COORD: FakeProfile = { uid: "uid-coord", email: "coord@example.com", firstName: "Iris", lastName: "D.", poles: ["evenement"] };
+
+const membre = (nom: string, uid: string, referent = false) => ({ nom, uid, mention: referent ? "Référente" : "", referent, essai: false, groupe: "" });
+const ORGANIGRAMME = [
+  { id: "da", pole: "da" as const, membres: [membre("Hugo B.", "uid-hugo")] },
+  { id: "regie", pole: null, membres: [membre("Rose T.", "uid-rose", true), membre("Hugo B.", "uid-hugo"), membre("Sans Compte", "")] },
+];
+
+test("équipe d'une réunion : « equipe:<id> » ; une réunion = un pôle ou une équipe", () => {
+  expect(equipeDuPour("equipe:regie")).toBe("regie");
+  expect(equipeDuPour("equipe:accueil-j1")).toBe("accueil-j1");
+  expect(equipeDuPour("equipe:")).toBeNull();
+  expect(equipeDuPour("pole:da")).toBeNull();
+  expect(equipeDuPour("Culte Francophone")).toBeNull();
+  expect(estReunion("equipe:regie")).toBe(true);
+  expect(estReunion("pole:da")).toBe(true);
+  expect(estReunion("eglise")).toBe(false);
+});
+
+test("rattachement : pôles, équipes et équipes dont on est référent, dans l'ordre de l'organigramme", () => {
+  expect(rattachementDe("uid-hugo", ORGANIGRAMME)).toEqual({ poles: ["da"], dansEquipes: ["da", "regie"], referentDe: [] });
+  expect(rattachementDe("uid-rose", ORGANIGRAMME)).toEqual({ poles: [], dansEquipes: ["regie"], referentDe: ["regie"] });
+  expect(rattachementDe("uid-personne", ORGANIGRAMME)).toEqual({ poles: [], dansEquipes: [], referentDe: [] });
+  expect(rattachementDe("", ORGANIGRAMME), "un nom sans compte n'a rien").toEqual({ poles: [], dansEquipes: [], referentDe: [] });
+});
+
+/** Base Admin simulée : les profils et les équipes, et les mises à jour reçues. */
+function fausseBase(users: Record<string, Record<string, unknown>>) {
+  const ecrits: { uid: string; data: Record<string, unknown> }[] = [];
+  const docs = (m: Record<string, Record<string, unknown>>) => Object.entries(m).map(([id, d]) => ({ id, data: () => d }));
+  const equipes = Object.fromEntries(ORGANIGRAMME.map(({ id, ...e }) => [id, e as Record<string, unknown>]));
+  const db = {
+    collection: (nom: string) => ({
+      get: async () => ({ docs: docs(nom === "equipes" ? equipes : users) }),
+      doc: (uid: string) => ({
+        get: async () => ({ exists: uid in users, data: () => users[uid] }),
+        update: async (data: Record<string, unknown>) => { ecrits.push({ uid, data }); users[uid] = { ...users[uid], ...data }; },
+      }),
+    }),
+  } as unknown as Parameters<typeof recalculerPoles>[0];
+  return { db, ecrits, users };
+}
+
+test("recalculerPoles recopie aussi dansEquipes et referentDe sur le profil ; rien n'est réécrit s'il n'a pas changé", async () => {
+  const { db, ecrits } = fausseBase({ "uid-rose": { poles: [] }, "uid-hugo": { poles: ["da"] } });
+  const equipes = ORGANIGRAMME.map(({ id, pole, membres }) => ({ id, pole, membres }));
+  expect(await recalculerPoles(db, ["uid-rose", "uid-hugo", "uid-absent"], equipes)).toBe(2);
+  expect(ecrits).toEqual([
+    { uid: "uid-rose", data: { poles: [], dansEquipes: ["regie"], referentDe: ["regie"] } },
+    { uid: "uid-hugo", data: { poles: ["da"], dansEquipes: ["da", "regie"], referentDe: [] } },
+  ]);
+  expect(await recalculerPoles(db, ["uid-rose", "uid-hugo"], equipes)).toBe(0);
+  expect(ecrits).toHaveLength(2);
+});
+
+test("« Recalculer depuis l'organigramme » : tous les membres des équipes, et personne d'autre", async () => {
+  const { db, ecrits } = fausseBase({
+    "uid-rose": { poles: [] }, "uid-hugo": { poles: ["da"] },
+    "uid-hors": { poles: ["orga"] }, // pôle coché hors organigramme (D10) : on n'y touche pas ici
+  });
+  expect(await recalculerDepuisOrganigramme(db)).toBe(2);
+  expect(ecrits.map((e) => e.uid).sort()).toEqual(["uid-hugo", "uid-rose"]);
+});
+
+test("destinataires d'une réunion d'équipe : les comptes dont le profil porte l'équipe", async () => {
+  const { db } = fausseBase({
+    "uid-rose": { dansEquipes: ["regie"] }, "uid-hugo": { dansEquipes: ["da", "regie"] }, "uid-noe": { poles: ["media"] },
+  });
+  expect((await destinatairesEvenement(db, { pour: "equipe:regie" })).sort()).toEqual(["uid-hugo", "uid-rose"]);
+});
+
+test("droits d'une réunion d'équipe : voir et en être = ses membres, l'organisatrice, un admin ; pas la coordination", () => {
+  const cas: [FakeProfile, FakeProfile | { dansEquipes: string[] } | null, boolean][] = [
+    [HUGO, HUGO, true], [ROSE, { dansEquipes: [] }, true], [ADMIN, null, true], [NOE, NOE, false], [COORD, COORD, false],
+  ];
+  for (const [qui, profil, attendu] of cas) {
+    expect(canSeeEvenement(user(qui), profil, ER), `${qui.uid} voit`).toBe(attendu);
+    expect(estDeLaReunion(user(qui), profil, ER), `${qui.uid} en est`).toBe(attendu);
+  }
+  expect(canSeeEvenement(null, null, ER)).toBe(false);
+  expect(peutAjouterSujet(user(HUGO), HUGO, ER, "2026-10-03T19:59")).toBe(true);
+  expect(peutAjouterSujet(user(NOE), NOE, ER, "2026-10-02T10:00")).toBe(false);
+});
+
+test("droits d'une réunion d'équipe : la créer = un référent de l'équipe ou un admin", () => {
+  expect(canCreateEvenement(user(ROSE), ROSE, "equipe:regie")).toBe(true);
+  expect(canCreateEvenement(user(ROSE), ROSE, "equipe:da")).toBe(false);
+  expect(canCreateEvenement(user(HUGO), HUGO, "equipe:regie")).toBe(false);
+  expect(canCreateEvenement(user(COORD), COORD, "equipe:regie")).toBe(false);
+  expect(canCreateEvenement(user(ADMIN), null, "equipe:regie")).toBe(true);
+  expect(creatableEvenementPours(user(ROSE), ROSE, ["Culte Francophone"])).toEqual(["equipe:regie"]);
+  expect(creatableEvenementPours(user(HUGO), HUGO, ["Culte Francophone"])).toEqual([]);
+  const admin = creatableEvenementPours(user(ADMIN), null, ["Culte Francophone"]);
+  expect(admin.filter((p) => p.startsWith("equipe:"))).toEqual(EQUIPES.map((e) => `equipe:${e.id}`));
+});
+
+test("règles R4 : membres (dansEquipes) de la réunion d'équipe, création par un référent, champs fermés à la création du profil", () => {
+  const rules = lire("firestore.rules");
+  expect(rules).toMatch(/function estDeLaReunion\(e\)[\s\S]*e\.pour\.matches\('equipe:\[a-z0-9-\]\+'\) && hasProfile\(\) && e\.pour\.split\(':'\)\[1\] in profile\(\)\.get\('dansEquipes', \[\]\)/);
+  const create = rules.slice(rules.indexOf("match /evenements/{id}"), rules.indexOf("allow update", rules.indexOf("match /evenements/{id}")));
+  expect(create).toMatch(/request\.resource\.data\.pour\.matches\('equipe:\[a-z0-9-\]\+'\)[\s\S]*request\.resource\.data\.pour\.split\(':'\)\[1\] in profile\(\)\.get\('referentDe', \[\]\)/);
+  const profil = rules.slice(rules.indexOf("match /users/{uid}"), rules.indexOf("allow update", rules.indexOf("match /users/{uid}")));
+  expect(profil).toMatch(/request\.resource\.data\.get\('dansEquipes', \[\]\) == \[\]/);
+  expect(profil).toMatch(/request\.resource\.data\.get\('referentDe', \[\]\) == \[\]/);
+});
+
+test("le cron : la veille d'une réunion d'équipe va à ses membres, comme celle d'une réunion de pôle", () => {
+  const route = lire("src/app/api/cron/reminders/route.ts");
+  expect(route).toMatch(/if \(estReunion\(e\.pour\)\) \{[\s\S]*?destinatairesEvenement\(db, e\)/);
+});
+
+/** La veille de la réunion de la Régie, 18:00, sur sa fiche. */
+async function ouvrirRegie(page: Page, qui: FakeProfile, vers = "/evenements/reunion-regie") {
+  await page.clock.setFixedTime(new Date("2026-10-02T18:00:00"));
+  return signInAs(page, qui, {
+    "evenements/reunion-regie": REUNION_REGIE,
+    "evenements/reunion-regie/sujets/r1": sujet("Micros HF : piles neuves", ROSE, "2026-09-29T09:00:00Z", 0),
+  }, vers);
+}
+
+test("référente : elle crée la réunion de son équipe, sans inscriptions, et y retrouve les sujets", async ({ page }) => {
+  const db = await ouvrirRegie(page, ROSE, "/evenements/nouveau");
+  await sansPush(page);
+  await expect(page.getByLabel("Public")).toHaveValue("equipe:regie");
+  await expect(page.getByLabel("Public").locator("option")).toHaveText(["TEAM RÉGIE"]);
+  await page.getByLabel("Nom de l'évènement").fill("Réunion Régie");
+  await page.getByLabel("Date", { exact: true }).fill("2026-10-10");
+  await page.getByLabel("Horaire", { exact: true }).fill("20:00");
+  await page.getByRole("button", { name: "Créer l'évènement" }).click();
+  await page.waitForURL(/\/evenements\/fake-\d+\/?$/);
+  const ecrit = db.doc(`evenements/${creee(db)}`)!;
+  expect(ecrit).toMatchObject({ pour: "equipe:regie", inscriptions: "fermees", organisateurUid: "uid-rose", placesMax: null });
+  await expect(page.getByText("TEAM RÉGIE").first()).toBeVisible();
+  await expect(carte(page).getByRole("heading", { name: "Sujets à aborder", exact: true })).toBeVisible();
+});
+
+test("membre de l'équipe, non référent : pas de réunion d'équipe à créer", async ({ page }) => {
+  await ouvrirRegie(page, HUGO, "/evenements/nouveau");
+  await expect(page.getByText("Cette page est réservée à la coordination et aux responsables de section.")).toBeVisible();
+});
+
+test("membre de l'équipe : il voit la réunion dans l'agenda, et y ajoute un sujet à son nom", async ({ page }) => {
+  const db = await ouvrirRegie(page, HUGO);
+  await expect(lignes(page)).toHaveCount(1);
+  await champ(page).fill("Retour de la console");
+  await carte(page).getByRole("button", { name: "Ajouter", exact: true }).click();
+  await expect(lignes(page)).toHaveCount(2);
+  const [post] = db.writes.filter((w) => w.method === "POST" && w.path.startsWith("evenements/reunion-regie/sujets/"));
+  expect(post.data).toMatchObject({ texte: "Retour de la console", auteurUid: "uid-hugo", auteurNom: "Hugo B.", ordre: 1, traite: false });
+  await page.goto("/evenements");
+  await expect(page.getByText("Réunion Régie")).toBeVisible();
+});
+
+for (const [qui, nom] of [[NOE, "un autre pôle"], [COORD, "la coordination"]] as const) {
+  test(`non-membre de l'équipe (${nom}) : ni la réunion ni ses sujets, ni dans l'agenda`, async ({ page }) => {
+    await ouvrirRegie(page, qui);
+    await expect(page.getByText("Évènement introuvable")).toBeVisible();
+    await expect(carte(page)).toHaveCount(0);
+    await page.goto("/evenements");
+    await expect(page.getByRole("heading", { name: "Évènements" }).first()).toBeVisible();
+    await expect(page.getByText("Réunion Régie")).toHaveCount(0);
+  });
+}
+
+test("captures : une réunion d'équipe, côté membre", async ({ page }, info) => {
+  await ouvrirRegie(page, HUGO);
+  await expect(lignes(page)).toHaveCount(1);
+  await page.screenshot({ path: path.join(ROOT, "test-results", "reunions-captures", `${info.project.name}-reunion-equipe.png`), fullPage: true });
 });
