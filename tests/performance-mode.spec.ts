@@ -1,6 +1,6 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
-import { ouvrirPartitions } from "./helpers/setlist";
+import { basculerAccords, fermerMenus, ouvrirAffichage, ouvrirPartitions } from "./helpers/setlist";
 
 // Chantier Mode louange (docs/spec-mode-louange.md). Setlist et compte
 // simulés : aucune lecture ni écriture du Firestore de production.
@@ -64,8 +64,10 @@ async function quitter(page: Page) {
 }
 
 /** Badges de la page affichée — hors copie invisible qui sert à mesurer les hauteurs. */
+// Dans le mode louange : en deux volets, les partitions restent montées dessous
+// (docs/spec-deux-volets.md, T4) et portent les mêmes badges.
 const nuance = (page: Page, text: string | RegExp) =>
-  page.locator("[data-nuance]:not([aria-hidden=true] *)", { hasText: text });
+  page.locator("[data-performance-mode] [data-nuance]:not([aria-hidden=true] *)", { hasText: text });
 
 const bg = (l: Locator) => l.evaluate((el) => getComputedStyle(el).backgroundColor);
 const fg = (l: Locator) => l.evaluate((el) => getComputedStyle(el).color);
@@ -227,10 +229,11 @@ test.describe("reprise des réglages", () => {
     await page.addInitScript(() => localStorage.setItem("perf-role-preset", "pianiste"));
     await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: setlist(ZH) }, `/setlists/${SETLIST_ID}`);
     await ouvrirPartitions(page);
-    // Pinyin : dans « Affichage » (setlist G, docs/spec-deux-volets.md, Q3).
-    await page.getByRole("button", { name: "Affichage" }).click();
+    // Pinyin : dans « Affichage » (bouton sur G, sous-menu du ⋯ en deux volets,
+    // docs/spec-deux-volets.md, Q3 et Q7).
+    await ouvrirAffichage(page);
     await page.getByRole("menuitemcheckbox", { name: "Pinyin" }).click();
-    await page.keyboard.press("Escape");
+    await fermerMenus(page);
     await launch(page);
     await expect(lyricLines(page).first()).toBeVisible();
     await expect(pinyin(page)).toHaveCount(0);
@@ -259,8 +262,8 @@ test.describe("reprise des réglages", () => {
     await quitter(page);
 
     await ouvrirPartitions(page);
-    await page.getByRole("button", { name: "Accords" }).click(); // masqués
-    await page.getByRole("button", { name: "Accords" }).click(); // de nouveau affichés
+    await basculerAccords(page); // masqués
+    await basculerAccords(page); // de nouveau affichés
     await launch(page);
     await expect(lyricLines(page).first()).toBeVisible();
     const settings = await settingsText(page);

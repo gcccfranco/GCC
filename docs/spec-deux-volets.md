@@ -452,3 +452,59 @@ et la tablette couchée ont aussi G (un volet) ; le « Déroulé » y reste, sa 
 - À faire par Timothée : aucune règle à publier. Essayer le geste sur son téléphone et sur l'iPad debout (Safari) :
   glisser la liste vers la gauche, les partitions vers la droite, un geste vertical qui défile, le bord gauche qui
   reste au retour du système.
+
+**T4 — faite le 05/10/2026** (branche `lot/u5-deux-volets`, commits `feat(U5): T4 — setlist en deux volets…` et
+`test(U5): T4 — specs existantes…`, après la fusion de `lot/u4-navigation`, `2af01de`). Sur ordinateur et tablette
+couchée, la setlist passe en deux volets ; téléphone et tablette debout gardent G.
+- `src/hooks/useDeuxVolets.ts` (nouveau) : règle de Q1 relue par `matchMedia` (requêtes de U4) et la préférence de la
+  barre (`suivreBarreReduite`) : tablette couchée toujours, ordinateur barre réduite toujours, barre dépliée dès
+  1 148 px. Passer de deux volets à un volet (fenêtre rétrécie, tablette tournée) rend à G la vue de l'adresse.
+- **En-tête** (Q7, `data-en-tete`) : pleine largeur, bornée par `--largeur-lecture` et centrée au-delà ; « ● catégorie ·
+  date », titre, « Présidence : … · notes » ; à droite Présentation (si un lien) · Adapter · Ma version · Modifier ·
+  PDF · ⋯ · Mode louange, libellés compris, la rangée passe sous le titre faute de place (le titre garde 18rem). ⋯ :
+  Accords, Affichage (sous-menu : trois positions, Pinyin, couleurs par section, 简谱), Prévenir l'équipe, Dupliquer,
+  Partager, Supprimer. Il colle en haut et s'escamote au défilement (`useScrollDirection`) ; c'est une barre
+  `.material-chrome` comme les autres (fond V8, halo recalé par `--barre-left`). Ni bascule, ni Retour, ni geste.
+- **Sommaire** (Q6, `_components/Sommaire.tsx`, remplace `SetlistOutline.tsx`, supprimé avec son CSS) : volet de
+  380 px, colle sous l'en-tête et monte avec lui ; par chant numéro, titre, tonalité et « orig. » (`KeyPill`), une
+  pastille par étape jouée (ma structure comprise, `stageItems`), notes, « Partition 简谱 ». Le chant lu en encre, sa
+  pastille marquée (`aria-current`) ; toucher un chant ou une pastille l'amène 12 px sous l'en-tête (même mécanique
+  que G : `allerA` → cible, tenue 2 s). Le chant lu suit le défilement et l'adresse aussi (`?vue=partitions&chant=N`,
+  sans entrée d'historique) : rechargé ou tourné, on reste au même chant.
+- **« Copier toutes les paroles »** (question 6) en pied du sommaire : `setlistLyricsText` (copyLyrics.ts), chants dans
+  l'ordre, transitions exclues, deux lignes vides entre deux chants ; absent si un chant suit « Ma version » (ou une
+  autre version, ou ma structure).
+- **PDF** (Q8) : « Quel PDF ? » gagne « Liste » (`onListe` de `PdfChoiceSheet`), qui télécharge le PDF liste.
+- **Setlists** (Q7) : sur une setlist, l'entrée « Setlists » de la barre latérale rouvre la liste telle qu'on l'a
+  quittée (`listeSetlistsRetenue`, clé `setlistsListPath` écrite par `useSetlistsNavState`).
+- **Adapter / Ma version** : dans le volet de droite, le sommaire reste. Ce que garde la question 4 (historique,
+  langue, « Vous pouvez modifier », ajouter/changer le lien de la présentation) est en tête du volet de droite, sous
+  l'en-tête, même pour une setlist vide.
+- Corrigés en passant : le PDF liste d'une setlist dont un chant a des notes échouait (« Could not resolve font for
+  Inter, italic ») : face italique enregistrée (`SetlistOverviewPDF.tsx`, Inter droit faute d'italique). Le suivi du
+  chant lu récrivait l'adresse sans l'état de Next, qui abandonnait alors une navigation en cours (un titre touché
+  pendant le défilement n'ouvrait pas la page du chant) : l'état est gardé (`replaceState(history.state, …)`).
+  Sur G, « Partitions » rouvrait parfois au bon endroit mais avec `chant=1` dans l'adresse (1 fois sur 10 à 20 en
+  test) : le suivi lisait un défilement de passage. Il attend désormais que la cible soit atteinte (`enRoute`), ne lit
+  rien quand les partitions sont déjà retirées, et le chant amené réaffirme chant lu et adresse pendant qu'il est tenu.
+- Choix pris : pas de pastille de tonalité pour une fusion dans le sommaire (deux tonalités possibles ; titre « A / B »
+  et ses pastilles) ; l'historique, la langue et « Vous pouvez modifier » en tête du volet de droite plutôt que dans
+  l'en-tête collant (il reste compact, comme la planche) ; la date écrite en entier (`formatDate`, année comprise).
+- Tests : `tests/setlist-deux-volets.spec.ts` (16 tests ; ordinateur, `tablette-paysage`, `ordinateur-1440`, ajouté à
+  `SPECS_GRAND_ECRAN` ; sautés sur téléphone et tablette debout) — vus rouges (16 échecs) puis verts (46 verts). FR
+  `abba-pere` transposé et ZH `一生爱你` sur son scan, transition et fusion. Specs existantes réécrites (nouvelles
+  fonctions `ouvrirAffichage`, `basculerAccords`, `fermerMenus`, `enDeuxVolets` dans `tests/helpers/setlist.ts`) :
+  `coup-d-oeil` (Affichage ; pastilles au lieu de « Refrain ×2 »), `setlist-regie` (Sommaire et pastilles ; « pas de
+  sommaire » joué en tablette debout), `setlist-version` (pastilles), `export-pdf` (« Liste » en deux volets),
+  `fusions-dp` (Dp lu dans le sommaire), `performance-mode` (Affichage, Accords, badges cherchés dans le mode louange),
+  `look-louange` (iPad couché et ordinateur ≥ 1 148 px : l'en-tête sur une ligne), `look-barres`,
+  `navigation-grand-ecran` (barre du haut et sommaire des deux volets).
+- Captures regardées (ordinateur 1 280, 1 440, tablette couchée ; Ma version) : conformes à `setlist-deux-volets` et
+  `ipad-paysage-reduit`.
+- **Reste après T4** : T5 (Chants en deux volets), T6 (finitions : captures FR/ZH clair et sombre sur les cinq projets,
+  suite complète, `graphify update .`). `look-louange` « la liste : structure en abrégé » n'a pas eu à changer : en
+  grand, elle lit déjà le sommaire (ses entrées sont des éléments de liste, pastille « C1 », tonalité et « orig. »).
+- À faire par Timothée : aucune règle à publier (`access.ts` et `firestore.rules` inchangés). Relire 目录, 复制全部歌词,
+  曲目列表 (« Liste » de « Quel PDF ? ») et son aide. Regarder la setlist sur l'ordinateur (barre dépliée et réduite)
+  et sur l'iPad couché : sommaire, pastilles, « Copier toutes les paroles », « Liste » dans « Quel PDF ? », l'entrée
+  « Setlists » qui rouvre la liste filtrée.

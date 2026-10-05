@@ -188,15 +188,24 @@ export function SetlistDetailClient() {
     ro.observe(el);
     return () => ro.disconnect();
   }, [setlist, deuxVolets]); // la barre n'existe qu'une fois la setlist chargée, et pas en deux volets
-  // L'en-tête des deux volets peut passer sur deux lignes : sa hauteur est mesurée.
+  // L'en-tête des deux volets peut passer sur deux lignes : sa hauteur est mesurée. Il
+  // glisse (transformé, il devient le repère des éléments fixes) : la copie du halo de
+  // son fond se recale de sa place à gauche, `--barre-left`, comme la barre de G.
   useEffect(() => {
     const el = enTeteRef.current;
     if (!el) return;
-    const update = () => setEnTeteH(el.offsetHeight);
+    const update = () => {
+      setEnTeteH(el.offsetHeight);
+      el.style.setProperty("--barre-left", `${el.getBoundingClientRect().left}px`);
+    };
     update();
     const ro = new ResizeObserver(update);
     ro.observe(el);
-    return () => ro.disconnect();
+    window.addEventListener("resize", update);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", update);
+    };
   }, [setlist, deuxVolets]);
   const [songsMap, setSongsMap] = useState<Record<string, SongIndexEntry>>({});
   // Relit l'historique après une adaptation écrite depuis cette page.
@@ -246,6 +255,9 @@ export function SetlistDetailClient() {
   }
   /** Dernière cible atteinte (ou abandonnée) : l'effet ne la rejoue pas. */
   const cibleFaite = useRef<Cible | null>(null);
+  /** Une cible est en route : le suivi du chant lu attend qu'elle soit atteinte (la page
+   *  défile alors d'elle-même, et le chant de passage n'est pas le chant lu). */
+  const enRoute = useRef(false);
   /** Où en étaient les partitions quand on les a quittées : « Partitions » y revient. */
   const retour = useRef<{ n: number; decalage: number } | null>(null);
   /** Lâche le chant amené (voir l'effet qui amène la vue à sa cible). */
@@ -484,6 +496,7 @@ export function SetlistDetailClient() {
       return;
     }
     const chant = n ?? current ?? premierChant();
+    enRoute.current = true;
     window.history.pushState({ vueG: true }, "", adresseVue(chant));
     setView("partitions");
     setCurrent(chant);
@@ -520,9 +533,11 @@ export function SetlistDetailClient() {
   // Amène la vue affichée à sa cible, une fois les partitions là.
   useEffect(() => {
     if (!cible || cible === cibleFaite.current || !setlist) return;
+    enRoute.current = true;
     if (cible.type === "ligne") {
       if (view !== "liste") return;
       cibleFaite.current = cible;
+      enRoute.current = false;
       const ligne = current !== null ? document.querySelector<HTMLElement>(`[data-ligne="${current}"]`) : null;
       if (!ligne) return;
       // Après le retour du navigateur, qui rend sa hauteur à la liste.
@@ -537,6 +552,7 @@ export function SetlistDetailClient() {
     if (!affichePartitions || loadingContent) return;
     if (cible.type === "haut") {
       cibleFaite.current = cible;
+      enRoute.current = false;
       posee.current = poser(0);
       return;
     }
@@ -545,13 +561,23 @@ export function SetlistDetailClient() {
     const el = (cible.uid && chant?.querySelector<HTMLElement>(`[data-section-uids~="${CSS.escape(cible.uid)}"]`)) || chant;
     if (!el) {
       // Contenus pas encore là : on attend ; chargés sans ce chant : on renonce.
-      if (Object.keys(contents).length > 0) cibleFaite.current = cible;
+      if (Object.keys(contents).length > 0) {
+        cibleFaite.current = cible;
+        enRoute.current = false;
+      }
       return;
     }
     cibleFaite.current = cible;
+    enRoute.current = false;
     const decalage = cible.decalage ?? 0;
-    const amener = () =>
-      (posee.current = poser(el.getBoundingClientRect().top + window.scrollY - hautDeLecture() - decalage));
+    const n = cible.n;
+    const amener = () => {
+      posee.current = poser(el.getBoundingClientRect().top + window.scrollY - hautDeLecture() - decalage);
+      // Le chant amené reste le chant lu, et l'adresse avec lui : un défilement de
+      // passage (page qui se recoupe pendant la mise en page) a pu en lire un autre.
+      setCurrent(n);
+      if (surLaSetlist(id) && lireAdresse()?.chant !== n) window.history.replaceState(window.history.state, "", adresseVue(n));
+    };
     amener();
     // Ce qui se met en page après (scans 简谱, polices) : le chant reste en place
     // jusqu'au premier geste. L'ancrage du navigateur, qui choisirait un autre
@@ -616,6 +642,9 @@ export function SetlistDetailClient() {
     const update = () => {
       frame = 0;
       if (!surLaSetlist(id)) return;
+      // Partitions déjà retirées (passage à la Liste, avant que l'effet ne se
+      // nettoie) : rien à lire — le premier chant serait pris pour le chant lu.
+      if (!document.querySelector("[data-outline-item]") || enRoute.current) return;
       retenirRetour();
       if (posee.current !== null && Math.abs(window.scrollY - posee.current) <= 4) return;
       posee.current = null;
@@ -623,7 +652,10 @@ export function SetlistDetailClient() {
       setCurrent(n);
       setUidsLus(uids);
       if (lireAdresse()?.chant !== n) {
-        window.history.replaceState({ vueG: window.history.state?.vueG }, "", adresseVue(n));
+        // L'état de Next (`__NA`) est gardé : sans lui, Next relit l'adresse comme une
+        // navigation et abandonne celle qui partait (un titre touché pendant le
+        // défilement n'ouvrait pas la page du chant).
+        window.history.replaceState(window.history.state, "", adresseVue(n));
       }
     };
     const onScroll = () => {
@@ -640,6 +672,7 @@ export function SetlistDetailClient() {
   /** Sommaire des deux volets : un chant (ou une de ses sections) touché vient
    *  sous l'en-tête et devient le chant lu ; l'adresse le suit, sans nouvelle entrée. */
   function allerA(n: number, uid?: string) {
+    enRoute.current = true;
     setCurrent(n);
     setUidsLus(uid ? [uid] : []);
     setCible({ type: "chant", n, uid });
@@ -1473,10 +1506,11 @@ export function SetlistDetailClient() {
           <header
             ref={enTeteRef}
             data-en-tete
-            className="print:hidden sticky z-20 border-b border-border transition-transform duration-300"
+            // Une barre comme les autres (V8) : fond opaque qui repeint la page et son halo.
+            className="material-chrome print:hidden sticky z-20 border-b border-border transition-transform duration-300 [--barre-top:var(--nav-h)]"
             style={{
               top: "var(--nav-h)",
-              transform: scrollVisible ? undefined : "translateY(calc(-100% - var(--nav-h) - 12px))",
+              transform: scrollVisible ? "translateY(0)" : "translateY(calc(-100% - var(--nav-h) - 12px))",
             }}
           >
             <FondDeBarre />
@@ -1576,53 +1610,53 @@ export function SetlistDetailClient() {
             </div>
           </header>
 
-          {setlist.items.length === 0 ? (
-            <p className="mx-7 my-8 text-center py-16 text-sm text-muted-foreground border border-dashed border-border rounded-xl">
-              {t("setlists.detail.emptyItems")}
-            </p>
-          ) : (
-            <div className="grid grid-cols-[380px_minmax(0,1fr)]">
-              {/* Le filet descend jusqu'en bas de la page ; le sommaire colle sous l'en-tête. */}
-              <div className="border-r border-border print:hidden">
-                <Sommaire
-                  items={stageItems}
-                  contents={contents}
-                  songsMap={songsMap}
-                  jianpuPref={jianpuPref}
-                  current={current ?? premierChant()}
-                  uidsLus={uidsLus}
-                  onGo={allerA}
-                  copier={toutSuitLaPresidence ? () => setlistLyricsText(setlist.items, contents) : undefined}
-                  className="sticky transition-[top,height] duration-300"
-                  style={{
-                    top: scrollVisible ? `calc(var(--nav-h) + ${enTeteH}px)` : "var(--nav-h)",
-                    height: scrollVisible ? `calc(100dvh - var(--nav-h) - ${enTeteH}px)` : "calc(100dvh - var(--nav-h))",
-                  }}
+          <div className="grid grid-cols-[380px_minmax(0,1fr)]">
+            {/* Le filet descend jusqu'en bas de la page ; le sommaire colle sous l'en-tête. */}
+            <div className="border-r border-border print:hidden">
+              <Sommaire
+                items={stageItems}
+                contents={contents}
+                songsMap={songsMap}
+                jianpuPref={jianpuPref}
+                current={current ?? premierChant()}
+                uidsLus={uidsLus}
+                onGo={allerA}
+                copier={toutSuitLaPresidence ? () => setlistLyricsText(setlist.items, contents) : undefined}
+                className="sticky transition-[top,height] duration-300"
+                style={{
+                  top: scrollVisible ? `calc(var(--nav-h) + ${enTeteH}px)` : "var(--nav-h)",
+                  height: scrollVisible ? `calc(100dvh - var(--nav-h) - ${enTeteH}px)` : "calc(100dvh - var(--nav-h))",
+                }}
+              />
+            </div>
+            <div className="min-w-0 px-7 pb-16 pt-6">
+              {/* Ce que garde la question 4, sous le titre : historique, langue, qui peut
+                  modifier ; la régie ajoute ou change ici le lien de la présentation. */}
+              <div className="mb-6 print:hidden">
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                  <SetlistHistory key={historyVersion} setlistId={id} songsMap={songsMap} />
+                  <span className="text-xs px-2 py-0.5 rounded border border-border text-muted-foreground">
+                    {t("common.languages." + setlist.language, { defaultValue: setlist.language })}
+                  </span>
+                </div>
+                {droitsDeModifier}
+                <PresentationLink
+                  setlistId={id}
+                  url={setlist.presentationUrl}
+                  canChange={peutChangerPresentation}
+                  onSaved={(presentationUrl) => setSetlist({ ...setlist, presentationUrl })}
+                  sansLien
                 />
               </div>
-              <div className="min-w-0 px-7 pb-16 pt-6">
-                {/* Ce que garde la question 4, sous le titre : historique, langue, qui peut
-                    modifier ; la régie ajoute ou change ici le lien de la présentation. */}
-                <div className="mb-6 print:hidden">
-                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                    <SetlistHistory key={historyVersion} setlistId={id} songsMap={songsMap} />
-                    <span className="text-xs px-2 py-0.5 rounded border border-border text-muted-foreground">
-                      {t("common.languages." + setlist.language, { defaultValue: setlist.language })}
-                    </span>
-                  </div>
-                  {droitsDeModifier}
-                  <PresentationLink
-                    setlistId={id}
-                    url={setlist.presentationUrl}
-                    canChange={peutChangerPresentation}
-                    onSaved={(presentationUrl) => setSetlist({ ...setlist, presentationUrl })}
-                    sansLien
-                  />
-                </div>
-                {partitions}
-              </div>
+              {setlist.items.length === 0 ? (
+                <p className="text-center py-16 text-sm text-muted-foreground border border-dashed border-border rounded-xl">
+                  {t("setlists.detail.emptyItems")}
+                </p>
+              ) : (
+                partitions
+              )}
             </div>
-          )}
+          </div>
         </div>
       ) : (
         <>

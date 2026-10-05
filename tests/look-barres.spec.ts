@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { enDeuxVolets } from "./helpers/setlist";
 
 // 5C1, tranche V8 (docs/spec-look.md § « V8 », 27/09/2026 ; remplace V7) : le texte ne
 // passe plus derrière les barres. Retour de Timothée sur iPhone : transparentes depuis
@@ -180,6 +181,9 @@ test.describe("barres (5C1, V8) : opaques, elles repeignent la page qu'elles cac
     await sansSheet(page);
     await signInAs(page, MUSICIEN, { "setlists/culte": FICHE }, "/setlists/culte");
     await page.getByRole("button", { name: "Mode louange" }).waitFor();
+    // Deux volets (docs/spec-deux-volets.md, T4) : la barre est l'en-tête collant, et les
+    // partitions sont là dès l'ouverture ; on attend qu'elles soient posées.
+    if (await enDeuxVolets(page)) await page.locator("[data-outline-item]").first().waitFor();
     await barresOpaquesEtInvisibles(page, avecNavbar(2), "setlist");
   });
 

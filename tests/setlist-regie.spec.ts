@@ -69,37 +69,41 @@ test("bouton « Copier les paroles » : ordre joué, reprises comprises, ligne v
   await expect(page.getByRole("button", { name: "Copié" })).toBeVisible();
 });
 
-test.describe("déroulé", () => {
-  // 1 600 px : le sommaire tient à côté de la barre latérale dépliée (lot U4 : 1 280 px de
-  // contenu, soit 1 528 px de fenêtre ; à 1 440 px il se masque).
+test.describe("sommaire", () => {
+  // 1 600 px : la setlist en deux volets, le Sommaire à gauche (lot U5,
+  // docs/spec-deux-volets.md, Q6 ; il remplace le « Déroulé »).
   test.use({ viewport: { width: 1600, height: 900 } });
 
-  test("sur ordinateur, le sommaire liste chants et sections et y amène au clic", async ({ page }) => {
+  test("sur ordinateur, le sommaire liste chants et étapes jouées et y amène au clic", async ({ page }) => {
     await openPartitions(page);
-    const outline = page.getByRole("navigation", { name: "Déroulé" });
-    await expect(outline).toBeVisible();
-    await expect(outline.getByRole("button", { name: /Abba Père/ })).toBeVisible();
-    await expect(outline.getByRole("button", { name: /一生爱你/ })).toBeVisible();
-    await expect(outline.getByRole("button", { name: "Refrain ×2" })).toBeVisible();
+    const sommaire = page.getByRole("navigation", { name: "Sommaire" });
+    await expect(sommaire).toBeVisible();
+    const chant = (n: number) => sommaire.locator(`[data-sommaire="${n}"] [data-sommaire-chant]`);
+    await expect(chant(1)).toHaveText("Abba Père");
+    await expect(chant(2)).toHaveText("一生爱你");
+    // Une pastille par étape jouée : le refrain repris deux fois, sans « ×2 ».
+    const pastilles = sommaire.locator('[data-sommaire="1"] [data-pastille]');
+    await expect(pastilles).toHaveText(["C1", "R", "R"]);
 
-    // Aller au 2ᵉ chant : son en-tête vient se placer sous la barre d'outils.
-    await outline.getByRole("button", { name: /一生爱你/ }).click();
+    // Aller au 2ᵉ chant : son en-tête vient se placer sous l'en-tête de la setlist.
+    await chant(2).click();
     const song2 = page.locator('[data-outline-item="2"]');
     await expect.poll(async () => (await song2.boundingBox())!.y).toBeLessThan(250);
-    await expect(outline.getByRole("button", { name: /一生爱你/ })).toHaveAttribute("aria-current", "true");
+    await expect(chant(2)).toHaveAttribute("aria-current", "true");
 
     // Retour à une section précise du 1ᵉʳ chant.
-    await outline.getByRole("button", { name: "Refrain ×2" }).click();
+    await pastilles.nth(1).click();
     const refrain = page.locator('[data-outline-item="1"] [data-section]').nth(1);
     await expect.poll(async () => (await refrain.boundingBox())!.y).toBeLessThan(250);
   });
 });
 
-test("sur tablette, pas de sommaire latéral", async ({ page }) => {
-  await page.setViewportSize({ width: 1024, height: 768 });
+test("sur tablette debout, pas de sommaire latéral", async ({ page }) => {
+  // 768 × 1024 : la setlist G ; couchée, la tablette a les deux volets (docs/spec-deux-volets.md, Q1).
+  await page.setViewportSize({ width: 768, height: 1024 });
   await openPartitions(page);
   await expect(page.locator('[data-section]').first()).toBeVisible();
-  await expect(page.getByRole("navigation", { name: "Déroulé" })).toBeHidden();
+  await expect(page.getByRole("navigation", { name: "Sommaire" })).toHaveCount(0);
 });
 
 test("bouton « Copier les paroles » : caractères puis pinyin, même sur un scan 简谱 (ZH)", async ({ page }) => {

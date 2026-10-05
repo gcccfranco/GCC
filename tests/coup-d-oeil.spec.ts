@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
-import { ouvrirPartitions } from "./helpers/setlist";
+import { fermerMenus, ouvrirAffichage, ouvrirPartitions } from "./helpers/setlist";
 import { abbreviateSection } from "../src/lib/chordpro/abbreviations";
 import { uniqueSections } from "../src/lib/setlist/uniqueSections";
 import { isLastPhraseOnly, materializeLastPhrase } from "../src/lib/setlist/lastPhrase";
@@ -154,11 +154,12 @@ test("sections uniques : une fois par section et par tonalité, occurrences repr
 
 test.describe("modes d'affichage de la vue partitions", () => {
   async function choose(page: Page, name: string) {
-    // Bouton « Affichage » de la barre (setlist G, docs/spec-deux-volets.md, Q3).
-    await page.getByRole("button", { name: "Affichage" }).click();
+    // Bouton « Affichage » de la barre sur G, sous-menu du ⋯ en deux volets
+    // (docs/spec-deux-volets.md, Q3 et Q7).
+    await ouvrirAffichage(page);
     await page.getByRole("menuitemradio", { name }).click();
     // Le menu reste ouvert après un choix (Radix cache alors le reste de la page).
-    await page.keyboard.press("Escape");
+    await fermerMenus(page);
   }
   const song1Sections = (page: Page) => page.locator('[data-outline-item="1"] [data-section]');
 
@@ -216,17 +217,19 @@ test.describe("modes d'affichage de la vue partitions", () => {
   });
 
   test.describe("sommaire (ordinateur)", () => {
-    // 1 600 px : le sommaire tient à côté de la barre latérale dépliée (lot U4 : 1 280 px de
-    // contenu, soit 1 528 px de fenêtre ; à 1 440 px il se masque).
+    // Le Sommaire des deux volets (docs/spec-deux-volets.md, T4) : une pastille par étape
+    // jouée, « R » deux fois et plus « Refrain ×2 ».
     test.use({ viewport: { width: 1600, height: 900 } });
-    test("en sections uniques, « Refrain ×2 » mène à l'unique refrain imprimé et le marque", async ({ page }) => {
+    test("ordinateur, en sections uniques : la pastille du second refrain mène à l'unique refrain imprimé et la marque", async ({ page }, info) => {
+      test.skip(info.project.name !== "ordinateur", "deux volets : une fois suffit (ordinateur)");
       await page.addInitScript(() => localStorage.setItem("partition-layout", "unique"));
       await openPartitions(page);
-      const outline = page.getByRole("navigation", { name: "Déroulé" });
-      await outline.getByRole("button", { name: "Refrain ×2" }).click();
+      const pastilles = page.getByRole("navigation", { name: "Sommaire" }).locator('[data-sommaire="1"] [data-pastille]');
+      await expect(pastilles).toHaveText(["C1", "R", "R"]);
+      await pastilles.nth(2).click();
       const refrain = page.locator('[data-outline-item="1"] [data-section-uids~="chorus-3-2"]');
       await expect.poll(async () => (await refrain.boundingBox())!.y).toBeLessThan(250);
-      await expect(outline.getByRole("button", { name: "Refrain ×2" })).toHaveClass(/font-semibold/);
+      await expect(pastilles.nth(2)).toHaveAttribute("aria-current", "true");
     });
   });
 });

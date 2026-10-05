@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { readFileSync } from "fs";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
-import { ouvrirPartitions } from "./helpers/setlist";
+import { enDeuxVolets, ouvrirPartitions } from "./helpers/setlist";
 import { withoutLastPhrases } from "../src/lib/setlist/lastPhrase";
 import { diffSetlists } from "../src/lib/setlist/history";
 import { playedSections } from "../src/lib/setlist/playedSections";
@@ -77,7 +77,12 @@ test("historique : une Dernière phrase se reconnaît dans les deux formats (oth
   expect(withoutLastPhrases(DP_ABBA)).toEqual({ source: ABBA.trimEnd(), count: 1 });
 });
 
-test("liste : une Dernière phrase écrite dans l'ancien format s'affiche « Dp », pas « other »", async ({ page }) => {
+/** Pastilles d'un chant du Sommaire (deux volets, docs/spec-deux-volets.md, Q6), à la
+ *  manière de la structure abrégée de la liste : « C1 · R · Dp ». */
+const pastillesDuSommaire = async (page: Page, position: number) =>
+  (await page.locator(`[data-sommaire="${position}"] [data-pastille]`).allTextContents()).join(" · ");
+
+test("liste (sommaire en deux volets) : une Dernière phrase écrite dans l'ancien format s'affiche « Dp », pas « other »", async ({ page }) => {
   await ouvrir(page, setlist([
     item({
       songSlug: "abba-pere",
@@ -86,6 +91,10 @@ test("liste : une Dernière phrase écrite dans l'ancien format s'affiche « Dp 
       structureOverride: ["verse-2-0", "chorus-3-1", "other-7-9"],
     }),
   ]));
+  if (await enDeuxVolets(page)) {
+    await expect.poll(() => pastillesDuSommaire(page, 1)).toBe("C1 · R · Dp");
+    return;
+  }
   const ligne = page.getByRole("listitem").filter({ hasText: "Abba Père" });
   await expect(ligne).toContainText("C1 · R · Dp");
   await expect(ligne).not.toContainText("other");
@@ -271,8 +280,13 @@ test("partitions, fusion mélangée : la Dernière phrase termine le mélange", 
   await capture(page, "fusions-dp-partitions-mixte");
 });
 
-test("liste : la Dernière phrase d'un chant de fusion s'affiche « Dp », mélangée ou à la suite", async ({ page }) => {
+test("liste (sommaire en deux volets) : la Dernière phrase d'un chant de fusion s'affiche « Dp », mélangée ou à la suite", async ({ page }) => {
   await ouvrir(page, setlist([item({ songSlug: "一生爱你", position: 1 }), FUSION_SUITE_DP, { ...FUSION_MIXTE_DP, position: 3 }]));
+  if (await enDeuxVolets(page)) {
+    await expect.poll(() => pastillesDuSommaire(page, 2)).toContain("R · Dp");
+    await expect.poll(() => pastillesDuSommaire(page, 3)).toContain("R · Dp");
+    return;
+  }
   const lignes = page.getByRole("listitem").filter({ hasText: "Fusion" });
   await expect(lignes.first()).toContainText("R · Dp");
   await expect(lignes.nth(1)).toContainText("R · Dp");

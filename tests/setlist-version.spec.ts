@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
-import { ouvrirListe, ouvrirPartitions } from "./helpers/setlist";
+import { enDeuxVolets, ouvrirAffichage, ouvrirListe, ouvrirPartitions } from "./helpers/setlist";
 
 // Version perso d'un chant dans une setlist (docs/spec-version-perso.md).
 // V1 : « Ma version » — accords et paroles retouchés pour soi, enregistrés
@@ -174,8 +174,10 @@ test("chant chinois : ma version garde les caractères et le pinyin des autres l
 const MY_STRUCTURE = ["verse-2", "chorus-3", "bridge-6"];
 const strip = (page: Page, position: number) => song(page, position).locator("ol abbr");
 const bodySections = (page: Page, position: number) => song(page, position).locator("[data-section]");
-/** Sommaire : masqué par CSS sous 1280 px (téléphone, tablette), mais toujours rendu. */
-const outline = (page: Page) => page.getByRole("navigation", { name: "Déroulé", includeHidden: true });
+/** Pastilles d'un chant du Sommaire : seulement en deux volets (ordinateur, tablette
+ *  couchée ; docs/spec-deux-volets.md, Q6). */
+const pastilles = (page: Page, position: number) =>
+  page.getByRole("navigation", { name: "Sommaire" }).locator(`[data-sommaire="${position}"] [data-pastille]`);
 
 test("ma structure : le corps la suit, le bandeau, le sommaire et la liste restent cohérents", async ({ page }) => {
   await openPartitions(page, {
@@ -187,9 +189,10 @@ test("ma structure : le corps la suit, le bandeau, le sommaire et la liste reste
   await expect(bodySections(page, 1).nth(2)).toContainText("Pont");
   await expect(song(page, 1).getByText("Ma version", { exact: true })).toBeVisible();
   await expect(strip(page, 1), "le bandeau garde la structure de la présidence").toHaveText(["I", "C1", "R", "Pm", "C2", "P"]);
-  await expect(outline(page).getByText("Interlude"), "le sommaire suit ce qui est affiché").toHaveCount(0);
-  await expect(outline(page).getByText("Pont")).toHaveCount(1);
+  const deuxVolets = await enDeuxVolets(page);
+  if (deuxVolets) await expect(pastilles(page, 1), "le sommaire suit ce qui est affiché").toHaveText(["C1", "R", "P"]);
   await capture(page, "v2-ma-structure");
+  if (deuxVolets) return; // pas de vue liste en deux volets
 
   await ouvrirListe(page);
   // 5C1 (20/09/2026) : la liste écrit la structure en abrégé — l'interlude de la présidence y est « Pm ».
@@ -235,7 +238,7 @@ test("« Structure seule » masque le corps même avec ma structure", async ({ p
   await openPartitions(page, {
     [VERSION_DOC]: myDoc({ "abba-pere": { content: null, structure: MY_STRUCTURE, shared: false } }),
   });
-  await page.getByRole("button", { name: "Affichage" }).click();
+  await ouvrirAffichage(page);
   await page.getByRole("menuitemradio", { name: "Structure seule" }).click();
   await expect(bodySections(page, 1)).toHaveCount(0);
   await expect(strip(page, 1)).toHaveText(["I", "C1", "R", "Pm", "C2", "P"]);
