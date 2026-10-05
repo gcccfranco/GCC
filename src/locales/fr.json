@@ -26,6 +26,7 @@
     "jourAria_one": "{{jour}}, {{count}} entrée",
     "jourAria_other": "{{jour}}, {{count}} entrées",
     "rien": "Rien ce jour-là.",
+    "casesVides": "Cases vides : {{liste}}",
     "duSheet": "Lu dans le Sheet des évènements",
     "sheetInjoignable": "Sheet des évènements injoignable : ses évènements n'apparaissent pas pour l'instant.",
     "fermer": "Fermer",

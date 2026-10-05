@@ -152,7 +152,8 @@ test.describe("Barre du bas (B6) : la barre", () => {
       await route.fallback().catch(() => {});
     });
     await page.goto("/back-office");
-    await expect(onglets(page)).toHaveText(["Accueil", "Tâches", "Planning", "Évènements", "Plus"], { timeout: 10_000 });
+    // Défaut d'un admin depuis l'entrée Calendrier (U8, C3) : celui de la planche.
+    await expect(onglets(page)).toHaveText(["Accueil", "Calendrier", "Tâches", "Planning", "Plus"], { timeout: 10_000 });
     await page.unrouteAll({ behavior: "ignoreErrors" });
   });
 

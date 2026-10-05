@@ -203,6 +203,45 @@ test.describe("sources du calendrier (pur)", () => {
     ]);
   });
 
+  test("services : « Cases vides » des plannings lus (calcul du widget 4 de U6), aujourd'hui et après seulement", () => {
+    const d = vide();
+    d.seances = [
+      { category: "Culte Francophone", date: "2026-09-27", leader: "Lou M.", label: "" },
+      { category: "Culte Francophone", date: "2026-10-11", leader: "Sam T.", label: "" },
+      { category: "Culte Francophone", date: "2026-10-18", leader: "Noé R.", label: "" },
+      { category: "Groupe Paix", date: "2026-10-11", leader: "Kim R.", label: "" },
+      { category: "Campus", date: "2026-10-20", moment: "matin", leader: "A.", label: "" },
+      { category: "Campus", date: "2026-10-20", moment: "soir", leader: "B.", label: "" },
+      { category: "中班", date: "2026-10-11", leader: "Lou M.", label: "" },
+      { category: "大班", date: "2026-10-11", leader: "", label: "" },
+    ];
+    // Lignes des grilles lues (`lireGrilles`) : index 1 = présidence, puis les colonnes de chaque grille.
+    // Culte : Batterie (6) et Sono (7) vides le 11 ; Sainte cène (11) vide mais optionnelle ; le 18 complet.
+    const culte = (date: string, vides: number[]) =>
+      [date, ...Array.from({ length: 11 }, (_, i) => (vides.includes(i + 1) || i + 1 === 11 ? "" : `N${i + 1}`))];
+    const campus = (date: string) => [date, ...Array.from({ length: 13 }, (_, i) => (i + 1 === 4 ? "" : `C${i + 1}`))];
+    d.grilles = {
+      culte: [culte("2026-09-27", [6]), culte("2026-10-11", [6, 7]), culte("2026-10-18", [])],
+      campusSoir: [campus("2026-10-20")],
+      // EDD 中班 : Piano (3) et Cajón (4) vides ; 大班 n'est pas lu.
+      eddZhongban: [["2026-10-11", "Lou M.", "S.", "", "", "G.", "Cours"]],
+    };
+    const e = de(entreesCalendrier(...OCT, d, ctx()), "services");
+    const vides = (cle: string) => e.find((x) => x.cle === cle)?.vides;
+    expect(vides("services:Culte Francophone:2026-10-11")).toEqual(["planning.roles.batterie", "planning.roles.sono"]);
+    // Complet, ou planning non lu (Groupe Paix, Campus matin) : rien.
+    expect(vides("services:Culte Francophone:2026-10-18")).toBeUndefined();
+    expect(vides("services:Groupe Paix:2026-10-11")).toBeUndefined();
+    expect(vides("services:Campus-matin:2026-10-20")).toBeUndefined();
+    // Campus : la grille du même moment seulement.
+    expect(vides("services:Campus-soir:2026-10-20")).toEqual(["planning.roles.piano"]);
+    // L'entrée « EDD » réunit les classes lues.
+    expect(vides("services:EDD:2026-10-11")).toEqual(["planning.roles.piano", "planning.roles.cajon"]);
+    // Un dimanche passé ne réclame plus rien (le 27/09, Batterie vide).
+    const passe = de(entreesCalendrier("2026-09-27", "2026-09-27", d, ctx()), "services");
+    expect(passe[0].vides).toBeUndefined();
+  });
+
   test("Sheet : lecture seule, jamais « moi », heures « 19:00 – 21:00 », lien vers l'onglet du mois", () => {
     const d = vide();
     d.sheet = [
@@ -616,7 +655,8 @@ const csv = (rows: string[][]) => rows.map((r) => r.map((c) => `"${c}"`).join(",
 const CULTE = csv([
   ["2026 DATE", "Présidence", "Choristes", "", "Pianiste", "Guitariste", "Batterie", "Sono + Live", "PPT", "Orateur", "Traducteur", "Sainte cène", "Notes"],
   ["04/10", "Lou M.", "", "", "", "", "", "", "", "", "", "", ""],
-  ["11/10", "Sam T.", "", "", "", "", "", "", "", "", "", "", ""],
+  // Le 11 : tout rempli sauf Batterie et Sono (« Cases vides : Batterie, Sono », la Sainte cène est optionnelle).
+  ["11/10", "Sam T.", "Ana B.", "Bea C.", "Cyd D.", "Dan E.", "", "", "Eli F.", "Fay G.", "Gus H.", "", ""],
 ]);
 
 const P_ADMIN: FakeProfile = { uid: "u-admin", email: ADMIN_EMAILS[0], firstName: "Admin", lastName: "T.", planningName: "Lou M." };
@@ -795,6 +835,29 @@ test.describe("C3 : la page du calendrier en Mois", () => {
     await expect(jour(page, "2026-10-11")).toHaveAttribute("aria-pressed", "true");
   });
 
+  test("le panneau du jour dit les cases vides d'un service : « Cases vides : Batterie, Sono » (ordinateur et tablettes)", async ({ page }, info) => {
+    test.skip(estTelephone(info), SANS_TELEPHONE);
+    await ouvrir(page);
+    await jour(page, "2026-10-11").click();
+    const panneau = panneauADroite(info)
+      ? page.getByRole("complementary", { name: "Dimanche 11 octobre" })
+      : page.getByRole("dialog", { name: "Dimanche 11 octobre" });
+    await expect(panneau.getByRole("link", { name: /Culte Franco/ })).toContainText("Cases vides : Batterie, Sono");
+    // La case de la grille n'en dit rien : la carte du panneau seulement (planche bo-calendrier).
+    await expect(jour(page, "2026-10-11")).not.toContainText("Cases vides");
+  });
+
+  test("« Cases vides » : seulement pour les plannings qu'on remplit ou publie, comme le widget 4 (ordinateur et tablettes)", async ({ page }, info) => {
+    test.skip(estTelephone(info), SANS_TELEPHONE);
+    await ouvrir(page, P_POLES);
+    await jour(page, "2026-10-11").click();
+    const panneau = panneauADroite(info)
+      ? page.getByRole("complementary", { name: "Dimanche 11 octobre" })
+      : page.getByRole("dialog", { name: "Dimanche 11 octobre" });
+    await expect(panneau.getByRole("link", { name: /Culte Franco/ })).toContainText("Présidence : Sam T.");
+    await expect(panneau).not.toContainText("Cases vides");
+  });
+
   test("sur grand écran, le panneau montre aujourd'hui dès l'ouverture", async ({ page }, info) => {
     test.skip(!panneauADroite(info), "panneau à droite : ordinateur et tablette couchée");
     await ouvrir(page);
@@ -875,6 +938,10 @@ test.describe("C3 : la page du calendrier en Mois", () => {
     await expect(page.getByRole("button", { name: "只看我的" })).toBeVisible();
     // La case de la grille dit « 早餐：空闲 » ; la carte de l'agenda, « 早餐 » puis « 空闲 ».
     await expect(jour(page, "2026-10-11").locator('[data-source="petitDej"]')).toContainText(estTelephone(info) ? "空闲" : "早餐：空闲");
+    if (estTelephone(info)) return;
+    // Les cases vides du panneau du jour, libellés des colonnes en chinois.
+    await jour(page, "2026-10-11").click();
+    await expect(page.getByRole(panneauADroite(info) ? "complementary" : "dialog", { name: /10月11日/ })).toContainText("空缺：架子鼓, 音控");
   });
 });
 

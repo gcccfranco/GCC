@@ -41,7 +41,7 @@ export function WidgetCalendrier({ widget }: { widget: Widget }) {
   const pret = !loading && user !== null;
 
   const { valeur: base, erreur } = useLecture(
-    async () => (pret ? chargerCalendrier(user, profil, today) : null),
+    async () => (pret ? chargerCalendrier(user, profil, today, { pourLeWidget: true }) : null),
     pret ? `${user.uid}|${today}` : "",
   );
   // Le Sheet des évènements, sur la période du widget : sans lui, le reste s'affiche.

@@ -4,36 +4,19 @@
 // Le Sheet des évènements se lit à part, par mois affiché (lireSheetEvenements).
 
 import { isAdminUser, polesDe } from "@/lib/access";
-import type { DonneesCalendrier, LignePetitDejCalendrier, ProfilCalendrier } from "@/lib/calendrier/entrees";
+import type { DonneesCalendrier, ProfilCalendrier } from "@/lib/calendrier/entrees";
 import { getInscription, listEvenements } from "@/lib/firebase/evenements";
 import { listCreneaux, listProgrammes } from "@/lib/firebase/programmes";
-import { FS_BASE, authHeader, getSetlists } from "@/lib/firebase/setlists";
+import { getSetlists } from "@/lib/firebase/setlists";
 import { listTaches } from "@/lib/firebase/taches";
+import { lirePetitDej } from "@/lib/petitdej/lignes";
 import { findMyServices, loadPlanningData, setlistSeances } from "@/lib/planning/names";
 import { currentProgramme } from "@/lib/scene/dimanches";
+import { planningsCasesVides } from "@/lib/tableauDeBord/donnees";
+import { lireGrilles } from "@/lib/tableauDeBord/lecture";
 import { TACHE_POLES } from "@/types/tache";
 
 type Utilisateur = { uid: string; email?: string | null };
-type Doc = { name: string; fields?: Record<string, { stringValue?: string }> };
-
-/**
- * Lignes `petitDej/{id}` (forme de U3). **Une lecture en échec est une
- * erreur** (jamais « Libre »). À remplacer par `lirePetitDej` de U3
- * (`src/lib/petitdej/lignes.ts`) quand les deux lots se rejoignent.
- */
-async function lirePetitDej(): Promise<LignePetitDejCalendrier[]> {
-  const res = await fetch(`${FS_BASE}:runQuery`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...(await authHeader()) },
-    body: JSON.stringify({ structuredQuery: { from: [{ collectionId: "petitDej" }] } }),
-  });
-  if (!res.ok) throw new Error(`petitDej illisible (HTTP ${res.status})`);
-  return ((await res.json()) as { document?: Doc }[]).flatMap(({ document }) => {
-    const champ = (cle: string) => document?.fields?.[cle]?.stringValue ?? "";
-    if (!document || !champ("dimanche")) return [];
-    return [{ id: document.name.split("/").pop()!, dimanche: champ("dimanche"), nom: champ("nom"), uid: champ("uid") }];
-  });
-}
 
 async function lireScene(today: string): Promise<DonneesCalendrier["scene"]> {
   const programme = currentProgramme(await listProgrammes(), today);
@@ -45,15 +28,22 @@ export async function chargerCalendrier(
   user: Utilisateur,
   profile: ProfilCalendrier | null,
   today: string,
+  /** Le widget ne montre ni setlists ni cases vides : il ne les lit pas (au tableau de bord, les
+   *  setlists ne se lisent qu'une fois, pour « Ce dimanche » et « Setlists à préparer », U6). */
+  { pourLeWidget = false }: { pourLeWidget?: boolean } = {},
 ): Promise<Omit<DonneesCalendrier, "sheet">> {
   const poles = isAdminUser(user) ? [...TACHE_POLES] : polesDe(profile);
-  const [planning, evenements, taches, scene, petitDej, setlists] = await Promise.all([
+  const [planning, evenements, taches, scene, petitDej, setlists, grilles] = await Promise.all([
     loadPlanningData().catch(() => null),
     listEvenements(false).catch(() => []),
     Promise.all(poles.map((p) => listTaches(p).catch(() => []))).then((l) => l.flat()),
     lireScene(today).catch(() => null),
+    // Lecteur de U3 : une lecture en échec donne null (rien, jamais « Libre »).
     lirePetitDej().catch(() => null),
-    getSetlists().catch(() => []),
+    pourLeWidget ? [] : getSetlists().catch(() => []),
+    // « Cases vides » : les plannings du widget 4 de U6 (qu'on remplit, sinon qu'on publie ; le Culte
+    // pour un admin). Illisibles : aucune case vide annoncée.
+    pourLeWidget ? undefined : lireGrilles(planningsCasesVides({}, user, profile)).catch(() => undefined),
   ]);
   // « Seulement moi » : les évènements où je suis inscrit (une lecture par évènement, comme l'agenda).
   const ouverts = evenements.filter((e) => !e.pour.startsWith("pole:") && !e.pour.startsWith("equipe:") && !e.lienExterne);
@@ -70,5 +60,6 @@ export async function chargerCalendrier(
     scene,
     petitDej,
     setlists,
+    grilles,
   };
 }

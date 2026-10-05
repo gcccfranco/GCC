@@ -16,10 +16,13 @@ import {
 } from "@/lib/access";
 import { lienOngletSheet, type EntreeSheet } from "@/lib/evenements/sheet";
 import type { FSSetlist } from "@/lib/firebase/setlists";
+import { casesVides } from "@/lib/planning/casesVides";
+import { GRILLE_CAMPUS_MATIN, GRILLE_CAMPUS_SOIR } from "@/lib/planning/grilles";
 import type { ServiceEntry, SetlistSeance } from "@/lib/planning/names";
 import { EDD_CLASSES } from "@/lib/planning/utils";
 import { quiCategories } from "@/lib/scene/rappels";
 import { PLANNING_COLORS, categoryColor, categoryLabel, serviceColor } from "@/lib/serviceColors";
+import { GRILLES_DU_SERVICE } from "@/lib/tableauDeBord/donnees";
 import { addDays, echeancesDe } from "@/lib/taches/echeances";
 import { poleLabel } from "@/lib/taches/messages";
 import type { Evenement } from "@/types/evenement";
@@ -64,6 +67,9 @@ export interface EntreeCalendrier {
   deplacable: boolean;
   /** Fiche, page du pôle, setlist, onglet du Sheet. */
   lien: string;
+  /** Services seulement : colonnes à remplir (clés `planning.roles.*`), « Cases vides : … »
+   *  du panneau du jour ; absent quand rien ne manque ou que le planning n'est pas lu. */
+  vides?: string[];
 }
 
 /** Profil lu par le calendrier ; `dansEquipes` vient avec les réunions
@@ -101,6 +107,8 @@ export interface DonneesCalendrier {
   petitDej: LignePetitDejCalendrier[] | null;
   /** Setlists (`getSetlists`). */
   setlists: FSSetlist[];
+  /** Lignes des plannings dont on montre les cases vides (`lireGrilles`), par clé de grille. */
+  grilles?: Record<string, string[][]>;
 }
 
 export interface ContexteCalendrier {
@@ -224,6 +232,22 @@ function categorieDuService(service: string): string {
   return service;
 }
 
+/** Les grilles d'une séance : celles de sa catégorie, du même moment au Campus. */
+const grillesDeLaSeance = (s: SetlistSeance) =>
+  (GRILLES_DU_SERVICE[s.category] ?? []).filter(
+    (g) => !s.moment || g.key === (s.moment === "matin" ? GRILLE_CAMPUS_MATIN : GRILLE_CAMPUS_SOIR).key,
+  );
+
+/** « Cases vides » (calcul du widget 4 de U6) des grilles lues de ces séances, aujourd'hui et après. */
+function videsDe(d: DonneesCalendrier, c: ContexteCalendrier, seances: SetlistSeance[], date: string): string[] | undefined {
+  if (date < c.today || !d.grilles) return undefined;
+  const cles = seances
+    .flatMap(grillesDeLaSeance)
+    .flatMap((g) => (d.grilles![g.key] ? casesVides(g, d.grilles![g.key], [date]) : []))
+    .flatMap((v) => v.colonnes.map((col) => col.i18n));
+  return cles.length ? [...new Set(cles)] : undefined;
+}
+
 function services(d: DonneesCalendrier, c: ContexteCalendrier, debut: string, fin: string): EntreeCalendrier[] {
   const m = MOTS[c.lang];
   const classes = EDD_CLASSES as readonly string[];
@@ -251,6 +275,7 @@ function services(d: DonneesCalendrier, c: ContexteCalendrier, debut: string, fi
       ),
       deplacable: false,
       lien: lienPlanning(s.category),
+      vides: videsDe(d, c, [s], s.date),
     });
   }
   // Question 6 : une seule entrée « EDD » le dimanche, les classes dans le détail.
@@ -270,6 +295,7 @@ function services(d: DonneesCalendrier, c: ContexteCalendrier, debut: string, fi
       moi: d.mesServices.some((x) => x.date === date && categorieDuService(x.service) === "EDD"),
       deplacable: false,
       lien: lienPlanning("EDD"),
+      vides: videsDe(d, c, seances, date),
     });
   }
   return out;

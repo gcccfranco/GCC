@@ -25,6 +25,7 @@
     },
     "jourAria_other": "{{jour}}，{{count}} 项",
     "rien": "这天没有安排。",
+    "casesVides": "空缺：{{liste}}",
     "duSheet": "读取自活动表格（Sheet）",
     "sheetInjoignable": "无法读取活动表格（Sheet）：其中的活动暂时不显示。",
     "fermer": "关闭",

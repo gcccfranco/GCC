@@ -505,9 +505,41 @@ Spec validée et go de code donné (04/10/2026, redit le 05/10/2026) ; questions
   le widget. Widget 3 : une entrée du Sheet dit « Sheet » / « 活动表 » à la place de l'état des
   inscriptions (« Nb inscrits » du Sheet n'est pas lu, « demander avant ») ; un Sheet injoignable
   n'y est pas signalé (les évènements de l'app restent).
-- **Reste** : rien de C8. L'avertissement « Cases vides : … » du panneau du jour (après C3) attend
-  toujours le branchement de `casesVides` (U2 et U6 sont désormais fusionnés ici) ; l'envoi réel de
-  la ligne de C7 se vérifie en ligne (spec, § Réussite).
+- **Reste** (après C8, levé plus bas) : l'avertissement « Cases vides : … » du panneau du jour attendait
+  le branchement de `casesVides` ; l'envoi réel de la ligne de C7 se vérifie en ligne (spec, § Réussite).
+- **05/10/2026 — fusion des versions finales des lots dont U8 dépend : le lot U8 est complet** (branche
+  `lot/u8-calendrier`). `lot/u1-scene-saison` et `lot/u6b-tableau-de-bord` y étaient déjà dans leur
+  version finale ; `lot/u6-back-office` apporte sa relecture et celles de U2 et U3 (commit de fusion
+  `e3eede7`). Conflits résolus : l'Avancement de `spec-back-office.md` (version de U6, qui réunit déjà
+  les deux sections) ; `SPECS_GRAND_ECRAN` (les trois fichiers du calendrier et ceux de U6) ; le libellé
+  `backOffice.menu` (« Tes modules »), retiré par B6 et lu nulle part : retiré. `npx tsc --noEmit` vert,
+  `npm run lint` sans erreur (53 avertissements, tous d'avant).
+- **Après la fusion** (commit « fix(U8): fusion — … ») :
+  - **Petit déj** : `chargerCalendrier` lit les lignes par `lirePetitDej` de U3 (lecture publique, cache
+    de 5 minutes), comme le dit le Modèle ; la copie locale de C3 est retirée. Lecture en échec : rien,
+    jamais « Libre », comme avant.
+  - **« Cases vides » du panneau du jour** (Écrans, Réussite) : une carte de service à venir dit en
+    orange « Cases vides : Batterie, Sono » (中文 « 空缺：架子鼓, 音控 »), sous sa présidence, comme la
+    planche `bo-calendrier`. Calcul du widget 4 de U6 (`casesVides`, `lignesDeLAnnee` de U2) sur les
+    plannings que ce widget montre d'office (`planningsCasesVides` : ceux qu'on remplit, sinon ceux
+    qu'on publie ; le Culte pour un admin), lus par `lireGrilles` dans `chargerCalendrier`. Nouveaux
+    champs facultatifs : `DonneesCalendrier.grilles` et `EntreeCalendrier.vides` (clés
+    `planning.roles.*`, traduites par le panneau). `tests/calendrier.spec.ts` : 1 test pur et 2 de
+    page (plus le 中文), vus rouges puis verts ; la ligne du 11/10 du planning simulé est remplie sauf
+    Batterie et Sono.
+  - **Une lecture des setlists au tableau de bord** (relecture de U6) : le widget Calendrier lisait
+    toutes les setlists (`getSetlists`) pour une source qu'il ne montre jamais ; il ne les lit plus, ni
+    les grilles des cases vides (`chargerCalendrier(…, { pourLeWidget: true })`). Le test de U6
+    « une seule lecture des setlists » repasse au vert sur le tableau de bord d'un admin, où le
+    widget Calendrier est d'office.
+  - **Barre du bas** : le test de U6 « la barre enregistrée ne répond pas » attend le défaut d'un
+    admin depuis l'entrée Calendrier (Accueil · Calendrier · Tâches · Planning · Plus).
+- **Choix de l'après-fusion, faute de réponse dans la spec** : seulement aujourd'hui et après (un
+  dimanche passé ne réclame plus rien) ; seulement dans le panneau du jour et sa feuille (tablette
+  debout), pas dans la case de la grille ni dans les cartes de l'Agenda et du téléphone, que la planche
+  ne montre pas ; l'entrée « EDD » réunit les colonnes vides des classes lues, sans dire laquelle ;
+  plannings illisibles : aucune case vide annoncée.
+- **Reste** : rien. L'envoi réel de la ligne de C7 se vérifie en ligne.
 - **Pour Timothée** : rien à publier (C1 à C4 ne touchent pas `firestore.rules` ; C3 ouvre
   seulement l'entrée de menu déjà prévue par U6) ; relire les mots 中文 de `calendrier` dans
   `src/locales/zh-CN.json` (`只看我的`, `活动（Sheet）`, `读取自活动表格（Sheet）`,
@@ -533,3 +565,7 @@ Spec validée et go de code donné (04/10/2026, redit le 05/10/2026) ; questions
   `未来十四天没有安排。`, `本周没有其他安排。`, `无法读取活动表格（Sheet），其中的活动暂不显示。`,
   `来源` (réglages), `活动表` (widget 3), et les jours « 今天 », « 周六 3日 »
   (`src/lib/calendrier/widget.ts`).
+  Après la fusion : rien à publier pour U8 (ni `access.ts` ni `firestore.rules` ne bougent ; les
+  plannings et `petitDej` se lisent déjà sans jeton). `firestore.rules`, telle que la fusion l'apporte,
+  porte les règles de U6, U2 et U3 que leurs specs demandent de publier. Relire le 中文 `空缺：{{liste}}`
+  (`calendrier.casesVides`). Regarder, en local, le panneau d'un dimanche à venir du Culte Franco.

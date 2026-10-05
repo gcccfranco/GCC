@@ -6,6 +6,8 @@
 // sert le panneau de droite (ordinateur, tablette couchée) et la feuille (ailleurs).
 // C5 : en bas, les deux boutons de création (`BoutonsCreation`), selon les droits.
 // C6 : « Déplacer… » sous une carte déplaçable.
+// Un service à venir dit ses cases vides en orange (« Cases vides : Batterie, Sono »,
+// calcul du widget 4 de U6), pour les plannings qu'on remplit ou publie.
 
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
@@ -38,6 +40,11 @@ function Carte({ e, onDeplacer }: { e: EntreeCalendrier; onDeplacer?: (e: Entree
       </span>
       <span className="mt-0.5 block font-bold leading-snug text-foreground">{titre}</span>
       {detail && <span className="mt-0.5 block text-sm text-muted-foreground">{detail}</span>}
+      {e.vides && (
+        <span className="mt-1 block text-sm text-amber-700 dark:text-amber-400">
+          {t("calendrier.casesVides", { liste: e.vides.map((cle) => t(cle)).join(", ") })}
+        </span>
+      )}
       {e.duSheet && <span className="mt-1 block text-xs text-muted-foreground">{t("calendrier.duSheet")}</span>}
     </>
   );
