@@ -26,8 +26,9 @@ rules_version = '2';
 //   l'organisateur et les admins ; retirés par l'auteur, l'organisateur, un admin.
 // - Programmes de scène (programmes/{id}, lot 3 bis) : lus par les connectés ;
 //   écrits par la coordination (pôle « événement » du profil + admins). Créneaux
-//   (programmes/{id}/creneaux) : tout connecté en pose un à son nom ; auteur +
-//   coordination le modifient ou le retirent.
+//   (programmes/{id}/creneaux) : tout connecté en pose un à son nom — depuis le
+//   lot U1, dans une saison ouverte et pour les groupes permis (reservable()) ;
+//   auteur + coordination le modifient ou le retirent.
 // - Organigramme (equipes/{id}, lot 16) : lu par les connectés ; écrit par les
 //   admins et par les comptes portant le droit `equipes`. Les pôles qui en
 //   découlent (users/{uid}.poles) restent écrits par le serveur seul.
@@ -165,12 +166,23 @@ service cloud.firestore {
       allow read: if signedIn();
       allow create, update, delete: if isCoordination();
 
+      // U1 (docs/spec-scene-saison.md) : un membre réserve dans une saison ouverte,
+      // pour des groupes permis par « Qui peut réserver » (liste vide = tout membre
+      // connecté) ; la coordination n'est pas limitée. Un get() par écriture.
+      // Miroir : canReserverPour (src/lib/access.ts).
+      function reservable(programmeId, qui) {
+        let p = get(/databases/$(database)/documents/programmes/$(programmeId)).data;
+        return p.get('ouvert', true) == true
+          && (p.get('quiAutorises', []).size() == 0 || qui.hasOnly(p.quiAutorises));
+      }
+
       match /creneaux/{cid} {
         allow read: if signedIn();
-        allow create: if signedIn() && request.resource.data.auteurUid == request.auth.uid;
-        allow update, delete: if signedIn() && (
-          isCoordination() || resource.data.auteurUid == request.auth.uid
-        );
+        allow create: if signedIn() && request.resource.data.auteurUid == request.auth.uid
+          && (isCoordination() || reservable(id, request.resource.data.qui));
+        allow update: if signedIn() && (isCoordination()
+          || (resource.data.auteurUid == request.auth.uid && reservable(id, request.resource.data.qui)));
+        allow delete: if signedIn() && (isCoordination() || resource.data.auteurUid == request.auth.uid);
       }
     }
 

@@ -108,6 +108,24 @@ export function canEditCreneau(
   return creneau.auteurUid === user.uid || isCoordination(user, profile);
 }
 
+// ─── Scène : saison de réservation (lot U1, docs/spec-scene-saison.md) ───────
+
+/** Réserver pour ces groupes : la coordination toujours ; un membre si la saison
+ *  est ouverte et que chaque groupe est permis (liste vide = tous).
+ *  Miroir serveur : reservable() sous programmes/{id}/creneaux, firestore.rules. */
+export function canReserverPour(
+  user: AuthUser | null,
+  profile: { poles?: string[] } | null,
+  programme: { ouvert?: boolean; quiAutorises?: string[] },
+  qui: string[]
+): boolean {
+  if (!user) return false;
+  if (isCoordination(user, profile)) return true;
+  if (programme.ouvert === false) return false;
+  const permis = programme.quiAutorises ?? [];
+  return permis.length === 0 || qui.every((q) => permis.includes(q));
+}
+
 // ─── Évènements (lot 6, docs/spec-evenements.md) — miroir : firestore.rules ───
 
 type EvenementDroits = { pour: string; organisateurUid: string };
