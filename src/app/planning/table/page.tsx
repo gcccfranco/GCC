@@ -15,7 +15,7 @@ import { fetchTable } from "@/lib/planning/sheets"
 import { GRILLE_TABLE, anneeRemplie, anneesDuPlanning, dimanchesDe, lignesDeLAnnee, lignesSimples } from "@/lib/planning/grilles"
 import { useGrilleApp } from "@/lib/planning/useGrilleApp"
 import { useProfile } from "@/lib/firebase/users"
-import { canEditPlanning } from "@/lib/access"
+import { canEditPlanning, isAdminUser } from "@/lib/access"
 import { BACK_OFFICE } from "@/lib/backOffice"
 import { avecPetitDej, rangeesPetitDej } from "@/lib/petitdej/lignes"
 import type { LignePetitDej } from "@/types/petitDej"
@@ -40,7 +40,9 @@ function TablePage() {
   const rows = inscriptions ? avecPetitDej(lues, rangeesPetitDej(inscriptions)) : lues
   const [tri, setTri] = useState(getCurrentTri())
   const peutModifier = canEditPlanning(user, profile, GRILLE_TABLE.key)
-  const { datesDansLApp, nomsDesComptes } = useGrilleApp(GRILLE_TABLE.key, peutModifier)
+  const { datesDansLApp, comptes } = useGrilleApp(GRILLE_TABLE.key, peutModifier)
+  // Les noms de planning des comptes, proposés par la carte pour une ligne posée pour quelqu'un.
+  const nomsDesComptes = comptes.map((c) => c.nom).filter(Boolean)
   // Lot U2 : l'année suivante s'ouvre à qui remplit, et à tous dès une case remplie.
   const anneeCourante = new Date().getFullYear()
   const [annee, setAnnee] = useState(anneeCourante)
@@ -75,7 +77,8 @@ function TablePage() {
         lignes={lignesSimples(filterByTri(lignesDeLAnnee(GRILLE_TABLE, effAnnee, rows), tri))}
         peutModifier={peutModifier}
         datesDansLApp={datesDansLApp}
-        nomsDesComptes={nomsDesComptes}
+        comptes={comptes}
+        exporter={peutModifier ? { annee: effAnnee, rang: Number(tri.slice(1)), tout: isAdminUser(user) } : undefined}
       />
     </div>
   )

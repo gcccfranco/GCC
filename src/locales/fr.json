@@ -1001,6 +1001,7 @@
       "aVenir": "Planning à venir",
       "periode": "{{du}} à {{au}}",
       "nonPublie": "Non publié",
+      "dimancheSpecial": "Dimanche {{service}} : la présidence se règle dans le planning {{service}}.",
       "pasDispo": "Pas disponible un dimanche ? Préviens la personne qui tient le planning.",
       "droitRetire": "Enregistrement refusé par le serveur : tu n’as plus le droit de modifier ce planning, ou les règles n’ont pas été publiées.",
       "horsLigne": "Modification impossible : pas de réseau.",
@@ -1009,9 +1010,9 @@
       "remplace": "{{auteur}} a remplacé {{avant}} par {{apres}} au {{colonne}} du {{date}}",
       "ajoute": "{{auteur}} a mis {{apres}} au {{colonne}} du {{date}}",
       "efface": "{{auteur}} a effacé le {{colonne}} du {{date}}",
-      "exporter": "Exporter en CSV",
-      "exporterPdf": "Exporter en PDF",
       "importe": "{{auteur}} a importé {{count}} dimanches depuis le Google Sheet",
+      "pose": "{{auteur}} a ajouté le {{date}}",
+      "retire": "{{auteur}} a retiré le {{date}}",
       "periodeAnnee": "Année {{annee}}"
     },
     "petitDej": {
@@ -1160,8 +1161,7 @@
       "confirmerRetrait": "Retirer le {{date}} ? Ses cases s'effacent.",
       "choisirDate": "Dimanche à ajouter",
       "dateSeance": "Date de la séance",
-      "moment": "Moment",
-      "special": "Ce dimanche est celui de {{service}} : la présidence vient de son planning."
+      "moment": "Moment"
     },
     "publier": "Publier le {{tri}}",
     "masquer": "Masquer le {{tri}}",

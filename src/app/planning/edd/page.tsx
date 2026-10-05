@@ -11,7 +11,7 @@ import { fetchEDD, periodeEdd } from "@/lib/planning/sheets"
 import { GRILLES_EDD, anneeRemplie, anneesDuPlanning, dimanchesDe, lignesDeLAnnee, lignesSimples } from "@/lib/planning/grilles"
 import { useGrilleApp } from "@/lib/planning/useGrilleApp"
 import { useProfile } from "@/lib/firebase/users"
-import { canEditPlanning } from "@/lib/access"
+import { canEditPlanning, isAdminUser } from "@/lib/access"
 import { PLANNING_COLORS } from "@/lib/serviceColors"
 import type { EddDataStructure, EddPeriode, EddClasse } from "@/lib/planning/utils"
 import { BACK_OFFICE } from "@/lib/backOffice"
@@ -38,7 +38,7 @@ function EddPage() {
 
   const definition = GRILLES_EDD.find((g) => g.sousTitre === classe) ?? GRILLES_EDD[0]
   const peutModifier = canEditPlanning(user, profile, definition.key)
-  const { datesDansLApp, nomsDesComptes } = useGrilleApp(definition.key, peutModifier)
+  const { datesDansLApp, comptes } = useGrilleApp(definition.key, peutModifier)
   // Lot U2 : `fetchEDD` range par période sans regarder l'année ; la page
   // reprend toutes les lignes de la classe et garde l'année choisie.
   const anneeCourante = new Date().getFullYear()
@@ -102,7 +102,8 @@ function EddPage() {
         lignes={lignesSimples(rows)}
         peutModifier={peutModifier}
         datesDansLApp={datesDansLApp}
-        nomsDesComptes={nomsDesComptes}
+        comptes={comptes}
+        exporter={peutModifier ? { annee: effAnnee, rang: EDD_PERIODES.indexOf(periode) + 1, tout: isAdminUser(user) } : undefined}
       />
     </div>
   )

@@ -144,13 +144,19 @@ export const GRILLE_INTERFRANCO: DefinitionGrille = {
   ],
 }
 
-// Groupes (quatre onglets par trimestre dans le Sheet, quatre colonnes).
+// Groupes (quatre onglets par trimestre dans le Sheet, quatre colonnes, plus
+// PERCUSSION — lot U2, P5 — que le Sheet de 2026 n'a qu'à quelques trimestres
+// (Paix T4, Bonté T3 et T4) : masquée en lecture tant qu'aucune case de la
+// période ne la porte, comme la Sainte cène. MÉNAGES (Bonté, jamais rempli) est écarté.
 export const GRILLE_PAIX: DefinitionGrille = {
   key: "paix",
   label: "Groupe Paix",
   i18nTitre: "planning.groupes.paix",
   couleur: PLANNING_COLORS.paix,
-  colonnes: [col("presidence", "presidence", 1), col("musiciens", "musiciens", 2), col("orateur", "orateur", 3), col("theme", "theme", 4)],
+  colonnes: [
+    col("presidence", "presidence", 1), col("musiciens", "musiciens", 2), col("orateur", "orateur", 3), col("theme", "theme", 4),
+    col("percussion", "percussion", 5, true),
+  ],
   dates: "dimanches",
 }
 
@@ -159,7 +165,10 @@ export const GRILLE_BONTE: DefinitionGrille = {
   label: "Groupe Bonté",
   i18nTitre: "planning.groupes.bonte",
   couleur: PLANNING_COLORS.bonte,
-  colonnes: [col("presidence", "presidence", 1), col("musiciens", "musiciens", 2), col("orateur", "orateur", 3), col("theme", "theme", 4)],
+  colonnes: [
+    col("presidence", "presidence", 1), col("musiciens", "musiciens", 2), col("orateur", "orateur", 3), col("theme", "theme", 4),
+    col("percussion", "percussion", 5, true),
+  ],
   dates: "dimanches",
 }
 
@@ -193,7 +202,7 @@ export const GRILLE_TABLE: DefinitionGrille = {
   dates: "dimanches",
 }
 
-// EDD : une grille par classe, cinq colonnes (cf. `fetchEDD`).
+// EDD : une grille par classe, six colonnes (cf. `fetchEDD`) ; COURS ajouté au lot U2 (P5).
 export const CLES_EDD: Record<(typeof EDD_CLASSES)[number], string> = { "中班": "eddZhongban", "大班": "eddDaban", "高班": "eddGaoban" }
 
 export const GRILLES_EDD: DefinitionGrille[] = EDD_CLASSES.map((classe) => ({
@@ -203,7 +212,10 @@ export const GRILLES_EDD: DefinitionGrille[] = EDD_CLASSES.map((classe) => ({
   sousTitre: classe,
   couleur: PLANNING_COLORS.edd,
   dates: "dimanches",
-  colonnes: [col("presidence", "presidence", 1), col("suppleant", "suppleant", 2), col("piano", "piano", 3), col("cajon", "cajon", 4), col("guitare", "guitare", 5)],
+  colonnes: [
+    col("presidence", "presidence", 1), col("suppleant", "suppleant", 2), col("piano", "piano", 3), col("cajon", "cajon", 4),
+    col("guitare", "guitare", 5), col("cours", "cours", 6),
+  ],
 }))
 
 // Campus : une grille par moment (matin, soir), la répétition en texte libre
@@ -262,6 +274,31 @@ export const GRILLES: DefinitionGrille[] = [
 
 export function grilleDe(key: string): DefinitionGrille | undefined {
   return GRILLES.find((g) => g.key === key)
+}
+
+/**
+ * Lot U2 (Q5) : les dimanches d'Interfranco et d'Intergroupe, date → nom du
+ * service. Une seule source, leur grille : déplacer la date dans sa grille
+ * déplace la marque. Les deux ne prennent jamais le même dimanche ; si cela
+ * arrivait, Interfranco l'emporte, comme dans « Ce dimanche ».
+ */
+export function dimanchesSpeciaux(interfranco: string[][], intergroupe: string[][]): Record<string, string> {
+  const out: Record<string, string> = {}
+  for (const r of intergroupe) out[r[0]] = "Intergroupe"
+  for (const r of interfranco) out[r[0]] = "Interfranco"
+  return out
+}
+
+/**
+ * La présidence d'un groupe (Paix, Bonté, Fidélité et ses musiciens, toutes en
+ * colonne 1) un dimanche d'Interfranco ou d'Intergroupe : le nom du service,
+ * tiré de sa grille, jamais recopié dans celle du groupe. Orateur, thème et
+ * musiciens restent ceux du groupe, comme dans le Sheet de 2026. Ces deux mots
+ * ne sont jamais pris pour des noms (`NON_NAMES`) : plus de président fantôme.
+ */
+export function marquerDimanchesSpeciaux(groupe: string[][], interfranco: string[][], intergroupe: string[][]): string[][] {
+  const speciaux = dimanchesSpeciaux(interfranco, intergroupe)
+  return groupe.map((r) => (speciaux[r[0]] ? [r[0], speciaux[r[0]], ...r.slice(2)] : r))
 }
 
 /** Une ligne affichée : la ligne au format du lecteur du Sheet, et son état de publication. */

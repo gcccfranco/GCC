@@ -1001,6 +1001,7 @@
       "aVenir": "服事表待定",
       "periode": "{{du}}至{{au}}",
       "nonPublie": "尚未发布",
+      "dimancheSpecial": "{{service}}主日：司会在{{service}}服事表中安排。",
       "pasDispo": "某个主日无法服事？请联系负责排表的同工。",
       "droitRetire": "服务器拒绝保存：你已没有修改此服事表的权限，或规则尚未发布。",
       "horsLigne": "无法修改：网络不可用。",
@@ -1009,9 +1010,9 @@
       "remplace": "{{auteur}} 把 {{date}} 的{{colonne}}从 {{avant}} 改为 {{apres}}",
       "ajoute": "{{auteur}} 把 {{apres}} 安排在 {{date}} 的{{colonne}}",
       "efface": "{{auteur}} 清空了 {{date}} 的{{colonne}}",
-      "exporter": "导出 CSV",
-      "exporterPdf": "导出 PDF",
       "importe": "{{auteur}} 从 Google 表格导入了 {{count}} 个主日",
+      "pose": "{{auteur}} 添加了 {{date}}",
+      "retire": "{{auteur}} 移除了 {{date}}",
       "periodeAnnee": "{{annee}} 年"
     },
     "petitDej": {
@@ -1160,8 +1161,7 @@
       "confirmerRetrait": "移除 {{date}}？该日所填内容将被清除。",
       "choisirDate": "要添加的主日",
       "dateSeance": "聚会日期",
-      "moment": "时段",
-      "special": "这个主日是{{service}}：司会取自其服事表。"
+      "moment": "时段"
     },
     "publier": "发布 {{tri}}",
     "masquer": "隐藏 {{tri}}",
