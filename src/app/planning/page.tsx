@@ -13,8 +13,10 @@ import { fetchCulte, fetchDejeuner, fetchPetitDej, fetchPaix, fetchFidelite, fet
 import { StaleBanner } from "@/components/planning/StaleBanner"
 import type { EddDataStructure, CampusSeance } from "@/lib/planning/utils"
 import { useProfile } from "@/lib/firebase/users"
-import { avecDimanchesSpeciaux, findMyServices, type PlanningData } from "@/lib/planning/names"
+import { avecDimanchesSpeciaux, type PlanningData } from "@/lib/planning/names"
 import { BACK_OFFICE } from "@/lib/backOffice"
+import { lirePetitDej, servicesDuCompte } from "@/lib/petitdej/lignes"
+import type { LignePetitDej } from "@/types/petitDej"
 import { PLANNING_COLORS, serviceColor } from "@/lib/serviceColors"
 import { ChevronRight } from "lucide-react"
 import { PageTitle } from "@/components/layout/PageTitle"
@@ -59,6 +61,8 @@ export default function PlanningAccueil() {
   const [dej, setDej] = useState(DEJEUNER_FALLBACK)
   // Petit déj : aucune donnée de secours, il ne s'affiche que s'il est lu.
   const [petitDej, setPetitDej] = useState<string[][]>([])
+  // Ses lignes comptent pour l'inscrit (U3, Q9), même réécrites et sans nom de planning.
+  const [lignesPetitDej, setLignesPetitDej] = useState<LignePetitDej[]>([])
   const [paix, setPaix] = useState(PAIX_FALLBACK)
   const [fid, setFid] = useState(FIDELITE_FALLBACK)
   const [fidM, setFidM] = useState(FIDELITE_MUSIC_FALLBACK)
@@ -85,20 +89,22 @@ export default function PlanningAccueil() {
       fetchIntergroupe().then(d => { if (d.length) setIntergroupe(d) }),
       fetchInterfranco().then(d => { if (d.length) setInterfranco(d) }),
     ]).then(results => setStale(results.some(r => r.status === "rejected")))
+    // Même lecture que fetchPetitDej (cache partagé) ; en échec, rien de plus.
+    if (BACK_OFFICE) lirePetitDej().then(setLignesPetitDej, () => {})
   }, [])
 
-  // Prochain service de la personne connectée (d'après son nom de planning)
+  // Prochain service de la personne connectée (d'après son nom de planning, et ses petits déj par son compte)
   const nextServices = useMemo(() => {
-    if (!user || !profile?.planningName) return null
+    if (!user || !profile) return null
     const lu: PlanningData = { culte, dejeuner: dej, petitDej, paix, fidelite: fid, fideliteMusic: fidM, bonte, edd, campus, intergroupe, interfranco }
     // Lot U2 (Q5) : comme `loadPlanningData`, pas de président de groupe fantôme
     // un dimanche d'Interfranco ou d'Intergroupe.
     const data = BACK_OFFICE ? avecDimanchesSpeciaux(lu) : lu
     const today = new Date().toISOString().split("T")[0]
-    const upcoming = findMyServices(data, profile.planningName).filter(e => e.date >= today)
+    const upcoming = servicesDuCompte(data, lignesPetitDej, user.uid, profile.planningName ?? "").filter(e => e.date >= today)
     if (!upcoming.length) return null
     return upcoming.filter(e => e.date === upcoming[0].date)
-  }, [user, profile, culte, dej, petitDej, paix, fid, fidM, bonte, edd, campus, intergroupe, interfranco])
+  }, [user, profile, culte, dej, petitDej, lignesPetitDej, paix, fid, fidM, bonte, edd, campus, intergroupe, interfranco])
 
   const sun = currentSundayStr()
   const sunParts = sun.split("-")

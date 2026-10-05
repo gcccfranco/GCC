@@ -313,3 +313,20 @@ export async function signInAs(
 
   return db;
 }
+
+/**
+ * Le navigateur se dit déjà abonné aux notifications : `PushToggle` (Mon profil)
+ * n'affiche ses bascules par type qu'alors. Aucun vrai abonnement ni service
+ * worker : `navigator.serviceWorker.ready` rend un enregistrement simulé. Sur
+ * l'iPad émulé, l'app passe pour installée (sinon : « ajoute d'abord le site à
+ * l'écran d'accueil »). À appeler avant `signInAs`.
+ */
+export async function abonneAuxNotifications(page: Page): Promise<void> {
+  await page.addInitScript(() => {
+    const abonnement = { endpoint: "https://push.example.invalid/abonnement", toJSON: () => ({}) };
+    const enregistrement = { pushManager: { getSubscription: async () => abonnement } };
+    Object.defineProperty(ServiceWorkerContainer.prototype, "ready", { configurable: true, get: () => Promise.resolve(enregistrement) });
+    Object.defineProperty(Notification, "permission", { configurable: true, get: () => "granted" });
+    Object.defineProperty(Navigator.prototype, "standalone", { configurable: true, get: () => true });
+  });
+}

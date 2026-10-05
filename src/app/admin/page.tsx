@@ -168,6 +168,25 @@ export default function AdminPage() {
       setImportPlanningEnCours(null);
     }
   }
+  // Reprise du petit déj (lot U3, PD5) : compte rendu de /api/admin/reprendre-petit-dej.
+  const [repriseEnCours, setRepriseEnCours] = useState(false);
+  const [repriseResultat, setRepriseResultat] = useState("");
+
+  async function reprendrePetitDej() {
+    if (!window.confirm("Reprendre les noms du petit déj ? À faire une seule fois, le jour de la mise en ligne : les lignes s'écrivent dans la vraie base.")) return;
+    setRepriseEnCours(true);
+    setRepriseResultat("");
+    try {
+      const res = await fetch("/api/admin/reprendre-petit-dej", { method: "POST", headers: await authHeader() });
+      const json = (await res.json()) as { reprises?: number; ignores?: number; error?: string };
+      if (!res.ok) throw new Error(json.error ?? "Reprise impossible");
+      setRepriseResultat(`${json.reprises ?? 0} dimanches repris, ${json.ignores ?? 0} déjà inscrits.`);
+    } catch (e) {
+      setRepriseResultat(e instanceof Error ? e.message : "Reprise impossible");
+    } finally {
+      setRepriseEnCours(false);
+    }
+  }
   const [importEtat, setImportEtat] = useState<"" | "busy" | "fait">("");
   const [importErreur, setImportErreur] = useState("");
   // Lot U6 (R4) : « Recalculer depuis l'organigramme » — profils mis à jour, ou null.
@@ -1124,6 +1143,18 @@ export default function AdminPage() {
           {importPlanningResultat && (
             <p className="text-sm text-foreground" aria-live="polite">{importPlanningResultat}</p>
           )}
+          <div className="border-t border-border pt-3 space-y-2">
+            <p className="text-xs text-muted-foreground">
+              Petit déj : les noms à venir de la grille Table deviennent des inscriptions, une ligne par dimanche.
+              Un dimanche déjà inscrit ne bouge pas : relancer n&apos;écrit rien de plus. Une seule fois, le jour de la mise en ligne.
+            </p>
+            <Button onClick={() => void reprendrePetitDej()} disabled={repriseEnCours} variant="outline" className="h-11">
+              {repriseEnCours ? "Reprise…" : "Reprendre les noms du petit déj"}
+            </Button>
+            {repriseResultat && (
+              <p className="text-sm text-foreground" aria-live="polite">{repriseResultat}</p>
+            )}
+          </div>
         </div>
         )}
 

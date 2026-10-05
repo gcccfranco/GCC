@@ -3,6 +3,7 @@ import { EDD_CLASSES, EDD_PERIODES, getMois } from "./utils"
 import { fetchGrille } from "./grille"
 import { BACK_OFFICE } from "@/lib/backOffice"
 import { CLES_EDD, fusionnerLignes } from "./grilles"
+import { avecPetitDej, lirePetitDej, rangeesPetitDej } from "@/lib/petitdej/lignes"
 
 /** Les dimanches écrits dans l'app. Back-office coupé (lot 18) : aucun — le site
  *  en ligne lit le Google Sheet seul. Local et en ligne partagent le même
@@ -148,9 +149,18 @@ export async function lireTableSheet(): Promise<string[][]> {
   return [...parDate.values()].sort((a, b) => a[0] < b[0] ? -1 : 1)
 }
 
-/** [date, équipe, petit déj] : la grille « table » réunie au Sheet. */
+/** Petit déj, interrupteur ouvert (lot U3, docs/spec-petit-dej.md) : les
+ *  inscriptions sont la seule source (T8), le Sheet ne parle plus. Une lecture en
+ *  échec rend vide ici ; la carte de l'onglet Table, elle, le dit (Q10). Coupé :
+ *  jamais lues, Firestore étant partagé entre le local et le site en ligne (Q14). */
+const rangeesDesInscriptions = () => lirePetitDej().then(rangeesPetitDej, () => [] as string[][])
+
+/** [date, équipe, petit déj] : la grille « table » réunie au Sheet ; ouvert, la
+ *  colonne 2 porte les inscriptions (T9), même un dimanche que le Sheet ignore. */
 export async function fetchTable(): Promise<string[][]> {
-  return fusionnerLignes(await grilleDeLApp("table"), await lireTableSheet())
+  const inscriptions = BACK_OFFICE ? rangeesDesInscriptions() : null
+  const rows = fusionnerLignes(await grilleDeLApp("table"), await lireTableSheet())
+  return inscriptions ? avecPetitDej(rows, await inscriptions) : rows
 }
 
 /** [date, équipe] des dimanches où une équipe est inscrite. */
@@ -160,6 +170,7 @@ export async function fetchDejeuner(): Promise<string[][]> {
 
 /** [date, noms] des dimanches où un petit déj est inscrit. */
 export async function fetchPetitDej(): Promise<string[][]> {
+  if (BACK_OFFICE) return rangeesDesInscriptions()
   return (await fetchTable()).filter(r => r[2]).map(r => [r[0], r[2]])
 }
 
