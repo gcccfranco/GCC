@@ -5,16 +5,17 @@
 // créneau, qui peut réserver. Enregistrement à chaque changement, comme
 // l'éditeur de setlist ; une erreur s'affiche sous le champ et rien n'est écrit.
 
-import { useId, useState, type ReactNode } from "react"
+import { useId, useRef, useState, type ReactNode } from "react"
 import { useTranslation } from "react-i18next"
 import { Plus } from "lucide-react"
 import {
-  DUREES, erreursSaison, FAMILLES, famillesDe, joursDes, ORDRE_JOURS, PLAGES_DEFAUT, quiDesFamilles, saisonDe, triPlages,
+  DATE, DUREES, erreursSaison, FAMILLES, famillesDe, joursDes, ORDRE_JOURS, PLAGES_DEFAUT, quiDesFamilles, saisonDe, triPlages,
   type Famille, type Saison,
 } from "@/lib/scene/saison"
 import type { Plage, Programme } from "@/types/programme"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { jourEnLettres } from "./libelles"
 
 type Champ = "dates" | "jours" | "plages" | "duree" | "qui"
 export type SaisonPatch = Partial<Pick<Programme, "debut" | "fin" | "plages" | "duree" | "quiAutorises">>
@@ -59,6 +60,31 @@ function Reglage({ titre, erreurs, children }: { titre: string; erreurs?: string
 }
 
 const pastille = "h-9 inline-flex items-center gap-1.5 rounded-full bg-secondary px-3.5 text-sm font-semibold whitespace-nowrap"
+
+/** « du jeudi 1er octobre » en toutes lettres, comme la planche ; le champ date
+ *  natif, transparent, couvre la pastille : un clic ouvre le sélecteur du système. */
+function DatePastille({ prefixe, label, value, max, onChange }: {
+  prefixe: string
+  label: string
+  value: string
+  max?: string
+  onChange: (value: string) => void
+}) {
+  const { i18n } = useTranslation()
+  const ref = useRef<HTMLInputElement>(null)
+  return (
+    <label className={`${pastille} relative cursor-pointer focus-within:ring-2 focus-within:ring-ring`}>
+      <span aria-hidden>{prefixe} {DATE.test(value) ? jourEnLettres(value, i18n.language) : "…"}</span>
+      <input
+        ref={ref} type="date" aria-label={label} value={value} max={max}
+        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+        // showPicker : Chrome n'ouvre sinon le calendrier que sur son icône.
+        onClick={() => { try { ref.current?.showPicker() } catch { /* sélecteur déjà ouvert ou indisponible */ } }}
+        onChange={(e) => onChange(e.target.value)}
+      />
+    </label>
+  )
+}
 
 export function SaisonForm({ programme, onSave }: {
   programme: Programme
@@ -128,16 +154,10 @@ export function SaisonForm({ programme, onSave }: {
       <h3 id={titreId} className="text-[17px] font-semibold">{t("planning.saison.carte")}</h3>
 
       <Reglage titre={t("planning.saison.periode")} erreurs={erreursDe("dates")}>
-        <label className={pastille}>
-          {t("planning.saison.du")}
-          <input type="date" aria-label={t("planning.saison.ouverture")} value={s.debut} max={programme.jourJ}
-            className="bg-transparent outline-none tabular-nums" onChange={(e) => appliquer({ ...s, debut: e.target.value }, "dates")} />
-        </label>
-        <label className={pastille}>
-          {t("planning.saison.au")}
-          <input type="date" aria-label={t("planning.saison.fermeture")} value={s.fin}
-            className="bg-transparent outline-none tabular-nums" onChange={(e) => appliquer({ ...s, fin: e.target.value }, "dates")} />
-        </label>
+        <DatePastille prefixe={t("planning.saison.du")} label={t("planning.saison.ouverture")} value={s.debut} max={programme.jourJ}
+          onChange={(debut) => appliquer({ ...s, debut }, "dates")} />
+        <DatePastille prefixe={t("planning.saison.au")} label={t("planning.saison.fermeture")} value={s.fin}
+          onChange={(fin) => appliquer({ ...s, fin }, "dates")} />
       </Reglage>
 
       <Reglage titre={t("planning.saison.jours")} erreurs={erreursDe("jours")}>

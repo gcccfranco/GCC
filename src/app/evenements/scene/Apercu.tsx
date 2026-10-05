@@ -37,10 +37,12 @@ export function Apercu({ programme, creneaux, onChanged }: {
   const today = todayIso()
   const maintenant = heureLocale()
   const jours = joursReservables(saison, programme.jourJ)
-  const [choisi, setChoisi] = useState<string | null>(null)
+  const prochain = jours.find((d) => d >= today) ?? jours.at(-1) ?? null
+  // Le jour montré reste tant qu'il est réservable, même quand la saison change
+  // (cocher « sam. » ne fait pas sauter l'aperçu) ; sinon le prochain à venir.
+  const [choisi, setChoisi] = useState<string | null>(prochain)
   const [deplace, setDeplace] = useState<Creneau | null>(null)
-  // Le jour choisi reste tant qu'il est réservable ; sinon le prochain à venir.
-  const jour = choisi && jours.includes(choisi) ? choisi : (jours.find((d) => d >= today) ?? jours.at(-1) ?? null)
+  const jour = choisi && jours.includes(choisi) ? choisi : prochain
   const i = jour ? jours.indexOf(jour) : -1
   const hors = horsGrille(saison, creneaux)
 
@@ -87,9 +89,9 @@ export function Apercu({ programme, creneaux, onChanged }: {
               ligne={l}
               badges={l.type === "reserve" && l.horsGrille ? <BadgeHorsGrille /> : undefined}
               droite={l.type === "reserve"
-                ? <span className="text-muted-foreground">{l.creneau.auteurNom}</span>
+                ? <span>{l.creneau.auteurNom}</span>
                 : l.type === "libre" && !commence(jour, l.debut, today, maintenant)
-                  ? <span className="text-muted-foreground">{t("planning.saison.reserver")}</span>
+                  ? <span>{t("planning.saison.reserver")}</span>
                   : undefined}
             />
           ))}

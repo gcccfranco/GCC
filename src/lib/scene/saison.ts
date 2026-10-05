@@ -171,7 +171,9 @@ export type ErreurSaison =
   | "plageCourte"
   | "plagesChevauchent";
 
-const DATE = /^\d{4}-\d{2}-\d{2}$/;
+// Année en 20xx : un champ date tapé au clavier passe par 0002, 0020, 0202
+// avant 2026 ; rien ne s'écrit tant que l'année n'est pas entière.
+export const DATE = /^20\d{2}-\d{2}-\d{2}$/;
 const HEURE = /^\d{2}:\d{2}$/;
 
 export function erreursSaison(saison: Saison, jourJ: string): ErreurSaison[] {

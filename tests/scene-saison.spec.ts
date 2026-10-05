@@ -133,6 +133,12 @@ test("erreurs : une plage dont la fin n'est pas après le début", () => {
   expect(erreursSaison(bad, NOEL.jourJ)).toContain("plageInvalide");
 });
 
+test("erreurs : une date en cours de frappe (année 0002, 0202…) n'est pas une date — rien ne s'écrit avant l'année entière", () => {
+  expect(erreursSaison({ ...SAISON, debut: "0002-10-01" }, NOEL.jourJ)).toContain("dateInvalide");
+  expect(erreursSaison({ ...SAISON, fin: "0202-12-20" }, NOEL.jourJ)).toContain("dateInvalide");
+  expect(erreursSaison({ ...SAISON, debut: "2026-09-27" }, NOEL.jourJ)).toEqual([]);
+});
+
 test("erreurs : deux plages du même jour qui se chevauchent", () => {
   const bad = { ...SAISON, plages: [...SAISON.plages, { jour: 0, debut: "18:00", fin: "20:00" }] };
   expect(erreursSaison(bad, NOEL.jourJ)).toContain("plagesChevauchent");
@@ -234,6 +240,14 @@ async function ouvrir(page: Page, who: FakeProfile, docs: Record<string, Record<
 }
 
 const patches = (db: FakeDb, path = "programmes/noel") => db.writes.filter((w) => w.method === "PATCH" && w.path === path);
+/** Capture à regarder à l'œil (PW_CAPTURES=<dossier>), une par appareil. */
+async function capture(page: Page, name: string) {
+  const dir = process.env.PW_CAPTURES;
+  if (!dir) return;
+  await page.waitForTimeout(300); // fin des transitions de couleur des pilules (150 ms)
+  await page.screenshot({ path: `${dir}/${name}-${test.info().project.name}.png`, fullPage: true });
+}
+
 const carte = (page: Page) => page.getByRole("region", { name: "Mettre en place la saison" });
 const apercu = (page: Page) => page.getByRole("region", { name: "Aperçu de ce que verront les groupes" });
 
@@ -251,6 +265,10 @@ test("brouillon : la coordination l'ouvre depuis sa ligne et voit la saison et l
   await ligne.getByRole("button", { name: "Préparer la saison" }).click();
   await expect(page.getByRole("heading", { name: "Noël 2026 · réservations" })).toBeVisible();
   await expect(page.getByText("Jour J : jeudi 24 décembre", { exact: true })).toBeVisible();
+  // Les dates en toutes lettres, comme la planche (le sélecteur natif reste dessous).
+  await expect(carte(page).getByText("du jeudi 1er octobre", { exact: true })).toBeVisible();
+  await expect(carte(page).getByText("au dimanche 20 décembre", { exact: true })).toBeVisible();
+  await expect(carte(page).getByLabel("Ouverture des réservations")).toHaveValue("2026-10-01");
   await expect(carte(page).getByRole("button", { name: "sam.", exact: true, pressed: true })).toBeVisible();
   await expect(carte(page).getByRole("button", { name: "dim.", exact: true, pressed: true })).toBeVisible();
   await expect(carte(page).getByRole("button", { name: "lun.", exact: true, pressed: false })).toBeVisible();
@@ -338,6 +356,135 @@ test("« Programme du jour J » ouvre l'ordre de passage depuis l'écran de la s
   await page.getByRole("button", { name: "Préparer la saison" }).click();
   await page.getByRole("button", { name: "Programme du jour J" }).click();
   await expect(page.getByRole("list", { name: "Ordre de Passage jour J" }).getByRole("listitem")).toContainText(["Douce nuit"]);
+});
+
+test("« Programme du jour J » s'ouvre sous l'en-tête, au-dessus de la saison (pas au bas d'une longue page)", async ({ page }) => {
+  await ouvrir(page, ALICE, { "programmes/noel": { ...NOEL26, passages: [{ quoi: "Chant", qui: ["Chorale"], titre: "Douce nuit" }] } });
+  await page.getByRole("button", { name: "Préparer la saison" }).click();
+  await page.getByRole("button", { name: "Programme du jour J" }).click();
+  const ordre = page.getByRole("list", { name: "Ordre de Passage jour J" });
+  await expect(ordre).toBeVisible();
+  const yOrdre = (await ordre.boundingBox())?.y ?? Infinity;
+  const yCarte = (await carte(page).boundingBox())?.y ?? -Infinity;
+  expect(yOrdre).toBeLessThan(yCarte);
+});
+
+test("« Modifier le programme » depuis l'écran de la saison : nom et jour J, en un PATCH de ces deux champs", async ({ page }) => {
+  const db = await ouvrir(page, ALICE, { "programmes/noel": NOEL26 });
+  await page.getByRole("button", { name: "Préparer la saison" }).click();
+  await page.getByRole("button", { name: "Modifier le programme" }).click();
+  await expect(page.getByLabel("Début des réservations")).toHaveCount(0);
+  await page.getByLabel("Nom").fill("Noël 26");
+  await page.getByLabel("Jour J").fill("2026-12-25");
+  await page.getByRole("button", { name: "Enregistrer", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Noël 26 · réservations" })).toBeVisible();
+  await expect(page.getByText("Jour J : vendredi 25 décembre", { exact: true })).toBeVisible();
+  expect(patches(db)).toHaveLength(1);
+  expect(Object.keys(patches(db)[0].data).sort()).toEqual(["jourJ", "nom", "updatedAt"]);
+  expect(patches(db)[0].data).toMatchObject({ nom: "Noël 26", jourJ: "2026-12-25" });
+});
+
+test("dates : changer l'ouverture écrit `debut` seul, et la pastille se relit en toutes lettres", async ({ page }) => {
+  const db = await ouvrir(page, ALICE, { "programmes/noel": NOEL26 });
+  await page.getByRole("button", { name: "Préparer la saison" }).click();
+  await carte(page).getByLabel("Ouverture des réservations").fill("2026-10-08");
+  await expect(carte(page).getByText("du jeudi 8 octobre", { exact: true })).toBeVisible();
+  await expect.poll(() => patches(db).length).toBe(1);
+  expect(Object.keys(patches(db)[0].data).sort()).toEqual(["debut", "updatedAt"]);
+  expect(patches(db)[0].data.debut).toBe("2026-10-08");
+});
+
+test("plages : la pastille s'ouvre pour changer la plage ; retirer la seule plage d'un jour coché n'écrit rien ; décocher le jour retire ses plages", async ({ page }) => {
+  const db = await ouvrir(page, ALICE, { "programmes/noel": NOEL26 });
+  await page.getByRole("button", { name: "Préparer la saison" }).click();
+  await carte(page).getByRole("button", { name: "sam. 10:00 – 12:00" }).click();
+  await carte(page).getByLabel("Fin de la plage").fill("13:00");
+  await carte(page).getByRole("button", { name: "OK", exact: true }).click();
+  await expect(carte(page).getByRole("button", { name: "sam. 10:00 – 13:00" })).toBeVisible();
+  await expect.poll(() => patches(db).at(-1)?.data.plages).toEqual([
+    { jour: 6, debut: "10:00", fin: "13:00" }, { jour: 0, debut: "14:00", fin: "19:00" },
+  ]);
+  const avant = patches(db).length;
+  await carte(page).getByRole("button", { name: "sam. 10:00 – 13:00" }).click();
+  await carte(page).getByRole("button", { name: "Retirer la plage" }).click();
+  await expect(carte(page).getByText("Chaque jour coché a au moins une plage.")).toBeVisible();
+  expect(patches(db)).toHaveLength(avant);
+  await carte(page).getByRole("button", { name: "sam.", exact: true }).click();
+  await expect(carte(page).getByRole("button", { name: "sam.", exact: true, pressed: false })).toBeVisible();
+  await expect(carte(page).getByText("Chaque jour coché a au moins une plage.")).toHaveCount(0);
+  await expect.poll(() => patches(db).at(-1)?.data.plages).toEqual([{ jour: 0, debut: "14:00", fin: "19:00" }]);
+});
+
+test("plages : « + Plage » ajoute une seconde plage au dimanche, rangée par heure", async ({ page }) => {
+  const db = await ouvrir(page, ALICE, { "programmes/noel": NOEL26 });
+  await page.getByRole("button", { name: "Préparer la saison" }).click();
+  await carte(page).getByRole("button", { name: "Ajouter une plage" }).click();
+  await carte(page).getByLabel("Jour de la plage").selectOption({ label: "dim." });
+  await carte(page).getByLabel("Début de la plage").fill("10:00");
+  await carte(page).getByLabel("Fin de la plage").fill("12:00");
+  await carte(page).getByRole("button", { name: "OK", exact: true }).click();
+  await expect(carte(page).getByRole("button", { name: /^(sam|dim)\. / })).toHaveText([
+    "sam. 10:00 – 12:00", "dim. 10:00 – 12:00", "dim. 14:00 – 19:00",
+  ]);
+  await expect.poll(() => patches(db).at(-1)?.data.plages).toEqual([
+    { jour: 6, debut: "10:00", fin: "12:00" }, { jour: 0, debut: "10:00", fin: "12:00" }, { jour: 0, debut: "14:00", fin: "19:00" },
+  ]);
+});
+
+test("qui peut réserver : « Tout membre connecté » vide la liste ; une famille cochée écrit ses groupes ; l'un exclut l'autre", async ({ page }) => {
+  const db = await ouvrir(page, ALICE, { "programmes/noel": NOEL26 });
+  await page.getByRole("button", { name: "Préparer la saison" }).click();
+  await carte(page).getByRole("button", { name: "Tout membre connecté" }).click();
+  await expect(carte(page).getByRole("button", { name: "Tout membre connecté", pressed: true })).toBeVisible();
+  await expect(carte(page).getByRole("button", { name: "Groupes", pressed: false })).toBeVisible();
+  await expect.poll(() => patches(db).at(-1)?.data.quiAutorises).toEqual([]);
+  await carte(page).getByRole("button", { name: "Chorale" }).click();
+  await expect(carte(page).getByRole("button", { name: "Tout membre connecté", pressed: false })).toBeVisible();
+  await expect.poll(() => patches(db).at(-1)?.data.quiAutorises).toEqual(["Chorale"]);
+});
+
+test("hors grille : « Retirer » supprime la réservation après confirmation", async ({ page }) => {
+  const c1 = { ...resa("2026-10-11", "17:00", "18:30"), auteurUid: "uid-jo", auteurNom: "Jo L." };
+  const db = await ouvrir(page, ALICE, { "programmes/noel": { ...NOEL26, ouvert: true }, "programmes/noel/creneaux/c1": c1 });
+  await page.getByRole("button", { name: "Modifier la saison" }).click();
+  page.on("dialog", (d) => d.accept());
+  const hors = page.getByRole("region", { name: "1 réservation hors grille" });
+  await expect(hors).toContainText("17:00 – 18:30");
+  await hors.getByRole("button", { name: "Retirer" }).click();
+  await expect(page.getByRole("region", { name: /hors grille/ })).toHaveCount(0);
+  expect(db.writes.find((w) => w.method === "DELETE")?.path).toBe("programmes/noel/creneaux/c1");
+});
+
+test("中文 : l'écran de la saison est traduit, dates comprises", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
+  await ouvrir(page, ALICE, { "programmes/noel": NOEL26 });
+  await page.getByRole("button", { name: "准备预约季" }).click();
+  await expect(page.getByRole("heading", { name: "Noël 2026 · 预约" })).toBeVisible();
+  const carteZh = page.getByRole("region", { name: "设置预约季" });
+  await expect(carteZh.getByText("从 10月1日星期四", { exact: true })).toBeVisible();
+  await expect(carteZh.getByRole("button", { name: "周六 10:00 – 12:00" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "开放预约" })).toBeVisible();
+  await expect(page.getByRole("region", { name: "各小组将看到的预览" }).getByRole("heading", { name: "10月10日星期六" })).toBeVisible();
+});
+
+test("captures : l'écran de la saison, brouillon avec deux réservations, puis ouvert (à regarder)", async ({ page }) => {
+  const sketch = { ...resa("2026-10-11", "15:00", "16:00"), quoi: "Sketch", qui: ["Jeunes"] };
+  const chant = resa("2026-10-11", "17:00", "18:00");
+  await ouvrir(page, ALICE, {
+    "programmes/noel": NOEL26, "programmes/noel/creneaux/a": sketch, "programmes/noel/creneaux/b": chant,
+  });
+  await page.getByRole("button", { name: "Préparer la saison" }).click();
+  await apercu(page).getByRole("button", { name: "Jour suivant" }).click();
+  await expect(apercu(page).getByText("Sketch · Jeunes")).toBeVisible();
+  await capture(page, "u1-saison-brouillon");
+  await page.getByRole("button", { name: "Ouvrir les réservations" }).click();
+  await expect(page.getByText("Réservations ouvertes du 1er octobre au 20 décembre")).toBeVisible();
+  await carte(page).getByRole("button", { name: "1 h 30", exact: true }).click();
+  await expect(page.getByRole("region", { name: "2 réservations hors grille" })).toBeVisible();
+  await capture(page, "u1-saison-ouverte-hors-grille");
+  await page.getByRole("button", { name: "Fermer", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Modifier la saison" })).toBeVisible();
+  await capture(page, "u1-saison-repliee");
 });
 
 test("créer un programme : brouillon ouvert au jour de sa création, l'écran s'ouvre directement sur sa saison", async ({ page }) => {

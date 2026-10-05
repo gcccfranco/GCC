@@ -60,20 +60,24 @@ test("section Évènements : sans programme affiché, un membre n'a ni onglet ni
   await expect(page.getByRole("link", { name: "Scène", exact: true })).toHaveCount(0);
 });
 
-test("coordination : onglet « Scène » sans programme, formulaire direct, l'onglet prend le nom du programme créé", async ({ page }) => {
-  // Lot 12 : le programme créé n'est plus épinglé (`visible: false`) ; il prend
-  // l'onglet parce que ses réservations sont ouvertes le jour du test.
+test("coordination : onglet « Scène » sans programme, formulaire direct, l'onglet prend le nom du programme à l'ouverture de ses réservations", async ({ page }) => {
+  // Lot 12 : le programme créé n'est plus épinglé (`visible: false`). Lot U1
+  // (docs/spec-scene-saison.md) : il part en brouillon, ouvert au jour de sa
+  // création, et ne prend l'onglet qu'une fois « Ouvrir les réservations » pressé.
   await page.clock.setFixedTime(new Date("2026-10-05T10:00:00"));
   const db = await signInAs(page, ALICE, {}, "/evenements/scene");
   await expect(page.getByRole("link", { name: "Scène", exact: true })).toBeVisible();
   await page.getByLabel("Nom").fill("Noël");
   await page.getByLabel("Jour J").fill("2026-12-24");
-  await page.getByLabel("Début des réservations").fill("2026-10-01");
   await page.getByRole("button", { name: "Créer le programme" }).click();
+  await expect(page.getByRole("heading", { name: "Noël · réservations" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Scène", exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Ouvrir les réservations" }).click();
   await expect(page.getByRole("link", { name: "Noël", exact: true })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Réserver un créneau" })).toBeVisible();
+  await page.getByRole("button", { name: "Fermer", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Entraînements" })).toBeVisible();
   const created = db.writes.find((w) => w.method === "POST" && w.path.startsWith("programmes/"));
-  expect(created?.data).toMatchObject({ nom: "Noël", jourJ: "2026-12-24", debut: "2026-10-01", visible: false, createdBy: "uid-alice" });
+  expect(created?.data).toMatchObject({ nom: "Noël", jourJ: "2026-12-24", debut: "2026-10-05", ouvert: false, visible: false, createdBy: "uid-alice" });
 });
 
 test("coordination : masquer rend l'onglet « Scène », le programme attend dans les masqués, Afficher le ramène", async ({ page }) => {
@@ -495,15 +499,18 @@ test("coordination : « Afficher » épingle Pâques et bascule l'onglet, en une
   expect(db.doc("programmes/paques")?.visible).toBe(true);
 });
 
-test("coordination : créer un programme ne vole plus l'onglet au programme en cours", async ({ page }) => {
+test("coordination : créer un programme ne vole plus l'onglet au programme en cours (lot U1 : il part en brouillon)", async ({ page }) => {
   const db = await ouvrirScene(page, ALICE, "2026-12-06", { "programmes/noel": { ...NOEL, visible: false } });
   await page.getByRole("button", { name: "Nouveau programme" }).click();
   await page.getByLabel("Nom").fill("Pâques");
   await page.getByLabel("Jour J").fill("2027-04-05");
-  await page.getByLabel("Début des réservations").fill("2027-01-04");
   await page.getByRole("button", { name: "Créer le programme" }).click();
-  await expect(page.getByRole("region", { name: "Programmes masqués" })).toContainText("Pâques");
+  await expect(page.getByRole("heading", { name: "Pâques · réservations" })).toBeVisible();
+  await page.getByRole("button", { name: "Fermer", exact: true }).click();
+  const masques = page.getByRole("region", { name: "Programmes masqués" });
+  await expect(masques).toContainText("Pâques");
+  await expect(masques).toContainText("Brouillon");
   await expect(page.getByRole("link", { name: "Noël", exact: true })).toBeVisible();
-  expect(ecritures(db, "POST")[0]?.data).toMatchObject({ nom: "Pâques", visible: false });
+  expect(ecritures(db, "POST")[0]?.data).toMatchObject({ nom: "Pâques", visible: false, ouvert: false });
   expect(ecritures(db, "PATCH")).toHaveLength(0);
 });

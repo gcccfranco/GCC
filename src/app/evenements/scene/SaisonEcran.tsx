@@ -47,13 +47,16 @@ export function SaisonEcran({ programme, creneaux, onChanged, onClose }: {
   return (
     <div className="space-y-5">
       <header className="flex flex-wrap items-end gap-x-4 gap-y-3">
-        <div className="min-w-0">
+        <div className="basis-full flex items-center justify-between gap-3">
           <p className="flex items-center gap-1.5 text-[13px] font-semibold svc-ink" style={{ "--svc": COLOR } as CSSProperties}>
             <Drama className="h-3.5 w-3.5" aria-hidden /> {t("planning.saison.label")}
           </p>
-          <h2 className="mt-1 text-[26px] sm:text-[30px] leading-tight font-bold tracking-tight">{t("planning.saison.titre", { nom: programme.nom })}</h2>
+          <Button size="sm" variant="ghost" className="-my-1" onClick={onClose}>{t("planning.saison.fermer")}</Button>
+        </div>
+        <div className="min-w-0">
+          <h2 className="text-[26px] sm:text-[30px] leading-tight font-bold tracking-tight">{t("planning.saison.titre", { nom: programme.nom })}</h2>
           <p className="text-[13px] text-muted-foreground">
-            {t("planning.programmes.jourJLabel", { date: jourEnLettres(programme.jourJ, i18n.language) })}
+            <span>{t("planning.programmes.jourJLabel", { date: jourEnLettres(programme.jourJ, i18n.language) })}</span>
             {" · "}
             <button type="button" className="font-semibold text-foreground underline-offset-4 hover:underline" onClick={() => setModifier(!modifier)}>
               {t("planning.scene.editProgramme")}
@@ -71,7 +74,6 @@ export function SaisonEcran({ programme, creneaux, onChanged, onClose }: {
               <Check aria-hidden /> {t("planning.saison.ouvrir")}
             </Button>
           )}
-          <Button size="sm" variant="ghost" onClick={onClose}>{t("planning.saison.fermer")}</Button>
         </div>
       </header>
 
@@ -88,11 +90,7 @@ export function SaisonEcran({ programme, creneaux, onChanged, onClose }: {
         />
       )}
 
-      <div className="grid gap-5 lg:grid-cols-2 lg:items-start">
-        <SaisonForm key={programme.id} programme={programme} onSave={(patch: SaisonPatch) => ecrire(patch)} />
-        <Apercu programme={programme} creneaux={creneaux} onChanged={onChanged} />
-      </div>
-
+      {/* Sous l'en-tête, près de son bouton : la saison est longue sur téléphone. */}
       {ordre && (
         <OrdrePassage
           passages={programme.passages}
@@ -100,6 +98,11 @@ export function SaisonEcran({ programme, creneaux, onChanged, onClose }: {
           onSave={async (passages: Passage[]) => { await updateProgramme(programme.id, { passages }); await onChanged() }}
         />
       )}
+
+      <div className="grid gap-5 lg:grid-cols-2 lg:items-start">
+        <SaisonForm key={programme.id} programme={programme} onSave={(patch: SaisonPatch) => ecrire(patch)} />
+        <Apercu programme={programme} creneaux={creneaux} onChanged={onChanged} />
+      </div>
     </div>
   )
 }

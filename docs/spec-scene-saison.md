@@ -350,6 +350,19 @@ npm run lint
   `290bb31` S2 (droits en double, `canReserverPour` et `reservable()`, règles à publier), `b681429` S3-S4
   commencés (écran de la coordination, grille des membres), **non testé**. Agents arrêtés par Timothée le 04/10 au
   soir ; rien fusionné dans `ui/apple-design`, rien poussé.
+- 05/10/2026 : **S3 faite** (écran de la coordination), commit « feat(U1): S3 — l'écran de la coordination » sur `lot/u1-scene-saison`, local, rien
+  poussé. Le wip de `b681429` côté coordination est repris, fini et testé : carte « Mettre en place la saison »
+  (dates en toutes lettres posées sur le sélecteur natif, jours, plages, durée, qui ; écriture champ par champ,
+  erreur sous le champ sans écriture ; une date en cours de frappe, année 0002…, n'écrit rien), aperçu jour par
+  jour, « Ouvrir les réservations » en un PATCH, réservations hors grille (Déplacer, Retirer), badge « Brouillon »
+  et « Préparer la saison », ligne repliée « Saison : … — Modifier la saison », « Modifier le programme » (nom et
+  jour J). Choix : un bouton « Fermer » ramène à la page des membres (avant U6) ; l'ordre de passage s'ouvre sous
+  l'en-tête. Tests : `tests/scene-saison.spec.ts` 45 × 3 appareils verts ; contre-épreuve sur le code d'avant S3
+  (`290bb31`) : les 19 tests d'écran rouges ; `back-office-coupe` vert ; `tsc` et `lint` sans erreur ; captures
+  regardées aux trois tailles. **Reste S4** (écran des membres) : le code de `b681429` (`Entrainements.tsx`,
+  `CreneauForm.tsx`, `LigneJour.tsx`) n'est pas testé, et 7 tests de `tests/programme-scene.spec.ts` × 3 (bouton
+  « Réserver un créneau », formulaire 17:00–18:00, « Scène libre », « Voir les dimanches passés », chevauchement,
+  retrait par la coordination, course perdue) sont rouges : ce sont ceux que S4 réécrit pour la grille.
 - Après le code : publier `firestore.rules` (règle des créneaux) ; à la mise en ligne, la coordination règle la
   saison de Noël 2026 puis l'ouvre. Téléphone des membres : planches `scene-reserver-telephone` et
   `scene-reserver-feuille-telephone` (version 17).
