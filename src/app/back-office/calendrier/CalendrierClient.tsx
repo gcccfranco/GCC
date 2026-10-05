@@ -25,6 +25,7 @@ import {
 import { finDuMois, joursDeLaGrille, moisVoisin, nomMois, titreJour, titreMois } from "@/lib/calendrier/grille";
 import { ecrirePreferences, lirePreferences, type PreferencesCalendrier } from "@/lib/calendrier/preferences";
 import { lireSheetEvenements, type LectureSheet } from "@/lib/evenements/sheet";
+import { avantBascule } from "@/lib/evenements/bascule";
 import { todayIso } from "@/lib/scene/dimanches";
 import { cn } from "@/lib/utils";
 import type { NotifLang } from "@/types/user";
@@ -101,11 +102,15 @@ export function CalendrierClient() {
     return () => { vivant = false; };
   }, [user, profil, aujourdhui]);
 
+  // Lot U9 (Q6) : un mois affiché à partir de la bascule ne lit plus le Sheet, pas même les
+  // derniers jours de décembre en tête de sa grille ; l'agenda, à partir d'aujourd'hui.
+  const lireLeSheet = avantBascule(vue === "agenda" ? aujourdhui : `${mois}-01`);
   useEffect(() => {
     let vivant = true;
-    lireSheetEvenements(debut, fin).then((lecture) => vivant && setSheet({ fenetre: `${debut}|${fin}`, lecture }));
+    const lecture = lireLeSheet ? lireSheetEvenements(debut, fin) : Promise.resolve<LectureSheet>({ entrees: [], injoignable: false });
+    lecture.then((l) => vivant && setSheet({ fenetre: `${debut}|${fin}`, lecture: l }));
     return () => { vivant = false; };
-  }, [debut, fin]);
+  }, [debut, fin, lireLeSheet]);
 
   const permises = useMemo(() => (user ? sourcesPermises(user, profil) : []), [user, profil]);
   const parJour = useMemo(() => {
@@ -158,7 +163,8 @@ export function CalendrierClient() {
         className={cn(PASTILLE, allumee ? "raised text-foreground" : "text-muted-foreground line-through hover:bg-muted/60")}
       >
         <Icone aria-hidden className="h-3.5 w-3.5 shrink-0" />
-        {t(`calendrier.sources.${s}`)}
+        {/* U9 (Q6) : « Évènements (Sheet) » jusqu'au 31/12/2026, « Évènements » ensuite. */}
+        {t(s === "evenements" && avantBascule(aujourdhui) ? "calendrier.sources.evenementsSheet" : `calendrier.sources.${s}`)}
       </button>
     );
   });

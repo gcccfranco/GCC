@@ -177,7 +177,31 @@ npx tsc --noEmit && npm run lint               # PW_PORT=3000 si un next dev tou
 
 ## Avancement
 
-Rien n'est codé : la spec attend la validation de Timothée, puis son go. À la mise en ligne, côté
-évènements : (1) supprimer les évènements d'essai du Firestore partagé (Timothée, console ; Q8) ;
-(2) relire les onglets de 2027 du Sheet et prévenir chaque responsable concerné (Q4) ; (3) envoyer
-l'annonce par « Notifier » (Q7 a). U9 ne touche pas à `firestore.rules`.
+Validée par le go du 04/10/2026 (redit le 05/10/2026) ; les questions ouvertes prennent leur
+recommandation.
+
+**05/10/2026 — B1 (bascule) faite**, branche `lot/u9-evenements-2027` (fusionnée avec
+`lot/u8-calendrier` et `lot/u6-back-office` d'abord) :
+- `src/lib/evenements/bascule.ts` : `BASCULE_EVENEMENTS = "2027-01-01"`, `avantBascule(date)`,
+  `dernierJourDuSheet()` (« 31/12/2026 » dans les phrases).
+- Formulaire (`EvenementForm.tsx`) : « Toute l'église » daté avant la bascule → sous la date, « Jusqu'au
+  31/12/2026, les évènements de toute l'église s'écrivent dans le Sheet des évènements. » et « Ouvrir le
+  Sheet des évènements » (onglet du mois, nouvel onglet) ; « Créer » / « Enregistrer » n'écrit rien.
+  Sections, réunions et infos libres. **Modification** : seul le passage dans le Sheet est refusé
+  (date reculée avant 2027, ou public passé à « Toute l'église ») ; un évènement déjà dans l'app se
+  corrige toujours (choix pris : sinon tout évènement d'essai de 2026 deviendrait intouchable).
+- Calendrier (`CalendrierClient.tsx`) : pastille « Évènements (Sheet) » jusqu'au 31/12/2026, « Évènements »
+  à partir du 01/01/2027 (horloge) ; un mois affiché à partir de janvier 2027 (ou l'agenda à partir
+  d'aujourd'hui, après la bascule) ne lit plus le Sheet, même pour les derniers jours de décembre en tête
+  de grille ; revenir en décembre le relit. `lienSheetEvenements(mois)` ajouté à `sheet.ts`.
+- Tests : `tests/evenements-2027.spec.ts` (pur, formulaire, pastille et requêtes, capture du refus) ;
+  quatre tests existants qui créaient « Toute l'église » en 2026 (`evenements.spec.ts`,
+  `back-office-admin.spec.ts`) créent maintenant en janvier 2027.
+
+Reste : B2 (agenda public), B3 (annonce), B4 (ménage de février 2027, sur un go à part).
+
+À la mise en ligne, côté évènements : (1) supprimer les évènements d'essai du Firestore partagé
+(Timothée, console ; Q8) ; (2) relire les onglets de 2027 du Sheet et prévenir chaque responsable
+concerné (Q4) ; (3) envoyer l'annonce par « Notifier » (Q7 a). U9 ne touche pas à `firestore.rules`.
+Timothée relit le 中文 : « {{jour}} 之前，全教会的活动请写在活动表（Sheet）中。 », « 打开活动表 », pastille
+« 活动 » / « 活动（Sheet）».

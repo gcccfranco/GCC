@@ -17,6 +17,8 @@ import { equipeDuPour, estReunion, poleDuPour } from "@/lib/access"
 import { EVENEMENT_TYPES, type Evenement, type EvenementType } from "@/types/evenement"
 import { ChoixInscriptions } from "@/components/evenements/ChoixInscriptions"
 import { borneInscription, modeInscriptions } from "@/lib/evenements/agenda"
+import { avantBascule, dernierJourDuSheet } from "@/lib/evenements/bascule"
+import { lienSheetEvenements } from "@/lib/evenements/sheet"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
@@ -34,6 +36,10 @@ export const EMPTY_EVENEMENT: EvenementValues = {
 
 /** « AAAA-MM-JJ » + « HH:MM » facultative ↔ « AAAA-MM-JJ[THH:MM] » ; sans jour, rien. */
 const joindre = (jour: string, heure: string) => (jour ? (heure ? `${jour}T${heure}` : jour) : "")
+
+/** Lot U9 (Q3) : un évènement de toute l'église daté avant la bascule s'écrit dans le Sheet. */
+const dansLeSheet = (x: Pick<EvenementValues, "type" | "pour" | "date">) =>
+  x.type !== "info" && x.pour === "eglise" && x.date !== "" && avantBascule(x.date)
 
 /** Ouverture ou fin des inscriptions : un jour, une heure facultative, une aide. */
 function Periode({ id, label, heureLabel, aide, value, onChange }: {
@@ -77,6 +83,9 @@ export function EvenementForm({ initial, pours, creation, inscrits = 0, onSubmit
   // Lien externe (lot 11) : l'inscription se passe ailleurs, le reste du bloc
   // ne s'applique plus (docs/spec-inscription-externe.md).
   const externe = v.lienExterne.trim() !== ""
+  // Pas de doublon avec le Sheet (U9, Q3). À la modification, seul le passage dans le Sheet est
+  // refusé : un évènement déjà dans l'app (créé avant la règle) se corrige toujours.
+  const refusSheet = dansLeSheet(v) && (creation || !dansLeSheet(initial))
   const set = (patch: Partial<EvenementValues>) => setV((x) => ({ ...x, ...patch }))
   // Listes au style des champs du site (fond gris, sans bord), libellés
   // discrets comme la maquette (retour du 17/09/2026).
@@ -112,6 +121,8 @@ export function EvenementForm({ initial, pours, creation, inscrits = 0, onSubmit
     if (!v.titre.trim()) { setError(t("evenements.form.errorTitre")); return }
     if (!info && !v.date) { setError(t("evenements.form.errorDate")); return }
     if (!info && v.dateFin && v.dateFin < v.date) { setError(t("evenements.form.errorDateFin")); return }
+    // La raison est déjà écrite sous la date : on y ramène.
+    if (refusSheet) { setError(""); document.getElementById("ev-date")?.focus(); return }
     if (mode === "auto" && v.inscriptionDebut && v.inscriptionFin
       && borneInscription(v.inscriptionFin, "23:59") < borneInscription(v.inscriptionDebut, "00:00")) {
       setError(t("evenements.form.errorInsFin")); return
@@ -180,13 +191,23 @@ export function EvenementForm({ initial, pours, creation, inscrits = 0, onSubmit
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <label htmlFor="ev-date" className={LABEL}>{t("evenements.form.date")}</label>
-              <Input id="ev-date" type="date" value={v.date} onChange={(e) => set({ date: e.target.value })} required />
+              <Input id="ev-date" type="date" value={v.date} onChange={(e) => set({ date: e.target.value })} required
+                aria-invalid={refusSheet || undefined} aria-describedby={refusSheet ? "ev-date-sheet" : undefined} />
             </div>
             <div className="space-y-1">
               <label htmlFor="ev-heure" className={LABEL}>{t("evenements.form.heure")}</label>
               <Input id="ev-heure" type="time" value={v.heure} onChange={(e) => set({ heure: e.target.value })} />
             </div>
           </div>
+        )}
+        {refusSheet && (
+          <p id="ev-date-sheet" className="-mt-2 text-sm text-destructive">
+            {t("evenements.form.refusSheet", { jour: dernierJourDuSheet() })}{" "}
+            <a href={lienSheetEvenements(v.date.slice(0, 7))} target="_blank" rel="noopener noreferrer"
+              className="font-semibold underline underline-offset-2">
+              {t("evenements.form.ouvrirSheet")}
+            </a>
+          </p>
         )}
 
         <div className="space-y-1">

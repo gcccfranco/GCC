@@ -7,7 +7,8 @@
     "seulementMoi": "只看我的",
     "sources": {
       "services": "服事",
-      "evenements": "活动（Sheet）",
+      "evenements": "活动",
+      "evenementsSheet": "活动（Sheet）",
       "reunions": "会议",
       "scene": "舞台",
       "taches": "任务",
@@ -1777,6 +1778,8 @@
       "errorTitre": "标题为必填项。",
       "errorDate": "日期为必填项。",
       "errorDateFin": "结束日期须晚于开始日期。",
+      "refusSheet": "{{jour}} 之前，全教会的活动请写在活动表（Sheet）中。",
+      "ouvrirSheet": "打开活动表",
       "errorSave": "无法保存。请检查网络连接及 Firestore 规则是否已发布。",
       "plusOptions": "更多选项",
       "banniere": "添加横幅图片",

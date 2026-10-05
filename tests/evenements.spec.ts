@@ -149,7 +149,8 @@ test("créer : la coordination remplit la fiche ; écriture à son nom, compteur
   await page.getByLabel("Nom de l'évènement").fill("Soirée jeux");
   await page.getByLabel("Catégorie").selectOption("loisir");
   await page.getByLabel("Public").selectOption("eglise");
-  await page.getByLabel("Date", { exact: true }).fill("2026-11-07");
+  // U9 (B1) : « Toute l'église » avant 2027 s'écrit dans le Sheet ; l'app crée à partir de janvier.
+  await page.getByLabel("Date", { exact: true }).fill("2027-01-09");
   await page.getByLabel("Horaire", { exact: true }).fill("19:30");
   await page.getByLabel("Lieu").fill("Salle du bas");
   await page.getByLabel("Description").fill("Apportez vos jeux.");
@@ -160,7 +161,7 @@ test("créer : la coordination remplit la fiche ; écriture à son nom, compteur
   await expect(page.getByRole("heading", { name: "Soirée jeux" })).toBeVisible();
   const created = db.writes.find((w) => w.method === "POST" && w.path.startsWith("evenements/"));
   expect(created?.data).toMatchObject({
-    titre: "Soirée jeux", type: "loisir", pour: "eglise", date: "2026-11-07", heure: "19:30", lieu: "Salle du bas",
+    titre: "Soirée jeux", type: "loisir", pour: "eglise", date: "2027-01-09", heure: "19:30", lieu: "Salle du bas",
     placesMax: 20, inscriptions: "auto", inscriptionDebut: "", inscriptionFin: "", inscrits: 0, organisateurUid: "uid-alice", organisateurNom: "Alice Q.",
   });
   await expect.poll(() => pushed).not.toBeNull();
@@ -811,7 +812,8 @@ test("période P2 : le formulaire écrit l'ouverture et la fin des inscriptions 
   const db = await member(page, ALICE, "/back-office/evenements/nouveau");
   await page.route("**/api/push/notify-evenement", (route) => route.fulfill({ json: { ok: true } }));
   await page.getByLabel("Nom de l'évènement").fill("Retraite");
-  await page.getByLabel("Date", { exact: true }).fill("2026-11-14");
+  // U9 (B1) : « Toute l'église » avant 2027 s'écrit dans le Sheet ; l'app crée à partir de janvier.
+  await page.getByLabel("Date", { exact: true }).fill("2027-01-16");
   await expect(page.getByText("Vide : dès la publication")).toBeVisible();
   await expect(page.getByText("Vide : au début de l'évènement")).toBeVisible();
   await page.getByLabel("Ouverture des inscriptions", { exact: true }).fill("2026-10-05");
@@ -828,7 +830,8 @@ test("période P2 : forcer « Ouvertes » cache les dates ; une fin avant l'ouve
   const db = await member(page, ALICE, "/back-office/evenements/nouveau");
   await page.route("**/api/push/notify-evenement", (route) => route.fulfill({ json: { ok: true } }));
   await page.getByLabel("Nom de l'évènement").fill("Soirée louange");
-  await page.getByLabel("Date", { exact: true }).fill("2026-11-14");
+  // U9 (B1) : « Toute l'église » avant 2027 s'écrit dans le Sheet ; l'app crée à partir de janvier.
+  await page.getByLabel("Date", { exact: true }).fill("2027-01-16");
   await page.getByLabel("Ouverture des inscriptions", { exact: true }).fill("2026-11-10");
   await page.getByLabel("Fin des inscriptions", { exact: true }).fill("2026-11-01");
   await page.getByRole("button", { name: "Créer l'évènement" }).click();

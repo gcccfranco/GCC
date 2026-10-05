@@ -7,7 +7,8 @@
     "seulementMoi": "Seulement moi",
     "sources": {
       "services": "Services",
-      "evenements": "Évènements (Sheet)",
+      "evenements": "Évènements",
+      "evenementsSheet": "Évènements (Sheet)",
       "reunions": "Réunions",
       "scene": "Scène",
       "taches": "Tâches",
@@ -1778,6 +1779,8 @@
       "errorTitre": "Le titre est obligatoire.",
       "errorDate": "La date est obligatoire.",
       "errorDateFin": "La date de fin doit suivre la date.",
+      "refusSheet": "Jusqu'au {{jour}}, les évènements de toute l'église s'écrivent dans le Sheet des évènements.",
+      "ouvrirSheet": "Ouvrir le Sheet des évènements",
       "errorSave": "Enregistrement impossible. Vérifie ta connexion et que les règles Firestore sont publiées.",
       "plusOptions": "Plus d'options",
       "banniere": "Ajouter une bannière",
