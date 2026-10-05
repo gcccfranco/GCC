@@ -57,11 +57,11 @@ async function deplierSiTablettePaysage(page: Page, info: TestInfo) {
 }
 
 /** Le menu du Back-Office : la barre latérale sur grand écran ; sur téléphone et tablette en
- *  portrait, la liste du tableau de bord en attendant la barre du bas de B6. */
+ *  portrait, la barre du bas du Back-Office (B6 : 4 onglets + « Plus »). */
 function menu(page: Page, info: TestInfo) {
   if (estOrdinateur(info)) return page.getByTestId("barre-laterale").getByRole("navigation", { name: "Navigation principale" });
   if (estTablettePaysage(info)) return page.getByTestId("barre-par-dessus").getByRole("navigation", { name: "Navigation principale" });
-  return page.getByTestId("menu-back-office");
+  return page.getByTestId("barre-du-bas");
 }
 
 test.describe("Back-Office (B1) : qui est responsable (Q1)", () => {
@@ -178,12 +178,11 @@ test.describe("Back-Office (B1) : le sélecteur et le menu", () => {
     await expect(menu(page, info).getByRole("link")).toHaveText(
       estOrdinateur(info) || estTablettePaysage(info)
         ? ["Tableau de bord", "Planning", "Tâches", "Évènements", "Équipes", "Messages"]
-        // La liste du tableau de bord ne répète pas la page où l'on est.
-        : ["Planning", "Tâches", "Évènements", "Équipes", "Messages"],
+        // Barre du bas (B6, Q13) : 4 onglets, le tableau de bord sous le nom « Accueil », puis « Plus ».
+        : ["Accueil", "Tâches", "Planning", "Évènements", "Plus"],
     );
-    if (estOrdinateur(info) || estTablettePaysage(info)) {
-      await expect(menu(page, info).getByRole("link", { name: "Tableau de bord" })).toHaveAttribute("aria-current", "page");
-    }
+    const tableau = estOrdinateur(info) || estTablettePaysage(info) ? "Tableau de bord" : "Accueil";
+    await expect(menu(page, info).getByRole("link", { name: tableau })).toHaveAttribute("aria-current", "page");
   });
 
   test("Alice voit Tableau de bord, Tâches, Évènements", async ({ page }, info) => {
@@ -191,7 +190,7 @@ test.describe("Back-Office (B1) : le sélecteur et le menu", () => {
     await expect(page.getByRole("heading", { name: "Tableau de bord" })).toBeVisible();
     await deplierSiTablettePaysage(page, info);
     await expect(menu(page, info).getByRole("link")).toHaveText(
-      estOrdinateur(info) || estTablettePaysage(info) ? ["Tableau de bord", "Tâches", "Évènements"] : ["Tâches", "Évènements"],
+      estOrdinateur(info) || estTablettePaysage(info) ? ["Tableau de bord", "Tâches", "Évènements"] : ["Accueil", "Tâches", "Évènements", "Plus"],
     );
   });
 

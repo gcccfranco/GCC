@@ -5,7 +5,7 @@
 // écrit lui-même (B5) — le profil `users/{uid}` est verrouillé. Patron d'`onboarding/{uid}`. REST.
 
 import { FS_BASE, authHeader, fromFsValue, toFsFields, type RawDoc } from "@/lib/firebase/setlists";
-import type { PreferencesBackOffice, Widget } from "@/types/backOffice";
+import type { Entree, PreferencesBackOffice, Widget } from "@/types/backOffice";
 
 /**
  * Enregistre la disposition du tableau de bord (B5, à chaque geste, Q12) ; `null` la retire
@@ -18,6 +18,21 @@ export async function ecrireTableauDeBord(uid: string, widgets: Widget[] | null)
     method: "PATCH",
     headers: { "Content-Type": "application/json", ...(await authHeader()) },
     body: JSON.stringify({ fields: toFsFields({ ...(widgets ? { tableauDeBord: widgets } : {}), majLe: new Date().toISOString() }) }),
+  });
+  if (!res.ok) throw new Error(`backOffice/${uid} : ${res.status}`);
+}
+
+/**
+ * Enregistre la barre du bas (B6, à « Terminé ») ; `null` la retire (« Remettre la barre par
+ * défaut » : absente = défaut, recalculé). Seuls `barreDuBas` et `majLe` sont touchés : la
+ * disposition du tableau de bord reste. Lève si refusé.
+ */
+export async function ecrireBarreDuBas(uid: string, barre: Entree[] | null): Promise<void> {
+  const masque = new URLSearchParams([["updateMask.fieldPaths", "barreDuBas"], ["updateMask.fieldPaths", "majLe"]]);
+  const res = await fetch(`${FS_BASE}/backOffice/${uid}?${masque}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...(await authHeader()) },
+    body: JSON.stringify({ fields: toFsFields({ ...(barre ? { barreDuBas: barre } : {}), majLe: new Date().toISOString() }) }),
   });
   if (!res.ok) throw new Error(`backOffice/${uid} : ${res.status}`);
 }

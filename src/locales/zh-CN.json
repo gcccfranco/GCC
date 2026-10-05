@@ -2380,7 +2380,46 @@
     "reserve": "仅限负责人。",
     "seConnecter": "登录",
     "bonjour": "{{jour}} · {{prenom}}，你好",
-    "menu": "你的模块",
+    "barre": {
+      "accueil": "首页",
+      "plus": "更多",
+      "personnaliser": "自定义底部栏",
+      "personnaliserAide": "选择底部的 4 个标签及其顺序",
+      "titre": "你的底部栏",
+      "aide": "选择 4 个标签并排好顺序（拖动手柄）。「更多」固定在最右边，可进入其余部分。",
+      "termine": "完成",
+      "apercu": "预览",
+      "parDefaut": "恢复默认底部栏",
+      "deplacer": "移动{{nom}}",
+      "instructions": "移动标签：按空格或回车拿起，用方向键移动，再按空格或回车放下，按 Esc 取消。",
+      "erreur": "底部栏未保存：请检查网络后重试。",
+      "indice": {
+        "tableau": "仪表盘",
+        "scene": "+ 舞台",
+        "admins": "管理员"
+      }
+    },
+    "plus": {
+      "revenir": "返回应用",
+      "revenirAide": "诗歌、歌单、排班表、我",
+      "contenu": {
+        "tableau": "你的小组件",
+        "calendrier": "服事、会议、活动",
+        "plannings": "排班表",
+        "import": "导入",
+        "sansCompte": "无账号",
+        "tesPoles": "你所在部门的任务",
+        "tousLesPoles": "所有部门的任务",
+        "fiches": "活动、报名、报名时间",
+        "scene": "舞台节目",
+        "organigramme": "组织架构、部门",
+        "personnes": "人员与权限",
+        "reception": "问题反馈、诗歌推荐",
+        "notifier": "发送通知",
+        "questionnaire": "问卷",
+        "statistiques": "最常唱的诗歌"
+      }
+    },
     "enAttente": "这部分将随后续开发移入后台。目前请在这里使用：",
     "scene": "舞台",
     "administration": "管理"

@@ -456,6 +456,59 @@ B6 (barre du bas du Back-Office, « Plus », feuille « Ta barre du bas »).
   des services de Ce dimanche = tous les services ; Retirer ne demande pas confirmation (le catalogue le rend) ; la
   disposition touchée n'est pas relue pendant la visite (le dernier geste fait foi).
 
+**05/10/2026 — B6 « Barre du bas » codée** (commit « feat(U6): B6 — barre du bas du Back-Office… »). La suite
+parallèle B4–B6 est finie ; reste sa fusion dans `lot/u6-back-office`.
+
+- **Règles pures** (`src/lib/tableauDeBord/barre.ts`) : `barreParDefaut` (Q13 : Accueil · Calendrier · Tâches ·
+  Planning parmi les entrées permises, complété dans l'ordre du menu ; Calendrier arrivant avec U8, un admin a
+  aujourd'hui Accueil · Tâches · Planning · Évènements, Alice Accueil · Tâches · Évènements), `barreAffichee` (la
+  barre enregistrée dans son ordre, sans entrée inconnue, en double ou sans droit, 4 au plus, complétée dans
+  l'ordre du menu ; absente = défaut), `listeDeLaFeuille`, `basculer` (une cinquième refusée), `barreDeLaFeuille`.
+- **Barre** (`MobileTabBar.tsx`) : au Back-Office, un responsable a ses 4 onglets + « Plus » (`ongletsBackOffice`,
+  `ONGLET_PLUS`, `cleOnglet` dans `src/lib/navigation.ts` : le tableau de bord s'y appelle « Accueil », comme la
+  planche) ; « Plus » est marqué sur toute page du Back-Office hors de la barre ; la barre attend le profil et la
+  barre enregistrée (jamais d'onglets qui changent sous le doigt). Celle de l'App ne change pas ; un
+  non-responsable au Back-Office (« Réservé aux responsables ») garde celle de l'App.
+- **Lecture et écriture** : `useBarreDuBas` / `enregistrerBarreDuBas` (`src/lib/tableauDeBord/useBarreDuBas.ts`),
+  une lecture de `backOffice/{uid}` par compte et par visite, partagée par la barre et « Plus » ;
+  `ecrireBarreDuBas` (`src/lib/firebase/backOffice.ts`, REST) n'écrit que `barreDuBas` et `majLe` (masque : la
+  disposition du tableau de bord reste). Refusée, la barre d'avant revient avec « Barre non enregistrée ». Aucune
+  règle nouvelle : celle de B5 (`backOffice/{uid}`) couvre le champ.
+- **« Plus »** (`/back-office/plus`, `src/components/backOffice/PagePlus.tsx`, planche `bo-telephone-plus`) : une
+  ligne par entrée hors barre, en cartes comme la planche (gestion, puis Messages, puis Statistiques), contenu selon
+  les droits (Planning + « import · sans compte » pour un admin ; Évènements + « programmes de scène » pour la
+  coordination ; Équipes + « personnes et droits » pour un admin ; Messages = « Notifier » seul pour un droit
+  `notify`), pastilles de Q15 (Tâches : à faire pour moi, comme « Mes tâches » ; Messages : signalements et
+  propositions en attente, admins), comptées seulement pour une entrée posée là ; « Personnaliser la barre »
+  (question 9) ; « Revenir à l'app » (dernière page de l'App, mémoire du sélecteur, `useDernierePage`).
+- **Feuille « Ta barre du bas »** (`FeuilleBarreDuBas.tsx`, planche `bo-telephone-barre-perso`, feuille `vaul`) :
+  entrées permises, la barre d'abord ; cases rondes (4 au plus, la cinquième grisée) ; indices « tableau de bord »,
+  « + scène » (coordination), « admins » ; poignées au doigt, à la souris et au clavier (`useSensorsAvecClavier`,
+  annonces du tableau de bord) ; aperçu de la barre ; « Remettre la barre par défaut » ; « Terminé ».
+- **La liste « Tes modules »** de B1 sous le tableau de bord est retirée (clé `backOffice.menu` retirée).
+- **Correction de B1** : le sélecteur ne retient plus `/login` comme dernière page de l'App (après la connexion,
+  « App » et « Revenir à l'app » y ramenaient).
+- **Libellés** `backOffice.barre.*` et `backOffice.plus.*` en FR et 中文 (首页, 更多, 自定义底部栏, 你的底部栏, 恢复默认底部栏,
+  返回应用…) : **à relire par Timothée**.
+- **Tests** : `tests/barre-back-office.spec.ts` (nouveau, 20 tests ; vus rouges sur fonctions vides, puis verts sur
+  téléphone et tablette ; sur ordinateur et grands écrans, seuls les tests purs et « pas de barre du bas »
+  tournent) : règles pures, barre d'un admin et d'Alice (Réussite 2), barre de l'App inchangée, repli sans droit,
+  « Plus » marqué hors barre, cartes et contenus selon les droits, pastilles, feuille (4 au plus, aperçu, rien
+  avant Terminé, masque qui garde le tableau de bord), ordre au clavier, défaut retiré du document, écriture
+  refusée, Réussite 3 (relue sur une tablette, autre contexte), 中文 ; captures
+  `test-results/barre-back-office-captures/` regardées (conformes à `bo-telephone-accueil`, `bo-telephone-plus`,
+  `bo-telephone-barre-perso`, `tablette-portrait-back-office`). `tests/back-office-espace.spec.ts` : sur
+  téléphone et tablette, le menu est désormais la barre du bas.
+- **Choix faits faute de réponse dans la spec** : « Plus » est une page (`/back-office/plus`, hors table Q4) et
+  non un menu ; la feuille s'ouvre depuis « Plus » seulement ; rien ne s'écrit avant de la refermer
+  (« Terminé », le voile ou le geste vers le bas valent tous « Terminé ») ; moins de 4 cochées : la barre est
+  complétée dans l'ordre du menu (l'aperçu le montre) ; « Remettre par défaut » retire `barreDuBas` du document ;
+  pastilles dans « Plus » seulement (ni sur les onglets ni sur la barre latérale) ; descriptions de Tableau de
+  bord, Calendrier et Statistiques écrites d'après leurs voisines (absentes de la planche).
+
+À faire par Timothée (suite B4–B6) : publier `firestore.rules` (règle `backOffice/{uid}` de B5, qui sert aussi
+la barre du bas) ; relire le 中文 de `tableauDeBord.*`, `backOffice.barre.*`, `backOffice.plus.*`.
+
 ### Lot U6 (branche `lot/u6-back-office`)
 
 **05/10/2026 — B1 « Espace » codée** (branche `lot/u6-back-office`, après la fusion de `lot/u4-navigation`,

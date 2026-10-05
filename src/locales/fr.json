@@ -2385,7 +2385,46 @@
     "reserve": "Réservé aux responsables.",
     "seConnecter": "Se connecter",
     "bonjour": "{{jour}} · bonjour {{prenom}}",
-    "menu": "Tes modules",
+    "barre": {
+      "accueil": "Accueil",
+      "plus": "Plus",
+      "personnaliser": "Personnaliser la barre",
+      "personnaliserAide": "Choisis les 4 onglets du bas et leur ordre",
+      "titre": "Ta barre du bas",
+      "aide": "Choisis 4 onglets et leur ordre (glisse les poignées). « Plus » reste à droite et donne accès au reste.",
+      "termine": "Terminé",
+      "apercu": "Aperçu",
+      "parDefaut": "Remettre la barre par défaut",
+      "deplacer": "Déplacer {{nom}}",
+      "instructions": "Pour déplacer un onglet : Espace ou Entrée pour le saisir, les flèches pour le déplacer, Espace ou Entrée pour le poser, Échap pour annuler.",
+      "erreur": "Barre non enregistrée : vérifie ta connexion, puis recommence.",
+      "indice": {
+        "tableau": "tableau de bord",
+        "scene": "+ scène",
+        "admins": "admins"
+      }
+    },
+    "plus": {
+      "revenir": "Revenir à l'app",
+      "revenirAide": "Chants, setlists, planning, moi",
+      "contenu": {
+        "tableau": "tes widgets",
+        "calendrier": "services, réunions, évènements",
+        "plannings": "plannings",
+        "import": "import",
+        "sansCompte": "sans compte",
+        "tesPoles": "tâches de tes pôles",
+        "tousLesPoles": "tâches de tous les pôles",
+        "fiches": "fiches, inscrits, période",
+        "scene": "programmes de scène",
+        "organigramme": "organigramme, pôles",
+        "personnes": "personnes et droits",
+        "reception": "signalements, propositions de chants",
+        "notifier": "notifier",
+        "questionnaire": "questionnaire",
+        "statistiques": "chants les plus joués"
+      }
+    },
     "enAttente": "Cette partie arrive au Back-Office avec la suite du chantier. En attendant, elle est ici :",
     "scene": "Scène",
     "administration": "Administration"
