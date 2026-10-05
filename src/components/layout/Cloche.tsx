@@ -34,12 +34,15 @@ export function Cloche({
   boutonClassName,
   side = "bottom",
   align = "end",
+  sideOffset,
 }: {
   /** Forme du bouton, propre à chaque barre. */
   boutonClassName: string;
   /** Côté où s'ouvre le menu : sous la navbar, à côté de la barre latérale. */
   side?: "bottom" | "right";
   align?: "start" | "end";
+  /** Écart entre le bouton et le menu (barre latérale : jusqu'à son bord). */
+  sideOffset?: number;
 }) {
   const { t, i18n } = useTranslation();
   const isZh = i18n.language === "zh-CN";
@@ -57,7 +60,7 @@ export function Cloche({
           )}
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent side={side} align={align} className="w-80 max-w-[90vw]">
+      <DropdownMenuContent side={side} align={align} sideOffset={sideOffset} className="w-80 max-w-[90vw]">
         <DropdownMenuLabel>{t("notifications.title")}</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <div className="max-h-96 overflow-y-auto">

@@ -36,11 +36,14 @@ export function MenuCompte({
   children,
   side = "bottom",
   align = "end",
+  sideOffset,
 }: {
   /** Le bouton qui ouvre le menu (nommé « Compte »). */
   children: React.ReactNode;
   side?: "bottom" | "right" | "top";
   align?: "start" | "end";
+  /** Écart entre le bouton et le menu (barre latérale : jusqu'à son bord). */
+  sideOffset?: number;
 }) {
   const { t } = useTranslation();
   const { user } = useAuth();
@@ -54,7 +57,7 @@ export function MenuCompte({
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>{children}</DropdownMenuTrigger>
-        <DropdownMenuContent side={side} align={align} className="w-64">
+        <DropdownMenuContent side={side} align={align} sideOffset={sideOffset} className="w-64">
           <DropdownMenuLabel>
             <div className="font-semibold truncate">{displayName}</div>
             {planningName && (

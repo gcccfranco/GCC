@@ -169,6 +169,45 @@ test.describe("louange : barre d'outils de la setlist, une seule ligne sur tél�
       }
     });
   }
+
+  // Lot U4, N2 : sur ordinateur, la barre d'outils commence au bord de la barre latérale
+  // dépliée (248 px). Les libellés n'arrivent que s'ils tiennent dans ce qui reste : ce test
+  // « une seule ligne » mesure le seuil (des libellés trop tôt feraient passer la barre sur
+  // deux lignes, `flex-wrap` étant le filet).
+  test.describe("ordinateur, à côté de la barre latérale dépliée (U4)", () => {
+    test.use({ isMobile: false, hasTouch: false, deviceScaleFactor: 1 });
+    test.beforeEach(({}, info) => {
+      test.skip(!info.project.name.startsWith("ordinateur"), "pointeur fin : projets ordinateur seulement");
+    });
+    for (const largeur of [1024, 1180, 1280, 1366, 1440, 1920]) {
+      test(`ordinateur ${largeur} × 900 : une ligne, rien sous la barre latérale ni hors de l'écran`, async ({ page }) => {
+        await page.setViewportSize({ width: largeur, height: 900 });
+        await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: setlist }, `/setlists/${SETLIST_ID}`);
+        await page.getByRole("button", { name: "Partitions" }).click();
+        const barre = page.getByTestId("barre-outils");
+        await expect(barre.getByRole("button", { name: "Pinyin" })).toBeVisible();
+        const boites = await barre.locator("a, button").evaluateAll((els) =>
+          els
+            .filter((el) => (el as HTMLElement).offsetParent !== null)
+            .map((el) => {
+              const r = el.getBoundingClientRect();
+              return { nom: el.getAttribute("aria-label") ?? "", milieu: r.top + r.height / 2, gauche: r.left, droite: r.right };
+            }),
+        );
+        expect(boites.length).toBeGreaterThanOrEqual(9);
+        const milieux = boites.map((b) => b.milieu);
+        expect(Math.max(...milieux) - Math.min(...milieux), `une seule ligne : ${JSON.stringify(boites.map((b) => [b.nom, Math.round(b.milieu)]))}`).toBeLessThan(4);
+        for (const b of boites) {
+          expect.soft(b.gauche, `${b.nom} ne passe pas sous la barre latérale`).toBeGreaterThanOrEqual(248);
+          expect.soft(b.droite, `${b.nom} ne sort pas à droite`).toBeLessThanOrEqual(largeur);
+        }
+        expect(await barre.evaluate((el) => el.scrollWidth <= el.clientWidth), "la barre ne déborde pas").toBe(true);
+        // 1 024 px : 776 px à côté de la barre, les libellés ne tiennent pas ; 1 440 px et plus : ils tiennent.
+        if (largeur === 1024) await expect(barre.getByText("Mode Louange", { exact: true })).toBeHidden();
+        if (largeur >= 1440) await expect(barre.getByText("Mode Louange", { exact: true })).toBeVisible();
+      });
+    }
+  });
 });
 
 test.describe("louange (T3) : barre d'outils du chant, téléphone et tablette", () => {

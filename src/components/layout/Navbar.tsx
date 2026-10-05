@@ -31,6 +31,8 @@ const sectionClass = (active: boolean) =>
  * Sur ordinateur : les sections, la cloche, la langue, le thème et un menu
  * compte. Sur tactile : la barre du bas porte les sections et « Moi » range
  * le reste ; il ne reste ici que la cloche et la langue (Connexion sans compte).
+ * Lot U4 : sur ordinateur, la barre latérale la remplace ; masquée par `.barre-haut`,
+ * elle reste montée (elle mémorise la langue des rappels).
  */
 export function Navbar() {
   const { t, i18n } = useTranslation();

@@ -162,23 +162,25 @@ test.describe("navigation par sections (T2), 320 px", () => {
   }
 });
 
-test.describe("navigation par sections (T2), ordinateur", () => {
+test.describe("navigation par sections (T2), ordinateur : la barre latérale (lot U4)", () => {
   test.use({ viewport: { width: 1280, height: 800 } });
-  // La barre du bas est masquée par `.hide-on-desktop` (pointeur fin + grand
-  // écran) : une tablette en paysage la garde, c'est voulu.
+  // Sur un poste desktop (pointeur fin + grand écran), la barre latérale remplace la barre
+  // du haut et celle du bas (docs/spec-navigation-grand-ecran.md, N2). Une tablette en
+  // paysage garde ses barres jusqu'à N4.
   test.beforeEach(({}, info) => {
-    test.skip(info.project.name !== "ordinateur", "poste desktop seulement");
+    test.skip(!info.project.name.startsWith("ordinateur"), "poste desktop seulement");
   });
+  const barreLaterale = (page: Page) => page.getByTestId("barre-laterale");
 
-  test("connecté : les sections dans la navbar, le reste dans un menu compte", async ({ page }) => {
+  test("connecté : les entrées dans la barre latérale, le reste dans un menu compte", async ({ page }) => {
     await signInAs(page, MEMBRE, {}, "/songs");
     await page.getByRole("searchbox").waitFor();
-    for (const nom of ["Planning", "Évènements", "Mes services"]) {
-      await expect(header(page).getByRole("link", { name: nom })).toBeVisible();
-    }
-    await expect(header(page).getByRole("button", { name: "Louange" })).toBeVisible();
-    await expect(header(page).getByRole("button", { name: "Déconnexion" })).toHaveCount(0);
-    await header(page).getByRole("button", { name: "Compte" }).click();
+    await expect(barreLaterale(page).getByRole("navigation", { name: "Navigation principale" }).getByRole("link")).toHaveText(["Chants", "Setlists", "Planning", "Évènements", "Moi"]);
+    await expect(header(page), "plus de barre du haut").toBeHidden();
+    await expect(page.getByRole("button", { name: "Déconnexion" })).toHaveCount(0);
+    // L'indicateur de Next (développement seulement) est posé en bas à gauche, sur l'initiale.
+    await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
+    await barreLaterale(page).getByRole("button", { name: "Compte" }).click();
     const menu = page.getByRole("menu");
     for (const nom of ["Mon profil", "Guide d'utilisation", "Ton avis sur le site", "Signaler un problème", "Déconnexion"]) {
       await expect(menu.getByRole("menuitem", { name: nom })).toBeVisible();
@@ -189,9 +191,9 @@ test.describe("navigation par sections (T2), ordinateur", () => {
   test("sans compte : Chants · Évènements et Connexion, pas de barre du bas", async ({ page }) => {
     await page.goto("/songs");
     await page.getByRole("searchbox").waitFor();
-    await expect(header(page).getByRole("link", { name: "Chants" })).toBeVisible();
-    await expect(header(page).getByRole("link", { name: "Évènements" })).toBeVisible();
-    await expect(header(page).getByRole("link", { name: "Connexion" })).toBeVisible();
-    await expect(barreDuBas(page)).toBeHidden();
+    await expect(barreLaterale(page).getByRole("link", { name: "Chants" })).toBeVisible();
+    await expect(barreLaterale(page).getByRole("link", { name: "Évènements" })).toBeVisible();
+    await expect(barreLaterale(page).getByRole("link", { name: "Connexion" })).toBeVisible();
+    await expect(page.getByTestId("barre-du-bas")).toBeHidden();
   });
 });

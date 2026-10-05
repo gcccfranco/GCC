@@ -421,6 +421,26 @@
   :root {
     --barre-laterale: 0px;
     --largeur-lecture: 1440px;
+    /* La barre de la planche (Q11) ; en sombre, la surface des groupes et le filet du thème. */
+    --barre-laterale-fond: #f7f7f8;
+    --barre-laterale-filet: #ececee;
+    /* La barre des onglets colle sous la navbar en la recouvrant d'1 px (densité
+       fractionnaire, voir `.barre-fond`) ; sans navbar, rien à recouvrir. */
+    --recouvrement-navbar: 1px;
+  }
+  .dark {
+    --barre-laterale-fond: hsl(var(--card));
+    --barre-laterale-filet: hsl(var(--border));
+  }
+  /* Ordinateur (N2) : la barre dépliée, 248 px ; plus de barre du haut, la page commence en
+     haut de l'écran (sous la zone sûre, gardée pour l'iPad installé le 21/09/2026). `screen` :
+     à l'impression, ni barre ni marge. */
+  @media screen and (pointer: fine) and (min-width: 1024px) {
+    :root {
+      --barre-laterale: 248px;
+      --nav-h: var(--sat);
+      --recouvrement-navbar: 0px;
+    }
   }
   @media print {
     :root { --barre-laterale: 0px; }
@@ -433,4 +453,47 @@
      déclaré par la barre comme `--barre-top`. */
   .halo { left: var(--barre-laterale); }
   .barre-halo { left: calc(var(--barre-laterale) - var(--barre-left, 0px)); }
+
+  /* La barre latérale (`BarreLaterale`) : montée partout, montrée sur ordinateur seulement.
+     La barre du haut (`.barre-haut`) y est masquée mais reste montée : elle garde la langue
+     des rappels ; la barre du bas l'est déjà par `.hide-on-desktop`. */
+  .barre-laterale {
+    display: none;
+    background-color: var(--barre-laterale-fond);
+    border-right: 1px solid var(--barre-laterale-filet);
+  }
+  .barre-laterale-filet { border-color: var(--barre-laterale-filet); }
+  .barre-laterale :focus-visible { outline: 2px solid hsl(var(--ring)); outline-offset: 2px; }
+  @media screen and (pointer: fine) and (min-width: 1024px) {
+    .barre-laterale { display: flex; }
+    .barre-haut { display: none; }
+  }
+
+  /* Sommaire de la setlist : à gauche de la colonne des partitions, seulement s'il tient dans
+     la zone de contenu, soit 1 280 px comme avant le lot U4 (`xl`). Ordinateur, barre dépliée :
+     1 280 + 248 px de fenêtre. U5 le remplace. */
+  .sommaire-setlist { display: none; }
+  @media screen and (min-width: 1280px) {
+    .sommaire-setlist { display: block; }
+  }
+  @media screen and (pointer: fine) and (min-width: 1024px) and (max-width: 1527.98px) {
+    .sommaire-setlist { display: none; }
+  }
+}
+
+/* Libellés de la barre d'outils de la setlist : à partir de 1 024 px de fenêtre comme avant
+   (en dessous, téléphones même couchés et iPad en portrait : icônes), et seulement s'ils tiennent dans la
+   rangée, donc à côté de la barre latérale. Requête de conteneur sur la rangée, qui ne
+   contient aucun élément fixe (Q9 : jamais sur `main` ni ses ancêtres). Seuil mesuré le
+   05/10/2026 : la rangée avec ses libellés fait 852 px en français dans le pire cas (Adapter,
+   Ma version, Pinyin), 728 px en 中文 ; 880 px laisse de la marge aux polices système d'autres
+   machines. Ordinateur, barre dépliée : libellés dès 1 160 px de fenêtre. Le test « une seule
+   ligne » de look-louange.spec.ts le garde. Hors `@layer` : Tailwind ne touche pas à la
+   requête de conteneur. */
+.rangee-outils { container-type: inline-size; }
+.libelle-outil { display: none; }
+@media (min-width: 1024px) {
+  @container (min-width: 880px) {
+    .libelle-outil { display: inline; }
+  }
 }

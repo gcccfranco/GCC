@@ -947,11 +947,13 @@ export function SetlistDetailClient() {
         <div className="max-w-[1080px] mx-auto px-4">
           {/* Une seule ligne sur téléphone (retour du 20/09/2026) : 9 commandes de 32 px
               tiennent à partir de 390 px ; en dessous, « Adapter » et « Ma version »
-              passent dans le menu « ⋯ ». Les libellés n'arrivent qu'à 1024 px (`lg`) :
+              passent dans le menu « ⋯ ». Les libellés n'arrivent qu'à 1024 px :
               icônes sur tout téléphone, portrait comme paysage (jusqu'à 956 px), et sur
-              iPad en portrait ; libellés sur iPad en paysage et ordinateur. `flex-wrap`
-              reste le filet de sécurité. */}
-          <div className="flex items-center gap-1.5 sm:gap-2 py-[9px] flex-wrap">
+              iPad en portrait ; libellés sur iPad en paysage et ordinateur, à condition
+              de tenir à côté de la barre latérale (lot U4 : `.libelle-outil`, requête de
+              conteneur sur `.rangee-outils`, globals.css). `flex-wrap` reste le filet de
+              sécurité. */}
+          <div className="rangee-outils flex items-center gap-1.5 sm:gap-2 py-[9px] flex-wrap">
 
             {/* ← Retour */}
             <Link aria-label={t("songs.detail.backToAll")}
@@ -961,7 +963,7 @@ export function SetlistDetailClient() {
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M19 12H5m6-7l-7 7 7 7" />
               </svg>
-              <span className="hidden lg:inline">{t("songs.detail.backToAll")}</span>
+              <span className="libelle-outil">{t("songs.detail.backToAll")}</span>
             </Link>
 
             {/* Vue toggle — pill identique au transpose pill */}
@@ -973,7 +975,7 @@ export function SetlistDetailClient() {
                 }`}
               >
                 <List className="h-3.5 w-3.5" />
-                <span className="hidden lg:inline">{t("setlists.detail.tabList")}</span>
+                <span className="libelle-outil">{t("setlists.detail.tabList")}</span>
               </button>
               
               <button aria-label={t("setlists.detail.tabCharts")}
@@ -983,7 +985,7 @@ export function SetlistDetailClient() {
                 }`}
               >
                 <Music className="h-3.5 w-3.5" />
-                <span className="hidden lg:inline">{t("setlists.detail.tabCharts")}</span>
+                <span className="libelle-outil">{t("setlists.detail.tabCharts")}</span>
               </button>
             </div>
 
@@ -1001,7 +1003,7 @@ export function SetlistDetailClient() {
                   }`}
                 >
                   <SlidersHorizontal className="h-3.5 w-3.5" />
-                  <span className="hidden lg:inline">
+                  <span className="libelle-outil">
                     {t("setlists.contentEdit.toggle", { defaultValue: "Adapter" })}
                   </span>
                 </button>
@@ -1018,7 +1020,7 @@ export function SetlistDetailClient() {
                   }`}
                 >
                   <PenLine className="h-3.5 w-3.5" />
-                  <span className="hidden lg:inline">{t("setlists.myVersion.toggle")}</span>
+                  <span className="libelle-outil">{t("setlists.myVersion.toggle")}</span>
                 </button>
               )}
 
@@ -1036,7 +1038,7 @@ export function SetlistDetailClient() {
                   }`}
                 >
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/><path d="M9 18V5l12-2v13"/></svg>
-                  <span className="hidden lg:inline">{t("songs.detail.chords")}</span>
+                  <span className="libelle-outil">{t("songs.detail.chords")}</span>
                 </button>
               )}
 
@@ -1051,7 +1053,7 @@ export function SetlistDetailClient() {
                   }`}
                 >
                   <Languages className="h-3.5 w-3.5" />
-                  <span className="hidden lg:inline">{t("setlists.detail.pinyin", { defaultValue: "Pinyin" })}</span>
+                  <span className="libelle-outil">{t("setlists.detail.pinyin", { defaultValue: "Pinyin" })}</span>
                 </button>
               )}
 
@@ -1076,7 +1078,7 @@ export function SetlistDetailClient() {
                 className="h-8 px-2.5 sm:px-3 rounded-full text-white text-[12.5px] font-semibold flex items-center gap-1.5 hover:brightness-95 dark:ring-1 dark:ring-white/15 transition-all duration-150"
               >
                 <Play className="h-3.5 w-3.5" />
-                <span className="hidden lg:inline">{t("setlists.detail.performanceMode")}</span>
+                <span className="libelle-outil">{t("setlists.detail.performanceMode")}</span>
               </button>
 
               {/* Menu ⋯ : Modifier / Prévenir l'équipe / Dupliquer / Partager / PDF / Supprimer */}

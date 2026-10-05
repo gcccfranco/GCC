@@ -3,6 +3,7 @@ import { ThemeProvider } from "next-themes";
 import { I18nProvider } from "@/lib/I18nProvider";
 import { Navbar } from "@/components/layout/Navbar";
 import { MobileTabBar } from "@/components/layout/MobileTabBar";
+import { BarreLaterale } from "@/components/layout/BarreLaterale";
 import { Accueil } from "@/components/onboarding/Accueil";
 import { PageTransition } from "@/components/layout/PageTransition";
 import { LyricsCopyListener } from "@/components/song/LyricsCopyListener";
@@ -65,6 +66,8 @@ export default function RootLayout({
             {/* Une seule cloche pour toutes les barres (lot U4, Q7). */}
             <NotificationsProvider>
               <Navbar />
+              {/* Ordinateur : une seule barre, à gauche ; montrée par le CSS (lot U4). */}
+              <BarreLaterale />
               {/* `--barre-laterale` : place de la barre latérale sur grand écran (0 ailleurs).
                   Rien ici ne doit devenir repère ni pile (ni transform, filter, contain,
                   container-type, z-index) : le mode louange doit couvrir les barres (Q9). */}

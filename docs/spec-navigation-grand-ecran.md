@@ -310,3 +310,18 @@ npm run lint
   (fondations, rien ne change à l'écran), `2cfeda4` N2 commencé (barre latérale sur ordinateur), **non testé**.
   Agents arrêtés par Timothée le 04/10 au soir ; rien fusionné dans `ui/apple-design`, rien poussé. U4 bis
   (`spec-pages-en-grand.md`) se code après U4.
+- 05/10/2026 : **N2 faite** (commit « feat(U4): N2 — ordinateur : la barre latérale dépliée », sur
+  `lot/u4-navigation`, local, non poussé ; il complète le wip `2cfeda4`). `BarreLaterale` montée dans `layout.tsx`, montrée
+  par le CSS seul sur ordinateur (pointeur fin, ≥ 1 024 px) : logo et label en fondu, place vide du sélecteur,
+  entrées de `entreesBarre` (pastille d'encre, `aria-current`), pied membre (initiale → menu « Compte », nom,
+  cloche, langue) ou visiteur (« Connexion », langue, thème), menus ouverts à côté de la barre ; navbar masquée
+  mais montée, `--nav-h` = `--sat`, `--barre-laterale` = 248 px (0 à l'impression). Libellés de la barre d'outils
+  de la setlist : requête de conteneur sur la rangée (pas sur `main`), seuil mesuré à 880 px, soit dès 1 160 px de
+  fenêtre barre dépliée. Sommaire de la setlist montré seulement s'il tient (1 280 px de contenu, 1 528 px de
+  fenêtre) : `coup-d-oeil` et `setlist-regie` le testent à 1 600 px. Tests : `navigation-grand-ecran.spec.ts`
+  (vus rouges avant le code, puis verts) et onze specs adaptées (tableau ci-dessus) ; vingt fichiers de test
+  verts sur les cinq projets (ordinateur et ordinateur-1440 : 474 ; téléphone, tablette, tablette-paysage : 754) ;
+  captures regardées aux cinq tailles, clair et sombre. La tablette en paysage garde ses deux barres jusqu'à N4.
+  Reste : N3 (réduire, déplier,
+  s'en souvenir, infobulles, libellés « Réduire / Déplier la barre latérale »), N4 (tablette en paysage). N5 ne se
+  fait pas (U5 bis, question 2). Rien à publier pour Timothée (ni règles ni données).
