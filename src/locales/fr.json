@@ -38,6 +38,26 @@
     "ouvrir": "Ouvrir",
     "agendaVide": "Rien de prévu jusqu'à fin {{mois}}.",
     "afficherMois": "Afficher {{mois}}",
+    "deplacer": {
+      "bouton": "Déplacer…",
+      "titre": "Déplacer « {{titre}} »",
+      "nouvelleDate": "Nouvelle date",
+      "deposer": "Déposer pour déplacer",
+      "prevenirInscrits": "Prévenir les inscrits ({{count}})",
+      "prevenirMembres": "Prévenir les membres de la réunion",
+      "rappel": "Ils le liront dans le rappel de demain matin.",
+      "tachesLiees": "Tâches liées, qui ne bougent pas : {{liste}}",
+      "creneauxLibres": "Créneaux libres le {{jour}}",
+      "annuler": "Annuler",
+      "confirmer": "Déplacer",
+      "ok": "OK",
+      "erreur": "Le déplacement n'a pas été enregistré. Réessaie.",
+      "refus": {
+        "avantAujourdhui": "Pas avant aujourd'hui",
+        "sceneFermee": "La scène n'est pas ouverte ce jour-là",
+        "aucunCreneau": "Aucun créneau libre ce jour-là"
+      }
+    },
     "legende": {
       "services": "Services",
       "evenements": "Évènements",

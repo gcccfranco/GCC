@@ -407,7 +407,39 @@ Spec validée et go de code donné (04/10/2026, redit le 05/10/2026) ; questions
   libellés 中文 `新建{{date}}的活动`, `新建{{date}}截止的任务`, `新建`, date « 10月11日 ». La
   question 8 (en 2026, renvoyer au Sheet un évènement « Toute l'église ») est laissée à U9 : le
   formulaire s'ouvre tel quel.
-- **À suivre** : C6 → C8. « Déplacer… » (C6) se pose aussi dans `FeuilleEntree` (`Agenda.tsx`).
+- **05/10/2026 — C6 faite** (même branche, commit « feat(U8): C6 — déplacer ») :
+  `src/lib/calendrier/deplacer.ts` (pur : `ecartJours`, `decaler`, `champsDecales`,
+  `planDeplacement`, `questionDeplacement`) ; `src/components/calendrier/Deplacer.tsx` (la
+  confirmation) ; glisser dans `GrilleMois.tsx` (`@dnd-kit/core` déjà installé, `useDefaultSensors`,
+  case visée sous le pointeur, « Déposer pour déplacer », original en pointillé, entrée soulevée
+  penchée et cernée d'encre comme la planche) ; « Déplacer… » sous une carte déplaçable du panneau
+  du jour (`PanneauJour.tsx`) et dans la feuille d'une entrée (`Agenda.tsx`, seul moyen sur
+  téléphone). Confirmation : « Déplacer « Chants de Noël » du jeudi 15 au mercredi 14 octobre ? »
+  (中文 « 把「…」从10月15日（周四）改到10月14日（周三）？ ») ; « Déplacer… » demande d'abord la date
+  (champ, aujourd'hui au plus tôt). Écritures : tâche unique = `echeance` seule
+  (`deplacerTache`, `src/lib/firebase/taches.ts`) ; évènement et réunion = `date`, `dateFin`,
+  `inscriptionDebut`, `inscriptionFin` décalés de l'écart, jamais l'heure, et `deplacement`
+  (`{ de, vers, le, parUid }`, type `Deplacement` dans `src/types/evenement.ts`) ; créneau =
+  `dimanche`, `debut`, `fin` du créneau libre choisi (`creneauxLibres` de U1, la même heure cochée
+  si elle est libre). Refus en une phrase : « Pas avant aujourd'hui », « La scène n'est pas ouverte
+  ce jour-là » (jour sans plage, hors saison, jour J), « Aucun créneau libre ce jour-là ». Après
+  l'écriture, le calendrier relit ses sources. `tests/calendrier-deplacer.spec.ts` (ajouté à
+  `SPECS_GRAND_ECRAN`) : 10 tests purs + 14 de page et 2 de captures, vus rouges sur une ébauche
+  puis verts sur les cinq projets ; avec `tests/calendrier.spec.ts`, 434 verts et 41 sautés (tests propres à un appareil).
+- **Choix de C6, faute de réponse dans la spec** : case décochée (ou sans case : pas d'inscrit,
+  inscription externe) = `deplacement: null`, pour qu'un déplacement précédent ne soit pas annoncé à
+  la place de celui-ci par le rappel de C7 ; `deplacement.de` et `.vers` = dates de début de
+  l'évènement (glissé depuis un autre jour d'un évènement sur plusieurs jours, il se décale de
+  l'écart). La case « Prévenir les inscrits (4) » compte `inscrits` (invités compris), cochée
+  d'office ; « Prévenir les membres de la réunion » aussi. Une tâche unique « En cours » emporte sa
+  fois (nommée par sa date) sous la nouvelle date, sinon son état se perdrait. Un créneau d'aujourd'hui
+  déjà commencé n'est pas proposé (`creneauxLibres`). Le glisser ne fait défiler la page que tout au
+  bord (5 % de la hauteur), sinon la dernière semaine fuyait sous le doigt ; les annonces anglaises
+  de dnd-kit sont tues (le clavier passe par « Déplacer… », la confirmation dit tout). Les entrées
+  derrière « +N » ne se glissent pas : « Déplacer… » dans le panneau du jour. Dépôt sur le même jour
+  = rien. La confirmation est une boîte centrée sur les trois appareils.
+- **À suivre** : C7 (lire `deplacement` dans `fromFsEvenement`, ligne du matin, clé datée de la
+  veille), puis C8.
 - **Pour Timothée** : rien à publier (C1 à C4 ne touchent pas `firestore.rules` ; C3 ouvre
   seulement l'entrée de menu déjà prévue par U6) ; relire les mots 中文 de `calendrier` dans
   `src/locales/zh-CN.json` (`只看我的`, `活动（Sheet）`, `读取自活动表格（Sheet）`,
@@ -416,3 +448,10 @@ Spec validée et go de code donné (04/10/2026, redit le 05/10/2026) ; questions
   `显示{{mois}}` (« 显示11月 »), `到{{mois}}底都没有安排。` et la légende (`calendrier.legende`) ;
   pour C5, `新建`, `新建{{date}}的活动`, `新建{{date}}截止的任务`. C5 ne touche ni `access.ts` ni
   `firestore.rules` : rien à publier.
+  Pour C6, les mots de `calendrier.deplacer` (`改期…`, `改期「{{titre}}」`, `新日期`,
+  `放下即可改期`, `通知已报名的人（{{count}}）`, `通知会议成员`, `他们会在明天早上的提醒里看到。`,
+  `关联任务不会改期：{{liste}}`, `{{jour}}的空闲时段`, `取消`, `改期`, `好`, `改期没有保存，请重试。`,
+  `不能早于今天`, `这天舞台不开放`, `这天没有空闲时段`) et la question
+  « 把「…」从10月15日（周四）改到10月14日（周三）？ » (`questionDeplacement`). C6 ne touche ni
+  `access.ts` ni `firestore.rules` (les règles d'aujourd'hui permettent déjà ces écritures, champ
+  `deplacement` compris) : rien à publier.

@@ -37,6 +37,26 @@
     "ouvrir": "打开",
     "agendaVide": "到{{mois}}底都没有安排。",
     "afficherMois": "显示{{mois}}",
+    "deplacer": {
+      "bouton": "改期…",
+      "titre": "改期「{{titre}}」",
+      "nouvelleDate": "新日期",
+      "deposer": "放下即可改期",
+      "prevenirInscrits": "通知已报名的人（{{count}}）",
+      "prevenirMembres": "通知会议成员",
+      "rappel": "他们会在明天早上的提醒里看到。",
+      "tachesLiees": "关联任务不会改期：{{liste}}",
+      "creneauxLibres": "{{jour}}的空闲时段",
+      "annuler": "取消",
+      "confirmer": "改期",
+      "ok": "好",
+      "erreur": "改期没有保存，请重试。",
+      "refus": {
+        "avantAujourdhui": "不能早于今天",
+        "sceneFermee": "这天舞台不开放",
+        "aucunCreneau": "这天没有空闲时段"
+      }
+    },
     "legende": {
       "services": "服事",
       "evenements": "活动",

@@ -5,7 +5,7 @@
 // est en lecture seule : elle le dit et ouvre l'onglet du mois. Le même contenu
 // sert le panneau de droite (ordinateur, tablette couchée) et la feuille (ailleurs).
 // C5 : en bas, les deux boutons de création (`BoutonsCreation`), selon les droits.
-// « Déplacer… » (C6) viendra ici.
+// C6 : « Déplacer… » sous une carte déplaçable.
 
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
@@ -22,7 +22,7 @@ const POINT: Partial<Record<EntreeCalendrier["source"], string>> = {
   taches: COULEURS_CALENDRIER.taches.point,
 };
 
-function Carte({ e }: { e: EntreeCalendrier }) {
+function Carte({ e, onDeplacer }: { e: EntreeCalendrier; onDeplacer?: (e: EntreeCalendrier) => void }) {
   const { t } = useTranslation();
   // Planche : un service se nomme par sa catégorie (« Culte Franco »), sa présidence en
   // titre ; le petit déj, par la source, le nom inscrit (ou « Libre ») en titre.
@@ -42,26 +42,42 @@ function Carte({ e }: { e: EntreeCalendrier }) {
     </>
   );
   const classe =
-    "raised block rounded-2xl px-3.5 py-3 transition-opacity duration-150 hover:opacity-85 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground";
-  return e.duSheet ? (
-    <a href={e.lien} target="_blank" rel="noopener noreferrer" className={classe}>
-      {contenu}
-    </a>
-  ) : (
-    <Link href={e.lien} className={classe}>
-      {contenu}
-    </Link>
+    "block rounded-2xl px-3.5 py-3 transition-opacity duration-150 hover:opacity-85 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground";
+  return (
+    <div className="raised rounded-2xl">
+      {e.duSheet ? (
+        <a href={e.lien} target="_blank" rel="noopener noreferrer" className={classe}>
+          {contenu}
+        </a>
+      ) : (
+        <Link href={e.lien} className={classe}>
+          {contenu}
+        </Link>
+      )}
+      {/* C6 : « Déplacer… » sur les entrées déplaçables (la voie sans glisser, Q5). */}
+      {e.deplacable && onDeplacer && (
+        <div className="-mt-1.5 flex justify-end px-2 pb-2">
+          <button
+            type="button"
+            onClick={() => onDeplacer(e)}
+            className="rounded-full bg-secondary px-3 py-1 text-[13px] font-semibold text-foreground transition-opacity duration-150 hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground"
+          >
+            {t("calendrier.deplacer.bouton")}
+          </button>
+        </div>
+      )}
+    </div>
   );
 }
 
-export function ListeDuJour({ entrees }: { entrees: EntreeCalendrier[] }) {
+export function ListeDuJour({ entrees, onDeplacer }: { entrees: EntreeCalendrier[]; onDeplacer?: (e: EntreeCalendrier) => void }) {
   const { t } = useTranslation();
   if (entrees.length === 0) return <p className="text-sm text-muted-foreground">{t("calendrier.rien")}</p>;
   return (
     <ul className="flex flex-col gap-3">
       {entrees.map((e) => (
         <li key={e.cle}>
-          <Carte e={e} />
+          <Carte e={e} onDeplacer={onDeplacer} />
         </li>
       ))}
     </ul>

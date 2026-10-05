@@ -9,7 +9,9 @@
 // du jour touché dessous. C5 : créer depuis un jour — « Nouvel évènement le JJ/MM » et
 // « Nouvelle tâche pour le JJ/MM » en bas du panneau (ou de la feuille) du jour ; là où il
 // n'y a pas de panneau (téléphone, Agenda), un « + » à côté de « Mois | Agenda » les propose
-// pour le jour affiché (question 5). Le déplacement (C6) vient ensuite.
+// pour le jour affiché (question 5). C6 : déplacer — glisser une entrée dans la grille du
+// Mois (ordinateur, tablettes), ou « Déplacer… » sous sa carte dans le panneau du jour et
+// dans sa feuille (seul moyen sur téléphone) ; la confirmation écrit, puis tout se relit.
 
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { useTranslation } from "react-i18next";
@@ -37,6 +39,7 @@ import { ANNONCE_SECTIONS } from "@/types/annonce";
 import { TACHE_POLES, type TachePole } from "@/types/tache";
 import type { NotifLang, UserProfile } from "@/types/user";
 import { CartesDuJour, FeuilleEntree, ListeAgenda, useTitreDuJour } from "@/components/calendrier/Agenda";
+import { DialogueDeplacer, type DemandeDeplacement } from "@/components/calendrier/Deplacer";
 import { GrilleMois } from "@/components/calendrier/GrilleMois";
 import { GrillePoints } from "@/components/calendrier/GrillePoints";
 import { BoutonsCreation, ListeDuJour } from "@/components/calendrier/PanneauJour";
@@ -100,6 +103,8 @@ export function CalendrierClient() {
   const [tacheLe, setTacheLe] = useState<string | null>(null);
   const [membres, setMembres] = useState<UserProfile[]>([]);
   const [lecture, setLecture] = useState(0);
+  // C6 : le déplacement demandé (dépôt dans la grille, ou « Déplacer… »).
+  const [demande, setDemande] = useState<DemandeDeplacement | null>(null);
 
   const jours = useMemo(() => joursDeLaGrille(mois), [mois]);
   const dernierMoisAgenda = moisVoisin(aujourdhui.slice(0, 7), moisEnPlus);
@@ -149,6 +154,13 @@ export function CalendrierClient() {
   const choisir = (date: string) => { setChoisi(date); if (!aDroite && !telephone) setFeuille(true); };
   const duJour = parJour.get(choisi) ?? [];
   const ouvrirEntree = (e: EntreeCalendrier) => setEntree({ e, ouverte: true });
+  // La feuille du jour ou de l'entrée se ferme : la confirmation prend la place.
+  const deplacer = (e: EntreeCalendrier, vers: string | null) => {
+    setFeuille(false);
+    setEntree((x) => ({ ...x, ouverte: false }));
+    setDemande({ entree: e, vers });
+  };
+  const demanderDate = (e: EntreeCalendrier) => deplacer(e, null);
 
   // Créer (Q4) : chaque bouton seulement pour qui a le droit — un évènement si un public lui est
   // ouvert (un membre de pôle y crée une réunion), une tâche parmi ses pôles (tous pour un admin).
@@ -324,7 +336,16 @@ export function CalendrierClient() {
           </div>
         ) : (
           <div className="mt-4">
-            <GrilleMois mois={mois} jours={jours} parJour={parJour} aujourdhui={aujourdhui} choisi={choisi} lang={lang} onChoisir={choisir} />
+            <GrilleMois
+              mois={mois}
+              jours={jours}
+              parJour={parJour}
+              aujourdhui={aujourdhui}
+              choisi={choisi}
+              lang={lang}
+              onChoisir={choisir}
+              onDeposer={deplacer}
+            />
           </div>
         )}
       </div>
@@ -368,7 +389,20 @@ export function CalendrierClient() {
         ouverte={entree.ouverte}
         lang={lang}
         onFermer={() => setEntree((x) => ({ ...x, ouverte: false }))}
+        onDeplacer={demanderDate}
       />
+      {demande && base && user && (
+        <DialogueDeplacer
+          key={`${demande.entree.cle}|${demande.vers ?? ""}`}
+          demande={demande}
+          donnees={base}
+          aujourdhui={aujourdhui}
+          lang={lang}
+          uid={user.uid}
+          onFermer={() => setDemande(null)}
+          onDeplace={() => { setDemande(null); setLecture((n) => n + 1); }}
+        />
+      )}
 
       {vue === "agenda" || telephone ? null : aDroite ? (
         <aside
@@ -379,7 +413,7 @@ export function CalendrierClient() {
             <h2 id="calendrier-jour" className="mb-3 text-sm font-semibold text-muted-foreground">
               {titreJour(choisi, lang)}
             </h2>
-            <ListeDuJour entrees={duJour} />
+            <ListeDuJour entrees={duJour} onDeplacer={demanderDate} />
           </div>
           {/* Planche : les deux boutons en bas du panneau. */}
           <div className="mt-auto">{boutonsCreation(choisi)}</div>
@@ -391,7 +425,7 @@ export function CalendrierClient() {
               <DrawerTitle>{titreJour(choisi, lang)}</DrawerTitle>
             </DrawerHeader>
             <div className="flex flex-col gap-4 overflow-y-auto px-4 pb-8">
-              <ListeDuJour entrees={duJour} />
+              <ListeDuJour entrees={duJour} onDeplacer={demanderDate} />
               {boutonsCreation(choisi)}
             </div>
           </DrawerContent>

@@ -144,3 +144,19 @@ export async function cyclerEtat(
   await ecrireFois(pole, id, { date, parUid: par.uid, parNom: par.nom, le, etat, debutLe: fois?.debutLe || le });
   return etat;
 }
+
+/** Déplacer une tâche unique (lot U8, C6) : son échéance seule (masque), et sa fois
+ *  commencée, nommée par sa date, qui suit sous la nouvelle date. */
+export async function deplacerTache(pole: TachePole, id: string, vers: string, fois: Fois | null): Promise<void> {
+  const headers = await authHeader();
+  const res = await fetch(`${FS_BASE}/${tachePath(pole, id)}?updateMask.fieldPaths=echeance&updateMask.fieldPaths=updatedAt`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...headers },
+    body: JSON.stringify({ fields: toFsFields({ echeance: vers, updatedAt: new Date().toISOString() }) }),
+  });
+  await checkRest(res);
+  if (fois) {
+    await ecrireFois(pole, id, { ...fois, date: vers });
+    await remove(`${tachePath(pole, id)}/fois/${fois.date}`);
+  }
+}
