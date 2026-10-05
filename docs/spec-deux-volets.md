@@ -303,7 +303,7 @@ graphify update .
 
 ## Avancement
 
-**T0 — faite le 05/10/2026** (branche `lot/u5-deux-volets`, commit `test(U5): T0 — ouvrirPartitions / ouvrirListe…`). Rien ne change à l'écran :
+**T0 — faite le 05/10/2026** (branche `lot/u5-deux-volets`, commit `502345e`, `test(U5): T0 — ouvrirPartitions / ouvrirListe…`). Rien ne change à l'écran :
 aucun fichier de `src/` touché.
 - `tests/helpers/setlist.ts` : `ouvrirPartitions(page)` attend la setlist (la bascule ou un `[data-outline-item]`),
   touche « Partitions » si la bascule est visible, puis attend le premier chant en partition ; `ouvrirListe(page)`
@@ -321,5 +321,7 @@ aucun fichier de `src/` touché.
   avec T1 à T5 : chaque tranche ajoute la sienne à `SPECS_GRAND_ECRAN` une fois U4 fusionnée. `ouvrirListe` attend
   aujourd'hui que les partitions quittent la page : T2 (G, Liste et Partitions reliées) l'ajustera si les deux vues
   restent montées côte à côte.
+- Revérifié à la reprise (05/10/2026, après la coupure) : les douze specs sur ordinateur, téléphone et tablette,
+  586 verts, 5 sautés ; `tsc` et ESLint propres ; plus aucune spec ne vise « Partitions » ou « Liste » par son nom.
 - Reste : T1 à T6.
 - À faire par Timothée : rien pour T0 (aucune règle, aucun écran).
