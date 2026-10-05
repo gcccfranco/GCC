@@ -1,14 +1,16 @@
 import { readFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { issueDuGeste, lireIntention, projection } from "../src/hooks/useSwipeViews";
 
 // Lot U5, tranche T2 (docs/spec-deux-volets.md, questions 3, 9 à 12 et 14) :
 // sur téléphone et tablette portrait, la setlist relie Liste et Partitions (G).
 // Toucher une ligne ouvre les partitions à ce chant ; « Liste » ramène à la ligne
 // du chant lu ; l'adresse et le retour du navigateur suivent ; la même barre des
-// deux côtés ; le titre d'un chant des partitions mène à sa page. Le glissement
-// d'une vue à l'autre viendra avec T3. Sur ordinateur et tablette couchée, la
-// setlist passera en deux volets (T4) : ces tests ne visent pas ces dispositions.
+// deux côtés ; le titre d'un chant des partitions mène à sa page. Tranche T3
+// (question 13) : le glissement d'une vue à l'autre, au doigt. Sur ordinateur et
+// tablette couchée, la setlist passera en deux volets (T4) : ces tests ne visent
+// pas ces dispositions.
 
 const SETLIST_ID = "setlist-g";
 /** Artiste d'Abba Père, lu dans l'index (pas de nom de personne écrit ici). */
@@ -345,5 +347,252 @@ test.describe("setlist G, téléphone et tablette portrait", () => {
     await expect(ligne(page, 1)).toBeVisible();
     await expect.poll(() => [...chants].sort()).toEqual(["abba-pere", "一生爱你"]);
     await expect(chant(page, 1), "toujours sur la liste").toHaveCount(0);
+  });
+});
+
+// ─── T3 : le glissement (question 13) ─────────────────────────────────────────
+
+test.describe("glissement : seuils (pur)", () => {
+  test("engagé après 10 px si l'écart horizontal dépasse 1,5 fois le vertical, sinon le défilement gagne", () => {
+    expect(lireIntention(6, 2)).toBe("attente");
+    expect(lireIntention(-12, 4)).toBe("glisser");
+    expect(lireIntention(16, 10)).toBe("glisser");
+    expect(lireIntention(14, 10)).toBe("defiler");
+    expect(lireIntention(3, -11)).toBe("defiler");
+  });
+
+  test("validé si la position projetée dépasse un tiers de l'écran, du côté du geste", () => {
+    expect(issueDuGeste(-140, 0, 400)).toBe(-1);
+    expect(issueDuGeste(140, 0, 400)).toBe(1);
+    expect(issueDuGeste(-120, 0, 400), "un quart d'écran, doigt arrêté : retour").toBe(0);
+    // Un coup de doigt court mais vif est projeté plus loin.
+    expect(projection(-1000)).toBeLessThan(-400);
+    expect(issueDuGeste(-60, -1000, 400)).toBe(-1);
+    // Doigt ramené vers son départ au lâcher : la projection repasse sous le tiers.
+    expect(issueDuGeste(-150, 600, 400)).toBe(0);
+  });
+});
+
+/** Un doigt réel (événements tactiles de Chromium par CDP) : `touch-action`, défilement
+ *  et événements de pointeur `touch` comme sur un téléphone. */
+async function doigt(page: Page) {
+  const cdp = await page.context().newCDPSession(page);
+  return (type: "touchStart" | "touchMove" | "touchEnd", x = 0, y = 0) =>
+    cdp.send("Input.dispatchTouchEvent", { type, touchPoints: type === "touchEnd" ? [] : [{ x, y }] });
+}
+
+type Geste = {
+  /** Pas de déplacement. */
+  pas?: number;
+  /** Attente entre deux pas (ms) : un doigt lent. */
+  lent?: number;
+  /** Doigt immobile avant le lâcher (ms) : plus d'élan. */
+  tenir?: number;
+  /** Lu au milieu du geste, doigt posé. */
+  pendant?: () => Promise<void>;
+};
+
+/** Glisse un doigt de `de` à `a`. */
+async function glisser(page: Page, de: { x: number; y: number }, a: { x: number; y: number }, g: Geste = {}) {
+  const touch = await doigt(page);
+  const pas = g.pas ?? 8;
+  await touch("touchStart", de.x, de.y);
+  for (let i = 1; i <= pas; i++) {
+    await touch("touchMove", de.x + ((a.x - de.x) * i) / pas, de.y + ((a.y - de.y) * i) / pas);
+    if (g.lent) await page.waitForTimeout(g.lent);
+    if (i === Math.ceil(pas / 2) && g.pendant) await g.pendant();
+  }
+  if (g.tenir) await page.waitForTimeout(g.tenir);
+  await touch("touchEnd");
+}
+
+/** La vue affichée (Liste ou Partitions), celle qui suit le doigt. */
+const vue = (page: Page) => page.locator("[data-vue]");
+/** Décalage horizontal de la vue (0 au repos). */
+const decalage = (page: Page) =>
+  vue(page).evaluate((el) => {
+    const t = getComputedStyle(el).transform;
+    return t === "none" ? 0 : Math.round(new DOMMatrixReadOnly(t).m41);
+  });
+
+/** Milieu vertical d'un élément, à l'écran. */
+async function hauteurDe(page: Page, sel: ReturnType<Page["locator"]>) {
+  const b = (await sel.boundingBox())!;
+  return b.y + b.height / 2;
+}
+
+test.describe("glissement entre Liste et Partitions (setlist G)", () => {
+  test("vers la gauche sur la Liste : la vue suit le doigt, puis les Partitions arrivent", async ({ page }) => {
+    await ouvrir(page);
+    await expect(ligne(page, 1)).toBeVisible();
+    const w = page.viewportSize()!.width;
+    const y = await hauteurDe(page, ligne(page, 1));
+    let pendant = 0;
+    await glisser(page, { x: w * 0.85, y }, { x: w * 0.2, y }, {
+      pendant: async () => {
+        pendant = await decalage(page);
+      },
+    });
+    expect(pendant, "la liste part à gauche avec le doigt").toBeLessThan(-40);
+    await expect(boutonVue(page, "Partitions")).toHaveAttribute("aria-pressed", "true");
+    await expect(chant(page, 1)).toBeVisible();
+    expect(params(page)).toEqual({ vue: "partitions", chant: "1" });
+    await expect.poll(() => decalage(page), "la nouvelle vue se pose").toBe(0);
+    await expect(vue(page)).toHaveAttribute("data-vue", "partitions");
+  });
+
+  test("vers la droite sur les Partitions : la Liste revient, ligne du chant lu marquée", async ({ page }) => {
+    await ouvrir(page);
+    await lienLigne(page, 2).click();
+    await expect.poll(() => ecartSousLaBarre(page, 2)).toBe(SOUS_LA_BARRE);
+    const w = page.viewportSize()!.width;
+    const y = page.viewportSize()!.height * 0.6;
+    let pendant = 0;
+    await glisser(page, { x: w * 0.15, y }, { x: w * 0.8, y }, {
+      pendant: async () => {
+        pendant = await decalage(page);
+      },
+    });
+    expect(pendant, "les partitions partent à droite avec le doigt").toBeGreaterThan(40);
+    await expect(boutonVue(page, "Liste")).toHaveAttribute("aria-pressed", "true");
+    expect(params(page)).toEqual({});
+    await expect(lienLigne(page, 2)).toHaveAttribute("aria-current", "true");
+    await expect.poll(() => decalage(page)).toBe(0);
+    // Comme « Liste » : l'entrée des partitions est refermée, le retour quitte la setlist.
+    expect(new URL(page.url()).pathname).toMatch(new RegExp(`^/setlists/${SETLIST_ID}/?$`));
+  });
+
+  test("un geste court et lent revient en ressort, sans ouvrir la ligne touchée", async ({ page }) => {
+    await ouvrir(page);
+    await expect(ligne(page, 2)).toBeVisible();
+    const w = page.viewportSize()!.width;
+    const y = await hauteurDe(page, ligne(page, 2));
+    await glisser(page, { x: w * 0.7, y }, { x: w * 0.45, y }, { lent: 20, tenir: 250 });
+    await expect.poll(() => decalage(page), "retour à sa place").toBe(0);
+    await expect(boutonVue(page, "Liste")).toHaveAttribute("aria-pressed", "true");
+    expect(params(page)).toEqual({});
+    await expect(chant(page, 2)).toHaveCount(0);
+  });
+
+  test("vers la droite sur la Liste : rien de ce côté, la vue résiste puis revient", async ({ page }) => {
+    await ouvrir(page);
+    await expect(ligne(page, 1)).toBeVisible();
+    const w = page.viewportSize()!.width;
+    const y = await hauteurDe(page, ligne(page, 1));
+    let pendant = 0;
+    await glisser(page, { x: w * 0.15, y }, { x: w * 0.85, y }, {
+      pendant: async () => {
+        pendant = await decalage(page);
+      },
+    });
+    expect(pendant, "elle bouge un peu").toBeGreaterThan(0);
+    expect(pendant, "mais moins que le doigt").toBeLessThan(w * 0.35 * 0.6);
+    await expect.poll(() => decalage(page)).toBe(0);
+    await expect(boutonVue(page, "Liste")).toHaveAttribute("aria-pressed", "true");
+    expect(params(page)).toEqual({});
+  });
+
+  test("un geste surtout vertical fait défiler la page, la vue ne bouge pas", async ({ page }) => {
+    await ouvrir(page, `/setlists/${SETLIST_ID}?vue=partitions&chant=1`);
+    await expect(chant(page, 1)).toBeVisible();
+    await page.evaluate(() => window.scrollTo({ top: 0, behavior: "instant" }));
+    const w = page.viewportSize()!.width;
+    const h = page.viewportSize()!.height;
+    const avant = await page.evaluate(() => window.scrollY);
+    let pendant = 1;
+    await glisser(page, { x: w * 0.5, y: h * 0.75 }, { x: w * 0.5 + 40, y: h * 0.3 }, {
+      pendant: async () => {
+        pendant = await decalage(page);
+      },
+    });
+    expect(pendant).toBe(0);
+    await expect.poll(() => page.evaluate(() => window.scrollY), "la page a défilé").toBeGreaterThan(avant + 100);
+    await expect(boutonVue(page, "Partitions")).toHaveAttribute("aria-pressed", "true");
+  });
+
+  test("un geste parti du bord de l'écran (retour du système) ne fait rien", async ({ page }) => {
+    await ouvrir(page);
+    await expect(ligne(page, 1)).toBeVisible();
+    const w = page.viewportSize()!.width;
+    const y = await hauteurDe(page, ligne(page, 1));
+    let pendant = 1;
+    await glisser(page, { x: w - 10, y }, { x: w * 0.15, y }, {
+      pendant: async () => {
+        pendant = await decalage(page);
+      },
+    });
+    expect(pendant).toBe(0);
+    await page.waitForTimeout(400);
+    await expect(boutonVue(page, "Liste")).toHaveAttribute("aria-pressed", "true");
+    expect(params(page)).toEqual({});
+  });
+
+  test("pendant une sélection de texte, pas de glissement", async ({ page }) => {
+    await ouvrir(page);
+    await expect(ligne(page, 1)).toBeVisible();
+    await page.evaluate(() => {
+      const h1 = document.querySelector("h1")!;
+      const r = document.createRange();
+      r.selectNodeContents(h1);
+      getSelection()!.removeAllRanges();
+      getSelection()!.addRange(r);
+    });
+    const w = page.viewportSize()!.width;
+    const y = await hauteurDe(page, ligne(page, 1));
+    await glisser(page, { x: w * 0.85, y }, { x: w * 0.15, y });
+    await page.waitForTimeout(400);
+    await expect(boutonVue(page, "Liste")).toHaveAttribute("aria-pressed", "true");
+    expect(await decalage(page)).toBe(0);
+  });
+
+  test("dans un élément qui défile en largeur, pas de glissement", async ({ page }) => {
+    await ouvrir(page);
+    await expect(ligne(page, 1)).toBeVisible();
+    // Un bandeau qui défile en largeur, posé dans la vue.
+    await vue(page).evaluate((el) => {
+      const d = document.createElement("div");
+      d.id = "defile-en-largeur";
+      d.style.cssText = "overflow-x:auto;height:80px";
+      d.innerHTML = '<div style="width:3000px;height:80px"></div>';
+      el.prepend(d);
+    });
+    const w = page.viewportSize()!.width;
+    const y = await hauteurDe(page, page.locator("#defile-en-largeur"));
+    await glisser(page, { x: w * 0.85, y }, { x: w * 0.15, y });
+    await page.waitForTimeout(400);
+    await expect(boutonVue(page, "Liste")).toHaveAttribute("aria-pressed", "true");
+    expect(await decalage(page)).toBe(0);
+  });
+
+  test("mouvement réduit : pas de glissement, la vue change en fondu", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await ouvrir(page);
+    await expect(ligne(page, 1)).toBeVisible();
+    const w = page.viewportSize()!.width;
+    const y = await hauteurDe(page, ligne(page, 1));
+    let pendant = 1;
+    await glisser(page, { x: w * 0.85, y }, { x: w * 0.15, y }, {
+      pendant: async () => {
+        pendant = await decalage(page);
+      },
+    });
+    expect(pendant, "la vue ne suit pas le doigt").toBe(0);
+    await expect(boutonVue(page, "Partitions")).toHaveAttribute("aria-pressed", "true");
+    expect(params(page)).toEqual({ vue: "partitions", chant: "1" });
+    expect(await decalage(page)).toBe(0);
+  });
+
+  test("à la souris, rien (au doigt seulement)", async ({ page }) => {
+    await ouvrir(page);
+    await expect(ligne(page, 1)).toBeVisible();
+    const w = page.viewportSize()!.width;
+    const y = await hauteurDe(page, page.getByRole("heading", { level: 1 }));
+    await page.mouse.move(w * 0.85, y);
+    await page.mouse.down();
+    await page.mouse.move(w * 0.15, y, { steps: 8 });
+    expect(await decalage(page)).toBe(0);
+    await page.mouse.up();
+    await page.waitForTimeout(400);
+    await expect(boutonVue(page, "Liste")).toHaveAttribute("aria-pressed", "true");
   });
 });

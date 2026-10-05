@@ -40,6 +40,7 @@ import type { JianpuChords, SetlistItem } from "@/types/setList";
 import type { ChordProLine } from "@/types/chordPro";
 import { formatDate } from "@/lib/utils/formatDate";
 import { useScrollDirection } from "@/hooks/useScrollDirection";
+import { useSwipeViews } from "@/hooks/useSwipeViews";
 import { ListView } from "./_components/ListView";
 import { PartitionsView } from "./_components/PartitionView";
 import { SetlistOutline } from "./_components/SetlistOutline";
@@ -188,6 +189,9 @@ export function SetlistDetailClient() {
   const [view, setView] = useState<"liste" | "partitions">("liste");
   // ── Setlist G : Liste et Partitions reliées (docs/spec-deux-volets.md, T2) ──
   const basculeRef = useRef<HTMLDivElement>(null);
+  /** Glissement (T3) : le doigt se pose dans la colonne, la vue affichée le suit. */
+  const zoneRef = useRef<HTMLDivElement>(null);
+  const vueRef = useRef<HTMLDivElement>(null);
   /** Position du chant lu (celle de `data-outline-item`), suivie dans l'adresse. */
   const [current, setCurrent] = useState<number | null>(null);
   const [cible, setCible] = useState<Cible | null>(null);
@@ -447,6 +451,17 @@ export function SetlistDetailClient() {
     setView("liste");
     setCible({ type: "ligne" });
   }
+
+  // Glissement entre les deux vues (Q13) : la Liste à gauche, les Partitions à
+  // droite ; même chemin que la bascule (historique, chant lu, retour à la ligne).
+  useSwipeViews({
+    zone: zoneRef,
+    vue: vueRef,
+    cle: view,
+    versGauche: view === "liste" ? () => versPartitions() : undefined,
+    versDroite: view === "partitions" ? versListe : undefined,
+    actif: !!setlist && setlist.items.length > 0 && !performanceMode,
+  });
 
   // Amène la vue affichée à sa cible, une fois les partitions là.
   useEffect(() => {
@@ -1434,7 +1449,7 @@ export function SetlistDetailClient() {
         </div>
       </div>
 
-      <div className="relative max-w-2xl mx-auto px-4 py-8 print:px-0 print:py-4" style={{ marginTop: toolbarH }}>
+      <div ref={zoneRef} className="relative max-w-2xl mx-auto px-4 py-8 print:px-0 print:py-4" style={{ marginTop: toolbarH }}>
         {/* Header setlist */}
         <div className="mb-3 pb-5 print:mb-4">
           <div className="flex items-start gap-3">
@@ -1533,56 +1548,60 @@ export function SetlistDetailClient() {
           <p className="text-center py-16 text-sm text-muted-foreground border border-dashed border-border rounded-xl">
             {t("setlists.detail.emptyItems")}
           </p>
-        ) : view === "liste" ? (
-          <ListView items={setlist.items} songsMap={songsMap} jianpuPref={jianpuPref} current={current} onOpen={versPartitions} />
         ) : (
-          <>
-            {editPartitions && (
-              <p className="mb-4 text-xs text-muted-foreground bg-primary/5 border border-primary/20 rounded-lg px-3 py-2 print:hidden">
-                {t("setlists.contentEdit.hint", {
-                  defaultValue:
-                    "Mode adaptation : touche une ligne pour modifier ses accords ou ses paroles. Les changements ne concernent que cette setlist.",
-                })}
-              </p>
+          <div ref={vueRef} data-vue={view}>
+            {view === "liste" ? (
+              <ListView items={setlist.items} songsMap={songsMap} jianpuPref={jianpuPref} current={current} onOpen={versPartitions} />
+            ) : (
+              <>
+                {editPartitions && (
+                  <p className="mb-4 text-xs text-muted-foreground bg-primary/5 border border-primary/20 rounded-lg px-3 py-2 print:hidden">
+                    {t("setlists.contentEdit.hint", {
+                      defaultValue:
+                        "Mode adaptation : touche une ligne pour modifier ses accords ou ses paroles. Les changements ne concernent que cette setlist.",
+                    })}
+                  </p>
+                )}
+                {editMine && (
+                  <p className="mb-4 text-xs text-muted-foreground bg-primary/5 border border-primary/20 rounded-lg px-3 py-2 print:hidden">
+                    {t("setlists.myVersion.hint")}
+                  </p>
+                )}
+                {!loadingContent && <SetlistOutline items={stageItems} contents={contents} />}
+                <PartitionsView
+                  setlistId={id}
+                  items={displayItems}
+                  contents={contents}
+                  loading={loadingContent}
+                  showChordsGlobal={showChords}
+                  showPinyinGlobal={showPinyin}
+                  chartStyle={chartStyle}
+                  jianpuPref={jianpuPref}
+                  layout={layout}
+                  editMode={editPartitions || editMine}
+                  versions={versionViews}
+                  editMine={editMine}
+                  onSelectLine={handleSelectLine}
+                  onRevert={(itemIndex) => setConfirmRevert(itemIndex)}
+                  onEditStructure={(itemIndex) => {
+                    const item = setlist.items[itemIndex];
+                    const ast = itemAst(withMine(item), contents[item.songSlug]);
+                    if (!ast) return;
+                    setStructureTarget({
+                      itemIndex,
+                      ast,
+                      structure: myItems?.[item.songSlug]?.structure ?? null,
+                      presidency: item.structureOverride,
+                    });
+                  }}
+                  onChooseVersion={(itemIndex, value) => persistChoice(setlist.items[itemIndex].songSlug, value)}
+                  onShare={(itemIndex, shared) => persistMine(setlist.items[itemIndex].songSlug, { shared })}
+                  onEditJianpu={handleEditJianpu}
+                  onIdees={accesHarmonie.peut ? (itemIndex, slug) => { setIdeesTarget(itemIndex); setIdeesChant(slug ?? null); } : undefined}
+                />
+              </>
             )}
-            {editMine && (
-              <p className="mb-4 text-xs text-muted-foreground bg-primary/5 border border-primary/20 rounded-lg px-3 py-2 print:hidden">
-                {t("setlists.myVersion.hint")}
-              </p>
-            )}
-            {!loadingContent && <SetlistOutline items={stageItems} contents={contents} />}
-            <PartitionsView
-              setlistId={id}
-              items={displayItems}
-              contents={contents}
-              loading={loadingContent}
-              showChordsGlobal={showChords}
-              showPinyinGlobal={showPinyin}
-              chartStyle={chartStyle}
-              jianpuPref={jianpuPref}
-              layout={layout}
-              editMode={editPartitions || editMine}
-              versions={versionViews}
-              editMine={editMine}
-              onSelectLine={handleSelectLine}
-              onRevert={(itemIndex) => setConfirmRevert(itemIndex)}
-              onEditStructure={(itemIndex) => {
-                const item = setlist.items[itemIndex];
-                const ast = itemAst(withMine(item), contents[item.songSlug]);
-                if (!ast) return;
-                setStructureTarget({
-                  itemIndex,
-                  ast,
-                  structure: myItems?.[item.songSlug]?.structure ?? null,
-                  presidency: item.structureOverride,
-                });
-              }}
-              onChooseVersion={(itemIndex, value) => persistChoice(setlist.items[itemIndex].songSlug, value)}
-              onShare={(itemIndex, shared) => persistMine(setlist.items[itemIndex].songSlug, { shared })}
-              onEditJianpu={handleEditJianpu}
-              onIdees={accesHarmonie.peut ? (itemIndex, slug) => { setIdeesTarget(itemIndex); setIdeesChant(slug ?? null); } : undefined}
-            />
-          </>
+          </div>
         )}
       </div>
 

@@ -413,3 +413,42 @@ et la tablette couchée ont aussi G (un volet) ; le « Déroulé » y reste, sa 
   rien à jouer, c'est T4).
 - À faire par Timothée : aucune règle à publier (rien de nouveau dans `access.ts` ni `firestore.rules`). Regarder G
   sur son téléphone : la ligne qui ouvre les partitions, « Liste » qui revient à la ligne, le retour du navigateur.
+
+**T3 — faite le 05/10/2026** (branche `lot/u5-deux-volets`, commit `feat(U5): T3 — le glissement…`, juste après
+`f38b69b`). Sur G, un doigt fait glisser la Liste et les Partitions l'une vers l'autre ; sans lui, G marche comme en T2.
+- `src/hooks/useSwipeViews.ts` (nouveau) : Pointer Events, au doigt seulement (`pointerType === "touch"`), écoutés sur
+  la colonne de la setlist (`touch-action: pan-y pinch-zoom` posé par le crochet : le navigateur garde le défilement
+  vertical). Seuils de Q13 dans trois fonctions pures exportées : `lireIntention` (engagé après 10 px si l'écart
+  horizontal dépasse 1,5 fois le vertical, sinon le défilement gagne), `projection` (élan projeté, décélération
+  0,998) et `issueDuGeste` (validé si la position projetée dépasse un tiers de l'écran, du côté où la vue a été
+  emmenée). Ignoré à moins de 24 px d'un bord, pendant une sélection de texte, dans un élément qui défile en largeur.
+  La vue suit le doigt (élastique du côté où il n'y a rien : vers la droite sur la Liste, vers la gauche sur les
+  Partitions) ; au lâcher, ressort critique écrit à la main (réponse 0,35 s, vitesse du doigt reprise) : la vue part
+  du côté du geste et la nouvelle arrive du bord opposé, ou elle revient à sa place. Un doigt reposé pendant le
+  ressort reprend la vue où elle est. Mouvement réduit : la vue ne bouge pas, la nouvelle apparaît en fondu (200 ms).
+  Le toucher qui finit un glissement n'ouvre pas la ligne ou le lien de départ.
+- `SetlistDetailClient.tsx` : la vue affichée est enveloppée (`data-vue`, l'élément qui suit le doigt) ; le geste
+  passe par le même chemin que la bascule (`versPartitions()` / `versListe()` : historique, chant lu, retour à la
+  ligne) ; coupé pendant le mode louange et sur une setlist vide. Pendant le geste seulement, la colonne prend
+  `overflow-x: clip` (la vue sortie n'élargit pas la page).
+- Choix pris : seule la vue affichée est montée, comme en T2 (la vue voisine n'apparaît pas à côté pendant le geste ;
+  elle arrive après le lâcher) ; Liste → Partitions par le geste rouvre comme le bouton « Partitions » (là où on
+  était, sinon en haut) ; sur tablette debout, la vue glisse dans sa colonne (coupée aux bords de la colonne de
+  42rem, pas de l'écran) ; un geste vif revenu vers son départ au lâcher ne valide pas, même loin.
+- Tests : `tests/setlist-g.spec.ts`, 12 nouveaux (téléphone et tablette ; sautés sur ordinateur comme le reste de G) —
+  deux purs (seuils) ; à l'écran, un vrai doigt Chromium (événements tactiles par CDP, `touch-action` et défilement
+  compris) : gauche → Partitions (la vue suit le doigt, puis se pose), droite → Liste (ligne du chant lu marquée,
+  entrée d'historique refermée), geste court et lent → ressort sans ouvrir la ligne touchée, vers la droite sur la
+  Liste → élastique puis retour, geste surtout vertical → défilement, départ au bord → rien, sélection de texte →
+  rien, élément qui défile en largeur → rien, mouvement réduit → pas de glissement mais la vue change, souris → rien.
+  Vus rouges (12 échecs, crochet absent) puis verts. Contre-épreuve : gardes du bord, de la sélection, du sens et du
+  pointeur retirées → quatre rouges (vertical, bord, sélection, souris) ; le cas « défile en largeur » reste vert sans
+  sa garde (Chromium donne le geste à l'élément qui défile et annule le pointeur) : la garde reste pour les autres
+  navigateurs. Les 21 specs qui ouvrent une setlist (dont `copy-lyrics`), sur ordinateur, téléphone et tablette : 898 verts, 65 sautés, aucun rouge ; `setlist-g` repassé seul après la dernière retouche : 64 verts, 32 sautés (ordinateur). `tsc` propre ; ESLint : aucun avertissement nouveau.
+- Captures regardées (téléphone, tablette debout ; doigt posé à mi-course, arrivée, vue posée) : la liste suit le
+  doigt sous la bascule, les partitions arrivent par la droite, la Liste revient ligne 1 marquée.
+- **Reste après T3** : T4 (deux volets : la bascule et le geste n'existent plus en grand, `actif` du crochet à couper
+  quand les deux volets sont là), T5, T6.
+- À faire par Timothée : aucune règle à publier. Essayer le geste sur son téléphone et sur l'iPad debout (Safari) :
+  glisser la liste vers la gauche, les partitions vers la droite, un geste vertical qui défile, le bord gauche qui
+  reste au retour du système.
