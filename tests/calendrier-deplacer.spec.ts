@@ -5,11 +5,14 @@ import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { ADMIN_EMAILS } from "../src/lib/access";
 import type { DonneesCalendrier, EntreeCalendrier } from "../src/lib/calendrier/entrees";
 import { champsDecales, decaler, ecartJours, planDeplacement, questionDeplacement } from "../src/lib/calendrier/deplacer";
+import { cleDeplacement, cleVeille, deplacementsAPrevenir, destinatairesDeplacement, ligneDeplacement } from "../src/lib/calendrier/prevenir";
+import { notificationsDuMatin } from "../src/lib/reunions/rappels";
 import type { Evenement } from "../src/types/evenement";
 import type { Creneau, Programme } from "../src/types/programme";
 import type { Fois, Tache } from "../src/types/tache";
 
-// Lot U8, tranche C6 (docs/spec-calendrier.md, Q5 et Q6) : déplacer une entrée.
+// Lot U8, tranches C6 et C7 (docs/spec-calendrier.md, Q5 à Q8) : déplacer une entrée,
+// puis prévenir par une ligne du rappel du lendemain matin (C7, tests purs).
 // Glisser en vue Mois (ordinateur, tablettes) ; « Déplacer… » partout, seul moyen
 // sur téléphone ; une confirmation à chaque fois ; les écritures attendues ; les
 // refus nommés. Horloge au jeudi 1er octobre 2026 ; noms et titres inventés.
@@ -214,6 +217,88 @@ test.describe("déplacer (pur)", () => {
     expect(questionDeplacement("Chants de Noël", "2026-10-15", "2026-10-14", "fr")).toBe("Déplacer « Chants de Noël » du jeudi 15 au mercredi 14 octobre ?");
     expect(questionDeplacement("Veillée", "2026-10-31", "2026-11-01", "fr")).toBe("Déplacer « Veillée » du samedi 31 octobre au dimanche 1er novembre ?");
     expect(questionDeplacement("Chants de Noël", "2026-10-15", "2026-10-14", "zh-CN")).toBe("把「Chants de Noël」从10月15日（周四）改到10月14日（周三）？");
+  });
+});
+
+// ─── Prévenir (C7, Q7 et Q8) ─────────────────────────────────────────────────
+
+test.describe("prévenir (pur)", () => {
+  // Déplacé le 30/09 (heure de Paris, 10:12) du 8 au 9 octobre, par l'organisatrice.
+  const deplace = (e: Partial<Evenement> = {}) => evenement({
+    id: "foot",
+    titre: "Foot au parc",
+    date: "2026-10-09",
+    deplacement: { de: "2026-10-08", vers: "2026-10-09", le: "2026-09-30T08:12:00.000Z", parUid: "u-orga" },
+    ...e,
+  });
+
+  test("la ligne du matin : FR et 中文, avec ou sans heure", () => {
+    expect(ligneDeplacement(deplace(), "fr")).toBe("Changement : Foot au parc passe au vendredi 9 octobre, 19:00.");
+    expect(ligneDeplacement(deplace(), "zh-CN")).toBe("活动改期：Foot au parc 改到 10月9日 19:00。");
+    expect(ligneDeplacement(deplace({ heure: "" }), "fr")).toBe("Changement : Foot au parc passe au vendredi 9 octobre.");
+    expect(ligneDeplacement(deplace({ heure: "" }), "zh-CN")).toBe("活动改期：Foot au parc 改到 10月9日。");
+  });
+
+  test("fenêtre de deux jours : un déplacement d'hier ou d'avant-hier, pas d'aujourd'hui (il attend demain matin) ni plus ancien", () => {
+    const le = (iso: string) => deplace({ deplacement: { de: "2026-10-08", vers: "2026-10-09", le: iso, parUid: "u-orga" } });
+    const garde = (iso: string) => deplacementsAPrevenir([le(iso)], TODAY).length === 1;
+    expect(garde("2026-09-30T08:12:00.000Z")).toBe(true); // hier
+    expect(garde("2026-09-29T21:00:00.000Z")).toBe(true); // avant-hier : un matin manqué ne perd rien
+    expect(garde("2026-10-01T06:30:00.000Z")).toBe(false); // ce matin : demain
+    expect(garde("2026-09-28T23:59:00.000Z")).toBe(false); // trop vieux
+  });
+
+  test("fenêtre : rien sans déplacement, ni s'il ne dit plus la date de l'évènement, ni pour un évènement passé", () => {
+    expect(deplacementsAPrevenir([deplace({ deplacement: null }), evenement({ id: "sans", titre: "Sans" })], TODAY)).toEqual([]);
+    // Redéplacé depuis par le formulaire : la ligne annoncerait une date fausse.
+    expect(deplacementsAPrevenir([deplace({ date: "2026-10-10" })], TODAY)).toEqual([]);
+    const passe = deplace({ date: "2026-09-30", deplacement: { de: "2026-10-02", vers: "2026-09-30", le: "2026-09-29T09:00:00.000Z", parUid: "u-orga" } });
+    expect(deplacementsAPrevenir([passe], TODAY)).toEqual([]);
+    // Aujourd'hui même : on le dit encore.
+    const ce_jour = deplace({ date: TODAY, deplacement: { de: "2026-10-08", vers: TODAY, le: "2026-09-30T09:00:00.000Z", parUid: "u-orga" } });
+    expect(deplacementsAPrevenir([ce_jour], TODAY).map((e) => e.id)).toEqual(["foot"]);
+  });
+
+  test("clés : `deplacement-<id>-<vers>` (le cron ajoute l'uid) ; le rappel de la veille porte la date", () => {
+    expect(cleDeplacement(deplace())).toBe("deplacement-foot-2026-10-09");
+    expect(cleVeille(deplace())).toBe("rappel-evenement-foot-2026-10-09");
+    // Glissé du 8 au 9 : la veille du 9 n'est pas celle du 8, déjà envoyée.
+    expect(cleVeille(deplace({ date: "2026-10-08" }))).not.toBe(cleVeille(deplace()));
+  });
+
+  test("destinataires : inscrits avec compte (ou membres de la réunion), sans l'auteur du geste, une fois chacun", () => {
+    expect(destinatairesDeplacement(deplace(), ["u-a", null, "u-orga", "u-b", "u-a", undefined])).toEqual(["u-a", "u-b"]);
+    const reunion = deplace({ pour: "pole:da", deplacement: { de: "2026-10-08", vers: "2026-10-09", le: "2026-09-30T08:12:00.000Z", parUid: "u-membre" } });
+    expect(destinatairesDeplacement(reunion, ["u-orga", "u-membre", "u-c"])).toEqual(["u-orga", "u-c"]);
+    expect(destinatairesDeplacement(deplace({ deplacement: null }), ["u-a"])).toEqual([]);
+  });
+
+  test("dans le rappel du matin : fondue avec les services, seule sinon (vers la fiche)", () => {
+    const ligne = { kind: "deplacement" as const, evenement: deplace() };
+    const seule = notificationsDuMatin({ services: [], taches: [], lignes: [ligne] }, "fr", TODAY);
+    expect(seule).toEqual([{
+      title: "Changement de date",
+      body: "Changement : Foot au parc passe au vendredi 9 octobre, 19:00.",
+      url: "/evenements/foot",
+      tag: `rappel-evenements-${TODAY}`,
+      kind: "evenement",
+    }]);
+    expect(notificationsDuMatin({ services: [], taches: [], lignes: [ligne] }, "zh-CN", TODAY)[0])
+      .toMatchObject({ title: "活动改期", body: "活动改期：Foot au parc 改到 10月9日 19:00。" });
+    const service = { tag: "J3" as const, date: "2026-10-04", services: [{ service: "Culte Franco", roles: ["Piano"] }] };
+    const fondue = notificationsDuMatin({ services: [service], taches: [], lignes: [ligne] }, "fr", TODAY);
+    expect(fondue).toHaveLength(1);
+    expect(fondue[0].body.split("\n")).toEqual([expect.stringContaining("Culte Franco"), "Changement : Foot au parc passe au vendredi 9 octobre, 19:00."]);
+  });
+
+  test("le cron : les déplacements d'hier et d'avant-hier lus, une ligne par destinataire, la veille datée", () => {
+    const route = readFileSync(join(__dirname, "..", "src", "app", "api", "cron", "reminders", "route.ts"), "utf8");
+    expect(route).toContain('where("deplacement.le", ">=", isoInDays(-2))');
+    expect(route).toMatch(/deplacementsAPrevenir\([\s\S]*?destinatairesDeplacement\(e, candidats\), \{ kind: "deplacement", evenement: e \}, cleDeplacement\(e\)\)/);
+    expect(route).not.toContain("`rappel-evenement-${e.id}`");
+    expect(route.match(/cleVeille\(e\)/g)).toHaveLength(2);
+    // Derrière l'interrupteur, comme les autres lignes d'évènements (lot 18).
+    expect(route).toContain("BACK_OFFICE ? await lignesEvenements(db, today)");
   });
 });
 

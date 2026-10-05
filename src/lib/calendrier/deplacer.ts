@@ -118,7 +118,7 @@ export function planDeplacement(
 const enDate = (iso: string) => new Date(`${iso}T00:00:00Z`);
 
 /** « jeudi 15 », « dimanche 1er novembre » (le mois quand on le demande). */
-function jourFr(iso: string, avecMois: boolean): string {
+export function jourFr(iso: string, avecMois: boolean): string {
   const texte = enDate(iso).toLocaleDateString("fr-FR", {
     weekday: "long", day: "numeric", ...(avecMois ? { month: "long" } : {}), timeZone: "UTC",
   });

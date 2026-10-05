@@ -12,6 +12,7 @@ import { evenementReminder, ligneOuverture, ouverturesTitre, avecLignes } from "
 import { reminderBody, reminderTitle, type ReminderService, type ReminderTag } from "@/lib/push/reminderMessage";
 import { corpsAvecTaches, rappelTachesTitre, type RappelTache } from "@/lib/taches/messages";
 import { jourDuMois } from "@/lib/reunions/sujets";
+import { ligneDeplacement } from "@/lib/calendrier/prevenir";
 
 /** Sujets encore à aborder : ni traités ni repris. */
 export function nombreSujetsAAborder(sujets: Pick<Sujet, "traite" | "reprisDans">[]): number {
@@ -40,11 +41,14 @@ export function ligneCompteRendu(e: Pick<Evenement, "titre" | "date">, lang: Not
 export type LigneEvenement =
   | { kind: "veille"; evenement: Evenement; /** Réunion seulement. */ sujets?: number }
   | { kind: "compteRendu"; evenement: Evenement }
-  | { kind: "ouverture"; evenement: Evenement };
+  | { kind: "ouverture"; evenement: Evenement }
+  /** Déplacé depuis le calendrier, case « Prévenir » cochée (lot U8, C7). */
+  | { kind: "deplacement"; evenement: Evenement };
 
 function texte(l: LigneEvenement, lang: NotifLang): string {
   if (l.kind === "veille") return ligneVeille(l.evenement, l.sujets, lang);
   if (l.kind === "compteRendu") return ligneCompteRendu(l.evenement, lang);
+  if (l.kind === "deplacement") return ligneDeplacement(l.evenement, lang);
   return ligneOuverture(l.evenement, lang);
 }
 
@@ -85,9 +89,11 @@ export function notificationsDuMatin(
   const ids = new Set(lignes.map((l) => l.evenement.id));
   const title = lignes.every((l) => l.kind === "ouverture")
     ? ouverturesTitre(lang)
-    : lignes.length === 1 && lignes[0].kind === "veille"
-      ? evenementReminder(lignes[0].evenement, lang).title
-      : lang === "zh-CN" ? "活动提醒" : "Rappel des évènements";
+    : lignes.every((l) => l.kind === "deplacement")
+      ? (lang === "zh-CN" ? "活动改期" : "Changement de date")
+      : lignes.length === 1 && lignes[0].kind === "veille"
+        ? evenementReminder(lignes[0].evenement, lang).title
+        : lang === "zh-CN" ? "活动提醒" : "Rappel des évènements";
   return [{
     title,
     body: avecLignes("", textes),

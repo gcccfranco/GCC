@@ -438,8 +438,31 @@ Spec validée et go de code donné (04/10/2026, redit le 05/10/2026) ; questions
   de dnd-kit sont tues (le clavier passe par « Déplacer… », la confirmation dit tout). Les entrées
   derrière « +N » ne se glissent pas : « Déplacer… » dans le panneau du jour. Dépôt sur le même jour
   = rien. La confirmation est une boîte centrée sur les trois appareils.
-- **À suivre** : C7 (lire `deplacement` dans `fromFsEvenement`, ligne du matin, clé datée de la
-  veille), puis C8.
+- **05/10/2026 — C7 faite** (même branche, commit « feat(U8): C7 — prévenir ») :
+  `src/lib/calendrier/prevenir.ts` (pur : `ligneDeplacement`, `deplacementsAPrevenir`,
+  `cleDeplacement`, `cleVeille`, `destinatairesDeplacement`). Ligne du matin « Changement : Foot au
+  parc passe au vendredi 9 octobre, 19:00. » / « 活动改期：Foot au parc 改到 10月9日 19:00。» (sans
+  heure : « … passe au vendredi 9 octobre. » / « … 改到 10月9日。»), nouvelle sorte `deplacement` des
+  lignes d'évènements (`src/lib/reunions/rappels.ts`) : fondue dans la première notification du jour
+  (services, tâches), seule sinon, titre « Changement de date » / « 活动改期 », ouverte sur la fiche.
+  Cron (`src/app/api/cron/reminders/route.ts`, dans `lignesEvenements`, donc derrière `BACK_OFFICE`) :
+  évènements dont `deplacement.le` date d'hier ou d'avant-hier (jour UTC du cron), destinataires =
+  inscrits avec compte, ou membres pour une réunion (`destinatairesEvenement`), sans l'auteur du
+  geste, préférence « Évènements », clé `deplacement-<id>-<vers>-<uid>`. Rappel de la veille : clé
+  datée `rappel-evenement-<id>-<date>-<uid>` (Q8). `fromFsEvenement` relit `deplacement`.
+  `tests/calendrier-deplacer.spec.ts` : 7 tests purs « prévenir (pur) » (ligne FR et 中文, fenêtre de
+  deux jours, clés, clé datée de la veille, destinataires, rappel du matin, branchement du cron), vus
+  rouges sur une ébauche (sauf celui du branchement, écrit après) puis verts sur les cinq projets.
+- **Choix de C7, faute de réponse dans la spec** : un déplacement fait ce matin (avant le cron)
+  attend le lendemain ; un `deplacement` dont `vers` n'est plus la date de l'évènement (redéplacé
+  depuis par le formulaire) ou un évènement passé ne s'annonce pas, pour ne jamais dire une date
+  fausse ; un évènement déplacé à aujourd'hui s'annonce encore. Notification faite de seuls
+  déplacements : titre « Changement de date » / « 活动改期 ». Le premier matin après le déploiement,
+  la clé datée de la veille ne refait pas partir un rappel déjà envoyé (la veille d'un évènement
+  n'existe qu'un jour) ; seul un évènement déplacé vers demain, déjà rappelé sous l'ancienne date,
+  est rappelé de nouveau, comme voulu.
+- **À suivre** : C8 (widget Calendrier S, M, L ; entrées du Sheet dans « Prochains évènements »).
+  L'envoi réel de la ligne se vérifie en ligne (spec, § Réussite).
 - **Pour Timothée** : rien à publier (C1 à C4 ne touchent pas `firestore.rules` ; C3 ouvre
   seulement l'entrée de menu déjà prévue par U6) ; relire les mots 中文 de `calendrier` dans
   `src/locales/zh-CN.json` (`只看我的`, `活动（Sheet）`, `读取自活动表格（Sheet）`,
@@ -455,3 +478,8 @@ Spec validée et go de code donné (04/10/2026, redit le 05/10/2026) ; questions
   « 把「…」从10月15日（周四）改到10月14日（周三）？ » (`questionDeplacement`). C6 ne touche ni
   `access.ts` ni `firestore.rules` (les règles d'aujourd'hui permettent déjà ces écritures, champ
   `deplacement` compris) : rien à publier.
+  Pour C7, les deux lignes 中文 de `src/lib/calendrier/prevenir.ts` et
+  `src/lib/reunions/rappels.ts` : « 活动改期：{titre} 改到 10月9日 19:00。» et le titre « 活动改期 ». C7
+  ne touche ni `access.ts` ni `firestore.rules` (le cron lit avec le compte de service) : rien à
+  publier. La requête `deplacement.le >= …` du cron se sert de l'index simple automatique de
+  Firestore, comme `compteRendu.le` : rien à créer.
