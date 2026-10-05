@@ -21,11 +21,15 @@ export function setlistReadyMessage(s: SetlistReady, lang: NotifLang): { title: 
   };
 }
 
-export type PlanningRelease = { label: string; tri: string };
+/** `annee` : donnée seulement quand ce n'est pas l'année en cours (lot U2 : le
+ *  T1 2027 publié en décembre 2026 ne se lit pas comme un trimestre passé). */
+export type PlanningRelease = { label: string; tri: string; annee?: number };
 
 export function planningReleaseMessage(p: PlanningRelease, lang: NotifLang): { title: string; body: string } {
   if (lang === "zh-CN") {
-    return { title: `${p.tri} 服事表已上线`, body: `${p.label} 的 ${p.tri} 服事表已可查看。` };
+    const tri = p.annee ? `${p.annee} 年 ${p.tri}` : p.tri;
+    return { title: `${tri} 服事表已上线`, body: `${p.label} 的 ${tri} 服事表已可查看。` };
   }
-  return { title: `Planning ${p.tri} en ligne`, body: `Le planning ${p.label} du ${p.tri} est disponible.` };
+  const tri = p.annee ? `${p.tri} ${p.annee}` : p.tri;
+  return { title: `Planning ${tri} en ligne`, body: `Le planning ${p.label} du ${tri} est disponible.` };
 }

@@ -47,6 +47,26 @@ export async function getReports(): Promise<Report[]> {
   return rows.filter((r) => r.document).map((r) => fromFsReport(r.document!));
 }
 
+/** Signalements (ou propositions de chants) en attente, pour la pastille de Messages (lot U6,
+ *  Q15, admins) : la requête ne lit que ceux-là, et seulement leur statut. Lève si refusé. */
+export async function compterEnAttente(collectionId: "reports" | "songProposals"): Promise<number> {
+  const headers = await authHeader();
+  const res = await fetch(`${FS_BASE}:runQuery`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...headers },
+    body: JSON.stringify({
+      structuredQuery: {
+        from: [{ collectionId }],
+        select: { fields: [{ fieldPath: "status" }] },
+        where: { fieldFilter: { field: { fieldPath: "status" }, op: "EQUAL", value: { stringValue: "pending" } } },
+      },
+    }),
+  });
+  await checkRest(res);
+  const rows = (await res.json()) as Array<{ document?: RawDoc }>;
+  return rows.filter((r) => r.document && fromFsValue(r.document.fields?.status) === "pending").length;
+}
+
 export async function setReportStatus(id: string, status: ReportStatus): Promise<void> {
   const headers = await authHeader();
   const docName = `projects/gcclouange/databases/(default)/documents/reports/${id}`;

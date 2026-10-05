@@ -3,10 +3,9 @@ import { adminDb } from "@/lib/push/admin";
 import { isAdminEmail } from "@/lib/access";
 import { HttpError, errorResponse, optionalUser } from "@/lib/evenements/serveur";
 import { fetchGrille } from "@/lib/planning/grille";
-import { fusionnerLignes } from "@/lib/planning/grilles";
 import { lireTableSheet } from "@/lib/planning/sheets";
 import { currentSundayStr } from "@/lib/planning/utils";
-import { lirePetitDej, oublierPetitDej, planifierReprise } from "@/lib/petitdej/lignes";
+import { grillePourReprise, lirePetitDej, oublierPetitDej, planifierReprise } from "@/lib/petitdej/lignes";
 import { BACK_OFFICE } from "@/lib/backOffice";
 
 export const runtime = "nodejs";
@@ -15,7 +14,7 @@ export const maxDuration = 60;
 
 // La reprise du petit déj (lot U3, PD5, docs/spec-petit-dej.md, T11 et Q13) :
 // les noms à venir de la grille Table, telle qu'elle s'affichait avant U3
-// (grille de l'app réunie au Sheet, colonne 2), deviennent des lignes
+// (grille de l'app réunie au Sheet, colonne 2, `grillePourReprise`), deviennent des lignes
 // `petitDej/{id}`, une par case, texte tel quel, `uid` vide. Un dimanche qui a
 // déjà une ligne est ignoré : relancer n'écrit rien de plus. Réservée aux admins
 // (bouton dans /admin), sur le patron de l'import G4 ; à lancer une fois, le
@@ -34,7 +33,10 @@ export async function POST(req: NextRequest) {
     // lecture en échec lève (Q10) : rien n'est écrit.
     oublierPetitDej();
     const [grille, sheet, lignes] = await Promise.all([fetchGrille("table"), lireTableSheet(), lirePetitDej()]);
-    const { aEcrire, ignores } = planifierReprise(fusionnerLignes(grille, sheet), lignes, currentSundayStr());
+    // Sheet illisible : rien n'est repris, l'admin relance plus tard (relancer est sans risque).
+    const aReprendre = grillePourReprise(grille, sheet);
+    if (!aReprendre) throw new HttpError(503, "Sheet du planning illisible : rien n'est repris, relance plus tard.");
+    const { aEcrire, ignores } = planifierReprise(aReprendre, lignes, currentSundayStr());
 
     const db = adminDb();
     const quand = new Date().toISOString();

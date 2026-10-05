@@ -19,6 +19,7 @@ import { useAuth } from "@/lib/firebase/auth"
 import { useProfile } from "@/lib/firebase/users"
 import { canEditEvenement, canSeeEvenement, estDeLaReunion, estResponsable, estReunion } from "@/lib/access"
 import { deleteEvenement, getEvenement, listReunionsDu } from "@/lib/firebase/evenements"
+import { listSujets, retirerSujet } from "@/lib/firebase/sujets"
 import { isInfo } from "@/lib/evenements/agenda"
 import { PLANNING_COLORS } from "@/lib/serviceColors"
 import type { Evenement } from "@/types/evenement"
@@ -59,6 +60,7 @@ export function EvenementClient({ espace = "app" }: { espace?: "app" | "back-off
   // relire la fiche, son inscription dans la fiche fait relire le panneau.
   const [cleInscription, setCleInscription] = useState(0)
   const [relireListe, setRelireListe] = useState(0)
+  const [erreurSuppression, setErreurSuppression] = useState(false)
 
   useEffect(() => {
     if (authLoading) return
@@ -96,9 +98,24 @@ export function EvenementClient({ espace = "app" }: { espace?: "app" | "back-off
 
   async function supprimer() {
     if (!window.confirm(t("evenements.confirmDelete", { titre: e.titre }))) return
-    await deleteEvenement(e.id)
-    router.push(liste)
+    setErreurSuppression(false)
+    try {
+      // Les sujets d'une réunion partent avec elle : orphelins, leurs règles (qui lisent la
+      // réunion) ne les laisseraient plus ni lire ni supprimer. Au mieux : un sujet refusé
+      // n'empêche pas la suppression.
+      if (reunion) {
+        const sujets = await listSujets(e.id).catch(() => [])
+        await Promise.allSettled(sujets.map((s) => retirerSujet(e.id, s.id)))
+      }
+      await deleteEvenement(e.id)
+      router.push(liste)
+    } catch {
+      setErreurSuppression(true)
+    }
   }
+  const messageSuppression = erreurSuppression && (
+    <p role="alert" className="text-sm text-destructive">{t("evenements.erreurSuppression")}</p>
+  )
 
   const retour = (
     <Link href={liste} className="text-xs font-semibold text-muted-foreground hover:text-foreground">
@@ -108,7 +125,7 @@ export function EvenementClient({ espace = "app" }: { espace?: "app" | "back-off
   const cartesReunion = user && deLaReunion ? {
     compteRendu: <CompteRenduCarte evenement={e} user={user} profile={profile} onChange={(compteRendu) => setEvenement({ ...e, compteRendu })} />,
     sujets: <SujetsAborder evenement={e} user={user} profile={profile} reunions={memePublic} />,
-    precedentes: <ReunionsPrecedentes courante={e} reunions={memePublic} />,
+    precedentes: <ReunionsPrecedentes courante={e} reunions={memePublic} espace={espace} />,
   } : null
 
   // Réunion au Back-Office (planche bo-reunion-avant) : sujets à gauche, compte rendu et
@@ -118,6 +135,7 @@ export function EvenementClient({ espace = "app" }: { espace?: "app" | "back-off
       <div className="max-w-5xl space-y-4">
         {retour}
         <EnTeteReunion e={e} gestion={gestionnaire} onSupprimer={supprimer} />
+        {messageSuppression}
         {e.description && <Linkified text={e.description} />}
         {cartesReunion && (
           <div className="grid gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:items-start">
@@ -148,11 +166,14 @@ export function EvenementClient({ espace = "app" }: { espace?: "app" | "back-off
             <div className="mt-2 flex flex-wrap gap-1"><TypePour e={e} /></div>
           </div>
           {backOffice ? (
-            <div className="grid grid-cols-3 gap-2">
-              <Button asChild variant="outline"><Link href={`/back-office/evenements/${e.id}/modifier`}>{t("evenements.modifier")}</Link></Button>
-              <Button asChild variant="outline"><Link href={`/back-office/evenements/nouveau?from=${e.id}`}>{t("evenements.dupliquer")}</Link></Button>
-              <Button variant="outline" className="text-destructive hover:text-destructive" onClick={supprimer}>{t("evenements.supprimer")}</Button>
-            </div>
+            <>
+              <div className="grid grid-cols-3 gap-2">
+                <Button asChild variant="outline"><Link href={`/back-office/evenements/${e.id}/modifier`}>{t("evenements.modifier")}</Link></Button>
+                <Button asChild variant="outline"><Link href={`/back-office/evenements/nouveau?from=${e.id}`}>{t("evenements.dupliquer")}</Link></Button>
+                <Button variant="outline" className="text-destructive hover:text-destructive" onClick={supprimer}>{t("evenements.supprimer")}</Button>
+              </div>
+              {messageSuppression}
+            </>
           ) : estResponsable(user, profile) && (
             <Button asChild variant="outline" className="w-full">
               <Link href={`/back-office/evenements/${e.id}`}>{t("backOffice.gerer")}</Link>

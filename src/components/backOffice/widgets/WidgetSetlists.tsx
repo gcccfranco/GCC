@@ -4,7 +4,6 @@
 // publiée, sur 2 ou 4 semaines ; chacune ouvre l'éditeur prérempli (« Préparer », U5 bis).
 import { useTranslation } from "react-i18next";
 import { ListMusic } from "lucide-react";
-import { getSetlists } from "@/lib/firebase/setlists";
 import { useProfile } from "@/lib/firebase/users";
 import { getAnnee } from "@/lib/planning/utils";
 import { todayIso } from "@/lib/scene/dimanches";
@@ -12,7 +11,7 @@ import { categoryColor, categoryLabel } from "@/lib/serviceColors";
 import { lienPreparer, prochainsServicesSansSetlist } from "@/lib/setlist/prochainsServices";
 import { addDays } from "@/lib/taches/echeances";
 import { GRILLES_DU_SERVICE, seancesDesServices, servicesSetlists } from "@/lib/tableauDeBord/donnees";
-import { lireGrilles, useLecture } from "@/lib/tableauDeBord/lecture";
+import { lireGrilles, lireSetlists, useLecture } from "@/lib/tableauDeBord/lecture";
 import type { Widget } from "@/types/backOffice";
 import { CadreWidget, Message, Rangee, jourCourt } from "./Cadre";
 
@@ -24,7 +23,7 @@ export function WidgetSetlists({ widget }: { widget: Widget }) {
   const today = todayIso();
   const { valeur, erreur } = useLecture(async () => {
     const [rows, setlists] = await Promise.all([
-      lireGrilles(services.flatMap((s) => GRILLES_DU_SERVICE[s].map((g) => g.key))), getSetlists(),
+      lireGrilles(services.flatMap((s) => GRILLES_DU_SERVICE[s].map((g) => g.key))), lireSetlists(today),
     ]);
     const annees = [getAnnee(today), getAnnee(addDays(today, jours - 1))];
     return prochainsServicesSansSetlist(seancesDesServices(rows, services, annees), setlists, services, today, jours);

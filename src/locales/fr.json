@@ -1086,9 +1086,9 @@
       "remplace": "{{auteur}} a remplacé {{avant}} par {{apres}} au {{colonne}} du {{date}}",
       "ajoute": "{{auteur}} a mis {{apres}} au {{colonne}} du {{date}}",
       "efface": "{{auteur}} a effacé le {{colonne}} du {{date}}",
-      "exporter": "Exporter en CSV",
-      "exporterPdf": "Exporter en PDF",
       "importe": "{{auteur}} a importé {{count}} dimanches depuis le Google Sheet",
+      "pose": "{{auteur}} a ajouté le {{date}}",
+      "retire": "{{auteur}} a retiré le {{date}}",
       "periodeAnnee": "Année {{annee}}"
     },
     "petitDej": {
@@ -1101,7 +1101,9 @@
       "ajouter": "Ajouter une ligne",
       "astuce": "Tu peux écrire « Famille … » à la place de ton nom.",
       "vientDeSInscrire": "{{nom}} vient de s'inscrire.",
-      "illisible": "Inscriptions illisibles pour l'instant."
+      "illisible": "Inscriptions illisibles pour l'instant.",
+      "echec": "Enregistrement impossible, réessaie.",
+      "tonNom": "Ton nom"
     },
     "horaires": {
       "culte": "Dimanche 10:30",
@@ -1229,8 +1231,7 @@
       "confirmerRetrait": "Retirer le {{date}} ? Ses cases s'effacent.",
       "choisirDate": "Dimanche à ajouter",
       "dateSeance": "Date de la séance",
-      "moment": "Moment",
-      "special": "Ce dimanche est celui de {{service}} : la présidence vient de son planning."
+      "moment": "Moment"
     },
     "publier": "Publier le {{tri}}",
     "masquer": "Masquer le {{tri}}",
@@ -1776,6 +1777,7 @@
     "dupliquer": "Dupliquer",
     "supprimer": "Supprimer",
     "confirmDelete": "Supprimer « {{titre}} » ? Les inscriptions seront perdues.",
+    "erreurSuppression": "Suppression impossible. Réessaie.",
     "reserved": "Cette page est réservée à la coordination et aux responsables de section.",
     "form": {
       "titre": "Nom de l'évènement",
@@ -2338,6 +2340,21 @@
       "louange": "TEAM LOUANGE",
       "edd": "TEAM EDD"
     },
+    "court": {
+      "orga": "Orga",
+      "comite-franco": "Comité franco",
+      "da": "DA",
+      "medias": "Médias",
+      "developpement": "Développement",
+      "regie": "Régie",
+      "traduction": "Traduction",
+      "theologie": "Théologie",
+      "evenementiel": "Événementiel",
+      "decoration": "Décoration",
+      "accueil-j1": "Accueil J1",
+      "louange": "Louange",
+      "edd": "EDD"
+    },
     "soustitre": {
       "orga": "Coordination générale",
       "comite-franco": "",
@@ -2535,7 +2552,6 @@
     "reserve": "Réservé aux responsables.",
     "seConnecter": "Se connecter",
     "bonjour": "{{jour}} · bonjour {{prenom}}",
-    "menu": "Tes modules",
     "sousParties": "Sous-parties",
     "plannings": "Plannings",
     "planningReserve": "Page réservée aux responsables de ce planning.",

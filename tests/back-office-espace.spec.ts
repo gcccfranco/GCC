@@ -300,12 +300,101 @@ test.describe("Back-Office (B1) : le sélecteur et le menu", () => {
   });
 });
 
+// Relecture du lot U6 : les pastilles de Q15 sont aussi celles de la barre latérale
+// (« Écrans ordinateur : entrées permises (icônes, pastilles) », planche bo-tableau-de-bord).
+test.describe("Back-Office : pastilles de la barre latérale (Q15)", () => {
+  const PASTILLES = {
+    "reports/r1": { kind: "site", title: "Lien mort", status: "pending", createdAt: "2026-09-30T10:00:00Z" },
+    "reports/r2": { kind: "site", title: "Réglé", status: "resolved", createdAt: "2026-09-29T10:00:00Z" },
+    "songProposals/p1": { title: "Un chant", youtubeUrl: "https://example.com/v", status: "pending", createdAt: "2026-09-30T10:00:00Z" },
+    // À faire pour l'admin : la sienne en retard et une sans responsable ; pas celle d'un autre.
+    "poles/da/taches/t1": { titre: "Affiche", responsableUid: "uid-admin", responsableNom: "Admin T.", echeance: "2026-09-28", repetition: null },
+    "poles/orga/taches/t2": { titre: "Salle", responsableUid: null, responsableNom: "", echeance: "2026-10-05", repetition: null },
+    "poles/media/taches/t3": { titre: "Photos", responsableUid: "uid-autre", responsableNom: "Pers. B", echeance: "2026-10-05", repetition: null },
+    "poles/da/taches/t4": { titre: "Fond du culte", responsableUid: "uid-da", responsableNom: "Bruno M.", echeance: "2026-10-03", repetition: null },
+  };
+
+  test("grand écran : Tâches (à faire pour moi) et Messages (en attente) portent leur compte", async ({ page }, info) => {
+    test.skip(!estOrdinateur(info) && !estTablettePaysage(info), "propre aux grands écrans");
+    await sansSheet(page);
+    await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
+    await signInAs(page, ADMIN, PASTILLES, "/back-office");
+    await expect(page.getByRole("heading", { name: "Tableau de bord" })).toBeVisible();
+    await deplierSiTablettePaysage(page, info);
+    const entree = (nom: string) => menu(page, info).getByRole("link", { name: nom, exact: true });
+    await expect(entree("Tâches").getByTestId("pastille")).toHaveText("2");
+    await expect(entree("Messages").getByTestId("pastille")).toHaveText("2");
+    await expect(entree("Planning").getByTestId("pastille")).toHaveCount(0);
+    // Dans l'App, la barre latérale n'a pas de pastille.
+    await page.goto("/songs");
+    await page.getByRole("searchbox").waitFor();
+    await expect(page.getByTestId("barre-laterale").getByTestId("pastille")).toHaveCount(0);
+  });
+
+  test("un responsable qui n'est pas admin : Tâches compte, Messages n'est pas lu", async ({ page }, info) => {
+    test.skip(!estOrdinateur(info), "propre à l'ordinateur");
+    const lus: string[] = [];
+    page.on("request", (r) => { if (r.url().includes(":runQuery")) lus.push(r.postData() ?? ""); });
+    await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
+    await signInAs(page, { ...DA, notify: ["Groupe Paix"] }, PASTILLES, "/back-office");
+    await expect(page.getByRole("heading", { name: "Tableau de bord" })).toBeVisible();
+    await expect(menu(page, info).getByRole("link", { name: "Tâches", exact: true }).getByTestId("pastille")).toHaveText("1");
+    await expect(menu(page, info).getByRole("link", { name: "Messages", exact: true }).getByTestId("pastille")).toHaveCount(0);
+    expect(lus.filter((b) => b.includes("\"reports\"") || b.includes("\"songProposals\""))).toEqual([]);
+  });
+
+  test("téléphone et tablette en portrait : la barre latérale, cachée, ne lit rien", async ({ page }, info) => {
+    test.skip(estOrdinateur(info) || estTablettePaysage(info), "propre au téléphone et à la tablette en portrait");
+    const lus: string[] = [];
+    page.on("request", (r) => { if (r.url().includes(":runQuery")) lus.push(r.postData() ?? ""); });
+    await sansSheet(page);
+    await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
+    await signInAs(page, ADMIN, PASTILLES, "/back-office");
+    await expect(page.getByRole("heading", { name: "Tableau de bord" })).toBeVisible();
+    await expect(page.getByTestId("barre-du-bas").getByRole("link").first()).toBeVisible();
+    await page.waitForTimeout(500);
+    expect(lus.filter((b) => b.includes("\"reports\"") || b.includes("\"songProposals\""))).toEqual([]);
+  });
+
+  // Comparée à la planche bo-tableau-de-bord (barre latérale : Tâches 3, Messages 2).
+  test("capture : la barre latérale et ses pastilles (à regarder)", async ({ page }, info) => {
+    test.skip(!estOrdinateur(info) && !estTablettePaysage(info), "propre aux grands écrans");
+    await sansSheet(page);
+    await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
+    await signInAs(page, ADMIN, PASTILLES, "/back-office");
+    await page.goto("/back-office/taches/da");
+    await expect(page.getByRole("heading", { level: 1, name: "Tâches" })).toBeVisible();
+    await deplierSiTablettePaysage(page, info);
+    await expect(menu(page, info).getByRole("link", { name: "Messages", exact: true }).getByTestId("pastille")).toHaveText("2");
+    await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
+    await page.waitForTimeout(400);
+    await page.screenshot({ path: `test-results/back-office-captures/${info.project.name}-pastilles.png` });
+  });
+
+  test("Messages : seuls les signalements et propositions en attente sont lus", async ({ page }, info) => {
+    test.skip(!estOrdinateur(info), "propre à l'ordinateur");
+    const requetes: { from: { collectionId: string }[]; where?: unknown }[] = [];
+    page.on("request", (r) => {
+      if (!r.url().includes(":runQuery")) return;
+      const q = (r.postDataJSON() as { structuredQuery: { from: { collectionId: string }[]; where?: unknown } }).structuredQuery;
+      if (["reports", "songProposals"].includes(q.from[0].collectionId)) requetes.push(q);
+    });
+    await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
+    await signInAs(page, ADMIN, PASTILLES, "/back-office");
+    await expect(menu(page, info).getByRole("link", { name: "Messages", exact: true }).getByTestId("pastille")).toHaveText("2");
+    expect(requetes.map((q) => q.from[0].collectionId).sort()).toEqual(["reports", "songProposals"]);
+    for (const q of requetes) {
+      expect(q.where).toEqual({ fieldFilter: { field: { fieldPath: "status" }, op: "EQUAL", value: { stringValue: "pending" } } });
+    }
+  });
+});
+
 test.describe("Back-Office (B1) : captures à regarder", () => {
   // Comparées aux planches bo-tableau-de-bord, bo-telephone-accueil, tablette-portrait-back-office.
   test("App puis Back-Office, d'un admin, dans chaque disposition", async ({ page }, info) => {
     await sansSheet(page);
     await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
-    await signInAs(page, { ...ADMIN, firstName: "Timothée" }, {}, "/songs");
+    await signInAs(page, ADMIN, {}, "/songs");
     await page.getByRole("searchbox").waitFor();
     await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
     await page.screenshot({ path: `test-results/back-office-captures/${info.project.name}-app.png` });

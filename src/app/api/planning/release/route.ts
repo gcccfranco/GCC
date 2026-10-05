@@ -87,10 +87,12 @@ export async function POST(req: NextRequest) {
     const cible = tous ? await allSubscriberUids() : await uidsForCategory(planning.notifyAudience);
     const langs = await loadNotifLangs(cible);
     const tag = `release-${planning.key}-${yr}-${tri}`;
+    // Lot U2 : l'année dans le message dès qu'elle n'est pas l'année en cours.
+    const release = { label: planning.label, tri, ...(yr !== new Date().getFullYear() ? { annee: yr } : {}) };
     for (const lang of ["fr", "zh-CN"] as const) {
       const groupe = cible.filter((u) => (langs.get(u) ?? "fr") === lang);
       if (!groupe.length) continue;
-      const message = planningReleaseMessage({ label: planning.label, tri }, lang);
+      const message = planningReleaseMessage(release, lang);
       const result = await sendPushToUids(groupe, { ...message, url: "/planning", tag });
       sent += result.sent;
       // Cloche : une entrée par fournée pour une catégorie ; « tout le monde »
@@ -98,7 +100,7 @@ export async function POST(req: NextRequest) {
       if (!tous) await recordNotification({ ...message, url: "/planning", kind: "broadcast", recipients: groupe });
     }
     if (tous) {
-      const fr = planningReleaseMessage({ label: planning.label, tri }, "fr");
+      const fr = planningReleaseMessage(release, "fr");
       await recordNotification({ ...fr, url: "/planning", kind: "broadcast", everyone: true });
     }
     notified = true;

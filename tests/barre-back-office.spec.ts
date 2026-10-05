@@ -140,11 +140,28 @@ test.describe("Barre du bas (B6) : la barre", () => {
     await expect(onglets(page)).toHaveText(["Planning", "Accueil", "Calendrier", "Plus"]);
   });
 
+  // Relecture du lot U6 : sur un réseau qui accroche, la barre n'attend pas indéfiniment.
+  test("la barre enregistrée ne répond pas : la barre par défaut s'affiche au bout de quelques secondes", async ({ page }) => {
+    await sansSheet(page);
+    await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
+    await signInAs(page, ADMIN, { "backOffice/uid-admin": { barreDuBas: ["tableau", "equipes"], majLe: "2026-09-30T10:00:00Z" } }, "/songs");
+    // Posée après la base simulée, cette route passe avant elle : la lecture reste sans réponse.
+    await page.route(/\/documents\/backOffice\/uid-admin$/, async (route) => {
+      if (route.request().method() !== "GET") return route.fallback();
+      await new Promise((r) => setTimeout(r, 30_000));
+      await route.fallback().catch(() => {});
+    });
+    await page.goto("/back-office");
+    await expect(onglets(page)).toHaveText(["Accueil", "Tâches", "Planning", "Évènements", "Plus"], { timeout: 10_000 });
+    await page.unrouteAll({ behavior: "ignoreErrors" });
+  });
+
   test("une page hors de la barre marque « Plus »", async ({ page }) => {
     await ouvrir(page, ADMIN, {}, "/back-office/equipes");
     await expect(barre(page).getByRole("link", { name: "Plus" })).toHaveAttribute("aria-current", "page");
     await barre(page).getByRole("link", { name: "Tâches" }).click();
-    await expect(page).toHaveURL(/\/back-office\/taches\/?$/);
+    // L'entrée Tâches mène au premier pôle de la personne (B3).
+    await expect(page).toHaveURL(/\/back-office\/taches\/da\/?$/);
     await expect(barre(page).getByRole("link", { name: "Tâches" })).toHaveAttribute("aria-current", "page");
     await expect(barre(page).getByRole("link", { name: "Plus" })).not.toHaveAttribute("aria-current", "page");
   });
@@ -339,7 +356,7 @@ test.describe("Barre du bas (B6) : captures à regarder", () => {
 
   // Comparées aux planches bo-telephone-accueil, bo-telephone-plus, bo-telephone-barre-perso, tablette-portrait-back-office.
   test("tableau de bord, « Plus », feuille", async ({ page }, info) => {
-    await ouvrir(page, { ...ADMIN, firstName: "Timothée" }, {
+    await ouvrir(page, ADMIN, {
       "reports/r1": { kind: "site", title: "Lien mort", status: "pending", createdAt: "2026-09-30T10:00:00Z" },
     });
     await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
