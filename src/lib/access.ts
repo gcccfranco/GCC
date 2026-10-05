@@ -541,3 +541,33 @@ export function widgetsPermis(user: AuthUser | null, profile: UserProfile | null
   };
   return WIDGETS.filter((w) => permis[w] && !WIDGETS_A_VENIR.includes(w));
 }
+
+/** Les pôles de Back-Office › Tâches (lot U6, B3, table Q2) : ses pôles, Louange compris
+ *  (`polesDe`), dans l'ordre de TACHE_POLES ; tous pour un admin. */
+export function tachesDuBackOffice(
+  user: AuthUser | { email?: string | null } | null,
+  profile: { poles?: string[]; serviceRoles?: Record<string, unknown> } | null
+): TachePole[] {
+  if (!user) return [];
+  if (isAdminUser(user)) return [...TACHE_POLES];
+  const siens = polesDe(profile);
+  return TACHE_POLES.filter((p) => siens.includes(p));
+}
+
+/** Sous-parties de Back-Office › Évènements (lot U6, B3, table Q2) : Évènements (ceux qu'on
+ *  gère : admin, coordination, droit d'annonces) · Réunions (ses pôles, Louange compris, et
+ *  ses équipes ; toutes pour un admin) · Scène (coordination, U1). Affichage seulement. */
+export type SousPartieEvenements = "evenements" | "reunions" | "scene";
+export function sousPartiesEvenements(
+  user: AuthUser | null,
+  profile: (ProfilResponsable & { dansEquipes?: string[] }) | null
+): SousPartieEvenements[] {
+  if (!user) return [];
+  const admin = isAdminUser(user);
+  const coordination = isCoordination(user, profile);
+  const parties: SousPartieEvenements[] = [];
+  if (admin || coordination || nonVide(profile?.annonces)) parties.push("evenements");
+  if (admin || polesDe(profile).length > 0 || nonVide(profile?.dansEquipes) || nonVide(profile?.referentDe)) parties.push("reunions");
+  if (coordination) parties.push("scene");
+  return parties;
+}

@@ -195,14 +195,14 @@ test.describe("Back-Office (B1) : le sélecteur et le menu", () => {
     );
   });
 
-  test("une entrée encore à venir mène à l'écran d'aujourd'hui, sans page vide", async ({ page }, info) => {
+  test("une entrée du menu mène à sa page du Back-Office (Tâches : le pôle de la personne, B3)", async ({ page }, info) => {
     await signInAs(page, ALICE, {}, "/back-office");
     await expect(page.getByRole("heading", { name: "Tableau de bord" })).toBeVisible();
     await deplierSiTablettePaysage(page, info);
     await menu(page, info).getByRole("link", { name: "Tâches" }).click();
-    await expect(page).toHaveURL(/\/back-office\/taches\/?$/);
-    await expect(page.getByRole("heading", { name: "Tâches" })).toBeVisible();
-    await expect(page.getByRole("main").getByRole("link", { name: /Tâches/ }).last()).toHaveAttribute("href", /^\/taches\/?$/);
+    await expect(page).toHaveURL(/\/back-office\/taches\/evenement\/?$/);
+    await expect(page.getByRole("heading", { level: 1, name: "Tâches" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 2, name: "Événement" })).toBeVisible();
     // Le sélecteur reste dans l'espace Back-Office.
     await deplierSiTablettePaysage(page, info);
     await expect(selecteur(page).getByRole("link", { name: "Back-Office" })).toHaveAttribute("aria-current", "true");

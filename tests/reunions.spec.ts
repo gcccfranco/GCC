@@ -434,7 +434,7 @@ const sansPush = (page: Page) => page.route("**/api/push/notify-evenement", (rou
 
 /** Nouvelle réunion du pôle DA par « Créer » (le seul public d'Alice). */
 async function creerReunion(page: Page, date: string) {
-  await page.goto("/evenements/nouveau");
+  await page.goto("/back-office/evenements/nouveau");
   await page.getByLabel("Nom de l'évènement").fill("Réunion DA");
   await expect(page.getByLabel("Public")).toHaveValue("pole:da");
   await page.getByLabel("Date", { exact: true }).fill(date);
@@ -450,7 +450,10 @@ test("reprise, oui : en dupliquant pour la prochaine, le sujet laissé est recop
   const db = await ouvrir(page, ALICE, "2026-10-04T10:00:00", APRES);
   await sansPush(page);
   await expect(lignes(page)).toHaveCount(4);
-  await page.getByRole("link", { name: "Dupliquer" }).click();
+  // Lot U6, B3 : « Dupliquer pour la prochaine » est sur la fiche de gestion, au Back-Office.
+  await page.goto("/back-office/evenements/reunion-da");
+  await expect(lignes(page)).toHaveCount(4);
+  await page.getByRole("link", { name: "Dupliquer pour la prochaine" }).click();
   await page.getByLabel("Date", { exact: true }).fill("2026-11-07");
   await page.getByRole("button", { name: "Créer l'évènement" }).click();
 
@@ -903,7 +906,7 @@ async function ouvrirRegie(page: Page, qui: FakeProfile, vers = "/evenements/reu
 }
 
 test("référente : elle crée la réunion de son équipe, sans inscriptions, et y retrouve les sujets", async ({ page }) => {
-  const db = await ouvrirRegie(page, ROSE, "/evenements/nouveau");
+  const db = await ouvrirRegie(page, ROSE, "/back-office/evenements/nouveau");
   await sansPush(page);
   await expect(page.getByLabel("Public")).toHaveValue("equipe:regie");
   await expect(page.getByLabel("Public").locator("option")).toHaveText(["TEAM RÉGIE"]);
@@ -919,8 +922,9 @@ test("référente : elle crée la réunion de son équipe, sans inscriptions, et
 });
 
 test("membre de l'équipe, non référent : pas de réunion d'équipe à créer", async ({ page }) => {
-  await ouvrirRegie(page, HUGO, "/evenements/nouveau");
-  await expect(page.getByText("Cette page est réservée à la coordination et aux responsables de section.")).toBeVisible();
+  // Lot U6, B3 : créer est au Back-Office, réservé aux responsables (un référent l'est).
+  await ouvrirRegie(page, HUGO, "/back-office/evenements/nouveau");
+  await expect(page.getByText("Réservé aux responsables.")).toBeVisible();
 });
 
 test("membre de l'équipe : il voit la réunion dans l'agenda, et y ajoute un sujet à son nom", async ({ page }) => {

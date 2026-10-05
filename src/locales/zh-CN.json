@@ -1894,7 +1894,6 @@
     "title": "任务",
     "mesTaches": "我的任务",
     "aFairePourMoi": "我要做的",
-    "poles": "部门",
     "pole": {
       "da": "美工",
       "media": "媒体",
@@ -2345,8 +2344,6 @@
     "seConnecter": "登录",
     "bonjour": "{{jour}} · {{prenom}}，你好",
     "menu": "你的模块",
-    "enAttente": "这部分将随后续开发移入后台。目前请在这里使用：",
-    "scene": "舞台",
     "sousParties": "子栏目",
     "plannings": "排班表",
     "planningReserve": "仅限该排班表的负责人。",
@@ -2360,7 +2357,21 @@
       "inscriptions": "注册",
       "import": "导入",
       "plannings": "排班表",
-      "sansCompte": "无账号"
-    }
+      "sansCompte": "无账号",
+      "evenements": "活动",
+      "reunions": "会议",
+      "scene": "舞台"
+    },
+    "gerer": "在后台管理",
+    "tachesDesPoles": "各部门的任务",
+    "sceneReserve": "仅限协调组。",
+    "aucunEvenement": "没有需要管理的活动。",
+    "aucuneReunion": "暂无会议。",
+    "nouvelleReunion": "新建会议",
+    "aVenir": "即将举行",
+    "reunionDePole": "部门会议 · {{pole}}",
+    "reunionDEquipe": "团队会议 · {{equipe}}",
+    "organiseePar": "组织者：{{nom}}",
+    "dupliquerProchaine": "复制为下一次"
   }
 }

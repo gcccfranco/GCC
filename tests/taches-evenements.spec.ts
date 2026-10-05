@@ -99,7 +99,7 @@ test("une tâche sans champ evenement se lit non liée", async ({ page }) => {
   // Document d'avant le lot 14 : aucun champ `evenement`, aucune migration.
   const { evenement, ...avant } = tacheDoc({ titre: "Fond PPT" });
   void evenement;
-  const db = await signInAs(page, RUTH_DA, { "poles/da/taches/t1": avant }, "/taches/da");
+  const db = await signInAs(page, RUTH_DA, { "poles/da/taches/t1": avant }, "/back-office/taches/da");
   await expect(page.getByText("Fond PPT")).toBeVisible();
   await expect(page.getByText(/^pour /)).toHaveCount(0);
   await page.getByRole("button", { name: /^Fond PPT/ }).click();
@@ -238,7 +238,7 @@ test("fiche : cocher depuis la fiche cycle À faire → En cours → Terminé et
 });
 
 test("ligne : une tâche liée dit “pour Noël 2026” sur la page du pôle et dans Mes tâches", async ({ page }) => {
-  await signInAs(page, RUTH_DA, DOCS, "/taches/da");
+  await signInAs(page, RUTH_DA, DOCS, "/back-office/taches/da");
   const liee = page.locator(".group-row", { hasText: "Fond PPT de Noël" });
   await expect(liee).toContainText("pour Noël 2026");
   await expect(page.locator(".group-row", { hasText: "Vidéo d'annonce" })).not.toContainText("pour ");
@@ -247,7 +247,7 @@ test("ligne : une tâche liée dit “pour Noël 2026” sur la page du pôle et
 });
 
 test("formulaire : Détacher écrit evenement: null ; une tâche liée ne propose pas de répétition", async ({ page }) => {
-  const db = await signInAs(page, RUTH_DA, DOCS, "/taches/da");
+  const db = await signInAs(page, RUTH_DA, DOCS, "/back-office/taches/da");
   await page.getByRole("button", { name: /^Fond PPT de Noël/ }).click();
   const form = page.getByRole("dialog", { name: "Modifier la tâche" });
   await expect(form).toContainText("Noël 2026");
@@ -266,7 +266,8 @@ test("formulaire : Détacher écrit evenement: null ; une tâche liée ne propos
 });
 
 test("évènement supprimé : la tâche reste, avec le titre mémorisé", async ({ page }) => {
-  const db = await member(page, ALICE, "/evenements/noel");
+  // Lot U6, B3 : supprimer est sur la fiche de gestion, au Back-Office.
+  const db = await member(page, ALICE, "/back-office/evenements/noel");
   page.on("dialog", (d) => d.accept());
   await page.getByRole("button", { name: "Supprimer" }).click();
   await expect(page).toHaveURL(/\/evenements\/?$/);
@@ -274,7 +275,7 @@ test("évènement supprimé : la tâche reste, avec le titre mémorisé", async 
   // Rien n'est écrit chez les tâches : ni suppression, ni détachement.
   expect(db.writes.filter((w) => w.path.startsWith("poles/"))).toEqual([]);
   expect(db.doc("poles/da/taches/t1")?.evenement).toEqual(LIE_A_NOEL);
-  await page.goto("/taches/da");
+  await page.goto("/back-office/taches/da");
   await expect(page.locator(".group-row", { hasText: "Fond PPT de Noël" })).toContainText("pour Noël 2026");
 });
 
@@ -291,13 +292,13 @@ test("中文 : bloc, ligne et confirmation en chinois", async ({ page }) => {
   await expect(carte(page)).toContainText("此活动还没有任务。");
 
   // La ligne, sur la page du pôle.
-  await page.goto("/taches/da");
+  await page.goto("/back-office/taches/da");
   await expect(page.locator(".group-row", { hasText: "Fond PPT de Noël" })).toContainText("用于 Noël 2026");
 
   // Dupliquer Noël : la question est posée en chinois, avec le nombre de tâches.
   const questions: string[] = [];
   page.on("dialog", (d) => { questions.push(d.message()); return d.dismiss(); });
-  await page.goto("/evenements/noel");
+  await page.goto("/back-office/evenements/noel");
   await page.getByRole("link", { name: "复制" }).click();
   await page.getByLabel("日期", { exact: true }).fill("2027-12-24");
   await page.getByRole("button", { name: "创建活动" }).click();

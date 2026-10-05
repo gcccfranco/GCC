@@ -1,13 +1,8 @@
-import { Suspense } from "react"
-import { RequireAuth } from "@/components/auth/RequireAuth"
-import { NouveauClient } from "./NouveauClient"
+import { redirect } from "next/navigation"
 
-export default function NouveauEvenementPage() {
-  return (
-    <RequireAuth>
-      <Suspense fallback={<div className="min-h-screen bg-background" />}>
-        <NouveauClient />
-      </Suspense>
-    </RequireAuth>
-  )
+// Lot U6, B3 (Q4) : créer et dupliquer passent au Back-Office ; l'ancienne adresse y mène,
+// `?from=` compris. Interrupteur coupé, le gabarit `evenements/layout.tsx` répond 404 avant.
+export default async function AncienNouveau({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  const { from } = await searchParams
+  redirect(typeof from === "string" ? `/back-office/evenements/nouveau?from=${encodeURIComponent(from)}` : "/back-office/evenements/nouveau")
 }

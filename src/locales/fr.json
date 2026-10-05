@@ -1894,7 +1894,6 @@
     "title": "Tâches",
     "mesTaches": "Mes tâches",
     "aFairePourMoi": "À faire pour moi",
-    "poles": "Pôles",
     "pole": {
       "da": "DA",
       "media": "Média",
@@ -2348,8 +2347,6 @@
     "seConnecter": "Se connecter",
     "bonjour": "{{jour}} · bonjour {{prenom}}",
     "menu": "Tes modules",
-    "enAttente": "Cette partie arrive au Back-Office avec la suite du chantier. En attendant, elle est ici :",
-    "scene": "Scène",
     "sousParties": "Sous-parties",
     "plannings": "Plannings",
     "planningReserve": "Page réservée aux responsables de ce planning.",
@@ -2363,7 +2360,21 @@
       "inscriptions": "Inscriptions",
       "import": "Import",
       "plannings": "Plannings",
-      "sansCompte": "Sans compte"
-    }
+      "sansCompte": "Sans compte",
+      "evenements": "Évènements",
+      "reunions": "Réunions",
+      "scene": "Scène"
+    },
+    "gerer": "Gérer dans le Back-Office",
+    "tachesDesPoles": "Les tâches des pôles",
+    "sceneReserve": "Réservé à la coordination.",
+    "aucunEvenement": "Aucun évènement à gérer.",
+    "aucuneReunion": "Aucune réunion.",
+    "nouvelleReunion": "Nouvelle réunion",
+    "aVenir": "À venir",
+    "reunionDePole": "Réunion de pôle · {{pole}}",
+    "reunionDEquipe": "Réunion d'équipe · {{equipe}}",
+    "organiseePar": "organisée par {{nom}}",
+    "dupliquerProchaine": "Dupliquer pour la prochaine"
   }
 }

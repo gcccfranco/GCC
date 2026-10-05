@@ -128,7 +128,9 @@ test("onglets : un connecté voit le programme de scène à côté du calendrier
 // ─── Tranche E2 : créer, modifier, dupliquer, supprimer, push à la création ──
 
 const ALICE: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", poles: ["evenement"] };
-const STEPH: FakeProfile = { uid: "uid-steph", email: "steph@example.com", firstName: "Steph", lastName: "R." };
+// Lot U6, B3 : la gestion d'un évènement est au Back-Office, ouvert aux responsables ; Steph
+// organise avec le droit d'annonces de sa section.
+const STEPH: FakeProfile = { uid: "uid-steph", email: "steph@example.com", firstName: "Steph", lastName: "R.", annonces: ["Groupe Bonté"] };
 const RESP_PAIX: FakeProfile = { uid: "uid-resp", email: "resp@example.com", firstName: "Ruth", lastName: "K.", serviceRoles: { "Groupe Paix": ["presidence"] }, annonces: ["Groupe Paix"] };
 
 async function member(page: Page, who: FakeProfile, to: string, docs: Record<string, Record<string, unknown>> = DOCS) {
@@ -188,13 +190,14 @@ test("créer : un membre sans droit n'a pas de bouton et la page de création lu
   // Sans rôle de service ni pôle : un rôle de service donnerait le pôle Louange (lot 7).
   await member(page, { uid: "uid-sans", email: "sans@example.com", firstName: "Sam", lastName: "S." }, "/evenements");
   await expect(page.getByRole("link", { name: "Nouvel évènement" })).toHaveCount(0);
+  // L'ancienne adresse mène au Back-Office (lot U6, B3), réservé aux responsables.
   await page.goto("/evenements/nouveau");
-  await expect(page.getByText("réservée")).toBeVisible();
+  await expect(page.getByText("Réservé aux responsables.")).toBeVisible();
   await expect(page.getByLabel("Nom de l'évènement")).toHaveCount(0);
 });
 
 test("créer une info : pas de date, épinglée, avec une date d'expiration", async ({ page }) => {
-  const db = await member(page, ALICE, "/evenements/nouveau");
+  const db = await member(page, ALICE, "/back-office/evenements/nouveau");
   await page.route("**/api/push/notify-evenement", (route) => route.fulfill({ json: { ok: true } }));
   await page.getByLabel("Nom de l'évènement").fill("Travaux dans le hall");
   await page.getByLabel("Catégorie").selectOption("info");
@@ -209,7 +212,7 @@ test("créer une info : pas de date, épinglée, avec une date d'expiration", as
 });
 
 test("modifier : l'organisateur change le lieu, sans toucher au compteur", async ({ page }) => {
-  const db = await member(page, STEPH, "/evenements/foot");
+  const db = await member(page, STEPH, "/back-office/evenements/foot");
   await page.getByRole("link", { name: "Modifier" }).click();
   await expect(page.getByLabel("Nom de l'évènement")).toHaveValue("Foot au parc");
   await page.getByLabel("Lieu").fill("Stade Charléty");
@@ -222,7 +225,7 @@ test("modifier : l'organisateur change le lieu, sans toucher au compteur", async
 });
 
 test("dupliquer : formulaire pré-rempli sans date, nouvel évènement écrit avec un compteur à zéro", async ({ page }) => {
-  const db = await member(page, ALICE, "/evenements/culte-noel");
+  const db = await member(page, ALICE, "/back-office/evenements/culte-noel");
   await page.route("**/api/push/notify-evenement", (route) => route.fulfill({ json: { ok: true } }));
   await page.getByRole("link", { name: "Dupliquer" }).click();
   await expect(page.getByLabel("Nom de l'évènement")).toHaveValue("Culte de Noël");
@@ -257,7 +260,7 @@ async function dupliquerLeCulte(page: Page, copier: boolean) {
   const questions: string[] = [];
   page.on("dialog", (d) => { questions.push(d.message()); return copier ? d.accept() : d.dismiss(); });
   await page.route("**/api/push/notify-evenement", (route) => route.fulfill({ json: { ok: true } }));
-  const db = await member(page, ALICE, "/evenements/culte-noel", DOCS_TACHES);
+  const db = await member(page, ALICE, "/back-office/evenements/culte-noel", DOCS_TACHES);
   await page.getByRole("link", { name: "Dupliquer" }).click();
   await page.getByLabel("Date", { exact: true }).fill("2027-12-24");
   await page.getByRole("button", { name: "Créer l'évènement" }).click();
@@ -290,7 +293,7 @@ test("dupliquer : Copier aussi ses 2 tâches écrit deux tâches liées au nouve
 });
 
 test("supprimer : l'organisateur confirme, la fiche disparaît", async ({ page }) => {
-  const db = await member(page, STEPH, "/evenements/foot");
+  const db = await member(page, STEPH, "/back-office/evenements/foot");
   page.on("dialog", (d) => d.accept());
   await page.getByRole("button", { name: "Supprimer" }).click();
   await expect(page).toHaveURL(/\/evenements\/?$/);
@@ -602,7 +605,7 @@ test("L2 fiche : bannière, lignes date · horaire · lieu, « Pour plus d'infos
 });
 
 test("L3 organisateur : panneau des inscriptions avec compteur et état, lien de la fiche avec QR visible, inscrits repliés", async ({ page }) => {
-  await member(page, STEPH, "/evenements/foot", {
+  await member(page, STEPH, "/back-office/evenements/foot", {
     ...DOCS,
     "evenements/foot/inscriptions/uid-jo": MA_PLACE,
     "evenements/foot/inscriptions/x1": { uid: null, nom: "Marie", invites: 0, createdAt: "2026-09-22T10:00:00Z" },
@@ -624,7 +627,7 @@ test("L3 organisateur : panneau des inscriptions avec compteur et état, lien de
 });
 
 test("L4 formulaire : champs courants dans l'ordre de la maquette, responsable pré-rempli, bannière, champs rares sous « Plus d'options »", async ({ page }) => {
-  await member(page, ALICE, "/evenements/nouveau");
+  await member(page, ALICE, "/back-office/evenements/nouveau");
   await page.getByLabel("Nom de l'évènement").waitFor();
   const labels = await page.locator("form label[for]").evaluateAll((els) => els.map((el) => el.textContent?.trim()));
   expect(labels.slice(0, 8)).toEqual(["Nom de l'évènement", "Catégorie", "Public", "Date", "Horaire", "Lieu", "Responsable", "Description"]);
@@ -660,7 +663,7 @@ test("L6 fiche : la bannière montre l'image quand il y en a une", async ({ page
 });
 
 test("L6 formulaire : champs, bannière et interrupteur dans une seule carte blanche", async ({ page }) => {
-  await member(page, ALICE, "/evenements/nouveau");
+  await member(page, ALICE, "/back-office/evenements/nouveau");
   const carte = page.getByTestId("form-carte");
   await expect(carte).toBeVisible();
   expect(await carte.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe(BLANC);
@@ -683,7 +686,7 @@ test("L6 organisateur : le compteur n'est écrit qu'une fois", async ({ page }) 
 // membres sans répéter titre ni badges, avec « S'inscrire » (choix du 17/09/2026).
 
 test("organisateur : carte de gestion en haut (titre, pilules, panneau, lien), puis la fiche avec « S'inscrire »", async ({ page }) => {
-  await member(page, STEPH, "/evenements/foot");
+  await member(page, STEPH, "/back-office/evenements/foot");
   const gestion = page.getByTestId("gestion-carte");
   const fiche = page.getByTestId("fiche-carte");
   await expect(gestion.getByRole("heading", { name: "Foot au parc" })).toBeVisible();
@@ -703,7 +706,7 @@ test("organisateur : carte de gestion en haut (titre, pilules, panneau, lien), p
 });
 
 test("organisateur : « Supprimer » est une pilule à bord, comme « Modifier » et « Dupliquer »", async ({ page }) => {
-  await member(page, STEPH, "/evenements/foot");
+  await member(page, STEPH, "/back-office/evenements/foot");
   const bord = (name: string, role: "link" | "button") =>
     page.getByTestId("gestion-carte").getByRole(role, { name }).evaluate((el) => getComputedStyle(el).borderTopWidth);
   expect(await bord("Modifier", "link")).toBe("1px");
@@ -751,7 +754,7 @@ test("fiche : la date n'est pas en gras", async ({ page }) => {
 });
 
 test("formulaire : libellés discrets, « Prévenir les membres » et le bouton pleine largeur dans la carte", async ({ page }) => {
-  await member(page, ALICE, "/evenements/nouveau");
+  await member(page, ALICE, "/back-office/evenements/nouveau");
   const carte = page.getByTestId("form-carte");
   const poids = await carte.locator("label[for='ev-titre']").evaluate((el) => Number(getComputedStyle(el).fontWeight));
   expect(poids).toBeLessThan(600);
@@ -805,7 +808,7 @@ test("calendrier : une réunion de pôle n'a ni « S'inscrire » ni compteur", a
 });
 
 test("période P2 : le formulaire écrit l'ouverture et la fin des inscriptions (heure facultative)", async ({ page }) => {
-  const db = await member(page, ALICE, "/evenements/nouveau");
+  const db = await member(page, ALICE, "/back-office/evenements/nouveau");
   await page.route("**/api/push/notify-evenement", (route) => route.fulfill({ json: { ok: true } }));
   await page.getByLabel("Nom de l'évènement").fill("Retraite");
   await page.getByLabel("Date", { exact: true }).fill("2026-11-14");
@@ -822,7 +825,7 @@ test("période P2 : le formulaire écrit l'ouverture et la fin des inscriptions 
 });
 
 test("période P2 : forcer « Ouvertes » cache les dates ; une fin avant l'ouverture est refusée", async ({ page }) => {
-  const db = await member(page, ALICE, "/evenements/nouveau");
+  const db = await member(page, ALICE, "/back-office/evenements/nouveau");
   await page.route("**/api/push/notify-evenement", (route) => route.fulfill({ json: { ok: true } }));
   await page.getByLabel("Nom de l'évènement").fill("Soirée louange");
   await page.getByLabel("Date", { exact: true }).fill("2026-11-14");
@@ -978,7 +981,7 @@ test("lot 11 calendrier : la carte montre « S'inscrire » seul et mène à la f
 });
 
 test("lot 11 formulaire : le lien est écrit, le mode et les dates disparaissent, places et sans compte désactivés", async ({ page }) => {
-  const db = await member(page, STEPH, "/evenements/theologie/modifier", DOCS_SANS);
+  const db = await member(page, STEPH, "/back-office/evenements/theologie/modifier", DOCS_SANS);
   await expect(page.getByRole("radio", { name: "Automatique" })).toBeVisible();
   await page.getByLabel("Lien d'inscription externe").fill(FORMULAIRE);
   await expect(page.getByRole("radiogroup", { name: "Inscriptions" })).toHaveCount(0);
@@ -994,7 +997,7 @@ test("lot 11 formulaire : le lien est écrit, le mode et les dates disparaissent
 });
 
 test("lot 11 formulaire : une adresse sans http(s) est refusée, comme les liens", async ({ page }) => {
-  const db = await member(page, STEPH, "/evenements/theologie/modifier", DOCS_SANS);
+  const db = await member(page, STEPH, "/back-office/evenements/theologie/modifier", DOCS_SANS);
   const champ = page.getByLabel("Lien d'inscription externe");
   // Sans schéma : le champ « url » ne laisse même pas partir le formulaire.
   await champ.fill("forms.gle/theologie");
@@ -1009,7 +1012,7 @@ test("lot 11 formulaire : une adresse sans http(s) est refusée, comme les liens
 });
 
 test("lot 11 formulaire : un évènement qui a déjà des inscrits refuse le lien externe", async ({ page }) => {
-  const db = await member(page, STEPH, "/evenements/foot/modifier");
+  const db = await member(page, STEPH, "/back-office/evenements/foot/modifier");
   await page.getByLabel("Lien d'inscription externe").fill(FORMULAIRE);
   await page.getByRole("button", { name: "Enregistrer" }).click();
   await expect(page.getByText("Cet évènement a déjà 4 inscrits dans l'app.")).toBeVisible();
@@ -1023,7 +1026,7 @@ test("lot 11 中文 : la fiche et le formulaire montrent les nouveaux libellés"
   const fiche = page.getByTestId("fiche-carte");
   await expect(fiche).toContainText("通过外部表单报名");
   await expect(fiche.getByRole("link", { name: "报名" })).toHaveAttribute("href", FORMULAIRE);
-  await page.goto("/evenements/theologie/modifier");
+  await page.goto("/back-office/evenements/theologie/modifier");
   await expect(page.getByLabel("外部报名链接")).toHaveValue(FORMULAIRE);
   await expect(page.getByText(/应用不再统计名额和报名人数/)).toBeVisible();
 });

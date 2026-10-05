@@ -164,11 +164,12 @@ export function EvenementCarte({ evenement: e, inscrit = false }: { evenement: E
   )
 }
 
-/** Info épinglée ou évènement passé : la ligne compacte. */
-export function EvenementCard({ evenement: e, past }: { evenement: Evenement; past?: boolean }) {
+/** Info épinglée ou évènement passé : la ligne compacte. Au Back-Office (lot U6, B3), elle
+ *  mène à la fiche de gestion (`href`). */
+export function EvenementCard({ evenement: e, past, href }: { evenement: Evenement; past?: boolean; href?: string }) {
   const { i18n } = useTranslation()
   return (
-    <Link href={`/evenements/${e.id}`}
+    <Link href={href ?? `/evenements/${e.id}`}
       className={`block bg-card rounded-xl px-4 py-3 transition-colors duration-150 active:bg-secondary/70 hover:bg-secondary/40 ${past ? "opacity-70" : ""}`}>
       <div className="flex items-center gap-3">
         {!isInfo(e) && <Tile color={COLOR} big={Number(e.date.slice(8, 10))} small={monthLabel(e.date, i18n.language)} size="lg" />}
