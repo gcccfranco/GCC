@@ -122,6 +122,9 @@ export function buildSetlistItems(items: FormListItem[]): SetlistItem[] {
       // formulaire ne touche qu'à la structure et aux réglages par section.
       ...(item.contentOverride ? { contentOverride: item.contentOverride } : {}),
       ...(item.sectionOrigins ? { sectionOrigins: item.sectionOrigins } : {}),
+      // Accords retouchés sur le scan 简谱 : même chose, sinon tout enregistrement
+      // de l'éditeur les effaçait (updateSetlist réécrit les items en entier).
+      ...(item.jianpuChords ? { jianpuChords: item.jianpuChords } : {}),
       notes: item.notes,
     };
   });
