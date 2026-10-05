@@ -18,7 +18,7 @@ import type { Tache } from "../src/types/tache";
 import type { UserProfile } from "../src/types/user";
 
 // Lot U6 (docs/spec-back-office.md), tranche B4 — le tableau de bord : les widgets
-// 1-6 et 8-10 (Calendrier et Chants les plus joués arrivent avec U8 et U7, Q17), la
+// 1-6 et 8-10 (Chants les plus joués arrive avec U7, Q17 ; le Calendrier, widget 11, est de U8 C8), la
 // disposition par défaut selon le rôle (Q11), la grille selon l'appareil (Q10) et la
 // lecture de `backOffice/{uid}` (Q5). Tranche B5 (en fin de fichier) : Personnaliser —
 // catalogue, retirer, Monter / Descendre, glisser, S / M / L, réglages, « Disposition par
@@ -122,10 +122,10 @@ async function part(cadre: Locator, w: Locator): Promise<number> {
 // ─── Règles pures ─────────────────────────────────────────────────────────────
 
 test.describe("Tableau de bord (B4) : disposition par défaut selon le rôle (Q11)", () => {
-  test("admin : tous les widgets permis, dans l'ordre de la planche (Calendrier et Chants avec U8 et U7)", () => {
+  test("admin : tous les widgets permis, dans l'ordre de la planche (Calendrier depuis U8 C8 ; Chants avec U7)", () => {
     const d = dispositionParDefaut(user(ADMIN), null);
-    expect(ids(d)).toEqual(["dimanche", "afaire", "setlists", "planning", "evenements", "petitdej", "raccourcis", "scene", "comptes"]);
-    expect(d.map((w) => w.taille)).toEqual(["m", "m", "s", "s", "m", "s", "s", "s", "s"]);
+    expect(ids(d)).toEqual(["dimanche", "calendrier", "afaire", "setlists", "planning", "evenements", "petitdej", "raccourcis", "scene", "comptes"]);
+    expect(d.map((w) => w.taille)).toEqual(["m", "m", "m", "s", "s", "m", "s", "s", "s", "s"]);
     expect(d.every((w) => Object.keys(w.reglages).length === 0)).toBe(true);
   });
 
@@ -328,7 +328,7 @@ test.describe("Tableau de bord (B4) : écrans", () => {
   test("admin sans disposition enregistrée : tous ses widgets, dans l'ordre du défaut", async ({ page }) => {
     await ouvrir(page, ADMIN);
     await expect(widget(page, "Ce dimanche")).toBeVisible();
-    expect(await widgetsAffiches(page)).toEqual(["dimanche", "afaire", "setlists", "planning", "evenements", "petitdej", "raccourcis", "scene", "comptes"]);
+    expect(await widgetsAffiches(page)).toEqual(["dimanche", "calendrier", "afaire", "setlists", "planning", "evenements", "petitdej", "raccourcis", "scene", "comptes"]);
   });
 
   test("Ce dimanche : le Culte du 4 octobre, setlist, présentation, case vide", async ({ page }) => {
@@ -474,8 +474,8 @@ const catalogueDe = (page: Page) => page.getByRole("region", { name: "Ajouter un
 test.describe("Personnaliser (B5) : règles pures", () => {
   test("catalogue : les widgets permis non affichés, dans l'ordre de la planche ; jamais un widget non permis", () => {
     const d = dispositionParDefaut(user(ALICE), profil(ALICE));
-    expect(catalogue(d, user(ALICE), profil(ALICE))).toEqual(["petitdej", "raccourcis"]);
-    expect(catalogue([], user(ALICE), profil(ALICE))).toEqual(["dimanche", "afaire", "evenements", "petitdej", "raccourcis", "scene"]);
+    expect(catalogue(d, user(ALICE), profil(ALICE))).toEqual(["calendrier", "petitdej", "raccourcis"]);
+    expect(catalogue([], user(ALICE), profil(ALICE))).toEqual(["dimanche", "calendrier", "afaire", "evenements", "petitdej", "raccourcis", "scene"]);
     expect(catalogue(dispositionParDefaut(user(ADMIN), null), user(ADMIN), null)).toEqual([]);
   });
 
@@ -542,7 +542,7 @@ test.describe("Personnaliser (B5) : écrans", () => {
     await expect(page.getByRole("button", { name: "Monter" })).toHaveCount(0);
     await personnaliser(page);
     await expect(page.getByRole("button", { name: "Disposition par défaut" })).toBeVisible();
-    await expect(catalogueDe(page).getByRole("button")).toHaveText(["Petit déj", "Raccourcis"]);
+    await expect(catalogueDe(page).getByRole("button")).toHaveText(["Calendrier", "Petit déj", "Raccourcis"]);
     // Les outils de chaque widget ; Monter grisé en tête, Descendre en queue.
     await expect(widget(page, "Ce dimanche").getByRole("button", { name: "Monter" })).toBeDisabled();
     await expect(widget(page, "Scène").getByRole("button", { name: "Descendre" })).toBeDisabled();
@@ -559,13 +559,13 @@ test.describe("Personnaliser (B5) : écrans", () => {
     await catalogueDe(page).getByRole("button", { name: "Petit déj" }).click();
     await expect(widget(page, "Petit déj").getByTestId("ligne-petitdej").first()).toBeVisible();
     expect(await widgetsAffiches(page)).toEqual([...ALICE_DEFAUT, "petitdej"]);
-    await expect(catalogueDe(page).getByRole("button")).toHaveText(["Raccourcis"]);
+    await expect(catalogueDe(page).getByRole("button")).toHaveText(["Calendrier", "Raccourcis"]);
     await expect.poll(() => idsEcrits(db, "uid-alice")).toEqual([...ALICE_DEFAUT, "petitdej"]);
     expect(ecrituresBO(db, "uid-alice").at(-1)!.data.majLe).toEqual(expect.stringMatching(/^2026-10-01T/));
 
     await widget(page, "À faire").getByRole("button", { name: "Retirer le widget" }).click();
     await expect(widget(page, "À faire")).toHaveCount(0);
-    await expect(catalogueDe(page).getByRole("button")).toHaveText(["À faire", "Raccourcis"]);
+    await expect(catalogueDe(page).getByRole("button")).toHaveText(["Calendrier", "À faire", "Raccourcis"]);
     await expect.poll(() => idsEcrits(db, "uid-alice")).toEqual(["dimanche", "evenements", "scene", "petitdej"]);
   });
 

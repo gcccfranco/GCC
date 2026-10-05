@@ -14,7 +14,7 @@ import {
   isPoleMember,
   polesDe,
 } from "@/lib/access";
-import { ONGLETS_SHEET, SHEET_EVENEMENTS_ID, type EntreeSheet } from "@/lib/evenements/sheet";
+import { lienOngletSheet, type EntreeSheet } from "@/lib/evenements/sheet";
 import type { FSSetlist } from "@/lib/firebase/setlists";
 import type { ServiceEntry, SetlistSeance } from "@/lib/planning/names";
 import { EDD_CLASSES } from "@/lib/planning/utils";
@@ -282,7 +282,6 @@ function sheet(d: DonneesCalendrier, debut: string, fin: string): EntreeCalendri
     .map((s) => {
       const n = parJour.get(s.date) ?? 0;
       parJour.set(s.date, n + 1);
-      const gid = ONGLETS_SHEET[s.date.slice(0, 7)];
       return {
         source: "evenements" as const,
         cle: `evenements:sheet-${n}:${s.date}`,
@@ -296,7 +295,7 @@ function sheet(d: DonneesCalendrier, debut: string, fin: string): EntreeCalendri
         // Q3 : les noms du Sheet sont du texte libre, reliés à aucun compte.
         moi: false,
         deplacable: false,
-        lien: `https://docs.google.com/spreadsheets/d/${SHEET_EVENEMENTS_ID}/edit${gid ? `#gid=${gid}` : ""}`,
+        lien: lienOngletSheet(s.date),
       };
     });
 }

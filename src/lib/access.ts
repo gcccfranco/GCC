@@ -470,11 +470,11 @@ export function estResponsable(user: AuthUser | null, profile: ProfilResponsable
     || profile.equipes === true || nonVide(profile.referentDe);
 }
 
-/** Entrées et widgets qui arrivent avec leur lot (Q17) : U8 (widget Calendrier, C8 ; l'entrée
- *  est là depuis C3), U7 (Statistiques, Chants les plus joués). Chaque lot retire la sienne de
- *  ces listes ; le rang est déjà gardé. */
+/** Entrées et widgets qui arrivent avec leur lot (Q17) : U7 (Statistiques, Chants les plus
+ *  joués). U8 a retiré les siens (l'entrée Calendrier en C3, son widget en C8). Chaque lot
+ *  retire la sienne de ces listes ; le rang est déjà gardé. */
 const ENTREES_A_VENIR: readonly Entree[] = ["statistiques"];
-const WIDGETS_A_VENIR: readonly WidgetId[] = ["calendrier", "chants"];
+const WIDGETS_A_VENIR: readonly WidgetId[] = ["chants"];
 
 /** Les entrées du Back-Office d'une personne (table Q2), dans l'ordre du menu. Vide pour qui
  *  n'est pas responsable. */

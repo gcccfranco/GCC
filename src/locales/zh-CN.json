@@ -65,6 +65,13 @@
       "taches": "任务",
       "petitDej": "早餐",
       "setlists": "歌单"
+    },
+    "widget": {
+      "prochainsJours": "近几天",
+      "cetteSemaine": "本周",
+      "rienS": "未来十四天没有安排。",
+      "rienM": "本周没有其他安排。",
+      "sheetInjoignable": "无法读取活动表格（Sheet），其中的活动暂不显示。"
     }
   },
   "common": {
@@ -2437,7 +2444,8 @@
       "sansLimite": "不限人数",
       "fermees": "报名已截止",
       "externe": "外部表单",
-      "rien": "近期没有活动。"
+      "rien": "近期没有活动。",
+      "duSheet": "活动表"
     },
     "petitdej": {
       "libre": "空缺"
@@ -2498,7 +2506,8 @@
       "nouveaux": "新账号",
       "raccourcis": "快捷方式",
       "semaines_other": "{{count}} 周",
-      "dimanches_other": "{{count}} 个主日"
+      "dimanches_other": "{{count}} 个主日",
+      "sources": "来源"
     }
   },
   "backOffice": {

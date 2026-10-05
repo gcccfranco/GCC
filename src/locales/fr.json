@@ -66,6 +66,13 @@
       "taches": "Tâches",
       "petitDej": "Petit déj",
       "setlists": "Setlists"
+    },
+    "widget": {
+      "prochainsJours": "Prochains jours",
+      "cetteSemaine": "Cette semaine",
+      "rienS": "Rien dans les quatorze prochains jours.",
+      "rienM": "Rien d'autre cette semaine.",
+      "sheetInjoignable": "Sheet des évènements injoignable : ses évènements n'y sont pas."
     }
   },
   "common": {
@@ -2441,7 +2448,8 @@
       "sansLimite": "sans limite",
       "fermees": "inscriptions fermées",
       "externe": "formulaire externe",
-      "rien": "Aucun évènement à venir."
+      "rien": "Aucun évènement à venir.",
+      "duSheet": "Sheet"
     },
     "petitdej": {
       "libre": "Libre"
@@ -2504,7 +2512,8 @@
       "semaines_one": "{{count}} semaine",
       "semaines_other": "{{count}} semaines",
       "dimanches_one": "{{count}} dimanche",
-      "dimanches_other": "{{count}} dimanches"
+      "dimanches_other": "{{count}} dimanches",
+      "sources": "Sources"
     }
   },
   "backOffice": {

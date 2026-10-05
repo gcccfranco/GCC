@@ -68,10 +68,12 @@ export function CadreWidget({
 
 /** Une rangée : texte à gauche, détail en petit à droite. */
 export function Rangee({
-  testId, href, detail, ton, children,
+  testId, href, externe, detail, ton, children,
 }: {
   testId?: string;
   href?: string;
+  /** Lien hors du site (l'onglet du Sheet des évènements) : un nouvel onglet. */
+  externe?: boolean;
   detail?: React.ReactNode;
   /** Couleur du détail : à surveiller (orange) ou en retard (rouge). */
   ton?: "warn" | "bad";
@@ -86,6 +88,9 @@ export function Rangee({
       )}
     </>
   );
+  if (href && externe) {
+    return <a href={href} target="_blank" rel="noopener noreferrer" data-testid={testId} className={cn(classes, "hover:text-muted-foreground")}>{contenu}</a>;
+  }
   if (href) {
     return <Link href={href} data-testid={testId} className={cn(classes, "hover:text-muted-foreground")}>{contenu}</Link>;
   }

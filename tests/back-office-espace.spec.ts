@@ -122,17 +122,17 @@ test.describe("Back-Office (B1) : les entrées selon les droits (Q2)", () => {
 });
 
 test.describe("Back-Office (B1) : les widgets permis (table des widgets)", () => {
-  test("un admin : tous ceux de U6 (Calendrier et Chants les plus joués viendront avec U8 et U7)", () => {
-    expect(widgetsPermis(user(ADMIN), profil(ADMIN))).toEqual(["dimanche", "afaire", "setlists", "planning", "evenements", "petitdej", "scene", "comptes", "raccourcis"]);
+  test("un admin : tous ceux de U6 et le Calendrier de U8 (Chants les plus joués viendra avec U7)", () => {
+    expect(widgetsPermis(user(ADMIN), profil(ADMIN))).toEqual(["dimanche", "calendrier", "afaire", "setlists", "planning", "evenements", "petitdej", "scene", "comptes", "raccourcis"]);
   });
 
   test("Alice : ni Setlists à préparer (elle ne crée pas de setlist), ni Cases vides, ni Comptes", () => {
-    expect(widgetsPermis(user(ALICE), profil(ALICE))).toEqual(["dimanche", "afaire", "evenements", "petitdej", "scene", "raccourcis"]);
+    expect(widgetsPermis(user(ALICE), profil(ALICE))).toEqual(["dimanche", "calendrier", "afaire", "evenements", "petitdej", "scene", "raccourcis"]);
   });
 
   test("un responsable musicien des plannings : Setlists à préparer et Cases vides ; un non-responsable : rien", () => {
     const p = { ...PLANNINGS, serviceRoles: { "Culte Francophone": ["musicien"] } };
-    expect(widgetsPermis(user(p), profil(p))).toEqual(["dimanche", "afaire", "setlists", "planning", "evenements", "petitdej", "scene", "raccourcis"]);
+    expect(widgetsPermis(user(p), profil(p))).toEqual(["dimanche", "calendrier", "afaire", "setlists", "planning", "evenements", "petitdej", "scene", "raccourcis"]);
     expect(widgetsPermis(user(CHORISTE), profil(CHORISTE))).toEqual([]);
   });
 });

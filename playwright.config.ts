@@ -26,6 +26,7 @@ const SPECS_GRAND_ECRAN = [
   // Lot U8 (spec-calendrier.md, Tests) : la page du calendrier, Mois sur la tablette couchée.
   /calendrier\.spec\.ts/,
   /calendrier-deplacer\.spec\.ts/,
+  /calendrier-widget\.spec\.ts/,
   // B2 : Planning, Équipes, Messages rangés dans le Back-Office (pleine largeur, barre latérale).
   /back-office-admin\.spec\.ts/,
   // B4 : le tableau de bord (grille de 4 en paysage et à 1 440 px).

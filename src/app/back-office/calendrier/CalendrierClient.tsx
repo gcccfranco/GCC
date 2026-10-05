@@ -12,8 +12,11 @@
 // pour le jour affiché (question 5). C6 : déplacer — glisser une entrée dans la grille du
 // Mois (ordinateur, tablettes), ou « Déplacer… » sous sa carte dans le panneau du jour et
 // dans sa feuille (seul moyen sur téléphone) ; la confirmation écrit, puis tout se relit.
+// C8 : `?jour=AAAA-MM-JJ` (le widget du tableau de bord) ouvre la page en Mois sur ce jour —
+// son panneau à droite, sa feuille sur tablette debout, sa liste sous le Mois à points.
 
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { useSearchParams } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import { Check, ChevronLeft, ChevronRight, CloudOff, Plus, SlidersHorizontal, UserRound } from "lucide-react";
 import { creatableEvenementPours, isAdminUser, polesDe } from "@/lib/access";
@@ -64,6 +67,11 @@ const usePanneauADroite = requeteMedia([
   "(pointer: coarse) and (orientation: landscape) and (min-width: 1024px)",
 ]);
 const useTelephone = requeteMedia(["(max-width: 767px)"]);
+/** Faux au rendu du serveur et à l'hydratation, vrai ensuite (les requêtes média sont lues). */
+const useHydrate = () => useSyncExternalStore(() => () => {}, () => true, () => false);
+
+/** `?jour=` : une date « AAAA-MM-JJ », sinon rien. */
+const jourDeLAdresse = (v: string | null) => (v && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : null);
 
 type Vue = "mois" | "agenda";
 
@@ -84,12 +92,18 @@ export function CalendrierClient() {
   const aDroite = usePanneauADroite();
   const telephone = useTelephone();
   const titreDuJour = useTitreDuJour(lang, aujourdhui);
+  // Ouverte sur un jour (C8) : en Mois, ce jour choisi.
+  const jourDemande = jourDeLAdresse(useSearchParams().get("jour"));
 
-  const [vueChoisie, setVue] = useState<Vue | null>(null);
+  const [vueChoisie, setVue] = useState<Vue | null>(jourDemande ? "mois" : null);
   const vue: Vue = vueChoisie ?? (telephone ? "agenda" : "mois");
-  const [mois, setMois] = useState(aujourdhui.slice(0, 7));
-  const [choisi, setChoisi] = useState(aujourdhui);
-  const [feuille, setFeuille] = useState(false);
+  const [mois, setMois] = useState((jourDemande ?? aujourdhui).slice(0, 7));
+  const [choisi, setChoisi] = useState(jourDemande ?? aujourdhui);
+  // Ouverte sur un jour, là où le jour s'affiche en feuille (tablette debout), sa feuille
+  // s'ouvre — une fois les requêtes média lues (`hydrate`), pour ne jamais passer sur un
+  // ordinateur, où le jour est dans le panneau de droite.
+  const [feuille, setFeuille] = useState(jourDemande !== null);
+  const hydrate = useHydrate();
   const [feuilleSources, setFeuilleSources] = useState(false);
   const [entree, setEntree] = useState<{ e: EntreeCalendrier | null; ouverte: boolean }>({ e: null, ouverte: false });
   // L'agenda part d'aujourd'hui jusqu'à la fin du mois, plus les mois ajoutés par « Afficher … ».
@@ -419,7 +433,7 @@ export function CalendrierClient() {
           <div className="mt-auto">{boutonsCreation(choisi)}</div>
         </aside>
       ) : (
-        <Drawer open={feuille} onOpenChange={setFeuille}>
+        <Drawer open={feuille && hydrate} onOpenChange={setFeuille}>
           <DrawerContent className="max-h-[85vh] md:mx-auto md:max-w-xl">
             <DrawerHeader className="pb-2 text-left">
               <DrawerTitle>{titreJour(choisi, lang)}</DrawerTitle>

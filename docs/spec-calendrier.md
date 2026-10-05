@@ -461,8 +461,53 @@ Spec validée et go de code donné (04/10/2026, redit le 05/10/2026) ; questions
   la clé datée de la veille ne refait pas partir un rappel déjà envoyé (la veille d'un évènement
   n'existe qu'un jour) ; seul un évènement déplacé vers demain, déjà rappelé sous l'ancienne date,
   est rappelé de nouveau, comme voulu.
-- **À suivre** : C8 (widget Calendrier S, M, L ; entrées du Sheet dans « Prochains évènements »).
-  L'envoi réel de la ligne se vérifie en ligne (spec, § Réussite).
+- **05/10/2026 — fusion de `lot/u6b-tableau-de-bord`** (B4 à B6 : tableau de bord, Personnaliser,
+  barre du bas) dans `lot/u8-calendrier`, avant C8. Conflits : l'Avancement de `spec-back-office.md`
+  (les deux sections gardées), `SPECS_GRAND_ECRAN` (calendrier + tableau de bord), les libellés
+  `backOffice.*` (réunis, sans `enAttente`, `scene` ni `administration`, retirés par B3) et
+  `back-office-espace.spec.ts`. L'entrée Calendrier étant là depuis C3, les tests de la barre du bas
+  (`barre-back-office.spec.ts`) écrits avant elle attendent désormais la barre de la planche
+  (Accueil · Calendrier · Tâches · Planning · Plus) ; une pièce de plus dans « Plus » et la feuille.
+- **05/10/2026 — C8 faite** (même branche, commit « feat(U8): C8 — widget Calendrier S, M, L ; le
+  Sheet dans Prochains évènements ») : le widget 11 (`src/components/backOffice/widgets/WidgetCalendrier.tsx`,
+  règles pures `src/lib/calendrier/widget.ts`), retiré de `WIDGETS_A_VENIR` (`access.ts`) : permis à
+  tout responsable, d'office au tableau de bord d'un admin (taille M, Q11 de U6). Mêmes entrées que
+  la page (`chargerCalendrier`, `entreesCalendrier`, Sheet sur la période du widget, bandeau discret
+  s'il est injoignable). **S** « Prochains jours » : trois jours au plus sur quatorze, une ligne par
+  jour (« Sam. 3 · Réunion DA · 20:00 » : titres à la suite, heure de la première entrée qui en a
+  une). **M** « Cette semaine » : lundi → dimanche, un point par entrée (quatre au plus), aujourd'hui
+  en encre (planche), puis les lignes des jours qui restent. **L** le mois (« Octobre ») : la grille
+  à points du téléphone (`GrillePoints`) et sa légende. Réglages (`groupesDeReglages`) : un groupe
+  « Sources » — les sources que la personne peut voir, sans Setlists, puis « Seulement moi » (oui /
+  non rangé avec elles, comme la planche ; `choisirReglage` le traite à part, la dernière source ne
+  s'éteint pas). Toucher un jour (ligne, case de M ou de L) ouvre `/back-office/calendrier?jour=…` :
+  la page s'ouvre en Mois sur ce mois et ce jour — panneau à droite, feuille du jour sur tablette
+  debout (ouverte une fois les requêtes média lues, jamais sur ordinateur), liste sous le Mois à
+  points sur téléphone ; la page passe sous `Suspense` (`useSearchParams`). **Widget 3** :
+  `avecLeSheet` (`donnees.ts`) mêle aux évènements de l'app les entrées du Sheet à venir (lues sur
+  un an : seuls les onglets connus sont demandés, donc rien après décembre 2026, U9), par date puis
+  heure, 3 / 5 / 10 ; une section choisie les écarte (toute l'église). Ligne : « dim. 04/10 · 12:30
+  · Sheet », lien vers l'onglet du mois dans un nouvel onglet (`lienOngletSheet`, `sheet.ts`, repris
+  par la fiche du calendrier ; `Rangee` gagne `externe`). `tests/calendrier-widget.spec.ts` (ajouté à
+  `SPECS_GRAND_ECRAN`) : 11 tests purs + 13 d'écran + 1 de captures, vus rouges (ébauches vides,
+  widget absent) puis verts sur les cinq projets (121 verts, 4 sautés : le test propre au
+  téléphone). Tests de U6 mis à jour (widget Calendrier permis, défaut de l'admin, catalogue
+  d'Alice). Verts ensemble : `back-office-espace`, `barre-back-office`, `tableau-de-bord`,
+  `calendrier`, `calendrier-sheet`, `calendrier-widget` (888) puis `calendrier`,
+  `calendrier-widget`, `back-office-coupe` (630). Captures `test-results/calendrier-widget-captures/`
+  regardées aux cinq tailles (S, M, L), conformes à `bo-tableau-de-bord` et `bo-telephone-accueil`.
+- **Choix de C8, faute de réponse dans la spec** : le contenu suit la taille sur tous les appareils
+  (le téléphone de la planche montre la liste S sous « Cette semaine » : on suit la spec, M y montre
+  la semaine à points) ; « Aujourd'hui » / « 今天 » nomme le jour courant dans les lignes ; en L,
+  aujourd'hui en rouge comme sur le Mois à points du téléphone (même composant) ; dans une ligne, un
+  créneau se dit « Scène », un petit déj libre « Petit déj : libre » ; le widget attend le profil
+  avant de lire (« mes services » et les pôles en dépendent) ; Sheet injoignable : une phrase sous
+  le widget. Widget 3 : une entrée du Sheet dit « Sheet » / « 活动表 » à la place de l'état des
+  inscriptions (« Nb inscrits » du Sheet n'est pas lu, « demander avant ») ; un Sheet injoignable
+  n'y est pas signalé (les évènements de l'app restent).
+- **Reste** : rien de C8. L'avertissement « Cases vides : … » du panneau du jour (après C3) attend
+  toujours le branchement de `casesVides` (U2 et U6 sont désormais fusionnés ici) ; l'envoi réel de
+  la ligne de C7 se vérifie en ligne (spec, § Réussite).
 - **Pour Timothée** : rien à publier (C1 à C4 ne touchent pas `firestore.rules` ; C3 ouvre
   seulement l'entrée de menu déjà prévue par U6) ; relire les mots 中文 de `calendrier` dans
   `src/locales/zh-CN.json` (`只看我的`, `活动（Sheet）`, `读取自活动表格（Sheet）`,
@@ -483,3 +528,8 @@ Spec validée et go de code donné (04/10/2026, redit le 05/10/2026) ; questions
   ne touche ni `access.ts` ni `firestore.rules` (le cron lit avec le compte de service) : rien à
   publier. La requête `deplacement.le >= …` du cron se sert de l'index simple automatique de
   Firestore, comme `compteRendu.le` : rien à créer.
+  Pour C8 : rien à publier (`access.ts` ne fait que rendre le widget permis ; ses réglages vivent
+  dans `backOffice/{uid}`, dont la règle vient de B5) ; relire les mots 中文 `近几天`, `本周`,
+  `未来十四天没有安排。`, `本周没有其他安排。`, `无法读取活动表格（Sheet），其中的活动暂不显示。`,
+  `来源` (réglages), `活动表` (widget 3), et les jours « 今天 », « 周六 3日 »
+  (`src/lib/calendrier/widget.ts`).
