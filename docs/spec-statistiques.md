@@ -330,3 +330,33 @@ Questions ouvertes 1 à 7 : la recommandation de chacune est retenue (go du 04/1
      avec S4, avec ses deux vues et le paramètre d'adresse `vue`.
 - Reste : S4 (« Jamais joués », « À redécouvrir », le sélecteur de vues dans `action` de `PageTitle`), S5 (widget).
 - À faire par Timothée : rien pour S3 (aucune règle Firestore, aucune donnée) ; valider l'écran en local.
+
+### 05/10/2026 — S4, « Jamais joués » et « À redécouvrir » : faite (commit « feat(U7): S4 — … », branche `lot/u7-statistiques`)
+
+- `StatistiquesClient.tsx` porte maintenant le titre (repris de `page.tsx`) et le sélecteur « Les plus joués · Jamais
+  joués · À redécouvrir » (boutons `aria-pressed` dans un groupe « Vue », au style du sélecteur App · Back-Office) :
+  à droite du titre à partir de 1024 px, dessous en dessous, pleine largeur sur téléphone. La vue vit dans l'adresse
+  (`vue=jamais-joues`, `vue=a-redecouvrir` ; absente = « Les plus joués ») avec les filtres : le retour depuis un chant
+  la retrouve. Filtres et carte « Setlists comptées » gardés dans les trois vues, « Les 10 premiers » effacé.
+- **Jamais joués** : « N chants sur M », puis Chant (lien + étiquette), Artiste, Dernière fois (« 28/06 » ou « jamais ») ;
+  tableau sur tablette et ordinateur, liste sur téléphone (titre ; « artiste · dernière fois »).
+- **À redécouvrir** : #, Chant, Avant la période, Dernière fois, Tonalité la plus jouée ; liste sur téléphone
+  (« 3 avant la période · 28/06 · G »). Messages : « L'historique commence le JJ/MM/AAAA : choisis une période plus
+  courte. » (aucune setlist avant la période, ou « Depuis le début ») ; « Aucun chant à redécouvrir sur cette période. ».
+- `SEUIL_A_REDECOUVRIR` exporté de `src/lib/stats/chantsJoues.ts` (aucun calcul changé).
+- `tests/statistiques.spec.ts` : 7 tests S4 (sélecteur, jamais joués, à redécouvrir sur 3 mois, sans historique,
+  période vide, retour depuis un chant, captures), écrits avant le code et vus rouges (7 sur 7), puis verts sur les
+  cinq projets (139 verts, 1 sauté : en-têtes sur téléphone) ; `back-office-coupe` vert ; lint et `tsc` propres.
+  Captures regardées aux cinq tailles.
+- Choix pris faute de réponse dans la spec :
+  1. **« N chants sur M »** : M = les chants du recueil de la langue choisie (378 sans filtre de langue).
+  2. **Début de l'historique** : la première setlist publiée passée, tous services et présidences (en ligne :
+     24/05/2026), lue dans les données plutôt qu'écrite en dur. Sans setlist avant le début de la période, la vue
+     montre ce message, même avec un service ou une présidence choisis.
+  3. **Une phrase sous « À redécouvrir »** rappelle la règle : « Joués au moins 3 fois avant le 04/07, aucune fois
+     depuis ».
+  4. **Période vide** : « Aucune setlist publiée sur cette période. » dans les trois vues (sans liste de jamais joués).
+  5. **Jamais joués vide** : « Tous les chants ont été joués sur cette période. ».
+  6. Ni tri ni rang dans « Jamais joués » (ordre du recueil, Q11) ; « À redécouvrir » numérote dans son ordre (Q11).
+- Reste : S5 (le widget « Chants les plus joués » du tableau de bord).
+- À faire par Timothée : rien pour S4 (aucune règle Firestore, aucune donnée) ; valider les deux vues en local.

@@ -3,6 +3,8 @@
 // Lot U7 (docs/spec-statistiques.md), S3 : la vue « Les plus joués » — lecture des setlists et du
 // recueil, filtres (période, service, langue, présidence) gardés dans l'URL (Q13), cartes
 // « Setlists comptées » et « Les 10 premiers », tableau trié (Q9) ou liste sur téléphone.
+// S4 : le sélecteur « Les plus joués · Jamais joués · À redécouvrir » (Q11), mêmes filtres et
+// même carte « Setlists comptées » dans les trois vues.
 // Calcul : `statsChants` (src/lib/stats/chantsJoues.ts). Rien n'est écrit. Français seul (Q14).
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
@@ -10,13 +12,22 @@ import { useTranslation } from "react-i18next";
 import { ArrowDownWideNarrow, CalendarDays, ChevronDown, ChevronUp } from "lucide-react";
 import { ALL_CATEGORIES, getSetlists, type FSSetlist } from "@/lib/firebase/setlists";
 import {
-  choixDesFiltres, libellePart, libelleTendance, statsChants,
-  type FiltresStats, type LigneChant, type Periode,
+  SEUIL_A_REDECOUVRIR, bornesDeLaPeriode, choixDesFiltres, libellePart, libelleTendance, statsChants,
+  type FiltresStats, type LigneChant, type Periode, type StatsChants,
 } from "@/lib/stats/chantsJoues";
+import { PageTitle } from "@/components/layout/PageTitle";
 import type { SongIndexEntry } from "@/types/song";
 import { cn } from "@/lib/utils";
 
+type Vue = "plus" | "jamais" | "redecouvrir";
 type ChoixPeriode = "3" | "6" | "12" | "debut" | "libre";
+
+/** Les trois vues et leur nom dans l'adresse (« Les plus joués » : pas de paramètre). */
+const VUES: { vue: Vue; libelle: string; adresse: string | null }[] = [
+  { vue: "plus", libelle: "Les plus joués", adresse: null },
+  { vue: "jamais", libelle: "Jamais joués", adresse: "jamais-joues" },
+  { vue: "redecouvrir", libelle: "À redécouvrir", adresse: "a-redecouvrir" },
+];
 type CleTri = "chant" | "setlists" | "derniere" | "tendance";
 type Sens = "asc" | "desc";
 
@@ -44,12 +55,12 @@ const COMPARER: Record<CleTri, (a: LigneChant, b: LigneChant) => number> = {
 };
 
 type Etat = {
-  periode: ChoixPeriode; du: string; au: string;
+  vue: Vue; periode: ChoixPeriode; du: string; au: string;
   service: string | null; langue: "fr" | "zh" | null; presidence: string | null;
   tri: CleTri; sens: Sens;
 };
 const ETAT_PAR_DEFAUT: Etat = {
-  periode: "12", du: "", au: "", service: null, langue: null, presidence: null, tri: "setlists", sens: "desc",
+  vue: "plus", periode: "12", du: "", au: "", service: null, langue: null, presidence: null, tri: "setlists", sens: "desc",
 };
 
 /** L'écran tel que l'adresse le décrit (Q13) ; une valeur inconnue garde le défaut. */
@@ -59,6 +70,7 @@ function lireAdresse(recherche: string): Etat {
   const tri = p.get("tri");
   const langue = p.get("langue");
   const etat: Etat = { ...ETAT_PAR_DEFAUT };
+  etat.vue = VUES.find((v) => v.adresse !== null && v.adresse === p.get("vue"))?.vue ?? "plus";
   if (periode && ["3", "6", "12", "debut", "libre"].includes(periode)) etat.periode = periode as ChoixPeriode;
   etat.du = p.get("du") ?? "";
   etat.au = p.get("au") ?? "";
@@ -72,6 +84,8 @@ function lireAdresse(recherche: string): Etat {
 
 function ecrireAdresse(e: Etat): string {
   const p = new URLSearchParams();
+  const vue = VUES.find((v) => v.vue === e.vue)?.adresse;
+  if (vue) p.set("vue", vue);
   if (e.periode !== "12") p.set("periode", e.periode);
   if (e.periode === "libre") { p.set("du", e.du); p.set("au", e.au); }
   if (e.service) p.set("service", e.service);
@@ -98,6 +112,12 @@ function jourCourt(jour: string, aujourdhui: string): string {
 
 function veille(jour: string): string {
   return new Date(Date.parse(`${jour}T00:00:00Z`) - 86_400_000).toISOString().slice(0, 10);
+}
+
+/** « 24/05/2026 ». */
+function jourLong(jour: string): string {
+  const [a, m, j] = jour.split("-");
+  return `${j}/${m}/${a}`;
 }
 
 type Lecture =
@@ -148,18 +168,28 @@ export function StatistiquesClient() {
     return etat.sens === SENS_PAR_DEFAUT[etat.tri] ? triees : triees.reverse();
   }, [stats, etat]);
 
+  const enTete = (
+    <div className="lg:flex lg:items-start lg:justify-between lg:gap-4">
+      <PageTitle title="Chants les plus joués" subtitle="Visible par les admins seulement" />
+      <SelecteurVue vue={etat.vue} choisir={(vue) => changer({ vue })} />
+    </div>
+  );
+
   if (lecture.etat === "echec") {
     return (
-      <div role="alert" className="raised rounded-2xl px-5 py-8 flex flex-col items-center gap-3 text-center">
-        <p className="text-sm text-muted-foreground">{lecture.message}</p>
-        <button type="button" onClick={() => { setLecture({ etat: "calcul" }); lire(); }} className="h-9 px-4 rounded-full bg-foreground text-background text-sm font-semibold transition-transform active:scale-[.97]">
-          Réessayer
-        </button>
-      </div>
+      <>
+        {enTete}
+        <div role="alert" className="raised rounded-2xl px-5 py-8 flex flex-col items-center gap-3 text-center">
+          <p className="text-sm text-muted-foreground">{lecture.message}</p>
+          <button type="button" onClick={() => { setLecture({ etat: "calcul" }); lire(); }} className="h-9 px-4 rounded-full bg-foreground text-background text-sm font-semibold transition-transform active:scale-[.97]">
+            Réessayer
+          </button>
+        </div>
+      </>
     );
   }
-  if (!stats || !choix) {
-    return <p role="status" className="text-sm text-muted-foreground">Calcul…</p>;
+  if (!stats || !choix || !donnees) {
+    return <>{enTete}<p role="status" className="text-sm text-muted-foreground">Calcul…</p></>;
   }
 
   const trier = (cle: CleTri) =>
@@ -174,48 +204,82 @@ export function StatistiquesClient() {
   const { comptees } = stats;
 
   return (
-    <div className="space-y-4">
-      <Filtres
-        etat={etat} aujourdhui={aujourdhui} services={choix.services} presidences={choix.presidences}
-        nomService={(c) => t("categories." + c, { lng: "fr", defaultValue: c })}
-        choisirPeriode={choisirPeriode} changer={changer}
-      />
+    <>
+      {enTete}
+      <div className="space-y-4">
+        <Filtres
+          etat={etat} aujourdhui={aujourdhui} services={choix.services} presidences={choix.presidences}
+          nomService={(c) => t("categories." + c, { lng: "fr", defaultValue: c })}
+          choisirPeriode={choisirPeriode} changer={changer}
+        />
 
-      {comptees.nombre === 0 ? (
-        <p role="status" className="raised rounded-2xl px-5 py-8 text-center text-sm text-muted-foreground">
-          Aucune setlist publiée sur cette période.
-        </p>
-      ) : (
-        <>
-          <div className="grid gap-4 lg:grid-cols-[minmax(0,15rem)_minmax(0,1fr)]">
-            {/* Téléphone : le nombre à gauche, le titre et les dates à droite, sur une ligne. */}
-            <section data-testid="setlists-comptees"
-              className="raised rounded-2xl px-5 py-4 grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-4 sm:grid-cols-1 sm:items-start sm:content-start">
-              <h2 className="col-start-2 row-start-1 self-end text-sm font-semibold text-muted-foreground sm:col-start-1 sm:self-auto">
-                Setlists comptées
-              </h2>
-              <p data-testid="nombre" className="col-start-1 row-start-1 row-span-2 text-3xl font-bold tabular-nums sm:row-start-2 sm:row-span-1 sm:mt-1">
-                {comptees.nombre}
-              </p>
-              <p className="col-start-2 row-start-2 self-start text-sm text-muted-foreground sm:col-start-1 sm:row-start-3 sm:self-auto">
-                publiées, du {jourCourt(comptees.du!, aujourdhui)} au {jourCourt(comptees.au!, aujourdhui)}
-              </p>
-            </section>
-            {lignes.length > 0 && <DixPremiers lignes={stats.plusJoues.slice(0, 10)} />}
-          </div>
+        {comptees.nombre === 0 ? (
+          <p role="status" className="raised rounded-2xl px-5 py-8 text-center text-sm text-muted-foreground">
+            Aucune setlist publiée sur cette période.
+          </p>
+        ) : (
+          <>
+            <div className="grid gap-4 lg:grid-cols-[minmax(0,15rem)_minmax(0,1fr)]">
+              {/* Téléphone : le nombre à gauche, le titre et les dates à droite, sur une ligne. */}
+              <section data-testid="setlists-comptees"
+                className="raised rounded-2xl px-5 py-4 grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-4 sm:grid-cols-1 sm:items-start sm:content-start">
+                <h2 className="col-start-2 row-start-1 self-end text-sm font-semibold text-muted-foreground sm:col-start-1 sm:self-auto">
+                  Setlists comptées
+                </h2>
+                <p data-testid="nombre" className="col-start-1 row-start-1 row-span-2 text-3xl font-bold tabular-nums sm:row-start-2 sm:row-span-1 sm:mt-1">
+                  {comptees.nombre}
+                </p>
+                <p className="col-start-2 row-start-2 self-start text-sm text-muted-foreground sm:col-start-1 sm:row-start-3 sm:self-auto">
+                  publiées, du {jourCourt(comptees.du!, aujourdhui)} au {jourCourt(comptees.au!, aujourdhui)}
+                </p>
+              </section>
+              {etat.vue === "plus" && lignes.length > 0 && <DixPremiers lignes={stats.plusJoues.slice(0, 10)} />}
+            </div>
 
-          {stats.plusJoues.length === 0 ? (
-            <p role="status" className="raised rounded-2xl px-5 py-8 text-center text-sm text-muted-foreground">
-              Aucun chant dans cette langue sur cette période.
-            </p>
-          ) : (
-            <>
-              <ListeTelephone lignes={lignes} aujourdhui={aujourdhui} tri={etat.tri} trier={(cle) => changer({ tri: cle, sens: SENS_PAR_DEFAUT[cle] })} />
-              <Tableau lignes={lignes} aujourdhui={aujourdhui} tri={etat.tri} sens={etat.sens} trier={trier} />
-            </>
-          )}
-        </>
-      )}
+            {etat.vue === "jamais" ? (
+              <JamaisJoues chants={stats.jamaisJoues} aujourdhui={aujourdhui}
+                total={donnees.recueil.filter((c) => etat.langue === null || c.language === etat.langue).length} />
+            ) : etat.vue === "redecouvrir" ? (
+              <ARedecouvrir chants={stats.aRedecouvrir} aujourdhui={aujourdhui}
+                debutPeriode={bornesDeLaPeriode(enPeriode(etat), aujourdhui).du}
+                debutHistorique={premiereSetlist(donnees.setlists, aujourdhui)} />
+            ) : stats.plusJoues.length === 0 ? (
+              <p role="status" className="raised rounded-2xl px-5 py-8 text-center text-sm text-muted-foreground">
+                Aucun chant dans cette langue sur cette période.
+              </p>
+            ) : (
+              <>
+                <ListeTelephone lignes={lignes} aujourdhui={aujourdhui} tri={etat.tri} trier={(cle) => changer({ tri: cle, sens: SENS_PAR_DEFAUT[cle] })} />
+                <Tableau lignes={lignes} aujourdhui={aujourdhui} tri={etat.tri} sens={etat.sens} trier={trier} />
+              </>
+            )}
+          </>
+        )}
+      </div>
+    </>
+  );
+}
+
+/** La première setlist publiée passée : le début de l'historique (« À redécouvrir », Q11). */
+function premiereSetlist(setlists: FSSetlist[], aujourdhui: string): string | null {
+  const jours = setlists.map((s) => (s.date ?? "").slice(0, 10)).filter((j) => /^\d{4}-\d{2}-\d{2}$/.test(j) && j < aujourdhui);
+  return jours.length ? jours.reduce((min, j) => (j < min ? j : min)) : null;
+}
+
+/** « Les plus joués · Jamais joués · À redécouvrir » : à droite du titre sur grand écran, dessous
+ *  ailleurs, pleine largeur sur téléphone (planches bo-statistiques et bo-statistiques-telephone). */
+function SelecteurVue({ vue, choisir }: { vue: Vue; choisir: (vue: Vue) => void }) {
+  return (
+    <div role="group" aria-label="Vue" className="flex w-full shrink-0 rounded-full bg-secondary p-[3px] sm:inline-flex sm:w-auto lg:mt-1">
+      {VUES.map((v) => (
+        <button key={v.vue} type="button" aria-pressed={vue === v.vue} onClick={() => choisir(v.vue)}
+          className={cn(
+            "flex-1 whitespace-nowrap rounded-full px-3.5 py-1.5 text-[13px] font-semibold transition-[background-color,color] duration-150 sm:flex-none",
+            vue === v.vue ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
+          )}>
+          {v.libelle}
+        </button>
+      ))}
     </div>
   );
 }
@@ -320,7 +384,7 @@ function Langue({ langue }: { langue: "fr" | "zh" }) {
 }
 
 /** Le titre (lien vers le chant) et son étiquette ; un chant absent du recueil garde son slug (Q12). */
-function TitreChant({ ligne }: { ligne: LigneChant }) {
+function TitreChant({ ligne }: { ligne: Pick<LigneChant, "slug" | "titre" | "langue"> }) {
   return (
     <span className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5">
       {ligne.langue ? (
@@ -449,5 +513,114 @@ function Tableau({ lignes, aujourdhui, tri, sens, trier }: {
         </tbody>
       </table>
     </div>
+  );
+}
+
+// ─── Jamais joués, À redécouvrir (S4) ─────────────────────────────────────────
+
+const MESSAGE = "raised rounded-2xl px-5 py-8 text-center text-sm text-muted-foreground";
+
+/** « Jamais joués » : les chants du recueil absents des setlists comptées, dans l'ordre du recueil
+ *  (Q11), avec l'artiste et la dernière fois toutes dates confondues ou « jamais ». */
+function JamaisJoues({ chants, total, aujourdhui }: {
+  chants: StatsChants["jamaisJoues"]; total: number; aujourdhui: string;
+}) {
+  if (chants.length === 0) return <p role="status" className={MESSAGE}>Tous les chants ont été joués sur cette période.</p>;
+  const derniere = (jour: string | null) => (jour ? jourCourt(jour, aujourdhui) : "jamais");
+  return (
+    <section className="raised rounded-2xl px-2">
+      <h2 className="px-3 pt-4 pb-1 text-sm font-semibold text-muted-foreground">
+        {chants.length} {chants.length > 1 ? "chants" : "chant"} sur {total}
+      </h2>
+      <ol className="divide-y divide-border sm:hidden">
+        {chants.map((c) => (
+          <li key={c.slug} data-testid="ligne-jamais" className="space-y-0.5 px-2 py-3">
+            <TitreChant ligne={c} />
+            <p className="text-sm text-muted-foreground">
+              <span data-champ="artiste">{c.artiste}</span>
+              {" · "}<span data-champ="derniere" className="tabular-nums">{derniere(c.derniereFois)}</span>
+            </p>
+          </li>
+        ))}
+      </ol>
+      <table className="hidden w-full text-sm sm:table">
+        <thead className="text-left text-xs text-muted-foreground">
+          <tr className="border-b border-border">
+            <th scope="col" className="px-3 py-3 font-semibold">Chant</th>
+            <th scope="col" className="px-3 py-3 font-semibold">Artiste</th>
+            <th scope="col" className="px-3 py-3 font-semibold">Dernière fois</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-border">
+          {chants.map((c) => (
+            <tr key={c.slug} data-testid="ligne-jamais">
+              <td className="px-3 py-3"><TitreChant ligne={c} /></td>
+              <td data-champ="artiste" className="px-3 py-3 text-muted-foreground">{c.artiste}</td>
+              <td data-champ="derniere" className="px-3 py-3 tabular-nums">{derniere(c.derniereFois)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </section>
+  );
+}
+
+/** « À redécouvrir » : au moins trois setlists avant la période, aucune pendant (Q11). Sans
+ *  setlist avant la période (« Depuis le début », ou une période plus longue que l'historique),
+ *  la liste le dit. */
+function ARedecouvrir({ chants, aujourdhui, debutPeriode, debutHistorique }: {
+  chants: StatsChants["aRedecouvrir"]; aujourdhui: string; debutPeriode: string | null; debutHistorique: string | null;
+}) {
+  if (!debutPeriode || !debutHistorique || debutHistorique >= debutPeriode) {
+    return (
+      <p role="status" className={MESSAGE}>
+        L&apos;historique commence le {debutHistorique ? jourLong(debutHistorique) : "?"} : choisis une période plus courte.
+      </p>
+    );
+  }
+  if (chants.length === 0) return <p role="status" className={MESSAGE}>Aucun chant à redécouvrir sur cette période.</p>;
+  return (
+    <section className="raised rounded-2xl px-2">
+      <h2 className="px-3 pt-4 pb-1 text-sm font-semibold text-muted-foreground">
+        Joués au moins {SEUIL_A_REDECOUVRIR} fois avant le {jourCourt(debutPeriode, aujourdhui)}, aucune fois depuis
+      </h2>
+      <ol className="divide-y divide-border sm:hidden">
+        {chants.map((c, i) => (
+          <li key={c.slug} data-testid="ligne-redecouvrir" className="flex gap-3 px-2 py-3">
+            <span data-champ="rang" className="w-5 shrink-0 text-right text-sm text-muted-foreground tabular-nums">{i + 1}</span>
+            <div className="min-w-0 flex-1 space-y-0.5">
+              <TitreChant ligne={c} />
+              <p className="text-sm text-muted-foreground">
+                <b data-champ="avant" className="font-bold text-foreground tabular-nums">{c.avant}</b> avant la période
+                {" · "}<span data-champ="derniere" className="tabular-nums">{jourCourt(c.derniereFois, aujourdhui)}</span>
+                {" · "}<span data-champ="tonalite">{c.tonalites.join(" / ")}</span>
+              </p>
+            </div>
+          </li>
+        ))}
+      </ol>
+      <table className="hidden w-full text-sm sm:table">
+        <thead className="text-left text-xs text-muted-foreground">
+          <tr className="border-b border-border">
+            <th scope="col" className="w-10 px-3 py-3 text-right font-semibold">#</th>
+            <th scope="col" className="px-3 py-3 font-semibold">Chant</th>
+            <th scope="col" className="px-3 py-3 text-right font-semibold">Avant la période</th>
+            <th scope="col" className="px-3 py-3 font-semibold">Dernière fois</th>
+            <th scope="col" className="px-3 py-3 font-semibold">Tonalité la plus jouée</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-border">
+          {chants.map((c, i) => (
+            <tr key={c.slug} data-testid="ligne-redecouvrir">
+              <td data-champ="rang" className="px-3 py-3 text-right text-muted-foreground tabular-nums">{i + 1}</td>
+              <td className="px-3 py-3"><TitreChant ligne={c} /></td>
+              <td data-champ="avant" className="px-3 py-3 text-right font-bold tabular-nums">{c.avant}</td>
+              <td data-champ="derniere" className="px-3 py-3 tabular-nums">{jourCourt(c.derniereFois, aujourdhui)}</td>
+              <td data-champ="tonalite" className="px-3 py-3">{c.tonalites.join(" / ")}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </section>
   );
 }

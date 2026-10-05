@@ -30,7 +30,7 @@ type ChantDuRecueil = Pick<SongIndexEntry, "slug" | "title" | "language" | "arti
 type Passage = { jour: string; tonalite: string | null };
 
 /** « Au moins 3 setlists avant la période » (Q11). */
-const SEUIL_A_REDECOUVRIR = 3;
+export const SEUIL_A_REDECOUVRIR = 3;
 const JOUR = /^\d{4}-\d{2}-\d{2}$/;
 
 // ─── Dates (AAAA-MM-JJ, en UTC pour ignorer les fuseaux) ──────────────────────

@@ -4,11 +4,10 @@
 // Interrupteur coupé : 404, et sans compte ou sans droit de responsable : « Réservé aux
 // responsables » + « Se connecter », par la garde de l'espace (back-office/layout.tsx).
 // Ici, un responsable non admin lit le message de /admin (Q2). Français seul (Q14).
-// S3 : la vue « Les plus joués » (StatistiquesClient) ; les deux autres vues viennent avec S4.
+// S3, S4 : le titre, le sélecteur des trois vues et leur contenu (StatistiquesClient).
 import { ShieldCheck } from "lucide-react";
 import { useAuth } from "@/lib/firebase/auth";
 import { canVoirStatistiques } from "@/lib/access";
-import { PageTitle } from "@/components/layout/PageTitle";
 import { StatistiquesClient } from "./StatistiquesClient";
 
 export default function StatistiquesPage() {
@@ -28,7 +27,6 @@ export default function StatistiquesPage() {
   return (
     // Pleine largeur, comme la planche bo-statistiques et le tableau de bord.
     <div className="px-4 pt-6 pb-10 space-y-6 sm:px-6 lg:px-8">
-      <PageTitle title="Chants les plus joués" subtitle="Visible par les admins seulement" />
       <StatistiquesClient />
     </div>
   );

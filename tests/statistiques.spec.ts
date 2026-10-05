@@ -165,7 +165,9 @@ async function ouvrirStatistiques(page: Page, chemin = "/back-office/statistique
     route.fulfill({ contentType: "application/json", body: JSON.stringify({ generatedAt: "2026-10-01", songs: RECUEIL }) }));
   const db = await signInAs(page, ADMIN, SETLISTS, chemin);
   // Tableau (tablette, ordinateur) ou liste (téléphone) : seul l'un des deux se voit.
-  await expect(page.locator('[data-testid="ligne-chant"]:visible').first()).toBeVisible();
+  if (!chemin.includes("vue=")) await expect(page.locator('[data-testid="ligne-chant"]:visible').first()).toBeVisible();
+  // Autres vues (S4) : la carte « Setlists comptées », ou le message d'une période vide.
+  else await expect(page.getByTestId("setlists-comptees").or(page.getByText("Aucune setlist publiée sur cette période."))).toBeVisible();
   return db;
 }
 
@@ -359,5 +361,143 @@ test.describe("Statistiques (S3) : captures à regarder", () => {
     await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
     await page.waitForTimeout(600);
     await page.screenshot({ path: `test-results/statistiques-captures/${info.project.name}-s3.png`, fullPage: true });
+  });
+});
+
+// ─── S4 : « Jamais joués » et « À redécouvrir » ───────────────────────────────
+// Même jeu d'essai. Sur 3 mois (du 04/07 à hier), Abba Père a été joué trois fois avant (s1 à s3)
+// et aucune pendant : le seul chant « à redécouvrir ». Sur 12 mois, rien n'existe avant le
+// 04/10/2025 : l'historique commence à la première setlist simulée, le 31/05/2026.
+
+/** Les lignes visibles d'une vue (tableau, ou liste sur téléphone), lues champ par champ. */
+async function lignesDe(page: Page, testid: "ligne-jamais" | "ligne-redecouvrir") {
+  return page.locator(`[data-testid="${testid}"]:visible`).evaluateAll((els) =>
+    els.map((el) => Object.fromEntries(
+      [...el.querySelectorAll("[data-champ]")].map((c) => [c.getAttribute("data-champ"), (c.textContent ?? "").trim()]),
+    )));
+}
+
+const vue = (page: Page, nom: "Les plus joués" | "Jamais joués" | "À redécouvrir") =>
+  page.getByRole("group", { name: "Vue" }).getByRole("button", { name: nom, exact: true });
+
+test.describe("Statistiques (S4) : jamais joués et à redécouvrir", () => {
+  test.use({ serviceWorkers: "block" });
+
+  test("le sélecteur de vues : « Les plus joués » par défaut, les deux autres gardent filtres et « Setlists comptées »", async ({ page }) => {
+    await ouvrirStatistiques(page);
+    await expect(vue(page, "Les plus joués")).toHaveAttribute("aria-pressed", "true");
+    await expect(vue(page, "Jamais joués")).toHaveAttribute("aria-pressed", "false");
+
+    await vue(page, "Jamais joués").click();
+    await expect(vue(page, "Jamais joués")).toHaveAttribute("aria-pressed", "true");
+    await expect(page).toHaveURL(/vue=jamais-joues/);
+    await expect(page.getByTestId("dix-premiers")).toHaveCount(0);
+    await expect(page.locator('[data-testid="ligne-chant"]:visible')).toHaveCount(0);
+    expect(await setlistsComptees(page)).toBe("6");
+    await expect(page.getByRole("button", { name: "12 mois" })).toHaveAttribute("aria-pressed", "true");
+    await expect(page.getByRole("combobox", { name: "Service" })).toBeVisible();
+
+    await vue(page, "À redécouvrir").click();
+    await expect(page).toHaveURL(/vue=a-redecouvrir/);
+    await expect(page.getByTestId("dix-premiers")).toHaveCount(0);
+    expect(await setlistsComptees(page)).toBe("6");
+
+    await vue(page, "Les plus joués").click();
+    await expect(page).not.toHaveURL(/vue=/);
+    await expect(page.getByTestId("dix-premiers")).toBeVisible();
+  });
+
+  test("« Jamais joués » : les chants du recueil absents des setlists comptées, A→Z, avec artiste et dernière fois", async ({ page }) => {
+    await ouvrirStatistiques(page);
+    await vue(page, "Jamais joués").click();
+    await expect(page.getByText("1 chant sur 5", { exact: true })).toBeVisible();
+    expect(await lignesDe(page, "ligne-jamais")).toEqual([{ titre: "À la croix", artiste: "Auteur Cinq", derniere: "jamais" }]);
+
+    await page.getByRole("button", { name: "3 mois" }).click();
+    await expect(page.getByText("3 chants sur 5", { exact: true })).toBeVisible();
+    // Dernière fois toutes dates confondues ; l'absent du recueil (« ancien-chant ») n'y est jamais.
+    expect(await lignesDe(page, "ligne-jamais")).toEqual([
+      { titre: "Abba Père", artiste: "Auteur Un", derniere: "28/06" },
+      { titre: "Abrite-moi", artiste: "Auteur Deux", derniere: "14/06" },
+      { titre: "À la croix", artiste: "Auteur Cinq", derniere: "jamais" },
+    ]);
+    const ligne = page.locator('[data-testid="ligne-jamais"]:visible').first();
+    await expect(ligne.getByRole("link", { name: "Abba Père" })).toHaveAttribute("href", /^\/songs\/abba-pere\/?$/);
+    await expect(ligne.getByTestId("langue")).toHaveText("FR");
+
+    // La langue retire des chants, et du total.
+    await page.getByRole("combobox", { name: "Langue" }).selectOption({ label: "FR" });
+    await expect(page.getByText("3 chants sur 4", { exact: true })).toBeVisible();
+    await page.getByRole("combobox", { name: "Langue" }).selectOption({ label: "中文" });
+    await expect(page.getByText("Tous les chants ont été joués sur cette période.")).toBeVisible();
+    await expect(page.locator('[data-testid="ligne-jamais"]:visible')).toHaveCount(0);
+  });
+
+  test("« À redécouvrir » sur 3 mois : le chant joué trois fois avant juillet, aucune depuis", async ({ page }) => {
+    await ouvrirStatistiques(page);
+    await vue(page, "À redécouvrir").click();
+    await page.getByRole("button", { name: "3 mois" }).click();
+    await expect.poll(() => lignesDe(page, "ligne-redecouvrir")).toEqual([
+      { rang: "1", titre: "Abba Père", avant: "3", derniere: "28/06", tonalite: "G" },
+    ]);
+    await expect(page.locator('[data-testid="ligne-redecouvrir"]:visible').getByRole("link", { name: "Abba Père" }))
+      .toHaveAttribute("href", /^\/songs\/abba-pere\/?$/);
+    expect(await setlistsComptees(page)).toBe("3");
+
+    // Avec un historique, mais aucun chant qui le mérite.
+    await page.getByRole("combobox", { name: "Service" }).selectOption("Groupe Paix");
+    await expect(page.getByText("Aucun chant à redécouvrir sur cette période.")).toBeVisible();
+    await expect(page.locator('[data-testid="ligne-redecouvrir"]:visible')).toHaveCount(0);
+  });
+
+  test("« À redécouvrir » sans historique avant la période : le message le dit (12 mois, depuis le début)", async ({ page }) => {
+    await ouvrirStatistiques(page);
+    await vue(page, "À redécouvrir").click();
+    const message = page.getByText("L'historique commence le 31/05/2026 : choisis une période plus courte.");
+    await expect(message).toBeVisible();
+    await expect(page.locator('[data-testid="ligne-redecouvrir"]:visible')).toHaveCount(0);
+    await page.getByRole("button", { name: "Depuis le début" }).click();
+    await expect(message).toBeVisible();
+    await page.getByRole("button", { name: "3 mois" }).click();
+    await expect(message).toHaveCount(0);
+  });
+
+  test("période vide : le même message dans les deux vues", async ({ page }) => {
+    await ouvrirStatistiques(page, "/back-office/statistiques?vue=jamais-joues&periode=libre&du=2026-07-01&au=2026-07-31");
+    await expect(page.getByText("Aucune setlist publiée sur cette période.")).toBeVisible();
+    await expect(page.locator('[data-testid="ligne-jamais"]:visible')).toHaveCount(0);
+    await vue(page, "À redécouvrir").click();
+    await expect(page.getByText("Aucune setlist publiée sur cette période.")).toBeVisible();
+  });
+
+  test("un titre ouvre la page du chant ; le retour retrouve la vue et les filtres", async ({ page }) => {
+    await ouvrirStatistiques(page, "/back-office/statistiques?vue=a-redecouvrir&periode=3");
+    await expect(vue(page, "À redécouvrir")).toHaveAttribute("aria-pressed", "true");
+    await expect.poll(() => lignesDe(page, "ligne-redecouvrir")).toHaveLength(1);
+
+    await vue(page, "Jamais joués").click();
+    await page.locator('[data-testid="ligne-jamais"]:visible').getByRole("link", { name: "Abrite-moi" }).click();
+    await expect(page).toHaveURL(/\/songs\/abrite-moi\/?$/);
+    await page.goBack();
+    await expect(page).toHaveURL(/vue=jamais-joues/);
+    await expect(vue(page, "Jamais joués")).toHaveAttribute("aria-pressed", "true");
+    await expect(page.getByRole("button", { name: "3 mois" })).toHaveAttribute("aria-pressed", "true");
+    await expect(page.getByText("3 chants sur 5", { exact: true })).toBeVisible();
+  });
+});
+
+test.describe("Statistiques (S4) : captures à regarder", () => {
+  test.use({ serviceWorkers: "block" });
+  // Vues déduites de la planche bo-statistiques (spec, « Écrans ») : à regarder aux trois tailles.
+  test("« Jamais joués » et « À redécouvrir » d'un admin, page entière, dans chaque disposition", async ({ page }, info) => {
+    await ouvrirStatistiques(page, "/back-office/statistiques?vue=jamais-joues&periode=3");
+    await expect(page.locator('[data-testid="ligne-jamais"]:visible').first()).toBeVisible();
+    await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
+    await page.waitForTimeout(600);
+    await page.screenshot({ path: `test-results/statistiques-captures/${info.project.name}-s4-jamais.png`, fullPage: true });
+    await vue(page, "À redécouvrir").click();
+    await expect(page.locator('[data-testid="ligne-redecouvrir"]:visible').first()).toBeVisible();
+    await page.waitForTimeout(300); // la pastille du sélecteur finit sa transition
+    await page.screenshot({ path: `test-results/statistiques-captures/${info.project.name}-s4-redecouvrir.png`, fullPage: true });
   });
 });
