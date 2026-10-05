@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { expect, test, type Page, type TestInfo } from "@playwright/test";
 import { fakeFirestore, signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { ADMIN_EMAILS } from "../src/lib/access";
-import { BASCULE_EVENEMENTS, avantBascule } from "../src/lib/evenements/bascule";
+import { BASCULE_EVENEMENTS, annonceBascule, avantBascule } from "../src/lib/evenements/bascule";
 import { agendaPublic } from "../src/lib/evenements/agenda";
 import type { EntreeSheet } from "../src/lib/evenements/sheet";
 import type { Evenement } from "../src/types/evenement";
@@ -11,8 +11,9 @@ import type { Evenement } from "../src/types/evenement";
 // Lot U9 (docs/spec-evenements-2027.md) : les évènements sur le site à partir de janvier 2027.
 // B1 : la bascule (`bascule.ts`), le refus du formulaire avant la bascule pour « Toute
 // l'église », la pastille du calendrier. B2 : l'agenda public mêle les entrées du Sheet
-// (avant la bascule) aux évènements de l'app, sans nom ni lien sans compte. Sheet, Firestore et horloge simulés ; titres et
-// noms inventés.
+// (avant la bascule) aux évènements de l'app, sans nom ni lien sans compte. B3 : la ligne
+// d'annonce du Back-Office (jusqu'au 31/01/2027) et le paragraphe du guide. Sheet, Firestore
+// et horloge simulés ; titres et noms inventés.
 
 const SHEET = "https://docs.google.com/spreadsheets/d/12FxK1sMrk08bFrVnL7BjCTJd6FXTqvRXyZoyDYhgPU8";
 const GID_DECEMBRE = "484545153";
@@ -341,4 +342,109 @@ test("captures B2 : sans compte", async ({ page }, info) => {
   await visiteur(page, "2026-12-15T10:00:00");
   await expect(page.getByText("Chants de Noël")).toBeVisible();
   await page.screenshot({ path: `${dossier}-agenda-visiteur.png`, animations: "disabled", fullPage: true });
+});
+
+
+// ─── B3 : l'annonce ───────────────────────────────────────────────────────────
+
+const ANNONCE_AVANT = "Les évènements de 2026 restent dans le Sheet ; ceux de 2027 se créent ici.";
+const ANNONCE_APRES = "Les évènements se créent ici ; le Sheet n'est plus lu.";
+const annonce = (page: Page) => page.getByRole("note", { name: "Annonce" });
+
+test.describe("B3 : annonceBascule (pur)", () => {
+  test("« avant » jusqu'au 31/12/2026, « après » du 01/01 au 31/01/2027, plus rien ensuite", () => {
+    expect(annonceBascule("2026-10-05")).toBe("avant");
+    expect(annonceBascule("2026-12-31")).toBe("avant");
+    expect(annonceBascule("2027-01-01")).toBe("apres");
+    expect(annonceBascule("2027-01-31")).toBe("apres");
+    expect(annonceBascule("2027-02-01")).toBeNull();
+  });
+});
+
+test.describe("B3 : la ligne d'annonce en tête du Back-Office", () => {
+  test("calendrier : le texte d'avant le 15/12/2026", async ({ page }) => {
+    await ouvrir(page, ADMIN, "/back-office/calendrier", "2026-12-15T10:00:00");
+    await expect(page.getByRole("heading", { level: 1, name: /^Décembre( 2026)?$/ })).toBeVisible();
+    await expect(annonce(page)).toHaveText(ANNONCE_AVANT);
+    await expect(page.getByText(ANNONCE_APRES)).toHaveCount(0);
+  });
+
+  test("calendrier : le texte d'après le 02/01/2027, encore le 31/01/2027, disparu le 01/02/2027", async ({ page }) => {
+    await ouvrir(page, ADMIN, "/back-office/calendrier", "2027-01-02T10:00:00");
+    await expect(page.getByRole("heading", { level: 1, name: /^Janvier( 2027)?$/ })).toBeVisible();
+    await expect(annonce(page)).toHaveText(ANNONCE_APRES);
+    await expect(page.getByText(ANNONCE_AVANT)).toHaveCount(0);
+
+    await page.clock.setFixedTime(new Date("2027-01-31T20:00:00"));
+    await page.reload();
+    await expect(page.getByRole("heading", { level: 1, name: /^Janvier( 2027)?$/ })).toBeVisible();
+    await expect(annonce(page)).toHaveText(ANNONCE_APRES);
+
+    await page.clock.setFixedTime(new Date("2027-02-01T08:00:00"));
+    await page.reload();
+    await expect(page.getByRole("heading", { level: 1, name: /^Février( 2027)?$/ })).toBeVisible();
+    await expect(annonce(page)).toHaveCount(0);
+    await expect(page.getByText(ANNONCE_APRES)).toHaveCount(0);
+  });
+
+  test("gestion des évènements : avant, après, puis disparue", async ({ page }) => {
+    await ouvrir(page, COORD, "/back-office/evenements", "2026-12-15T10:00:00");
+    await expect(page.getByRole("link", { name: "Nouvel évènement" })).toBeVisible();
+    await expect(annonce(page)).toHaveText(ANNONCE_AVANT);
+
+    await page.clock.setFixedTime(new Date("2027-01-02T10:00:00"));
+    await page.reload();
+    await expect(page.getByRole("link", { name: "Nouvel évènement" })).toBeVisible();
+    await expect(annonce(page)).toHaveText(ANNONCE_APRES);
+
+    await page.clock.setFixedTime(new Date("2027-02-01T08:00:00"));
+    await page.reload();
+    await expect(page.getByRole("link", { name: "Nouvel évènement" })).toBeVisible();
+    await expect(annonce(page)).toHaveCount(0);
+  });
+
+  test("les réunions de pôle n'ont pas la ligne (elles ne passent jamais par le Sheet)", async ({ page }) => {
+    await ouvrir(page, COORD, "/back-office/evenements/reunions", "2026-12-15T10:00:00");
+    await expect(page.getByRole("link", { name: /Nouvelle réunion/ })).toBeVisible();
+    await expect(annonce(page)).toHaveCount(0);
+  });
+
+  test("en chinois, sur les deux pages", async ({ page }) => {
+    await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
+    await ouvrir(page, COORD, "/back-office/evenements", "2026-12-15T10:00:00");
+    await expect(page.getByRole("note", { name: "公告" })).toHaveText("2026 年的活动仍记在活动表（Sheet）中；2027 年的活动请在这里创建。");
+    await page.clock.setFixedTime(new Date("2027-01-02T10:00:00"));
+    await page.goto("/back-office/calendrier");
+    await expect(page.getByRole("note", { name: "公告" })).toHaveText("活动请在这里创建；系统不再读取活动表（Sheet）。");
+  });
+});
+
+test.describe("B3 : le guide dit où créer un évènement", () => {
+  test("en français : le Sheet jusqu'au 31/12/2026, le Back-Office ensuite", async ({ page }) => {
+    await ouvrir(page, COORD, "/guide", "2026-12-15T10:00:00");
+    const section = page.locator("section#evenements");
+    await expect(section).toContainText(
+      "Où créer un évènement : ceux de toute l'église datés jusqu'au 31/12/2026 s'écrivent dans le Sheet des évènements ; à partir de 2027, ils se créent dans le Back-Office › Évènements › « Nouvel évènement », comme les sorties de section et les réunions de pôle.",
+    );
+  });
+
+  test("en chinois", async ({ page }) => {
+    await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
+    await ouvrir(page, COORD, "/guide", "2026-12-15T10:00:00");
+    await expect(page.locator("section#evenements")).toContainText(
+      "在哪里创建活动：日期在 31/12/2026 之前（含）的全教会活动写在活动表（Sheet）中；从 2027 年起，请在 后台 › 活动 ›「新建活动」中创建，小组外出和部门会议也一样。",
+    );
+  });
+});
+
+test("captures B3 : la ligne d'annonce, calendrier et gestion", async ({ page }, info) => {
+  const dossier = join(process.cwd(), "test-results", "evenements-2027-captures", info.project.name);
+  await ouvrir(page, ADMIN, "/back-office/calendrier", "2026-12-15T10:00:00");
+  await expect(annonce(page)).toBeVisible();
+  await pret(page);
+  await page.screenshot({ path: `${dossier}-annonce-calendrier.png`, animations: "disabled" });
+  await page.clock.setFixedTime(new Date("2027-01-02T10:00:00"));
+  await page.goto("/back-office/evenements");
+  await expect(annonce(page)).toHaveText(ANNONCE_APRES);
+  await page.screenshot({ path: `${dossier}-annonce-evenements.png`, animations: "disabled" });
 });

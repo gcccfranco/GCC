@@ -34,6 +34,7 @@ import { GrilleMois } from "@/components/calendrier/GrilleMois";
 import { GrillePoints } from "@/components/calendrier/GrillePoints";
 import { ListeDuJour } from "@/components/calendrier/PanneauJour";
 import { ICONES } from "@/components/calendrier/apparence";
+import { AnnonceBascule } from "@/components/evenements/AnnonceBascule";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 
 // Les dispositions de U4 (bloc « Lot U4 » de globals.css) : le panneau du jour se pose à
@@ -207,6 +208,9 @@ export function CalendrierClient() {
             ))}
           </div>
         </div>
+
+        {/* U9 (Q7 b) : où se créent les évènements, jusqu'au 31/01/2027. */}
+        <AnnonceBascule today={aujourdhui} className="mt-3" />
 
         {telephone ? (
           <div className="mt-3 flex items-center gap-1.5">

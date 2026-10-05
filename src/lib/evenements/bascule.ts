@@ -19,3 +19,13 @@ export function dernierJourDuSheet(): string {
   veille.setUTCDate(veille.getUTCDate() - 1)
   return veille.toISOString().slice(0, 10).split("-").reverse().join("/")
 }
+
+/** Dernier jour de la ligne d'annonce du Back-Office (Q7 b). */
+export const FIN_ANNONCE_BASCULE = "2027-01-31"
+
+/** La ligne d'annonce du Back-Office selon le jour : « avant » la bascule, « apres » jusqu'au
+ *  31/01/2027, plus rien ensuite (`null`). */
+export function annonceBascule(today: string): "avant" | "apres" | null {
+  if (avantBascule(today)) return "avant"
+  return today.slice(0, 10) <= FIN_ANNONCE_BASCULE ? "apres" : null
+}

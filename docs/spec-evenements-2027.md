@@ -218,10 +218,34 @@ recommandation.
   évènements vide (au niveau du contexte : la `page.route` d'un test l'emporte), pour que plus aucun test
   ne lise le vrai Sheet.
 
-Reste : B3 (annonce), B4 (ménage de février 2027, sur un go à part).
+**05/10/2026 — B3 (annonce) faite**, même branche (fusionnée d'abord avec la fin de `lot/u6-back-office`,
+barre du bas comprise : défaut Accueil · Calendrier · Tâches · Planning · Plus) :
+- `annonceBascule(today)` et `FIN_ANNONCE_BASCULE = "2027-01-31"` dans `bascule.ts` : « avant » jusqu'au
+  31/12/2026, « apres » du 01/01 au 31/01/2027, rien ensuite.
+- `AnnonceBascule` (`src/components/evenements/AnnonceBascule.tsx`) : une ligne discrète (icône « i », fond
+  gris clair, `role="note"`, nom « Annonce » / « 公告 ») sous le titre du calendrier
+  (`/back-office/calendrier`) et en tête de la liste « Évènements » de la gestion
+  (`/back-office/evenements`). Avant : « Les évènements de 2026 restent dans le Sheet ; ceux de 2027 se
+  créent ici. » ; après : « Les évènements se créent ici ; le Sheet n'est plus lu. »
+- Guide (`/guide`, section Évènements) : un point de plus, « **Où créer un évènement** : ceux de toute
+  l'église datés jusqu'au 31/12/2026 s'écrivent dans le Sheet des évènements ; à partir de 2027, ils se
+  créent dans le Back-Office › Évènements › « Nouvel évènement », comme les sorties de section et les
+  réunions de pôle. » (la date vient de `dernierJourDuSheet()`). La section reste cachée tant que
+  l'interrupteur du back-office est coupé, comme avant.
+- Choix pris : la ligne n'est **pas** sur « Réunions » ni « Scène » (les réunions ne passent jamais par le
+  Sheet) ; elle ne porte pas de lien vers le Sheet (le formulaire l'a déjà, B1) ; le paragraphe du guide
+  ne change pas avec l'horloge (il dit les deux règles ; B4 le retirera avec le reste).
+- Tests : `tests/evenements-2027.spec.ts`, partie B3 (pur, calendrier et gestion le 15/12/2026, le
+  02/01/2027, le 31/01/2027 et le 01/02/2027, réunions sans la ligne, 中文, guide FR et 中文, captures),
+  vus rouges puis verts sur ordinateur, téléphone et tablette.
+
+Reste : B4 (ménage de février 2027, sur un go à part).
 
 À la mise en ligne, côté évènements : (1) supprimer les évènements d'essai du Firestore partagé
 (Timothée, console ; Q8) ; (2) relire les onglets de 2027 du Sheet et prévenir chaque responsable
 concerné (Q4) ; (3) envoyer l'annonce par « Notifier » (Q7 a). U9 ne touche pas à `firestore.rules`.
 Timothée relit le 中文 : « {{jour}} 之前，全教会的活动请写在活动表（Sheet）中。 », « 打开活动表 », pastille
-« 活动 » / « 活动（Sheet）», et pour B2 « 活动表 », « 在活动表上报名 ».
+« 活动 » / « 活动（Sheet）», et pour B2 « 活动表 », « 在活动表上报名 ». Pour B3 : « 2026 年的活动仍记在活动表（Sheet）中；2027 年的活动请在这里创建。 »,
+« 活动请在这里创建；系统不再读取活动表（Sheet）。 », « 公告 », et le point du guide « **在哪里创建活动**：日期在
+{{jour}} 之前（含）的全教会活动写在活动表（Sheet）中；从 2027 年起，请在 **后台 › 活动 ›「新建活动」**中创建，
+小组外出和部门会议也一样。 »
