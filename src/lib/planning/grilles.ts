@@ -259,6 +259,31 @@ export function grilleDe(key: string): DefinitionGrille | undefined {
   return GRILLES.find((g) => g.key === key)
 }
 
+/**
+ * Lot U2 (Q5) : les dimanches d'Interfranco et d'Intergroupe, date → nom du
+ * service. Une seule source, leur grille : déplacer la date dans sa grille
+ * déplace la marque. Les deux ne prennent jamais le même dimanche ; si cela
+ * arrivait, Interfranco l'emporte, comme dans « Ce dimanche ».
+ */
+export function dimanchesSpeciaux(interfranco: string[][], intergroupe: string[][]): Record<string, string> {
+  const out: Record<string, string> = {}
+  for (const r of intergroupe) out[r[0]] = "Intergroupe"
+  for (const r of interfranco) out[r[0]] = "Interfranco"
+  return out
+}
+
+/**
+ * La présidence d'un groupe (Paix, Bonté, Fidélité et ses musiciens, toutes en
+ * colonne 1) un dimanche d'Interfranco ou d'Intergroupe : le nom du service,
+ * tiré de sa grille, jamais recopié dans celle du groupe. Orateur, thème et
+ * musiciens restent ceux du groupe, comme dans le Sheet de 2026. Ces deux mots
+ * ne sont jamais pris pour des noms (`NON_NAMES`) : plus de président fantôme.
+ */
+export function marquerDimanchesSpeciaux(groupe: string[][], interfranco: string[][], intergroupe: string[][]): string[][] {
+  const speciaux = dimanchesSpeciaux(interfranco, intergroupe)
+  return groupe.map((r) => (speciaux[r[0]] ? [r[0], speciaux[r[0]], ...r.slice(2)] : r))
+}
+
 /** Une ligne affichée : la ligne au format du lecteur du Sheet, et son état de publication. */
 export type LigneGrille = { row: string[]; nonPublie: boolean }
 

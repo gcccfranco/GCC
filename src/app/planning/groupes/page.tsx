@@ -7,8 +7,8 @@ import { PlanningGrille } from "@/components/planning/PlanningGrille"
 import { StaleBanner } from "@/components/planning/StaleBanner"
 import { getCurrentTri } from "@/lib/planning/utils"
 import { PAIX_FALLBACK, FIDELITE_FALLBACK, FIDELITE_MUSIC_FALLBACK, BONTE_FALLBACK } from "@/lib/planning/data"
-import { fetchPaix, fetchFidelite, fetchFideliteMusic, fetchBonte } from "@/lib/planning/sheets"
-import { GRILLE_BONTE, GRILLE_FIDELITE, GRILLE_FIDELITE_MUSICIENS, GRILLE_PAIX, dimanchesDe, vueTrimestrielle } from "@/lib/planning/grilles"
+import { fetchPaix, fetchFidelite, fetchFideliteMusic, fetchBonte, fetchInterfranco, fetchIntergroupe } from "@/lib/planning/sheets"
+import { GRILLE_BONTE, GRILLE_FIDELITE, GRILLE_FIDELITE_MUSICIENS, GRILLE_PAIX, dimanchesDe, dimanchesSpeciaux, vueTrimestrielle } from "@/lib/planning/grilles"
 import { AnneeSelecteur } from "@/components/planning/AnneeSelecteur"
 import { BandeauAnnee } from "@/components/planning/BandeauAnnee"
 import { BoutonPublication } from "@/components/planning/BoutonPublication"
@@ -48,6 +48,9 @@ function GroupesPage() {
   const [fid, setFid] = useState(FIDELITE_FALLBACK)
   const [fidM, setFidM] = useState(FIDELITE_MUSIC_FALLBACK)
   const [bonte, setBonte] = useState(BONTE_FALLBACK)
+  // Lot U2 (Q5) : les dimanches d'Interfranco et d'Intergroupe, lus dans leur grille.
+  const [interfranco, setInterfranco] = useState<string[][]>([])
+  const [intergroupe, setIntergroupe] = useState<string[][]>([])
   const [loading, setLoading] = useState(true)
   const [stale, setStale] = useState(false)
   const [grp, setGrp] = useState<Groupe>("paix")
@@ -64,6 +67,8 @@ function GroupesPage() {
       fetchFidelite().then(d => { if (d.length) setFid(d) }),
       fetchFideliteMusic().then(d => { if (d.length) setFidM(d) }),
       fetchBonte().then(d => { if (d.length) setBonte(d) }),
+      fetchInterfranco().then(setInterfranco),
+      fetchIntergroupe().then(setIntergroupe),
     ]).then(results => {
       setStale(results.some(r => r.status === "rejected"))
       setLoading(false)
@@ -176,6 +181,7 @@ function GroupesPage() {
         peutModifier={peutModifier}
         datesDansLApp={datesDansLApp}
         nomsDesComptes={nomsDesComptes}
+        dimanchesSpeciaux={dimanchesSpeciaux(interfranco, intergroupe)}
       />
     </div>
   )

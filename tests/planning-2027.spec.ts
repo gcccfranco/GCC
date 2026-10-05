@@ -1,8 +1,12 @@
 import { expect, test, type Page } from "@playwright/test";
+import { readFileSync } from "node:fs";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import {
-  GRILLE_INTERFRANCO, GRILLE_PAIX, PREMIERE_ANNEE_APP, dimanchesDe, lignesDeLAnnee,
+  GRILLE_BONTE, GRILLE_FIDELITE, GRILLE_FIDELITE_MUSICIENS, GRILLE_INTERFRANCO, GRILLE_PAIX, PREMIERE_ANNEE_APP,
+  dimanchesDe, lignesDeLAnnee, marquerDimanchesSpeciaux,
 } from "../src/lib/planning/grilles";
+import { avecDimanchesSpeciaux, findMyServices, type PlanningData } from "../src/lib/planning/names";
+import { reminderServicesFor } from "../src/lib/push/reminderMessage";
 
 // Lot U2 (docs/spec-planning-2027.md) : le planning 2027 se remplit dans
 // l'app, sur des dimanches posés d'office ; chaque trimestre reste un
@@ -78,6 +82,12 @@ const datesAffichees = (page: Page) =>
 
 const laCase = (page: Page, date: string, colonne: string) =>
   page.locator(`[data-case="${date}|${colonne}"]`).filter({ visible: true });
+
+/** Capture à regarder à l'œil (PW_CAPTURES=<dossier>), une par appareil. */
+async function capture(page: Page, name: string) {
+  const dir = process.env.PW_CAPTURES;
+  if (dir) await page.screenshot({ path: `${dir}/${name}-${test.info().project.name}.png`, fullPage: true });
+}
 
 test("Paix 2027 : l'écrivain choisit 2027, voit les 13 dimanches du T1 et aucun de 2026", async ({ page }) => {
   await ouvrir(page, ECRIVAIN, "/planning/groupes");
@@ -208,4 +218,131 @@ test("EDD 2027 : la classe 中班 montre les 9 dimanches de janvier-février 202
   const dates = await datesAffichees(page);
   expect(dates[0]).toBe("2027-01-03");
   expect(dates[8]).toBe("2027-02-28");
+});
+
+// ─── Interfranco et Intergroupe dans les groupes (P4, Q5) ───────────────────
+
+test("marquerDimanchesSpeciaux : la présidence prend le nom du service, le reste de la ligne ne bouge pas", () => {
+  const paix = [
+    ["2027-01-10", "Ancien B.", "Groupe C.", "Orateur D.", "Thème E."],
+    ["2027-01-17", "Ancien Z.", "", "Orateur O.", "Offrande"],
+    ["2027-03-14", "", "", "", ""],
+  ];
+  const interfranco = [["2027-01-17", "Président I.", "", "", "", "", "", "", "", "", ""]];
+  const intergroupe = [["2027-03-14", "Président J.", "", "", "", "", "", "", "", "", "", ""]];
+  expect(marquerDimanchesSpeciaux(paix, interfranco, intergroupe)).toEqual([
+    ["2027-01-10", "Ancien B.", "Groupe C.", "Orateur D.", "Thème E."],
+    ["2027-01-17", "Interfranco", "", "Orateur O.", "Offrande"],
+    ["2027-03-14", "Intergroupe", "", "", ""],
+  ]);
+  expect(paix[1][1], "jamais recopié : la ligne d'origine reste intacte").toBe("Ancien Z.");
+  expect(marquerDimanchesSpeciaux(paix, [], []), "sans dimanche spécial, rien ne change").toEqual(paix);
+  expect(
+    marquerDimanchesSpeciaux([["2027-01-17", "", "", "", ""]], interfranco, [["2027-01-17"]])[0][1],
+    "les deux le même jour (jamais en principe) : Interfranco, comme « Ce dimanche »",
+  ).toBe("Interfranco");
+  // Les quatre grilles de groupe ont leur présidence en tête (index 1).
+  for (const g of [GRILLE_PAIX, GRILLE_BONTE, GRILLE_FIDELITE, GRILLE_FIDELITE_MUSICIENS]) {
+    expect(g.colonnes.find((c) => c.cle === "presidence")?.index, g.key).toBe(1);
+  }
+});
+
+test("loadPlanningData (avecDimanchesSpeciaux) : pas de président fantôme dans « Mes services » ni dans les rappels", () => {
+  const vide: PlanningData = {
+    culte: [], dejeuner: [], petitDej: [], paix: [], fidelite: [], fideliteMusic: [], bonte: [],
+    edd: {}, campus: [], intergroupe: [], interfranco: [],
+  };
+  const planning = avecDimanchesSpeciaux({
+    ...vide,
+    paix: [["2027-01-17", "Membre M.", "", "Orateur O.", ""], ["2027-01-24", "Membre M.", "", "", ""]],
+    fidelite: [["2027-03-14", "Membre M.", "", "", ""]],
+    fideliteMusic: [["2027-03-14", "Membre M.", "", "", ""]],
+    bonte: [["2027-01-17", "Membre M.", "", "", ""]],
+    interfranco: [["2027-01-17", "Président I.", "", "", "", "", "", "", "", "", ""]],
+    intergroupe: [["2027-03-14", "Président J.", "", "", "", "", "", "", "", "", "", ""]],
+  });
+  expect(findMyServices(planning, "Membre M.").map((e) => `${e.date} ${e.service} ${e.role}`)).toEqual([
+    "2027-01-24 Groupe Paix Présidence",
+  ]);
+  expect(reminderServicesFor(planning, "Membre M.", "2027-01-17")).toEqual([]);
+  expect(reminderServicesFor(planning, "Orateur O.", "2027-01-17"), "l'orateur reste libre").toEqual([
+    { service: "Groupe Paix", roles: ["Orateur"] },
+  ]);
+  expect(reminderServicesFor(planning, "Président I.", "2027-01-17")).toEqual([
+    { service: "Interfranco", roles: ["Présidence"] },
+  ]);
+});
+
+const DIMANCHES_SPECIAUX = {
+  "plannings/interfranco/dimanches/2027-01-17": { date: "2027-01-17", presidence: "Président I." },
+  "plannings/intergroupe/dimanches/2027-03-14": { date: "2027-03-14" },
+  // Président posé avant que l'Interfranco ne prenne ce dimanche : il ne s'affiche plus.
+  "plannings/paix/dimanches/2027-01-17": { date: "2027-01-17", presidence: "Ancien Z.", orateur: "Orateur O." },
+};
+
+test("Paix 2027 : un dimanche d'Interfranco ou d'Intergroupe, la présidence affiche le service, non modifiable", async ({ page }) => {
+  const db = await ouvrir(page, ECRIVAIN, "/planning/groupes", DIMANCHES_SPECIAUX);
+  await page.getByRole("button", { name: "2027", exact: true }).click();
+  await page.getByRole("button", { name: "T1", exact: true }).click();
+  await expect(laCase(page, "2027-01-17", "presidence")).toHaveText("Interfranco");
+  await expect(laCase(page, "2027-03-14", "presidence")).toHaveText("Intergroupe");
+  await expect(laCase(page, "2027-01-17", "orateur")).toContainText("Orateur O.");
+  await expect(page.getByText("Ancien Z.")).toHaveCount(0);
+
+  await page.getByRole("button", { name: "Modifier" }).click();
+  await expect(laCase(page, "2027-01-17", "presidence").getByRole("button"), "non modifiable").toHaveCount(0);
+  await expect(laCase(page, "2027-01-17", "presidence")).toHaveText("Interfranco");
+  await expect(laCase(page, "2027-01-10", "presidence").getByRole("button"), "un dimanche ordinaire reste modifiable").toHaveCount(1);
+
+  // L'orateur et le thème restent libres ; la marque n'est jamais recopiée dans le document du groupe.
+  await laCase(page, "2027-03-14", "theme").getByRole("button").click();
+  const champ = laCase(page, "2027-03-14", "theme").getByLabel("Thème", { exact: true });
+  await champ.fill("Louange commune");
+  await champ.press("Enter");
+  await expect.poll(() => db.doc("plannings/paix/dimanches/2027-03-14")?.theme).toBe("Louange commune");
+  expect(Object.keys(db.doc("plannings/paix/dimanches/2027-03-14")!).sort()).toEqual(["date", "modifieLe", "modifiePar", "theme"]);
+  expect(db.doc("plannings/paix/dimanches/2027-01-17")?.presidence).toBe("Ancien Z.");
+  await capture(page, "paix-2027-interfranco");
+});
+
+test("Paix 2027 : l'export du trimestre porte « Interfranco » et « Intergroupe » à la présidence", async ({ page }) => {
+  await ouvrir(page, ECRIVAIN, "/planning/groupes", DIMANCHES_SPECIAUX);
+  await page.getByRole("button", { name: "2027", exact: true }).click();
+  await page.getByRole("button", { name: "T1", exact: true }).click();
+  await expect(laCase(page, "2027-01-17", "presidence")).toHaveText("Interfranco");
+  const [download] = await Promise.all([
+    page.waitForEvent("download"),
+    page.getByRole("button", { name: "Exporter en CSV" }).click(),
+  ]);
+  const texte = readFileSync(await download.path(), "utf8");
+  expect(texte).toContain("17/01,Interfranco,,Orateur O.,");
+  expect(texte).toContain("14/03,Intergroupe,,,");
+  expect(texte).not.toContain("Ancien Z.");
+});
+
+test("Mes services (loadPlanningData) : le président de Paix posé avant l'Interfranco n'y est plus", async ({ page }) => {
+  await ouvrir(page, MEMBRE, "/mes-services", {
+    "plannings/interfranco/dimanches/2027-01-17": { date: "2027-01-17", presidence: "Président I." },
+    "plannings/paix/dimanches/2027-01-17": { date: "2027-01-17", presidence: "Membre M." },
+    "plannings/paix/dimanches/2027-01-24": { date: "2027-01-24", presidence: "Membre M." },
+  });
+  await expect(page.getByText("Janvier 2027")).toBeVisible();
+  await expect(page.getByText("Groupe Paix", { exact: true }), "le 24/01 seulement").toHaveCount(1);
+  await expect(page.getByText(/17 janv/i)).toHaveCount(0);
+  await expect(page.getByText(/24 janv/i)).toBeVisible();
+});
+
+test("Ce dimanche du 17/01/2027 montre l'Interfranco ; « Prochain service » saute le président fantôme", async ({ page }) => {
+  await ouvrir(page, MEMBRE, "/planning", {
+    "plannings/interfranco/dimanches/2027-01-17": { date: "2027-01-17", presidence: "Président I." },
+    "plannings/paix/dimanches/2027-01-17": { date: "2027-01-17", presidence: "Membre M." },
+    "plannings/paix/dimanches/2027-01-24": { date: "2027-01-24", presidence: "Membre M." },
+  }, "2027-01-15T10:00:00");
+  const dimanche = page.getByRole("region", { name: /Ce dimanche/ });
+  await expect(dimanche.getByText("Interfranco", { exact: true })).toBeVisible();
+  await expect(dimanche.getByText("Président I.")).toBeVisible();
+  const prochain = page.getByRole("link", { name: /Groupe Paix \(Présidence\)/ });
+  await expect(prochain).toContainText("24 janvier");
+  await expect(prochain).not.toContainText("17 janvier");
+  await capture(page, "ce-dimanche-interfranco-2027");
 });

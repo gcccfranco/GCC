@@ -1001,6 +1001,7 @@
       "aVenir": "Planning à venir",
       "periode": "{{du}} à {{au}}",
       "nonPublie": "Non publié",
+      "dimancheSpecial": "Dimanche {{service}} : la présidence se règle dans le planning {{service}}.",
       "pasDispo": "Pas disponible un dimanche ? Préviens la personne qui tient le planning.",
       "droitRetire": "Enregistrement refusé par le serveur : tu n’as plus le droit de modifier ce planning, ou les règles n’ont pas été publiées.",
       "horsLigne": "Modification impossible : pas de réseau.",

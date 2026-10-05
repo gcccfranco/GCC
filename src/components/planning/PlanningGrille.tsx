@@ -38,6 +38,11 @@ export interface PlanningGrilleProps {
   dateBadge?: (row: string[], allRows: string[][]) => ReactNode
   /** Période affichée, écrite dans le bandeau (le trimestre choisi par la page). */
   periode: string
+  /** Lot U2 (Q5) : date → service (Interfranco, Intergroupe) qui tient ce
+   *  dimanche, tiré de sa grille (`dimanchesSpeciaux`). La présidence affiche ce
+   *  nom, non modifiable, et l'export le porte ; il n'est jamais recopié dans le
+   *  document du groupe. */
+  dimanchesSpeciaux?: Readonly<Record<string, string>>
 }
 
 
@@ -49,6 +54,7 @@ export function PlanningGrille({
   nomsDesComptes,
   dateBadge,
   periode,
+  dimanchesSpeciaux,
 }: PlanningGrilleProps) {
   const { t, i18n } = useTranslation()
   const { profile } = useProfile()
@@ -86,13 +92,25 @@ export function PlanningGrille({
   const aUnNom = aiguille.length >= 2
   const estMoi = (cell: string) => aUnNom && cell.toLowerCase().includes(aiguille)
 
+  /** La présidence d'un dimanche d'Interfranco ou d'Intergroupe : le nom du service. */
+  const imposee = (date: string, c: ColonneGrille) =>
+    c.cle === "presidence" ? dimanchesSpeciaux?.[date] : undefined
+
   const valeur = (date: string, c: ColonneGrille, row: string[]) =>
-    modifs[`${date}|${c.cle}`] ?? row[c.index] ?? ""
+    imposee(date, c) ?? modifs[`${date}|${c.cle}`] ?? row[c.index] ?? ""
 
   /** La ligne telle qu'elle est affichée (modifications locales comprises). */
   const ligneAffichee = (l: LigneGrille) => {
     const row = [...l.row]
     for (const c of definition.colonnes) row[c.index] = valeur(l.row[0], c, l.row)
+    return row
+  }
+
+  /** La ligne à recopier (« semer ») : l'affichée, sauf une présidence imposée,
+   *  qui reste celle du groupe — la marque n'entre jamais dans son document. */
+  const ligneASemer = (l: LigneGrille) => {
+    const row = ligneAffichee(l)
+    for (const c of definition.colonnes) if (imposee(l.row[0], c)) row[c.index] = l.row[c.index] ?? ""
     return row
   }
 
@@ -164,7 +182,7 @@ export function PlanningGrille({
         // U2, Q2), rien à recopier : la case n'écrit qu'elle.
         semer: getAnnee(date) >= PREMIERE_ANNEE_APP || datesDansLApp.includes(date) || semes.current.has(date)
           ? undefined
-          : ligneAffichee(l),
+          : ligneASemer(l),
       })
       semes.current.add(date)
       setEnregistre(true)
@@ -215,6 +233,19 @@ export function PlanningGrille({
   function laCase(l: LigneGrille, c: ColonneGrille): ReactNode {
     const val = valeur(l.row[0], c, l.row)
     if (edition?.date === l.row[0] && edition.cle === c.cle) return champ(l, c)
+    const service = imposee(l.row[0], c)
+    if (service && mode === "edition") {
+      // Tirée de la grille du service : rien à modifier ici (planche bo-planning-2027).
+      return (
+        <span
+          title={t("planning.grille.dimancheSpecial", { service })}
+          className="inline-flex min-h-8 items-center gap-1.5 rounded-md border border-transparent px-1.5 py-1"
+        >
+          {val}
+          <Lock className="h-3 w-3 text-muted-foreground" aria-hidden />
+        </span>
+      )
+    }
     if (mode === "edition") {
       return (
         <button

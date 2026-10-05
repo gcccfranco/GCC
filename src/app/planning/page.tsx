@@ -13,7 +13,8 @@ import { fetchCulte, fetchDejeuner, fetchPetitDej, fetchPaix, fetchFidelite, fet
 import { StaleBanner } from "@/components/planning/StaleBanner"
 import type { EddDataStructure, CampusSeance } from "@/lib/planning/utils"
 import { useProfile } from "@/lib/firebase/users"
-import { findMyServices, type PlanningData } from "@/lib/planning/names"
+import { avecDimanchesSpeciaux, findMyServices, type PlanningData } from "@/lib/planning/names"
+import { BACK_OFFICE } from "@/lib/backOffice"
 import { PLANNING_COLORS, serviceColor } from "@/lib/serviceColors"
 import { ChevronRight } from "lucide-react"
 import { PageTitle } from "@/components/layout/PageTitle"
@@ -89,7 +90,10 @@ export default function PlanningAccueil() {
   // Prochain service de la personne connectée (d'après son nom de planning)
   const nextServices = useMemo(() => {
     if (!user || !profile?.planningName) return null
-    const data: PlanningData = { culte, dejeuner: dej, petitDej, paix, fidelite: fid, fideliteMusic: fidM, bonte, edd, campus, intergroupe, interfranco }
+    const lu: PlanningData = { culte, dejeuner: dej, petitDej, paix, fidelite: fid, fideliteMusic: fidM, bonte, edd, campus, intergroupe, interfranco }
+    // Lot U2 (Q5) : comme `loadPlanningData`, pas de président de groupe fantôme
+    // un dimanche d'Interfranco ou d'Intergroupe.
+    const data = BACK_OFFICE ? avecDimanchesSpeciaux(lu) : lu
     const today = new Date().toISOString().split("T")[0]
     const upcoming = findMyServices(data, profile.planningName).filter(e => e.date >= today)
     if (!upcoming.length) return null

@@ -9,6 +9,8 @@ import {
   fetchFideliteMusic, fetchBonte, fetchEDD, fetchCampus,
   fetchIntergroupe, fetchInterfranco, fetchPetitDej,
 } from "./sheets"
+import { marquerDimanchesSpeciaux } from "./grilles"
+import { BACK_OFFICE } from "@/lib/backOffice"
 import type { ServiceRole } from "@/types/user"
 
 export interface PlanningData {
@@ -34,7 +36,7 @@ export async function loadPlanningData(): Promise<PlanningData> {
       fetchCampus().then(c => c.louange).catch(() => [] as CampusSeance[]),
       fetchIntergroupe(), fetchInterfranco(),
     ])
-  return {
+  const data: PlanningData = {
     // G5 (19/09/2026) : plus de repli sur CULTE_FALLBACK (données de 2026, D4).
     culte,
     dejeuner: dejeuner.length ? dejeuner : DEJEUNER_FALLBACK,
@@ -48,6 +50,24 @@ export async function loadPlanningData(): Promise<PlanningData> {
     campus: campus.length ? campus : CAMP_LOUANGE_FALLBACK,
     intergroupe,
     interfranco,
+  }
+  // Lot U2 (Q14) : derrière l'interrupteur ; en ligne, le Sheet est lu tel quel.
+  return BACK_OFFICE ? avecDimanchesSpeciaux(data) : data
+}
+
+/** Lot U2 (Q5) : un dimanche d'Interfranco ou d'Intergroupe, la présidence des
+ *  groupes est le nom du service (`marquerDimanchesSpeciaux`) — pas de président
+ *  fantôme dans « Mes services », les rappels ni les notifications. Pur : les
+ *  appelants qui assemblent eux-mêmes un `PlanningData` l'appliquent derrière
+ *  `BACK_OFFICE`, comme `loadPlanningData`. */
+export function avecDimanchesSpeciaux(data: PlanningData): PlanningData {
+  const marquer = (rows: string[][]) => marquerDimanchesSpeciaux(rows, data.interfranco, data.intergroupe)
+  return {
+    ...data,
+    paix: marquer(data.paix),
+    fidelite: marquer(data.fidelite),
+    fideliteMusic: marquer(data.fideliteMusic),
+    bonte: marquer(data.bonte),
   }
 }
 

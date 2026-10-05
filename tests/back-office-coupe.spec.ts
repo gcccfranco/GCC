@@ -123,3 +123,31 @@ test.describe("back-office coupé : la Sainte cène reste un service à part ent
     await expect(page.getByText("Sainte cène", { exact: true })).toBeVisible();
   });
 });
+
+// Lot U2, P4 (docs/spec-planning-2027.md, Q5 et Q14) : la présidence d'un groupe
+// un dimanche d'Interfranco ou d'Intergroupe vient de leur grille… derrière
+// l'interrupteur. En ligne, rien ne change : « Mes services » lit le Sheet tel quel.
+test.describe("back-office coupé : les dimanches d'Interfranco ne touchent pas encore « Mes services »", () => {
+  const csv = (rows: string[][]) => rows.map((r) => r.map((c) => `"${c}"`).join(",")).join("\n");
+  const SHEETS: Record<string, string> = {
+    Interfranco: csv([
+      ["INTERFRANCO Année 2026 DATE", "Présidence", "Choristes", "", "Pianiste", "Guitariste", "Cajon/Batterie", "Sono + Live", "PPT", "Orateur", "Traducteur"],
+      ["25/10", "Président I.", "", "", "", "", "", "", "", "", ""],
+    ]),
+    Paix_T4: csv([
+      ["DATE", "PRÉSIDENCE", "MUSICIENS", "ORATEUR", "THÈME"],
+      ["25/10", "Membre M.", "", "", ""],
+    ]),
+  };
+  const MEMBRE: FakeProfile = { uid: "uid-membre", email: "membre@example.com", planningName: "Membre M." };
+
+  test("un président de Paix le jour d'une Interfranco du Sheet reste listé", async ({ page }) => {
+    await page.clock.setFixedTime(new Date("2026-10-20T10:00:00"));
+    await page.route(/docs\.google\.com\/spreadsheets/, (route) => {
+      const sheet = new URL(route.request().url()).searchParams.get("sheet") ?? "";
+      return route.fulfill({ status: 200, contentType: "text/csv", body: SHEETS[sheet] ?? "" });
+    });
+    await signInAs(page, MEMBRE, {}, "/mes-services");
+    await expect(page.getByText("Groupe Paix", { exact: true })).toBeVisible();
+  });
+});
