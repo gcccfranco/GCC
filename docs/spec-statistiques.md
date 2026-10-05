@@ -392,3 +392,34 @@ Questions ouvertes 1 à 7 : la recommandation de chacune est retenue (go du 04/1
 - À faire par Timothée : rien pour S5 (aucune règle Firestore : le réglage s'écrit dans `backOffice/{uid}`, règle de
   U6) ; relire le 中文 (« {{count}} 份歌单 », « 时段 », « {{count}} 个月 », « 全部记录 », « 该时段没有已发布的歌单。 ») ;
   valider le widget en local.
+
+### 05/10/2026 — fusion des versions finales de U6 et U6b : faite (« Merge branch 'lot/u6-back-office' … » puis « fix(U7): fusion — … », branche `lot/u7-statistiques`)
+
+- `lot/u6-back-office` fusionnée (B2, B3, B6 et la relecture de U6) ; `lot/u6b-tableau-de-bord` y était déjà
+  (« Already up to date »). Deux conflits, tous deux dans des tests, résolus en gardant les deux intentions :
+  `back-office-coupe` (les nouvelles adresses de U6 **et** `/back-office/statistiques`, toutes en 404) ;
+  `back-office-espace` (sur grand écran, le menu d'un admin finit par « Statistiques » ; sur téléphone et tablette
+  en portrait, c'est la barre du bas de B6 : Accueil · Tâches · Planning · Évènements · Plus). `tsc` et lint propres.
+- Ce que la fusion change pour U7 : la liste « Tes modules » de B1 sous le tableau de bord n'existe plus. Sur
+  téléphone et tablette en portrait, Statistiques s'ouvre par « Plus » (sa carte à part, la dernière, planche
+  `bo-telephone-plus`) ou en la cochant dans « Ta barre du bas » (indice « admins »).
+- Correctifs de la fusion :
+  1. **« Plus »** (`PagePlus.tsx`) : la carte Statistiques dit « Chants les plus joués · admins », comme la planche
+     (B6 écrivait « Chants les plus joués » seul, la croyant absente de la planche).
+  2. **`barre-back-office`** (B6, écrit quand Statistiques était « à venir ») : un admin a 7 entrées — 3 cartes dans
+     « Plus » (Équipes, Messages, Statistiques), 7 cases dans la feuille, « en position … sur 7 » au clavier.
+  3. **`tableau-de-bord`**, test de la relecture U6 « une seule lecture des setlists » : il ouvre un tableau de bord
+     à ces deux widgets seuls. Le widget « Chants les plus joués » (S5) lit à part toutes les setlists passées (Q1,
+     `getSetlists()`), ce qui faisait deux lectures dans le défaut d'un admin ; l'intention (« Ce dimanche » et
+     « Setlists à préparer » partagent une lecture bornée) est gardée.
+  4. **`statistiques.spec.ts`** (S2) : sur petit écran, le chemin passe par « Plus », la page marque « Plus » comme
+     courant ; un responsable non admin n'a de Statistiques ni dans la barre ni dans « Plus ».
+- Tests : `statistiques`, `statistiques-calcul`, `barre-back-office`, `tableau-de-bord`, `back-office-espace`,
+  `back-office-admin`, `back-office-coupe` sur les cinq projets : 1 118 verts, 49 sautés (propres à un appareil),
+  0 rouge. Passage rouge d'abord, avant les correctifs : 17 rouges, tous expliqués par les points 2 à 4 ; le point 1
+  vu rouge seul, puis vert. Captures regardées : « Plus » et la feuille sur téléphone (conformes à
+  `bo-telephone-plus` et `bo-telephone-barre-perso`), la page et le widget aux cinq tailles.
+- Reste : rien pour U7. La garde `BACK_OFFICE` partira avec l'interrupteur en fin de chantier (T8).
+- À faire par Timothée : rien de nouveau pour U7 (aucune règle Firestore) ; valider en local, sur téléphone,
+  « Plus » › Statistiques. À savoir : le tableau de bord par défaut d'un admin lit toutes les setlists pour ce
+  widget (une visite de l'onglet Setlists, Q1) en plus de la lecture bornée de U6.

@@ -34,11 +34,19 @@ async function deplierSiTablettePaysage(page: Page, info: TestInfo) {
 }
 
 /** Le menu du Back-Office : la barre latérale sur grand écran ; sur téléphone et tablette en
- *  portrait, la liste du tableau de bord (en attendant la barre du bas de U6, B6). */
+ *  portrait, la barre du bas (U6, B6 : 4 onglets + « Plus »). */
 function menu(page: Page, info: TestInfo) {
   if (estOrdinateur(info)) return page.getByTestId("barre-laterale").getByRole("navigation", { name: "Navigation principale" });
   if (estTablettePaysage(info)) return page.getByTestId("barre-par-dessus").getByRole("navigation", { name: "Navigation principale" });
-  return page.getByTestId("menu-back-office");
+  return page.getByTestId("barre-du-bas");
+}
+
+/** Sur téléphone et tablette en portrait, Statistiques n'est pas dans la barre par défaut :
+ *  on l'atteint par « Plus » (planche bo-telephone-plus). */
+async function ouvrirPlusSiPetitEcran(page: Page, info: TestInfo) {
+  if (estOrdinateur(info) || estTablettePaysage(info)) return;
+  await menu(page, info).getByRole("link", { name: "Plus" }).click();
+  await expect(page.getByRole("heading", { name: "Plus", level: 1 })).toBeVisible();
 }
 
 test.describe("Statistiques (S2) : le droit (Q2)", () => {
@@ -61,7 +69,10 @@ test.describe("Statistiques (S2) : l'entrée et l'adresse", () => {
     await signInAs(page, ADMIN, {}, "/back-office");
     await expect(page.getByRole("heading", { name: "Tableau de bord" })).toBeVisible();
     await deplierSiTablettePaysage(page, info);
-    const entree = menu(page, info).getByRole("link", { name: "Statistiques" });
+    await ouvrirPlusSiPetitEcran(page, info);
+    const entree = estOrdinateur(info) || estTablettePaysage(info)
+      ? menu(page, info).getByRole("link", { name: "Statistiques" })
+      : page.getByTestId("plus-entree").filter({ hasText: "Statistiques" });
     await expect(entree).toHaveAttribute("href", /^\/back-office\/statistiques\/?$/);
     await entree.click();
     await expect(page).toHaveURL(/\/back-office\/statistiques\/?$/);
@@ -70,6 +81,9 @@ test.describe("Statistiques (S2) : l'entrée et l'adresse", () => {
     if (estOrdinateur(info) || estTablettePaysage(info)) {
       await deplierSiTablettePaysage(page, info);
       await expect(menu(page, info).getByRole("link", { name: "Statistiques" })).toHaveAttribute("aria-current", "page");
+    } else {
+      // Une page hors de la barre marque « Plus » (B6).
+      await expect(menu(page, info).getByRole("link", { name: "Plus" })).toHaveAttribute("aria-current", "page");
     }
   });
 
@@ -78,6 +92,8 @@ test.describe("Statistiques (S2) : l'entrée et l'adresse", () => {
     await expect(page.getByRole("heading", { name: "Tableau de bord" })).toBeVisible();
     await deplierSiTablettePaysage(page, info);
     await expect(menu(page, info).getByRole("link", { name: "Planning" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Statistiques" })).toHaveCount(0);
+    await ouvrirPlusSiPetitEcran(page, info);
     await expect(page.getByRole("link", { name: "Statistiques" })).toHaveCount(0);
     await page.goto("/back-office/statistiques");
     await expect(page.getByText("Page réservée aux administrateurs.")).toBeVisible();

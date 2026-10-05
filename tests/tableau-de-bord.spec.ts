@@ -437,7 +437,13 @@ test.describe("Tableau de bord (B4) : écrans", () => {
       // La cloche lit les setlists récentes à part (`limit`) : pas les widgets.
       if (q.from[0].collectionId === "setlists" && !q.limit) lectures.push(q);
     });
-    await ouvrir(page, ADMIN);
+    // Ces deux widgets seuls : « Chants les plus joués » (U7) lit les setlists passées, à part.
+    await ouvrir(page, ADMIN, {
+      "backOffice/uid-admin": {
+        tableauDeBord: [{ id: "dimanche", taille: "m", reglages: {} }, { id: "setlists", taille: "s", reglages: {} }],
+        majLe: "2026-10-01",
+      },
+    });
     await expect(widget(page, "Ce dimanche").getByText("Setlist publiée")).toBeVisible();
     await expect(widget(page, "Setlists à préparer").getByTestId("ligne-setlist").first()).toBeVisible();
     expect(lectures).toEqual([expect.objectContaining({

@@ -35,6 +35,8 @@ function morceaux(e: Entree, admin: boolean, coordination: boolean): string[] {
     case "evenements": return [`${d}.fiches`, ...(coordination ? [`${d}.scene`] : [])];
     case "equipes": return [`${d}.organigramme`, ...(admin ? [`${d}.personnes`] : [])];
     case "messages": return admin ? [`${d}.reception`, `${d}.notifier`, `${d}.questionnaire`] : [`${d}.notifier`];
+    // Planche bo-telephone-plus : « Chants les plus joués · admins » (U7, Q2).
+    case "statistiques": return [`${d}.statistiques`, "backOffice.barre.indice.admins"];
     default: return [`${d}.${e}`];
   }
 }

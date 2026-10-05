@@ -97,7 +97,7 @@ test.describe("Barre du bas (B6) : règles pures (Q13)", () => {
   test("feuille : la barre d'abord, puis les autres entrées permises dans l'ordre du menu ; 4 cochées au plus", () => {
     const admin = permises(ADMIN);
     const liste = listeDeLaFeuille(["evenements", "tableau", "taches", "planning"], admin);
-    expect(liste).toEqual(["evenements", "tableau", "taches", "planning", "equipes", "messages"]);
+    expect(liste).toEqual(["evenements", "tableau", "taches", "planning", "equipes", "messages", "statistiques"]);
     const cochees: Entree[] = ["evenements", "tableau", "taches", "planning"];
     expect(basculer(cochees, "messages"), "une cinquième : refusée").toEqual(cochees);
     const sansPlanning = basculer(cochees, "planning");
@@ -180,13 +180,17 @@ test.describe("Barre du bas (B6) : « Plus »", () => {
     await expect(page.getByRole("heading", { name: "Plus", level: 1 })).toBeVisible();
     await expect(barre(page).getByRole("link", { name: "Plus" })).toHaveAttribute("aria-current", "page");
     const cartes = page.getByTestId("plus-entree");
-    await expect(cartes).toHaveCount(2);
+    // Statistiques (U7, admins seuls) : sa carte à part, la dernière (planche bo-telephone-plus).
+    await expect(cartes).toHaveCount(3);
     const equipes = cartes.filter({ hasText: "Équipes" });
     await expect(equipes).toHaveAttribute("href", /^\/back-office\/equipes\/?$/);
     await expect(equipes).toContainText("Organigramme, pôles · personnes et droits");
     const messages = cartes.filter({ hasText: "Messages" });
     await expect(messages).toContainText("Signalements, propositions de chants · notifier · questionnaire");
     await expect(messages.getByTestId("pastille")).toHaveText("2");
+    await expect(cartes.last()).toContainText("Statistiques");
+    await expect(cartes.last()).toContainText("Chants les plus joués · admins");
+    await expect(cartes.last()).toHaveAttribute("href", /^\/back-office\/statistiques\/?$/);
     // Ni le tableau de bord, ni une entrée déjà dans la barre.
     await expect(cartes.filter({ hasText: "Tâches" })).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Personnaliser la barre" })).toBeVisible();
@@ -245,10 +249,11 @@ test.describe("Barre du bas (B6) : la feuille « Ta barre du bas »", () => {
     const disposition = [{ id: "scene", taille: "s", reglages: {} }];
     const db = await ouvrir(page, ADMIN, { "backOffice/uid-admin": { tableauDeBord: disposition, majLe: "2026-09-30T10:00:00Z" } });
     await ouvrirFeuille(page);
-    await expect(feuille(page).getByRole("checkbox")).toHaveCount(6);
+    await expect(feuille(page).getByRole("checkbox")).toHaveCount(7);
     for (const nom of ["Accueil", "Tâches", "Planning", "Évènements"]) await expect(caseDe(page, nom)).toHaveAttribute("aria-checked", "true");
-    // La barre d'abord, puis les autres dans l'ordre du menu ; Accueil dit ce qu'il ouvre.
-    await expect(feuille(page).getByTestId("ligne-barre")).toHaveText([/Accueil.*tableau de bord/, /Tâches/, /Planning/, /Évènements.*\+ scène/, /Équipes/, /Messages/]);
+    // La barre d'abord, puis les autres dans l'ordre du menu ; Accueil dit ce qu'il ouvre,
+    // Statistiques (U7) à qui elle est réservée.
+    await expect(feuille(page).getByTestId("ligne-barre")).toHaveText([/Accueil.*tableau de bord/, /Tâches/, /Planning/, /Évènements.*\+ scène/, /Équipes/, /Messages/, /Statistiques.*admins/]);
     // 4 cochées : la cinquième est refusée.
     await expect(caseDe(page, "Équipes")).toBeDisabled();
     await expect(apercu(page)).toHaveText(["Accueil", "Tâches", "Planning", "Évènements", "Plus"]);
@@ -278,7 +283,7 @@ test.describe("Barre du bas (B6) : la feuille « Ta barre du bas »", () => {
     await expect(poignee).toHaveAttribute("aria-pressed", "true");
     for (const position of [3, 2, 1]) {
       await page.keyboard.press("ArrowUp");
-      await expect(page.getByText(`« Évènements » en position ${position} sur 6.`)).toBeAttached();
+      await expect(page.getByText(`« Évènements » en position ${position} sur 7.`)).toBeAttached();
     }
     await page.keyboard.press("Space");
     await expect(apercu(page)).toHaveText(["Évènements", "Accueil", "Tâches", "Planning", "Plus"]);
