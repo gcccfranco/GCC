@@ -1,11 +1,13 @@
 import { expect, test, type Page } from "@playwright/test";
+import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync } from "node:fs";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { lirePdf } from "./helpers/pdf";
 import { MODELES, modeleDe, nomFichierExport, pagesExport, porteesExport, type PageExport } from "../src/lib/planning/modeles";
 import { dimanchesDe } from "../src/lib/planning/grilles";
+import { classeurXlsx } from "../src/lib/planning/xlsx";
 
-// Lot U2, tranches P6 (modèles) et P7 (PDF) — docs/spec-planning-2027.md :
+// Lot U2, tranches P6 (modèles), P7 (PDF) et P8 (.xlsx) — docs/spec-planning-2027.md :
 // tout planning s'exporte au modèle de son onglet du Google Sheet (une page
 // = un onglet ou un trimestre de l'onglet), logo sous le nom de l'église, pas
 // de bas de page. Noms fictifs seulement.
@@ -368,4 +370,143 @@ test("P7 · « Tous les plannings 2027 » (admin) : toutes les pages, dans l'ord
   expect(estA4(pdf.pages[17], "portrait"), "Paix en portrait").toBe(true);
   expect(pdf.pages.every((p) => estA4(p, "portrait") || estA4(p, "paysage"))).toBe(true);
   expect(pdf.polices).toEqual(expect.arrayContaining(["Gelasio-Regular"]));
+});
+
+// ─── P8 · Le .xlsx ──────────────────────────────────────────────────────────
+
+test("P8 · classeur : une feuille par onglet, dans l'ordre du Sheet ; l'EDD et le Culte en une feuille chacun", () => {
+  const feuilles = classeurXlsx(page("tout", "paix"), "logo");
+  expect(feuilles.map((f) => f.sheet)).toEqual([
+    "Franco_Louange", "Franco_Table_PtD", "Intergroupe", "Interfranco", "EDD", "Campus_Louange",
+    "Paix_T1", "Paix_T2", "Paix_T3", "Paix_T4",
+    "Fidélité_T1", "Fidélité_T2", "Fidélité_T3", "Fidélité_T4",
+    "Fidélité_Musicien",
+    "Bonté_T1", "Bonté_T2", "Bonté_T3", "Bonté_T4",
+  ]);
+  // Une image par feuille : le logo, centré au-dessus du tableau ; quadrillage masqué.
+  for (const f of feuilles) {
+    expect(f.images, f.sheet).toHaveLength(1);
+    expect(f.showGridLines, f.sheet).toBe(false);
+  }
+  const valeurs = (i: number) => feuilles[i].data.flat().map((c) => (c && typeof c === "object" && "value" in c ? c.value : c)).filter(Boolean);
+  // EDD : les six périodes, l'une sous l'autre, dans la même feuille.
+  expect(valeurs(4).filter((v) => String(v).startsWith("PÉRIODE "))).toHaveLength(6);
+  // Culte : les quatre trimestres dans la même feuille.
+  expect(valeurs(0).filter((v) => String(v).startsWith("TRIMESTRE "))).toHaveLength(4);
+  expect(feuilles[0].orientation).toBe("landscape");
+  expect(feuilles[6].orientation, "Paix en portrait").toBeUndefined();
+});
+
+test("P8 · Paix T1 : en-tête de l'onglet, rangées du Sheet, logo centré sur le tableau", () => {
+  const [f] = classeurXlsx(page("affiche", "paix", 1), "logo");
+  const cellule = (r: number, c = 0) => f.data[r][c] as { value?: string; columnSpan?: number; height?: number; fontFamily?: string; fontSize?: number };
+  expect(f.sheet).toBe("Paix_T1");
+  expect(cellule(0)).toMatchObject({ value: "Grace Church Christian Chinese de Paris", fontFamily: "Lora", fontSize: 22, columnSpan: 5, height: 47.25 });
+  expect(cellule(1)).toMatchObject({ height: 47.25 });
+  expect(cellule(2)).toMatchObject({ height: 164.25 });
+  expect(cellule(4)).toMatchObject({ value: "GROUPE PAIX", fontFamily: "Lora", fontSize: 22 });
+  expect(cellule(6)).toMatchObject({ value: "Planning de Janvier à Mars 2027", fontSize: 16 });
+  expect(cellule(7)).toMatchObject({ value: "Dimanche de 13:00 à 14:30", fontSize: 16 });
+  // Deux rangées vides, puis le tableau.
+  const entetes = f.data[10].map((c) => (c as { value?: string }).value);
+  expect(entetes).toEqual(["DATE", "PRÉSIDENCE", "MUSICIENS", "ORATEUR", "THÈME"]);
+  const premiere = f.data[11] as { value?: string; backgroundColor?: string; fontFamily?: string; fontWeight?: string; borderStyle?: string }[];
+  expect(premiere[0]).toMatchObject({ value: "03/01", fontFamily: "Calibri", fontWeight: "bold", backgroundColor: "#EAF2FB", borderStyle: "thin" });
+  expect((f.data[12][0] as { backgroundColor?: string }).backgroundColor, "une ligne sur deux").toBeUndefined();
+  expect(f.data).toHaveLength(11 + 13);
+  // Le logo : rangée 3, au milieu de la largeur du tableau.
+  const [logo] = f.images!;
+  expect(logo.anchor.row).toBe(3);
+  const px = (f.columns ?? []).map((c) => Math.round((c.width ?? 0) * 7 + 5));
+  const gauche = px.slice(0, logo.anchor.column - 1).reduce((s, x) => s + x, 0) + (logo.offsetX ?? 0);
+  const total = px.reduce((s, x) => s + x, 0);
+  expect(Math.abs(gauche + logo.width / 2 - total / 2)).toBeLessThan(2);
+});
+
+test("P8 · fusions : Choristes du Culte, classe de l'EDD, mois et dimanche spécial de Fidélité musiciens", () => {
+  const [culte] = classeurXlsx(page("affiche", "culte", 1), "logo");
+  const entete = culte.data.find((r) => (r[0] as { value?: string })?.value === "DATE")!;
+  expect((entete[2] as { value: string; columnSpan: number })).toMatchObject({ value: "Choristes", columnSpan: 2 });
+  const [edd] = classeurXlsx(page("affiche", "eddZhongban", 1), "logo");
+  const classe = edd.data.flat().find((c) => (c as { value?: string })?.value === "中班") as { rowSpan?: number; fontSize?: number };
+  expect(classe).toMatchObject({ rowSpan: 9, fontSize: 14 });
+  const [fm] = classeurXlsx(page("affiche", "fideliteMusiciens", 1), "logo");
+  const janvier = fm.data.flat().find((c) => (c as { value?: string })?.value === "Janvier") as { rowSpan?: number };
+  expect(janvier.rowSpan).toBe(5);
+  const special = fm.data.flat().find((c) => (c as { value?: string })?.value === "Interfranco") as { columnSpan?: number };
+  expect(special.columnSpan, "Présidence → Percussion").toBe(4);
+  expect((fm.data[0][0] as { fontFamily?: string }).fontFamily).toBe("Ma Shan Zheng");
+});
+
+/** Lit une entrée de l'archive .xlsx (un zip) avec `unzip`. */
+const dansXlsx = (fichier: string, entree: string) => execFileSync("unzip", ["-p", fichier, entree]).toString("utf8");
+const entreesXlsx = (fichier: string) => execFileSync("unzip", ["-Z1", fichier]).toString("utf8").trim().split("\n");
+const nomsDesFeuilles = (fichier: string) => [...dansXlsx(fichier, "xl/workbook.xml").matchAll(/<sheet [^>]*name="([^"]+)"/g)].map((m) => m[1]);
+
+/** Choisit la portée, clique « .xlsx », rend le chemin du fichier gardé dans test-results/. */
+async function exporterXlsx(page: Page, portee: string | RegExp) {
+  await boutonExporter(page).click();
+  const fenetre = page.getByRole("dialog", { name: "Exporter" });
+  await fenetre.getByRole("radio", { name: portee }).click();
+  const [download] = await Promise.all([
+    page.waitForEvent("download", { timeout: 120_000 }),
+    fenetre.getByRole("button", { name: ".xlsx", exact: true }).click(),
+  ]);
+  const fichier = test.info().outputPath(download.suggestedFilename());
+  writeFileSync(fichier, readFileSync(await download.path()));
+  return { nom: download.suggestedFilename(), fichier };
+}
+
+test("P8 · .xlsx « Toute l'année » de Paix 2027 : 4 feuilles, Lora et Calibri, EAF2FB, bordures, fusions, logo, ni en-tête ni pied de page", async ({ page }) => {
+  await ouvrir(page, ECRIVAIN);
+  await page.getByRole("button", { name: "2027", exact: true }).click();
+  await boutonExporter(page).click();
+  await expect(page.getByRole("dialog", { name: "Exporter" }).getByRole("button", { name: ".xlsx", exact: true })).toBeVisible();
+  await capture(page, "p8-menu-exporter-xlsx");
+  await page.keyboard.press("Escape");
+  const { nom, fichier } = await exporterXlsx(page, "Toute l'année · Groupe Paix");
+  expect(nom).toBe("Groupe_Paix_2027.xlsx");
+  expect(readFileSync(fichier).subarray(0, 2).toString()).toBe("PK");
+  expect(nomsDesFeuilles(fichier)).toEqual(["Paix_T1", "Paix_T2", "Paix_T3", "Paix_T4"]);
+
+  const styles = dansXlsx(fichier, "xl/styles.xml");
+  for (const police of ["Lora", "Calibri"]) expect(styles).toContain(`<name val="${police}"/>`);
+  expect(styles).toMatch(/rgb="FFEAF2FB"/i);
+  expect(styles).toMatch(/<left style="thin">/);
+
+  const textes = dansXlsx(fichier, "xl/sharedStrings.xml");
+  for (const attendu of ["Grace Church Christian Chinese de Paris", "GROUPE PAIX", "Planning de Janvier à Mars 2027", "Dimanche de 13:00 à 14:30", "PRÉSIDENCE", "Invité A.", "Interfranco", "Intergroupe", "Offrande"]) {
+    expect(textes, attendu).toContain(attendu);
+  }
+  expect(textes).not.toContain("Ancien Z.");
+  expect(textes, "le brouillon de Bonté n'entre pas").not.toContain("Brouillon B.");
+
+  const feuille1 = dansXlsx(fichier, "xl/worksheets/sheet1.xml");
+  expect(feuille1).toContain("<mergeCell ");
+  expect(feuille1).toContain("<drawing ");
+  expect(feuille1, "quadrillage masqué").toMatch(/showGridLines="(0|false)"/);
+  expect(feuille1).not.toContain("<headerFooter");
+  expect(entreesXlsx(fichier).filter((e) => e.startsWith("xl/media/"))).toHaveLength(4);
+});
+
+test("P8 · .xlsx « Tous les plannings 2027 » (admin) : une feuille par onglet, dans l'ordre et sous les noms du Sheet", async ({ page }) => {
+  test.setTimeout(240_000);
+  await ouvrir(page, ADMIN);
+  await page.getByRole("button", { name: "2027", exact: true }).click();
+  const { nom, fichier } = await exporterXlsx(page, "Tous les plannings 2027");
+  expect(nom).toBe("Plannings_2027.xlsx");
+  expect(nomsDesFeuilles(fichier)).toEqual([
+    "Franco_Louange", "Franco_Table_PtD", "Intergroupe", "Interfranco", "EDD", "Campus_Louange",
+    "Paix_T1", "Paix_T2", "Paix_T3", "Paix_T4",
+    "Fidélité_T1", "Fidélité_T2", "Fidélité_T3", "Fidélité_T4",
+    "Fidélité_Musicien",
+    "Bonté_T1", "Bonté_T2", "Bonté_T3", "Bonté_T4",
+  ]);
+  const styles = dansXlsx(fichier, "xl/styles.xml");
+  for (const police of ["Lora", "Calibri", "Georgia", "Ma Shan Zheng"]) expect(styles).toContain(`<name val="${police}"/>`);
+  const textes = dansXlsx(fichier, "xl/sharedStrings.xml");
+  expect(textes).toContain("基督教会巴黎华人恩典堂");
+  expect(textes).toContain("测试");
+  expect(textes, "l'admin voit le brouillon de Bonté").toContain("Brouillon B.");
+  expect(entreesXlsx(fichier).filter((e) => e.startsWith("xl/media/"))).toHaveLength(19);
 });

@@ -1,6 +1,6 @@
 "use client"
 
-// Export d'un planning au modèle du Sheet (lot U2, P7, docs/spec-planning-2027.md) :
+// Export d'un planning au modèle du Sheet (lot U2, P7 PDF et P8 .xlsx, docs/spec-planning-2027.md) :
 // dans le navigateur, chargé à la demande, sans route ni coût serveur (Q8).
 // Les lignes se relisent au moment d'exporter (grille de l'app et Sheet réunis,
 // comme les pages) : « Toute l'année » et « Tous les plannings » dépassent ce que
@@ -46,7 +46,7 @@ function telecharger(blob: Blob, nom: string) {
   URL.revokeObjectURL(url)
 }
 
-export async function exporterModelePdf(p: {
+export async function exporterModele(format: "pdf" | "xlsx", p: {
   portee: Portee
   /** Planning affiché (clé de grille). */
   key: string
@@ -58,14 +58,22 @@ export async function exporterModelePdf(p: {
   /** Ce que le nom du fichier dit de la page affichée (« T1 », « P5 »). */
   periodeCourte: string
 }): Promise<void> {
-  const [lignes, logo, { pdf }, { PlanningModelePDF }] = await Promise.all([
-    lignesDe(grillesAExporter(p.portee, p.key)),
-    logoReduit(),
-    import("@react-pdf/renderer"),
-    import("@/components/pdf/PlanningModelePDF"),
-  ])
+  const [lignes, logo] = await Promise.all([lignesDe(grillesAExporter(p.portee, p.key)), logoReduit()])
   const pages = pagesExport({ portee: p.portee, annee: p.annee, key: p.key, rang: p.rang, lignes })
-  const nom = nomFichierExport(p.portee, p.label, p.periodeCourte, p.annee, "pdf")
-  const blob = await pdf(<PlanningModelePDF pages={pages} logo={logo} titre={nom.replace(/\.pdf$/, "")} />).toBlob()
-  telecharger(blob, nom)
+  const nom = nomFichierExport(p.portee, p.label, p.periodeCourte, p.annee, format)
+  if (format === "pdf") {
+    const [{ pdf }, { PlanningModelePDF }] = await Promise.all([
+      import("@react-pdf/renderer"),
+      import("@/components/pdf/PlanningModelePDF"),
+    ])
+    telecharger(await pdf(<PlanningModelePDF pages={pages} logo={logo} titre={nom.replace(/\.pdf$/, "")} />).toBlob(), nom)
+  } else {
+    // P8 : une feuille par onglet du Sheet (xlsx.ts), écrite par write-excel-file (question 1).
+    const [{ default: writeXlsxFile }, { classeurXlsx }, image] = await Promise.all([
+      import("write-excel-file/browser"),
+      import("./xlsx"),
+      fetch(logo).then((r) => r.blob()),
+    ])
+    telecharger(await writeXlsxFile(classeurXlsx(pages, image)).toBlob(), nom)
+  }
 }

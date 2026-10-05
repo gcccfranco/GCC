@@ -14,7 +14,7 @@ import type { DefinitionGrille } from "@/lib/planning/grilles"
 // « Écrans ») : ce que la page montre, toute l'année du planning, et pour les
 // admins tous les plannings de l'année ; un bouton par format. Fenêtre sur
 // ordinateur et tablette, feuille sur téléphone. Il remplace « Exporter en
-// CSV » et « Exporter en PDF » du lot 17 (question 6).
+// CSV » et « Exporter en PDF » du lot 17 (question 6). P8 : le bouton « .xlsx ».
 
 export type ExportPlanning = {
   annee: number
@@ -125,12 +125,12 @@ function Choix({
     tout: t("planning.export.tout", { annee: exporter.annee }),
   }
 
-  async function pdf() {
+  async function lancer(format: "pdf" | "xlsx") {
     setEnCours(true)
     setEchec(false)
     try {
-      const { exporterModelePdf } = await import("@/lib/planning/exporter")
-      await exporterModelePdf({
+      const { exporterModele } = await import("@/lib/planning/exporter")
+      await exporterModele(format, {
         portee, key: definition.key, label: definition.label, annee: exporter.annee, rang: exporter.rang, periodeCourte,
       })
       onFini()
@@ -164,8 +164,11 @@ function Choix({
       {enCours && <p aria-live="polite" className="text-sm text-muted-foreground">{t("planning.export.enCours")}</p>}
       {echec && <p role="alert" className="text-sm text-destructive">{t("planning.export.echec")}</p>}
       <div className="flex gap-2">
-        <Button type="button" className="flex-1" disabled={enCours} onClick={() => void pdf()}>
+        <Button type="button" className="flex-1" disabled={enCours} onClick={() => void lancer("pdf")}>
           {t("planning.export.pdf")}
+        </Button>
+        <Button type="button" className="flex-1" disabled={enCours} onClick={() => void lancer("xlsx")}>
+          {t("planning.export.xlsx")}
         </Button>
       </div>
     </div>
