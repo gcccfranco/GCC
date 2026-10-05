@@ -101,7 +101,7 @@ sans droit de publier, choisit 2027 dans Groupes › Paix : bandeau « 2027 · b
 trimestre donne un PDF A4 conforme à `export-paix-t1` (église, logo, « GROUPE PAIX », « Planning de Janvier à Mars
 2027 », horaire, une ligne sur deux `#eaf2fb`, bordures noires, rien en bas) et un .xlsx qui s'ouvre dans Google Sheets
 avec la même mise en forme ; « Tous les plannings 2027 » (admin) : une feuille par onglet, dans l'ordre du Sheet ;
-Fidélité porte le nom chinois et une ligne vide entre les mois. Sur le serveur « comme en ligne », rien n'a changé ;
+les trois groupes (Paix, Bonté, Fidélité) ont la même mise en forme, Fidélité avec le nom chinois de l'église. Sur le serveur « comme en ligne », rien n'a changé ;
 un « 04/01 » du Sheet lu en décembre 2026 reste le 04/01/2026.
 
 ## Modèle
@@ -164,7 +164,7 @@ feuilles (`Paix_Prière` et `Membres_Groupes` n'en font pas partie). Couleurs en
 | `eddZhongban`, `eddDaban`, `eddGaoban` | `EDD` (5) | période de deux mois, les trois classes l'une sous l'autre ; 6 pages (9, 8, 9, 9, 9, 8 dimanches en 2027) | « EDD — Planning par classe (bimensuel) — 2027 » (Impact 16) · « PÉRIODE 1 — JANVIER FÉVRIER » (puis « MARS AVRIL », « MAI JUIN », « JUILLET AOÛT », « SEPTEMBRE OCTOBRE », « NOVEMBRE DÉCEMBRE ») · pas d'horaire | DATE · PRESIDENCE (sans accent) · SUPPLÉANT · PIANO · CAJON · GUITARE · COURS, puis la classe (中班, 大班, 高班) dans une 8e colonne sans en-tête, fusionnée sur ses dimanches | Calibri 11 ; en-têtes blanc gras sur `#1F5B57`, bordures `#4F6B63` ; période en gras, à gauche, sans fond ; date jj/mm/aaaa, non grasse, sur `#CFE8DD` ; classe Calibri 14 gras sur `#A9D18E` ; pas de ligne alternée ; bordures fines noires et `#9AA7B1` ; 100 px partout | A4 portrait, ajusté à la page (8 colonnes : relevé contraire à la règle des 7) |
 | `campusMatin`, `campusSoir` | `Campus_Louange` (6) | année ; 1 page, les séances dans l'ordre des dates, matin et soir mêlés (colonne MOMENT), pas « matin puis soir » | onglet de saisie : son titre (« CAMPUS_LOUANGE — Format de lecture automatique ») et sa consigne ne se recopient pas ; un ancien rendu lisible, caché (lignes 16-29), titrait « CAMPUS 2026 » · « 27 — 31 Juillet 2026 • (lieu) » : proposé « CAMPUS 2027 » · « JJ — JJ Mois 2027 » (première et dernière séance, sans lieu) · pas d'horaire | DATE_SEANCE · MOMENT · PRESIDENT · CHORISTE_1 · CHORISTE_2 · PIANO · GUITARE · BATTERIE · SONO · PPT · CHANT_1 · CHANT_2 · CHANT_3 · CHANT_4 · DATE_RÉPÉTITION (proposé : tirets bas changés en espaces) | Calibri 11 ; en-têtes blanc gras sur `#2D5A65`, la répétition sur `#6B4A8E` ; date jj/mm/aaaa grasse en `#2D5A65`, moment gras ; cases alignées à gauche ; une ligne sur deux `#F5F9FA` dès la première ; répétition sur `#EDE4F5`, texte `#6B4A8E` ; bordures fines noires ; 107 · 100 (× 10) · 127 · 222 · 127 · 193 | paysage |
 | `paix` | `Paix_T1`, `Paix _T2`, `Paix _T3`, `Paix_T4` (7 à 10 ; feuilles `Paix_T2`, `Paix_T3`) | trimestre ; 4 pages | « GROUPE PAIX » · « Planning de Janvier à Mars 2027 » (« Avril à Juin », « Juillet à Septembre », « Octobre à Décembre ») · « Dimanche de 13:00 à 14:30 » (le Sheet : « 13h à 14h30 » ; Q8) | DATE · PRÉSIDENCE · MUSICIENS · ORATEUR · THÈME ; + PERCUSSION au T4 (10 cases sur 13) | Calibri 12 ; en-têtes gras `#1F3A5F`, sans fond ; date jj/mm grasse ; cases centrées ; une ligne sur deux `#EAF2FB` dès la première (T1 à T3 : quelques cases teintées en trop, restes de copier-coller ; T4 net) ; bordures fines noires ; 88 · 100-125 · 100-122 · 100-155 · 190-209 (· 125) | A4 portrait, ajusté à la page |
-| `fidelite` | `Fidélité_T1` … `Fidélité_T4` (13 à 16) | trimestre ; 4 pages | église en chinois · « Groupe Fidélité » · « Programme du 1er Trimestre 2027 » (« 2e », « 3e », « 4e ») · « 13:00-14:00 » (le Sheet : « 13H00-14H00 » ; Q8) | Date · Présidence · Orateur · Thème · Pianiste | Lora 12, **ni en-têtes ni dates en gras**, sans couleur ; une ligne sur deux `#EAF2FB`, reprise au premier dimanche de chaque mois ; une ligne vide entre les mois (fusionnée sur les 5 colonnes, bordée, sans fond) ; bordures fines noires ; 100 · 120-144 · 100-190 · 196-199 · 149 ; l'encadré « Pour imprimer » (G10:I16) ne se recopie pas | A4 portrait, ajusté à la page |
+| `fidelite` | `Fidélité_T1` … `Fidélité_T4` (13 à 16) | trimestre ; 4 pages | église en chinois · **export comme Paix** (05/10/2026) : « GROUPE FIDÉLITÉ » · « Planning de Janvier à Mars 2027 » (« Avril à Juin »…) · « Dimanche de 13:00 à 14:00 » *(le Sheet 2026 : « Groupe Fidélité » · « Programme du 1er Trimestre » · « 13H00-14H00 »)* | Date · Présidence · Orateur · Thème · Pianiste | **export : comme Paix** (décision du 05/10/2026, les trois groupes homogènes : Calibri 12, en-têtes gras `#1F3A5F`, date grasse, une ligne sur deux `#EAF2FB` dès la première, pas de ligne vide entre les mois, bordures fines noires). *Le Sheet 2026, pour mémoire : Lora 12, ni en-têtes ni dates en gras, ligne alternée reprise à chaque mois, une ligne vide entre les mois ; 100 · 120-144 · 100-190 · 196-199 · 149.* L'encadré « Pour imprimer » (G10:I16) ne se recopie pas | A4 portrait, ajusté à la page |
 | `fideliteMusiciens` | `Fidélité_Musicien` (17) | trimestre (bloc) ; 4 pages | l'onglet n'a ni église ni logo ; « Groupe Fidélité Planning Musiciens 2027 » (Georgia 16 gras) · « Groupe Fidélité Planning 2027 - T1 (Janvier - Mars) » (« T2 (Avril - Juin) », « T3 (Juillet - Septembre) », « T4 (Octobre - Décembre) ») · pas d'horaire | (mois, sans en-tête) · Date · Présidence · Piano · Guitare · Percussion | Georgia 12 ; bandeau du trimestre et en-têtes gras sur `#B4A7D6` ; mois en colonne A, au premier dimanche du mois, gras sur `#D9D2E9` ; date jj/mm non grasse ; pas de ligne alternée ; un dimanche spécial (Interfranco, Intergroupe, anniversaire de l'église, baptême) s'écrit sur toute la ligne, Présidence → Percussion fusionnées ; bordures fines noires ; 100 · 100 · 119 · 116 · 128 · 103 | A4 portrait |
 | `bonte` | `Bonté_T1`, `Bonté _T2`, `Bonté _T3`, `Bonté_T4` (18 à 21 ; feuilles `Bonté_T2`, `Bonté_T3`) | trimestre ; 4 pages | « GROUPE BONTÉ », le reste comme Paix (même horaire) | comme Paix ; + PERCUSSION et MÉNAGES aux T3 et T4 (Percussion : 11 cases sur 13 à chacun ; Ménages : aucune) | comme Paix (`Bonté_T1` vide en 2026, dates seules) | comme Paix |
 
@@ -205,15 +205,18 @@ source, la grille) règle ce cas. « Baptême » et « Séance de louange » s'�
 pour P9, « Choisir » ne doit pas les proposer comme des noms.
 
 **Écart avec une planche validée.** `export-fidelite-t1` met en gras les en-têtes et les dates ; le Sheet ne le fait
-pas (Lora 12 maigre partout). `export-paix-t1` est conforme au Sheet. Proposé : suivre le Sheet (« au modèle de son
-onglet »).
+pas (Lora 12 maigre partout). `export-paix-t1` est conforme au Sheet. **Tranché le 05/10/2026 (Timothée) : les
+plannings des trois groupes sont homogènes, en gras** : Fidélité prend la mise en forme de Paix et Bonté (tableau,
+titres « GROUPE FIDÉLITÉ » · « Planning de Janvier à Mars 2027 » · « Dimanche de 13:00 à 14:00 »), sans ligne vide
+entre les mois ; seul le nom de l'église reste en chinois. La planche `export-fidelite-t1` (en gras) est donc juste.
+Fidélité musiciens n'est pas un des trois groupes : il garde son modèle (Gelasio).
 
 **Le logo dans le Sheet.** Une même image (PNG 314 × 320, le logo de l'église) sur les douze onglets de groupe, dans
 la rangée 3 : environ 200 px de côté sur le rendu PDF, centrée sur le tableau. L'export .xlsx de Google la ramène à
 environ 108 px et l'accroche au coin de sa cellule (C3, ou A3 pour Fidélité), sans la centrer : P8 calcule lui-même
 le décalage qui la centre.
 
-**Ce que le relevé propose aux tranches suivantes** (à valider avec le tableau) :
+**Ce que le relevé propose aux tranches suivantes** — **accepté le 05/10/2026** (Timothée : « fait ce qui est selon toi le mieux »), avec une exception : les trois groupes sont homogènes (paragraphe précédent) :
 
 1. **Le tableau au modèle de son onglet, l'en-tête des groupes partout** (Q11). Le paragraphe « Commun » d'avant
    étendait aussi la date en gras, les bordures noires et la ligne sur deux `#eaf2fb` à tous les onglets ; le Sheet ne
@@ -299,7 +302,7 @@ simulée (jamais de vraie notification). Pas d'appareil de plus : la barre laté
 - le 10/12/2026, « 04/01 » du Sheet donne 2026-01-04 ; en juillet 2027, une séance du Campus de 2026 n'est pas à venir.
 
 `tests/planning-export-modele.spec.ts` :
-- pur : titres, périodes, libellés du Sheet, une ligne sur deux, ligne vide entre les mois de Fidélité ;
+- pur : titres, périodes, libellés du Sheet, une ligne sur deux ; Paix, Bonté et Fidélité au même modèle (Fidélité : église en chinois, ni ligne vide entre les mois ni police différente) ;
 - .xlsx ouvert avec `unzip` : noms des feuilles, polices Lora et Calibri, fond `EAF2FB`, bordures, fusions, une
   image, ni en-tête ni pied de page ; « Tous les plannings » : une feuille par onglet, dans l'ordre du Sheet ;
 - PDF : `%PDF`, « Toute l'année » de Paix = 4 pages, Lora et Carlito, une image, police chinoise pour une case chinoise ;
