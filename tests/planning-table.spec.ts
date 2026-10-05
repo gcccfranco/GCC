@@ -126,7 +126,9 @@ test("« Exporter (modèle du Sheet) » : le trimestre affiché, Date · Équipe
     expect(lignes, attendu).toContain(attendu);
   }
   const i = lignes.indexOf("27/09");
-  expect(lignes.slice(i, i + 3), "la colonne Petit déj porte les inscriptions").toEqual(["27/09", "Lydie, Samuel", "Famille Martin, Les jeunes du Campus"]);
+  expect(lignes.slice(i, i + 2)).toEqual(["27/09", "Lydie, Samuel"]);
+  // La case Petit déj porte les inscriptions ; trop longue, elle passe à la ligne dans le PDF.
+  expect(lignes[i + 2], "la colonne Petit déj porte les inscriptions").toMatch(/^Famille Martin, Les jeunes du/);
 
   const autre = await browser.newPage();
   await open(autre, MEMBRE, "/planning/table");

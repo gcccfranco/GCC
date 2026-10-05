@@ -711,7 +711,8 @@ test("Mes services en 中文 : un compte sans nom de planning voit ses petits d�
     ligne({ id: "a", dimanche: "2026-09-27", nom: "Famille Martin", uid: SANS_NOM.uid, auteurUid: SANS_NOM.uid }),
   ]), SANS_NOM);
   await expect(page.getByRole("listitem").filter({ hasText: "Petit déj" })).toHaveCount(1);
-  await expect(page.getByText(/Camille Exemple/)).toBeVisible();
+  // Le pied de la barre latérale (lot U4) porte aussi le nom : la phrase de la page seule.
+  await expect(page.getByText(/Camille Exemple\s*出现在排班表中/)).toBeVisible();
 });
 
 // ─── U3 · PD4 : le mercredi (T5, Q5) ────────────────────────────────────────
