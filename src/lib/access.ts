@@ -4,6 +4,8 @@ import type { Evenement } from "@/types/evenement";
 import type { FSSetlist } from "@/lib/firebase/setlists";
 import { TACHE_POLES, type TachePole } from "@/types/tache";
 import { EQUIPES } from "@/lib/equipes/table";
+import { PUBLISHABLE_PLANNINGS, canPublishPlanning } from "@/lib/planning/releases";
+import { ENTREES, WIDGETS, type Entree, type WidgetId } from "@/types/backOffice";
 import {
   GROUPES,
   type AccessLevel,
@@ -402,3 +404,72 @@ export function canEditSetlist(
  *  diverger. Aucun droit nouveau. Miroir serveur : `allow delete` sur
  *  setlists/{id} dans firestore.rules. */
 export const canDeleteSetlist = canEditSetlist;
+
+// ─── Back-Office (lot U6, docs/spec-back-office.md) ──────────────────────────
+// Affichage seulement : le sélecteur et le menu ne protègent aucune donnée,
+// chaque sous-partie garde sa règle dans firestore.rules (signalements, profils,
+// plannings…). Aucune règle miroir ici.
+
+type ProfilResponsable = {
+  serviceRoles?: Record<string, unknown>; poles?: string[]; plannings?: string[]; notify?: string[];
+  annonces?: string[]; equipes?: boolean; referentDe?: string[];
+};
+const nonVide = (l: string[] | undefined) => (l?.length ?? 0) > 0;
+
+/** Responsable (Q1) : admin, ou au moins un droit donné par un admin ou par l'organigramme —
+ *  `poles` écrit, `plannings`, `notify`, `annonces`, droit Équipes, référent d'une équipe.
+ *  Le pôle Louange implicite d'un rôle de service (`polesDe`) ne compte pas (question 2). */
+export function estResponsable(user: AuthUser | null, profile: ProfilResponsable | null): boolean {
+  if (!user) return false;
+  if (isAdminUser(user)) return true;
+  if (!profile) return false;
+  return nonVide(profile.poles) || nonVide(profile.plannings) || nonVide(profile.notify) || nonVide(profile.annonces)
+    || profile.equipes === true || nonVide(profile.referentDe);
+}
+
+/** Entrées et widgets qui arrivent avec leur lot (Q17) : U8 (Calendrier), U7 (Statistiques,
+ *  Chants les plus joués). Chaque lot retire la sienne de ces listes ; le rang est déjà gardé. */
+const ENTREES_A_VENIR: readonly Entree[] = ["calendrier", "statistiques"];
+const WIDGETS_A_VENIR: readonly WidgetId[] = ["calendrier", "chants"];
+
+/** Les entrées du Back-Office d'une personne (table Q2), dans l'ordre du menu. Vide pour qui
+ *  n'est pas responsable. */
+export function entreesBackOffice(user: AuthUser | null, profile: ProfilResponsable | null): Entree[] {
+  if (!user || !estResponsable(user, profile)) return [];
+  const admin = isAdminUser(user);
+  const pole = polesDe(profile).length > 0;
+  const visible: Record<Entree, boolean> = {
+    tableau: true,
+    calendrier: true,
+    planning: admin || nonVide(profile?.plannings)
+      || PUBLISHABLE_PLANNINGS.some((p) => canPublishPlanning(p, admin, profile?.notify ?? [])),
+    taches: admin || pole,
+    evenements: admin || isCoordination(user, profile) || nonVide(profile?.annonces) || pole || nonVide(profile?.referentDe),
+    equipes: canEditerEquipes(user, profile),
+    messages: admin || nonVide(profile?.notify),
+    statistiques: admin,
+  };
+  return ENTREES.filter((e) => visible[e] && !ENTREES_A_VENIR.includes(e));
+}
+
+/** Les widgets qu'une personne peut ajouter à son tableau de bord (table des widgets), dans
+ *  l'ordre du catalogue. Vide pour qui n'est pas responsable. */
+export function widgetsPermis(user: AuthUser | null, profile: UserProfile | null): WidgetId[] {
+  const entrees = entreesBackOffice(user, profile);
+  if (entrees.length === 0) return [];
+  const admin = isAdminUser(user);
+  const permis: Record<WidgetId, boolean> = {
+    dimanche: true,
+    calendrier: true,
+    afaire: entrees.includes("taches"),
+    setlists: canCreateSetlist(user, profile),
+    planning: entrees.includes("planning"),
+    evenements: entrees.includes("evenements"),
+    chants: admin,
+    petitdej: true,
+    scene: true,
+    comptes: admin,
+    raccourcis: true,
+  };
+  return WIDGETS.filter((w) => permis[w] && !WIDGETS_A_VENIR.includes(w));
+}

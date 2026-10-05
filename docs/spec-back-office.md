@@ -376,6 +376,53 @@ npm test && npx tsc --noEmit && npm run lint && graphify update .
 
 ## Avancement
 
+**05/10/2026 — B1 « Espace » codée** (branche `lot/u6-back-office`, après la fusion de `lot/u4-navigation`,
+commit « feat(U6): B1 — espace Back-Office… »). Faites : R1 à R4, B1. Restent B2 à B6.
+
+- **Droits purs** (`src/lib/access.ts`) : `estResponsable` (Q1 : admin, ou `poles` écrit, `plannings`, `notify`,
+  `annonces`, droit Équipes, `referentDe` ; le pôle Louange implicite ne compte pas), `entreesBackOffice` (table Q2,
+  dans l'ordre du menu ; Planning = admin, `plannings` ou `canPublishPlanning`), `widgetsPermis` (table des
+  widgets, ordre de `WIDGETS`). Calendrier et Statistiques (entrées), Calendrier et Chants les plus joués
+  (widgets) sont écartés par `ENTREES_A_VENIR` / `WIDGETS_A_VENIR` : **U8 et U7 retirent la leur de ces listes**
+  (Q17). Un admin voit donc 6 entrées. Modèle de § Modèle dans `src/types/backOffice.ts`. Aucune règle Firestore :
+  le menu ne protège rien, chaque sous-partie garde la sienne.
+- **Barres** (`src/lib/navigation.ts`) : `espaceDe(pathname)` (tout `/back-office…`), `entreesBarre("back-office",
+  { …, permises })` rend les entrées aux adresses de Q4 ; `exact` pour le tableau de bord (courant sur
+  `/back-office` seul) ; `estEntreeActive` ignore la barre oblique finale (`trailingSlash`). La barre latérale
+  (`BarreLaterale.tsx`) montre l'espace de la page.
+- **Sélecteur** `src/components/layout/SelecteurEspace.tsx` (« App · Back-Office », `role="group"` « Choisir
+  l'espace », espace courant `aria-current="true"`), pour les responsables seuls, interrupteur ouvert : dans la
+  place de U4 de la barre latérale dépliée (et de la barre par-dessus de la tablette en paysage, qui se referme au
+  choix) ; dans la barre du haut après le label sur tablette en portrait ; **sur téléphone (< 640 px) à la place
+  du label, et sans le bouton de langue** (question 5 : la langue passe par Moi). Barre réduite : rien (U4,
+  question 2). Mémoire de session (`sessionStorage`, une clé par espace) : chaque lien rouvre la dernière page de
+  son espace, sinon `/back-office` ou `/planning`.
+- **Pages** : `src/app/back-office/layout.tsx` (404 interrupteur coupé ; `EspaceBackOffice.tsx` : « Réservé aux
+  responsables. », « Se connecter » sans compte) ; `src/app/back-office/page.tsx` = titre « Tableau de bord » et
+  « {jour} · bonjour {prénom} », pleine largeur, et, sur téléphone et tablette en portrait seulement, la liste
+  « Tes modules » (entrées permises) **en attendant B4 (widgets) et B6 (barre du bas du Back-Office)**, qui la
+  remplacent ; `src/app/back-office/[entree]/page.tsx` : Planning, Tâches, Évènements, Équipes, Messages
+  mènent, en attendant B2 et B3, à l'écran d'aujourd'hui (liens selon les droits : `/planning`, `/taches`,
+  `/evenements`, `/evenements/scene`, `/equipes`, `/notifier`, `/admin`) — **chaque tranche pose sa page à
+  l'adresse fixe, qui l'emporte ; la dernière retire ce fichier** ; toute autre adresse répond 404
+  (`dynamicParams = false`, Calendrier compris jusqu'à U8).
+- **Libellés** `backOffice.*` en FR et 中文 (sélecteur « 应用 · 后台 », question 14 ; menu 仪表盘, 日历, 排班表, 任务,
+  活动, 团队, 消息, 统计 ; « 仅限负责人。 »).
+- **Tests** : `tests/back-office-espace.spec.ts` (nouveau, ajouté à `SPECS_GRAND_ECRAN`), 23 tests × 5 projets (dont les captures),
+  vus rouges sur fonctions vides, puis verts : responsables et non-responsables, table des entrées, adresses,
+  widgets, choriste sans sélecteur, « Réservé aux responsables » (choriste, visiteur), passage App → Back-Office
+  et menu d'un admin (6) et d'Alice (3), entrée en attente, 404, mémoire de session, téléphone, tablette en
+  portrait, grand écran (réduite, dépliée, par-dessus), 中文 ; captures `test-results/back-office-captures/`
+  (regardées : conformes à `bo-tableau-de-bord`, `bo-telephone-accueil`, `tablette-portrait-back-office` pour
+  l'en-tête et la barre latérale). `tests/back-office-coupe.spec.ts` : `/back-office`, `/back-office/taches`,
+  `/back-office/evenements` en 404, aucun sélecteur même pour un admin. Verts aussi :
+  `navigation-grand-ecran`, `look-navigation`, `look-barres`, `look-fondations`, `look-halo`, `look-secondaires`,
+  `i18n-hydration`, `coherence`, `rappels-regroupes`.
+- **Choix faits faute de réponse dans la spec** : téléphone = moins de 640 px (le seuil où la barre du bas se
+  centre) ; le lien de l'espace courant mène aussi à sa dernière page ; la mémoire retient l'adresse et ses
+  paramètres ; la barre du bas reste celle de l'App au Back-Office jusqu'à B6 (aucune entrée n'y est marquée) ;
+  l'ordre des widgets permis est celui de `WIDGETS` (le catalogue de B5 pourra le reprendre).
+
 **05/10/2026 — R4 « Réunions d'équipe » codée** (branche `lot/u6-back-office`, commit « feat(U6): R4 — réunions
 d'équipe… », après R3). Les tranches R1 à R4 sont faites ; B1 à B6 ne sont pas commencées.
 
@@ -531,4 +578,5 @@ relire le 中文 de `evenements.sujets`, `evenements.reprise`, `evenements.prece
 d'équipe : `estDeLaReunion`, création par un référent, création des profils), **puis**, depuis l'app en local (même
 Firestore que le site en ligne ; le bouton est derrière `BACK_OFFICE`), cliquer une fois **« Recalculer depuis l'organigramme »** (Admin › Équipes) : sans cela, aucun profil
 existant n'a `dansEquipes` ni `referentDe`, et personne ne voit ni ne crée de réunion d'équipe. Après B5 :
-republier les règles (`backOffice/{uid}`).
+republier les règles (`backOffice/{uid}`). B1 ne change aucune règle ; relire le 中文 de `backOffice.*`
+(`src/locales/zh-CN.json`).

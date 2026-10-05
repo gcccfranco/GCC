@@ -18,6 +18,7 @@ import { FondDeBarre } from "@/components/layout/FondDeBarre";
 import { labelDeSection } from "@/lib/navigation";
 import { Cloche } from "@/components/layout/Cloche";
 import { MenuCompte, useNomDuMembre } from "@/components/layout/MenuCompte";
+import { SelecteurEspace, useResponsable } from "@/components/layout/SelecteurEspace";
 
 // Bouton d'icône de la barre : rond, sans bordure, réponse dès l'appui.
 const ICON_BUTTON =
@@ -100,6 +101,10 @@ export function Navbar() {
   const admin = isAdminUser(user);
   const headerLabel = t(labelDeSection(pathname));
   const { displayName, initial } = useNomDuMembre();
+  // Lot U6 (spec-back-office.md, question 5) : pour un responsable, le sélecteur
+  // « App · Back-Office » suit le label ; sur téléphone il en prend la place, et la
+  // langue passe par « Moi » (à 390 px, les quatre ne tiennent pas ensemble).
+  const responsable = useResponsable();
 
   return (
     <>
@@ -122,7 +127,7 @@ export function Navbar() {
                 priority
               />
             </div>
-            <span className="font-bold text-lg text-foreground min-w-[111px] whitespace-nowrap flex items-center gap-1">
+            <span className={`font-bold text-lg text-foreground min-w-[111px] whitespace-nowrap flex items-center gap-1 ${responsable ? "max-sm:hidden" : ""}`}>
               GCC{" "}
               <span
                 key={headerLabel}
@@ -132,6 +137,8 @@ export function Navbar() {
               </span>
             </span>
           </Link>
+
+          {responsable && <SelecteurEspace />}
 
           {/* Sections (ordinateur) */}
           <nav className="hidden lg:flex items-center gap-1 ml-2" aria-label={t("common.aria.sections")}>
@@ -219,7 +226,7 @@ export function Navbar() {
             <button
               onClick={toggleLanguage}
               aria-label={isZh ? "Changer en français" : "切换为中文"}
-              className={`${ICON_BUTTON} w-auto min-w-10 px-3 gap-1.5 text-sm font-semibold`}
+              className={`${ICON_BUTTON} w-auto min-w-10 px-3 gap-1.5 text-sm font-semibold ${responsable ? "max-sm:hidden" : ""}`}
             >
               <Globe className="h-4 w-4" aria-hidden />
               <span className={user ? "" : "hidden min-[400px]:inline"}>{isZh ? "中文" : "FR"}</span>

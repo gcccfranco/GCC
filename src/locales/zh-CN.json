@@ -2187,5 +2187,29 @@
     },
     "matriceVide": "目前没有人在排班中。",
     "nom": "姓名"
+  },
+  "backOffice": {
+    "selecteur": {
+      "aria": "选择空间",
+      "app": "应用",
+      "backOffice": "后台"
+    },
+    "entrees": {
+      "tableau": "仪表盘",
+      "calendrier": "日历",
+      "planning": "排班表",
+      "taches": "任务",
+      "evenements": "活动",
+      "equipes": "团队",
+      "messages": "消息",
+      "statistiques": "统计"
+    },
+    "reserve": "仅限负责人。",
+    "seConnecter": "登录",
+    "bonjour": "{{jour}} · {{prenom}}，你好",
+    "menu": "你的模块",
+    "enAttente": "这部分将随后续开发移入后台。目前请在这里使用：",
+    "scene": "舞台",
+    "administration": "管理"
   }
 }

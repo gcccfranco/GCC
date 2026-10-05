@@ -2190,5 +2190,29 @@
     },
     "matriceVide": "Personne ne sert au planning pour l'instant.",
     "nom": "Nom"
+  },
+  "backOffice": {
+    "selecteur": {
+      "aria": "Choisir l'espace",
+      "app": "App",
+      "backOffice": "Back-Office"
+    },
+    "entrees": {
+      "tableau": "Tableau de bord",
+      "calendrier": "Calendrier",
+      "planning": "Planning",
+      "taches": "Tâches",
+      "evenements": "Évènements",
+      "equipes": "Équipes",
+      "messages": "Messages",
+      "statistiques": "Statistiques"
+    },
+    "reserve": "Réservé aux responsables.",
+    "seConnecter": "Se connecter",
+    "bonjour": "{{jour}} · bonjour {{prenom}}",
+    "menu": "Tes modules",
+    "enAttente": "Cette partie arrive au Back-Office avec la suite du chantier. En attendant, elle est ici :",
+    "scene": "Scène",
+    "administration": "Administration"
   }
 }

@@ -22,10 +22,13 @@ import { Drawer as DrawerPrimitive } from "vaul";
 import { useAuth } from "@/lib/firebase/auth";
 import { useSetLanguage } from "@/lib/I18nProvider";
 import { BACK_OFFICE } from "@/lib/backOffice";
-import { entreesBarre, estEntreeActive, labelDeSection } from "@/lib/navigation";
+import { entreesBarre, espaceDe, estEntreeActive, labelDeSection } from "@/lib/navigation";
+import { entreesBackOffice } from "@/lib/access";
+import { useProfile } from "@/lib/firebase/users";
 import { getBarreReduite, setBarreReduite, suivreBarreReduite } from "@/lib/barreLateralePref";
 import { Cloche } from "@/components/layout/Cloche";
 import { MenuCompte, useNomDuMembre } from "@/components/layout/MenuCompte";
+import { SelecteurEspace } from "@/components/layout/SelecteurEspace";
 import { ReportDialog } from "@/components/report/ReportDialog";
 import { Drawer, DrawerOverlay, DrawerPortal, DrawerTitle } from "@/components/ui/drawer";
 import { useStandaloneScrollLock } from "@/hooks/useStandaloneScrollLock";
@@ -180,6 +183,7 @@ function ContenuBarre({
   const { t, i18n } = useTranslation();
   const pathname = usePathname() || "";
   const { user, loading } = useAuth();
+  const { profile } = useProfile();
   const { resolvedTheme, setTheme } = useTheme();
   const dark = mounted && resolvedTheme === "dark";
   const setLanguage = useSetLanguage();
@@ -188,8 +192,11 @@ function ContenuBarre({
   const { displayName, initial, planningName } = useNomDuMembre();
   const compte = useACoteDeLaBarre();
   const cloche = useACoteDeLaBarre();
-  // Back-office coupé (lot 18) : la section Évènements n'est pas en ligne.
-  const entrees = loading ? [] : entreesBarre("app", { connecte: !!user, backOffice: BACK_OFFICE });
+  // Back-office coupé (lot 18) : la section Évènements n'est pas en ligne. Au Back-Office (U6),
+  // les entrées que donnent les droits (`entreesBackOffice`).
+  const entrees = loading
+    ? []
+    : entreesBarre(espaceDe(pathname), { connecte: !!user, backOffice: BACK_OFFICE, permises: entreesBackOffice(user, profile) });
 
   // Barre réduite : la langue d'un membre n'y figure pas (Q5), celle du visiteur si.
   const langue = (classe = "") => (
@@ -229,8 +236,10 @@ function ContenuBarre({
         </button>
       </div>
 
-      {/* Place du sélecteur App ↔ Back-Office : vide en U4, U6 la remplit pour les responsables. */}
-      <div data-testid="place-selecteur" className="barre-si-depliee empty:hidden" />
+      {/* Place du sélecteur App ↔ Back-Office (U4) : remplie pour les responsables (U6), vide sinon. */}
+      <div data-testid="place-selecteur" className="barre-si-depliee empty:hidden">
+        <SelecteurEspace pleineLargeur onChoix={onChoix} />
+      </div>
 
       <nav aria-label={t("common.aria.navigationPrincipale")} className="flex flex-col gap-0.5">
         {entrees.map((entree) => {

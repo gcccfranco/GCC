@@ -2,7 +2,11 @@
 // d'entrées pour la barre du bas (téléphone, tablette en portrait) et la barre latérale
 // (ordinateur, tablette en paysage), pour que les deux ne divergent jamais.
 // U6 ajoute l'espace « back-office » (sélecteur App ↔ Back-Office, menu à 8 entrées).
-import { CalendarDays, ListMusic, Music, Ticket, UserRound, type LucideIcon } from "lucide-react";
+import {
+  CalendarDays, CalendarRange, ChartColumn, Inbox, LayoutGrid, ListChecks, ListMusic, Music, Network, Ticket, UserRound,
+  type LucideIcon,
+} from "lucide-react";
+import type { Entree } from "@/types/backOffice";
 
 /** Vocabulaire commun du chantier U ; choisie par le CSS (globals.css, bloc « Lot U4 »),
  *  jamais par l'agent utilisateur. */
@@ -19,6 +23,8 @@ export type EntreeBarre = {
   Icone: LucideIcon;
   /** Préfixes d'URL où l'entrée est la page courante. */
   actifSur: string[];
+  /** Courante sur sa seule adresse, pas sur les pages en dessous (le tableau de bord, `/back-office`). */
+  exact?: boolean;
 };
 
 // Chants et Setlists ont chacun leur entrée (décision du 16/09/2026 : un onglet
@@ -38,20 +44,44 @@ const ENTREES_VISITEUR: EntreeBarre[] = [
   { href: "/evenements", cle: "common.header.evenements", Icone: Ticket, actifSur: ["/evenements"] },
 ];
 
+// Back-Office (U6, spec-back-office.md Q2-Q4) : le menu à 8 entrées, aux adresses `/back-office/…`.
+const ENTREES_BACK_OFFICE: Record<Entree, EntreeBarre> = {
+  tableau: { href: "/back-office", cle: "backOffice.entrees.tableau", Icone: LayoutGrid, actifSur: ["/back-office"], exact: true },
+  calendrier: { href: "/back-office/calendrier", cle: "backOffice.entrees.calendrier", Icone: CalendarRange, actifSur: ["/back-office/calendrier"] },
+  planning: { href: "/back-office/planning", cle: "backOffice.entrees.planning", Icone: CalendarDays, actifSur: ["/back-office/planning"] },
+  taches: { href: "/back-office/taches", cle: "backOffice.entrees.taches", Icone: ListChecks, actifSur: ["/back-office/taches"] },
+  evenements: { href: "/back-office/evenements", cle: "backOffice.entrees.evenements", Icone: Ticket, actifSur: ["/back-office/evenements"] },
+  equipes: { href: "/back-office/equipes", cle: "backOffice.entrees.equipes", Icone: Network, actifSur: ["/back-office/equipes"] },
+  messages: { href: "/back-office/messages", cle: "backOffice.entrees.messages", Icone: Inbox, actifSur: ["/back-office/messages"] },
+  statistiques: { href: "/back-office/statistiques", cle: "backOffice.entrees.statistiques", Icone: ChartColumn, actifSur: ["/back-office/statistiques"] },
+};
+
+/** L'espace d'une adresse : tout ce qui est sous `/back-office` est au Back-Office. */
+export function espaceDe(pathname: string): Espace {
+  return pathname === "/back-office" || pathname.startsWith("/back-office/") ? "back-office" : "app";
+}
+
 /**
  * Entrées des barres pour un espace. `backOffice` = interrupteur `BACK_OFFICE`
- * (lot 18) : coupé, la section Évènements n'est pas en ligne.
+ * (lot 18) : coupé, la section Évènements n'est pas en ligne, ni le Back-Office.
+ * `permises` = `entreesBackOffice` (access.ts), lu pour l'espace « back-office ».
  */
-export function entreesBarre(espace: Espace, ctx: { connecte: boolean; backOffice: boolean }): EntreeBarre[] {
-  // U4 : seul l'espace « app » existe ; U6 rendra ici les entrées du back-office.
-  void espace;
+export function entreesBarre(
+  espace: Espace,
+  ctx: { connecte: boolean; backOffice: boolean; permises?: readonly Entree[] },
+): EntreeBarre[] {
+  if (espace === "back-office") {
+    return ctx.backOffice && ctx.connecte ? (ctx.permises ?? []).map((e) => ENTREES_BACK_OFFICE[e]) : [];
+  }
   const entrees = ctx.connecte ? ENTREES_MEMBRE : ENTREES_VISITEUR;
   return entrees.filter((e) => ctx.backOffice || e.href !== "/evenements");
 }
 
 /** Vrai si `pathname` est la page de l'entrée (ou l'une de ses sous-pages). */
 export function estEntreeActive(entree: EntreeBarre, pathname: string): boolean {
-  return entree.actifSur.some((m) => pathname === m || pathname.startsWith(`${m}/`));
+  // `trailingSlash` (next.config) : « /back-office/ » est la page « /back-office ».
+  const p = pathname.length > 1 ? pathname.replace(/\/$/, "") : pathname;
+  return entree.actifSur.some((m) => p === m || (!entree.exact && p.startsWith(`${m}/`)));
 }
 
 /** Clé i18n du label contextuel « GCC <label> » (décisions du 15/09/2026, gelées). */

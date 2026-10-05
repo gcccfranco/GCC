@@ -21,6 +21,8 @@ const SPECS_GRAND_ECRAN = [
   /performance-mode\.spec\.ts/,
   /setlist-regie\.spec\.ts/,
   /coup-d-oeil\.spec\.ts/,
+  // Lot U6 (spec-back-office.md, Tests) : l'espace Back-Office, B1.
+  /back-office-espace\.spec\.ts/,
 ];
 
 export default defineConfig({
