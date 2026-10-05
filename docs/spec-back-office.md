@@ -376,5 +376,507 @@ npm test && npx tsc --noEmit && npm run lint && graphify update .
 
 ## Avancement
 
-Rien n'est codé. Après le code, à faire par Timothée : publier `firestore.rules` (sujets, compte rendu, réunions
-d'équipe, `backOffice/{uid}`, création des profils) et cliquer une fois « Recalculer depuis l'organigramme ».
+**05/10/2026 — Fusion des lots dont U6 dépend : le lot U6 est complet** (branche `lot/u6-back-office`). Toutes les
+tranches y sont : R1 à R4, B1 à B6. Commits de fusion `49ecabd` (`lot/u2-planning-2027`, relecture de U2),
+`5c0668a` (`lot/u3-petit-dej`, relecture de U3) et `75fec0d` (`lot/u6b-tableau-de-bord`, B4 à B6), puis le
+correctif « fix(U6): fusion — … ». `lot/u4-navigation` et `lot/u1-scene-saison` étaient déjà dans la branche,
+dans leur version finale (rien de neuf).
+
+- **Conflits résolus en gardant les deux intentions** :
+  - Relecture de U2 × B2 : les pages Interfranco et Intergroupe passent par `PageDatesChoisies` (U2), qui lit
+    maintenant `useGestionPlanning` (B2). « Ajouter un dimanche », « Retirer ce dimanche », l'export et l'année
+    suivante montrée d'office ne servent donc qu'au Back-Office ; dans l'App, la page se lit, même pour qui la remplit.
+  - `PlanningGrille` : « Choisir » s'ouvre sur une case modifiable (le petit déj reste en lecture, B2 et U3) qui
+    porte au plus un nom (U2 : une case à plusieurs noms s'écrit en texte).
+  - `access.ts` : `canGererPetitDej` et `canEditPetitDej` (U3) à côté de `canRetirerDate` (U2).
+  - Accueil du planning : prochain service compté par le compte (U3), sans le brouillon de l'année suivante (U2).
+  - Relecture de U3 × correctif `4d83a96` : le même correctif d'export de la Table des deux côtés (un seul
+    gardé) ; la page Table garde la gestion de B2.
+  - Libellés : `backOffice.barre.*` et `backOffice.plus.*` (B6) rejoignent ceux de B2 et B3 ; `backOffice.menu`
+    (retirée par B6) et `enAttente`, `scene`, `administration` (retirées par B2 et B3) restent retirées.
+  - `playwright.config.ts` : `back-office-admin` et `tableau-de-bord` sont tous deux dans `SPECS_GRAND_ECRAN`.
+  - Tests : `planning-table` garde le test de U3 (« Choisir » ne propose pas les lignes du petit déj), passé au
+    Back-Office ; dans `back-office-coupe`, les blocs de U2 ne sont gardés qu'une fois.
+- **Ce que la fusion a cassé, corrigé** (« fix(U6): fusion — … ») : les tests de la relecture de U2 écrivaient
+  dans l'App. Ils passent au Back-Office (`/back-office/planning/…`, grille ouverte en modification, sans
+  « Modifier ») : Interfranco 2027, Intergroupe 2027, Campus 2027 et la case à plusieurs noms. Le test
+  « Retirer ce dimanche » vérifie en plus que l'App n'offre ni « Ajouter » ni « Retirer » à qui remplit.
+  Dans `barre-back-office`, l'entrée Tâches mène au premier pôle (B3) : `/back-office/taches/da`.
+- **Vérifié** : `npx tsc --noEmit` vert, `npm run lint` sans erreur (53 avertissements, tous d'avant).
+  Playwright, ordinateur, téléphone, tablette (et les deux grands écrans pour les fichiers de `SPECS_GRAND_ECRAN`) :
+  les fichiers du lot (`back-office-espace`, `back-office-admin`, `tableau-de-bord`, `barre-back-office`,
+  `back-office-coupe`, `reunions`), tous les `planning-*`, `coherence`, `rappels-regroupes`, `look-planning*`,
+  `equipes`, `evenements`, `taches`, `taches-evenements`, `nouveaux-membres`, `programme-scene`, `scene-saison`,
+  `navigation-grand-ecran`, `look-navigation`, `look-barres`, `look-fondations`, `look-halo*`, `look-secondaires`,
+  `i18n-hydration` : plus de 2 700 passages verts, aucun rouge après correction (les « sautés » sont les tests
+  propres à un appareil). Captures regardées aux trois tailles (Interfranco et Campus 2027 au Back-Office,
+  tableau de bord, « Plus », Planning du Back-Office avec sa barre du bas) : conformes à `bo-planning-2027`,
+  `bo-tableau-de-bord`, `bo-telephone-plus`.
+- **Noms réels retirés des tests du lot** (consigne du chantier) : `back-office-admin` (Culte, Table et
+  l'écrivain du planning, comme l'avait fait la relecture de U2 pour ses fixtures), et le prénom de la capture de
+  `back-office-espace` et `barre-back-office`. Restent, hors du lot U6 : `back-office-coupe` (lot 18) et
+  d'anciennes fixtures du planning.
+- **Instable, non touché** : `barre-back-office` « l'ordre se choisit aux poignées » sur téléphone a échoué une fois
+  sous charge (la première flèche n'a pas bougé l'onglet). Il est passé 3 fois sur 3 à la relance. C'est le même
+  geste au clavier de `@dnd-kit` que « elle réordonne au clavier » de `reunions.spec.ts` (noté à B3).
+- **À faire par Timothée** :
+  - **publier `firestore.rules`** : sujets (R1), compte rendu (R3), réunions d'équipe (R4), `backOffice/{uid}`
+    (B5, sert aussi la barre du bas) ; le fichier porte aussi, venu de U2, l'`allow delete` des dates choisies ;
+  - puis, une fois, **« Recalculer depuis l'organigramme »** (Back-Office › Équipes › Import), depuis l'app en local ;
+  - relire le 中文 de `backOffice.*`, `tableauDeBord.*`, `evenements.sujets`, `evenements.reprise`,
+    `evenements.precedentes`, `evenements.compteRendu` et des lignes du rappel (`src/lib/reunions/rappels.ts`).
+
+### Suite parallèle B4–B6 (branche `lot/u6b-tableau-de-bord`, fusionnée dans `lot/u6-back-office` le 05/10/2026)
+
+**05/10/2026 — B4 « Tableau de bord » codée** (commit « feat(U6): B4 — tableau de bord… », après la fusion de
+`lot/u6-back-office` jusqu'à `4d83a96`). Restent B5 (Personnaliser, écriture et règle `backOffice/{uid}`) et B6
+(barre du bas) ; en parallèle, B2 et B3 dans `lot/u6-back-office`.
+
+- **Disposition** (`src/lib/tableauDeBord/disposition.ts`, pur) : `dispositionParDefaut` (Q11 : admin = tous ses
+  widgets permis ; « évènement » = coordination ou `annonces` ; « louange » = rôle de service ou `plannings` ;
+  sinon Ce dimanche et À faire ; filtré par `widgetsPermis`), ordre de la planche (`ORDRE_DU_CATALOGUE` : Scène et
+  Comptes à la suite, question 6) et tailles de la table (`TAILLE_PAR_DEFAUT`). `dispositionAffichee` : document
+  absent = défaut recalculé ; présent, même vide = le sien, sans widget inconnu, à venir (Calendrier, Chants),
+  non permis ni doublon ; taille illisible = celle de la table.
+- **Lecture** `lirePreferencesBackOffice` (`src/lib/firebase/backOffice.ts`, REST) : 404, refus ou erreur = `null`,
+  donc le défaut. **Aucune règle ajoutée** : la règle `backOffice/{uid}` vient avec B5 ; d'ici là, en ligne, la
+  lecture est refusée et le défaut s'affiche.
+- **Grille** (Q10, `GRILLE_WIDGETS` dans `src/components/backOffice/widgets/Cadre.tsx`) : 1 colonne, 2 dès 640 px,
+  4 sur grand écran (mêmes requêtes que la barre latérale de U4) ; S = 1, M = 2 (1 sur 2 colonnes), L = toute la
+  ligne ; `grid-auto-flow: dense`.
+- **Widgets** (`src/components/backOffice/widgets/`, règles pures dans `src/lib/tableauDeBord/donnees.ts`) :
+  1 Ce dimanche (par service, grille de l'app + Sheet réunis comme l'export, sans données de secours ; setlist
+  publiée, présentation, cases vides, « Personne ») ; 2 À faire (tâches de ses pôles, tous pour un admin, jusqu'à
+  J+7, en retard en rouge, 5 lignes) ; 3 Prochains évènements (visibles, hors réunions, 3/5/10, section, état des
+  inscriptions par `refusInscription`, « Tout voir ») ; 4 Cases vides (`src/lib/planning/casesVides.ts`, pour U8 :
+  colonnes ni optionnelles ni en lecture seule, sur `lignesDeLAnnee`) ; 5 Setlists à préparer
+  (`prochainsServicesSansSetlist` de U5 bis, **fichier `src/lib/setlist/prochainsServices.ts` recopié tel quel de
+  `lot/u5bis-editeur-setlist`** : la fusion le verra identique) ; 6 Petit déj (`lirePetitDej` de U3 ; une lecture
+  en échec n'est jamais « Libre ») ; 8 Scène (programme affiché par `currentProgramme`, ou celui du réglage) ;
+  9 Comptes (admins : noms sans compte comme l'administration, ou nouveaux comptes de la semaine) ; 10 Raccourcis
+  (ceux que les droits permettent, adresses de Q4). Chaque widget a son chargement, son erreur et son état vide.
+- **Page** `src/app/back-office/page.tsx` : titre, puis `TableauDeBord` ; la liste « Tes modules » de B1 reste
+  dessous, sur téléphone et tablette en portrait, **jusqu'à B6**.
+- **Libellés** `tableauDeBord.*` en FR et 中文 (本主日, 待办, 待准备的歌单, 排班空缺, 近期活动…) : **à relire par Timothée**.
+- **Tests** : `tests/tableau-de-bord.spec.ts` (ajouté à `SPECS_GRAND_ECRAN`), 33 tests × 5 projets, vus rouges sur
+  fonctions vides puis verts (165) : défauts des rôles (admin, Alice, annonces, louange, les deux, DA, choriste),
+  disposition enregistrée, règles pures de chaque widget, écrans sur jeu d'essai (Firestore et Sheet simulés),
+  réglages (services, nombre, horizon), widget non permis absent, parts de largeur S/M/L par appareil, 中文 ;
+  captures `test-results/tableau-de-bord-captures/` regardées aux cinq tailles (conformes à `bo-tableau-de-bord`,
+  `bo-telephone-accueil`, `tablette-portrait-back-office`). Verts aussi : `back-office-espace`,
+  `back-office-coupe` sauf « l'ancien tableau des groupes n'a pas de colonne de plus » sur ordinateur (« Batteur
+  B. » trouvé 2 fois), rouge deux fois de suite, étranger à B4 (planning des groupes, venu de U2).
+- **Choix faits faute de réponse dans la spec** : un service = une catégorie de setlist (Culte Francophone,
+  Campus, Intergroupe, Interfranco, groupes, classes EDD), un bloc par grille (Campus matin et soir, Fidélité et
+  ses musiciens) ; Ce dimanche montre toutes les cases (la planche n'en montrait que 4) ; défaut de Cases vides
+  pour un non-admin = ses `plannings`, sinon ceux qu'il publie ; Setlists à préparer : réglage limité aux services
+  où l'on crée, Culte pour un admin qui n'en a pas ; À faire = jusqu'à J+7 ; Petit déj et Cases vides partent du
+  dimanche courant ; le « Personnaliser » de la planche arrive avec B5.
+
+**05/10/2026 — B5 « Personnaliser » codée** (commit « feat(U6): B5 — personnaliser le tableau de bord… »). Reste
+B6 (barre du bas du Back-Office, « Plus », feuille « Ta barre du bas »).
+
+- **Règles pures** : `catalogue`, `ajouterWidget` (à la fin, taille de la table, jamais deux fois), `retirerWidget`,
+  `deplacerWidget`, `changerTaille`, `changerReglages` (`src/lib/tableauDeBord/disposition.ts`) ; réglages de chaque
+  widget en pastilles, `groupesDeReglages` et `choisirReglage` (`src/lib/tableauDeBord/reglages.ts`), qui lisent les
+  choix actifs avec les règles mêmes des widgets (ce qui est coché est ce qui s'affiche).
+- **Écran** (`TableauDeBord.tsx`, `OutilsWidget.tsx`, contexte `EditionWidgetContext` dans `widgets/Cadre.tsx`) :
+  « Personnaliser » → « Terminé » (encre) et « Disposition par défaut » ; bandeau « Ajouter un widget » (widgets
+  permis non affichés, sinon « Tous les widgets sont déjà affichés. ») ; par widget, contour pointillé et barre
+  poignée · Monter · Descendre · S M L · Réglages du widget · Retirer le widget ; glisser à la souris, au toucher et
+  au clavier (`useSensorsAvecClavier`, annonces FR et 中文). Sur téléphone, « Disposition par défaut » passe sur sa
+  ligne, sous le titre (le titre et deux boutons ne tiennent pas à 390 px).
+- **Écriture** (`ecrireTableauDeBord`, `src/lib/firebase/backOffice.ts`, REST) : à chaque geste, `tableauDeBord` et
+  `majLe` seuls (masque : la barre du bas de B6 reste) ; les écritures partent l'une après l'autre ; refusée, la
+  disposition reste à l'écran avec « Disposition non enregistrée ». « Disposition par défaut » demande
+  confirmation puis **retire** `tableauDeBord` du document (absent = défaut du rôle, recalculé, jamais recopié).
+- **Règle** `match /backOffice/{uid} { allow read, write: if signedIn() && request.auth.uid == uid; }`
+  (`firestore.rules`, patron d'`onboarding/{uid}` ; aucun droit dans `access.ts`, `widgetsPermis` filtre déjà
+  l'affichage). **À publier par Timothée** dans la console Firebase : d'ici là, en ligne, la lecture et l'écriture
+  sont refusées (défaut affiché, « Disposition non enregistrée » à chaque geste).
+- **Libellés** `tableauDeBord.perso.*` et `tableauDeBord.reglages.*` en FR et 中文 (自定义, 完成, 恢复默认布局,
+  添加小组件, 上移, 下移, 小组件设置, 移除小组件…) : **à relire par Timothée**.
+- **Tests** (`tests/tableau-de-bord.spec.ts`, fin du fichier) : 18 de plus × 5 projets, vus rouges sur fonctions
+  vides puis verts : règles pures (catalogue, gestes, réglages à un et à plusieurs choix, règle lue dans
+  `firestore.rules`), écrans (Terminé, catalogue sans Comptes, ajouter, retirer, Monter / Descendre, glisser, S / M /
+  L selon l'appareil, réglage qui change le contenu, Réussite 2 relue dans un second contexte, « Disposition par
+  défaut » refusée puis acceptée, écriture refusée, 中文) ; captures `test-results/tableau-de-bord-captures/*-personnaliser.png`.
+- **Choix faits faute de réponse dans la spec** : un réglage à plusieurs choix garde toujours au moins un choix ;
+  « Toutes » (section) et « Celui qui est affiché » (programme) retirent la clé, donc reviennent au défaut ; choix
+  des services de Ce dimanche = tous les services ; Retirer ne demande pas confirmation (le catalogue le rend) ; la
+  disposition touchée n'est pas relue pendant la visite (le dernier geste fait foi).
+
+**05/10/2026 — B6 « Barre du bas » codée** (commit « feat(U6): B6 — barre du bas du Back-Office… »). La suite
+parallèle B4–B6 est finie ; reste sa fusion dans `lot/u6-back-office`.
+
+- **Règles pures** (`src/lib/tableauDeBord/barre.ts`) : `barreParDefaut` (Q13 : Accueil · Calendrier · Tâches ·
+  Planning parmi les entrées permises, complété dans l'ordre du menu ; Calendrier arrivant avec U8, un admin a
+  aujourd'hui Accueil · Tâches · Planning · Évènements, Alice Accueil · Tâches · Évènements), `barreAffichee` (la
+  barre enregistrée dans son ordre, sans entrée inconnue, en double ou sans droit, 4 au plus, complétée dans
+  l'ordre du menu ; absente = défaut), `listeDeLaFeuille`, `basculer` (une cinquième refusée), `barreDeLaFeuille`.
+- **Barre** (`MobileTabBar.tsx`) : au Back-Office, un responsable a ses 4 onglets + « Plus » (`ongletsBackOffice`,
+  `ONGLET_PLUS`, `cleOnglet` dans `src/lib/navigation.ts` : le tableau de bord s'y appelle « Accueil », comme la
+  planche) ; « Plus » est marqué sur toute page du Back-Office hors de la barre ; la barre attend le profil et la
+  barre enregistrée (jamais d'onglets qui changent sous le doigt). Celle de l'App ne change pas ; un
+  non-responsable au Back-Office (« Réservé aux responsables ») garde celle de l'App.
+- **Lecture et écriture** : `useBarreDuBas` / `enregistrerBarreDuBas` (`src/lib/tableauDeBord/useBarreDuBas.ts`),
+  une lecture de `backOffice/{uid}` par compte et par visite, partagée par la barre et « Plus » ;
+  `ecrireBarreDuBas` (`src/lib/firebase/backOffice.ts`, REST) n'écrit que `barreDuBas` et `majLe` (masque : la
+  disposition du tableau de bord reste). Refusée, la barre d'avant revient avec « Barre non enregistrée ». Aucune
+  règle nouvelle : celle de B5 (`backOffice/{uid}`) couvre le champ.
+- **« Plus »** (`/back-office/plus`, `src/components/backOffice/PagePlus.tsx`, planche `bo-telephone-plus`) : une
+  ligne par entrée hors barre, en cartes comme la planche (gestion, puis Messages, puis Statistiques), contenu selon
+  les droits (Planning + « import · sans compte » pour un admin ; Évènements + « programmes de scène » pour la
+  coordination ; Équipes + « personnes et droits » pour un admin ; Messages = « Notifier » seul pour un droit
+  `notify`), pastilles de Q15 (Tâches : à faire pour moi, comme « Mes tâches » ; Messages : signalements et
+  propositions en attente, admins), comptées seulement pour une entrée posée là ; « Personnaliser la barre »
+  (question 9) ; « Revenir à l'app » (dernière page de l'App, mémoire du sélecteur, `useDernierePage`).
+- **Feuille « Ta barre du bas »** (`FeuilleBarreDuBas.tsx`, planche `bo-telephone-barre-perso`, feuille `vaul`) :
+  entrées permises, la barre d'abord ; cases rondes (4 au plus, la cinquième grisée) ; indices « tableau de bord »,
+  « + scène » (coordination), « admins » ; poignées au doigt, à la souris et au clavier (`useSensorsAvecClavier`,
+  annonces du tableau de bord) ; aperçu de la barre ; « Remettre la barre par défaut » ; « Terminé ».
+- **La liste « Tes modules »** de B1 sous le tableau de bord est retirée (clé `backOffice.menu` retirée).
+- **Correction de B1** : le sélecteur ne retient plus `/login` comme dernière page de l'App (après la connexion,
+  « App » et « Revenir à l'app » y ramenaient).
+- **Libellés** `backOffice.barre.*` et `backOffice.plus.*` en FR et 中文 (首页, 更多, 自定义底部栏, 你的底部栏, 恢复默认底部栏,
+  返回应用…) : **à relire par Timothée**.
+- **Tests** : `tests/barre-back-office.spec.ts` (nouveau, 20 tests ; vus rouges sur fonctions vides, puis verts sur
+  téléphone et tablette ; sur ordinateur et grands écrans, seuls les tests purs et « pas de barre du bas »
+  tournent) : règles pures, barre d'un admin et d'Alice (Réussite 2), barre de l'App inchangée, repli sans droit,
+  « Plus » marqué hors barre, cartes et contenus selon les droits, pastilles, feuille (4 au plus, aperçu, rien
+  avant Terminé, masque qui garde le tableau de bord), ordre au clavier, défaut retiré du document, écriture
+  refusée, Réussite 3 (relue sur une tablette, autre contexte), 中文 ; captures
+  `test-results/barre-back-office-captures/` regardées (conformes à `bo-telephone-accueil`, `bo-telephone-plus`,
+  `bo-telephone-barre-perso`, `tablette-portrait-back-office`). `tests/back-office-espace.spec.ts` : sur
+  téléphone et tablette, le menu est désormais la barre du bas.
+- **Choix faits faute de réponse dans la spec** : « Plus » est une page (`/back-office/plus`, hors table Q4) et
+  non un menu ; la feuille s'ouvre depuis « Plus » seulement ; rien ne s'écrit avant de la refermer
+  (« Terminé », le voile ou le geste vers le bas valent tous « Terminé ») ; moins de 4 cochées : la barre est
+  complétée dans l'ordre du menu (l'aperçu le montre) ; « Remettre par défaut » retire `barreDuBas` du document ;
+  pastilles dans « Plus » seulement (ni sur les onglets ni sur la barre latérale) ; descriptions de Tableau de
+  bord, Calendrier et Statistiques écrites d'après leurs voisines (absentes de la planche).
+
+À faire par Timothée (suite B4–B6) : publier `firestore.rules` (règle `backOffice/{uid}` de B5, qui sert aussi
+la barre du bas) ; relire le 中文 de `tableauDeBord.*`, `backOffice.barre.*`, `backOffice.plus.*`.
+
+### Lot U6 (branche `lot/u6-back-office`)
+
+**05/10/2026 — B3 « Tâches et Évènements » codée** (branche `lot/u6-back-office`, après la fusion de
+`lot/u1-scene-saison`, commit « feat(U6): B3 — Tâches et Évènements… »). Faites : R1 à R4, B1 à B3. Restent B4 à B6
+(dans `lot/u6b-tableau-de-bord`). La route d'attente `src/app/back-office/[entree]/` est retirée (dernière entrée
+posée) avec ses libellés `backOffice.enAttente` et `backOffice.scene`.
+
+- **Tâches** : `/back-office/taches` mène au premier pôle ; `…/taches/<pôle>` = la page d'un pôle d'avant (déplacée
+  de `src/app/taches/[pole]/`), sous « Tâches » et un onglet par pôle (`tachesDuBackOffice`, `access.ts` : ses
+  pôles, Louange compris, ordre de `TACHE_POLES` ; tous pour un admin) ; le nom du pôle passe en titre de niveau 2.
+  **App** : `/taches` = « À faire pour moi » seul (question 3), la liste des pôles laisse place, pour qui a l'entrée
+  Tâches, à la ligne « Les tâches des pôles · Back-Office » (planche `mes-taches-telephone`). `/taches/<pôle>`
+  redirige. Les notifications « tâche confiée » et « tâche faite » ouvrent désormais `/taches` (un musicien du pôle
+  Louange n'est pas responsable : la page du pôle lui serait fermée) ; un lien déjà envoyé suit la redirection.
+- **Évènements** (`src/app/back-office/evenements/`) : titre et sous-parties `sousPartiesEvenements` (`access.ts`,
+  table Q2 : Évènements = admin, coordination, droit d'annonces ; Réunions = admin, un pôle `polesDe`,
+  `dansEquipes` ou `referentDe` ; Scène = coordination) sur les trois listes seulement ; qui n'a que des réunions
+  arrive sur Réunions. Listes (`ListeGestion.tsx`) en lignes compactes du calendrier (`EvenementCard`, prop `href`)
+  vers la fiche de gestion : Évènements = ceux qu'on gère (`canEditEvenement`), réunions à part ; Réunions = celles
+  de ses pôles et équipes (`estDeLaReunion`, toutes pour un admin) ; à venir puis « Évènements passés (n) ».
+  « Nouvel évènement » / « Nouvelle réunion » (`?reunion=1` : seuls les publics de réunion).
+  - `…/nouveau` et `…/<id>/modifier` : `NouveauClient` et `ModifierClient` déplacés ici, retour à la fiche de gestion.
+  - `…/<id>` : `EvenementClient espace="back-office"` ; évènement = carte de gestion (Modifier, Dupliquer,
+    Supprimer, inscriptions, QR) puis la fiche ; **réunion** = planche `bo-reunion-avant` (`EnTeteReunion.tsx` :
+    « Réunion de pôle · DA » ou « Réunion d'équipe · TEAM RÉGIE », titre, « Samedi 10 octobre · 20:00 · Salle 2 ·
+    organisée par … », « Modifier », « Dupliquer pour la prochaine », « Supprimer ») ; Sujets (et Tâches) à gauche,
+    Compte rendu et Réunions précédentes à droite, le compte rendu en tête sur téléphone et tablette. Ouverte à qui
+    gère, ou à une personne de la réunion (sans les boutons) ; sinon « Cette page est réservée… ».
+  - `…/scene` : `SceneClient gestion` (l'écran de la coordination de U1, tel quel : programmes, saison, ordre de
+    passage, volets), coordination seule (« Réservé à la coordination. »).
+- **App** : la fiche garde inscription, sujets, compte rendu, tâches ; la carte de gestion (organisateur,
+  coordination) garde le panneau des inscriptions et le QR, mais Modifier, Dupliquer, Supprimer laissent place à
+  « Gérer dans le Back-Office » (responsables seuls). « Nouvel évènement » du calendrier ouvre le formulaire du
+  Back-Office (responsables). La scène de l'App ne gère plus rien (ni Nouveau programme, ni Masquer, ni saison, ni
+  ordre de passage en écriture) ; la coordination y réserve comme les groupes et a « Gérer dans le Back-Office ».
+  `/evenements/nouveau` (avec `?from=`) et `/evenements/<id>/modifier` redirigent.
+- **Interrupteur coupé** : rien ne change (toute la section Évènements et `/taches` sont déjà en 404) ; neuf adresses
+  `/back-office/taches|evenements/…` de plus vérifiées en 404.
+- **Libellés** `backOffice.gerer`, `tachesDesPoles`, `sceneReserve`, `aucunEvenement`, `aucuneReunion`,
+  `nouvelleReunion`, `aVenir`, `reunionDePole`, `reunionDEquipe`, `organiseePar`, `dupliquerProchaine`,
+  `parties.evenements|reunions|scene` en FR et 中文 (在后台管理, 各部门的任务, 仅限协调组。, 没有需要管理的活动。,
+  暂无会议。, 新建会议, 即将举行, 部门会议 · …, 团队会议 · …, 组织者：…, 复制为下一次, 活动, 会议, 舞台) ;
+  `taches.poles` retirée.
+- **Tests** : `tests/back-office-admin.spec.ts`, bloc B3 (24 tests : `sousPartiesEvenements`, Tâches, App
+  « À faire pour moi », liens de la cloche, listes, fiches, création, modification, redirections, « Gérer dans le
+  Back-Office », Scène, 中文, captures `test-results/back-office-captures/b3-*.png`) écrits avant le code, vus rouges
+  (22 sur 24 ; les deux verts d'avance décrivent une absence), puis verts sur les cinq projets.
+  `back-office-coupe.spec.ts` étendu. Tests déplacés au Back-Office : `taches`, `taches-evenements`,
+  `nouveaux-membres` (pages des pôles), `evenements` (créer, modifier, dupliquer, supprimer, carte de gestion ; Steph,
+  l'organisateur des fixtures, reçoit le droit d'annonces d'une section pour être responsable), `reunions` (dupliquer,
+  créer), `programme-scene` et `scene-saison` (la coordination ouvre `/back-office/evenements/scene` ; l'onglet de
+  l'App se vérifie dans l'App, et le titre du programme en cours, même règle `currentProgramme`, au Back-Office),
+  `back-office-espace` (l'entrée Tâches mène au pôle).
+  Suites voisines vertes sur ordinateur, téléphone et tablette, sauf **un test instable d'avant B3** :
+  `reunions.spec.ts` « elle réordonne au clavier », téléphone seul, rouge une fois sur deux **aussi sur la fiche
+  d'avant B3** (contre-épreuve faite) : la flèche ne fait pas changer le sujet de place ; non touché.
+- **Choix faits faute de réponse dans la spec** : un organisateur qui n'est pas responsable (fiche d'avant le lot,
+  réunion Louange d'un musicien) ne voit plus ni Modifier ni « Gérer dans le Back-Office » : la coordination gère
+  à sa place ; le panneau des inscriptions et le QR restent aussi dans l'App (Q14 ne déplace que Modifier, Dupliquer,
+  Supprimer) ; « Supprimer » d'une réunion est à côté des deux boutons de la planche, en lien discret ; les titres
+  des sous-parties ne coiffent que les listes (une fiche prend la page, comme la planche) ; la scène du Back-Office
+  garde les volets Entraînements et Programme, comme l'écran d'avant ; l'équipe est nommée par son libellé
+  d'organigramme (« TEAM RÉGIE », comme R4) ; les tâches d'une réunion restent sous les sujets.
+- **À faire par Timothée** : rien dans `firestore.rules` (aucun droit ne change) ; relire le 中文 des libellés
+  ci-dessus.
+
+**05/10/2026 — B2 « Admin fusionnée » codée** (branche `lot/u6-back-office`, après la fusion de
+`lot/u2-planning-2027` et `lot/u3-petit-dej`, commit « feat(U6): B2 — Admin fusionnée… »). Faites : R1 à R4, B1,
+B2. Restent B3 (Tâches et Évènements), et B4 à B6 (dans `lot/u6b-tableau-de-bord`).
+
+- **Blocs de l'administration** sortis de `admin/page.tsx` dans `src/components/admin/` (un fichier par bloc, chacun
+  charge ses données) : `Reception` (signalements, propositions), `Personnes` (Membres : fiche, pôles, droits),
+  `InscriptionsComptes`, `ImportPlanning` (import du Sheet, « Reprendre les noms du petit déj »), `SansCompte`,
+  `ImportEquipes` (import de l'organigramme, « Recalculer »), et `commun.tsx` (`Pill`, `ListePuces`,
+  `ReserveAuxAdmins`). Notifier sort de `notifier/page.tsx` dans `src/components/messages/Notifier.tsx`.
+- **Pages** (table Q3, adresses Q4), titre et sous-parties en contrôle segmenté
+  (`src/components/backOffice/EnTeteEntree.tsx`, `nav` « Sous-parties », absent s'il n'y a qu'une sous-partie) :
+  - **Messages** (`/back-office/messages`) : Réception (admins), Notifier (`…/notifier`, droit `notify`),
+    Questionnaire (`…/questionnaire`, admins) ; qui ne fait que notifier arrive sur Notifier. Notifier y perd
+    « Publier un planning » (passé au Planning, « Publier le T… » de U2) et la destination « Annonces » (question 13).
+  - **Équipes** (`/back-office/equipes`) : Organigramme (`EquipesClient` en gestion, droit Équipes), Personnes,
+    Inscriptions, Import (admins). Dans l'App, `/equipes` se lit, même pour un admin (question 4) ; le lien
+    « Ouvrir dans l'administration » de la fiche mène à Équipes › Personnes.
+  - **Planning** (`/back-office/planning`) : mène au premier planning de la personne ; `…/<onglet>` pour
+    `planningsDuBackOffice` (`src/lib/access.ts` : ceux qu'on remplit ou publie, dans l'ordre des onglets ; tous pour
+    un admin), en pilules « Plannings » ; Import et Sans compte (admins). Les pages sont celles de l'App
+    (`src/app/planning/*/page.tsx`), rendues en gestion par le contexte `GestionPlanning`
+    (`src/lib/planning/gestion.ts`) : saisie, « Publier le T… », export et brouillon **au Back-Office seulement**.
+    La grille s'ouvre directement en modification pour qui la remplit (plus de bouton « Modifier » ni « Terminé » :
+    clés `planning.grille.modifier` et `termine` retirées). Pleine largeur.
+- **App** : le planning se lit (ni saisie, ni export, ni publication, ni brouillon, même pour qui en a le droit) ;
+  l'onglet Table montre la carte Petit déj (inchangée : « Je m'inscris », ＋, ✎, « Retirer ») et la carte compacte
+  « Prépa. Table du Seigneur » (l'équipe du dimanche qui vient), sans grille. Au Back-Office, la Table est la grille
+  seule (sa colonne Petit déj lit les inscriptions par `fetchTable`).
+- **Anciennes adresses** : `/admin` → `/back-office`, `/notifier` → `/back-office/messages/notifier` ; Moi et le
+  menu du compte n'ont plus Notifier ni Administration ; la notification d'un signalement ouvre Messages. **Interrupteur
+  coupé (en ligne), rien ne change** : `/admin` et `/notifier` restent les pages d'avant (`AncienneAdmin.tsx` assemble
+  les mêmes blocs en onglets), Moi et le menu les gardent, toutes les adresses `/back-office/…` répondent 404.
+- **Libellés** `backOffice.sousParties`, `plannings`, `planningReserve`, `adminReserve`, `parties.*` en FR et 中文
+  (收件箱, 发送通知, 问卷, 组织架构, 成员, 注册, 导入, 排班表, 无账号 ; « 仅限该排班表的负责人。 », « 仅限管理员。 ») ;
+  `backOffice.administration` retirée. Les anciens blocs restent en français (Q16).
+- **Tests** : `tests/back-office-admin.spec.ts` (nouveau, ajouté à `SPECS_GRAND_ECRAN`) écrit avant le code et vu
+  rouge (19 tests sur 19), puis vert sur les trois appareils et les deux grands écrans : `planningsDuBackOffice`,
+  chaque bloc à sa place avec ses droits, redirections, App en lecture, Table en cartes, Moi et menu du compte,
+  captures `test-results/back-office-captures/b2-*.png`. `back-office-coupe.spec.ts` : `/admin` et `/notifier`
+  inchangés, Moi garde Notifier et Admin, sept adresses du Back-Office en 404. Tests déplacés au Back-Office (saisie,
+  publication, export, brouillon) : `planning-grille`, `-2027`, `-campus`, `-edd`, `-groupes-grille`, `-table`,
+  `-export-modele`, `-import`, `-petit-dej`, `equipes`, `evenements` (inscriptions), `coherence` (fichiers déplacés).
+- **Choix faits faute de réponse dans la spec** : l'App montre ce que voit un membre (pas de brouillon, même pour qui
+  remplit ou publie) ; « Publier le T… » au Back-Office seulement ; les pilules gardent les libellés des onglets de
+  l'App (« Culte Franco », « Prépa. Table ») plutôt que ceux, plus courts, de la planche ; un planning qu'on ne
+  remplit ni ne publie répond « Page réservée aux responsables de ce planning. » au Back-Office (il se lit dans
+  l'App) ; Notifier, au Back-Office, garde « Planning » et « Mes services » comme destinations ; la Réception reste
+  l'écran d'aujourd'hui (la liste et le message côte à côte des planches `bo-reception-*` sont à
+  `spec-pages-en-grand.md`, Q15).
+- **À faire par Timothée** : rien dans `firestore.rules` (aucun droit ne change : chaque bloc garde sa règle).
+
+**05/10/2026 — B1 « Espace » codée** (branche `lot/u6-back-office`, après la fusion de `lot/u4-navigation`,
+commit « feat(U6): B1 — espace Back-Office… »). Faites : R1 à R4, B1. Restent B2 à B6.
+
+- **Droits purs** (`src/lib/access.ts`) : `estResponsable` (Q1 : admin, ou `poles` écrit, `plannings`, `notify`,
+  `annonces`, droit Équipes, `referentDe` ; le pôle Louange implicite ne compte pas), `entreesBackOffice` (table Q2,
+  dans l'ordre du menu ; Planning = admin, `plannings` ou `canPublishPlanning`), `widgetsPermis` (table des
+  widgets, ordre de `WIDGETS`). Calendrier et Statistiques (entrées), Calendrier et Chants les plus joués
+  (widgets) sont écartés par `ENTREES_A_VENIR` / `WIDGETS_A_VENIR` : **U8 et U7 retirent la leur de ces listes**
+  (Q17). Un admin voit donc 6 entrées. Modèle de § Modèle dans `src/types/backOffice.ts`. Aucune règle Firestore :
+  le menu ne protège rien, chaque sous-partie garde la sienne.
+- **Barres** (`src/lib/navigation.ts`) : `espaceDe(pathname)` (tout `/back-office…`), `entreesBarre("back-office",
+  { …, permises })` rend les entrées aux adresses de Q4 ; `exact` pour le tableau de bord (courant sur
+  `/back-office` seul) ; `estEntreeActive` ignore la barre oblique finale (`trailingSlash`). La barre latérale
+  (`BarreLaterale.tsx`) montre l'espace de la page.
+- **Sélecteur** `src/components/layout/SelecteurEspace.tsx` (« App · Back-Office », `role="group"` « Choisir
+  l'espace », espace courant `aria-current="true"`), pour les responsables seuls, interrupteur ouvert : dans la
+  place de U4 de la barre latérale dépliée (et de la barre par-dessus de la tablette en paysage, qui se referme au
+  choix) ; dans la barre du haut après le label sur tablette en portrait ; **sur téléphone (< 640 px) à la place
+  du label, et sans le bouton de langue** (question 5 : la langue passe par Moi). Barre réduite : rien (U4,
+  question 2). Mémoire de session (`sessionStorage`, une clé par espace) : chaque lien rouvre la dernière page de
+  son espace, sinon `/back-office` ou `/planning`.
+- **Pages** : `src/app/back-office/layout.tsx` (404 interrupteur coupé ; `EspaceBackOffice.tsx` : « Réservé aux
+  responsables. », « Se connecter » sans compte) ; `src/app/back-office/page.tsx` = titre « Tableau de bord » et
+  « {jour} · bonjour {prénom} », pleine largeur, et, sur téléphone et tablette en portrait seulement, la liste
+  « Tes modules » (entrées permises) **en attendant B4 (widgets) et B6 (barre du bas du Back-Office)**, qui la
+  remplacent ; `src/app/back-office/[entree]/page.tsx` : Planning, Tâches, Évènements, Équipes, Messages
+  mènent, en attendant B2 et B3, à l'écran d'aujourd'hui (liens selon les droits : `/planning`, `/taches`,
+  `/evenements`, `/evenements/scene`, `/equipes`, `/notifier`, `/admin`) — **chaque tranche pose sa page à
+  l'adresse fixe, qui l'emporte ; la dernière retire ce fichier** ; toute autre adresse répond 404
+  (`dynamicParams = false`, Calendrier compris jusqu'à U8).
+- **Libellés** `backOffice.*` en FR et 中文 (sélecteur « 应用 · 后台 », question 14 ; menu 仪表盘, 日历, 排班表, 任务,
+  活动, 团队, 消息, 统计 ; « 仅限负责人。 »).
+- **Tests** : `tests/back-office-espace.spec.ts` (nouveau, ajouté à `SPECS_GRAND_ECRAN`), 23 tests × 5 projets (dont les captures),
+  vus rouges sur fonctions vides, puis verts : responsables et non-responsables, table des entrées, adresses,
+  widgets, choriste sans sélecteur, « Réservé aux responsables » (choriste, visiteur), passage App → Back-Office
+  et menu d'un admin (6) et d'Alice (3), entrée en attente, 404, mémoire de session, téléphone, tablette en
+  portrait, grand écran (réduite, dépliée, par-dessus), 中文 ; captures `test-results/back-office-captures/`
+  (regardées : conformes à `bo-tableau-de-bord`, `bo-telephone-accueil`, `tablette-portrait-back-office` pour
+  l'en-tête et la barre latérale). `tests/back-office-coupe.spec.ts` : `/back-office`, `/back-office/taches`,
+  `/back-office/evenements` en 404, aucun sélecteur même pour un admin. Verts aussi :
+  `navigation-grand-ecran`, `look-navigation`, `look-barres`, `look-fondations`, `look-halo`, `look-secondaires`,
+  `i18n-hydration`, `coherence`, `rappels-regroupes`.
+- **Choix faits faute de réponse dans la spec** : téléphone = moins de 640 px (le seuil où la barre du bas se
+  centre) ; le lien de l'espace courant mène aussi à sa dernière page ; la mémoire retient l'adresse et ses
+  paramètres ; la barre du bas reste celle de l'App au Back-Office jusqu'à B6 (aucune entrée n'y est marquée) ;
+  l'ordre des widgets permis est celui de `WIDGETS` (le catalogue de B5 pourra le reprendre).
+
+**05/10/2026 — R4 « Réunions d'équipe » codée** (branche `lot/u6-back-office`, commit « feat(U6): R4 — réunions
+d'équipe… », après R3). Les tranches R1 à R4 sont faites ; B1 à B6 ne sont pas commencées.
+
+- **Public** `equipe:<id>` (`EvenementPour`, ids de la table `EQUIPES`). `equipeDuPour` et `estReunion` (pôle ou
+  équipe) dans `src/lib/access.ts` ; partout où une réunion de pôle était reconnue (`poleDuPour`), une réunion
+  d'équipe l'est aussi : formulaire sans inscriptions, carte et fiche sans pied d'inscription, cartes Compte
+  rendu, Sujets et Réunions précédentes, question de reprise à la création, ouvertures d'inscriptions du cron.
+  Pastille et choix du public = le nom de l'équipe (`equipes.team.<id>` : « TEAM RÉGIE », « 音控组 »), aucun libellé
+  nouveau.
+- **Profil** : `dansEquipes` et `referentDe` (`src/types/user.ts`, lus par `fromFsProfile`) sont recopiés par
+  `recalculerPoles` (`src/lib/equipes/serveur.ts`) avec `poles`, d'après `rattachementDe`
+  (`src/lib/equipes/organigramme.ts`, pur, ordre de la table) ; un profil inchangé n'est pas réécrit. Ils suivent
+  donc l'import du Sheet et chaque enregistrement d'une équipe (`/api/equipes/poles`, membres d'avant et d'après).
+  La table des 13 équipes passe dans `src/lib/equipes/table.ts` (réexportée par `organigramme.ts`) pour que
+  `access.ts` la lise sans tirer la lecture du Sheet.
+- **Bouton admin « Recalculer depuis l'organigramme »** : onglet Équipes de `/admin`, à côté de l'import (Équipes ›
+  Import viendra avec B2) ; `POST /api/equipes/poles` `{ tous: true }`, **admins seuls** (403 sinon), qui appelle
+  `recalculerDepuisOrganigramme` : tous les membres des équipes, et personne d'autre (un pôle coché hors
+  organigramme reste, D10). Affiche « N profils mis à jour. ».
+- **Droits en double** : `canSeeEvenement`, `estDeLaReunion` (membres = `dansEquipes`, l'organisateur, un admin ;
+  ni la coordination ni un autre pôle), `canCreateEvenement` (référent ou admin), `creatableEvenementPours` (les
+  équipes dont on est référent, après les pôles ; les 13 pour un admin). `firestore.rules` : `estDeLaReunion` lit
+  `dansEquipes` (donc sujets et compte rendu suivent), `allow create` de `evenements/{id}` accepte un référent
+  (`referentDe`), et `users/{uid}` à la création refuse `dansEquipes` et `referentDe` non vides.
+- **Destinataires** (`destinatairesEvenement`, `src/lib/evenements/serveur.ts`) : les profils qui portent
+  l'équipe dans `dansEquipes` — « Prévenir », compte rendu et veille du rappel du matin. Le cron prend ces
+  destinataires pour la veille de toute réunion (pôle ou équipe).
+- **Tests** : `tests/reunions.spec.ts`, 15 tests de plus (vus rouges, puis verts, ordinateur, téléphone,
+  tablette) : `equipeDuPour` / `estReunion`, `rattachementDe`, `recalculerPoles` et « Recalculer » sur une base
+  Admin simulée, destinataires, droits (voir, en être, créer, publics), règles relues, cron relu ; une référente
+  crée la réunion de son équipe (sans inscriptions, sujets ensuite), un membre non référent ne peut pas, un
+  membre la voit dans l'agenda et y ajoute un sujet, un autre pôle et la coordination ne voient ni la fiche ni
+  l'agenda ; capture `test-results/reunions-captures/*-reunion-equipe.png`. `tests/equipes.spec.ts` : le bouton
+  admin envoie `{ tous: true }` et rend compte.
+- **Choix faits faute de réponse dans la spec** : la coordination ne voit pas une réunion d'équipe dont elle
+  n'est pas (comme une réunion de pôle) ; côté règles, `isCoordination()` peut toujours créer n'importe quel
+  évènement, réunions comprises (règle d'avant, inchangée ; le navigateur ne le propose pas) ; le recalcul de
+  tous est réservé aux admins, la propagation par équipe reste ouverte au droit `equipes` ; pas de libellé
+  « Réunion d'équipe · … » dans l'App (la fiche du Back-Office le portera avec B3, comme « Réunion de pôle · DA »).
+- **Instable avant R4, non touché** : `equipes.spec.ts` « admin : le bouton d'import rend compte… » échoue de
+  temps en temps (`getByText(/13 équipes/)` trouve aussi le paragraphe d'aide de l'import, écrit au lot 16, quand
+  le compte rendu arrive avant la vérification) ; vert à la relance.
+
+**05/10/2026 — R3 « Compte rendu et rappels » codée** (branche `lot/u6-back-office`, commit « feat(U6): R3 — compte
+rendu et rappels du matin… », après R2).
+
+- **Carte « Compte rendu »** (`src/components/reunions/CompteRenduCarte.tsx`), sur la fiche `/evenements/<id>` d'une
+  réunion de pôle, **en tête** des cartes de réunion (au-dessus des sujets), pour toute personne de la réunion
+  (`estDeLaReunion`) : vide = aide de la planche, champ en pointillés, « Enregistrer le lien » ; collé = « Google
+  Doc · ajouté par Alice Q. le 4 oct. », « Ouvrir » (nouvel onglet), ✕ « Retirer le lien du compte rendu » (avec
+  confirmation). **B3 la posera sur la fiche du Back-Office.** Libellés `evenements.compteRendu.*` en FR et 中文.
+- **Écriture** : `majCompteRendu` (`src/lib/firebase/evenements.ts`), PATCH du seul champ `compteRendu` (ni
+  `updatedAt`), `{ url, parUid, parNom, le }` ou `null`. Lien vérifié par `lienCompteRendu`
+  (`src/lib/reunions/compteRendu.ts` : tout `https://` complet, rogné, question 12) ; source affichée par
+  `sourceDuLien` (« Google Doc », « Google Drive », sinon le nom du site).
+- **Règle** (`firestore.rules`, `allow update` de `evenements/{id}`) : en plus de l'organisateur et de la
+  coordination, `estDeLaReunion(resource.data) && changeSeulement(['compteRendu'])`, avec `compteRendu == null` ou
+  `parUid == request.auth.uid` et `url.matches('https://.+')`. Miroir noté dans `access.ts` (la carte s'affiche par
+  `estDeLaReunion`).
+- **Rappel du matin** (`src/app/api/cron/reminders/route.ts`) : la veille d'un évènement **ne part plus à part**
+  (question 8 : réunions et évènements à inscriptions). Trois sortes de lignes, préférence « Évènements », une clé
+  `notifLog` par (ligne, personne) : veille (clé du lot 6 gardée, `rappel-evenement-<id>`) — réunion : tout le
+  pôle, « Réunion DA demain, 20:00 : 1 sujet » (sujets ni traités ni repris) ; autre : la phrase du lot 6 ; compte
+  rendu collé depuis hier (`compteRendu.le >= hier`) — les autres personnes de la réunion, « Compte rendu ajouté :
+  Réunion DA du 3 octobre », clé `compte-rendu-<id>-<le>` ; ouvertures d'inscriptions (comme avant). Le message est
+  composé par `notificationsDuMatin` (`src/lib/reunions/rappels.ts`, pur) : un seul passage par personne, un seul
+  `sendPushToUids` dans la route.
+- **Tests** : `tests/reunions.spec.ts`, 16 tests de plus (52 × ordinateur, téléphone, tablette ; vus rouges sur
+  modules vides, puis verts) : lien et source, règle relue, libellés, lignes FR et 中文, un seul message quand
+  service, tâche et réunion tombent le même jour (FR et 中文), sans service, réunion seule, le cron relu ; carte :
+  coller (lien refusé, seul champ écrit, à son nom, relu après rechargement), ouvrir et retirer, admin hors pôle,
+  pas de carte hors réunion ; captures `test-results/reunions-captures/*-compte-rendu-vide.png`, `*-compte-rendu.png`.
+  `evenements.spec.ts`, `taches.spec.ts`, `taches-evenements.spec.ts`, `rappels-regroupes.spec.ts`,
+  `back-office-coupe.spec.ts` verts (637 passés, 2 sautés d'avant).
+- **Choix faits faute de réponse dans la spec** : le lien se colle **avant comme après** la réunion (la planche
+  `bo-reunion-avant` montre le champ avant) ; toute personne de la réunion le **retire** ou le remplace (retirer
+  puis coller), comme la règle proposée ; « Enregistrer le lien » grisé tant que le champ est vide ; la ligne de la
+  veille prend le **titre** de la réunion (« Réunion DA », comme la planche ; une réunion d'équipe de R4 suivra
+  sans changement) et se tait sur le nombre quand il n'y a aucun sujet ; un lien remplacé est annoncé à nouveau ;
+  la personne qui colle n'est pas prévenue, les admins hors pôle non plus (« personnes de la réunion » =
+  `destinatairesEvenement`) ; titre d'une notification sans service ni tâche : « Inscriptions ouvertes » si elle
+  n'a que des ouvertures, « Rappel — <titre> » pour une seule veille, sinon « Rappel des évènements » (中文
+  « 活动提醒 »). **Inchangé** : deux échéances de service distinctes (J7, J3, J1) gardent chacune leur notification,
+  comme avant ; les lignes vont dans la première.
+
+**05/10/2026 — R2 « Reprise » codée** (branche `lot/u6-back-office`, commit « feat(U6): R2 — reprise des sujets
+non traités… », après R1).
+
+- **Question à la création** : `src/app/evenements/nouveau/NouveauClient.tsx`, donc par « Créer » comme par
+  « Dupliquer » (`?from=`). À l'envoi d'une réunion de pôle, avant toute écriture, `lireSujetsAReprendre`
+  (`src/lib/firebase/sujets.ts`) lit les réunions du même `pour` (`listReunionsDu`, égalité seule : pas d'index
+  composite) déjà commencées et leurs sujets rouges ; s'il y en a, la feuille `RepriseSujets.tsx` (planche
+  `bo-reunion-nouvelle-telephone`) attend « Non, les laisser » ou « Oui, les reprendre ». Oui : la réunion est
+  créée, puis chaque sujet est **recopié** (à son nom, `auteurNom` d'origine, `repriseDe` rempli, ordre 0, 1, 2…)
+  et **ensuite** marqué `reprisDans` dans l'ancienne (masque sur ce seul champ, règle de R1). Non : rien n'est
+  écrit, ils restent rouges et reviennent à la création suivante (question 11). Une lecture refusée = rien à
+  reprendre, la création ne bloque jamais.
+- **Purs** (`src/lib/reunions/sujets.ts`) : `sujetsAReprendre` (rouges des réunions commencées, la plus ancienne
+  d'abord, chacune dans son ordre), `copieReprise`, `reunionsPrecedentes`, `jourDuMois`.
+- **Fiche** `/evenements/<id>` d'une réunion : un sujet repris passe en gris, « repris le 7 novembre » ; sa copie
+  dit « repris du 3 octobre ». Carte **« Réunions précédentes »** (`ReunionsPrecedentes.tsx`, planche
+  `bo-reunion-avant`) sous les sujets : réunions du même pôle avant celle-ci, la plus récente d'abord, date vers
+  leur fiche, « Compte rendu » (lien) ou « pas de compte rendu ». **B3 posera les deux cartes sur la fiche du
+  Back-Office.**
+- **Modèle** : `Evenement.compteRendu?` (type `CompteRendu`) ajouté et **lu** seulement, pour cette carte ; exclu de
+  `EvenementValues` et retiré à la duplication et à la modification, pour que le formulaire ne le recopie ni ne
+  l'écrase. **R3** l'écrit (règle, carte, rappels).
+- **Tests** : `tests/reunions.spec.ts`, 11 tests de plus (36 × ordinateur, téléphone, tablette ; vus rouges, puis
+  verts) : précédentes, à reprendre, copie, règle `reprisDans`, libellés ; oui en dupliquant (copie, marquage,
+  « repris du / le »), non (rien d'écrit, reproposé à la création suivante), plusieurs réunions (ni un autre pôle,
+  ni une réunion à venir), rien à reprendre = pas de question, carte des précédentes ; captures
+  `test-results/reunions-captures/*-reprise.png`, `*-repris.png`, `*-precedentes.png`. `evenements.spec.ts`,
+  `taches-evenements.spec.ts`, `back-office-coupe.spec.ts` verts.
+- **Choix faits faute de réponse dans la spec** : la question est posée **à l'envoi** du formulaire (la date et le
+  public sont connus), avant la création ; Échap ne la ferme pas (il faut répondre) ; elle porte sur **toutes**
+  les réunions déjà commencées du même pôle (question 11), sans limite de date ; plusieurs réunions : « Les
+  réunions précédentes en ont laissé N : » et la date de chacune à côté du sujet ; la copie garde la date d'ajout
+  d'origine ; un sujet repris garde sa case « traité » ; « Réunions précédentes » les montre **toutes** (pas de
+  « voir plus ») et n'apparaît pas pour la première réunion d'un pôle ; année ajoutée à la date si elle diffère.
+
+**05/10/2026 — R1 « Sujets à aborder » codée** (branche `lot/u6-back-office`, commit « feat(U6): R1 — sujets à
+aborder… »).
+
+- **Données** : sous-collection `evenements/{id}/sujets/{sid}` (`src/types/reunion.ts`), lue et écrite en REST
+  (`src/lib/firebase/sujets.ts` : lire, ajouter, changer `ordre` ou `traite` par masque, retirer) ; calculs purs
+  dans `src/lib/reunions/sujets.ts` (tri par `ordre` puis date d'ajout, rouge = Q9, nouvel ordre après un glisser
+  qui ne réécrit que les sujets déplacés).
+- **Droits en double** : `estDeLaReunion`, `peutAjouterSujet` (borne du début vérifiée dans le navigateur, relue à
+  l'envoi), `peutRetirerSujet`, `peutOrdonnerSujets` dans `src/lib/access.ts` ; fonctions `reunion`, `organise`,
+  `changeSeulement`, `estDeLaReunion` et bloc `match /sujets/{sid}` dans `firestore.rules`, tels que § Règles
+  proposées (sans `equipe:`, qui vient avec R4).
+- **Carte** `src/components/reunions/SujetsAborder.tsx`, posée sur la fiche d'aujourd'hui `/evenements/<id>`, sous
+  la fiche, pour toute personne d'une réunion de pôle : la même carte sert l'App et la gestion (l'organisatrice y
+  voit en plus poignées et cases) ; **B3 la posera sur la fiche du Back-Office**. Ordre au glisser et au clavier
+  (`useSensorsAvecClavier`, `src/lib/dnd/sensors.ts` : capteur clavier de `@dnd-kit`, annonces en FR et 中文).
+  Libellés `evenements.sujets.*` en FR et 中文.
+- **Tests** : `tests/reunions.spec.ts`, 25 tests × ordinateur, téléphone, tablette (vus rouges carte coupée, puis
+  verts) : droits purs, règles relues dans `firestore.rules`, tri, rouge, nouvel ordre, ajout à la fin à son nom,
+  sujet vide, borne du début à l'horloge simulée (19:59 / 20:00, et ajout tapé avant, envoyé après), retrait
+  (auteur, organisatrice, admin ; refusé à un autre membre), non-membre, évènement qui n'est pas une réunion,
+  « traité », glisser, clavier, rouge après le début, captures (`test-results/reunions-captures/`).
+- **Choix faits faute de réponse dans la spec** : après le début, le titre devient « Sujets » avec « N traités sur
+  M » et sans compteur, comme `bo-reunion-apres-telephone` ; chaque sujet retirable a un bouton ✕ « Retirer »
+  (absent des planches), avec confirmation ; l'ordre et « traité » restent modifiables après le début (pour cocher
+  pendant ou après la réunion) ; rouge = `text-red-700` (`#b91c1c`, tout près du `#b3261d` de la planche ;
+  le thème n'a pas de jeton « alerte » de ce ton) ; les sujets d'une réunion supprimée restent dans Firestore, illisibles (la règle relit la réunion).
+
+À faire par Timothée : **publier `firestore.rules`** (bloc des sujets, R1 ; R2 n'y change rien, le marquage
+`reprisDans` y est déjà ; **R3 : nouvelle branche de `allow update` sur `evenements/{id}`** pour le compte rendu) ;
+relire le 中文 de `evenements.sujets`, `evenements.reprise`, `evenements.precedentes`, `evenements.compteRendu`
+(`src/locales/zh-CN.json`) et des lignes du rappel (`src/lib/reunions/rappels.ts` : « 明天 20:00：… （1 个议题）»,
+« 会议记录已添加：… », titre « 活动提醒 »). **R4 : republier `firestore.rules`** (réunions
+d'équipe : `estDeLaReunion`, création par un référent, création des profils), **puis**, depuis l'app en local (même
+Firestore que le site en ligne ; le bouton est derrière `BACK_OFFICE`), cliquer une fois **« Recalculer depuis l'organigramme »** (Admin › Équipes) : sans cela, aucun profil
+existant n'a `dansEquipes` ni `referentDe`, et personne ne voit ni ne crée de réunion d'équipe. Après B5 :
+republier les règles (`backOffice/{uid}`). B1 ne change aucune règle ; relire le 中文 de `backOffice.*`
+(`src/locales/zh-CN.json`).

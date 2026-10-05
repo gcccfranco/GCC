@@ -1,5 +1,5 @@
 import type { CampusSeance, EddDataStructure } from "./utils"
-import { EDD_CLASSES, EDD_PERIODES } from "./utils"
+import { EDD_CLASSES, EDD_PERIODES, getAnnee, getCurrentTri, getTri } from "./utils"
 import {
   DEJEUNER_FALLBACK, PAIX_FALLBACK, FIDELITE_FALLBACK,
   FIDELITE_MUSIC_FALLBACK, BONTE_FALLBACK, EDD_FALLBACK, CAMP_LOUANGE_FALLBACK,
@@ -9,6 +9,9 @@ import {
   fetchFideliteMusic, fetchBonte, fetchEDD, fetchCampus,
   fetchIntergroupe, fetchInterfranco, fetchPetitDej,
 } from "./sheets"
+import { PREMIERE_ANNEE_APP, marquerDimanchesSpeciaux } from "./grilles"
+import { PUBLISHABLE_PLANNINGS, getPublishedQuarters, triRank } from "./releases"
+import { BACK_OFFICE } from "@/lib/backOffice"
 import type { ServiceRole } from "@/types/user"
 
 export interface PlanningData {
@@ -34,7 +37,7 @@ export async function loadPlanningData(): Promise<PlanningData> {
       fetchCampus().then(c => c.louange).catch(() => [] as CampusSeance[]),
       fetchIntergroupe(), fetchInterfranco(),
     ])
-  return {
+  const data: PlanningData = {
     // G5 (19/09/2026) : plus de repli sur CULTE_FALLBACK (données de 2026, D4).
     culte,
     dejeuner: dejeuner.length ? dejeuner : DEJEUNER_FALLBACK,
@@ -48,6 +51,73 @@ export async function loadPlanningData(): Promise<PlanningData> {
     campus: campus.length ? campus : CAMP_LOUANGE_FALLBACK,
     intergroupe,
     interfranco,
+  }
+  // Lot U2 (Q14) : derrière l'interrupteur ; en ligne, le Sheet est lu tel quel.
+  if (!BACK_OFFICE) return data
+  const an = new Date().getFullYear()
+  const [courante, suivante] = await Promise.all([trimestresPublies(an), trimestresPublies(an + 1)])
+  return avecDimanchesSpeciaux(sansBrouillon(data, an, getCurrentTri(), { [an]: courante, [an + 1]: suivante }))
+}
+
+/** Lot U2 (Q4) : dès 2027, un trimestre à venir non publié est un brouillon,
+ *  qui reste aux responsables du planning — ni « Mes services », ni la carte
+ *  « Prochain service », ni les rappels, ni les notifications avant sa
+ *  publication. Même règle que les pages pour un membre (`triVisibilitiesAnnee`) :
+ *  le trimestre en cours et les passés se lisent toujours. L'année du Sheet
+ *  (2026) se lit comme avant. Pur. Seuls les plannings publiés par trimestre
+ *  (Culte, groupes ; les musiciens de Fidélité suivent Fidélité) ont un
+ *  brouillon. `publies` : trimestres publiés, par année puis par planning. */
+export function sansBrouillon(
+  data: PlanningData,
+  anneeCourante: number,
+  triCourant: string,
+  publies: Readonly<Record<number, Readonly<Record<string, readonly string[]>>>>
+): PlanningData {
+  const garder = (rows: string[][], key: string) => rows.filter((r) => {
+    const annee = getAnnee(r[0])
+    const tri = getTri(r[0])
+    return annee < PREMIERE_ANNEE_APP || annee < anneeCourante
+      || (annee === anneeCourante && triRank(tri) <= triRank(triCourant))
+      || (publies[annee]?.[key] ?? []).includes(tri)
+  })
+  return {
+    ...data,
+    culte: garder(data.culte, "culte"),
+    paix: garder(data.paix, "paix"),
+    fidelite: garder(data.fidelite, "fidelite"),
+    fideliteMusic: garder(data.fideliteMusic, "fidelite"),
+    bonte: garder(data.bonte, "bonte"),
+  }
+}
+
+// Trimestres publiés d'une année, par planning, lus une fois toutes les cinq
+// minutes (même délai que le cache du Sheet) : `loadPlanningData` sert dix appelants.
+const TTL_PUBLIES_MS = 5 * 60_000
+const publiesEnCache = new Map<number, { at: number; val: Promise<Record<string, string[]>> }>()
+
+export function trimestresPublies(annee: number): Promise<Record<string, string[]>> {
+  const enCache = publiesEnCache.get(annee)
+  if (enCache && Date.now() - enCache.at < TTL_PUBLIES_MS) return enCache.val
+  const val = Promise.all(
+    PUBLISHABLE_PLANNINGS.map(async ({ key }) => [key, await getPublishedQuarters(key, annee)] as const),
+  ).then((paires) => Object.fromEntries(paires))
+  publiesEnCache.set(annee, { at: Date.now(), val })
+  return val
+}
+
+/** Lot U2 (Q5) : un dimanche d'Interfranco ou d'Intergroupe, la présidence des
+ *  groupes est le nom du service (`marquerDimanchesSpeciaux`) — pas de président
+ *  fantôme dans « Mes services », les rappels ni les notifications. Pur : les
+ *  appelants qui assemblent eux-mêmes un `PlanningData` l'appliquent derrière
+ *  `BACK_OFFICE`, comme `loadPlanningData`. */
+export function avecDimanchesSpeciaux(data: PlanningData): PlanningData {
+  const marquer = (rows: string[][]) => marquerDimanchesSpeciaux(rows, data.interfranco, data.intergroupe)
+  return {
+    ...data,
+    paix: marquer(data.paix),
+    fidelite: marquer(data.fidelite),
+    fideliteMusic: marquer(data.fideliteMusic),
+    bonte: marquer(data.bonte),
   }
 }
 
@@ -106,10 +176,13 @@ export const CULTE_ROLES: [number, string][] = [
   [9, "Orateur"], [10, "Traduction"], [11, "Sainte cène"],
 ]
 
-const GROUPE_ROLES: [number, string][] = [[1, "Présidence"], [2, "Musicien"], [3, "Orateur"]]
+// Lot U2, P5 : Percussion (groupes, index 5) et Cours (EDD, index 6), colonnes
+// du Sheet de 2026 que l'app ignorait. Les lecteurs ne les rendent que derrière
+// l'interrupteur (`sheets.ts`) : en ligne, ces index restent vides.
+const GROUPE_ROLES: [number, string][] = [[1, "Présidence"], [2, "Musicien"], [3, "Orateur"], [5, "Percussion"]]
 const FIDELITE_ROLES: [number, string][] = [[1, "Présidence"], [2, "Orateur"], [4, "Piano"]]
 const FIDELITE_MUSIC_ROLES: [number, string][] = [[1, "Présidence"], [2, "Piano"], [3, "Guitare"], [4, "Batterie"]]
-const EDD_ROLES_COLS: [number, string][] = [[1, "Présidence"], [2, "Suppléant"], [3, "Piano"], [4, "Cajon"], [5, "Guitare"]]
+const EDD_ROLES_COLS: [number, string][] = [[1, "Présidence"], [2, "Suppléant"], [3, "Piano"], [4, "Cajon"], [5, "Guitare"], [6, "Cours"]]
 const INTERGROUPE_ROLES: [number, string][] = [
   [1, "Présidence"], [2, "Choriste"], [3, "Choriste"], [4, "Choriste"],
   [5, "Piano"], [6, "Guitare"], [7, "Cajon/Batterie"], [8, "Sono"], [9, "PPT"],
@@ -160,10 +233,11 @@ const CULTE_ROLE_MAP: [number, ServiceRole | null][] = [
   [1, "presidence"], [2, "chanteur"], [3, "chanteur"], [4, "musicien"],
   [5, "musicien"], [6, "musicien"], [7, "regie"], [8, "regie"],
 ]
-const GROUPE_ROLE_MAP: [number, ServiceRole | null][] = [[1, "presidence"], [2, "musicien"], [3, null]]
+const GROUPE_ROLE_MAP: [number, ServiceRole | null][] = [[1, "presidence"], [2, "musicien"], [3, null], [5, "musicien"]]
 const FIDELITE_ROLE_MAP: [number, ServiceRole | null][] = [[1, "presidence"], [2, null], [4, "musicien"]]
 const FIDELITE_MUSIC_ROLE_MAP: [number, ServiceRole | null][] = [[1, "presidence"], [2, "musicien"], [3, "musicien"], [4, "musicien"]]
-const EDD_ROLE_MAP: [number, ServiceRole | null][] = [[1, "presidence"], [2, null], [3, "musicien"], [4, "musicien"], [5, "musicien"]]
+// Cours (P5) : présence sans rôle de setlist, comme le suppléant.
+const EDD_ROLE_MAP: [number, ServiceRole | null][] = [[1, "presidence"], [2, null], [3, "musicien"], [4, "musicien"], [5, "musicien"], [6, null]]
 const INTERGROUPE_ROLE_MAP: [number, ServiceRole | null][] = [
   [1, "presidence"], [2, "chanteur"], [3, "chanteur"], [4, "chanteur"],
   [5, "musicien"], [6, "musicien"], [7, "musicien"], [8, "regie"], [9, "regie"],

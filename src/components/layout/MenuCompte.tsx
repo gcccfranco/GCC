@@ -55,7 +55,10 @@ export function MenuCompte({
   const { displayName, planningName } = useNomDuMembre();
   const [reportOpen, setReportOpen] = useState(false);
   const admin = isAdminUser(user);
-  const canNotify = admin || (profile?.notify?.length ?? 0) > 0;
+  // Lot U6, B2 : Notifier et l'administration passent au Back-Office (sélecteur) ; en ligne,
+  // interrupteur coupé, le menu les garde.
+  const canNotify = !BACK_OFFICE && (admin || (profile?.notify?.length ?? 0) > 0);
+  const voitAdmin = !BACK_OFFICE && admin;
 
   return (
     <>
@@ -87,13 +90,13 @@ export function MenuCompte({
           <DropdownMenuItem onSelect={() => (onSignaler ? onSignaler() : setReportOpen(true))}>
             <TriangleAlert aria-hidden />{t("common.report")}
           </DropdownMenuItem>
-          {(canNotify || admin) && <DropdownMenuSeparator />}
+          {(canNotify || voitAdmin) && <DropdownMenuSeparator />}
           {canNotify && (
             <DropdownMenuItem asChild>
               <Link href="/notifier"><Megaphone aria-hidden />{t("common.header.notify")}</Link>
             </DropdownMenuItem>
           )}
-          {admin && (
+          {voitAdmin && (
             <DropdownMenuItem asChild>
               <Link href="/admin"><ShieldCheck aria-hidden />{t("common.header.admin")}</Link>
             </DropdownMenuItem>

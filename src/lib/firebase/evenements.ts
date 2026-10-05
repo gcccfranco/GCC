@@ -6,7 +6,7 @@ import {
   fromFsValue,
   type RawDoc,
 } from "./setlists";
-import type { Evenement, Inscription } from "@/types/evenement";
+import type { CompteRendu, Evenement, Inscription } from "@/types/evenement";
 import { modeInscriptions } from "@/lib/evenements/agenda";
 
 // Évènements (lot 6) : evenements/{id} et evenements/{id}/inscriptions/{iid},
@@ -55,6 +55,7 @@ export function fromFsEvenement(raw: RawDoc): Evenement {
     epingle: (data.epingle as boolean) ?? false,
     expiresAt: (data.expiresAt as string | null) ?? null,
     inscrits: typeof data.inscrits === "number" ? data.inscrits : 0,
+    ...(data.compteRendu ? { compteRendu: data.compteRendu as CompteRendu } : {}),
     createdAt: (data.createdAt as string) ?? "",
     updatedAt: (data.updatedAt as string) ?? "",
   };
@@ -93,6 +94,17 @@ export async function listEvenements(publicOnly: boolean): Promise<Evenement[]> 
     query.where = { fieldFilter: { field: { fieldPath: "pour" }, op: "EQUAL", value: { stringValue: "eglise" } } };
   }
   return (await runQuery("", query)).map(fromFsEvenement);
+}
+
+/** Réunions d'un même public (`pole:da`…), dans le désordre (lot U6, R2) : une
+ *  égalité seule, sans tri, ne demande pas d'index composite. Le filtre est
+ *  rejoué ici : le reste du code ne dépend pas de celui de la requête. */
+export async function listReunionsDu(pour: string): Promise<Evenement[]> {
+  const docs = await runQuery("", {
+    from: [{ collectionId: "evenements" }],
+    where: { fieldFilter: { field: { fieldPath: "pour" }, op: "EQUAL", value: { stringValue: pour } } },
+  });
+  return docs.map(fromFsEvenement).filter((e) => e.pour === pour);
 }
 
 /** Évènements créés après `sinceMs` (cloche), les plus récents d'abord, bornés à `max`.
@@ -157,6 +169,19 @@ export async function updateEvenement(id: string, data: Partial<Omit<Evenement, 
     method: "PATCH",
     headers: { "Content-Type": "application/json", ...headers },
     body: JSON.stringify({ fields: toFsFields(fields) }),
+  });
+  await checkRest(res);
+  changed();
+}
+
+/** Compte rendu d'une réunion (lot U6, R3), collé ou retiré (null) : ce seul
+ *  champ, ni `updatedAt` — la règle n'accepte que lui d'une personne de la réunion. */
+export async function majCompteRendu(id: string, compteRendu: CompteRendu | null): Promise<void> {
+  const headers = await authHeader();
+  const res = await fetch(`${FS_BASE}/evenements/${id}?updateMask.fieldPaths=compteRendu`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...headers },
+    body: JSON.stringify({ fields: toFsFields({ compteRendu }) }),
   });
   await checkRest(res);
   changed();

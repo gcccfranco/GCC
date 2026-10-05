@@ -4,7 +4,7 @@
 
 import type { Evenement } from "@/types/evenement";
 import { isInfo, isPast, modeInscriptions } from "@/lib/evenements/agenda";
-import { poleDuPour } from "@/lib/access";
+import { estReunion } from "@/lib/access";
 import type { NotifLang } from "@/types/user";
 import { formatReminderDate } from "@/lib/push/reminderMessage";
 
@@ -40,14 +40,14 @@ export function nouvelEvenementMessage(
 }
 
 /** Les inscriptions s'ouvrent aujourd'hui : mode automatique, ouverture datée
- *  du jour, évènement à inscriptions (ni info ni réunion de pôle) pas passé.
+ *  du jour, évènement à inscriptions (ni info ni réunion) pas passé.
  *  Un formulaire externe (lot 11) n'ouvre rien : l'app n'inscrit plus personne,
  *  et la date d'ouverture restée dans la fiche n'a plus cours. */
 export function ouvertureDuJour(
   e: Pick<Evenement, "type" | "date" | "dateFin" | "pour" | "lienExterne" | "inscriptions" | "inscriptionOuverte" | "inscriptionDebut">,
   today: string,
 ): boolean {
-  return !e.lienExterne && modeInscriptions(e) === "auto" && !isInfo(e) && !poleDuPour(e.pour)
+  return !e.lienExterne && modeInscriptions(e) === "auto" && !isInfo(e) && !estReunion(e.pour)
     && (e.inscriptionDebut ?? "").slice(0, 10) === today && !isPast(e, today);
 }
 

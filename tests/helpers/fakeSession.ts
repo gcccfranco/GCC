@@ -21,6 +21,10 @@ export type FakeProfile = {
   notify?: string[];
   /** Plannings que la personne peut remplir dans l'app (lot 17). */
   plannings?: string[];
+  /** Équipes de l'organigramme où la personne figure, et celles dont elle est
+   *  référente (lot U6, R4) — écrites par le serveur seul (`recalculerPoles`). */
+  dansEquipes?: string[];
+  referentDe?: string[];
   /** Vrai = compte qui n'a pas encore vu l'accueil de première connexion (lot 8).
    *  Par défaut l'accueil est déjà vu, pour ne pas masquer les pages testées. */
   accueil?: boolean;
@@ -286,6 +290,8 @@ export async function signInAs(
       poles: profile.poles ?? [],
       equipes: profile.equipes ?? false,
       plannings: profile.plannings ?? [],
+      ...(profile.dansEquipes ? { dansEquipes: profile.dansEquipes } : {}),
+      ...(profile.referentDe ? { referentDe: profile.referentDe } : {}),
     },
     ...(profile.accueil ? {} : { [`onboarding/${profile.uid}`]: { vu: true, le: "2026-09-01T10:00:00Z" } }),
     ...docs,
@@ -306,4 +312,21 @@ export async function signInAs(
   await page.waitForURL((u) => u.pathname.replace(/\/$/, "") === to.split("?")[0]);
 
   return db;
+}
+
+/**
+ * Le navigateur se dit déjà abonné aux notifications : `PushToggle` (Mon profil)
+ * n'affiche ses bascules par type qu'alors. Aucun vrai abonnement ni service
+ * worker : `navigator.serviceWorker.ready` rend un enregistrement simulé. Sur
+ * l'iPad émulé, l'app passe pour installée (sinon : « ajoute d'abord le site à
+ * l'écran d'accueil »). À appeler avant `signInAs`.
+ */
+export async function abonneAuxNotifications(page: Page): Promise<void> {
+  await page.addInitScript(() => {
+    const abonnement = { endpoint: "https://push.example.invalid/abonnement", toJSON: () => ({}) };
+    const enregistrement = { pushManager: { getSubscription: async () => abonnement } };
+    Object.defineProperty(ServiceWorkerContainer.prototype, "ready", { configurable: true, get: () => Promise.resolve(enregistrement) });
+    Object.defineProperty(Notification, "permission", { configurable: true, get: () => "granted" });
+    Object.defineProperty(Navigator.prototype, "standalone", { configurable: true, get: () => true });
+  });
 }

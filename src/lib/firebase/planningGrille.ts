@@ -37,7 +37,8 @@ export async function ecrireCase({ definition, date, colonne, valeur, auteur, se
   };
   if (semer) {
     for (const c of definition.colonnes) {
-      if (!(c.cle in champs)) champs[c.cle] = semer[c.index] ?? "";
+      // Une colonne en lecture seule (le petit déj, lot U3) vient d'ailleurs : jamais recopiée.
+      if (!(c.cle in champs) && !c.lectureSeule) champs[c.cle] = semer[c.index] ?? "";
     }
   }
   const mask = Object.keys(champs).map((k) => `updateMask.fieldPaths=${k}`).join("&");
@@ -45,6 +46,33 @@ export async function ecrireCase({ definition, date, colonne, valeur, auteur, se
     method: "PATCH",
     headers: { "Content-Type": "application/json", ...(await authHeader()) },
     body: JSON.stringify({ fields: toFsFields(champs) }),
+  });
+  await checkRest(res);
+  oublierGrille(definition.key);
+}
+
+// Lot U2 (Q3, Q10, docs/spec-planning-2027.md) : sur un planning à dates
+// choisies (Interfranco, Intergroupe, Campus), une date se pose — le document
+// naît sans case (PATCH limité à la date : une date déjà là garde ses cases) —
+// et se retire, ce qui efface ses cases. Droits : `allow delete` de
+// plannings/{key}/dimanches (firestore.rules) et canRetirerDate (access.ts).
+
+export async function poserDate(definition: DefinitionGrille, date: string, auteur: string): Promise<void> {
+  const champs = { date, modifieLe: new Date().toISOString(), modifiePar: auteur };
+  const mask = Object.keys(champs).map((k) => `updateMask.fieldPaths=${k}`).join("&");
+  const res = await fetch(`${FS_BASE}/plannings/${definition.key}/dimanches/${date}?${mask}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...(await authHeader()) },
+    body: JSON.stringify({ fields: toFsFields(champs) }),
+  });
+  await checkRest(res);
+  oublierGrille(definition.key);
+}
+
+export async function retirerDate(definition: DefinitionGrille, date: string): Promise<void> {
+  const res = await fetch(`${FS_BASE}/plannings/${definition.key}/dimanches/${date}`, {
+    method: "DELETE",
+    headers: await authHeader(),
   });
   await checkRest(res);
   oublierGrille(definition.key);

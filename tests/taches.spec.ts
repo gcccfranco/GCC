@@ -155,8 +155,8 @@ test("un membre du pôle voit ses tâches rangées et en coche une, qui passe da
   const db = await signInAs(page, MEMBRE_DA, {
     "poles/da/taches/t1": tacheDoc(),
     "poles/da/taches/t2": tacheDoc({ titre: "Affiche Noël", echeance: jour(-3) }),
-  }, "/taches/da");
-  await expect(page.getByRole("heading", { name: "DA", level: 1 })).toBeVisible();
+  }, "/back-office/taches/da");
+  await expect(page.getByRole("heading", { name: "DA", level: 2 })).toBeVisible();
   await expect(groupe(page, "En retard").getByText("Affiche Noël")).toBeVisible();
   await expect(groupe(page, "Cette semaine").getByText("Fond PPT")).toBeVisible();
 
@@ -171,7 +171,7 @@ test("un membre du pôle voit ses tâches rangées et en coche une, qui passe da
 });
 
 test("créer une tâche pour tout le pôle", async ({ page }) => {
-  const db = await signInAs(page, MEMBRE_DA, {}, "/taches/da");
+  const db = await signInAs(page, MEMBRE_DA, {}, "/back-office/taches/da");
   await page.getByRole("button", { name: "Nouvelle tâche" }).click();
   const form = page.getByRole("dialog", { name: "Nouvelle tâche" });
   await form.getByLabel("Titre").fill("Vidéo d'annonce");
@@ -187,7 +187,7 @@ test("une tâche répétée chaque semaine : cochée, la fois suivante apparaît
   await signInAs(page, MEMBRE_DA, {
     "poles/da/taches/t1": tacheDoc({ echeance: jour(-7), repetition: { rythme: "semaine" } }),
     [`poles/da/taches/t1/fois/${jour(-7)}`]: { date: jour(-7), parUid: "uid-da", parNom: "Ruth Kouassi", le: new Date().toISOString() },
-  }, "/taches/da");
+  }, "/back-office/taches/da");
   const cercle = groupe(page, "Cette semaine").getByRole("checkbox", { name: /Fond PPT/ });
   await expect(cercle).toHaveAttribute("aria-checked", "false");
   await cercle.click();
@@ -198,16 +198,15 @@ test("une tâche répétée chaque semaine : cochée, la fois suivante apparaît
 });
 
 test("un membre d'un autre pôle ne voit pas les tâches du pôle", async ({ page }) => {
-  await signInAs(page, MEMBRE_MEDIA, { "poles/da/taches/t1": tacheDoc() }, "/taches/da");
+  await signInAs(page, MEMBRE_MEDIA, { "poles/da/taches/t1": tacheDoc() }, "/back-office/taches/da");
   await expect(page.getByText("Tu ne fais pas partie de ce pôle.")).toBeVisible();
   await expect(page.getByText("Fond PPT")).toHaveCount(0);
 });
 
-test("Tâches : chacun voit la liste de ses pôles, et rien hors pôle", async ({ page }) => {
-  await signInAs(page, { ...MEMBRE_DA, serviceRoles: { "Culte Francophone": ["musicien"] } }, {}, "/taches");
-  await expect(page.getByRole("link", { name: /DA/ })).toBeVisible();
-  await expect(page.getByRole("link", { name: /Louange/ })).toBeVisible();
-  await expect(page.getByRole("link", { name: /Média/ })).toHaveCount(0);
+test("Tâches : chacun voit ses pôles (Back-Office › Tâches, lot U6), et rien hors pôle", async ({ page }) => {
+  await signInAs(page, { ...MEMBRE_DA, serviceRoles: { "Culte Francophone": ["musicien"] } }, {}, "/back-office/taches/da");
+  const poles = page.getByRole("navigation", { name: "Sous-parties" });
+  await expect(poles.getByRole("link")).toHaveText(["DA", "Louange"]);
 });
 
 test("Moi : « Mes tâches » compte mes tâches et celles de mon pôle sans responsable", async ({ page }) => {
@@ -267,7 +266,7 @@ test("cocher une tâche qui prévient la régie : la route part, la régie est d
   });
   await signInAs(page, MEMBRE_DA, {
     "poles/da/taches/t1": tacheDoc({ prevenir: { regie: "Culte Francophone" } }),
-  }, "/taches/da");
+  }, "/back-office/taches/da");
   const cercle = groupe(page, "Cette semaine").getByRole("checkbox", { name: /Fond PPT/ });
   await cercle.click();
   await expect(cercle).toHaveAttribute("aria-checked", "mixed");
@@ -283,7 +282,7 @@ test("cocher : sans régie reliée à un compte, on le dit ; un pôle prévenu e
   await signInAs(page, MEMBRE_DA, {
     "poles/da/taches/t1": tacheDoc({ prevenir: { regie: "Culte Francophone" } }),
     "poles/da/taches/t2": tacheDoc({ titre: "Visuel", prevenir: { pole: "media" } }),
-  }, "/taches/da");
+  }, "/back-office/taches/da");
   const terminer = async (titre: RegExp) => {
     const cercle = groupe(page, "Cette semaine").getByRole("checkbox", { name: titre });
     await cercle.click();
@@ -305,7 +304,7 @@ test("nommer quelqu'un d'autre responsable le prévient", async ({ page }) => {
   });
   const db = await signInAs(page, MEMBRE_DA, {
     "users/uid-paul": { email: "paul@example.com", firstName: "Paul", lastName: "Dupont", planningName: "", serviceRoles: {}, annonces: [], notify: [], poles: ["da"] },
-  }, "/taches/da");
+  }, "/back-office/taches/da");
   await page.getByRole("button", { name: "Nouvelle tâche" }).click();
   const form = page.getByRole("dialog", { name: "Nouvelle tâche" });
   await form.getByLabel("Titre").fill("Affiche");
@@ -357,7 +356,7 @@ test("créer une réunion de pôle : pas d'inscriptions", async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
   let pushed = false;
   await page.route("**/api/push/notify-evenement", (route) => { pushed = true; return route.fulfill({ json: { ok: true } }); });
-  const db = await signInAs(page, MEMBRE_DA, {}, "/evenements/nouveau");
+  const db = await signInAs(page, MEMBRE_DA, {}, "/back-office/evenements/nouveau");
   await page.getByLabel("Public").selectOption({ label: "Pôle DA" });
   await expect(page.getByRole("radiogroup", { name: "Inscriptions" })).toHaveCount(0);
   await page.getByLabel("Nom de l'évènement").fill("Réunion DA");
@@ -460,7 +459,7 @@ test("le cercle cycle À faire → En cours → Terminé → À faire", async ({
   });
   const db = await signInAs(page, MEMBRE_DA, {
     "poles/da/taches/t1": tacheDoc({ prevenir: { regie: "Culte Francophone" } }),
-  }, "/taches/da");
+  }, "/back-office/taches/da");
   const chemin = `poles/da/taches/t1/fois/${jour(0)}`;
   const cercle = page.getByRole("checkbox", { name: /Fond PPT/ });
   await expect(cercle).toHaveAttribute("aria-checked", "false");
@@ -490,7 +489,7 @@ test("la ligne d'une fois en cours dit depuis quand et par qui", async ({ page }
       date: jour(-3), parUid: "uid-da", parNom: "Ruth Kouassi", le: `${jour(-2)}T09:00:00Z`,
       etat: "encours", debutLe: `${jour(-2)}T09:00:00Z`,
     },
-  }, "/taches/da");
+  }, "/back-office/taches/da");
   const retard = groupe(page, "En retard");
   await expect(retard.getByText("En cours depuis 2 jours")).toBeVisible();
   await expect(retard.getByText("Commencée par Ruth Kouassi")).toBeVisible();
@@ -498,7 +497,7 @@ test("la ligne d'une fois en cours dit depuis quand et par qui", async ({ page }
 });
 
 test("le formulaire propose « Chaque année », sans semaine du mois", async ({ page }) => {
-  const db = await signInAs(page, MEMBRE_DA, {}, "/taches/da");
+  const db = await signInAs(page, MEMBRE_DA, {}, "/back-office/taches/da");
   await page.getByRole("button", { name: "Nouvelle tâche" }).click();
   const form = page.getByRole("dialog", { name: "Nouvelle tâche" });
   await form.getByLabel("Titre").fill("Fond PPT de Noël");
@@ -532,7 +531,7 @@ test("capture : les trois états sur la page d'un pôle", async ({ page }) => {
       date: jour(-2), parUid: "uid-da", parNom: "Ruth Kouassi", le: `${jour(-1)}T18:00:00Z`,
       etat: "terminee", debutLe: `${jour(-2)}T09:00:00Z`,
     },
-  }, "/taches/da");
+  }, "/back-office/taches/da");
   await expect(groupe(page, "En retard").getByText("En cours depuis 1 jour")).toBeVisible();
   await expect(groupe(page, "Faites").getByText("Vidéo d'annonce")).toBeVisible();
   await capture(page, "taches-trois-etats");
