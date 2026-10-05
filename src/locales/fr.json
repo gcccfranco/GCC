@@ -2255,6 +2255,77 @@
     "matriceVide": "Personne ne sert au planning pour l'instant.",
     "nom": "Nom"
   },
+  "tableauDeBord": {
+    "widgets": {
+      "dimanche": "Ce dimanche",
+      "calendrier": "Calendrier",
+      "afaire": "À faire",
+      "setlists": "Setlists à préparer",
+      "planning": "Cases vides du planning",
+      "evenements": "Prochains évènements",
+      "chants": "Chants les plus joués",
+      "petitdej": "Petit déj",
+      "scene": "Scène",
+      "comptes": "Comptes",
+      "raccourcis": "Raccourcis"
+    },
+    "aucunWidget": "Aucun widget sur ton tableau de bord.",
+    "lectureImpossible": "Lecture impossible pour l'instant.",
+    "toutVoir": "Tout voir",
+    "dimanche": {
+      "titre": "Ce dimanche · {{date}}",
+      "rien": "Rien au planning ce dimanche.",
+      "setlistPubliee": "Setlist publiée",
+      "pasDeSetlist": "Pas de setlist",
+      "presentationPrete": "Présentation prête",
+      "casesVides_one": "{{count}} case vide",
+      "casesVides_other": "{{count}} cases vides",
+      "personne": "Personne"
+    },
+    "afaire": {
+      "enRetard": "{{count}} en retard",
+      "rien": "Rien à faire cette semaine."
+    },
+    "setlists": {
+      "aucune": "aucune",
+      "rien": "Toutes les setlists sont prêtes."
+    },
+    "planning": {
+      "titre": "Cases vides",
+      "rien": "Aucune case vide.",
+      "aucun": "Aucun planning choisi."
+    },
+    "evenements": {
+      "places": "{{inscrits}} inscrits sur {{max}}",
+      "sansLimite": "sans limite",
+      "fermees": "inscriptions fermées",
+      "externe": "formulaire externe",
+      "rien": "Aucun évènement à venir."
+    },
+    "petitdej": {
+      "libre": "Libre"
+    },
+    "scene": {
+      "titre": "Scène · {{nom}}",
+      "aucunProgramme": "Aucun programme affiché.",
+      "rien": "Aucun créneau à venir."
+    },
+    "comptes": {
+      "sansCompte": "Noms du planning sans compte",
+      "nouveaux": "Nouveaux comptes cette semaine",
+      "voirListe": "Voir la liste",
+      "aucunSansCompte": "Tous les noms ont un compte.",
+      "aucunNouveau": "Aucun nouveau compte cette semaine.",
+      "autres_one": "et {{count}} autre",
+      "autres_other": "et {{count}} autres"
+    },
+    "raccourcis": {
+      "tache": "Tâche",
+      "evenement": "Évènement",
+      "notifier": "Notifier",
+      "setlist": "Setlist"
+    }
+  },
   "backOffice": {
     "selecteur": {
       "aria": "Choisir l'espace",

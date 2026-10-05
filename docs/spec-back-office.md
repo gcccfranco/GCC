@@ -376,6 +376,55 @@ npm test && npx tsc --noEmit && npm run lint && graphify update .
 
 ## Avancement
 
+### Suite parallèle B4–B6 (branche `lot/u6b-tableau-de-bord`, à fusionner dans `lot/u6-back-office`)
+
+**05/10/2026 — B4 « Tableau de bord » codée** (commit « feat(U6): B4 — tableau de bord… », après la fusion de
+`lot/u6-back-office` jusqu'à `4d83a96`). Restent B5 (Personnaliser, écriture et règle `backOffice/{uid}`) et B6
+(barre du bas) ; en parallèle, B2 et B3 dans `lot/u6-back-office`.
+
+- **Disposition** (`src/lib/tableauDeBord/disposition.ts`, pur) : `dispositionParDefaut` (Q11 : admin = tous ses
+  widgets permis ; « évènement » = coordination ou `annonces` ; « louange » = rôle de service ou `plannings` ;
+  sinon Ce dimanche et À faire ; filtré par `widgetsPermis`), ordre de la planche (`ORDRE_DU_CATALOGUE` : Scène et
+  Comptes à la suite, question 6) et tailles de la table (`TAILLE_PAR_DEFAUT`). `dispositionAffichee` : document
+  absent = défaut recalculé ; présent, même vide = le sien, sans widget inconnu, à venir (Calendrier, Chants),
+  non permis ni doublon ; taille illisible = celle de la table.
+- **Lecture** `lirePreferencesBackOffice` (`src/lib/firebase/backOffice.ts`, REST) : 404, refus ou erreur = `null`,
+  donc le défaut. **Aucune règle ajoutée** : la règle `backOffice/{uid}` vient avec B5 ; d'ici là, en ligne, la
+  lecture est refusée et le défaut s'affiche.
+- **Grille** (Q10, `GRILLE_WIDGETS` dans `src/components/backOffice/widgets/Cadre.tsx`) : 1 colonne, 2 dès 640 px,
+  4 sur grand écran (mêmes requêtes que la barre latérale de U4) ; S = 1, M = 2 (1 sur 2 colonnes), L = toute la
+  ligne ; `grid-auto-flow: dense`.
+- **Widgets** (`src/components/backOffice/widgets/`, règles pures dans `src/lib/tableauDeBord/donnees.ts`) :
+  1 Ce dimanche (par service, grille de l'app + Sheet réunis comme l'export, sans données de secours ; setlist
+  publiée, présentation, cases vides, « Personne ») ; 2 À faire (tâches de ses pôles, tous pour un admin, jusqu'à
+  J+7, en retard en rouge, 5 lignes) ; 3 Prochains évènements (visibles, hors réunions, 3/5/10, section, état des
+  inscriptions par `refusInscription`, « Tout voir ») ; 4 Cases vides (`src/lib/planning/casesVides.ts`, pour U8 :
+  colonnes ni optionnelles ni en lecture seule, sur `lignesDeLAnnee`) ; 5 Setlists à préparer
+  (`prochainsServicesSansSetlist` de U5 bis, **fichier `src/lib/setlist/prochainsServices.ts` recopié tel quel de
+  `lot/u5bis-editeur-setlist`** : la fusion le verra identique) ; 6 Petit déj (`lirePetitDej` de U3 ; une lecture
+  en échec n'est jamais « Libre ») ; 8 Scène (programme affiché par `currentProgramme`, ou celui du réglage) ;
+  9 Comptes (admins : noms sans compte comme l'administration, ou nouveaux comptes de la semaine) ; 10 Raccourcis
+  (ceux que les droits permettent, adresses de Q4). Chaque widget a son chargement, son erreur et son état vide.
+- **Page** `src/app/back-office/page.tsx` : titre, puis `TableauDeBord` ; la liste « Tes modules » de B1 reste
+  dessous, sur téléphone et tablette en portrait, **jusqu'à B6**.
+- **Libellés** `tableauDeBord.*` en FR et 中文 (本主日, 待办, 待准备的歌单, 排班空缺, 近期活动…) : **à relire par Timothée**.
+- **Tests** : `tests/tableau-de-bord.spec.ts` (ajouté à `SPECS_GRAND_ECRAN`), 33 tests × 5 projets, vus rouges sur
+  fonctions vides puis verts (165) : défauts des rôles (admin, Alice, annonces, louange, les deux, DA, choriste),
+  disposition enregistrée, règles pures de chaque widget, écrans sur jeu d'essai (Firestore et Sheet simulés),
+  réglages (services, nombre, horizon), widget non permis absent, parts de largeur S/M/L par appareil, 中文 ;
+  captures `test-results/tableau-de-bord-captures/` regardées aux cinq tailles (conformes à `bo-tableau-de-bord`,
+  `bo-telephone-accueil`, `tablette-portrait-back-office`). Verts aussi : `back-office-espace`,
+  `back-office-coupe` sauf « l'ancien tableau des groupes n'a pas de colonne de plus » sur ordinateur (« Batteur
+  B. » trouvé 2 fois), rouge deux fois de suite, étranger à B4 (planning des groupes, venu de U2).
+- **Choix faits faute de réponse dans la spec** : un service = une catégorie de setlist (Culte Francophone,
+  Campus, Intergroupe, Interfranco, groupes, classes EDD), un bloc par grille (Campus matin et soir, Fidélité et
+  ses musiciens) ; Ce dimanche montre toutes les cases (la planche n'en montrait que 4) ; défaut de Cases vides
+  pour un non-admin = ses `plannings`, sinon ceux qu'il publie ; Setlists à préparer : réglage limité aux services
+  où l'on crée, Culte pour un admin qui n'en a pas ; À faire = jusqu'à J+7 ; Petit déj et Cases vides partent du
+  dimanche courant ; le « Personnaliser » de la planche arrive avec B5.
+
+### Lot U6 (branche `lot/u6-back-office`)
+
 **05/10/2026 — B1 « Espace » codée** (branche `lot/u6-back-office`, après la fusion de `lot/u4-navigation`,
 commit « feat(U6): B1 — espace Back-Office… »). Faites : R1 à R4, B1. Restent B2 à B6.
 

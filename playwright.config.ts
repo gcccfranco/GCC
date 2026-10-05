@@ -23,6 +23,8 @@ const SPECS_GRAND_ECRAN = [
   /coup-d-oeil\.spec\.ts/,
   // Lot U6 (spec-back-office.md, Tests) : l'espace Back-Office, B1.
   /back-office-espace\.spec\.ts/,
+  // B4 : le tableau de bord (grille de 4 en paysage et à 1 440 px).
+  /tableau-de-bord\.spec\.ts/,
 ];
 
 export default defineConfig({
