@@ -69,13 +69,13 @@ const apercu = (page: Page) => feuille(page).getByRole("list", { name: "Aperçu"
 
 test.describe("Barre du bas (B6) : règles pures (Q13)", () => {
   test("défaut : Accueil · Calendrier · Tâches · Planning, complété dans l'ordre du menu", () => {
-    // Calendrier arrive avec U8 : d'ici là, l'entrée suivante du menu prend sa place.
-    expect(barreParDefaut(permises(ADMIN))).toEqual(["tableau", "taches", "planning", "evenements"]);
+    // Calendrier est là depuis U8 (C3) : la barre de la planche, telle quelle.
+    expect(barreParDefaut(permises(ADMIN))).toEqual(["tableau", "calendrier", "taches", "planning"]);
     expect(barreParDefaut(["tableau", "calendrier", "planning", "taches", "evenements", "equipes", "messages", "statistiques"]))
       .toEqual(["tableau", "calendrier", "taches", "planning"]);
-    // Réussite 2 : Alice n'a que trois entrées, toutes dans la barre.
-    expect(barreParDefaut(permises(ALICE))).toEqual(["tableau", "taches", "evenements"]);
-    expect(barreParDefaut(permises(PLANNINGS))).toEqual(["tableau", "planning"]);
+    // Réussite 2 : Alice n'a que quatre entrées, toutes dans la barre.
+    expect(barreParDefaut(permises(ALICE))).toEqual(["tableau", "calendrier", "taches", "evenements"]);
+    expect(barreParDefaut(permises(PLANNINGS))).toEqual(["tableau", "calendrier", "planning"]);
     expect(barreParDefaut([])).toEqual([]);
   });
 
@@ -85,19 +85,19 @@ test.describe("Barre du bas (B6) : règles pures (Q13)", () => {
     expect(barreAffichee(null, admin)).toEqual(barreParDefaut(admin));
     expect(barreAffichee(["messages", "tableau", "equipes", "taches"], admin)).toEqual(["messages", "tableau", "equipes", "taches"]);
     expect(barreAffichee(["messages", "zzz", "messages", 3, "tableau"], admin), "nettoyée puis complétée")
-      .toEqual(["messages", "tableau", "planning", "taches"]);
+      .toEqual(["messages", "tableau", "calendrier", "planning"]);
     expect(barreAffichee(["equipes", "messages", "tableau", "taches", "planning"], admin), "4 au plus")
       .toEqual(["equipes", "messages", "tableau", "taches"]);
     // Un droit perdu : l'entrée sort, la barre se complète dans l'ordre du menu.
-    expect(barreAffichee(["messages", "planning", "equipes", "tableau"], permises(PLANNINGS))).toEqual(["planning", "tableau"]);
-    expect(barreAffichee(["evenements", "planning", "tableau"], permises(ALICE))).toEqual(["evenements", "tableau", "taches"]);
+    expect(barreAffichee(["messages", "planning", "equipes", "tableau"], permises(PLANNINGS))).toEqual(["planning", "tableau", "calendrier"]);
+    expect(barreAffichee(["evenements", "planning", "tableau"], permises(ALICE))).toEqual(["evenements", "tableau", "calendrier", "taches"]);
     expect(barreAffichee(["tableau"], [])).toEqual([]);
   });
 
   test("feuille : la barre d'abord, puis les autres entrées permises dans l'ordre du menu ; 4 cochées au plus", () => {
     const admin = permises(ADMIN);
     const liste = listeDeLaFeuille(["evenements", "tableau", "taches", "planning"], admin);
-    expect(liste).toEqual(["evenements", "tableau", "taches", "planning", "equipes", "messages"]);
+    expect(liste).toEqual(["evenements", "tableau", "taches", "planning", "calendrier", "equipes", "messages"]);
     const cochees: Entree[] = ["evenements", "tableau", "taches", "planning"];
     expect(basculer(cochees, "messages"), "une cinquième : refusée").toEqual(cochees);
     const sansPlanning = basculer(cochees, "planning");
@@ -114,9 +114,9 @@ test.describe("Barre du bas (B6) : règles pures (Q13)", () => {
 test.describe("Barre du bas (B6) : la barre", () => {
   test.beforeEach(({}, info) => test.skip(estGrandEcran(info), "propre au téléphone et à la tablette en portrait"));
 
-  test("un admin : Accueil · Tâches · Planning · Évènements · Plus, Accueil marqué", async ({ page }) => {
+  test("un admin : Accueil · Calendrier · Tâches · Planning · Plus, Accueil marqué", async ({ page }) => {
     await ouvrir(page, ADMIN);
-    await expect(onglets(page)).toHaveText(["Accueil", "Tâches", "Planning", "Évènements", "Plus"]);
+    await expect(onglets(page)).toHaveText(["Accueil", "Calendrier", "Tâches", "Planning", "Plus"]);
     await expect(barre(page).getByRole("link", { name: "Accueil" })).toHaveAttribute("aria-current", "page");
     await expect(barre(page).getByRole("link", { name: "Accueil" })).toHaveAttribute("href", /^\/back-office\/?$/);
     await expect(barre(page).getByRole("link", { name: "Tâches" })).toHaveAttribute("href", /^\/back-office\/taches\/?$/);
@@ -124,9 +124,9 @@ test.describe("Barre du bas (B6) : la barre", () => {
     await expect(page.getByTestId("menu-back-office")).toHaveCount(0);
   });
 
-  test("Réussite 2 : Alice, Accueil · Tâches · Évènements · Plus (pas de Planning)", async ({ page }) => {
+  test("Réussite 2 : Alice, Accueil · Calendrier · Tâches · Évènements · Plus (pas de Planning)", async ({ page }) => {
     await ouvrir(page, ALICE);
-    await expect(onglets(page)).toHaveText(["Accueil", "Tâches", "Évènements", "Plus"]);
+    await expect(onglets(page)).toHaveText(["Accueil", "Calendrier", "Tâches", "Évènements", "Plus"]);
   });
 
   test("la barre de l'App ne change pas, pour un responsable comme pour les autres", async ({ page }) => {
@@ -137,7 +137,7 @@ test.describe("Barre du bas (B6) : la barre", () => {
 
   test("repli : une entrée enregistrée sans droit n'y figure pas", async ({ page }) => {
     await ouvrir(page, PLANNINGS, { "backOffice/uid-pl": { barreDuBas: ["messages", "planning", "equipes", "tableau"], majLe: "2026-09-30T10:00:00Z" } });
-    await expect(onglets(page)).toHaveText(["Planning", "Accueil", "Plus"]);
+    await expect(onglets(page)).toHaveText(["Planning", "Accueil", "Calendrier", "Plus"]);
   });
 
   test("une page hors de la barre marque « Plus »", async ({ page }) => {
@@ -163,7 +163,8 @@ test.describe("Barre du bas (B6) : « Plus »", () => {
     await expect(page.getByRole("heading", { name: "Plus", level: 1 })).toBeVisible();
     await expect(barre(page).getByRole("link", { name: "Plus" })).toHaveAttribute("aria-current", "page");
     const cartes = page.getByTestId("plus-entree");
-    await expect(cartes).toHaveCount(2);
+    // Évènements, Équipes, Messages : les entrées hors de la barre (Calendrier y est depuis U8).
+    await expect(cartes).toHaveCount(3);
     const equipes = cartes.filter({ hasText: "Équipes" });
     await expect(equipes).toHaveAttribute("href", /^\/back-office\/equipes\/?$/);
     await expect(equipes).toContainText("Organigramme, pôles · personnes et droits");
@@ -181,12 +182,12 @@ test.describe("Barre du bas (B6) : « Plus »", () => {
   });
 
   test("le contenu d'une carte suit les droits : Messages = Notifier seul, sans pastille ; Équipes = Organigramme", async ({ page }) => {
-    // Notifier un groupe, le droit Équipes et le pôle DA : six entrées, deux dans « Plus ».
+    // Notifier un groupe, le droit Équipes et le pôle DA : sept entrées, trois dans « Plus ».
     await ouvrir(page, { ...NOTIFY, equipes: true, poles: ["da"] });
-    await expect(onglets(page)).toHaveText(["Accueil", "Tâches", "Planning", "Évènements", "Plus"]);
+    await expect(onglets(page)).toHaveText(["Accueil", "Calendrier", "Tâches", "Planning", "Plus"]);
     await barre(page).getByRole("link", { name: "Plus" }).click();
     const cartes = page.getByTestId("plus-entree");
-    await expect(cartes).toHaveCount(2);
+    await expect(cartes).toHaveCount(3);
     const messages = cartes.filter({ hasText: "Messages" });
     await expect(messages).toContainText("Notifier");
     await expect(messages).not.toContainText("Signalements");
@@ -196,10 +197,10 @@ test.describe("Barre du bas (B6) : « Plus »", () => {
     await expect(equipes).not.toContainText("personnes");
   });
 
-  test("Alice, ses trois entrées toujours dans la barre : « Plus » n'a pas de carte d'entrée", async ({ page }) => {
+  test("Alice, ses quatre entrées toujours dans la barre : « Plus » n'a pas de carte d'entrée", async ({ page }) => {
     // Barre enregistrée à deux onglets : complétée jusqu'à toutes ses entrées (Q13).
     await ouvrir(page, ALICE, { "backOffice/uid-alice": { barreDuBas: ["tableau", "evenements"], majLe: "2026-09-30T10:00:00Z" } });
-    await expect(onglets(page)).toHaveText(["Accueil", "Évènements", "Tâches", "Plus"]);
+    await expect(onglets(page)).toHaveText(["Accueil", "Évènements", "Calendrier", "Tâches", "Plus"]);
     await barre(page).getByRole("link", { name: "Plus" }).click();
     await expect(page.getByRole("button", { name: "Personnaliser la barre" })).toBeVisible();
     await expect(page.getByTestId("plus-entree")).toHaveCount(0);
@@ -228,22 +229,23 @@ test.describe("Barre du bas (B6) : la feuille « Ta barre du bas »", () => {
     const disposition = [{ id: "scene", taille: "s", reglages: {} }];
     const db = await ouvrir(page, ADMIN, { "backOffice/uid-admin": { tableauDeBord: disposition, majLe: "2026-09-30T10:00:00Z" } });
     await ouvrirFeuille(page);
-    await expect(feuille(page).getByRole("checkbox")).toHaveCount(6);
-    for (const nom of ["Accueil", "Tâches", "Planning", "Évènements"]) await expect(caseDe(page, nom)).toHaveAttribute("aria-checked", "true");
+    await expect(feuille(page).getByRole("checkbox")).toHaveCount(7);
+    for (const nom of ["Accueil", "Calendrier", "Tâches", "Planning"]) await expect(caseDe(page, nom)).toHaveAttribute("aria-checked", "true");
     // La barre d'abord, puis les autres dans l'ordre du menu ; Accueil dit ce qu'il ouvre.
-    await expect(feuille(page).getByTestId("ligne-barre")).toHaveText([/Accueil.*tableau de bord/, /Tâches/, /Planning/, /Évènements.*\+ scène/, /Équipes/, /Messages/]);
+    await expect(feuille(page).getByTestId("ligne-barre"))
+      .toHaveText([/Accueil.*tableau de bord/, /Calendrier/, /Tâches/, /Planning/, /Évènements.*\+ scène/, /Équipes/, /Messages/]);
     // 4 cochées : la cinquième est refusée.
     await expect(caseDe(page, "Équipes")).toBeDisabled();
-    await expect(apercu(page)).toHaveText(["Accueil", "Tâches", "Planning", "Évènements", "Plus"]);
+    await expect(apercu(page)).toHaveText(["Accueil", "Calendrier", "Tâches", "Planning", "Plus"]);
     await caseDe(page, "Planning").click();
     await expect(caseDe(page, "Équipes")).toBeEnabled();
     await caseDe(page, "Messages").click();
-    await expect(apercu(page)).toHaveText(["Accueil", "Tâches", "Évènements", "Messages", "Plus"]);
+    await expect(apercu(page)).toHaveText(["Accueil", "Calendrier", "Tâches", "Messages", "Plus"]);
     expect(ecrituresBO(db, "uid-admin"), "rien avant Terminé").toHaveLength(0);
     await feuille(page).getByRole("button", { name: "Terminé" }).click();
     await expect(feuille(page)).toBeHidden();
-    await expect(onglets(page)).toHaveText(["Accueil", "Tâches", "Évènements", "Messages", "Plus"]);
-    await expect.poll(() => db.doc("backOffice/uid-admin")?.barreDuBas).toEqual(["tableau", "taches", "evenements", "messages"]);
+    await expect(onglets(page)).toHaveText(["Accueil", "Calendrier", "Tâches", "Messages", "Plus"]);
+    await expect.poll(() => db.doc("backOffice/uid-admin")?.barreDuBas).toEqual(["tableau", "calendrier", "taches", "messages"]);
     // Le masque ne touche que la barre : la disposition du tableau de bord reste.
     expect(db.doc("backOffice/uid-admin")!.tableauDeBord).toEqual(disposition);
     expect(db.doc("backOffice/uid-admin")!.majLe).toEqual(expect.stringMatching(/^2026-10-01T/));
@@ -254,20 +256,20 @@ test.describe("Barre du bas (B6) : la feuille « Ta barre du bas »", () => {
   test("l'ordre se choisit aux poignées (clavier : Espace, flèches, Espace)", async ({ page }) => {
     const db = await ouvrir(page, ADMIN);
     await ouvrirFeuille(page);
-    const poignee = feuille(page).getByRole("button", { name: "Déplacer Évènements" });
+    const poignee = feuille(page).getByRole("button", { name: "Déplacer Planning" });
     // Chaque touche attend l'effet de la précédente : @dnd-kit n'écoute les flèches qu'une fois l'onglet saisi.
     await poignee.focus();
     await page.keyboard.press("Space");
     await expect(poignee).toHaveAttribute("aria-pressed", "true");
     for (const position of [3, 2, 1]) {
       await page.keyboard.press("ArrowUp");
-      await expect(page.getByText(`« Évènements » en position ${position} sur 6.`)).toBeAttached();
+      await expect(page.getByText(`« Planning » en position ${position} sur 7.`)).toBeAttached();
     }
     await page.keyboard.press("Space");
-    await expect(apercu(page)).toHaveText(["Évènements", "Accueil", "Tâches", "Planning", "Plus"]);
+    await expect(apercu(page)).toHaveText(["Planning", "Accueil", "Calendrier", "Tâches", "Plus"]);
     await feuille(page).getByRole("button", { name: "Terminé" }).click();
-    await expect(onglets(page)).toHaveText(["Évènements", "Accueil", "Tâches", "Planning", "Plus"]);
-    await expect.poll(() => db.doc("backOffice/uid-admin")?.barreDuBas).toEqual(["evenements", "tableau", "taches", "planning"]);
+    await expect(onglets(page)).toHaveText(["Planning", "Accueil", "Calendrier", "Tâches", "Plus"]);
+    await expect.poll(() => db.doc("backOffice/uid-admin")?.barreDuBas).toEqual(["planning", "tableau", "calendrier", "taches"]);
   });
 
   test("« Remettre la barre par défaut » : la barre du rôle, retirée du document", async ({ page }) => {
@@ -275,9 +277,9 @@ test.describe("Barre du bas (B6) : la feuille « Ta barre du bas »", () => {
     await expect(onglets(page)).toHaveText(["Messages", "Équipes", "Accueil", "Tâches", "Plus"]);
     await ouvrirFeuille(page);
     await feuille(page).getByRole("button", { name: "Remettre la barre par défaut" }).click();
-    await expect(apercu(page)).toHaveText(["Accueil", "Tâches", "Planning", "Évènements", "Plus"]);
+    await expect(apercu(page)).toHaveText(["Accueil", "Calendrier", "Tâches", "Planning", "Plus"]);
     await feuille(page).getByRole("button", { name: "Terminé" }).click();
-    await expect(onglets(page)).toHaveText(["Accueil", "Tâches", "Planning", "Évènements", "Plus"]);
+    await expect(onglets(page)).toHaveText(["Accueil", "Calendrier", "Tâches", "Planning", "Plus"]);
     await expect.poll(() => ecrituresBO(db, "uid-admin").length).toBe(1);
     expect(db.doc("backOffice/uid-admin")!.barreDuBas, "absente = défaut, jamais recopié").toBeUndefined();
   });
@@ -290,7 +292,7 @@ test.describe("Barre du bas (B6) : la feuille « Ta barre du bas »", () => {
     await caseDe(page, "Planning").click();
     await feuille(page).getByRole("button", { name: "Terminé" }).click();
     await expect(page.getByRole("alert").filter({ hasText: "Barre non enregistrée" })).toBeVisible();
-    await expect(onglets(page)).toHaveText(["Accueil", "Tâches", "Planning", "Évènements", "Plus"]);
+    await expect(onglets(page)).toHaveText(["Accueil", "Calendrier", "Tâches", "Planning", "Plus"]);
   });
 
   test("Réussite 3 : la barre choisie sur un appareil le suit sur la tablette", async ({ page, browser }) => {
@@ -299,13 +301,13 @@ test.describe("Barre du bas (B6) : la feuille « Ta barre du bas »", () => {
     await caseDe(page, "Planning").click();
     await caseDe(page, "Équipes").click();
     await feuille(page).getByRole("button", { name: "Terminé" }).click();
-    await expect.poll(() => db.doc("backOffice/uid-admin")?.barreDuBas).toEqual(["tableau", "taches", "evenements", "equipes"]);
+    await expect.poll(() => db.doc("backOffice/uid-admin")?.barreDuBas).toEqual(["tableau", "calendrier", "taches", "equipes"]);
     const { defaultBrowserType: _ignore, ...ipad } = devices["iPad (gen 7)"] as typeof devices[string] & { defaultBrowserType?: string };
     const autre = await browser.newContext({ ...ipad, baseURL: new URL(page.url()).origin });
     try {
       const tablette = await autre.newPage();
       await ouvrir(tablette, ADMIN, { "backOffice/uid-admin": db.doc("backOffice/uid-admin")! });
-      await expect(onglets(tablette)).toHaveText(["Accueil", "Tâches", "Évènements", "Équipes", "Plus"]);
+      await expect(onglets(tablette)).toHaveText(["Accueil", "Calendrier", "Tâches", "Équipes", "Plus"]);
     } finally {
       await autre.close();
     }
@@ -314,7 +316,7 @@ test.describe("Barre du bas (B6) : la feuille « Ta barre du bas »", () => {
   test("en 中文", async ({ page }) => {
     await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
     await ouvrir(page, ADMIN);
-    await expect(onglets(page)).toHaveText(["首页", "任务", "排班表", "活动", "更多"]);
+    await expect(onglets(page)).toHaveText(["首页", "日历", "任务", "排班表", "更多"]);
     await barre(page).getByRole("link", { name: "更多" }).click();
     await expect(page.getByRole("heading", { name: "更多", level: 1 })).toBeVisible();
     await page.getByRole("button", { name: "自定义底部栏" }).click();
