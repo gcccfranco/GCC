@@ -28,6 +28,8 @@ const SPECS_GRAND_ECRAN = [
   /calendrier-deplacer\.spec\.ts/,
   // B2 : Planning, Équipes, Messages rangés dans le Back-Office (pleine largeur, barre latérale).
   /back-office-admin\.spec\.ts/,
+  // B4 : le tableau de bord (grille de 4 en paysage et à 1 440 px).
+  /tableau-de-bord\.spec\.ts/,
 ];
 
 export default defineConfig({

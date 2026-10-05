@@ -6,8 +6,12 @@ import { usePathname } from "next/navigation";
 import { BACK_OFFICE } from "@/lib/backOffice";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/lib/firebase/auth";
+import { useProfile } from "@/lib/firebase/users";
+import { entreesBackOffice } from "@/lib/access";
 import { useScrollDirection } from "@/hooks/useScrollDirection";
-import { entreesBarre, estEntreeActive } from "@/lib/navigation";
+import { entreesBarre, espaceDe, estEntreeActive, ongletsBackOffice, ONGLET_PLUS } from "@/lib/navigation";
+import { barreAffichee } from "@/lib/tableauDeBord/barre";
+import { useBarreDuBas } from "@/lib/tableauDeBord/useBarreDuBas";
 
 /**
  * Barre d'onglets fixée en bas d'écran, sur téléphone et tablette en portrait ;
@@ -15,11 +19,17 @@ import { entreesBarre, estEntreeActive } from "@/lib/navigation";
  * et sur la tablette en paysage, qui ont la barre latérale (lot U4). Masquée en
  * plein écran (vue partition / pupitre) pour ne jamais recouvrir une
  * partition ; le mode louange (z-9999) passe par-dessus de toute façon.
+ * Au Back-Office (lot U6, B6), un responsable a la sienne : 4 onglets choisis + « Plus »,
+ * « Plus » marqué sur toute page qui n'est pas dans la barre ; celle de l'App ne change pas.
  */
 export function MobileTabBar() {
   const { t } = useTranslation();
   const pathname = usePathname() || "";
   const { user, loading } = useAuth();
+  const { profile, loading: profilEnCours } = useProfile();
+  const auBackOffice = BACK_OFFICE && espaceDe(pathname) === "back-office";
+  const permises = auBackOffice ? entreesBackOffice(user, profile) : [];
+  const barre = useBarreDuBas(permises.length > 0 && user ? user.uid : null);
   const [mounted, setMounted] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
   // Comme la navbar du haut : masquée au scroll vers le bas, réaffichée dès
@@ -35,9 +45,15 @@ export function MobileTabBar() {
   }, []);
 
   if (!mounted || loading || fullscreen) return null;
+  // Au Back-Office, on attend le profil et la barre enregistrée : jamais une barre qui change sous le doigt.
+  if (auBackOffice && (profilEnCours || (permises.length > 0 && !barre.charge))) return null;
   // Mêmes entrées que la barre latérale (lot U4) ; back-office coupé (lot 18) :
   // la section Évènements n'est pas en ligne.
-  const tabs = entreesBarre("app", { connecte: !!user, backOffice: BACK_OFFICE });
+  const tabs = permises.length > 0
+    ? ongletsBackOffice(barreAffichee(barre.enregistree, permises))
+    : entreesBarre("app", { connecte: !!user, backOffice: BACK_OFFICE });
+  // « Plus » couvre les pages du Back-Office qui ne sont pas dans la barre.
+  const horsBarre = permises.length > 0 && !tabs.some((e) => estEntreeActive(e, pathname));
 
   return (
     <>
@@ -54,7 +70,7 @@ export function MobileTabBar() {
         <div className="flex h-16 gap-0.5 p-1.5">
           {tabs.map((entree) => {
             const { href, cle, Icone } = entree;
-            const active = estEntreeActive(entree, pathname);
+            const active = estEntreeActive(entree, pathname) || (horsBarre && entree === ONGLET_PLUS);
             return (
               <Link
                 key={href}

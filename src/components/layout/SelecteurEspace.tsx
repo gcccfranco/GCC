@@ -41,6 +41,12 @@ function retenir(espace: Espace, chemin: string) {
   abonnes.forEach((f) => f());
 }
 
+/** La page que rouvre le lien d'un espace : la dernière vue pendant la session, sinon celle
+ *  par défaut (« Revenir à l'app » de la page « Plus », B6, la suit aussi). */
+export function useDernierePage(espace: Espace): string {
+  return useSyncExternalStore(suivre, () => derniere(espace), () => PAR_DEFAUT[espace]);
+}
+
 /** Vrai pour un responsable, interrupteur du back-office ouvert. */
 export function useResponsable(): boolean {
   const { user, profile } = useProfile();
@@ -52,14 +58,12 @@ export function SelecteurEspace({ pleineLargeur = false, onChoix }: { pleineLarg
   const pathname = usePathname() || "";
   const responsable = useResponsable();
   const espace = espaceDe(pathname);
-  const cibles: Record<Espace, string> = {
-    app: useSyncExternalStore(suivre, () => derniere("app"), () => PAR_DEFAUT.app),
-    "back-office": useSyncExternalStore(suivre, () => derniere("back-office"), () => PAR_DEFAUT["back-office"]),
-  };
+  const cibles: Record<Espace, string> = { app: useDernierePage("app"), "back-office": useDernierePage("back-office") };
 
-  // Retenir la page courante pour son espace.
+  // Retenir la page courante pour son espace — pas la page de connexion, qu'on quitte aussitôt
+  // (sinon « App » et « Revenir à l'app » y ramèneraient après s'être connecté).
   useEffect(() => {
-    if (responsable) retenir(espace, (pathname.replace(/\/$/, "") || "/") + window.location.search);
+    if (responsable && !pathname.startsWith("/login")) retenir(espace, (pathname.replace(/\/$/, "") || "/") + window.location.search);
   }, [responsable, pathname, espace]);
 
   if (!responsable) return null;
