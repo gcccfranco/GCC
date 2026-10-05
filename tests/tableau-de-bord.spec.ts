@@ -427,6 +427,42 @@ test.describe("Tableau de bord (B4) : écrans", () => {
     expect(S).toBeCloseTo(n === 4 ? 0.25 : n === 2 ? 0.5 : 1, 1);
   });
 
+  // Relecture du lot U6 : les deux widgets partagent une lecture des setlists, bornée aux
+  // setlists à venir ; une lecture en échec n'est jamais « pas de setlist » (U3 Q10).
+  test("Ce dimanche et Setlists à préparer : une seule lecture des setlists, celles d'aujourd'hui et après", async ({ page }) => {
+    const lectures: { where?: unknown; limit?: number }[] = [];
+    page.on("request", (r) => {
+      if (!r.url().includes(":runQuery")) return;
+      const q = (r.postDataJSON() as { structuredQuery: { from: { collectionId: string }[]; where?: unknown; limit?: number } }).structuredQuery;
+      // La cloche lit les setlists récentes à part (`limit`) : pas les widgets.
+      if (q.from[0].collectionId === "setlists" && !q.limit) lectures.push(q);
+    });
+    await ouvrir(page, ADMIN);
+    await expect(widget(page, "Ce dimanche").getByText("Setlist publiée")).toBeVisible();
+    await expect(widget(page, "Setlists à préparer").getByTestId("ligne-setlist").first()).toBeVisible();
+    expect(lectures).toEqual([expect.objectContaining({
+      where: { fieldFilter: { field: { fieldPath: "date" }, op: "GREATER_THAN_OR_EQUAL", value: { stringValue: "2026-10-01" } } },
+    })]);
+  });
+
+  test("setlists illisibles : « Lecture impossible » dans les deux widgets, jamais « Pas de setlist »", async ({ page }) => {
+    await ouvrir(page, ADMIN);
+    await expect(widget(page, "Ce dimanche").getByText("Setlist publiée")).toBeVisible();
+    // Posée après la base simulée, cette route passe avant elle ; le rechargement relit tout.
+    await page.route(/documents:runQuery/, (route) => {
+      const q = (route.request().postDataJSON() as { structuredQuery?: { from?: { collectionId: string }[]; limit?: number } }).structuredQuery;
+      if (q?.from?.[0]?.collectionId === "setlists" && !q.limit) {
+        return route.fulfill({ status: 403, contentType: "application/json", body: JSON.stringify({ error: { code: 403, message: "refusé" } }) });
+      }
+      return route.fallback();
+    });
+    await page.reload();
+    await expect(widget(page, "Ce dimanche").getByText("Lecture impossible pour l'instant.")).toBeVisible();
+    await expect(widget(page, "Setlists à préparer").getByText("Lecture impossible pour l'instant.")).toBeVisible();
+    await expect(widget(page, "Ce dimanche").getByText("Pas de setlist")).toHaveCount(0);
+    await expect(widget(page, "Setlists à préparer").getByTestId("ligne-setlist")).toHaveCount(0);
+  });
+
   test("un widget réservé aux admins enregistré par Alice ne s'affiche pas", async ({ page }) => {
     await ouvrir(page, ALICE, {
       "backOffice/uid-alice": { tableauDeBord: [{ id: "comptes", taille: "s", reglages: {} }, { id: "scene", taille: "s", reglages: {} }], majLe: "2026-10-01" },

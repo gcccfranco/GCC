@@ -8,8 +8,8 @@
 // src/lib/firebase/petitDej.ts. Le reste du module est pur.
 
 import type { LignePetitDej } from "@/types/petitDej"
-import { findMyServices, normalizeName, splitNames, type PlanningData, type ServiceEntry } from "@/lib/planning/names"
 import type { ReminderService } from "@/lib/push/reminderMessage"
+import { fusionnerLignes } from "@/lib/planning/grilles"
 
 const FS_DOCS =
   "https://firestore.googleapis.com/v1/projects/gcclouange/databases/(default)/documents"
@@ -102,35 +102,6 @@ export function estLibre(lignes: LignePetitDej[], dimanche: string): boolean {
 }
 
 /**
- * Les petits déj rattachés à un compte par son `uid` (Q9) : une ligne posée par
- * « Je m'inscris » compte pour son inscrit même réécrite (« Famille Martin ») et
- * sans nom de planning. Un dimanche dont une ligne porte déjà son nom de
- * planning est laissé à `findMyServices`, qui le trouve dans les rangées : pas
- * de doublon. Une ligne posée pour quelqu'un (`uid` vide) ne se rattache que par
- * son texte.
- */
-export function servicesPetitDejDuCompte(lignes: LignePetitDej[], uid: string, planningName: string): ServiceEntry[] {
-  if (!uid) return []
-  const nom = normalizeName(planningName)
-  const porteSonNom = (texte: string) => !!nom && splitNames(texte).some((n) => normalizeName(n) === nom)
-  const trouvesParLeNom = new Set(lignes.filter((l) => porteSonNom(l.nom)).map((l) => l.dimanche))
-  const dates = new Set(lignes.filter((l) => l.uid === uid && !trouvesParLeNom.has(l.dimanche)).map((l) => l.dimanche))
-  return [...dates].sort().map((date) => ({ date, service: "Petit déj", role: "Équipe", leader: "" }))
-}
-
-/**
- * Les services d'un compte (PD3) : par son nom de planning (`findMyServices`,
- * rien sans nom) et ses petits déj par `uid` (`servicesPetitDejDuCompte`), sans
- * doublon, triés comme `findMyServices`. « Ton prochain service » et « Mes services ».
- */
-export function servicesDuCompte(data: PlanningData, lignes: LignePetitDej[], uid: string, planningName: string): ServiceEntry[] {
-  return [
-    ...(planningName.trim() ? findMyServices(data, planningName) : []),
-    ...servicesPetitDejDuCompte(lignes, uid, planningName),
-  ].sort((a, b) => a.date.localeCompare(b.date) || a.service.localeCompare(b.service))
-}
-
-/**
  * Rappels J-7 / J-3 / J-1 (PD3, Q9), sur le patron des créneaux de scène :
  * « Petit déj » ajouté aux services de chaque inscrit (`uid`) du dimanche
  * `date`, même sans nom de planning ; une seule fois (déjà trouvé par son nom
@@ -146,8 +117,24 @@ export function ajouterPetitDejAuxRappels(parUid: Map<string, ReminderService[]>
 }
 
 /**
+ * La grille que la reprise lit (Q13) : la grille de l'app réunie au Sheet
+ * (`fusionnerLignes`), mais le petit déj d'un dimanche que l'app laisse vide
+ * vient du Sheet. Depuis PD2, un dimanche créé dans l'app (case « équipe »,
+ * import G4) n'a plus de colonne `petitDej` : sa ligne de l'app masquerait le
+ * nom du Sheet, perdu en silence. `null` si le Sheet n'a rien rendu (lecture en
+ * échec : `fetchSheet` rend alors vide) : la route refuse, plutôt que de
+ * répondre « 0 repris » à une reprise qui ne se lance qu'une fois.
+ */
+export function grillePourReprise(grille: string[][], sheet: string[][]): string[][] | null {
+  if (!sheet.length) return null
+  const duSheet = new Map(sheet.map((r) => [r[0], r[2] ?? ""]))
+  return fusionnerLignes(grille, sheet).map((r) =>
+    (r[2] ?? "").trim() ? r : [r[0], r[1] ?? "", duSheet.get(r[0]) ?? ""])
+}
+
+/**
  * La reprise, une fois (T11, Q13) : `grille` est la grille Table telle qu'elle
- * s'affichait avant U3 (`[date, équipe, petit déj]`). Une ligne par case
+ * s'affichait avant U3 (`[date, équipe, petit déj]`, `grillePourReprise`). Une ligne par case
  * remplie d'un dimanche ≥ `dimancheEnCours` qui n'a encore aucune ligne, texte
  * tel quel ; `ignores` compte les dimanches déjà inscrits. Relancer n'écrit rien.
  */

@@ -206,9 +206,15 @@ test("P6 · portées : l'affiché, l'année, tous les plannings (admins) ; noms 
   expect(porteesExport("interfranco", false)).toEqual(["annee"]);
   expect(porteesExport("campusMatin", true)).toEqual(["annee", "tout"]);
   expect(page("affiche", "paix", 2).map((p) => p.feuille)).toEqual(["Paix_T2"]);
-  expect(nomFichierExport("affiche", "Groupe Paix", "T1", 2027, "pdf")).toBe("Groupe_Paix_T1_2027.pdf");
-  expect(nomFichierExport("annee", "Groupe Paix", "T1", 2027, "pdf")).toBe("Groupe_Paix_2027.pdf");
-  expect(nomFichierExport("tout", "Groupe Paix", "T1", 2027, "pdf")).toBe("Plannings_2027.pdf");
+  // Relecture : le nom de l'onglet du Sheet (le fichier en porte toutes les grilles), sans accents ni point.
+  expect(nomFichierExport("affiche", "paix", "T1", 2027, "pdf")).toBe("Paix_T1_2027.pdf");
+  expect(nomFichierExport("annee", "paix", "T1", 2027, "pdf")).toBe("Paix_2027.pdf");
+  expect(nomFichierExport("tout", "paix", "T1", 2027, "pdf")).toBe("Plannings_2027.pdf");
+  expect(nomFichierExport("affiche", "eddDaban", "P1", 2027, "pdf"), "les trois classes dans le fichier").toBe("EDD_P1_2027.pdf");
+  expect(nomFichierExport("annee", "campusSoir", "", 2027, "xlsx"), "matin et soir dans le fichier").toBe("Campus_Louange_2027.xlsx");
+  expect(nomFichierExport("affiche", "fidelite", "T1", 2027, "pdf")).toBe("Fidelite_T1_2027.pdf");
+  expect(nomFichierExport("affiche", "bonte", "T2", 2027, "pdf")).toBe("Bonte_T2_2027.pdf");
+  expect(nomFichierExport("affiche", "table", "T1", 2027, "pdf")).toBe("Franco_Table_PtD_T1_2027.pdf");
 });
 
 test("P6 · 2026 : les lignes du Sheet telles quelles, pas de dimanches calculés", () => {
@@ -236,7 +242,8 @@ const DOCS_2027 = {
   "plannings/bonte/dimanches/2027-01-10": { date: "2027-01-10", presidence: "Brouillon B." },
 };
 
-async function ouvrir(page: Page, qui: FakeProfile, vers = "/planning/groupes", docs: Record<string, Record<string, unknown>> = DOCS_2027) {
+/** Lot U6, B2 (Q14) : on exporte au Back-Office ; un membre, lui, lit le planning dans l'App. */
+async function ouvrir(page: Page, qui: FakeProfile, vers = qui === MEMBRE ? "/planning/groupes" : "/back-office/planning/groupes", docs: Record<string, Record<string, unknown>> = DOCS_2027) {
   await page.clock.setFixedTime(new Date("2026-11-15T10:00:00"));
   // Le Sheet de 2026 ne dit rien de 2027 : réponses vides.
   await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
@@ -316,7 +323,7 @@ test("P7 · PDF « Toute l'année » de Paix 2027 : 4 pages A4, Lora et Carlito,
   await ouvrir(page, ECRIVAIN);
   await page.getByRole("button", { name: "2027", exact: true }).click();
   const { nom, octets, pdf } = await exporterPdf(page, "Toute l'année · Groupe Paix");
-  expect(nom).toBe("Groupe_Paix_2027.pdf");
+  expect(nom).toBe("Paix_2027.pdf");
   expect(octets.subarray(0, 4).toString()).toBe("%PDF");
   expect(pdf.pages).toHaveLength(4);
   for (const p of pdf.pages) expect(estA4(p, "portrait"), `${p.largeur} × ${p.hauteur}`).toBe(true);
@@ -340,7 +347,7 @@ test("P7 · PDF de Fidélité : l'église en chinois (Ma Shan Zheng), une case e
   await page.getByRole("button", { name: "Fidélité", exact: true }).click();
   await page.getByRole("button", { name: "2027", exact: true }).click();
   const { nom, pdf } = await exporterPdf(page, "T1 2027 · Groupe Fidélité");
-  expect(nom).toBe("Groupe_Fidélité_T1_2027.pdf");
+  expect(nom).toBe("Fidelite_T1_2027.pdf");
   expect(pdf.pages).toHaveLength(1);
   const [t1] = pdf.pages;
   for (const attendu of ["基督教会巴黎华人恩典堂", "GROUPE FIDÉLITÉ", "Planning de Janvier à Mars 2027", "Dimanche de 13:00 à 14:00", "PIANISTE", "测试"]) {
@@ -465,7 +472,7 @@ test("P8 · .xlsx « Toute l'année » de Paix 2027 : 4 feuilles, Lora et Calibr
   await capture(page, "p8-menu-exporter-xlsx");
   await page.keyboard.press("Escape");
   const { nom, fichier } = await exporterXlsx(page, "Toute l'année · Groupe Paix");
-  expect(nom).toBe("Groupe_Paix_2027.xlsx");
+  expect(nom).toBe("Paix_2027.xlsx");
   expect(readFileSync(fichier).subarray(0, 2).toString()).toBe("PK");
   expect(nomsDesFeuilles(fichier)).toEqual(["Paix_T1", "Paix_T2", "Paix_T3", "Paix_T4"]);
 

@@ -5,9 +5,9 @@ import { parsePetitDej } from "../src/lib/planning/sheets";
 import { findMyServices, type PlanningData } from "../src/lib/planning/names";
 import { reminderBody, reminderServicesFor, type ReminderService } from "../src/lib/push/reminderMessage";
 import {
-  ajouterPetitDejAuxRappels, estLibre, lirePetitDej, oublierPetitDej, planifierReprise, rangeesPetitDej,
-  servicesPetitDejDuCompte,
+  ajouterPetitDejAuxRappels, estLibre, grillePourReprise, lirePetitDej, oublierPetitDej, planifierReprise, rangeesPetitDej,
 } from "../src/lib/petitdej/lignes";
+import { servicesPetitDejDuCompte } from "../src/lib/petitdej/services";
 import { canEditPetitDej, canGererPetitDej } from "../src/lib/access";
 import { GRILLE_TABLE } from "../src/lib/planning/grilles";
 import { documentDimanche, nomsNonRattaches } from "../src/lib/planning/import";
@@ -256,6 +256,41 @@ test("planifierReprise : une ligne par case à venir remplie, dimanches déjà p
   expect(planifierReprise(grille, apres, DIMANCHE_EN_COURS)).toEqual({ aEcrire: [], ignores: 3 });
 });
 
+test("grillePourReprise : un document de l'app sans petit déj ne masque pas le nom du Sheet ; Sheet illisible, rien", () => {
+  // Grille de l'app [date, équipe, petit déj] : depuis PD2, un dimanche créé par
+  // une case « équipe » ou par l'import G4 n'a plus de petit déj.
+  const app = [
+    ["2026-09-27", "Lydie", ""],
+    ["2026-10-04", "Wendy", "Alice Q."],
+    ["2026-10-11", "Olivier", "  "],
+  ];
+  const sheet = [
+    ["2026-09-27", "Ruth K.", "Famille Martin"],
+    ["2026-10-04", "Wendy", "Julien & Stéphane"],
+    ["2026-10-11", "", "Isabelle L."],
+    ["2026-10-18", "Samuel", "Charlie B."],
+  ];
+  expect(grillePourReprise(app, sheet), "l'équipe de l'app, le petit déj de l'app s'il en a un, sinon celui du Sheet").toEqual([
+    ["2026-09-27", "Lydie", "Famille Martin"],
+    ["2026-10-04", "Wendy", "Alice Q."],
+    ["2026-10-11", "Olivier", "Isabelle L."],
+    ["2026-10-18", "Samuel", "Charlie B."],
+  ]);
+  expect(
+    planifierReprise(grillePourReprise(app, sheet)!, [], DIMANCHE_EN_COURS).aEcrire.map((l) => l.nom),
+    "le nom du Sheet est repris, pas perdu en silence",
+  ).toEqual(["Famille Martin", "Alice Q.", "Isabelle L.", "Charlie B."]);
+
+  expect(grillePourReprise(app, []), "Sheet illisible (lecture vide) : la route refuse au lieu de dire « 0 repris »").toBeNull();
+  expect(grillePourReprise([], [])).toBeNull();
+});
+
+test("lignes.ts n'importe pas names.ts : pas de cycle sheets → lignes → names → sheets", () => {
+  const source = readFileSync("src/lib/petitdej/lignes.ts", "utf8");
+  expect(source).not.toMatch(/from "@\/lib\/planning\/names"/);
+  expect(readFileSync("src/lib/planning/names.ts", "utf8"), "le cycle passait par ici").toMatch(/from "\.\/sheets"/);
+});
+
 // ─── U3 · PD1 : la lecture REST publique (Q10) ──────────────────────────────
 
 test("lirePetitDej : la collection en REST public, sans jeton, triée, gardée cinq minutes", async () => {
@@ -449,10 +484,7 @@ test("carte : un dimanche à venir sans ligne dit « Libre » ; « Je m'inscris 
   expect(posees[0].data).toMatchObject({ dimanche: "2026-09-27", nom: "Charlie B.", uid: CHARLIE.uid, auteurUid: CHARLIE.uid });
   await expect(le27.getByRole("button", { name: "Modifier" })).toBeVisible();
   await expect(le27.getByRole("button", { name: "Retirer" })).toBeVisible();
-  await expect(
-    page.locator('[data-case="2026-09-27|petitDej"]').filter({ visible: true }),
-    "la case de la grille suit la carte sans attendre un rechargement",
-  ).toContainText("Charlie B.");
+  // Lot U6, B2 : la grille de la Table n'est plus dans l'App (Back-Office seulement).
 });
 
 test("carte : ✎ réécrit ma ligne « Famille Martin » (tient au rechargement) ; Échap annule, un texte vide est refusé", async ({ page }) => {
@@ -598,6 +630,71 @@ test("carte en 中文 : titre, trimestre, date, « 空闲 » et « 我来报名 
   await expect(le20.getByRole("button", { name: "移除" })).toBeVisible();
   await expect(carte.getByText("可以写“某某家庭”代替你的名字。")).toBeVisible();
   await capture(page, "petit-dej-carte-zh");
+});
+
+// ─── U3 · relecture : les échecs d'écriture et le nom pré-rempli ───────────
+
+/** Répond `status` à toute écriture POST d'une ligne `petitDej`, avant la base simulée. */
+async function refuserLesInscriptions(page: Page, status: number) {
+  await page.route(/firestore\.googleapis\.com.*\/documents\/petitDej(\?|$)/, (route) =>
+    route.request().method() === "POST"
+      ? route.fulfill({ status, contentType: "application/json", body: JSON.stringify({ error: { code: status, message: "refus simulé" } }) })
+      : route.fallback(),
+  );
+}
+
+test("carte : un échec du serveur (500) dit « Enregistrement impossible, réessaie. », pas « tu n'as plus le droit »", async ({ page }) => {
+  await ouvrirTable(page, CHARLIE);
+  await refuserLesInscriptions(page, 500);
+  const le27 = rangee(carteDe(page), "2026-09-27");
+  await le27.getByRole("button", { name: "Je m'inscris" }).click();
+  await expect(le27.getByRole("status")).toHaveText("Enregistrement impossible, réessaie.");
+  await expect(le27.getByText("Libre", { exact: true }), "rien n'est écrit, le dimanche reste libre").toBeVisible();
+});
+
+test("carte : un refus des règles (403) garde le message des droits", async ({ page }) => {
+  await ouvrirTable(page, CHARLIE);
+  await refuserLesInscriptions(page, 403);
+  const le27 = rangee(carteDe(page), "2026-09-27");
+  await le27.getByRole("button", { name: "Je m'inscris" }).click();
+  await expect(le27.getByRole("status")).toContainText("tu n’as plus le droit de modifier ce planning, ou les règles n’ont pas été publiées");
+});
+
+test("carte en 中文 : un échec du serveur a son message traduit", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
+  await ouvrirTable(page, CHARLIE);
+  await refuserLesInscriptions(page, 500);
+  const le27 = rangee(carteDe(page, "早餐"), "2026-09-27");
+  await le27.getByRole("button", { name: "我来报名" }).click();
+  await expect(le27.getByRole("status")).toHaveText("保存失败，请重试。");
+});
+
+/** Un compte sans prénom ni nom de planning (profil incomplet). */
+const SANS_PRENOM: FakeProfile = { uid: "uid-sans-prenom", email: "adresse.privee@example.com", firstName: "", lastName: "" };
+
+test("carte : sans prénom ni nom de planning, « Je m'inscris » demande un nom ; l'adresse mail n'est jamais écrite", async ({ page }) => {
+  const db = await ouvrirTable(page, SANS_PRENOM);
+  const le27 = rangee(carteDe(page), "2026-09-27");
+  await le27.getByRole("button", { name: "Je m'inscris" }).click();
+  const champ = le27.getByRole("textbox", { name: "Ton nom" });
+  await expect(champ).toBeVisible();
+  await expect(champ).toHaveValue("");
+  expect(ecrituresPetitDej(db.writes, "POST"), "rien d'écrit avant le nom").toHaveLength(0);
+  await capture(page, "petit-dej-carte-sans-prenom");
+
+  await champ.press("Escape");
+  await expect(le27.getByRole("button", { name: "Je m'inscris" }), "Échap annule").toBeVisible();
+
+  await le27.getByRole("button", { name: "Je m'inscris" }).click();
+  await champ.fill("Famille Martin");
+  await champ.press("Enter");
+  await expect(le27.getByText("Famille Martin", { exact: true })).toBeVisible();
+  const posees = ecrituresPetitDej(db.writes, "POST");
+  expect(posees).toHaveLength(1);
+  expect(posees[0].data, "une inscription : rattachée à son compte").toMatchObject({
+    dimanche: "2026-09-27", nom: "Famille Martin", uid: SANS_PRENOM.uid, auteurUid: SANS_PRENOM.uid,
+  });
+  expect(JSON.stringify(db.writes.filter((w) => w.path.startsWith("petitDej/"))), "ni début d'adresse mail").not.toContain("adresse.privee");
 });
 
 // ─── U3 · PD3 : Ce dimanche, Mes services, rappels — rattachés par le compte (Q9) ─
@@ -795,7 +892,7 @@ test("Mon profil › Notifications en 中文 : la liste « Recevoir » est tradu
 
 // ─── U3 · PD5 : la reprise (T11, Q13), le bouton et la route ───────────────
 
-test("administration › Planning : « Reprendre les noms du petit déj » demande confirmation, appelle la route et affiche son compte rendu", async ({ page }) => {
+test("Back-Office › Planning › Import : « Reprendre les noms du petit déj » demande confirmation, appelle la route et affiche son compte rendu", async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-09-19T10:00:00"));
   await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
   const appels: { methode: string; jeton: string }[] = [];
@@ -803,8 +900,7 @@ test("administration › Planning : « Reprendre les noms du petit déj » deman
     appels.push({ methode: route.request().method(), jeton: route.request().headers()["authorization"] ?? "" });
     return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: true, reprises: 9, ignores: 3 }) });
   });
-  await signInAs(page, { ...ADMIN, firstName: "Admin", lastName: "A." }, {}, "/admin");
-  await page.getByRole("button", { name: /^Planning/ }).click();
+  await signInAs(page, { ...ADMIN, firstName: "Admin", lastName: "A." }, {}, "/back-office/planning/import");
   const bouton = page.getByRole("button", { name: "Reprendre les noms du petit déj" });
   await expect(bouton).toBeVisible();
 
@@ -823,13 +919,12 @@ test("administration › Planning : « Reprendre les noms du petit déj » deman
   await capture(page, "admin-reprise-petit-dej");
 });
 
-test("administration › Planning : un refus de la route s'affiche à la place du compte rendu", async ({ page }) => {
+test("Back-Office › Planning › Import : un refus de la route s'affiche à la place du compte rendu", async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-09-19T10:00:00"));
   await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
   await page.route("**/api/admin/reprendre-petit-dej", (route) =>
     route.fulfill({ status: 500, contentType: "application/json", body: JSON.stringify({ error: "Erreur serveur" }) }));
-  await signInAs(page, { ...ADMIN, firstName: "Admin", lastName: "A." }, {}, "/admin");
-  await page.getByRole("button", { name: /^Planning/ }).click();
+  await signInAs(page, { ...ADMIN, firstName: "Admin", lastName: "A." }, {}, "/back-office/planning/import");
   page.once("dialog", (d) => void d.accept());
   await page.getByRole("button", { name: "Reprendre les noms du petit déj" }).click();
   await expect(page.getByText("Erreur serveur")).toBeVisible();

@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { fusionnerLignes } from "@/lib/planning/grilles";
 import { fetchGrille } from "@/lib/planning/grille";
 import { lireSheetDe } from "@/lib/planning/sheets";
+import { getSetlistsDepuis, type FSSetlist } from "@/lib/firebase/setlists";
 
 /**
  * Les lignes de plannings par clé : la grille de l'app et le Google Sheet réunis dimanche
@@ -16,6 +17,22 @@ export async function lireGrilles(cles: string[]): Promise<Record<string, string
   return Object.fromEntries(await Promise.all(
     [...new Set(cles)].map(async (k) => [k, fusionnerLignes(await fetchGrille(k), await lireSheetDe(k))] as const),
   ));
+}
+
+// « Ce dimanche » et « Setlists à préparer » lisent les mêmes setlists : une lecture pour les
+// deux, gardée une minute (comme `fetchGrille`, plus court : une setlist se publie vite).
+const TTL_SETLISTS_MS = 60_000;
+let setlists: { depuis: string; at: number; promesse: Promise<FSSetlist[]> } | null = null;
+
+/** Les setlists publiées datées de `depuis` ou après, lues une fois pour tous les widgets.
+ *  Une lecture en échec rejette (« Lecture impossible ») et n'est pas gardée. */
+export function lireSetlists(depuis: string): Promise<FSSetlist[]> {
+  if (setlists && setlists.depuis === depuis && Date.now() - setlists.at < TTL_SETLISTS_MS) return setlists.promesse;
+  const promesse = getSetlistsDepuis(depuis);
+  const entree = { depuis, at: Date.now(), promesse };
+  setlists = entree;
+  promesse.catch(() => { if (setlists === entree) setlists = null; });
+  return promesse;
 }
 
 /** Une lecture relancée quand `cle` change ; `erreur` si elle échoue (jamais « vide »). */

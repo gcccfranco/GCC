@@ -54,14 +54,12 @@ async function open(page: Page, who: FakeProfile, to: string, docs: Record<strin
   return signInAs(page, who, docs, to);
 }
 
-/** La grille seule : la carte Petit déj au-dessus a ses propres « Modifier » (✎). */
-const grille = (page: Page) => page.locator('[data-grille="table"]');
-
 const laCase = (page: Page, date: string, colonne: string) =>
   page.locator(`[data-case="${date}|${colonne}"]`).filter({ visible: true });
 
+// Lot U6, B2 (Q14) : la grille Table est au Back-Office ; l'App montre les cartes.
 test("la grille Table : l'équipe lue dans le Sheet, le petit déj dans les inscriptions", async ({ page }) => {
-  await open(page, MEMBRE, "/planning/table", PETIT_DEJ);
+  await open(page, RESPONSABLE, "/back-office/planning/table", PETIT_DEJ);
   await expect(page.getByTestId("grille-bandeau")).toContainText("Prépa. Table du Seigneur");
   await expect(laCase(page, "2026-09-20", "equipe")).toContainText("Charlie, Isabelle");
   await expect(laCase(page, "2026-09-27", "equipe")).toContainText("Lydie, Samuel");
@@ -69,16 +67,15 @@ test("la grille Table : l'équipe lue dans le Sheet, le petit déj dans les insc
     "Famille Martin, Les jeunes du Campus",
   );
   await expect(laCase(page, "2026-09-27", "petitDej"), "le nom du Sheet ne parle plus (T8)").not.toContainText("Charlie");
-  await expect(grille(page).getByRole("button", { name: "Modifier" })).toHaveCount(0);
 });
 
 test("avec le droit « table » : une case s'écrit et tient au rechargement ; la case Petit déj n'est pas recopiée", async ({ page }) => {
-  const db = await open(page, RESPONSABLE, "/planning/table", PETIT_DEJ);
-  await grille(page).getByRole("button", { name: "Modifier" }).click();
+  const db = await open(page, RESPONSABLE, "/back-office/planning/table", PETIT_DEJ);
   await laCase(page, "2026-09-27", "equipe").getByRole("button").click();
-  // P9 (lot U2) : « Choisir », puis un nom écrit à la main.
-  await page.getByRole("button", { name: "Écrire un nom sans compte…" }).click();
+  // Lot U2 (relecture) : une case qui porte déjà deux noms s'ouvre en texte,
+  // prérempli — « Choisir » remplacerait les deux.
   const champ = page.getByRole("textbox", { name: "Équipe", exact: true });
+  await expect(champ).toHaveValue("Lydie, Samuel");
   await champ.fill("Ruth K.");
   await champ.press("Enter");
   await expect(laCase(page, "2026-09-27", "equipe")).toContainText("Ruth K.");
@@ -99,19 +96,35 @@ test("avec le droit « table » : une case s'écrit et tient au rechargement ; l
   await expect(page.getByText("Esther C.")).toBeVisible();
 });
 
-test("en « Modifier », la case Petit déj montre les inscriptions sans être un bouton", async ({ page }) => {
-  await open(page, RESPONSABLE, "/planning/table", PETIT_DEJ);
-  await grille(page).getByRole("button", { name: "Modifier" }).click();
+test("en modification, la case Petit déj montre les inscriptions sans être un bouton", async ({ page }) => {
+  await open(page, RESPONSABLE, "/back-office/planning/table", PETIT_DEJ);
   await expect(laCase(page, "2026-09-27", "equipe").getByRole("button"), "l'équipe reste une case à remplir").toHaveCount(1);
   await expect(laCase(page, "2026-09-27", "petitDej")).toContainText("Famille Martin, Les jeunes du Campus");
   await expect(laCase(page, "2026-09-27", "petitDej").getByRole("button")).toHaveCount(0);
   await expect(laCase(page, "2026-09-20", "petitDej").getByRole("button"), "vide, pas de « + » non plus").toHaveCount(0);
 });
 
+// Fusion U2 × U3 : « Choisir » (U2, P9) propose les noms déjà écrits dans les
+// cases de personnes ; les lignes du petit déj (« Famille … ») n'en sont pas (Q12).
+test("« Choisir » une équipe ne propose pas les lignes du petit déj", async ({ page }) => {
+  await open(page, RESPONSABLE, "/back-office/planning/table", {
+    "petitDej/c": {
+      dimanche: "2026-10-04", nom: "Famille Martin", uid: "uid-autre", auteurUid: "uid-autre",
+      creeLe: "2026-09-09T08:00:00.000Z", modifieLe: "2026-09-09T08:00:00.000Z",
+    },
+  });
+  await page.getByRole("button", { name: "T4", exact: true }).click();
+  await expect(laCase(page, "2026-10-04", "petitDej")).toContainText("Famille Martin");
+  await laCase(page, "2026-10-04", "equipe").getByRole("button").click();
+  const menu = page.getByRole("dialog", { name: /Équipe/ });
+  await expect(menu.getByRole("option", { name: /Olivier/ }), "les noms des cases d'équipe").toBeVisible();
+  await expect(menu.getByText("Famille Martin")).toHaveCount(0);
+});
+
 // Lot U2, P7 : « Exporter (modèle du Sheet) » remplace le CSV du lot 17 (question 6).
-// Lot U3 : la colonne Petit déj porte les inscriptions.
+// Lot U3 (Q12) : la colonne Petit déj s'exporte telle que la case l'affiche, lue dans les inscriptions.
 test("« Exporter (modèle du Sheet) » : le trimestre affiché, Date · Équipe · Petit déj ; pas pour un membre", async ({ page, browser }) => {
-  await open(page, RESPONSABLE, "/planning/table", PETIT_DEJ);
+  await open(page, RESPONSABLE, "/back-office/planning/table", PETIT_DEJ);
   await page.getByRole("button", { name: "Exporter (modèle du Sheet)" }).click();
   const fenetre = page.getByRole("dialog", { name: "Exporter" });
   await fenetre.getByRole("radio", { name: "T3 2026 · Prépa. Table" }).click();
@@ -119,7 +132,7 @@ test("« Exporter (modèle du Sheet) » : le trimestre affiché, Date · Équipe
     page.waitForEvent("download", { timeout: 120_000 }),
     fenetre.getByRole("button", { name: "PDF", exact: true }).click(),
   ]);
-  expect(download.suggestedFilename()).toBe("Prépa._Table_T3_2026.pdf");
+  expect(download.suggestedFilename()).toBe("Franco_Table_PtD_T3_2026.pdf");
   await download.saveAs(test.info().outputPath(download.suggestedFilename())); // à ouvrir à l'œil
   const lignes = lirePdf(readFileSync(await download.path())).pages[0].lignes;
   for (const attendu of ["PRÉPARATION TABLE DÉJEUNER", "DÉJEUNER PRÉPARATION T3 2026", "DATE", "Équipe", "Petit déj", "Septembre"]) {
@@ -127,12 +140,12 @@ test("« Exporter (modèle du Sheet) » : le trimestre affiché, Date · Équipe
   }
   const i = lignes.indexOf("27/09");
   expect(lignes.slice(i, i + 2)).toEqual(["27/09", "Lydie, Samuel"]);
-  // La case Petit déj porte les inscriptions ; trop longue, elle passe à la ligne dans le PDF.
-  expect(lignes[i + 2], "la colonne Petit déj porte les inscriptions").toMatch(/^Famille Martin, Les jeunes du/);
+  // La case Petit déj revient à la ligne dans sa colonne : on la relit en entier.
+  expect(lignes.slice(i + 2, i + 4).join(""), "le petit déj des inscriptions, pas du Sheet").toBe("Famille Martin, Les jeunes du Campus");
 
   const autre = await browser.newPage();
   await open(autre, MEMBRE, "/planning/table");
-  await expect(autre.getByTestId("grille-bandeau")).toBeVisible();
+  await expect(autre.getByRole("region", { name: "Prépa. Table du Seigneur" })).toBeVisible();
   await expect(autre.getByRole("button", { name: /Exporter/ })).toHaveCount(0);
   await autre.close();
 });
@@ -140,7 +153,7 @@ test("« Exporter (modèle du Sheet) » : le trimestre affiché, Date · Équipe
 test("en 中文 : les deux colonnes sont traduites", async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
   // Sur téléphone, une case vide ne montre pas son libellé : il faut une inscription.
-  await open(page, MEMBRE, "/planning/table", PETIT_DEJ);
+  await open(page, RESPONSABLE, "/back-office/planning/table", PETIT_DEJ);
   await expect(page.getByText("团队").filter({ visible: true }).first()).toBeVisible();
   await expect(page.getByText("早餐").filter({ visible: true }).first()).toBeVisible();
 });

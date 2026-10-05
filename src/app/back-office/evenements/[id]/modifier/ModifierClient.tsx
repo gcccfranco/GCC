@@ -1,7 +1,7 @@
 "use client"
 
 // Modification d'un évènement (lot 6) : organisateur + coordination. Le
-// compteur d'inscrits n'est jamais envoyé.
+// compteur d'inscrits n'est jamais envoyé. Lot U6, B3 : au Back-Office.
 
 import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
@@ -13,6 +13,8 @@ import { getEvenement, updateEvenement } from "@/lib/firebase/evenements"
 import { ANNONCE_SECTIONS } from "@/types/annonce"
 import type { Evenement } from "@/types/evenement"
 import { EvenementForm } from "@/components/evenements/EvenementForm"
+
+const base = "/back-office/evenements"
 
 export function ModifierClient() {
   const { t } = useTranslation()
@@ -43,9 +45,9 @@ export function ModifierClient() {
         inscrits={evenement.inscrits}
         onSubmit={async (values) => {
           await updateEvenement(evenement.id, values)
-          router.push(`/evenements/${evenement.id}`)
+          router.push(`${base}/${evenement.id}`)
         }}
-        onCancel={() => router.push(`/evenements/${evenement.id}`)}
+        onCancel={() => router.push(`${base}/${evenement.id}`)}
       />
     </div>
   )

@@ -7,11 +7,14 @@ import {
   GRILLE_INTERFRANCO, GRILLE_PAIX, GRILLE_TABLE, PREMIERE_ANNEE_APP, dimanchesDe, lignesDeLAnnee, marquerDimanchesSpeciaux,
 } from "../src/lib/planning/grilles";
 import {
-  avecDimanchesSpeciaux, collectPlanningNames, deriveServiceRolesFromPlanning, findMyServices, servantsForDate,
+  avecDimanchesSpeciaux, collectPlanningNames, deriveServiceRolesFromPlanning, findMyServices, sansBrouillon, servantsForDate,
   type PlanningData,
 } from "../src/lib/planning/names";
 import { reminderBody, reminderServicesFor } from "../src/lib/push/reminderMessage";
 import { colonneDePersonnes, propositions, type CompteDuPlanning } from "../src/lib/planning/choisir";
+import { ADMIN_EMAILS, PLANNINGS_DATES_CHOISIES, canRetirerDate } from "../src/lib/access";
+import { fusionnerChangements, phraseDuChangement, type ChangementGrille } from "../src/lib/planning/historique";
+import { planningReleaseMessage } from "../src/lib/push/messages";
 
 // Lot U2 (docs/spec-planning-2027.md) : le planning 2027 se remplit dans
 // l'app, sur des dimanches posés d'office ; chaque trimestre reste un
@@ -80,6 +83,11 @@ const SHEETS: Record<string, string> = {
     ["22/11", "Ancien K.", "", "", "", "", "Membre P.", "中班"],
     ["29/11", "Ancien L.", "", "", "", "", "", ""],
   ]),
+  // Le Campus de 2026, dans le Sheet : le sélecteur d'année le garde à part de 2027.
+  Campus_Louange: csv([
+    ["DATE", "MOMENT", "PRESIDENT"],
+    ["27/07/2026", "Soir", "Président C."],
+  ]),
 };
 
 const MEMBRE: FakeProfile = { uid: "uid-membre", email: "membre@example.com", planningName: "Membre M." };
@@ -118,7 +126,7 @@ async function capture(page: Page, name: string) {
 }
 
 test("Paix 2027 : l'écrivain choisit 2027, voit les 13 dimanches du T1 et aucun de 2026", async ({ page }) => {
-  await ouvrir(page, ECRIVAIN, "/planning/groupes");
+  await ouvrir(page, ECRIVAIN, "/back-office/planning/groupes");
   await page.getByRole("button", { name: "2027", exact: true }).click();
   await page.getByRole("button", { name: "T1", exact: true }).click();
   await expect.poll(() => datesAffichees(page)).toHaveLength(13);
@@ -129,10 +137,9 @@ test("Paix 2027 : l'écrivain choisit 2027, voit les 13 dimanches du T1 et aucun
 });
 
 test("Paix 2027 : une case s'écrit seule (rien recopié) et tient au rechargement", async ({ page }) => {
-  const db = await ouvrir(page, ECRIVAIN, "/planning/groupes");
+  const db = await ouvrir(page, ECRIVAIN, "/back-office/planning/groupes");
   await page.getByRole("button", { name: "2027", exact: true }).click();
   await page.getByRole("button", { name: "T1", exact: true }).click();
-  await page.getByRole("button", { name: "Modifier" }).click();
   await ecrireSansCompte(page, "2027-01-10", "presidence", "Présidence", "Invité A.");
   await expect(laCase(page, "2027-01-10", "presidence")).toContainText("Invité A.");
   await expect.poll(() => db.doc("plannings/paix/dimanches/2027-01-10")?.presidence).toBe("Invité A.");
@@ -158,7 +165,7 @@ test("Paix 2027 : un membre ne voit pas 2027 tant que rien n'est publié", async
 });
 
 test("Paix 2027 : l'écrivain sans droit de publier voit le brouillon, marqué, et le bandeau", async ({ page }) => {
-  await ouvrir(page, ECRIVAIN, "/planning/groupes", CASE_2027);
+  await ouvrir(page, ECRIVAIN, "/back-office/planning/groupes", CASE_2027);
   await page.getByRole("button", { name: "2027", exact: true }).click();
   const bandeau = page.getByTestId("bandeau-annee");
   await expect(bandeau).toContainText("2027 · brouillon");
@@ -169,7 +176,7 @@ test("Paix 2027 : l'écrivain sans droit de publier voit le brouillon, marqué, 
 });
 
 test("Paix 2027 : « Publier le T1 » appelle la route avec l'année, puis propose « Masquer le T1 »", async ({ page }) => {
-  const db = await ouvrir(page, PUBLIEUR, "/planning/groupes", CASE_2027);
+  const db = await ouvrir(page, PUBLIEUR, "/back-office/planning/groupes", CASE_2027);
   const corps: unknown[] = [];
   // Route simulée : jamais de vraie notification.
   await page.route("**/api/planning/release", async (route) => {
@@ -201,7 +208,7 @@ test("Paix 2027 : T1 publié, le membre voit 2027 et son T1 le 15/11/2026, pas l
 // ─── Les autres pages : Culte, Table, EDD ───────────────────────────────────
 
 test("Culte 2027 : l'écrivain du Culte voit le T1 2027 (13 dimanches, sainte cène le 03/01) ; un membre, non", async ({ page, browser }) => {
-  await ouvrir(page, { ...ECRIVAIN, plannings: ["culte"] }, "/planning/culte");
+  await ouvrir(page, { ...ECRIVAIN, plannings: ["culte"] }, "/back-office/planning/culte");
   await page.getByRole("button", { name: "2027", exact: true }).click();
   await expect.poll(() => datesAffichees(page)).toHaveLength(13);
   await expect(page.getByTestId("bandeau-annee")).toContainText("2027 · brouillon");
@@ -216,27 +223,26 @@ test("Culte 2027 : l'écrivain du Culte voit le T1 2027 (13 dimanches, sainte c�
 });
 
 test("Table 2027 : l'écrivain voit les 13 dimanches du T1 ; le membre voit 2027 dès une case remplie", async ({ page, browser }) => {
-  await ouvrir(page, { ...ECRIVAIN, plannings: ["table"] }, "/planning/table");
+  await ouvrir(page, { ...ECRIVAIN, plannings: ["table"] }, "/back-office/planning/table");
   await page.getByRole("button", { name: "2027", exact: true }).click();
   await page.getByRole("button", { name: "T1", exact: true }).click();
   await expect.poll(() => datesAffichees(page)).toHaveLength(13);
 
   const vide = await browser.newPage();
+  // Lot U6, B2 : dans l'App, la Table est en cartes (Petit déj, Prépa. Table), sans grille.
   await ouvrir(vide, MEMBRE, "/planning/table");
-  await expect(vide.getByTestId("grille-bandeau")).toBeVisible();
+  await expect(vide.getByRole("region", { name: "Prépa. Table du Seigneur" })).toBeVisible();
   await expect(vide.getByRole("button", { name: "2027", exact: true })).toHaveCount(0);
   await vide.close();
 
   const rempli = await browser.newPage();
   await ouvrir(rempli, MEMBRE, "/planning/table", { "plannings/table/dimanches/2027-01-03": { date: "2027-01-03", equipe: "Équipe Z." } });
-  await rempli.getByRole("button", { name: "2027", exact: true }).click();
-  await rempli.getByRole("button", { name: "T1", exact: true }).click();
-  await expect(laCase(rempli, "2027-01-03", "equipe")).toContainText("Équipe Z.");
+  await expect(rempli.getByRole("button", { name: "2027", exact: true })).toBeVisible();
   await rempli.close();
 });
 
 test("EDD 2027 : la classe 中班 montre les 9 dimanches de janvier-février 2027", async ({ page }) => {
-  await ouvrir(page, { ...ECRIVAIN, plannings: ["eddZhongban"] }, "/planning/edd");
+  await ouvrir(page, { ...ECRIVAIN, plannings: ["eddZhongban"] }, "/back-office/planning/edd");
   await page.getByRole("button", { name: "2027", exact: true }).click();
   await page.getByRole("button", { name: /Janv/ }).click();
   await expect.poll(() => datesAffichees(page)).toHaveLength(9);
@@ -306,7 +312,7 @@ const DIMANCHES_SPECIAUX = {
 };
 
 test("Paix 2027 : un dimanche d'Interfranco ou d'Intergroupe, la présidence affiche le service, non modifiable", async ({ page }) => {
-  const db = await ouvrir(page, ECRIVAIN, "/planning/groupes", DIMANCHES_SPECIAUX);
+  const db = await ouvrir(page, ECRIVAIN, "/back-office/planning/groupes", DIMANCHES_SPECIAUX);
   await page.getByRole("button", { name: "2027", exact: true }).click();
   await page.getByRole("button", { name: "T1", exact: true }).click();
   await expect(laCase(page, "2027-01-17", "presidence")).toHaveText("Interfranco");
@@ -314,7 +320,6 @@ test("Paix 2027 : un dimanche d'Interfranco ou d'Intergroupe, la présidence aff
   await expect(laCase(page, "2027-01-17", "orateur")).toContainText("Orateur O.");
   await expect(page.getByText("Ancien Z.")).toHaveCount(0);
 
-  await page.getByRole("button", { name: "Modifier" }).click();
   await expect(laCase(page, "2027-01-17", "presidence").getByRole("button"), "non modifiable").toHaveCount(0);
   await expect(laCase(page, "2027-01-17", "presidence")).toHaveText("Interfranco");
   await expect(laCase(page, "2027-01-10", "presidence").getByRole("button"), "un dimanche ordinaire reste modifiable").toHaveCount(1);
@@ -331,7 +336,7 @@ test("Paix 2027 : un dimanche d'Interfranco ou d'Intergroupe, la présidence aff
 });
 
 test("Paix 2027 : l'export du trimestre porte « Interfranco » et « Intergroupe » à la présidence", async ({ page }) => {
-  await ouvrir(page, ECRIVAIN, "/planning/groupes", DIMANCHES_SPECIAUX);
+  await ouvrir(page, ECRIVAIN, "/back-office/planning/groupes", DIMANCHES_SPECIAUX);
   await page.getByRole("button", { name: "2027", exact: true }).click();
   await page.getByRole("button", { name: "T1", exact: true }).click();
   await expect(laCase(page, "2027-01-17", "presidence")).toHaveText("Interfranco");
@@ -354,6 +359,8 @@ test("Mes services (loadPlanningData) : le président de Paix posé avant l'Inte
     "plannings/interfranco/dimanches/2027-01-17": { date: "2027-01-17", presidence: "Président I." },
     "plannings/paix/dimanches/2027-01-17": { date: "2027-01-17", presidence: "Membre M." },
     "plannings/paix/dimanches/2027-01-24": { date: "2027-01-24", presidence: "Membre M." },
+    // Relecture : le brouillon de 2027 n'entre dans « Mes services » qu'une fois publié.
+    "planningReleases/paix_2027": { published: ["T1"] },
   });
   await expect(page.getByText("Janvier 2027")).toBeVisible();
   await expect(page.getByText("Groupe Paix", { exact: true }), "le 24/01 seulement").toHaveCount(1);
@@ -442,14 +449,15 @@ test("P5 · Groupes 2026 : la Percussion du Sheet s'affiche (Paix et Bonté au T
   await capture(page, "p5-bonte-t4-percussion");
 });
 
-test("P5 · Paix 2027 : Percussion masquée en lecture tant qu'elle est vide, remplissable en modification", async ({ page }) => {
-  const db = await ouvrir(page, ECRIVAIN, "/planning/groupes");
+// Lot U6, B2 : au Back-Office, la grille s'ouvre en modification ; la colonne optionnelle y
+// est donc toujours là pour être remplie (la règle de lecture, masquée vide, ne change pas).
+test("P5 · Paix 2027 : Percussion, colonne optionnelle, remplissable au Back-Office", async ({ page }) => {
+  const db = await ouvrir(page, ECRIVAIN, "/back-office/planning/groupes");
   await page.getByRole("button", { name: "2027", exact: true }).click();
   await page.getByRole("button", { name: "T1", exact: true }).click();
   await expect.poll(() => datesAffichees(page)).toHaveLength(13);
-  await expect(page.getByText("Percussion", { exact: true }).filter({ visible: true }), "colonne optionnelle, vide au T1").toHaveCount(0);
+  await expect(page.getByText("Percussion", { exact: true }).filter({ visible: true }).first(), "vide au T1, mais à remplir").toBeVisible();
 
-  await page.getByRole("button", { name: "Modifier" }).click();
   await ecrireSansCompte(page, "2027-01-10", "percussion", "Percussion", "Batteur B.");
   await expect(laCase(page, "2027-01-10", "percussion")).toContainText("Batteur B.");
   await expect.poll(() => db.doc("plannings/paix/dimanches/2027-01-10")?.percussion).toBe("Batteur B.");
@@ -487,7 +495,7 @@ test("P5 · « Ce dimanche » montre la Percussion des groupes et le Cours de l'
 
 const COMPTES_P9: CompteDuPlanning[] = [
   { nom: "Julien Z.", prenom: "Julien", nomDeFamille: "Zed", serviceRoles: { "Groupe Paix": ["presidence"] } },
-  { nom: "Éloïse M.", prenom: "Éloïse", nomDeFamille: "Martin", serviceRoles: { "Groupe Paix": ["musicien"] } },
+  { nom: "Élise M.", prenom: "Élise", nomDeFamille: "Mercier", serviceRoles: { "Groupe Paix": ["musicien"] } },
   { nom: "Alice Q.", prenom: "Alice", nomDeFamille: "Quinet", serviceRoles: { "Groupe Paix": ["presidence"], "中班": ["musicien"] } },
   { nom: "Bruno R.", prenom: "Bruno", nomDeFamille: "Roux", serviceRoles: { "Culte Francophone": ["presidence", "chanteur"] } },
   // Sans nom de planning : « Mes services » ne la retrouverait pas, « Choisir » ne la propose pas.
@@ -503,22 +511,22 @@ test("P9 · propositions : d'abord les comptes qui ont le rôle de la colonne, p
     { nom: "Alice Q.", duRole: true },
     { nom: "Julien Z.", duRole: true },
     { nom: "Bruno R.", duRole: false },
-    { nom: "Éloïse M.", duRole: false },
+    { nom: "Élise M.", duRole: false },
     { nom: "Invité A.", duRole: false },
   ]);
   // Le rôle suit la colonne : musiciens → musicien du Groupe Paix.
-  expect(propositions(GRILLE_PAIX, "musiciens", COMPTES_P9, rows, "")[0]).toEqual({ nom: "Éloïse M.", duRole: true });
+  expect(propositions(GRILLE_PAIX, "musiciens", COMPTES_P9, rows, "")[0]).toEqual({ nom: "Élise M.", duRole: true });
   // … et la catégorie, le planning : la présidence du Culte n'est pas celle de Paix.
   expect(propositions(GRILLE_CULTE, "presidence", COMPTES_P9, [], "").filter((p) => p.duRole).map((p) => p.nom)).toEqual(["Bruno R."]);
   expect(propositions(GRILLE_CULTE, "choriste2", COMPTES_P9, [], "").filter((p) => p.duRole).map((p) => p.nom)).toEqual(["Bruno R."]);
   expect(propositions(GRILLES_EDD[0], "piano", COMPTES_P9, [], "").filter((p) => p.duRole).map((p) => p.nom)).toEqual(["Alice Q."]);
   // Sans rôle de setlist (orateur) ou sans catégorie (Table) : une seule liste, par ordre alphabétique.
   expect(propositions(GRILLE_PAIX, "orateur", COMPTES_P9, [], "").some((p) => p.duRole)).toBe(false);
-  expect(propositions(GRILLE_TABLE, "equipe", COMPTES_P9, [], "").map((p) => p.nom)).toEqual(["Alice Q.", "Bruno R.", "Éloïse M.", "Julien Z."]);
+  expect(propositions(GRILLE_TABLE, "equipe", COMPTES_P9, [], "").map((p) => p.nom)).toEqual(["Alice Q.", "Bruno R.", "Élise M.", "Julien Z."]);
 });
 
 test("P9 · recherche : sans accents ni casse, sur le nom de planning, le prénom ou le nom", () => {
-  expect(propositions(GRILLE_PAIX, "presidence", COMPTES_P9, [], "eloise").map((p) => p.nom)).toEqual(["Éloïse M."]);
+  expect(propositions(GRILLE_PAIX, "presidence", COMPTES_P9, [], "elise").map((p) => p.nom)).toEqual(["Élise M."]);
   expect(propositions(GRILLE_PAIX, "presidence", COMPTES_P9, [], "QUINET").map((p) => p.nom)).toEqual(["Alice Q."]);
   expect(propositions(GRILLE_PAIX, "presidence", COMPTES_P9, [], "  ju ").map((p) => p.nom)).toEqual(["Julien Z."]);
   expect(propositions(GRILLE_PAIX, "presidence", COMPTES_P9, [], "personne")).toEqual([]);
@@ -545,10 +553,9 @@ const DOCS_P9: Record<string, Record<string, unknown>> = {
 
 /** Paix, T1 2027, en modification. */
 async function paix2027EnModification(page: Page) {
-  const db = await ouvrir(page, ECRIVAIN, "/planning/groupes", DOCS_P9);
+  const db = await ouvrir(page, ECRIVAIN, "/back-office/planning/groupes", DOCS_P9);
   await page.getByRole("button", { name: "2027", exact: true }).click();
   await page.getByRole("button", { name: "T1", exact: true }).click();
-  await page.getByRole("button", { name: "Modifier" }).click();
   return db;
 }
 
@@ -560,7 +567,7 @@ test("P9 · « Choisir » : les comptes de la présidence de Paix d'abord, puis 
 
   const menu = page.getByRole("dialog", { name: "Présidence · 10/1" });
   await expect(menu.getByPlaceholder("Chercher un nom")).toBeVisible();
-  await expect(menu.getByRole("option")).toHaveText([/^Alice Q\./, /^Julien Z\./, /^Bruno R\./, /^Écrivain E\./, /^Éloïse M\./, /^Invité A\./]);
+  await expect(menu.getByRole("option")).toHaveText([/^Alice Q\./, /^Julien Z\./, /^Bruno R\./, /^Écrivain E\./, /^Élise M\./, /^Invité A\./]);
   await expect(menu.getByRole("option").nth(0)).toContainText("Présidence");
   await expect(menu.getByText("Avec ce rôle")).toBeVisible();
   await expect(menu.getByText("Autres noms")).toBeVisible();
@@ -569,8 +576,8 @@ test("P9 · « Choisir » : les comptes de la présidence de Paix d'abord, puis 
   await expect(menu.getByRole("button", { name: "Vider la case" }), "case vide : rien à vider").toHaveCount(0);
   await capture(page, "p9-choisir-menu");
 
-  await menu.getByPlaceholder("Chercher un nom").fill("eloise");
-  await expect(menu.getByRole("option")).toHaveText([/^Éloïse M\./]);
+  await menu.getByPlaceholder("Chercher un nom").fill("elise");
+  await expect(menu.getByRole("option")).toHaveText([/^Élise M\./]);
   await menu.getByPlaceholder("Chercher un nom").fill("quinet");
   await menu.getByRole("option", { name: /Alice Q\./ }).click();
 
@@ -656,13 +663,251 @@ test("P9 · ordinateur : le menu s'ouvre contre la case ; tablette et téléphon
 
 test("P9 · en 中文 : « Choisir », la recherche et le nom sans compte traduits", async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
-  await ouvrir(page, ECRIVAIN, "/planning/groupes", DOCS_P9);
+  await ouvrir(page, ECRIVAIN, "/back-office/planning/groupes", DOCS_P9);
   await page.getByRole("button", { name: "2027", exact: true }).click();
   await page.getByRole("button", { name: "T1", exact: true }).click();
-  await page.getByRole("button", { name: "修改", exact: true }).click();
   await laCase(page, "2027-01-10", "presidence").getByRole("button", { name: "选择" }).click();
   const menu = page.getByRole("dialog");
   await expect(menu.getByPlaceholder("搜索姓名")).toBeVisible();
   await expect(menu.getByRole("button", { name: "输入没有账号的名字…" })).toBeVisible();
   await capture(page, "p9-choisir-zh");
+});
+
+// ─── Relecture · fin de P2 : dates choisies (Q3), retrait (Q10) ─────────────
+//
+// Interfranco, Intergroupe et Campus n'ont pas de dimanches posés d'office :
+// le responsable ajoute ses dates (un dimanche que l'autre service n'a pas
+// pris ; pour le Campus, une séance un jour quelconque, matin ou soir) et peut
+// retirer une date posée par erreur, là seulement (règle en double avec
+// `canRetirerDate`). Poser ou retirer laisse une entrée dans l'historique.
+
+test("Q10 · retirer une date : seulement les plannings à dates choisies, pour qui les remplit (contre-épreuve sur la clé)", () => {
+  expect([...PLANNINGS_DATES_CHOISIES].sort()).toEqual(GRILLES.filter((g) => g.dates === "choisies").map((g) => g.key).sort());
+  const ecrivain = { email: "ecrivain@example.com" };
+  const admin = { email: ADMIN_EMAILS[0] };
+  expect(canRetirerDate(ecrivain, { plannings: ["interfranco"] }, "interfranco")).toBe(true);
+  expect(canRetirerDate(ecrivain, { plannings: ["campusSoir"] }, "campusSoir")).toBe(true);
+  expect(canRetirerDate(ecrivain, { plannings: ["paix"] }, "paix"), "un dimanche de Paix ne se retire pas").toBe(false);
+  expect(canRetirerDate(admin, null, "culte"), "pas même par un admin").toBe(false);
+  expect(canRetirerDate(admin, null, "intergroupe")).toBe(true);
+  expect(canRetirerDate(ecrivain, { plannings: ["paix"] }, "interfranco"), "sans le droit d'écrire ce planning").toBe(false);
+  expect(canRetirerDate(null, null, "interfranco")).toBe(false);
+
+  // Miroir serveur : la règle de suppression nomme exactement les mêmes clés.
+  const rules = readFileSync("firestore.rules", "utf8");
+  const bloc = rules.slice(rules.indexOf("match /dimanches/{date}"), rules.indexOf("match /history/{entryId}", rules.indexOf("match /dimanches/{date}")));
+  const del = bloc.slice(bloc.indexOf("allow delete"));
+  expect(del).toContain("peutEcrirePlanning(key)");
+  const cles = [...(del.match(/key in \[([^\]]*)\]/)?.[1] ?? "").matchAll(/'([^']+)'/g)].map((m) => m[1]);
+  expect(cles.sort()).toEqual([...PLANNINGS_DATES_CHOISIES].sort());
+});
+
+test("historique : une date posée ou retirée est une entrée ; posée puis retirée dans le même passage, rien", () => {
+  const pose: ChangementGrille = { kind: "dimanche", date: "2027-01-17", retire: false };
+  const retire: ChangementGrille = { kind: "dimanche", date: "2027-01-17", retire: true };
+  expect(phraseDuChangement(pose)).toBe("pose");
+  expect(phraseDuChangement(retire)).toBe("retire");
+  const caseEcrite: ChangementGrille = { kind: "case", date: "2027-01-17", colonne: "presidence", from: "", to: "Président I." };
+  expect(fusionnerChangements([], pose)).toEqual([pose]);
+  expect(fusionnerChangements([pose, caseEcrite], retire)).toEqual([caseEcrite]);
+  expect(fusionnerChangements([pose], { kind: "dimanche", date: "2027-01-24", retire: false })).toHaveLength(2);
+});
+
+const INTERFRANCO: FakeProfile = { ...ECRIVAIN, plannings: ["interfranco", "paix"] };
+const choixDeDate = (page: Page) => page.getByLabel("Dimanche à ajouter", { exact: true });
+const optionsProposees = (page: Page) => choixDeDate(page).locator("option").evaluateAll((os) => os.map((o) => (o as HTMLOptionElement).value));
+
+test("Interfranco 2027 : « Aucun dimanche posé », « Ajouter un dimanche » ; Paix affiche alors « Interfranco », non modifiable", async ({ page }) => {
+  const db = await ouvrir(page, INTERFRANCO, "/back-office/planning/interfranco");
+  await page.getByRole("button", { name: "2027", exact: true }).click();
+  await expect(page.getByText("Aucun dimanche posé pour 2027.").filter({ visible: true })).toHaveCount(1);
+  expect(await optionsProposees(page)).toEqual(dimanchesDe(2027));
+  await choixDeDate(page).selectOption("2027-01-17");
+  await page.getByRole("button", { name: "Ajouter un dimanche" }).click();
+
+  await expect.poll(() => datesAffichees(page)).toEqual(["2027-01-17"]);
+  expect(db.doc("plannings/interfranco/dimanches/2027-01-17")?.date).toBe("2027-01-17");
+  expect(await optionsProposees(page), "un dimanche posé n'est plus proposé").not.toContain("2027-01-17");
+  await expect.poll(() => db.list("plannings/interfranco/history").length).toBe(1);
+  expect(db.doc(db.list("plannings/interfranco/history")[0])?.changes).toEqual([{ kind: "dimanche", date: "2027-01-17", retire: false }]);
+  await page.getByRole("button", { name: "Historique des modifications" }).click();
+  await expect(page.getByText("Écrivain E. a ajouté le 17 janvier")).toBeVisible();
+  await capture(page, "interfranco-2027-ajoute");
+
+  // Au Back-Office, la grille de Paix s'ouvre en modification (U6, B2).
+  await page.goto("/back-office/planning/groupes");
+  await page.getByRole("button", { name: "2027", exact: true }).click();
+  await page.getByRole("button", { name: "T1", exact: true }).click();
+  await expect(laCase(page, "2027-01-17", "presidence")).toHaveText("Interfranco");
+  await expect(laCase(page, "2027-01-17", "presidence").getByRole("button"), "non modifiable").toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Retirer ce dimanche" }), "un dimanche de Paix ne se retire pas").toHaveCount(0);
+});
+
+test("Intergroupe 2027 : un dimanche déjà pris par l'Interfranco n'est pas proposé", async ({ page }) => {
+  await ouvrir(page, { ...ECRIVAIN, plannings: ["intergroupe"] }, "/back-office/planning/intergroupe", {
+    "plannings/interfranco/dimanches/2027-01-17": { date: "2027-01-17" },
+  });
+  await page.getByRole("button", { name: "2027", exact: true }).click();
+  const proposes = await optionsProposees(page);
+  expect(proposes).not.toContain("2027-01-17");
+  expect(proposes).toContain("2027-01-24");
+  expect(proposes).toHaveLength(51);
+});
+
+test("Interfranco : un membre voit 2027 dès qu'un dimanche est posé, sans « Ajouter » ; rien avant", async ({ page, browser }) => {
+  await ouvrir(page, MEMBRE, "/planning/interfranco");
+  await expect(page.getByTestId("grille-bandeau")).toBeVisible();
+  await expect(page.getByRole("button", { name: "2027", exact: true })).toHaveCount(0);
+
+  const autre = await browser.newPage();
+  await ouvrir(autre, MEMBRE, "/planning/interfranco", { "plannings/interfranco/dimanches/2027-01-17": { date: "2027-01-17", presidence: "Président I." } });
+  await autre.getByRole("button", { name: "2027", exact: true }).click();
+  await expect(laCase(autre, "2027-01-17", "presidence")).toContainText("Président I.");
+  await expect(autre.getByRole("button", { name: "Ajouter un dimanche" })).toHaveCount(0);
+  await autre.close();
+});
+
+test("Interfranco 2027 : « Retirer ce dimanche » demande confirmation, efface la date et le note", async ({ page, browser }) => {
+  const DATE = { "plannings/interfranco/dimanches/2027-01-17": { date: "2027-01-17", presidence: "Président I." } };
+  // Dans l'App, la page se lit, même pour qui la remplit (U6, B2) : ni « Ajouter » ni « Retirer ».
+  const app = await browser.newPage();
+  await ouvrir(app, INTERFRANCO, "/planning/interfranco", DATE);
+  await app.getByRole("button", { name: "2027", exact: true }).click();
+  await expect(laCase(app, "2027-01-17", "presidence")).toContainText("Président I.");
+  await expect(app.getByRole("button", { name: "Retirer ce dimanche" }), "au Back-Office seulement").toHaveCount(0);
+  await expect(app.getByRole("button", { name: "Ajouter un dimanche" })).toHaveCount(0);
+  await app.close();
+
+  const db = await ouvrir(page, INTERFRANCO, "/back-office/planning/interfranco", DATE);
+  await page.getByRole("button", { name: "2027", exact: true }).click();
+  await expect(laCase(page, "2027-01-17", "presidence")).toContainText("Président I.");
+  const retirer = page.getByRole("button", { name: "Retirer ce dimanche" }).filter({ visible: true });
+  await expect(retirer).toHaveCount(1);
+  await capture(page, "interfranco-2027-modifier");
+
+  const messages: string[] = [];
+  page.once("dialog", (d) => { messages.push(d.message()); void d.dismiss(); });
+  await retirer.click();
+  await expect.poll(() => messages.length).toBe(1);
+  expect(messages[0]).toContain("Ses cases s'effacent");
+  expect(db.doc("plannings/interfranco/dimanches/2027-01-17"), "refusé : rien ne bouge").toBeDefined();
+
+  page.once("dialog", (d) => void d.accept());
+  await retirer.click();
+  await expect.poll(() => db.doc("plannings/interfranco/dimanches/2027-01-17")).toBeUndefined();
+  await expect(page.getByText("Aucun dimanche posé pour 2027.").filter({ visible: true })).toHaveCount(1);
+  await expect.poll(() => db.list("plannings/interfranco/history").length).toBe(1);
+  expect(db.doc(db.list("plannings/interfranco/history")[0])?.changes).toEqual([{ kind: "dimanche", date: "2027-01-17", retire: true }]);
+  await capture(page, "interfranco-2027-retire");
+});
+
+test("Campus 2027 : « Ajouter une séance » (date et moment) ; les cartes ne mêlent pas 2026", async ({ page }) => {
+  const db = await ouvrir(page, { ...ECRIVAIN, plannings: ["campusMatin"] }, "/back-office/planning/campus");
+  await page.getByRole("button", { name: "2027", exact: true }).click();
+  await page.getByRole("button", { name: "Grille", exact: true }).click();
+  await expect(page.getByText("Aucun dimanche posé pour 2027.").filter({ visible: true })).toHaveCount(2);
+  const moment = page.getByLabel("Moment", { exact: true });
+  await expect(moment.locator("option"), "le soir n'est pas à elle").toHaveText(["Matin"]);
+  await page.getByLabel("Date de la séance", { exact: true }).fill("2027-07-26");
+  await page.getByRole("button", { name: "Ajouter une séance" }).click();
+
+  await expect.poll(() => db.doc("plannings/campusMatin/dimanches/2027-07-26")?.date).toBe("2027-07-26");
+  await expect(page.locator('[data-grille="campusMatin"]').locator("[data-date-cell='2027-07-26'], [data-date-carte='2027-07-26']").filter({ visible: true })).toHaveCount(1);
+  await expect(page.locator('[data-grille="campusMatin"]').getByText("Aucun dimanche posé pour 2027.").filter({ visible: true })).toHaveCount(0);
+  await capture(page, "campus-2027-seance");
+
+  // Le volet « Louange » de la page, à côté de « Grille » (la barre de navigation a aussi une section « Louange »).
+  await page.getByRole("button", { name: "Grille", exact: true }).locator("..").getByRole("button", { name: "Louange", exact: true }).click();
+  await expect(page.getByText("26/7", { exact: true })).toBeVisible();
+  await expect(page.getByText("27/7", { exact: true }), "les séances de 2026 restent dans 2026").toHaveCount(0);
+  await page.getByRole("button", { name: "2026", exact: true }).click();
+  await expect(page.getByText("27/7", { exact: true })).toBeVisible();
+});
+
+// ─── Relecture · le brouillon de 2027 hors de « Mes services » (Q4) ─────────
+
+test("Mes services : un service du brouillon 2027 n'apparaît qu'une fois son trimestre publié", async ({ page, browser }) => {
+  const SERVICE_2027 = { "plannings/paix/dimanches/2027-01-24": { date: "2027-01-24", presidence: "Membre M." } };
+  await ouvrir(page, MEMBRE, "/mes-services", SERVICE_2027);
+  await expect(page.getByText("Aucun service à venir", { exact: false })).toBeVisible();
+  await expect(page.getByText(/24 janv/i)).toHaveCount(0);
+  await expect(page.getByText("Groupe Paix", { exact: true })).toHaveCount(0);
+
+  const publie = await browser.newPage();
+  await ouvrir(publie, MEMBRE, "/mes-services", { ...SERVICE_2027, "planningReleases/paix_2027": { published: ["T1"] } });
+  await expect(publie.getByText(/24 janv/i)).toBeVisible();
+  await publie.close();
+});
+
+test("sansBrouillon : un trimestre à venir non publié reste hors de « Mes services », cette année comme la suivante", () => {
+  const vide: PlanningData = {
+    culte: [], dejeuner: [], petitDej: [], paix: [], fidelite: [], fideliteMusic: [], bonte: [],
+    edd: {}, campus: [], intergroupe: [], interfranco: [],
+  };
+  const data: PlanningData = {
+    ...vide,
+    culte: [["2026-12-27", "Membre M."], ["2027-01-10", "Membre M."], ["2027-04-11", "Membre M."], ["2027-07-11", "Membre M."], ["2028-01-09", "Membre M."]],
+    paix: [["2027-04-11", "Membre M."]],
+    fideliteMusic: [["2027-04-11", "Membre M."]],
+  };
+  const dates = (d: PlanningData) => ({ culte: d.culte.map((r) => r[0]), paix: d.paix.map((r) => r[0]), fideliteMusic: d.fideliteMusic.map((r) => r[0]) });
+
+  // Le 15/11/2026 (T4) : 2026 tel quel, de 2027 seul le T1 du Culte, publié.
+  expect(dates(sansBrouillon(data, 2026, "T4", { 2026: {}, 2027: { culte: ["T1"] } }))).toEqual({
+    culte: ["2026-12-27", "2027-01-10"], paix: [], fideliteMusic: [],
+  });
+  // Le 14/02/2027 : le T1 en cours se lit toujours ; le T2 du Culte, brouillon, non ; celui de Paix et
+  // de Fidélité (les musiciens suivent Fidélité), publié, oui ; 2028 seulement s'il est publié.
+  expect(dates(sansBrouillon(data, 2027, "T1", { 2027: { paix: ["T2"], fidelite: ["T2"] }, 2028: {} }))).toEqual({
+    culte: ["2026-12-27", "2027-01-10"], paix: ["2027-04-11"], fideliteMusic: ["2027-04-11"],
+  });
+  // L'année du Sheet (2026) ne change pas : son T4 se lit dès septembre, publié ou non, comme avant U2.
+  expect(dates(sansBrouillon(data, 2026, "T3", {})).culte).toEqual(["2026-12-27"]);
+  // Le 11/07/2027 : T1 à T3 passés ou en cours.
+  expect(dates(sansBrouillon(data, 2027, "T3", {})).culte).toEqual(["2026-12-27", "2027-01-10", "2027-04-11", "2027-07-11"]);
+});
+
+test("Prochain service : le brouillon 2027 n'y entre qu'une fois son trimestre publié", async ({ page, browser }) => {
+  const SERVICE_2027 = { "plannings/paix/dimanches/2027-01-24": { date: "2027-01-24", presidence: "Membre M." } };
+  const prochain = (p: Page) => p.getByRole("link", { name: /Groupe Paix \(Présidence\)/ });
+  await ouvrir(page, MEMBRE, "/planning", SERVICE_2027);
+  // Le Sheet et la grille de Paix sont lus : « Ce dimanche » (15/11/2026) montre sa présidence.
+  await expect(page.getByRole("region", { name: /Ce dimanche/ }).getByText("Ancien G.")).toBeVisible();
+  await expect(prochain(page)).toHaveCount(0);
+
+  const publie = await browser.newPage();
+  await ouvrir(publie, MEMBRE, "/planning", { ...SERVICE_2027, "planningReleases/paix_2027": { published: ["T1"] } });
+  await expect(prochain(publie)).toContainText("24 janvier");
+  await publie.close();
+});
+
+// ─── Relecture · la notification de publication dit l'année (mineur) ───────
+
+test("publication : « Planning T1 2027 en ligne » quand l'année n'est pas l'année en cours, FR et 中文", () => {
+  expect(planningReleaseMessage({ label: "Groupe Paix", tri: "T1", annee: 2027 }, "fr")).toEqual({
+    title: "Planning T1 2027 en ligne",
+    body: "Le planning Groupe Paix du T1 2027 est disponible.",
+  });
+  expect(planningReleaseMessage({ label: "Groupe Paix", tri: "T1", annee: 2027 }, "zh-CN")).toEqual({
+    title: "2027 年 T1 服事表已上线",
+    body: "Groupe Paix 的 2027 年 T1 服事表已可查看。",
+  });
+  expect(planningReleaseMessage({ label: "Groupe Paix", tri: "T1" }, "fr").title, "sans année : le message d'aujourd'hui").toBe("Planning T1 en ligne");
+});
+
+// ─── Relecture · une case à plusieurs noms ne se remplace pas d'un clic (mineur)
+
+test("P9 · une case qui porte plusieurs noms s'ouvre en texte, prérempli, sans « Choisir »", async ({ page }) => {
+  const db = await ouvrir(page, { ...ECRIVAIN, plannings: ["table"] }, "/back-office/planning/table", {
+    "plannings/table/dimanches/2027-01-03": { date: "2027-01-03", equipe: "Alice Q., Bruno R., Julien Z." },
+  });
+  await page.getByRole("button", { name: "2027", exact: true }).click();
+  await page.getByRole("button", { name: "T1", exact: true }).click();
+  await laCase(page, "2027-01-03", "equipe").getByRole("button").click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  const champ = laCase(page, "2027-01-03", "equipe").getByLabel("Équipe", { exact: true });
+  await expect(champ).toHaveValue("Alice Q., Bruno R., Julien Z.");
+  await champ.fill("Alice Q., Bruno R., Cécile T.");
+  await champ.press("Enter");
+  await expect.poll(() => db.doc("plannings/table/dimanches/2027-01-03")?.equipe).toBe("Alice Q., Bruno R., Cécile T.");
 });
