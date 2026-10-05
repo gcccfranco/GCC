@@ -297,4 +297,42 @@ npm test   # suite complète avant de rendre la main ; PW_PORT=3000 si un next d
 
 ## Avancement
 
-Rien n'est codé : la spec attend la validation de Timothée, puis son go.
+Spec validée, go de code du 04/10/2026 (redit le 05/10/2026) ; les questions ouvertes prennent leur recommandation.
+Branche `lot/u5bis-editeur-setlist`, rien de poussé.
+
+**05/10/2026 — T1 faite** (logique pure ; aucun écran ne change).
+
+- Correctif `jianpuChords` (question 6), commit `5b4c070` : `FormItem` porte `jianpuChords`, relus par `buildFormItems`
+  et réécrits par `buildSetlistItems` (`src/lib/setlist/formItems.ts`, `buildSetlistItems.ts`), comme `contentOverride`.
+  « Modifier » une setlist n'efface plus les accords retouchés sur un scan 简谱. Vu rouge (`Received: undefined`), puis vert.
+- Logique pure, commit suivant : `src/lib/setlist/prochainsServices.ts` (`prochainsServicesSansSetlist`),
+  `src/lib/setlist/bibliotheque.ts` (`trancheDeTempo`, `chantsDeLaBibliotheque`), `insererA` et `fusionner` dans
+  `formItems.ts` ; `mergeSongs` de `SetlistForm.tsx` appelle désormais `fusionner` (même comportement).
+- Tests (écrits avant, vus rouges sur des bouchons, puis verts ; ordinateur, téléphone, tablette — 32 × 3) :
+  `tests/setlist-pour-quel-service.spec.ts`, `tests/setlist-bibliotheque.spec.ts`, `tests/setlist-fusionner.spec.ts`
+  (parties pures) et `tests/setlist-editeur-piste2.spec.ts` (`jianpuChords` : deux tests purs + « Modifier » de bout en
+  bout dans l'éditeur actuel). Les tranches suivantes ajoutent leurs tests d'écran dans ces mêmes fichiers.
+- Suite de l'éditeur sans retouche : `setlist-editor`, `setlist-history`, `coup-d-oeil`, `fusions-dp`,
+  `recommended-key`, `harmonie-jianpu` — 246 verts sur les trois appareils. `tsc` propre, lint sans erreur (2 avertissements
+  anciens de `SetlistForm.tsx`, l. 125 et 179, hors du changement).
+
+Choix faits faute de réponse écrite :
+- `prochainsServicesSansSetlist` accepte aussi `isDraft` / `isPrivate` (facultatifs) et ignore brouillons et privées : le
+  test pur « pas avec un brouillon ou une privée » le demande ; `getSetlists()` les retire déjà.
+- Campus : une setlist **avec** moment ne prend que son moment ; **sans** moment, elle prend la séance de même présidence
+  (`normalizeName`, présidence non vide). « Mes services » retombe aussi sur la présidence quand le moment ne colle pas :
+  ici non, sinon le soir d'une même présidence masquerait le matin.
+- Bibliothèque sans recherche : l'ordre de l'index reçu (comme l'éditeur actuel) ; avec recherche, la pertinence de Fuse
+  (mêmes clés, seuil 0,4).
+- Thème = `themes.includes(slug)`, comme la page Chants. **Remarqué, non corrigé** : sur les 61 chants 中文 qui ont un thème,
+  56 ne l'écrivent jamais par son slug — 43 avec le nom chinois d'un thème de `content/themes.json` (« 敬拜 » pour
+  « adoration »), 13 avec des mots qui n'y sont pas (« 赞美 », « 歌唱 ») ; ni la page Chants ni la bibliothèque ne les
+  trouvent par thème.
+  Question du corpus (question 8 : à compléter à part).
+- `fusionner` ignore les uids de transitions et de fusions ; moins de deux chants seuls : la liste est rendue telle quelle
+  (même tableau). Un chant fusionné perd toujours note, transitions de section, choix 简谱 et retouches du scan
+  (`FusionSong` n'a pas ces champs) : la ligne de la question 7 viendra avec l'écran du choix (T3).
+
+Reste : T2 (« Pour quel service ? »), T3 (piste 2 grands écrans), T4 (feuilles téléphone et tablette portrait), T5
+(bibliothèque complète). Timothée : aucune règle Firestore à publier pour T1. Le correctif `jianpuChords` (commit à lui
+seul) peut partir sur `main` sur son ordre, avant le reste du lot.

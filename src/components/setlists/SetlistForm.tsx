@@ -32,6 +32,7 @@ import {
   isFormFusion,
   isFormTransition,
   makeDefaultSections,
+  fusionner,
 } from "@/lib/setlist/formItems";
 import { buildSetlistItems, detectSetlistLanguage } from "@/lib/setlist/buildSetlistItems";
 import { historyAuthor, recordCreation, recordHistory, type HistoryPass } from "@/lib/firebase/setlistHistory";
@@ -441,15 +442,9 @@ export function SetlistForm({ mode, setlistId, songs, initial }: SetlistFormProp
   }
 
   function mergeSongs() {
-    const toMerge = items.filter(
-      (i): i is FormItem => !isFormFusion(i) && !isFormTransition(i) && selectedUids.has(i.uid)
-    );
-    if (toMerge.length < 2) return;
-    const firstIdx = items.findIndex((i) => i.uid === toMerge[0].uid);
-    const fusion: FormFusionItem = { uid: nextUid(), kind: "fusion", songs: toMerge, mixedStructure: null };
-    const remaining = items.filter((i) => !selectedUids.has(i.uid));
-    remaining.splice(firstIdx, 0, fusion);
-    setItems(remaining);
+    const merged = fusionner(items, [...selectedUids]);
+    if (merged === items) return; // moins de deux chants cochés
+    setItems(merged);
     setSelectedUids(new Set());
     setSelectMode(false);
   }

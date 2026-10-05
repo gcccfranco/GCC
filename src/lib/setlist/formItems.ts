@@ -209,3 +209,23 @@ export function buildFormItems(
       return [toFormItem(song, item.keyOverride, item.notes, item.structureOverride, item.sectionNotes, item.sectionTransitions, item.sectionNuances, item.sectionKeys, item.jianpuSheet, { contentOverride: item.contentOverride, sectionOrigins: item.sectionOrigins, jianpuChords: item.jianpuChords })];
     });
 }
+
+/** Place un élément à `index` (0 = avant le premier, `items.length` = à la fin) :
+ *  le « + » entre deux éléments de la bibliothèque (docs/spec-editeur-setlist.md, Q8). */
+export function insererA(items: FormListItem[], index: number, nouveau: FormListItem): FormListItem[] {
+  return [...items.slice(0, index), nouveau, ...items.slice(index)];
+}
+
+/** Fusionne les chants seuls dont l'uid est donné, dans l'ordre de la setlist,
+ *  à la place du premier ; transitions et fusions ne se fusionnent pas. Moins
+ *  de deux chants seuls : la liste est rendue telle quelle. */
+export function fusionner(items: FormListItem[], uids: string[]): FormListItem[] {
+  const choisis = new Set(uids);
+  const songs = items.filter(
+    (i): i is FormItem => !isFormFusion(i) && !isFormTransition(i) && choisis.has(i.uid)
+  );
+  if (songs.length < 2) return items;
+  const fusion: FormFusionItem = { uid: nextUid(), kind: "fusion", songs, mixedStructure: null };
+  const fusionnes = new Set(songs.map((s) => s.uid));
+  return items.flatMap((i) => (i.uid === songs[0].uid ? [fusion] : fusionnes.has(i.uid) ? [] : [i]));
+}
