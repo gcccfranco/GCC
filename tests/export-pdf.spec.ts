@@ -69,6 +69,18 @@ async function quelPdf(page: Page) {
   await pdfEntry(page).click();
 }
 
+/** « Quel PDF ? » d'un chant : l'entrée PDF du ⋯ sur téléphone, le bouton PDF de la barre dès
+ *  la tablette debout (docs/spec-deux-volets.md, Q16 ; même règle que `.hors-menu-chant`). */
+async function pdfDuChant(page: Page) {
+  const { width, height } = page.viewportSize()!;
+  if (width >= 768 && height >= 500) {
+    await page.getByTestId("barre-outils").getByRole("button", { name: "PDF", exact: true }).click();
+    return;
+  }
+  await openMenu(page);
+  await pdfEntry(page).click();
+}
+
 // ── Préférence et nom de fichier (fonctions pures) ──────────────────────────
 
 test("préférence : valeur inconnue ou absente → classique ; compact n'existe pas pour un chant", () => {
@@ -162,8 +174,7 @@ test("compact : une transition rejoint la page du chant d'avant, sauf en tête d
 
 test("chant : deux choix, le choix part dans le nom du fichier et revient présélectionné", async ({ page }) => {
   await page.goto("/songs/abba-pere");
-  await openMenu(page);
-  await pdfEntry(page).click();
+  await pdfDuChant(page);
 
   const sheet = page.getByRole("dialog", { name: "Quel PDF ?" });
   await expect(sheet).toBeVisible();
@@ -179,8 +190,7 @@ test("chant : deux choix, le choix part dans le nom du fichier et revient prés�
   expect(download.suggestedFilename()).toMatch(/^abba-pere-.+-couleurs\.pdf$/);
 
   await page.reload();
-  await openMenu(page);
-  await pdfEntry(page).click();
+  await pdfDuChant(page);
   await expect(
     page.getByRole("dialog", { name: "Quel PDF ?" }).getByRole("radio", { name: /Couleurs par section/ }),
   ).toHaveAttribute("aria-checked", "true");

@@ -23,6 +23,8 @@ const SPECS_GRAND_ECRAN = [
   /coup-d-oeil\.spec\.ts/,
   // Lot U5 (docs/spec-deux-volets.md) : la setlist en deux volets.
   /setlist-deux-volets\.spec\.ts/,
+  // … et Chants en deux volets.
+  /chants-deux-volets\.spec\.ts/,
 ];
 
 export default defineConfig({

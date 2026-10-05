@@ -508,3 +508,79 @@ couchée, la setlist passe en deux volets ; téléphone et tablette debout garde
   曲目列表 (« Liste » de « Quel PDF ? ») et son aide. Regarder la setlist sur l'ordinateur (barre dépliée et réduite)
   et sur l'iPad couché : sommaire, pastilles, « Copier toutes les paroles », « Liste » dans « Quel PDF ? », l'entrée
   « Setlists » qui rouvre la liste filtrée.
+
+**T5 — faite le 05/10/2026** (branche `lot/u5-deux-volets`, commit `feat(U5): T5 — Chants en deux volets…`, après
+`6524e64`). Sur ordinateur et tablette couchée, Chants passe en deux volets ; téléphone et tablette debout gardent un
+volet (seuls Idées d'harmonie et PDF sortent du menu ⋯ sur la tablette debout).
+- **Layout** (`src/app/songs/layout.tsx`, `ChantsVolets.tsx`) : la liste vit dans le layout. La disposition est
+  décidée par le CSS (`.chants-volets`, fin de `globals.css`, mêmes conditions que `useDeuxVolets`), pour que la page
+  arrive du serveur déjà à sa place. Un volet : la liste sur `/songs`, la page du chant ailleurs, comme avant (la liste
+  n'est montée que sur `/songs` et se remonte au retour). Deux volets : liste à gauche (`clamp(320px, 37 %, 400px)`,
+  elle défile seule dans son volet, collée en haut), à droite « Choisis un chant » ou le chant ; bornés par
+  `--largeur-lecture`, centrés.
+- **Liste depuis l'index** (`src/hooks/useSongsIndex.ts`) : `/songs-index.json`, gardé en mémoire une fois lu (la liste
+  remontée s'affiche d'un coup, sa position se rend avant la première image). `/songs` ne charge plus les 378 chants
+  côté serveur ; seuls les thèmes passent par le layout. La restauration du défilement attend la liste.
+- **Fondu par section** (`PageTransition.tsx`) : Chants n'est plus remonté à chaque chant ; le volet de droite a son
+  fondu à chaque adresse, la liste à chaque montage.
+- **Filtres** : écrits dans l'adresse (et `lastListPath`) sur `/songs` seulement ; sous `/songs/[slug]` ils n'effacent
+  plus `?key=`. En deux volets, la position de la liste n'est ni enregistrée ni restaurée (la fenêtre est celle du chant).
+- **Chant ouvert** : sa ligne en encre (`aria-current="page"`, tonalité en blanc, planche `Main`) ; elle vient dans la
+  vue de son volet (arrivé par une adresse, retour du navigateur).
+- **Page du chant dans le volet** (`SongDetailClient.tsx`, Q16) : la barre colle en haut du volet (plus fixe sur toute la
+  largeur ; `--zoom-chant` pour garder sa largeur au zoom ; `--barre-left` mesuré pour la copie du halo), sans Retour.
+  Libellés selon la largeur de la rangée (requête de conteneur `.rangee-chant` : libellés dès 620 px, comme le
+  téléphone les cachait sous 640 px de fenêtre ; « Idées d'harmonie » dès 760 px). Dès 768 px de large et 500 px de
+  haut (tablette debout, ordinateur, pas un téléphone couché), Idées d'harmonie (si l'accès) et PDF en boutons à droite
+  de la barre, retirés du menu ⋯.
+- **« Choisis un chant »** (`ChoisisUnChant.tsx`, Q17, planche `chants-accueil`) : connecté, les trois prochaines
+  setlists — `getSetlistsFrom` (setlists.ts : `date ≥ aujourd'hui`, tri par date, 30 au plus, index simple) puis
+  `upcomingSetlists` (`src/lib/setlist/upcoming.ts`, pur : date refiltrée, brouillons exclus, `canSeeSetlist`, par date
+  puis ordre des catégories). Carte : catégorie en couleur, titre (lien vers la setlist), « Dim. 4 oct. · présidence »,
+  chants numérotés (transitions exclues) avec leur tonalité (`keyOverride`, sinon l'originale), une fusion en
+  « A / B » (chaque titre dans ses réglages de la fusion, sans pastille) ; un chant ouvre sa page par `songHref`. Sans
+  compte, sans setlist ou hors ligne : « Choisis un chant », « dans la liste. ». Rien n'est lu en un volet.
+- Choix pris : halo de « Choisis un chant » en `--sec-verse` (la teinte verte de la planche) ; le nom de catégorie est celui des traductions
+  (« Culte Francophone », la planche écrit « Culte Franco ») ; « Récemment consultés » reste en tête de la liste ;
+  pas de « + Setlist » (question 5) ; un téléphone couché garde Idées et PDF dans ⋯ (« rien ne change »).
+- Tests : `tests/chants-deux-volets.spec.ts` (14 tests ; ajouté à `SPECS_GRAND_ECRAN`) — en grand : sans compte, cartes
+  d'un musicien (ordre, brouillon, passée, privée d'un autre, sa privée), admin, lecture bornée, chant de carte dans la
+  tonalité de la setlist puis retour, titre de carte, liste qui garde position et recherche (FR puis ZH) et retour au
+  chant précédent, arrivée par une adresse (`?key=` gardé par les filtres), barre collante sans Retour avec Idées et
+  PDF, scan 简谱 de `一生爱你` dans le volet, 1 024 px barre dépliée → un volet ; en un volet : pas de « Choisis un
+  chant » ni de lecture des setlists, tablette debout (boutons, Retour), téléphone (tout dans ⋯). Vus rouges (13
+  échecs) puis verts sur les cinq projets.
+- Reprise après la coupure (05/10/2026) : le travail laissé non commité par l'agent coupé a été relu et gardé.
+  Corrigé à la reprise : sur `/songs` en deux volets, aucun halo avant l'hydratation (celui de la liste caché par le
+  CSS, celui de « Choisis un chant » posé par React). Désormais un seul halo pour `/songs`, posé par `ChantsVolets`
+  (variante `chants` de `Halo`) : le CSS en fait le bleu des accords à gauche en un volet, le vert des couplets à
+  droite en deux volets (`--halo-chants`, `.halo-chants`) ; juste dès le premier affichage, sans React. Les
+  enveloppes de la liste et de « Choisis un chant » perdent leur fond (celui du `body` suffit) pour ne pas le couvrir.
+  Specs existantes ajustées au volet de gauche : `key-selector` et `recommended-key` (le sélecteur de tonalité lu
+  dans la barre du chant, la liste a son choix de thème), `harmonie-idees` (bouton dès la tablette debout ;
+  « nouveau » lu dans la feuille), `look-barres` (zone comparée depuis le bord gauche des barres), `look-halo`
+  (`/songs` en deux volets : vert des couplets à 12 %, à droite), `navigation-grand-ecran` (en deux volets, la
+  liste se décale des 180 px entiers en réduisant la barre), `export-pdf` (PDF du chant par le bouton de la barre
+  dès la tablette debout), `performance-mode` et `nouveau-chant` (sélecteur de tonalité lu dans la barre du chant).
+  Revérifié : `chants-deux-volets` 36 verts, 34 sautés (tests d'une autre disposition) ; `tsc` propre ;
+  ESLint sans erreur (avertissements déjà présents sur `SongListClient` et `SongDetailClient`) ; specs voisines
+  repassées (`songs-list-return` réécrite pour lire l'opacité de la liste, `songs-index`, `look-recents`,
+  `look-halo`, `look-halo-defilement`, `look-barres`, `recommended-key`, `key-selector`, `copy-lyrics`,
+  `navigation-grand-ecran`, `look-navigation`, `look-zone-sure`, `look-fondations`, `i18n-hydration`,
+  `harmonie-idees`, `harmonie-catalogue`, `service-worker`, `section-labels`, `back-office-coupe`,
+  `accords-voisins-zh`, `pinyin-espace` : 511 tests, puis les 36 rouges dus au volet de gauche corrigés et
+  repassés) ; specs des setlists et du mode louange (`export-pdf`, `lignes-accords`, `lignes-chinoises`,
+  `fusions-dp`, `harmonie-ma-version`, `setlist-history`, `setlist-version`, `coup-d-oeil`, `look-louange`,
+  `performance-mode`, `nouveaux-membres`, `rappels-regroupes`, `setlist-deux-volets`, `setlist-g`,
+  `setlist-regie`, `harmonie-setlist`, `harmonie-jianpu`, `jianpu-tonalite-cho`, `mode-louange-colonnes` :
+  1 020 verts ; 8 rouges dus à T5 corrigés, 2 dus à la charge — `look-louange` 667 × 375 à 31,999 px,
+  `setlist-g` « rouvre » — verts une fois repassés) ; `nouveau-chant` avec `abba-pere` et `一生爱你` vert.
+  Captures regardées (ordinateur 1 280 et 1 440, tablette couchée, tablette
+  debout) : conformes à `chants-accueil` et `Main` (sans « + Setlist », question 5).
+- **Reste après T5** : T6 (finitions : captures FR/ZH clair et sombre sur les cinq projets, suite complète,
+  `graphify update .`).
+- À faire par Timothée : aucune règle à publier (`access.ts` et `firestore.rules` inchangés ; la lecture bornée
+  `date ≥ aujourd'hui`, tri par `date` n'a besoin que de l'index simple, créé d'office). Relire 选择一首诗歌,
+  接下来的歌单 et les deux sous-titres. Regarder Chants sur l'ordinateur (barre dépliée et réduite) et sur l'iPad
+  couché : la liste qui reste en place d'un chant à l'autre, les cartes « Prochaines setlists », un chant de carte
+  qui s'ouvre dans la tonalité de la setlist.

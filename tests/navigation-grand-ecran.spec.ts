@@ -487,8 +487,11 @@ test.describe("navigation sur grand écran (U4) : réduire, déplier, s'en souve
     await expect.poll(() => largeurBarre(page)).toBe(68);
     expect(await pxVar(page, "--barre-laterale")).toBe(68);
     expect(await paddingGaucheMain(page), "la zone de contenu suit").toBe("68px");
-    // La page, centrée dans la zone de contenu, se décale de la moitié des 180 px rendus.
-    expect(Math.round(titreDeplie - (await titre.boundingBox())!.x), "le titre suit la zone de contenu").toBe(90);
+    // La page, centrée dans la zone de contenu, se décale de la moitié des 180 px rendus. Chants en
+    // deux volets (lot U5) : les volets remplissent la zone (moins de 1 440 px), la liste en
+    // tient le bord gauche et se décale des 180 px entiers.
+    const deuxVolets = await page.locator(".chants-volets").evaluate((el) => getComputedStyle(el).display === "grid");
+    expect(Math.round(titreDeplie - (await titre.boundingBox())!.x), "le titre suit la zone de contenu").toBe(deuxVolets ? 180 : 90);
     expect(Math.round((await page.getByTestId("halo").boundingBox())!.x), "halo au bord de la barre").toBe(68);
     expect(await debordement(page)).toBe(0);
     expect(await barreRetenue(page)).toBe("reduite");

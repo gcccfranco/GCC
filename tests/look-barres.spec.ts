@@ -67,12 +67,18 @@ async function capture(page: Page, name: string) {
 
 /** La zone des barres : du haut de l'écran au bas de la dernière barre visible. */
 async function zoneDesBarres(page: Page) {
-  const bas = await page.locator(".material-chrome:not(.material-steady)").evaluateAll((els) => Math.max(...els.filter((el) => el.getClientRects().length > 0).map((el) => el.getBoundingClientRect().bottom)));
+  const { bas, gauche } = await page.locator(".material-chrome:not(.material-steady)").evaluateAll((els) => {
+    const r = els.filter((el) => el.getClientRects().length > 0).map((el) => el.getBoundingClientRect());
+    return { bas: Math.max(...r.map((b) => b.bottom)), gauche: Math.min(...r.map((b) => b.left)) };
+  });
   const largeur = await page.evaluate(() => document.documentElement.clientWidth);
+  // Depuis le bord gauche des barres : Chants en deux volets (lot U5) pose la barre du chant
+  // dans le volet de droite ; la liste, à gauche, n'est sous aucune barre et défile seule.
+  const x = Math.ceil(Math.max(0, gauche));
   // Sans la dernière colonne : à ×2,625, le bord droit de l'écran tombe au milieu d'un pixel.
   // Sans la dernière rangée : la barre des onglets colle à `nav-h − 1 px`, son bas remonte
   // d'1 px au défilement et cette rangée passe dans le fondu.
-  return { x: 0, y: 0, width: largeur - 1, height: Math.floor(bas) - 1 };
+  return { x, y: 0, width: largeur - 1 - x, height: Math.floor(bas) - 1 };
 }
 
 /** Écart entre deux captures de même taille, décodées dans la page : le plus grand écart
@@ -144,7 +150,7 @@ async function barresOpaquesEtInvisibles(page: Page, combien: number, nom: strin
   const transformations = () => page.locator(".material-chrome:not(.material-steady)").evaluateAll((els) => els.filter((el) => el.getClientRects().length > 0).map((el) => getComputedStyle(el).transform));
   const enPlace = Array(combien).fill("matrix(1, 0, 0, 1, 0, 0)");
   await page.addStyleTag({ content: "body{min-height:3000px}" });
-  await page.mouse.move(zone.width / 2, 400);
+  await page.mouse.move(zone.x + zone.width / 2, 400);
   await page.mouse.wheel(0, 600);
   await expect.poll(transformations, "les barres se rangent quand on descend").not.toEqual(enPlace);
   await page.mouse.wheel(0, -40);

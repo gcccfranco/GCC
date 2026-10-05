@@ -83,6 +83,13 @@
       "allLanguages": "全部",
       "recent": "最近查看"
     },
+    "choose": {
+      "title": "选择一首诗歌",
+      "subtitle": "在列表中选择，或从接下来几个主日的诗歌中选择。",
+      "subtitleListOnly": "在列表中选择。",
+      "upcoming": "接下来的歌单",
+      "upcomingHelp": "与「歌单」页相同：你有角色的服事和小组的歌单。"
+    },
     "detail": {
       "backToAll": "诗歌",
       "chords": "和弦",

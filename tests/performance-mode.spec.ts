@@ -311,7 +311,8 @@ test.describe("tonalité choisie sur la page du chant", () => {
       await ouvrirPartitions(page);
       await page.locator("[data-outline-item]").getByRole("link", { name: c.title }).click();
       await page.waitForURL(/\/songs\//);
-      await page.locator("select").first().selectOption(c.chosen);
+      // Le sélecteur de la barre du chant : en deux volets, la liste a son choix de thème (lot U5).
+      await page.getByTestId("barre-outils").locator("select").first().selectOption(c.chosen);
       await page.goBack();
       await page.getByRole("button", { name: /Mode Louange/ }).click();
       await expect(page.getByText("Mise en page…")).toHaveCount(0);

@@ -83,6 +83,13 @@
       "allLanguages": "Tous",
       "recent": "Récemment consultés"
     },
+    "choose": {
+      "title": "Choisis un chant",
+      "subtitle": "dans la liste, ou parmi ceux des prochains dimanches.",
+      "subtitleListOnly": "dans la liste.",
+      "upcoming": "Prochaines setlists",
+      "upcomingHelp": "Les mêmes que dans l'onglet Setlists : celles des services et des groupes où tu as un rôle."
+    },
     "detail": {
       "backToAll": "Retour",
       "chords": "Accords",

@@ -8,6 +8,8 @@ import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 const BLEU_ACCORDS = "rgb(63, 99, 207)"; // --chord-color
 const BLEU_ACCORDS_SOMBRE = "rgb(143, 176, 255)"; // --chord-color en sombre
 const ORANGE_REFRAIN = "rgb(224, 86, 10)"; // --sec-chorus
+const VERT_COUPLETS = "rgb(44, 138, 125)"; // --sec-verse
+const VERT_COUPLETS_SOMBRE = "rgb(89, 189, 172)"; // --sec-verse en sombre
 const CULTE = "rgb(45, 90, 101)"; // PLANNING_COLORS.culte
 const CAMPUS = "rgb(36, 113, 163)"; // PLANNING_COLORS.campus
 const EDD = "rgb(59, 109, 17)"; // PLANNING_COLORS.edd
@@ -74,13 +76,22 @@ async function capture(page: Page, name: string) {
   await page.screenshot({ path: `${dir}/${name}-${test.info().project.name}.png` });
 }
 
+/** Chants en deux volets (lot U5, docs/spec-deux-volets.md) : sur /songs, le halo est celui
+ *  de « Choisis un chant », à droite (planche `chants-accueil`) ; en un volet, celui de la liste. */
+const enDeuxVolets = (page: Page) =>
+  page.locator(".chants-volets").evaluate((el) => getComputedStyle(el).display === "grid");
+
 test.describe("halo d'en-tête (5C1, V6)", () => {
-  test("Chants : bleu des accords à 10 %, en haut à gauche", async ({ page }) => {
+  test("Chants : bleu des accords à 10 %, en haut à gauche (deux volets : vert des couplets à 12 %, à droite)", async ({ page }) => {
     await page.goto("/songs");
     await page.getByRole("searchbox").waitFor();
     await capture(page, "halo-chants");
     await auCoinDeLaFenetre(page);
-    expect(await ellipse(page)).toMatchObject({ couleur: BLEU_ACCORDS, opacite: "0.1", ...geometrie("page") });
+    if (await enDeuxVolets(page)) {
+      expect(await ellipse(page)).toMatchObject({ couleur: VERT_COUPLETS, opacite: "0.12", ...geometrie("chant") });
+    } else {
+      expect(await ellipse(page)).toMatchObject({ couleur: BLEU_ACCORDS, opacite: "0.1", ...geometrie("page") });
+    }
   });
 
   // Un chant français et un chant chinois (CLAUDE.md).
@@ -199,11 +210,11 @@ test.describe("halo d'en-tête (5C1, V6)", () => {
     expect(enCours).toEqual({ transform: "none", fondu: true });
   });
 
-  test("en sombre le halo reste, au bleu des accords du sombre ; à l'impression il disparaît", async ({ page }) => {
+  test("en sombre le halo reste, au bleu des accords du sombre (deux volets : vert des couplets) ; à l'impression il disparaît", async ({ page }) => {
     await page.goto("/songs");
     await page.getByRole("searchbox").waitFor();
     await page.emulateMedia({ colorScheme: "dark" });
-    await expect.poll(async () => (await ellipse(page)).couleur).toBe(BLEU_ACCORDS_SOMBRE);
+    await expect.poll(async () => (await ellipse(page)).couleur).toBe((await enDeuxVolets(page)) ? VERT_COUPLETS_SOMBRE : BLEU_ACCORDS_SOMBRE);
     await capture(page, "halo-chants-sombre");
     await page.emulateMedia({ media: "print" });
     await expect(page.getByTestId("halo")).toBeHidden();

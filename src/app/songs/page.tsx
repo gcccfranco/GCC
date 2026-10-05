@@ -1,28 +1,9 @@
-import * as fs from "fs";
-import * as path from "path";
-import { getSongSlugs, loadSong } from "@/lib/content/loadSongs";
-import { SongListClient } from "./SongListClient";
-import { Halo } from "@/components/layout/Halo";
-import type { SongIndexEntry, Theme } from "@/types/song";
+import { ChoisisUnChant } from "./ChoisisUnChant";
 
 export const dynamic = "force-static";
 
-export default async  function SongsPage() {
-  const slugs = getSongSlugs();
-  const songs: SongIndexEntry[] = slugs.map((slug) => {
-    const { chordProSource: _, ...entry } = loadSong(slug);
-    return entry;
-  });
-
-
-  const themesPath = path.join(process.cwd(), "content", "themes.json");
-  const themes: Theme[] = JSON.parse(fs.readFileSync(themesPath, "utf-8")).themes;
-  return (
-    <div className="relative min-h-screen bg-background">
-      <Halo color="var(--chord-color)" />
-      <main className="relative max-w-2xl mx-auto px-4 py-6">
-        <SongListClient songs={songs} themes={themes} />
-      </main>
-    </div>
-  );
+// /songs : la liste vit dans le layout (songs/layout.tsx, lot U5, docs/spec-deux-volets.md,
+// Q15) ; la page, c'est le volet de droite avant d'avoir choisi un chant.
+export default function SongsPage() {
+  return <ChoisisUnChant />;
 }
