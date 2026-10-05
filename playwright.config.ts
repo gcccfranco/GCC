@@ -25,6 +25,9 @@ const SPECS_GRAND_ECRAN = [
   /setlist-deux-volets\.spec\.ts/,
   // … et Chants en deux volets.
   /chants-deux-volets\.spec\.ts/,
+  // … le mode louange en deux colonnes, et le parcours de T6 (captures, FR et ZH, clair et sombre).
+  /mode-louange-colonnes\.spec\.ts/,
+  /deux-volets-finitions\.spec\.ts/,
 ];
 
 export default defineConfig({

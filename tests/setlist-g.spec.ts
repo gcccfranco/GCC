@@ -178,6 +178,10 @@ test.describe("setlist G, téléphone et tablette portrait", () => {
     await expect.poll(() => ecartSousLaBarre(page, 2)).toBe(SOUS_LA_BARRE);
     // Descendre cache les barres (et la bascule avec elles) ; remonter un peu les ramène.
     const image = () => page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
+    // Un vrai défilement commence par un doigt posé, qui lâche le chant amené ; sans
+    // lui, un scan arrivé pendant la tenue (2 s) ramènerait le chant 2 sous la barre
+    // et le « −20 » qui suit ferait lire le chant 1 (T6 : 2 échecs sur 5 sous charge).
+    await page.evaluate(() => window.dispatchEvent(new Event("touchstart")));
     await page.evaluate(() => window.scrollBy(0, 150));
     await image();
     await page.evaluate(() => window.scrollBy(0, -20));

@@ -584,3 +584,38 @@ volet (seuls Idées d'harmonie et PDF sortent du menu ⋯ sur la tablette debout
   接下来的歌单 et les deux sous-titres. Regarder Chants sur l'ordinateur (barre dépliée et réduite) et sur l'iPad
   couché : la liste qui reste en place d'un chant à l'autre, les cartes « Prochaines setlists », un chant de carte
   qui s'ouvre dans la tonalité de la setlist.
+
+**T6 — faite le 05/10/2026** (branche `lot/u5-deux-volets`, commit `feat(U5): T6 — finitions…`, après `3812992`).
+Rien ne change à l'écran, sauf l'app Android installée, qui tourne désormais avec la tablette.
+- **Manifeste** (question 7) : `orientation: "portrait"` retiré de `src/app/manifest.ts` ; `coherence.spec.ts` vérifie
+  qu'aucune orientation n'est imposée (vu rouge, puis vert).
+- **Parcours du dimanche** (`tests/deux-volets-finitions.spec.ts`, nouveau, ajouté à `SPECS_GRAND_ECRAN`) : sur les cinq
+  projets, interface en français puis en 中文, clair puis sombre (4 tests par projet, 20 en tout) — Chants (« Choisis
+  un chant » et sa carte en grand, absent en un volet), `abba-pere`, `一生爱你`, la setlist (Liste et bascule sur G,
+  Sommaire en deux volets), ses partitions au chant ZH sur son scan (toucher sa ligne ou son entrée du sommaire), le
+  mode louange (« 2 colonnes » pressé en grand, absent ailleurs). À chaque écran : rien ne déborde en largeur, la
+  langue de la page, le fond clair ou sombre ; les libellés du lot lus dans la langue (目录, 曲目列表, 选择一首诗歌,
+  敬拜模式, 双栏). Avec `PW_CAPTURES`, une capture par écran : 120 regardées par échantillon aux cinq tailles, FR et
+  中文, clair et sombre, comparées à `chants-accueil`, `setlist-deux-volets`, `setlist-g-telephone(-partitions)`,
+  `setlist-g-tablette`, `tablette-portrait-chant`, `mode-louange-2-colonnes` : conformes. Écarts connus, hors lot :
+  accords en encre et non en bleu dans les partitions quand les couleurs par section sont actives (choix du
+  15/09/2026, `SongView.tsx`, couleurs gelées) ; chrome du mode louange d'aujourd'hui (question 1) ; « orig. » non
+  traduit, comme avant.
+- **Tests existants ajustés** : `mode-louange-colonnes.spec.ts` entre dans `SPECS_GRAND_ECRAN` et perd son describe
+  « tablette couchée » (l'iPad tourné de T1), remplacé par le vrai projet `tablette-paysage`. `setlist-g.spec.ts`,
+  « « Partitions » rouvre là où on était » : échouait 2 fois sur 5 sur téléphone (adresse `chant=1`). Diagnostic
+  (journal posé puis retiré) : le `scrollBy` du test n'est pas un geste, il ne lâchait pas le chant amené ; un scan
+  arrivé pendant la tenue de 2 s ramenait le chant 2 sous la barre, et le « −20 » qui suit faisait lire, à juste
+  titre, le chant 1. L'app avait raison ; le test pose maintenant un doigt (`touchstart`) avant de défiler, comme un
+  vrai défilement : 59 verts sur 60 répétitions (un échec isolé sur tablette sous charge, non reproduit en 25).
+- Vérifié : `deux-volets-finitions`, `mode-louange-colonnes`, `coherence`, `setlist-deux-volets`, `chants-deux-volets`,
+  `setlist-g` sur les cinq projets : 250 verts, 118 sautés (tests d'une autre disposition), 1 rouge (le test ci-dessus,
+  corrigé). `tsc` propre ; ESLint propre sur les fichiers touchés.
+- **Pas fait ici** : la suite complète (elle tourne à l'intégration du chantier, consigne des copies de travail) ;
+  `graphify update .` (le graphe vit dans le dossier de Timothée, `graphify-out/` est ignoré par git : à lancer après
+  la fusion).
+- **Reste** : rien pour U5, hors suite complète et graphe à l'intégration.
+- À faire par Timothée : aucune règle à publier (`access.ts` et `firestore.rules` inchangés sur tout le lot). Relire le
+  中文 du lot (双栏, 目录, 复制全部歌词, 曲目列表, 选择一首诗歌, 接下来的歌单 et les sous-titres). Sur une tablette
+  Android, réinstaller l'app (ou attendre la mise à jour du manifeste) pour qu'elle tourne en paysage. Prévenir
+  l'équipe avant la mise en ligne (question 2 : un trait posé en une colonne ne s'affiche pas en deux colonnes).
