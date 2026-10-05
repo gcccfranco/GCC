@@ -325,3 +325,42 @@ aucun fichier de `src/` touché.
   586 verts, 5 sautés ; `tsc` et ESLint propres ; plus aucune spec ne vise « Partitions » ou « Liste » par son nom.
 - Reste : T1 à T6.
 - À faire par Timothée : rien pour T0 (aucune règle, aucun écran).
+
+**T1 — faite le 05/10/2026** (branche `lot/u5-deux-volets`, commit `feat(U5): T1 — mode louange en deux colonnes…`,
+juste après `6c6bb63`). Le mode louange passe en deux colonnes sur ordinateur et sur tablette couchée ;
+téléphone et tablette debout gardent leurs pages au bloc près.
+- `src/lib/performance/columns.ts` (nouveau, pur) : `PerfPage` (sorti du composant, plus `twoColumns`),
+  `paginateBlocks` (déplacé tel quel), `pagesUneColonne` (le calcul d'aujourd'hui, sorti du composant),
+  `twoColumnsPossible` (grand écran et `largeur ÷ taille du texte ≥ 960`), `paginateColumns` (Q4) et `GRAND_ECRAN`,
+  les deux requêtes de U4 (ordinateur, tablette paysage) relues par `matchMedia`.
+- `PerformanceMode.tsx` : disposition et largeur relues au redimensionnement ; seconde copie de mesure à la largeur
+  d'une colonne (gouttière de 2rem), montée seulement en deux colonnes, sans en-têtes ni scans ; pagination chant
+  par chant ; en-tête du chant en pleine largeur au-dessus des colonnes de sa première page ; `x2` dans la clé des
+  seules pages en deux colonnes ; bouton « 2 colonnes » / 双栏 (`aria-pressed`, icône colonnes) à droite du
+  compteur, seulement quand deux colonnes sont possibles et hors vue structure ; `perf-two-columns` (`"1"`, `"0"`,
+  absent = automatique). Chrome d'aujourd'hui gardé (question 1).
+- Choix pris : sur la dernière page d'un chant, à hauteur égale, la colonne de gauche prend le bloc de plus ; un
+  chant d'un seul bloc reste en une colonne (deux colonnes ne l'aideraient pas) ; quand la mise en page change
+  (« 2 colonnes », rotation, taille du texte), on reste sur la page qui contient le premier bloc de la page lue
+  (avant : même numéro de page, qui envoyait ailleurs en passant de deux à une colonne).
+- Tests : `tests/mode-louange-colonnes.spec.ts` — sept tests purs (`paginateColumns`, `twoColumnsPossible`) ; à
+  l'écran, deux colonnes d'office (FR `abba-pere`, ZH `一生爱你` joué deux fois : en entier il tient sur une page et
+  reste en une colonne), coupé → une colonne retenue à la réouverture, scan 简谱 de `一生爱你` entier sur sa page,
+  vue structure identique, trait posé en une colonne absent en deux colonnes puis revenu ; téléphone et tablette
+  debout sans interrupteur, une colonne à chaque page, même nombre de pages quel que soit le réglage. Vus rouges
+  (25 échecs) puis verts sur ordinateur, téléphone et tablette (35 verts ; 25 sautés = tests d'une autre
+  disposition). La tablette couchée est jouée par l'iPad du projet `tablette` tourné en 1 080 × 810 (describe
+  « tablette couchée »), en attendant le projet `tablette-paysage` de U4.
+- Relevé avant / après (sonde jetable, non commitée) des pages de quatre chants (FR, ZH, scan, structure courte),
+  rôles pianiste et batteur : identiques au bloc près sur téléphone, tablette debout, et ordinateur avec
+  « 2 colonnes » coupé.
+- Specs existantes du mode louange repassées sur les trois projets : `performance-mode`, `look-louange`,
+  `jianpu-tonalite-cho`, `fusions-dp`, `setlist-version`, `harmonie-ma-version`, `look-barres`, `look-halo`,
+  `songs-list-return` : 436 verts, 5 sautés, aucune à réécrire. `tsc` propre ; ESLint : aucun avertissement nouveau.
+- Captures regardées (ordinateur 1 280 × 720, tablette couchée) : colonnes conformes à `mode-louange-2-colonnes`,
+  scan entier ; comme aujourd'hui, la barre du haut couvre l'en-tête du chant jusqu'à ce qu'elle s'efface.
+- **Reste après T1** : une fois U4 fusionnée, ajouter `mode-louange-colonnes.spec.ts` à `SPECS_GRAND_ECRAN`
+  (`tablette-paysage`, `ordinateur-1440`) ; le describe « tablette couchée » peut alors partir. Puis T2 à T6.
+- À faire par Timothée : aucune règle à publier. Relire 双栏. Prévenir l'équipe avant la mise en ligne
+  (question 2) : un trait posé sur une page en une colonne ne s'affiche pas sur la même page en deux colonnes, et
+  inversement ; « 2 colonnes » coupé les retrouve.
