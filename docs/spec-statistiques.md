@@ -297,3 +297,36 @@ Questions ouvertes 1 à 7 : la recommandation de chacune est retenue (go du 04/1
   de `PageTitle`), S4, S5. Sur téléphone et tablette en portrait, l'entrée vit dans la liste du tableau de bord
   en attendant « Plus » et la barre personnalisable de U6 (B6), qui liront `entreesBackOffice`.
 - À faire par Timothée : rien pour S2 (aucune règle Firestore, aucune donnée).
+
+### 05/10/2026 — S3, « Les plus joués » : faite (commit « feat(U7): S3 — … », branche `lot/u7-statistiques`)
+
+- `src/app/back-office/statistiques/StatistiquesClient.tsx`, sous le titre de la page : lecture (`getSetlists()` et
+  `/songs-index.json` en parallèle, aucune écriture), filtres (période en pastilles, « Dates libres » qui ouvre
+  « Du … Au … » en champs date natifs, puis Service, Langue, Présidence en `<select>` pastilles), cartes
+  « Setlists comptées » et « Les 10 premiers » (barres CSS `aria-hidden`, nombres en texte), tableau aux en-têtes
+  cliquables (`aria-sort`) sur tablette et ordinateur, liste + menu « Trier par » sur téléphone ; titre = lien vers
+  `/songs/{slug}`, chant absent du recueil : son slug, « absent du recueil », sans lien ni étiquette. États :
+  « Calcul… », « Impossible de lire les setlists. » + « Réessayer », « Aucune setlist publiée sur cette période. ».
+- L'adresse porte l'écran (Q13) : `periode` (3, 6, debut, libre ; 12 par défaut, absent), `du`, `au`, `service`,
+  `langue`, `presidence`, `tri` (chant, derniere, tendance ; setlists par défaut), `sens` (s'il n'est pas celui
+  par défaut de la colonne). Tenue à jour par `history.replaceState` : le retour depuis un chant retrouve tout.
+- `tests/statistiques.spec.ts` : 15 tests S3 (horloge au 04/10/2026, recueil et setlists simulés — six publiées
+  passées, un brouillon, une privée, une du jour, une à venir), écrits avant le code et vus rouges (15 sur 15),
+  puis verts sur les cinq projets ; avec S2, `statistiques-calcul`, `back-office-espace` et `back-office-coupe` :
+  294 verts. Captures regardées aux cinq tailles et comparées à `bo-statistiques` et `bo-statistiques-telephone`.
+- Choix pris faute de réponse dans la spec :
+  1. **Sens du tri** : Chant A→Z, Setlists, Dernière fois et Tendance du plus grand au plus petit ; un second clic
+     sur l'en-tête renverse tout l'ordre. Les ex aequo gardent l'ordre des rangs ; sans tendance (« — ») en dernier.
+     Sur téléphone, le menu « Trier par » prend le sens par défaut de la colonne.
+  2. **« Dates libres »** s'ouvre sur la première setlist comptée de la vue courante et hier ; un champ vidé ne
+     borne plus ce côté.
+  3. **Service** : le menu reprend les groupes de l'onglet Setlists (« Réunions principales », « Groupes »), noms
+     en français ; une catégorie inconnue trouvée dans les données va dans « Autres ».
+  4. **Langue sans chant** (setlists comptées, mais aucun chant de cette langue) : « Aucun chant dans cette langue
+     sur cette période. », la carte « Setlists comptées » restant affichée.
+  5. **Recueil illisible** : « Impossible de lire le recueil. » + « Réessayer », au lieu de lignes au nom des slugs.
+  6. Période vide : filtres et message seuls, sans les cartes.
+  7. Le sélecteur de vues (« Les plus joués · Jamais joués · À redécouvrir ») n'est pas encore affiché : il vient
+     avec S4, avec ses deux vues et le paramètre d'adresse `vue`.
+- Reste : S4 (« Jamais joués », « À redécouvrir », le sélecteur de vues dans `action` de `PageTitle`), S5 (widget).
+- À faire par Timothée : rien pour S3 (aucune règle Firestore, aucune donnée) ; valider l'écran en local.
