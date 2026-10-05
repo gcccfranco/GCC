@@ -581,7 +581,7 @@ export function SetlistForm({ mode, setlistId, songs, initial, prefill }: Setlis
     <div className="min-h-screen bg-background">
 
       {/* ── Header sticky ── */}
-      <div className={`sticky top-[var(--nav-h)] [--barre-top:var(--nav-h)] z-10 material-chrome px-4 py-2.5 flex items-center gap-3 transition-transform duration-300 ${scrollVisible ? "translate-y-0" : "-translate-y-[calc(100%+var(--nav-h))]"}`}>
+      <div className={`sticky top-[var(--nav-h)] [--barre-top:var(--nav-h)] [--barre-left:var(--barre-laterale)] z-10 material-chrome px-4 py-2.5 flex items-center gap-3 transition-transform duration-300 ${scrollVisible ? "translate-y-0" : "-translate-y-[calc(100%+var(--nav-h))]"}`}>
         <FondDeBarre sousNavbar />
         {isEdit ? (
           <button
@@ -948,7 +948,7 @@ export function SetlistForm({ mode, setlistId, songs, initial, prefill }: Setlis
       {/* z-50 : passe DEVANT la barre d'onglets mobile (z-40, fixed bottom-0
           elle aussi) — sinon le bouton est caché derrière. Fond opaque pour
           que les onglets ne transparaissent pas. */}
-      <div className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-background">
+      <div className="fixed left-[var(--barre-laterale)] right-0 bottom-0 z-50 border-t border-border bg-background">
         <div
           className="max-w-2xl mx-auto px-4 py-3 flex items-center gap-3"
           style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}

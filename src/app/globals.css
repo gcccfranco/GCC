@@ -406,3 +406,169 @@
   from { opacity: 0; transform: translateX(12px); }
   to { opacity: 1; transform: translateX(0); }
 }
+
+/* ══ Lot U4 — navigation sur grand écran (docs/spec-navigation-grand-ecran.md) ══════════
+   Une seule barre, à gauche, sur ordinateur et tablette en paysage ; téléphone et tablette
+   en portrait inchangés. La disposition est décidée ICI, jamais par l'agent utilisateur :
+   ordinateur        = (pointer: fine) and (min-width: 1024px)
+   tablette paysage  = (pointer: coarse) and (orientation: landscape) and (min-width: 1024px)
+   sinon             = le modèle du téléphone (barre du haut + barre du bas).
+   Jetons lus par le reste du site :
+   --barre-laterale  place prise à gauche par la barre (0, 68 ou 248 px ; 0 à l'impression).
+                     `main` et chaque élément fixe calé sur la fenêtre s'en décalent.
+   --largeur-lecture borne d'une page de lecture, centrée dans la zone de contenu (U5…). */
+@layer base {
+  :root {
+    --barre-laterale: 0px;
+    --largeur-lecture: 1440px;
+    /* La barre de la planche (Q11) ; en sombre, la surface des groupes et le filet du thème. */
+    --barre-laterale-fond: #f7f7f8;
+    --barre-laterale-filet: #ececee;
+    /* La barre des onglets colle sous la navbar en la recouvrant d'1 px (densité
+       fractionnaire, voir `.barre-fond`) ; sans navbar, rien à recouvrir. */
+    --recouvrement-navbar: 1px;
+  }
+  .dark {
+    --barre-laterale-fond: hsl(var(--card));
+    --barre-laterale-filet: hsl(var(--border));
+  }
+  /* Ordinateur (N2) : la barre dépliée, 248 px ; plus de barre du haut, la page commence en
+     haut de l'écran (sous la zone sûre, gardée pour l'iPad installé le 21/09/2026). `screen` :
+     à l'impression, ni barre ni marge. */
+  @media screen and (pointer: fine) and (min-width: 1024px) {
+    :root {
+      --barre-laterale: 248px;
+      --nav-h: var(--sat);
+      --recouvrement-navbar: 0px;
+    }
+    /* N3 : réduite (68 px) si cet appareil l'a choisi. `data-barre` est posé par la ligne de
+       script de l'en-tête (layout.tsx), avant le premier affichage : rien ne saute. */
+    :root[data-barre="reduite"] { --barre-laterale: 68px; }
+  }
+  /* Tablette en paysage (N4) : la barre réduite, toujours (68 px) ; `data-barre` n'y compte pas.
+     Un iPad Pro 13 pouces debout (1 024 px, portrait) et un téléphone couché (< 1 024 px)
+     gardent le modèle du téléphone. */
+  @media screen and (pointer: coarse) and (orientation: landscape) and (min-width: 1024px) {
+    :root {
+      --barre-laterale: 68px;
+      --nav-h: var(--sat);
+      --recouvrement-navbar: 0px;
+    }
+  }
+  @media print {
+    :root { --barre-laterale: 0px; }
+  }
+}
+
+@layer utilities {
+  /* Le halo part du bord de la barre (jamais sous elle). Sa copie dans une barre transformée
+     (donc repère des fixes) se recale de la place où la barre est posée : `--barre-left`,
+     déclaré par la barre comme `--barre-top`. */
+  .halo { left: var(--barre-laterale); }
+  .barre-halo { left: calc(var(--barre-laterale) - var(--barre-left, 0px)); }
+
+  /* La barre latérale (`BarreLaterale`) : montée partout, montrée sur ordinateur seulement.
+     La barre du haut (`.barre-haut`) y est masquée mais reste montée : elle garde la langue
+     des rappels ; la barre du bas l'est déjà par `.hide-on-desktop`. */
+  .barre-laterale {
+    display: none;
+    background-color: var(--barre-laterale-fond);
+    border-right: 1px solid var(--barre-laterale-filet);
+  }
+  .barre-laterale-filet { border-color: var(--barre-laterale-filet); }
+  .barre-laterale :focus-visible { outline: 2px solid hsl(var(--ring)); outline-offset: 2px; }
+  @media screen and (pointer: fine) and (min-width: 1024px) {
+    .barre-laterale { display: flex; }
+    .barre-haut { display: none; }
+  }
+  /* Tablette en paysage (N4) : la barre latérale aussi, et plus de barre du bas ni de sa cale. */
+  @media screen and (pointer: coarse) and (orientation: landscape) and (min-width: 1024px) {
+    .barre-laterale { display: flex; }
+    .barre-haut { display: none; }
+    .hide-on-desktop { display: none !important; }
+  }
+
+  /* N3 — réduire, déplier (Q5, Q12, planche `ordinateur-barre-reduite`). Réduite : 68 px, logo,
+     entrées en icônes de 44 px (nom gardé en `aria-label`, infobulle en `title`), « Déplier »
+     sous les entrées, cloche puis initiale en bas ; ni label, ni langue, ni nom, ni sélecteur.
+     Visiteur : « Connexion », langue et thème en icônes. Pas d'animation de largeur : la barre
+     bascule d'un coup, les libellés reviennent en fondu court (opacité seule). */
+  .barre-si-reduite { display: none; }
+  .barre-laterale .barre-texte { animation: barre-fondu 150ms ease-out; }
+  @keyframes barre-fondu { from { opacity: 0; } }
+  /* Les règles valent pour la barre fixe seulement (`.barre-laterale`) : la barre dépliée
+     par-dessus la page de la tablette (N4, `.barre-par-dessus`) garde ses libellés. */
+  @media screen and (pointer: fine) and (min-width: 1024px) {
+    :root[data-barre="reduite"] .barre-laterale { padding-left: 10px; padding-right: 10px; align-items: center; }
+    :root[data-barre="reduite"] .barre-laterale .barre-si-depliee,
+    :root[data-barre="reduite"] .barre-laterale .barre-texte { display: none; }
+    :root[data-barre="reduite"] .barre-laterale .barre-si-reduite { display: flex; }
+    :root[data-barre="reduite"] .barre-laterale .barre-entree { width: 44px; height: 44px; padding: 0; justify-content: center; }
+    :root[data-barre="reduite"] .barre-laterale .barre-pied { flex-direction: column; gap: 10px; border-top-width: 0; padding-left: 0; padding-right: 0; }
+    /* L'initiale tout en bas, sous la cloche (planche) ; Tab garde l'ordre du document. */
+    :root[data-barre="reduite"] .barre-laterale .barre-fin { order: 1; }
+    :root[data-barre="reduite"] .barre-laterale .barre-connexion { flex: none; width: 36px; padding: 0; }
+  }
+  /* Tablette en paysage (N4, planche `ipad-paysage-reduit`) : la même barre réduite, toujours. */
+  @media screen and (pointer: coarse) and (orientation: landscape) and (min-width: 1024px) {
+    :root .barre-laterale { padding-left: 10px; padding-right: 10px; align-items: center; }
+    .barre-laterale .barre-si-depliee,
+    .barre-laterale .barre-texte { display: none; }
+    .barre-laterale .barre-si-reduite { display: flex; }
+    .barre-laterale .barre-entree { width: 44px; height: 44px; padding: 0; justify-content: center; }
+    .barre-laterale .barre-pied { flex-direction: column; gap: 10px; border-top-width: 0; padding-left: 0; padding-right: 0; }
+    .barre-laterale .barre-fin { order: 1; }
+    .barre-laterale .barre-connexion { flex: none; width: 36px; padding: 0; }
+  }
+
+  /* N4 — la barre dépliée par-dessus la page (tablette en paysage) : la barre de la planche
+     `Main`, en lignes de 44 px au moins (toucher). Elle glisse depuis la gauche (vaul) ; en
+     mouvement réduit, fondu. `!important` : le glissé est posé par la feuille de style de vaul. */
+  .barre-par-dessus {
+    background-color: var(--barre-laterale-fond);
+    border-right: 1px solid var(--barre-laterale-filet);
+  }
+  .barre-par-dessus .barre-entree { min-height: 44px; }
+  .barre-par-dessus :focus-visible { outline: 2px solid hsl(var(--ring)); outline-offset: 2px; }
+  @keyframes barre-fondu-sortie { to { opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) {
+    .barre-par-dessus[data-state="open"] { animation-name: barre-fondu !important; }
+    .barre-par-dessus[data-state="closed"] { animation-name: barre-fondu-sortie !important; }
+  }
+
+  /* Sommaire de la setlist : à gauche de la colonne des partitions, seulement s'il tient dans
+     la zone de contenu, soit 1 280 px comme avant le lot U4 (`xl`). Ordinateur, barre dépliée :
+     1 280 + 248 px de fenêtre. U5 le remplace. */
+  .sommaire-setlist { display: none; }
+  @media screen and (min-width: 1280px) {
+    .sommaire-setlist { display: block; }
+  }
+  @media screen and (pointer: fine) and (min-width: 1024px) and (max-width: 1527.98px) {
+    .sommaire-setlist { display: none; }
+  }
+  /* Barre réduite (N3) : 1 280 + 68 px de fenêtre suffisent. */
+  @media screen and (pointer: fine) and (min-width: 1348px) {
+    :root[data-barre="reduite"] .sommaire-setlist { display: block; }
+  }
+  /* Tablette en paysage (N4), barre de 68 px : de même (un iPad Pro 13 pouces couché, 1 366 px). */
+  @media screen and (pointer: coarse) and (orientation: landscape) and (min-width: 1024px) and (max-width: 1347.98px) {
+    .sommaire-setlist { display: none; }
+  }
+}
+
+/* Libellés de la barre d'outils de la setlist : à partir de 1 024 px de fenêtre comme avant
+   (en dessous, téléphones même couchés et iPad en portrait : icônes), et seulement s'ils tiennent dans la
+   rangée, donc à côté de la barre latérale. Requête de conteneur sur la rangée, qui ne
+   contient aucun élément fixe (Q9 : jamais sur `main` ni ses ancêtres). Seuil mesuré le
+   05/10/2026 : la rangée avec ses libellés fait 852 px en français dans le pire cas (Adapter,
+   Ma version, Pinyin), 728 px en 中文 ; 880 px laisse de la marge aux polices système d'autres
+   machines. Ordinateur, barre dépliée : libellés dès 1 160 px de fenêtre. Le test « une seule
+   ligne » de look-louange.spec.ts le garde. Hors `@layer` : Tailwind ne touche pas à la
+   requête de conteneur. */
+.rangee-outils { container-type: inline-size; }
+.libelle-outil { display: none; }
+@media (min-width: 1024px) {
+  @container (min-width: 880px) {
+    .libelle-outil { display: inline; }
+  }
+}

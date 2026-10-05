@@ -11,14 +11,19 @@ import { expect, test, type Page } from "@playwright/test";
 const SAT = 59;
 const poser = (page: Page, px: number) => page.addStyleTag({ content: `:root { --sat: ${px}px !important; }` });
 
+/** Lot U4 : sur ordinateur, pas de navbar ; la barre latérale porte la même garde. */
+const sansNavbar = () => test.info().project.name.startsWith("ordinateur");
+
 test.describe("zone sûre du haut", () => {
   test("sans zone sûre, rien ne bouge : la navbar fait 58 px", async ({ page }) => {
+    test.skip(sansNavbar(), "là où il y a une navbar : pas sur ordinateur (lot U4)");
     await page.goto("/songs");
     await page.getByRole("searchbox").waitFor();
     expect(await page.locator("header").first().boundingBox()).toMatchObject({ y: 0, height: 58 });
   });
 
   test("avec une zone sûre, la navbar la réserve et son contenu reste dessous", async ({ page }) => {
+    test.skip(sansNavbar(), "là où il y a une navbar : pas sur ordinateur (lot U4)");
     await page.goto("/songs");
     await page.getByRole("searchbox").waitFor();
     await poser(page, SAT);
@@ -26,6 +31,16 @@ test.describe("zone sûre du haut", () => {
     await expect.poll(async () => (await header.boundingBox())?.height).toBe(58 + SAT);
     const logo = await page.locator("header img").first().boundingBox();
     expect(logo!.y, "le logo passerait derrière l'heure").toBeGreaterThanOrEqual(SAT);
+  });
+
+  test("ordinateur : la barre latérale réserve la zone sûre, son logo reste dessous (lot U4)", async ({ page }) => {
+    test.skip(!sansNavbar(), "ordinateur seulement");
+    await page.goto("/songs");
+    await page.getByRole("searchbox").waitFor();
+    await poser(page, SAT);
+    const barre = page.getByTestId("barre-laterale");
+    expect((await barre.boundingBox())!.y, "la barre part du haut de l'écran").toBe(0);
+    await expect.poll(async () => (await barre.locator("img").first().boundingBox())!.y, "le logo passerait derrière l'heure").toBeGreaterThanOrEqual(SAT);
   });
 
   test("le contenu de la page descend d'autant", async ({ page }) => {

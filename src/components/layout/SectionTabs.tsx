@@ -50,8 +50,10 @@ export function SectionTabs({ tabs, rootHref, menuLabel }: { tabs: SectionTab[];
 
   const courant = tabs.find((tab) => isTabActive(tab.href)) ?? tabs[0]
 
+  // Colle sous la navbar en la recouvrant d'1 px (`--recouvrement-navbar`) ; sans navbar
+  // (ordinateur, lot U4), en haut de l'écran : sinon la copie du halo descendait d'1 px.
   return (
-    <div data-testid="barre-section" className={`sticky top-[calc(var(--nav-h)-1px)] [--barre-top:calc(var(--nav-h)-1px)] z-40 material-chrome print:hidden transition-transform duration-300 ${scrollVisible ? "translate-y-0" : "-translate-y-[calc(100%+var(--nav-h))]"}`}>
+    <div data-testid="barre-section" className={`sticky top-[calc(var(--nav-h)-var(--recouvrement-navbar))] [--barre-top:calc(var(--nav-h)-var(--recouvrement-navbar))] [--barre-left:var(--barre-laterale)] z-40 material-chrome print:hidden transition-transform duration-300 ${scrollVisible ? "translate-y-0" : "-translate-y-[calc(100%+var(--nav-h))]"}`}>
       <FondDeBarre sousNavbar />
       <div className="max-w-[1080px] mx-auto px-4">
         {menuLabel && (

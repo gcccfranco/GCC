@@ -20,8 +20,15 @@ const GEOMETRIE = {
   fiche: { petit: { largeur: "300px", hauteur: "220px", gauche: "-40px", haut: "-60px", flou: "blur(44px)" }, grand: { ...GRAND, gauche: "-140px" } },
   chant: { petit: { largeur: "300px", hauteur: "220px", droite: "-80px", haut: "-60px", flou: "blur(44px)" }, grand: { ...GRAND, droite: "-140px" } },
 };
-/** Le projet « ordinateur » fait 1280 px de large ; téléphone (412) et tablette (810) gardent la taille des planches. */
-const geometrie = (variante: keyof typeof GEOMETRIE) => GEOMETRIE[variante][test.info().project.name === "ordinateur" ? "grand" : "petit"];
+/** À partir de 1024 px de large (ordinateur, ordinateur-1440, tablette couchée : lot U4), le halo agrandi ;
+ *  téléphone (412) et tablette (810) gardent la taille des planches. */
+const geometrie = (variante: keyof typeof GEOMETRIE) => GEOMETRIE[variante][(test.info().project.use.viewport?.width ?? 0) >= 1024 ? "grand" : "petit"];
+/** Lot U4 : le halo part du bord de la barre latérale (0 sans elle) et fait le reste de la fenêtre. */
+const zoneDeContenu = (page: Page) =>
+  page.evaluate(() => {
+    const barre = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--barre-laterale")) || 0;
+    return { x: barre, y: 0, width: document.documentElement.clientWidth - barre };
+  });
 
 const MUSICIEN: FakeProfile = {
   uid: "uid-musicien",
@@ -46,15 +53,15 @@ const ellipse = (page: Page) =>
 async function auCoinDeLaFenetre(page: Page) {
   const halo = page.getByTestId("halo");
   await expect(halo).toBeVisible();
-  const largeur = await page.evaluate(() => document.documentElement.clientWidth);
-  await expect.poll(() => halo.boundingBox()).toMatchObject({ x: 0, y: 0, width: largeur });
+  const zone = await zoneDeContenu(page);
+  await expect.poll(() => halo.boundingBox()).toMatchObject(zone);
   expect(await halo.evaluate((el) => getComputedStyle(el).pointerEvents)).toBe("none");
   await expect(halo).toHaveAttribute("aria-hidden", "true");
   expect(await debordement(page)).toBe(0);
   // Même sur une page trop courte pour défiler (planning vide, setlist sans chant).
   await page.addStyleTag({ content: "body{min-height:3000px}" });
   await page.evaluate(() => window.scrollTo(0, 600));
-  await expect.poll(() => halo.boundingBox()).toMatchObject({ x: 0, y: 0, width: largeur });
+  await expect.poll(() => halo.boundingBox()).toMatchObject(zone);
   await page.evaluate(() => window.scrollTo(0, 0));
 }
 
@@ -95,8 +102,8 @@ test.describe("halo d'en-tête (5C1, V6)", () => {
       await page.goto("/songs/beni-soit-ton-nom");
       await page.getByTestId("barre-outils").waitFor();
       const halo = page.getByTestId("halo");
-      const largeur = await page.evaluate(() => document.documentElement.clientWidth);
-      await expect.poll(() => halo.boundingBox()).toMatchObject({ x: 0, y: 0, width: largeur });
+      const zone = await zoneDeContenu(page);
+      await expect.poll(() => halo.boundingBox()).toMatchObject(zone);
     });
   }
 

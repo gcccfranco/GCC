@@ -5,34 +5,14 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { BACK_OFFICE } from "@/lib/backOffice";
 import { useTranslation } from "react-i18next";
-import { CalendarDays, ListMusic, Music, Ticket, UserRound, type LucideIcon } from "lucide-react";
 import { useAuth } from "@/lib/firebase/auth";
 import { useScrollDirection } from "@/hooks/useScrollDirection";
-
-type Tab = { href: string; key: string; Icon: LucideIcon; match: string[] };
-
-// Chants et Setlists ont chacun leur onglet (décision du 16/09/2026 : un
-// onglet « Louange » cachait les setlists, injoignables sur tactile). « Moi »
-// est la porte de tout ce qui me concerne : services, profil, guide,
-// réglages, déconnexion.
-const MEMBER_TABS: Tab[] = [
-  { href: "/songs", key: "common.header.songs", Icon: Music, match: ["/songs"] },
-  { href: "/setlists", key: "common.header.setlists", Icon: ListMusic, match: ["/setlists"] },
-  { href: "/planning", key: "common.header.planning", Icon: CalendarDays, match: ["/planning"] },
-  { href: "/evenements", key: "common.header.evenements", Icon: Ticket, match: ["/evenements"] },
-  { href: "/moi", key: "common.header.moi", Icon: UserRound, match: ["/moi", "/mes-services", "/taches", "/profil", "/guide", "/questionnaire", "/notifier", "/admin"] },
-];
-
-// Sans compte : les chants et le calendrier public (décision Q10).
-const VISITOR_TABS: Tab[] = [
-  { href: "/songs", key: "common.header.songs", Icon: Music, match: ["/songs"] },
-  { href: "/evenements", key: "common.header.evenements", Icon: Ticket, match: ["/evenements"] },
-];
+import { entreesBarre, estEntreeActive } from "@/lib/navigation";
 
 /**
- * Barre d'onglets fixée en bas d'écran, sur tout appareil tactile (téléphone
- * ET tablette, y compris iPad en paysage ≥1024px) ; masquée seulement sur un
- * poste desktop (souris + grand écran, via `.hide-on-desktop`). Masquée en
+ * Barre d'onglets fixée en bas d'écran, sur téléphone et tablette en portrait ;
+ * masquée (via `.hide-on-desktop`) sur un poste desktop (souris + grand écran)
+ * et sur la tablette en paysage, qui ont la barre latérale (lot U4). Masquée en
  * plein écran (vue partition / pupitre) pour ne jamais recouvrir une
  * partition ; le mode louange (z-9999) passe par-dessus de toute façon.
  */
@@ -55,14 +35,16 @@ export function MobileTabBar() {
   }, []);
 
   if (!mounted || loading || fullscreen) return null;
-  // Back-office coupé (lot 18) : la section Évènements n'est pas en ligne.
-  const tabs = (user ? MEMBER_TABS : VISITOR_TABS).filter((tab) => BACK_OFFICE || tab.href !== "/evenements");
+  // Mêmes entrées que la barre latérale (lot U4) ; back-office coupé (lot 18) :
+  // la section Évènements n'est pas en ligne.
+  const tabs = entreesBarre("app", { connecte: !!user, backOffice: BACK_OFFICE });
 
   return (
     <>
       {/* Cale en flux : le contenu ne finit pas caché derrière la barre */}
       <div aria-hidden className="hide-on-desktop h-[calc(78px+var(--tabbar-bottom))] print:hidden" />
       <nav
+        data-testid="barre-du-bas"
         aria-label={t("common.aria.navigationPrincipale")}
         // 5C1 : la barre flotte, en verre ; l'onglet courant est une pastille d'encre.
         className={`hide-on-desktop print:hidden fixed inset-x-2 bottom-[var(--tabbar-bottom)] z-40 rounded-[32px] material-bar transition-transform duration-300 min-[360px]:inset-x-3.5 sm:left-1/2 sm:right-auto sm:w-[560px] sm:max-w-[calc(100%-28px)] sm:-translate-x-1/2 ${
@@ -70,8 +52,9 @@ export function MobileTabBar() {
         }`}
       >
         <div className="flex h-16 gap-0.5 p-1.5">
-          {tabs.map(({ href, key, Icon, match }) => {
-            const active = match.some((m) => pathname === m || pathname.startsWith(`${m}/`));
+          {tabs.map((entree) => {
+            const { href, cle, Icone } = entree;
+            const active = estEntreeActive(entree, pathname);
             return (
               <Link
                 key={href}
@@ -82,8 +65,8 @@ export function MobileTabBar() {
                   active ? "bg-primary text-primary-foreground" : "text-muted-foreground"
                 }`}
               >
-                <Icon className="h-[22px] w-[22px]" strokeWidth={active ? 2.2 : 1.9} aria-hidden />
-                {t(key)}
+                <Icone className="h-[22px] w-[22px]" strokeWidth={active ? 2.2 : 1.9} aria-hidden />
+                {t(cle)}
               </Link>
             );
           })}
