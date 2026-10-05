@@ -1827,6 +1827,8 @@
     "inscrit": "Inscrit",
     "sinscrire": "S'inscrire",
     "plusInfos": "Pour plus d'infos : {{nom}}",
+    "tableau": "Tableau des évènements",
+    "sinscrireTableau": "S'inscrire sur le tableau",
     "dejaInscrits_one": "{{count}} déjà inscrit",
     "dejaInscrits_other": "{{count}} déjà inscrits",
     "confirmer": "Confirmer",

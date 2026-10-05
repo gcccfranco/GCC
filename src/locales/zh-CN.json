@@ -1826,6 +1826,8 @@
     "inscrit": "已报名",
     "sinscrire": "报名",
     "plusInfos": "详情联系：{{nom}}",
+    "tableau": "活动表",
+    "sinscrireTableau": "在活动表上报名",
     "dejaInscrits_one": "已有 {{count}} 人报名",
     "dejaInscrits_other": "已有 {{count}} 人报名",
     "confirmer": "确认",

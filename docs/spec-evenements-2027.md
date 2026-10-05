@@ -198,10 +198,30 @@ recommandation.
   quatre tests existants qui créaient « Toute l'église » en 2026 (`evenements.spec.ts`,
   `back-office-admin.spec.ts`) créent maintenant en janvier 2027.
 
-Reste : B2 (agenda public), B3 (annonce), B4 (ménage de février 2027, sur un go à part).
+**05/10/2026 — B2 (agenda public) faite**, même branche :
+- `agendaPublic(app, sheet, connecte, today, lang)` dans `src/lib/evenements/agenda.ts` (pur ; `today` et
+  `lang` ajoutés à la signature de la spec pour les passés et les noms de mois) : garde les entrées du
+  Sheet datées avant la bascule, les mêle aux évènements de l'app par mois (tri `byDate`), passés des
+  trois derniers mois derrière le lien ; sans compte, ni responsable ni lien.
+- Agenda (`src/app/evenements/CalendrierClient.tsx`) : jusqu'au 31/12/2026, lit le Sheet de
+  `daysAgo(today, 92)` à la bascule ; à partir du 01/01/2027, aucune requête.
+- Carte compacte `EntreeSheetCarte` (`EvenementCard.tsx`) : vignette de date, titre, « heure · lieu »
+  (le texte de la case quand l'heure ne se lit pas, ex. « après le culte »), mention « Tableau des
+  évènements » / « 活动表 » ; connecté, dessous « Pour plus d'infos : <responsable> » (s'il y en a un)
+  et « S'inscrire sur le tableau » / « 在活动表上报名 » (onglet du mois, nouvel onglet). Ni fiche ni compteur.
+- Choix pris : une entrée **passée** du Sheet n'a ni responsable ni lien, même connecté (on ne
+  s'inscrit plus, et les cartes passées de l'app n'ont pas non plus « Pour plus d'infos ») ; connecté,
+  « S'inscrire sur le tableau » paraît sur **toute** entrée à venir, même sans responsable (lecture
+  littérale de Q2) ; un Sheet injoignable n'affiche rien de plus (pas de bandeau côté assemblée).
+- Tests : `tests/evenements-2027.spec.ts` (B2 pur, agenda sans compte / connecté / 中文, 02/01/2027 sans
+  requête, captures). `tests/helpers/fakeSession.ts` : `fakeFirestore` sert par défaut un Sheet des
+  évènements vide (au niveau du contexte : la `page.route` d'un test l'emporte), pour que plus aucun test
+  ne lise le vrai Sheet.
+
+Reste : B3 (annonce), B4 (ménage de février 2027, sur un go à part).
 
 À la mise en ligne, côté évènements : (1) supprimer les évènements d'essai du Firestore partagé
 (Timothée, console ; Q8) ; (2) relire les onglets de 2027 du Sheet et prévenir chaque responsable
 concerné (Q4) ; (3) envoyer l'annonce par « Notifier » (Q7 a). U9 ne touche pas à `firestore.rules`.
 Timothée relit le 中文 : « {{jour}} 之前，全教会的活动请写在活动表（Sheet）中。 », « 打开活动表 », pastille
-« 活动 » / « 活动（Sheet）».
+« 活动 » / « 活动（Sheet）», et pour B2 « 活动表 », « 在活动表上报名 ».

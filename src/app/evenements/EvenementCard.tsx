@@ -9,8 +9,8 @@
 
 import Link from "next/link"
 import { useTranslation } from "react-i18next"
-import { CalendarDays, Check, Clock, Image as ImageIcon, Info, MapPin } from "lucide-react"
-import { isInfo, nowIsoParis, placesRestantes, refusInscription } from "@/lib/evenements/agenda"
+import { CalendarDays, Check, Clock, ExternalLink, Image as ImageIcon, Info, MapPin } from "lucide-react"
+import { isInfo, nowIsoParis, placesRestantes, refusInscription, type EntreeSheetPublique } from "@/lib/evenements/agenda"
 import { useRaisonInscription } from "@/components/evenements/ChoixInscriptions"
 import { fdFullL } from "@/lib/planning/utils"
 import { categoryColor, categoryLabel, PLANNING_COLORS } from "@/lib/serviceColors"
@@ -179,5 +179,42 @@ export function EvenementCard({ evenement: e, past, href }: { evenement: Eveneme
         </div>
       </div>
     </Link>
+  )
+}
+
+/** Entrée du Sheet des évènements (lot U9, B2, jusqu'au 31/12/2026) : la ligne compacte, sans
+ *  fiche ni compteur, avec la mention « Tableau des évènements ». Connecté (à venir), dessous :
+ *  « Pour plus d'infos » et « S'inscrire sur le tableau » (l'onglet du mois, nouvel onglet). */
+export function EntreeSheetCarte({ entree: s, past }: { entree: EntreeSheetPublique; past?: boolean }) {
+  const { i18n, t } = useTranslation()
+  const horaire = s.heure ? `${s.heure}${s.heureFin ? ` – ${s.heureFin}` : ""}` : s.horaire
+  return (
+    <div data-source="sheet" className={`bg-card rounded-xl px-4 py-3 ${past ? "opacity-70" : ""}`}>
+      <div className="flex items-center gap-3">
+        <Tile color={COLOR} big={Number(s.date.slice(8, 10))} small={monthLabel(s.date, i18n.language)} size="lg" />
+        <div className="min-w-0 flex-1">
+          <p className="font-semibold text-foreground truncate">{s.titre}</p>
+          <p className="text-sm text-muted-foreground truncate">{[horaire, s.lieu].filter(Boolean).join(" · ")}</p>
+          <p className="text-xs text-muted-foreground">{t("evenements.tableau")}</p>
+        </div>
+      </div>
+      {(s.responsable || s.lien) && (
+        <div className="mt-3 space-y-1 border-t border-border pt-2 text-sm text-muted-foreground">
+          {s.responsable && (
+            <p className="flex items-start gap-2.5">
+              <Info className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+              <span>{t("evenements.plusInfos", { nom: s.responsable })}</span>
+            </p>
+          )}
+          {s.lien && (
+            <a href={s.lien} target="_blank" rel="noopener noreferrer"
+              className="inline-flex min-h-10 items-center gap-2.5 font-semibold text-foreground underline-offset-4 hover:underline">
+              <ExternalLink className="h-4 w-4 shrink-0" aria-hidden />
+              {t("evenements.sinscrireTableau")}
+            </a>
+          )}
+        </div>
+      )}
+    </div>
   )
 }

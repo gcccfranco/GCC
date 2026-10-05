@@ -1,13 +1,17 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { expect, test, type Page, type TestInfo } from "@playwright/test";
-import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { fakeFirestore, signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { ADMIN_EMAILS } from "../src/lib/access";
 import { BASCULE_EVENEMENTS, avantBascule } from "../src/lib/evenements/bascule";
+import { agendaPublic } from "../src/lib/evenements/agenda";
+import type { EntreeSheet } from "../src/lib/evenements/sheet";
+import type { Evenement } from "../src/types/evenement";
 
 // Lot U9 (docs/spec-evenements-2027.md) : les évènements sur le site à partir de janvier 2027.
 // B1 : la bascule (`bascule.ts`), le refus du formulaire avant la bascule pour « Toute
-// l'église », la pastille du calendrier. Sheet, Firestore et horloge simulés ; titres et
+// l'église », la pastille du calendrier. B2 : l'agenda public mêle les entrées du Sheet
+// (avant la bascule) aux évènements de l'app, sans nom ni lien sans compte. Sheet, Firestore et horloge simulés ; titres et
 // noms inventés.
 
 const SHEET = "https://docs.google.com/spreadsheets/d/12FxK1sMrk08bFrVnL7BjCTJd6FXTqvRXyZoyDYhgPU8";
@@ -214,4 +218,127 @@ test("captures B1 : le refus sous la date, la pastille de janvier", async ({ pag
   await expect(page.getByText(REFUS)).toBeVisible();
   await page.getByText(REFUS).scrollIntoViewIfNeeded();
   await page.screenshot({ path: `${dossier}-refus.png`, animations: "disabled" });
+});
+
+
+// ─── B2 : l'agenda public ─────────────────────────────────────────────────────
+
+/** Le jour de la fixture qui porte un responsable et dont les inscrits ont un téléphone. */
+const TELEPHONES = ["06 99 99 99 99", "07 11 22 33 44"];
+const LIEN_DECEMBRE = `${SHEET}/edit#gid=${GID_DECEMBRE}`;
+
+const entree = (date: string, titre: string, responsable = ""): EntreeSheet =>
+  ({ date, titre, heure: "20:00", heureFin: "", horaire: "20h", lieu: "Eglise", responsable });
+const appEv = (id: string, date: string, titre: string) => ({ ...EV, id, titre, date }) as Evenement;
+
+test.describe("B2 : agendaPublic (pur)", () => {
+  const sheet = [entree("2026-12-31", "Veillée", "Sacha Fictif"), entree("2027-01-01", "Égarée en 2027"), entree("2026-12-04", "Repas", "Noé Fictif")];
+  const app = [appEv("galette", "2027-01-16", "Galette"), appEv("concert", "2026-12-20", "Concert")];
+
+  test("garde le Sheet jusqu'au 31/12/2026, jamais le 01/01/2027 ; mêle et trie par mois", () => {
+    const { aVenir } = agendaPublic(app, sheet, true, "2026-12-15", "fr");
+    expect(aVenir.map((g) => g.label)).toEqual(["Décembre 2026", "Janvier 2027"]);
+    const titres = (i: number) => aVenir[i].elements.map((x) => (x.source === "app" ? x.evenement.titre : x.entree.titre));
+    expect(titres(0)).toEqual(["Concert", "Veillée"]);
+    expect(titres(1)).toEqual(["Galette"]);
+  });
+
+  test("connecté : responsable et lien de l'onglet du mois ; sans compte : ni l'un ni l'autre", () => {
+    const veillee = (connecte: boolean) => {
+      const x = agendaPublic([], sheet, connecte, "2026-12-15", "fr").aVenir[0].elements[0];
+      if (x.source !== "sheet") throw new Error("entrée du Sheet attendue");
+      return x.entree;
+    };
+    expect(veillee(true)).toMatchObject({ titre: "Veillée", responsable: "Sacha Fictif", lien: LIEN_DECEMBRE });
+    expect(veillee(false)).toMatchObject({ titre: "Veillée", responsable: "", lien: "" });
+  });
+
+  test("passés derrière le lien, plus récents d'abord ; une entrée passée du Sheet n'a ni nom ni lien", () => {
+    const { aVenir, passes } = agendaPublic(app, sheet, true, "2026-12-15", "fr");
+    expect(aVenir.flatMap((g) => g.elements).some((x) => x.source === "sheet" && x.entree.titre === "Repas")).toBe(false);
+    expect(passes).toHaveLength(1);
+    expect(passes[0]).toMatchObject({ source: "sheet", entree: { titre: "Repas", responsable: "", lien: "" } });
+  });
+});
+
+/** Un visiteur sans compte, Sheet et Firestore simulés. */
+async function visiteur(page: Page, maintenant: string) {
+  await page.clock.setFixedTime(new Date(maintenant));
+  const lus = await sheets(page);
+  await fakeFirestore(page, DOCS);
+  await page.goto("/evenements");
+  return lus;
+}
+const sansTelephone = async (page: Page) => {
+  for (const tel of TELEPHONES) await expect(page.getByText(tel)).toHaveCount(0);
+};
+
+test.describe("B2 : l'agenda public montre le Sheet jusqu'au 31/12/2026", () => {
+  test("15/12/2026, sans compte : entrées de décembre du Sheet, sans responsable ni lien, mêlées à l'app", async ({ page }) => {
+    const lus = await visiteur(page, "2026-12-15T10:00:00");
+    const decembre = page.getByRole("heading", { name: "Décembre 2026" });
+    await expect(decembre).toBeVisible();
+    await expect(page.getByText("Chants de Noël")).toBeVisible();
+    await expect(page.getByText("Veillée")).toBeVisible();
+    await expect(page.getByText("Tableau des évènements").first()).toBeVisible();
+    // L'évènement de l'app de janvier, après décembre.
+    await expect(page.getByRole("heading", { name: "Janvier 2027" })).toBeVisible();
+    await expect(page.getByRole("link", { name: /Galette/ })).toBeVisible();
+    // Pas de fiche, pas de nom, pas de lien vers la feuille.
+    await expect(page.getByRole("link", { name: /Chants de Noël/ })).toHaveCount(0);
+    await expect(page.getByText("Sacha Fictif")).toHaveCount(0);
+    await expect(page.getByText("Camille Exemple")).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "S'inscrire sur le tableau" })).toHaveCount(0);
+    expect(lus).toContain(GID_DECEMBRE);
+    // Les passés (le 6, le 10) derrière le lien, sans nom non plus.
+    await page.getByRole("button", { name: /Évènements passés/ }).click();
+    await expect(page.getByText("Soirée louange")).toBeVisible();
+    await expect(page.getByText("Camille Exemple")).toHaveCount(0);
+    await sansTelephone(page);
+  });
+
+  test("15/12/2026, connecté : « Pour plus d'infos » et « S'inscrire sur le tableau » (onglet du mois, nouvel onglet)", async ({ page }) => {
+    await ouvrir(page, COORD, "/evenements", "2026-12-15T10:00:00");
+    await expect(page.getByText("Pour plus d'infos : Sacha Fictif")).toBeVisible();
+    const liens = page.getByRole("link", { name: "S'inscrire sur le tableau" });
+    await expect(liens).toHaveCount(2);
+    await expect(liens.first()).toHaveAttribute("href", LIEN_DECEMBRE);
+    await expect(liens.first()).toHaveAttribute("target", "_blank");
+    await expect(page.getByRole("link", { name: /Chants de Noël/ })).toHaveCount(0);
+    await page.getByRole("button", { name: /Évènements passés/ }).click();
+    await expect(page.getByText("Soirée louange")).toBeVisible();
+    await sansTelephone(page);
+  });
+
+  test("15/12/2026, en chinois : « 活动表 » et « 在活动表上报名 »", async ({ page }) => {
+    await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
+    await ouvrir(page, COORD, "/evenements", "2026-12-15T10:00:00");
+    await expect(page.getByText("Chants de Noël")).toBeVisible();
+    await expect(page.getByText("活动表", { exact: true }).first()).toBeVisible();
+    await expect(page.getByRole("link", { name: "在活动表上报名" }).first()).toHaveAttribute("href", LIEN_DECEMBRE);
+    await expect(page.getByText("详情联系：Sacha Fictif")).toBeVisible();
+  });
+
+  test("02/01/2027 : l'agenda ne lit plus le Sheet", async ({ page }) => {
+    const lus = await visiteur(page, "2027-01-02T10:00:00");
+    await expect(page.getByRole("link", { name: /Galette/ })).toBeVisible();
+    await page.waitForTimeout(300);
+    expect(lus).toEqual([]);
+    await expect(page.getByText("Tableau des évènements")).toHaveCount(0);
+  });
+});
+
+test("captures B2 : l'agenda de décembre, sans compte et connecté", async ({ page }, info) => {
+  const dossier = join(process.cwd(), "test-results", "evenements-2027-captures", info.project.name);
+  await ouvrir(page, COORD, "/evenements", "2026-12-15T10:00:00");
+  await expect(page.getByText("Pour plus d'infos : Sacha Fictif")).toBeVisible();
+  await page.getByText("Chants de Noël").scrollIntoViewIfNeeded();
+  await page.screenshot({ path: `${dossier}-agenda-connecte.png`, animations: "disabled", fullPage: true });
+});
+
+test("captures B2 : sans compte", async ({ page }, info) => {
+  const dossier = join(process.cwd(), "test-results", "evenements-2027-captures", info.project.name);
+  await visiteur(page, "2026-12-15T10:00:00");
+  await expect(page.getByText("Chants de Noël")).toBeVisible();
+  await page.screenshot({ path: `${dossier}-agenda-visiteur.png`, animations: "disabled", fullPage: true });
 });

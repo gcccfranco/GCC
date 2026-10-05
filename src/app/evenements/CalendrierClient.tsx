@@ -3,6 +3,7 @@
 // Calendrier des évènements (lot 6) : lisible sans compte (« toute l'église »
 // seulement), plus les évènements de ses sections quand on est connecté.
 // Infos épinglées en tête, puis agenda par mois, passés derrière un lien.
+// Lot U9, B2 : jusqu'au 31/12/2026, les entrées du Sheet des évènements s'y mêlent.
 
 import { GuideLien } from "@/components/guide/GuideLien"
 import { useEffect, useMemo, useState } from "react"
@@ -15,10 +16,12 @@ import { canSeeEvenement, creatableEvenementPours, estResponsable } from "@/lib/
 import { ANNONCE_SECTIONS } from "@/types/annonce"
 import { PLANNING_COLORS } from "@/lib/serviceColors"
 import { EVENEMENTS_CHANGED, getInscription, listEvenements } from "@/lib/firebase/evenements"
-import { daysAgo, groupByMonth, isExpired, isInfo, isPast } from "@/lib/evenements/agenda"
+import { agendaPublic, daysAgo, isExpired, isInfo } from "@/lib/evenements/agenda"
+import { avantBascule, BASCULE_EVENEMENTS } from "@/lib/evenements/bascule"
+import { lireSheetEvenements, type EntreeSheet } from "@/lib/evenements/sheet"
 import { todayIso } from "@/lib/scene/dimanches"
 import type { Evenement } from "@/types/evenement"
-import { EvenementCard, EvenementCarte } from "./EvenementCard"
+import { EntreeSheetCarte, EvenementCard, EvenementCarte } from "./EvenementCard"
 
 export function CalendrierClient() {
   const { t, i18n } = useTranslation()
@@ -45,6 +48,15 @@ export function CalendrierClient() {
   }, [user, evenements])
 
   const today = todayIso()
+
+  // Lot U9, B2 : jusqu'au 31/12/2026, les entrées du Sheet (trois derniers mois compris, pour les
+  // passés). À partir du 01/01/2027, aucune requête.
+  const [sheet, setSheet] = useState<EntreeSheet[]>([])
+  useEffect(() => {
+    if (!avantBascule(today)) return
+    lireSheetEvenements(daysAgo(today, 92), BASCULE_EVENEMENTS).then((l) => setSheet(l.entrees)).catch(() => {})
+  }, [today])
+
   const visible = useMemo(
     () => (evenements ?? []).filter((e) => canSeeEvenement(user, profile, e) && !isExpired(e, today)),
     [evenements, user, profile, today],
@@ -55,11 +67,7 @@ export function CalendrierClient() {
   }
 
   const infos = visible.filter(isInfo).sort((a, b) => Number(b.epingle) - Number(a.epingle) || b.createdAt.localeCompare(a.createdAt))
-  const upcoming = groupByMonth(visible.filter((e) => !isInfo(e) && !isPast(e, today)), i18n.language)
-  const since = daysAgo(today, 92)
-  const past = visible
-    .filter((e) => !isInfo(e) && isPast(e, today) && (e.dateFin || e.date) >= since)
-    .sort((a, b) => b.date.localeCompare(a.date))
+  const { aVenir: upcoming, passes: past } = agendaPublic(visible, sheet, !!user, today, i18n.language)
 
   // Lot U6, B3 : le formulaire est au Back-Office, ouvert aux responsables.
   const peutCreer = estResponsable(user, profile) && creatableEvenementPours(user, profile, ANNONCE_SECTIONS).length > 0
@@ -92,7 +100,9 @@ export function CalendrierClient() {
       {upcoming.map((g) => (
         <section key={g.key} className="space-y-3">
           <h2 className="text-sm font-semibold text-muted-foreground px-1 capitalize">{g.label}</h2>
-          {g.evenements.map((e) => <EvenementCarte key={e.id} evenement={e} inscrit={!!user && inscrits.has(e.id)} />)}
+          {g.elements.map((x, i) => x.source === "app"
+            ? <EvenementCarte key={x.evenement.id} evenement={x.evenement} inscrit={!!user && inscrits.has(x.evenement.id)} />
+            : <EntreeSheetCarte key={`sheet-${i}`} entree={x.entree} />)}
         </section>
       ))}
 
@@ -101,7 +111,9 @@ export function CalendrierClient() {
           <button type="button" className="text-xs font-semibold text-muted-foreground hover:text-foreground" onClick={() => setShowPast(!showPast)}>
             {showPast ? t("evenements.hidePast") : t("evenements.past")} ({past.length})
           </button>
-          {showPast && past.map((e) => <EvenementCard key={e.id} evenement={e} past />)}
+          {showPast && past.map((x, i) => x.source === "app"
+            ? <EvenementCard key={x.evenement.id} evenement={x.evenement} past />
+            : <EntreeSheetCarte key={`sheet-${i}`} entree={x.entree} past />)}
         </section>
       )}
 

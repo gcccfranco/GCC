@@ -164,6 +164,12 @@ export async function fakeFirestore(
     createTime: "2026-01-01T00:00:00Z",
   });
 
+  // Lot U9, B2 : l'agenda public lit le Sheet des évènements jusqu'au 31/12/2026. Par défaut, un
+  // Sheet vide, jamais le vrai ; au niveau du contexte, donc toute `page.route` d'un test l'emporte.
+  await page.context().route(/docs\.google\.com\/spreadsheets\/d\/12FxK1sMrk08bFrVnL7BjCTJd6FXTqvRXyZoyDYhgPU8\/export/, (route) =>
+    route.fulfill({ status: 200, contentType: "text/csv", body: "" }),
+  );
+
   await page.route(/firestore\.googleapis\.com/, (route) => {
     const request = route.request();
     const url = new URL(request.url());
