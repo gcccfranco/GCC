@@ -174,6 +174,19 @@ export async function updateEvenement(id: string, data: Partial<Omit<Evenement, 
   changed();
 }
 
+/** Compte rendu d'une réunion (lot U6, R3), collé ou retiré (null) : ce seul
+ *  champ, ni `updatedAt` — la règle n'accepte que lui d'une personne de la réunion. */
+export async function majCompteRendu(id: string, compteRendu: CompteRendu | null): Promise<void> {
+  const headers = await authHeader();
+  const res = await fetch(`${FS_BASE}/evenements/${id}?updateMask.fieldPaths=compteRendu`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...headers },
+    body: JSON.stringify({ fields: toFsFields({ compteRendu }) }),
+  });
+  await checkRest(res);
+  changed();
+}
+
 export async function deleteEvenement(id: string): Promise<void> {
   const headers = await authHeader();
   const res = await fetch(`${FS_BASE}/evenements/${id}`, { method: "DELETE", headers });

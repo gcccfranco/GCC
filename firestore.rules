@@ -199,9 +199,17 @@ service cloud.firestore {
             || (hasProfile() && request.resource.data.pour in profile().get('annonces', []))
             || (request.resource.data.pour.matches('pole:[a-z]+')
                 && isTachePole(request.resource.data.pour.split(':')[1])));
+      // Compte rendu d'une réunion (lot U6, R3) : toute personne de la réunion
+      // colle (à son nom, un lien https://) ou retire le lien, et ne change que
+      // lui. Miroir : estDeLaReunion et lienCompteRendu (src/lib/access.ts,
+      // src/lib/reunions/compteRendu.ts).
       allow update: if signedIn()
-        && request.resource.data.inscrits == resource.data.inscrits
-        && (isCoordination() || resource.data.organisateurUid == request.auth.uid);
+        && ((request.resource.data.inscrits == resource.data.inscrits
+             && (isCoordination() || resource.data.organisateurUid == request.auth.uid))
+          || (estDeLaReunion(resource.data) && changeSeulement(['compteRendu'])
+             && (request.resource.data.compteRendu == null
+                 || (request.resource.data.compteRendu.parUid == request.auth.uid
+                     && request.resource.data.compteRendu.url.matches('https://.+')))));
       allow delete: if signedIn() && (isCoordination() || resource.data.organisateurUid == request.auth.uid);
 
       match /inscriptions/{iid} {

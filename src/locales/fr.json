@@ -1716,6 +1716,19 @@
       "noteUne": "Sans reprise, ils restent en rouge dans l'ancienne réunion.",
       "notePlusieurs": "Sans reprise, ils restent en rouge dans les anciennes réunions."
     },
+    "compteRendu": {
+      "titre": "Compte rendu",
+      "aide": "Après la réunion, toute personne de la réunion (ou un admin) colle ici le lien du Google Doc du récap ; les autres sont prévenus dans le rappel du matin.",
+      "lien": "Lien du compte rendu",
+      "placeholder": "https://docs.google.com/document/…",
+      "enregistrer": "Enregistrer le lien",
+      "invalide": "Colle un lien complet, qui commence par https://",
+      "ajoutePar": "{{source}} · ajouté par {{nom}} le {{date}}",
+      "ouvrir": "Ouvrir",
+      "retirer": "Retirer le lien du compte rendu",
+      "confirmRetirer": "Retirer le lien du compte rendu ?",
+      "erreur": "Échec de l'enregistrement. Réessaie."
+    },
     "precedentes": {
       "titre": "Réunions précédentes",
       "compteRendu": "Compte rendu",

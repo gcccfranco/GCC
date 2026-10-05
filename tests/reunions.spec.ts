@@ -6,6 +6,9 @@ import { estDeLaReunion, peutAjouterSujet, peutOrdonnerSujets, peutRetirerSujet 
 import { copieReprise, estRouge, reordonner, reunionsPrecedentes, sujetsAReprendre, trierSujets } from "../src/lib/reunions/sujets";
 import type { Evenement } from "../src/types/evenement";
 import type { Sujet } from "../src/types/reunion";
+import { lienCompteRendu, sourceDuLien } from "../src/lib/reunions/compteRendu";
+import { ligneCompteRendu, ligneVeille, nombreSujetsAAborder, notificationsDuMatin } from "../src/lib/reunions/rappels";
+import type { RappelTache } from "../src/lib/taches/messages";
 
 // Lot U6 (docs/spec-back-office.md), tranche R1 : les « Sujets à aborder »
 // d'une réunion de pôle — sous-collection evenements/{id}/sujets, droits en
@@ -16,6 +19,9 @@ import type { Sujet } from "../src/types/reunion";
 // (« Créer » ou « Dupliquer »), « Reprendre les sujets non traités ? » ; oui =
 // recopiés dans la nouvelle (repriseDe) et marqués dans l'ancienne (reprisDans),
 // non = rien d'écrit, reproposés la fois suivante ; carte « Réunions précédentes ».
+// Tranche R3 (en fin de fichier) : lien du compte rendu (coller, ouvrir, retirer),
+// et le rappel du matin qui porte la veille de la réunion et le compte rendu en
+// lignes — une seule notification par personne et par jour, FR et 中文.
 
 const ROOT = path.resolve(__dirname, "..");
 const lire = (rel: string) => readFileSync(path.join(ROOT, rel), "utf8");
@@ -559,4 +565,190 @@ test("réunions précédentes : pas de carte pour la première réunion du pôle
   await ouvrir(page, BRUNO, "2026-10-02T18:00:00", { ...SUJETS, "evenements/reunion-nov": autreReunion("2026-11-07") });
   await expect(lignes(page)).toHaveCount(4);
   await expect(precedentes(page)).toHaveCount(0);
+});
+
+// ─── R3 : compte rendu et rappels du matin ──────────────────────────────────
+
+/** Compte rendu de la réunion du 3 octobre, collé par Alice le lendemain. */
+const CR = { url: "https://docs.google.com/document/d/oct", parUid: "uid-alice", parNom: "Alice Q.", le: "2026-10-04T09:30:00Z" };
+
+test("lien du compte rendu : tout lien https:// complet, rogné ; rien d'autre (question 12)", () => {
+  expect(lienCompteRendu("  https://docs.google.com/document/d/oct  ")).toBe("https://docs.google.com/document/d/oct");
+  expect(lienCompteRendu("https://drive.google.com/file/d/abc/view")).toBe("https://drive.google.com/file/d/abc/view");
+  expect(lienCompteRendu("https://exemple.org/cr.pdf")).toBe("https://exemple.org/cr.pdf");
+  for (const faux of ["", "docs.google.com/document/d/oct", "http://exemple.org/cr", "https://", "javascript:alert(1)", "https://exe mple.org"]) {
+    expect(lienCompteRendu(faux), faux).toBeNull();
+  }
+});
+
+test("source du lien : « Google Doc » pour un document Google, sinon le nom du site", () => {
+  expect(sourceDuLien("https://docs.google.com/document/d/oct/edit")).toBe("Google Doc");
+  expect(sourceDuLien("https://drive.google.com/file/d/abc/view")).toBe("Google Drive");
+  expect(sourceDuLien("https://www.exemple.org/cr.pdf")).toBe("exemple.org");
+});
+
+test("règles R3 : une personne de la réunion change le compte rendu, et lui seul, à son nom", () => {
+  const rules = lire("firestore.rules");
+  const debut = rules.indexOf("match /evenements/{id}");
+  const bloc = rules.slice(debut, rules.indexOf("match /inscriptions/{iid}", debut));
+  expect(bloc).toMatch(/allow update:[\s\S]*estDeLaReunion\(resource\.data\) && changeSeulement\(\['compteRendu'\]\)/);
+  expect(bloc).toMatch(/request\.resource\.data\.compteRendu == null[\s\S]*request\.resource\.data\.compteRendu\.parUid == request\.auth\.uid/);
+  expect(bloc).toMatch(/compteRendu\.url\.matches\('https:\/\/.+'\)/);
+});
+
+test("libellés R3 : le compte rendu en français et en 中文, clé pour clé", () => {
+  const fr = JSON.parse(lire("src/locales/fr.json")).evenements.compteRendu;
+  const zh = JSON.parse(lire("src/locales/zh-CN.json")).evenements.compteRendu;
+  expect(fr.titre).toBe("Compte rendu");
+  expect(fr.enregistrer).toBe("Enregistrer le lien");
+  expect(Object.keys(zh).sort()).toEqual(Object.keys(fr).sort());
+});
+
+test("veille d'une réunion : « Réunion DA demain, 20:00 : 1 sujet », en français et en 中文", () => {
+  expect(nombreSujetsAAborder([S("a", 0), S("b", 1, { traite: true }), S("c", 2, { reprisDans: "x" }), S("d", 3)])).toBe(2);
+  expect(ligneVeille(E, 1, "fr")).toBe("Réunion DA demain, 20:00 : 1 sujet");
+  expect(ligneVeille(E, 3, "fr")).toBe("Réunion DA demain, 20:00 : 3 sujets");
+  expect(ligneVeille(E, 0, "fr"), "sans sujet, pas de compte").toBe("Réunion DA demain, 20:00");
+  expect(ligneVeille({ ...E, heure: "" }, 1, "fr")).toBe("Réunion DA demain : 1 sujet");
+  expect(ligneVeille(E, 1, "zh-CN")).toBe("明天 20:00：Réunion DA（1 个议题）");
+  expect(ligneVeille(E, 0, "zh-CN")).toBe("明天 20:00：Réunion DA");
+  // Un évènement à inscriptions garde la phrase du lot 6.
+  const foot = { ...E, titre: "Foot au parc", pour: "eglise", heure: "19:00", lieu: "Parc de Bercy" } as Evenement;
+  expect(ligneVeille(foot, undefined, "fr")).toBe("Demain : Foot au parc à 19:00, Parc de Bercy");
+  expect(ligneVeille(foot, undefined, "zh-CN")).toBe("明天：Foot au parc 19:00，Parc de Bercy");
+});
+
+test("compte rendu : la ligne du rappel du lendemain, en français et en 中文", () => {
+  expect(ligneCompteRendu(E, "fr")).toBe("Compte rendu ajouté : Réunion DA du 3 octobre");
+  expect(ligneCompteRendu(E, "zh-CN")).toBe("会议记录已添加：Réunion DA（10月3日）");
+});
+
+/** Une tâche du pôle DA à faire dans 3 jours. */
+const RAPPEL_TACHE = {
+  tache: {
+    id: "t1", pole: "da", titre: "Fond PPT", responsableUid: null, responsableNom: "", echeance: "2026-10-05", repetition: null,
+    lien: "", note: "", prevenir: null, evenement: null, auteurUid: "uid-alice", createdAt: "2026-09-01T10:00:00Z", updatedAt: "2026-09-01T10:00:00Z",
+  },
+  date: "2026-10-05", quand: "J3" as const,
+} as unknown as RappelTache;
+const SERVICE = { tag: "J3" as const, date: "2026-10-04", services: [{ service: "Culte Franco", roles: ["Piano"] }] };
+const VEILLE = { kind: "veille" as const, evenement: E, sujets: 1 };
+const COMPTE_RENDU = { kind: "compteRendu" as const, evenement: { ...E, id: "reunion-sept", date: "2026-09-05" } as Evenement };
+
+test("un seul message quand service, tâche et réunion tombent le même jour (FR)", () => {
+  const n = notificationsDuMatin({ services: [SERVICE], taches: [RAPPEL_TACHE], lignes: [VEILLE, COMPTE_RENDU] }, "fr", "2026-10-02");
+  expect(n).toHaveLength(1);
+  expect(n[0]).toMatchObject({ title: "Rappel de service", url: "/mes-services", tag: "rappel-J3-2026-10-04", kind: "reminder" });
+  expect(n[0].body).toBe([
+    "Dimanche 4 octobre (dans 3 jours) : Culte Franco (Piano)",
+    "À faire : Fond PPT (DA), lundi 5 octobre",
+    "Réunion DA demain, 20:00 : 1 sujet",
+    "Compte rendu ajouté : Réunion DA du 5 septembre",
+  ].join("\n"));
+});
+
+test("le même message en 中文", () => {
+  const n = notificationsDuMatin({ services: [SERVICE], taches: [RAPPEL_TACHE], lignes: [VEILLE] }, "zh-CN", "2026-10-02");
+  expect(n).toHaveLength(1);
+  expect(n[0].title).toBe("服务提醒");
+  expect(n[0].body.split("\n")).toEqual(["10月4日星期日（3天后）：法语崇拜（钢琴）", "待办：Fond PPT（美工），10月5日星期一", "明天 20:00：Réunion DA（1 个议题）"]);
+});
+
+test("sans service : tâche et réunion dans un seul message ; réunion seule, un message vers sa fiche", () => {
+  const avecTache = notificationsDuMatin({ services: [], taches: [RAPPEL_TACHE], lignes: [VEILLE] }, "fr", "2026-10-02");
+  expect(avecTache).toHaveLength(1);
+  expect(avecTache[0]).toMatchObject({ title: "Rappel de tâches", url: "/taches", body: "À faire : Fond PPT (DA), lundi 5 octobre\nRéunion DA demain, 20:00 : 1 sujet" });
+
+  const seule = notificationsDuMatin({ services: [], taches: [], lignes: [VEILLE] }, "fr", "2026-10-02");
+  expect(seule).toEqual([{ title: "Rappel — Réunion DA", body: "Réunion DA demain, 20:00 : 1 sujet", url: "/evenements/reunion-da", tag: "rappel-evenements-2026-10-02", kind: "evenement" }]);
+
+  const deux = notificationsDuMatin({ services: [], taches: [], lignes: [VEILLE, COMPTE_RENDU] }, "zh-CN", "2026-10-02");
+  expect(deux).toHaveLength(1);
+  expect(deux[0]).toMatchObject({ title: "活动提醒", url: "/evenements", body: "明天 20:00：Réunion DA（1 个议题）\n会议记录已添加：Réunion DA（9月5日）" });
+
+  const ouverture = { kind: "ouverture" as const, evenement: { ...E, titre: "Foot au parc", pour: "eglise", inscriptionDebut: "2026-10-02T10:00" } as Evenement };
+  expect(notificationsDuMatin({ services: [], taches: [], lignes: [ouverture] }, "fr", "2026-10-02")[0])
+    .toMatchObject({ title: "Inscriptions ouvertes", body: "Inscriptions ouvertes : Foot au parc (dès 10:00)" });
+  expect(notificationsDuMatin({ services: [], taches: [], lignes: [] }, "fr", "2026-10-02")).toEqual([]);
+});
+
+test("le cron fond la veille et le compte rendu dans le rappel du matin : un seul envoi", () => {
+  const route = lire("src/app/api/cron/reminders/route.ts");
+  expect(route).toContain("notificationsDuMatin(");
+  expect(route.match(/sendPushToUids\(/g), "un seul endroit envoie").toHaveLength(1);
+  expect(route, "la veille ne part plus à part").not.toContain("evenementReminder");
+  expect(route).toContain('"compteRendu.le"');
+});
+
+// La carte « Compte rendu », sur la fiche d'une réunion.
+const compteRendu = (page: Page) => page.getByRole("region", { name: "Compte rendu", exact: true });
+const lienCR = (page: Page) => compteRendu(page).getByRole("textbox", { name: "Lien du compte rendu" });
+const ecrituresReunion = (db: Awaited<ReturnType<typeof ouvrir>>) =>
+  db.writes.filter((w) => w.method === "PATCH" && w.path === "evenements/reunion-da");
+
+test("compte rendu : un membre colle le lien après la réunion ; seul le champ compteRendu est écrit, à son nom", async ({ page }) => {
+  const db = await ouvrir(page, BRUNO, "2026-10-04T10:00:00");
+  await expect(compteRendu(page)).toContainText("Après la réunion, toute personne de la réunion (ou un admin) colle ici le lien du Google Doc du récap ; les autres sont prévenus dans le rappel du matin.");
+  await lienCR(page).fill("docs.google.com/document/d/oct");
+  await compteRendu(page).getByRole("button", { name: "Enregistrer le lien" }).click();
+  await expect(compteRendu(page).getByRole("alert")).toHaveText("Colle un lien complet, qui commence par https://");
+  expect(ecrituresReunion(db)).toHaveLength(0);
+
+  await lienCR(page).fill("  https://docs.google.com/document/d/oct  ");
+  await compteRendu(page).getByRole("button", { name: "Enregistrer le lien" }).click();
+  await expect.poll(() => ecrituresReunion(db).length).toBe(1);
+  const ecrit = ecrituresReunion(db)[0].data;
+  expect(Object.keys(ecrit)).toEqual(["compteRendu"]);
+  expect(ecrit.compteRendu).toMatchObject({ url: "https://docs.google.com/document/d/oct", parUid: "uid-bruno", parNom: "Bruno M." });
+  expect(String((ecrit.compteRendu as { le: string }).le)).toMatch(/^2026-10-04T/);
+  await expect(compteRendu(page)).toContainText("Google Doc · ajouté par Bruno M. le 4 oct.");
+  await expect(compteRendu(page).getByRole("link", { name: "Ouvrir" })).toHaveAttribute("href", "https://docs.google.com/document/d/oct");
+
+  await page.reload();
+  await expect(compteRendu(page)).toContainText("Google Doc · ajouté par Bruno M. le 4 oct.");
+});
+
+test("compte rendu : on l'ouvre dans un nouvel onglet ; une personne de la réunion le retire", async ({ page }) => {
+  const db = await ouvrir(page, CLARA, "2026-10-04T18:00:00", { ...SUJETS, "evenements/reunion-da": { ...REUNION, compteRendu: CR } });
+  await expect(compteRendu(page)).toContainText("Google Doc · ajouté par Alice Q. le 4 oct.");
+  const ouvrirLien = compteRendu(page).getByRole("link", { name: "Ouvrir" });
+  await expect(ouvrirLien).toHaveAttribute("href", CR.url);
+  await expect(ouvrirLien).toHaveAttribute("target", "_blank");
+  await expect(lienCR(page)).toHaveCount(0);
+
+  page.once("dialog", (d) => d.accept());
+  await compteRendu(page).getByRole("button", { name: "Retirer le lien du compte rendu" }).click();
+  await expect.poll(() => ecrituresReunion(db).map((w) => w.data)).toEqual([{ compteRendu: null }]);
+  await expect(lienCR(page)).toBeVisible();
+  await expect(compteRendu(page).getByRole("link", { name: "Ouvrir" })).toHaveCount(0);
+});
+
+test("compte rendu : un admin hors du pôle le colle aussi, tout lien https:// accepté", async ({ page }) => {
+  const db = await ouvrir(page, ADMIN, "2026-10-04T10:00:00");
+  await lienCR(page).fill("https://exemple.org/cr.pdf");
+  await compteRendu(page).getByRole("button", { name: "Enregistrer le lien" }).click();
+  await expect(compteRendu(page)).toContainText("exemple.org · ajouté par Admin T.");
+  expect(ecrituresReunion(db)).toHaveLength(1);
+});
+
+test("compte rendu : pas de carte pour un évènement qui n'est pas une réunion", async ({ page }) => {
+  await page.clock.setFixedTime(new Date("2026-10-04T10:00:00"));
+  await signInAs(page, ADMIN, { "evenements/foot": { ...REUNION, titre: "Foot au parc", pour: "eglise", compteRendu: CR } }, "/evenements/foot");
+  await expect(page.getByRole("heading", { name: "Foot au parc" })).toBeVisible();
+  await expect(compteRendu(page)).toHaveCount(0);
+});
+
+test("captures : le compte rendu vide, avant la réunion (organisatrice)", async ({ page }, info) => {
+  await ouvrir(page, ALICE);
+  await expect(lienCR(page)).toBeVisible();
+  // Au milieu de l'écran : sur téléphone, la barre d'onglets flottante cacherait le bas de la carte.
+  await compteRendu(page).evaluate((el) => el.scrollIntoView({ block: "center" }));
+  await compteRendu(page).screenshot({ path: path.join(ROOT, "test-results", "reunions-captures", `${info.project.name}-compte-rendu-vide.png`) });
+});
+
+test("captures : le compte rendu collé, après la réunion (membre)", async ({ page }, info) => {
+  await ouvrir(page, BRUNO, "2026-10-04T18:00:00", { ...APRES, "evenements/reunion-da": { ...REUNION, compteRendu: CR } });
+  await expect(lignes(page)).toHaveCount(4);
+  await expect(compteRendu(page).getByRole("link", { name: "Ouvrir" })).toBeVisible();
+  await page.screenshot({ path: path.join(ROOT, "test-results", "reunions-captures", `${info.project.name}-compte-rendu.png`), fullPage: true });
 });

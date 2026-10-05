@@ -24,6 +24,7 @@ import { TachesEvenement } from "./TachesEvenement"
 import { QrCodeLink } from "@/components/evenements/QrCode"
 import { SujetsAborder } from "@/components/reunions/SujetsAborder"
 import { ReunionsPrecedentes } from "@/components/reunions/ReunionsPrecedentes"
+import { CompteRenduCarte } from "@/components/reunions/CompteRenduCarte"
 
 const COLOR = PLANNING_COLORS.scene
 const URL_RE = /(https?:\/\/[^\s]+)/g
@@ -144,11 +145,12 @@ export function EvenementClient() {
       )}
       </div>
 
-      {/* Lot U6 (R1, R2) : les sujets d'une réunion de pôle et les réunions
-          précédentes, pour les personnes de la réunion — les mêmes cartes pour
-          les membres et pour qui la gère. */}
+      {/* Lot U6 (R1, R2, R3) : le compte rendu en tête, les sujets d'une réunion
+          de pôle et les réunions précédentes, pour les personnes de la réunion —
+          les mêmes cartes pour les membres et pour qui la gère. */}
       {user && poleDuPour(e.pour) && estDeLaReunion(user, profile, e) && (
         <>
+          <CompteRenduCarte evenement={e} user={user} profile={profile} onChange={(compteRendu) => setEvenement({ ...e, compteRendu })} />
           <SujetsAborder evenement={e} user={user} profile={profile} reunions={memePublic} />
           <ReunionsPrecedentes courante={e} reunions={memePublic} />
         </>

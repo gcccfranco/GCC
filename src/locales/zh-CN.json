@@ -1716,6 +1716,19 @@
       "noteUne": "不沿用的话，它们会在原来的会议中继续以红色显示。",
       "notePlusieurs": "不沿用的话，它们会在原来的各次会议中继续以红色显示。"
     },
+    "compteRendu": {
+      "titre": "会议记录",
+      "aide": "会议结束后，参会的任何人（或管理员）都可以在这里粘贴会议记录的 Google 文档链接；其他人会在早间提醒中收到通知。",
+      "lien": "会议记录链接",
+      "placeholder": "https://docs.google.com/document/…",
+      "enregistrer": "保存链接",
+      "invalide": "请粘贴以 https:// 开头的完整链接",
+      "ajoutePar": "{{source}} · {{nom}} 于{{date}}添加",
+      "ouvrir": "打开",
+      "retirer": "移除会议记录链接",
+      "confirmRetirer": "确定移除会议记录链接吗？",
+      "erreur": "保存失败，请重试。"
+    },
     "precedentes": {
       "titre": "以往会议",
       "compteRendu": "会议记录",

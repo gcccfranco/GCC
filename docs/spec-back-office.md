@@ -376,8 +376,50 @@ npm test && npx tsc --noEmit && npm run lint && graphify update .
 
 ## Avancement
 
+**05/10/2026 — R3 « Compte rendu et rappels » codée** (branche `lot/u6-back-office`, commit « feat(U6): R3 — compte
+rendu et rappels du matin… », après R2). Le reste (B1 à B6, R4) n'est pas commencé.
+
+- **Carte « Compte rendu »** (`src/components/reunions/CompteRenduCarte.tsx`), sur la fiche `/evenements/<id>` d'une
+  réunion de pôle, **en tête** des cartes de réunion (au-dessus des sujets), pour toute personne de la réunion
+  (`estDeLaReunion`) : vide = aide de la planche, champ en pointillés, « Enregistrer le lien » ; collé = « Google
+  Doc · ajouté par Alice Q. le 4 oct. », « Ouvrir » (nouvel onglet), ✕ « Retirer le lien du compte rendu » (avec
+  confirmation). **B3 la posera sur la fiche du Back-Office.** Libellés `evenements.compteRendu.*` en FR et 中文.
+- **Écriture** : `majCompteRendu` (`src/lib/firebase/evenements.ts`), PATCH du seul champ `compteRendu` (ni
+  `updatedAt`), `{ url, parUid, parNom, le }` ou `null`. Lien vérifié par `lienCompteRendu`
+  (`src/lib/reunions/compteRendu.ts` : tout `https://` complet, rogné, question 12) ; source affichée par
+  `sourceDuLien` (« Google Doc », « Google Drive », sinon le nom du site).
+- **Règle** (`firestore.rules`, `allow update` de `evenements/{id}`) : en plus de l'organisateur et de la
+  coordination, `estDeLaReunion(resource.data) && changeSeulement(['compteRendu'])`, avec `compteRendu == null` ou
+  `parUid == request.auth.uid` et `url.matches('https://.+')`. Miroir noté dans `access.ts` (la carte s'affiche par
+  `estDeLaReunion`).
+- **Rappel du matin** (`src/app/api/cron/reminders/route.ts`) : la veille d'un évènement **ne part plus à part**
+  (question 8 : réunions et évènements à inscriptions). Trois sortes de lignes, préférence « Évènements », une clé
+  `notifLog` par (ligne, personne) : veille (clé du lot 6 gardée, `rappel-evenement-<id>`) — réunion : tout le
+  pôle, « Réunion DA demain, 20:00 : 1 sujet » (sujets ni traités ni repris) ; autre : la phrase du lot 6 ; compte
+  rendu collé depuis hier (`compteRendu.le >= hier`) — les autres personnes de la réunion, « Compte rendu ajouté :
+  Réunion DA du 3 octobre », clé `compte-rendu-<id>-<le>` ; ouvertures d'inscriptions (comme avant). Le message est
+  composé par `notificationsDuMatin` (`src/lib/reunions/rappels.ts`, pur) : un seul passage par personne, un seul
+  `sendPushToUids` dans la route.
+- **Tests** : `tests/reunions.spec.ts`, 16 tests de plus (52 × ordinateur, téléphone, tablette ; vus rouges sur
+  modules vides, puis verts) : lien et source, règle relue, libellés, lignes FR et 中文, un seul message quand
+  service, tâche et réunion tombent le même jour (FR et 中文), sans service, réunion seule, le cron relu ; carte :
+  coller (lien refusé, seul champ écrit, à son nom, relu après rechargement), ouvrir et retirer, admin hors pôle,
+  pas de carte hors réunion ; captures `test-results/reunions-captures/*-compte-rendu-vide.png`, `*-compte-rendu.png`.
+  `evenements.spec.ts`, `taches.spec.ts`, `taches-evenements.spec.ts`, `rappels-regroupes.spec.ts`,
+  `back-office-coupe.spec.ts` verts (637 passés, 2 sautés d'avant).
+- **Choix faits faute de réponse dans la spec** : le lien se colle **avant comme après** la réunion (la planche
+  `bo-reunion-avant` montre le champ avant) ; toute personne de la réunion le **retire** ou le remplace (retirer
+  puis coller), comme la règle proposée ; « Enregistrer le lien » grisé tant que le champ est vide ; la ligne de la
+  veille prend le **titre** de la réunion (« Réunion DA », comme la planche ; une réunion d'équipe de R4 suivra
+  sans changement) et se tait sur le nombre quand il n'y a aucun sujet ; un lien remplacé est annoncé à nouveau ;
+  la personne qui colle n'est pas prévenue, les admins hors pôle non plus (« personnes de la réunion » =
+  `destinatairesEvenement`) ; titre d'une notification sans service ni tâche : « Inscriptions ouvertes » si elle
+  n'a que des ouvertures, « Rappel — <titre> » pour une seule veille, sinon « Rappel des évènements » (中文
+  « 活动提醒 »). **Inchangé** : deux échéances de service distinctes (J7, J3, J1) gardent chacune leur notification,
+  comme avant ; les lignes vont dans la première.
+
 **05/10/2026 — R2 « Reprise » codée** (branche `lot/u6-back-office`, commit « feat(U6): R2 — reprise des sujets
-non traités… », après R1). Le reste (B1 à B6, R3, R4) n'est pas commencé.
+non traités… », après R1).
 
 - **Question à la création** : `src/app/evenements/nouveau/NouveauClient.tsx`, donc par « Créer » comme par
   « Dupliquer » (`?from=`). À l'envoi d'une réunion de pôle, avant toute écriture, `lireSujetsAReprendre`
@@ -439,6 +481,8 @@ aborder… »).
   le thème n'a pas de jeton « alerte » de ce ton) ; les sujets d'une réunion supprimée restent dans Firestore, illisibles (la règle relit la réunion).
 
 À faire par Timothée : **publier `firestore.rules`** (bloc des sujets, R1 ; R2 n'y change rien, le marquage
-`reprisDans` y est déjà) ; relire le 中文 de `evenements.sujets`, `evenements.reprise` et `evenements.precedentes`
-(`src/locales/zh-CN.json`). Après les tranches suivantes : republier les règles (compte rendu, réunions d'équipe,
-`backOffice/{uid}`, création des profils) et cliquer une fois « Recalculer depuis l'organigramme ».
+`reprisDans` y est déjà ; **R3 : nouvelle branche de `allow update` sur `evenements/{id}`** pour le compte rendu) ;
+relire le 中文 de `evenements.sujets`, `evenements.reprise`, `evenements.precedentes`, `evenements.compteRendu`
+(`src/locales/zh-CN.json`) et des lignes du rappel (`src/lib/reunions/rappels.ts` : « 明天 20:00：… （1 个议题）»,
+« 会议记录已添加：… », titre « 活动提醒 »). Après les tranches suivantes : republier les règles (réunions
+d'équipe, `backOffice/{uid}`, création des profils) et cliquer une fois « Recalculer depuis l'organigramme ».

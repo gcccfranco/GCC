@@ -180,6 +180,8 @@ export function canEditEvenement(
 
 // ─── Sujets d'une réunion (lot U6, R1, docs/spec-back-office.md) — miroir : ───
 // estDeLaReunion, organise et match /sujets/{sid} dans firestore.rules.
+// Compte rendu (R3) : estDeLaReunion colle ou retire le lien (allow update de
+// evenements/{id}, champ compteRendu seul) ; lien vérifié par lienCompteRendu.
 
 /** Personne de la réunion : membre du pôle (Louange compris, comme pour les
  *  tâches), l'organisateur, un admin. Comme dans les règles, l'organisateur et
