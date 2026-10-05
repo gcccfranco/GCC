@@ -186,3 +186,37 @@ npm test -- tests/pages-en-grand-*.spec.ts
 ## Avancement
 
 - 05/10/2026 : spec écrite ; planche version 17.
+
+**B0 — faite le 05/10/2026** (branche `lot/u4bis-pages-en-grand`, après fusion de `lot/u4-navigation` et
+`lot/u5-deux-volets` ; commit `feat(U4bis): B0 — fondations…`). Aucun écran ne change.
+- `src/components/layout/DeuxVolets.tsx` : `<DeuxVolets racine liste premier largeurListe>{children}</DeuxVolets>`,
+  à poser dans le layout de route d'une section (Q2). Bâti sur `useDeuxVolets` de U5 (Q1, pas de second hook). En
+  grand : la liste à gauche (`data-volet="liste"`, 380 px par défaut, collante sous `--nav-h`, défile seule, filet à
+  droite), à droite la page de l'adresse ou, sur l'adresse de la liste, `premier` (Q3 : le premier élément de la
+  liste filtrée, ou son état vide) ; le tout borné par `--largeur-lecture` et centré. Un volet : la liste seule sur
+  son adresse, la page seule ailleurs (la liste n'est pas montée), comme aujourd'hui. La page de l'adresse de la
+  liste (`page.tsx`) n'est jamais montrée : elle rend `null`, la liste vit dans le layout. Les deux emplacements
+  gardent leur place : passer d'un volet à deux ne remonte pas la page.
+- `src/lib/deuxVolets.ts` : la règle sans React (`disposerVolets`, `estSurLaListe`, barre finale tolérée : le site
+  sert `/x/`), et `SECTIONS_EN_DEUX_VOLETS` + `cleDeTransition`. `PageTransition` remontait toute la page à chaque
+  adresse (`key={pathname}`) : la liste d'un layout aurait été rechargée à chaque élément. Une section inscrite dans
+  `SECTIONS_EN_DEUX_VOLETS` n'est plus remontée qu'en la quittant, et `DeuxVolets` fait le fondu de ses volets (le
+  détail se fond, la liste ne bouge pas). **La liste est vide avec B0** : chaque tranche y ajoute sa section avec son
+  layout (`/evenements`, `/mes-services`…).
+- `src/lib/equipes/rangerEnColonnes.ts` : `rangerEnColonnes(hauteurs, hauteurMax, { larges, ecart })` → colonnes
+  `{ cartes, large }` (Q12) ; ordre gardé, une carte sous la précédente tant que la colonne (écarts compris) tient,
+  une carte plus haute que la limite seule, les `larges` (Louange, EDD) une par colonne, en dernier.
+- Tests : `tests/pages-en-grand-fondations.spec.ts` (13 tests, fonctions pures), vus rouges (module absent, puis
+  bouchons : 8 échecs) puis verts sur les cinq projets (65). `playwright.config.ts` : `pages-en-grand-*.spec.ts` entre
+  dans `SPECS_GRAND_ECRAN`. Le composant a été essayé sur une route jetable (non commitée) sur les cinq projets :
+  deux volets sur ordinateur, ordinateur-1440 et tablette paysage (liste 380 px à côté de la barre), un volet sur
+  téléphone et tablette ; liste restée montée d'un élément à l'autre (défilement gardé), retour arrière, aucun
+  défilement horizontal ; captures regardées. `tsc` et ESLint propres ; `navigation-grand-ecran`, `look-navigation`
+  verts.
+- Relevé, sans rapport avec B0 : `songs-list-return.spec.ts` échoue sur `ordinateur` (2 tests « bouton Retour » : la
+  flèche du Retour introuvable à 390 px avec un pointeur fin), déjà sans le changement de `PageTransition` ; vient
+  des fusions U4/U5.
+- **Fusion avec U5 T5** : U5 (non commité au 05/10) change aussi `PageTransition` pour garder `/songs` montée ; à
+  l'intégration, garder `cleDeTransition` et inscrire `/songs` dans `SECTIONS_EN_DEUX_VOLETS` (ou garder les deux).
+- Reste : B1 à B7.
+- À faire par Timothée : rien pour B0 (aucune règle, aucun écran).

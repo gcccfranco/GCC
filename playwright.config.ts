@@ -23,6 +23,8 @@ const SPECS_GRAND_ECRAN = [
   /coup-d-oeil\.spec\.ts/,
   // Lot U5 (docs/spec-deux-volets.md) : la setlist en deux volets.
   /setlist-deux-volets\.spec\.ts/,
+  // Lot U4 bis (docs/spec-pages-en-grand.md, Q16) : toutes les pages en grand.
+  /pages-en-grand-.*\.spec\.ts/,
 ];
 
 export default defineConfig({
