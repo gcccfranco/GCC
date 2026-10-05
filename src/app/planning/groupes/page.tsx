@@ -5,10 +5,13 @@ import { useTranslation } from "react-i18next"
 import { FilterButtons } from "@/components/planning/FilterButtons"
 import { PlanningGrille } from "@/components/planning/PlanningGrille"
 import { StaleBanner } from "@/components/planning/StaleBanner"
-import { getCurrentTri, getTri } from "@/lib/planning/utils"
+import { getCurrentTri } from "@/lib/planning/utils"
 import { PAIX_FALLBACK, FIDELITE_FALLBACK, FIDELITE_MUSIC_FALLBACK, BONTE_FALLBACK } from "@/lib/planning/data"
-import { fetchPaix, fetchFidelite, fetchFideliteMusic, fetchBonte } from "@/lib/planning/sheets"
-import { GRILLE_BONTE, GRILLE_FIDELITE, GRILLE_FIDELITE_MUSICIENS, GRILLE_PAIX, lignesPubliees } from "@/lib/planning/grilles"
+import { fetchPaix, fetchFidelite, fetchFideliteMusic, fetchBonte, fetchInterfranco, fetchIntergroupe } from "@/lib/planning/sheets"
+import { GRILLE_BONTE, GRILLE_FIDELITE, GRILLE_FIDELITE_MUSICIENS, GRILLE_PAIX, dimanchesDe, dimanchesSpeciaux, vueTrimestrielle } from "@/lib/planning/grilles"
+import { AnneeSelecteur } from "@/components/planning/AnneeSelecteur"
+import { BandeauAnnee } from "@/components/planning/BandeauAnnee"
+import { BoutonPublication } from "@/components/planning/BoutonPublication"
 import { useGrilleApp } from "@/lib/planning/useGrilleApp"
 import { useProfile } from "@/lib/firebase/users"
 import { canEditPlanning, isAdminUser } from "@/lib/access"
@@ -17,8 +20,6 @@ import {
   PUBLISHABLE_PLANNINGS,
   canPublishPlanning,
   getPublishedQuarters,
-  triVisibilities,
-  TRI_ORDER,
 } from "@/lib/planning/releases"
 import { BACK_OFFICE } from "@/lib/backOffice"
 import { AncienTableau } from "./AncienTableau"
@@ -47,11 +48,17 @@ function GroupesPage() {
   const [fid, setFid] = useState(FIDELITE_FALLBACK)
   const [fidM, setFidM] = useState(FIDELITE_MUSIC_FALLBACK)
   const [bonte, setBonte] = useState(BONTE_FALLBACK)
+  // Lot U2 (Q5) : les dimanches d'Interfranco et d'Intergroupe, lus dans leur grille.
+  const [interfranco, setInterfranco] = useState<string[][]>([])
+  const [intergroupe, setIntergroupe] = useState<string[][]>([])
   const [loading, setLoading] = useState(true)
   const [stale, setStale] = useState(false)
   const [grp, setGrp] = useState<Groupe>("paix")
   const [fidSub, setFidSub] = useState<FidSub>("groupe")
   const [tri, setTri] = useState(getCurrentTri())
+  // Lot U2 : l'année choisie ; publication lue pour l'année en cours et la suivante.
+  const anneeCourante = new Date().getFullYear()
+  const [annee, setAnnee] = useState(anneeCourante)
   const [pubByGrp, setPubByGrp] = useState<Record<string, string[]>>({})
 
   useEffect(() => {
@@ -60,6 +67,8 @@ function GroupesPage() {
       fetchFidelite().then(d => { if (d.length) setFid(d) }),
       fetchFideliteMusic().then(d => { if (d.length) setFidM(d) }),
       fetchBonte().then(d => { if (d.length) setBonte(d) }),
+      fetchInterfranco().then(setInterfranco),
+      fetchIntergroupe().then(setIntergroupe),
     ]).then(results => {
       setStale(results.some(r => r.status === "rejected"))
       setLoading(false)
@@ -69,8 +78,8 @@ function GroupesPage() {
   useEffect(() => {
     const year = new Date().getFullYear()
     Promise.all(
-      (["paix", "fidelite", "bonte"] as Groupe[]).map(k =>
-        getPublishedQuarters(k, year).then(q => [k, q] as const)
+      (["paix", "fidelite", "bonte"] as Groupe[]).flatMap(k =>
+        [year, year + 1].map(y => getPublishedQuarters(k, y).then(q => [`${k}_${y}`, q] as const))
       )
     ).then(entries => setPubByGrp(Object.fromEntries(entries)))
   }, [])
@@ -84,26 +93,51 @@ function GroupesPage() {
   const rows = grp === "paix" ? paix : grp === "bonte" ? bonte : fidSub === "musiciens" ? fidM : fid
 
   const peutModifier = canEditPlanning(user, profile, definition.key)
-  const { datesDansLApp, nomsDesComptes } = useGrilleApp(definition.key, peutModifier)
+  const { datesDansLApp, comptes } = useGrilleApp(definition.key, peutModifier)
 
   // Trimestres futurs non publiés du groupe actif : masqués aux membres, marqués aux publieurs.
   const planning = PUBLISHABLE_PLANNINGS.find(p => p.key === grp)!
   const canPublish = canPublishPlanning(planning, isAdminUser(user), profile?.notify ?? [])
-  const vis = triVisibilities(TRI_ORDER, pubByGrp[grp] ?? [], getCurrentTri(), canPublish)
-  const visibleTris = vis.filter(v => v.visible).map(v => v.tri)
-  const unpublishedTris = vis.filter(v => v.unpublished).map(v => v.tri)
-  const effTri = visibleTris.includes(tri) ? tri : getCurrentTri()
-  const lignes = lignesPubliees(rows, pubByGrp[grp] ?? [], getCurrentTri(), new Date().getFullYear(), canPublish)
-    .filter((l) => getTri(l.row[0]) === effTri)
+  // Q4 (lot U2) : le brouillon se montre à qui remplit ou publie ce planning, et aux admins.
+  const voitBrouillon = canPublish || peutModifier
+  const {
+    annees, annee: effAnnee, visibles: visibleTris, nonPublies: unpublishedTris, tri: effTri, lignes, aVenir, brouillon,
+  } = vueTrimestrielle({
+    definition, rows, anneeCourante, triCourant: getCurrentTri(), annee, tri,
+    publies: (y) => pubByGrp[`${grp}_${y}`] ?? [], voitBrouillon,
+  })
+
+  function changerAnnee(a: number) {
+    setAnnee(a)
+    setTri(a === anneeCourante ? getCurrentTri() : "T1")
+  }
 
   return (
     <div className="max-w-full space-y-4 mx-auto">
       <div className="flex flex-wrap gap-3 items-center justify-between">
-        <h2 className="text-base font-bold text-foreground">{t("planning.pages.groupes")}</h2>
+        <div className="flex items-center gap-3 flex-wrap">
+          <h2 className="text-base font-bold text-foreground">{t("planning.pages.groupes")}</h2>
+          <AnneeSelecteur annees={annees} annee={effAnnee} onChange={changerAnnee} />
+        </div>
         {loading && <span className="text-xs text-muted-foreground">{t("common.loading")}</span>}
+        {canPublish && effTri && aVenir && (
+          <BoutonPublication
+            planningKey={planning.key}
+            planningLabel={planning.label}
+            annee={effAnnee}
+            tri={effTri}
+            publie={!unpublishedTris.includes(effTri)}
+            onChange={(published) => setPubByGrp((prev) => ({ ...prev, [`${grp}_${effAnnee}`]: published }))}
+          />
+        )}
       </div>
 
       <StaleBanner show={stale} />
+      <BandeauAnnee
+        annee={effAnnee}
+        brouillon={brouillon}
+        dimanches={brouillon && definition.dates === "dimanches" ? dimanchesDe(effAnnee).length : null}
+      />
 
       <div className="flex gap-2">
         {(["paix","fidelite","bonte"] as Groupe[]).map(g => (
@@ -142,11 +176,14 @@ function GroupesPage() {
       <PlanningGrille
         key={definition.key}
         definition={definition}
-        periode={`${effTri} ${new Date().getFullYear()}`}
+        periode={`${effTri} ${effAnnee}`}
         lignes={lignes}
         peutModifier={peutModifier}
         datesDansLApp={datesDansLApp}
-        nomsDesComptes={nomsDesComptes}
+        comptes={comptes}
+        dimanchesSpeciaux={dimanchesSpeciaux(interfranco, intergroupe)}
+        // P7 : les responsables du planning et les admins exportent (Q13).
+        exporter={voitBrouillon ? { annee: effAnnee, rang: Number(effTri.slice(1)) || 1, tout: isAdminUser(user) } : undefined}
       />
     </div>
   )

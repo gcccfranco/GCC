@@ -303,8 +303,9 @@ test("organisatrice : elle réordonne en glissant un sujet", async ({ page }) =>
   await expect(page.getByText("Sujet « Photos du culte : qui prend le relais en novembre ? » en position 1 sur 4.")).toBeAttached();
   await page.mouse.up();
   await attendreOrdre(page, ["Photos du culte", "Affiche de Noël", "Fond PPT du culte", "Budget impression"]);
-  const patchs = ecritures(db, "PATCH").map((w) => [w.path.split("/").pop(), w.data]);
-  expect(patchs).toEqual([["s3", { ordre: 0 }], ["s1", { ordre: 1 }], ["s2", { ordre: 2 }]]);
+  // Les écritures partent l'une après l'autre : la dernière peut suivre l'affichage.
+  const patchs = () => ecritures(db, "PATCH").map((w) => [w.path.split("/").pop(), w.data]);
+  await expect.poll(patchs).toEqual([["s3", { ordre: 0 }], ["s1", { ordre: 1 }], ["s2", { ordre: 2 }]]);
 });
 
 test("organisatrice : elle réordonne au clavier (Espace, flèche, Espace)", async ({ page }) => {
@@ -320,8 +321,8 @@ test("organisatrice : elle réordonne au clavier (Espace, flèche, Espace)", asy
   await expect(page.getByText("Sujet « Budget impression du trimestre » en position 3 sur 4.")).toBeAttached();
   await page.keyboard.press("Space");
   await attendreOrdre(page, ["Affiche de Noël", "Fond PPT du culte", "Budget impression", "Photos du culte"]);
-  const patchs = ecritures(db, "PATCH").map((w) => [w.path.split("/").pop(), w.data]);
-  expect(patchs).toEqual([["s4", { ordre: 2 }], ["s3", { ordre: 3 }]]);
+  const patchs = () => ecritures(db, "PATCH").map((w) => [w.path.split("/").pop(), w.data]);
+  await expect.poll(patchs).toEqual([["s4", { ordre: 2 }], ["s3", { ordre: 3 }]]);
 });
 
 // ─── Après le début : le rouge ──────────────────────────────────────────────
@@ -682,10 +683,21 @@ test("sans service : tâche et réunion dans un seul message ; réunion seule, u
   expect(notificationsDuMatin({ services: [], taches: [], lignes: [] }, "fr", "2026-10-02")).toEqual([]);
 });
 
+test("la ligne du petit déj du mercredi (lot U3) suit les autres lignes ; seule, pas de message ici", () => {
+  const PD = ["Dimanche 4 octobre : personne pour le petit déj.", "Ne plus recevoir : Moi › Mon profil › Notifications › Petit déj"];
+  const n = notificationsDuMatin({ services: [SERVICE], taches: [], lignes: [VEILLE], autres: PD }, "fr", "2026-09-30");
+  expect(n).toHaveLength(1);
+  expect(n[0].body.split("\n")).toEqual(["Dimanche 4 octobre (dans 3 jours) : Culte Franco (Piano)", "Réunion DA demain, 20:00 : 1 sujet", ...PD]);
+  expect(notificationsDuMatin({ services: [], taches: [], lignes: [], autres: PD }, "fr", "2026-09-30")).toEqual([]);
+});
+
 test("le cron fond la veille et le compte rendu dans le rappel du matin : un seul envoi", () => {
   const route = lire("src/app/api/cron/reminders/route.ts");
   expect(route).toContain("notificationsDuMatin(");
-  expect(route.match(/sendPushToUids\(/g), "un seul endroit envoie").toHaveLength(1);
+  // Deux envois : le passage par personne, et la ligne du petit déj du mercredi
+  // pour les comptes qui n'ont rien d'autre ce jour-là (lot U3, PD4).
+  expect(route.match(/sendPushToUids\(/g), "le passage par personne, puis le petit déj seul").toHaveLength(2);
+  expect(route).toContain("petitDejSeuls = [...petitDej.uids]");
   expect(route, "la veille ne part plus à part").not.toContain("evenementReminder");
   expect(route).toContain('"compteRendu.le"');
 });

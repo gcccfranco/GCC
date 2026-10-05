@@ -45,7 +45,8 @@
     "react-i18next": "^17.0.8",
     "tailwind-merge": "^2.6.0",
     "vaul": "^1.1.2",
-    "web-push": "^3.6.7"
+    "web-push": "^3.6.7",
+    "write-excel-file": "^4.1.1"
   },
   "devDependencies": {
     "@playwright/test": "^1.62.1",

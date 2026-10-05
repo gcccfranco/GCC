@@ -7,7 +7,7 @@ import { fetchInterfranco } from "@/lib/planning/sheets"
 import { GRILLE_INTERFRANCO, lignesSimples } from "@/lib/planning/grilles"
 import { useGrilleApp } from "@/lib/planning/useGrilleApp"
 import { useProfile } from "@/lib/firebase/users"
-import { canEditPlanning } from "@/lib/access"
+import { canEditPlanning, isAdminUser } from "@/lib/access"
 import { BACK_OFFICE } from "@/lib/backOffice"
 import { AncienTableau } from "./AncienTableau"
 
@@ -19,7 +19,7 @@ function InterfrancoPage() {
   const { user, profile } = useProfile()
   const { rows, status } = useSheet<string[]>(fetchInterfranco, [])
   const peutModifier = canEditPlanning(user, profile, GRILLE_INTERFRANCO.key)
-  const { datesDansLApp, nomsDesComptes } = useGrilleApp(GRILLE_INTERFRANCO.key, peutModifier)
+  const { datesDansLApp, comptes } = useGrilleApp(GRILLE_INTERFRANCO.key, peutModifier)
 
   return (
     <div className="max-w-full space-y-4 mx-auto">
@@ -34,7 +34,8 @@ function InterfrancoPage() {
         lignes={lignesSimples(rows)}
         peutModifier={peutModifier}
         datesDansLApp={datesDansLApp}
-        nomsDesComptes={nomsDesComptes}
+        comptes={comptes}
+        exporter={peutModifier ? { annee: new Date().getFullYear(), rang: 1, tout: isAdminUser(user) } : undefined}
       />
     </div>
   )

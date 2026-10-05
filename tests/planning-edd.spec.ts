@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { lirePdf } from "./helpers/pdf";
 
 // Lot 17, tranche G6 « EDD » (Timothée, 19/09/2026 : « pouvoir modifier tous
 // les plannings sur le site ») : une grille par classe (中班, 大班, 高班),
@@ -54,7 +55,9 @@ test("avec le droit sur 中班 : une case s'écrit dans la grille de la classe, 
   const db = await open(page, PROF, "/planning/edd");
   await page.getByRole("button", { name: "Modifier" }).click();
   await laCase(page, "2026-09-27", "piano").getByRole("button").click();
-  const champ = laCase(page, "2026-09-27", "piano").getByLabel("Piano", { exact: true });
+  // P9 (lot U2) : « Choisir », puis un nom écrit à la main.
+  await page.getByRole("button", { name: "Écrire un nom sans compte…" }).click();
+  const champ = page.getByRole("textbox", { name: "Piano", exact: true });
   await champ.fill("Esther C.");
   await champ.press("Enter");
   await expect(laCase(page, "2026-09-27", "piano")).toContainText("Esther C.");
@@ -72,16 +75,30 @@ test("avec le droit sur 中班 : une case s'écrit dans la grille de la classe, 
   await expect(laCase(page, "2026-09-27", "piano")).toContainText("Eva C.");
 });
 
-test("« Exporter en CSV » : la classe et la période affichées", async ({ page }) => {
-  await open(page, MEMBRE, "/planning/edd");
+// Lot U2, P7 : « Exporter (modèle du Sheet) » remplace le CSV et l'ancien PDF du
+// lot 17 (question 6) ; la page de l'EDD porte les trois classes de la période.
+test("« Exporter (modèle du Sheet) » : la période affichée, les trois classes l'une sous l'autre", async ({ page }) => {
+  await open(page, PROF, "/planning/edd");
+  await page.getByRole("button", { name: "Exporter (modèle du Sheet)" }).click();
+  const fenetre = page.getByRole("dialog", { name: "Exporter" });
+  await fenetre.getByRole("radio", { name: "Sep–Oct 2026 · EDD 中班" }).click();
   const [download] = await Promise.all([
-    page.waitForEvent("download"),
-    page.getByRole("button", { name: "Exporter en CSV" }).click(),
+    page.waitForEvent("download", { timeout: 120_000 }),
+    fenetre.getByRole("button", { name: "PDF", exact: true }).click(),
   ]);
-  expect(download.suggestedFilename()).toBe("EDD_中班_2026-09-20_2026-09-27.csv");
-  const texte = readFileSync(await download.path(), "utf8");
-  expect(texte).toContain("Date,Présidence,Suppléant,Piano,Cajon,Guitare");
-  expect(texte).toContain("27/09,Lydie W.,Samuel L.,Jo M.,Chloé W.,Christelle C.");
+  expect(download.suggestedFilename()).toBe("EDD_中班_P5_2026.pdf");
+  await download.saveAs(test.info().outputPath(download.suggestedFilename())); // à ouvrir à l'œil
+  const pdf = lirePdf(readFileSync(await download.path()));
+  expect(pdf.pages).toHaveLength(1);
+  for (const attendu of ["EDD — Planning par classe (bimensuel) — 2026", "PÉRIODE 5 — SEPTEMBRE OCTOBRE", "27/09/2026", "Lydie W.", "Paul W.", "中班", "大班", "高班"]) {
+    expect(pdf.pages[0].lignes, attendu).toContain(attendu);
+  }
+});
+
+test("un membre n'exporte pas l'EDD", async ({ page }) => {
+  await open(page, MEMBRE, "/planning/edd");
+  await expect(page.getByTestId("grille-bandeau")).toContainText("中班");
+  await expect(page.getByRole("button", { name: /Exporter/ })).toHaveCount(0);
 });
 
 test("en 中文 : les colonnes de l'EDD sont traduites", async ({ page }) => {

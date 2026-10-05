@@ -418,6 +418,12 @@ service cloud.firestore {
       allow read, write: if signedIn() && request.auth.uid == uid;
     }
 
+    // Back-Office de chacun (lot U6, B5, docs/spec-back-office.md, Q5) : disposition du
+    // tableau de bord et barre du bas, écrites par l'intéressé seul (le profil users/{uid}
+    // est verrouillé). Miroir : src/lib/firebase/backOffice.ts (aucun droit dans access.ts,
+    // chacun n'écrit que le sien ; `widgetsPermis` filtre l'affichage).
+    match /backOffice/{uid} { allow read, write: if signedIn() && request.auth.uid == uid; }
+
     match /config/app {
       // La page d'inscription lit registrationOpen sans être connectée
       allow read: if true;
@@ -469,6 +475,27 @@ service cloud.firestore {
           && request.resource.data.authorUid == request.auth.uid;
         allow delete: if false;
       }
+    }
+
+    // Petit déj (lot U3, docs/spec-petit-dej.md). Lecture publique, comme plannings/*. Sa ligne : tout connecté ;
+    // une ligne pour quelqu'un (uid vide), réécrire ou retirer : écrivains du planning Table et admins. Dimanche,
+    // inscrit et auteur figés ; borne du passé côté client. Miroir : canGererPetitDej, canEditPetitDej (access.ts).
+    match /petitDej/{id} {
+      allow read: if true;
+      allow create: if signedIn()
+        && request.resource.data.auteurUid == request.auth.uid
+        && request.resource.data.dimanche.matches('[0-9]{4}-[0-9]{2}-[0-9]{2}')
+        && request.resource.data.nom.size() > 0 && request.resource.data.nom.size() <= 80
+        && (request.resource.data.uid == request.auth.uid
+            || (request.resource.data.uid == '' && peutEcrirePlanning('table')));
+      allow update: if signedIn()
+        && request.resource.data.dimanche == resource.data.dimanche
+        && request.resource.data.uid == resource.data.uid
+        && request.resource.data.auteurUid == resource.data.auteurUid
+        && request.resource.data.nom.size() > 0 && request.resource.data.nom.size() <= 80
+        && (resource.data.uid == request.auth.uid || peutEcrirePlanning('table'));
+      allow delete: if signedIn()
+        && (resource.data.uid == request.auth.uid || peutEcrirePlanning('table'));
     }
   }
 }

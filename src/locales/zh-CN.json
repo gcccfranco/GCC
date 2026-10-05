@@ -982,7 +982,10 @@
       "chant2": "诗歌 2",
       "chant3": "诗歌 3",
       "chant4": "诗歌 4",
-      "repetition": "排练"
+      "repetition": "排练",
+      "percussion": "打击乐",
+      "menages": "清洁",
+      "cours": "授课"
     },
     "table": {
       "myName": "我的名字…",
@@ -1000,6 +1003,7 @@
       "aVenir": "服事表待定",
       "periode": "{{du}}至{{au}}",
       "nonPublie": "尚未发布",
+      "dimancheSpecial": "{{service}}主日：司会在{{service}}服事表中安排。",
       "pasDispo": "某个主日无法服事？请联系负责排表的同工。",
       "droitRetire": "服务器拒绝保存：你已没有修改此服事表的权限，或规则尚未发布。",
       "horsLigne": "无法修改：网络不可用。",
@@ -1013,8 +1017,22 @@
       "importe": "{{auteur}} 从 Google 表格导入了 {{count}} 个主日",
       "periodeAnnee": "{{annee}} 年"
     },
+    "petitDej": {
+      "trimestre": "第{{n}}季度",
+      "libre": "空闲",
+      "inscrire": "我来报名",
+      "modifier": "修改",
+      "retirer": "移除",
+      "confirmerRetrait": "移除这一行？",
+      "ajouter": "添加一行",
+      "astuce": "可以写“某某家庭”代替你的名字。",
+      "vientDeSInscrire": "{{nom}} 刚刚报名了。",
+      "illisible": "暂时无法读取报名。"
+    },
     "horaires": {
-      "culte": "主日 10:30"
+      "culte": "主日 10:30",
+      "groupes": "主日 13:00–14:30",
+      "fidelite": "主日 13:00–14:00"
     },
     "pages": {
       "culte": "法语崇拜",
@@ -1132,6 +1150,44 @@
       "autoChosen": "自动选择：自 {{date}} 起开放预约。",
       "viewOrdre": "查看出场顺序",
       "hideOrdre": "隐藏出场顺序"
+    },
+    "annee": {
+      "label": "年份",
+      "brouillon": "{{annee}} · 草稿。各季度发布前，仅服事表负责人可见。",
+      "poses": "沿用 {{avant}} 年的栏目和时间；{{annee}} 年的 {{n}} 个主日已列出。",
+      "aucun": "{{annee}} 年尚未添加主日。",
+      "ajouter": "添加主日",
+      "ajouterSeance": "添加聚会",
+      "retirer": "移除此主日",
+      "retirerSeance": "移除此聚会",
+      "confirmerRetrait": "移除 {{date}}？该日所填内容将被清除。",
+      "choisirDate": "要添加的主日",
+      "dateSeance": "聚会日期",
+      "moment": "时段",
+      "special": "这个主日是{{service}}：司会取自其服事表。"
+    },
+    "publier": "发布 {{tri}}",
+    "masquer": "隐藏 {{tri}}",
+    "publierConfirm": "发布{{planning}} {{annee}} 年 {{tri}}？所有成员都将看到并收到通知。",
+    "publierEchec": "发布失败，请重试。",
+    "export": {
+      "bouton": "导出（表格样式）",
+      "titre": "导出",
+      "affiche": "{{periode}} · {{planning}}",
+      "annee": "全年 · {{planning}}",
+      "tout": "{{annee}} 年全部服事表",
+      "pdf": "PDF",
+      "xlsx": ".xlsx",
+      "enCours": "正在生成文件…",
+      "echec": "导出失败，请重试。"
+    },
+    "choisir": {
+      "bouton": "选择",
+      "chercher": "搜索姓名",
+      "sansCompte": "输入没有账号的名字…",
+      "avecRole": "担任此职",
+      "autres": "其他姓名",
+      "vider": "清空"
     }
   },
   "survey": {
@@ -1908,7 +1964,15 @@
     "iosInstall": "在 iPhone 或 iPad 上：请先把网站添加到主屏幕（点「分享」，再点「添加到主屏幕」），然后从图标打开，才能开启通知。",
     "blocked": "你的浏览器屏蔽了本网站的通知。要重新开启：点击地址栏左侧的图标，选择「通知」，设为「允许」，然后刷新页面。",
     "promptTitle": "开启服侍提醒",
-    "promptText": "在每次服侍前收到提醒，歌单准备好时也会通知你。"
+    "promptText": "在每次服侍前收到提醒，歌单准备好时也会通知你。",
+    "recevoir": "接收",
+    "types": {
+      "reminders": "服侍提醒",
+      "setlists": "歌单已准备好",
+      "evenements": "活动",
+      "taches": "任务",
+      "petitDej": "早餐"
+    }
   },
   "proposition": {
     "titre": "推荐新诗歌",
@@ -2187,6 +2251,115 @@
     },
     "matriceVide": "目前没有人在排班中。",
     "nom": "姓名"
+  },
+  "tableauDeBord": {
+    "widgets": {
+      "dimanche": "本主日",
+      "calendrier": "日历",
+      "afaire": "待办",
+      "setlists": "待准备的歌单",
+      "planning": "排班空缺",
+      "evenements": "近期活动",
+      "chants": "最常唱的诗歌",
+      "petitdej": "早餐",
+      "scene": "舞台",
+      "comptes": "账号",
+      "raccourcis": "快捷方式"
+    },
+    "aucunWidget": "仪表盘上没有小组件。",
+    "lectureImpossible": "暂时无法读取。",
+    "toutVoir": "查看全部",
+    "dimanche": {
+      "titre": "本主日 · {{date}}",
+      "rien": "本主日排班表上没有安排。",
+      "setlistPubliee": "歌单已发布",
+      "pasDeSetlist": "没有歌单",
+      "presentationPrete": "幻灯片已准备",
+      "casesVides_one": "{{count}} 个空缺",
+      "casesVides_other": "{{count}} 个空缺",
+      "personne": "无人"
+    },
+    "afaire": {
+      "enRetard": "{{count}} 项逾期",
+      "rien": "本周没有待办。"
+    },
+    "setlists": {
+      "aucune": "未准备",
+      "rien": "所有歌单都已准备好。"
+    },
+    "planning": {
+      "titre": "排班空缺",
+      "rien": "没有空缺。",
+      "aucun": "未选择排班表。"
+    },
+    "evenements": {
+      "places": "{{inscrits}}/{{max}} 人报名",
+      "sansLimite": "不限人数",
+      "fermees": "报名已截止",
+      "externe": "外部表单",
+      "rien": "近期没有活动。"
+    },
+    "petitdej": {
+      "libre": "空缺"
+    },
+    "scene": {
+      "titre": "舞台 · {{nom}}",
+      "aucunProgramme": "没有显示中的节目。",
+      "rien": "近期没有排练时段。"
+    },
+    "comptes": {
+      "sansCompte": "排班表中没有账号的名字",
+      "nouveaux": "本周新账号",
+      "voirListe": "查看名单",
+      "aucunSansCompte": "所有名字都有账号。",
+      "aucunNouveau": "本周没有新账号。",
+      "autres_one": "还有 {{count}} 人",
+      "autres_other": "还有 {{count}} 人"
+    },
+    "raccourcis": {
+      "tache": "任务",
+      "evenement": "活动",
+      "notifier": "通知",
+      "setlist": "歌单"
+    },
+    "perso": {
+      "personnaliser": "自定义",
+      "termine": "完成",
+      "parDefaut": "恢复默认布局",
+      "confirmParDefaut": "恢复你角色的默认布局？你的小组件、大小和设置都将被替换。",
+      "ajouter": "添加小组件",
+      "tousAffiches": "所有小组件都已显示。",
+      "outils": "“{{nom}}”工具",
+      "deplacer": "移动“{{nom}}”",
+      "monter": "上移",
+      "descendre": "下移",
+      "taille": "大小",
+      "reglages": "小组件设置",
+      "retirer": "移除小组件",
+      "erreurEcriture": "布局未保存：请检查网络连接后再试一次。",
+      "instructions": "移动小组件：按空格或回车拿起，用方向键移动，再按空格或回车放下，按 Esc 取消。",
+      "annonceSaisi": "已拿起“{{nom}}”，位置 {{position}} / {{total}}。",
+      "annonceDeplace": "“{{nom}}”位于 {{position}} / {{total}}。",
+      "annoncePose": "“{{nom}}”已放在 {{position}} / {{total}}。",
+      "annonceAnnule": "已取消移动“{{nom}}”。"
+    },
+    "reglages": {
+      "services": "服事",
+      "poles": "部门",
+      "plannings": "排班表",
+      "sur": "范围",
+      "afficher": "显示",
+      "section": "版块",
+      "toutes": "全部",
+      "programme": "节目",
+      "programmeAffiche": "当前显示的节目",
+      "liste": "列表",
+      "sansCompte": "无账号",
+      "nouveaux": "新账号",
+      "raccourcis": "快捷方式",
+      "semaines_other": "{{count}} 周",
+      "dimanches_other": "{{count}} 个主日"
+    }
   },
   "backOffice": {
     "selecteur": {

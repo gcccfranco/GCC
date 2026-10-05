@@ -982,7 +982,10 @@
       "chant2": "Chant 2",
       "chant3": "Chant 3",
       "chant4": "Chant 4",
-      "repetition": "Répétition"
+      "repetition": "Répétition",
+      "percussion": "Percussion",
+      "menages": "Ménages",
+      "cours": "Cours"
     },
     "table": {
       "myName": "Mon prénom…",
@@ -1000,6 +1003,7 @@
       "aVenir": "Planning à venir",
       "periode": "{{du}} à {{au}}",
       "nonPublie": "Non publié",
+      "dimancheSpecial": "Dimanche {{service}} : la présidence se règle dans le planning {{service}}.",
       "pasDispo": "Pas disponible un dimanche ? Préviens la personne qui tient le planning.",
       "droitRetire": "Enregistrement refusé par le serveur : tu n’as plus le droit de modifier ce planning, ou les règles n’ont pas été publiées.",
       "horsLigne": "Modification impossible : pas de réseau.",
@@ -1013,8 +1017,22 @@
       "importe": "{{auteur}} a importé {{count}} dimanches depuis le Google Sheet",
       "periodeAnnee": "Année {{annee}}"
     },
+    "petitDej": {
+      "trimestre": "Trimestre {{n}}",
+      "libre": "Libre",
+      "inscrire": "Je m'inscris",
+      "modifier": "Modifier",
+      "retirer": "Retirer",
+      "confirmerRetrait": "Retirer cette ligne ?",
+      "ajouter": "Ajouter une ligne",
+      "astuce": "Tu peux écrire « Famille … » à la place de ton nom.",
+      "vientDeSInscrire": "{{nom}} vient de s'inscrire.",
+      "illisible": "Inscriptions illisibles pour l'instant."
+    },
     "horaires": {
-      "culte": "Dimanche 10:30"
+      "culte": "Dimanche 10:30",
+      "groupes": "Dimanche de 13:00 à 14:30",
+      "fidelite": "Dimanche de 13:00 à 14:00"
     },
     "pages": {
       "culte": "Culte Franco",
@@ -1132,6 +1150,44 @@
       "autoChosen": "Choisi automatiquement : réservations ouvertes depuis le {{date}}.",
       "viewOrdre": "Voir l'ordre de passage",
       "hideOrdre": "Masquer l'ordre de passage"
+    },
+    "annee": {
+      "label": "Année",
+      "brouillon": "{{annee}} · brouillon. Visible des responsables du planning seulement, jusqu'à la publication de chaque trimestre.",
+      "poses": "Colonnes et horaire repris de {{avant}} ; les {{n}} dimanches de {{annee}} sont déjà posés.",
+      "aucun": "Aucun dimanche posé pour {{annee}}.",
+      "ajouter": "Ajouter un dimanche",
+      "ajouterSeance": "Ajouter une séance",
+      "retirer": "Retirer ce dimanche",
+      "retirerSeance": "Retirer cette séance",
+      "confirmerRetrait": "Retirer le {{date}} ? Ses cases s'effacent.",
+      "choisirDate": "Dimanche à ajouter",
+      "dateSeance": "Date de la séance",
+      "moment": "Moment",
+      "special": "Ce dimanche est celui de {{service}} : la présidence vient de son planning."
+    },
+    "publier": "Publier le {{tri}}",
+    "masquer": "Masquer le {{tri}}",
+    "publierConfirm": "Publier le {{tri}} {{annee}} de {{planning}} ? Tous ses membres le verront et recevront une notification.",
+    "publierEchec": "La publication a échoué. Réessaie.",
+    "export": {
+      "bouton": "Exporter (modèle du Sheet)",
+      "titre": "Exporter",
+      "affiche": "{{periode}} · {{planning}}",
+      "annee": "Toute l'année · {{planning}}",
+      "tout": "Tous les plannings {{annee}}",
+      "pdf": "PDF",
+      "xlsx": ".xlsx",
+      "enCours": "Préparation du fichier…",
+      "echec": "L'export a échoué. Réessaie."
+    },
+    "choisir": {
+      "bouton": "Choisir",
+      "chercher": "Chercher un nom",
+      "sansCompte": "Écrire un nom sans compte…",
+      "avecRole": "Avec ce rôle",
+      "autres": "Autres noms",
+      "vider": "Vider la case"
     }
   },
   "survey": {
@@ -1908,7 +1964,15 @@
     "iosInstall": "Sur iPhone ou iPad : ajoute d'abord le site à l'écran d'accueil (Partager, puis « Sur l'écran d'accueil »), puis ouvre-le depuis l'icône pour activer les notifications.",
     "blocked": "Les notifications sont bloquées pour ce site dans ton navigateur. Pour les réactiver : clique sur l'icône à gauche de l'adresse, puis Notifications, Autoriser, et recharge la page.",
     "promptTitle": "Active les rappels de service",
-    "promptText": "Reçois un rappel avant chaque service et une alerte quand une setlist est prête."
+    "promptText": "Reçois un rappel avant chaque service et une alerte quand une setlist est prête.",
+    "recevoir": "Recevoir",
+    "types": {
+      "reminders": "Rappels de service",
+      "setlists": "Setlist prête",
+      "evenements": "Évènements",
+      "taches": "Tâches",
+      "petitDej": "Petit déj"
+    }
   },
   "proposition": {
     "titre": "Proposer un nouveau chant",
@@ -2190,6 +2254,117 @@
     },
     "matriceVide": "Personne ne sert au planning pour l'instant.",
     "nom": "Nom"
+  },
+  "tableauDeBord": {
+    "widgets": {
+      "dimanche": "Ce dimanche",
+      "calendrier": "Calendrier",
+      "afaire": "À faire",
+      "setlists": "Setlists à préparer",
+      "planning": "Cases vides du planning",
+      "evenements": "Prochains évènements",
+      "chants": "Chants les plus joués",
+      "petitdej": "Petit déj",
+      "scene": "Scène",
+      "comptes": "Comptes",
+      "raccourcis": "Raccourcis"
+    },
+    "aucunWidget": "Aucun widget sur ton tableau de bord.",
+    "lectureImpossible": "Lecture impossible pour l'instant.",
+    "toutVoir": "Tout voir",
+    "dimanche": {
+      "titre": "Ce dimanche · {{date}}",
+      "rien": "Rien au planning ce dimanche.",
+      "setlistPubliee": "Setlist publiée",
+      "pasDeSetlist": "Pas de setlist",
+      "presentationPrete": "Présentation prête",
+      "casesVides_one": "{{count}} case vide",
+      "casesVides_other": "{{count}} cases vides",
+      "personne": "Personne"
+    },
+    "afaire": {
+      "enRetard": "{{count}} en retard",
+      "rien": "Rien à faire cette semaine."
+    },
+    "setlists": {
+      "aucune": "aucune",
+      "rien": "Toutes les setlists sont prêtes."
+    },
+    "planning": {
+      "titre": "Cases vides",
+      "rien": "Aucune case vide.",
+      "aucun": "Aucun planning choisi."
+    },
+    "evenements": {
+      "places": "{{inscrits}} inscrits sur {{max}}",
+      "sansLimite": "sans limite",
+      "fermees": "inscriptions fermées",
+      "externe": "formulaire externe",
+      "rien": "Aucun évènement à venir."
+    },
+    "petitdej": {
+      "libre": "Libre"
+    },
+    "scene": {
+      "titre": "Scène · {{nom}}",
+      "aucunProgramme": "Aucun programme affiché.",
+      "rien": "Aucun créneau à venir."
+    },
+    "comptes": {
+      "sansCompte": "Noms du planning sans compte",
+      "nouveaux": "Nouveaux comptes cette semaine",
+      "voirListe": "Voir la liste",
+      "aucunSansCompte": "Tous les noms ont un compte.",
+      "aucunNouveau": "Aucun nouveau compte cette semaine.",
+      "autres_one": "et {{count}} autre",
+      "autres_other": "et {{count}} autres"
+    },
+    "raccourcis": {
+      "tache": "Tâche",
+      "evenement": "Évènement",
+      "notifier": "Notifier",
+      "setlist": "Setlist"
+    },
+    "perso": {
+      "personnaliser": "Personnaliser",
+      "termine": "Terminé",
+      "parDefaut": "Disposition par défaut",
+      "confirmParDefaut": "Remettre la disposition par défaut de ton rôle ? Tes widgets, leurs tailles et leurs réglages seront remplacés.",
+      "ajouter": "Ajouter un widget",
+      "tousAffiches": "Tous les widgets sont déjà affichés.",
+      "outils": "Outils de « {{nom}} »",
+      "deplacer": "Déplacer « {{nom}} »",
+      "monter": "Monter",
+      "descendre": "Descendre",
+      "taille": "Taille",
+      "reglages": "Réglages du widget",
+      "retirer": "Retirer le widget",
+      "erreurEcriture": "Disposition non enregistrée : vérifie ta connexion, puis refais le geste.",
+      "instructions": "Pour déplacer un widget : Espace ou Entrée pour le saisir, les flèches pour le déplacer, Espace ou Entrée pour le poser, Échap pour annuler.",
+      "annonceSaisi": "« {{nom}} » saisi, en position {{position}} sur {{total}}.",
+      "annonceDeplace": "« {{nom}} » en position {{position}} sur {{total}}.",
+      "annoncePose": "« {{nom}} » posé en position {{position}} sur {{total}}.",
+      "annonceAnnule": "Déplacement de « {{nom}} » annulé."
+    },
+    "reglages": {
+      "services": "Services",
+      "poles": "Pôles",
+      "plannings": "Plannings",
+      "sur": "Sur",
+      "afficher": "Afficher",
+      "section": "Section",
+      "toutes": "Toutes",
+      "programme": "Programme",
+      "programmeAffiche": "Celui qui est affiché",
+      "liste": "Liste",
+      "sansCompte": "Sans compte",
+      "nouveaux": "Nouveaux comptes",
+      "raccourcis": "Raccourcis",
+      "semaines_one": "{{count}} semaine",
+      "semaines_other": "{{count}} semaines",
+      "dimanches_one": "{{count}} dimanche",
+      "dimanches_other": "{{count}} dimanches"
+    }
   },
   "backOffice": {
     "selecteur": {

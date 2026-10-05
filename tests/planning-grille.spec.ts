@@ -49,11 +49,12 @@ async function open(page: Page, who: FakeProfile, to: string, docs: Record<strin
 const laCase = (page: Page, date: string, colonne: string) =>
   page.locator(`[data-case="${date}|${colonne}"]`).filter({ visible: true });
 
-/** Le champ d'une case en cours de saisie : table et cartes coexistent dans le
- *  DOM, on vise donc celui de la vue affichée. Un <input list> a le rôle ARIA
- *  « combobox » : on le désigne par son libellé. */
-const champDe = (page: Page, date: string, colonne: string, libelle: string) =>
-  laCase(page, date, colonne).getByLabel(libelle, { exact: true });
+/** Lot U2, P9 : une case de personne s'ouvre sur « Choisir » (menu sur
+ *  ordinateur, feuille ailleurs) ; on y prend un nom proposé. */
+async function choisir(page: Page, date: string, colonne: string, nom: string) {
+  await laCase(page, date, colonne).getByRole("button").click();
+  await page.getByRole("dialog").getByRole("option", { name: new RegExp(`^${nom.replace(/\./g, "\\.")}`) }).click();
+}
 
 const ordinateurEtTablette = () =>
   test.skip(test.info().project.name === "telephone", "la table : ordinateur et tablette");
@@ -219,10 +220,7 @@ test("sans le droit : aucun bouton « Modifier », aucune case cliquable", async
 test("avec le droit : une case s'écrit, tient après rechargement, et la voisine ne bouge pas", async ({ page }) => {
   const db = await open(page, CHRISTELLE, "/planning/culte", { [`users/uid-esther`]: ESTHER });
   await page.getByRole("button", { name: "Modifier" }).click();
-  await laCase(page, "2026-09-27", "piano").getByRole("button").click();
-  const champ = champDe(page, "2026-09-27", "piano", "Piano");
-  await champ.fill("Esther C.");
-  await champ.press("Enter");
+  await choisir(page, "2026-09-27", "piano", "Esther C.");
   await expect(laCase(page, "2026-09-27", "piano")).toContainText("Esther C.");
   await expect(page.getByText("Enregistré")).toBeVisible();
 
@@ -238,64 +236,59 @@ test("avec le droit : une case s'écrit, tient après rechargement, et la voisin
   await expect(laCase(page, "2026-09-20", "piano"), "les autres dimanches viennent encore du Sheet").toContainText("Ruth K.");
 });
 
-test("un nom sans compte s'écrit ; l'autocomplétion propose la grille et les comptes ; Échap annule", async ({ page }) => {
+test("« Choisir » propose les comptes et les noms de la grille ; un nom sans compte s'écrit ; Échap annule", async ({ page }) => {
   await open(page, CHRISTELLE, "/planning/culte", { [`users/uid-esther`]: ESTHER });
   await page.getByRole("button", { name: "Modifier" }).click();
   await laCase(page, "2026-09-27", "orateur").getByRole("button").click();
-  // <option value="…"> n'a pas de texte : c'est la valeur qui est proposée.
-  const propose = (nom: string) => page.locator(`datalist#noms-culte option[value="${nom}"]`);
-  await expect(propose("Ruth K."), "un nom déjà dans la grille").toHaveCount(1);
-  await expect(propose("Esther C."), "le nom de planning d'un compte").toHaveCount(1);
-  const champ = champDe(page, "2026-09-27", "orateur", "Orateur");
+  // Lot U2, P9 : le menu « Choisir » remplace la datalist du lot 17 (D12).
+  const menu = page.getByRole("dialog");
+  await expect(menu.getByRole("option", { name: /^Ruth K\./ }), "un nom déjà dans la grille").toHaveCount(1);
+  await expect(menu.getByRole("option", { name: /^Esther C\./ }), "le nom de planning d'un compte").toHaveCount(1);
+  await expect(page.locator("datalist")).toHaveCount(0);
+  await menu.getByRole("button", { name: "Écrire un nom sans compte…" }).click();
+  const champ = menu.getByRole("textbox", { name: "Orateur", exact: true });
   await champ.fill("Pasteur ZHOU");
   await champ.press("Enter");
   await expect(laCase(page, "2026-09-27", "orateur")).toContainText("Pasteur ZHOU");
 
   await laCase(page, "2026-09-27", "sono").getByRole("button").click();
-  const autre = champDe(page, "2026-09-27", "sono", "Sono");
+  await page.getByRole("dialog").getByRole("button", { name: "Écrire un nom sans compte…" }).click();
+  const autre = page.getByRole("dialog").getByRole("textbox", { name: "Sono", exact: true });
   await autre.fill("Quelqu'un d'autre");
   await autre.press("Escape");
+  await expect(page.getByRole("dialog")).toHaveCount(0);
   await expect(laCase(page, "2026-09-27", "sono")).toContainText("Lorenzo S.");
   await expect(page.getByText("Quelqu'un d'autre")).toHaveCount(0);
 });
 
 test("droit retiré en cours de route : la case revient, le message et « Recharger » s'affichent", async ({ page }) => {
-  await open(page, CHRISTELLE, "/planning/culte");
+  await open(page, CHRISTELLE, "/planning/culte", { [`users/uid-esther`]: ESTHER });
   await page.route(/firestore\.googleapis\.com.*dimanches/, (route) =>
     route.request().method() === "PATCH"
       ? route.fulfill({ status: 403, contentType: "application/json", body: JSON.stringify({ error: { message: "PERMISSION_DENIED" } }) })
       : route.fallback()
   );
   await page.getByRole("button", { name: "Modifier" }).click();
-  await laCase(page, "2026-09-27", "piano").getByRole("button").click();
-  const champ = champDe(page, "2026-09-27", "piano", "Piano");
-  await champ.fill("Esther C.");
-  await champ.press("Enter");
+  await choisir(page, "2026-09-27", "piano", "Esther C.");
   await expect(page.getByText(/Enregistrement refusé par le serveur/)).toBeVisible();
   await expect(page.getByRole("button", { name: "Recharger" })).toBeVisible();
   await expect(laCase(page, "2026-09-27", "piano")).toContainText("Eva C.");
 });
 
 test("l'historique nomme l'auteur, la case et le dimanche", async ({ page }) => {
-  await open(page, CHRISTELLE, "/planning/culte");
+  await open(page, CHRISTELLE, "/planning/culte", { [`users/uid-esther`]: ESTHER });
   await page.getByRole("button", { name: "Modifier" }).click();
-  await laCase(page, "2026-09-27", "piano").getByRole("button").click();
-  const champ = champDe(page, "2026-09-27", "piano", "Piano");
-  await champ.fill("Esther C.");
-  await champ.press("Enter");
+  await choisir(page, "2026-09-27", "piano", "Esther C.");
   await expect(laCase(page, "2026-09-27", "piano")).toContainText("Esther C.");
 
   await page.getByRole("button", { name: "Historique des modifications" }).click();
   await expect(page.getByText("Christelle Z. a remplacé Eva C. par Esther C. au Piano du 27 septembre")).toBeVisible();
 
   // Une case vide remplie, puis effacée : les deux autres phrases.
-  await laCase(page, "2026-09-27", "sainteCene").getByRole("button").click();
-  await champDe(page, "2026-09-27", "sainteCene", "Sainte cène").fill("Ruth K.");
-  await champDe(page, "2026-09-27", "sainteCene", "Sainte cène").press("Enter");
+  await choisir(page, "2026-09-27", "sainteCene", "Ruth K.");
   await expect(page.getByText("Christelle Z. a mis Ruth K. au Sainte cène du 27 septembre")).toBeVisible();
   await laCase(page, "2026-09-27", "orateur").getByRole("button").click();
-  await champDe(page, "2026-09-27", "orateur", "Orateur").fill("");
-  await champDe(page, "2026-09-27", "orateur", "Orateur").press("Enter");
+  await page.getByRole("dialog").getByRole("button", { name: "Vider la case" }).click();
   await expect(page.getByText("Christelle Z. a effacé le Orateur du 27 septembre")).toBeVisible();
 });
 

@@ -29,7 +29,7 @@ export function documentDimanche(
   quand: string
 ): Record<string, string> {
   const doc: Record<string, string> = { date: row[0], modifieLe: quand, modifiePar: auteur }
-  for (const c of def.colonnes) doc[c.cle] = row[c.index] ?? ""
+  for (const c of def.colonnes) if (!c.lectureSeule) doc[c.cle] = row[c.index] ?? ""
   return doc
 }
 
@@ -47,6 +47,7 @@ export function nomsNonRattaches(
   const vus = new Map<string, string>()
   for (const r of rows) {
     for (const c of def.colonnes) {
+      if (c.lectureSeule) continue
       for (const nom of splitNames(r[c.index] ?? "")) {
         const cle = normalizeName(nom)
         if (cle && !comptes.has(cle) && !vus.has(cle)) vus.set(cle, nom)
