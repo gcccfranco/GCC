@@ -3,7 +3,7 @@
 // (ordinateur, tablette en paysage), pour que les deux ne divergent jamais.
 // U6 ajoute l'espace « back-office » (sélecteur App ↔ Back-Office, menu à 8 entrées).
 import {
-  CalendarDays, CalendarRange, ChartColumn, Inbox, LayoutGrid, ListChecks, ListMusic, Music, Network, Ticket, UserRound,
+  CalendarDays, CalendarRange, ChartColumn, Ellipsis, Inbox, LayoutGrid, ListChecks, ListMusic, Music, Network, Ticket, UserRound,
   type LucideIcon,
 } from "lucide-react";
 import type { Entree } from "@/types/backOffice";
@@ -55,6 +55,29 @@ const ENTREES_BACK_OFFICE: Record<Entree, EntreeBarre> = {
   messages: { href: "/back-office/messages", cle: "backOffice.entrees.messages", Icone: Inbox, actifSur: ["/back-office/messages"] },
   statistiques: { href: "/back-office/statistiques", cle: "backOffice.entrees.statistiques", Icone: ChartColumn, actifSur: ["/back-office/statistiques"] },
 };
+
+/** Une entrée du Back-Office (son libellé du menu, son icône, son adresse). */
+export function entreeBackOffice(e: Entree): EntreeBarre {
+  return ENTREES_BACK_OFFICE[e];
+}
+
+/** « Plus » (B6) : toujours à droite de la barre du bas du Back-Office. */
+export const ONGLET_PLUS: EntreeBarre = {
+  href: "/back-office/plus", cle: "backOffice.barre.plus", Icone: Ellipsis, actifSur: ["/back-office/plus"],
+};
+
+/**
+ * Onglets de la barre du bas du Back-Office (B6, Q13) : la barre choisie (`barreAffichee`),
+ * le tableau de bord sous le nom « Accueil » (planche), puis « Plus ».
+ */
+export function ongletsBackOffice(barre: readonly Entree[]): EntreeBarre[] {
+  return [...barre.map((e) => ({ ...ENTREES_BACK_OFFICE[e], cle: cleOnglet(e) })), ONGLET_PLUS];
+}
+
+/** Libellé d'une entrée dans la barre du bas : le tableau de bord s'y appelle « Accueil ». */
+export function cleOnglet(e: Entree): string {
+  return e === "tableau" ? "backOffice.barre.accueil" : ENTREES_BACK_OFFICE[e].cle;
+}
 
 /** L'espace d'une adresse : tout ce qui est sous `/back-office` est au Back-Office. */
 export function espaceDe(pathname: string): Espace {

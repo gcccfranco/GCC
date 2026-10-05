@@ -2328,6 +2328,117 @@
     "matriceVide": "Personne ne sert au planning pour l'instant.",
     "nom": "Nom"
   },
+  "tableauDeBord": {
+    "widgets": {
+      "dimanche": "Ce dimanche",
+      "calendrier": "Calendrier",
+      "afaire": "À faire",
+      "setlists": "Setlists à préparer",
+      "planning": "Cases vides du planning",
+      "evenements": "Prochains évènements",
+      "chants": "Chants les plus joués",
+      "petitdej": "Petit déj",
+      "scene": "Scène",
+      "comptes": "Comptes",
+      "raccourcis": "Raccourcis"
+    },
+    "aucunWidget": "Aucun widget sur ton tableau de bord.",
+    "lectureImpossible": "Lecture impossible pour l'instant.",
+    "toutVoir": "Tout voir",
+    "dimanche": {
+      "titre": "Ce dimanche · {{date}}",
+      "rien": "Rien au planning ce dimanche.",
+      "setlistPubliee": "Setlist publiée",
+      "pasDeSetlist": "Pas de setlist",
+      "presentationPrete": "Présentation prête",
+      "casesVides_one": "{{count}} case vide",
+      "casesVides_other": "{{count}} cases vides",
+      "personne": "Personne"
+    },
+    "afaire": {
+      "enRetard": "{{count}} en retard",
+      "rien": "Rien à faire cette semaine."
+    },
+    "setlists": {
+      "aucune": "aucune",
+      "rien": "Toutes les setlists sont prêtes."
+    },
+    "planning": {
+      "titre": "Cases vides",
+      "rien": "Aucune case vide.",
+      "aucun": "Aucun planning choisi."
+    },
+    "evenements": {
+      "places": "{{inscrits}} inscrits sur {{max}}",
+      "sansLimite": "sans limite",
+      "fermees": "inscriptions fermées",
+      "externe": "formulaire externe",
+      "rien": "Aucun évènement à venir."
+    },
+    "petitdej": {
+      "libre": "Libre"
+    },
+    "scene": {
+      "titre": "Scène · {{nom}}",
+      "aucunProgramme": "Aucun programme affiché.",
+      "rien": "Aucun créneau à venir."
+    },
+    "comptes": {
+      "sansCompte": "Noms du planning sans compte",
+      "nouveaux": "Nouveaux comptes cette semaine",
+      "voirListe": "Voir la liste",
+      "aucunSansCompte": "Tous les noms ont un compte.",
+      "aucunNouveau": "Aucun nouveau compte cette semaine.",
+      "autres_one": "et {{count}} autre",
+      "autres_other": "et {{count}} autres"
+    },
+    "raccourcis": {
+      "tache": "Tâche",
+      "evenement": "Évènement",
+      "notifier": "Notifier",
+      "setlist": "Setlist"
+    },
+    "perso": {
+      "personnaliser": "Personnaliser",
+      "termine": "Terminé",
+      "parDefaut": "Disposition par défaut",
+      "confirmParDefaut": "Remettre la disposition par défaut de ton rôle ? Tes widgets, leurs tailles et leurs réglages seront remplacés.",
+      "ajouter": "Ajouter un widget",
+      "tousAffiches": "Tous les widgets sont déjà affichés.",
+      "outils": "Outils de « {{nom}} »",
+      "deplacer": "Déplacer « {{nom}} »",
+      "monter": "Monter",
+      "descendre": "Descendre",
+      "taille": "Taille",
+      "reglages": "Réglages du widget",
+      "retirer": "Retirer le widget",
+      "erreurEcriture": "Disposition non enregistrée : vérifie ta connexion, puis refais le geste.",
+      "instructions": "Pour déplacer un widget : Espace ou Entrée pour le saisir, les flèches pour le déplacer, Espace ou Entrée pour le poser, Échap pour annuler.",
+      "annonceSaisi": "« {{nom}} » saisi, en position {{position}} sur {{total}}.",
+      "annonceDeplace": "« {{nom}} » en position {{position}} sur {{total}}.",
+      "annoncePose": "« {{nom}} » posé en position {{position}} sur {{total}}.",
+      "annonceAnnule": "Déplacement de « {{nom}} » annulé."
+    },
+    "reglages": {
+      "services": "Services",
+      "poles": "Pôles",
+      "plannings": "Plannings",
+      "sur": "Sur",
+      "afficher": "Afficher",
+      "section": "Section",
+      "toutes": "Toutes",
+      "programme": "Programme",
+      "programmeAffiche": "Celui qui est affiché",
+      "liste": "Liste",
+      "sansCompte": "Sans compte",
+      "nouveaux": "Nouveaux comptes",
+      "raccourcis": "Raccourcis",
+      "semaines_one": "{{count}} semaine",
+      "semaines_other": "{{count}} semaines",
+      "dimanches_one": "{{count}} dimanche",
+      "dimanches_other": "{{count}} dimanches"
+    }
+  },
   "backOffice": {
     "selecteur": {
       "aria": "Choisir l'espace",
@@ -2347,7 +2458,6 @@
     "reserve": "Réservé aux responsables.",
     "seConnecter": "Se connecter",
     "bonjour": "{{jour}} · bonjour {{prenom}}",
-    "menu": "Tes modules",
     "sousParties": "Sous-parties",
     "plannings": "Plannings",
     "planningReserve": "Page réservée aux responsables de ce planning.",
@@ -2376,6 +2486,46 @@
     "reunionDePole": "Réunion de pôle · {{pole}}",
     "reunionDEquipe": "Réunion d'équipe · {{equipe}}",
     "organiseePar": "organisée par {{nom}}",
-    "dupliquerProchaine": "Dupliquer pour la prochaine"
+    "dupliquerProchaine": "Dupliquer pour la prochaine",
+    "barre": {
+      "accueil": "Accueil",
+      "plus": "Plus",
+      "personnaliser": "Personnaliser la barre",
+      "personnaliserAide": "Choisis les 4 onglets du bas et leur ordre",
+      "titre": "Ta barre du bas",
+      "aide": "Choisis 4 onglets et leur ordre (glisse les poignées). « Plus » reste à droite et donne accès au reste.",
+      "termine": "Terminé",
+      "apercu": "Aperçu",
+      "parDefaut": "Remettre la barre par défaut",
+      "deplacer": "Déplacer {{nom}}",
+      "instructions": "Pour déplacer un onglet : Espace ou Entrée pour le saisir, les flèches pour le déplacer, Espace ou Entrée pour le poser, Échap pour annuler.",
+      "erreur": "Barre non enregistrée : vérifie ta connexion, puis recommence.",
+      "indice": {
+        "tableau": "tableau de bord",
+        "scene": "+ scène",
+        "admins": "admins"
+      }
+    },
+    "plus": {
+      "revenir": "Revenir à l'app",
+      "revenirAide": "Chants, setlists, planning, moi",
+      "contenu": {
+        "tableau": "tes widgets",
+        "calendrier": "services, réunions, évènements",
+        "plannings": "plannings",
+        "import": "import",
+        "sansCompte": "sans compte",
+        "tesPoles": "tâches de tes pôles",
+        "tousLesPoles": "tâches de tous les pôles",
+        "fiches": "fiches, inscrits, période",
+        "scene": "programmes de scène",
+        "organigramme": "organigramme, pôles",
+        "personnes": "personnes et droits",
+        "reception": "signalements, propositions de chants",
+        "notifier": "notifier",
+        "questionnaire": "questionnaire",
+        "statistiques": "chants les plus joués"
+      }
+    }
   }
 }

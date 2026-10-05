@@ -376,6 +376,141 @@ npm test && npx tsc --noEmit && npm run lint && graphify update .
 
 ## Avancement
 
+### Suite parallèle B4–B6 (branche `lot/u6b-tableau-de-bord`, à fusionner dans `lot/u6-back-office`)
+
+**05/10/2026 — B4 « Tableau de bord » codée** (commit « feat(U6): B4 — tableau de bord… », après la fusion de
+`lot/u6-back-office` jusqu'à `4d83a96`). Restent B5 (Personnaliser, écriture et règle `backOffice/{uid}`) et B6
+(barre du bas) ; en parallèle, B2 et B3 dans `lot/u6-back-office`.
+
+- **Disposition** (`src/lib/tableauDeBord/disposition.ts`, pur) : `dispositionParDefaut` (Q11 : admin = tous ses
+  widgets permis ; « évènement » = coordination ou `annonces` ; « louange » = rôle de service ou `plannings` ;
+  sinon Ce dimanche et À faire ; filtré par `widgetsPermis`), ordre de la planche (`ORDRE_DU_CATALOGUE` : Scène et
+  Comptes à la suite, question 6) et tailles de la table (`TAILLE_PAR_DEFAUT`). `dispositionAffichee` : document
+  absent = défaut recalculé ; présent, même vide = le sien, sans widget inconnu, à venir (Calendrier, Chants),
+  non permis ni doublon ; taille illisible = celle de la table.
+- **Lecture** `lirePreferencesBackOffice` (`src/lib/firebase/backOffice.ts`, REST) : 404, refus ou erreur = `null`,
+  donc le défaut. **Aucune règle ajoutée** : la règle `backOffice/{uid}` vient avec B5 ; d'ici là, en ligne, la
+  lecture est refusée et le défaut s'affiche.
+- **Grille** (Q10, `GRILLE_WIDGETS` dans `src/components/backOffice/widgets/Cadre.tsx`) : 1 colonne, 2 dès 640 px,
+  4 sur grand écran (mêmes requêtes que la barre latérale de U4) ; S = 1, M = 2 (1 sur 2 colonnes), L = toute la
+  ligne ; `grid-auto-flow: dense`.
+- **Widgets** (`src/components/backOffice/widgets/`, règles pures dans `src/lib/tableauDeBord/donnees.ts`) :
+  1 Ce dimanche (par service, grille de l'app + Sheet réunis comme l'export, sans données de secours ; setlist
+  publiée, présentation, cases vides, « Personne ») ; 2 À faire (tâches de ses pôles, tous pour un admin, jusqu'à
+  J+7, en retard en rouge, 5 lignes) ; 3 Prochains évènements (visibles, hors réunions, 3/5/10, section, état des
+  inscriptions par `refusInscription`, « Tout voir ») ; 4 Cases vides (`src/lib/planning/casesVides.ts`, pour U8 :
+  colonnes ni optionnelles ni en lecture seule, sur `lignesDeLAnnee`) ; 5 Setlists à préparer
+  (`prochainsServicesSansSetlist` de U5 bis, **fichier `src/lib/setlist/prochainsServices.ts` recopié tel quel de
+  `lot/u5bis-editeur-setlist`** : la fusion le verra identique) ; 6 Petit déj (`lirePetitDej` de U3 ; une lecture
+  en échec n'est jamais « Libre ») ; 8 Scène (programme affiché par `currentProgramme`, ou celui du réglage) ;
+  9 Comptes (admins : noms sans compte comme l'administration, ou nouveaux comptes de la semaine) ; 10 Raccourcis
+  (ceux que les droits permettent, adresses de Q4). Chaque widget a son chargement, son erreur et son état vide.
+- **Page** `src/app/back-office/page.tsx` : titre, puis `TableauDeBord` ; la liste « Tes modules » de B1 reste
+  dessous, sur téléphone et tablette en portrait, **jusqu'à B6**.
+- **Libellés** `tableauDeBord.*` en FR et 中文 (本主日, 待办, 待准备的歌单, 排班空缺, 近期活动…) : **à relire par Timothée**.
+- **Tests** : `tests/tableau-de-bord.spec.ts` (ajouté à `SPECS_GRAND_ECRAN`), 33 tests × 5 projets, vus rouges sur
+  fonctions vides puis verts (165) : défauts des rôles (admin, Alice, annonces, louange, les deux, DA, choriste),
+  disposition enregistrée, règles pures de chaque widget, écrans sur jeu d'essai (Firestore et Sheet simulés),
+  réglages (services, nombre, horizon), widget non permis absent, parts de largeur S/M/L par appareil, 中文 ;
+  captures `test-results/tableau-de-bord-captures/` regardées aux cinq tailles (conformes à `bo-tableau-de-bord`,
+  `bo-telephone-accueil`, `tablette-portrait-back-office`). Verts aussi : `back-office-espace`,
+  `back-office-coupe` sauf « l'ancien tableau des groupes n'a pas de colonne de plus » sur ordinateur (« Batteur
+  B. » trouvé 2 fois), rouge deux fois de suite, étranger à B4 (planning des groupes, venu de U2).
+- **Choix faits faute de réponse dans la spec** : un service = une catégorie de setlist (Culte Francophone,
+  Campus, Intergroupe, Interfranco, groupes, classes EDD), un bloc par grille (Campus matin et soir, Fidélité et
+  ses musiciens) ; Ce dimanche montre toutes les cases (la planche n'en montrait que 4) ; défaut de Cases vides
+  pour un non-admin = ses `plannings`, sinon ceux qu'il publie ; Setlists à préparer : réglage limité aux services
+  où l'on crée, Culte pour un admin qui n'en a pas ; À faire = jusqu'à J+7 ; Petit déj et Cases vides partent du
+  dimanche courant ; le « Personnaliser » de la planche arrive avec B5.
+
+**05/10/2026 — B5 « Personnaliser » codée** (commit « feat(U6): B5 — personnaliser le tableau de bord… »). Reste
+B6 (barre du bas du Back-Office, « Plus », feuille « Ta barre du bas »).
+
+- **Règles pures** : `catalogue`, `ajouterWidget` (à la fin, taille de la table, jamais deux fois), `retirerWidget`,
+  `deplacerWidget`, `changerTaille`, `changerReglages` (`src/lib/tableauDeBord/disposition.ts`) ; réglages de chaque
+  widget en pastilles, `groupesDeReglages` et `choisirReglage` (`src/lib/tableauDeBord/reglages.ts`), qui lisent les
+  choix actifs avec les règles mêmes des widgets (ce qui est coché est ce qui s'affiche).
+- **Écran** (`TableauDeBord.tsx`, `OutilsWidget.tsx`, contexte `EditionWidgetContext` dans `widgets/Cadre.tsx`) :
+  « Personnaliser » → « Terminé » (encre) et « Disposition par défaut » ; bandeau « Ajouter un widget » (widgets
+  permis non affichés, sinon « Tous les widgets sont déjà affichés. ») ; par widget, contour pointillé et barre
+  poignée · Monter · Descendre · S M L · Réglages du widget · Retirer le widget ; glisser à la souris, au toucher et
+  au clavier (`useSensorsAvecClavier`, annonces FR et 中文). Sur téléphone, « Disposition par défaut » passe sur sa
+  ligne, sous le titre (le titre et deux boutons ne tiennent pas à 390 px).
+- **Écriture** (`ecrireTableauDeBord`, `src/lib/firebase/backOffice.ts`, REST) : à chaque geste, `tableauDeBord` et
+  `majLe` seuls (masque : la barre du bas de B6 reste) ; les écritures partent l'une après l'autre ; refusée, la
+  disposition reste à l'écran avec « Disposition non enregistrée ». « Disposition par défaut » demande
+  confirmation puis **retire** `tableauDeBord` du document (absent = défaut du rôle, recalculé, jamais recopié).
+- **Règle** `match /backOffice/{uid} { allow read, write: if signedIn() && request.auth.uid == uid; }`
+  (`firestore.rules`, patron d'`onboarding/{uid}` ; aucun droit dans `access.ts`, `widgetsPermis` filtre déjà
+  l'affichage). **À publier par Timothée** dans la console Firebase : d'ici là, en ligne, la lecture et l'écriture
+  sont refusées (défaut affiché, « Disposition non enregistrée » à chaque geste).
+- **Libellés** `tableauDeBord.perso.*` et `tableauDeBord.reglages.*` en FR et 中文 (自定义, 完成, 恢复默认布局,
+  添加小组件, 上移, 下移, 小组件设置, 移除小组件…) : **à relire par Timothée**.
+- **Tests** (`tests/tableau-de-bord.spec.ts`, fin du fichier) : 18 de plus × 5 projets, vus rouges sur fonctions
+  vides puis verts : règles pures (catalogue, gestes, réglages à un et à plusieurs choix, règle lue dans
+  `firestore.rules`), écrans (Terminé, catalogue sans Comptes, ajouter, retirer, Monter / Descendre, glisser, S / M /
+  L selon l'appareil, réglage qui change le contenu, Réussite 2 relue dans un second contexte, « Disposition par
+  défaut » refusée puis acceptée, écriture refusée, 中文) ; captures `test-results/tableau-de-bord-captures/*-personnaliser.png`.
+- **Choix faits faute de réponse dans la spec** : un réglage à plusieurs choix garde toujours au moins un choix ;
+  « Toutes » (section) et « Celui qui est affiché » (programme) retirent la clé, donc reviennent au défaut ; choix
+  des services de Ce dimanche = tous les services ; Retirer ne demande pas confirmation (le catalogue le rend) ; la
+  disposition touchée n'est pas relue pendant la visite (le dernier geste fait foi).
+
+**05/10/2026 — B6 « Barre du bas » codée** (commit « feat(U6): B6 — barre du bas du Back-Office… »). La suite
+parallèle B4–B6 est finie ; reste sa fusion dans `lot/u6-back-office`.
+
+- **Règles pures** (`src/lib/tableauDeBord/barre.ts`) : `barreParDefaut` (Q13 : Accueil · Calendrier · Tâches ·
+  Planning parmi les entrées permises, complété dans l'ordre du menu ; Calendrier arrivant avec U8, un admin a
+  aujourd'hui Accueil · Tâches · Planning · Évènements, Alice Accueil · Tâches · Évènements), `barreAffichee` (la
+  barre enregistrée dans son ordre, sans entrée inconnue, en double ou sans droit, 4 au plus, complétée dans
+  l'ordre du menu ; absente = défaut), `listeDeLaFeuille`, `basculer` (une cinquième refusée), `barreDeLaFeuille`.
+- **Barre** (`MobileTabBar.tsx`) : au Back-Office, un responsable a ses 4 onglets + « Plus » (`ongletsBackOffice`,
+  `ONGLET_PLUS`, `cleOnglet` dans `src/lib/navigation.ts` : le tableau de bord s'y appelle « Accueil », comme la
+  planche) ; « Plus » est marqué sur toute page du Back-Office hors de la barre ; la barre attend le profil et la
+  barre enregistrée (jamais d'onglets qui changent sous le doigt). Celle de l'App ne change pas ; un
+  non-responsable au Back-Office (« Réservé aux responsables ») garde celle de l'App.
+- **Lecture et écriture** : `useBarreDuBas` / `enregistrerBarreDuBas` (`src/lib/tableauDeBord/useBarreDuBas.ts`),
+  une lecture de `backOffice/{uid}` par compte et par visite, partagée par la barre et « Plus » ;
+  `ecrireBarreDuBas` (`src/lib/firebase/backOffice.ts`, REST) n'écrit que `barreDuBas` et `majLe` (masque : la
+  disposition du tableau de bord reste). Refusée, la barre d'avant revient avec « Barre non enregistrée ». Aucune
+  règle nouvelle : celle de B5 (`backOffice/{uid}`) couvre le champ.
+- **« Plus »** (`/back-office/plus`, `src/components/backOffice/PagePlus.tsx`, planche `bo-telephone-plus`) : une
+  ligne par entrée hors barre, en cartes comme la planche (gestion, puis Messages, puis Statistiques), contenu selon
+  les droits (Planning + « import · sans compte » pour un admin ; Évènements + « programmes de scène » pour la
+  coordination ; Équipes + « personnes et droits » pour un admin ; Messages = « Notifier » seul pour un droit
+  `notify`), pastilles de Q15 (Tâches : à faire pour moi, comme « Mes tâches » ; Messages : signalements et
+  propositions en attente, admins), comptées seulement pour une entrée posée là ; « Personnaliser la barre »
+  (question 9) ; « Revenir à l'app » (dernière page de l'App, mémoire du sélecteur, `useDernierePage`).
+- **Feuille « Ta barre du bas »** (`FeuilleBarreDuBas.tsx`, planche `bo-telephone-barre-perso`, feuille `vaul`) :
+  entrées permises, la barre d'abord ; cases rondes (4 au plus, la cinquième grisée) ; indices « tableau de bord »,
+  « + scène » (coordination), « admins » ; poignées au doigt, à la souris et au clavier (`useSensorsAvecClavier`,
+  annonces du tableau de bord) ; aperçu de la barre ; « Remettre la barre par défaut » ; « Terminé ».
+- **La liste « Tes modules »** de B1 sous le tableau de bord est retirée (clé `backOffice.menu` retirée).
+- **Correction de B1** : le sélecteur ne retient plus `/login` comme dernière page de l'App (après la connexion,
+  « App » et « Revenir à l'app » y ramenaient).
+- **Libellés** `backOffice.barre.*` et `backOffice.plus.*` en FR et 中文 (首页, 更多, 自定义底部栏, 你的底部栏, 恢复默认底部栏,
+  返回应用…) : **à relire par Timothée**.
+- **Tests** : `tests/barre-back-office.spec.ts` (nouveau, 20 tests ; vus rouges sur fonctions vides, puis verts sur
+  téléphone et tablette ; sur ordinateur et grands écrans, seuls les tests purs et « pas de barre du bas »
+  tournent) : règles pures, barre d'un admin et d'Alice (Réussite 2), barre de l'App inchangée, repli sans droit,
+  « Plus » marqué hors barre, cartes et contenus selon les droits, pastilles, feuille (4 au plus, aperçu, rien
+  avant Terminé, masque qui garde le tableau de bord), ordre au clavier, défaut retiré du document, écriture
+  refusée, Réussite 3 (relue sur une tablette, autre contexte), 中文 ; captures
+  `test-results/barre-back-office-captures/` regardées (conformes à `bo-telephone-accueil`, `bo-telephone-plus`,
+  `bo-telephone-barre-perso`, `tablette-portrait-back-office`). `tests/back-office-espace.spec.ts` : sur
+  téléphone et tablette, le menu est désormais la barre du bas.
+- **Choix faits faute de réponse dans la spec** : « Plus » est une page (`/back-office/plus`, hors table Q4) et
+  non un menu ; la feuille s'ouvre depuis « Plus » seulement ; rien ne s'écrit avant de la refermer
+  (« Terminé », le voile ou le geste vers le bas valent tous « Terminé ») ; moins de 4 cochées : la barre est
+  complétée dans l'ordre du menu (l'aperçu le montre) ; « Remettre par défaut » retire `barreDuBas` du document ;
+  pastilles dans « Plus » seulement (ni sur les onglets ni sur la barre latérale) ; descriptions de Tableau de
+  bord, Calendrier et Statistiques écrites d'après leurs voisines (absentes de la planche).
+
+À faire par Timothée (suite B4–B6) : publier `firestore.rules` (règle `backOffice/{uid}` de B5, qui sert aussi
+la barre du bas) ; relire le 中文 de `tableauDeBord.*`, `backOffice.barre.*`, `backOffice.plus.*`.
+
+### Lot U6 (branche `lot/u6-back-office`)
+
 **05/10/2026 — B3 « Tâches et Évènements » codée** (branche `lot/u6-back-office`, après la fusion de
 `lot/u1-scene-saison`, commit « feat(U6): B3 — Tâches et Évènements… »). Faites : R1 à R4, B1 à B3. Restent B4 à B6
 (dans `lot/u6b-tableau-de-bord`). La route d'attente `src/app/back-office/[entree]/` est retirée (dernière entrée
