@@ -423,6 +423,39 @@ npm test && npx tsc --noEmit && npm run lint && graphify update .
   où l'on crée, Culte pour un admin qui n'en a pas ; À faire = jusqu'à J+7 ; Petit déj et Cases vides partent du
   dimanche courant ; le « Personnaliser » de la planche arrive avec B5.
 
+**05/10/2026 — B5 « Personnaliser » codée** (commit « feat(U6): B5 — personnaliser le tableau de bord… »). Reste
+B6 (barre du bas du Back-Office, « Plus », feuille « Ta barre du bas »).
+
+- **Règles pures** : `catalogue`, `ajouterWidget` (à la fin, taille de la table, jamais deux fois), `retirerWidget`,
+  `deplacerWidget`, `changerTaille`, `changerReglages` (`src/lib/tableauDeBord/disposition.ts`) ; réglages de chaque
+  widget en pastilles, `groupesDeReglages` et `choisirReglage` (`src/lib/tableauDeBord/reglages.ts`), qui lisent les
+  choix actifs avec les règles mêmes des widgets (ce qui est coché est ce qui s'affiche).
+- **Écran** (`TableauDeBord.tsx`, `OutilsWidget.tsx`, contexte `EditionWidgetContext` dans `widgets/Cadre.tsx`) :
+  « Personnaliser » → « Terminé » (encre) et « Disposition par défaut » ; bandeau « Ajouter un widget » (widgets
+  permis non affichés, sinon « Tous les widgets sont déjà affichés. ») ; par widget, contour pointillé et barre
+  poignée · Monter · Descendre · S M L · Réglages du widget · Retirer le widget ; glisser à la souris, au toucher et
+  au clavier (`useSensorsAvecClavier`, annonces FR et 中文). Sur téléphone, « Disposition par défaut » passe sur sa
+  ligne, sous le titre (le titre et deux boutons ne tiennent pas à 390 px).
+- **Écriture** (`ecrireTableauDeBord`, `src/lib/firebase/backOffice.ts`, REST) : à chaque geste, `tableauDeBord` et
+  `majLe` seuls (masque : la barre du bas de B6 reste) ; les écritures partent l'une après l'autre ; refusée, la
+  disposition reste à l'écran avec « Disposition non enregistrée ». « Disposition par défaut » demande
+  confirmation puis **retire** `tableauDeBord` du document (absent = défaut du rôle, recalculé, jamais recopié).
+- **Règle** `match /backOffice/{uid} { allow read, write: if signedIn() && request.auth.uid == uid; }`
+  (`firestore.rules`, patron d'`onboarding/{uid}` ; aucun droit dans `access.ts`, `widgetsPermis` filtre déjà
+  l'affichage). **À publier par Timothée** dans la console Firebase : d'ici là, en ligne, la lecture et l'écriture
+  sont refusées (défaut affiché, « Disposition non enregistrée » à chaque geste).
+- **Libellés** `tableauDeBord.perso.*` et `tableauDeBord.reglages.*` en FR et 中文 (自定义, 完成, 恢复默认布局,
+  添加小组件, 上移, 下移, 小组件设置, 移除小组件…) : **à relire par Timothée**.
+- **Tests** (`tests/tableau-de-bord.spec.ts`, fin du fichier) : 18 de plus × 5 projets, vus rouges sur fonctions
+  vides puis verts : règles pures (catalogue, gestes, réglages à un et à plusieurs choix, règle lue dans
+  `firestore.rules`), écrans (Terminé, catalogue sans Comptes, ajouter, retirer, Monter / Descendre, glisser, S / M /
+  L selon l'appareil, réglage qui change le contenu, Réussite 2 relue dans un second contexte, « Disposition par
+  défaut » refusée puis acceptée, écriture refusée, 中文) ; captures `test-results/tableau-de-bord-captures/*-personnaliser.png`.
+- **Choix faits faute de réponse dans la spec** : un réglage à plusieurs choix garde toujours au moins un choix ;
+  « Toutes » (section) et « Celui qui est affiché » (programme) retirent la clé, donc reviennent au défaut ; choix
+  des services de Ce dimanche = tous les services ; Retirer ne demande pas confirmation (le catalogue le rend) ; la
+  disposition touchée n'est pas relue pendant la visite (le dernier geste fait foi).
+
 ### Lot U6 (branche `lot/u6-back-office`)
 
 **05/10/2026 — B1 « Espace » codée** (branche `lot/u6-back-office`, après la fusion de `lot/u4-navigation`,

@@ -418,6 +418,12 @@ service cloud.firestore {
       allow read, write: if signedIn() && request.auth.uid == uid;
     }
 
+    // Back-Office de chacun (lot U6, B5, docs/spec-back-office.md, Q5) : disposition du
+    // tableau de bord et barre du bas, écrites par l'intéressé seul (le profil users/{uid}
+    // est verrouillé). Miroir : src/lib/firebase/backOffice.ts (aucun droit dans access.ts,
+    // chacun n'écrit que le sien ; `widgetsPermis` filtre l'affichage).
+    match /backOffice/{uid} { allow read, write: if signedIn() && request.auth.uid == uid; }
+
     match /config/app {
       // La page d'inscription lit registrationOpen sans être connectée
       allow read: if true;

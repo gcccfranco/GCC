@@ -2,7 +2,9 @@
 
 // Le cadre commun des widgets du tableau de bord (lot U6, B4, planche `bo-tableau-de-bord`) :
 // carte en relief, titre avec son icône et, à droite, un complément (« Culte Franco »,
-// « 1 en retard », « Tout voir ») ; des rangées séparées d'un filet.
+// « 1 en retard », « Tout voir ») ; des rangées séparées d'un filet. En personnalisation (B5),
+// le tableau de bord lui passe par `EditionWidgetContext` sa barre d'outils et de quoi le glisser.
+import { createContext, useContext } from "react";
 import Link from "next/link";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -20,6 +22,16 @@ const CLASSE_TAILLE: Record<Taille, string> = {
 export const GRILLE_WIDGETS =
   "grid grid-cols-1 items-start gap-4 [grid-auto-flow:row_dense] sm:grid-cols-2 [@media(pointer:fine)_and_(min-width:1024px)]:grid-cols-4 [@media(pointer:coarse)_and_(orientation:landscape)_and_(min-width:1024px)]:grid-cols-4";
 
+/** Personnalisation (B5) : la carte se glisse (`setNodeRef`, `style`) et porte, en tête, la
+ *  barre d'outils et les réglages (`outils`, absent hors personnalisation). */
+export type EditionWidget = {
+  setNodeRef: (el: HTMLElement | null) => void;
+  style?: React.CSSProperties;
+  enMouvement: boolean;
+  outils: React.ReactNode | null;
+};
+export const EditionWidgetContext = createContext<EditionWidget | null>(null);
+
 export function CadreWidget({
   id, taille, nom, titre, Icone, complement, children,
 }: {
@@ -32,8 +44,18 @@ export function CadreWidget({
   complement?: React.ReactNode;
   children: React.ReactNode;
 }) {
+  const edition = useContext(EditionWidgetContext);
   return (
-    <section aria-label={nom} data-widget={id} className={cn("raised min-h-[120px] min-w-0 rounded-[18px] px-[18px] py-4", CLASSE_TAILLE[taille])}>
+    <section
+      ref={edition?.setNodeRef} style={edition?.style} aria-label={nom} data-widget={id}
+      className={cn(
+        "raised min-h-[120px] min-w-0 rounded-[18px] px-[18px] py-4", CLASSE_TAILLE[taille],
+        // Planche : contour pointillé en personnalisation ; la carte saisie passe devant.
+        edition?.outils && "outline-dashed outline-2 -outline-offset-2 outline-muted-foreground/30",
+        edition?.enMouvement && "relative z-10 shadow-lg",
+      )}
+    >
+      {edition?.outils}
       <div className="mb-2.5 flex items-center gap-2">
         <Icone className="h-4 w-4 shrink-0 text-foreground/80" aria-hidden />
         <h3 className="text-[15px] font-semibold leading-snug text-foreground">{titre ?? nom}</h3>

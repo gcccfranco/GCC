@@ -61,3 +61,39 @@ export function dispositionAffichee(
     return [{ id, taille, reglages }];
   });
 }
+
+// ─── B5 : Personnaliser ──────────────────────────────────────────────────────
+// Chaque geste rend une nouvelle disposition (rien n'est modifié en place), aussitôt
+// écrite dans `backOffice/{uid}` (Q12).
+
+/** « Ajouter un widget » : les widgets permis qu'on n'affiche pas, dans l'ordre de la planche. */
+export function catalogue(d: Widget[], user: AuthUser | null, profile: UserProfile | null): WidgetId[] {
+  const permis = widgetsPermis(user, profile);
+  return ORDRE_DU_CATALOGUE.filter((id) => permis.includes(id) && !d.some((w) => w.id === id));
+}
+
+/** À la fin, à la taille de la table, sans réglage ; jamais deux fois. */
+export function ajouterWidget(d: Widget[], id: WidgetId): Widget[] {
+  return d.some((w) => w.id === id) ? d : [...d, { id, taille: TAILLE_PAR_DEFAUT[id], reglages: {} }];
+}
+
+export function retirerWidget(d: Widget[], id: WidgetId): Widget[] {
+  return d.filter((w) => w.id !== id);
+}
+
+/** Le widget de la place `de` passe à la place `vers` (glisser, Monter, Descendre) ; hors bornes, rien. */
+export function deplacerWidget(d: Widget[], de: number, vers: number): Widget[] {
+  if (de === vers || de < 0 || vers < 0 || de >= d.length || vers >= d.length) return d;
+  const r = [...d];
+  const [w] = r.splice(de, 1);
+  r.splice(vers, 0, w);
+  return r;
+}
+
+export function changerTaille(d: Widget[], id: WidgetId, taille: Taille): Widget[] {
+  return d.map((w) => (w.id === id ? { ...w, taille } : w));
+}
+
+export function changerReglages(d: Widget[], id: WidgetId, reglages: Reglages): Widget[] {
+  return d.map((w) => (w.id === id ? { ...w, reglages } : w));
+}

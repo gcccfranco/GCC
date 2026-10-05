@@ -1,6 +1,7 @@
 "use client";
 
-// Tableau de bord du Back-Office (lot U6). B4 : les widgets (`TableauDeBord`). Sous eux, sur
+// Tableau de bord du Back-Office (lot U6). B4 : les widgets (`TableauDeBord`, qui porte aussi
+// le titre et, B5, « Personnaliser »). Sous eux, sur
 // téléphone et tablette en portrait, la liste des entrées permises (B1) reste en attendant
 // la barre du bas du Back-Office (B6), qui la remplacera. Sur grand écran, la barre latérale suffit.
 import { useTranslation } from "react-i18next";
@@ -8,7 +9,6 @@ import { useProfile } from "@/lib/firebase/users";
 import { entreesBackOffice } from "@/lib/access";
 import { BACK_OFFICE } from "@/lib/backOffice";
 import { entreesBarre } from "@/lib/navigation";
-import { PageTitle } from "@/components/layout/PageTitle";
 import { Group, GroupRow } from "@/components/ui/group";
 import { TableauDeBord } from "@/components/backOffice/TableauDeBord";
 
@@ -27,11 +27,10 @@ export default function TableauDeBordPage() {
   return (
     // Pleine largeur, comme la planche bo-tableau-de-bord.
     <div className="px-4 pt-6 pb-10 space-y-6 sm:px-6 lg:px-8">
-      <PageTitle
-        title={t("backOffice.entrees.tableau")}
-        subtitle={prenom ? t("backOffice.bonjour", { jour: jourAffiche, prenom }) : jourAffiche}
+      <TableauDeBord
+        titre={t("backOffice.entrees.tableau")}
+        sousTitre={prenom ? t("backOffice.bonjour", { jour: jourAffiche, prenom }) : jourAffiche}
       />
-      <TableauDeBord />
       {entrees.length > 0 && (
         <div data-testid="menu-back-office" className="hide-on-desktop">
           <Group title={t("backOffice.menu")}>

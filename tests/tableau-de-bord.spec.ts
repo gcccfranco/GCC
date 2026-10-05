@@ -1,6 +1,11 @@
-import { expect, test, type Locator, type Page, type TestInfo } from "@playwright/test";
-import { signInAs, type FakeProfile } from "./helpers/fakeSession";
-import { dispositionAffichee, dispositionParDefaut } from "../src/lib/tableauDeBord/disposition";
+import { expect, test, type BrowserContextOptions, type Locator, type Page, type TestInfo } from "@playwright/test";
+import { readFileSync } from "node:fs";
+import path from "node:path";
+import { signInAs, type FakeDb, type FakeProfile } from "./helpers/fakeSession";
+import {
+  ajouterWidget, catalogue, changerReglages, changerTaille, deplacerWidget, dispositionAffichee, dispositionParDefaut, retirerWidget,
+} from "../src/lib/tableauDeBord/disposition";
+import { choisirReglage, groupesDeReglages } from "../src/lib/tableauDeBord/reglages";
 import {
   aFaireDuTableau, ceDimanche, creneauxAVenir, etatInscriptions, evenementsAVenir, nomsSansCompte, nouveauxComptes,
   petitDejAVenir, polesAFaire, prochainsDimanches, raccourcisPermis, seancesDesServices, servicesDuDimanche, servicesSetlists,
@@ -15,7 +20,9 @@ import type { UserProfile } from "../src/types/user";
 // Lot U6 (docs/spec-back-office.md), tranche B4 — le tableau de bord : les widgets
 // 1-6 et 8-10 (Calendrier et Chants les plus joués arrivent avec U8 et U7, Q17), la
 // disposition par défaut selon le rôle (Q11), la grille selon l'appareil (Q10) et la
-// lecture de `backOffice/{uid}` (Q5). Personnaliser (B5) et la barre du bas (B6) suivent.
+// lecture de `backOffice/{uid}` (Q5). Tranche B5 (en fin de fichier) : Personnaliser —
+// catalogue, retirer, Monter / Descendre, glisser, S / M / L, réglages, « Disposition par
+// défaut », écriture à chaque geste et règle `backOffice/{uid}`. La barre du bas (B6) suit.
 // Lancé aussi sur `tablette-paysage` et `ordinateur-1440` (SPECS_GRAND_ECRAN, Q16 de U4).
 // Aucun nom réel : personnes « Pers. A » à « Pers. I ».
 
@@ -439,5 +446,263 @@ test.describe("Tableau de bord (B4) : écrans", () => {
     await ouvrir(page, ALICE);
     await expect(grille(page).getByRole("region", { name: "本主日" })).toBeVisible();
     await expect(grille(page).getByRole("region", { name: "待办" })).toBeVisible();
+  });
+});
+
+// ═══ B5 — Personnaliser ═══════════════════════════════════════════════════════
+// Planche `bo-tableau-de-bord` (mode personnalisation) : « Personnaliser » devient
+// « Terminé » avec « Disposition par défaut » ; bandeau « Ajouter un widget » ; par widget,
+// poignée, Monter, Descendre, S, M, L, Réglages du widget, Retirer le widget. Chaque geste
+// écrit `backOffice/{uid}` (Q12) ; « Disposition par défaut » demande confirmation et retire
+// la disposition du document (absente = défaut du rôle, jamais recopié, Q5).
+
+const ROOT = path.resolve(__dirname, "..");
+const ALICE_DEFAUT = ["dimanche", "afaire", "evenements", "scene"];
+
+/** La dernière écriture de `backOffice/{uid}`. */
+const ecrituresBO = (db: FakeDb, uid: string) => db.writes.filter((w) => w.path === `backOffice/${uid}`);
+const idsEcrits = (db: FakeDb, uid: string) =>
+  ((ecrituresBO(db, uid).at(-1)?.data.tableauDeBord ?? null) as { id: string }[] | null)?.map((w) => w.id) ?? null;
+
+async function personnaliser(page: Page) {
+  await expect(widget(page, "Scène")).toBeVisible();
+  await page.getByRole("button", { name: "Personnaliser" }).click();
+  await expect(page.getByRole("button", { name: "Terminé" })).toBeVisible();
+}
+const catalogueDe = (page: Page) => page.getByRole("region", { name: "Ajouter un widget" });
+
+test.describe("Personnaliser (B5) : règles pures", () => {
+  test("catalogue : les widgets permis non affichés, dans l'ordre de la planche ; jamais un widget non permis", () => {
+    const d = dispositionParDefaut(user(ALICE), profil(ALICE));
+    expect(catalogue(d, user(ALICE), profil(ALICE))).toEqual(["petitdej", "raccourcis"]);
+    expect(catalogue([], user(ALICE), profil(ALICE))).toEqual(["dimanche", "afaire", "evenements", "petitdej", "raccourcis", "scene"]);
+    expect(catalogue(dispositionParDefaut(user(ADMIN), null), user(ADMIN), null)).toEqual([]);
+  });
+
+  test("ajouter (à la fin, taille de la table), retirer, déplacer, taille, réglages", () => {
+    const d = dispositionParDefaut(user(ALICE), profil(ALICE));
+    const plus = ajouterWidget(d, "petitdej");
+    expect(ids(plus)).toEqual([...ALICE_DEFAUT, "petitdej"]);
+    expect(plus.at(-1)).toEqual({ id: "petitdej", taille: "s", reglages: {} });
+    expect(ids(ajouterWidget(plus, "petitdej")), "jamais deux fois").toEqual(ids(plus));
+    expect(ids(retirerWidget(d, "afaire"))).toEqual(["dimanche", "evenements", "scene"]);
+    expect(ids(deplacerWidget(d, 3, 0))).toEqual(["scene", "dimanche", "afaire", "evenements"]);
+    expect(ids(deplacerWidget(d, 0, 1))).toEqual(["afaire", "dimanche", "evenements", "scene"]);
+    expect(ids(deplacerWidget(d, 0, -1)), "hors bornes : rien").toEqual(ALICE_DEFAUT);
+    expect(changerTaille(d, "evenements", "l").find((w) => w.id === "evenements")!.taille).toBe("l");
+    expect(changerReglages(d, "evenements", { nombre: 5 }).find((w) => w.id === "evenements")!.reglages).toEqual({ nombre: 5 });
+    // Rien n'est modifié en place.
+    expect(ids(d)).toEqual(ALICE_DEFAUT);
+  });
+
+  test("réglages de Prochains évènements : nombre 3 / 5 / 10, section (toutes)", () => {
+    const [nombre, section] = groupesDeReglages("evenements", {}, user(ALICE), profil(ALICE));
+    expect([nombre.cle, nombre.plusieurs, nombre.choix.map((c) => c.valeur), nombre.actifs]).toEqual(["nombre", false, ["3", "5", "10"], ["3"]]);
+    expect([section.cle, section.choix.map((c) => c.valeur), section.actifs])
+      .toEqual(["section", ["", "Culte Francophone", "Groupe Paix", "Groupe Fidélité", "Groupe Bonté"], [""]]);
+    expect(choisirReglage({}, nombre, "5")).toEqual({ nombre: 5 });
+    expect(choisirReglage({ section: "Groupe Paix", nombre: 5 }, section, "")).toEqual({ nombre: 5 });
+  });
+
+  test("réglages à plusieurs choix : cocher, décocher, jamais vide", () => {
+    const [poles] = groupesDeReglages("afaire", {}, user(LES_DEUX), profil(LES_DEUX));
+    expect([poles.cle, poles.plusieurs, poles.choix.map((c) => c.valeur), poles.actifs])
+      .toEqual(["poles", true, ["evenement", "louange"], ["evenement", "louange"]]);
+    const sansLouange = choisirReglage({}, poles, "louange");
+    expect(sansLouange).toEqual({ poles: ["evenement"] });
+    const [seul] = groupesDeReglages("afaire", sansLouange, user(LES_DEUX), profil(LES_DEUX));
+    expect(seul.actifs).toEqual(["evenement"]);
+    expect(choisirReglage(sansLouange, seul, "evenement"), "le dernier choix reste").toEqual(sansLouange);
+  });
+
+  test("réglages des autres widgets : services, plannings, horizons, programme, liste, raccourcis", () => {
+    const g = (id: Parameters<typeof groupesDeReglages>[0], qui: FakeProfile | null, programmes?: { id: string; nom: string }[]) =>
+      groupesDeReglages(id, {}, qui ? user(qui) : user(ADMIN), qui ? profil(qui) : null, programmes)
+        .map((x) => [x.cle, x.choix.map((c) => c.valeur), x.actifs]);
+    expect(g("dimanche", DA)[0][2]).toEqual(["Culte Francophone"]);
+    expect(g("planning", null)).toEqual([
+      ["plannings", expect.arrayContaining(["culte", "campusMatin"]), ["culte"]], ["horizon", ["2", "4", "8"], ["4"]],
+    ]);
+    expect(g("setlists", LOUANGE)).toEqual([["services", ["Culte Francophone"], ["Culte Francophone"]], ["horizon", ["2", "4"], ["4"]]]);
+    expect(g("petitdej", ALICE)).toEqual([["horizon", ["4", "8"], ["4"]]]);
+    expect(g("scene", ALICE, [{ id: "p1", nom: "Noël" }])).toEqual([["programme", ["", "p1"], [""]]]);
+    expect(g("comptes", null)).toEqual([["liste", ["sansCompte", "nouveaux"], ["sansCompte"]]]);
+    expect(g("raccourcis", ALICE)).toEqual([["raccourcis", ["tache", "evenement"], ["tache", "evenement"]]]);
+  });
+
+  test("règle backOffice/{uid} : lue et écrite par l'intéressé seul (firestore.rules)", () => {
+    const rules = readFileSync(path.join(ROOT, "firestore.rules"), "utf8");
+    expect(rules).toMatch(/match \/backOffice\/\{uid\} \{\s*allow read, write: if signedIn\(\) && request\.auth\.uid == uid;\s*\}/);
+  });
+});
+
+test.describe("Personnaliser (B5) : écrans", () => {
+  test("Personnaliser : Terminé, Disposition par défaut, catalogue des widgets permis (pas Comptes)", async ({ page }) => {
+    await ouvrir(page, ALICE);
+    await expect(page.getByRole("button", { name: "Monter" })).toHaveCount(0);
+    await personnaliser(page);
+    await expect(page.getByRole("button", { name: "Disposition par défaut" })).toBeVisible();
+    await expect(catalogueDe(page).getByRole("button")).toHaveText(["Petit déj", "Raccourcis"]);
+    // Les outils de chaque widget ; Monter grisé en tête, Descendre en queue.
+    await expect(widget(page, "Ce dimanche").getByRole("button", { name: "Monter" })).toBeDisabled();
+    await expect(widget(page, "Scène").getByRole("button", { name: "Descendre" })).toBeDisabled();
+    await expect(widget(page, "Prochains évènements").getByRole("button", { name: "M", exact: true })).toHaveAttribute("aria-pressed", "true");
+    await page.getByRole("button", { name: "Terminé" }).click();
+    await expect(page.getByRole("button", { name: "Personnaliser" })).toBeVisible();
+    await expect(catalogueDe(page)).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Monter" })).toHaveCount(0);
+  });
+
+  test("ajouter puis retirer un widget : écrit à chaque geste", async ({ page }) => {
+    const db = await ouvrir(page, ALICE);
+    await personnaliser(page);
+    await catalogueDe(page).getByRole("button", { name: "Petit déj" }).click();
+    await expect(widget(page, "Petit déj").getByTestId("ligne-petitdej").first()).toBeVisible();
+    expect(await widgetsAffiches(page)).toEqual([...ALICE_DEFAUT, "petitdej"]);
+    await expect(catalogueDe(page).getByRole("button")).toHaveText(["Raccourcis"]);
+    await expect.poll(() => idsEcrits(db, "uid-alice")).toEqual([...ALICE_DEFAUT, "petitdej"]);
+    expect(ecrituresBO(db, "uid-alice").at(-1)!.data.majLe).toEqual(expect.stringMatching(/^2026-10-01T/));
+
+    await widget(page, "À faire").getByRole("button", { name: "Retirer le widget" }).click();
+    await expect(widget(page, "À faire")).toHaveCount(0);
+    await expect(catalogueDe(page).getByRole("button")).toHaveText(["À faire", "Raccourcis"]);
+    await expect.poll(() => idsEcrits(db, "uid-alice")).toEqual(["dimanche", "evenements", "scene", "petitdej"]);
+  });
+
+  test("tous affichés : « Tous les widgets sont déjà affichés. »", async ({ page }) => {
+    await ouvrir(page, ADMIN);
+    await expect(widget(page, "Comptes")).toBeVisible();
+    await page.getByRole("button", { name: "Personnaliser" }).click();
+    await expect(catalogueDe(page).getByText("Tous les widgets sont déjà affichés.")).toBeVisible();
+  });
+
+  test("Monter et Descendre", async ({ page }) => {
+    const db = await ouvrir(page, ALICE);
+    await personnaliser(page);
+    await widget(page, "Scène").getByRole("button", { name: "Monter" }).click();
+    await expect.poll(() => widgetsAffiches(page)).toEqual(["dimanche", "afaire", "scene", "evenements"]);
+    await widget(page, "Ce dimanche").getByRole("button", { name: "Descendre" }).click();
+    await expect.poll(() => widgetsAffiches(page)).toEqual(["afaire", "dimanche", "scene", "evenements"]);
+    await expect.poll(() => idsEcrits(db, "uid-alice")).toEqual(["afaire", "dimanche", "scene", "evenements"]);
+  });
+
+  test("glisser un widget par sa poignée", async ({ page }) => {
+    const db = await ouvrir(page, ALICE);
+    await personnaliser(page);
+    const poignee = widget(page, "Scène").getByRole("button", { name: "Déplacer « Scène »" });
+    const cible = widget(page, "Prochains évènements");
+    await cible.evaluate((e) => e.scrollIntoView({ block: "center" }));
+    const from = (await poignee.boundingBox())!;
+    const to = (await cible.boundingBox())!;
+    await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2 - 12, { steps: 4 });
+    await expect(poignee).toHaveAttribute("aria-pressed", "true");
+    await page.mouse.move(to.x + to.width / 2, to.y + to.height / 2, { steps: 12 });
+    await expect(page.getByText("« Scène » en position 3 sur 4.")).toBeAttached();
+    await page.mouse.up();
+    await expect.poll(() => widgetsAffiches(page)).toEqual(["dimanche", "afaire", "scene", "evenements"]);
+    await expect.poll(() => idsEcrits(db, "uid-alice")).toEqual(["dimanche", "afaire", "scene", "evenements"]);
+  });
+
+  test("tailles S / M / L : la place change selon l'appareil (Q10), et s'écrit", async ({ page }, info) => {
+    const db = await ouvrir(page, ALICE);
+    await personnaliser(page);
+    const evts = widget(page, "Prochains évènements");
+    await evts.getByRole("button", { name: "L", exact: true }).click();
+    await expect(evts.getByRole("button", { name: "L", exact: true })).toHaveAttribute("aria-pressed", "true");
+    await expect.poll(() => part(grille(page), evts)).toBeCloseTo(1, 1);
+    await evts.getByRole("button", { name: "S", exact: true }).click();
+    const n = colonnes(info);
+    await expect.poll(() => part(grille(page), evts)).toBeCloseTo(n === 4 ? 0.25 : n === 2 ? 0.5 : 1, 1);
+    await expect.poll(() => (ecrituresBO(db, "uid-alice").at(-1)?.data.tableauDeBord as { id: string; taille: string }[] | undefined)
+      ?.find((w) => w.id === "evenements")?.taille).toBe("s");
+  });
+
+  test("un réglage change le contenu et s'écrit", async ({ page }) => {
+    const db = await ouvrir(page, ALICE);
+    const evts = widget(page, "Prochains évènements");
+    await expect(evts.getByTestId("ligne-evenement")).toHaveCount(3);
+    await personnaliser(page);
+    const reglages = evts.getByRole("button", { name: "Réglages du widget" });
+    await reglages.click();
+    await expect(reglages).toHaveAttribute("aria-expanded", "true");
+    const afficher = evts.getByRole("group", { name: "Afficher" });
+    await expect(afficher.getByRole("button", { name: "3", exact: true })).toHaveAttribute("aria-pressed", "true");
+    await afficher.getByRole("button", { name: "5", exact: true }).click();
+    await expect(evts.getByTestId("ligne-evenement")).toHaveCount(5);
+    await expect.poll(() => (ecrituresBO(db, "uid-alice").at(-1)?.data.tableauDeBord as { id: string; reglages: object }[] | undefined)
+      ?.find((w) => w.id === "evenements")?.reglages).toEqual({ nombre: 5 });
+  });
+
+  test("Réussite 2 : Alice ajoute Petit déj, monte Scène en tête, passe Prochains évènements en L ; relue sur un autre appareil, la même", async ({ page, browser }, info) => {
+    const db = await ouvrir(page, ALICE);
+    await personnaliser(page);
+    await catalogueDe(page).getByRole("button", { name: "Petit déj" }).click();
+    for (let i = 0; i < 3; i++) await widget(page, "Scène").getByRole("button", { name: "Monter" }).click();
+    await widget(page, "Prochains évènements").getByRole("button", { name: "L", exact: true }).click();
+    const voulu = ["scene", "dimanche", "afaire", "evenements", "petitdej"];
+    await expect.poll(() => widgetsAffiches(page)).toEqual(voulu);
+    await expect.poll(() => (db.doc("backOffice/uid-alice")?.tableauDeBord as { taille: string }[] | undefined)?.[3]?.taille).toBe("l");
+
+    // Un autre appareil, une autre session : il ne lit que la base.
+    const { defaultBrowserType: _ignore, ...use } = info.project.use as Record<string, unknown>;
+    const autre = await browser.newContext({ ...(use as BrowserContextOptions), baseURL: new URL(page.url()).origin });
+    try {
+      const page2 = await autre.newPage();
+      await ouvrir(page2, ALICE, { "backOffice/uid-alice": db.doc("backOffice/uid-alice")! });
+      await expect(widget(page2, "Petit déj")).toBeVisible();
+      expect(await widgetsAffiches(page2)).toEqual(voulu);
+      expect(await part(grille(page2), widget(page2, "Prochains évènements"))).toBeCloseTo(1, 1);
+    } finally {
+      await autre.close();
+    }
+  });
+
+  test("Disposition par défaut : confirmation, puis le défaut du rôle, retiré du document", async ({ page }) => {
+    const db = await ouvrir(page, ALICE, {
+      "backOffice/uid-alice": { tableauDeBord: [{ id: "scene", taille: "l", reglages: {} }], majLe: "2026-09-30T10:00:00Z" },
+    });
+    await expect(widget(page, "Scène")).toBeVisible();
+    await page.getByRole("button", { name: "Personnaliser" }).click();
+    // Refusée : rien ne change, rien ne s'écrit.
+    page.once("dialog", (d) => d.dismiss());
+    await page.getByRole("button", { name: "Disposition par défaut" }).click();
+    expect(await widgetsAffiches(page)).toEqual(["scene"]);
+    expect(ecrituresBO(db, "uid-alice")).toHaveLength(0);
+    // Acceptée : le défaut d'Alice, et plus de disposition enregistrée.
+    page.once("dialog", (d) => d.accept());
+    await page.getByRole("button", { name: "Disposition par défaut" }).click();
+    await expect.poll(() => widgetsAffiches(page)).toEqual(ALICE_DEFAUT);
+    await expect.poll(() => ecrituresBO(db, "uid-alice").length).toBe(1);
+    expect(db.doc("backOffice/uid-alice")!.tableauDeBord).toBeUndefined();
+    expect(db.doc("backOffice/uid-alice")!.majLe).toEqual(expect.stringMatching(/^2026-10-01T/));
+  });
+
+  test("écriture refusée : la disposition reste à l'écran et un message le dit", async ({ page }) => {
+    await ouvrir(page, ALICE);
+    await page.route(/firestore\.googleapis\.com.*backOffice/, (route) =>
+      route.request().method() === "PATCH"
+        ? route.fulfill({ status: 403, contentType: "application/json", body: "{}" })
+        : route.fallback());
+    await personnaliser(page);
+    await widget(page, "À faire").getByRole("button", { name: "Retirer le widget" }).click();
+    await expect(page.getByRole("alert").filter({ hasText: "Disposition non enregistrée" })).toBeVisible();
+    expect(await widgetsAffiches(page)).toEqual(["dimanche", "evenements", "scene"]);
+  });
+
+  test("captures en personnalisation (à regarder)", async ({ page }, info) => {
+    await ouvrir(page, ALICE);
+    await personnaliser(page);
+    await widget(page, "Prochains évènements").getByRole("button", { name: "Réglages du widget" }).click();
+    await page.screenshot({ path: `test-results/tableau-de-bord-captures/${info.project.name}-personnaliser.png`, fullPage: true });
+  });
+
+  test("中文 : Personnaliser traduit", async ({ page }) => {
+    await page.addInitScript(() => { try { localStorage.setItem("i18nextLng", "zh-CN"); } catch {} });
+    await ouvrir(page, ALICE);
+    await page.getByRole("button", { name: "自定义" }).click();
+    await expect(page.getByRole("button", { name: "完成" })).toBeVisible();
+    await expect(page.getByRole("region", { name: "添加小组件" })).toBeVisible();
   });
 });
