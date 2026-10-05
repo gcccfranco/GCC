@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page, type TestInfo } from "@playwright/test";
 import { fakeFirestore, signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { groupByMonth, isPast, modeInscriptions, placesRestantes, refusInscription } from "../src/lib/evenements/agenda";
 import type { Evenement } from "../src/types/evenement";
@@ -29,6 +29,13 @@ const NOEL = { nom: "Noël", jourJ: "2026-12-24", debut: "2026-10-01", visible: 
 
 const JO: FakeProfile = { uid: "uid-jo", email: "jo@example.com", firstName: "Jo", lastName: "L.", serviceRoles: { "Groupe Paix": ["chanteur"] } };
 const EVA: FakeProfile = { uid: "uid-eva", email: "eva@example.com", firstName: "Eva", lastName: "C.", serviceRoles: { "Groupe Bonté": ["musicien"] } };
+
+// Lot U4 bis, B2 (docs/spec-pages-en-grand.md, Q5) : en grand (projet `ordinateur`), l'agenda
+// est en lignes à gauche et la fiche à droite, en deux colonnes. Les tests des grandes cartes du
+// calendrier se vérifient en un volet (téléphone, tablette) ; ceux de la fiche lisent la carte
+// d'inscription (`fiche-carte`), l'agenda montrant aussi lieux et états.
+const enGrand = (info: TestInfo) => ["ordinateur", "ordinateur-1440", "tablette-paysage"].includes(info.project.name);
+const CARTES_EN_UN_VOLET = "en grand, l'agenda est en lignes (U4 bis, B2) : les cartes se vérifient en un volet";
 
 async function visitor(page: Page, to: string, docs: Record<string, Record<string, unknown>> = DOCS) {
   await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
@@ -83,13 +90,14 @@ test("passés : masqués, un lien montre les trois derniers mois", async ({ page
 
 test("fiche sans compte : détails, places restantes, formulaire sans compte, aucun nom d'inscrit", async ({ page }) => {
   await visitor(page, "/evenements/foot", { ...DOCS, "evenements/foot/inscriptions/uid-jo": { uid: "uid-jo", nom: "Jo L.", invites: 1, createdAt: "2026-09-21T10:00:00Z" } });
+  const fiche = page.getByTestId("fiche-carte");
   await expect(page.getByRole("heading", { name: "Foot au parc" })).toBeVisible();
-  await expect(page.getByText("Parc de Bercy")).toBeVisible();
-  await expect(page.getByText(/samedi 10 octobre 2026/)).toBeVisible();
-  await expect(page.getByText("19:00")).toBeVisible();
+  await expect(fiche.getByText("Parc de Bercy")).toBeVisible();
+  await expect(fiche.getByText(/samedi 10 octobre 2026/)).toBeVisible();
+  await expect(fiche.getByText("19:00")).toBeVisible();
   await expect(page.getByText("Match amical, venez nombreux.")).toBeVisible();
-  await expect(page.getByText("6 places restantes")).toBeVisible();
-  await expect(page.getByText("Pour plus d'infos : Steph")).toBeVisible();
+  await expect(fiche.getByText("6 places restantes")).toBeVisible();
+  await expect(fiche.getByText("Pour plus d'infos : Steph")).toBeVisible();
   await page.getByRole("button", { name: "S'inscrire" }).click();
   await expect(page.getByLabel("Ton nom")).toBeVisible();
   await expect(page.getByText("Jo L.")).toHaveCount(0);
@@ -97,7 +105,7 @@ test("fiche sans compte : détails, places restantes, formulaire sans compte, au
 
 test("fiche : « Complet » quand les places sont prises", async ({ page }) => {
   await visitor(page, "/evenements/foot", { ...DOCS, "evenements/foot": { ...FOOT, inscrits: 10 } });
-  await expect(page.getByText("Complet")).toBeVisible();
+  await expect(page.getByTestId("fiche-carte").getByText("Complet")).toBeVisible();
   await expect(page.getByText(/places restantes/)).toHaveCount(0);
 });
 
@@ -387,7 +395,7 @@ test("membre : « S'inscrire » puis invités et « Confirmer » envoie au serve
   await page.getByRole("button", { name: "S'inscrire" }).click();
   await page.getByLabel("Invités").selectOption("2");
   await page.getByRole("button", { name: "Confirmer" }).click();
-  await expect(page.getByText("Inscrit", { exact: true })).toBeVisible();
+  await expect(page.getByTestId("fiche-carte").getByText("Inscrit", { exact: true })).toBeVisible();
   await expect(page.getByText("2 invités")).toBeVisible();
   await expect(page.getByText("3 places restantes")).toBeVisible();
   await expect(page.getByRole("button", { name: "Me désinscrire" })).toBeVisible();
@@ -402,7 +410,7 @@ test("membre déjà inscrit : voit sa place et se désinscrit", async ({ page })
     sent = route.request().postDataJSON();
     return route.fulfill({ json: { ok: true, inscrits: 2 } });
   });
-  await expect(page.getByText("Inscrit", { exact: true })).toBeVisible();
+  await expect(page.getByTestId("fiche-carte").getByText("Inscrit", { exact: true })).toBeVisible();
   await expect(page.getByText("1 invité")).toBeVisible();
   await page.getByRole("button", { name: "Me désinscrire" }).click();
   await expect(page.getByRole("button", { name: "S'inscrire" })).toBeVisible();
@@ -430,12 +438,12 @@ test("sans compte, autorisé : nom + invités, envoyé sans jeton, confirmation 
 test("sans compte, non autorisé : pas de formulaire, invitation à se connecter", async ({ page }) => {
   await visitor(page, "/evenements/foot", { ...DOCS, "evenements/foot": { ...FOOT, sansCompte: false } });
   await expect(page.getByLabel("Ton nom")).toHaveCount(0);
-  await expect(page.getByRole("main").getByRole("link", { name: "Connexion" })).toBeVisible();
+  await expect(page.getByTestId("fiche-carte").getByRole("link", { name: "Connexion" })).toBeVisible();
 });
 
 test("complet : ni bouton ni formulaire", async ({ page }) => {
   await member(page, JO, "/evenements/foot", { ...DOCS, "evenements/foot": { ...FOOT, inscrits: 10 } });
-  await expect(page.getByText("Complet")).toBeVisible();
+  await expect(page.getByTestId("fiche-carte").getByText("Complet")).toBeVisible();
   await expect(page.getByRole("button", { name: "S'inscrire" })).toHaveCount(0);
 });
 
@@ -542,7 +550,8 @@ test("QR code : l'organisateur voit le QR de sa fiche à côté du lien", async 
 // 16/09/2026 : plus de QR code sur l'onglet Évènements (demande de Timothée).
 test("QR code : aucun bouton sur le calendrier, même pour la coordination", async ({ page }) => {
   await member(page, ALICE, "/evenements");
-  await expect(page.getByRole("heading", { level: 1, name: "Évènements" })).toBeVisible();
+  // En grand, le titre de l'agenda est un h2 (celui de la fiche est à droite).
+  await expect(page.getByRole("heading", { name: "Évènements", exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "QR code" })).toHaveCount(0);
 });
 
@@ -564,7 +573,8 @@ test("annonces retirées : l'administration ne propose plus de migration, la rou
 
 // ─── Lot 6 bis : look de la maquette de Timothée (16/09/2026, spec-evenements-look.md) ──
 
-test("L1 calendrier : la carte porte l'état d'inscription ; « S'inscrire » ouvre la fiche", async ({ page }) => {
+test("L1 calendrier : la carte porte l'état d'inscription ; « S'inscrire » ouvre la fiche", async ({ page }, info) => {
+  test.skip(enGrand(info), CARTES_EN_UN_VOLET);
   await member(page, JO, "/evenements", {
     ...DOCS,
     "evenements/foot/inscriptions/uid-jo": MA_PLACE,
@@ -581,7 +591,8 @@ test("L1 calendrier : la carte porte l'état d'inscription ; « S'inscrire » ou
   await expect(page).toHaveURL(/\/evenements\/paix\/?$/);
 });
 
-test("L1 calendrier sans compte : « S'inscrire » sur les cartes ouvertes, rien sur une info", async ({ page }) => {
+test("L1 calendrier sans compte : « S'inscrire » sur les cartes ouvertes, rien sur une info", async ({ page }, info) => {
+  test.skip(enGrand(info), CARTES_EN_UN_VOLET);
   await visitor(page, "/evenements");
   await expect(page.getByRole("link", { name: /Foot au parc/ })).toContainText("S'inscrire");
   await expect(page.getByRole("link", { name: /Nouveau parking/ })).not.toContainText("S'inscrire");
@@ -646,7 +657,9 @@ test("L4 formulaire : champs courants dans l'ordre de la maquette, responsable p
 
 const BLANC = "rgb(255, 255, 255)";
 
-test("L6 fiche : tout le contenu dans une carte blanche, zone d'attente quand il n'y a pas de bannière", async ({ page }) => {
+test("L6 fiche : tout le contenu dans une carte blanche, zone d'attente quand il n'y a pas de bannière", async ({ page }, info) => {
+  // En grand, la fiche est en deux colonnes (planche `evenements-ordinateur`) : pages-en-grand-evenements.spec.ts.
+  test.skip(enGrand(info), "en grand, la fiche est en deux colonnes (U4 bis, B2, Q5)");
   await member(page, JO, "/evenements/paix");
   const carte = page.getByTestId("fiche-carte");
   await expect(carte).toBeVisible();
@@ -740,7 +753,8 @@ test("évènement commencé : l'organisateur lit « Fermées » et pourquoi ; «
   await expect.poll(() => db.doc("evenements/foot")?.inscriptions).toBe("ouvertes");
 });
 
-test("calendrier : « Inscrit » s'écrit sous l'heure et le lieu, comme la maquette", async ({ page }) => {
+test("calendrier : « Inscrit » s'écrit sous l'heure et le lieu, comme la maquette", async ({ page }, info) => {
+  test.skip(enGrand(info), CARTES_EN_UN_VOLET);
   await member(page, JO, "/evenements", { ...DOCS, "evenements/foot/inscriptions/uid-jo": MA_PLACE });
   const carte = page.getByRole("link", { name: /Foot au parc/ });
   const [meta, badge] = [(await carte.getByText(/Parc de Bercy/).boundingBox())!, (await carte.getByText("Inscrit", { exact: true }).boundingBox())!];
@@ -773,7 +787,8 @@ test("formulaire : libellés discrets, « Prévenir les membres » et le bouton 
 // titre, date · horaire · lieu, « Pour plus d'infos », « S'inscrire »,
 // « N déjà inscrits ». Infos épinglées et évènements passés restent compacts.
 
-test("calendrier : un évènement à venir est une grande carte comme la maquette", async ({ page }) => {
+test("calendrier : un évènement à venir est une grande carte comme la maquette", async ({ page }, info) => {
+  test.skip(enGrand(info), CARTES_EN_UN_VOLET);
   await member(page, JO, "/evenements", { ...DOCS, "evenements/foot": { ...FOOT, heureFin: "21:00", contact: "Steph R." } });
   const carte = page.getByRole("link", { name: /Foot au parc/ });
   await expect(carte.getByTestId("banniere")).toBeVisible();
@@ -864,7 +879,8 @@ test("période P3 : sans compte aussi, la raison s'affiche", async ({ page }) =>
   await expect(page.getByText("Inscriptions fermées : l'évènement a commencé")).toBeVisible();
 });
 
-test("période P3 : la carte de la liste annonce l'ouverture au lieu de « S'inscrire »", async ({ page }) => {
+test("période P3 : la carte de la liste annonce l'ouverture au lieu de « S'inscrire »", async ({ page }, info) => {
+  test.skip(enGrand(info), CARTES_EN_UN_VOLET);
   await member(page, JO, "/evenements", { ...DOCS, "evenements/foot": PAS_ENCORE });
   const carte = page.getByRole("link", { name: /Foot au parc/ });
   await expect(carte).toContainText("Inscriptions à partir du 5 oct.");
@@ -969,7 +985,8 @@ test("lot 11 panneau : « Formulaire externe », l'adresse cliquable, aucun rég
   await expect(lienQr).toHaveAttribute("href", /\/evenements\/theologie$/);
 });
 
-test("lot 11 calendrier : la carte montre « S'inscrire » seul et mène à la fiche, pas au formulaire", async ({ page }) => {
+test("lot 11 calendrier : la carte montre « S'inscrire » seul et mène à la fiche, pas au formulaire", async ({ page }, info) => {
+  test.skip(enGrand(info), CARTES_EN_UN_VOLET);
   await member(page, JO, "/evenements", DOCS_EXT);
   const carte = page.getByRole("link", { name: /Cours de théologie/ });
   await expect(carte).toContainText("S'inscrire");

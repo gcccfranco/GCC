@@ -312,6 +312,12 @@
       "jianpuSheetHint": "以简谱演奏这首歌",
       "transitionPlaceholder": "过渡内容…"
     },
+    "apercu": {
+      "region": "歌单预览",
+      "tonalites": "本歌单的调性",
+      "equipe": "本次服事团队",
+      "dapres": "根据排班表"
+    },
     "history": {
       "heading": "修改记录",
       "modifiedBy": "{{name}} {{when}}修改",

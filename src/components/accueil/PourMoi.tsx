@@ -18,7 +18,8 @@ import { serviceButtonFill } from "@/lib/serviceButton"
 import { Tile } from "@/components/ui/tile"
 import { KeyPill } from "@/components/ui/key-pill"
 
-export type Disposition = "grand" | "tablette" | "telephone"
+import type { Disposition } from "@/hooks/useDisposition"
+export type { Disposition }
 
 const locale = (lang: string) => (lang === "zh-CN" ? "zh-CN" : "fr-FR")
 const jourDe = (iso: string) => new Date(`${iso}T12:00:00`)

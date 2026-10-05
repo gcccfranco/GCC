@@ -14,13 +14,16 @@ const ONLY_MINE_KEY = "setlists-only-mine";
  *   `lastListPath`) ramène exactement où on s'était arrêté ;
  * - le filtre « Mes services » est mémorisé sur l'appareil : coché par
  *   défaut, mais un décochage reste acquis d'une visite à l'autre ;
- * - la position de scroll est restaurée via sessionStorage.
+ * - la position de scroll est restaurée via sessionStorage ;
+ * - en grand, l'aperçu de la setlist choisie aussi (`?apercu=<id>`, lot U4 bis, B2, Q4) :
+ *   l'adresse est remplacée, sans entrée d'historique.
  */
 export function useSetlistsNavState() {
   const [categoryFilter, setCategoryFilter] = useState("Toutes");
   const [tab, setTab] = useState<Tab>("upcoming");
   const [query, setQuery] = useState("");
   const [onlyMine, setOnlyMineState] = useState(true);
+  const [apercu, setApercu] = useState<string | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
 
   // Initialisation depuis l'URL (+ localStorage pour « Mes services ») et
@@ -31,6 +34,7 @@ export function useSetlistsNavState() {
     const t = params.get("tab");
     if (t === "archived" || t === "mine") setTab(t);
     setQuery(params.get("q") || "");
+    setApercu(params.get("apercu"));
     try {
       setOnlyMineState(localStorage.getItem(ONLY_MINE_KEY) !== "0");
     } catch { /* stockage indisponible */ }
@@ -60,6 +64,7 @@ export function useSetlistsNavState() {
     if (categoryFilter !== "Toutes") params.set("cat", categoryFilter);
     if (tab !== "upcoming") params.set("tab", tab);
     if (query.trim()) params.set("q", query.trim());
+    if (apercu) params.set("apercu", apercu);
 
     const queryString = params.toString();
     const newUrl = window.location.pathname + (queryString ? `?${queryString}` : "");
@@ -68,7 +73,7 @@ export function useSetlistsNavState() {
     // `lastListPath` est repris par la page d'une setlist (retour d'un chant) : la
     // liste se retient aussi à part, pour l'entrée « Setlists » de la barre latérale.
     sessionStorage.setItem(CLE_LISTE_SETLISTS, newUrl);
-  }, [categoryFilter, tab, query, isInitialized]);
+  }, [categoryFilter, tab, query, apercu, isInitialized]);
 
   // Sauvegarde du scroll au défilement
   useEffect(() => {
@@ -79,5 +84,5 @@ export function useSetlistsNavState() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  return { categoryFilter, setCategoryFilter, tab, setTab, query, setQuery, onlyMine, setOnlyMine };
+  return { categoryFilter, setCategoryFilter, tab, setTab, query, setQuery, onlyMine, setOnlyMine, apercu, setApercu };
 }

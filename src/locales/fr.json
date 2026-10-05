@@ -312,6 +312,12 @@
       "jianpuSheetHint": "Jouer ce chant sur sa partition 简谱",
       "transitionPlaceholder": "Texte de la transition…"
     },
+    "apercu": {
+      "region": "Aperçu de la setlist",
+      "tonalites": "tonalités de la setlist",
+      "equipe": "L'équipe de ce service",
+      "dapres": "d'après le planning"
+    },
     "history": {
       "heading": "Historique des modifications",
       "modifiedBy": "Modifiée par {{name}} {{when}}",

@@ -185,10 +185,11 @@ test("« À venir » : la setlist d'un autre membre n'a pas de case et reste un 
   await entrerEnSelection(page);
   await expect(cases(page)).toHaveCount(1);
   await expect(page.getByRole("checkbox", { name: "Culte de Léa" })).toBeVisible();
-  // Next sert ses pages avec une barre oblique finale.
+  // Next sert ses pages avec une barre oblique finale. En grand (U4 bis, B2), la ligne mène à
+  // l'aperçu de la setlist (`?apercu=`).
   await expect(ligne(page, "Culte de Jonathan").getByRole("link")).toHaveAttribute(
     "href",
-    /\/setlists\/pub-jonathan\/?$/,
+    /\/setlists\/(pub-jonathan\/?|\?apercu=pub-jonathan)$/,
   );
 });
 
@@ -219,9 +220,14 @@ test("musicien : pas de case sur la setlist privée d'un autre, vignettes align�
   await expect(cases(page)).toHaveCount(1);
   await expect(page.getByRole("checkbox", { name: "Ma répétition" })).toBeVisible();
 
-  const avec = (await ligne(page, "Ma répétition").getByTestId("tuile").boundingBox())!;
-  const sans = (await ligne(page, "Brouillon de Jonathan").getByTestId("tuile").boundingBox())!;
-  expect(Math.abs(sans.x - avec.x), "vignettes alignées, avec ou sans case").toBeLessThan(1);
+  // Mesurée depuis le bord de sa ligne : sur tablette portrait (U4 bis, B2), les setlists sont
+  // des cartes sur deux colonnes.
+  const decalage = async (titre: string) => {
+    const l = ligne(page, titre);
+    return (await l.getByTestId("tuile").boundingBox())!.x - (await l.boundingBox())!.x;
+  };
+  const [avec, sans] = [await decalage("Ma répétition"), await decalage("Brouillon de Jonathan")];
+  expect(Math.abs(sans - avec), "vignettes alignées, avec ou sans case").toBeLessThan(1);
 });
 
 test("rien de supprimable : pas de bouton « Sélectionner »", async ({ page }) => {
@@ -261,7 +267,7 @@ test("« Annuler » referme le mode : plus de case, la ligne redevient un lien",
 
   await page.getByRole("button", { name: "Annuler" }).click();
   await expect(cases(page)).toHaveCount(0);
-  await expect(ligne(page, "Culte du 24 janvier").getByRole("link")).toHaveAttribute("href", /\/setlists\/s3\/?$/);
+  await expect(ligne(page, "Culte du 24 janvier").getByRole("link")).toHaveAttribute("href", /\/setlists\/(s3\/?|\?apercu=s3)$/); // en grand : l'aperçu (U4 bis, B2)
   await expect(page.getByRole("button", { name: "Sélectionner" })).toBeVisible();
 });
 

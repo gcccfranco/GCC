@@ -305,3 +305,52 @@ commité, aucun code) ; gardé, une attente corrigée (lire la fiche avant le to
   s'efface toujours au premier filtre ; en grand, la ligne de la première fiche s'allume avant le premier toucher.
 - Reste : B2, B4 à B7.
 - À faire par Timothée : relire le 中文 « {{ecran}}（续） » ; rien à publier (aucune règle).
+
+**B2 — Setlists et Évènements, faite le 05/10/2026** (branche `lot/u4bis-pages-en-grand`, après la fusion de
+`lot/u6-back-office` ; commit `feat(U4bis): B2 — Setlists et Évènements…`).
+- **Fusion de U6** (commit de fusion) : l'accueil A garde la lecture des services de U2/U3 (`servicesDuCompte`,
+  `sansBrouillon`, `avecDimanchesSpeciaux`) dans « Pour moi » ; la percussion (U2, P5) rejoint les musiciens de la
+  ligne d'un groupe, le cours de l'EDD reste dans son onglet ; « Libre » et « Je m'inscris » seulement si les
+  inscriptions ont été lues (illisibles : pas de ligne, U3 T8). Les tests U3 de « Ton prochain service » lisent
+  « Pour moi » ; le test « sans inscription, pas de ligne » dit maintenant « Libre » (Q14). Barre latérale : espace
+  Back-Office (U6) et liste retenue des setlists (U5) gardés tous deux.
+- **Setlists (Q4)** : `setlists/page.tsx` en trois dispositions (`hooks/useDisposition.ts`, sorti de l'accueil B1).
+  En grand, `DeuxVolets` (racine `/setlists`) : la liste à gauche (400 px), à droite l'aperçu
+  (`components/setlists/ApercuSetlist.tsx`) de `?apercu=<id>` ou, sans aperçu, de la première setlist de la liste
+  filtrée (Q3) ; toucher une ligne remplace l'adresse (`useSetlistsNavState`, sans entrée d'historique), la ligne
+  s'allume. L'aperçu : catégorie et date, présidence, « Présentation », thème (les notes), « Modifiée par… »
+  (`SetlistHistory`), les chants (`ListView` de U5, qui prend `lienBase` : toucher un chant ouvre la setlist à ce chant),
+  « Ouvrir » et « Mode Louange » (`?louange=1` de B1), et « L'équipe de ce service » lue dans le planning déjà chargé
+  par la liste (`lib/setlist/equipeDuService.ts`, pur : Culte, Inter, groupes, Fidélité avec ses musiciens, Campus par
+  moment, classes de l'EDD), la personne en pastille d'encre ; chants et équipe côte à côte quand le volet a 680 px
+  (requête de conteneur). Tablette portrait : cartes sur deux colonnes qui listent leurs chants
+  (`SetlistCarteChants`) ; « Nouvelle » à côté du titre et « Mes services » en tête de la rangée des filtres (grand et
+  tablette). Téléphone : inchangé.
+- **Évènements (Q5)** : l'agenda vit dans le layout (`evenements/SectionEvenements.tsx` → `CalendrierClient`, qui prend
+  la fiche en enfant ; `evenements/page.tsx` rend `null`) ; `/evenements` entre dans `SECTIONS_EN_DEUX_VOLETS`. Le
+  programme de scène garde sa page et ses onglets. En grand : titre, onglets en pilules (`EvenementsTabs enLigne`),
+  « Nouvel évènement » en encre (rond « + » : le libellé ne tient pas dans 380 px), lignes compactes
+  (`EvenementCard` prend `actif` et un badge « Inscrit » / « Complet » / « Bientôt ») ; à droite la fiche de l'adresse
+  ou, sur `/evenements`, celle du prochain évènement (sinon la première info). La fiche de l'App
+  (`EvenementClient`, qui prend `id`) en grand : titre (h1) et « Gérer dans le Back-Office » en tête, bannière,
+  description, liens et gestion des inscriptions de l'organisateur à gauche, infos et inscription (`fiche-carte`),
+  réunion et tâches à droite ; `EnteteEvenement` se découpe en `Banniere`, `TitreEvenement`, `InfosEvenement`. Un
+  volet : cartes à bannière (deux colonnes dès 768 px), fiche d'une carte où l'inscription remonte sous les infos.
+  La fiche du Back-Office ne change pas. Interrupteur coupé : la section reste en 404 (layout inchangé sur ce point).
+- Tests : `tests/pages-en-grand-setlists.spec.ts` (9, dont 3 purs) et `tests/pages-en-grand-evenements.spec.ts` (7),
+  vus rouges (21 échecs sur ordinateur, téléphone, tablette) puis verts sur les cinq projets. Adaptés au nouvel
+  écran : `evenements.spec.ts` (en grand, les tests des grandes cartes de l'agenda et de la carte blanche L6 passent en
+  un volet ; les fiches lisent `fiche-carte`, l'agenda montrant aussi lieux, états et « Connexion » ; titre de
+  l'agenda en h2 quand une fiche est à droite, qui porte le h1), `reunions.spec.ts` (la ligne de l'agenda),
+  `setlist-suppression-groupee.spec.ts` (en grand, la ligne mène à `?apercu=` ; vignettes alignées mesurées depuis le
+  bord de leur ligne, les cartes de la tablette étant sur deux colonnes). Avec les specs voisines (accueil,
+  fondations, setlist-deux-volets, setlist-g, look-navigation, navigation-grand-ecran, coherence, back-office-coupe,
+  back-office-admin, programme-scene, taches, taches-evenements, nouveaux-membres, planning-petit-dej) : vertes sur
+  leurs projets. Captures regardées aux cinq tailles et comparées aux planches `setlists-*` et `evenements-*`.
+- Choix faute de réponse : la structure des chants reste en texte (« I · C1 · R », vue Liste de U5) et non en pastilles ;
+  l'équipe ne paraît que pour les catégories que le planning porte (pas de carte vide) ; l'organisateur garde sa
+  carte de gestion (panneau, lien d'inscription) — en grand dans la colonne de gauche, plus large ; sur téléphone, la
+  barre « ‹ Évènements · Gérer dans le Back-Office » de la planche n'est pas refaite (carte de gestion d'aujourd'hui).
+- Reste : B4 à B7.
+- À faire par Timothée : relire le 中文 « 歌单预览 », « 本歌单的调性 », « 本次服事团队 », « 根据排班表 » ; rien à publier (aucune
+  règle).

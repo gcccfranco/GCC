@@ -48,55 +48,73 @@ export function TypePour({ e }: { e: Pick<Evenement, "type" | "pour"> }) {
   )
 }
 
+/** La bannière : l'image, ou une zone d'attente (une info sans image n'en a pas). */
+export function Banniere({ e }: { e: Evenement }) {
+  if (isInfo(e) && !e.images[0]) return null
+  return (
+    <div data-testid="banniere" className="flex aspect-[16/9] w-full items-center justify-center overflow-hidden rounded-xl bg-secondary">
+      {e.images[0] ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={e.images[0]} alt={e.titre} className="h-full w-full object-cover" />
+      ) : (
+        <ImageIcon className="h-10 w-10 text-muted-foreground/50" aria-hidden />
+      )}
+    </div>
+  )
+}
+
+/** Badges (type, public) et titre. */
+export function TitreEvenement({ e, niveau = "h2" }: { e: Evenement; niveau?: "h1" | "h2" | "h3" }) {
+  const Titre = niveau
+  return (
+    <div>
+      <div className="flex flex-wrap gap-1"><TypePour e={e} /></div>
+      <Titre className="mt-2 text-xl font-bold text-foreground text-balance">{e.titre}</Titre>
+    </div>
+  )
+}
+
+/** Date · horaire · lieu, chacun avec son icône (rien pour une info). */
+export function InfosEvenement({ e }: { e: Evenement }) {
+  const { i18n, t } = useTranslation()
+  if (isInfo(e)) return null
+  return (
+    <ul className="space-y-1.5 text-sm text-foreground">
+      <li className="flex items-start gap-2.5">
+        <CalendarDays className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+        {/* Majuscule à l'écran seulement (« Dimanche 27 septembre ») : le texte reste celui du planning. */}
+        <span className="inline-block first-letter:uppercase">
+          {e.dateFin
+            ? t("evenements.du", { from: fdFullL(e.date, i18n.language), to: fdFullL(e.dateFin, i18n.language) })
+            : fdFullL(e.date, i18n.language)}
+        </span>
+      </li>
+      {e.heure && (
+        <li className="flex items-start gap-2.5">
+          <Clock className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+          <span>{e.heure}{e.heureFin ? ` – ${e.heureFin}` : ""}</span>
+        </li>
+      )}
+      {e.lieu && (
+        <li className="flex items-start gap-2.5">
+          <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+          <span>{e.lieu}</span>
+        </li>
+      )}
+    </ul>
+  )
+}
+
 /** Haut de la maquette, commun à la carte et à la fiche : bannière (image ou
  *  zone d'attente), badges et titre (`titre` : niveau, ou `false` quand la
- *  carte de gestion les porte déjà), lignes date · horaire · lieu. */
+ *  carte de gestion les porte déjà), lignes date · horaire · lieu. Lot U4 bis (B2) :
+ *  les trois morceaux se posent aussi séparément (fiche en deux colonnes). */
 export function EnteteEvenement({ e, titre }: { e: Evenement; titre: "h2" | "h3" | false }) {
-  const { i18n, t } = useTranslation()
-  const Titre = titre || "h2"
   return (
     <>
-      {(!isInfo(e) || e.images[0]) && (
-        <div data-testid="banniere" className="flex aspect-[16/9] w-full items-center justify-center overflow-hidden rounded-xl bg-secondary">
-          {e.images[0] ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={e.images[0]} alt={e.titre} className="h-full w-full object-cover" />
-          ) : (
-            <ImageIcon className="h-10 w-10 text-muted-foreground/50" aria-hidden />
-          )}
-        </div>
-      )}
-      {titre && (
-        <div>
-          <div className="flex flex-wrap gap-1"><TypePour e={e} /></div>
-          <Titre className="mt-2 text-xl font-bold text-foreground text-balance">{e.titre}</Titre>
-        </div>
-      )}
-      {!isInfo(e) && (
-        <ul className="space-y-1.5 text-sm text-foreground">
-          <li className="flex items-start gap-2.5">
-            <CalendarDays className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
-            {/* Majuscule à l'écran seulement (« Dimanche 27 septembre ») : le texte reste celui du planning. */}
-            <span className="inline-block first-letter:uppercase">
-              {e.dateFin
-                ? t("evenements.du", { from: fdFullL(e.date, i18n.language), to: fdFullL(e.dateFin, i18n.language) })
-                : fdFullL(e.date, i18n.language)}
-            </span>
-          </li>
-          {e.heure && (
-            <li className="flex items-start gap-2.5">
-              <Clock className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
-              <span>{e.heure}{e.heureFin ? ` – ${e.heureFin}` : ""}</span>
-            </li>
-          )}
-          {e.lieu && (
-            <li className="flex items-start gap-2.5">
-              <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
-              <span>{e.lieu}</span>
-            </li>
-          )}
-        </ul>
-      )}
+      <Banniere e={e} />
+      {titre && <TitreEvenement e={e} niveau={titre} />}
+      <InfosEvenement e={e} />
     </>
   )
 }
@@ -155,7 +173,7 @@ function PiedCarte({ e, inscrit }: { e: Evenement; inscrit: boolean }) {
 /** Évènement à venir : la grande carte de la maquette. */
 export function EvenementCarte({ evenement: e, inscrit = false }: { evenement: Evenement; inscrit?: boolean }) {
   return (
-    <Link href={`/evenements/${e.id}`}
+    <Link href={`/evenements/${e.id}`} data-testid="carte-evenement"
       className="block space-y-4 rounded-2xl bg-card p-4 transition-transform duration-150 active:scale-[.99]">
       <EnteteEvenement e={e} titre="h3" />
       <PlusInfos e={e} />
@@ -165,18 +183,40 @@ export function EvenementCarte({ evenement: e, inscrit = false }: { evenement: E
 }
 
 /** Info épinglée ou évènement passé : la ligne compacte. Au Back-Office (lot U6, B3), elle
- *  mène à la fiche de gestion (`href`). */
-export function EvenementCard({ evenement: e, past, href }: { evenement: Evenement; past?: boolean; href?: string }) {
-  const { i18n } = useTranslation()
+ *  mène à la fiche de gestion (`href`). Lot U4 bis (B2) : c'est aussi la ligne de l'agenda en
+ *  deux volets — `actif` (la fiche montrée à droite) et `inscrit` (badge « Inscrit », sinon
+ *  « Complet » ou « Bientôt » d'après l'inscription). */
+export function EvenementCard({ evenement: e, past, href, actif = false, inscrit }: {
+  evenement: Evenement; past?: boolean; href?: string; actif?: boolean; inscrit?: boolean
+}) {
+  const { i18n, t } = useTranslation()
+  let badge: React.ReactNode = null
+  if (inscrit !== undefined && !past && !isInfo(e) && !estReunion(e.pour)) {
+    const refus = refusInscription(e, 0, nowIsoParis())
+    if (inscrit) {
+      badge = (
+        <span className="inline-flex shrink-0 items-center gap-1 rounded-md bg-emerald-500/15 px-1.5 py-0.5 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
+          <Check className="h-3.5 w-3.5" aria-hidden />{t("evenements.inscrit")}
+        </span>
+      )
+    } else if (refus === "complet") {
+      badge = <span className="shrink-0 rounded-md bg-red-500/10 px-1.5 py-0.5 text-xs font-semibold text-red-700 dark:text-red-400">{t("evenements.complet")}</span>
+    } else if (refus === "pasEncore") {
+      badge = <span className="shrink-0 rounded-md bg-amber-500/15 px-1.5 py-0.5 text-xs font-semibold text-amber-700 dark:text-amber-400">{t("evenements.bientot")}</span>
+    }
+  }
   return (
-    <Link href={href ?? `/evenements/${e.id}`}
-      className={`block bg-card rounded-xl px-4 py-3 transition-colors duration-150 active:bg-secondary/70 hover:bg-secondary/40 ${past ? "opacity-70" : ""}`}>
+    <Link href={href ?? `/evenements/${e.id}`} aria-current={actif ? "page" : undefined}
+      className={`block rounded-xl px-4 py-3 transition-colors duration-150 ${actif
+        ? "bg-foreground text-background [&_.text-foreground]:text-background [&_.text-muted-foreground]:text-background/75"
+        : "bg-card active:bg-secondary/70 hover:bg-secondary/40"} ${past ? "opacity-70" : ""}`}>
       <div className="flex items-center gap-3">
-        {!isInfo(e) && <Tile color={COLOR} big={Number(e.date.slice(8, 10))} small={monthLabel(e.date, i18n.language)} size="lg" />}
+        {!isInfo(e) && <Tile color={COLOR} big={Number(e.date.slice(8, 10))} small={monthLabel(e.date, i18n.language)} size="lg" className={actif ? "!bg-background" : undefined} />}
         <div className="min-w-0 flex-1">
           <p className="font-semibold text-foreground truncate">{e.epingle ? "📌 " : ""}{e.titre}</p>
           <p className="text-sm text-muted-foreground truncate">{[e.heure, e.lieu].filter(Boolean).join(" · ")}</p>
         </div>
+        {badge}
       </div>
     </Link>
   )

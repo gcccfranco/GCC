@@ -28,6 +28,8 @@ export const SECTIONS_EN_DEUX_VOLETS: readonly string[] = [
   "/harmonie/cours",
   "/harmonie/rd2000",
   "/harmonie",
+  // B2 : l'agenda des évènements (le programme de scène, sous `/evenements/scene`, n'a pas de liste).
+  "/evenements",
 ];
 
 /** Clé du fondu de page (`PageTransition`) : la page entière se remonte à chaque adresse,

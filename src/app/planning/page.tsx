@@ -1,7 +1,7 @@
 "use client"
 
 import { GuideLien } from "@/components/guide/GuideLien"
-import { useEffect, useMemo, useState, useSyncExternalStore } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { currentSundayStr, fdLongL, getCurrentTri, EDD_PERIODES } from "@/lib/planning/utils"
 import {
@@ -22,28 +22,17 @@ import { listEvenements } from "@/lib/firebase/evenements"
 import { isExpired, isInfo, isPast } from "@/lib/evenements/agenda"
 import { canSeeEvenement, canSeeSetlist } from "@/lib/access"
 import { BACK_OFFICE } from "@/lib/backOffice"
-import { useDeuxVolets } from "@/hooks/useDeuxVolets"
+import { useDisposition } from "@/hooks/useDisposition"
 import type { Evenement } from "@/types/evenement"
 import type { SongIndexEntry } from "@/types/song"
 import { PageTitle } from "@/components/layout/PageTitle"
-import { PourMoi, type Disposition } from "@/components/accueil/PourMoi"
+import { PourMoi } from "@/components/accueil/PourMoi"
 import { CeDimanche } from "@/components/accueil/CeDimanche"
 
 // Accueil A (lot U4 bis, B1, docs/spec-pages-en-grand.md, Q14). En grand (deux volets de U5,
 // Q1) : « Ce dimanche » à gauche, « Pour moi » à droite. Tablette portrait (dès 768 px) :
 // « Pour moi » en deux cartes côte à côte, puis « Ce dimanche ». Téléphone : une carte, puis
-// « Ce dimanche ». Les données sont celles d'aujourd'hui.
-const TABLETTE = "(min-width: 768px)"
-const suivreTablette = (changement: () => void) => {
-  const m = window.matchMedia(TABLETTE)
-  m.addEventListener("change", changement)
-  return () => m.removeEventListener("change", changement)
-}
-function useDisposition(): Disposition {
-  const grand = useDeuxVolets()
-  const tablette = useSyncExternalStore(suivreTablette, () => window.matchMedia(TABLETTE).matches, () => false)
-  return grand ? "grand" : tablette ? "tablette" : "telephone"
-}
+// « Ce dimanche ». Les données sont celles d'aujourd'hui. La disposition : `useDisposition`.
 
 /** Date du jour en heure locale (pas UTC : décalée autour de minuit). */
 function aujourdhuiLocal(): string {
