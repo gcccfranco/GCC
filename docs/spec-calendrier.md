@@ -316,5 +316,30 @@ Spec validée et go de code donné (04/10/2026, redit le 05/10/2026) ; questions
 - **Reste de C1 pour C3** : le bandeau « Sheet des évènements injoignable » et « les autres sources
   s'affichent » se vérifient sur la page (`injoignable` de `lireSheetEvenements`), avec
   `page.route(/docs\.google\.com\/spreadsheets/, …)` qui coupe le Sheet.
-- **À suivre** : C2 → C8.
-- **Pour Timothée** : rien à publier (C1 ne touche ni `access.ts` ni `firestore.rules`).
+- **05/10/2026 — C2 faite** (même branche, après la fusion de `lot/u1-scene-saison` ; commit
+  « feat(U8): C2 — sources du calendrier ») : `src/lib/calendrier/entrees.ts`, pur. Il expose
+  `SOURCES` (ordre dans un jour), `SOURCES_D_OFFICE` (tout sauf Setlists), `COULEURS_CALENDRIER`
+  (point et fond de la planche pour évènements, tâches, réunions), `entreesCalendrier(debut, fin,
+  donnees, contexte)` (contexte = `user`, `profile`, `lang` fr / 中文, `today`), `filtrerEntrees`
+  (pastilles, « Seulement moi »), `sourcesPermises` (Q2 : Tâches avec un pôle, Réunions avec un pôle
+  ou une équipe, admin toutes) et `peutDeplacer(user, profile, cible, today)`. Les données arrivent
+  déjà lues (`DonneesCalendrier` : séances, mes services, Sheet, évènements, mes inscriptions,
+  tâches et leurs fois, programme affiché et créneaux, lignes du petit déj ou `null`, setlists) :
+  le chargement est pour C3. `tests/calendrier.spec.ts` : 34 tests purs × 3 appareils, vus rouges
+  sur une ébauche puis verts (avec ceux de C1 : 147 verts).
+- **Choix de C2, faute de réponse dans la spec** : EDD fondu en une entrée par dimanche (question 6),
+  détail « 中班 Lou M. · 大班 · 高班 Sam T. » ; Campus matin et soir à part. Un évènement sur plusieurs
+  jours porte son heure le premier jour seulement. Le détail d'une entrée du Sheet ajoute le
+  responsable (« 19:00 – 21:00 · Salle 2 · Lou »), texte du Sheet affiché sans être relié à un compte.
+  Une tâche terminée n'est pas « à moi » (comme `aFairePour`) et ne se soulève pas (sa fois porte sa
+  date pour nom) ; une tâche passée pas terminée se soulève. Un évènement commencé (sur plusieurs
+  jours) ne bouge plus. Réunions d'équipe : `pour: "equipe:<id>"` lu dès maintenant, vues de qui a
+  l'équipe dans `profile.dansEquipes` (U6 R4), en plus de `canSeeEvenement`. Liens : `/evenements/<id>`,
+  `/taches/<pôle>`, `/setlists/<id>`, `/evenements/scene`, `/planning/<page>`, `/planning/table`,
+  onglet du Sheet `…/edit#gid=<gid>`. Le petit déj est lu sur la forme de `LignePetitDej` (U3),
+  `estLibre` refait en une ligne (U3 n'est pas fusionné ici).
+- **À suivre** : C3 → C8 (C3 branche les lecteurs sur `DonneesCalendrier` et range les pastilles en
+  `localStorage`).
+- **Pour Timothée** : rien à publier (C1 et C2 ne touchent ni `access.ts` ni `firestore.rules`) ;
+  relire les mots 中文 de `src/lib/calendrier/entrees.ts` (`司会：`, `已报名 4/10`, `截止`, `舞台`,
+  `早餐`, `空闲`, `主日学`, `首`).
