@@ -6,7 +6,7 @@ import type { UserProfile } from "../src/types/user";
 
 // Lot U6 (docs/spec-back-office.md), tranche B1 — l'espace « Back-Office » :
 // qui est responsable (Q1), quelles entrées chacun voit (Q2, menu à 8 entrées dont
-// Calendrier et Statistiques arrivent avec U8 et U7, Q17), quels widgets il pourra
+// Statistiques arrive avec U7, Q17 ; Calendrier est là depuis U8 C3), quels widgets il pourra
 // ajouter, le sélecteur « App · Back-Office » dans les places de U4 (Q6 ; téléphone :
 // à la place du label, question 5), la mémoire de la dernière page de chaque espace,
 // et « Réservé aux responsables » pour les autres.
@@ -82,26 +82,26 @@ test.describe("Back-Office (B1) : qui est responsable (Q1)", () => {
 });
 
 test.describe("Back-Office (B1) : les entrées selon les droits (Q2)", () => {
-  test("un admin voit 6 entrées (Calendrier et Statistiques viendront avec U8 et U7)", () => {
-    expect(entreesBackOffice(user(ADMIN), profil(ADMIN))).toEqual(["tableau", "planning", "taches", "evenements", "equipes", "messages"]);
+  test("un admin voit 7 entrées (Statistiques viendra avec U7 ; Calendrier est là depuis U8 C3)", () => {
+    expect(entreesBackOffice(user(ADMIN), profil(ADMIN))).toEqual(["tableau", "calendrier", "planning", "taches", "evenements", "equipes", "messages"]);
   });
 
-  test("Alice (pôle Événement) : Tableau de bord, Tâches, Évènements — pas de Planning", () => {
-    expect(entreesBackOffice(user(ALICE), profil(ALICE))).toEqual(["tableau", "taches", "evenements"]);
+  test("Alice (pôle Événement) : Tableau de bord, Calendrier, Tâches, Évènements — pas de Planning", () => {
+    expect(entreesBackOffice(user(ALICE), profil(ALICE))).toEqual(["tableau", "calendrier", "taches", "evenements"]);
   });
 
   test("chaque droit ouvre ses entrées, et rien d'autre", () => {
     const cas: [FakeProfile, string[]][] = [
-      [DA, ["tableau", "taches", "evenements"]],
-      [PLANNINGS, ["tableau", "planning"]],
+      [DA, ["tableau", "calendrier", "taches", "evenements"]],
+      [PLANNINGS, ["tableau", "calendrier", "planning"]],
       // `notify` donne Messages, et Planning s'il permet de publier un trimestre (canPublishPlanning).
-      [NOTIFY, ["tableau", "planning", "messages"]],
-      [{ ...NOTIFY, uid: "uid-no2", notify: ["Campus"] }, ["tableau", "messages"]],
-      [ANNONCES, ["tableau", "evenements"]],
-      [EQUIPIER, ["tableau", "equipes"]],
-      [REFERENT, ["tableau", "evenements"]],
+      [NOTIFY, ["tableau", "calendrier", "planning", "messages"]],
+      [{ ...NOTIFY, uid: "uid-no2", notify: ["Campus"] }, ["tableau", "calendrier", "messages"]],
+      [ANNONCES, ["tableau", "calendrier", "evenements"]],
+      [EQUIPIER, ["tableau", "calendrier", "equipes"]],
+      [REFERENT, ["tableau", "calendrier", "evenements"]],
       // Le pôle Louange implicite ne fait pas un responsable, mais compte pour Tâches et Évènements d'un responsable.
-      [{ ...NOTIFY, uid: "uid-no3", serviceRoles: { "Culte Francophone": ["musicien"] } }, ["tableau", "planning", "taches", "evenements", "messages"]],
+      [{ ...NOTIFY, uid: "uid-no3", serviceRoles: { "Culte Francophone": ["musicien"] } }, ["tableau", "calendrier", "planning", "taches", "evenements", "messages"]],
     ];
     for (const [p, attendu] of cas) expect(entreesBackOffice(user(p), profil(p)), p.uid).toEqual(attendu);
   });
@@ -114,7 +114,7 @@ test.describe("Back-Office (B1) : les entrées selon les droits (Q2)", () => {
   test("les entrées deviennent celles des barres dans l'espace « back-office », aux adresses de Q4", () => {
     const entrees = entreesBarre("back-office", { connecte: true, backOffice: true, permises: entreesBackOffice(user(ADMIN), profil(ADMIN)) });
     expect(entrees.map((e) => e.href)).toEqual([
-      "/back-office", "/back-office/planning", "/back-office/taches", "/back-office/evenements", "/back-office/equipes", "/back-office/messages",
+      "/back-office", "/back-office/calendrier", "/back-office/planning", "/back-office/taches", "/back-office/evenements", "/back-office/equipes", "/back-office/messages",
     ]);
     // L'espace « app » ne change pas.
     expect(entreesBarre("app", { connecte: true, backOffice: true }).map((e) => e.href)).toEqual(["/songs", "/setlists", "/planning", "/evenements", "/moi"]);
@@ -163,7 +163,7 @@ test.describe("Back-Office (B1) : rien de neuf pour l'assemblée", () => {
 });
 
 test.describe("Back-Office (B1) : le sélecteur et le menu", () => {
-  test("un admin passe de l'App au Back-Office : tableau de bord, 6 entrées, espace marqué", async ({ page }, info) => {
+  test("un admin passe de l'App au Back-Office : tableau de bord, 7 entrées, espace marqué", async ({ page }, info) => {
     await sansSheet(page);
     await signInAs(page, ADMIN, {}, "/songs");
     await page.getByRole("searchbox").waitFor();
@@ -177,21 +177,21 @@ test.describe("Back-Office (B1) : le sélecteur et le menu", () => {
     await expect(selecteur(page).getByRole("link", { name: "Back-Office" })).toHaveAttribute("aria-current", "true");
     await expect(menu(page, info).getByRole("link")).toHaveText(
       estOrdinateur(info) || estTablettePaysage(info)
-        ? ["Tableau de bord", "Planning", "Tâches", "Évènements", "Équipes", "Messages"]
+        ? ["Tableau de bord", "Calendrier", "Planning", "Tâches", "Évènements", "Équipes", "Messages"]
         // La liste du tableau de bord ne répète pas la page où l'on est.
-        : ["Planning", "Tâches", "Évènements", "Équipes", "Messages"],
+        : ["Calendrier", "Planning", "Tâches", "Évènements", "Équipes", "Messages"],
     );
     if (estOrdinateur(info) || estTablettePaysage(info)) {
       await expect(menu(page, info).getByRole("link", { name: "Tableau de bord" })).toHaveAttribute("aria-current", "page");
     }
   });
 
-  test("Alice voit Tableau de bord, Tâches, Évènements", async ({ page }, info) => {
+  test("Alice voit Tableau de bord, Calendrier, Tâches, Évènements", async ({ page }, info) => {
     await signInAs(page, ALICE, {}, "/back-office");
     await expect(page.getByRole("heading", { name: "Tableau de bord" })).toBeVisible();
     await deplierSiTablettePaysage(page, info);
     await expect(menu(page, info).getByRole("link")).toHaveText(
-      estOrdinateur(info) || estTablettePaysage(info) ? ["Tableau de bord", "Tâches", "Évènements"] : ["Tâches", "Évènements"],
+      estOrdinateur(info) || estTablettePaysage(info) ? ["Tableau de bord", "Calendrier", "Tâches", "Évènements"] : ["Calendrier", "Tâches", "Évènements"],
     );
   });
 
@@ -208,11 +208,11 @@ test.describe("Back-Office (B1) : le sélecteur et le menu", () => {
     await expect(selecteur(page).getByRole("link", { name: "Back-Office" })).toHaveAttribute("aria-current", "true");
   });
 
-  test("une entrée inconnue, ou encore à venir (Calendrier, U8), répond 404", async ({ page }) => {
+  test("une entrée inconnue, ou encore à venir (Statistiques, U7), répond 404", async ({ page }) => {
     await signInAs(page, ALICE, {}, "/back-office");
     await expect(page.getByRole("heading", { name: "Tableau de bord" })).toBeVisible();
     expect((await page.goto("/back-office/nimporte-quoi"))?.status()).toBe(404);
-    expect((await page.goto("/back-office/calendrier"))?.status()).toBe(404);
+    expect((await page.goto("/back-office/statistiques"))?.status()).toBe(404);
   });
 
   test("le sélecteur rouvre la dernière page de chaque espace (mémoire de session)", async ({ page }, info) => {

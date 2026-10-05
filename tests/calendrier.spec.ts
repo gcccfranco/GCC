@@ -1,5 +1,9 @@
-import { expect, test } from "@playwright/test";
-import { ADMIN_EMAILS } from "../src/lib/access";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import { expect, test, type Page, type TestInfo } from "@playwright/test";
+import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { ADMIN_EMAILS, entreesBackOffice } from "../src/lib/access";
+import { joursDeLaGrille, libelleCourt } from "../src/lib/calendrier/grille";
 import {
   SOURCES,
   SOURCES_D_OFFICE,
@@ -571,5 +575,274 @@ test.describe("peutDeplacer (pur)", () => {
     expect(dep["taches:u:2026-10-15"]).toBe(true);
     expect(dep["taches:r:2026-10-15"]).toBe(false);
     expect(dep["scene:c:2026-10-04"]).toBe(true);
+  });
+});
+
+// ─── C3 : la page en Mois (ordinateur, tablettes) ───────────────────────────
+// Horloge au jeudi 1er octobre 2026 ; Sheet des évènements (fixture d'octobre),
+// planning (onglet du culte) et Firestore simulés. Noms et titres inventés.
+// Le téléphone montre encore le Mois : l'Agenda d'office vient avec C4.
+
+test.describe("grille du mois (pur)", () => {
+  test("six semaines du lundi au dimanche, à partir du lundi qui précède le 1er", () => {
+    const jours = joursDeLaGrille("2026-10");
+    expect(jours).toHaveLength(42);
+    expect(jours[0]).toBe("2026-09-28");
+    expect(jours[3]).toBe("2026-10-01");
+    expect(jours[41]).toBe("2026-11-08");
+    // Un mois qui commence un lundi commence la grille.
+    expect(joursDeLaGrille("2026-06")[0]).toBe("2026-06-01");
+  });
+
+  test("libellé court d'une case : le nom après « Présidence : », l'heure après le titre, « Petit déj : libre »", () => {
+    const d = vide();
+    d.seances = [{ category: "Culte Francophone", date: "2026-10-04", leader: "Lou M.", label: "" }];
+    d.evenements = [evenement({ id: "r", titre: "Réunion DA", pour: "pole:da", date: "2026-10-03", heure: "20:00" })];
+    d.petitDej = [{ id: "p", dimanche: "2026-10-18", nom: "Famille Test", uid: "" }];
+    const e = entreesCalendrier(...OCT, d, ctx(ADMIN, null));
+    const court = (cle: string) => libelleCourt(e.find((x) => x.cle === cle)!, "fr");
+    expect(court("services:Culte Francophone:2026-10-04")).toBe("Culte Franco · Lou M.");
+    expect(court("reunions:r:2026-10-03")).toBe("Réunion DA 20:00");
+    expect(court("petitDej:libre:2026-10-04")).toBe("Petit déj : libre");
+    expect(court("petitDej:p:2026-10-18")).toBe("Famille Test");
+    const zh = entreesCalendrier(...OCT, d, ctx(ADMIN, null, "zh-CN"));
+    expect(libelleCourt(zh.find((x) => x.cle === "services:Culte Francophone:2026-10-04")!, "zh-CN")).toBe("Culte Franco · Lou M.");
+    expect(libelleCourt(zh.find((x) => x.cle === "petitDej:libre:2026-10-04")!, "zh-CN")).toBe("早餐：空闲");
+  });
+});
+
+const FIXTURE_OCTOBRE = readFileSync(join(__dirname, "fixtures", "sheet-evenements-mois.csv"), "utf8");
+const csv = (rows: string[][]) => rows.map((r) => r.map((c) => `"${c}"`).join(",")).join("\n");
+const CULTE = csv([
+  ["2026 DATE", "Présidence", "Choristes", "", "Pianiste", "Guitariste", "Batterie", "Sono + Live", "PPT", "Orateur", "Traducteur", "Sainte cène", "Notes"],
+  ["04/10", "Lou M.", "", "", "", "", "", "", "", "", "", "", ""],
+  ["11/10", "Sam T.", "", "", "", "", "", "", "", "", "", "", ""],
+]);
+
+const P_ADMIN: FakeProfile = { uid: "u-admin", email: ADMIN_EMAILS[0], firstName: "Admin", lastName: "T.", planningName: "Lou M." };
+/** Responsable des plannings, sans pôle : ni Tâches ni Réunions (Q2). */
+const P_PLANNINGS: FakeProfile = { uid: "u-pl", email: "pl@example.org", firstName: "Noa", lastName: "V.", plannings: ["culte"] };
+
+const MAINTENANT = "2026-09-01T10:00:00Z";
+const DOCS: Record<string, Record<string, unknown>> = {
+  "evenements/reu-da": {
+    titre: "Réunion DA", type: "reunion", pour: "pole:da", date: "2026-10-03", heure: "20:00", lieu: "Salle 2",
+    organisateurUid: "u-autre", organisateurNom: "Autre", inscrits: 0, createdAt: MAINTENANT, updatedAt: MAINTENANT,
+  },
+  "evenements/ping": {
+    titre: "Tournoi de ping", type: "loisir", pour: "eglise", date: "2026-10-22", heure: "19:00", lieu: "Gymnase",
+    placesMax: 10, inscrits: 4, organisateurUid: "u-autre", organisateurNom: "Autre", createdAt: MAINTENANT, updatedAt: MAINTENANT,
+  },
+  // Le 4 porte cinq entrées (culte, baptêmes, repas du Sheet, scène, petit déj) : trois, puis « +2 ».
+  "evenements/bapteme": {
+    titre: "Baptêmes", type: "culte", pour: "eglise", date: "2026-10-04", heure: "11:00", lieu: "Église",
+    organisateurUid: "u-autre", organisateurNom: "Autre", inscrits: 0, createdAt: MAINTENANT, updatedAt: MAINTENANT,
+  },
+  "poles/da/taches/noel": {
+    titre: "Chants de Noël", responsableUid: null, responsableNom: "", echeance: "2026-10-15", repetition: null,
+    lien: "", note: "", prevenir: null, evenement: null, auteurUid: "u-autre", createdAt: MAINTENANT, updatedAt: MAINTENANT,
+  },
+  "programmes/noel": {
+    nom: "Noël", jourJ: "2026-12-20", debut: "2026-09-27", visible: true, passages: [], createdBy: "u-autre", updatedAt: MAINTENANT,
+  },
+  "programmes/noel/creneaux/c4": {
+    dimanche: "2026-10-04", debut: "17:00", fin: "18:00", quoi: "Sketch", qui: ["Jeunes"], note: "",
+    auteurUid: "u-autre", auteurNom: "Autre", createdAt: MAINTENANT, updatedAt: MAINTENANT,
+  },
+  "programmes/noel/creneaux/c11": {
+    dimanche: "2026-10-11", debut: "14:00", fin: "15:30", quoi: "Sketch", qui: ["Jeunes"], note: "Costumes à prévoir",
+    auteurUid: "u-autre", auteurNom: "Autre", createdAt: MAINTENANT, updatedAt: MAINTENANT,
+  },
+  "petitDej/pd18": { dimanche: "2026-10-18", nom: "Famille Test", uid: "", auteurUid: "u-autre", creeLe: MAINTENANT, modifieLe: MAINTENANT },
+};
+
+/** Le Sheet des évènements (export par gid) et le planning (gviz) : jamais les vrais. */
+async function sheets(page: Page, opts: { evenementsCoupe?: boolean } = {}) {
+  await page.route(/docs\.google\.com\/spreadsheets/, (route) => {
+    const url = new URL(route.request().url());
+    if (url.pathname.endsWith("/export")) {
+      if (opts.evenementsCoupe) return route.abort("internetdisconnected");
+      const corps = url.searchParams.get("gid") === "439766955" ? FIXTURE_OCTOBRE : "";
+      return route.fulfill({ status: 200, contentType: "text/csv", body: corps });
+    }
+    const corps = url.searchParams.get("sheet") === "Franco_Louange" ? CULTE : "";
+    return route.fulfill({ status: 200, contentType: "text/csv", body: corps });
+  });
+}
+
+async function ouvrir(page: Page, profil: FakeProfile = P_ADMIN, opts: { evenementsCoupe?: boolean } = {}) {
+  await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
+  await sheets(page, opts);
+  const db = await signInAs(page, profil, DOCS, "/back-office/calendrier");
+  await expect(page.getByRole("heading", { level: 1, name: "Octobre 2026" })).toBeVisible();
+  await expect(page.getByTestId("calendrier")).not.toHaveAttribute("aria-busy", "true");
+  return db;
+}
+
+const jour = (page: Page, date: string) => page.locator(`[data-jour="${date}"]`);
+const pastilles = (page: Page) => page.getByRole("group", { name: "Sources affichées" });
+/** Panneau du jour : à droite sur ordinateur et tablette couchée, en feuille ailleurs. */
+const panneauADroite = (info: TestInfo) => info.project.name.startsWith("ordinateur") || info.project.name === "tablette-paysage";
+
+test.describe("C3 : la page du calendrier en Mois", () => {
+  test("l'entrée « Calendrier » du menu du Back-Office mène à la page", async ({ page }) => {
+    expect(entreesBackOffice(ADMIN, null)).toContain("calendrier");
+    // Depuis le tableau de bord : la barre latérale sur grand écran, la liste du tableau de
+    // bord sur téléphone et tablette en portrait (U6).
+    await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
+    await sheets(page);
+    await signInAs(page, P_ADMIN, DOCS, "/back-office");
+    await expect(page.getByRole("heading", { name: "Tableau de bord" })).toBeVisible();
+    const lien = page.getByRole("link", { name: "Calendrier" }).filter({ visible: true }).first();
+    await expect(lien).toHaveAttribute("href", /^\/back-office\/calendrier\/?$/);
+    await lien.click();
+    await expect(page.getByRole("heading", { level: 1, name: "Octobre 2026" })).toBeVisible();
+  });
+
+  test("octobre en grille : culte du 4 et sa présidence, Sheet le 6, réunion le 3, tâche le 15, scène et petit déj le dimanche", async ({ page }) => {
+    await ouvrir(page);
+    await expect(page.getByTestId("grille-mois").locator("[data-jour]")).toHaveCount(42);
+    await expect(jour(page, "2026-10-04").locator('[data-source="services"]')).toContainText("Culte Franco · Lou M.");
+    await expect(jour(page, "2026-10-06").locator('[data-source="evenements"]').first()).toContainText("Soirée louange 19:00");
+    await expect(jour(page, "2026-10-03").locator('[data-source="reunions"]')).toContainText("Réunion DA 20:00");
+    await expect(jour(page, "2026-10-15").locator('[data-source="taches"]')).toContainText("Chants de Noël");
+    // Le 4, la scène est derrière « +2 » ; le 11 (culte, scène, petit déj) la montre.
+    await expect(jour(page, "2026-10-11").locator('[data-source="scene"]')).toContainText("Scène · Sketch Jeunes 14:00");
+    await expect(jour(page, "2026-10-18").locator('[data-source="petitDej"]')).toContainText("Famille Test");
+    await expect(jour(page, "2026-10-11").locator('[data-source="petitDej"]')).toContainText("Petit déj : libre");
+    // Aujourd'hui est marqué ; les jours hors du mois aussi.
+    await expect(jour(page, "2026-10-01")).toHaveAttribute("aria-current", "date");
+    await expect(jour(page, "2026-09-28")).toHaveAttribute("data-hors-mois", "true");
+  });
+
+  test("Setlists éteinte d'office ; une pastille éteinte retire sa source, même après rechargement", async ({ page }) => {
+    await ouvrir(page);
+    await expect(pastilles(page).getByRole("button", { name: "Setlists" })).toHaveAttribute("aria-pressed", "false");
+    const taches = pastilles(page).getByRole("button", { name: "Tâches" });
+    await expect(taches).toHaveAttribute("aria-pressed", "true");
+    await taches.click();
+    await expect(taches).toHaveAttribute("aria-pressed", "false");
+    await expect(jour(page, "2026-10-15").locator('[data-source="taches"]')).toHaveCount(0);
+    // L'entrée du Sheet du même jour reste.
+    await expect(jour(page, "2026-10-15").locator('[data-source="evenements"]')).toHaveCount(1);
+    await page.reload();
+    await expect(page.getByTestId("calendrier")).not.toHaveAttribute("aria-busy", "true");
+    await expect(pastilles(page).getByRole("button", { name: "Tâches" })).toHaveAttribute("aria-pressed", "false");
+    await expect(jour(page, "2026-10-15").locator('[data-source="evenements"]')).toHaveCount(1);
+    await expect(jour(page, "2026-10-15").locator('[data-source="taches"]')).toHaveCount(0);
+  });
+
+  test("« Seulement moi » ne laisse que mes entrées (mon service du 4), retenu au rechargement", async ({ page }) => {
+    await ouvrir(page);
+    const moi = page.getByRole("button", { name: "Seulement moi" });
+    await expect(moi).toHaveAttribute("aria-pressed", "false");
+    await moi.click();
+    await expect(moi).toHaveAttribute("aria-pressed", "true");
+    await expect(jour(page, "2026-10-04").locator('[data-source="services"]')).toContainText("Lou M.");
+    await expect(jour(page, "2026-10-11").locator('[data-source="services"]')).toHaveCount(0);
+    await expect(jour(page, "2026-10-03").locator('[data-source="reunions"]')).toHaveCount(0);
+    await expect(jour(page, "2026-10-06").locator('[data-source="evenements"]')).toHaveCount(0);
+    await page.reload();
+    await expect(page.getByTestId("calendrier")).not.toHaveAttribute("aria-busy", "true");
+    await expect(page.getByRole("button", { name: "Seulement moi" })).toHaveAttribute("aria-pressed", "true");
+    await expect(jour(page, "2026-10-11").locator('[data-source="services"]')).toHaveCount(0);
+  });
+
+  test("toucher un jour ouvre le panneau du jour (à droite sur grand écran, en feuille sinon)", async ({ page }, info) => {
+    await ouvrir(page);
+    await jour(page, "2026-10-11").click();
+    const panneau = panneauADroite(info)
+      ? page.getByRole("complementary", { name: "Dimanche 11 octobre" })
+      : page.getByRole("dialog", { name: "Dimanche 11 octobre" });
+    await expect(panneau).toBeVisible();
+    await expect(panneau.getByRole("link", { name: /Culte Franco/ })).toContainText("Présidence : Sam T.");
+    await expect(panneau.getByRole("link", { name: /Scène/ })).toContainText("14:00 – 15:30 · Costumes à prévoir");
+    await expect(panneau.getByRole("link", { name: /Petit déj/ })).toContainText("Libre");
+    await expect(jour(page, "2026-10-11")).toHaveAttribute("aria-pressed", "true");
+  });
+
+  test("sur grand écran, le panneau montre aujourd'hui dès l'ouverture", async ({ page }, info) => {
+    test.skip(!panneauADroite(info), "panneau à droite : ordinateur et tablette couchée");
+    await ouvrir(page);
+    await expect(page.getByRole("complementary", { name: "Jeudi 1er octobre" })).toBeVisible();
+  });
+
+  test("trois entrées dans une case, puis « +N », qui ouvre le jour entier", async ({ page }, info) => {
+    await ouvrir(page);
+    const quatre = jour(page, "2026-10-04");
+    await expect(quatre.locator("[data-source]")).toHaveCount(3);
+    const plus = quatre.getByTestId("plus-n");
+    await expect(plus).toHaveText(/^\+\d+$/);
+    const n = Number((await plus.textContent())!.slice(1));
+    await plus.click();
+    const panneau = panneauADroite(info)
+      ? page.getByRole("complementary", { name: "Dimanche 4 octobre" })
+      : page.getByRole("dialog", { name: "Dimanche 4 octobre" });
+    await expect(panneau.getByRole("link")).toHaveCount(3 + n);
+  });
+
+  test("une entrée du Sheet : lecture seule, ni « Déplacer… », elle ouvre l'onglet du mois", async ({ page }, info) => {
+    await ouvrir(page);
+    await jour(page, "2026-10-06").click();
+    const panneau = panneauADroite(info)
+      ? page.getByRole("complementary", { name: "Mardi 6 octobre" })
+      : page.getByRole("dialog", { name: "Mardi 6 octobre" });
+    const carte = panneau.getByRole("link", { name: /Soirée louange/ });
+    await expect(carte).toContainText("Lu dans le Sheet des évènements");
+    await expect(carte).toContainText("19:00 – 21:00");
+    await expect(carte).toHaveAttribute("href", /docs\.google\.com\/spreadsheets\/d\/[^/]+\/edit#gid=439766955$/);
+    await expect(carte).toHaveAttribute("target", "_blank");
+    await expect(panneau.getByRole("button", { name: /Déplacer/ })).toHaveCount(0);
+  });
+
+  test("sans pôle : ni pastille Tâches ni Réunions, et aucune tâche", async ({ page }) => {
+    await ouvrir(page, P_PLANNINGS);
+    await expect(pastilles(page).getByRole("button", { name: "Services" })).toBeVisible();
+    await expect(pastilles(page).getByRole("button", { name: "Tâches" })).toHaveCount(0);
+    await expect(pastilles(page).getByRole("button", { name: "Réunions" })).toHaveCount(0);
+    await expect(page.locator('[data-source="taches"]')).toHaveCount(0);
+  });
+
+  test("Sheet des évènements injoignable : bandeau, et les autres sources s'affichent", async ({ page }) => {
+    await ouvrir(page, P_ADMIN, { evenementsCoupe: true });
+    await expect(page.getByRole("status").filter({ hasText: "Sheet des évènements injoignable" })).toBeVisible();
+    await expect(jour(page, "2026-10-04").locator('[data-source="services"]')).toContainText("Lou M.");
+    await expect(jour(page, "2026-10-06").locator('[data-source="evenements"]')).toHaveCount(0);
+  });
+
+  test("‹ › changent de mois, « Aujourd'hui » y revient", async ({ page }) => {
+    await ouvrir(page);
+    await page.getByRole("button", { name: "Mois suivant" }).click();
+    await expect(page.getByRole("heading", { level: 1, name: "Novembre 2026" })).toBeVisible();
+    await expect(page.getByTestId("grille-mois").locator("[data-jour]").first()).toHaveAttribute("data-jour", "2026-10-26");
+    await page.getByRole("button", { name: "Aujourd'hui" }).click();
+    await expect(page.getByRole("heading", { level: 1, name: "Octobre 2026" })).toBeVisible();
+    await page.getByRole("button", { name: "Mois précédent" }).click();
+    await expect(page.getByRole("heading", { level: 1, name: "Septembre 2026" })).toBeVisible();
+  });
+
+  test("中文 : titre, pastilles et entrées", async ({ page }) => {
+    await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
+    await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
+    await sheets(page);
+    await signInAs(page, P_ADMIN, DOCS, "/back-office/calendrier");
+    await expect(page.getByRole("heading", { level: 1, name: "2026年10月" })).toBeVisible();
+    await expect(page.getByTestId("calendrier")).not.toHaveAttribute("aria-busy", "true");
+    const groupe = page.getByRole("group", { name: "显示的来源" });
+    await expect(groupe.getByRole("button", { name: "任务" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "只看我的" })).toBeVisible();
+    await expect(jour(page, "2026-10-11").locator('[data-source="petitDej"]')).toContainText("早餐：空闲");
+  });
+});
+
+test.describe("C3 : captures à regarder", () => {
+  // Comparées à la planche bo-calendrier (ordinateur) ; tablettes et téléphone à l'œil.
+  test("octobre, puis le dimanche 11 ouvert, dans chaque disposition", async ({ page }, info) => {
+    await ouvrir(page);
+    await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
+    await page.screenshot({ path: `test-results/calendrier-captures/${info.project.name}-mois.png` });
+    await jour(page, "2026-10-11").click();
+    await page.waitForTimeout(400);
+    await page.screenshot({ path: `test-results/calendrier-captures/${info.project.name}-jour.png` });
   });
 });

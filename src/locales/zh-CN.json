@@ -1,4 +1,34 @@
 {
+  "calendrier": {
+    "precedent": "上个月",
+    "suivant": "下个月",
+    "aujourdhui": "今天",
+    "sourcesAria": "显示的来源",
+    "seulementMoi": "只看我的",
+    "sources": {
+      "services": "服事",
+      "evenements": "活动（Sheet）",
+      "reunions": "会议",
+      "scene": "舞台",
+      "taches": "任务",
+      "petitDej": "早餐",
+      "setlists": "歌单"
+    },
+    "carte": {
+      "services": "服事",
+      "evenements": "活动",
+      "reunions": "会议",
+      "scene": "舞台",
+      "taches": "任务",
+      "petitDej": "早餐",
+      "setlists": "歌单"
+    },
+    "jourAria_other": "{{jour}}，{{count}} 项",
+    "rien": "这天没有安排。",
+    "duSheet": "读取自活动表格（Sheet）",
+    "sheetInjoignable": "无法读取活动表格（Sheet）：其中的活动暂时不显示。",
+    "fermer": "关闭"
+  },
   "common": {
     "noAccess": "此页面仅限乐手查看。",
     "header": {

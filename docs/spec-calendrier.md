@@ -338,8 +338,35 @@ Spec validée et go de code donné (04/10/2026, redit le 05/10/2026) ; questions
   `/taches/<pôle>`, `/setlists/<id>`, `/evenements/scene`, `/planning/<page>`, `/planning/table`,
   onglet du Sheet `…/edit#gid=<gid>`. Le petit déj est lu sur la forme de `LignePetitDej` (U3),
   `estLibre` refait en une ligne (U3 n'est pas fusionné ici).
-- **À suivre** : C3 → C8 (C3 branche les lecteurs sur `DonneesCalendrier` et range les pastilles en
-  `localStorage`).
-- **Pour Timothée** : rien à publier (C1 et C2 ne touchent ni `access.ts` ni `firestore.rules`) ;
-  relire les mots 中文 de `src/lib/calendrier/entrees.ts` (`司会：`, `已报名 4/10`, `截止`, `舞台`,
+- **05/10/2026 — C3 faite** (même branche, après la fusion de `lot/u6-back-office` ; commit
+  « feat(U8): C3 — page en Mois et entrée Calendrier ») : `/back-office/calendrier`
+  (`src/app/back-office/calendrier/`, sous le gabarit de U6) ; l'entrée « Calendrier » du menu
+  (retirée de `ENTREES_A_VENIR` dans `access.ts` ; le widget Calendrier y reste jusqu'à C8) ;
+  `src/lib/calendrier/charger.ts` (lecteurs REST branchés sur `DonneesCalendrier`, une source en
+  panne n'empêche pas les autres), `grille.ts` (six semaines, mois voisin, libellé court, titres FR
+  et 中文), `preferences.ts` (`localStorage` « calendrier » sous `try`) ;
+  `src/components/calendrier/` (`GrilleMois`, `PanneauJour`, `apparence`). Pastilles retenues,
+  « Seulement moi », trois entrées puis « +N », panneau de 300 px à droite sur ordinateur et
+  tablette couchée (requêtes média de U4), feuille ailleurs ; fiche du Sheet en lecture seule
+  (« Lu dans le Sheet des évènements », onglet du mois dans un nouvel onglet) ; bandeau « Sheet des
+  évènements injoignable », le reste s'affiche. `tests/calendrier.spec.ts` (ajouté à
+  `SPECS_GRAND_ECRAN`) : 15 tests de page + 2 purs, vus rouges (entrée absente du menu) puis verts
+  sur les cinq projets ; `back-office-espace.spec.ts` mis à jour (Calendrier dans le menu,
+  Statistiques seule encore en 404) ; `back-office-coupe.spec.ts` : la page répond 404
+  interrupteur coupé. Captures regardées aux cinq tailles, conformes à la planche `bo-calendrier`.
+- **Choix de C3, faute de réponse dans la spec** : la carte d'un service se nomme par sa catégorie
+  (« Culte Franco »), sa présidence en titre (planche) ; le petit déj par « Petit déj », le nom ou
+  « Libre » en titre. Le petit déj est lu par une requête REST locale (`lirePetitDej` dans
+  `charger.ts`) tant que U3 n'est pas fusionné. Sur grand écran, le panneau montre aujourd'hui dès
+  l'ouverture. Le téléphone montre encore la grille (l'Agenda d'office vient avec C4) ; le sélecteur
+  « Mois | Agenda » vient avec C4.
+- **Reste après C3** : l'avertissement orange « Cases vides : … » d'un service dans le panneau
+  attend le calcul `casesVides` du widget 4 de U6 (sur `lignesDeLAnnee` de U2), absent de cette
+  branche ; à brancher quand U2 et le widget de U6 seront fusionnés. « Déplacer… » (C6) et les deux
+  boutons de création (C5) se posent dans `PanneauJour.tsx`.
+- **À suivre** : C4 → C8.
+- **Pour Timothée** : rien à publier (C1, C2 et C3 ne touchent pas `firestore.rules` ; C3 ouvre
+  seulement l'entrée de menu déjà prévue par U6) ; relire les mots 中文 de `calendrier` dans
+  `src/locales/zh-CN.json` (`只看我的`, `活动（Sheet）`, `读取自活动表格（Sheet）`,
+  `无法读取活动表格（Sheet）…`, `这天没有安排。`) et ceux de `src/lib/calendrier/entrees.ts` (`司会：`, `已报名 4/10`, `截止`, `舞台`,
   `早餐`, `空闲`, `主日学`, `首`).

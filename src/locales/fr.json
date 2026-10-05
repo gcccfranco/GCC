@@ -1,4 +1,35 @@
 {
+  "calendrier": {
+    "precedent": "Mois précédent",
+    "suivant": "Mois suivant",
+    "aujourdhui": "Aujourd'hui",
+    "sourcesAria": "Sources affichées",
+    "seulementMoi": "Seulement moi",
+    "sources": {
+      "services": "Services",
+      "evenements": "Évènements (Sheet)",
+      "reunions": "Réunions",
+      "scene": "Scène",
+      "taches": "Tâches",
+      "petitDej": "Petit déj",
+      "setlists": "Setlists"
+    },
+    "carte": {
+      "services": "Service",
+      "evenements": "Évènement",
+      "reunions": "Réunion",
+      "scene": "Scène",
+      "taches": "Tâche",
+      "petitDej": "Petit déj",
+      "setlists": "Setlist"
+    },
+    "jourAria_one": "{{jour}}, {{count}} entrée",
+    "jourAria_other": "{{jour}}, {{count}} entrées",
+    "rien": "Rien ce jour-là.",
+    "duSheet": "Lu dans le Sheet des évènements",
+    "sheetInjoignable": "Sheet des évènements injoignable : ses évènements n'apparaissent pas pour l'instant.",
+    "fermer": "Fermer"
+  },
   "common": {
     "noAccess": "Cette page est réservée aux musiciens de l'équipe.",
     "header": {
