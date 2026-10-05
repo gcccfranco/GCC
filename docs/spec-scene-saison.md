@@ -385,6 +385,30 @@ npm run lint
   regardées aux trois tailles. Choix : l'auteur s'affiche en entier (« Prénom Nom » du profil, la planche abrégeait
   « Léa M. ») ; les groupes gardent l'ordre de `QUI` (EDD d'abord), comme S1. **Reste** : rien dans U1 ; la
   fusion dans `ui/apple-design` et la suite complète à l'intégration.
+- 05/10/2026 (soir) : **lot fini et relu.** Deux relectures, 12 constats ; commit « fix(U1): relecture » sur
+  `lot/u1-scene-saison`, local, rien poussé, rien fusionné. Corrigé, chaque fois avec un test vu rouge puis vert :
+  un brouillon n'est plus annoncé dans « Prochain programme » (Q3) ; les créneaux chargés portent le programme à
+  qui ils appartiennent et seule la dernière lecture compte (créer un programme ou ouvrir « Préparer la saison »
+  ne montre plus, même un instant, les réservations du programme affiché, et « Retirer » ne vise plus un créneau
+  d'un autre programme) ; la carte « Mettre en place la saison » suit le programme hors erreur et hors écriture
+  en cours (jour J reporté : la fermeture par défaut suit ; un réglage d'un autre coordinateur n'est plus écrasé
+  au clic suivant) ; « N réservations hors grille » ne compte que l'avenir ; un créneau qui commence feuille
+  ouverte est refusé à l'enregistrement (« Ce créneau a déjà commencé : il ne se réserve plus. », Réserver,
+  Modifier vers un autre créneau, Déplacer) ; « Retirer » qui échoue le dit sous la liste hors grille ; la feuille
+  range les groupes **par famille, comme la planche** (Groupes, EDD, Jeunes, Louange, Chorale ; le choix « ordre
+  de `QUI` » de S4 est abandonné ; l'ordre de passage garde `QUI`). Test des règles : la tranche `allow delete`
+  n'était jamais lue, elle l'est. Nettoyé : 8 libellés morts (FR et 中文), le paramètre `options` de
+  `QuiChecklist`, le `.catch` jamais atteint de la carte. Tests : prénom réel remplacé par « Noé L. » dans
+  `tests/scene-saison.spec.ts`. Suites `scene-saison` (68 × 3), `programme-scene`, `evenements`,
+  `back-office-coupe` vertes ; `tsc` et `lint` sans erreur ; feuille regardée aux trois tailles.
+  **À trancher par Timothée** (rien ne bloque la fusion) : (1) un brouillon s'ouvre depuis sa ligne « Préparer la
+  saison » (choix gardé) ; la phrase « la saison s'y montre en entier tant que le programme est un brouillon »
+  (§ Écrans) veut-elle plutôt dire « ouvrir d'office l'écran de la saison quand la coordination arrive, qu'un
+  brouillon existe et qu'aucun programme n'est affiché » ? Sinon, retirer la phrase à l'intégration.
+  (2) `sundaysBetween` (`src/lib/scene/dimanches.ts`) n'a plus d'appelant hors de son test
+  (`tests/programme-scene.spec.ts`) : le retirer avec son test, ou le garder. (3) `tests/programme-scene.spec.ts`
+  et `tests/evenements.spec.ts` gardent des prénoms réels de l'équipe depuis avant U1 : à renommer dans un lot de
+  tests. Relire le 中文 « 该时段已经开始，不能再预约。 ».
 - Après le code : publier `firestore.rules` (règle des créneaux) ; à la mise en ligne, la coordination règle la
   saison de Noël 2026 puis l'ouvre. Téléphone des membres : planches `scene-reserver-telephone` et
   `scene-reserver-feuille-telephone` (version 17). Timothée relit le 中文 (dont « 本季允许的团体 », les groupes

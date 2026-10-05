@@ -10,9 +10,9 @@ import { ChevronLeft, ChevronRight } from "lucide-react"
 import { deleteCreneau, listCreneaux, updateCreneau } from "@/lib/firebase/programmes"
 import { overlaps, todayIso } from "@/lib/scene/dimanches"
 import {
-  commence, creneauxLibres, heureLocale, horsGrille, joursReservables, lignesDuJour, saisonDe,
+  commence, creneauxLibres, heureLocale, horsGrille, joursReservables, lignesDuJour, quiPermis, saisonDe,
 } from "@/lib/scene/saison"
-import { QUI, type Creneau, type Programme } from "@/types/programme"
+import type { Creneau, Programme } from "@/types/programme"
 import { Button } from "@/components/ui/button"
 import { CreneauForm, type CreneauValues } from "./CreneauForm"
 import { LigneJour } from "./LigneJour"
@@ -46,11 +46,15 @@ export function Apercu({ programme, creneaux, onChanged }: {
   const [deplace, setDeplace] = useState<Creneau | null>(null)
   const [ouverte, setOuverte] = useState(false)
   const [fois, setFois] = useState(0)
+  const [erreurRetrait, setErreurRetrait] = useState("")
   const jour = choisi && jours.includes(choisi) ? choisi : prochain
   const i = jour ? jours.indexOf(jour) : -1
-  const hors = horsGrille(saison, creneaux)
+  // Les jours passés ne se déplacent plus : seule l'alerte à venir compte.
+  const hors = horsGrille(saison, creneaux).filter((c) => c.dimanche >= today)
 
   async function deplacer(c: Creneau, values: CreneauValues): Promise<string | null> {
+    // Q11, revu à l'enregistrement : le créneau a pu commencer feuille ouverte.
+    if (commence(values.dimanche, values.debut, todayIso(), heureLocale())) return t("planning.saison.dejaCommence")
     try {
       // Relecture juste avant d'écrire : la scène est unique, un chevauchement est refusé.
       const fresh = await listCreneaux(programme.id)
@@ -67,8 +71,13 @@ export function Apercu({ programme, creneaux, onChanged }: {
 
   async function retirer(c: Creneau) {
     if (!window.confirm(t("planning.programme.confirmRemove"))) return
-    await deleteCreneau(programme.id, c.id)
-    await onChanged()
+    setErreurRetrait("")
+    try {
+      await deleteCreneau(programme.id, c.id)
+      await onChanged()
+    } catch {
+      setErreurRetrait(t("planning.programme.error"))
+    }
   }
 
   return (
@@ -127,6 +136,7 @@ export function Apercu({ programme, creneaux, onChanged }: {
               )
             })}
           </ul>
+          {erreurRetrait && <p role="alert" className="text-sm text-destructive">{erreurRetrait}</p>}
         </section>
       )}
 
@@ -141,7 +151,7 @@ export function Apercu({ programme, creneaux, onChanged }: {
             submitLabel={t("planning.programme.save")}
             places={places}
             initial={{ dimanche: depart.jour, debut: depart.debut, fin: depart.fin, quoi: deplace.quoi, qui: deplace.qui, note: deplace.note }}
-            quiOptions={QUI}
+            quiOptions={quiPermis({})}
             onSubmit={(values) => deplacer(deplace, values)}
             onCancel={() => setOuverte(false)}
           />

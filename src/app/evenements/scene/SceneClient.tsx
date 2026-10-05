@@ -10,7 +10,7 @@
 // s'archive et la bascule prend le suivant dès l'ouverture de ses
 // réservations. `visible` n'est plus que l'épinglage de la coordination.
 
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useAuth } from "@/lib/firebase/auth"
 import { useProfile } from "@/lib/firebase/users"
@@ -36,12 +36,15 @@ import { dateCourte } from "./libelles"
 const COLOR = PLANNING_COLORS.scene
 type Volet = "entrainements" | "programme"
 
+/** Créneaux chargés, et le programme à qui ils appartiennent. */
+type Charge = { pour: string | null; creneaux: Creneau[] }
+
 /** Les programmes, et les créneaux du programme montré : celui dont la
  *  coordination a ouvert la saison (`focusId`, lot U1), sinon le programme affiché. */
-async function fetchAll(focusId: string | null): Promise<{ programmes: Programme[]; creneaux: Creneau[] }> {
+async function fetchAll(focusId: string | null): Promise<{ programmes: Programme[] } & Charge> {
   const programmes = await listProgrammes()
   const focus = programmes.find((p) => p.id === focusId) ?? currentProgramme(programmes, todayIso())
-  return { programmes, creneaux: focus ? await listCreneaux(focus.id) : [] }
+  return { programmes, pour: focus?.id ?? null, creneaux: focus ? await listCreneaux(focus.id) : [] }
 }
 
 export function SceneClient() {
@@ -49,24 +52,36 @@ export function SceneClient() {
   const { user } = useAuth()
   const { profile, loading: profileLoading } = useProfile()
   const [programmes, setProgrammes] = useState<Programme[] | null>(null)
-  const [creneaux, setCreneaux] = useState<Creneau[]>([])
+  const [charge, setCharge] = useState<Charge | null>(null)
   const [volet, setVolet] = useState<Volet>("entrainements")
   const [form, setForm] = useState<"new" | Programme | null>(null)
   const [ordre, setOrdre] = useState<string | null>(null)
   const [error, setError] = useState("")
   /** Lot U1 : programme dont la coordination a ouvert l'écran de la saison. */
   const [saisonOuverte, setSaisonOuverte] = useState<string | null>(null)
+  // Le même, lu par `reload` : un rechargement lancé depuis un rendu plus ancien
+  // demande quand même le programme montré maintenant.
+  const focus = useRef<string | null>(null)
+  // Seule la dernière demande pose l'état : une réponse plus lente, partie avant,
+  // mettrait sinon les créneaux d'un autre programme sous l'écran.
+  const demandes = useRef(0)
 
   const reload = useCallback(async () => {
-    const data = await fetchAll(saisonOuverte)
+    const n = ++demandes.current
+    const data = await fetchAll(focus.current)
+    if (n !== demandes.current) return
     setProgrammes(data.programmes)
-    setCreneaux(data.creneaux)
-  }, [saisonOuverte])
+    setCharge({ pour: data.pour, creneaux: data.creneaux })
+  }, [])
+
+  function montrer(id: string | null) {
+    focus.current = id
+    setSaisonOuverte(id)
+  }
 
   useEffect(() => {
-    if (!user) return
-    fetchAll(saisonOuverte).then((data) => { setProgrammes(data.programmes); setCreneaux(data.creneaux) })
-  }, [user, saisonOuverte])
+    if (user) reload()
+  }, [user, saisonOuverte, reload])
 
   const coordination = isCoordination(user, profile)
   const today = todayIso()
@@ -74,8 +89,9 @@ export function SceneClient() {
   const state = current ? programmeState(current, today) : null
   // Tous les autres programmes : en attente, à venir ou archivés.
   const others = programmes?.filter((p) => p.id !== current?.id) ?? []
+  // Q3 : un brouillon n'est jamais annoncé, pas même par son nom.
   const next = current
-    ? others.find((p) => p.jourJ > current.jourJ && programmeState(p, today) !== "archived") ?? null
+    ? others.find((p) => p.ouvert !== false && p.jourJ > current.jourJ && programmeState(p, today) !== "archived") ?? null
     : null
 
   async function run(action: () => Promise<void>) {
@@ -105,7 +121,7 @@ export function SceneClient() {
         const id = await createProgramme({
           ...values, debut: todayIso(), ouvert: false, visible: false, passages: [], createdBy: user.uid, updatedAt: new Date().toISOString(),
         })
-        setSaisonOuverte(id)
+        montrer(id)
       }
       setForm(null)
     })
@@ -128,15 +144,21 @@ export function SceneClient() {
     if (window.confirm(t("planning.programmes.confirmDelete", { nom: p.nom }))) run(() => deleteProgramme(p.id))
   }
 
-  if (profileLoading || !programmes || !user) return <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
+  const chargement = <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
+  if (profileLoading || !programmes || !user) return chargement
+  /** Les créneaux de ce programme, ou null tant que ce ne sont pas les siens qui sont chargés. */
+  const creneauxDe = (p: Programme) => (charge?.pour === p.id ? charge.creneaux : null)
 
   // Lot U1 : l'écran de la saison (brouillon, ou « Modifier la saison ») prend la page.
   const edited = coordination ? programmes.find((p) => p.id === saisonOuverte) ?? null : null
   if (edited) {
-    return <SaisonEcran programme={edited} creneaux={creneaux} onChanged={reload} onClose={() => setSaisonOuverte(null)} />
+    const creneaux = creneauxDe(edited)
+    if (!creneaux) return chargement
+    return <SaisonEcran programme={edited} creneaux={creneaux} onChanged={reload} onClose={() => montrer(null)} />
   }
 
   const closed = current ? reservationsClosed(todayIso(), current.jourJ, current.fin) : false
+  const creneauxCourant = current ? creneauxDe(current) : null
   const activeVolet: Volet = closed ? "programme" : volet
   // Sans aucun programme, la coordination voit directement le formulaire.
   const showForm = form !== null || (coordination && programmes.length === 0)
@@ -241,7 +263,7 @@ export function SceneClient() {
           {coordination && (
             <div className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-xl bg-secondary px-3 py-2 text-sm">
               <span>{resumeSaison(current)}</span>
-              <button type="button" className="font-semibold underline-offset-4 hover:underline" onClick={() => setSaisonOuverte(current.id)}>
+              <button type="button" className="font-semibold underline-offset-4 hover:underline" onClick={() => montrer(current.id)}>
                 {t("planning.saison.modifierSaison")}
               </button>
             </div>
@@ -264,10 +286,12 @@ export function SceneClient() {
             </div>
           )}
           {activeVolet === "entrainements" ? (
-            <Entrainements
-              programme={current} creneaux={creneaux} user={user} profile={profile} onChanged={reload}
-              onConflict={(a, b) => reportConflict(current.id, [a.id, b.id])}
-            />
+            creneauxCourant ? (
+              <Entrainements
+                programme={current} creneaux={creneauxCourant} user={user} profile={profile} onChanged={reload}
+                onConflict={(a, b) => reportConflict(current.id, [a.id, b.id])}
+              />
+            ) : chargement
           ) : (
             <OrdrePassage
               passages={current.passages}
@@ -315,7 +339,7 @@ export function SceneClient() {
                   </div>
                   <div className="flex flex-wrap gap-1">
                     {brouillon || st !== "archived" ? (
-                      <Button size="sm" variant="outline" onClick={() => setSaisonOuverte(p.id)}>
+                      <Button size="sm" variant="outline" onClick={() => montrer(p.id)}>
                         {t(brouillon ? "planning.saison.preparerSaison" : "planning.saison.modifierSaison")}
                       </Button>
                     ) : null}

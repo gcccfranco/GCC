@@ -208,11 +208,13 @@ export const FAMILLES = [
 
 export type Famille = (typeof FAMILLES)[number]["cle"];
 
-/** Groupes proposés au formulaire d'un membre : tous sans limite, sinon les
- *  groupes permis, dans l'ordre de QUI. La coordination n'est pas limitée. */
+/** Groupes proposés par la feuille « Réserver » : tous sans limite, sinon les
+ *  groupes permis, rangés par famille comme la planche (Groupes, EDD, Jeunes,
+ *  Louange, Chorale). La coordination n'est pas limitée : `quiPermis({})`. */
 export function quiPermis(p: { quiAutorises?: string[] }): string[] {
   const permis = p.quiAutorises ?? [];
-  return permis.length === 0 ? [...QUI] : QUI.filter((q) => permis.includes(q));
+  const parFamille: string[] = FAMILLES.flatMap((f) => f.qui);
+  return permis.length === 0 ? parFamille : parFamille.filter((q) => permis.includes(q));
 }
 
 /** Familles dont tous les groupes sont permis, dans l'ordre de l'écran. */

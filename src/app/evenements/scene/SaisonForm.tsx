@@ -88,12 +88,18 @@ function DatePastille({ prefixe, label, value, max, onChange }: {
 
 export function SaisonForm({ programme, onSave }: {
   programme: Programme
-  /** Écrit les champs changés (updateMask), puis recharge la page. */
+  /** Écrit les champs changés (updateMask), puis recharge la page ; ne rejette
+   *  jamais (un échec d'écriture s'affiche en haut de l'écran de la saison). */
   onSave: (patch: SaisonPatch) => Promise<void>
 }) {
   const { t } = useTranslation()
   const titreId = useId()
-  const [s, setS] = useState<Saison>(() => saisonDe(programme))
+  // La saison montrée est celle du programme, sauf le temps d'une erreur (rien
+  // n'est écrit) ou d'une écriture : une copie gardée plus longtemps resterait
+  // périmée quand le programme change ailleurs (jour J, autre coordinateur) et
+  // repartirait en base au réglage suivant.
+  const [local, setLocal] = useState<Saison | null>(null)
+  const s = local ?? saisonDe(programme)
   const [erreur, setErreur] = useState<{ champ: Champ; textes: string[] } | null>(null)
   const [editeur, setEditeur] = useState<{ index: number | null; plage: Plage } | null>(null)
 
@@ -103,12 +109,15 @@ export function SaisonForm({ programme, onSave }: {
 
   /** Affiche `next` ; s'il est valable, écrit ce qui a changé, sinon montre l'erreur sous le champ. */
   function appliquer(next: Saison, champ: Champ) {
-    setS(next)
+    setLocal(next)
     const textes = verifier(next)
     setErreur(textes.length > 0 ? { champ, textes } : null)
     if (textes.length > 0) return
     const patch = difference(saisonDe(programme), next)
-    if (Object.keys(patch).length > 0) onSave(patch).catch(() => setErreur({ champ, textes: [t("planning.programmes.error")] }))
+    if (Object.keys(patch).length === 0) { setLocal(null); return }
+    // Écrit puis relu (un échec se dit en haut de l'écran) : on revient au
+    // programme, sauf si un autre réglage a suivi entre-temps.
+    onSave(patch).then(() => setLocal((l) => (l === next ? null : l)))
   }
 
   /** Cocher un jour lui donne une plage (celle du jour coché avant) ; décocher retire ses plages. */

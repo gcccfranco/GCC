@@ -31,17 +31,13 @@ export type CreneauValues = {
 }
 
 /** Cases « Qui » (un ou plusieurs) de l'ordre de passage. */
-export function QuiChecklist({ value, onChange, options = QUI }: {
-  value: string[]
-  onChange: (qui: string[]) => void
-  options?: readonly string[]
-}) {
+export function QuiChecklist({ value, onChange }: { value: string[]; onChange: (qui: string[]) => void }) {
   const { t } = useTranslation()
   return (
     <fieldset className="space-y-1">
       <legend className="text-xs font-semibold">{t("planning.programme.qui")}</legend>
       <div className="flex flex-wrap gap-2">
-        {options.map((q) => {
+        {QUI.map((q) => {
           const checked = value.includes(q)
           return (
             <label key={q} className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold cursor-pointer ${checked ? "" : "bg-background border-border text-muted-foreground"}`}

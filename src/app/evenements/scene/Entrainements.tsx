@@ -20,7 +20,7 @@ import {
   commence, creneauxLibres, heureLocale, joursReservables, lignesDuJour, quiPermis, saisonDe, type Place,
 } from "@/lib/scene/saison"
 import { PLANNING_COLORS } from "@/lib/serviceColors"
-import { QUI, type Creneau, type Programme } from "@/types/programme"
+import type { Creneau, Programme } from "@/types/programme"
 import type { UserProfile } from "@/types/user"
 import { Button } from "@/components/ui/button"
 import { BadgeHorsGrille } from "./Apercu"
@@ -67,7 +67,7 @@ export function Entrainements({ programme, creneaux, user, profile, onChanged, o
   const auteurNom = profile ? `${profile.firstName} ${profile.lastName}`.trim() || profile.email : user.email ?? ""
   // Q4 : la coordination n'est pas limitée ; un membre choisit parmi les groupes permis.
   const quiLimite = !coordination && saison.quiAutorises.length > 0
-  const quiOptions = coordination ? QUI : quiPermis(programme)
+  const quiOptions = quiPermis(coordination ? {} : programme)
 
   function ouvrir(a: Action) {
     setAction(a)
@@ -77,6 +77,11 @@ export function Entrainements({ programme, creneaux, user, profile, onChanged, o
 
   async function save(values: CreneauValues): Promise<string | null> {
     const editingId = action?.type === "modifier" ? action.creneau.id : null
+    // Q11, revu à l'enregistrement : la feuille a pu rester ouverte pendant que le
+    // créneau commençait. Garder son créneau (changer la note, le qui) reste permis.
+    const autreCreneau = action?.type !== "modifier"
+      || values.dimanche !== action.creneau.dimanche || values.debut !== action.creneau.debut
+    if (autreCreneau && commence(values.dimanche, values.debut, todayIso(), heureLocale())) return t("planning.saison.dejaCommence")
     if (!canReserverPour(user, profile, programme, values.qui)) {
       return t("planning.saison.quiRefuse", { qui: values.qui.filter((q) => !quiPermis(programme).includes(q)).join(", ") })
     }
