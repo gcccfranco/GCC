@@ -718,7 +718,7 @@ const choixDeDate = (page: Page) => page.getByLabel("Dimanche à ajouter", { exa
 const optionsProposees = (page: Page) => choixDeDate(page).locator("option").evaluateAll((os) => os.map((o) => (o as HTMLOptionElement).value));
 
 test("Interfranco 2027 : « Aucun dimanche posé », « Ajouter un dimanche » ; Paix affiche alors « Interfranco », non modifiable", async ({ page }) => {
-  const db = await ouvrir(page, INTERFRANCO, "/planning/interfranco");
+  const db = await ouvrir(page, INTERFRANCO, "/back-office/planning/interfranco");
   await page.getByRole("button", { name: "2027", exact: true }).click();
   await expect(page.getByText("Aucun dimanche posé pour 2027.").filter({ visible: true })).toHaveCount(1);
   expect(await optionsProposees(page)).toEqual(dimanchesDe(2027));
@@ -734,17 +734,17 @@ test("Interfranco 2027 : « Aucun dimanche posé », « Ajouter un dimanche » ;
   await expect(page.getByText("Écrivain E. a ajouté le 17 janvier")).toBeVisible();
   await capture(page, "interfranco-2027-ajoute");
 
-  await page.goto("/planning/groupes");
+  // Au Back-Office, la grille de Paix s'ouvre en modification (U6, B2).
+  await page.goto("/back-office/planning/groupes");
   await page.getByRole("button", { name: "2027", exact: true }).click();
   await page.getByRole("button", { name: "T1", exact: true }).click();
   await expect(laCase(page, "2027-01-17", "presidence")).toHaveText("Interfranco");
-  await page.getByRole("button", { name: "Modifier" }).click();
   await expect(laCase(page, "2027-01-17", "presidence").getByRole("button"), "non modifiable").toHaveCount(0);
   await expect(page.getByRole("button", { name: "Retirer ce dimanche" }), "un dimanche de Paix ne se retire pas").toHaveCount(0);
 });
 
 test("Intergroupe 2027 : un dimanche déjà pris par l'Interfranco n'est pas proposé", async ({ page }) => {
-  await ouvrir(page, { ...ECRIVAIN, plannings: ["intergroupe"] }, "/planning/intergroupe", {
+  await ouvrir(page, { ...ECRIVAIN, plannings: ["intergroupe"] }, "/back-office/planning/intergroupe", {
     "plannings/interfranco/dimanches/2027-01-17": { date: "2027-01-17" },
   });
   await page.getByRole("button", { name: "2027", exact: true }).click();
@@ -767,14 +767,20 @@ test("Interfranco : un membre voit 2027 dès qu'un dimanche est posé, sans « A
   await autre.close();
 });
 
-test("Interfranco 2027 : « Retirer ce dimanche » demande confirmation, efface la date et le note", async ({ page }) => {
-  const db = await ouvrir(page, INTERFRANCO, "/planning/interfranco", {
-    "plannings/interfranco/dimanches/2027-01-17": { date: "2027-01-17", presidence: "Président I." },
-  });
+test("Interfranco 2027 : « Retirer ce dimanche » demande confirmation, efface la date et le note", async ({ page, browser }) => {
+  const DATE = { "plannings/interfranco/dimanches/2027-01-17": { date: "2027-01-17", presidence: "Président I." } };
+  // Dans l'App, la page se lit, même pour qui la remplit (U6, B2) : ni « Ajouter » ni « Retirer ».
+  const app = await browser.newPage();
+  await ouvrir(app, INTERFRANCO, "/planning/interfranco", DATE);
+  await app.getByRole("button", { name: "2027", exact: true }).click();
+  await expect(laCase(app, "2027-01-17", "presidence")).toContainText("Président I.");
+  await expect(app.getByRole("button", { name: "Retirer ce dimanche" }), "au Back-Office seulement").toHaveCount(0);
+  await expect(app.getByRole("button", { name: "Ajouter un dimanche" })).toHaveCount(0);
+  await app.close();
+
+  const db = await ouvrir(page, INTERFRANCO, "/back-office/planning/interfranco", DATE);
   await page.getByRole("button", { name: "2027", exact: true }).click();
   await expect(laCase(page, "2027-01-17", "presidence")).toContainText("Président I.");
-  await expect(page.getByRole("button", { name: "Retirer ce dimanche" }), "en modification seulement").toHaveCount(0);
-  await page.getByRole("button", { name: "Modifier" }).click();
   const retirer = page.getByRole("button", { name: "Retirer ce dimanche" }).filter({ visible: true });
   await expect(retirer).toHaveCount(1);
   await capture(page, "interfranco-2027-modifier");
@@ -796,7 +802,7 @@ test("Interfranco 2027 : « Retirer ce dimanche » demande confirmation, efface 
 });
 
 test("Campus 2027 : « Ajouter une séance » (date et moment) ; les cartes ne mêlent pas 2026", async ({ page }) => {
-  const db = await ouvrir(page, { ...ECRIVAIN, plannings: ["campusMatin"] }, "/planning/campus");
+  const db = await ouvrir(page, { ...ECRIVAIN, plannings: ["campusMatin"] }, "/back-office/planning/campus");
   await page.getByRole("button", { name: "2027", exact: true }).click();
   await page.getByRole("button", { name: "Grille", exact: true }).click();
   await expect(page.getByText("Aucun dimanche posé pour 2027.").filter({ visible: true })).toHaveCount(2);
@@ -810,8 +816,8 @@ test("Campus 2027 : « Ajouter une séance » (date et moment) ; les cartes ne m
   await expect(page.locator('[data-grille="campusMatin"]').getByText("Aucun dimanche posé pour 2027.").filter({ visible: true })).toHaveCount(0);
   await capture(page, "campus-2027-seance");
 
-  // Le volet « Louange » de la page (la barre de navigation a aussi une section « Louange »).
-  await page.locator("main main").getByRole("button", { name: "Louange", exact: true }).click();
+  // Le volet « Louange » de la page, à côté de « Grille » (la barre de navigation a aussi une section « Louange »).
+  await page.getByRole("button", { name: "Grille", exact: true }).locator("..").getByRole("button", { name: "Louange", exact: true }).click();
   await expect(page.getByText("26/7", { exact: true })).toBeVisible();
   await expect(page.getByText("27/7", { exact: true }), "les séances de 2026 restent dans 2026").toHaveCount(0);
   await page.getByRole("button", { name: "2026", exact: true }).click();
@@ -892,12 +898,11 @@ test("publication : « Planning T1 2027 en ligne » quand l'année n'est pas l'a
 // ─── Relecture · une case à plusieurs noms ne se remplace pas d'un clic (mineur)
 
 test("P9 · une case qui porte plusieurs noms s'ouvre en texte, prérempli, sans « Choisir »", async ({ page }) => {
-  const db = await ouvrir(page, { ...ECRIVAIN, plannings: ["table"] }, "/planning/table", {
+  const db = await ouvrir(page, { ...ECRIVAIN, plannings: ["table"] }, "/back-office/planning/table", {
     "plannings/table/dimanches/2027-01-03": { date: "2027-01-03", equipe: "Alice Q., Bruno R., Julien Z." },
   });
   await page.getByRole("button", { name: "2027", exact: true }).click();
   await page.getByRole("button", { name: "T1", exact: true }).click();
-  await page.getByRole("button", { name: "Modifier" }).click();
   await laCase(page, "2027-01-03", "equipe").getByRole("button").click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
   const champ = laCase(page, "2027-01-03", "equipe").getByLabel("Équipe", { exact: true });

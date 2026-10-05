@@ -15,20 +15,20 @@ const csv = (rows: string[][]) => rows.map((r) => r.map((c) => `"${c}"`).join(",
 
 const CULTE = csv([
   ["2026 DATE", "Présidence", "Choristes", "", "Pianiste", "Guitariste", "Batterie", "Sono + Live", "PPT", "Orateur", "Traducteur", "Sainte cène", "Notes"],
-  ["20/09", "Paul W.", "Christelle Z.", "Inès L.", "Ruth K.", "", "Stéphane Z.", "Anyi Y.", "Karémy X.", "Hewei", "", "", ""],
-  ["27/09", "Jonathan Z.", "Daniela W.", "Alice Q.", "Eva C.", "Christelle C.", "Yiyi C.", "Lorenzo S.", "Denis F.", "Belka", "", "", ""],
+  ["20/09", "Président A.", "Choriste B.", "Choriste C.", "Pianiste D.", "", "Batteur F.", "Sono G.", "Projection H.", "Orateur I.", "", "", ""],
+  ["27/09", "Président J.", "Choriste K.", "Alice Q.", "Pianiste M.", "Guitariste N.", "Batteur O.", "Sono P.", "Projection Q.", "Orateur R.", "", "", ""],
 ]);
 // Onglet Franco_Table_PtD : la date en colonne 1, l'équipe dans les colonnes 2 à 5.
 const TABLE = csv([
   ["", "PRÉPARATION TABLE"],
-  ["", "20/09", "Charlie", "Isabelle"],
-  ["", "27/09", "Lydie", "Samuel"],
-  ["", "04/10", "Ruth", "Marc"],
+  ["", "20/09", "Membre A.", "Membre B."],
+  ["", "27/09", "Membre C.", "Membre D."],
+  ["", "04/10", "Membre E.", "Membre F."],
 ]);
 
 const ADMIN: FakeProfile = { uid: "uid-admin", email: "tc328829@gmail.com", firstName: "Admin", lastName: "T." };
 /** Remplit le Culte Franco, rien d'autre. */
-const ECRIVAIN: FakeProfile = { uid: "uid-ecr", email: "ecr@example.com", firstName: "Christelle", lastName: "Z.", planningName: "Christelle Z.", plannings: ["culte"] };
+const ECRIVAIN: FakeProfile = { uid: "uid-ecr", email: "ecr@example.com", firstName: "Choriste", lastName: "B.", planningName: "Choriste B.", plannings: ["culte"] };
 /** Notifie le Groupe Paix (et publie donc son planning). */
 const NOTIFY: FakeProfile = { uid: "uid-no", email: "no@example.com", firstName: "Noé", lastName: "T.", notify: ["Groupe Paix"] };
 /** Tient l'organigramme, sans être admin. */
@@ -169,7 +169,7 @@ test.describe("B2 : Planning (plannings, Import, Sans compte)", () => {
     await expect(plannings(page).getByRole("link")).toHaveText(["Culte Franco"]);
     await expect(page.getByRole("link", { name: "Import" })).toHaveCount(0);
     // Pas de « Modifier » à toucher d'abord : les cases sont déjà des boutons.
-    await expect(laCase(page, "2026-09-27", "presidence").getByRole("button")).toHaveText("Jonathan Z.");
+    await expect(laCase(page, "2026-09-27", "presidence").getByRole("button")).toHaveText("Président J.");
     await expect(laCase(page, "2026-09-20", "guitare").getByRole("button", { name: /Choisir/ })).toBeVisible();
     await expect(page.locator('[data-grille="culte"]').getByRole("button", { name: "Modifier", exact: true })).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Exporter (modèle du Sheet)" })).toBeVisible();
@@ -200,7 +200,7 @@ test.describe("B2 : Planning (plannings, Import, Sans compte)", () => {
 
   test("dans l'App, le planning se lit : ni case à remplir, ni export, même pour qui le remplit", async ({ page }) => {
     await ouvrir(page, ECRIVAIN, "/planning/culte");
-    await expect(laCase(page, "2026-09-27", "presidence")).toHaveText("Jonathan Z.");
+    await expect(laCase(page, "2026-09-27", "presidence")).toHaveText("Président J.");
     await expect(laCase(page, "2026-09-27", "presidence").getByRole("button")).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Modifier", exact: true })).toHaveCount(0);
     await expect(page.getByRole("button", { name: /Exporter/ })).toHaveCount(0);
@@ -210,8 +210,8 @@ test.describe("B2 : Planning (plannings, Import, Sans compte)", () => {
     await ouvrir(page, ADMIN, "/planning/table");
     await expect(page.getByRole("region", { name: "Petit déj" })).toBeVisible();
     const table = page.getByRole("region", { name: "Prépa. Table du Seigneur" });
-    await expect(table).toContainText("Charlie, Isabelle");
-    await expect(table, "le prochain dimanche seulement").not.toContainText("Lydie");
+    await expect(table).toContainText("Membre A., Membre B.");
+    await expect(table, "le prochain dimanche seulement").not.toContainText("Membre C.");
     await expect(page.locator("[data-grille]")).toHaveCount(0);
     await expect(page.getByRole("button", { name: /Exporter/ })).toHaveCount(0);
   });
@@ -270,7 +270,7 @@ test("captures : Planning, Équipes, Messages au Back-Office ; la Table dans l'A
   await expect(page.getByRole("heading", { name: "Signalements" })).toBeVisible();
   await capture("messages");
   await page.goto("/planning/table");
-  await expect(page.getByRole("region", { name: "Prépa. Table du Seigneur" })).toContainText("Charlie, Isabelle");
+  await expect(page.getByRole("region", { name: "Prépa. Table du Seigneur" })).toContainText("Membre A., Membre B.");
   await capture("app-table");
 });
 

@@ -144,7 +144,8 @@ test.describe("Barre du bas (B6) : la barre", () => {
     await ouvrir(page, ADMIN, {}, "/back-office/equipes");
     await expect(barre(page).getByRole("link", { name: "Plus" })).toHaveAttribute("aria-current", "page");
     await barre(page).getByRole("link", { name: "Tâches" }).click();
-    await expect(page).toHaveURL(/\/back-office\/taches\/?$/);
+    // L'entrée Tâches mène au premier pôle de la personne (B3).
+    await expect(page).toHaveURL(/\/back-office\/taches\/da\/?$/);
     await expect(barre(page).getByRole("link", { name: "Tâches" })).toHaveAttribute("aria-current", "page");
     await expect(barre(page).getByRole("link", { name: "Plus" })).not.toHaveAttribute("aria-current", "page");
   });
@@ -337,7 +338,7 @@ test.describe("Barre du bas (B6) : captures à regarder", () => {
 
   // Comparées aux planches bo-telephone-accueil, bo-telephone-plus, bo-telephone-barre-perso, tablette-portrait-back-office.
   test("tableau de bord, « Plus », feuille", async ({ page }, info) => {
-    await ouvrir(page, { ...ADMIN, firstName: "Timothée" }, {
+    await ouvrir(page, ADMIN, {
       "reports/r1": { kind: "site", title: "Lien mort", status: "pending", createdAt: "2026-09-30T10:00:00Z" },
     });
     await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });

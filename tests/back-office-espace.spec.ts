@@ -303,7 +303,7 @@ test.describe("Back-Office (B1) : captures à regarder", () => {
   test("App puis Back-Office, d'un admin, dans chaque disposition", async ({ page }, info) => {
     await sansSheet(page);
     await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
-    await signInAs(page, { ...ADMIN, firstName: "Timothée" }, {}, "/songs");
+    await signInAs(page, ADMIN, {}, "/songs");
     await page.getByRole("searchbox").waitFor();
     await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
     await page.screenshot({ path: `test-results/back-office-captures/${info.project.name}-app.png` });
