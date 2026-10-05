@@ -30,6 +30,9 @@ export const SECTIONS_EN_DEUX_VOLETS: readonly string[] = [
   "/harmonie",
   // B2 : l'agenda des évènements (le programme de scène, sous `/evenements/scene`, n'a pas de liste).
   "/evenements",
+  // B4 : Mes services (`/mes-services/[date]`) et Mes tâches (`/taches/[pole]/[id]`).
+  "/mes-services",
+  "/taches",
 ];
 
 /** Clé du fondu de page (`PageTransition`) : la page entière se remonte à chaque adresse,

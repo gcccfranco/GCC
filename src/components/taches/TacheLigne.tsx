@@ -16,7 +16,7 @@ export function dateCourte(iso: string, lang: string): string {
 }
 
 /** « En cours depuis 3 jours », ou « En cours » faute de date de début. */
-function depuisQuand(t: TFunction, fois: Fois): string {
+export function depuisQuand(t: TFunction, fois: Fois): string {
   if (!fois.debutLe) return t("taches.enCoursSansDate");
   const jours = joursEntre(fois.debutLe, todayIso());
   return jours <= 0 ? t("taches.enCoursAujourdhui") : t("taches.enCoursDepuis", { count: jours });
@@ -25,7 +25,7 @@ function depuisQuand(t: TFunction, fois: Fois): string {
 /** Une fois de tâche : cercle à trois états (À faire → En cours → Terminé),
  *  titre, puis échéance · responsable · rythme · où ça en est. Toucher la
  *  ligne ouvre la tâche. */
-export function TacheLigne({ ligne, onToggle, onOpen, poleLabel, sansEvenement }: {
+export function TacheLigne({ ligne, onToggle, onOpen, poleLabel, sansEvenement, actif }: {
   ligne: Ligne;
   onToggle: () => void;
   onOpen?: () => void;
@@ -33,6 +33,8 @@ export function TacheLigne({ ligne, onToggle, onOpen, poleLabel, sansEvenement }
   poleLabel?: string;
   /** Sur la fiche de l'évènement lui-même : « pour Noël 2026 » n'apprend rien. */
   sansEvenement?: boolean;
+  /** La tâche ouverte à côté, en deux volets (lot U4 bis, B4) : la ligne s'allume en encre. */
+  actif?: boolean;
 }) {
   const { t, i18n } = useTranslation();
   const { tache, date, fois } = ligne;
@@ -52,7 +54,9 @@ export function TacheLigne({ ligne, onToggle, onOpen, poleLabel, sansEvenement }
   ].filter(Boolean).join(" · ");
 
   return (
-    <div className="group-row relative flex w-full min-h-[52px] items-center gap-1 pl-1.5 pr-3 py-1.5">
+    <div className={`group-row relative flex w-full min-h-[52px] items-center gap-1 pl-1.5 pr-3 py-1.5${actif
+      ? " rounded-xl bg-foreground text-background [&_*]:border-background [&_.text-foreground]:text-background [&_.text-muted-foreground]:text-background/70"
+      : ""}`}>
       <button
         type="button"
         role="checkbox"
@@ -69,7 +73,7 @@ export function TacheLigne({ ligne, onToggle, onOpen, poleLabel, sansEvenement }
           {enCours && <Minus className="h-3.5 w-3.5" strokeWidth={3} aria-hidden />}
         </span>
       </button>
-      <button type="button" onClick={onOpen} disabled={!onOpen} className="min-w-0 flex-1 text-left cursor-pointer disabled:cursor-default">
+      <button type="button" onClick={onOpen} disabled={!onOpen} aria-current={actif ? "page" : undefined} className="min-w-0 flex-1 text-left cursor-pointer disabled:cursor-default">
         <span className={`block text-base ${terminee ? "text-muted-foreground line-through" : "text-foreground"}`}>{tache.titre}</span>
         <span className="block text-sm text-muted-foreground">{details}</span>
       </button>

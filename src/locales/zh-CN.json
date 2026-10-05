@@ -617,7 +617,8 @@
     "inDays": "{{count}} 天后",
     "emptyUpcoming": "暂无即将到来的服事——好好休息 🙂",
     "emptyPast": "未找到过去的服事。",
-    "setlist": "歌单"
+    "setlist": "歌单",
+    "introuvable": "这一天没有你的服事。"
   },
   "guide": {
     "title": "使用指南",
@@ -1990,7 +1991,17 @@
     "polePrevenu": "已通知{{pole}}部门。",
     "personnePrevenue": "没有通知任何人：没有与账号关联的音控/投影。",
     "pourEvenement": "用于 {{titre}}",
-    "detacherEvenement": "取消关联活动"
+    "detacherEvenement": "取消关联活动",
+    "introuvable": "该任务已不存在。",
+    "fiche": {
+      "modifier": "编辑"
+    },
+    "etat": {
+      "titre": "状态",
+      "afaire": "待办",
+      "encours": "进行中",
+      "terminee": "已完成"
+    }
   },
   "accueil": {
     "nom": "欢迎使用 GCC",

@@ -7,7 +7,7 @@
 // d'après le planning, avec « Ouvrir » (la setlist en deux volets de U5) et « Mode louange ».
 // Toucher un chant ouvre la setlist aux partitions de ce chant (U5, Q9).
 
-import { Fragment, useMemo } from "react";
+import { useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "react-i18next";
@@ -19,27 +19,11 @@ import { categoryColor, categoryLabel } from "@/lib/serviceColors";
 import { serviceButtonFill } from "@/lib/serviceButton";
 import { formatDate } from "@/lib/utils/formatDate";
 import { parsePresentationUrl } from "@/lib/setlist/presentationLink";
-import { porteLeNom } from "@/lib/planning/accueil";
 import { equipeDuService } from "@/lib/setlist/equipeDuService";
 import { getJianpuPref } from "@/lib/jianpu/preference";
 import { ListView } from "@/app/setlists/[id]/_components/ListView";
 import { SetlistHistory } from "@/app/setlists/[id]/_components/SetlistHistory";
-
-/** Les noms d'une case, la personne connectée en évidence (pastille d'encre, comme l'accueil). */
-function Noms({ valeur, monNom }: { valeur: string; monNom: string }) {
-  return (
-    <>
-      {valeur.split(/\s*,\s*/).map((n, i) => (
-        <Fragment key={i}>
-          {i > 0 && ", "}
-          {porteLeNom(n, monNom)
-            ? <b data-testid="moi" className="rounded-md bg-foreground px-1.5 py-px font-semibold text-background">{n}</b>
-            : n}
-        </Fragment>
-      ))}
-    </>
-  );
-}
+import { CarteEquipe } from "@/components/setlists/CarteEquipe";
 
 export function ApercuSetlist({
   setlist,
@@ -120,20 +104,7 @@ export function ApercuSetlist({
           />
         </article>
 
-        {equipe.length > 0 && (
-          <section aria-labelledby={`equipe-${setlist.id}`} className="raised rounded-2xl px-5 pb-3 pt-4">
-            <h3 id={`equipe-${setlist.id}`} className="text-base font-bold">{t("setlists.apercu.equipe")}</h3>
-            <p className="text-xs text-muted-foreground">{t("setlists.apercu.dapres")}</p>
-            <dl className="mt-2">
-              {equipe.map(([cle, noms]) => (
-                <div key={cle} className="flex min-w-0 gap-3 border-t border-border/70 py-1.5 text-sm">
-                  <dt className="w-24 shrink-0 text-muted-foreground">{t(cle)}</dt>
-                  <dd className="min-w-0"><Noms valeur={noms} monNom={monNom} /></dd>
-                </div>
-              ))}
-            </dl>
-          </section>
-        )}
+        {equipe.length > 0 && <CarteEquipe equipe={equipe} monNom={monNom} />}
       </div>
     </section>
   );

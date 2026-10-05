@@ -617,7 +617,8 @@
     "inDays": "dans {{count}} j",
     "emptyUpcoming": "Aucun service à venir — profite du repos 🙂",
     "emptyPast": "Aucun service passé trouvé.",
-    "setlist": "Setlist"
+    "setlist": "Setlist",
+    "introuvable": "Aucun service à cette date."
   },
   "guide": {
     "title": "Guide d'utilisation",
@@ -1991,7 +1992,17 @@
     "polePrevenu": "Pôle {{pole}} prévenu.",
     "personnePrevenue": "Personne n'a été prévenu : aucune régie reliée à un compte.",
     "pourEvenement": "pour {{titre}}",
-    "detacherEvenement": "Détacher de l'évènement"
+    "detacherEvenement": "Détacher de l'évènement",
+    "introuvable": "Cette tâche n'existe plus.",
+    "fiche": {
+      "modifier": "Modifier"
+    },
+    "etat": {
+      "titre": "État",
+      "afaire": "À faire",
+      "encours": "En cours",
+      "terminee": "Terminée"
+    }
   },
   "accueil": {
     "nom": "Bienvenue dans GCC",

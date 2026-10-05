@@ -354,3 +354,59 @@ commité, aucun code) ; gardé, une attente corrigée (lire la fiche avant le to
 - Reste : B4 à B7.
 - À faire par Timothée : relire le 中文 « 歌单预览 », « 本歌单的调性 », « 本次服事团队 », « 根据排班表 » ; rien à publier (aucune
   règle).
+
+**B4 — Mes services et Mes tâches, faite le 05/10/2026** (branche `lot/u4bis-pages-en-grand`, commit `feat(U4bis): B4 —
+Mes services et Mes tâches…`). Reprise après l'arrêt du run de 23 h 30 : l'agent arrêté avait laissé le code et les deux
+fichiers de test, non commités et jamais lancés ; tout gardé (conforme à Q7 et Q8), vu rouge puis vert, deux erreurs
+ESLint corrigées, trois retouches après les captures (dates « Dim. 4 oct. », état sur une ligne, captures sans fondu).
+- **Mes services (Q7)** : la liste vit dans le layout (`app/mes-services/layout.tsx` →
+  `components/mesServices/SectionMesServices.tsx`, qui lit plannings, petits déj de U3, setlists et index des chants une
+  fois, et les donne par contexte) ; `page.tsx` rend `null` ; nouvelle adresse `/mes-services/[date]`, avec
+  `?service=` quand la personne sert deux fois ce jour-là (`lib/planning/mesServices.ts`, pur : `grouperServices` sorti de
+  l'ancienne page, `adresseDuService`, `serviceDeLAdresse`, `repetitionsDe`). En grand, `DeuxVolets` (400 px) : la liste
+  (`ListeMesServices`, ligne du service ouvert en encre) et à droite le service (`DetailService`) ou, sur `/mes-services`,
+  le premier de l'onglet (À venir : le prochain ; Passés : le dernier). Le service : vignette, service à sa couleur, date
+  longue (h1), « dans N jours », rôles ; la répétition (Campus) en carte ; la setlist liée (règle de l'accueil,
+  `setlistDuService`, seulement si `canSeeSetlist`), avec « Ouvrir » et « Mode Louange » ; « L'équipe de ce service »
+  par `equipeDuService` de B2 (même lecture que `servantsForDate`, rangée par rôle), la personne en pastille d'encre. En
+  grand la setlist et l'équipe côte à côte (requête de conteneur, `.service-colonnes`) ; un volet : « ‹ Mes services »,
+  l'équipe puis la setlist (boutons en tête). Tablette portrait : une carte par service, deux colonnes. Téléphone : les
+  lignes d'un mois dans une carte, avec chevron ; le lien « Setlist » de la ligne mène toujours à la setlist.
+  `components/setlists/CarteEquipe.tsx` : la carte de l'équipe, sortie de l'aperçu de B2 (`ApercuSetlist` l'utilise).
+- **Mes tâches (Q8)** : « À faire pour moi » vit dans le layout (`app/taches/layout.tsx` → `components/taches/SectionTaches.tsx`,
+  toujours derrière `BACK_OFFICE` et `RequireAuth`) ; `page.tsx` rend `null` ; nouvelle adresse `/taches/[pole]/[id]`
+  (`?date=` pour une fois d'une tâche répétée). `/mes-services` et `/taches` entrent dans `SECTIONS_EN_DEUX_VOLETS`.
+  Toucher une tâche ouvre sa **fiche à lire** (`components/taches/FicheTache.tsx`), plus le formulaire : pôle, titre, état
+  à trois positions (À faire · En cours · Terminée, `choisirEtat` dans `lib/firebase/taches.ts` : « À faire » supprime la
+  fois, les deux autres l'écrivent en gardant la date de début ; « Terminée » prévient comme le cercle), échéance,
+  responsable (« Tout le pôle »), répétition, évènement (lien vers sa fiche), « Quand c'est fait, prévenir », lien, note.
+  « Modifier » ouvre `TacheForm` (enregistrer, supprimer, nouveau responsable prévenu, comme le Back-Office). Le cercle de
+  la ligne garde son cycle. En grand, la liste à gauche (ligne ouverte en encre, `TacheLigne` prend `actif`), la fiche à
+  droite, sur `/taches` la première à faire ; un volet : la fiche en page avec « ‹ Tâches » (question 3). Tablette
+  portrait : « À faire pour moi » et « Les tâches des pôles » côte à côte. Une tâche d'un pôle dont on n'est pas : « Tu ne
+  fais pas partie de ce pôle. » ; une tâche effacée : « Cette tâche n'existe plus. ».
+- Libellés : `mesServices.introuvable`, `taches.introuvable`, `taches.fiche.modifier`, `taches.etat.*` (中文 à relire :
+  « 这一天没有你的服事。 », « 该任务已不存在。 », « 编辑 », « 状态 », « 待办 », « 进行中 », « 已完成 »).
+- Tests : `tests/pages-en-grand-mes-services.spec.ts` (11, dont 4 purs) et `tests/pages-en-grand-taches.spec.ts` (7),
+  vus rouges sans le code (25 échecs sur ordinateur, téléphone, tablette : adresses absentes, formulaire au toucher), puis
+  verts sur les cinq projets (63 passés, 27 sautés : tests propres à une disposition). Avec les specs voisines (fondations,
+  setlists, accueil, taches, taches-evenements, back-office-coupe, back-office-admin, look-*, nouveaux-membres,
+  planning-2027, planning-annee-sheet, planning-sainte-cene, planning-petit-dej, reunions, setlist-suppression-groupee) :
+  vertes sur leurs projets, après deux retouches. Adaptés au nouvel écran : en grand, le service ouvert à droite redit son
+  nom et ses rôles, donc `back-office-coupe`, `planning-2027` et `planning-sainte-cene` comptent les lignes (lien
+  « Groupe Paix, … ») ou prennent le premier texte ; `look-halo` attendait un h1 sur `/mes-services` sans aucun service :
+  le titre de la liste reste un h1 tant que rien n'est ouvert à droite (Mes services et Mes tâches). Captures regardées aux
+  cinq tailles et comparées aux planches `mes-services-*` et `mes-taches-*`.
+- Relevé, sans rapport avec B4 : trois tests de l'accueil dans `planning-2027.spec.ts` (« Ce dimanche du 17/01/2027…
+  Prochain service », « P5 · Ce dimanche montre la Percussion… », « Prochain service : le brouillon 2027… ») échouent sur
+  les trois appareils : ils cherchent le lien « Ton prochain service » et le libellé « Percussion » de l'ancien accueil,
+  que B1 a remplacés (« Pour moi », percussion dans la ligne des musiciens). À réécrire avec l'accueil A (B1, ou à
+  l'intégration).
+- Choix faute de réponse : sur `/mes-services`, à droite le premier service de l'onglet ouvert (« Passés » : le dernier
+  passé) ; l'adresse d'un service seul à sa date n'a que la date ; Mes tâches ne montre pas la liste des pôles de la
+  planche (Q8 et U6 B3 : « Les tâches des pôles · Back-Office » la remplace) ; les notifications de tâche mènent encore à
+  `/taches` (l'adresse de la fiche existe, les messages n'ont pas été changés : hors de la tranche) ; avec une seule des
+  deux cartes (pas de setlist liée), l'équipe garde la largeur d'une colonne.
+- Reste : B5 à B7 (suites parallèles `u4bis-b5`, `u4bis-b67`).
+- À faire par Timothée : relire le 中文 ci-dessus ; rien à publier (aucune règle : la fiche lit et écrit les mêmes
+  documents que la ligne).

@@ -363,9 +363,10 @@ test("Mes services (loadPlanningData) : le président de Paix posé avant l'Inte
     "planningReleases/paix_2027": { published: ["T1"] },
   });
   await expect(page.getByText("Janvier 2027")).toBeVisible();
-  await expect(page.getByText("Groupe Paix", { exact: true }), "le 24/01 seulement").toHaveCount(1);
+  // Une ligne par service (en grand, U4 bis B4, le service ouvert à droite redit son nom).
+  await expect(page.getByRole("link", { name: /^Groupe Paix,/ }), "le 24/01 seulement").toHaveCount(1);
   await expect(page.getByText(/17 janv/i)).toHaveCount(0);
-  await expect(page.getByText(/24 janv/i)).toBeVisible();
+  await expect(page.getByText(/24 janv/i).first()).toBeVisible();
 });
 
 test("Ce dimanche du 17/01/2027 montre l'Interfranco ; « Prochain service » saute le président fantôme", async ({ page }) => {
@@ -475,10 +476,11 @@ test("P5 · EDD 2026 : la colonne Cours du Sheet s'affiche", async ({ page }) =>
 
 test("P5 · « Mes services » liste la Percussion et le Cours", async ({ page }) => {
   await ouvrir(page, { uid: "uid-perc", email: "perc@example.com", planningName: "Membre P." }, "/mes-services");
-  await expect(page.getByText("Groupe Paix", { exact: true })).toBeVisible();
-  await expect(page.getByText("Percussion", { exact: true })).toBeVisible();
-  await expect(page.getByText("EDD 中班", { exact: true })).toBeVisible();
-  await expect(page.getByText("Cours", { exact: true })).toBeVisible();
+  // En grand (U4 bis, B4), le service ouvert à droite redit nom et rôles : la ligne d'abord.
+  await expect(page.getByRole("link", { name: /^Groupe Paix,/ })).toBeVisible();
+  await expect(page.getByText("Percussion", { exact: true }).first()).toBeVisible();
+  await expect(page.getByRole("link", { name: /^EDD 中班,/ })).toBeVisible();
+  await expect(page.getByText("Cours", { exact: true }).first()).toBeVisible();
   await capture(page, "p5-mes-services");
 });
 
@@ -835,7 +837,7 @@ test("Mes services : un service du brouillon 2027 n'apparaît qu'une fois son tr
 
   const publie = await browser.newPage();
   await ouvrir(publie, MEMBRE, "/mes-services", { ...SERVICE_2027, "planningReleases/paix_2027": { published: ["T1"] } });
-  await expect(publie.getByText(/24 janv/i)).toBeVisible();
+  await expect(publie.getByText(/24 janv/i).first()).toBeVisible();
   await publie.close();
 });
 

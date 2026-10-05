@@ -561,6 +561,13 @@
   .apercu-colonnes { grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); }
 }
 
+/* Un service de Mes services (lot U4 bis, B4, Q7) : la setlist et l'équipe côte à côte quand le
+   volet en a la place, l'une sous l'autre sinon. */
+.service-detail { container-type: inline-size; }
+@container (min-width: 560px) {
+  .service-colonnes { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); }
+}
+
 /* Fiche d'un évènement à droite de l'agenda (lot U4 bis, B2, Q5) : deux colonnes quand le volet
    en a la place, une sinon. */
 .fiche-grand { container-type: inline-size; }
