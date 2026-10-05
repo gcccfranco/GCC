@@ -121,7 +121,8 @@ test("onglets : un connecté voit le programme de scène à côté du calendrier
   await page.getByRole("link", { name: "Noël", exact: true }).click();
   await expect(page).toHaveURL(/\/evenements\/scene/);
   await expect(page.getByRole("heading", { name: "Noël" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Réserver un créneau" })).toBeVisible();
+  // Lot U1 (docs/spec-scene-saison.md) : on réserve un créneau de la grille.
+  await expect(page.getByRole("button", { name: "Réserver 14:00 – 15:00" }).first()).toBeVisible();
 });
 
 // ─── Tranche E2 : créer, modifier, dupliquer, supprimer, push à la création ──
