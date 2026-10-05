@@ -1025,7 +1025,9 @@
       "ajouter": "Ajouter une ligne",
       "astuce": "Tu peux écrire « Famille … » à la place de ton nom.",
       "vientDeSInscrire": "{{nom}} vient de s'inscrire.",
-      "illisible": "Inscriptions illisibles pour l'instant."
+      "illisible": "Inscriptions illisibles pour l'instant.",
+      "echec": "Enregistrement impossible, réessaie.",
+      "tonNom": "Ton nom"
     },
     "horaires": {
       "culte": "Dimanche 10:30",

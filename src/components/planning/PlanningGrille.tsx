@@ -276,7 +276,7 @@ export function PlanningGrille({
     // Une colonne en lecture seule (le petit déj, géré dans sa carte) reste du texte.
     const modifiable = mode === "edition" && !c.lectureSeule
     const service = imposee(l.row[0], c)
-    if (service && mode === "edition") {
+    if (service && modifiable) {
       // Tirée de la grille du service : rien à modifier ici (planche bo-planning-2027).
       return (
         <span

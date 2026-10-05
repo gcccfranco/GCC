@@ -20,7 +20,8 @@ import { MOIS } from "@/lib/planning/utils";
 import { serviceColor } from "@/lib/serviceColors";
 import { PushPrompt } from "@/components/push/PushPrompt";
 import { BACK_OFFICE } from "@/lib/backOffice";
-import { lirePetitDej, servicesDuCompte, servicesPetitDejDuCompte } from "@/lib/petitdej/lignes";
+import { lirePetitDej } from "@/lib/petitdej/lignes";
+import { servicesDuCompte, servicesPetitDejDuCompte } from "@/lib/petitdej/services";
 import type { LignePetitDej } from "@/types/petitDej";
 
 type Tab = "upcoming" | "past";

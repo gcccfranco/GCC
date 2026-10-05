@@ -17,7 +17,7 @@ export const COTE_LOGO = 300
 
 async function lignesDe(keys: string[]): Promise<Record<string, string[][]>> {
   const paires = await Promise.all(
-    // La Table passe par `fetchTable` : sa colonne Petit déj porte les inscriptions (lot U3, T9).
+    // Table : la case Petit déj porte les inscriptions, comme la page (lot U3, Q12).
     keys.map(async (k) => [k, k === "table" ? await fetchTable() : fusionnerLignes(await fetchGrille(k), await lireSheetDe(k))] as const),
   )
   return Object.fromEntries(paires)
