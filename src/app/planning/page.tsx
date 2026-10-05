@@ -13,7 +13,8 @@ import { fetchCulte, fetchDejeuner, fetchPetitDej, fetchPaix, fetchFidelite, fet
 import { StaleBanner } from "@/components/planning/StaleBanner"
 import type { EddDataStructure, CampusSeance } from "@/lib/planning/utils"
 import { useProfile } from "@/lib/firebase/users"
-import { findMyServices, type PlanningData } from "@/lib/planning/names"
+import { avecDimanchesSpeciaux, findMyServices, type PlanningData } from "@/lib/planning/names"
+import { BACK_OFFICE } from "@/lib/backOffice"
 import { PLANNING_COLORS, serviceColor } from "@/lib/serviceColors"
 import { ChevronRight } from "lucide-react"
 import { PageTitle } from "@/components/layout/PageTitle"
@@ -89,7 +90,10 @@ export default function PlanningAccueil() {
   // Prochain service de la personne connectée (d'après son nom de planning)
   const nextServices = useMemo(() => {
     if (!user || !profile?.planningName) return null
-    const data: PlanningData = { culte, dejeuner: dej, petitDej, paix, fidelite: fid, fideliteMusic: fidM, bonte, edd, campus, intergroupe, interfranco }
+    const lu: PlanningData = { culte, dejeuner: dej, petitDej, paix, fidelite: fid, fideliteMusic: fidM, bonte, edd, campus, intergroupe, interfranco }
+    // Lot U2 (Q5) : comme `loadPlanningData`, pas de président de groupe fantôme
+    // un dimanche d'Interfranco ou d'Intergroupe.
+    const data = BACK_OFFICE ? avecDimanchesSpeciaux(lu) : lu
     const today = new Date().toISOString().split("T")[0]
     const upcoming = findMyServices(data, profile.planningName).filter(e => e.date >= today)
     if (!upcoming.length) return null
@@ -223,6 +227,8 @@ export default function PlanningAccueil() {
             <GroupBlock badge={t("planning.groupes.paix")}>
               <InfoRow label={t("planning.roles.presidence")} value={val(paixRow?.[1] ?? "")} />
               <InfoRow label={t("planning.roles.musiciens")} value={val(paixRow?.[2] ?? "")} />
+              {/* Lot U2, P5 : la percussion, quand le dimanche en a une (comme la Sainte cène). */}
+              {paixRow?.[5] && <InfoRow label={t("planning.roles.percussion")} value={val(paixRow[5])} />}
               <InfoRow label={t("planning.roles.orateur")} value={val(paixRow?.[3] ?? "")} />
             </GroupBlock>
             <GroupBlock badge={t("planning.groupes.fidelite")}>
@@ -235,6 +241,7 @@ export default function PlanningAccueil() {
             <GroupBlock badge={t("planning.groupes.bonte")}>
               <InfoRow label={t("planning.roles.presidence")} value={val(bonteRow?.[1] ?? "")} />
               <InfoRow label={t("planning.roles.musiciens")} value={val(bonteRow?.[2] ?? "")} />
+              {bonteRow?.[5] && <InfoRow label={t("planning.roles.percussion")} value={val(bonteRow[5])} />}
               <InfoRow label={t("planning.roles.orateur")} value={val(bonteRow?.[3] ?? "")} />
             </GroupBlock>
           </SectionBlock>
@@ -249,6 +256,7 @@ export default function PlanningAccueil() {
                 <InfoRow label={t("planning.roles.piano")} value={val((row as string[]|null)?.[3] ?? "")} />
                 <InfoRow label={t("planning.roles.cajon")} value={val((row as string[]|null)?.[4] ?? "")} />
                 <InfoRow label={t("planning.roles.guitare")} value={val((row as string[]|null)?.[5] ?? "")} />
+                {(row as string[]|null)?.[6] && <InfoRow label={t("planning.roles.cours")} value={val((row as string[])[6])} />}
               </GroupBlock>
             ))}
           </SectionBlock>

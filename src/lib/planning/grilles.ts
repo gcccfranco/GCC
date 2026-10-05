@@ -15,7 +15,7 @@
 // `dimanches/{date}` ne porte qu'une ligne.
 
 import { PLANNING_COLORS } from "@/lib/serviceColors"
-import { TRI_ORDER, triVisibilities } from "./releases"
+import { TRI_ORDER, triRank, triVisibilities, triVisibilitiesAnnee } from "./releases"
 import { EDD_CLASSES, getAnnee, getTri } from "./utils"
 
 export type ColonneGrille = {
@@ -41,6 +41,45 @@ export type DefinitionGrille = {
   i18nHoraire?: string
   couleur: string
   colonnes: ColonneGrille[]
+  /** Lot U2 : « dimanches » = tous les dimanches de l'année posés d'office ;
+   *  « choisies » = seulement les dates ajoutées (Interfranco, Intergroupe, Campus). */
+  dates: "dimanches" | "choisies"
+}
+
+/** Première année remplie dans l'app (lot U2) : dès elle, les dimanches sont
+ *  calculés et une case écrite ne recopie rien du Sheet (pas de « semer »). */
+export const PREMIERE_ANNEE_APP = 2027
+
+const iso = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
+
+/** Les dimanches d'une année, AAAA-MM-JJ (52 ou 53). */
+export function dimanchesDe(annee: number): string[] {
+  const d = new Date(annee, 0, 1, 12)
+  d.setDate(d.getDate() + ((7 - d.getDay()) % 7))
+  const out: string[] = []
+  while (d.getFullYear() === annee) {
+    out.push(iso(d))
+    d.setDate(d.getDate() + 7)
+  }
+  return out
+}
+
+/**
+ * Les lignes d'une année : pour un planning hebdomadaire, tous ses dimanches,
+ * remplis ou vides (un document naît à la première case écrite) ; pour un
+ * planning à dates choisies, seulement les dates posées. Une ligne d'une autre
+ * date de l'année (hors dimanche) est gardée.
+ */
+export function lignesDeLAnnee(def: DefinitionGrille, annee: number, rows: string[][]): string[][] {
+  const deLAnnee = rows.filter((r) => getAnnee(r[0]) === annee)
+  // Avant 2027, le Sheet porte déjà ses dimanches : rien à calculer.
+  if (def.dates === "choisies" || annee < PREMIERE_ANNEE_APP) return deLAnnee
+  const largeur = Math.max(...def.colonnes.map((c) => c.index)) + 1
+  const vide = (date: string) => [date, ...Array<string>(largeur - 1).fill("")]
+  const parDate = new Map(deLAnnee.map((r) => [r[0], r]))
+  for (const date of dimanchesDe(annee)) if (!parDate.has(date)) parDate.set(date, vide(date))
+  return [...parDate.values()].sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0))
 }
 
 const col = (cle: string, i18n: string, index: number, optionnelle = false): ColonneGrille => ({
@@ -69,6 +108,7 @@ export const GRILLE_CULTE: DefinitionGrille = {
   i18nHoraire: "planning.horaires.culte",
   couleur: PLANNING_COLORS.culte,
   colonnes: COLONNES_CULTE,
+  dates: "dimanches",
 }
 
 // Intergroupe (3 choristes) et Interfranco (2) : même structure que le Culte
@@ -78,6 +118,7 @@ export const GRILLE_INTERGROUPE: DefinitionGrille = {
   label: "Intergroupe",
   i18nTitre: "planning.pages.intergroupe",
   couleur: PLANNING_COLORS.intergroupe,
+  dates: "choisies",
   colonnes: [
     col("presidence", "presidence", 1), col("choriste1", "choriste1", 2), col("choriste2", "choriste2", 3),
     col("choriste3", "choriste3", 4), col("piano", "piano", 5), col("guitare", "guitare", 6),
@@ -91,6 +132,7 @@ export const GRILLE_INTERFRANCO: DefinitionGrille = {
   label: "Interfranco",
   i18nTitre: "planning.pages.interfranco",
   couleur: PLANNING_COLORS.interfranco,
+  dates: "choisies",
   colonnes: [
     col("presidence", "presidence", 1), col("choriste1", "choriste1", 2), col("choriste2", "choriste2", 3),
     col("piano", "piano", 4), col("guitare", "guitare", 5), col("cajonBatterie", "cajonBatt", 6),
@@ -98,13 +140,20 @@ export const GRILLE_INTERFRANCO: DefinitionGrille = {
   ],
 }
 
-// Groupes (quatre onglets par trimestre dans le Sheet, quatre colonnes).
+// Groupes (quatre onglets par trimestre dans le Sheet, quatre colonnes, plus
+// PERCUSSION — lot U2, P5 — que le Sheet de 2026 n'a qu'à quelques trimestres
+// (Paix T4, Bonté T3 et T4) : masquée en lecture tant qu'aucune case de la
+// période ne la porte, comme la Sainte cène. MÉNAGES (Bonté, jamais rempli) est écarté.
 export const GRILLE_PAIX: DefinitionGrille = {
   key: "paix",
   label: "Groupe Paix",
   i18nTitre: "planning.groupes.paix",
   couleur: PLANNING_COLORS.paix,
-  colonnes: [col("presidence", "presidence", 1), col("musiciens", "musiciens", 2), col("orateur", "orateur", 3), col("theme", "theme", 4)],
+  colonnes: [
+    col("presidence", "presidence", 1), col("musiciens", "musiciens", 2), col("orateur", "orateur", 3), col("theme", "theme", 4),
+    col("percussion", "percussion", 5, true),
+  ],
+  dates: "dimanches",
 }
 
 export const GRILLE_BONTE: DefinitionGrille = {
@@ -112,7 +161,11 @@ export const GRILLE_BONTE: DefinitionGrille = {
   label: "Groupe Bonté",
   i18nTitre: "planning.groupes.bonte",
   couleur: PLANNING_COLORS.bonte,
-  colonnes: [col("presidence", "presidence", 1), col("musiciens", "musiciens", 2), col("orateur", "orateur", 3), col("theme", "theme", 4)],
+  colonnes: [
+    col("presidence", "presidence", 1), col("musiciens", "musiciens", 2), col("orateur", "orateur", 3), col("theme", "theme", 4),
+    col("percussion", "percussion", 5, true),
+  ],
+  dates: "dimanches",
 }
 
 export const GRILLE_FIDELITE: DefinitionGrille = {
@@ -121,6 +174,7 @@ export const GRILLE_FIDELITE: DefinitionGrille = {
   i18nTitre: "planning.groupes.fidelite",
   couleur: PLANNING_COLORS.fidelite,
   colonnes: [col("presidence", "presidence", 1), col("orateur", "orateur", 2), col("theme", "theme", 3), col("pianiste", "pianiste", 4)],
+  dates: "dimanches",
 }
 
 export const GRILLE_FIDELITE_MUSICIENS: DefinitionGrille = {
@@ -130,6 +184,7 @@ export const GRILLE_FIDELITE_MUSICIENS: DefinitionGrille = {
   i18nSousTitre: "planning.groupes.planningMusiciens",
   couleur: PLANNING_COLORS.fidelite,
   colonnes: [col("presidence", "presidence", 1), col("piano", "piano", 2), col("guitare", "guitare", 3), col("batterie", "batterie", 4)],
+  dates: "dimanches",
 }
 
 // Prépa. Table du Seigneur + petit déjeuner : deux cases par dimanche.
@@ -139,9 +194,10 @@ export const GRILLE_TABLE: DefinitionGrille = {
   i18nTitre: "planning.pages.table",
   couleur: PLANNING_COLORS.table,
   colonnes: [col("equipe", "equipe", 1), col("petitDej", "petitDej", 2)],
+  dates: "dimanches",
 }
 
-// EDD : une grille par classe, cinq colonnes (cf. `fetchEDD`).
+// EDD : une grille par classe, six colonnes (cf. `fetchEDD`) ; COURS ajouté au lot U2 (P5).
 export const CLES_EDD: Record<(typeof EDD_CLASSES)[number], string> = { "中班": "eddZhongban", "大班": "eddDaban", "高班": "eddGaoban" }
 
 export const GRILLES_EDD: DefinitionGrille[] = EDD_CLASSES.map((classe) => ({
@@ -150,7 +206,11 @@ export const GRILLES_EDD: DefinitionGrille[] = EDD_CLASSES.map((classe) => ({
   i18nTitre: "planning.pages.edd",
   sousTitre: classe,
   couleur: PLANNING_COLORS.edd,
-  colonnes: [col("presidence", "presidence", 1), col("suppleant", "suppleant", 2), col("piano", "piano", 3), col("cajon", "cajon", 4), col("guitare", "guitare", 5)],
+  dates: "dimanches",
+  colonnes: [
+    col("presidence", "presidence", 1), col("suppleant", "suppleant", 2), col("piano", "piano", 3), col("cajon", "cajon", 4),
+    col("guitare", "guitare", 5), col("cours", "cours", 6),
+  ],
 }))
 
 // Campus : une grille par moment (matin, soir), la répétition en texte libre
@@ -170,6 +230,7 @@ export const GRILLE_CAMPUS_MATIN: DefinitionGrille = {
   i18nSousTitre: "planning.campus.morning",
   couleur: PLANNING_COLORS.campus,
   colonnes: COLONNES_CAMPUS,
+  dates: "choisies",
 }
 
 export const GRILLE_CAMPUS_SOIR: DefinitionGrille = {
@@ -179,6 +240,25 @@ export const GRILLE_CAMPUS_SOIR: DefinitionGrille = {
   i18nSousTitre: "planning.campus.evening",
   couleur: PLANNING_COLORS.campus,
   colonnes: COLONNES_CAMPUS,
+  dates: "choisies",
+}
+
+/**
+ * Les années du sélecteur : l'année en cours, la précédente (archive, jamais
+ * avant 2026, l'année du Sheet) et la suivante si on la voit (responsables du
+ * planning, ou premier trimestre publié / première case remplie).
+ */
+export function anneesDuPlanning(anneeCourante: number, suivanteVisible: boolean): number[] {
+  const out: number[] = []
+  for (let a = Math.max(PREMIERE_ANNEE_APP - 1, anneeCourante - 1); a <= anneeCourante; a++) out.push(a)
+  if (suivanteVisible) out.push(anneeCourante + 1)
+  return out
+}
+
+/** Une case remplie cette année-là ? (plannings sans publication : un membre
+ *  voit l'année suivante dès sa première case, comme dans le Sheet — Q4). */
+export function anneeRemplie(rows: string[][], annee: number): boolean {
+  return rows.some((r) => getAnnee(r[0]) === annee && r.slice(1).some((c) => (c ?? "").trim()))
 }
 
 /** Toutes les grilles, dans l'ordre des onglets du planning. */
@@ -191,6 +271,31 @@ export function grilleDe(key: string): DefinitionGrille | undefined {
   return GRILLES.find((g) => g.key === key)
 }
 
+/**
+ * Lot U2 (Q5) : les dimanches d'Interfranco et d'Intergroupe, date → nom du
+ * service. Une seule source, leur grille : déplacer la date dans sa grille
+ * déplace la marque. Les deux ne prennent jamais le même dimanche ; si cela
+ * arrivait, Interfranco l'emporte, comme dans « Ce dimanche ».
+ */
+export function dimanchesSpeciaux(interfranco: string[][], intergroupe: string[][]): Record<string, string> {
+  const out: Record<string, string> = {}
+  for (const r of intergroupe) out[r[0]] = "Intergroupe"
+  for (const r of interfranco) out[r[0]] = "Interfranco"
+  return out
+}
+
+/**
+ * La présidence d'un groupe (Paix, Bonté, Fidélité et ses musiciens, toutes en
+ * colonne 1) un dimanche d'Interfranco ou d'Intergroupe : le nom du service,
+ * tiré de sa grille, jamais recopié dans celle du groupe. Orateur, thème et
+ * musiciens restent ceux du groupe, comme dans le Sheet de 2026. Ces deux mots
+ * ne sont jamais pris pour des noms (`NON_NAMES`) : plus de président fantôme.
+ */
+export function marquerDimanchesSpeciaux(groupe: string[][], interfranco: string[][], intergroupe: string[][]): string[][] {
+  const speciaux = dimanchesSpeciaux(interfranco, intergroupe)
+  return groupe.map((r) => (speciaux[r[0]] ? [r[0], speciaux[r[0]], ...r.slice(2)] : r))
+}
+
 /** Une ligne affichée : la ligne au format du lecteur du Sheet, et son état de publication. */
 export type LigneGrille = { row: string[]; nonPublie: boolean }
 
@@ -201,21 +306,28 @@ export type LigneGrille = { row: string[]; nonPublie: boolean }
  * publieurs avec la marque « Non publié ». Sans cela, supprimer les pilules de
  * trimestre publierait le trimestre suivant à toute l'église.
  *
- * `published` ne couvre que `anneeCourante` (planningReleases/{key}_{year}) :
- * une année ultérieure n'a donc rien de publié, et reste masquée aux membres.
+ * `published` ne couvre que `anneeCourante` (planningReleases/{key}_{year}) ;
+ * une année ultérieure se lit dans `publiesParAnnee` (lot U2) : sans trimestre
+ * publié, elle reste masquée aux membres.
  */
 export function lignesPubliees(
   rows: string[][],
   published: string[],
   currentTri: string,
   anneeCourante: number,
-  canPublish: boolean
+  canPublish: boolean,
+  /** Lot U2 : trimestres publiés d'une année ultérieure (planningReleases/{key}_{année}).
+   *  `canPublish` vaut alors « voit le brouillon » : qui remplit ou publie, et les admins. */
+  publiesParAnnee: Record<number, string[]> = {}
 ): LigneGrille[] {
   const vis = new Map(triVisibilities(TRI_ORDER, published, currentTri, canPublish).map((v) => [v.tri, v]))
   return rows.flatMap((row) => {
     const annee = getAnnee(row[0])
     if (annee < anneeCourante) return [{ row, nonPublie: false }]
-    if (annee > anneeCourante) return canPublish ? [{ row, nonPublie: true }] : []
+    if (annee > anneeCourante) {
+      if ((publiesParAnnee[annee] ?? []).includes(getTri(row[0]))) return [{ row, nonPublie: false }]
+      return canPublish ? [{ row, nonPublie: true }] : []
+    }
     const v = vis.get(getTri(row[0]))
     if (!v) return [{ row, nonPublie: false }]
     return v.visible ? [{ row, nonPublie: v.unpublished }] : []
@@ -238,4 +350,37 @@ export function fusionnerLignes(app: string[][], sheet: string[][]): string[][] 
   const parDate = new Map(sheet.map((r) => [r[0], r]))
   for (const r of app) parDate.set(r[0], r)
   return [...parDate.values()].sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0))
+}
+
+/**
+ * Lot U2 : ce qu'une page publiée par trimestre (Culte, groupes) affiche pour
+ * l'année et le trimestre choisis — années du sélecteur, pilules (cadenas sur
+ * un trimestre non publié), lignes du trimestre, et si le trimestre est à
+ * venir (« Publier » / « Masquer ») ou encore un brouillon (bandeau).
+ */
+export function vueTrimestrielle(p: {
+  definition: DefinitionGrille
+  rows: string[][]
+  anneeCourante: number
+  triCourant: string
+  annee: number
+  tri: string
+  /** Trimestres publiés d'une année (l'année en cours et la suivante au moins). */
+  publies: (annee: number) => string[]
+  /** Qui remplit ou publie ce planning, et les admins (Q4). */
+  voitBrouillon: boolean
+}) {
+  const annees = anneesDuPlanning(p.anneeCourante, p.voitBrouillon || p.publies(p.anneeCourante + 1).length > 0)
+  const annee = annees.includes(p.annee) ? p.annee : p.anneeCourante
+  const vis = triVisibilitiesAnnee(annee, p.anneeCourante, p.publies(annee), p.triCourant, p.voitBrouillon)
+  const visibles = vis.filter((v) => v.visible).map((v) => v.tri)
+  const nonPublies = vis.filter((v) => v.unpublished).map((v) => v.tri)
+  const tri = visibles.includes(p.tri) ? p.tri : annee === p.anneeCourante ? p.triCourant : (visibles[0] ?? "")
+  const lignes = lignesPubliees(
+    lignesDeLAnnee(p.definition, annee, p.rows), p.publies(p.anneeCourante), p.triCourant, p.anneeCourante,
+    p.voitBrouillon, { [annee]: p.publies(annee) },
+  ).filter((l) => getTri(l.row[0]) === tri)
+  const aVenir = annee > p.anneeCourante || (annee === p.anneeCourante && triRank(tri) > triRank(p.triCourant))
+  const brouillon = annee > p.anneeCourante && p.voitBrouillon && nonPublies.length > 0
+  return { annees, annee, visibles, nonPublies, tri, lignes, aVenir, brouillon }
 }

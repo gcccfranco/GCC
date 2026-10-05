@@ -982,7 +982,10 @@
       "chant2": "Chant 2",
       "chant3": "Chant 3",
       "chant4": "Chant 4",
-      "repetition": "Répétition"
+      "repetition": "Répétition",
+      "percussion": "Percussion",
+      "menages": "Ménages",
+      "cours": "Cours"
     },
     "table": {
       "myName": "Mon prénom…",
@@ -1000,6 +1003,7 @@
       "aVenir": "Planning à venir",
       "periode": "{{du}} à {{au}}",
       "nonPublie": "Non publié",
+      "dimancheSpecial": "Dimanche {{service}} : la présidence se règle dans le planning {{service}}.",
       "pasDispo": "Pas disponible un dimanche ? Préviens la personne qui tient le planning.",
       "droitRetire": "Enregistrement refusé par le serveur : tu n’as plus le droit de modifier ce planning, ou les règles n’ont pas été publiées.",
       "horsLigne": "Modification impossible : pas de réseau.",
@@ -1014,7 +1018,9 @@
       "periodeAnnee": "Année {{annee}}"
     },
     "horaires": {
-      "culte": "Dimanche 10:30"
+      "culte": "Dimanche 10:30",
+      "groupes": "Dimanche de 13:00 à 14:30",
+      "fidelite": "Dimanche de 13:00 à 14:00"
     },
     "pages": {
       "culte": "Culte Franco",
@@ -1132,6 +1138,44 @@
       "autoChosen": "Choisi automatiquement : réservations ouvertes depuis le {{date}}.",
       "viewOrdre": "Voir l'ordre de passage",
       "hideOrdre": "Masquer l'ordre de passage"
+    },
+    "annee": {
+      "label": "Année",
+      "brouillon": "{{annee}} · brouillon. Visible des responsables du planning seulement, jusqu'à la publication de chaque trimestre.",
+      "poses": "Colonnes et horaire repris de {{avant}} ; les {{n}} dimanches de {{annee}} sont déjà posés.",
+      "aucun": "Aucun dimanche posé pour {{annee}}.",
+      "ajouter": "Ajouter un dimanche",
+      "ajouterSeance": "Ajouter une séance",
+      "retirer": "Retirer ce dimanche",
+      "retirerSeance": "Retirer cette séance",
+      "confirmerRetrait": "Retirer le {{date}} ? Ses cases s'effacent.",
+      "choisirDate": "Dimanche à ajouter",
+      "dateSeance": "Date de la séance",
+      "moment": "Moment",
+      "special": "Ce dimanche est celui de {{service}} : la présidence vient de son planning."
+    },
+    "publier": "Publier le {{tri}}",
+    "masquer": "Masquer le {{tri}}",
+    "publierConfirm": "Publier le {{tri}} {{annee}} de {{planning}} ? Tous ses membres le verront et recevront une notification.",
+    "publierEchec": "La publication a échoué. Réessaie.",
+    "export": {
+      "bouton": "Exporter (modèle du Sheet)",
+      "titre": "Exporter",
+      "affiche": "{{periode}} · {{planning}}",
+      "annee": "Toute l'année · {{planning}}",
+      "tout": "Tous les plannings {{annee}}",
+      "pdf": "PDF",
+      "xlsx": ".xlsx",
+      "enCours": "Préparation du fichier…",
+      "echec": "L'export a échoué. Réessaie."
+    },
+    "choisir": {
+      "bouton": "Choisir",
+      "chercher": "Chercher un nom",
+      "sansCompte": "Écrire un nom sans compte…",
+      "avecRole": "Avec ce rôle",
+      "autres": "Autres noms",
+      "vider": "Vider la case"
     }
   },
   "survey": {

@@ -982,7 +982,10 @@
       "chant2": "诗歌 2",
       "chant3": "诗歌 3",
       "chant4": "诗歌 4",
-      "repetition": "排练"
+      "repetition": "排练",
+      "percussion": "打击乐",
+      "menages": "清洁",
+      "cours": "授课"
     },
     "table": {
       "myName": "我的名字…",
@@ -1000,6 +1003,7 @@
       "aVenir": "服事表待定",
       "periode": "{{du}}至{{au}}",
       "nonPublie": "尚未发布",
+      "dimancheSpecial": "{{service}}主日：司会在{{service}}服事表中安排。",
       "pasDispo": "某个主日无法服事？请联系负责排表的同工。",
       "droitRetire": "服务器拒绝保存：你已没有修改此服事表的权限，或规则尚未发布。",
       "horsLigne": "无法修改：网络不可用。",
@@ -1014,7 +1018,9 @@
       "periodeAnnee": "{{annee}} 年"
     },
     "horaires": {
-      "culte": "主日 10:30"
+      "culte": "主日 10:30",
+      "groupes": "主日 13:00–14:30",
+      "fidelite": "主日 13:00–14:00"
     },
     "pages": {
       "culte": "法语崇拜",
@@ -1132,6 +1138,44 @@
       "autoChosen": "自动选择：自 {{date}} 起开放预约。",
       "viewOrdre": "查看出场顺序",
       "hideOrdre": "隐藏出场顺序"
+    },
+    "annee": {
+      "label": "年份",
+      "brouillon": "{{annee}} · 草稿。各季度发布前，仅服事表负责人可见。",
+      "poses": "沿用 {{avant}} 年的栏目和时间；{{annee}} 年的 {{n}} 个主日已列出。",
+      "aucun": "{{annee}} 年尚未添加主日。",
+      "ajouter": "添加主日",
+      "ajouterSeance": "添加聚会",
+      "retirer": "移除此主日",
+      "retirerSeance": "移除此聚会",
+      "confirmerRetrait": "移除 {{date}}？该日所填内容将被清除。",
+      "choisirDate": "要添加的主日",
+      "dateSeance": "聚会日期",
+      "moment": "时段",
+      "special": "这个主日是{{service}}：司会取自其服事表。"
+    },
+    "publier": "发布 {{tri}}",
+    "masquer": "隐藏 {{tri}}",
+    "publierConfirm": "发布{{planning}} {{annee}} 年 {{tri}}？所有成员都将看到并收到通知。",
+    "publierEchec": "发布失败，请重试。",
+    "export": {
+      "bouton": "导出（表格样式）",
+      "titre": "导出",
+      "affiche": "{{periode}} · {{planning}}",
+      "annee": "全年 · {{planning}}",
+      "tout": "{{annee}} 年全部服事表",
+      "pdf": "PDF",
+      "xlsx": ".xlsx",
+      "enCours": "正在生成文件…",
+      "echec": "导出失败，请重试。"
+    },
+    "choisir": {
+      "bouton": "选择",
+      "chercher": "搜索姓名",
+      "sansCompte": "输入没有账号的名字…",
+      "avecRole": "担任此职",
+      "autres": "其他姓名",
+      "vider": "清空"
     }
   },
   "survey": {
