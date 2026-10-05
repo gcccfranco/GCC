@@ -324,4 +324,128 @@ npm run lint
 
 ## Avancement
 
-Rien n'est codé : la spec attend la validation de Timothée, puis son go.
+Go de Timothée le 04/10/2026, redit le 05/10/2026 ; questions ouvertes = recommandations.
+
+**05/10/2026 — PD1 (modèle, droits, lecture) : codée**, commit « feat(U3): PD1 » sur `lot/u3-petit-dej` (partie
+de `lot/u2-planning-2027`, commits locaux, rien de poussé).
+
+- `src/types/petitDej.ts` (`LignePetitDej`) ; `src/lib/petitdej/lignes.ts` : `lirePetitDej` (REST public, `runQuery`
+  trié par `dimanche`, cache de cinq minutes, une lecture en échec est une erreur), `oublierPetitDej`, et les pures
+  `rangeesPetitDej`, `estLibre`, `servicesPetitDejDuCompte`, `planifierReprise` ; `src/lib/firebase/petitDej.ts`
+  (REST avec jeton : `inscrire` qui relit le dimanche avant d'écrire, `ajouterLigne`, `renommerLigne`, `retirerLigne`,
+  chacune oublie le cache).
+- Règle `petitDej/{id}` dans `firestore.rules` (celle de la spec, mot pour mot) ; miroir `canGererPetitDej` et
+  `canEditPetitDej` dans `src/lib/access.ts`.
+- `src/lib/planning/sheets.ts` : ouvert, `fetchPetitDej` = les rangées des inscriptions (vide si la lecture échoue)
+  et `fetchTable` met les inscriptions en colonne 2, même un dimanche que le Sheet ignore ; coupé, rien ne change
+  (aucune lecture de `petitDej`).
+- Tests : `tests/planning-petit-dej.spec.ts` (pures, droits, règle relue dans `firestore.rules`, lecture REST, Ce
+  dimanche, Mes services, 中文), `tests/planning-table.spec.ts` (case Petit déj et export CSV lus dans les lignes),
+  `tests/back-office-coupe.spec.ts` (les 4 écrans du lot 1b, Sheet compris, et aucune lecture des inscriptions).
+  Contre-épreuve : les 8 tests d'écran rouges avec l'ancien `sheets.ts` ; verts sur ordinateur, téléphone et
+  tablette (145 tests des trois fichiers), `tsc` et `lint` propres.
+
+**05/10/2026 — PD2 (onglet Table) : codée**, commit « feat(U3): PD2 » sur `lot/u3-petit-dej` (commits locaux, rien
+de poussé).
+
+- `src/components/planning/PetitDejCarte.tsx`, sous les boutons T1–T4 de `src/app/planning/table/page.tsx` : tasse
+  sur fond teinté, « Trimestre n », une rangée par dimanche du trimestre et de l'année choisis (`dimanchesDe` +
+  `getTri`, mêmes dimanches que `sundaysBetween`), date courte (« 27 sept. », « 1er nov. », « 9月27日 »). « Libre » et
+  « Je m'inscris » (relit le dimanche avant d'écrire ; si quelqu'un vient de s'inscrire, « X vient de s'inscrire. »
+  et rien n'est écrit) ; ✎ sur place (Entrée ou sortie du champ enregistre, Échap annule, vide refusé, 80 caractères)
+  et « Retirer » (« Retirer cette ligne ? ») selon `canEditPetitDej` ; « ＋ Ajouter une ligne » pour
+  `canGererPetitDej`, noms des comptes suggérés ; dimanche passé : date grise, texte ou « — », aucun bouton ; lecture
+  en échec : « Inscriptions illisibles pour l'instant. », ni « Libre » ni bouton ; refus d'écriture : `droitRetire`
+  ou `horsLigne` sous le dimanche. Carte en `max-w-lg` à partir de 1024 px, pleine largeur en dessous.
+- Après chaque lecture de la carte, la page recalcule la colonne Petit déj de la grille (`avecPetitDej`, sorti de
+  `fetchTable` dans `src/lib/petitdej/lignes.ts`) : la case suit sans rechargement.
+- `lectureSeule` sur `ColonneGrille`, posé sur la colonne `petitDej` de `GRILLE_TABLE` : texte même en « Modifier »
+  (`laCase`, cartes du téléphone), jamais semée (`ecrireCase`), ni importée (`documentDimanche`), ni comptée
+  (`nomsNonRattaches`).
+- `FONDS_FONCES` : `#c87941` → `#a66436` (4,67:1 avec le blanc, vérifié par le test) ; `serviceColors.ts` intact.
+- Libellés `planning.petitDej.*` en FR et 中文 (tableau ci-dessus, à relire en 中文).
+- Tests : `tests/planning-petit-dej.spec.ts` (colonne en lecture seule, contraste, et huit tests de la carte :
+  s'inscrire, réécrire, retirer, autre / passé / membre sans ＋ / Sheet muet, ligne arrivée entre-temps, écrivain,
+  lecture en échec, 中文), `tests/planning-table.spec.ts` (case Petit déj ni bouton ni semée ; les « Modifier » de la
+  grille visés dans la grille, la carte ayant ses ✎), `tests/back-office-coupe.spec.ts` (coupé, pas de carte ni de
+  lecture des inscriptions). Vus rouges (12) avant le code, verts ensuite sur ordinateur, téléphone et tablette ;
+  `planning-2027`, `planning-import`, `planning-groupes-grille` verts ; captures regardées aux trois tailles.
+
+**05/10/2026 — PD3 (Ce dimanche, Mes services, rappels) : codée**, commit « feat(U3): PD3 » sur `lot/u3-petit-dej`
+(commits locaux, rien de poussé).
+
+- `src/lib/petitdej/lignes.ts` : `servicesDuCompte` (services par le nom de planning, `findMyServices`, plus les petits
+  déj par `uid`, `servicesPetitDejDuCompte`, sans doublon, triés) et `ajouterPetitDejAuxRappels` (pur : « Petit déj »
+  ajouté aux services de chaque inscrit du jour, une fois ; une ligne à `uid` vide ne passe que par son texte).
+- « Ton prochain service » (`src/app/planning/page.tsx`) : compte les lignes de l'inscrit, même réécrites et sans nom
+  de planning. « Ce dimanche » inchangé (ligne Petit déj seulement s'il y a une ligne, depuis PD1).
+- « Mes services » (`src/app/mes-services/page.tsx`) : la liste compte les lignes de l'inscrit ; un compte sans nom de
+  planning qui a des lignes voit la page, sous-titre « Les dates où Prénom Nom apparaît dans les plannings. », au lieu
+  de « choisis ton nom » (attente de la lecture, pas d'éclair) ; sans ligne, « choisis ton nom » comme avant.
+- Rappel du matin (`src/app/api/cron/reminders/route.ts`) : aux dates J-7, J-3, J-1, `ajouterPetitDejAuxRappels` après
+  les noms, avant les créneaux de scène (même patron) ; lecture en échec : rien de plus. Préférence « Rappels »,
+  `notifLog` et une notification par personne inchangés. Relu, pas exécuté (comme le reste du cron).
+- Coupé : aucune lecture des inscriptions sur ces pages ni dans le cron ; tout reste comme avant (Sheet).
+- Tests : `tests/planning-petit-dej.spec.ts` (rappels : par le compte, sans doublon, `uid` vide ignoré, liste
+  partagée intacte, `reminderBody` « Dimanche 20 septembre (demain) : Petit déj » et 早餐 ; prochain service par le
+  compte, une seule fois, sans nom de planning, rien sans ligne à soi ; Mes services : « Famille Martin » plus la ligne
+  à son nom = deux services, compte sans nom avec et sans ligne, 中文), `tests/back-office-coupe.spec.ts` (coupé : un
+  compte sans nom de planning inscrit en base garde « choisis ton nom », pas de prochain service, aucune lecture).
+  Vus rouges (18 sur 27) avant le code, verts ensuite sur ordinateur, téléphone et tablette ; captures regardées aux
+  trois tailles ; `tsc` et `lint` propres.
+
+**05/10/2026 — PD4 (le mercredi) : codée**, commit « feat(U3): PD4 » sur `lot/u3-petit-dej` (commits locaux, rien de
+poussé).
+
+- `"petitDej"` dans `NOTIF_TYPES`, `DEFAULT_NOTIF_PREFS` (`true`) et `NOTIF_TYPE_LABELS` (« Petit déj »),
+  `src/types/user.ts`. Mon profil › Notifications : la bascule « Petit déj », active par défaut, masquée interrupteur
+  coupé (`PushToggle.tsx`, Q14). Question 7 (recommandation : oui) : la liste « Recevoir » est traduite, six clés
+  `push.recevoir` et `push.types.*` (接收, 服侍提醒, 歌单已准备好, 活动, 任务, 早餐).
+- `src/lib/petitdej/rappel.ts` (pur) : `estMercredi`, `prochainDimanche` (le dimanche qui vient, J+4 un mercredi),
+  `lignesMercredi` (les deux lignes de Q5 en FR et 中文 ; rien un autre jour, rien si le dimanche a une ligne, rien si
+  la lecture a échoué), `petitDejTitre` (« Petit déj » / « 早餐 »).
+- Rappel du matin (`src/app/api/cron/reminders/route.ts`) : le mercredi d'un dimanche libre, tous les comptes
+  (`users`), filtrés par la préférence « Petit déj » et par l'anti-doublon `notifLog` `petit-dej-libre-<dimanche>` ;
+  les deux lignes s'ajoutent à la première notification de la personne ce jour-là (service, sinon tâches seules,
+  sinon ouvertures seules), sinon une notification seule par langue, `url: "/planning/table"`, une entrée de cloche
+  par langue. Lecture des inscriptions en échec : pas de ligne du mercredi. `markNotified` écrit par lots de 500 (la
+  limite d'un lot Firestore, atteinte en marquant tous les comptes). Coupé : rien. Relu, pas exécuté (comme le reste
+  du cron).
+- Tests : `tests/planning-petit-dej.spec.ts` (mercredi, J+4, lignes FR et 中文 fondues à la suite d'un rappel, rien si
+  pris / lecture en échec / un autre jour, type de notification par défaut ; Mon profil : bascule active par défaut,
+  l'éteindre écrit `notifPrefs/{uid}.petitDej = false`, les autres restent ; liste traduite en 中文, préférence éteinte
+  relue), `tests/back-office-coupe.spec.ts` (coupé : pas de bascule « Petit déj »), `tests/coherence.spec.ts` (la
+  liste des types compte `petitDej`). `tests/helpers/fakeSession.ts` : `abonneAuxNotifications` (abonnement push
+  simulé, sans service worker). Vus rouges (21) avant le code, verts ensuite sur ordinateur, téléphone et tablette ;
+  captures regardées aux trois tailles ; `tsc` et `lint` propres.
+
+**05/10/2026 — PD5 (la reprise) : codée**, commit « feat(U3): PD5 » sur `lot/u3-petit-dej` (commits locaux, rien de
+poussé). **Le lot U3 est entièrement codé.**
+
+- `src/app/api/admin/reprendre-petit-dej/route.ts` (POST) : 404 interrupteur coupé ; sans jeton 401, un non-admin 403 ;
+  lit la grille telle qu'elle s'affichait avant U3 (`fusionnerLignes(fetchGrille("table"), lireTableSheet())`) et les
+  inscriptions relues en base (cache oublié avant et après : une seconde reprise voit les lignes de la première),
+  `planifierReprise` (PD1) au dimanche en cours, puis un seul lot firebase-admin : une ligne `petitDej/{id auto}` par
+  case, texte tel quel, `uid` vide, `auteurUid` = l'admin. Rend `{ ok, reprises, ignores }`. Lecture des inscriptions
+  en échec : erreur, rien n'est écrit (Q10).
+- Administration › Planning (`src/app/admin/page.tsx`), sous les imports, derrière `BACK_OFFICE` : « Reprendre les
+  noms du petit déj », une confirmation (« À faire une seule fois, le jour de la mise en ligne », la base étant
+  partagée), puis le compte rendu « 9 dimanches repris, 3 déjà inscrits. » ou le refus de la route. En français
+  seulement, comme le reste de l'administration.
+- Tests : `tests/planning-petit-dej.spec.ts` (le bouton : annuler n'appelle rien, accepter appelle la route en POST
+  avec le jeton et affiche le compte rendu ; un refus s'affiche ; la route existe ouverte et répond 401 sans jeton ;
+  `planifierReprise`, pure, depuis PD1), `tests/back-office-coupe.spec.ts` (coupé : la route répond 404, pas de bouton).
+  Vus rouges (9) avant le code, verts ensuite sur ordinateur, téléphone et tablette (les deux tests coupés sont des
+  gardes : verts aussi sans le code, ils tiennent le bouton et la route hors ligne) ; captures regardées aux trois
+  tailles ; `tsc` et `lint` propres. La route écrit avec firebase-admin : simulée côté page, relue, pas exécutée
+  (comme l'import G4 et le cron).
+
+Reste : rien dans U3. La reprise se lance **une fois, le jour du retrait de l'interrupteur** (§ « À la mise en ligne »),
+pas pendant la validation en local.
+
+À faire par Timothée : publier `firestore.rules` (règle `petitDej`) **avant** la validation en local ; relire les
+libellés 中文 de la carte (`planning.petitDej.*`), de la liste « Recevoir » (`push.recevoir`, `push.types.*`) et des
+deux lignes du mercredi (`src/lib/petitdej/rappel.ts`). PD3, PD4 et PD5 n'ajoutent aucune règle (`notifPrefs/{uid}`
+accepte déjà le nouveau champ ; la reprise écrit avec firebase-admin). Le jour de la mise en ligne, lancer la reprise
+une fois (Administration › Planning). Remarque : à la fin d'un trimestre, la carte montre aussi ses
+dimanches passés (Q11 : tous ceux du trimestre choisi), là où la planche n'en montrait qu'un.

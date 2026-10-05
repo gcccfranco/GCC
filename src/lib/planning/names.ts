@@ -9,6 +9,8 @@ import {
   fetchFideliteMusic, fetchBonte, fetchEDD, fetchCampus,
   fetchIntergroupe, fetchInterfranco, fetchPetitDej,
 } from "./sheets"
+import { marquerDimanchesSpeciaux } from "./grilles"
+import { BACK_OFFICE } from "@/lib/backOffice"
 import type { ServiceRole } from "@/types/user"
 
 export interface PlanningData {
@@ -34,7 +36,7 @@ export async function loadPlanningData(): Promise<PlanningData> {
       fetchCampus().then(c => c.louange).catch(() => [] as CampusSeance[]),
       fetchIntergroupe(), fetchInterfranco(),
     ])
-  return {
+  const data: PlanningData = {
     // G5 (19/09/2026) : plus de repli sur CULTE_FALLBACK (données de 2026, D4).
     culte,
     dejeuner: dejeuner.length ? dejeuner : DEJEUNER_FALLBACK,
@@ -48,6 +50,24 @@ export async function loadPlanningData(): Promise<PlanningData> {
     campus: campus.length ? campus : CAMP_LOUANGE_FALLBACK,
     intergroupe,
     interfranco,
+  }
+  // Lot U2 (Q14) : derrière l'interrupteur ; en ligne, le Sheet est lu tel quel.
+  return BACK_OFFICE ? avecDimanchesSpeciaux(data) : data
+}
+
+/** Lot U2 (Q5) : un dimanche d'Interfranco ou d'Intergroupe, la présidence des
+ *  groupes est le nom du service (`marquerDimanchesSpeciaux`) — pas de président
+ *  fantôme dans « Mes services », les rappels ni les notifications. Pur : les
+ *  appelants qui assemblent eux-mêmes un `PlanningData` l'appliquent derrière
+ *  `BACK_OFFICE`, comme `loadPlanningData`. */
+export function avecDimanchesSpeciaux(data: PlanningData): PlanningData {
+  const marquer = (rows: string[][]) => marquerDimanchesSpeciaux(rows, data.interfranco, data.intergroupe)
+  return {
+    ...data,
+    paix: marquer(data.paix),
+    fidelite: marquer(data.fidelite),
+    fideliteMusic: marquer(data.fideliteMusic),
+    bonte: marquer(data.bonte),
   }
 }
 
@@ -106,10 +126,13 @@ export const CULTE_ROLES: [number, string][] = [
   [9, "Orateur"], [10, "Traduction"], [11, "Sainte cène"],
 ]
 
-const GROUPE_ROLES: [number, string][] = [[1, "Présidence"], [2, "Musicien"], [3, "Orateur"]]
+// Lot U2, P5 : Percussion (groupes, index 5) et Cours (EDD, index 6), colonnes
+// du Sheet de 2026 que l'app ignorait. Les lecteurs ne les rendent que derrière
+// l'interrupteur (`sheets.ts`) : en ligne, ces index restent vides.
+const GROUPE_ROLES: [number, string][] = [[1, "Présidence"], [2, "Musicien"], [3, "Orateur"], [5, "Percussion"]]
 const FIDELITE_ROLES: [number, string][] = [[1, "Présidence"], [2, "Orateur"], [4, "Piano"]]
 const FIDELITE_MUSIC_ROLES: [number, string][] = [[1, "Présidence"], [2, "Piano"], [3, "Guitare"], [4, "Batterie"]]
-const EDD_ROLES_COLS: [number, string][] = [[1, "Présidence"], [2, "Suppléant"], [3, "Piano"], [4, "Cajon"], [5, "Guitare"]]
+const EDD_ROLES_COLS: [number, string][] = [[1, "Présidence"], [2, "Suppléant"], [3, "Piano"], [4, "Cajon"], [5, "Guitare"], [6, "Cours"]]
 const INTERGROUPE_ROLES: [number, string][] = [
   [1, "Présidence"], [2, "Choriste"], [3, "Choriste"], [4, "Choriste"],
   [5, "Piano"], [6, "Guitare"], [7, "Cajon/Batterie"], [8, "Sono"], [9, "PPT"],
@@ -160,10 +183,11 @@ const CULTE_ROLE_MAP: [number, ServiceRole | null][] = [
   [1, "presidence"], [2, "chanteur"], [3, "chanteur"], [4, "musicien"],
   [5, "musicien"], [6, "musicien"], [7, "regie"], [8, "regie"],
 ]
-const GROUPE_ROLE_MAP: [number, ServiceRole | null][] = [[1, "presidence"], [2, "musicien"], [3, null]]
+const GROUPE_ROLE_MAP: [number, ServiceRole | null][] = [[1, "presidence"], [2, "musicien"], [3, null], [5, "musicien"]]
 const FIDELITE_ROLE_MAP: [number, ServiceRole | null][] = [[1, "presidence"], [2, null], [4, "musicien"]]
 const FIDELITE_MUSIC_ROLE_MAP: [number, ServiceRole | null][] = [[1, "presidence"], [2, "musicien"], [3, "musicien"], [4, "musicien"]]
-const EDD_ROLE_MAP: [number, ServiceRole | null][] = [[1, "presidence"], [2, null], [3, "musicien"], [4, "musicien"], [5, "musicien"]]
+// Cours (P5) : présence sans rôle de setlist, comme le suppléant.
+const EDD_ROLE_MAP: [number, ServiceRole | null][] = [[1, "presidence"], [2, null], [3, "musicien"], [4, "musicien"], [5, "musicien"], [6, null]]
 const INTERGROUPE_ROLE_MAP: [number, ServiceRole | null][] = [
   [1, "presidence"], [2, "chanteur"], [3, "chanteur"], [4, "chanteur"],
   [5, "musicien"], [6, "musicien"], [7, "musicien"], [8, "regie"], [9, "regie"],

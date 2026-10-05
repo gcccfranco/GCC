@@ -25,6 +25,8 @@ const SPECS_GRAND_ECRAN = [
   /back-office-espace\.spec\.ts/,
   // Lot U8 (spec-calendrier.md, Tests) : la page du calendrier, Mois sur la tablette couchée.
   /calendrier\.spec\.ts/,
+  // B2 : Planning, Équipes, Messages rangés dans le Back-Office (pleine largeur, barre latérale).
+  /back-office-admin\.spec\.ts/,
 ];
 
 export default defineConfig({

@@ -11,7 +11,7 @@ import { PageTitle } from "@/components/layout/PageTitle"
 import { useTranslation } from "react-i18next"
 import { useAuth } from "@/lib/firebase/auth"
 import { useProfile } from "@/lib/firebase/users"
-import { canSeeEvenement, creatableEvenementPours } from "@/lib/access"
+import { canSeeEvenement, creatableEvenementPours, estResponsable } from "@/lib/access"
 import { ANNONCE_SECTIONS } from "@/types/annonce"
 import { PLANNING_COLORS } from "@/lib/serviceColors"
 import { EVENEMENTS_CHANGED, getInscription, listEvenements } from "@/lib/firebase/evenements"
@@ -61,13 +61,16 @@ export function CalendrierClient() {
     .filter((e) => !isInfo(e) && isPast(e, today) && (e.dateFin || e.date) >= since)
     .sort((a, b) => b.date.localeCompare(a.date))
 
+  // Lot U6, B3 : le formulaire est au Back-Office, ouvert aux responsables.
+  const peutCreer = estResponsable(user, profile) && creatableEvenementPours(user, profile, ANNONCE_SECTIONS).length > 0
+
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <PageTitle
         title={t("evenements.title")}
         action={
-          creatableEvenementPours(user, profile, ANNONCE_SECTIONS).length > 0 && (
-            <Link href="/evenements/nouveau" className="text-sm font-semibold text-white rounded-full px-4 py-2 inline-block transition-transform duration-150 active:scale-[.97]" style={{ background: PLANNING_COLORS.scene }}>
+          peutCreer && (
+            <Link href="/back-office/evenements/nouveau" className="text-sm font-semibold text-white rounded-full px-4 py-2 inline-block transition-transform duration-150 active:scale-[.97]" style={{ background: PLANNING_COLORS.scene }}>
               {t("evenements.nouveau")}
             </Link>
           )
@@ -83,7 +86,7 @@ export function CalendrierClient() {
       {upcoming.length === 0 && (
         <p className="text-sm text-muted-foreground">
           {t("evenements.none")}
-          {user && creatableEvenementPours(user, profile, ANNONCE_SECTIONS).length > 0 && ` ${t("evenements.noneHint")}`}
+          {peutCreer && ` ${t("evenements.noneHint")}`}
         </p>
       )}
       {upcoming.map((g) => (

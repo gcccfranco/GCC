@@ -76,7 +76,9 @@ function MoiClient() {
         <GroupRow onClick={() => setReportOpen(true)} leading={<TriangleAlert />}>{t("common.report")}</GroupRow>
       </Group>
 
-      {(canNotify || admin) && (
+      {/* Lot U6, B2 : Notifier et l'administration sont au Back-Office (Messages, Équipes…) ;
+          en ligne, interrupteur coupé, ils restent ici. */}
+      {!BACK_OFFICE && (canNotify || admin) && (
         <Group>
           {canNotify && <GroupRow href="/notifier" leading={<Megaphone />} chevron>{t("common.header.notify")}</GroupRow>}
           {admin && <GroupRow href="/admin" leading={<ShieldCheck />} chevron>{t("common.header.admin")}</GroupRow>}

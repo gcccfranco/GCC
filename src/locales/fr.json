@@ -1028,7 +1028,10 @@
       "chant2": "Chant 2",
       "chant3": "Chant 3",
       "chant4": "Chant 4",
-      "repetition": "Répétition"
+      "repetition": "Répétition",
+      "percussion": "Percussion",
+      "menages": "Ménages",
+      "cours": "Cours"
     },
     "table": {
       "myName": "Mon prénom…",
@@ -1038,14 +1041,13 @@
       "clear": "Effacer"
     },
     "grille": {
-      "modifier": "Modifier",
-      "termine": "Terminé",
       "enregistre": "Enregistré",
       "plusTot": "Voir plus tôt",
       "plusTard": "Voir plus tard",
       "aVenir": "Planning à venir",
       "periode": "{{du}} à {{au}}",
       "nonPublie": "Non publié",
+      "dimancheSpecial": "Dimanche {{service}} : la présidence se règle dans le planning {{service}}.",
       "pasDispo": "Pas disponible un dimanche ? Préviens la personne qui tient le planning.",
       "droitRetire": "Enregistrement refusé par le serveur : tu n’as plus le droit de modifier ce planning, ou les règles n’ont pas été publiées.",
       "horsLigne": "Modification impossible : pas de réseau.",
@@ -1059,8 +1061,22 @@
       "importe": "{{auteur}} a importé {{count}} dimanches depuis le Google Sheet",
       "periodeAnnee": "Année {{annee}}"
     },
+    "petitDej": {
+      "trimestre": "Trimestre {{n}}",
+      "libre": "Libre",
+      "inscrire": "Je m'inscris",
+      "modifier": "Modifier",
+      "retirer": "Retirer",
+      "confirmerRetrait": "Retirer cette ligne ?",
+      "ajouter": "Ajouter une ligne",
+      "astuce": "Tu peux écrire « Famille … » à la place de ton nom.",
+      "vientDeSInscrire": "{{nom}} vient de s'inscrire.",
+      "illisible": "Inscriptions illisibles pour l'instant."
+    },
     "horaires": {
-      "culte": "Dimanche 10:30"
+      "culte": "Dimanche 10:30",
+      "groupes": "Dimanche de 13:00 à 14:30",
+      "fidelite": "Dimanche de 13:00 à 14:00"
     },
     "pages": {
       "culte": "Culte Franco",
@@ -1171,6 +1187,44 @@
       "viewOrdre": "Voir l'ordre de passage",
       "hideOrdre": "Masquer l'ordre de passage"
     },
+    "annee": {
+      "label": "Année",
+      "brouillon": "{{annee}} · brouillon. Visible des responsables du planning seulement, jusqu'à la publication de chaque trimestre.",
+      "poses": "Colonnes et horaire repris de {{avant}} ; les {{n}} dimanches de {{annee}} sont déjà posés.",
+      "aucun": "Aucun dimanche posé pour {{annee}}.",
+      "ajouter": "Ajouter un dimanche",
+      "ajouterSeance": "Ajouter une séance",
+      "retirer": "Retirer ce dimanche",
+      "retirerSeance": "Retirer cette séance",
+      "confirmerRetrait": "Retirer le {{date}} ? Ses cases s'effacent.",
+      "choisirDate": "Dimanche à ajouter",
+      "dateSeance": "Date de la séance",
+      "moment": "Moment",
+      "special": "Ce dimanche est celui de {{service}} : la présidence vient de son planning."
+    },
+    "publier": "Publier le {{tri}}",
+    "masquer": "Masquer le {{tri}}",
+    "publierConfirm": "Publier le {{tri}} {{annee}} de {{planning}} ? Tous ses membres le verront et recevront une notification.",
+    "publierEchec": "La publication a échoué. Réessaie.",
+    "export": {
+      "bouton": "Exporter (modèle du Sheet)",
+      "titre": "Exporter",
+      "affiche": "{{periode}} · {{planning}}",
+      "annee": "Toute l'année · {{planning}}",
+      "tout": "Tous les plannings {{annee}}",
+      "pdf": "PDF",
+      "xlsx": ".xlsx",
+      "enCours": "Préparation du fichier…",
+      "echec": "L'export a échoué. Réessaie."
+    },
+    "choisir": {
+      "bouton": "Choisir",
+      "chercher": "Chercher un nom",
+      "sansCompte": "Écrire un nom sans compte…",
+      "avecRole": "Avec ce rôle",
+      "autres": "Autres noms",
+      "vider": "Vider la case"
+      },
     "saison": {
       "label": "Scène",
       "titre": "{{nom}} · réservations",
@@ -1886,7 +1940,6 @@
     "title": "Tâches",
     "mesTaches": "Mes tâches",
     "aFairePourMoi": "À faire pour moi",
-    "poles": "Pôles",
     "pole": {
       "da": "DA",
       "media": "Média",
@@ -2029,7 +2082,15 @@
     "iosInstall": "Sur iPhone ou iPad : ajoute d'abord le site à l'écran d'accueil (Partager, puis « Sur l'écran d'accueil »), puis ouvre-le depuis l'icône pour activer les notifications.",
     "blocked": "Les notifications sont bloquées pour ce site dans ton navigateur. Pour les réactiver : clique sur l'icône à gauche de l'adresse, puis Notifications, Autoriser, et recharge la page.",
     "promptTitle": "Active les rappels de service",
-    "promptText": "Reçois un rappel avant chaque service et une alerte quand une setlist est prête."
+    "promptText": "Reçois un rappel avant chaque service et une alerte quand une setlist est prête.",
+    "recevoir": "Recevoir",
+    "types": {
+      "reminders": "Rappels de service",
+      "setlists": "Setlist prête",
+      "evenements": "Évènements",
+      "taches": "Tâches",
+      "petitDej": "Petit déj"
+    }
   },
   "proposition": {
     "titre": "Proposer un nouveau chant",
@@ -2332,8 +2393,34 @@
     "seConnecter": "Se connecter",
     "bonjour": "{{jour}} · bonjour {{prenom}}",
     "menu": "Tes modules",
-    "enAttente": "Cette partie arrive au Back-Office avec la suite du chantier. En attendant, elle est ici :",
-    "scene": "Scène",
-    "administration": "Administration"
+    "sousParties": "Sous-parties",
+    "plannings": "Plannings",
+    "planningReserve": "Page réservée aux responsables de ce planning.",
+    "adminReserve": "Page réservée aux administrateurs.",
+    "parties": {
+      "reception": "Réception",
+      "notifier": "Notifier",
+      "questionnaire": "Questionnaire",
+      "organigramme": "Organigramme",
+      "personnes": "Personnes",
+      "inscriptions": "Inscriptions",
+      "import": "Import",
+      "plannings": "Plannings",
+      "sansCompte": "Sans compte",
+      "evenements": "Évènements",
+      "reunions": "Réunions",
+      "scene": "Scène"
+    },
+    "gerer": "Gérer dans le Back-Office",
+    "tachesDesPoles": "Les tâches des pôles",
+    "sceneReserve": "Réservé à la coordination.",
+    "aucunEvenement": "Aucun évènement à gérer.",
+    "aucuneReunion": "Aucune réunion.",
+    "nouvelleReunion": "Nouvelle réunion",
+    "aVenir": "À venir",
+    "reunionDePole": "Réunion de pôle · {{pole}}",
+    "reunionDEquipe": "Réunion d'équipe · {{equipe}}",
+    "organiseePar": "organisée par {{nom}}",
+    "dupliquerProchaine": "Dupliquer pour la prochaine"
   }
 }

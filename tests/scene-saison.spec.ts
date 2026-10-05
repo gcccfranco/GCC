@@ -240,10 +240,16 @@ const NOEL26 = {
   ouvert: false,
 };
 
-/** Lundi 5 octobre 2026 à 10:00, horloge posée avant la connexion. */
+/** Lundi 5 octobre 2026 à 10:00, horloge posée avant la connexion. Lot U6, B3 (Q12) : la
+ *  coordination gère au Back-Office › Évènements › Scène, les membres réservent dans l'App. */
 async function ouvrir(page: Page, who: FakeProfile, docs: Record<string, Record<string, unknown>>, jour = "2026-10-05T10:00:00") {
   await page.clock.setFixedTime(new Date(jour));
-  return signInAs(page, who, docs, "/evenements/scene");
+  return signInAs(page, who, docs, who.poles?.includes("evenement") ? "/back-office/evenements/scene" : "/evenements/scene");
+}
+/** L'onglet de la section Évènements, dans l'App. */
+async function ongletApp(page: Page, nom: string) {
+  await page.goto("/evenements");
+  return page.getByRole("link", { name: nom, exact: true });
 }
 
 const patches = (db: FakeDb, path = "programmes/noel") => db.writes.filter((w) => w.method === "PATCH" && w.path === path);
@@ -266,7 +272,7 @@ test("brouillon : un membre n'a ni onglet ni programme", async ({ page }) => {
 
 test("brouillon : la coordination l'ouvre depuis sa ligne et voit la saison et l'aperçu", async ({ page }) => {
   await ouvrir(page, ALICE, { "programmes/noel": NOEL26 });
-  await expect(page.getByRole("link", { name: "Scène", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Scène", exact: true })).toBeVisible();
   const ligne = page.getByRole("region", { name: "Programmes masqués" }).getByRole("listitem").filter({ hasText: "Noël 2026" });
   await expect(ligne).toContainText("Brouillon");
   await ligne.getByRole("button", { name: "Préparer la saison" }).click();
@@ -297,10 +303,10 @@ test("« Ouvrir les réservations » écrit `ouvert: true` en un seul PATCH, et 
   await page.getByRole("button", { name: "Préparer la saison" }).click();
   await page.getByRole("button", { name: "Ouvrir les réservations" }).click();
   await expect(page.getByText("Réservations ouvertes du 1er octobre au 20 décembre")).toBeVisible();
-  await expect(page.getByRole("link", { name: "Noël 2026", exact: true })).toBeVisible();
   expect(patches(db)).toHaveLength(1);
   expect(patches(db)[0].data).toMatchObject({ ouvert: true });
   expect(Object.keys(patches(db)[0].data).sort()).toEqual(["ouvert", "updatedAt"]);
+  await expect(await ongletApp(page, "Noël 2026")).toBeVisible();
 });
 
 test("une fois ouvert, un membre voit l'onglet, le samedi et le dimanche", async ({ page }) => {
@@ -504,9 +510,10 @@ test("créer un programme : brouillon ouvert au jour de sa création, l'écran s
   await page.getByRole("button", { name: "Créer le programme" }).click();
   await expect(page.getByRole("heading", { name: "Noël 2026 · réservations" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Ouvrir les réservations" })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Scène", exact: true })).toBeVisible();
   const cree = db.writes.find((w) => w.method === "POST" && w.path.startsWith("programmes/"));
   expect(cree?.data).toMatchObject({ nom: "Noël 2026", jourJ: "2026-12-24", debut: "2026-10-05", ouvert: false, visible: false });
+  // Un brouillon ne prend pas l'onglet de l'App.
+  await expect(await ongletApp(page, "Scène")).toBeVisible();
 });
 
 test("créneaux libres : la grille à venir moins les créneaux pris ou commencés ; la réservation qu'on déplace ne se bloque pas elle-même", () => {

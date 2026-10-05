@@ -59,13 +59,16 @@ export interface NotificationDuMatin {
 }
 
 /** Les notifications du matin d'une personne : une par échéance de service, la
- *  première portant tâches et lignes d'évènements ; sans service, une seule. */
+ *  première portant tâches et lignes d'évènements ; sans service, une seule.
+ *  `autres` : lignes déjà écrites dans la langue (ligne du petit déj du
+ *  mercredi, lot U3, PD4), ajoutées après les lignes d'évènements ; seules,
+ *  elles ne font pas de notification (le cron les envoie à part). */
 export function notificationsDuMatin(
-  { services, taches, lignes }: { services: ServiceDuJour[]; taches: RappelTache[]; lignes: LigneEvenement[] },
+  { services, taches, lignes, autres = [] }: { services: ServiceDuJour[]; taches: RappelTache[]; lignes: LigneEvenement[]; autres?: string[] },
   lang: NotifLang,
   today: string,
 ): NotificationDuMatin[] {
-  const textes = lignes.map((l) => texte(l, lang));
+  const textes = [...lignes.map((l) => texte(l, lang)), ...autres];
   if (services.length) {
     return services.map((s, i) => ({
       title: reminderTitle(lang),
