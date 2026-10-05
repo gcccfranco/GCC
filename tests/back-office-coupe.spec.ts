@@ -63,7 +63,7 @@ test.describe("back-office coupé : les entrées disparaissent", () => {
 });
 
 test.describe("back-office coupé : une adresse tapée à la main tombe dans le vide", () => {
-  for (const chemin of ["/taches", "/taches/da", "/equipes", "/evenements", "/evenements/foot", "/evenements/foot/modifier", "/evenements/nouveau", "/evenements/scene", "/annonces", "/back-office", "/back-office/taches", "/back-office/evenements"]) {
+  for (const chemin of ["/taches", "/taches/da", "/equipes", "/evenements", "/evenements/foot", "/evenements/foot/modifier", "/evenements/nouveau", "/evenements/scene", "/annonces", "/back-office", "/back-office/taches", "/back-office/evenements", "/back-office/statistiques"]) {
     test(`${chemin} répond 404`, async ({ page }) => {
       const reponse = await page.goto(chemin);
       expect(reponse?.status()).toBe(404);

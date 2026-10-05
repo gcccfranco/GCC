@@ -23,6 +23,8 @@ const SPECS_GRAND_ECRAN = [
   /coup-d-oeil\.spec\.ts/,
   // Lot U6 (spec-back-office.md, Tests) : l'espace Back-Office, B1.
   /back-office-espace\.spec\.ts/,
+  // Lot U7 (spec-statistiques.md, Tests) : la page Statistiques et son entrée du menu.
+  /statistiques\.spec\.ts/,
 ];
 
 export default defineConfig({

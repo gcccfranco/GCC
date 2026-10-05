@@ -82,8 +82,8 @@ test.describe("Back-Office (B1) : qui est responsable (Q1)", () => {
 });
 
 test.describe("Back-Office (B1) : les entrées selon les droits (Q2)", () => {
-  test("un admin voit 6 entrées (Calendrier et Statistiques viendront avec U8 et U7)", () => {
-    expect(entreesBackOffice(user(ADMIN), profil(ADMIN))).toEqual(["tableau", "planning", "taches", "evenements", "equipes", "messages"]);
+  test("un admin voit 7 entrées (Calendrier viendra avec U8 ; Statistiques est arrivée avec U7, S2)", () => {
+    expect(entreesBackOffice(user(ADMIN), profil(ADMIN))).toEqual(["tableau", "planning", "taches", "evenements", "equipes", "messages", "statistiques"]);
   });
 
   test("Alice (pôle Événement) : Tableau de bord, Tâches, Évènements — pas de Planning", () => {
@@ -115,6 +115,7 @@ test.describe("Back-Office (B1) : les entrées selon les droits (Q2)", () => {
     const entrees = entreesBarre("back-office", { connecte: true, backOffice: true, permises: entreesBackOffice(user(ADMIN), profil(ADMIN)) });
     expect(entrees.map((e) => e.href)).toEqual([
       "/back-office", "/back-office/planning", "/back-office/taches", "/back-office/evenements", "/back-office/equipes", "/back-office/messages",
+      "/back-office/statistiques",
     ]);
     // L'espace « app » ne change pas.
     expect(entreesBarre("app", { connecte: true, backOffice: true }).map((e) => e.href)).toEqual(["/songs", "/setlists", "/planning", "/evenements", "/moi"]);
@@ -163,7 +164,7 @@ test.describe("Back-Office (B1) : rien de neuf pour l'assemblée", () => {
 });
 
 test.describe("Back-Office (B1) : le sélecteur et le menu", () => {
-  test("un admin passe de l'App au Back-Office : tableau de bord, 6 entrées, espace marqué", async ({ page }, info) => {
+  test("un admin passe de l'App au Back-Office : tableau de bord, 7 entrées, espace marqué", async ({ page }, info) => {
     await sansSheet(page);
     await signInAs(page, ADMIN, {}, "/songs");
     await page.getByRole("searchbox").waitFor();
@@ -177,9 +178,9 @@ test.describe("Back-Office (B1) : le sélecteur et le menu", () => {
     await expect(selecteur(page).getByRole("link", { name: "Back-Office" })).toHaveAttribute("aria-current", "true");
     await expect(menu(page, info).getByRole("link")).toHaveText(
       estOrdinateur(info) || estTablettePaysage(info)
-        ? ["Tableau de bord", "Planning", "Tâches", "Évènements", "Équipes", "Messages"]
+        ? ["Tableau de bord", "Planning", "Tâches", "Évènements", "Équipes", "Messages", "Statistiques"]
         // La liste du tableau de bord ne répète pas la page où l'on est.
-        : ["Planning", "Tâches", "Évènements", "Équipes", "Messages"],
+        : ["Planning", "Tâches", "Évènements", "Équipes", "Messages", "Statistiques"],
     );
     if (estOrdinateur(info) || estTablettePaysage(info)) {
       await expect(menu(page, info).getByRole("link", { name: "Tableau de bord" })).toHaveAttribute("aria-current", "page");

@@ -272,3 +272,28 @@ Questions ouvertes 1 à 7 : la recommandation de chacune est retenue (go du 04/1
 - Reste : S2 (droit et adresse), S3 (« Les plus joués »), S4 (« Jamais joués », « À redécouvrir »), S5 (widget).
   « Dernière fois » écrit « 20/09 » (l'année hors année en cours) : à faire dans S3, à l'affichage.
 - À faire par Timothée : rien pour S1 (aucune règle Firestore, aucune donnée).
+
+### 05/10/2026 — S2, le droit et l'adresse : faite (commit « feat(U7): S2 — … », branche `lot/u7-statistiques`, après fusion de `lot/u6-back-office`)
+
+- `canVoirStatistiques(user)` = `isAdminUser(user)` dans `src/lib/access.ts`, sans règle Firestore (Q2) ;
+  `entreesBackOffice` s'en sert pour l'entrée « statistiques », retirée de `ENTREES_A_VENIR` (U6, Q17) : un admin
+  a 7 entrées (8 avec U8), « Statistiques » en dernier. Le widget « Chants les plus joués » reste dans
+  `WIDGETS_A_VENIR` jusqu'à S5.
+- Page `src/app/back-office/statistiques/page.tsx` (question 7) : titre « Chants les plus joués », sous-titre
+  « Visible par les admins seulement », pleine largeur comme le tableau de bord ; responsable non admin :
+  « Page réservée aux administrateurs. » (icône et message de `/admin`), en français seul (Q14).
+- `tests/statistiques.spec.ts` (nouveau, ajouté à `SPECS_GRAND_ECRAN`) : 6 tests × 5 projets (ordinateur,
+  téléphone, tablette, tablette-paysage, ordinateur-1440), écrits avant le code et vus rouges, puis verts ;
+  captures regardées (barre latérale : « Statistiques » courante, icône `ChartColumn`). `tests/back-office-espace.spec.ts`
+  passe d'un admin à 6 entrées à 7 ; `tests/back-office-coupe.spec.ts` : `/back-office/statistiques` répond 404.
+- Choix pris faute de réponse dans la spec :
+  1. **Sans compte**, ou membre sans droit de responsable : la garde de l'espace (U6, `back-office/layout.tsx`)
+     répond avant la page — « Réservé aux responsables. » + « Se connecter », qui ramène à
+     `/back-office/statistiques`. Pas de `RequireAuth` en plus : il ne serait jamais atteint.
+  2. Interrupteur coupé : le `notFound()` du gabarit `/back-office` suffit, la page n'en ajoute pas.
+  3. La page attend la fin de la lecture du compte (`useAuth`) avant de refuser, pour ne pas montrer le refus
+     un instant à un admin.
+- Reste : S3 (« Les plus joués » : `StatistiquesClient.tsx` sous le titre, sélecteur des vues dans `action`
+  de `PageTitle`), S4, S5. Sur téléphone et tablette en portrait, l'entrée vit dans la liste du tableau de bord
+  en attendant « Plus » et la barre personnalisable de U6 (B6), qui liront `entreesBackOffice`.
+- À faire par Timothée : rien pour S2 (aucune règle Firestore, aucune donnée).
