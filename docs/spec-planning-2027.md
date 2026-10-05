@@ -52,7 +52,8 @@ réunions, réservations de la scène et export avec logo : **validés** » ; to
 - **Le Sheet** (« [2026 QG] Planning », copie locale du 03/10/2026, hors dépôt) : 24 onglets, dont 19 de planning
   lus par l'app ; `Paix_Prière` ne l'est pas. Mise en forme relevée sur `Paix_T1` et `Fidélité_T1` (tableau des
   modèles plus bas). **Colonnes que l'app ignore** : `PERCUSSION` au `Paix_T4` (10 dimanches sur 13 ;
-  `fetchMulti(…, 4)`, `sheets.ts:186`) et `COURS` à l'EDD (87 cases sur 156 ; `sheets.ts:255`).
+  `fetchMulti(…, 4)`, `sheets.ts:186`) et `COURS` à l'EDD (87 cases sur 156 ; `sheets.ts:255`). Le relevé T0
+  (05/10/2026, plus bas) les étend à tous les onglets : il en trouve deux de plus, au Groupe Bonté.
 
 ## Décisions de Timothée — à ne pas rouvrir
 
@@ -121,9 +122,13 @@ export type ChangementDimanche = { kind: "dimanche"; date: string; retire: boole
 export type ModeleOnglet = {
   onglet: string; decoupage: "trimestre" | "periodeEdd" | "annee"   // « Paix » → « Paix_T1 »…
   eglise: "fr" | "zh"            // « Grace Church Christian Chinese de Paris » | « 基督教会巴黎华人恩典堂 »
-  titre: string; periode: "planningDe" | "programmeDu" | "bloc" | "annee"; horaire?: string
+  titre: string; periode: "planningDe" | "programmeDu" | "bloc" | "annee" | "seances"; horaire?: string
   entetes: Record<string, string>   // clé de colonne → libellé du Sheet (« PRÉSIDENCE »)
-  policeTableau: "Calibri" | "Lora"; couleurEntetes: string; ligneEntreMois: boolean
+  // Le tableau garde la mise en forme de SON onglet (relevé T0, colonne « Tableau » plus bas) :
+  policeTableau: "Calibri" | "Lora" | "Georgia"; taille: 11 | 12; alignement: "centre" | "gauche"
+  couleurs: { texteEntete: string; fondEntete?: string; bandeau?: string; mois?: string; date?: string; alterne?: string; bordure: string }
+  mois: "aucun" | "ligneVide" | "ligneTitre" | "colonne"   // groupes · Fidélité · Culte et Table · Fidélité musiciens
+  dateGras: boolean; formatDate: "jj/mm" | "jj/mm/aaaa"
 }
 export type PageExport = { feuille: string; modele: ModeleOnglet; periode: string; lignes: (string[] | "mois")[] }
 export function pagesExport(portee: "affiche" | "annee" | "tout", annee: number /* , lignes vues */): PageExport[]
@@ -146,22 +151,83 @@ match /dimanches/{date} {
 
 ### Les modèles, onglet par onglet
 
-Titres et colonnes relevés dans la copie du Sheet ; « T0 » = à relever avant de coder (tranche T0).
+Relevé T0 du 05/10/2026, **à valider par Timothée** (méthode et détails dans « Relevé T0 » juste après). Une ligne
+par grille, dans l'ordre des onglets du Sheet, qui sera celui des feuilles du .xlsx « Tous les plannings » : 19
+feuilles (`Paix_Prière` et `Membres_Groupes` n'en font pas partie). Couleurs en hexadécimal, largeurs en px du Sheet.
 
-| Grille | Onglet | Une page = | En-tête : titre · période · horaire | Colonnes du Sheet | Mise en forme |
-| --- | --- | --- | --- | --- | --- |
-| `paix`, `bonte` | `Paix_T1`…`T4`, `Bonté_T1`…`T4` | trimestre | « GROUPE PAIX » · « Planning de Janvier à Mars 2027 » · « Dimanche de 13:00 à 14:30 » (Bonté : T0) | DATE · PRÉSIDENCE · MUSICIENS · ORATEUR · THÈME (· PERCUSSION, question 4) | relevée sur Paix : église en français, tableau Calibri 12 pt, en-têtes en capitales, gras, `#1f3a5f` ; Bonté : T0 |
-| `fidelite` | `Fidélité_T1`…`T4` | trimestre | « Groupe Fidélité » · « Programme du 1er Trimestre 2027 » · « 13:00-14:00 » | Date · Présidence · Orateur · Thème · Pianiste | relevée : église en chinois (Ma Shan Zheng 36 pt), tableau Lora 12 pt, ligne vide entre les mois |
-| `fideliteMusiciens` | `Fidélité_Musicien` | trimestre (bloc) | « Groupe Fidélité Planning Musiciens 2027 » · « Groupe Fidélité Planning 2027 - T1 (Janvier - Mars) » | (mois) · Date · Présidence · Piano · Guitare · Percussion | T0 |
-| `culte` | `Franco_Louange` | trimestre (bloc « TRIMESTRE 1 ») | titre : T0 (l'onglet n'en a pas) · « Janvier à Mars 2027 » · « Dimanche 10:30 » | DATE · Présidence · Choristes (2 colonnes) · Pianiste · Guitariste · Cajon/Batterie · Sono + Live · PPT · Orateur · Traducteur · Sainte cène | T0 |
-| `table` | `Franco_Table_PtD` | trimestre | T0 | DATE · Équipe · Petit déj (question 9) | T0 |
-| `eddZhongban`, `eddDaban`, `eddGaoban` | `EDD` | période : un bloc par classe | « EDD — Planning par classe (bimensuel) — 2027 » · « PÉRIODE 1 — JANVIER FÉVRIER » | DATE · PRESIDENCE · SUPPLÉANT · PIANO · CAJON · GUITARE (· COURS, question 4) | T0 |
-| `intergroupe`, `interfranco` | `Intergroupe`, `Interfranco` | année | « INTERGROUPE » · « Année 2027 » | DATE · Présidence · Choristes (3 ; 2) · Pianiste · Guitariste · Cajon/Batterie · Sono + Live · PPT · Orateur · Traducteur | T0 |
-| `campusMatin`, `campusSoir` | `Campus_Louange` | année, matin puis soir | T0 | DATE · moment · Présidence · Choristes (2) · Piano · Guitare · Batterie · Sono · PPT · Chants 1 à 4 · Répétition | T0 ; la consigne « Ne pas modifier la structure » ne se recopie pas |
+| Grille | Onglet (rang) | Une page = | En-tête : titre · période · horaire | Colonnes du Sheet | Tableau (mise en forme relevée) | Page |
+| --- | --- | --- | --- | --- | --- | --- |
+| `culte` | `Franco_Louange` (1) | trimestre : bandeau « TRIMESTRE 1 », puis une ligne par mois ; 4 pages | l'onglet n'a pas de titre (A1 fusionnée, vide) : proposé « CULTE FRANCO » · « Janvier à Mars 2027 » · « Dimanche 10:30 » (code ; rien dans le Sheet) | DATE · Présidence · Choristes (2 colonnes, en-tête fusionné) · Pianiste · Guitariste · Cajon/Batterie · Sono + Live · PPT · Orateur · Traducteur · Sainte cène | Calibri 11 ; bandeau blanc gras sur `#24575B` ; en-têtes blanc gras sur `#2F6E73` ; mois (« Janvier », gras, à gauche) sur `#D7E7EA` ; date jj/mm grasse sur `#BFD9DC` ; cases centrées, pas de ligne alternée ; bordures fines `#9AA7B1` ; 100 · 141 · 117 + 110 · 119 · 118 · 117 · 108 · 100 · 197 · 106 · 131 | A4 paysage, ajusté à la largeur |
+| `table` | `Franco_Table_PtD` (2) | trimestre (Q9) : un tableau, une ligne par mois ; 4 pages | « PRÉPARATION TABLE DÉJEUNER » · « DÉJEUNER PRÉPARATION T1 » (bandeau du bloc ; proposé suivi de l'année) · pas d'horaire | DATE · « Équipe : Mix » (4 cases fusionnées, un nom par case, que l'app joint) ; à côté, « PETIT DÉJEUNER 2026 » : DATE · NOM, deux paires (janvier-juin, juillet-décembre ; le second « NOM » est écrit « DATE ») → Q9 : DATE · Équipe · Petit déj | Calibri 11 (bandeau 12) ; bandeau blanc gras sur `#6AA84F` ; mois et en-têtes blanc gras sur `#93C47D` ; date jj/mm grasse sur `#D9EAD3` ; petit déj sur `#F5FFF2` ; bordures fines noires ; titres Impact 23 ; blocs de 5 colonnes de 100 px | A4 portrait |
+| `intergroupe` | `Intergroupe` (3) | année ; 1 page | « INTERGROUPE » (Impact 22 sur `#8E7CC3`) · « Année 2027 » · pas d'horaire | DATE · Présidence · Choristes (3 colonnes, en-tête fusionné) · Pianiste · Guitariste · Cajon/Batterie · Sono + Live · PPT · Orateur · Traducteur | Calibri 11 ; « Année » blanc gras sur `#8E7CC3` ; en-têtes blanc gras sur `#B4A7D6` ; date jj/mm grasse sur `#D9D2E9` ; cases centrées, pas de ligne alternée ; bordures fines `#9AA7B1` ; 100 px partout | paysage (aucun réglage d'impression dans le Sheet) |
+| `interfranco` | `Interfranco` (4) | année ; 1 page | « INTERFRANCO » (Impact 22 sur `#C27BA0`) · « Année 2027 » · pas d'horaire | comme Intergroupe, Choristes sur 2 colonnes | le gabarit d'Intergroupe en rose : bandeau `#C27BA0`, en-têtes `#D5A6BD`, date `#EAD1DC` | paysage |
+| `eddZhongban`, `eddDaban`, `eddGaoban` | `EDD` (5) | période de deux mois, les trois classes l'une sous l'autre ; 6 pages (9, 8, 9, 9, 9, 8 dimanches en 2027) | « EDD — Planning par classe (bimensuel) — 2027 » (Impact 16) · « PÉRIODE 1 — JANVIER FÉVRIER » (puis « MARS AVRIL », « MAI JUIN », « JUILLET AOÛT », « SEPTEMBRE OCTOBRE », « NOVEMBRE DÉCEMBRE ») · pas d'horaire | DATE · PRESIDENCE (sans accent) · SUPPLÉANT · PIANO · CAJON · GUITARE · COURS, puis la classe (中班, 大班, 高班) dans une 8e colonne sans en-tête, fusionnée sur ses dimanches | Calibri 11 ; en-têtes blanc gras sur `#1F5B57`, bordures `#4F6B63` ; période en gras, à gauche, sans fond ; date jj/mm/aaaa, non grasse, sur `#CFE8DD` ; classe Calibri 14 gras sur `#A9D18E` ; pas de ligne alternée ; bordures fines noires et `#9AA7B1` ; 100 px partout | A4 portrait, ajusté à la page (8 colonnes : relevé contraire à la règle des 7) |
+| `campusMatin`, `campusSoir` | `Campus_Louange` (6) | année ; 1 page, les séances dans l'ordre des dates, matin et soir mêlés (colonne MOMENT), pas « matin puis soir » | onglet de saisie : son titre (« CAMPUS_LOUANGE — Format de lecture automatique ») et sa consigne ne se recopient pas ; un ancien rendu lisible, caché (lignes 16-29), titrait « CAMPUS 2026 » · « 27 — 31 Juillet 2026 • (lieu) » : proposé « CAMPUS 2027 » · « JJ — JJ Mois 2027 » (première et dernière séance, sans lieu) · pas d'horaire | DATE_SEANCE · MOMENT · PRESIDENT · CHORISTE_1 · CHORISTE_2 · PIANO · GUITARE · BATTERIE · SONO · PPT · CHANT_1 · CHANT_2 · CHANT_3 · CHANT_4 · DATE_RÉPÉTITION (proposé : tirets bas changés en espaces) | Calibri 11 ; en-têtes blanc gras sur `#2D5A65`, la répétition sur `#6B4A8E` ; date jj/mm/aaaa grasse en `#2D5A65`, moment gras ; cases alignées à gauche ; une ligne sur deux `#F5F9FA` dès la première ; répétition sur `#EDE4F5`, texte `#6B4A8E` ; bordures fines noires ; 107 · 100 (× 10) · 127 · 222 · 127 · 193 | paysage |
+| `paix` | `Paix_T1`, `Paix _T2`, `Paix _T3`, `Paix_T4` (7 à 10 ; feuilles `Paix_T2`, `Paix_T3`) | trimestre ; 4 pages | « GROUPE PAIX » · « Planning de Janvier à Mars 2027 » (« Avril à Juin », « Juillet à Septembre », « Octobre à Décembre ») · « Dimanche de 13:00 à 14:30 » (le Sheet : « 13h à 14h30 » ; Q8) | DATE · PRÉSIDENCE · MUSICIENS · ORATEUR · THÈME ; + PERCUSSION au T4 (10 cases sur 13) | Calibri 12 ; en-têtes gras `#1F3A5F`, sans fond ; date jj/mm grasse ; cases centrées ; une ligne sur deux `#EAF2FB` dès la première (T1 à T3 : quelques cases teintées en trop, restes de copier-coller ; T4 net) ; bordures fines noires ; 88 · 100-125 · 100-122 · 100-155 · 190-209 (· 125) | A4 portrait, ajusté à la page |
+| `fidelite` | `Fidélité_T1` … `Fidélité_T4` (13 à 16) | trimestre ; 4 pages | église en chinois · « Groupe Fidélité » · « Programme du 1er Trimestre 2027 » (« 2e », « 3e », « 4e ») · « 13:00-14:00 » (le Sheet : « 13H00-14H00 » ; Q8) | Date · Présidence · Orateur · Thème · Pianiste | Lora 12, **ni en-têtes ni dates en gras**, sans couleur ; une ligne sur deux `#EAF2FB`, reprise au premier dimanche de chaque mois ; une ligne vide entre les mois (fusionnée sur les 5 colonnes, bordée, sans fond) ; bordures fines noires ; 100 · 120-144 · 100-190 · 196-199 · 149 ; l'encadré « Pour imprimer » (G10:I16) ne se recopie pas | A4 portrait, ajusté à la page |
+| `fideliteMusiciens` | `Fidélité_Musicien` (17) | trimestre (bloc) ; 4 pages | l'onglet n'a ni église ni logo ; « Groupe Fidélité Planning Musiciens 2027 » (Georgia 16 gras) · « Groupe Fidélité Planning 2027 - T1 (Janvier - Mars) » (« T2 (Avril - Juin) », « T3 (Juillet - Septembre) », « T4 (Octobre - Décembre) ») · pas d'horaire | (mois, sans en-tête) · Date · Présidence · Piano · Guitare · Percussion | Georgia 12 ; bandeau du trimestre et en-têtes gras sur `#B4A7D6` ; mois en colonne A, au premier dimanche du mois, gras sur `#D9D2E9` ; date jj/mm non grasse ; pas de ligne alternée ; un dimanche spécial (Interfranco, Intergroupe, anniversaire de l'église, baptême) s'écrit sur toute la ligne, Présidence → Percussion fusionnées ; bordures fines noires ; 100 · 100 · 119 · 116 · 128 · 103 | A4 portrait |
+| `bonte` | `Bonté_T1`, `Bonté _T2`, `Bonté _T3`, `Bonté_T4` (18 à 21 ; feuilles `Bonté_T2`, `Bonté_T3`) | trimestre ; 4 pages | « GROUPE BONTÉ », le reste comme Paix (même horaire) | comme Paix ; + PERCUSSION et MÉNAGES aux T3 et T4 (Percussion : 11 cases sur 13 à chacun ; Ménages : aucune) | comme Paix (`Bonté_T1` vide en 2026, dates seules) | comme Paix |
 
-Commun (relevé sur les groupes, étendu à tous, question 11) : nom de l'église (Lora 22 pt) dans une rangée de 62 px,
-logo centré dans une rangée de 218 px, titre (Lora 22 pt), période et horaire (Lora 16 pt), puis le tableau : date en
-gras, bordures noires fines, une ligne sur deux `#eaf2fb` dès la première, cases vides vides, rien dessous.
+Commun à tous les onglets (question 11, relevé sur les groupes) : rangée 1 (47,25 pt, 63 px), le nom de l'église en
+Lora 22 (Fidélité : en chinois, Ma Shan Zheng 36) ; rangée 2 vide, même hauteur ; rangée 3 (164,25 pt, 219 px), le
+logo centré, environ 200 px de côté ; rangée 5, le titre (Lora 22) ; rangées 7 et 8, la période et l'horaire (Lora
+16) ; deux rangées vides, puis le tableau ; tout centré sur la largeur du tableau, quadrillage masqué. Un onglet sans
+horaire n'a pas de ligne d'horaire. Le tableau garde la mise en forme de **son** onglet (colonne « Tableau »), cases
+vides vides, rien dessous : aucun onglet du Sheet n'a d'en-tête ni de pied de page d'impression.
+
+### Relevé T0 (05/10/2026)
+
+**Méthode.** Les 19 onglets lus comme l'app : CSV public `gviz` (`BASE_URL`, `sheets.ts:14` ; `fetchSheet`,
+`sheets.ts:73`), en-têtes et colonnes comparés aux lecteurs `lire…Sheet`. Le rendu : l'export .xlsx public du même
+classeur (polices, fonds, bordures, fusions, largeurs, hauteurs, images, réglages d'impression) et l'export PDF de
+Google, onglet par onglet, regardé à l'œil. Ces fichiers restent hors dépôt : ils portent des noms. Aucun nom n'est
+recopié dans cette spec. Le classeur a 26 onglets, dont 24 visibles.
+
+**Colonnes et cases que l'app ne lit pas** (cases remplies en 2026) :
+
+| Onglet | Colonne | Remplie | Pour P5 (question 4 : oui) |
+| --- | --- | --- | --- |
+| `Paix_T4` | PERCUSSION | 10 sur 13 | à ajouter (déjà prévu) |
+| `Bonté _T3`, `Bonté_T4` | PERCUSSION | 11 sur 13 à chacun | **à ajouter aussi à Bonté** (trouvé par T0) |
+| `Bonté _T3`, `Bonté_T4` | MÉNAGES | 0 sur 26 | proposé : ne pas l'ajouter (en-tête seul, jamais rempli) |
+| `EDD` | COURS | 87 sur 156 | à ajouter (déjà prévu) |
+| `Franco_Louange` | au-delà de « Sainte cène » : « 3 PRÉSIDENCES », « ABSENCES », « Notes » | notes de travail | rien (déjà écarté, `sheets.ts:98`) |
+| `Franco_Table_PtD` | « Personnes disponibles » par groupe (colonnes N à Q, cachées) | notes de travail | rien |
+| `Fidélité_T1` … `T4` | encadré « Pour imprimer » (G à I) | consigne | rien |
+| `Campus_Louange` | NOTE_GLOBALE (ligne 3) | note libre | rien |
+
+**Dimanches spéciaux dans le Sheet de 2026.** Les groupes écrivent « Interfranco » ou « Intergroupe » dans la
+présidence (Paix, Bonté, Fidélité), parfois aussi dans l'orateur ou le thème ; Fidélité musiciens fusionne la ligne
+sur le mot. Le Sheet ne s'accorde pas avec lui-même : l'onglet `Interfranco` porte trois dates (14/06, 09/08, 25/10)
+et une ligne vide, quand Paix, Fidélité et Fidélité musiciens marquent aussi le 18/01 en Interfranco. P4 (une seule
+source, la grille) règle ce cas. « Baptême » et « Séance de louange » s'écrivent aussi dans des colonnes de personnes
+(présidence de Fidélité musiciens, orateur de Fidélité) et ne sont pas dans `NON_NAMES` (`names.ts:57`) : à savoir
+pour P9, « Choisir » ne doit pas les proposer comme des noms.
+
+**Écart avec une planche validée.** `export-fidelite-t1` met en gras les en-têtes et les dates ; le Sheet ne le fait
+pas (Lora 12 maigre partout). `export-paix-t1` est conforme au Sheet. Proposé : suivre le Sheet (« au modèle de son
+onglet »).
+
+**Le logo dans le Sheet.** Une même image (PNG 314 × 320, le logo de l'église) sur les douze onglets de groupe, dans
+la rangée 3 : environ 200 px de côté sur le rendu PDF, centrée sur le tableau. L'export .xlsx de Google la ramène à
+environ 108 px et l'accroche au coin de sa cellule (C3, ou A3 pour Fidélité), sans la centrer : P8 calcule lui-même
+le décalage qui la centre.
+
+**Ce que le relevé propose aux tranches suivantes** (à valider avec le tableau) :
+
+1. **Le tableau au modèle de son onglet, l'en-tête des groupes partout** (Q11). Le paragraphe « Commun » d'avant
+   étendait aussi la date en gras, les bordures noires et la ligne sur deux `#eaf2fb` à tous les onglets ; le Sheet ne
+   les a qu'aux groupes. Le relevé suit la décision du 03/10 (« chacun au modèle de son onglet ») : P6 porte, par
+   onglet, police, taille, couleurs, lignes de mois et format de date (type `ModeleOnglet` complété plus haut).
+2. **Une police libre de plus pour le PDF** (Q11) : Georgia (Fidélité musiciens) est propriétaire, comme Calibri ; son
+   équivalent libre aux mêmes mesures est **Gelasio** (OFL, Google Fonts), dans `public/fonts/` avec sa licence.
+   Impact (titres de Table, EDD, Intergroupe, Interfranco) et Arial (notes) ne servent pas : l'en-tête commun remplace
+   ces titres, les notes ne s'exportent pas.
+3. **Église en chinois** pour Fidélité et Fidélité musiciens (même groupe ; l'onglet des musiciens n'en a pas) ; en
+   français pour tous les autres, EDD compris (ses textes sont en français).
+4. **Horaires** : seuls le Culte (code), les groupes et Fidélité en ont un ; les autres onglets n'ont pas de ligne
+   d'horaire, Fidélité musiciens compris.
+5. **P5** : PERCUSSION aussi pour Bonté ; MÉNAGES écarté.
 
 ## Écrans
 
@@ -303,3 +369,4 @@ npx tsc --noEmit && npm run lint
 
 - 04/10/2026 : **P1 codé** (test d'abord, vu rouge puis vert : 12 tests × 3 appareils ; 420 tests du planning verts, serveur « comme en ligne » compris), commité en local `b483d9d`, **non poussé**.
 - 04/10/2026 : code commencé par un agent sur la branche locale `lot/u2-planning-2027` (part de `ui/apple-design`, P1 compris), quatre commits locaux : `8fb7cae` année 2027 dans les groupes (dimanches posés d'office, case écrite seule), `a2892fd` brouillon par trimestre, bandeau, « Publier le T1 » (page Groupes), `afaf8e6` le Culte en 2027 (sélecteur, brouillon, publication, vue trimestrielle partagée), `65d3cbd` Table et EDD en 2027. Restent P4 (Interfranco, Intergroupe), P5, P6 à P9 (modèles, PDF, .xlsx, « Choisir ») et le relevé T0 à vérifier. Agents arrêtés par Timothée le 04/10 au soir ; rien fusionné dans `ui/apple-design`, rien poussé.
+- 05/10/2026 : **T0 fait** (agent, branche `lot/u2-planning-2027`) : les 19 onglets relevés (CSV public comme l'app, export .xlsx et PDF du classeur pour le rendu), tableau des modèles complété sans aucun nom, « Commun » corrigé (63 px et 219 px, logo d'environ 200 px), type `ModeleOnglet` complété, section « Relevé T0 » ajoutée ; aucun code de l'app, aucun test (tranche de relevé). Commit local `docs(U2): T0 …`, non poussé. **À faire par Timothée** : valider le tableau et les cinq propositions du relevé (tableau au modèle de son onglet ; Gelasio pour Georgia ; église en chinois pour Fidélité musiciens ; pas d'horaire là où le Sheet n'en a pas ; Percussion pour Bonté, Ménages écarté), plus les titres proposés du Culte (« CULTE FRANCO ») et du Campus (« CAMPUS 2027 »). Restent P4 à P9.
