@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { ouvrirPartitions } from "./helpers/setlist";
 
 // Chantier Setlist, lot 2 (docs/spec-setlist.md) : historique des
 // modifications, une entrée par passage, lu depuis la page de la setlist.
@@ -198,7 +199,7 @@ test("rétablir l'original d'un chant adapté (vue partitions) s'écrit dans l'h
     item({ songSlug: "一生爱你", position: 2 }),
   ] };
   await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: adapted }, `/setlists/${SETLIST_ID}`);
-  await page.getByRole("button", { name: "Partitions" }).click();
+  await ouvrirPartitions(page);
   await page.getByRole("button", { name: "Adapter" }).click();
   await page.getByRole("button", { name: "Rétablir l'original" }).click();
   await page.getByRole("button", { name: "Rétablir", exact: true }).click();
@@ -209,7 +210,7 @@ test("rétablir l'original d'un chant adapté (vue partitions) s'écrit dans l'h
 test("vue partitions : adapter une ligne puis rétablir l'original ne laisse pas de phrase", async ({ page }) => {
   const db = await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: { ...SETLIST, ownerId: MUSICIEN.uid } }, `/setlists/${SETLIST_ID}`);
   const phrases = () => db.list(`setlists/${SETLIST_ID}/history`).map((p) => (db.doc(p)?.changes as unknown[]).length);
-  await page.getByRole("button", { name: "Partitions" }).click();
+  await ouvrirPartitions(page);
   await page.getByRole("button", { name: "Adapter" }).click();
   await page.getByRole("button").filter({ hasText: "planait" }).first().click();
   await page.getByRole("button", { name: "Supprimer la ligne" }).click();
@@ -480,7 +481,7 @@ test("H1 — mode Adapter, copie d'une section répétée : pas de phrase de str
     ],
   };
   const db = await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: repeated }, `/setlists/${SETLIST_ID}`);
-  await page.getByRole("button", { name: "Partitions" }).click();
+  await ouvrirPartitions(page);
   await page.getByRole("button", { name: "Adapter" }).click();
   // Ligne du 2e Couplet 1 : l'édition matérialise une copie de la section.
   await page.getByRole("button").filter({ hasText: "planait" }).last().click();

@@ -22,7 +22,7 @@ import { Drawer as DrawerPrimitive } from "vaul";
 import { useAuth } from "@/lib/firebase/auth";
 import { useSetLanguage } from "@/lib/I18nProvider";
 import { BACK_OFFICE } from "@/lib/backOffice";
-import { entreesBarre, estEntreeActive, labelDeSection } from "@/lib/navigation";
+import { entreesBarre, estEntreeActive, labelDeSection, listeSetlistsRetenue } from "@/lib/navigation";
 import { getBarreReduite, setBarreReduite, suivreBarreReduite } from "@/lib/barreLateralePref";
 import { Cloche } from "@/components/layout/Cloche";
 import { MenuCompte, useNomDuMembre } from "@/components/layout/MenuCompte";
@@ -190,6 +190,8 @@ function ContenuBarre({
   const cloche = useACoteDeLaBarre();
   // Back-office coupé (lot 18) : la section Évènements n'est pas en ligne.
   const entrees = loading ? [] : entreesBarre("app", { connecte: !!user, backOffice: BACK_OFFICE });
+  // Sur une setlist, « Setlists » rouvre la liste filtrée qu'on a quittée (U5, Q7).
+  const listeSetlists = useSyncExternalStore(rienASuivre, listeSetlistsRetenue, () => "/setlists");
 
   // Barre réduite : la langue d'un membre n'y figure pas (Q5), celle du visiteur si.
   const langue = (classe = "") => (
@@ -239,7 +241,7 @@ function ContenuBarre({
           return (
             <Link
               key={href}
-              href={href}
+              href={href === "/setlists" && pathname.startsWith("/setlists/") ? listeSetlists : href}
               aria-current={active ? "page" : undefined}
               aria-label={t(cle)}
               title={enIcones ? t(cle) : undefined}

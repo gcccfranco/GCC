@@ -12,13 +12,21 @@ import { PageTitle } from "@/components/layout/PageTitle";
 import { useTranslation } from "react-i18next";
 import type { SongIndexEntry, Theme } from "@/types/song";
 import { SongProposalDrawer } from "@/components/songs/SongProposalDrawer";
+import { deuxVoletsMaintenant } from "@/hooks/useDeuxVolets";
 
 interface SongListClientProps {
+  /** Lus dans l'index (useSongsIndex) : vide tant qu'il n'est pas arrivé. */
   songs: SongIndexEntry[];
   themes: Theme[];
+  /** Chant ouvert dans le volet de droite (deux volets) : sa ligne en encre. */
+  actif?: string | null;
 }
 
-export function SongListClient({ songs, themes }: SongListClientProps) {
+/** Sur /songs seulement (lot U5, Q15) : en deux volets, la liste reste montée sous
+ *  /songs/[slug], dont l'adresse porte les réglages du chant (`?key=`). */
+const surLaListe = () => /^\/songs\/?$/.test(window.location.pathname);
+
+export function SongListClient({ songs, themes, actif = null }: SongListClientProps) {
   const { t, i18n } = useTranslation();
   const currentLang = i18n.language;
   const isZhLocale = currentLang === "zh-CN";
@@ -54,8 +62,11 @@ export function SongListClient({ songs, themes }: SongListClientProps) {
   // Restore scroll position. Next.js remet la page en haut juste après le
   // rendu de la route : on repasse derrière lui dans l'image suivante, qui
   // s'affiche déjà à la bonne position (un délai fixe laissait voir le saut).
+  // Une fois la liste là (l'index est lu au premier affichage). En deux volets, la
+  // fenêtre est celle du chant : la liste défile dans son volet et ne se restaure pas.
+  const chargee = songs.length > 0;
   useLayoutEffect(() => {
-    if (!isInitialized) return;
+    if (!isInitialized || !chargee || deuxVoletsMaintenant()) return;
     const savedScroll = sessionStorage.getItem("songsScrollPos");
     if (!savedScroll) return;
     const frame = requestAnimationFrame(() => {
@@ -65,11 +76,11 @@ export function SongListClient({ songs, themes }: SongListClientProps) {
       });
     });
     return () => cancelAnimationFrame(frame);
-  }, [isInitialized]);
+  }, [isInitialized, chargee]);
 
   // Update URL search params and sessionStorage path when state changes
   useEffect(() => {
-    if (!isInitialized) return;
+    if (!isInitialized || !surLaListe()) return;
     
     const params = new URLSearchParams();
     if (query.trim()) params.set("q", query.trim());
@@ -87,6 +98,7 @@ export function SongListClient({ songs, themes }: SongListClientProps) {
   // fait avant l'hydratation — liste déjà visible, écouteur pas encore
   // branché — n'était jamais enregistré, et le retour ramenait en haut.
   function saveScrollPos() {
+    if (deuxVoletsMaintenant()) return;
     sessionStorage.setItem("songsScrollPos", window.scrollY.toString());
   }
 
@@ -147,11 +159,12 @@ export function SongListClient({ songs, themes }: SongListClientProps) {
 
   // Récents : slugs → entrées (dans l'ordre de consultation)
   // La rangée s'estompe du côté où il reste des chants (V7) plutôt que d'en couper un.
-  const rangeeRecents = useFonduLateral<HTMLDivElement>(recentSlugs.length);
   const recentSongs = useMemo(() => {
     const map = new Map(songs.map((s) => [s.slug, s]));
     return recentSlugs.map((slug) => map.get(slug)).filter((s): s is SongIndexEntry => !!s);
   }, [recentSlugs, songs]);
+  // Les récents s'affichent quand l'index arrive : le fondu se recalcule alors.
+  const rangeeRecents = useFonduLateral<HTMLDivElement>(recentSongs.length);
 
   // Index A–Z (hors recherche)
   const letterIndex = useMemo(() => {
@@ -202,6 +215,13 @@ export function SongListClient({ songs, themes }: SongListClientProps) {
     // Un tap : le défilement du pointerdown n'a pas encore émis son événement.
     requestAnimationFrame(() => requestAnimationFrame(unlockNav));
   }
+
+  // La ligne du chant ouvert à droite vient dans la vue de son volet : arrivé par une
+  // adresse, ou par le retour du navigateur.
+  useEffect(() => {
+    if (!actif || !chargee) return;
+    document.getElementById(`song-li-${actif}`)?.scrollIntoView({ block: "nearest" });
+  }, [actif, chargee]);
 
   const usedThemeSlugs = new Set(songs.flatMap((s) => s.themes));
   const availableThemes = themes.filter((t) => usedThemeSlugs.has(t.slug));
@@ -315,7 +335,9 @@ export function SongListClient({ songs, themes }: SongListClientProps) {
       {/* Compteur + proposition de chant */}
       <div className="flex items-center justify-between gap-3 mb-3">
         <p className="text-sm text-muted-foreground">
-          {filtered.length === songs.length
+          {!chargee
+            ? "\u00a0"
+            : filtered.length === songs.length
             ? t("songs.list.counter", { count: songs.length })
             : t("songs.list.counterFiltered", { count: filtered.length, filteredCount: filtered.length, totalCount: songs.length })}
         </p>
@@ -323,29 +345,46 @@ export function SongListClient({ songs, themes }: SongListClientProps) {
       </div>
 
       {/* Liste */}
-      {filtered.length === 0 ? (
+      {!chargee ? null : filtered.length === 0 ? (
         <p className="text-sm text-muted-foreground text-center py-10">
           {t("songs.list.noSongsFound")}
         </p>
       ) : (
         <ul>
-          {filtered.map((song) => (
+          {filtered.map((song) => {
+            const ouvert = song.slug === actif;
+            return (
             <li key={song.slug} id={`song-li-${song.slug}`} className="group-row relative scroll-mt-[calc(var(--nav-h)+8px)]">
               <Link
                 href={`/songs/${song.slug}`}
-                className="-mx-3 flex min-h-[60px] items-center gap-3 rounded-xl px-3 py-2.5 transition-colors duration-150 active:bg-secondary/70"
+                aria-current={ouvert ? "page" : undefined}
+                className={`-mx-3 flex min-h-[60px] items-center gap-3 rounded-xl px-3 py-2.5 transition-colors duration-150 ${
+                  // Le chant ouvert à droite (deux volets, planche `Main`) : la ligne en encre.
+                  ouvert ? "bg-foreground" : "active:bg-secondary/70"
+                }`}
               >
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-base font-semibold text-foreground">{song.title}</span>
-                  <span className="block truncate text-sm text-muted-foreground">
+                  <span className={`block truncate text-base font-semibold ${ouvert ? "text-background" : "text-foreground"}`}>{song.title}</span>
+                  <span className={`block truncate text-sm ${ouvert ? "text-background/70" : "text-muted-foreground"}`}>
                     {song.titlePinyin ? `${song.titlePinyin} · ${song.artist}` : song.artist}
                   </span>
                 </span>
-                {/* Tonalité recommandée (sinon d'origine), à droite, teinte de la langue */}
-                <KeyPill tonalite={song.recommendedKey ?? song.originalKey} langue={song.language === "zh" ? "zh" : "fr"} />
+                {/* Tonalité recommandée (sinon d'origine), à droite, teinte de la langue ; sur
+                    l'encre, en blanc (planche `Main`). */}
+                {ouvert ? (
+                  <span
+                    data-testid="tonalite"
+                    className="inline-flex h-[26px] min-w-9 shrink-0 items-center justify-center rounded-[7px] px-2 text-sm font-bold leading-none tabular-nums text-background ring-1 ring-inset ring-background/50"
+                  >
+                    {song.recommendedKey ?? song.originalKey}
+                  </span>
+                ) : (
+                  <KeyPill tonalite={song.recommendedKey ?? song.originalKey} langue={song.language === "zh" ? "zh" : "fr"} />
+                )}
               </Link>
             </li>
-          ))}
+            );
+          })}
         </ul>
       )}
 

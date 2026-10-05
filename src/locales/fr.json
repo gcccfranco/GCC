@@ -83,6 +83,13 @@
       "allLanguages": "Tous",
       "recent": "Récemment consultés"
     },
+    "choose": {
+      "title": "Choisis un chant",
+      "subtitle": "dans la liste, ou parmi ceux des prochains dimanches.",
+      "subtitleListOnly": "dans la liste.",
+      "upcoming": "Prochaines setlists",
+      "upcomingHelp": "Les mêmes que dans l'onglet Setlists : celles des services et des groupes où tu as un rôle."
+    },
     "detail": {
       "backToAll": "Retour",
       "chords": "Accords",
@@ -190,7 +197,9 @@
       "loadingCharts": "Chargement des partitions…",
       "copyLyrics": "Copier les paroles",
       "copyLyricsDone": "Copié",
-      "outline": "Déroulé",
+      "sommaire": "Sommaire",
+      "copyAllLyrics": "Copier toutes les paroles",
+      "pdf": "PDF",
       "presentation": "Présentation",
       "presentationAdd": "Ajouter le lien de la présentation",
       "presentationChange": "Changer le lien",
@@ -465,6 +474,7 @@
     "layout": "Mise en page…",
     "next": "Suivant :",
     "songList": "Liste des chants",
+    "twoColumns": "2 colonnes",
     "settings": "Réglages",
     "view": "Vue",
     "rolePrompt": {
@@ -1721,6 +1731,8 @@
       "colorsHelp": "Chaque section dans un cadre à sa couleur, comme à l'écran.",
       "compact": "Compact",
       "compactHelp": "Le bandeau de structure, puis chaque section une seule fois.",
+      "liste": "Liste",
+      "listeHelp": "Les chants, leurs tonalités et leur structure, sur une page.",
       "download": "Télécharger",
       "preparing": "Préparation…"
     }

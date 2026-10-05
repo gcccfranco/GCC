@@ -1,5 +1,6 @@
 "use client";
 import localFont from "next/font/local";
+import Link, { type LinkProps } from "next/link";
 import { ChordLine } from "@/components/song/ChordLine";
 import { JianpuLine } from "@/components/song/JianpuLine";
 import { pinyin_font } from "@/components/song/pinyinFont";
@@ -700,6 +701,9 @@ export interface SongViewProps {
    *  quelle, sans notes ni transitions d'occurrence ; le bandeau garde la
    *  structure jouée. */
   bodyStructure?: string[] | null;
+  /** Dans une setlist : le titre mène à la page du chant, dans ses réglages
+   *  (docs/spec-deux-volets.md, Q12). */
+  titleHref?: LinkProps["href"];
 }
 
 export function SongView({
@@ -716,6 +720,7 @@ export function SongView({
   onLineSelect,
   layout = "played",
   bodyStructure = null,
+  titleHref,
 }: SongViewProps) {
   const { t } = useTranslation();
   const isZh = ast.metadata.language === "zh";
@@ -745,7 +750,13 @@ export function SongView({
         <div className="flex items-start justify-between gap-5">
           <div className="min-w-0">
             <h1 className={`text-[26px] font-bold text-foreground leading-[1.05] tracking-[-0.4px] uppercase ${isZh ? KaiTiFont.className : chord_font.className}`}>
-              {ast.metadata.title}
+              {titleHref ? (
+                <Link href={titleHref} className="hover:underline underline-offset-4 decoration-2">
+                  {ast.metadata.title}
+                </Link>
+              ) : (
+                ast.metadata.title
+              )}
             </h1>
             {ast.metadata.titlePinyin && (
               <p className={`text-muted-foreground text-[13px] mt-1 ${pinyin_font.className}`}>

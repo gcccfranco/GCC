@@ -7,7 +7,8 @@ const DOUZE = ["C", "Db", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"];
 
 async function ouvrir(page: import("@playwright/test").Page, slug: string) {
   await page.goto(`/songs/${encodeURIComponent(slug)}`, { waitUntil: "domcontentloaded" });
-  const select = page.locator("select").first();
+  // Dans la barre du chant : en deux volets, la liste (et son choix de thème) est à côté (lot U5).
+  const select = page.getByTestId("barre-outils").locator("select").first();
   await select.waitFor();
   return select;
 }

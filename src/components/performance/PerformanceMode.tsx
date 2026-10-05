@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { X, ChevronLeft, ChevronRight, Link2, MessageSquare, ListMusic, Settings, PenLine, Sun, Moon } from "lucide-react";
+import { X, ChevronLeft, ChevronRight, Columns2, Link2, MessageSquare, ListMusic, Settings, PenLine, Sun, Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/drawer";
 import type { PerformanceBlock, SectionBlock, JianpuSheetBlock, SongHeaderBlock } from "@/lib/performance/blocks";
 import { buildPerformanceBlocks, computePageKey } from "@/lib/performance/blocks";
+import { GRAND_ECRAN, pagesUneColonne, paginateColumns, twoColumnsPossible, type PerfPage } from "@/lib/performance/columns";
 import { useJianpuManifest } from "@/lib/jianpu/images";
 import { getJianpuPref, setJianpuPref, type JianpuPref } from "@/lib/jianpu/preference";
 import { JianpuSheet } from "@/components/jianpu/JianpuSheet";
@@ -193,33 +194,7 @@ function SongHeader({ block }: { block: SongHeaderBlock }) {
 }
 
 // ─── Pagination ───────────────────────────────────────────────────────────────
-
-// Une page de rendu : en-tête de chant éventuel (pleine largeur), une ou deux
-// colonnes de blocs, et un facteur d'échelle ≤ 1 (ajustement automatique pour
-// faire tenir toute la structure d'un chant sur sa page en mode ossature).
-// `fit` : page occupée par une partition 简谱, qui se met à l'échelle de la
-// hauteur disponible au lieu d'être paginée (une image ne se coupe pas).
-type PerfPage = { header: number | null; cols: number[][]; scale: number; fit?: boolean };
-
-// Mode normal : une colonne par page. Chaque chant commence sur une nouvelle page
-// (breakBefore = en-têtes de chant) ; à l'intérieur d'un chant, remplissage glouton.
-function paginateBlocks(idxs: number[], heights: number[], viewportH: number, breakBefore: Set<number>): number[][] {
-  const pages: number[][] = [];
-  let current: number[] = [];
-  let used = 0;
-  for (const i of idxs) {
-    const h = heights[i];
-    if ((breakBefore.has(i) && current.length > 0) || (current.length > 0 && used + h > viewportH)) {
-      pages.push(current);
-      current = [];
-      used = 0;
-    }
-    current.push(i);
-    used += h;
-  }
-  if (current.length > 0) pages.push(current);
-  return pages.length > 0 ? pages : [[]];
-}
+// Pages en une et en deux colonnes (`PerfPage`) : src/lib/performance/columns.ts.
 
 // Une page de scan 简谱 = une page d'écran, avec l'en-tête du chant s'il la
 // précède immédiatement. Le reste des blocs est paginé normalement autour.
@@ -302,6 +277,12 @@ function layoutSong(
     // gap-x-4 entre les deux colonnes
     scale: fit(best.maxH, (contentW - 16) / 2),
   };
+}
+
+/** Disposition et largeur de la fenêtre : le mode louange est plein écran. */
+function lireEcran(): { grand: boolean; largeur: number } {
+  if (typeof window === "undefined") return { grand: false, largeur: 0 };
+  return { grand: window.matchMedia(GRAND_ECRAN).matches, largeur: window.innerWidth };
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
@@ -508,6 +489,26 @@ export function PerformanceMode({
   // Vue ossature (paroles ET accords masqués) : un chant par page, structure en
   // colonnes adaptatives, texte réduit au besoin pour tout faire tenir.
   const structureMode = hideLyrics && !showChords;
+
+  // Deux colonnes (lot U5, docs/spec-deux-volets.md Q2–Q3) : sur tablette couchée
+  // et sur ordinateur, si la largeur de mise en page le permet, hors vue structure.
+  // Automatique ; l'interrupteur « 2 colonnes » est retenu par appareil
+  // (`perf-two-columns` : "1", "0", absent = automatique).
+  const [ecran, setEcran] = useState(lireEcran);
+  const [twoColumnsPref, setTwoColumnsPref] = useState<string | null>(() => {
+    try {
+      return localStorage.getItem("perf-two-columns");
+    } catch {
+      return null;
+    }
+  });
+  const twoColumnsAvailable = twoColumnsPossible(ecran.grand, ecran.largeur, fontScale) && !structureMode;
+  const twoColumns = twoColumnsAvailable && twoColumnsPref !== "0";
+  const toggleTwoColumns = useCallback(() => {
+    const next = twoColumns ? "0" : "1";
+    setTwoColumnsPref(next);
+    try { localStorage.setItem("perf-two-columns", next); } catch { /* ignore */ }
+  }, [twoColumns]);
   // Indices à plat par page (navigation, sommaire, clé d'annotations).
   const pages = useMemo(
     () => layout.map((p) => (p.header != null ? [p.header, ...p.cols.flat()] : p.cols.flat())),
@@ -515,6 +516,9 @@ export function PerformanceMode({
   );
 
   const blockRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const blockColRefs = useRef<(HTMLDivElement | null)[]>([]);
+  // Page lue et son premier bloc : ancre de la lecture quand la mise en page change.
+  const readingRef = useRef<{ page: number; block: number | undefined }>({ page: 0, block: undefined });
   const measureInnerRef = useRef<HTMLDivElement | null>(null);
   const chromeTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const tapStart = useRef<{ x: number; y: number; time: number } | null>(null);
@@ -587,7 +591,10 @@ export function PerformanceMode({
 
   // Re-measure on viewport resize / orientation change
   useEffect(() => {
-    const onResize = () => setRemeasureKey((k) => k + 1);
+    const onResize = () => {
+      setEcran(lireEcran());
+      setRemeasureKey((k) => k + 1);
+    };
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, []);
@@ -612,12 +619,18 @@ export function PerformanceMode({
         : window.innerWidth / fontScale;
       // Hauteur réellement occupée par chaque bloc, marges verticales comprises :
       // delta entre le haut du bloc et le haut du bloc suivant dans le flux.
+      const flowHeights = (rects: (DOMRect | null)[]) =>
+        rects.map((r, i) => {
+          if (!r) return 0;
+          const next = rects[i + 1];
+          return next ? Math.max(0, next.top - r.top) : r.height;
+        });
       const rects = blocks.map((_, i) => blockRefs.current[i]?.getBoundingClientRect() ?? null);
-      const heights = rects.map((r, i) => {
-        if (!r) return 0;
-        const next = rects[i + 1];
-        return next ? Math.max(0, next.top - r.top) : r.height;
-      });
+      const heights = flowHeights(rects);
+      // Deux colonnes : hauteurs à la largeur d'une colonne (seconde copie de
+      // mesure). Absente : une colonne.
+      const colRects = twoColumns ? blocks.map((_, i) => blockColRefs.current[i]?.getBoundingClientRect() ?? null) : [];
+      const heightsColumn = colRects.some(Boolean) ? flowHeights(colRects) : [];
       // Vue structure : largeur naturelle des sections (mesurées sans retour à la ligne).
       const widths = rects.map((r, i) => (structureMode && blocks[i]?.kind === "section" ? r?.width ?? 0 : 0));
       const kindOf = (i: number) => blocks[i]?.kind;
@@ -641,24 +654,40 @@ export function PerformanceMode({
         );
       } else {
         const breakBefore = new Set(blocks.flatMap((b, i) => (b.kind === "song-header" ? [i] : [])));
-        computed = splitSheetPages(all, kindOf, (flow) =>
-          paginateBlocks(flow, heights, viewportH, breakBefore).map((idxs) => {
-          // Jamais de section coupée : une page qui déborde quand même (bloc
-          // seul plus haut que l'écran) est réduite pour tenir, comme l'ossature.
-            const pageH = idxs.reduce((s, i) => s + heights[i], 0);
-            return {
-              header: null,
-              cols: [idxs],
-              scale: Math.min(1, viewportH / Math.max(1, pageH)),
-            };
-          }),
-        );
+        computed = splitSheetPages(all, kindOf, (flow) => {
+          if (!twoColumns) return pagesUneColonne(flow, heights, viewportH, breakBefore);
+          // Deux colonnes : chant par chant, chacun ouvre une page.
+          const songs: number[][] = [];
+          for (const i of flow) {
+            if (kindOf(i) === "song-header" || songs.length === 0) songs.push([]);
+            songs[songs.length - 1].push(i);
+          }
+          return songs.flatMap((song) => {
+            const header = kindOf(song[0]) === "song-header" ? song[0] : null;
+            return paginateColumns({
+              flow: header != null ? song.slice(1) : song,
+              header,
+              heightsFull: heights,
+              heightsColumn,
+              pageHeight: viewportH,
+            });
+          });
+        });
       }
       setLayout(computed);
-      setCurrentPage((prev) => Math.min(prev, Math.max(0, computed.length - 1)));
+      // La lecture reste à l'écran quand la mise en page change (« 2 colonnes »,
+      // rotation, taille du texte) : la page qui contient le premier bloc de la
+      // page lue. Une page tournée entre-temps n'est pas déplacée.
+      setCurrentPage((prev) => {
+        const { page, block } = readingRef.current;
+        const anchored = page === prev && block !== undefined
+          ? computed.findIndex((p) => p.header === block || p.cols.some((c) => c.includes(block)))
+          : -1;
+        return anchored >= 0 ? anchored : Math.min(prev, Math.max(0, computed.length - 1));
+      });
     };
     run();
-  }, [blocks, remeasureKey, fontScale, structureMode]);
+  }, [blocks, remeasureKey, fontScale, structureMode, twoColumns]);
 
   // Vue structure agrandie : la mesure se fait à l'échelle 1, mais à l'écran
   // le corps agrandi dispose d'une largeur réduite d'autant, et un libellé
@@ -746,6 +775,9 @@ export function PerformanceMode({
   // ── Annotation persistence ──────────────────────────────────────────────────
 
   const currentPageIndices = pages[currentPage] ?? [];
+  useEffect(() => {
+    readingRef.current = { page: currentPage, block: pages[currentPage]?.[0] };
+  }, [pages, currentPage]);
   // Sommaire : un en-tête de chant par entrée, avec sa page de départ
   const songEntries = useMemo(
     () => blocks.flatMap((b, i) => (b.kind === "song-header" ? [{ block: b, index: i }] : [])),
@@ -767,7 +799,9 @@ export function PerformanceMode({
   // d'annotations existantes (sans ces marqueurs) restent valables sinon.
   // « p<tonalité> » seulement quand une tonalité est choisie sur l'appareil.
   const layoutSig = `c${showChords ? 1 : 0}t${showTransitions ? 1 : 0}l${hideLyrics ? 1 : 0}${chartStyle ? "s1" : ""}${currentCapo ? `k${currentCapo}` : ""}${currentPersonalKey ? `p${currentPersonalKey}` : ""}z${Math.round(fontScale * 100)}`;
-  const currentPageKey = computePageKey(blocks, currentPageIndices, layoutSig);
+  // « x2 » seulement sur une page posée en deux colonnes : une page en une
+  // colonne garde sa clé, et ses traits ne se mêlent pas à ceux d'une autre mise en page.
+  const currentPageKey = computePageKey(blocks, currentPageIndices, `${layoutSig}${layout[currentPage]?.twoColumns ? "x2" : ""}`);
 
   // Charger les traits de la page courante (toujours — affichage permanent)
   useEffect(() => {
@@ -956,6 +990,29 @@ export function PerformanceMode({
             </div>
           ))}
         </div>
+        {/* Deux colonnes : la même mesure à la largeur d'une colonne (gouttière
+            de 2rem, comme le rendu). Seuls les blocs qui vont en colonne y sont
+            rendus : l'en-tête reste en pleine largeur, un scan 简谱 sur sa page. */}
+        {twoColumns && (
+          <div className="absolute top-0 left-0" style={{ width: `calc(100% / ${fontScale})`, ...contentPadding }}>
+            <div style={{ width: "calc(50% - 1rem)" }}>
+              {blocks.map((block, i) => (
+                <div key={block.uid} ref={(el) => { blockColRefs.current[i] = el; }}>
+                  {block.kind !== "song-header" && block.kind !== "jianpu-sheet" && (
+                    <BlockRenderer
+                      block={block}
+                      showChordsGlobal={showChords}
+                      showTransitions={showTransitions}
+                      hideLyrics={hideLyrics}
+                      chartStyle={chartStyle}
+                      showPinyinGlobal={showPinyin}
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* ── Content area ── */}
@@ -1042,7 +1099,8 @@ export function PerformanceMode({
           }
           return (
             <div>
-              {/* En-tête hors échelle : seule la vue structure en a un ici. */}
+              {/* En-tête hors échelle, en pleine largeur : vue structure et
+                  première page d'un chant en deux colonnes. */}
               {page.header != null && renderBlock(page.header)}
               {/* Mise à l'échelle d'une page (réduction si elle déborde, agrandissement
                   en vue structure) : transform + largeur compensée, comme le
@@ -1060,7 +1118,8 @@ export function PerformanceMode({
                     : undefined
                 }
               >
-                <div className={multiCol ? "flex items-start gap-x-4" : undefined}>
+                {/* Deux colonnes : gouttière de 2rem, celle de la mesure en colonne. */}
+                <div className={multiCol ? `flex items-start ${page.twoColumns ? "gap-x-8" : "gap-x-4"}` : undefined}>
                   {page.cols.map((colIdxs, ci) => (
                     <div key={ci} className={multiCol ? "flex-1 min-w-0" : undefined}>
                       {colIdxs.map((i) => renderBlock(i))}
@@ -1199,6 +1258,20 @@ export function PerformanceMode({
               {pages.length > 0 ? `${currentPage + 1} / ${pages.length}` : "—"}
             </span>
           </div>
+          {/* Deux colonnes : à côté du compteur, seulement quand elles sont possibles. */}
+          {twoColumnsAvailable && (
+            <button
+              type="button"
+              aria-pressed={twoColumns}
+              onClick={toggleTwoColumns}
+              className={`h-9 px-3 shrink-0 flex items-center gap-1.5 rounded-full border text-xs font-semibold transition-colors active:bg-muted ${
+                twoColumns ? "bg-secondary text-foreground border-transparent" : "border-border text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Columns2 className="h-4 w-4" />
+              {t("performance.twoColumns")}
+            </button>
+          )}
         </div>
 
         {/* Bottom bar */}

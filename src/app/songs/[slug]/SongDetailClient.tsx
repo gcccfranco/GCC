@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import Link from "next/link";
-import { MoreHorizontal, Download, Play, X, TriangleAlert , Music, Music2, Settings, ChevronDown, Sparkles } from "lucide-react";
+import { MoreHorizontal, Download, Play, X, TriangleAlert , Music, Music2, Settings, ChevronDown, Sparkles, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -25,6 +25,7 @@ import { buildDefaultStructure } from "@/lib/chordpro/structure";
 import { parseChordPro } from "@/lib/chordpro/parser";
 import { transposeAST } from "@/lib/transposeAST";
 import { useScrollDirection } from "@/hooks/useScrollDirection";
+import { useDeuxVolets } from "@/hooks/useDeuxVolets";
 import { Halo } from "@/components/layout/Halo";
 import { FondDeBarre } from "@/components/layout/FondDeBarre";
 import { keyOptions, semitonesTo, getTransposedKey } from "@/lib/transpose";
@@ -104,6 +105,29 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
     const defaultKey = recommendedKey ?? originalKey;
     const youtubeId = song.youtubeUrl ? extractYouTubeId(song.youtubeUrl) : null;
     const scrollVisible = useScrollDirection();
+    // Deux volets (lot U5, docs/spec-deux-volets.md, Q16) : la barre colle en haut du volet
+    // de droite au lieu d'être fixe sur toute la largeur (globals.css, `.chants-volets`).
+    // Elle glisse au défilement, donc devient le repère de la copie fixe du halo de son
+    // fond : celle-ci se recale de la place de la barre à gauche, `--barre-left`.
+    const deuxVolets = useDeuxVolets();
+    const barreRef = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+      const el = barreRef.current;
+      if (!el) return;
+      if (!deuxVolets) {
+        el.style.removeProperty("--barre-left");
+        return;
+      }
+      const update = () => el.style.setProperty("--barre-left", `${el.getBoundingClientRect().left}px`);
+      update();
+      const ro = new ResizeObserver(update);
+      ro.observe(el);
+      window.addEventListener("resize", update);
+      return () => {
+        ro.disconnect();
+        window.removeEventListener("resize", update);
+      };
+    }, [deuxVolets]);
     // Barre d'outils rappelée d'un tap sur la partition (tablette au pupitre :
     // éviter de devoir remonter la page pour transposer / zoomer)
     const [barPinned, setBarPinned] = useState(false);
@@ -289,22 +313,24 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
     (k === recommendedKey ? " " + t("customize.panel.keyRecommended") : "");
 
   return (
-      <div className="relative min-h-screen print:min-h-0 bg-background" style={{ width: `${100 / fontScale}%` }}>
+      <div className="relative min-h-screen print:min-h-0 bg-background" style={{ width: `${100 / fontScale}%`, "--zoom-chant": fontScale } as React.CSSProperties}>
         <Halo variant="chant" color="var(--sec-chorus)" />
         {/* Barre de contrôles */}
-        <div data-testid="barre-outils" className={`print:hidden fixed left-[var(--barre-laterale)] right-0 top-[var(--nav-h)] [--barre-top:var(--nav-h)] [--barre-left:var(--barre-laterale)] z-10 material-chrome transition-transform duration-300 ${ scrollVisible || barPinned ? "translate-y-0" : "-translate-y-[calc(100%+var(--nav-h))]"}`}>
+        <div ref={barreRef} data-testid="barre-outils" className={`barre-chant print:hidden fixed left-[var(--barre-laterale)] right-0 top-[var(--nav-h)] [--barre-top:var(--nav-h)] [--barre-left:var(--barre-laterale)] z-10 material-chrome transition-transform duration-300 ${ scrollVisible || barPinned ? "translate-y-0" : "-translate-y-[calc(100%+var(--nav-h))]"}`}>
           <FondDeBarre sousNavbar />
-          <div className = "max-w-3xl mx-auto w-full flex flex-nowrap gap-1 items-center py-2 px-1.5">
+          {/* `rangee-chant` : les libellés suivent la largeur de la rangée (requête de conteneur,
+              globals.css), donc celle du volet en deux volets. */}
+          <div className = "rangee-chant max-w-3xl mx-auto w-full flex flex-nowrap gap-1 items-center py-2 px-1.5">
             <Button
               asChild
               variant="secondary"
-              className="h-9 lg:h-8 px-2.5 rounded-full text-xs font-semibold text-muted-foreground hover:text-foreground"
+              className="retour-chant h-9 lg:h-8 px-2.5 rounded-full text-xs font-semibold text-muted-foreground hover:text-foreground"
             >
               <Link aria-label={t("songs.detail.backToAll")} href={backPath}>
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M19 12H5m6-7l-7 7 7 7" />
                 </svg>
-                <span className="hidden sm:inline">{t("songs.detail.backToAll")}</span>
+                <span className="libelle-chant">{t("songs.detail.backToAll")}</span>
               </Link>
             </Button>
             {/* Transposition rapide */}
@@ -383,7 +409,7 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
               )}
             </div>
 
-            <div className="raised ml-auto flex gap-0.5 items-center justify-end rounded-full p-0.5">
+            <div className="groupe-chant raised ml-auto flex gap-0.5 items-center justify-end rounded-full p-0.5">
               {/* Taille du texte */}
               <div className="flex items-center">
                 <Button
@@ -418,7 +444,7 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
                     }`}
               >
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/><path d="M9 18V5l12-2v13"/></svg>
-                    <span className="hidden sm:inline">{t("songs.detail.chords") || "Accords"}</span>
+                    <span className="libelle-chant">{t("songs.detail.chords") || "Accords"}</span>
               </button>
 
               {/* Pinyin (chants zh) */}
@@ -432,7 +458,7 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
                       }`}
                     >
                       <span className="font-bold">拼</span>
-                      <span className="hidden sm:inline">{t("songs.detail.pinyin") || "Pinyin"}</span>
+                      <span className="libelle-chant">{t("songs.detail.pinyin") || "Pinyin"}</span>
                     </button>
                   )}
 
@@ -447,7 +473,7 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
                   }`}
                 >
                   <span className="font-bold">谱</span>
-                  <span className="hidden sm:inline">简谱</span>
+                  <span className="libelle-chant">简谱</span>
                 </button>
               )}
 
@@ -497,12 +523,12 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
                     <Settings className="h-3.5 w-3.5 text-muted-foreground" />
                     {t("songs.detail.customize")}
                   </DropdownMenuItem>
-                  <DropdownMenuItem disabled={downloading} onClick={() => setShowPdfChoice(true)}>
+                  <DropdownMenuItem className="dans-menu-chant" disabled={downloading} onClick={() => setShowPdfChoice(true)}>
                     <Download className="h-3.5 w-3.5 text-muted-foreground" />
                     {downloading ? "…" : t("songs.detail.downloadPdf") || "PDF"}
                   </DropdownMenuItem>
                   {accesHarmonie.peut && (
-                    <DropdownMenuItem onClick={() => setShowIdees(true)}>
+                    <DropdownMenuItem className="dans-menu-chant" onClick={() => setShowIdees(true)}>
                       <Sparkles className="h-3.5 w-3.5 text-muted-foreground" />
                       {t("harmonie.idees")}
                     </DropdownMenuItem>
@@ -514,13 +540,41 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
+
+            {/* Dès la tablette debout (planches `tablette-portrait-chant` et `Main`, Q16) :
+                Idées d'harmonie et PDF sortent du menu ⋯ (globals.css, `.hors-menu-chant`). */}
+            <div className="hors-menu-chant ml-auto shrink-0 items-center gap-1">
+              {accesHarmonie.peut && (
+                <Button
+                  variant="secondary"
+                  aria-label={t("harmonie.idees")}
+                  title={t("harmonie.idees")}
+                  onClick={() => setShowIdees(true)}
+                  className="h-9 lg:h-8 min-w-9 lg:min-w-8 px-2.5 rounded-full text-xs font-semibold"
+                >
+                  <Sparkles className="h-4 w-4" />
+                  <span className="libelle-idees">{t("harmonie.idees")}</span>
+                </Button>
+              )}
+              <Button
+                variant="secondary"
+                size="icon-lg"
+                aria-label={t("songs.detail.downloadPdf") || "PDF"}
+                title={t("songs.detail.downloadPdf") || "PDF"}
+                disabled={downloading}
+                onClick={() => setShowPdfChoice(true)}
+                className="h-9 w-9 lg:h-8 lg:w-8 rounded-full"
+              >
+                <FileText className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
 
           {/* Embed YouTube */}
           
         </div>
         {youtubeId && showVideo && (
-            <div className="relative print:hidden border-b border-border bg-black/5 px-4 py-3 flex justify-center mt-[82px]">
+            <div className="video-chant relative print:hidden border-b border-border bg-black/5 px-4 py-3 flex justify-center mt-[82px]">
               <div className="w-full max-w-xl aspect-video">
                 <iframe
                   src={`https://www.youtube.com/embed/${youtubeId}`}

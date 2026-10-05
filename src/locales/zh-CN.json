@@ -83,6 +83,13 @@
       "allLanguages": "全部",
       "recent": "最近查看"
     },
+    "choose": {
+      "title": "选择一首诗歌",
+      "subtitle": "在列表中选择，或从接下来几个主日的诗歌中选择。",
+      "subtitleListOnly": "在列表中选择。",
+      "upcoming": "接下来的歌单",
+      "upcomingHelp": "与「歌单」页相同：你有角色的服事和小组的歌单。"
+    },
     "detail": {
       "backToAll": "诗歌",
       "chords": "和弦",
@@ -190,7 +197,9 @@
       "loadingCharts": "正在加载歌谱…",
       "copyLyrics": "复制歌词",
       "copyLyricsDone": "已复制",
-      "outline": "流程",
+      "sommaire": "目录",
+      "copyAllLyrics": "复制全部歌词",
+      "pdf": "PDF",
       "presentation": "幻灯片",
       "presentationAdd": "添加幻灯片链接",
       "presentationChange": "更改链接",
@@ -465,6 +474,7 @@
     "layout": "排版中…",
     "next": "下一首：",
     "songList": "歌曲列表",
+    "twoColumns": "双栏",
     "settings": "设置",
     "view": "视图",
     "rolePrompt": {
@@ -1721,6 +1731,8 @@
       "colorsHelp": "每个段落用自己的颜色框出，与屏幕显示一致。",
       "compact": "紧凑",
       "compactHelp": "先是结构条，每个段落只出现一次。",
+      "liste": "曲目列表",
+      "listeHelp": "歌曲、调性与结构，一页列出。",
       "download": "下载",
       "preparing": "正在生成…"
     }

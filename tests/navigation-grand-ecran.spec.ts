@@ -274,45 +274,69 @@ const debordement = (page: Page) => page.evaluate(() => document.documentElement
 const auPoint = (page: Page, x: number, y: number, selecteur: string) =>
   page.evaluate(([px, py, sel]) => !!document.elementFromPoint(px as number, py as number)?.closest(sel as string), [x, y, selecteur] as const);
 
+/** La barre du haut d'une setlist : la barre d'outils (un volet, G) ou l'en-tête des deux
+ *  volets (lot U5, docs/spec-deux-volets.md, T4) — 900 px utiles au moins à côté de la barre. */
+const barreDeSetlist = (page: Page) => page.locator('[data-testid="barre-outils"], [data-en-tete]');
+const LECTURE = 1440; // --largeur-lecture : les deux volets, centrés au-delà
+
+/** La barre du haut part du bord de la barre latérale (`bord`) ; les deux volets, bornés à
+ *  1 440 px, restent centrés dans la zone de contenu au-delà. Le halo part du bord ; rien ne
+ *  déborde en largeur. */
+async function barreDeSetlistAuBord(page: Page, largeur: number, bord: number) {
+  const barre = barreDeSetlist(page);
+  const deuxVolets = largeur - bord >= 900;
+  const contenu = largeur - bord;
+  const x = deuxVolets ? bord + Math.max(0, (contenu - LECTURE) / 2) : bord;
+  const l = deuxVolets ? Math.min(contenu, LECTURE) : contenu;
+  await expect(page.locator("[data-en-tete]"), `${largeur} px : ${deuxVolets ? "deux volets" : "un volet"}`).toHaveCount(deuxVolets ? 1 : 0);
+  await expect.poll(async () => Math.round((await barre.boundingBox())!.x), `${largeur} px : barre du haut`).toBe(Math.round(x));
+  expect(Math.round((await barre.boundingBox())!.width), `${largeur} px : sa largeur`).toBe(Math.round(l));
+  expect(Math.round((await page.getByTestId("halo").boundingBox())!.x), `${largeur} px : halo`).toBe(bord);
+  expect(await debordement(page), `${largeur} px`).toBe(0);
+}
+
+/** Le Sommaire des deux volets : le volet de gauche, jamais sous la barre latérale, à
+ *  gauche des partitions. */
+async function sommaireAGauche(page: Page, bord: number) {
+  const sommaire = page.getByRole("navigation", { name: "Sommaire" });
+  await expect(sommaire).toBeVisible();
+  const s = (await sommaire.boundingBox())!;
+  expect(s.x, "jamais sous la barre").toBeGreaterThanOrEqual(bord);
+  const chant = (await page.locator("[data-outline-item]").first().boundingBox())!;
+  expect(s.x + s.width, "il ne mord pas sur les partitions").toBeLessThanOrEqual(chant.x);
+}
+
 test.describe("navigation sur grand écran (U4) : rien ne passe sous la barre, ordinateur", () => {
   test.beforeEach(({}, info) => {
     test.skip(!estOrdinateur(info), "ordinateur seulement");
   });
 
-  test("setlist : barre d'outils et halo au bord de la barre, aucun défilement horizontal, de 1 024 à 1 920 px", async ({ page }) => {
+  test("setlist : barre du haut (barre d'outils ou en-tête des deux volets) et halo au bord de la barre, aucun défilement horizontal, de 1 024 à 1 920 px", async ({ page }) => {
     await ouvrirSetlist(page);
-    const outils = page.getByTestId("barre-outils");
-    await outils.waitFor();
+    await barreDeSetlist(page).first().waitFor();
     await animationsFinies(page);
     for (const largeur of [1024, 1280, 1440, 1920]) {
       await page.setViewportSize({ width: largeur, height: 900 });
-      await expect.poll(async () => Math.round((await outils.boundingBox())!.x), `${largeur} px : barre d'outils`).toBe(248);
-      expect(Math.round((await outils.boundingBox())!.width), `${largeur} px : jusqu'au bord droit`).toBe(largeur - 248);
-      expect(Math.round((await page.getByTestId("halo").boundingBox())!.x), `${largeur} px : halo`).toBe(248);
-      expect(await debordement(page), `${largeur} px`).toBe(0);
+      await barreDeSetlistAuBord(page, largeur, 248);
     }
   });
 
-  test("setlist : le sommaire se cale dans la zone de contenu, et se masque s'il n'y tient pas", async ({ page }) => {
+  test("setlist : le sommaire est le volet de gauche dès 900 px utiles (1 148 px de fenêtre), absent en dessous", async ({ page }) => {
     await page.setViewportSize({ width: 1920, height: 900 });
     await ouvrirSetlist(page);
-    await page.getByRole("button", { name: "Partitions" }).click();
-    const sommaire = page.getByRole("navigation", { name: "Déroulé" });
-    await expect(sommaire).toBeVisible();
-    const s = (await sommaire.boundingBox())!;
-    expect(s.x, "jamais sous la barre").toBeGreaterThanOrEqual(248 + 16);
-    // Colonne des partitions : 42rem centrés dans la zone de contenu.
-    const colonne = 248 + (1920 - 248) / 2 - 336;
-    expect(s.x + s.width, "il ne mord pas sur les partitions").toBeLessThanOrEqual(colonne - 16);
-    // 1 440 px, barre dépliée : 1 192 px de contenu, moins que les 1 280 px où il tenait avant.
+    await sommaireAGauche(page, 248);
     await page.setViewportSize({ width: 1440, height: 900 });
-    await expect(sommaire).toBeHidden();
+    await sommaireAGauche(page, 248);
+    // 1 147 px, barre dépliée : 899 px utiles, un volet (G).
+    await page.setViewportSize({ width: 1147, height: 900 });
+    await expect(page.getByRole("navigation", { name: "Sommaire" })).toHaveCount(0);
+    await expect(page.getByTestId("bascule-vues")).toBeVisible();
   });
 
   test("setlist : le message (« Partager » une setlist privée) est centré dans la zone de contenu", async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await ouvrirSetlist(page);
-    const outils = page.getByTestId("barre-outils");
+    const outils = barreDeSetlist(page);
     await outils.getByRole("button", { name: "Plus d'actions" }).click();
     await page.getByRole("menuitem", { name: "Partager" }).click();
     const message = page.getByText("Setlist privée — visible uniquement par toi");
@@ -343,7 +367,7 @@ test.describe("navigation sur grand écran (U4) : dimanche, ordinateur et tablet
     const bord = estOrdinateur(info) ? 248 : 68;
     await page.addInitScript(() => localStorage.setItem("perf-role-preset", "pianiste"));
     await ouvrirSetlist(page);
-    const outils = page.getByTestId("barre-outils");
+    const outils = barreDeSetlist(page);
     await outils.waitFor();
     const b = (await barreLaterale(page).boundingBox())!;
     await outils.getByRole("button", { name: /Mode Louange/ }).click();
@@ -463,8 +487,11 @@ test.describe("navigation sur grand écran (U4) : réduire, déplier, s'en souve
     await expect.poll(() => largeurBarre(page)).toBe(68);
     expect(await pxVar(page, "--barre-laterale")).toBe(68);
     expect(await paddingGaucheMain(page), "la zone de contenu suit").toBe("68px");
-    // La page, centrée dans la zone de contenu, se décale de la moitié des 180 px rendus.
-    expect(Math.round(titreDeplie - (await titre.boundingBox())!.x), "le titre suit la zone de contenu").toBe(90);
+    // La page, centrée dans la zone de contenu, se décale de la moitié des 180 px rendus. Chants en
+    // deux volets (lot U5) : les volets remplissent la zone (moins de 1 440 px), la liste en
+    // tient le bord gauche et se décale des 180 px entiers.
+    const deuxVolets = await page.locator(".chants-volets").evaluate((el) => getComputedStyle(el).display === "grid");
+    expect(Math.round(titreDeplie - (await titre.boundingBox())!.x), "le titre suit la zone de contenu").toBe(deuxVolets ? 180 : 90);
     expect(Math.round((await page.getByTestId("halo").boundingBox())!.x), "halo au bord de la barre").toBe(68);
     expect(await debordement(page)).toBe(0);
     expect(await barreRetenue(page)).toBe("reduite");
@@ -599,36 +626,24 @@ test.describe("navigation sur grand écran (U4) : réduire, déplier, s'en souve
     expect((await menu.boundingBox())!.x, "à côté de la barre réduite").toBeGreaterThanOrEqual(68);
   });
 
-  test("barre réduite, setlist : barre d'outils et halo au bord de la barre, aucun défilement horizontal, de 1 024 à 1 920 px", async ({ page }) => {
+  test("barre réduite, setlist : en-tête des deux volets et halo au bord de la barre, aucun défilement horizontal, de 1 024 à 1 920 px", async ({ page }) => {
     await dejaReduite(page);
     await ouvrirSetlist(page);
-    const outils = page.getByTestId("barre-outils");
-    await outils.waitFor();
+    await barreDeSetlist(page).first().waitFor();
     await animationsFinies(page);
     for (const largeur of [1024, 1280, 1440, 1920]) {
       await page.setViewportSize({ width: largeur, height: 900 });
-      await expect.poll(async () => Math.round((await outils.boundingBox())!.x), `${largeur} px : barre d'outils`).toBe(68);
-      expect(Math.round((await outils.boundingBox())!.width), `${largeur} px : jusqu'au bord droit`).toBe(largeur - 68);
-      expect(Math.round((await page.getByTestId("halo").boundingBox())!.x), `${largeur} px : halo`).toBe(68);
-      expect(await debordement(page), `${largeur} px`).toBe(0);
+      await barreDeSetlistAuBord(page, largeur, 68);
     }
   });
 
-  test("barre réduite, setlist : le sommaire revient dès qu'il tient à côté de la barre de 68 px", async ({ page }) => {
+  test("barre réduite, setlist : le sommaire est là dès 1 024 px (956 px utiles à côté de la barre de 68 px)", async ({ page }) => {
     await dejaReduite(page);
     await page.setViewportSize({ width: 1440, height: 900 });
     await ouvrirSetlist(page);
-    await page.getByRole("button", { name: "Partitions" }).click();
-    const sommaire = page.getByRole("navigation", { name: "Déroulé" });
-    // 1 440 px, barre réduite : 1 372 px de contenu, plus que les 1 280 px où il tient.
-    await expect(sommaire).toBeVisible();
-    const s = (await sommaire.boundingBox())!;
-    expect(s.x, "jamais sous la barre").toBeGreaterThanOrEqual(68 + 16);
-    const colonne = 68 + (1440 - 68) / 2 - 336;
-    expect(s.x + s.width, "il ne mord pas sur les partitions").toBeLessThanOrEqual(colonne - 16);
-    // 1 280 px : 1 212 px de contenu, il ne tient plus.
-    await page.setViewportSize({ width: 1280, height: 900 });
-    await expect(sommaire).toBeHidden();
+    await sommaireAGauche(page, 68);
+    await page.setViewportSize({ width: 1024, height: 900 });
+    await sommaireAGauche(page, 68);
   });
 
   test("impression, barre réduite : ni barre ni marge", async ({ page }) => {
@@ -808,32 +823,22 @@ test.describe("navigation sur grand écran (U4) : tablette en paysage", () => {
     expect(await barreParDessus(page).evaluate((el) => getComputedStyle(el).animationName)).toBe("barre-fondu");
   });
 
-  test("tablette en paysage, setlist : barre d'outils et halo au bord de la barre, aucun défilement horizontal, iPad de 1 024 à 1 366 px", async ({ page }) => {
+  test("tablette en paysage, setlist : en-tête des deux volets et halo au bord de la barre, aucun défilement horizontal, iPad de 1 024 à 1 366 px", async ({ page }) => {
     await ouvrirSetlist(page);
-    const outils = page.getByTestId("barre-outils");
-    await outils.waitFor();
+    await barreDeSetlist(page).first().waitFor();
     await animationsFinies(page);
     for (const [largeur, hauteur] of [[1024, 768], [1080, 810], [1180, 820], [1366, 1024]]) {
       await page.setViewportSize({ width: largeur, height: hauteur });
-      await expect.poll(async () => Math.round((await outils.boundingBox())!.x), `${largeur} px : barre d'outils`).toBe(68);
-      expect(Math.round((await outils.boundingBox())!.width), `${largeur} px : jusqu'au bord droit`).toBe(largeur - 68);
-      expect(Math.round((await page.getByTestId("halo").boundingBox())!.x), `${largeur} px : halo`).toBe(68);
-      expect(await debordement(page), `${largeur} px`).toBe(0);
+      await barreDeSetlistAuBord(page, largeur, 68);
     }
   });
 
-  test("tablette en paysage, setlist : le sommaire tient sur un iPad Pro couché (1 366 px), pas sur un iPad (1 180 px)", async ({ page }) => {
+  test("tablette en paysage, setlist : le sommaire est là sur tout iPad couché, de 1 024 à 1 366 px", async ({ page }) => {
     await page.setViewportSize({ width: 1366, height: 1024 });
     await ouvrirSetlist(page);
-    await page.getByRole("button", { name: "Partitions" }).click();
-    const sommaire = page.getByRole("navigation", { name: "Déroulé" });
-    // 1 366 px moins la barre de 68 : 1 298 px de contenu, plus que les 1 280 px où il tient.
-    await expect(sommaire).toBeVisible();
-    const s = (await sommaire.boundingBox())!;
-    expect(s.x, "jamais sous la barre").toBeGreaterThanOrEqual(68 + 16);
-    expect(s.x + s.width, "il ne mord pas sur les partitions").toBeLessThanOrEqual(68 + (1366 - 68) / 2 - 336 - 16);
-    await page.setViewportSize({ width: 1180, height: 820 });
-    await expect(sommaire).toBeHidden();
+    await sommaireAGauche(page, 68);
+    await page.setViewportSize({ width: 1024, height: 768 });
+    await sommaireAGauche(page, 68);
   });
 
   test("tablette en paysage, éditeur : la barre d'action commence au bord de la barre et laisse son pied visible", async ({ page }) => {

@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { ouvrirPartitions } from "./helpers/setlist";
 
 // Lot 9 / H2 et H4 dans une setlist : le bouton « Idées d'harmonie » sur un
 // chant, l'essai dans Ma version (jamais dans la setlist de la présidence), et
@@ -49,13 +50,13 @@ async function capture(page: Page, name: string) {
   if (dir) await page.screenshot({ path: `${dir}/${name}-${test.info().project.name}.png` });
 }
 
-async function ouvrirPartitions(page: Page, extra: Record<string, Record<string, unknown>> = {}) {
+async function openPartitions(page: Page, extra: Record<string, Record<string, unknown>> = {}) {
   await page.route(/docs\.google\.com\/spreadsheets/, (route) => {
     const sheet = new URL(route.request().url()).searchParams.get("sheet");
     return route.fulfill({ status: 200, contentType: "text/csv", body: sheet === "Franco_Louange" ? CULTE : "" });
   });
   const db = await signInAs(page, MUSICIEN, { [SETLIST_DOC]: SETLIST, ...extra }, `/setlists/${SETLIST_ID}`);
-  await page.getByRole("button", { name: "Partitions" }).click();
+  await ouvrirPartitions(page);
   await expect(page.getByRole("heading", { name: "Abba Père" })).toBeVisible();
   return db;
 }
@@ -66,7 +67,7 @@ const ouvrirLesIdees = async (page: Page) => {
 };
 
 test("un pianiste ouvre les idées d'un chant de la setlist, avec la transition vers le suivant", async ({ page }) => {
-  await ouvrirPartitions(page);
+  await openPartitions(page);
   await ouvrirLesIdees(page);
   await expect(page.locator("[data-suggestion]").first()).toBeVisible();
   const transition = page.locator("section", { has: page.getByRole("heading", { name: "Vers le chant suivant" }) });
@@ -76,13 +77,13 @@ test("un pianiste ouvre les idées d'un chant de la setlist, avec la transition 
 });
 
 test("hors « Ma version », l'idée se lit mais ne s'applique pas", async ({ page }) => {
-  await ouvrirPartitions(page);
+  await openPartitions(page);
   await ouvrirLesIdees(page);
   await expect(page.getByRole("button", { name: "Essayer dans Ma version" })).toHaveCount(0);
 });
 
 test("« Essayer dans Ma version » écrit dans mon document, jamais dans la setlist", async ({ page }) => {
-  const db = await ouvrirPartitions(page);
+  const db = await openPartitions(page);
   await page.getByRole("button", { name: "Ma version" }).click();
   await ouvrirLesIdees(page);
   const premiere = page.locator("[data-suggestion]").first();
@@ -102,7 +103,7 @@ test("« Essayer dans Ma version » écrit dans mon document, jamais dans la set
 });
 
 test("« Appliquer à la setlist » fait monter le dernier refrain", async ({ page }) => {
-  const db = await ouvrirPartitions(page);
+  const db = await openPartitions(page);
   await ouvrirLesIdees(page);
   const modulation = page.locator("[data-modulation='modulations/ton-par-le-5']");
   await expect(modulation, "un ton plus haut, amené par le 5").toContainText("en B");
@@ -120,7 +121,7 @@ test("chant lu sur son scan 简谱 : l'app rappelle de reporter le changement", 
   // Préférence « toujours le scan » : la retouche part bien dans la version
   // texte, mais l'image ne bouge pas — l'app doit le dire.
   await page.addInitScript(() => localStorage.setItem("jianpu-sheet-pref", "always"));
-  await ouvrirPartitions(page);
+  await openPartitions(page);
   await page.getByRole("button", { name: "Ma version" }).click();
   await page.getByRole("button", { name: "Idées d'harmonie" }).first().click();
   await expect(page.locator("[data-idees-harmonie]")).toBeVisible();
@@ -143,7 +144,7 @@ test("un 升调 se voit au-dessus du scan 简谱, qui ne peut pas le montrer", a
     return route.fulfill({ status: 200, contentType: "text/csv", body: sheet === "Franco_Louange" ? CULTE : "" });
   });
   await signInAs(page, MUSICIEN, { [SETLIST_DOC]: avecModulation }, `/setlists/${SETLIST_ID}`);
-  await page.getByRole("button", { name: "Partitions" }).click();
+  await ouvrirPartitions(page);
   const bandeau = page.locator("[data-bandeau-modulation]");
   await expect(bandeau.first()).toContainText("on monte en F#");
 });
@@ -153,7 +154,7 @@ test("un chanteur ne voit pas le bouton", async ({ page }) => {
     route.fulfill({ status: 200, contentType: "text/csv", body: "" }),
   );
   await signInAs(page, { ...MUSICIEN, planningName: "Personne" }, { [SETLIST_DOC]: SETLIST }, `/setlists/${SETLIST_ID}`);
-  await page.getByRole("button", { name: "Partitions" }).click();
+  await ouvrirPartitions(page);
   await expect(page.getByRole("heading", { name: "Abba Père" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Idées d'harmonie" })).toHaveCount(0);
 });

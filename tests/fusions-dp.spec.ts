@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { readFileSync } from "fs";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { enDeuxVolets, ouvrirPartitions } from "./helpers/setlist";
 import { withoutLastPhrases } from "../src/lib/setlist/lastPhrase";
 import { diffSetlists } from "../src/lib/setlist/history";
 import { playedSections } from "../src/lib/setlist/playedSections";
@@ -76,7 +77,12 @@ test("historique : une Dernière phrase se reconnaît dans les deux formats (oth
   expect(withoutLastPhrases(DP_ABBA)).toEqual({ source: ABBA.trimEnd(), count: 1 });
 });
 
-test("liste : une Dernière phrase écrite dans l'ancien format s'affiche « Dp », pas « other »", async ({ page }) => {
+/** Pastilles d'un chant du Sommaire (deux volets, docs/spec-deux-volets.md, Q6), à la
+ *  manière de la structure abrégée de la liste : « C1 · R · Dp ». */
+const pastillesDuSommaire = async (page: Page, position: number) =>
+  (await page.locator(`[data-sommaire="${position}"] [data-pastille]`).allTextContents()).join(" · ");
+
+test("liste (sommaire en deux volets) : une Dernière phrase écrite dans l'ancien format s'affiche « Dp », pas « other »", async ({ page }) => {
   await ouvrir(page, setlist([
     item({
       songSlug: "abba-pere",
@@ -85,6 +91,10 @@ test("liste : une Dernière phrase écrite dans l'ancien format s'affiche « Dp 
       structureOverride: ["verse-2-0", "chorus-3-1", "other-7-9"],
     }),
   ]));
+  if (await enDeuxVolets(page)) {
+    await expect.poll(() => pastillesDuSommaire(page, 1)).toBe("C1 · R · Dp");
+    return;
+  }
   const ligne = page.getByRole("listitem").filter({ hasText: "Abba Père" });
   await expect(ligne).toContainText("C1 · R · Dp");
   await expect(ligne).not.toContainText("other");
@@ -110,17 +120,20 @@ const FUSION_MIXTE = item({
   mixedStructure: MELANGE,
 });
 
-test("chant touché dans la liste : la page du chant montre sa Dernière phrase", async ({ page }) => {
+// Le titre du chant dans les partitions mène à sa page (setlist G,
+// docs/spec-deux-volets.md, Q12) : la ligne de la liste ouvre les partitions.
+test("titre du chant dans les partitions : la page du chant montre sa Dernière phrase", async ({ page }) => {
   await ouvrir(page, setlist([
     item({ songSlug: "abba-pere", position: 1, contentOverride: DP_ABBA, structureOverride: ["verse-2-0", "chorus-3-1", "Dp-7-9"] }),
   ]));
-  await page.getByRole("link", { name: "Abba Père" }).click();
+  await ouvrirPartitions(page);
+  await page.locator('[data-outline-item="1"]').getByRole("link", { name: "Abba Père" }).click();
   await page.waitForURL(/\/songs\/abba-pere/);
   await expect(page.getByText("Dernière phrase – R").first()).toBeVisible();
   await capture(page, "fusions-dp-chant-depuis-setlist");
 });
 
-test("chant d'une fusion touché dans la liste : la page du chant montre sa Dernière phrase", async ({ page }) => {
+test("titre d'un chant d'une fusion dans les partitions : la page du chant montre sa Dernière phrase", async ({ page }) => {
   await ouvrir(page, setlist([
     item({ songSlug: "一生爱你", position: 1 }),
     item({
@@ -134,7 +147,8 @@ test("chant d'une fusion touché dans la liste : la page du chant montre sa Dern
       mixedStructure: null,
     }),
   ]));
-  await page.getByRole("link", { name: "Abba Père" }).click();
+  await ouvrirPartitions(page);
+  await page.locator('[data-outline-item="2"]').getByRole("link", { name: "Abba Père" }).click();
   await page.waitForURL(/\/songs\/abba-pere/);
   await expect(page.getByText("Dernière phrase – R").first()).toBeVisible();
 });
@@ -146,7 +160,7 @@ const sectionsDeLaFusion = (page: Page) => page.locator('[data-outline-item="2"]
 async function partitionsAvecMode(page: Page, mode: "played" | "unique" | "structure") {
   await page.addInitScript((m) => localStorage.setItem("partition-layout", m), mode);
   await ouvrir(page, setlist([item({ songSlug: "一生爱你", position: 1 }), FUSION_MIXTE]));
-  await page.getByRole("button", { name: "Partitions" }).click();
+  await ouvrirPartitions(page);
   await expect(page.locator('[data-outline-item="1"]').getByRole("list", { name: "Structure" })).toBeVisible();
 }
 
@@ -249,7 +263,7 @@ test("éditeur, fusion mélangée : la Dernière phrase s'ajoute à la suite du 
 
 test("partitions, fusion à la suite : la Dernière phrase s'imprime avec ses accords, « Dp » au bandeau", async ({ page }) => {
   await ouvrir(page, setlist([item({ songSlug: "一生爱你", position: 1 }), FUSION_SUITE_DP]));
-  await page.getByRole("button", { name: "Partitions" }).click();
+  await ouvrirPartitions(page);
   const fusion = page.locator('[data-outline-item="2"]');
   await expect(fusion.getByRole("list", { name: "Structure" }).first().getByRole("listitem")).toHaveText(["R", "Dp"]);
   await expect(fusion.locator("[data-section]").nth(1)).toContainText("Bm");
@@ -258,7 +272,7 @@ test("partitions, fusion à la suite : la Dernière phrase s'imprime avec ses ac
 
 test("partitions, fusion mélangée : la Dernière phrase termine le mélange", async ({ page }) => {
   await ouvrir(page, setlist([item({ songSlug: "一生爱你", position: 1 }), FUSION_MIXTE_DP]));
-  await page.getByRole("button", { name: "Partitions" }).click();
+  await ouvrirPartitions(page);
   const fusion = page.locator('[data-outline-item="2"]');
   await expect(fusion.getByRole("list", { name: "Structure" }).getByRole("listitem").last()).toHaveText("Dp");
   await expect(fusion.locator("[data-section]")).toHaveCount(4);
@@ -266,8 +280,13 @@ test("partitions, fusion mélangée : la Dernière phrase termine le mélange", 
   await capture(page, "fusions-dp-partitions-mixte");
 });
 
-test("liste : la Dernière phrase d'un chant de fusion s'affiche « Dp », mélangée ou à la suite", async ({ page }) => {
+test("liste (sommaire en deux volets) : la Dernière phrase d'un chant de fusion s'affiche « Dp », mélangée ou à la suite", async ({ page }) => {
   await ouvrir(page, setlist([item({ songSlug: "一生爱你", position: 1 }), FUSION_SUITE_DP, { ...FUSION_MIXTE_DP, position: 3 }]));
+  if (await enDeuxVolets(page)) {
+    await expect.poll(() => pastillesDuSommaire(page, 2)).toContain("R · Dp");
+    await expect.poll(() => pastillesDuSommaire(page, 3)).toContain("R · Dp");
+    return;
+  }
   const lignes = page.getByRole("listitem").filter({ hasText: "Fusion" });
   await expect(lignes.first()).toContainText("R · Dp");
   await expect(lignes.nth(1)).toContainText("R · Dp");
@@ -310,7 +329,7 @@ test("idées d'harmonie : chaque chant d'une fusion a les siennes, mélangée ou
     return route.fulfill({ status: 200, contentType: "text/csv", body: sheet === "Franco_Louange" ? CULTE : "" });
   });
   await signInAs(page, MUSICIEN, { [SETLIST_DOC]: setlist([FUSION_SUITE_DP, { ...FUSION_MIXTE, position: 3 }]) }, `/setlists/${SETLIST_ID}`);
-  await page.getByRole("button", { name: "Partitions" }).click();
+  await ouvrirPartitions(page);
 
   const suite = page.locator('[data-outline-item="2"]');
   await expect(suite.getByRole("button", { name: /Idées d'harmonie/ })).toHaveCount(2);
@@ -366,7 +385,7 @@ test("partitions, fusion : la Dernière phrase d'un chant chinois s'imprime avec
       { songSlug: "一生爱你", keyOverride: null, structureOverride: ["chorus-3-0", "Dp-4-9"], sectionNotes: {}, contentOverride: DP_YISHENG },
     ],
   })]));
-  await page.getByRole("button", { name: "Partitions" }).click();
+  await ouvrirPartitions(page);
   const fusion = page.locator('[data-outline-item="1"]');
   await expect(fusion.getByRole("list", { name: "Structure" }).last().getByRole("listitem")).toHaveText(["R", "Dp"]);
   const dp = fusion.locator("[data-section]").last();
@@ -374,9 +393,10 @@ test("partitions, fusion : la Dernière phrase d'un chant chinois s'imprime avec
   await expect(dp).toContainText("gēn");
 });
 
-test("liste, fusion mélangée : chaque chant ouvre sa page depuis la setlist", async ({ page }) => {
+test("partitions, fusion mélangée : chaque chant ouvre sa page depuis la setlist", async ({ page }) => {
   await ouvrir(page, setlist([item({ songSlug: "一生爱你", position: 1 }), FUSION_MIXTE]));
-  await page.getByRole("listitem").filter({ hasText: "Fusion" }).getByRole("link", { name: "Abba Père" }).first().click();
+  await ouvrirPartitions(page);
+  await page.locator('[data-outline-item="2"]').getByRole("link", { name: "Abba Père" }).first().click();
   await page.waitForURL(/\/songs\/abba-pere/);
   expect(new URL(page.url()).searchParams.get("item")).toBe("2");
   await expect(page.getByRole("heading", { name: "Abba Père" })).toBeVisible();
@@ -397,7 +417,8 @@ test("page du chant ouverte depuis la setlist : les accords retouchés sur le sc
   await ouvrir(page, setlist([
     item({ songSlug: "到各山岭去传扬", position: 1, jianpuSheet: true, jianpuChords: { changed: { 0: "Em" } } }),
   ]));
-  await page.getByRole("link", { name: "到各山岭去传扬" }).click();
+  await ouvrirPartitions(page);
+  await page.locator('[data-outline-item="1"]').getByRole("link", { name: "到各山岭去传扬" }).click();
   await page.waitForURL(/\/songs\//);
   await page.getByRole("button", { name: /简谱/ }).click();
   await page.locator("[data-jianpu-page] img").first().waitFor();

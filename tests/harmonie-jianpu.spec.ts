@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { ouvrirPartitions } from "./helpers/setlist";
 import { loadChords } from "./helpers/jianpu";
 
 // Lot 9, tranche « 简谱 » (docs/spec-harmonie.md) : retoucher un accord sur le
@@ -65,7 +66,7 @@ async function openPartitions(page: Page, docs: Record<string, Record<string, un
     route.fulfill({ status: 200, contentType: "text/csv", body: "" }),
   );
   const db = await signInAs(page, MUSICIEN, { [SETLIST_DOC]: setlist(), ...docs }, `/setlists/${SETLIST_ID}`);
-  await page.getByRole("button", { name: "Partitions" }).click();
+  await ouvrirPartitions(page);
   // Le scan pèse 1 à 2 Mo et le calque vient d'un fetch à part : sans ces
   // attentes, on touche une image absente ou une géométrie pas encore lue.
   await page.locator('[data-jianpu-page="0"] img').waitFor();

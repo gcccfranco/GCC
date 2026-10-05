@@ -28,9 +28,17 @@ async function ouvrirChant(page: Page, qui: FakeProfile, docs: Record<string, Re
   return signInAs(page, qui, docs, "/songs/hosanna");
 }
 
+/** Dès la tablette debout, « Idées d'harmonie » est un bouton de la barre ; sur téléphone,
+ *  une entrée du menu ⋯ (lot U5, docs/spec-deux-volets.md, Q16). */
 async function ouvrirLaFeuille(page: Page) {
-  await page.getByRole("button", { name: /Plus d'actions|More actions|更多操作/ }).click();
-  await page.getByRole("menuitem", { name: "Idées d'harmonie" }).click();
+  const { width, height } = page.viewportSize()!;
+  if (width >= 768 && height >= 500) {
+    // Le bouton arrive avec le profil (accès à l'Harmonie) : `click` l'attend.
+    await page.getByTestId("barre-outils").getByRole("button", { name: "Idées d'harmonie" }).click();
+  } else {
+    await page.getByRole("button", { name: /Plus d'actions|More actions|更多操作/ }).click();
+    await page.getByRole("menuitem", { name: "Idées d'harmonie" }).click();
+  }
   await expect(page.locator("[data-idees-harmonie]")).toBeVisible();
 }
 
@@ -120,7 +128,8 @@ test("une idée déjà écrite est lisible, avec « nouveau » la première fois
   await ouvrirLaFeuille(page);
   await expect(page.getByText("Refrain : capo 2, formes de C")).toBeVisible();
   await expect(page.getByText("Éloïse M. · Guitare")).toBeVisible();
-  await expect(page.getByText("nouveau")).toBeVisible();
+  // Dans la feuille : en deux volets, la liste des chants à côté a ses « … nouveau » (lot U5).
+  await expect(page.locator("[data-idees-harmonie]").getByText("nouveau", { exact: true })).toBeVisible();
   await expect(page.locator("[data-idee='i1']").getByRole("button", { name: "Modifier" }), "on ne modifie pas l'idée d'un autre").toHaveCount(0);
 });
 
@@ -140,6 +149,7 @@ test("un batteur n'a pas l'entrée « Idées d'harmonie »", async ({ page }) =>
   await ouvrirChant(page, YIYI);
   await page.getByRole("button", { name: /Plus d'actions|More actions|更多操作/ }).click();
   await expect(page.getByRole("menuitem", { name: "Idées d'harmonie" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Idées d'harmonie" })).toHaveCount(0);
 });
 
 // Retour du 01/10/2026 : une idée sans remplacement d'accords (« Le tag : répéter
