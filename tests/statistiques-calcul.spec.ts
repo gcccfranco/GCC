@@ -2,8 +2,8 @@ import { expect, test } from "@playwright/test";
 import type { FSSetlist } from "../src/lib/firebase/setlists";
 import type { SetlistItem } from "../src/types/setList";
 import {
-  bornesDeLaPeriode, chantsDeLaSetlist, choixDesFiltres, libellePart, libelleTendance,
-  statsChants, type FiltresStats,
+  bornesDeLaPeriode, chantsDeLaSetlist, choixDesFiltres, debutDeLHistorique, libellePart, libelleTendance,
+  statsChants, veille, type FiltresStats,
 } from "../src/lib/stats/chantsJoues";
 
 // Lot U7, tranche S1 (docs/spec-statistiques.md) : le calcul des statistiques
@@ -68,6 +68,25 @@ test("aucune setlist comptée : zéro, sans bornes", () => {
   const r = statsChants([setlist("2026-10-11", [chant("a-toi-essai")])], INDEX, TOUT, AUJOURDHUI);
   expect(r.comptees).toEqual({ nombre: 0, du: null, au: null });
   expect(r.plusJoues).toEqual([]);
+});
+
+// Relecture : la règle Q3 sert aussi au début de l'historique (« À redécouvrir », Q11), écrite une fois.
+test("début de l'historique : la première publiée passée ; brouillon, privée, du jour, à venir, sans date : non", () => {
+  expect(debutDeLHistorique([
+    setlist("2026-09-20", []),
+    setlist("2026-05-10", [], { isDraft: true }),
+    setlist("2026-05-17", [], { isPrivate: true }),
+    setlist("2026-05-24T09:30:00", []),
+    setlist("", []),
+    setlist("20/09/2026", []),
+  ], AUJOURDHUI)).toBe("2026-05-24");
+  expect(debutDeLHistorique([setlist("2026-10-04", []), setlist("2026-10-11", [])], AUJOURDHUI)).toBeNull();
+});
+
+test("veille : le jour d'avant, mois et années compris", () => {
+  expect(veille("2026-10-04")).toBe("2026-10-03");
+  expect(veille("2026-03-01")).toBe("2026-02-28");
+  expect(veille("2027-01-01")).toBe("2026-12-31");
 });
 
 // ─── Q4 : les chants d'une setlist ────────────────────────────────────────────

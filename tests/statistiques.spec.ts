@@ -176,12 +176,12 @@ const PLUS_JOUES_12_MOIS = [
 
 const estTelephone = (info: TestInfo) => info.project.name === "telephone";
 
-/** Ouvre la page d'un admin, horloge au 04/10/2026, recueil et setlists simulés. */
-async function ouvrirStatistiques(page: Page, chemin = "/back-office/statistiques") {
+/** Ouvre la page d'un admin, horloge au 04/10/2026, recueil et setlists simulés (plus `autres`). */
+async function ouvrirStatistiques(page: Page, chemin = "/back-office/statistiques", autres: Record<string, Record<string, unknown>> = {}) {
   await page.clock.setFixedTime(new Date("2026-10-04T10:00:00"));
   await page.route(/\/songs-index\.json/, (route) =>
     route.fulfill({ contentType: "application/json", body: JSON.stringify({ generatedAt: "2026-10-01", songs: RECUEIL }) }));
-  const db = await signInAs(page, ADMIN, SETLISTS, chemin);
+  const db = await signInAs(page, ADMIN, { ...SETLISTS, ...autres }, chemin);
   // Tableau (tablette, ordinateur) ou liste (téléphone) : seul l'un des deux se voit.
   if (!chemin.includes("vue=")) await expect(page.locator('[data-testid="ligne-chant"]:visible').first()).toBeVisible();
   // Autres vues (S4) : la carte « Setlists comptées », ou le message d'une période vide.
@@ -501,6 +501,87 @@ test.describe("Statistiques (S4) : jamais joués et à redécouvrir", () => {
     await expect(vue(page, "Jamais joués")).toHaveAttribute("aria-pressed", "true");
     await expect(page.getByRole("button", { name: "3 mois" })).toHaveAttribute("aria-pressed", "true");
     await expect(page.getByText("3 chants sur 5", { exact: true })).toBeVisible();
+  });
+});
+
+// ─── Relecture : messages, menus, phrases ─────────────────────────────────────
+// Déjà couverts plus haut : période vide, lecture des setlists refusée, « Tous les chants ont été
+// joués sur cette période. » (S4, jamais joués) et « Aucun chant à redécouvrir sur cette période. ».
+
+test.describe("Statistiques (relecture) : messages, menus, phrases", () => {
+  test.use({ serviceWorkers: "block" });
+
+  test("langue sans chant : « Aucun chant dans cette langue sur cette période. », la carte « Setlists comptées » reste", async ({ page }) => {
+    await ouvrirStatistiques(page);
+    await page.getByRole("button", { name: "Dates libres" }).click();
+    await page.getByLabel("Du", { exact: true }).fill("2026-06-01");
+    await page.getByLabel("Au", { exact: true }).fill("2026-06-15");
+    await page.getByRole("combobox", { name: "Langue" }).selectOption({ label: "中文" });
+    await expect(page.getByText("Aucun chant dans cette langue sur cette période.")).toBeVisible();
+    expect(await setlistsComptees(page)).toBe("1");
+    await expect(page.locator('[data-testid="ligne-chant"]:visible')).toHaveCount(0);
+    await expect(page.getByTestId("dix-premiers")).toHaveCount(0);
+  });
+
+  test("recueil illisible : « Impossible de lire le recueil. », puis « Réessayer »", async ({ page }) => {
+    await ouvrirStatistiques(page);
+    let refuser = true;
+    // Posée après celle du recueil simulé, cette route passe avant elle.
+    await page.route(/\/songs-index\.json/, (route) => (refuser ? route.fulfill({ status: 500, body: "" }) : route.fallback()));
+    await page.reload();
+    await expect(page.getByText("Impossible de lire le recueil.")).toBeVisible();
+    await expect(page.getByTestId("ligne-chant")).toHaveCount(0);
+    refuser = false;
+    await page.getByRole("button", { name: "Réessayer" }).click();
+    await expect.poll(() => setlistsComptees(page)).toBe("6");
+  });
+
+  test("une catégorie inconnue : dans le groupe « Autres » du menu Service, et elle filtre (Q8)", async ({ page }) => {
+    await ouvrirStatistiques(page, "/back-office/statistiques", {
+      "setlists/soiree": setlist("2026-09-27", "Soirée de louange", "Luc R.", [chant("a-la-croix")]),
+    });
+    expect(await setlistsComptees(page)).toBe("7");
+    const service = page.getByRole("combobox", { name: "Service" });
+    await expect(service.locator('optgroup[label="Autres"] option')).toHaveText(["Soirée de louange"]);
+    await service.selectOption("Soirée de louange");
+    await expect.poll(() => setlistsComptees(page)).toBe("1");
+    expect(await colonne(page, "titre")).toEqual(["À la croix"]);
+  });
+
+  test("téléphone : « 1 setlist » au singulier, « 4 setlists » au pluriel", async ({ page }, info) => {
+    test.skip(!estTelephone(info), "la liste n'existe que sur téléphone ; le tableau a sa colonne « Setlists »");
+    await ouvrirStatistiques(page);
+    const ligne = (titre: string) => page.locator('[data-testid="ligne-chant"]:visible').filter({ hasText: titre });
+    await expect(ligne("ancien-chant")).toContainText("1 setlist · 17 %");
+    await expect(ligne("À jamais Tu es saint")).toContainText("4 setlists · 67 %");
+  });
+
+  test("une adresse au service ou à la présidence inconnus : le filtre est ignoré, menus et adresse le disent", async ({ page }) => {
+    await ouvrirStatistiques(page, "/back-office/statistiques?service=Inconnu&presidence=Personne&periode=3");
+    expect(await setlistsComptees(page)).toBe("3");
+    await expect(page.getByRole("combobox", { name: "Service" })).toHaveValue("");
+    await expect(page.getByRole("combobox", { name: "Présidence" })).toHaveValue("");
+    await expect(page).toHaveURL(/\/back-office\/statistiques\/?\?periode=3$/);
+  });
+
+  test("« À redécouvrir », dates libres finies avant hier : la phrase dit « aucune fois du … au … »", async ({ page }) => {
+    await ouvrirStatistiques(page, "/back-office/statistiques?vue=a-redecouvrir&periode=libre&du=2026-07-01&au=2026-08-31");
+    await expect.poll(() => lignesDe(page, "ligne-redecouvrir")).toEqual([
+      { rang: "1", titre: "Abba Père", avant: "3", derniere: "28/06", tonalite: "G" },
+    ]);
+    await expect(page.getByRole("heading", { name: "Joués au moins 3 fois avant le 01/07, aucune fois du 01/07 au 31/08", exact: true })).toBeVisible();
+    // Jusqu'à hier : « depuis ».
+    await page.getByLabel("Au", { exact: true }).fill("2026-10-03");
+    await expect(page.getByRole("heading", { name: "Joués au moins 3 fois avant le 01/07, aucune fois depuis", exact: true })).toBeVisible();
+  });
+
+  test("« À redécouvrir », dates libres sans « Du » : la page demande une date de début", async ({ page }) => {
+    await ouvrirStatistiques(page, "/back-office/statistiques?vue=a-redecouvrir&periode=libre&du=2026-07-01&au=2026-10-03");
+    await expect.poll(() => lignesDe(page, "ligne-redecouvrir")).toHaveLength(1);
+    await page.getByLabel("Du", { exact: true }).fill("");
+    await expect(page.getByText("Choisis une date de début (« Du ») pour voir les chants à redécouvrir.")).toBeVisible();
+    await expect(page.getByText(/L'historique commence le/)).toHaveCount(0);
+    await expect(page.locator('[data-testid="ligne-redecouvrir"]:visible')).toHaveCount(0);
   });
 });
 

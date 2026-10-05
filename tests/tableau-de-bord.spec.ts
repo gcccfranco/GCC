@@ -437,7 +437,9 @@ test.describe("Tableau de bord (B4) : écrans", () => {
       // La cloche lit les setlists récentes à part (`limit`) : pas les widgets.
       if (q.from[0].collectionId === "setlists" && !q.limit) lectures.push(q);
     });
-    // Ces deux widgets seuls : « Chants les plus joués » (U7) lit les setlists passées, à part.
+    // Ces deux widgets seuls : « Chants les plus joués » (U7) lit toutes les setlists, à part et sans
+    // cache (`getSetlists()`, comme la page Statistiques) : coût accepté par Q1 de spec-statistiques.md
+    // (une visite de l'onglet Setlists, ~150 lectures sur un quota de 50 000 par jour).
     await ouvrir(page, ADMIN, {
       "backOffice/uid-admin": {
         tableauDeBord: [{ id: "dimanche", taille: "m", reglages: {} }, { id: "setlists", taille: "s", reglages: {} }],

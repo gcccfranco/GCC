@@ -38,7 +38,8 @@ const JOUR = /^\d{4}-\d{2}-\d{2}$/;
 const enMs = (jour: string) => Date.parse(`${jour}T00:00:00Z`);
 const deux = (n: number) => String(n).padStart(2, "0");
 
-function veille(jour: string): string {
+/** Le jour d'avant (« 2026-10-03 » pour « 2026-10-04 »). */
+export function veille(jour: string): string {
   return new Date(enMs(jour) - 86_400_000).toISOString().slice(0, 10);
 }
 
@@ -66,6 +67,12 @@ function publieesPassees(setlists: SetlistLue[], aujourdhui: string): (SetlistLu
     const jour = (s.date ?? "").slice(0, 10);
     return !s.isDraft && !s.isPrivate && JOUR.test(jour) && jour < aujourdhui ? [{ ...s, jour }] : [];
   });
+}
+
+/** Le début de l'historique : la première setlist publiée passée (Q3), `null` s'il n'y en a pas.
+ *  « À redécouvrir » (Q11) n'a rien avant la période quand elle commence avant ce jour. */
+export function debutDeLHistorique(setlists: SetlistLue[], aujourdhui: string): string | null {
+  return publieesPassees(setlists, aujourdhui).reduce<string | null>((min, s) => (min === null || s.jour < min ? s.jour : min), null);
 }
 
 // ─── Les chants d'une setlist (Q4) ────────────────────────────────────────────

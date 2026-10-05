@@ -12,8 +12,8 @@ import { useTranslation } from "react-i18next";
 import { ArrowDownWideNarrow, CalendarDays, ChevronDown, ChevronUp } from "lucide-react";
 import { ALL_CATEGORIES, getSetlists, type FSSetlist } from "@/lib/firebase/setlists";
 import {
-  SEUIL_A_REDECOUVRIR, bornesDeLaPeriode, choixDesFiltres, libellePart, libelleTendance, statsChants,
-  type FiltresStats, type LigneChant, type Periode, type StatsChants,
+  SEUIL_A_REDECOUVRIR, bornesDeLaPeriode, choixDesFiltres, debutDeLHistorique, libellePart, libelleTendance, statsChants,
+  veille, type FiltresStats, type LigneChant, type Periode, type StatsChants,
 } from "@/lib/stats/chantsJoues";
 import { PageTitle } from "@/components/layout/PageTitle";
 import type { SongIndexEntry } from "@/types/song";
@@ -110,10 +110,6 @@ function jourCourt(jour: string, aujourdhui: string): string {
   return a === aujourdhui.slice(0, 4) ? `${j}/${m}` : `${j}/${m}/${a}`;
 }
 
-function veille(jour: string): string {
-  return new Date(Date.parse(`${jour}T00:00:00Z`) - 86_400_000).toISOString().slice(0, 10);
-}
-
 /** « 24/05/2026 ». */
 function jourLong(jour: string): string {
   const [a, m, j] = jour.split("-");
@@ -123,7 +119,7 @@ function jourLong(jour: string): string {
 type Lecture =
   | { etat: "calcul" }
   | { etat: "echec"; message: string }
-  | { etat: "pret"; setlists: FSSetlist[]; recueil: SongIndexEntry[] };
+  | { etat: "pret"; setlists: FSSetlist[]; recueil: SongIndexEntry[]; choix: { services: string[]; presidences: string[] } };
 
 export function StatistiquesClient() {
   const { t } = useTranslation();
@@ -146,17 +142,23 @@ export function StatistiquesClient() {
         // La base compte plus de cent setlists : zéro veut dire que la lecture a échoué.
         if (setlists.length === 0) setLecture({ etat: "echec", message: "Impossible de lire les setlists." });
         else if (!index) setLecture({ etat: "echec", message: "Impossible de lire le recueil." });
-        else setLecture({ etat: "pret", setlists, recueil: index.songs });
+        else {
+          const choix = choixDesFiltres(setlists, aujourdhui, ALL_CATEGORIES);
+          setLecture({ etat: "pret", setlists, recueil: index.songs, choix });
+          // Un service ou une présidence de l'adresse absents des menus (lien retouché) : ignorés,
+          // pour que le menu dise toujours le filtre appliqué.
+          setEtat((e) => {
+            const service = e.service !== null && !choix.services.includes(e.service) ? null : e.service;
+            const presidence = e.presidence !== null && !choix.presidences.includes(e.presidence) ? null : e.presidence;
+            return service === e.service && presidence === e.presidence ? e : { ...e, service, presidence };
+          });
+        }
       })
       .catch(() => setLecture({ etat: "echec", message: "Impossible de lire les setlists." }));
-  }, []);
+  }, [aujourdhui]);
   useEffect(() => { lire(); }, [lire]);
 
   const donnees = lecture.etat === "pret" ? lecture : null;
-  const choix = useMemo(
-    () => (donnees ? choixDesFiltres(donnees.setlists, aujourdhui, ALL_CATEGORIES) : null),
-    [donnees, aujourdhui],
-  );
   const stats = useMemo(() => {
     if (!donnees) return null;
     const filtres: FiltresStats = { periode: enPeriode(etat), service: etat.service, langue: etat.langue, presidence: etat.presidence };
@@ -188,7 +190,7 @@ export function StatistiquesClient() {
       </>
     );
   }
-  if (!stats || !choix || !donnees) {
+  if (!stats || !donnees) {
     return <>{enTete}<p role="status" className="text-sm text-muted-foreground">Calcul…</p></>;
   }
 
@@ -202,13 +204,14 @@ export function StatistiquesClient() {
     changer({ periode, du: etat.periode === "libre" ? etat.du : du, au: etat.periode === "libre" ? etat.au : au });
   };
   const { comptees } = stats;
+  const bornes = bornesDeLaPeriode(enPeriode(etat), aujourdhui);
 
   return (
     <>
       {enTete}
       <div className="space-y-4">
         <Filtres
-          etat={etat} aujourdhui={aujourdhui} services={choix.services} presidences={choix.presidences}
+          etat={etat} aujourdhui={aujourdhui} services={donnees.choix.services} presidences={donnees.choix.presidences}
           nomService={(c) => t("categories." + c, { lng: "fr", defaultValue: c })}
           choisirPeriode={choisirPeriode} changer={changer}
         />
@@ -241,8 +244,8 @@ export function StatistiquesClient() {
                 total={donnees.recueil.filter((c) => etat.langue === null || c.language === etat.langue).length} />
             ) : etat.vue === "redecouvrir" ? (
               <ARedecouvrir chants={stats.aRedecouvrir} aujourdhui={aujourdhui}
-                debutPeriode={bornesDeLaPeriode(enPeriode(etat), aujourdhui).du}
-                debutHistorique={premiereSetlist(donnees.setlists, aujourdhui)} />
+                debutPeriode={bornes.du} finPeriode={bornes.au < veille(aujourdhui) ? bornes.au : null}
+                debutHistorique={debutDeLHistorique(donnees.setlists, aujourdhui)} />
             ) : stats.plusJoues.length === 0 ? (
               <p role="status" className="raised rounded-2xl px-5 py-8 text-center text-sm text-muted-foreground">
                 Aucun chant dans cette langue sur cette période.
@@ -258,12 +261,6 @@ export function StatistiquesClient() {
       </div>
     </>
   );
-}
-
-/** La première setlist publiée passée : le début de l'historique (« À redécouvrir », Q11). */
-function premiereSetlist(setlists: FSSetlist[], aujourdhui: string): string | null {
-  const jours = setlists.map((s) => (s.date ?? "").slice(0, 10)).filter((j) => /^\d{4}-\d{2}-\d{2}$/.test(j) && j < aujourdhui);
-  return jours.length ? jours.reduce((min, j) => (j < min ? j : min)) : null;
 }
 
 /** « Les plus joués · Jamais joués · À redécouvrir » : à droite du titre sur grand écran, dessous
@@ -454,7 +451,7 @@ function ListeTelephone({ lignes, aujourdhui, tri, trier }: {
             <div className="min-w-0 flex-1 space-y-0.5">
               <TitreChant ligne={l} />
               <p className="text-sm text-muted-foreground">
-                <b data-champ="setlists" className="font-bold text-foreground tabular-nums">{l.setlists}</b> setlists
+                <b data-champ="setlists" className="font-bold text-foreground tabular-nums">{l.setlists}</b> {l.setlists > 1 ? "setlists" : "setlist"}
                 {" · "}<span data-champ="part" className="tabular-nums">{libellePart(l.part)}</span>
                 {" · "}<span data-champ="derniere" className="tabular-nums">{jourCourt(l.derniereFois, aujourdhui)}</span>
                 {" · "}<span data-champ="tonalite">{l.tonalites.join(" / ")}</span>
@@ -567,10 +564,15 @@ function JamaisJoues({ chants, total, aujourdhui }: {
 
 /** « À redécouvrir » : au moins trois setlists avant la période, aucune pendant (Q11). Sans
  *  setlist avant la période (« Depuis le début », ou une période plus longue que l'historique),
- *  la liste le dit. */
-function ARedecouvrir({ chants, aujourdhui, debutPeriode, debutHistorique }: {
-  chants: StatsChants["aRedecouvrir"]; aujourdhui: string; debutPeriode: string | null; debutHistorique: string | null;
+ *  la liste le dit. `finPeriode` : la fin de dates libres d'avant hier (`null` = jusqu'à hier). */
+function ARedecouvrir({ chants, aujourdhui, debutPeriode, finPeriode, debutHistorique }: {
+  chants: StatsChants["aRedecouvrir"]; aujourdhui: string;
+  debutPeriode: string | null; finPeriode: string | null; debutHistorique: string | null;
 }) {
+  // Dates libres, « Du » vidé : la période n'a pas de début, donc pas d'avant.
+  if (debutPeriode === "") {
+    return <p role="status" className={MESSAGE}>Choisis une date de début (« Du ») pour voir les chants à redécouvrir.</p>;
+  }
   if (!debutPeriode || !debutHistorique || debutHistorique >= debutPeriode) {
     return (
       <p role="status" className={MESSAGE}>
@@ -582,7 +584,8 @@ function ARedecouvrir({ chants, aujourdhui, debutPeriode, debutHistorique }: {
   return (
     <section className="raised rounded-2xl px-2">
       <h2 className="px-3 pt-4 pb-1 text-sm font-semibold text-muted-foreground">
-        Joués au moins {SEUIL_A_REDECOUVRIR} fois avant le {jourCourt(debutPeriode, aujourdhui)}, aucune fois depuis
+        Joués au moins {SEUIL_A_REDECOUVRIR} fois avant le {jourCourt(debutPeriode, aujourdhui)}, aucune fois{" "}
+        {finPeriode ? `du ${jourCourt(debutPeriode, aujourdhui)} au ${jourCourt(finPeriode, aujourdhui)}` : "depuis"}
       </h2>
       <ol className="divide-y divide-border sm:hidden">
         {chants.map((c, i) => (

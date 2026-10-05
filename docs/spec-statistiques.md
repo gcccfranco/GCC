@@ -1,7 +1,7 @@
 # Spec : lot U7 — statistiques des chants (admins)
 
 Spec écrite le 04/10/2026, validée avec le go du 04/10/2026 (redit le 05/10/2026) : les questions ouvertes
-prennent leur recommandation. Codage en cours, voir « Avancement ».
+prennent leur recommandation. Lot codé (S1 à S5) et relu le 05/10/2026, voir « Avancement ».
 
 Lot U7 du chantier U (`feuille-de-route.md` § 3.U), après U6 (`docs/spec-back-office.md`), avant U8
 (`docs/spec-calendrier.md`) ; dispositions : U4 (`docs/spec-navigation-grand-ecran.md`). Écran de la
@@ -423,3 +423,42 @@ Questions ouvertes 1 à 7 : la recommandation de chacune est retenue (go du 04/1
 - À faire par Timothée : rien de nouveau pour U7 (aucune règle Firestore) ; valider en local, sur téléphone,
   « Plus » › Statistiques. À savoir : le tableau de bord par défaut d'un admin lit toutes les setlists pour ce
   widget (une visite de l'onglet Setlists, Q1) en plus de la lecture bornée de U6.
+
+### 05/10/2026 — relecture du lot : faite (commit « fix(U7): relecture — … », branche `lot/u7-statistiques`)
+
+- Deux relectures, neuf constats, tous mineurs (aucun bloquant, aucun important). Corrigés :
+  1. **Téléphone** : « 1 setlist » au singulier (la liste écrivait « 1 setlists ») ; « 4 setlists » inchangé.
+  2. **« À redécouvrir », dates libres finies avant hier** : la phrase dit « Joués au moins 3 fois avant le 01/07,
+     aucune fois du 01/07 au 31/08 » au lieu de « … aucune fois depuis », qui était faux pour un chant rejoué après
+     la fin choisie. Le calcul ne change pas (Q11 : aucune setlist **pendant** la période). Jusqu'à hier : « depuis ».
+  3. **« À redécouvrir », dates libres, « Du » vidé** (deux constats, un seul défaut) : « Choisis une date de début
+     (« Du ») pour voir les chants à redécouvrir. » au lieu de « L'historique commence le … », qui accusait
+     l'historique alors que c'est la borne qui manque. Un « Du » vidé ne borne toujours plus ce côté dans les deux
+     autres vues (choix 2 de S3).
+  4. **Service ou présidence de l'adresse absents des menus** (lien tapé ou retouché) : ignorés à la lecture ; le
+     menu montre « Tous les services » ou « Toutes les présidences », l'adresse les perd, les chiffres suivent.
+     Comparaison exacte avec les choix du menu (les liens viennent de la page elle-même).
+  5. **La règle Q3 écrite une fois** : `veille` et `debutDeLHistorique` (la première setlist publiée passée) sont
+     exportées de `src/lib/stats/chantsJoues.ts` ; `StatistiquesClient.tsx` ne refait plus ce calcul (sa copie
+     oubliait brouillons et privées, sans effet tant que `getSetlists` les écarte). Les choix des menus sont
+     calculés une fois, à la lecture.
+  6. **Messages et menu sans test**, maintenant testés (comportement inchangé) : « Aucun chant dans cette langue sur
+     cette période. », « Impossible de lire le recueil. » + « Réessayer », une catégorie inconnue dans le groupe
+     « Autres » du menu Service, qui filtre (Q8).
+- Constats écartés, avec la raison :
+  - « Tous les chants ont été joués sur cette période. » et « Aucun chant à redécouvrir sur cette période. » étaient
+    déjà testés (S4, « Jamais joués » et « À redécouvrir sur 3 mois ») : seuls les deux autres messages manquaient.
+  - **Le widget relit toutes les setlists**, sans cache, puis la page Statistiques aussi : coût accepté par Q1 (une
+    visite de l'onglet Setlists, ~150 lectures sur un quota de 50 000 par jour), laissé tel quel et écrit dans le
+    test « une seule lecture des setlists » de `tests/tableau-de-bord.spec.ts`. S'il gêne un jour : un cache de
+    module à durée de vie, partagé entre le widget et la page.
+- Tests : 7 nouveaux dans `tests/statistiques.spec.ts` (bloc « relecture ») et 2 dans `tests/statistiques-calcul.spec.ts`,
+  écrits avant le code ; les 5 changements de comportement et les 2 fonctions exportées vus rouges (16 échecs sur
+  ordinateur, téléphone, tablette), puis verts ; les 3 tests de couverture (point 6) verts d'emblée, comme attendu.
+  `statistiques`, `statistiques-calcul` et `back-office-coupe` sur les cinq projets : 488 verts, 7 sautés (propres à un appareil), 0 rouge. Captures regardées (téléphone :
+  « 1 setlist » ; ordinateur : « À redécouvrir » sur 3 mois, « … aucune fois depuis » inchangé). `tsc` et lint
+  propres (aucun avertissement dans les fichiers de U7).
+- Reste : rien. **Lot U7 fini et relu.** La garde `BACK_OFFICE` partira avec l'interrupteur en fin de chantier (T8).
+- À faire par Timothée : aucune règle Firestore à publier pour U7 ; valider en local (« Plus » › Statistiques sur
+  téléphone ; « À redécouvrir » en dates libres) ; relire la phrase nouvelle « Choisis une date de début (« Du ») pour
+  voir les chants à redécouvrir. » et le 中文 du widget (déjà listé en S5).
