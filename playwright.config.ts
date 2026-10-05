@@ -10,6 +10,21 @@ export const BASE_URL = `http://localhost:${PORT}`;
  *  docs/spec-mise-en-ligne.md) : ce que verra le site en ligne. */
 export const BASE_URL_COUPE = `http://localhost:${PORT + 1}`;
 
+/** Lot U4 : specs lancées aussi sur `tablette-paysage` et `ordinateur-1440` —
+ *  la navigation, le halo qui part du bord de la barre, et le dimanche (setlist,
+ *  barre d'outils, sommaire, mode louange). */
+const SPECS_GRAND_ECRAN = [
+  /navigation-grand-ecran\.spec\.ts/,
+  /look-navigation\.spec\.ts/,
+  /look-halo(-defilement)?\.spec\.ts/,
+  /look-louange\.spec\.ts/,
+  /performance-mode\.spec\.ts/,
+  /setlist-regie\.spec\.ts/,
+  /coup-d-oeil\.spec\.ts/,
+  // Lot U6 (spec-back-office.md, Tests) : l'espace Back-Office, B1.
+  /back-office-espace\.spec\.ts/,
+];
+
 export default defineConfig({
   testDir: "./tests",
   fullyParallel: true,
@@ -31,6 +46,12 @@ export default defineConfig({
     { name: "ordinateur", use: { ...devices["Desktop Chrome"] } },
     { name: "telephone", use: { ...devices["Pixel 7"] } },
     { name: "tablette", use: { ...devices["iPad (gen 7)"], defaultBrowserType: "chromium" } },
+    // ── Lot U4 (docs/spec-navigation-grand-ecran.md, Q16) ──────────────────────
+    // La tablette couchée (barre latérale réduite) et la lecture à 1 440 px, que
+    // les trois appareils ne montrent pas. Limités à la navigation et aux specs du
+    // dimanche : toute la suite sur cinq projets coûterait deux tiers de temps en plus.
+    { name: "tablette-paysage", testMatch: SPECS_GRAND_ECRAN, use: { ...devices["iPad (gen 7) landscape"], defaultBrowserType: "chromium" } },
+    { name: "ordinateur-1440", testMatch: SPECS_GRAND_ECRAN, use: { ...devices["Desktop Chrome"], viewport: { width: 1440, height: 900 } } },
   ],
   webServer: [
     {

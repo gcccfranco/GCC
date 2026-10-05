@@ -41,11 +41,21 @@ test.describe("back-office coupé : les entrées disparaissent", () => {
     await expect(moi.getByRole("link", { name: /tâches/i })).toHaveCount(0);
   });
 
-  test("la navbar d'ordinateur n'a ni Évènements ni Tâches", async ({ page }) => {
-    test.skip((page.viewportSize()?.width ?? 0) < 1024, "propre à l'ordinateur");
+  // Lot U6 (B1) : le sélecteur « App · Back-Office » n'apparaît pour personne, même un admin.
+  test("aucun sélecteur App · Back-Office, même pour un admin", async ({ page }) => {
     await signInAs(page, ADMIN, {}, "/songs");
     await page.getByRole("searchbox").waitFor();
-    const sections = page.getByRole("navigation", { name: "Sections" });
+    await expect(page.getByRole("navigation", { name: "Navigation principale" }).first()).toBeAttached();
+    await expect(page.getByRole("group", { name: "Choisir l'espace" })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "Back-Office" })).toHaveCount(0);
+  });
+
+  // Lot U4 : sur ordinateur, la barre latérale remplace la navbar.
+  test("la barre latérale d'ordinateur n'a ni Évènements ni Tâches", async ({ page }) => {
+    test.skip(!test.info().project.name.startsWith("ordinateur"), "propre à l'ordinateur");
+    await signInAs(page, ADMIN, {}, "/songs");
+    await page.getByRole("searchbox").waitFor();
+    const sections = page.getByTestId("barre-laterale").getByRole("navigation", { name: "Navigation principale" });
     await expect(sections.getByRole("link", { name: "Planning" })).toBeVisible();
     await expect(sections.getByRole("link", { name: "Évènements" })).toHaveCount(0);
     await expect(sections.getByRole("link", { name: "Tâches" })).toHaveCount(0);
@@ -53,7 +63,7 @@ test.describe("back-office coupé : les entrées disparaissent", () => {
 });
 
 test.describe("back-office coupé : une adresse tapée à la main tombe dans le vide", () => {
-  for (const chemin of ["/taches", "/taches/da", "/equipes", "/evenements", "/evenements/foot", "/evenements/foot/modifier", "/evenements/nouveau", "/evenements/scene", "/annonces"]) {
+  for (const chemin of ["/taches", "/taches/da", "/equipes", "/evenements", "/evenements/foot", "/evenements/foot/modifier", "/evenements/nouveau", "/evenements/scene", "/annonces", "/back-office", "/back-office/taches", "/back-office/evenements"]) {
     test(`${chemin} répond 404`, async ({ page }) => {
       const reponse = await page.goto(chemin);
       expect(reponse?.status()).toBe(404);

@@ -4,15 +4,15 @@ import { adminDb } from "@/lib/push/admin";
 import { sendPushToUids } from "@/lib/push/send";
 import { recordNotification } from "@/lib/push/notifications";
 import { loadPlanningNameIndex, filterUidsByNotifPref, loadNotifLangs, uidsForCategories } from "@/lib/push/recipients";
-import { reminderBody, reminderServicesFor, reminderTitle, type ReminderService } from "@/lib/push/reminderMessage";
+import { reminderServicesFor, type ReminderService } from "@/lib/push/reminderMessage";
 import { quiCategories, sceneReminder } from "@/lib/scene/rappels";
-import { avecLignes, evenementReminder, ligneOuverture, ouvertureDuJour, ouverturesTitre } from "@/lib/evenements/rappel";
+import { ouvertureDuJour } from "@/lib/evenements/rappel";
 import { destinatairesEvenement } from "@/lib/evenements/serveur";
-import type { NotifLang } from "@/types/user";
 import type { Evenement } from "@/types/evenement";
-import { corpsAvecTaches, rappelsDuJour, rappelTachesTitre, type RappelTache } from "@/lib/taches/messages";
-import { poleDuPour, polesDe } from "@/lib/access";
-import { membresDuPole } from "@/lib/taches/serveur";
+import type { Sujet } from "@/types/reunion";
+import { rappelsDuJour, type RappelTache } from "@/lib/taches/messages";
+import { nombreSujetsAAborder, notificationsDuMatin, type LigneEvenement, type ServiceDuJour } from "@/lib/reunions/rappels";
+import { estReunion, polesDe } from "@/lib/access";
 import type { Fois, Tache, TachePole } from "@/types/tache";
 import type { Creneau, Programme } from "@/types/programme";
 import { currentProgramme } from "@/lib/scene/dimanches";
@@ -136,26 +136,56 @@ async function rappelsTaches(
   return out;
 }
 
-/** Évènements dont les inscriptions s'ouvrent aujourd'hui (docs/spec-inscriptions-periode.md),
- *  par membre concerné, préférence « Évènements », pas encore prévenu. */
-async function ouverturesDuJour(
+/** Lignes d'évènements du matin (préférence « Évènements »), par membre pas
+ *  encore prévenu : la veille d'un évènement (lot 6 ; réunion de pôle ou
+ *  d'équipe : tout le pôle ou toute l'équipe, avec le nombre de sujets à aborder, R3, R4), le compte rendu d'une réunion
+ *  collé depuis hier (R3 : les autres personnes de la réunion), les inscriptions
+ *  qui s'ouvrent aujourd'hui (docs/spec-inscriptions-periode.md). */
+async function lignesEvenements(
   db: FirebaseFirestore.Firestore,
   today: string
-): Promise<Map<string, { evenements: Evenement[]; keys: string[] }>> {
-  const out = new Map<string, { evenements: Evenement[]; keys: string[] }>();
-  // « AAAA-MM-JJ » et « AAAA-MM-JJTHH:MM » du jour sont entre `today` et `today~`.
-  const snap = await db.collection("evenements").where("inscriptionDebut", ">=", today).where("inscriptionDebut", "<", `${today}~`).get();
-  for (const doc of snap.docs) {
-    const e = { id: doc.id, ...doc.data() } as Evenement;
-    if (!ouvertureDuJour(e, today)) continue;
-    const key = `ouverture-inscriptions-${e.id}`;
-    const uids = (await destinatairesEvenement(db, e)).filter((u) => u !== e.organisateurUid);
+): Promise<Map<string, { lignes: LigneEvenement[]; keys: string[] }>> {
+  const out = new Map<string, { lignes: LigneEvenement[]; keys: string[] }>();
+  const ajouter = async (uids: string[], ligne: LigneEvenement, key: string) => {
     for (const u of await freshUids(db, await filterUidsByNotifPref(uids, "evenements"), key)) {
-      const entry = out.get(u) ?? { evenements: [], keys: [] };
-      entry.evenements.push(e);
+      const entry = out.get(u) ?? { lignes: [], keys: [] };
+      entry.lignes.push(ligne);
       entry.keys.push(key);
       out.set(u, entry);
     }
+  };
+
+  // Évènements de demain. La clé reste celle du lot 6 : pas de doublon le jour du déploiement.
+  for (const doc of (await db.collection("evenements").where("date", "==", isoInDays(1)).get()).docs) {
+    const e = { id: doc.id, ...doc.data() } as Evenement;
+    if (estReunion(e.pour)) {
+      const sujets = (await doc.ref.collection("sujets").get()).docs.map((s) => s.data() as Sujet);
+      await ajouter(await destinatairesEvenement(db, e), { kind: "veille", evenement: e, sujets: nombreSujetsAAborder(sujets) }, `rappel-evenement-${e.id}`);
+    } else {
+      const inscrits = (await doc.ref.collection("inscriptions").get()).docs
+        .map((i) => i.data().uid as string | null)
+        .filter((u): u is string => !!u);
+      await ajouter(inscrits, { kind: "veille", evenement: e }, `rappel-evenement-${e.id}`);
+    }
+  }
+
+  // Comptes rendus collés depuis hier (« le » est un ISO : la comparaison de
+  // texte suit le temps). Un lien remplacé change « le » : il est annoncé à nouveau.
+  for (const doc of (await db.collection("evenements").where("compteRendu.le", ">=", isoInDays(-1)).get()).docs) {
+    const e = { id: doc.id, ...doc.data() } as Evenement;
+    const cr = e.compteRendu;
+    if (!cr) continue;
+    const uids = (await destinatairesEvenement(db, e)).filter((u) => u !== cr.parUid);
+    await ajouter(uids, { kind: "compteRendu", evenement: e }, `compte-rendu-${e.id}-${cr.le}`);
+  }
+
+  // « AAAA-MM-JJ » et « AAAA-MM-JJTHH:MM » du jour sont entre `today` et `today~`.
+  const ouvertures = await db.collection("evenements").where("inscriptionDebut", ">=", today).where("inscriptionDebut", "<", `${today}~`).get();
+  for (const doc of ouvertures.docs) {
+    const e = { id: doc.id, ...doc.data() } as Evenement;
+    if (!ouvertureDuJour(e, today)) continue;
+    const uids = (await destinatairesEvenement(db, e)).filter((u) => u !== e.organisateurUid);
+    await ajouter(uids, { kind: "ouverture", evenement: e }, `ouverture-inscriptions-${e.id}`);
   }
   return out;
 }
@@ -168,29 +198,16 @@ export async function GET(req: NextRequest) {
   }
 
   const db = adminDb();
+  const today = isoInDays(0);
   const [planning, index] = await Promise.all([loadPlanningData(), loadPlanningNameIndex()]);
   // Back-office coupé (lot 18, docs/spec-mise-en-ligne.md) : le rappel du matin ne
   // parle que des services — ni scène, ni tâches, ni évènements.
-  const creneaux = BACK_OFFICE ? await sceneCreneaux(db, REMINDERS.map((r) => isoInDays(r.days)), isoInDays(0)) : [];
-  // Rappels de tâches : ajoutés à la première notification de service de la
-  // personne aujourd'hui, sinon envoyés seuls après la boucle.
-  const taches: Awaited<ReturnType<typeof rappelsTaches>> = BACK_OFFICE ? await rappelsTaches(db, isoInDays(0)) : new Map();
-  const marquerTaches = async (u: string) => {
-    const entry = taches.get(u);
-    if (!entry) return;
-    taches.delete(u);
-    for (const key of entry.keys) await markNotified(db, [u], key, { kind: "tache" });
-  };
-  // Ouvertures d'inscriptions du jour : même principe que les tâches.
-  const ouvertures: Awaited<ReturnType<typeof ouverturesDuJour>> = BACK_OFFICE ? await ouverturesDuJour(db, isoInDays(0)) : new Map();
-  const lignesOuvertures = (u: string, lang: NotifLang) => (ouvertures.get(u)?.evenements ?? []).map((e) => ligneOuverture(e, lang));
-  const marquerOuvertures = async (u: string) => {
-    const entry = ouvertures.get(u);
-    if (!entry) return;
-    ouvertures.delete(u);
-    for (const key of entry.keys) await markNotified(db, [u], key, { kind: "ouverture" });
-  };
+  const creneaux = BACK_OFFICE ? await sceneCreneaux(db, REMINDERS.map((r) => isoInDays(r.days)), today) : [];
+  const taches: Awaited<ReturnType<typeof rappelsTaches>> = BACK_OFFICE ? await rappelsTaches(db, today) : new Map();
+  const lignes: Awaited<ReturnType<typeof lignesEvenements>> = BACK_OFFICE ? await lignesEvenements(db, today) : new Map();
 
+  // Services de chacun, échéance par échéance (pas encore prévenus).
+  const servicesDe = new Map<string, ServiceDuJour[]>();
   const summary: Record<string, { date: string; sent: number }> = {};
 
   for (const { tag, days } of REMINDERS) {
@@ -223,99 +240,34 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    const prefix = `rappel-${tag}-${date}`;
     const prefUids = await filterUidsByNotifPref([...byUid.keys()], "reminders");
-    const fresh = await freshUids(db, prefUids, prefix);
-    if (fresh.length) {
-      const langs = await loadNotifLangs(fresh);
-      await Promise.all(
-        fresh.map(async (u) => {
-          const lang = langs.get(u) ?? "fr";
-          const payload = {
-            title: reminderTitle(lang),
-            body: avecLignes(corpsAvecTaches(reminderBody(date, tag, byUid.get(u)!, lang), taches.get(u)?.rappels ?? [], lang), lignesOuvertures(u, lang)),
-            url: "/mes-services",
-            tag: prefix,
-          };
-          await marquerTaches(u);
-          await marquerOuvertures(u);
-          await sendPushToUids([u], payload);
-          // Une entrée de cloche par destinataire : le corps est personnel.
-          await recordNotification({ ...payload, kind: "reminder", recipients: [u] });
-        })
-      );
-      await markNotified(db, fresh, prefix, { tag, date, kind: "service" });
-    }
-
+    const fresh = await freshUids(db, prefUids, `rappel-${tag}-${date}`);
+    for (const u of fresh) servicesDe.set(u, [...(servicesDe.get(u) ?? []), { tag, date, services: byUid.get(u)! }]);
     summary[tag] = { date, sent: fresh.length };
   }
 
-  // Tâches des personnes sans notification de service aujourd'hui.
-  const tachesSeules = [...taches.keys()];
-  if (tachesSeules.length) {
-    const langs = await loadNotifLangs(tachesSeules);
-    for (const u of tachesSeules) {
-      const lang = langs.get(u) ?? "fr";
-      const payload = {
-        title: rappelTachesTitre(lang),
-        body: avecLignes(corpsAvecTaches("", taches.get(u)!.rappels, lang), lignesOuvertures(u, lang)),
-        url: "/taches",
-        tag: `rappel-taches-${isoInDays(0)}`,
-      };
-      await marquerTaches(u);
-      await marquerOuvertures(u);
-      await sendPushToUids([u], payload);
-      await recordNotification({ ...payload, kind: "tache", recipients: [u] });
-    }
-  }
-
-  // Ouvertures d'inscriptions des membres sans autre notification aujourd'hui.
-  const ouverturesSeules = [...ouvertures.keys()];
-  if (ouverturesSeules.length) {
-    const langs = await loadNotifLangs(ouverturesSeules);
-    for (const u of ouverturesSeules) {
-      const lang = langs.get(u) ?? "fr";
-      const evs = ouvertures.get(u)!.evenements;
-      const payload = {
-        title: ouverturesTitre(lang),
-        body: avecLignes("", lignesOuvertures(u, lang)),
-        url: evs.length === 1 ? `/evenements/${evs[0].id}` : "/evenements",
-        tag: `ouvertures-inscriptions-${isoInDays(0)}`,
-      };
-      await marquerOuvertures(u);
-      await sendPushToUids([u], payload);
-      await recordNotification({ ...payload, kind: "evenement", recipients: [u] });
-    }
-  }
-
-  // Évènements de demain (lot 6) : un rappel à chaque inscrit ayant un compte,
-  // préférence « Évènements », une fois par (évènement, uid).
-  const demain = isoInDays(1);
-  let evenementsSent = 0;
-  const evs = BACK_OFFICE ? (await db.collection("evenements").where("date", "==", demain).get()).docs : [];
-  for (const doc of evs) {
-    const e = { id: doc.id, ...doc.data() } as Evenement;
-    // Réunion de pôle (lot 7) : pas d'inscriptions, tout le pôle est rappelé.
-    const pole = poleDuPour(e.pour);
-    const inscrits = pole
-      ? await membresDuPole(pole)
-      : (await doc.ref.collection("inscriptions").get()).docs
-          .map((i) => i.data().uid as string | null)
-          .filter((u): u is string => !!u);
-    const prefix = `rappel-evenement-${e.id}`;
-    const fresh = await freshUids(db, await filterUidsByNotifPref(inscrits, "evenements"), prefix);
-    if (!fresh.length) continue;
-    const langs = await loadNotifLangs(fresh);
-    await Promise.all(
-      fresh.map(async (u) => {
-        const payload = { ...evenementReminder(e, langs.get(u) ?? "fr"), url: `/evenements/${e.id}`, tag: prefix };
+  // Un seul passage par personne : services, tâches et lignes d'évènements dans
+  // le même message (notificationsDuMatin), puis tout est marqué comme envoyé.
+  const uids = [...new Set([...servicesDe.keys(), ...taches.keys(), ...lignes.keys()])];
+  const langs = await loadNotifLangs(uids);
+  await Promise.all(
+    uids.map(async (u) => {
+      const mesServices = servicesDe.get(u) ?? [];
+      const notifications = notificationsDuMatin(
+        { services: mesServices, taches: taches.get(u)?.rappels ?? [], lignes: lignes.get(u)?.lignes ?? [] },
+        langs.get(u) ?? "fr",
+        today,
+      );
+      for (const { kind, ...payload } of notifications) {
         await sendPushToUids([u], payload);
-        await recordNotification({ ...payload, kind: "evenement", recipients: [u] });
-      })
-    );
-    await markNotified(db, fresh, prefix, { date: demain, kind: "evenement", evenementId: e.id });
-    evenementsSent += fresh.length;
-  }
+        // Une entrée de cloche par destinataire : le corps est personnel.
+        await recordNotification({ ...payload, kind, recipients: [u] });
+      }
+      for (const s of mesServices) await markNotified(db, [u], `rappel-${s.tag}-${s.date}`, { tag: s.tag, date: s.date, kind: "service" });
+      for (const key of taches.get(u)?.keys ?? []) await markNotified(db, [u], key, { kind: "tache" });
+      for (const key of lignes.get(u)?.keys ?? []) await markNotified(db, [u], key, { kind: "evenement" });
+    })
+  );
 
-  return NextResponse.json({ ok: true, summary, taches: tachesSeules.length, ouvertures: ouverturesSeules.length, evenements: { date: demain, sent: evenementsSent } });
+  return NextResponse.json({ ok: true, summary, personnes: uids.length });
 }

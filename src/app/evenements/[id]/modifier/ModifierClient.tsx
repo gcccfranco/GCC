@@ -28,8 +28,9 @@ export function ModifierClient() {
   if (!evenement) return <p className="text-sm text-muted-foreground">{t("evenements.notFound")}</p>
   if (!canEditEvenement(user, profile, evenement)) return <p className="text-sm text-muted-foreground max-w-2xl mx-auto">{t("evenements.reserved")}</p>
 
-  const { id: _id, organisateurUid, organisateurNom, inscrits, createdAt, updatedAt, ...initial } = evenement
-  void _id; void organisateurUid; void organisateurNom; void inscrits; void createdAt; void updatedAt
+  // Le compte rendu (lot U6) a sa carte : le formulaire ne le réécrit jamais.
+  const { id: _id, organisateurUid, organisateurNom, inscrits, createdAt, updatedAt, compteRendu, ...initial } = evenement
+  void _id; void organisateurUid; void organisateurNom; void inscrits; void createdAt; void updatedAt; void compteRendu
   // L'organisateur garde le public de sa fiche même s'il ne pourrait plus le choisir aujourd'hui.
   const pours = Array.from(new Set([evenement.pour, ...creatableEvenementPours(user, profile, ANNONCE_SECTIONS)]))
 
