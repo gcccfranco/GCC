@@ -1010,9 +1010,9 @@
       "remplace": "{{auteur}} a remplacé {{avant}} par {{apres}} au {{colonne}} du {{date}}",
       "ajoute": "{{auteur}} a mis {{apres}} au {{colonne}} du {{date}}",
       "efface": "{{auteur}} a effacé le {{colonne}} du {{date}}",
-      "exporter": "Exporter en CSV",
-      "exporterPdf": "Exporter en PDF",
       "importe": "{{auteur}} a importé {{count}} dimanches depuis le Google Sheet",
+      "pose": "{{auteur}} a ajouté le {{date}}",
+      "retire": "{{auteur}} a retiré le {{date}}",
       "periodeAnnee": "Année {{annee}}"
     },
     "horaires": {
@@ -1149,8 +1149,7 @@
       "confirmerRetrait": "Retirer le {{date}} ? Ses cases s'effacent.",
       "choisirDate": "Dimanche à ajouter",
       "dateSeance": "Date de la séance",
-      "moment": "Moment",
-      "special": "Ce dimanche est celui de {{service}} : la présidence vient de son planning."
+      "moment": "Moment"
     },
     "publier": "Publier le {{tri}}",
     "masquer": "Masquer le {{tri}}",

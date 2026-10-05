@@ -88,7 +88,7 @@ test("« Exporter (modèle du Sheet) » depuis la grille du matin : une page, ma
     page.waitForEvent("download", { timeout: 120_000 }),
     fenetre.getByRole("button", { name: "PDF", exact: true }).click(),
   ]);
-  expect(download.suggestedFilename()).toBe("Campus_matin_2026.pdf");
+  expect(download.suggestedFilename()).toBe("Campus_Louange_2026.pdf");
   await download.saveAs(test.info().outputPath(download.suggestedFilename())); // à ouvrir à l'œil
   const pdf = lirePdf(readFileSync(await download.path()));
   expect(pdf.pages).toHaveLength(1);

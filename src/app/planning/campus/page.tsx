@@ -5,11 +5,16 @@ import { useTranslation } from "react-i18next"
 import { CAMP_LOUANGE_FALLBACK, CAMP_ENT_FALLBACK } from "@/lib/planning/data"
 import { fetchCampus, fetchCampusGrilles } from "@/lib/planning/sheets"
 import type { CampusSeance } from "@/lib/planning/utils"
-import { fdLongL } from "@/lib/planning/utils"
+import { fdLongL, getAnnee } from "@/lib/planning/utils"
 import { PLANNING_COLORS } from "@/lib/serviceColors"
 import { PlanningGrille } from "@/components/planning/PlanningGrille"
-import { GRILLE_CAMPUS_MATIN, GRILLE_CAMPUS_SOIR, lignesSimples } from "@/lib/planning/grilles"
+import { AnneeSelecteur } from "@/components/planning/AnneeSelecteur"
+import { AjouterDate } from "@/components/planning/AjouterDate"
+import { GRILLE_CAMPUS_MATIN, GRILLE_CAMPUS_SOIR, PREMIERE_ANNEE_APP, anneesDuPlanning, lignesDeLAnnee, lignesSimples } from "@/lib/planning/grilles"
 import { useGrilleApp } from "@/lib/planning/useGrilleApp"
+import { poserDate } from "@/lib/firebase/planningGrille"
+import { noterChangement } from "@/lib/firebase/planningHistorique"
+import { historyAuthor } from "@/lib/firebase/setlistHistory"
 import { useProfile } from "@/lib/firebase/users"
 import { canEditPlanning, isAdminUser } from "@/lib/access"
 import { BACK_OFFICE } from "@/lib/backOffice"
@@ -19,6 +24,9 @@ import { AncienTableau } from "./AncienTableau"
 // « Grille » (19/09/2026, lot 17 G6) montre les deux grilles, matin puis soir,
 // treize cases par séance, remplies dans l'app par qui en a le droit. Une case
 // écrite dans la grille se retrouve dans les cartes au retour sur le volet.
+// Lot U2 (P2) : un sélecteur d'année pour les trois volets ; dès 2027, les
+// séances se posent dans l'app (« Ajouter une séance », date et moment) et une
+// séance posée par erreur se retire (Q10).
 
 const COLOR = PLANNING_COLORS.campus
 
@@ -72,16 +80,45 @@ function CampusPage() {
     else void chargerCartes()
   }
 
-  const data = sub === "louange" ? louange : entrainement
+  // L'année suivante : d'office pour qui remplit, pour tous dès sa première séance posée (Q4).
+  const anneeCourante = new Date().getFullYear()
+  const [anneeChoisie, setAnnee] = useState(anneeCourante)
+  const toutes = [...grilles.matin, ...grilles.soir]
+  const annees = anneesDuPlanning(anneeCourante, peutMatin || peutSoir || toutes.some((r) => getAnnee(r[0]) === anneeCourante + 1))
+  const effAnnee = annees.includes(anneeChoisie) ? anneeChoisie : anneeCourante
+  const dansLApp = effAnnee >= PREMIERE_ANNEE_APP
+
+  const data = (sub === "louange" ? louange : entrainement).filter((s) => getAnnee(s.date) === effAnnee)
   const { days, order } = groupByDay(data)
-  const annee = t("planning.grille.periodeAnnee", { annee: new Date().getFullYear() })
-  const exporter = { annee: new Date().getFullYear(), rang: 1, tout: isAdminUser(user) }
+  const annee = t("planning.grille.periodeAnnee", { annee: effAnnee })
+  const exporter = { annee: effAnnee, rang: 1, tout: isAdminUser(user) }
+  const vide = dansLApp ? t("planning.annee.aucun", { annee: effAnnee }) : undefined
+  const relire = () => void fetchCampusGrilles().then(setGrilles)
+  const retrait = { libelle: t("planning.annee.retirerSeance"), onRetire: relire }
+  const moments = [
+    ...(peutMatin ? [{ valeur: "matin", libelle: t("planning.campus.morning") }] : []),
+    ...(peutSoir ? [{ valeur: "soir", libelle: t("planning.campus.evening") }] : []),
+  ]
+
+  async function ajouterSeance(date: string, moment?: string) {
+    const definition = moment === "soir" ? GRILLE_CAMPUS_SOIR : GRILLE_CAMPUS_MATIN
+    const deja = (moment === "soir" ? grilles.soir : grilles.matin).some((r) => r[0] === date)
+    if (!deja) {
+      const auteur = historyAuthor(profile)
+      await poserDate(definition, date, auteur?.name ?? "")
+      if (auteur) await noterChangement(definition.key, auteur, { kind: "dimanche", date, retire: false })
+    }
+    setGrilles(await fetchCampusGrilles())
+  }
 
   return (
     // Le volet Grille porte treize colonnes : toute la largeur ; les cartes gardent leur colonne étroite.
     <div className={`${sub === "grille" ? "max-w-full" : "max-w-2xl"} space-y-4 mx-auto`}>
       <div className="flex flex-wrap gap-3 items-center justify-between">
-        <h2 className="text-base font-bold text-foreground">{t("planning.pages.campus")}</h2>
+        <div className="flex items-center gap-3 flex-wrap">
+          <h2 className="text-base font-bold text-foreground">{t("planning.pages.campus")}</h2>
+          <AnneeSelecteur annees={annees} annee={effAnnee} onChange={setAnnee} />
+        </div>
         {loading && <span className="text-xs text-muted-foreground">{t("common.loading")}</span>}
       </div>
 
@@ -102,23 +139,28 @@ function CampusPage() {
 
       {sub === "grille" && (
         <div className="space-y-6">
+          {moments.length > 0 && dansLApp && <AjouterDate annee={effAnnee} moments={moments} onAjouter={ajouterSeance} />}
           <PlanningGrille
             definition={GRILLE_CAMPUS_MATIN}
             periode={annee}
-            lignes={lignesSimples(grilles.matin)}
+            lignes={lignesSimples(lignesDeLAnnee(GRILLE_CAMPUS_MATIN, effAnnee, grilles.matin))}
             peutModifier={peutMatin}
             datesDansLApp={matinApp.datesDansLApp}
             comptes={matinApp.comptes}
             exporter={peutMatin ? exporter : undefined}
+            vide={vide}
+            retrait={retrait}
           />
           <PlanningGrille
             definition={GRILLE_CAMPUS_SOIR}
             periode={annee}
-            lignes={lignesSimples(grilles.soir)}
+            lignes={lignesSimples(lignesDeLAnnee(GRILLE_CAMPUS_SOIR, effAnnee, grilles.soir))}
             peutModifier={peutSoir}
             datesDansLApp={soirApp.datesDansLApp}
             comptes={soirApp.comptes}
             exporter={peutSoir ? exporter : undefined}
+            vide={vide}
+            retrait={retrait}
           />
         </div>
       )}
