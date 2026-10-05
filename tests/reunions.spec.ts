@@ -1,0 +1,346 @@
+import { expect, test, type Page } from "@playwright/test";
+import { readFileSync } from "node:fs";
+import path from "node:path";
+import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { estDeLaReunion, peutAjouterSujet, peutOrdonnerSujets, peutRetirerSujet } from "../src/lib/access";
+import { estRouge, reordonner, trierSujets } from "../src/lib/reunions/sujets";
+import type { Evenement } from "../src/types/evenement";
+import type { Sujet } from "../src/types/reunion";
+
+// Lot U6 (docs/spec-back-office.md), tranche R1 : les « Sujets à aborder »
+// d'une réunion de pôle — sous-collection evenements/{id}/sujets, droits en
+// double (access.ts + firestore.rules), ajout jusqu'au début de la réunion,
+// retrait par l'auteur, l'organisateur ou un admin, ordre au glisser et au
+// clavier, « traité », non traités en rouge une fois la réunion commencée.
+
+const ROOT = path.resolve(__dirname, "..");
+const lire = (rel: string) => readFileSync(path.join(ROOT, rel), "utf8");
+
+/** Réunion du pôle DA, samedi 3 octobre à 20:00, organisée par Alice. */
+const REUNION = {
+  titre: "Réunion DA", type: "loisir", pour: "pole:da", date: "2026-10-03", heure: "20:00", heureFin: "", dateFin: "",
+  lieu: "Salle 2", description: "", liens: [], images: [], placesMax: null, inscriptions: "fermees",
+  inscriptionDebut: "", inscriptionFin: "", sansCompte: false, lienExterne: "", contact: "",
+  organisateurUid: "uid-alice", organisateurNom: "Alice Q.", epingle: false, expiresAt: null, inscrits: 0,
+  createdAt: "2026-09-18T10:00:00Z", updatedAt: "2026-09-18T10:00:00Z",
+};
+const E = { ...REUNION, id: "reunion-da" } as unknown as Evenement;
+
+const ALICE: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", poles: ["da"] };
+const BRUNO: FakeProfile = { uid: "uid-bruno", email: "bruno@example.com", firstName: "Bruno", lastName: "M.", poles: ["da"] };
+const CLARA: FakeProfile = { uid: "uid-clara", email: "clara@example.com", firstName: "Clara", lastName: "P.", poles: ["da"] };
+const NOE: FakeProfile = { uid: "uid-noe", email: "noe@example.com", firstName: "Noé", lastName: "V.", poles: ["media"] };
+const ADMIN: FakeProfile = { uid: "admin1", email: "tc328829@gmail.com", firstName: "Admin", lastName: "T." };
+const MUSICIEN: FakeProfile = { uid: "uid-musicien", email: "musicien@example.com", serviceRoles: { "Culte Francophone": ["musicien"] } };
+
+const user = (p: FakeProfile) => ({ uid: p.uid, email: p.email });
+
+function sujet(texte: string, auteur: FakeProfile, creeLe: string, ordre: number, traite = false) {
+  return {
+    texte, auteurUid: auteur.uid, auteurNom: `${auteur.firstName} ${auteur.lastName}`, creeLe, ordre, traite,
+    reprisDans: null, repriseDe: null,
+  };
+}
+
+// Rangés exprès dans le désordre : la carte trie sur `ordre`.
+const SUJETS = {
+  "evenements/reunion-da/sujets/s3": sujet("Photos du culte : qui prend le relais en novembre ?", CLARA, "2026-10-01T09:00:00Z", 2),
+  "evenements/reunion-da/sujets/s1": sujet("Affiche de Noël : valider le visuel", ALICE, "2026-09-28T09:00:00Z", 0),
+  "evenements/reunion-da/sujets/s4": sujet("Budget impression du trimestre", BRUNO, "2026-10-01T12:00:00Z", 3),
+  "evenements/reunion-da/sujets/s2": sujet("Fond PPT du culte : nouveau modèle pour l'Avent", BRUNO, "2026-09-30T09:00:00Z", 1),
+};
+const ORDRE = ["Affiche de Noël", "Fond PPT du culte", "Photos du culte", "Budget impression"];
+
+/** La veille de la réunion, 18:00 (heure de Paris), sauf mention contraire. */
+async function ouvrir(page: Page, qui: FakeProfile, quand = "2026-10-02T18:00:00", docs: Record<string, Record<string, unknown>> = SUJETS) {
+  await page.clock.setFixedTime(new Date(quand));
+  return signInAs(page, qui, { "evenements/reunion-da": REUNION, ...docs }, "/evenements/reunion-da");
+}
+
+// « Sujets à aborder » avant le début, « Sujets » après (planches bo-reunion-avant
+// et bo-reunion-apres-telephone).
+const carte = (page: Page) => page.getByRole("region", { name: /^Sujets/ });
+const lignes = (page: Page) => carte(page).getByRole("list", { name: "Sujets à aborder" }).getByRole("listitem");
+const champ = (page: Page) => carte(page).getByRole("textbox", { name: "Nouveau sujet" });
+const ecritures = (db: Awaited<ReturnType<typeof ouvrir>>, method: string) =>
+  db.writes.filter((w) => w.method === method && w.path.startsWith("evenements/reunion-da/sujets"));
+
+async function attendreOrdre(page: Page, attendu: string[]) {
+  for (const [i, texte] of attendu.entries()) await expect(lignes(page).nth(i)).toContainText(texte);
+}
+
+// ─── Purs : droits (miroir de firestore.rules) ──────────────────────────────
+
+test("droits : est de la réunion le membre du pôle, l'organisatrice et un admin ; pas un autre pôle", () => {
+  expect(estDeLaReunion(user(BRUNO), BRUNO, E)).toBe(true);
+  expect(estDeLaReunion(user(NOE), NOE, E)).toBe(false);
+  expect(estDeLaReunion(user(ADMIN), null, E)).toBe(true);
+  expect(estDeLaReunion(user(ALICE), { poles: [] }, E), "l'organisatrice, même sortie du pôle").toBe(true);
+  expect(estDeLaReunion(null, null, E)).toBe(false);
+  // Le pôle Louange se lit comme pour les tâches : avoir un rôle de service.
+  expect(estDeLaReunion(user(MUSICIEN), MUSICIEN, { ...E, pour: "pole:louange" })).toBe(true);
+});
+
+test("droits : ajouter jusqu'au début seulement, pour une personne de la réunion", () => {
+  expect(peutAjouterSujet(user(BRUNO), BRUNO, E, "2026-10-03T19:59")).toBe(true);
+  expect(peutAjouterSujet(user(BRUNO), BRUNO, E, "2026-10-03T20:00")).toBe(false);
+  expect(peutAjouterSujet(user(ALICE), ALICE, E, "2026-10-04T09:00")).toBe(false);
+  expect(peutAjouterSujet(user(NOE), NOE, E, "2026-10-02T10:00")).toBe(false);
+});
+
+test("droits : retirer = l'auteur, l'organisatrice, un admin ; ordonner et cocher = l'organisatrice, un admin", () => {
+  const deBruno = { auteurUid: BRUNO.uid };
+  expect(peutRetirerSujet(user(BRUNO), E, deBruno)).toBe(true);
+  expect(peutRetirerSujet(user(CLARA), E, deBruno)).toBe(false);
+  expect(peutRetirerSujet(user(ALICE), E, deBruno)).toBe(true);
+  expect(peutRetirerSujet(user(ADMIN), E, deBruno)).toBe(true);
+  expect(peutOrdonnerSujets(user(ALICE), E)).toBe(true);
+  expect(peutOrdonnerSujets(user(ADMIN), E)).toBe(true);
+  expect(peutOrdonnerSujets(user(BRUNO), E)).toBe(false);
+  expect(peutOrdonnerSujets(null, E)).toBe(false);
+});
+
+test("règles : la sous-collection des sujets reprend les mêmes droits", () => {
+  const rules = lire("firestore.rules");
+  const debut = rules.indexOf("match /sujets/{sid}");
+  expect(debut, "bloc match /sujets/{sid}").toBeGreaterThan(0);
+  const bloc = rules.slice(debut, rules.indexOf("}", rules.indexOf("allow delete", debut)));
+  expect(bloc).toMatch(/allow read: if signedIn\(\) && estDeLaReunion\(reunion\(id\)\)/);
+  expect(bloc).toMatch(/allow create:[\s\S]*estDeLaReunion\(reunion\(id\)\)[\s\S]*auteurUid == request\.auth\.uid/);
+  expect(bloc).toMatch(/traite == false/);
+  expect(bloc).toMatch(/organise\(id\) && changeSeulement\(\['ordre', 'traite'\]\)/);
+  expect(bloc).toMatch(/allow delete: if signedIn\(\) && \(organise\(id\) \|\| resource\.data\.auteurUid == request\.auth\.uid\)/);
+  expect(rules).toMatch(/function estDeLaReunion\(e\)[\s\S]*isTachePole\(e\.pour\.split\(':'\)\[1\]\)/);
+  expect(rules).toMatch(/function organise\(id\) \{ return isAdmin\(\) \|\| reunion\(id\)\.organisateurUid == request\.auth\.uid; \}/);
+});
+
+// ─── Purs : tri, rouge, nouvel ordre ────────────────────────────────────────
+
+const S = (id: string, ordre: number, extra: Partial<Sujet> = {}): Sujet => ({
+  id, texte: id, auteurUid: "u", auteurNom: "U", creeLe: `2026-10-01T0${ordre}:00:00Z`, ordre, traite: false,
+  reprisDans: null, repriseDe: null, ...extra,
+});
+
+test("tri : par ordre, puis par date d'ajout à ordre égal (deux ajouts simultanés)", () => {
+  const tries = trierSujets([S("c", 2), S("a", 0), S("b2", 1, { creeLe: "2026-10-01T09:00:00Z" }), S("b1", 1, { creeLe: "2026-10-01T08:00:00Z" })]);
+  expect(tries.map((s) => s.id)).toEqual(["a", "b1", "b2", "c"]);
+});
+
+test("rouge : réunion commencée, sujet ni traité ni repris", () => {
+  expect(estRouge(E, S("a", 0), "2026-10-03T19:59")).toBe(false);
+  expect(estRouge(E, S("a", 0), "2026-10-03T20:00")).toBe(true);
+  expect(estRouge(E, S("a", 0, { traite: true }), "2026-10-03T21:00")).toBe(false);
+  expect(estRouge(E, S("a", 0, { reprisDans: "reunion-nov" }), "2026-10-03T21:00")).toBe(false);
+});
+
+test("nouvel ordre : le sujet glissé prend sa place, seuls les sujets déplacés sont réécrits", () => {
+  const { sujets, changes } = reordonner([S("a", 0), S("b", 1), S("c", 2), S("d", 3)], 2, 0);
+  expect(sujets.map((s) => s.id)).toEqual(["c", "a", "b", "d"]);
+  expect(sujets.map((s) => s.ordre)).toEqual([0, 1, 2, 3]);
+  expect(changes).toEqual([{ id: "c", ordre: 0 }, { id: "a", ordre: 1 }, { id: "b", ordre: 2 }]);
+});
+
+test("libellés : les sujets existent en français et en 中文, clé pour clé", () => {
+  const fr = JSON.parse(lire("src/locales/fr.json")).evenements.sujets;
+  const zh = JSON.parse(lire("src/locales/zh-CN.json")).evenements.sujets;
+  expect(fr.titre).toBe("Sujets à aborder");
+  expect(Object.keys(zh).sort()).toEqual(Object.keys(fr).sort());
+});
+
+// ─── La carte, côté membre ──────────────────────────────────────────────────
+
+test("membre du pôle, la veille : la carte liste les sujets dans l'ordre, avec auteur et date", async ({ page }) => {
+  await ouvrir(page, BRUNO);
+  await expect(carte(page).getByRole("heading", { name: "Sujets à aborder", exact: true })).toBeVisible();
+  await expect(lignes(page)).toHaveCount(4);
+  await attendreOrdre(page, ORDRE);
+  await expect(lignes(page).nth(0)).toContainText("Alice Q. · 28/09");
+  await expect(carte(page)).toContainText("Chaque personne de la réunion peut en ajouter jusqu'au début");
+  await expect(carte(page).getByText("4", { exact: true })).toBeVisible();
+});
+
+test("membre du pôle, la veille : il ajoute un sujet, qui va à la fin, à son nom", async ({ page }) => {
+  const db = await ouvrir(page, BRUNO);
+  await expect(lignes(page)).toHaveCount(4);
+  await champ(page).fill("  Décor de la crèche  ");
+  await carte(page).getByRole("button", { name: "Ajouter", exact: true }).click();
+  await expect(lignes(page)).toHaveCount(5);
+  await expect(lignes(page).nth(4)).toContainText("Décor de la crèche");
+  await expect(lignes(page).nth(4)).toContainText("Bruno M. · 02/10");
+  await expect(champ(page)).toHaveValue("");
+  const [post] = ecritures(db, "POST");
+  expect(post.path).toMatch(/^evenements\/reunion-da\/sujets\/[^/]+$/);
+  expect(post.data).toMatchObject({
+    texte: "Décor de la crèche", auteurUid: "uid-bruno", auteurNom: "Bruno M.", ordre: 4, traite: false,
+    reprisDans: null, repriseDe: null,
+  });
+  expect(String(post.data.creeLe)).toMatch(/^2026-10-02T/);
+});
+
+test("un sujet vide ne s'ajoute pas", async ({ page }) => {
+  const db = await ouvrir(page, BRUNO);
+  await champ(page).fill("   ");
+  await expect(carte(page).getByRole("button", { name: "Ajouter", exact: true })).toBeDisabled();
+  expect(ecritures(db, "POST")).toHaveLength(0);
+});
+
+test("borne du début (horloge simulée) : à 19:59 le champ est là ; à 20:00 le jour J il disparaît", async ({ page }) => {
+  await ouvrir(page, BRUNO, "2026-10-03T19:59:00");
+  await expect(champ(page)).toBeVisible();
+  await page.clock.setFixedTime(new Date("2026-10-03T20:00:00"));
+  await page.reload();
+  await expect(lignes(page)).toHaveCount(4);
+  await expect(champ(page)).toHaveCount(0);
+});
+
+test("borne du début : un ajout tapé avant 20:00 et envoyé après est refusé", async ({ page }) => {
+  const db = await ouvrir(page, BRUNO, "2026-10-03T19:59:00");
+  await champ(page).fill("Trop tard");
+  await page.clock.setFixedTime(new Date("2026-10-03T20:00:30"));
+  await carte(page).getByRole("button", { name: "Ajouter", exact: true }).click();
+  await expect(carte(page)).toContainText("La réunion a commencé : on n'ajoute plus de sujet.");
+  await expect(champ(page)).toHaveCount(0);
+  await expect(lignes(page)).toHaveCount(4);
+  expect(ecritures(db, "POST")).toHaveLength(0);
+});
+
+test("retrait : un membre retire ses sujets, pas ceux des autres", async ({ page }) => {
+  const db = await ouvrir(page, BRUNO);
+  await expect(lignes(page)).toHaveCount(4);
+  await expect(carte(page).getByRole("button", { name: /^Retirer/ })).toHaveCount(2);
+  await expect(lignes(page).nth(0).getByRole("button", { name: /^Retirer/ })).toHaveCount(0);
+  page.on("dialog", (d) => d.accept());
+  await lignes(page).nth(3).getByRole("button", { name: "Retirer « Budget impression du trimestre »" }).click();
+  await expect(lignes(page)).toHaveCount(3);
+  await expect(carte(page)).not.toContainText("Budget impression");
+  expect(ecritures(db, "DELETE").map((w) => w.path)).toEqual(["evenements/reunion-da/sujets/s4"]);
+});
+
+test("membre : ni poignée ni case à cocher active (l'organisatrice ordonne et coche)", async ({ page }) => {
+  await ouvrir(page, BRUNO);
+  await expect(lignes(page)).toHaveCount(4);
+  await expect(carte(page).getByRole("button", { name: /^Déplacer/ })).toHaveCount(0);
+  await expect(carte(page).getByRole("checkbox", { name: "Traité : Affiche de Noël : valider le visuel" })).toBeDisabled();
+});
+
+test("non-membre du pôle : ni la réunion ni ses sujets", async ({ page }) => {
+  await ouvrir(page, NOE);
+  await expect(page.getByText("Évènement introuvable")).toBeVisible();
+  await expect(carte(page)).toHaveCount(0);
+});
+
+test("un évènement qui n'est pas une réunion n'a pas de sujets", async ({ page }) => {
+  await page.clock.setFixedTime(new Date("2026-10-02T18:00:00"));
+  await signInAs(page, ADMIN, { "evenements/foot": { ...REUNION, titre: "Foot au parc", pour: "eglise" } }, "/evenements/foot");
+  await expect(page.getByRole("heading", { name: "Foot au parc" })).toBeVisible();
+  await expect(carte(page)).toHaveCount(0);
+});
+
+// ─── La carte, côté organisatrice et admin ──────────────────────────────────
+
+test("organisatrice : elle retire n'importe quel sujet ; un admin aussi", async ({ page }) => {
+  await ouvrir(page, ALICE);
+  await expect(lignes(page)).toHaveCount(4);
+  await expect(carte(page).getByRole("button", { name: /^Retirer/ })).toHaveCount(4);
+});
+
+test("admin hors du pôle : il voit la carte, retire et ordonne", async ({ page }) => {
+  await ouvrir(page, ADMIN);
+  await expect(lignes(page)).toHaveCount(4);
+  await expect(carte(page).getByRole("button", { name: /^Retirer/ })).toHaveCount(4);
+  await expect(carte(page).getByRole("button", { name: /^Déplacer/ })).toHaveCount(4);
+});
+
+test("organisatrice : elle coche « traité », le sujet passe barré", async ({ page }) => {
+  const db = await ouvrir(page, ALICE);
+  const caseFond = carte(page).getByRole("checkbox", { name: "Traité : Fond PPT du culte : nouveau modèle pour l'Avent" });
+  await expect(caseFond).toBeEnabled();
+  await caseFond.click();
+  await expect(caseFond).toHaveAttribute("aria-checked", "true");
+  await expect(lignes(page).nth(1).getByText("Fond PPT du culte : nouveau modèle pour l'Avent")).toHaveCSS("text-decoration-line", "line-through");
+  expect(ecritures(db, "PATCH")).toEqual([{ method: "PATCH", path: "evenements/reunion-da/sujets/s2", data: { traite: true } }]);
+  await caseFond.click();
+  await expect(caseFond).toHaveAttribute("aria-checked", "false");
+  expect(ecritures(db, "PATCH").pop()?.data).toEqual({ traite: false });
+});
+
+test("organisatrice : elle réordonne en glissant un sujet", async ({ page }) => {
+  const db = await ouvrir(page, ALICE);
+  await attendreOrdre(page, ORDRE);
+  const poignee = lignes(page).nth(2).getByRole("button", { name: /^Déplacer/ });
+  // La carte est sous la fiche : la souris n'atteint que ce qui est à l'écran.
+  await carte(page).scrollIntoViewIfNeeded();
+  const from = (await poignee.boundingBox())!;
+  const to = (await lignes(page).nth(0).boundingBox())!;
+  await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2 - 12, { steps: 4 });
+  // Le glisser a pris (poignée pressée) avant d'aller plus loin, et le sujet est
+  // annoncé à sa nouvelle place avant d'être lâché : sinon, sur une machine
+  // chargée, le lâcher part avant que @dnd-kit ait mesuré les cibles.
+  await expect(poignee).toHaveAttribute("aria-pressed", "true");
+  await page.mouse.move(from.x + from.width / 2, to.y + 4, { steps: 12 });
+  await expect(page.getByText("Sujet « Photos du culte : qui prend le relais en novembre ? » en position 1 sur 4.")).toBeAttached();
+  await page.mouse.up();
+  await attendreOrdre(page, ["Photos du culte", "Affiche de Noël", "Fond PPT du culte", "Budget impression"]);
+  const patchs = ecritures(db, "PATCH").map((w) => [w.path.split("/").pop(), w.data]);
+  expect(patchs).toEqual([["s3", { ordre: 0 }], ["s1", { ordre: 1 }], ["s2", { ordre: 2 }]]);
+});
+
+test("organisatrice : elle réordonne au clavier (Espace, flèche, Espace)", async ({ page }) => {
+  const db = await ouvrir(page, ALICE);
+  await attendreOrdre(page, ORDRE);
+  const poignee = lignes(page).nth(3).getByRole("button", { name: /^Déplacer/ });
+  await poignee.focus();
+  // Chaque touche attend l'effet de la précédente, comme le fait une personne :
+  // @dnd-kit n'écoute les flèches qu'une fois le sujet saisi.
+  await page.keyboard.press("Space");
+  await expect(poignee).toHaveAttribute("aria-pressed", "true");
+  await page.keyboard.press("ArrowUp");
+  await expect(page.getByText("Sujet « Budget impression du trimestre » en position 3 sur 4.")).toBeAttached();
+  await page.keyboard.press("Space");
+  await attendreOrdre(page, ["Affiche de Noël", "Fond PPT du culte", "Budget impression", "Photos du culte"]);
+  const patchs = ecritures(db, "PATCH").map((w) => [w.path.split("/").pop(), w.data]);
+  expect(patchs).toEqual([["s4", { ordre: 2 }], ["s3", { ordre: 3 }]]);
+});
+
+// ─── Après le début : le rouge ──────────────────────────────────────────────
+
+test("après le début : 3 traités sur 4, le quatrième en rouge, « non traité »", async ({ page }) => {
+  const traites = {
+    ...SUJETS,
+    "evenements/reunion-da/sujets/s1": { ...SUJETS["evenements/reunion-da/sujets/s1"], traite: true },
+    "evenements/reunion-da/sujets/s2": { ...SUJETS["evenements/reunion-da/sujets/s2"], traite: true },
+    "evenements/reunion-da/sujets/s3": { ...SUJETS["evenements/reunion-da/sujets/s3"], traite: true },
+  };
+  await ouvrir(page, BRUNO, "2026-10-03T21:30:00", traites);
+  await expect(lignes(page)).toHaveCount(4);
+  await expect(carte(page).getByRole("heading", { name: "Sujets", exact: true })).toBeVisible();
+  await expect(carte(page)).toContainText("3 traités sur 4");
+  const rouge = lignes(page).nth(3);
+  await expect(rouge).toContainText("Bruno M. · 01/10 · non traité");
+  await expect(rouge.getByText("Budget impression du trimestre")).toHaveCSS("color", "rgb(185, 28, 28)");
+  await expect(lignes(page).nth(0).getByText("Affiche de Noël : valider le visuel")).not.toHaveCSS("color", "rgb(185, 28, 28)");
+  await expect(carte(page)).toContainText("1 sujet non traité : il restera en rouge tant qu'on ne l'a pas repris dans une prochaine réunion.");
+  await expect(champ(page)).toHaveCount(0);
+});
+
+test("avant le début, rien n'est rouge", async ({ page }) => {
+  await ouvrir(page, BRUNO);
+  await expect(lignes(page)).toHaveCount(4);
+  await expect(lignes(page).nth(3)).not.toContainText("non traité");
+});
+
+// ─── Captures, regardées à l'œil ────────────────────────────────────────────
+
+test("captures : la carte avant (organisatrice) et après le début (membre)", async ({ page }, info) => {
+  await ouvrir(page, ALICE);
+  await expect(lignes(page)).toHaveCount(4);
+  await carte(page).screenshot({ path: path.join(ROOT, "test-results", "reunions-captures", `${info.project.name}-avant.png`) });
+  await page.clock.setFixedTime(new Date("2026-10-03T21:30:00"));
+  await page.reload();
+  await expect(lignes(page)).toHaveCount(4);
+  await carte(page).getByRole("checkbox", { name: /^Traité : Affiche/ }).click();
+  await expect(lignes(page).nth(1)).toContainText("non traité");
+  await page.screenshot({ path: path.join(ROOT, "test-results", "reunions-captures", `${info.project.name}-apres.png`), fullPage: true });
+});

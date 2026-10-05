@@ -376,5 +376,33 @@ npm test && npx tsc --noEmit && npm run lint && graphify update .
 
 ## Avancement
 
-Rien n'est codé. Après le code, à faire par Timothée : publier `firestore.rules` (sujets, compte rendu, réunions
-d'équipe, `backOffice/{uid}`, création des profils) et cliquer une fois « Recalculer depuis l'organigramme ».
+**05/10/2026 — R1 « Sujets à aborder » codée** (branche `lot/u6-back-office`, commit « feat(U6): R1 — sujets à
+aborder… »). Le reste (B1 à B6, R2 à R4) n'est pas commencé.
+
+- **Données** : sous-collection `evenements/{id}/sujets/{sid}` (`src/types/reunion.ts`), lue et écrite en REST
+  (`src/lib/firebase/sujets.ts` : lire, ajouter, changer `ordre` ou `traite` par masque, retirer) ; calculs purs
+  dans `src/lib/reunions/sujets.ts` (tri par `ordre` puis date d'ajout, rouge = Q9, nouvel ordre après un glisser
+  qui ne réécrit que les sujets déplacés).
+- **Droits en double** : `estDeLaReunion`, `peutAjouterSujet` (borne du début vérifiée dans le navigateur, relue à
+  l'envoi), `peutRetirerSujet`, `peutOrdonnerSujets` dans `src/lib/access.ts` ; fonctions `reunion`, `organise`,
+  `changeSeulement`, `estDeLaReunion` et bloc `match /sujets/{sid}` dans `firestore.rules`, tels que § Règles
+  proposées (sans `equipe:`, qui vient avec R4).
+- **Carte** `src/components/reunions/SujetsAborder.tsx`, posée sur la fiche d'aujourd'hui `/evenements/<id>`, sous
+  la fiche, pour toute personne d'une réunion de pôle : la même carte sert l'App et la gestion (l'organisatrice y
+  voit en plus poignées et cases) ; **B3 la posera sur la fiche du Back-Office**. Ordre au glisser et au clavier
+  (`useSensorsAvecClavier`, `src/lib/dnd/sensors.ts` : capteur clavier de `@dnd-kit`, annonces en FR et 中文).
+  Libellés `evenements.sujets.*` en FR et 中文.
+- **Tests** : `tests/reunions.spec.ts`, 25 tests × ordinateur, téléphone, tablette (vus rouges carte coupée, puis
+  verts) : droits purs, règles relues dans `firestore.rules`, tri, rouge, nouvel ordre, ajout à la fin à son nom,
+  sujet vide, borne du début à l'horloge simulée (19:59 / 20:00, et ajout tapé avant, envoyé après), retrait
+  (auteur, organisatrice, admin ; refusé à un autre membre), non-membre, évènement qui n'est pas une réunion,
+  « traité », glisser, clavier, rouge après le début, captures (`test-results/reunions-captures/`).
+- **Choix faits faute de réponse dans la spec** : après le début, le titre devient « Sujets » avec « N traités sur
+  M » et sans compteur, comme `bo-reunion-apres-telephone` ; chaque sujet retirable a un bouton ✕ « Retirer »
+  (absent des planches), avec confirmation ; l'ordre et « traité » restent modifiables après le début (pour cocher
+  pendant ou après la réunion) ; rouge = `text-red-700` (`#b91c1c`, tout près du `#b3261d` de la planche ;
+  le thème n'a pas de jeton « alerte » de ce ton) ; les sujets d'une réunion supprimée restent dans Firestore, illisibles (la règle relit la réunion).
+
+À faire par Timothée : **publier `firestore.rules`** (bloc des sujets, R1) ; relire le 中文 de `evenements.sujets`
+(`src/locales/zh-CN.json`). Après les tranches suivantes : republier les règles (compte rendu, réunions d'équipe,
+`backOffice/{uid}`, création des profils) et cliquer une fois « Recalculer depuis l'organigramme ».

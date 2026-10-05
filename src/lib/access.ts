@@ -1,4 +1,6 @@
 import { EDD_CLASSES } from "@/lib/planning/utils";
+import { aCommence } from "@/lib/evenements/agenda";
+import type { Evenement } from "@/types/evenement";
 import type { FSSetlist } from "@/lib/firebase/setlists";
 import { TACHE_POLES, type TachePole } from "@/types/tache";
 import {
@@ -174,6 +176,52 @@ export function canEditEvenement(
 ): boolean {
   if (!user) return false;
   return e.organisateurUid === user.uid || isCoordination(user, profile);
+}
+
+// ─── Sujets d'une réunion (lot U6, R1, docs/spec-back-office.md) — miroir : ───
+// estDeLaReunion, organise et match /sujets/{sid} dans firestore.rules.
+
+/** Personne de la réunion : membre du pôle (Louange compris, comme pour les
+ *  tâches), l'organisateur, un admin. Comme dans les règles, l'organisateur et
+ *  les admins passent même pour un évènement qui n'est pas une réunion : la
+ *  carte des sujets ne s'affiche que sur une réunion (poleDuPour). */
+export function estDeLaReunion(
+  user: AuthUser | null,
+  profile: { poles?: string[]; serviceRoles?: Record<string, unknown> } | null,
+  e: EvenementDroits
+): boolean {
+  if (!user) return false;
+  if (isAdminUser(user) || e.organisateurUid === user.uid) return true;
+  const pole = poleDuPour(e.pour);
+  return pole !== null && isPoleMember(user, profile, pole);
+}
+
+/** Ajouter un sujet : une personne de la réunion, jusqu'au début. La borne se
+ *  vérifie dans le navigateur seulement : les règles ne lisent pas une heure de
+ *  Paris écrite en texte (Q7, choix de confiance). */
+export function peutAjouterSujet(
+  user: AuthUser | null,
+  profile: { poles?: string[]; serviceRoles?: Record<string, unknown> } | null,
+  e: EvenementDroits & Pick<Evenement, "type" | "date" | "heure">,
+  nowIso: string
+): boolean {
+  return estDeLaReunion(user, profile, e) && !aCommence(e, nowIso);
+}
+
+/** Retirer un sujet : son auteur, l'organisateur, un admin. */
+export function peutRetirerSujet(
+  user: AuthUser | null,
+  e: EvenementDroits,
+  sujet: { auteurUid: string }
+): boolean {
+  if (!user) return false;
+  return sujet.auteurUid === user.uid || peutOrdonnerSujets(user, e);
+}
+
+/** Ordonner les sujets et cocher « traité » : l'organisateur, un admin. */
+export function peutOrdonnerSujets(user: AuthUser | null, e: EvenementDroits): boolean {
+  if (!user) return false;
+  return isAdminUser(user) || e.organisateurUid === user.uid;
 }
 
 /** Remplir les cases d'un planning dans l'app (lot 17, docs/spec-planning-grille.md) :

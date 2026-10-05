@@ -12,7 +12,7 @@ import { useParams, useRouter } from "next/navigation"
 import { useTranslation } from "react-i18next"
 import { useAuth } from "@/lib/firebase/auth"
 import { useProfile } from "@/lib/firebase/users"
-import { canEditEvenement, canSeeEvenement, poleDuPour } from "@/lib/access"
+import { canEditEvenement, canSeeEvenement, estDeLaReunion, poleDuPour } from "@/lib/access"
 import { deleteEvenement, getEvenement } from "@/lib/firebase/evenements"
 import { isInfo } from "@/lib/evenements/agenda"
 import { PLANNING_COLORS } from "@/lib/serviceColors"
@@ -22,6 +22,7 @@ import { EnteteEvenement, PlusInfos, TypePour } from "../EvenementCard"
 import { Inscriptions, PanneauInscriptions } from "./Inscriptions"
 import { TachesEvenement } from "./TachesEvenement"
 import { QrCodeLink } from "@/components/evenements/QrCode"
+import { SujetsAborder } from "@/components/reunions/SujetsAborder"
 
 const COLOR = PLANNING_COLORS.scene
 const URL_RE = /(https?:\/\/[^\s]+)/g
@@ -132,6 +133,10 @@ export function EvenementClient() {
         />
       )}
       </div>
+
+      {/* Lot U6 (R1) : les sujets d'une réunion de pôle, pour les personnes de la
+          réunion — la même carte pour les membres et pour qui la gère. */}
+      {user && poleDuPour(e.pour) && estDeLaReunion(user, profile, e) && <SujetsAborder evenement={e} user={user} profile={profile} />}
 
       {/* Lot 14 : les tâches de mes pôles rattachées à l'évènement. Daté
           seulement (réunions de pôle comprises) : une info sans date n'a pas de délai. */}

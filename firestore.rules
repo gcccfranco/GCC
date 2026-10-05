@@ -18,6 +18,9 @@ rules_version = '2';
 // - Évènements (evenements/{id}, lot 6) : « pour = eglise » public, le reste
 //   pour les connectés ; inscriptions lues par les connectés, écrites par le
 //   serveur seulement.
+//   Sujets d'une réunion de pôle (evenements/{id}/sujets, lot U6) : lus et
+//   ajoutés par les personnes de la réunion ; ordre et « traité » par
+//   l'organisateur et les admins ; retirés par l'auteur, l'organisateur, un admin.
 // - Programmes de scène (programmes/{id}, lot 3 bis) : lus par les connectés ;
 //   écrits par la coordination (pôle « événement » du profil + admins). Créneaux
 //   (programmes/{id}/creneaux) : tout connecté en pose un à son nom ; auteur +
@@ -166,6 +169,18 @@ service cloud.firestore {
       }
     }
 
+    // Réunions de pôle (lot U6, docs/spec-back-office.md) : est de la réunion
+    // le membre du pôle (isTachePole, Louange compris), l'organisateur, un
+    // admin ; seuls l'organisateur et les admins l'« organisent » (ordre des
+    // sujets, « traité »). Miroir : estDeLaReunion, peutOrdonnerSujets (access.ts).
+    function reunion(id) { return get(/databases/$(database)/documents/evenements/$(id)).data; }
+    function organise(id) { return isAdmin() || reunion(id).organisateurUid == request.auth.uid; }
+    function changeSeulement(champs) { return request.resource.data.diff(resource.data).affectedKeys().hasOnly(champs); }
+    function estDeLaReunion(e) {
+      return isAdmin() || e.organisateurUid == request.auth.uid
+        || (e.pour.matches('pole:[a-z]+') && isTachePole(e.pour.split(':')[1]));
+    }
+
     // Évènements (lot 6, docs/spec-evenements.md). « pour = eglise » : lisible par
     // tout le monde (calendrier public ; la requête filtre sur pour) ; les autres
     // par les connectés. Création : coordination, ou membre dont le droit
@@ -195,6 +210,23 @@ service cloud.firestore {
         // (src/lib/access.ts).
         allow read: if signedIn();
         allow write: if false;
+      }
+
+      // « Sujets à aborder » (lot U6, R1) : lus et ajoutés par les personnes de
+      // la réunion, chacun à son nom, jamais déjà traités ni repris ; la borne
+      // « jusqu'au début » se vérifie dans le navigateur (les règles ne lisent
+      // pas une heure de Paris en texte, Q7). L'organisateur et les admins
+      // changent l'ordre et « traité » ; une personne de la réunion marque un
+      // sujet repris dans la suivante (R2), une seule fois. Retrait : l'auteur,
+      // l'organisateur, un admin. Miroir : peutAjouterSujet, peutRetirerSujet,
+      // peutOrdonnerSujets (src/lib/access.ts).
+      match /sujets/{sid} {
+        allow read: if signedIn() && estDeLaReunion(reunion(id));
+        allow create: if signedIn() && estDeLaReunion(reunion(id)) && request.resource.data.auteurUid == request.auth.uid
+          && request.resource.data.traite == false && request.resource.data.reprisDans == null;
+        allow update: if signedIn() && ((organise(id) && changeSeulement(['ordre', 'traite']))
+          || (estDeLaReunion(reunion(id)) && resource.data.reprisDans == null && changeSeulement(['reprisDans'])));
+        allow delete: if signedIn() && (organise(id) || resource.data.auteurUid == request.auth.uid);
       }
     }
 
