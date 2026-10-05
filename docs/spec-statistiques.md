@@ -1,6 +1,7 @@
 # Spec : lot U7 — statistiques des chants (admins)
 
-Spec écrite le 04/10/2026 ; rien n'est codé. Attend la validation de Timothée, puis son go.
+Spec écrite le 04/10/2026, validée avec le go du 04/10/2026 (redit le 05/10/2026) : les questions ouvertes
+prennent leur recommandation. Codage en cours, voir « Avancement ».
 
 Lot U7 du chantier U (`feuille-de-route.md` § 3.U), après U6 (`docs/spec-back-office.md`), avant U8
 (`docs/spec-calendrier.md`) ; dispositions : U4 (`docs/spec-navigation-grand-ecran.md`). Écran de la
@@ -241,4 +242,33 @@ npm run lint
 
 ## Avancement
 
-Rien n'est codé : la spec attend la validation de Timothée, puis son go.
+Questions ouvertes 1 à 7 : la recommandation de chacune est retenue (go du 04/10/2026, redit le 05/10/2026).
+
+### 05/10/2026 — S1, le calcul : faite (commit « feat(U7): S1 — le calcul des statistiques des chants », branche `lot/u7-statistiques`)
+
+- `src/lib/stats/chantsJoues.ts`, pur (aucune lecture, aucune écriture) : `chantsDeLaSetlist`, `statsChants`
+  (types de « Modèle » à l'identique), plus `bornesDeLaPeriode` (Q7), `choixDesFiltres` (listes des pastilles
+  Service et Présidence, Q8), `libellePart` (« 13 % », « < 1 % », Q6) et `libelleTendance` (« +3 », « −1 »,
+  « = », « — », Q10). Le module n'importe `setlists.ts` qu'en type : il se charge sans Firebase.
+- `tests/statistiques-calcul.spec.ts` : 26 tests × 3 appareils, écrits avant le code et vus rouges (26 sur 26),
+  puis verts (78) ; contre-épreuve faite (trois règles cassées exprès → quatre tests rouges).
+- Choix pris faute de réponse dans la spec (à confirmer par Timothée, sinon ils restent) :
+  1. **Graphie d'une tonalité** : à égalité de fréquence entre `C#` et `Db`, la plus récente.
+  2. **Tendance** : une setlist datée pile du milieu ouvre la seconde moitié.
+  3. **« N mois »** depuis un jour qui n'existe pas N mois plus tôt : le dernier jour du mois (31/12 − 3 mois
+     = 30/09).
+  4. **Filtre de langue** : les rangs se renumérotent parmi les lignes gardées (« 中文 » : le 1er chant chinois
+     est n° 1 ; « Les 10 premiers » = les dix premiers chants chinois). Le % ne bouge pas (Q8).
+  5. **Listes des filtres** : présidences et services inconnus lus dans toutes les setlists publiées passées,
+     sans tenir compte de la période ni de l'autre filtre (les pastilles ne bougent pas quand on filtre). Les
+     dix catégories connues sont passées par l'appelant (`ALL_CATEGORIES`), puis les inconnues, A→Z.
+  6. **« Jamais joués »** suit aussi le filtre de langue (« mêmes filtres », Q11).
+  7. **« À redécouvrir »** : à égalité de nombre, la dernière fois la plus récente d'abord, puis le titre ; la
+     tonalité la plus jouée y est celle des setlists d'avant la période.
+  8. **« Setlists comptées »** : `du` / `au` sont les dates de la première et de la dernière setlist comptée
+     (« du 24/05 au 20/09 »), pas les bornes de la période. Dates libres : la fin est ramenée à hier.
+  9. **Titre** départageant les ex aequo : ordre alphabétique français (le latin avant le chinois).
+  10. Un `keyOverride` vide (`""`) vaut l'originale, comme dans `scripts/recommended-keys.ts`.
+- Reste : S2 (droit et adresse), S3 (« Les plus joués »), S4 (« Jamais joués », « À redécouvrir »), S5 (widget).
+  « Dernière fois » écrit « 20/09 » (l'année hors année en cours) : à faire dans S3, à l'affichage.
+- À faire par Timothée : rien pour S1 (aucune règle Firestore, aucune donnée).
