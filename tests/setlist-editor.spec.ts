@@ -60,7 +60,7 @@ async function openEditor(page: Page) {
 
 test("création : une seule page, brouillon enregistré tout seul, « Publier » la rend visible", async ({ page }) => {
   await emptyPlanning(page);
-  const db = await signInAs(page, MUSICIEN, {}, "/setlists/new");
+  const db = await signInAs(page, MUSICIEN, {}, "/setlists/new?autre=1");
 
   await expect(page.getByRole("button", { name: /Suivant/ })).toHaveCount(0);
   // Infos et chants sur la même page.
@@ -113,7 +113,7 @@ test("modification : « Terminé » envoie le changement en cours et ramène à 
 
 test("création : « Publier » juste après une retouche, sur réseau lent, ne repasse pas en brouillon", async ({ page }) => {
   await emptyPlanning(page);
-  const db = await signInAs(page, MUSICIEN, {}, "/setlists/new");
+  const db = await signInAs(page, MUSICIEN, {}, "/setlists/new?autre=1");
   await page.getByLabel("Titre").fill("Culte du 28 septembre");
   await page.getByLabel("Catégorie").selectOption("Culte Francophone");
   await page.getByLabel("Présidence *", { exact: true }).selectOption("__other__");

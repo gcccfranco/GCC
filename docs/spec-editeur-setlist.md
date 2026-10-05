@@ -333,6 +333,48 @@ Choix faits faute de réponse écrite :
   (même tableau). Un chant fusionné perd toujours note, transitions de section, choix 简谱 et retouches du scan
   (`FusionSong` n'a pas ces champs) : la ligne de la question 7 viendra avec l'écran du choix (T3).
 
-Reste : T2 (« Pour quel service ? »), T3 (piste 2 grands écrans), T4 (feuilles téléphone et tablette portrait), T5
-(bibliothèque complète). Timothée : aucune règle Firestore à publier pour T1. Le correctif `jianpuChords` (commit à lui
-seul) peut partir sur `main` sur son ordre, avant le reste du lot.
+**05/10/2026 — T2 faite** (« Pour quel service ? » ; l'éditeur reste celui d'aujourd'hui), commit
+« feat(U5bis): T2 — « Pour quel service ? » … » sur la même branche.
+
+- `/setlists/new` choisit son écran d'après l'URL (`src/app/setlists/new/CreateSetlistClient.tsx`) : sans paramètre,
+  `PourQuelService.tsx` (cartes : catégorie dans sa couleur, « Dimanche 18 octobre », « · Soir » au Campus,
+  « Présidence : … » ou « à définir », « Préparer » en encre ; une colonne sur téléphone, deux en tablette portrait, trois
+  au-delà ; vide et planning illisible dits, « Autre setlist » et « Repartir d'une setlist passée » toujours là) ;
+  `?cat=…&date=…(&moment=…)`, l'éditeur prérempli ; `?autre=1`, l'éditeur vide ; `?depuis=passee`, `SetlistsPassees.tsx`
+  (lignes `SetlistCard`, recherche, « Reprendre » = `duplicateSetlist`, puis « Modifier »).
+- `lienPreparer` et `lirePreremplissage` dans `src/lib/setlist/prochainsServices.ts` : chaque paramètre invalide est
+  ignoré seul (catégorie non permise, date qui n'existe pas, moment hors Campus).
+- `SetlistForm` : prop `prefill` (catégorie, date, moment, titre automatique par la règle du code, question 1) ; la
+  présidence est relue au planning, dans la graphie de la liste. **Brouillon au premier changement (Q4)** : rien n'est
+  écrit tant que l'état est celui du préremplissage (présidence comprise) ; ensuite, comme avant. Le menu Matin / Soir
+  du Campus porte enfin un nom (« Moment »).
+- FR et 中文 : bloc `setlists.entree` des deux fichiers de langue (Timothée relit le 中文).
+- Tests (écrits avant, vus rouges — 9 sur 9 sur l'éditeur d'avant —, puis verts ; ordinateur, téléphone, tablette) :
+  `tests/setlist-pour-quel-service.spec.ts`, 2 tests purs (`lienPreparer`, `lirePreremplissage`, écrits après le code)
+  et 9 tests de page (entrée depuis « Nouvelle », « Préparer » sans écriture puis brouillon au premier chant et « Publier »
+  qui retire le service, URL et catégorie non permise, Campus, « Autre setlist », setlists passées → copie privée →
+  « Modifier », planning vide, 中文, une / deux / trois colonnes) ; captures regardées aux trois tailles. Les tests qui
+  ouvraient `/setlists/new` passent par `?autre=1` (`setlist-editor` ×2, `setlist-history` ×1, `recommended-key` ×1).
+- Vérifié : `pour-quel-service`, `setlist-editor`, `setlist-history`, `recommended-key`, `coup-d-oeil`, `fusions-dp`,
+  `setlist-editeur-piste2`, `setlist-fusionner`, `setlist-bibliotheque`, `harmonie-jianpu` — 375 verts sur les trois
+  appareils ; `back-office-coupe` vert ; `tsc` propre, lint sans erreur ni avertissement nouveau.
+
+Choix faits faute de réponse écrite :
+- Admins : « Pour quel service ? » ne propose que les catégories de leur profil (question 2) ; l'URL, elle, accepte
+  toutes les catégories pour eux, comme le menu de l'éditeur.
+- Un paramètre `cat` ou `date` présent ouvre l'éditeur, même invalide (il est alors vide de ce champ) ; sans paramètre
+  utile, l'entrée. Titre automatique seulement si catégorie et date sont valides.
+- Aujourd'hui = date locale du navigateur (`todayIso`, `src/lib/scene/dimanches.ts`), comme la spec le demande.
+- « Repartir d'une setlist passée » : partagées **et** privées de la personne (`getMySetlists`), passées (avant
+  aujourd'hui), visibles (`canSeeSetlist`) et duplicables (`canDuplicateSetlist`) ; recherche titre, présidence, date
+  (comme la liste des setlists) ; « Reprendre » en gris (une ligne par setlist : l'encre partout alourdirait).
+- Cartes en relief (`raised`, la règle 5C1 « ce qui se touche porte une ombre ») ; catégorie en toutes lettres
+  (« Culte Francophone », comme `SetlistCard`), la planche écrit « Culte Franco ».
+- Un planning qui ne se lit pas : `loadPlanningData` ne lève presque jamais (chaque feuille retombe sur vide) ; le
+  message « Le planning n'a pas pu être lu. » couvre aussi un échec de lecture des setlists. Non testé (on ne sait pas
+  le provoquer sans toucher au code du planning).
+- Le « ← » de l'éditeur ramène toujours à la liste des setlists (T3 refait cet en-tête).
+
+Reste : T3 (piste 2 grands écrans), T4 (feuilles téléphone et tablette portrait), T5 (bibliothèque complète).
+Timothée : aucune règle Firestore à publier pour T1 ni T2 ; relire les libellés 中文 de `setlists.entree`. Le correctif
+`jianpuChords` (commit à lui seul) peut partir sur `main` sur son ordre, avant le reste du lot.

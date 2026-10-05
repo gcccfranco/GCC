@@ -74,7 +74,7 @@ test("éditeur de setlist : un chant ajouté démarre dans la recommandée", asy
   await page.route(/docs\.google\.com\/spreadsheets/, (route) =>
     route.fulfill({ status: 200, contentType: "text/csv", body: "" }),
   );
-  await signInAs(page, musicien, {}, "/setlists/new");
+  await signInAs(page, musicien, {}, "/setlists/new?autre=1");
   await page.getByPlaceholder("Chercher un chant à ajouter…").fill("Je reviens au cœur");
   await page.getByRole("button", { name: "Ajouter" }).first().click();
   const key = page.getByLabel("Tonalité de Je reviens au cœur");

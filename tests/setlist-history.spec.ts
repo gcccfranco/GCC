@@ -165,7 +165,7 @@ test("en 中文, la ligne et les phrases sont traduites", async ({ page }) => {
 
 test("publier une nouvelle setlist écrit « A créé la setlist »", async ({ page }) => {
   await emptyPlanning(page);
-  await signInAs(page, MUSICIEN, {}, "/setlists/new");
+  await signInAs(page, MUSICIEN, {}, "/setlists/new?autre=1");
   await page.getByLabel("Titre").fill("Culte du 28 septembre");
   await page.getByLabel("Catégorie").selectOption("Culte Francophone");
   await page.getByLabel("Présidence *", { exact: true }).selectOption("__other__");

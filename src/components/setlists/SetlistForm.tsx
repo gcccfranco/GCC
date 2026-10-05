@@ -23,6 +23,7 @@ import { useScrollDirection } from "@/hooks/useScrollDirection";
 import { creatableCategories, isAdminUser } from "@/lib/access";
 import { loadPlanningData, setlistSeances, normalizeName, type PlanningData, type SetlistSeance } from "@/lib/planning/names";
 import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import { DndContext, closestCenter, DragEndEvent } from "@dnd-kit/core";
 import {
   type FormItem,
@@ -40,6 +41,7 @@ import type { SectionsOf } from "@/lib/setlist/history";
 import type { SongIndexEntry } from "@/types/song";
 import { useDefaultSensors } from "@/lib/dnd/sensors";
 import { nextUid } from "@/lib/uid";
+import type { Preremplissage } from "@/lib/setlist/prochainsServices";
 import { SongRow, FusionRow, TransitionRow } from "@/components/setlists/SetlistFormRows";
 
 import { FREE_CATEGORIES } from "@/lib/firebase/setlists";
@@ -64,6 +66,17 @@ export interface SetlistFormProps {
   songs: SongIndexEntry[];
   /** État initial (mode edit) — lu une seule fois au montage */
   initial?: SetlistFormInitial;
+  /** Création depuis « Pour quel service ? » (lot U5 bis) : catégorie, date et
+   *  moment du service ; la présidence est relue au planning. Lu au montage. */
+  prefill?: Preremplissage;
+}
+
+/** Titre automatique « Catégorie JJ/MM [Soir] » (éditable). */
+function titreAuto(t: TFunction, category: string, dateISO: string, mom: "matin" | "soir" | undefined): string {
+  const catLabel = t("categories." + category, { defaultValue: category });
+  const [, mm, dd] = dateISO.split("-");
+  const m = mom ? (mom === "soir" ? " Soir" : " Matin") : "";
+  return `${catLabel} ${dd}/${mm}${m}`;
 }
 
 /** Déclenche la notif « setlist prête » en mode auto après une sauvegarde.
@@ -82,7 +95,7 @@ async function notifySetlistReady(setlistId: string): Promise<void> {
   }
 }
 
-export function SetlistForm({ mode, setlistId, songs, initial }: SetlistFormProps) {
+export function SetlistForm({ mode, setlistId, songs, initial, prefill }: SetlistFormProps) {
   const scrollVisible = useScrollDirection();
   const isEdit = mode === "edit";
   const { t } = useTranslation();
@@ -92,14 +105,17 @@ export function SetlistForm({ mode, setlistId, songs, initial }: SetlistFormProp
   useEffect(() => { profileRef.current = profile; }, [profile]);
 
   // ── Form state ──────────────────────────────────────────
-  const [title, setTitle] = useState(initial?.title ?? "");
-  const [date, setDate] = useState(initial?.date ?? new Date().toISOString().split("T")[0]);
+  const [title, setTitle] = useState(
+    initial?.title ??
+      (prefill?.category && prefill.date ? titreAuto(t, prefill.category, prefill.date, prefill.moment) : ""),
+  );
+  const [date, setDate] = useState(initial?.date ?? prefill?.date ?? new Date().toISOString().split("T")[0]);
   const [leader, setLeader] = useState(initial?.leader ?? "");
-  const [category, setCategory] = useState(initial?.category ?? "");
+  const [category, setCategory] = useState(initial?.category ?? prefill?.category ?? "");
   const [notes, setNotes] = useState(initial?.notes ?? "");
   const [isPrivate, setIsPrivate] = useState(initial?.isPrivate ?? false);
   const [items, setItems] = useState<FormListItem[]>(initial?.items ?? []);
-  const [moment, setMoment] = useState<"matin" | "soir" | undefined>(initial?.moment);
+  const [moment, setMoment] = useState<"matin" | "soir" | undefined>(initial?.moment ?? prefill?.moment);
   const ownerId = initial?.ownerId ?? null;
 
   // ── Sélecteurs planning : présidence (liste) + date (manuelle) ───────────
@@ -147,9 +163,6 @@ export function SetlistForm({ mode, setlistId, songs, initial }: SetlistFormProp
 
   const loginFrom = isEdit ? `/setlists/${setlistId}/edit` : "/setlists/new";
 
-  // Charge le planning pour proposer les séances
-  useEffect(() => { loadPlanningData().then(setPlanning); }, []);
-
   // Séances de la catégorie choisie (clé = date|moment)
   const categorySeances = useMemo<(SetlistSeance & { key: string })[]>(() => {
     if (!planning || !category) return [];
@@ -189,10 +202,7 @@ export function SetlistForm({ mode, setlistId, songs, initial }: SetlistFormProp
   // Titre auto (éditable) tant qu'il est vide : "Catégorie JJ/MM [Soir]".
   const fillTitleIfEmpty = (dateISO: string, mom: "matin" | "soir" | undefined) => {
     if (!dateISO || title.trim() || !category) return;
-    const catLabel = t("categories." + category, { defaultValue: category });
-    const [, mm, dd] = dateISO.split("-");
-    const m = mom ? (mom === "soir" ? " Soir" : " Matin") : "";
-    setTitle(`${catLabel} ${dd}/${mm}${m}`);
+    setTitle(titreAuto(t, category, dateISO, mom));
   };
 
   // Présidence : un président de séance (pré-remplit la date avec sa prochaine
@@ -252,9 +262,23 @@ export function SetlistForm({ mode, setlistId, songs, initial }: SetlistFormProp
     latestRef.current = { json: payloadJson, valid: !invalidReason, payload };
   });
 
+  // Création : le brouillon part au premier changement (un chant, un champ),
+  // pas au préremplissage (docs/spec-editeur-setlist.md, Q4) — ouvrir
+  // « Préparer » puis fermer l'onglet ne laisse rien en base. L'état de départ
+  // est repris quand la présidence arrive du planning.
+  const pristineJsonRef = useRef(payloadJson);
+  const rebaselineRef = useRef(false);
+  const touchedRef = useRef(false);
+
   // Création : brouillon invisible dans les listes tant que « Publier » n'a pas été touché.
   useEffect(() => {
     if (isEdit) return;
+    if (rebaselineRef.current) {
+      rebaselineRef.current = false;
+      pristineJsonRef.current = payloadJson;
+    }
+    if (!touchedRef.current && payloadJson === pristineJsonRef.current) return;
+    touchedRef.current = true;
     if (!user) return;
     if (!title.trim() || !category) return;
     const timer = setTimeout(() => {
@@ -280,6 +304,26 @@ export function SetlistForm({ mode, setlistId, songs, initial }: SetlistFormProp
     }, 2000);
     return () => clearTimeout(timer);
   }, [isEdit, payloadJson, title, category, user]);
+
+  // Charge le planning pour proposer les séances. Création préremplie
+  // (« Préparer ») : la présidence du service y est relue, dans la graphie de
+  // la liste des présidences ; ce n'est pas un changement (pas de brouillon).
+  const prefillRef = useRef(prefill);
+  useEffect(() => {
+    loadPlanningData().then((p) => {
+      setPlanning(p);
+      const pre = prefillRef.current;
+      if (!pre?.category || !pre.date || latestRef.current.payload.leader) return;
+      const seances = setlistSeances(p).filter((s) => s.category === pre.category);
+      const nom = seances
+        .find((s) => s.date === pre.date && (s.moment ?? null) === (pre.moment ?? null))
+        ?.leader.trim();
+      if (!nom) return;
+      const graphie = seances.map((s) => s.leader.trim()).find((l) => normalizeName(l) === normalizeName(nom)) ?? nom;
+      setLeader(graphie);
+      rebaselineRef.current = true;
+    });
+  }, []);
 
   // Modification : état enregistré (au montage, celui qui a été chargé).
   const savedJsonRef = useRef(payloadJson);
@@ -664,6 +708,7 @@ export function SetlistForm({ mode, setlistId, songs, initial }: SetlistFormProp
                 />
                 {category === "Campus" && (
                   <select
+                    aria-label={t("setlists.entree.moment")}
                     value={moment ?? ""}
                     onChange={(e) => setMoment((e.target.value || undefined) as "matin" | "soir" | undefined)}
                     className="mt-2 w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring/30 text-[16px] sm:text-sm"
