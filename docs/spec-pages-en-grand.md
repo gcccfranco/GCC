@@ -220,3 +220,45 @@ npm test -- tests/pages-en-grand-*.spec.ts
   l'intégration, garder `cleDeTransition` et inscrire `/songs` dans `SECTIONS_EN_DEUX_VOLETS` (ou garder les deux).
 - Reste : B1 à B7.
 - À faire par Timothée : rien pour B0 (aucune règle, aucun écran).
+
+**B1 — Accueil A, faite le 05/10/2026** (branche `lot/u4bis-pages-en-grand`, commit `feat(U4bis): B1 — Accueil A…`).
+- `src/app/planning/page.tsx` : mêmes lectures qu'avant (feuilles, fallbacks, Interfranco / Intergroupe), le rendu
+  part dans deux composants. Disposition : en grand (`useDeuxVolets`, règle Q1) « Ce dimanche » à gauche (1,45 fr),
+  « Pour moi » à droite (1 fr) ; dès 768 px sans deux volets (tablette portrait, ordinateur étroit barre dépliée)
+  « Pour moi » en deux cartes côte à côte puis « Ce dimanche » ; téléphone : une carte puis « Ce dimanche ». Le verset
+  reste en bas (question 1), le lien du guide aussi. Cartes en relief (`.raised`, 16 px) comme la planche.
+- `src/components/accueil/PourMoi.tsx` : prochain service (vignette, date longue, service à sa couleur et rôles,
+  « dans 3 jours »), « Ensuite » (2 en grand, 3 sur tablette, aucun sur téléphone : il reste dans Mes services), « Mes
+  services › » ; la setlist de ce service (titre, présidence, chants numérotés, tonalité en rectangle 5C1), « Ouvrir »
+  et « Mode Louange » (bouton plein à la couleur du service). Sans service à venir, le bloc disparaît.
+- `src/components/accueil/CeDimanche.tsx` : Culte (ou Interfranco / Intergroupe) en deux colonnes de rôles, une sur
+  téléphone, la personne en pastille d'encre ; Groupes et EDD côte à côte, une ligne par groupe (présidence et
+  musiciens ; présidence pour une classe) ; Prépa. Table et petit déj ; prochains évènements (deux, derrière
+  `BACK_OFFICE` jusqu'à U9).
+- `src/lib/planning/accueil.ts` (pur) : `pourMoi`, `reunirServices`, `choisirSetlist` / `setlistDuService` (la règle de
+  Mes services, sortie de sa page sans la changer), `joursAvant`, `porteLeNom`.
+- `SetlistDetailClient.tsx` : `?louange=1` ouvre le mode louange dès la setlist lue (sans plein écran natif, qui
+  demande un geste sur la page) et s'efface de l'adresse. Servira aussi à l'aperçu de B2 (Q4).
+- `serviceButton.ts` : l'entrée `#c87941 → #a66436` de U3 (Q15), à l'identique, pour « Je m'inscris ».
+- Libellés FR et 中文 sous `planning.accueil.*` (中文 à relire par Timothée : « 我的安排 » pour « Pour moi », « 之后 »,
+  « 本次服事的歌单 », « 主领：», « 近期活动 », « 空闲 », « 我来报名 ») ; « Ce dimanche · 4 octobre » sans l'année, comme la planche.
+- Tests : `tests/pages-en-grand-accueil.spec.ts` (13 tests, dont 4 purs) sur les cinq projets ; vus rouges (13 échecs
+  sur ordinateur et téléphone avant le code), puis verts. `look-planning.spec.ts` suit les cartes (plus de filet) ;
+  `planning-petit-dej.spec.ts` (lot 1b) : une case vide n'est plus « pas de ligne » mais « Libre » et « Je m'inscris »
+  (Q14). Avec les specs voisines (planning-accueil, back-office-coupe, coherence, planning-*, look-*, nouveaux-membres) :
+  vertes sur les cinq projets.
+  Captures regardées aux cinq tailles et comparées aux planches `accueil-a-*`.
+- Choix faute de réponse : pas d'heures (10:30, 13:00 de la planche : le planning ne les porte pas) ; « Paix »,
+  « Fidélité », « Bonté » (libellés d'aujourd'hui) plutôt que « Groupe Paix » ; une setlist que la personne ne peut pas
+  ouvrir (`canSeeSetlist`) n'est pas proposée ; sans setlist, la carte de la setlist n'est pas montrée ; évènements
+  sans pastille « Inscrit » ; « Je m'inscris » mène à Planning › Table (l'inscription de U3), seulement interrupteur
+  ouvert et pour un dimanche à venir ; interrupteur coupé, le petit déj ne paraît que rempli, comme avant.
+- **Fusion avec U3 et U2** : leur `planning/page.tsx` change la lecture du prochain service (`servicesDuCompte`,
+  `sansBrouillon`, `avecDimanchesSpeciaux`) et ajoute des rôles (percussion, cours) dans les blocs supprimés ici. À la
+  fusion : garder leur calcul des services dans le `useMemo` de `mesServices` (en passant le résultat à `pourMoi`),
+  ajouter la percussion aux lignes de groupe et le cours à l'EDD si on les veut sur l'accueil, et lire le petit déj par
+  `lirePetitDej` / `estLibre` (« Libre » plus juste que la case vide du Sheet). Leurs clés `planning.petitDej.libre` /
+  `inscrire` doublonnent `planning.accueil.libre` / `inscrire` : en garder une paire. Le test de U3 « Ce dimanche : sans
+  inscription, pas de ligne Petit déj » contredit Q14 (planche : « Libre » et « Je m'inscris ») : le réécrire comme ici.
+- Reste : B2 à B7.
+- À faire par Timothée : relire le 中文 ci-dessus ; rien à publier (aucune règle).

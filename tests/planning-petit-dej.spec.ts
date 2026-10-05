@@ -105,11 +105,14 @@ test("Ce dimanche : la ligne Petit déj apparaît quand la case est remplie", as
   await capture(page, "ce-dimanche-petit-dej");
 });
 
-test("Ce dimanche : pas de ligne Petit déj quand la case est vide", async ({ page }) => {
+// Accueil A (lot U4 bis, B1, docs/spec-pages-en-grand.md, Q14) : interrupteur ouvert, une case vide
+// est « Libre », avec « Je m'inscris » ; interrupteur coupé, pas de ligne (pages-en-grand-accueil).
+test("Ce dimanche : case vide, le petit déj est « Libre » avec « Je m'inscris »", async ({ page }) => {
   await open(page, "2026-09-13", "/planning");
   const dimanche = page.getByRole("region", { name: /Ce dimanche/ });
   await expect(dimanche.getByText("Daniel F.", { exact: false }), "la Prépa. Table reste").toBeVisible();
-  await expect(dimanche.getByText("Petit déj", { exact: true })).toHaveCount(0);
+  await expect(dimanche.getByText("Libre", { exact: true })).toBeVisible();
+  await expect(dimanche.getByRole("link", { name: "Je m'inscris" })).toBeVisible();
 });
 
 test("Mes services : le petit déj est un service à part entière", async ({ page }) => {

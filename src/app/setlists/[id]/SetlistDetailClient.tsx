@@ -443,6 +443,19 @@ export function SetlistDetailClient() {
     requestAnimationFrame(() => loadContents(items));
   }, [setlist, loadContents]);
 
+  // « Mode louange » de l'accueil (lot U4 bis, B1, docs/spec-pages-en-grand.md, Q14) arrive
+  // avec `?louange=1` : le mode louange s'ouvre dès la setlist lue, sans plein écran natif
+  // (il faut un geste sur cette page) ; l'adresse perd le paramètre, retour arrière ne le relance pas.
+  const louangeDemandee = useRef(false);
+  useEffect(() => {
+    if (!setlist || louangeDemandee.current) return;
+    if (new URLSearchParams(window.location.search).get("louange") !== "1") return;
+    louangeDemandee.current = true;
+    window.history.replaceState(window.history.state, "", window.location.pathname);
+    const items = setlist.items;
+    requestAnimationFrame(() => { loadContents(items).then(() => setPerformanceMode(true)); });
+  }, [setlist, loadContents]);
+
   // Vue lue dans l'adresse à l'ouverture (lien, rechargement) et au retour du
   // navigateur (Q9).
   useEffect(() => {
