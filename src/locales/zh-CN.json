@@ -26,6 +26,8 @@
     "jourAria_other": "{{jour}}，{{count}} 项",
     "rien": "这天没有安排。",
     "casesVides": "空缺：{{liste}}",
+    "setlistDuService_other": "歌单「{{titre}}」· {{count}} 首",
+    "echecs": "无法读取：{{liste}}。其余照常显示。",
     "duSheet": "读取自活动表格（Sheet）",
     "sheetInjoignable": "无法读取活动表格（Sheet）：其中的活动暂时不显示。",
     "fermer": "关闭",
@@ -51,6 +53,7 @@
       "annuler": "取消",
       "confirmer": "改期",
       "ok": "好",
+      "repetee": "请到任务里修改重复设置",
       "erreur": "改期没有保存，请重试。",
       "refus": {
         "avantAujourdhui": "不能早于今天",

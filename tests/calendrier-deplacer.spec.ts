@@ -176,6 +176,27 @@ test.describe("déplacer (pur)", () => {
       .toMatchObject({ type: "evenement", champs: { date: "2026-10-29", dateFin: "2026-10-31" } });
   });
 
+  test("évènement sur plusieurs jours : son nouveau début ne tombe jamais avant aujourd'hui", () => {
+    // Un camp du 2 au 4 octobre (demain à après-demain), glissé de sa case du 4 sur aujourd'hui (le 1er) :
+    // son début passerait au 28 septembre.
+    const camp = evenement({ id: "camp", titre: "Camp", date: "2026-10-02", dateFin: "2026-10-04" });
+    expect(planDeplacement(entree("evenements", "camp", "2026-10-04"), "2026-10-01", donnees({ evenements: [camp] }), horloge))
+      .toEqual({ type: "refus", refus: "avantAujourdhui" });
+    // Depuis sa première case, aujourd'hui reste permis.
+    expect(planDeplacement(entree("evenements", "camp", "2026-10-02"), "2026-10-01", donnees({ evenements: [camp] }), horloge))
+      .toMatchObject({ type: "evenement", champs: { date: "2026-10-01", dateFin: "2026-10-03" } });
+  });
+
+  test("une date mal formée (année à cinq chiffres) : rien à faire, rien ne casse", () => {
+    const camp = evenement({ id: "camp", titre: "Camp", date: "2026-10-22" });
+    const t = tache({ id: "noel", titre: "Chants de Noël" });
+    const d = donnees({ evenements: [camp], taches: [{ tache: t, fois: [] }] });
+    for (const vers of ["20266-10-14", "2026-13-40", "2026-1-4", ""]) {
+      expect(planDeplacement(entree("evenements", "camp", "2026-10-22"), vers, d, horloge), vers).toBeNull();
+      expect(planDeplacement(entree("taches", "noel", "2026-10-15"), vers, d, horloge), vers).toBeNull();
+    }
+  });
+
   test("réunion : « Prévenir les membres de la réunion »", () => {
     const reu = evenement({ id: "reu", titre: "Réunion DA", pour: "pole:da", date: "2026-10-03" });
     expect(planDeplacement(entree("reunions", "reu", "2026-10-03"), "2026-10-05", donnees({ evenements: [reu] }), horloge))
@@ -259,8 +280,11 @@ test.describe("prévenir (pur)", () => {
     expect(deplacementsAPrevenir([ce_jour], TODAY).map((e) => e.id)).toEqual(["foot"]);
   });
 
-  test("clés : `deplacement-<id>-<vers>` (le cron ajoute l'uid) ; le rappel de la veille porte la date", () => {
-    expect(cleDeplacement(deplace())).toBe("deplacement-foot-2026-10-09");
+  test("clés : `deplacement-<id>-<vers>-<jour du geste>` (le cron ajoute l'uid) ; le rappel de la veille porte la date", () => {
+    expect(cleDeplacement(deplace())).toBe("deplacement-foot-2026-10-09-2026-09-30");
+    // A → B annoncé, puis B → C, puis C → B : le second retour à B s'annonce aussi (autre jour de geste).
+    const retour = deplace({ deplacement: { de: "2026-10-12", vers: "2026-10-09", le: "2026-10-03T07:00:00.000Z", parUid: "u-orga" } });
+    expect(cleDeplacement(retour)).not.toBe(cleDeplacement(deplace()));
     expect(cleVeille(deplace())).toBe("rappel-evenement-foot-2026-10-09");
     // Glissé du 8 au 9 : la veille du 9 n'est pas celle du 8, déjà envoyée.
     expect(cleVeille(deplace({ date: "2026-10-08" }))).not.toBe(cleVeille(deplace()));
@@ -317,6 +341,8 @@ const P_ADMIN: FakeProfile = { uid: "u-admin", email: ADMIN_EMAILS[0], firstName
 const P_ORGA: FakeProfile = { uid: "u-orga", email: "orga@example.org", firstName: "Orane", lastName: "G.", poles: ["da"] };
 /** Membre du pôle DA qui n'organise rien. */
 const P_MEMBRE: FakeProfile = { uid: "u-membre", email: "membre@example.org", firstName: "Mael", lastName: "B.", poles: ["da"] };
+/** Auteur de créneaux, responsable des plannings, sans pôle (pas la coordination). */
+const P_AUTEUR: FakeProfile = { uid: "u-auteur", email: "auteur@example.org", firstName: "Ines", lastName: "R.", plannings: ["culte"] };
 
 const DOCS: Record<string, Record<string, unknown>> = {
   "evenements/ping": {
@@ -410,6 +436,10 @@ async function glisser(page: Page, source: Locator, cible: Locator) {
   await soulever(page, source, cible);
   await page.mouse.up();
 }
+/** Les ouvertures (boîte, feuille) ont fini de s'animer : la capture montre l'état posé. */
+async function animationsFinies(page: Page) {
+  await page.waitForFunction(() => document.getAnimations().every((a) => a.playState !== "running"));
+}
 
 test.describe("C6 : glisser en vue Mois", () => {
   test("la tâche du 15 glissée au 14 : « Déposer pour déplacer », confirmation ; « Annuler » n'écrit rien, « Déplacer » écrit l'échéance (ordinateur et tablettes)", async ({ page }, info) => {
@@ -459,6 +489,43 @@ test.describe("C6 : glisser en vue Mois", () => {
     // La tâche unique, elle, se soulève.
     await expect(jour(page, "2026-10-15").locator('[data-source="taches"]')).toHaveAttribute("data-deplacable", "true");
     expect(ecritures(db)).toEqual([]);
+    // La tâche répétée le dit dans le panneau du jour, à la place de « Déplacer… » (Q6).
+    await jour(page, "2026-10-02").click();
+    const panneau = panneauADroite(info)
+      ? page.getByRole("complementary", { name: "Vendredi 2 octobre" })
+      : page.getByRole("dialog", { name: "Vendredi 2 octobre" });
+    await expect(panneau).toContainText("Change la répétition dans la tâche");
+    await expect(panneau.getByRole("button", { name: "Déplacer…" })).toHaveCount(0);
+  });
+
+  test("créneau d'un groupe que la saison ne permet pas : ni poignée ni « Déplacer… » pour son auteur (ordinateur et tablettes)", async ({ page }, info) => {
+    test.skip(estTelephone(info), GLISSER);
+    await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
+    await sheets(page);
+    await signInAs(page, P_AUTEUR, {
+      ...DOCS,
+      "programmes/noel": { ...DOCS["programmes/noel"], quiAutorises: ["Jeunes"] },
+      "programmes/noel/creneaux/chorale": {
+        dimanche: "2026-10-25", debut: "15:00", fin: "16:00", quoi: "Chant", qui: ["Chorale"], note: "",
+        auteurUid: "u-auteur", auteurNom: "Auteur", createdAt: MAINTENANT, updatedAt: MAINTENANT,
+      },
+      "programmes/noel/creneaux/jeunes": {
+        dimanche: "2026-10-11", debut: "16:00", fin: "17:00", quoi: "Danse", qui: ["Jeunes"], note: "",
+        auteurUid: "u-auteur", auteurNom: "Auteur", createdAt: MAINTENANT, updatedAt: MAINTENANT,
+      },
+    }, "/back-office/calendrier");
+    await expect(page.getByTestId("calendrier")).not.toHaveAttribute("aria-busy", "true");
+    const chorale = jour(page, "2026-10-25").locator('[data-source="scene"]').filter({ hasText: "Chorale" });
+    await expect(chorale).toBeVisible();
+    await expect(chorale).not.toHaveAttribute("data-deplacable", "true");
+    // Le sien d'un groupe permis, lui, se soulève (témoin).
+    await expect(jour(page, "2026-10-11").locator('[data-source="scene"]').filter({ hasText: "Danse" })).toHaveAttribute("data-deplacable", "true");
+    await jour(page, "2026-10-25").click();
+    const panneau = panneauADroite(info)
+      ? page.getByRole("complementary", { name: "Dimanche 25 octobre" })
+      : page.getByRole("dialog", { name: "Dimanche 25 octobre" });
+    await expect(panneau.getByRole("link", { name: /Chorale/ })).toBeVisible();
+    await expect(panneau.getByRole("button", { name: "Déplacer…" })).toHaveCount(0);
   });
 
   test("pas de dépôt avant aujourd'hui : « Pas avant aujourd'hui », rien d'écrit (ordinateur et tablettes)", async ({ page }, info) => {
@@ -582,6 +649,8 @@ test.describe("C6 : « Déplacer… »", () => {
     await bouton.focus();
     await page.keyboard.press("Enter");
     const dlg = page.getByRole("alertdialog", { name: "Déplacer « Chants de Noël »" });
+    // Une année à cinq chiffres ne se tape pas.
+    await expect(dlg.getByLabel("Nouvelle date")).toHaveAttribute("max", "9999-12-31");
     await dlg.getByLabel("Nouvelle date").fill("2026-10-14");
     await expect(dlg).toContainText("Déplacer « Chants de Noël » du jeudi 15 au mercredi 14 octobre ?");
     await dlg.getByRole("button", { name: "Déplacer", exact: true }).focus();
@@ -615,6 +684,15 @@ test.describe("C6 : « Déplacer… »", () => {
     await dlg.getByRole("button", { name: "Déplacer", exact: true }).click();
     await expect(dlg).toHaveCount(0);
     expect(ecritures(db)).toMatchObject([{ method: "PATCH", path: "poles/da/taches/noel", data: { echeance: "2026-10-14" } }]);
+  });
+
+  test("téléphone : la feuille d'une tâche répétée dit « Change la répétition dans la tâche », sans « Déplacer… »", async ({ page }, info) => {
+    test.skip(!estTelephone(info), "test propre au téléphone");
+    await ouvrir(page);
+    await page.getByTestId("agenda").getByRole("button", { name: /Fond PPT/ }).first().click();
+    const feuille = page.getByRole("dialog", { name: "Fond PPT" });
+    await expect(feuille).toContainText("Change la répétition dans la tâche");
+    await expect(feuille.getByRole("button", { name: "Déplacer…" })).toHaveCount(0);
   });
 
   test("téléphone : une entrée qui ne bouge pas n'a pas « Déplacer… » (service)", async ({ page }, info) => {
@@ -653,20 +731,33 @@ test.describe("C6 : captures à regarder", () => {
       await page.getByTestId("agenda").getByRole("button", { name: /Tournoi de ping/ }).click();
       await page.getByRole("dialog", { name: "Tournoi de ping" }).getByRole("button", { name: "Déplacer…" }).click();
       await page.getByRole("alertdialog").getByLabel("Nouvelle date").fill("2026-10-23");
-      await page.waitForTimeout(300);
+      await expect(page.getByRole("alertdialog")).toContainText("Prévenir les inscrits (4)");
+      await animationsFinies(page);
       await page.screenshot({ path: `${dossier}/${info.project.name}-champ.png` });
       return;
     }
     await ouvrir(page, P_ORGA);
     await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
     await soulever(page, jour(page, "2026-10-15").locator('[data-source="taches"]'), jour(page, "2026-10-14"));
-    await page.waitForTimeout(200);
+    await expect(jour(page, "2026-10-14")).toContainText("Déposer pour déplacer");
+    await animationsFinies(page);
     await page.screenshot({ path: `${dossier}/${info.project.name}-glisser.png` });
     await page.mouse.up();
     await page.getByRole("alertdialog").getByRole("button", { name: "Annuler" }).click();
     await glisser(page, jour(page, "2026-10-22").locator('[data-source="evenements"]'), jour(page, "2026-10-23"));
-    await page.waitForTimeout(300);
+    await expect(page.getByRole("alertdialog", { name: /Tournoi de ping/ })).toBeVisible();
+    await animationsFinies(page);
     await page.screenshot({ path: `${dossier}/${info.project.name}-evenement.png` });
+  });
+
+  test("tâche répétée : « Change la répétition dans la tâche » dans le panneau du jour ou la feuille de l'entrée", async ({ page }, info) => {
+    await ouvrir(page);
+    await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
+    if (estTelephone(info)) await page.getByTestId("agenda").getByRole("button", { name: /Fond PPT/ }).first().click();
+    else await jour(page, "2026-10-02").click();
+    await expect(page.getByText("Change la répétition dans la tâche").filter({ visible: true })).toBeVisible();
+    await animationsFinies(page);
+    await page.screenshot({ path: `test-results/calendrier-deplacer-captures/${info.project.name}-repetee.png` });
   });
 
   test("confirmation d'un créneau (ordinateur et tablettes)", async ({ page }, info) => {
@@ -674,7 +765,8 @@ test.describe("C6 : captures à regarder", () => {
     await ouvrir(page);
     await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
     await glisser(page, jour(page, "2026-10-25").locator('[data-source="scene"]'), jour(page, "2026-10-11"));
-    await page.waitForTimeout(300);
+    await expect(page.getByRole("alertdialog").getByRole("radiogroup")).toBeVisible();
+    await animationsFinies(page);
     await page.screenshot({ path: `test-results/calendrier-deplacer-captures/${info.project.name}-creneau.png` });
   });
 });

@@ -56,10 +56,14 @@ export function champsDecales(e: Evenement, n: number): ChampsDecales {
 /** L'id de la source dans la clé `${source}:${id}:${date}`. */
 const idDe = (e: EntreeCalendrier) => e.cle.slice(e.cle.indexOf(":") + 1, e.cle.lastIndexOf(":"));
 
+/** Une vraie date « AAAA-MM-JJ » : le champ date de Chrome laisse taper une année à cinq chiffres. */
+const dateValide = (iso: string) => /^\d{4}-\d{2}-\d{2}$/.test(iso) && !Number.isNaN(Date.parse(iso));
+
 /**
- * Ce que demande le dépôt de `entree` sur `vers`. `null` : rien à faire (même jour,
- * source introuvable ou qui ne bouge pas). On ne dépose jamais avant aujourd'hui ; un
- * créneau, sur un créneau libre de la grille de ce jour (`horloge.maintenant` écarte
+ * Ce que demande le dépôt de `entree` sur `vers`. `null` : rien à faire (même jour, date
+ * mal formée, source introuvable ou qui ne bouge pas). On ne dépose jamais avant
+ * aujourd'hui, et un évènement sur plusieurs jours ne commence jamais avant aujourd'hui ;
+ * un créneau, sur un créneau libre de la grille de ce jour (`horloge.maintenant` écarte
  * ceux d'aujourd'hui déjà commencés).
  */
 export function planDeplacement(
@@ -68,7 +72,7 @@ export function planDeplacement(
   donnees: Pick<DonneesCalendrier, "evenements" | "taches" | "scene">,
   horloge: { today: string; maintenant: string },
 ): PlanDeplacement | null {
-  if (vers === entree.date) return null;
+  if (vers === entree.date || !dateValide(vers)) return null;
   if (vers < horloge.today) return { type: "refus", refus: "avantAujourdhui" };
   const id = idDe(entree);
   switch (entree.source) {
@@ -77,10 +81,13 @@ export function planDeplacement(
       const e = donnees.evenements.find((x) => x.id === id);
       if (!e) return null;
       const reunion = entree.source === "reunions";
+      // Glissé depuis une autre case que la première, son début recule d'autant.
+      const champs = champsDecales(e, ecartJours(entree.date, vers));
+      if (champs.date < horloge.today) return { type: "refus", refus: "avantAujourdhui" };
       return {
         type: "evenement",
         evenement: e,
-        champs: champsDecales(e, ecartJours(entree.date, vers)),
+        champs,
         prevenir: reunion ? "membres" : !e.lienExterne && e.inscrits > 0 ? { inscrits: e.inscrits } : null,
         tachesLiees: donnees.taches.filter((t) => t.tache.evenement?.id === e.id).map((t) => t.tache.titre),
       };

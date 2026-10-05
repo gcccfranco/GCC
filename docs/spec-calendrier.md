@@ -1,6 +1,6 @@
 # Spec : lot U8 — calendrier du Back-Office
 
-Spec écrite le 04/10/2026 ; rien n'est codé. Attend la validation de Timothée, puis son go.
+Spec écrite le 04/10/2026, validée (go du 04/10/2026) ; codée le 05/10/2026 (C1 à C8) et relue : voir « Avancement ».
 
 Lot U8 de `feuille-de-route.md` § 3.U. Specs voisines, à raccorder : **U6** (`spec-back-office.md`)
 fixe l'adresse `/back-office/calendrier` (sans page d'attente : U8 crée la page et ajoute l'entrée,
@@ -569,3 +569,64 @@ Spec validée et go de code donné (04/10/2026, redit le 05/10/2026) ; questions
   plannings et `petitDej` se lisent déjà sans jeton). `firestore.rules`, telle que la fusion l'apporte,
   porte les règles de U6, U2 et U3 que leurs specs demandent de publier. Relire le 中文 `空缺：{{liste}}`
   (`calendrier.casesVides`). Regarder, en local, le panneau d'un dimanche à venir du Culte Franco.
+- **05/10/2026 — relecture du lot (deux relectures), corrigée** (commit « fix(U8): relecture — … ») :
+  - **Setlist du culte dans le panneau du jour** (Réussite, planche `bo-calendrier`) : une carte de
+    service dit « Setlist « Culte du 11 octobre » · 4 chants » (中文 « 歌单「…」· 4 首 ») sous sa
+    présidence, même pastille Setlists éteinte : la setlist publiée du même jour et de la même
+    catégorie (même moment au Campus), que je vois (`canSeeSetlist`), jamais un brouillon. Champ
+    facultatif `EntreeCalendrier.setlist` ; panneau du jour et sa feuille seulement, comme les cases vides.
+  - **Plus de boucle sans fin** : un évènement ne parcourt que les jours de la période affichée ; une
+    `date` mal formée (année à cinq chiffres) l'écarte, une `dateFin` mal formée compte pour rien.
+    `EvenementForm` borne ses champs date (`max="9999-12-31"`), comme le champ de « Déplacer… ».
+  - **Lectures bornées à la période** (`charger.ts`) : `chargerCalendrier` lit une fois les tâches
+    sans leurs fois (`listTachesSeules`, `src/lib/firebase/taches.ts`) ; `chargerPeriode` lit les fois
+    des seules tâches qui ont une échéance dans la période affichée (`listFois`), et mes inscriptions
+    seulement « Seulement moi » allumé, pour les évènements ouverts de la période. Même chose au
+    widget, sur sa période (S, M ou L). Le coût ne croît plus avec l'histoire.
+  - **Sources illisibles nommées** : une lecture qui rejette (réseau coupé, Firestore bloqué) donne un
+    bandeau « Lecture impossible : Tâches. Le reste s'affiche. » (中文 « 无法读取：任务。其余照常显示。 »)
+    sur la page, une ligne au widget.
+  - **Le Sheet ne retient plus rien** : le widget Calendrier et « Prochains évènements » montrent les
+    données de l'app sans attendre le Sheet ; une requête au Sheet est abandonnée au bout de 8 s
+    (`AbortSignal.timeout`, sauf vieux Safari) ; deux lectures du même onglet en même temps n'en font
+    qu'une.
+  - **Pastilles dans l'ordre de la planche** (Services · Évènements (Sheet) · Tâches · Réunions ·
+    Scène · Petit déj · Setlists), feuille « Sources » comprise (`ORDRE_PASTILLES`) ; l'ordre dans un
+    jour (`SOURCES`) ne change pas.
+  - **Tâche répétée** : « Change la répétition dans la tâche » (中文 « 请到任务里修改重复设置 ») à la place
+    de « Déplacer… », dans le panneau du jour et la feuille de l'entrée (Q6).
+  - **Déplacer** : un évènement sur plusieurs jours glissé depuis une autre case que la première est
+    refusé si son nouveau début tombe avant aujourd'hui (« Pas avant aujourd'hui ») ; une date mal
+    formée ne donne rien à faire (plus d'erreur ni d'échéance illisible écrite).
+  - **Prévenir** : la clé du rappel du matin prend le jour du geste
+    (`deplacement-<id>-<vers>-<AAAA-MM-JJ du geste>-<uid>`) : un retour à une date déjà annoncée
+    (A → B, B → C, C → B) s'annonce aussi.
+  - **Doublons retirés** : `estReunion` et `equipeDuPour` viennent d'`access.ts` (un `pole:` inconnu ou
+    une équipe mal formée n'est plus une réunion), `estLibre` et `LignePetitDej` de U3
+    (`estLibre` accepte des lignes réduites à `dimanche`).
+  - Tests : 18 nouveaux et 5 complétés (purs et de page), vus rouges puis verts, sauf deux témoins
+    verts d'emblée (créneau d'un groupe non permis, en page ; grille jamais montrée sur téléphone) ; une
+    capture de plus (tâche répétée) ; les captures de « Déplacer » attendent un état observable, plus
+    des délais fixes. Verts sur les cinq projets :
+    `calendrier`, `calendrier-deplacer`, `calendrier-widget`, `calendrier-sheet`, `tableau-de-bord`,
+    `back-office-coupe` (1165 verts, 64 sautés : tests propres à un appareil) ; `evenements`,
+    `back-office-espace`, `barre-back-office` sur trois appareils (353). `npx tsc --noEmit` vert,
+    `npm run lint` sans erreur (53 avertissements, tous d'avant). Captures regardées : panneau du 11
+    (ordinateur 1440, tablette debout) conforme à `bo-calendrier` ; tâche répétée (ordinateur, téléphone).
+- **Constats de la relecture laissés, et pourquoi** :
+  - « Squelette avant les requêtes média » : faux en pratique. La page ne se monte qu'après la
+    connexion (gabarit de U6, « Chargement… » au rendu serveur et à l'hydratation), donc hors
+    hydratation : `useSyncExternalStore` lit les vraies requêtes média dès son premier rendu. Un test
+    (téléphone) le garde : la grille du Mois n'apparaît jamais avant l'Agenda (vert sans changement).
+  - « Patcher les données après un déplacement plutôt que tout relire » : la relecture est maintenant
+    bornée (quelques listes, plus les fois de la période) et garde la vérité de la base ; pas de patch local.
+  - « Titre d'onglet inattendu = Sheet injoignable » : non fait. Un Sheet rendu privé redirige vers la
+    connexion Google, que le navigateur refuse (CORS) : c'est déjà une panne, donc le bandeau. Les titres
+    réels d'août et de septembre n'ont pas été relus ; changer la règle sans eux risquait un bandeau à tort.
+  - Hors du lot : la pastille Tâches de la barre latérale (U6) et le widget « À faire » relisent
+    toujours toutes les tâches avec toutes leurs fois ; `listEvenements` lit toute la collection (une requête).
+- **Reste** : rien pour U8. L'envoi réel de la ligne de C7 se vérifie en ligne.
+- **Pour Timothée** : rien à publier (ni `access.ts` ni `firestore.rules` ne bougent). Relire le 中文
+  `歌单「{{titre}}」· {{count}} 首` (`calendrier.setlistDuService`), `无法读取：{{liste}}。其余照常显示。`
+  (`calendrier.echecs`) et `请到任务里修改重复设置` (`calendrier.deplacer.repetee`). Regarder en local le
+  panneau d'un dimanche du Culte Franco qui a sa setlist publiée.

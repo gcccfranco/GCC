@@ -24,13 +24,12 @@ export function WidgetEvenements({ widget }: { widget: Widget }) {
   const { t, i18n } = useTranslation();
   const { user, profile } = useProfile();
   const today = todayIso();
-  const { valeur, erreur } = useLecture(
-    () => Promise.all([listEvenements(false), lireSheetEvenements(today, addDays(today, HORIZON_SHEET))]),
-    today,
-  );
+  const { valeur: evenements, erreur } = useLecture(() => listEvenements(false), today);
+  // Le Sheet à part : lent ou injoignable, il ne retient pas les évènements de l'app (relecture U8).
+  const { valeur: sheet } = useLecture(() => lireSheetEvenements(today, addDays(today, HORIZON_SHEET)), today);
   // Dix au plus de chaque côté suffisent à en garder 3, 5 ou 10 une fois mêlés.
-  const lignes = valeur && avecLeSheet(
-    evenementsAVenir(valeur[0], user, profile, today, { ...widget.reglages, nombre: 10 }), valeur[1].entrees, today, widget.reglages,
+  const lignes = evenements && avecLeSheet(
+    evenementsAVenir(evenements, user, profile, today, { ...widget.reglages, nombre: 10 }), sheet?.entrees ?? [], today, widget.reglages,
   );
   const maintenant = nowIsoParis();
   const etat = (e: EtatInscriptions) =>

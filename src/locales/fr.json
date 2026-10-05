@@ -27,6 +27,9 @@
     "jourAria_other": "{{jour}}, {{count}} entrées",
     "rien": "Rien ce jour-là.",
     "casesVides": "Cases vides : {{liste}}",
+    "setlistDuService_one": "Setlist « {{titre}} » · {{count}} chant",
+    "setlistDuService_other": "Setlist « {{titre}} » · {{count}} chants",
+    "echecs": "Lecture impossible : {{liste}}. Le reste s'affiche.",
     "duSheet": "Lu dans le Sheet des évènements",
     "sheetInjoignable": "Sheet des évènements injoignable : ses évènements n'apparaissent pas pour l'instant.",
     "fermer": "Fermer",
@@ -52,6 +55,7 @@
       "annuler": "Annuler",
       "confirmer": "Déplacer",
       "ok": "OK",
+      "repetee": "Change la répétition dans la tâche",
       "erreur": "Le déplacement n'a pas été enregistré. Réessaie.",
       "refus": {
         "avantAujourdhui": "Pas avant aujourd'hui",

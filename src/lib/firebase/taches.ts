@@ -66,15 +66,20 @@ const tachePath = (pole: TachePole, id: string) => `poles/${pole}/taches/${id}`;
 
 export type TacheAvecFois = { tache: Tache; fois: Fois[] };
 
+/** Tâches d'un pôle, sans leurs fois (le calendrier, lot U8, ne lit que celles de sa période). */
+export async function listTachesSeules(pole: TachePole): Promise<Tache[]> {
+  return (await runQuery(`poles/${pole}`, "taches", "echeance")).map((r) => fromFsTache(r, pole));
+}
+
+/** Les fois cochées d'une tâche. */
+export async function listFois(tache: Pick<Tache, "pole" | "id">): Promise<Fois[]> {
+  return (await runQuery(tachePath(tache.pole, tache.id), "fois", "date")).map(fromFsFois);
+}
+
 /** Tâches d'un pôle, avec les fois cochées de chacune. */
 export async function listTaches(pole: TachePole): Promise<TacheAvecFois[]> {
-  const taches = (await runQuery(`poles/${pole}`, "taches", "echeance")).map((r) => fromFsTache(r, pole));
-  return Promise.all(
-    taches.map(async (tache) => ({
-      tache,
-      fois: (await runQuery(tachePath(pole, tache.id), "fois", "date")).map(fromFsFois),
-    })),
-  );
+  const taches = await listTachesSeules(pole);
+  return Promise.all(taches.map(async (tache) => ({ tache, fois: await listFois(tache) })));
 }
 
 export type TacheValues = Omit<Tache, "id" | "pole" | "auteurUid" | "createdAt" | "updatedAt">;

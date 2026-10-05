@@ -31,9 +31,10 @@ export function deplacementsAPrevenir<E extends Pick<Evenement, "type" | "date" 
   });
 }
 
-/** Clé notifLog du déplacement, sans l'uid que le cron ajoute : `deplacement-<id>-<vers>`. */
+/** Clé notifLog du déplacement, sans l'uid que le cron ajoute : `deplacement-<id>-<vers>-<jour du
+ *  geste>`. Le jour du geste distingue un retour à une date déjà annoncée (A → B, B → C, C → B). */
 export function cleDeplacement(e: Pick<Evenement, "id" | "deplacement">): string {
-  return `deplacement-${e.id}-${e.deplacement?.vers ?? ""}`;
+  return `deplacement-${e.id}-${e.deplacement?.vers ?? ""}-${e.deplacement?.le.slice(0, 10) ?? ""}`;
 }
 
 /** Clé notifLog du rappel de la veille (Q8) : datée, pour qu'un évènement déplacé

@@ -165,6 +165,14 @@ test.describe("lecteur du Sheet des évènements : réseau, cache, panne", () =>
     expect(appels, "au-delà de 5 minutes, on relit l'onglet").toHaveLength(2);
   });
 
+  test("deux lectures en même temps (widgets du tableau de bord) : une seule requête", async () => {
+    const { env, appels } = faux({});
+    const [a, b] = await Promise.all([chargerMoisSheet("2026-10", env), chargerMoisSheet("2026-10", env)]);
+    expect(appels).toHaveLength(1);
+    expect(a.entrees).toHaveLength(6);
+    expect(b.entrees).toHaveLength(6);
+  });
+
   test("réseau coupé sans copie : aucune entrée, Sheet injoignable", async () => {
     const { env } = faux({ [OCTOBRE]: new TypeError("Failed to fetch") });
     expect(await chargerMoisSheet("2026-10", env)).toEqual({ entrees: [], injoignable: true });

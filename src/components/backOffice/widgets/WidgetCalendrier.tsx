@@ -5,14 +5,16 @@
 // sources et « Seulement moi » de ses réglages. S : « Prochains jours », trois jours au plus
 // sur quatorze, une ligne par jour. M : « Cette semaine », les sept jours à points, puis
 // les lignes des jours qui restent. L : le mois à points (la grille du téléphone) et sa
-// légende. Toucher un jour ouvre la page du calendrier sur ce jour.
+// légende. Toucher un jour ouvre la page du calendrier sur ce jour. Relecture : seule la
+// période du widget se lit (fois des tâches qui y tombent, mes inscriptions pour « Seulement
+// moi ») ; les données de l'app s'affichent sans attendre le Sheet ; une source illisible se dit.
 import { useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import { CalendarDays } from "lucide-react";
 import { GrillePoints } from "@/components/calendrier/GrillePoints";
-import { chargerCalendrier } from "@/lib/calendrier/charger";
+import { chargerCalendrier, chargerPeriode, enOrdre } from "@/lib/calendrier/charger";
 import { entreesCalendrier, filtrerEntrees, sourcesPermises, type EntreeCalendrier, type ProfilCalendrier } from "@/lib/calendrier/entrees";
 import { joursDeLaGrille, titreJour, titreMois } from "@/lib/calendrier/grille";
 import {
@@ -40,22 +42,29 @@ export function WidgetCalendrier({ widget }: { widget: Widget }) {
   // Lu une fois le profil connu : « mes services » et les pôles en dépendent.
   const pret = !loading && user !== null;
 
-  const { valeur: base, erreur } = useLecture(
-    async () => (pret ? chargerCalendrier(user, profil, today, { pourLeWidget: true }) : null),
-    pret ? `${user.uid}|${today}` : "",
+  const r = widget.reglages;
+  const seulementMoi = r.seulementMoi === true;
+  const { valeur: lu, erreur } = useLecture(
+    async () => {
+      if (!pret) return null;
+      const { base, echecs } = await chargerCalendrier(user, profil, today, { pourLeWidget: true });
+      const periode = await chargerPeriode(base, user.uid, debut, fin, { seulementMoi });
+      return { donnees: periode.donnees, echecs: enOrdre([...echecs, ...periode.echecs]) };
+    },
+    pret ? `${user.uid}|${today}|${debut}|${fin}|${seulementMoi}` : "",
   );
-  // Le Sheet des évènements, sur la période du widget : sans lui, le reste s'affiche.
+  const base = lu?.donnees ?? null;
+  // Le Sheet des évènements, sur la période du widget : sans lui (lent, injoignable), le reste s'affiche.
   const { valeur: sheet } = useLecture(() => lireSheetEvenements(debut, fin), `${debut}|${fin}`);
 
-  const r = widget.reglages;
   const parJour = useMemo(() => {
     const m = new Map<string, EntreeCalendrier[]>();
-    if (!user || !base || !sheet) return null;
-    const toutes = entreesCalendrier(debut, fin, { ...base, sheet: sheet.entrees }, { user, profile: profil, lang, today });
-    const filtre = { sources: sourcesDuWidget(r, sourcesPermises(user, profil)), seulementMoi: r.seulementMoi === true };
+    if (!user || !base) return null;
+    const toutes = entreesCalendrier(debut, fin, { ...base, sheet: sheet?.entrees ?? [] }, { user, profile: profil, lang, today });
+    const filtre = { sources: sourcesDuWidget(r, sourcesPermises(user, profil)), seulementMoi };
     for (const e of filtrerEntrees(toutes, filtre)) m.set(e.date, [...(m.get(e.date) ?? []), e]);
     return m;
-  }, [user, profil, base, sheet, debut, fin, lang, today, r]);
+  }, [user, profil, base, sheet, debut, fin, lang, today, r, seulementMoi]);
 
   const complement = widget.taille === "s" ? t("calendrier.widget.prochainsJours")
     : widget.taille === "m" ? t("calendrier.widget.cetteSemaine")
@@ -97,6 +106,11 @@ export function WidgetCalendrier({ widget }: { widget: Widget }) {
                   })}
                 </div>
               ))}
+            {lu && lu.echecs.length > 0 && (
+              <p className="mt-2 text-xs text-muted-foreground">
+                {t("calendrier.echecs", { liste: lu.echecs.map((s) => t(`calendrier.legende.${s}`)).join(lang === "zh-CN" ? "、" : ", ") })}
+              </p>
+            )}
             {sheet?.injoignable && <p className="mt-2 text-xs text-muted-foreground">{t("calendrier.widget.sheetInjoignable")}</p>}
           </>
         )}

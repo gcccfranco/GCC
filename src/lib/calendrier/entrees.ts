@@ -10,12 +10,15 @@ import {
   canReserverPour,
   canSeeEvenement,
   canSeeSetlist,
+  equipeDuPour,
+  estReunion,
   isAdminUser,
   isPoleMember,
   polesDe,
 } from "@/lib/access";
 import { lienOngletSheet, type EntreeSheet } from "@/lib/evenements/sheet";
 import type { FSSetlist } from "@/lib/firebase/setlists";
+import { estLibre } from "@/lib/petitdej/lignes";
 import { casesVides } from "@/lib/planning/casesVides";
 import { GRILLE_CAMPUS_MATIN, GRILLE_CAMPUS_SOIR } from "@/lib/planning/grilles";
 import type { ServiceEntry, SetlistSeance } from "@/lib/planning/names";
@@ -27,6 +30,7 @@ import { addDays, echeancesDe } from "@/lib/taches/echeances";
 import { poleLabel } from "@/lib/taches/messages";
 import type { Evenement } from "@/types/evenement";
 import type { Creneau, Programme } from "@/types/programme";
+import type { LignePetitDej } from "@/types/petitDej";
 import type { Fois, Tache } from "@/types/tache";
 import type { NotifLang, UserProfile } from "@/types/user";
 
@@ -34,6 +38,9 @@ export type SourceCalendrier = "services" | "evenements" | "taches" | "reunions"
 
 /** Les sept sources, dans l'ordre où elles se suivent dans un jour. */
 export const SOURCES: readonly SourceCalendrier[] = ["services", "evenements", "reunions", "scene", "taches", "petitDej", "setlists"];
+
+/** Ordre des pastilles et de la feuille « Sources » (planche, § Écrans) : Tâches avant Réunions. */
+export const ORDRE_PASTILLES: readonly SourceCalendrier[] = ["services", "evenements", "taches", "reunions", "scene", "petitDej", "setlists"];
 
 /** Pastilles allumées d'office (Q11) : toutes sauf Setlists. */
 export const SOURCES_D_OFFICE: readonly SourceCalendrier[] = SOURCES.filter((s) => s !== "setlists");
@@ -70,6 +77,12 @@ export interface EntreeCalendrier {
   /** Services seulement : colonnes à remplir (clés `planning.roles.*`), « Cases vides : … »
    *  du panneau du jour ; absent quand rien ne manque ou que le planning n'est pas lu. */
   vides?: string[];
+  /** Services seulement : la setlist publiée de ce service (même jour, même catégorie,
+   *  même moment au Campus), « Setlist « Culte du 11 octobre » · 4 chants » du panneau du
+   *  jour (planche bo-calendrier), même pastille Setlists éteinte. */
+  setlist?: { titre: string; chants: number };
+  /** Tâche répétée : elle ne se glisse pas, « Change la répétition dans la tâche » (Q6). */
+  repetee?: boolean;
 }
 
 /** Profil lu par le calendrier ; `dansEquipes` vient avec les réunions
@@ -77,15 +90,6 @@ export interface EntreeCalendrier {
 export type ProfilCalendrier = UserProfile & { dansEquipes?: string[] };
 
 type Utilisateur = { uid: string; email?: string | null };
-
-/** Ligne du petit déj (`petitDej/{id}`, lot U3) : seuls ces champs sont lus. */
-export interface LignePetitDejCalendrier {
-  id: string;
-  dimanche: string;
-  nom: string;
-  /** L'inscrit par « Je m'inscris » ; "" pour une ligne posée pour quelqu'un. */
-  uid: string;
-}
 
 /** Ce que la page a lu, source par source. */
 export interface DonneesCalendrier {
@@ -103,8 +107,9 @@ export interface DonneesCalendrier {
   taches: { tache: Tache; fois: Fois[] }[];
   /** Programme de scène affiché (`currentProgramme`) et ses créneaux. */
   scene: { programme: Programme; creneaux: Creneau[] } | null;
-  /** Lignes du petit déj ; null = lecture en échec (rien, jamais « Libre »). */
-  petitDej: LignePetitDejCalendrier[] | null;
+  /** Lignes du petit déj (`lirePetitDej`, U3 ; `uid` = l'inscrit par « Je m'inscris », "" pour
+   *  une ligne posée pour quelqu'un) ; null = lecture en échec (rien, jamais « Libre »). */
+  petitDej: Pick<LignePetitDej, "id" | "dimanche" | "nom" | "uid">[] | null;
   /** Setlists (`getSetlists`). */
   setlists: FSSetlist[];
   /** Lignes des plannings dont on montre les cases vides (`lireGrilles`), par clé de grille. */
@@ -191,14 +196,14 @@ export function peutDeplacer(
   }
 }
 
-/** Pastilles à montrer (Q2) : une source n'apparaît que si la personne a
- *  quelque chose à y voir — Tâches : un pôle ; Réunions : un pôle ou une
+/** Pastilles à montrer (Q2), dans l'ordre de la planche : une source n'apparaît que si
+ *  la personne a quelque chose à y voir — Tâches : un pôle ; Réunions : un pôle ou une
  *  équipe ; un admin toujours. */
 export function sourcesPermises(user: Utilisateur | null, profile: ProfilCalendrier | null): SourceCalendrier[] {
   const admin = isAdminUser(user);
   const poles = polesDe(profile).length > 0;
   const equipes = (profile?.dansEquipes ?? []).length > 0;
-  return SOURCES.filter((s) => (s === "taches" ? admin || poles : s === "reunions" ? admin || poles || equipes : true));
+  return ORDRE_PASTILLES.filter((s) => (s === "taches" ? admin || poles : s === "reunions" ? admin || poles || equipes : true));
 }
 
 /** Pastilles allumées et « Seulement moi ». */
@@ -211,8 +216,8 @@ export function filtrerEntrees(
 
 // ─── Sources ─────────────────────────────────────────────────────────────────
 
-const equipeDuPour = (pour: string) => (pour.startsWith("equipe:") ? pour.slice(7) : null);
-const estReunion = (pour: string) => pour.startsWith("pole:") || pour.startsWith("equipe:");
+/** « AAAA-MM-JJ » : une date tapée sur cinq chiffres (le champ date de Chrome l'accepte) n'en est pas une. */
+const ISO = /^\d{4}-\d{2}-\d{2}$/;
 
 function lienPlanning(category: string): string {
   if (category === "Culte Francophone") return "/planning/culte";
@@ -248,6 +253,15 @@ function videsDe(d: DonneesCalendrier, c: ContexteCalendrier, seances: SetlistSe
   return cles.length ? [...new Set(cles)] : undefined;
 }
 
+/** La setlist publiée d'une séance : même jour, même catégorie, même moment au Campus, et que je vois. */
+function setlistDe(d: DonneesCalendrier, c: ContexteCalendrier, s: SetlistSeance): EntreeCalendrier["setlist"] {
+  const x = d.setlists.find(
+    (l) => !l.isDraft && l.date === s.date && l.category === s.category && (!s.moment || !l.moment || l.moment === s.moment)
+      && canSeeSetlist(c.user, c.profile, l),
+  );
+  return x ? { titre: x.title, chants: x.items.length } : undefined;
+}
+
 function services(d: DonneesCalendrier, c: ContexteCalendrier, debut: string, fin: string): EntreeCalendrier[] {
   const m = MOTS[c.lang];
   const classes = EDD_CLASSES as readonly string[];
@@ -276,6 +290,7 @@ function services(d: DonneesCalendrier, c: ContexteCalendrier, debut: string, fi
       deplacable: false,
       lien: lienPlanning(s.category),
       vides: videsDe(d, c, [s], s.date),
+      setlist: setlistDe(d, c, s),
     });
   }
   // Question 6 : une seule entrée « EDD » le dimanche, les classes dans le détail.
@@ -332,7 +347,7 @@ function evenements(d: DonneesCalendrier, c: ContexteCalendrier, debut: string, 
   const mesEquipes = c.profile?.dansEquipes ?? [];
   const out: EntreeCalendrier[] = [];
   for (const e of d.evenements) {
-    if (!e.date) continue; // une info sans date n'est pas au calendrier
+    if (!ISO.test(e.date)) continue; // une info sans date n'est pas au calendrier ; une date mal formée non plus
     const reunion = estReunion(e.pour);
     const equipe = equipeDuPour(e.pour);
     const visible = canSeeEvenement(c.user, c.profile, e) || (equipe !== null && mesEquipes.includes(equipe));
@@ -344,9 +359,11 @@ function evenements(d: DonneesCalendrier, c: ContexteCalendrier, debut: string, 
     const inscrits = !e.lienExterne && e.inscrits > 0 ? m.inscrits(e.inscrits, e.placesMax) : "";
     const detail = joindre([plage(e.heure, e.heureFin), e.lieu, inscrits]);
     const deplacable = peutDeplacer(c.user, c.profile, { source, evenement: e }, c.today);
-    const dernier = e.dateFin && e.dateFin > e.date ? e.dateFin : e.date;
-    for (let jour = e.date; jour <= dernier; jour = addDays(jour, 1)) {
-      if (!dans(jour, debut, fin)) continue;
+    // Une fin mal formée ne compte pas ; on ne parcourt que les jours de la fenêtre.
+    const dernier = ISO.test(e.dateFin) && e.dateFin > e.date ? e.dateFin : e.date;
+    const de = e.date > debut ? e.date : debut;
+    const jusqua = dernier < fin ? dernier : fin;
+    for (let jour = de; jour <= jusqua; jour = addDays(jour, 1)) {
       const premier = jour === e.date;
       out.push({
         source,
@@ -412,6 +429,7 @@ function taches(d: DonneesCalendrier, c: ContexteCalendrier, debut: string, fin:
         moi: !terminee && (t.responsableUid === c.user.uid || (t.responsableUid === null && mesPoles.includes(t.pole))),
         deplacable: peutDeplacer(c.user, c.profile, { source: "taches", tache: t, date, fois }, c.today),
         lien: `/taches/${t.pole}`,
+        repetee: t.repetition ? true : undefined,
       });
     }
   }
@@ -440,7 +458,7 @@ function petitDej(d: DonneesCalendrier, c: ContexteCalendrier, debut: string, fi
   // « Libre » : un dimanche à venir sans ligne (estLibre de U3).
   const premier = addDays(debut, (7 - new Date(`${debut}T00:00:00Z`).getUTCDay()) % 7);
   for (let dim = premier; dim <= fin; dim = addDays(dim, 7)) {
-    if (dim >= c.today && !d.petitDej.some((l) => l.dimanche === dim)) out.push(entree("libre", dim, m.libre, false));
+    if (dim >= c.today && estLibre(d.petitDej, dim)) out.push(entree("libre", dim, m.libre, false));
   }
   return out;
 }

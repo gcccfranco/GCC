@@ -326,6 +326,60 @@ test.describe("C8 : le widget Calendrier", () => {
   });
 });
 
+test.describe("relecture du lot : le widget ne dépend ni du Sheet ni de l'histoire", () => {
+  test("un Sheet qui ne répond pas ne bloque ni le widget Calendrier ni « Prochains évènements »", async ({ page }) => {
+    await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
+    // Le planning répond ; l'export du Sheet des évènements reste pendu.
+    await page.route(/docs\.google\.com\/spreadsheets/, (route) => {
+      const url = new URL(route.request().url());
+      if (url.pathname.endsWith("/export")) return; // jamais de réponse
+      const corps = url.searchParams.get("sheet") === "Franco_Louange" ? CULTE : "";
+      return route.fulfill({ status: 200, contentType: "text/csv", body: corps });
+    });
+    await signInAs(page, P_ADMIN, {
+      ...DOCS,
+      "backOffice/u-admin": {
+        tableauDeBord: [{ id: "calendrier", taille: "s", reglages: {} }, { id: "evenements", taille: "m", reglages: { nombre: 5 } }],
+        majLe: "2026-10-01",
+      },
+    }, "/back-office");
+    await expect(lignes(page).nth(0)).toContainText("Fond du culte");
+    await expect(lignes(page).nth(1)).toContainText(/Sam\. 3.*Réunion DA/);
+    const evenements = page.getByTestId("grille-widgets").getByRole("region", { name: "Prochains évènements", exact: true });
+    await expect(evenements.getByTestId("ligne-evenement")).toHaveText([/Tournoi de ping/]);
+  });
+
+  test("ni inscriptions sans « Seulement moi », ni fois d'une tâche hors de la période du widget", async ({ page }, info) => {
+    const inscriptions: string[] = [];
+    const fois: string[] = [];
+    page.on("request", (r) => {
+      const url = decodeURIComponent(r.url());
+      const i = /\/evenements\/([^/]+)\/inscriptions\//.exec(url);
+      if (i && r.method() === "GET") inscriptions.push(i[1]);
+      const f = /\/taches\/([^/:]+):runQuery/.exec(url);
+      if (f) fois.push(f[1]);
+    });
+    await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
+    await sheets(page);
+    await signInAs(page, P_ADMIN, {
+      ...DOCS,
+      "poles/da/taches/ancienne": {
+        titre: "Affiche de 2024", responsableUid: null, responsableNom: "", echeance: "2024-10-15", repetition: null,
+        lien: "", note: "", prevenir: null, evenement: null, auteurUid: "u-autre", createdAt: MAINTENANT, updatedAt: MAINTENANT,
+      },
+      "backOffice/u-admin": { tableauDeBord: [{ id: "calendrier", taille: "s", reglages: {} }], majLe: "2026-10-01" },
+    }, "/back-office");
+    await expect(lignes(page).nth(0)).toContainText("Fond du culte");
+    expect(inscriptions).toEqual([]);
+    // Les fois : sur téléphone seulement, où la barre latérale (qui relit toutes les tâches pour
+    // sa pastille, lot U6) n'est pas montée.
+    if (estTelephone(info)) {
+      expect(fois).toContain("fond");
+      expect(fois).not.toContain("ancienne");
+    }
+  });
+});
+
 test.describe("C8 : « Prochains évènements » reçoit le Sheet", () => {
   test("les entrées du Sheet à venir s'y mêlent aux évènements de l'app ; elles ouvrent l'onglet du mois", async ({ page }) => {
     await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));

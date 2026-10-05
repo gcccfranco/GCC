@@ -119,6 +119,7 @@ export function DialogueDeplacer({
                   <input
                     type="date"
                     min={aujourdhui}
+                    max="9999-12-31"
                     value={date}
                     onChange={(e) => { setDate(e.target.value); setErreur(false); }}
                     className="h-11 rounded-xl border border-border bg-background px-3 text-[15px] text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground"

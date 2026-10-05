@@ -14,6 +14,9 @@
 // dans sa feuille (seul moyen sur téléphone) ; la confirmation écrit, puis tout se relit.
 // C8 : `?jour=AAAA-MM-JJ` (le widget du tableau de bord) ouvre la page en Mois sur ce jour —
 // son panneau à droite, sa feuille sur tablette debout, sa liste sous le Mois à points.
+// Relecture : les sources se lisent une fois (`chargerCalendrier`), puis la période affichée
+// (`chargerPeriode` : fois des tâches qui y tombent, mes inscriptions pour « Seulement moi ») ;
+// une source illisible se nomme dans un bandeau, comme le Sheet.
 
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { useSearchParams } from "next/navigation";
@@ -23,7 +26,7 @@ import { creatableEvenementPours, isAdminUser, polesDe } from "@/lib/access";
 import { createTache, type TacheValues } from "@/lib/firebase/taches";
 import { listProfiles, useProfile } from "@/lib/firebase/users";
 import { prevenirResponsable } from "@/lib/taches/prevenir";
-import { chargerCalendrier } from "@/lib/calendrier/charger";
+import { chargerCalendrier, chargerPeriode, enOrdre, type LectureCalendrier } from "@/lib/calendrier/charger";
 import {
   entreesCalendrier,
   filtrerEntrees,
@@ -109,7 +112,14 @@ export function CalendrierClient() {
   // L'agenda part d'aujourd'hui jusqu'à la fin du mois, plus les mois ajoutés par « Afficher … ».
   const [moisEnPlus, setMoisEnPlus] = useState(0);
   const [prefs, setPrefs] = useState<PreferencesCalendrier>(lirePreferences);
-  const [base, setBase] = useState<Omit<DonneesCalendrier, "sheet"> | null>(null);
+  const [lu, setLu] = useState<LectureCalendrier | null>(null);
+  // La période lue : la dernière, même périmée le temps d'en lire une autre (rien ne clignote).
+  const [periode, setPeriode] = useState<{
+    de: LectureCalendrier;
+    cle: string;
+    donnees: Omit<DonneesCalendrier, "sheet">;
+    echecs: SourceCalendrier[];
+  } | null>(null);
   const [sheet, setSheet] = useState<{ fenetre: string; lecture: LectureSheet } | null>(null);
   // C5 : la feuille « Créer » (téléphone, Agenda), l'échéance d'une nouvelle tâche, ses responsables
   // possibles, et un compteur qui fait relire les sources après une création.
@@ -131,9 +141,22 @@ export function CalendrierClient() {
   useEffect(() => {
     if (!user) return;
     let vivant = true;
-    chargerCalendrier(user, profil, aujourdhui).then((d) => vivant && setBase(d));
+    chargerCalendrier(user, profil, aujourdhui).then((l) => vivant && setLu(l));
     return () => { vivant = false; };
   }, [user, profil, aujourdhui, lecture]);
+
+  const seulementMoiActif = prefs.seulementMoi;
+  const clePeriode = `${debut}|${fin}|${seulementMoiActif}`;
+  useEffect(() => {
+    if (!user || !lu) return;
+    let vivant = true;
+    const cle = `${debut}|${fin}|${seulementMoiActif}`;
+    chargerPeriode(lu.base, user.uid, debut, fin, { seulementMoi: seulementMoiActif })
+      .then((p) => vivant && setPeriode({ de: lu, cle, ...p }));
+    return () => { vivant = false; };
+  }, [user, lu, debut, fin, seulementMoiActif]);
+  const base = periode?.donnees ?? null;
+  const echecs = enOrdre([...(lu?.echecs ?? []), ...(periode?.echecs ?? [])]);
 
   // Les responsables possibles ne servent qu'au formulaire de tâche : lus à son ouverture.
   useEffect(() => {
@@ -159,7 +182,7 @@ export function CalendrierClient() {
     return m;
   }, [user, profil, base, sheet, debut, fin, lang, aujourdhui, prefs, permises]);
 
-  const chargement = !base || sheet?.fenetre !== `${debut}|${fin}`;
+  const chargement = !periode || periode.de !== lu || periode.cle !== clePeriode || sheet?.fenetre !== `${debut}|${fin}`;
   const changer = (p: PreferencesCalendrier) => { setPrefs(p); ecrirePreferences(p); };
   const basculer = (s: SourceCalendrier) =>
     changer({ ...prefs, sources: prefs.sources.includes(s) ? prefs.sources.filter((x) => x !== s) : [...prefs.sources, s] });
@@ -310,6 +333,12 @@ export function CalendrierClient() {
           </div>
         )}
 
+        {echecs.length > 0 && (
+          <div role="status" className="mt-3 flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700 dark:border-amber-800/50 dark:bg-amber-950/30 dark:text-amber-400">
+            <CloudOff aria-hidden className="h-3.5 w-3.5 shrink-0" />
+            {t("calendrier.echecs", { liste: echecs.map((s) => t(`calendrier.legende.${s}`)).join(lang === "zh-CN" ? "、" : ", ") })}
+          </div>
+        )}
         {sheet?.lecture.injoignable && (
           <div role="status" className="mt-3 flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700 dark:border-amber-800/50 dark:bg-amber-950/30 dark:text-amber-400">
             <CloudOff aria-hidden className="h-3.5 w-3.5 shrink-0" />
