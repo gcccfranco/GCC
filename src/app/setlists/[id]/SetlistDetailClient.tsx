@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { Trash2, List, Music, Pencil, SlidersHorizontal, PenLine, UserRound, Play, MoreHorizontal, Download, Copy, Share2, BellRing } from "lucide-react";
+import { Trash2, List, Music, Pencil, SlidersHorizontal, PenLine, UserRound, Play, MoreHorizontal, Download, Copy, Share2, BellRing, FileText, Presentation } from "lucide-react";
 import { categoryColor } from "@/lib/serviceColors";
 import { Halo } from "@/components/layout/Halo";
 import { FondDeBarre } from "@/components/layout/FondDeBarre";
@@ -19,6 +19,9 @@ import {
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -41,10 +44,13 @@ import type { ChordProLine } from "@/types/chordPro";
 import { formatDate } from "@/lib/utils/formatDate";
 import { useScrollDirection } from "@/hooks/useScrollDirection";
 import { useSwipeViews } from "@/hooks/useSwipeViews";
+import { useDeuxVolets } from "@/hooks/useDeuxVolets";
 import { ListView } from "./_components/ListView";
 import { PartitionsView } from "./_components/PartitionView";
-import { SetlistOutline } from "./_components/SetlistOutline";
+import { Sommaire } from "./_components/Sommaire";
 import { PresentationLink } from "./_components/PresentationLink";
+import { parsePresentationUrl } from "@/lib/setlist/presentationLink";
+import { setlistLyricsText } from "@/components/song/copyLyrics";
 import { SetlistHistory } from "./_components/SetlistHistory";
 import { continuePass, historyAuthor, recordHistory, type HistoryPass } from "@/lib/firebase/setlistHistory";
 import { getSetlistVersions, saveSetlistVersions, type SetlistVersions, type VersionItem } from "@/lib/firebase/setlistVersions";
@@ -92,8 +98,9 @@ type LineEditState = EditLineTarget & {
  *  (« Seulement ce passage »). */
 /** Setlist G (docs/spec-deux-volets.md, T2) : où amener la vue qui s'affiche —
  *  un chant des partitions (`decalage` : son haut sous la ligne de lecture, pour
- *  rouvrir là où on était), le haut de la page, ou la ligne du chant lu dans la liste. */
-type Cible = { type: "chant"; n: number; decalage?: number } | { type: "haut" } | { type: "ligne" };
+ *  rouvrir là où on était ; `uid` : une de ses sections, touchée dans le sommaire des
+ *  deux volets), le haut de la page, ou la ligne du chant lu dans la liste. */
+type Cible = { type: "chant"; n: number; decalage?: number; uid?: string } | { type: "haut" } | { type: "ligne" };
 
 /** Le chant amené commence 12 px sous la bascule : la hauteur de son fondu. */
 const SOUS_LA_BASCULE = 12;
@@ -128,6 +135,16 @@ function poser(y: number): number {
   return window.scrollY;
 }
 
+/** Boutons de l'en-tête des deux volets (planche `setlist-deux-volets`) : pilules
+ *  libellées, l'état actif en encre comme la barre de G. */
+const PILULE =
+  "flex h-10 items-center gap-2 rounded-full bg-secondary px-4 text-[14px] font-semibold text-foreground transition-[background-color,color,transform] duration-150 hover:bg-muted active:scale-[.97] disabled:opacity-60";
+/** Bouton rond sans libellé (PDF, ⋯) : l'icône seule, nom en `aria-label`. */
+const PILULE_ICONE =
+  "flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary text-foreground transition-[background-color,color,transform] duration-150 hover:bg-muted active:scale-[.97] disabled:opacity-60";
+const PILULE_ACTIVE =
+  "flex h-10 items-center gap-2 rounded-full bg-foreground px-4 text-[14px] font-semibold text-background transition-[background-color,color,transform] duration-150 active:scale-[.97]";
+
 type EditBase = {
   source: string;
   srcLine: number;
@@ -151,6 +168,13 @@ export function SetlistDetailClient() {
   const [backPath, setBackPath] = useState("/setlists");
 
   const scrollVisible = useScrollDirection();
+  // ── Deux volets (docs/spec-deux-volets.md, T4) : ordinateur et tablette couchée,
+  // 900 px utiles au moins (Q1). Le sommaire à gauche, les partitions toujours à
+  // droite : ni bascule, ni Liste, ni geste ; `view` n'y sert plus qu'à G.
+  const deuxVolets = useDeuxVolets();
+  /** En-tête collant des deux volets, et sa hauteur (le sommaire colle dessous). */
+  const enTeteRef = useRef<HTMLElement>(null);
+  const [enTeteH, setEnTeteH] = useState(0);
   // La barre d'outils peut passer sur deux lignes (flex-wrap) : sa hauteur
   // réelle est mesurée pour que le contenu ne finisse jamais dessous.
   const toolbarRef = useRef<HTMLDivElement>(null);
@@ -163,7 +187,17 @@ export function SetlistDetailClient() {
     const ro = new ResizeObserver(update);
     ro.observe(el);
     return () => ro.disconnect();
-  }, [setlist]); // la barre n'existe qu'une fois la setlist chargée
+  }, [setlist, deuxVolets]); // la barre n'existe qu'une fois la setlist chargée, et pas en deux volets
+  // L'en-tête des deux volets peut passer sur deux lignes : sa hauteur est mesurée.
+  useEffect(() => {
+    const el = enTeteRef.current;
+    if (!el) return;
+    const update = () => setEnTeteH(el.offsetHeight);
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [setlist, deuxVolets]);
   const [songsMap, setSongsMap] = useState<Record<string, SongIndexEntry>>({});
   // Relit l'historique après une adaptation écrite depuis cette page.
   const [historyVersion, setHistoryVersion] = useState(0);
@@ -187,6 +221,9 @@ export function SetlistDetailClient() {
   // par appareil, comme en mode louange.
   const [jianpuPref, setJianpuPrefState] = useState<JianpuPref>("auto");
   const [view, setView] = useState<"liste" | "partitions">("liste");
+  const affichePartitions = deuxVolets || view === "partitions";
+  /** Occurrences de la section lue (`data-section-uids`) : la pastille marquée. */
+  const [uidsLus, setUidsLus] = useState<string[]>([]);
   // ── Setlist G : Liste et Partitions reliées (docs/spec-deux-volets.md, T2) ──
   const basculeRef = useRef<HTMLDivElement>(null);
   /** Glissement (T3) : le doigt se pose dans la colonne, la vue affichée le suit. */
@@ -195,6 +232,18 @@ export function SetlistDetailClient() {
   /** Position du chant lu (celle de `data-outline-item`), suivie dans l'adresse. */
   const [current, setCurrent] = useState<number | null>(null);
   const [cible, setCible] = useState<Cible | null>(null);
+  // Deux volets → un volet (fenêtre rétrécie, tablette tournée debout) : G reprend
+  // la vue que dit l'adresse, que les deux volets écrivent en lisant (Q9). Ajusté
+  // pendant le rendu, comme le veut React pour un état qui suit un autre.
+  const [avaitDeuxVolets, setAvaitDeuxVolets] = useState(deuxVolets);
+  if (avaitDeuxVolets !== deuxVolets) {
+    setAvaitDeuxVolets(deuxVolets);
+    const a = deuxVolets ? null : lireAdresse();
+    if (a) {
+      setView("partitions");
+      setCible(a.chant !== null ? { type: "chant", n: a.chant } : { type: "haut" });
+    }
+  }
   /** Dernière cible atteinte (ou abandonnée) : l'effet ne la rejoue pas. */
   const cibleFaite = useRef<Cible | null>(null);
   /** Où en étaient les partitions quand on les a quittées : « Partitions » y revient. */
@@ -296,18 +345,19 @@ export function SetlistDetailClient() {
   };
   // Adapter (la setlist) et Ma version (pour soi) s'excluent ; la barre d'outils
   // et, sur téléphone étroit, le menu « ⋯ » passent par ici.
-  // Depuis la Liste, les deux modes ouvrent les partitions au chant lu (Q11).
+  // Depuis la Liste, les deux modes ouvrent les partitions au chant lu (Q11) ; en
+  // deux volets, elles sont déjà là.
   const toggleAdapter = () => {
     setEditPartitions(!editPartitions);
     setEditMine(false);
     setEditTarget(null);
-    if (!editPartitions && view === "liste") versPartitions(current ?? undefined);
+    if (!editPartitions && !affichePartitions) versPartitions(current ?? undefined);
   };
   const toggleMaVersion = () => {
     setEditMine(!editMine);
     setEditPartitions(false);
     setEditTarget(null);
-    if (!editMine && view === "liste") versPartitions(current ?? undefined);
+    if (!editMine && !affichePartitions) versPartitions(current ?? undefined);
   };
   const changeLayout = (v: PartitionLayout) => {
     setLayout(v);
@@ -410,8 +460,12 @@ export function SetlistDetailClient() {
   }, [id]);
 
   /** Bas de la bascule quand elle colle sous la barre, plus le fondu : la ligne
-   *  où commence le chant amené, et la ligne de lecture du chant lu. */
+   *  où commence le chant amené, et la ligne de lecture du chant lu. En deux
+   *  volets, le bas de l'en-tête collé en haut, plus son fondu. Elle ne bouge pas
+   *  quand les barres s'escamotent : le chant lu changerait avec elles. */
   function hautDeLecture(): number {
+    const enTete = enTeteRef.current;
+    if (enTete) return (parseFloat(getComputedStyle(enTete).top) || 0) + enTete.offsetHeight + SOUS_LA_BASCULE;
     const barre = toolbarRef.current;
     const bascule = basculeRef.current;
     return (barre ? barre.offsetTop + barre.offsetHeight : 0) + (bascule?.offsetHeight ?? 0) + SOUS_LA_BASCULE;
@@ -460,7 +514,7 @@ export function SetlistDetailClient() {
     cle: view,
     versGauche: view === "liste" ? () => versPartitions() : undefined,
     versDroite: view === "partitions" ? versListe : undefined,
-    actif: !!setlist && setlist.items.length > 0 && !performanceMode,
+    actif: !!setlist && setlist.items.length > 0 && !performanceMode && !deuxVolets,
   });
 
   // Amène la vue affichée à sa cible, une fois les partitions là.
@@ -480,13 +534,15 @@ export function SetlistDetailClient() {
       });
       return;
     }
-    if (view !== "partitions" || loadingContent) return;
+    if (!affichePartitions || loadingContent) return;
     if (cible.type === "haut") {
       cibleFaite.current = cible;
       posee.current = poser(0);
       return;
     }
-    const el = document.querySelector<HTMLElement>(`[data-outline-item="${cible.n}"]`);
+    const chant = document.querySelector<HTMLElement>(`[data-outline-item="${cible.n}"]`);
+    // Une pastille du sommaire : sa section, sinon (scan 简谱) le chant.
+    const el = (cible.uid && chant?.querySelector<HTMLElement>(`[data-section-uids~="${CSS.escape(cible.uid)}"]`)) || chant;
     if (!el) {
       // Contenus pas encore là : on attend ; chargés sans ce chant : on renonce.
       if (Object.keys(contents).length > 0) cibleFaite.current = cible;
@@ -519,23 +575,30 @@ export function SetlistDetailClient() {
     const fin = window.setTimeout(lacher, 2000);
     lacherRef.current = lacher;
     // eslint-disable-next-line react-hooks/exhaustive-deps -- `current` n'est lu que pour la ligne visée
-  }, [cible, view, loadingContent, contents, setlist]);
+  }, [cible, view, affichePartitions, loadingContent, contents, setlist]);
 
   // En quittant la page, ou en passant à la Liste, le chant amené est lâché.
   useEffect(() => {
-    if (view !== "partitions") lacherRef.current?.();
-  }, [view]);
+    if (!affichePartitions) lacherRef.current?.();
+  }, [affichePartitions]);
+
   useEffect(() => () => lacherRef.current?.(), []);
 
   /** Chant à la ligne de lecture des partitions, et l'élément qui le porte. */
-  function chantALaLigne(): { n: number; el: HTMLElement | null } {
+  function chantALaLigne(): { n: number; el: HTMLElement | null; uids: string[] } {
     const line = hautDeLecture() + 1;
     let found: HTMLElement | null = null;
     for (const el of document.querySelectorAll<HTMLElement>("[data-outline-item]")) {
       if (el.getBoundingClientRect().top > line) break;
       found = el;
     }
-    return { n: found ? Number(found.dataset.outlineItem) : premierChant(), el: found };
+    // Section lue : la dernière dont le haut a passé la ligne (aucune avant la
+    // première, ni sur un scan 简谱).
+    let uids: string[] = [];
+    found?.querySelectorAll<HTMLElement>("[data-section]").forEach((s) => {
+      if (s.getBoundingClientRect().top <= line) uids = (s.dataset.sectionUids ?? "").split(" ").filter(Boolean);
+    });
+    return { n: found ? Number(found.dataset.outlineItem) : premierChant(), el: found, uids };
   }
 
   /** Retient où en sont les partitions : le chant lu et son haut sous la ligne de lecture. */
@@ -548,7 +611,7 @@ export function SetlistDetailClient() {
   // Le chant lu suit le défilement des partitions, et l'adresse avec lui, sans
   // nouvelle entrée d'historique (Q9).
   useEffect(() => {
-    if (view !== "partitions" || loadingContent) return;
+    if (!affichePartitions || loadingContent) return;
     let frame = 0;
     const update = () => {
       frame = 0;
@@ -556,8 +619,9 @@ export function SetlistDetailClient() {
       retenirRetour();
       if (posee.current !== null && Math.abs(window.scrollY - posee.current) <= 4) return;
       posee.current = null;
-      const { n } = chantALaLigne();
+      const { n, uids } = chantALaLigne();
       setCurrent(n);
+      setUidsLus(uids);
       if (lireAdresse()?.chant !== n) {
         window.history.replaceState({ vueG: window.history.state?.vueG }, "", adresseVue(n));
       }
@@ -571,14 +635,24 @@ export function SetlistDetailClient() {
       cancelAnimationFrame(frame);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- lecture du DOM au défilement
-  }, [view, loadingContent]);
+  }, [affichePartitions, loadingContent]);
 
-  async function handleDownload(style: PdfStyle = "classic") {
+  /** Sommaire des deux volets : un chant (ou une de ses sections) touché vient
+   *  sous l'en-tête et devient le chant lu ; l'adresse le suit, sans nouvelle entrée. */
+  function allerA(n: number, uid?: string) {
+    setCurrent(n);
+    setUidsLus(uid ? [uid] : []);
+    setCible({ type: "chant", n, uid });
+    window.history.replaceState(window.history.state, "", adresseVue(n));
+  }
+
+  /** `"liste"` : le PDF liste (la vue liste de G, « Liste » de « Quel PDF ? » en deux volets). */
+  async function handleDownload(style: PdfStyle | "liste" = "classic") {
     if (!setlist) return;
     setDownloading(true);
     try {
       const { pdf } = await import("@react-pdf/renderer");
-      if (view === "liste") {
+      if (style === "liste") {
         const { SetlistOverviewPDF } = await import("@/components/pdf/SetlistOverviewPDF");
         const blob = await pdf(
           <SetlistOverviewPDF setlist={setlist} songsMap={songsMap} language={i18n.language} />
@@ -1194,418 +1268,616 @@ export function SetlistDetailClient() {
       songsMap[i.songSlug]?.language === "zh" ||
       i.fusionSongs?.some((fs) => songsMap[fs.songSlug]?.language === "zh")
   );
+  const peutChangerPresentation = canSetPresentationLink(
+    user,
+    profile,
+    setlist,
+    !!profile?.serviceRoles[setlist.category]?.includes("regie"),
+  );
+  const presentationHref = setlist.presentationUrl ? parsePresentationUrl(setlist.presentationUrl) : null;
+  // « Copier toutes les paroles » (question 6) : seulement si chaque chant suit la
+  // présidence — ni ma version, ni ma structure, ni celle d'un autre (comme
+  // « Copier les paroles » de chaque chant, PartitionView).
+  const toutSuitLaPresidence = setlist.items.every((item) => {
+    if (!item.songSlug || item.type === "fusion") return true;
+    const v = viewOf(item);
+    const shown = editMine ? (v?.mine?.content ? "mine" : "presidence") : (v?.shown ?? "presidence");
+    return shown === "presidence" && !v?.mine?.structure?.length;
+  });
+  /** Plein écran natif : à demander en synchrone dans le geste (avant tout
+   *  await), sinon la demande est rejetée ; iPhone Safari ne le connaît pas. */
+  async function ouvrirModeLouange() {
+    try {
+      document.documentElement.requestFullscreen({ navigationUI: "hide" }).catch(() => {});
+    } catch { /* non supporté */ }
+    // Toujours (re)charger : loadContents ne fetch que les chants manquants. Sans
+    // ça, un chargement partiel faisait entrer en mode Louange avec des chants absents.
+    if (setlist) await loadContents(setlist.items);
+    setPerformanceMode(true);
+  }
+  // Qui peut modifier — rend visible la logique de access.ts.
+  const droitsDeModifier = (
+    <div className="mt-3 flex items-center gap-2 flex-wrap">
+      <Badge variant="secondary">
+        {canEdit ? t("setlists.detail.canEdit") : t("setlists.detail.readOnly")}
+      </Badge>
+      <span className="text-xs text-muted-foreground">
+        {setlist.isPrivate
+          ? t("setlists.detail.editableByOwner")
+          : t("setlists.detail.editableBy", {
+              category: t("categories." + setlist.category, { defaultValue: setlist.category }),
+            })}
+      </span>
+    </div>
+  );
+  // Réglages d'affichage : le bouton « Affichage » de G, le sous-menu « Affichage »
+  // du ⋯ en deux volets (Q3, Q7).
+  const reglagesAffichage = (
+    <>
+      <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
+        {t("setlists.detail.layout.label")}
+      </DropdownMenuLabel>
+      <DropdownMenuRadioGroup value={layout} onValueChange={(v) => changeLayout(v as PartitionLayout)}>
+        {(["played", "unique", "structure"] as const).map((v) => (
+          <DropdownMenuRadioItem key={v} value={v} onSelect={(e) => e.preventDefault()}>
+            {t(`setlists.detail.layout.${v}`)}
+          </DropdownMenuRadioItem>
+        ))}
+      </DropdownMenuRadioGroup>
+      <DropdownMenuSeparator />
+      {/* Pinyin (chants zh) — préférence persistée */}
+      {hasZhSong && (
+        <DropdownMenuCheckboxItem
+          checked={showPinyin}
+          onCheckedChange={() => togglePinyin()}
+          onSelect={(e) => e.preventDefault()}
+        >
+          {t("setlists.detail.pinyin", { defaultValue: "Pinyin" })}
+        </DropdownMenuCheckboxItem>
+      )}
+      <DropdownMenuCheckboxItem
+        checked={chartStyle}
+        onCheckedChange={toggleChartStyle}
+        onSelect={(e) => e.preventDefault()}
+      >
+        {t("performance.chartStyle")}
+      </DropdownMenuCheckboxItem>
+      {hasJianpuSheets && (
+        <>
+          <DropdownMenuSeparator />
+          <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
+            {t("performance.jianpuSheet")}
+          </DropdownMenuLabel>
+          <DropdownMenuRadioGroup
+            value={jianpuPref}
+            onValueChange={(v) => changeJianpuPref(v as JianpuPref)}
+          >
+            {(["auto", "always", "never"] as const).map((v) => (
+              <DropdownMenuRadioItem
+                key={v}
+                value={v}
+                onSelect={(e) => e.preventDefault()}
+              >
+                {t(`performance.jianpuPref.${v}`)}
+              </DropdownMenuRadioItem>
+            ))}
+          </DropdownMenuRadioGroup>
+        </>
+      )}
+    </>
+  );
+  // Actions du menu ⋯ communes à G et aux deux volets.
+  const actionsPartagees = (
+    <>
+      {canNotifyTeam && (
+        <DropdownMenuItem
+          disabled={notifying}
+          onClick={() =>
+            realSongCount < 4
+              ? flashFeedback(t("setlists.detail.notifyNeedSongs"))
+              : handleNotifyTeam()
+          }
+        >
+          <BellRing className="h-3.5 w-3.5 text-muted-foreground" />
+          {notifying
+            ? "…"
+            : t("setlists.detail.notifyTeam", { defaultValue: "Prévenir l'équipe" })}
+        </DropdownMenuItem>
+      )}
+      {canDuplicate && (
+        <DropdownMenuItem disabled={duplicating} onClick={() => handleDuplicate()}>
+          <Copy className="h-3.5 w-3.5 text-muted-foreground" />
+          {duplicating ? "…" : t("setlists.detail.duplicate")}
+        </DropdownMenuItem>
+      )}
+      <DropdownMenuItem onClick={() => handleShare()}>
+        <Share2 className="h-3.5 w-3.5 text-muted-foreground" />
+        {t("setlists.detail.share")}
+      </DropdownMenuItem>
+    </>
+  );
+  const supprimer = (
+    <>
+      {canDelete && (
+        <>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            className="text-destructive focus:text-destructive"
+            onClick={() => setConfirmDelete(true)}
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+            {t("setlists.detail.deleteButton")}
+          </DropdownMenuItem>
+        </>
+      )}
+    </>
+  );
+  // Les partitions : à droite en deux volets, côté Partitions sur G.
+  const partitions = (
+    <>
+      {editPartitions && (
+        <p className="mb-4 text-xs text-muted-foreground bg-primary/5 border border-primary/20 rounded-lg px-3 py-2 print:hidden">
+          {t("setlists.contentEdit.hint", {
+            defaultValue:
+              "Mode adaptation : touche une ligne pour modifier ses accords ou ses paroles. Les changements ne concernent que cette setlist.",
+          })}
+        </p>
+      )}
+      {editMine && (
+        <p className="mb-4 text-xs text-muted-foreground bg-primary/5 border border-primary/20 rounded-lg px-3 py-2 print:hidden">
+          {t("setlists.myVersion.hint")}
+        </p>
+      )}
+      <PartitionsView
+        setlistId={id}
+        items={displayItems}
+        contents={contents}
+        loading={loadingContent}
+        showChordsGlobal={showChords}
+        showPinyinGlobal={showPinyin}
+        chartStyle={chartStyle}
+        jianpuPref={jianpuPref}
+        layout={layout}
+        editMode={editPartitions || editMine}
+        versions={versionViews}
+        editMine={editMine}
+        onSelectLine={handleSelectLine}
+        onRevert={(itemIndex) => setConfirmRevert(itemIndex)}
+        onEditStructure={(itemIndex) => {
+          const item = setlist.items[itemIndex];
+          const ast = itemAst(withMine(item), contents[item.songSlug]);
+          if (!ast) return;
+          setStructureTarget({
+            itemIndex,
+            ast,
+            structure: myItems?.[item.songSlug]?.structure ?? null,
+            presidency: item.structureOverride,
+          });
+        }}
+        onChooseVersion={(itemIndex, value) => persistChoice(setlist.items[itemIndex].songSlug, value)}
+        onShare={(itemIndex, shared) => persistMine(setlist.items[itemIndex].songSlug, { shared })}
+        onEditJianpu={handleEditJianpu}
+        onIdees={accesHarmonie.peut ? (itemIndex, slug) => { setIdeesTarget(itemIndex); setIdeesChant(slug ?? null); } : undefined}
+      />
+    </>
+  );
   return (
     <div className="relative min-h-screen bg-background">
       <Halo variant="fiche" color={categoryColor(setlist?.category ?? "")} />
-      {/* Top bar — même style que SongDetailClient */}
-      <div ref={toolbarRef} data-testid="barre-outils" className={`print:hidden fixed left-[var(--barre-laterale)] right-0 top-[var(--nav-h)] [--barre-top:var(--nav-h)] [--barre-left:var(--barre-laterale)] z-10 material-chrome transition-transform duration-300 ${ scrollVisible ? "translate-y-0" : "-translate-y-[calc(100%+var(--nav-h))]"}`}>
-        <FondDeBarre sousNavbar />
-        <div className="max-w-[1080px] mx-auto px-4">
-          {/* Une seule ligne sur téléphone (retour du 20/09/2026) : 9 commandes de 32 px
-              tiennent à partir de 390 px ; en dessous, « Adapter » et « Ma version »
-              passent dans le menu « ⋯ ». Les libellés n'arrivent qu'à 1024 px :
-              icônes sur tout téléphone, portrait comme paysage (jusqu'à 956 px), et sur
-              iPad en portrait ; libellés sur iPad en paysage et ordinateur, à condition
-              de tenir à côté de la barre latérale (lot U4 : `.libelle-outil`, requête de
-              conteneur sur `.rangee-outils`, globals.css). `flex-wrap` reste le filet de
-              sécurité. */}
-          <div className="rangee-outils flex items-center gap-1.5 sm:gap-2 py-[9px] flex-wrap">
-
-            {/* ← Retour */}
-            <Link aria-label={t("songs.detail.backToAll")}
-              href={backPath}
-              className="h-8 px-2.5 sm:mr-1 rounded-full bg-secondary text-muted-foreground hover:text-foreground text-sm font-semibold flex items-center gap-0.5 transition-[background-color,color,transform] duration-150 active:scale-[.96]"
-            >
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M19 12H5m6-7l-7 7 7 7" />
-              </svg>
-              <span className="libelle-outil">{t("songs.detail.backToAll")}</span>
-            </Link>
-
-            {/* Setlist G (docs/spec-deux-volets.md, Q3 et Q11) : la même barre côté Liste
-                et côté Partitions — Affichage, Adapter, Accords, Ma version ; la bascule
-                « Liste | Partitions » est passée sous l'en-tête. */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button aria-label={t("setlists.detail.layout.label")}
-                  className="h-8 px-2.5 rounded-full text-sm font-semibold flex items-center gap-1.5 transition-[background-color,color,transform] duration-150 active:scale-[.96] bg-secondary text-muted-foreground hover:text-foreground"
-                >
-                  <SlidersHorizontal className="h-3.5 w-3.5" />
-                  <span className="libelle-outil">{t("setlists.detail.layout.label")}</span>
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-56">
-                <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
-                  {t("setlists.detail.layout.label")}
-                </DropdownMenuLabel>
-                <DropdownMenuRadioGroup value={layout} onValueChange={(v) => changeLayout(v as PartitionLayout)}>
-                  {(["played", "unique", "structure"] as const).map((v) => (
-                    <DropdownMenuRadioItem key={v} value={v} onSelect={(e) => e.preventDefault()}>
-                      {t(`setlists.detail.layout.${v}`)}
-                    </DropdownMenuRadioItem>
-                  ))}
-                </DropdownMenuRadioGroup>
-                <DropdownMenuSeparator />
-                {/* Pinyin (chants zh) — préférence persistée */}
-                {hasZhSong && (
-                  <DropdownMenuCheckboxItem
-                    checked={showPinyin}
-                    onCheckedChange={() => togglePinyin()}
-                    onSelect={(e) => e.preventDefault()}
-                  >
-                    {t("setlists.detail.pinyin", { defaultValue: "Pinyin" })}
-                  </DropdownMenuCheckboxItem>
-                )}
-                <DropdownMenuCheckboxItem
-                  checked={chartStyle}
-                  onCheckedChange={toggleChartStyle}
-                  onSelect={(e) => e.preventDefault()}
-                >
-                  {t("performance.chartStyle")}
-                </DropdownMenuCheckboxItem>
-                {hasJianpuSheets && (
-                  <>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
-                      {t("performance.jianpuSheet")}
-                    </DropdownMenuLabel>
-                    <DropdownMenuRadioGroup
-                      value={jianpuPref}
-                      onValueChange={(v) => changeJianpuPref(v as JianpuPref)}
-                    >
-                      {(["auto", "always", "never"] as const).map((v) => (
-                        <DropdownMenuRadioItem
-                          key={v}
-                          value={v}
-                          onSelect={(e) => e.preventDefault()}
-                        >
-                          {t(`performance.jianpuPref.${v}`)}
-                        </DropdownMenuRadioItem>
-                      ))}
-                    </DropdownMenuRadioGroup>
-                  </>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            {/* Adapter le chant (accords/paroles par setlist) */}
-            {canEdit && (
-              <button aria-label={t("setlists.contentEdit.toggle", { defaultValue: "Adapter" })}
-                aria-pressed={editPartitions}
-                onClick={toggleAdapter}
-                className={`max-[389px]:hidden h-8 px-2.5 rounded-full text-sm font-semibold flex items-center gap-1.5 transition-[background-color,color,transform] duration-150 active:scale-[.96] ${
-                  editPartitions
-                    ? "bg-foreground text-background"
-                    : "bg-secondary text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                <PenLine className="h-3.5 w-3.5" />
-                <span className="libelle-outil">
-                  {t("setlists.contentEdit.toggle", { defaultValue: "Adapter" })}
-                </span>
-              </button>
-            )}
-
-            {/* Accords — le réglage vaut pour les partitions et le mode louange */}
-            <button aria-label={t("songs.detail.chords")}
-              aria-pressed={showChords}
-              onClick={() => {
-                setShowChords((s) => !s);
-                setChordsTouched(true);
-              }}
-              className={`h-8 px-2.5 rounded-full text-sm font-semibold flex items-center gap-1.5 transition-[background-color,color,transform] duration-150 active:scale-[.96] ${
-                showChords
-                  ? "bg-foreground text-background"
-                  : "bg-secondary text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/><path d="M9 18V5l12-2v13"/></svg>
-              <span className="libelle-outil">{t("songs.detail.chords")}</span>
-            </button>
-
-            {/* Ma version (accords/paroles pour soi) — tout connecté */}
-            {canHaveSetlistVersion(user, profile, setlist) && (
-              <button aria-label={t("setlists.myVersion.toggle")}
-                aria-pressed={editMine}
-                onClick={toggleMaVersion}
-                className={`max-[389px]:hidden h-8 px-2.5 rounded-full text-sm font-semibold flex items-center gap-1.5 transition-[background-color,color,transform] duration-150 active:scale-[.96] ${
-                  editMine
-                    ? "bg-foreground text-background"
-                    : "bg-secondary text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                <UserRound className="h-3.5 w-3.5" />
-                <span className="libelle-outil">{t("setlists.myVersion.toggle")}</span>
-              </button>
-            )}
-
-            {/* Mode louange et ⋯ — poussés à droite, sur la même ligne */}
-            <div className="ml-auto flex items-center gap-1.5">
-
-              {/* Mode Louange — action principale en live */}
-              <button
-                onClick={async () => {
-                  // Plein écran natif : à appeler en synchrone dans le geste
-                  // utilisateur (avant tout await), sinon la demande est rejetée.
-                  // iPhone Safari ne supporte pas l'API → échec silencieux.
-                  try {
-                    document.documentElement.requestFullscreen({ navigationUI: "hide" }).catch(() => {});
-                  } catch { /* non supporté */ }
-                  // Toujours (re)charger : loadContents ne fetch que les chants
-                  // manquants. Sans ça, un chargement partiel de la vue Partitions
-                  // faisait entrer en mode Louange avec des chants absents.
-                  if (setlist) await loadContents(setlist.items);
-                  setPerformanceMode(true);
-                }}
-                aria-label={t("setlists.detail.performanceMode")}
-                // 5C1 : un bouton plein est en encre, sauf sur l'écran d'un culte, où il en prend la couleur.
-                style={{ backgroundColor: serviceButtonFill(categoryColor(setlist?.category ?? "")) }}
-                className="h-8 px-2.5 sm:px-3 rounded-full text-white text-[12.5px] font-semibold flex items-center gap-1.5 hover:brightness-95 dark:ring-1 dark:ring-white/15 transition-all duration-150"
-              >
-                <Play className="h-3.5 w-3.5" />
-                <span className="libelle-outil">{t("setlists.detail.performanceMode")}</span>
-              </button>
-
-              {/* Menu ⋯ : Modifier / Prévenir l'équipe / Dupliquer / Partager / PDF / Supprimer */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="icon-lg"
-                    className="h-8 w-8 rounded-md text-muted-foreground"
-                    aria-label={t("common.moreActions")}
-                  >
-                    <MoreHorizontal className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  {/* Téléphone étroit : les deux modes d'édition, sortis de la barre. */}
-                  {canEdit && (
-                    <DropdownMenuCheckboxItem className="min-[390px]:hidden" checked={editPartitions} onCheckedChange={toggleAdapter}>
-                      {t("setlists.contentEdit.toggle", { defaultValue: "Adapter" })}
-                    </DropdownMenuCheckboxItem>
-                  )}
-                  {canHaveSetlistVersion(user, profile, setlist) && (
-                    <DropdownMenuCheckboxItem className="min-[390px]:hidden" checked={editMine} onCheckedChange={toggleMaVersion}>
-                      {t("setlists.myVersion.toggle")}
-                    </DropdownMenuCheckboxItem>
-                  )}
-                  {(canEdit || canHaveSetlistVersion(user, profile, setlist)) && <DropdownMenuSeparator className="min-[390px]:hidden" />}
-                  {canEdit && (
-                    <DropdownMenuItem asChild>
-                      <Link href={`/setlists/${id}/edit`}>
-                        <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
-                        {t("setlists.detail.editButton")}
-                      </Link>
-                    </DropdownMenuItem>
-                  )}
-                  {canNotifyTeam && (
-                    <DropdownMenuItem
-                      disabled={notifying}
-                      onClick={() =>
-                        realSongCount < 4
-                          ? flashFeedback(t("setlists.detail.notifyNeedSongs"))
-                          : handleNotifyTeam()
-                      }
-                    >
-                      <BellRing className="h-3.5 w-3.5 text-muted-foreground" />
-                      {notifying
-                        ? "…"
-                        : t("setlists.detail.notifyTeam", { defaultValue: "Prévenir l'équipe" })}
-                    </DropdownMenuItem>
-                  )}
-                  {canDuplicate && (
-                    <DropdownMenuItem disabled={duplicating} onClick={() => handleDuplicate()}>
-                      <Copy className="h-3.5 w-3.5 text-muted-foreground" />
-                      {duplicating ? "…" : t("setlists.detail.duplicate")}
-                    </DropdownMenuItem>
-                  )}
-                  <DropdownMenuItem onClick={() => handleShare()}>
-                    <Share2 className="h-3.5 w-3.5 text-muted-foreground" />
-                    {t("setlists.detail.share")}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    disabled={downloading}
-                    // Vue liste : le PDF liste, sans choix ; vue partitions : « Quel PDF ? ».
-                    onClick={() => (view === "liste" ? handleDownload() : setShowPdfChoice(true))}
-                  >
-                    <Download className="h-3.5 w-3.5 text-muted-foreground" />
-                    {downloading ? "…" : t("songs.detail.downloadPdf")}
-                  </DropdownMenuItem>
-                  {canDelete && (
-                    <>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem
-                        className="text-destructive focus:text-destructive"
-                        onClick={() => setConfirmDelete(true)}
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                        {t("setlists.detail.deleteButton")}
-                      </DropdownMenuItem>
-                    </>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div ref={zoneRef} className="relative max-w-2xl mx-auto px-4 py-8 print:px-0 print:py-4" style={{ marginTop: toolbarH }}>
-        {/* Header setlist */}
-        <div className="mb-3 pb-5 print:mb-4">
-          <div className="flex items-start gap-3">
-            <div className="flex-1">
-              <div className="flex items-center gap-3 flex-wrap">
-                <h1 className="text-2xl font-bold text-foreground">{setlist.title}</h1>
-              </div>
-              <p className="text-muted-foreground capitalize mt-1 text-sm">
-                {formatDate(setlist.date, i18n.language)}
-              </p>
-              <SetlistHistory key={historyVersion} setlistId={id} songsMap={songsMap} />
-            </div>
-            <span className="text-xs px-2 py-0.5 rounded border border-border text-muted-foreground shrink-0 mt-1">
-              {t("common.languages." + setlist.language, { defaultValue: setlist.language })}
-            </span>
-          </div>
-          <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
-            <span className="px-2 py-0.5 rounded bg-muted text-foreground text-xs">
-              {t("categories." + setlist.category, { defaultValue: setlist.category })}
-            </span>
-            {setlist.leader && (
-              <span>{t("setlists.detail.leaderLabel")} <span className="text-foreground">{setlist.leader}</span></span>
-            )}
-          </div>
-          {/* Qui peut modifier — rend visible la logique de access.ts */}
-          <div className="mt-3 flex items-center gap-2 flex-wrap">
-            <Badge variant="secondary">
-              {canEdit ? t("setlists.detail.canEdit") : t("setlists.detail.readOnly")}
-            </Badge>
-            <span className="text-xs text-muted-foreground">
-              {setlist.isPrivate
-                ? t("setlists.detail.editableByOwner")
-                : t("setlists.detail.editableBy", {
-                    category: t("categories." + setlist.category, { defaultValue: setlist.category }),
-                  })}
-            </span>
-          </div>
-          <PresentationLink
-            setlistId={id}
-            url={setlist.presentationUrl}
-            canChange={canSetPresentationLink(
-              user,
-              profile,
-              setlist,
-              !!profile?.serviceRoles[setlist.category]?.includes("regie"),
-            )}
-            onSaved={(presentationUrl) => setSetlist({ ...setlist, presentationUrl })}
-          />
-          {setlist.notes && (
-            <p className="mt-3 text-sm text-muted-foreground italic">{setlist.notes}</p>
-          )}
-        </div>
-
-        {/* Bascule « Liste | Partitions » (setlist G, Q11) : sous l'en-tête, elle colle
-            sous la barre et s'escamote avec elle. Pleine largeur sur téléphone. */}
-        {setlist.items.length > 0 && (
-          <div
-            ref={basculeRef}
-            data-testid="bascule-vues"
-            className="print:hidden sticky z-10 -mx-4 px-4 py-2 mb-1 transition-transform duration-300"
+      {deuxVolets ? (
+        // ── Deux volets (docs/spec-deux-volets.md, T4, planche `setlist-deux-volets`) :
+        // l'en-tête pleine largeur colle en haut et s'escamote au défilement (Q7) ; à
+        // gauche le sommaire (Q6), qui monte avec lui ; à droite toutes les partitions.
+        // Bornés par `--largeur-lecture` et centrés dans la zone de contenu (U4).
+        <div className="relative mx-auto max-w-[var(--largeur-lecture)]">
+          <header
+            ref={enTeteRef}
+            data-en-tete
+            className="print:hidden sticky z-20 border-b border-border transition-transform duration-300"
             style={{
-              top: `calc(var(--nav-h) + ${toolbarH}px)`,
-              transform: scrollVisible ? undefined : `translateY(calc(-100% - var(--nav-h) - ${toolbarH}px))`,
+              top: "var(--nav-h)",
+              transform: scrollVisible ? undefined : "translateY(calc(-100% - var(--nav-h) - 12px))",
             }}
           >
+            <FondDeBarre />
+            <div className="flex flex-wrap items-end gap-x-6 gap-y-3 px-7 pb-4 pt-5">
+              {/* Le titre garde 18rem au moins : sinon les boutons passent dessous. */}
+              <div className="min-w-0 flex-[1_1_18rem]">
+                <p className="flex items-center gap-1.5 text-[13px] font-semibold" style={{ color: categoryColor(setlist.category) }}>
+                  <span aria-hidden className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: categoryColor(setlist.category) }} />
+                  {t("categories." + setlist.category, { defaultValue: setlist.category })} · {formatDate(setlist.date, i18n.language)}
+                </p>
+                <h1 className="mt-1 text-[28px] font-bold leading-tight tracking-[-0.01em] text-foreground">{setlist.title}</h1>
+                {(setlist.leader || setlist.notes) && (
+                  <p className="mt-0.5 text-[13px] text-muted-foreground">
+                    {setlist.leader && <>{t("setlists.detail.leaderLabel")} {setlist.leader}</>}
+                    {setlist.leader && setlist.notes && " · "}
+                    {setlist.notes}
+                  </p>
+                )}
+              </div>
+              {/* Présentation · Adapter · Ma version · Modifier · PDF · ⋯ · Mode louange,
+                  libellés compris ; la rangée passe sous le titre quand elle n'y tient pas. */}
+              <div className="flex flex-wrap items-center gap-2">
+                {presentationHref && (
+                  <a href={presentationHref} target="_blank" rel="noopener noreferrer" className={PILULE}>
+                    <Presentation className="h-4 w-4" aria-hidden />
+                    {t("setlists.detail.presentation")}
+                  </a>
+                )}
+                {canEdit && (
+                  <button type="button" aria-pressed={editPartitions} onClick={toggleAdapter} className={editPartitions ? PILULE_ACTIVE : PILULE}>
+                    <PenLine className="h-4 w-4" aria-hidden />
+                    {t("setlists.contentEdit.toggle", { defaultValue: "Adapter" })}
+                  </button>
+                )}
+                {canHaveSetlistVersion(user, profile, setlist) && (
+                  <button type="button" aria-pressed={editMine} onClick={toggleMaVersion} className={editMine ? PILULE_ACTIVE : PILULE}>
+                    <UserRound className="h-4 w-4" aria-hidden />
+                    {t("setlists.myVersion.toggle")}
+                  </button>
+                )}
+                {canEdit && (
+                  <Link href={`/setlists/${id}/edit`} className={PILULE}>
+                    <Pencil className="h-4 w-4" aria-hidden />
+                    {t("setlists.detail.editButton")}
+                  </Link>
+                )}
+                <button
+                  type="button"
+                  aria-label={t("setlists.detail.pdf")}
+                  title={t("setlists.detail.pdf")}
+                  disabled={downloading}
+                  onClick={() => setShowPdfChoice(true)}
+                  className={PILULE_ICONE}
+                >
+                  <FileText className="h-4 w-4" aria-hidden />
+                </button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button type="button" aria-label={t("common.moreActions")} className={PILULE_ICONE}>
+                      <MoreHorizontal className="h-4 w-4" aria-hidden />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    {/* Accords : le réglage vaut pour les partitions et le mode louange. */}
+                    <DropdownMenuCheckboxItem
+                      checked={showChords}
+                      onCheckedChange={(v) => {
+                        setShowChords(v);
+                        setChordsTouched(true);
+                      }}
+                    >
+                      {t("songs.detail.chords")}
+                    </DropdownMenuCheckboxItem>
+                    <DropdownMenuSub>
+                      <DropdownMenuSubTrigger>
+                        <SlidersHorizontal className="h-3.5 w-3.5 text-muted-foreground" />
+                        {t("setlists.detail.layout.label")}
+                      </DropdownMenuSubTrigger>
+                      <DropdownMenuSubContent className="w-56">{reglagesAffichage}</DropdownMenuSubContent>
+                    </DropdownMenuSub>
+                    <DropdownMenuSeparator />
+                    {actionsPartagees}
+                    {supprimer}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                <button
+                  type="button"
+                  onClick={ouvrirModeLouange}
+                  // 5C1 : un bouton plein est en encre, sauf sur l'écran d'un culte, où il en prend la couleur.
+                  style={{ backgroundColor: serviceButtonFill(categoryColor(setlist.category)) }}
+                  className="flex h-10 items-center gap-2 rounded-full px-4 text-[14px] font-semibold text-white transition-all duration-150 hover:brightness-95 active:scale-[.97] dark:ring-1 dark:ring-white/15"
+                >
+                  <Play className="h-4 w-4" aria-hidden />
+                  {t("setlists.detail.performanceMode")}
+                </button>
+              </div>
+            </div>
+          </header>
+
+          {setlist.items.length === 0 ? (
+            <p className="mx-7 my-8 text-center py-16 text-sm text-muted-foreground border border-dashed border-border rounded-xl">
+              {t("setlists.detail.emptyItems")}
+            </p>
+          ) : (
+            <div className="grid grid-cols-[380px_minmax(0,1fr)]">
+              {/* Le filet descend jusqu'en bas de la page ; le sommaire colle sous l'en-tête. */}
+              <div className="border-r border-border print:hidden">
+                <Sommaire
+                  items={stageItems}
+                  contents={contents}
+                  songsMap={songsMap}
+                  jianpuPref={jianpuPref}
+                  current={current ?? premierChant()}
+                  uidsLus={uidsLus}
+                  onGo={allerA}
+                  copier={toutSuitLaPresidence ? () => setlistLyricsText(setlist.items, contents) : undefined}
+                  className="sticky transition-[top,height] duration-300"
+                  style={{
+                    top: scrollVisible ? `calc(var(--nav-h) + ${enTeteH}px)` : "var(--nav-h)",
+                    height: scrollVisible ? `calc(100dvh - var(--nav-h) - ${enTeteH}px)` : "calc(100dvh - var(--nav-h))",
+                  }}
+                />
+              </div>
+              <div className="min-w-0 px-7 pb-16 pt-6">
+                {/* Ce que garde la question 4, sous le titre : historique, langue, qui peut
+                    modifier ; la régie ajoute ou change ici le lien de la présentation. */}
+                <div className="mb-6 print:hidden">
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                    <SetlistHistory key={historyVersion} setlistId={id} songsMap={songsMap} />
+                    <span className="text-xs px-2 py-0.5 rounded border border-border text-muted-foreground">
+                      {t("common.languages." + setlist.language, { defaultValue: setlist.language })}
+                    </span>
+                  </div>
+                  {droitsDeModifier}
+                  <PresentationLink
+                    setlistId={id}
+                    url={setlist.presentationUrl}
+                    canChange={peutChangerPresentation}
+                    onSaved={(presentationUrl) => setSetlist({ ...setlist, presentationUrl })}
+                    sansLien
+                  />
+                </div>
+                {partitions}
+              </div>
+            </div>
+          )}
+        </div>
+      ) : (
+        <>
+          {/* Top bar — même style que SongDetailClient */}
+          <div ref={toolbarRef} data-testid="barre-outils" className={`print:hidden fixed left-[var(--barre-laterale)] right-0 top-[var(--nav-h)] [--barre-top:var(--nav-h)] [--barre-left:var(--barre-laterale)] z-10 material-chrome transition-transform duration-300 ${ scrollVisible ? "translate-y-0" : "-translate-y-[calc(100%+var(--nav-h))]"}`}>
             <FondDeBarre sousNavbar />
-            <div className="flex w-full sm:max-w-[360px] items-center gap-0.5 rounded-full bg-secondary p-0.5">
-              <button
-                type="button"
-                aria-pressed={view === "liste"}
-                onClick={versListe}
-                className={`flex-1 flex items-center justify-center gap-1.5 h-9 rounded-full text-sm font-semibold transition-colors ${
-                  view === "liste" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                <List className="h-3.5 w-3.5" aria-hidden="true" />
-                {t("setlists.detail.tabList")}
-              </button>
-              <button
-                type="button"
-                aria-pressed={view === "partitions"}
-                onClick={() => versPartitions()}
-                className={`flex-1 flex items-center justify-center gap-1.5 h-9 rounded-full text-sm font-semibold transition-colors ${
-                  view === "partitions" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                <Music className="h-3.5 w-3.5" aria-hidden="true" />
-                {t("setlists.detail.tabCharts")}
-              </button>
+            <div className="max-w-[1080px] mx-auto px-4">
+              {/* Une seule ligne sur téléphone (retour du 20/09/2026) : 9 commandes de 32 px
+                  tiennent à partir de 390 px ; en dessous, « Adapter » et « Ma version »
+                  passent dans le menu « ⋯ ». Les libellés n'arrivent qu'à 1024 px :
+                  icônes sur tout téléphone, portrait comme paysage (jusqu'à 956 px), et sur
+                  iPad en portrait ; libellés sur iPad en paysage et ordinateur, à condition
+                  de tenir à côté de la barre latérale (lot U4 : `.libelle-outil`, requête de
+                  conteneur sur `.rangee-outils`, globals.css). `flex-wrap` reste le filet de
+                  sécurité. */}
+              <div className="rangee-outils flex items-center gap-1.5 sm:gap-2 py-[9px] flex-wrap">
+
+                {/* ← Retour */}
+                <Link aria-label={t("songs.detail.backToAll")}
+                  href={backPath}
+                  className="h-8 px-2.5 sm:mr-1 rounded-full bg-secondary text-muted-foreground hover:text-foreground text-sm font-semibold flex items-center gap-0.5 transition-[background-color,color,transform] duration-150 active:scale-[.96]"
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M19 12H5m6-7l-7 7 7 7" />
+                  </svg>
+                  <span className="libelle-outil">{t("songs.detail.backToAll")}</span>
+                </Link>
+
+                {/* Setlist G (docs/spec-deux-volets.md, Q3 et Q11) : la même barre côté Liste
+                    et côté Partitions — Affichage, Adapter, Accords, Ma version ; la bascule
+                    « Liste | Partitions » est passée sous l'en-tête. */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button aria-label={t("setlists.detail.layout.label")}
+                      className="h-8 px-2.5 rounded-full text-sm font-semibold flex items-center gap-1.5 transition-[background-color,color,transform] duration-150 active:scale-[.96] bg-secondary text-muted-foreground hover:text-foreground"
+                    >
+                      <SlidersHorizontal className="h-3.5 w-3.5" />
+                      <span className="libelle-outil">{t("setlists.detail.layout.label")}</span>
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="w-56">
+                    {reglagesAffichage}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
+                {/* Adapter le chant (accords/paroles par setlist) */}
+                {canEdit && (
+                  <button aria-label={t("setlists.contentEdit.toggle", { defaultValue: "Adapter" })}
+                    aria-pressed={editPartitions}
+                    onClick={toggleAdapter}
+                    className={`max-[389px]:hidden h-8 px-2.5 rounded-full text-sm font-semibold flex items-center gap-1.5 transition-[background-color,color,transform] duration-150 active:scale-[.96] ${
+                      editPartitions
+                        ? "bg-foreground text-background"
+                        : "bg-secondary text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    <PenLine className="h-3.5 w-3.5" />
+                    <span className="libelle-outil">
+                      {t("setlists.contentEdit.toggle", { defaultValue: "Adapter" })}
+                    </span>
+                  </button>
+                )}
+
+                {/* Accords — le réglage vaut pour les partitions et le mode louange */}
+                <button aria-label={t("songs.detail.chords")}
+                  aria-pressed={showChords}
+                  onClick={() => {
+                    setShowChords((s) => !s);
+                    setChordsTouched(true);
+                  }}
+                  className={`h-8 px-2.5 rounded-full text-sm font-semibold flex items-center gap-1.5 transition-[background-color,color,transform] duration-150 active:scale-[.96] ${
+                    showChords
+                      ? "bg-foreground text-background"
+                      : "bg-secondary text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/><path d="M9 18V5l12-2v13"/></svg>
+                  <span className="libelle-outil">{t("songs.detail.chords")}</span>
+                </button>
+
+                {/* Ma version (accords/paroles pour soi) — tout connecté */}
+                {canHaveSetlistVersion(user, profile, setlist) && (
+                  <button aria-label={t("setlists.myVersion.toggle")}
+                    aria-pressed={editMine}
+                    onClick={toggleMaVersion}
+                    className={`max-[389px]:hidden h-8 px-2.5 rounded-full text-sm font-semibold flex items-center gap-1.5 transition-[background-color,color,transform] duration-150 active:scale-[.96] ${
+                      editMine
+                        ? "bg-foreground text-background"
+                        : "bg-secondary text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    <UserRound className="h-3.5 w-3.5" />
+                    <span className="libelle-outil">{t("setlists.myVersion.toggle")}</span>
+                  </button>
+                )}
+
+                {/* Mode louange et ⋯ — poussés à droite, sur la même ligne */}
+                <div className="ml-auto flex items-center gap-1.5">
+
+                  {/* Mode Louange — action principale en live */}
+                  <button
+                    onClick={ouvrirModeLouange}
+                    aria-label={t("setlists.detail.performanceMode")}
+                    // 5C1 : un bouton plein est en encre, sauf sur l'écran d'un culte, où il en prend la couleur.
+                    style={{ backgroundColor: serviceButtonFill(categoryColor(setlist?.category ?? "")) }}
+                    className="h-8 px-2.5 sm:px-3 rounded-full text-white text-[12.5px] font-semibold flex items-center gap-1.5 hover:brightness-95 dark:ring-1 dark:ring-white/15 transition-all duration-150"
+                  >
+                    <Play className="h-3.5 w-3.5" />
+                    <span className="libelle-outil">{t("setlists.detail.performanceMode")}</span>
+                  </button>
+
+                  {/* Menu ⋯ : Modifier / Prévenir l'équipe / Dupliquer / Partager / PDF / Supprimer */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="icon-lg"
+                        className="h-8 w-8 rounded-md text-muted-foreground"
+                        aria-label={t("common.moreActions")}
+                      >
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-56">
+                      {/* Téléphone étroit : les deux modes d'édition, sortis de la barre. */}
+                      {canEdit && (
+                        <DropdownMenuCheckboxItem className="min-[390px]:hidden" checked={editPartitions} onCheckedChange={toggleAdapter}>
+                          {t("setlists.contentEdit.toggle", { defaultValue: "Adapter" })}
+                        </DropdownMenuCheckboxItem>
+                      )}
+                      {canHaveSetlistVersion(user, profile, setlist) && (
+                        <DropdownMenuCheckboxItem className="min-[390px]:hidden" checked={editMine} onCheckedChange={toggleMaVersion}>
+                          {t("setlists.myVersion.toggle")}
+                        </DropdownMenuCheckboxItem>
+                      )}
+                      {(canEdit || canHaveSetlistVersion(user, profile, setlist)) && <DropdownMenuSeparator className="min-[390px]:hidden" />}
+                      {canEdit && (
+                        <DropdownMenuItem asChild>
+                          <Link href={`/setlists/${id}/edit`}>
+                            <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
+                            {t("setlists.detail.editButton")}
+                          </Link>
+                        </DropdownMenuItem>
+                      )}
+                      {actionsPartagees}
+                      <DropdownMenuItem
+                        disabled={downloading}
+                        // Vue liste : le PDF liste, sans choix ; vue partitions : « Quel PDF ? ».
+                        onClick={() => (view === "liste" ? handleDownload("liste") : setShowPdfChoice(true))}
+                      >
+                        <Download className="h-3.5 w-3.5 text-muted-foreground" />
+                        {downloading ? "…" : t("songs.detail.downloadPdf")}
+                      </DropdownMenuItem>
+                      {supprimer}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </div>
             </div>
           </div>
-        )}
 
-        {/* Contenu selon la vue */}
-        {setlist.items.length === 0 ? (
-          <p className="text-center py-16 text-sm text-muted-foreground border border-dashed border-border rounded-xl">
-            {t("setlists.detail.emptyItems")}
-          </p>
-        ) : (
-          <div ref={vueRef} data-vue={view}>
-            {view === "liste" ? (
-              <ListView items={setlist.items} songsMap={songsMap} jianpuPref={jianpuPref} current={current} onOpen={versPartitions} />
+          <div ref={zoneRef} className="relative max-w-2xl mx-auto px-4 py-8 print:px-0 print:py-4" style={{ marginTop: toolbarH }}>
+            {/* Header setlist */}
+            <div className="mb-3 pb-5 print:mb-4">
+              <div className="flex items-start gap-3">
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <h1 className="text-2xl font-bold text-foreground">{setlist.title}</h1>
+                  </div>
+                  <p className="text-muted-foreground capitalize mt-1 text-sm">
+                    {formatDate(setlist.date, i18n.language)}
+                  </p>
+                  <SetlistHistory key={historyVersion} setlistId={id} songsMap={songsMap} />
+                </div>
+                <span className="text-xs px-2 py-0.5 rounded border border-border text-muted-foreground shrink-0 mt-1">
+                  {t("common.languages." + setlist.language, { defaultValue: setlist.language })}
+                </span>
+              </div>
+              <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
+                <span className="px-2 py-0.5 rounded bg-muted text-foreground text-xs">
+                  {t("categories." + setlist.category, { defaultValue: setlist.category })}
+                </span>
+                {setlist.leader && (
+                  <span>{t("setlists.detail.leaderLabel")} <span className="text-foreground">{setlist.leader}</span></span>
+                )}
+              </div>
+              {droitsDeModifier}
+              <PresentationLink
+                setlistId={id}
+                url={setlist.presentationUrl}
+                canChange={peutChangerPresentation}
+                onSaved={(presentationUrl) => setSetlist({ ...setlist, presentationUrl })}
+              />
+              {setlist.notes && (
+                <p className="mt-3 text-sm text-muted-foreground italic">{setlist.notes}</p>
+              )}
+            </div>
+
+            {/* Bascule « Liste | Partitions » (setlist G, Q11) : sous l'en-tête, elle colle
+                sous la barre et s'escamote avec elle. Pleine largeur sur téléphone. */}
+            {setlist.items.length > 0 && (
+              <div
+                ref={basculeRef}
+                data-testid="bascule-vues"
+                className="print:hidden sticky z-10 -mx-4 px-4 py-2 mb-1 transition-transform duration-300"
+                style={{
+                  top: `calc(var(--nav-h) + ${toolbarH}px)`,
+                  transform: scrollVisible ? undefined : `translateY(calc(-100% - var(--nav-h) - ${toolbarH}px))`,
+                }}
+              >
+                <FondDeBarre sousNavbar />
+                <div className="flex w-full sm:max-w-[360px] items-center gap-0.5 rounded-full bg-secondary p-0.5">
+                  <button
+                    type="button"
+                    aria-pressed={view === "liste"}
+                    onClick={versListe}
+                    className={`flex-1 flex items-center justify-center gap-1.5 h-9 rounded-full text-sm font-semibold transition-colors ${
+                      view === "liste" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    <List className="h-3.5 w-3.5" aria-hidden="true" />
+                    {t("setlists.detail.tabList")}
+                  </button>
+                  <button
+                    type="button"
+                    aria-pressed={view === "partitions"}
+                    onClick={() => versPartitions()}
+                    className={`flex-1 flex items-center justify-center gap-1.5 h-9 rounded-full text-sm font-semibold transition-colors ${
+                      view === "partitions" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    <Music className="h-3.5 w-3.5" aria-hidden="true" />
+                    {t("setlists.detail.tabCharts")}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Contenu selon la vue */}
+            {setlist.items.length === 0 ? (
+              <p className="text-center py-16 text-sm text-muted-foreground border border-dashed border-border rounded-xl">
+                {t("setlists.detail.emptyItems")}
+              </p>
             ) : (
-              <>
-                {editPartitions && (
-                  <p className="mb-4 text-xs text-muted-foreground bg-primary/5 border border-primary/20 rounded-lg px-3 py-2 print:hidden">
-                    {t("setlists.contentEdit.hint", {
-                      defaultValue:
-                        "Mode adaptation : touche une ligne pour modifier ses accords ou ses paroles. Les changements ne concernent que cette setlist.",
-                    })}
-                  </p>
+              <div ref={vueRef} data-vue={view}>
+                {view === "liste" ? (
+                  <ListView items={setlist.items} songsMap={songsMap} jianpuPref={jianpuPref} current={current} onOpen={versPartitions} />
+                ) : (
+                  partitions
                 )}
-                {editMine && (
-                  <p className="mb-4 text-xs text-muted-foreground bg-primary/5 border border-primary/20 rounded-lg px-3 py-2 print:hidden">
-                    {t("setlists.myVersion.hint")}
-                  </p>
-                )}
-                {!loadingContent && <SetlistOutline items={stageItems} contents={contents} />}
-                <PartitionsView
-                  setlistId={id}
-                  items={displayItems}
-                  contents={contents}
-                  loading={loadingContent}
-                  showChordsGlobal={showChords}
-                  showPinyinGlobal={showPinyin}
-                  chartStyle={chartStyle}
-                  jianpuPref={jianpuPref}
-                  layout={layout}
-                  editMode={editPartitions || editMine}
-                  versions={versionViews}
-                  editMine={editMine}
-                  onSelectLine={handleSelectLine}
-                  onRevert={(itemIndex) => setConfirmRevert(itemIndex)}
-                  onEditStructure={(itemIndex) => {
-                    const item = setlist.items[itemIndex];
-                    const ast = itemAst(withMine(item), contents[item.songSlug]);
-                    if (!ast) return;
-                    setStructureTarget({
-                      itemIndex,
-                      ast,
-                      structure: myItems?.[item.songSlug]?.structure ?? null,
-                      presidency: item.structureOverride,
-                    });
-                  }}
-                  onChooseVersion={(itemIndex, value) => persistChoice(setlist.items[itemIndex].songSlug, value)}
-                  onShare={(itemIndex, shared) => persistMine(setlist.items[itemIndex].songSlug, { shared })}
-                  onEditJianpu={handleEditJianpu}
-                  onIdees={accesHarmonie.peut ? (itemIndex, slug) => { setIdeesTarget(itemIndex); setIdeesChant(slug ?? null); } : undefined}
-                />
-              </>
+              </div>
             )}
           </div>
-        )}
-      </div>
+        </>
+      )}
 
       {/* Idées d'harmonie du chant (lot 9) */}
       {ideesTarget !== null && setlist?.items[ideesTarget] && (() => {
@@ -1698,6 +1970,7 @@ export function SetlistDetailClient() {
         onClose={() => setShowPdfChoice(false)}
         forSetlist
         onDownload={handleDownload}
+        onListe={deuxVolets ? () => handleDownload("liste") : undefined}
       />
 
       <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>

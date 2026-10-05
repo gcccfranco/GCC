@@ -11,6 +11,9 @@
 // en page que PowerPoint et Canva collent d'un bloc.
 
 import type { ChordProSection } from "@/types/chordPro";
+import type { SetlistItem } from "@/types/setList";
+import type { SongContent } from "@/lib/api/songs";
+import { playedSections } from "@/lib/setlist/playedSections";
 
 const BLOCK_TAGS = new Set(["DIV", "P", "H1", "H2", "H3", "LI"]);
 
@@ -39,6 +42,18 @@ export function lyricsText(sections: ChordProSection[]): string {
     )
     .filter(Boolean)
     .join("\n\n");
+}
+
+/** « Copier toutes les paroles » (setlist en deux volets, docs/spec-deux-volets.md,
+ *  question 6) : chaque chant comme `lyricsText`, dans l'ordre de la setlist,
+ *  transitions exclues, deux lignes vides entre deux chants. */
+export function setlistLyricsText(items: SetlistItem[], contents: Record<string, SongContent>): string {
+  return [...items]
+    .filter((item) => item.type !== "transition")
+    .sort((a, b) => a.position - b.position)
+    .map((item) => lyricsText(playedSections(item, contents)))
+    .filter(Boolean)
+    .join("\n\n\n");
 }
 
 function nodeText(node: Node): string {

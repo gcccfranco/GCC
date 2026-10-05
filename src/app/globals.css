@@ -535,25 +535,6 @@
     .barre-par-dessus[data-state="open"] { animation-name: barre-fondu !important; }
     .barre-par-dessus[data-state="closed"] { animation-name: barre-fondu-sortie !important; }
   }
-
-  /* Sommaire de la setlist : à gauche de la colonne des partitions, seulement s'il tient dans
-     la zone de contenu, soit 1 280 px comme avant le lot U4 (`xl`). Ordinateur, barre dépliée :
-     1 280 + 248 px de fenêtre. U5 le remplace. */
-  .sommaire-setlist { display: none; }
-  @media screen and (min-width: 1280px) {
-    .sommaire-setlist { display: block; }
-  }
-  @media screen and (pointer: fine) and (min-width: 1024px) and (max-width: 1527.98px) {
-    .sommaire-setlist { display: none; }
-  }
-  /* Barre réduite (N3) : 1 280 + 68 px de fenêtre suffisent. */
-  @media screen and (pointer: fine) and (min-width: 1348px) {
-    :root[data-barre="reduite"] .sommaire-setlist { display: block; }
-  }
-  /* Tablette en paysage (N4), barre de 68 px : de même (un iPad Pro 13 pouces couché, 1 366 px). */
-  @media screen and (pointer: coarse) and (orientation: landscape) and (min-width: 1024px) and (max-width: 1347.98px) {
-    .sommaire-setlist { display: none; }
-  }
 }
 
 /* Libellés de la barre d'outils de la setlist : à partir de 1 024 px de fenêtre comme avant

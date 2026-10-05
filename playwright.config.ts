@@ -21,6 +21,8 @@ const SPECS_GRAND_ECRAN = [
   /performance-mode\.spec\.ts/,
   /setlist-regie\.spec\.ts/,
   /coup-d-oeil\.spec\.ts/,
+  // Lot U5 (docs/spec-deux-volets.md) : la setlist en deux volets.
+  /setlist-deux-volets\.spec\.ts/,
 ];
 
 export default defineConfig({

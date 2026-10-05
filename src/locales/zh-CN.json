@@ -190,7 +190,9 @@
       "loadingCharts": "正在加载歌谱…",
       "copyLyrics": "复制歌词",
       "copyLyricsDone": "已复制",
-      "outline": "流程",
+      "sommaire": "目录",
+      "copyAllLyrics": "复制全部歌词",
+      "pdf": "PDF",
       "presentation": "幻灯片",
       "presentationAdd": "添加幻灯片链接",
       "presentationChange": "更改链接",
@@ -1699,6 +1701,8 @@
       "colorsHelp": "每个段落用自己的颜色框出，与屏幕显示一致。",
       "compact": "紧凑",
       "compactHelp": "先是结构条，每个段落只出现一次。",
+      "liste": "曲目列表",
+      "listeHelp": "歌曲、调性与结构，一页列出。",
       "download": "下载",
       "preparing": "正在生成…"
     }

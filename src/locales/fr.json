@@ -190,7 +190,9 @@
       "loadingCharts": "Chargement des partitions…",
       "copyLyrics": "Copier les paroles",
       "copyLyricsDone": "Copié",
-      "outline": "Déroulé",
+      "sommaire": "Sommaire",
+      "copyAllLyrics": "Copier toutes les paroles",
+      "pdf": "PDF",
       "presentation": "Présentation",
       "presentationAdd": "Ajouter le lien de la présentation",
       "presentationChange": "Changer le lien",
@@ -1699,6 +1701,8 @@
       "colorsHelp": "Chaque section dans un cadre à sa couleur, comme à l'écran.",
       "compact": "Compact",
       "compactHelp": "Le bandeau de structure, puis chaque section une seule fois.",
+      "liste": "Liste",
+      "listeHelp": "Les chants, leurs tonalités et leur structure, sur une page.",
       "download": "Télécharger",
       "preparing": "Préparation…"
     }
