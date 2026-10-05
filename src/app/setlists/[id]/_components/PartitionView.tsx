@@ -1,4 +1,6 @@
 import { useMemo, useState } from "react";
+import Link from "next/link";
+import { songHref } from "@/lib/setlist/songHref";
 import type { JianpuChords, SetlistItem } from "@/types/setList";
 import type { SongContent } from "@/lib/api/songs";
 import { SongView, SectionView, StructureStrip, TransitionNote } from "@/components/song/SongView";
@@ -61,6 +63,7 @@ function TransitionBanner({ text }: { text: string }) {
 }
 
 export function PartitionsView({
+  setlistId,
   items,
   contents,
   loading,
@@ -80,6 +83,8 @@ export function PartitionsView({
   onEditJianpu,
   onIdees,
 }: {
+  /** Le titre de chaque chant mène à sa page, dans les réglages de la setlist. */
+  setlistId: string;
   items: SetlistItem[];
   contents: Record<string, SongContent>;
   loading: boolean;
@@ -200,7 +205,9 @@ export function PartitionsView({
                       if (!ast) return null;
                       return (
                         <span key={fs.songSlug} className="text-sm font-bold text-foreground">
-                          {ast.metadata.title}
+                          <Link href={songHref(fs.songSlug, fs, setlistId, item.position)} className="hover:underline underline-offset-2">
+                            {ast.metadata.title}
+                          </Link>
                           <span className="ml-1 font-mono text-xs font-normal text-muted-foreground">
                             {fs.keyOverride ?? ast.metadata.key}
                           </span>
@@ -293,6 +300,7 @@ export function PartitionsView({
                         sectionKeys={fs.sectionKeys ?? {}}
                         chartStyle={chartStyle}
                         layout={layout}
+                        titleHref={songHref(fs.songSlug, fs, setlistId, item.position)}
                       />
                     </div>
                   );
@@ -306,6 +314,7 @@ export function PartitionsView({
         return (
           <NormalSongItem
             key={`${item.songSlug}-${idx}`}
+            setlistId={setlistId}
             item={item}
             origIndex={origIndex}
             content={contents[item.songSlug]}
@@ -332,6 +341,7 @@ export function PartitionsView({
 }
 
 function NormalSongItem({
+  setlistId,
   item,
   origIndex,
   content,
@@ -351,6 +361,7 @@ function NormalSongItem({
   onEditJianpu,
   onIdees,
 }: {
+  setlistId: string;
   item: SetlistItem;
   origIndex: number;
   content: SongContent | undefined;
@@ -399,6 +410,7 @@ function NormalSongItem({
   // « Revenir à la présidence » même sans accords ni paroles retouchés.
   const mesRetouches = aDesRetouches(mine?.jianpuChords);
   if (!ast) return null;
+  const titleHref = songHref(item.songSlug, item, setlistId, item.position);
 
   // Mode Adapter : on tape une occurrence précise → ordre joué forcé.
   const layout: PartitionLayout = editMode ? "played" : layoutPref;
@@ -500,6 +512,10 @@ function NormalSongItem({
     <div data-outline-item={item.position} className="print:break-before-page first:print:break-before-auto">
       {jianpuScore ? (
         <StructureStrip position={item.position} steps={steps} songKey={ast.metadata.key} details className="mb-3 pb-2 border-b border-border print:mb-2">
+          {/* Le titre est dans le scan ; le lien vers la page du chant, ici. */}
+          <Link href={titleHref} className="text-sm font-semibold text-foreground hover:underline underline-offset-2 print:hidden">
+            {ast.metadata.title}
+          </Link>
           {badges}
         </StructureStrip>
       ) : (
@@ -556,6 +572,7 @@ function NormalSongItem({
         chartStyle={chartStyle}
         layout={layout}
         bodyStructure={version?.bodyStructure}
+        titleHref={titleHref}
         onLineSelect={editMode ? (line, sectionUid) => onSelectLine?.(origIndex, line, sectionUid) : undefined}
       />
       )}

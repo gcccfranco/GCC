@@ -25,7 +25,10 @@ const uidsOf = (el: HTMLElement) => (el.dataset.sectionUids ?? "").split(" ").fi
  *  visé par un clic serait marqué en retard. */
 function readingLine(): number {
   const root = getComputedStyle(document.documentElement);
-  return (parseFloat(root.getPropertyValue("--nav-h")) || 58) + 5.5 * parseFloat(root.fontSize) + 1;
+  // La bascule « Liste | Partitions » colle sous la barre (setlist G, U5 T2) :
+  // la lecture commence sous elle et son fondu de 12 px.
+  const bascule = document.querySelector<HTMLElement>('[data-testid="bascule-vues"]');
+  return (parseFloat(root.getPropertyValue("--nav-h")) || 58) + 5.5 * parseFloat(root.fontSize) + 1 + (bascule ? bascule.offsetHeight + 12 : 0);
 }
 
 /** Déroulé de la régie : chants et sections dans l'ordre joué, à côté des

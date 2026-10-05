@@ -227,7 +227,10 @@ test.describe("reprise des réglages", () => {
     await page.addInitScript(() => localStorage.setItem("perf-role-preset", "pianiste"));
     await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: setlist(ZH) }, `/setlists/${SETLIST_ID}`);
     await ouvrirPartitions(page);
-    await page.getByRole("button", { name: "Pinyin" }).click();
+    // Pinyin : dans « Affichage » (setlist G, docs/spec-deux-volets.md, Q3).
+    await page.getByRole("button", { name: "Affichage" }).click();
+    await page.getByRole("menuitemcheckbox", { name: "Pinyin" }).click();
+    await page.keyboard.press("Escape");
     await launch(page);
     await expect(lyricLines(page).first()).toBeVisible();
     await expect(pinyin(page)).toHaveCount(0);
@@ -300,8 +303,10 @@ test.describe("tonalité choisie sur la page du chant", () => {
         [`setlists/${SETLIST_ID}`]: setlist([item({ songSlug: c.slug, position: 1, structureOverride: ["verse-2-0"] })]),
       }, `/setlists/${SETLIST_ID}`);
 
-      // Vue liste → page du chant → autre tonalité → retour à la setlist.
-      await page.getByRole("link", { name: c.title }).click();
+      // Partitions → titre du chant → autre tonalité → retour à la setlist (la
+      // ligne de la liste ouvre désormais les partitions : setlist G, Q12).
+      await ouvrirPartitions(page);
+      await page.locator("[data-outline-item]").getByRole("link", { name: c.title }).click();
       await page.waitForURL(/\/songs\//);
       await page.locator("select").first().selectOption(c.chosen);
       await page.goBack();

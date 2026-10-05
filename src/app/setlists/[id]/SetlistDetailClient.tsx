@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { Trash2, List, Music, Pencil, SlidersHorizontal, PenLine, Languages, Play, MoreHorizontal, Download, Copy, Share2, BellRing } from "lucide-react";
+import { Trash2, List, Music, Pencil, SlidersHorizontal, PenLine, UserRound, Play, MoreHorizontal, Download, Copy, Share2, BellRing } from "lucide-react";
 import { categoryColor } from "@/lib/serviceColors";
 import { Halo } from "@/components/layout/Halo";
 import { FondDeBarre } from "@/components/layout/FondDeBarre";
@@ -89,6 +89,44 @@ type LineEditState = EditLineTarget & {
  *  lignes) après une éventuelle copie d'occurrence, plus ce qu'il faut
  *  enregistrer à côté — sur l'item de la setlist (Adapter) ou dans ma version
  *  (« Seulement ce passage »). */
+/** Setlist G (docs/spec-deux-volets.md, T2) : où amener la vue qui s'affiche —
+ *  un chant des partitions (`decalage` : son haut sous la ligne de lecture, pour
+ *  rouvrir là où on était), le haut de la page, ou la ligne du chant lu dans la liste. */
+type Cible = { type: "chant"; n: number; decalage?: number } | { type: "haut" } | { type: "ligne" };
+
+/** Le chant amené commence 12 px sous la bascule : la hauteur de son fondu. */
+const SOUS_LA_BASCULE = 12;
+
+/** Adresse de la vue : `/setlists/[id]` (Liste) ou `?vue=partitions&chant=N` (Q9). */
+function adresseVue(chant: number | null): string {
+  return chant === null ? window.location.pathname : `${window.location.pathname}?vue=partitions&chant=${chant}`;
+}
+
+/** L'adresse est encore celle de la setlist : en partant vers la page d'un
+ *  chant, la page défile en haut avant de disparaître, et récrire l'adresse
+ *  effacerait alors les réglages du chant. */
+function surLaSetlist(id: string): boolean {
+  return window.location.pathname.replace(/\/$/, "") === `/setlists/${id}`;
+}
+
+/** Lit la vue dans l'adresse : `null` pour la Liste. */
+function lireAdresse(): { chant: number | null } | null {
+  const q = new URLSearchParams(window.location.search);
+  if (q.get("vue") !== "partitions") return null;
+  const n = Number(q.get("chant"));
+  return { chant: Number.isInteger(n) && n > 0 ? n : null };
+}
+
+/** Défile sans escamoter les barres : la bascule reste au-dessus du chant amené
+ *  (même verrou que l'index A–Z, `useScrollDirection`). */
+function poser(y: number): number {
+  const root = document.documentElement;
+  root.setAttribute("data-nav-lock", "");
+  window.scrollTo({ top: Math.max(0, Math.round(y)), behavior: "instant" });
+  requestAnimationFrame(() => requestAnimationFrame(() => root.removeAttribute("data-nav-lock")));
+  return window.scrollY;
+}
+
 type EditBase = {
   source: string;
   srcLine: number;
@@ -148,6 +186,20 @@ export function SetlistDetailClient() {
   // par appareil, comme en mode louange.
   const [jianpuPref, setJianpuPrefState] = useState<JianpuPref>("auto");
   const [view, setView] = useState<"liste" | "partitions">("liste");
+  // ── Setlist G : Liste et Partitions reliées (docs/spec-deux-volets.md, T2) ──
+  const basculeRef = useRef<HTMLDivElement>(null);
+  /** Position du chant lu (celle de `data-outline-item`), suivie dans l'adresse. */
+  const [current, setCurrent] = useState<number | null>(null);
+  const [cible, setCible] = useState<Cible | null>(null);
+  /** Dernière cible atteinte (ou abandonnée) : l'effet ne la rejoue pas. */
+  const cibleFaite = useRef<Cible | null>(null);
+  /** Où en étaient les partitions quand on les a quittées : « Partitions » y revient. */
+  const retour = useRef<{ n: number; decalage: number } | null>(null);
+  /** Lâche le chant amené (voir l'effet qui amène la vue à sa cible). */
+  const lacherRef = useRef<(() => void) | null>(null);
+  /** Hauteur où la page a été amenée : tant qu'on n'a pas défilé, le chant
+   *  amené reste le chant lu, même s'il ne peut pas monter jusqu'en haut. */
+  const posee = useRef<number | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [downloading, setDownloading] = useState(false);
@@ -240,15 +292,18 @@ export function SetlistDetailClient() {
   };
   // Adapter (la setlist) et Ma version (pour soi) s'excluent ; la barre d'outils
   // et, sur téléphone étroit, le menu « ⋯ » passent par ici.
+  // Depuis la Liste, les deux modes ouvrent les partitions au chant lu (Q11).
   const toggleAdapter = () => {
-    setEditPartitions((e) => !e);
+    setEditPartitions(!editPartitions);
     setEditMine(false);
     setEditTarget(null);
+    if (!editPartitions && view === "liste") versPartitions(current ?? undefined);
   };
   const toggleMaVersion = () => {
-    setEditMine((m) => !m);
+    setEditMine(!editMine);
     setEditPartitions(false);
     setEditTarget(null);
+    if (!editMine && view === "liste") versPartitions(current ?? undefined);
   };
   const changeLayout = (v: PartitionLayout) => {
     setLayout(v);
@@ -312,10 +367,196 @@ export function SetlistDetailClient() {
     setLoadingContent(false);
   }, [contents]);
 
-  function switchToPartitions() {
-    setView("partitions");
-    if (setlist) loadContents(setlist.items);
+  // Partitions préchargées juste après l'affichage de la liste (Q14) : la
+  // bascule les trouve prêtes.
+  const prechargees = useRef(false);
+  useEffect(() => {
+    if (!setlist || prechargees.current) return;
+    prechargees.current = true;
+    const items = setlist.items;
+    requestAnimationFrame(() => loadContents(items));
+  }, [setlist, loadContents]);
+
+  // Vue lue dans l'adresse à l'ouverture (lien, rechargement) et au retour du
+  // navigateur (Q9).
+  useEffect(() => {
+    const lire = () => {
+      // Retour vers une autre page : Next s'en charge.
+      if (!surLaSetlist(id)) return;
+      const a = lireAdresse();
+      if (a) {
+        setView("partitions");
+        if (a.chant !== null) setCurrent(a.chant);
+        setCible(a.chant !== null ? { type: "chant", n: a.chant } : { type: "haut" });
+      } else {
+        setView("liste");
+        setCible({ type: "ligne" });
+      }
+    };
+    if (lireAdresse()) lire();
+    window.addEventListener("popstate", lire);
+    // Entre Liste et Partitions, c'est la page qui place la vue (ligne du chant
+    // lu, chant amené) : le navigateur ne rend pas sa hauteur à l'entrée.
+    const avant = window.history.scrollRestoration;
+    window.history.scrollRestoration = "manual";
+    return () => {
+      window.removeEventListener("popstate", lire);
+      window.history.scrollRestoration = avant;
+    };
+  }, [id]);
+
+  /** Bas de la bascule quand elle colle sous la barre, plus le fondu : la ligne
+   *  où commence le chant amené, et la ligne de lecture du chant lu. */
+  function hautDeLecture(): number {
+    const barre = toolbarRef.current;
+    const bascule = basculeRef.current;
+    return (barre ? barre.offsetTop + barre.offsetHeight : 0) + (bascule?.offsetHeight ?? 0) + SOUS_LA_BASCULE;
   }
+
+  /** Premier chant de la setlist (les transitions n'en sont pas). */
+  const premierChant = () =>
+    [...(setlist?.items ?? [])].filter((i) => i.type !== "transition").sort((a, b) => a.position - b.position)[0]?.position ?? 1;
+
+  /** Liste → Partitions : une entrée d'historique, que « Liste » et le retour du
+   *  navigateur referment. Un chant donné y est amené ; sinon on revient là où
+   *  on était (Q10). */
+  function versPartitions(n?: number) {
+    if (view === "partitions") {
+      if (n !== undefined) setCible({ type: "chant", n });
+      return;
+    }
+    const chant = n ?? current ?? premierChant();
+    window.history.pushState({ vueG: true }, "", adresseVue(chant));
+    setView("partitions");
+    setCurrent(chant);
+    setCible(
+      n !== undefined ? { type: "chant", n } : retour.current ? { type: "chant", ...retour.current } : { type: "haut" },
+    );
+  }
+
+  /** Partitions → Liste : retour en arrière si on est venu de la Liste, sinon
+   *  (lien direct, rechargement) l'adresse de la Liste remplace la sienne. */
+  function versListe() {
+    if (view === "liste") return;
+    retenirRetour();
+    if (window.history.state?.vueG) {
+      window.history.back();
+      return;
+    }
+    window.history.replaceState({}, "", adresseVue(null));
+    setView("liste");
+    setCible({ type: "ligne" });
+  }
+
+  // Amène la vue affichée à sa cible, une fois les partitions là.
+  useEffect(() => {
+    if (!cible || cible === cibleFaite.current || !setlist) return;
+    if (cible.type === "ligne") {
+      if (view !== "liste") return;
+      cibleFaite.current = cible;
+      const ligne = current !== null ? document.querySelector<HTMLElement>(`[data-ligne="${current}"]`) : null;
+      if (!ligne) return;
+      // Après le retour du navigateur, qui rend sa hauteur à la liste.
+      requestAnimationFrame(() => {
+        const r = ligne.getBoundingClientRect();
+        const haut = r.top + window.scrollY;
+        // En haut de page si la ligne y tient (en-tête compris), sinon sous la bascule.
+        poser(haut + r.height <= window.innerHeight - 16 ? 0 : haut - hautDeLecture());
+      });
+      return;
+    }
+    if (view !== "partitions" || loadingContent) return;
+    if (cible.type === "haut") {
+      cibleFaite.current = cible;
+      posee.current = poser(0);
+      return;
+    }
+    const el = document.querySelector<HTMLElement>(`[data-outline-item="${cible.n}"]`);
+    if (!el) {
+      // Contenus pas encore là : on attend ; chargés sans ce chant : on renonce.
+      if (Object.keys(contents).length > 0) cibleFaite.current = cible;
+      return;
+    }
+    cibleFaite.current = cible;
+    const decalage = cible.decalage ?? 0;
+    const amener = () =>
+      (posee.current = poser(el.getBoundingClientRect().top + window.scrollY - hautDeLecture() - decalage));
+    amener();
+    // Ce qui se met en page après (scans 简谱, polices) : le chant reste en place
+    // jusqu'au premier geste. L'ancrage du navigateur, qui choisirait un autre
+    // repère, est suspendu le temps de tenir.
+    // Tenu hors du cycle de l'effet : il se relance dès que la cible est consommée.
+    lacherRef.current?.();
+    const root = document.documentElement;
+    root.style.overflowAnchor = "none";
+    const ro = new ResizeObserver(() => amener());
+    // La colonne entière (en-tête compris) : `body` garde la hauteur de l'écran.
+    ro.observe(basculeRef.current?.parentElement ?? el);
+    const GESTES = ["wheel", "touchstart", "pointerdown", "keydown"] as const;
+    const lacher = () => {
+      ro.disconnect();
+      root.style.overflowAnchor = "";
+      for (const ev of GESTES) window.removeEventListener(ev, lacher);
+      window.clearTimeout(fin);
+      if (lacherRef.current === lacher) lacherRef.current = null;
+    };
+    for (const ev of GESTES) window.addEventListener(ev, lacher, { passive: true });
+    const fin = window.setTimeout(lacher, 2000);
+    lacherRef.current = lacher;
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `current` n'est lu que pour la ligne visée
+  }, [cible, view, loadingContent, contents, setlist]);
+
+  // En quittant la page, ou en passant à la Liste, le chant amené est lâché.
+  useEffect(() => {
+    if (view !== "partitions") lacherRef.current?.();
+  }, [view]);
+  useEffect(() => () => lacherRef.current?.(), []);
+
+  /** Chant à la ligne de lecture des partitions, et l'élément qui le porte. */
+  function chantALaLigne(): { n: number; el: HTMLElement | null } {
+    const line = hautDeLecture() + 1;
+    let found: HTMLElement | null = null;
+    for (const el of document.querySelectorAll<HTMLElement>("[data-outline-item]")) {
+      if (el.getBoundingClientRect().top > line) break;
+      found = el;
+    }
+    return { n: found ? Number(found.dataset.outlineItem) : premierChant(), el: found };
+  }
+
+  /** Retient où en sont les partitions : le chant lu et son haut sous la ligne de lecture. */
+  function retenirRetour() {
+    const { n, el } = chantALaLigne();
+    const haut = (el ?? document.querySelector<HTMLElement>(`[data-outline-item="${n}"]`))?.getBoundingClientRect().top;
+    if (haut !== undefined) retour.current = { n, decalage: haut - hautDeLecture() };
+  }
+
+  // Le chant lu suit le défilement des partitions, et l'adresse avec lui, sans
+  // nouvelle entrée d'historique (Q9).
+  useEffect(() => {
+    if (view !== "partitions" || loadingContent) return;
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      if (!surLaSetlist(id)) return;
+      retenirRetour();
+      if (posee.current !== null && Math.abs(window.scrollY - posee.current) <= 4) return;
+      posee.current = null;
+      const { n } = chantALaLigne();
+      setCurrent(n);
+      if (lireAdresse()?.chant !== n) {
+        window.history.replaceState({ vueG: window.history.state?.vueG }, "", adresseVue(n));
+      }
+    };
+    const onScroll = () => {
+      if (!frame) frame = requestAnimationFrame(update);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      cancelAnimationFrame(frame);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- lecture du DOM au défilement
+  }, [view, loadingContent]);
 
   async function handleDownload(style: PdfStyle = "classic") {
     if (!setlist) return;
@@ -964,96 +1205,125 @@ export function SetlistDetailClient() {
               <span className="hidden lg:inline">{t("songs.detail.backToAll")}</span>
             </Link>
 
-            {/* Vue toggle — pill identique au transpose pill */}
-            <div className="flex items-center gap-0.5 rounded-full bg-secondary p-0.5">
-              <button aria-label={t("setlists.detail.tabList")}
-                onClick={() => setView("liste")}
-                className={`flex items-center gap-1.5 px-2.5 sm:px-3 h-8 rounded-full text-sm font-semibold transition-colors ${
-                  view === "liste" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                <List className="h-3.5 w-3.5" />
-                <span className="hidden lg:inline">{t("setlists.detail.tabList")}</span>
-              </button>
-              
-              <button aria-label={t("setlists.detail.tabCharts")}
-                onClick={switchToPartitions}
-                className={`flex items-center gap-1.5 px-2.5 sm:px-3 h-8 rounded-full text-sm font-semibold transition-colors ${
-                  view === "partitions" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                <Music className="h-3.5 w-3.5" />
-                <span className="hidden lg:inline">{t("setlists.detail.tabCharts")}</span>
-              </button>
-            </div>
-
-            {/* Actions — poussées à droite, sur la même ligne */}
-            <div className="ml-auto flex items-center gap-1.5">
-
-              {/* Adapter le chant (accords/paroles par setlist) — vue partitions */}
-              {view === "partitions" && canEdit && (
-                <button aria-label={t("setlists.contentEdit.toggle", { defaultValue: "Adapter" })}
-                  onClick={toggleAdapter}
-                  className={`max-[389px]:hidden h-8 px-2.5 rounded-full text-sm font-semibold flex items-center gap-1.5 transition-[background-color,color,transform] duration-150 active:scale-[.96] ${
-                    editPartitions
-                      ? "bg-foreground text-background"
-                      : "bg-secondary text-muted-foreground hover:text-foreground"
-                  }`}
+            {/* Setlist G (docs/spec-deux-volets.md, Q3 et Q11) : la même barre côté Liste
+                et côté Partitions — Affichage, Adapter, Accords, Ma version ; la bascule
+                « Liste | Partitions » est passée sous l'en-tête. */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button aria-label={t("setlists.detail.layout.label")}
+                  className="h-8 px-2.5 rounded-full text-sm font-semibold flex items-center gap-1.5 transition-[background-color,color,transform] duration-150 active:scale-[.96] bg-secondary text-muted-foreground hover:text-foreground"
                 >
                   <SlidersHorizontal className="h-3.5 w-3.5" />
-                  <span className="hidden lg:inline">
-                    {t("setlists.contentEdit.toggle", { defaultValue: "Adapter" })}
-                  </span>
+                  <span className="hidden lg:inline">{t("setlists.detail.layout.label")}</span>
                 </button>
-              )}
-
-              {/* Ma version (accords/paroles pour soi) — vue partitions, tout connecté */}
-              {view === "partitions" && canHaveSetlistVersion(user, profile, setlist) && (
-                <button aria-label={t("setlists.myVersion.toggle")}
-                  onClick={toggleMaVersion}
-                  className={`max-[389px]:hidden h-8 px-2.5 rounded-full text-sm font-semibold flex items-center gap-1.5 transition-[background-color,color,transform] duration-150 active:scale-[.96] ${
-                    editMine
-                      ? "bg-foreground text-background"
-                      : "bg-secondary text-muted-foreground hover:text-foreground"
-                  }`}
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-56">
+                <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
+                  {t("setlists.detail.layout.label")}
+                </DropdownMenuLabel>
+                <DropdownMenuRadioGroup value={layout} onValueChange={(v) => changeLayout(v as PartitionLayout)}>
+                  {(["played", "unique", "structure"] as const).map((v) => (
+                    <DropdownMenuRadioItem key={v} value={v} onSelect={(e) => e.preventDefault()}>
+                      {t(`setlists.detail.layout.${v}`)}
+                    </DropdownMenuRadioItem>
+                  ))}
+                </DropdownMenuRadioGroup>
+                <DropdownMenuSeparator />
+                {/* Pinyin (chants zh) — préférence persistée */}
+                {hasZhSong && (
+                  <DropdownMenuCheckboxItem
+                    checked={showPinyin}
+                    onCheckedChange={() => togglePinyin()}
+                    onSelect={(e) => e.preventDefault()}
+                  >
+                    {t("setlists.detail.pinyin", { defaultValue: "Pinyin" })}
+                  </DropdownMenuCheckboxItem>
+                )}
+                <DropdownMenuCheckboxItem
+                  checked={chartStyle}
+                  onCheckedChange={toggleChartStyle}
+                  onSelect={(e) => e.preventDefault()}
                 >
-                  <PenLine className="h-3.5 w-3.5" />
-                  <span className="hidden lg:inline">{t("setlists.myVersion.toggle")}</span>
-                </button>
-              )}
+                  {t("performance.chartStyle")}
+                </DropdownMenuCheckboxItem>
+                {hasJianpuSheets && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
+                      {t("performance.jianpuSheet")}
+                    </DropdownMenuLabel>
+                    <DropdownMenuRadioGroup
+                      value={jianpuPref}
+                      onValueChange={(v) => changeJianpuPref(v as JianpuPref)}
+                    >
+                      {(["auto", "always", "never"] as const).map((v) => (
+                        <DropdownMenuRadioItem
+                          key={v}
+                          value={v}
+                          onSelect={(e) => e.preventDefault()}
+                        >
+                          {t(`performance.jianpuPref.${v}`)}
+                        </DropdownMenuRadioItem>
+                      ))}
+                    </DropdownMenuRadioGroup>
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
 
-              {/* Accords (pertinent uniquement en vue partitions) */}
-              {view === "partitions" && (
-                <button aria-label={t("songs.detail.chords")}
-                  onClick={() => {
-                    setShowChords((s) => !s);
-                    setChordsTouched(true);
-                  }}
-                  className={`h-8 px-2.5 rounded-full text-sm font-semibold flex items-center gap-1.5 transition-[background-color,color,transform] duration-150 active:scale-[.96] ${
-                    showChords
-                      ? "bg-foreground text-background"
-                      : "bg-secondary text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/><path d="M9 18V5l12-2v13"/></svg>
-                  <span className="hidden lg:inline">{t("songs.detail.chords")}</span>
-                </button>
-              )}
+            {/* Adapter le chant (accords/paroles par setlist) */}
+            {canEdit && (
+              <button aria-label={t("setlists.contentEdit.toggle", { defaultValue: "Adapter" })}
+                aria-pressed={editPartitions}
+                onClick={toggleAdapter}
+                className={`max-[389px]:hidden h-8 px-2.5 rounded-full text-sm font-semibold flex items-center gap-1.5 transition-[background-color,color,transform] duration-150 active:scale-[.96] ${
+                  editPartitions
+                    ? "bg-foreground text-background"
+                    : "bg-secondary text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <PenLine className="h-3.5 w-3.5" />
+                <span className="hidden lg:inline">
+                  {t("setlists.contentEdit.toggle", { defaultValue: "Adapter" })}
+                </span>
+              </button>
+            )}
 
-              {/* Pinyin (chants zh, vue partitions) — préférence persistée */}
-              {view === "partitions" && hasZhSong && (
-                <button aria-label={t("setlists.detail.pinyin", { defaultValue: "Pinyin" })}
-                  onClick={togglePinyin}
-                  className={`h-8 px-2.5 rounded-full text-sm font-semibold flex items-center gap-1.5 transition-[background-color,color,transform] duration-150 active:scale-[.96] ${
-                    showPinyin
-                      ? "bg-foreground text-background"
-                      : "bg-secondary text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  <Languages className="h-3.5 w-3.5" />
-                  <span className="hidden lg:inline">{t("setlists.detail.pinyin", { defaultValue: "Pinyin" })}</span>
-                </button>
-              )}
+            {/* Accords — le réglage vaut pour les partitions et le mode louange */}
+            <button aria-label={t("songs.detail.chords")}
+              aria-pressed={showChords}
+              onClick={() => {
+                setShowChords((s) => !s);
+                setChordsTouched(true);
+              }}
+              className={`h-8 px-2.5 rounded-full text-sm font-semibold flex items-center gap-1.5 transition-[background-color,color,transform] duration-150 active:scale-[.96] ${
+                showChords
+                  ? "bg-foreground text-background"
+                  : "bg-secondary text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/><path d="M9 18V5l12-2v13"/></svg>
+              <span className="hidden lg:inline">{t("songs.detail.chords")}</span>
+            </button>
+
+            {/* Ma version (accords/paroles pour soi) — tout connecté */}
+            {canHaveSetlistVersion(user, profile, setlist) && (
+              <button aria-label={t("setlists.myVersion.toggle")}
+                aria-pressed={editMine}
+                onClick={toggleMaVersion}
+                className={`max-[389px]:hidden h-8 px-2.5 rounded-full text-sm font-semibold flex items-center gap-1.5 transition-[background-color,color,transform] duration-150 active:scale-[.96] ${
+                  editMine
+                    ? "bg-foreground text-background"
+                    : "bg-secondary text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <UserRound className="h-3.5 w-3.5" />
+                <span className="hidden lg:inline">{t("setlists.myVersion.toggle")}</span>
+              </button>
+            )}
+
+            {/* Mode louange et ⋯ — poussés à droite, sur la même ligne */}
+            <div className="ml-auto flex items-center gap-1.5">
 
               {/* Mode Louange — action principale en live */}
               <button
@@ -1092,63 +1362,18 @@ export function SetlistDetailClient() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
-                  {view === "partitions" && (
-                    <>
-                      {/* Téléphone étroit : les deux modes d'édition, sortis de la barre. */}
-                      {canEdit && (
-                        <DropdownMenuCheckboxItem className="min-[390px]:hidden" checked={editPartitions} onCheckedChange={toggleAdapter}>
-                          {t("setlists.contentEdit.toggle", { defaultValue: "Adapter" })}
-                        </DropdownMenuCheckboxItem>
-                      )}
-                      {canHaveSetlistVersion(user, profile, setlist) && (
-                        <DropdownMenuCheckboxItem className="min-[390px]:hidden" checked={editMine} onCheckedChange={toggleMaVersion}>
-                          {t("setlists.myVersion.toggle")}
-                        </DropdownMenuCheckboxItem>
-                      )}
-                      {(canEdit || canHaveSetlistVersion(user, profile, setlist)) && <DropdownMenuSeparator className="min-[390px]:hidden" />}
-                      <DropdownMenuCheckboxItem
-                        checked={chartStyle}
-                        onCheckedChange={toggleChartStyle}
-                        onSelect={(e) => e.preventDefault()}
-                      >
-                        {t("performance.chartStyle")}
-                      </DropdownMenuCheckboxItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
-                        {t("setlists.detail.layout.label")}
-                      </DropdownMenuLabel>
-                      <DropdownMenuRadioGroup value={layout} onValueChange={(v) => changeLayout(v as PartitionLayout)}>
-                        {(["played", "unique", "structure"] as const).map((v) => (
-                          <DropdownMenuRadioItem key={v} value={v} onSelect={(e) => e.preventDefault()}>
-                            {t(`setlists.detail.layout.${v}`)}
-                          </DropdownMenuRadioItem>
-                        ))}
-                      </DropdownMenuRadioGroup>
-                      {hasJianpuSheets && (
-                        <>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
-                            {t("performance.jianpuSheet")}
-                          </DropdownMenuLabel>
-                          <DropdownMenuRadioGroup
-                            value={jianpuPref}
-                            onValueChange={(v) => changeJianpuPref(v as JianpuPref)}
-                          >
-                            {(["auto", "always", "never"] as const).map((v) => (
-                              <DropdownMenuRadioItem
-                                key={v}
-                                value={v}
-                                onSelect={(e) => e.preventDefault()}
-                              >
-                                {t(`performance.jianpuPref.${v}`)}
-                              </DropdownMenuRadioItem>
-                            ))}
-                          </DropdownMenuRadioGroup>
-                        </>
-                      )}
-                      <DropdownMenuSeparator />
-                    </>
+                  {/* Téléphone étroit : les deux modes d'édition, sortis de la barre. */}
+                  {canEdit && (
+                    <DropdownMenuCheckboxItem className="min-[390px]:hidden" checked={editPartitions} onCheckedChange={toggleAdapter}>
+                      {t("setlists.contentEdit.toggle", { defaultValue: "Adapter" })}
+                    </DropdownMenuCheckboxItem>
                   )}
+                  {canHaveSetlistVersion(user, profile, setlist) && (
+                    <DropdownMenuCheckboxItem className="min-[390px]:hidden" checked={editMine} onCheckedChange={toggleMaVersion}>
+                      {t("setlists.myVersion.toggle")}
+                    </DropdownMenuCheckboxItem>
+                  )}
+                  {(canEdit || canHaveSetlistVersion(user, profile, setlist)) && <DropdownMenuSeparator className="min-[390px]:hidden" />}
                   {canEdit && (
                     <DropdownMenuItem asChild>
                       <Link href={`/setlists/${id}/edit`}>
@@ -1211,7 +1436,7 @@ export function SetlistDetailClient() {
 
       <div className="relative max-w-2xl mx-auto px-4 py-8 print:px-0 print:py-4" style={{ marginTop: toolbarH }}>
         {/* Header setlist */}
-        <div className="mb-8 pb-5 border-b border-border print:mb-4">
+        <div className="mb-3 pb-5 print:mb-4">
           <div className="flex items-start gap-3">
             <div className="flex-1">
               <div className="flex items-center gap-3 flex-wrap">
@@ -1263,13 +1488,53 @@ export function SetlistDetailClient() {
           )}
         </div>
 
+        {/* Bascule « Liste | Partitions » (setlist G, Q11) : sous l'en-tête, elle colle
+            sous la barre et s'escamote avec elle. Pleine largeur sur téléphone. */}
+        {setlist.items.length > 0 && (
+          <div
+            ref={basculeRef}
+            data-testid="bascule-vues"
+            className="print:hidden sticky z-10 -mx-4 px-4 py-2 mb-1 transition-transform duration-300"
+            style={{
+              top: `calc(var(--nav-h) + ${toolbarH}px)`,
+              transform: scrollVisible ? undefined : `translateY(calc(-100% - var(--nav-h) - ${toolbarH}px))`,
+            }}
+          >
+            <FondDeBarre sousNavbar />
+            <div className="flex w-full sm:max-w-[360px] items-center gap-0.5 rounded-full bg-secondary p-0.5">
+              <button
+                type="button"
+                aria-pressed={view === "liste"}
+                onClick={versListe}
+                className={`flex-1 flex items-center justify-center gap-1.5 h-9 rounded-full text-sm font-semibold transition-colors ${
+                  view === "liste" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <List className="h-3.5 w-3.5" aria-hidden="true" />
+                {t("setlists.detail.tabList")}
+              </button>
+              <button
+                type="button"
+                aria-pressed={view === "partitions"}
+                onClick={() => versPartitions()}
+                className={`flex-1 flex items-center justify-center gap-1.5 h-9 rounded-full text-sm font-semibold transition-colors ${
+                  view === "partitions" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <Music className="h-3.5 w-3.5" aria-hidden="true" />
+                {t("setlists.detail.tabCharts")}
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Contenu selon la vue */}
         {setlist.items.length === 0 ? (
           <p className="text-center py-16 text-sm text-muted-foreground border border-dashed border-border rounded-xl">
             {t("setlists.detail.emptyItems")}
           </p>
         ) : view === "liste" ? (
-          <ListView setlistId={id} items={setlist.items} songsMap={songsMap} jianpuPref={jianpuPref} />
+          <ListView items={setlist.items} songsMap={songsMap} jianpuPref={jianpuPref} current={current} onOpen={versPartitions} />
         ) : (
           <>
             {editPartitions && (
@@ -1287,6 +1552,7 @@ export function SetlistDetailClient() {
             )}
             {!loadingContent && <SetlistOutline items={stageItems} contents={contents} />}
             <PartitionsView
+              setlistId={id}
               items={displayItems}
               contents={contents}
               loading={loadingContent}

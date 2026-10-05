@@ -111,17 +111,20 @@ const FUSION_MIXTE = item({
   mixedStructure: MELANGE,
 });
 
-test("chant touché dans la liste : la page du chant montre sa Dernière phrase", async ({ page }) => {
+// Le titre du chant dans les partitions mène à sa page (setlist G,
+// docs/spec-deux-volets.md, Q12) : la ligne de la liste ouvre les partitions.
+test("titre du chant dans les partitions : la page du chant montre sa Dernière phrase", async ({ page }) => {
   await ouvrir(page, setlist([
     item({ songSlug: "abba-pere", position: 1, contentOverride: DP_ABBA, structureOverride: ["verse-2-0", "chorus-3-1", "Dp-7-9"] }),
   ]));
-  await page.getByRole("link", { name: "Abba Père" }).click();
+  await ouvrirPartitions(page);
+  await page.locator('[data-outline-item="1"]').getByRole("link", { name: "Abba Père" }).click();
   await page.waitForURL(/\/songs\/abba-pere/);
   await expect(page.getByText("Dernière phrase – R").first()).toBeVisible();
   await capture(page, "fusions-dp-chant-depuis-setlist");
 });
 
-test("chant d'une fusion touché dans la liste : la page du chant montre sa Dernière phrase", async ({ page }) => {
+test("titre d'un chant d'une fusion dans les partitions : la page du chant montre sa Dernière phrase", async ({ page }) => {
   await ouvrir(page, setlist([
     item({ songSlug: "一生爱你", position: 1 }),
     item({
@@ -135,7 +138,8 @@ test("chant d'une fusion touché dans la liste : la page du chant montre sa Dern
       mixedStructure: null,
     }),
   ]));
-  await page.getByRole("link", { name: "Abba Père" }).click();
+  await ouvrirPartitions(page);
+  await page.locator('[data-outline-item="2"]').getByRole("link", { name: "Abba Père" }).click();
   await page.waitForURL(/\/songs\/abba-pere/);
   await expect(page.getByText("Dernière phrase – R").first()).toBeVisible();
 });
@@ -375,9 +379,10 @@ test("partitions, fusion : la Dernière phrase d'un chant chinois s'imprime avec
   await expect(dp).toContainText("gēn");
 });
 
-test("liste, fusion mélangée : chaque chant ouvre sa page depuis la setlist", async ({ page }) => {
+test("partitions, fusion mélangée : chaque chant ouvre sa page depuis la setlist", async ({ page }) => {
   await ouvrir(page, setlist([item({ songSlug: "一生爱你", position: 1 }), FUSION_MIXTE]));
-  await page.getByRole("listitem").filter({ hasText: "Fusion" }).getByRole("link", { name: "Abba Père" }).first().click();
+  await ouvrirPartitions(page);
+  await page.locator('[data-outline-item="2"]').getByRole("link", { name: "Abba Père" }).first().click();
   await page.waitForURL(/\/songs\/abba-pere/);
   expect(new URL(page.url()).searchParams.get("item")).toBe("2");
   await expect(page.getByRole("heading", { name: "Abba Père" })).toBeVisible();
@@ -398,7 +403,8 @@ test("page du chant ouverte depuis la setlist : les accords retouchés sur le sc
   await ouvrir(page, setlist([
     item({ songSlug: "到各山岭去传扬", position: 1, jianpuSheet: true, jianpuChords: { changed: { 0: "Em" } } }),
   ]));
-  await page.getByRole("link", { name: "到各山岭去传扬" }).click();
+  await ouvrirPartitions(page);
+  await page.locator('[data-outline-item="1"]').getByRole("link", { name: "到各山岭去传扬" }).click();
   await page.waitForURL(/\/songs\//);
   await page.getByRole("button", { name: /简谱/ }).click();
   await page.locator("[data-jianpu-page] img").first().waitFor();

@@ -364,3 +364,52 @@ téléphone et tablette debout gardent leurs pages au bloc près.
 - À faire par Timothée : aucune règle à publier. Relire 双栏. Prévenir l'équipe avant la mise en ligne
   (question 2) : un trait posé sur une page en une colonne ne s'affiche pas sur la même page en deux colonnes, et
   inversement ; « 2 colonnes » coupé les retrouve.
+
+**T2 — faite le 05/10/2026** (branche `lot/u5-deux-volets`, commit `feat(U5): T2 — setlist G…`, juste après `ec367ee`).
+Sur téléphone et tablette debout, la setlist relie Liste et Partitions, sans le geste (T3). Jusqu'à T4, l'ordinateur
+et la tablette couchée ont aussi G (un volet) ; le « Déroulé » y reste, sa ligne de lecture passe sous la bascule.
+- **Barre identique des deux côtés** (Q3, Q11), dans l'ordre de la planche : Retour · Affichage · Adapter · Accords ·
+  Ma version · Mode louange · ⋯ (icônes de la planche : réglages, crayon, note, personne). « Affichage » ouvre
+  Ordre joué / Sections uniques / Structure seule, Pinyin (si un chant 中文), Couleurs par section, Partition 简谱 ; le
+  bouton Pinyin et ces réglages quittent la barre et le menu ⋯. Adapter, Accords, Ma version portent `aria-pressed`.
+  Sous 390 px, Adapter et Ma version restent dans ⋯ (des deux côtés). Depuis la Liste, Adapter et Ma version ouvrent
+  les partitions au chant lu dans ce mode ; Accords et Affichage changent le réglage sans quitter la liste.
+- **Bascule** « Liste | Partitions » sous l'en-tête (`data-testid="bascule-vues"`, `aria-pressed`), pleine largeur sur
+  téléphone, 360 px sur tablette ; elle colle sous la barre (fond `FondDeBarre`, fondu de 12 px) et s'escamote avec
+  elle. L'en-tête perd son filet du bas (la bascule le sépare de la liste). Tout l'en-tête d'aujourd'hui reste (question 4).
+- **Lignes-liens** (`ListView.tsx`) : une ligne par chant, séparées d'un filet, chevron à droite ; toute la ligne est
+  un lien `?vue=partitions&chant=N` (`data-ligne`), fusion comprise ; la ligne du chant lu porte `aria-current` et
+  un fond. Les liens vers la page du chant quittent la liste (titres et chants de fusion).
+- **Titre-lien** (Q12) : dans les partitions, le titre de chaque chant mène à sa page dans les réglages de la setlist
+  (`songHref`, sorti dans `src/lib/setlist/songHref.ts`, slug encodé) : `SongView` prend `titleHref` ; chants d'une
+  fusion (les deux formes) ; un chant sur son scan 简谱 reçoit son titre en lien à côté des badges (le scan porte
+  déjà le titre en image).
+- **Adresse et historique** (Q9, Q10) : Liste → Partitions pousse `?vue=partitions&chant=N` (marque `vueG` dans
+  `history.state`) ; « Liste » revient en arrière, ou remplace l'adresse si on est arrivé directement ;
+  `chant` suit le chant lu (ligne de lecture = bas de la bascule) par `replaceState`, jamais hors de la page de la
+  setlist. Le chant touché vient 12 px sous la bascule, barres gardées à l'écran (`data-nav-lock`) et tenu en place
+  2 s ou jusqu'au premier geste (scans et polices qui arrivent après ; ancrage du navigateur suspendu). « Partitions »
+  rouvre au même chant et au même décalage ; « Liste » ramène la ligne du chant lu (en haut de page si elle y tient).
+  `history.scrollRestoration` est manuel tant que la page est ouverte. Rechargement : même vue, même chant.
+- **Préchargement** (Q14) : les partitions se chargent juste après le premier affichage de la liste ; la bascule ne
+  recharge plus rien (le mode louange recharge toujours ce qui manque).
+- Choix pris : la ligne marquée et le chant amené se repèrent par la position (`item.position`, celle de
+  `data-outline-item`) ; un chant donné sans retour connu ouvre les partitions en haut de page ; le titre d'un scan
+  est un lien texte ajouté (un scan n'a pas de titre texte à rendre cliquable).
+- Tests : `tests/setlist-g.spec.ts` (20 tests, téléphone et tablette ; sautés sur ordinateur, deux volets en T4) —
+  bascule, lignes, fusion, transition, retour à la ligne, défilement, rouvrir, retour du navigateur, ouverture directe,
+  rechargement, barre identique, Adapter / Ma version / Accords / Affichage depuis la Liste, informations, côté
+  Partitions, titre-lien, préchargement. Vus rouges avant le code, puis verts. Existants réécrits : `coup-d-oeil`
+  et `setlist-version` (Affichage), `performance-mode` (Pinyin dans Affichage ; tonalité perso par le titre dans les
+  partitions), `fusions-dp` (quatre tests passent par le titre dans les partitions), `look-louange` (barre : Affichage
+  au lieu de Pinyin, 7 commandes, 5 sous 390 px). Les 26 specs qui ouvrent une setlist, sur ordinateur, téléphone
+  et tablette : 987 verts, 59 sautés, un rouge trouvé et corrigé (en partant vers la page d'un chant, le suivi du
+  chant lu récrivait l'adresse du chant et effaçait ses réglages : il ne touche plus l'adresse hors de la setlist) ;
+  repasse finale de `setlist-g`, `fusions-dp`, `setlist-regie`, `performance-mode`, `coup-d-oeil`,
+  `setlist-version` : 310 verts. `tsc` propre ; ESLint : aucun avertissement nouveau. Captures regardées (téléphone,
+  tablette, ordinateur ; clair et sombre) : conformes à `setlist-g-telephone`, `-partitions` et `-tablette`.
+- **Reste après T2** : T3 (le glissement) ; T4 (deux volets : la bascule et G disparaissent en grand, `setlist-g` y
+  reste sauté) ; T5, T6. Une fois U4 fusionnée, ajouter `setlist-g.spec.ts` aux projets si utile (tablette paysage :
+  rien à jouer, c'est T4).
+- À faire par Timothée : aucune règle à publier (rien de nouveau dans `access.ts` ni `firestore.rules`). Regarder G
+  sur son téléphone : la ligne qui ouvre les partitions, « Liste » qui revient à la ligne, le retour du navigateur.

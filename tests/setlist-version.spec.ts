@@ -235,7 +235,7 @@ test("« Structure seule » masque le corps même avec ma structure", async ({ p
   await openPartitions(page, {
     [VERSION_DOC]: myDoc({ "abba-pere": { content: null, structure: MY_STRUCTURE, shared: false } }),
   });
-  await page.getByRole("button", { name: "Plus d'actions" }).click();
+  await page.getByRole("button", { name: "Affichage" }).click();
   await page.getByRole("menuitemradio", { name: "Structure seule" }).click();
   await expect(bodySections(page, 1)).toHaveCount(0);
   await expect(strip(page, 1)).toHaveText(["I", "C1", "R", "Pm", "C2", "P"]);

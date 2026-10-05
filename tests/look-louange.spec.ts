@@ -105,7 +105,7 @@ test.describe("louange : barre d'outils de la setlist, une seule ligne sur tél�
     keyOverride: null, showChords: true, showPinyin: true, useJianpu: false,
     structureOverride: null, sectionNotes: {}, notes: "", ...over,
   });
-  // Le pire cas : on peut modifier (Adapter), avoir sa version, et un chant 中文 ajoute « Pinyin ».
+  // Le pire cas : on peut modifier (Adapter) et avoir sa version (Pinyin est passé dans « Affichage »).
   const setlist = {
     title: "高班", leader: "David C.", category: "Culte Francophone", date: "2026-09-20",
     language: "mixed", notes: "", ownerId: "uid-owner", isPrivate: false,
@@ -126,7 +126,9 @@ test.describe("louange : barre d'outils de la setlist, une seule ligne sur tél�
       await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: setlist }, `/setlists/${SETLIST_ID}`);
       await ouvrirPartitions(page);
       const barre = page.getByTestId("barre-outils");
-      await expect(barre.getByRole("button", { name: "Pinyin" })).toBeVisible();
+      // Setlist G (docs/spec-deux-volets.md, Q3 et Q11) : « Affichage » remplace
+      // Pinyin dans la barre ; la bascule Liste | Partitions est sous l'en-tête.
+      await expect(barre.getByRole("button", { name: "Affichage" })).toBeVisible();
 
       const boites = await barre.locator("a, button").evaluateAll((els) =>
         els
@@ -136,7 +138,7 @@ test.describe("louange : barre d'outils de la setlist, une seule ligne sur tél�
             return { nom: el.getAttribute("aria-label") ?? "", milieu: r.top + r.height / 2, gauche: r.left, droite: r.right, h: r.height, l: r.width };
           }),
       );
-      expect(boites.length, "retour, liste, partitions, accords, pinyin, mode louange, ⋯ au moins").toBeGreaterThanOrEqual(7);
+      expect(boites.length, "retour, affichage, (adapter), accords, (ma version), mode louange, ⋯").toBe(largeur >= 390 ? 7 : 5);
       const milieux = boites.map((b) => b.milieu);
       expect(Math.max(...milieux) - Math.min(...milieux), `une seule ligne : ${JSON.stringify(boites.map((b) => [b.nom, Math.round(b.milieu)]))}`).toBeLessThan(4);
       for (const b of boites) {

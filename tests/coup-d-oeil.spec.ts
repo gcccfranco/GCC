@@ -154,7 +154,8 @@ test("sections uniques : une fois par section et par tonalité, occurrences repr
 
 test.describe("modes d'affichage de la vue partitions", () => {
   async function choose(page: Page, name: string) {
-    await page.getByRole("button", { name: "Plus d'actions" }).click();
+    // Bouton « Affichage » de la barre (setlist G, docs/spec-deux-volets.md, Q3).
+    await page.getByRole("button", { name: "Affichage" }).click();
     await page.getByRole("menuitemradio", { name }).click();
     // Le menu reste ouvert après un choix (Radix cache alors le reste de la page).
     await page.keyboard.press("Escape");
