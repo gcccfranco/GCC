@@ -16,13 +16,11 @@ export default function TableauDeBordPage() {
   const jourAffiche = jour.charAt(0).toUpperCase() + jour.slice(1);
   const prenom = profile?.firstName?.trim();
 
+  // Toute la zone (agencement v18, B14) : `TableauDeBord` pose l'en-tête commun et la marge de la zone.
   return (
-    // Pleine largeur, comme la planche bo-tableau-de-bord.
-    <div className="px-4 pt-6 pb-10 space-y-6 sm:px-6 lg:px-8">
-      <TableauDeBord
-        titre={t("backOffice.entrees.tableau")}
-        sousTitre={prenom ? t("backOffice.bonjour", { jour: jourAffiche, prenom }) : jourAffiche}
-      />
-    </div>
+    <TableauDeBord
+      titre={t("backOffice.entrees.tableau")}
+      sousTitre={prenom ? t("backOffice.bonjour", { jour: jourAffiche, prenom }) : jourAffiche}
+    />
   );
 }

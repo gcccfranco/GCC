@@ -76,7 +76,7 @@ test.describe("Statistiques (S2) : l'entrée et l'adresse", () => {
     await expect(entree).toHaveAttribute("href", /^\/back-office\/statistiques\/?$/);
     await entree.click();
     await expect(page).toHaveURL(/\/back-office\/statistiques\/?$/);
-    await expect(page.getByRole("heading", { name: "Chants les plus joués" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "Statistiques" })).toBeVisible();
     await expect(page.getByText("Visible par les admins seulement")).toBeVisible();
     if (estOrdinateur(info) || estTablettePaysage(info)) {
       await deplierSiTablettePaysage(page, info);
@@ -97,7 +97,7 @@ test.describe("Statistiques (S2) : l'entrée et l'adresse", () => {
     await expect(page.getByRole("link", { name: "Statistiques" })).toHaveCount(0);
     await page.goto("/back-office/statistiques");
     await expect(page.getByText("Page réservée aux administrateurs.")).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Chants les plus joués" })).toHaveCount(0);
+    await expect(page.getByRole("heading", { level: 1, name: "Statistiques" })).toHaveCount(0);
   });
 
   test("sans compte : la connexion, qui ramène à la page", async ({ page }) => {
@@ -105,7 +105,7 @@ test.describe("Statistiques (S2) : l'entrée et l'adresse", () => {
     await expect(page.getByRole("link", { name: "Se connecter" })).toHaveAttribute(
       "href", /^\/login\/?\?from=%2Fback-office%2Fstatistiques$/,
     );
-    await expect(page.getByRole("heading", { name: "Chants les plus joués" })).toHaveCount(0);
+    await expect(page.getByRole("heading", { level: 1, name: "Statistiques" })).toHaveCount(0);
   });
 });
 
@@ -114,7 +114,7 @@ test.describe("Statistiques (S2) : captures à regarder", () => {
   test("la page d'un admin, dans chaque disposition", async ({ page }, info) => {
     await page.clock.setFixedTime(new Date("2026-10-04T10:00:00"));
     await signInAs(page, ADMIN, {}, "/back-office/statistiques");
-    await expect(page.getByRole("heading", { name: "Chants les plus joués" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "Statistiques" })).toBeVisible();
     await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
     // Le fondu d'arrivée de la page : capturer une fois fini.
     await page.waitForTimeout(600);
@@ -185,7 +185,8 @@ async function ouvrirStatistiques(page: Page, chemin = "/back-office/statistique
   // Tableau (tablette, ordinateur) ou liste (téléphone) : seul l'un des deux se voit.
   if (!chemin.includes("vue=")) await expect(page.locator('[data-testid="ligne-chant"]:visible').first()).toBeVisible();
   // Autres vues (S4) : la carte « Setlists comptées », ou le message d'une période vide.
-  else await expect(page.getByTestId("setlists-comptees").or(page.getByText("Aucune setlist publiée sur cette période."))).toBeVisible();
+  // Agencement v18 (B13) : en grand, « Jamais joués » n'a plus la carte ; le sous-titre compte les setlists, une fois lues.
+  else await expect(page.locator("header[data-entete-page] p").first()).toContainText(" · ");
   return db;
 }
 
@@ -396,18 +397,18 @@ async function lignesDe(page: Page, testid: "ligne-jamais" | "ligne-redecouvrir"
 }
 
 const vue = (page: Page, nom: "Les plus joués" | "Jamais joués" | "À redécouvrir") =>
-  page.getByRole("group", { name: "Vue" }).getByRole("button", { name: nom, exact: true });
+  page.getByRole("tablist", { name: "Vue" }).getByRole("tab", { name: nom, exact: true });
 
 test.describe("Statistiques (S4) : jamais joués et à redécouvrir", () => {
   test.use({ serviceWorkers: "block" });
 
   test("le sélecteur de vues : « Les plus joués » par défaut, les deux autres gardent filtres et « Setlists comptées »", async ({ page }) => {
     await ouvrirStatistiques(page);
-    await expect(vue(page, "Les plus joués")).toHaveAttribute("aria-pressed", "true");
-    await expect(vue(page, "Jamais joués")).toHaveAttribute("aria-pressed", "false");
+    await expect(vue(page, "Les plus joués")).toHaveAttribute("aria-selected", "true");
+    await expect(vue(page, "Jamais joués")).toHaveAttribute("aria-selected", "false");
 
     await vue(page, "Jamais joués").click();
-    await expect(vue(page, "Jamais joués")).toHaveAttribute("aria-pressed", "true");
+    await expect(vue(page, "Jamais joués")).toHaveAttribute("aria-selected", "true");
     await expect(page).toHaveURL(/vue=jamais-joues/);
     await expect(page.getByTestId("dix-premiers")).toHaveCount(0);
     await expect(page.locator('[data-testid="ligne-chant"]:visible')).toHaveCount(0);
@@ -428,24 +429,26 @@ test.describe("Statistiques (S4) : jamais joués et à redécouvrir", () => {
   test("« Jamais joués » : les chants du recueil absents des setlists comptées, A→Z, avec artiste et dernière fois", async ({ page }) => {
     await ouvrirStatistiques(page);
     await vue(page, "Jamais joués").click();
-    await expect(page.getByText("1 chant sur 5", { exact: true })).toBeVisible();
-    expect(await lignesDe(page, "ligne-jamais")).toEqual([{ titre: "À la croix", artiste: "Auteur Cinq", derniere: "jamais" }]);
+    // Agencement v18 (B13) : une carte par langue, « En français · n » ; la tonalité au bout de la ligne.
+    await expect(page.getByRole("heading", { name: "En français · 1", exact: true })).toBeVisible();
+    await expect(page.getByTestId("jamais-zh")).toHaveCount(0);
+    expect(await lignesDe(page, "ligne-jamais")).toEqual([{ titre: "À la croix", artiste: "Auteur Cinq", derniere: "jamais", tonalite: "E" }]);
 
     await page.getByRole("button", { name: "3 mois" }).click();
-    await expect(page.getByText("3 chants sur 5", { exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "En français · 3", exact: true })).toBeVisible();
     // Dernière fois toutes dates confondues ; l'absent du recueil (« ancien-chant ») n'y est jamais.
     expect(await lignesDe(page, "ligne-jamais")).toEqual([
-      { titre: "Abba Père", artiste: "Auteur Un", derniere: "28/06" },
-      { titre: "Abrite-moi", artiste: "Auteur Deux", derniere: "14/06" },
-      { titre: "À la croix", artiste: "Auteur Cinq", derniere: "jamais" },
+      { titre: "Abba Père", artiste: "Auteur Un", derniere: "28/06", tonalite: "A" },
+      { titre: "Abrite-moi", artiste: "Auteur Deux", derniere: "14/06", tonalite: "C" },
+      { titre: "À la croix", artiste: "Auteur Cinq", derniere: "jamais", tonalite: "E" },
     ]);
     const ligne = page.locator('[data-testid="ligne-jamais"]:visible').first();
     await expect(ligne.getByRole("link", { name: "Abba Père" })).toHaveAttribute("href", /^\/songs\/abba-pere\/?$/);
-    await expect(ligne.getByTestId("langue")).toHaveText("FR");
 
-    // La langue retire des chants, et du total.
+    // La langue retire des chants (la carte de l'autre langue).
     await page.getByRole("combobox", { name: "Langue" }).selectOption({ label: "FR" });
-    await expect(page.getByText("3 chants sur 4", { exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "En français · 3", exact: true })).toBeVisible();
+    await expect(page.getByTestId("jamais-zh")).toHaveCount(0);
     await page.getByRole("combobox", { name: "Langue" }).selectOption({ label: "中文" });
     await expect(page.getByText("Tous les chants ont été joués sur cette période.")).toBeVisible();
     await expect(page.locator('[data-testid="ligne-jamais"]:visible')).toHaveCount(0);
@@ -490,7 +493,7 @@ test.describe("Statistiques (S4) : jamais joués et à redécouvrir", () => {
 
   test("un titre ouvre la page du chant ; le retour retrouve la vue et les filtres", async ({ page }) => {
     await ouvrirStatistiques(page, "/back-office/statistiques?vue=a-redecouvrir&periode=3");
-    await expect(vue(page, "À redécouvrir")).toHaveAttribute("aria-pressed", "true");
+    await expect(vue(page, "À redécouvrir")).toHaveAttribute("aria-selected", "true");
     await expect.poll(() => lignesDe(page, "ligne-redecouvrir")).toHaveLength(1);
 
     await vue(page, "Jamais joués").click();
@@ -498,9 +501,9 @@ test.describe("Statistiques (S4) : jamais joués et à redécouvrir", () => {
     await expect(page).toHaveURL(/\/songs\/abrite-moi\/?$/);
     await page.goBack();
     await expect(page).toHaveURL(/vue=jamais-joues/);
-    await expect(vue(page, "Jamais joués")).toHaveAttribute("aria-pressed", "true");
+    await expect(vue(page, "Jamais joués")).toHaveAttribute("aria-selected", "true");
     await expect(page.getByRole("button", { name: "3 mois" })).toHaveAttribute("aria-pressed", "true");
-    await expect(page.getByText("3 chants sur 5", { exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "En français · 3", exact: true })).toBeVisible();
   });
 });
 

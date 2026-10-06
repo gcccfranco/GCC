@@ -529,3 +529,36 @@ la barre d'onglets : une page sans barre du bas (rare) le verra plus haut que n�
   empilés sur téléphone, au-dessus de la feuille du formulaire de tâche).
 - **Reste** : rien pour F2. Les tranches de pages (T1 à T11) peuvent partir.
 - **Timothée** : rien à publier (aucune règle, aucune donnée) ; relire les six libellés 中文 ci-dessus.
+
+### V18T6 — BO Statistiques et Tableau de bord (T6)
+
+- 06/10/2026 (repris le 07/10 après une coupure) : **T6 faite** (branche `lot/v18-t6`, commit
+  `feat(V18T6): T6 — Statistiques et Tableau de bord en colonnes`).
+- **Statistiques (B13)** : `EnTetePage` « Statistiques », sous-titre « Visible par les admins seulement · n setlists
+  comptées, du … au … » ; rail « Vue » (`OngletsRail`, boutons) sous le titre ; rangée dessous : périodes en
+  `Pilules` (« Dates libres » comprise), Service, Langue, Présidence. « Les plus joués » : en grand, trois cartes
+  de chiffres à gauche (Setlists comptées, Chants différents, Jamais joués → l'onglet), « Les 10 premiers » et le
+  tableau à droite. « Jamais joués » : deux cartes « En français · n » (deux colonnes) et « En chinois · n » (une
+  colonne en grand), 40 et 20 chants (10 sur téléphone) puis « Tout afficher » ; une ligne = titre, artiste,
+  dernière fois, tonalité (`KeyPill`). En grand, la carte « Setlists comptées » ne s'y montre plus (le sous-titre
+  la donne, planche). Français seul (R18).
+- **Tableau de bord (B14)** : `EnTetePage`, « Personnaliser » en contour ; en grand (barre latérale présente) et
+  hors personnalisation, colonnes 1,55 fr + 1 fr, et 1,6 + 1 + 1 dès 1 200 px de zone (barre réduite à 1 440 px ;
+  la largeur de la zone, mesurée, pas `data-barre`, R15). `lib/tableauDeBord/colonnes.ts` : `repartirWidgets`
+  (pur) et `hauteurMax`. Les cartes restent dans l'ordre du DOM (rien n'est remonté, aucune donnée relue) et se
+  placent dans une grille aux rangées de 4 px selon leur hauteur mesurée ; la répartition ne change que si elle
+  raccourcit la page de 24 px au moins (pas de va-et-vient). Personnalisation, tablette portrait, téléphone : la
+  grille d'avant (`GRILLE_WIDGETS`).
+- **Tests** : `tests/agencement-v18-t6.spec.ts` (13 tests, 5 projets : 54 verts, 11 sautés par appareil), vus
+  rouges sur l'ancien code (15 rouges sur ordinateur et téléphone, seuls les tests purs passaient), puis verts.
+  Suites réécrites avec la règle : `statistiques.spec.ts` (titre « Statistiques », rail en `tab`/`aria-selected`,
+  cartes par langue avec tonalité, plus d'étiquette de langue dans « Jamais joués »), `tableau-de-bord.spec.ts`
+  (en grand, le « Grand » va dans la colonne large). La suite a trouvé une vraie panne, corrigée : une période
+  sans setlist faisait planter la page (la carte « Setlists comptées » lisait des bornes absentes).
+  Captures regardées aux cinq tailles, conformes aux planches `v18-bo-statistiques*` et `v18-bo-tableau-de-bord*`.
+- **Écarts** : les pilules des périodes gardent la taille du composant commun (`Pilules`, 40 px, 15 px), plus
+  grandes que sur la planche ; la ligne « Jamais joués » garde l'artiste et la dernière fois (tests de U7), que la
+  planche n'écrit pas.
+- **Reste** : rien pour T6.
+- **Timothée** : rien à publier (aucune règle, aucune donnée, aucun libellé 中文 : Statistiques en français seul,
+  Tableau de bord sans libellé nouveau).

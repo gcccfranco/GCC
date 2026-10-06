@@ -420,12 +420,19 @@ test.describe("Tableau de bord (B4) : écrans", () => {
     await expect(widget(page, "Cases vides du planning").getByTestId("ligne-case-vide")).toHaveCount(2);
 
     const n = colonnes(info);
+    if (n === 4) {
+      // Agencement v18 (B14) : en grand, hors personnalisation, des colonnes ; le « Grand » prend la large.
+      await expect(grille(page)).toHaveAttribute("data-disposition", "colonnes");
+      await expect(widget(page, "Prochains évènements")).toHaveAttribute("data-colonne", "0");
+      await expect(widget(page, "Cases vides du planning")).not.toHaveAttribute("data-colonne", "0");
+      return;
+    }
     const L = await part(grille(page), widget(page, "Prochains évènements"));
     const S = await part(grille(page), widget(page, "Cases vides du planning"));
     const M = await part(grille(page), widget(page, "Ce dimanche"));
     expect(L).toBeCloseTo(1, 1);
-    expect(M).toBeCloseTo(n === 4 ? 0.5 : n === 2 ? 0.5 : 1, 1);
-    expect(S).toBeCloseTo(n === 4 ? 0.25 : n === 2 ? 0.5 : 1, 1);
+    expect(M).toBeCloseTo(n === 2 ? 0.5 : 1, 1);
+    expect(S).toBeCloseTo(n === 2 ? 0.5 : 1, 1);
   });
 
   // Relecture du lot U6 : les deux widgets partagent une lecture des setlists, bornée aux
@@ -699,7 +706,9 @@ test.describe("Personnaliser (B5) : écrans", () => {
       await ouvrir(page2, ALICE, { "backOffice/uid-alice": db.doc("backOffice/uid-alice")! });
       await expect(widget(page2, "Petit déj")).toBeVisible();
       expect(await widgetsAffiches(page2)).toEqual(voulu);
-      expect(await part(grille(page2), widget(page2, "Prochains évènements"))).toBeCloseTo(1, 1);
+      // Agencement v18 (B14) : en grand, hors personnalisation, le « Grand » va dans la colonne large.
+      if (colonnes(info) === 4) await expect(widget(page2, "Prochains évènements")).toHaveAttribute("data-colonne", "0");
+      else expect(await part(grille(page2), widget(page2, "Prochains évènements"))).toBeCloseTo(1, 1);
     } finally {
       await autre.close();
     }
