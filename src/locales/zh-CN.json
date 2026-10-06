@@ -2381,6 +2381,13 @@
       "equipes": "团队",
       "musiciens": "乐手"
     },
+    "recalcul": {
+      "bouton": "按组织架构重新计算",
+      "aide": "为每个团队成员重新设定其所属团队和负责人身份（所在部门不变）：团队成员由此可以参加团队会议，负责人可以创建会议。",
+      "fait_one": "已更新 {{count}} 份资料。",
+      "fait_other": "已更新 {{count}} 份资料。",
+      "erreur": "无法重新计算。"
+    },
     "team": {
       "orga": "统筹组",
       "comite-franco": "法语堂委员会",
@@ -2626,8 +2633,6 @@
       "questionnaire": "问卷",
       "organigramme": "组织架构",
       "personnes": "成员",
-      "inscriptions": "注册",
-      "import": "导入",
       "plannings": "排班表",
       "sansCompte": "无账号",
       "evenements": "活动",
@@ -2676,7 +2681,6 @@
         "tableau": "你的小组件",
         "calendrier": "服事、会议、活动",
         "plannings": "排班表",
-        "import": "导入",
         "sansCompte": "无账号",
         "tesPoles": "你所在部门的任务",
         "tousLesPoles": "所有部门的任务",

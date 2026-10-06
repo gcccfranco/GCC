@@ -516,3 +516,9 @@ liste « Recevoir » (`push.recevoir`, `push.types.*`) et des deux lignes du mer
 trancher les points 1 à 3 ci-dessus. PD3, PD4 et PD5 n'ajoutent aucune règle (`notifPrefs/{uid}` accepte déjà le
 nouveau champ ; la reprise écrit avec firebase-admin). Le jour de la mise en ligne, lancer la reprise une fois
 (Administration › Planning).
+
+**06/10/2026 — PD5 retirée** (retours de Timothée en local, branche `fix/equipes-imports`) : « on va tout faire
+manuellement ». La reprise des noms de la grille Table — bouton « Reprendre les noms du petit déj » (Planning ›
+Import), route `/api/admin/reprendre-petit-dej`, pures `grillePourReprise` et `planifierReprise`, leurs tests —
+est retirée avec les autres importations depuis le Sheet. Les inscriptions se posent à la main dans la carte Petit
+déj ; rien d'autre ne change (lecture, droits, rappels).

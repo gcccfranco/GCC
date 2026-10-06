@@ -438,3 +438,16 @@ verts sur les trois appareils (63 exécutions) ; captures regardées à l'œil e
 `firestore.rules` doit être **publiée dans la console Firebase** : le bloc
 `equipes/{id}` + `isEquipier()`, et la garde `equipes == false` ajoutée à la
 création d'un profil. Sans cela, `/equipes` ne lit rien et l'édition échoue.
+
+**06/10/2026 — Retours de Timothée en local** (branche `fix/equipes-imports`).
+
+- **Import de l'organigramme retiré** (« on va tout faire manuellement ») : O2 part — route `/api/equipes/importer`,
+  bouton « Importer l'organigramme du Sheet » et son compte rendu (Équipes › Import), `parseOrganigramme`,
+  `rattacherNoms`, la copie `tests/fixtures/organigramme.csv` et leurs tests. Les équipes se tiennent à la main
+  dans Équipes › Organigramme. « Recalculer depuis l'organigramme » reste, au bas de cette page (admins) ;
+  « Décocher » un pôle hors organigramme (D10) passe dans la fiche de Personnes.
+- **Matrice des musiciens (D6, O4) resserrée** : la spec y mettait tout compte ayant une clé de `serviceRoles`, chant
+  et présidence compris ; Timothée : « Musiciens montre tout le monde ». Une case ne montre plus que les
+  instruments nommés par le planning (Piano, Guitare, Batterie, Cajon, Cajon/Batterie), sinon « Musicien » si le
+  profil a ce rôle dans la catégorie ; présidence, chant, sono, PPT et régie n'ont plus de case, et une personne
+  sans case n'a plus de ligne.

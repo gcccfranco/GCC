@@ -5,8 +5,8 @@ import { planningsDuBackOffice, sousPartiesEvenements } from "../src/lib/access"
 
 // Lot U6 (docs/spec-back-office.md), tranche B2 — l'Admin fusionnée dans le
 // Back-Office (table Q3, adresses Q4) : Planning (plannings en modification
-// directe, Import, Sans compte), Équipes (Organigramme, Personnes, Inscriptions,
-// Import), Messages (Réception, Notifier, Questionnaire) ; `/admin` et
+// directe, Sans compte), Équipes (Organigramme, Personnes — Import et Inscriptions
+// retirés le 06/10/2026), Messages (Réception, Notifier, Questionnaire) ; `/admin` et
 // `/notifier` redirigent ; Moi et le menu du compte perdent Notifier et
 // Administration ; le planning de l'App passe en lecture (Q14), l'onglet Table y
 // montre la carte Petit déj et la carte compacte « Prépa. Table du Seigneur ».
@@ -109,29 +109,43 @@ test.describe("B2 : Messages (Réception, Notifier, Questionnaire)", () => {
 
 // ─── Équipes ─────────────────────────────────────────────────────────────────
 
-test.describe("B2 : Équipes (Organigramme, Personnes, Inscriptions, Import)", () => {
-  test("admin : l'organigramme se modifie ici ; Personnes, Inscriptions, Import à côté", async ({ page }) => {
+test.describe("B2 : Équipes (Organigramme, Personnes)", () => {
+  // Retours du 06/10/2026 : plus d'onglet Import (« on va tout faire manuellement ») ni
+  // d'onglet Inscriptions — l'ouverture des comptes passe en tête de Personnes, et
+  // « Recalculer depuis l'organigramme » au bas de l'Organigramme, pour les admins.
+  test("admin : l'organigramme se modifie ici ; Personnes à côté, inscriptions en tête", async ({ page }) => {
     await ouvrir(page, ADMIN, "/back-office/equipes");
     await expect(page.getByRole("heading", { level: 1, name: "Équipes" })).toBeVisible();
-    await expect(sousParties(page).getByRole("link")).toHaveText(["Organigramme", "Personnes", "Inscriptions", "Import"]);
+    await expect(sousParties(page).getByRole("link")).toHaveText(["Organigramme", "Personnes"]);
     await expect(page.getByTestId("equipe-orga").getByRole("button", { name: "Modifier" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Recalculer depuis l'organigramme" })).toBeVisible();
+    await expect(page.getByRole("button", { name: /Importer/ })).toHaveCount(0);
 
     await sousParties(page).getByRole("link", { name: "Personnes" }).click();
     await expect(page).toHaveURL(/\/back-office\/equipes\/personnes\/?$/);
     await expect(page.getByPlaceholder(/Rechercher un membre/)).toBeVisible();
+    const inscriptions = page.getByRole("heading", { name: "Inscriptions" });
+    await expect(inscriptions).toBeVisible();
+    await expect(page.getByRole("button", { name: /(Fermer|Ouvrir) les inscriptions/ })).toBeVisible();
+    // En tête : le bloc des inscriptions passe avant la liste des membres.
+    const yInscriptions = (await inscriptions.boundingBox())!.y;
+    const yMembres = (await page.getByRole("heading", { name: "Membres" }).boundingBox())!.y;
+    expect(yInscriptions).toBeLessThan(yMembres);
+  });
 
-    await sousParties(page).getByRole("link", { name: "Inscriptions" }).click();
-    await expect(page.getByRole("heading", { name: "Inscriptions" })).toBeVisible();
-
-    await sousParties(page).getByRole("link", { name: "Import" }).click();
-    await expect(page.getByRole("button", { name: "Importer l'organigramme du Sheet" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Recalculer depuis l'organigramme" })).toBeVisible();
+  test("admin : Import et Inscriptions n'existent plus comme pages", async ({ page }) => {
+    await ouvrir(page, ADMIN, "/back-office/equipes");
+    for (const chemin of ["/back-office/equipes/import", "/back-office/equipes/inscriptions", "/back-office/planning/import"]) {
+      const reponse = await page.goto(chemin);
+      expect(reponse?.status(), chemin).toBe(404);
+    }
   });
 
   test("droit Équipes sans être admin : l'organigramme seul, Personnes réservée", async ({ page }) => {
     await ouvrir(page, EQUIPIER, "/back-office/equipes");
     await expect(page.getByTestId("equipe-orga").getByRole("button", { name: "Modifier" })).toBeVisible();
     await expect(page.getByRole("link", { name: "Personnes" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Recalculer depuis l'organigramme" }), "réservé aux admins").toHaveCount(0);
     await page.goto("/back-office/equipes/personnes");
     await expect(page.getByText("Page réservée aux administrateurs.")).toBeVisible();
   });
@@ -145,22 +159,25 @@ test.describe("B2 : Équipes (Organigramme, Personnes, Inscriptions, Import)", (
 
 // ─── Planning ────────────────────────────────────────────────────────────────
 
-test.describe("B2 : Planning (plannings, Import, Sans compte)", () => {
-  test("admin : tous les plannings, Import et Sans compte", async ({ page }) => {
+test.describe("B2 : Planning (plannings, Sans compte)", () => {
+  // Retours du 06/10/2026 : plus d'onglet Import (ni import du Sheet, ni reprise du petit déj).
+  test("admin : tous les plannings et Sans compte, sans Import", async ({ page }) => {
     await ouvrir(page, ADMIN, "/back-office/planning");
     await expect(page).toHaveURL(/\/back-office\/planning\/culte\/?$/);
     await expect(page.getByRole("heading", { level: 1, name: "Planning" })).toBeVisible();
-    await expect(sousParties(page).getByRole("link")).toHaveText(["Plannings", "Import", "Sans compte"]);
+    await expect(sousParties(page).getByRole("link")).toHaveText(["Plannings", "Sans compte"]);
     await expect(plannings(page).getByRole("link")).toHaveText(["Culte Franco", "Prépa. Table", "Groupes", "EDD", "Campus", "Intergroupe", "Interfranco"]);
-
-    await sousParties(page).getByRole("link", { name: "Import" }).click();
-    await expect(page.getByRole("button", { name: "Importer le Culte Franco depuis le Google Sheet" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Reprendre les noms du petit déj" })).toBeVisible();
-    await expect(page.getByRole("heading", { name: /Planning sans compte/ })).toHaveCount(0);
 
     await sousParties(page).getByRole("link", { name: "Sans compte" }).click();
     await expect(page.getByRole("heading", { name: /Planning sans compte/ })).toBeVisible();
-    await expect(page.getByRole("button", { name: /Importer le Culte Franco/ })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: /Importer|Reprendre les noms/ })).toHaveCount(0);
+  });
+
+  test("les routes d'import n'existent plus, même interrupteur ouvert", async ({ request }) => {
+    for (const route of ["/api/admin/importer-planning", "/api/equipes/importer", "/api/admin/reprendre-petit-dej"]) {
+      const reponse = await request.post(`${route}/`, { data: {} });
+      expect(reponse.status(), route).toBe(404);
+    }
   });
 
   test("qui remplit le Culte : son planning seul, la grille ouverte en modification, l'export", async ({ page }) => {

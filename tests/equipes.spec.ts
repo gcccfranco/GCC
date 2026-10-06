@@ -1,142 +1,15 @@
-import { readFileSync } from "node:fs";
-import path from "node:path";
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs } from "./helpers/fakeSession";
-import { parseCSV } from "../src/lib/planning/sheets";
 import type { PlanningData } from "../src/lib/planning/names";
-import { EQUIPES, parseOrganigramme, polesDesEquipes, rattacherNoms } from "../src/lib/equipes/organigramme";
+import { EQUIPES, polesDesEquipes } from "../src/lib/equipes/organigramme";
 import { COLONNES_MUSICIENS, matriceMusiciens, type ProfilMusicien } from "../src/lib/equipes/musiciens";
 import { canEditerEquipes, canVoirEquipes } from "../src/lib/access";
 import type { MembreEquipe } from "../src/types/equipe";
 
 // Lot 16 « Organigramme, source des pôles » (docs/spec-organigramme.md).
-// Le parseur et la matrice sont des fonctions pures : on les mesure sur une
-// copie figée de l'onglet ORGANIGRAMME (tests/fixtures/organigramme.csv),
-// jamais sur le réseau.
-
-const LIGNES = parseCSV(
-  readFileSync(path.join(process.cwd(), "tests/fixtures/organigramme.csv"), "utf8"),
-);
-
-const parse = () => parseOrganigramme(LIGNES);
-
-/** Membres d'une équipe du résultat de parse (tableau vide si absente). */
-function membres(id: string): MembreEquipe[] {
-  return parse().equipes.find((e) => e.id === id)?.membres ?? [];
-}
-
-const nomsDe = (id: string) => membres(id).map((m) => m.nom);
-
-// ── Parseur ─────────────────────────────────────────────────────────────────
-
-test("parseur : les 13 équipes du Sheet, dans l'ordre, avec leur sous-titre", () => {
-  const { equipes } = parse();
-  expect(equipes.map((e) => e.id)).toEqual([
-    "orga", "comite-franco", "da", "medias", "developpement", "regie", "traduction",
-    "theologie", "evenementiel", "decoration", "accueil-j1", "louange", "edd",
-  ]);
-  expect(EQUIPES.map((e) => e.id)).toEqual(equipes.map((e) => e.id));
-  expect(EQUIPES.find((e) => e.id === "da")?.soustitre).toBe("Direction Artistique");
-  expect(EQUIPES.find((e) => e.id === "edd")?.soustitre).toBe("École du Dimanche");
-  // Un bloc n'empiète pas sur son voisin de droite.
-  expect(nomsDe("da")).toEqual(["Charlie L.", "Christelle C.", "Justine C."]);
-  expect(nomsDe("medias")).toEqual(["Daniela W.", "Wendy C.", "Yawin C.", "Esther C."]);
-});
-
-test("parseur : TEAM MUSICIENS n'est pas une équipe et ne laisse aucun membre", () => {
-  const { equipes, inconnues } = parse();
-  expect(equipes.map((e) => e.id)).not.toContain("musiciens");
-  expect(inconnues).toEqual([]);
-  // La matrice est saisie à la main dans le Sheet : aucun de ses noms ne doit
-  // atterrir dans une équipe.
-  const tous = equipes.flatMap((e) => e.membres.map((m) => m.nom));
-  expect(tous).not.toContain("Hewei");
-  expect(tous).not.toContain("Enzo L.");
-  expect(tous).not.toContain("Nom");
-});
-
-test("parseur : « (en essai) » devient un booléen, pas un bout de nom", () => {
-  const justine = membres("da").find((m) => m.nom === "Justine C.");
-  expect(justine).toBeTruthy();
-  expect(justine!.essai).toBe(true);
-  expect(justine!.mention).toBe("");
-  // Deux espaces avant « (en essai) » dans le Sheet.
-  const maelice = membres("louange").find((m) => m.nom === "Maëlice D.");
-  expect(maelice?.essai).toBe(true);
-  expect(membres("da").find((m) => m.nom === "Charlie L.")?.essai).toBe(false);
-});
-
-test("parseur : la mention après le tiret, et « Réf… » qui fait le référent", () => {
-  const charlie = membres("da").find((m) => m.nom === "Charlie L.");
-  expect(charlie?.mention).toBe("Référente");
-  expect(charlie?.referent).toBe(true);
-  const christelle = membres("theologie").find((m) => m.nom === "Christelle C.");
-  expect(christelle?.mention).toBe("Orga/Inscriptions");
-  expect(christelle?.referent).toBe(false);
-  expect(membres("orga").find((m) => m.nom === "Stéphane Z.")?.mention).toBe("Prés. Paix");
-});
-
-test("parseur : le référent collé à l'en-tête de TEAM LOUANGE et de TEAM EDD", () => {
-  const jonathan = membres("louange")[0];
-  expect(jonathan.nom).toBe("Jonathan Z.");
-  expect(jonathan.referent).toBe(true);
-  expect(membres("edd")[0]).toMatchObject({ nom: "Alice Q.", referent: true });
-  // Le nom de l'équipe ne reste pas collé au référent.
-  expect(nomsDe("louange")).not.toContain("TEAM LOUANGE (FRANCO / INTER)");
-});
-
-test("parseur : les sous-colonnes de LOUANGE et EDD, et leurs intertitres jamais pris pour des noms", () => {
-  const louange = membres("louange");
-  expect(louange.find((m) => m.nom === "Christelle C.")?.groupe).toBe("Guitaristes");
-  expect(louange.find((m) => m.nom === "Éloïse L.")?.groupe).toBe("Guitaristes");
-  expect(louange.find((m) => m.nom === "Chloé W.")?.groupe).toBe("Batteu(r/se)");
-  expect(louange.find((m) => m.nom === "Daniela W.")?.groupe).toBe("Choristes");
-  expect(louange.map((m) => m.nom)).not.toContain("Pianistes");
-  const edd = membres("edd");
-  expect(edd.find((m) => m.nom === "Daniel Y.")?.groupe).toBe("Professeurs louange");
-  expect(edd.find((m) => m.nom === "Yiyi C.")?.groupe).toBe("Cajon");
-  expect(edd.map((m) => m.nom)).not.toContain("Professeurs cours");
-  // Une équipe sans sous-colonnes n'invente pas de groupe.
-  expect(membres("da").every((m) => m.groupe === "")).toBe(true);
-});
-
-test("parseur : une équipe inconnue est signalée, jamais créée", () => {
-  const inventees = [
-    ["TEAM XYZ — Ce qu'on n'a pas prévu", "", ""],
-    ["Untel B.", "", ""],
-  ];
-  const { equipes, inconnues } = parseOrganigramme(inventees);
-  expect(equipes).toEqual([]);
-  expect(inconnues).toEqual(["TEAM XYZ — Ce qu'on n'a pas prévu"]);
-});
-
-test("parseur : deux passages du même CSV donnent le même résultat", () => {
-  expect(parseOrganigramme(LIGNES)).toEqual(parseOrganigramme(LIGNES));
-});
-
-// ── Rattachement d'un nom du Sheet à un compte ──────────────────────────────
-
-const PROFILS = [
-  { uid: "u-charlie", planningName: "Charlie L.", firstName: "Charlie", lastName: "L." },
-  { uid: "u-stephane", planningName: "Stéphane Z.", firstName: "Stéphane", lastName: "Z." },
-  { uid: "u-ketty", planningName: "Ketty S.", firstName: "Ketty", lastName: "S." },
-];
-
-test("rattachement : le nom de planning, puis le prénom seul quand il ne désigne qu'un compte", () => {
-  const trouve = rattacherNoms(["Charlie L.", "Stéphane", "Kitty S."], PROFILS);
-  expect(trouve["Charlie L."]).toBe("u-charlie");
-  // « Stéphane — Référent » de TEAM ÉVÉNEMENTIEL : prénom seul, un seul compte.
-  expect(trouve["Stéphane"]).toBe("u-stephane");
-  // Faute d'orthographe du Sheet (« Kitty » contre « Ketty ») : rien n'est deviné.
-  expect(trouve["Kitty S."]).toBeUndefined();
-});
-
-test("rattachement : un prénom porté par deux comptes ne rattache rien", () => {
-  const deux = [...PROFILS, { uid: "u-stephane2", planningName: "Stéphane M.", firstName: "Stéphane", lastName: "M." }];
-  expect(rattacherNoms(["Stéphane"], deux)["Stéphane"]).toBeUndefined();
-  // Le nom complet reste sans ambiguïté.
-  expect(rattacherNoms(["Stéphane Z."], deux)["Stéphane Z."]).toBe("u-stephane");
-});
+// La matrice est une fonction pure. Le parseur de l'onglet ORGANIGRAMME et le
+// rattachement des noms du Sheet sont partis avec l'import, le 06/10/2026
+// (« on va tout faire manuellement ») : leurs tests aussi.
 
 // ── Pôles donnés par les équipes ────────────────────────────────────────────
 
@@ -204,6 +77,35 @@ test("matrice : le planning nomme l'instrument, sinon « Musicien »", () => {
   expect(COLONNES_MUSICIENS).toEqual([
     "paix", "bonte", "fidelite", "campus", "edd", "franco", "intergroupe", "interfranco",
   ]);
+});
+
+// Retours du 06/10/2026 : « Musiciens montre tout le monde ». La vue ne garde que
+// les musiciens — rôle « musicien » du profil ou instrument nommé par le planning ;
+// présidence, choristes et régie n'y ont plus de ligne ni de case.
+test("matrice : seuls les musiciens — ni présidence, ni choristes, ni régie", () => {
+  const profils: ProfilMusicien[] = [
+    { uid: "u-pres", firstName: "Paul", lastName: "W.", planningName: "Paul W.", serviceRoles: { "Culte Francophone": ["presidence"] } },
+    { uid: "u-chor", firstName: "Daniela", lastName: "W.", planningName: "Daniela W.", serviceRoles: { "Culte Francophone": ["chanteur"] } },
+    { uid: "u-regie", firstName: "Régis", lastName: "S.", planningName: "Régis S.", serviceRoles: { "Culte Francophone": ["regie"] } },
+    // Musicienne qui préside aussi : sa case ne garde que l'instrument.
+    { uid: "u-eva", firstName: "Eva", lastName: "C.", planningName: "Eva C.", serviceRoles: { "Culte Francophone": ["musicien", "presidence"] } },
+    // Choriste au Franco, musicienne au Campus : une ligne, la case Franco vide.
+    { uid: "u-lydia", firstName: "Lydia", lastName: "H.", planningName: "Lydia H.", serviceRoles: { "Culte Francophone": ["chanteur"], Campus: ["musicien"] } },
+  ];
+  const data: PlanningData = {
+    ...PLANNING_VIDE,
+    culte: [
+      ["2026-10-04", "Eva C.", "Daniela W.", "Lydia H.", "", "", "", "Régis S.", "", "", "", ""],
+      ["2026-10-11", "Paul W.", "", "", "Eva C.", "", "", "", "", "", "", ""],
+    ],
+  };
+  const lignes = matriceMusiciens(profils, data);
+  expect(lignes.map((l) => l.uid).sort()).toEqual(["u-eva", "u-lydia"]);
+  const eva = lignes.find((l) => l.uid === "u-eva")!;
+  expect(eva.cases.franco, "la présidence n'est pas un instrument").toEqual(["piano"]);
+  const lydia = lignes.find((l) => l.uid === "u-lydia")!;
+  expect(lydia.cases.franco, "choriste au Franco : pas de case").toEqual([]);
+  expect(lydia.cases.campus).toEqual(["musicien"]);
 });
 
 // ── Écrans ──────────────────────────────────────────────────────────────────
@@ -331,6 +233,36 @@ test("matrice : tableau sur grand écran, cartes sur téléphone, sans défileme
   expect(corps).toBeLessThanOrEqual(ecran + 1);
 });
 
+test("onglet Musiciens : un président ou une choriste n'y figure pas (retours du 06/10/2026)", async ({ page }, info) => {
+  await simulerSheets(page, {
+    Franco_Louange: '"12/10","Paul W.","Daniela W.","","Ruth K.","","","","","","",""',
+  });
+  await signInAs(
+    page,
+    { uid: "u-ruth", email: "ruth@example.com", firstName: "Ruth", lastName: "K.", planningName: "Ruth K.", serviceRoles: { "Culte Francophone": ["musicien"] } },
+    {
+      ...DOCS,
+      "users/u-ruth": { ...DOCS["users/u-ruth"], serviceRoles: { "Culte Francophone": ["musicien"] } },
+      "users/u-paul": {
+        email: "paul@example.com", firstName: "Paul", lastName: "W.", planningName: "Paul W.",
+        serviceRoles: { "Culte Francophone": ["presidence"] }, annonces: [], notify: [], poles: [], equipes: false,
+      },
+      "users/u-daniela": {
+        email: "daniela@example.com", firstName: "Daniela", lastName: "W.", planningName: "Daniela W.",
+        serviceRoles: { "Culte Francophone": ["chanteur"] }, annonces: [], notify: [], poles: [], equipes: false,
+      },
+    },
+    "/equipes",
+  );
+  await page.getByRole("button", { name: "Musiciens" }).click();
+  const vue = page.getByTestId(info.project.name === "telephone" ? "matrice-cartes" : "matrice-table");
+  await expect(vue).toContainText("Ruth K.");
+  await expect(vue).toContainText("Piano");
+  await expect(vue).not.toContainText("Paul W.");
+  await expect(vue).not.toContainText("Daniela W.");
+  await expect(vue).not.toContainText(/Présidence|Choriste/);
+});
+
 test("中文 : les noms d'équipe sont traduits, les noms de personnes ne le sont pas", async ({ page }) => {
   await simulerSheets(page);
   await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
@@ -343,6 +275,7 @@ test("中文 : les noms d'équipe sont traduits, les noms de personnes ne le son
   await expect(page.getByTestId("equipe-theologie")).toContainText("Orga/Inscriptions");
 });
 
+// Retours du 06/10/2026 : l'onglet Import est retiré ; le bouton reste, au bas de l'Organigramme.
 test("admin : « Recalculer depuis l'organigramme » repose équipes et référents des profils existants (lot U6, R4)", async ({ page }) => {
   await simulerSheets(page);
   const envois: unknown[] = [];
@@ -350,31 +283,39 @@ test("admin : « Recalculer depuis l'organigramme » repose équipes et référe
     envois.push(route.request().postDataJSON());
     return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: true, maj: 12 }) });
   });
-  await signInAs(page, { uid: "admin1", email: "tc328829@gmail.com", firstName: "Timothée", lastName: "C." }, DOCS, "/back-office/equipes/import");
+  await signInAs(page, { uid: "admin1", email: "tc328829@gmail.com", firstName: "Timothée", lastName: "C." }, DOCS, "/back-office/equipes");
+  await expect(page.getByTestId("equipe-da")).toBeVisible();
   await expect(page.getByText(/réunions d.équipe/)).toBeVisible();
   await page.getByRole("button", { name: "Recalculer depuis l'organigramme" }).click();
   await expect(page.getByText("12 profils mis à jour.")).toBeVisible();
   expect(envois).toEqual([{ tous: true }]);
 });
 
-test("admin : le bouton d'import rend compte de ce qu'il n'a pas su rattacher", async ({ page }) => {
+// Retours du 06/10/2026 : l'import parti, « Décocher » un pôle hors organigramme (D10)
+// ne vivait que dans son compte rendu. Il passe dans la fiche de Personnes.
+test("admin : Personnes décoche un pôle coché hors organigramme", async ({ page }) => {
   await simulerSheets(page);
-  await page.route("**/api/equipes/importer", (route) =>
-    route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify({
-        ok: true, equipes: 13, membres: 96, rattaches: 81,
-        nonRattaches: ["Kitty S."], inconnues: [], polesHorsOrganigramme: [{ uid: "u-x", nom: "Untel B.", poles: ["orga"] }],
-      }),
-    }),
+  const envois: unknown[] = [];
+  await page.route("**/api/equipes/poles", (route) => {
+    envois.push(route.request().postDataJSON());
+    return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: true, maj: 1 }) });
+  });
+  await signInAs(
+    page,
+    { uid: "admin1", email: "tc328829@gmail.com", firstName: "Timothée", lastName: "C." },
+    {
+      ...DOCS,
+      "users/u-hors": {
+        email: "hors@example.com", firstName: "Untel", lastName: "B.", planningName: "",
+        serviceRoles: {}, annonces: [], notify: [], poles: ["orga"], equipes: false,
+      },
+    },
+    "/back-office/equipes/personnes",
   );
-  page.on("dialog", (d) => d.accept());
-  await signInAs(page, { uid: "admin1", email: "tc328829@gmail.com", firstName: "Timothée", lastName: "C." }, DOCS, "/back-office/equipes/import");
-  await page.getByRole("button", { name: "Importer l'organigramme du Sheet" }).click();
-  // Le compte rendu de l'import, pas la description de l'écran (qui parle aussi des « 13 équipes ») :
-  // sinon le test passe ou casse selon qu'il regarde avant ou après la réponse.
-  await expect(page.getByText(/13 équipes, 96 membres/)).toBeVisible();
-  await expect(page.getByText("Kitty S.")).toBeVisible();
-  await expect(page.getByText("Untel B.")).toBeVisible();
+  await page.getByRole("button", { name: /Untel B\./ }).click();
+  await expect(page.getByText(/Coché hors organigramme : Orga/)).toBeVisible();
+  await expect(page.getByText(/Équipes › Import/)).toHaveCount(0);
+  await page.getByRole("button", { name: "Décocher" }).click();
+  await expect(page.getByText(/Coché hors organigramme/)).toHaveCount(0);
+  expect(envois).toEqual([{ uids: ["u-hors"] }]);
 });

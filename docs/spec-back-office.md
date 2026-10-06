@@ -434,7 +434,7 @@ relecture — … »). Deux relectures, onze constats (deux importants, neuf min
   - **publier `firestore.rules`** (tout le lot : sujets, compte rendu, réunions d'équipe, `backOffice/{uid}`,
     plus cette relecture : création des réunions et « repris dans » resserrés ; l'`allow delete` des dates
     choisies venu de U2) ;
-  - puis, une fois, **« Recalculer depuis l'organigramme »** (Back-Office › Équipes › Import), depuis l'app en local ;
+  - puis, une fois, **« Recalculer depuis l'organigramme »** (Back-Office › Équipes › Organigramme, bas de page), depuis l'app en local ;
   - relire le 中文 de `backOffice.*`, `tableauDeBord.*`, `evenements.sujets`, `evenements.reprise`,
     `evenements.precedentes`, `evenements.compteRendu`, `evenements.erreurSuppression` (删除失败，请重试。),
     `equipes.court.*` (recopié de `equipes.team.*`) et des lignes du rappel (`src/lib/reunions/rappels.ts`) ;
@@ -487,7 +487,7 @@ dans leur version finale (rien de neuf).
 - **À faire par Timothée** :
   - **publier `firestore.rules`** : sujets (R1), compte rendu (R3), réunions d'équipe (R4), `backOffice/{uid}`
     (B5, sert aussi la barre du bas) ; le fichier porte aussi, venu de U2, l'`allow delete` des dates choisies ;
-  - puis, une fois, **« Recalculer depuis l'organigramme »** (Back-Office › Équipes › Import), depuis l'app en local ;
+  - puis, une fois, **« Recalculer depuis l'organigramme »** (Back-Office › Équipes › Organigramme, bas de page), depuis l'app en local ;
   - relire le 中文 de `backOffice.*`, `tableauDeBord.*`, `evenements.sujets`, `evenements.reprise`,
     `evenements.precedentes`, `evenements.compteRendu` et des lignes du rappel (`src/lib/reunions/rappels.ts`).
 
@@ -941,7 +941,29 @@ relire le 中文 de `evenements.sujets`, `evenements.reprise`, `evenements.prece
 (`src/locales/zh-CN.json`) et des lignes du rappel (`src/lib/reunions/rappels.ts` : « 明天 20:00：… （1 个议题）»,
 « 会议记录已添加：… », titre « 活动提醒 »). **R4 : republier `firestore.rules`** (réunions
 d'équipe : `estDeLaReunion`, création par un référent, création des profils), **puis**, depuis l'app en local (même
-Firestore que le site en ligne ; le bouton est derrière `BACK_OFFICE`), cliquer une fois **« Recalculer depuis l'organigramme »** (Admin › Équipes) : sans cela, aucun profil
+Firestore que le site en ligne ; le bouton est derrière `BACK_OFFICE`), cliquer une fois **« Recalculer depuis l'organigramme »** (Back-Office › Équipes › Organigramme, bas de page) : sans cela, aucun profil
 existant n'a `dansEquipes` ni `referentDe`, et personne ne voit ni ne crée de réunion d'équipe. Après B5 :
 republier les règles (`backOffice/{uid}`). B1 ne change aucune règle ; relire le 中文 de `backOffice.*`
 (`src/locales/zh-CN.json`).
+
+**06/10/2026 — Retours de Timothée en local : importations retirées, Inscriptions fusionné** (branche
+`fix/equipes-imports`). « On va tout faire manuellement » : plus aucune importation de planning ni d'organigramme
+depuis le Google Sheet. Le Sheet reste lu pour **afficher** les plannings de 2026 ; seul l'écrire dans l'app part.
+
+- **Retirés** : Planning › Import (« Importer le … depuis le Google Sheet » et « Reprendre les noms du petit
+  déj »), Équipes › Import (« Importer l'organigramme du Sheet » et son compte rendu), les routes
+  `/api/admin/importer-planning`, `/api/equipes/importer` et `/api/admin/reprendre-petit-dej` (404 même
+  interrupteur ouvert), leurs modules devenus orphelins (`src/lib/planning/import.ts`, `parseOrganigramme` et
+  `rattacherNoms`, `grillePourReprise` et `planifierReprise`), leurs libellés (`backOffice.parties.import`,
+  `backOffice.parties.inscriptions`, `backOffice.plus.contenu.import`) et leurs tests. L'onglet Équipes, vide en
+  ligne, quitte aussi l'ancienne administration (`AncienneAdmin.tsx`).
+- **Déplacés** : « Recalculer depuis l'organigramme » au bas de Équipes › Organigramme, discret, admins seuls
+  (`RecalculerOrganigramme.tsx`, libellés `equipes.recalcul.*` en FR et 中文) ; l'onglet Inscriptions disparaît,
+  son bloc (« Les inscriptions sont ouvertes » + Fermer/Ouvrir) passe en tête de Équipes › Personnes. Équipes n'a
+  plus que Organigramme · Personnes ; Planning, Plannings · Sans compte. La table Q3 plus haut garde l'état du
+  04/10.
+- **Gardé ailleurs** : « Décocher » un pôle coché hors organigramme (D10 du lot 16) ne vivait que dans le compte
+  rendu de l'import ; il passe dans la fiche d'une personne (Personnes › bloc Pôles).
+- **Équipes › Musiciens** ne garde que les musiciens (voir `docs/spec-organigramme.md`).
+- **Tests** : `back-office-admin`, `equipes`, `planning-petit-dej`, `planning-import` (réduit à l'historique),
+  `back-office-coupe`, `evenements` ; vus rouges puis verts sur ordinateur, téléphone et tablette.
