@@ -1,8 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
 import { ADMIN_EMAIL, signInAs, type FakeProfile } from "./helpers/fakeSession";
 import {
-  HALO_BACK_OFFICE, enTete, estGrandEcran, estTelephone, interdireDialoguesNatifs, margeAttendue, ongletsRail, ouvrirAvecBarre,
-  pilules, verifierAgencement, zoneDeContenu,
+  HALO_BACK_OFFICE, HALO_BACK_OFFICE_SOMBRE, enTete, estGrandEcran, estTelephone, interdireDialoguesNatifs, margeAttendue,
+  ongletsRail, ouvrirAvecBarre, pilules, verifierAgencement, verifierPleineLargeur, zoneDeContenu,
 } from "./helpers/agencement";
 
 // Agencement v18, tranche F1 (docs/spec-agencement-v18.md) : les composants et règles communes,
@@ -11,6 +11,14 @@ import {
 // Cinq projets (`agencement-v18-*` est dans SPECS_GRAND_ECRAN).
 
 const ESSAI = "/essai-agencement";
+
+/** Capture à regarder à l'œil et à comparer aux planches v18 (PW_CAPTURES=<dossier>), une par appareil. */
+async function capture(page: Page, nom: string) {
+  const dir = process.env.PW_CAPTURES;
+  if (!dir) return;
+  await page.waitForTimeout(300); // fondus finis
+  await page.screenshot({ path: `${dir}/${nom}-${test.info().project.name}.png` });
+}
 
 async function ouvrirEssai(page: Page) {
   interdireDialoguesNatifs(page);
@@ -48,9 +56,15 @@ test.describe("EnTetePage (R1, R2, R3, R8)", () => {
     }
   });
 
-  test("vérifications communes : un h1 à la marge, 30 px dès 768 px (24 sur téléphone), rien ne déborde, un halo", async ({ page }) => {
+  test("vérifications communes : un h1 à la marge, 30 px dès 768 px (24 sur téléphone), rien ne déborde, un halo, contenu pleine zone, onglets", async ({ page }) => {
     await ouvrirEssai(page);
-    await verifierAgencement(page);
+    // Le contenu : les deux volets (ou la liste seule), sur toute la zone ; trois rails (en-tête,
+    // adresses, vues par adresse) et une rangée de pilules.
+    const volets = page.locator('[data-volet="liste"]').locator("..");
+    await verifierAgencement(page, { contenu: volets, onglets: { rail: 3, pilules: 1 } });
+    // La vérification de pleine largeur mord : un bouton n'occupe pas la zone.
+    await expect(verifierPleineLargeur(page, page.getByRole("button", { name: "Demander" }))).rejects.toThrow();
+    await capture(page, "f1-essai");
   });
 
   test("barre réduite : le titre passe à barre + 28 px (grands écrans)", async ({ page }, info) => {
@@ -59,6 +73,7 @@ test.describe("EnTetePage (R1, R2, R3, R8)", () => {
     await ouvrirEssai(page);
     expect(await margeAttendue(page)).toBe(28);
     await verifierAgencement(page);
+    await capture(page, "f1-essai-reduite");
   });
 
   test("la marge de la page est un jeton CSS (--marge-page) qui suit la barre", async ({ page }) => {
@@ -111,6 +126,7 @@ test.describe("ConfirmerProvider, useConfirmer (R9)", () => {
     await expect(fenetre).toBeVisible();
     await expect(fenetre.getByRole("heading", { name: "Retirer l'essai ?" })).toBeVisible();
     await expect(fenetre.getByText("Il ne sera plus dans la liste.")).toBeVisible();
+    await capture(page, "f1-confirmer");
     await fenetre.getByRole("button", { name: "Annuler" }).click();
     await expect(fenetre).toBeHidden();
     await expect(reponse).toHaveText("false");
@@ -126,6 +142,24 @@ test.describe("ConfirmerProvider, useConfirmer (R9)", () => {
     await expect(fenetre).toBeHidden();
     await expect(reponse).toHaveText("true");
   });
+
+  test("la page change pendant que la fenêtre est ouverte (Précédent, Suivant) : la fenêtre se ferme", async ({ page }) => {
+    await ouvrirEssai(page);
+    // Une navigation dans le site puis Précédent : l'historique a une page après l'essai. « Ailleurs »
+    // mène aux Chants, publics (Moi renverrait un visiteur à la connexion, et Précédent avec lui).
+    await page.getByRole("link", { name: "Ailleurs" }).click();
+    await page.waitForURL(/\/songs\/?$/);
+    await page.goBack();
+    await expect(enTete(page).getByRole("heading", { level: 1, name: "Essai d'agencement" })).toBeVisible();
+    const fenetre = page.getByRole("alertdialog");
+    await page.getByRole("button", { name: "Demander" }).click();
+    await expect(fenetre).toBeVisible();
+    // Suivant, fenêtre ouverte : la page de l'essai est quittée, sa demande ne doit pas survivre
+    // par-dessus la page suivante (un clic sur « Retirer » agirait pour une page démontée).
+    await page.goForward();
+    await page.waitForURL(/\/songs\/?$/);
+    await expect(fenetre).toBeHidden();
+  });
 });
 
 test.describe("MenuActions (R9)", () => {
@@ -137,6 +171,7 @@ test.describe("MenuActions (R9)", () => {
     const menu = page.getByRole("menu");
     await expect(menu).toBeVisible();
     await expect(menu.getByRole("menuitem", { name: "Dupliquer" })).toBeVisible();
+    await capture(page, "f1-menu");
     // Au clavier : Début et Fin vont à la première et à la dernière action. (Pas de « la première a le
     // focus à l'ouverture » : vu manquer 2 fois sur 20 sous charge, le menu ayant alors le focus
     // lui-même ; Début et Fin marchent dans les deux cas.)
@@ -178,6 +213,40 @@ test.describe("OngletsRail et Pilules (R4, R5)", () => {
     // La couleur du service (#2d5a65) sur la pilule active.
     // (après le fondu de 150 ms)
     await expect.poll(() => culte.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe("rgb(45, 90, 101)");
+  });
+
+  test("rail en boutons au clavier : un seul arrêt de tabulation, les flèches vont d'un onglet à l'autre, Entrée choisit", async ({ page }) => {
+    await ouvrirEssai(page);
+    const rail = enTete(page).locator('[data-onglets="rail"]');
+    const avenir = rail.getByRole("tab", { name: "À venir" });
+    const passes = rail.getByRole("tab", { name: "Passés" });
+    // Un seul onglet dans l'ordre de tabulation : le choisi.
+    await expect(rail.locator('[role="tab"][tabindex="0"]')).toHaveCount(1);
+    await expect(avenir).toHaveAttribute("tabindex", "0");
+    await avenir.focus();
+    await page.keyboard.press("ArrowRight");
+    await expect(passes).toBeFocused();
+    // Activation manuelle : la flèche déplace le focus, elle ne change pas la vue.
+    await expect(page.getByTestId("vue")).toHaveText("avenir");
+    await page.keyboard.press("ArrowRight"); // le rail boucle
+    await expect(avenir).toBeFocused();
+    await page.keyboard.press("ArrowLeft");
+    await expect(passes).toBeFocused();
+    await page.keyboard.press("Home");
+    await expect(avenir).toBeFocused();
+    await page.keyboard.press("End");
+    await expect(passes).toBeFocused();
+    await page.keyboard.press("Enter");
+    await expect(page.getByTestId("vue")).toHaveText("passes");
+    await expect(passes).toHaveAttribute("tabindex", "0");
+    await expect(avenir).toHaveAttribute("tabindex", "-1");
+  });
+
+  test("rail en liens qui ne diffèrent que par la query : `actif` désigne l'onglet", async ({ page }) => {
+    await ouvrirEssai(page);
+    const rail = ongletsRail(page).filter({ has: page.getByRole("link", { name: "Vue A" }) });
+    await expect(rail.getByRole("link", { name: "Vue B" })).toHaveAttribute("aria-current", "page");
+    await expect(rail.getByRole("link", { name: "Vue A" })).not.toHaveAttribute("aria-current", "page");
   });
 
   test("rail en liens : l'adresse courante porte aria-current=page", async ({ page }) => {
@@ -244,6 +313,24 @@ test.describe("Halo du Back-Office (R12)", () => {
     expect(bleuGris).toBe(HALO_BACK_OFFICE);
     expect(variable).toBe(HALO_BACK_OFFICE);
     expect(await halo.evaluate((el) => getComputedStyle(el, "::before").backgroundColor)).toBe("rgb(228, 231, 246)");
+    await capture(page, "f1-halo-back-office");
+  });
+
+  test("en sombre, le halo du Back-Office prend la valeur sombre du bleu gris", async ({ page }) => {
+    await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
+    await page.emulateMedia({ colorScheme: "dark" });
+    await signInAs(page, ADMIN, {}, "/back-office");
+    await page.locator("main h1, main h2").first().waitFor();
+    await expect(page.locator("html")).toHaveClass(/\bdark\b/);
+    const halo = page.getByTestId("halo-defaut");
+    await expect(halo).toBeVisible();
+    const lire = () => page.evaluate(() => {
+      const st = getComputedStyle(document.documentElement);
+      return [st.getPropertyValue("--halo").trim(), st.getPropertyValue("--halo-back-office").trim()];
+    });
+    await expect.poll(lire).toEqual([HALO_BACK_OFFICE_SOMBRE, HALO_BACK_OFFICE_SOMBRE]);
+    expect(await halo.evaluate((el) => getComputedStyle(el, "::before").backgroundColor)).toBe("rgb(38, 43, 69)");
+    await capture(page, "f1-halo-back-office-sombre");
   });
 
   test("hors du Back-Office, le halo par défaut reste l'encre", async ({ page }) => {
