@@ -71,6 +71,12 @@ export function groupesDeReglages(
     case "scene":
       return [unSeul("programme", "programme",
         [{ valeur: "", i18n: `${T}.programmeAffiche` }, ...programmes.map((p) => ({ valeur: p.id, texte: p.nom }))], r.programme ?? "")];
+    case "chants":
+      // Lot U7, S5 : la période du widget (12 mois par défaut, comme la page Statistiques).
+      return [unSeul("periode", "periode", [
+        ...[3, 6, 12].map((count) => ({ valeur: `${count}m`, i18n: `${T}.mois`, params: { count } })),
+        { valeur: "tout", i18n: `${T}.depuisLeDebut` },
+      ], r.periode ?? "12m")];
     case "comptes":
       return [unSeul("liste", "liste",
         [{ valeur: "sansCompte", i18n: `${T}.sansCompte` }, { valeur: "nouveaux", i18n: `${T}.nouveaux` }], r.liste ?? "sansCompte")];
@@ -79,7 +85,7 @@ export function groupesDeReglages(
         raccourcisPermis(user, profile, {}).map((x) => ({ valeur: x.id, i18n: `tableauDeBord.raccourcis.${x.id}` })),
         raccourcisPermis(user, profile, r).map((x) => x.id))];
     default:
-      // Calendrier (U8) et Chants les plus joués (U7) apportent leurs réglages avec leur lot.
+      // Calendrier (U8) apporte ses réglages avec son lot.
       return [];
   }
 }

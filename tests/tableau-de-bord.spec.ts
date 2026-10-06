@@ -122,10 +122,10 @@ async function part(cadre: Locator, w: Locator): Promise<number> {
 // ─── Règles pures ─────────────────────────────────────────────────────────────
 
 test.describe("Tableau de bord (B4) : disposition par défaut selon le rôle (Q11)", () => {
-  test("admin : tous les widgets permis, dans l'ordre de la planche (Calendrier et Chants avec U8 et U7)", () => {
+  test("admin : tous les widgets permis, dans l'ordre de la planche (Calendrier avec U8 ; Chants les plus joués : U7, S5)", () => {
     const d = dispositionParDefaut(user(ADMIN), null);
-    expect(ids(d)).toEqual(["dimanche", "afaire", "setlists", "planning", "evenements", "petitdej", "raccourcis", "scene", "comptes"]);
-    expect(d.map((w) => w.taille)).toEqual(["m", "m", "s", "s", "m", "s", "s", "s", "s"]);
+    expect(ids(d)).toEqual(["dimanche", "afaire", "setlists", "planning", "evenements", "chants", "petitdej", "raccourcis", "scene", "comptes"]);
+    expect(d.map((w) => w.taille)).toEqual(["m", "m", "s", "s", "m", "m", "s", "s", "s", "s"]);
     expect(d.every((w) => Object.keys(w.reglages).length === 0)).toBe(true);
   });
 
@@ -328,7 +328,7 @@ test.describe("Tableau de bord (B4) : écrans", () => {
   test("admin sans disposition enregistrée : tous ses widgets, dans l'ordre du défaut", async ({ page }) => {
     await ouvrir(page, ADMIN);
     await expect(widget(page, "Ce dimanche")).toBeVisible();
-    expect(await widgetsAffiches(page)).toEqual(["dimanche", "afaire", "setlists", "planning", "evenements", "petitdej", "raccourcis", "scene", "comptes"]);
+    expect(await widgetsAffiches(page)).toEqual(["dimanche", "afaire", "setlists", "planning", "evenements", "chants", "petitdej", "raccourcis", "scene", "comptes"]);
   });
 
   test("Ce dimanche : le Culte du 4 octobre, setlist, présentation, case vide", async ({ page }) => {
@@ -413,7 +413,8 @@ test.describe("Tableau de bord (B4) : écrans", () => {
       },
     });
     await expect(widget(page, "Prochains évènements").getByTestId("ligne-evenement")).toHaveCount(5);
-    expect(await widgetsAffiches(page)).toEqual(["evenements", "planning", "dimanche"]);
+    // « chants » (U7, S5) : permis à un admin, donc affiché.
+    expect(await widgetsAffiches(page)).toEqual(["evenements", "planning", "dimanche", "chants"]);
     // Réglage « 2 dimanches » : le 4 et le 11 seulement.
     await expect(widget(page, "Cases vides du planning").getByTestId("ligne-case-vide")).toHaveCount(2);
 
@@ -436,7 +437,15 @@ test.describe("Tableau de bord (B4) : écrans", () => {
       // La cloche lit les setlists récentes à part (`limit`) : pas les widgets.
       if (q.from[0].collectionId === "setlists" && !q.limit) lectures.push(q);
     });
-    await ouvrir(page, ADMIN);
+    // Ces deux widgets seuls : « Chants les plus joués » (U7) lit toutes les setlists, à part et sans
+    // cache (`getSetlists()`, comme la page Statistiques) : coût accepté par Q1 de spec-statistiques.md
+    // (une visite de l'onglet Setlists, ~150 lectures sur un quota de 50 000 par jour).
+    await ouvrir(page, ADMIN, {
+      "backOffice/uid-admin": {
+        tableauDeBord: [{ id: "dimanche", taille: "m", reglages: {} }, { id: "setlists", taille: "s", reglages: {} }],
+        majLe: "2026-10-01",
+      },
+    });
     await expect(widget(page, "Ce dimanche").getByText("Setlist publiée")).toBeVisible();
     await expect(widget(page, "Setlists à préparer").getByTestId("ligne-setlist").first()).toBeVisible();
     expect(lectures).toEqual([expect.objectContaining({

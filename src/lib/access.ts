@@ -486,10 +486,16 @@ export function estResponsable(user: AuthUser | null, profile: ProfilResponsable
     || profile.equipes === true || nonVide(profile.referentDe);
 }
 
-/** Entrées et widgets qui arrivent avec leur lot (Q17) : U8 (Calendrier), U7 (Statistiques,
- *  Chants les plus joués). Chaque lot retire la sienne de ces listes ; le rang est déjà gardé. */
-const ENTREES_A_VENIR: readonly Entree[] = ["calendrier", "statistiques"];
-const WIDGETS_A_VENIR: readonly WidgetId[] = ["calendrier", "chants"];
+/** Statistiques des chants (lot U7, docs/spec-statistiques.md, Q2) : admins seulement (T1).
+ *  Sans règle Firestore : rien de nouveau n'est lu ni écrit (précédent `canUseHarmonie`). */
+export function canVoirStatistiques(user: { email?: string | null } | null): boolean {
+  return isAdminUser(user);
+}
+
+/** Entrées et widgets qui arrivent avec leur lot (Q17) : U8 (Calendrier). Chaque lot retire
+ *  la sienne de ces listes ; le rang est déjà gardé. U7 (Statistiques, Chants les plus joués) : arrivés. */
+const ENTREES_A_VENIR: readonly Entree[] = ["calendrier"];
+const WIDGETS_A_VENIR: readonly WidgetId[] = ["calendrier"];
 
 /** Les entrées du Back-Office d'une personne (table Q2), dans l'ordre du menu. Vide pour qui
  *  n'est pas responsable. */
@@ -506,7 +512,7 @@ export function entreesBackOffice(user: AuthUser | null, profile: ProfilResponsa
     evenements: admin || isCoordination(user, profile) || nonVide(profile?.annonces) || pole || nonVide(profile?.referentDe),
     equipes: canEditerEquipes(user, profile),
     messages: admin || nonVide(profile?.notify),
-    statistiques: admin,
+    statistiques: canVoirStatistiques(user),
   };
   return ENTREES.filter((e) => visible[e] && !ENTREES_A_VENIR.includes(e));
 }
@@ -549,7 +555,7 @@ export function widgetsPermis(user: AuthUser | null, profile: UserProfile | null
     setlists: canCreateSetlist(user, profile),
     planning: entrees.includes("planning"),
     evenements: entrees.includes("evenements"),
-    chants: admin,
+    chants: canVoirStatistiques(user),
     petitdej: true,
     scene: true,
     comptes: admin,

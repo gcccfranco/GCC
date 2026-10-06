@@ -40,6 +40,8 @@ const SPECS_GRAND_ECRAN = [
   /setlist-bibliotheque\.spec\.ts/,
   // … et le choix des chants à fusionner, dans le volet de droite.
   /setlist-fusionner\.spec\.ts/,
+  // Lot U7 (spec-statistiques.md, Tests) : la page Statistiques et son entrée du menu.
+  /statistiques\.spec\.ts/,
 ];
 
 export default defineConfig({
