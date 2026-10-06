@@ -390,3 +390,19 @@ npm run lint
 - 06/10/2026, plus tard : relecture croisée avec `spec-agencement-v18.md` (en-tête et composants communs repris
   de F1, F2, T2 et T7 ; ordre P4 après T7, P7 après T2a et T2b) ; Réunions sort du rail du Back-Office (entrée à
   part, T2a de l'agencement). Attend toujours le go.
+
+### SCENE
+
+- 06/10/2026 — **P1 — La règle des fêtes : faite** (branche `lot/v18-scene`, commit « feat(SCENE): P1 »).
+  `src/lib/scene/fetes.ts` (`FETES`, `Fete`, `paques`, `jourJParDefaut`, `idEdition`, `feteDe`, `anneeDe`,
+  `editionsDe`, `editionCourante`, `etatEdition`, `editionsAffichees`, `reglagesRepris`, `libelleEdition`) ;
+  `fete` et `annee` dans `Programme` (`src/types/programme.ts`) et lus par `fromFsProgramme`
+  (`src/lib/firebase/programmes.ts`) ; `tests/scene-paques-noel.spec.ts` (20 tests de la règle) ajouté à
+  `SPECS_GRAND_ECRAN` : vu rouge (module absent, puis contre-épreuve : 9 tests rouges sur une règle
+  sabotée), vert sur les cinq projets (100) ; `tsc` et `lint` propres. Aucun écran ne change.
+  - Choix faits faute de réponse : `nom` d'une édition nouvelle = son titre français (« Noël 2027 ») ;
+    `visible` reste dans le type tant que `currentProgramme` (P3) et `SceneClient` (P7) le lisent ;
+    `etatEdition` rend `passee` pour toute date après le jour J (une année passée aussi) ; deux documents
+    non canoniques pour la même édition : le premier lu (ordre de `listProgrammes`, jour J croissant) gagne.
+  - Reste : P2 à P9.
+  - À faire par Timothée : rien pour P1 (aucune règle à publier, droits inchangés).
