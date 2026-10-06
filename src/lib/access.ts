@@ -209,6 +209,31 @@ export function canEditPlanning(
   return isAdminUser(user) || (profile?.plannings ?? []).includes(key);
 }
 
+/** Petit déj (lot U3, docs/spec-petit-dej.md, Q8) : poser une ligne pour
+ *  quelqu'un, réécrire ou retirer n'importe laquelle — les écrivains du planning
+ *  Table et les admins, le droit qui remplit déjà la grille Table. Poser SA
+ *  ligne (« Je m'inscris ») : tout connecté. Miroir serveur : petitDej/{id}
+ *  dans firestore.rules. */
+export function canGererPetitDej(
+  user: { email?: string | null } | null,
+  profile: { plannings?: string[] } | null
+): boolean {
+  return canEditPlanning(user, profile, "table");
+}
+
+/** Réécrire ou retirer une ligne : l'inscrit (`ligne.uid`) ou canGererPetitDej,
+ *  tant que le dimanche n'est pas passé (Q2 : la borne du passé vaut pour tous,
+ *  côté client seulement, comme le reste du filtrage du site). */
+export function canEditPetitDej(
+  user: AuthUser | null,
+  profile: { plannings?: string[] } | null,
+  ligne: { uid: string; dimanche: string },
+  dimancheEnCours: string
+): boolean {
+  if (!user || ligne.dimanche < dimancheEnCours) return false;
+  return ligne.uid === user.uid || canGererPetitDej(user, profile);
+}
+
 /** Lot U2 (Q10, docs/spec-planning-2027.md) : les plannings dont les dates se
  *  choisissent (`dates: "choisies"` dans grilles.ts) — les seuls où une date
  *  posée par erreur se retire ; ailleurs, on vide les cases. */

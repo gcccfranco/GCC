@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { BASE_URL_COUPE } from "../playwright.config";
-import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { abonneAuxNotifications, signInAs, type FakeProfile } from "./helpers/fakeSession";
 
 // Lot 18 (docs/spec-mise-en-ligne.md) : ce que voit le site en ligne tant que le
 // back-office n'est pas ouvert. Ce serveur tourne SANS `NEXT_PUBLIC_BACK_OFFICE` ;
@@ -60,7 +60,7 @@ test.describe("back-office coupé : une adresse tapée à la main tombe dans le 
     });
   }
 
-  for (const route of ["/api/taches/assigne", "/api/taches/fait", "/api/equipes/importer", "/api/equipes/poles", "/api/admin/importer-planning", "/api/scene/conflit", "/api/evenements/inscription", "/api/evenements/desinscription", "/api/push/notify-evenement"]) {
+  for (const route of ["/api/taches/assigne", "/api/taches/fait", "/api/equipes/importer", "/api/equipes/poles", "/api/admin/importer-planning", "/api/admin/reprendre-petit-dej", "/api/scene/conflit", "/api/evenements/inscription", "/api/evenements/desinscription", "/api/push/notify-evenement"]) {
     test(`${route} répond 404`, async ({ request }) => {
       const reponse = await request.post(`${BASE_URL_COUPE}${route}/`, { data: {} });
       expect(reponse.status()).toBe(404);
@@ -121,6 +121,110 @@ test.describe("back-office coupé : la Sainte cène reste un service à part ent
     await expect(dimanche.getByText("Ruth K.")).toBeVisible();
     await page.goto("/mes-services");
     await expect(page.getByText("Sainte cène", { exact: true })).toBeVisible();
+  });
+});
+
+// Lot 1b, vu « comme en ligne » (venu de planning-petit-dej.spec.ts au lot U3) :
+// interrupteur coupé, le petit déj se lit encore dans le bloc « PETIT DÉJEUNER »
+// de Franco_Table_PtD, et les inscriptions `petitDej/*` ne sont jamais lues
+// (docs/spec-petit-dej.md, Q14 : Firestore est partagé entre local et en ligne).
+test.describe("back-office coupé : le petit déj vient encore du Sheet", () => {
+  const csv = (rows: string[][]) => rows.map((r) => r.map((c) => `"${c}"`).join(",")).join("\n");
+  const col = (cells: Record<number, string>) => Array.from({ length: 21 }, (_, i) => cells[i] ?? "");
+  const TABLE_PTD = csv([
+    col({ 1: "PRÉPARATION TABLE", 17: "PETIT DÉJEUNER 2026 DATE", 18: "NOM", 19: "DATE", 20: "DATE" }),
+    col({ 1: "13/09", 2: "Daniel F.", 3: "Lucas W.", 17: "15/03", 18: "Julien & Stéphane", 19: "13/09", 20: "" }),
+    col({ 1: "20/09", 2: "Ruth K.", 3: "Charlie B.", 17: "22/03", 18: "Alice Q.", 19: "20/09", 20: "Charlie B. & Isabelle L." }),
+  ]);
+  const CHARLIE: FakeProfile = { uid: "uid-charlie", email: "charlie@example.com", planningName: "Charlie B." };
+  // Une inscription en base pour le 20/09 : coupé, elle ne doit compter nulle part.
+  const INSCRIPTION = {
+    "petitDej/a": {
+      dimanche: "2026-09-20", nom: "Famille Martin", uid: "uid-autre", auteurUid: "uid-autre",
+      creeLe: "2026-09-09T08:00:00.000Z", modifieLe: "2026-09-09T08:00:00.000Z",
+    },
+  };
+  const ouvrir = async (page: Page, dimanche: string, to: string, qui: FakeProfile = CHARLIE, docs: Record<string, Record<string, unknown>> = INSCRIPTION) => {
+    const vendredi = new Date(`${dimanche}T10:00:00`);
+    vendredi.setDate(vendredi.getDate() - 2);
+    await page.clock.setFixedTime(vendredi);
+    await page.route(/docs\.google\.com\/spreadsheets/, (route) => {
+      const sheet = new URL(route.request().url()).searchParams.get("sheet");
+      return route.fulfill({ status: 200, contentType: "text/csv", body: sheet === "Franco_Table_PtD" ? TABLE_PTD : "" });
+    });
+    const lectures = { petitDej: 0 };
+    page.on("request", (r) => { if (r.url().includes("firestore") && (r.postData() ?? "").includes('"petitDej"')) lectures.petitDej++; });
+    await signInAs(page, qui, docs, to);
+    return lectures;
+  };
+
+  test("Ce dimanche : la ligne Petit déj apparaît quand la case est remplie", async ({ page }) => {
+    const lectures = await ouvrir(page, "2026-09-20", "/planning");
+    const dimanche = page.getByRole("region", { name: /Ce dimanche/ });
+    await expect(dimanche.getByText("Petit déj", { exact: true })).toBeVisible();
+    await expect(dimanche.getByText("Charlie B., Isabelle L.")).toBeVisible();
+    await expect(dimanche.getByText("Famille Martin")).toHaveCount(0);
+    expect(lectures.petitDej, "aucune lecture des inscriptions").toBe(0);
+  });
+
+  test("Ce dimanche : pas de ligne Petit déj quand la case est vide", async ({ page }) => {
+    await ouvrir(page, "2026-09-13", "/planning");
+    const dimanche = page.getByRole("region", { name: /Ce dimanche/ });
+    await expect(dimanche.getByText("Daniel F.", { exact: false }), "la Prépa. Table reste").toBeVisible();
+    await expect(dimanche.getByText("Petit déj", { exact: true })).toHaveCount(0);
+  });
+
+  test("la page Table n'a pas de carte Petit déj : l'ancien tableau, sans inscription (PD2)", async ({ page }) => {
+    const lectures = await ouvrir(page, "2026-09-20", "/planning/table");
+    await expect(page.getByRole("heading", { name: "Prépa. Table du Seigneur" })).toBeVisible();
+    await expect(page.getByText("Ruth K.", { exact: false }).filter({ visible: true }).first(), "le tableau du Sheet").toBeVisible();
+    await expect(page.getByRole("region", { name: "Petit déj" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Je m'inscris" })).toHaveCount(0);
+    await expect(page.getByText("Famille Martin")).toHaveCount(0);
+    expect(lectures.petitDej, "aucune lecture des inscriptions").toBe(0);
+  });
+
+  test("Mes services : le petit déj est un service à part entière", async ({ page }) => {
+    await ouvrir(page, "2026-09-20", "/mes-services");
+    await expect(page.getByText("Petit déj", { exact: true })).toBeVisible();
+  });
+
+  // PD3 : coupé, une inscription en base ne rattache rien — ni « Mes services »
+  // ouvert sans nom de planning, ni prochain service.
+  test("un compte sans nom de planning garde « choisis ton nom », même inscrit en base (PD3)", async ({ page }) => {
+    const sansNom: FakeProfile = { uid: "uid-sans-nom", email: "sans-nom@example.com" };
+    const inscrit = { "petitDej/b": { ...INSCRIPTION["petitDej/a"], dimanche: "2026-09-27", uid: sansNom.uid, auteurUid: sansNom.uid } };
+    const lectures = await ouvrir(page, "2026-09-27", "/mes-services", sansNom, inscrit);
+    await expect(page.getByText(/Choisis ton nom de planning/)).toBeVisible();
+    await page.goto("/planning");
+    await expect(page.getByRole("region", { name: /Ce dimanche/ })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Ton prochain service" })).toHaveCount(0);
+    expect(lectures.petitDej, "aucune lecture des inscriptions").toBe(0);
+  });
+
+  test("en 中文 : libellé traduit", async ({ page }) => {
+    await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
+    await ouvrir(page, "2026-09-20", "/planning");
+    const dimanche = page.getByRole("region", { name: /本主日/ });
+    await expect(dimanche.getByText("早餐", { exact: true })).toBeVisible();
+  });
+
+  // PD4 : coupé, ni ligne du mercredi (cron) ni bascule « Petit déj » dans Mon profil.
+  test("Mon profil › Notifications : pas de bascule « Petit déj » (PD4)", async ({ page }) => {
+    await abonneAuxNotifications(page);
+    await signInAs(page, CHARLIE, {}, "/profil");
+    await expect(page.getByRole("switch", { name: "Rappels de service" })).toBeChecked();
+    await expect(page.getByRole("switch", { name: "Petit déj" })).toHaveCount(0);
+  });
+
+  // PD5 : coupé, l'administration ne propose pas la reprise (la route répond 404, plus haut).
+  test("Administration › Planning : pas de « Reprendre les noms du petit déj » (PD5)", async ({ page }) => {
+    await page.clock.setFixedTime(new Date("2026-09-19T10:00:00"));
+    await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
+    await signInAs(page, ADMIN, {}, "/admin");
+    await page.getByRole("button", { name: /^Planning/ }).click();
+    await expect(page.getByRole("heading", { name: /Planning sans compte/ })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Reprendre les noms du petit déj" })).toHaveCount(0);
   });
 });
 

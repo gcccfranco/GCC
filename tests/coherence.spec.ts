@@ -109,7 +109,8 @@ test("manifeste : une seule source, celle de l'app, au nom et à la couleur du l
 // ─── C5 : plus de préférence sans expéditeur ───────────────────────────────
 
 test("préférences : la bascule « Annonces » a disparu avec les annonces", () => {
-  expect(NOTIF_TYPES).toEqual(["reminders", "setlists", "evenements", "taches"]);
+  // « petitDej » ajouté au lot U3 (docs/spec-petit-dej.md, PD4) : il a son expéditeur, le rappel du mercredi.
+  expect(NOTIF_TYPES).toEqual(["reminders", "setlists", "evenements", "taches", "petitDej"]);
   expect(Object.keys(DEFAULT_NOTIF_PREFS).sort()).toEqual([...NOTIF_TYPES].sort());
 });
 

@@ -433,5 +433,26 @@ service cloud.firestore {
         allow delete: if false;
       }
     }
+
+    // Petit déj (lot U3, docs/spec-petit-dej.md). Lecture publique, comme plannings/*. Sa ligne : tout connecté ;
+    // une ligne pour quelqu'un (uid vide), réécrire ou retirer : écrivains du planning Table et admins. Dimanche,
+    // inscrit et auteur figés ; borne du passé côté client. Miroir : canGererPetitDej, canEditPetitDej (access.ts).
+    match /petitDej/{id} {
+      allow read: if true;
+      allow create: if signedIn()
+        && request.resource.data.auteurUid == request.auth.uid
+        && request.resource.data.dimanche.matches('[0-9]{4}-[0-9]{2}-[0-9]{2}')
+        && request.resource.data.nom.size() > 0 && request.resource.data.nom.size() <= 80
+        && (request.resource.data.uid == request.auth.uid
+            || (request.resource.data.uid == '' && peutEcrirePlanning('table')));
+      allow update: if signedIn()
+        && request.resource.data.dimanche == resource.data.dimanche
+        && request.resource.data.uid == resource.data.uid
+        && request.resource.data.auteurUid == resource.data.auteurUid
+        && request.resource.data.nom.size() > 0 && request.resource.data.nom.size() <= 80
+        && (resource.data.uid == request.auth.uid || peutEcrirePlanning('table'));
+      allow delete: if signedIn()
+        && (resource.data.uid == request.auth.uid || peutEcrirePlanning('table'));
+    }
   }
 }

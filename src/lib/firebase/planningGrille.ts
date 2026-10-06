@@ -37,7 +37,8 @@ export async function ecrireCase({ definition, date, colonne, valeur, auteur, se
   };
   if (semer) {
     for (const c of definition.colonnes) {
-      if (!(c.cle in champs)) champs[c.cle] = semer[c.index] ?? "";
+      // Une colonne en lecture seule (le petit déj, lot U3) vient d'ailleurs : jamais recopiée.
+      if (!(c.cle in champs) && !c.lectureSeule) champs[c.cle] = semer[c.index] ?? "";
     }
   }
   const mask = Object.keys(champs).map((k) => `updateMask.fieldPaths=${k}`).join("&");

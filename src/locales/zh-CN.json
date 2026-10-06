@@ -1015,6 +1015,20 @@
       "retire": "{{auteur}} 移除了 {{date}}",
       "periodeAnnee": "{{annee}} 年"
     },
+    "petitDej": {
+      "trimestre": "第{{n}}季度",
+      "libre": "空闲",
+      "inscrire": "我来报名",
+      "modifier": "修改",
+      "retirer": "移除",
+      "confirmerRetrait": "移除这一行？",
+      "ajouter": "添加一行",
+      "astuce": "可以写“某某家庭”代替你的名字。",
+      "vientDeSInscrire": "{{nom}} 刚刚报名了。",
+      "illisible": "暂时无法读取报名。",
+      "echec": "保存失败，请重试。",
+      "tonNom": "你的名字"
+    },
     "horaires": {
       "culte": "主日 10:30",
       "groupes": "主日 13:00–14:30",
@@ -1965,7 +1979,15 @@
     "iosInstall": "在 iPhone 或 iPad 上：请先把网站添加到主屏幕（点「分享」，再点「添加到主屏幕」），然后从图标打开，才能开启通知。",
     "blocked": "你的浏览器屏蔽了本网站的通知。要重新开启：点击地址栏左侧的图标，选择「通知」，设为「允许」，然后刷新页面。",
     "promptTitle": "开启服侍提醒",
-    "promptText": "在每次服侍前收到提醒，歌单准备好时也会通知你。"
+    "promptText": "在每次服侍前收到提醒，歌单准备好时也会通知你。",
+    "recevoir": "接收",
+    "types": {
+      "reminders": "服侍提醒",
+      "setlists": "歌单已准备好",
+      "evenements": "活动",
+      "taches": "任务",
+      "petitDej": "早餐"
+    }
   },
   "proposition": {
     "titre": "推荐新诗歌",
