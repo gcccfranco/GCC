@@ -1,7 +1,7 @@
 import { nextUid } from "@/lib/uid";
 import { resolveStructureOverride } from "@/lib/chordpro/structure";
 import { parseChordPro } from "@/lib/chordpro/parser";
-import type { SetlistItem, SectionNuance } from "@/types/setList";
+import type { JianpuChords, SetlistItem, SectionNuance } from "@/types/setList";
 import type { SongIndexEntry, SectionSummary } from "@/types/song";
 
 export interface FormSectionItem {
@@ -31,6 +31,9 @@ export interface FormItem {
   contentOverride?: string | null;
   /** Provenance des sections matérialisées, reconduite avec le contenu. */
   sectionOrigins?: Record<string, string>;
+  /** Accords retouchés sur le scan 简谱 (mode Adapter, lot 9) : reconduits tels
+   *  quels, comme `contentOverride` — l'éditeur ne les modifie pas. */
+  jianpuChords?: JianpuChords;
 }
 
 export interface FusionMixedSectionForm {
@@ -119,7 +122,7 @@ function toFormItem(
   sectionNuances: Record<string, SectionNuance> = {},
   sectionKeys: Record<string, string> = {},
   jianpuSheet = false,
-  adapted: { contentOverride?: string | null; sectionOrigins?: Record<string, string> } = {}
+  adapted: { contentOverride?: string | null; sectionOrigins?: Record<string, string>; jianpuChords?: JianpuChords } = {}
 ): FormItem {
   const allSections = itemSections(song, adapted.contentOverride);
   const orderedSections: SectionSummary[] = structureOverride && structureOverride.length > 0
@@ -151,6 +154,7 @@ function toFormItem(
     }),
     contentOverride: adapted.contentOverride ?? null,
     ...(adapted.sectionOrigins ? { sectionOrigins: adapted.sectionOrigins } : {}),
+    ...(adapted.jianpuChords ? { jianpuChords: adapted.jianpuChords } : {}),
   };
 }
 
@@ -202,6 +206,26 @@ export function buildFormItems(
 
       const song = songsMap[item.songSlug];
       if (!song) return [];
-      return [toFormItem(song, item.keyOverride, item.notes, item.structureOverride, item.sectionNotes, item.sectionTransitions, item.sectionNuances, item.sectionKeys, item.jianpuSheet, { contentOverride: item.contentOverride, sectionOrigins: item.sectionOrigins })];
+      return [toFormItem(song, item.keyOverride, item.notes, item.structureOverride, item.sectionNotes, item.sectionTransitions, item.sectionNuances, item.sectionKeys, item.jianpuSheet, { contentOverride: item.contentOverride, sectionOrigins: item.sectionOrigins, jianpuChords: item.jianpuChords })];
     });
+}
+
+/** Place un élément à `index` (0 = avant le premier, `items.length` = à la fin) :
+ *  le « + » entre deux éléments de la bibliothèque (docs/spec-editeur-setlist.md, Q8). */
+export function insererA(items: FormListItem[], index: number, nouveau: FormListItem): FormListItem[] {
+  return [...items.slice(0, index), nouveau, ...items.slice(index)];
+}
+
+/** Fusionne les chants seuls dont l'uid est donné, dans l'ordre de la setlist,
+ *  à la place du premier ; transitions et fusions ne se fusionnent pas. Moins
+ *  de deux chants seuls : la liste est rendue telle quelle. */
+export function fusionner(items: FormListItem[], uids: string[]): FormListItem[] {
+  const choisis = new Set(uids);
+  const songs = items.filter(
+    (i): i is FormItem => !isFormFusion(i) && !isFormTransition(i) && choisis.has(i.uid)
+  );
+  if (songs.length < 2) return items;
+  const fusion: FormFusionItem = { uid: nextUid(), kind: "fusion", songs, mixedStructure: null };
+  const fusionnes = new Set(songs.map((s) => s.uid));
+  return items.flatMap((i) => (i.uid === songs[0].uid ? [fusion] : fusionnes.has(i.uid) ? [] : [i]));
 }

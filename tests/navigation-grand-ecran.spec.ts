@@ -349,7 +349,7 @@ test.describe("navigation sur grand écran (U4) : rien ne passe sous la barre, o
 
   test("éditeur : la barre d'action commence au bord de la barre et laisse son pied visible", async ({ page }) => {
     await sansSheet(page);
-    await signInAs(page, MUSICIEN, {}, "/setlists/new");
+    await signInAs(page, MUSICIEN, {}, "/setlists/new?autre=1");
     const publier = page.getByRole("button", { name: "Publier" });
     await publier.waitFor();
     await sansIndicateurDeNext(page);
@@ -843,7 +843,7 @@ test.describe("navigation sur grand écran (U4) : tablette en paysage", () => {
 
   test("tablette en paysage, éditeur : la barre d'action commence au bord de la barre et laisse son pied visible", async ({ page }) => {
     await sansSheet(page);
-    await signInAs(page, MUSICIEN, {}, "/setlists/new");
+    await signInAs(page, MUSICIEN, {}, "/setlists/new?autre=1");
     const publier = page.getByRole("button", { name: "Publier" });
     await publier.waitFor();
     await sansIndicateurDeNext(page);

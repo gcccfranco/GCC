@@ -31,7 +31,10 @@ export async function compterLesRendus(page: Page) {
       supportsFiber: true,
       renderers: new Map(),
       inject: () => 1,
-      onCommitFiberRoot: (_id: number, racine: { current: Fibre }) => {
+      onCommitFiberRoot: (_id: number, racine: { current: Fibre; containerInfo: unknown }) => {
+        // La page seule (Next l'hydrate sur `document`) : les outils de développement de
+        // Next ont leur propre racine, qui se refait à chaque compilation d'une autre page.
+        if (racine.containerInfo !== document) return;
         w.__rendus.push(refaits(racine.current.child));
       },
       onCommitFiberUnmount: () => {},

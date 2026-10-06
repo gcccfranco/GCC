@@ -1,6 +1,6 @@
 # Spec : lot U5 bis — éditeur de setlist (« Pour quel service ? » et piste 2)
 
-Spec écrite le 04/10/2026 ; rien n'est codé. Attend la validation de Timothée, puis son go.
+Spec écrite le 04/10/2026. Codée du 05 au 06/10/2026, puis relue : voir « Avancement ».
 
 Lot U5 bis de `feuille-de-route.md` § 3.U, après U4 (`docs/spec-navigation-grand-ecran.md`) et U5
 (`docs/spec-deux-volets.md`). Planche : https://claude.ai/artifact/1d4ZW7Y9NVHcsLB9YrrbrA, version 11 ; les écrans de la
@@ -297,4 +297,313 @@ npm test   # suite complète avant de rendre la main ; PW_PORT=3000 si un next d
 
 ## Avancement
 
-Rien n'est codé : la spec attend la validation de Timothée, puis son go.
+Spec validée, go de code du 04/10/2026 (redit le 05/10/2026) ; les questions ouvertes prennent leur recommandation.
+Branche `lot/u5bis-editeur-setlist`, rien de poussé.
+
+**05/10/2026 — T1 faite** (logique pure ; aucun écran ne change).
+
+- Correctif `jianpuChords` (question 6), commit `5b4c070` : `FormItem` porte `jianpuChords`, relus par `buildFormItems`
+  et réécrits par `buildSetlistItems` (`src/lib/setlist/formItems.ts`, `buildSetlistItems.ts`), comme `contentOverride`.
+  « Modifier » une setlist n'efface plus les accords retouchés sur un scan 简谱. Vu rouge (`Received: undefined`), puis vert.
+- Logique pure, commit suivant : `src/lib/setlist/prochainsServices.ts` (`prochainsServicesSansSetlist`),
+  `src/lib/setlist/bibliotheque.ts` (`trancheDeTempo`, `chantsDeLaBibliotheque`), `insererA` et `fusionner` dans
+  `formItems.ts` ; `mergeSongs` de `SetlistForm.tsx` appelle désormais `fusionner` (même comportement).
+- Tests (écrits avant, vus rouges sur des bouchons, puis verts ; ordinateur, téléphone, tablette — 32 × 3) :
+  `tests/setlist-pour-quel-service.spec.ts`, `tests/setlist-bibliotheque.spec.ts`, `tests/setlist-fusionner.spec.ts`
+  (parties pures) et `tests/setlist-editeur-piste2.spec.ts` (`jianpuChords` : deux tests purs + « Modifier » de bout en
+  bout dans l'éditeur actuel). Les tranches suivantes ajoutent leurs tests d'écran dans ces mêmes fichiers.
+- Suite de l'éditeur sans retouche : `setlist-editor`, `setlist-history`, `coup-d-oeil`, `fusions-dp`,
+  `recommended-key`, `harmonie-jianpu` — 246 verts sur les trois appareils. `tsc` propre, lint sans erreur (2 avertissements
+  anciens de `SetlistForm.tsx`, l. 125 et 179, hors du changement).
+
+Choix faits faute de réponse écrite :
+- `prochainsServicesSansSetlist` accepte aussi `isDraft` / `isPrivate` (facultatifs) et ignore brouillons et privées : le
+  test pur « pas avec un brouillon ou une privée » le demande ; `getSetlists()` les retire déjà.
+- Campus : une setlist **avec** moment ne prend que son moment ; **sans** moment, elle prend la séance de même présidence
+  (`normalizeName`, présidence non vide). « Mes services » retombe aussi sur la présidence quand le moment ne colle pas :
+  ici non, sinon le soir d'une même présidence masquerait le matin.
+- Bibliothèque sans recherche : l'ordre de l'index reçu (comme l'éditeur actuel) ; avec recherche, la pertinence de Fuse
+  (mêmes clés, seuil 0,4).
+- Thème = `themes.includes(slug)`, comme la page Chants. **Remarqué, non corrigé** : sur les 61 chants 中文 qui ont un thème,
+  56 ne l'écrivent jamais par son slug — 43 avec le nom chinois d'un thème de `content/themes.json` (« 敬拜 » pour
+  « adoration »), 13 avec des mots qui n'y sont pas (« 赞美 », « 歌唱 ») ; ni la page Chants ni la bibliothèque ne les
+  trouvent par thème.
+  Question du corpus (question 8 : à compléter à part).
+- `fusionner` ignore les uids de transitions et de fusions ; moins de deux chants seuls : la liste est rendue telle quelle
+  (même tableau). Un chant fusionné perd toujours note, transitions de section, choix 简谱 et retouches du scan
+  (`FusionSong` n'a pas ces champs) : la ligne de la question 7 viendra avec l'écran du choix (T3).
+
+**05/10/2026 — T2 faite** (« Pour quel service ? » ; l'éditeur reste celui d'aujourd'hui), commit
+« feat(U5bis): T2 — « Pour quel service ? » … » sur la même branche.
+
+- `/setlists/new` choisit son écran d'après l'URL (`src/app/setlists/new/CreateSetlistClient.tsx`) : sans paramètre,
+  `PourQuelService.tsx` (cartes : catégorie dans sa couleur, « Dimanche 18 octobre », « · Soir » au Campus,
+  « Présidence : … » ou « à définir », « Préparer » en encre ; une colonne sur téléphone, deux en tablette portrait, trois
+  au-delà ; vide et planning illisible dits, « Autre setlist » et « Repartir d'une setlist passée » toujours là) ;
+  `?cat=…&date=…(&moment=…)`, l'éditeur prérempli ; `?autre=1`, l'éditeur vide ; `?depuis=passee`, `SetlistsPassees.tsx`
+  (lignes `SetlistCard`, recherche, « Reprendre » = `duplicateSetlist`, puis « Modifier »).
+- `lienPreparer` et `lirePreremplissage` dans `src/lib/setlist/prochainsServices.ts` : chaque paramètre invalide est
+  ignoré seul (catégorie non permise, date qui n'existe pas, moment hors Campus).
+- `SetlistForm` : prop `prefill` (catégorie, date, moment, titre automatique par la règle du code, question 1) ; la
+  présidence est relue au planning, dans la graphie de la liste. **Brouillon au premier changement (Q4)** : rien n'est
+  écrit tant que l'état est celui du préremplissage (présidence comprise) ; ensuite, comme avant. Le menu Matin / Soir
+  du Campus porte enfin un nom (« Moment »).
+- FR et 中文 : bloc `setlists.entree` des deux fichiers de langue (Timothée relit le 中文).
+- Tests (écrits avant, vus rouges — 9 sur 9 sur l'éditeur d'avant —, puis verts ; ordinateur, téléphone, tablette) :
+  `tests/setlist-pour-quel-service.spec.ts`, 2 tests purs (`lienPreparer`, `lirePreremplissage`, écrits après le code)
+  et 9 tests de page (entrée depuis « Nouvelle », « Préparer » sans écriture puis brouillon au premier chant et « Publier »
+  qui retire le service, URL et catégorie non permise, Campus, « Autre setlist », setlists passées → copie privée →
+  « Modifier », planning vide, 中文, une / deux / trois colonnes) ; captures regardées aux trois tailles. Les tests qui
+  ouvraient `/setlists/new` passent par `?autre=1` (`setlist-editor` ×2, `setlist-history` ×1, `recommended-key` ×1).
+- Vérifié : `pour-quel-service`, `setlist-editor`, `setlist-history`, `recommended-key`, `coup-d-oeil`, `fusions-dp`,
+  `setlist-editeur-piste2`, `setlist-fusionner`, `setlist-bibliotheque`, `harmonie-jianpu` — 375 verts sur les trois
+  appareils ; `back-office-coupe` vert ; `tsc` propre, lint sans erreur ni avertissement nouveau.
+
+Choix faits faute de réponse écrite :
+- Admins : « Pour quel service ? » ne propose que les catégories de leur profil (question 2) ; l'URL, elle, accepte
+  toutes les catégories pour eux, comme le menu de l'éditeur.
+- Un paramètre `cat` ou `date` présent ouvre l'éditeur, même invalide (il est alors vide de ce champ) ; sans paramètre
+  utile, l'entrée. Titre automatique seulement si catégorie et date sont valides.
+- Aujourd'hui = date locale du navigateur (`todayIso`, `src/lib/scene/dimanches.ts`), comme la spec le demande.
+- « Repartir d'une setlist passée » : partagées **et** privées de la personne (`getMySetlists`), passées (avant
+  aujourd'hui), visibles (`canSeeSetlist`) et duplicables (`canDuplicateSetlist`) ; recherche titre, présidence, date
+  (comme la liste des setlists) ; « Reprendre » en gris (une ligne par setlist : l'encre partout alourdirait).
+- Cartes en relief (`raised`, la règle 5C1 « ce qui se touche porte une ombre ») ; catégorie en toutes lettres
+  (« Culte Francophone », comme `SetlistCard`), la planche écrit « Culte Franco ».
+- Un planning qui ne se lit pas : `loadPlanningData` ne lève presque jamais (chaque feuille retombe sur vide) ; le
+  message « Le planning n'a pas pu être lu. » couvre aussi un échec de lecture des setlists. Non testé (on ne sait pas
+  le provoquer sans toucher au code du planning).
+- Le « ← » de l'éditeur ramène toujours à la liste des setlists (T3 refait cet en-tête).
+
+**05/10/2026 — T3 faite** (piste 2 sur ordinateur et tablette paysage ; téléphone et tablette portrait gardent la page
+d'aujourd'hui jusqu'à T4), après fusion de `lot/u4-navigation` et `lot/u5-deux-volets` dans la branche (`26d1427`,
+`3823ad6`). Commencée le 05/10 au soir, coupée par la limite de dépense avant le commit ; reprise le 06/10, relue,
+vérifiée et commitée « feat(U5bis): T3 — … ».
+
+- `SetlistForm` choisit sa mise en page par `useEditeurDeuxColonnes` (`src/hooks/`) : tablette couchée toujours,
+  ordinateur barre réduite toujours, barre dépliée dès 1 054 px de fenêtre (806 px d'éditeur, Q6) ; mêmes requêtes que
+  U4, jamais l'agent utilisateur. L'état et les écritures restent ceux de `SetlistForm` (`buildSetlistItems`) : seule la
+  mise en page change, `EditeurDeuxColonnes` reçoit champs et actions.
+- `src/components/setlists/editeur/` :
+  - `EditeurDeuxColonnes.tsx` : grille `clamp(400px, 100% − 672px, 520px)` + volet (Q2, N5 de U4 non construite) ; les
+    deux colonnes défilent chacune, le bas de la colonne setlist (repère, « Publier » à la couleur du culte, question 9,
+    ou « Terminé ») reste visible ; premier élément choisi à l'ouverture de « Modifier » (Q7), bibliothèque ouverte
+    d'office sur une setlist vide (Q8) ; « Retirer » choisit le suivant.
+  - `EnTeteEditeur.tsx` (Q5) : fil « Setlists › Nouvelle setlist / Modifier la setlist », titre modifiable et crayon,
+    puces Catégorie · Date · Moment (Campus) · Présidence (liste ou « Autre » + nom) · Visibilité, « Notes pour l'équipe ».
+  - `ListeCourte.tsx` : poignée, numéro (chants et fusions, pas les transitions, comme la planche), titre, pinyin,
+    étiquette 简谱, artiste, pastilles, note en italique, `KeyPill` « orig. », chevron ; ligne choisie en encre
+    (`aria-current`) ; transition en pointillé ambre ; fusion « A / B ». Réordonner au doigt, à la souris et au clavier
+    (`KeyboardSensor`, Q13).
+  - `Reglages.tsx` : 12 tonalités en groupe radio (« Tonalité de <titre> », flèches ; l'origine écrit `null`), structure
+    en pastilles (glisser, toucher = choisir, ✕ = retirer, flèches = déplacer ; « + section », « + Dernière phrase »),
+    « Par section » (Note · Nuance · Transition · 升调, sous-éditeurs d'aujourd'hui sous la ligne).
+  - `Volets.tsx` : chant (« Voir la partition » dans un nouvel onglet dans la tonalité choisie, Q10 ; Partition 简谱 /
+    Paroles pour un chant à scan ; note du chant ; « Fusionner » s'il reste un autre chant seul ; « Retirer »),
+    transition (texte, « Retirer », Q9), fusion (par chant : tonalité, structure Dp comprise, par section sans
+    transition ; « Mélanger » et `MixedStructureEditor` d'aujourd'hui ; « Défusionner », « Retirer »), choix des chants
+    à fusionner (Q1 : départ coché en tête, autres chants seuls, ligne de la question 7, « Annuler », « Fusionner (n) »
+    inactif sans second chant ; la fusion, choisie, prend la place du premier coché par `fusionner`).
+  - `Bibliotheque.tsx` : « Ajouter des chants », « Terminé » (Échap ou un élément touché aussi), recherche titre, pinyin,
+    artiste sans limite (`chantsDeLaBibliotheque`), compteur, `KeyPill` « reco. », « + », « ✓ Dans la setlist »,
+    « ✓ Ajouté » ; ajout à la fin dans la tonalité recommandée ; toucher un titre montre ses sections (l'aperçu des
+    deux lignes vient en T5), « Touche + pour ajouter, le titre pour un aperçu ».
+- `SetlistFormRows.tsx` : sous-éditeurs exportés (note, nuance, 升调, mélange), `data-ligne-section` / `data-nom-section`
+  pour les tests ; `addTransition` rend l'uid de la transition ajoutée (choisie aussitôt). FR et 中文 :
+  bloc `setlists.editeur` des deux fichiers de langue.
+- Tests (écrits avant, vus rouges — 19 sur 19 sur l'éditeur d'avant —, puis verts) : 11 tests d'écran dans
+  `setlist-editeur-piste2.spec.ts` (ajouté à `SPECS_GRAND_ECRAN` : ordinateur, `tablette-paysage`, `ordinateur-1440`),
+  5 dans `setlist-fusionner.spec.ts`, 3 dans `setlist-bibliotheque.spec.ts` ; ils sautent sur téléphone et tablette
+  portrait (T4). Aide commune `tests/helpers/editeurSetlist.ts` : les specs existantes passent par elle et valent pour
+  les deux pages (sélecteurs seulement, vérifications des écritures inchangées) ; `navigation-grand-ecran` ouvre
+  l'éditeur par `?autre=1`.
+- Vérifié le 06/10 : `setlist-editeur-piste2`, `setlist-fusionner`, `setlist-bibliotheque`, `setlist-pour-quel-service`,
+  `setlist-editor`, `setlist-history`, `coup-d-oeil`, `fusions-dp`, `recommended-key`, `harmonie-jianpu` — 450 verts,
+  42 sautés (grand écran sur petits appareils), cinq projets ; `navigation-grand-ecran`, `back-office-coupe`,
+  `setlist-deux-volets` — 202 verts ; `tsc` propre, lint sans erreur ni avertissement nouveau. Captures regardées
+  (1 280, 1 440, tablette couchée) et comparées à `creer-piste2-ordinateur`, `-fusionner`, `-bibliotheque`.
+
+Choix faits faute de réponse écrite :
+- Numéros : les transitions n'en ont pas (planche) ; « 2 · 一生爱你 » quand une transition précède.
+- Le choix « Fusionner » liste aussi les chants seuls placés avant le chant de départ (la planche le fait).
+- Chant de départ du choix : case cochée qu'on ne peut décocher (`aria-disabled`), pas grisée.
+- « Fusionner » est caché, non grisé, quand il ne reste aucun autre chant seul (spec : « n'apparaît que »).
+- Crayon du titre : décoratif (`aria-hidden`), il met le focus dans le titre ; le titre est un champ nommé « Titre ».
+- La date s'écrit en clair dans sa puce (« Dim. 18 octobre ») ; le champ de date natif, transparent, est posé dessus.
+- Bibliothèque : toucher un titre montre seulement les noms des sections en T3 ; les deux lignes avec accords (Q12),
+  les filtres (Q11) et le « + » entre deux éléments viennent en T5, comme le dit « Ce qui sera construit ».
+- Une étape ajoutée garde un uid `<section>-<chiffres>` comme aujourd'hui : `structureOverride` écrit les uids et
+  `resolveStructureOverride` les relit sous cette forme.
+
+**06/10/2026 — T4 faite** (piste 2 sur téléphone et tablette en portrait ; l'ancienne page et « Sélectionner »
+disparaissent), commit « feat(U5bis): T4 — … » sur la même branche.
+
+- `SetlistForm` n'a plus que deux dispositions : `EditeurDeuxColonnes` (T3) ou `EditeurFeuilles`
+  (`src/components/setlists/editeur/EditeurFeuilles.tsx`). Ce que montre le volet (réglages du chant, de la transition,
+  de la fusion ; choix à fusionner ; bibliothèque) est sorti dans `useVolet.tsx`, partagé par les deux ; `feuille.tsx`
+  dit au contenu qu'il est dans une feuille (titre du dialogue, « OK »). L'état et les écritures ne bougent pas
+  (`buildSetlistItems`).
+- Petits écrans (planches `creer-piste2-telephone-setlist`, `-telephone`, `-telephone-ajouter`, `-tablette`) :
+  « ‹ Nouvelle setlist » (ou « ‹ Modifier la setlist », dont le retour envoie le changement en cours comme
+  « Terminé »), titre, puces, notes, la liste courte, « + Transition », « Toucher un chant ouvre ses réglages ; la
+  poignée change l'ordre. » ; barre du bas : repère, « Ajouter des chants », « Publier » à la couleur du culte ou
+  « Terminé ». Toucher un élément ouvre une feuille `Drawer` titrée « n · Titre » avec « OK » (glisser vers le bas,
+  voile, Échap) ; le focus y entre, puis revient à la ligne (ou à « Ajouter des chants »). « Fusionner » remplace le
+  contenu de la même feuille (« ‹ Retour », « Annuler », « Fusionner (n) ») ; la Dernière phrase s'ouvre par-dessus.
+  Bibliothèque en feuille presque pleine hauteur : « N chants dans la setlist », « Terminé ».
+- Retirés : l'ancienne page de `SetlistForm` (recherche limitée à 20, mode « Sélectionner », lignes dépliées),
+  `SongRow`, `FusionRow`, `TransitionRow` et leurs aides de `SetlistFormRows.tsx` (restent les sous-éditeurs repris par
+  le volet et `SectionStructureEditor` de « Ma version ») ; libellés devenus inutiles (`selectMode`, `cancelSelect`,
+  `mergeButton`, `fusionExpand`, `emptySongs`, `allSongsAdded`, `notesLabel`, `songOriginalKey`). Nouveaux : `ok`,
+  `retour`, `aideListe`, `listeVide`, `nDansLaSetlist` (FR et 中文).
+- Tests (écrits avant, vus rouges — 7 sur 7 sur téléphone —, puis verts) : `setlist-editeur-piste2.spec.ts` (liste et
+  barre du bas, feuille titrée, « OK » et Échap rendent le focus, création sans rien d'ouvert ; les tests de T3 valent
+  désormais pour les deux dispositions), `setlist-fusionner.spec.ts` (choix dans la même feuille, « ‹ Retour » ; les
+  tests de T3 courent partout), `setlist-bibliotheque.spec.ts` (feuille, compteur, « Terminé » et Échap). Aide
+  `tests/helpers/editeurSetlist.ts` réécrite pour la seule piste 2 (`attendreEditeur`, `fermerFeuille`,
+  `ouvrirBibliotheque`, `ajouterChant`) ; specs existantes retouchées aux sélecteurs seulement.
+- Vérifié le 06/10 : `setlist-editeur-piste2`, `setlist-fusionner`, `setlist-bibliotheque`,
+  `setlist-pour-quel-service`, `setlist-editor`, `setlist-history`, `coup-d-oeil`, `fusions-dp`, `recommended-key`,
+  `harmonie-jianpu` — 495 verts, 23 sautés (une disposition seulement), cinq projets (deux échecs de `setlist-history`
+  sur petits écrans, un champ touché sous la feuille ouverte : test corrigé, revu vert) ; `back-office-coupe`,
+  `navigation-grand-ecran`, `setlist-deux-volets` — 202 verts ; `tsc` propre, lint sans erreur ni avertissement
+  nouveau. Captures regardées (téléphone, tablette en portrait) et comparées aux planches.
+
+Choix faits faute de réponse écrite :
+- Petits écrans : rien ne s'ouvre d'office (la bibliothèque d'office de Q8 est « sur grand écran ») ; une setlist vide
+  dit « Aucun chant pour l'instant. » et la barre du bas porte « Ajouter des chants ».
+- « Retirer » dans une feuille la ferme (sur grand écran, le suivant est choisi).
+- La ligne n'est en encre (`aria-current`) que tant que sa feuille est ouverte (la planche n'en montre pas).
+- « N chants dans la setlist » compte les chants distincts, ceux des fusions compris.
+- Glisser une pastille de structure ou un passage du mélange ne tire pas la feuille (`data-vaul-no-drag`) ; la
+  feuille se tire par sa poignée et son haut.
+- Tablette en portrait : feuille et liste bornées à 768 px de large (`max-w-3xl`), centrées.
+
+**06/10/2026 — T5 faite** (bibliothèque complète), commit « feat(U5bis): T5 — … » sur la même branche. Le lot
+est entier.
+
+- `Bibliotheque.tsx` : pilules Tous · FR · 中文 (groupe « Langue », `aria-pressed`), « Thèmes ▾ » et « Tempo ▾ »
+  (menus natifs habillés en pilule, en encre quand un filtre est pris) ; thèmes de `content/themes.json` portés par au
+  moins un chant, nommés dans la langue de l'interface, comme la page Chants ; tempo Lent < 90, Modéré 90–119,
+  Rapide ≥ 120 (`chantsDeLaBibliotheque`, T1). Le compteur suit recherche et filtres, qui se cumulent.
+- Aperçu (Q12) : toucher un titre déplie les pastilles de structure, les **deux premières lignes chantées** (une ligne
+  d'accords seuls, comme une intro, ne compte pas) avec leurs accords dans la tonalité où le chant serait ajouté (la
+  recommandée, sinon l'origine), rendues par `ChordLine`, sans pinyin ni 简谱, et « Voir la partition » dans un nouvel
+  onglet dans cette tonalité. Chargé à l'ouverture par `/api/song/<slug>` (`fetchSongAST`) ; « Chargement de
+  l'aperçu… », « Aperçu indisponible. ». Logique pure : `premieresLignes` (`src/lib/setlist/bibliotheque.ts`).
+- « + » entre deux éléments (Q8), **disposition ordinateur seulement** (`useEditeurOrdinateur`,
+  `src/hooks/useEditeurDeuxColonnes.ts` ; ni tablette couchée ni feuilles) : avant chaque élément de la liste courte, un
+  bouton « Insérer ici, au début » / « Insérer ici, après <titre> », ligne bleue « ⊕ Insérer ici » au survol ou au
+  focus. Le toucher ouvre la bibliothèque (ou la garde) ; la ligne choisie reste visible et ouvre de la place tant
+  que la bibliothèque est ouverte ; chaque ajout va à cet endroit et la ligne avance d'un cran (`useVolet`,
+  `insertion`). « Ajouter des chants » remet les ajouts à la fin ; choisir un élément ou fermer la bibliothèque oublie
+  l'endroit. `addSong(song, index?)` de `SetlistForm` passe par `insererA` (T1).
+- FR et 中文 : `langue`, `tous`, `theme`, `themes`, `tempo`, `tempoLent`, `tempoModere`, `tempoRapide`,
+  `apercuChargement`, `apercuIndisponible`, `insererIci`, `insererAuDebut`, `insererApres` (`setlists.editeur`).
+- Tests (écrits avant, vus rouges — 9 sur 9 sur ordinateur et téléphone —, puis verts) : 6 tests d'écran de plus dans
+  `tests/setlist-bibliotheque.spec.ts` (langue ; thème et tempo, chant sans tempo absent ; aperçu FR, Eb écrit, D
+  ajouté : `Bb/D` → `A/C#` ; aperçu 中文 sans pinyin ; « + » sur ordinateur, deux ajouts dans l'ordre puis « Ajouter
+  des chants » à la fin ; aucun « + » ailleurs). Le fichier passe dans `SPECS_GRAND_ECRAN` (cinq projets).
+- Vérifié le 06/10 : `setlist-bibliotheque` (cinq projets désormais), `setlist-editeur-piste2`, `setlist-fusionner`,
+  `setlist-pour-quel-service`, `setlist-editor`, `setlist-history`, `coup-d-oeil`, `fusions-dp`, `recommended-key`,
+  `harmonie-jianpu` — 551 verts, 30 sautés (une disposition seulement), un échec de lenteur (`recommended-key`, page
+  du chant, tablette) revu vert seul ; `tsc` propre, lint sans erreur ni avertissement nouveau. Captures regardées (ordinateur, 1 440, tablette couchée, téléphone, tablette en
+  portrait) et comparées à `creer-piste2-bibliotheque` et `creer-piste2-telephone-ajouter`.
+
+Choix faits faute de réponse écrite :
+- « visible tant que la bibliothèque est ouverte » lu ainsi : la ligne d'insertion apparaît au survol ou au focus ;
+  une fois touchée, elle reste affichée (et ouvre de la place) jusqu'à la fermeture de la bibliothèque.
+- Pas de « + » après le dernier élément : c'est « Ajouter des chants ».
+- Aperçu d'un chant sans tonalité recommandée : sa tonalité d'origine (c'est là qu'il serait ajouté) ; le lien
+  « Voir la partition » n'a alors pas de `?key=`.
+- Les filtres ne sont pas gardés d'une ouverture de la bibliothèque à l'autre (comme la recherche en T3).
+- Thème et tempo en menus natifs (accessibles, sans dépendance) plutôt qu'en menus dessinés.
+
+**06/10/2026 — fusion des versions finales de U4 et U5** : `lot/u4-navigation` était déjà entier dans la branche ;
+`lot/u5-deux-volets` apportait sa relecture (`e7a14b5`), fusionnée sans conflit (les fichiers de langue se rejoignent
+seuls ; l'éditeur ne lit pas `useSongsIndex`, dont la forme change). `tsc` propre, lint sans erreur (51 avertissements,
+tous anciens). Suite du lot et de ce que la fusion touche (`setlist-pour-quel-service`, `setlist-editeur-piste2`,
+`setlist-bibliotheque`, `setlist-fusionner`, `setlist-editor`, `setlist-history`, `recommended-key`, `fusions-dp`,
+`coup-d-oeil`, `navigation-grand-ecran`, `chants-deux-volets`, `setlist-deux-volets`, `setlist-g`,
+`deux-volets-finitions`, `back-office-coupe`) : 887 verts, 298 sautés, 3 échecs, tous deux tests fragiles, corrigés
+(commit « fix(U5bis): fusion — … ») :
+- `recommended-key`, « le bouton de retour ramène à la recommandée » (déjà vu en T3 à T5) : le rendu du serveur porte
+  l'originale (Eb) et le bouton de retour ; choisir Eb avant l'hydratation « réussissait », puis la page passait à D et
+  le bouton disparaissait sous le clic. Le test attend désormais D avant de choisir. Ancienne version : 5 échecs sur 18
+  répétitions ; nouvelle : 18 sur 18.
+- `setlist-g`, « défiler … ne re-rend pas la page à chaque image » (test de la relecture de U5), téléphone et tablette :
+  le compteur de `tests/helpers/rendus.ts` comptait aussi la racine des outils de développement de Next, qui se refait
+  à chaque compilation d'une autre page par l'autre worker. Il ne compte plus que la racine de la page (`document`).
+  Vert seul avant et après ; `recommended-key`, `setlist-g`, `setlist-deux-volets` revus : 147 verts.
+- Remarqué, non corrigé (hors du lot) : la page d'un chant affiche un instant l'originale avant la recommandée (état de
+  départ = originale, recommandée posée au montage).
+
+Reste : rien dans le lot. Remarqué, non corrigé : les thèmes 中文 du corpus écrits en chinois (voir T1) ne se filtrent
+toujours pas par thème (question 8).
+Timothée : aucune règle Firestore à publier pour T1 à T5 ; relire les libellés 中文 de `setlists.entree` et
+`setlists.editeur` (nouveaux en T4 : `ok` « 好 », `retour`, `aideListe`, `listeVide`, `nDansLaSetlist` ; en T5 :
+`langue` à `insererApres`, dont « 插入此处，在 {{titre}} 之后 »). Le correctif `jianpuChords` (commit à lui seul)
+peut partir sur `main` sur son ordre, avant le reste du lot.
+
+**06/10/2026 — relecture du lot (deux relectures, 13 constats)**, commit « fix(U5bis): relecture — … » sur la même
+branche. Chaque correction de comportement a son test, vu rouge sur le code d'avant, puis vert.
+
+- **Date et titre du service (important).** Après « Préparer », choisir une autre présidence posait la date de la
+  prochaine séance de cette personne (le 11/10 au lieu du 18/10), le titre restant « … 18/10 ». `SetlistForm` : une date
+  déjà fixée — service préparé, setlist qu'on modifie, ou date choisie à la main — ne bouge plus au choix d'une
+  présidence ; sur « Autre setlist », tant que la date n'a pas été touchée, la présidence propose toujours sa prochaine
+  séance. Le titre automatique suit catégorie, date et moment tant qu'il est vide ou encore celui de la règle ; un titre
+  écrit à la main ne bouge plus. « Aujourd'hui » de l'éditeur (date par défaut, prochaine séance d'une présidence) est
+  la date locale (`todayIso`), plus l'UTC : à 00:30 il donnait la veille. Tests : `setlist-pour-quel-service.spec.ts`
+  (« Préparer » puis une autre présidence ; « Modifier » ; « Autre setlist », date qui suit et titre écrit à la main ;
+  date choisie à la main ; autre catégorie ; deux tests à 00:30 heure de Paris).
+- **« Voir la partition » dans la tonalité d'origine (important).** L'origine choisie (`keyOverride: null`) n'écrivait
+  pas `?key=` : la page du chant s'ouvrait dans la recommandée. Le lien porte maintenant la tonalité affichée (Q10).
+  Test sur Je reviens au cœur (Eb gravé, D recommandé).
+- **Réordonner au clavier (important, test manquant).** Deux tests (`setlist-editeur-piste2.spec.ts`) : poignée d'un
+  chant (espace, flèche bas, espace, ordre écrit) ; flèches gauche et droite sur une pastille de structure (le focus
+  suit la pastille), Entrée la choisit. Verts d'emblée (le code était là) ; contre-épreuve faite : sans
+  `sortableKeyboardCoordinates`, ou sans les flèches des pastilles, chacun passe au rouge.
+- Mouvement réduit = fondu (« Partout ») : les feuilles de l'éditeur (`[data-volet]`, vaul) arrivent et partent en
+  fondu de 200 ms (`globals.css`, fin du fichier) au lieu de glisser. Test sur petits écrans (`emulateMedia`).
+- Q6 : test à 1 040 px (feuilles) et 1 060 px (deux colonnes), barre dépliée, puis barre réduite à 1 040 px (deux
+  colonnes), sur ordinateur.
+- `setlist-fusionner.spec.ts` entre dans `SPECS_GRAND_ECRAN` : il court aussi sur `tablette-paysage` et
+  `ordinateur-1440` (le compte rendu de T4 disait « partout », c'était vrai des trois appareils seulement).
+- « Pour quel service ? » lit les setlists par `getSetlistsFrom(aujourd'hui, 200, { strict: true })` au lieu de toute la
+  collection ; `strict` (nouvelle option, sans effet sur Chants) fait lever un refus (jeton expiré, règle) au lieu de
+  rendre `[]` : le message « Le planning n'a pas pu être lu. » s'affiche au lieu de re-proposer des services déjà
+  préparés. Tests : lecture refusée (message, aucune carte, les deux autres entrées) et lecture bornée par date.
+- Bibliothèque : un chant ajouté puis retiré (la setlist redevenue vide, la bibliothèque revenue d'elle-même sur grand
+  écran) n'est plus « ✓ Ajouté » : son « + » revient (« Ajouté » seulement s'il est encore dans la setlist). Test.
+- Fusionner : la mise en garde nomme aussi « les accords retouchés sur le scan 简谱 » (FR et 中文), perdus à
+  l'enregistrement (`FusionSong` n'a pas `jianpuChords`). `sectionOrigins` (copies de sections du mode Adapter) est
+  perdu aussi, sans être nommé : c'est un détail interne de la version adaptée, déjà annoncée par « la structure ».
+- En-tête de cette spec : « rien n'est codé » remplacé.
+- Vérifié le 06/10 : 16 tests nouveaux ou retouchés, 13 vus rouges sur le code d'avant puis verts (les deux du clavier
+  et celui de Q6 couvrent du code déjà là) ; `setlist-pour-quel-service`, `setlist-editeur-piste2`,
+  `setlist-bibliotheque`, `setlist-fusionner`, `setlist-editor`, `setlist-history`, `coup-d-oeil`, `fusions-dp`,
+  `recommended-key`, `harmonie-jianpu`, `back-office-coupe` — 692 verts, 43 sautés (une disposition ou un appareil
+  seulement), aucun échec, cinq projets ; `tsc` propre, lint sans erreur (51 avertissements, tous anciens ; les deux de
+  `SetlistForm.tsx` sont ceux d'avant). Capture du choix à fusionner regardée (mise en garde sur trois lignes à 1 280 px).
+
+Choix faits faute de réponse écrite :
+- « Modifier » : changer de présidence ne déplace plus la date (le constat ne visait que « Préparer » ; même piège quand
+  la présidence est remplacée au dernier moment sur une setlist existante). La date se change par sa puce.
+- En modification aussi, un titre resté celui de la règle suit une nouvelle date (« Culte Francophone 18/10 » devient
+  « … 25/10 ») ; un titre vide se remplit au choix d'une date ou d'une présidence, pas à celui d'une catégorie ou d'un
+  moment (comme avant).
+- Fondu de 200 ms, opacité seule ; le voile de vaul garde son propre fondu.
+
+Remarqué, non corrigé (hors du lot ou sans constat) :
+- « Repartir d'une setlist passée » lit toujours toute la collection (plus les privées de la personne) : sa recherche
+  porte sur tout l'historique ; une lecture bornée limiterait ce qu'on retrouve.
+- U4 : le fondu de la barre par-dessus la tablette (`.barre-par-dessus`) ne change que le nom de l'animation ; la règle
+  générale du mouvement réduit la ramène à 0,01 ms, donc la barre apparaît d'un coup.
+
+Reste : rien. **Lot U5 bis fini et relu.**
+Timothée : aucune règle Firestore à publier ; relire le 中文 de `setlists.editeur.fusionnerPerte`
+(« 合并后保留每首诗歌的调、结构和段落备注；诗歌备注、段落过渡、简谱选择以及在简谱扫描上修改的和弦不会保留。 ») avec les
+libellés déjà signalés plus haut ; essayer en local « Préparer » puis une autre présidence, et une setlist modifiée
+dont on change la présidence (la date ne bouge plus) ; dire si ce comportement lui va. Le correctif `jianpuChords`
+peut toujours partir seul sur `main`, sur son ordre.

@@ -13,11 +13,6 @@ import {
   GripVertical,
   Trash2,
   Plus,
-  ChevronDown,
-  ChevronUp,
-  Link2,
-  Unlink,
-  Shuffle,
   RotateCcw,
   MessageSquare,
   ArrowRight,
@@ -28,8 +23,7 @@ import { keyOptions } from "@/lib/transpose";
 import { useTranslation } from "react-i18next";
 import { useDefaultSensors } from "@/lib/dnd/sensors";
 import { nextUid } from "@/lib/uid";
-import { useJianpuScore } from "@/lib/jianpu/images";
-import type { FormItem, FormSectionItem, FormFusionItem, FormTransitionItem, FusionMixedSectionForm } from "@/lib/setlist/formItems";
+import type { FormItem, FormSectionItem, FormFusionItem, FusionMixedSectionForm } from "@/lib/setlist/formItems";
 import type { SectionSummary, SongIndexEntry } from "@/types/song";
 import { LastPhraseSheet } from "@/components/setlists/LastPhraseSheet";
 import { NUANCES, nuanceFull } from "@/lib/setlist/nuances";
@@ -38,7 +32,7 @@ import { NUANCES, nuanceFull } from "@/lib/setlist/nuances";
 
 type AnnotationField = "note" | "transition" | "nuance" | "keyChange" | null;
 
-const FIELD_STYLE = {
+export const FIELD_STYLE = {
   note: { Icon: MessageSquare, filled: "bg-secondary text-foreground", ring: "ring-1 ring-foreground/30", title: "Note" },
   transition: { Icon: ArrowRight, filled: "bg-amber-500/15 text-amber-600 dark:text-amber-400", ring: "ring-1 ring-amber-400/50", title: "Transition" },
   nuance: { Icon: SlidersHorizontal, filled: "bg-violet-500/15 text-violet-600 dark:text-violet-400", ring: "ring-1 ring-violet-400/50", title: "Nuance" },
@@ -72,7 +66,7 @@ function FieldToggleBtn({
 }
 
 /** Éditeur de nuance : étiquettes prédéfinies (violet) + texte libre. */
-function NuanceFieldInput({
+export function NuanceFieldInput({
   tags,
   note,
   onTagsChange,
@@ -120,7 +114,7 @@ function NuanceFieldInput({
 }
 
 /** Sélecteur de modulation (升调) : tonalité cible de la section, vide = aucune. */
-function KeyChangeFieldInput({
+export function KeyChangeFieldInput({
   value,
   onChange,
 }: {
@@ -155,7 +149,7 @@ function KeyChangeFieldInput({
   );
 }
 
-function AnnotationFieldInput({
+export function AnnotationFieldInput({
   kind,
   value,
   onChange,
@@ -225,6 +219,7 @@ export function SortableSectionRow({
     <div
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition }}
+      data-ligne-section
       className={`rounded border text-xs ${
         isDragging ? "border-primary/40 bg-primary/5 shadow" : "border-border bg-background"
       }`}
@@ -239,7 +234,7 @@ export function SortableSectionRow({
         >
           <GripVertical className="h-4 w-4" />
         </button>
-        <span className="flex-1 min-w-0 font-medium text-foreground truncate">{item.name}</span>
+        <span data-nom-section className="flex-1 min-w-0 font-medium text-foreground truncate">{item.name}</span>
         {!hideNote && (
           <>
             <FieldToggleBtn
@@ -562,7 +557,7 @@ function SortableMixedRow({
 
 // ─── Mixed structure editor ───────────────────────────────────────────────────
 
-function MixedStructureEditor({
+export function MixedStructureEditor({
   fusionItem,
   onChangeMixed,
   onPatchSong,
@@ -721,548 +716,6 @@ function MixedStructureEditor({
         <p className="text-[11px] text-muted-foreground text-center py-1">
           {t("setlists.form.mixedStructureEmpty")}
         </p>
-      )}
-    </div>
-  );
-}
-
-// ─── Song row (sortable, top-level) ───────────────────────────────────────────
-
-export function SongRow({
-  item,
-  selectable,
-  selected,
-  onToggleSelect,
-  onRemove,
-  onKeyChange,
-  onNoteChange,
-  onSectionItemsChange,
-  onJianpuSheetChange,
-  onLastPhrase,
-}: {
-  item: FormItem;
-  selectable?: boolean;
-  selected?: boolean;
-  onToggleSelect?: () => void;
-  onRemove: () => void;
-  onKeyChange: (key: string | null) => void;
-  onNoteChange: (note: string) => void;
-  onSectionItemsChange: (items: FormSectionItem[]) => void;
-  onJianpuSheetChange: (on: boolean) => void;
-  /** « Dernière phrase » ajoutée : version adaptée + nouvelle étape, ensemble. */
-  onLastPhrase: LastPhraseTarget["onAdd"];
-}) {
-  const { t } = useTranslation();
-  const jianpuScore = useJianpuScore(item.song.slug);
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
-    useSortable({ id: item.uid });
-  const [showStructure, setShowStructure] = useState(false);
-  const allSections = item.song.sections ?? [];
-  const originalCount = allSections.length;
-  const currentCount = item.sectionItems.length;
-  const isModified =
-    currentCount !== originalCount ||
-    item.sectionItems.some((si, i) => si.sectionId !== allSections[i]?.id);
-  return (
-    <div
-      ref={setNodeRef}
-      style={{ transform: CSS.Transform.toString(transform), transition}}
-      className={`rounded-lg border transition-colors ${
-        isDragging
-          ? "border-primary/50 bg-primary/5 shadow-md"
-          : selected
-          ? "border-primary/40 bg-primary/5"
-          : "border-border bg-background"
-      }`}
-    >
-      <div className="flex items-start gap-2 p-3">
-        {selectable ? (
-          <button
-            type="button"
-            onClick={onToggleSelect}
-            className={`mt-0.5 shrink-0 w-4 h-4 rounded border-2 flex items-center justify-center transition-colors ${
-              selected
-                ? "border-primary bg-primary"
-                : "border-muted-foreground/40 hover:border-primary"
-            }`}
-          >
-            {selected && (
-              <svg className="w-2.5 h-2.5 text-primary-foreground" viewBox="0 0 10 10" fill="none">
-                <path d="M2 5l2.5 2.5 3.5-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            )}
-          </button>
-        ) : (
-          <button
-            {...attributes}
-            {...listeners}
-            type="button"
-            style={{touchAction: "none"}}
-            className="mt-0.5 text-muted-foreground cursor-grab active:cursor-grabbing shrink-0"
-          >
-            <GripVertical className="h-4 w-4" />
-          </button>
-        )}
-
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-sm font-medium text-foreground truncate">{item.song.title}</span>
-            {item.song.titlePinyin && (
-              <span className="text-xs text-muted-foreground">{item.song.titlePinyin}</span>
-            )}
-            {item.song.language === "zh" && (
-              <span className="text-xs text-muted-foreground bg-muted px-1 rounded">
-                {t("common.languages.zh")}
-              </span>
-            )}
-          </div>
-          {item.song.artist && (
-            <p className="text-xs text-muted-foreground">{item.song.artist}</p>
-          )}
-          <input
-            type="text"
-            placeholder={t("setlists.form.songNotePlaceholder")}
-            value={item.notes}
-            onChange={(e) => onNoteChange(e.target.value)}
-            className="mt-1.5 w-full text-xs px-2 py-1 border border-border rounded bg-muted/50 text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-primary/30"
-          />
-        </div>
-
-        <div className="shrink-0 flex flex-col items-end gap-1.5">
-          <select
-            aria-label={t("setlists.form.songKeyLabel", { title: item.song.title })}
-            value={item.keyOverride ?? ""}
-            onChange={(e) => onKeyChange(e.target.value || null)}
-            className="text-xs px-1.5 py-1 border border-border rounded bg-background text-foreground font-mono font-bold focus:outline-none focus:ring-1 focus:ring-primary/30"
-          >
-            <option value="">{t("setlists.form.songOriginalKey", { key: item.song.originalKey })}</option>
-            {keyOptions(item.keyOverride).map((k) => (
-              <option key={k} value={k}>
-                {k}
-                {k === item.song.recommendedKey ? " " + t("customize.panel.keyRecommended") : ""}
-              </option>
-            ))}
-          </select>
-          {jianpuScore && (
-            <button
-              type="button"
-              onClick={() => onJianpuSheetChange(!item.jianpuSheet)}
-              title={t("setlists.form.jianpuSheetHint")}
-              className={`flex items-center gap-0.5 text-xs px-1.5 py-0.5 rounded border transition-colors ${
-                item.jianpuSheet
-                  ? "border-primary/30 bg-secondary text-foreground"
-                  : "border-border text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <span className="font-bold">谱</span>
-              {t("setlists.form.jianpuSheet")}
-            </button>
-          )}
-          {originalCount > 1 && (
-            <button
-              type="button"
-              onClick={() => setShowStructure((v) => !v)}
-              className={`flex items-center gap-0.5 text-xs px-1.5 py-0.5 rounded border transition-colors ${
-                isModified
-                  ? "border-primary/30 bg-secondary text-foreground"
-                  : "border-border text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {showStructure ? <ChevronUp className="h-2.5 w-2.5" /> : <ChevronDown className="h-2.5 w-2.5" />}
-              {t("setlists.form.structure")}
-              {isModified && ` ${currentCount}/${originalCount}`}
-            </button>
-          )}
-        </div>
-
-        {!selectable && (
-          <button
-            type="button"
-            onClick={onRemove}
-            className="mt-0.5 shrink-0 text-muted-foreground hover:text-destructive"
-          >
-            <Trash2 className="h-4 w-4" />
-          </button>
-        )}
-      </div>
-
-      {showStructure && originalCount > 1 && (
-        <SectionStructureEditor
-          allSections={allSections}
-          sectionItems={item.sectionItems}
-          onChange={onSectionItemsChange}
-          lastPhrase={{ song: item.song, contentOverride: item.contentOverride, keyOverride: item.keyOverride, onAdd: onLastPhrase }}
-        />
-      )}
-    </div>
-  );
-}
-
-// ─── Ligne note/nuance d'une section (carte fusion, sans structure mixte) ─────
-
-function FusionSectionNoteRow({
-  item,
-  onPatch,
-}: {
-  item: FormSectionItem;
-  onPatch: (patch: Partial<FormSectionItem>) => void;
-}) {
-  const { t } = useTranslation();
-  const [expanded, setExpanded] = useState<"nuance" | "keyChange" | null>(null);
-  const hasNuance = item.nuanceTags.length > 0 || !!item.nuanceNote.trim();
-  return (
-    <div className="rounded border border-transparent">
-      <div className="flex items-center gap-2">
-        <span className="text-xs text-muted-foreground w-20 shrink-0 truncate">{item.name}</span>
-        <input
-          type="text"
-          placeholder={t("setlists.form.songNotePlaceholder")}
-          value={item.note}
-          onChange={(e) => onPatch({ note: e.target.value })}
-          className="flex-1 text-[11px] px-1.5 py-0.5 border border-border rounded bg-muted/50 text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-primary/30"
-        />
-        <FieldToggleBtn
-          kind="nuance"
-          filled={hasNuance}
-          active={expanded === "nuance"}
-          onClick={() => setExpanded(expanded === "nuance" ? null : "nuance")}
-        />
-        <FieldToggleBtn
-          kind="keyChange"
-          filled={!!(item.keyChange ?? "").trim()}
-          active={expanded === "keyChange"}
-          onClick={() => setExpanded(expanded === "keyChange" ? null : "keyChange")}
-        />
-      </div>
-      {expanded === "nuance" && (
-        <NuanceFieldInput
-          tags={item.nuanceTags}
-          note={item.nuanceNote}
-          onTagsChange={(nuanceTags) => onPatch({ nuanceTags })}
-          onNoteChange={(nuanceNote) => onPatch({ nuanceNote })}
-        />
-      )}
-      {expanded === "keyChange" && (
-        <KeyChangeFieldInput
-          value={item.keyChange ?? ""}
-          onChange={(keyChange) => onPatch({ keyChange })}
-        />
-      )}
-    </div>
-  );
-}
-
-// ─── Song card inside a fusion (not sortable at top level) ────────────────────
-
-function FusionSongCard({
-  item,
-  onKeyChange,
-  onSectionItemsChange,
-  onLastPhrase,
-  hasMixed,
-}: {
-  item: FormItem;
-  onKeyChange: (key: string | null) => void;
-  onSectionItemsChange: (items: FormSectionItem[]) => void;
-  /** « Dernière phrase » ajoutée : version adaptée + nouvelle étape, ensemble. */
-  onLastPhrase: LastPhraseTarget["onAdd"];
-  hasMixed?: boolean;
-}) {
-  const { t } = useTranslation();
-  const [showStructure, setShowStructure] = useState(false);
-  const allSections = item.song.sections ?? [];
-  const originalCount = allSections.length;
-  const currentCount = item.sectionItems.length;
-  const isModified =
-    currentCount !== originalCount ||
-    item.sectionItems.some((si, i) => si.sectionId !== allSections[i]?.id);
-
-  return (
-    <div data-fusion-song className="bg-background rounded border border-border">
-      <div className="flex items-start gap-2 p-2.5">
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="text-xs font-medium text-foreground truncate">{item.song.title}</span>
-            {item.song.titlePinyin && (
-              <span className="text-xs text-muted-foreground">{item.song.titlePinyin}</span>
-            )}
-          </div>
-          {item.song.artist && (
-            <p className="text-xs text-muted-foreground">{item.song.artist}</p>
-          )}
-        </div>
-        <div className="shrink-0 flex flex-col items-end gap-1">
-          <select
-            aria-label={t("setlists.form.songKeyLabel", { title: item.song.title })}
-            value={item.keyOverride ?? ""}
-            onChange={(e) => onKeyChange(e.target.value || null)}
-            className="text-xs px-1.5 py-0.5 border border-border rounded bg-background text-foreground font-mono font-bold focus:outline-none focus:ring-1 focus:ring-primary/30"
-          >
-            <option value="">{t("setlists.form.songOriginalKey", { key: item.song.originalKey })}</option>
-            {keyOptions(item.keyOverride).map((k) => (
-              <option key={k} value={k}>
-                {k}
-                {k === item.song.recommendedKey ? " " + t("customize.panel.keyRecommended") : ""}
-              </option>
-            ))}
-          </select>
-          {!hasMixed && originalCount > 1 && (
-            <button
-              type="button"
-              onClick={() => setShowStructure((v) => !v)}
-              className={`flex items-center gap-0.5 text-xs px-1.5 py-0.5 rounded border transition-colors ${
-                isModified
-                  ? "border-primary/30 bg-secondary text-foreground"
-                  : "border-border text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {showStructure ? <ChevronUp className="h-2.5 w-2.5" /> : <ChevronDown className="h-2.5 w-2.5" />}
-              {t("setlists.form.structure")}
-              {isModified && ` ${currentCount}/${originalCount}`}
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* Notes/nuances par section et structure — masqués si structure mélangée active */}
-      {!hasMixed && item.sectionItems.length > 0 && (
-        <div className="border-t border-border px-2.5 pb-2 pt-1.5 space-y-1">
-          {item.sectionItems.map((si, idx) => (
-            <FusionSectionNoteRow
-              key={si.uid}
-              item={si}
-              onPatch={(patch) => {
-                const next = [...item.sectionItems];
-                next[idx] = { ...next[idx], ...patch };
-                onSectionItemsChange(next);
-              }}
-            />
-          ))}
-        </div>
-      )}
-
-      {!hasMixed && showStructure && originalCount > 1 && (
-        <SectionStructureEditor
-          allSections={allSections}
-          sectionItems={item.sectionItems}
-          onChange={onSectionItemsChange}
-          hideNotes
-          lastPhrase={{ song: item.song, contentOverride: item.contentOverride, keyOverride: item.keyOverride, onAdd: onLastPhrase }}
-        />
-      )}
-    </div>
-  );
-}
-
-// ─── Fusion row (sortable, top-level) ─────────────────────────────────────────
-
-export function FusionRow({
-  item,
-  onUnfuse,
-  onRemove,
-  onPatchSong,
-  onChangeMixed,
-}: {
-  item: FormFusionItem;
-  onUnfuse: () => void;
-  onRemove: () => void;
-  onPatchSong: (songUid: string, update: Partial<FormItem>) => void;
-  onChangeMixed: (mixed: FusionMixedSectionForm[] | null) => void;
-}) {
-  const { t } = useTranslation();
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
-    useSortable({ id: item.uid });
-
-  const [expanded, setExpanded] = useState(false);
-  const fusionTitle = item.songs.map((s) => s.song.title).join(" / ");
-
-  function toggleMixed() {
-    if (item.mixedStructure !== null) {
-      // Désactiver : remettre à null
-      onChangeMixed(null);
-    } else {
-      // Activer : initialiser avec l'ordre par défaut
-      const defaultMixed: FusionMixedSectionForm[] = item.songs.flatMap((song) =>
-        song.sectionItems.map((si) => ({
-          uid: nextUid(),
-          songSlug: song.song.slug,
-          sectionId: si.sectionId,
-          sectionName: si.name,
-          songTitle: song.song.title,
-          note: si.note,
-          keyChange: si.keyChange ?? "",
-          transition: si.transition ?? "",
-          nuanceTags: si.nuanceTags ?? [],
-          nuanceNote: si.nuanceNote ?? "",
-        }))
-      );
-      onChangeMixed(defaultMixed);
-    }
-  }
-
-  const hasMixed = item.mixedStructure !== null;
-
-  return (
-    <div
-      ref={setNodeRef}
-      style={{ transform: CSS.Transform.toString(transform), transition}}
-      className={`rounded-lg border-2 ${
-        isDragging
-          ? "border-primary/60 bg-primary/5 shadow-md"
-          : "border-border bg-card"
-      }`}
-    >
-      {/* En-tête de la fusion */}
-      <div className="flex items-center gap-2 p-3">
-        <button
-          {...attributes}
-          {...listeners}
-          type="button"
-          style={{touchAction: 'none'}}
-          className="text-muted-foreground cursor-grab active:cursor-grabbing shrink-0"
-        >
-          <GripVertical className="h-4 w-4" />
-        </button>
-
-        <Link2 className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-
-        <div className="flex-1 min-w-0">
-          <span className="text-sm font-semibold text-foreground truncate block">{fusionTitle}</span>
-          <span className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
-            {t("setlists.form.fusionLabel")}
-          </span>
-        </div>
-
-        {/* Bouton structure mélangée */}
-        <button
-          type="button"
-          onClick={toggleMixed}
-          title={t("setlists.form.mixedStructureToggle")}
-          className={`flex items-center gap-1 text-xs px-1.5 py-0.5 rounded border transition-colors ${
-            hasMixed
-              ? "border-foreground/30 bg-secondary text-foreground"
-              : "border-border text-muted-foreground hover:text-foreground"
-          }`}
-        >
-          <Shuffle className="h-2.5 w-2.5" />
-          {t("setlists.form.mixedStructureLabel")}
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setExpanded((v) => !v)}
-          className="text-xs px-2 py-1 rounded border border-border text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
-        >
-          {expanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-          {t("setlists.form.fusionExpand")}
-        </button>
-
-        <button
-          type="button"
-          onClick={onUnfuse}
-          title={t("setlists.form.unfuseButton")}
-          className="text-muted-foreground hover:text-foreground transition-colors shrink-0"
-        >
-          <Unlink className="h-4 w-4" />
-        </button>
-
-        <button
-          type="button"
-          onClick={onRemove}
-          className="text-muted-foreground hover:text-destructive shrink-0"
-        >
-          <Trash2 className="h-4 w-4" />
-        </button>
-      </div>
-
-      {/* Éditeur de structure mélangée */}
-      {hasMixed && (
-        <MixedStructureEditor fusionItem={item} onChangeMixed={onChangeMixed} onPatchSong={onPatchSong} />
-      )}
-
-      {/* Chants de la fusion (dépliés) */}
-      {expanded && (
-        <div className="border-t border-primary/20 px-3 pb-3 pt-2 space-y-2">
-          {item.songs.map((song) => (
-            <FusionSongCard
-              key={song.uid}
-              item={song}
-              onKeyChange={(key) => onPatchSong(song.uid, { keyOverride: key })}
-              onSectionItemsChange={(sectionItems) => onPatchSong(song.uid, { sectionItems })}
-              onLastPhrase={({ contentOverride, step }) =>
-                onPatchSong(song.uid, { contentOverride, sectionItems: [...song.sectionItems, step] })
-              }
-              hasMixed={item.mixedStructure !== null}
-            />
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ─── Transition row ───────────────────────────────────────────────────────────
-
-export function TransitionRow({ item, onTextChange, onRemove }: {
-  item: FormTransitionItem;
-  onTextChange: (text: string) => void;
-  onRemove: () => void;
-}) {
-  const [expanded, setExpanded] = useState(false);
-  const { t } = useTranslation();
-  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: item.uid });
-  const style = { transform: CSS.Transform.toString(transform), transition };
-
-  return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      className="rounded-lg border border-dashed border-amber-300 dark:border-amber-700 bg-amber-50/50 dark:bg-amber-950/20"
-    >
-      {/* Header row */}
-      <div className="flex items-center gap-2 px-3 py-2">
-        <button type="button" {...attributes} {...listeners}
-          className="cursor-grab text-muted-foreground hover:text-foreground touch-none">
-          <GripVertical className="h-4 w-4" />
-        </button>
-
-        <MessageSquare className="h-3.5 w-3.5 text-amber-500 dark:text-amber-400 shrink-0" />
-        <span className="text-xs font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-400 flex-1">
-          {t("setlists.form.transitionLabel", { defaultValue: "Transition" })}
-        </span>
-
-        {/* Preview when collapsed */}
-        {!expanded && item.text && (
-          <span className="text-xs text-muted-foreground italic truncate max-w-[160px]">{item.text}</span>
-        )}
-
-        <button
-          type="button"
-          onClick={() => setExpanded((v) => !v)}
-          className="text-muted-foreground hover:text-foreground p-0.5"
-        >
-          {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-        </button>
-        <button
-          type="button"
-          onClick={onRemove}
-          className="text-muted-foreground hover:text-destructive p-0.5"
-        >
-          <Trash2 className="h-3.5 w-3.5" />
-        </button>
-      </div>
-
-      {/* Textarea */}
-      {expanded && (
-        <div className="px-3 pb-3 border-t border-amber-200 dark:border-amber-800 pt-2">
-          <textarea
-            value={item.text}
-            onChange={(e) => onTextChange(e.target.value)}
-            rows={4}
-            placeholder={t("setlists.form.transitionPlaceholder", { defaultValue: "Texte de transition du président de séance…" })}
-            className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-amber-400/30 text-sm resize-none"
-          />
-        </div>
       )}
     </div>
   );

@@ -611,3 +611,15 @@
   .chants-chant .retour-chant:not([data-vers-setlist]) { display: none; }
   .chants-chant .song-zoom, .chants-chant .video-chant { margin-top: 0; }
 }
+
+/* ══ Lot U5 bis — feuilles de l'éditeur de setlist (docs/spec-editeur-setlist.md, « Partout ») ══
+   En mouvement réduit, la feuille (`data-volet`, vaul) arrive et part en fondu, opacité seule,
+   au lieu de glisser depuis le bas. `!important` : le glissé est posé par la feuille de style de
+   vaul, et la règle générale du mouvement réduit ramène toute animation à 0,01 ms (ce sélecteur,
+   plus précis, garde sa durée). */
+@keyframes volet-fondu { from { opacity: 0; } }
+@keyframes volet-fondu-sortie { to { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  [data-volet][data-vaul-drawer][data-state="open"] { animation-name: volet-fondu !important; animation-duration: 200ms !important; }
+  [data-volet][data-vaul-drawer][data-state="closed"] { animation-name: volet-fondu-sortie !important; animation-duration: 200ms !important; }
+}

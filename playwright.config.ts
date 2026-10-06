@@ -34,6 +34,12 @@ const SPECS_GRAND_ECRAN = [
   /back-office-admin\.spec\.ts/,
   // B4 : le tableau de bord (grille de 4 en paysage et à 1 440 px).
   /tableau-de-bord\.spec\.ts/,
+  // Lot U5 bis (docs/spec-editeur-setlist.md) : l'éditeur de setlist en deux colonnes.
+  /setlist-editeur-piste2\.spec\.ts/,
+  // … et sa bibliothèque (T5 : « + » entre deux éléments sur ordinateur, pas sur tablette couchée).
+  /setlist-bibliotheque\.spec\.ts/,
+  // … et le choix des chants à fusionner, dans le volet de droite.
+  /setlist-fusionner\.spec\.ts/,
 ];
 
 export default defineConfig({

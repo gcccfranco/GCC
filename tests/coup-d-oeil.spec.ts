@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { attendreEditeur, reglerElement } from "./helpers/editeurSetlist";
 import { fermerMenus, ouvrirAffichage, ouvrirPartitions } from "./helpers/setlist";
 import { abbreviateSection } from "../src/lib/chordpro/abbreviations";
 import { uniqueSections } from "../src/lib/setlist/uniqueSections";
@@ -283,11 +284,11 @@ test("badge « Version modifiée » : rien à dire quand seul un Dp a été ajou
 test("éditeur : la Dernière phrase du refrain s'enregistre, puis s'affiche « Dp » avec ses accords, sans badge", async ({ page }) => {
   await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
   const db = await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: setlist() }, `/setlists/${SETLIST_ID}/edit`);
-  await expect(page.getByLabel("Tonalité de Abba Père")).toBeVisible();
-  await page.getByRole("button", { name: /^Structure/ }).first().click();
+  await attendreEditeur(page, "Abba Père");
+  await reglerElement(page, "Abba Père");
   await page.getByRole("button", { name: "Dernière phrase", exact: true }).click();
 
-  const sheet = page.getByRole("dialog");
+  const sheet = page.getByRole("dialog", { name: "Dernière phrase (Dp)" });
   // La dernière étape jouée (le refrain) est proposée d'office.
   await expect(sheet.getByLabel("Section")).toHaveValue("chorus-3");
   await expect(sheet.locator("[data-copy-line]")).toHaveCount(1);

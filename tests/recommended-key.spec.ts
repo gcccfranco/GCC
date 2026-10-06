@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { ajouterChant, boutonTonalite, groupeTonalites, reglerElement } from "./helpers/editeurSetlist";
 
 // Chantier Setlist, lot 3 (docs/spec-setlist.md) : la tonalité la plus chantée
 // à Grace Church, validée par Timothée (docs/tonalites-recommandees.md), est
@@ -38,6 +39,10 @@ test("page du chant : une originale écrite autrement (C#) reste dans le sélect
 
 test("page du chant : le bouton de retour ramène à la recommandée", async ({ page }) => {
   const select = await openSong(page, "/songs/je-reviens-au-coeur");
+  // Le rendu du serveur porte déjà l'originale (Eb) et le bouton de retour : choisir Eb
+  // avant l'hydratation « réussit », puis la page passe à D et le bouton disparaît sous le
+  // clic. On attend donc la recommandée, posée une fois la page hydratée.
+  await expect(select).toHaveValue("D");
   // Avant l'hydratation le choix est perdu : on recommence jusqu'à ce que la page réponde.
   await expect(async () => {
     await select.selectOption("Eb");
@@ -75,10 +80,11 @@ test("éditeur de setlist : un chant ajouté démarre dans la recommandée", asy
   await page.route(/docs\.google\.com\/spreadsheets/, (route) =>
     route.fulfill({ status: 200, contentType: "text/csv", body: "" }),
   );
-  await signInAs(page, musicien, {}, "/setlists/new");
-  await page.getByPlaceholder("Chercher un chant à ajouter…").fill("Je reviens au cœur");
-  await page.getByRole("button", { name: "Ajouter" }).first().click();
-  const key = page.getByLabel("Tonalité de Je reviens au cœur");
-  await expect(key).toHaveValue("D");
-  await expect(key.locator("option", { hasText: "Eb (orig.)" })).toHaveCount(1);
+  await signInAs(page, musicien, {}, "/setlists/new?autre=1");
+  await ajouterChant(page, "Je reviens au cœur");
+  // Lot U5 bis : la tonalité est un groupe de boutons dans les réglages du chant.
+  await reglerElement(page, "Je reviens au cœur");
+  const groupe = groupeTonalites(page, "Je reviens au cœur");
+  await expect(boutonTonalite(groupe, "D")).toBeChecked();
+  await expect(boutonTonalite(groupe, "Eb")).toHaveAccessibleName("Eb orig.");
 });

@@ -157,8 +157,10 @@ export async function getSetlists(): Promise<FSSetlist[]> {
 /** Setlists datées de `today` (AAAA-MM-JJ) ou après, par date, `max` au plus : la lecture
  *  bornée des « Prochaines setlists » de Chants (lot U5, docs/spec-deux-volets.md, Q17).
  *  Un seul champ, donc un index simple. Rien n'est filtré ici : brouillons, privées et
- *  visibilité se trient côté client (`upcomingSetlists`). Hors ligne : rien. */
-export async function getSetlistsFrom(today: string, max = 30): Promise<FSSetlist[]> {
+ *  visibilité se trient côté client (`upcomingSetlists`). Hors ligne : rien.
+ *  `strict` : un refus (jeton expiré, règle) lève au lieu de rendre `[]` — « Pour quel
+ *  service ? » (lot U5 bis) ne doit pas re-proposer un service déjà préparé. */
+export async function getSetlistsFrom(today: string, max = 30, { strict = false } = {}): Promise<FSSetlist[]> {
   const headers = await authHeader();
   const res = await fetch(`${FS_BASE}:runQuery`, {
     method: "POST",
@@ -174,7 +176,10 @@ export async function getSetlistsFrom(today: string, max = 30): Promise<FSSetlis
       },
     }),
   });
-  if (!res.ok) return [];
+  if (!res.ok) {
+    if (strict) await checkRest(res);
+    return [];
+  }
   const rows = (await res.json()) as Array<{ document?: RawDoc }>;
   return rows.filter((r) => r.document).map((r) => fromFsDoc(r.document!));
 }
