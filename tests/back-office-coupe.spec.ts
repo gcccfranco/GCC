@@ -41,11 +41,12 @@ test.describe("back-office coupé : les entrées disparaissent", () => {
     await expect(moi.getByRole("link", { name: /tâches/i })).toHaveCount(0);
   });
 
-  test("la navbar d'ordinateur n'a ni Évènements ni Tâches", async ({ page }) => {
-    test.skip((page.viewportSize()?.width ?? 0) < 1024, "propre à l'ordinateur");
+  // Lot U4 : sur ordinateur, la barre latérale remplace la navbar.
+  test("la barre latérale d'ordinateur n'a ni Évènements ni Tâches", async ({ page }) => {
+    test.skip(!test.info().project.name.startsWith("ordinateur"), "propre à l'ordinateur");
     await signInAs(page, ADMIN, {}, "/songs");
     await page.getByRole("searchbox").waitFor();
-    const sections = page.getByRole("navigation", { name: "Sections" });
+    const sections = page.getByTestId("barre-laterale").getByRole("navigation", { name: "Navigation principale" });
     await expect(sections.getByRole("link", { name: "Planning" })).toBeVisible();
     await expect(sections.getByRole("link", { name: "Évènements" })).toHaveCount(0);
     await expect(sections.getByRole("link", { name: "Tâches" })).toHaveCount(0);

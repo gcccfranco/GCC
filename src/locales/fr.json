@@ -64,7 +64,9 @@
       "modeClair": "Mode clair",
       "modeSombre": "Mode sombre",
       "indexAlphabetique": "Index alphabétique",
-      "allerA": "Aller à {{lettre}}"
+      "allerA": "Aller à {{lettre}}",
+      "reduireBarre": "Réduire la barre latérale",
+      "deplierBarre": "Déplier la barre latérale"
     }
   },
   "songs": {

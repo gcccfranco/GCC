@@ -78,6 +78,9 @@ test("cloche : la réunion d'un pôle reste invisible pour qui n'en est pas", as
 test("ordinateur : le menu du compte mène à Équipes, et à Harmonie pour qui y a accès", async ({ page }) => {
   test.skip(test.info().project.name !== "ordinateur", "le menu du compte n'existe que sur ordinateur");
   await open(page, ADMIN, "/evenements");
+  // L'indicateur de Next (développement seulement) est posé en bas à gauche, sur l'initiale
+  // du pied de la barre latérale (lot U4).
+  await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
   await page.getByRole("button", { name: "Compte" }).click();
   await expect(page.getByRole("menuitem", { name: "Équipes" })).toHaveAttribute("href", /\/equipes/);
   await expect(page.getByRole("menuitem", { name: "Harmonie" })).toHaveAttribute("href", /\/harmonie/);
