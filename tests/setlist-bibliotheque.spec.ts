@@ -253,3 +253,181 @@ test("petits écrans : la bibliothèque en feuille — « N chants dans la setli
   await page.keyboard.press("Escape");
   await expect(volet(page)).toHaveCount(0);
 });
+
+// ─── Tranche T5 : bibliothèque complète ─────────────────────────────────────
+// Filtres langue, thème, tempo (Q11) ; aperçu chargé à la demande (Q12) ;
+// « + » entre deux éléments, sur ordinateur seulement (Q8, planche
+// `creer-piste2-bibliotheque` ; tablette couchée et feuilles : sans).
+
+const compteur = (page: Page, n: number) => volet(page).getByText(n === 1 ? "1 chant" : `${n} chants`, { exact: true });
+const attendus = (f: Partial<FiltresBibliotheque>) => chantsDeLaBibliotheque(INDEX, { ...SANS_FILTRE, ...f }).length;
+
+/** Texte chanté d'une ligne de l'aperçu, sans ses accords. */
+const paroles = (ligne: ReturnType<Page["locator"]>) =>
+  ligne.evaluate((el) => {
+    const copie = el.cloneNode(true) as HTMLElement;
+    copie.querySelectorAll("[data-copy-ignore]").forEach((n) => n.remove());
+    return (copie.textContent ?? "").replace(/\s+/g, " ").trim();
+  });
+const accords = (ligne: ReturnType<Page["locator"]>) => ligne.locator(".font-chord").allTextContents();
+
+test("filtre de langue : Tous · FR · 中文, le compteur suit", async ({ page }) => {
+  await ouvrirLaBibliotheque(page);
+  const langue = volet(page).getByRole("group", { name: "Langue" });
+  await expect(langue.getByRole("button", { name: "Tous" })).toHaveAttribute("aria-pressed", "true");
+
+  await langue.getByRole("button", { name: "中文" }).click();
+  await expect(langue.getByRole("button", { name: "中文" })).toHaveAttribute("aria-pressed", "true");
+  await expect(compteur(page, attendus({ langue: "zh" }))).toBeVisible();
+  await recherche(page).fill("Abba Père");
+  await expect(resultats(page).filter({ hasText: "Abba Père" })).toHaveCount(0);
+  await recherche(page).fill("yi sheng ai ni");
+  await expect(resultats(page).filter({ hasText: "一生爱你" })).toHaveCount(1);
+
+  await langue.getByRole("button", { name: "FR" }).click();
+  await expect(resultats(page).filter({ hasText: "一生爱你" })).toHaveCount(0);
+  await recherche(page).fill("");
+  await expect(compteur(page, attendus({ langue: "fr" }))).toBeVisible();
+
+  await langue.getByRole("button", { name: "Tous" }).click();
+  await expect(compteur(page, INDEX.length)).toBeVisible();
+});
+
+test("filtres thème et tempo : le compteur suit ; un chant sans tempo disparaît", async ({ page }, testInfo) => {
+  await ouvrirLaBibliotheque(page);
+  const theme = volet(page).getByLabel("Thème", { exact: true });
+  const tempo = volet(page).getByLabel("Tempo", { exact: true });
+
+  await theme.selectOption("adoration");
+  await expect(compteur(page, attendus({ theme: "adoration" }))).toBeVisible();
+  await theme.selectOption("");
+  await expect(compteur(page, INDEX.length)).toBeVisible();
+
+  await tempo.selectOption("lent");
+  await expect(compteur(page, attendus({ tempo: "lent" }))).toBeVisible();
+  // Abba Père n'a pas de tempo : il disparaît ; 一生爱你 (65) est lent.
+  await recherche(page).fill("Abba Père");
+  await expect(resultats(page).filter({ hasText: "Abba Père" })).toHaveCount(0);
+  await recherche(page).fill("yi sheng ai ni");
+  await expect(resultats(page).filter({ hasText: "一生爱你" })).toHaveCount(1);
+  await tempo.selectOption("rapide");
+  await expect(resultats(page).filter({ hasText: "一生爱你" })).toHaveCount(0);
+  await recherche(page).fill("");
+  await expect(compteur(page, attendus({ tempo: "rapide" }))).toBeVisible();
+
+  // Les filtres se cumulent.
+  await theme.selectOption("adoration");
+  await expect(compteur(page, attendus({ tempo: "rapide", theme: "adoration" }))).toBeVisible();
+  await page.screenshot({ path: testInfo.outputPath(`bibliotheque-filtres-${testInfo.project.name}.png`) });
+});
+
+test("aperçu FR : le titre déplie deux lignes avec accords, dans la tonalité d'ajout ; « Voir la partition » dans un nouvel onglet", async ({ page }, testInfo) => {
+  await ouvrirLaBibliotheque(page);
+  await recherche(page).fill("Je reviens au cœur");
+  const ligne = resultats(page).filter({ hasText: "Je reviens au cœur" }).first();
+  const titre = ligne.getByRole("button", { name: /^Je reviens au cœur/ });
+  await expect(titre).toHaveAttribute("aria-expanded", "false");
+  await titre.click();
+  await expect(titre).toHaveAttribute("aria-expanded", "true");
+
+  const apercu = ligne.locator("[data-apercu]");
+  const lignes = apercu.locator("[data-apercu-ligne]");
+  await expect(lignes).toHaveCount(2);
+  // Écrit en Eb, ajouté en D (tonalité recommandée) : Bb/D devient A/C#.
+  expect(await paroles(lignes.nth(0))).toBe("Le chant terminé, le rideau retombe.");
+  expect(await accords(lignes.nth(0))).toEqual(["D", "A/C#", "Em7"]);
+  expect(await paroles(lignes.nth(1))).toBe("Je viens simplement");
+  await expect(apercu).not.toContainText("Porter mon");
+
+  const lien = apercu.getByRole("link", { name: "Voir la partition" });
+  await expect(lien).toHaveAttribute("href", `/songs/je-reviens-au-coeur?key=${encodeURIComponent('"D"')}`);
+  await expect(lien).toHaveAttribute("target", "_blank");
+  await page.screenshot({ path: testInfo.outputPath(`bibliotheque-apercu-${testInfo.project.name}.png`) });
+
+  // Toucher de nouveau le titre replie l'aperçu.
+  await titre.click();
+  await expect(apercu).toHaveCount(0);
+});
+
+test("aperçu 中文 : deux lignes chantées avec accords, sans pinyin", async ({ page }) => {
+  await ouvrirLaBibliotheque(page);
+  await recherche(page).fill("yi sheng ai ni");
+  const ligne = resultats(page).filter({ hasText: "一生爱你" }).first();
+  await ligne.getByRole("button", { name: /^一生爱你/ }).click();
+  const lignes = ligne.locator("[data-apercu] [data-apercu-ligne]");
+  await expect(lignes).toHaveCount(2);
+  // L'intro (accords seuls) n'est pas chantée : on part du couplet.
+  expect(await paroles(lignes.nth(0))).toBe("亲爱的宝贵耶稣，你爱何等的甘甜，");
+  expect(await accords(lignes.nth(0))).toEqual(["E", "A", "F#m", "Bsus4", "B"]);
+  expect(await paroles(lignes.nth(1))).toBe("我的心深深被你吸引，爱你是我的喜乐。");
+  await expect(ligne.locator("[data-apercu]")).not.toContainText("qīn");
+  await expect(ligne.locator("[data-apercu]")).not.toContainText("wǒ de");
+});
+
+const SETLIST_DEUX_ID = "setlist-bibliotheque-deux";
+const SETLIST_DEUX_DOC = `setlists/${SETLIST_DEUX_ID}`;
+
+async function ouvrirSetlistDeDeux(page: Page) {
+  await page.route(/docs\.google\.com\/spreadsheets/, (route) =>
+    route.fulfill({ status: 200, contentType: "text/csv", body: "" }),
+  );
+  const db = await signInAs(
+    page,
+    MUSICIENNE,
+    {
+      [SETLIST_DEUX_DOC]: {
+        ...SETLIST,
+        items: [
+          SETLIST.items[0],
+          { ...SETLIST.items[0], songSlug: "一生爱你", position: 2 },
+        ],
+      },
+    },
+    `/setlists/${SETLIST_DEUX_ID}/edit`,
+  );
+  await attendreEditeur(page, "一生爱你");
+  return db;
+}
+
+const PROJETS_ORDINATEUR = ["ordinateur", "ordinateur-1440"];
+
+test("ordinateur : « + » entre deux éléments insère à cet endroit, deux ajouts gardent leur ordre", async ({ page }, testInfo) => {
+  test.skip(!PROJETS_ORDINATEUR.includes(testInfo.project.name), "ordinateur seulement (tablette couchée et feuilles : sans « + »)");
+  const db = await ouvrirSetlistDeDeux(page);
+  const colonne = page.locator("[data-colonne-setlist]");
+  const inserer = colonne.getByRole("button", { name: "Insérer ici, après Abba Père" });
+  await expect(colonne.getByRole("button", { name: "Insérer ici, au début" })).toHaveCount(1);
+  await inserer.click();
+  await expect(volet(page).getByRole("heading", { name: "Ajouter des chants" })).toBeVisible();
+  await expect(recherche(page)).toBeFocused();
+  await expect(inserer).toHaveAttribute("aria-pressed", "true");
+  await expect(inserer).toContainText("Insérer ici");
+
+  await recherche(page).fill("Je reviens au cœur");
+  await volet(page).getByRole("button", { name: "Ajouter Je reviens au cœur", exact: true }).click();
+  await recherche(page).fill("Abrite-moi");
+  await volet(page).getByRole("button", { name: "Ajouter Abrite-moi", exact: true }).click();
+  await page.mouse.move(0, 0);
+  await page.screenshot({ path: testInfo.outputPath(`bibliotheque-inserer-${testInfo.project.name}.png`) });
+
+  await expect(listeCourte(page).locator("[data-element]")).toHaveText([/Abba Père/, /Je reviens au cœur/, /Abrite-moi/, /一生爱你/]);
+  await expect
+    .poll(() => (db.doc(SETLIST_DEUX_DOC)?.items as { songSlug: string }[] | undefined)?.map((i) => i.songSlug), { timeout: 10_000 })
+    .toEqual(["abba-pere", "je-reviens-au-coeur", "abrite-moi", "一生爱你"]);
+  // La ligne d'insertion suit les ajouts : elle est maintenant après Abrite-moi.
+  await expect(colonne.getByRole("button", { name: "Insérer ici, après Abrite-moi" })).toHaveAttribute("aria-pressed", "true");
+
+  // « Ajouter des chants » ajoute de nouveau à la fin.
+  await colonne.locator("[data-ouvrir-bibliotheque]").click();
+  await expect(colonne.locator("[data-inserer][aria-pressed=true]")).toHaveCount(0);
+  await recherche(page).fill("Amour parfait");
+  await volet(page).getByRole("button", { name: "Ajouter Amour parfait", exact: true }).click();
+  await expect(listeCourte(page).locator("[data-element]").last()).toContainText("Amour parfait");
+});
+
+test("tablette couchée, téléphone, tablette en portrait : pas de « + » entre deux éléments", async ({ page }, testInfo) => {
+  test.skip(PROJETS_ORDINATEUR.includes(testInfo.project.name), "sans « + » hors de l'ordinateur");
+  await ouvrirSetlistDeDeux(page);
+  await ouvrirBibliotheque(page);
+  await expect(page.locator("[data-inserer]")).toHaveCount(0);
+});

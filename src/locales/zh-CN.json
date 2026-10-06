@@ -359,7 +359,20 @@
       "retour": "返回",
       "aideListe": "点击诗歌打开设置；拖动手柄调整顺序。",
       "listeVide": "还没有诗歌。",
-      "nDansLaSetlist_other": "歌单中有 {{count}} 首诗歌"
+      "nDansLaSetlist_other": "歌单中有 {{count}} 首诗歌",
+      "langue": "语言",
+      "tous": "全部",
+      "theme": "主题",
+      "themes": "主题",
+      "tempo": "速度",
+      "tempoLent": "慢（低于 90）",
+      "tempoModere": "中速（90 至 119）",
+      "tempoRapide": "快（120 及以上）",
+      "apercuChargement": "正在加载预览…",
+      "apercuIndisponible": "无法预览。",
+      "insererIci": "插入此处",
+      "insererAuDebut": "插入此处，最前面",
+      "insererApres": "插入此处，在 {{titre}} 之后"
     },
     "entree": {
       "pourQuelService": "为哪场聚会准备？",

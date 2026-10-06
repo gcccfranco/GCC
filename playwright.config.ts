@@ -30,6 +30,8 @@ const SPECS_GRAND_ECRAN = [
   /deux-volets-finitions\.spec\.ts/,
   // Lot U5 bis (docs/spec-editeur-setlist.md) : l'éditeur de setlist en deux colonnes.
   /setlist-editeur-piste2\.spec\.ts/,
+  // … et sa bibliothèque (T5 : « + » entre deux éléments sur ordinateur, pas sur tablette couchée).
+  /setlist-bibliotheque\.spec\.ts/,
 ];
 
 export default defineConfig({

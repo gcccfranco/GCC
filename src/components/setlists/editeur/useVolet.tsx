@@ -22,7 +22,8 @@ import { ChoixFusion, VoletChant, VoletFusion, VoletTransition } from "@/compone
 // qui ne décident que de l'endroit où le contenu se pose.
 
 export interface ActionsEditeur {
-  addSong: (song: SongIndexEntry) => void;
+  /** Ajoute un chant à la fin, ou à `index` (« + » entre deux éléments). */
+  addSong: (song: SongIndexEntry, index?: number) => void;
   /** Ajoute une transition à la fin ; rend son uid. */
   addTransition: () => string;
   patch: (uid: string, update: Partial<FormItem>) => void;
@@ -55,6 +56,9 @@ export function useVolet({
   const [choisi, setChoisi] = useState<string | null>(() => (feuille ? null : items[0]?.uid ?? null));
   const [vue, setVue] = useState<Vue>(() => (!feuille && items.length === 0 ? { nom: "bibliotheque" } : { nom: "reglages" }));
   const [ajoutes, setAjoutes] = useState<Set<string>>(new Set());
+  /** « + » entre deux éléments (ordinateur, Q8) : index où va le prochain ajout de la
+   *  bibliothèque ; null = à la fin. Il avance à chaque ajout (« à la suite »). */
+  const [insertion, setInsertion] = useState<number | null>(null);
 
   const numeros = useMemo(() => numerosDesElements(items), [items]);
   const pris = useMemo(() => {
@@ -72,14 +76,29 @@ export function useVolet({
   /** Clé du contenu : le volet repart du haut quand elle change. */
   const cle = vue.nom === "reglages" ? `r-${choisi}` : vue.nom === "fusionner" ? `f-${vue.depart}` : "b";
 
+  /** « Ajouter des chants » : la bibliothèque, ajouts à la fin. */
   function ouvrirBibliotheque() {
     setAjoutes(new Set());
+    setInsertion(null);
+    setVue({ nom: "bibliotheque" });
+  }
+
+  /** « + » entre deux éléments : la bibliothèque (ouverte ou gardée), ajouts à `index`. */
+  function insererIci(index: number) {
+    if (vue.nom !== "bibliotheque") setAjoutes(new Set());
+    setInsertion(index);
     setVue({ nom: "bibliotheque" });
   }
 
   function choisir(uid: string) {
     setChoisi(uid);
+    setInsertion(null);
     setVue({ nom: "reglages" });
+  }
+
+  function changerVue(v: Vue) {
+    if (v.nom !== "bibliotheque") setInsertion(null);
+    setVue(v);
   }
 
   /** Retire un élément. Grand écran : le suivant est choisi (sinon le précédent, sinon
@@ -114,7 +133,11 @@ export function useVolet({
           pris={pris}
           ajoutes={ajoutes}
           onAjouter={(song) => {
-            actions.addSong(song);
+            if (insertion === null) actions.addSong(song);
+            else {
+              actions.addSong(song, insertion);
+              setInsertion(Math.min(insertion, items.length) + 1);
+            }
             setAjoutes((prev) => new Set(prev).add(song.slug));
           }}
           onTermine={onTermineBibliotheque}
@@ -172,5 +195,8 @@ export function useVolet({
     );
   }
 
-  return { choisi, vue, setVue, cle, choisir, ouvrirBibliotheque, contenu };
+  /** Point d'insertion montré dans la liste, tant que la bibliothèque est ouverte. */
+  const insertionActive = vue.nom === "bibliotheque" ? insertion : null;
+
+  return { choisi, vue, setVue: changerVue, cle, choisir, ouvrirBibliotheque, insererIci, insertionActive, contenu };
 }

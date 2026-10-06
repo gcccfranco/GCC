@@ -1,5 +1,8 @@
 import Fuse from "fuse.js";
 import type { SongIndexEntry } from "@/types/song";
+import type { ChordProAST, Token } from "@/types/chordPro";
+import { semitonesTo } from "@/lib/transpose";
+import { transposeSection } from "@/lib/transposeAST";
 
 /** Bibliothèque de l'éditeur de setlist (docs/spec-editeur-setlist.md, Q11) :
  *  recherche titre, pinyin, artiste, puis filtres langue, thème, tempo. Les
@@ -36,4 +39,21 @@ export function chantsDeLaBibliotheque(songs: SongIndexEntry[], f: FiltresBiblio
       (!f.theme || s.themes.includes(f.theme)) &&
       (!f.tempo || trancheDeTempo(s.tempo) === f.tempo),
   );
+}
+
+/** Aperçu d'un chant (Q12) : ses `n` premières lignes chantées (une ligne d'accords
+ *  seuls, comme une intro, ne compte pas), accords transposés de `ast.metadata.key`
+ *  vers `cible` — la tonalité où le chant serait ajouté. Sans pinyin ni 简谱 : seuls
+ *  les jetons de la ligne sont rendus. */
+export function premieresLignes(ast: ChordProAST, cible: string, n = 2): Token[][] {
+  const demi = semitonesTo(ast.metadata.key || cible, cible);
+  const lignes: Token[][] = [];
+  for (const section of ast.sections) {
+    for (const ligne of transposeSection(section, demi, cible).lines) {
+      if (!ligne.tokens.some((t) => t.type === "lyric" && t.value.trim())) continue;
+      lignes.push(ligne.tokens);
+      if (lignes.length === n) return lignes;
+    }
+  }
+  return lignes;
 }

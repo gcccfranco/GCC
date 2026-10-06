@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { DndContext, KeyboardSensor, PointerSensor, TouchSensor, closestCenter, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core";
 import { SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { ChevronRight, GripVertical, MessageSquare } from "lucide-react";
+import { ChevronRight, CirclePlus, GripVertical, MessageSquare } from "lucide-react";
 import { useJianpuScore } from "@/lib/jianpu/images";
 import { isFormFusion, isFormTransition, itemSections, type FormItem, type FormListItem } from "@/lib/setlist/formItems";
 import { KeyPill } from "@/components/ui/key-pill";
@@ -54,16 +54,44 @@ function Pastilles({ chant, choisi }: { chant: FormItem; choisi: boolean }) {
   );
 }
 
+/** « + » entre deux éléments (ordinateur, Q8) : au-dessus de la ligne, une ligne bleue
+ *  « ⊕ Insérer ici » au survol ou au focus ; choisie, elle reste visible et ouvre de la
+ *  place tant que la bibliothèque est ouverte. */
+function BoutonInserer({ label, actif, onClick }: { label: string; actif: boolean; onClick: () => void }) {
+  const { t } = useTranslation();
+  return (
+    <button
+      type="button"
+      data-inserer
+      aria-label={label}
+      aria-pressed={actif}
+      onClick={onClick}
+      className={`absolute inset-x-0 z-20 flex items-center gap-2 text-blue-600 transition-opacity focus-visible:outline-none dark:text-blue-400 ${
+        actif ? "-top-7 h-6 opacity-100" : "-top-[11px] h-4 opacity-0 hover:opacity-100 focus-visible:opacity-100"
+      }`}
+    >
+      <span className="h-[1.5px] flex-1 rounded-full bg-current" aria-hidden />
+      <span className="flex items-center gap-1 rounded-full bg-background px-1.5 text-[13px] font-semibold leading-none">
+        <CirclePlus className="h-3.5 w-3.5" aria-hidden />
+        {t("setlists.editeur.insererIci")}
+      </span>
+      <span className="h-[1.5px] flex-1 rounded-full bg-current" aria-hidden />
+    </button>
+  );
+}
+
 function LigneElement({
   item,
   numero,
   choisi,
   onChoisir,
+  inserer,
 }: {
   item: FormListItem;
   numero: number | null;
   choisi: boolean;
   onChoisir: () => void;
+  inserer?: { label: string; actif: boolean; onClick: () => void };
 }) {
   const { t } = useTranslation();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.uid });
@@ -86,9 +114,14 @@ function LigneElement({
     </button>
   );
 
+  // Ligne d'insertion choisie : de la place au-dessus de l'élément (`!` : space-y du parent).
+  const classeLi = `relative ${isDragging ? "z-20" : ""} ${inserer?.actif ? "!mt-8" : ""}`;
+  const boutonInserer = inserer && <BoutonInserer {...inserer} />;
+
   if (isFormTransition(item)) {
     return (
-      <li ref={setNodeRef} style={style} data-element data-uid={item.uid} className={`relative ${isDragging ? "z-20" : ""}`}>
+      <li ref={setNodeRef} style={style} data-element data-uid={item.uid} className={classeLi}>
+        {boutonInserer}
         <div
           className={`relative flex items-center gap-3 rounded-xl border border-dashed px-4 py-3 ${
             choisi
@@ -113,7 +146,8 @@ function LigneElement({
 
   const fusion = isFormFusion(item) ? item : null;
   return (
-    <li ref={setNodeRef} style={style} data-element data-uid={item.uid} className={`relative ${isDragging ? "z-20" : ""}`}>
+    <li ref={setNodeRef} style={style} data-element data-uid={item.uid} className={classeLi}>
+      {boutonInserer}
       <div
         className={`relative flex items-start gap-3 rounded-xl px-3 py-3 ${
           choisi ? "bg-foreground text-background shadow-soft" : "hover:bg-muted/50"
@@ -169,12 +203,16 @@ export function ListeCourte({
   choisi,
   onChoisir,
   onDragEnd,
+  insertion,
 }: {
   items: FormListItem[];
   choisi: string | null;
   onChoisir: (uid: string) => void;
   onDragEnd: (e: DragEndEvent) => void;
+  /** « + » avant chaque élément (ordinateur seulement) ; `active` = index choisi, ou null. */
+  insertion?: { active: number | null; onInserer: (index: number) => void };
 }) {
+  const { t } = useTranslation();
   const sensors = useSensors(
     useSensor(TouchSensor, { activationConstraint: { delay: 100, tolerance: 5 } }),
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -185,13 +223,23 @@ export function ListeCourte({
     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
       <SortableContext items={items.map((i) => i.uid)} strategy={verticalListSortingStrategy}>
         <ol data-liste-courte className="space-y-1.5">
-          {items.map((item) => (
+          {items.map((item, i) => (
             <LigneElement
               key={item.uid}
               item={item}
               numero={numeros.get(item.uid) ?? null}
               choisi={choisi === item.uid}
               onChoisir={() => onChoisir(item.uid)}
+              inserer={
+                insertion && {
+                  label:
+                    i === 0
+                      ? t("setlists.editeur.insererAuDebut")
+                      : t("setlists.editeur.insererApres", { titre: titreElement(items[i - 1], t("setlists.form.transitionLabel")) }),
+                  actif: insertion.active === i,
+                  onClick: () => insertion.onInserer(i),
+                }
+              }
             />
           ))}
         </ol>

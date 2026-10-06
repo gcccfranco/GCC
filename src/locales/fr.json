@@ -362,7 +362,20 @@
       "aideListe": "Toucher un chant ouvre ses réglages ; la poignée change l'ordre.",
       "listeVide": "Aucun chant pour l'instant.",
       "nDansLaSetlist_one": "{{count}} chant dans la setlist",
-      "nDansLaSetlist_other": "{{count}} chants dans la setlist"
+      "nDansLaSetlist_other": "{{count}} chants dans la setlist",
+      "langue": "Langue",
+      "tous": "Tous",
+      "theme": "Thème",
+      "themes": "Thèmes",
+      "tempo": "Tempo",
+      "tempoLent": "Lent (moins de 90)",
+      "tempoModere": "Modéré (90 à 119)",
+      "tempoRapide": "Rapide (120 et plus)",
+      "apercuChargement": "Chargement de l'aperçu…",
+      "apercuIndisponible": "Aperçu indisponible.",
+      "insererIci": "Insérer ici",
+      "insererAuDebut": "Insérer ici, au début",
+      "insererApres": "Insérer ici, après {{titre}}"
     },
     "entree": {
       "pourQuelService": "Pour quel service ?",

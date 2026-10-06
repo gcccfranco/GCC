@@ -48,7 +48,7 @@ function EnTeteVolet({ surtitre, titre, sousTitre, lien }: { surtitre: string; t
 
 /** Lien vers la page du chant, dans un nouvel onglet (Q10 : quitter l'éditeur de
  *  création supprimerait le brouillon), dans la tonalité choisie. */
-function lienPartition(slug: string, cle: string | null) {
+export function lienPartition(slug: string, cle: string | null) {
   return `/songs/${encodeURIComponent(slug)}${cle ? `?key=${encodeURIComponent(JSON.stringify(cle))}` : ""}`;
 }
 

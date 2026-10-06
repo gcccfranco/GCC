@@ -9,6 +9,7 @@ import type { SongIndexEntry } from "@/types/song";
 import { EnTeteEditeur, type ChampsEnTete } from "@/components/setlists/editeur/EnTeteEditeur";
 import { ListeCourte } from "@/components/setlists/editeur/ListeCourte";
 import { useVolet, type ActionsEditeur } from "@/components/setlists/editeur/useVolet";
+import { useEditeurOrdinateur } from "@/hooks/useEditeurDeuxColonnes";
 
 // Éditeur de setlist « piste 2 » en deux colonnes (lot U5 bis, T3, docs/spec-editeur-setlist.md) :
 // ordinateur et tablette en paysage. À gauche, la setlist (en-tête compact, liste courte,
@@ -78,6 +79,8 @@ export function EditeurDeuxColonnes({
 }: ProprietesEditeur) {
   const { t } = useTranslation();
   const v = useVolet({ items, setItems, songs, actions, feuille: null });
+  // « + » entre deux éléments : ordinateur seulement, pas la tablette couchée (spec).
+  const ordinateur = useEditeurOrdinateur();
   const voletRef = useRef<HTMLElement>(null);
 
   // Le volet repart du haut quand il change de contenu.
@@ -110,6 +113,7 @@ export function EditeurDeuxColonnes({
               choisi={v.vue.nom === "bibliotheque" ? null : v.choisi}
               onChoisir={v.choisir}
               onDragEnd={actions.onDragEnd}
+              insertion={ordinateur ? { active: v.insertionActive, onInserer: v.insererIci } : undefined}
             />
           </div>
           <div className="mt-5 flex flex-wrap gap-2.5">
@@ -117,7 +121,7 @@ export function EditeurDeuxColonnes({
               type="button"
               data-ouvrir-bibliotheque
               onClick={v.ouvrirBibliotheque}
-              aria-pressed={v.vue.nom === "bibliotheque"}
+              aria-pressed={v.vue.nom === "bibliotheque" && v.insertionActive === null}
               className="flex h-11 items-center gap-2 rounded-full bg-foreground px-5 text-sm font-semibold text-background transition-colors hover:bg-foreground/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             >
               <Plus className="h-4 w-4" aria-hidden />

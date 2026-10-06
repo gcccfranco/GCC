@@ -24,6 +24,7 @@ import {
   type FormListItem,
   type FusionMixedSectionForm,
   isFormFusion,
+  insererA,
   isFormTransition,
   makeDefaultSections,
 } from "@/lib/setlist/formItems";
@@ -387,12 +388,11 @@ export function SetlistForm({ mode, setlistId, songs, initial, prefill }: Setlis
   }
 
   // ── Song actions ───────────────────────────────────────
-  function addSong(song: SongIndexEntry) {
-    setItems((prev) => [
-      ...prev,
-      // Un chant ajouté démarre dans la tonalité recommandée (la plus chantée à GCC).
-      { uid: nextUid(), song, keyOverride: song.recommendedKey ?? null, notes: "", sectionItems: makeDefaultSections(song.sections ?? []) },
-    ]);
+  /** Ajoute un chant à la fin, ou à `index` (le « + » entre deux éléments, Q8). */
+  function addSong(song: SongIndexEntry, index?: number) {
+    // Un chant ajouté démarre dans la tonalité recommandée (la plus chantée à GCC).
+    const item: FormItem = { uid: nextUid(), song, keyOverride: song.recommendedKey ?? null, notes: "", sectionItems: makeDefaultSections(song.sections ?? []) };
+    setItems((prev) => insererA(prev, Math.min(index ?? prev.length, prev.length), item));
   }
 
   function addTransition() {

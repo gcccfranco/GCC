@@ -37,3 +37,15 @@ function suivre(changement: () => void) {
 export function useEditeurDeuxColonnes(): boolean {
   return useSyncExternalStore(suivre, maintenant, () => false);
 }
+
+function suivreOrdinateur(changement: () => void) {
+  const liste = window.matchMedia(ORDINATEUR);
+  liste.addEventListener("change", changement);
+  return () => liste.removeEventListener("change", changement);
+}
+
+/** Vrai dans la disposition « ordinateur » de U4 (pas la tablette couchée) : le « + »
+ *  entre deux éléments de la setlist lui est réservé (spec, « Tablette paysage »). */
+export function useEditeurOrdinateur(): boolean {
+  return useSyncExternalStore(suivreOrdinateur, () => window.matchMedia(ORDINATEUR).matches, () => false);
+}

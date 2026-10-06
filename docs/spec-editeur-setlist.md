@@ -479,7 +479,49 @@ Choix faits faute de réponse écrite :
   feuille se tire par sa poignée et son haut.
 - Tablette en portrait : feuille et liste bornées à 768 px de large (`max-w-3xl`), centrées.
 
-Reste : T5 (bibliothèque complète : filtres, aperçu, « + » entre deux éléments).
-Timothée : aucune règle Firestore à publier pour T1 à T4 ; relire les libellés 中文 de `setlists.entree` et
-`setlists.editeur` (nouveaux en T4 : `ok` « 好 », `retour`, `aideListe`, `listeVide`, `nDansLaSetlist`). Le correctif
-`jianpuChords` (commit à lui seul) peut partir sur `main` sur son ordre, avant le reste du lot.
+**06/10/2026 — T5 faite** (bibliothèque complète), commit « feat(U5bis): T5 — … » sur la même branche. Le lot
+est entier.
+
+- `Bibliotheque.tsx` : pilules Tous · FR · 中文 (groupe « Langue », `aria-pressed`), « Thèmes ▾ » et « Tempo ▾ »
+  (menus natifs habillés en pilule, en encre quand un filtre est pris) ; thèmes de `content/themes.json` portés par au
+  moins un chant, nommés dans la langue de l'interface, comme la page Chants ; tempo Lent < 90, Modéré 90–119,
+  Rapide ≥ 120 (`chantsDeLaBibliotheque`, T1). Le compteur suit recherche et filtres, qui se cumulent.
+- Aperçu (Q12) : toucher un titre déplie les pastilles de structure, les **deux premières lignes chantées** (une ligne
+  d'accords seuls, comme une intro, ne compte pas) avec leurs accords dans la tonalité où le chant serait ajouté (la
+  recommandée, sinon l'origine), rendues par `ChordLine`, sans pinyin ni 简谱, et « Voir la partition » dans un nouvel
+  onglet dans cette tonalité. Chargé à l'ouverture par `/api/song/<slug>` (`fetchSongAST`) ; « Chargement de
+  l'aperçu… », « Aperçu indisponible. ». Logique pure : `premieresLignes` (`src/lib/setlist/bibliotheque.ts`).
+- « + » entre deux éléments (Q8), **disposition ordinateur seulement** (`useEditeurOrdinateur`,
+  `src/hooks/useEditeurDeuxColonnes.ts` ; ni tablette couchée ni feuilles) : avant chaque élément de la liste courte, un
+  bouton « Insérer ici, au début » / « Insérer ici, après <titre> », ligne bleue « ⊕ Insérer ici » au survol ou au
+  focus. Le toucher ouvre la bibliothèque (ou la garde) ; la ligne choisie reste visible et ouvre de la place tant
+  que la bibliothèque est ouverte ; chaque ajout va à cet endroit et la ligne avance d'un cran (`useVolet`,
+  `insertion`). « Ajouter des chants » remet les ajouts à la fin ; choisir un élément ou fermer la bibliothèque oublie
+  l'endroit. `addSong(song, index?)` de `SetlistForm` passe par `insererA` (T1).
+- FR et 中文 : `langue`, `tous`, `theme`, `themes`, `tempo`, `tempoLent`, `tempoModere`, `tempoRapide`,
+  `apercuChargement`, `apercuIndisponible`, `insererIci`, `insererAuDebut`, `insererApres` (`setlists.editeur`).
+- Tests (écrits avant, vus rouges — 9 sur 9 sur ordinateur et téléphone —, puis verts) : 6 tests d'écran de plus dans
+  `tests/setlist-bibliotheque.spec.ts` (langue ; thème et tempo, chant sans tempo absent ; aperçu FR, Eb écrit, D
+  ajouté : `Bb/D` → `A/C#` ; aperçu 中文 sans pinyin ; « + » sur ordinateur, deux ajouts dans l'ordre puis « Ajouter
+  des chants » à la fin ; aucun « + » ailleurs). Le fichier passe dans `SPECS_GRAND_ECRAN` (cinq projets).
+- Vérifié le 06/10 : `setlist-bibliotheque` (cinq projets désormais), `setlist-editeur-piste2`, `setlist-fusionner`,
+  `setlist-pour-quel-service`, `setlist-editor`, `setlist-history`, `coup-d-oeil`, `fusions-dp`, `recommended-key`,
+  `harmonie-jianpu` — 551 verts, 30 sautés (une disposition seulement), un échec de lenteur (`recommended-key`, page
+  du chant, tablette) revu vert seul ; `tsc` propre, lint sans erreur ni avertissement nouveau. Captures regardées (ordinateur, 1 440, tablette couchée, téléphone, tablette en
+  portrait) et comparées à `creer-piste2-bibliotheque` et `creer-piste2-telephone-ajouter`.
+
+Choix faits faute de réponse écrite :
+- « visible tant que la bibliothèque est ouverte » lu ainsi : la ligne d'insertion apparaît au survol ou au focus ;
+  une fois touchée, elle reste affichée (et ouvre de la place) jusqu'à la fermeture de la bibliothèque.
+- Pas de « + » après le dernier élément : c'est « Ajouter des chants ».
+- Aperçu d'un chant sans tonalité recommandée : sa tonalité d'origine (c'est là qu'il serait ajouté) ; le lien
+  « Voir la partition » n'a alors pas de `?key=`.
+- Les filtres ne sont pas gardés d'une ouverture de la bibliothèque à l'autre (comme la recherche en T3).
+- Thème et tempo en menus natifs (accessibles, sans dépendance) plutôt qu'en menus dessinés.
+
+Reste : rien dans le lot. Remarqué, non corrigé : les thèmes 中文 du corpus écrits en chinois (voir T1) ne se filtrent
+toujours pas par thème (question 8).
+Timothée : aucune règle Firestore à publier pour T1 à T5 ; relire les libellés 中文 de `setlists.entree` et
+`setlists.editeur` (nouveaux en T4 : `ok` « 好 », `retour`, `aideListe`, `listeVide`, `nDansLaSetlist` ; en T5 :
+`langue` à `insererApres`, dont « 插入此处，在 {{titre}} 之后 »). Le correctif `jianpuChords` (commit à lui seul)
+peut partir sur `main` sur son ordre, avant le reste du lot.
