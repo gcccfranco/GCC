@@ -5,6 +5,7 @@ import {
   canCreateSetlist, canSeeEvenement, creatableCategories, entreesBackOffice, estReunion, isAdminUser, polesDe,
 } from "@/lib/access";
 import { byDate, isExpired, isInfo, isPast, refusInscription } from "@/lib/evenements/agenda";
+import type { EntreeSheet } from "@/lib/evenements/sheet";
 import type { FSSetlist } from "@/lib/firebase/setlists";
 import { colonnesVides } from "@/lib/planning/casesVides";
 import {
@@ -171,6 +172,27 @@ export function evenementsAVenir(
     .filter((e) => canSeeEvenement(user, profile, e) && !estReunion(e.pour) && !isInfo(e) && !isPast(e, today)
       && !isExpired(e, today) && (!r.section || e.pour === r.section))
     .sort(byDate)
+    .slice(0, r.nombre ?? 3);
+}
+
+/** Une ligne du widget 3 : un évènement de l'app, ou une entrée du Sheet des évènements. */
+export type ProchainEvenement =
+  | { du: "app"; date: string; heure: string; evenement: Evenement }
+  | { du: "sheet"; date: string; heure: string; entree: EntreeSheet };
+
+/**
+ * Le widget 3 avec le Sheet (lot U8, C8) : les entrées du Sheet à venir (toute l'église,
+ * donc seulement sans section choisie) mêlées aux évènements de l'app (`evenementsAVenir`,
+ * déjà filtrés, 10 au plus), par date puis heure, 3 / 5 / 10. Après le 31/12/2026 le
+ * lecteur ne lit plus rien (U9) : seuls restent ceux de l'app.
+ */
+export function avecLeSheet(app: Evenement[], sheet: EntreeSheet[], today: string, r: Reglages): ProchainEvenement[] {
+  const lignes: ProchainEvenement[] = [
+    ...app.map((evenement) => ({ du: "app" as const, date: evenement.date, heure: evenement.heure, evenement })),
+    ...(r.section ? [] : sheet.filter((s) => s.date >= today).map((entree) => ({ du: "sheet" as const, date: entree.date, heure: entree.heure, entree }))),
+  ];
+  return lignes
+    .sort((a, b) => a.date.localeCompare(b.date) || (a.heure || "99").localeCompare(b.heure || "99"))
     .slice(0, r.nombre ?? 3);
 }
 

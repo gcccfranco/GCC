@@ -97,7 +97,7 @@ export function avecPetitDej(rows: string[][], rangees: string[][]): string[][] 
 }
 
 /** Un dimanche sans aucune ligne (T2 : pas de compteur de places). */
-export function estLibre(lignes: LignePetitDej[], dimanche: string): boolean {
+export function estLibre(lignes: Pick<LignePetitDej, "dimanche">[], dimanche: string): boolean {
   return !lignes.some((l) => l.dimanche === dimanche)
 }
 

@@ -492,10 +492,11 @@ export function canVoirStatistiques(user: { email?: string | null } | null): boo
   return isAdminUser(user);
 }
 
-/** Entrées et widgets qui arrivent avec leur lot (Q17) : U8 (Calendrier). Chaque lot retire
- *  la sienne de ces listes ; le rang est déjà gardé. U7 (Statistiques, Chants les plus joués) : arrivés. */
-const ENTREES_A_VENIR: readonly Entree[] = ["calendrier"];
-const WIDGETS_A_VENIR: readonly WidgetId[] = ["calendrier"];
+/** Entrées et widgets qui arrivent avec leur lot (Q17). Chaque lot retire la sienne de ces
+ *  listes ; le rang est déjà gardé. U7 (Statistiques, Chants les plus joués) et U8 (l'entrée
+ *  Calendrier en C3, son widget en C8) : arrivés. */
+const ENTREES_A_VENIR: readonly Entree[] = [];
+const WIDGETS_A_VENIR: readonly WidgetId[] = [];
 
 /** Les entrées du Back-Office d'une personne (table Q2), dans l'ordre du menu. Vide pour qui
  *  n'est pas responsable. */

@@ -2483,7 +2483,8 @@
       "sansLimite": "sans limite",
       "fermees": "inscriptions fermées",
       "externe": "formulaire externe",
-      "rien": "Aucun évènement à venir."
+      "rien": "Aucun évènement à venir.",
+      "duSheet": "Sheet"
     },
     "petitdej": {
       "libre": "Libre"
@@ -2552,6 +2553,7 @@
       "semaines_other": "{{count}} semaines",
       "dimanches_one": "{{count}} dimanche",
       "dimanches_other": "{{count}} dimanches",
+      "sources": "Sources",
       "periode": "Période",
       "mois_one": "{{count}} mois",
       "mois_other": "{{count}} mois",
@@ -2645,6 +2647,87 @@
         "questionnaire": "questionnaire",
         "statistiques": "chants les plus joués"
       }
+    }
+  },
+  "calendrier": {
+    "precedent": "Mois précédent",
+    "suivant": "Mois suivant",
+    "aujourdhui": "Aujourd'hui",
+    "sourcesAria": "Sources affichées",
+    "seulementMoi": "Seulement moi",
+    "sources": {
+      "services": "Services",
+      "evenements": "Évènements (Sheet)",
+      "reunions": "Réunions",
+      "scene": "Scène",
+      "taches": "Tâches",
+      "petitDej": "Petit déj",
+      "setlists": "Setlists"
+    },
+    "carte": {
+      "services": "Service",
+      "evenements": "Évènement",
+      "reunions": "Réunion",
+      "scene": "Scène",
+      "taches": "Tâche",
+      "petitDej": "Petit déj",
+      "setlists": "Setlist"
+    },
+    "jourAria_one": "{{jour}}, {{count}} entrée",
+    "jourAria_other": "{{jour}}, {{count}} entrées",
+    "rien": "Rien ce jour-là.",
+    "casesVides": "Cases vides : {{liste}}",
+    "setlistDuService_one": "Setlist « {{titre}} » · {{count}} chant",
+    "setlistDuService_other": "Setlist « {{titre}} » · {{count}} chants",
+    "echecs": "Lecture impossible : {{liste}}. Le reste s'affiche.",
+    "duSheet": "Lu dans le Sheet des évènements",
+    "sheetInjoignable": "Sheet des évènements injoignable : ses évènements n'apparaissent pas pour l'instant.",
+    "fermer": "Fermer",
+    "vue": { "aria": "Affichage", "mois": "Mois", "agenda": "Agenda" },
+    "creer": "Créer",
+    "nouvelEvenement": "Nouvel évènement le {{date}}",
+    "nouvelleTache": "Nouvelle tâche pour le {{date}}",
+    "tout": "Tout",
+    "sourcesFeuille": "Sources",
+    "ouvrir": "Ouvrir",
+    "agendaVide": "Rien de prévu jusqu'à fin {{mois}}.",
+    "afficherMois": "Afficher {{mois}}",
+    "deplacer": {
+      "bouton": "Déplacer…",
+      "titre": "Déplacer « {{titre}} »",
+      "nouvelleDate": "Nouvelle date",
+      "deposer": "Déposer pour déplacer",
+      "prevenirInscrits": "Prévenir les inscrits ({{count}})",
+      "prevenirMembres": "Prévenir les membres de la réunion",
+      "rappel": "Ils le liront dans le rappel de demain matin.",
+      "tachesLiees": "Tâches liées, qui ne bougent pas : {{liste}}",
+      "creneauxLibres": "Créneaux libres le {{jour}}",
+      "annuler": "Annuler",
+      "confirmer": "Déplacer",
+      "ok": "OK",
+      "repetee": "Change la répétition dans la tâche",
+      "erreur": "Le déplacement n'a pas été enregistré. Réessaie.",
+      "refus": {
+        "avantAujourdhui": "Pas avant aujourd'hui",
+        "sceneFermee": "La scène n'est pas ouverte ce jour-là",
+        "aucunCreneau": "Aucun créneau libre ce jour-là"
+      }
+    },
+    "legende": {
+      "services": "Services",
+      "evenements": "Évènements",
+      "reunions": "Réunions",
+      "scene": "Scène",
+      "taches": "Tâches",
+      "petitDej": "Petit déj",
+      "setlists": "Setlists"
+    },
+    "widget": {
+      "prochainsJours": "Prochains jours",
+      "cetteSemaine": "Cette semaine",
+      "rienS": "Rien dans les quatorze prochains jours.",
+      "rienM": "Rien d'autre cette semaine.",
+      "sheetInjoignable": "Sheet des évènements injoignable : ses évènements n'y sont pas."
     }
   }
 }

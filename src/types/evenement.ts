@@ -23,6 +23,15 @@ export interface CompteRendu {
   le: string;
 }
 
+/** Un déplacement d'évènement (lot U8, docs/spec-calendrier.md) : de quel jour à
+ *  quel jour (dates de début), quand (ISO) et par qui. */
+export interface Deplacement {
+  de: string;
+  vers: string;
+  le: string;
+  parUid: string;
+}
+
 export const MODES_INSCRIPTIONS = ["auto", "ouvertes", "fermees"] as const;
 export type ModeInscriptions = (typeof MODES_INSCRIPTIONS)[number];
 
@@ -72,6 +81,9 @@ export interface Evenement {
   /** Réunion (lot U6) : son compte rendu ; absent ou null = pas de compte rendu.
    *  Jamais écrit par le formulaire de l'évènement (EvenementValues l'exclut). */
   compteRendu?: CompteRendu | null;
+  /** Dernier déplacement depuis le calendrier (lot U8, C6), écrit quand « Prévenir »
+   *  est cochée (`null` sinon) ; le rappel du matin l'annonce (C7). */
+  deplacement?: Deplacement | null;
   /** Inscrits + invités — tenu par le serveur seulement. */
   inscrits: number;
   createdAt: string;

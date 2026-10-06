@@ -8,6 +8,7 @@
 // ont laissé des sujets, on demande s'il faut les reprendre (Créer comme Dupliquer).
 // Lot U6, B3 : le formulaire est au Back-Office (`/back-office/evenements/nouveau`) ;
 // `?reunion=1` (« Nouvelle réunion ») ne propose que les réunions.
+// Lot U8, C5 : `?date=AAAA-MM-JJ` (un jour du calendrier) pré-remplit la date.
 
 import { useEffect, useRef, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
@@ -36,9 +37,11 @@ export function NouveauClient() {
   const params = useSearchParams()
   const from = params.get("from")
   const reunion = params.get("reunion") === "1"
+  const date = params.get("date") ?? ""
+  const vide = /^\d{4}-\d{2}-\d{2}$/.test(date) ? { ...EMPTY_EVENEMENT, date } : EMPTY_EVENEMENT
   const { user } = useAuth()
   const { profile, loading: profileLoading } = useProfile()
-  const [initial, setInitial] = useState<EvenementValues | null>(from ? null : EMPTY_EVENEMENT)
+  const [initial, setInitial] = useState<EvenementValues | null>(from ? null : vide)
   // Duplication : la date de l'évènement source (le formulaire repart sans) et
   // les tâches de mes pôles, pour les copier aux mêmes délais.
   const [sourceDate, setSourceDate] = useState("")

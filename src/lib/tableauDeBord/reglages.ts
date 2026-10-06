@@ -2,6 +2,8 @@
 // les pastilles de « Réglages du widget » (planche `bo-tableau-de-bord`). Module pur.
 // Une clé absente des réglages = le défaut de la table ; les choix actifs se lisent avec
 // les mêmes règles que les widgets (`./donnees`), donc ce qu'on voit coché est ce qui s'affiche.
+import { sourcesPermises } from "@/lib/calendrier/entrees";
+import { MOI, sourcesDuWidget } from "@/lib/calendrier/widget";
 import { grilleDe, GRILLES } from "@/lib/planning/grilles";
 import { categoryLabel } from "@/lib/serviceColors";
 import { ANNONCE_SECTIONS } from "@/types/annonce";
@@ -84,8 +86,17 @@ export function groupesDeReglages(
       return [plusieurs("raccourcis", "raccourcis",
         raccourcisPermis(user, profile, {}).map((x) => ({ valeur: x.id, i18n: `tableauDeBord.raccourcis.${x.id}` })),
         raccourcisPermis(user, profile, r).map((x) => x.id))];
+    case "calendrier": {
+      // Lot U8, C8 : les sources qu'on peut voir (sans Setlists), puis « Seulement moi »,
+      // dans le même groupe (planche). Ordre de la planche : Tâches avant Réunions.
+      const permises = user ? sourcesPermises(user, profile) : [];
+      const ordre = ["services", "evenements", "taches", "reunions", "scene", "petitDej"] as const;
+      const choix = ordre.filter((s) => permises.includes(s)).map((s): ChoixReglage => ({ valeur: s, i18n: `calendrier.legende.${s}` }));
+      const actives: string[] = sourcesDuWidget(r, permises);
+      return [plusieurs("sources", "sources", [...choix, { valeur: MOI, i18n: "calendrier.seulementMoi" }],
+        [...choix.map((c) => c.valeur).filter((v) => actives.includes(v)), ...(r.seulementMoi ? [MOI] : [])])];
+    }
     default:
-      // Calendrier (U8) apporte ses réglages avec son lot.
       return [];
   }
 }
@@ -97,7 +108,14 @@ export function groupesDeReglages(
  */
 export function choisirReglage(r: Reglages, g: GroupeReglages, valeur: string): Reglages {
   if (g.plusieurs) {
-    const actifs = g.actifs.includes(valeur) ? g.actifs.filter((v) => v !== valeur) : [...g.actifs, valeur];
+    // Calendrier (U8) : « Seulement moi » est rangé avec les sources, mais c'est un oui / non.
+    if (g.cle === "sources" && valeur === MOI) {
+      const reste = { ...r };
+      delete reste.seulementMoi;
+      return r.seulementMoi ? reste : { ...r, seulementMoi: true };
+    }
+    const sansMoi = g.actifs.filter((v) => v !== MOI);
+    const actifs = sansMoi.includes(valeur) ? sansMoi.filter((v) => v !== valeur) : [...sansMoi, valeur];
     if (actifs.length === 0) return r;
     return { ...r, [g.cle]: g.choix.map((c) => c.valeur).filter((v) => actifs.includes(v)) };
   }
