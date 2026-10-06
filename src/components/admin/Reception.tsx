@@ -13,8 +13,10 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Pill } from "./commun";
 
-/** `onEnAttente` : signalements et propositions en attente (pastille de l'onglet). */
-export function Reception({ onEnAttente }: { onEnAttente?: (n: number) => void }) {
+/** Signalements et propositions de chants, avec leurs actions : lus une fois, mis à jour sur
+ *  place après chaque écriture (règles : reports, songProposals, admins). Partagé par l'ancien
+ *  bloc (interrupteur coupé) et la Réception du Back-Office (U4 bis, B7). */
+export function useReception() {
   const [proposals, setProposals] = useState<SongProposal[]>([]);
   const [loadingProposals, setLoadingProposals] = useState(true);
   const [proposalBusy, setProposalBusy] = useState<string | null>(null);
@@ -22,10 +24,6 @@ export function Reception({ onEnAttente }: { onEnAttente?: (n: number) => void }
   const [loadingReports, setLoadingReports] = useState(true);
   const [reportBusy, setReportBusy] = useState<string | null>(null);
   const [error, setError] = useState("");
-  const [showResolvedReports, setShowResolvedReports] = useState(false);
-  const [showResolvedProposals, setShowResolvedProposals] = useState(false);
-  const [expandedReport, setExpandedReport] = useState<string | null>(null);
-  const [expandedProposal, setExpandedProposal] = useState<string | null>(null);
 
   useEffect(() => {
     getSongProposals().then(setProposals).finally(() => setLoadingProposals(false));
@@ -83,6 +81,23 @@ export function Reception({ onEnAttente }: { onEnAttente?: (n: number) => void }
       setReportBusy(null);
     }
   }
+
+  return {
+    proposals, loadingProposals, proposalBusy, reports, loadingReports, reportBusy, error,
+    handleProposalStatus, handleProposalDelete, handleReportStatus, handleReportDelete,
+  };
+}
+
+/** `onEnAttente` : signalements et propositions en attente (pastille de l'onglet). */
+export function Reception({ onEnAttente }: { onEnAttente?: (n: number) => void }) {
+  const {
+    proposals, loadingProposals, proposalBusy, reports, loadingReports, reportBusy, error,
+    handleProposalStatus, handleProposalDelete, handleReportStatus, handleReportDelete,
+  } = useReception();
+  const [showResolvedReports, setShowResolvedReports] = useState(false);
+  const [showResolvedProposals, setShowResolvedProposals] = useState(false);
+  const [expandedReport, setExpandedReport] = useState<string | null>(null);
+  const [expandedProposal, setExpandedProposal] = useState<string | null>(null);
 
   const pendingProposals = proposals.filter((p) => p.status === "pending");
   const pendingReports = reports.filter((r) => r.status === "pending");

@@ -12,6 +12,8 @@ import Link from "next/link";
 import { useTranslation } from "react-i18next";
 import { Pencil, X } from "lucide-react";
 import { PageTitle } from "@/components/layout/PageTitle";
+import { Halo } from "@/components/layout/Halo";
+import { BandeauEquipes } from "@/components/equipes/BandeauEquipes";
 import { FilterButtons } from "@/components/planning/FilterButtons";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
@@ -51,45 +53,84 @@ export function EquipesClient({ gestion = false }: { gestion?: boolean }) {
 
   const peutEditer = gestion && canEditerEquipes(user, profile);
   const onglets = [t("equipes.onglet.equipes"), t("equipes.onglet.musiciens")];
+  // Lot U4 bis, B6 (Q12) : dans l'App, l'organigramme est un bandeau qui défile de gauche à
+  // droite et la page tient dans la hauteur de l'écran. Au Back-Office (édition), les colonnes
+  // d'aujourd'hui : une carte qui s'ouvre en formulaire n'a pas de hauteur fixe.
+  const bandeau = !gestion && onglet === "equipes";
 
-  return (
-    <div className={gestion ? "space-y-5" : "max-w-5xl mx-auto px-4 pt-6 pb-10 space-y-5"}>
+  const carte = (def: (typeof EQUIPES)[number]) => (
+    <CarteEquipe
+      key={def.id}
+      def={def}
+      equipe={equipes.find((e) => e.id === def.id) ?? null}
+      profils={profils}
+      peutEditer={peutEditer}
+      enBandeau={bandeau}
+      onFiche={setFiche}
+      onEnregistre={(maj) =>
+        setEquipes((prev) => [...prev.filter((e) => e.id !== maj.id), maj])
+      }
+    />
+  );
+
+  const filtres = (
+    <FilterButtons
+      options={onglets}
+      active={onglets[onglet === "equipes" ? 0 : 1]}
+      onChange={(v) => setOnglet(v === onglets[0] ? "equipes" : "musiciens")}
+    />
+  );
+
+  const fichePersonne = (
+    <FichePersonne
+      uid={fiche}
+      profils={profils}
+      equipes={equipes}
+      planning={planning}
+      admin={isAdminUser(user)}
+      onClose={() => setFiche(null)}
+    />
+  );
+
+  if (bandeau) {
+    return (
+      <div className="relative">
+        <Halo variant="moi" color="hsl(var(--foreground))" />
+        <div className="equipes-ecran relative flex flex-col pt-4 md:pt-6">
+          <div className="px-4 md:px-6 xl:px-10">
+            <PageTitle title={t("equipes.title")} subtitle={t("equipes.sousTitre")} action={filtres} />
+          </div>
+          <BandeauEquipes
+            cartes={EQUIPES.map((def) => ({ id: def.id, large: !!def.sousColonnes, carte: carte(def) }))}
+          />
+        </div>
+        {fichePersonne}
+      </div>
+    );
+  }
+
+  const contenu = (
+    <div className={gestion ? "space-y-5" : "relative max-w-5xl mx-auto px-4 pt-6 pb-10 space-y-5"}>
       {/* Au Back-Office, le titre est celui de l'entrée (EnTeteEntree). */}
-      {!gestion && <PageTitle title={t("equipes.title")} subtitle={t("equipes.sousTitre")} />}
-      <FilterButtons
-        options={onglets}
-        active={onglets[onglet === "equipes" ? 0 : 1]}
-        onChange={(v) => setOnglet(v === onglets[0] ? "equipes" : "musiciens")}
-      />
+      {!gestion && <PageTitle title={t("equipes.title")} subtitle={t("equipes.sousTitre")} action={filtres} />}
+      {gestion && filtres}
 
       {onglet === "equipes" ? (
         <div className="columns-1 md:columns-2 lg:columns-3 gap-3">
-          {EQUIPES.map((def) => (
-            <CarteEquipe
-              key={def.id}
-              def={def}
-              equipe={equipes.find((e) => e.id === def.id) ?? null}
-              profils={profils}
-              peutEditer={peutEditer}
-              onFiche={setFiche}
-              onEnregistre={(maj) =>
-                setEquipes((prev) => [...prev.filter((e) => e.id !== maj.id), maj])
-              }
-            />
-          ))}
+          {EQUIPES.map(carte)}
         </div>
       ) : (
         <Matrice profils={profils} planning={planning} onFiche={setFiche} />
       )}
 
-      <FichePersonne
-        uid={fiche}
-        profils={profils}
-        equipes={equipes}
-        planning={planning}
-        admin={isAdminUser(user)}
-        onClose={() => setFiche(null)}
-      />
+      {fichePersonne}
+    </div>
+  );
+  if (gestion) return contenu;
+  return (
+    <div className="relative">
+      <Halo variant="moi" color="hsl(var(--foreground))" />
+      {contenu}
     </div>
   );
 }
@@ -97,12 +138,15 @@ export function EquipesClient({ gestion = false }: { gestion?: boolean }) {
 // ── Une équipe ──────────────────────────────────────────────────────────────
 
 function CarteEquipe({
-  def, equipe, profils, peutEditer, onFiche, onEnregistre,
+  def, equipe, profils, peutEditer, enBandeau, onFiche, onEnregistre,
 }: {
   def: EquipeDef;
   equipe: Equipe | null;
   profils: UserProfile[];
   peutEditer: boolean;
+  /** Dans le bandeau de l'App (U4 bis, B6) : carte en relief ; Louange et EDD rangent leurs
+   *  sous-groupes sur trois colonnes, sous le référent. */
+  enBandeau: boolean;
   onFiche: (uid: string) => void;
   onEnregistre: (e: Equipe) => void;
 }) {
@@ -112,11 +156,25 @@ function CarteEquipe({
   const membres = equipe?.membres ?? [];
   const soustitre = t(`equipes.soustitre.${def.id}`);
   const groupes = [...new Set(membres.map((m) => m.groupe))];
+  const enColonnes = enBandeau && !!def.sousColonnes;
+
+  const groupe = (g: string) => (
+    <div key={g} className="break-inside-avoid space-y-0.5">
+      {g && (
+        <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{g}</p>
+      )}
+      {membres.filter((m) => m.groupe === g).sort(referentsDabord).map((m, i) => (
+        <LigneMembre key={`${m.nom}-${i}`} membre={m} onFiche={onFiche} />
+      ))}
+    </div>
+  );
 
   return (
     <section
       data-testid={`equipe-${def.id}`}
-      className="mb-3 break-inside-avoid rounded-xl bg-card shadow-soft p-4 space-y-2.5"
+      className={enBandeau
+        ? "raised rounded-2xl p-4 space-y-2.5"
+        : "mb-3 break-inside-avoid rounded-xl bg-card shadow-soft p-4 space-y-2.5"}
     >
       <header className="space-y-1">
         <div className="flex items-start justify-between gap-2">
@@ -161,18 +219,14 @@ function CarteEquipe({
         />
       ) : membres.length === 0 ? (
         <p className="text-sm text-muted-foreground">{t("equipes.aucunMembre")}</p>
+      ) : enColonnes ? (
+        <div>
+          {groupes.includes("") && <div className="pb-2">{groupe("")}</div>}
+          <div className="columns-3 gap-4 [&>div]:pb-2">{groupes.filter((g) => g).map(groupe)}</div>
+        </div>
       ) : (
         <div className="space-y-2">
-          {groupes.map((g) => (
-            <div key={g} className="space-y-0.5">
-              {g && (
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{g}</p>
-              )}
-              {membres.filter((m) => m.groupe === g).sort(referentsDabord).map((m, i) => (
-                <LigneMembre key={`${m.nom}-${i}`} membre={m} onFiche={onFiche} />
-              ))}
-            </div>
-          ))}
+          {groupes.map(groupe)}
         </div>
       )}
     </section>

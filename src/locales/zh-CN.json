@@ -2297,6 +2297,24 @@
       "equipes": "团队",
       "musiciens": "乐手"
     },
+    "court": {
+      "orga": "统筹组",
+      "comite-franco": "法语堂委员会",
+      "da": "美工组",
+      "medias": "媒体组",
+      "developpement": "开发组",
+      "regie": "音控组",
+      "traduction": "翻译组",
+      "theologie": "神学组",
+      "evenementiel": "活动组",
+      "decoration": "布置组",
+      "accueil-j1": "迎新组",
+      "louange": "敬拜组",
+      "edd": "主日学"
+    },
+    "index": "团队索引",
+    "precedentes": "上一组团队",
+    "suivantes": "下一组团队",
     "team": {
       "orga": "统筹组",
       "comite-franco": "法语堂委员会",
@@ -2588,6 +2606,37 @@
         "questionnaire": "问卷",
         "statistiques": "最常唱的诗歌"
       }
+    },
+    "reception": {
+      "filtres": "筛选消息",
+      "tout": "全部",
+      "signalements": "问题反馈",
+      "propositions": "诗歌推荐",
+      "titreSignalements": "问题反馈",
+      "titrePropositions": "诗歌推荐",
+      "aideSignalements": "成员报告的问题（诗歌或网站）。展开一条查看详情，解决后标为已处理。",
+      "aidePropositions": "成员推荐的诗歌。展开一条查看链接，加入诗歌库后标为已处理。",
+      "enAttente": "{{n}} 条待处理",
+      "voirTraites": "查看已处理（{{n}}）",
+      "masquerTraites": "隐藏已处理",
+      "chant": "诗歌",
+      "site": "网站",
+      "traite": "已处理",
+      "refuse": "已拒绝",
+      "proposePar": "{{nom}} 推荐",
+      "page": "页面",
+      "voirChant": "查看诗歌",
+      "partition": "PDF 乐谱",
+      "marquerTraite": "标为已处理",
+      "rouvrir": "重新打开",
+      "refuser": "拒绝",
+      "supprimerSignalement": "删除此问题反馈",
+      "supprimerProposition": "删除此推荐",
+      "aucunSignalement": "暂无问题反馈。",
+      "aucuneProposition": "暂无诗歌推荐。",
+      "aucunEnAttente": "暂无待处理消息。",
+      "message": "消息",
+      "erreur": "未能保存。请检查网络后重试。"
     }
   }
 }
