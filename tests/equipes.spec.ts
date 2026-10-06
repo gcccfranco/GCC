@@ -184,13 +184,16 @@ test("Équipes › Organigramme : le droit « Équipes » ajoute un membre et fa
     "/back-office/equipes",
   );
   const carte = page.getByTestId("equipe-da");
-  await carte.getByRole("button", { name: "Modifier" }).click();
-  await carte.getByPlaceholder("Ajouter un membre").fill("Ruth");
-  await carte.getByRole("button", { name: /Ruth K\./ }).click();
-  await carte.getByRole("button", { name: "Enregistrer" }).click();
-  // Un signe à l'écran d'abord : l'édition se referme et le nom apparaît.
+  // Agencement v18 (B8) : le crayon de la carte ouvre le panneau d'édition.
+  await carte.getByRole("button", { name: "Modifier TEAM DA" }).click();
+  const panneau = page.getByRole("dialog", { name: "TEAM DA" });
+  await panneau.getByPlaceholder("Ajouter un membre").fill("Ruth");
+  await panneau.getByRole("button", { name: /Ruth K\./ }).click();
+  await panneau.getByRole("button", { name: "Enregistrer" }).click();
+  // Un signe à l'écran d'abord : le panneau se referme et le nom apparaît dans la carte.
+  await expect(panneau).toBeHidden();
   await expect(carte.getByRole("button", { name: /Ruth K\./ })).toBeVisible();
-  await expect(carte.getByRole("button", { name: "Modifier" })).toBeVisible();
+  await expect(carte.getByRole("button", { name: "Modifier TEAM DA" })).toBeVisible();
   const ecrit = db.doc("equipes/da") as { membres: MembreEquipe[] } | undefined;
   expect(ecrit?.membres.filter((m) => m.uid === "u-ruth")).toHaveLength(1);
   // Les anciens membres restent, et le pôle de l'équipe ne bouge pas.
@@ -285,8 +288,10 @@ test("admin : « Recalculer depuis l'organigramme » repose équipes et référe
   });
   await signInAs(page, { uid: "admin1", email: "tc328829@gmail.com", firstName: "Timothée", lastName: "C." }, DOCS, "/back-office/equipes");
   await expect(page.getByTestId("equipe-da")).toBeVisible();
-  await expect(page.getByText(/réunions d.équipe/)).toBeVisible();
-  await page.getByRole("button", { name: "Recalculer depuis l'organigramme" }).click();
+  // Agencement v18 (B8) : dans l'en-tête ; son aide passe dans l'infobulle du bouton.
+  const bouton = page.getByRole("button", { name: "Recalculer depuis l'organigramme" });
+  await expect(bouton).toHaveAttribute("title", /réunions d.équipe/);
+  await bouton.click();
   await expect(page.getByText("12 profils mis à jour.")).toBeVisible();
   expect(envois).toEqual([{ tous: true }]);
 });

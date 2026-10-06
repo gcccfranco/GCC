@@ -529,3 +529,39 @@ la barre d'onglets : une page sans barre du bas (rare) le verra plus haut que n�
   empilés sur téléphone, au-dessus de la feuille du formulaire de tâche).
 - **Reste** : rien pour F2. Les tranches de pages (T1 à T11) peuvent partir.
 - **Timothée** : rien à publier (aucune règle, aucune donnée) ; relire les six libellés 中文 ci-dessus.
+
+### V18T5 — Back-Office : Équipes et Messages (T5)
+
+- 06/10/2026 : **T5 faite** (branche `lot/v18-t5`, commit `feat(V18T5): T5 — Équipes et Messages`). B8 à B12.
+- **Équipes › Organigramme** (B8) : `back-office/equipes/layout.tsx` retiré ; chaque page pose `EnTetePage`
+  (« Équipes », sous-titre `equipes.sousTitreGestion`, rail `RailEquipes.tsx`, caché quand il n'y a qu'Organigramme).
+  « Recalculer depuis l'organigramme » devient `useRecalculOrganigramme()` (`RecalculerOrganigramme.tsx`) : le
+  bouton en contour dans les outils (admins ; libellé caché sur téléphone, son aide en infobulle), le résultat sous
+  les pilules. `EquipesClient gestion` : le bandeau de l'App (`BandeauEquipes margePage`, à `--marge-page`),
+  Équipes · Musiciens en `Pilules`, un crayon par carte (`Modifier TEAM DA`) qui ouvre `PanneauEquipe` (vaul :
+  420 px à droite en grand, feuille sinon) ; l'édition ne vit plus dans la carte. La branche App ne change pas.
+- **Équipes › Personnes** (B9) : `components/admin/PersonnesVolets.tsx` ; `Personnes.tsx` exporte ses morceaux
+  (`useDonneesPersonnes`, `useFiltresPersonnes`, `FiltresPersonnes` en `Pilules`, `LignePersonne`,
+  `FormulairePersonne`, `ListePersonnes`) et l'ancienne administration les assemble comme avant.
+  `InscriptionsComptes court` : interrupteur, état, « n nouveaux comptes », « Voir les n ». `?uid=` (remplacé sans
+  historique) choisit la personne ; un volet : elle se déplie sur place.
+- **Messages** (B10 à B12) : `messages/layout.tsx` pose un seul `EnTetePage` pour les trois onglets.
+  `ReceptionVolets` dans `DeuxVolets` ; « Supprimer » dans `MenuActions` (confirmation dans le site) ; « Le chant
+  signalé » (index des chants) et « Du même membre ». `Notifier backOffice` : carte du formulaire, audience en
+  deux rangées de pilules (Tout le monde, Cultes, Groupes, EDD, puis l'audience), pied « Annuler · Envoyer à n
+  personnes » ; `ApercuNotification.tsx` (aperçu, `DerniersEnvois`). `SurveyResults backOffice` : deux volets
+  (sommaire avec moyennes, « Par personne », lien vers la page) ; un volet : l'accordéon, la première partie ouverte.
+- **Décisions prises faute de réponse** : « n en attente » de la planche = comptes créés ces sept jours (aucune
+  validation de compte n'existe) ; « Voir les n » trie par récents et ouvre le plus récent. Les blocs
+  d'administration restent en français seul (Q16 de U6) : Personnes, Notifier, Questionnaire ; libellés nouveaux
+  en FR et 中文 pour Équipes et Réception (`equipes.sousTitreGestion`, `vue`, `modifierEquipe`, `compte.*`,
+  `backOffice.reception.{sousTitreSection, chantSignale, ouvrirPartition, tonalite, sections, memeMembre,
+  proposition, enAttenteCourt, traiteCourt, refuseCourt}`). Les audiences de Notifier restent celles de l'API
+  (pas d'« Une équipe » ni d'« Un pôle », que la planche dessine). Pas de « ⋯ » sur la fiche d'une personne
+  (aucune action à y mettre).
+- **Tests** : `tests/agencement-v18-t5.spec.ts` (17 tests × 5 projets, 85 verts ; les six de Messages vus rouges sur le code
+  d'avant, les autres écrits avant le code d'Équipes) ; réécrits : `back-office-admin` (rail, audience en pilules,
+  carte des inscriptions), `equipes` (panneau d'édition, aide en infobulle), `pages-en-grand-reception`
+  (« ⋯ › Supprimer »), `evenements` (carte des inscriptions). Captures regardées aux cinq tailles.
+- **Reste** : rien pour T5. Hors périmètre (spec) : « Joué n fois », « Setlist citée », « Pôles calculés le … ».
+- **Timothée** : rien à publier (ni règle ni donnée) ; relire les libellés 中文 ci-dessus.

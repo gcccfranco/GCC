@@ -575,7 +575,8 @@ test("annonces retirées : l'administration ne propose plus de migration, la rou
   // Lot U6, B2 : l'onglet Inscriptions de l'administration est en tête de Équipes ›
   // Personnes depuis le 06/10/2026.
   await member(page, TIM, "/back-office/equipes/personnes");
-  await expect(page.getByRole("heading", { name: "Inscriptions" })).toBeVisible();
+  // Agencement v18 (B9) : la carte des inscriptions, dans l'en-tête de Personnes.
+  await expect(page.getByRole("region", { name: "Inscriptions" })).toBeVisible();
   await expect(page.getByRole("button", { name: /Migrer les annonces/ })).toHaveCount(0);
   expect((await request.post("/api/admin/migrer-annonces/")).status()).toBe(404);
 });

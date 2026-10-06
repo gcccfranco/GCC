@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
-import { repondreDansLeSite } from "./helpers/agencement";
+import { ongletsRail, repondreDansLeSite } from "./helpers/agencement";
 import { readFileSync } from "node:fs";
 import { planningsDuBackOffice, sousPartiesEvenements } from "../src/lib/access";
 
@@ -73,7 +73,7 @@ test.describe("B2 : Messages (Réception, Notifier, Questionnaire)", () => {
   test("admin : Réception par défaut, avec les signalements et les propositions de chants", async ({ page }) => {
     await ouvrir(page, ADMIN, "/back-office/messages");
     await expect(page.getByRole("heading", { level: 1, name: "Messages" })).toBeVisible();
-    const onglets = sousParties(page);
+    const onglets = ongletsRail(page);
     await expect(onglets.getByRole("link")).toHaveText(["Réception", "Notifier", "Questionnaire"]);
     await expect(onglets.getByRole("link", { name: "Réception" })).toHaveAttribute("aria-current", "page");
     await expect(page.getByRole("heading", { name: "Signalements" })).toBeVisible();
@@ -85,22 +85,25 @@ test.describe("B2 : Messages (Réception, Notifier, Questionnaire)", () => {
 
   test("admin : Notifier compose une notification, sans « Publier un planning » ni la destination « Annonces »", async ({ page }) => {
     await ouvrir(page, ADMIN, "/back-office/messages");
-    await sousParties(page).getByRole("link", { name: "Notifier" }).click();
+    await ongletsRail(page).getByRole("link", { name: "Notifier" }).click();
     await expect(page).toHaveURL(/\/back-office\/messages\/notifier\/?$/);
-    await expect(page.getByText("Audience", { exact: true })).toBeVisible();
+    // Agencement v18 (B11) : l'audience en pilules.
+    await expect(page.getByRole("group", { name: "Audience" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Publier un planning" })).toHaveCount(0);
     await expect(page.locator("option", { hasText: "Annonces" })).toHaveCount(0);
   });
 
   test("admin : Questionnaire", async ({ page }) => {
     await ouvrir(page, ADMIN, "/back-office/messages/questionnaire");
-    await expect(page.getByRole("heading", { name: "Questionnaire" })).toBeVisible();
+    // Agencement v18 (B12) : l'onglet du rail, sous l'en-tête « Messages ».
+    await expect(ongletsRail(page).getByRole("link", { name: "Questionnaire" })).toHaveAttribute("aria-current", "page");
+    await expect(page.getByText("Aucune réponse pour l'instant.")).toBeVisible();
   });
 
   test("droit de notifier seul : Messages mène à Notifier, sans Réception ni Questionnaire", async ({ page }) => {
     await ouvrir(page, NOTIFY, "/back-office/messages");
     await expect(page).toHaveURL(/\/back-office\/messages\/notifier\/?$/);
-    await expect(page.getByText("Audience", { exact: true })).toBeVisible();
+    await expect(page.getByRole("group", { name: "Audience" })).toBeVisible();
     await expect(page.getByRole("link", { name: "Réception" })).toHaveCount(0);
     await expect(page.getByRole("link", { name: "Questionnaire" })).toHaveCount(0);
     await page.goto("/back-office/messages/questionnaire");
@@ -113,24 +116,26 @@ test.describe("B2 : Messages (Réception, Notifier, Questionnaire)", () => {
 test.describe("B2 : Équipes (Organigramme, Personnes)", () => {
   // Retours du 06/10/2026 : plus d'onglet Import (« on va tout faire manuellement ») ni
   // d'onglet Inscriptions — l'ouverture des comptes passe en tête de Personnes, et
-  // « Recalculer depuis l'organigramme » au bas de l'Organigramme, pour les admins.
+  // « Recalculer depuis l'organigramme » au bas de l'Organigramme, pour les admins (dans son
+  // en-tête depuis l'agencement v18, B8).
   test("admin : l'organigramme se modifie ici ; Personnes à côté, inscriptions en tête", async ({ page }) => {
     await ouvrir(page, ADMIN, "/back-office/equipes");
     await expect(page.getByRole("heading", { level: 1, name: "Équipes" })).toBeVisible();
-    await expect(sousParties(page).getByRole("link")).toHaveText(["Organigramme", "Personnes"]);
+    await expect(ongletsRail(page).getByRole("link")).toHaveText(["Organigramme", "Personnes"]);
     await expect(page.getByTestId("equipe-orga").getByRole("button", { name: "Modifier" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Recalculer depuis l'organigramme" })).toBeVisible();
     await expect(page.getByRole("button", { name: /Importer/ })).toHaveCount(0);
 
-    await sousParties(page).getByRole("link", { name: "Personnes" }).click();
+    await ongletsRail(page).getByRole("link", { name: "Personnes" }).click();
     await expect(page).toHaveURL(/\/back-office\/equipes\/personnes\/?$/);
-    await expect(page.getByPlaceholder(/Rechercher un membre/)).toBeVisible();
-    const inscriptions = page.getByRole("heading", { name: "Inscriptions" });
+    const recherche = page.getByPlaceholder(/Rechercher un membre/);
+    await expect(recherche).toBeVisible();
+    // Agencement v18 (B9) : la carte des inscriptions, dans l'en-tête, avant la liste des membres.
+    const inscriptions = page.getByRole("region", { name: "Inscriptions" });
     await expect(inscriptions).toBeVisible();
-    await expect(page.getByRole("button", { name: /(Fermer|Ouvrir) les inscriptions/ })).toBeVisible();
-    // En tête : le bloc des inscriptions passe avant la liste des membres.
+    await expect(inscriptions.getByRole("switch", { name: /(Fermer|Ouvrir) les inscriptions/ })).toBeVisible();
     const yInscriptions = (await inscriptions.boundingBox())!.y;
-    const yMembres = (await page.getByRole("heading", { name: "Membres" }).boundingBox())!.y;
+    const yMembres = (await recherche.boundingBox())!.y;
     expect(yInscriptions).toBeLessThan(yMembres);
   });
 

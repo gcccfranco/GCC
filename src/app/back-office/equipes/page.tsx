@@ -1,20 +1,32 @@
 "use client";
 
-// Équipes › Organigramme : les 13 équipes, modifiables par qui a le droit Équipes ;
-// au bas, « Recalculer depuis l'organigramme » pour les admins (retours du 06/10/2026).
+// Équipes › Organigramme (agencement v18, B8) : l'en-tête commun, « Recalculer depuis
+// l'organigramme » dans ses outils (admins, retours du 06/10/2026) et son résultat dessous ;
+// les 13 équipes en bandeau, modifiables par qui a le droit Équipes.
+import { useTranslation } from "react-i18next";
 import { useProfile } from "@/lib/firebase/users";
 import { canEditerEquipes, isAdminUser } from "@/lib/access";
 import { EquipesClient } from "@/app/equipes/EquipesClient";
-import { RecalculerOrganigramme } from "@/components/equipes/RecalculerOrganigramme";
+import { useRecalculOrganigramme } from "@/components/equipes/RecalculerOrganigramme";
 import { ReserveAuxAdmins } from "@/components/admin/commun";
+import { RailEquipes } from "./RailEquipes";
 
 export default function OrganigrammePage() {
+  const { t } = useTranslation();
   const { user, profile } = useProfile();
+  const recalcul = useRecalculOrganigramme();
   if (!canEditerEquipes(user, profile)) return <ReserveAuxAdmins connecte={!!user} retour="/back-office/equipes" />;
+  const admin = isAdminUser(user);
   return (
-    <>
-      <EquipesClient gestion />
-      {isAdminUser(user) && <RecalculerOrganigramme />}
-    </>
+    <EquipesClient
+      gestion
+      enTete={{
+        titre: t("backOffice.entrees.equipes"),
+        sousTitre: t("equipes.sousTitreGestion"),
+        outils: admin ? recalcul.bouton : undefined,
+        onglets: <RailEquipes />,
+        sousEnTete: admin ? recalcul.resultat : undefined,
+      }}
+    />
   );
 }
