@@ -205,11 +205,18 @@ test.describe("Chants en deux volets (ordinateur, tablette couchée)", () => {
       const top = el.getBoundingClientRect().top;
       return [...el.querySelectorAll('li[id^="song-li-"]')].find((li) => li.getBoundingClientRect().top > top + 120)!.id.replace("song-li-", "");
     });
+    // La ligne touchée, à l'écran : elle ne bouge pas. Le défilement du volet, lui, peut
+    // grandir d'autant que la rangée « Récents » qui apparaît au-dessus (relecture : les
+    // récents suivent les chants ouverts ; le navigateur garde la ligne en place).
+    const hautDeLaLigne = () => ligne(page, slug).evaluate((el) => Math.round(el.getBoundingClientRect().top));
+    const hautAvant = await hautDeLaLigne();
     await ligne(page, slug).click();
     await expect(titreChant(page)).toBeVisible();
     await expect(ligne(page, slug)).toHaveAttribute("aria-current", "page");
     expect(new URL(page.url()).pathname.replace(/\/$/, "")).toBe(`/songs/${encodeURIComponent(slug)}`);
-    expect(await liste(page).evaluate((el) => el.scrollTop), "la liste n'a pas bougé").toBe(yAvant);
+    await expect(liste(page).getByTestId("recents")).toBeVisible();
+    expect(await hautDeLaLigne(), "la liste n'a pas bougé").toBe(hautAvant);
+    expect(await liste(page).evaluate((el) => el.scrollTop), "ni remontée, ni remise en haut").toBeGreaterThanOrEqual(yAvant);
 
     // Recherche : un chant ZH, puis un FR ; la recherche reste.
     await recherche(page).fill("一生爱你");
@@ -331,5 +338,110 @@ test.describe("Chants en un volet (téléphone, tablette debout)", () => {
     await barre.getByRole("button", { name: "Plus d'actions" }).click();
     await expect(page.getByRole("menuitem", { name: "PDF" })).toBeVisible();
     await expect(page.getByRole("menuitem", { name: "Idées d'harmonie" })).toBeVisible();
+  });
+});
+
+// ─── Relecture du lot (05/10/2026) ────────────────────────────────────────────
+
+const lectureDeLIndex = (r: Request) => new URL(r.url()).pathname === "/songs-index.json";
+
+test.describe("relecture : Chants en deux volets", () => {
+  test.beforeEach(async ({}, info) => {
+    test.skip(!GRAND.includes(info.project.name), "deux volets : ordinateur et tablette couchée");
+  });
+
+  test("les récents suivent les chants ouverts à droite, sans recharger la page", async ({ page }) => {
+    await page.goto("/songs");
+    await listePrete(page);
+    const recents = liste(page).getByTestId("recents").getByRole("link");
+    await ligne(page, "abba-pere").click();
+    await expect(titreChant(page)).toHaveText(/Abba Père/i);
+    await expect(recents).toHaveText(["Abba Père"]);
+    await ligne(page, "tout-puissant").click();
+    await expect(titreChant(page)).toHaveText(/Tout puissant/i);
+    await expect(recents).toHaveText(["Tout puissant", "Abba Père"]);
+  });
+
+  test("revenir à « Choisis un chant » ne relit pas les prochaines setlists", async ({ page }) => {
+    let lectures = 0;
+    page.on("request", (r) => {
+      if (lectureDesProchaines(r)) lectures++;
+    });
+    await signInAs(page, MUSICIEN, SETLISTS, "/songs");
+    await listePrete(page);
+    await expect(cartes(page)).toHaveCount(3);
+    await ligne(page, "abba-pere").click();
+    await expect(titreChant(page)).toHaveText(/Abba Père/i);
+    await page.goBack();
+    await expect(choisis(page)).toBeVisible();
+    await expect(cartes(page)).toHaveCount(3);
+    await page.waitForTimeout(300);
+    expect(lectures, "une seule lecture, gardée une minute").toBe(1);
+  });
+
+  test("un chant ouvert depuis une setlist garde un Retour, qui ramène à la setlist", async ({ page }) => {
+    await signInAs(page, MUSICIEN, SETLISTS, "/songs");
+    await listePrete(page);
+    await cartes(page).first().locator("[data-carte-chant]").first().getByRole("link").click();
+    await expect(titreChant(page)).toHaveText(/Abba Père/i);
+    const barre = page.getByTestId("barre-outils");
+    const retour = barre.getByRole("link", { name: "Retour" });
+    await expect(retour).toBeVisible();
+    // La barre tient toujours sur sa ligne, Retour compris.
+    expect(await barre.evaluate((el) => el.scrollWidth - el.clientWidth)).toBeLessThanOrEqual(0);
+    await capture(page, "chants-retour-setlist");
+    await retour.click();
+    await page.waitForURL((u) => u.pathname.replace(/\/$/, "") === "/setlists/culte-4");
+    // Un chant de la liste, lui, reste sans Retour (Q16).
+    await page.goto("/songs/abba-pere");
+    await listePrete(page);
+    await expect(page.getByTestId("barre-outils")).toBeVisible();
+    await expect(page.getByTestId("barre-outils").getByRole("link", { name: "Retour" })).toHaveCount(0);
+  });
+});
+
+test.describe("relecture : Chants en un volet", () => {
+  test.use({ serviceWorkers: "block" });
+  test.beforeEach(async ({}, info) => {
+    test.skip(!UN_VOLET.includes(info.project.name), "un volet : téléphone et tablette debout");
+  });
+
+  test("la page d'un chant ne charge pas l'index des chants ; la liste, si", async ({ page }) => {
+    let lectures = 0;
+    page.on("request", (r) => {
+      if (lectureDeLIndex(r)) lectures++;
+    });
+    await page.goto("/songs/abba-pere");
+    await expect(page.getByRole("heading", { level: 1, name: /Abba Père/i })).toBeVisible();
+    await page.waitForTimeout(800);
+    expect(lectures, "rien ne sert l'index sur la page du chant").toBe(0);
+    await page.getByTestId("barre-outils").getByRole("link", { name: "Retour" }).click();
+    await expect(page.locator('li[id="song-li-abba-pere"]')).toBeVisible();
+    expect(lectures).toBe(1);
+  });
+});
+
+test.describe("relecture : liste des chants sans réseau", () => {
+  // `page.route` ne voit pas ce qui passe par le service worker.
+  test.use({ serviceWorkers: "block" });
+
+  test("l'index ne vient pas : un message et « Réessayer », qui ramène la liste", async ({ page }) => {
+    await page.route("**/songs-index.json", (route) => route.abort("internetdisconnected"));
+    await page.goto("/songs");
+    const message = page.getByText("Impossible de charger les chants. Vérifie ta connexion.");
+    await expect(message).toBeVisible();
+    await page.unroute("**/songs-index.json");
+    await page.getByRole("button", { name: "Réessayer" }).click();
+    await expect(page.locator('li[id="song-li-abba-pere"]')).toBeAttached();
+    await expect(message).toHaveCount(0);
+  });
+
+  test("l'index ne vient pas : le retour du réseau ramène la liste", async ({ page }) => {
+    await page.route("**/songs-index.json", (route) => route.abort("internetdisconnected"));
+    await page.goto("/songs");
+    await expect(page.getByText("Impossible de charger les chants. Vérifie ta connexion.")).toBeVisible();
+    await page.unroute("**/songs-index.json");
+    await page.evaluate(() => window.dispatchEvent(new Event("online")));
+    await expect(page.locator('li[id="song-li-abba-pere"]')).toBeAttached();
   });
 });

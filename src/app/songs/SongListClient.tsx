@@ -7,6 +7,7 @@ import { useFonduLateral } from "@/hooks/useFonduLateral";
 import Link from "next/link";
 import Fuse from "fuse.js";
 import { Search, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { KeyPill } from "@/components/ui/key-pill";
 import { PageTitle } from "@/components/layout/PageTitle";
 import { useTranslation } from "react-i18next";
@@ -20,13 +21,16 @@ interface SongListClientProps {
   themes: Theme[];
   /** Chant ouvert dans le volet de droite (deux volets) : sa ligne en encre. */
   actif?: string | null;
+  /** L'index n'a pas pu être lu (hors ligne) : un message et « Réessayer ». */
+  erreur?: boolean;
+  onReessayer?: () => void;
 }
 
 /** Sur /songs seulement (lot U5, Q15) : en deux volets, la liste reste montée sous
  *  /songs/[slug], dont l'adresse porte les réglages du chant (`?key=`). */
 const surLaListe = () => /^\/songs\/?$/.test(window.location.pathname);
 
-export function SongListClient({ songs, themes, actif = null }: SongListClientProps) {
+export function SongListClient({ songs, themes, actif = null, erreur = false, onReessayer }: SongListClientProps) {
   const { t, i18n } = useTranslation();
   const currentLang = i18n.language;
   const isZhLocale = currentLang === "zh-CN";
@@ -37,12 +41,18 @@ export function SongListClient({ songs, themes, actif = null }: SongListClientPr
   const [recentSlugs, setRecentSlugs] = useState<string[]>([]);
   const [isInitialized, setIsInitialized] = useState(false);
 
-  // Récemment consultés (stockés sur l'appareil par la page détail)
+  // Récemment consultés (stockés sur l'appareil par la page détail). En deux volets, la
+  // liste reste montée d'un chant à l'autre : la page détail prévient à chaque chant.
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem("recentSongs");
-      if (raw) setRecentSlugs(JSON.parse(raw));
-    } catch { /* stockage indisponible */ }
+    const lire = () => {
+      try {
+        const raw = localStorage.getItem("recentSongs");
+        if (raw) setRecentSlugs(JSON.parse(raw));
+      } catch { /* stockage indisponible */ }
+    };
+    lire();
+    window.addEventListener("recentSongs", lire);
+    return () => window.removeEventListener("recentSongs", lire);
   }, []);
 
   // Load from URL search params on mount — avant la première image, pour que
@@ -345,7 +355,16 @@ export function SongListClient({ songs, themes, actif = null }: SongListClientPr
       </div>
 
       {/* Liste */}
-      {!chargee ? null : filtered.length === 0 ? (
+      {!chargee ? (
+        erreur && (
+          <div role="alert" className="flex flex-col items-center gap-3 py-10 text-center">
+            <p className="text-sm text-muted-foreground">{t("songs.list.loadError")}</p>
+            <Button variant="outline" onClick={onReessayer}>
+              {t("common.retry")}
+            </Button>
+          </div>
+        )
+      ) : filtered.length === 0 ? (
         <p className="text-sm text-muted-foreground text-center py-10">
           {t("songs.list.noSongsFound")}
         </p>

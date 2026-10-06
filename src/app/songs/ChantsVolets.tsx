@@ -18,7 +18,8 @@ export function ChantsVolets({ themes, children }: { themes: Theme[]; children: 
   const surListe = /^\/songs\/?$/.test(pathname);
   const actif = surListe ? null : decodeURIComponent(pathname.replace(/^\/songs\//, "").replace(/\/$/, ""));
   const deuxVolets = useDeuxVolets();
-  const songs = useSongsIndex();
+  // Lu seulement quand la liste est montée (sur /songs, ou en deux volets).
+  const { songs, erreur, reessayer } = useSongsIndex(surListe || deuxVolets);
 
   return (
     <div className="chants-volets" data-sur-liste={surListe ? "" : undefined}>
@@ -32,7 +33,7 @@ export function ChantsVolets({ themes, children }: { themes: Theme[]; children: 
           // Le fondu de page, à chaque montage de la liste (retour à la liste en un volet).
           <div className="page-fade relative min-h-screen">
             <div className="relative mx-auto max-w-2xl px-4 py-6">
-              <SongListClient songs={songs ?? []} themes={themes} actif={actif} />
+              <SongListClient songs={songs ?? []} themes={themes} actif={actif} erreur={erreur} onReessayer={reessayer} />
             </div>
           </div>
         )}
