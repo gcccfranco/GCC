@@ -154,6 +154,30 @@ export async function getSetlists(): Promise<FSSetlist[]> {
     .filter((s) => !s.isPrivate && !s.isDraft);
 }
 
+/** Setlists datées de `depuis` (« AAAA-MM-JJ ») ou après, ni privées ni brouillons : celles du
+ *  tableau de bord du Back-Office (lot U6). Filtre mono-champ, pas d'index composite. Contrairement
+ *  à `getSetlists`, lève si la lecture échoue : un widget dit alors « Lecture impossible »,
+ *  jamais « Pas de setlist ». */
+export async function getSetlistsDepuis(depuis: string): Promise<FSSetlist[]> {
+  const headers = await authHeader();
+  const res = await fetch(`${FS_BASE}:runQuery`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...headers },
+    body: JSON.stringify({
+      structuredQuery: {
+        from: [{ collectionId: "setlists" }],
+        where: { fieldFilter: { field: { fieldPath: "date" }, op: "GREATER_THAN_OR_EQUAL", value: { stringValue: depuis } } },
+      },
+    }),
+  });
+  await checkRest(res);
+  const rows = await res.json() as Array<{ document?: RawDoc }>;
+  return rows
+    .filter((r) => r.document)
+    .map((r) => fromFsDoc(r.document!))
+    .filter((s) => !s.isPrivate && !s.isDraft);
+}
+
 /** Setlists récentes pour le badge de notifications (cloche). Deux requêtes
  *  mono-champ fusionnées : `createdAt` (toutes les setlists) capte les créations,
  *  `updatedAt` (présent seulement sur les setlists éditées) capte les mises à

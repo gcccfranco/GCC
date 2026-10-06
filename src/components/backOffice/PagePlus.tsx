@@ -4,7 +4,7 @@
 // entrée hors de la barre du bas (icône, nom, contenu selon les droits, pastille Q15),
 // « Personnaliser la barre » (question 9) et « Revenir à l'app ». Sur téléphone et tablette
 // en portrait ; sur grand écran, la barre latérale montre déjà toutes les entrées.
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
 import { ArrowLeftRight, ChevronRight, SlidersHorizontal } from "lucide-react";
@@ -12,16 +12,11 @@ import { PageTitle } from "@/components/layout/PageTitle";
 import { useDernierePage } from "@/components/layout/SelecteurEspace";
 import { FeuilleBarreDuBas } from "@/components/backOffice/FeuilleBarreDuBas";
 import { useProfile } from "@/lib/firebase/users";
-import { entreesBackOffice, isAdminUser, isCoordination, polesDe } from "@/lib/access";
+import { entreesBackOffice, isAdminUser, isCoordination } from "@/lib/access";
 import { entreeBackOffice } from "@/lib/navigation";
 import { barreAffichee } from "@/lib/tableauDeBord/barre";
 import { enregistrerBarreDuBas, useBarreDuBas } from "@/lib/tableauDeBord/useBarreDuBas";
-import { useTaches } from "@/lib/taches/useTaches";
-import { aFairePour, lignesDeTache } from "@/lib/taches/echeances";
-import { todayIso } from "@/lib/scene/dimanches";
-import { getReports } from "@/lib/firebase/reports";
-import { getSongProposals } from "@/lib/firebase/songProposals";
-import { TACHE_POLES } from "@/types/tache";
+import { usePastilles } from "@/lib/tableauDeBord/usePastilles";
 import type { Entree } from "@/types/backOffice";
 
 /** Cartes de la planche : la gestion, puis Messages, puis Statistiques, chacune à part. */
@@ -44,21 +39,6 @@ function morceaux(e: Entree, admin: boolean, coordination: boolean): string[] {
   }
 }
 
-/** Signalements et propositions de chants en attente (admins, Q15). */
-function useEnAttente(actif: boolean): number {
-  const [n, setN] = useState(0);
-  useEffect(() => {
-    if (!actif) return;
-    let vivant = true;
-    Promise.all([getReports(), getSongProposals()]).then(
-      ([r, p]) => { if (vivant) setN(r.filter((x) => x.status === "pending").length + p.filter((x) => x.status === "pending").length); },
-      () => {},
-    );
-    return () => { vivant = false; };
-  }, [actif]);
-  return actif ? n : 0;
-}
-
 export function PagePlus() {
   const { t } = useTranslation();
   const { user, profile } = useProfile();
@@ -72,12 +52,7 @@ export function PagePlus() {
   const horsBarre = charge ? permises.filter((e) => !barre.includes(e)) : [];
 
   // Pastilles (Q15) : comptées seulement pour une entrée posée ici.
-  // `useTaches` relit selon la liste des pôles (en texte) : un nouveau tableau à chaque rendu ne relance rien.
-  const { items } = useTaches(horsBarre.includes("taches") ? (admin ? [...TACHE_POLES] : polesDe(profile)) : []);
-  const today = todayIso();
-  const aFaire = user ? aFairePour(items.flatMap(({ tache, fois }) => lignesDeTache(tache, fois, today)), user.uid).length : 0;
-  const enAttente = useEnAttente(admin && horsBarre.includes("messages"));
-  const pastille: Partial<Record<Entree, number>> = { taches: aFaire, messages: enAttente };
+  const pastille = usePastilles(horsBarre);
 
   const libelle = (e: Entree) => {
     const texte = morceaux(e, admin, isCoordination(user, profile)).map((k) => t(k)).join(" · ");

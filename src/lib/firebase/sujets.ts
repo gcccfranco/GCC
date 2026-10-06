@@ -1,8 +1,7 @@
 import { FS_BASE, authHeader, checkRest, toFsFields, fromFsValue, type RawDoc } from "./setlists";
 import type { Sujet } from "@/types/reunion";
 import { listReunionsDu } from "./evenements";
-import { aCommence } from "@/lib/evenements/agenda";
-import { copieReprise, sujetsAReprendre, type SujetAReprendre } from "@/lib/reunions/sujets";
+import { copieReprise, reunionsALire, sujetsAReprendre, type SujetAReprendre } from "@/lib/reunions/sujets";
 
 // Sujets d'une réunion (lot U6, R1) : evenements/{id}/sujets/{sid}, en REST
 // comme le reste. Droits : firestore.rules (match /sujets/{sid}) et
@@ -79,12 +78,13 @@ export async function marquerRepris(reunionId: string, sujetId: string, dans: st
   await checkRest(res);
 }
 
-/** Sujets laissés par les réunions déjà commencées du public `pour`, à
- *  proposer à la création d'une nouvelle. Une lecture refusée ou perdue compte
- *  pour « rien à reprendre » : la création ne s'arrête jamais là-dessus. */
+/** Sujets laissés par les dernières réunions déjà commencées du public `pour`
+ *  (`reunionsALire`), à proposer à la création d'une nouvelle. Une lecture
+ *  refusée ou perdue compte pour « rien à reprendre » : la création ne s'arrête
+ *  jamais là-dessus. */
 export async function lireSujetsAReprendre(pour: string, nowIso: string): Promise<SujetAReprendre[]> {
   try {
-    const commencees = (await listReunionsDu(pour)).filter((r) => aCommence(r, nowIso));
+    const commencees = reunionsALire(await listReunionsDu(pour), nowIso);
     const lus = await Promise.all(commencees.map(async (reunion) => ({
       reunion, sujets: await listSujets(reunion.id).catch(() => [] as Sujet[]),
     })));

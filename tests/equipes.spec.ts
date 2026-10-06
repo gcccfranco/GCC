@@ -343,7 +343,7 @@ test("中文 : les noms d'équipe sont traduits, les noms de personnes ne le son
   await expect(page.getByTestId("equipe-theologie")).toContainText("Orga/Inscriptions");
 });
 
-test("admin : « Recalculer depuis l'organigramme » repose pôles, équipes et référents des profils existants (lot U6, R4)", async ({ page }) => {
+test("admin : « Recalculer depuis l'organigramme » repose équipes et référents des profils existants (lot U6, R4)", async ({ page }) => {
   await simulerSheets(page);
   const envois: unknown[] = [];
   await page.route("**/api/equipes/poles", (route) => {
@@ -372,7 +372,9 @@ test("admin : le bouton d'import rend compte de ce qu'il n'a pas su rattacher", 
   page.on("dialog", (d) => d.accept());
   await signInAs(page, { uid: "admin1", email: "tc328829@gmail.com", firstName: "Timothée", lastName: "C." }, DOCS, "/back-office/equipes/import");
   await page.getByRole("button", { name: "Importer l'organigramme du Sheet" }).click();
-  await expect(page.getByText(/13 équipes/)).toBeVisible();
+  // Le compte rendu de l'import, pas la description de l'écran (qui parle aussi des « 13 équipes ») :
+  // sinon le test passe ou casse selon qu'il regarde avant ou après la réponse.
+  await expect(page.getByText(/13 équipes, 96 membres/)).toBeVisible();
   await expect(page.getByText("Kitty S.")).toBeVisible();
   await expect(page.getByText("Untel B.")).toBeVisible();
 });

@@ -14,7 +14,8 @@ export const dynamic = "force-dynamic";
 // le droit de tenir l'organigramme. Elle n'écrit que `poles`, et seulement ce
 // que les équipes disent — l'appelant ne choisit pas les pôles, seulement les
 // comptes à recalculer. `{ tous: true }` (bouton admin « Recalculer depuis
-// l'organigramme », lot U6, R4) recalcule tous les membres des équipes : admins seuls.
+// l'organigramme », lot U6, R4) pose `dansEquipes` et `referentDe` de tous les membres
+// des équipes, sans toucher à leurs pôles : admins seuls.
 
 export async function POST(req: NextRequest) {
   // Back-office coupé (lot 18, docs/spec-mise-en-ligne.md) : la route n'existe pas en ligne.

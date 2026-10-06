@@ -50,6 +50,16 @@ export interface SujetAReprendre {
   reunion: { id: string; date: string };
 }
 
+/** Réunions à relire pour la reprise (relecture du lot U6) : les `n` dernières déjà
+ *  commencées, la plus récente d'abord : une requête par réunion lue, le coût ne grandit
+ *  plus avec l'historique. Un sujet laissé plus loin reste rouge dans sa réunion. */
+export function reunionsALire<T extends Moment & Pick<Evenement, "type">>(reunions: T[], nowIso: string, n = 6): T[] {
+  return reunions
+    .filter((r) => aCommence(r, nowIso))
+    .sort((a, b) => moment(b).localeCompare(moment(a)))
+    .slice(0, n);
+}
+
 /** Ce qu'on propose de reprendre à la création d'une réunion (R2, question 11) :
  *  les sujets rouges — réunion commencée, ni traités ni repris — de chaque
  *  réunion lue, la plus ancienne d'abord, chacune dans son ordre. */
