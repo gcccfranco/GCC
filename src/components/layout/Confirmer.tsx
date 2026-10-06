@@ -3,17 +3,21 @@
 // Les confirmations dans le site (agencement v18, R9 de docs/spec-agencement-v18.md) : jamais la
 // fenêtre grise du navigateur. `ConfirmerProvider`, posé une fois à la racine (app/layout.tsx),
 // tient une petite fenêtre (`AlertDialog`) ; `useConfirmer()` rend une fonction qui l'ouvre et rend
-// une promesse : `true` sur l'action, `false` sur « Annuler », Échap ou un clic à côté. Elle se
-// substitue à `window.confirm` ligne pour ligne, sans changer la logique :
+// une promesse : `true` sur l'action, `false` sur « Annuler » ou Échap (un clic à côté ne ferme pas
+// une `AlertDialog` : la fenêtre reste ouverte). Elle se substitue à `window.confirm` ligne pour ligne,
+// sans changer la logique :
 //
 //   const confirmer = useConfirmer();
 //   if (!(await confirmer({ titre: "Supprimer la tâche ?", texte: "Elle disparaît pour tout le pôle.",
 //                           action: "Supprimer", destructif: true }))) return;
 //
 // Une seule fenêtre à la fois : une demande pendant qu'une autre est ouverte répond `false` à la
-// première.
+// première. La fenêtre vit à la racine, au-dessus des pages : si la page change sous elle
+// (Précédent, Suivant), elle se ferme et répond `false`, comme « Annuler » (`window.confirm`
+// bloquait la page, ce cas n'existait pas).
 
-import { createContext, useCallback, useContext, useRef, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
+import { usePathname } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
@@ -47,10 +51,14 @@ export function useConfirmer(): Confirmer {
 
 export function ConfirmerProvider({ children }: { children: ReactNode }) {
   const { t } = useTranslation();
+  const chemin = usePathname();
   // La demande reste affichée pendant le fondu de fermeture : seul `ouvert` repasse à faux.
   const [demande, setDemande] = useState<DemandeDeConfirmation | null>(null);
   const [ouvert, setOuvert] = useState(false);
   const reponse = useRef<((oui: boolean) => void) | null>(null);
+  // La page de la demande en cours : une demande faite par une page qui vient de s'ouvrir (au
+  // montage) n'est pas annulée par le changement de page qui l'a ouverte.
+  const cheminDeLaDemande = useRef<string | null>(null);
 
   const repondre = useCallback((oui: boolean) => {
     reponse.current?.(oui);
@@ -60,12 +68,18 @@ export function ConfirmerProvider({ children }: { children: ReactNode }) {
 
   const confirmer = useCallback<Confirmer>((d) => {
     reponse.current?.(false);
+    cheminDeLaDemande.current = chemin;
     setDemande(d);
     setOuvert(true);
     return new Promise<boolean>((resoudre) => {
       reponse.current = resoudre;
     });
-  }, []);
+  }, [chemin]);
+
+  // La page a changé sous la fenêtre : la demande tombe, sinon l'action agirait pour une page quittée.
+  useEffect(() => {
+    if (reponse.current && cheminDeLaDemande.current !== chemin) repondre(false);
+  }, [chemin, repondre]);
 
   return (
     <Contexte.Provider value={confirmer}>

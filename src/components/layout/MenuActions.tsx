@@ -12,6 +12,9 @@
 //   ]} />
 //
 // Il s'ouvre au clavier (Entrée, Espace, flèche bas) et se parcourt aux flèches (Radix).
+// `onSelect` gère ses erreurs lui-même (message à l'utilisateur, comme `run()` dans
+// `evenements/[id]/Inscriptions.tsx`) : le menu, déjà fermé, n'a rien pour les montrer, et une
+// erreur qui en sort n'est rattrapée par personne.
 
 import type { LucideIcon } from "lucide-react";
 import { MoreHorizontal } from "lucide-react";
@@ -24,6 +27,7 @@ import { useConfirmer, type DemandeDeConfirmation } from "./Confirmer";
 
 export type ActionDuMenu = {
   label: string;
+  /** L'action ; elle attrape et montre ses propres erreurs (voir plus haut). */
   onSelect: () => void | Promise<void>;
   icone?: LucideIcon;
   /** Retire ou supprime : en rouge. */
@@ -50,11 +54,12 @@ export function MenuActions({ actions, label }: { actions: ActionDuMenu[]; label
         <MoreHorizontal className="h-4 w-4" aria-hidden />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="min-w-48">
-        {actions.map((a) => {
+        {actions.map((a, i) => {
           const Icone = a.icone;
           return (
             <DropdownMenuItem
-              key={a.label}
+              // L'ordre des actions ne change pas d'un rendu à l'autre ; deux libellés peuvent se répéter.
+              key={i}
               // Le menu se ferme d'abord : la fenêtre de confirmation prend alors le focus.
               onSelect={() => { void choisir(a); }}
               className={cn(a.destructif && "text-destructive focus:text-destructive")}
