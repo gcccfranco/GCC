@@ -628,6 +628,7 @@
     "welcome": "Bienvenue ! Complète ton profil pour accéder aux setlists de tes services et à l'onglet « Mes Services ».",
     "locked": "Ton profil est complété. Pour le modifier, contacte un administrateur.",
     "save": "Enregistrer mon profil",
+    "enregistrer": "Enregistrer",
     "saving": "Enregistrement…",
     "saveError": "Erreur lors de l'enregistrement. Réessaie.",
     "errorName": "Renseigne ton prénom et ton nom.",
@@ -1387,6 +1388,9 @@
     "title": "Ton avis sur le site",
     "intro": "Dis-nous ce qui te sert, ce qui te gêne et ce qui te manque. Le questionnaire est détaillé, mais les questions qui ne te concernent pas sont automatiquement sautées.",
     "loginRequired": "Connecte-toi pour répondre au questionnaire.",
+    "sousTitre": "Dis-nous ce qui te sert, ce qui te gêne et ce qui te manque.",
+    "etapes": "Étapes",
+    "sautees": "Les questions qui ne te concernent pas sont sautées.",
     "optional": "(facultatif)",
     "multiHint": "Plusieurs réponses possibles",
     "stepOf": "Étape {{step}} / {{total}}",
@@ -2008,7 +2012,28 @@
     "admin": "Admin",
     "notifications": "Notifications",
     "activees": "Activées",
-    "desactivees": "Désactivées"
+    "desactivees": "Désactivées",
+    "apercus": {
+      "aFaire_one": "{{count}} à faire",
+      "aFaire_other": "{{count}} à faire",
+      "rienAFaire": "Rien à faire pour toi.",
+      "ouvrir": "Ouvrir",
+      "cours": "Cours de théorie",
+      "chapitres": "{{faits}} / {{total}} chapitres",
+      "prochain": "Prochain chapitre : {{titre}}",
+      "coursFini": "Tous les chapitres sont finis.",
+      "fiches": "Les fiches de réharmonisation",
+      "sons": "Sons du RD-2000",
+      "mesEquipes": "Mes équipes",
+      "organigramme": "Organigramme",
+      "aucuneEquipe": "Tu n'es dans aucune équipe.",
+      "membre": "Membre",
+      "membres_one": "{{count}} membre",
+      "membres_other": "{{count}} membres",
+      "guideSous": "Tout le site, pas à pas",
+      "avisSous": "Le questionnaire",
+      "signalerSous": "Une erreur, un bug"
+    }
   },
   "pdf": {
     "choice": {

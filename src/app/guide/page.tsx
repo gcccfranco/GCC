@@ -4,7 +4,6 @@ import { Fragment, useCallback, useEffect, useState } from "react";
 import { BACK_OFFICE } from "@/lib/backOffice";
 import { useTranslation } from "react-i18next";
 import {
-  BookOpen,
   Music,
   SlidersHorizontal,
   Pencil,
@@ -26,6 +25,7 @@ import {
 } from "lucide-react";
 import { RequireAuth } from "@/components/auth/RequireAuth";
 import { Halo } from "@/components/layout/Halo";
+import { EnTetePage } from "@/components/layout/EnTetePage";
 import { useDisposition } from "@/hooks/useDisposition";
 import { GuideFigure } from "@/components/guide/GuideFigure";
 import { FIGURES } from "@/lib/guide/figures";
@@ -109,7 +109,7 @@ const CLES = SECTIONS.map((s) => s.key);
 export default function GuidePage() {
   const { t } = useTranslation();
   // Lot U4 bis, B6 (docs/spec-pages-en-grand.md, Q11 ; planches `guide-*`) : en grand, le
-  // sommaire collant à gauche (270 px) et la lecture à 720 px ; tablette portrait, le sommaire
+  // sommaire collant à gauche (260 px depuis la v18, R14) et la lecture à 720 px ; tablette portrait, le sommaire
   // sur deux colonnes en tête ; téléphone, une ligne par partie, en tête.
   const disposition = useDisposition();
   const grand = disposition === "grand";
@@ -120,7 +120,7 @@ export default function GuidePage() {
       aria-label={t("guide.tocTitle")}
       className={
         grand
-          ? "sticky top-[calc(var(--nav-h)+24px)] row-start-2 max-h-[calc(100dvh-var(--nav-h)-48px)] self-start overflow-y-auto"
+          ? "sticky top-[calc(var(--nav-h)+24px)] max-h-[calc(100dvh-var(--nav-h)-48px)] self-start overflow-y-auto"
           : "raised rounded-2xl p-3"
       }
     >
@@ -166,88 +166,85 @@ export default function GuidePage() {
     <RequireAuth>
       <div className="relative min-h-screen">
         <Halo variant="moi" color="hsl(var(--foreground))" />
-        <div
-          className={
-            grand
-              ? "relative mx-auto grid max-w-[1118px] grid-cols-[270px_minmax(0,720px)] justify-center gap-x-12 gap-y-6 px-6 pb-16 pt-8 xl:px-10"
-              : "relative mx-auto space-y-6 px-4 pb-16 pt-6 md:px-6"
-          }
-        >
-          <header className={`space-y-1.5 ${grand ? "col-start-2" : ""}`}>
-            <div className="flex items-center gap-2.5">
-              <BookOpen className="h-6 w-6 shrink-0 text-muted-foreground" />
-              <h1 className="text-2xl font-bold text-foreground md:text-[28px]">{t("guide.title")}</h1>
-            </div>
-            <p className="text-sm text-muted-foreground md:text-[15px]">{t("guide.subtitle")}</p>
-          </header>
+        {/* A14 (agencement v18) : l'en-tête commun, « ‹ Moi », sans icône ; en grand, la lecture (R14) :
+            sommaire de 260 px collant à gauche, colonne de 720 px, calés sur le titre. */}
+        <div className="relative pb-16">
+          <EnTetePage retour={{ href: "/moi", label: t("moi.title") }} titre={t("guide.title")} sousTitre={t("guide.subtitle")} />
+          <div
+            className={
+              grand
+                ? "grid grid-cols-[260px_minmax(0,720px)] gap-x-10 px-[var(--marge-page)]"
+                : "max-w-[calc(720px+2*var(--marge-page))] space-y-6 px-[var(--marge-page)]"
+            }
+          >
+            {sommaire}
 
-          {sommaire}
+            {/* Sections */}
+            <div className="min-w-0 space-y-5">
+              {SECTIONS.map(({ key, Icon }) => {
+                const points = t(`guide.sections.${key}.points`, {
+                  returnObjects: true,
+                  defaultValue: [],
+                  // U9 (Q7 c) : « Où créer un évènement » cite le dernier jour du Sheet.
+                  jour: dernierJourDuSheet(),
+                }) as unknown as string[];
+                const tip = t(`guide.sections.${key}.tip`, { defaultValue: "" });
+                const forWhom = t(`guide.sections.${key}.for`, { defaultValue: "" });
 
-          {/* Sections */}
-          <div className={`space-y-5 ${grand ? "col-start-2 row-start-2" : ""}`}>
-            {SECTIONS.map(({ key, Icon }) => {
-              const points = t(`guide.sections.${key}.points`, {
-                returnObjects: true,
-                defaultValue: [],
-                // U9 (Q7 c) : « Où créer un évènement » cite le dernier jour du Sheet.
-                jour: dernierJourDuSheet(),
-              }) as unknown as string[];
-              const tip = t(`guide.sections.${key}.tip`, { defaultValue: "" });
-              const forWhom = t(`guide.sections.${key}.for`, { defaultValue: "" });
-
-              return (
-                <section
-                  key={key}
-                  id={key}
-                  className="raised scroll-mt-[calc(var(--nav-h)+16px)] space-y-3 rounded-2xl p-4 md:p-5"
-                >
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h2 className="flex items-center gap-2.5 text-lg font-bold text-foreground">
-                      <Icon className="h-5 w-5 shrink-0 text-foreground" />
-                      {t(`guide.sections.${key}.title`)}
-                    </h2>
-                    {forWhom && (
-                      <span className="inline-flex items-center rounded-full bg-secondary px-2 py-0.5 text-xs font-medium text-muted-foreground">
-                        {forWhom}
-                      </span>
-                    )}
-                  </div>
-
-                  <p className="text-[15px] leading-relaxed text-muted-foreground">
-                    <RichText text={t(`guide.sections.${key}.body`)} />
-                  </p>
-
-                  {(FIGURES[key] ?? []).map((figure) => (
-                    <GuideFigure key={figure.id} figure={figure} />
-                  ))}
-
-                  {points.length > 0 && (
-                    <ul className="space-y-1.5">
-                      {points.map((point, i) => (
-                        <li
-                          key={i}
-                          className="flex gap-2 text-[15px] leading-relaxed text-muted-foreground"
-                        >
-                          <span className="mt-[9px] h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
-                          <span>
-                            <RichText text={point} />
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-
-                  {tip && (
-                    <div className="flex gap-2 rounded-lg bg-secondary/60 px-3 py-2 text-xs leading-relaxed text-muted-foreground">
-                      <Lightbulb className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                      <span>
-                        <RichText text={tip} />
-                      </span>
+                return (
+                  <section
+                    key={key}
+                    id={key}
+                    className="raised scroll-mt-[calc(var(--nav-h)+16px)] space-y-3 rounded-2xl p-4 md:p-5"
+                  >
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h2 className="flex items-center gap-2.5 text-lg font-bold text-foreground">
+                        <Icon className="h-5 w-5 shrink-0 text-foreground" />
+                        {t(`guide.sections.${key}.title`)}
+                      </h2>
+                      {forWhom && (
+                        <span className="inline-flex items-center rounded-full bg-secondary px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                          {forWhom}
+                        </span>
+                      )}
                     </div>
-                  )}
-                </section>
-              );
-            })}
+
+                    <p className="text-[15px] leading-relaxed text-muted-foreground">
+                      <RichText text={t(`guide.sections.${key}.body`)} />
+                    </p>
+
+                    {(FIGURES[key] ?? []).map((figure) => (
+                      <GuideFigure key={figure.id} figure={figure} />
+                    ))}
+
+                    {points.length > 0 && (
+                      <ul className="space-y-1.5">
+                        {points.map((point, i) => (
+                          <li
+                            key={i}
+                            className="flex gap-2 text-[15px] leading-relaxed text-muted-foreground"
+                          >
+                            <span className="mt-[9px] h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
+                            <span>
+                              <RichText text={point} />
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+
+                    {tip && (
+                      <div className="flex gap-2 rounded-lg bg-secondary/60 px-3 py-2 text-xs leading-relaxed text-muted-foreground">
+                        <Lightbulb className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                        <span>
+                          <RichText text={tip} />
+                        </span>
+                      </div>
+                    )}
+                  </section>
+                );
+              })}
+            </div>
           </div>
         </div>
       </div>

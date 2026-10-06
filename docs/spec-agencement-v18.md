@@ -529,3 +529,40 @@ la barre d'onglets : une page sans barre du bas (rare) le verra plus haut que n�
   empilés sur téléphone, au-dessus de la feuille du formulaire de tâche).
 - **Reste** : rien pour F2. Les tranches de pages (T1 à T11) peuvent partir.
 - **Timothée** : rien à publier (aucune règle, aucune donnée) ; relire les six libellés 中文 ci-dessus.
+
+### V18T1011 — App Moi, Profil, Guide, Questionnaire (T10)
+
+- 06/10/2026 (fini le 07/10 après la coupure du 06 au soir) : **T10 faite** (branche `lot/v18-t1011`, commit
+  `feat(V18T1011): T10 — Moi en aperçus, Profil, Guide et Questionnaire en lecture`), A12 à A15.
+- **Moi (A12)** : `EnTetePage` « Moi », sous-titre « <nom> · Admin » ; en grand, compte, Réglages, (Notifier ·
+  Admin interrupteur coupé) et Déconnexion à gauche sur 340 px, à droite les aperçus en deux colonnes puis les
+  trois cartes d'aide (Guide, Ton avis, Signaler un problème) ; tablette portrait : compte et Réglages côte à côte,
+  puis aperçus et aide ; téléphone : une colonne (compte, aperçus, aide, Réglages, Déconnexion). Aperçus
+  (`components/moi/Apercus.tsx`, lecture seule) : **Mes services** (les trois prochains, « n à venir » →
+  `/mes-services`, lus comme Mes services : plannings + petits déj par le compte), **Mes tâches** (`BACK_OFFICE` et
+  pôles ; trois à faire, la plus proche d'abord, « n à faire » → `/taches`), **Harmonie** (si l'accès ; cours
+  n / N chapitres, barre, « Prochain chapitre : … », fiches, sons), **Mes équipes** (`BACK_OFFICE` ; les équipes où
+  figure la personne, dans l'ordre de l'organigramme, rôle et nombre, « Organigramme » → `/equipes`). Les lignes
+  de liens d'avant sont devenues ces « Tout voir » et le « Mon profil » de la carte du compte.
+- **Profil (A13)** : « ‹ Moi », « Mon profil », l'e-mail ; « Enregistrer » (pilule noire) dans l'en-tête dès
+  768 px (bouton `form=` du formulaire), en bas sur téléphone ; à gauche identité puis la carte Notifications
+  (`PushToggle` tel quel), à droite services et rôles.
+- **Guide (A14) et Questionnaire (A15)** : `EnTetePage` avec « ‹ Moi », sans icône ; en grand, lecture R14
+  (sommaire de 260 px collant, colonne de 720 px, calés sur le titre). Questionnaire : les étapes en sommaire
+  (l'étape en cours en encre, « Étape n / N », « Les questions qui ne te concernent pas sont sautées »), les
+  réponses en pilules (`aria-pressed`), « Précédent · Suivant » en pied de carte ; ailleurs, la progression d'avant.
+  Même parcours, mêmes réponses.
+- **Libellés nouveaux** (FR et 中文, à relire) : `moi.apercus.*`, `profile.enregistrer` (保存),
+  `survey.sousTitre`, `survey.etapes` (步骤), `survey.sautees`.
+- **Tests** : `tests/agencement-v18-moi.spec.ts` (10 tests ; 9 × 5 projets sur le serveur principal, vus rouges
+  sur le code d'avant — 17 sur 18 en `ordinateur` + `telephone`, le seul vert étant « Enregistrer en bas sur
+  téléphone », déjà vrai — puis verts ; 1 sur le second serveur, sans l'interrupteur : ni Mes tâches ni Mes
+  équipes, Notifier et Admin restent). Réécrits avec la règle : `pages-en-grand-moi.spec.ts` (disposition de Moi,
+  Profil Q10 → A13 : la carte Notifications revient, « Enregistrer » dans l'en-tête) et
+  `pages-en-grand-guide-equipes.spec.ts` (sommaire 270 → 260 px). Voisines vertes (cinq projets) :
+  `look-navigation`, `look-halo`, `look-secondaires`, `halo-partout`, `coherence`, `nouveaux-membres`, les tests
+  Moi de `taches`, `equipes`, `back-office-admin`, `planning-petit-dej`, le Guide d'`evenements-2027` ;
+  `back-office-coupe` vert. Captures regardées aux cinq tailles, conformes aux planches `v18-app-moi-a`,
+  `v18-app-profil`, `v18-app-guide`, `v18-app-questionnaire`.
+- **Reste** : rien pour T10. T11 (Harmonie en onglets) est la tranche suivante de la voie ⑦.
+- **Timothée** : rien à publier (aucune règle, aucune donnée, R16) ; relire les libellés 中文 ci-dessus.

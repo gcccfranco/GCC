@@ -625,6 +625,7 @@
     "welcome": "欢迎！完善你的资料即可访问你所服事的歌单以及「我的服事」页面。",
     "locked": "你的资料已完成。如需修改，请联系管理员。",
     "save": "保存资料",
+    "enregistrer": "保存",
     "saving": "保存中…",
     "saveError": "保存失败，请重试。",
     "errorName": "请填写你的名字和姓氏。",
@@ -1383,6 +1384,9 @@
     "title": "你对网站的意见",
     "intro": "告诉我们：什么好用、什么不方便、还缺什么。问卷比较详细，但与你无关的问题会自动跳过。",
     "loginRequired": "请先登录再填写问卷。",
+    "sousTitre": "告诉我们：什么好用、什么不方便、还缺什么。",
+    "etapes": "步骤",
+    "sautees": "与你无关的问题会自动跳过。",
     "optional": "（选填）",
     "multiHint": "可多选",
     "stepOf": "第 {{step}} / {{total}} 步",
@@ -2004,7 +2008,26 @@
     "admin": "管理员",
     "notifications": "通知",
     "activees": "已开启",
-    "desactivees": "已关闭"
+    "desactivees": "已关闭",
+    "apercus": {
+      "aFaire_other": "{{count}} 项待办",
+      "rienAFaire": "你暂时没有待办事项。",
+      "ouvrir": "打开",
+      "cours": "乐理课程",
+      "chapitres": "{{faits}} / {{total}} 章",
+      "prochain": "下一章：{{titre}}",
+      "coursFini": "所有章节都已完成。",
+      "fiches": "和声重配卡片",
+      "sons": "RD-2000 音色",
+      "mesEquipes": "我的团队",
+      "organigramme": "组织架构",
+      "aucuneEquipe": "你还不在任何团队中。",
+      "membre": "成员",
+      "membres_other": "{{count}} 名成员",
+      "guideSous": "一步步了解整个网站",
+      "avisSous": "问卷",
+      "signalerSous": "错误或故障"
+    }
   },
   "pdf": {
     "choice": {

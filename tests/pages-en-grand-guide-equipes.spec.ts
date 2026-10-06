@@ -5,7 +5,7 @@ import type { MembreEquipe } from "../src/types/equipe";
 
 // Lot U4 bis, tranche B6 — Guide et Équipes (docs/spec-pages-en-grand.md, Q11 et Q12 ; planches
 // `guide-*` et `equipes-*`).
-// Guide : en grand, le sommaire collant à gauche (270 px) et la lecture à 720 px au plus ;
+// Guide : en grand, le sommaire collant à gauche (260 px depuis la v18) et la lecture à 720 px au plus ;
 // tablette portrait, le sommaire sur deux colonnes en tête ; téléphone, en une colonne.
 // Équipes : l'écran garde sa hauteur, l'organigramme défile de gauche à droite (bandeau) ; une
 // pilule par équipe sert d'index ; flèches sur ordinateur (pointeur fin) seulement.
@@ -216,12 +216,12 @@ test.describe("Guide", () => {
     await capture(page, "b6-guide");
   });
 
-  test("en grand : sommaire collant à gauche (270 px), lecture à 720 px au plus", async ({ page }, info) => {
+  test("en grand : sommaire collant à gauche (260 px depuis la v18, R14), lecture à 720 px au plus", async ({ page }, info) => {
     test.skip(!enGrand(info), "deux volets seulement (ordinateur, iPad paysage)");
     await ouvrirGuide(page);
     const nav = (await sommaire(page).boundingBox())!;
     const lecture = (await page.locator("section#songs").boundingBox())!;
-    expect(Math.round(nav.width)).toBe(270);
+    expect(Math.round(nav.width)).toBe(260);
     expect(nav.x + nav.width).toBeLessThanOrEqual(lecture.x);
     expect(lecture.width).toBeLessThanOrEqual(721);
     expect(lecture.width).toBeGreaterThan(560);
