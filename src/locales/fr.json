@@ -2275,6 +2275,24 @@
       "equipes": "Équipes",
       "musiciens": "Musiciens"
     },
+    "court": {
+      "orga": "Orga",
+      "comite-franco": "Comité Franco",
+      "da": "DA",
+      "medias": "Médias",
+      "developpement": "Développement",
+      "regie": "Régie",
+      "traduction": "Traduction",
+      "theologie": "Théologie",
+      "evenementiel": "Événementiel",
+      "decoration": "Décoration",
+      "accueil-j1": "Accueil J1",
+      "louange": "Louange",
+      "edd": "EDD"
+    },
+    "index": "Index des équipes",
+    "precedentes": "Équipes précédentes",
+    "suivantes": "Équipes suivantes",
     "team": {
       "orga": "TEAM ORGA",
       "comite-franco": "COMITÉ FRANCO",

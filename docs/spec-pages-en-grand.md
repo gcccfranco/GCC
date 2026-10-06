@@ -354,3 +354,41 @@ commité, aucun code) ; gardé, une attente corrigée (lire la fiche avant le to
 - Reste : B4 à B7.
 - À faire par Timothée : relire le 中文 « 歌单预览 », « 本歌单的调性 », « 本次服事团队 », « 根据排班表 » ; rien à publier (aucune
   règle).
+
+**B6 — Guide et Équipes, faite le 05/10/2026 (suite parallèle B6/B7)** (branche `lot/u4bis-b67`, partie de
+`lot/u4bis-pages-en-grand` après B2 ; commit `feat(U4bis): B6 — Guide et Équipes…`). Deux reprises : la première
+n'a rien trouvé de l'agent coupé et a tout codé sans commiter ; la seconde (06/10/2026) a relu ce travail, l'a
+gardé tel quel, l'a revu vert (48 verts, 12 sautés hors appareil), contre-épreuve refaite (pages d'avant : 15 rouges sur
+`ordinateur` et `telephone`) et l'a commité.
+- **Équipes (Q12)** : `components/equipes/BandeauEquipes.tsx`. Dans l'App, la page tient dans la hauteur de l'écran
+  (`.equipes-ecran` dans `globals.css` : sous la navbar, au-dessus de la cale de la barre du bas ; jusqu'en bas sur
+  ordinateur et iPad paysage) ; le titre porte les onglets Équipes · Musiciens à droite ; dessous, l'**index** (une
+  pilule par équipe, noms courts `equipes.court.*`) puis le **bandeau**, seul à défiler en largeur. Les cartes sont
+  mesurées (`ResizeObserver`) et rangées par `rangerEnColonnes` (B0) : 290 px en grand, 300 px sur tablette et
+  téléphone ; Louange et EDD en colonnes larges, en dernier (moitié de l'écran chacune en grand : au bout, les deux
+  tiennent ensemble ; 560 px sur tablette ; 340 px sur téléphone), leurs sous-groupes sur trois colonnes sous le
+  référent. Une carte plus haute que le bandeau défile dans sa colonne. Fondu à droite (rien au bout), flèches ‹ › avec
+  un pointeur fin seulement, accroche aux colonnes sur écran tactile. Toucher une pilule amène sa colonne ; la pilule
+  de la première colonne visible s'allume (la pilule touchée reste allumée si sa colonne est la première visible, ou
+  au bout du bandeau), et la rangée de l'index la garde à l'écran. Halo de Moi. Onglet Musiciens et Back-Office
+  (Équipes › Organigramme, édition) : inchangés, colonnes d'aujourd'hui.
+- **Guide (Q11)** : `guide/page.tsx` en trois dispositions (`useDisposition`). En grand : sommaire collant à gauche
+  (270 px), lecture à 720 px au plus, titre au-dessus de la lecture ; la partie lue s'allume dans le sommaire (au
+  défilement, au toucher, la dernière au bas de la page). Tablette portrait : sommaire en carte sur deux colonnes, en
+  tête, partie lue allumée ; lecture sur la largeur. Téléphone : sommaire en carte, une ligne de 44 px par partie,
+  filets. Cartes en relief (`.raised`, 16 px), titres de partie à 18 px, texte à 15 px, halo de Moi. Captures du guide
+  inchangées (à refaire après le code, tâche à part).
+- Libellés FR et 中文 : `equipes.court.*` (中文 = les noms d'équipe d'aujourd'hui, déjà courts), `equipes.index`
+  « Index des équipes » / « 团队索引 », `equipes.precedentes` / `suivantes` « Équipes précédentes / suivantes » /
+  « 上一组团队 » / « 下一组团队 ».
+- Tests : `tests/pages-en-grand-guide-equipes.spec.ts` (12 tests, dont 1 sur les données ; organigramme fictif aux
+  effectifs d'aujourd'hui, Louange 28, EDD 33) sur les cinq projets ; vus rouges (bandeau, index, flèches, sommaire
+  absents) puis verts. Voisines vertes : `equipes`, `look-secondaires`, `nouveaux-membres`, `back-office-coupe`,
+  `coherence` ; revues le 06/10 avec `back-office-admin`, `back-office-espace`, `barre-back-office` (688 verts). Captures regardées aux cinq tailles et comparées aux planches `equipes-*` et `guide-*`.
+- Choix faute de réponse : le bandeau n'est que dans l'App (au Back-Office, une carte s'ouvre en formulaire : pas de
+  hauteur fixe) ; la pilule allumée est la première équipe de la première colonne visible, sauf la pilule touchée
+  (Décoration partage sa colonne avec Événementiel) ; barre de défilement du bandeau masquée (flèches, glisser) ; halo
+  de Moi (encre) sur les deux pages, celles-ci étant sous l'onglet Moi, au lieu du bleu clair de la planche ; sommaire
+  sans partie allumée sur téléphone (la planche n'en montre pas).
+- Reste : B7 (Réception), sur la même branche.
+- À faire par Timothée : relire le 中文 « 团队索引 », « 上一组团队 », « 下一组团队 » ; rien à publier (aucune règle).
