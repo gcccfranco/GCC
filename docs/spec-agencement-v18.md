@@ -529,3 +529,37 @@ la barre d'onglets : une page sans barre du bas (rare) le verra plus haut que n�
   empilés sur téléphone, au-dessus de la feuille du formulaire de tâche).
 - **Reste** : rien pour F2. Les tranches de pages (T1 à T11) peuvent partir.
 - **Timothée** : rien à publier (aucune règle, aucune donnée) ; relire les six libellés 中文 ci-dessus.
+
+### V18T13 — Back-Office › Tâches (T1)
+
+- 06/10/2026 : **T1 faite** (branche `lot/v18-t13`, commit `feat(V18T13): T1 — BO Tâches en deux volets…`), B1 et B2.
+  En-tête « Tâches » (`EnTetePage`, sous-titre, `BoutonNouveau`, rail des pôles avec le compte des tâches encore à
+  faire) au-dessus de `DeuxVolets` ; liste du pôle en carte (En retard en rouge · Cette semaine · Plus tard,
+  « Terminées (n) » repliées) ; à droite la fiche à lire (`FicheTache`, la même que l'App, en mode Back-Office) :
+  badge du pôle, titre h2, « Modifier », « ⋯ › Supprimer » (`MenuActions` + `useConfirmer`), carte d'état, carte
+  d'infos (« en retard » sur l'échéance), « Note » et « Historique » côte à côte (« Commencée / Faite par … » de
+  `Fois`, « Créée par … » lu par `getProfile(auteurUid)`). Adresses `/back-office/taches/[pole]/[id]` (`?date=`) et
+  `/back-office/taches/[pole]/nouvelle` ; `/back-office/taches` ajouté à `SECTIONS_EN_DEUX_VOLETS`.
+  En grand, « + Nouvelle tâche » et « Modifier » ouvrent `TacheForm enLigne` dans le volet (carte de 720 px au plus,
+  pôle en pilules, échéance et responsable côte à côte, répétition en rail, « Annuler · Créer la tâche ») ; créer
+  ouvre la fiche. Sur un volet : la liste, la fiche en page avec « ‹ Tâches », le rond « + » et la feuille.
+- **Fichiers** : `app/back-office/taches/{layout,page}.tsx`, `[pole]/{layout,page}.tsx`, `[pole]/[id]/page.tsx`,
+  `[pole]/nouvelle/page.tsx`, `components/taches/{FicheTache,TacheForm,SectionTaches}.tsx`,
+  `components/taches/creerTache.ts` (création + prévenir le responsable, partagée par la feuille et le volet),
+  `lib/taches/useTaches.ts` (`loading` suit les pôles lus : pas d'« introuvable » quand les pôles changent),
+  `lib/deuxVolets.ts`, libellés `taches.*` FR et 中文.
+- **Tests** : `tests/agencement-v18-taches.spec.ts` (15 tests, cinq projets : 43 verts, 27 passés exprès selon
+  l'appareil ; vus rouges, 17 sur 17 sur `ordinateur` et `telephone`, sans le code). Réécrits pour la nouvelle
+  disposition : `taches.spec.ts` (« Faites » → « Terminées (n) » repliées, rail au lieu du h2 du pôle, formulaire
+  dans le volet en grand), `taches-evenements.spec.ts`, `back-office-admin.spec.ts` (B3 : le rail reste avec un
+  seul pôle), `back-office-espace.spec.ts`, `nouveaux-membres.spec.ts`, `agencement-v18-confirmations.spec.ts`
+  (la confirmation de la feuille se teste dans l'App, `/taches/da/t1` : au BO, Supprimer est dans « ⋯ »).
+  Captures regardées aux cinq tailles, conformes à `v18-bo-taches` et `v18-bo-tache-nouvelle`.
+- **Choix faute de réponse** : le rail des pôles reste avec un seul pôle (il porte le nom et le compte, le h2 du
+  pôle n'existe plus) ; libellés courts de la répétition dans le rail (Une fois · Semaine · 2 semaines · Mois ·
+  Année) pour tenir dans le volet de l'iPad paysage ; un lien direct vers `nouvelle` sur un volet ouvre la feuille
+  sur une page vide (Annuler revient à la liste).
+- **Reste** : rien pour T1. T3 (Calendrier) peut partir ; `TacheForm` y reste en feuille (`enLigne` facultatif).
+- **Timothée** : rien à publier (aucune règle, aucune donnée) ; relire le 中文 de `taches.sousTitreBackOffice`,
+  `taches.poles`, `taches.terminees`, `taches.creer`, `taches.rythmeCourt.*`, `taches.fiche.{enRetard,historique,
+  creeePar,unMembre}`.

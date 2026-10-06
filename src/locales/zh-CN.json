@@ -2097,8 +2097,23 @@
     "pourEvenement": "用于 {{titre}}",
     "detacherEvenement": "取消关联活动",
     "introuvable": "该任务已不存在。",
+    "sousTitreBackOffice": "各部门的任务：逾期的排在前面",
+    "poles": "部门",
+    "terminees": "已完成（{{count}}）",
+    "creer": "创建任务",
+    "rythmeCourt": {
+      "aucun": "仅一次",
+      "semaine": "每周",
+      "2semaines": "每两周",
+      "mois": "每月",
+      "an": "每年"
+    },
     "fiche": {
-      "modifier": "编辑"
+      "modifier": "编辑",
+      "enRetard": "已逾期",
+      "historique": "记录",
+      "creeePar": "{{nom}} 创建",
+      "unMembre": "一位成员"
     },
     "etat": {
       "titre": "状态",

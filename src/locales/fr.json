@@ -2101,8 +2101,23 @@
     "pourEvenement": "pour {{titre}}",
     "detacherEvenement": "Détacher de l'évènement",
     "introuvable": "Cette tâche n'existe plus.",
+    "sousTitreBackOffice": "Les tâches des pôles : ce qui est en retard d'abord",
+    "poles": "Pôles",
+    "terminees": "Terminées ({{count}})",
+    "creer": "Créer la tâche",
+    "rythmeCourt": {
+      "aucun": "Une fois",
+      "semaine": "Semaine",
+      "2semaines": "2 semaines",
+      "mois": "Mois",
+      "an": "Année"
+    },
     "fiche": {
-      "modifier": "Modifier"
+      "modifier": "Modifier",
+      "enRetard": "en retard",
+      "historique": "Historique",
+      "creeePar": "Créée par {{nom}}",
+      "unMembre": "un membre"
     },
     "etat": {
       "titre": "État",

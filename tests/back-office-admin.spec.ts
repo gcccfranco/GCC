@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
-import { repondreDansLeSite } from "./helpers/agencement";
+import { estGrandEcran, ongletsRail, repondreDansLeSite } from "./helpers/agencement";
 import { readFileSync } from "node:fs";
 import { planningsDuBackOffice, sousPartiesEvenements } from "../src/lib/access";
 
@@ -350,24 +350,24 @@ test.describe("B3 : Tâches", () => {
     await ouvrirB3(page, DA_ORG, "/back-office/taches", { "poles/da/taches/t1": TACHE });
     await expect(page).toHaveURL(/\/back-office\/taches\/da\/?$/);
     await expect(page.getByRole("heading", { level: 1, name: "Tâches" })).toBeVisible();
-    await expect(page.getByRole("heading", { level: 2, name: "DA" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Nouvelle tâche" })).toBeVisible();
+    // Agencement v18 (T1, B1) : le rail des pôles, même pour un seul (il porte le nom et le compte) ;
+    // « + Nouvelle tâche » en pilule (lien) en grand, en rond (bouton) sur un volet.
+    await expect(ongletsRail(page).getByRole("link")).toHaveText([/^DA\s*·\s*1$/]);
+    await expect(page.getByRole(estGrandEcran(test.info()) ? "link" : "button", { name: "Nouvelle tâche" })).toBeVisible();
     await expect(page.getByRole("checkbox", { name: /Fond PPT/ })).toBeVisible();
-    // Un seul pôle : pas de contrôle segmenté.
-    await expect(sousParties(page)).toHaveCount(0);
   });
 
   test("admin : un onglet par pôle, dans l'ordre", async ({ page }) => {
     await ouvrirB3(page, ADMIN, "/back-office/taches/media");
-    await expect(sousParties(page).getByRole("link")).toHaveText(["DA", "Média", "Orga", "Louange", "Événement"]);
-    await expect(sousParties(page).getByRole("link", { name: "Média" })).toHaveAttribute("aria-current", "page");
-    await expect(page.getByRole("heading", { level: 2, name: "Média" })).toBeVisible();
+    // Agencement v18 (T1, B1) : le rail des pôles, avec le compte de chacun.
+    await expect(ongletsRail(page).getByRole("link")).toHaveText([/^DA/, /^Média/, /^Orga/, /^Louange/, /^Événement/]);
+    await expect(ongletsRail(page).getByRole("link", { name: /^Média/ })).toHaveAttribute("aria-current", "page");
   });
 
   test("ancienne adresse : /taches/da mène à Back-Office › Tâches › DA", async ({ page }) => {
     await ouvrirB3(page, DA_ORG, "/taches/da");
     await expect(page).toHaveURL(/\/back-office\/taches\/da\/?$/);
-    await expect(page.getByRole("heading", { level: 2, name: "DA" })).toBeVisible();
+    await expect(ongletsRail(page).getByRole("link", { name: /^DA/ })).toHaveAttribute("aria-current", "page");
   });
 
   test("App : /taches = « À faire pour moi », et une ligne vers les tâches des pôles pour un responsable", async ({ page }) => {

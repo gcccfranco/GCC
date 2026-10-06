@@ -13,14 +13,17 @@ async function charger(key: string): Promise<TacheAvecFois[]> {
 export function useTaches(poles: TachePole[]) {
   const key = poles.join(",");
   const [items, setItems] = useState<TacheAvecFois[]>([]);
-  const [loading, setLoading] = useState(true);
+  // Les pôles dont `items` est la lecture : d'autres pôles (le profil vient d'arriver) remettent
+  // `loading` le temps de les lire, et la page ne dit pas « introuvable » entre deux.
+  const [lus, setLus] = useState<string | null>(null);
+  const loading = lus !== key;
 
   useEffect(() => {
     let alive = true;
     charger(key).then((next) => {
       if (!alive) return;
       setItems(next);
-      setLoading(false);
+      setLus(key);
     });
     return () => {
       alive = false;
