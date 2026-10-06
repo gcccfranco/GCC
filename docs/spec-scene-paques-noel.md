@@ -406,3 +406,20 @@ npm run lint
     non canoniques pour la même édition : le premier lu (ordre de `listProgrammes`, jour J croissant) gagne.
   - Reste : P2 à P9.
   - À faire par Timothée : rien pour P1 (aucune règle à publier, droits inchangés).
+- 06/10/2026 — **P2 — La grille : faite** (branche `lot/v18-scene`, commit « feat(SCENE): P2 »).
+  `src/lib/scene/saison.ts` : `lignesDuJour` sans type `pris` (une réservation absorbe les créneaux qu'elle
+  chevauche et porte `couvre` et `aussi`, les heures des créneaux pris en plus), `semainesDe` (semaines du
+  lundi au dimanche, une case par créneau, `libres`), `compteCreneaux` (créneaux par jour de la semaine,
+  semaines, total), erreur `autreFete` dans `erreursSaison(saison, jourJ, autre?)` ;
+  `src/app/evenements/scene/LigneJour.tsx` rend une réservation hors grille sur une ligne de la hauteur des
+  créneaux couverts (« 17:00 → 18:30 », « 17:00 – 18:30 · prend aussi le créneau de 18:00 ») ;
+  `semaineCourte` (« 3 – 4 oct. », « 10月3日 – 4日 ») dans `libelles.ts` ; libellé `planning.saison.pris`
+  remplacé par `prendAussi` (FR et 中文). Tests : 8 nouveaux dans `tests/scene-paques-noel.spec.ts`, 2
+  repris dans `tests/scene-saison.spec.ts` (plus de « Pris » sur la page actuelle) : vus rouges sur le code
+  de P1 (10 rouges), verts ensuite ; `tsc` et `lint` propres.
+  - Choix faits faute de réponse : une réservation un jour sans grille (mardi) a `couvre` = 0 et ne compte
+    dans aucune semaine ; `compteCreneaux` compte les créneaux de la grille, hors jour J ; `semaineCourte`
+    écrit « 1er » le premier du mois.
+  - Reste : P3 à P9.
+  - À faire par Timothée : rien pour P2 (aucune règle à publier, droits inchangés) ; relire le 中文
+    « 同时占用 {{heures}} 的时段 ».

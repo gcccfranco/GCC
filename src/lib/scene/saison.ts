@@ -89,10 +89,9 @@ export function saisonDe(p: {
   };
 }
 
-/** Créneaux d'un jour : depuis le début de chaque plage de ce jour de la
- *  semaine, de la durée choisie, tant qu'ils tiennent dans la plage. */
-export function grilleDuJour(saison: Pick<Saison, "plages" | "duree">, date: string): { debut: string; fin: string }[] {
-  const jour = jourDeSemaine(date);
+/** Créneaux d'un jour de la semaine (0 = dimanche) : depuis le début de chaque
+ *  plage de ce jour, de la durée choisie, tant qu'ils tiennent dans la plage. */
+function grilleDeJourSemaine(saison: Pick<Saison, "plages" | "duree">, jour: number): { debut: string; fin: string }[] {
   const out: { debut: string; fin: string }[] = [];
   for (const p of triPlages(saison.plages.filter((x) => x.jour === jour))) {
     const fin = minutes(p.fin);
@@ -101,6 +100,11 @@ export function grilleDuJour(saison: Pick<Saison, "plages" | "duree">, date: str
     }
   }
   return out;
+}
+
+/** Créneaux d'une date, selon son jour de la semaine. */
+export function grilleDuJour(saison: Pick<Saison, "plages" | "duree">, date: string): { debut: string; fin: string }[] {
+  return grilleDeJourSemaine(saison, jourDeSemaine(date));
 }
 
 /** Dates réservables : entre l'ouverture et la fermeture, dont le jour de la
@@ -117,11 +121,13 @@ export function joursReservables(saison: Pick<Saison, "debut" | "fin" | "plages"
 
 type CreneauLike = { dimanche: string; debut: string; fin: string };
 
-/** Une ligne de la journée : créneau libre, créneau rendu « pris » par une
- *  réservation qui le chevauche sans le recouvrir, ou réservation à son heure. */
+/** Une ligne de la journée : créneau libre, ou réservation à son heure.
+ *  `couvre` = nombre de créneaux de la grille qu'elle absorbe (Q13) ; `aussi` =
+ *  les heures de ceux qui ne commencent pas avec elle (« prend aussi le
+ *  créneau de 18:00 »). */
 export type Ligne<C extends CreneauLike> =
-  | { type: "libre" | "pris"; debut: string; fin: string }
-  | { type: "reserve"; debut: string; fin: string; creneau: C; horsGrille: boolean };
+  | { type: "libre"; debut: string; fin: string }
+  | { type: "reserve"; debut: string; fin: string; creneau: C; horsGrille: boolean; couvre: number; aussi: string[] };
 
 /** Grille du jour s'il est dans la période, vide sinon. */
 function grilleDans(saison: Pick<Saison, "debut" | "fin" | "plages" | "duree">, date: string) {
@@ -129,10 +135,11 @@ function grilleDans(saison: Pick<Saison, "debut" | "fin" | "plages" | "duree">, 
 }
 
 const pile = (g: { debut: string; fin: string }, c: CreneauLike) => g.debut === c.debut && g.fin === c.fin;
+const chevauche = (g: { debut: string; fin: string }, c: CreneauLike) => c.debut < g.fin && g.debut < c.fin;
 
-/** Grille et réservations d'un jour, fusionnées et triées par heure (à heure
- *  égale, la réservation d'abord). Une réservation hors grille (Q8) reste à son
- *  heure et rend « pris » les créneaux qu'elle chevauche. */
+/** Grille et réservations d'un jour, fusionnées et triées par heure. Une
+ *  réservation hors grille (U1, Q8) reste à son heure, sur une seule ligne :
+ *  les créneaux qu'elle chevauche n'ont plus de ligne à eux (Q13). */
 export function lignesDuJour<C extends CreneauLike>(
   saison: Pick<Saison, "debut" | "fin" | "plages" | "duree">,
   date: string,
@@ -140,16 +147,65 @@ export function lignesDuJour<C extends CreneauLike>(
 ): Ligne<C>[] {
   const grille = grilleDans(saison, date);
   const resas = creneaux.filter((c) => c.dimanche === date);
-  const lignes: Ligne<C>[] = [];
-  for (const g of grille) {
-    if (resas.some((c) => pile(g, c))) continue;
-    lignes.push({ type: resas.some((c) => c.debut < g.fin && g.debut < c.fin) ? "pris" : "libre", ...g });
-  }
+  const lignes: Ligne<C>[] = grille
+    .filter((g) => !resas.some((c) => chevauche(g, c)))
+    .map((g) => ({ type: "libre" as const, ...g }));
   for (const c of resas) {
-    lignes.push({ type: "reserve", debut: c.debut, fin: c.fin, creneau: c, horsGrille: !grille.some((g) => pile(g, c)) });
+    const pris = grille.filter((g) => chevauche(g, c));
+    lignes.push({
+      type: "reserve", debut: c.debut, fin: c.fin, creneau: c, horsGrille: !grille.some((g) => pile(g, c)),
+      couvre: pris.length, aussi: pris.filter((g) => g.debut !== c.debut).map((g) => g.debut),
+    });
   }
-  const rang = (l: Ligne<C>) => (l.type === "reserve" ? 0 : 1);
-  return lignes.sort((a, b) => a.debut.localeCompare(b.debut) || rang(a) - rang(b));
+  return lignes.sort((a, b) => a.debut.localeCompare(b.debut));
+}
+
+/** Une semaine de la saison, du lundi au dimanche (Q12) : ses jours
+ *  réservables, une case par créneau de la grille (`true` = pris, une
+ *  réservation hors grille comprise) et le nombre de places libres. */
+export interface Semaine {
+  lundi: string;
+  jours: string[];
+  cases: boolean[];
+  libres: number;
+}
+
+/** Lundi de la semaine d'une date ISO. */
+function lundiDe(date: string): string {
+  return iso(utc(date) - ((jourDeSemaine(date) + 6) % 7) * DAY);
+}
+
+/** Les jours réservables rangés en semaines, dans l'ordre. */
+export function semainesDe(
+  saison: Pick<Saison, "debut" | "fin" | "plages" | "duree">,
+  jourJ: string,
+  creneaux: CreneauLike[],
+): Semaine[] {
+  const semaines: Semaine[] = [];
+  for (const jour of joursReservables(saison, jourJ)) {
+    const lundi = lundiDe(jour);
+    let s = semaines.at(-1);
+    if (s?.lundi !== lundi) semaines.push((s = { lundi, jours: [], cases: [], libres: 0 }));
+    s.jours.push(jour);
+    const resas = creneaux.filter((c) => c.dimanche === jour);
+    for (const g of grilleDuJour(saison, jour)) s.cases.push(resas.some((c) => chevauche(g, c)));
+  }
+  for (const s of semaines) s.libres = s.cases.filter((pris) => !pris).length;
+  return semaines;
+}
+
+/** Les comptes des aides de la saison (Q19) : créneaux par jour de la semaine
+ *  (lundi → dimanche), nombre de semaines et créneaux en tout. */
+export function compteCreneaux(
+  saison: Pick<Saison, "debut" | "fin" | "plages" | "duree">,
+  jourJ: string,
+): { parJour: { jour: number; creneaux: number }[]; semaines: number; total: number } {
+  const semaines = semainesDe(saison, jourJ, []);
+  return {
+    parJour: joursDes(saison.plages).map((jour) => ({ jour, creneaux: grilleDeJourSemaine(saison, jour).length })),
+    semaines: semaines.length,
+    total: semaines.reduce((n, s) => n + s.cases.length, 0),
+  };
 }
 
 /** Réservations hors des jours, de la période ou des créneaux de la grille. */
@@ -169,20 +225,24 @@ export type ErreurSaison =
   | "jourSansPlage"
   | "plageInvalide"
   | "plageCourte"
-  | "plagesChevauchent";
+  | "plagesChevauchent"
+  | "autreFete";
 
 // Année en 20xx : un champ date tapé au clavier passe par 0002, 0020, 0202
 // avant 2026 ; rien ne s'écrit tant que l'année n'est pas entière.
 export const DATE = /^20\d{2}-\d{2}-\d{2}$/;
 const HEURE = /^\d{2}:\d{2}$/;
 
-export function erreursSaison(saison: Saison, jourJ: string): ErreurSaison[] {
+/** `autre` : la période de réservation de l'édition de l'autre fête (non
+ *  archivée) ; les deux ne se croisent pas, la scène est une seule salle (Q8). */
+export function erreursSaison(saison: Saison, jourJ: string, autre?: Pick<Saison, "debut" | "fin">): ErreurSaison[] {
   const e: ErreurSaison[] = [];
   const { debut, fin, jours, plages, duree } = saison;
   if (!DATE.test(debut) || !DATE.test(fin)) e.push("dateInvalide");
   else {
     if (fin >= jourJ) e.push("finApresJourJ");
     if (fin < debut) e.push("finAvantDebut");
+    if (autre && debut <= autre.fin && autre.debut <= fin) e.push("autreFete");
   }
   if (plages.length === 0) e.push("aucunJour");
   if (jours.some((j) => !plages.some((p) => p.jour === j))) e.push("jourSansPlage");

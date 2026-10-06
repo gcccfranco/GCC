@@ -27,3 +27,19 @@ export function dateCourte(iso: string, lang: string): string {
   if (lang === "zh-CN") return `${d.getMonth() + 1}月${d.getDate()}日`
   return `${d.getDate() === 1 ? "1er" : d.getDate()} ${d.toLocaleDateString("fr-FR", { month: "long" })}`
 }
+
+/** Une semaine par ses jours réservables (Q12) : « 3 – 4 oct. », « 31 oct. –
+ *  1er nov. » / « 10月3日 – 4日 », « 10月31日 – 11月1日 ». */
+export function semaineCourte(jours: string[], lang: string): string {
+  const [a, b] = [jourLocal(jours[0]), jourLocal(jours[jours.length - 1])]
+  const memeMois = a.getMonth() === b.getMonth()
+  if (lang === "zh-CN") {
+    const de = `${a.getMonth() + 1}月${a.getDate()}日`
+    if (jours.length === 1) return de
+    return `${de} – ${memeMois ? "" : `${b.getMonth() + 1}月`}${b.getDate()}日`
+  }
+  const num = (d: Date) => (d.getDate() === 1 ? "1er" : String(d.getDate()))
+  const mois = (d: Date) => d.toLocaleDateString("fr-FR", { month: "short" })
+  if (jours.length === 1) return `${num(a)} ${mois(a)}`
+  return memeMois ? `${num(a)} – ${num(b)} ${mois(b)}` : `${num(a)} ${mois(a)} – ${num(b)} ${mois(b)}`
+}

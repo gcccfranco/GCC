@@ -2,7 +2,7 @@
 
 // Volet Entraînements. Lot U1 (docs/spec-scene-saison.md, planche
 // scene-reserver-telephone) : un bloc par jour réservable à venir, en grille —
-// l'heure, « Libre · Réserver », « Pris », ou la réservation et son auteur.
+// l'heure, « Libre · Réserver », ou la réservation et son auteur.
 // « Réserver » ouvre la feuille sur ce créneau ; sur sa réservation (toutes pour
 // la coordination), « Modifier » propose les créneaux libres pour déplacer et
 // « Retirer » la supprime. Les chevauchements restent refusés à

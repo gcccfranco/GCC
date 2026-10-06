@@ -3,7 +3,8 @@ import {
   editionCourante, editionsAffichees, editionsDe, etatEdition, FETES, feteDe, anneeDe, idEdition,
   jourJParDefaut, libelleEdition, paques, reglagesRepris,
 } from "../src/lib/scene/fetes";
-import { FAMILLES } from "../src/lib/scene/saison";
+import { compteCreneaux, erreursSaison, FAMILLES, lignesDuJour, saisonDe, semainesDe } from "../src/lib/scene/saison";
+import { semaineCourte } from "../src/app/evenements/scene/libelles";
 import type { Programme } from "../src/types/programme";
 
 // Réservation de la scène — Pâques · Noël (docs/spec-scene-paques-noel.md).
@@ -167,4 +168,87 @@ test("titre d'une édition : calculé, dans la langue", () => {
   expect(libelleEdition("paques", 2027, "fr")).toBe("Pâques 2027");
   expect(libelleEdition("noel", 2026, "zh")).toBe("圣诞节 2026");
   expect(libelleEdition("paques", 2027, "zh")).toBe("复活节 2027");
+});
+
+// ─── P2 : la grille (fonctions pures) ───────────────────────────────────────
+
+/** Noël 2026 de la « Réussite » : du 01/10 au 20/12, samedi 10:00–12:00 et
+ *  dimanche 14:00–19:00, créneaux d'1 h. */
+const NOEL26 = saisonDe({
+  ...prog(), fin: "2026-12-20", duree: 60,
+  plages: [{ jour: 6, debut: "10:00", fin: "12:00" }, { jour: 0, debut: "14:00", fin: "19:00" }],
+});
+
+const resa = (dimanche: string, debut: string, fin: string) => ({ id: `${dimanche}-${debut}`, dimanche, debut, fin });
+
+test("lignes : 17:00–18:30 dans une grille d'1 h → une seule ligne qui couvre 2 créneaux, aucune ligne à 18:00, aucun « Pris »", () => {
+  const c = resa("2026-10-11", "17:00", "18:30");
+  const lignes = lignesDuJour(NOEL26, "2026-10-11", [c]);
+  expect(lignes.map((l) => [l.type, l.debut])).toEqual([
+    ["libre", "14:00"], ["libre", "15:00"], ["libre", "16:00"], ["reserve", "17:00"],
+  ]);
+  expect(lignes.at(-1)).toMatchObject({ debut: "17:00", fin: "18:30", horsGrille: true, couvre: 2, aussi: ["18:00"], creneau: c });
+});
+
+test("lignes : une réservation pile sur un créneau couvre 1 créneau, sans « aussi »", () => {
+  const lignes = lignesDuJour(NOEL26, "2026-10-11", [resa("2026-10-11", "15:00", "16:00")]);
+  expect(lignes.map((l) => l.type)).toEqual(["libre", "reserve", "libre", "libre", "libre"]);
+  expect(lignes[1]).toMatchObject({ horsGrille: false, couvre: 1, aussi: [] });
+});
+
+test("lignes : une réservation à cheval sur deux créneaux absorbe les deux ; un jour sans grille ne couvre rien", () => {
+  const lignes = lignesDuJour(NOEL26, "2026-10-11", [resa("2026-10-11", "15:30", "16:30")]);
+  expect(lignes.map((l) => [l.type, l.debut])).toEqual([["libre", "14:00"], ["reserve", "15:30"], ["libre", "17:00"], ["libre", "18:00"]]);
+  expect(lignes[1]).toMatchObject({ couvre: 2, aussi: ["15:00", "16:00"] });
+  expect(lignesDuJour(NOEL26, "2026-10-13", [resa("2026-10-13", "15:00", "16:00")])).toMatchObject([{ type: "reserve", couvre: 0, aussi: [] }]);
+});
+
+test("semaines : samedi et dimanche du 01/10 au 20/12/2026 → 12 semaines du lundi au dimanche, la première « 3 – 4 oct. »", () => {
+  const semaines = semainesDe(NOEL26, "2026-12-24", []);
+  expect(semaines).toHaveLength(12);
+  expect(semaines[0]).toEqual({ lundi: "2026-09-28", jours: ["2026-10-03", "2026-10-04"], cases: Array(7).fill(false), libres: 7 });
+  expect(semaines.at(-1)).toMatchObject({ lundi: "2026-12-14", jours: ["2026-12-19", "2026-12-20"] });
+  expect(semaineCourte(semaines[0].jours, "fr")).toBe("3 – 4 oct.");
+  expect(semaineCourte(["2026-10-31", "2026-11-01"], "fr")).toBe("31 oct. – 1er nov.");
+  expect(semaineCourte(semaines[0].jours, "zh-CN")).toBe("10月3日 – 4日");
+  expect(semaineCourte(["2026-10-31", "2026-11-01"], "zh-CN")).toBe("10月31日 – 11月1日");
+});
+
+test("semaines : une case par créneau, pleine = pris ; une réservation hors grille remplit les cases qu'elle prend ; « 3 places libres »", () => {
+  const creneaux = [
+    resa("2026-10-10", "10:00", "11:00"), resa("2026-10-11", "16:00", "17:00"), resa("2026-10-11", "17:00", "18:30"),
+    resa("2026-10-13", "15:00", "16:00"), // un mardi : hors des jours, ne compte pas
+  ];
+  const s = semainesDe(NOEL26, "2026-12-24", creneaux)[1];
+  expect(s.lundi).toBe("2026-10-05");
+  expect(s.cases).toEqual([true, false, false, false, true, true, true]);
+  expect(s.libres).toBe(3);
+});
+
+test("semaines : une semaine pleine n'a plus de place libre (« complet »)", () => {
+  const jours = { "2026-10-17": ["10:00", "11:00"], "2026-10-18": ["14:00", "15:00", "16:00", "17:00", "18:00"] };
+  const pleine = Object.entries(jours).flatMap(([d, hs]) => hs.map((h) => resa(d, h, `${String(Number(h.slice(0, 2)) + 1).padStart(2, "0")}:00`)));
+  const s = semainesDe(NOEL26, "2026-12-24", pleine)[2];
+  expect(s.cases.every(Boolean)).toBe(true);
+  expect(s.libres).toBe(0);
+});
+
+test("compte : Pâques 2027 du 01/02, samedi 10–12 et dimanche 14–19 en 1 h → 2 et 5 créneaux, 7 semaines, 49 en tout ; dimanche seul → 35", () => {
+  const paques27 = saisonDe({
+    debut: "2027-02-01", jourJ: "2027-03-28", duree: 60,
+    plages: [{ jour: 6, debut: "10:00", fin: "12:00" }, { jour: 0, debut: "14:00", fin: "19:00" }],
+  });
+  expect(compteCreneaux(paques27, "2027-03-28")).toEqual({ parJour: [{ jour: 6, creneaux: 2 }, { jour: 0, creneaux: 5 }], semaines: 7, total: 49 });
+  const dimanche = saisonDe({ debut: "2027-02-01", jourJ: "2027-03-28" });
+  expect(compteCreneaux(dimanche, "2027-03-28")).toEqual({ parJour: [{ jour: 0, creneaux: 5 }], semaines: 7, total: 35 });
+});
+
+test("erreurs : Pâques 2027 ouvert le 01/12/2026 croise Noël 2026 (fermé le 20/12) → `autreFete` ; ouvert le 01/02/2027 → aucune erreur", () => {
+  const noel = { debut: NOEL26.debut, fin: NOEL26.fin };
+  const paques27 = saisonDe({ debut: "2026-12-01", jourJ: "2027-03-28" });
+  expect(erreursSaison(paques27, "2027-03-28", noel)).toEqual(["autreFete"]);
+  expect(erreursSaison(paques27, "2027-03-28")).toEqual([]);
+  expect(erreursSaison({ ...paques27, debut: "2027-02-01" }, "2027-03-28", noel)).toEqual([]);
+  // Le croisement vaut dans les deux sens : Noël 2026 contre un Pâques 2027 ouvert le 01/12.
+  expect(erreursSaison(NOEL26, "2026-12-24", { debut: "2026-12-01", fin: "2027-03-21" })).toEqual(["autreFete"]);
 });

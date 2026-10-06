@@ -81,15 +81,14 @@ test("défauts d'un programme d'avant U1 : dimanche 14:00–19:00, 1 h, tout mem
   });
 });
 
-test("lignes : une réservation 17:00–18:30 dans une grille d'1 h rend 17:00 et 18:00 « Pris » et reste à son heure, hors grille", () => {
+test("lignes : une réservation 17:00–18:30 dans une grille d'1 h tient sur une ligne, à son heure, hors grille, sans « Pris »", () => {
   const c = resa("2026-10-11", "17:00", "18:30");
   const lignes = lignesDuJour(SAISON, "2026-10-11", [c]);
   expect(lignes.map((l) => [l.type, l.debut])).toEqual([
-    ["libre", "14:00"], ["libre", "15:00"], ["libre", "16:00"],
-    ["reserve", "17:00"], ["pris", "17:00"], ["pris", "18:00"],
+    ["libre", "14:00"], ["libre", "15:00"], ["libre", "16:00"], ["reserve", "17:00"],
   ]);
   const ligne = lignes.find((l) => l.type === "reserve");
-  expect(ligne).toMatchObject({ debut: "17:00", fin: "18:30", horsGrille: true, creneau: c });
+  expect(ligne).toMatchObject({ debut: "17:00", fin: "18:30", horsGrille: true, couvre: 2, creneau: c });
 });
 
 test("lignes : une réservation pile sur un créneau prend sa place, dans la grille", () => {
@@ -608,14 +607,15 @@ test("membres : sans limite, la feuille propose tous les groupes ; la coordinati
   await expect(feuille(page).getByText("Qui", { exact: true })).toBeVisible();
 });
 
-test("membres : la réservation d'un autre montre son auteur, sans bouton ; un créneau pris n'a pas de bouton", async ({ page }) => {
+test("membres : la réservation d'un autre montre son auteur, sans bouton ; une réservation hors grille tient sur une ligne, sans « Pris »", async ({ page }) => {
   const long = resa("2026-10-11", "17:00", "18:30", "l");
   await ouvrir(page, LEA, { "programmes/noel": OUVERT, "programmes/noel/creneaux/s": SKETCH, "programmes/noel/creneaux/l": long });
   const dimanche = bloc(page, "Dimanche 11 octobre");
   await expect(dimanche.getByRole("listitem")).toHaveText([
     /14:00\s*Libre\s*Réserver/, /15:00\s*Sketch · Jeunes\s*Noé L\./, /16:00\s*Libre\s*Réserver/,
-    /17:00 – 18:30\s*Chant · EDD 中班\s*Alice Q\./, /17:00\s*Pris/, /18:00\s*Pris/,
+    /^17:00\s*→ 18:30\s*Chant · EDD 中班\s*17:00 – 18:30 · prend aussi le créneau de 18:00\s*Alice Q\.$/,
   ]);
+  await expect(dimanche.getByText("Pris", { exact: true })).toHaveCount(0);
   await expect(dimanche.getByRole("button")).toHaveCount(2);
   await expect(dimanche.getByRole("button", { name: "Modifier" })).toHaveCount(0);
   await expect(dimanche.getByRole("button", { name: "Retirer" })).toHaveCount(0);
