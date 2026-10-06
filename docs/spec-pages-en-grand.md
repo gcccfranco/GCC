@@ -536,3 +536,39 @@ pour B7 (copie propre, B6 commitée).
 - Reste : rien pour B6/B7 ; la suite parallèle est finie, à fusionner dans `lot/u4bis-pages-en-grand`.
 - À faire par Timothée : relire le 中文 ci-dessus ; rien à publier (aucune règle : `reports` et `songProposals`
   gardent les leurs).
+
+**Fusion finale, faite le 06/10/2026** (branche `lot/u4bis-pages-en-grand` ; commits de fusion `d64121f` (U5),
+`02cb11c` (U6), `e63b339` (B5), `3d9564f` (B6/B7) ; correctifs `fix(U4bis): fusion — …`). Toutes les tranches B0 à B7
+sont dans la branche, avec les versions finales relues de U4, U5 et U6.
+- **Fusions** : `lot/u4-navigation` déjà dedans. `lot/u5-deux-volets` (relecture, T5, T6) : `playwright.config.ts`
+  (les deux listes de `SPECS_GRAND_ECRAN` réunies), `globals.css` (styles d'U4 bis puis ceux de Chants), `PageTransition`
+  (`cleDeTransition` gardé, `/songs` inscrit dans `SECTIONS_EN_DEUX_VOLETS` : même clé que l'expression d'U5).
+  `lot/u6-back-office` (relecture) : import de `BarreLaterale` (`entreeBackOffice` et `listeSetlistsRetenue`),
+  `getSetlistsFrom` (Chants, U5) et `getSetlistsDepuis` (tableau de bord, U6) gardées toutes deux. `lot/u4bis-b5` et
+  `lot/u4bis-b67` : `globals.css` et cette section, à la suite.
+- **Corrigé après la fusion** : `equipes.court` en double (B6 et relecture d'U6, la seconde gagnait) : un seul bloc,
+  « Comité Franco » comme la planche ; Moi en 中文 : la carte du compte (B5) montrait « Culte Franco · Musicien »,
+  le service passe par `categories.*` et les rôles par `equipes.role.*` (en français, rien ne change).
+  Tests : `planning-2027` (les trois tests de l'ancien accueil lisent « Pour moi », la percussion dans la ligne de son
+  groupe, le Cours reste dans l'onglet EDD) ; `evenements` (« aucun QR sur le calendrier » regarde l'agenda : en grand,
+  la fiche à droite garde son QR) ; `setlist-deux-volets` (la liste retenue : attendre son écriture, course) ;
+  `helpers/rendus` (seule la racine React de la page compte : les outils de `next dev` en ont une, refaite quand un autre
+  test fait compiler une page) ; `pages-en-grand-reception` (« Voir les traités » du groupe Signalements).
+- **Vérifié** : `tsc` propre, ESLint sans erreur (51 avertissements anciens). `pages-en-grand-*` : 405 verts (135 sautés,
+  propres à une disposition) sur les cinq projets. Voisines touchées par les fusions (23 fichiers : back-office-*,
+  barre-back-office, chants-deux-volets, deux-volets-finitions, coherence, equipes, evenements, look-barres, look-halo,
+  look-navigation, mode-louange-colonnes, navigation-grand-ecran, planning-2027, planning-petit-dej, reunions,
+  setlist-deux-volets, setlist-g, setlist-suppression-groupee, songs-list-return, tableau-de-bord, taches) : 2 346 verts,
+  10 échecs, corrigés ci-dessus ou instables ci-dessous. Second lot (18 fichiers : export-pdf, harmonie-idees,
+  key-selector, recommended-key, performance-mode, look-louange, setlist-regie, coup-d-oeil, planning-accueil,
+  look-secondaires, nouveaux-membres, taches-evenements, harmonie-catalogue, harmonie-cours, rd2000, look-planning,
+  i18n-hydration, look-halo-defilement) : 765 verts, 7 échecs (6 = Moi en 中文, corrigé). Captures regardées aux cinq
+  tailles (Moi, profil, connexion, Équipes, Guide, Chants).
+- **Instables, non touchés** (verts relancés seuls) : `reunions` « elle réordonne au clavier » sur téléphone (une fois sur
+  deux, connu depuis U6 B3, déjà sur la fiche d'avant) ; `recommended-key` « le bouton de retour ramène à la
+  recommandée » sous charge (12 sur 12 seul) ; `barre-back-office` « Plus » sur téléphone pendant la compilation de la
+  page (« Compiling » à l'écran).
+- Reste : rien pour U4 bis ; le lot attend l'intégration.
+- À faire par Timothée : valider en local ; relire le 中文 des tranches B1 à B7 (listé à chacune) ; rien de neuf à publier
+  pour U4 bis, mais `firestore.rules` arrive resserrée par la relecture d'U6 (réunions, « repris dans ») : la publier
+  avec U6.
