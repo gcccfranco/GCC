@@ -18,7 +18,7 @@ import type { Tache } from "../src/types/tache";
 import type { UserProfile } from "../src/types/user";
 
 // Lot U6 (docs/spec-back-office.md), tranche B4 — le tableau de bord : les widgets
-// 1-6 et 8-10 (Chants les plus joués arrive avec U7, Q17 ; le Calendrier, widget 11, est de U8 C8), la
+// 1-6 et 8-10 (Chants les plus joués est de U7 S5 ; le Calendrier, widget 11, de U8 C8), la
 // disposition par défaut selon le rôle (Q11), la grille selon l'appareil (Q10) et la
 // lecture de `backOffice/{uid}` (Q5). Tranche B5 (en fin de fichier) : Personnaliser —
 // catalogue, retirer, Monter / Descendre, glisser, S / M / L, réglages, « Disposition par

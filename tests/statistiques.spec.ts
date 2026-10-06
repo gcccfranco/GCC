@@ -636,7 +636,7 @@ test.describe("Statistiques (S5) : le widget, règles pures", () => {
     expect(widgetsPermis(user(ADMIN), profil(ADMIN))).toContain("chants");
     expect(widgetsPermis(user(RESPONSABLE), profil(RESPONSABLE))).not.toContain("chants");
     const d = dispositionParDefaut(user(ADMIN), null);
-    expect(d.map((w) => w.id)).toEqual(["dimanche", "afaire", "setlists", "planning", "evenements", "chants", "petitdej", "raccourcis", "scene", "comptes"]);
+    expect(d.map((w) => w.id)).toEqual(["dimanche", "calendrier", "afaire", "setlists", "planning", "evenements", "chants", "petitdej", "raccourcis", "scene", "comptes"]);
     expect(d.find((w) => w.id === "chants")).toEqual({ id: "chants", taille: "m", reglages: {} });
     expect(dispositionParDefaut(user(RESPONSABLE), profil(RESPONSABLE)).map((w) => w.id)).not.toContain("chants");
   });

@@ -6,7 +6,7 @@ import type { UserProfile } from "../src/types/user";
 
 // Lot U6 (docs/spec-back-office.md), tranche B1 — l'espace « Back-Office » :
 // qui est responsable (Q1), quelles entrées chacun voit (Q2, menu à 8 entrées dont
-// Statistiques arrive avec U7, Q17 ; Calendrier est là depuis U8 C3), quels widgets il pourra
+// Statistiques, là depuis U7 S2 ; Calendrier, depuis U8 C3), quels widgets il pourra
 // ajouter, le sélecteur « App · Back-Office » dans les places de U4 (Q6 ; téléphone :
 // à la place du label, question 5), la mémoire de la dernière page de chaque espace,
 // et « Réservé aux responsables » pour les autres.
@@ -211,11 +211,10 @@ test.describe("Back-Office (B1) : le sélecteur et le menu", () => {
     await expect(selecteur(page).getByRole("link", { name: "Back-Office" })).toHaveAttribute("aria-current", "true");
   });
 
-  test("une entrée inconnue, ou encore à venir (Statistiques, U7), répond 404", async ({ page }) => {
+  test("une entrée inconnue répond 404 (Calendrier, U8, et Statistiques, U7, sont arrivés)", async ({ page }) => {
     await signInAs(page, ALICE, {}, "/back-office");
     await expect(page.getByRole("heading", { name: "Tableau de bord" })).toBeVisible();
     expect((await page.goto("/back-office/nimporte-quoi"))?.status()).toBe(404);
-    expect((await page.goto("/back-office/statistiques"))?.status()).toBe(404);
   });
 
   test("le sélecteur rouvre la dernière page de chaque espace (mémoire de session)", async ({ page }, info) => {
