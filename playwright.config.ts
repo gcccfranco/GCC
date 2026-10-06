@@ -32,6 +32,8 @@ const SPECS_GRAND_ECRAN = [
   /setlist-editeur-piste2\.spec\.ts/,
   // … et sa bibliothèque (T5 : « + » entre deux éléments sur ordinateur, pas sur tablette couchée).
   /setlist-bibliotheque\.spec\.ts/,
+  // … et le choix des chants à fusionner, dans le volet de droite.
+  /setlist-fusionner\.spec\.ts/,
 ];
 
 export default defineConfig({

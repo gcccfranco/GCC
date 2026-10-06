@@ -91,7 +91,9 @@ export function VoletChant({
         sousTitre={sousTitre}
         lien={
           <a
-            href={lienPartition(item.song.slug, item.keyOverride)}
+            // L'origine choisie s'écrit aussi (`keyOverride: null`) : sans `?key=`, la page
+            // du chant démarrerait dans la recommandée.
+            href={lienPartition(item.song.slug, item.keyOverride ?? item.song.originalKey)}
             target="_blank"
             rel="noopener noreferrer"
             className="mt-1 shrink-0 text-sm font-medium text-foreground underline underline-offset-2 hover:text-muted-foreground"

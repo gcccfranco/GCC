@@ -341,7 +341,7 @@
       "fusionner": "Fusionner",
       "retirer": "Retirer",
       "fusionnerAvec": "Fusionner {{titre}} avec…",
-      "fusionnerPerte": "Une fusion garde la tonalité, la structure et les notes de section de chaque chant ; la note du chant, les transitions de section et le choix 简谱 ne sont pas gardés.",
+      "fusionnerPerte": "Une fusion garde la tonalité, la structure et les notes de section de chaque chant ; la note du chant, les transitions de section, le choix 简谱 et les accords retouchés sur le scan 简谱 ne sont pas gardés.",
       "fusionnerN": "Fusionner ({{count}})",
       "annuler": "Annuler",
       "fusion": "Fusion",

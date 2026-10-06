@@ -386,3 +386,77 @@ test("petits écrans : création — rien d'ouvert d'office, « Publier » à la
   await expect(page.getByText("Nouvelle setlist", { exact: true })).toBeVisible();
   await page.screenshot({ path: testInfo.outputPath(`feuilles-creation-${testInfo.project.name}.png`) });
 });
+
+// ─── Relecture du lot (06/10/2026) ───────────────────────────────────────────
+
+test("« Voir la partition » : la tonalité d'origine choisie s'écrit dans le lien (sans elle, la page du chant démarre dans la recommandée)", async ({ page }) => {
+  // Je reviens au cœur : gravé en Eb, recommandé en D.
+  const doc = { ...SETLIST_T3, items: [...SETLIST_T3.items, item({ songSlug: "je-reviens-au-coeur", position: 5, keyOverride: "D" })] };
+  await ouvrirT3(page, doc);
+  await choisirTonalite(page, "Je reviens au cœur", null);
+  const lien = volet(page).getByRole("link", { name: /Voir la partition/ });
+  await expect(lien).toHaveAttribute("href", "/songs/je-reviens-au-coeur?key=%22Eb%22");
+});
+
+test("clavier (Q13) : la poignée d'un chant le déplace — espace, flèche bas, espace — et l'ordre est écrit", async ({ page }) => {
+  const db = await ouvrirT3(page);
+  const poignee = listeCourte(page).getByRole("button", { name: "Réordonner Abba Père", exact: true });
+  await poignee.focus();
+  await page.keyboard.press("Space");
+  // Pris : dnd-kit écoute les flèches au tour suivant (`setTimeout`) ; une personne n'est pas plus rapide.
+  await expect(poignee).toHaveAttribute("aria-pressed", "true");
+  await page.waitForTimeout(100);
+  await page.keyboard.press("ArrowDown");
+  await page.waitForTimeout(100);
+  await page.keyboard.press("Space");
+  await expect
+    .poll(() => itemsEnBase(db).map((i) => i.songSlug), { timeout: 10_000 })
+    .toEqual(["", "abba-pere", "一生爱你", SCAN]);
+  await expect(listeCourte(page).locator("[data-element]").nth(1)).toContainText("Abba Père");
+});
+
+test("clavier (Q13) : flèches gauche et droite déplacent une pastille de structure, le focus la suit ; Entrée la choisit", async ({ page }) => {
+  const db = await ouvrirT3(page);
+  await reglerElement(page, "Abba Père");
+  await volet(page).getByRole("button", { name: "Intro, étape 1", exact: true }).focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(volet(page).getByRole("button", { name: "Intro, étape 2", exact: true })).toBeFocused();
+  await expect
+    .poll(() => etapes(itemsEnBase(db)[0] ?? ({} as SetlistItem)).slice(0, 3), { timeout: 10_000 })
+    .toEqual(["verse-2", "intro-1", "chorus-3"]);
+  await page.keyboard.press("ArrowLeft");
+  await expect(volet(page).getByRole("button", { name: "Intro, étape 1", exact: true })).toBeFocused();
+  // Revenue à l'ordre du chant : plus de structure propre (`structureOverride: null`).
+  await expect.poll(() => itemsEnBase(db)[0]?.structureOverride, { timeout: 10_000 }).toBeNull();
+  await page.keyboard.press("Enter");
+  await expect(volet(page).getByRole("button", { name: "Intro, étape 1", exact: true })).toHaveAttribute("aria-pressed", "true");
+  await expect(volet(page).getByRole("button", { name: "Retirer l'étape Intro", exact: true })).toBeVisible();
+});
+
+test("ordinateur, barre dépliée (Q6) : feuilles sous 1 054 px de fenêtre (moins de 806 px d'éditeur), deux colonnes au-delà ; barre réduite, deux colonnes", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "ordinateur", "ordinateur seulement : le seuil de la barre dépliée");
+  await ouvrirT3(page);
+  await page.setViewportSize({ width: 1040, height: 800 });
+  await expect(page.locator("[data-editeur-feuilles]")).toBeVisible();
+  await expect(page.locator("[data-editeur-deux-colonnes]")).toHaveCount(0);
+  await page.setViewportSize({ width: 1060, height: 800 });
+  await expect(page.locator("[data-editeur-deux-colonnes]")).toBeVisible();
+  await expect(page.locator("[data-editeur-feuilles]")).toHaveCount(0);
+  await page.getByRole("button", { name: "Réduire la barre latérale" }).click();
+  await page.setViewportSize({ width: 1040, height: 800 });
+  await expect(page.locator("[data-editeur-deux-colonnes]")).toBeVisible();
+});
+
+test("petits écrans, mouvement réduit : la feuille arrive en fondu, sans glisser", async ({ page }, testInfo) => {
+  petitsEcransSeulement(testInfo);
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await ouvrirT3(page);
+  await listeCourte(page).getByRole("button", { name: "Abba Père", exact: true }).click();
+  const feuille = page.getByRole("dialog", { name: "1 · Abba Père" });
+  await expect(feuille).toBeVisible();
+  const style = await feuille.evaluate((el) => {
+    const s = getComputedStyle(el);
+    return { nom: s.animationName, duree: s.animationDuration };
+  });
+  expect(style).toEqual({ nom: "volet-fondu", duree: "0.2s" });
+});

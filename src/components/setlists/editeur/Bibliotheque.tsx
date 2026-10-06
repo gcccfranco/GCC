@@ -213,8 +213,9 @@ export function Bibliotheque({
       ) : (
         <ul className="mt-2 flex-1 border-t border-border">
           {resultats.map((song) => {
-            const ajoute = ajoutes.has(song.slug);
             const dedans = pris.has(song.slug);
+            // Ajouté puis retiré (la setlist a pu se vider, la bibliothèque revenir) : son « + » revient.
+            const ajoute = dedans && ajoutes.has(song.slug);
             const ouvert = deplie === song.slug;
             const cle = song.recommendedKey ?? song.originalKey;
             return (

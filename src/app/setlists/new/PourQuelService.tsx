@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useTranslation } from "react-i18next";
 import { ChevronLeft, ChevronRight, CopyPlus, Plus } from "lucide-react";
 import { PageTitle } from "@/components/layout/PageTitle";
-import { getSetlists } from "@/lib/firebase/setlists";
+import { getSetlistsFrom } from "@/lib/firebase/setlists";
 import { loadPlanningData, setlistSeances, type SetlistSeance } from "@/lib/planning/names";
 import { lienPreparer, prochainsServicesSansSetlist } from "@/lib/setlist/prochainsServices";
 import { categoryColor } from "@/lib/serviceColors";
@@ -34,10 +34,15 @@ export function PourQuelService({ categories }: { categories: string[] }) {
 
   useEffect(() => {
     let annule = false;
-    Promise.all([loadPlanningData(), getSetlists()])
+    const aujourdhui = todayIso();
+    // Seules les setlists à venir servent (4 semaines) : lecture bornée par date, avec de la
+    // marge (tous services confondus) ; brouillons et privées sont écartés par
+    // `prochainsServicesSansSetlist`. Une lecture refusée lève : sinon les services déjà
+    // préparés seraient re-proposés (doublon), le message d'erreur s'affiche.
+    Promise.all([loadPlanningData(), getSetlistsFrom(aujourdhui, 200, { strict: true })])
       .then(([planning, setlists]) => {
         if (annule) return;
-        setEtat(prochainsServicesSansSetlist(setlistSeances(planning), setlists, categories, todayIso()));
+        setEtat(prochainsServicesSansSetlist(setlistSeances(planning), setlists, categories, aujourdhui));
       })
       .catch(() => {
         if (!annule) setEtat("erreur");

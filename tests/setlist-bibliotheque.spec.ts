@@ -431,3 +431,28 @@ test("tablette couchée, téléphone, tablette en portrait : pas de « + » entr
   await ouvrirBibliotheque(page);
   await expect(page.locator("[data-inserer]")).toHaveCount(0);
 });
+
+// ─── Relecture du lot (06/10/2026) ───────────────────────────────────────────
+
+test("grand écran : un chant ajouté puis retiré (setlist redevenue vide) n'est plus « Ajouté » — son « + » revient", async ({ page }, testInfo) => {
+  test.skip(!deuxColonnesAttendues(testInfo), "grand écran seulement : la bibliothèque revient d'elle-même quand la setlist est vide");
+  await page.route(/docs\.google\.com\/spreadsheets/, (route) =>
+    route.fulfill({ status: 200, contentType: "text/csv", body: "" }),
+  );
+  await signInAs(page, MUSICIENNE, {}, "/setlists/new?autre=1");
+  // Setlist vide : la bibliothèque est ouverte d'office.
+  await expect(volet(page).getByRole("heading", { name: "Ajouter des chants" })).toBeVisible();
+  await recherche(page).fill("Abba Père");
+  await volet(page).getByRole("button", { name: "Ajouter Abba Père", exact: true }).click();
+  await attendreEditeur(page, "Abba Père");
+
+  await reglerElement(page, "Abba Père");
+  await volet(page).getByRole("button", { name: "Retirer", exact: true }).click();
+  await expect(listeCourte(page).locator("[data-element]")).toHaveCount(0);
+  // Plus rien dans la setlist : la bibliothèque revient.
+  await expect(volet(page).getByRole("heading", { name: "Ajouter des chants" })).toBeVisible();
+  await recherche(page).fill("Abba Père");
+  const abba = resultats(page).filter({ hasText: "Abba Père" }).first();
+  await expect(abba.getByRole("button", { name: "Ajouter Abba Père", exact: true })).toBeVisible();
+  await expect(abba).not.toContainText("Ajouté");
+});

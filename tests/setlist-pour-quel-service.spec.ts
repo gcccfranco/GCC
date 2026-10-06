@@ -398,3 +398,127 @@ test("(page) disposition : une colonne sur téléphone, deux sur tablette, trois
   if (colonnes === 3) expect(a === b && b === c).toBe(true);
   await page.screenshot({ path: testInfo.outputPath(`pour-quel-service-${testInfo.project.name}.png`), fullPage: true });
 });
+
+// ─── Relecture du lot (06/10/2026) ───────────────────────────────────────────
+
+const champDate = (page: Page) => page.getByLabel("Date de la présidence");
+
+test("(page) setlists illisibles (jeton expiré, règle refusée) : le message, aucun service re-proposé, les deux autres entrées restent", async ({ page }) => {
+  await ouvrir(page, "/setlists");
+  // Toute lecture de la collection `setlists` est refusée ; le reste passe.
+  await page.route(/firestore\.googleapis\.com.*:runQuery/, (route) => {
+    const q = (route.request().postDataJSON() as { structuredQuery?: { from?: { collectionId: string }[] } }).structuredQuery;
+    if (q?.from?.[0]?.collectionId !== "setlists") return route.fallback();
+    return route.fulfill({ status: 403, contentType: "application/json", body: JSON.stringify({ error: { code: 403, message: "refusé" } }) });
+  });
+  await page.goto("/setlists/new");
+  await expect(page.getByText("Le planning n'a pas pu être lu.")).toBeVisible();
+  await expect(services(page)).toHaveCount(0);
+  await expect(page.getByRole("link", { name: /Autre setlist/ })).toBeVisible();
+  await expect(page.getByRole("link", { name: /Repartir d'une setlist passée/ })).toBeVisible();
+});
+
+test("(page) « Pour quel service ? » ne lit que les setlists à venir : lecture bornée, par date", async ({ page }) => {
+  await ouvrir(page, "/setlists");
+  type Requete = { from?: { collectionId: string }[]; where?: { fieldFilter?: { field?: { fieldPath?: string } } }; limit?: number };
+  const lectures: Requete[] = [];
+  page.on("request", (r) => {
+    // Seulement les lectures de la page « Nouvelle setlist » (pas la fin de la liste d'avant).
+    if (!r.url().includes(":runQuery") || !new URL(page.url()).pathname.startsWith("/setlists/new")) return;
+    const q = (r.postDataJSON() as { structuredQuery?: Requete }).structuredQuery;
+    if (q?.from?.[0]?.collectionId === "setlists") lectures.push(q);
+  });
+  await page.goto("/setlists/new");
+  await expect(services(page)).toHaveCount(3);
+  expect(lectures.some((q) => q.where?.fieldFilter?.field?.fieldPath === "date" && !!q.limit), "une lecture à partir d'aujourd'hui").toBe(true);
+  expect(lectures.filter((q) => !q.limit), "aucune lecture de toute la collection").toEqual([]);
+});
+
+test("(page) « Préparer », puis une autre présidence : la date et le titre du service restent", async ({ page }) => {
+  await ouvrir(page, `/setlists/new?cat=${encodeURIComponent(CULTE)}&date=2026-10-18`);
+  await expect(champPresidence(page)).toHaveValue("Présidence C");
+  // Présidence B a une séance le 11/10 : avant, la date y sautait, le titre restait au 18/10.
+  await champPresidence(page).selectOption("Présidence B");
+  await expect(champPresidence(page)).toHaveValue("Présidence B");
+  await expect(champDate(page)).toHaveValue("2026-10-18");
+  await expect(page.getByLabel("Titre")).toHaveValue("Culte Francophone 18/10");
+});
+
+test("(page) « Modifier » : changer de présidence ne déplace pas la date de la setlist", async ({ page }) => {
+  const doc = {
+    ...SETLIST_DU_11,
+    title: "Culte Francophone 18/10",
+    date: "2026-10-18",
+    leader: "Présidence C",
+    items: [{ songSlug: "abba-pere", position: 1, keyOverride: null, showChords: true, showPinyin: false, useJianpu: false, structureOverride: null, sectionNotes: {}, notes: "" }],
+  };
+  const db = await ouvrir(page, "/setlists/sl-1018/edit", { docs: { "setlists/sl-1018": doc } });
+  await attendreEditeur(page, "Abba Père");
+  await expect(champPresidence(page)).toHaveValue("Présidence C");
+  await champPresidence(page).selectOption("Présidence B");
+  await expect(champDate(page)).toHaveValue("2026-10-18");
+  await expect.poll(() => db.doc("setlists/sl-1018")?.leader, { timeout: 10_000 }).toBe("Présidence B");
+  expect(db.doc("setlists/sl-1018")).toMatchObject({ date: "2026-10-18", title: "Culte Francophone 18/10" });
+});
+
+test("(page) « Autre setlist » : la présidence propose sa prochaine séance, et le titre automatique suit la date", async ({ page }) => {
+  await ouvrir(page, "/setlists/new?autre=1");
+  await page.getByLabel("Catégorie").selectOption(CULTE);
+  await champPresidence(page).selectOption("Présidence C");
+  await expect(champDate(page)).toHaveValue("2026-10-18");
+  await expect(page.getByLabel("Titre")).toHaveValue("Culte Francophone 18/10");
+  await champPresidence(page).selectOption("Présidence B");
+  await expect(champDate(page)).toHaveValue("2026-10-11");
+  await expect(page.getByLabel("Titre")).toHaveValue("Culte Francophone 11/10");
+  // Un titre écrit à la main ne bouge plus.
+  await page.getByLabel("Titre").fill("Louange de rentrée");
+  await champPresidence(page).selectOption("Présidence C");
+  await expect(champDate(page)).toHaveValue("2026-10-18");
+  await expect(page.getByLabel("Titre")).toHaveValue("Louange de rentrée");
+});
+
+test("(page) « Autre setlist » : une date choisie à la main reste quand on choisit ensuite la présidence", async ({ page }) => {
+  await ouvrir(page, "/setlists/new?autre=1");
+  await page.getByLabel("Catégorie").selectOption(CULTE);
+  await champDate(page).fill("2026-10-25");
+  await expect(page.getByLabel("Titre")).toHaveValue("Culte Francophone 25/10");
+  await champPresidence(page).selectOption("Présidence C");
+  await expect(champDate(page)).toHaveValue("2026-10-25");
+  await expect(page.getByLabel("Titre")).toHaveValue("Culte Francophone 25/10");
+});
+
+test("(page) « Préparer », puis une autre catégorie : le titre automatique suit la catégorie", async ({ page }) => {
+  const deux: FakeProfile = { ...MUSICIENNE, serviceRoles: { [CULTE]: ["musicien"], "Groupe Paix": ["musicien"] } };
+  await ouvrir(page, `/setlists/new?cat=${encodeURIComponent(CULTE)}&date=2026-10-18`, { profil: deux });
+  await expect(page.getByLabel("Titre")).toHaveValue("Culte Francophone 18/10");
+  await page.getByLabel("Catégorie").selectOption("Groupe Paix");
+  await expect(page.getByLabel("Titre")).toHaveValue("Groupe Paix 18/10");
+  await expect(champDate(page)).toHaveValue("2026-10-18");
+});
+
+test.describe("heure de Paris", () => {
+  test.use({ timezoneId: "Europe/Paris" });
+
+  async function ouvrirA(page: Page, instant: string, to: string) {
+    await page.clock.setFixedTime(new Date(instant));
+    await page.route(/docs\.google\.com\/spreadsheets/, (route) => {
+      const sheet = new URL(route.request().url()).searchParams.get("sheet");
+      return route.fulfill({ status: 200, contentType: "text/csv", body: sheet === "Franco_Louange" ? FRANCO : "" });
+    });
+    return signInAs(page, MUSICIENNE, {}, to);
+  }
+
+  test("(page) à 00:30 le 08/10, « Autre setlist » date du 08/10 (jour local, pas UTC)", async ({ page }) => {
+    await ouvrirA(page, "2026-10-08T00:30:00+02:00", "/setlists/new?autre=1");
+    // La puce de la date paraît avec la catégorie.
+    await page.getByLabel("Catégorie").selectOption(CULTE);
+    await expect(champDate(page)).toHaveValue("2026-10-08");
+  });
+
+  test("(page) à 00:30 le 19/10, la prochaine séance d'une présidence n'est plus celle de la veille", async ({ page }) => {
+    await ouvrirA(page, "2026-10-19T00:30:00+02:00", "/setlists/new?autre=1");
+    await page.getByLabel("Catégorie").selectOption(CULTE);
+    await champPresidence(page).selectOption("Présidence C");
+    await expect(champDate(page)).toHaveValue("2026-11-08");
+  });
+});

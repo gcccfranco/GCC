@@ -1,6 +1,6 @@
 # Spec : lot U5 bis — éditeur de setlist (« Pour quel service ? » et piste 2)
 
-Spec écrite le 04/10/2026 ; rien n'est codé. Attend la validation de Timothée, puis son go.
+Spec écrite le 04/10/2026. Codée du 05 au 06/10/2026, puis relue : voir « Avancement ».
 
 Lot U5 bis de `feuille-de-route.md` § 3.U, après U4 (`docs/spec-navigation-grand-ecran.md`) et U5
 (`docs/spec-deux-volets.md`). Planche : https://claude.ai/artifact/1d4ZW7Y9NVHcsLB9YrrbrA, version 11 ; les écrans de la
@@ -544,3 +544,66 @@ Timothée : aucune règle Firestore à publier pour T1 à T5 ; relire les libell
 `setlists.editeur` (nouveaux en T4 : `ok` « 好 », `retour`, `aideListe`, `listeVide`, `nDansLaSetlist` ; en T5 :
 `langue` à `insererApres`, dont « 插入此处，在 {{titre}} 之后 »). Le correctif `jianpuChords` (commit à lui seul)
 peut partir sur `main` sur son ordre, avant le reste du lot.
+
+**06/10/2026 — relecture du lot (deux relectures, 13 constats)**, commit « fix(U5bis): relecture — … » sur la même
+branche. Chaque correction de comportement a son test, vu rouge sur le code d'avant, puis vert.
+
+- **Date et titre du service (important).** Après « Préparer », choisir une autre présidence posait la date de la
+  prochaine séance de cette personne (le 11/10 au lieu du 18/10), le titre restant « … 18/10 ». `SetlistForm` : une date
+  déjà fixée — service préparé, setlist qu'on modifie, ou date choisie à la main — ne bouge plus au choix d'une
+  présidence ; sur « Autre setlist », tant que la date n'a pas été touchée, la présidence propose toujours sa prochaine
+  séance. Le titre automatique suit catégorie, date et moment tant qu'il est vide ou encore celui de la règle ; un titre
+  écrit à la main ne bouge plus. « Aujourd'hui » de l'éditeur (date par défaut, prochaine séance d'une présidence) est
+  la date locale (`todayIso`), plus l'UTC : à 00:30 il donnait la veille. Tests : `setlist-pour-quel-service.spec.ts`
+  (« Préparer » puis une autre présidence ; « Modifier » ; « Autre setlist », date qui suit et titre écrit à la main ;
+  date choisie à la main ; autre catégorie ; deux tests à 00:30 heure de Paris).
+- **« Voir la partition » dans la tonalité d'origine (important).** L'origine choisie (`keyOverride: null`) n'écrivait
+  pas `?key=` : la page du chant s'ouvrait dans la recommandée. Le lien porte maintenant la tonalité affichée (Q10).
+  Test sur Je reviens au cœur (Eb gravé, D recommandé).
+- **Réordonner au clavier (important, test manquant).** Deux tests (`setlist-editeur-piste2.spec.ts`) : poignée d'un
+  chant (espace, flèche bas, espace, ordre écrit) ; flèches gauche et droite sur une pastille de structure (le focus
+  suit la pastille), Entrée la choisit. Verts d'emblée (le code était là) ; contre-épreuve faite : sans
+  `sortableKeyboardCoordinates`, ou sans les flèches des pastilles, chacun passe au rouge.
+- Mouvement réduit = fondu (« Partout ») : les feuilles de l'éditeur (`[data-volet]`, vaul) arrivent et partent en
+  fondu de 200 ms (`globals.css`, fin du fichier) au lieu de glisser. Test sur petits écrans (`emulateMedia`).
+- Q6 : test à 1 040 px (feuilles) et 1 060 px (deux colonnes), barre dépliée, puis barre réduite à 1 040 px (deux
+  colonnes), sur ordinateur.
+- `setlist-fusionner.spec.ts` entre dans `SPECS_GRAND_ECRAN` : il court aussi sur `tablette-paysage` et
+  `ordinateur-1440` (le compte rendu de T4 disait « partout », c'était vrai des trois appareils seulement).
+- « Pour quel service ? » lit les setlists par `getSetlistsFrom(aujourd'hui, 200, { strict: true })` au lieu de toute la
+  collection ; `strict` (nouvelle option, sans effet sur Chants) fait lever un refus (jeton expiré, règle) au lieu de
+  rendre `[]` : le message « Le planning n'a pas pu être lu. » s'affiche au lieu de re-proposer des services déjà
+  préparés. Tests : lecture refusée (message, aucune carte, les deux autres entrées) et lecture bornée par date.
+- Bibliothèque : un chant ajouté puis retiré (la setlist redevenue vide, la bibliothèque revenue d'elle-même sur grand
+  écran) n'est plus « ✓ Ajouté » : son « + » revient (« Ajouté » seulement s'il est encore dans la setlist). Test.
+- Fusionner : la mise en garde nomme aussi « les accords retouchés sur le scan 简谱 » (FR et 中文), perdus à
+  l'enregistrement (`FusionSong` n'a pas `jianpuChords`). `sectionOrigins` (copies de sections du mode Adapter) est
+  perdu aussi, sans être nommé : c'est un détail interne de la version adaptée, déjà annoncée par « la structure ».
+- En-tête de cette spec : « rien n'est codé » remplacé.
+- Vérifié le 06/10 : 16 tests nouveaux ou retouchés, 13 vus rouges sur le code d'avant puis verts (les deux du clavier
+  et celui de Q6 couvrent du code déjà là) ; `setlist-pour-quel-service`, `setlist-editeur-piste2`,
+  `setlist-bibliotheque`, `setlist-fusionner`, `setlist-editor`, `setlist-history`, `coup-d-oeil`, `fusions-dp`,
+  `recommended-key`, `harmonie-jianpu`, `back-office-coupe` — 692 verts, 43 sautés (une disposition ou un appareil
+  seulement), aucun échec, cinq projets ; `tsc` propre, lint sans erreur (51 avertissements, tous anciens ; les deux de
+  `SetlistForm.tsx` sont ceux d'avant). Capture du choix à fusionner regardée (mise en garde sur trois lignes à 1 280 px).
+
+Choix faits faute de réponse écrite :
+- « Modifier » : changer de présidence ne déplace plus la date (le constat ne visait que « Préparer » ; même piège quand
+  la présidence est remplacée au dernier moment sur une setlist existante). La date se change par sa puce.
+- En modification aussi, un titre resté celui de la règle suit une nouvelle date (« Culte Francophone 18/10 » devient
+  « … 25/10 ») ; un titre vide se remplit au choix d'une date ou d'une présidence, pas à celui d'une catégorie ou d'un
+  moment (comme avant).
+- Fondu de 200 ms, opacité seule ; le voile de vaul garde son propre fondu.
+
+Remarqué, non corrigé (hors du lot ou sans constat) :
+- « Repartir d'une setlist passée » lit toujours toute la collection (plus les privées de la personne) : sa recherche
+  porte sur tout l'historique ; une lecture bornée limiterait ce qu'on retrouve.
+- U4 : le fondu de la barre par-dessus la tablette (`.barre-par-dessus`) ne change que le nom de l'animation ; la règle
+  générale du mouvement réduit la ramène à 0,01 ms, donc la barre apparaît d'un coup.
+
+Reste : rien. **Lot U5 bis fini et relu.**
+Timothée : aucune règle Firestore à publier ; relire le 中文 de `setlists.editeur.fusionnerPerte`
+(« 合并后保留每首诗歌的调、结构和段落备注；诗歌备注、段落过渡、简谱选择以及在简谱扫描上修改的和弦不会保留。 ») avec les
+libellés déjà signalés plus haut ; essayer en local « Préparer » puis une autre présidence, et une setlist modifiée
+dont on change la présidence (la date ne bouge plus) ; dire si ce comportement lui va. Le correctif `jianpuChords`
+peut toujours partir seul sur `main`, sur son ordre.

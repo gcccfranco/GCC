@@ -341,7 +341,7 @@
       "fusionner": "合并",
       "retirer": "移除",
       "fusionnerAvec": "将 {{titre}} 与…合并",
-      "fusionnerPerte": "合并后保留每首诗歌的调、结构和段落备注；诗歌备注、段落过渡和简谱选择不会保留。",
+      "fusionnerPerte": "合并后保留每首诗歌的调、结构和段落备注；诗歌备注、段落过渡、简谱选择以及在简谱扫描上修改的和弦不会保留。",
       "fusionnerN": "合并（{{count}}）",
       "annuler": "取消",
       "fusion": "合并",

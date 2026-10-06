@@ -34,6 +34,7 @@ import type { SectionsOf } from "@/lib/setlist/history";
 import type { SongIndexEntry } from "@/types/song";
 import { nextUid } from "@/lib/uid";
 import type { Preremplissage } from "@/lib/setlist/prochainsServices";
+import { todayIso } from "@/lib/scene/dimanches";
 
 import { FREE_CATEGORIES } from "@/lib/firebase/setlists";
 import { useEditeurDeuxColonnes } from "@/hooks/useEditeurDeuxColonnes";
@@ -104,7 +105,8 @@ export function SetlistForm({ mode, setlistId, songs, initial, prefill }: Setlis
     initial?.title ??
       (prefill?.category && prefill.date ? titreAuto(t, prefill.category, prefill.date, prefill.moment) : ""),
   );
-  const [date, setDate] = useState(initial?.date ?? prefill?.date ?? new Date().toISOString().split("T")[0]);
+  // Aujourd'hui = date locale (comme « Pour quel service ? ») : en UTC, la nuit donnait la veille.
+  const [date, setDate] = useState(initial?.date ?? prefill?.date ?? todayIso());
   const [leader, setLeader] = useState(initial?.leader ?? "");
   const [category, setCategory] = useState(initial?.category ?? prefill?.category ?? "");
   const [notes, setNotes] = useState(initial?.notes ?? "");
@@ -183,42 +185,60 @@ export function SetlistForm({ mode, setlistId, songs, initial, prefill }: Setlis
     if (initial?.leader && !categoryLeaders.includes(initial.leader)) setLeaderOther(true);
   }, [isEdit, planning, categoryLeaders, initial]);
 
+  // Titre auto (éditable) "Catégorie JJ/MM [Soir]" : posé tant que le titre est vide, et
+  // refait tant qu'il est encore celui de la règle — il suit alors catégorie, date et moment
+  // (sinon « Préparer » le 18/10 puis une autre date gardait « … 18/10 »). Un titre écrit à
+  // la main ne bouge plus. `siVide` : un titre vide se remplit (date, présidence), pas au
+  // seul choix d'une catégorie ou d'un moment, comme avant.
+  const titreSuit = (cat: string, dateISO: string, mom: "matin" | "soir" | undefined, siVide = true) => {
+    const genere = !!category && !!date && title === titreAuto(t, category, date, moment);
+    if (!cat || !dateISO || !(genere || (siVide && !title.trim()))) return;
+    setTitle(titreAuto(t, cat, dateISO, mom));
+  };
+
   const onCategoryChange = (c: string) => {
     setCategory(c);
     setLeaderOther(false);
     setMoment(undefined);
     setLeader("");
+    titreSuit(c, date, undefined, false);
   };
 
-  // Titre auto (éditable) tant qu'il est vide : "Catégorie JJ/MM [Soir]".
-  const fillTitleIfEmpty = (dateISO: string, mom: "matin" | "soir" | undefined) => {
-    if (!dateISO || title.trim() || !category) return;
-    setTitle(titreAuto(t, category, dateISO, mom));
+  const onMomentChange = (m: "matin" | "soir" | undefined) => {
+    setMoment(m);
+    titreSuit(category, date, m, false);
   };
+
+  // Date déjà fixée — le service préparé (« Préparer »), la setlist qu'on modifie, ou une
+  // date choisie à la main : choisir une présidence ne la déplace plus (sinon la setlist
+  // sortait du service, son titre restant à l'ancienne date).
+  const dateFixeeRef = useRef(isEdit || !!prefill?.date);
 
   // Présidence : un président de séance (pré-remplit la date avec sa prochaine
-  // séance, modifiable), ou « Autre » (saisie libre).
+  // séance, modifiable, si la date n'est pas déjà fixée), ou « Autre » (saisie libre).
   const onLeaderSelect = (v: string) => {
     if (v === "__other__") { setLeaderOther(true); setLeader(""); return; }
     setLeaderOther(false);
     setLeader(v);
+    if (dateFixeeRef.current) return;
     const key = normalizeName(v);
     const mine = categorySeances.filter((s) => normalizeName(s.leader) === key);
     if (!mine.length) return;
-    const today = new Date().toISOString().slice(0, 10);
+    const today = todayIso();
     const upcoming = mine.filter((s) => s.date >= today).sort((a, b) => a.date.localeCompare(b.date));
     const past = mine.filter((s) => s.date < today).sort((a, b) => b.date.localeCompare(a.date));
     const pick = upcoming[0] ?? past[0];
     if (!pick) return;
     setDate(pick.date);
     setMoment(pick.moment);
-    fillTitleIfEmpty(pick.date, pick.moment);
+    titreSuit(category, pick.date, pick.moment);
   };
 
-  // Date manuelle : titre auto si encore vide.
+  // Date manuelle : elle est désormais fixée ; titre auto s'il est vide ou encore celui de la règle.
   const onDateChange = (v: string) => {
+    dateFixeeRef.current = true;
     setDate(v);
-    fillTitleIfEmpty(v, moment);
+    titreSuit(category, v, moment);
   };
 
   // Premier champ obligatoire manquant ("" si complet).
@@ -535,7 +555,7 @@ export function SetlistForm({ mode, setlistId, songs, initial, prefill }: Setlis
       date,
       onDateChange,
       moment,
-      setMoment,
+      setMoment: onMomentChange,
       leader,
       setLeader,
       leaderOther,

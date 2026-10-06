@@ -170,8 +170,11 @@ test("« Fusionner » ouvre le choix, chant de départ coché en tête ; ni tran
   await expect(cases.nth(0)).toBeChecked();
   await expect(cases.nth(1)).toHaveAccessibleName(/Que ma bouche chante ta louange/);
   await expect(cases.nth(1)).not.toBeChecked();
-  // La ligne de la question 7 : ce qu'une fusion ne garde pas.
-  await expect(volet(page)).toContainText("la note du chant, les transitions de section et le choix 简谱 ne sont pas gardés");
+  // La ligne de la question 7 : ce qu'une fusion ne garde pas — accords retouchés sur un scan compris
+  // (`FusionSong` n'a pas `jianpuChords` : à l'enregistrement, ils sont perdus).
+  await expect(volet(page)).toContainText(
+    "la note du chant, les transitions de section, le choix 简谱 et les accords retouchés sur le scan 简谱 ne sont pas gardés",
+  );
   // Inactif tant qu'aucun autre chant n'est coché.
   await expect(volet(page).getByRole("button", { name: /^Fusionner \(/ })).toBeDisabled();
   await page.screenshot({ path: testInfo.outputPath(`fusionner-choix-${testInfo.project.name}.png`) });
