@@ -6,20 +6,17 @@
 // les blocs sont montés (onglets masqués par `hidden`) : leurs données se chargent dès
 // l'ouverture et les pastilles des onglets sont justes, comme avant.
 import { useCallback, useState } from "react";
-import { CalendarDays, DoorOpen, Inbox, MessageSquareHeart, Network, ShieldCheck, Users, type LucideIcon } from "lucide-react";
+import { CalendarDays, DoorOpen, Inbox, MessageSquareHeart, ShieldCheck, Users, type LucideIcon } from "lucide-react";
 import { useProfile } from "@/lib/firebase/users";
 import { isAdminUser } from "@/lib/access";
-import { BACK_OFFICE } from "@/lib/backOffice";
 import { SurveyResults } from "@/components/admin/SurveyResults";
 import { Reception } from "@/components/admin/Reception";
 import { Personnes } from "@/components/admin/Personnes";
 import { InscriptionsComptes } from "@/components/admin/InscriptionsComptes";
-import { ImportPlanning } from "@/components/admin/ImportPlanning";
 import { SansCompte } from "@/components/admin/SansCompte";
-import { ImportEquipes } from "@/components/admin/ImportEquipes";
 import { ReserveAuxAdmins } from "@/components/admin/commun";
 
-type AdminTab = "reception" | "membres" | "inscriptions" | "planning" | "equipes" | "questionnaire";
+type AdminTab = "reception" | "membres" | "inscriptions" | "planning" | "questionnaire";
 
 export function AncienneAdmin() {
   const { user, loading } = useProfile();
@@ -47,7 +44,6 @@ export function AncienneAdmin() {
     { key: "membres", label: "Membres", Icon: Users, count: inscrits, always: true },
     { key: "inscriptions", label: "Inscriptions", Icon: DoorOpen },
     { key: "planning", label: "Planning", Icon: CalendarDays, count: sansCompte },
-    { key: "equipes", label: "Équipes", Icon: Network },
     { key: "questionnaire", label: "Questionnaire", Icon: MessageSquareHeart },
   ];
 
@@ -97,11 +93,7 @@ export function AncienneAdmin() {
         <div hidden={tab !== "reception"}><Reception onEnAttente={surEnAttente} /></div>
         <div hidden={tab !== "membres"}><Personnes onCompte={surInscrits} /></div>
         <div hidden={tab !== "inscriptions"}><InscriptionsComptes /></div>
-        <div hidden={tab !== "planning"} className="space-y-5">
-          {BACK_OFFICE && <ImportPlanning />}
-          <SansCompte onCompte={surSansCompte} />
-        </div>
-        <div hidden={tab !== "equipes"}>{BACK_OFFICE && <ImportEquipes />}</div>
+        <div hidden={tab !== "planning"}><SansCompte onCompte={surSansCompte} /></div>
         {tab === "questionnaire" && <SurveyResults />}
       </div>
     </div>

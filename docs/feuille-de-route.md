@@ -1018,7 +1018,7 @@ réponse.
 1. **Publier `firestore.rules`** dans la console Firebase, AVANT de tester en local (le local écrit dans le vrai
    Firestore) : créneaux de la scène (U1), retrait d'une date choisie (U2), `petitDej/{id}` (U3), sujets, compte
    rendu, réunions d'équipe et `backOffice/{uid}` (U6).
-2. Une fois, après la publication : **Back-Office › Équipes › Import › « Recalculer depuis l'organigramme »**.
+2. Une fois, après la publication : **Back-Office › Équipes › Organigramme › « Recalculer depuis l'organigramme »** (bas de page).
 3. **Tester en local** (`npm install` déjà fait, puis `npm run dev`) : scène (saison, réservations), planning 2027
    (groupes, Culte, Interfranco/Intergroupe/Campus, « Choisir », export PDF et .xlsx à ouvrir dans Google Sheets),
    petit déj (Planning › Table, Mes services), barre latérale (réduire, recharger), setlist et Chants en deux

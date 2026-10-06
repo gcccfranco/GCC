@@ -2388,6 +2388,13 @@
       "equipes": "Équipes",
       "musiciens": "Musiciens"
     },
+    "recalcul": {
+      "bouton": "Recalculer depuis l'organigramme",
+      "aide": "Repose, pour chaque membre d'une équipe, ses équipes et ses référents (ses pôles ne changent pas) : c'est ce qui ouvre les réunions d'équipe à leurs membres et leur création aux référents.",
+      "fait_one": "{{count}} profil mis à jour.",
+      "fait_other": "{{count}} profils mis à jour.",
+      "erreur": "Recalcul impossible."
+    },
     "team": {
       "orga": "TEAM ORGA",
       "comite-franco": "COMITÉ FRANCO",
@@ -2637,8 +2644,6 @@
       "questionnaire": "Questionnaire",
       "organigramme": "Organigramme",
       "personnes": "Personnes",
-      "inscriptions": "Inscriptions",
-      "import": "Import",
       "plannings": "Plannings",
       "sansCompte": "Sans compte",
       "evenements": "Évènements",
@@ -2687,7 +2692,6 @@
         "tableau": "tes widgets",
         "calendrier": "services, réunions, évènements",
         "plannings": "plannings",
-        "import": "import",
         "sansCompte": "sans compte",
         "tesPoles": "tâches de tes pôles",
         "tousLesPoles": "tâches de tous les pôles",

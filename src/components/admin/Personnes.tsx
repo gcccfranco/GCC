@@ -16,7 +16,7 @@ import {
 } from "@/lib/planning/names";
 import { ProfileFields, type ProfileFormValue } from "@/components/auth/ProfileFields";
 import { SERVICE_ROLE_LABELS, SERVICE_LIEUX, GROUPES, POLE_LABELS, type ServiceRole, type UserProfile } from "@/types/user";
-import { listEquipes } from "@/lib/firebase/equipes";
+import { listEquipes, majPoles } from "@/lib/firebase/equipes";
 import { EQUIPES, polesDesEquipes } from "@/lib/equipes/organigramme";
 import type { Equipe } from "@/types/equipe";
 import { EDD_CLASSES } from "@/lib/planning/utils";
@@ -39,8 +39,11 @@ function profileToForm(p: UserProfile): ProfileFormValue {
   };
 }
 
-/** Pôles d'un membre, en lecture seule : ils viennent des équipes (lot 16, D9). */
-function PolesDuMembre({ profile, equipes }: { profile: UserProfile; equipes: Equipe[] }) {
+/** Pôles d'un membre, en lecture seule : ils viennent des équipes (lot 16, D9).
+ *  Un pôle coché hors organigramme se décoche ici (D10) : le serveur repose les
+ *  pôles depuis les équipes. Seul endroit depuis le retrait de l'import (06/10/2026). */
+function PolesDuMembre({ profile, equipes, onDecoche }: { profile: UserProfile; equipes: Equipe[]; onDecoche: () => Promise<void> }) {
+  const [decoche, setDecoche] = useState<"" | "busy" | "erreur">("");
   const siennes = equipes.filter((e) => e.membres.some((m) => m.uid === profile.uid));
   const poles = polesDesEquipes(profile.uid, equipes);
   const coches = (profile.poles ?? []).filter((x) => !poles.includes(x));
@@ -58,9 +61,28 @@ function PolesDuMembre({ profile, equipes }: { profile: UserProfile; equipes: Eq
         )}
       </p>
       {coches.length > 0 && (
-        <p className="text-xs text-amber-700 dark:text-amber-400">
-          Coché hors organigramme : {coches.map((x) => POLE_LABELS[x]).join(" · ")} — à régler depuis Équipes › Import.
-        </p>
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+          <p className="text-xs text-amber-700 dark:text-amber-400">
+            Coché hors organigramme : {coches.map((x) => POLE_LABELS[x]).join(" · ")}
+          </p>
+          <button
+            type="button"
+            disabled={decoche === "busy"}
+            onClick={async () => {
+              setDecoche("busy");
+              try {
+                await onDecoche();
+                setDecoche("");
+              } catch {
+                setDecoche("erreur");
+              }
+            }}
+            className="text-xs font-semibold text-muted-foreground hover:text-destructive disabled:opacity-60"
+          >
+            {decoche === "busy" ? "…" : "Décocher"}
+          </button>
+          {decoche === "erreur" && <p className="text-xs text-destructive">Impossible de retirer le pôle.</p>}
+        </div>
       )}
     </>
   );
@@ -324,7 +346,15 @@ export function Personnes({ onCompte }: { onCompte?: (n: number) => void }) {
                       <p className="text-sm font-semibold text-muted-foreground">
                         Pôles (donnés par les équipes ; Louange : automatique avec un rôle de service) :
                       </p>
-                      <PolesDuMembre profile={p} equipes={equipes} />
+                      <PolesDuMembre
+                        profile={p}
+                        equipes={equipes}
+                        onDecoche={async () => {
+                          await majPoles([p.uid]);
+                          const poles = polesDesEquipes(p.uid, equipes);
+                          setProfiles((prev) => prev.map((x) => (x.uid === p.uid ? { ...x, poles } : x)));
+                        }}
+                      />
                     </div>
 
                     {/* Droit de tenir l'organigramme (lot 16, D4) — réservé aux admins */}

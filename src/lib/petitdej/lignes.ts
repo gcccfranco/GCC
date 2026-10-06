@@ -9,7 +9,6 @@
 
 import type { LignePetitDej } from "@/types/petitDej"
 import type { ReminderService } from "@/lib/push/reminderMessage"
-import { fusionnerLignes } from "@/lib/planning/grilles"
 
 const FS_DOCS =
   "https://firestore.googleapis.com/v1/projects/gcclouange/databases/(default)/documents"
@@ -114,42 +113,4 @@ export function ajouterPetitDejAuxRappels(parUid: Map<string, ReminderService[]>
     const siens = parUid.get(uid) ?? []
     if (!siens.some((s) => s.service === "Petit déj")) parUid.set(uid, [...siens, { service: "Petit déj", roles: [] }])
   }
-}
-
-/**
- * La grille que la reprise lit (Q13) : la grille de l'app réunie au Sheet
- * (`fusionnerLignes`), mais le petit déj d'un dimanche que l'app laisse vide
- * vient du Sheet. Depuis PD2, un dimanche créé dans l'app (case « équipe »,
- * import G4) n'a plus de colonne `petitDej` : sa ligne de l'app masquerait le
- * nom du Sheet, perdu en silence. `null` si le Sheet n'a rien rendu (lecture en
- * échec : `fetchSheet` rend alors vide) : la route refuse, plutôt que de
- * répondre « 0 repris » à une reprise qui ne se lance qu'une fois.
- */
-export function grillePourReprise(grille: string[][], sheet: string[][]): string[][] | null {
-  if (!sheet.length) return null
-  const duSheet = new Map(sheet.map((r) => [r[0], r[2] ?? ""]))
-  return fusionnerLignes(grille, sheet).map((r) =>
-    (r[2] ?? "").trim() ? r : [r[0], r[1] ?? "", duSheet.get(r[0]) ?? ""])
-}
-
-/**
- * La reprise, une fois (T11, Q13) : `grille` est la grille Table telle qu'elle
- * s'affichait avant U3 (`[date, équipe, petit déj]`, `grillePourReprise`). Une ligne par case
- * remplie d'un dimanche ≥ `dimancheEnCours` qui n'a encore aucune ligne, texte
- * tel quel ; `ignores` compte les dimanches déjà inscrits. Relancer n'écrit rien.
- */
-export function planifierReprise(
-  grille: string[][],
-  lignes: LignePetitDej[],
-  dimancheEnCours: string,
-): { aEcrire: { dimanche: string; nom: string }[]; ignores: number } {
-  const aEcrire: { dimanche: string; nom: string }[] = []
-  let ignores = 0
-  for (const [dimanche, , texte] of grille) {
-    const nom = (texte ?? "").trim()
-    if (dimanche < dimancheEnCours || !nom) continue
-    if (estLibre(lignes, dimanche)) aEcrire.push({ dimanche, nom })
-    else ignores++
-  }
-  return { aEcrire, ignores }
 }
