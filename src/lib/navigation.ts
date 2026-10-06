@@ -49,6 +49,20 @@ export function entreesBarre(espace: Espace, ctx: { connecte: boolean; backOffic
   return entrees.filter((e) => ctx.backOffice || e.href !== "/evenements");
 }
 
+/** Liste des setlists telle qu'on l'a quittée (onglet, recherche, catégorie), retenue
+ *  pour l'onglet du navigateur par `useSetlistsNavState`. Sur une setlist, l'entrée
+ *  « Setlists » de la barre latérale y ramène : en deux volets, il n'y a plus de Retour
+ *  (lot U5, docs/spec-deux-volets.md, Q7). */
+export const CLE_LISTE_SETLISTS = "setlistsListPath";
+
+export function listeSetlistsRetenue(): string {
+  try {
+    const p = sessionStorage.getItem(CLE_LISTE_SETLISTS);
+    if (p && /^\/setlists\/?(\?|$)/.test(p)) return p;
+  } catch { /* stockage indisponible */ }
+  return "/setlists";
+}
+
 /** Vrai si `pathname` est la page de l'entrée (ou l'une de ses sous-pages). */
 export function estEntreeActive(entree: EntreeBarre, pathname: string): boolean {
   return entree.actifSur.some((m) => pathname === m || pathname.startsWith(`${m}/`));

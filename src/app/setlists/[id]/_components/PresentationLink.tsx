@@ -16,11 +16,15 @@ export function PresentationLink({
   url,
   canChange,
   onSaved,
+  sansLien = false,
 }: {
   setlistId: string;
   url?: string;
   canChange: boolean;
   onSaved: (url: string | undefined) => void;
+  /** Le lien s'ouvre ailleurs (en-tête des deux volets, docs/spec-deux-volets.md, Q7) :
+   *  ici, seulement l'ajouter ou le changer. */
+  sansLien?: boolean;
 }) {
   const { t } = useTranslation();
   const inputId = useId();
@@ -35,7 +39,7 @@ export function PresentationLink({
   // on n'affiche jamais un lien qui ne serait pas https.
   const href = url ? parsePresentationUrl(url) : null;
 
-  if (!href && !canChange) return null;
+  if ((!href || sansLien) && !canChange) return null;
 
   function open() {
     setDraft(url ?? "");
@@ -123,7 +127,7 @@ export function PresentationLink({
           {notice === "notified" ? t("setlists.detail.presentationNotified") : t("setlists.detail.presentationUnlinked")}
         </p>
       )}
-      {href ? (
+      {href && !sansLien ? (
         <a
           href={href}
           target="_blank"

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { CLE_LISTE_SETLISTS } from "@/lib/navigation";
 
 export type Tab = "upcoming" | "archived" | "mine";
 
@@ -64,6 +65,9 @@ export function useSetlistsNavState() {
     const newUrl = window.location.pathname + (queryString ? `?${queryString}` : "");
     window.history.replaceState(null, "", newUrl);
     sessionStorage.setItem("lastListPath", newUrl);
+    // `lastListPath` est repris par la page d'une setlist (retour d'un chant) : la
+    // liste se retient aussi à part, pour l'entrée « Setlists » de la barre latérale.
+    sessionStorage.setItem(CLE_LISTE_SETLISTS, newUrl);
   }, [categoryFilter, tab, query, isInitialized]);
 
   // Sauvegarde du scroll au défilement

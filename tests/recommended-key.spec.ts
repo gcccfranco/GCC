@@ -7,13 +7,14 @@ import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 
 async function openSong(page: Page, path: string) {
   await page.goto(path, { waitUntil: "domcontentloaded" });
-  const select = page.locator("select").first();
+  // Dans la barre du chant : en deux volets, la liste (et son choix de thème) est à côté (lot U5).
+  const select = page.getByTestId("barre-outils").locator("select").first();
   await select.waitFor();
   return select;
 }
 
 const optionTexts = (page: Page) =>
-  page.locator("select").first().locator("option").evaluateAll((els) => els.map((e) => e.textContent?.trim()));
+  page.getByTestId("barre-outils").locator("select").first().locator("option").evaluateAll((els) => els.map((e) => e.textContent?.trim()));
 
 test("page du chant : démarre dans la recommandée, l'originale reste proposée (FR)", async ({ page }) => {
   const select = await openSong(page, "/songs/je-reviens-au-coeur");

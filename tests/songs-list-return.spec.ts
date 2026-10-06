@@ -13,10 +13,15 @@ async function recordFrames(page: Page) {
     (window as unknown as { __frames: typeof frames }).__frames = frames;
     const t0 = performance.now();
     const tick = () => {
-      const wrap = document.querySelector("main > div");
+      // Opacité de la liste à l'écran : celle de ses ancêtres multipliées. Le fondu
+      // d'entrée n'est plus celui de la page entière (`main > div`) mais celui de la
+      // liste, qui se remonte seule (lot U5, songs/ChantsVolets).
+      const search = document.querySelector('input[type="search"]');
+      let opacity = search ? 1 : 0;
+      for (let e = search; e; e = e.parentElement) opacity *= Number(getComputedStyle(e).opacity);
       frames.push({
-        list: !!document.querySelector('input[type="search"]'),
-        opacity: wrap ? Number(getComputedStyle(wrap).opacity) : 0,
+        list: !!search,
+        opacity,
         y: Math.round(window.scrollY),
       });
       if (performance.now() - t0 < 900) requestAnimationFrame(tick);

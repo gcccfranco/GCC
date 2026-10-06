@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { enDeuxVolets, ouvrirPartitions } from "./helpers/setlist";
 import { parsePdfStyle, pdfFileName } from "../src/lib/pdfStylePref";
 import { nuancePdfColors, sectionPdfPalette } from "../src/lib/pdf/colors";
 import { compactPlan, compactTransitions, stripGroups } from "../src/lib/pdf/compact";
@@ -57,6 +58,28 @@ function setlist(over: Record<string, unknown> = {}) {
 
 const openMenu = (page: Page) => page.getByRole("button", { name: "Plus d'actions" }).click();
 const pdfEntry = (page: Page) => page.getByRole("menuitem", { name: "PDF" });
+/** « Quel PDF ? » d'une setlist : l'entrée PDF du ⋯ sur G, le bouton PDF de l'en-tête
+ *  en deux volets (docs/spec-deux-volets.md, Q7). */
+async function quelPdf(page: Page) {
+  if (await enDeuxVolets(page)) {
+    await page.locator("[data-en-tete]").getByRole("button", { name: "PDF", exact: true }).click();
+    return;
+  }
+  await openMenu(page);
+  await pdfEntry(page).click();
+}
+
+/** « Quel PDF ? » d'un chant : l'entrée PDF du ⋯ sur téléphone, le bouton PDF de la barre dès
+ *  la tablette debout (docs/spec-deux-volets.md, Q16 ; même règle que `.hors-menu-chant`). */
+async function pdfDuChant(page: Page) {
+  const { width, height } = page.viewportSize()!;
+  if (width >= 768 && height >= 500) {
+    await page.getByTestId("barre-outils").getByRole("button", { name: "PDF", exact: true }).click();
+    return;
+  }
+  await openMenu(page);
+  await pdfEntry(page).click();
+}
 
 // ── Préférence et nom de fichier (fonctions pures) ──────────────────────────
 
@@ -151,8 +174,7 @@ test("compact : une transition rejoint la page du chant d'avant, sauf en tête d
 
 test("chant : deux choix, le choix part dans le nom du fichier et revient présélectionné", async ({ page }) => {
   await page.goto("/songs/abba-pere");
-  await openMenu(page);
-  await pdfEntry(page).click();
+  await pdfDuChant(page);
 
   const sheet = page.getByRole("dialog", { name: "Quel PDF ?" });
   await expect(sheet).toBeVisible();
@@ -168,15 +190,25 @@ test("chant : deux choix, le choix part dans le nom du fichier et revient prés�
   expect(download.suggestedFilename()).toMatch(/^abba-pere-.+-couleurs\.pdf$/);
 
   await page.reload();
-  await openMenu(page);
-  await pdfEntry(page).click();
+  await pdfDuChant(page);
   await expect(
     page.getByRole("dialog", { name: "Quel PDF ?" }).getByRole("radio", { name: /Couleurs par section/ }),
   ).toHaveAttribute("aria-checked", "true");
 });
 
-test("setlist en vue liste : le PDF liste part directement, sans fenêtre", async ({ page }) => {
+test("setlist, PDF liste : sans fenêtre depuis la vue liste (G), par « Liste » de « Quel PDF ? » en deux volets", async ({ page }) => {
   await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: setlist() }, `/setlists/${SETLIST_ID}`);
+  if (await enDeuxVolets(page)) {
+    await quelPdf(page);
+    const sheet = page.getByRole("dialog", { name: "Quel PDF ?" });
+    await sheet.getByRole("radio", { name: /^Liste/ }).click();
+    const [download] = await Promise.all([
+      page.waitForEvent("download", { timeout: 60_000 }),
+      sheet.getByRole("button", { name: "Télécharger" }).click(),
+    ]);
+    expect(download.suggestedFilename()).toBe("Culte du 21 septembre-liste.pdf");
+    return;
+  }
   await openMenu(page);
   const [download] = await Promise.all([
     page.waitForEvent("download", { timeout: 60_000 }),
@@ -186,14 +218,14 @@ test("setlist en vue liste : le PDF liste part directement, sans fenêtre", asyn
   await expect(page.getByRole("dialog", { name: "Quel PDF ?" })).toHaveCount(0);
 });
 
-test("setlist en vue partitions : trois choix, le classique garde son nom", async ({ page }) => {
+test("setlist en vue partitions : trois choix (et « Liste » en deux volets), le classique garde son nom", async ({ page }) => {
   await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: setlist() }, `/setlists/${SETLIST_ID}`);
-  await page.getByRole("button", { name: "Partitions" }).click();
-  await openMenu(page);
-  await pdfEntry(page).click();
+  await ouvrirPartitions(page);
+  const deuxVolets = await enDeuxVolets(page);
+  await quelPdf(page);
 
   const sheet = page.getByRole("dialog", { name: "Quel PDF ?" });
-  await expect(sheet.getByRole("radio")).toHaveCount(3);
+  await expect(sheet.getByRole("radio")).toHaveCount(deuxVolets ? 4 : 3);
   await expect(sheet.getByRole("radio", { name: /Compact/ })).toBeVisible();
   const [download] = await Promise.all([
     page.waitForEvent("download", { timeout: 60_000 }),
@@ -204,9 +236,8 @@ test("setlist en vue partitions : trois choix, le classique garde son nom", asyn
 
 test("setlist en vue partitions : le compact se télécharge sous son nom", async ({ page }) => {
   await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: setlist() }, `/setlists/${SETLIST_ID}`);
-  await page.getByRole("button", { name: "Partitions" }).click();
-  await openMenu(page);
-  await pdfEntry(page).click();
+  await ouvrirPartitions(page);
+  await quelPdf(page);
   const sheet = page.getByRole("dialog", { name: "Quel PDF ?" });
   await sheet.getByRole("radio", { name: /Compact/ }).click();
   const [download] = await Promise.all([

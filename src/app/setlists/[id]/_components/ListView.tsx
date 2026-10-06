@@ -4,8 +4,7 @@ import type { SongIndexEntry } from "@/types/song";
 import { useTranslation } from "react-i18next";
 import { abbreviateSection } from "@/lib/chordpro/abbreviations";
 import { KeyPill } from "@/components/ui/key-pill";
-import Link from "next/link";
-import { Link2, MessageSquare, ChevronDown, ChevronUp } from "lucide-react";
+import { Link2, MessageSquare, ChevronDown, ChevronUp, ChevronRight } from "lucide-react";
 import type { SectionSummary } from "@/types/song";
 import { useJianpuManifest } from "@/lib/jianpu/images";
 import { sheetEnabled, type JianpuPref } from "@/lib/jianpu/preference";
@@ -45,58 +44,59 @@ function sectionNamesFor(
   }));
 }
 
-/** Lien vers la page du chant : ses réglages, la setlist et la position de
- *  l'élément — la page y relit la version adaptée (Dernière phrase, mode
- *  Adapter). Un chant peut revenir deux fois : la position les distingue. */
-function songHref(
-  slug: string,
-  s: Pick<SetlistItem, "structureOverride" | "sectionNotes" | "sectionNuances" | "keyOverride" | "sectionKeys">,
-  setlistId: string,
-  position: number,
-) {
-  return {
-    pathname: `/songs/${slug}`,
-    query: {
-      ...(s.structureOverride && {
-        structure: JSON.stringify(s.structureOverride),
-      }),
-      ...(s.sectionNotes && {
-        sectionNotes: JSON.stringify(s.sectionNotes),
-      }),
-      ...(s.sectionNuances && Object.keys(s.sectionNuances).length > 0 && {
-        sectionNuances: JSON.stringify(s.sectionNuances),
-      }),
-      ...(s.keyOverride && {
-        key: JSON.stringify(s.keyOverride)
-      }),
-      ...(s.sectionKeys && {
-        sectionKeys: JSON.stringify(s.sectionKeys)
-      }),
-      setlist: JSON.stringify(setlistId),
-      item: JSON.stringify(position),
-    },
-  };
+/** Une ligne de la liste (setlist G, docs/spec-deux-volets.md, Q9 à Q11) : toute
+ *  la ligne ouvre les partitions à ce chant. Un vrai lien (`?vue=partitions&chant=N`),
+ *  que la page intercepte pour garder la setlist chargée. Le chant lu est marqué. */
+function LigneLien({
+  position,
+  current,
+  onOpen,
+  children,
+}: {
+  position: number;
+  current: boolean;
+  onOpen: (position: number) => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <a
+      href={`?vue=partitions&chant=${position}`}
+      aria-current={current ? "true" : undefined}
+      onClick={(e) => {
+        if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+        e.preventDefault();
+        onOpen(position);
+      }}
+      className="-mx-2 flex gap-3 items-start rounded-lg px-2 py-3 transition-colors hover:bg-muted/60 aria-[current=true]:bg-secondary"
+    >
+      {children}
+      <ChevronRight data-chevron aria-hidden="true" className="h-4 w-4 shrink-0 self-center text-muted-foreground/60" />
+    </a>
+  );
 }
 
 export function ListView({
-  setlistId,
   items,
   songsMap,
   jianpuPref,
+  current,
+  onOpen,
 }: {
-  /** Passé à la page du chant : une tonalité qui y est choisie est retenue pour cette setlist. */
-  setlistId: string;
   items: SetlistItem[];
   songsMap: Record<string, SongIndexEntry>;
   /** Partition 简谱 : suivre le choix du responsable, l'imposer, ou l'ignorer. */
   jianpuPref: JianpuPref;
+  /** Position du chant lu dans les partitions : sa ligne est marquée. */
+  current: number | null;
+  /** Ouvre les partitions à ce chant. */
+  onOpen: (position: number) => void;
 }) {
   const { t } = useTranslation();
   // Repère « ce chant se lit sur son 简谱 » — même résolution que la vue
   // Partitions, pour que la liste dise ce qui sera réellement affiché.
   const jianpuManifest = useJianpuManifest();
   return (
-    <ol className="space-y-3">
+    <ol className="divide-y divide-border">
       {(() => {
         const sorted = [...items].sort((a, b) => a.position - b.position);
         return sorted.map((item, idx) => {
@@ -110,7 +110,8 @@ export function ListView({
         // ── Fusion item ──
         if (item.type === "fusion" && item.fusionSongs) {
           return (
-            <li key={`fusion-${idx}`} className="flex gap-3 items-start">
+            <li key={`fusion-${idx}`} data-ligne={item.position}>
+              <LigneLien position={item.position} current={current === item.position} onOpen={onOpen}>
               <span className="shrink-0 w-7 h-7 rounded-full bg-muted flex items-center justify-center text-xs font-bold text-muted-foreground mt-0.5">
                 {num}
               </span>
@@ -155,16 +156,7 @@ export function ListView({
                           <div className="space-y-0.5">
                             {runs.map((run, i) => (
                               <p key={i} className="text-[11px] leading-tight">
-                                {(() => {
-                                  const fs = item.fusionSongs!.find((f) => f.songSlug === run.slug);
-                                  return fs ? (
-                                    <Link href={songHref(run.slug, fs, setlistId, item.position)} className="font-medium text-muted-foreground/90 hover:text-foreground hover:underline">
-                                      {run.title}
-                                    </Link>
-                                  ) : (
-                                    <span className="font-medium text-muted-foreground/90">{run.title}</span>
-                                  );
-                                })()}
+                                <span className="font-medium text-muted-foreground/90">{run.title}</span>
                                 <span className="text-muted-foreground/40"> · </span>
                                 <span className="text-muted-foreground/60">
                                   {run.names.map((n, j) => (
@@ -209,9 +201,7 @@ export function ListView({
                       return (
                         <div key={fs.songSlug}>
                           <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground/80">
-                            <Link href={songHref(fs.songSlug, fs, setlistId, item.position)} className="hover:text-foreground hover:underline">
-                              {song?.title ?? fs.songSlug}
-                            </Link>
+                            <span>{song?.title ?? fs.songSlug}</span>
                             <span className={`font-mono text-xs px-1 py-0.5 rounded ${
                               transposed
                                 ? "bg-secondary text-foreground border border-transparent"
@@ -241,6 +231,7 @@ export function ListView({
                   </div>
                 )}
               </div>
+              </LigneLien>
             </li>
           );
         }
@@ -250,16 +241,16 @@ export function ListView({
         const displayKey = item.keyOverride ?? song?.originalKey ?? "?";
         const transposed = !!item.keyOverride && item.keyOverride !== song?.originalKey;
         return (
-          <li key={`${item.songSlug}-${idx}`} className="flex gap-3 items-start">
+          <li key={`${item.songSlug}-${idx}`} data-ligne={item.position}>
+            <LigneLien position={item.position} current={current === item.position} onOpen={onOpen}>
             <span className="shrink-0 w-7 h-7 rounded-full bg-muted flex items-center justify-center text-xs font-bold text-muted-foreground mt-0.5">
               {num}
             </span>
             <div className="flex-1 min-w-0">
               <div className="flex items-baseline gap-2 flex-wrap">
-                <Link href={songHref(item.songSlug, item, setlistId, item.position)}
-                  className="font-semibold text-sm text-foreground hover:text-foreground">
+                <span className="font-semibold text-sm text-foreground">
                   {song?.title ?? item.songSlug}
-                </Link>
+                </span>
                 {song?.titlePinyin && (
                   <span className="text-xs text-muted-foreground">{song.titlePinyin}</span>
                 )}
@@ -341,6 +332,7 @@ export function ListView({
               langue={song?.language === "zh" ? "zh" : "fr"}
               origine={transposed ? song?.originalKey : undefined}
             />
+            </LigneLien>
           </li>
         );
         });
@@ -354,7 +346,7 @@ function TransitionListItem({ item }: { item: SetlistItem }) {
   const { t } = useTranslation();
   if (!item.transitionText) return null;
   return (
-    <li className="flex gap-3 items-start">
+    <li className="flex gap-3 items-start py-3">
       <span className="shrink-0 w-7 h-7 rounded-full bg-amber-100 dark:bg-amber-950/40 flex items-center justify-center mt-0.5">
         <MessageSquare className="h-3.5 w-3.5 text-amber-500 dark:text-amber-400" />
       </span>

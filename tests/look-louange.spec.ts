@@ -2,6 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import * as fs from "fs";
 import * as path from "path";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { ouvrirPartitions } from "./helpers/setlist";
 
 // Lot 4 « Nouveau look », tranche T3 : louange (docs/spec-look.md).
 const MUSICIEN: FakeProfile = {
@@ -104,7 +105,7 @@ test.describe("louange : barre d'outils de la setlist, une seule ligne sur tél�
     keyOverride: null, showChords: true, showPinyin: true, useJianpu: false,
     structureOverride: null, sectionNotes: {}, notes: "", ...over,
   });
-  // Le pire cas : on peut modifier (Adapter), avoir sa version, et un chant 中文 ajoute « Pinyin ».
+  // Le pire cas : on peut modifier (Adapter) et avoir sa version (Pinyin est passé dans « Affichage »).
   const setlist = {
     title: "高班", leader: "David C.", category: "Culte Francophone", date: "2026-09-20",
     language: "mixed", notes: "", ownerId: "uid-owner", isPrivate: false,
@@ -112,6 +113,39 @@ test.describe("louange : barre d'outils de la setlist, une seule ligne sur tél�
   };
   const AIDE_ADAPTER = /Mode adaptation/;
   const AIDE_MA_VERSION = /^Ma version :/;
+
+  /** Deux volets (docs/spec-deux-volets.md, T4, Q7) : plus de barre d'outils, l'en-tête
+   *  pleine largeur porte Adapter · Ma version · Modifier · PDF · ⋯ · Mode louange (pas de
+   *  Présentation sans lien), libellés compris ; la rangée tient sur une ligne, à droite du
+   *  titre ou dessous, jamais par-dessus, ni sous la barre latérale (`bord`), ni hors de l'écran. */
+  async function enTeteSurUneLigne(page: Page, largeur: number, bord: number) {
+    const enTete = page.locator("[data-en-tete]");
+    await expect(enTete.getByRole("button", { name: "Mode Louange" })).toBeVisible();
+    await expect(page.getByTestId("barre-outils")).toHaveCount(0);
+    const boites = await enTete.locator("a, button").evaluateAll((els) =>
+      els
+        .filter((el) => (el as HTMLElement).offsetParent !== null)
+        .map((el) => {
+          const r = el.getBoundingClientRect();
+          return { nom: el.getAttribute("aria-label") ?? el.textContent?.trim() ?? "", milieu: r.top + r.height / 2, haut: r.top, gauche: r.left, droite: r.right };
+        }),
+    );
+    expect(boites.map((b) => b.nom)).toEqual(["Adapter", "Ma version", "Modifier", "PDF", "Plus d'actions", "Mode Louange"]);
+    const milieux = boites.map((b) => b.milieu);
+    expect(Math.max(...milieux) - Math.min(...milieux), `une seule ligne : ${JSON.stringify(boites.map((b) => [b.nom, Math.round(b.milieu)]))}`).toBeLessThan(4);
+    const titre = (await enTete.getByRole("heading", { level: 1 }).boundingBox())!;
+    for (const b of boites) {
+      expect.soft(b.gauche, `${b.nom} ne passe pas sous la barre latérale`).toBeGreaterThanOrEqual(bord);
+      expect.soft(b.droite, `${b.nom} ne sort pas à droite`).toBeLessThanOrEqual(largeur);
+      expect.soft(b.gauche >= titre.x + titre.width || b.haut >= titre.y + titre.height, `${b.nom} ne passe pas sur le titre`).toBe(true);
+    }
+    expect(await enTete.evaluate((el) => el.scrollWidth <= el.clientWidth), "l'en-tête ne déborde pas").toBe(true);
+    await expect(enTete.getByText("Mode Louange", { exact: true }), "libellés compris").toBeVisible();
+    await enTete.getByRole("button", { name: "Adapter" }).click();
+    await expect(page.getByText(AIDE_ADAPTER)).toBeVisible();
+    await enTete.getByRole("button", { name: "Ma version" }).click();
+    await expect(page.getByText(AIDE_MA_VERSION)).toBeVisible();
+  }
 
   const ECRANS: [number, number, string][] = [
     [320, 568, "portrait"], [360, 740, "portrait"], [375, 667, "portrait"], [390, 844, "portrait"], [402, 874, "portrait"], [430, 932, "portrait"],
@@ -123,9 +157,13 @@ test.describe("louange : barre d'outils de la setlist, une seule ligne sur tél�
     test(`${largeur} × ${hauteur} (${sens}) : toutes les commandes sur une ligne, rien ne dépasse`, async ({ page }) => {
       await page.setViewportSize({ width: largeur, height: hauteur });
       await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: setlist }, `/setlists/${SETLIST_ID}`);
-      await page.getByRole("button", { name: "Partitions" }).click();
+      await ouvrirPartitions(page);
+      // iPad couché : deux volets, l'en-tête du grand écran (barre latérale de 68 px).
+      if (sens === "iPad paysage") return enTeteSurUneLigne(page, largeur, 68);
       const barre = page.getByTestId("barre-outils");
-      await expect(barre.getByRole("button", { name: "Pinyin" })).toBeVisible();
+      // Setlist G (docs/spec-deux-volets.md, Q3 et Q11) : « Affichage » remplace
+      // Pinyin dans la barre ; la bascule Liste | Partitions est sous l'en-tête.
+      await expect(barre.getByRole("button", { name: "Affichage" })).toBeVisible();
 
       const boites = await barre.locator("a, button").evaluateAll((els) =>
         els
@@ -135,7 +173,7 @@ test.describe("louange : barre d'outils de la setlist, une seule ligne sur tél�
             return { nom: el.getAttribute("aria-label") ?? "", milieu: r.top + r.height / 2, gauche: r.left, droite: r.right, h: r.height, l: r.width };
           }),
       );
-      expect(boites.length, "retour, liste, partitions, accords, pinyin, mode louange, ⋯ au moins").toBeGreaterThanOrEqual(7);
+      expect(boites.length, "retour, affichage, (adapter), accords, (ma version), mode louange, ⋯").toBe(largeur >= 390 ? 7 : 5);
       const milieux = boites.map((b) => b.milieu);
       expect(Math.max(...milieux) - Math.min(...milieux), `une seule ligne : ${JSON.stringify(boites.map((b) => [b.nom, Math.round(b.milieu)]))}`).toBeLessThan(4);
       for (const b of boites) {
@@ -184,9 +222,11 @@ test.describe("louange : barre d'outils de la setlist, une seule ligne sur tél�
       test(`ordinateur ${largeur} × 900 : une ligne, rien sous la barre latérale ni hors de l'écran`, async ({ page }) => {
         await page.setViewportSize({ width: largeur, height: 900 });
         await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: setlist }, `/setlists/${SETLIST_ID}`);
-        await page.getByRole("button", { name: "Partitions" }).click();
+        await ouvrirPartitions(page);
+        // Deux volets dès 900 px utiles, soit 1 148 px de fenêtre (docs/spec-deux-volets.md, Q1).
+        if (largeur >= 1148) return enTeteSurUneLigne(page, largeur, 248);
         const barre = page.getByTestId("barre-outils");
-        await expect(barre.getByRole("button", { name: "Pinyin" })).toBeVisible();
+        await expect(barre.getByRole("button", { name: "Affichage" })).toBeVisible();
         const boites = await barre.locator("a, button").evaluateAll((els) =>
           els
             .filter((el) => (el as HTMLElement).offsetParent !== null)
@@ -195,7 +235,7 @@ test.describe("louange : barre d'outils de la setlist, une seule ligne sur tél�
               return { nom: el.getAttribute("aria-label") ?? "", milieu: r.top + r.height / 2, gauche: r.left, droite: r.right };
             }),
         );
-        expect(boites.length).toBeGreaterThanOrEqual(9);
+        expect(boites.length, "retour, affichage, adapter, accords, ma version, mode louange, ⋯").toBe(7);
         const milieux = boites.map((b) => b.milieu);
         expect(Math.max(...milieux) - Math.min(...milieux), `une seule ligne : ${JSON.stringify(boites.map((b) => [b.nom, Math.round(b.milieu)]))}`).toBeLessThan(4);
         for (const b of boites) {
@@ -203,9 +243,8 @@ test.describe("louange : barre d'outils de la setlist, une seule ligne sur tél�
           expect.soft(b.droite, `${b.nom} ne sort pas à droite`).toBeLessThanOrEqual(largeur);
         }
         expect(await barre.evaluate((el) => el.scrollWidth <= el.clientWidth), "la barre ne déborde pas").toBe(true);
-        // 1 024 px : 776 px à côté de la barre, les libellés ne tiennent pas ; 1 440 px et plus : ils tiennent.
-        if (largeur === 1024) await expect(barre.getByText("Mode Louange", { exact: true })).toBeHidden();
-        if (largeur >= 1440) await expect(barre.getByText("Mode Louange", { exact: true })).toBeVisible();
+        // 1 024 px : 776 px à côté de la barre, les libellés ne tiennent pas.
+        await expect(barre.getByText("Mode Louange", { exact: true })).toBeHidden();
       });
     }
   });
@@ -216,32 +255,13 @@ test.describe("louange : barre d'outils de la setlist, une seule ligne sur tél�
       test.skip(!info.project.name.startsWith("ordinateur"), "pointeur fin : projets ordinateur seulement");
       await page.addInitScript(() => localStorage.setItem("barre-laterale", "reduite"));
     });
+    // Barre réduite : 956 px utiles dès 1 024 px, deux volets toujours (docs/spec-deux-volets.md, Q1).
     for (const largeur of [1024, 1180, 1280, 1440]) {
       test(`ordinateur ${largeur} × 900, barre réduite : une ligne, rien sous la barre latérale ni hors de l'écran`, async ({ page }) => {
         await page.setViewportSize({ width: largeur, height: 900 });
         await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: setlist }, `/setlists/${SETLIST_ID}`);
-        await page.getByRole("button", { name: "Partitions" }).click();
-        const barre = page.getByTestId("barre-outils");
-        await expect(barre.getByRole("button", { name: "Pinyin" })).toBeVisible();
-        expect(Math.round((await barre.boundingBox())!.x), "la barre d'outils commence au bord de la barre réduite").toBe(68);
-        const boites = await barre.locator("a, button").evaluateAll((els) =>
-          els
-            .filter((el) => (el as HTMLElement).offsetParent !== null)
-            .map((el) => {
-              const r = el.getBoundingClientRect();
-              return { nom: el.getAttribute("aria-label") ?? "", milieu: r.top + r.height / 2, gauche: r.left, droite: r.right };
-            }),
-        );
-        expect(boites.length).toBeGreaterThanOrEqual(9);
-        const milieux = boites.map((b) => b.milieu);
-        expect(Math.max(...milieux) - Math.min(...milieux), `une seule ligne : ${JSON.stringify(boites.map((b) => [b.nom, Math.round(b.milieu)]))}`).toBeLessThan(4);
-        for (const b of boites) {
-          expect.soft(b.gauche, `${b.nom} ne passe pas sous la barre latérale`).toBeGreaterThanOrEqual(68);
-          expect.soft(b.droite, `${b.nom} ne sort pas à droite`).toBeLessThanOrEqual(largeur);
-        }
-        expect(await barre.evaluate((el) => el.scrollWidth <= el.clientWidth), "la barre ne déborde pas").toBe(true);
-        // 1 280 px et plus : 1 212 px à côté de la barre réduite, les libellés tiennent.
-        if (largeur >= 1280) await expect(barre.getByText("Mode Louange", { exact: true })).toBeVisible();
+        await ouvrirPartitions(page);
+        await enTeteSurUneLigne(page, largeur, 68);
       });
     }
   });

@@ -16,7 +16,13 @@ Font.register({
 });
 Font.register({
   family: "Inter",
-  fonts: [{ src: "/fonts/Inter-Regular.ttf", fontWeight: 400 }],
+  fonts: [
+    { src: "/fonts/Inter-Regular.ttf", fontWeight: 400 },
+    // Les notes d'un chant sont en italique : sans cette face, le PDF liste d'une
+    // setlist annotée échouait (« Could not resolve font for Inter, … italic »). Pas
+    // d'Inter italique dans public/fonts : la droite en tient lieu.
+    { src: "/fonts/Inter-Regular.ttf", fontWeight: 400, fontStyle: "italic" },
+  ],
 });
 Font.register({
   family: "LiberationSans",
