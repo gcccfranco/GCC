@@ -31,6 +31,9 @@ export type SectionSummary = {
 
 export type SongIndexEntry = Omit<Song, "chordProSource"> & {
   sections?: SectionSummary[];
+  /** Date d'ajout au répertoire (AAAA-MM-JJ), lue dans git par `build:index` ; `null` sans
+   *  historique (clone superficiel). « Nouveaux au répertoire » (agencement v18, A7). */
+  ajouteLe?: string | null;
 };
 
 export type Theme = {

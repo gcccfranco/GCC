@@ -7,7 +7,8 @@ const ENCRE = "rgb(28, 28, 30)";
 
 const phone = { viewport: { width: 390, height: 664 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 };
 const barreDuBas = (page: Page) => page.getByRole("navigation", { name: "Navigation principale" });
-const header = (page: Page) => page.locator("header");
+// `.barre-haut` : l'en-tête de la page (EnTetePage, agencement v18) est aussi un <header>.
+const header = (page: Page) => page.locator("header.barre-haut");
 
 test.describe("navigation par sections (T2), téléphone", () => {
   test.use(phone);

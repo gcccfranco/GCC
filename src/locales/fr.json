@@ -83,12 +83,27 @@
       "counterFiltered_other": "{{filteredCount}} résultats sur {{totalCount}}",
       "allLanguages": "Tous",
       "recent": "Récemment consultés",
-      "loadError": "Impossible de charger les chants. Vérifie ta connexion."
+      "loadError": "Impossible de charger les chants. Vérifie ta connexion.",
+      "sousTitre_one": "{{count}} chant, en français et en chinois",
+      "sousTitre_other": "{{count}} chants, en français et en chinois",
+      "proposer": "Proposer un chant"
     },
     "choose": {
       "title": "Choisis un chant",
       "subtitle": "dans la liste, ou parmi ceux des prochains dimanches.",
       "subtitleListOnly": "dans la liste.",
+      "subtitleRecents": "dans la liste, ou reprends là où tu t'es arrêté.",
+      "sansSetlist": "Pas de setlist à venir pour toi",
+      "sansSetlistTexte": "Quand une setlist de tes services sera prête, ses chants s'afficheront ici, en premier.",
+      "voirSetlists": "Voir les setlists",
+      "recents": "Récemment ouverts",
+      "recentsAide": "sur cet appareil",
+      "nouveaux": "Nouveaux au répertoire",
+      "ajouteLe": "ajouté le {{date}}",
+      "plusChantes": "Les plus chantés à GCC",
+      "plusChantesAide": "ces 3 derniers mois",
+      "foisEnSetlist_one": "{{count}} fois en setlist",
+      "foisEnSetlist_other": "{{count}} fois en setlist",
       "upcoming": "Prochaines setlists",
       "upcomingHelp": "Les mêmes que dans l'onglet Setlists : celles des services et des groupes où tu as un rôle."
     },

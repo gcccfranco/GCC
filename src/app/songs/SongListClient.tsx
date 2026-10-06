@@ -9,7 +9,6 @@ import Fuse from "fuse.js";
 import { Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { KeyPill } from "@/components/ui/key-pill";
-import { PageTitle } from "@/components/layout/PageTitle";
 import { useTranslation } from "react-i18next";
 import type { SongIndexEntry, Theme } from "@/types/song";
 import { SongProposalDrawer } from "@/components/songs/SongProposalDrawer";
@@ -251,7 +250,6 @@ export function SongListClient({ songs, themes, actif = null, erreur = false, on
     // pr-7 : gouttière fixe de l'index A–Z. Elle ne dépend pas de la recherche,
     // pour que le champ ne change pas de largeur pendant la frappe.
     <div className="relative pr-7" onClickCapture={saveScrollPos}>
-      <PageTitle title={t("common.header.songs")} />
       {/* Barre de recherche */}
       <div className="relative mb-3.5">
         <Search className="absolute left-[14px] top-1/2 -translate-y-1/2 h-[18px] w-[18px] text-muted-foreground/70 pointer-events-none" />
@@ -351,7 +349,10 @@ export function SongListClient({ songs, themes, actif = null, erreur = false, on
             ? t("songs.list.counter", { count: songs.length })
             : t("songs.list.counterFiltered", { count: filtered.length, filteredCount: filtered.length, totalCount: songs.length })}
         </p>
-        <SongProposalDrawer />
+        {/* Dès 768 px, « Proposer un chant » est dans l'en-tête (ChantsVolets, agencement v18 R7). */}
+        <span className="md:hidden">
+          <SongProposalDrawer />
+        </span>
       </div>
 
       {/* Liste */}
@@ -415,9 +416,10 @@ export function SongListClient({ songs, themes, actif = null, erreur = false, on
           débordant sur la marge de page pour rester au bord de l'écran sur
           téléphone et collé à la liste sur ordinateur. On le balaye du doigt. */}
       {showIndex && (
-        // -top-6 : la colonne part du ras de la navbar, pour que l'index soit
-        // déjà à sa place collante avant le premier défilement.
-        <div className="absolute -top-6 bottom-0 -right-4 w-11 flex justify-end pointer-events-none">
+        // La colonne remonte bien au-dessus de la liste (jusqu'au-dessus de l'en-tête de la
+        // page, agencement v18), pour que l'index soit déjà à sa place collante avant le
+        // premier défilement : sinon il glisserait sous le doigt au premier geste.
+        <div className="absolute -top-[100svh] bottom-0 -right-4 w-11 flex justify-end pointer-events-none">
           <nav
             aria-label={t("common.aria.indexAlphabetique")}
             onPointerDown={(e) => {

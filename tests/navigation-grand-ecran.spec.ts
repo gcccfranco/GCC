@@ -90,7 +90,8 @@ test.describe("navigation sur grand écran (U4) : un seul profil lu", () => {
 /** Ce qui est visible : barre du haut, barre du bas, barre latérale. */
 async function barresVisibles(page: Page) {
   return {
-    haut: await page.locator("header").isVisible(),
+    // `.barre-haut` : l'en-tête de la page (EnTetePage, agencement v18) est aussi un <header>.
+    haut: await page.locator("header.barre-haut").isVisible(),
     bas: await page.getByTestId("barre-du-bas").isVisible(),
     laterale: await barreLaterale(page).isVisible(),
   };
@@ -249,9 +250,13 @@ test.describe("navigation sur grand écran (U4) : barre dépliée, ordinateur", 
     await expect(navigation(page).getByRole("link")).toHaveCount(5);
     expect(await barre.evaluate((el) => el.scrollHeight > el.clientHeight), "le contenu dépasse la fenêtre").toBe(true);
     const pied = barre.getByTestId("pied-barre");
+    // La page peut déjà être un peu défilée : la connexion (signInAs) passe par /login, dont le bouton
+    // pris par le focus est sous les 300 px, et Chants ne remet pas la fenêtre en haut quand son volet
+    // de droite est déjà dans la vue (agencement v18 : l'en-tête de page est au-dessus).
+    const avant = await page.evaluate(() => window.scrollY);
     await pied.scrollIntoViewIfNeeded();
     await expect(pied).toBeInViewport();
-    expect(await page.evaluate(() => window.scrollY), "c'est la barre qui a défilé, pas la page").toBe(0);
+    expect(await page.evaluate(() => window.scrollY), "c'est la barre qui a défilé, pas la page").toBe(avant);
   });
 });
 
@@ -479,16 +484,17 @@ test.describe("navigation sur grand écran (U4) : réduire, déplier, s'en souve
 
     const titre = page.getByRole("heading", { level: 1, name: "Chants" });
     const titreDeplie = (await titre.boundingBox())!.x;
+    const margeDepliee = await pxVar(page, "--marge-page");
     await sansIndicateurDeNext(page);
     await reduire(page).click();
     await expect.poll(() => largeurBarre(page)).toBe(68);
     expect(await pxVar(page, "--barre-laterale")).toBe(68);
     expect(await paddingGaucheMain(page), "la zone de contenu suit").toBe("68px");
-    // La page, centrée dans la zone de contenu, se décale de la moitié des 180 px rendus. Chants en
-    // deux volets (lot U5) : les volets remplissent la zone (moins de 1 440 px), la liste en
-    // tient le bord gauche et se décale des 180 px entiers.
-    const deuxVolets = await page.locator(".chants-volets").evaluate((el) => getComputedStyle(el).display === "grid");
-    expect(Math.round(titreDeplie - (await titre.boundingBox())!.x), "le titre suit la zone de contenu").toBe(deuxVolets ? 180 : 90);
+    // Agencement v18 (R2, A5) : le titre « Chants » est celui de l'en-tête de page, à `--marge-page`
+    // du bord de la zone de contenu, plus centré : il se décale des 180 px rendus, et de la marge
+    // qui passe de 40 à 28 px barre réduite.
+    const margeReduite = await pxVar(page, "--marge-page");
+    expect(Math.round(titreDeplie - (await titre.boundingBox())!.x), "le titre suit la zone de contenu").toBe(180 + margeDepliee - margeReduite);
     expect(Math.round((await page.getByTestId("halo").boundingBox())!.x), "halo au bord de la barre").toBe(68);
     expect(await debordement(page)).toBe(0);
     expect(await barreRetenue(page)).toBe("reduite");

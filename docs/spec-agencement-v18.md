@@ -529,3 +529,39 @@ la barre d'onglets : une page sans barre du bas (rare) le verra plus haut que n�
   empilés sur téléphone, au-dessus de la feuille du formulaire de tâche).
 - **Reste** : rien pour F2. Les tranches de pages (T1 à T11) peuvent partir.
 - **Timothée** : rien à publier (aucune règle, aucune donnée) ; relire les six libellés 中文 ci-dessus.
+
+### V18T89 — App Chants (T8)
+
+- 06/10/2026 (fini le 07/10/2026 après minuit) : **T8 faite** (branche `lot/v18-t89`, commit
+  `feat(V18T89): T8 — App Chants, piste A`), commencée par une voie coupée puis reprise.
+- **Écran** (A5) : `ChantsVolets` pose l'en-tête commun (`EnTetePage`) « Chants », sous-titre « n chants, en
+  français et en chinois » (compté au serveur, `songs/layout.tsx`), action « + Proposer un chant »
+  (`SongProposalDrawer enTete`, pilule `BoutonNouveau` dès 768 px ; le téléphone garde le lien en bas de liste,
+  R7). La liste perd son `PageTitle`. En deux volets, l'en-tête est au-dessus des deux volets, y compris sur la
+  page d'un chant (la liste ne bouge pas d'un chant à l'autre) ; la liste est une carte en relief collante
+  (bloc `.chants-volets`, `globals.css`), le chant s'étire sur toute la rangée (sa barre reste collée).
+- **Volet sans chant** (A5 à A8, `ChoisisUnChant.tsx`) : prochaines setlists, sinon la carte « Pas de setlist à
+  venir pour toi » + « Voir les setlists » ; « Récemment ouverts » (cinq premiers de `recentSongs`, même clé et
+  même évènement que la rangée de la liste, lecture sous `try/catch`) et « Nouveaux au répertoire » (six plus
+  récents par `ajouteLe`) côte à côte ; « Les plus chantés à GCC » (`lib/stats/plusChantes.ts` : `statsChants`
+  sur les 92 jours avant aujourd'hui, six, deux colonnes, rang et nombre de setlists ; setlists lues une fois,
+  gardées une minute comme les prochaines). Une carte sans donnée ne paraît pas ; sans compte, rien n'est lu.
+- **Index** (A7) : `scripts/dates-ajout.ts`, lu par `build-index.ts` : une passe `git log --diff-filter=A
+  --name-only --format=%cs -- content/songs` → `ajouteLe` (AAAA-MM-JJ) ; clone superficiel ou hors git →
+  `null` partout, sans erreur. `public/songs-index.json` régénéré (377 dates sur 378 : `Ta-parole-écriture`
+  vient d'un renommage, que git ne compte pas comme un ajout → `null`, il ne paraît jamais « nouveau »).
+- **Tests** : `tests/agencement-v18-chants.spec.ts` (15 tests, cinq projets ; volet de droite vu rouge sur le
+  `ChoisisUnChant` d'avant, puis vert) ; captures regardées aux cinq tailles. Suites voisines adaptées, sans
+  changer ce qu'elles vérifient : `chants-deux-volets` (la barre du chant colle sous l'en-tête),
+  `navigation-grand-ecran` (le titre suit la zone de contenu de 180 px + l'écart de `--marge-page` ; la page
+  peut arriver un peu défilée de /login), `look-barres` (l'en-tête retiré pour mesurer le fond des barres), et
+  `header` → `header.barre-haut` dans `navigation-grand-ecran`, `look-navigation`, `songs-index`,
+  `back-office-espace` (`EnTetePage` est aussi un `<header>` : **à reprendre par les autres voies** qui posent
+  l'en-tête sur une page où un test lit `locator("header")`).
+- **Reste** : rien pour T8. Hors spec, non fait : le lien « Tout voir › » de la planche sur « Nouveaux au
+  répertoire » (A5 ne le cite pas).
+- **Timothée** : rien à publier dans Firestore. À la mise en ligne : `VERCEL_DEEP_CLONE=true` sur Vercel, sinon
+  « Nouveaux au répertoire » ne paraît pas. Relire le 中文 : 共 {{count}} 首诗歌，法语和中文 · 推荐诗歌 ·
+  在列表中选择，或从上次停下的地方继续。· 暂无你的待用歌单 · 你所服事的歌单准备好后，其中的诗歌会优先显示在这里。·
+  查看歌单 · 最近打开 · 本设备 · 新加入的诗歌 · {{date}}加入 · GCC 最常唱的诗歌 · 最近 3 个月 ·
+  {{count}} 次出现在歌单中.

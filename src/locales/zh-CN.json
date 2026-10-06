@@ -83,12 +83,27 @@
       "counterFiltered_other": "找到 {{filteredCount}} 首诗歌（共 {{totalCount}} 首）",
       "allLanguages": "全部",
       "recent": "最近查看",
-      "loadError": "无法加载诗歌，请检查网络连接。"
+      "loadError": "无法加载诗歌，请检查网络连接。",
+      "sousTitre_one": "共 {{count}} 首诗歌，法语和中文",
+      "sousTitre_other": "共 {{count}} 首诗歌，法语和中文",
+      "proposer": "推荐诗歌"
     },
     "choose": {
       "title": "选择一首诗歌",
       "subtitle": "在列表中选择，或从接下来几个主日的诗歌中选择。",
       "subtitleListOnly": "在列表中选择。",
+      "subtitleRecents": "在列表中选择，或从上次停下的地方继续。",
+      "sansSetlist": "暂无你的待用歌单",
+      "sansSetlistTexte": "你所服事的歌单准备好后，其中的诗歌会优先显示在这里。",
+      "voirSetlists": "查看歌单",
+      "recents": "最近打开",
+      "recentsAide": "本设备",
+      "nouveaux": "新加入的诗歌",
+      "ajouteLe": "{{date}}加入",
+      "plusChantes": "GCC 最常唱的诗歌",
+      "plusChantesAide": "最近 3 个月",
+      "foisEnSetlist_one": "{{count}} 次出现在歌单中",
+      "foisEnSetlist_other": "{{count}} 次出现在歌单中",
       "upcoming": "接下来的歌单",
       "upcomingHelp": "与「歌单」页相同：你有角色的服事和小组的歌单。"
     },

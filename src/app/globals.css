@@ -591,6 +591,7 @@
    page du chant ailleurs — comme avant. */
 /* `:where` : ces règles cèdent à celles des deux volets, plus bas, de même poids. */
 .chants-volets:where([data-sur-liste]) > .chants-chant,
+.chants-volets:where(:not([data-sur-liste])) > .chants-entete,
 .chants-volets:where(:not([data-sur-liste])) > .chants-liste { display: none; }
 
 /* Barre du chant : libellés selon la largeur de la rangée (requête de conteneur ; la rangée
@@ -613,29 +614,43 @@
    couchée et ordinateur barre réduite toujours, barre dépliée dès 1 148 px. Trois copies du
    même bloc : une condition de média ne s'écrit pas dans un sélecteur. Liste de 320 à 400 px,
    qui défile seule dans son volet ; les volets prennent toute la zone de contenu (retours du
-   06/10/2026 : bornés à `--largeur-lecture` et centrés, ils laissaient une bande vide à côté de la barre). */
+   06/10/2026 : bornés à `--largeur-lecture` et centrés, ils laissaient une bande vide à côté de la barre).
+   Agencement v18 (R10, A5) : l'en-tête « Chants » sur toute la largeur, au-dessus des deux volets ;
+   la liste est une carte en relief (rayon 16 px, sans filet) à `--marge-page` du bord, collante
+   20 px sous la barre du haut ; la page à `--ecart-volets` de la carte (« Choisis un chant » pose
+   lui-même la marge de droite : la page d'un chant garde ses marges, hors du lot). Le chant
+   s'étire sur toute la rangée : un chant court sous une liste plus haute garde sa barre collée. */
 @media screen and (pointer: coarse) and (orientation: landscape) and (min-width: 1024px) {
-  .chants-volets { display: grid; grid-template-columns: clamp(320px, 37%, 400px) minmax(0, 1fr); --halo-chants: var(--sec-verse); }
-  .chants-volets > .chants-liste { display: block; position: sticky; top: var(--nav-h); z-index: 1; height: calc(100svh - var(--nav-h)); overflow-y: auto; overscroll-behavior: contain; border-right: 1px solid hsl(var(--border)); background-color: hsl(var(--background)); }
-  .chants-volets > .chants-chant { display: block; min-width: 0; }
+  .chants-volets { display: grid; grid-template-columns: clamp(320px, 37%, 400px) minmax(0, 1fr); column-gap: var(--ecart-volets); align-items: start; padding-left: var(--marge-page); --halo-chants: var(--sec-verse); }
+  .chants-volets > .chants-entete { display: block; grid-column: 1 / -1; margin-left: calc(-1 * var(--marge-page)); }
+  .chants-volets > .chants-liste { display: block; position: sticky; top: calc(var(--nav-h) + 20px); z-index: 1; max-height: calc(100svh - var(--nav-h) - 44px); margin-bottom: 24px; overflow-y: auto; overscroll-behavior: contain; border-radius: 16px; background-color: hsl(var(--raised)); box-shadow: var(--shadow-raised); }
+  .chants-liste .chants-liste-fond { min-height: 0; }
+  .chants-liste .chants-liste-corps { padding: 14px 16px 8px; }
+  .chants-volets > .chants-chant { display: block; min-width: 0; align-self: stretch; }
   .halo-chants::before { left: auto; right: -140px; opacity: 0.12; }
   .chants-chant .barre-chant { position: sticky; left: auto; right: auto; width: calc(100% * var(--zoom-chant, 1)); }
   .chants-chant .retour-chant:not([data-vers-setlist]) { display: none; }
   .chants-chant .song-zoom, .chants-chant .video-chant { margin-top: 0; }
 }
 @media screen and (pointer: fine) and (min-width: 1024px) {
-  :root[data-barre="reduite"] .chants-volets { display: grid; grid-template-columns: clamp(320px, 37%, 400px) minmax(0, 1fr); --halo-chants: var(--sec-verse); }
-  :root[data-barre="reduite"] .chants-volets > .chants-liste { display: block; position: sticky; top: var(--nav-h); z-index: 1; height: calc(100svh - var(--nav-h)); overflow-y: auto; overscroll-behavior: contain; border-right: 1px solid hsl(var(--border)); background-color: hsl(var(--background)); }
-  :root[data-barre="reduite"] .chants-volets > .chants-chant { display: block; min-width: 0; }
+  :root[data-barre="reduite"] .chants-volets { display: grid; grid-template-columns: clamp(320px, 37%, 400px) minmax(0, 1fr); column-gap: var(--ecart-volets); align-items: start; padding-left: var(--marge-page); --halo-chants: var(--sec-verse); }
+  :root[data-barre="reduite"] .chants-volets > .chants-entete { display: block; grid-column: 1 / -1; margin-left: calc(-1 * var(--marge-page)); }
+  :root[data-barre="reduite"] .chants-volets > .chants-liste { display: block; position: sticky; top: calc(var(--nav-h) + 20px); z-index: 1; max-height: calc(100svh - var(--nav-h) - 44px); margin-bottom: 24px; overflow-y: auto; overscroll-behavior: contain; border-radius: 16px; background-color: hsl(var(--raised)); box-shadow: var(--shadow-raised); }
+  :root[data-barre="reduite"] .chants-liste .chants-liste-fond { min-height: 0; }
+  :root[data-barre="reduite"] .chants-liste .chants-liste-corps { padding: 14px 16px 8px; }
+  :root[data-barre="reduite"] .chants-volets > .chants-chant { display: block; min-width: 0; align-self: stretch; }
   :root[data-barre="reduite"] .halo-chants::before { left: auto; right: -140px; opacity: 0.12; }
   :root[data-barre="reduite"] .chants-chant .barre-chant { position: sticky; left: auto; right: auto; width: calc(100% * var(--zoom-chant, 1)); }
   :root[data-barre="reduite"] .chants-chant .retour-chant:not([data-vers-setlist]) { display: none; }
   :root[data-barre="reduite"] .chants-chant .song-zoom, :root[data-barre="reduite"] .chants-chant .video-chant { margin-top: 0; }
 }
 @media screen and (pointer: fine) and (min-width: 1148px) {
-  .chants-volets { display: grid; grid-template-columns: clamp(320px, 37%, 400px) minmax(0, 1fr); --halo-chants: var(--sec-verse); }
-  .chants-volets > .chants-liste { display: block; position: sticky; top: var(--nav-h); z-index: 1; height: calc(100svh - var(--nav-h)); overflow-y: auto; overscroll-behavior: contain; border-right: 1px solid hsl(var(--border)); background-color: hsl(var(--background)); }
-  .chants-volets > .chants-chant { display: block; min-width: 0; }
+  .chants-volets { display: grid; grid-template-columns: clamp(320px, 37%, 400px) minmax(0, 1fr); column-gap: var(--ecart-volets); align-items: start; padding-left: var(--marge-page); --halo-chants: var(--sec-verse); }
+  .chants-volets > .chants-entete { display: block; grid-column: 1 / -1; margin-left: calc(-1 * var(--marge-page)); }
+  .chants-volets > .chants-liste { display: block; position: sticky; top: calc(var(--nav-h) + 20px); z-index: 1; max-height: calc(100svh - var(--nav-h) - 44px); margin-bottom: 24px; overflow-y: auto; overscroll-behavior: contain; border-radius: 16px; background-color: hsl(var(--raised)); box-shadow: var(--shadow-raised); }
+  .chants-liste .chants-liste-fond { min-height: 0; }
+  .chants-liste .chants-liste-corps { padding: 14px 16px 8px; }
+  .chants-volets > .chants-chant { display: block; min-width: 0; align-self: stretch; }
   .halo-chants::before { left: auto; right: -140px; opacity: 0.12; }
   .chants-chant .barre-chant { position: sticky; left: auto; right: auto; width: calc(100% * var(--zoom-chant, 1)); }
   .chants-chant .retour-chant:not([data-vers-setlist]) { display: none; }

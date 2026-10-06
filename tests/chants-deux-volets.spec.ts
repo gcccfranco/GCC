@@ -98,9 +98,10 @@ async function capture(page: Page, name: string) {
   if (dir) await page.screenshot({ path: `${dir}/${name}-${test.info().project.name}.png` });
 }
 
-/** La lecture des prochaines setlists (la cloche lit aussi `setlists`, par `createdAt`). */
+/** La lecture des prochaines setlists (la cloche lit aussi `setlists`, par `createdAt` ; « Les plus
+ *  chantés », agencement v18 A8, les lit par `date` sans tri). */
 const lectureDesProchaines = (r: Request) =>
-  r.url().includes(":runQuery") && !!r.postData()?.includes('"setlists"') && !!r.postData()?.includes('"fieldPath":"date"');
+  r.url().includes(":runQuery") && !!r.postData()?.includes('"setlists"') && !!r.postData()?.includes('"orderBy":[{"field":{"fieldPath":"date"}');
 
 test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(AUJOURDHUI);
@@ -260,13 +261,15 @@ test.describe("Chants en deux volets (ordinateur, tablette couchée)", () => {
     expect(await barre.evaluate((el) => el.scrollWidth - el.clientWidth)).toBeLessThanOrEqual(0);
     expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
     // La barre colle : le chant défile, elle s'escamote ; on remonte un peu, elle revient
-    // en haut du volet (et non en haut de la page).
+    // collée sous la barre du haut, au-dessus du volet (et non en haut de la page). Agencement v18
+    // (A5, R3) : au départ, elle est sous l'en-tête « Chants », posé au-dessus des deux volets.
     const centre = { x: d!.x + d!.width / 2, y: 400 };
     await page.mouse.move(centre.x, centre.y);
     await page.mouse.wheel(0, 800);
     await expect.poll(async () => (await barre.boundingBox())!.y + b!.height).toBeLessThanOrEqual(0);
     await page.mouse.wheel(0, -120);
-    await expect.poll(async () => Math.round((await barre.boundingBox())!.y)).toBe(Math.round(b!.y));
+    const hautDuVolet = await page.evaluate(() => parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--nav-h")) || 0);
+    await expect.poll(async () => Math.round((await barre.boundingBox())!.y)).toBe(Math.round(hautDuVolet));
     expect(await page.evaluate(() => window.scrollY), "toujours au milieu du chant").toBeGreaterThan(300);
     await page.waitForTimeout(350);
     await capture(page, "chants-chant");
