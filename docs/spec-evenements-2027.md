@@ -239,7 +239,25 @@ barre du bas comprise : défaut Accueil · Calendrier · Tâches · Planning · 
   02/01/2027, le 31/01/2027 et le 01/02/2027, réunions sans la ligne, 中文, guide FR et 中文, captures),
   vus rouges puis verts sur ordinateur, téléphone et tablette.
 
-Reste : B4 (ménage de février 2027, sur un go à part).
+**06/10/2026 — fusion des versions finales de U8 et U6**, même branche (fusion `5a96e24` de
+`lot/u8-calendrier` à `20fc0be`, qui porte déjà la fin de `lot/u6-back-office` ; U6 n'avait rien de
+plus) :
+- Conflits, deux intentions gardées : `EvenementForm.tsx` (la date bornée à `9999-12-31` de U8 et le
+  refus du Sheet de U9), `playwright.config.ts` (`calendrier-deplacer` et `calendrier-widget` en grand
+  écran), `back-office-espace.spec.ts` (widget Calendrier de U8), `barre-back-office.spec.ts`.
+- Correctifs `fix(U9): fusion` : (1) le **widget Calendrier** du tableau de bord (U8, C8), arrivé avec la
+  fusion, suit Q6 comme la page : à partir du 01/01/2027, aucune requête au Sheet, pas même pour les
+  derniers jours de décembre en tête de sa semaine (M) ou de son mois (L) ; avant, inchangé. « Prochains
+  évènements » n'a pas besoin de code (il lit d'aujourd'hui à un an, et aucun onglet de 2027 n'existe).
+  (2) Un seul lien vers l'onglet du mois : `lienOngletSheet(date)` de U8 sert aussi le refus du
+  formulaire et l'agenda public ; `lienSheetEvenements(mois)` de B1, son double, est retiré.
+- Tests : `tests/evenements-2027.spec.ts`, partie « Q6 : le widget Calendrier » (02/01/2027 en M et en L
+  sans requête, 15/12/2026 en L qui lit décembre), vue rouge puis verte sur les trois appareils ; les
+  tests du lot et ceux que la fusion touche (calendrier, widgets, tableau de bord, Back-Office, coupé)
+  relancés.
+
+Reste : B4 (ménage de février 2027, sur un go à part ; il retirera aussi la condition du widget
+Calendrier).
 
 À la mise en ligne, côté évènements : (1) supprimer les évènements d'essai du Firestore partagé
 (Timothée, console ; Q8) ; (2) relire les onglets de 2027 du Sheet et prévenir chaque responsable

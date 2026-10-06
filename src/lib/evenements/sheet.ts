@@ -46,16 +46,11 @@ export interface EnvSheet {
   cache: Map<string, { at: number; entrees: EntreeSheet[] }>
 }
 
-/** Le Sheet ouvert à l'onglet d'un mois (AAAA-MM), à son premier onglet sinon (lot U9, Q3). */
-export function lienSheetEvenements(mois = ""): string {
-  const gid = ONGLETS_SHEET[mois]
-  return `https://docs.google.com/spreadsheets/d/${SHEET_EVENEMENTS_ID}/edit${gid ? `#gid=${gid}` : ""}`
-}
-
 const urlExport = (gid: number) =>
   `https://docs.google.com/spreadsheets/d/${SHEET_EVENEMENTS_ID}/export?format=csv&gid=${gid}`
 
-/** L'onglet du mois d'une date, à ouvrir dans le navigateur (fiche du calendrier, widget 3). */
+/** L'onglet du mois d'une date, à ouvrir dans le navigateur (fiche du calendrier, widget 3 ; U9 :
+ *  refus du formulaire, agenda public) ; le premier onglet pour un mois sans onglet. */
 export function lienOngletSheet(date: string): string {
   const gid = ONGLETS_SHEET[date.slice(0, 7)]
   return `https://docs.google.com/spreadsheets/d/${SHEET_EVENEMENTS_ID}/edit${gid ? `#gid=${gid}` : ""}`

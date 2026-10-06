@@ -3,7 +3,7 @@
 
 import type { Evenement, ModeInscriptions } from "@/types/evenement";
 import { avantBascule } from "@/lib/evenements/bascule";
-import { lienSheetEvenements, type EntreeSheet } from "@/lib/evenements/sheet";
+import { lienOngletSheet, type EntreeSheet } from "@/lib/evenements/sheet";
 
 export const isInfo = (e: Pick<Evenement, "type" | "date">) => e.type === "info" || !e.date;
 
@@ -89,7 +89,7 @@ export function agendaPublic(app: Evenement[], sheet: EntreeSheet[], connecte: b
       const visible = connecte && s.date >= today;
       return {
         source: "sheet" as const, date: s.date, heure: s.heure, fin: s.date,
-        entree: { ...s, responsable: visible ? s.responsable : "", lien: visible ? lienSheetEvenements(s.date.slice(0, 7)) : "" },
+        entree: { ...s, responsable: visible ? s.responsable : "", lien: visible ? lienOngletSheet(s.date) : "" },
       };
     }),
   ];

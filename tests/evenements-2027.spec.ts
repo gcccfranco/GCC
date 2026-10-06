@@ -448,3 +448,35 @@ test("captures B3 : la ligne d'annonce, calendrier et gestion", async ({ page },
   await expect(annonce(page)).toHaveText(ANNONCE_APRES);
   await page.screenshot({ path: `${dossier}-annonce-evenements.png`, animations: "disabled" });
 });
+
+
+// ─── Fusion de U8 : le widget Calendrier du tableau de bord suit Q6 ─────────────
+
+test.describe("Q6 : le widget Calendrier (U8, C8) suit la bascule", () => {
+  const widgetCal = (page: Page) => page.getByTestId("grille-widgets").getByRole("region", { name: "Calendrier", exact: true });
+  async function tableauDeBord(page: Page, taille: "m" | "l", maintenant: string) {
+    await page.clock.setFixedTime(new Date(maintenant));
+    const lus = await sheets(page);
+    await signInAs(page, ADMIN, {
+      ...DOCS,
+      "backOffice/u-admin": { tableauDeBord: [{ id: "calendrier", taille, reglages: {} }], majLe: "2026-12-01" },
+    }, "/back-office");
+    await expect(widgetCal(page)).toBeVisible();
+    return lus;
+  }
+
+  for (const taille of ["m", "l"] as const) {
+    test(`02/01/2027, ${taille.toUpperCase()} : la période commence le 28/12/2026, aucune requête au Sheet`, async ({ page }) => {
+      const lus = await tableauDeBord(page, taille, "2027-01-02T10:00:00");
+      await expect(widgetCal(page).locator('[data-jour="2026-12-28"]')).toBeVisible();
+      await page.waitForTimeout(300);
+      expect(lus).toEqual([]);
+    });
+  }
+
+  test("15/12/2026, L : décembre lit encore le Sheet", async ({ page }) => {
+    const lus = await tableauDeBord(page, "l", "2026-12-15T10:00:00");
+    await expect.poll(() => lus.includes(GID_DECEMBRE)).toBe(true);
+    await expect(widgetCal(page).locator('[data-jour="2026-12-06"] [data-source="evenements"]').first()).toBeVisible();
+  });
+});

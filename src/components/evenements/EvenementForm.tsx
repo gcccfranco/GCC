@@ -18,7 +18,7 @@ import { EVENEMENT_TYPES, type Evenement, type EvenementType } from "@/types/eve
 import { ChoixInscriptions } from "@/components/evenements/ChoixInscriptions"
 import { borneInscription, modeInscriptions } from "@/lib/evenements/agenda"
 import { avantBascule, dernierJourDuSheet } from "@/lib/evenements/bascule"
-import { lienSheetEvenements } from "@/lib/evenements/sheet"
+import { lienOngletSheet } from "@/lib/evenements/sheet"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
@@ -215,7 +215,7 @@ export function EvenementForm({ initial, pours, creation, inscrits = 0, onSubmit
         {refusSheet && (
           <p id="ev-date-sheet" className="-mt-2 text-sm text-destructive">
             {t("evenements.form.refusSheet", { jour: dernierJourDuSheet() })}{" "}
-            <a href={lienSheetEvenements(v.date.slice(0, 7))} target="_blank" rel="noopener noreferrer"
+            <a href={lienOngletSheet(v.date)} target="_blank" rel="noopener noreferrer"
               className="font-semibold underline underline-offset-2">
               {t("evenements.form.ouvrirSheet")}
             </a>
