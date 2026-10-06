@@ -136,7 +136,9 @@ test.describe("Réception en grand (ordinateur, iPad paysage)", () => {
 
   test("« Voir les traités » les montre ; supprimer passe au suivant", async ({ page }) => {
     const db = await ouvrir(page);
-    await liste(page).getByRole("button", { name: "Voir les traités (1)" }).first().click();
+    // Le bouton du groupe Signalements (`first()` prenait celui des Propositions quand les
+    // signalements arrivaient après elles).
+    await liste(page).getByRole("region", { name: "Signalements" }).getByRole("button", { name: "Voir les traités (1)" }).click();
     await ligne(page, "Lien mort sur le guide").click();
     await expect(message(page).getByRole("heading", { level: 2 })).toHaveText("Lien mort sur le guide");
     await expect(message(page).getByRole("button", { name: "Rouvrir" })).toBeVisible();

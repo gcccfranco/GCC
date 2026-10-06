@@ -369,6 +369,10 @@ test("Mes services (loadPlanningData) : le président de Paix posé avant l'Inte
   await expect(page.getByText(/24 janv/i).first()).toBeVisible();
 });
 
+// Accueil A (lot U4 bis, B1, Q14) : « Ton prochain service » est devenu la carte du prochain
+// service de « Pour moi » (la première `[data-carte]` de la région).
+const prochainService = (page: Page) => page.getByRole("region", { name: "Pour moi" }).locator("[data-carte]").first();
+
 test("Ce dimanche du 17/01/2027 montre l'Interfranco ; « Prochain service » saute le président fantôme", async ({ page }) => {
   await ouvrir(page, MEMBRE, "/planning", {
     "plannings/interfranco/dimanches/2027-01-17": { date: "2027-01-17", presidence: "Président I." },
@@ -378,7 +382,8 @@ test("Ce dimanche du 17/01/2027 montre l'Interfranco ; « Prochain service » sa
   const dimanche = page.getByRole("region", { name: /Ce dimanche/ });
   await expect(dimanche.getByText("Interfranco", { exact: true })).toBeVisible();
   await expect(dimanche.getByText("Président I.")).toBeVisible();
-  const prochain = page.getByRole("link", { name: /Groupe Paix \(Présidence\)/ });
+  const prochain = prochainService(page);
+  await expect(prochain).toContainText("Groupe Paix · Présidence");
   await expect(prochain).toContainText("24 janvier");
   await expect(prochain).not.toContainText("17 janvier");
   await capture(page, "ce-dimanche-interfranco-2027");
@@ -484,13 +489,17 @@ test("P5 · « Mes services » liste la Percussion et le Cours", async ({ page }
   await capture(page, "p5-mes-services");
 });
 
-test("P5 · « Ce dimanche » montre la Percussion des groupes et le Cours de l'EDD", async ({ page }) => {
+// Accueil A (lot U4 bis, B1, Q14 ; fusion de U2) : une ligne par groupe, « Présidence · Musiciens » ;
+// la percussion rejoint les musiciens de son groupe ; l'EDD n'y montre que la présidence de chaque
+// classe, le Cours reste dans l'onglet EDD du planning (test « P5 · EDD 2026 »).
+test("P5 · « Ce dimanche » montre la Percussion des groupes avec leurs musiciens", async ({ page }) => {
   await ouvrir(page, MEMBRE, "/planning", {}, "2026-11-20T10:00:00");
   const dimanche = page.getByRole("region", { name: /Ce dimanche/ });
-  await expect(dimanche.getByText("Batteur B.")).toBeVisible();
-  await expect(dimanche.getByText("Percussion", { exact: true })).toHaveCount(2);
-  await expect(dimanche.getByText("Cours", { exact: true })).toHaveCount(1);
-  await expect(dimanche.getByText("Membre P.")).toHaveCount(2);
+  const groupe = (nom: string) => dimanche.getByTestId("ligne-groupe").filter({ hasText: nom });
+  await expect(groupe("Paix")).toContainText("Membre P.");
+  await expect(groupe("Bonté")).toContainText("Batteur B.");
+  await expect(dimanche.getByText("Ménage X."), "Ménages reste écarté").toHaveCount(0);
+  await expect(dimanche.getByTestId("ligne-edd").filter({ hasText: "中班" })).toContainText("Ancien K.");
 });
 
 // ─── P9 · « Choisir » une personne dans une case (question 5) ────────────────
@@ -871,15 +880,16 @@ test("sansBrouillon : un trimestre à venir non publié reste hors de « Mes ser
 
 test("Prochain service : le brouillon 2027 n'y entre qu'une fois son trimestre publié", async ({ page, browser }) => {
   const SERVICE_2027 = { "plannings/paix/dimanches/2027-01-24": { date: "2027-01-24", presidence: "Membre M." } };
-  const prochain = (p: Page) => p.getByRole("link", { name: /Groupe Paix \(Présidence\)/ });
   await ouvrir(page, MEMBRE, "/planning", SERVICE_2027);
   // Le Sheet et la grille de Paix sont lus : « Ce dimanche » (15/11/2026) montre sa présidence.
   await expect(page.getByRole("region", { name: /Ce dimanche/ }).getByText("Ancien G.")).toBeVisible();
-  await expect(prochain(page)).toHaveCount(0);
+  // Sans service à venir, « Pour moi » disparaît (Q14).
+  await expect(page.getByRole("region", { name: "Pour moi" })).toHaveCount(0);
 
   const publie = await browser.newPage();
   await ouvrir(publie, MEMBRE, "/planning", { ...SERVICE_2027, "planningReleases/paix_2027": { published: ["T1"] } });
-  await expect(prochain(publie)).toContainText("24 janvier");
+  await expect(prochainService(publie)).toContainText("Groupe Paix · Présidence");
+  await expect(prochainService(publie)).toContainText("24 janvier");
   await publie.close();
 });
 

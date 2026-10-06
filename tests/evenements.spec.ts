@@ -552,7 +552,11 @@ test("QR code : aucun bouton sur le calendrier, même pour la coordination", asy
   await member(page, ALICE, "/evenements");
   // En grand, le titre de l'agenda est un h2 (celui de la fiche est à droite).
   await expect(page.getByRole("heading", { name: "Évènements", exact: true })).toBeVisible();
-  await expect(page.getByRole("button", { name: "QR code" })).toHaveCount(0);
+  // En grand (U4 bis, B2, Q5), la fiche du prochain évènement est à droite et garde son QR
+  // (« gardé sur la fiche ») : c'est l'agenda, le volet de la liste, qui n'en a pas.
+  const agenda = page.locator('[data-volet="liste"]');
+  await expect(agenda.getByText("Foot au parc")).toBeVisible();
+  await expect(agenda.getByRole("button", { name: "QR code" })).toHaveCount(0);
 });
 
 test("QR code : un simple membre n'a pas le bouton", async ({ page }) => {

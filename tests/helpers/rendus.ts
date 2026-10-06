@@ -31,7 +31,11 @@ export async function compterLesRendus(page: Page) {
       supportsFiber: true,
       renderers: new Map(),
       inject: () => 1,
-      onCommitFiberRoot: (_id: number, racine: { current: Fibre }) => {
+      onCommitFiberRoot: (_id: number, racine: { current: Fibre; containerInfo?: { nodeType?: number } }) => {
+        // Seule la racine de la page compte (Next l'hydrate sur `document`). Les outils de
+        // `next dev` ont leur propre racine React, dans une ombre : ils se refont quand un autre
+        // test fait compiler une page (« Compiling »), ce qui n'est pas un rendu du site.
+        if (racine.containerInfo?.nodeType !== 9) return;
         w.__rendus.push(refaits(racine.current.child));
       },
       onCommitFiberUnmount: () => {},
