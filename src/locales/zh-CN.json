@@ -59,7 +59,8 @@
       "refus": {
         "avantAujourdhui": "不能早于今天",
         "sceneFermee": "这天舞台不开放",
-        "aucunCreneau": "这天没有空闲时段"
+        "aucunCreneau": "这天没有空闲时段",
+        "sheet": "{{jour}}（含）之前，全教会的活动请写在活动表（Sheet）中。"
       }
     },
     "legende": {
@@ -1815,7 +1816,7 @@
       "errorTitre": "标题为必填项。",
       "errorDate": "日期为必填项。",
       "errorDateFin": "结束日期须晚于开始日期。",
-      "refusSheet": "{{jour}} 之前，全教会的活动请写在活动表（Sheet）中。",
+      "refusSheet": "{{jour}}（含）之前，全教会的活动请写在活动表（Sheet）中。",
       "ouvrirSheet": "打开活动表",
       "errorSave": "无法保存。请检查网络连接及 Firestore 规则是否已发布。",
       "plusOptions": "更多选项",
@@ -1865,6 +1866,7 @@
     "plusInfos": "详情联系：{{nom}}",
     "tableau": "活动表",
     "sinscrireTableau": "在活动表上报名",
+    "sheetInjoignable": "暂时无法读取活动表，请稍后再试。",
     "dejaInscrits_one": "已有 {{count}} 人报名",
     "dejaInscrits_other": "已有 {{count}} 人报名",
     "confirmer": "确认",

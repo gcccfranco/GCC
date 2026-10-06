@@ -5,6 +5,7 @@
 // (soulever ou non) sont ceux de `peutDeplacer` (entrees.ts), déjà portés par l'entrée.
 
 import type { DonneesCalendrier, EntreeCalendrier } from "@/lib/calendrier/entrees";
+import { dansLeSheet } from "@/lib/evenements/bascule";
 import { creneauxLibres, joursReservables, saisonDe, type Place } from "@/lib/scene/saison";
 import { addDays } from "@/lib/taches/echeances";
 import type { Evenement } from "@/types/evenement";
@@ -12,8 +13,9 @@ import type { Creneau } from "@/types/programme";
 import type { Fois, Tache } from "@/types/tache";
 import type { NotifLang } from "@/types/user";
 
-/** « Pas avant aujourd'hui », « La scène n'est pas ouverte ce jour-là », « Aucun créneau libre ce jour-là ». */
-export type RefusDeplacement = "avantAujourdhui" | "sceneFermee" | "aucunCreneau";
+/** « Pas avant aujourd'hui », « La scène n'est pas ouverte ce jour-là », « Aucun créneau libre ce jour-là » ;
+ *  U9 (Q3) : « Jusqu'au 31/12/2026, les évènements de toute l'église s'écrivent dans le Sheet… ». */
+export type RefusDeplacement = "avantAujourdhui" | "sceneFermee" | "aucunCreneau" | "sheet";
 
 /** Champs d'un évènement que le déplacement réécrit (les vides ne s'écrivent pas). */
 export type ChampsDecales = { date: string } & Partial<Pick<Evenement, "dateFin" | "inscriptionDebut" | "inscriptionFin">>;
@@ -84,6 +86,9 @@ export function planDeplacement(
       // Glissé depuis une autre case que la première, son début recule d'autant.
       const champs = champsDecales(e, ecartJours(entree.date, vers));
       if (champs.date < horloge.today) return { type: "refus", refus: "avantAujourdhui" };
+      // U9 (Q3) : comme le formulaire en modification, pas d'entrée dans le Sheet (un évènement de
+      // toute l'église de 2027 reculé en 2026) ; un évènement déjà en 2026 dans l'app bouge librement.
+      if (dansLeSheet({ ...e, date: champs.date }) && !dansLeSheet(e)) return { type: "refus", refus: "sheet" };
       return {
         type: "evenement",
         evenement: e,

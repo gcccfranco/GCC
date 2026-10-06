@@ -48,7 +48,7 @@ export function ListeGestion({ reunions }: { reunions: boolean }) {
   return (
     <div className="max-w-2xl space-y-5">
       {/* U9 (Q7 b) : où se créent les évènements, jusqu'au 31/01/2027 ; pas pour les réunions. */}
-      {!reunions && <AnnonceBascule today={today} />}
+      {!reunions && <AnnonceBascule />}
       {peutCreer && (
         <Button asChild>
           <Link href={reunions ? "/back-office/evenements/nouveau?reunion=1" : "/back-office/evenements/nouveau"}>

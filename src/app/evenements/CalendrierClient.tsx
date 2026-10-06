@@ -17,9 +17,8 @@ import { ANNONCE_SECTIONS } from "@/types/annonce"
 import { PLANNING_COLORS } from "@/lib/serviceColors"
 import { EVENEMENTS_CHANGED, getInscription, listEvenements } from "@/lib/firebase/evenements"
 import { agendaPublic, daysAgo, isExpired, isInfo } from "@/lib/evenements/agenda"
-import { avantBascule, BASCULE_EVENEMENTS } from "@/lib/evenements/bascule"
-import { lireSheetEvenements, type EntreeSheet } from "@/lib/evenements/sheet"
-import { todayIso } from "@/lib/scene/dimanches"
+import { avantBascule, BASCULE_EVENEMENTS, jourDeParis } from "@/lib/evenements/bascule"
+import { lireSheetEvenements, type LectureSheet } from "@/lib/evenements/sheet"
 import type { Evenement } from "@/types/evenement"
 import { EntreeSheetCarte, EvenementCard, EvenementCarte } from "./EvenementCard"
 
@@ -47,15 +46,18 @@ export function CalendrierClient() {
       .then((r) => setInscrits(new Set(r.filter((id): id is string => id !== null))))
   }, [user, evenements])
 
-  const today = todayIso()
+  // Le jour de Paris, comme les inscriptions (`nowIsoParis`) : la bascule (U9) tombe à minuit de
+  // Paris sur tous les appareils.
+  const today = jourDeParis()
 
   // Lot U9, B2 : jusqu'au 31/12/2026, les entrées du Sheet (trois derniers mois compris, pour les
-  // passés). À partir du 01/01/2027, aucune requête.
-  const [sheet, setSheet] = useState<EntreeSheet[]>([])
+  // passés). À partir du 01/01/2027, aucune requête. `null` : lecture en cours.
+  const [sheet, setSheet] = useState<LectureSheet | null>(null)
   useEffect(() => {
     if (!avantBascule(today)) return
-    lireSheetEvenements(daysAgo(today, 92), BASCULE_EVENEMENTS).then((l) => setSheet(l.entrees)).catch(() => {})
+    lireSheetEvenements(daysAgo(today, 92), BASCULE_EVENEMENTS).then(setSheet).catch(() => setSheet({ entrees: [], injoignable: true }))
   }, [today])
+  const sheetEnLecture = avantBascule(today) && sheet === null
 
   const visible = useMemo(
     () => (evenements ?? []).filter((e) => canSeeEvenement(user, profile, e) && !isExpired(e, today)),
@@ -67,7 +69,7 @@ export function CalendrierClient() {
   }
 
   const infos = visible.filter(isInfo).sort((a, b) => Number(b.epingle) - Number(a.epingle) || b.createdAt.localeCompare(a.createdAt))
-  const { aVenir: upcoming, passes: past } = agendaPublic(visible, sheet, !!user, today, i18n.language)
+  const { aVenir: upcoming, passes: past } = agendaPublic(visible, sheet?.entrees ?? [], !!user, today, i18n.language)
 
   // Lot U6, B3 : le formulaire est au Back-Office, ouvert aux responsables.
   const peutCreer = estResponsable(user, profile) && creatableEvenementPours(user, profile, ANNONCE_SECTIONS).length > 0
@@ -91,10 +93,15 @@ export function CalendrierClient() {
         </section>
       )}
 
+      {/* Rien de prévu : on ne l'affirme qu'une fois le Sheet lu (U9), et pas s'il n'a pu l'être. */}
       {upcoming.length === 0 && (
         <p className="text-sm text-muted-foreground">
-          {t("evenements.none")}
-          {peutCreer && ` ${t("evenements.noneHint")}`}
+          {sheetEnLecture ? t("common.loading") : sheet?.injoignable ? t("evenements.sheetInjoignable") : (
+            <>
+              {t("evenements.none")}
+              {peutCreer && ` ${t("evenements.noneHint")}`}
+            </>
+          )}
         </p>
       )}
       {upcoming.map((g) => (

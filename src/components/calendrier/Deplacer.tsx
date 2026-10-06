@@ -12,6 +12,7 @@ import { useTranslation } from "react-i18next";
 import type { DonneesCalendrier, EntreeCalendrier } from "@/lib/calendrier/entrees";
 import { planDeplacement, questionDeplacement, type PlanDeplacement } from "@/lib/calendrier/deplacer";
 import { titreJour } from "@/lib/calendrier/grille";
+import { dernierJourDuSheet } from "@/lib/evenements/bascule";
 import { updateEvenement } from "@/lib/firebase/evenements";
 import { updateCreneau } from "@/lib/firebase/programmes";
 import { deplacerTache } from "@/lib/firebase/taches";
@@ -87,7 +88,7 @@ export function DialogueDeplacer({
   const [enCours, setEnCours] = useState(false);
   const [erreur, setErreur] = useState(false);
 
-  const refus = plan?.type === "refus" ? t(`calendrier.deplacer.refus.${plan.refus}`) : null;
+  const refus = plan?.type === "refus" ? t(`calendrier.deplacer.refus.${plan.refus}`, { jour: dernierJourDuSheet() }) : null;
   const question = vers && vers !== entree.date ? questionDeplacement(entree.titre, entree.date, vers, lang) : null;
   const titre = avecChamp ? t("calendrier.deplacer.titre", { titre: entree.titre }) : (refus ?? question ?? "");
   const pret = !!plan && plan.type !== "refus" && (plan.type !== "creneau" || !!place);

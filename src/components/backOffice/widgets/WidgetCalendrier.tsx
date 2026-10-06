@@ -20,7 +20,7 @@ import { joursDeLaGrille, titreJour, titreMois } from "@/lib/calendrier/grille";
 import {
   fenetreDuWidget, jourDuWidget, joursRestants, lienDuJour, ligneDuJour, prochainsJours, semaineDe, sourcesDuWidget,
 } from "@/lib/calendrier/widget";
-import { avantBascule } from "@/lib/evenements/bascule";
+import { avantBascule, jourDeParis } from "@/lib/evenements/bascule";
 import { lireSheetEvenements, type LectureSheet } from "@/lib/evenements/sheet";
 import { useProfile } from "@/lib/firebase/users";
 import { todayIso } from "@/lib/scene/dimanches";
@@ -57,9 +57,10 @@ export function WidgetCalendrier({ widget }: { widget: Widget }) {
   const base = lu?.donnees ?? null;
   // Le Sheet des évènements, sur la période du widget : sans lui (lent, injoignable), le reste s'affiche.
   // Lot U9 (Q6) : à partir de la bascule, aucune requête, pas même pour les derniers jours de
-  // décembre en tête de la semaine ou du mois (comme la page du calendrier).
+  // décembre en tête de la semaine ou du mois (comme la page du calendrier). Le jour de Paris :
+  // la bascule tombe à minuit de Paris, même sur un appareil loin.
   const { valeur: sheet } = useLecture(
-    () => (avantBascule(today) ? lireSheetEvenements(debut, fin) : Promise.resolve<LectureSheet>({ entrees: [], injoignable: false })),
+    () => (avantBascule(jourDeParis()) ? lireSheetEvenements(debut, fin) : Promise.resolve<LectureSheet>({ entrees: [], injoignable: false })),
     `${debut}|${fin}`,
   );
 

@@ -3,14 +3,26 @@
 // lecteur du Sheet (U8), calendrier, agenda public, formulaire et ligne d'annonce la lisent.
 //
 // La date de l'ÉVÈNEMENT décide, pas le jour de la création : un évènement du 10/01/2027 se
-// crée sur le site dès décembre. Le jour courant (`todayIso`) passé ici fait basculer ce qui
-// dépend de l'horloge (pastille du calendrier, mois lus dans le Sheet).
+// crée sur le site dès décembre. Le jour courant passé ici fait basculer ce qui dépend de
+// l'horloge (pastille du calendrier, mois lus dans le Sheet, ligne d'annonce) : le jour de
+// Paris (`jourDeParis`), pour que tous les appareils basculent à minuit de Paris, même loin.
 
 export const BASCULE_EVENEMENTS = "2027-01-01"
 
 /** Une date (« AAAA-MM-JJ », heure facultative) d'avant la bascule : le Sheet fait foi. */
 export function avantBascule(date: string): boolean {
   return date.slice(0, 10) < BASCULE_EVENEMENTS
+}
+
+/** Aujourd'hui à Paris, « AAAA-MM-JJ », quel que soit le fuseau de l'appareil. */
+export function jourDeParis(d = new Date()): string {
+  return new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Paris", year: "numeric", month: "2-digit", day: "2-digit" }).format(d)
+}
+
+/** Q3 : un évènement de toute l'église (pas une info) daté avant la bascule s'écrit dans le Sheet.
+ *  Le formulaire et le déplacement du calendrier (U8) refusent de l'y faire entrer. */
+export function dansLeSheet(e: { type: string; pour: string; date: string }): boolean {
+  return e.type !== "info" && e.pour === "eglise" && e.date !== "" && avantBascule(e.date)
 }
 
 /** Le dernier jour du Sheet, « JJ/MM/AAAA » (31/12/2026), pour les phrases qui le citent. */

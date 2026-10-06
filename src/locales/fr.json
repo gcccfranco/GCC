@@ -61,7 +61,8 @@
       "refus": {
         "avantAujourdhui": "Pas avant aujourd'hui",
         "sceneFermee": "La scène n'est pas ouverte ce jour-là",
-        "aucunCreneau": "Aucun créneau libre ce jour-là"
+        "aucunCreneau": "Aucun créneau libre ce jour-là",
+        "sheet": "Jusqu'au {{jour}}, les évènements de toute l'église s'écrivent dans le Sheet des évènements."
       }
     },
     "legende": {
@@ -1867,6 +1868,7 @@
     "plusInfos": "Pour plus d'infos : {{nom}}",
     "tableau": "Tableau des évènements",
     "sinscrireTableau": "S'inscrire sur le tableau",
+    "sheetInjoignable": "Le tableau des évènements n'a pas pu être lu. Réessaie plus tard.",
     "dejaInscrits_one": "{{count}} déjà inscrit",
     "dejaInscrits_other": "{{count}} déjà inscrits",
     "confirmer": "Confirmer",

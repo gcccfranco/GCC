@@ -17,7 +17,7 @@ import { equipeDuPour, estReunion, poleDuPour } from "@/lib/access"
 import { EVENEMENT_TYPES, type Evenement, type EvenementType } from "@/types/evenement"
 import { ChoixInscriptions } from "@/components/evenements/ChoixInscriptions"
 import { borneInscription, modeInscriptions } from "@/lib/evenements/agenda"
-import { avantBascule, dernierJourDuSheet } from "@/lib/evenements/bascule"
+import { dansLeSheet, dernierJourDuSheet } from "@/lib/evenements/bascule"
 import { lienOngletSheet } from "@/lib/evenements/sheet"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -42,10 +42,6 @@ export const EMPTY_EVENEMENT: EvenementValues = {
 
 /** « AAAA-MM-JJ » + « HH:MM » facultative ↔ « AAAA-MM-JJ[THH:MM] » ; sans jour, rien. */
 const joindre = (jour: string, heure: string) => (jour ? (heure ? `${jour}T${heure}` : jour) : "")
-
-/** Lot U9 (Q3) : un évènement de toute l'église daté avant la bascule s'écrit dans le Sheet. */
-const dansLeSheet = (x: Pick<EvenementValues, "type" | "pour" | "date">) =>
-  x.type !== "info" && x.pour === "eglise" && x.date !== "" && avantBascule(x.date)
 
 /** Ouverture ou fin des inscriptions : un jour, une heure facultative, une aide. */
 function Periode({ id, label, heureLabel, aide, value, onChange }: {

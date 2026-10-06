@@ -3,9 +3,11 @@ import { join } from "node:path";
 import { expect, test, type Page, type TestInfo } from "@playwright/test";
 import { fakeFirestore, signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { ADMIN_EMAILS } from "../src/lib/access";
-import { BASCULE_EVENEMENTS, annonceBascule, avantBascule } from "../src/lib/evenements/bascule";
+import { BASCULE_EVENEMENTS, annonceBascule, avantBascule, jourDeParis } from "../src/lib/evenements/bascule";
 import { agendaPublic } from "../src/lib/evenements/agenda";
 import type { EntreeSheet } from "../src/lib/evenements/sheet";
+import { planDeplacement } from "../src/lib/calendrier/deplacer";
+import type { EntreeCalendrier } from "../src/lib/calendrier/entrees";
 import type { Evenement } from "../src/types/evenement";
 
 // Lot U9 (docs/spec-evenements-2027.md) : les évènements sur le site à partir de janvier 2027.
@@ -155,6 +157,14 @@ test.describe("B1 : le formulaire refuse « Toute l'église » avant la bascule"
   });
 });
 
+test("B1, en chinois : le refus compte le 31/12/2026（含）", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
+  await ouvrir(page, COORD, "/back-office/evenements/nouveau", "2026-12-15T10:00:00");
+  await page.locator("#ev-date").fill("2026-12-31");
+  await expect(page.getByText("31/12/2026（含）之前，全教会的活动请写在活动表（Sheet）中。")).toBeVisible();
+  await expect(page.getByRole("link", { name: "打开活动表" })).toHaveAttribute("href", `${SHEET}/edit#gid=${GID_DECEMBRE}`);
+});
+
 /** Les pastilles des sources : en rangée, ou dans la feuille « Sources » sur téléphone. */
 async function pastilles(page: Page, info: TestInfo) {
   if (info.project.name === "telephone") {
@@ -185,6 +195,18 @@ test.describe("B1 : la pastille du calendrier selon l'horloge", () => {
     await expect(groupe.getByRole("button", { name: "Évènements (Sheet)" })).toBeVisible();
     await fermer(page, info);
     await expect.poll(() => lus.includes(GID_DECEMBRE)).toBe(true);
+  });
+
+  test("le 15/12/2026, janvier affiché : la pastille suit l'horloge, elle dit encore « Évènements (Sheet) »", async ({ page }, info) => {
+    await ouvrir(page, ADMIN, "/back-office/calendrier", "2026-12-15T10:00:00");
+    await expect(page.getByRole("heading", { level: 1, name: /^Décembre( 2026)?$/ })).toBeVisible();
+    await enMois(page);
+    await page.getByRole("button", { name: "Mois suivant" }).click();
+    await expect(page.getByRole("heading", { level: 1, name: /^Janvier( 2027)?$/ })).toBeVisible();
+    await pret(page);
+    const groupe = await pastilles(page, info);
+    await expect(groupe.getByRole("button", { name: "Évènements (Sheet)" })).toBeVisible();
+    await fermer(page, info);
   });
 
   test("le 02/01/2027 : « Évènements », janvier sans requête au Sheet, décembre le lit encore", async ({ page }, info) => {
@@ -254,6 +276,11 @@ test.describe("B2 : agendaPublic (pur)", () => {
     expect(veillee(false)).toMatchObject({ titre: "Veillée", responsable: "", lien: "" });
   });
 
+  test("connecté, une entrée sans responsable n'a pas de lien : le Sheet n'a de bloc d'inscription que sous un responsable", () => {
+    const x = agendaPublic([], [entree("2026-12-24", "Crèche vivante")], true, "2026-12-15", "fr").aVenir[0].elements[0];
+    expect(x).toMatchObject({ source: "sheet", entree: { titre: "Crèche vivante", responsable: "", lien: "" } });
+  });
+
   test("passés derrière le lien, plus récents d'abord ; une entrée passée du Sheet n'a ni nom ni lien", () => {
     const { aVenir, passes } = agendaPublic(app, sheet, true, "2026-12-15", "fr");
     expect(aVenir.flatMap((g) => g.elements).some((x) => x.source === "sheet" && x.entree.titre === "Repas")).toBe(false);
@@ -301,8 +328,9 @@ test.describe("B2 : l'agenda public montre le Sheet jusqu'au 31/12/2026", () => 
   test("15/12/2026, connecté : « Pour plus d'infos » et « S'inscrire sur le tableau » (onglet du mois, nouvel onglet)", async ({ page }) => {
     await ouvrir(page, COORD, "/evenements", "2026-12-15T10:00:00");
     await expect(page.getByText("Pour plus d'infos : Sacha Fictif")).toBeVisible();
+    // « Chants de Noël » (responsable) a le lien ; « Veillée » (sans responsable) ne l'a pas.
     const liens = page.getByRole("link", { name: "S'inscrire sur le tableau" });
-    await expect(liens).toHaveCount(2);
+    await expect(liens).toHaveCount(1);
     await expect(liens.first()).toHaveAttribute("href", LIEN_DECEMBRE);
     await expect(liens.first()).toHaveAttribute("target", "_blank");
     await expect(page.getByRole("link", { name: /Chants de Noël/ })).toHaveCount(0);
@@ -326,6 +354,60 @@ test.describe("B2 : l'agenda public montre le Sheet jusqu'au 31/12/2026", () => 
     await page.waitForTimeout(300);
     expect(lus).toEqual([]);
     await expect(page.getByText("Tableau des évènements")).toHaveCount(0);
+  });
+});
+
+test.describe("B2 : l'agenda ne dit pas « rien » tant que le Sheet n'a pas répondu", () => {
+  const AUCUN = "Aucun évènement à venir.";
+  const INJOIGNABLE = "Le tableau des évènements n'a pas pu être lu. Réessaie plus tard.";
+  const charge = (page: Page) => expect(page.getByText("Membre de l'église ? Connecte-toi", { exact: false })).toBeVisible();
+
+  test("15/12/2026, rien dans l'app : pendant la lecture, pas de « Aucun évènement à venir. »", async ({ page }) => {
+    await page.clock.setFixedTime(new Date("2026-12-15T10:00:00"));
+    let repondre!: () => void;
+    const reponse = new Promise<void>((r) => { repondre = r; });
+    await page.route(/docs\.google\.com\/spreadsheets/, async (route) => {
+      await reponse;
+      const gid = new URL(route.request().url()).searchParams.get("gid");
+      return route.fulfill({ status: 200, contentType: "text/csv", body: gid === GID_DECEMBRE ? FIXTURE_DECEMBRE : "" });
+    });
+    await fakeFirestore(page, {});
+    await page.goto("/evenements");
+    await charge(page);
+    await page.waitForTimeout(300);
+    await expect(page.getByText(AUCUN)).toHaveCount(0);
+    repondre();
+    await expect(page.getByText("Chants de Noël")).toBeVisible();
+    await expect(page.getByText(AUCUN)).toHaveCount(0);
+  });
+
+  test("15/12/2026, rien dans l'app, Sheet injoignable : il le dit au lieu de « Aucun évènement à venir. »", async ({ page }) => {
+    await page.clock.setFixedTime(new Date("2026-12-15T10:00:00"));
+    await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 500, body: "" }));
+    await fakeFirestore(page, {});
+    await page.goto("/evenements");
+    await charge(page);
+    await expect(page.getByText(INJOIGNABLE)).toBeVisible();
+    await expect(page.getByText(AUCUN)).toHaveCount(0);
+  });
+
+  test("en chinois, Sheet injoignable", async ({ page }) => {
+    await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
+    await page.clock.setFixedTime(new Date("2026-12-15T10:00:00"));
+    await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 500, body: "" }));
+    await fakeFirestore(page, {});
+    await page.goto("/evenements");
+    await expect(page.getByText("暂时无法读取活动表，请稍后再试。")).toBeVisible();
+    await expect(page.getByText("暂无即将举行的活动。")).toHaveCount(0);
+  });
+
+  test("02/01/2027, rien dans l'app : « Aucun évènement à venir. » tout de suite (le Sheet n'est plus lu)", async ({ page }) => {
+    await page.clock.setFixedTime(new Date("2027-01-02T10:00:00"));
+    const lus = await sheets(page);
+    await fakeFirestore(page, {});
+    await page.goto("/evenements");
+    await expect(page.getByText(AUCUN)).toBeVisible();
+    expect(lus).toEqual([]);
   });
 });
 
@@ -478,5 +560,104 @@ test.describe("Q6 : le widget Calendrier (U8, C8) suit la bascule", () => {
     const lus = await tableauDeBord(page, "l", "2026-12-15T10:00:00");
     await expect.poll(() => lus.includes(GID_DECEMBRE)).toBe(true);
     await expect(widgetCal(page).locator('[data-jour="2026-12-06"] [data-source="evenements"]').first()).toBeVisible();
+  });
+});
+
+
+// ─── Relecture : Q3 dans « Déplacer… » et le glisser-déposer du calendrier (U8, C6) ───
+
+test.describe("Q3 : déplacer un évènement de toute l'église de 2027 en 2026 est refusé", () => {
+  const horloge = { today: "2026-12-15", maintenant: "10:00" };
+  const ev = (e: Partial<Evenement> & Pick<Evenement, "id" | "date">) => ({ ...EV, titre: "Titre", ...e }) as Evenement;
+  const de = (source: EntreeCalendrier["source"], id: string, date: string): EntreeCalendrier => ({
+    source, cle: `${source}:${id}:${date}`, date, heure: "", heureFin: "", titre: "Titre", detail: "", couleur: "#000",
+    duSheet: false, moi: false, deplacable: true, lien: "",
+  });
+  const donnees = (evenements: Evenement[]) => ({ evenements, taches: [], scene: null });
+
+  test("« Toute l'église » du 16/01/2027 déposé le 19/12/2026 : refus « sheet » ; le 31/12 aussi, le 01/01/2027 passe", () => {
+    const galette = ev({ id: "galette", date: "2027-01-16" });
+    const d = donnees([galette]);
+    expect(planDeplacement(de("evenements", "galette", "2027-01-16"), "2026-12-19", d, horloge)).toEqual({ type: "refus", refus: "sheet" });
+    expect(planDeplacement(de("evenements", "galette", "2027-01-16"), "2026-12-31", d, horloge)).toEqual({ type: "refus", refus: "sheet" });
+    expect(planDeplacement(de("evenements", "galette", "2027-01-16"), "2027-01-01", d, horloge)).toMatchObject({ type: "evenement", champs: { date: "2027-01-01" } });
+  });
+
+  test("déjà dans l'app en 2026, une section, une réunion : libres (comme le formulaire en modification)", () => {
+    const kermesse = ev({ id: "kermesse", date: "2026-12-18" });
+    expect(planDeplacement(de("evenements", "kermesse", "2026-12-18"), "2026-12-19", donnees([kermesse]), horloge))
+      .toMatchObject({ type: "evenement", champs: { date: "2026-12-19" } });
+    const section = ev({ id: "paix", date: "2027-01-16", pour: "Groupe Paix" });
+    expect(planDeplacement(de("evenements", "paix", "2027-01-16"), "2026-12-19", donnees([section]), horloge))
+      .toMatchObject({ type: "evenement", champs: { date: "2026-12-19" } });
+    const reunion = ev({ id: "reu", date: "2027-01-16", pour: "pole:evenement" });
+    expect(planDeplacement(de("reunions", "reu", "2027-01-16"), "2026-12-19", donnees([reunion]), horloge))
+      .toMatchObject({ type: "evenement", champs: { date: "2026-12-19" } });
+  });
+
+  test("« Déplacer… » le dit en une phrase, sans bouton « Déplacer », et n'écrit rien", async ({ page }, info) => {
+    // Ouvert sur le 16/01/2027 : le jour dans le panneau (ordinateur, tablette couchée) ou sa feuille (tablette debout).
+    const { db } = await ouvrir(page, ADMIN, "/back-office/calendrier?jour=2027-01-16", "2026-12-15T10:00:00");
+    await pret(page);
+    if (info.project.name === "telephone") {
+      await page.locator('[data-jour="2027-01-16"]').first().click();
+      await page.getByRole("button", { name: /Galette/ }).filter({ visible: true }).first().click();
+    }
+    await page.getByRole("button", { name: "Déplacer…" }).filter({ visible: true }).first().click();
+    const dlg = page.getByRole("alertdialog", { name: "Déplacer « Galette »" });
+    await dlg.getByLabel("Nouvelle date").fill("2026-12-19");
+    await expect(dlg).toContainText(REFUS);
+    await expect(dlg.getByRole("button", { name: "Déplacer", exact: true })).toHaveCount(0);
+    await dlg.getByRole("button", { name: "Annuler" }).click();
+    expect(db.writes.filter((w) => /^evenements\//.test(w.path))).toEqual([]);
+  });
+});
+
+
+// ─── Relecture : la bascule tombe à minuit de Paris, quel que soit le fuseau de l'appareil ───
+
+test.describe("La bascule à l'heure de Paris", () => {
+  test("jourDeParis : le 31/12/2026 à 23:00 UTC, c'est minuit à Paris, donc le 01/01/2027 ; à 22:59 et 17:30 UTC, encore le 31", () => {
+    expect(jourDeParis(new Date("2026-12-31T22:59:00Z"))).toBe("2026-12-31");
+    expect(jourDeParis(new Date("2026-12-31T23:00:00Z"))).toBe("2027-01-01");
+    expect(jourDeParis(new Date("2026-12-31T17:30:00Z"))).toBe("2026-12-31");
+  });
+});
+
+test.describe("Un appareil à Shanghai, le 31/12/2026 à 18:30 de Paris (01:30 le 01/01/2027 sur place)", () => {
+  test.use({ timezoneId: "Asia/Shanghai" });
+  const INSTANT = "2026-12-31T18:30:00+01:00";
+
+  test("l'agenda public lit encore le Sheet : la « Veillée » du 31/12 est à venir", async ({ page }) => {
+    const lus = await visiteur(page, INSTANT);
+    await expect(page.getByRole("heading", { name: "Décembre 2026" })).toBeVisible();
+    await expect(page.getByText("Veillée")).toBeVisible();
+    expect(lus).toContain(GID_DECEMBRE);
+  });
+
+  test("le calendrier du Back-Office : « Évènements (Sheet) » et l'annonce d'avant la bascule", async ({ page }, info) => {
+    await ouvrir(page, ADMIN, "/back-office/calendrier", INSTANT);
+    await expect(annonce(page)).toHaveText(ANNONCE_AVANT);
+    await pret(page);
+    const groupe = await pastilles(page, info);
+    await expect(groupe.getByRole("button", { name: "Évènements (Sheet)" })).toBeVisible();
+    await fermer(page, info);
+  });
+
+  test("la gestion des évènements : l'annonce d'avant la bascule", async ({ page }) => {
+    await ouvrir(page, COORD, "/back-office/evenements", INSTANT);
+    await expect(page.getByRole("link", { name: "Nouvel évènement" })).toBeVisible();
+    await expect(annonce(page)).toHaveText(ANNONCE_AVANT);
+  });
+
+  test("le widget Calendrier (L) lit encore décembre", async ({ page }) => {
+    await page.clock.setFixedTime(new Date(INSTANT));
+    const lus = await sheets(page);
+    await signInAs(page, ADMIN, {
+      ...DOCS,
+      "backOffice/u-admin": { tableauDeBord: [{ id: "calendrier", taille: "l", reglages: {} }], majLe: "2026-12-01" },
+    }, "/back-office");
+    await expect(page.getByTestId("grille-widgets").getByRole("region", { name: "Calendrier", exact: true })).toBeVisible();
+    await expect.poll(() => lus.includes(GID_DECEMBRE)).toBe(true);
   });
 });

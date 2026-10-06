@@ -1,6 +1,6 @@
 # Spec : lot U9 — évènements sur le site à partir de janvier 2027
 
-Spec écrite le 04/10/2026 ; rien n'est codé. Attend la validation de Timothée, puis son go.
+Spec écrite le 04/10/2026. B1 à B3 codées le 05/10/2026 et relues le 06/10/2026, voir Avancement ; B4 sur go à part.
 
 Dernier lot du chantier U (`feuille-de-route.md` § 3.U), après U8 (`spec-calendrier.md`) dont il
 reprend le lecteur du Sheet. **Partage** : U8 lit le Sheet (août → décembre 2026) pour le calendrier
@@ -96,8 +96,9 @@ Sheet. Aucun téléphone du Sheet n'apparaît nulle part.
 - Le widget « Prochains évènements » (U6) reçoit les entrées du Sheet par U8 : après la bascule il
   n'en a plus, sans code, le lecteur ne connaissant que 2026.
 - Aucune collection, aucun champ, aucune règle : `firestore.rules` et `access.ts` ne bougent pas.
-- Horloge : le jour se lit comme ailleurs (`todayIso`), donc l'horloge simulée des tests fait
-  basculer.
+- Horloge : le jour **de Paris** (`jourDeParis`, relecture du 06/10/2026 ; avant : `todayIso`, le
+  fuseau de l'appareil), donc tous les appareils basculent à minuit de Paris ; l'horloge simulée des
+  tests fait basculer.
 
 ## Écrans
 
@@ -212,7 +213,9 @@ recommandation.
 - Choix pris : une entrée **passée** du Sheet n'a ni responsable ni lien, même connecté (on ne
   s'inscrit plus, et les cartes passées de l'app n'ont pas non plus « Pour plus d'infos ») ; connecté,
   « S'inscrire sur le tableau » paraît sur **toute** entrée à venir, même sans responsable (lecture
-  littérale de Q2) ; un Sheet injoignable n'affiche rien de plus (pas de bandeau côté assemblée).
+  littérale de Q2 — **changé à la relecture du 06/10/2026** : seulement sous un responsable) ; un Sheet
+  injoignable n'affiche rien de plus (pas de bandeau côté assemblée ; **relecture** : sauf quand l'agenda
+  serait vide, voir plus bas).
 - Tests : `tests/evenements-2027.spec.ts` (B2 pur, agenda sans compte / connecté / 中文, 02/01/2027 sans
   requête, captures). `tests/helpers/fakeSession.ts` : `fakeFirestore` sert par défaut un Sheet des
   évènements vide (au niveau du contexte : la `page.route` d'un test l'emporte), pour que plus aucun test
@@ -256,13 +259,54 @@ plus) :
   tests du lot et ceux que la fusion touche (calendrier, widgets, tableau de bord, Back-Office, coupé)
   relancés.
 
+**06/10/2026 — relecture (deux relectures, onze constats mineurs) : le lot (B1 à B3) est fini et relu**,
+même branche, commit `fix(U9): relecture` :
+- **Grands écrans** : `tests/evenements-2027.spec.ts` est dans `SPECS_GRAND_ECRAN` (tablette couchée et
+  1 440 px en plus des trois appareils).
+- **Déplacer et glisser (U8, C6) suivent Q3** : `planDeplacement` refuse (refus nommé `sheet`, la phrase du
+  formulaire en FR et 中文) de faire passer dans le Sheet un évènement « Toute l'église » de 2027 reculé en
+  2026 ; même règle que le formulaire en modification, désormais en un seul endroit (`dansLeSheet`,
+  `bascule.ts`). Un évènement déjà en 2026 dans l'app, une section, une réunion bougent librement.
+- **Agenda public, Sheet pas encore lu ou injoignable** : tant que le Sheet n'a pas répondu, l'agenda
+  vide dit « Chargement… » et non « Aucun évènement à venir. » ; s'il est injoignable, « Le tableau des
+  évènements n'a pas pu être lu. Réessaie plus tard. » / « 暂时无法读取活动表，请稍后再试。 ». Un agenda
+  qui a déjà des évènements de l'app n'affiche toujours pas de bandeau.
+- **« S'inscrire sur le tableau » seulement sous un responsable** : le Sheet n'a de bloc « INSCRIPTIONS »
+  que pour ces entrées ; sans responsable, ni nom ni lien, même connecté.
+- **Bascule à minuit de Paris** : `jourDeParis()` (`bascule.ts`) décide de la lecture du Sheet (agenda
+  public, calendrier en Agenda, widget Calendrier), de la pastille et de la ligne d'annonce ; l'agenda
+  public prend aussi le jour de Paris pour « à venir » et « passés » (comme les inscriptions,
+  `nowIsoParis`). Un téléphone à Shanghai le 31/12/2026 à 18:30 de Paris voit encore le Sheet.
+- **中文 du refus** : « {{jour}}（含）之前，… » (31/12 compris, comme le FR et le guide).
+- **Pastille selon l'horloge, gardé** : le 15/12/2026, janvier affiché, elle dit encore « Évènements
+  (Sheet) » alors que janvier ne lit pas le Sheet (Q6 : elle change le 01/01/2027) ; un test le fige.
+- Tests : `tests/evenements-2027.spec.ts` (refus du déplacement, pur et « Déplacer… » ; Sheet en lecture
+  et injoignable, FR et 中文 ; lien sans responsable ; fuseau de Shanghai sur l'agenda, le calendrier, la
+  gestion et le widget ; refus en 中文 ; pastille de janvier), vus rouges puis verts : 220 verts sur les
+  cinq projets. Relancés et verts : `evenements`, `calendrier`, `calendrier-deplacer`, `calendrier-widget`,
+  `tableau-de-bord`, `back-office-admin`, `back-office-coupe`, `reunions`, `taches-evenements`,
+  `nouveaux-membres`, `programme-scene`, `scene-saison` (2 245 verts, 68 propres à un autre appareil).
+
 Reste : B4 (ménage de février 2027, sur un go à part ; il retirera aussi la condition du widget
-Calendrier).
+Calendrier, le refus `sheet` du déplacement, `dansLeSheet`, `jourDeParis` s'il ne sert plus, et
+`groupByMonth` / `MonthGroup` d'`agenda.ts`, code mort depuis B2 que seul `tests/evenements.spec.ts`
+importe encore).
+
+**À confirmer par Timothée (relecture)** :
+1. **Modification** : le formulaire ne refuse que le **passage** dans le Sheet ; un évènement « Toute
+   l'église » de 2026 déjà créé dans l'app se modifie sans refus (sinon les évènements d'essai de 2026
+   deviennent intouchables). La spec (§ Écrans) prévoyait le refus en création et en modification.
+2. **Ce que télécharge l'agenda public** : sans compte, le navigateur du visiteur télécharge l'export CSV
+   complet de chaque onglet, blocs « INSCRIPTIONS » (noms, téléphones) compris ; seul l'affichage les
+   écarte. Ce n'est pas une fuite nouvelle (le Sheet est déjà lisible par quiconque a son lien), mais « rien
+   de nominatif sans compte » (Q2) ne tient qu'à l'écran. Pour le tenir vraiment : sortir les inscriptions
+   de l'onglet exporté, ou un relais serveur qui ne renvoie que la grille (à trancher).
 
 À la mise en ligne, côté évènements : (1) supprimer les évènements d'essai du Firestore partagé
 (Timothée, console ; Q8) ; (2) relire les onglets de 2027 du Sheet et prévenir chaque responsable
 concerné (Q4) ; (3) envoyer l'annonce par « Notifier » (Q7 a). U9 ne touche pas à `firestore.rules`.
-Timothée relit le 中文 : « {{jour}} 之前，全教会的活动请写在活动表（Sheet）中。 », « 打开活动表 », pastille
+Timothée relit le 中文 : « {{jour}}（含）之前，全教会的活动请写在活动表（Sheet）中。 » (formulaire et, depuis la
+relecture, refus du déplacement), « 暂时无法读取活动表，请稍后再试。 » (agenda, Sheet injoignable), « 打开活动表 », pastille
 « 活动 » / « 活动（Sheet）», et pour B2 « 活动表 », « 在活动表上报名 ». Pour B3 : « 2026 年的活动仍记在活动表（Sheet）中；2027 年的活动请在这里创建。 »,
 « 活动请在这里创建；系统不再读取活动表（Sheet）。 », « 公告 », et le point du guide « **在哪里创建活动**：日期在
 {{jour}} 之前（含）的全教会活动写在活动表（Sheet）中；从 2027 年起，请在 **后台 › 活动 ›「新建活动」**中创建，

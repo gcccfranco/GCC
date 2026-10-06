@@ -5,12 +5,13 @@
 // tout se crée ici ; plus rien après le 31/01/2027.
 import { Info } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { annonceBascule } from "@/lib/evenements/bascule";
+import { annonceBascule, jourDeParis } from "@/lib/evenements/bascule";
 import { cn } from "@/lib/utils";
 
-export function AnnonceBascule({ today, className }: { today: string; className?: string }) {
+export function AnnonceBascule({ className }: { className?: string }) {
   const { t } = useTranslation();
-  const quand = annonceBascule(today);
+  // Le jour de Paris : la ligne change à minuit de Paris, même sur un appareil loin.
+  const quand = annonceBascule(jourDeParis());
   if (!quand) return null;
   return (
     <p
