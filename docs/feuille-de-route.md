@@ -1001,6 +1001,51 @@ puis les écrans manquants de la piste 2 (bibliothèque, choix des chants à fus
   dès le 01/11 des services de janvier-février 2027 qui n'existent pas, et le rappel du matin en enverra dès
   le 28/12. Correctif = P1 de U2, seul à pouvoir partir sur `main` avant le reste (U2, question 2).
 
+**Codé le 05–06/10/2026 — tout le chantier U est sur `ui/apple-design`** (`2c64fbb`, en local, rien poussé ;
+consigne de Timothée : « on va tout mettre sur la branche d'abord et après on va fusionner sur le main quand je te
+le dirais »). Les onze specs (U1 à U9, U4 bis, U5 bis) codées par des agents en parallèle, une branche par lot,
+tests écrits avant et vus rouges ; chaque lot relu deux fois (conformité à la spec, bugs et sécurité) puis corrigé ;
+intégration des 14 branches sur `lot/u-integration`, fusionnée en avance rapide. Vérifié : suite complète sur les
+cinq projets (ordinateur, téléphone, tablette, tablette paysage, ordinateur 1 440) 6 453 verts, aucun échec
+persistant ; `tsc` 0 erreur, lint 0 erreur, 378 chants valides, build réussi. Les deux défauts ci-dessus sont
+corrigés sur la branche (P1, U5 bis T1), **toujours en ligne** tant que `main` n'a pas reçu la branche. Non faits,
+comme prévu : U9 B4 (ménage de février 2027, go à part), U4 N5 (écartée par U5 bis). Décision du relevé T0 :
+Timothée a voulu **les trois groupes au même modèle d'export, en gras** (Fidélité suit Paix et Bonté ; seul le nom
+de l'église reste en chinois). Chaque spec dit dans « Avancement » ce qui est fait et les choix pris faute de
+réponse.
+
+**À faire par Timothée, dans l'ordre** :
+1. **Publier `firestore.rules`** dans la console Firebase, AVANT de tester en local (le local écrit dans le vrai
+   Firestore) : créneaux de la scène (U1), retrait d'une date choisie (U2), `petitDej/{id}` (U3), sujets, compte
+   rendu, réunions d'équipe et `backOffice/{uid}` (U6).
+2. Une fois, après la publication : **Back-Office › Équipes › Import › « Recalculer depuis l'organigramme »**.
+3. **Tester en local** (`npm install` déjà fait, puis `npm run dev`) : scène (saison, réservations), planning 2027
+   (groupes, Culte, Interfranco/Intergroupe/Campus, « Choisir », export PDF et .xlsx à ouvrir dans Google Sheets),
+   petit déj (Planning › Table, Mes services), barre latérale (réduire, recharger), setlist et Chants en deux
+   volets, mode louange en 2 colonnes, setlist G sur téléphone (glisser), éditeur « Pour quel service ? » et piste
+   2, Back-Office (sélecteur, tableau de bord à personnaliser, barre du bas, Tâches, Évènements, réunions avec
+   sujets et compte rendu, Statistiques, Calendrier), pages en grand.
+4. **Sur de vrais appareils** (Chromium ne remplace pas Safari) : iPad couché (barre en feuille, glissé, voile,
+   liste des chants qui ne saute pas), téléphone (glisser Liste ↔ Partitions de la setlist G).
+5. **Relire le 中文** des nouveaux libellés : `planning.saison.*`, `planning.annee.*`, `planning.choisir.*`,
+   `planning.petitDej.*`, `push.types.*`, `backOffice.*`, `tableauDeBord.*`, `evenements.sujets` / `reprise` /
+   `compteRendu`, les lignes des rappels (`src/lib/petitdej/rappel.ts`, `src/lib/reunions/rappels.ts`), 双栏, 目录.
+6. **Choix à confirmer** (pris par les agents, détaillés dans l'« Avancement » de chaque spec) : nom de l'auteur
+   d'un créneau en entier ou abrégé (U1) ; 2027 visible dès la première date posée sur Interfranco, Intergroupe,
+   Campus (U2) ; la carte du petit déj garde tous les dimanches du trimestre, et la ligne du mercredi part souvent
+   seule (U3) ; « Retour » vers la setlist en deux volets (U5, Q16 disait sans) ; un organisateur non responsable
+   ne gère plus son évènement, seule la coordination (U6) ; en grand, sans évènement de l'app, le volet de droite
+   de /evenements montre la première entrée du Sheet (intégration).
+7. **À la mise en ligne, sur ordre** : retirer l'interrupteur `BACK_OFFICE`, fusionner sur `main`, pousser ; puis
+   la coordination règle et ouvre la saison de Noël 2026 ; « Reprendre les noms du petit déj » une seule fois
+   (jamais pendant les essais en local) ; côté évènements, les trois gestes de U9 (évènements d'essai, onglets 2027
+   du Sheet, annonce par « Notifier ») ; le premier mercredi, vérifier qu'il part une seule notification par
+   personne.
+
+Tests connus pour être instables (anciens, pas du chantier) : `equipes.spec.ts` « 13 équipes »,
+`reunions.spec.ts` « réordonne au clavier » sur téléphone, `setlist-g.spec.ts` « Liste ramène la ligne 1 » sous
+charge. Prénoms réels encore présents dans `tests/programme-scene.spec.ts` et `tests/evenements.spec.ts` (d'avant).
+
 ## 4. Carte des modules de l'app « GCC »
 
 À valider par Timothée avant toute spec de module (les modules existants ne
@@ -1297,6 +1342,11 @@ porte le nom « GCC » et le menu par sections dont ces modules ont besoin.
   (`1d2c140`), prototype Figma en texte vectoriel, planche des designs (version 10 puis 11), entretien en
   cinq tours, puis les dix specs U1 à U9 écrites le 04/10 (U1 par Claude, les autres par des agents en
   parallèle, relues et raccordées entre elles). Deux défauts déjà en ligne relevés. Rien codé, rien commité.
+
+- 05–06/10/2026 : **chantier U codé** (§ 3 U, « Codé le 05–06/10/2026 ») : 62 tranches, 11 lots relus et
+  corrigés, intégration verte, `ui/apple-design` = `2c64fbb` (144 commits, rien poussé). Deux coupures par la
+  limite d'usage, relances sans rien refaire. Reste : publier les règles, tester en local, puis la mise en ligne
+  sur ordre.
 
 ## 7. Relecture adversariale (14/09/2026)
 
