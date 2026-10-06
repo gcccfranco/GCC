@@ -29,6 +29,7 @@ import { Halo } from "@/components/layout/Halo";
 import { useDisposition } from "@/hooks/useDisposition";
 import { GuideFigure } from "@/components/guide/GuideFigure";
 import { FIGURES } from "@/lib/guide/figures";
+import { dernierJourDuSheet } from "@/lib/evenements/bascule";
 
 // Les ancres (#songs, #setlists, #planning, #evenements…) sont visées par les
 // liens « Comment ça marche ? » des pages (lot 8).
@@ -188,6 +189,8 @@ export default function GuidePage() {
               const points = t(`guide.sections.${key}.points`, {
                 returnObjects: true,
                 defaultValue: [],
+                // U9 (Q7 c) : « Où créer un évènement » cite le dernier jour du Sheet.
+                jour: dernierJourDuSheet(),
               }) as unknown as string[];
               const tip = t(`guide.sections.${key}.tip`, { defaultValue: "" });
               const forWhom = t(`guide.sections.${key}.for`, { defaultValue: "" });

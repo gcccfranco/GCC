@@ -184,6 +184,7 @@ test.describe("Barre du bas (B6) : « Plus »", () => {
     // Évènements, Équipes, Messages : les entrées hors de la barre (Calendrier y est depuis U8) ;
     // Statistiques (U7, admins seuls) : sa carte à part, la dernière (planche bo-telephone-plus).
     await expect(cartes).toHaveCount(4);
+    await expect(cartes.filter({ hasText: "Évènements" })).toHaveAttribute("href", /^\/back-office\/evenements\/?$/);
     const equipes = cartes.filter({ hasText: "Équipes" });
     await expect(equipes).toHaveAttribute("href", /^\/back-office\/equipes\/?$/);
     await expect(equipes).toContainText("Organigramme, pôles · personnes et droits");

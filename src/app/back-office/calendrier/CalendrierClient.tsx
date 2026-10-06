@@ -39,6 +39,7 @@ import {
 import { finDuMois, joursDeLaGrille, moisVoisin, nomMois, titreJour, titreMois } from "@/lib/calendrier/grille";
 import { ecrirePreferences, lirePreferences, type PreferencesCalendrier } from "@/lib/calendrier/preferences";
 import { lireSheetEvenements, type LectureSheet } from "@/lib/evenements/sheet";
+import { avantBascule, jourDeParis } from "@/lib/evenements/bascule";
 import { todayIso } from "@/lib/scene/dimanches";
 import { cn } from "@/lib/utils";
 import { ANNONCE_SECTIONS } from "@/types/annonce";
@@ -51,6 +52,7 @@ import { GrillePoints } from "@/components/calendrier/GrillePoints";
 import { BoutonsCreation, ListeDuJour } from "@/components/calendrier/PanneauJour";
 import { TacheForm } from "@/components/taches/TacheForm";
 import { ICONES } from "@/components/calendrier/apparence";
+import { AnnonceBascule } from "@/components/evenements/AnnonceBascule";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 
 // Les dispositions de U4 (bloc « Lot U4 » de globals.css) : le panneau du jour se pose à
@@ -92,6 +94,8 @@ export function CalendrierClient() {
   const { user, profile } = useProfile();
   const profil = profile as ProfilCalendrier | null;
   const aujourdhui = useMemo(() => todayIso(), []);
+  // U9 : la bascule (pastille, lecture du Sheet en Agenda) tombe à minuit de Paris, même loin.
+  const jourParis = useMemo(() => jourDeParis(), []);
   const aDroite = usePanneauADroite();
   const telephone = useTelephone();
   const titreDuJour = useTitreDuJour(lang, aujourdhui);
@@ -163,11 +167,15 @@ export function CalendrierClient() {
     if (tacheLe) listProfiles().then(setMembres).catch(() => {});
   }, [tacheLe]);
 
+  // Lot U9 (Q6) : un mois affiché à partir de la bascule ne lit plus le Sheet, pas même les
+  // derniers jours de décembre en tête de sa grille ; l'agenda, à partir d'aujourd'hui.
+  const lireLeSheet = avantBascule(vue === "agenda" ? jourParis : `${mois}-01`);
   useEffect(() => {
     let vivant = true;
-    lireSheetEvenements(debut, fin).then((lecture) => vivant && setSheet({ fenetre: `${debut}|${fin}`, lecture }));
+    const lecture = lireLeSheet ? lireSheetEvenements(debut, fin) : Promise.resolve<LectureSheet>({ entrees: [], injoignable: false });
+    lecture.then((l) => vivant && setSheet({ fenetre: `${debut}|${fin}`, lecture: l }));
     return () => { vivant = false; };
-  }, [debut, fin]);
+  }, [debut, fin, lireLeSheet]);
 
   const permises = useMemo(() => (user ? sourcesPermises(user, profil) : []), [user, profil]);
   const parJour = useMemo(() => {
@@ -252,7 +260,9 @@ export function CalendrierClient() {
         className={cn(PASTILLE, allumee ? "raised text-foreground" : "text-muted-foreground line-through hover:bg-muted/60")}
       >
         <Icone aria-hidden className="h-3.5 w-3.5 shrink-0" />
-        {t(`calendrier.sources.${s}`)}
+        {/* U9 (Q6) : « Évènements (Sheet) » jusqu'au 31/12/2026, « Évènements » ensuite — selon
+            l'horloge (de Paris), pas selon le mois affiché. */}
+        {t(s === "evenements" && avantBascule(jourParis) ? "calendrier.sources.evenementsSheet" : `calendrier.sources.${s}`)}
       </button>
     );
   });
@@ -305,6 +315,9 @@ export function CalendrierClient() {
             ))}
           </div>
         </div>
+
+        {/* U9 (Q7 b) : où se créent les évènements, jusqu'au 31/01/2027. */}
+        <AnnonceBascule className="mt-3" />
 
         {telephone ? (
           <div className="mt-3 flex items-center gap-1.5">

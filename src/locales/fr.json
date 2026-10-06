@@ -837,7 +837,8 @@
           "Ouvre un évènement pour voir le lieu, l'heure et les places restantes, puis **S'inscrire**, avec tes invités.",
           "Les **infos** épinglées restent en tête du calendrier : elles remplacent les anciennes annonces.",
           "Avec le droit d'annonces d'une section, ou dans un pôle, tu peux **créer** un évènement pour ta section ou une **réunion de pôle**.",
-          "Tu reçois un rappel la veille des évènements auxquels tu es inscrit."
+          "Tu reçois un rappel la veille des évènements auxquels tu es inscrit.",
+          "**Où créer un évènement** : ceux de toute l'église datés jusqu'au {{jour}} s'écrivent dans le Sheet des évènements ; à partir de 2027, ils se créent dans le **Back-Office › Évènements › « Nouvel évènement »**, comme les sorties de section et les réunions de pôle."
         ],
         "tip": "L'organisateur retrouve la liste des inscrits et un **QR code** sur la fiche de l'évènement."
       },
@@ -1849,6 +1850,8 @@
       "errorTitre": "Le titre est obligatoire.",
       "errorDate": "La date est obligatoire.",
       "errorDateFin": "La date de fin doit suivre la date.",
+      "refusSheet": "Jusqu'au {{jour}}, les évènements de toute l'église s'écrivent dans le Sheet des évènements.",
+      "ouvrirSheet": "Ouvrir le Sheet des évènements",
       "errorSave": "Enregistrement impossible. Vérifie ta connexion et que les règles Firestore sont publiées.",
       "plusOptions": "Plus d'options",
       "banniere": "Ajouter une bannière",
@@ -1895,6 +1898,9 @@
     "inscrit": "Inscrit",
     "sinscrire": "S'inscrire",
     "plusInfos": "Pour plus d'infos : {{nom}}",
+    "tableau": "Tableau des évènements",
+    "sinscrireTableau": "S'inscrire sur le tableau",
+    "sheetInjoignable": "Le tableau des évènements n'a pas pu être lu. Réessaie plus tard.",
     "dejaInscrits_one": "{{count}} déjà inscrit",
     "dejaInscrits_other": "{{count}} déjà inscrits",
     "confirmer": "Confirmer",
@@ -2645,6 +2651,11 @@
     "aucunEvenement": "Aucun évènement à gérer.",
     "aucuneReunion": "Aucune réunion.",
     "nouvelleReunion": "Nouvelle réunion",
+    "annonceBascule": {
+      "aria": "Annonce",
+      "avant": "Les évènements de 2026 restent dans le Sheet ; ceux de 2027 se créent ici.",
+      "apres": "Les évènements se créent ici ; le Sheet n'est plus lu."
+    },
     "aVenir": "À venir",
     "reunionDePole": "Réunion de pôle · {{pole}}",
     "reunionDEquipe": "Réunion d'équipe · {{equipe}}",
@@ -2730,7 +2741,8 @@
     "seulementMoi": "Seulement moi",
     "sources": {
       "services": "Services",
-      "evenements": "Évènements (Sheet)",
+      "evenements": "Évènements",
+      "evenementsSheet": "Évènements (Sheet)",
       "reunions": "Réunions",
       "scene": "Scène",
       "taches": "Tâches",
@@ -2783,7 +2795,8 @@
       "refus": {
         "avantAujourdhui": "Pas avant aujourd'hui",
         "sceneFermee": "La scène n'est pas ouverte ce jour-là",
-        "aucunCreneau": "Aucun créneau libre ce jour-là"
+        "aucunCreneau": "Aucun créneau libre ce jour-là",
+        "sheet": "Jusqu'au {{jour}}, les évènements de toute l'église s'écrivent dans le Sheet des évènements."
       }
     },
     "legende": {

@@ -9,6 +9,7 @@
 // lignes à gauche (titre, onglets, « Nouvel évènement » en encre), la fiche à droite — sur
 // l'adresse de l'agenda, celle du prochain évènement. Un volet : les cartes à bannière
 // d'aujourd'hui (deux colonnes sur tablette portrait), puis la fiche seule sur son adresse.
+// Lot U9, B2 : jusqu'au 31/12/2026, les entrées du Sheet des évènements s'y mêlent.
 
 import { GuideLien } from "@/components/guide/GuideLien"
 import { useEffect, useMemo, useState } from "react"
@@ -24,12 +25,13 @@ import { useProfile } from "@/lib/firebase/users"
 import { canSeeEvenement, creatableEvenementPours, estResponsable } from "@/lib/access"
 import { ANNONCE_SECTIONS } from "@/types/annonce"
 import { EVENEMENTS_CHANGED, getInscription, listEvenements } from "@/lib/firebase/evenements"
-import { daysAgo, groupByMonth, isExpired, isInfo, isPast } from "@/lib/evenements/agenda"
+import { agendaPublic, daysAgo, isExpired, isInfo } from "@/lib/evenements/agenda"
+import { avantBascule, BASCULE_EVENEMENTS, jourDeParis } from "@/lib/evenements/bascule"
+import { lireSheetEvenements, type LectureSheet } from "@/lib/evenements/sheet"
 import { estSurLaListe } from "@/lib/deuxVolets"
 import { useDisposition } from "@/hooks/useDisposition"
-import { todayIso } from "@/lib/scene/dimanches"
 import type { Evenement } from "@/types/evenement"
-import { EvenementCard, EvenementCarte } from "./EvenementCard"
+import { EntreeSheetCarte, EvenementCard, EvenementCarte } from "./EvenementCard"
 import { EvenementClient } from "./[id]/EvenementClient"
 
 export function CalendrierClient({ children }: { children: React.ReactNode }) {
@@ -61,7 +63,20 @@ export function CalendrierClient({ children }: { children: React.ReactNode }) {
       .then((r) => setInscrits(new Set(r.filter((id): id is string => id !== null))))
   }, [user, evenements])
 
-  const today = todayIso()
+  // Le jour de Paris, comme les inscriptions (`nowIsoParis`) : la bascule (U9) tombe à minuit de
+  // Paris sur tous les appareils.
+  const today = jourDeParis()
+
+  // Lot U9, B2 : jusqu'au 31/12/2026, les entrées du Sheet (trois derniers mois compris, pour les
+  // passés). À partir du 01/01/2027, aucune requête ; ni sur une fiche en un volet (pas d'agenda).
+  // `null` : lecture en cours.
+  const [sheet, setSheet] = useState<LectureSheet | null>(null)
+  useEffect(() => {
+    if (!avecAgenda || !avantBascule(today)) return
+    lireSheetEvenements(daysAgo(today, 92), BASCULE_EVENEMENTS).then(setSheet).catch(() => setSheet({ entrees: [], injoignable: true }))
+  }, [today, avecAgenda])
+  const sheetEnLecture = avantBascule(today) && sheet === null
+
   const visible = useMemo(
     () => (evenements ?? []).filter((e) => canSeeEvenement(user, profile, e) && !isExpired(e, today)),
     [evenements, user, profile, today],
@@ -69,18 +84,15 @@ export function CalendrierClient({ children }: { children: React.ReactNode }) {
 
   const chargement = authLoading || (user && profileLoading) || evenements === null
   const infos = visible.filter(isInfo).sort((a, b) => Number(b.epingle) - Number(a.epingle) || b.createdAt.localeCompare(a.createdAt))
-  const aVenir = visible.filter((e) => !isInfo(e) && !isPast(e, today))
-  const upcoming = groupByMonth(aVenir, i18n.language)
-  const since = daysAgo(today, 92)
-  const past = visible
-    .filter((e) => !isInfo(e) && isPast(e, today) && (e.dateFin || e.date) >= since)
-    .sort((a, b) => b.date.localeCompare(a.date))
+  const { aVenir: upcoming, passes: past } = agendaPublic(visible, sheet?.entrees ?? [], !!user, today, i18n.language)
 
   // Lot U6, B3 : le formulaire est au Back-Office, ouvert aux responsables.
   const peutCreer = estResponsable(user, profile) && creatableEvenementPours(user, profile, ANNONCE_SECTIONS).length > 0
 
   // En grand, sans fiche choisie : le prochain évènement de l'agenda, sinon la première info (Q3).
-  const premier = upcoming[0]?.evenements[0] ?? infos[0] ?? null
+  // Une entrée du Sheet (U9) n'a pas de fiche : le prochain évènement de l'app.
+  const prochain = upcoming.flatMap((g) => g.elements).find((x) => x.source === "app")
+  const premier = (prochain?.source === "app" ? prochain.evenement : null) ?? infos[0] ?? null
   const surLaListe = estSurLaListe(pathname, "/evenements")
   const idActif = surLaListe ? premier?.id : decodeURIComponent(pathname.replace(/\/+$/, "").split("/")[2] ?? "")
 
@@ -108,21 +120,30 @@ export function CalendrierClient({ children }: { children: React.ReactNode }) {
         </section>
       )}
 
+      {/* Rien de prévu : on ne l'affirme qu'une fois le Sheet lu (U9), et pas s'il n'a pu l'être. */}
       {upcoming.length === 0 && (
         <p className="text-sm text-muted-foreground">
-          {t("evenements.none")}
-          {peutCreer && ` ${t("evenements.noneHint")}`}
+          {sheetEnLecture ? t("common.loading") : sheet?.injoignable ? t("evenements.sheetInjoignable") : (
+            <>
+              {t("evenements.none")}
+              {peutCreer && ` ${t("evenements.noneHint")}`}
+            </>
+          )}
         </p>
       )}
       {upcoming.map((g) => (
         <section key={g.key} className={grand ? "space-y-1" : "space-y-3"}>
           <h2 className="text-sm font-semibold text-muted-foreground px-1 capitalize">{g.label}</h2>
           {grand ? (
-            g.evenements.map((e) => <EvenementCard key={e.id} evenement={e} actif={e.id === idActif} inscrit={!!user && inscrits.has(e.id)} />)
+            g.elements.map((x, i) => x.source === "app"
+              ? <EvenementCard key={x.evenement.id} evenement={x.evenement} actif={x.evenement.id === idActif} inscrit={!!user && inscrits.has(x.evenement.id)} />
+              : <EntreeSheetCarte key={`sheet-${i}`} entree={x.entree} />)
           ) : (
             // Tablette portrait : les cartes sur deux colonnes (planche `evenements-tablette`).
             <div className="space-y-3 md:grid md:grid-cols-2 md:items-start md:gap-4 md:space-y-0">
-              {g.evenements.map((e) => <EvenementCarte key={e.id} evenement={e} inscrit={!!user && inscrits.has(e.id)} />)}
+              {g.elements.map((x, i) => x.source === "app"
+                ? <EvenementCarte key={x.evenement.id} evenement={x.evenement} inscrit={!!user && inscrits.has(x.evenement.id)} />
+                : <EntreeSheetCarte key={`sheet-${i}`} entree={x.entree} />)}
             </div>
           )}
         </section>
@@ -133,7 +154,9 @@ export function CalendrierClient({ children }: { children: React.ReactNode }) {
           <button type="button" className="text-xs font-semibold text-muted-foreground hover:text-foreground" onClick={() => setShowPast(!showPast)}>
             {showPast ? t("evenements.hidePast") : t("evenements.past")} ({past.length})
           </button>
-          {showPast && past.map((e) => <EvenementCard key={e.id} evenement={e} past actif={grand && e.id === idActif} />)}
+          {showPast && past.map((x, i) => x.source === "app"
+            ? <EvenementCard key={x.evenement.id} evenement={x.evenement} past actif={grand && x.evenement.id === idActif} />
+            : <EntreeSheetCarte key={`sheet-${i}`} entree={x.entree} past />)}
         </section>
       )}
 

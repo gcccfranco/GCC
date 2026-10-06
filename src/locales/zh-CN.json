@@ -834,7 +834,8 @@
           "打开一个活动可查看地点、时间和剩余名额，然后点「**报名**」，可带上同行的人。",
           "置顶的**通知**显示在日历最上方，取代以前的公告。",
           "拥有某个小组的公告权限，或属于某个部门时，你可以为小组**创建**活动，或创建**部门会议**。",
-          "你报名的活动会在前一天收到提醒。"
+          "你报名的活动会在前一天收到提醒。",
+          "**在哪里创建活动**：日期在 {{jour}} 之前（含）的全教会活动写在活动表（Sheet）中；从 2027 年起，请在 **后台 › 活动 ›「新建活动」**中创建，小组外出和部门会议也一样。"
         ],
         "tip": "组织者可在活动页面查看报名名单和**二维码**。"
       },
@@ -1845,6 +1846,8 @@
       "errorTitre": "标题为必填项。",
       "errorDate": "日期为必填项。",
       "errorDateFin": "结束日期须晚于开始日期。",
+      "refusSheet": "{{jour}}（含）之前，全教会的活动请写在活动表（Sheet）中。",
+      "ouvrirSheet": "打开活动表",
       "errorSave": "无法保存。请检查网络连接及 Firestore 规则是否已发布。",
       "plusOptions": "更多选项",
       "banniere": "添加横幅图片",
@@ -1891,6 +1894,9 @@
     "inscrit": "已报名",
     "sinscrire": "报名",
     "plusInfos": "详情联系：{{nom}}",
+    "tableau": "活动表",
+    "sinscrireTableau": "在活动表上报名",
+    "sheetInjoignable": "暂时无法读取活动表，请稍后再试。",
     "dejaInscrits_one": "已有 {{count}} 人报名",
     "dejaInscrits_other": "已有 {{count}} 人报名",
     "confirmer": "确认",
@@ -2634,6 +2640,11 @@
     "aucunEvenement": "没有需要管理的活动。",
     "aucuneReunion": "暂无会议。",
     "nouvelleReunion": "新建会议",
+    "annonceBascule": {
+      "aria": "公告",
+      "avant": "2026 年的活动仍记在活动表（Sheet）中；2027 年的活动请在这里创建。",
+      "apres": "活动请在这里创建；系统不再读取活动表（Sheet）。"
+    },
     "aVenir": "即将举行",
     "reunionDePole": "部门会议 · {{pole}}",
     "reunionDEquipe": "团队会议 · {{equipe}}",
@@ -2719,7 +2730,8 @@
     "seulementMoi": "只看我的",
     "sources": {
       "services": "服事",
-      "evenements": "活动（Sheet）",
+      "evenements": "活动",
+      "evenementsSheet": "活动（Sheet）",
       "reunions": "会议",
       "scene": "舞台",
       "taches": "任务",
@@ -2770,7 +2782,8 @@
       "refus": {
         "avantAujourdhui": "不能早于今天",
         "sceneFermee": "这天舞台不开放",
-        "aucunCreneau": "这天没有空闲时段"
+        "aucunCreneau": "这天没有空闲时段",
+        "sheet": "{{jour}}（含）之前，全教会的活动请写在活动表（Sheet）中。"
       }
     },
     "legende": {

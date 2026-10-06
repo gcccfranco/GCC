@@ -503,7 +503,8 @@ test.describe("B3 : Évènements", () => {
     await page.route("**/api/push/notify-evenement", (route) => route.fulfill({ json: { ok: true } }));
     const db = await ouvrirB3(page, COORD, "/back-office/evenements/nouveau");
     await page.getByLabel("Nom de l'évènement").fill("Pique-nique");
-    await page.getByLabel("Date", { exact: true }).fill("2026-10-31");
+    // U9 (B1) : « Toute l'église » avant 2027 s'écrit dans le Sheet.
+    await page.getByLabel("Date", { exact: true }).fill("2027-01-30");
     await page.getByRole("button", { name: "Créer l'évènement" }).click();
     await expect(page).toHaveURL(/\/back-office\/evenements\/fake-\d+\/?$/);
     await expect(page.getByTestId("gestion-carte")).toContainText("Pique-nique");

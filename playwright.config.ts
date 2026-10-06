@@ -36,6 +36,8 @@ const SPECS_GRAND_ECRAN = [
   /calendrier\.spec\.ts/,
   /calendrier-deplacer\.spec\.ts/,
   /calendrier-widget\.spec\.ts/,
+  // Lot U9 (spec-evenements-2027.md) : ligne d'annonce, pastille et calendrier, agenda public.
+  /evenements-2027\.spec\.ts/,
   // B2 : Planning, Équipes, Messages rangés dans le Back-Office (pleine largeur, barre latérale).
   /back-office-admin\.spec\.ts/,
   // B4 : le tableau de bord (grille de 4 en paysage et à 1 440 px).
