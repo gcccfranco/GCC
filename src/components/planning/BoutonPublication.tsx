@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { Send, EyeOff } from "lucide-react"
 import { useTranslation } from "react-i18next"
+import { useConfirmer } from "@/components/layout/Confirmer"
 import { authHeader } from "@/lib/firebase/setlists"
 
 // « Publier le T1 » / « Masquer le T1 » sur la page du planning (lot U2, Q4) :
@@ -19,12 +20,14 @@ export function BoutonPublication({ planningKey, planningLabel, annee, tri, publ
   onChange: (published: string[]) => void
 }) {
   const { t } = useTranslation()
+  const confirmer = useConfirmer()
   const [enCours, setEnCours] = useState(false)
   const [erreur, setErreur] = useState("")
 
   async function agir() {
     const publish = !publie
-    if (publish && !window.confirm(t("planning.publierConfirm", { tri, annee, planning: planningLabel }))) return
+    if (publish && !(await confirmer({ titre: t("planning.publierConfirm", { tri, annee, planning: planningLabel }),
+      texte: t("planning.publierConfirmTexte"), action: t("planning.publier", { tri }) }))) return
     setEnCours(true)
     setErreur("")
     try {

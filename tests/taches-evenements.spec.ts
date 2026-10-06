@@ -1,5 +1,6 @@
 import { expect, test, type Browser, type Page } from "@playwright/test";
 import { fakeFirestore, signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { fenetreDuSite, repondreDansLeSite } from "./helpers/agencement";
 import { tachesDupliquees } from "../src/lib/taches/echeances";
 import type { Tache } from "../src/types/tache";
 
@@ -268,8 +269,8 @@ test("formulaire : Détacher écrit evenement: null ; une tâche liée ne propos
 test("évènement supprimé : la tâche reste, avec le titre mémorisé", async ({ page }) => {
   // Lot U6, B3 : supprimer est sur la fiche de gestion, au Back-Office.
   const db = await member(page, ALICE, "/back-office/evenements/noel");
-  page.on("dialog", (d) => d.accept());
   await page.getByRole("button", { name: "Supprimer" }).click();
+  await repondreDansLeSite(page, "Supprimer");
   await expect(page).toHaveURL(/\/evenements\/?$/);
   expect(db.doc("evenements/noel")).toBeUndefined();
   // Rien n'est écrit chez les tâches : ni suppression, ni détachement.
@@ -296,13 +297,12 @@ test("中文 : bloc, ligne et confirmation en chinois", async ({ page }) => {
   await expect(page.locator(".group-row", { hasText: "Fond PPT de Noël" })).toContainText("用于 Noël 2026");
 
   // Dupliquer Noël : la question est posée en chinois, avec le nombre de tâches.
-  const questions: string[] = [];
-  page.on("dialog", (d) => { questions.push(d.message()); return d.dismiss(); });
   await page.goto("/back-office/evenements/noel");
   await page.getByRole("link", { name: "复制" }).click();
   await page.getByLabel("日期", { exact: true }).fill("2027-12-24");
   await page.getByRole("button", { name: "创建活动" }).click();
-  await expect.poll(() => questions).toEqual(["是否同时复制它的 1 个任务（保持相同提前天数）？"]);
+  await expect(fenetreDuSite(page).getByRole("heading", { name: "是否同时复制它的 1 个任务（保持相同提前天数）？" })).toBeVisible();
+  await repondreDansLeSite(page, "取消");
 });
 
 /** Capture à regarder à l'œil (PW_CAPTURES=<dossier>), une par appareil. */

@@ -54,6 +54,8 @@ const SPECS_GRAND_ECRAN = [
   /agencement-barre-reduite\.spec\.ts/,
   // Scène Pâques · Noël (docs/spec-scene-paques-noel.md) : onglets de fête, une semaine à la fois.
   /scene-paques-noel\.spec\.ts/,
+  // Agencement v18 (docs/spec-agencement-v18.md) : chaque tranche, F1 comprise, sur les cinq projets.
+  /agencement-v18-.*\.spec\.ts/,
 ];
 
 export default defineConfig({

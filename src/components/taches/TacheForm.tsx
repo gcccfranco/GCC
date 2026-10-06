@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
+import { useConfirmer } from "@/components/layout/Confirmer";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -68,6 +69,7 @@ export function TacheForm({ open, pole, poles, evenement, echeance, initial, mem
 
 function Champs({ pole: poleDepart, poles, evenement, echeance, initial, membres, onSubmit, onDelete, onClose }: Omit<Parameters<typeof TacheForm>[0], "open">) {
   const { t } = useTranslation();
+  const confirmer = useConfirmer();
   const [pole, setPole] = useState(poleDepart);
   const [v, setV] = useState<TacheValues>(
     initial ?? {
@@ -101,7 +103,7 @@ function Champs({ pole: poleDepart, poles, evenement, echeance, initial, membres
   }
 
   async function remove() {
-    if (!onDelete || !window.confirm(t("taches.confirmerSuppression"))) return;
+    if (!onDelete || !(await confirmer({ titre: t("taches.confirmerSuppression"), action: t("common.buttons.delete"), destructif: true }))) return;
     setBusy(true);
     try {
       await onDelete();

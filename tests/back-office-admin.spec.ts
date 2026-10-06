@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { repondreDansLeSite } from "./helpers/agencement";
 import { readFileSync } from "node:fs";
 import { planningsDuBackOffice, sousPartiesEvenements } from "../src/lib/access";
 
@@ -461,8 +462,8 @@ test.describe("B3 : Évènements", () => {
       ...DOCS_EV, "evenements/reu-da/sujets/s1": sujet("Affiche", 0), "evenements/reu-da/sujets/s2": sujet("Budget", 1),
     });
     await expect(page.getByRole("region", { name: /^Sujets/ }).getByText("Budget")).toBeVisible();
-    page.once("dialog", (d) => d.accept());
     await page.getByRole("button", { name: "Supprimer" }).click();
+    await repondreDansLeSite(page, "Supprimer");
     await expect(page).toHaveURL(/\/back-office\/evenements\/reunions\/?$/);
     expect(db.writes.filter((w) => w.method === "DELETE").map((w) => w.path).sort())
       .toEqual(["evenements/reu-da", "evenements/reu-da/sujets/s1", "evenements/reu-da/sujets/s2"]);
@@ -475,8 +476,8 @@ test.describe("B3 : Évènements", () => {
     await page.route(/\/documents\/evenements\/reu-da$/, (route) => route.request().method() === "DELETE"
       ? route.fulfill({ status: 403, contentType: "application/json", body: JSON.stringify({ error: { code: 403, message: "refusé" } }) })
       : route.fallback());
-    page.once("dialog", (d) => d.accept());
     await page.getByRole("button", { name: "Supprimer" }).click();
+    await repondreDansLeSite(page, "Supprimer");
     await expect(page.getByRole("alert").filter({ hasText: "Suppression impossible. Réessaie." })).toBeVisible();
     await expect(page).toHaveURL(/\/back-office\/evenements\/reu-da\/?$/);
   });
@@ -510,8 +511,8 @@ test.describe("B3 : Évènements", () => {
     const gestion = page.getByTestId("gestion-carte");
     await expect(gestion.getByRole("link", { name: "Modifier" })).toHaveAttribute("href", /^\/back-office\/evenements\/fete\/modifier\/?$/);
     await expect(gestion.getByRole("link", { name: "Dupliquer" })).toHaveAttribute("href", /^\/back-office\/evenements\/nouveau\/?\?from=fete$/);
-    page.once("dialog", (d) => d.accept());
     await gestion.getByRole("button", { name: "Supprimer" }).click();
+    await repondreDansLeSite(page, "Supprimer");
     await expect(page).toHaveURL(/\/back-office\/evenements\/?$/);
     expect(db.writes.some((w) => w.method === "DELETE" && w.path === "evenements/fete")).toBe(true);
   });

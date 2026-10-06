@@ -2,6 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { repondreDansLeSite } from "./helpers/agencement";
 import {
   canCreateEvenement, canSeeEvenement, creatableEvenementPours, equipeDuPour, estDeLaReunion, estReunion, peutAjouterSujet,
   peutOrdonnerSujets, peutRetirerSujet,
@@ -229,8 +230,8 @@ test("retrait : un membre retire ses sujets, pas ceux des autres", async ({ page
   await expect(lignes(page)).toHaveCount(4);
   await expect(carte(page).getByRole("button", { name: /^Retirer/ })).toHaveCount(2);
   await expect(lignes(page).nth(0).getByRole("button", { name: /^Retirer/ })).toHaveCount(0);
-  page.on("dialog", (d) => d.accept());
   await lignes(page).nth(3).getByRole("button", { name: "Retirer « Budget impression du trimestre »" }).click();
+  await repondreDansLeSite(page, "Retirer");
   await expect(lignes(page)).toHaveCount(3);
   await expect(carte(page)).not.toContainText("Budget impression");
   expect(ecritures(db, "DELETE").map((w) => w.path)).toEqual(["evenements/reunion-da/sujets/s4"]);
@@ -759,8 +760,8 @@ test("compte rendu : on l'ouvre dans un nouvel onglet ; une personne de la réun
   await expect(ouvrirLien).toHaveAttribute("target", "_blank");
   await expect(lienCR(page)).toHaveCount(0);
 
-  page.once("dialog", (d) => d.accept());
   await compteRendu(page).getByRole("button", { name: "Retirer le lien du compte rendu" }).click();
+  await repondreDansLeSite(page, "Retirer");
   await expect.poll(() => ecrituresReunion(db).map((w) => w.data)).toEqual([{ compteRendu: null }]);
   await expect(lienCR(page)).toBeVisible();
   await expect(compteRendu(page).getByRole("link", { name: "Ouvrir" })).toHaveCount(0);

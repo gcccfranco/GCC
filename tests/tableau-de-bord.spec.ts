@@ -2,6 +2,7 @@ import { expect, test, type BrowserContextOptions, type Locator, type Page, type
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { signInAs, type FakeDb, type FakeProfile } from "./helpers/fakeSession";
+import { repondreDansLeSite } from "./helpers/agencement";
 import {
   ajouterWidget, catalogue, changerReglages, changerTaille, deplacerWidget, dispositionAffichee, dispositionParDefaut, retirerWidget,
 } from "../src/lib/tableauDeBord/disposition";
@@ -711,13 +712,13 @@ test.describe("Personnaliser (B5) : écrans", () => {
     await expect(widget(page, "Scène")).toBeVisible();
     await page.getByRole("button", { name: "Personnaliser" }).click();
     // Refusée : rien ne change, rien ne s'écrit.
-    page.once("dialog", (d) => d.dismiss());
     await page.getByRole("button", { name: "Disposition par défaut" }).click();
+    await repondreDansLeSite(page, "Annuler");
     expect(await widgetsAffiches(page)).toEqual(["scene"]);
     expect(ecrituresBO(db, "uid-alice")).toHaveLength(0);
     // Acceptée : le défaut d'Alice, et plus de disposition enregistrée.
-    page.once("dialog", (d) => d.accept());
     await page.getByRole("button", { name: "Disposition par défaut" }).click();
+    await repondreDansLeSite(page, "Remettre par défaut");
     await expect.poll(() => widgetsAffiches(page)).toEqual(ALICE_DEFAUT);
     await expect.poll(() => ecrituresBO(db, "uid-alice").length).toBe(1);
     expect(db.doc("backOffice/uid-alice")!.tableauDeBord).toBeUndefined();

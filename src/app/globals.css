@@ -92,6 +92,10 @@
      sans couleur à elles ; il s'efface dès qu'une page pose son propre halo. */
   .halo-defaut::before, :root:not(:has(.halo:not(.halo-defaut, .barre-halo))) .barre-halo::before { opacity: 0.08; }
   :root:has(.halo:not(.halo-defaut, .barre-halo)) .halo-defaut { display: none; }
+  /* Au Back-Office (agencement v18, R12) : le halo par défaut prend le bleu gris de la planche
+     (`--halo-back-office`), à l'opacité de la planche ; la copie des barres suit. */
+  .halo-defaut[data-back-office]::before,
+  :root:has(.halo-defaut[data-back-office]):not(:has(.halo:not(.halo-defaut, .barre-halo))) .barre-halo::before { opacity: 0.8; }
   .halo-chant::before, :root:has(.halo-chant) .barre-halo::before { left: auto; right: -80px; top: calc(-60px + var(--sat)); width: 300px; height: 220px; opacity: 0.12; filter: blur(44px); }
   /* Grand écran (ordinateur, tablette en paysage ; tranché le 20/09/2026 au soir) : la
      colonne de contenu est centrée, le halo des planches resterait coincé dans le coin.
@@ -683,4 +687,40 @@
 }
 @media screen and (pointer: coarse) and (orientation: landscape) and (min-width: 1024px) {
   .equipes-ecran { height: calc(100dvh - var(--nav-h)); }
+}
+
+/* ══ Agencement v18, F1 (docs/spec-agencement-v18.md, R2, R10, R12) ══════════════════════════
+   Jetons lus par `EnTetePage`, `DeuxVolets` et les pages :
+   --marge-page        marge de la zone de contenu, des deux côtés : 16 px téléphone, 24 px dès
+                       768 px (tablette portrait), 40 px barre dépliée, 28 px barre réduite et
+                       tablette couchée. Rien n'est centré dans une borne : la place gagnée en
+                       réduisant la barre va au contenu.
+   --ecart-volets      entre la liste-carte et la fiche : 24 px, 20 px barre réduite.
+   --halo-back-office  le halo par défaut sous `/back-office` (bleu gris de la planche).
+   Mêmes requêtes que le bloc « Lot U4 » : la disposition se décide ici. */
+@layer base {
+  :root {
+    --marge-page: 16px;
+    --ecart-volets: 24px;
+    --halo-back-office: #e4e7f6;
+  }
+  .dark { --halo-back-office: #262b45; }
+  @media screen and (min-width: 768px) {
+    :root { --marge-page: 24px; }
+  }
+  @media screen and (pointer: fine) and (min-width: 1024px) {
+    :root { --marge-page: 40px; }
+    :root[data-barre="reduite"] { --marge-page: 28px; --ecart-volets: 20px; }
+  }
+  @media screen and (pointer: coarse) and (orientation: landscape) and (min-width: 1024px) {
+    :root { --marge-page: 28px; --ecart-volets: 20px; }
+  }
+}
+
+@layer components {
+  /* Le titre de la page, le h1 de `EnTetePage` (R2) : 24 px sur téléphone, 30 px dès 768 px. */
+  .titre-page { font-size: 24px; line-height: 30px; font-weight: 700; letter-spacing: -0.02em; }
+  @media (min-width: 768px) {
+    .titre-page { font-size: 30px; line-height: 36px; }
+  }
 }

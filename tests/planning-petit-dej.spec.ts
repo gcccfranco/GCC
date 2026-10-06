@@ -1,6 +1,7 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { abonneAuxNotifications, fsDoc, signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { fenetreDuSite, repondreDansLeSite } from "./helpers/agencement";
 import { parsePetitDej } from "../src/lib/planning/sheets";
 import { findMyServices, type PlanningData } from "../src/lib/planning/names";
 import { reminderBody, reminderServicesFor, type ReminderService } from "../src/lib/push/reminderMessage";
@@ -463,12 +464,11 @@ test("carte : « Retirer » demande confirmation et rend le dimanche « Libre »
     ligne({ id: "m", dimanche: "2026-09-27", nom: "Famille Martin", uid: CHARLIE.uid, auteurUid: CHARLIE.uid }),
   ]));
   const le27 = rangee(carteDe(page), "2026-09-27");
-  let question = "";
-  page.once("dialog", (d) => { question = d.message(); void d.accept(); });
   await le27.getByRole("button", { name: "Retirer" }).click();
+  await expect(fenetreDuSite(page).getByRole("heading", { name: "Retirer cette ligne ?" })).toBeVisible();
+  await repondreDansLeSite(page, "Retirer");
   await expect(le27.getByText("Libre", { exact: true })).toBeVisible();
   await expect(le27.getByRole("button", { name: "Je m'inscris" })).toBeVisible();
-  expect(question).toBe("Retirer cette ligne ?");
   expect(db.doc("petitDej/m"), "le document est supprimé").toBeUndefined();
 });
 
@@ -534,8 +534,8 @@ test("carte : un écrivain du planning Table ajoute « Les jeunes du Campus » e
 
   const le27 = rangee(carte, "2026-09-27");
   await expect(le27.getByRole("button", { name: "Ajouter une ligne" }), "sur chaque dimanche à venir, même pris").toBeVisible();
-  page.once("dialog", (d) => void d.accept());
   await le27.getByRole("button", { name: "Retirer" }).click();
+  await repondreDansLeSite(page, "Retirer");
   await expect(le27.getByText("Libre", { exact: true })).toBeVisible();
   expect(db.doc("petitDej/a")).toBeUndefined();
   await expect(rangee(carte, "2026-09-13").getByRole("button"), "le passé, même pour un écrivain : aucun bouton").toHaveCount(0);
