@@ -375,6 +375,67 @@ Choix faits faute de réponse écrite :
   le provoquer sans toucher au code du planning).
 - Le « ← » de l'éditeur ramène toujours à la liste des setlists (T3 refait cet en-tête).
 
-Reste : T3 (piste 2 grands écrans), T4 (feuilles téléphone et tablette portrait), T5 (bibliothèque complète).
-Timothée : aucune règle Firestore à publier pour T1 ni T2 ; relire les libellés 中文 de `setlists.entree`. Le correctif
-`jianpuChords` (commit à lui seul) peut partir sur `main` sur son ordre, avant le reste du lot.
+**05/10/2026 — T3 faite** (piste 2 sur ordinateur et tablette paysage ; téléphone et tablette portrait gardent la page
+d'aujourd'hui jusqu'à T4), après fusion de `lot/u4-navigation` et `lot/u5-deux-volets` dans la branche (`26d1427`,
+`3823ad6`). Commencée le 05/10 au soir, coupée par la limite de dépense avant le commit ; reprise le 06/10, relue,
+vérifiée et commitée « feat(U5bis): T3 — … ».
+
+- `SetlistForm` choisit sa mise en page par `useEditeurDeuxColonnes` (`src/hooks/`) : tablette couchée toujours,
+  ordinateur barre réduite toujours, barre dépliée dès 1 054 px de fenêtre (806 px d'éditeur, Q6) ; mêmes requêtes que
+  U4, jamais l'agent utilisateur. L'état et les écritures restent ceux de `SetlistForm` (`buildSetlistItems`) : seule la
+  mise en page change, `EditeurDeuxColonnes` reçoit champs et actions.
+- `src/components/setlists/editeur/` :
+  - `EditeurDeuxColonnes.tsx` : grille `clamp(400px, 100% − 672px, 520px)` + volet (Q2, N5 de U4 non construite) ; les
+    deux colonnes défilent chacune, le bas de la colonne setlist (repère, « Publier » à la couleur du culte, question 9,
+    ou « Terminé ») reste visible ; premier élément choisi à l'ouverture de « Modifier » (Q7), bibliothèque ouverte
+    d'office sur une setlist vide (Q8) ; « Retirer » choisit le suivant.
+  - `EnTeteEditeur.tsx` (Q5) : fil « Setlists › Nouvelle setlist / Modifier la setlist », titre modifiable et crayon,
+    puces Catégorie · Date · Moment (Campus) · Présidence (liste ou « Autre » + nom) · Visibilité, « Notes pour l'équipe ».
+  - `ListeCourte.tsx` : poignée, numéro (chants et fusions, pas les transitions, comme la planche), titre, pinyin,
+    étiquette 简谱, artiste, pastilles, note en italique, `KeyPill` « orig. », chevron ; ligne choisie en encre
+    (`aria-current`) ; transition en pointillé ambre ; fusion « A / B ». Réordonner au doigt, à la souris et au clavier
+    (`KeyboardSensor`, Q13).
+  - `Reglages.tsx` : 12 tonalités en groupe radio (« Tonalité de <titre> », flèches ; l'origine écrit `null`), structure
+    en pastilles (glisser, toucher = choisir, ✕ = retirer, flèches = déplacer ; « + section », « + Dernière phrase »),
+    « Par section » (Note · Nuance · Transition · 升调, sous-éditeurs d'aujourd'hui sous la ligne).
+  - `Volets.tsx` : chant (« Voir la partition » dans un nouvel onglet dans la tonalité choisie, Q10 ; Partition 简谱 /
+    Paroles pour un chant à scan ; note du chant ; « Fusionner » s'il reste un autre chant seul ; « Retirer »),
+    transition (texte, « Retirer », Q9), fusion (par chant : tonalité, structure Dp comprise, par section sans
+    transition ; « Mélanger » et `MixedStructureEditor` d'aujourd'hui ; « Défusionner », « Retirer »), choix des chants
+    à fusionner (Q1 : départ coché en tête, autres chants seuls, ligne de la question 7, « Annuler », « Fusionner (n) »
+    inactif sans second chant ; la fusion, choisie, prend la place du premier coché par `fusionner`).
+  - `Bibliotheque.tsx` : « Ajouter des chants », « Terminé » (Échap ou un élément touché aussi), recherche titre, pinyin,
+    artiste sans limite (`chantsDeLaBibliotheque`), compteur, `KeyPill` « reco. », « + », « ✓ Dans la setlist »,
+    « ✓ Ajouté » ; ajout à la fin dans la tonalité recommandée ; toucher un titre montre ses sections (l'aperçu des
+    deux lignes vient en T5), « Touche + pour ajouter, le titre pour un aperçu ».
+- `SetlistFormRows.tsx` : sous-éditeurs exportés (note, nuance, 升调, mélange), `data-ligne-section` / `data-nom-section`
+  pour les tests ; `addTransition` rend l'uid de la transition ajoutée (choisie aussitôt). FR et 中文 :
+  bloc `setlists.editeur` des deux fichiers de langue.
+- Tests (écrits avant, vus rouges — 19 sur 19 sur l'éditeur d'avant —, puis verts) : 11 tests d'écran dans
+  `setlist-editeur-piste2.spec.ts` (ajouté à `SPECS_GRAND_ECRAN` : ordinateur, `tablette-paysage`, `ordinateur-1440`),
+  5 dans `setlist-fusionner.spec.ts`, 3 dans `setlist-bibliotheque.spec.ts` ; ils sautent sur téléphone et tablette
+  portrait (T4). Aide commune `tests/helpers/editeurSetlist.ts` : les specs existantes passent par elle et valent pour
+  les deux pages (sélecteurs seulement, vérifications des écritures inchangées) ; `navigation-grand-ecran` ouvre
+  l'éditeur par `?autre=1`.
+- Vérifié le 06/10 : `setlist-editeur-piste2`, `setlist-fusionner`, `setlist-bibliotheque`, `setlist-pour-quel-service`,
+  `setlist-editor`, `setlist-history`, `coup-d-oeil`, `fusions-dp`, `recommended-key`, `harmonie-jianpu` — 450 verts,
+  42 sautés (grand écran sur petits appareils), cinq projets ; `navigation-grand-ecran`, `back-office-coupe`,
+  `setlist-deux-volets` — 202 verts ; `tsc` propre, lint sans erreur ni avertissement nouveau. Captures regardées
+  (1 280, 1 440, tablette couchée) et comparées à `creer-piste2-ordinateur`, `-fusionner`, `-bibliotheque`.
+
+Choix faits faute de réponse écrite :
+- Numéros : les transitions n'en ont pas (planche) ; « 2 · 一生爱你 » quand une transition précède.
+- Le choix « Fusionner » liste aussi les chants seuls placés avant le chant de départ (la planche le fait).
+- Chant de départ du choix : case cochée qu'on ne peut décocher (`aria-disabled`), pas grisée.
+- « Fusionner » est caché, non grisé, quand il ne reste aucun autre chant seul (spec : « n'apparaît que »).
+- Crayon du titre : décoratif (`aria-hidden`), il met le focus dans le titre ; le titre est un champ nommé « Titre ».
+- La date s'écrit en clair dans sa puce (« Dim. 18 octobre ») ; le champ de date natif, transparent, est posé dessus.
+- Bibliothèque : toucher un titre montre seulement les noms des sections en T3 ; les deux lignes avec accords (Q12),
+  les filtres (Q11) et le « + » entre deux éléments viennent en T5, comme le dit « Ce qui sera construit ».
+- Une étape ajoutée garde un uid `<section>-<chiffres>` comme aujourd'hui : `structureOverride` écrit les uids et
+  `resolveStructureOverride` les relit sous cette forme.
+
+Reste : T4 (feuilles téléphone et tablette portrait, retrait de l'ancienne page et de « Sélectionner »), T5
+(bibliothèque complète : filtres, aperçu, « + » entre deux éléments).
+Timothée : aucune règle Firestore à publier pour T1, T2 ni T3 ; relire les libellés 中文 de `setlists.entree` et
+`setlists.editeur`. Le correctif `jianpuChords` (commit à lui seul) peut partir sur `main` sur son ordre, avant le reste du lot.

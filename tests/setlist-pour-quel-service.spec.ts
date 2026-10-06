@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeDb, type FakeProfile } from "./helpers/fakeSession";
+import { boutonAjouter, boutonTonalite, champPresidence, enDeuxColonnes, groupeTonalites } from "./helpers/editeurSetlist";
 import { lienPreparer, lirePreremplissage, prochainsServicesSansSetlist } from "../src/lib/setlist/prochainsServices";
 import type { SetlistSeance } from "../src/lib/planning/names";
 
@@ -254,7 +255,7 @@ test("(page) « Préparer » remplit l'éditeur ; rien n'est écrit avant le pre
   await expect(page.getByLabel("Titre")).toHaveValue("Culte Francophone 18/10");
   await expect(page.getByLabel("Catégorie")).toHaveValue(CULTE);
   await expect(page.getByLabel("Date de la présidence")).toHaveValue("2026-10-18");
-  await expect(page.getByLabel("Présidence *", { exact: true })).toHaveValue("Présidence C");
+  await expect(champPresidence(page)).toHaveValue("Présidence C");
 
   // Préremplir n'est pas un changement : aucun brouillon ne part.
   await page.waitForTimeout(3_500);
@@ -262,7 +263,7 @@ test("(page) « Préparer » remplit l'éditeur ; rien n'est écrit avant le pre
 
   // Premier changement : un chant. Le brouillon part, prérempli.
   await page.getByPlaceholder("Chercher un chant à ajouter…").fill("Abba Père");
-  await page.getByRole("button", { name: "Ajouter" }).first().click();
+  await boutonAjouter(page, "Abba Père").click();
   await expect.poll(() => ecrituresSetlist(db).length, { timeout: 10_000 }).toBeGreaterThan(0);
   const brouillon = ecrituresSetlist(db).at(-1)!;
   expect(brouillon.data).toMatchObject({
@@ -289,7 +290,7 @@ test("(page) l'URL préremplit ; une catégorie où l'on ne peut pas créer est 
   await expect(page.getByLabel("Catégorie")).toHaveValue(CULTE);
   await expect(page.getByLabel("Date de la présidence")).toHaveValue("2026-10-25");
   // Pas de présidence au planning ce jour-là : à choisir.
-  await expect(page.getByLabel("Présidence *", { exact: true })).toHaveValue("");
+  await expect(champPresidence(page)).toHaveValue("");
 
   await page.goto(`/setlists/new?cat=${encodeURIComponent("Groupe Paix")}&date=2026-10-18`);
   await expect(page.getByLabel("Catégorie")).toHaveValue("");
@@ -305,7 +306,7 @@ test("(page) Campus : la carte dit le moment, « Préparer » remplit le soir et
   await services(page).nth(1).getByRole("link", { name: /^Préparer/ }).click();
   await page.waitForURL(/moment=soir/);
   await expect(page.getByLabel("Titre")).toHaveValue("Campus 10/10 Soir");
-  await expect(page.getByLabel("Présidence *", { exact: true })).toHaveValue("Présidence B");
+  await expect(champPresidence(page)).toHaveValue("Présidence B");
   await expect(page.getByLabel("Moment")).toHaveValue("soir");
 });
 
@@ -359,7 +360,9 @@ test("(page) « Repartir d'une setlist passée » : la plus récente d'abord, «
     category: CULTE,
     ownerId: MUSICIENNE.uid,
   });
-  await expect(page.getByLabel("Tonalité de Abba Père")).toHaveValue("B");
+  await expect(page.getByLabel("Tonalité de Abba Père")).toBeVisible();
+  if (await enDeuxColonnes(page)) await expect(boutonTonalite(groupeTonalites(page, "Abba Père"), "B")).toBeChecked();
+  else await expect(page.getByLabel("Tonalité de Abba Père")).toHaveValue("B");
 });
 
 test("(page) planning vide : le message, et les deux autres entrées restent", async ({ page }) => {

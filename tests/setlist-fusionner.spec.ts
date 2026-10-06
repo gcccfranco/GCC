@@ -1,4 +1,7 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page, type TestInfo } from "@playwright/test";
+import { signInAs, type FakeDb, type FakeProfile } from "./helpers/fakeSession";
+import { boutonTonalite, deuxColonnesAttendues, groupeTonalites, listeCourte, reglerElement, volet } from "./helpers/editeurSetlist";
+import type { SetlistItem } from "../src/types/setList";
 import { readFileSync } from "fs";
 import {
   fusionner,
@@ -84,4 +87,145 @@ test("(pur) la liste d'origine ne bouge pas", () => {
   const items = [ABBA, TRANSITION, YISHENG];
   fusionner(items, ["a", "b"]);
   expect(uids(items)).toEqual(["a", "t", "b"]);
+});
+
+// ─── Tranche T3 : le choix à l'écran, grands écrans ─────────────────────────
+// « Fusionner » est dans les réglages du chant ; il ouvre, dans le volet, le
+// choix des autres chants seuls. Les numéros sont ceux des chants et des fusions
+// (une transition n'en a pas, comme la planche). Téléphone et tablette en portrait : T4.
+
+const MUSICIENNE: FakeProfile = {
+  uid: "uid-musicienne",
+  email: "musicienne@example.com",
+  firstName: "Musicienne",
+  lastName: "Test",
+  planningName: "Musicienne T.",
+  serviceRoles: { "Culte Francophone": ["musicien"] },
+};
+
+const SETLIST_ID = "setlist-fusionner";
+const SETLIST_DOC = `setlists/${SETLIST_ID}`;
+
+const ligne = (over: Record<string, unknown>) => ({
+  keyOverride: null,
+  showChords: true,
+  showPinyin: true,
+  useJianpu: false,
+  structureOverride: null,
+  sectionNotes: {},
+  notes: "",
+  ...over,
+});
+
+const FUSION_EN_BASE = {
+  ...ligne({ songSlug: "", position: 4, showPinyin: false }),
+  type: "fusion",
+  fusionSongs: [
+    { songSlug: "je-reviens-au-coeur", keyOverride: null, structureOverride: null, sectionNotes: {} },
+    { songSlug: "abba-pere", keyOverride: null, structureOverride: null, sectionNotes: {} },
+  ],
+  mixedStructure: null,
+};
+
+const SETLIST = {
+  title: "Culte Francophone 18/10",
+  leader: "Présidence A",
+  category: "Culte Francophone",
+  date: "2026-10-18",
+  language: "mixed",
+  notes: "",
+  ownerId: "uid-owner",
+  isPrivate: false,
+  items: [
+    ligne({ songSlug: "que-ma-bouche-chante-ta-louange", position: 1, keyOverride: "D" }),
+    { ...ligne({ songSlug: "", position: 2 }), type: "transition", transitionText: "Prière" },
+    ligne({ songSlug: "一生爱你", position: 3, notes: "Lent" }),
+    FUSION_EN_BASE,
+  ],
+};
+
+type Enregistre = SetlistItem & { fusionSongs?: { songSlug: string; keyOverride: string | null }[] };
+const itemsEnBase = (db: FakeDb) => (db.doc(SETLIST_DOC)?.items ?? []) as Enregistre[];
+
+async function ouvrir(page: Page, testInfo: TestInfo, doc: Record<string, unknown> = SETLIST) {
+  test.skip(!deuxColonnesAttendues(testInfo), "grand écran seulement : le choix en feuille vient en T4");
+  await page.route(/docs\.google\.com\/spreadsheets/, (route) =>
+    route.fulfill({ status: 200, contentType: "text/csv", body: "" }),
+  );
+  const db = await signInAs(page, MUSICIENNE, { [SETLIST_DOC]: doc }, `/setlists/${SETLIST_ID}/edit`);
+  await expect(page.locator("[data-editeur-deux-colonnes]")).toBeVisible();
+  return db;
+}
+
+const choix = (page: Page) => volet(page).getByRole("group", { name: /^Fusionner .* avec…$/ });
+
+test("grand écran : « Fusionner » ouvre le choix, chant de départ coché en tête ; ni transition ni fusion proposées", async ({ page }, testInfo) => {
+  await ouvrir(page, testInfo);
+  await reglerElement(page, "一生爱你");
+  await volet(page).getByRole("button", { name: "Fusionner", exact: true }).click();
+  await expect(volet(page).getByRole("heading", { name: "Fusionner 一生爱你 avec…" })).toBeVisible();
+  const cases = choix(page).getByRole("checkbox");
+  await expect(cases).toHaveCount(2);
+  await expect(cases.nth(0)).toHaveAccessibleName(/一生爱你/);
+  await expect(cases.nth(0)).toBeChecked();
+  await expect(cases.nth(1)).toHaveAccessibleName(/Que ma bouche chante ta louange/);
+  await expect(cases.nth(1)).not.toBeChecked();
+  // La ligne de la question 7 : ce qu'une fusion ne garde pas.
+  await expect(volet(page)).toContainText("la note du chant, les transitions de section et le choix 简谱 ne sont pas gardés");
+  // Inactif tant qu'aucun autre chant n'est coché.
+  await expect(volet(page).getByRole("button", { name: /^Fusionner \(/ })).toBeDisabled();
+  await page.screenshot({ path: testInfo.outputPath(`fusionner-choix-${testInfo.project.name}.png`) });
+});
+
+test("grand écran : deux chants non voisins — la fusion prend la place du premier, dans l'ordre de la setlist", async ({ page }, testInfo) => {
+  const db = await ouvrir(page, testInfo);
+  await reglerElement(page, "一生爱你");
+  await volet(page).getByRole("button", { name: "Fusionner", exact: true }).click();
+  await choix(page).getByRole("checkbox", { name: /Que ma bouche/ }).check();
+  await volet(page).getByRole("button", { name: "Fusionner (2)" }).click();
+
+  await expect
+    .poll(() => itemsEnBase(db).map((i) => (i.type === "fusion" ? i.fusionSongs!.map((s) => s.songSlug).join("+") : i.type ?? i.songSlug)), { timeout: 10_000 })
+    .toEqual(["que-ma-bouche-chante-ta-louange+一生爱你", "transition", "je-reviens-au-coeur+abba-pere"]);
+  // La fusion est choisie, ses réglages s'ouvrent ; la tonalité de chaque chant reste.
+  await expect(listeCourte(page).getByRole("button", { name: "Que ma bouche chante ta louange / 一生爱你", exact: true })).toHaveAttribute("aria-current", "true");
+  expect(itemsEnBase(db)[0].fusionSongs!.map((s) => s.keyOverride)).toEqual(["D", null]);
+});
+
+test("grand écran : « Annuler » ne change rien", async ({ page }, testInfo) => {
+  const db = await ouvrir(page, testInfo);
+  await reglerElement(page, "一生爱你");
+  await volet(page).getByRole("button", { name: "Fusionner", exact: true }).click();
+  await choix(page).getByRole("checkbox", { name: /Que ma bouche/ }).check();
+  await volet(page).getByRole("button", { name: "Annuler", exact: true }).click();
+  await expect(volet(page).getByRole("heading", { name: "2 · 一生爱你" })).toBeVisible();
+  await expect(listeCourte(page).locator("[data-element]")).toHaveCount(4);
+  await page.waitForTimeout(2_500);
+  expect(db.writes.filter((w) => w.path === SETLIST_DOC)).toHaveLength(0);
+});
+
+test("grand écran : réglages d'une fusion — tonalité par chant, « Mélanger », « Défusionner »", async ({ page }, testInfo) => {
+  const db = await ouvrir(page, testInfo);
+  await reglerElement(page, "Je reviens au cœur / Abba Père");
+  await expect(volet(page).getByRole("heading", { name: "3 · Je reviens au cœur / Abba Père" })).toBeVisible();
+  await boutonTonalite(groupeTonalites(volet(page), "Abba Père"), "B").click();
+  await expect.poll(() => itemsEnBase(db)[3]?.fusionSongs?.map((s) => s.keyOverride), { timeout: 10_000 }).toEqual([null, "B"]);
+
+  await volet(page).getByRole("button", { name: "Mélanger" }).click();
+  await expect(volet(page).getByText("Structure mélangée")).toBeVisible();
+  await expect.poll(() => (itemsEnBase(db)[3]?.mixedStructure ?? []).length, { timeout: 10_000 }).toBeGreaterThan(0);
+
+  await volet(page).getByRole("button", { name: "Défusionner" }).click();
+  await expect(listeCourte(page).locator("[data-element]")).toHaveCount(5);
+  await expect.poll(() => itemsEnBase(db).map((i) => i.songSlug), { timeout: 10_000 }).toEqual([
+    "que-ma-bouche-chante-ta-louange", "", "一生爱你", "je-reviens-au-coeur", "abba-pere",
+  ]);
+});
+
+test("grand écran : « Fusionner » absent quand il ne reste aucun autre chant seul ; plus aucun « Sélectionner »", async ({ page }, testInfo) => {
+  await ouvrir(page, testInfo, { ...SETLIST, items: [SETLIST.items[1], SETLIST.items[2], FUSION_EN_BASE] });
+  await reglerElement(page, "一生爱你");
+  await expect(volet(page).getByRole("heading", { name: "1 · 一生爱你" })).toBeVisible();
+  await expect(volet(page).getByRole("button", { name: "Fusionner", exact: true })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Sélectionner" })).toHaveCount(0);
 });

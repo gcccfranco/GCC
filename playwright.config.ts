@@ -28,6 +28,8 @@ const SPECS_GRAND_ECRAN = [
   // … le mode louange en deux colonnes, et le parcours de T6 (captures, FR et ZH, clair et sombre).
   /mode-louange-colonnes\.spec\.ts/,
   /deux-volets-finitions\.spec\.ts/,
+  // Lot U5 bis (docs/spec-editeur-setlist.md) : l'éditeur de setlist en deux colonnes.
+  /setlist-editeur-piste2\.spec\.ts/,
 ];
 
 export default defineConfig({

@@ -1,4 +1,6 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page, type TestInfo } from "@playwright/test";
+import { signInAs, type FakeDb, type FakeProfile } from "./helpers/fakeSession";
+import { deuxColonnesAttendues, listeCourte, reglerElement, volet } from "./helpers/editeurSetlist";
 import { readFileSync } from "fs";
 import { chantsDeLaBibliotheque, trancheDeTempo, type FiltresBibliotheque } from "../src/lib/setlist/bibliotheque";
 import { insererA, type FormListItem } from "../src/lib/setlist/formItems";
@@ -127,4 +129,99 @@ test("(pur) deux ajouts à la suite au même « + » gardent leur ordre", () => 
   items = insererA(items, 1, transition("x"));
   items = insererA(items, 2, transition("y"));
   expect(uids(items)).toEqual(["a", "x", "y", "b"]);
+});
+
+// ─── Tranche T3 : la bibliothèque dans le volet, grands écrans ──────────────
+// Recherche, « Dans la setlist », « Ajouté », ajout à la fin dans la tonalité
+// recommandée, compteur. Filtres, aperçu et « + » entre deux chants : T5.
+// Téléphone et tablette en portrait (feuille) : T4.
+
+const MUSICIENNE: FakeProfile = {
+  uid: "uid-musicienne",
+  email: "musicienne@example.com",
+  firstName: "Musicienne",
+  lastName: "Test",
+  planningName: "Musicienne T.",
+  serviceRoles: { "Culte Francophone": ["musicien"] },
+};
+
+const SETLIST_ID = "setlist-bibliotheque";
+const SETLIST_DOC = `setlists/${SETLIST_ID}`;
+
+const SETLIST = {
+  title: "Culte Francophone 18/10",
+  leader: "Présidence A",
+  category: "Culte Francophone",
+  date: "2026-10-18",
+  language: "fr",
+  notes: "",
+  ownerId: "uid-owner",
+  isPrivate: false,
+  items: [
+    { songSlug: "abba-pere", position: 1, keyOverride: null, showChords: true, showPinyin: false, useJianpu: false, structureOverride: null, sectionNotes: {}, notes: "" },
+  ],
+};
+
+async function ouvrirBibliotheque(page: Page, testInfo: TestInfo) {
+  test.skip(!deuxColonnesAttendues(testInfo), "grand écran seulement : la bibliothèque en feuille vient en T4");
+  await page.route(/docs\.google\.com\/spreadsheets/, (route) =>
+    route.fulfill({ status: 200, contentType: "text/csv", body: "" }),
+  );
+  const db = await signInAs(page, MUSICIENNE, { [SETLIST_DOC]: SETLIST }, `/setlists/${SETLIST_ID}/edit`);
+  await expect(page.locator("[data-editeur-deux-colonnes]")).toBeVisible();
+  await page.locator("[data-colonne-setlist]").getByRole("button", { name: "Ajouter des chants" }).click();
+  await expect(volet(page).getByRole("heading", { name: "Ajouter des chants" })).toBeVisible();
+  return db;
+}
+
+const recherche = (page: Page) => volet(page).getByPlaceholder("Chercher un chant à ajouter…");
+const resultats = (page: Page) => volet(page).locator("[data-resultat]");
+const items = (db: FakeDb) => (db.doc(SETLIST_DOC)?.items ?? []) as { songSlug: string; keyOverride: string | null }[];
+
+test("grand écran : la recherche trouve par titre, pinyin et artiste ; le compteur suit", async ({ page }, testInfo) => {
+  await ouvrirBibliotheque(page, testInfo);
+  await expect(recherche(page)).toBeFocused();
+  await expect(volet(page).getByText(`${INDEX.length} chants`)).toBeVisible();
+  await recherche(page).fill("Je reviens au cœur");
+  await expect(resultats(page).first()).toContainText("Je reviens au cœur");
+  await recherche(page).fill("yi sheng ai ni");
+  await expect(resultats(page).filter({ hasText: "一生爱你" })).toHaveCount(1);
+  await recherche(page).fill("Samuel Olivier");
+  await expect(resultats(page).filter({ hasText: "Abba Père" })).toHaveCount(1);
+  const n = await resultats(page).count();
+  await expect(volet(page).getByText(n === 1 ? "1 chant" : `${n} chants`, { exact: true })).toBeVisible();
+});
+
+test("grand écran : un chant pris est « Dans la setlist », sans « + » ; un ajout dit « Ajouté », à la fin, dans la recommandée", async ({ page }, testInfo) => {
+  const db = await ouvrirBibliotheque(page, testInfo);
+  await recherche(page).fill("Abba Père");
+  const abba = resultats(page).filter({ hasText: "Abba Père" }).first();
+  await expect(abba).toContainText("Dans la setlist");
+  await expect(abba.getByRole("button", { name: /^Ajouter/ })).toHaveCount(0);
+
+  await recherche(page).fill("Je reviens au cœur");
+  const jeReviens = resultats(page).filter({ hasText: "Je reviens au cœur" }).first();
+  await jeReviens.getByRole("button", { name: "Ajouter Je reviens au cœur", exact: true }).click();
+  await expect(jeReviens).toContainText("Ajouté");
+  await expect(jeReviens.getByRole("button", { name: /^Ajouter/ })).toHaveCount(0);
+  await expect(listeCourte(page).locator("[data-element]").last()).toContainText("Je reviens au cœur");
+  await expect
+    .poll(() => items(db).map((i) => [i.songSlug, i.keyOverride]), { timeout: 10_000 })
+    .toEqual([["abba-pere", null], ["je-reviens-au-coeur", "D"]]);
+  await page.screenshot({ path: testInfo.outputPath(`bibliotheque-${testInfo.project.name}.png`) });
+});
+
+test("grand écran : « Terminé », Échap ou un élément touché rendent les réglages", async ({ page }, testInfo) => {
+  await ouvrirBibliotheque(page, testInfo);
+  await volet(page).getByRole("button", { name: "Terminé" }).click();
+  await expect(volet(page).getByRole("heading", { name: "1 · Abba Père" })).toBeVisible();
+
+  await page.locator("[data-colonne-setlist]").getByRole("button", { name: "Ajouter des chants" }).click();
+  await expect(recherche(page)).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(volet(page).getByRole("heading", { name: "1 · Abba Père" })).toBeVisible();
+
+  await page.locator("[data-colonne-setlist]").getByRole("button", { name: "Ajouter des chants" }).click();
+  await reglerElement(page, "Abba Père");
+  await expect(volet(page).getByRole("heading", { name: "1 · Abba Père" })).toBeVisible();
 });

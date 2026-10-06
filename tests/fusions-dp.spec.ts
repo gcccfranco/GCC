@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { readFileSync } from "fs";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { ouvrirStructure, reglerElement, voirChantsFusion } from "./helpers/editeurSetlist";
 import { enDeuxVolets, ouvrirPartitions } from "./helpers/setlist";
 import { withoutLastPhrases } from "../src/lib/setlist/lastPhrase";
 import { diffSetlists } from "../src/lib/setlist/history";
@@ -219,15 +220,15 @@ type Saved = { items?: { fusionSongs?: { contentOverride?: string; structureOver
 
 async function ouvrirEditeur(page: Page, fusion: Record<string, unknown>) {
   const db = await ouvrir(page, setlist([item({ songSlug: "一生爱你", position: 1 }), fusion]), `/setlists/${SETLIST_ID}/edit`);
-  await expect(page.getByText("Abba Père / 一生爱你")).toBeVisible();
+  await expect(page.getByText("Abba Père / 一生爱你").first()).toBeVisible();
   return db;
 }
 
 test("éditeur, fusion à la suite : un chant de la fusion reçoit sa Dernière phrase", async ({ page }) => {
   const db = await ouvrirEditeur(page, FUSION_SUITE);
-  await page.getByRole("button", { name: "Voir les chants" }).click();
+  await voirChantsFusion(page, "Abba Père / 一生爱你");
   const carte = page.locator("[data-fusion-song]").filter({ hasText: "Abba Père" });
-  await carte.getByRole("button", { name: /^Structure/ }).click();
+  await ouvrirStructure(carte);
   await carte.getByRole("button", { name: "Dernière phrase", exact: true }).click();
   const sheet = page.getByRole("dialog");
   await sheet.getByLabel("Section").selectOption("chorus-3");
@@ -242,6 +243,7 @@ test("éditeur, fusion à la suite : un chant de la fusion reçoit sa Dernière 
 
 test("éditeur, fusion mélangée : la Dernière phrase s'ajoute à la suite du mélange", async ({ page }) => {
   const db = await ouvrirEditeur(page, FUSION_MIXTE);
+  await reglerElement(page, "Abba Père / 一生爱你");
   await page.getByRole("button", { name: "Dernière phrase", exact: true }).first().click();
   const sheet = page.getByRole("dialog");
   // Proposée d'office : le dernier passage d'Abba Père dans le mélange.

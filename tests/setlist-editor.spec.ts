@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeDb, type FakeProfile } from "./helpers/fakeSession";
+import { boutonAjouter, champNotes, champPresidence, choisirTonalite } from "./helpers/editeurSetlist";
 
 // Chantier Setlist, lot 1 (docs/spec-setlist.md) : l'éditeur est une seule
 // page, enregistrée automatiquement ; « Publier » à la création seulement.
@@ -68,10 +69,10 @@ test("création : une seule page, brouillon enregistré tout seul, « Publier »
 
   await page.getByLabel("Titre").fill("Culte du 28 septembre");
   await page.getByLabel("Catégorie").selectOption("Culte Francophone");
-  await page.getByLabel("Présidence *", { exact: true }).selectOption("__other__");
+  await champPresidence(page).selectOption("__other__");
   await page.getByPlaceholder("ex. Timothée").fill("Jonathan Z.");
   await page.getByPlaceholder("Chercher un chant à ajouter…").fill("Abba Père");
-  await page.getByRole("button", { name: "Ajouter" }).first().click();
+  await boutonAjouter(page, "Abba Père").click();
 
   await expect.poll(() => setlistWrites(db).at(-1)?.data.isDraft, { timeout: 10_000 }).toBe(true);
   const draft = setlistWrites(db).at(-1)!;
@@ -86,8 +87,8 @@ test("modification : un changement de tonalité est enregistré sans bouton (FR 
   const db = await openEditor(page);
   await expect(page.getByRole("button", { name: /Enregistrer les modifications/ })).toHaveCount(0);
 
-  await page.getByLabel("Tonalité de Abba Père").selectOption("B");
-  await page.getByLabel("Tonalité de 一生爱你").selectOption("F");
+  await choisirTonalite(page, "Abba Père", "B");
+  await choisirTonalite(page, "一生爱你", "F");
 
   await expect
     .poll(() => (db.doc(`setlists/${SETLIST_ID}`)?.items as { keyOverride: string | null }[]).map((i) => i.keyOverride))
@@ -105,7 +106,7 @@ test("modification : titre vidé, rien n'est enregistré et le repère le dit", 
 
 test("modification : « Terminé » envoie le changement en cours et ramène à la setlist", async ({ page }) => {
   const db = await openEditor(page);
-  await page.getByLabel("Notes (optionnel)").fill("Thème : la grâce");
+  await champNotes(page).fill("Thème : la grâce");
   await page.getByRole("button", { name: "Terminé" }).click();
   await page.waitForURL((u) => u.pathname.replace(/\/$/, "") === `/setlists/${SETLIST_ID}`);
   await expect.poll(() => db.doc(`setlists/${SETLIST_ID}`)?.notes).toBe("Thème : la grâce");
@@ -116,7 +117,7 @@ test("création : « Publier » juste après une retouche, sur réseau lent, ne 
   const db = await signInAs(page, MUSICIEN, {}, "/setlists/new?autre=1");
   await page.getByLabel("Titre").fill("Culte du 28 septembre");
   await page.getByLabel("Catégorie").selectOption("Culte Francophone");
-  await page.getByLabel("Présidence *", { exact: true }).selectOption("__other__");
+  await champPresidence(page).selectOption("__other__");
   await page.getByPlaceholder("ex. Timothée").fill("Jonathan Z.");
   await expect.poll(() => setlistWrites(db).length, { timeout: 10_000 }).toBeGreaterThan(0);
   // Réseau lent : chaque écriture de la setlist met 2,5 s à partir.
@@ -124,7 +125,7 @@ test("création : « Publier » juste après une retouche, sur réseau lent, ne 
     await new Promise((r) => setTimeout(r, 2_500));
     await route.fallback();
   });
-  await page.getByLabel("Notes (optionnel)").fill("Thème : la grâce");
+  await champNotes(page).fill("Thème : la grâce");
   await page.getByRole("button", { name: "Publier" }).click();
   const id = setlistWrites(db)[0].path;
   await page.waitForURL((u) => u.pathname.replace(/\/$/, "") === `/${id}`, { timeout: 15_000 });
@@ -139,7 +140,7 @@ test("modification : quitter l'éditeur sans « Terminé » envoie le changement
     notified.push(route.request().postData() ?? "");
     return route.fulfill({ status: 200, contentType: "application/json", body: '{"ok":true}' });
   });
-  await page.getByLabel("Notes (optionnel)").fill("Thème : la paix");
+  await champNotes(page).fill("Thème : la paix");
   await page.evaluate(() => history.back());
   await expect.poll(() => db.doc(`setlists/${SETLIST_ID}`)?.notes).toBe("Thème : la paix");
   await expect.poll(() => notified.length).toBe(1);

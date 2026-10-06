@@ -46,6 +46,8 @@ import { SongRow, FusionRow, TransitionRow } from "@/components/setlists/Setlist
 
 import { FREE_CATEGORIES } from "@/lib/firebase/setlists";
 import { FondDeBarre } from "@/components/layout/FondDeBarre";
+import { useEditeurDeuxColonnes } from "@/hooks/useEditeurDeuxColonnes";
+import { EditeurDeuxColonnes } from "@/components/setlists/editeur/EditeurDeuxColonnes";
 
 export interface SetlistFormInitial {
   title: string;
@@ -97,6 +99,8 @@ async function notifySetlistReady(setlistId: string): Promise<void> {
 
 export function SetlistForm({ mode, setlistId, songs, initial, prefill }: SetlistFormProps) {
   const scrollVisible = useScrollDirection();
+  // Ordinateur et tablette en paysage : la piste 2 en deux colonnes (lot U5 bis, T3).
+  const deuxColonnes = useEditeurDeuxColonnes();
   const isEdit = mode === "edit";
   const { t } = useTranslation();
   const router = useRouter();
@@ -439,7 +443,9 @@ export function SetlistForm({ mode, setlistId, songs, initial, prefill }: Setlis
   }
 
   function addTransition() {
-    setItems((prev) => [...prev, { uid: nextUid(), kind: "transition" as const, text: "" }]);
+    const uid = nextUid();
+    setItems((prev) => [...prev, { uid, kind: "transition" as const, text: "" }]);
+    return uid;
   }
 
   function patchTransition(uid: string, text: string) {
@@ -574,6 +580,57 @@ export function SetlistForm({ mode, setlistId, songs, initial, prefill }: Setlis
         <Check className="h-3.5 w-3.5" aria-hidden />
         {t(isEdit ? "setlists.form.autoSaved" : "setlists.form.draftSaved")}
       </span>
+    );
+  }
+
+  if (deuxColonnes) {
+    return (
+      <EditeurDeuxColonnes
+        isEdit={isEdit}
+        items={items}
+        setItems={setItems}
+        songs={songs}
+        champs={{
+          isEdit,
+          title,
+          setTitle,
+          category,
+          onCategoryChange,
+          categoriesReservees: allowedRestricted,
+          categoriesLibres: allowedFree,
+          date,
+          onDateChange,
+          moment,
+          setMoment,
+          leader,
+          setLeader,
+          leaderOther,
+          categoryLeaders,
+          onLeaderSelect,
+          isPrivate,
+          setIsPrivate,
+          notes,
+          setNotes,
+          needsAuth,
+          connecte: !!user,
+          authLoading,
+          loginFrom,
+        }}
+        actions={{
+          addSong,
+          addTransition,
+          patch,
+          patchTransition,
+          patchFusionSong,
+          patchFusionMixed,
+          unfuse,
+          onDragEnd: handleDragEnd,
+        }}
+        statut={saveStatus()}
+        saving={saving}
+        onPublier={() => void publish()}
+        onTerminer={() => void finishEdit()}
+      />
     );
   }
 

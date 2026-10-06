@@ -38,7 +38,7 @@ import { NUANCES, nuanceFull } from "@/lib/setlist/nuances";
 
 type AnnotationField = "note" | "transition" | "nuance" | "keyChange" | null;
 
-const FIELD_STYLE = {
+export const FIELD_STYLE = {
   note: { Icon: MessageSquare, filled: "bg-secondary text-foreground", ring: "ring-1 ring-foreground/30", title: "Note" },
   transition: { Icon: ArrowRight, filled: "bg-amber-500/15 text-amber-600 dark:text-amber-400", ring: "ring-1 ring-amber-400/50", title: "Transition" },
   nuance: { Icon: SlidersHorizontal, filled: "bg-violet-500/15 text-violet-600 dark:text-violet-400", ring: "ring-1 ring-violet-400/50", title: "Nuance" },
@@ -72,7 +72,7 @@ function FieldToggleBtn({
 }
 
 /** Éditeur de nuance : étiquettes prédéfinies (violet) + texte libre. */
-function NuanceFieldInput({
+export function NuanceFieldInput({
   tags,
   note,
   onTagsChange,
@@ -120,7 +120,7 @@ function NuanceFieldInput({
 }
 
 /** Sélecteur de modulation (升调) : tonalité cible de la section, vide = aucune. */
-function KeyChangeFieldInput({
+export function KeyChangeFieldInput({
   value,
   onChange,
 }: {
@@ -155,7 +155,7 @@ function KeyChangeFieldInput({
   );
 }
 
-function AnnotationFieldInput({
+export function AnnotationFieldInput({
   kind,
   value,
   onChange,
@@ -225,6 +225,7 @@ export function SortableSectionRow({
     <div
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition }}
+      data-ligne-section
       className={`rounded border text-xs ${
         isDragging ? "border-primary/40 bg-primary/5 shadow" : "border-border bg-background"
       }`}
@@ -239,7 +240,7 @@ export function SortableSectionRow({
         >
           <GripVertical className="h-4 w-4" />
         </button>
-        <span className="flex-1 min-w-0 font-medium text-foreground truncate">{item.name}</span>
+        <span data-nom-section className="flex-1 min-w-0 font-medium text-foreground truncate">{item.name}</span>
         {!hideNote && (
           <>
             <FieldToggleBtn
@@ -562,7 +563,7 @@ function SortableMixedRow({
 
 // ─── Mixed structure editor ───────────────────────────────────────────────────
 
-function MixedStructureEditor({
+export function MixedStructureEditor({
   fusionItem,
   onChangeMixed,
   onPatchSong,
