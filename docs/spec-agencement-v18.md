@@ -532,7 +532,7 @@ la barre d'onglets : une page sans barre du bas (rare) le verra plus haut que n�
 
 ### V18T4 — Planning (T4a)
 
-- 06/10/2026 (fini le 07/10) : **T4a faite** (branche `lot/v18-t4`, commit `feat(V18T4): T4a — …`) : B6, B7, A2, A3.
+- 06/10/2026 (fini le 07/10) : **T4a faite** (branche `lot/v18-t4`, commit `7666e03`) : B6, B7, A2, A3.
   - **En-tête commun** : App, `PlanningTabs` pose `EnTetePage` « Planning » (sous-titre « Qui sert quand, dans tous
     les plannings de l'église ») au-dessus de toute la section ; en grand, les huit plannings en `Pilules` (liens,
     l'actif à la couleur de son service) dans sa rangée `apres` ; sur téléphone et tablette portrait, la barre
