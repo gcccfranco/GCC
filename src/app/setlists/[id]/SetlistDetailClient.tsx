@@ -1975,6 +1975,9 @@ export function SetlistDetailClient() {
             tonalite={tonalite}
             tonaliteOrigine={ast.metadata.key}
             instrument={instrumentHarmonie}
+            // « Montrer » cherche dans ce chant : les identifiants de section
+            // se répètent d'un chant à l'autre, et d'un chant à l'autre d'une fusion.
+            portee={`[data-outline-item="${item.position}"]${chantFusion ? ` [data-chant-slug="${CSS.escape(slug)}"]` : ""}`}
             suivant={item.type === "fusion" ? undefined : suivant}
             onModuler={
               canEdit && !editMine && item.type !== "fusion"

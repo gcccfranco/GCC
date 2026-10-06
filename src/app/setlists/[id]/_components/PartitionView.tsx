@@ -239,7 +239,7 @@ export function PartitionsView({
                       ? transposeSection(section, semitonesTo(ast.metadata.key, keyChange), keyChange)
                       : section;
                     return (
-                      <div key={`${ms.songSlug}-${ms.sectionId}-${msIdx}`}>
+                      <div key={`${ms.songSlug}-${ms.sectionId}-${msIdx}`} data-chant-slug={ms.songSlug}>
                         <SectionView
                           section={shownSection}
                           language={ast.metadata.language}
@@ -281,7 +281,7 @@ export function PartitionsView({
                   const ast = transposedAsts[fs.songSlug];
                   if (!ast) return null;
                   return (
-                    <div key={fs.songSlug}>
+                    <div key={fs.songSlug} data-chant-slug={fs.songSlug}>
                       {fsIdx > 0 && (
                         <div className="flex items-center gap-2 my-6 print:my-3">
                           <div className="flex-1 border-t border-dashed border-primary/30" />
