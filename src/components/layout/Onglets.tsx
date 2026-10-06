@@ -11,14 +11,15 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import type { ReactNode } from "react";
+import { useRef, type KeyboardEvent, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 export type OngletRail = {
   /** Identifiant de l'onglet (rendu par `choisir`, comparé à `actif`). */
   id: string;
   label: ReactNode;
-  /** Un lien : le rail est une navigation (`aria-current="page"`) ; sinon un bouton (`role="tab"`). */
+  /** Un lien : le rail est une navigation (`aria-current="page"`) ; sinon un bouton (`role="tab"`).
+   *  Dans un rail de liens, chaque onglet a le sien (sans lui, l'onglet mènerait à `#`). */
   href?: string;
   /** Un nombre après le libellé (« DA · 4 »). */
   compte?: number;
@@ -42,9 +43,14 @@ function ongletDuChemin(onglets: OngletRail[], chemin: string): string | undefin
  * Le rail gris. Liens (sous-parties, une adresse par onglet) :
  *   <OngletsRail etiquette="Équipes" onglets={[{ id: "orga", label: "Organigramme", href: "/back-office/equipes" },
  *                                              { id: "personnes", label: "Personnes", href: "/back-office/equipes/personnes" }]} />
- * (l'onglet actif se lit dans l'adresse ; `actif` le force). Boutons (vues dans la page) :
+ * (l'onglet actif se lit dans le CHEMIN de l'adresse ; `actif` le force). Des liens qui ne diffèrent que
+ * par la query (`?vue=a`, `?vue=b`) ont le même chemin : `actif` est alors obligatoire, sans quoi le
+ * premier resterait choisi. Boutons (vues dans la page) :
  *   <OngletsRail etiquette="Période" onglets={[{ id: "avenir", label: "À venir" }, { id: "passes", label: "Passés" }]}
  *                actif={vue} choisir={setVue} />
+ * En boutons, le motif ARIA des onglets à activation manuelle : un seul arrêt de tabulation (l'onglet
+ * choisi), ← et → (en boucle), Début et Fin déplacent le focus, Entrée ou Espace choisit. Pas de
+ * `aria-controls` : la vue choisie est la page sous l'en-tête, pas un panneau à part.
  * Il défile en largeur quand il ne tient pas (téléphone).
  */
 export function OngletsRail({
@@ -64,6 +70,7 @@ export function OngletsRail({
   className?: string;
 }) {
   const chemin = usePathname() ?? "";
+  const boutons = useRef<(HTMLButtonElement | null)[]>([]);
   const liens = onglets.some((o) => o.href);
   const courant = actif ?? (liens ? ongletDuChemin(onglets, chemin) : undefined);
   const classe = (on: boolean) =>
@@ -91,14 +98,27 @@ export function OngletsRail({
       </nav>
     );
   }
+  // Le seul arrêt de tabulation : l'onglet choisi, ou le premier.
+  const arret = Math.max(0, onglets.findIndex((o) => o.id === courant));
+  const auClavier = (e: KeyboardEvent<HTMLDivElement>) => {
+    const i = boutons.current.indexOf(e.target as HTMLButtonElement);
+    if (i < 0) return;
+    const n = onglets.length;
+    const cible = ({ ArrowRight: (i + 1) % n, ArrowLeft: (i - 1 + n) % n, Home: 0, End: n - 1 } as Record<string, number | undefined>)[e.key];
+    if (cible === undefined) return;
+    e.preventDefault();
+    boutons.current[cible]?.focus();
+  };
   return (
-    <div role="tablist" aria-label={etiquette} data-onglets="rail" className={rail}>
-      {onglets.map((o) => (
+    <div role="tablist" aria-label={etiquette} data-onglets="rail" className={rail} onKeyDown={auClavier}>
+      {onglets.map((o, i) => (
         <button
           key={o.id}
+          ref={(b) => { boutons.current[i] = b; }}
           type="button"
           role="tab"
           aria-selected={courant === o.id}
+          tabIndex={i === arret ? 0 : -1}
           onClick={() => choisir?.(o.id)}
           className={classe(courant === o.id)}
         >

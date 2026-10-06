@@ -82,7 +82,13 @@ export function EssaiAgencement() {
         <p>Réponse : <span data-testid="reponse">{reponse}</span></p>
         <OngletsRail
           etiquette="Adresses"
-          onglets={[{ id: "ici", label: "Ici", href: "/essai-agencement" }, { id: "ailleurs", label: "Ailleurs", href: "/moi" }]}
+          onglets={[{ id: "ici", label: "Ici", href: "/essai-agencement" }, { id: "ailleurs", label: "Ailleurs", href: "/songs" }]}
+        />
+        {/* Des liens qui ne diffèrent que par la query : l'adresse ne les départage pas, `actif` le fait. */}
+        <OngletsRail
+          etiquette="Vues par adresse"
+          actif="b"
+          onglets={[{ id: "a", label: "Vue A", href: "/essai-agencement?vue=a" }, { id: "b", label: "Vue B", href: "/essai-agencement?vue=b" }]}
         />
       </section>
     </div>
