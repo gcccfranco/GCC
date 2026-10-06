@@ -631,3 +631,60 @@ relecture) est déjà dans la branche par la fusion `2af01de` (avant T4). Ni com
 - **Reste** : rien pour U5, hors suite complète et `graphify update .` à l'intégration du chantier.
 - À faire par Timothée : inchangé (voir T6) — aucune règle à publier ; relire le 中文 du lot ; réinstaller l'app sur
   une tablette Android ; prévenir l'équipe pour les traits en deux colonnes.
+
+**Relecture du lot — faite le 06/10/2026** (branche `lot/u5-deux-volets`, commit `fix(U5): relecture — …`, après
+`51271a1`). Deux relectures, dix constats : les deux importants et six mineurs corrigés, deux mineurs laissés
+(raisons ci-dessous). Reprise d'un premier passage coupé : son travail non commité a été relu, gardé, et complété
+par le Retour vers la setlist.
+- **Défilement** (important) : le suivi du chant lu ne re-rend plus toute la page à chaque image. La section lue ne
+  remplace l'état que si elle change (même tableau sinon, React n'a rien à refaire), et le DOM n'est lu qu'une fois
+  par image (`chantALaLigne()` sert au chant lu et au retour). Calcul gardé hors des deux volets : sur G, le retour à
+  la ligne en a besoin, et il ne coûte plus de rendu.
+- **« Copier toutes les paroles »** (important) : inactif (`disabled`, `aria-disabled`) tant que les partitions se
+  chargent ou qu'un chant de la setlist, fusions comprises, n'est pas là (hors ligne, échec) : plus de copie
+  incomplète annoncée « Copié ».
+- **Index des chants** : lu seulement quand la liste est montée (`/songs`, ou deux volets) ; la page d'un chant sur
+  téléphone ou tablette debout ne télécharge plus ses 367 Ko. S'il ne vient pas (hors ligne sans copie du service
+  worker) : « Impossible de charger les chants. Vérifie ta connexion. » / 无法加载诗歌，请检查网络连接。 et
+  « Réessayer » ; relu seul au retour du réseau (`online`).
+- **Récents** : en deux volets, la rangée suit les chants ouverts à droite (la page du chant prévient la liste,
+  évènement `recentSongs`), sans recharger.
+- **« Choisis un chant »** : la lecture des prochaines setlists est gardée une minute en mémoire (par compte et par
+  jour, oubliée si elle échoue, comme le profil) : un aller-retour chant / Chants ne relit plus 30 documents. La
+  limite de 30 reste : au volume d'aujourd'hui, il faudrait plus de 27 setlists futures privées ou en brouillon
+  pour cacher une setlist visible.
+- **Retour vers la setlist** : en deux volets, un chant ouvert avec `?setlist=` (titre dans les partitions, carte de
+  « Choisis un chant ») garde son Retour, qui mène à cette setlist (`data-vers-setlist`, globals.css) ; un chant de
+  la liste reste sans Retour (Q16). Partout, un chant ouvert avec `?setlist=` revient à sa setlist (avant : à la
+  dernière liste quittée, qui était cette setlist sauf par un lien partagé).
+- **Glissement G** : après un glissement, seul le clic du doigt levé est avalé ; l'écouteur part au toucher suivant
+  (ou après 400 ms) : un vrai toucher juste après n'est plus perdu.
+- **Laissés** : `setlist-g.spec.ts` hors de `SPECS_GRAND_ECRAN` (juste, mais G n'existe pas en grand : rien à y
+  jouer tant que la règle Q1 ne bouge pas ; sinon l'ajouter) ; suite complète et `graphify update .` (à
+  l'intégration du chantier, depuis le dossier de Timothée pour le graphe).
+- Tests (écrits avant, vus rouges : 26 échecs sur ordinateur, téléphone, tablette et tablette couchée, puis verts sur
+  les cinq projets) : `setlist-deux-volets` et `setlist-g` « défiler dans un même chant ne re-rend pas la page à
+  chaque image » (rendus comptés par le crochet des outils de React, `tests/helpers/rendus.ts` : 40 rendus pour 20
+  images avant, 59 sur tablette ; 8 au plus après, en pratique 0 à 2), « Copier toutes les paroles » attend tous les
+  chants (chant ZH retenu, puis en échec) ; `setlist-g` « le toucher suivant n'est pas avalé » ; `chants-deux-volets`
+  récents, une seule lecture des prochaines setlists, Retour vers la setlist (barre toujours sur une ligne), page d'un
+  chant sans index en un volet, index absent → message, « Réessayer » et retour du réseau.
+- Vérifié : les specs du lot (`mode-louange-colonnes`, `setlist-g`, `setlist-deux-volets`, `chants-deux-volets`,
+  `deux-volets-finitions`, `coherence`), `back-office-coupe` (second serveur, interrupteur coupé) et les voisines
+  (`harmonie-idees`, `lignes-accords`, `look-barres`, `look-louange`, `look-navigation`, `performance-mode`,
+  `setlist-regie`, `songs-list-return`, `look-recents`, `fusions-dp`, `jianpu-tonalite-cho`, `songs-index`,
+  `copy-lyrics`) sur les cinq projets : 991 verts, 194 sautés, 3 rouges, un même test sur les trois projets en
+  grand — `chants-deux-volets` « la liste garde sa position » lisait le défilement du volet, qui grandit maintenant de
+  la rangée « Récents » apparue au-dessus (le navigateur garde la ligne touchée en place) : il lit désormais la
+  position de la ligne à l'écran, et vérifie que la liste n'est ni remontée ni remise en haut ;
+  `chants-deux-volets` repassé : 57 verts, 43 sautés. `tsc` propre ; ESLint 0 erreur, aucun avertissement nouveau.
+  Capture regardée (ordinateur, 1 440, tablette couchée) : Retour en tête de la barre du chant, barre sur une ligne.
+- Limite possible, non vérifiable ici (tests sous Chromium) : si Safari n'ancre pas le défilement, la ligne ne
+  reste pas en place quand un contenu grandit au-dessus. La rangée « Récents » ne change de hauteur qu'en
+  apparaissant (une seule ligne qui défile en largeur) : sur un iPad aux récents vides, le premier chant ouvert
+  décalerait la liste d'une rangée, une fois.
+- **Reste** : rien pour U5, hors suite complète et `graphify update .` à l'intégration.
+- À faire par Timothée : aucune règle à publier (`access.ts` et `firestore.rules` inchangés). **Valider le Retour
+  vers la setlist en deux volets** (Q16 disait « sans Retour » ; s'il n'en veut pas, retirer
+  `:not([data-vers-setlist])` des trois blocs de `globals.css`). Relire 无法加载诗歌，请检查网络连接。. Sur l'iPad couché,
+  liste défilée, ouvrir un chant : la liste ne doit pas sauter. Le reste inchangé (voir T6).

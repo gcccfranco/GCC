@@ -25,6 +25,24 @@ function dateCourte(iso: string, langue: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
+/** Lecture des prochaines setlists, gardée une minute (comme le profil) : chaque retour sur
+ *  /songs remonte « Choisis un chant », et relisait jusqu'à 30 documents à chaque fois. */
+const GARDEE_MS = 60_000;
+let lecture: { cle: string; quand: number; promesse: Promise<FSSetlist[]> } | null = null;
+
+function prochainesLues(uid: string, today: string): Promise<FSSetlist[]> {
+  const cle = `${uid}|${today}`;
+  if (!lecture || lecture.cle !== cle || Date.now() - lecture.quand > GARDEE_MS) {
+    const promesse = getSetlistsFrom(today, 30);
+    lecture = { cle, quand: Date.now(), promesse };
+    // Échouée (hors ligne) : rien de gardé, la prochaine visite relira.
+    promesse.catch(() => {
+      if (lecture?.promesse === promesse) lecture = null;
+    });
+  }
+  return lecture.promesse;
+}
+
 /** Volet de droite de Chants avant d'avoir choisi (lot U5, docs/spec-deux-volets.md, Q17,
  *  planche `chants-accueil`) : « Choisis un chant » et, pour un connecté, ses trois
  *  prochaines setlists. Masqué en un volet (la liste est seule, globals.css), et rien
@@ -39,7 +57,7 @@ export function ChoisisUnChant() {
     if (!deuxVolets || loading || !user) return;
     let vivant = true;
     const today = todayIso();
-    getSetlistsFrom(today, 30)
+    prochainesLues(user.uid, today)
       .then((toutes) => { if (vivant) setLues(upcomingSetlists(toutes, user, profile, today)); })
       .catch(() => { /* hors ligne : « Choisis un chant » seul */ });
     return () => { vivant = false; };
@@ -81,7 +99,7 @@ export function ChoisisUnChant() {
 
 function CarteSetlist({ setlist, langue }: { setlist: FSSetlist; langue: string }) {
   const { t } = useTranslation();
-  const songs = useSongsIndex();
+  const { songs } = useSongsIndex();
   const parSlug = useMemo(() => new Map((songs ?? []).map((s) => [s.slug, s])), [songs]);
   const couleur = categoryColor(setlist.category);
   const titre = (slug: string) => parSlug.get(slug)?.title ?? slug;

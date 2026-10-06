@@ -26,6 +26,7 @@ export function Sommaire({
   uidsLus,
   onGo,
   copier,
+  copierPret = true,
   className,
   style,
 }: {
@@ -41,6 +42,8 @@ export function Sommaire({
   onGo: (position: number, uid?: string) => void;
   /** Texte de « Copier toutes les paroles » ; absent : le bouton n'est pas proposé. */
   copier?: () => string;
+  /** Faux tant qu'un chant n'est pas chargé : le bouton est là, inactif. */
+  copierPret?: boolean;
   className?: string;
   style?: CSSProperties;
 }) {
@@ -138,13 +141,13 @@ export function Sommaire({
           })}
         </ol>
       </div>
-      {copier && <CopierTout copier={copier} />}
+      {copier && <CopierTout copier={copier} pret={copierPret} />}
     </nav>
   );
 }
 
 /** « Copier toutes les paroles » (question 6), en pied du sommaire. */
-function CopierTout({ copier }: { copier: () => string }) {
+function CopierTout({ copier, pret }: { copier: () => string; pret: boolean }) {
   const { t } = useTranslation();
   const [copie, setCopie] = useState(false);
   const minuteur = useRef(0);
@@ -153,6 +156,8 @@ function CopierTout({ copier }: { copier: () => string }) {
     <div className="shrink-0 border-t border-border px-5 py-3">
       <button
         type="button"
+        disabled={!pret}
+        aria-disabled={!pret}
         onClick={async () => {
           try {
             await navigator.clipboard.writeText(copier());
@@ -163,7 +168,7 @@ function CopierTout({ copier }: { copier: () => string }) {
           window.clearTimeout(minuteur.current);
           minuteur.current = window.setTimeout(() => setCopie(false), 2000);
         }}
-        className="flex items-center gap-2 text-[13px] text-muted-foreground transition-colors hover:text-foreground"
+        className="flex items-center gap-2 text-[13px] text-muted-foreground transition-colors enabled:hover:text-foreground disabled:opacity-50"
       >
         {copie ? <Check className="h-4 w-4" aria-hidden /> : <Copy className="h-4 w-4" aria-hidden />}
         {copie ? t("setlists.detail.copyLyricsDone") : t("setlists.detail.copyAllLyrics")}

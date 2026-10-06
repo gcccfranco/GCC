@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { compterLesRendus, defilerImageParImage } from "./helpers/rendus";
 
 // Lot U5, tranche T4 (docs/spec-deux-volets.md, questions 1, 6 à 8, 14) : sur
 // ordinateur et sur tablette couchée, la setlist passe en deux volets. Un en-tête
@@ -342,5 +343,60 @@ test.describe("setlist en deux volets (ordinateur, tablette couchée)", () => {
     await page.getByRole("button", { name: "Réduire la barre latérale" }).click();
     await expect(sommaire(page)).toBeVisible();
     await expect(page.getByTestId("bascule-vues")).toHaveCount(0);
+  });
+});
+
+// ─── Relecture du lot (05/10/2026) ────────────────────────────────────────────
+
+/** Le chant ZH de la setlist, à son adresse (`/api/song/一生爱你`, encodée). */
+const estLeChantZh = (url: URL) => decodeURIComponent(url.pathname).replace(/\/$/, "") === "/api/song/一生爱你";
+
+test.describe("relecture : défilement, copie (deux volets)", () => {
+  // `page.route` ne voit pas ce qui passe par le service worker.
+  test.use({ serviceWorkers: "block" });
+
+  test("défiler dans un même chant ne re-rend pas la page à chaque image", async ({ page }) => {
+    const rendus = await compterLesRendus(page);
+    await ouvrir(page);
+    // Dans le premier chant, l'en-tête déjà escamoté ; scans et barres posés.
+    await defiler(page, 300);
+    await rendus.attendreLeCalme();
+    const avant = (await rendus.lire()).length;
+    expect(avant, "le crochet voit les rendus").toBeGreaterThan(0);
+    await defilerImageParImage(page, 3, 20);
+    const pendant = (await rendus.lire()).slice(avant);
+    await expect(boutonChant(page, 1)).toHaveAttribute("aria-current", "true");
+    // Un ou deux au passage d'une section (sa pastille marquée), jamais un par image. Avant la relecture :
+    // deux par image, 40 ; la marge absorbe un scan ou une police arrivés en retard sous charge.
+    expect(pendant.length, `vingt images dans le même chant : ${pendant.join(" | ")}`).toBeLessThanOrEqual(8);
+  });
+
+  test("« Copier toutes les paroles » attend que tous les chants soient chargés", async ({ page }) => {
+    let lacher!: () => void;
+    const retenu = new Promise<void>((r) => (lacher = r));
+    await page.route((url) => estLeChantZh(url), async (route) => {
+      await retenu;
+      await route.continue();
+    });
+    await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: SETLIST }, `/setlists/${SETLIST_ID}`);
+    const bouton = sommaire(page).getByRole("button", { name: "Copier toutes les paroles" });
+    await expect(bouton).toBeVisible();
+    await expect(bouton, "le chant ZH n'est pas encore là").toBeDisabled();
+    await expect(bouton).toHaveAttribute("aria-disabled", "true");
+    lacher();
+    await chant(page, 1).waitFor();
+    await expect(bouton).toBeEnabled();
+    await bouton.click();
+    const text = await page.evaluate(() => navigator.clipboard.readText());
+    expect(text.split("\n\n\n"), "les trois chants").toHaveLength(3);
+  });
+
+  test("« Copier toutes les paroles » reste inactif si un chant n'a pas pu être chargé", async ({ page }) => {
+    await page.route((url) => estLeChantZh(url), (route) => route.abort("internetdisconnected"));
+    await ouvrir(page);
+    const bouton = sommaire(page).getByRole("button", { name: "Copier toutes les paroles" });
+    await expect(bouton).toBeVisible();
+    await expect(bouton).toBeDisabled();
+    await expect(bouton).toHaveAttribute("aria-disabled", "true");
   });
 });

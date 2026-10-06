@@ -88,9 +88,11 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
   export function SongDetailClient({ song }: SongDetailClientProps) {
     const { t, i18n } = useTranslation();
     const searchParams = useSearchParams();
+    // Ouvert depuis une setlist (`?setlist=`) : sa version, et le Retour y ramène.
+    const setlistDOrigine = safeParseParam<string | null>(searchParams.get("setlist"), null);
     const versionSetlist = useVersionDeLaSetlist(
       song.slug,
-      safeParseParam<string | null>(searchParams.get("setlist"), null),
+      setlistDOrigine,
       safeParseParam<number | null>(searchParams.get("item"), null),
     );
     const sourceAdaptee = versionSetlist?.source;
@@ -162,6 +164,8 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
         const list: string[] = raw ? JSON.parse(raw) : [];
         const next = [song.slug, ...list.filter((s) => s !== song.slug)].slice(0, 8);
         localStorage.setItem("recentSongs", JSON.stringify(next));
+        // La liste des deux volets, restée montée, relit ses récents.
+        window.dispatchEvent(new Event("recentSongs"));
       } catch { /* stockage indisponible */ }
     }, [song.slug]);
 
@@ -326,7 +330,13 @@ function useVersionDeLaSetlist(slug: string, setlistId: string | null, position:
               variant="secondary"
               className="retour-chant h-9 lg:h-8 px-2.5 rounded-full text-xs font-semibold text-muted-foreground hover:text-foreground"
             >
-              <Link aria-label={t("songs.detail.backToAll")} href={backPath}>
+              {/* Deux volets : le Retour n'est montré que vers une setlist (`data-vers-setlist`,
+                  globals.css) ; la liste des chants est déjà à gauche. */}
+              <Link
+                aria-label={t("songs.detail.backToAll")}
+                href={setlistDOrigine ? `/setlists/${encodeURIComponent(setlistDOrigine)}` : backPath}
+                data-vers-setlist={setlistDOrigine ? "" : undefined}
+              >
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M19 12H5m6-7l-7 7 7 7" />
                 </svg>

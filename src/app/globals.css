@@ -590,7 +590,7 @@
   .chants-volets > .chants-chant { display: block; min-width: 0; }
   .halo-chants::before { left: auto; right: -140px; opacity: 0.12; }
   .chants-chant .barre-chant { position: sticky; left: auto; right: auto; width: calc(100% * var(--zoom-chant, 1)); }
-  .chants-chant .retour-chant { display: none; }
+  .chants-chant .retour-chant:not([data-vers-setlist]) { display: none; }
   .chants-chant .song-zoom, .chants-chant .video-chant { margin-top: 0; }
 }
 @media screen and (pointer: fine) and (min-width: 1024px) {
@@ -599,7 +599,7 @@
   :root[data-barre="reduite"] .chants-volets > .chants-chant { display: block; min-width: 0; }
   :root[data-barre="reduite"] .halo-chants::before { left: auto; right: -140px; opacity: 0.12; }
   :root[data-barre="reduite"] .chants-chant .barre-chant { position: sticky; left: auto; right: auto; width: calc(100% * var(--zoom-chant, 1)); }
-  :root[data-barre="reduite"] .chants-chant .retour-chant { display: none; }
+  :root[data-barre="reduite"] .chants-chant .retour-chant:not([data-vers-setlist]) { display: none; }
   :root[data-barre="reduite"] .chants-chant .song-zoom, :root[data-barre="reduite"] .chants-chant .video-chant { margin-top: 0; }
 }
 @media screen and (pointer: fine) and (min-width: 1148px) {
@@ -608,6 +608,6 @@
   .chants-volets > .chants-chant { display: block; min-width: 0; }
   .halo-chants::before { left: auto; right: -140px; opacity: 0.12; }
   .chants-chant .barre-chant { position: sticky; left: auto; right: auto; width: calc(100% * var(--zoom-chant, 1)); }
-  .chants-chant .retour-chant { display: none; }
+  .chants-chant .retour-chant:not([data-vers-setlist]) { display: none; }
   .chants-chant .song-zoom, .chants-chant .video-chant { margin-top: 0; }
 }
