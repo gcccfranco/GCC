@@ -184,14 +184,23 @@ export function useSwipeViews(options: Options) {
       ressort(sens * largeur, vitesse, aller, (pos) => Math.abs(pos) >= largeur * 0.98);
     };
 
-    // Après un glissement, le doigt levé ne touche pas la ligne ou le lien de départ.
+    // Après un glissement, le doigt levé ne touche pas la ligne ou le lien de départ. Le
+    // clic de ce doigt, s'il vient, suit aussitôt son lâcher : le toucher suivant (un
+    // nouveau pointerdown) n'est jamais avalé, même dans les 400 ms.
     const avalerClic = () => {
+      const finir = () => {
+        zone.removeEventListener("click", stop, { capture: true });
+        window.removeEventListener("pointerdown", finir, { capture: true });
+        window.clearTimeout(minuteur);
+      };
       const stop = (e: Event) => {
         e.preventDefault();
         e.stopPropagation();
+        finir();
       };
-      zone.addEventListener("click", stop, { capture: true, once: true });
-      window.setTimeout(() => zone.removeEventListener("click", stop, { capture: true }), 400);
+      zone.addEventListener("click", stop, { capture: true });
+      window.addEventListener("pointerdown", finir, { capture: true });
+      const minuteur = window.setTimeout(finir, 400);
     };
 
     const down = (e: PointerEvent) => {

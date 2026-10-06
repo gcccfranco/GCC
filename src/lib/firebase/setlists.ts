@@ -154,6 +154,31 @@ export async function getSetlists(): Promise<FSSetlist[]> {
     .filter((s) => !s.isPrivate && !s.isDraft);
 }
 
+/** Setlists datées de `today` (AAAA-MM-JJ) ou après, par date, `max` au plus : la lecture
+ *  bornée des « Prochaines setlists » de Chants (lot U5, docs/spec-deux-volets.md, Q17).
+ *  Un seul champ, donc un index simple. Rien n'est filtré ici : brouillons, privées et
+ *  visibilité se trient côté client (`upcomingSetlists`). Hors ligne : rien. */
+export async function getSetlistsFrom(today: string, max = 30): Promise<FSSetlist[]> {
+  const headers = await authHeader();
+  const res = await fetch(`${FS_BASE}:runQuery`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...headers },
+    body: JSON.stringify({
+      structuredQuery: {
+        from: [{ collectionId: "setlists" }],
+        where: {
+          fieldFilter: { field: { fieldPath: "date" }, op: "GREATER_THAN_OR_EQUAL", value: { stringValue: today } },
+        },
+        orderBy: [{ field: { fieldPath: "date" }, direction: "ASCENDING" }],
+        limit: max,
+      },
+    }),
+  });
+  if (!res.ok) return [];
+  const rows = (await res.json()) as Array<{ document?: RawDoc }>;
+  return rows.filter((r) => r.document).map((r) => fromFsDoc(r.document!));
+}
+
 /** Setlists récentes pour le badge de notifications (cloche). Deux requêtes
  *  mono-champ fusionnées : `createdAt` (toutes les setlists) capte les créations,
  *  `updatedAt` (présent seulement sur les setlists éditées) capte les mises à

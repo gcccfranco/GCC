@@ -508,3 +508,183 @@ couchée, la setlist passe en deux volets ; téléphone et tablette debout garde
   曲目列表 (« Liste » de « Quel PDF ? ») et son aide. Regarder la setlist sur l'ordinateur (barre dépliée et réduite)
   et sur l'iPad couché : sommaire, pastilles, « Copier toutes les paroles », « Liste » dans « Quel PDF ? », l'entrée
   « Setlists » qui rouvre la liste filtrée.
+
+**T5 — faite le 05/10/2026** (branche `lot/u5-deux-volets`, commit `feat(U5): T5 — Chants en deux volets…`, après
+`6524e64`). Sur ordinateur et tablette couchée, Chants passe en deux volets ; téléphone et tablette debout gardent un
+volet (seuls Idées d'harmonie et PDF sortent du menu ⋯ sur la tablette debout).
+- **Layout** (`src/app/songs/layout.tsx`, `ChantsVolets.tsx`) : la liste vit dans le layout. La disposition est
+  décidée par le CSS (`.chants-volets`, fin de `globals.css`, mêmes conditions que `useDeuxVolets`), pour que la page
+  arrive du serveur déjà à sa place. Un volet : la liste sur `/songs`, la page du chant ailleurs, comme avant (la liste
+  n'est montée que sur `/songs` et se remonte au retour). Deux volets : liste à gauche (`clamp(320px, 37 %, 400px)`,
+  elle défile seule dans son volet, collée en haut), à droite « Choisis un chant » ou le chant ; bornés par
+  `--largeur-lecture`, centrés.
+- **Liste depuis l'index** (`src/hooks/useSongsIndex.ts`) : `/songs-index.json`, gardé en mémoire une fois lu (la liste
+  remontée s'affiche d'un coup, sa position se rend avant la première image). `/songs` ne charge plus les 378 chants
+  côté serveur ; seuls les thèmes passent par le layout. La restauration du défilement attend la liste.
+- **Fondu par section** (`PageTransition.tsx`) : Chants n'est plus remonté à chaque chant ; le volet de droite a son
+  fondu à chaque adresse, la liste à chaque montage.
+- **Filtres** : écrits dans l'adresse (et `lastListPath`) sur `/songs` seulement ; sous `/songs/[slug]` ils n'effacent
+  plus `?key=`. En deux volets, la position de la liste n'est ni enregistrée ni restaurée (la fenêtre est celle du chant).
+- **Chant ouvert** : sa ligne en encre (`aria-current="page"`, tonalité en blanc, planche `Main`) ; elle vient dans la
+  vue de son volet (arrivé par une adresse, retour du navigateur).
+- **Page du chant dans le volet** (`SongDetailClient.tsx`, Q16) : la barre colle en haut du volet (plus fixe sur toute la
+  largeur ; `--zoom-chant` pour garder sa largeur au zoom ; `--barre-left` mesuré pour la copie du halo), sans Retour.
+  Libellés selon la largeur de la rangée (requête de conteneur `.rangee-chant` : libellés dès 620 px, comme le
+  téléphone les cachait sous 640 px de fenêtre ; « Idées d'harmonie » dès 760 px). Dès 768 px de large et 500 px de
+  haut (tablette debout, ordinateur, pas un téléphone couché), Idées d'harmonie (si l'accès) et PDF en boutons à droite
+  de la barre, retirés du menu ⋯.
+- **« Choisis un chant »** (`ChoisisUnChant.tsx`, Q17, planche `chants-accueil`) : connecté, les trois prochaines
+  setlists — `getSetlistsFrom` (setlists.ts : `date ≥ aujourd'hui`, tri par date, 30 au plus, index simple) puis
+  `upcomingSetlists` (`src/lib/setlist/upcoming.ts`, pur : date refiltrée, brouillons exclus, `canSeeSetlist`, par date
+  puis ordre des catégories). Carte : catégorie en couleur, titre (lien vers la setlist), « Dim. 4 oct. · présidence »,
+  chants numérotés (transitions exclues) avec leur tonalité (`keyOverride`, sinon l'originale), une fusion en
+  « A / B » (chaque titre dans ses réglages de la fusion, sans pastille) ; un chant ouvre sa page par `songHref`. Sans
+  compte, sans setlist ou hors ligne : « Choisis un chant », « dans la liste. ». Rien n'est lu en un volet.
+- Choix pris : halo de « Choisis un chant » en `--sec-verse` (la teinte verte de la planche) ; le nom de catégorie est celui des traductions
+  (« Culte Francophone », la planche écrit « Culte Franco ») ; « Récemment consultés » reste en tête de la liste ;
+  pas de « + Setlist » (question 5) ; un téléphone couché garde Idées et PDF dans ⋯ (« rien ne change »).
+- Tests : `tests/chants-deux-volets.spec.ts` (14 tests ; ajouté à `SPECS_GRAND_ECRAN`) — en grand : sans compte, cartes
+  d'un musicien (ordre, brouillon, passée, privée d'un autre, sa privée), admin, lecture bornée, chant de carte dans la
+  tonalité de la setlist puis retour, titre de carte, liste qui garde position et recherche (FR puis ZH) et retour au
+  chant précédent, arrivée par une adresse (`?key=` gardé par les filtres), barre collante sans Retour avec Idées et
+  PDF, scan 简谱 de `一生爱你` dans le volet, 1 024 px barre dépliée → un volet ; en un volet : pas de « Choisis un
+  chant » ni de lecture des setlists, tablette debout (boutons, Retour), téléphone (tout dans ⋯). Vus rouges (13
+  échecs) puis verts sur les cinq projets.
+- Reprise après la coupure (05/10/2026) : le travail laissé non commité par l'agent coupé a été relu et gardé.
+  Corrigé à la reprise : sur `/songs` en deux volets, aucun halo avant l'hydratation (celui de la liste caché par le
+  CSS, celui de « Choisis un chant » posé par React). Désormais un seul halo pour `/songs`, posé par `ChantsVolets`
+  (variante `chants` de `Halo`) : le CSS en fait le bleu des accords à gauche en un volet, le vert des couplets à
+  droite en deux volets (`--halo-chants`, `.halo-chants`) ; juste dès le premier affichage, sans React. Les
+  enveloppes de la liste et de « Choisis un chant » perdent leur fond (celui du `body` suffit) pour ne pas le couvrir.
+  Specs existantes ajustées au volet de gauche : `key-selector` et `recommended-key` (le sélecteur de tonalité lu
+  dans la barre du chant, la liste a son choix de thème), `harmonie-idees` (bouton dès la tablette debout ;
+  « nouveau » lu dans la feuille), `look-barres` (zone comparée depuis le bord gauche des barres), `look-halo`
+  (`/songs` en deux volets : vert des couplets à 12 %, à droite), `navigation-grand-ecran` (en deux volets, la
+  liste se décale des 180 px entiers en réduisant la barre), `export-pdf` (PDF du chant par le bouton de la barre
+  dès la tablette debout), `performance-mode` et `nouveau-chant` (sélecteur de tonalité lu dans la barre du chant).
+  Revérifié : `chants-deux-volets` 36 verts, 34 sautés (tests d'une autre disposition) ; `tsc` propre ;
+  ESLint sans erreur (avertissements déjà présents sur `SongListClient` et `SongDetailClient`) ; specs voisines
+  repassées (`songs-list-return` réécrite pour lire l'opacité de la liste, `songs-index`, `look-recents`,
+  `look-halo`, `look-halo-defilement`, `look-barres`, `recommended-key`, `key-selector`, `copy-lyrics`,
+  `navigation-grand-ecran`, `look-navigation`, `look-zone-sure`, `look-fondations`, `i18n-hydration`,
+  `harmonie-idees`, `harmonie-catalogue`, `service-worker`, `section-labels`, `back-office-coupe`,
+  `accords-voisins-zh`, `pinyin-espace` : 511 tests, puis les 36 rouges dus au volet de gauche corrigés et
+  repassés) ; specs des setlists et du mode louange (`export-pdf`, `lignes-accords`, `lignes-chinoises`,
+  `fusions-dp`, `harmonie-ma-version`, `setlist-history`, `setlist-version`, `coup-d-oeil`, `look-louange`,
+  `performance-mode`, `nouveaux-membres`, `rappels-regroupes`, `setlist-deux-volets`, `setlist-g`,
+  `setlist-regie`, `harmonie-setlist`, `harmonie-jianpu`, `jianpu-tonalite-cho`, `mode-louange-colonnes` :
+  1 020 verts ; 8 rouges dus à T5 corrigés, 2 dus à la charge — `look-louange` 667 × 375 à 31,999 px,
+  `setlist-g` « rouvre » — verts une fois repassés) ; `nouveau-chant` avec `abba-pere` et `一生爱你` vert.
+  Captures regardées (ordinateur 1 280 et 1 440, tablette couchée, tablette
+  debout) : conformes à `chants-accueil` et `Main` (sans « + Setlist », question 5).
+- **Reste après T5** : T6 (finitions : captures FR/ZH clair et sombre sur les cinq projets, suite complète,
+  `graphify update .`).
+- À faire par Timothée : aucune règle à publier (`access.ts` et `firestore.rules` inchangés ; la lecture bornée
+  `date ≥ aujourd'hui`, tri par `date` n'a besoin que de l'index simple, créé d'office). Relire 选择一首诗歌,
+  接下来的歌单 et les deux sous-titres. Regarder Chants sur l'ordinateur (barre dépliée et réduite) et sur l'iPad
+  couché : la liste qui reste en place d'un chant à l'autre, les cartes « Prochaines setlists », un chant de carte
+  qui s'ouvre dans la tonalité de la setlist.
+
+**T6 — faite le 05/10/2026** (branche `lot/u5-deux-volets`, commit `feat(U5): T6 — finitions…`, après `3812992`).
+Rien ne change à l'écran, sauf l'app Android installée, qui tourne désormais avec la tablette.
+- **Manifeste** (question 7) : `orientation: "portrait"` retiré de `src/app/manifest.ts` ; `coherence.spec.ts` vérifie
+  qu'aucune orientation n'est imposée (vu rouge, puis vert).
+- **Parcours du dimanche** (`tests/deux-volets-finitions.spec.ts`, nouveau, ajouté à `SPECS_GRAND_ECRAN`) : sur les cinq
+  projets, interface en français puis en 中文, clair puis sombre (4 tests par projet, 20 en tout) — Chants (« Choisis
+  un chant » et sa carte en grand, absent en un volet), `abba-pere`, `一生爱你`, la setlist (Liste et bascule sur G,
+  Sommaire en deux volets), ses partitions au chant ZH sur son scan (toucher sa ligne ou son entrée du sommaire), le
+  mode louange (« 2 colonnes » pressé en grand, absent ailleurs). À chaque écran : rien ne déborde en largeur, la
+  langue de la page, le fond clair ou sombre ; les libellés du lot lus dans la langue (目录, 曲目列表, 选择一首诗歌,
+  敬拜模式, 双栏). Avec `PW_CAPTURES`, une capture par écran : 120 regardées par échantillon aux cinq tailles, FR et
+  中文, clair et sombre, comparées à `chants-accueil`, `setlist-deux-volets`, `setlist-g-telephone(-partitions)`,
+  `setlist-g-tablette`, `tablette-portrait-chant`, `mode-louange-2-colonnes` : conformes. Écarts connus, hors lot :
+  accords en encre et non en bleu dans les partitions quand les couleurs par section sont actives (choix du
+  15/09/2026, `SongView.tsx`, couleurs gelées) ; chrome du mode louange d'aujourd'hui (question 1) ; « orig. » non
+  traduit, comme avant.
+- **Tests existants ajustés** : `mode-louange-colonnes.spec.ts` entre dans `SPECS_GRAND_ECRAN` et perd son describe
+  « tablette couchée » (l'iPad tourné de T1), remplacé par le vrai projet `tablette-paysage`. `setlist-g.spec.ts`,
+  « « Partitions » rouvre là où on était » : échouait 2 fois sur 5 sur téléphone (adresse `chant=1`). Diagnostic
+  (journal posé puis retiré) : le `scrollBy` du test n'est pas un geste, il ne lâchait pas le chant amené ; un scan
+  arrivé pendant la tenue de 2 s ramenait le chant 2 sous la barre, et le « −20 » qui suit faisait lire, à juste
+  titre, le chant 1. L'app avait raison ; le test pose maintenant un doigt (`touchstart`) avant de défiler, comme un
+  vrai défilement : 59 verts sur 60 répétitions (un échec isolé sur tablette sous charge, non reproduit en 25).
+- Vérifié : `deux-volets-finitions`, `mode-louange-colonnes`, `coherence`, `setlist-deux-volets`, `chants-deux-volets`,
+  `setlist-g` sur les cinq projets : 250 verts, 118 sautés (tests d'une autre disposition), 1 rouge (le test ci-dessus,
+  corrigé). `tsc` propre ; ESLint propre sur les fichiers touchés.
+- **Pas fait ici** : la suite complète (elle tourne à l'intégration du chantier, consigne des copies de travail) ;
+  `graphify update .` (le graphe vit dans le dossier de Timothée, `graphify-out/` est ignoré par git : à lancer après
+  la fusion).
+- **Reste** : rien pour U5, hors suite complète et graphe à l'intégration.
+- À faire par Timothée : aucune règle à publier (`access.ts` et `firestore.rules` inchangés sur tout le lot). Relire le
+  中文 du lot (双栏, 目录, 复制全部歌词, 曲目列表, 选择一首诗歌, 接下来的歌单 et les sous-titres). Sur une tablette
+  Android, réinstaller l'app (ou attendre la mise à jour du manifeste) pour qu'elle tourne en paysage. Prévenir
+  l'équipe avant la mise en ligne (question 2 : un trait posé en une colonne ne s'affiche pas en deux colonnes).
+
+**Fusion de la version finale de U4 — revérifiée le 05/10/2026** (branche `lot/u5-deux-volets`, sur `d7f92a9`).
+`git merge --no-edit lot/u4-navigation` répond « Already up to date » : la version finale de U4 (`e2f9861`, sa
+relecture) est déjà dans la branche par la fusion `2af01de` (avant T4). Ni commit de fusion, ni conflit, ni correctif.
+- Vérifié sur l'état final : `tsc` propre ; ESLint 0 erreur, aucun avertissement nouveau (comptés fichier par fichier
+  contre `b6c19a7` sur les fichiers de `src/` touchés par le lot : autant ou moins) ; `deux-volets-finitions`,
+  `mode-louange-colonnes`, `coherence`, `setlist-deux-volets`, `chants-deux-volets`, `setlist-g`, plus
+  `navigation-grand-ecran` (U4) et `back-office-coupe` (second serveur, interrupteur coupé), sur les cinq projets :
+  407 verts, 269 sautés (tests d'une autre disposition ou d'un autre projet), aucun rouge.
+- **Reste** : rien pour U5, hors suite complète et `graphify update .` à l'intégration du chantier.
+- À faire par Timothée : inchangé (voir T6) — aucune règle à publier ; relire le 中文 du lot ; réinstaller l'app sur
+  une tablette Android ; prévenir l'équipe pour les traits en deux colonnes.
+
+**Relecture du lot — faite le 06/10/2026** (branche `lot/u5-deux-volets`, commit `fix(U5): relecture — …`, après
+`51271a1`). Deux relectures, dix constats : les deux importants et six mineurs corrigés, deux mineurs laissés
+(raisons ci-dessous). Reprise d'un premier passage coupé : son travail non commité a été relu, gardé, et complété
+par le Retour vers la setlist.
+- **Défilement** (important) : le suivi du chant lu ne re-rend plus toute la page à chaque image. La section lue ne
+  remplace l'état que si elle change (même tableau sinon, React n'a rien à refaire), et le DOM n'est lu qu'une fois
+  par image (`chantALaLigne()` sert au chant lu et au retour). Calcul gardé hors des deux volets : sur G, le retour à
+  la ligne en a besoin, et il ne coûte plus de rendu.
+- **« Copier toutes les paroles »** (important) : inactif (`disabled`, `aria-disabled`) tant que les partitions se
+  chargent ou qu'un chant de la setlist, fusions comprises, n'est pas là (hors ligne, échec) : plus de copie
+  incomplète annoncée « Copié ».
+- **Index des chants** : lu seulement quand la liste est montée (`/songs`, ou deux volets) ; la page d'un chant sur
+  téléphone ou tablette debout ne télécharge plus ses 367 Ko. S'il ne vient pas (hors ligne sans copie du service
+  worker) : « Impossible de charger les chants. Vérifie ta connexion. » / 无法加载诗歌，请检查网络连接。 et
+  « Réessayer » ; relu seul au retour du réseau (`online`).
+- **Récents** : en deux volets, la rangée suit les chants ouverts à droite (la page du chant prévient la liste,
+  évènement `recentSongs`), sans recharger.
+- **« Choisis un chant »** : la lecture des prochaines setlists est gardée une minute en mémoire (par compte et par
+  jour, oubliée si elle échoue, comme le profil) : un aller-retour chant / Chants ne relit plus 30 documents. La
+  limite de 30 reste : au volume d'aujourd'hui, il faudrait plus de 27 setlists futures privées ou en brouillon
+  pour cacher une setlist visible.
+- **Retour vers la setlist** : en deux volets, un chant ouvert avec `?setlist=` (titre dans les partitions, carte de
+  « Choisis un chant ») garde son Retour, qui mène à cette setlist (`data-vers-setlist`, globals.css) ; un chant de
+  la liste reste sans Retour (Q16). Partout, un chant ouvert avec `?setlist=` revient à sa setlist (avant : à la
+  dernière liste quittée, qui était cette setlist sauf par un lien partagé).
+- **Glissement G** : après un glissement, seul le clic du doigt levé est avalé ; l'écouteur part au toucher suivant
+  (ou après 400 ms) : un vrai toucher juste après n'est plus perdu.
+- **Laissés** : `setlist-g.spec.ts` hors de `SPECS_GRAND_ECRAN` (juste, mais G n'existe pas en grand : rien à y
+  jouer tant que la règle Q1 ne bouge pas ; sinon l'ajouter) ; suite complète et `graphify update .` (à
+  l'intégration du chantier, depuis le dossier de Timothée pour le graphe).
+- Tests (écrits avant, vus rouges : 26 échecs sur ordinateur, téléphone, tablette et tablette couchée, puis verts sur
+  les cinq projets) : `setlist-deux-volets` et `setlist-g` « défiler dans un même chant ne re-rend pas la page à
+  chaque image » (rendus comptés par le crochet des outils de React, `tests/helpers/rendus.ts` : 40 rendus pour 20
+  images avant, 59 sur tablette ; 8 au plus après, en pratique 0 à 2), « Copier toutes les paroles » attend tous les
+  chants (chant ZH retenu, puis en échec) ; `setlist-g` « le toucher suivant n'est pas avalé » ; `chants-deux-volets`
+  récents, une seule lecture des prochaines setlists, Retour vers la setlist (barre toujours sur une ligne), page d'un
+  chant sans index en un volet, index absent → message, « Réessayer » et retour du réseau.
+- Vérifié : les specs du lot (`mode-louange-colonnes`, `setlist-g`, `setlist-deux-volets`, `chants-deux-volets`,
+  `deux-volets-finitions`, `coherence`), `back-office-coupe` (second serveur, interrupteur coupé) et les voisines
+  (`harmonie-idees`, `lignes-accords`, `look-barres`, `look-louange`, `look-navigation`, `performance-mode`,
+  `setlist-regie`, `songs-list-return`, `look-recents`, `fusions-dp`, `jianpu-tonalite-cho`, `songs-index`,
+  `copy-lyrics`) sur les cinq projets : 991 verts, 194 sautés, 3 rouges, un même test sur les trois projets en
+  grand — `chants-deux-volets` « la liste garde sa position » lisait le défilement du volet, qui grandit maintenant de
+  la rangée « Récents » apparue au-dessus (le navigateur garde la ligne touchée en place) : il lit désormais la
+  position de la ligne à l'écran, et vérifie que la liste n'est ni remontée ni remise en haut ;
+  `chants-deux-volets` repassé : 57 verts, 43 sautés. `tsc` propre ; ESLint 0 erreur, aucun avertissement nouveau.
+  Capture regardée (ordinateur, 1 440, tablette couchée) : Retour en tête de la barre du chant, barre sur une ligne.
+- Limite possible, non vérifiable ici (tests sous Chromium) : si Safari n'ancre pas le défilement, la ligne ne
+  reste pas en place quand un contenu grandit au-dessus. La rangée « Récents » ne change de hauteur qu'en
+  apparaissant (une seule ligne qui défile en largeur) : sur un iPad aux récents vides, le premier chant ouvert
+  décalerait la liste d'une rangée, une fois.
+- **Reste** : rien pour U5, hors suite complète et `graphify update .` à l'intégration.
+- À faire par Timothée : aucune règle à publier (`access.ts` et `firestore.rules` inchangés). **Valider le Retour
+  vers la setlist en deux volets** (Q16 disait « sans Retour » ; s'il n'en veut pas, retirer
+  `:not([data-vers-setlist])` des trois blocs de `globals.css`). Relire 无法加载诗歌，请检查网络连接。. Sur l'iPad couché,
+  liste défilée, ouvrir un chant : la liste ne doit pas sauter. Le reste inchangé (voir T6).

@@ -190,8 +190,7 @@ async function capture(page: Page, nom: string) {
 }
 
 /** Les comportements du grand écran, joués sur la disposition donnée par le projet
- *  (`ordinateur`, et après U4 `tablette-paysage` et `ordinateur-1440`) ou par une
- *  tablette tournée (`tablette` en 1 080 × 810). */
+ *  (`ordinateur`, `tablette-paysage` et `ordinateur-1440`, SPECS_GRAND_ECRAN). */
 function grandEcranTests(nom: string) {
   // 一生爱你 en entier tient sur une page (il reste en une colonne, Q4) : joué
   // deux fois, il n'y tient plus.
@@ -311,15 +310,6 @@ function grandEcranTests(nom: string) {
 }
 
 grandEcranTests("grand écran");
-
-test.describe("tablette couchée (1 080 × 810)", () => {
-  // En attendant le projet `tablette-paysage` de U4 : l'iPad du projet `tablette`, tourné.
-  test.use({ viewport: { width: 1080, height: 810 } });
-  test.beforeEach(() => {
-    test.skip(test.info().project.name !== "tablette", "iPad tourné : projet tablette seulement");
-  });
-  grandEcranTests("tablette paysage");
-});
 
 test("téléphone et tablette portrait : pas d'interrupteur, une colonne, même nombre de pages quel que soit le réglage", async ({ page }) => {
   test.skip(await grandEcran(page), "téléphone et tablette portrait seulement");

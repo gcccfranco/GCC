@@ -23,6 +23,11 @@ const SPECS_GRAND_ECRAN = [
   /coup-d-oeil\.spec\.ts/,
   // Lot U5 (docs/spec-deux-volets.md) : la setlist en deux volets.
   /setlist-deux-volets\.spec\.ts/,
+  // … et Chants en deux volets.
+  /chants-deux-volets\.spec\.ts/,
+  // … le mode louange en deux colonnes, et le parcours de T6 (captures, FR et ZH, clair et sombre).
+  /mode-louange-colonnes\.spec\.ts/,
+  /deux-volets-finitions\.spec\.ts/,
   // Lot U4 bis (docs/spec-pages-en-grand.md, Q16) : toutes les pages en grand.
   /pages-en-grand-.*\.spec\.ts/,
   // Lot U6 (spec-back-office.md, Tests) : l'espace Back-Office, B1.

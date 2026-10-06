@@ -33,6 +33,8 @@ export const SECTIONS_EN_DEUX_VOLETS: readonly string[] = [
   // B4 : Mes services (`/mes-services/[date]`) et Mes tâches (`/taches/[pole]/[id]`).
   "/mes-services",
   "/taches",
+  // Lot U5 (Q15) : Chants, dont `songs/ChantsVolets` porte la liste et règle son fondu.
+  "/songs",
 ];
 
 /** Clé du fondu de page (`PageTransition`) : la page entière se remonte à chaque adresse,

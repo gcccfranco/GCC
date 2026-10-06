@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { compterLesRendus, defilerImageParImage } from "./helpers/rendus";
 import { issueDuGeste, lireIntention, projection } from "../src/hooks/useSwipeViews";
 
 // Lot U5, tranche T2 (docs/spec-deux-volets.md, questions 3, 9 à 12 et 14) :
@@ -178,6 +179,10 @@ test.describe("setlist G, téléphone et tablette portrait", () => {
     await expect.poll(() => ecartSousLaBarre(page, 2)).toBe(SOUS_LA_BARRE);
     // Descendre cache les barres (et la bascule avec elles) ; remonter un peu les ramène.
     const image = () => page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
+    // Un vrai défilement commence par un doigt posé, qui lâche le chant amené ; sans
+    // lui, un scan arrivé pendant la tenue (2 s) ramènerait le chant 2 sous la barre
+    // et le « −20 » qui suit ferait lire le chant 1 (T6 : 2 échecs sur 5 sous charge).
+    await page.evaluate(() => window.dispatchEvent(new Event("touchstart")));
     await page.evaluate(() => window.scrollBy(0, 150));
     await image();
     await page.evaluate(() => window.scrollBy(0, -20));
@@ -594,5 +599,44 @@ test.describe("glissement entre Liste et Partitions (setlist G)", () => {
     await page.mouse.up();
     await page.waitForTimeout(400);
     await expect(boutonVue(page, "Liste")).toHaveAttribute("aria-pressed", "true");
+  });
+});
+
+// ─── Relecture du lot (05/10/2026) ────────────────────────────────────────────
+
+test.describe("relecture : défilement, toucher après un glissement (setlist G)", () => {
+  test("défiler dans un chant des partitions ne re-rend pas la page à chaque image", async ({ page }) => {
+    const rendus = await compterLesRendus(page);
+    await ouvrir(page);
+    await lienLigne(page, 1).click();
+    await expect(chant(page, 1)).toBeVisible();
+    // Un doigt posé lâche le chant amené ; puis on descend dans le premier chant.
+    await page.evaluate(() => window.dispatchEvent(new Event("touchstart")));
+    await defilerImageParImage(page, 30, 5);
+    await rendus.attendreLeCalme();
+    const avant = (await rendus.lire()).length;
+    expect(avant, "le crochet voit les rendus").toBeGreaterThan(0);
+    await defilerImageParImage(page, 3, 20);
+    const pendant = (await rendus.lire()).slice(avant);
+    expect(params(page).chant).toBe("1");
+    // Un ou deux au passage d'une section, jamais un par image. Avant la relecture :
+    // deux par image, 40 ; la marge absorbe un scan ou une police arrivés en retard sous charge.
+    expect(pendant.length, `vingt images dans le même chant : ${pendant.join(" | ")}`).toBeLessThanOrEqual(8);
+  });
+
+  test("juste après un glissement, le toucher suivant n'est pas avalé", async ({ page }) => {
+    await ouvrir(page);
+    await expect(ligne(page, 2)).toBeVisible();
+    const w = page.viewportSize()!.width;
+    const y = await hauteurDe(page, ligne(page, 2));
+    const b = (await boutonVue(page, "Partitions").boundingBox())!;
+    const touch = await doigt(page);
+    // Un geste engagé mais trop court : la vue revient en ressort.
+    await glisser(page, { x: w * 0.7, y }, { x: w * 0.45, y }, { lent: 20, tenir: 250 });
+    // Aussitôt (moins de 400 ms), un vrai toucher sur « Partitions ».
+    await touch("touchStart", b.x + b.width / 2, b.y + b.height / 2);
+    await touch("touchEnd");
+    await expect(boutonVue(page, "Partitions")).toHaveAttribute("aria-pressed", "true");
+    await expect(chant(page, 1)).toBeVisible();
   });
 });

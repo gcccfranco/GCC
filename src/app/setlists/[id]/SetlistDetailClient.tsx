@@ -641,8 +641,7 @@ export function SetlistDetailClient() {
   }
 
   /** Retient où en sont les partitions : le chant lu et son haut sous la ligne de lecture. */
-  function retenirRetour() {
-    const { n, el } = chantALaLigne();
+  function retenirRetour({ n, el } = chantALaLigne()) {
     const haut = (el ?? document.querySelector<HTMLElement>(`[data-outline-item="${n}"]`))?.getBoundingClientRect().top;
     if (haut !== undefined) retour.current = { n, decalage: haut - hautDeLecture() };
   }
@@ -658,12 +657,16 @@ export function SetlistDetailClient() {
       // Partitions déjà retirées (passage à la Liste, avant que l'effet ne se
       // nettoie) : rien à lire — le premier chant serait pris pour le chant lu.
       if (!document.querySelector("[data-outline-item]") || enRoute.current) return;
-      retenirRetour();
+      // Une seule lecture du DOM par image, pour le retour et pour le chant lu.
+      const lu = chantALaLigne();
+      retenirRetour(lu);
       if (posee.current !== null && Math.abs(window.scrollY - posee.current) <= 4) return;
       posee.current = null;
-      const { n, uids } = chantALaLigne();
+      const { n, uids } = lu;
       setCurrent(n);
-      setUidsLus(uids);
+      // Même section qu'à l'image d'avant : le même tableau, pour que React n'ait rien à
+      // refaire (un tableau neuf re-rendait toute la page à chaque image de défilement).
+      setUidsLus((avant) => (avant.length === uids.length && avant.every((u, i) => u === uids[i]) ? avant : uids));
       if (lireAdresse()?.chant !== n) {
         // L'état de Next (`__NA`) est gardé : sans lui, Next relit l'adresse comme une
         // navigation et abandonne celle qui partait (un titre touché pendant le
@@ -1330,6 +1333,15 @@ export function SetlistDetailClient() {
     const shown = editMine ? (v?.mine?.content ? "mine" : "presidence") : (v?.shown ?? "presidence");
     return shown === "presidence" && !v?.mine?.structure?.length;
   });
+  // … et seulement quand chaque chant est là : pendant le préchargement (Q14), ou sans un
+  // chant qui n'a pas pu venir (hors ligne), la copie aurait omis des chants sans le dire.
+  const tousLesChantsCharges =
+    !loadingContent &&
+    setlist.items.every((item) =>
+      item.type === "fusion" && item.fusionSongs
+        ? item.fusionSongs.every((fs) => !!contents[fs.songSlug])
+        : !item.songSlug || !!contents[item.songSlug],
+    );
   /** Plein écran natif : à demander en synchrone dans le geste (avant tout
    *  await), sinon la demande est rejetée ; iPhone Safari ne le connaît pas. */
   async function ouvrirModeLouange() {
@@ -1635,6 +1647,7 @@ export function SetlistDetailClient() {
                 uidsLus={uidsLus}
                 onGo={allerA}
                 copier={toutSuitLaPresidence ? () => setlistLyricsText(setlist.items, contents) : undefined}
+                copierPret={tousLesChantsCharges}
                 className="sticky transition-[top,height] duration-300"
                 style={{
                   top: scrollVisible ? `calc(var(--nav-h) + ${enTeteH}px)` : "var(--nav-h)",
