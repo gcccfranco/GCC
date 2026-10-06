@@ -119,6 +119,13 @@ export function editionsAffichees(programmes: Programme[], today: string): Editi
     .filter((e) => !["aucune", "brouillon"].includes(etatEdition(e, today)));
 }
 
+/** Parmi des éditions qui ont un document, celle dont le jour J est le plus près de
+ *  `today`, avant ou après (Q10 : le widget sans réglage ; à égalité, la première). */
+export function editionProche(editions: Edition[], today: string): Edition | null {
+  const ecart = (e: Edition) => Math.abs(utc(e.programme!.jourJ) - utc(today));
+  return editions.reduce<Edition | null>((m, e) => (!m || ecart(e) < ecart(m) ? e : m), null);
+}
+
 /** Le document d'une édition nouvelle, sans `createdBy` ni `updatedAt`. */
 export type ReglagesEdition = Required<
   Pick<Programme, "nom" | "fete" | "annee" | "jourJ" | "debut" | "plages" | "duree" | "quiAutorises" | "passages" | "ouvert">

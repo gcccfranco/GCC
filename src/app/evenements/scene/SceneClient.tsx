@@ -5,10 +5,11 @@
 // coordination (pôle Événement + admins) crée, modifie, affiche, masque et
 // supprime les programmes en haut de la même page. Sans programme affiché, les
 // membres ne voient pas l'onglet ; la coordination y crée le suivant.
-// Lot 12 : le programme affiché est **calculé** (currentProgramme), jamais
+// Lot 12 : le programme affiché est **calculé** (Pâques · Noël, P3 : l'édition affichée
+// au jour J le plus proche, `editionsAffichees` puis `editionProche`), jamais
 // écrit — après le jour J l'onglet remercie sept jours, puis le programme
 // s'archive et la bascule prend le suivant dès l'ouverture de ses
-// réservations. `visible` n'est plus que l'épinglage de la coordination.
+// réservations. `visible` (l'épinglage) n'est plus lu (Q11) ; « Afficher » part avec P7.
 // Lot U6, B3 (U1 Q12) : la gestion (`gestion`) est à Back-Office › Évènements ›
 // Scène ; dans l'App, la coordination réserve comme les groupes et trouve
 // « Gérer dans le Back-Office ».
@@ -23,8 +24,9 @@ import {
   createProgramme, deleteProgramme, listCreneaux, listProgrammes, updateProgramme,
 } from "@/lib/firebase/programmes"
 import {
-  archiveDate, currentProgramme, programmeState, reservationsClosed, todayIso,
+  archiveDate, programmeState, reservationsClosed, todayIso,
 } from "@/lib/scene/dimanches"
+import { editionProche, editionsAffichees } from "@/lib/scene/fetes"
 import { famillesDe, joursReservables, saisonDe } from "@/lib/scene/saison"
 import { reportConflict } from "@/lib/scene/reportConflict"
 import { fdFullL, fdLongL } from "@/lib/planning/utils"
@@ -38,6 +40,11 @@ import { SaisonEcran } from "./SaisonEcran"
 import { dateCourte } from "./libelles"
 
 const COLOR = PLANNING_COLORS.scene
+
+/** Le programme montré : l'édition affichée au jour J le plus proche (Q10), comme l'onglet. */
+const programmeAffiche = (programmes: Programme[], today: string) =>
+  editionProche(editionsAffichees(programmes, today), today)?.programme ?? null
+
 type Volet = "entrainements" | "programme"
 
 /** Créneaux chargés, et le programme à qui ils appartiennent. */
@@ -47,7 +54,7 @@ type Charge = { pour: string | null; creneaux: Creneau[] }
  *  coordination a ouvert la saison (`focusId`, lot U1), sinon le programme affiché. */
 async function fetchAll(focusId: string | null): Promise<{ programmes: Programme[] } & Charge> {
   const programmes = await listProgrammes()
-  const focus = programmes.find((p) => p.id === focusId) ?? currentProgramme(programmes, todayIso())
+  const focus = programmes.find((p) => p.id === focusId) ?? programmeAffiche(programmes, todayIso())
   return { programmes, pour: focus?.id ?? null, creneaux: focus ? await listCreneaux(focus.id) : [] }
 }
 
@@ -89,7 +96,7 @@ export function SceneClient({ gestion = false }: { gestion?: boolean }) {
 
   const coordination = gestion && isCoordination(user, profile)
   const today = todayIso()
-  const current = programmes ? currentProgramme(programmes, today) : null
+  const current = programmes ? programmeAffiche(programmes, today) : null
   const state = current ? programmeState(current, today) : null
   // Tous les autres programmes : en attente, à venir ou archivés.
   const others = programmes?.filter((p) => p.id !== current?.id) ?? []

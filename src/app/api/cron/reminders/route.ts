@@ -16,7 +16,7 @@ import { nombreSujetsAAborder, notificationsDuMatin, type LigneEvenement, type S
 import { estReunion, polesDe } from "@/lib/access";
 import type { Fois, Tache, TachePole } from "@/types/tache";
 import type { Creneau, Programme } from "@/types/programme";
-import { currentProgramme } from "@/lib/scene/dimanches";
+import { editionsAffichees } from "@/lib/scene/fetes";
 import { ajouterPetitDejAuxRappels, lirePetitDej } from "@/lib/petitdej/lignes";
 import { lignesMercredi, petitDejTitre, prochainDimanche } from "@/lib/petitdej/rappel";
 import type { LignePetitDej } from "@/types/petitDej";
@@ -86,19 +86,19 @@ async function markNotified(
   }
 }
 
-/** Créneaux sur scène du programme affiché aujourd'hui, pour ces dates (ISO).
- *  Lot 12 : le programme n'est plus celui qui porte `visible` mais celui que
- *  `currentProgramme` désigne — la même règle que la page et que l'onglet, sans
- *  quoi un programme choisi automatiquement n'enverrait aucun rappel. */
+/** Créneaux sur scène des éditions affichées aujourd'hui (Pâques et Noël, Q10 de
+ *  docs/spec-scene-paques-noel.md), pour ces dates (ISO) : la même règle que l'onglet, le
+ *  calendrier et le widget ; un brouillon n'envoie aucun rappel. */
 async function sceneCreneaux(db: FirebaseFirestore.Firestore, dates: string[], today: string): Promise<Creneau[]> {
-  // Trié par jour J croissant, comme `listProgrammes` : `currentProgramme` s'y fie.
+  // Trié par jour J croissant, comme `listProgrammes` (deux documents pour une édition : le premier lu).
   const snap = await db.collection("programmes").orderBy("jourJ").get();
   const programmes = snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<Programme, "id">) }));
-  const current = currentProgramme(programmes, today);
-  if (!current) return [];
-  const creneaux = await db.collection("programmes").doc(current.id).collection("creneaux")
-    .where("dimanche", "in", dates).get();
-  return creneaux.docs.map((c) => ({ id: c.id, ...c.data() } as Creneau));
+  const parEdition = await Promise.all(editionsAffichees(programmes, today).map(async ({ programme }) => {
+    const creneaux = await db.collection("programmes").doc(programme!.id).collection("creneaux")
+      .where("dimanche", "in", dates).get();
+    return creneaux.docs.map((c) => ({ id: c.id, ...c.data() } as Creneau));
+  }));
+  return parEdition.flat();
 }
 
 /** Rappels de tâches du jour (lot 7, docs/spec-taches.md) : J-3, J-1 et le

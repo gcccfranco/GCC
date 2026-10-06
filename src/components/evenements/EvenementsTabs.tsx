@@ -4,8 +4,9 @@
 // programme de scène affiché (« Noël », lot 3 bis) pour les connectés ; sans
 // programme affiché, seule la coordination voit ce second onglet (« Scène »)
 // pour en créer un. Rechargé après chaque écriture (PROGRAMMES_CHANGED).
-// Lot 12 : le programme affiché est calculé par `currentProgramme`, la même
-// fonction que la page — le nom de l'onglet et la page ne peuvent pas diverger.
+// Pâques · Noël (P3) : le programme affiché est l'édition affichée au jour J le plus
+// proche (`editionsAffichees`, `editionProche`), comme la page — le nom de l'onglet et la
+// page ne peuvent pas diverger. P4 en fait les onglets des deux fêtes.
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
@@ -15,7 +16,8 @@ import { useAuth } from "@/lib/firebase/auth"
 import { useProfile } from "@/lib/firebase/users"
 import { isCoordination } from "@/lib/access"
 import { listProgrammes, PROGRAMMES_CHANGED } from "@/lib/firebase/programmes"
-import { currentProgramme, todayIso } from "@/lib/scene/dimanches"
+import { todayIso } from "@/lib/scene/dimanches"
+import { editionProche, editionsAffichees } from "@/lib/scene/fetes"
 import { PLANNING_COLORS } from "@/lib/serviceColors"
 import { SectionTabs, type SectionTab } from "@/components/layout/SectionTabs"
 import type { Programme } from "@/types/programme"
@@ -37,7 +39,8 @@ export function EvenementsTabs({ enLigne = false }: { enLigne?: boolean }) {
     return () => window.removeEventListener(PROGRAMMES_CHANGED, load)
   }, [user])
 
-  const current = currentProgramme(programmes, todayIso())
+  const today = todayIso()
+  const current = editionProche(editionsAffichees(programmes, today), today)?.programme ?? null
   const tabs: SectionTab[] = [{ href: "/evenements", label: t("evenements.tabs.calendrier") }]
   if (user && (current || isCoordination(user, profile))) {
     tabs.push({ href: "/evenements/scene", label: current?.nom ?? t("planning.tabs.scene"), color: PLANNING_COLORS.scene })

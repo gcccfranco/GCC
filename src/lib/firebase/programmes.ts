@@ -6,6 +6,7 @@ import {
   fromFsValue,
   type RawDoc,
 } from "./setlists";
+import { idEdition, type Fete } from "@/lib/scene/fetes";
 import type { Creneau, Duree, Passage, Plage, Programme } from "@/types/programme";
 
 // Programmes de scène (lot 3 bis) : programmes/{id} et programmes/{id}/creneaux/{cid},
@@ -128,6 +129,33 @@ export async function getProgramme(id: string): Promise<Programme | null> {
 
 export async function createProgramme(data: Omit<Programme, "id">): Promise<string> {
   const id = await post("programmes", data as unknown as Record<string, unknown>);
+  changed();
+  return id;
+}
+
+/** Crée l'édition `{fete}-{annee}` (Q6) à la première action de la coordination : `data`
+ *  (ses réglages, `reglagesRepris`, sans `visible` : Q11) plus `changement` (ce que la
+ *  coordination vient de faire).
+ *  Une autre coordination l'a créée entre-temps (409) : seul `changement` s'écrit sur le
+ *  document existant. Rend l'identifiant. */
+export async function creerEdition(
+  fete: Fete,
+  annee: number,
+  data: Omit<Programme, "id" | "visible">,
+  changement: Partial<Omit<Programme, "id" | "visible">> = {},
+): Promise<string> {
+  const id = idEdition(fete, annee);
+  const headers = await authHeader();
+  const res = await fetch(`${FS_BASE}/programmes?documentId=${id}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...headers },
+    body: JSON.stringify({ fields: toFsFields({ ...data, ...changement } as unknown as Record<string, unknown>) }),
+  });
+  if (res.status === 409) {
+    if (Object.keys(changement).length) await updateProgramme(id, changement);
+    return id;
+  }
+  await checkRest(res);
   changed();
   return id;
 }

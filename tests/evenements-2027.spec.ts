@@ -588,7 +588,7 @@ test.describe("Q3 : déplacer un évènement de toute l'église de 2027 en 2026 
     source, cle: `${source}:${id}:${date}`, date, heure: "", heureFin: "", titre: "Titre", detail: "", couleur: "#000",
     duSheet: false, moi: false, deplacable: true, lien: "",
   });
-  const donnees = (evenements: Evenement[]) => ({ evenements, taches: [], scene: null });
+  const donnees = (evenements: Evenement[]) => ({ evenements, taches: [], scene: [] });
 
   test("« Toute l'église » du 16/01/2027 déposé le 19/12/2026 : refus « sheet » ; le 31/12 aussi, le 01/01/2027 passe", () => {
     const galette = ev({ id: "galette", date: "2027-01-16" });

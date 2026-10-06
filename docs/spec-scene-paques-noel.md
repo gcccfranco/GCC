@@ -423,3 +423,30 @@ npm run lint
   - Reste : P3 à P9.
   - À faire par Timothée : rien pour P2 (aucune règle à publier, droits inchangés) ; relire le 中文
     « 同时占用 {{heures}} 的时段 ».
+- 06/10/2026 — **P3 — Les lecteurs : faite** (branche `lot/v18-scene`, commit « feat(SCENE): P3 »).
+  `editionProche(editions, today)` dans `fetes.ts` (le jour J le plus près, avant ou après) ;
+  `creerEdition(fete, annee, data, changement)` dans `src/lib/firebase/programmes.ts` (`POST
+  programmes?documentId={fete}-{annee}`, sans `visible` ; sur 409, seul `changement` s'écrit en `PATCH`
+  sur le document existant) ; cron des rappels (`sceneCreneaux` : les créneaux de chaque édition
+  affichée), calendrier (`DonneesCalendrier.scene` = tableau d'éditions, `charger.ts` ; `entrees.ts` :
+  un brouillon écarté, lien `/evenements/scene/{fete}` ; `deplacer.ts` : l'édition qui porte le créneau,
+  sa grille et son programme), widget Scène (choisi parmi les éditions affichées, sinon `editionProche` ;
+  titre « Scène · Noël 2026 ») et ses réglages (les éditions affichées, titre calculé) passent à
+  `editionsAffichees`. `currentProgramme` retiré de `dimanches.ts` avec ses tests (`programme-scene.spec.ts`,
+  `scene-saison.spec.ts`). Dans `programme-scene.spec.ts`, les trois tests de l'épinglage (« Masquer »,
+  « Afficher ») sont retirés (Q11) ; trois autres, qui comptaient sur un programme lancé caché avant son
+  ouverture, posent désormais un brouillon. Tests : 9 nouveaux dans `tests/scene-paques-noel.spec.ts` (vus rouges, verts),
+  `tests/helpers/cleFirebase.ts` (clé factice pour importer les modules REST dans un test Node) ;
+  `calendrier.spec.ts`, `calendrier-deplacer.spec.ts`, `evenements-2027.spec.ts`, `tableau-de-bord.spec.ts`
+  suivent la nouvelle forme ; `tsc` et `lint` propres.
+  - Choix faits faute de réponse : la page (`SceneClient`) et l'onglet (`EvenementsTabs`), autres
+    appelants de `currentProgramme`, montrent en attendant P4 l'édition affichée au jour J le plus proche
+    (`editionsAffichees` puis `editionProche`) : l'épinglage (`visible`, « Afficher ») n'a plus d'effet
+    (Q11) et une édition lancée avant son ouverture (`bientot`) s'affiche ; `creerEdition` prend un
+    quatrième argument `changement` (ce qui s'applique sur 409) ; le réglage par défaut du widget garde
+    son libellé « Celui qui est affiché » ; les clés des entrées du calendrier restent
+    `scene:{créneau}:{date}` (l'édition se retrouve par l'identifiant du créneau).
+  - Entre P3 et P4, le lien du calendrier `/evenements/scene/noel` répond 404 (la route vient avec P4).
+  - Reste : P4 à P9 ; `creerEdition` n'a pas encore d'écran (P7, Q6), et le Firestore simulé des tests
+    (`fakeSession.ts`) ne connaît pas encore `documentId` ni le 409.
+  - À faire par Timothée : rien pour P3 (aucune règle à publier, droits inchangés).

@@ -7,7 +7,7 @@ import {
   commence, creneauxLibres, erreursSaison, FAMILLES, famillesDe, grilleDuJour, horsGrille, joursReservables,
   lignesDuJour, quiDesFamilles, quiPermis, saisonDe,
 } from "../src/lib/scene/saison";
-import { currentProgramme, reservationsClosed } from "../src/lib/scene/dimanches";
+import { reservationsClosed } from "../src/lib/scene/dimanches";
 import { QUI } from "../src/types/programme";
 
 // Lot U1 (docs/spec-scene-saison.md) : la coordination définit la saison de
@@ -148,16 +148,6 @@ test("fermeture : le volet se ferme le lendemain de `fin`, sinon du dernier dima
   expect(reservationsClosed("2026-12-21", "2026-12-24")).toBe(true);
   expect(reservationsClosed("2026-12-06", "2026-12-24", "2026-12-06")).toBe(false);
   expect(reservationsClosed("2026-12-07", "2026-12-24", "2026-12-06")).toBe(true);
-});
-
-test("programme affiché : un brouillon n'est jamais affiché, même épinglé ; ouvert → lui ; champ absent → ouvert", () => {
-  const brouillon = { debut: "2026-10-01", jourJ: "2026-12-24", visible: false, ouvert: false };
-  expect(currentProgramme([brouillon], "2026-10-05")).toBeNull();
-  expect(currentProgramme([{ ...brouillon, visible: true }], "2026-10-05")).toBeNull();
-  const ouvert = { ...brouillon, ouvert: true };
-  expect(currentProgramme([ouvert], "2026-10-05")).toBe(ouvert);
-  const avantU1 = { debut: "2026-10-01", jourJ: "2026-12-24", visible: false };
-  expect(currentProgramme([avantU1], "2026-10-05")).toBe(avantU1);
 });
 
 test("familles : Groupes, EDD, Jeunes, Louange, Chorale ; « Jeunes » et « Chorale » sont des groupes du « Qui »", () => {

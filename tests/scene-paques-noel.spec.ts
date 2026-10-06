@@ -1,11 +1,19 @@
-import { expect, test } from "@playwright/test";
+import "./helpers/cleFirebase";
+import { readFileSync } from "node:fs";
+import { expect, test, type Page } from "@playwright/test";
+import { fsDoc, signInAs, type FakeProfile } from "./helpers/fakeSession";
 import {
-  editionCourante, editionsAffichees, editionsDe, etatEdition, FETES, feteDe, anneeDe, idEdition,
+  editionCourante, editionProche, editionsAffichees, editionsDe, etatEdition, FETES, feteDe, anneeDe, idEdition,
   jourJParDefaut, libelleEdition, paques, reglagesRepris,
 } from "../src/lib/scene/fetes";
+import * as dimanches from "../src/lib/scene/dimanches";
+import { chargerCalendrier } from "../src/lib/calendrier/charger";
+import { planDeplacement } from "../src/lib/calendrier/deplacer";
+import { entreesCalendrier, type DonneesCalendrier, type EntreeCalendrier, type ProfilCalendrier } from "../src/lib/calendrier/entrees";
 import { compteCreneaux, erreursSaison, FAMILLES, lignesDuJour, saisonDe, semainesDe } from "../src/lib/scene/saison";
 import { semaineCourte } from "../src/app/evenements/scene/libelles";
-import type { Programme } from "../src/types/programme";
+import { creerEdition } from "../src/lib/firebase/programmes";
+import type { Creneau, Programme } from "../src/types/programme";
 
 // Réservation de la scène — Pâques · Noël (docs/spec-scene-paques-noel.md).
 // Deux onglets fixes ; une édition par fête et par année, `programmes/{fete}-{annee}`.
@@ -251,4 +259,192 @@ test("erreurs : Pâques 2027 ouvert le 01/12/2026 croise Noël 2026 (fermé le 2
   expect(erreursSaison({ ...paques27, debut: "2027-02-01" }, "2027-03-28", noel)).toEqual([]);
   // Le croisement vaut dans les deux sens : Noël 2026 contre un Pâques 2027 ouvert le 01/12.
   expect(erreursSaison(NOEL26, "2026-12-24", { debut: "2026-12-01", fin: "2027-03-21" })).toEqual(["autreFete"]);
+});
+
+// ─── P3 : les lecteurs (calendrier, déplacer, widget, cron, création) ───────
+
+// Tous passent à `editionsAffichees` : les éditions courantes des deux fêtes,
+// sans brouillon ni fête sans document ; `currentProgramme` disparaît.
+
+/** Noël 2026, ancien document (identifiant quelconque, ni `fete` ni `annee`), samedi 10–12 et dimanche 14–19. */
+const NOEL_ANCIEN = prog({
+  id: "x7Kq2", plages: [{ jour: 6, debut: "10:00", fin: "12:00" }, { jour: 0, debut: "14:00", fin: "19:00" }],
+});
+/** Pâques 2027, lancé (réservations le 01/02/2027), dimanche seul. */
+const PAQUES_LANCE = prog({ id: "paques-2027", nom: "Pâques 2027", fete: "paques", annee: 2027, jourJ: "2027-03-28", debut: "2027-02-01", ouvert: true });
+/** Noël 2026 en brouillon : n'apparaît nulle part. */
+const NOEL_BROUILLON = prog({ id: "noel-2026", fete: "noel", annee: 2026, ouvert: false });
+
+const resaDe = (id: string, dimanche: string, debut: string, fin: string): Creneau => ({
+  id, dimanche, debut, fin, quoi: "Chant", qui: ["Jeunes"], note: "", auteurUid: "u-autre", auteurNom: "Autre",
+  createdAt: "2026-09-01T10:00:00Z", updatedAt: "2026-09-01T10:00:00Z",
+});
+
+const donneesVides = (): DonneesCalendrier => ({
+  seances: [], mesServices: [], sheet: [], evenements: [], mesInscriptions: [], taches: [], scene: [], petitDej: [], setlists: [],
+});
+const CTX = {
+  user: { uid: "u-moi", email: "moi@example.org" },
+  profile: { uid: "u-moi", email: "moi@example.org", firstName: "Alix", lastName: "P.", serviceRoles: {} } as unknown as ProfilCalendrier,
+  lang: "fr" as const,
+  today: "2026-10-09",
+};
+
+test("édition la plus proche : le jour J le plus près d'aujourd'hui, avant ou après", () => {
+  const editions = editionsAffichees([NOEL_ANCIEN, PAQUES_LANCE], "2026-10-09");
+  expect(editions.map((e) => e.fete)).toEqual(["paques", "noel"]);
+  expect(editionProche(editions, "2026-10-09")?.fete).toBe("noel");
+  // Le 28/12, Noël (passé de 4 jours) reste plus proche que Pâques (dans trois mois).
+  expect(editionProche(editionsAffichees([NOEL_ANCIEN, PAQUES_LANCE], "2026-12-28"), "2026-12-28")?.fete).toBe("noel");
+  expect(editionProche(editionsAffichees([NOEL_ANCIEN, PAQUES_LANCE], "2027-01-02"), "2027-01-02")?.fete).toBe("paques");
+  expect(editionProche([], "2026-10-09")).toBeNull();
+});
+
+test("calendrier : les créneaux de Noël 2026 et de Pâques 2027 dans la même liste, chacun vers sa fête ; un brouillon n'y est pas", () => {
+  const d = donneesVides();
+  d.scene = [
+    { programme: NOEL_ANCIEN, creneaux: [resaDe("n1", "2026-10-11", "14:00", "15:00")] },
+    { programme: PAQUES_LANCE, creneaux: [resaDe("p1", "2027-02-07", "15:00", "16:00")] },
+    { programme: { ...NOEL_BROUILLON, id: "brouillon", jourJ: "2027-12-24", annee: 2027 }, creneaux: [resaDe("b1", "2026-10-18", "14:00", "15:00")] },
+  ];
+  const scene = entreesCalendrier("2026-10-01", "2027-03-31", d, CTX).filter((e) => e.source === "scene");
+  expect(scene.map((e) => [e.cle, e.lien])).toEqual([
+    ["scene:n1:2026-10-11", "/evenements/scene/noel"],
+    ["scene:p1:2027-02-07", "/evenements/scene/paques"],
+  ]);
+});
+
+test("calendrier : une seule lecture rend les éditions affichées des deux fêtes avec leurs créneaux, sans brouillon", async () => {
+  const docs: Record<string, Record<string, unknown>> = {
+    "programmes/x7Kq2": { nom: "Noël", jourJ: "2026-12-24", debut: "2026-10-01", visible: false, passages: [], createdBy: "", updatedAt: "" },
+    "programmes/paques-2027": { nom: "Pâques 2027", fete: "paques", annee: 2027, jourJ: "2027-03-28", debut: "2027-02-01", ouvert: true, passages: [], createdBy: "", updatedAt: "" },
+    "programmes/noel-2027": { nom: "Noël 2027", fete: "noel", annee: 2027, jourJ: "2027-12-24", debut: "2027-10-01", ouvert: false, passages: [], createdBy: "", updatedAt: "" },
+    "programmes/x7Kq2/creneaux/n1": { ...resaDe("n1", "2026-10-11", "14:00", "15:00") },
+    "programmes/paques-2027/creneaux/p1": { ...resaDe("p1", "2027-02-07", "15:00", "16:00") },
+    "programmes/noel-2027/creneaux/b1": { ...resaDe("b1", "2027-10-03", "14:00", "15:00") },
+  };
+  const avant = globalThis.fetch;
+  globalThis.fetch = (async (url: string, init?: RequestInit) => {
+    const u = String(url);
+    if (!u.endsWith(":runQuery")) return new Response("{}", { status: 404 });
+    const parent = decodeURIComponent(u.split("/documents")[1] ?? "").replace(/^\//, "").replace(/:runQuery$/, "");
+    const from = (JSON.parse(String(init?.body)) as { structuredQuery: { from: { collectionId: string }[] } }).structuredQuery.from[0].collectionId;
+    const collection = parent ? `${parent}/${from}` : from;
+    const rows = Object.entries(docs)
+      .filter(([p]) => p.startsWith(`${collection}/`) && !p.slice(collection.length + 1).includes("/"))
+      .sort(([a], [b]) => String(docs[a].jourJ ?? "").localeCompare(String(docs[b].jourJ ?? "")))
+      .map(([p, data]) => ({ document: fsDoc(p, data) }));
+    return new Response(JSON.stringify(rows), { status: 200, headers: { "Content-Type": "application/json" } });
+  }) as typeof fetch;
+  try {
+    const { base } = await chargerCalendrier({ uid: "u-moi" }, null, "2026-10-09", { pourLeWidget: true });
+    expect(base.scene.map((e) => [e.programme.id, e.creneaux.map((c) => c.id)])).toEqual([
+      ["paques-2027", ["p1"]],
+      ["x7Kq2", ["n1"]],
+    ]);
+  } finally {
+    globalThis.fetch = avant;
+  }
+});
+
+test("déplacer : un créneau de Pâques reste dans Pâques (sa grille, son programme), un créneau de Noël dans Noël", () => {
+  const scene = [
+    { programme: NOEL_ANCIEN, creneaux: [resaDe("n1", "2026-10-11", "14:00", "15:00")] },
+    { programme: PAQUES_LANCE, creneaux: [resaDe("p1", "2027-02-07", "15:00", "16:00")] },
+  ];
+  const entree = (id: string, date: string): EntreeCalendrier => ({
+    source: "scene", cle: `scene:${id}:${date}`, date, heure: "", heureFin: "", titre: "", detail: "", couleur: "", duSheet: false, moi: false, deplacable: true, lien: "",
+  });
+  const horloge = { today: "2026-10-09", maintenant: "10:00" };
+  const donnees = { evenements: [], taches: [], scene };
+  expect(planDeplacement(entree("p1", "2027-02-07"), "2027-02-14", donnees, horloge))
+    .toMatchObject({ type: "creneau", programmeId: "paques-2027", parDefaut: { jour: "2027-02-14", debut: "15:00" } });
+  // Un samedi : réservable à Noël (samedi 10–12), pas à Pâques (dimanche seul).
+  expect(planDeplacement(entree("p1", "2027-02-07"), "2027-02-13", donnees, horloge)).toEqual({ type: "refus", refus: "sceneFermee" });
+  expect(planDeplacement(entree("n1", "2026-10-11"), "2026-10-17", donnees, horloge))
+    .toMatchObject({ type: "creneau", programmeId: "x7Kq2", places: [{ jour: "2026-10-17", debut: "10:00" }, { jour: "2026-10-17", debut: "11:00" }] });
+});
+
+test("création d'une édition : `POST programmes?documentId=noel-2027` ; déjà créée (409) → le changement s'applique au document existant", async () => {
+  const appels: { url: string; method: string; body: string }[] = [];
+  let reponse = 200;
+  const avant = globalThis.fetch;
+  globalThis.fetch = (async (url: string, init?: RequestInit) => {
+    appels.push({ url: String(url), method: init?.method ?? "GET", body: String(init?.body ?? "") });
+    if (init?.method === "POST" && reponse === 409) {
+      return new Response(JSON.stringify({ error: { code: 409, status: "ALREADY_EXISTS" } }), { status: 409 });
+    }
+    return new Response(JSON.stringify({ name: "projects/gcclouange/databases/(default)/documents/programmes/noel-2027", fields: {} }), { status: 200 });
+  }) as typeof fetch;
+  try {
+    const data = { ...reglagesRepris(null, "noel", 2027), createdBy: "uid-alice", updatedAt: "2026-12-28T10:00:00Z" };
+    expect(await creerEdition("noel", 2027, data, { duree: 90 })).toBe("noel-2027");
+    expect(appels).toHaveLength(1);
+    expect(appels[0].method).toBe("POST");
+    expect(appels[0].url).toMatch(/\/documents\/programmes\?documentId=noel-2027$/);
+    expect(appels[0].body).toContain('"fete":{"stringValue":"noel"}');
+    expect(appels[0].body).toContain('"annee":{"integerValue":"2027"}');
+    expect(appels[0].body).toContain('"duree":{"integerValue":"90"}');
+
+    appels.length = 0;
+    reponse = 409;
+    expect(await creerEdition("noel", 2027, data, { duree: 90 })).toBe("noel-2027");
+    expect(appels.map((a) => a.method)).toEqual(["POST", "PATCH"]);
+    expect(appels[1].url).toMatch(/\/documents\/programmes\/noel-2027\?updateMask\.fieldPaths=duree&updateMask\.fieldPaths=updatedAt$/);
+  } finally {
+    globalThis.fetch = avant;
+  }
+});
+
+test("`currentProgramme` a disparu ; le cron des rappels lit les éditions affichées", () => {
+  expect("currentProgramme" in dimanches).toBe(false);
+  const cron = readFileSync("src/app/api/cron/reminders/route.ts", "utf8");
+  expect(cron).toMatch(/editionsAffichees\(/);
+  expect(cron).not.toMatch(/currentProgramme/);
+});
+
+// Le widget « Scène » du tableau de bord (Alice, pôle Événement, seul widget affiché).
+const DOCS_WIDGET: Record<string, Record<string, unknown>> = {
+  "backOffice/uid-alice": { tableauDeBord: [{ id: "scene", taille: "m", reglages: {} }], majLe: "2026-10-01" },
+  "programmes/x7Kq2": { nom: "Noël", jourJ: "2026-12-24", debut: "2026-10-01", visible: false, passages: [], createdBy: "uid-alice", updatedAt: "" },
+  "programmes/x7Kq2/creneaux/n1": { ...resaDe("n1", "2026-10-11", "14:00", "15:00"), quoi: "Sketch", qui: ["Franco"] },
+  "programmes/paques-2027": { nom: "Pâques 2027", fete: "paques", annee: 2027, jourJ: "2027-03-28", debut: "2027-02-01", ouvert: true, passages: [], createdBy: "uid-alice", updatedAt: "" },
+  "programmes/paques-2027/creneaux/p1": { ...resaDe("p1", "2027-02-07", "15:00", "16:00"), quoi: "Danse", qui: ["Gp Paix"] },
+  "programmes/noel-2027": { nom: "Noël 2027", fete: "noel", annee: 2027, jourJ: "2027-12-24", debut: "2027-10-01", ouvert: false, passages: [], createdBy: "uid-alice", updatedAt: "" },
+};
+const ALICE_EVT: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", poles: ["evenement"] };
+
+async function tableauDeBord(page: Page, docs: Record<string, Record<string, unknown>>) {
+  await page.clock.setFixedTime(new Date("2026-10-09T10:00:00"));
+  await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
+  await signInAs(page, ALICE_EVT, docs, "/back-office");
+  return page.getByTestId("grille-widgets").getByRole("region", { name: "Scène", exact: true });
+}
+
+test("widget Scène : sans réglage, l'édition au jour J le plus proche — « Scène · Noël 2026 » et ses créneaux", async ({ page }) => {
+  const w = await tableauDeBord(page, DOCS_WIDGET);
+  await expect(w.getByRole("heading", { name: "Scène · Noël 2026" })).toBeVisible();
+  await expect(w.getByTestId("ligne-creneau")).toHaveText([/11 oct\. 14:00.*Sketch · Franco/]);
+});
+
+test("widget Scène : ses réglages proposent les éditions affichées (Pâques 2027, Noël 2026), jamais un brouillon", async ({ page }) => {
+  const w = await tableauDeBord(page, DOCS_WIDGET);
+  await expect(w.getByRole("heading", { name: "Scène · Noël 2026" })).toBeVisible();
+  await page.getByRole("button", { name: "Personnaliser" }).click();
+  await w.getByRole("button", { name: "Réglages du widget" }).click();
+  const groupe = w.getByRole("group", { name: "Programme" });
+  await expect(groupe.getByRole("button")).toHaveText(["Celui qui est affiché", "Pâques 2027", "Noël 2026"]);
+  await groupe.getByRole("button", { name: "Pâques 2027" }).click();
+  await expect(w.getByRole("heading", { name: "Scène · Pâques 2027" })).toBeVisible();
+  await expect(w.getByTestId("ligne-creneau")).toHaveText([/7 févr\. 15:00.*Danse · Gp Paix/]);
+});
+
+test("widget Scène : un brouillon seul n'est pas montré", async ({ page }) => {
+  const w = await tableauDeBord(page, {
+    "backOffice/uid-alice": DOCS_WIDGET["backOffice/uid-alice"],
+    "programmes/noel-2026": { nom: "Noël 2026", fete: "noel", annee: 2026, jourJ: "2026-12-24", debut: "2026-10-01", ouvert: false, passages: [], createdBy: "uid-alice", updatedAt: "" },
+    "programmes/noel-2026/creneaux/b1": { ...resaDe("b1", "2026-10-11", "14:00", "15:00") },
+  });
+  await expect(w.getByText("Aucun programme affiché.")).toBeVisible();
+  await expect(w.getByRole("heading", { name: /Noël 2026/ })).toHaveCount(0);
 });
