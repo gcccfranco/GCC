@@ -519,6 +519,25 @@ Choix faits faute de réponse écrite :
 - Les filtres ne sont pas gardés d'une ouverture de la bibliothèque à l'autre (comme la recherche en T3).
 - Thème et tempo en menus natifs (accessibles, sans dépendance) plutôt qu'en menus dessinés.
 
+**06/10/2026 — fusion des versions finales de U4 et U5** : `lot/u4-navigation` était déjà entier dans la branche ;
+`lot/u5-deux-volets` apportait sa relecture (`e7a14b5`), fusionnée sans conflit (les fichiers de langue se rejoignent
+seuls ; l'éditeur ne lit pas `useSongsIndex`, dont la forme change). `tsc` propre, lint sans erreur (51 avertissements,
+tous anciens). Suite du lot et de ce que la fusion touche (`setlist-pour-quel-service`, `setlist-editeur-piste2`,
+`setlist-bibliotheque`, `setlist-fusionner`, `setlist-editor`, `setlist-history`, `recommended-key`, `fusions-dp`,
+`coup-d-oeil`, `navigation-grand-ecran`, `chants-deux-volets`, `setlist-deux-volets`, `setlist-g`,
+`deux-volets-finitions`, `back-office-coupe`) : 887 verts, 298 sautés, 3 échecs, tous deux tests fragiles, corrigés
+(commit « fix(U5bis): fusion — … ») :
+- `recommended-key`, « le bouton de retour ramène à la recommandée » (déjà vu en T3 à T5) : le rendu du serveur porte
+  l'originale (Eb) et le bouton de retour ; choisir Eb avant l'hydratation « réussissait », puis la page passait à D et
+  le bouton disparaissait sous le clic. Le test attend désormais D avant de choisir. Ancienne version : 5 échecs sur 18
+  répétitions ; nouvelle : 18 sur 18.
+- `setlist-g`, « défiler … ne re-rend pas la page à chaque image » (test de la relecture de U5), téléphone et tablette :
+  le compteur de `tests/helpers/rendus.ts` comptait aussi la racine des outils de développement de Next, qui se refait
+  à chaque compilation d'une autre page par l'autre worker. Il ne compte plus que la racine de la page (`document`).
+  Vert seul avant et après ; `recommended-key`, `setlist-g`, `setlist-deux-volets` revus : 147 verts.
+- Remarqué, non corrigé (hors du lot) : la page d'un chant affiche un instant l'originale avant la recommandée (état de
+  départ = originale, recommandée posée au montage).
+
 Reste : rien dans le lot. Remarqué, non corrigé : les thèmes 中文 du corpus écrits en chinois (voir T1) ne se filtrent
 toujours pas par thème (question 8).
 Timothée : aucune règle Firestore à publier pour T1 à T5 ; relire les libellés 中文 de `setlists.entree` et
