@@ -62,7 +62,7 @@ export function SectionMesServices({ children }: { children: React.ReactNode }) 
   const { t } = useTranslation();
   const { user, profile, loading: authLoading } = useProfile();
   const chemin = usePathname() ?? "/mes-services";
-  const serviceVoulu = useSearchParams().get("service");
+  const requete = useSearchParams();
   const [data, setData] = useState<PlanningData | null>(null);
   const [setlists, setSetlists] = useState<FSSetlist[]>([]);
   const [songs, setSongs] = useState<Record<string, SongIndexEntry>>({});
@@ -152,7 +152,7 @@ export function SectionMesServices({ children }: { children: React.ReactNode }) 
 
   // Le service choisi : celui de l'adresse, ou en grand le premier de la liste (Q3).
   const date = dateDeLAdresse(chemin);
-  const choisi = date ? serviceDeLAdresse(services, date, serviceVoulu) : affiches[0];
+  const choisi = date ? serviceDeLAdresse(services, date, requete.get("service"), requete.get("moment"), requete.get("seance")) : affiches[0];
   const liste = (
     <ListeMesServices
       services={services}

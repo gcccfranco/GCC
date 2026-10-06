@@ -10,7 +10,7 @@
 // et la fiche à droite ; sans fiche choisie, la première de la liste telle qu'elle est filtrée
 // (Q3). Les filtres et l'instrument restent d'une fiche à l'autre : ils vivent ici.
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslation } from "react-i18next";
@@ -24,6 +24,7 @@ import { ContexteCatalogue, useCatalogueHarmonie } from "@/components/harmonie/c
 import { useDeuxVolets } from "@/hooks/useDeuxVolets";
 import { useAccesHarmonie, useCatalogue, useInstrument } from "@/lib/harmonie/useHarmonie";
 import { useCoursIndex, useCoursProgres } from "@/lib/harmonie/useCours";
+import { getSetlists } from "@/lib/firebase/setlists";
 import { useRd2000 } from "@/lib/harmonie/rd2000";
 import { cn } from "@/lib/utils";
 import { MOMENTS, SENSATIONS, type Fiche, type HarmonieIndex, type Instrument, type Niveau } from "@/types/harmonie";
@@ -57,7 +58,24 @@ export function HarmonieCatalogue({ children }: { children: React.ReactNode }) {
       ),
     [fiches, instrument, filtres],
   );
-  const valeur = useMemo(() => ({ acces, fiches, instrument, setInstrument }), [acces, fiches, instrument, setInstrument]);
+  // Les setlists (pour classer les exemples d'une fiche) : lues une fois pour la section, à la
+  // première fiche ouverte, et non plus à chaque fiche (relecture du lot). Sans elles, l'ordre reste
+  // celui du répertoire.
+  const comptes = useRef<Promise<Record<string, number>> | null>(null);
+  const comptesDesChants = useCallback(() => {
+    comptes.current ??= getSetlists()
+      .then((setlists) => {
+        const n: Record<string, number> = {};
+        for (const s of setlists) for (const it of s.items ?? []) if (it.songSlug) n[it.songSlug] = (n[it.songSlug] ?? 0) + 1;
+        return n;
+      })
+      .catch(() => ({}));
+    return comptes.current;
+  }, []);
+  const valeur = useMemo(
+    () => ({ acces, fiches, instrument, setInstrument, comptesDesChants }),
+    [acces, fiches, instrument, setInstrument, comptesDesChants],
+  );
 
   if (acces.chargement || chargement) return null;
   // Sans droit, une phrase, une seule fois : ni liste ni fiche.

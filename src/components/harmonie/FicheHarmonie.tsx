@@ -19,7 +19,6 @@ import { Clavier, DiagrammeGuitare, doigtesDe, notesDe } from "@/components/harm
 import { ParagrapheFiche, TexteFiche, TON_DES_FICHES } from "@/components/harmonie/TexteFiche";
 import { useCatalogueHarmonie } from "@/components/harmonie/catalogueContexte";
 import { useDeuxVolets } from "@/hooks/useDeuxVolets";
-import { getSetlists } from "@/lib/firebase/setlists";
 import { ALL_KEYS, getTransposedKey, semitonesTo } from "@/lib/transpose";
 import { cn } from "@/lib/utils";
 import type { Instrument } from "@/types/harmonie";
@@ -31,7 +30,7 @@ const CARTE = "raised rounded-2xl pt-3.5 pb-1 [&>h2]:px-4";
 
 export function FicheHarmonie({ id }: { id: string }) {
   const { t } = useTranslation();
-  const { acces, fiches, instrument, setInstrument } = useCatalogueHarmonie();
+  const { acces, fiches, instrument, setInstrument, comptesDesChants } = useCatalogueHarmonie();
   const deuxVolets = useDeuxVolets();
   const [tonalite, setTonalite] = useState(TON_DES_FICHES);
   const [capo, setCapo] = useState(0);
@@ -42,9 +41,9 @@ export function FicheHarmonie({ id }: { id: string }) {
   const fiche = fiches.find((f) => f.id === id);
   const demiTons = semitonesTo(TON_DES_FICHES, tonalite);
 
-  // Les exemples s'ordonnent du plus chanté au moins chanté, compté ici (les
-  // setlists sont déjà lisibles par tout connecté) plutôt qu'au build : le
-  // classement reste à jour sans relancer de script.
+  // Les exemples s'ordonnent du plus chanté au moins chanté, compté d'après les
+  // setlists (lisibles par tout connecté) plutôt qu'au build : le classement reste
+  // à jour sans relancer de script. Le layout de la section les lit une fois.
   useEffect(() => {
     if (!fiche?.exemples.length) return;
     let vivant = true;
@@ -52,16 +51,9 @@ export function FicheHarmonie({ id }: { id: string }) {
       .then((r) => r.json())
       .then((d: { songs: Entree[] }) => { if (vivant) setChants(d.songs); })
       .catch(() => { /* la liste s'affichera par slug */ });
-    getSetlists()
-      .then((setlists) => {
-        if (!vivant) return;
-        const n: Record<string, number> = {};
-        for (const s of setlists) for (const it of s.items ?? []) if (it.songSlug) n[it.songSlug] = (n[it.songSlug] ?? 0) + 1;
-        setComptes(n);
-      })
-      .catch(() => { /* sans les setlists, l'ordre reste celui du répertoire */ });
+    comptesDesChants().then((n) => { if (vivant) setComptes(n); });
     return () => { vivant = false; };
-  }, [fiche?.exemples.length]);
+  }, [fiche?.exemples.length, comptesDesChants]);
 
   const exemples = useMemo(() => {
     if (!fiche) return [];

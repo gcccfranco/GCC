@@ -114,6 +114,25 @@ test("l'état à trois positions : À faire, En cours, Terminée", async ({ page
   expect(db.doc("poles/da/taches/t3/fois/2026-10-05")).toBeUndefined();
 });
 
+// Relecture du lot : la fiche n'ouvre que les liens web ; un autre schéma (`javascript:`,
+// `data:`) se lit en texte, sans lien.
+test("le lien de la fiche : seulement http(s), un autre schéma reste du texte", async ({ page }) => {
+  await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
+  await signInAs(page, RUTH, {
+    ...DOCS,
+    "poles/da/taches/t8": tacheDoc({ titre: "Lien douteux", lien: "javascript:alert(1)" }),
+    "poles/da/taches/t9": tacheDoc({ titre: "Lien data", lien: "data:text/html,<b>x</b>" }),
+  }, "/taches/da/t8");
+  const f = page.getByRole("article", { name: "Lien douteux" });
+  await expect(f.getByRole("heading", { name: "Lien douteux" })).toBeVisible();
+  await expect(f.getByText("javascript:alert(1)")).toBeVisible();
+  await expect(f.locator("a[href^='javascript']")).toHaveCount(0);
+  await page.goto("/taches/da/t9");
+  const g = page.getByRole("article", { name: "Lien data" });
+  await expect(g.getByText("data:text/html,<b>x</b>")).toBeVisible();
+  await expect(g.locator("a[href^='data:']")).toHaveCount(0);
+});
+
 test("une tâche d'un pôle dont on n'est pas : la fiche le dit, sans rien montrer", async ({ page }) => {
   await ouvrir(page, "/taches/media/m1");
   await expect(page.getByText("Tu ne fais pas partie de ce pôle.")).toBeVisible();

@@ -21,7 +21,7 @@ const PAIX: Omit<Evenement, "id"> = { ...base, titre: "Repas Groupe Paix", type:
 const INFO: Omit<Evenement, "id"> = { ...base, titre: "Nouveau parking", type: "info", date: "", heure: "", epingle: true, placesMax: null, inscriptionOuverte: false, liens: [] };
 const DOCS = { "evenements/louange": LOUANGE, "evenements/foot": FOOT, "evenements/paix": PAIX, "evenements/parking": INFO };
 
-const JO: FakeProfile = { uid: "uid-jo", email: "jo@example.com", firstName: "Jo", lastName: "L.", serviceRoles: { "Groupe Paix": ["chanteur"] } };
+const SACHA: FakeProfile = { uid: "uid-sacha", email: "sacha@example.com", firstName: "Sacha", lastName: "L.", serviceRoles: { "Groupe Paix": ["chanteur"] } };
 const ALICE: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", poles: ["evenement"] };
 
 async function membre(page: Page, qui: FakeProfile, adresse: string) {
@@ -42,11 +42,17 @@ const fiche = (page: Page) => page.getByTestId("fiche-carte");
 const detail = (page: Page) => page.locator('[data-volet="detail"]');
 const sansDefilementLateral = (page: Page) => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth);
 
+/** Capture à regarder à l'œil (PW_CAPTURES=<dossier>), une par appareil. */
+async function capture(page: Page, name: string) {
+  const dir = process.env.PW_CAPTURES;
+  if (dir) await page.screenshot({ path: `${dir}/${name}-${test.info().project.name}.png` });
+}
+
 test.describe("Évènements en grand", () => {
   test.beforeEach(({}, info) => { test.skip(disposition(info) !== "grand", "deux volets : ordinateur et iPad paysage"); });
 
   test("l'agenda à gauche, le prochain évènement à droite, l'adresse inchangée", async ({ page }) => {
-    await membre(page, JO, "/evenements");
+    await membre(page, SACHA, "/evenements");
     await expect(liste(page).getByRole("heading", { name: "Évènements" })).toBeVisible();
     await expect(liste(page).getByRole("link", { name: "Calendrier", exact: true }), "les onglets sont dans la liste").toBeVisible();
     await expect(liste(page).getByRole("link", { name: /Repas Groupe Paix/ })).toBeVisible();
@@ -58,7 +64,7 @@ test.describe("Évènements en grand", () => {
   });
 
   test("un lien direct vers une fiche : l'agenda à gauche, la fiche à droite ; retour arrière rend la précédente", async ({ page }) => {
-    await membre(page, JO, "/evenements/paix");
+    await membre(page, SACHA, "/evenements/paix");
     await expect(liste(page).getByRole("link", { name: /Repas Groupe Paix/ })).toHaveAttribute("aria-current", "page");
     await expect(detail(page).getByRole("heading", { name: "Repas Groupe Paix" })).toBeVisible();
     await liste(page).getByRole("link", { name: /Foot au parc/ }).click();
@@ -72,7 +78,7 @@ test.describe("Évènements en grand", () => {
 
   test("la fiche : bannière et description à gauche, infos et inscription à droite ; badge « Inscrit » dans l'agenda", async ({ page }) => {
     await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
-    await signInAs(page, JO, { ...DOCS, "evenements/louange/inscriptions/uid-jo": { uid: "uid-jo", nom: "Jo L.", invites: 0, createdAt: "2026-09-21T10:00:00Z" } }, "/evenements/foot");
+    await signInAs(page, SACHA, { ...DOCS, "evenements/louange/inscriptions/uid-sacha": { uid: "uid-sacha", nom: "Sacha L.", invites: 0, createdAt: "2026-09-21T10:00:00Z" } }, "/evenements/foot");
     const banniere = (await page.getByTestId("banniere").boundingBox())!;
     const sinscrire = (await page.getByRole("button", { name: "S'inscrire" }).boundingBox())!;
     expect(sinscrire.x, "l'inscription à droite de la bannière").toBeGreaterThan(banniere.x + banniere.width - 1);
@@ -102,7 +108,7 @@ test.describe("Évènements en grand", () => {
 
 test("tablette portrait : l'agenda en cartes sur deux colonnes ; la fiche seule sur son adresse", async ({ page }, info) => {
   test.skip(disposition(info) !== "tablette", "tablette portrait");
-  await membre(page, JO, "/evenements");
+  await membre(page, SACHA, "/evenements");
   const cartes = page.getByTestId("carte-evenement");
   await expect(cartes.first()).toBeVisible();
   const [b1, b2] = [(await cartes.nth(0).boundingBox())!, (await cartes.nth(1).boundingBox())!];
@@ -115,9 +121,35 @@ test("tablette portrait : l'agenda en cartes sur deux colonnes ; la fiche seule 
   expect(await sansDefilementLateral(page)).toBe(true);
 });
 
+// Relecture du lot : la barre de la planche `evenement-fiche-telephone`, « ‹ Évènements » et
+// « Gérer dans le Back-Office » sur une rangée, en tête de la fiche, au-dessus de la bannière.
+test("un volet, responsable : « ‹ Évènements · Gérer dans le Back-Office » en tête de la fiche", async ({ page }, info) => {
+  test.skip(disposition(info) === "grand", "un volet : téléphone et tablette portrait");
+  await membre(page, ALICE, "/evenements/foot");
+  const barre = page.getByTestId("barre-fiche");
+  const retour = barre.getByRole("link", { name: "Évènements" });
+  const gerer = barre.getByRole("link", { name: "Gérer dans le Back-Office" });
+  await expect(retour).toHaveAttribute("href", /^\/evenements\/?$/);
+  await expect(gerer).toHaveAttribute("href", /^\/back-office\/evenements\/foot\/?$/);
+  const [r, g, b] = [(await retour.boundingBox())!, (await gerer.boundingBox())!, (await fiche(page).getByTestId("banniere").boundingBox())!];
+  expect(Math.abs(r.y + r.height / 2 - (g.y + g.height / 2)), "sur une rangée").toBeLessThan(4);
+  expect(g.x, "« Gérer » à droite").toBeGreaterThan(r.x + r.width);
+  expect(g.y + g.height, "au-dessus de la bannière").toBeLessThanOrEqual(b.y);
+  await expect(page.getByRole("link", { name: "Gérer dans le Back-Office" }), "une seule fois").toHaveCount(1);
+  expect(await sansDefilementLateral(page)).toBe(true);
+  await capture(page, "relecture-fiche-evenement");
+});
+
+test("un volet, membre : la barre n'a que « ‹ Évènements »", async ({ page }, info) => {
+  test.skip(disposition(info) === "grand", "un volet : téléphone et tablette portrait");
+  await membre(page, SACHA, "/evenements/foot");
+  await expect(page.getByTestId("barre-fiche").getByRole("link", { name: "Évènements" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Gérer dans le Back-Office" })).toHaveCount(0);
+});
+
 test("téléphone : l'agenda garde ses cartes à bannière ; la fiche fait remonter l'inscription sous les infos", async ({ page }, info) => {
   test.skip(disposition(info) !== "telephone", "téléphone");
-  await membre(page, JO, "/evenements");
+  await membre(page, SACHA, "/evenements");
   await expect(page.getByTestId("carte-evenement").first().getByTestId("banniere")).toBeVisible();
   await page.goto("/evenements/foot");
   const sinscrire = (await page.getByRole("button", { name: "S'inscrire" }).boundingBox())!;

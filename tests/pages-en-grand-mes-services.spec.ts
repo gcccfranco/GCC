@@ -80,6 +80,26 @@ test.describe("Mes services : la règle des adresses, sans navigateur", () => {
     expect(serviceDeLAdresse(tous, "2026-10-11", null)).toBeUndefined();
   });
 
+  // Relecture du lot : deux services du même nom le même jour (les répétitions du Campus pour la
+  // séance du matin et pour celle du soir) sont deux lignes ; chacune a son adresse et la rend.
+  test("deux services du même nom le même jour : deux adresses, chacune rend le sien", () => {
+    const matin = s("2026-10-17", "Campus (répét.)", { setlistDate: "2026-10-18", moment: "matin", time: "10:00" });
+    const soir = s("2026-10-17", "Campus (répét.)", { setlistDate: "2026-10-18", moment: "soir", time: "17:00" });
+    const culte = s("2026-10-17", "Culte Franco");
+    const relire = (liste: typeof tous, adresse: string) => {
+      const u = new URL(adresse, "https://gcc.example");
+      const p = u.searchParams;
+      return serviceDeLAdresse(liste, u.pathname.split("/").pop()!, p.get("service"), p.get("moment"), p.get("seance"));
+    };
+    for (const liste of [[matin, soir], [culte, matin, soir], [soir, culte, matin]]) {
+      const adresses = liste.map((x) => adresseDuService(x, liste));
+      expect(new Set(adresses).size, adresses.join(" · ")).toBe(liste.length);
+      for (const x of liste) expect(relire(liste, adresseDuService(x, liste))).toBe(x);
+    }
+    expect(adresseDuService(culte, [culte, matin, soir]), "seul de son nom : le nom suffit").toBe("/mes-services/2026-10-17?service=Culte%20Franco");
+    for (const x of tous) expect(relire(tous, adresseDuService(x, tous))).toBe(x);
+  });
+
   test("la répétition d'une séance du Campus : même séance (date et moment), service différent", () => {
     const soir = s("2026-10-18", "Campus (soir)", { moment: "soir" });
     const repet = s("2026-10-17", "Campus (répét.)", { setlistDate: "2026-10-18", moment: "soir", time: "17:00" });

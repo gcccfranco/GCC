@@ -35,22 +35,36 @@ export function grouperServices(entries: ServiceEntry[]): ServiceGroupe[] {
 export const cleDuService = (s: Pick<ServiceGroupe, "date" | "service" | "setlistDate" | "moment">) =>
   `${s.date}|${s.service}|${s.setlistDate ?? ""}|${s.moment ?? ""}`;
 
+type Repere = Pick<ServiceGroupe, "date" | "service" | "setlistDate" | "moment">;
+
 /** Adresse d'un service : la date suffit quand il est seul ce jour-là ; sinon son nom
- *  s'ajoute (`?service=`), pour que chaque ligne ait la sienne. */
-export function adresseDuService(s: Pick<ServiceGroupe, "date" | "service">, tous: Pick<ServiceGroupe, "date" | "service">[]): string {
+ *  s'ajoute (`?service=`), et, si un autre service du même nom tombe ce jour-là (les
+ *  répétitions du Campus pour la séance du matin et pour celle du soir), sa séance
+ *  (`&moment=…&seance=<date de la setlist>`) : chaque ligne a la sienne. */
+export function adresseDuService(s: Repere, tous: Repere[]): string {
+  const duJour = tous.filter((x) => x.date === s.date);
+  const parts: string[] = [];
+  if (duJour.some((x) => x.service !== s.service)) parts.push(`service=${encodeURIComponent(s.service)}`);
+  if (duJour.some((x) => x.service === s.service && cleDuService(x) !== cleDuService(s))) {
+    parts.push(`moment=${encodeURIComponent(s.moment ?? "")}`, `seance=${encodeURIComponent(s.setlistDate ?? "")}`);
+  }
   const base = `/mes-services/${s.date}`;
-  const seul = tous.every((x) => x.date !== s.date || x.service === s.service);
-  return seul ? base : `${base}?service=${encodeURIComponent(s.service)}`;
+  return parts.length ? `${base}?${parts.join("&")}` : base;
 }
 
-/** Le service d'une adresse : celui de ce nom à cette date, sinon le premier du jour. */
-export function serviceDeLAdresse<S extends Pick<ServiceGroupe, "date" | "service">>(
+/** Le service d'une adresse : celui de ce nom (et de cette séance, si l'adresse la porte) à
+ *  cette date, sinon le premier de ce nom, sinon le premier du jour. */
+export function serviceDeLAdresse<S extends Repere>(
   tous: S[],
   date: string,
   service: string | null,
+  moment: string | null = null,
+  seance: string | null = null,
 ): S | undefined {
   const duJour = tous.filter((s) => s.date === date);
-  return duJour.find((s) => s.service === service) ?? duJour[0];
+  const duNom = service === null ? duJour : duJour.filter((s) => s.service === service);
+  const candidats = duNom.length ? duNom : duJour;
+  return candidats.find((s) => (moment === null || (s.moment ?? "") === moment) && (seance === null || (s.setlistDate ?? "") === seance)) ?? candidats[0];
 }
 
 /** Les répétitions d'une séance (Campus) : les services qui pointent vers elle (même date

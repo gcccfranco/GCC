@@ -134,6 +134,30 @@ test.describe("Harmonie : le catalogue", () => {
     expect(await sansDefilementHorizontal(page)).toBe(true);
   });
 
+  // Relecture du lot : les exemples d'une fiche se classent par les setlists ; le layout les lit
+  // une fois pour toute la section, plus chaque fiche ouverte (ni la première, montrée d'office).
+  test("les setlists ne se lisent qu'une fois, d'une fiche à l'autre", async ({ page }, info) => {
+    const completes: string[] = [];
+    page.on("request", (r) => {
+      if (!r.url().includes(":runQuery")) return;
+      const q = (r.postDataJSON() as { structuredQuery?: { from?: { collectionId: string }[]; where?: unknown; limit?: number } } | null)?.structuredQuery;
+      if (q?.from?.[0]?.collectionId === "setlists" && !q.where && !q.limit) completes.push(r.url());
+    });
+    await entrer(page, "/harmonie");
+    for (const f of [fichesPiano[1], fichesPiano[2], fichesPiano[3]]) {
+      if (enGrand(info)) await liste(page).locator(`a[href^="/harmonie/${f.id}"]`).first().click();
+      else {
+        if (await page.locator("[data-fiche]").count()) await page.goBack();
+        await page.locator(`a[href^="/harmonie/${f.id}"]`).first().click();
+      }
+      await expect(page.locator(`[data-fiche="${f.id}"]`)).toBeVisible();
+    }
+    // Une lecture en trop partirait dès le montage : une seconde suffit à la voir (le réseau
+    // n'est jamais au repos sous charge, `networkidle` n'est pas fiable ici).
+    await page.waitForTimeout(1000);
+    expect(completes).toHaveLength(1);
+  });
+
   test("partout, les filtres au-dessus de « Par où commencer » (question 5)", async ({ page }) => {
     await entrer(page, "/harmonie");
     const cat = page.locator("[data-harmonie]");
@@ -183,6 +207,19 @@ test.describe("Harmonie : le cours", () => {
     await expect(detail(page).getByRole("link", { name: "Cours" })).toHaveCount(0);
     expect(await sansDefilementHorizontal(page)).toBe(true);
     await capture(page, "b3-cours");
+  });
+
+  test("en grand, une autre leçon s'ouvre à droite, la liste reste ; retour arrière rend la précédente", async ({ page }, info) => {
+    test.skip(!enGrand(info), "deux volets : ordinateur et tablette paysage");
+    await entrer(page, `/harmonie/cours/${CADENCES.id}`);
+    await expect(detail(page).locator(`[data-chapitre="${CADENCES.id}"]`)).toBeVisible();
+    await liste(page).locator('a[href^="/harmonie/cours/les-intervalles"]').first().click();
+    await expect(detail(page).locator('[data-chapitre="les-intervalles"]')).toBeVisible();
+    await expect(liste(page).locator('a[aria-current="page"]')).toHaveAttribute("href", /\/harmonie\/cours\/les-intervalles\/?$/);
+    await page.goBack();
+    await expect(page).toHaveURL(new RegExp(`/harmonie/cours/${CADENCES.id}/?$`));
+    await expect(detail(page).locator(`[data-chapitre="${CADENCES.id}"]`), "retour arrière rend la leçon précédente").toBeVisible();
+    await expect(liste(page).locator('a[aria-current="page"]')).toHaveAttribute("href", new RegExp(`/harmonie/cours/${CADENCES.id}/?$`));
   });
 
   test("tablette portrait : « Sommaire » ouvre le sommaire du cours par-dessus la leçon", async ({ page }, info) => {
@@ -245,6 +282,10 @@ test.describe("Harmonie : les sons du RD-2000", () => {
     await expect(detail(page).locator('[data-son-page="0385"]')).toBeVisible();
     expect(await sansDefilementHorizontal(page)).toBe(true);
     await capture(page, "b3-rd2000");
+    await page.goBack();
+    await expect(page).toHaveURL(/\/harmonie\/rd2000\/S01\/?$/);
+    await expect(detail(page).locator('[data-son-page="S01"]'), "retour arrière rend le son précédent").toBeVisible();
+    await expect(liste(page).locator('a[aria-current="page"]').first()).toHaveAttribute("href", /\/harmonie\/rd2000\/S01\/?$/);
   });
 
   test("tablette portrait : un moment par carte, deux cartes par rangée", async ({ page }, info) => {

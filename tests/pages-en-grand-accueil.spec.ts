@@ -74,6 +74,18 @@ async function ouvrir(page: Page, profil: FakeProfile = RUTH) {
   await signInAs(page, profil, DOCS, "/planning");
 }
 
+/** Les requêtes sur la collection des setlists (`runQuery`), relevées pendant le test : leur
+ *  filtre (`where`) et leur borne (`limit`). Sans l'un ni l'autre, toute la collection est lue. */
+function lecturesDesSetlists(page: Page) {
+  const lues: { where?: unknown; limit?: number }[] = [];
+  page.on("request", (r) => {
+    if (!r.url().includes(":runQuery")) return;
+    const q = (r.postDataJSON() as { structuredQuery?: { from?: { collectionId: string }[]; where?: unknown; limit?: number } } | null)?.structuredQuery;
+    if (q?.from?.[0]?.collectionId === "setlists") lues.push({ where: q.where, limit: q.limit });
+  });
+  return lues;
+}
+
 const ceDimanche = (page: Page) => page.getByRole("region", { name: /Ce dimanche/ });
 const cePourMoi = (page: Page) => page.getByRole("region", { name: "Pour moi" });
 const boite = async (l: ReturnType<Page["locator"]>) => (await l.boundingBox())!;
@@ -166,6 +178,30 @@ test.describe("Accueil A : les quatre dispositions", () => {
     // Le planning est lu (la feuille du Culte aussi) : l'absence n'est pas un chargement.
     await expect(ceDimanche(page).getByText("Noé T., Inès V.")).toBeVisible();
     await expect(cePourMoi(page)).toHaveCount(0);
+  });
+
+  // Relecture du lot : l'accueil, page la plus visitée, ne relit jamais toute la collection des
+  // setlists ; il lit seulement celles du prochain service et après (bornées), et rien sans service.
+  test("les setlists : une lecture bornée depuis le prochain service, aucune sans service", async ({ page }) => {
+    const lues = lecturesDesSetlists(page);
+    await ouvrir(page);
+    await expect(cePourMoi(page).getByText("向主欢呼")).toBeVisible();
+    // Une lecture en trop partirait dès le montage : une seconde suffit à la voir (le réseau
+    // n'est jamais au repos sous charge, `networkidle` n'est pas fiable ici).
+    await page.waitForTimeout(1000);
+    expect(lues.filter((q) => !q.where && !q.limit), "jamais toute la collection").toEqual([]);
+    const bornees = lues.filter((q) => JSON.stringify(q.where ?? null).includes('"stringValue":"2026-10-04"'));
+    expect([...new Set(bornees.map((q) => q.limit))], "depuis le prochain service, 30 au plus").toEqual([30]);
+  });
+
+  test("sans service à venir, aucune setlist lue", async ({ page }) => {
+    const lues = lecturesDesSetlists(page);
+    await ouvrir(page, SANS_SERVICE);
+    await expect(ceDimanche(page).getByText("Noé T., Inès V.")).toBeVisible();
+    // Une lecture en trop partirait dès le montage : une seconde suffit à la voir (le réseau
+    // n'est jamais au repos sous charge, `networkidle` n'est pas fiable ici).
+    await page.waitForTimeout(1000);
+    expect(lues.filter((q) => !q.limit || JSON.stringify(q.where ?? null).includes('"fieldPath":"date"'))).toEqual([]);
   });
 
   test("« Ce dimanche » : le Culte avec ses rôles et la personne en évidence, Groupes et EDD en une ligne par groupe", async ({ page }, info) => {

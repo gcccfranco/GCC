@@ -12,6 +12,9 @@ interface CatalogueHarmonie {
   fiches: Fiche[];
   instrument: Instrument;
   setInstrument: (i: Instrument) => void;
+  /** Combien de setlists chantent chaque chant (slug → nombre) : les exemples d'une fiche s'y
+   *  classent. Les setlists ne sont lues qu'une fois pour la section, au premier appel. */
+  comptesDesChants: () => Promise<Record<string, number>>;
 }
 
 export const ContexteCatalogue = createContext<CatalogueHarmonie | null>(null);

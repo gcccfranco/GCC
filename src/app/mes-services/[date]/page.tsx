@@ -1,7 +1,8 @@
 "use client";
 
 // Un service de Mes services (lot U4 bis, B4, Q7) : `/mes-services/2026-10-18`, avec
-// `?service=` quand la personne sert deux fois ce jour-là (`adresseDuService`).
+// `?service=` quand la personne sert deux fois ce jour-là, et sa séance si les deux services
+// portent le même nom (`adresseDuService`).
 
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
@@ -13,9 +14,9 @@ import { serviceDeLAdresse } from "@/lib/planning/mesServices";
 export default function ServicePage() {
   const { t } = useTranslation();
   const { date } = useParams<{ date: string }>();
-  const service = useSearchParams().get("service");
+  const requete = useSearchParams();
   const { services } = useMesServices();
-  const s = serviceDeLAdresse(services, date, service);
+  const s = serviceDeLAdresse(services, date, requete.get("service"), requete.get("moment"), requete.get("seance"));
   if (!s) {
     return (
       <div className="mx-auto max-w-2xl space-y-3 px-4 py-16 text-center">

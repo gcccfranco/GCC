@@ -17,7 +17,7 @@ import { lirePetitDej } from "@/lib/petitdej/lignes"
 import { servicesDuCompte } from "@/lib/petitdej/services"
 import type { LignePetitDej } from "@/types/petitDej"
 import { pourMoi, setlistDuService } from "@/lib/planning/accueil"
-import { getSetlists, type FSSetlist } from "@/lib/firebase/setlists"
+import { getSetlistsFrom, type FSSetlist } from "@/lib/firebase/setlists"
 import { listEvenements } from "@/lib/firebase/evenements"
 import { isExpired, isInfo, isPast } from "@/lib/evenements/agenda"
 import { canSeeEvenement, canSeeSetlist } from "@/lib/access"
@@ -107,11 +107,15 @@ export default function PlanningAccueil() {
   }, [user, profile, culte, dej, petitDej, lignesPetitDej, paix, fid, fidM, bonte, edd, campus, intergroupe, interfranco, publies, aujourdhui, disposition])
 
   // La setlist de ce service (règle de Mes services), puis les titres et tonalités de ses chants.
+  // L'accueil est la page la plus visitée : jamais toute la collection, seulement les setlists
+  // datées du prochain service ou après (30 au plus), et rien sans service à venir.
+  const uid = user?.uid
+  const depuis = mesServices ? mesServices.prochain.map(s => s.setlistDate ?? s.date).sort()[0] : null
   const [setlists, setSetlists] = useState<FSSetlist[]>([])
   useEffect(() => {
-    if (!user) return
-    getSetlists().then(setSetlists).catch(() => {})
-  }, [user])
+    if (!uid || !depuis) return
+    getSetlistsFrom(depuis).then(l => setSetlists(l.filter(s => !s.isPrivate && !s.isDraft))).catch(() => {})
+  }, [uid, depuis])
   // Seulement une setlist que la personne peut ouvrir (même règle que sa page) : jamais un lien vers « pas d'accès ».
   const setlist = useMemo(() => {
     if (!user || !mesServices) return null

@@ -4,6 +4,7 @@
 
 import type { FSSetlist } from "@/lib/firebase/setlists"
 import { normalizeName, serviceCategory, type ServiceEntry } from "./names"
+import { grouperServices } from "./mesServices"
 
 /** Un service d'une personne, ses rôles réunis (« Piano », « Présidence »…). */
 export type ServiceDuJour = {
@@ -15,19 +16,10 @@ export type ServiceDuJour = {
   moment?: "matin" | "soir"
 }
 
-/** Réunit les rôles d'un même service le même jour, dans l'ordre des dates (comme Mes services). */
+/** Réunit les rôles d'un même service le même jour, dans l'ordre des dates : le regroupement
+ *  de Mes services (`grouperServices`, même clé `cleDuService`), trié. */
 export function reunirServices(entries: ServiceEntry[]): ServiceDuJour[] {
-  const parCle = new Map<string, ServiceDuJour>()
-  for (const e of entries) {
-    const cle = `${e.date}|${e.service}|${e.setlistDate ?? ""}|${e.moment ?? ""}`
-    const deja = parCle.get(cle)
-    if (deja) {
-      if (!deja.roles.includes(e.role)) deja.roles.push(e.role)
-    } else {
-      parCle.set(cle, { date: e.date, service: e.service, roles: [e.role], setlistDate: e.setlistDate, leader: e.leader, moment: e.moment })
-    }
-  }
-  return [...parCle.values()].sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0))
+  return grouperServices(entries).sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0))
 }
 
 /** « Pour moi » : les services du prochain jour où la personne sert, puis au plus

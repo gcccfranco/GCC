@@ -130,8 +130,10 @@ function Fiche({ ligne, toutesLesFois }: { ligne: Ligne; toutesLesFois: Fois[] }
   }
   if (prevenir) lignes.push([<Bell key="i" />, t("taches.champs.prevenir"), prevenir]);
   if (tache.lien) {
-    lignes.push([<Link2 key="i" />, t("taches.champs.lien"),
-      <a key="v" href={tache.lien} target="_blank" rel="noopener noreferrer" className="break-all font-medium underline underline-offset-2">{tache.lien.replace(/^https?:\/\//, "")}</a>]);
+    // Seul un lien web s'ouvre ; un autre schéma (`javascript:`, `data:`…) se lit en texte.
+    lignes.push([<Link2 key="i" />, t("taches.champs.lien"), /^https?:\/\//i.test(tache.lien)
+      ? <a key="v" href={tache.lien} target="_blank" rel="noopener noreferrer" className="break-all font-medium underline underline-offset-2">{tache.lien.replace(/^https?:\/\//, "")}</a>
+      : <span key="v" className="break-all">{tache.lien}</span>]);
   }
 
   return (

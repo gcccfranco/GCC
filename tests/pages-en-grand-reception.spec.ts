@@ -1,5 +1,5 @@
 import { expect, test, type Page, type TestInfo } from "@playwright/test";
-import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { signInAs, ADMIN_EMAIL, type FakeProfile } from "./helpers/fakeSession";
 
 // Lot U4 bis, tranche B7 — la Réception en grand (docs/spec-pages-en-grand.md, Q15 ; planches
 // `bo-reception-*`). Back-Office › Messages › Réception. En grand (ordinateur, iPad paysage) : la
@@ -9,7 +9,7 @@ import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 // Téléphone : les filtres, la liste filtrée, le message qui se déplie dessous. Firestore simulé ;
 // personnes fictives.
 
-const ADMIN: FakeProfile = { uid: "uid-admin", email: "tc328829@gmail.com", firstName: "Admin", lastName: "T." };
+const ADMIN: FakeProfile = { uid: "uid-admin", email: ADMIN_EMAIL, firstName: "Admin", lastName: "T." };
 
 const DOCS = {
   "reports/r1": {

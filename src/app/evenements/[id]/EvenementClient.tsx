@@ -20,7 +20,7 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import { useParams, useRouter } from "next/navigation"
 import { useTranslation } from "react-i18next"
-import { ArrowRight } from "lucide-react"
+import { ArrowRight, ChevronLeft } from "lucide-react"
 import { useAuth } from "@/lib/firebase/auth"
 import { useProfile } from "@/lib/firebase/users"
 import { canEditEvenement, canSeeEvenement, estDeLaReunion, estResponsable, estReunion } from "@/lib/access"
@@ -248,22 +248,30 @@ export function EvenementClient({ espace = "app", id: idDonne }: { espace?: "app
     )
   }
 
-  // App, un volet : la fiche d'une carte, l'inscription sous les infos (premier écran).
+  // App, un volet : la barre « ‹ Évènements · Gérer dans le Back-Office » (planche
+  // `evenement-fiche-telephone`), puis la fiche d'une carte, l'inscription sous les infos
+  // (premier écran). L'organisateur garde sa carte de gestion (panneau, lien d'inscription).
   if (!backOffice) {
     return (
       <div className="max-w-2xl mx-auto space-y-3">
-        {retour}
+        <div data-testid="barre-fiche" className="flex min-h-10 items-center justify-between gap-3">
+          <Link href={liste} className="inline-flex items-center gap-1 text-[15px] text-muted-foreground active:text-foreground">
+            <ChevronLeft className="h-4 w-4" aria-hidden />
+            {t("evenements.title")}
+          </Link>
+          {gestionnaire && estResponsable(user, profile) && (
+            <Link href={`/back-office/evenements/${e.id}`} className="raised inline-flex h-10 shrink-0 items-center gap-1.5 rounded-full px-4 text-sm font-semibold text-foreground transition-transform duration-150 active:scale-[.97]">
+              <ArrowRight className="h-4 w-4" aria-hidden />
+              {t("backOffice.gerer")}
+            </Link>
+          )}
+        </div>
         {gestionnaire && (
           <div data-testid="gestion-carte" className="space-y-4 rounded-2xl bg-card p-4">
             <div>
               <h2 className="text-xl font-bold text-foreground text-balance">{e.titre}</h2>
               <div className="mt-2 flex flex-wrap gap-1"><TypePour e={e} /></div>
             </div>
-            {estResponsable(user, profile) && (
-              <Button asChild variant="outline" className="w-full">
-                <Link href={`/back-office/evenements/${e.id}`}>{t("backOffice.gerer")}</Link>
-              </Button>
-            )}
             {panneau}
           </div>
         )}

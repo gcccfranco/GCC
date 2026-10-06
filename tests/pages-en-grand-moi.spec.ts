@@ -1,5 +1,5 @@
 import { expect, test, type Page, type TestInfo } from "@playwright/test";
-import { abonneAuxNotifications, signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { abonneAuxNotifications, signInAs, ADMIN_EMAIL, type FakeProfile } from "./helpers/fakeSession";
 
 // Lot U4 bis, tranche B5 — Moi, profil, connexion (docs/spec-pages-en-grand.md, Q9, Q10, Q13 ;
 // planches `moi-*`, `notifications-telephone`, `profil-*`, `connexion-*`, `inscription-*`).
@@ -10,7 +10,7 @@ import { abonneAuxNotifications, signInAs, type FakeProfile } from "./helpers/fa
 // haut ailleurs ; titre « Connexion » (登录). Firestore, Sheet et abonnement simulés ; personnes fictives.
 
 const ADMIN: FakeProfile = {
-  uid: "uid-admin", email: "tc328829@gmail.com", firstName: "Noé", lastName: "T.", planningName: "Noé T.",
+  uid: "uid-admin", email: ADMIN_EMAIL, firstName: "Noé", lastName: "T.", planningName: "Noé T.",
   serviceRoles: { "Culte Francophone": ["musicien"], "Groupe Fidélité": ["musicien"], "Campus": ["presidence", "musicien"] },
 };
 const MEMBRE: FakeProfile = {
@@ -47,7 +47,6 @@ test.describe("Moi (Q9)", () => {
     await ouvrir(page, ADMIN, "/moi");
     const c = compte(page);
     await expect(c.getByRole("heading", { name: "Noé T." })).toBeVisible();
-    await expect(c.getByText("tc328829@gmail.com")).toBeVisible();
     await expect(c.getByText("Admin", { exact: true })).toBeVisible();
     await expect(c.getByText("Ton nom dans les plannings")).toBeVisible();
     await expect(c.getByText("Noé T.", { exact: true }).last()).toBeVisible();
@@ -63,6 +62,7 @@ test.describe("Moi (Q9)", () => {
   test("un membre n'a pas de pastille de rôle", async ({ page }) => {
     await ouvrir(page, MEMBRE, "/moi");
     await expect(compte(page).getByRole("heading", { name: "Léa M." })).toBeVisible();
+    await expect(compte(page).getByText("lea@example.com"), "l'e-mail du compte").toBeVisible();
     await expect(compte(page).getByText("Admin", { exact: true })).toHaveCount(0);
     await expect(compte(page).getByTestId("service-role")).toHaveText(["Culte Franco · Choriste"]);
   });

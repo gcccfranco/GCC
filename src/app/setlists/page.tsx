@@ -4,7 +4,7 @@ import { GuideLien } from "@/components/guide/GuideLien";
 import { useEffect, useState, useMemo } from "react";
 import { ALL_CATEGORIES, getSetlists, getMySetlists, deleteSetlists, type FSSetlist } from "@/lib/firebase/setlists";
 import { useProfile } from "@/lib/firebase/users";
-import { visibleCategories, canCreateSetlist, canDeleteSetlist, isAdminUser } from "@/lib/access";
+import { visibleCategories, canCreateSetlist, canDeleteSetlist, canSeeSetlist, isAdminUser } from "@/lib/access";
 import {
   loadPlanningData,
   findMyServices,
@@ -148,7 +148,14 @@ export default function SetlistsPage() {
   }, [tab, setlists, mySetlists, matches, todayStr, myCategories, user, onlyMine, profile, myServiceKeys]);
 
   // L'aperçu (en grand) : celui de l'adresse, sinon la première setlist de la liste filtrée (Q3).
-  const choisie = (apercu && (displayed.find((s) => s.id === apercu) ?? [...setlists, ...mySetlists].find((s) => s.id === apercu))) || displayed[0] || null;
+  // Une adresse peut viser une setlist d'un autre onglet (lien partagé) : seulement si la page
+  // de la setlist l'ouvrirait (`canSeeSetlist`, même règle que sa page).
+  const choisie =
+    (apercu &&
+      (displayed.find((s) => s.id === apercu) ??
+        [...setlists, ...mySetlists].find((s) => s.id === apercu && !!user && canSeeSetlist(user, profile, s)))) ||
+    displayed[0] ||
+    null;
 
   // ── Suppression groupée (lot 10, docs/spec-suppression-groupee.md) ──
   // La sélection est **dérivée** de ce qui est affiché : changer de filtre ou

@@ -572,3 +572,63 @@ sont dans la branche, avec les versions finales relues de U4, U5 et U6.
 - À faire par Timothée : valider en local ; relire le 中文 des tranches B1 à B7 (listé à chacune) ; rien de neuf à publier
   pour U4 bis, mais `firestore.rules` arrive resserrée par la relecture d'U6 (réunions, « repris dans ») : la publier
   avec U6.
+
+**Relecture, faite le 06/10/2026** (branche `lot/u4bis-pages-en-grand`, commit `fix(U4bis): relecture — …`). Deux
+relectures, quinze constats. **Le lot est fini et relu.**
+- **Corrigés**, chacun avec un test vu rouge avant le correctif puis vert :
+  - Accueil : il ne lit plus toute la collection des setlists à chaque visite. Il lit seulement les setlists datées du
+    prochain service ou après (`getSetlistsFrom`, 30 au plus ; brouillons et privées écartés, puis `canSeeSetlist`).
+    Sans service à venir, il n'en lit aucune. L'effet suit l'uid et la date du prochain service, et non plus l'objet `user`
+    (`pages-en-grand-accueil` : « lecture bornée », « aucune setlist lue »).
+  - Mes services : deux services de même nom le même jour (répétitions du Campus pour la séance du matin et pour celle
+    du soir) ont maintenant chacun leur adresse (`?moment=…&seance=<date de la setlist>`, avec `service=` s'il y a
+    un autre service ce jour-là). `serviceDeLAdresse` les relit, dans la liste comme sur la page du service. Test pur
+    aller-retour.
+  - Setlists : `?apercu=` ne se rabat plus que sur une setlist que `canSeeSetlist` laisse voir (un lien partagé vers
+    un autre onglet marche encore). Sinon, c'est la première setlist de la liste qui s'affiche.
+  - Setlists, en grand : la position du volet de la liste (qui défile seul) est gardée
+    (`setlistsScrollPosVolet`, écoute en capture). Elle revient au retour d'une setlist ouverte par « Ouvrir ».
+  - Harmonie : les setlists qui classent les exemples sont lues une seule fois pour toute la section, par le layout
+    (`comptesDesChants` du contexte du catalogue, à la première fiche ouverte). Avant, chaque fiche, y compris la
+    première montrée d'office, les relisait.
+  - Mes tâches : le lien de la fiche n'est cliquable que s'il commence par `http(s)://`. Sinon il s'affiche en texte
+    (`javascript:`, `data:`).
+  - Évènements, téléphone et tablette portrait : la barre « ‹ Évènements · Gérer dans le Back-Office » de la planche
+    `evenement-fiche-telephone` est en tête de la fiche. Le bouton quitte la carte de gestion de l'organisateur, qui
+    garde le titre, les badges, le panneau des inscriptions et le lien d'inscription.
+  - Simplification : `reunirServices` (accueil) dérive de `grouperServices` (Mes services), avec la même clé
+    `cleDuService`. `PourMoi` importe `cleDuService` au lieu de la recopier.
+  - Tests : l'identité de l'admin passe par un seul helper, `ADMIN_EMAIL` dans `tests/helpers/fakeSession.ts`, lu dans
+    `ADMIN_EMAILS` de `src/lib/access.ts`. Les tests du lot n'écrivent ni ne vérifient plus l'adresse réelle : l'e-mail de
+    la carte du compte se vérifie sur un membre fictif. Un équipier au prénom réel est remplacé par « Sacha L. ». Ajouts :
+    retours arrière pour le cours et pour les sons du RD-2000 ; absence de défilement horizontal pour Setlists sur
+    tablette et téléphone.
+- **Constat faux, laissé** : `login.subtitle` n'existe plus depuis B5. La clé de `fr.json:586` est `signup.subtitle`
+  (« GCC Louange — réservé aux membres de l'église »), que la page d'inscription lit encore (`signup/page.tsx:149`).
+- **Laissés, à trancher par Timothée** (écarts aux planches, déjà déclarés dans les tranches) :
+  - La connexion et l'inscription gardent le chrome de l'app (barre latérale, barres du haut et du bas). Sur téléphone,
+    un bandeau de marque est posé au-dessus du formulaire. La « pastille sombre sans libellé » du pied de la barre
+    latérale est le bouton « Connexion » quand la barre est réduite : icône seule, avec son nom accessible (règle de U4).
+  - Dans l'aperçu d'une setlist, la structure des chants reste en texte (« I · C1 · R ») et pas en pastilles.
+  - Dans Moi, la ligne « Mes tâches » n'affiche pas de nombre : il faudrait lire les tâches sur Moi.
+  - Cours : la partie lue n'est pas suivie dans le sommaire. Sur tablette, le lien reste « ‹ Cours ».
+- **Laissés, hors de ce correctif** :
+  - Les lignes de chants de `PourMoi`, `CarteSetlist` et `SetlistCarteChants` ne sont pas réunies dans un composant
+    commun (leurs rendus diffèrent).
+  - `TacheForm` accepte encore un lien d'un autre schéma : seule la fiche le filtre.
+  - Dix-huit anciens tests hors du lot écrivent encore l'adresse réelle de l'admin (à passer à `ADMIN_EMAIL`).
+  - Mes services lit toujours toutes les setlists, comme l'ancienne page (`SectionMesServices`).
+  - Un aperçu choisi reste à droite après un changement de filtre tant qu'il est visible.
+- **Vérifié** : `tsc` propre, ESLint sans erreur (51 avertissements anciens). `pages-en-grand-*` et `back-office-coupe` :
+  623 verts, 149 sautés (tests propres à une disposition) sur les cinq projets. Un seul échec, sur téléphone : une
+  attente `networkidle` jamais atteinte sous charge, remplacée par une attente fixe, puis vert sur les cinq projets.
+  Specs voisines (16 fichiers : back-office-admin, coherence, evenements, harmonie-catalogue, harmonie-cours,
+  harmonie-idees, look-planning, planning-2027, planning-accueil, planning-petit-dej, rd2000, reunions,
+  setlist-deux-volets, setlist-suppression-groupee, taches-evenements, taches) : 1 420 verts, 54 sautés. Captures de
+  la barre de la fiche regardées sur téléphone et tablette, comparées à `evenement-fiche-telephone`.
+- Reste : rien pour U4 bis ; le lot attend l'intégration.
+- À faire par Timothée :
+  - valider en local ;
+  - trancher les quatre écarts ci-dessus ;
+  - relire le 中文 des tranches B1 à B7 (aucun libellé nouveau dans la relecture).
+  - Rien à publier pour U4 bis : aucune règle ni aucun droit n'a changé.

@@ -13,6 +13,7 @@ import type { FSSetlist } from "@/lib/firebase/setlists"
 import type { SongIndexEntry } from "@/types/song"
 import type { ServiceDuJour } from "@/lib/planning/accueil"
 import { joursAvant } from "@/lib/planning/accueil"
+import { cleDuService } from "@/lib/planning/mesServices"
 import { serviceColor } from "@/lib/serviceColors"
 import { serviceButtonFill } from "@/lib/serviceButton"
 import { Tile } from "@/components/ui/tile"
@@ -24,7 +25,6 @@ export type { Disposition }
 const locale = (lang: string) => (lang === "zh-CN" ? "zh-CN" : "fr-FR")
 const jourDe = (iso: string) => new Date(`${iso}T12:00:00`)
 const majuscule = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
-const cle = (s: ServiceDuJour) => `${s.date}|${s.service}|${s.setlistDate ?? ""}|${s.moment ?? ""}`
 
 /** Le nom du service à sa couleur, puis ses rôles : « Culte Franco · Piano ». */
 function ServiceRoles({ s }: { s: ServiceDuJour }) {
@@ -108,7 +108,7 @@ export function PourMoi({
             <span className="min-w-0 flex-1">
               <span className="block text-xs font-semibold text-muted-foreground">{t("planning.nextService")}</span>
               {prochain.map((s) => (
-                <span key={cle(s)} className="block text-base font-bold leading-snug"><ServiceRoles s={s} /></span>
+                <span key={cleDuService(s)} className="block text-base font-bold leading-snug"><ServiceRoles s={s} /></span>
               ))}
               <span className="block text-sm text-muted-foreground">{dateLongue} · {quand}</span>
             </span>
@@ -139,7 +139,7 @@ export function PourMoi({
             <div className="min-w-0">
               <p className="text-lg font-bold leading-snug">{dateLongue}</p>
               {prochain.map((s) => (
-                <p key={cle(s)} className="text-sm"><ServiceRoles s={s} /></p>
+                <p key={cleDuService(s)} className="text-sm"><ServiceRoles s={s} /></p>
               ))}
               <p className="text-[13px] text-muted-foreground">{quand}</p>
             </div>
@@ -149,7 +149,7 @@ export function PourMoi({
               <p className="mt-3 text-[13px] text-muted-foreground">{t("planning.accueil.ensuite")}</p>
               <ul>
                 {ensuite.map((s) => (
-                  <li key={cle(s)} data-testid="ensuite" className="flex gap-3 border-t border-border/70 py-1.5 text-sm">
+                  <li key={cleDuService(s)} data-testid="ensuite" className="flex gap-3 border-t border-border/70 py-1.5 text-sm">
                     <span className="w-14 shrink-0 font-bold">{new Intl.DateTimeFormat(locale(i18n.language), { day: "numeric", month: "short" }).format(jourDe(s.date))}</span>
                     <span className="min-w-0"><ServiceRoles s={s} /></span>
                   </li>
