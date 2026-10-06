@@ -10,7 +10,9 @@
 // PAR-DESSUS la page (feuille `vaul` par la gauche, sans mise à l'échelle), sur un voile ; elle
 // se referme au choix d'une entrée, sur un toucher du voile, par Échap, « Réduire » ou à la
 // déconnexion, et ne retient rien.
-import { useEffect, useRef, useState, useSyncExternalStore, type Ref } from "react";
+// Au Back-Office (U6, Q15), les entrées Tâches et Messages portent leur pastille (planche
+// bo-tableau-de-bord), lue seulement quand la barre est montrée ; réduite, la barre n'en a pas.
+import { useEffect, useId, useRef, useState, useSyncExternalStore, type Ref } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import Image from "next/image";
@@ -22,10 +24,14 @@ import { Drawer as DrawerPrimitive } from "vaul";
 import { useAuth } from "@/lib/firebase/auth";
 import { useSetLanguage } from "@/lib/I18nProvider";
 import { BACK_OFFICE } from "@/lib/backOffice";
-import { entreesBarre, estEntreeActive, labelDeSection, listeSetlistsRetenue } from "@/lib/navigation";
+import { entreeBackOffice, entreesBarre, espaceDe, estEntreeActive, labelDeSection, listeSetlistsRetenue } from "@/lib/navigation";
+import { entreesBackOffice } from "@/lib/access";
+import { useProfile } from "@/lib/firebase/users";
 import { getBarreReduite, setBarreReduite, suivreBarreReduite } from "@/lib/barreLateralePref";
+import { usePastilles } from "@/lib/tableauDeBord/usePastilles";
 import { Cloche } from "@/components/layout/Cloche";
 import { MenuCompte, useNomDuMembre } from "@/components/layout/MenuCompte";
+import { SelecteurEspace } from "@/components/layout/SelecteurEspace";
 import { ReportDialog } from "@/components/report/ReportDialog";
 import { Drawer, DrawerOverlay, DrawerPortal, DrawerTitle } from "@/components/ui/drawer";
 import { useStandaloneScrollLock } from "@/hooks/useStandaloneScrollLock";
@@ -60,13 +66,33 @@ const suivreTablette = (changement: () => void) => {
 function useTablettePaysage() {
   return useSyncExternalStore(suivreTablette, () => window.matchMedia(TABLETTE_PAYSAGE).matches, () => false);
 }
+/** La barre est montrée (ordinateur, ou tablette en paysage) : mêmes conditions que le CSS. */
+const BARRE_MONTREE = `(pointer: fine) and (min-width: 1024px), ${TABLETTE_PAYSAGE}`;
+const suivreBarreMontree = (changement: () => void) => {
+  const m = window.matchMedia(BARRE_MONTREE);
+  m.addEventListener("change", changement);
+  return () => m.removeEventListener("change", changement);
+};
+function useBarreMontree() {
+  return useSyncExternalStore(suivreBarreMontree, () => window.matchMedia(BARRE_MONTREE).matches, () => false);
+}
 const rienASuivre = () => () => {};
 
 export function BarreLaterale() {
   const { t } = useTranslation();
   const pathname = usePathname() || "";
   const { user } = useAuth();
+  const { profile } = useProfile();
   const tablette = useTablettePaysage();
+  // Pastilles (Q15) : lues une fois ici pour les deux barres (fixe et par-dessus), et
+  // seulement au Back-Office, la barre montrée — pas sur un téléphone où elle est cachée.
+  const montree = useBarreMontree();
+  const auBackOffice = BACK_OFFICE && !!user && espaceDe(pathname) === "back-office";
+  const comptes = usePastilles(montree && auBackOffice ? entreesBackOffice(user, profile) : []);
+  const pastilles: Record<string, number> = {
+    [entreeBackOffice("taches").href]: comptes.taches ?? 0,
+    [entreeBackOffice("messages").href]: comptes.messages ?? 0,
+  };
   // Lus hors de React, sans effet : monté (le thème ne se lit que dans le navigateur) et
   // réduite (pour les infobulles seulement ; la mise en page, elle, suit le CSS dès l'en-tête).
   const mounted = useSyncExternalStore(rienASuivre, () => true, () => false);
@@ -100,6 +126,7 @@ export function BarreLaterale() {
           onReduire={() => setBarreReduite(true)}
           onDeplier={() => (tablette ? setOuverte(true) : setBarreReduite(false))}
           deplierRef={deplierRef}
+          pastilles={pastilles}
         />
       </div>
       {/* Q11, Q12 : plan 50, voile à 35 %, glissé depuis la gauche (fondu en mouvement réduit,
@@ -127,6 +154,7 @@ export function BarreLaterale() {
               parDessus
               mounted={mounted}
               enIcones={false}
+              pastilles={pastilles}
               onReduire={() => setOuverte(false)}
               onChoix={() => setOuverte(false)}
               onSignaler={() => {
@@ -164,6 +192,7 @@ function ContenuBarre({
   onChoix,
   onSignaler,
   deplierRef,
+  pastilles,
 }: {
   mounted: boolean;
   parDessus?: boolean;
@@ -176,10 +205,13 @@ function ContenuBarre({
   /** « Signaler un problème » du menu « Compte » (barre par-dessus, voir `MenuCompte`). */
   onSignaler?: () => void;
   deplierRef?: Ref<HTMLButtonElement>;
+  /** Pastille de chaque entrée, par adresse (Back-Office, Q15) ; 0 ou absente = aucune. */
+  pastilles: Record<string, number>;
 }) {
   const { t, i18n } = useTranslation();
   const pathname = usePathname() || "";
   const { user, loading } = useAuth();
+  const { profile } = useProfile();
   const { resolvedTheme, setTheme } = useTheme();
   const dark = mounted && resolvedTheme === "dark";
   const setLanguage = useSetLanguage();
@@ -188,8 +220,12 @@ function ContenuBarre({
   const { displayName, initial, planningName } = useNomDuMembre();
   const compte = useACoteDeLaBarre();
   const cloche = useACoteDeLaBarre();
-  // Back-office coupé (lot 18) : la section Évènements n'est pas en ligne.
-  const entrees = loading ? [] : entreesBarre("app", { connecte: !!user, backOffice: BACK_OFFICE });
+  const idPastille = useId();
+  // Back-office coupé (lot 18) : la section Évènements n'est pas en ligne. Au Back-Office (U6),
+  // les entrées que donnent les droits (`entreesBackOffice`).
+  const entrees = loading
+    ? []
+    : entreesBarre(espaceDe(pathname), { connecte: !!user, backOffice: BACK_OFFICE, permises: entreesBackOffice(user, profile) });
   // Sur une setlist, « Setlists » rouvre la liste filtrée qu'on a quittée (U5, Q7).
   const listeSetlists = useSyncExternalStore(rienASuivre, listeSetlistsRetenue, () => "/setlists");
 
@@ -231,19 +267,23 @@ function ContenuBarre({
         </button>
       </div>
 
-      {/* Place du sélecteur App ↔ Back-Office : vide en U4, U6 la remplit pour les responsables. */}
-      <div data-testid="place-selecteur" className="barre-si-depliee empty:hidden" />
+      {/* Place du sélecteur App ↔ Back-Office (U4) : remplie pour les responsables (U6), vide sinon. */}
+      <div data-testid="place-selecteur" className="barre-si-depliee empty:hidden">
+        <SelecteurEspace pleineLargeur onChoix={onChoix} />
+      </div>
 
       <nav aria-label={t("common.aria.navigationPrincipale")} className="flex flex-col gap-0.5">
         {entrees.map((entree) => {
           const { href, cle, Icone } = entree;
           const active = estEntreeActive(entree, pathname);
+          const n = pastilles[href] ?? 0;
           return (
             <Link
               key={href}
               href={href === "/setlists" && pathname.startsWith("/setlists/") ? listeSetlists : href}
               aria-current={active ? "page" : undefined}
               aria-label={t(cle)}
+              aria-describedby={n > 0 ? `${idPastille}-${cle}` : undefined}
               title={enIcones ? t(cle) : undefined}
               onClick={onChoix}
               className={`barre-entree flex items-center gap-3 rounded-xl px-3 py-[9px] text-[15px] font-semibold transition-colors duration-150 ${
@@ -252,6 +292,18 @@ function ContenuBarre({
             >
               <Icone className="h-5 w-5 shrink-0" strokeWidth={active ? 2.1 : 1.9} aria-hidden />
               <span className="barre-texte">{t(cle)}</span>
+              {n > 0 && (
+                // Le nom de l'entrée (aria-label) le tait : la pastille le dit en description.
+                <span
+                  data-testid="pastille"
+                  id={`${idPastille}-${cle}`}
+                  className={`barre-texte ml-auto rounded-full px-[7px] py-px text-xs font-bold ${
+                    active ? "bg-primary-foreground text-primary" : "bg-destructive text-destructive-foreground"
+                  }`}
+                >
+                  {n}
+                </span>
+              )}
             </Link>
           );
         })}

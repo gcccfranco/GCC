@@ -50,7 +50,8 @@ const ADMIN: FakeProfile = { uid: "admin1", email: "tc328829@gmail.com", firstNa
 async function admin(page: Page) {
   await page.clock.setFixedTime(new Date("2026-09-19T10:00:00"));
   await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
-  return signInAs(page, ADMIN, {}, "/admin");
+  // Lot U6, B2 : l'import est à Planning › Import, au Back-Office.
+  return signInAs(page, ADMIN, {}, "/back-office/planning/import");
 }
 
 test("admin : « Importer » appelle la route et affiche le compte rendu, noms sans compte compris", async ({ page }) => {
@@ -60,7 +61,6 @@ test("admin : « Importer » appelle la route et affiche le compte rendu, noms s
     appel = route.request().postDataJSON() as { key?: string };
     return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: true, importes: 52, ignores: 3, nomsNonRattaches: ["Belka", "Pasteur ZHOU"] }) });
   });
-  await page.getByRole("button", { name: /^Planning/ }).click();
   await page.getByRole("button", { name: "Importer le Culte Franco depuis le Google Sheet" }).click();
   await expect(page.getByText(/52 dimanches importés/)).toBeVisible();
   await expect(page.getByText(/3 déjà dans l'app/)).toBeVisible();

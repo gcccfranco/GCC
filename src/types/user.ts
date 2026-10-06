@@ -69,6 +69,12 @@ export interface UserProfile {
    *  planning par planning (lot 17). Absent = aucun.
    *  Cf. canEditPlanning (src/lib/access.ts). */
   plannings?: string[];
+  /** Équipes de l'organigramme où la personne figure, et celles dont elle est
+   *  référente (ids de EQUIPES, lot U6, R4) : recopiées par le serveur seul
+   *  (`recalculerPoles`, src/lib/equipes/serveur.ts), comme `poles`. Les règles
+   *  les lisent pour les réunions d'équipe. Absent = aucune. */
+  dansEquipes?: string[];
+  referentDe?: string[];
   /** Date d'inscription = createTime du document Firestore users/{uid}, en lecture
    *  seule (jamais persisté comme champ). Renseigné pour tous les profils existants. */
   createdAt?: Date;

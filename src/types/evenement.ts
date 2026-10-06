@@ -8,9 +8,20 @@ export const EVENEMENT_TYPES = ["sport", "loisir", "musique", "eglise", "info"] 
 export type EvenementType = (typeof EVENEMENT_TYPES)[number];
 
 /** Public visé : toute l'église (calendrier public), une section (membres
- *  connectés de la section) ou un pôle (réunion, lot 7 : membres du pôle). */
-export type EvenementPour = "eglise" | AnnonceSection | `pole:${TachePole}`;
+ *  connectés de la section), un pôle (réunion, lot 7 : membres du pôle) ou une
+ *  équipe de l'organigramme (réunion d'équipe, lot U6, R4 : ses membres). */
+export type EvenementPour = "eglise" | AnnonceSection | `pole:${TachePole}` | `equipe:${string}`;
 export const POUR_EGLISE = "eglise" as const;
+
+/** Lien du compte rendu d'une réunion (lot U6, docs/spec-back-office.md) :
+ *  collé par une personne de la réunion (R3), lu par « Réunions précédentes » (R2). */
+export interface CompteRendu {
+  url: string;
+  parUid: string;
+  parNom: string;
+  /** ISO. */
+  le: string;
+}
 
 export const MODES_INSCRIPTIONS = ["auto", "ouvertes", "fermees"] as const;
 export type ModeInscriptions = (typeof MODES_INSCRIPTIONS)[number];
@@ -58,6 +69,9 @@ export interface Evenement {
   epingle: boolean;
   /** ISO ; l'entrée est masquée après cette date (null = jamais). */
   expiresAt: string | null;
+  /** Réunion (lot U6) : son compte rendu ; absent ou null = pas de compte rendu.
+   *  Jamais écrit par le formulaire de l'évènement (EvenementValues l'exclut). */
+  compteRendu?: CompteRendu | null;
   /** Inscrits + invités — tenu par le serveur seulement. */
   inscrits: number;
   createdAt: string;

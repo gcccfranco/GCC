@@ -52,8 +52,7 @@ test("la grille EDD : la classe 中班 de la période courante, cinq colonnes, b
 });
 
 test("avec le droit sur 中班 : une case s'écrit dans la grille de la classe, 大班 reste en lecture", async ({ page }) => {
-  const db = await open(page, PROF, "/planning/edd");
-  await page.getByRole("button", { name: "Modifier" }).click();
+  const db = await open(page, PROF, "/back-office/planning/edd");
   await laCase(page, "2026-09-27", "piano").getByRole("button").click();
   // P9 (lot U2) : « Choisir », puis un nom écrit à la main.
   await page.getByRole("button", { name: "Écrire un nom sans compte…" }).click();
@@ -71,14 +70,14 @@ test("avec le droit sur 中班 : une case s'écrit dans la grille de la classe, 
   await page.reload();
   await expect(laCase(page, "2026-09-27", "piano")).toContainText("Esther C.");
   await page.getByRole("button", { name: "大班", exact: true }).click();
-  await expect(page.getByRole("button", { name: "Modifier" })).toHaveCount(0);
+  await expect(laCase(page, "2026-09-27", "piano").getByRole("button"), "大班 : en lecture").toHaveCount(0);
   await expect(laCase(page, "2026-09-27", "piano")).toContainText("Eva C.");
 });
 
 // Lot U2, P7 : « Exporter (modèle du Sheet) » remplace le CSV et l'ancien PDF du
 // lot 17 (question 6) ; la page de l'EDD porte les trois classes de la période.
 test("« Exporter (modèle du Sheet) » : la période affichée, les trois classes l'une sous l'autre", async ({ page }) => {
-  await open(page, PROF, "/planning/edd");
+  await open(page, PROF, "/back-office/planning/edd");
   await page.getByRole("button", { name: "Exporter (modèle du Sheet)" }).click();
   const fenetre = page.getByRole("dialog", { name: "Exporter" });
   await fenetre.getByRole("radio", { name: "Sep–Oct 2026 · EDD 中班" }).click();

@@ -9,8 +9,12 @@
 // écrit — après le jour J l'onglet remercie sept jours, puis le programme
 // s'archive et la bascule prend le suivant dès l'ouverture de ses
 // réservations. `visible` n'est plus que l'épinglage de la coordination.
+// Lot U6, B3 (U1 Q12) : la gestion (`gestion`) est à Back-Office › Évènements ›
+// Scène ; dans l'App, la coordination réserve comme les groupes et trouve
+// « Gérer dans le Back-Office ».
 
 import { useCallback, useEffect, useRef, useState } from "react"
+import Link from "next/link"
 import { useTranslation } from "react-i18next"
 import { useAuth } from "@/lib/firebase/auth"
 import { useProfile } from "@/lib/firebase/users"
@@ -47,7 +51,7 @@ async function fetchAll(focusId: string | null): Promise<{ programmes: Programme
   return { programmes, pour: focus?.id ?? null, creneaux: focus ? await listCreneaux(focus.id) : [] }
 }
 
-export function SceneClient() {
+export function SceneClient({ gestion = false }: { gestion?: boolean }) {
   const { t, i18n } = useTranslation()
   const { user } = useAuth()
   const { profile, loading: profileLoading } = useProfile()
@@ -83,7 +87,7 @@ export function SceneClient() {
     if (user) reload()
   }, [user, saisonOuverte, reload])
 
-  const coordination = isCoordination(user, profile)
+  const coordination = gestion && isCoordination(user, profile)
   const today = todayIso()
   const current = programmes ? currentProgramme(programmes, today) : null
   const state = current ? programmeState(current, today) : null
@@ -204,6 +208,12 @@ export function SceneClient() {
       </div>
 
       {error && <p className="text-sm text-destructive">{error}</p>}
+
+      {!gestion && isCoordination(user, profile) && (
+        <Button asChild size="sm" variant="outline">
+          <Link href="/back-office/evenements/scene">{t("backOffice.gerer")}</Link>
+        </Button>
+      )}
 
       {coordination && (
         <div className="flex flex-wrap gap-2">

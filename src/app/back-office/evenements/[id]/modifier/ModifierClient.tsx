@@ -1,7 +1,7 @@
 "use client"
 
 // Modification d'un évènement (lot 6) : organisateur + coordination. Le
-// compteur d'inscrits n'est jamais envoyé.
+// compteur d'inscrits n'est jamais envoyé. Lot U6, B3 : au Back-Office.
 
 import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
@@ -13,6 +13,8 @@ import { getEvenement, updateEvenement } from "@/lib/firebase/evenements"
 import { ANNONCE_SECTIONS } from "@/types/annonce"
 import type { Evenement } from "@/types/evenement"
 import { EvenementForm } from "@/components/evenements/EvenementForm"
+
+const base = "/back-office/evenements"
 
 export function ModifierClient() {
   const { t } = useTranslation()
@@ -28,8 +30,9 @@ export function ModifierClient() {
   if (!evenement) return <p className="text-sm text-muted-foreground">{t("evenements.notFound")}</p>
   if (!canEditEvenement(user, profile, evenement)) return <p className="text-sm text-muted-foreground max-w-2xl mx-auto">{t("evenements.reserved")}</p>
 
-  const { id: _id, organisateurUid, organisateurNom, inscrits, createdAt, updatedAt, ...initial } = evenement
-  void _id; void organisateurUid; void organisateurNom; void inscrits; void createdAt; void updatedAt
+  // Le compte rendu (lot U6) a sa carte : le formulaire ne le réécrit jamais.
+  const { id: _id, organisateurUid, organisateurNom, inscrits, createdAt, updatedAt, compteRendu, ...initial } = evenement
+  void _id; void organisateurUid; void organisateurNom; void inscrits; void createdAt; void updatedAt; void compteRendu
   // L'organisateur garde le public de sa fiche même s'il ne pourrait plus le choisir aujourd'hui.
   const pours = Array.from(new Set([evenement.pour, ...creatableEvenementPours(user, profile, ANNONCE_SECTIONS)]))
 
@@ -42,9 +45,9 @@ export function ModifierClient() {
         inscrits={evenement.inscrits}
         onSubmit={async (values) => {
           await updateEvenement(evenement.id, values)
-          router.push(`/evenements/${evenement.id}`)
+          router.push(`${base}/${evenement.id}`)
         }}
-        onCancel={() => router.push(`/evenements/${evenement.id}`)}
+        onCancel={() => router.push(`${base}/${evenement.id}`)}
       />
     </div>
   )

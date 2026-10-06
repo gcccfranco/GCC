@@ -13,7 +13,7 @@ import { useTranslation } from "react-i18next"
 import { ImagePlus, Trash2 } from "lucide-react"
 import { compressImage } from "@/lib/utils/compressImage"
 import { categoryLabel } from "@/lib/serviceColors"
-import { poleDuPour } from "@/lib/access"
+import { equipeDuPour, estReunion, poleDuPour } from "@/lib/access"
 import { EVENEMENT_TYPES, type Evenement, type EvenementType } from "@/types/evenement"
 import { ChoixInscriptions } from "@/components/evenements/ChoixInscriptions"
 import { borneInscription, modeInscriptions } from "@/lib/evenements/agenda"
@@ -23,9 +23,12 @@ import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
 
 const MAX_IMAGES = 3
+// Une réunion (lot U6, relecture) a toujours une date : jamais « Info » (sujets jusqu'au début,
+// rappel de la veille, réunions précédentes). Elle prend « Église » si elle était une info.
+const TYPE_REUNION: EvenementType = "eglise"
 const MAX_TOTAL_CHARS = 750_000
 
-export type EvenementValues = Omit<Evenement, "id" | "organisateurUid" | "organisateurNom" | "inscrits" | "createdAt" | "updatedAt">
+export type EvenementValues = Omit<Evenement, "id" | "organisateurUid" | "organisateurNom" | "inscrits" | "createdAt" | "updatedAt" | "compteRendu">
 
 export const EMPTY_EVENEMENT: EvenementValues = {
   titre: "", type: "loisir", pour: "eglise", date: "", heure: "", heureFin: "", dateFin: "", lieu: "", description: "",
@@ -64,14 +67,17 @@ export function EvenementForm({ initial, pours, creation, inscrits = 0, onSubmit
   onCancel: () => void
 }) {
   const { t } = useTranslation()
-  const [v, setV] = useState<EvenementValues>({ ...initial, pour: pours.includes(initial.pour) ? initial.pour : (pours[0] as EvenementValues["pour"]) })
+  const [v, setV] = useState<EvenementValues>(() => {
+    const pour = pours.includes(initial.pour) ? initial.pour : (pours[0] as EvenementValues["pour"])
+    return { ...initial, pour, ...(estReunion(pour) && initial.type === "info" ? { type: TYPE_REUNION } : {}) }
+  })
   const [prevenir, setPrevenir] = useState(initial.type !== "eglise")
   const [error, setError] = useState("")
   const [busy, setBusy] = useState(false)
   const [compressing, setCompressing] = useState(false)
   const info = v.type === "info"
-  // Réunion de pôle (lot 7) : pas d'inscriptions.
-  const reunion = poleDuPour(v.pour) !== null
+  // Réunion de pôle (lot 7) ou d'équipe (lot U6, R4) : pas d'inscriptions.
+  const reunion = estReunion(v.pour)
   const sansInscription = { inscriptions: "fermees" as const, inscriptionDebut: "", inscriptionFin: "", sansCompte: false, placesMax: null, lienExterne: "" }
   const mode = modeInscriptions(v)
   // Lien externe (lot 11) : l'inscription se passe ailleurs, le reste du bloc
@@ -160,16 +166,20 @@ export function EvenementForm({ initial, pours, creation, inscrits = 0, onSubmit
           <div className="space-y-1">
             <label htmlFor="ev-type" className={LABEL}>{t("evenements.form.type")}</label>
             <select id="ev-type" className={field} value={v.type} onChange={(e) => setType(e.target.value as EvenementType)}>
-              {EVENEMENT_TYPES.map((x) => <option key={x} value={x}>{t(`evenements.types.${x}`)}</option>)}
+              {EVENEMENT_TYPES.filter((x) => !reunion || x !== "info").map((x) => <option key={x} value={x}>{t(`evenements.types.${x}`)}</option>)}
             </select>
           </div>
           <div className="space-y-1">
             <label htmlFor="ev-pour" className={LABEL}>{t("evenements.form.pour")}</label>
             <select id="ev-pour" className={field} value={v.pour}
-              onChange={(e) => set({ pour: e.target.value as EvenementValues["pour"], ...(poleDuPour(e.target.value) ? sansInscription : {}) })}>
+              onChange={(e) => set({
+                pour: e.target.value as EvenementValues["pour"],
+                ...(estReunion(e.target.value) ? { ...sansInscription, ...(info ? { type: TYPE_REUNION } : {}) } : {}),
+              })}>
               {pours.map((p) => {
                 const pole = poleDuPour(p)
-                return <option key={p} value={p}>{p === "eglise" ? t("evenements.pourEglise") : pole ? t("evenements.pourPole", { pole: t(`taches.pole.${pole}`) }) : categoryLabel(p)}</option>
+                const equipe = equipeDuPour(p)
+                return <option key={p} value={p}>{p === "eglise" ? t("evenements.pourEglise") : pole ? t("evenements.pourPole", { pole: t(`taches.pole.${pole}`) }) : equipe ? t(`equipes.team.${equipe}`) : categoryLabel(p)}</option>
               })}
             </select>
           </div>

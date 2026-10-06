@@ -144,7 +144,7 @@ test("ordinateur et tablette : les colonnes sont dans l'ordre du Sheet", async (
 });
 
 test("le sélecteur de trimestre : T3 par défaut, T4 sur demande", async ({ page }) => {
-  await open(page, PUBLIEUR, "/planning/culte");
+  await open(page, PUBLIEUR, "/back-office/planning/culte");
   // Le trimestre courant est choisi d'office, et le bandeau le nomme.
   await expect(page.getByRole("button", { name: "T3" })).toBeVisible();
   await expect(page.getByTestId("grille-bandeau")).toContainText("T3");
@@ -200,7 +200,7 @@ test("trimestre non publié : invisible pour un membre, marqué « Non publié �
 });
 
 test("trimestre non publié : le publieur voit les lignes, marquées", async ({ page }) => {
-  await open(page, PUBLIEUR, "/planning/culte");
+  await open(page, PUBLIEUR, "/back-office/planning/culte");
   // Le T4 n'est pas publié : le publieur a sa pilule, le membre ne l'a pas.
   await page.getByRole("button", { name: "T4" }).click();
   await expect(laCase(page, "2026-10-04", "presidence")).toHaveText("Paul W.");
@@ -218,8 +218,7 @@ test("sans le droit : aucun bouton « Modifier », aucune case cliquable", async
 });
 
 test("avec le droit : une case s'écrit, tient après rechargement, et la voisine ne bouge pas", async ({ page }) => {
-  const db = await open(page, CHRISTELLE, "/planning/culte", { [`users/uid-esther`]: ESTHER });
-  await page.getByRole("button", { name: "Modifier" }).click();
+  const db = await open(page, CHRISTELLE, "/back-office/planning/culte", { [`users/uid-esther`]: ESTHER });
   await choisir(page, "2026-09-27", "piano", "Esther C.");
   await expect(laCase(page, "2026-09-27", "piano")).toContainText("Esther C.");
   await expect(page.getByText("Enregistré")).toBeVisible();
@@ -237,8 +236,7 @@ test("avec le droit : une case s'écrit, tient après rechargement, et la voisin
 });
 
 test("« Choisir » propose les comptes et les noms de la grille ; un nom sans compte s'écrit ; Échap annule", async ({ page }) => {
-  await open(page, CHRISTELLE, "/planning/culte", { [`users/uid-esther`]: ESTHER });
-  await page.getByRole("button", { name: "Modifier" }).click();
+  await open(page, CHRISTELLE, "/back-office/planning/culte", { [`users/uid-esther`]: ESTHER });
   await laCase(page, "2026-09-27", "orateur").getByRole("button").click();
   // Lot U2, P9 : le menu « Choisir » remplace la datalist du lot 17 (D12).
   const menu = page.getByRole("dialog");
@@ -262,13 +260,12 @@ test("« Choisir » propose les comptes et les noms de la grille ; un nom sans c
 });
 
 test("droit retiré en cours de route : la case revient, le message et « Recharger » s'affichent", async ({ page }) => {
-  await open(page, CHRISTELLE, "/planning/culte", { [`users/uid-esther`]: ESTHER });
+  await open(page, CHRISTELLE, "/back-office/planning/culte", { [`users/uid-esther`]: ESTHER });
   await page.route(/firestore\.googleapis\.com.*dimanches/, (route) =>
     route.request().method() === "PATCH"
       ? route.fulfill({ status: 403, contentType: "application/json", body: JSON.stringify({ error: { message: "PERMISSION_DENIED" } }) })
       : route.fallback()
   );
-  await page.getByRole("button", { name: "Modifier" }).click();
   await choisir(page, "2026-09-27", "piano", "Esther C.");
   await expect(page.getByText(/Enregistrement refusé par le serveur/)).toBeVisible();
   await expect(page.getByRole("button", { name: "Recharger" })).toBeVisible();
@@ -276,8 +273,7 @@ test("droit retiré en cours de route : la case revient, le message et « Rechar
 });
 
 test("l'historique nomme l'auteur, la case et le dimanche", async ({ page }) => {
-  await open(page, CHRISTELLE, "/planning/culte", { [`users/uid-esther`]: ESTHER });
-  await page.getByRole("button", { name: "Modifier" }).click();
+  await open(page, CHRISTELLE, "/back-office/planning/culte", { [`users/uid-esther`]: ESTHER });
   await choisir(page, "2026-09-27", "piano", "Esther C.");
   await expect(laCase(page, "2026-09-27", "piano")).toContainText("Esther C.");
 

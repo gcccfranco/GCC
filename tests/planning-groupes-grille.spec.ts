@@ -74,8 +74,7 @@ test("groupes : la grille du Groupe Paix, en lecture pour un membre", async ({ p
 });
 
 test("groupes : avec le droit « paix », une case s'écrit ; Fidélité reste en lecture", async ({ page }) => {
-  const db = await open(page, profil(["paix"]), "/planning/groupes");
-  await page.getByRole("button", { name: "Modifier" }).click();
+  const db = await open(page, profil(["paix"]), "/back-office/planning/groupes");
   await laCase(page, "2026-09-20", "theme").getByRole("button").click();
   const champ = laCase(page, "2026-09-20", "theme").getByLabel("Thème", { exact: true });
   await champ.fill("Psaumes");
@@ -88,15 +87,14 @@ test("groupes : avec le droit « paix », une case s'écrit ; Fidélité reste e
 
   await page.getByRole("button", { name: "Fidélité", exact: true }).click();
   await expect(laCase(page, "2026-09-20", "pianiste")).toContainText("Eva C.");
-  await expect(page.getByRole("button", { name: "Modifier" })).toHaveCount(0);
+  await expect(laCase(page, "2026-09-20", "pianiste").getByRole("button"), "Fidélité : en lecture").toHaveCount(0);
 });
 
 test("groupes : les musiciens de Fidélité ont leur propre grille et leur propre droit", async ({ page }) => {
-  const db = await open(page, profil(["fideliteMusiciens"]), "/planning/groupes");
+  const db = await open(page, profil(["fideliteMusiciens"]), "/back-office/planning/groupes");
   await page.getByRole("button", { name: "Fidélité", exact: true }).click();
-  await expect(page.getByRole("button", { name: "Modifier" }), "le planning du groupe n'est pas le sien").toHaveCount(0);
+  await expect(laCase(page, "2026-09-20", "theme").getByRole("button"), "le planning du groupe n'est pas le sien").toHaveCount(0);
   await page.getByRole("button", { name: /Planning musiciens/ }).click();
-  await page.getByRole("button", { name: "Modifier" }).click();
   await laCase(page, "2026-09-20", "guitare").getByRole("button").click();
   // P9 (lot U2) : « Choisir », puis un nom écrit à la main.
   await page.getByRole("button", { name: "Écrire un nom sans compte…" }).click();
@@ -109,8 +107,7 @@ test("groupes : les musiciens de Fidélité ont leur propre grille et leur propr
 });
 
 test("Intergroupe : se remplit dans l'app et s'exporte au modèle du Sheet", async ({ page }) => {
-  const db = await open(page, profil(["intergroupe"]), "/planning/intergroupe");
-  await page.getByRole("button", { name: "Modifier" }).click();
+  const db = await open(page, profil(["intergroupe"]), "/back-office/planning/intergroupe");
   await laCase(page, "2026-10-04", "choriste3").getByRole("button").click();
   // P9 (lot U2) : « Choisir », puis un nom écrit à la main.
   await page.getByRole("button", { name: "Écrire un nom sans compte…" }).click();
@@ -119,7 +116,6 @@ test("Intergroupe : se remplit dans l'app et s'exporte au modèle du Sheet", asy
   await champ.press("Enter");
   await expect(laCase(page, "2026-10-04", "choriste3")).toContainText("Daniela W.");
   expect(db.doc("plannings/intergroupe/dimanches/2026-10-04")?.choriste3).toBe("Daniela W.");
-  await page.getByRole("button", { name: "Terminé" }).click();
 
   // Lot U2, P7 : « Exporter (modèle du Sheet) » remplace le CSV du lot 17 (question 6).
   await page.getByRole("button", { name: "Exporter (modèle du Sheet)" }).click();

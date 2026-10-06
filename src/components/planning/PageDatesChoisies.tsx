@@ -12,6 +12,7 @@ import { noterChangement } from "@/lib/firebase/planningHistorique"
 import { historyAuthor } from "@/lib/firebase/setlistHistory"
 import { useProfile } from "@/lib/firebase/users"
 import { canEditPlanning, isAdminUser } from "@/lib/access"
+import { useGestionPlanning } from "@/lib/planning/gestion"
 
 // Interfranco et Intergroupe (lot 17, G6 ; lot U2, P2) : une page par service,
 // toute l'année affichée, sans publication par trimestre. Les dates se
@@ -31,7 +32,9 @@ export function PageDatesChoisies({ definition, lire, lireAutre }: {
   const [rows, setRows] = useState<string[][]>([])
   const [autre, setAutre] = useState<string[][]>([])
   const [loading, setLoading] = useState(true)
-  const peutModifier = canEditPlanning(user, profile, definition.key)
+  // Lot U6, B2 : on remplit au Back-Office ; dans l'App, la page se lit.
+  const gestion = useGestionPlanning()
+  const peutModifier = gestion && canEditPlanning(user, profile, definition.key)
   const { datesDansLApp, comptes } = useGrilleApp(definition.key, peutModifier)
 
   const recharger = () => lire().then(setRows).catch(() => { /* lignes d'avant gardées */ })

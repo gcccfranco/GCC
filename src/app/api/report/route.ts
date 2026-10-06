@@ -4,6 +4,7 @@ import { adminDb, verifyIdToken } from "@/lib/push/admin";
 import { adminUids } from "@/lib/push/recipients";
 import { sendPushToUids } from "@/lib/push/send";
 import { REPORT_KINDS, type ReportKind } from "@/types/report";
+import { BACK_OFFICE } from "@/lib/backOffice";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -85,7 +86,8 @@ export async function POST(req: NextRequest) {
       await sendPushToUids(admins, {
         title: kind === "song" ? `Signalement chant — ${songTitle || report.title}` : "Signalement site",
         body: report.title,
-        url: "/admin",
+        // Lot U6, B2 : les signalements sont dans Messages › Réception (en ligne : /admin).
+        url: BACK_OFFICE ? "/back-office/messages" : "/admin",
         tag: `report-${docRef.id}`,
       });
     } catch (e) {

@@ -32,7 +32,8 @@ export interface PlanningGrilleProps {
   definition: DefinitionGrille
   /** Lignes déjà filtrées par la publication (lignesPubliees). */
   lignes: LigneGrille[]
-  /** La personne peut-elle remplir les cases ? (canEditPlanning) */
+  /** La personne peut-elle remplir les cases ? (canEditPlanning, au Back-Office seulement :
+   *  lot U6, B2, Q14). Si oui, la grille s'ouvre directement en modification. */
   peutModifier: boolean
   /** Dimanches déjà écrits dans la grille de l'app — les autres viennent du Sheet. */
   datesDansLApp: readonly string[]
@@ -78,7 +79,9 @@ export function PlanningGrille({
   const couleur = definition.couleur
   const sun = currentSundayStr()
 
-  const [mode, setMode] = useState<"lecture" | "edition">("lecture")
+  // Lot U6, B2 (Q14, question 5 de U2) : plus de bouton « Modifier » ; qui peut remplir
+  // la grille (au Back-Office) l'a directement en modification, les cases « Choisir ».
+  const mode: "lecture" | "edition" = peutModifier ? "edition" : "lecture"
   const [modifs, setModifs] = useState<Record<string, string>>({})
   const [edition, setEdition] = useState<{ date: string; cle: string; valeur: string } | null>(null)
   // « Choisir » ouvert sur une case de personne (P9) ; la case cliquée pose le menu.
@@ -366,7 +369,7 @@ export function PlanningGrille({
         </span>
       </div>
 
-      {/* ── Mon prénom, Mes dates, Modifier ── */}
+      {/* ── Mon prénom, Mes dates ── */}
       <div className="flex items-center gap-2 flex-wrap">
         <div className="relative flex-1 min-w-[160px] max-w-[220px]">
           <User className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
@@ -396,17 +399,6 @@ export function PlanningGrille({
             style={mesDates ? { background: couleur } : undefined}
           >
             {t("planning.table.myDates")}
-          </button>
-        )}
-        {peutModifier && (
-          <button
-            onClick={() => { setEdition(null); setChoix(null); setEnregistre(false); setMode((m) => (m === "edition" ? "lecture" : "edition")) }}
-            className={`h-10 sm:h-8 px-3 rounded-full text-sm font-semibold transition-[background-color,color,transform] duration-150 active:scale-[.96] cursor-pointer ${
-              mode === "edition" ? "text-white" : "bg-secondary text-muted-foreground hover:text-foreground"
-            }`}
-            style={mode === "edition" ? { background: couleur } : undefined}
-          >
-            {t(mode === "edition" ? "planning.grille.termine" : "planning.grille.modifier")}
           </button>
         )}
         {enregistre && (

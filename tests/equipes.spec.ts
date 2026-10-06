@@ -265,7 +265,8 @@ test("page Équipes : « en essai », un nom rattaché ouvre la fiche, un nom li
   await expect(page.getByTestId("fiche")).toContainText("Charlie L.");
 });
 
-test("page Équipes : le droit « Équipes » ajoute un membre et fait recalculer les pôles", async ({ page }) => {
+// Lot U6, B2 (question 4) : l'organigramme se modifie au Back-Office, Équipes › Organigramme.
+test("Équipes › Organigramme : le droit « Équipes » ajoute un membre et fait recalculer les pôles", async ({ page }) => {
   await simulerSheets(page);
   let appels = 0;
   let envoye: { uids?: string[] } = {};
@@ -278,7 +279,7 @@ test("page Équipes : le droit « Équipes » ajoute un membre et fait recalcule
     page,
     { uid: "u-ref", email: "referent@example.com", firstName: "Lydia", lastName: "H.", equipes: true },
     DOCS,
-    "/equipes",
+    "/back-office/equipes",
   );
   const carte = page.getByTestId("equipe-da");
   await carte.getByRole("button", { name: "Modifier" }).click();
@@ -342,6 +343,20 @@ test("中文 : les noms d'équipe sont traduits, les noms de personnes ne le son
   await expect(page.getByTestId("equipe-theologie")).toContainText("Orga/Inscriptions");
 });
 
+test("admin : « Recalculer depuis l'organigramme » repose équipes et référents des profils existants (lot U6, R4)", async ({ page }) => {
+  await simulerSheets(page);
+  const envois: unknown[] = [];
+  await page.route("**/api/equipes/poles", (route) => {
+    envois.push(route.request().postDataJSON());
+    return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: true, maj: 12 }) });
+  });
+  await signInAs(page, { uid: "admin1", email: "tc328829@gmail.com", firstName: "Timothée", lastName: "C." }, DOCS, "/back-office/equipes/import");
+  await expect(page.getByText(/réunions d.équipe/)).toBeVisible();
+  await page.getByRole("button", { name: "Recalculer depuis l'organigramme" }).click();
+  await expect(page.getByText("12 profils mis à jour.")).toBeVisible();
+  expect(envois).toEqual([{ tous: true }]);
+});
+
 test("admin : le bouton d'import rend compte de ce qu'il n'a pas su rattacher", async ({ page }) => {
   await simulerSheets(page);
   await page.route("**/api/equipes/importer", (route) =>
@@ -355,10 +370,11 @@ test("admin : le bouton d'import rend compte de ce qu'il n'a pas su rattacher", 
     }),
   );
   page.on("dialog", (d) => d.accept());
-  await signInAs(page, { uid: "admin1", email: "tc328829@gmail.com", firstName: "Timothée", lastName: "C." }, DOCS, "/admin");
-  await page.getByRole("button", { name: /Équipes/ }).click();
+  await signInAs(page, { uid: "admin1", email: "tc328829@gmail.com", firstName: "Timothée", lastName: "C." }, DOCS, "/back-office/equipes/import");
   await page.getByRole("button", { name: "Importer l'organigramme du Sheet" }).click();
-  await expect(page.getByText(/13 équipes/)).toBeVisible();
+  // Le compte rendu de l'import, pas la description de l'écran (qui parle aussi des « 13 équipes ») :
+  // sinon le test passe ou casse selon qu'il regarde avant ou après la réponse.
+  await expect(page.getByText(/13 équipes, 96 membres/)).toBeVisible();
   await expect(page.getByText("Kitty S.")).toBeVisible();
   await expect(page.getByText("Untel B.")).toBeVisible();
 });

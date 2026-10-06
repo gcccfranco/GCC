@@ -21,6 +21,10 @@ export type FakeProfile = {
   notify?: string[];
   /** Plannings que la personne peut remplir dans l'app (lot 17). */
   plannings?: string[];
+  /** Équipes de l'organigramme où la personne figure, et celles dont elle est
+   *  référente (lot U6, R4) — écrites par le serveur seul (`recalculerPoles`). */
+  dansEquipes?: string[];
+  referentDe?: string[];
   /** Vrai = compte qui n'a pas encore vu l'accueil de première connexion (lot 8).
    *  Par défaut l'accueil est déjà vu, pour ne pas masquer les pages testées. */
   accueil?: boolean;
@@ -286,6 +290,8 @@ export async function signInAs(
       poles: profile.poles ?? [],
       equipes: profile.equipes ?? false,
       plannings: profile.plannings ?? [],
+      ...(profile.dansEquipes ? { dansEquipes: profile.dansEquipes } : {}),
+      ...(profile.referentDe ? { referentDe: profile.referentDe } : {}),
     },
     ...(profile.accueil ? {} : { [`onboarding/${profile.uid}`]: { vu: true, le: "2026-09-01T10:00:00Z" } }),
     ...docs,

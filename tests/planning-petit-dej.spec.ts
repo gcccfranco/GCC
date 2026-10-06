@@ -484,10 +484,7 @@ test("carte : un dimanche à venir sans ligne dit « Libre » ; « Je m'inscris 
   expect(posees[0].data).toMatchObject({ dimanche: "2026-09-27", nom: "Charlie B.", uid: CHARLIE.uid, auteurUid: CHARLIE.uid });
   await expect(le27.getByRole("button", { name: "Modifier" })).toBeVisible();
   await expect(le27.getByRole("button", { name: "Retirer" })).toBeVisible();
-  await expect(
-    page.locator('[data-case="2026-09-27|petitDej"]').filter({ visible: true }),
-    "la case de la grille suit la carte sans attendre un rechargement",
-  ).toContainText("Charlie B.");
+  // Lot U6, B2 : la grille de la Table n'est plus dans l'App (Back-Office seulement).
 });
 
 test("carte : ✎ réécrit ma ligne « Famille Martin » (tient au rechargement) ; Échap annule, un texte vide est refusé", async ({ page }) => {
@@ -811,7 +808,8 @@ test("Mes services en 中文 : un compte sans nom de planning voit ses petits d�
     ligne({ id: "a", dimanche: "2026-09-27", nom: "Famille Martin", uid: SANS_NOM.uid, auteurUid: SANS_NOM.uid }),
   ]), SANS_NOM);
   await expect(page.getByRole("listitem").filter({ hasText: "Petit déj" })).toHaveCount(1);
-  await expect(page.getByText(/Camille Exemple/)).toBeVisible();
+  // Le pied de la barre latérale (lot U4) porte aussi le nom : la phrase de la page seule.
+  await expect(page.getByText(/Camille Exemple\s*出现在排班表中/)).toBeVisible();
 });
 
 // ─── U3 · PD4 : le mercredi (T5, Q5) ────────────────────────────────────────
@@ -894,7 +892,7 @@ test("Mon profil › Notifications en 中文 : la liste « Recevoir » est tradu
 
 // ─── U3 · PD5 : la reprise (T11, Q13), le bouton et la route ───────────────
 
-test("administration › Planning : « Reprendre les noms du petit déj » demande confirmation, appelle la route et affiche son compte rendu", async ({ page }) => {
+test("Back-Office › Planning › Import : « Reprendre les noms du petit déj » demande confirmation, appelle la route et affiche son compte rendu", async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-09-19T10:00:00"));
   await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
   const appels: { methode: string; jeton: string }[] = [];
@@ -902,8 +900,7 @@ test("administration › Planning : « Reprendre les noms du petit déj » deman
     appels.push({ methode: route.request().method(), jeton: route.request().headers()["authorization"] ?? "" });
     return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: true, reprises: 9, ignores: 3 }) });
   });
-  await signInAs(page, { ...ADMIN, firstName: "Admin", lastName: "A." }, {}, "/admin");
-  await page.getByRole("button", { name: /^Planning/ }).click();
+  await signInAs(page, { ...ADMIN, firstName: "Admin", lastName: "A." }, {}, "/back-office/planning/import");
   const bouton = page.getByRole("button", { name: "Reprendre les noms du petit déj" });
   await expect(bouton).toBeVisible();
 
@@ -922,13 +919,12 @@ test("administration › Planning : « Reprendre les noms du petit déj » deman
   await capture(page, "admin-reprise-petit-dej");
 });
 
-test("administration › Planning : un refus de la route s'affiche à la place du compte rendu", async ({ page }) => {
+test("Back-Office › Planning › Import : un refus de la route s'affiche à la place du compte rendu", async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-09-19T10:00:00"));
   await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
   await page.route("**/api/admin/reprendre-petit-dej", (route) =>
     route.fulfill({ status: 500, contentType: "application/json", body: JSON.stringify({ error: "Erreur serveur" }) }));
-  await signInAs(page, { ...ADMIN, firstName: "Admin", lastName: "A." }, {}, "/admin");
-  await page.getByRole("button", { name: /^Planning/ }).click();
+  await signInAs(page, { ...ADMIN, firstName: "Admin", lastName: "A." }, {}, "/back-office/planning/import");
   page.once("dialog", (d) => void d.accept());
   await page.getByRole("button", { name: "Reprendre les noms du petit déj" }).click();
   await expect(page.getByText("Erreur serveur")).toBeVisible();

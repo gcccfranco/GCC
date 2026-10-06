@@ -1006,8 +1006,6 @@
       "clear": "清除"
     },
     "grille": {
-      "modifier": "修改",
-      "termine": "完成",
       "enregistre": "已保存",
       "plusTot": "查看更早",
       "plusTard": "查看更晚",
@@ -1714,6 +1712,7 @@
     "dupliquer": "复制",
     "supprimer": "删除",
     "confirmDelete": "删除「{{titre}}」？报名信息将丢失。",
+    "erreurSuppression": "删除失败，请重试。",
     "reserved": "此页面仅限协调组和各小组负责人。",
     "form": {
       "titre": "活动名称",
@@ -1820,6 +1819,65 @@
       "titre": "任务",
       "vide": "此活动还没有任务。"
     },
+    "sujets": {
+      "titre": "待讨论议题",
+      "titreApres": "议题",
+      "aide": "参会的每个人在会议开始前都可以添加",
+      "traites_one": "已讨论 {{count}} / {{total}}",
+      "traites_other": "已讨论 {{count}} / {{total}}",
+      "nouveau": "新议题",
+      "placeholder": "添加议题…",
+      "ajouter": "添加",
+      "vide": "暂无议题。",
+      "commencee": "会议已开始，不能再添加议题。",
+      "deplacer": "移动「{{texte}}」",
+      "traite": "已讨论：{{texte}}",
+      "retirer": "移除「{{texte}}」",
+      "confirmRetirer": "确定移除议题「{{texte}}」吗？",
+      "nonTraite": "未讨论",
+      "noteAvant": "未讨论的议题会以红色显示；创建下一次会议时，会询问你是否沿用。",
+      "noteRouge_one": "{{count}} 个议题未讨论：在下一次会议沿用之前，会一直以红色显示。",
+      "noteRouge_other": "{{count}} 个议题未讨论：在下一次会议沿用之前，会一直以红色显示。",
+      "erreur": "保存失败，请重试。",
+      "erreurLecture": "议题加载失败。",
+      "instructions": "移动议题：按空格键或回车键拿起，用上下方向键移动，再按空格键或回车键放下，按 Esc 取消。",
+      "annonceSaisi": "已拿起议题「{{texte}}」，位置 {{position}} / {{total}}。",
+      "annonceDeplace": "议题「{{texte}}」在位置 {{position}} / {{total}}。",
+      "annoncePose": "议题「{{texte}}」已放在位置 {{position}} / {{total}}。",
+      "annonceAnnule": "已取消移动，「{{texte}}」留在原位。",
+      "reprisLe": "已沿用至{{date}}的会议",
+      "reprisSansDate": "已沿用至另一次会议",
+      "reprisDu": "沿用自{{date}}的会议"
+    },
+    "reprise": {
+      "titre": "沿用未讨论的议题吗？",
+      "uneReunion_one": "{{date}}的会议留下了 {{count}} 个议题：",
+      "uneReunion_other": "{{date}}的会议留下了 {{count}} 个议题：",
+      "plusieurs_one": "之前的会议留下了 {{count}} 个议题：",
+      "plusieurs_other": "之前的会议留下了 {{count}} 个议题：",
+      "non": "不，保留原处",
+      "oui": "是，沿用",
+      "noteUne": "不沿用的话，它们会在原来的会议中继续以红色显示。",
+      "notePlusieurs": "不沿用的话，它们会在原来的各次会议中继续以红色显示。"
+    },
+    "compteRendu": {
+      "titre": "会议记录",
+      "aide": "会议结束后，参会的任何人（或管理员）都可以在这里粘贴会议记录的 Google 文档链接；其他人会在早间提醒中收到通知。",
+      "lien": "会议记录链接",
+      "placeholder": "https://docs.google.com/document/…",
+      "enregistrer": "保存链接",
+      "invalide": "请粘贴以 https:// 开头的完整链接",
+      "ajoutePar": "{{source}} · {{nom}} 于{{date}}添加",
+      "ouvrir": "打开",
+      "retirer": "移除会议记录链接",
+      "confirmRetirer": "确定移除会议记录链接吗？",
+      "erreur": "保存失败，请重试。"
+    },
+    "precedentes": {
+      "titre": "以往会议",
+      "compteRendu": "会议记录",
+      "sansCompteRendu": "无会议记录"
+    },
     "copierTaches_one": "是否同时复制它的 {{count}} 个任务（保持相同提前天数）？",
     "copierTaches_other": "是否同时复制它的 {{count}} 个任务（保持相同提前天数）？"
   },
@@ -1851,7 +1909,6 @@
     "title": "任务",
     "mesTaches": "我的任务",
     "aFairePourMoi": "我要做的",
-    "poles": "部门",
     "pole": {
       "da": "美工",
       "media": "媒体",
@@ -2217,6 +2274,21 @@
       "louange": "敬拜组",
       "edd": "主日学"
     },
+    "court": {
+      "orga": "统筹组",
+      "comite-franco": "法语堂委员会",
+      "da": "美工组",
+      "medias": "媒体组",
+      "developpement": "开发组",
+      "regie": "音控组",
+      "traduction": "翻译组",
+      "theologie": "神学组",
+      "evenementiel": "活动组",
+      "decoration": "布置组",
+      "accueil-j1": "迎新组",
+      "louange": "敬拜组",
+      "edd": "主日学"
+    },
     "soustitre": {
       "orga": "总协调",
       "comite-franco": "",
@@ -2281,5 +2353,203 @@
     },
     "matriceVide": "目前没有人在排班中。",
     "nom": "姓名"
+  },
+  "tableauDeBord": {
+    "widgets": {
+      "dimanche": "本主日",
+      "calendrier": "日历",
+      "afaire": "待办",
+      "setlists": "待准备的歌单",
+      "planning": "排班空缺",
+      "evenements": "近期活动",
+      "chants": "最常唱的诗歌",
+      "petitdej": "早餐",
+      "scene": "舞台",
+      "comptes": "账号",
+      "raccourcis": "快捷方式"
+    },
+    "aucunWidget": "仪表盘上没有小组件。",
+    "lectureImpossible": "暂时无法读取。",
+    "toutVoir": "查看全部",
+    "dimanche": {
+      "titre": "本主日 · {{date}}",
+      "rien": "本主日排班表上没有安排。",
+      "setlistPubliee": "歌单已发布",
+      "pasDeSetlist": "没有歌单",
+      "presentationPrete": "幻灯片已准备",
+      "casesVides_one": "{{count}} 个空缺",
+      "casesVides_other": "{{count}} 个空缺",
+      "personne": "无人"
+    },
+    "afaire": {
+      "enRetard": "{{count}} 项逾期",
+      "rien": "本周没有待办。"
+    },
+    "setlists": {
+      "aucune": "未准备",
+      "rien": "所有歌单都已准备好。"
+    },
+    "planning": {
+      "titre": "排班空缺",
+      "rien": "没有空缺。",
+      "aucun": "未选择排班表。"
+    },
+    "evenements": {
+      "places": "{{inscrits}}/{{max}} 人报名",
+      "sansLimite": "不限人数",
+      "fermees": "报名已截止",
+      "externe": "外部表单",
+      "rien": "近期没有活动。"
+    },
+    "petitdej": {
+      "libre": "空缺"
+    },
+    "scene": {
+      "titre": "舞台 · {{nom}}",
+      "aucunProgramme": "没有显示中的节目。",
+      "rien": "近期没有排练时段。"
+    },
+    "comptes": {
+      "sansCompte": "排班表中没有账号的名字",
+      "nouveaux": "本周新账号",
+      "voirListe": "查看名单",
+      "aucunSansCompte": "所有名字都有账号。",
+      "aucunNouveau": "本周没有新账号。",
+      "autres_one": "还有 {{count}} 人",
+      "autres_other": "还有 {{count}} 人"
+    },
+    "raccourcis": {
+      "tache": "任务",
+      "evenement": "活动",
+      "notifier": "通知",
+      "setlist": "歌单"
+    },
+    "perso": {
+      "personnaliser": "自定义",
+      "termine": "完成",
+      "parDefaut": "恢复默认布局",
+      "confirmParDefaut": "恢复你角色的默认布局？你的小组件、大小和设置都将被替换。",
+      "ajouter": "添加小组件",
+      "tousAffiches": "所有小组件都已显示。",
+      "outils": "“{{nom}}”工具",
+      "deplacer": "移动“{{nom}}”",
+      "monter": "上移",
+      "descendre": "下移",
+      "taille": "大小",
+      "reglages": "小组件设置",
+      "retirer": "移除小组件",
+      "erreurEcriture": "布局未保存：请检查网络连接后再试一次。",
+      "instructions": "移动小组件：按空格或回车拿起，用方向键移动，再按空格或回车放下，按 Esc 取消。",
+      "annonceSaisi": "已拿起“{{nom}}”，位置 {{position}} / {{total}}。",
+      "annonceDeplace": "“{{nom}}”位于 {{position}} / {{total}}。",
+      "annoncePose": "“{{nom}}”已放在 {{position}} / {{total}}。",
+      "annonceAnnule": "已取消移动“{{nom}}”。"
+    },
+    "reglages": {
+      "services": "服事",
+      "poles": "部门",
+      "plannings": "排班表",
+      "sur": "范围",
+      "afficher": "显示",
+      "section": "版块",
+      "toutes": "全部",
+      "programme": "节目",
+      "programmeAffiche": "当前显示的节目",
+      "liste": "列表",
+      "sansCompte": "无账号",
+      "nouveaux": "新账号",
+      "raccourcis": "快捷方式",
+      "semaines_other": "{{count}} 周",
+      "dimanches_other": "{{count}} 个主日"
+    }
+  },
+  "backOffice": {
+    "selecteur": {
+      "aria": "选择空间",
+      "app": "应用",
+      "backOffice": "后台"
+    },
+    "entrees": {
+      "tableau": "仪表盘",
+      "calendrier": "日历",
+      "planning": "排班表",
+      "taches": "任务",
+      "evenements": "活动",
+      "equipes": "团队",
+      "messages": "消息",
+      "statistiques": "统计"
+    },
+    "reserve": "仅限负责人。",
+    "seConnecter": "登录",
+    "bonjour": "{{jour}} · {{prenom}}，你好",
+    "sousParties": "子栏目",
+    "plannings": "排班表",
+    "planningReserve": "仅限该排班表的负责人。",
+    "adminReserve": "仅限管理员。",
+    "parties": {
+      "reception": "收件箱",
+      "notifier": "发送通知",
+      "questionnaire": "问卷",
+      "organigramme": "组织架构",
+      "personnes": "成员",
+      "inscriptions": "注册",
+      "import": "导入",
+      "plannings": "排班表",
+      "sansCompte": "无账号",
+      "evenements": "活动",
+      "reunions": "会议",
+      "scene": "舞台"
+    },
+    "gerer": "在后台管理",
+    "tachesDesPoles": "各部门的任务",
+    "sceneReserve": "仅限协调组。",
+    "aucunEvenement": "没有需要管理的活动。",
+    "aucuneReunion": "暂无会议。",
+    "nouvelleReunion": "新建会议",
+    "aVenir": "即将举行",
+    "reunionDePole": "部门会议 · {{pole}}",
+    "reunionDEquipe": "团队会议 · {{equipe}}",
+    "organiseePar": "组织者：{{nom}}",
+    "dupliquerProchaine": "复制为下一次",
+    "barre": {
+      "accueil": "首页",
+      "plus": "更多",
+      "personnaliser": "自定义底部栏",
+      "personnaliserAide": "选择底部的 4 个标签及其顺序",
+      "titre": "你的底部栏",
+      "aide": "选择 4 个标签并排好顺序（拖动手柄）。「更多」固定在最右边，可进入其余部分。",
+      "termine": "完成",
+      "apercu": "预览",
+      "parDefaut": "恢复默认底部栏",
+      "deplacer": "移动{{nom}}",
+      "instructions": "移动标签：按空格或回车拿起，用方向键移动，再按空格或回车放下，按 Esc 取消。",
+      "erreur": "底部栏未保存：请检查网络后重试。",
+      "indice": {
+        "tableau": "仪表盘",
+        "scene": "+ 舞台",
+        "admins": "管理员"
+      }
+    },
+    "plus": {
+      "revenir": "返回应用",
+      "revenirAide": "诗歌、歌单、排班表、我",
+      "contenu": {
+        "tableau": "你的小组件",
+        "calendrier": "服事、会议、活动",
+        "plannings": "排班表",
+        "import": "导入",
+        "sansCompte": "无账号",
+        "tesPoles": "你所在部门的任务",
+        "tousLesPoles": "所有部门的任务",
+        "fiches": "活动、报名、报名时间",
+        "scene": "舞台节目",
+        "organigramme": "组织架构、部门",
+        "personnes": "人员与权限",
+        "reception": "问题反馈、诗歌推荐",
+        "notifier": "发送通知",
+        "questionnaire": "问卷",
+        "statistiques": "最常唱的诗歌"
+      }
+    }
   }
 }

@@ -15,6 +15,7 @@ import { canEditPlanning, isAdminUser } from "@/lib/access"
 import { PLANNING_COLORS } from "@/lib/serviceColors"
 import type { EddDataStructure, EddPeriode, EddClasse } from "@/lib/planning/utils"
 import { BACK_OFFICE } from "@/lib/backOffice"
+import { useGestionPlanning } from "@/lib/planning/gestion"
 import { AncienTableau } from "./AncienTableau"
 
 // EDD : une grille par classe (中班, 大班, 高班), cinq cases par dimanche,
@@ -37,7 +38,8 @@ function EddPage() {
   }, [])
 
   const definition = GRILLES_EDD.find((g) => g.sousTitre === classe) ?? GRILLES_EDD[0]
-  const peutModifier = canEditPlanning(user, profile, definition.key)
+  const gestion = useGestionPlanning()
+  const peutModifier = gestion && canEditPlanning(user, profile, definition.key)
   const { datesDansLApp, comptes } = useGrilleApp(definition.key, peutModifier)
   // Lot U2 : `fetchEDD` range par période sans regarder l'année ; la page
   // reprend toutes les lignes de la classe et garde l'année choisie.

@@ -1006,8 +1006,6 @@
       "clear": "Effacer"
     },
     "grille": {
-      "modifier": "Modifier",
-      "termine": "Terminé",
       "enregistre": "Enregistré",
       "plusTot": "Voir plus tôt",
       "plusTard": "Voir plus tard",
@@ -1714,6 +1712,7 @@
     "dupliquer": "Dupliquer",
     "supprimer": "Supprimer",
     "confirmDelete": "Supprimer « {{titre}} » ? Les inscriptions seront perdues.",
+    "erreurSuppression": "Suppression impossible. Réessaie.",
     "reserved": "Cette page est réservée à la coordination et aux responsables de section.",
     "form": {
       "titre": "Nom de l'évènement",
@@ -1820,6 +1819,65 @@
       "titre": "Tâches",
       "vide": "Aucune tâche pour cet évènement."
     },
+    "sujets": {
+      "titre": "Sujets à aborder",
+      "titreApres": "Sujets",
+      "aide": "Chaque personne de la réunion peut en ajouter jusqu'au début",
+      "traites_one": "{{count}} traité sur {{total}}",
+      "traites_other": "{{count}} traités sur {{total}}",
+      "nouveau": "Nouveau sujet",
+      "placeholder": "Ajouter un sujet…",
+      "ajouter": "Ajouter",
+      "vide": "Aucun sujet pour l'instant.",
+      "commencee": "La réunion a commencé : on n'ajoute plus de sujet.",
+      "deplacer": "Déplacer « {{texte}} »",
+      "traite": "Traité : {{texte}}",
+      "retirer": "Retirer « {{texte}} »",
+      "confirmRetirer": "Retirer le sujet « {{texte}} » ?",
+      "nonTraite": "non traité",
+      "noteAvant": "Un sujet non traité reste en rouge ; à la création de la réunion suivante, on te propose de le reprendre.",
+      "noteRouge_one": "{{count}} sujet non traité : il restera en rouge tant qu'on ne l'a pas repris dans une prochaine réunion.",
+      "noteRouge_other": "{{count}} sujets non traités : ils resteront en rouge tant qu'on ne les a pas repris dans une prochaine réunion.",
+      "erreur": "Échec de l'enregistrement. Réessaie.",
+      "erreurLecture": "Les sujets n'ont pas pu être chargés.",
+      "instructions": "Pour déplacer un sujet : Espace ou Entrée pour le saisir, flèches haut et bas pour le déplacer, Espace ou Entrée pour le poser, Échap pour annuler.",
+      "annonceSaisi": "Sujet « {{texte}} » saisi, position {{position}} sur {{total}}.",
+      "annonceDeplace": "Sujet « {{texte}} » en position {{position}} sur {{total}}.",
+      "annoncePose": "Sujet « {{texte}} » posé en position {{position}} sur {{total}}.",
+      "annonceAnnule": "Déplacement annulé : « {{texte}} » reste à sa place.",
+      "reprisLe": "repris le {{date}}",
+      "reprisSansDate": "repris dans une autre réunion",
+      "reprisDu": "repris du {{date}}"
+    },
+    "reprise": {
+      "titre": "Reprendre les sujets non traités ?",
+      "uneReunion_one": "La réunion du {{date}} en a laissé {{count}} :",
+      "uneReunion_other": "La réunion du {{date}} en a laissé {{count}} :",
+      "plusieurs_one": "Les réunions précédentes en ont laissé {{count}} :",
+      "plusieurs_other": "Les réunions précédentes en ont laissé {{count}} :",
+      "non": "Non, les laisser",
+      "oui": "Oui, les reprendre",
+      "noteUne": "Sans reprise, ils restent en rouge dans l'ancienne réunion.",
+      "notePlusieurs": "Sans reprise, ils restent en rouge dans les anciennes réunions."
+    },
+    "compteRendu": {
+      "titre": "Compte rendu",
+      "aide": "Après la réunion, toute personne de la réunion (ou un admin) colle ici le lien du Google Doc du récap ; les autres sont prévenus dans le rappel du matin.",
+      "lien": "Lien du compte rendu",
+      "placeholder": "https://docs.google.com/document/…",
+      "enregistrer": "Enregistrer le lien",
+      "invalide": "Colle un lien complet, qui commence par https://",
+      "ajoutePar": "{{source}} · ajouté par {{nom}} le {{date}}",
+      "ouvrir": "Ouvrir",
+      "retirer": "Retirer le lien du compte rendu",
+      "confirmRetirer": "Retirer le lien du compte rendu ?",
+      "erreur": "Échec de l'enregistrement. Réessaie."
+    },
+    "precedentes": {
+      "titre": "Réunions précédentes",
+      "compteRendu": "Compte rendu",
+      "sansCompteRendu": "pas de compte rendu"
+    },
     "copierTaches_one": "Copier aussi sa tâche, au même délai ?",
     "copierTaches_other": "Copier aussi ses {{count}} tâches, aux mêmes délais ?"
   },
@@ -1851,7 +1909,6 @@
     "title": "Tâches",
     "mesTaches": "Mes tâches",
     "aFairePourMoi": "À faire pour moi",
-    "poles": "Pôles",
     "pole": {
       "da": "DA",
       "media": "Média",
@@ -2220,6 +2277,21 @@
       "louange": "TEAM LOUANGE",
       "edd": "TEAM EDD"
     },
+    "court": {
+      "orga": "Orga",
+      "comite-franco": "Comité franco",
+      "da": "DA",
+      "medias": "Médias",
+      "developpement": "Développement",
+      "regie": "Régie",
+      "traduction": "Traduction",
+      "theologie": "Théologie",
+      "evenementiel": "Événementiel",
+      "decoration": "Décoration",
+      "accueil-j1": "Accueil J1",
+      "louange": "Louange",
+      "edd": "EDD"
+    },
     "soustitre": {
       "orga": "Coordination générale",
       "comite-franco": "",
@@ -2284,5 +2356,205 @@
     },
     "matriceVide": "Personne ne sert au planning pour l'instant.",
     "nom": "Nom"
+  },
+  "tableauDeBord": {
+    "widgets": {
+      "dimanche": "Ce dimanche",
+      "calendrier": "Calendrier",
+      "afaire": "À faire",
+      "setlists": "Setlists à préparer",
+      "planning": "Cases vides du planning",
+      "evenements": "Prochains évènements",
+      "chants": "Chants les plus joués",
+      "petitdej": "Petit déj",
+      "scene": "Scène",
+      "comptes": "Comptes",
+      "raccourcis": "Raccourcis"
+    },
+    "aucunWidget": "Aucun widget sur ton tableau de bord.",
+    "lectureImpossible": "Lecture impossible pour l'instant.",
+    "toutVoir": "Tout voir",
+    "dimanche": {
+      "titre": "Ce dimanche · {{date}}",
+      "rien": "Rien au planning ce dimanche.",
+      "setlistPubliee": "Setlist publiée",
+      "pasDeSetlist": "Pas de setlist",
+      "presentationPrete": "Présentation prête",
+      "casesVides_one": "{{count}} case vide",
+      "casesVides_other": "{{count}} cases vides",
+      "personne": "Personne"
+    },
+    "afaire": {
+      "enRetard": "{{count}} en retard",
+      "rien": "Rien à faire cette semaine."
+    },
+    "setlists": {
+      "aucune": "aucune",
+      "rien": "Toutes les setlists sont prêtes."
+    },
+    "planning": {
+      "titre": "Cases vides",
+      "rien": "Aucune case vide.",
+      "aucun": "Aucun planning choisi."
+    },
+    "evenements": {
+      "places": "{{inscrits}} inscrits sur {{max}}",
+      "sansLimite": "sans limite",
+      "fermees": "inscriptions fermées",
+      "externe": "formulaire externe",
+      "rien": "Aucun évènement à venir."
+    },
+    "petitdej": {
+      "libre": "Libre"
+    },
+    "scene": {
+      "titre": "Scène · {{nom}}",
+      "aucunProgramme": "Aucun programme affiché.",
+      "rien": "Aucun créneau à venir."
+    },
+    "comptes": {
+      "sansCompte": "Noms du planning sans compte",
+      "nouveaux": "Nouveaux comptes cette semaine",
+      "voirListe": "Voir la liste",
+      "aucunSansCompte": "Tous les noms ont un compte.",
+      "aucunNouveau": "Aucun nouveau compte cette semaine.",
+      "autres_one": "et {{count}} autre",
+      "autres_other": "et {{count}} autres"
+    },
+    "raccourcis": {
+      "tache": "Tâche",
+      "evenement": "Évènement",
+      "notifier": "Notifier",
+      "setlist": "Setlist"
+    },
+    "perso": {
+      "personnaliser": "Personnaliser",
+      "termine": "Terminé",
+      "parDefaut": "Disposition par défaut",
+      "confirmParDefaut": "Remettre la disposition par défaut de ton rôle ? Tes widgets, leurs tailles et leurs réglages seront remplacés.",
+      "ajouter": "Ajouter un widget",
+      "tousAffiches": "Tous les widgets sont déjà affichés.",
+      "outils": "Outils de « {{nom}} »",
+      "deplacer": "Déplacer « {{nom}} »",
+      "monter": "Monter",
+      "descendre": "Descendre",
+      "taille": "Taille",
+      "reglages": "Réglages du widget",
+      "retirer": "Retirer le widget",
+      "erreurEcriture": "Disposition non enregistrée : vérifie ta connexion, puis refais le geste.",
+      "instructions": "Pour déplacer un widget : Espace ou Entrée pour le saisir, les flèches pour le déplacer, Espace ou Entrée pour le poser, Échap pour annuler.",
+      "annonceSaisi": "« {{nom}} » saisi, en position {{position}} sur {{total}}.",
+      "annonceDeplace": "« {{nom}} » en position {{position}} sur {{total}}.",
+      "annoncePose": "« {{nom}} » posé en position {{position}} sur {{total}}.",
+      "annonceAnnule": "Déplacement de « {{nom}} » annulé."
+    },
+    "reglages": {
+      "services": "Services",
+      "poles": "Pôles",
+      "plannings": "Plannings",
+      "sur": "Sur",
+      "afficher": "Afficher",
+      "section": "Section",
+      "toutes": "Toutes",
+      "programme": "Programme",
+      "programmeAffiche": "Celui qui est affiché",
+      "liste": "Liste",
+      "sansCompte": "Sans compte",
+      "nouveaux": "Nouveaux comptes",
+      "raccourcis": "Raccourcis",
+      "semaines_one": "{{count}} semaine",
+      "semaines_other": "{{count}} semaines",
+      "dimanches_one": "{{count}} dimanche",
+      "dimanches_other": "{{count}} dimanches"
+    }
+  },
+  "backOffice": {
+    "selecteur": {
+      "aria": "Choisir l'espace",
+      "app": "App",
+      "backOffice": "Back-Office"
+    },
+    "entrees": {
+      "tableau": "Tableau de bord",
+      "calendrier": "Calendrier",
+      "planning": "Planning",
+      "taches": "Tâches",
+      "evenements": "Évènements",
+      "equipes": "Équipes",
+      "messages": "Messages",
+      "statistiques": "Statistiques"
+    },
+    "reserve": "Réservé aux responsables.",
+    "seConnecter": "Se connecter",
+    "bonjour": "{{jour}} · bonjour {{prenom}}",
+    "sousParties": "Sous-parties",
+    "plannings": "Plannings",
+    "planningReserve": "Page réservée aux responsables de ce planning.",
+    "adminReserve": "Page réservée aux administrateurs.",
+    "parties": {
+      "reception": "Réception",
+      "notifier": "Notifier",
+      "questionnaire": "Questionnaire",
+      "organigramme": "Organigramme",
+      "personnes": "Personnes",
+      "inscriptions": "Inscriptions",
+      "import": "Import",
+      "plannings": "Plannings",
+      "sansCompte": "Sans compte",
+      "evenements": "Évènements",
+      "reunions": "Réunions",
+      "scene": "Scène"
+    },
+    "gerer": "Gérer dans le Back-Office",
+    "tachesDesPoles": "Les tâches des pôles",
+    "sceneReserve": "Réservé à la coordination.",
+    "aucunEvenement": "Aucun évènement à gérer.",
+    "aucuneReunion": "Aucune réunion.",
+    "nouvelleReunion": "Nouvelle réunion",
+    "aVenir": "À venir",
+    "reunionDePole": "Réunion de pôle · {{pole}}",
+    "reunionDEquipe": "Réunion d'équipe · {{equipe}}",
+    "organiseePar": "organisée par {{nom}}",
+    "dupliquerProchaine": "Dupliquer pour la prochaine",
+    "barre": {
+      "accueil": "Accueil",
+      "plus": "Plus",
+      "personnaliser": "Personnaliser la barre",
+      "personnaliserAide": "Choisis les 4 onglets du bas et leur ordre",
+      "titre": "Ta barre du bas",
+      "aide": "Choisis 4 onglets et leur ordre (glisse les poignées). « Plus » reste à droite et donne accès au reste.",
+      "termine": "Terminé",
+      "apercu": "Aperçu",
+      "parDefaut": "Remettre la barre par défaut",
+      "deplacer": "Déplacer {{nom}}",
+      "instructions": "Pour déplacer un onglet : Espace ou Entrée pour le saisir, les flèches pour le déplacer, Espace ou Entrée pour le poser, Échap pour annuler.",
+      "erreur": "Barre non enregistrée : vérifie ta connexion, puis recommence.",
+      "indice": {
+        "tableau": "tableau de bord",
+        "scene": "+ scène",
+        "admins": "admins"
+      }
+    },
+    "plus": {
+      "revenir": "Revenir à l'app",
+      "revenirAide": "Chants, setlists, planning, moi",
+      "contenu": {
+        "tableau": "tes widgets",
+        "calendrier": "services, réunions, évènements",
+        "plannings": "plannings",
+        "import": "import",
+        "sansCompte": "sans compte",
+        "tesPoles": "tâches de tes pôles",
+        "tousLesPoles": "tâches de tous les pôles",
+        "fiches": "fiches, inscrits, période",
+        "scene": "programmes de scène",
+        "organigramme": "organigramme, pôles",
+        "personnes": "personnes et droits",
+        "reception": "signalements, propositions de chants",
+        "notifier": "notifier",
+        "questionnaire": "questionnaire",
+        "statistiques": "chants les plus joués"
+      }
+    }
   }
 }
