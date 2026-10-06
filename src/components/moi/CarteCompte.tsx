@@ -35,7 +35,10 @@ export function CarteCompte({
   planningName: string;
   serviceRoles: Record<string, ServiceRole[]>;
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  // En 中文, le service et ses rôles traduits (comme l'aperçu d'une setlist) ; en français, les
+  // libellés du formulaire du profil.
+  const zh = i18n.language === "zh-CN";
   const services = servicesEtRoles(serviceRoles);
   const initiale = (nom || email).trim().charAt(0).toUpperCase();
 
@@ -76,8 +79,9 @@ export function CarteCompte({
                   className="rounded-md px-2 py-0.5 text-[13px] font-semibold"
                   style={{ color: couleur, background: `${couleur}1f` }}
                 >
-                  {categoryLabel(service)}
-                  {roles.length > 0 && ` · ${roles.map((r) => SERVICE_ROLE_LABELS[r]).join(", ")}`}
+                  {zh ? t(`categories.${service}`, { defaultValue: service }) : categoryLabel(service)}
+                  {roles.length > 0 &&
+                    ` · ${roles.map((r) => (zh ? t(`equipes.role.${r === "chanteur" ? "choriste" : r}`) : SERVICE_ROLE_LABELS[r])).join(", ")}`}
                 </li>
               );
             })}
