@@ -236,7 +236,7 @@ test.describe("B2 : anciennes adresses et menus", () => {
 
   test("Moi n'a plus Notifier ni Administration", async ({ page }) => {
     await ouvrir(page, ADMIN, "/moi");
-    await expect(page.getByRole("link", { name: "Mon profil" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Mon profil" }).first()).toBeVisible();
     await expect(page.getByRole("link", { name: "Notifier" })).toHaveCount(0);
     await expect(page.getByRole("link", { name: "Admin" })).toHaveCount(0);
   });

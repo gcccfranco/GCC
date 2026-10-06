@@ -864,9 +864,11 @@ test("préférence « Petit déj » : un type de notification, active par défau
   expect(NOTIF_TYPE_LABELS.petitDej).toBe("Petit déj");
 });
 
-test("Mon profil › Notifications : la bascule « Petit déj » est active par défaut ; l'éteindre écrit notifPrefs/{uid}.petitDej = false", async ({ page }) => {
+// Les réglages des notifications sont dans Moi › Réglages depuis U4 bis, B5 (plus dans le profil).
+test("Moi › Réglages › Notifications : la bascule « Petit déj » est active par défaut ; l'éteindre écrit notifPrefs/{uid}.petitDej = false", async ({ page }) => {
   await abonneAuxNotifications(page);
-  const db = await signInAs(page, CHARLIE, {}, "/profil");
+  const db = await signInAs(page, CHARLIE, {}, "/moi");
+  await page.getByRole("region", { name: "Réglages" }).getByRole("button", { name: /Notifications/ }).click();
   await expect(page.getByText("Recevoir", { exact: true })).toBeVisible();
   const bascule = page.getByRole("switch", { name: "Petit déj" });
   await expect(bascule, "aucun document notifPrefs : actif par défaut").toBeChecked();
@@ -881,10 +883,11 @@ test("Mon profil › Notifications : la bascule « Petit déj » est active par 
   });
 });
 
-test("Mon profil › Notifications en 中文 : la liste « Recevoir » est traduite ; une préférence éteinte le reste", async ({ page }) => {
+test("Moi › Réglages › Notifications en 中文 : la liste « Recevoir » est traduite ; une préférence éteinte le reste", async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
   await abonneAuxNotifications(page);
-  await signInAs(page, CHARLIE, { [`notifPrefs/${CHARLIE.uid}`]: { petitDej: false } }, "/profil");
+  await signInAs(page, CHARLIE, { [`notifPrefs/${CHARLIE.uid}`]: { petitDej: false } }, "/moi");
+  await page.getByRole("region", { name: "设置" }).getByRole("button", { name: /通知/ }).click();
   await expect(page.getByText("接收", { exact: true })).toBeVisible();
   for (const nom of ["服侍提醒", "歌单已准备好", "活动", "任务"]) {
     await expect(page.getByRole("switch", { name: nom }), nom).toBeChecked();

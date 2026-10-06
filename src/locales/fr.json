@@ -116,7 +116,8 @@
   },
   "login": {
     "title": "GCC Louange",
-    "subtitle": "Connexion présidents de séance",
+    "heading": "Connexion",
+    "reserve": "Réservé aux membres de l'église",
     "emailLabel": "Email",
     "passwordLabel": "Mot de passe",
     "emailPlaceholder": "email@example.com",
@@ -700,7 +701,7 @@
         "title": "Notifications et rappels",
         "body": "La **cloche** en haut affiche les nouveautés. Sur mobile, tu peux aussi recevoir des **notifications push**, même site fermé.",
         "points": [
-          "Active-les depuis ton **profil**, avec l'interrupteur Notifications.",
+          "Active-les depuis **Moi › Réglages**, avec la ligne Notifications.",
           "Quatre types, activables séparément : **Rappels de service** (à J-7, J-3 et J-1, plus les répétitions Campus), **Setlist prête**, **Évènements** et **Tâches**.",
           "Sur iPhone, installe d'abord le site sur l'écran d'accueil (PWA) pour activer le push."
         ],
@@ -1900,7 +1901,12 @@
     "theme": "Thème",
     "light": "Clair",
     "dark": "Sombre",
-    "french": "Français"
+    "french": "Français",
+    "compte": "Mon compte",
+    "admin": "Admin",
+    "notifications": "Notifications",
+    "activees": "Activées",
+    "desactivees": "Désactivées"
   },
   "pdf": {
     "choice": {

@@ -333,10 +333,12 @@ test.describe("back-office coupé : le petit déj vient encore du Sheet", () => 
     await expect(dimanche.getByText("早餐", { exact: true })).toBeVisible();
   });
 
-  // PD4 : coupé, ni ligne du mercredi (cron) ni bascule « Petit déj » dans Mon profil.
-  test("Mon profil › Notifications : pas de bascule « Petit déj » (PD4)", async ({ page }) => {
+  // PD4 : coupé, ni ligne du mercredi (cron) ni bascule « Petit déj » dans les réglages des
+  // notifications (Moi › Réglages depuis U4 bis, B5).
+  test("Moi › Réglages › Notifications : pas de bascule « Petit déj » (PD4)", async ({ page }) => {
     await abonneAuxNotifications(page);
-    await signInAs(page, CHARLIE, {}, "/profil");
+    await signInAs(page, CHARLIE, {}, "/moi");
+    await page.getByRole("region", { name: "Réglages" }).getByRole("button", { name: /Notifications/ }).click();
     await expect(page.getByRole("switch", { name: "Rappels de service" })).toBeChecked();
     await expect(page.getByRole("switch", { name: "Petit déj" })).toHaveCount(0);
   });

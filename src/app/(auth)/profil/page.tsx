@@ -12,14 +12,16 @@ import {
   type PlanningData,
 } from "@/lib/planning/names";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
-  ProfileFields,
+  IdentityFields,
+  PlanningNameField,
+  ServiceGrid,
   EMPTY_PROFILE_FORM,
   type ProfileFormValue,
 } from "@/components/auth/ProfileFields";
-import { PushToggle } from "@/components/push/PushToggle";
+import { PageTitle } from "@/components/layout/PageTitle";
+import { cn } from "@/lib/utils";
 
 export default function ProfilPage() {
   const { t } = useTranslation();
@@ -102,62 +104,68 @@ export default function ProfilPage() {
     ? (name: string) => deriveServiceRolesFromPlanning(planningData, name)
     : undefined;
 
+  // Q10 (lot U4 bis, B5) : deux colonnes dès la tablette portrait — identité et « Enregistrer » à
+  // gauche, services et rôles à droite ; une sur téléphone, « Enregistrer » en bas. Plus de carte
+  // Notifications : elle est dans Moi › Réglages.
   return (
-    <div className="min-h-screen bg-background px-4 py-10">
-      <div className="w-full max-w-lg mx-auto">
-        <div className="mb-6 text-center">
-          <h1 className="text-xl font-bold text-foreground">{t("profile.title")}</h1>
-          <p className="text-sm text-muted-foreground mt-1">{user.email}</p>
-        </div>
+    <div className="mx-auto max-w-[var(--largeur-lecture)] px-4 pb-10 pt-6 md:px-6">
+      <PageTitle title={t("profile.title")} subtitle={user.email} />
 
-        {!profile && (
-          <Alert className="mb-5 border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-400">
-            <AlertDescription className="text-inherit">
-              {t("profile.welcome")}
-            </AlertDescription>
-          </Alert>
-        )}
+      {!profile && (
+        <Alert className="mb-5 border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-400">
+          <AlertDescription className="text-inherit">
+            {t("profile.welcome")}
+          </AlertDescription>
+        </Alert>
+      )}
 
-        {!canEdit && (
-          <Alert className="mb-5">
-            <AlertDescription>{t("profile.locked")}</AlertDescription>
-          </Alert>
-        )}
+      {!canEdit && (
+        <Alert className="mb-5">
+          <AlertDescription>{t("profile.locked")}</AlertDescription>
+        </Alert>
+      )}
 
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <Card>
-            <CardContent className="p-5">
-              <fieldset disabled={!canEdit} className={!canEdit ? "opacity-60" : undefined}>
-                <ProfileFields
-                  value={form}
-                  onChange={setForm}
-                  planningNames={planningNames}
-                  deriveFromPlanning={deriveFromPlanning}
-                />
-              </fieldset>
-            </CardContent>
-          </Card>
+      <form
+        onSubmit={handleSubmit}
+        className="grid items-start gap-4 md:grid-cols-2 md:grid-rows-[auto_1fr] lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]"
+      >
+        <fieldset
+          disabled={!canEdit}
+          aria-label={t("signup.steps.identity")}
+          className={cn("raised min-w-0 space-y-6 rounded-2xl p-5", !canEdit && "opacity-60")}
+        >
+          <IdentityFields value={form} onChange={setForm} />
+          <PlanningNameField
+            value={form}
+            onChange={setForm}
+            planningNames={planningNames}
+            deriveFromPlanning={deriveFromPlanning}
+          />
+        </fieldset>
 
-          {error && (
-            <Alert variant="destructive">
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
+        <fieldset
+          disabled={!canEdit}
+          aria-label={t("profile.fields.accessTitle")}
+          className={cn("raised min-w-0 rounded-2xl p-5 md:col-start-2 md:row-span-2 md:row-start-1", !canEdit && "opacity-60")}
+        >
+          <ServiceGrid value={form} onChange={setForm} deriveFromPlanning={deriveFromPlanning} />
+        </fieldset>
 
-          {canEdit && (
-            <Button type="submit" disabled={saving} className="w-full h-11">
-              {saving ? t("profile.saving") : t("profile.save")}
-            </Button>
-          )}
-        </form>
-
-        {/* Notifications push — disponible une fois le profil créé */}
-        {profile && (
-          <div className="mt-5">
-            <PushToggle />
+        {(error || canEdit) && (
+          <div className="space-y-4 md:col-start-1 md:row-start-2">
+            {error && (
+              <Alert variant="destructive">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+            {canEdit && (
+              <Button type="submit" disabled={saving} className="w-full h-11">
+                {saving ? t("profile.saving") : t("profile.save")}
+              </Button>
+            )}
           </div>
         )}
-      </div>
+      </form>
     </div>
   );
 }

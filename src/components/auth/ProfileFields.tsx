@@ -146,7 +146,7 @@ export function ServiceGrid({
   };
 
   return (
-    <div className="space-y-5">
+    <div className="grille-services space-y-5">
       <div className="flex items-start justify-between gap-3">
         <div>
           <Label className="block">{t("profile.fields.accessTitle")}</Label>
@@ -168,7 +168,8 @@ export function ServiceGrid({
           <p className="text-xs font-medium text-muted-foreground mb-2">
             {t(g.titleKey)}
           </p>
-          <div className="space-y-1.5">
+          {/* Deux colonnes quand la carte en a la place (lot U4 bis, B5 : profil et inscription en grand). */}
+          <div className="grille-services-cartes grid gap-1.5">
             {g.cats.map((cat) => {
               const active = cat in sr;
               const color = categoryColor(cat);
