@@ -157,7 +157,7 @@ test("retirer une date de la grille : la fenêtre du site ; Annuler la garde ; R
   const db = await ouvrir(page, qui, "/back-office/planning/interfranco", {
     "plannings/interfranco/dimanches/2027-01-17": { date: "2027-01-17", presidence: "Président I." },
   }, "2026-11-15T10:00:00");
-  await page.getByRole("button", { name: "2027", exact: true }).click();
+  await page.getByRole("tab", { name: "2027", exact: true }).click();
   const retirer = page.getByRole("button", { name: "Retirer ce dimanche" }).filter({ visible: true });
   await retirer.click();
   await expect(fenetreDuSite(page).getByRole("heading", { name: /^Retirer le .*17 janvier 2027 \?$/ })).toBeVisible();
@@ -205,7 +205,7 @@ test("publier un trimestre : la fenêtre du site ; Annuler n'appelle rien ; Publ
     db.set("planningReleases/paix_2027", { published });
     await route.fulfill({ json: { ok: true, published, notified: body.publish, sent: 0 } });
   });
-  await page.getByRole("button", { name: "2027", exact: true }).click();
+  await page.getByRole("tab", { name: "2027", exact: true }).click();
   const publier = page.getByRole("button", { name: "Publier le T1" });
   await publier.click();
   await expect(fenetreDuSite(page).getByRole("heading", { name: /^Publier le T1 2027 de .+ \?$/ })).toBeVisible();

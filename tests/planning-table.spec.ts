@@ -60,7 +60,7 @@ const laCase = (page: Page, date: string, colonne: string) =>
 // Lot U6, B2 (Q14) : la grille Table est au Back-Office ; l'App montre les cartes.
 test("la grille Table : l'équipe lue dans le Sheet, le petit déj dans les inscriptions", async ({ page }) => {
   await open(page, RESPONSABLE, "/back-office/planning/table", PETIT_DEJ);
-  await expect(page.getByTestId("grille-bandeau")).toContainText("Prépa. Table du Seigneur");
+  await expect(page.locator("header[data-entete-page]"), "le sous-titre de l'en-tête (agencement v18)").toContainText("Prépa. Table du Seigneur");
   await expect(laCase(page, "2026-09-20", "equipe")).toContainText("Charlie, Isabelle");
   await expect(laCase(page, "2026-09-27", "equipe")).toContainText("Lydie, Samuel");
   await expect(laCase(page, "2026-09-27", "petitDej"), "les lignes jointes, dans l'ordre d'inscription").toContainText(
@@ -113,7 +113,7 @@ test("« Choisir » une équipe ne propose pas les lignes du petit déj", async 
       creeLe: "2026-09-09T08:00:00.000Z", modifieLe: "2026-09-09T08:00:00.000Z",
     },
   });
-  await page.getByRole("button", { name: "T4", exact: true }).click();
+  await page.getByRole("tab", { name: "T4", exact: true }).click();
   await expect(laCase(page, "2026-10-04", "petitDej")).toContainText("Famille Martin");
   await laCase(page, "2026-10-04", "equipe").getByRole("button").click();
   const menu = page.getByRole("dialog", { name: /Équipe/ });

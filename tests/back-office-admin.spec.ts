@@ -198,14 +198,14 @@ test.describe("B2 : Planning (plannings, Sans compte)", () => {
     await expect(page).toHaveURL(/\/back-office\/planning\/groupes\/?$/);
     await expect(plannings(page).getByRole("link")).toHaveText(["Groupes"]);
     // Le trimestre suivant, pas encore publié (cadenas) : « Publier le T4 ».
-    await page.getByRole("button", { name: /^T4/ }).click();
+    await page.getByRole("tab", { name: /^T4/ }).click();
     await expect(page.getByRole("button", { name: "Publier le T4" })).toBeVisible();
   });
 
   test("dans l'App, qui publie ne trouve ni « Publier le T… » ni export", async ({ page }) => {
     await ouvrir(page, NOTIFY, "/planning/groupes");
     await expect(page.locator('[data-grille]')).toBeVisible();
-    await expect(page.getByRole("button", { name: /^T4/ }), "le brouillon ne se montre qu'au Back-Office").toHaveCount(0);
+    await expect(page.getByRole("tab", { name: /^T4/ }), "le brouillon ne se montre qu'au Back-Office").toHaveCount(0);
     await expect(page.getByRole("button", { name: /^(Publier|Masquer) le T\d/ })).toHaveCount(0);
     await expect(page.getByRole("button", { name: /Exporter/ })).toHaveCount(0);
   });

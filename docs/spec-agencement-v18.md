@@ -529,3 +529,52 @@ la barre d'onglets : une page sans barre du bas (rare) le verra plus haut que n�
   empilés sur téléphone, au-dessus de la feuille du formulaire de tâche).
 - **Reste** : rien pour F2. Les tranches de pages (T1 à T11) peuvent partir.
 - **Timothée** : rien à publier (aucune règle, aucune donnée) ; relire les six libellés 中文 ci-dessus.
+
+### V18T4 — Planning (T4a)
+
+- 06/10/2026 (fini le 07/10) : **T4a faite** (branche `lot/v18-t4`, commit `feat(V18T4): T4a — …`) : B6, B7, A2, A3.
+  - **En-tête commun** : App, `PlanningTabs` pose `EnTetePage` « Planning » (sous-titre « Qui sert quand, dans tous
+    les plannings de l'église ») au-dessus de toute la section ; en grand, les huit plannings en `Pilules` (liens,
+    l'actif à la couleur de son service) dans sa rangée `apres` ; sur téléphone et tablette portrait, la barre
+    collante de V7 (`SectionTabs`, feuille en tuiles) reste, posée sous le titre (R6). L'accueil perd son
+    `PageTitle` (un seul h1). Back-Office : `EnTetePage` « Planning », rail Plannings · Sans compte (admins) ; la
+    page ouverte écrit son sous-titre (« Culte Franco · Dimanche 10:30 · n cases vides ce trimestre »,
+    `colonnesVides`) et ses outils (« Exporter » en contour, « Enregistré », « Chargement… ») dans l'en-tête par
+    un portail (`EmplacementsEnTete`, `DansLEnTete`).
+  - **Rangée de la grille** (`components/planning/BarreDeGrille.tsx`, nouveau), la même pour toutes les pages
+    (Culte, Table, Groupes, EDD, Campus, Intergroupe, Interfranco) : App = pastille + h2 22 px du service +
+    « Dimanche 10:30 · 4e trimestre 2026 » ; Back-Office = les plannings de la personne en pilules (`compact`,
+    l'actif à la couleur du service ; en grand une seule rangée, les pilules défilent et s'estompent si elles
+    ne tiennent pas) ; puis à droite vues, période et filtres. **Période unique** : `AnneeSelecteur` devient un
+    `OngletsRail`, T1–T4 aussi (cadenas sur un trimestre non publié) ; EDD : classe et période en rail ; Campus :
+    Louange · Répétition · Grille en rail. **Groupes** : Paix · Fidélité · Bonté en rail à pastille, Fidélité ›
+    Groupe · Musiciens en pilules. « Mon prénom ✕ » et « Mes dates » sortent de la grille (`useFiltreNom`,
+    `FiltreDeNom`) ; au Back-Office, « Mes dates » seul (le nom vient du profil ou de l'appareil).
+  - **Grille de l'App** (A2) : carte en relief, en-tête gris, la couleur du service sur les dates seulement, son
+    nom en encre ; au Back-Office, l'en-tête de couleur de la planche. Plus de bandeau `grille-bandeau`.
+  - **Halo** : au Back-Office, un planning ouvert prend la couleur de son service (R12) ; Sans compte garde le
+    bleu gris.
+  - `Pilules` (F1) gagne `href` (pilules-liens, `aria-current`) et `compact` ; `SectionTabs` gagne `className`,
+    et mesure où la barre est vraiment posée (`--barre-top`, hors translation) : au repos sous le titre, la copie
+    du halo de son fond faisait une bande ; elle ne s'efface au défilement qu'une fois collée (sinon elle
+    remontait sur le titre). Campus : un seul « Exporter » (celui du matin, ou du soir pour qui n'a que le soir),
+    la page exportée mêlant les deux.
+- **Tests** : `tests/agencement-v18-planning.spec.ts` (14 tests × 5 projets, captures comprises), rouges avant le code
+  (aucun `barre-grille`, aucun rail ni h1 « Planning » dans le Planning d'avant), puis verts. Réécrits pour les
+  rails (bouton → onglet, `grille-bandeau` → `barre-grille`, rangée de l'en-tête en grand) :
+  `planning-2027`, `planning-campus`, `planning-edd`, `planning-export-modele`, `planning-grille`,
+  `planning-groupes-grille`, `planning-table`, `back-office-admin`, `agencement-v18-confirmations`,
+  `look-navigation`, `look-planning-feuille` ; `look-barres` (Planning : barre posée sous le titre, comparée
+  collée ; sautée en grand, où elle n'existe plus ; vue rouge sur la bande du halo avant la mesure de
+  `--barre-top`), `agencement-barre-reduite` (accueil : 40 px de marge, R2). Voisines vertes le 07/10 :
+  27 fichiers (planning-*, look-*, back-office-*, agencement-*, halo, navigation, coherence) et
+  `back-office-coupe` + `pages-en-grand-accueil` sur le second serveur. Captures regardées aux cinq tailles
+  (BO Culte, App Culte, Groupes).
+- **Écarts à la planche** : la période est en deux rails (année, T1–T4, B7) et non « ‹ T4 2026 › » ; les pilules
+  des plannings de l'App ont l'actif à la couleur du service (R4), la planche le dessine en encre. Les pages
+  « comme en ligne » (`AncienTableau`, interrupteur coupé) ne changent pas : elles gardent leur h2 et leurs
+  boutons sous le nouvel en-tête « Planning ».
+- **Reste** : T4b (accueil A1 : rangée Groupes · EDD · Table barre réduite ; Prépa. Table A4 en deux colonnes).
+  `FilterButtons` n'a plus d'appel que dans les `AncienTableau` (tranche Z).
+- **Timothée** : rien à publier (aucune règle, aucune donnée) ; relire le 中文 de `planning.barre.*`
+  (教会所有服侍表：谁在何时服侍, 季度, 时段, 班级, 视图, « 2026年第四季度 », « 本季度 n 个空缺 »…).

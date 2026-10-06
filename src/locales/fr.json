@@ -1146,6 +1146,20 @@
       "echec": "Enregistrement impossible, réessaie.",
       "tonNom": "Ton nom"
     },
+    "barre": {
+      "sousTitre": "Qui sert quand, dans tous les plannings de l'église",
+      "trimestre": "Trimestre",
+      "periode": "Période",
+      "classe": "Classe",
+      "vue": "Vue",
+      "trimestres": { "T1": "1er trimestre {{annee}}", "T2": "2e trimestre {{annee}}", "T3": "3e trimestre {{annee}}", "T4": "4e trimestre {{annee}}" },
+      "casesVidesTrimestre_one": "{{count}} case vide ce trimestre",
+      "casesVidesTrimestre_other": "{{count}} cases vides ce trimestre",
+      "casesVidesPeriode_one": "{{count}} case vide sur la période",
+      "casesVidesPeriode_other": "{{count}} cases vides sur la période",
+      "casesVidesAnnee_one": "{{count}} case vide cette année",
+      "casesVidesAnnee_other": "{{count}} cases vides cette année"
+    },
     "horaires": {
       "culte": "Dimanche 10:30",
       "groupes": "Dimanche de 13:00 à 14:30",

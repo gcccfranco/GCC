@@ -278,7 +278,7 @@ const estA4 = (p: { largeur: number; hauteur: number }, sens: keyof typeof A4) =
 
 test("P7 · « Exporter (modèle du Sheet) » : l'écrivain, le publieur, l'admin ; pas un membre", async ({ page, browser }) => {
   await ouvrir(page, ECRIVAIN);
-  await page.getByRole("button", { name: "2027", exact: true }).click();
+  await page.getByRole("tab", { name: "2027", exact: true }).click();
   await boutonExporter(page).click();
   const fenetre = page.getByRole("dialog", { name: "Exporter" });
   await expect(fenetre.getByRole("radio")).toHaveText(["T1 2027 · Groupe Paix", "Toute l'année · Groupe Paix"]);
@@ -290,7 +290,7 @@ test("P7 · « Exporter (modèle du Sheet) » : l'écrivain, le publieur, l'admi
   for (const [qui, voit, tout] of [[PUBLIEUR, true, false], [ADMIN, true, true], [MEMBRE, false, false]] as const) {
     const autre = await browser.newPage();
     await ouvrir(autre, qui);
-    await expect(autre.getByTestId("grille-bandeau")).toContainText("Paix");
+    await expect(autre.getByRole("tab", { name: "Paix", exact: true })).toHaveAttribute("aria-selected", "true");
     await expect(boutonExporter(autre), qui.email).toHaveCount(voit ? 1 : 0);
     if (voit) {
       await boutonExporter(autre).click();
@@ -302,7 +302,7 @@ test("P7 · « Exporter (modèle du Sheet) » : l'écrivain, le publieur, l'admi
 
 test("P7 · les deux boutons du lot 17 ont disparu (CSV et ancien PDF)", async ({ page }) => {
   await ouvrir(page, ADMIN);
-  await expect(page.getByTestId("grille-bandeau")).toContainText("Paix");
+  await expect(page.getByRole("tab", { name: "Paix", exact: true })).toHaveAttribute("aria-selected", "true");
   await expect(boutonExporter(page)).toBeVisible();
   await expect(page.getByRole("button", { name: "Exporter en CSV" })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Exporter en PDF" })).toHaveCount(0);
@@ -310,18 +310,18 @@ test("P7 · les deux boutons du lot 17 ont disparu (CSV et ancien PDF)", async (
 
 test("P7 · le brouillon d'un planning qu'on ne tient pas n'entre dans aucun fichier", async ({ page }) => {
   await ouvrir(page, ECRIVAIN);
-  await page.getByRole("button", { name: "Bonté", exact: true }).click();
-  await expect(page.getByTestId("grille-bandeau")).toContainText("Bonté");
+  await page.getByRole("tab", { name: "Bonté", exact: true }).click();
+  await expect(page.getByRole("tab", { name: "Bonté", exact: true })).toHaveAttribute("aria-selected", "true");
   await expect(boutonExporter(page), "Bonté n'est pas à l'écrivain de Paix : pas d'export").toHaveCount(0);
-  await page.getByRole("button", { name: "Paix", exact: true }).click();
-  await page.getByRole("button", { name: "2027", exact: true }).click();
+  await page.getByRole("tab", { name: "Paix", exact: true }).click();
+  await page.getByRole("tab", { name: "2027", exact: true }).click();
   const { pdf } = await exporterPdf(page, "Toute l'année · Groupe Paix");
   expect(pdf.pages.map((p) => p.texte).join("\n")).not.toContain("Brouillon B.");
 });
 
 test("P7 · PDF « Toute l'année » de Paix 2027 : 4 pages A4, Lora et Carlito, le logo, rien en bas", async ({ page }) => {
   await ouvrir(page, ECRIVAIN);
-  await page.getByRole("button", { name: "2027", exact: true }).click();
+  await page.getByRole("tab", { name: "2027", exact: true }).click();
   const { nom, octets, pdf } = await exporterPdf(page, "Toute l'année · Groupe Paix");
   expect(nom).toBe("Paix_2027.pdf");
   expect(octets.subarray(0, 4).toString()).toBe("%PDF");
@@ -344,8 +344,8 @@ test("P7 · PDF « Toute l'année » de Paix 2027 : 4 pages A4, Lora et Carlito,
 
 test("P7 · PDF de Fidélité : l'église en chinois (Ma Shan Zheng), une case en chinois (Source Han Sans)", async ({ page }) => {
   await ouvrir(page, { ...ECRIVAIN, plannings: ["fidelite"] });
-  await page.getByRole("button", { name: "Fidélité", exact: true }).click();
-  await page.getByRole("button", { name: "2027", exact: true }).click();
+  await page.getByRole("tab", { name: "Fidélité", exact: true }).click();
+  await page.getByRole("tab", { name: "2027", exact: true }).click();
   const { nom, pdf } = await exporterPdf(page, "T1 2027 · Groupe Fidélité");
   expect(nom).toBe("Fidelite_T1_2027.pdf");
   expect(pdf.pages).toHaveLength(1);
@@ -360,7 +360,7 @@ test("P7 · PDF de Fidélité : l'église en chinois (Ma Shan Zheng), une case e
 test("P7 · « Tous les plannings 2027 » (admin) : toutes les pages, dans l'ordre des onglets du Sheet", async ({ page }) => {
   test.setTimeout(240_000);
   await ouvrir(page, ADMIN);
-  await page.getByRole("button", { name: "2027", exact: true }).click();
+  await page.getByRole("tab", { name: "2027", exact: true }).click();
   const { nom, pdf } = await exporterPdf(page, "Tous les plannings 2027");
   expect(nom).toBe("Plannings_2027.pdf");
   expect(pdf.pages).toHaveLength(33);
@@ -466,7 +466,7 @@ async function exporterXlsx(page: Page, portee: string | RegExp) {
 
 test("P8 · .xlsx « Toute l'année » de Paix 2027 : 4 feuilles, Lora et Calibri, EAF2FB, bordures, fusions, logo, ni en-tête ni pied de page", async ({ page }) => {
   await ouvrir(page, ECRIVAIN);
-  await page.getByRole("button", { name: "2027", exact: true }).click();
+  await page.getByRole("tab", { name: "2027", exact: true }).click();
   await boutonExporter(page).click();
   await expect(page.getByRole("dialog", { name: "Exporter" }).getByRole("button", { name: ".xlsx", exact: true })).toBeVisible();
   await capture(page, "p8-menu-exporter-xlsx");
@@ -499,7 +499,7 @@ test("P8 · .xlsx « Toute l'année » de Paix 2027 : 4 feuilles, Lora et Calibr
 test("P8 · .xlsx « Tous les plannings 2027 » (admin) : une feuille par onglet, dans l'ordre et sous les noms du Sheet", async ({ page }) => {
   test.setTimeout(240_000);
   await ouvrir(page, ADMIN);
-  await page.getByRole("button", { name: "2027", exact: true }).click();
+  await page.getByRole("tab", { name: "2027", exact: true }).click();
   const { nom, fichier } = await exporterXlsx(page, "Tous les plannings 2027");
   expect(nom).toBe("Plannings_2027.xlsx");
   expect(nomsDesFeuilles(fichier)).toEqual([

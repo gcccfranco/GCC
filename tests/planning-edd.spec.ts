@@ -40,14 +40,14 @@ const laCase = (page: Page, date: string, colonne: string) =>
 
 test("la grille EDD : la classe 中班 de la période courante, cinq colonnes, bandeau avec la classe", async ({ page }) => {
   await open(page, MEMBRE, "/planning/edd");
-  await expect(page.getByTestId("grille-bandeau")).toContainText("中班");
-  await expect(page.getByTestId("grille-bandeau")).toContainText("Sep–Oct");
+  await expect(page.getByRole("tab", { name: "中班", exact: true })).toHaveAttribute("aria-selected", "true");
+  await expect(page.getByTestId("barre-grille")).toContainText("Sep–Oct 2026");
   await expect(laCase(page, "2026-09-20", "presidence")).toContainText("Alice Q.");
   await expect(laCase(page, "2026-09-27", "guitare")).toContainText("Christelle C.");
   await expect(page.getByRole("button", { name: "Modifier" })).toHaveCount(0);
 
-  await page.getByRole("button", { name: "大班", exact: true }).click();
-  await expect(page.getByTestId("grille-bandeau")).toContainText("大班");
+  await page.getByRole("tab", { name: "大班", exact: true }).click();
+  await expect(page.getByRole("tab", { name: "大班", exact: true })).toHaveAttribute("aria-selected", "true");
   await expect(laCase(page, "2026-09-20", "presidence")).toContainText("Paul W.");
 });
 
@@ -69,7 +69,7 @@ test("avec le droit sur 中班 : une case s'écrit dans la grille de la classe, 
 
   await page.reload();
   await expect(laCase(page, "2026-09-27", "piano")).toContainText("Esther C.");
-  await page.getByRole("button", { name: "大班", exact: true }).click();
+  await page.getByRole("tab", { name: "大班", exact: true }).click();
   await expect(laCase(page, "2026-09-27", "piano").getByRole("button"), "大班 : en lecture").toHaveCount(0);
   await expect(laCase(page, "2026-09-27", "piano")).toContainText("Eva C.");
 });
@@ -96,7 +96,7 @@ test("« Exporter (modèle du Sheet) » : la période affichée, les trois class
 
 test("un membre n'exporte pas l'EDD", async ({ page }) => {
   await open(page, MEMBRE, "/planning/edd");
-  await expect(page.getByTestId("grille-bandeau")).toContainText("中班");
+  await expect(page.getByRole("tab", { name: "中班", exact: true })).toHaveAttribute("aria-selected", "true");
   await expect(page.getByRole("button", { name: /Exporter/ })).toHaveCount(0);
 });
 

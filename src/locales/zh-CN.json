@@ -1142,6 +1142,17 @@
       "echec": "保存失败，请重试。",
       "tonNom": "你的名字"
     },
+    "barre": {
+      "sousTitre": "教会所有服侍表：谁在何时服侍",
+      "trimestre": "季度",
+      "periode": "时段",
+      "classe": "班级",
+      "vue": "视图",
+      "trimestres": { "T1": "{{annee}}年第一季度", "T2": "{{annee}}年第二季度", "T3": "{{annee}}年第三季度", "T4": "{{annee}}年第四季度" },
+      "casesVidesTrimestre_other": "本季度 {{count}} 个空缺",
+      "casesVidesPeriode_other": "本时段 {{count}} 个空缺",
+      "casesVidesAnnee_other": "今年 {{count}} 个空缺"
+    },
     "horaires": {
       "culte": "主日 10:30",
       "groupes": "主日 13:00–14:30",

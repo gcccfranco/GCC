@@ -1,7 +1,7 @@
 "use client"
 
-import { Fragment, useEffect, useRef, useState, type MouseEvent, type ReactNode } from "react"
-import { ChevronDown, History, Lock, Trash2, User, X } from "lucide-react"
+import { Fragment, useRef, useState, type MouseEvent, type ReactNode } from "react"
+import { ChevronDown, History, Lock, Trash2 } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { useConfirmer } from "@/components/layout/Confirmer"
 import { currentSundayStr, fdFullL, fdLongL, fdShort, getAnnee, getMois, moisName } from "@/lib/planning/utils"
@@ -16,6 +16,8 @@ import { splitNames } from "@/lib/planning/names"
 import { canRetirerDate } from "@/lib/access"
 import { ExportModele, type ExportPlanning } from "./ExportModele"
 import { ChoisirNom } from "./ChoisirNom"
+import { DansLEnTete, type FiltreNom } from "./BarreDeGrille"
+import { useGestionPlanning } from "@/lib/planning/gestion"
 
 // Grille d'un planning rempli dans l'app (lot 17, docs/spec-planning-grille.md).
 // Table sur ordinateur et tablette — colonne des dates FIGÉE au défilement
@@ -42,8 +44,13 @@ export interface PlanningGrilleProps {
   comptes: readonly CompteDuPlanning[]
   /** Badge optionnel à côté de la date (Sainte Cène), comme PlanningTable. */
   dateBadge?: (row: string[], allRows: string[][]) => ReactNode
-  /** Période affichée, écrite dans le bandeau (le trimestre choisi par la page). */
+  /** Période affichée (le trimestre choisi par la page), reprise par l'export. */
   periode: string
+  /** « Mon prénom » et « Mes dates », tenus par la page et affichés dans la rangée de la grille
+   *  (`BarreDeGrille`, agencement v18) : deux grilles d'une page (Campus) suivent le même. */
+  filtre: FiltreNom
+  /** Le nom de la grille quand la page en montre plusieurs (Campus : Matin, Soir). */
+  legende?: string
   /** Lot U2 (Q5) : date → service (Interfranco, Intergroupe) qui tient ce
    *  dimanche, tiré de sa grille (`dimanchesSpeciaux`). La présidence affiche ce
    *  nom, non modifiable, et l'export le porte ; il n'est jamais recopié dans le
@@ -70,6 +77,8 @@ export function PlanningGrille({
   comptes,
   dateBadge,
   periode,
+  filtre,
+  legende,
   dimanchesSpeciaux,
   exporter,
   vide,
@@ -80,6 +89,9 @@ export function PlanningGrille({
   const { user, profile } = useProfile()
   const couleur = definition.couleur
   const sun = currentSundayStr()
+  // Agencement v18 (A2) : dans l'App, la grille en carte, en-tête gris, la couleur du service sur
+  // les dates seulement ; au Back-Office, l'en-tête de couleur de la planche `v18-bo-planning-a`.
+  const app = !useGestionPlanning()
 
   // Lot U6, B2 (Q14, question 5 de U2) : plus de bouton « Modifier » ; qui peut remplir
   // la grille (au Back-Office) l'a directement en modification, les cases « Choisir ».
@@ -96,25 +108,7 @@ export function PlanningGrille({
   const semes = useRef(new Set<string>())
   const fini = useRef(false)
 
-  // Prénom mémorisé sur l'appareil, prérempli depuis le profil (PlanningTable).
-  const [nom, setNom] = useState("")
-  const [mesDates, setMesDates] = useState(false)
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem("planningName")
-      if (saved) { setNom(saved); return }
-    } catch { /* stockage indisponible */ }
-    if (profile?.planningName) setNom(profile.planningName)
-  }, [profile])
-
-  function changerNom(v: string) {
-    setNom(v)
-    try { localStorage.setItem("planningName", v) } catch { /* ignore */ }
-  }
-
-  const aiguille = nom.trim().toLowerCase()
-  const aUnNom = aiguille.length >= 2
-  const estMoi = (cell: string) => aUnNom && cell.toLowerCase().includes(aiguille)
+  const { mesDates, aUnNom, estMoi } = filtre
 
   /** La présidence d'un dimanche d'Interfranco ou d'Intergroupe : le nom du service. */
   const imposee = (date: string, c: ColonneGrille) =>
@@ -335,7 +329,8 @@ export function PlanningGrille({
         </button>
       )
     }
-    return <span className={estMoi(val) ? "font-bold" : ""} style={estMoi(val) ? { color: couleur } : undefined}>{val || "—"}</span>
+    // La couleur du service reste aux dates (A2) : son nom se repère en encre.
+    return <span className={estMoi(val) ? "rounded-md bg-foreground px-1.5 py-0.5 font-semibold text-background" : ""}>{val || "—"}</span>
   }
 
   const phrase = (auteurNom: string, ch: EntreeGrille["changes"][number]) => {
@@ -351,65 +346,17 @@ export function PlanningGrille({
     })
   }
 
-  const sousTitre = [
-    definition.sousTitre ?? (definition.i18nSousTitre ? t(definition.i18nSousTitre) : ""),
-    periode,
-    definition.i18nHoraire ? t(definition.i18nHoraire) : "",
-  ].filter(Boolean).join(" · ")
-
   return (
     <div className="space-y-3" data-grille={definition.key}>
-      {/* ── Bandeau : planning, période, horaire (T4) ── */}
-      <div
-        data-testid="grille-bandeau"
-        className="rounded-xl px-3.5 py-2.5 text-sm font-semibold text-white"
-        style={{ background: couleur }}
-      >
-        {t(definition.i18nTitre)}
-        <span className="font-normal opacity-90">
-          {" · "}
-          {sousTitre}
-        </span>
-      </div>
-
-      {/* ── Mon prénom, Mes dates ── */}
-      <div className="flex items-center gap-2 flex-wrap">
-        <div className="relative flex-1 min-w-[160px] max-w-[220px]">
-          <User className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-          <input
-            type="text"
-            value={nom}
-            onChange={(e) => changerNom(e.target.value)}
-            placeholder={t("planning.table.myName")}
-            className="w-full h-10 sm:h-8 pl-8 pr-8 rounded-full border border-transparent bg-secondary text-foreground text-[16px] sm:text-sm focus:outline-none focus:ring-2 focus:ring-ring/20"
-          />
-          {nom && (
-            <button
-              onClick={() => { changerNom(""); setMesDates(false) }}
-              className="absolute right-0 top-1/2 -translate-y-1/2 p-2.5 text-muted-foreground hover:text-foreground active:text-foreground"
-              aria-label={t("planning.table.clear")}
-            >
-              <X className="h-3 w-3" />
-            </button>
-          )}
-        </div>
-        {aUnNom && (
-          <button
-            onClick={() => setMesDates((v) => !v)}
-            className={`h-10 sm:h-8 px-3 rounded-full text-sm font-semibold transition-[background-color,color,transform] duration-150 active:scale-[.96] cursor-pointer ${
-              mesDates ? "text-white" : "bg-secondary text-muted-foreground hover:text-foreground"
-            }`}
-            style={mesDates ? { background: couleur } : undefined}
-          >
-            {t("planning.table.myDates")}
-          </button>
-        )}
+      {/* Agencement v18 (B6) : l'export et « Enregistré » dans les outils de l'en-tête ; le service,
+          la période et les filtres dans la rangée de la grille (BarreDeGrille). */}
+      <DansLEnTete ou="outils">
         {enregistre && (
           <span aria-live="polite" className="text-xs text-muted-foreground">{t("planning.grille.enregistre")}</span>
         )}
-        {/* Export au modèle du Sheet (lot U2, P7) : remplace le CSV et le PDF du lot 17. */}
         {exporter && <ExportModele definition={definition} periode={periode} exporter={exporter} />}
-      </div>
+      </DansLEnTete>
+      {legende && <h3 className="text-[15px] font-bold text-foreground">{legende}</h3>}
 
       {refus && (
         <p className="rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-foreground">
@@ -441,18 +388,18 @@ export function PlanningGrille({
       )}
 
       {/* ── Grille (ordinateur, tablette) ── */}
-      <div data-testid="grille-defilement" className="hidden sm:block overflow-x-auto rounded-xl border border-border">
+      <div data-testid="grille-defilement" className={`hidden sm:block overflow-x-auto ${app ? "raised rounded-2xl" : "rounded-xl border border-border"}`}>
         <table className="w-full text-sm border-collapse" style={{ minWidth: largeurMin }}>
           <thead>
-            <tr data-testid="grille-colonnes" className="text-white">
+            <tr data-testid="grille-colonnes" className={app ? "bg-secondary text-muted-foreground" : "text-white"}>
               <th
-                className="sticky left-0 z-20 px-3 py-2.5 text-left text-[11px] font-semibold whitespace-nowrap"
-                style={{ background: couleur }}
+                className={`sticky left-0 z-20 px-3 py-2.5 text-left text-[11px] font-semibold whitespace-nowrap ${app ? "bg-secondary" : ""}`}
+                style={app ? undefined : { background: couleur }}
               >
                 {t("planning.roles.date")}
               </th>
               {colonnes.map((c) => (
-                <th key={c.cle} className="px-3 py-2.5 text-left text-[11px] font-semibold whitespace-nowrap" style={{ background: couleur }}>
+                <th key={c.cle} className="px-3 py-2.5 text-left text-[11px] font-semibold whitespace-nowrap" style={app ? undefined : { background: couleur }}>
                   {t(c.i18n)}
                 </th>
               ))}
@@ -475,7 +422,7 @@ export function PlanningGrille({
               return (
                 <Fragment key={date}>
                   {sep && (
-                    <tr style={{ background: `${couleur}15` }}>
+                    <tr className={app ? "bg-secondary/50" : undefined} style={app ? undefined : { background: `${couleur}15` }}>
                       <td colSpan={colonnes.length + 1} className="px-3 py-1.5">
                         <span className="sticky left-3 inline-block text-xs font-bold uppercase tracking-wider" style={{ color: couleur }}>
                           {sep}
@@ -491,7 +438,7 @@ export function PlanningGrille({
                     >
                       <div>
                         {cetteSemaine ? (
-                          <span className="inline-block text-xs font-bold px-1.5 py-0.5 rounded text-white" style={{ background: couleur }}>
+                          <span className={`inline-block text-xs font-bold px-1.5 py-0.5 rounded ${app ? "bg-foreground text-background" : "text-white"}`} style={app ? undefined : { background: couleur }}>
                             {t("planning.table.thisWeek")}
                           </span>
                         ) : fdShort(date)}

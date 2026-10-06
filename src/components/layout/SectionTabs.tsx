@@ -26,7 +26,9 @@ const teinte = (color?: string) =>
 
 /** `pleineLargeur` : la section prend toute la zone de contenu (Planning, retours du 06/10/2026) ;
  *  la rangée part alors du même bord que la page, au lieu d'être centrée sur 1 080 px. */
-export function SectionTabs({ tabs, rootHref, menuLabel, pleineLargeur = false }: { tabs: SectionTab[]; rootHref: string; menuLabel?: string; pleineLargeur?: boolean }) {
+/** `className` : posé sur la barre collante (le Planning la masque en grand, où ses plannings
+ *  sont dans l'en-tête, agencement v18 R6). */
+export function SectionTabs({ tabs, rootHref, menuLabel, pleineLargeur = false, className = "" }: { tabs: SectionTab[]; rootHref: string; menuLabel?: string; pleineLargeur?: boolean; className?: string }) {
   const pathname = usePathname() || ""
   const scrollVisible = useScrollDirection()
   const tabRefs = useRef<(HTMLAnchorElement | null)[]>([])
@@ -50,14 +52,46 @@ export function SectionTabs({ tabs, rootHref, menuLabel, pleineLargeur = false }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname, tabsKey])
 
+  // Agencement v18 (R6) : la barre du Planning est posée SOUS le titre, et ne colle qu'une fois
+  // le titre passé. La copie du halo de son fond (`.barre-halo`) remonte de la hauteur où la
+  // barre se trouve vraiment (`--barre-top`, mesurée hors translation), sinon son fond, au repos
+  // sous le titre, faisait une bande sur le halo ; et elle ne s'efface au défilement qu'une fois
+  // collée, sinon elle remontait par-dessus le titre.
+  const barreRef = useRef<HTMLDivElement>(null)
+  const [colle, setColle] = useState(true)
+  useEffect(() => {
+    const el = barreRef.current
+    if (!el) return
+    let raf = 0
+    const poser = () => {
+      raf = 0
+      const transform = getComputedStyle(el).transform
+      const decalage = transform === "none" ? 0 : new DOMMatrixReadOnly(transform).m42
+      const haut = el.getBoundingClientRect().top - decalage
+      el.style.setProperty("--barre-top", `${haut}px`)
+      setColle(haut <= parseFloat(getComputedStyle(el).top) + 1)
+    }
+    const demander = () => { if (!raf) raf = requestAnimationFrame(poser) }
+    demander()
+    window.addEventListener("scroll", demander, { passive: true })
+    window.addEventListener("resize", demander)
+    el.addEventListener("transitionend", demander)
+    return () => {
+      cancelAnimationFrame(raf)
+      window.removeEventListener("scroll", demander)
+      window.removeEventListener("resize", demander)
+      el.removeEventListener("transitionend", demander)
+    }
+  }, [])
+
   const courant = tabs.find((tab) => isTabActive(tab.href)) ?? tabs[0]
 
   // Colle sous la navbar en la recouvrant d'1 px (`--recouvrement-navbar`) ; sans navbar
   // (ordinateur, lot U4), en haut de l'écran : sinon la copie du halo descendait d'1 px.
   return (
-    <div data-testid="barre-section" className={`sticky top-[calc(var(--nav-h)-var(--recouvrement-navbar))] [--barre-top:calc(var(--nav-h)-var(--recouvrement-navbar))] [--barre-left:var(--barre-laterale)] z-40 material-chrome print:hidden transition-transform duration-300 ${scrollVisible ? "translate-y-0" : "-translate-y-[calc(100%+var(--nav-h))]"}`}>
+    <div ref={barreRef} data-testid="barre-section" className={`sticky top-[calc(var(--nav-h)-var(--recouvrement-navbar))] [--barre-top:calc(var(--nav-h)-var(--recouvrement-navbar))] [--barre-left:var(--barre-laterale)] z-40 material-chrome print:hidden transition-transform duration-300 ${className} ${scrollVisible || !colle ? "translate-y-0" : "-translate-y-[calc(100%+var(--nav-h))]"}`}>
       <FondDeBarre sousNavbar />
-      <div className={pleineLargeur ? "px-4" : "max-w-[1080px] mx-auto px-4"}>
+      <div className={pleineLargeur ? "px-[var(--marge-page)]" : "max-w-[1080px] mx-auto px-4"}>
         {menuLabel && (
           <div className="md:hidden py-1">
             <button

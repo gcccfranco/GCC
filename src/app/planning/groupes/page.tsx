@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
-import { FilterButtons } from "@/components/planning/FilterButtons"
+import { OngletsRail, Pilules } from "@/components/layout/Onglets"
+import { BarreDeGrille, FiltreDeNom, compterCasesVides, ongletsDePeriode, useFiltreNom, useTrimestreEnLettres } from "@/components/planning/BarreDeGrille"
 import { PlanningGrille } from "@/components/planning/PlanningGrille"
 import { StaleBanner } from "@/components/planning/StaleBanner"
 import { getCurrentTri } from "@/lib/planning/utils"
@@ -40,12 +41,12 @@ const GRP_COLORS: Record<Groupe, string> = {
   bonte:    PLANNING_COLORS.bonte,
 }
 
-const GRP_INACTIVE = "bg-card text-muted-foreground border-border hover:text-foreground"
-
 function GroupesPage() {
   const { t } = useTranslation()
   const { user, profile } = useProfile()
   const gestion = useGestionPlanning()
+  const filtre = useFiltreNom()
+  const trimestre = useTrimestreEnLettres()
   const [paix, setPaix] = useState(PAIX_FALLBACK)
   const [fid, setFid] = useState(FIDELITE_FALLBACK)
   const [fidM, setFidM] = useState(FIDELITE_MUSIC_FALLBACK)
@@ -109,6 +110,8 @@ function GroupesPage() {
     publies: (y) => pubByGrp[`${grp}_${y}`] ?? [], voitBrouillon,
   })
 
+  const horaire = t(grp === "fidelite" ? "planning.horaires.fidelite" : "planning.horaires.groupes")
+
   function changerAnnee(a: number) {
     setAnnee(a)
     setTri(a === anneeCourante ? getCurrentTri() : "T1")
@@ -116,12 +119,40 @@ function GroupesPage() {
 
   return (
     <div className="max-w-full space-y-4 mx-auto">
-      <div className="flex flex-wrap gap-3 items-center justify-between">
-        <div className="flex items-center gap-3 flex-wrap">
-          <h2 className="text-base font-bold text-foreground">{t("planning.pages.groupes")}</h2>
-          <AnneeSelecteur annees={annees} annee={effAnnee} onChange={changerAnnee} />
-        </div>
-        {loading && <span className="text-xs text-muted-foreground">{t("common.loading")}</span>}
+      {/* Agencement v18 (A3) : Paix · Fidélité · Bonté en rail, pastille de couleur devant chaque
+          nom ; Fidélité › Groupe · Musiciens en pilules juste après (un sous-onglet, R4). */}
+      <BarreDeGrille
+        titre={t("planning.pages.groupes")}
+        couleur={color}
+        detail={[horaire, effTri && trimestre(effTri, effAnnee)].filter(Boolean).join(" · ")}
+        sousTitreBO={[t(definition.i18nTitre), definition.i18nSousTitre && t(definition.i18nSousTitre), horaire,
+          t("planning.barre.casesVidesTrimestre", { count: compterCasesVides(definition, lignes) })].filter(Boolean).join(" · ")}
+        chargement={loading}
+      >
+        <OngletsRail
+          etiquette={t("planning.pages.groupes")}
+          onglets={(["paix", "fidelite", "bonte"] as Groupe[]).map((g) => ({ id: g, label: t(`planning.groupes.${g}`), couleur: GRP_COLORS[g] }))}
+          actif={grp}
+          choisir={(g) => { setGrp(g as Groupe); if (g !== "fidelite") setFidSub("groupe") }}
+        />
+        {grp === "fidelite" && (
+          <Pilules
+            etiquette={t("planning.groupes.fidelite")}
+            compact
+            options={(["groupe", "musiciens"] as FidSub[]).map((sub) => ({
+              cle: sub,
+              nom: sub === "groupe" ? t("planning.groupes.planningGroupe") : t("planning.groupes.planningMusiciens"),
+              couleur: color,
+            }))}
+            valeur={fidSub}
+            choisir={(sub) => sub && setFidSub(sub)}
+            obligatoire
+          />
+        )}
+        <AnneeSelecteur annees={annees} annee={effAnnee} onChange={changerAnnee} />
+        {visibleTris.length > 0 && (
+          <OngletsRail etiquette={t("planning.barre.trimestre")} onglets={ongletsDePeriode(visibleTris, unpublishedTris)} actif={effTri} choisir={setTri} />
+        )}
         {canPublish && effTri && aVenir && (
           <BoutonPublication
             planningKey={planning.key}
@@ -132,7 +163,8 @@ function GroupesPage() {
             onChange={(published) => setPubByGrp((prev) => ({ ...prev, [`${grp}_${effAnnee}`]: published }))}
           />
         )}
-      </div>
+        <FiltreDeNom filtre={filtre} couleur={color} />
+      </BarreDeGrille>
 
       <StaleBanner show={stale} />
       <BandeauAnnee
@@ -141,44 +173,11 @@ function GroupesPage() {
         dimanches={brouillon && definition.dates === "dimanches" ? dimanchesDe(effAnnee).length : null}
       />
 
-      <div className="flex gap-2">
-        {(["paix","fidelite","bonte"] as Groupe[]).map(g => (
-          <button
-            key={g}
-            onClick={() => { setGrp(g); if (g !== "fidelite") setFidSub("groupe") }}
-            className={`flex-1 py-2 px-3 rounded-xl border text-xs font-semibold transition-all duration-150 cursor-pointer ${grp === g ? "text-white border-transparent" : GRP_INACTIVE}`}
-            style={grp === g ? { background: GRP_COLORS[g], borderColor: GRP_COLORS[g] } : undefined}
-          >
-            {t(`planning.groupes.${g}`)}
-          </button>
-        ))}
-      </div>
-
-      {grp === "fidelite" && (
-        <div className="flex gap-2">
-          {(["groupe","musiciens"] as FidSub[]).map(sub => (
-            <button
-              key={sub}
-              onClick={() => setFidSub(sub)}
-              className={`flex-1 py-1.5 px-3 rounded-lg border text-xs font-semibold transition-all duration-150 cursor-pointer ${
-                fidSub === sub
-                  ? "border-transparent"
-                  : "bg-card border-border text-muted-foreground hover:text-foreground"
-              }`}
-              style={fidSub === sub ? { background: `${color}15`, borderColor: color, color } : undefined}
-            >
-              {sub === "groupe" ? t("planning.groupes.planningGroupe") : t("planning.groupes.planningMusiciens")}
-            </button>
-          ))}
-        </div>
-      )}
-
-      <FilterButtons options={visibleTris} active={effTri} onChange={setTri} color={color} unpublished={unpublishedTris} />
-
       <PlanningGrille
         key={definition.key}
         definition={definition}
         periode={`${effTri} ${effAnnee}`}
+        filtre={filtre}
         lignes={lignes}
         peutModifier={peutModifier}
         datesDansLApp={datesDansLApp}

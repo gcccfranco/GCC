@@ -2,7 +2,8 @@
 
 import { useId, useState } from "react"
 import { useTranslation } from "react-i18next"
-import { FilterButtons } from "@/components/planning/FilterButtons"
+import { OngletsRail } from "@/components/layout/Onglets"
+import { BarreDeGrille, FiltreDeNom, compterCasesVides, ongletsDePeriode, useFiltreNom, useTrimestreEnLettres } from "@/components/planning/BarreDeGrille"
 import { PlanningGrille } from "@/components/planning/PlanningGrille"
 import { PetitDejCarte, dateCourte } from "@/components/planning/PetitDejCarte"
 import { StaleBanner } from "@/components/planning/StaleBanner"
@@ -44,6 +45,8 @@ function TablePage() {
   const rows = inscriptions ? avecPetitDej(lues, rangeesPetitDej(inscriptions)) : lues
   const [tri, setTri] = useState(getCurrentTri())
   const gestion = useGestionPlanning()
+  const filtre = useFiltreNom()
+  const trimestre = useTrimestreEnLettres()
   const peutModifier = gestion && canEditPlanning(user, profile, GRILLE_TABLE.key)
   // Les comptes : « Choisir » de la grille (Back-Office), suggestions de la carte Petit
   // déj (App) — les mêmes personnes, écrivains de la Table et admins.
@@ -56,25 +59,29 @@ function TablePage() {
   const annees = anneesDuPlanning(anneeCourante, peutModifier || anneeRemplie(rows, anneeCourante + 1))
   const effAnnee = annees.includes(annee) ? annee : anneeCourante
   const suivante = effAnnee > anneeCourante && peutModifier
+  const lignes = lignesSimples(filterByTri(lignesDeLAnnee(GRILLE_TABLE, effAnnee, rows), tri))
 
   return (
     <div className="max-w-full space-y-4 mx-auto">
-      <div className="flex flex-wrap gap-3 items-center justify-between">
-        <div className="flex items-center gap-3 flex-wrap">
-          <h2 className="text-base font-bold text-foreground">{t("planning.pages.table")}</h2>
-          <AnneeSelecteur
-            annees={annees}
-            annee={effAnnee}
-            onChange={(a) => { setAnnee(a); setTri(a === anneeCourante ? getCurrentTri() : "T1") }}
-          />
-        </div>
-        {status === "loading" && <span className="text-xs text-muted-foreground">{t("common.loading")}</span>}
-      </div>
+      {/* Agencement v18 (T4a) : la rangée de la grille ; les deux colonnes de l'App viennent en T4b. */}
+      <BarreDeGrille
+        titre={t("planning.pages.table")}
+        couleur={GRILLE_TABLE.couleur}
+        detail={trimestre(tri, effAnnee)}
+        sousTitreBO={[t("planning.pages.table"), t("planning.barre.casesVidesTrimestre", { count: compterCasesVides(GRILLE_TABLE, lignes) })].join(" · ")}
+        chargement={status === "loading"}
+      >
+        <AnneeSelecteur
+          annees={annees}
+          annee={effAnnee}
+          onChange={(a) => { setAnnee(a); setTri(a === anneeCourante ? getCurrentTri() : "T1") }}
+        />
+        <OngletsRail etiquette={t("planning.barre.trimestre")} onglets={ongletsDePeriode(["T1", "T2", "T3", "T4"])} actif={tri} choisir={setTri} />
+        {gestion && <FiltreDeNom filtre={filtre} couleur={GRILLE_TABLE.couleur} />}
+      </BarreDeGrille>
 
       <StaleBanner show={status === "stale"} />
       <BandeauAnnee annee={effAnnee} brouillon={false} dimanches={suivante ? dimanchesDe(effAnnee).length : null} />
-
-      <FilterButtons options={["T1","T2","T3","T4"]} active={tri} onChange={setTri} color={GRILLE_TABLE.couleur} />
 
       {!gestion && <PetitDejCarte annee={effAnnee} tri={tri} nomsDesComptes={nomsDesComptes} onLignes={setInscriptions} />}
 
@@ -83,7 +90,8 @@ function TablePage() {
       {gestion && <PlanningGrille
         definition={GRILLE_TABLE}
         periode={`${tri} ${effAnnee}`}
-        lignes={lignesSimples(filterByTri(lignesDeLAnnee(GRILLE_TABLE, effAnnee, rows), tri))}
+        filtre={filtre}
+        lignes={lignes}
         peutModifier={peutModifier}
         datesDansLApp={datesDansLApp}
         comptes={comptes}

@@ -25,7 +25,6 @@ import { BACK_OFFICE } from "@/lib/backOffice"
 import { useDisposition } from "@/hooks/useDisposition"
 import type { Evenement } from "@/types/evenement"
 import type { SongIndexEntry } from "@/types/song"
-import { PageTitle } from "@/components/layout/PageTitle"
 import { PourMoi } from "@/components/accueil/PourMoi"
 import { CeDimanche } from "@/components/accueil/CeDimanche"
 
@@ -206,8 +205,6 @@ export default function PlanningAccueil() {
 
   return (
     <div className="relative space-y-6">
-      <PageTitle title={t("common.header.planning")} />
-
       <StaleBanner show={stale} />
 
       {disposition === "grand" ? (

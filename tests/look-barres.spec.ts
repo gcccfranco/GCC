@@ -119,8 +119,11 @@ const TOLERANCE = 6;
  * Les deux promesses de la barre, vérifiées au pixel :
  * 1. en haut de page, son fond repeint exactement la page qu'il cache (fond + halo) ;
  * 2. défilée, rien ne transparaît dessous : la zone est la même qu'en haut de page.
+ * `sousLeTitre` (agencement v18, R6) : la dernière barre est posée sous le titre de la page et
+ * ne colle qu'une fois le titre passé ; en haut de page, la zone des barres contient donc le
+ * titre. Défilée, on compare alors la zone des barres collées à la même zone, page masquée.
  */
-async function barresOpaquesEtInvisibles(page: Page, combien: number, nom: string) {
+async function barresOpaquesEtInvisibles(page: Page, combien: number, nom: string, { sousLeTitre = false } = {}) {
   await expect.poll(async () => (await barres(page)).length).toBe(combien);
   for (const b of await barres(page)) {
     expect(b.couvre, "le fond couvre la barre").toBe(true);
@@ -156,10 +159,22 @@ async function barresOpaquesEtInvisibles(page: Page, combien: number, nom: strin
   await page.mouse.wheel(0, -40);
   await expect.poll(transformations, "elles reviennent quand on remonte").toEqual(enPlace);
   await auRepos(page);
-  // Attendu jusqu'à ce que le rendu se pose (1 fois sur 90, la capture tombait juste après
-  // le défilement) : du contenu visible sous une barre, lui, ne disparaîtrait jamais.
-  await expect.poll(async () => ecart(page, fondSeul, await page.screenshot({ clip: zone })), "rien ne transparaît sous les barres")
-    .toMatchObject({ trop: 0 });
+  if (sousLeTitre) {
+    const collees = await zoneDesBarres(page);
+    const pageMasquee = async () => {
+      const cache = await page.addStyleTag({ content: "main main, header[data-entete-page] { visibility: hidden !important }" });
+      const image = await page.screenshot({ clip: collees });
+      await cache.evaluate((el) => (el as ChildNode).remove());
+      return image;
+    };
+    await expect.poll(async () => ecart(page, await pageMasquee(), await page.screenshot({ clip: collees })), "rien ne transparaît sous les barres collées")
+      .toMatchObject({ trop: 0 });
+  } else {
+    // Attendu jusqu'à ce que le rendu se pose (1 fois sur 90, la capture tombait juste après
+    // le défilement) : du contenu visible sous une barre, lui, ne disparaîtrait jamais.
+    await expect.poll(async () => ecart(page, fondSeul, await page.screenshot({ clip: zone })), "rien ne transparaît sous les barres")
+      .toMatchObject({ trop: 0 });
+  }
 
   await masque.evaluate((el) => (el as ChildNode).remove());
   await capture(page, `barres-${nom}-defile`);
@@ -194,10 +209,12 @@ test.describe("barres (5C1, V8) : opaques, elles repeignent la page qu'elles cac
   });
 
   test("Planning : la navbar et la barre des onglets", async ({ page }) => {
+    // Agencement v18 (R6) : en grand, les plannings sont des pilules dans l'en-tête, plus de barre collante.
+    test.skip(sansNavbar(), "en grand, le Planning n'a plus de barre d'onglets");
     await sansSheet(page);
     await signInAs(page, MUSICIEN, {}, "/planning");
     await page.getByRole("heading", { level: 1, name: "Planning" }).waitFor();
-    await barresOpaquesEtInvisibles(page, avecNavbar(2), "planning");
+    await barresOpaquesEtInvisibles(page, avecNavbar(2), "planning", { sousLeTitre: true });
   });
 
   test("en sombre aussi, le fond repeint la page", async ({ page }) => {
