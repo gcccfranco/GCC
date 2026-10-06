@@ -632,3 +632,26 @@
   .chants-chant .retour-chant:not([data-vers-setlist]) { display: none; }
   .chants-chant .song-zoom, .chants-chant .video-chant { margin-top: 0; }
 }
+
+/* Services et rôles du profil et de l'inscription (lot U4 bis, B5, Q10 et Q13) : les cartes des
+   services sur deux colonnes quand la carte en a la place (planches `profil-ordinateur`,
+   `inscription-*`), l'une sous l'autre sinon (téléphone, colonne du profil sur tablette). */
+.grille-services { container-type: inline-size; }
+@container (min-width: 540px) {
+  .grille-services-cartes { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
+}
+
+/* Panneau de marque de la connexion et de l'inscription (lot U4 bis, B5, Q13) : le rouge du logo
+   et le bleu des accords en deux halos très pâles (planches `connexion-*`, `inscription-*`). */
+.panneau-marque {
+  background:
+    radial-gradient(ellipse 75% 55% at 15% 12%, rgb(207 42 32 / 0.13), transparent 70%),
+    radial-gradient(ellipse 75% 55% at 85% 88%, rgb(63 99 207 / 0.12), transparent 70%),
+    hsl(var(--secondary) / 0.5);
+}
+.dark .panneau-marque {
+  background:
+    radial-gradient(ellipse 75% 55% at 15% 12%, rgb(207 42 32 / 0.22), transparent 70%),
+    radial-gradient(ellipse 75% 55% at 85% 88%, rgb(63 99 207 / 0.2), transparent 70%),
+    hsl(var(--secondary) / 0.5);
+}

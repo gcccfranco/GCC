@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
-import { ArrowLeft, ArrowRight, Check } from "lucide-react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import { getRegistrationOpen, signUp, saveProfile } from "@/lib/firebase/users";
 import {
   loadPlanningData,
@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Card, CardContent } from "@/components/ui/card";
+import { EcranMarque } from "@/components/auth/EcranMarque";
 import {
   IdentityFields,
   ServiceGrid,
@@ -136,155 +136,122 @@ export default function SignupPage() {
 
   const isLast = step === STEP_KEYS.length - 1;
 
+  // Lot U4 bis, B5 (Q13) : les trois étapes dans le panneau de marque (à gauche en grand, en haut
+  // ailleurs) ; sous le titre, la barre de progression seule.
+  const etapes = STEP_KEYS.map((key, i) => ({
+    libelle: t(`signup.steps.${key}`),
+    etat: i < step ? "fait" : i === step ? "courant" : "avenir",
+  }) as const);
+
   return (
-    <div className="min-h-screen bg-background px-4 py-10">
-      <div className="w-full max-w-lg mx-auto">
-        <div className="mb-6 text-center">
-          <h1 className="text-xl font-bold text-foreground">{t("signup.title")}</h1>
-          <p className="text-sm text-muted-foreground mt-1">{t("signup.subtitle")}</p>
-        </div>
+    <EcranMarque large etapes={etapes} onEtape={(i) => { setError(""); setStep(i); }}>
+      <h1 className="text-2xl font-bold text-foreground">{t("signup.title")}</h1>
+      <p className="mt-0.5 text-sm text-muted-foreground">{t("signup.subtitle")}</p>
+      <div className="mb-6 mt-4 h-1 overflow-hidden rounded-full bg-muted">
+        <div
+          className="h-full rounded-full bg-primary transition-all duration-300"
+          style={{ width: `${((step + 1) / STEP_KEYS.length) * 100}%` }}
+        />
+      </div>
 
-        {/* ── Barre de progression ── */}
-        <div className="mb-6">
-          <div className="flex items-center justify-between mb-2">
-            {STEP_KEYS.map((key, i) => (
-              <button
-                key={key}
-                type="button"
-                // On ne peut revenir qu'en arrière (les étapes suivantes restent à valider)
-                onClick={() => { if (i < step) { setError(""); setStep(i); } }}
-                className={`flex flex-col items-center gap-1 flex-1 ${i < step ? "cursor-pointer" : "cursor-default"}`}
-              >
-                <span
-                  className={`h-7 w-7 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${
-                    i < step
-                      ? "bg-foreground text-background"
-                      : i === step
-                      ? "bg-secondary text-foreground border-2 border-transparent"
-                      : "bg-muted text-muted-foreground"
-                  }`}
-                >
-                  {i < step ? <Check className="h-3.5 w-3.5" /> : i + 1}
-                </span>
-                <span
-                  className={`text-xs font-semibold ${
-                    i === step ? "text-foreground" : "text-muted-foreground"
-                  }`}
-                >
-                  {t(`signup.steps.${key}`)}
-                </span>
-              </button>
-            ))}
+      {/* ── Étape courante ── */}
+      <div>
+        {step === 0 && (
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="signup-email">
+                {t("signup.email")} <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="signup-email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                autoComplete="email"
+                className="h-11"
+                placeholder={t("signup.emailPlaceholder")}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="signup-password">
+                {t("signup.password")} <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="signup-password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                autoComplete="new-password"
+                className="h-11"
+                placeholder={t("signup.passwordPlaceholder")}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="signup-password2">
+                {t("signup.password2")} <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="signup-password2"
+                type="password"
+                value={password2}
+                onChange={(e) => setPassword2(e.target.value)}
+                required
+                autoComplete="new-password"
+                className="h-11"
+                placeholder="••••••••"
+              />
+            </div>
           </div>
-          <div className="h-1 rounded-full bg-muted overflow-hidden">
-            <div
-              className="h-full bg-primary rounded-full transition-all duration-300"
-              style={{ width: `${((step + 1) / STEP_KEYS.length) * 100}%` }}
-            />
-          </div>
-        </div>
-
-        {/* ── Étape courante ── */}
-        <Card>
-          <CardContent className="p-5">
-            {step === 0 && (
-              <div className="space-y-4">
-                <div className="space-y-1.5">
-                  <Label htmlFor="signup-email">
-                    {t("signup.email")} <span className="text-destructive">*</span>
-                  </Label>
-                  <Input
-                    id="signup-email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    autoComplete="email"
-                    className="h-11"
-                    placeholder={t("signup.emailPlaceholder")}
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="signup-password">
-                    {t("signup.password")} <span className="text-destructive">*</span>
-                  </Label>
-                  <Input
-                    id="signup-password"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    autoComplete="new-password"
-                    className="h-11"
-                    placeholder={t("signup.passwordPlaceholder")}
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="signup-password2">
-                    {t("signup.password2")} <span className="text-destructive">*</span>
-                  </Label>
-                  <Input
-                    id="signup-password2"
-                    type="password"
-                    value={password2}
-                    onChange={(e) => setPassword2(e.target.value)}
-                    required
-                    autoComplete="new-password"
-                    className="h-11"
-                    placeholder="••••••••"
-                  />
-                </div>
-              </div>
-            )}
-
-            {step === 1 && <IdentityFields value={form} onChange={setForm} />}
-
-            {step === 2 && (
-              <div className="space-y-6">
-                <PlanningNameField
-                  value={form}
-                  onChange={setForm}
-                  planningNames={planningNames}
-                  deriveFromPlanning={deriveFromPlanning}
-                />
-                <ServiceGrid value={form} onChange={setForm} deriveFromPlanning={deriveFromPlanning} />
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {error && (
-          <Alert variant="destructive" className="mt-4">
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
         )}
 
-        {/* ── Navigation ── */}
-        <div className="mt-5 flex items-center gap-3">
-          {step > 0 && (
-            <Button type="button" variant="outline" onClick={back} className="h-11">
-              <ArrowLeft className="h-4 w-4" />
-              {t("signup.back")}
-            </Button>
-          )}
-          {isLast ? (
-            <Button type="button" onClick={handleSubmit} disabled={loading} className="flex-1 h-11">
-              {loading ? t("signup.creating") : t("signup.create")}
-            </Button>
-          ) : (
-            <Button type="button" onClick={next} className="flex-1 h-11">
-              {t("signup.next")}
-              <ArrowRight className="h-4 w-4" />
-            </Button>
-          )}
-        </div>
+        {step === 1 && <IdentityFields value={form} onChange={setForm} />}
 
-        <div className="mt-6 text-center">
-          <Link href="/login" className="text-sm text-muted-foreground hover:text-foreground">
-            {t("signup.alreadyAccount")}
-          </Link>
-        </div>
+        {step === 2 && (
+          <div className="space-y-6">
+            <PlanningNameField
+              value={form}
+              onChange={setForm}
+              planningNames={planningNames}
+              deriveFromPlanning={deriveFromPlanning}
+            />
+            <ServiceGrid value={form} onChange={setForm} deriveFromPlanning={deriveFromPlanning} />
+          </div>
+        )}
       </div>
-    </div>
+
+      {error && (
+        <Alert variant="destructive" className="mt-4">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+
+      {/* ── Navigation ── */}
+      <div className="mt-5 flex items-center gap-3">
+        {step > 0 && (
+          <Button type="button" variant="outline" onClick={back} className="h-11">
+            <ArrowLeft className="h-4 w-4" />
+            {t("signup.back")}
+          </Button>
+        )}
+        {isLast ? (
+          <Button type="button" onClick={handleSubmit} disabled={loading} className="flex-1 h-11">
+            {loading ? t("signup.creating") : t("signup.create")}
+          </Button>
+        ) : (
+          <Button type="button" onClick={next} className="flex-1 h-11">
+            {t("signup.next")}
+            <ArrowRight className="h-4 w-4" />
+          </Button>
+        )}
+      </div>
+
+      <div className="mt-6 text-center">
+        <Link href="/login" className="text-sm text-muted-foreground hover:text-foreground">
+          {t("signup.alreadyAccount")}
+        </Link>
+      </div>
+    </EcranMarque>
   );
 }

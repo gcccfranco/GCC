@@ -43,7 +43,8 @@ test.describe("navigation par sections (T2), téléphone", () => {
     await signInAs(page, MEMBRE, {}, "/moi");
     await expect(page.getByRole("heading", { level: 1, name: "Moi" })).toBeVisible();
     for (const nom of ["Mes services", "Mon profil", "Guide d'utilisation", "Ton avis sur le site"]) {
-      await expect(page.getByRole("link", { name: nom })).toBeVisible();
+      // « Mon profil » est aussi dans la carte du compte (U4 bis, B5).
+      await expect(page.getByRole("link", { name: nom }).first()).toBeVisible();
     }
     await expect(page.getByRole("button", { name: "Signaler un problème" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Sombre" })).toBeVisible();

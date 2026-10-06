@@ -410,3 +410,53 @@ ESLint corrigées, trois retouches après les captures (dates « Dim. 4 oct. »,
 - Reste : B5 à B7 (suites parallèles `u4bis-b5`, `u4bis-b67`).
 - À faire par Timothée : relire le 中文 ci-dessus ; rien à publier (aucune règle : la fiche lit et écrit les mêmes
   documents que la ligne).
+
+**B5 — Moi, profil, connexion, faite le 05/10/2026 (suite parallèle B5)** (branche `lot/u4bis-b5`, partie de
+`lot/u4bis-pages-en-grand` après B3 et B2 ; commit `feat(U4bis): B5 — Moi, profil, connexion…` ; à fusionner dans
+`lot/u4bis-pages-en-grand`).
+- **Moi (Q9)** : `moi/page.tsx` range ses blocs par `useDisposition` — en grand, trois colonnes (compte · listes et
+  liens · Réglages, Notifier/Admin s'ils sont là, Déconnexion) ; tablette portrait, deux (compte et Réglages · listes,
+  liens, Notifier/Admin, Déconnexion) ; téléphone, une (compte, listes, liens, Notifier/Admin, Réglages, Déconnexion).
+  Chaque bloc en carte `.raised` ; page bornée par `--largeur-lecture`. `components/moi/CarteCompte.tsx` : initiale, nom,
+  e-mail, pastille « Admin » (admins seulement), nom dans les plannings, services et rôles en pastilles à la couleur du
+  service (ordre du formulaire du profil), « Mon profil ». La ligne « Mon profil » des listes reste (planche).
+- **Réglages = Notifications · Langue · Thème** : `components/moi/ReglagesNotifications.tsx` — la ligne dit « Activées » /
+  « Désactivées » (abonnement de cet appareil, relu à la fermeture) et ouvre `PushToggle` inchangé : feuille posée en bas
+  sur téléphone (vaul), panneau de 420 px à droite dès la tablette portrait. Ligne montrée quand le profil existe, comme
+  la carte l'était dans le profil.
+- **Profil (Q10)** : `(auth)/profil/page.tsx` — titre de page à gauche (`PageTitle`), deux colonnes dès 768 px
+  (identité et nom dans les plannings, « Enregistrer mon profil » dessous · services et rôles), une sur téléphone,
+  « Enregistrer » en bas ; plus de `PushToggle`. `ProfileFields.ServiceGrid` : les cartes des services sur deux colonnes
+  quand sa carte a 540 px (requête de conteneur `.grille-services`, globals.css) — profil en grand et inscription ;
+  l'administration (Personnes) en profite pareil.
+- **Connexion et inscription (Q13)** : `components/auth/EcranMarque.tsx` — écran partagé dès 1 024 px (`lg`, tablette
+  paysage et ordinateur) : panneau de marque à gauche (logo, « GCC Louange », « Réservé aux membres de l'église », halos
+  pâles rouge et bleu `.panneau-marque`), le formulaire à droite ; ailleurs la marque en haut. Connexion : titre
+  **« Connexion »** (`login.heading`, 登录), plus de carte. Inscription : les trois étapes dans le panneau (en colonne en
+  grand, sur une ligne ailleurs ; une étape faite se touche pour revenir), sous le titre la barre de progression seule.
+  `login.subtitle` (« Connexion présidents de séance ») supprimée des deux locales.
+- Libellés : `login.heading`, `login.reserve` (« 仅限教会成员 »), `moi.compte` (« 我的账号 »), `moi.admin` (« 管理员 »),
+  `moi.notifications`, `moi.activees` (« 已开启 »), `moi.desactivees` (« 已关闭 ») ; le guide (§ Notifications) dit
+  « Moi › Réglages » au lieu du profil (« 在**我 › 设置**中，点「通知」启用它们。»).
+- Tests : `tests/pages-en-grand-moi.spec.ts` (10) sur les cinq projets, vus rouges (20 échecs sur ordinateur et
+  téléphone avant le code) puis verts. Adaptés : `back-office-coupe` (PD4 : la bascule « Petit déj » se cherche dans
+  Moi › Réglages › Notifications), `planning-petit-dej` (les deux tests de la bascule « Petit déj », vus rouges après le
+  retrait de `PushToggle` du profil, passent par Moi › Réglages › Notifications), `taches`, `look-navigation`,
+  `back-office-admin` (« Mon profil » est deux fois sur Moi : `.first()`). Captures regardées aux cinq tailles et comparées aux planches `moi-*`, `notifications-telephone`,
+  `profil-*`, `connexion-*`, `inscription-*`.
+- Choix faute de réponse : la connexion et l'inscription gardent la barre de l'app (barre latérale, barre du haut et du
+  bas sur téléphone), que les planches ne dessinent pas — l'écran partagé occupe la zone de contenu ; sur téléphone, la
+  marque est en bandeau au-dessus du formulaire comme la planche `connexion-telephone` (la spec disait « le formulaire
+  d'aujourd'hui » : mêmes champs et liens) ; le panneau des notifications vaut aussi pour la tablette portrait ; pas de
+  pastille de rôle pour un membre (seulement « Admin ») ; les pastilles des services gardent les libellés français du
+  formulaire (comme `ProfileFields`).
+- Reprise du 05/10/2026 (le premier passage avait été coupé avant le commit) : travail relu et gardé tel quel, tests
+  relancés — `pages-en-grand-moi` 50/50 sur les cinq projets ; specs voisines (`back-office-coupe`, `back-office-admin`,
+  `back-office-espace`, `taches`, `look-*`, `coherence`, `i18n-hydration`, `planning-petit-dej`, `notif-president`)
+  1 031 verts, les 7 échecs = les deux tests du petit déj ci-dessus (corrigés, verts) et un test de la Sainte cène
+  (`back-office-coupe`, nom en double avec le pied de la barre latérale, sans rapport ; vert à la relance).
+- Relevé, sans rapport avec B5 : `write-excel-file` manquait dans `node_modules` de la copie (déclaré dans
+  `package.json`, pages du planning au Back-Office en erreur de compilation, ce qui figeait l'hydratation des autres
+  pages en dev) ; ESLint : un avertissement ancien (`set-state-in-effect`) dans `profil/page.tsx`.
+- Reste (suite B5) : rien.
+- À faire par Timothée : relire le 中文 ci-dessus ; rien à publier (aucune règle, aucun droit changé).
