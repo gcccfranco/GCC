@@ -3,7 +3,7 @@
 // L'agenda du calendrier (lot U8, C4, planche bo-telephone-calendrier) : la liste par
 // jour depuis aujourd'hui, jours vides sautés ; une carte par entrée (vignette colorée
 // à icône, titre, détail) qui ouvre sa feuille (date, détail, « Ouvrir » ; « Déplacer… »
-// viendra avec C6). Les mêmes cartes servent la liste du jour sous le Mois à points.
+// pour une entrée déplaçable, C6). Les mêmes cartes servent la liste du jour sous le Mois à points.
 
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
@@ -86,17 +86,24 @@ export function ListeAgenda({
 const BOUTON_PLEIN =
   "flex h-11 w-full items-center justify-center rounded-full bg-foreground text-[15px] font-semibold text-background transition-opacity duration-150 hover:opacity-85 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground";
 
-/** La feuille d'une entrée : sa source, son titre, sa date, son détail, « Ouvrir ». */
+const BOUTON_SECOND =
+  "flex h-11 w-full items-center justify-center rounded-full bg-secondary text-[15px] font-semibold text-foreground transition-opacity duration-150 hover:opacity-85 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground";
+
+/** La feuille d'une entrée : sa source, son titre, sa date, son détail, « Ouvrir », et
+ *  « Déplacer… » si elle bouge (C6 : seul moyen sur téléphone, Q5) ; une tâche répétée
+ *  dit « Change la répétition dans la tâche » (Q6). */
 export function FeuilleEntree({
   entree,
   ouverte,
   lang,
   onFermer,
+  onDeplacer,
 }: {
   entree: EntreeCalendrier | null;
   ouverte: boolean;
   lang: NotifLang;
   onFermer: () => void;
+  onDeplacer: (e: EntreeCalendrier) => void;
 }) {
   const { t } = useTranslation();
   return (
@@ -114,7 +121,8 @@ export function FeuilleEntree({
             <div className="flex flex-col gap-1 px-4 pb-8">
               {entree.detail && <p className="text-[15px] text-foreground">{entree.detail}</p>}
               {entree.duSheet && <p className="text-xs text-muted-foreground">{t("calendrier.duSheet")}</p>}
-              <div className="mt-4">
+              {entree.repetee && <p className="text-[13px] text-muted-foreground">{t("calendrier.deplacer.repetee")}</p>}
+              <div className="mt-4 flex flex-col gap-2">
                 {entree.duSheet ? (
                   <a href={entree.lien} target="_blank" rel="noopener noreferrer" className={BOUTON_PLEIN}>
                     {t("calendrier.ouvrir")}
@@ -123,6 +131,11 @@ export function FeuilleEntree({
                   <Link href={entree.lien} className={BOUTON_PLEIN}>
                     {t("calendrier.ouvrir")}
                   </Link>
+                )}
+                {entree.deplacable && (
+                  <button type="button" onClick={() => onDeplacer(entree)} className={BOUTON_SECOND}>
+                    {t("calendrier.deplacer.bouton")}
+                  </button>
                 )}
               </div>
             </div>

@@ -1,6 +1,6 @@
 # Spec : lot U8 — calendrier du Back-Office
 
-Spec écrite le 04/10/2026 ; rien n'est codé. Attend la validation de Timothée, puis son go.
+Spec écrite le 04/10/2026, validée (go du 04/10/2026) ; codée le 05/10/2026 (C1 à C8) et relue : voir « Avancement ».
 
 Lot U8 de `feuille-de-route.md` § 3.U. Specs voisines, à raccorder : **U6** (`spec-back-office.md`)
 fixe l'adresse `/back-office/calendrier` (sans page d'attente : U8 crée la page et ajoute l'entrée,
@@ -385,10 +385,248 @@ Spec validée et go de code donné (04/10/2026, redit le 05/10/2026) ; questions
   rallume pas les sources) ; l'Agenda part toujours d'aujourd'hui, même après ‹ › en Mois ; la vue
   choisie n'est pas retenue au rechargement (seules les pastilles le sont, Q11) ; le Mois à points du
   téléphone reprend la grille du widget L, que C8 pourra réutiliser.
-- **À suivre** : C5 → C8. « Déplacer… » (C6) se pose aussi dans `FeuilleEntree` (`Agenda.tsx`).
+- **05/10/2026 — C5 faite** (même branche, après la fusion de `lot/u6-back-office` avec B3 ; commit
+  « feat(U8): C5 — créer depuis un jour ») : en bas du panneau du jour (et de sa feuille sur tablette
+  debout), « Nouvel évènement le 11/10 » (plein, encre) et « Nouvelle tâche pour le 11/10 »
+  (`BoutonsCreation`, `src/components/calendrier/PanneauJour.tsx` ; `jourCourt` dans `grille.ts`).
+  Le premier est un lien vers `/back-office/evenements/nouveau?date=AAAA-MM-JJ` : `NouveauClient`
+  pré-remplit la date (une date mal formée est ignorée), publics de `creatableEvenementPours`. Le
+  second ouvre `TacheForm` sur place, avec la nouvelle prop `echeance`, choix parmi mes pôles (tous
+  pour un admin) ; enregistrée, la tâche est écrite (`createTache`), le responsable nommé par un autre
+  est prévenu comme sur la page du pôle, et le calendrier relit ses sources. Chaque bouton seulement
+  pour qui a le droit (évènement : un public ouvert ; tâche : un pôle). **Question 5** : sur
+  téléphone, et en Agenda sur grand écran (pas de panneau), un « + » (« Créer ») à droite de « Mois |
+  Agenda » ouvre la feuille « Créer » avec les deux boutons pour le jour affiché (le jour touché du
+  Mois à points ; aujourd'hui en Agenda). `tests/calendrier.spec.ts` : 7 tests C5 + captures, vus
+  rouges puis verts sur les cinq projets (325 verts, 20 sautés pour tout le fichier) ; le test
+  « +N » compte désormais les cartes de la liste (les boutons sont des liens de plus). Captures
+  regardées : ordinateur 1440 conforme à la planche `bo-calendrier` (boutons en bas du panneau),
+  feuille du jour sur tablette debout, feuille « Créer » sur téléphone, formulaire de tâche pré-rempli.
+- **Choix de C5, faute de réponse dans la spec** : les boutons sont proposés pour tout jour, passé
+  compris (la spec ne borne que le déplacement) ; le « + » sert aussi l'Agenda sur grand écran ;
+  libellés 中文 `新建{{date}}的活动`, `新建{{date}}截止的任务`, `新建`, date « 10月11日 ». La
+  question 8 (en 2026, renvoyer au Sheet un évènement « Toute l'église ») est laissée à U9 : le
+  formulaire s'ouvre tel quel.
+- **05/10/2026 — C6 faite** (même branche, commit « feat(U8): C6 — déplacer ») :
+  `src/lib/calendrier/deplacer.ts` (pur : `ecartJours`, `decaler`, `champsDecales`,
+  `planDeplacement`, `questionDeplacement`) ; `src/components/calendrier/Deplacer.tsx` (la
+  confirmation) ; glisser dans `GrilleMois.tsx` (`@dnd-kit/core` déjà installé, `useDefaultSensors`,
+  case visée sous le pointeur, « Déposer pour déplacer », original en pointillé, entrée soulevée
+  penchée et cernée d'encre comme la planche) ; « Déplacer… » sous une carte déplaçable du panneau
+  du jour (`PanneauJour.tsx`) et dans la feuille d'une entrée (`Agenda.tsx`, seul moyen sur
+  téléphone). Confirmation : « Déplacer « Chants de Noël » du jeudi 15 au mercredi 14 octobre ? »
+  (中文 « 把「…」从10月15日（周四）改到10月14日（周三）？ ») ; « Déplacer… » demande d'abord la date
+  (champ, aujourd'hui au plus tôt). Écritures : tâche unique = `echeance` seule
+  (`deplacerTache`, `src/lib/firebase/taches.ts`) ; évènement et réunion = `date`, `dateFin`,
+  `inscriptionDebut`, `inscriptionFin` décalés de l'écart, jamais l'heure, et `deplacement`
+  (`{ de, vers, le, parUid }`, type `Deplacement` dans `src/types/evenement.ts`) ; créneau =
+  `dimanche`, `debut`, `fin` du créneau libre choisi (`creneauxLibres` de U1, la même heure cochée
+  si elle est libre). Refus en une phrase : « Pas avant aujourd'hui », « La scène n'est pas ouverte
+  ce jour-là » (jour sans plage, hors saison, jour J), « Aucun créneau libre ce jour-là ». Après
+  l'écriture, le calendrier relit ses sources. `tests/calendrier-deplacer.spec.ts` (ajouté à
+  `SPECS_GRAND_ECRAN`) : 10 tests purs + 14 de page et 2 de captures, vus rouges sur une ébauche
+  puis verts sur les cinq projets ; avec `tests/calendrier.spec.ts`, 434 verts et 41 sautés (tests propres à un appareil).
+- **Choix de C6, faute de réponse dans la spec** : case décochée (ou sans case : pas d'inscrit,
+  inscription externe) = `deplacement: null`, pour qu'un déplacement précédent ne soit pas annoncé à
+  la place de celui-ci par le rappel de C7 ; `deplacement.de` et `.vers` = dates de début de
+  l'évènement (glissé depuis un autre jour d'un évènement sur plusieurs jours, il se décale de
+  l'écart). La case « Prévenir les inscrits (4) » compte `inscrits` (invités compris), cochée
+  d'office ; « Prévenir les membres de la réunion » aussi. Une tâche unique « En cours » emporte sa
+  fois (nommée par sa date) sous la nouvelle date, sinon son état se perdrait. Un créneau d'aujourd'hui
+  déjà commencé n'est pas proposé (`creneauxLibres`). Le glisser ne fait défiler la page que tout au
+  bord (5 % de la hauteur), sinon la dernière semaine fuyait sous le doigt ; les annonces anglaises
+  de dnd-kit sont tues (le clavier passe par « Déplacer… », la confirmation dit tout). Les entrées
+  derrière « +N » ne se glissent pas : « Déplacer… » dans le panneau du jour. Dépôt sur le même jour
+  = rien. La confirmation est une boîte centrée sur les trois appareils.
+- **05/10/2026 — C7 faite** (même branche, commit « feat(U8): C7 — prévenir ») :
+  `src/lib/calendrier/prevenir.ts` (pur : `ligneDeplacement`, `deplacementsAPrevenir`,
+  `cleDeplacement`, `cleVeille`, `destinatairesDeplacement`). Ligne du matin « Changement : Foot au
+  parc passe au vendredi 9 octobre, 19:00. » / « 活动改期：Foot au parc 改到 10月9日 19:00。» (sans
+  heure : « … passe au vendredi 9 octobre. » / « … 改到 10月9日。»), nouvelle sorte `deplacement` des
+  lignes d'évènements (`src/lib/reunions/rappels.ts`) : fondue dans la première notification du jour
+  (services, tâches), seule sinon, titre « Changement de date » / « 活动改期 », ouverte sur la fiche.
+  Cron (`src/app/api/cron/reminders/route.ts`, dans `lignesEvenements`, donc derrière `BACK_OFFICE`) :
+  évènements dont `deplacement.le` date d'hier ou d'avant-hier (jour UTC du cron), destinataires =
+  inscrits avec compte, ou membres pour une réunion (`destinatairesEvenement`), sans l'auteur du
+  geste, préférence « Évènements », clé `deplacement-<id>-<vers>-<uid>`. Rappel de la veille : clé
+  datée `rappel-evenement-<id>-<date>-<uid>` (Q8). `fromFsEvenement` relit `deplacement`.
+  `tests/calendrier-deplacer.spec.ts` : 7 tests purs « prévenir (pur) » (ligne FR et 中文, fenêtre de
+  deux jours, clés, clé datée de la veille, destinataires, rappel du matin, branchement du cron), vus
+  rouges sur une ébauche (sauf celui du branchement, écrit après) puis verts sur les cinq projets.
+- **Choix de C7, faute de réponse dans la spec** : un déplacement fait ce matin (avant le cron)
+  attend le lendemain ; un `deplacement` dont `vers` n'est plus la date de l'évènement (redéplacé
+  depuis par le formulaire) ou un évènement passé ne s'annonce pas, pour ne jamais dire une date
+  fausse ; un évènement déplacé à aujourd'hui s'annonce encore. Notification faite de seuls
+  déplacements : titre « Changement de date » / « 活动改期 ». Le premier matin après le déploiement,
+  la clé datée de la veille ne refait pas partir un rappel déjà envoyé (la veille d'un évènement
+  n'existe qu'un jour) ; seul un évènement déplacé vers demain, déjà rappelé sous l'ancienne date,
+  est rappelé de nouveau, comme voulu.
+- **05/10/2026 — fusion de `lot/u6b-tableau-de-bord`** (B4 à B6 : tableau de bord, Personnaliser,
+  barre du bas) dans `lot/u8-calendrier`, avant C8. Conflits : l'Avancement de `spec-back-office.md`
+  (les deux sections gardées), `SPECS_GRAND_ECRAN` (calendrier + tableau de bord), les libellés
+  `backOffice.*` (réunis, sans `enAttente`, `scene` ni `administration`, retirés par B3) et
+  `back-office-espace.spec.ts`. L'entrée Calendrier étant là depuis C3, les tests de la barre du bas
+  (`barre-back-office.spec.ts`) écrits avant elle attendent désormais la barre de la planche
+  (Accueil · Calendrier · Tâches · Planning · Plus) ; une pièce de plus dans « Plus » et la feuille.
+- **05/10/2026 — C8 faite** (même branche, commit « feat(U8): C8 — widget Calendrier S, M, L ; le
+  Sheet dans Prochains évènements ») : le widget 11 (`src/components/backOffice/widgets/WidgetCalendrier.tsx`,
+  règles pures `src/lib/calendrier/widget.ts`), retiré de `WIDGETS_A_VENIR` (`access.ts`) : permis à
+  tout responsable, d'office au tableau de bord d'un admin (taille M, Q11 de U6). Mêmes entrées que
+  la page (`chargerCalendrier`, `entreesCalendrier`, Sheet sur la période du widget, bandeau discret
+  s'il est injoignable). **S** « Prochains jours » : trois jours au plus sur quatorze, une ligne par
+  jour (« Sam. 3 · Réunion DA · 20:00 » : titres à la suite, heure de la première entrée qui en a
+  une). **M** « Cette semaine » : lundi → dimanche, un point par entrée (quatre au plus), aujourd'hui
+  en encre (planche), puis les lignes des jours qui restent. **L** le mois (« Octobre ») : la grille
+  à points du téléphone (`GrillePoints`) et sa légende. Réglages (`groupesDeReglages`) : un groupe
+  « Sources » — les sources que la personne peut voir, sans Setlists, puis « Seulement moi » (oui /
+  non rangé avec elles, comme la planche ; `choisirReglage` le traite à part, la dernière source ne
+  s'éteint pas). Toucher un jour (ligne, case de M ou de L) ouvre `/back-office/calendrier?jour=…` :
+  la page s'ouvre en Mois sur ce mois et ce jour — panneau à droite, feuille du jour sur tablette
+  debout (ouverte une fois les requêtes média lues, jamais sur ordinateur), liste sous le Mois à
+  points sur téléphone ; la page passe sous `Suspense` (`useSearchParams`). **Widget 3** :
+  `avecLeSheet` (`donnees.ts`) mêle aux évènements de l'app les entrées du Sheet à venir (lues sur
+  un an : seuls les onglets connus sont demandés, donc rien après décembre 2026, U9), par date puis
+  heure, 3 / 5 / 10 ; une section choisie les écarte (toute l'église). Ligne : « dim. 04/10 · 12:30
+  · Sheet », lien vers l'onglet du mois dans un nouvel onglet (`lienOngletSheet`, `sheet.ts`, repris
+  par la fiche du calendrier ; `Rangee` gagne `externe`). `tests/calendrier-widget.spec.ts` (ajouté à
+  `SPECS_GRAND_ECRAN`) : 11 tests purs + 13 d'écran + 1 de captures, vus rouges (ébauches vides,
+  widget absent) puis verts sur les cinq projets (121 verts, 4 sautés : le test propre au
+  téléphone). Tests de U6 mis à jour (widget Calendrier permis, défaut de l'admin, catalogue
+  d'Alice). Verts ensemble : `back-office-espace`, `barre-back-office`, `tableau-de-bord`,
+  `calendrier`, `calendrier-sheet`, `calendrier-widget` (888) puis `calendrier`,
+  `calendrier-widget`, `back-office-coupe` (630). Captures `test-results/calendrier-widget-captures/`
+  regardées aux cinq tailles (S, M, L), conformes à `bo-tableau-de-bord` et `bo-telephone-accueil`.
+- **Choix de C8, faute de réponse dans la spec** : le contenu suit la taille sur tous les appareils
+  (le téléphone de la planche montre la liste S sous « Cette semaine » : on suit la spec, M y montre
+  la semaine à points) ; « Aujourd'hui » / « 今天 » nomme le jour courant dans les lignes ; en L,
+  aujourd'hui en rouge comme sur le Mois à points du téléphone (même composant) ; dans une ligne, un
+  créneau se dit « Scène », un petit déj libre « Petit déj : libre » ; le widget attend le profil
+  avant de lire (« mes services » et les pôles en dépendent) ; Sheet injoignable : une phrase sous
+  le widget. Widget 3 : une entrée du Sheet dit « Sheet » / « 活动表 » à la place de l'état des
+  inscriptions (« Nb inscrits » du Sheet n'est pas lu, « demander avant ») ; un Sheet injoignable
+  n'y est pas signalé (les évènements de l'app restent).
+- **Reste** (après C8, levé plus bas) : l'avertissement « Cases vides : … » du panneau du jour attendait
+  le branchement de `casesVides` ; l'envoi réel de la ligne de C7 se vérifie en ligne (spec, § Réussite).
+- **05/10/2026 — fusion des versions finales des lots dont U8 dépend : le lot U8 est complet** (branche
+  `lot/u8-calendrier`). `lot/u1-scene-saison` et `lot/u6b-tableau-de-bord` y étaient déjà dans leur
+  version finale ; `lot/u6-back-office` apporte sa relecture et celles de U2 et U3 (commit de fusion
+  `e3eede7`). Conflits résolus : l'Avancement de `spec-back-office.md` (version de U6, qui réunit déjà
+  les deux sections) ; `SPECS_GRAND_ECRAN` (les trois fichiers du calendrier et ceux de U6) ; le libellé
+  `backOffice.menu` (« Tes modules »), retiré par B6 et lu nulle part : retiré. `npx tsc --noEmit` vert,
+  `npm run lint` sans erreur (53 avertissements, tous d'avant).
+- **Après la fusion** (commit « fix(U8): fusion — … ») :
+  - **Petit déj** : `chargerCalendrier` lit les lignes par `lirePetitDej` de U3 (lecture publique, cache
+    de 5 minutes), comme le dit le Modèle ; la copie locale de C3 est retirée. Lecture en échec : rien,
+    jamais « Libre », comme avant.
+  - **« Cases vides » du panneau du jour** (Écrans, Réussite) : une carte de service à venir dit en
+    orange « Cases vides : Batterie, Sono » (中文 « 空缺：架子鼓, 音控 »), sous sa présidence, comme la
+    planche `bo-calendrier`. Calcul du widget 4 de U6 (`casesVides`, `lignesDeLAnnee` de U2) sur les
+    plannings que ce widget montre d'office (`planningsCasesVides` : ceux qu'on remplit, sinon ceux
+    qu'on publie ; le Culte pour un admin), lus par `lireGrilles` dans `chargerCalendrier`. Nouveaux
+    champs facultatifs : `DonneesCalendrier.grilles` et `EntreeCalendrier.vides` (clés
+    `planning.roles.*`, traduites par le panneau). `tests/calendrier.spec.ts` : 1 test pur et 2 de
+    page (plus le 中文), vus rouges puis verts ; la ligne du 11/10 du planning simulé est remplie sauf
+    Batterie et Sono.
+  - **Une lecture des setlists au tableau de bord** (relecture de U6) : le widget Calendrier lisait
+    toutes les setlists (`getSetlists`) pour une source qu'il ne montre jamais ; il ne les lit plus, ni
+    les grilles des cases vides (`chargerCalendrier(…, { pourLeWidget: true })`). Le test de U6
+    « une seule lecture des setlists » repasse au vert sur le tableau de bord d'un admin, où le
+    widget Calendrier est d'office.
+  - **Barre du bas** : le test de U6 « la barre enregistrée ne répond pas » attend le défaut d'un
+    admin depuis l'entrée Calendrier (Accueil · Calendrier · Tâches · Planning · Plus).
+- **Choix de l'après-fusion, faute de réponse dans la spec** : seulement aujourd'hui et après (un
+  dimanche passé ne réclame plus rien) ; seulement dans le panneau du jour et sa feuille (tablette
+  debout), pas dans la case de la grille ni dans les cartes de l'Agenda et du téléphone, que la planche
+  ne montre pas ; l'entrée « EDD » réunit les colonnes vides des classes lues, sans dire laquelle ;
+  plannings illisibles : aucune case vide annoncée.
+- **Reste** : rien. L'envoi réel de la ligne de C7 se vérifie en ligne.
 - **Pour Timothée** : rien à publier (C1 à C4 ne touchent pas `firestore.rules` ; C3 ouvre
   seulement l'entrée de menu déjà prévue par U6) ; relire les mots 中文 de `calendrier` dans
   `src/locales/zh-CN.json` (`只看我的`, `活动（Sheet）`, `读取自活动表格（Sheet）`,
   `无法读取活动表格（Sheet）…`, `这天没有安排。`) et ceux de `src/lib/calendrier/entrees.ts` (`司会：`, `已报名 4/10`, `截止`, `舞台`,
   `早餐`, `空闲`, `主日学`, `首`) ; pour C4, `视图`, `月`, `日程`, `全部`, `来源`, `打开`,
-  `显示{{mois}}` (« 显示11月 »), `到{{mois}}底都没有安排。` et la légende (`calendrier.legende`).
+  `显示{{mois}}` (« 显示11月 »), `到{{mois}}底都没有安排。` et la légende (`calendrier.legende`) ;
+  pour C5, `新建`, `新建{{date}}的活动`, `新建{{date}}截止的任务`. C5 ne touche ni `access.ts` ni
+  `firestore.rules` : rien à publier.
+  Pour C6, les mots de `calendrier.deplacer` (`改期…`, `改期「{{titre}}」`, `新日期`,
+  `放下即可改期`, `通知已报名的人（{{count}}）`, `通知会议成员`, `他们会在明天早上的提醒里看到。`,
+  `关联任务不会改期：{{liste}}`, `{{jour}}的空闲时段`, `取消`, `改期`, `好`, `改期没有保存，请重试。`,
+  `不能早于今天`, `这天舞台不开放`, `这天没有空闲时段`) et la question
+  « 把「…」从10月15日（周四）改到10月14日（周三）？ » (`questionDeplacement`). C6 ne touche ni
+  `access.ts` ni `firestore.rules` (les règles d'aujourd'hui permettent déjà ces écritures, champ
+  `deplacement` compris) : rien à publier.
+  Pour C7, les deux lignes 中文 de `src/lib/calendrier/prevenir.ts` et
+  `src/lib/reunions/rappels.ts` : « 活动改期：{titre} 改到 10月9日 19:00。» et le titre « 活动改期 ». C7
+  ne touche ni `access.ts` ni `firestore.rules` (le cron lit avec le compte de service) : rien à
+  publier. La requête `deplacement.le >= …` du cron se sert de l'index simple automatique de
+  Firestore, comme `compteRendu.le` : rien à créer.
+  Pour C8 : rien à publier (`access.ts` ne fait que rendre le widget permis ; ses réglages vivent
+  dans `backOffice/{uid}`, dont la règle vient de B5) ; relire les mots 中文 `近几天`, `本周`,
+  `未来十四天没有安排。`, `本周没有其他安排。`, `无法读取活动表格（Sheet），其中的活动暂不显示。`,
+  `来源` (réglages), `活动表` (widget 3), et les jours « 今天 », « 周六 3日 »
+  (`src/lib/calendrier/widget.ts`).
+  Après la fusion : rien à publier pour U8 (ni `access.ts` ni `firestore.rules` ne bougent ; les
+  plannings et `petitDej` se lisent déjà sans jeton). `firestore.rules`, telle que la fusion l'apporte,
+  porte les règles de U6, U2 et U3 que leurs specs demandent de publier. Relire le 中文 `空缺：{{liste}}`
+  (`calendrier.casesVides`). Regarder, en local, le panneau d'un dimanche à venir du Culte Franco.
+- **05/10/2026 — relecture du lot (deux relectures), corrigée** (commit « fix(U8): relecture — … ») :
+  - **Setlist du culte dans le panneau du jour** (Réussite, planche `bo-calendrier`) : une carte de
+    service dit « Setlist « Culte du 11 octobre » · 4 chants » (中文 « 歌单「…」· 4 首 ») sous sa
+    présidence, même pastille Setlists éteinte : la setlist publiée du même jour et de la même
+    catégorie (même moment au Campus), que je vois (`canSeeSetlist`), jamais un brouillon. Champ
+    facultatif `EntreeCalendrier.setlist` ; panneau du jour et sa feuille seulement, comme les cases vides.
+  - **Plus de boucle sans fin** : un évènement ne parcourt que les jours de la période affichée ; une
+    `date` mal formée (année à cinq chiffres) l'écarte, une `dateFin` mal formée compte pour rien.
+    `EvenementForm` borne ses champs date (`max="9999-12-31"`), comme le champ de « Déplacer… ».
+  - **Lectures bornées à la période** (`charger.ts`) : `chargerCalendrier` lit une fois les tâches
+    sans leurs fois (`listTachesSeules`, `src/lib/firebase/taches.ts`) ; `chargerPeriode` lit les fois
+    des seules tâches qui ont une échéance dans la période affichée (`listFois`), et mes inscriptions
+    seulement « Seulement moi » allumé, pour les évènements ouverts de la période. Même chose au
+    widget, sur sa période (S, M ou L). Le coût ne croît plus avec l'histoire.
+  - **Sources illisibles nommées** : une lecture qui rejette (réseau coupé, Firestore bloqué) donne un
+    bandeau « Lecture impossible : Tâches. Le reste s'affiche. » (中文 « 无法读取：任务。其余照常显示。 »)
+    sur la page, une ligne au widget.
+  - **Le Sheet ne retient plus rien** : le widget Calendrier et « Prochains évènements » montrent les
+    données de l'app sans attendre le Sheet ; une requête au Sheet est abandonnée au bout de 8 s
+    (`AbortSignal.timeout`, sauf vieux Safari) ; deux lectures du même onglet en même temps n'en font
+    qu'une.
+  - **Pastilles dans l'ordre de la planche** (Services · Évènements (Sheet) · Tâches · Réunions ·
+    Scène · Petit déj · Setlists), feuille « Sources » comprise (`ORDRE_PASTILLES`) ; l'ordre dans un
+    jour (`SOURCES`) ne change pas.
+  - **Tâche répétée** : « Change la répétition dans la tâche » (中文 « 请到任务里修改重复设置 ») à la place
+    de « Déplacer… », dans le panneau du jour et la feuille de l'entrée (Q6).
+  - **Déplacer** : un évènement sur plusieurs jours glissé depuis une autre case que la première est
+    refusé si son nouveau début tombe avant aujourd'hui (« Pas avant aujourd'hui ») ; une date mal
+    formée ne donne rien à faire (plus d'erreur ni d'échéance illisible écrite).
+  - **Prévenir** : la clé du rappel du matin prend le jour du geste
+    (`deplacement-<id>-<vers>-<AAAA-MM-JJ du geste>-<uid>`) : un retour à une date déjà annoncée
+    (A → B, B → C, C → B) s'annonce aussi.
+  - **Doublons retirés** : `estReunion` et `equipeDuPour` viennent d'`access.ts` (un `pole:` inconnu ou
+    une équipe mal formée n'est plus une réunion), `estLibre` et `LignePetitDej` de U3
+    (`estLibre` accepte des lignes réduites à `dimanche`).
+  - Tests : 18 nouveaux et 5 complétés (purs et de page), vus rouges puis verts, sauf deux témoins
+    verts d'emblée (créneau d'un groupe non permis, en page ; grille jamais montrée sur téléphone) ; une
+    capture de plus (tâche répétée) ; les captures de « Déplacer » attendent un état observable, plus
+    des délais fixes. Verts sur les cinq projets :
+    `calendrier`, `calendrier-deplacer`, `calendrier-widget`, `calendrier-sheet`, `tableau-de-bord`,
+    `back-office-coupe` (1165 verts, 64 sautés : tests propres à un appareil) ; `evenements`,
+    `back-office-espace`, `barre-back-office` sur trois appareils (353). `npx tsc --noEmit` vert,
+    `npm run lint` sans erreur (53 avertissements, tous d'avant). Captures regardées : panneau du 11
+    (ordinateur 1440, tablette debout) conforme à `bo-calendrier` ; tâche répétée (ordinateur, téléphone).
+- **Constats de la relecture laissés, et pourquoi** :
+  - « Squelette avant les requêtes média » : faux en pratique. La page ne se monte qu'après la
+    connexion (gabarit de U6, « Chargement… » au rendu serveur et à l'hydratation), donc hors
+    hydratation : `useSyncExternalStore` lit les vraies requêtes média dès son premier rendu. Un test
+    (téléphone) le garde : la grille du Mois n'apparaît jamais avant l'Agenda (vert sans changement).
+  - « Patcher les données après un déplacement plutôt que tout relire » : la relecture est maintenant
+    bornée (quelques listes, plus les fois de la période) et garde la vérité de la base ; pas de patch local.
+  - « Titre d'onglet inattendu = Sheet injoignable » : non fait. Un Sheet rendu privé redirige vers la
+    connexion Google, que le navigateur refuse (CORS) : c'est déjà une panne, donc le bandeau. Les titres
+    réels d'août et de septembre n'ont pas été relus ; changer la règle sans eux risquait un bandeau à tort.
+  - Hors du lot : la pastille Tâches de la barre latérale (U6) et le widget « À faire » relisent
+    toujours toutes les tâches avec toutes leurs fois ; `listEvenements` lit toute la collection (une requête).
+- **Reste** : rien pour U8. L'envoi réel de la ligne de C7 se vérifie en ligne.
+- **Pour Timothée** : rien à publier (ni `access.ts` ni `firestore.rules` ne bougent). Relire le 中文
+  `歌单「{{titre}}」· {{count}} 首` (`calendrier.setlistDuService`), `无法读取：{{liste}}。其余照常显示。`
+  (`calendrier.echecs`) et `请到任务里修改重复设置` (`calendrier.deplacer.repetee`). Regarder en local le
+  panneau d'un dimanche du Culte Franco qui a sa setlist publiée.

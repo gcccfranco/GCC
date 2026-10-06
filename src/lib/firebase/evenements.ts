@@ -6,7 +6,7 @@ import {
   fromFsValue,
   type RawDoc,
 } from "./setlists";
-import type { CompteRendu, Evenement, Inscription } from "@/types/evenement";
+import type { CompteRendu, Deplacement, Evenement, Inscription } from "@/types/evenement";
 import { modeInscriptions } from "@/lib/evenements/agenda";
 
 // Évènements (lot 6) : evenements/{id} et evenements/{id}/inscriptions/{iid},
@@ -56,6 +56,7 @@ export function fromFsEvenement(raw: RawDoc): Evenement {
     expiresAt: (data.expiresAt as string | null) ?? null,
     inscrits: typeof data.inscrits === "number" ? data.inscrits : 0,
     ...(data.compteRendu ? { compteRendu: data.compteRendu as CompteRendu } : {}),
+    ...(data.deplacement ? { deplacement: data.deplacement as Deplacement } : {}),
     createdAt: (data.createdAt as string) ?? "",
     updatedAt: (data.updatedAt as string) ?? "",
   };

@@ -29,6 +29,9 @@ const MAX_IMAGES = 3
 // rappel de la veille, réunions précédentes). Elle prend « Église » si elle était une info.
 const TYPE_REUNION: EvenementType = "eglise"
 const MAX_TOTAL_CHARS = 750_000
+// Le champ date de Chrome laisse taper une année à cinq chiffres, que le calendrier (lot U8)
+// et le déplacement ne savent pas lire : on la borne.
+const DATE_MAX = "9999-12-31"
 
 export type EvenementValues = Omit<Evenement, "id" | "organisateurUid" | "organisateurNom" | "inscrits" | "createdAt" | "updatedAt" | "compteRendu">
 
@@ -53,7 +56,7 @@ function Periode({ id, label, heureLabel, aide, value, onChange }: {
     <div className="space-y-1">
       <label htmlFor={id} className="text-sm text-muted-foreground">{label}</label>
       <div className="grid grid-cols-2 gap-3">
-        <Input id={id} type="date" value={jour} onChange={(e) => onChange(joindre(e.target.value, heure))} />
+        <Input id={id} type="date" max={DATE_MAX} value={jour} onChange={(e) => onChange(joindre(e.target.value, heure))} />
         <Input type="time" aria-label={heureLabel} value={heure} disabled={!jour} onChange={(e) => onChange(joindre(jour, e.target.value))} />
       </div>
       <p className="text-xs text-muted-foreground">{aide}</p>
@@ -200,7 +203,7 @@ export function EvenementForm({ initial, pours, creation, inscrits = 0, onSubmit
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <label htmlFor="ev-date" className={LABEL}>{t("evenements.form.date")}</label>
-              <Input id="ev-date" type="date" value={v.date} onChange={(e) => set({ date: e.target.value })} required
+              <Input id="ev-date" type="date" max={DATE_MAX} value={v.date} onChange={(e) => set({ date: e.target.value })} required
                 aria-invalid={refusSheet || undefined} aria-describedby={refusSheet ? "ev-date-sheet" : undefined} />
             </div>
             <div className="space-y-1">
@@ -317,7 +320,7 @@ export function EvenementForm({ initial, pours, creation, inscrits = 0, onSubmit
               </div>
               <div className="space-y-1">
                 <label htmlFor="ev-date-fin" className={LABEL}>{t("evenements.form.dateFin")}</label>
-                <Input id="ev-date-fin" type="date" value={v.dateFin} onChange={(e) => set({ dateFin: e.target.value })} />
+                <Input id="ev-date-fin" type="date" max={DATE_MAX} value={v.dateFin} onChange={(e) => set({ dateFin: e.target.value })} />
               </div>
             </div>
           )}

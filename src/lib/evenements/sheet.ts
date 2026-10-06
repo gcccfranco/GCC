@@ -55,6 +55,12 @@ export function lienSheetEvenements(mois = ""): string {
 const urlExport = (gid: number) =>
   `https://docs.google.com/spreadsheets/d/${SHEET_EVENEMENTS_ID}/export?format=csv&gid=${gid}`
 
+/** L'onglet du mois d'une date, à ouvrir dans le navigateur (fiche du calendrier, widget 3). */
+export function lienOngletSheet(date: string): string {
+  const gid = ONGLETS_SHEET[date.slice(0, 7)]
+  return `https://docs.google.com/spreadsheets/d/${SHEET_EVENEMENTS_ID}/edit${gid ? `#gid=${gid}` : ""}`
+}
+
 // ─── CSV ──────────────────────────────────────────────────────────────────────
 
 /** CSV de l'export : virgules et retours à la ligne entre guillemets gardés, lignes vides comprises
@@ -163,21 +169,39 @@ export function lireMoisSheet(rows: string[][], mois: string): EntreeSheet[] {
 // ─── Réseau, cache, panne ─────────────────────────────────────────────────────
 
 /** Comme le planning (`fetchSheet`, src/lib/planning/sheets.ts) : 5 minutes en mémoire, vidée à
- *  chaque rechargement de la page ; la dernière copie resservie si le réseau tombe. */
+ *  chaque rechargement de la page ; la dernière copie resservie si le réseau tombe. Une requête
+ *  qui pend est abandonnée au bout de 8 secondes (panne : copie ou bandeau). */
 const TTL_MS = 5 * 60_000
+const DELAI_MS = 8_000
 const ENV: EnvSheet = {
-  fetch: (url) => fetch(url, { cache: "no-store" }),
+  // `AbortSignal.timeout` manque aux vieux Safari (avant 16) : sans lui, pas de délai.
+  fetch: (url) => fetch(url, { cache: "no-store", signal: AbortSignal.timeout?.(DELAI_MS) }),
   maintenant: () => Date.now(),
   cache: new Map(),
 }
 
+/** Lectures en cours, par cache puis par mois : deux widgets qui demandent le même onglet en même
+ *  temps (tableau de bord) n'envoient qu'une requête. */
+const enVol = new WeakMap<EnvSheet["cache"], Map<string, Promise<LectureSheet>>>()
+
 /** L'onglet d'un mois (AAAA-MM). Un mois sans onglet (avant août, après décembre 2026) : rien. */
-export async function chargerMoisSheet(mois: string, env: Partial<EnvSheet> = {}): Promise<LectureSheet> {
-  const { fetch: lire, maintenant, cache } = { ...ENV, ...env }
+export function chargerMoisSheet(mois: string, env: Partial<EnvSheet> = {}): Promise<LectureSheet> {
+  const { maintenant, cache } = { ...ENV, ...env }
   const gid = ONGLETS_SHEET[mois]
-  if (typeof gid !== "number") return { entrees: [], injoignable: false }
+  if (typeof gid !== "number") return Promise.resolve({ entrees: [], injoignable: false })
   const copie = cache.get(mois)
-  if (copie && maintenant() - copie.at < TTL_MS) return { entrees: copie.entrees, injoignable: false }
+  if (copie && maintenant() - copie.at < TTL_MS) return Promise.resolve({ entrees: copie.entrees, injoignable: false })
+  const lectures = enVol.get(cache) ?? new Map<string, Promise<LectureSheet>>()
+  enVol.set(cache, lectures)
+  const deja = lectures.get(mois)
+  if (deja) return deja
+  const promesse = lireMois(mois, gid, { ...ENV, ...env }).finally(() => lectures.delete(mois))
+  lectures.set(mois, promesse)
+  return promesse
+}
+
+async function lireMois(mois: string, gid: number, { fetch: lire, maintenant, cache }: EnvSheet): Promise<LectureSheet> {
+  const copie = cache.get(mois)
   try {
     const res = await lire(urlExport(gid))
     if (!res.ok) throw new Error("Sheet des évènements : réponse en erreur")

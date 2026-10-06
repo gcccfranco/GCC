@@ -5,6 +5,7 @@ import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { ADMIN_EMAILS, entreesBackOffice } from "../src/lib/access";
 import { joursDeLaGrille, libelleCourt } from "../src/lib/calendrier/grille";
 import {
+  ORDRE_PASTILLES,
   SOURCES,
   SOURCES_D_OFFICE,
   entreesCalendrier,
@@ -203,6 +204,71 @@ test.describe("sources du calendrier (pur)", () => {
     ]);
   });
 
+  test("services : « Cases vides » des plannings lus (calcul du widget 4 de U6), aujourd'hui et après seulement", () => {
+    const d = vide();
+    d.seances = [
+      { category: "Culte Francophone", date: "2026-09-27", leader: "Lou M.", label: "" },
+      { category: "Culte Francophone", date: "2026-10-11", leader: "Sam T.", label: "" },
+      { category: "Culte Francophone", date: "2026-10-18", leader: "Noé R.", label: "" },
+      { category: "Groupe Paix", date: "2026-10-11", leader: "Kim R.", label: "" },
+      { category: "Campus", date: "2026-10-20", moment: "matin", leader: "A.", label: "" },
+      { category: "Campus", date: "2026-10-20", moment: "soir", leader: "B.", label: "" },
+      { category: "中班", date: "2026-10-11", leader: "Lou M.", label: "" },
+      { category: "大班", date: "2026-10-11", leader: "", label: "" },
+    ];
+    // Lignes des grilles lues (`lireGrilles`) : index 1 = présidence, puis les colonnes de chaque grille.
+    // Culte : Batterie (6) et Sono (7) vides le 11 ; Sainte cène (11) vide mais optionnelle ; le 18 complet.
+    const culte = (date: string, vides: number[]) =>
+      [date, ...Array.from({ length: 11 }, (_, i) => (vides.includes(i + 1) || i + 1 === 11 ? "" : `N${i + 1}`))];
+    const campus = (date: string) => [date, ...Array.from({ length: 13 }, (_, i) => (i + 1 === 4 ? "" : `C${i + 1}`))];
+    d.grilles = {
+      culte: [culte("2026-09-27", [6]), culte("2026-10-11", [6, 7]), culte("2026-10-18", [])],
+      campusSoir: [campus("2026-10-20")],
+      // EDD 中班 : Piano (3) et Cajón (4) vides ; 大班 n'est pas lu.
+      eddZhongban: [["2026-10-11", "Lou M.", "S.", "", "", "G.", "Cours"]],
+    };
+    const e = de(entreesCalendrier(...OCT, d, ctx()), "services");
+    const vides = (cle: string) => e.find((x) => x.cle === cle)?.vides;
+    expect(vides("services:Culte Francophone:2026-10-11")).toEqual(["planning.roles.batterie", "planning.roles.sono"]);
+    // Complet, ou planning non lu (Groupe Paix, Campus matin) : rien.
+    expect(vides("services:Culte Francophone:2026-10-18")).toBeUndefined();
+    expect(vides("services:Groupe Paix:2026-10-11")).toBeUndefined();
+    expect(vides("services:Campus-matin:2026-10-20")).toBeUndefined();
+    // Campus : la grille du même moment seulement.
+    expect(vides("services:Campus-soir:2026-10-20")).toEqual(["planning.roles.piano"]);
+    // L'entrée « EDD » réunit les classes lues.
+    expect(vides("services:EDD:2026-10-11")).toEqual(["planning.roles.piano", "planning.roles.cajon"]);
+    // Un dimanche passé ne réclame plus rien (le 27/09, Batterie vide).
+    const passe = de(entreesCalendrier("2026-09-27", "2026-09-27", d, ctx()), "services");
+    expect(passe[0].vides).toBeUndefined();
+  });
+
+  test("services : la setlist publiée du même jour et de la même catégorie, même pastille Setlists éteinte (planche bo-calendrier)", () => {
+    const d = vide();
+    d.seances = [
+      { category: "Culte Francophone", date: "2026-10-11", leader: "Sam T.", label: "" },
+      { category: "Culte Francophone", date: "2026-10-18", leader: "Noé R.", label: "" },
+      { category: "Campus", date: "2026-10-20", moment: "matin", leader: "A.", label: "" },
+      { category: "Campus", date: "2026-10-20", moment: "soir", leader: "B.", label: "" },
+    ];
+    const chants = (n: number) => Array.from({ length: n }, () => ({}) as never);
+    d.setlists = [
+      // Privée d'un autre, brouillon : jamais jointes.
+      setlist({ id: "privee", title: "Privée d'un autre", isPrivate: true, ownerId: "u-autre", items: chants(2) }),
+      setlist({ id: "brouillon", title: "Brouillon", isDraft: true, date: "2026-10-18" }),
+      setlist({ id: "s11", title: "Culte du 11 octobre", items: chants(4) }),
+      setlist({ id: "soir", title: "Campus soir", category: "Campus", date: "2026-10-20", moment: "soir", items: chants(3) }),
+    ];
+    const toutes = entreesCalendrier(...OCT, d, ctx(MOI, profil({ serviceRoles: { "Culte Francophone": ["chanteur"], Campus: ["chanteur"] } })));
+    const services = de(filtrerEntrees(toutes, { sources: SOURCES_D_OFFICE, seulementMoi: false }), "services");
+    expect(services.map((x) => [x.cle, x.setlist ?? null])).toEqual([
+      ["services:Culte Francophone:2026-10-11", { titre: "Culte du 11 octobre", chants: 4 }],
+      ["services:Culte Francophone:2026-10-18", null],
+      ["services:Campus-matin:2026-10-20", null],
+      ["services:Campus-soir:2026-10-20", { titre: "Campus soir", chants: 3 }],
+    ]);
+  });
+
   test("Sheet : lecture seule, jamais « moi », heures « 19:00 – 21:00 », lien vers l'onglet du mois", () => {
     const d = vide();
     d.sheet = [
@@ -251,6 +317,22 @@ test.describe("sources du calendrier (pur)", () => {
     ]);
   });
 
+  test("évènements : seuls les jours de la fenêtre sont parcourus ; une date mal formée ne fige rien", () => {
+    const d = vide();
+    d.evenements = [
+      // Sur toute l'année : les trente et un jours d'octobre, rien d'autre.
+      evenement({ id: "annee", titre: "Année", date: "2026-01-01", dateFin: "2026-12-31" }),
+      // Fin tapée sur cinq chiffres (le champ date de Chrome l'accepte) : la boucle ne part pas à l'infini.
+      evenement({ id: "fin", titre: "Fin à cinq chiffres", date: "2026-10-12", dateFin: "20266-10-12" }),
+      // Début mal formé : écarté.
+      evenement({ id: "debut", titre: "Début à cinq chiffres", date: "20266-10-12" }),
+    ];
+    const e = de(entreesCalendrier(...OCT, d, ctx(ADMIN, null)), "evenements");
+    expect(e.filter((x) => x.titre === "Année")).toHaveLength(31);
+    expect(e.filter((x) => x.titre === "Fin à cinq chiffres").map((x) => x.date)).toEqual(["2026-10-12"]);
+    expect(e.filter((x) => x.titre === "Début à cinq chiffres")).toEqual([]);
+  });
+
   test("évènements : chacun ne voit que les siens (canSeeEvenement) ; « moi » = j'organise ou je suis inscrit", () => {
     const d = vide();
     d.evenements = [
@@ -284,6 +366,16 @@ test.describe("sources du calendrier (pur)", () => {
     expect(e[1].moi).toBe(true);
     expect(de(entreesCalendrier(...OCT, d, ctx(MOI, profil())), "reunions")).toEqual([]);
     expect(de(entreesCalendrier(...OCT, d, ctx(ADMIN, null)), "reunions").map((x) => x.moi)).toEqual([false, false, false]);
+  });
+
+  test("réunions : la règle d'access.ts (estReunion) — un pôle inconnu ou une équipe mal formée n'en est pas une", () => {
+    const d = vide();
+    d.evenements = [
+      evenement({ id: "inconnu", titre: "Pôle inconnu", pour: "pole:inconnu" as Evenement["pour"], date: "2026-10-03" }),
+      evenement({ id: "eq", titre: "Équipe mal formée", pour: "equipe:Accueil Bis" as Evenement["pour"], date: "2026-10-03" }),
+    ];
+    const e = entreesCalendrier(...OCT, d, ctx(ADMIN, null));
+    expect(de(e, "reunions")).toEqual([]);
   });
 
   test("scène : les créneaux du programme affiché, « Scène · Chant EDD 中班 », jamais ceux d'un brouillon", () => {
@@ -342,6 +434,8 @@ test.describe("sources du calendrier (pur)", () => {
     ]);
     expect(e[0]).toMatchObject({ titre: "Fond PPT du culte", detail: "DA · échéance", couleur: "#8e8e93", heure: "", lien: "/taches/da" });
     expect(e[1]).toMatchObject({ titre: "Envoyer la setlist", detail: "Louange · Alix P.", lien: "/taches/louange" });
+    // Q6 : la tâche répétée ne se glisse pas, et le dit (« Change la répétition dans la tâche ») ; l'unique, non.
+    expect(e.map((x) => x.repetee ?? false)).toEqual([false, true, true, true, true, true]);
   });
 
   test("tâches : « moi » = responsable moi, ou mon pôle sans responsable, et pas terminée", () => {
@@ -477,12 +571,17 @@ test.describe("filtres : pastilles et « Seulement moi » (pur)", () => {
 });
 
 test.describe("pastilles permises (pur)", () => {
+  // L'ordre des pastilles est celui de la planche (§ Écrans) : Tâches avant Réunions ;
+  // celui d'un jour (SOURCES) met les réunions avant.
+  const PLANCHE = ["services", "evenements", "taches", "reunions", "scene", "petitDej", "setlists"];
+
   test("sans pôle ni équipe : ni Tâches ni Réunions", () => {
     expect(sourcesPermises(MOI, profil())).toEqual(["services", "evenements", "scene", "petitDej", "setlists"]);
   });
 
-  test("un pôle (Louange compris, par un rôle de service) : Tâches et Réunions", () => {
-    expect(sourcesPermises(MOI, profil({ serviceRoles: { "Culte Francophone": ["musicien"] } }))).toEqual([...SOURCES]);
+  test("un pôle (Louange compris, par un rôle de service) : Tâches et Réunions, dans l'ordre de la planche", () => {
+    expect(ORDRE_PASTILLES).toEqual(PLANCHE);
+    expect(sourcesPermises(MOI, profil({ serviceRoles: { "Culte Francophone": ["musicien"] } }))).toEqual(PLANCHE);
   });
 
   test("une équipe sans pôle : Réunions, pas Tâches", () => {
@@ -491,8 +590,8 @@ test.describe("pastilles permises (pur)", () => {
     ]);
   });
 
-  test("un admin : toutes", () => {
-    expect(sourcesPermises(ADMIN, null)).toEqual([...SOURCES]);
+  test("un admin : toutes, dans l'ordre de la planche", () => {
+    expect(sourcesPermises(ADMIN, null)).toEqual(PLANCHE);
   });
 });
 
@@ -616,7 +715,8 @@ const csv = (rows: string[][]) => rows.map((r) => r.map((c) => `"${c}"`).join(",
 const CULTE = csv([
   ["2026 DATE", "Présidence", "Choristes", "", "Pianiste", "Guitariste", "Batterie", "Sono + Live", "PPT", "Orateur", "Traducteur", "Sainte cène", "Notes"],
   ["04/10", "Lou M.", "", "", "", "", "", "", "", "", "", "", ""],
-  ["11/10", "Sam T.", "", "", "", "", "", "", "", "", "", "", ""],
+  // Le 11 : tout rempli sauf Batterie et Sono (« Cases vides : Batterie, Sono », la Sainte cène est optionnelle).
+  ["11/10", "Sam T.", "Ana B.", "Bea C.", "Cyd D.", "Dan E.", "", "", "Eli F.", "Fay G.", "Gus H.", "", ""],
 ]);
 
 const P_ADMIN: FakeProfile = { uid: "u-admin", email: ADMIN_EMAILS[0], firstName: "Admin", lastName: "T.", planningName: "Lou M." };
@@ -654,6 +754,18 @@ const DOCS: Record<string, Record<string, unknown>> = {
     auteurUid: "u-autre", auteurNom: "Autre", createdAt: MAINTENANT, updatedAt: MAINTENANT,
   },
   "petitDej/pd18": { dimanche: "2026-10-18", nom: "Famille Test", uid: "", auteurUid: "u-autre", creeLe: MAINTENANT, modifieLe: MAINTENANT },
+  // La setlist publiée du culte du 11 (planche bo-calendrier : « Setlist « Culte du 11 octobre » · 4 chants »).
+  "setlists/s11": {
+    title: "Culte du 11 octobre", leader: "Sam T.", category: "Culte Francophone", date: "2026-10-11", language: "fr", notes: "",
+    createdAt: MAINTENANT, isDraft: false, isPrivate: false, ownerId: "u-autre",
+    items: [1, 2, 3, 4].map((position) => ({ songSlug: `chant-${position}`, position })),
+  },
+  // L'admin est inscrit au tournoi du 22 ; un évènement d'il y a deux ans reste dans la base.
+  "evenements/ping/inscriptions/u-admin": { uid: "u-admin", nom: "Admin T.", le: MAINTENANT },
+  "evenements/vieux": {
+    titre: "Sortie de 2024", type: "loisir", pour: "eglise", date: "2024-10-12", heure: "10:00",
+    organisateurUid: "u-autre", organisateurNom: "Autre", inscrits: 3, createdAt: MAINTENANT, updatedAt: MAINTENANT,
+  },
 };
 
 /** Le Sheet des évènements (export par gid) et le planning (gviz) : jamais les vrais. */
@@ -795,6 +907,29 @@ test.describe("C3 : la page du calendrier en Mois", () => {
     await expect(jour(page, "2026-10-11")).toHaveAttribute("aria-pressed", "true");
   });
 
+  test("le panneau du jour dit les cases vides d'un service : « Cases vides : Batterie, Sono » (ordinateur et tablettes)", async ({ page }, info) => {
+    test.skip(estTelephone(info), SANS_TELEPHONE);
+    await ouvrir(page);
+    await jour(page, "2026-10-11").click();
+    const panneau = panneauADroite(info)
+      ? page.getByRole("complementary", { name: "Dimanche 11 octobre" })
+      : page.getByRole("dialog", { name: "Dimanche 11 octobre" });
+    await expect(panneau.getByRole("link", { name: /Culte Franco/ })).toContainText("Cases vides : Batterie, Sono");
+    // La case de la grille n'en dit rien : la carte du panneau seulement (planche bo-calendrier).
+    await expect(jour(page, "2026-10-11")).not.toContainText("Cases vides");
+  });
+
+  test("« Cases vides » : seulement pour les plannings qu'on remplit ou publie, comme le widget 4 (ordinateur et tablettes)", async ({ page }, info) => {
+    test.skip(estTelephone(info), SANS_TELEPHONE);
+    await ouvrir(page, P_POLES);
+    await jour(page, "2026-10-11").click();
+    const panneau = panneauADroite(info)
+      ? page.getByRole("complementary", { name: "Dimanche 11 octobre" })
+      : page.getByRole("dialog", { name: "Dimanche 11 octobre" });
+    await expect(panneau.getByRole("link", { name: /Culte Franco/ })).toContainText("Présidence : Sam T.");
+    await expect(panneau).not.toContainText("Cases vides");
+  });
+
   test("sur grand écran, le panneau montre aujourd'hui dès l'ouverture", async ({ page }, info) => {
     test.skip(!panneauADroite(info), "panneau à droite : ordinateur et tablette couchée");
     await ouvrir(page);
@@ -813,7 +948,8 @@ test.describe("C3 : la page du calendrier en Mois", () => {
     const panneau = panneauADroite(info)
       ? page.getByRole("complementary", { name: "Dimanche 4 octobre" })
       : page.getByRole("dialog", { name: "Dimanche 4 octobre" });
-    await expect(panneau.getByRole("link")).toHaveCount(3 + n);
+    // Les cartes du jour (les boutons de création, C5, sont sous la liste).
+    await expect(panneau.getByRole("list").getByRole("link")).toHaveCount(3 + n);
   });
 
   test("une entrée du Sheet : lecture seule, ni « Déplacer… », elle ouvre l'onglet du mois (ordinateur et tablettes)", async ({ page }, info) => {
@@ -874,6 +1010,111 @@ test.describe("C3 : la page du calendrier en Mois", () => {
     await expect(page.getByRole("button", { name: "只看我的" })).toBeVisible();
     // La case de la grille dit « 早餐：空闲 » ; la carte de l'agenda, « 早餐 » puis « 空闲 ».
     await expect(jour(page, "2026-10-11").locator('[data-source="petitDej"]')).toContainText(estTelephone(info) ? "空闲" : "早餐：空闲");
+    if (estTelephone(info)) return;
+    // Les cases vides du panneau du jour, libellés des colonnes en chinois.
+    await jour(page, "2026-10-11").click();
+    await expect(page.getByRole(panneauADroite(info) ? "complementary" : "dialog", { name: /10月11日/ })).toContainText("空缺：架子鼓, 音控");
+  });
+});
+
+test.describe("relecture du lot : setlist du culte, ordre des pastilles, lectures, sources illisibles", () => {
+  test("le panneau du 11 : la setlist du culte sous la présidence, pastille Setlists éteinte (ordinateur et tablettes)", async ({ page }, info) => {
+    test.skip(estTelephone(info), SANS_TELEPHONE);
+    await ouvrir(page);
+    await jour(page, "2026-10-11").click();
+    const panneau = panneauADroite(info)
+      ? page.getByRole("complementary", { name: "Dimanche 11 octobre" })
+      : page.getByRole("dialog", { name: "Dimanche 11 octobre" });
+    const culte = panneau.getByRole("link", { name: /Culte Franco/ });
+    await expect(culte).toContainText("Présidence : Sam T.");
+    await expect(culte).toContainText("Setlist « Culte du 11 octobre » · 4 chants");
+    await expect(culte).toContainText("Cases vides : Batterie, Sono");
+    // Pas de carte « Setlist » à part : la pastille est éteinte d'office.
+    await expect(panneau.locator('[data-source="setlists"]')).toHaveCount(0);
+  });
+
+  test("中文 : la setlist du culte dans le panneau du jour (ordinateur et tablettes)", async ({ page }, info) => {
+    test.skip(estTelephone(info), SANS_TELEPHONE);
+    await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
+    await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
+    await sheets(page);
+    await signInAs(page, P_ADMIN, DOCS, "/back-office/calendrier");
+    await expect(page.getByTestId("calendrier")).not.toHaveAttribute("aria-busy", "true");
+    await jour(page, "2026-10-11").click();
+    await expect(page.getByRole(panneauADroite(info) ? "complementary" : "dialog", { name: /10月11日/ }))
+      .toContainText("歌单「Culte du 11 octobre」· 4 首");
+  });
+
+  test("les pastilles dans l'ordre de la planche : Tâches avant Réunions", async ({ page }, info) => {
+    await ouvrir(page);
+    const groupe = await sourcesAffichees(page, info);
+    await expect(groupe.getByRole("button")).toHaveText([
+      "Services", "Évènements (Sheet)", "Tâches", "Réunions", "Scène", "Petit déj", "Setlists",
+    ]);
+  });
+
+  test("mes inscriptions ne se lisent qu'avec « Seulement moi », pour les évènements de la période affichée", async ({ page }) => {
+    const lues: string[] = [];
+    page.on("request", (r) => {
+      const m = /\/evenements\/([^/]+)\/inscriptions\//.exec(decodeURIComponent(r.url()));
+      if (m && r.method() === "GET") lues.push(m[1]);
+    });
+    await ouvrir(page);
+    expect(lues, "« Seulement moi » éteint : aucune inscription lue").toEqual([]);
+    await page.getByRole("button", { name: "Seulement moi" }).click();
+    await expect(page.locator('[data-source="evenements"]').filter({ hasText: "Tournoi de ping" })).toHaveCount(1);
+    await expect(page.getByTestId("calendrier")).not.toHaveAttribute("aria-busy", "true");
+    expect(lues).toContain("ping");
+    expect(lues, "un évènement hors de la période n'est pas lu").not.toContain("vieux");
+    expect(lues, "une réunion n'a pas d'inscriptions").not.toContain("reu-da");
+  });
+
+  test("téléphone : les fois d'une tâche ne se lisent que si elle a une échéance dans la période affichée", async ({ page }, info) => {
+    // Ailleurs, la barre latérale du Back-Office relit toutes les tâches pour sa pastille (lot U6) :
+    // le téléphone, sans elle, isole les lectures du calendrier.
+    test.skip(!estTelephone(info), "test propre au téléphone");
+    const lues: string[] = [];
+    page.on("request", (r) => {
+      const m = /\/taches\/([^/:]+):runQuery/.exec(decodeURIComponent(r.url()));
+      if (m) lues.push(m[1]);
+    });
+    await ouvrir(page, P_ADMIN, {
+      docs: {
+        "poles/da/taches/ancienne": {
+          titre: "Affiche de 2024", responsableUid: null, responsableNom: "", echeance: "2024-10-15", repetition: null,
+          lien: "", note: "", prevenir: null, evenement: null, auteurUid: "u-autre", createdAt: MAINTENANT, updatedAt: MAINTENANT,
+        },
+      },
+    });
+    await expect(page.locator('[data-source="taches"]').filter({ hasText: "Chants de Noël" })).toHaveCount(1);
+    expect(lues).toContain("noel");
+    expect(lues).not.toContain("ancienne");
+  });
+
+  test("une source illisible : bandeau qui la nomme, et le reste s'affiche", async ({ page }, info) => {
+    await ouvrir(page);
+    // Firestore injoignable pour les tâches (réseau qui bloque) : la liste rejette.
+    await page.route(/documents\/poles\/[a-z-]+:runQuery/, (route) => route.abort("internetdisconnected"));
+    await page.reload();
+    await expect(page.getByTestId("calendrier")).not.toHaveAttribute("aria-busy", "true");
+    await expect(page.getByRole("status").filter({ hasText: "Lecture impossible : Tâches" })).toBeVisible();
+    await expect(page.locator('[data-source="services"]').filter({ hasText: "Sam T." }).first()).toBeVisible();
+    if (!estTelephone(info)) await expect(jour(page, "2026-10-04").locator('[data-source="services"]')).toContainText("Lou M.");
+  });
+
+  test("téléphone : la grille du Mois n'apparaît jamais avant l'Agenda (requêtes média lues au montage)", async ({ page }, info) => {
+    test.skip(!estTelephone(info), "test propre au téléphone");
+    // La page se monte après la connexion (gabarit de U6 : « Chargement… »), jamais à
+    // l'hydratation : les requêtes média sont lues dès son premier rendu.
+    await page.addInitScript(() => {
+      const w = window as unknown as { __grilleVue?: boolean };
+      new MutationObserver(() => {
+        if (document.querySelector('[data-testid="grille-mois"]')) w.__grilleVue = true;
+      }).observe(document, { childList: true, subtree: true });
+    });
+    await ouvrir(page);
+    await expect(page.getByTestId("agenda")).toBeVisible();
+    expect(await page.evaluate(() => (window as unknown as { __grilleVue?: boolean }).__grilleVue ?? false)).toBe(false);
   });
 });
 
@@ -1108,5 +1349,131 @@ test.describe("C4 : captures à regarder", () => {
       await page.waitForTimeout(400);
       await page.screenshot({ path: `${dossier}-mois-points.png`, fullPage: true });
     }
+  });
+});
+
+// ─── C5 : créer depuis un jour ───
+
+/** Membre de deux pôles, sans section : une réunion de ses pôles, des tâches (Q4). */
+const P_POLES: FakeProfile = { uid: "u-da", email: "da@example.org", firstName: "Alix", lastName: "P.", poles: ["da", "media"] };
+/** Publie pour une section, sans pôle : un évènement, pas de tâche. */
+const P_SECTION: FakeProfile = { uid: "u-sec", email: "sec@example.org", firstName: "Noa", lastName: "R.", annonces: ["Groupe Paix"] };
+
+/** Le jour touché : le panneau ou la feuille du jour (ordinateur, tablettes) ; sur téléphone,
+ *  la feuille du « + » (question 5), sur le jour affiché. */
+async function creerDepuis(page: Page, info: TestInfo, date: string, titre: string) {
+  if (estTelephone(info)) {
+    await vue(page, "Mois");
+    await jour(page, date).click();
+    await page.getByRole("button", { name: "Créer", exact: true }).click();
+    return page.getByRole("dialog", { name: "Créer" });
+  }
+  await jour(page, date).click();
+  return panneauADroite(info) ? page.getByRole("complementary", { name: titre }) : page.getByRole("dialog", { name: titre });
+}
+
+test.describe("C5 : créer depuis un jour", () => {
+  test("« Nouvel évènement le 11/10 » ouvre le formulaire à la date du jour choisi", async ({ page }, info) => {
+    await ouvrir(page);
+    const ou = await creerDepuis(page, info, "2026-10-11", "Dimanche 11 octobre");
+    const lien = ou.getByRole("link", { name: "Nouvel évènement le 11/10" });
+    await expect(lien).toHaveAttribute("href", /^\/back-office\/evenements\/nouveau\/?\?date=2026-10-11$/);
+    await lien.click();
+    await expect(page).toHaveURL(/\/back-office\/evenements\/nouveau\/?\?date=2026-10-11$/);
+    await expect(page.getByLabel("Date", { exact: true })).toHaveValue("2026-10-11");
+  });
+
+  test("une adresse « ?date= » pré-remplit la date ; une date mal formée est ignorée", async ({ page }) => {
+    await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
+    await sheets(page);
+    await signInAs(page, P_ADMIN, DOCS, "/back-office/evenements/nouveau?date=2026-12-24");
+    await expect(page.getByLabel("Date", { exact: true })).toHaveValue("2026-12-24");
+    // Une année à cinq chiffres ne se tape pas (relecture : le calendrier bouclerait sur elle).
+    await expect(page.getByLabel("Date", { exact: true })).toHaveAttribute("max", "9999-12-31");
+    await page.goto("/back-office/evenements/nouveau?date=24-12");
+    await expect(page.getByLabel("Nom de l'évènement")).toBeVisible();
+    await expect(page.getByLabel("Date", { exact: true })).toHaveValue("");
+  });
+
+  test("« Nouvelle tâche pour le 11/10 » : échéance du jour, choix parmi mes pôles ; enregistrée, elle apparaît ce jour-là", async ({ page }, info) => {
+    const db = await ouvrir(page, P_POLES);
+    const ou = await creerDepuis(page, info, "2026-10-11", "Dimanche 11 octobre");
+    await ou.getByRole("button", { name: "Nouvelle tâche pour le 11/10" }).click();
+    const form = page.getByRole("dialog", { name: "Nouvelle tâche" });
+    await expect(form.getByLabel("Échéance")).toHaveValue("2026-10-11");
+    await expect(form.getByLabel("Pôle").locator("option")).toHaveText(["DA", "Média"]);
+    await form.getByLabel("Pôle").selectOption("media");
+    await form.getByLabel("Titre").fill("Affiche du concert");
+    await form.getByRole("button", { name: "Enregistrer" }).click();
+    await expect(form).toHaveCount(0);
+    const ecrite = db.writes.find((w) => w.method === "POST" && w.path.startsWith("poles/media/taches/"));
+    expect(ecrite?.data).toMatchObject({ titre: "Affiche du concert", echeance: "2026-10-11", pole: "media", repetition: null });
+    // Le calendrier relit ses sources : la tâche est sur le 11.
+    if (estTelephone(info)) {
+      await expect(page.getByTestId("jour-choisi").locator('[data-source="taches"]')).toContainText("Affiche du concert");
+    } else {
+      await expect(jour(page, "2026-10-11").locator('[data-source="taches"]')).toContainText("Affiche du concert");
+    }
+  });
+
+  test("sans droit, pas de bouton : ni tâche sans pôle, ni évènement sans section ni pôle", async ({ page }, info) => {
+    await ouvrir(page, P_PLANNINGS);
+    if (estTelephone(info)) {
+      await expect(page.getByRole("button", { name: "Créer", exact: true })).toHaveCount(0);
+    } else {
+      await jour(page, "2026-10-11").click();
+      await expect(page.getByRole("link", { name: /Nouvel évènement/ })).toHaveCount(0);
+      await expect(page.getByRole("button", { name: /Nouvelle tâche/ })).toHaveCount(0);
+    }
+  });
+
+  test("une section sans pôle : « Nouvel évènement » seul", async ({ page }, info) => {
+    await ouvrir(page, P_SECTION);
+    const ou = await creerDepuis(page, info, "2026-10-11", "Dimanche 11 octobre");
+    await expect(ou.getByRole("link", { name: "Nouvel évènement le 11/10" })).toBeVisible();
+    await expect(ou.getByRole("button", { name: /Nouvelle tâche/ })).toHaveCount(0);
+  });
+
+  test("téléphone : en Agenda, le « + » propose aujourd'hui", async ({ page }, info) => {
+    test.skip(!estTelephone(info), "propre au téléphone : ailleurs, les boutons du panneau du jour");
+    await ouvrir(page, P_POLES);
+    await expect(agenda(page)).toBeVisible();
+    await page.getByRole("button", { name: "Créer", exact: true }).click();
+    const feuille = page.getByRole("dialog", { name: "Créer" });
+    await expect(feuille.getByRole("link", { name: "Nouvel évènement le 01/10" })).toHaveAttribute(
+      "href",
+      /^\/back-office\/evenements\/nouveau\/?\?date=2026-10-01$/,
+    );
+    await expect(feuille.getByRole("button", { name: "Nouvelle tâche pour le 01/10" })).toBeVisible();
+  });
+
+  test("中文 : les deux boutons du jour", async ({ page }, info) => {
+    await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
+    await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
+    await sheets(page);
+    await signInAs(page, P_ADMIN, DOCS, "/back-office/calendrier");
+    await expect(page.getByTestId("calendrier")).not.toHaveAttribute("aria-busy", "true");
+    if (estTelephone(info)) {
+      await page.getByRole("button", { name: "新建", exact: true }).click();
+    } else {
+      await jour(page, "2026-10-11").click();
+    }
+    const jourAffiche = estTelephone(info) ? "10月1日" : "10月11日";
+    await expect(page.getByRole("link", { name: `新建${jourAffiche}的活动` })).toBeVisible();
+    await expect(page.getByRole("button", { name: `新建${jourAffiche}截止的任务` })).toBeVisible();
+  });
+});
+
+test.describe("C5 : captures à regarder", () => {
+  test("le jour et ses deux boutons ; le formulaire de tâche pré-rempli", async ({ page }, info) => {
+    await ouvrir(page, P_POLES);
+    await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
+    const dossier = `test-results/calendrier-captures/${info.project.name}`;
+    const ou = await creerDepuis(page, info, "2026-10-11", "Dimanche 11 octobre");
+    await page.waitForTimeout(400);
+    await page.screenshot({ path: `${dossier}-creer.png` });
+    await ou.getByRole("button", { name: "Nouvelle tâche pour le 11/10" }).click();
+    await page.waitForTimeout(400);
+    await page.screenshot({ path: `${dossier}-creer-tache.png` });
   });
 });

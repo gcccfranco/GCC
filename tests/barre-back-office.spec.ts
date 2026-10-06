@@ -69,7 +69,7 @@ const apercu = (page: Page) => feuille(page).getByRole("list", { name: "Aperçu"
 
 test.describe("Barre du bas (B6) : règles pures (Q13)", () => {
   test("défaut : Accueil · Calendrier · Tâches · Planning, complété dans l'ordre du menu", () => {
-    // Calendrier est une entrée depuis U8 C3 (fusion dans U9).
+    // Calendrier est là depuis U8 (C3) : la barre de la planche, telle quelle.
     expect(barreParDefaut(permises(ADMIN))).toEqual(["tableau", "calendrier", "taches", "planning"]);
     expect(barreParDefaut(["tableau", "calendrier", "planning", "taches", "evenements", "equipes", "messages", "statistiques"]))
       .toEqual(["tableau", "calendrier", "taches", "planning"]);
@@ -152,6 +152,7 @@ test.describe("Barre du bas (B6) : la barre", () => {
       await route.fallback().catch(() => {});
     });
     await page.goto("/back-office");
+    // Défaut d'un admin depuis l'entrée Calendrier (U8, C3) : celui de la planche.
     await expect(onglets(page)).toHaveText(["Accueil", "Calendrier", "Tâches", "Planning", "Plus"], { timeout: 10_000 });
     await page.unrouteAll({ behavior: "ignoreErrors" });
   });
@@ -180,6 +181,7 @@ test.describe("Barre du bas (B6) : « Plus »", () => {
     await expect(page.getByRole("heading", { name: "Plus", level: 1 })).toBeVisible();
     await expect(barre(page).getByRole("link", { name: "Plus" })).toHaveAttribute("aria-current", "page");
     const cartes = page.getByTestId("plus-entree");
+    // Évènements, Équipes, Messages : les entrées hors de la barre (Calendrier y est depuis U8).
     await expect(cartes).toHaveCount(3);
     await expect(cartes.filter({ hasText: "Évènements" })).toHaveAttribute("href", /^\/back-office\/evenements\/?$/);
     const equipes = cartes.filter({ hasText: "Équipes" });
@@ -249,7 +251,8 @@ test.describe("Barre du bas (B6) : la feuille « Ta barre du bas »", () => {
     await expect(feuille(page).getByRole("checkbox")).toHaveCount(7);
     for (const nom of ["Accueil", "Calendrier", "Tâches", "Planning"]) await expect(caseDe(page, nom)).toHaveAttribute("aria-checked", "true");
     // La barre d'abord, puis les autres dans l'ordre du menu ; Accueil dit ce qu'il ouvre.
-    await expect(feuille(page).getByTestId("ligne-barre")).toHaveText([/Accueil.*tableau de bord/, /Calendrier/, /Tâches/, /Planning/, /Évènements.*\+ scène/, /Équipes/, /Messages/]);
+    await expect(feuille(page).getByTestId("ligne-barre"))
+      .toHaveText([/Accueil.*tableau de bord/, /Calendrier/, /Tâches/, /Planning/, /Évènements.*\+ scène/, /Équipes/, /Messages/]);
     // 4 cochées : la cinquième est refusée.
     await expect(caseDe(page, "Équipes")).toBeDisabled();
     await expect(apercu(page)).toHaveText(["Accueil", "Calendrier", "Tâches", "Planning", "Plus"]);

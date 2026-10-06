@@ -122,17 +122,17 @@ test.describe("Back-Office (B1) : les entrées selon les droits (Q2)", () => {
 });
 
 test.describe("Back-Office (B1) : les widgets permis (table des widgets)", () => {
-  test("un admin : tous ceux de U6 (Calendrier et Chants les plus joués viendront avec U8 et U7)", () => {
-    expect(widgetsPermis(user(ADMIN), profil(ADMIN))).toEqual(["dimanche", "afaire", "setlists", "planning", "evenements", "petitdej", "scene", "comptes", "raccourcis"]);
+  test("un admin : tous ceux de U6 et le Calendrier de U8 (Chants les plus joués viendra avec U7)", () => {
+    expect(widgetsPermis(user(ADMIN), profil(ADMIN))).toEqual(["dimanche", "calendrier", "afaire", "setlists", "planning", "evenements", "petitdej", "scene", "comptes", "raccourcis"]);
   });
 
   test("Alice : ni Setlists à préparer (elle ne crée pas de setlist), ni Cases vides, ni Comptes", () => {
-    expect(widgetsPermis(user(ALICE), profil(ALICE))).toEqual(["dimanche", "afaire", "evenements", "petitdej", "scene", "raccourcis"]);
+    expect(widgetsPermis(user(ALICE), profil(ALICE))).toEqual(["dimanche", "calendrier", "afaire", "evenements", "petitdej", "scene", "raccourcis"]);
   });
 
   test("un responsable musicien des plannings : Setlists à préparer et Cases vides ; un non-responsable : rien", () => {
     const p = { ...PLANNINGS, serviceRoles: { "Culte Francophone": ["musicien"] } };
-    expect(widgetsPermis(user(p), profil(p))).toEqual(["dimanche", "afaire", "setlists", "planning", "evenements", "petitdej", "scene", "raccourcis"]);
+    expect(widgetsPermis(user(p), profil(p))).toEqual(["dimanche", "calendrier", "afaire", "setlists", "planning", "evenements", "petitdej", "scene", "raccourcis"]);
     expect(widgetsPermis(user(CHORISTE), profil(CHORISTE))).toEqual([]);
   });
 });
@@ -178,7 +178,7 @@ test.describe("Back-Office (B1) : le sélecteur et le menu", () => {
     await expect(menu(page, info).getByRole("link")).toHaveText(
       estOrdinateur(info) || estTablettePaysage(info)
         ? ["Tableau de bord", "Calendrier", "Planning", "Tâches", "Évènements", "Équipes", "Messages"]
-        // Barre du bas (B6, Q13) : 4 onglets — défaut Accueil · Calendrier · Tâches · Planning — puis « Plus ».
+        // Barre du bas (B6, Q13) : défaut Accueil · Calendrier · Tâches · Planning, puis « Plus ».
         : ["Accueil", "Calendrier", "Tâches", "Planning", "Plus"],
     );
     const tableau = estOrdinateur(info) || estTablettePaysage(info) ? "Tableau de bord" : "Accueil";
@@ -190,7 +190,9 @@ test.describe("Back-Office (B1) : le sélecteur et le menu", () => {
     await expect(page.getByRole("heading", { name: "Tableau de bord" })).toBeVisible();
     await deplierSiTablettePaysage(page, info);
     await expect(menu(page, info).getByRole("link")).toHaveText(
-      estOrdinateur(info) || estTablettePaysage(info) ? ["Tableau de bord", "Calendrier", "Tâches", "Évènements"] : ["Accueil", "Calendrier", "Tâches", "Évènements", "Plus"],
+      estOrdinateur(info) || estTablettePaysage(info)
+        ? ["Tableau de bord", "Calendrier", "Tâches", "Évènements"]
+        : ["Accueil", "Calendrier", "Tâches", "Évènements", "Plus"],
     );
   });
 

@@ -8,6 +8,7 @@ import { reminderServicesFor, type ReminderService } from "@/lib/push/reminderMe
 import { quiCategories, sceneReminder } from "@/lib/scene/rappels";
 import { avecLignes, ouvertureDuJour } from "@/lib/evenements/rappel";
 import { destinatairesEvenement } from "@/lib/evenements/serveur";
+import { cleDeplacement, cleVeille, deplacementsAPrevenir, destinatairesDeplacement } from "@/lib/calendrier/prevenir";
 import type { Evenement } from "@/types/evenement";
 import type { Sujet } from "@/types/reunion";
 import { rappelsDuJour, type RappelTache } from "@/lib/taches/messages";
@@ -149,7 +150,8 @@ async function rappelsTaches(
  *  encore prévenu : la veille d'un évènement (lot 6 ; réunion de pôle ou
  *  d'équipe : tout le pôle ou toute l'équipe, avec le nombre de sujets à aborder, R3, R4), le compte rendu d'une réunion
  *  collé depuis hier (R3 : les autres personnes de la réunion), les inscriptions
- *  qui s'ouvrent aujourd'hui (docs/spec-inscriptions-periode.md). */
+ *  qui s'ouvrent aujourd'hui (docs/spec-inscriptions-periode.md), les évènements
+ *  déplacés depuis le calendrier, case « Prévenir » cochée (lot U8, C7). */
 async function lignesEvenements(
   db: FirebaseFirestore.Firestore,
   today: string
@@ -164,17 +166,21 @@ async function lignesEvenements(
     }
   };
 
-  // Évènements de demain. La clé reste celle du lot 6 : pas de doublon le jour du déploiement.
+  /** Inscrits avec compte d'un évènement (pas d'une réunion). */
+  const inscritsDe = async (ref: FirebaseFirestore.DocumentReference) =>
+    (await ref.collection("inscriptions").get()).docs
+      .map((i) => i.data().uid as string | null)
+      .filter((u): u is string => !!u);
+
+  // Évènements de demain. Clé datée (lot U8, Q8) : un évènement déplacé a son rappel
+  // la veille de sa nouvelle date, même si celle de l'ancienne est déjà partie.
   for (const doc of (await db.collection("evenements").where("date", "==", isoInDays(1)).get()).docs) {
     const e = { id: doc.id, ...doc.data() } as Evenement;
     if (estReunion(e.pour)) {
       const sujets = (await doc.ref.collection("sujets").get()).docs.map((s) => s.data() as Sujet);
-      await ajouter(await destinatairesEvenement(db, e), { kind: "veille", evenement: e, sujets: nombreSujetsAAborder(sujets) }, `rappel-evenement-${e.id}`);
+      await ajouter(await destinatairesEvenement(db, e), { kind: "veille", evenement: e, sujets: nombreSujetsAAborder(sujets) }, cleVeille(e));
     } else {
-      const inscrits = (await doc.ref.collection("inscriptions").get()).docs
-        .map((i) => i.data().uid as string | null)
-        .filter((u): u is string => !!u);
-      await ajouter(inscrits, { kind: "veille", evenement: e }, `rappel-evenement-${e.id}`);
+      await ajouter(await inscritsDe(doc.ref), { kind: "veille", evenement: e }, cleVeille(e));
     }
   }
 
@@ -195,6 +201,15 @@ async function lignesEvenements(
     if (!ouvertureDuJour(e, today)) continue;
     const uids = (await destinatairesEvenement(db, e)).filter((u) => u !== e.organisateurUid);
     await ajouter(uids, { kind: "ouverture", evenement: e }, `ouverture-inscriptions-${e.id}`);
+  }
+
+  // Déplacés depuis le calendrier hier ou avant-hier (`deplacement.le` est un ISO) :
+  // les inscrits, ou les membres d'une réunion, sauf l'auteur du geste (lot U8, Q7).
+  const deplaces = (await db.collection("evenements").where("deplacement.le", ">=", isoInDays(-2)).get()).docs;
+  const parId = new Map(deplaces.map((d) => [d.id, d.ref]));
+  for (const e of deplacementsAPrevenir(deplaces.map((d) => ({ id: d.id, ...d.data() }) as Evenement), today)) {
+    const candidats = estReunion(e.pour) ? await destinatairesEvenement(db, e) : await inscritsDe(parId.get(e.id)!);
+    await ajouter(destinatairesDeplacement(e, candidats), { kind: "deplacement", evenement: e }, cleDeplacement(e));
   }
   return out;
 }

@@ -6,13 +6,27 @@
 // (ordinateur, tablette couchée) ou dans une feuille (ailleurs). C4 : « Mois | Agenda »
 // (Agenda d'office sur téléphone, au choix ailleurs) ; sur téléphone, « Tout » ·
 // « Seulement moi » · « Sources » (feuille des sources) et le Mois à points, la liste
-// du jour touché dessous. La création (C5) et le déplacement (C6) viennent ensuite.
+// du jour touché dessous. C5 : créer depuis un jour — « Nouvel évènement le JJ/MM » et
+// « Nouvelle tâche pour le JJ/MM » en bas du panneau (ou de la feuille) du jour ; là où il
+// n'y a pas de panneau (téléphone, Agenda), un « + » à côté de « Mois | Agenda » les propose
+// pour le jour affiché (question 5). C6 : déplacer — glisser une entrée dans la grille du
+// Mois (ordinateur, tablettes), ou « Déplacer… » sous sa carte dans le panneau du jour et
+// dans sa feuille (seul moyen sur téléphone) ; la confirmation écrit, puis tout se relit.
+// C8 : `?jour=AAAA-MM-JJ` (le widget du tableau de bord) ouvre la page en Mois sur ce jour —
+// son panneau à droite, sa feuille sur tablette debout, sa liste sous le Mois à points.
+// Relecture : les sources se lisent une fois (`chargerCalendrier`), puis la période affichée
+// (`chargerPeriode` : fois des tâches qui y tombent, mes inscriptions pour « Seulement moi ») ;
+// une source illisible se nomme dans un bandeau, comme le Sheet.
 
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { useSearchParams } from "next/navigation";
 import { useTranslation } from "react-i18next";
-import { Check, ChevronLeft, ChevronRight, CloudOff, SlidersHorizontal, UserRound } from "lucide-react";
-import { useProfile } from "@/lib/firebase/users";
-import { chargerCalendrier } from "@/lib/calendrier/charger";
+import { Check, ChevronLeft, ChevronRight, CloudOff, Plus, SlidersHorizontal, UserRound } from "lucide-react";
+import { creatableEvenementPours, isAdminUser, polesDe } from "@/lib/access";
+import { createTache, type TacheValues } from "@/lib/firebase/taches";
+import { listProfiles, useProfile } from "@/lib/firebase/users";
+import { prevenirResponsable } from "@/lib/taches/prevenir";
+import { chargerCalendrier, chargerPeriode, enOrdre, type LectureCalendrier } from "@/lib/calendrier/charger";
 import {
   entreesCalendrier,
   filtrerEntrees,
@@ -28,11 +42,15 @@ import { lireSheetEvenements, type LectureSheet } from "@/lib/evenements/sheet";
 import { avantBascule } from "@/lib/evenements/bascule";
 import { todayIso } from "@/lib/scene/dimanches";
 import { cn } from "@/lib/utils";
-import type { NotifLang } from "@/types/user";
+import { ANNONCE_SECTIONS } from "@/types/annonce";
+import { TACHE_POLES, type TachePole } from "@/types/tache";
+import type { NotifLang, UserProfile } from "@/types/user";
 import { CartesDuJour, FeuilleEntree, ListeAgenda, useTitreDuJour } from "@/components/calendrier/Agenda";
+import { DialogueDeplacer, type DemandeDeplacement } from "@/components/calendrier/Deplacer";
 import { GrilleMois } from "@/components/calendrier/GrilleMois";
 import { GrillePoints } from "@/components/calendrier/GrillePoints";
-import { ListeDuJour } from "@/components/calendrier/PanneauJour";
+import { BoutonsCreation, ListeDuJour } from "@/components/calendrier/PanneauJour";
+import { TacheForm } from "@/components/taches/TacheForm";
 import { ICONES } from "@/components/calendrier/apparence";
 import { AnnonceBascule } from "@/components/evenements/AnnonceBascule";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
@@ -54,6 +72,11 @@ const usePanneauADroite = requeteMedia([
   "(pointer: coarse) and (orientation: landscape) and (min-width: 1024px)",
 ]);
 const useTelephone = requeteMedia(["(max-width: 767px)"]);
+/** Faux au rendu du serveur et à l'hydratation, vrai ensuite (les requêtes média sont lues). */
+const useHydrate = () => useSyncExternalStore(() => () => {}, () => true, () => false);
+
+/** `?jour=` : une date « AAAA-MM-JJ », sinon rien. */
+const jourDeLAdresse = (v: string | null) => (v && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : null);
 
 type Vue = "mois" | "agenda";
 
@@ -74,19 +97,40 @@ export function CalendrierClient() {
   const aDroite = usePanneauADroite();
   const telephone = useTelephone();
   const titreDuJour = useTitreDuJour(lang, aujourdhui);
+  // Ouverte sur un jour (C8) : en Mois, ce jour choisi.
+  const jourDemande = jourDeLAdresse(useSearchParams().get("jour"));
 
-  const [vueChoisie, setVue] = useState<Vue | null>(null);
+  const [vueChoisie, setVue] = useState<Vue | null>(jourDemande ? "mois" : null);
   const vue: Vue = vueChoisie ?? (telephone ? "agenda" : "mois");
-  const [mois, setMois] = useState(aujourdhui.slice(0, 7));
-  const [choisi, setChoisi] = useState(aujourdhui);
-  const [feuille, setFeuille] = useState(false);
+  const [mois, setMois] = useState((jourDemande ?? aujourdhui).slice(0, 7));
+  const [choisi, setChoisi] = useState(jourDemande ?? aujourdhui);
+  // Ouverte sur un jour, là où le jour s'affiche en feuille (tablette debout), sa feuille
+  // s'ouvre — une fois les requêtes média lues (`hydrate`), pour ne jamais passer sur un
+  // ordinateur, où le jour est dans le panneau de droite.
+  const [feuille, setFeuille] = useState(jourDemande !== null);
+  const hydrate = useHydrate();
   const [feuilleSources, setFeuilleSources] = useState(false);
   const [entree, setEntree] = useState<{ e: EntreeCalendrier | null; ouverte: boolean }>({ e: null, ouverte: false });
   // L'agenda part d'aujourd'hui jusqu'à la fin du mois, plus les mois ajoutés par « Afficher … ».
   const [moisEnPlus, setMoisEnPlus] = useState(0);
   const [prefs, setPrefs] = useState<PreferencesCalendrier>(lirePreferences);
-  const [base, setBase] = useState<Omit<DonneesCalendrier, "sheet"> | null>(null);
+  const [lu, setLu] = useState<LectureCalendrier | null>(null);
+  // La période lue : la dernière, même périmée le temps d'en lire une autre (rien ne clignote).
+  const [periode, setPeriode] = useState<{
+    de: LectureCalendrier;
+    cle: string;
+    donnees: Omit<DonneesCalendrier, "sheet">;
+    echecs: SourceCalendrier[];
+  } | null>(null);
   const [sheet, setSheet] = useState<{ fenetre: string; lecture: LectureSheet } | null>(null);
+  // C5 : la feuille « Créer » (téléphone, Agenda), l'échéance d'une nouvelle tâche, ses responsables
+  // possibles, et un compteur qui fait relire les sources après une création.
+  const [feuilleCreer, setFeuilleCreer] = useState(false);
+  const [tacheLe, setTacheLe] = useState<string | null>(null);
+  const [membres, setMembres] = useState<UserProfile[]>([]);
+  const [lecture, setLecture] = useState(0);
+  // C6 : le déplacement demandé (dépôt dans la grille, ou « Déplacer… »).
+  const [demande, setDemande] = useState<DemandeDeplacement | null>(null);
 
   const jours = useMemo(() => joursDeLaGrille(mois), [mois]);
   const dernierMoisAgenda = moisVoisin(aujourdhui.slice(0, 7), moisEnPlus);
@@ -99,9 +143,27 @@ export function CalendrierClient() {
   useEffect(() => {
     if (!user) return;
     let vivant = true;
-    chargerCalendrier(user, profil, aujourdhui).then((d) => vivant && setBase(d));
+    chargerCalendrier(user, profil, aujourdhui).then((l) => vivant && setLu(l));
     return () => { vivant = false; };
-  }, [user, profil, aujourdhui]);
+  }, [user, profil, aujourdhui, lecture]);
+
+  const seulementMoiActif = prefs.seulementMoi;
+  const clePeriode = `${debut}|${fin}|${seulementMoiActif}`;
+  useEffect(() => {
+    if (!user || !lu) return;
+    let vivant = true;
+    const cle = `${debut}|${fin}|${seulementMoiActif}`;
+    chargerPeriode(lu.base, user.uid, debut, fin, { seulementMoi: seulementMoiActif })
+      .then((p) => vivant && setPeriode({ de: lu, cle, ...p }));
+    return () => { vivant = false; };
+  }, [user, lu, debut, fin, seulementMoiActif]);
+  const base = periode?.donnees ?? null;
+  const echecs = enOrdre([...(lu?.echecs ?? []), ...(periode?.echecs ?? [])]);
+
+  // Les responsables possibles ne servent qu'au formulaire de tâche : lus à son ouverture.
+  useEffect(() => {
+    if (tacheLe) listProfiles().then(setMembres).catch(() => {});
+  }, [tacheLe]);
 
   // Lot U9 (Q6) : un mois affiché à partir de la bascule ne lit plus le Sheet, pas même les
   // derniers jours de décembre en tête de sa grille ; l'agenda, à partir d'aujourd'hui.
@@ -126,7 +188,7 @@ export function CalendrierClient() {
     return m;
   }, [user, profil, base, sheet, debut, fin, lang, aujourdhui, prefs, permises]);
 
-  const chargement = !base || sheet?.fenetre !== `${debut}|${fin}`;
+  const chargement = !periode || periode.de !== lu || periode.cle !== clePeriode || sheet?.fenetre !== `${debut}|${fin}`;
   const changer = (p: PreferencesCalendrier) => { setPrefs(p); ecrirePreferences(p); };
   const basculer = (s: SourceCalendrier) =>
     changer({ ...prefs, sources: prefs.sources.includes(s) ? prefs.sources.filter((x) => x !== s) : [...prefs.sources, s] });
@@ -135,6 +197,38 @@ export function CalendrierClient() {
   const choisir = (date: string) => { setChoisi(date); if (!aDroite && !telephone) setFeuille(true); };
   const duJour = parJour.get(choisi) ?? [];
   const ouvrirEntree = (e: EntreeCalendrier) => setEntree({ e, ouverte: true });
+  // La feuille du jour ou de l'entrée se ferme : la confirmation prend la place.
+  const deplacer = (e: EntreeCalendrier, vers: string | null) => {
+    setFeuille(false);
+    setEntree((x) => ({ ...x, ouverte: false }));
+    setDemande({ entree: e, vers });
+  };
+  const demanderDate = (e: EntreeCalendrier) => deplacer(e, null);
+
+  // Créer (Q4) : chaque bouton seulement pour qui a le droit — un évènement si un public lui est
+  // ouvert (un membre de pôle y crée une réunion), une tâche parmi ses pôles (tous pour un admin).
+  const peutEvenement = creatableEvenementPours(user, profile, ANNONCE_SECTIONS).length > 0;
+  const mesPoles: TachePole[] = !user ? [] : isAdminUser(user) ? [...TACHE_POLES] : polesDe(profile);
+  const sansPanneau = telephone || vue === "agenda";
+  // Le jour du « + » : celui touché dans le Mois à points ; aujourd'hui dans l'Agenda.
+  const jourCreer = vue === "agenda" ? aujourdhui : choisi;
+  const boutonsCreation = (date: string) => (
+    <BoutonsCreation
+      date={date}
+      lang={lang}
+      evenement={peutEvenement}
+      tache={mesPoles.length > 0}
+      onNouvelleTache={() => { setFeuille(false); setFeuilleCreer(false); setTacheLe(date); }}
+    />
+  );
+  async function creerTache(values: TacheValues, pole: TachePole) {
+    if (!user) return;
+    const id = await createTache(pole, values, user.uid);
+    setTacheLe(null);
+    setLecture((n) => n + 1);
+    // Nommé par quelqu'un d'autre : le responsable est prévenu, comme sur la page du pôle.
+    if (values.responsableUid && values.responsableUid !== user.uid) prevenirResponsable(pole, id);
+  }
 
   // ‹ › et « Aujourd'hui » : dans l'en-tête ; sur téléphone, au-dessus du Mois à points
   // (l'en-tête n'a la place que du titre et de « Mois | Agenda », planche).
@@ -191,6 +285,16 @@ export function CalendrierClient() {
               : titreMois(mois, lang, telephone && mois.slice(0, 4) === aujourdhui.slice(0, 4))}
           </h1>
           {vue === "mois" && !telephone && navigation}
+          {sansPanneau && (peutEvenement || mesPoles.length > 0) && (
+            <button
+              type="button"
+              aria-label={t("calendrier.creer")}
+              onClick={() => setFeuilleCreer(true)}
+              className={cn(BOUTON_ROND, "order-last h-[34px] w-[34px] px-0")}
+            >
+              <Plus aria-hidden className="h-4 w-4" />
+            </button>
+          )}
           <div role="group" aria-label={t("calendrier.vue.aria")} className="ml-auto inline-flex shrink-0 rounded-full bg-secondary p-[3px]">
             {(["mois", "agenda"] as const).map((v) => (
               <button
@@ -239,6 +343,12 @@ export function CalendrierClient() {
           </div>
         )}
 
+        {echecs.length > 0 && (
+          <div role="status" className="mt-3 flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700 dark:border-amber-800/50 dark:bg-amber-950/30 dark:text-amber-400">
+            <CloudOff aria-hidden className="h-3.5 w-3.5 shrink-0" />
+            {t("calendrier.echecs", { liste: echecs.map((s) => t(`calendrier.legende.${s}`)).join(lang === "zh-CN" ? "、" : ", ") })}
+          </div>
+        )}
         {sheet?.lecture.injoignable && (
           <div role="status" className="mt-3 flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700 dark:border-amber-800/50 dark:bg-amber-950/30 dark:text-amber-400">
             <CloudOff aria-hidden className="h-3.5 w-3.5 shrink-0" />
@@ -279,7 +389,16 @@ export function CalendrierClient() {
           </div>
         ) : (
           <div className="mt-4">
-            <GrilleMois mois={mois} jours={jours} parJour={parJour} aujourdhui={aujourdhui} choisi={choisi} lang={lang} onChoisir={choisir} />
+            <GrilleMois
+              mois={mois}
+              jours={jours}
+              parJour={parJour}
+              aujourdhui={aujourdhui}
+              choisi={choisi}
+              lang={lang}
+              onChoisir={choisir}
+              onDeposer={deplacer}
+            />
           </div>
         )}
       </div>
@@ -296,31 +415,71 @@ export function CalendrierClient() {
           </DrawerContent>
         </Drawer>
       )}
+      {sansPanneau && (
+        <Drawer open={feuilleCreer} onOpenChange={setFeuilleCreer}>
+          <DrawerContent aria-describedby={undefined} className="md:mx-auto md:max-w-md">
+            <DrawerHeader className="pb-2 text-left">
+              <DrawerTitle>{t("calendrier.creer")}</DrawerTitle>
+            </DrawerHeader>
+            <div className="px-4 pb-8">{boutonsCreation(jourCreer)}</div>
+          </DrawerContent>
+        </Drawer>
+      )}
+      {mesPoles.length > 0 && (
+        <TacheForm
+          open={tacheLe !== null}
+          pole={mesPoles[0]}
+          poles={mesPoles}
+          echeance={tacheLe ?? undefined}
+          initial={null}
+          membres={membres}
+          onSubmit={creerTache}
+          onClose={() => setTacheLe(null)}
+        />
+      )}
       <FeuilleEntree
         entree={entree.e}
         ouverte={entree.ouverte}
         lang={lang}
         onFermer={() => setEntree((x) => ({ ...x, ouverte: false }))}
+        onDeplacer={demanderDate}
       />
+      {demande && base && user && (
+        <DialogueDeplacer
+          key={`${demande.entree.cle}|${demande.vers ?? ""}`}
+          demande={demande}
+          donnees={base}
+          aujourdhui={aujourdhui}
+          lang={lang}
+          uid={user.uid}
+          onFermer={() => setDemande(null)}
+          onDeplace={() => { setDemande(null); setLecture((n) => n + 1); }}
+        />
+      )}
 
       {vue === "agenda" || telephone ? null : aDroite ? (
         <aside
           aria-labelledby="calendrier-jour"
-          className="sticky top-0 h-dvh w-[300px] shrink-0 overflow-y-auto border-l border-border px-5 py-6"
+          className="sticky top-0 flex h-dvh w-[300px] shrink-0 flex-col gap-4 overflow-y-auto border-l border-border px-5 py-6"
         >
-          <h2 id="calendrier-jour" className="mb-3 text-sm font-semibold text-muted-foreground">
-            {titreJour(choisi, lang)}
-          </h2>
-          <ListeDuJour entrees={duJour} />
+          <div>
+            <h2 id="calendrier-jour" className="mb-3 text-sm font-semibold text-muted-foreground">
+              {titreJour(choisi, lang)}
+            </h2>
+            <ListeDuJour entrees={duJour} onDeplacer={demanderDate} />
+          </div>
+          {/* Planche : les deux boutons en bas du panneau. */}
+          <div className="mt-auto">{boutonsCreation(choisi)}</div>
         </aside>
       ) : (
-        <Drawer open={feuille} onOpenChange={setFeuille}>
+        <Drawer open={feuille && hydrate} onOpenChange={setFeuille}>
           <DrawerContent className="max-h-[85vh] md:mx-auto md:max-w-xl">
             <DrawerHeader className="pb-2 text-left">
               <DrawerTitle>{titreJour(choisi, lang)}</DrawerTitle>
             </DrawerHeader>
-            <div className="overflow-y-auto px-4 pb-8">
-              <ListeDuJour entrees={duJour} />
+            <div className="flex flex-col gap-4 overflow-y-auto px-4 pb-8">
+              <ListeDuJour entrees={duJour} onDeplacer={demanderDate} />
+              {boutonsCreation(choisi)}
             </div>
           </DrawerContent>
         </Drawer>

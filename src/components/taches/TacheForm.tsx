@@ -32,7 +32,7 @@ function rangDe(iso: string): number {
 }
 
 /** Feuille de création ou de modification d'une tâche (lot 7). */
-export function TacheForm({ open, pole, poles, evenement, initial, membres, onSubmit, onDelete, onClose }: {
+export function TacheForm({ open, pole, poles, evenement, echeance, initial, membres, onSubmit, onDelete, onClose }: {
   open: boolean;
   pole: TachePole;
   /** Pôles où créer la tâche, depuis la fiche d'un évènement (lot 14) : un
@@ -40,6 +40,8 @@ export function TacheForm({ open, pole, poles, evenement, initial, membres, onSu
   poles?: TachePole[];
   /** Évènement auquel rattacher une nouvelle tâche (lot 14). */
   evenement?: Tache["evenement"];
+  /** Échéance d'une nouvelle tâche, depuis un jour du calendrier (lot U8, C5). */
+  echeance?: string;
   /** Valeurs de départ ; `null` = nouvelle tâche. */
   initial: TacheValues | null;
   /** Proposés comme responsables : ceux du pôle de la tâche. */
@@ -57,19 +59,19 @@ export function TacheForm({ open, pole, poles, evenement, initial, membres, onSu
           <DrawerTitle>{initial ? t("taches.modifier") : t("taches.nouvelle")}</DrawerTitle>
         </DrawerHeader>
         {open && (
-          <Champs pole={pole} poles={poles} evenement={evenement} initial={initial} membres={membres} onSubmit={onSubmit} onDelete={onDelete} onClose={onClose} />
+          <Champs pole={pole} poles={poles} evenement={evenement} echeance={echeance} initial={initial} membres={membres} onSubmit={onSubmit} onDelete={onDelete} onClose={onClose} />
         )}
       </DrawerContent>
     </Drawer>
   );
 }
 
-function Champs({ pole: poleDepart, poles, evenement, initial, membres, onSubmit, onDelete, onClose }: Omit<Parameters<typeof TacheForm>[0], "open">) {
+function Champs({ pole: poleDepart, poles, evenement, echeance, initial, membres, onSubmit, onDelete, onClose }: Omit<Parameters<typeof TacheForm>[0], "open">) {
   const { t } = useTranslation();
   const [pole, setPole] = useState(poleDepart);
   const [v, setV] = useState<TacheValues>(
     initial ?? {
-      titre: "", responsableUid: null, responsableNom: "", echeance: "", repetition: null,
+      titre: "", responsableUid: null, responsableNom: "", echeance: echeance ?? "", repetition: null,
       lien: "", note: "", prevenir: null, evenement: evenement ?? null,
     },
   );
