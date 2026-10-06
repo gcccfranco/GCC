@@ -124,7 +124,8 @@
   },
   "login": {
     "title": "GCC 敬拜诗歌",
-    "subtitle": "敬拜带领人员登录",
+    "heading": "登录",
+    "reserve": "仅限教会成员",
     "emailLabel": "电子邮箱",
     "passwordLabel": "密码",
     "emailPlaceholder": "email@example.com",
@@ -310,6 +311,12 @@
       "jianpuSheet": "简谱",
       "jianpuSheetHint": "以简谱演奏这首歌",
       "transitionPlaceholder": "过渡内容…"
+    },
+    "apercu": {
+      "region": "歌单预览",
+      "tonalites": "本歌单的调性",
+      "equipe": "本次服事团队",
+      "dapres": "根据排班表"
     },
     "editeur": {
       "fil": "导航路径",
@@ -697,7 +704,8 @@
     "inDays": "{{count}} 天后",
     "emptyUpcoming": "暂无即将到来的服事——好好休息 🙂",
     "emptyPast": "未找到过去的服事。",
-    "setlist": "歌单"
+    "setlist": "歌单",
+    "introuvable": "这一天没有你的服事。"
   },
   "guide": {
     "title": "使用指南",
@@ -780,7 +788,7 @@
         "title": "通知与提醒",
         "body": "顶部的**铃铛**会显示最新动态。在手机上，即使关闭网站，你也可以接收**推送通知**。",
         "points": [
-          "在你的**个人资料**中，用「通知」开关启用它们。",
+          "在**我 › 设置**中，点「通知」启用它们。",
           "四种类型，可分别启用：**服事提醒**（提前 7 天、3 天和 1 天，以及 Campus 排练）、**歌单就绪**、**活动**和**任务**。",
           "在 iPhone 上，请先把网站安装到主屏幕（PWA），才能启用推送。"
         ],
@@ -1024,7 +1032,21 @@
     "subtitle": "在这里集中查看各项服侍的最新安排。",
     "nextService": "你的下一次服侍",
     "seeAllServices": "查看我的所有服侍 →",
-    "thisSunday": "本主日 — {{date}}",
+    "thisSunday": "本主日 · {{date}}",
+    "accueil": {
+      "pourMoi": "我的安排",
+      "ensuite": "之后",
+      "setlistDuService": "本次服事的歌单",
+      "laSetlist": "歌单",
+      "presidence": "主领：{{nom}}",
+      "ouvrir": "打开",
+      "aujourdhui": "今天",
+      "demain": "明天",
+      "dansJours_other": "{{count}} 天后",
+      "evenements": "近期活动",
+      "libre": "空闲",
+      "inscrire": "我来报名"
+    },
     "dataPending": "数据待更新",
     "staleData": "无法获取在线安排——当前为本地数据，可能已过期。",
     "legendCurrentSunday": "本周主日",
@@ -1966,7 +1988,12 @@
     "theme": "主题",
     "light": "浅色",
     "dark": "深色",
-    "french": "Français"
+    "french": "Français",
+    "compte": "我的账号",
+    "admin": "管理员",
+    "notifications": "通知",
+    "activees": "已开启",
+    "desactivees": "已关闭"
   },
   "pdf": {
     "choice": {
@@ -2057,7 +2084,17 @@
     "polePrevenu": "已通知{{pole}}部门。",
     "personnePrevenue": "没有通知任何人：没有与账号关联的音控/投影。",
     "pourEvenement": "用于 {{titre}}",
-    "detacherEvenement": "取消关联活动"
+    "detacherEvenement": "取消关联活动",
+    "introuvable": "该任务已不存在。",
+    "fiche": {
+      "modifier": "编辑"
+    },
+    "etat": {
+      "titre": "状态",
+      "afaire": "待办",
+      "encours": "进行中",
+      "terminee": "已完成"
+    }
   },
   "accueil": {
     "nom": "欢迎使用 GCC",
@@ -2190,7 +2227,8 @@
       "recettes": "按类别的通用设置",
       "exemples": "示例音色",
       "conseil": "建议：{{valeur}}",
-      "priorite": "优先级"
+      "priorite": "优先级",
+      "suite": "{{ecran}}（续）"
     },
     "cours": {
       "titre": "课程",
@@ -2367,6 +2405,9 @@
       "louange": "敬拜组",
       "edd": "主日学"
     },
+    "index": "团队索引",
+    "precedentes": "上一组团队",
+    "suivantes": "下一组团队",
     "soustitre": {
       "orga": "总协调",
       "comite-franco": "",
@@ -2637,6 +2678,37 @@
         "questionnaire": "问卷",
         "statistiques": "最常唱的诗歌"
       }
+    },
+    "reception": {
+      "filtres": "筛选消息",
+      "tout": "全部",
+      "signalements": "问题反馈",
+      "propositions": "诗歌推荐",
+      "titreSignalements": "问题反馈",
+      "titrePropositions": "诗歌推荐",
+      "aideSignalements": "成员报告的问题（诗歌或网站）。展开一条查看详情，解决后标为已处理。",
+      "aidePropositions": "成员推荐的诗歌。展开一条查看链接，加入诗歌库后标为已处理。",
+      "enAttente": "{{n}} 条待处理",
+      "voirTraites": "查看已处理（{{n}}）",
+      "masquerTraites": "隐藏已处理",
+      "chant": "诗歌",
+      "site": "网站",
+      "traite": "已处理",
+      "refuse": "已拒绝",
+      "proposePar": "{{nom}} 推荐",
+      "page": "页面",
+      "voirChant": "查看诗歌",
+      "partition": "PDF 乐谱",
+      "marquerTraite": "标为已处理",
+      "rouvrir": "重新打开",
+      "refuser": "拒绝",
+      "supprimerSignalement": "删除此问题反馈",
+      "supprimerProposition": "删除此推荐",
+      "aucunSignalement": "暂无问题反馈。",
+      "aucuneProposition": "暂无诗歌推荐。",
+      "aucunEnAttente": "暂无待处理消息。",
+      "message": "消息",
+      "erreur": "未能保存。请检查网络后重试。"
     }
   },
   "calendrier": {

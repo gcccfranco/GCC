@@ -157,7 +157,8 @@ test.describe("back-office coupé : la Sainte cène reste un service à part ent
     await expect(dimanche.getByText("Sainte cène", { exact: true })).toBeVisible();
     await expect(dimanche.getByText("Ruth K.")).toBeVisible();
     await page.goto("/mes-services");
-    await expect(page.getByText("Sainte cène", { exact: true })).toBeVisible();
+    // En grand (U4 bis, B4), le rôle paraît aussi dans le service ouvert à droite.
+    await expect(page.getByText("Sainte cène", { exact: true }).first()).toBeVisible();
   });
 });
 
@@ -185,7 +186,7 @@ test.describe("back-office coupé : les dimanches d'Interfranco ne touchent pas 
       return route.fulfill({ status: 200, contentType: "text/csv", body: SHEETS[sheet] ?? "" });
     });
     await signInAs(page, MEMBRE, {}, "/mes-services");
-    await expect(page.getByText("Groupe Paix", { exact: true })).toBeVisible();
+    await expect(page.getByRole("link", { name: /^Groupe Paix,/ })).toBeVisible();
   });
 });
 
@@ -217,7 +218,8 @@ test.describe("back-office coupé : Percussion et Cours attendent l'ouverture du
 
   test("« Mes services » garde la présidence, sans Percussion ni Cours", async ({ page }) => {
     await ouvrir(page, "/mes-services");
-    await expect(page.getByText("Groupe Paix", { exact: true }), "le 29/11 seulement").toHaveCount(1);
+    // Une ligne par service (en grand, U4 bis B4, le service ouvert à droite redit son nom).
+    await expect(page.getByRole("link", { name: /^Groupe Paix,/ }), "le 29/11 seulement").toHaveCount(1);
     await expect(page.getByText("Percussion", { exact: true })).toHaveCount(0);
     await expect(page.getByText("EDD 中班", { exact: true })).toHaveCount(0);
   });
@@ -309,7 +311,7 @@ test.describe("back-office coupé : le petit déj vient encore du Sheet", () => 
 
   test("Mes services : le petit déj est un service à part entière", async ({ page }) => {
     await ouvrir(page, "2026-09-20", "/mes-services");
-    await expect(page.getByText("Petit déj", { exact: true })).toBeVisible();
+    await expect(page.getByRole("link", { name: /^Petit déj,/ })).toBeVisible();
   });
 
   // PD3 : coupé, une inscription en base ne rattache rien — ni « Mes services »
@@ -321,7 +323,8 @@ test.describe("back-office coupé : le petit déj vient encore du Sheet", () => 
     await expect(page.getByText(/Choisis ton nom de planning/)).toBeVisible();
     await page.goto("/planning");
     await expect(page.getByRole("region", { name: /Ce dimanche/ })).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Ton prochain service" })).toHaveCount(0);
+    // Accueil A (U4 bis, B1) : le prochain service est dans « Pour moi ».
+    await expect(page.getByRole("region", { name: "Pour moi" })).toHaveCount(0);
     expect(lectures.petitDej, "aucune lecture des inscriptions").toBe(0);
   });
 
@@ -332,10 +335,12 @@ test.describe("back-office coupé : le petit déj vient encore du Sheet", () => 
     await expect(dimanche.getByText("早餐", { exact: true })).toBeVisible();
   });
 
-  // PD4 : coupé, ni ligne du mercredi (cron) ni bascule « Petit déj » dans Mon profil.
-  test("Mon profil › Notifications : pas de bascule « Petit déj » (PD4)", async ({ page }) => {
+  // PD4 : coupé, ni ligne du mercredi (cron) ni bascule « Petit déj » dans les réglages des
+  // notifications (Moi › Réglages depuis U4 bis, B5).
+  test("Moi › Réglages › Notifications : pas de bascule « Petit déj » (PD4)", async ({ page }) => {
     await abonneAuxNotifications(page);
-    await signInAs(page, CHARLIE, {}, "/profil");
+    await signInAs(page, CHARLIE, {}, "/moi");
+    await page.getByRole("region", { name: "Réglages" }).getByRole("button", { name: /Notifications/ }).click();
     await expect(page.getByRole("switch", { name: "Rappels de service" })).toBeChecked();
     await expect(page.getByRole("switch", { name: "Petit déj" })).toHaveCount(0);
   });

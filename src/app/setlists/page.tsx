@@ -4,7 +4,7 @@ import { GuideLien } from "@/components/guide/GuideLien";
 import { useEffect, useState, useMemo } from "react";
 import { ALL_CATEGORIES, getSetlists, getMySetlists, deleteSetlists, type FSSetlist } from "@/lib/firebase/setlists";
 import { useProfile } from "@/lib/firebase/users";
-import { visibleCategories, canCreateSetlist, canDeleteSetlist, isAdminUser } from "@/lib/access";
+import { visibleCategories, canCreateSetlist, canDeleteSetlist, canSeeSetlist, isAdminUser } from "@/lib/access";
 import {
   loadPlanningData,
   findMyServices,
@@ -16,7 +16,11 @@ import { useTranslation } from "react-i18next";
 import { Search, X, Plus, Lock, LogIn, UserPen } from "lucide-react";
 import Link from "next/link";
 import { PageTitle } from "@/components/layout/PageTitle";
-import { SetlistCard } from "@/components/setlists/SetlistCard";
+import { SetlistCard, SetlistCarteChants } from "@/components/setlists/SetlistCard";
+import { ApercuSetlist } from "@/components/setlists/ApercuSetlist";
+import { DeuxVolets } from "@/components/layout/DeuxVolets";
+import { useDisposition } from "@/hooks/useDisposition";
+import type { SongIndexEntry } from "@/types/song";
 import { PullToRefresh } from "@/components/layout/PullToRefresh";
 import { Halo } from "@/components/layout/Halo";
 import { FondDeBarre } from "@/components/layout/FondDeBarre";
@@ -33,6 +37,9 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useSetlistsNavState, type Tab } from "@/hooks/useSetlistsNavState";
 
+// Lot U4 bis, B2 (docs/spec-pages-en-grand.md, Q4) : en grand, la liste à gauche et l'aperçu
+// de la setlist choisie à droite (`?apercu=<id>`, sans aperçu choisi la première de la liste,
+// Q3) ; tablette portrait, cartes sur deux colonnes qui listent leurs chants ; téléphone inchangé.
 export default function SetlistsPage() {
   const { t, i18n } = useTranslation();
   const { user, profile, loading: authLoading } = useProfile();
@@ -43,8 +50,20 @@ export default function SetlistsPage() {
   const [planning, setPlanning] = useState<PlanningData | null>(null);
   // Onglet, recherche, catégorie : dans l'URL (retour navigateur fidèle).
   // « Mes services » : mémorisé sur l'appareil (coché par défaut).
-  const { categoryFilter, setCategoryFilter, tab, setTab, query, setQuery, onlyMine, setOnlyMine } =
+  const { categoryFilter, setCategoryFilter, tab, setTab, query, setQuery, onlyMine, setOnlyMine, apercu, setApercu } =
     useSetlistsNavState();
+  const disposition = useDisposition();
+  const grand = disposition === "grand";
+
+  // Titres et tonalités des chants : l'aperçu et les cartes de la tablette les montrent.
+  const [songsMap, setSongsMap] = useState<Record<string, SongIndexEntry>>({});
+  const avecChants = disposition !== "telephone";
+  useEffect(() => {
+    if (!avecChants) return;
+    fetch("/songs-index.json").then((r) => r.json())
+      .then((index: { songs?: SongIndexEntry[] }) => setSongsMap(Object.fromEntries((index.songs ?? []).map((x) => [x.slug, x]))))
+      .catch(() => {});
+  }, [avecChants]);
 
   const todayStr = useMemo(() => new Date().toISOString().split("T")[0], []);
 
@@ -128,6 +147,16 @@ export default function SetlistsPage() {
       : list.filter((s) => s.date < todayStr).sort((a, b) => b.date.localeCompare(a.date));
   }, [tab, setlists, mySetlists, matches, todayStr, myCategories, user, onlyMine, profile, myServiceKeys]);
 
+  // L'aperçu (en grand) : celui de l'adresse, sinon la première setlist de la liste filtrée (Q3).
+  // Une adresse peut viser une setlist d'un autre onglet (lien partagé) : seulement si la page
+  // de la setlist l'ouvrirait (`canSeeSetlist`, même règle que sa page).
+  const choisie =
+    (apercu &&
+      (displayed.find((s) => s.id === apercu) ??
+        [...setlists, ...mySetlists].find((s) => s.id === apercu && !!user && canSeeSetlist(user, profile, s)))) ||
+    displayed[0] ||
+    null;
+
   // ── Suppression groupée (lot 10, docs/spec-suppression-groupee.md) ──
   // La sélection est **dérivée** de ce qui est affiché : changer de filtre ou
   // chercher la rétrécit sous les yeux, et on ne supprime jamais une setlist
@@ -197,7 +226,7 @@ export default function SetlistsPage() {
     : t("setlists.list.emptyArchived");
 
   const tabBtnClass = (active: boolean) =>
-    `flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-md font-semibold transition-colors text-sm ${
+    `flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-md font-semibold transition-colors text-sm ${grand ? "whitespace-nowrap " : ""}${
       active
         ? "bg-card text-foreground shadow-sm"
         : "text-muted-foreground hover:text-foreground"
@@ -256,12 +285,37 @@ export default function SetlistsPage() {
     );
   }
 
-  return (
-    <div className="relative min-h-screen bg-background">
-      <PullToRefresh />
-      <Halo color="var(--chord-color)" />
-      <div className="relative max-w-4xl mx-auto px-4 pt-6 pb-10">
-        <PageTitle title={t("common.header.setlists")} />
+  const nouvelle = (
+    <Link aria-label={t("setlists.list.newButton")}
+      href="/setlists/new"
+      className="shrink-0 flex items-center gap-1.5 h-9 px-4 rounded-full bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-[background-color,transform] duration-150 active:scale-[.97]"
+    >
+      <Plus className="h-4 w-4" />
+      <span className={disposition === "telephone" ? "hidden sm:inline" : undefined}>{t("setlists.list.newButton")}</span>
+    </Link>
+  );
+
+  // « Mes services » : seul sur sa ligne au téléphone (inchangé) ; en tête de la rangée des
+  // filtres en grand et sur tablette (planches `setlists-*`).
+  const mesServices = profile?.planningName && tab !== "mine" && (
+    <button
+      type="button"
+      aria-pressed={onlyMine}
+      onClick={() => setOnlyMine((v) => !v)}
+      className={`shrink-0 inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-sm font-semibold transition-[background-color,color,transform] duration-150 active:scale-[.97] ${
+        onlyMine
+          ? "bg-foreground text-background"
+          : "bg-secondary text-muted-foreground hover:text-foreground"
+      }`}
+    >
+      {onlyMine ? `✓ ${t("setlists.list.myServicesFilter")}` : t("setlists.list.myServicesFilter")}
+    </button>
+  );
+
+  const contenuListe = (
+      <>
+        {/* Grand et tablette (planches `setlists-*`) : « Nouvelle » à côté du titre. */}
+        <PageTitle title={t("common.header.setlists")} action={disposition !== "telephone" && canCreate ? nouvelle : undefined} />
 
         {/* ── Onglets ── */}
         <div className="flex rounded-lg bg-secondary p-0.5 gap-0.5 text-sm mb-4">
@@ -300,7 +354,7 @@ export default function SetlistsPage() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={t("setlists.list.searchPlaceholder")}
-              className="w-full pl-9 pr-9 py-2.5 rounded-xl border border-transparent bg-card text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-ring/50 focus:ring-[3px] focus:ring-ring/10 text-[16px] sm:text-sm [&::-webkit-search-cancel-button]:hidden"
+              className={`w-full pl-9 pr-9 py-2.5 rounded-xl border border-transparent ${grand ? "bg-secondary" : "bg-card"} text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-ring/50 focus:ring-[3px] focus:ring-ring/10 text-[16px] sm:text-sm [&::-webkit-search-cancel-button]:hidden`}
             />
             {query && (
               <button
@@ -313,22 +367,10 @@ export default function SetlistsPage() {
             )}
           </div>
 
-          {profile?.planningName && tab !== "mine" && (
-            <button
-              type="button"
-              aria-pressed={onlyMine}
-              onClick={() => setOnlyMine((v) => !v)}
-              className={`inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-sm font-semibold transition-[background-color,color,transform] duration-150 active:scale-[.97] ${
-                onlyMine
-                  ? "bg-foreground text-background"
-                  : "bg-secondary text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {onlyMine ? `✓ ${t("setlists.list.myServicesFilter")}` : t("setlists.list.myServicesFilter")}
-            </button>
-          )}
+          {disposition === "telephone" && mesServices}
 
           <div className="flex items-center gap-2">
+            {disposition !== "telephone" && mesServices}
             {!selectionMode && supprimables.length > 0 && (
               <button
                 type="button"
@@ -341,7 +383,7 @@ export default function SetlistsPage() {
             <select
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
-              className="flex-1 h-9 px-3 rounded-lg border border-transparent bg-secondary text-foreground text-[16px] sm:text-sm focus:outline-none focus:ring-2 focus:ring-ring/30"
+              className="min-w-0 flex-1 h-9 px-3 rounded-lg border border-transparent bg-secondary text-foreground text-[16px] sm:text-sm focus:outline-none focus:ring-2 focus:ring-ring/30"
             >
               <option value="Toutes">{t("setlists.list.allCategories")}</option>
               <optgroup label={t("setlists.list.mainMeetings")}>
@@ -359,15 +401,7 @@ export default function SetlistsPage() {
                 ))}
               </optgroup>
             </select>
-            {canCreate && (
-              <Link aria-label={t("setlists.list.newButton")}
-                href="/setlists/new"
-                className="shrink-0 flex items-center gap-1.5 h-9 px-4 rounded-full bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-[background-color,transform] duration-150 active:scale-[.97]"
-              >
-                <Plus className="h-4 w-4" />
-                <span className="hidden sm:inline">{t("setlists.list.newButton")}</span>
-              </Link>
-            )}
+            {disposition === "telephone" && canCreate && nouvelle}
           </div>
         </div>
 
@@ -386,7 +420,7 @@ export default function SetlistsPage() {
              PageTransition, donc sur le bas du **document** et non de l'écran
              (docs/spec-suppression-groupee.md, R3). */}
         {selectionMode && (
-          <div className="sticky top-[var(--nav-h)] z-10 -mx-4 mb-4 flex items-center gap-2 material-chrome px-4 py-2.5">
+          <div className={`sticky z-10 mb-4 flex items-center gap-2 material-chrome py-2.5 ${grand ? "top-0 -mx-5 px-5" : "top-[var(--nav-h)] -mx-4 px-4"}`}>
             <FondDeBarre sousNavbar />
             <button
               type="button"
@@ -429,6 +463,21 @@ export default function SetlistsPage() {
             )}
           </div>
         ) : (
+          disposition === "tablette" ? (
+            <ul className="grid grid-cols-2 items-start gap-4">
+              {displayed.map((s) => (
+                <li key={s.id}>
+                  <SetlistCarteChants
+                    setlist={s}
+                    songsMap={songsMap}
+                    selectable={selectionMode ? peutSupprimer(s) : undefined}
+                    selected={coches.has(s.id)}
+                    onToggle={() => basculer(s.id)}
+                  />
+                </li>
+              ))}
+            </ul>
+          ) : (
           <ul>
             {displayed.map((s) => (
               <li key={s.id} className="group-row relative">
@@ -437,11 +486,36 @@ export default function SetlistsPage() {
                   selectable={selectionMode ? peutSupprimer(s) : undefined}
                   selected={coches.has(s.id)}
                   onToggle={() => basculer(s.id)}
+                  onApercu={grand ? () => setApercu(s.id) : undefined}
+                  actif={grand && !selectionMode && s.id === choisie?.id}
                 />
               </li>
             ))}
           </ul>
+          )
         )}
+        <GuideLien section="setlists" />
+      </>
+  );
+
+  return (
+    <div className="relative min-h-screen bg-background">
+      <PullToRefresh />
+      <Halo color="var(--chord-color)" />
+      {grand ? (
+        <DeuxVolets
+          racine="/setlists"
+          largeurListe={400}
+          liste={<div className="relative px-5 pb-10 pt-6">{contenuListe}</div>}
+          premier={choisie && (
+            <ApercuSetlist setlist={choisie} songsMap={songsMap} planning={planning} monNom={profile?.planningName ?? ""} />
+          )}
+        >
+          {null}
+        </DeuxVolets>
+      ) : (
+        <div className="relative max-w-4xl mx-auto px-4 pt-6 pb-10">{contenuListe}</div>
+      )}
         {/* ── Confirmation : elle NOMME ce qui va disparaître (D3) ── */}
         <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
           <AlertDialogContent>
@@ -481,9 +555,6 @@ export default function SetlistsPage() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
-
-        <GuideLien section="setlists" />
-      </div>
     </div>
   );
 }

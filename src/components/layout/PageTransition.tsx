@@ -1,14 +1,15 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import { cleDeTransition } from "@/lib/deuxVolets";
 
 export function PageTransition({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  // Chants se remonte par section et règle son fondu lui-même (lot U5, Q15) : remonter
-  // la page à chaque chant rechargerait la liste du volet de gauche (songs/ChantsVolets).
-  const cle = /^\/songs(\/|$)/.test(pathname) ? "/songs" : pathname;
+  // Une section en deux volets (lot U4 bis, Q2 ; Chants, lot U5, Q15) n'est remontée qu'en la
+  // quittant : sa liste reste montée d'un élément à l'autre ; `DeuxVolets` (ou `ChantsVolets`)
+  // fait le fondu de ses volets.
   return (
-    <div key={cle} className="page-fade">
+    <div key={cleDeTransition(pathname)} className="page-fade">
       {children}
     </div>
   );

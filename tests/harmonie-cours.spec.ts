@@ -67,6 +67,8 @@ test("un chapitre : sommaire, texte, exercices ; un tableau large défile dans s
   const ch6 = CH(6);
   await entrer(page, RUTH, `/harmonie/cours/${ch6.id}`);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(`6. Tous les accords`);
+  // Tablette debout (U4 bis, B3) : le sommaire est dans le panneau « Sommaire », par-dessus la leçon.
+  if (test.info().project.name === "tablette") await page.getByRole("button", { name: "Sommaire" }).click();
   await expect(page.getByRole("navigation", { name: "Sommaire" }).getByRole("listitem")).toHaveCount(ch6.sousParties.length);
   await expect(page.locator("[data-sous-partie]")).toHaveCount(ch6.sousParties.length);
   const exercices = page.locator("[data-sous-partie]").filter({ has: page.getByRole("heading", { name: /Exercices$/ }) });
@@ -117,7 +119,8 @@ test("« J'ai fini » n'écrit que ce chapitre dans coursProgres/<mon uid>, et t
   const db = await entrer(page, RUTH, `/harmonie/cours/${ch1.id}`);
   await page.getByRole("button", { name: "J'ai fini" }).click();
   await expect(page.getByText(/^Fini le /)).toBeVisible();
-  await expect(page.getByRole("link", { name: /Prochain chapitre/ })).toContainText("2.");
+  // Sous la leçon : en grand, la liste du cours à gauche a aussi sa ligne « Prochain chapitre » (U4 bis, B3).
+  await expect(page.locator("[data-j-ai-fini]").getByRole("link", { name: /Prochain chapitre/ })).toContainText("2.");
   const cours = () => db.writes.filter((w) => w.path.startsWith("coursProgres/"));
   await expect.poll(() => cours().map((w) => `${w.method} ${w.path}`)).toEqual([`PATCH coursProgres/${RUTH.uid}`]);
   expect(Object.keys((cours()[0].data.fini ?? {}) as object), "ce seul chapitre").toEqual([ch1.id]);

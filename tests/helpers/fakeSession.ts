@@ -1,9 +1,14 @@
 import type { Page, Route } from "@playwright/test";
+import { ADMIN_EMAILS } from "../../src/lib/access";
 
 // Connexion Firebase et Firestore **simulés** : les pages réservées aux membres
 // (setlists) se testent sans identifiants ni écriture en production. Le SDK
 // Auth ne vérifie pas la signature du jeton côté navigateur, il le décode
 // seulement ; Firestore est lu en REST, donc interceptable requête par requête.
+
+/** Adresse d'un compte admin simulé. Être admin passe par `ADMIN_EMAILS` (src/lib/access.ts) :
+ *  l'adresse est lue là, seul endroit où elle est écrite, jamais recopiée dans un test. */
+export const ADMIN_EMAIL = ADMIN_EMAILS[0];
 
 export type FakeProfile = {
   uid: string;
@@ -36,6 +41,8 @@ function fsValue(v: unknown): unknown {
   if (typeof v === "boolean") return { booleanValue: v };
   if (typeof v === "number") return Number.isInteger(v) ? { integerValue: String(v) } : { doubleValue: v };
   if (typeof v === "string") return { stringValue: v };
+  // Horodatage Firestore (`createdAt` des signalements : la page le lit en Date).
+  if (v instanceof Date) return { timestampValue: v.toISOString() };
   if (Array.isArray(v)) return { arrayValue: { values: v.map(fsValue) } };
   return {
     mapValue: {

@@ -124,7 +124,8 @@
   },
   "login": {
     "title": "GCC Louange",
-    "subtitle": "Connexion présidents de séance",
+    "heading": "Connexion",
+    "reserve": "Réservé aux membres de l'église",
     "emailLabel": "Email",
     "passwordLabel": "Mot de passe",
     "emailPlaceholder": "email@example.com",
@@ -310,6 +311,12 @@
       "jianpuSheet": "简谱",
       "jianpuSheetHint": "Jouer ce chant sur sa partition 简谱",
       "transitionPlaceholder": "Texte de la transition…"
+    },
+    "apercu": {
+      "region": "Aperçu de la setlist",
+      "tonalites": "tonalités de la setlist",
+      "equipe": "L'équipe de ce service",
+      "dapres": "d'après le planning"
     },
     "editeur": {
       "fil": "Fil d'Ariane",
@@ -700,7 +707,8 @@
     "inDays": "dans {{count}} j",
     "emptyUpcoming": "Aucun service à venir — profite du repos 🙂",
     "emptyPast": "Aucun service passé trouvé.",
-    "setlist": "Setlist"
+    "setlist": "Setlist",
+    "introuvable": "Aucun service à cette date."
   },
   "guide": {
     "title": "Guide d'utilisation",
@@ -783,7 +791,7 @@
         "title": "Notifications et rappels",
         "body": "La **cloche** en haut affiche les nouveautés. Sur mobile, tu peux aussi recevoir des **notifications push**, même site fermé.",
         "points": [
-          "Active-les depuis ton **profil**, avec l'interrupteur Notifications.",
+          "Active-les depuis **Moi › Réglages**, avec la ligne Notifications.",
           "Quatre types, activables séparément : **Rappels de service** (à J-7, J-3 et J-1, plus les répétitions Campus), **Setlist prête**, **Évènements** et **Tâches**.",
           "Sur iPhone, installe d'abord le site sur l'écran d'accueil (PWA) pour activer le push."
         ],
@@ -1027,7 +1035,22 @@
     "subtitle": "Centralisez et consultez en temps réel tous les plannings des services.",
     "nextService": "Ton prochain service",
     "seeAllServices": "Voir tous mes services →",
-    "thisSunday": "Ce dimanche — {{date}}",
+    "thisSunday": "Ce dimanche · {{date}}",
+    "accueil": {
+      "pourMoi": "Pour moi",
+      "ensuite": "Ensuite",
+      "setlistDuService": "La setlist de ce service",
+      "laSetlist": "La setlist",
+      "presidence": "Présidence : {{nom}}",
+      "ouvrir": "Ouvrir",
+      "aujourdhui": "Aujourd'hui",
+      "demain": "Demain",
+      "dansJours_one": "dans {{count}} jour",
+      "dansJours_other": "dans {{count}} jours",
+      "evenements": "Prochains évènements",
+      "libre": "Libre",
+      "inscrire": "Je m'inscris"
+    },
     "dataPending": "Données à venir",
     "staleData": "Planning en ligne inaccessible — données locales, possiblement périmées.",
     "legendCurrentSunday": "Dimanche de la semaine courante",
@@ -1969,7 +1992,12 @@
     "theme": "Thème",
     "light": "Clair",
     "dark": "Sombre",
-    "french": "Français"
+    "french": "Français",
+    "compte": "Mon compte",
+    "admin": "Admin",
+    "notifications": "Notifications",
+    "activees": "Activées",
+    "desactivees": "Désactivées"
   },
   "pdf": {
     "choice": {
@@ -2060,7 +2088,17 @@
     "polePrevenu": "Pôle {{pole}} prévenu.",
     "personnePrevenue": "Personne n'a été prévenu : aucune régie reliée à un compte.",
     "pourEvenement": "pour {{titre}}",
-    "detacherEvenement": "Détacher de l'évènement"
+    "detacherEvenement": "Détacher de l'évènement",
+    "introuvable": "Cette tâche n'existe plus.",
+    "fiche": {
+      "modifier": "Modifier"
+    },
+    "etat": {
+      "titre": "État",
+      "afaire": "À faire",
+      "encours": "En cours",
+      "terminee": "Terminée"
+    }
   },
   "accueil": {
     "nom": "Bienvenue dans GCC",
@@ -2193,7 +2231,8 @@
       "recettes": "Recettes par famille",
       "exemples": "Sons d'exemple",
       "conseil": "Conseillé : {{valeur}}",
-      "priorite": "Priorité"
+      "priorite": "Priorité",
+      "suite": "{{ecran}} (suite)"
     },
     "cours": {
       "titre": "Cours",
@@ -2360,7 +2399,7 @@
     },
     "court": {
       "orga": "Orga",
-      "comite-franco": "Comité franco",
+      "comite-franco": "Comité Franco",
       "da": "DA",
       "medias": "Médias",
       "developpement": "Développement",
@@ -2373,6 +2412,9 @@
       "louange": "Louange",
       "edd": "EDD"
     },
+    "index": "Index des équipes",
+    "precedentes": "Équipes précédentes",
+    "suivantes": "Équipes suivantes",
     "soustitre": {
       "orga": "Coordination générale",
       "comite-franco": "",
@@ -2647,6 +2689,37 @@
         "questionnaire": "questionnaire",
         "statistiques": "chants les plus joués"
       }
+    },
+    "reception": {
+      "filtres": "Filtrer les messages",
+      "tout": "Tout",
+      "signalements": "Signalements",
+      "propositions": "Propositions",
+      "titreSignalements": "Signalements",
+      "titrePropositions": "Propositions de chants",
+      "aideSignalements": "Problèmes signalés par les membres (chant ou site). Déplie un signalement pour le détailler, et marque-le comme traité une fois résolu.",
+      "aidePropositions": "Chants proposés par les membres. Déplie une proposition pour ses liens, et marque-la comme traitée après ajout au répertoire.",
+      "enAttente": "{{n}} en attente",
+      "voirTraites": "Voir les traités ({{n}})",
+      "masquerTraites": "Masquer les traités",
+      "chant": "Chant",
+      "site": "Site",
+      "traite": "Traité",
+      "refuse": "Refusé",
+      "proposePar": "Proposé par {{nom}}",
+      "page": "Page",
+      "voirChant": "Voir le chant",
+      "partition": "Partition PDF",
+      "marquerTraite": "Marquer traité",
+      "rouvrir": "Rouvrir",
+      "refuser": "Refuser",
+      "supprimerSignalement": "Supprimer le signalement",
+      "supprimerProposition": "Supprimer la proposition",
+      "aucunSignalement": "Aucun signalement pour l'instant.",
+      "aucuneProposition": "Aucune proposition pour l'instant.",
+      "aucunEnAttente": "Aucun message en attente.",
+      "message": "Message",
+      "erreur": "Changement non enregistré. Vérifie ta connexion, puis recommence."
     }
   },
   "calendrier": {

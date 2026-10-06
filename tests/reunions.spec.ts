@@ -975,7 +975,8 @@ test("membre de l'équipe : il voit la réunion dans l'agenda, et y ajoute un su
   const [post] = db.writes.filter((w) => w.method === "POST" && w.path.startsWith("evenements/reunion-regie/sujets/"));
   expect(post.data).toMatchObject({ texte: "Retour de la console", auteurUid: "uid-hugo", auteurNom: "Hugo B.", ordre: 1, traite: false });
   await page.goto("/evenements");
-  await expect(page.getByText("Réunion Régie")).toBeVisible();
+  // En grand (U4 bis, B2), la fiche du prochain évènement est aussi à droite : la ligne de l'agenda.
+  await expect(page.getByRole("link", { name: /Réunion Régie/ })).toBeVisible();
 });
 
 for (const [qui, nom] of [[NOE, "un autre pôle"], [COORD, "la coordination"]] as const) {

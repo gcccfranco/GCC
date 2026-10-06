@@ -28,6 +28,8 @@ const SPECS_GRAND_ECRAN = [
   // … le mode louange en deux colonnes, et le parcours de T6 (captures, FR et ZH, clair et sombre).
   /mode-louange-colonnes\.spec\.ts/,
   /deux-volets-finitions\.spec\.ts/,
+  // Lot U4 bis (docs/spec-pages-en-grand.md, Q16) : toutes les pages en grand.
+  /pages-en-grand-.*\.spec\.ts/,
   // Lot U6 (spec-back-office.md, Tests) : l'espace Back-Office, B1.
   /back-office-espace\.spec\.ts/,
   // Lot U8 (spec-calendrier.md, Tests) : la page du calendrier, Mois sur la tablette couchée.

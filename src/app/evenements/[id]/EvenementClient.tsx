@@ -10,11 +10,17 @@
 // garde l'inscription, les sujets, le compte rendu, et mène à la gestion par
 // « Gérer dans le Back-Office ». Une réunion, au Back-Office : l'en-tête et les
 // deux colonnes de la planche bo-reunion-avant.
+// Lot U4 bis, B2 (docs/spec-pages-en-grand.md, Q5) : dans l'App, en grand, la fiche se lit à
+// droite de l'agenda en deux colonnes (planche `evenements-ordinateur`) — titre et « Gérer dans
+// le Back-Office » en tête, bannière et description à gauche, infos et inscription à droite ;
+// en un volet, l'inscription remonte sous les infos (planche `evenement-fiche-telephone`).
+// `id` : la fiche montrée sans être l'adresse (le prochain évènement de l'agenda, Q3).
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { useParams, useRouter } from "next/navigation"
 import { useTranslation } from "react-i18next"
+import { ArrowRight, ChevronLeft } from "lucide-react"
 import { useAuth } from "@/lib/firebase/auth"
 import { useProfile } from "@/lib/firebase/users"
 import { canEditEvenement, canSeeEvenement, estDeLaReunion, estResponsable, estReunion } from "@/lib/access"
@@ -24,7 +30,8 @@ import { isInfo } from "@/lib/evenements/agenda"
 import { PLANNING_COLORS } from "@/lib/serviceColors"
 import type { Evenement } from "@/types/evenement"
 import { Button } from "@/components/ui/button"
-import { EnteteEvenement, PlusInfos, TypePour } from "../EvenementCard"
+import { Banniere, EnteteEvenement, InfosEvenement, PlusInfos, TitreEvenement, TypePour } from "../EvenementCard"
+import { useDisposition } from "@/hooks/useDisposition"
 import { Inscriptions, PanneauInscriptions } from "./Inscriptions"
 import { TachesEvenement } from "./TachesEvenement"
 import { QrCodeLink } from "@/components/evenements/QrCode"
@@ -49,9 +56,11 @@ function Linkified({ text }: { text: string }) {
   )
 }
 
-export function EvenementClient({ espace = "app" }: { espace?: "app" | "back-office" }) {
+export function EvenementClient({ espace = "app", id: idDonne }: { espace?: "app" | "back-office"; id?: string }) {
   const { t } = useTranslation()
-  const { id } = useParams<{ id: string }>()
+  const params = useParams<{ id?: string }>()
+  const id = idDonne ?? params.id ?? ""
+  const grand = useDisposition() === "grand"
   const router = useRouter()
   const { user, loading: authLoading } = useAuth()
   const { profile, loading: profileLoading } = useProfile()
@@ -149,6 +158,130 @@ export function EvenementClient({ espace = "app" }: { espace?: "app" | "back-off
             </div>
           </div>
         )}
+      </div>
+    )
+  }
+
+  const contenu = (
+    <>
+      {e.description && <Linkified text={e.description} />}
+      {e.liens.length > 0 && (
+        <ul className="space-y-1 text-sm">
+          {e.liens.map((l, i) => (
+            <li key={i}><a href={l.url} target="_blank" rel="noopener noreferrer" className="underline" style={{ color: COLOR }}>{l.label || l.url}</a></li>
+          ))}
+        </ul>
+      )}
+      {e.images.length > 1 && (
+        <div className="grid grid-cols-2 gap-2">
+          {e.images.slice(1).map((src, i) => (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img key={i} src={src} alt="" className="rounded-lg w-full object-cover" />
+          ))}
+        </div>
+      )}
+    </>
+  )
+  const inscriptions = avecInscriptions && (
+    <Inscriptions
+      key={cleInscription}
+      evenement={e}
+      user={user}
+      organisateur={gestionnaire}
+      onInscrits={(inscrits) => { setEvenement({ ...e, inscrits }); setRelireListe((n) => n + 1) }}
+    />
+  )
+  const panneau = gestionnaire && (
+    <>
+      {avecInscriptions && (
+        <PanneauInscriptions evenement={e} relire={relireListe} onMode={(inscriptions) => setEvenement({ ...e, inscriptions })}
+          onInscrits={(inscrits) => setEvenement({ ...e, inscrits })}
+          onRetire={(id) => { if (id === user?.uid) setCleInscription((c) => c + 1) }} />
+      )}
+      <QrCodeLink path={`/evenements/${e.id}`} label={e.titre} avecInscriptions={avecInscriptions} />
+    </>
+  )
+  const reunionEtTaches = (
+    <>
+      {cartesReunion && (
+        <>
+          {cartesReunion.compteRendu}
+          {cartesReunion.sujets}
+          {cartesReunion.precedentes}
+        </>
+      )}
+      {e.date && <TachesEvenement evenement={e} user={user} profile={profile} />}
+    </>
+  )
+
+  // App, en grand : titre en tête, bannière et texte à gauche, infos et inscription à droite.
+  if (!backOffice && grand) {
+    return (
+      <div className="fiche-grand space-y-4">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          {/* En deux volets, le titre de la page est celui de droite (h1), l'agenda a un h2. */}
+          <div className="min-w-0"><TitreEvenement e={e} niveau="h1" /></div>
+          {gestionnaire && estResponsable(user, profile) && (
+            <Link href={`/back-office/evenements/${e.id}`} className="inline-flex h-9 items-center gap-1.5 rounded-full bg-secondary px-4 text-sm font-semibold text-foreground transition-transform duration-150 active:scale-[.97]">
+              <ArrowRight className="h-4 w-4" aria-hidden />
+              {t("backOffice.gerer")}
+            </Link>
+          )}
+        </div>
+        <div className="fiche-colonnes grid items-start gap-6">
+          <div className="min-w-0 space-y-4">
+            <Banniere e={e} />
+            {contenu}
+            {/* La gestion des inscriptions (organisateur) : la colonne large, ses trois choix y tiennent. */}
+            {panneau && <div data-testid="gestion-carte" className="raised space-y-4 rounded-2xl p-4">{panneau}</div>}
+          </div>
+          <div className="min-w-0 space-y-3">
+            <div data-testid="fiche-carte" className="raised space-y-4 rounded-2xl p-4">
+              <InfosEvenement e={e} />
+              <PlusInfos e={e} />
+              {inscriptions}
+            </div>
+            {reunionEtTaches}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // App, un volet : la barre « ‹ Évènements · Gérer dans le Back-Office » (planche
+  // `evenement-fiche-telephone`), puis la fiche d'une carte, l'inscription sous les infos
+  // (premier écran). L'organisateur garde sa carte de gestion (panneau, lien d'inscription).
+  if (!backOffice) {
+    return (
+      <div className="max-w-2xl mx-auto space-y-3">
+        <div data-testid="barre-fiche" className="flex min-h-10 items-center justify-between gap-3">
+          <Link href={liste} className="inline-flex items-center gap-1 text-[15px] text-muted-foreground active:text-foreground">
+            <ChevronLeft className="h-4 w-4" aria-hidden />
+            {t("evenements.title")}
+          </Link>
+          {gestionnaire && estResponsable(user, profile) && (
+            <Link href={`/back-office/evenements/${e.id}`} className="raised inline-flex h-10 shrink-0 items-center gap-1.5 rounded-full px-4 text-sm font-semibold text-foreground transition-transform duration-150 active:scale-[.97]">
+              <ArrowRight className="h-4 w-4" aria-hidden />
+              {t("backOffice.gerer")}
+            </Link>
+          )}
+        </div>
+        {gestionnaire && (
+          <div data-testid="gestion-carte" className="space-y-4 rounded-2xl bg-card p-4">
+            <div>
+              <h2 className="text-xl font-bold text-foreground text-balance">{e.titre}</h2>
+              <div className="mt-2 flex flex-wrap gap-1"><TypePour e={e} /></div>
+            </div>
+            {panneau}
+          </div>
+        )}
+        <div data-testid="fiche-carte" className="space-y-4 rounded-2xl bg-card p-4">
+          <EnteteEvenement e={e} titre={gestionnaire ? false : "h2"} />
+          <PlusInfos e={e} />
+          {inscriptions}
+          {contenu}
+        </div>
+        {reunionEtTaches}
       </div>
     )
   }

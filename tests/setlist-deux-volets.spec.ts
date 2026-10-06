@@ -322,6 +322,9 @@ test.describe("setlist en deux volets (ordinateur, tablette couchée)", () => {
   test("l'entrée « Setlists » de la barre latérale rouvre la liste filtrée", async ({ page }) => {
     await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: SETLIST }, "/setlists?tab=archived");
     await expect(page).toHaveURL(/tab=archived/);
+    // La liste se retient une fois son état relu de l'adresse (`useSetlistsNavState`) : l'adresse
+    // porte déjà `tab=archived` avant (connexion), d'où une course avec la page qui suit.
+    await page.waitForFunction(() => sessionStorage.getItem("setlistsListPath")?.includes("tab=archived"));
     await page.goto(`/setlists/${SETLIST_ID}`);
     await chant(page, 1).waitFor();
     const navigation = page.getByRole("navigation", { name: "Navigation principale" });

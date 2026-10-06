@@ -51,16 +51,18 @@ function LigneLien({
   position,
   current,
   onOpen,
+  lienBase,
   children,
 }: {
   position: number;
   current: boolean;
   onOpen: (position: number) => void;
+  lienBase: string;
   children: React.ReactNode;
 }) {
   return (
     <a
-      href={`?vue=partitions&chant=${position}`}
+      href={`${lienBase}?vue=partitions&chant=${position}`}
       aria-current={current ? "true" : undefined}
       onClick={(e) => {
         if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
@@ -81,6 +83,7 @@ export function ListView({
   jianpuPref,
   current,
   onOpen,
+  lienBase = "",
 }: {
   items: SetlistItem[];
   songsMap: Record<string, SongIndexEntry>;
@@ -90,6 +93,9 @@ export function ListView({
   current: number | null;
   /** Ouvre les partitions à ce chant. */
   onOpen: (position: number) => void;
+  /** Adresse de la setlist quand la liste est montrée ailleurs (aperçu de la liste des
+   *  setlists, lot U4 bis, B2) : le lien des lignes y mène. */
+  lienBase?: string;
 }) {
   const { t } = useTranslation();
   // Repère « ce chant se lit sur son 简谱 » — même résolution que la vue
@@ -111,7 +117,7 @@ export function ListView({
         if (item.type === "fusion" && item.fusionSongs) {
           return (
             <li key={`fusion-${idx}`} data-ligne={item.position}>
-              <LigneLien position={item.position} current={current === item.position} onOpen={onOpen}>
+              <LigneLien position={item.position} current={current === item.position} onOpen={onOpen} lienBase={lienBase}>
               <span className="shrink-0 w-7 h-7 rounded-full bg-muted flex items-center justify-center text-xs font-bold text-muted-foreground mt-0.5">
                 {num}
               </span>
@@ -242,7 +248,7 @@ export function ListView({
         const transposed = !!item.keyOverride && item.keyOverride !== song?.originalKey;
         return (
           <li key={`${item.songSlug}-${idx}`} data-ligne={item.position}>
-            <LigneLien position={item.position} current={current === item.position} onOpen={onOpen}>
+            <LigneLien position={item.position} current={current === item.position} onOpen={onOpen} lienBase={lienBase}>
             <span className="shrink-0 w-7 h-7 rounded-full bg-muted flex items-center justify-center text-xs font-bold text-muted-foreground mt-0.5">
               {num}
             </span>

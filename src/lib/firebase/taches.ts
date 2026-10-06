@@ -165,3 +165,22 @@ export async function deplacerTache(pole: TachePole, id: string, vers: string, f
     await remove(`${tachePath(pole, id)}/fois/${fois.date}`);
   }
 }
+
+/** L'état choisi sur la fiche d'une tâche (lot U4 bis, B4, Q8 : état à trois positions) :
+ *  « À faire » (`null`) supprime le document, les deux autres l'écrivent, la date de début
+ *  gardée. Mêmes documents que `cyclerEtat`. */
+export async function choisirEtat(
+  pole: TachePole,
+  id: string,
+  date: string,
+  fois: Fois | null,
+  etat: EtatFois | null,
+  par: { uid: string; nom: string },
+): Promise<void> {
+  if (!etat) {
+    if (fois) await remove(`${tachePath(pole, id)}/fois/${date}`);
+    return;
+  }
+  const le = new Date().toISOString();
+  await ecrireFois(pole, id, { date, parUid: par.uid, parNom: par.nom, le, etat, debutLe: fois?.debutLe || le });
+}

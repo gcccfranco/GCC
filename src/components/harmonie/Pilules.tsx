@@ -1,7 +1,7 @@
 "use client";
 
 // Harmonie (lot 9) — une rangée de filtres en pilules, au style des onglets de
-// section (lot 4) : neutres, l'actif en encre. La rangée défile
+// section (lot 4) : neutres (gris, planches `harmonie-*` de U4 bis), l'actif en encre. La rangée défile
 // horizontalement quand elle ne tient pas — douze sensations ne tiennent pas
 // sur un téléphone.
 
@@ -39,7 +39,7 @@ export function Pilules<T extends string>({
             onClick={() => choisir(actif && !obligatoire ? null : o.cle)}
             className={cn(
               "h-10 shrink-0 rounded-full px-3.5 text-[15px] transition-colors duration-150",
-              actif ? "bg-foreground text-background font-semibold" : "bg-card text-muted-foreground active:bg-secondary",
+              actif ? "bg-foreground text-background font-semibold" : "bg-secondary text-foreground/80 active:bg-secondary/70",
             )}
           >
             {o.nom}

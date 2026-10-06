@@ -6,15 +6,20 @@ export function PageTitle({
   title,
   subtitle,
   action,
+  niveau = 1,
 }: {
   title: string;
+  /** 2 dans le volet de gauche des deux volets (lot U4 bis) : le titre de la page est celui de droite. */
+  niveau?: 1 | 2;
   subtitle?: React.ReactNode;
   action?: React.ReactNode;
 }) {
   return (
     <div className="mb-4 flex items-end justify-between gap-3">
       <div className="min-w-0">
-        <h1 className="text-2xl font-bold text-foreground">{title}</h1>
+        {niveau === 1
+          ? <h1 className="text-2xl font-bold text-foreground">{title}</h1>
+          : <h2 className="text-2xl font-bold text-foreground">{title}</h2>}
         {subtitle && <p className="mt-0.5 text-sm text-muted-foreground">{subtitle}</p>}
       </div>
       {action && <div className="shrink-0 pb-1">{action}</div>}

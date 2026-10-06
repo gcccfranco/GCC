@@ -554,6 +554,27 @@
   }
 }
 
+/* Aperçu d'une setlist (lot U4 bis, B2, Q4) : les chants et l'équipe côte à côte quand le volet
+   de droite en a la place (ordinateur à 1 440 px, barre réduite), l'un sous l'autre sinon. */
+.apercu-setlist { container-type: inline-size; }
+@container (min-width: 680px) {
+  .apercu-colonnes { grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); }
+}
+
+/* Un service de Mes services (lot U4 bis, B4, Q7) : la setlist et l'équipe côte à côte quand le
+   volet en a la place, l'une sous l'autre sinon. */
+.service-detail { container-type: inline-size; }
+@container (min-width: 560px) {
+  .service-colonnes { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); }
+}
+
+/* Fiche d'un évènement à droite de l'agenda (lot U4 bis, B2, Q5) : deux colonnes quand le volet
+   en a la place, une sinon. */
+.fiche-grand { container-type: inline-size; }
+@container (min-width: 540px) {
+  .fiche-colonnes { grid-template-columns: minmax(0, 1.3fr) minmax(250px, 1fr); }
+}
+
 /* ══ Lot U5, T5 — Chants en deux volets (docs/spec-deux-volets.md, Q1, Q15, Q16) ══════════
    `ChantsVolets` (songs/layout) porte la liste (`.chants-liste`) et la page (`.chants-chant` :
    « Choisis un chant » sur /songs, sinon le chant). Hors `@layer`, pour passer devant les
@@ -622,4 +643,39 @@
 @media (prefers-reduced-motion: reduce) {
   [data-volet][data-vaul-drawer][data-state="open"] { animation-name: volet-fondu !important; animation-duration: 200ms !important; }
   [data-volet][data-vaul-drawer][data-state="closed"] { animation-name: volet-fondu-sortie !important; animation-duration: 200ms !important; }
+}
+
+/* Services et rôles du profil et de l'inscription (lot U4 bis, B5, Q10 et Q13) : les cartes des
+   services sur deux colonnes quand la carte en a la place (planches `profil-ordinateur`,
+   `inscription-*`), l'une sous l'autre sinon (téléphone, colonne du profil sur tablette). */
+.grille-services { container-type: inline-size; }
+@container (min-width: 540px) {
+  .grille-services-cartes { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
+}
+
+/* Panneau de marque de la connexion et de l'inscription (lot U4 bis, B5, Q13) : le rouge du logo
+   et le bleu des accords en deux halos très pâles (planches `connexion-*`, `inscription-*`). */
+.panneau-marque {
+  background:
+    radial-gradient(ellipse 75% 55% at 15% 12%, rgb(207 42 32 / 0.13), transparent 70%),
+    radial-gradient(ellipse 75% 55% at 85% 88%, rgb(63 99 207 / 0.12), transparent 70%),
+    hsl(var(--secondary) / 0.5);
+}
+.dark .panneau-marque {
+  background:
+    radial-gradient(ellipse 75% 55% at 15% 12%, rgb(207 42 32 / 0.22), transparent 70%),
+    radial-gradient(ellipse 75% 55% at 85% 88%, rgb(63 99 207 / 0.2), transparent 70%),
+    hsl(var(--secondary) / 0.5);
+}
+
+/* Équipes en bandeau (lot U4 bis, B6, Q12) : la page tient dans la hauteur de l'écran, sous la
+   navbar et au-dessus de la cale de la barre du bas (`MobileTabBar`, 78 px + `--tabbar-bottom`) ;
+   sans barre du bas (ordinateur, tablette en paysage : mêmes requêtes que le bloc « Lot U4 »),
+   jusqu'au bas de l'écran. */
+.equipes-ecran { height: calc(100dvh - var(--nav-h) - 78px - var(--tabbar-bottom)); }
+@media screen and (pointer: fine) and (min-width: 1024px) {
+  .equipes-ecran { height: calc(100dvh - var(--nav-h)); }
+}
+@media screen and (pointer: coarse) and (orientation: landscape) and (min-width: 1024px) {
+  .equipes-ecran { height: calc(100dvh - var(--nav-h)); }
 }

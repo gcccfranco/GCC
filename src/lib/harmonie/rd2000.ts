@@ -75,3 +75,34 @@ export function parEcran(reglages: Reglage[]): { ecran: string; reglages: Reglag
   }
   return groupes;
 }
+
+export type GroupeEcran = { ecran: string; reglages: Reglage[] };
+
+/** Les réglages d'un son sur deux colonnes (lot U4 bis, B3 : la fiche du son en grand).
+ *  La première prend la moitié des réglages, arrondie au-dessus ; l'ordre est gardé. Un écran
+ *  qui tient entre dans la première ; un écran plus long que la moitié s'y coupe, et sa fin
+ *  ouvre la seconde avec `suite` (« Piano Designer (suite) ») ; un écran plus court s'y
+ *  reporte entier. Jamais un morceau d'un seul réglage : l'écran reste alors entier. */
+export function couperEnDeuxColonnes(groupes: GroupeEcran[]): (GroupeEcran & { suite: boolean })[][] {
+  const moitie = Math.ceil(groupes.reduce((n, g) => n + g.reglages.length, 0) / 2);
+  const gauche: (GroupeEcran & { suite: boolean })[] = [];
+  const droite: (GroupeEcran & { suite: boolean })[] = [];
+  let pris = 0;
+  for (const g of groupes) {
+    const place = moitie - pris;
+    if (droite.length || place <= 0) droite.push({ ...g, suite: false });
+    else if (g.reglages.length <= place) {
+      gauche.push({ ...g, suite: false });
+      pris += g.reglages.length;
+    } else if (g.reglages.length > moitie && g.reglages.length - place < 2) {
+      // Couper laisserait un réglage seul dans la suite : l'écran reste entier à gauche.
+      gauche.push({ ...g, suite: false });
+      pris = moitie;
+    } else if (g.reglages.length > moitie && place >= 2) {
+      gauche.push({ ecran: g.ecran, reglages: g.reglages.slice(0, place), suite: false });
+      droite.push({ ecran: g.ecran, reglages: g.reglages.slice(place), suite: true });
+      pris = moitie;
+    } else droite.push({ ...g, suite: false });
+  }
+  return [gauche, droite];
+}

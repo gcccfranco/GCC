@@ -25,8 +25,9 @@ const couleur = (l: ReturnType<Page["locator"]>) => l.evaluate((el) => getComput
 test.describe("planning (T4)", () => {
   test.use(phone);
 
-  // 5C1, retour de Christelle (vue D) : le filet de couleur suffit, le petit carré part.
-  test("accueil : grand titre, prochain service en vignette de date, services marqués d'un filet de couleur, sans carré", async ({ page }) => {
+  // 5C1, retour de Christelle (vue D) : plus de petit carré. Accueil A (lot U4 bis, B1,
+  // planches `accueil-a-*`) : chaque service est une carte, son nom à sa couleur.
+  test("accueil : grand titre, prochain service en vignette de date, services en cartes à leur couleur, sans carré", async ({ page }) => {
     await open(page, "/planning");
     await expect(page.getByRole("heading", { level: 1, name: "Planning" })).toBeVisible();
     // Le lien du prochain service (pas l'onglet « Culte Franco » de la barre de section).
@@ -37,9 +38,7 @@ test.describe("planning (T4)", () => {
     const dimanche = page.getByRole("region", { name: /Ce dimanche/ });
     await expect(dimanche.getByText("Ruth K.")).toBeVisible();
     await expect(dimanche.getByTestId("carre-service")).toHaveCount(0);
-    const service = dimanche.getByTestId("service-dimanche").first();
-    expect(await service.evaluate((el) => getComputedStyle(el).borderLeftWidth)).toBe("3px");
-    expect(await service.evaluate((el) => getComputedStyle(el).borderLeftColor)).toBe(CULTE_COULEUR);
+    expect(await couleur(dimanche.getByTestId("carte-culte").getByText("Culte Franco", { exact: true }))).toBe(CULTE_COULEUR);
   });
 
   // Sous 1024 px, la rangée d'onglets est devenue un menu (V7, 21/09/2026) : ce describe

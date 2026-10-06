@@ -222,7 +222,8 @@ test("Moi : « Mes tâches » compte mes tâches et celles de mon pôle sans res
 
 test("Moi : pas de « Mes tâches » hors pôle", async ({ page }) => {
   await signInAs(page, SANS_POLE, {}, "/moi");
-  await expect(page.getByRole("link", { name: /profil/i })).toBeVisible();
+  // La carte du compte porte aussi « Mon profil » (U4 bis, B5).
+  await expect(page.getByRole("link", { name: /profil/i }).first()).toBeVisible();
   await expect(page.getByRole("link", { name: /Mes tâches/ })).toHaveCount(0);
 });
 

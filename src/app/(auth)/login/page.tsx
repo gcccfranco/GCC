@@ -10,14 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { EcranMarque } from "@/components/auth/EcranMarque";
 
 function LoginForm() {
   const { t } = useTranslation();
@@ -66,75 +59,70 @@ function LoginForm() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center px-4">
-      <Card className="w-full max-w-sm">
-        <CardHeader className="text-center">
-          <CardTitle className="text-xl">{t("login.title")}</CardTitle>
-          <CardDescription>{t("login.subtitle")}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="login-email">{t("login.emailLabel")}</Label>
-              <Input
-                id="login-email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                autoComplete="email"
-                className="h-11"
-                placeholder={t("login.emailPlaceholder")}
-              />
-            </div>
+    // Lot U4 bis, B5 (Q13) : titre « Connexion » (l'app s'ouvre à toute l'église), la marque à côté
+    // en grand, au-dessus ailleurs.
+    <EcranMarque>
+      <h1 className="mb-5 text-2xl font-bold text-foreground">{t("login.heading")}</h1>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="space-y-1.5">
+          <Label htmlFor="login-email">{t("login.emailLabel")}</Label>
+          <Input
+            id="login-email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            autoComplete="email"
+            className="h-11"
+            placeholder={t("login.emailPlaceholder")}
+          />
+        </div>
 
-            <div className="space-y-1.5">
-              <Label htmlFor="login-password">{t("login.passwordLabel")}</Label>
-              <Input
-                id="login-password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                autoComplete="current-password"
-                className="h-11"
-                placeholder={t("login.passwordPlaceholder")}
-              />
-            </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="login-password">{t("login.passwordLabel")}</Label>
+          <Input
+            id="login-password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            autoComplete="current-password"
+            className="h-11"
+            placeholder={t("login.passwordPlaceholder")}
+          />
+        </div>
 
-            {error && (
-              <Alert variant="destructive">
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
-            {info && (
-              <Alert>
-                <AlertDescription>{info}</AlertDescription>
-              </Alert>
-            )}
+        {error && (
+          <Alert variant="destructive">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+        {info && (
+          <Alert>
+            <AlertDescription>{info}</AlertDescription>
+          </Alert>
+        )}
 
-            <Button type="submit" disabled={loading} className="w-full h-11">
-              {loading ? t("login.submitLoading") : t("login.submit")}
-            </Button>
-          </form>
-        </CardContent>
-        <CardFooter className="flex-col gap-2">
-          <button
-            type="button"
-            onClick={handleForgotPassword}
-            className="text-sm text-muted-foreground hover:text-foreground underline underline-offset-2 block cursor-pointer"
-          >
-            {t("login.forgotPassword")}
-          </button>
-          <Link href="/signup" className="text-sm text-foreground underline underline-offset-2 block">
-            {t("login.signupLink")}
-          </Link>
-          <Link href="/setlists" className="text-sm text-muted-foreground hover:text-foreground block">
-            {t("login.backToSetlists")}
-          </Link>
-        </CardFooter>
-      </Card>
-    </div>
+        <Button type="submit" disabled={loading} className="w-full h-11">
+          {loading ? t("login.submitLoading") : t("login.submit")}
+        </Button>
+      </form>
+      <div className="mt-6 flex flex-col items-center gap-3">
+        <button
+          type="button"
+          onClick={handleForgotPassword}
+          className="text-sm text-muted-foreground hover:text-foreground underline underline-offset-2 block cursor-pointer"
+        >
+          {t("login.forgotPassword")}
+        </button>
+        <Link href="/signup" className="text-sm text-foreground underline underline-offset-2 block">
+          {t("login.signupLink")}
+        </Link>
+        <Link href="/setlists" className="text-sm text-muted-foreground hover:text-foreground block">
+          {t("login.backToSetlists")}
+        </Link>
+      </div>
+    </EcranMarque>
   );
 }
 

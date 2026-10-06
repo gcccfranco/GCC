@@ -352,11 +352,15 @@ test("Ce dimanche : la ligne Petit déj vient des inscriptions, plus du Sheet", 
   await capture(page, "ce-dimanche-petit-dej-lignes");
 });
 
-test("Ce dimanche : sans inscription, pas de ligne Petit déj, même si le Sheet en porte une", async ({ page }) => {
+// Accueil A (lot U4 bis, B1, docs/spec-pages-en-grand.md, Q14) : interrupteur ouvert, sans
+// inscription le petit déj est « Libre », avec « Je m'inscris » ; le Sheet ne parle plus (U3, T8).
+// Interrupteur coupé, pas de ligne (pages-en-grand-accueil).
+test("Ce dimanche : sans inscription, le petit déj est « Libre » avec « Je m'inscris », même si le Sheet en porte un", async ({ page }) => {
   await open(page, "2026-09-20", "/planning");
   const dimanche = page.getByRole("region", { name: /Ce dimanche/ });
   await expect(dimanche.getByText("Ruth K.", { exact: false }), "la Prépa. Table reste").toBeVisible();
-  await expect(dimanche.getByText("Petit déj", { exact: true })).toHaveCount(0);
+  await expect(dimanche.getByText("Libre", { exact: true })).toBeVisible();
+  await expect(dimanche.getByRole("link", { name: "Je m'inscris" })).toBeVisible();
   await expect(dimanche.getByText("Charlie B., Isabelle L.")).toHaveCount(0);
 });
 
@@ -733,15 +737,16 @@ test("rappels J-7 / J-3 / J-1 : « Petit déj » ajouté par le compte, sans dou
   );
 });
 
-test("Ce dimanche : « Ton prochain service » compte ma ligne « Famille Martin », une seule fois", async ({ page }) => {
+// Accueil A (lot U4 bis, B1, Q14) : « Ton prochain service » est devenu la carte du prochain
+// service de « Pour moi ».
+test("Ce dimanche : « Pour moi » compte ma ligne « Famille Martin », une seule fois", async ({ page }) => {
   // Vendredi 25/09 : le Sheet n'a plus rien pour Charlie, seules ses lignes comptent.
   await open(page, "2026-09-27", "/planning", docsPetitDej([
     ligne({ id: "a", dimanche: "2026-09-27", nom: "Famille Martin", uid: CHARLIE.uid, auteurUid: CHARLIE.uid }),
     ligne({ id: "b", dimanche: "2026-09-27", nom: "Charlie et ses amis", uid: CHARLIE.uid, auteurUid: CHARLIE.uid }),
   ]));
-  await expect(page.getByRole("heading", { name: "Ton prochain service" })).toBeVisible();
-  const prochain = page.locator('main a[href^="/mes-services"]').first();
-  await expect(prochain).toContainText("Petit déj (Équipe)");
+  const prochain = page.getByRole("region", { name: "Pour moi" }).locator("[data-carte]").first();
+  await expect(prochain).toContainText("Petit déj · Équipe");
   expect((await prochain.innerText()).match(/Petit déj/g), "deux lignes le même dimanche : un seul « Petit déj »").toHaveLength(1);
   await expect(prochain.getByTestId("tuile")).toContainText("27");
   await capture(page, "ce-dimanche-prochain-petit-dej");
@@ -752,8 +757,8 @@ test("Ce dimanche : un compte sans nom de planning voit son petit déj en procha
     ligne({ id: "a", dimanche: "2026-10-04", nom: "Famille Martin", uid: SANS_NOM.uid, auteurUid: SANS_NOM.uid }),
     ligne({ id: "b", dimanche: "2026-09-27", nom: "Famille Durand", uid: "uid-autre", auteurUid: "uid-autre" }),
   ]), SANS_NOM);
-  const prochain = page.locator('main a[href^="/mes-services"]').first();
-  await expect(prochain).toContainText("Petit déj (Équipe)");
+  const prochain = page.getByRole("region", { name: "Pour moi" }).locator("[data-carte]").first();
+  await expect(prochain).toContainText("Petit déj · Équipe");
   await expect(prochain.getByTestId("tuile"), "le 04/10, pas le 27/09 d'un autre").toContainText("4");
   await expect(prochain.getByTestId("tuile")).toContainText("oct");
 });
@@ -764,7 +769,7 @@ test("Ce dimanche : sans ligne à moi ni nom de planning, pas de prochain servic
   ]), SANS_NOM);
   const dimanche = page.getByRole("region", { name: /Ce dimanche/ });
   await expect(dimanche.getByText("Famille Durand"), "la ligne d'un autre reste dans Ce dimanche").toBeVisible();
-  await expect(page.getByRole("heading", { name: "Ton prochain service" })).toHaveCount(0);
+  await expect(page.getByRole("region", { name: "Pour moi" })).toHaveCount(0);
 });
 
 test("Mes services : « Famille Martin » reste un service de son inscrit, sans doublon avec son nom de planning", async ({ page }) => {
@@ -859,9 +864,11 @@ test("préférence « Petit déj » : un type de notification, active par défau
   expect(NOTIF_TYPE_LABELS.petitDej).toBe("Petit déj");
 });
 
-test("Mon profil › Notifications : la bascule « Petit déj » est active par défaut ; l'éteindre écrit notifPrefs/{uid}.petitDej = false", async ({ page }) => {
+// Les réglages des notifications sont dans Moi › Réglages depuis U4 bis, B5 (plus dans le profil).
+test("Moi › Réglages › Notifications : la bascule « Petit déj » est active par défaut ; l'éteindre écrit notifPrefs/{uid}.petitDej = false", async ({ page }) => {
   await abonneAuxNotifications(page);
-  const db = await signInAs(page, CHARLIE, {}, "/profil");
+  const db = await signInAs(page, CHARLIE, {}, "/moi");
+  await page.getByRole("region", { name: "Réglages" }).getByRole("button", { name: /Notifications/ }).click();
   await expect(page.getByText("Recevoir", { exact: true })).toBeVisible();
   const bascule = page.getByRole("switch", { name: "Petit déj" });
   await expect(bascule, "aucun document notifPrefs : actif par défaut").toBeChecked();
@@ -876,10 +883,11 @@ test("Mon profil › Notifications : la bascule « Petit déj » est active par 
   });
 });
 
-test("Mon profil › Notifications en 中文 : la liste « Recevoir » est traduite ; une préférence éteinte le reste", async ({ page }) => {
+test("Moi › Réglages › Notifications en 中文 : la liste « Recevoir » est traduite ; une préférence éteinte le reste", async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
   await abonneAuxNotifications(page);
-  await signInAs(page, CHARLIE, { [`notifPrefs/${CHARLIE.uid}`]: { petitDej: false } }, "/profil");
+  await signInAs(page, CHARLIE, { [`notifPrefs/${CHARLIE.uid}`]: { petitDej: false } }, "/moi");
+  await page.getByRole("region", { name: "设置" }).getByRole("button", { name: /通知/ }).click();
   await expect(page.getByText("接收", { exact: true })).toBeVisible();
   for (const nom of ["服侍提醒", "歌单已准备好", "活动", "任务"]) {
     await expect(page.getByRole("switch", { name: nom }), nom).toBeChecked();
