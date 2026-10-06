@@ -28,6 +28,7 @@ export function ChapitreHarmonie({ id }: { id: string }) {
   const { chapitres, fini, marquer } = useCoursCharge();
   const [sommaire, setSommaire] = useState(false);
 
+  const Titre = deuxVolets ? "h2" : "h1";
   if (chargement) return null;
   if (!chapitre) {
     return <p className="mx-auto max-w-2xl px-4 py-10 text-center text-muted-foreground">{t("harmonie.cours.introuvable")}</p>;
@@ -35,7 +36,7 @@ export function ChapitreHarmonie({ id }: { id: string }) {
 
   return (
     <div
-      className={cn("space-y-6 pb-10", deuxVolets ? "max-w-[860px] px-6 pt-6 xl:px-9" : "mx-auto max-w-2xl px-4 pt-3 md:max-w-3xl md:px-6")}
+      className={cn("space-y-6 pb-10", deuxVolets ? "max-w-[860px]" : "mx-auto max-w-2xl px-4 pt-3 md:max-w-3xl md:px-6")}
       data-chapitre={chapitre.id}
     >
       {!deuxVolets && (
@@ -60,10 +61,11 @@ export function ChapitreHarmonie({ id }: { id: string }) {
       )}
 
       <header>
-        <h1 className="text-[22px] font-bold leading-tight lg:text-[28px]">
+        {/* En grand, sous l'en-tête « Harmonie » : un h2 de 24 px (agencement v18, R3) ; seule, le h1. */}
+        <Titre className={deuxVolets ? "text-[24px] font-bold leading-tight" : "text-[22px] font-bold leading-tight lg:text-[28px]"}>
           {chapitre.numero !== null && `${chapitre.numero}. `}
           {chapitre.titre}
-        </h1>
+        </Titre>
         {chapitre.niveau !== null && (
           <p className="mt-1 text-[13px] text-muted-foreground">{t(`harmonie.cours.niveau${chapitre.niveau}`)}</p>
         )}

@@ -566,3 +566,35 @@ la barre d'onglets : une page sans barre du bas (rare) le verra plus haut que n�
   `v18-app-profil`, `v18-app-guide`, `v18-app-questionnaire`.
 - **Reste** : rien pour T10. T11 (Harmonie en onglets) est la tranche suivante de la voie ⑦.
 - **Timothée** : rien à publier (aucune règle, aucune donnée, R16) ; relire les libellés 中文 ci-dessus.
+
+### V18T1011 — App Harmonie en onglets (T11)
+
+- 07/10/2026 : **T11 faite** (branche `lot/v18-t1011`, commit `feat(V18T1011): T11 — Harmonie en onglets Fiches · Cours · Sons du RD-2000`), A16.
+- **En-tête de la section** : `app/harmonie/layout.tsx` (nouveau) pose `EnTeteHarmonie`
+  (`components/harmonie/EnTeteHarmonie.tsx`) au-dessus des trois layouts de U4 bis : `EnTetePage` « Harmonie »,
+  « Des idées pour réharmoniser, au piano et à la guitare. », `OngletsRail` en liens Fiches · Cours · Sons du
+  RD-2000 (`/harmonie`, `/harmonie/cours`, `/harmonie/rd2000`), l'onglet lu dans l'adresse. « Sons du RD-2000 »
+  pour les pianistes seulement (comme la page) ; pas de rail sans accès à Harmonie. Une fiche, une leçon ou un
+  son ouvert **seul** (téléphone, tablette portrait) garde son « ‹ » et son h1 : l'en-tête de la section s'y efface.
+- **Listes** : plus de titre ni de « ‹ Harmonie » (`Catalogue`, `SommaireCours`, `Rd2000Harmonie`) ; les cartes
+  Cours et Sons du catalogue sur téléphone seulement (`md:hidden`) ; tablette portrait : la liste du cours part
+  du bord de la marge comme le titre (elle était centrée à 672 px).
+- **Fiches en deux volets** (R3, R10) : le titre de la fiche, de la leçon, du son devient un h2 de 24 px et la
+  fiche ne pose plus de marge (`FicheHarmonie`, `ChapitreHarmonie`, `SonRd2000`) ; seules, h1 comme avant.
+- **Vues en rail** (R4) : Piano · Guitare (catalogue et fiche) et Par moment · Tous les sons · Paramètres
+  passent de `Pilules` à `OngletsRail` (boutons, `role="tab"`) ; les filtres restent en pilules.
+- **Libellés** : `harmonie.fiches` (« Fiches » / 卡片, à relire) ; `harmonie.cours.sousTitre` et
+  `harmonie.rd2000.sousTitre`, devenus orphelins avec les titres de liste, sont retirés (FR et 中文).
+- **Tests** : `tests/agencement-v18-harmonie.spec.ts` (11 tests × 5 projets, vus rouges sur le code d'avant
+  pour l'en-tête, le rail, l'onglet et le lien direct, puis verts) : en-tête et rail sur les trois adresses,
+  vérifications communes, l'onglet suit l'adresse (et le retour arrière), pas d'onglet Sons pour un guitariste,
+  cartes sur téléphone seulement, vues en rail et filtres en pilules, lien direct vers une fiche, une leçon, un son
+  (deux volets en grand, h2 24 px sans marge ; seul ailleurs, avec son retour). Réécrits avec la règle :
+  `pages-en-grand-harmonie` (titre dans l'en-tête, tablette portrait sans les cartes, « Par moment » en onglet),
+  `rd2000` (vues en onglets, titre du son h1 ou h2, l'onglet du rail hors téléphone), `harmonie-cours` (titre de
+  la leçon h1 ou h2, l'onglet « Cours » hors téléphone). Voisines vertes (cinq projets) : `harmonie-catalogue`,
+  `harmonie-cours-lecture`, `agencement-barre-reduite`, `halo-partout`, `coherence`, `pages-en-grand-fondations`,
+  `agencement-v18-moi`, `agencement-v18-fondations` ; `back-office-coupe` vert (second serveur). Captures
+  regardées aux cinq tailles, conformes à `v18-app-harmonie` (en grand) et aux planches v17 (téléphone, tablette).
+- **Reste** : rien pour T11. Voie ⑦ finie.
+- **Timothée** : rien à publier (aucune règle, aucune donnée, R16) ; relire 卡片 (« Fiches »).

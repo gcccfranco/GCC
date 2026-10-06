@@ -11,12 +11,10 @@
 // filtres restent d'un son à l'autre : ils vivent ici.
 
 import { useMemo, useState } from "react";
-import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronLeft } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { DeuxVolets } from "@/components/layout/DeuxVolets";
-import { PageTitle } from "@/components/layout/PageTitle";
+import { OngletsRail } from "@/components/layout/Onglets";
 import { Group, GroupRow } from "@/components/ui/group";
 import { Pilules } from "@/components/harmonie/Pilules";
 import { SonRd2000 } from "@/components/harmonie/rd2000/SonRd2000";
@@ -265,30 +263,19 @@ function ListeRd2000({ vue, setVue, filtres, setFiltres, parCategorie, premier }
   parCategorie: (readonly [string, Son[]])[];
   premier?: string;
 }) {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const deuxVolets = useDeuxVolets();
   // En grand, le son montré à droite s'allume : celui de l'adresse, ou le premier (Q3).
   const ouvert = sonDeLAdresse(usePathname() ?? "/harmonie/rd2000") ?? (deuxVolets ? premier : undefined);
   const cartes = !deuxVolets;
 
   return (
-    <div className={cn("space-y-6", deuxVolets ? "px-5 pt-4 pb-10" : "mx-auto max-w-2xl px-4 pt-3 pb-10 md:max-w-none md:px-6")} data-rd2000>
-      <div className="space-y-1">
-        <Link href="/harmonie" className="inline-flex items-center gap-1 text-[15px] text-muted-foreground active:text-foreground">
-          <ChevronLeft className="h-4 w-4" aria-hidden />
-          {t("harmonie.retour")}
-        </Link>
-        <PageTitle title={t("harmonie.rd2000.titre")} niveau={deuxVolets ? 2 : 1} />
-        <p className="-mt-3 text-[15px] text-muted-foreground">{t("harmonie.rd2000.sousTitre")}</p>
-        {i18n.language.startsWith("zh") && <p className="mt-1 text-[13px] text-muted-foreground">{t("harmonie.rd2000.contenuFr")}</p>}
-      </div>
-
-      <Pilules
+    <div className={cn("space-y-6", deuxVolets ? "px-5 pt-4 pb-10" : "mx-auto max-w-2xl px-4 pb-10 md:max-w-none md:px-6")} data-rd2000>
+      <OngletsRail
         etiquette={t("harmonie.rd2000.titre")}
-        options={(["moment", "sons", "parametres"] as const).map((v) => ({ cle: v, nom: t(`harmonie.rd2000.vues.${v}`) }))}
-        valeur={vue === "legende" ? null : vue}
-        choisir={(v) => setVue(v ?? "moment")}
-        obligatoire
+        onglets={(["moment", "sons", "parametres"] as const).map((v) => ({ id: v, label: t(`harmonie.rd2000.vues.${v}`) }))}
+        actif={vue}
+        choisir={(v) => setVue(v as Vue)}
       />
 
       {vue === "moment" && <ParMoment ouvert={ouvert} cartes={cartes} />}

@@ -14,7 +14,7 @@ import Link from "next/link";
 import { useTranslation } from "react-i18next";
 import { ChevronLeft } from "lucide-react";
 import { Group, GroupRow } from "@/components/ui/group";
-import { Pilules } from "@/components/harmonie/Pilules";
+import { OngletsRail } from "@/components/layout/Onglets";
 import { Clavier, DiagrammeGuitare, doigtesDe, notesDe } from "@/components/harmonie/Diagrammes";
 import { ParagrapheFiche, TexteFiche, TON_DES_FICHES } from "@/components/harmonie/TexteFiche";
 import { useCatalogueHarmonie } from "@/components/harmonie/catalogueContexte";
@@ -72,6 +72,7 @@ export function FicheHarmonie({ id }: { id: string }) {
     );
   }
 
+  const Titre = deuxVolets ? "h2" : "h1";
   const texteInstrument = instrument === "piano" ? fiche.piano : fiche.guitare;
   const montreCapo = instrument === "guitare";
   // Les doigtés écrits dans la fiche sont ceux de D (tout y est écrit). Le
@@ -81,18 +82,17 @@ export function FicheHarmonie({ id }: { id: string }) {
   // une phrase à moitié transposée est pire que pas transposée du tout.
   const tonDesFormes = getTransposedKey(TON_DES_FICHES, capo);
   const choixInstrument = acces.piano && acces.guitare && !fiche.instrument && (
-    <Pilules
+    <OngletsRail
       etiquette={t("harmonie.instrument.piano")}
-      options={(["piano", "guitare"] as Instrument[]).map((i) => ({ cle: i, nom: t(`harmonie.instrument.${i}`) }))}
-      valeur={instrument}
-      choisir={(v) => setInstrument((v ?? "piano") as Instrument)}
-      obligatoire
+      onglets={(["piano", "guitare"] as Instrument[]).map((i) => ({ id: i, label: t(`harmonie.instrument.${i}`) }))}
+      actif={instrument}
+      choisir={(v) => setInstrument(v as Instrument)}
     />
   );
 
   return (
     <div
-      className={cn("space-y-4 pb-10", deuxVolets ? "px-6 pt-6 xl:px-9" : "mx-auto max-w-2xl px-4 pt-3 md:max-w-3xl md:px-6")}
+      className={cn("space-y-4 pb-10", deuxVolets ? undefined : "mx-auto max-w-2xl px-4 pt-3 md:max-w-3xl md:px-6")}
       data-fiche={fiche.id}
     >
       {!deuxVolets && (
@@ -108,7 +108,8 @@ export function FicheHarmonie({ id }: { id: string }) {
       <header className="space-y-3">
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
-            <h1 className="text-[22px] font-bold leading-tight lg:text-[26px]">{fiche.nom}</h1>
+            {/* En grand, sous l'en-tête « Harmonie » : un h2 de 24 px (agencement v18, R3) ; seule, le h1. */}
+            <Titre className={deuxVolets ? "text-[24px] font-bold leading-tight" : "text-[22px] font-bold leading-tight lg:text-[26px]"}>{fiche.nom}</Titre>
             <p className="mt-1 text-[13px] text-muted-foreground">
               {fiche.familleNom} · {fiche.sensations.map((s) => t(`harmonie.sensation.${s}`)).join(" · ")}
             </p>

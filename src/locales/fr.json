@@ -2248,7 +2248,6 @@
       "titre": "Sons du RD-2000",
       "premierChoix": "Premier choix",
       "resume": "{{essentiels}} essentiels sur {{total}}",
-      "sousTitre": "Les sons du clavier de l'église, notés pour la louange.",
       "vues": { "moment": "Par moment", "sons": "Tous les sons", "parametres": "Paramètres" },
       "filtre": "Louange",
       "filtres": { "3": "★★★", "2": "★★ et plus", "1": "★ et plus", "0": "Tous" },
@@ -2275,7 +2274,6 @@
       "ligne": "Cours de théorie musicale",
       "chapitres_one": "{{count}} chapitre",
       "chapitres_other": "{{count}} chapitres",
-      "sousTitre": "Le cours de théorie musicale de l'équipe : chacun avance à son rythme.",
       "modeEmploi": "Mode d'emploi",
       "niveau1": "Niveau 1 · Fondations",
       "niveau2": "Niveau 2 · Accompagnateur",
@@ -2390,6 +2388,7 @@
     "aucuneFiche": "Aucune fiche avec ces filtres.",
     "effacerFiltres": "Tout afficher",
     "retour": "Harmonie",
+    "fiches": "Fiches",
     "idee": {
       "ajouter": "Ajouter une idée",
       "titre": "Idées de l'équipe",
