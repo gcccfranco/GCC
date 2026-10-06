@@ -392,3 +392,41 @@ gardé tel quel, l'a revu vert (48 verts, 12 sautés hors appareil), contre-épr
   sans partie allumée sur téléphone (la planche n'en montre pas).
 - Reste : B7 (Réception), sur la même branche.
 - À faire par Timothée : relire le 中文 « 团队索引 », « 上一组团队 », « 下一组团队 » ; rien à publier (aucune règle).
+
+**B7 — Réception, faite le 06/10/2026 (suite parallèle B6/B7)** (branche `lot/u4bis-b67`, après B6 et la fusion
+de `lot/u6-back-office` ; commit `feat(U4bis): B7 — Réception…`). Reprise : l'agent coupé n'avait rien laissé
+pour B7 (copie propre, B6 commitée).
+- **Fusion de U6** (commit de fusion) : un seul conflit, l'import de `BarreLaterale.tsx` (`entreeBackOffice` de U6 et
+  `listeSetlistsRetenue` de U5 gardés tous deux).
+- **Réception (Q15)** : `components/messages/ReceptionVolets.tsx`, rendu par `back-office/messages/page.tsx`. En grand
+  (`useDisposition`, règle U5 Q1) : la liste à gauche (420 px, 340 px sur iPad paysage), les filtres « Tout ·
+  Signalements · Propositions » (`Pilules` d'Harmonie), « Signalements » puis « Propositions de chants » avec
+  « N en attente », chaque ligne avec titre, auteur et date, étiquette Chant / Site (ou Traité / Refusé) ; la ligne
+  choisie en encre ; « Voir les traités (N) » sous chaque groupe. À droite le message : étiquette, titre (h2), auteur
+  et date, la description et les liens (le chant, la page ; YouTube et partition pour une proposition) dans une
+  carte, puis « Marquer traité » (« Rouvrir » pour un signalement traité), « Refuser » pour une proposition en
+  attente, la corbeille. Sans choix, le premier message en attente de la liste filtrée (Q3), sinon « Aucun message
+  en attente. ». Tablette portrait : les deux cartes côte à côte, avec leur phrase d'aide, un message se déplie dans
+  sa carte. Téléphone : les filtres, une carte, un message qui se déplie. `messages/layout.tsx` : sur la Réception
+  en grand, l'en-tête sur toute la largeur au-dessus des deux volets, qui descendent jusqu'en bas ; tablette portrait
+  sur la largeur ; Notifier et Questionnaire gardent leur colonne.
+- **Données** : `useReception` sort de `components/admin/Reception.tsx` (mêmes lectures et écritures) ; l'ancien bloc
+  `Reception` le garde et ne change pas : interrupteur coupé, `/admin` (`AncienneAdmin`) reste l'écran d'avant.
+- Libellés FR et 中文 sous `backOffice.reception.*` (中文 à relire : 全部, 问题反馈, 诗歌推荐, « {{n}} 条待处理 », 查看已处理,
+  隐藏已处理, 标为已处理, 重新打开, 拒绝, 已处理, 已拒绝, 诗歌, 网站, « {{nom}} 推荐 », 页面, PDF 乐谱, 删除此问题反馈,
+  删除此推荐, 暂无问题反馈, 暂无诗歌推荐, 暂无待处理消息, 消息, 筛选消息, les deux phrases d'aide, l'erreur).
+- Tests : `tests/pages-en-grand-reception.spec.ts` (10 tests) sur les cinq projets ; vus rouges (12 échecs sur
+  ordinateur, téléphone, tablette avant le code), puis verts (29 verts, le reste sauté hors appareil).
+  `tests/helpers/fakeSession.ts` : une `Date` devient un `timestampValue` (la page lit `createdAt` en date ; une
+  chaîne la faisait tomber). Voisines sur les trois appareils : `back-office-admin`, `back-office-coupe`,
+  `back-office-espace`, `barre-back-office` (438 verts ; un test de la feuille « Ta barre du bas » tombé une fois
+  sur tablette pendant une suite chargée, vert relancé seul). Captures regardées aux cinq tailles et comparées aux planches `bo-reception-*`.
+- Choix faute de réponse : le message choisi vit dans la page, pas dans l'adresse (rien ne mène à un message précis) ;
+  après « Marquer traité » ou « Refuser », le message reste à droite (« Rouvrir », étiquette) au lieu de passer au
+  suivant ; supprimer passe au premier en attente ; pas de filtres sur la tablette portrait (les deux cartes sont
+  déjà côte à côte, comme la planche) ; pas de halo dans le volet du message ; filtres à la taille de ceux d'Harmonie
+  (40 px), un peu plus grands que la planche ; une proposition refusée peut encore être marquée traitée (comme
+  l'ancien bloc).
+- Reste : rien pour B6/B7 ; la suite parallèle est finie, à fusionner dans `lot/u4bis-pages-en-grand`.
+- À faire par Timothée : relire le 中文 ci-dessus ; rien à publier (aucune règle : `reports` et `songProposals`
+  gardent les leurs).

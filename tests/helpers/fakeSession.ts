@@ -36,6 +36,8 @@ function fsValue(v: unknown): unknown {
   if (typeof v === "boolean") return { booleanValue: v };
   if (typeof v === "number") return Number.isInteger(v) ? { integerValue: String(v) } : { doubleValue: v };
   if (typeof v === "string") return { stringValue: v };
+  // Horodatage Firestore (`createdAt` des signalements : la page le lit en Date).
+  if (v instanceof Date) return { timestampValue: v.toISOString() };
   if (Array.isArray(v)) return { arrayValue: { values: v.map(fsValue) } };
   return {
     mapValue: {

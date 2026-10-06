@@ -2587,6 +2587,37 @@
         "questionnaire": "questionnaire",
         "statistiques": "chants les plus joués"
       }
+    },
+    "reception": {
+      "filtres": "Filtrer les messages",
+      "tout": "Tout",
+      "signalements": "Signalements",
+      "propositions": "Propositions",
+      "titreSignalements": "Signalements",
+      "titrePropositions": "Propositions de chants",
+      "aideSignalements": "Problèmes signalés par les membres (chant ou site). Déplie un signalement pour le détailler, et marque-le comme traité une fois résolu.",
+      "aidePropositions": "Chants proposés par les membres. Déplie une proposition pour ses liens, et marque-la comme traitée après ajout au répertoire.",
+      "enAttente": "{{n}} en attente",
+      "voirTraites": "Voir les traités ({{n}})",
+      "masquerTraites": "Masquer les traités",
+      "chant": "Chant",
+      "site": "Site",
+      "traite": "Traité",
+      "refuse": "Refusé",
+      "proposePar": "Proposé par {{nom}}",
+      "page": "Page",
+      "voirChant": "Voir le chant",
+      "partition": "Partition PDF",
+      "marquerTraite": "Marquer traité",
+      "rouvrir": "Rouvrir",
+      "refuser": "Refuser",
+      "supprimerSignalement": "Supprimer le signalement",
+      "supprimerProposition": "Supprimer la proposition",
+      "aucunSignalement": "Aucun signalement pour l'instant.",
+      "aucuneProposition": "Aucune proposition pour l'instant.",
+      "aucunEnAttente": "Aucun message en attente.",
+      "message": "Message",
+      "erreur": "Changement non enregistré. Vérifie ta connexion, puis recommence."
     }
   }
 }
