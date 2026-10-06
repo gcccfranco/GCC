@@ -413,8 +413,11 @@ service cloud.firestore {
         allow read: if true;
         allow create, update: if peutEcrirePlanning(key)
           && request.resource.data.date == date;
-        // On vide les cases, on ne supprime pas un dimanche.
-        allow delete: if false;
+        // On vide les cases, on ne supprime pas un dimanche — sauf une date
+        // posée par erreur, là seulement où les dates se choisissent (lot U2,
+        // Q10). Miroir client : canRetirerDate (src/lib/access.ts).
+        allow delete: if peutEcrirePlanning(key)
+          && key in ['interfranco', 'intergroupe', 'campusMatin', 'campusSoir'];
       }
 
       // Historique nommé : lu par tout connecté, écrit par qui peut remplir,

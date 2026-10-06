@@ -80,6 +80,25 @@ export function triVisibilities(
   })
 }
 
+/** Lot U2 : les trimestres d'une année choisie dans le sélecteur. Année passée :
+ *  tout se lit. Année en cours : `triVisibilities`. Année suivante : un
+ *  trimestre sort quand il est publié ; avant, seuls ceux qui voient le
+ *  brouillon (qui remplit ou publie ce planning, les admins) le voient, marqué. */
+export function triVisibilitiesAnnee(
+  annee: number,
+  anneeCourante: number,
+  published: string[],
+  currentTri: string,
+  voitBrouillon: boolean
+): TriVisibility[] {
+  if (annee < anneeCourante) return TRI_ORDER.map((tri) => ({ tri, visible: true, unpublished: false }))
+  if (annee === anneeCourante) return triVisibilities(TRI_ORDER, published, currentTri, voitBrouillon)
+  return TRI_ORDER.map((tri) => {
+    const pub = published.includes(tri)
+    return { tri, visible: pub || voitBrouillon, unpublished: !pub }
+  })
+}
+
 // ─── Lecture publique de l'état de publication (REST Firestore, sans auth) ─────
 // Les pages planning sont consultées sans compte → lecture publique du doc
 // planningReleases/{key}_{year}. Doc absent / erreur réseau = rien de publié.

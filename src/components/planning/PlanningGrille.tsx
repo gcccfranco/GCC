@@ -1,16 +1,20 @@
 "use client"
 
-import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from "react"
-import { Download, History, Lock, User, X } from "lucide-react"
+import { Fragment, useEffect, useRef, useState, type MouseEvent, type ReactNode } from "react"
+import { ChevronDown, History, Lock, Trash2, User, X } from "lucide-react"
 import { useTranslation } from "react-i18next"
-import { currentSundayStr, fdLongL, fdShort, getMois, moisName } from "@/lib/planning/utils"
-import type { ColonneGrille, DefinitionGrille, LigneGrille } from "@/lib/planning/grilles"
+import { currentSundayStr, fdFullL, fdLongL, fdShort, getAnnee, getMois, moisName } from "@/lib/planning/utils"
+import { PREMIERE_ANNEE_APP, type ColonneGrille, type DefinitionGrille, type LigneGrille } from "@/lib/planning/grilles"
 import { phraseDuChangement } from "@/lib/planning/historique"
-import { colonnesExportees, nomFichier, versCSV } from "@/lib/planning/csv"
-import { ecrireCase } from "@/lib/firebase/planningGrille"
+import { ecrireCase, retirerDate } from "@/lib/firebase/planningGrille"
 import { getHistoriqueGrille, noterChangement, type EntreeGrille } from "@/lib/firebase/planningHistorique"
 import { historyAuthor } from "@/lib/firebase/setlistHistory"
 import { useProfile } from "@/lib/firebase/users"
+import { colonneDePersonnes, propositions, type CompteDuPlanning } from "@/lib/planning/choisir"
+import { splitNames } from "@/lib/planning/names"
+import { canRetirerDate } from "@/lib/access"
+import { ExportModele, type ExportPlanning } from "./ExportModele"
+import { ChoisirNom } from "./ChoisirNom"
 
 // Grille d'un planning rempli dans l'app (lot 17, docs/spec-planning-grille.md).
 // Table sur ordinateur et tablette — colonne des dates FIGÉE au défilement
@@ -32,12 +36,27 @@ export interface PlanningGrilleProps {
   peutModifier: boolean
   /** Dimanches déjà écrits dans la grille de l'app — les autres viennent du Sheet. */
   datesDansLApp: readonly string[]
-  /** Noms de planning des comptes, pour l'autocomplétion (D12). */
-  nomsDesComptes: readonly string[]
+  /** Les comptes, pour « Choisir » (lot U2, P9 ; remplace l'autocomplétion D12). */
+  comptes: readonly CompteDuPlanning[]
   /** Badge optionnel à côté de la date (Sainte Cène), comme PlanningTable. */
   dateBadge?: (row: string[], allRows: string[][]) => ReactNode
   /** Période affichée, écrite dans le bandeau (le trimestre choisi par la page). */
   periode: string
+  /** Lot U2 (Q5) : date → service (Interfranco, Intergroupe) qui tient ce
+   *  dimanche, tiré de sa grille (`dimanchesSpeciaux`). La présidence affiche ce
+   *  nom, non modifiable, et l'export le porte ; il n'est jamais recopié dans le
+   *  document du groupe. */
+  dimanchesSpeciaux?: Readonly<Record<string, string>>
+  /** Lot U2, P7 : « Exporter (modèle du Sheet) », pour les responsables du
+   *  planning (qui remplit, qui publie) et les admins (Q13) ; absent = pas d'export. */
+  exporter?: ExportPlanning
+  /** Texte d'une période sans ligne (« Aucun dimanche posé pour 2027. ») ;
+   *  absent : « Planning à venir ». */
+  vide?: string
+  /** Lot U2 (Q10) : planning à dates choisies (Interfranco, Intergroupe,
+   *  Campus). En modification, une date de l'année de l'app se retire, après
+   *  confirmation (canRetirerDate) ; la page relit alors ses lignes. */
+  retrait?: { libelle: string; onRetire: () => void }
 }
 
 
@@ -46,18 +65,24 @@ export function PlanningGrille({
   lignes,
   peutModifier,
   datesDansLApp,
-  nomsDesComptes,
+  comptes,
   dateBadge,
   periode,
+  dimanchesSpeciaux,
+  exporter,
+  vide,
+  retrait,
 }: PlanningGrilleProps) {
   const { t, i18n } = useTranslation()
-  const { profile } = useProfile()
+  const { user, profile } = useProfile()
   const couleur = definition.couleur
   const sun = currentSundayStr()
 
   const [mode, setMode] = useState<"lecture" | "edition">("lecture")
   const [modifs, setModifs] = useState<Record<string, string>>({})
   const [edition, setEdition] = useState<{ date: string; cle: string; valeur: string } | null>(null)
+  // « Choisir » ouvert sur une case de personne (P9) ; la case cliquée pose le menu.
+  const [choix, setChoix] = useState<{ l: LigneGrille; c: ColonneGrille; ancre: DOMRect } | null>(null)
   const [refus, setRefus] = useState<"" | "droitRetire" | "horsLigne">("")
   const [enregistre, setEnregistre] = useState(false)
   const [histoOuvert, setHistoOuvert] = useState(false)
@@ -86,13 +111,25 @@ export function PlanningGrille({
   const aUnNom = aiguille.length >= 2
   const estMoi = (cell: string) => aUnNom && cell.toLowerCase().includes(aiguille)
 
+  /** La présidence d'un dimanche d'Interfranco ou d'Intergroupe : le nom du service. */
+  const imposee = (date: string, c: ColonneGrille) =>
+    c.cle === "presidence" ? dimanchesSpeciaux?.[date] : undefined
+
   const valeur = (date: string, c: ColonneGrille, row: string[]) =>
-    modifs[`${date}|${c.cle}`] ?? row[c.index] ?? ""
+    imposee(date, c) ?? modifs[`${date}|${c.cle}`] ?? row[c.index] ?? ""
 
   /** La ligne telle qu'elle est affichée (modifications locales comprises). */
   const ligneAffichee = (l: LigneGrille) => {
     const row = [...l.row]
     for (const c of definition.colonnes) row[c.index] = valeur(l.row[0], c, l.row)
+    return row
+  }
+
+  /** La ligne à recopier (« semer ») : l'affichée, sauf une présidence imposée,
+   *  qui reste celle du groupe — la marque n'entre jamais dans son document. */
+  const ligneASemer = (l: LigneGrille) => {
+    const row = ligneAffichee(l)
+    for (const c of definition.colonnes) if (imposee(l.row[0], c)) row[c.index] = l.row[c.index] ?? ""
     return row
   }
 
@@ -114,21 +151,6 @@ export function PlanningGrille({
       dansLaFenetre.some((l) => valeur(l.row[0], c, l.row).trim())
   )
   const largeurMin = 104 + 96 * colonnes.length
-  const listeId = `noms-${definition.key}`
-
-  const noms = useMemo(() => {
-    const vus = new Set<string>()
-    for (const l of lignes) {
-      for (const c of definition.colonnes) {
-        for (const part of (l.row[c.index] ?? "").split(/[,;/]/)) {
-          const n = part.trim()
-          if (n.length > 1 && !/\d/.test(n)) vus.add(n)
-        }
-      }
-    }
-    for (const n of nomsDesComptes) if (n.trim()) vus.add(n.trim())
-    return [...vus].sort((a, b) => a.localeCompare(b, "fr"))
-  }, [lignes, definition, nomsDesComptes])
 
   async function rechargerHistorique() {
     try {
@@ -160,8 +182,11 @@ export function PlanningGrille({
         valeur: apres,
         auteur: auteur?.name ?? "",
         // Dimanche absent de la grille : ses autres cases viennent du Sheet, on
-        // les recopie une fois, sans quoi la fusion les perdrait.
-        semer: datesDansLApp.includes(date) || semes.current.has(date) ? undefined : ligneAffichee(l),
+        // les recopie une fois, sans quoi la fusion les perdrait. Dès 2027 (lot
+        // U2, Q2), rien à recopier : la case n'écrit qu'elle.
+        semer: getAnnee(date) >= PREMIERE_ANNEE_APP || datesDansLApp.includes(date) || semes.current.has(date)
+          ? undefined
+          : ligneASemer(l),
       })
       semes.current.add(date)
       setEnregistre(true)
@@ -181,6 +206,40 @@ export function PlanningGrille({
     }
   }
 
+  /** Une date posée par erreur (Q10) : seulement en modification, dès l'année de l'app. */
+  const peutRetirer = (date: string) =>
+    !!retrait && mode === "edition" && getAnnee(date) >= PREMIERE_ANNEE_APP && canRetirerDate(user, profile, definition.key)
+
+  async function retirer(date: string) {
+    if (!retrait || !window.confirm(t("planning.annee.confirmerRetrait", { date: fdFullL(date, i18n.language) }))) return
+    setRefus("")
+    try {
+      await retirerDate(definition, date)
+    } catch {
+      setRefus(typeof navigator !== "undefined" && navigator.onLine === false ? "horsLigne" : "droitRetire")
+      return
+    }
+    const auteur = historyAuthor(profile)
+    if (auteur) {
+      await noterChangement(definition.key, auteur, { kind: "dimanche", date, retire: true })
+      if (histoOuvert) await rechargerHistorique()
+    }
+    retrait.onRetire()
+  }
+
+  const boutonRetirer = (date: string, avecTexte: boolean) => (
+    <button
+      type="button"
+      onClick={() => void retirer(date)}
+      aria-label={retrait?.libelle}
+      title={retrait?.libelle}
+      className="inline-flex min-h-8 items-center gap-1 rounded-md px-1.5 text-[11px] font-semibold text-muted-foreground hover:bg-destructive/10 hover:text-destructive active:bg-destructive/10"
+    >
+      <Trash2 className="h-3.5 w-3.5" aria-hidden />
+      {avecTexte && retrait?.libelle}
+    </button>
+  )
+
   function terminer(l: LigneGrille, c: ColonneGrille, commit: boolean) {
     if (fini.current) return
     fini.current = true
@@ -195,7 +254,6 @@ export function PlanningGrille({
       <input
         autoFocus
         type="text"
-        list={listeId}
         aria-label={t(c.i18n)}
         value={edition?.valeur ?? ""}
         onChange={(e) => setEdition((ed) => (ed ? { ...ed, valeur: e.target.value } : ed))}
@@ -212,6 +270,49 @@ export function PlanningGrille({
   function laCase(l: LigneGrille, c: ColonneGrille): ReactNode {
     const val = valeur(l.row[0], c, l.row)
     if (edition?.date === l.row[0] && edition.cle === c.cle) return champ(l, c)
+    const service = imposee(l.row[0], c)
+    if (service && mode === "edition") {
+      // Tirée de la grille du service : rien à modifier ici (planche bo-planning-2027).
+      return (
+        <span
+          title={t("planning.grille.dimancheSpecial", { service })}
+          className="inline-flex min-h-8 items-center gap-1.5 rounded-md border border-transparent px-1.5 py-1"
+        >
+          {val}
+          <Lock className="h-3 w-3 text-muted-foreground" aria-hidden />
+        </span>
+      )
+    }
+    // Une case qui porte déjà plusieurs noms (équipe de la Table, musiciens)
+    // s'écrit en texte, préremplie : « Choisir » remplacerait tous les noms.
+    if (mode === "edition" && colonneDePersonnes(c.cle) && splitNames(val).length <= 1) {
+      // Lot U2, P9 : une case de personne s'ouvre sur « Choisir » ; vide, elle
+      // le dit en pointillé gris (planche bo-planning-2027).
+      const ouvrir = (e: MouseEvent<HTMLButtonElement>) =>
+        setChoix({ l, c, ancre: e.currentTarget.getBoundingClientRect() })
+      if (!val) {
+        return (
+          <button
+            type="button"
+            onClick={ouvrir}
+            className="inline-flex min-h-8 items-center gap-1 rounded-lg border-[1.5px] border-dashed border-border px-2 py-1 text-[13px] text-muted-foreground hover:bg-secondary active:bg-secondary"
+          >
+            {t("planning.choisir.bouton")}
+            <ChevronDown className="h-3 w-3" aria-hidden />
+          </button>
+        )
+      }
+      return (
+        <button
+          type="button"
+          onClick={ouvrir}
+          className="w-full min-h-8 rounded-md border border-dashed px-1.5 py-1 text-left hover:bg-secondary active:bg-secondary"
+          style={{ borderColor: `${couleur}55` }}
+        >
+          {val}
+        </button>
+      )
+    }
     if (mode === "edition") {
       return (
         <button
@@ -231,6 +332,7 @@ export function PlanningGrille({
 
   const phrase = (auteurNom: string, ch: EntreeGrille["changes"][number]) => {
     if (ch.kind === "import") return t("planning.grille.importe", { auteur: auteurNom, count: ch.count })
+    if (ch.kind === "dimanche") return t(`planning.grille.${phraseDuChangement(ch)}`, { auteur: auteurNom, date: fdLongL(ch.date, i18n.language) })
     const col = definition.colonnes.find((x) => x.cle === ch.colonne)
     return t(`planning.grille.${phraseDuChangement(ch)}`, {
       auteur: auteurNom,
@@ -241,57 +343,11 @@ export function PlanningGrille({
     })
   }
 
-  // ── Export (G4, D5) : la période affichée, telle qu'elle est à l'écran ──
-  const lignesExport = () => dansLaFenetre.map(ligneAffichee)
   const sousTitre = [
     definition.sousTitre ?? (definition.i18nSousTitre ? t(definition.i18nSousTitre) : ""),
     periode,
     definition.i18nHoraire ? t(definition.i18nHoraire) : "",
   ].filter(Boolean).join(" · ")
-
-  function telecharger(blob: Blob, nom: string) {
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement("a")
-    a.href = url
-    a.download = nom
-    a.click()
-    URL.revokeObjectURL(url)
-  }
-
-  function exporterCSV() {
-    const rows = lignesExport()
-    telecharger(
-      new Blob([versCSV(rows, definition, (k) => t(k), t("planning.roles.date"))], { type: "text/csv;charset=utf-8" }),
-      nomFichier(definition.label, rows, "csv")
-    )
-  }
-
-  const [pdfEnCours, setPdfEnCours] = useState(false)
-  async function exporterPDF() {
-    setPdfEnCours(true)
-    try {
-      const rows = lignesExport()
-      const cols = colonnesExportees(definition, rows)
-      // Chargés à la demande : @react-pdf/renderer est lourd (cf. SongDetailClient).
-      const [{ pdf }, { PlanningPDF }] = await Promise.all([import("@react-pdf/renderer"), import("@/components/pdf/PlanningPDF")])
-      const blob = await pdf(
-        <PlanningPDF
-          titre={t(definition.i18nTitre)}
-          sousTitre={sousTitre}
-          couleur={couleur}
-          entetes={[t("planning.roles.date"), ...cols.map((c) => t(c.i18n))]}
-          lignes={rows.map((r, i) => ({
-            cells: [fdShort(r[0]), ...cols.map((c) => r[c.index] ?? "")],
-            mois: i === 0 || getMois(rows[i - 1][0]) !== getMois(r[0]) ? moisName(getMois(r[0]), i18n.language) : undefined,
-          }))}
-          lang={i18n.language}
-        />
-      ).toBlob()
-      telecharger(blob, nomFichier(definition.label, rows, "pdf"))
-    } finally {
-      setPdfEnCours(false)
-    }
-  }
 
   return (
     <div className="space-y-3" data-grille={definition.key}>
@@ -342,7 +398,7 @@ export function PlanningGrille({
         )}
         {peutModifier && (
           <button
-            onClick={() => { setEdition(null); setEnregistre(false); setMode((m) => (m === "edition" ? "lecture" : "edition")) }}
+            onClick={() => { setEdition(null); setChoix(null); setEnregistre(false); setMode((m) => (m === "edition" ? "lecture" : "edition")) }}
             className={`h-10 sm:h-8 px-3 rounded-full text-sm font-semibold transition-[background-color,color,transform] duration-150 active:scale-[.96] cursor-pointer ${
               mode === "edition" ? "text-white" : "bg-secondary text-muted-foreground hover:text-foreground"
             }`}
@@ -354,24 +410,8 @@ export function PlanningGrille({
         {enregistre && (
           <span aria-live="polite" className="text-xs text-muted-foreground">{t("planning.grille.enregistre")}</span>
         )}
-        {/* Export de la période affichée (G4) : CSV recollable dans le Sheet, ou PDF. */}
-        <button
-          type="button"
-          onClick={exporterCSV}
-          className="h-10 sm:h-8 px-3 rounded-full text-sm font-semibold bg-secondary text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 transition-[background-color,color,transform] duration-150 active:scale-[.96] cursor-pointer"
-        >
-          <Download className="h-3.5 w-3.5" aria-hidden />
-          {t("planning.grille.exporter")}
-        </button>
-        <button
-          type="button"
-          onClick={() => void exporterPDF()}
-          disabled={pdfEnCours}
-          className="h-10 sm:h-8 px-3 rounded-full text-sm font-semibold bg-secondary text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 transition-[background-color,color,transform] duration-150 active:scale-[.96] cursor-pointer disabled:opacity-60"
-        >
-          <Download className="h-3.5 w-3.5" aria-hidden />
-          {t("planning.grille.exporterPdf")}
-        </button>
+        {/* Export au modèle du Sheet (lot U2, P7) : remplace le CSV et le PDF du lot 17. */}
+        {exporter && <ExportModele definition={definition} periode={periode} exporter={exporter} />}
       </div>
 
       {refus && (
@@ -385,9 +425,22 @@ export function PlanningGrille({
 
 
       {peutModifier && (
-        <datalist id={listeId}>
-          {noms.map((n) => <option key={n} value={n} />)}
-        </datalist>
+        <ChoisirNom
+          ouverture={choix && {
+            titre: `${t(choix.c.i18n)} · ${fdShort(choix.l.row[0])}`,
+            libelle: t(choix.c.i18n),
+            valeur: valeur(choix.l.row[0], choix.c, choix.l.row),
+            ancre: choix.ancre,
+          }}
+          onFermer={() => setChoix(null)}
+          proposer={(recherche) => propositions(definition, choix?.c.cle ?? "", comptes, lignes.map((l) => l.row), recherche)}
+          onEcrire={(nom) => {
+            if (!choix) return
+            setChoix(null)
+            setEnregistre(false)
+            void enregistrer(choix.l, choix.c, nom.trim())
+          }}
+        />
       )}
 
       {/* ── Grille (ordinateur, tablette) ── */}
@@ -412,7 +465,7 @@ export function PlanningGrille({
             {affichees.length === 0 && (
               <tr>
                 <td colSpan={colonnes.length + 1} className="px-4 py-8 text-center text-sm text-muted-foreground">
-                  {t("planning.grille.aVenir")}
+                  {vide ?? t("planning.grille.aVenir")}
                 </td>
               </tr>
             )}
@@ -457,6 +510,7 @@ export function PlanningGrille({
                         </span>
                       )}
                       {dateBadge?.(l.row, toutes)}
+                      {peutRetirer(date) && <div className="-ml-1.5 mt-0.5">{boutonRetirer(date, false)}</div>}
                     </td>
                     {colonnes.map((c) => (
                       <td key={c.cle} data-case={`${date}|${c.cle}`} className="px-3 py-2 text-foreground">
@@ -475,7 +529,7 @@ export function PlanningGrille({
       <div className="sm:hidden space-y-2.5">
         {affichees.length === 0 && (
           <p className="px-4 py-8 text-center text-sm text-muted-foreground border border-dashed border-border rounded-xl">
-            {t("planning.grille.aVenir")}
+            {vide ?? t("planning.grille.aVenir")}
           </p>
         )}
         {affichees.map((l) => {
@@ -485,6 +539,7 @@ export function PlanningGrille({
             <div
               key={date}
               data-testid="grille-carte"
+              data-date-carte={date}
               className="rounded-xl border border-transparent bg-card shadow-soft overflow-hidden"
               style={{ borderColor: cetteSemaine ? couleur : undefined }}
             >
@@ -505,6 +560,7 @@ export function PlanningGrille({
                   </span>
                 )}
                 {dateBadge?.(l.row, toutes)}
+                {peutRetirer(date) && <span className="ml-auto">{boutonRetirer(date, true)}</span>}
               </div>
               <div className="px-3.5 py-2.5 space-y-1">
                 {colonnes
