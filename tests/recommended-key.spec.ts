@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
-import { boutonAjouter, boutonTonalite, enDeuxColonnes, groupeTonalites, listeCourte, reglerElement } from "./helpers/editeurSetlist";
+import { ajouterChant, boutonTonalite, groupeTonalites, reglerElement } from "./helpers/editeurSetlist";
 
 // Chantier Setlist, lot 3 (docs/spec-setlist.md) : la tonalité la plus chantée
 // à Grace Church, validée par Timothée (docs/tonalites-recommandees.md), est
@@ -77,18 +77,10 @@ test("éditeur de setlist : un chant ajouté démarre dans la recommandée", asy
     route.fulfill({ status: 200, contentType: "text/csv", body: "" }),
   );
   await signInAs(page, musicien, {}, "/setlists/new?autre=1");
-  await page.getByPlaceholder("Chercher un chant à ajouter…").fill("Je reviens au cœur");
-  await boutonAjouter(page, "Je reviens au cœur").click();
-  await expect(listeCourte(page).or(page.getByLabel("Tonalité de Je reviens au cœur")).first()).toBeVisible();
-  if (await enDeuxColonnes(page)) {
-    // Deux colonnes (lot U5 bis, T3) : la tonalité est un groupe de boutons dans les réglages du chant.
-    await reglerElement(page, "Je reviens au cœur");
-    const groupe = groupeTonalites(page, "Je reviens au cœur");
-    await expect(boutonTonalite(groupe, "D")).toBeChecked();
-    await expect(boutonTonalite(groupe, "Eb")).toHaveAccessibleName("Eb orig.");
-    return;
-  }
-  const key = page.getByLabel("Tonalité de Je reviens au cœur");
-  await expect(key).toHaveValue("D");
-  await expect(key.locator("option", { hasText: "Eb (orig.)" })).toHaveCount(1);
+  await ajouterChant(page, "Je reviens au cœur");
+  // Lot U5 bis : la tonalité est un groupe de boutons dans les réglages du chant.
+  await reglerElement(page, "Je reviens au cœur");
+  const groupe = groupeTonalites(page, "Je reviens au cœur");
+  await expect(boutonTonalite(groupe, "D")).toBeChecked();
+  await expect(boutonTonalite(groupe, "Eb")).toHaveAccessibleName("Eb orig.");
 });

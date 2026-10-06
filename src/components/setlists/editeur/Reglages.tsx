@@ -241,7 +241,8 @@ export function StructurePastilles({
       <h3 className="text-[13px] font-semibold text-muted-foreground">{t("setlists.editeur.structure")}</h3>
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
         <SortableContext items={sectionItems.map((s) => s.uid)} strategy={rectSortingStrategy}>
-          <div className="flex flex-wrap gap-2.5 py-1">
+          {/* `data-vaul-no-drag` : dans une feuille (T4), glisser une pastille ne tire pas la feuille. */}
+          <div data-vaul-no-drag className="flex flex-wrap gap-2.5 py-1">
             {sectionItems.map((si, i) => (
               <PastilleEtape
                 key={si.uid}

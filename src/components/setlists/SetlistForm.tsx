@@ -2,14 +2,8 @@
 
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import {
-  SortableContext,
-  verticalListSortingStrategy,
-  arrayMove,
-} from "@dnd-kit/sortable";
-import { Search, X, AlertTriangle, Link2, Lock, Globe, Plus, ChevronDown, ChevronUp, Check } from "lucide-react";
-import Fuse from "fuse.js";
+import { arrayMove } from "@dnd-kit/sortable";
+import { Check } from "lucide-react";
 import {
   RESTRICTED_CATEGORIES,
   ALL_CATEGORIES,
@@ -19,12 +13,11 @@ import {
   deleteSetlist,
 } from "@/lib/firebase/setlists";
 import { useProfile } from "@/lib/firebase/users";
-import { useScrollDirection } from "@/hooks/useScrollDirection";
 import { creatableCategories, isAdminUser } from "@/lib/access";
 import { loadPlanningData, setlistSeances, normalizeName, type PlanningData, type SetlistSeance } from "@/lib/planning/names";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
-import { DndContext, closestCenter, DragEndEvent } from "@dnd-kit/core";
+import type { DragEndEvent } from "@dnd-kit/core";
 import {
   type FormItem,
   type FormFusionItem,
@@ -33,21 +26,18 @@ import {
   isFormFusion,
   isFormTransition,
   makeDefaultSections,
-  fusionner,
 } from "@/lib/setlist/formItems";
 import { buildSetlistItems, detectSetlistLanguage } from "@/lib/setlist/buildSetlistItems";
 import { historyAuthor, recordCreation, recordHistory, type HistoryPass } from "@/lib/firebase/setlistHistory";
 import type { SectionsOf } from "@/lib/setlist/history";
 import type { SongIndexEntry } from "@/types/song";
-import { useDefaultSensors } from "@/lib/dnd/sensors";
 import { nextUid } from "@/lib/uid";
 import type { Preremplissage } from "@/lib/setlist/prochainsServices";
-import { SongRow, FusionRow, TransitionRow } from "@/components/setlists/SetlistFormRows";
 
 import { FREE_CATEGORIES } from "@/lib/firebase/setlists";
-import { FondDeBarre } from "@/components/layout/FondDeBarre";
 import { useEditeurDeuxColonnes } from "@/hooks/useEditeurDeuxColonnes";
-import { EditeurDeuxColonnes } from "@/components/setlists/editeur/EditeurDeuxColonnes";
+import { EditeurDeuxColonnes, type ProprietesEditeur } from "@/components/setlists/editeur/EditeurDeuxColonnes";
+import { EditeurFeuilles } from "@/components/setlists/editeur/EditeurFeuilles";
 
 export interface SetlistFormInitial {
   title: string;
@@ -98,8 +88,8 @@ async function notifySetlistReady(setlistId: string): Promise<void> {
 }
 
 export function SetlistForm({ mode, setlistId, songs, initial, prefill }: SetlistFormProps) {
-  const scrollVisible = useScrollDirection();
-  // Ordinateur et tablette en paysage : la piste 2 en deux colonnes (lot U5 bis, T3).
+  // Ordinateur et tablette en paysage : la piste 2 en deux colonnes (lot U5 bis, T3) ;
+  // téléphone et tablette en portrait : la liste en grand et des feuilles (T4).
   const deuxColonnes = useEditeurDeuxColonnes();
   const isEdit = mode === "edit";
   const { t } = useTranslation();
@@ -127,12 +117,8 @@ export function SetlistForm({ mode, setlistId, songs, initial, prefill }: Setlis
   const [leaderOther, setLeaderOther] = useState(false);  // présidence hors liste (saisie libre)
 
   // ── UI state ────────────────────────────────────────────
-  const [query, setQuery] = useState("");
-  const [expandedSlug, setExpandedSlug] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
-  const [selectMode, setSelectMode] = useState(false);
-  const [selectedUids, setSelectedUids] = useState<Set<string>>(new Set());
 
   // ── Enregistrement automatique ──────────────────────────
   // Création : brouillon invisible (isDraft) jusqu'à « Publier ».
@@ -400,38 +386,6 @@ export function SetlistForm({ mode, setlistId, songs, initial, prefill }: Setlis
     router.push(`/setlists/${setlistId}`);
   }
 
-  // ── Song search ────────────────────────────────────────
-  const addedSlugs = useMemo(() => {
-    const slugs = new Set<string>();
-    for (const item of items) {
-      if (isFormTransition(item)) continue;
-      if (isFormFusion(item)) {
-        for (const s of item.songs) slugs.add(s.song.slug);
-      } else {
-        slugs.add(item.song.slug);
-      }
-    }
-    return slugs;
-  }, [items]);
-
-  const availableSongs = useMemo(
-    () => songs.filter((s) => !addedSlugs.has(s.slug)),
-    [songs, addedSlugs]
-  );
-  const fuse = useMemo(
-    () => new Fuse(availableSongs, { keys: ["title", "titlePinyin", "artist"], threshold: 0.4 }),
-    [availableSongs]
-  );
-  const searchResults = useMemo(
-    () =>
-      query.trim()
-        ? fuse.search(query.trim()).map((r) => r.item).slice(0, 20)
-        : availableSongs,
-    [query, fuse, availableSongs]
-  );
-
-  const sensors = useDefaultSensors();
-
   // ── Song actions ───────────────────────────────────────
   function addSong(song: SongIndexEntry) {
     setItems((prev) => [
@@ -439,7 +393,6 @@ export function SetlistForm({ mode, setlistId, songs, initial, prefill }: Setlis
       // Un chant ajouté démarre dans la tonalité recommandée (la plus chantée à GCC).
       { uid: nextUid(), song, keyOverride: song.recommendedKey ?? null, notes: "", sectionItems: makeDefaultSections(song.sections ?? []) },
     ]);
-    setExpandedSlug(null);
   }
 
   function addTransition() {
@@ -481,22 +434,6 @@ export function SetlistForm({ mode, setlistId, songs, initial, prefill }: Setlis
     const oldIdx = items.findIndex((i) => i.uid === active.id);
     const newIdx = items.findIndex((i) => i.uid === over.id);
     setItems(arrayMove(items, oldIdx, newIdx));
-  }
-
-  function toggleSelectSong(uid: string) {
-    setSelectedUids((prev) => {
-      const next = new Set(prev);
-      if (next.has(uid)) next.delete(uid); else next.add(uid);
-      return next;
-    });
-  }
-
-  function mergeSongs() {
-    const merged = fusionner(items, [...selectedUids]);
-    if (merged === items) return; // moins de deux chants cochés
-    setItems(merged);
-    setSelectedUids(new Set());
-    setSelectMode(false);
   }
 
   function unfuse(fusionUid: string) {
@@ -563,7 +500,6 @@ export function SetlistForm({ mode, setlistId, songs, initial, prefill }: Setlis
   const allowedFree = FREE_CATEGORIES.filter(
     (c) => myCats.includes(c) || c === initial?.category
   );
-  const selectableItems = items.filter((i): i is FormItem => !isFormFusion(i) && !isFormTransition(i));
 
   // Repère d'enregistrement, à côté du bouton principal (visible aussi sur téléphone).
   function saveStatus() {
@@ -583,456 +519,52 @@ export function SetlistForm({ mode, setlistId, songs, initial, prefill }: Setlis
     );
   }
 
-  if (deuxColonnes) {
-    return (
-      <EditeurDeuxColonnes
-        isEdit={isEdit}
-        items={items}
-        setItems={setItems}
-        songs={songs}
-        champs={{
-          isEdit,
-          title,
-          setTitle,
-          category,
-          onCategoryChange,
-          categoriesReservees: allowedRestricted,
-          categoriesLibres: allowedFree,
-          date,
-          onDateChange,
-          moment,
-          setMoment,
-          leader,
-          setLeader,
-          leaderOther,
-          categoryLeaders,
-          onLeaderSelect,
-          isPrivate,
-          setIsPrivate,
-          notes,
-          setNotes,
-          needsAuth,
-          connecte: !!user,
-          authLoading,
-          loginFrom,
-        }}
-        actions={{
-          addSong,
-          addTransition,
-          patch,
-          patchTransition,
-          patchFusionSong,
-          patchFusionMixed,
-          unfuse,
-          onDragEnd: handleDragEnd,
-        }}
-        statut={saveStatus()}
-        saving={saving}
-        onPublier={() => void publish()}
-        onTerminer={() => void finishEdit()}
-      />
-    );
-  }
+  const proprietes: ProprietesEditeur = {
+    isEdit,
+    items,
+    setItems,
+    songs,
+    champs: {
+      isEdit,
+      title,
+      setTitle,
+      category,
+      onCategoryChange,
+      categoriesReservees: allowedRestricted,
+      categoriesLibres: allowedFree,
+      date,
+      onDateChange,
+      moment,
+      setMoment,
+      leader,
+      setLeader,
+      leaderOther,
+      categoryLeaders,
+      onLeaderSelect,
+      isPrivate,
+      setIsPrivate,
+      notes,
+      setNotes,
+      needsAuth,
+      connecte: !!user,
+      authLoading,
+      loginFrom,
+    },
+    actions: {
+      addSong,
+      addTransition,
+      patch,
+      patchTransition,
+      patchFusionSong,
+      patchFusionMixed,
+      unfuse,
+      onDragEnd: handleDragEnd,
+    },
+    statut: saveStatus(),
+    saving,
+    onPublier: () => void publish(),
+    onTerminer: () => void finishEdit(),
+  };
 
-  return (
-    <div className="min-h-screen bg-background">
-
-      {/* ── Header sticky ── */}
-      <div className={`sticky top-[var(--nav-h)] [--barre-top:var(--nav-h)] [--barre-left:var(--barre-laterale)] z-10 material-chrome px-4 py-2.5 flex items-center gap-3 transition-transform duration-300 ${scrollVisible ? "translate-y-0" : "-translate-y-[calc(100%+var(--nav-h))]"}`}>
-        <FondDeBarre sousNavbar />
-        {isEdit ? (
-          <button
-            type="button"
-            onClick={() => void finishEdit()}
-            aria-label={t("common.buttons.back")}
-            className="text-sm text-muted-foreground hover:text-foreground shrink-0"
-          >
-            ←
-          </button>
-        ) : (
-          <Link
-            href="/setlists"
-            aria-label={t("common.buttons.back")}
-            className="text-sm text-muted-foreground hover:text-foreground shrink-0"
-          >
-            ←
-          </Link>
-        )}
-        <span className="font-semibold text-foreground text-sm truncate">
-          {title.trim() || t(isEdit ? "setlists.form.titleEdit" : "setlists.form.titleNew")}
-        </span>
-      </div>
-
-      <div className="max-w-2xl mx-auto px-4 pt-5 pb-36 space-y-6">
-        <div className="space-y-5">
-        {/* ── Carte Informations ── */}
-        <div className="rounded-xl bg-card shadow-soft p-5 space-y-4">
-
-          {/* Titre + Catégorie */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label htmlFor="setlist-title" className="block text-sm font-medium text-foreground mb-1.5">
-                {t("setlists.form.titleLabel")} <span className="text-destructive">*</span>
-              </label>
-              <input
-                id="setlist-title"
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder={t("setlists.form.titlePlaceholder")}
-                className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/30 text-[16px] sm:text-sm"
-              />
-            </div>
-            <div>
-              <label htmlFor="setlist-category" className="block text-sm font-medium text-foreground mb-1.5">
-                {t("setlists.form.categoryLabel")} <span className="text-destructive">*</span>
-              </label>
-              <select
-                id="setlist-category"
-                value={category}
-                onChange={(e) => onCategoryChange(e.target.value)}
-                className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring/30 text-[16px] sm:text-sm"
-              >
-                <option value="">{t("setlists.form.categoryPlaceholder")}</option>
-                <optgroup label={t("setlists.form.categoryGroupRestricted")}>
-                  {allowedRestricted.map((c) => (
-                    <option key={c} value={c}>{t("categories." + c, { defaultValue: c })}</option>
-                  ))}
-                </optgroup>
-                <optgroup label={t("setlists.form.categoryGroupFree")}>
-                  {allowedFree.map((c) => (
-                    <option key={c} value={c}>{t("categories." + c, { defaultValue: c })}</option>
-                  ))}
-                </optgroup>
-              </select>
-              {needsAuth && (
-                <div className="mt-2 flex items-start gap-2 text-xs text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950 px-3 py-2 rounded-lg border border-amber-200 dark:border-amber-800">
-                  <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-                  <span>
-                    {t("setlists.form.categoryRestrictedAuthWarning")}{" "}
-                    <a href={`/login?from=${loginFrom}`} className="underline font-medium">
-                      {t("common.header.login")}
-                    </a>
-                  </span>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Présidence (présidents de séances) + Date (saisie manuelle). La date
-              reste enregistrée → notifs « setlist prête » + Mes Services OK. */}
-          {category && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {/* Présidence : présidents de séances (noms seuls) */}
-              <div>
-                <label htmlFor="setlist-leader" className="block text-sm font-medium text-foreground mb-1.5">
-                  {t("setlists.form.leaderLabel")} <span className="text-destructive">*</span>
-                </label>
-                <select
-                  id="setlist-leader"
-                  value={leaderOther ? "__other__" : leader}
-                  onChange={(e) => onLeaderSelect(e.target.value)}
-                  className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring/30 text-[16px] sm:text-sm"
-                >
-                  <option value="">{t("setlists.form.presidencePlaceholder")}</option>
-                  {categoryLeaders.map((m) => (
-                    <option key={m} value={m}>{m}</option>
-                  ))}
-                  <option value="__other__">{t("setlists.form.presidenceOther")}</option>
-                </select>
-                {leaderOther && (
-                  <input
-                    type="text"
-                    value={leader}
-                    onChange={(e) => setLeader(e.target.value)}
-                    placeholder={t("setlists.form.leaderPlaceholder")}
-                    className="mt-2 w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/30 text-[16px] sm:text-sm"
-                  />
-                )}
-              </div>
-
-              {/* Date : saisie manuelle (+ matin/soir pour Campus) */}
-              <div>
-                <label htmlFor="setlist-date" className="block text-sm font-medium text-foreground mb-1.5">
-                  {t("setlists.form.dateLabel")} <span className="text-destructive">*</span>
-                </label>
-                <input
-                  id="setlist-date"
-                  type="date"
-                  value={date}
-                  onChange={(e) => onDateChange(e.target.value)}
-                  className="w-full min-w-0 appearance-none px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring/30 text-[16px] sm:text-sm"
-                />
-                {category === "Campus" && (
-                  <select
-                    aria-label={t("setlists.entree.moment")}
-                    value={moment ?? ""}
-                    onChange={(e) => setMoment((e.target.value || undefined) as "matin" | "soir" | undefined)}
-                    className="mt-2 w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring/30 text-[16px] sm:text-sm"
-                  >
-                    <option value="">—</option>
-                    <option value="matin">Matin</option>
-                    <option value="soir">Soir</option>
-                  </select>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Visibilité */}
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-1.5">
-              {t("setlists.form.visibilityLabel")}
-            </label>
-            <div className="flex rounded-lg border border-border overflow-hidden text-sm">
-              <button
-                type="button"
-                onClick={() => setIsPrivate(false)}
-                className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 transition-colors ${
-                  !isPrivate ? "bg-foreground text-background" : "bg-background text-muted-foreground hover:bg-muted/50"
-                }`}
-              >
-                <Globe className="h-3.5 w-3.5" /> Partagée
-              </button>
-              <button
-                type="button"
-                onClick={() => setIsPrivate(true)}
-                className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 transition-colors border-l border-border ${
-                  isPrivate ? "bg-violet-600 text-white" : "bg-background text-muted-foreground hover:bg-muted/50"
-                }`}
-              >
-                <Lock className="h-3.5 w-3.5" /> Privée
-              </button>
-            </div>
-            {isPrivate && !user && !authLoading && (
-              <p className="mt-1.5 text-xs text-violet-700 dark:text-violet-400">
-                {t("setlists.form.privateLoginRequired")}
-              </p>
-            )}
-            {isPrivate && user && (
-              <p className="mt-1.5 text-xs text-muted-foreground">
-                {t("setlists.form.privateToggle")}
-              </p>
-            )}
-          </div>
-
-          {/* Notes */}
-          <div>
-            <label htmlFor="setlist-notes" className="block text-sm font-medium text-foreground mb-1.5">
-              {t("setlists.form.notesLabel")}
-            </label>
-            <textarea
-              id="setlist-notes"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              rows={2}
-              placeholder={t("setlists.form.notesPlaceholder")}
-              className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/30 text-[16px] sm:text-sm resize-none"
-            />
-          </div>
-        </div>
-        </div>
-        <div className="space-y-3">
-          <div className="flex items-center justify-between gap-2">
-            <h2 className="text-xs font-medium text-muted-foreground">
-              {t("common.header.songs")}
-            </h2>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={addTransition}
-                className="text-xs px-2.5 py-1 rounded-lg border border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/30 transition-colors"
-              >
-                + {t("setlists.form.addTransition")}
-              </button>
-              {selectableItems.length >= 2 && (
-                selectMode ? (
-                  <div className="flex items-center gap-2">
-                    {selectedUids.size >= 2 && (
-                      <button
-                        type="button"
-                        onClick={mergeSongs}
-                        className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition-colors"
-                      >
-                        <Link2 className="h-3 w-3" />
-                        {t("setlists.form.mergeButton", { count: selectedUids.size })}
-                      </button>
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => { setSelectMode(false); setSelectedUids(new Set()); }}
-                      className="text-xs px-2.5 py-1 rounded-lg border border-border text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                      {t("setlists.form.cancelSelect")}
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => setSelectMode(true)}
-                    className="text-xs px-2.5 py-1 rounded-lg border border-border text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    {t("setlists.form.selectMode")}
-                  </button>
-                )
-              )}
-            </div>
-          </div>
-
-          {/* Recherche + résultats scrollables */}
-          <div className="rounded-xl border border-border overflow-hidden">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-              <input
-                type="search"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder={t("setlists.form.searchSongsPlaceholder")}
-                className="w-full pl-9 pr-8 py-2.5 bg-background text-foreground placeholder:text-muted-foreground focus:outline-none text-sm border-b border-border [&::-webkit-search-cancel-button]:hidden"
-              />
-              {query && (
-                <button
-                  type="button"
-                  onClick={() => setQuery("")}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              )}
-            </div>
-
-            {availableSongs.length === 0 ? (
-              <p className="text-xs text-muted-foreground text-center py-4">
-                {t("setlists.form.allSongsAdded")}
-              </p>
-            ) : (
-              <div className="max-h-72 overflow-y-auto divide-y divide-border">
-                {searchResults.map((song) => (
-                  <div key={song.slug}>
-                    <div className="flex items-center gap-2 px-3 py-2.5 hover:bg-muted/40 transition-colors">
-                      <button
-                        type="button"
-                        onClick={() => setExpandedSlug(expandedSlug === song.slug ? null : song.slug)}
-                        className="flex-1 flex items-center gap-2 text-left min-w-0"
-                      >
-                        <span className="text-sm font-medium text-foreground truncate">{song.title}</span>
-                        {song.language === "zh" && (
-                          <span className="shrink-0 text-xs text-muted-foreground">{t("common.languages.zh")}</span>
-                        )}
-                        <span className="shrink-0 font-mono text-xs text-muted-foreground">{song.recommendedKey ?? song.originalKey}</span>
-                        {expandedSlug === song.slug
-                          ? <ChevronUp className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                          : <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                        }
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => addSong(song)}
-                        className="shrink-0 flex items-center gap-1 h-7 px-2.5 rounded-lg bg-secondary text-foreground hover:bg-secondary/80 transition-colors text-xs font-semibold"
-                      >
-                        <Plus className="h-3.5 w-3.5" />
-                        {t("common.buttons.add")}
-                      </button>
-                    </div>
-                    {expandedSlug === song.slug && song.sections && song.sections.length > 0 && (
-                      <div className="px-3 pb-2.5 flex flex-wrap gap-1.5 bg-muted/20">
-                        {song.sections.map((s) => (
-                          <span key={s.id} className="text-xs px-2 py-0.5 rounded-md bg-muted text-muted-foreground">
-                            {s.name}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Setlist (chants ajoutés) */}
-          {items.length > 0 ? (
-            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-              <SortableContext items={items.map((i) => i.uid)} strategy={verticalListSortingStrategy}>
-                <div className="space-y-2">
-                  {items.map((item) =>
-                    isFormTransition(item) ? (
-                      <TransitionRow
-                        key={item.uid}
-                        item={item}
-                        onTextChange={(text) => patchTransition(item.uid, text)}
-                        onRemove={() => setItems((prev) => prev.filter((i) => i.uid !== item.uid))}
-                      />
-                    ) : isFormFusion(item) ? (
-                      <FusionRow
-                        key={item.uid}
-                        item={item}
-                        onUnfuse={() => unfuse(item.uid)}
-                        onRemove={() => setItems((prev) => prev.filter((i) => i.uid !== item.uid))}
-                        onPatchSong={(songUid, update) => patchFusionSong(item.uid, songUid, update)}
-                        onChangeMixed={(mixed) => patchFusionMixed(item.uid, mixed)}
-                      />
-                    ) : (
-                      <SongRow
-                        key={item.uid}
-                        item={item}
-                        selectable={selectMode}
-                        selected={selectedUids.has(item.uid)}
-                        onToggleSelect={() => toggleSelectSong(item.uid)}
-                        onRemove={() => setItems((prev) => prev.filter((i) => i.uid !== item.uid))}
-                        onKeyChange={(key) => patch(item.uid, { keyOverride: key })}
-                        onNoteChange={(note) => patch(item.uid, { notes: note })}
-                        onSectionItemsChange={(sectionItems) => patch(item.uid, { sectionItems })}
-                        onJianpuSheetChange={(jianpuSheet) => patch(item.uid, { jianpuSheet })}
-                        onLastPhrase={({ contentOverride, step }) =>
-                          patch(item.uid, { contentOverride, sectionItems: [...item.sectionItems, step] })
-                        }
-                      />
-                    )
-                  )}
-                </div>
-              </SortableContext>
-            </DndContext>
-          ) : (
-            <p className="text-xs text-muted-foreground text-center py-4 border border-dashed border-border rounded-xl">
-              {t("setlists.form.emptySongs")}
-            </p>
-          )}
-        </div>
-
-      </div>
-
-      {/* ── Barre d'action ── */}
-      {/* z-50 : passe DEVANT la barre d'onglets mobile (z-40, fixed bottom-0
-          elle aussi) — sinon le bouton est caché derrière. Fond opaque pour
-          que les onglets ne transparaissent pas. */}
-      <div className="fixed left-[var(--barre-laterale)] right-0 bottom-0 z-50 border-t border-border bg-background">
-        <div
-          className="max-w-2xl mx-auto px-4 py-3 flex items-center gap-3"
-          style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}
-        >
-          <p role="status" className="flex-1 min-w-0 text-xs text-muted-foreground">
-            {saveStatus()}
-          </p>
-          {isEdit ? (
-            <button
-              type="button"
-              onClick={() => void finishEdit()}
-              className="h-11 px-6 rounded-full bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
-            >
-              {t("setlists.form.done")}
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={() => void publish()}
-              disabled={saving}
-              className="h-11 px-6 rounded-full bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50"
-            >
-              {t(saving ? "setlists.form.publishing" : "setlists.form.publish")}
-            </button>
-          )}
-        </div>
-      </div>
-    </div>
-  );
+  return deuxColonnes ? <EditeurDeuxColonnes {...proprietes} /> : <EditeurFeuilles {...proprietes} />;
 }

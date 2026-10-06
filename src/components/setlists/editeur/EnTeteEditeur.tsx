@@ -3,13 +3,14 @@
 import { useRef, type ReactNode } from "react";
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
-import { AlertTriangle, CalendarDays, ChevronDown, Globe, Lock, Mic, Pencil } from "lucide-react";
+import { AlertTriangle, CalendarDays, ChevronDown, ChevronLeft, Globe, Lock, Mic, Pencil } from "lucide-react";
 import { categoryColor } from "@/lib/serviceColors";
 
 // En-tête compact de l'éditeur (lot U5 bis, T3, Q5) : le formulaire devient l'en-tête de la
 // colonne setlist — titre modifiable, puces Catégorie · Date (+ Matin / Soir au Campus) ·
 // Présidence · Visibilité, ligne « Notes pour l'équipe ». Les règles des champs restent
 // celles de SetlistForm (titre automatique, présidence du planning, « Autre »).
+// Sur téléphone et tablette en portrait (T4), le fil devient « ‹ Nouvelle setlist ».
 
 export interface ChampsEnTete {
   isEdit: boolean;
@@ -70,18 +71,44 @@ function jourCourt(iso: string, langue: string): string {
   return texte.charAt(0).toUpperCase() + texte.slice(1);
 }
 
-export function EnTeteEditeur({ champs: c }: { champs: ChampsEnTete }) {
+export function EnTeteEditeur({
+  champs: c,
+  retour,
+}: {
+  champs: ChampsEnTete;
+  /** Feuilles (T4) : « ‹ Nouvelle setlist » au lieu du fil ; en modification, le
+   *  retour envoie le changement en cours (comme « Terminé »). */
+  retour?: { onClick?: () => void };
+}) {
   const { t, i18n } = useTranslation();
   const titreRef = useRef<HTMLInputElement>(null);
   const dateRef = useRef<HTMLInputElement>(null);
+  const nomPage = t(c.isEdit ? "setlists.form.titleEdit" : "setlists.form.titleNew");
+  const rondRetour =
+    "flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-secondary text-foreground transition-colors hover:bg-secondary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
   return (
     <div className="space-y-3.5">
-      <nav aria-label={t("setlists.editeur.fil")} className="text-[13px] text-muted-foreground">
-        <Link href="/setlists" className="hover:text-foreground hover:underline">{t("common.header.setlists")}</Link>
-        <span aria-hidden> › </span>
-        <span>{t(c.isEdit ? "setlists.form.titleEdit" : "setlists.form.titleNew")}</span>
-      </nav>
+      {retour ? (
+        <div className="flex items-center gap-2.5 text-[15px] font-medium text-muted-foreground">
+          {retour.onClick ? (
+            <button type="button" onClick={retour.onClick} aria-label={t("common.buttons.back")} className={rondRetour}>
+              <ChevronLeft className="h-4 w-4" aria-hidden />
+            </button>
+          ) : (
+            <Link href="/setlists" aria-label={t("common.buttons.back")} className={rondRetour}>
+              <ChevronLeft className="h-4 w-4" aria-hidden />
+            </Link>
+          )}
+          <span>{nomPage}</span>
+        </div>
+      ) : (
+        <nav aria-label={t("setlists.editeur.fil")} className="text-[13px] text-muted-foreground">
+          <Link href="/setlists" className="hover:text-foreground hover:underline">{t("common.header.setlists")}</Link>
+          <span aria-hidden> › </span>
+          <span>{nomPage}</span>
+        </nav>
+      )}
 
       <div className="flex items-center gap-2">
         <input
@@ -91,7 +118,7 @@ export function EnTeteEditeur({ champs: c }: { champs: ChampsEnTete }) {
           onChange={(e) => c.setTitle(e.target.value)}
           aria-label={t("setlists.form.titleLabel")}
           placeholder={t("setlists.form.titlePlaceholder")}
-          className="min-w-0 max-w-full rounded-lg bg-transparent text-[28px] [field-sizing:content] font-bold leading-tight tracking-tight text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+          className="min-w-0 max-w-full rounded-lg bg-transparent text-[24px] sm:text-[28px] [field-sizing:content] font-bold leading-tight tracking-tight text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
         />
         <button
           type="button"

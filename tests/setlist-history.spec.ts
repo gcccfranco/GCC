@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
-import { champNoteDuChant, champNotes, champPresidence, choisirTonalite, ligneSection, ouvrirStructure, retirerChant, retirerSection } from "./helpers/editeurSetlist";
+import { attendreEditeur, champNoteDuChant, champNotes, champPresidence, choisirTonalite, fermerFeuille, ligneSection, reglerElement, retirerChant, retirerSection } from "./helpers/editeurSetlist";
 import { ouvrirPartitions } from "./helpers/setlist";
 
 // Chantier Setlist, lot 2 (docs/spec-setlist.md) : historique des
@@ -67,12 +67,13 @@ async function openEditor(page: Page, extraDocs: Record<string, Record<string, u
     { [`setlists/${SETLIST_ID}`]: SETLIST, ...extraDocs },
     `/setlists/${SETLIST_ID}/edit`,
   );
-  await expect(page.getByLabel("Tonalité de Abba Père")).toBeVisible();
+  await attendreEditeur(page, "Abba Père");
   return db;
 }
 
 async function finishAndOpenHistory(page: Page) {
   await expect(page.getByText("Enregistré", { exact: true })).toBeVisible({ timeout: 8_000 });
+  await fermerFeuille(page);
   await page.getByRole("button", { name: "Terminé" }).click();
   await page.waitForURL((u) => u.pathname.replace(/\/$/, "") === `/setlists/${SETLIST_ID}`);
   await page.getByRole("button", { name: /Modifiée par Ruth K\./ }).click();
@@ -83,6 +84,7 @@ test("après une retouche, la setlist dit qui l'a modifiée et quoi (FR + 中文
   await openEditor(page);
   await choisirTonalite(page, "Abba Père", "B");
   await choisirTonalite(page, "一生爱你", "F");
+  await fermerFeuille(page);
   await page.getByLabel("Titre").fill("Culte du 21 septembre (révisé)");
 
   const sheet = await finishAndOpenHistory(page);
@@ -253,7 +255,7 @@ const changeItem = (sheet: ReturnType<Page["getByRole"]>, phrase: string) =>
 
 test("H1 — structure : la section retirée et la section ajoutée se voient avant / après", async ({ page }) => {
   await openEditor(page);
-  await ouvrirStructure(page);
+  await reglerElement(page, "Abba Père");
   await retirerSection(page, "Pont");
   await page.getByRole("button", { name: "Refrain", exact: true }).click();
 
@@ -266,7 +268,7 @@ test("H1 — structure : la section retirée et la section ajoutée se voient av
 
 test("H1 — structure retouchée puis remise comme avant : pas de phrase de structure", async ({ page }) => {
   await openEditor(page);
-  await ouvrirStructure(page);
+  await reglerElement(page, "Abba Père");
   await retirerSection(page, "Pont");
   await expect(page.getByText("Enregistré", { exact: true })).toBeVisible({ timeout: 8_000 });
   await page.getByRole("button", { name: "Pont", exact: true }).click();
@@ -291,7 +293,7 @@ test("H1 — deux retouches à moins de 15 min : l'avant de la première, l'apr�
       { kind: "structure", song: "abba-pere", from: ["I", "C1", "R", "Pm", "C2", "P"], to: ["I", "C1", "R", "Pm", "C2"] },
     ]),
   });
-  await ouvrirStructure(page);
+  await reglerElement(page, "Abba Père");
   await page.getByRole("button", { name: "Refrain", exact: true }).click();
 
   const sheet = await finishAndOpenHistory(page);
@@ -454,7 +456,7 @@ test("H3 — notes de section par section ; une ancienne entrée garde sa phrase
 
 test("H3 — note de section écrite dans l'éditeur : nommée par son abréviation", async ({ page }) => {
   await openEditor(page);
-  await ouvrirStructure(page);
+  await reglerElement(page, "Abba Père");
   await ligneSection(page, "Refrain").getByTitle("Note").click();
   // Le champ de la note de section prend le focus à l'ouverture.
   await page.keyboard.type("Tout doux");
@@ -516,6 +518,8 @@ const FUSION = {
 async function openFusionEditor(page: Page) {
   await emptyPlanning(page);
   await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: FUSION }, `/setlists/${SETLIST_ID}/edit`);
+  await attendreEditeur(page, "Abba Père / 一生爱你");
+  await reglerElement(page, "Abba Père / 一生爱你");
 }
 
 test("Fusion — note et transition du mélange : leurs phrases, sans « Structure … modifiée »", async ({ page }) => {

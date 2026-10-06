@@ -2,7 +2,7 @@
 
 import { useId, useMemo, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { Link2, Shuffle, Trash2, Unlink } from "lucide-react";
+import { ChevronLeft, Link2, Shuffle, Trash2, Unlink } from "lucide-react";
 import { useJianpuScore } from "@/lib/jianpu/images";
 import { nextUid } from "@/lib/uid";
 import {
@@ -15,10 +15,12 @@ import {
 import { MixedStructureEditor, type LastPhraseTarget } from "@/components/setlists/SetlistFormRows";
 import { KeyPill } from "@/components/ui/key-pill";
 import { ParSection, StructurePastilles, Tonalites } from "@/components/setlists/editeur/Reglages";
+import { BoutonOK, TitreVolet, useFeuille } from "@/components/setlists/editeur/feuille";
 
 // Le volet de droite de l'éditeur (lot U5 bis, T3) : les réglages de l'élément
 // choisi dans la liste — chant, fusion, transition — et le choix des chants à
-// fusionner. Chaque réglage écrit comme l'éditeur d'aujourd'hui.
+// fusionner. Chaque réglage écrit comme l'éditeur d'aujourd'hui. Les mêmes
+// contenus s'ouvrent dans une feuille sur téléphone et tablette en portrait (T4).
 
 const titreDeSection = "text-[13px] font-semibold text-muted-foreground";
 const boutonGris =
@@ -26,16 +28,20 @@ const boutonGris =
 const boutonRetirer =
   "flex h-10 items-center gap-2 rounded-full bg-destructive/10 px-4 text-sm font-semibold text-destructive transition-colors hover:bg-destructive/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
-/** En-tête commun : petite ligne, « n · Titre », sous-titre, lien à droite. */
+/** En-tête commun : petite ligne, « n · Titre », sous-titre, lien à droite. Dans une
+ *  feuille (planche `creer-piste2-telephone`) : sans petite ligne, « OK » à droite, le
+ *  lien sous le sous-titre. */
 function EnTeteVolet({ surtitre, titre, sousTitre, lien }: { surtitre: string; titre: string; sousTitre?: string; lien?: ReactNode }) {
+  const feuille = useFeuille();
   return (
     <div className="flex items-start justify-between gap-4">
       <div className="min-w-0">
-        <p className="text-[13px] font-medium text-muted-foreground">{surtitre}</p>
-        <h2 className="mt-0.5 text-2xl font-bold leading-tight tracking-tight text-foreground">{titre}</h2>
+        {!feuille && <p className="text-[13px] font-medium text-muted-foreground">{surtitre}</p>}
+        <TitreVolet className="mt-0.5 text-2xl font-bold leading-tight tracking-tight text-foreground">{titre}</TitreVolet>
         {sousTitre && <p className="mt-1 text-sm text-muted-foreground">{sousTitre}</p>}
+        {feuille && lien && <div className="mt-1.5">{lien}</div>}
       </div>
-      {lien}
+      {feuille ? <BoutonOK /> : lien}
     </div>
   );
 }
@@ -286,7 +292,8 @@ export function VoletFusion({
           {t("setlists.form.mixedStructureLabel")}
         </button>
         {melange && (
-          <div className="rounded-2xl border border-border">
+          // `data-vaul-no-drag` : dans une feuille, glisser un passage ne tire pas la feuille.
+          <div data-vaul-no-drag className="rounded-2xl border border-border">
             <MixedStructureEditor fusionItem={item} onChangeMixed={onChangeMixed} onPatchSong={onPatchSong} />
           </div>
         )}
@@ -357,7 +364,8 @@ export function ChoixFusion({
   onFusionner: (uids: string[]) => void;
 }) {
   const { t } = useTranslation();
-  const titreId = useId();
+  const feuille = useFeuille();
+  const titre = t("setlists.editeur.fusionnerAvec", { titre: depart.song.title });
   const [coches, setCoches] = useState<Set<string>>(new Set());
   const n = coches.size + 1;
   const ligne = (item: FormItem, coche: boolean, onToggle?: () => void) => (
@@ -383,10 +391,19 @@ export function ChoixFusion({
     </li>
   );
   return (
-    <div role="group" aria-labelledby={titreId} className="space-y-5">
-      <h2 id={titreId} className="text-2xl font-bold leading-tight tracking-tight text-foreground">
-        {t("setlists.editeur.fusionnerAvec", { titre: depart.song.title })}
-      </h2>
+    <div role="group" aria-label={titre} className="space-y-5">
+      {feuille && (
+        // Dans la feuille, le choix remplace les réglages : « ‹ Retour » y ramène.
+        <button
+          type="button"
+          onClick={onAnnuler}
+          className="-ml-1 flex h-8 items-center gap-0.5 rounded-full pr-2 text-sm font-medium text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <ChevronLeft className="h-4 w-4" aria-hidden />
+          {t("setlists.editeur.retour")}
+        </button>
+      )}
+      <TitreVolet className="text-2xl font-bold leading-tight tracking-tight text-foreground">{titre}</TitreVolet>
       <ul className="border-y border-border">
         {ligne(depart, true)}
         {autres.map((item) =>

@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeDb, type FakeProfile } from "./helpers/fakeSession";
-import { boutonAjouter, champNotes, champPresidence, choisirTonalite } from "./helpers/editeurSetlist";
+import { ajouterChant, attendreEditeur, champNotes, champPresidence, choisirTonalite, fermerFeuille } from "./helpers/editeurSetlist";
 
 // Chantier Setlist, lot 1 (docs/spec-setlist.md) : l'éditeur est une seule
 // page, enregistrée automatiquement ; « Publier » à la création seulement.
@@ -55,7 +55,7 @@ const setlistWrites = (db: FakeDb, id?: string) =>
 async function openEditor(page: Page) {
   await emptyPlanning(page);
   const db = await signInAs(page, MUSICIEN, { [`setlists/${SETLIST_ID}`]: SETLIST }, `/setlists/${SETLIST_ID}/edit`);
-  await expect(page.getByLabel("Tonalité de Abba Père")).toBeVisible();
+  await attendreEditeur(page, "Abba Père");
   return db;
 }
 
@@ -65,14 +65,13 @@ test("création : une seule page, brouillon enregistré tout seul, « Publier »
 
   await expect(page.getByRole("button", { name: /Suivant/ })).toHaveCount(0);
   // Infos et chants sur la même page.
-  await expect(page.getByPlaceholder("Chercher un chant à ajouter…")).toBeVisible();
+  await expect(page.locator("[data-ouvrir-bibliotheque]")).toBeVisible();
 
   await page.getByLabel("Titre").fill("Culte du 28 septembre");
   await page.getByLabel("Catégorie").selectOption("Culte Francophone");
   await champPresidence(page).selectOption("__other__");
   await page.getByPlaceholder("ex. Timothée").fill("Jonathan Z.");
-  await page.getByPlaceholder("Chercher un chant à ajouter…").fill("Abba Père");
-  await boutonAjouter(page, "Abba Père").click();
+  await ajouterChant(page, "Abba Père");
 
   await expect.poll(() => setlistWrites(db).at(-1)?.data.isDraft, { timeout: 10_000 }).toBe(true);
   const draft = setlistWrites(db).at(-1)!;
@@ -89,6 +88,7 @@ test("modification : un changement de tonalité est enregistré sans bouton (FR 
 
   await choisirTonalite(page, "Abba Père", "B");
   await choisirTonalite(page, "一生爱你", "F");
+  await fermerFeuille(page);
 
   await expect
     .poll(() => (db.doc(`setlists/${SETLIST_ID}`)?.items as { keyOverride: string | null }[]).map((i) => i.keyOverride))

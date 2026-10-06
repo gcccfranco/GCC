@@ -1,6 +1,6 @@
 import { expect, test, type Page, type TestInfo } from "@playwright/test";
 import { signInAs, type FakeDb, type FakeProfile } from "./helpers/fakeSession";
-import { boutonTonalite, deuxColonnesAttendues, groupeTonalites, listeCourte, reglerElement, volet } from "./helpers/editeurSetlist";
+import { attendreEditeur, boutonTonalite, deuxColonnesAttendues, groupeTonalites, listeCourte, reglerElement, volet } from "./helpers/editeurSetlist";
 import type { SetlistItem } from "../src/types/setList";
 import { readFileSync } from "fs";
 import {
@@ -16,7 +16,7 @@ import type { SongIndexEntry } from "../src/types/song";
 // Lot U5 bis (docs/spec-editeur-setlist.md), « Fusionner » (Q1) : on choisit
 // les chants seuls à fusionner ; la fusion prend la place du premier coché,
 // dans l'ordre de la setlist. Tranche T1 : la logique pure, extraite de
-// `mergeSongs` (SetlistForm). Le choix à l'écran vient en T3 et T4.
+// `mergeSongs` (SetlistForm). Le choix à l'écran : T3 (volet) et T4 (feuille).
 
 const INDEX = (JSON.parse(readFileSync("public/songs-index.json", "utf8")) as { songs: SongIndexEntry[] }).songs;
 const song = (slug: string) => INDEX.find((s) => s.slug === slug)!;
@@ -89,10 +89,11 @@ test("(pur) la liste d'origine ne bouge pas", () => {
   expect(uids(items)).toEqual(["a", "t", "b"]);
 });
 
-// ─── Tranche T3 : le choix à l'écran, grands écrans ─────────────────────────
-// « Fusionner » est dans les réglages du chant ; il ouvre, dans le volet, le
-// choix des autres chants seuls. Les numéros sont ceux des chants et des fusions
-// (une transition n'en a pas, comme la planche). Téléphone et tablette en portrait : T4.
+// ─── Tranches T3 et T4 : le choix à l'écran ──────────────────────────────────
+// « Fusionner » est dans les réglages du chant ; il ouvre, dans le volet (ou la
+// même feuille sur téléphone et tablette en portrait), le choix des autres chants
+// seuls. Les numéros sont ceux des chants et des fusions (une transition n'en a
+// pas, comme la planche).
 
 const MUSICIENNE: FakeProfile = {
   uid: "uid-musicienne",
@@ -147,19 +148,18 @@ const SETLIST = {
 type Enregistre = SetlistItem & { fusionSongs?: { songSlug: string; keyOverride: string | null }[] };
 const itemsEnBase = (db: FakeDb) => (db.doc(SETLIST_DOC)?.items ?? []) as Enregistre[];
 
-async function ouvrir(page: Page, testInfo: TestInfo, doc: Record<string, unknown> = SETLIST) {
-  test.skip(!deuxColonnesAttendues(testInfo), "grand écran seulement : le choix en feuille vient en T4");
+async function ouvrir(page: Page, _testInfo: TestInfo, doc: Record<string, unknown> = SETLIST) {
   await page.route(/docs\.google\.com\/spreadsheets/, (route) =>
     route.fulfill({ status: 200, contentType: "text/csv", body: "" }),
   );
   const db = await signInAs(page, MUSICIENNE, { [SETLIST_DOC]: doc }, `/setlists/${SETLIST_ID}/edit`);
-  await expect(page.locator("[data-editeur-deux-colonnes]")).toBeVisible();
+  await attendreEditeur(page, "一生爱你");
   return db;
 }
 
 const choix = (page: Page) => volet(page).getByRole("group", { name: /^Fusionner .* avec…$/ });
 
-test("grand écran : « Fusionner » ouvre le choix, chant de départ coché en tête ; ni transition ni fusion proposées", async ({ page }, testInfo) => {
+test("« Fusionner » ouvre le choix, chant de départ coché en tête ; ni transition ni fusion proposées", async ({ page }, testInfo) => {
   await ouvrir(page, testInfo);
   await reglerElement(page, "一生爱你");
   await volet(page).getByRole("button", { name: "Fusionner", exact: true }).click();
@@ -177,7 +177,7 @@ test("grand écran : « Fusionner » ouvre le choix, chant de départ coché en 
   await page.screenshot({ path: testInfo.outputPath(`fusionner-choix-${testInfo.project.name}.png`) });
 });
 
-test("grand écran : deux chants non voisins — la fusion prend la place du premier, dans l'ordre de la setlist", async ({ page }, testInfo) => {
+test("deux chants non voisins — la fusion prend la place du premier, dans l'ordre de la setlist", async ({ page }, testInfo) => {
   const db = await ouvrir(page, testInfo);
   await reglerElement(page, "一生爱你");
   await volet(page).getByRole("button", { name: "Fusionner", exact: true }).click();
@@ -188,11 +188,14 @@ test("grand écran : deux chants non voisins — la fusion prend la place du pre
     .poll(() => itemsEnBase(db).map((i) => (i.type === "fusion" ? i.fusionSongs!.map((s) => s.songSlug).join("+") : i.type ?? i.songSlug)), { timeout: 10_000 })
     .toEqual(["que-ma-bouche-chante-ta-louange+一生爱你", "transition", "je-reviens-au-coeur+abba-pere"]);
   // La fusion est choisie, ses réglages s'ouvrent ; la tonalité de chaque chant reste.
-  await expect(listeCourte(page).getByRole("button", { name: "Que ma bouche chante ta louange / 一生爱你", exact: true })).toHaveAttribute("aria-current", "true");
+  await expect(volet(page).getByRole("heading", { name: "1 · Que ma bouche chante ta louange / 一生爱你" })).toBeVisible();
+  if (deuxColonnesAttendues(testInfo)) {
+    await expect(listeCourte(page).getByRole("button", { name: "Que ma bouche chante ta louange / 一生爱你", exact: true })).toHaveAttribute("aria-current", "true");
+  }
   expect(itemsEnBase(db)[0].fusionSongs!.map((s) => s.keyOverride)).toEqual(["D", null]);
 });
 
-test("grand écran : « Annuler » ne change rien", async ({ page }, testInfo) => {
+test("« Annuler » ne change rien", async ({ page }, testInfo) => {
   const db = await ouvrir(page, testInfo);
   await reglerElement(page, "一生爱你");
   await volet(page).getByRole("button", { name: "Fusionner", exact: true }).click();
@@ -204,7 +207,7 @@ test("grand écran : « Annuler » ne change rien", async ({ page }, testInfo) =
   expect(db.writes.filter((w) => w.path === SETLIST_DOC)).toHaveLength(0);
 });
 
-test("grand écran : réglages d'une fusion — tonalité par chant, « Mélanger », « Défusionner »", async ({ page }, testInfo) => {
+test("réglages d'une fusion — tonalité par chant, « Mélanger », « Défusionner »", async ({ page }, testInfo) => {
   const db = await ouvrir(page, testInfo);
   await reglerElement(page, "Je reviens au cœur / Abba Père");
   await expect(volet(page).getByRole("heading", { name: "3 · Je reviens au cœur / Abba Père" })).toBeVisible();
@@ -222,10 +225,24 @@ test("grand écran : réglages d'une fusion — tonalité par chant, « Mélange
   ]);
 });
 
-test("grand écran : « Fusionner » absent quand il ne reste aucun autre chant seul ; plus aucun « Sélectionner »", async ({ page }, testInfo) => {
+test("« Fusionner » absent quand il ne reste aucun autre chant seul ; plus aucun « Sélectionner »", async ({ page }, testInfo) => {
   await ouvrir(page, testInfo, { ...SETLIST, items: [SETLIST.items[1], SETLIST.items[2], FUSION_EN_BASE] });
   await reglerElement(page, "一生爱你");
   await expect(volet(page).getByRole("heading", { name: "1 · 一生爱你" })).toBeVisible();
   await expect(volet(page).getByRole("button", { name: "Fusionner", exact: true })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Sélectionner" })).toHaveCount(0);
+});
+
+test("petits écrans : le choix remplace le contenu de la même feuille ; « ‹ Retour » rend les réglages du chant", async ({ page }, testInfo) => {
+  test.skip(deuxColonnesAttendues(testInfo), "téléphone et tablette en portrait seulement : feuilles");
+  await ouvrir(page, testInfo);
+  await reglerElement(page, "一生爱你");
+  await volet(page).getByRole("button", { name: "Fusionner", exact: true }).click();
+  // Une seule feuille, titrée par la question.
+  await expect(page.getByRole("dialog")).toHaveCount(1);
+  await expect(page.getByRole("dialog", { name: "Fusionner 一生爱你 avec…" })).toBeVisible();
+  await page.waitForTimeout(500);
+  await page.screenshot({ path: testInfo.outputPath(`fusionner-feuille-${testInfo.project.name}.png`) });
+  await volet(page).getByRole("button", { name: "Retour", exact: true }).click();
+  await expect(page.getByRole("dialog", { name: "2 · 一生爱你" })).toBeVisible();
 });

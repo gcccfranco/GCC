@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeDb, type FakeProfile } from "./helpers/fakeSession";
-import { boutonAjouter, boutonTonalite, champPresidence, enDeuxColonnes, groupeTonalites } from "./helpers/editeurSetlist";
+import { ajouterChant, attendreEditeur, boutonTonalite, champPresidence, groupeTonalites, reglerElement } from "./helpers/editeurSetlist";
 import { lienPreparer, lirePreremplissage, prochainsServicesSansSetlist } from "../src/lib/setlist/prochainsServices";
 import type { SetlistSeance } from "../src/lib/planning/names";
 
@@ -262,8 +262,7 @@ test("(page) « Préparer » remplit l'éditeur ; rien n'est écrit avant le pre
   expect(ecrituresSetlist(db)).toHaveLength(0);
 
   // Premier changement : un chant. Le brouillon part, prérempli.
-  await page.getByPlaceholder("Chercher un chant à ajouter…").fill("Abba Père");
-  await boutonAjouter(page, "Abba Père").click();
+  await ajouterChant(page, "Abba Père");
   await expect.poll(() => ecrituresSetlist(db).length, { timeout: 10_000 }).toBeGreaterThan(0);
   const brouillon = ecrituresSetlist(db).at(-1)!;
   expect(brouillon.data).toMatchObject({
@@ -316,7 +315,7 @@ test("(page) « Autre setlist » ouvre l'éditeur vide", async ({ page }) => {
   await page.waitForURL(/[?&]autre=1/);
   await expect(page.getByLabel("Titre")).toHaveValue("");
   await expect(page.getByLabel("Catégorie")).toHaveValue("");
-  await expect(page.getByPlaceholder("Chercher un chant à ajouter…")).toBeVisible();
+  await expect(page.locator("[data-ouvrir-bibliotheque]")).toBeVisible();
 });
 
 test("(page) « Repartir d'une setlist passée » : la plus récente d'abord, « Reprendre » ouvre une copie privée dans « Modifier »", async ({ page }, testInfo) => {
@@ -360,9 +359,9 @@ test("(page) « Repartir d'une setlist passée » : la plus récente d'abord, «
     category: CULTE,
     ownerId: MUSICIENNE.uid,
   });
-  await expect(page.getByLabel("Tonalité de Abba Père")).toBeVisible();
-  if (await enDeuxColonnes(page)) await expect(boutonTonalite(groupeTonalites(page, "Abba Père"), "B")).toBeChecked();
-  else await expect(page.getByLabel("Tonalité de Abba Père")).toHaveValue("B");
+  await attendreEditeur(page, "Abba Père");
+  await reglerElement(page, "Abba Père");
+  await expect(boutonTonalite(groupeTonalites(page, "Abba Père"), "B")).toBeChecked();
 });
 
 test("(page) planning vide : le message, et les deux autres entrées restent", async ({ page }) => {

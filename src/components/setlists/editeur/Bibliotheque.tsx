@@ -6,11 +6,14 @@ import { Check, ChevronDown, ChevronUp, Plus, Search, X } from "lucide-react";
 import { chantsDeLaBibliotheque } from "@/lib/setlist/bibliotheque";
 import { KeyPill } from "@/components/ui/key-pill";
 import type { SongIndexEntry } from "@/types/song";
+import { TitreVolet, useFeuille } from "@/components/setlists/editeur/feuille";
 
 // Bibliothèque de l'éditeur (lot U5 bis, T3, planche `creer-piste2-bibliotheque`) :
 // elle prend la place des réglages. Recherche titre, pinyin, artiste, sans limite ;
 // un chant pris reste, marqué « Dans la setlist » (« Ajouté » s'il vient de l'être),
 // sans « + ». Filtres langue, thème, tempo et aperçu des premières lignes : T5.
+// Sur téléphone et tablette en portrait, dans une feuille (T4, planche
+// `creer-piste2-telephone-ajouter`) : « N chants dans la setlist » et « Terminé » en bas.
 
 export function Bibliotheque({
   songs,
@@ -28,6 +31,7 @@ export function Bibliotheque({
   onTermine: () => void;
 }) {
   const { t } = useTranslation();
+  const feuille = useFeuille();
   const [recherche, setRecherche] = useState("");
   const [deplie, setDeplie] = useState<string | null>(null);
   const resultats = useMemo(
@@ -38,14 +42,16 @@ export function Bibliotheque({
   return (
     <div className="flex min-h-full flex-col">
       <div className="flex items-center justify-between gap-4">
-        <h2 className="text-2xl font-bold tracking-tight text-foreground">{t("setlists.editeur.ajouterDesChants")}</h2>
-        <button
-          type="button"
-          onClick={onTermine}
-          className="h-10 rounded-full bg-secondary px-4 text-sm font-semibold text-foreground transition-colors hover:bg-secondary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        >
-          {t("setlists.editeur.termine")}
-        </button>
+        <TitreVolet className="text-2xl font-bold tracking-tight text-foreground">{t("setlists.editeur.ajouterDesChants")}</TitreVolet>
+        {!feuille && (
+          <button
+            type="button"
+            onClick={onTermine}
+            className="h-10 rounded-full bg-secondary px-4 text-sm font-semibold text-foreground transition-colors hover:bg-secondary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            {t("setlists.editeur.termine")}
+          </button>
+        )}
       </div>
 
       <div className="relative mt-5">
@@ -144,9 +150,22 @@ export function Bibliotheque({
         </ul>
       )}
 
-      <p className="sticky bottom-0 mt-auto border-t border-border bg-background py-3 text-[13px] text-muted-foreground">
-        {t("setlists.editeur.aideBibliotheque")}
-      </p>
+      {feuille ? (
+        <div className="sticky bottom-0 mt-auto flex items-center justify-between gap-3 border-t border-border bg-background py-3">
+          <p className="text-sm font-semibold text-foreground">{t("setlists.editeur.nDansLaSetlist", { count: pris.size })}</p>
+          <button
+            type="button"
+            onClick={onTermine}
+            className="h-11 rounded-full bg-foreground px-6 text-sm font-semibold text-background transition-colors hover:bg-foreground/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          >
+            {t("setlists.editeur.termine")}
+          </button>
+        </div>
+      ) : (
+        <p className="sticky bottom-0 mt-auto border-t border-border bg-background py-3 text-[13px] text-muted-foreground">
+          {t("setlists.editeur.aideBibliotheque")}
+        </p>
+      )}
     </div>
   );
 }

@@ -435,7 +435,51 @@ Choix faits faute de réponse écrite :
 - Une étape ajoutée garde un uid `<section>-<chiffres>` comme aujourd'hui : `structureOverride` écrit les uids et
   `resolveStructureOverride` les relit sous cette forme.
 
-Reste : T4 (feuilles téléphone et tablette portrait, retrait de l'ancienne page et de « Sélectionner »), T5
-(bibliothèque complète : filtres, aperçu, « + » entre deux éléments).
-Timothée : aucune règle Firestore à publier pour T1, T2 ni T3 ; relire les libellés 中文 de `setlists.entree` et
-`setlists.editeur`. Le correctif `jianpuChords` (commit à lui seul) peut partir sur `main` sur son ordre, avant le reste du lot.
+**06/10/2026 — T4 faite** (piste 2 sur téléphone et tablette en portrait ; l'ancienne page et « Sélectionner »
+disparaissent), commit « feat(U5bis): T4 — … » sur la même branche.
+
+- `SetlistForm` n'a plus que deux dispositions : `EditeurDeuxColonnes` (T3) ou `EditeurFeuilles`
+  (`src/components/setlists/editeur/EditeurFeuilles.tsx`). Ce que montre le volet (réglages du chant, de la transition,
+  de la fusion ; choix à fusionner ; bibliothèque) est sorti dans `useVolet.tsx`, partagé par les deux ; `feuille.tsx`
+  dit au contenu qu'il est dans une feuille (titre du dialogue, « OK »). L'état et les écritures ne bougent pas
+  (`buildSetlistItems`).
+- Petits écrans (planches `creer-piste2-telephone-setlist`, `-telephone`, `-telephone-ajouter`, `-tablette`) :
+  « ‹ Nouvelle setlist » (ou « ‹ Modifier la setlist », dont le retour envoie le changement en cours comme
+  « Terminé »), titre, puces, notes, la liste courte, « + Transition », « Toucher un chant ouvre ses réglages ; la
+  poignée change l'ordre. » ; barre du bas : repère, « Ajouter des chants », « Publier » à la couleur du culte ou
+  « Terminé ». Toucher un élément ouvre une feuille `Drawer` titrée « n · Titre » avec « OK » (glisser vers le bas,
+  voile, Échap) ; le focus y entre, puis revient à la ligne (ou à « Ajouter des chants »). « Fusionner » remplace le
+  contenu de la même feuille (« ‹ Retour », « Annuler », « Fusionner (n) ») ; la Dernière phrase s'ouvre par-dessus.
+  Bibliothèque en feuille presque pleine hauteur : « N chants dans la setlist », « Terminé ».
+- Retirés : l'ancienne page de `SetlistForm` (recherche limitée à 20, mode « Sélectionner », lignes dépliées),
+  `SongRow`, `FusionRow`, `TransitionRow` et leurs aides de `SetlistFormRows.tsx` (restent les sous-éditeurs repris par
+  le volet et `SectionStructureEditor` de « Ma version ») ; libellés devenus inutiles (`selectMode`, `cancelSelect`,
+  `mergeButton`, `fusionExpand`, `emptySongs`, `allSongsAdded`, `notesLabel`, `songOriginalKey`). Nouveaux : `ok`,
+  `retour`, `aideListe`, `listeVide`, `nDansLaSetlist` (FR et 中文).
+- Tests (écrits avant, vus rouges — 7 sur 7 sur téléphone —, puis verts) : `setlist-editeur-piste2.spec.ts` (liste et
+  barre du bas, feuille titrée, « OK » et Échap rendent le focus, création sans rien d'ouvert ; les tests de T3 valent
+  désormais pour les deux dispositions), `setlist-fusionner.spec.ts` (choix dans la même feuille, « ‹ Retour » ; les
+  tests de T3 courent partout), `setlist-bibliotheque.spec.ts` (feuille, compteur, « Terminé » et Échap). Aide
+  `tests/helpers/editeurSetlist.ts` réécrite pour la seule piste 2 (`attendreEditeur`, `fermerFeuille`,
+  `ouvrirBibliotheque`, `ajouterChant`) ; specs existantes retouchées aux sélecteurs seulement.
+- Vérifié le 06/10 : `setlist-editeur-piste2`, `setlist-fusionner`, `setlist-bibliotheque`,
+  `setlist-pour-quel-service`, `setlist-editor`, `setlist-history`, `coup-d-oeil`, `fusions-dp`, `recommended-key`,
+  `harmonie-jianpu` — 495 verts, 23 sautés (une disposition seulement), cinq projets (deux échecs de `setlist-history`
+  sur petits écrans, un champ touché sous la feuille ouverte : test corrigé, revu vert) ; `back-office-coupe`,
+  `navigation-grand-ecran`, `setlist-deux-volets` — 202 verts ; `tsc` propre, lint sans erreur ni avertissement
+  nouveau. Captures regardées (téléphone, tablette en portrait) et comparées aux planches.
+
+Choix faits faute de réponse écrite :
+- Petits écrans : rien ne s'ouvre d'office (la bibliothèque d'office de Q8 est « sur grand écran ») ; une setlist vide
+  dit « Aucun chant pour l'instant. » et la barre du bas porte « Ajouter des chants ».
+- « Retirer » dans une feuille la ferme (sur grand écran, le suivant est choisi).
+- La ligne n'est en encre (`aria-current`) que tant que sa feuille est ouverte (la planche n'en montre pas).
+- « N chants dans la setlist » compte les chants distincts, ceux des fusions compris.
+- Glisser une pastille de structure ou un passage du mélange ne tire pas la feuille (`data-vaul-no-drag`) ; la
+  feuille se tire par sa poignée et son haut.
+- Tablette en portrait : feuille et liste bornées à 768 px de large (`max-w-3xl`), centrées.
+
+Reste : T5 (bibliothèque complète : filtres, aperçu, « + » entre deux éléments).
+Timothée : aucune règle Firestore à publier pour T1 à T4 ; relire les libellés 中文 de `setlists.entree` et
+`setlists.editeur` (nouveaux en T4 : `ok` « 好 », `retour`, `aideListe`, `listeVide`, `nDansLaSetlist`). Le correctif
+`jianpuChords` (commit à lui seul) peut partir sur `main` sur son ordre, avant le reste du lot.

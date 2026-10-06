@@ -1,6 +1,6 @@
-import { expect, test, type Page, type TestInfo } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeDb, type FakeProfile } from "./helpers/fakeSession";
-import { deuxColonnesAttendues, listeCourte, reglerElement, volet } from "./helpers/editeurSetlist";
+import { attendreEditeur, deuxColonnesAttendues, listeCourte, ouvrirBibliotheque, reglerElement, volet } from "./helpers/editeurSetlist";
 import { readFileSync } from "fs";
 import { chantsDeLaBibliotheque, trancheDeTempo, type FiltresBibliotheque } from "../src/lib/setlist/bibliotheque";
 import { insererA, type FormListItem } from "../src/lib/setlist/formItems";
@@ -131,10 +131,11 @@ test("(pur) deux ajouts à la suite au même « + » gardent leur ordre", () => 
   expect(uids(items)).toEqual(["a", "x", "y", "b"]);
 });
 
-// ─── Tranche T3 : la bibliothèque dans le volet, grands écrans ──────────────
+// ─── Tranches T3 et T4 : la bibliothèque dans le volet ou en feuille ────────
 // Recherche, « Dans la setlist », « Ajouté », ajout à la fin dans la tonalité
-// recommandée, compteur. Filtres, aperçu et « + » entre deux chants : T5.
-// Téléphone et tablette en portrait (feuille) : T4.
+// recommandée, compteur. Grands écrans : à la place des réglages (T3) ;
+// téléphone et tablette en portrait : une feuille (T4). Filtres, aperçu et
+// « + » entre deux chants : T5.
 
 const MUSICIENNE: FakeProfile = {
   uid: "uid-musicienne",
@@ -162,15 +163,13 @@ const SETLIST = {
   ],
 };
 
-async function ouvrirBibliotheque(page: Page, testInfo: TestInfo) {
-  test.skip(!deuxColonnesAttendues(testInfo), "grand écran seulement : la bibliothèque en feuille vient en T4");
+async function ouvrirLaBibliotheque(page: Page) {
   await page.route(/docs\.google\.com\/spreadsheets/, (route) =>
     route.fulfill({ status: 200, contentType: "text/csv", body: "" }),
   );
   const db = await signInAs(page, MUSICIENNE, { [SETLIST_DOC]: SETLIST }, `/setlists/${SETLIST_ID}/edit`);
-  await expect(page.locator("[data-editeur-deux-colonnes]")).toBeVisible();
-  await page.locator("[data-colonne-setlist]").getByRole("button", { name: "Ajouter des chants" }).click();
-  await expect(volet(page).getByRole("heading", { name: "Ajouter des chants" })).toBeVisible();
+  await attendreEditeur(page, "Abba Père");
+  await ouvrirBibliotheque(page);
   return db;
 }
 
@@ -178,8 +177,8 @@ const recherche = (page: Page) => volet(page).getByPlaceholder("Chercher un chan
 const resultats = (page: Page) => volet(page).locator("[data-resultat]");
 const items = (db: FakeDb) => (db.doc(SETLIST_DOC)?.items ?? []) as { songSlug: string; keyOverride: string | null }[];
 
-test("grand écran : la recherche trouve par titre, pinyin et artiste ; le compteur suit", async ({ page }, testInfo) => {
-  await ouvrirBibliotheque(page, testInfo);
+test("la recherche trouve par titre, pinyin et artiste ; le compteur suit", async ({ page }) => {
+  await ouvrirLaBibliotheque(page);
   await expect(recherche(page)).toBeFocused();
   await expect(volet(page).getByText(`${INDEX.length} chants`)).toBeVisible();
   await recherche(page).fill("Je reviens au cœur");
@@ -192,8 +191,8 @@ test("grand écran : la recherche trouve par titre, pinyin et artiste ; le compt
   await expect(volet(page).getByText(n === 1 ? "1 chant" : `${n} chants`, { exact: true })).toBeVisible();
 });
 
-test("grand écran : un chant pris est « Dans la setlist », sans « + » ; un ajout dit « Ajouté », à la fin, dans la recommandée", async ({ page }, testInfo) => {
-  const db = await ouvrirBibliotheque(page, testInfo);
+test("un chant pris est « Dans la setlist », sans « + » ; un ajout dit « Ajouté », à la fin, dans la recommandée", async ({ page }, testInfo) => {
+  const db = await ouvrirLaBibliotheque(page);
   await recherche(page).fill("Abba Père");
   const abba = resultats(page).filter({ hasText: "Abba Père" }).first();
   await expect(abba).toContainText("Dans la setlist");
@@ -212,7 +211,8 @@ test("grand écran : un chant pris est « Dans la setlist », sans « + » ; un 
 });
 
 test("grand écran : « Terminé », Échap ou un élément touché rendent les réglages", async ({ page }, testInfo) => {
-  await ouvrirBibliotheque(page, testInfo);
+  test.skip(!deuxColonnesAttendues(testInfo), "grand écran seulement : la bibliothèque à la place des réglages");
+  await ouvrirLaBibliotheque(page);
   await volet(page).getByRole("button", { name: "Terminé" }).click();
   await expect(volet(page).getByRole("heading", { name: "1 · Abba Père" })).toBeVisible();
 
@@ -224,4 +224,32 @@ test("grand écran : « Terminé », Échap ou un élément touché rendent les 
   await page.locator("[data-colonne-setlist]").getByRole("button", { name: "Ajouter des chants" }).click();
   await reglerElement(page, "Abba Père");
   await expect(volet(page).getByRole("heading", { name: "1 · Abba Père" })).toBeVisible();
+});
+
+test("petits écrans : la bibliothèque en feuille — « N chants dans la setlist », « Terminé » la ferme et rend le focus ; Échap aussi", async ({ page }, testInfo) => {
+  test.skip(deuxColonnesAttendues(testInfo), "téléphone et tablette en portrait seulement : feuilles");
+  await ouvrirLaBibliotheque(page);
+  const feuille = page.getByRole("dialog", { name: "Ajouter des chants" });
+  await expect(feuille).toBeVisible();
+  await expect(recherche(page)).toBeFocused();
+  await expect(feuille.getByText("1 chant dans la setlist", { exact: true })).toBeVisible();
+  await recherche(page).fill("Je reviens au cœur");
+  await feuille.getByRole("button", { name: "Ajouter Je reviens au cœur", exact: true }).click();
+  await expect(feuille.getByText("2 chants dans la setlist", { exact: true })).toBeVisible();
+  // Presque toute la hauteur de l'écran.
+  const h = (await feuille.boundingBox())!.height;
+  expect(h).toBeGreaterThan(page.viewportSize()!.height * 0.85);
+  await page.waitForTimeout(500);
+  await page.screenshot({ path: testInfo.outputPath(`bibliotheque-feuille-${testInfo.project.name}.png`) });
+
+  await feuille.getByRole("button", { name: "Terminé", exact: true }).click();
+  await expect(volet(page)).toHaveCount(0);
+  const ajouter = page.locator("[data-ouvrir-bibliotheque]");
+  await expect(ajouter).toBeFocused();
+  await expect(listeCourte(page).locator("[data-element]").last()).toContainText("Je reviens au cœur");
+
+  await ajouter.click();
+  await expect(recherche(page)).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(volet(page)).toHaveCount(0);
 });

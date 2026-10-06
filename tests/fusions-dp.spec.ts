@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { readFileSync } from "fs";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
-import { ouvrirStructure, reglerElement, voirChantsFusion } from "./helpers/editeurSetlist";
+import { attendreEditeur, reglerElement } from "./helpers/editeurSetlist";
 import { enDeuxVolets, ouvrirPartitions } from "./helpers/setlist";
 import { withoutLastPhrases } from "../src/lib/setlist/lastPhrase";
 import { diffSetlists } from "../src/lib/setlist/history";
@@ -220,17 +220,16 @@ type Saved = { items?: { fusionSongs?: { contentOverride?: string; structureOver
 
 async function ouvrirEditeur(page: Page, fusion: Record<string, unknown>) {
   const db = await ouvrir(page, setlist([item({ songSlug: "一生爱你", position: 1 }), fusion]), `/setlists/${SETLIST_ID}/edit`);
-  await expect(page.getByText("Abba Père / 一生爱你").first()).toBeVisible();
+  await attendreEditeur(page, "Abba Père / 一生爱你");
   return db;
 }
 
 test("éditeur, fusion à la suite : un chant de la fusion reçoit sa Dernière phrase", async ({ page }) => {
   const db = await ouvrirEditeur(page, FUSION_SUITE);
-  await voirChantsFusion(page, "Abba Père / 一生爱你");
+  await reglerElement(page, "Abba Père / 一生爱你");
   const carte = page.locator("[data-fusion-song]").filter({ hasText: "Abba Père" });
-  await ouvrirStructure(carte);
   await carte.getByRole("button", { name: "Dernière phrase", exact: true }).click();
-  const sheet = page.getByRole("dialog");
+  const sheet = page.getByRole("dialog", { name: "Dernière phrase (Dp)" });
   await sheet.getByLabel("Section").selectOption("chorus-3");
   await sheet.getByRole("button", { name: "Ajouter", exact: true }).click();
   await expect
@@ -245,7 +244,7 @@ test("éditeur, fusion mélangée : la Dernière phrase s'ajoute à la suite du 
   const db = await ouvrirEditeur(page, FUSION_MIXTE);
   await reglerElement(page, "Abba Père / 一生爱你");
   await page.getByRole("button", { name: "Dernière phrase", exact: true }).first().click();
-  const sheet = page.getByRole("dialog");
+  const sheet = page.getByRole("dialog", { name: "Dernière phrase (Dp)" });
   // Proposée d'office : le dernier passage d'Abba Père dans le mélange.
   await expect(sheet.getByLabel("Section")).toHaveValue("chorus-3");
   await sheet.getByRole("button", { name: "Ajouter", exact: true }).click();

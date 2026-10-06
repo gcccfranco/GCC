@@ -76,6 +76,7 @@ function LigneElement({
   const bouton = (contenu: ReactNode, className = "") => (
     <button
       type="button"
+      data-ligne
       aria-label={titre}
       aria-current={choisi ? "true" : undefined}
       onClick={onChoisir}
@@ -87,7 +88,7 @@ function LigneElement({
 
   if (isFormTransition(item)) {
     return (
-      <li ref={setNodeRef} style={style} data-element className={`relative ${isDragging ? "z-20" : ""}`}>
+      <li ref={setNodeRef} style={style} data-element data-uid={item.uid} className={`relative ${isDragging ? "z-20" : ""}`}>
         <div
           className={`relative flex items-center gap-3 rounded-xl border border-dashed px-4 py-3 ${
             choisi
@@ -112,7 +113,7 @@ function LigneElement({
 
   const fusion = isFormFusion(item) ? item : null;
   return (
-    <li ref={setNodeRef} style={style} data-element className={`relative ${isDragging ? "z-20" : ""}`}>
+    <li ref={setNodeRef} style={style} data-element data-uid={item.uid} className={`relative ${isDragging ? "z-20" : ""}`}>
       <div
         className={`relative flex items-start gap-3 rounded-xl px-3 py-3 ${
           choisi ? "bg-foreground text-background shadow-soft" : "hover:bg-muted/50"
