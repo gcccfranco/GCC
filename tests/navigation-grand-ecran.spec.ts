@@ -277,17 +277,14 @@ const auPoint = (page: Page, x: number, y: number, selecteur: string) =>
 /** La barre du haut d'une setlist : la barre d'outils (un volet, G) ou l'en-tête des deux
  *  volets (lot U5, docs/spec-deux-volets.md, T4) — 900 px utiles au moins à côté de la barre. */
 const barreDeSetlist = (page: Page) => page.locator('[data-testid="barre-outils"], [data-en-tete]');
-const LECTURE = 1440; // --largeur-lecture : les deux volets, centrés au-delà
-
-/** La barre du haut part du bord de la barre latérale (`bord`) ; les deux volets, bornés à
- *  1 440 px, restent centrés dans la zone de contenu au-delà. Le halo part du bord ; rien ne
- *  déborde en largeur. */
+/** La barre du haut part du bord de la barre latérale (`bord`) et fait toute la zone de contenu,
+ *  deux volets compris (retours du 06/10/2026 : plus de borne à 1 440 px, qui laissait une bande
+ *  vide à côté de la barre). Le halo part du bord ; rien ne déborde en largeur. */
 async function barreDeSetlistAuBord(page: Page, largeur: number, bord: number) {
   const barre = barreDeSetlist(page);
   const deuxVolets = largeur - bord >= 900;
-  const contenu = largeur - bord;
-  const x = deuxVolets ? bord + Math.max(0, (contenu - LECTURE) / 2) : bord;
-  const l = deuxVolets ? Math.min(contenu, LECTURE) : contenu;
+  const x = bord;
+  const l = largeur - bord;
   await expect(page.locator("[data-en-tete]"), `${largeur} px : ${deuxVolets ? "deux volets" : "un volet"}`).toHaveCount(deuxVolets ? 1 : 0);
   await expect.poll(async () => Math.round((await barre.boundingBox())!.x), `${largeur} px : barre du haut`).toBe(Math.round(x));
   expect(Math.round((await barre.boundingBox())!.width), `${largeur} px : sa largeur`).toBe(Math.round(l));

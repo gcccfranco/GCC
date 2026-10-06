@@ -50,6 +50,8 @@ const SPECS_GRAND_ECRAN = [
   /setlist-fusionner\.spec\.ts/,
   // Lot U7 (spec-statistiques.md, Tests) : la page Statistiques et son entrée du menu.
   /statistiques\.spec\.ts/,
+  // Retours du 06/10/2026 : barre réduite, aucune bande vide entre la barre et la page.
+  /agencement-barre-reduite\.spec\.ts/,
 ];
 
 export default defineConfig({

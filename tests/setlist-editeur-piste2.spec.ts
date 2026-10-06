@@ -200,6 +200,17 @@ test("toucher un chant ouvre ses réglages ; tonalités écrites comme aujourd'h
   await expect.poll(() => itemsEnBase(db).map((i) => i.keyOverride), { timeout: 10_000 }).toEqual(["B", null, null, null]);
 });
 
+// Retours du 06/10/2026 : « 升调 » s'affichait en français (clé introduite par T3).
+for (const [langue, libelle] of [["fr", "Modulation"], ["zh-CN", "升调"]] as const) {
+  test(`Par section : le bouton de la modulation dit « ${libelle} » (${langue})`, async ({ page }) => {
+    if (langue === "zh-CN") await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
+    await ouvrirT3(page);
+    await reglerElement(page, "Abba Père");
+    const bouton = ligneSection(volet(page), "Refrain").first().getByTitle("Modulation (升调)");
+    await expect(bouton).toHaveText(libelle);
+  });
+}
+
 test("structure en pastilles — retirer, ajouter, Dernière phrase ; note de section ; note du chant", async ({ page }) => {
   const db = await ouvrirT3(page);
   await reglerElement(page, "Abba Père");

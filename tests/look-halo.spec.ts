@@ -177,7 +177,7 @@ test.describe("halo d'en-tête (5C1, V6)", () => {
     });
   }
 
-  test("un seul halo par page, et pas de halo hors des écrans prévus", async ({ page }) => {
+  test("un seul halo par page ; ailleurs, le halo par défaut (retours du 06/10/2026)", async ({ page }) => {
     await page.goto("/login");
     await page.locator('button[type="submit"]').first().waitFor();
     await expect(page.getByTestId("halo")).toHaveCount(0);
@@ -186,9 +186,12 @@ test.describe("halo d'en-tête (5C1, V6)", () => {
     await signInAs(page, MUSICIEN, {}, "/planning");
     await page.getByRole("heading", { level: 1, name: "Planning" }).waitFor();
     await expect(page.getByTestId("halo")).toHaveCount(1);
+    await expect(page.getByTestId("halo-defaut")).toBeHidden();
+    // Mes services n'a pas de couleur à lui : le halo par défaut, à l'encre (halo-partout.spec.ts).
     await page.goto("/mes-services");
     await page.getByRole("heading", { level: 1 }).first().waitFor();
     await expect(page.getByTestId("halo")).toHaveCount(0);
+    await expect(page.getByTestId("halo-defaut")).toBeVisible();
   });
 
   // Un ancêtre transformé devient le repère des éléments fixes : si le fondu d'entrée des

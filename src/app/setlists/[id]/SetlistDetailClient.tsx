@@ -1526,8 +1526,9 @@ export function SetlistDetailClient() {
         // ── Deux volets (docs/spec-deux-volets.md, T4, planche `setlist-deux-volets`) :
         // l'en-tête pleine largeur colle en haut et s'escamote au défilement (Q7) ; à
         // gauche le sommaire (Q6), qui monte avec lui ; à droite toutes les partitions.
-        // Bornés par `--largeur-lecture` et centrés dans la zone de contenu (U4).
-        <div className="relative mx-auto max-w-[var(--largeur-lecture)]">
+        // Toute la zone de contenu, sans borne (retours du 06/10/2026 : bornés à
+        // `--largeur-lecture` et centrés, ils laissaient une bande vide à côté de la barre).
+        <div className="relative">
           <header
             ref={enTeteRef}
             data-en-tete

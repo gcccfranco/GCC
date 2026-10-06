@@ -88,6 +88,10 @@
   /* « Moi » (V7) : l'écran n'appartient à aucune section, donc l'encre — plus discrète
      que les couleurs, un gris franc se lirait comme une salissure et non comme une lumière. */
   .halo-moi::before, :root:has(.halo-moi) .barre-halo::before { opacity: 0.08; }
+  /* Le halo par défaut (`HaloParDefaut`, retours du 06/10/2026) : l'encre de Moi, sur les pages
+     sans couleur à elles ; il s'efface dès qu'une page pose son propre halo. */
+  .halo-defaut::before, :root:not(:has(.halo:not(.halo-defaut, .barre-halo))) .barre-halo::before { opacity: 0.08; }
+  :root:has(.halo:not(.halo-defaut, .barre-halo)) .halo-defaut { display: none; }
   .halo-chant::before, :root:has(.halo-chant) .barre-halo::before { left: auto; right: -80px; top: calc(-60px + var(--sat)); width: 300px; height: 220px; opacity: 0.12; filter: blur(44px); }
   /* Grand écran (ordinateur, tablette en paysage ; tranché le 20/09/2026 au soir) : la
      colonne de contenu est centrée, le halo des planches resterait coincé dans le coin.
@@ -604,9 +608,10 @@
 /* Deux volets : mêmes conditions que `useDeuxVolets` (Q1), au moins 900 px utiles — tablette
    couchée et ordinateur barre réduite toujours, barre dépliée dès 1 148 px. Trois copies du
    même bloc : une condition de média ne s'écrit pas dans un sélecteur. Liste de 320 à 400 px,
-   qui défile seule dans son volet ; volets bornés par `--largeur-lecture` et centrés (U4). */
+   qui défile seule dans son volet ; les volets prennent toute la zone de contenu (retours du
+   06/10/2026 : bornés à `--largeur-lecture` et centrés, ils laissaient une bande vide à côté de la barre). */
 @media screen and (pointer: coarse) and (orientation: landscape) and (min-width: 1024px) {
-  .chants-volets { display: grid; grid-template-columns: clamp(320px, 37%, 400px) minmax(0, 1fr); max-width: var(--largeur-lecture); margin-inline: auto; --halo-chants: var(--sec-verse); }
+  .chants-volets { display: grid; grid-template-columns: clamp(320px, 37%, 400px) minmax(0, 1fr); --halo-chants: var(--sec-verse); }
   .chants-volets > .chants-liste { display: block; position: sticky; top: var(--nav-h); z-index: 1; height: calc(100svh - var(--nav-h)); overflow-y: auto; overscroll-behavior: contain; border-right: 1px solid hsl(var(--border)); background-color: hsl(var(--background)); }
   .chants-volets > .chants-chant { display: block; min-width: 0; }
   .halo-chants::before { left: auto; right: -140px; opacity: 0.12; }
@@ -615,7 +620,7 @@
   .chants-chant .song-zoom, .chants-chant .video-chant { margin-top: 0; }
 }
 @media screen and (pointer: fine) and (min-width: 1024px) {
-  :root[data-barre="reduite"] .chants-volets { display: grid; grid-template-columns: clamp(320px, 37%, 400px) minmax(0, 1fr); max-width: var(--largeur-lecture); margin-inline: auto; --halo-chants: var(--sec-verse); }
+  :root[data-barre="reduite"] .chants-volets { display: grid; grid-template-columns: clamp(320px, 37%, 400px) minmax(0, 1fr); --halo-chants: var(--sec-verse); }
   :root[data-barre="reduite"] .chants-volets > .chants-liste { display: block; position: sticky; top: var(--nav-h); z-index: 1; height: calc(100svh - var(--nav-h)); overflow-y: auto; overscroll-behavior: contain; border-right: 1px solid hsl(var(--border)); background-color: hsl(var(--background)); }
   :root[data-barre="reduite"] .chants-volets > .chants-chant { display: block; min-width: 0; }
   :root[data-barre="reduite"] .halo-chants::before { left: auto; right: -140px; opacity: 0.12; }
@@ -624,7 +629,7 @@
   :root[data-barre="reduite"] .chants-chant .song-zoom, :root[data-barre="reduite"] .chants-chant .video-chant { margin-top: 0; }
 }
 @media screen and (pointer: fine) and (min-width: 1148px) {
-  .chants-volets { display: grid; grid-template-columns: clamp(320px, 37%, 400px) minmax(0, 1fr); max-width: var(--largeur-lecture); margin-inline: auto; --halo-chants: var(--sec-verse); }
+  .chants-volets { display: grid; grid-template-columns: clamp(320px, 37%, 400px) minmax(0, 1fr); --halo-chants: var(--sec-verse); }
   .chants-volets > .chants-liste { display: block; position: sticky; top: var(--nav-h); z-index: 1; height: calc(100svh - var(--nav-h)); overflow-y: auto; overscroll-behavior: contain; border-right: 1px solid hsl(var(--border)); background-color: hsl(var(--background)); }
   .chants-volets > .chants-chant { display: block; min-width: 0; }
   .halo-chants::before { left: auto; right: -140px; opacity: 0.12; }

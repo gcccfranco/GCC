@@ -65,11 +65,11 @@ const EVENEMENT = {
 const DOCS = { "setlists/sl-1": SETLIST, "evenements/ev-1": EVENEMENT };
 
 /** Jeudi 1er octobre 2026 : « Ce dimanche » est le 4 octobre. */
-async function ouvrir(page: Page, profil: FakeProfile = RUTH) {
+async function ouvrir(page: Page, profil: FakeProfile = RUTH, feuilles: Record<string, string> = FEUILLES) {
   await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
   await page.route(/docs\.google\.com\/spreadsheets/, (route) => {
     const feuille = new URL(route.request().url()).searchParams.get("sheet") ?? "";
-    return route.fulfill({ status: 200, contentType: "text/csv", body: FEUILLES[feuille] ?? "" });
+    return route.fulfill({ status: 200, contentType: "text/csv", body: feuilles[feuille] ?? "" });
   });
   await signInAs(page, profil, DOCS, "/planning");
 }
@@ -235,6 +235,27 @@ test.describe("Accueil A : les quatre dispositions", () => {
     await expect(cd.getByText("Soirée louange")).toBeVisible();
     // Le verset reste en bas (question 1).
     await expect(page.getByText("— Colossiens 3 : 23-24")).toBeVisible();
+  });
+
+  // Retours du 06/10/2026 : « Timothée C. » passait à la ligne au milieu de sa pastille (carte
+  // Groupes, « Musiciens Timothée / C. »). La pastille reste d'un seul tenant, quelle que soit la
+  // place laissée sur la ligne : on rétrécit la ligne pixel par pixel.
+  test("la pastille de la personne ne se coupe jamais au milieu du nom", async ({ page }) => {
+    await ouvrir(page, RUTH, { ...FEUILLES, Paix_T4: groupe("Clara B.", "Joël F., Ruth K.") });
+    const ligne = ceDimanche(page).getByTestId("ligne-groupe").first().locator("p");
+    const pastille = ligne.getByTestId("moi");
+    await expect(pastille).toHaveText("Ruth K.");
+    const coupees = await ligne.evaluate((p) => {
+      const b = p.querySelector('[data-testid="moi"]')!;
+      const largeurs: number[] = [];
+      for (let w = 60; w <= 320; w += 2) {
+        (p as HTMLElement).style.width = `${w}px`;
+        if (b.getClientRects().length > 1) largeurs.push(w);
+      }
+      (p as HTMLElement).style.width = "";
+      return largeurs;
+    });
+    expect(coupees, "largeurs de ligne où la pastille se coupe").toEqual([]);
   });
 
   test("disposition : ce dimanche à gauche et pour moi à droite en grand ; pour moi d'abord ailleurs", async ({ page }, info) => {

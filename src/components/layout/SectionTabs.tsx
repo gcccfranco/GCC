@@ -24,7 +24,9 @@ export type SectionTab = { href: string; label: string; color?: string }
 const teinte = (color?: string) =>
   color ? { background: `color-mix(in srgb, ${color} 14%, transparent)`, color } : undefined
 
-export function SectionTabs({ tabs, rootHref, menuLabel }: { tabs: SectionTab[]; rootHref: string; menuLabel?: string }) {
+/** `pleineLargeur` : la section prend toute la zone de contenu (Planning, retours du 06/10/2026) ;
+ *  la rangée part alors du même bord que la page, au lieu d'être centrée sur 1 080 px. */
+export function SectionTabs({ tabs, rootHref, menuLabel, pleineLargeur = false }: { tabs: SectionTab[]; rootHref: string; menuLabel?: string; pleineLargeur?: boolean }) {
   const pathname = usePathname() || ""
   const scrollVisible = useScrollDirection()
   const tabRefs = useRef<(HTMLAnchorElement | null)[]>([])
@@ -55,7 +57,7 @@ export function SectionTabs({ tabs, rootHref, menuLabel }: { tabs: SectionTab[];
   return (
     <div data-testid="barre-section" className={`sticky top-[calc(var(--nav-h)-var(--recouvrement-navbar))] [--barre-top:calc(var(--nav-h)-var(--recouvrement-navbar))] [--barre-left:var(--barre-laterale)] z-40 material-chrome print:hidden transition-transform duration-300 ${scrollVisible ? "translate-y-0" : "-translate-y-[calc(100%+var(--nav-h))]"}`}>
       <FondDeBarre sousNavbar />
-      <div className="max-w-[1080px] mx-auto px-4">
+      <div className={pleineLargeur ? "px-4" : "max-w-[1080px] mx-auto px-4"}>
         {menuLabel && (
           <div className="md:hidden py-1">
             <button

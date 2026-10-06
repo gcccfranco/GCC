@@ -22,6 +22,7 @@ export function PlanningTabs() {
   return (
     <SectionTabs
       rootHref="/planning"
+      pleineLargeur
       menuLabel={t("planning.choisirPlanning")}
       tabs={PLANNING_TABS.map((tab) => ({ href: tab.href, label: t(`planning.tabs.${tab.key}`), color: tab.color }))}
     />

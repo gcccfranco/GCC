@@ -4,6 +4,7 @@ import { I18nProvider } from "@/lib/I18nProvider";
 import { Navbar } from "@/components/layout/Navbar";
 import { MobileTabBar } from "@/components/layout/MobileTabBar";
 import { BarreLaterale } from "@/components/layout/BarreLaterale";
+import { HaloParDefaut } from "@/components/layout/HaloParDefaut";
 import { Accueil } from "@/components/onboarding/Accueil";
 import { PageTransition } from "@/components/layout/PageTransition";
 import { LyricsCopyListener } from "@/components/song/LyricsCopyListener";
@@ -75,6 +76,8 @@ export default function RootLayout({
               {/* `--barre-laterale` : place de la barre latérale sur grand écran (0 ailleurs).
                   Rien ici ne doit devenir repère ni pile (ni transform, filter, contain,
                   container-type, z-index) : le mode louange doit couvrir les barres (Q9). */}
+              {/* Avant `main` : le halo d'une page, plus bas, l'emporte sur lui. */}
+              <HaloParDefaut />
               <main className="pt-[var(--nav-h)] pl-[var(--barre-laterale)]">
                 <PageTransition>{children}</PageTransition>
               </main>

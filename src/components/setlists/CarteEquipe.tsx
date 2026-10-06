@@ -9,7 +9,8 @@ import { useTranslation } from "react-i18next";
 import { porteLeNom } from "@/lib/planning/accueil";
 import type { RoleEquipe } from "@/lib/setlist/equipeDuService";
 
-/** Les noms d'une case, la personne connectée en évidence. */
+/** Les noms d'une case, la personne connectée en évidence.
+ *  La pastille reste d'un seul tenant (retours du 06/10/2026 : « Timothée / C. »). */
 function Noms({ valeur, monNom }: { valeur: string; monNom: string }) {
   return (
     <>
@@ -17,7 +18,7 @@ function Noms({ valeur, monNom }: { valeur: string; monNom: string }) {
         <Fragment key={i}>
           {i > 0 && ", "}
           {porteLeNom(n, monNom)
-            ? <b data-testid="moi" className="rounded-md bg-foreground px-1.5 py-px font-semibold text-background">{n}</b>
+            ? <b data-testid="moi" className="inline-block whitespace-nowrap rounded-md bg-foreground px-1.5 py-px font-semibold text-background">{n}</b>
             : n}
         </Fragment>
       ))}

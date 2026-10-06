@@ -11,6 +11,8 @@ import { disposerVolets, estSurLaListe } from "@/lib/deuxVolets";
 // pas. En grand (règle de U5 Q1, `useDeuxVolets`) : la liste à gauche, collante et qui défile
 // seule ; à droite la page, ou, sur l'adresse de la liste, le premier élément (Q3). Sinon un
 // volet : la liste, puis la page, comme aujourd'hui. La règle elle-même : `disposerVolets`.
+// Les deux volets prennent toute la zone de contenu, sans borne (retours du 06/10/2026 : bornés à
+// `--largeur-lecture` et centrés, ils laissaient une bande vide à côté de la barre réduite).
 
 export function DeuxVolets({
   racine,
@@ -41,7 +43,7 @@ export function DeuxVolets({
   return (
     <div
       data-deux-volets={deuxVolets ? "" : undefined}
-      className={deuxVolets ? "mx-auto flex max-w-[var(--largeur-lecture)] items-start" : undefined}
+      className={deuxVolets ? "flex items-start" : undefined}
       style={deuxVolets ? ({ "--largeur-liste": `${largeurListe}px` } as CSSProperties) : undefined}
     >
       {volets.liste && (

@@ -24,7 +24,8 @@ function Point({ couleur, className = "" }: { couleur: string; className?: strin
   return <span aria-hidden className={`h-2 w-2 shrink-0 rounded-full ${className}`} style={{ background: couleur }} />
 }
 
-/** Une case de planning, la personne connectée en évidence (pastille d'encre). */
+/** Une case de planning, la personne connectée en évidence (pastille d'encre).
+ *  La pastille reste d'un seul tenant (retours du 06/10/2026 : « Timothée / C. »). */
 function Noms({ valeur, monNom }: { valeur: string; monNom: string }) {
   const noms = valeur.split(/\s*,\s*/)
   return (
@@ -33,7 +34,7 @@ function Noms({ valeur, monNom }: { valeur: string; monNom: string }) {
         <Fragment key={i}>
           {i > 0 && ", "}
           {porteLeNom(n, monNom)
-            ? <b data-testid="moi" className="rounded-md bg-foreground px-1.5 py-px font-semibold text-background">{n}</b>
+            ? <b data-testid="moi" className="inline-block whitespace-nowrap rounded-md bg-foreground px-1.5 py-px font-semibold text-background">{n}</b>
             : n}
         </Fragment>
       ))}
