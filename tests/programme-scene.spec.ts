@@ -128,32 +128,40 @@ const C_ALICE = {
   auteurUid: "uid-alice", auteurNom: "Alice Q.", createdAt: "2026-09-20T10:00:00Z", updatedAt: "2026-09-20T10:00:00Z",
 };
 
+/** Pâques · Noël, P5 : une semaine à la fois ; on choisit la semaine dans la liste (ou les pastilles). */
+const choisirSemaine = (page: import("@playwright/test").Page, debut: RegExp) =>
+  page.getByRole("list", { name: "Semaines" }).getByRole("button", { name: debut }).click();
+
 async function openNoel(page: import("@playwright/test").Page, who: FakeProfile, today: string, docs: Record<string, Record<string, unknown>> = {}) {
   await page.clock.setFixedTime(new Date(`${today}T10:00:00`));
   return signInAs(page, who, { "programmes/noel": NOEL, ...docs }, sceneDe(who));
 }
 
-test("entraînements : un bloc par dimanche réservable (saison par défaut, lot U1), en créneaux d'1 h libres, jamais le jour J", async ({ page }) => {
+test("entraînements : une semaine par dimanche réservable (saison par défaut, lot U1), en créneaux d'1 h libres, jamais le jour J", async ({ page }) => {
   await openNoel(page, JO, "2026-10-01");
+  await expect(page.getByRole("list", { name: "Semaines" }).getByRole("button")).toHaveCount(12);
   await expect(page.getByRole("region", { name: "Dimanche 4 octobre" })).toBeVisible();
-  await expect(page.getByRole("region", { name: "Dimanche 20 décembre" })).toBeVisible();
-  await expect(page.getByRole("region", { name: /24 décembre/ })).toHaveCount(0);
   await expect(page.getByRole("region", { name: "Dimanche 4 octobre" }).getByRole("listitem")).toHaveText([
     /14:00\s*Libre/, /15:00\s*Libre/, /16:00\s*Libre/, /17:00\s*Libre/, /18:00\s*Libre/,
   ]);
-  await expect(page.getByRole("button", { name: /^Réserver \d/ })).toHaveCount(12 * 5);
+  await expect(page.getByRole("button", { name: /^Réserver \d/ })).toHaveCount(5);
+  await choisirSemaine(page, /^20 déc\./);
+  await expect(page.getByRole("region", { name: "Dimanche 20 décembre" })).toBeVisible();
+  await expect(page.getByRole("region", { name: /24 décembre/ })).toHaveCount(0);
 });
 
-test("entraînements : les jours passés sont masqués, un lien les montre", async ({ page }) => {
+test("entraînements : les semaines passées sont masquées, un lien les montre", async ({ page }) => {
   await openNoel(page, JO, "2026-11-10");
   await expect(page.getByRole("region", { name: "Dimanche 15 novembre" })).toBeVisible();
   await expect(page.getByRole("region", { name: "Dimanche 4 octobre" })).toHaveCount(0);
-  await page.getByRole("button", { name: "Voir les jours passés (6)" }).click();
+  await page.getByRole("button", { name: "Semaines passées (6)" }).click();
+  await choisirSemaine(page, /^4 oct\./);
   await expect(page.getByRole("region", { name: "Dimanche 4 octobre" })).toBeVisible();
 });
 
 test("réserver : la feuille reprend le créneau choisi dans la grille (lot U1), écrit au nom de l'auteur puis affiché", async ({ page }) => {
   const db = await openNoel(page, JO, "2026-10-01");
+  await choisirSemaine(page, /^11 oct\./);
   const dimanche = page.getByRole("region", { name: "Dimanche 11 octobre" });
   await dimanche.getByRole("button", { name: "Réserver 17:00 – 18:00" }).click();
   const feuille = page.getByRole("dialog");
@@ -326,6 +334,7 @@ test("course perdue : un créneau enregistré au même moment chevauche le mien 
     if (route.request().method() === "POST") db.set("programmes/noel/creneaux/race", { ...C_ALICE, dimanche: "2026-10-11" });
     await route.fallback();
   });
+  await choisirSemaine(page, /^11 oct\./);
   const bloc = page.getByRole("region", { name: "Dimanche 11 octobre" });
   await bloc.getByRole("button", { name: "Réserver 17:00 – 18:00" }).click();
   const feuille = page.getByRole("dialog");

@@ -3,9 +3,9 @@
 // L'onglet d'une fête dans l'App, Évènements › Pâques ou Noël (docs/spec-scene-paques-noel.md, P4,
 // Q4, Q9, Q16, Q17 ; planches `v18-scene-a-membres-*` et `v18-scene-a-sans-saison-*`). L'édition
 // montrée est calculée (`editionCourante`) ; son titre aussi (« Noël 2026 », Q11). À gauche (la
-// liste en carte de `DeuxVolets`) : l'en-tête de l'édition, la carte de son état, les années
-// passées, l'ordre de passage en bas ; à droite : la grille quand on réserve, sinon un ordre de
-// passage en lecture. Sur téléphone et tablette debout, une colonne ; l'ordre de passage s'y
+// liste en carte de `DeuxVolets`) : l'en-tête de l'édition, la carte de son état, « Mes
+// réservations » et les semaines quand on réserve (P5), les années passées, l'ordre de passage en
+// bas ; à droite : la semaine choisie quand on réserve, sinon un ordre de passage en lecture. Sur téléphone et tablette debout, une colonne ; l'ordre de passage s'y
 // ouvre en page (`?vue=ordre`). Les paramètres d'adresse (`?vue=`, `?annee=`) remplacent
 // l'adresse sans entrée d'historique. Rien ne s'écrit ici : ouvrir l'onglet ne crée rien (Q6).
 
@@ -237,13 +237,7 @@ export function FeteClient({ fete }: { fete: Fete }) {
       </div>
     </div>
   )
-  const grille = programme && (creneaux ? (
-    <Entrainements
-      programme={programme} creneaux={creneaux} user={user} profile={profile} onChanged={reload}
-      onConflict={(a, b) => reportConflict(programme.id, [a.id, b.id])}
-    />
-  ) : <p className="text-sm text-muted-foreground">{t("common.loading")}</p>)
-
+  const chargement = <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
   const droite: ReactNode = vueOrdre ? ordreCourant
     : avantOuverture ? (
       <div className="space-y-4">
@@ -251,45 +245,64 @@ export function FeteClient({ fete }: { fete: Fete }) {
         {commentReserver}
       </div>
     )
-      : etat === "ouvertes" ? grille
+      : etat === "ouvertes" ? chargement
         : ordreCourant
 
-  const colonne = (
-    <div className={deuxVolets ? "space-y-5 p-5" : "space-y-5"}>
-      {enTeteEdition}
-      {gerer}
-      {carteEtat}
-      {anneesPassees}
-      {deuxVolets && entreeOrdre && <div className="border-t border-border pt-3">{entreeOrdre}</div>}
-    </div>
-  )
-
-  if (deuxVolets) {
-    return (
-      <DeuxVolets racine={pathname} liste={colonne} premier={droite} largeurListe={400}>
-        {null}
-      </DeuxVolets>
+  /** La page : la colonne de la fête (et, réservations ouvertes, « Mes réservations » et les
+   *  semaines, P5) puis ce qui se lit à droite (la semaine choisie, ou un ordre de passage). */
+  const disposer = (enPlus: ReactNode, aDroite: ReactNode) => {
+    const colonne = (
+      <div className={deuxVolets ? "space-y-5 p-5" : "space-y-5"}>
+        {enTeteEdition}
+        {gerer}
+        {carteEtat}
+        {enPlus}
+        {anneesPassees}
+        {deuxVolets && entreeOrdre && <div className="border-t border-border pt-3">{entreeOrdre}</div>}
+      </div>
     )
-  }
 
-  // Une colonne : l'ordre de passage en page, ou la colonne puis ce qui se lit dessous (l'ordre
-  // de l'année passée choisie, la grille, l'ordre de l'édition), et l'entrée de l'ordre de
-  // passage en carte tout en bas (planche `v18-scene-a-membres-telephone`).
-  if (vueOrdre) {
+    if (deuxVolets) {
+      return (
+        <DeuxVolets racine={pathname} liste={colonne} premier={aDroite} largeurListe={400}>
+          {null}
+        </DeuxVolets>
+      )
+    }
+
+    // Une colonne : l'ordre de passage en page, ou la colonne puis ce qui se lit dessous (l'ordre
+    // de l'année passée choisie, la semaine choisie, l'ordre de l'édition), et l'entrée de l'ordre
+    // de passage en carte tout en bas (planche `v18-scene-a-membres-telephone`).
+    if (vueOrdre) {
+      return (
+        <div className="space-y-3 px-[var(--marge-page)]">
+          <Retour href={pathname}>{titre}</Retour>
+          {ordreCourant}
+        </div>
+      )
+    }
     return (
-      <div className="space-y-3 px-[var(--marge-page)]">
-        <Retour href={pathname}>{titre}</Retour>
-        {ordreCourant}
+      <div className="space-y-5 px-[var(--marge-page)]">
+        {colonne}
+        {aDroite}
+        {entreeOrdre && <div className="raised rounded-2xl p-1">{entreeOrdre}</div>}
       </div>
     )
   }
-  return (
-    <div className="space-y-5 px-[var(--marge-page)]">
-      {colonne}
-      {droite}
-      {entreeOrdre && <div className="raised rounded-2xl p-1">{entreeOrdre}</div>}
-    </div>
-  )
+
+  // Réservations ouvertes (P5) : « Mes réservations » et les semaines dans la colonne, la
+  // semaine choisie à droite (dessous sur une colonne), sauf quand l'ordre de passage s'y lit.
+  if (etat === "ouvertes" && programme && creneaux) {
+    return (
+      <Entrainements
+        programme={programme} creneaux={creneaux} user={user} profile={profile} onChanged={reload}
+        onConflict={(a, b) => reportConflict(programme.id, [a.id, b.id])}
+      >
+        {(m) => disposer(<>{m.mes}{m.semaines}</>, vueOrdre ? ordreCourant : m.semaine)}
+      </Entrainements>
+    )
+  }
+  return disposer(null, droite)
 }
 
 /** Une carte d'annonce de la colonne (planche : icône de calendrier, titre, texte). */

@@ -13,7 +13,7 @@ import { entreesCalendrier, type DonneesCalendrier, type EntreeCalendrier, type 
 import { compteCreneaux, erreursSaison, FAMILLES, lignesDuJour, saisonDe, semainesDe } from "../src/lib/scene/saison";
 import { semaineCourte } from "../src/app/evenements/scene/libelles";
 import { creerEdition } from "../src/lib/firebase/programmes";
-import { enTete, estGrandEcran, estTelephone, interdireDialoguesNatifs, ongletsRail, verifierAgencement } from "./helpers/agencement";
+import { enTete, estGrandEcran, estTelephone, interdireDialoguesNatifs, ongletsRail, verifierAgencement, verifierSansDebordement } from "./helpers/agencement";
 import type { Creneau, Programme } from "../src/types/programme";
 
 // Réservation de la scène — Pâques · Noël (docs/spec-scene-paques-noel.md).
@@ -634,4 +634,159 @@ test("P4 — captures à regarder (planches v18-scene-a-sans-saison-* et v18-sce
   await expect(page.getByRole("button", { name: /^Réserver \d/ }).first()).toBeVisible();
   await page.waitForTimeout(400);
   await page.screenshot({ path: `${dir}/p4-noel-${test.info().project.name}.png` });
+});
+
+// ─── P5 : App — une semaine à la fois, « Mes réservations » en tête ─────────
+// Horloge au vendredi 09/10/2026 ; Jo a deux réservations (planche `v18-scene-a-membres-*`).
+
+const A_JO = { auteurUid: "uid-jo", auteurNom: "Jo L." };
+const RESAS_P5: Record<string, Record<string, unknown>> = {
+  "programmes/x7Kq2/creneaux/f": { ...resaDe("f", "2026-10-10", "10:00", "11:00"), quoi: "Séance louange", qui: ["Franco"], auteurUid: "uid-lea", auteurNom: "Léa M." },
+  "programmes/x7Kq2/creneaux/s": { ...resaDe("s", "2026-10-11", "16:00", "17:00"), quoi: "Sketch", qui: ["Jeunes"], ...A_JO },
+  "programmes/x7Kq2/creneaux/l": { ...resaDe("l", "2026-10-11", "17:00", "18:30"), quoi: "Chant", qui: ["EDD 中班"], auteurUid: "uid-alice", auteurNom: "Alice Q." },
+  "programmes/x7Kq2/creneaux/d": { ...resaDe("d", "2026-10-17", "11:00", "12:00"), quoi: "Danse", qui: ["Jeunes"], ...A_JO },
+};
+const DOCS_P5 = { "programmes/x7Kq2": DOC_NOEL_ANCIEN, ...RESAS_P5 };
+const LEA_MEMBRE: FakeProfile = { uid: "uid-lea", email: "lea@example.com", firstName: "Léa", lastName: "M." };
+
+const mesReservations = (page: Page) => page.getByRole("region", { name: "Mes réservations" });
+const listeSemaines = (page: Page) => page.getByRole("list", { name: "Semaines" });
+const semaineChoisie = (page: Page) => listeSemaines(page).locator('[aria-current="true"]');
+const jour = (page: Page, nom: string) => page.getByRole("region", { name: nom, exact: true });
+
+test("P5 — « Mes réservations » en tête avec le compte, puis la semaine du 10 au 11 octobre par défaut", async ({ page }) => {
+  await ouvrirFete(page, "/evenements/scene/noel", DOCS_P5);
+  const mes = mesReservations(page);
+  await expect(mes.getByTestId("compte")).toHaveText("2");
+  await expect(mes.getByRole("button")).toHaveText([
+    /11\s*oct\.\s*Sketch · Jeunes\s*dim\. 11 oct\. · 16:00 – 17:00/,
+    /17\s*oct\.\s*Danse · Jeunes\s*sam\. 17 oct\. · 11:00 – 12:00/,
+  ]);
+  expect((await mes.boundingBox())!.y).toBeLessThan((await listeSemaines(page).boundingBox())!.y);
+  await expect(semaineChoisie(page)).toHaveText(/^10 – 11 oct\./);
+  await expect(jour(page, "Samedi 10 octobre")).toContainText("1 place libre");
+  await expect(jour(page, "Dimanche 11 octobre")).toContainText("2 places libres");
+  await expect(jour(page, "Samedi 17 octobre")).toHaveCount(0);
+  await expect(jour(page, "Samedi 3 octobre")).toHaveCount(0);
+  // Hors grille (Q13) : une ligne, à son heure, qui prend aussi 18:00 ; pas de « Pris ».
+  await expect(jour(page, "Dimanche 11 octobre").getByRole("listitem")).toHaveText([
+    /14:00\s*Libre/, /15:00\s*Libre/, /16:00\s*Sketch · Jeunes/,
+    /17:00\s*→ 18:30\s*Chant · EDD 中班\s*17:00 – 18:30 · prend aussi le créneau de 18:00/,
+  ]);
+  await expect(page.getByText("Pris", { exact: true })).toHaveCount(0);
+  if (estGrandEcran(test.info())) {
+    await expect(page.getByRole("heading", { level: 2, name: "Semaine du 10 au 11 octobre" })).toBeVisible();
+    await expect(page.getByText("3 places libres · un créneau = 1 h", { exact: true })).toBeVisible();
+  }
+  await verifierAgencement(page);
+});
+
+test("P5 — sans réservation à moi, pas de « Mes réservations »", async ({ page }) => {
+  await ouvrirFete(page, "/evenements/scene/noel", { "programmes/x7Kq2": DOC_NOEL_ANCIEN, "programmes/x7Kq2/creneaux/s": RESAS_P5["programmes/x7Kq2/creneaux/s"] }, "2026-10-09", LEA_MEMBRE);
+  await expect(semaineChoisie(page)).toHaveText(/^10 – 11 oct\./);
+  await expect(mesReservations(page)).toHaveCount(0);
+});
+
+test("P5 — la liste des semaines : jours, places libres, une case par créneau (pleine = pris) ; « Semaines passées (1) »", async ({ page }) => {
+  await ouvrirFete(page, "/evenements/scene/noel", DOCS_P5);
+  const semaines = listeSemaines(page).getByRole("button");
+  await expect(semaines).toHaveCount(11);
+  await expect(semaines.first()).toHaveText(/^10 – 11 oct\.\s*sam\. et dim\. · 3 places libres/);
+  await expect(semaines.nth(1)).toHaveText(/^17 – 18 oct\.\s*sam\. et dim\. · 6 places libres/);
+  await expect(semaines.nth(3)).toHaveText(/^31 oct\. – 1er nov\./);
+  await expect(semaines.first().locator("[data-case]")).toHaveCount(7);
+  await expect(semaines.first().locator('[data-case="pris"]')).toHaveCount(4);
+  await expect(semaines.last()).toHaveText(/^19 – 20 déc\./);
+  const passees = page.getByRole("button", { name: "Semaines passées (1)" });
+  await expect(passees).toHaveAttribute("aria-expanded", "false");
+  await expect(listeSemaines(page).getByRole("button", { name: /^3 – 4 oct\./ })).toHaveCount(0);
+  await passees.click();
+  await expect(passees).toHaveAttribute("aria-expanded", "true");
+  await expect(semaines).toHaveCount(12);
+  await expect(semaines.first()).toHaveText(/^3 – 4 oct\./);
+});
+
+test("P5 — une semaine pleine dit « complet »", async ({ page }) => {
+  const court = { ...DOC_NOEL_ANCIEN, plages: [{ jour: 0, debut: "14:00", fin: "15:00" }] };
+  await ouvrirFete(page, "/evenements/scene/noel", {
+    "programmes/x7Kq2": court,
+    "programmes/x7Kq2/creneaux/a": { ...resaDe("a", "2026-10-11", "14:00", "15:00"), auteurUid: "uid-lea", auteurNom: "Léa M." },
+  });
+  await expect(semaineChoisie(page)).toHaveText(/^11 oct\.\s*dim\. · complet/);
+  await expect(jour(page, "Dimanche 11 octobre")).toContainText("complet");
+});
+
+test("P5 — changer de semaine : la liste et ‹ › changent la semaine et l'adresse (`?semaine=`), sans entrée d'historique", async ({ page }) => {
+  await ouvrirFete(page, "/evenements/scene/noel", DOCS_P5);
+  await expect(semaineChoisie(page)).toHaveText(/^10 – 11 oct\./);
+  const avant = await historique(page);
+  await listeSemaines(page).getByRole("button", { name: /^17 – 18 oct\./ }).click();
+  await expect(page).toHaveURL(/[?&]semaine=2026-10-12/);
+  await expect(semaineChoisie(page)).toHaveText(/^17 – 18 oct\./);
+  await expect(jour(page, "Samedi 17 octobre")).toContainText("Danse · Jeunes");
+  await expect(jour(page, "Samedi 10 octobre")).toHaveCount(0);
+  if (estGrandEcran(test.info())) {
+    await page.getByRole("button", { name: "Semaine suivante" }).click();
+    await expect(page).toHaveURL(/[?&]semaine=2026-10-19/);
+    await expect(jour(page, "Samedi 24 octobre")).toBeVisible();
+    await page.getByRole("button", { name: "Semaine précédente" }).click();
+    await page.getByRole("button", { name: "Semaine précédente" }).click();
+    await expect(page).toHaveURL(/[?&]semaine=2026-10-05/);
+    await expect(jour(page, "Samedi 10 octobre")).toBeVisible();
+  }
+  expect(await historique(page)).toBe(avant);
+  await page.goto("/evenements/scene/noel?semaine=2026-11-02");
+  await expect(semaineChoisie(page)).toHaveText(/^7 – 8 nov\./);
+  await expect(jour(page, "Samedi 7 novembre")).toBeVisible();
+});
+
+test("P5 — toucher une de mes réservations choisit sa semaine", async ({ page }) => {
+  await ouvrirFete(page, "/evenements/scene/noel", DOCS_P5);
+  await mesReservations(page).getByRole("button", { name: /Danse · Jeunes/ }).click();
+  await expect(page).toHaveURL(/[?&]semaine=2026-10-12/);
+  await expect(semaineChoisie(page)).toHaveText(/^17 – 18 oct\./);
+  await expect(jour(page, "Samedi 17 octobre").getByRole("listitem").filter({ hasText: "Danse · Jeunes" })).toBeVisible();
+});
+
+test("P5 — deux volets (ordinateur, ordinateur-1440, tablette couchée) : les semaines à gauche, la semaine choisie à droite", async ({ page }) => {
+  test.skip(!estGrandEcran(test.info()), "propre aux grands écrans");
+  await ouvrirFete(page, "/evenements/scene/noel", DOCS_P5);
+  await expect(page.locator('[data-volet="liste"]').getByRole("list", { name: "Semaines" })).toBeVisible();
+  await expect(page.locator('[data-volet="liste"]').getByRole("region", { name: "Mes réservations" })).toBeVisible();
+  await expect(page.locator('[data-volet="detail"]').getByRole("region", { name: "Dimanche 11 octobre", exact: true })).toBeVisible();
+  await verifierSansDebordement(page);
+});
+
+test("P5 — une colonne (téléphone, tablette) : les semaines en pastilles qui défilent en largeur, la page non ; page courte", async ({ page }) => {
+  test.skip(estGrandEcran(test.info()), "propre au téléphone et à la tablette debout");
+  await ouvrirFete(page, "/evenements/scene/noel", DOCS_P5);
+  await expect(semaineChoisie(page)).toHaveText(/^10 – 11 oct\./);
+  const [large, visible] = await listeSemaines(page).evaluate((e) => [e.scrollWidth, e.clientWidth]);
+  expect(large).toBeGreaterThan(visible);
+  await verifierSansDebordement(page);
+  // Les pastilles viennent avant les jours de la semaine choisie.
+  expect((await listeSemaines(page).boundingBox())!.y).toBeLessThan((await jour(page, "Samedi 10 octobre").boundingBox())!.y);
+  if (estTelephone(test.info())) {
+    // L'audit mesurait 7 458 px sur téléphone (un bloc par jour réservable à venir).
+    expect(await page.evaluate(() => document.documentElement.scrollHeight)).toBeLessThan(3000);
+  }
+});
+
+test("P5 — en chinois : 我的预约, les semaines et leurs places", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
+  await ouvrirFete(page, "/evenements/scene/noel", DOCS_P5);
+  await expect(mesReservations(page)).toHaveCount(0);
+  await expect(page.getByRole("region", { name: "我的预约" })).toBeVisible();
+  await expect(page.getByRole("list", { name: "周次" }).locator('[aria-current="true"]')).toHaveText(/^10月10日 – 11日\s*周六和周日 · 剩余 3 个名额/);
+  await expect(page.getByRole("button", { name: "过去的周（1）" })).toBeVisible();
+  if (estGrandEcran(test.info())) await expect(page.getByRole("heading", { level: 2, name: "10月10日至11日这一周" })).toBeVisible();
+});
+
+test("P5 — captures à regarder (planche v18-scene-a-membres-*), PW_CAPTURES=<dossier>", async ({ page }) => {
+  const dir = process.env.PW_CAPTURES;
+  test.skip(!dir, "captures seulement avec PW_CAPTURES");
+  await ouvrirFete(page, "/evenements/scene/noel", DOCS_P5);
+  await expect(semaineChoisie(page)).toHaveText(/^10 – 11 oct\./);
+  await page.waitForTimeout(1000);
+  await page.screenshot({ path: `${dir}/p5-noel-${test.info().project.name}.png`, fullPage: true });
 });

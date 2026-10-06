@@ -485,3 +485,35 @@ npm run lint
   - Reste : P5 à P9 (la grille reste celle de U1 en jours, jusqu'à P5).
   - À faire par Timothée : rien pour P4 (aucune règle à publier, droits inchangés) ; relire le 中文 des clés
     `planning.fete.*` et `evenements.sousTitre`.
+- 07/10/2026 — **P5 — App : une semaine à la fois : faite** (branche `lot/v18-scene`, commit « feat(SCENE): P5 »).
+  `Entrainements.tsx` rangé en semaines (Q12, Q14) : « Mes réservations » (mes réservations à venir, compte,
+  tuile de date ; toucher une ligne choisit sa semaine et descend à son jour ; masqué sans réservation), la liste
+  « Entraînements » des semaines (`semainesDe` : jours, « N places libres » ou « complet », une case par créneau,
+  pleine = pris), « Semaines passées (n) » qui déplie les passées, et la semaine choisie en cartes par jour (tuile,
+  « Samedi 10 octobre », places libres du jour, lignes de `LigneJour`). Deux volets (`useDeuxVolets`) : la liste à
+  gauche dans la colonne de la fête, à droite « Semaine du 10 au 11 octobre », « 3 places libres · un créneau = 1 h »,
+  ‹ › ; une colonne : les semaines en pastilles dans une bande qui défile seule en largeur (la pastille choisie s'y
+  montre), les jours dessous, l'ordre de passage en carte tout en bas. `?semaine=` (le lundi) remplace l'adresse
+  sans entrée d'historique ; par défaut la première semaine qui a un jour réservable à partir d'aujourd'hui.
+  `Entrainements` rend trois morceaux (`children`), posés par `FeteClient` ; `SceneClient` (Back-Office jusqu'à P7)
+  les empile. Libellés `planning.semaines.*` (FR et 中文) ; `libelles.ts` : `jourCourt`, `tuileDate`,
+  `joursCourts`, `bornesSemaine`.
+  - Tests : 10 tests P5 dans `tests/scene-paques-noel.spec.ts` (dont un propre aux grands écrans, un propre au
+    téléphone et à la tablette debout, une capture sous `PW_CAPTURES`), vus rouges (16 sur `ordinateur` et
+    `telephone`), verts sur les cinq projets ; téléphone : la page mesure moins de 3 000 px (7 458 à l'audit).
+    Réécrits pour la semaine choisie : 4 tests de `scene-saison.spec.ts` (jours lointains, « Semaines passées (1) »,
+    中文 « 过去的周（1） »), 4 de `programme-scene.spec.ts`. `tsc` et `lint` propres.
+  - Choix faits faute de réponse : sur une colonne, ni titre de semaine ni ‹ › (les pastilles en tiennent lieu,
+    planche téléphone) ; le bouton « Semaines passées (n) » garde son libellé déplié (`aria-expanded`) ; une semaine
+    passée choisie par l'adresse déplie les passées ; un jour qui n'a qu'une réservation hors des jours de la saison
+    entre dans sa semaine (créée sans case s'il le faut : rien ne disparaît) ; « places libres » d'un jour ne compte
+    pas les créneaux déjà commencés, et ne s'affiche pas pour un jour passé ; « Mes réservations » = mes
+    réservations à venir (aujourd'hui compris tant qu'elles ne sont pas finies), y compris pour la coordination.
+    Restent pour P6, comme le dit la spec : « ⋯ » (les boutons Modifier et Retirer sont encore sous la
+    réservation), la pastille « à moi », la feuille sans rien de coché, Déplacer en pastilles, `useConfirmer`.
+  - Captures : prises en pleine page, la tablette couchée y passe en une colonne (Chromium agrandit la fenêtre
+    pour la pleine page et la fenêtre devient « portrait ») ; le test des deux volets le vérifie sans capture.
+  - Reste : P6 à P9.
+  - À faire par Timothée : rien pour P5 (aucune règle à publier, droits inchangés) ; relire le 中文 de
+    `planning.semaines.*` (« 我的预约 », « 周次 », « 过去的周（n） », « 剩余 n 个名额 », « 已满 », « 每个时段 … »,
+    « …至…这一周 », « 上一周 », « 下一周 »).

@@ -1265,6 +1265,19 @@
       "commentReserverTexte": "Un créneau = {{duree}} de scène. On choisit quoi (chant, danse, sketch…) et pour quel groupe.",
       "et": " et "
     },
+    "semaines": {
+      "mes": "Mes réservations",
+      "liste": "Semaines",
+      "passees": "Semaines passées ({{n}})",
+      "placesLibres_one": "{{count}} place libre",
+      "placesLibres_other": "{{count}} places libres",
+      "complet": "complet",
+      "unCreneau": "un créneau = {{duree}}",
+      "titre": "Semaine du {{du}} au {{au}}",
+      "titreJour": "Semaine du {{du}}",
+      "precedente": "Semaine précédente",
+      "suivante": "Semaine suivante"
+    },
     "scene": {
       "noCurrent": "Aucun programme en cours.",
       "others": "Programmes masqués",

@@ -1261,6 +1261,19 @@
       "commentReserverTexte": "一个时段 = {{duree}}舞台时间。选择内容（唱歌、舞蹈、短剧……）和组别。",
       "et": "和"
     },
+    "semaines": {
+      "mes": "我的预约",
+      "liste": "周次",
+      "passees": "过去的周（{{n}}）",
+      "placesLibres_one": "剩余 {{count}} 个名额",
+      "placesLibres_other": "剩余 {{count}} 个名额",
+      "complet": "已满",
+      "unCreneau": "每个时段 {{duree}}",
+      "titre": "{{du}}至{{au}}这一周",
+      "titreJour": "{{du}}这一周",
+      "precedente": "上一周",
+      "suivante": "下一周"
+    },
     "scene": {
       "noCurrent": "暂无进行中的节目。",
       "others": "已隐藏的节目",

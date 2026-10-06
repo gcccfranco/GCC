@@ -541,19 +541,24 @@ const LEA: FakeProfile = { uid: "uid-lea", email: "lea@example.com", firstName: 
 const SKETCH = { ...resa("2026-10-11", "15:00", "16:00", "s"), quoi: "Sketch", qui: ["Jeunes"], auteurUid: "uid-noe", auteurNom: "Noé L." };
 
 const bloc = (page: Page, jour: string) => page.getByRole("region", { name: jour, exact: true });
+/** Pâques · Noël, P5 : une semaine à la fois ; on choisit la semaine dans la liste (ou les pastilles). */
+const choisirSemaine = (page: Page, debut: RegExp) => page.getByRole("list", { name: "Semaines" }).getByRole("button", { name: debut }).click();
 const feuille = (page: Page) => page.getByRole("dialog");
 
-test("membres : un bloc par jour réservable à venir, en toutes lettres, chaque créneau « Libre · Réserver » ; les jours passés derrière un lien", async ({ page }) => {
+test("membres : un bloc par jour de la semaine choisie, en toutes lettres, chaque créneau « Libre · Réserver » ; les semaines passées derrière un lien", async ({ page }) => {
   await ouvrir(page, NOE, { "programmes/noel": OUVERT });
   await expect(page.getByText("Jour J : jeudi 24 décembre · réservations jusqu'au dimanche 20 décembre", { exact: true })).toBeVisible();
   await expect(bloc(page, "Samedi 10 octobre").getByRole("listitem")).toHaveText([/10:00\s*Libre\s*Réserver/, /11:00\s*Libre\s*Réserver/]);
   const dimanche = bloc(page, "Dimanche 11 octobre");
   await expect(dimanche.getByRole("listitem")).toHaveText([/14:00\s*Libre/, /15:00\s*Libre/, /16:00\s*Libre/, /17:00\s*Libre/, /18:00\s*Libre/]);
   await expect(dimanche.getByRole("button", { name: "Réserver 15:00 – 16:00" })).toBeVisible();
+  await expect(bloc(page, "Dimanche 20 décembre")).toHaveCount(0);
+  await choisirSemaine(page, /^19 – 20 déc\./);
   await expect(bloc(page, "Dimanche 20 décembre")).toBeVisible();
   // Samedi 3 et dimanche 4 octobre sont passés (on est le lundi 5).
   await expect(bloc(page, "Samedi 3 octobre")).toHaveCount(0);
-  await page.getByRole("button", { name: "Voir les jours passés (2)" }).click();
+  await page.getByRole("button", { name: "Semaines passées (1)" }).click();
+  await choisirSemaine(page, /^3 – 4 oct\./);
   await expect(bloc(page, "Samedi 3 octobre")).toBeVisible();
   await expect(bloc(page, "Samedi 3 octobre").getByRole("button", { name: /^Réserver/ })).toHaveCount(0);
 });
@@ -642,8 +647,9 @@ test("membres : « Modifier » déplace sa réservation sur un créneau libre de
   await expect(f.getByLabel("Créneau", { exact: true }).getByRole("option")).toHaveText(["11:00 – 12:00"]);
   await f.getByRole("button", { name: "Enregistrer" }).click();
   await expect(feuille(page)).toHaveCount(0);
-  await expect(bloc(page, "Samedi 17 octobre").getByRole("listitem").filter({ hasText: "Sketch · Jeunes" })).toContainText("11:00");
   await expect(bloc(page, "Dimanche 11 octobre").getByText("Sketch · Jeunes")).toHaveCount(0);
+  await choisirSemaine(page, /^17 – 18 oct\./);
+  await expect(bloc(page, "Samedi 17 octobre").getByRole("listitem").filter({ hasText: "Sketch · Jeunes" })).toContainText("11:00");
   expect(db.doc("programmes/noel/creneaux/s")).toMatchObject({ dimanche: "2026-10-17", debut: "11:00", fin: "12:00", quoi: "Sketch", qui: ["Jeunes"] });
 });
 
@@ -682,7 +688,7 @@ test("membres : la veille de la fermeture, le dernier jour se réserve encore", 
 test("membres en 中文 : jours, lignes et feuille traduits", async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
   await ouvrir(page, NOE, { "programmes/noel": OUVERT, "programmes/noel/creneaux/s": SKETCH });
-  await expect(page.getByRole("button", { name: "查看过去的日子（2）" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "过去的周（1）" })).toBeVisible();
   await expect(page.getByText(/预约截至12月20日/)).toBeVisible();
   const samedi = page.getByRole("region", { name: "10月10日星期六" });
   await expect(samedi.getByRole("listitem")).toHaveText([/10:00\s*空闲\s*预约/, /11:00\s*空闲\s*预约/]);
@@ -702,7 +708,7 @@ test("captures : l'écran des membres et la feuille « Réserver » (à regarder
   await ouvrir(page, NOE, {
     "programmes/noel": OUVERT, "programmes/noel/creneaux/f": franco, "programmes/noel/creneaux/c": chant, "programmes/noel/creneaux/d": danse,
   });
-  await expect(bloc(page, "Samedi 17 octobre").getByRole("button", { name: "Modifier" })).toBeVisible();
+  await expect(bloc(page, "Dimanche 11 octobre").getByRole("button", { name: "Réserver 15:00 – 16:00" })).toBeVisible();
   await capture(page, "u1-membres");
   await bloc(page, "Dimanche 11 octobre").getByRole("button", { name: "Réserver 15:00 – 16:00" }).click();
   await feuille(page).getByRole("radio", { name: "Sketch" }).check();

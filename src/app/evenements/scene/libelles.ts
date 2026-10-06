@@ -53,3 +53,37 @@ export function joursDeLaSemaine(jours: number[], lang: string, et: string): str
   })
   return noms.length < 2 ? noms.join("") : `${noms.slice(0, -1).join(lang === "zh-CN" ? "、" : ", ")}${et}${noms.at(-1)}`
 }
+
+/** Un jour en court (P5, « Mes réservations ») : « dim. 11 oct. » / « 10月11日周日 ». */
+export function jourCourt(iso: string, lang: string): string {
+  const d = jourLocal(iso)
+  if (lang === "zh-CN") return `${d.getMonth() + 1}月${d.getDate()}日${d.toLocaleDateString("zh-CN", { weekday: "short" }).replace("星期", "周")}`
+  const num = d.getDate() === 1 ? "1er" : String(d.getDate())
+  return `${d.toLocaleDateString("fr-FR", { weekday: "short" })} ${num} ${d.toLocaleDateString("fr-FR", { month: "short" })}`
+}
+
+/** La tuile de date (P5) : « 11 » sur « oct. » / « 10月 ». */
+export function tuileDate(iso: string, lang: string): { jour: string; mois: string } {
+  const d = jourLocal(iso)
+  return { jour: String(d.getDate()), mois: lang === "zh-CN" ? `${d.getMonth() + 1}月` : d.toLocaleDateString("fr-FR", { month: "short" }) }
+}
+
+/** Les jours d'une semaine en court (P5) : « sam. et dim. » / « 周六和周日 ». */
+export function joursCourts(jours: string[], lang: string, et: string): string {
+  const noms = jours.map((iso) => {
+    const d = jourLocal(iso)
+    return lang === "zh-CN" ? d.toLocaleDateString("zh-CN", { weekday: "short" }).replace("星期", "周") : d.toLocaleDateString("fr-FR", { weekday: "short" })
+  })
+  return noms.length < 2 ? noms.join("") : `${noms.slice(0, -1).join(lang === "zh-CN" ? "、" : ", ")}${et}${noms.at(-1)}`
+}
+
+/** Les deux bornes du titre d'une semaine (P5) : « 10 » et « 11 octobre », « 31 octobre » et
+ *  « 1er novembre » / « 10月10日 » et « 11日 ». Un seul jour : `au` vaut `null`. */
+export function bornesSemaine(jours: string[], lang: string): { du: string; au: string | null } {
+  const [a, b] = [jourLocal(jours[0]), jourLocal(jours[jours.length - 1])]
+  if (jours.length === 1) return { du: dateCourte(jours[0], lang), au: null }
+  const memeMois = a.getMonth() === b.getMonth()
+  const au = dateCourte(jours[jours.length - 1], lang)
+  if (lang === "zh-CN") return { du: dateCourte(jours[0], lang), au: memeMois ? `${b.getDate()}日` : au }
+  return { du: memeMois ? (a.getDate() === 1 ? "1er" : String(a.getDate())) : dateCourte(jours[0], lang), au }
+}
