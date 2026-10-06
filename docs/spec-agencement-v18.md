@@ -432,3 +432,76 @@ npm test -- tests/back-office-coupe.spec.ts
 - 06/10/2026, plus tard : relecture croisée avec `spec-scene-paques-noel.md` (en-tête de la section Évènements
   à T7 et T2b, composants communs partagés, ordre des voies) ; décision de Timothée « Réunions dans la barre
   latérale » intégrée (B4, B15, tranche T2a). Attend toujours le go.
+
+### V18F — Fondations (F1)
+
+- 06/10/2026 : **F1 faite** (branche `lot/v18-fondations`, commit `feat(V18F): F1 — composants et règles communes`).
+  Aucun écran ne change, sauf le halo bleu gris du Back-Office et `DeuxVolets` (liste en carte, à la marge) :
+  les pages qui l'utilisent déjà (Setlists, Mes services, Harmonie, Tâches de l'App, Réception…) prennent la
+  carte et la marge tout de suite, leur en-tête vient avec leur tranche.
+- **Fichiers** : `components/layout/EnTetePage.tsx` (`EnTetePage`, `Retour`), `Onglets.tsx` (`OngletsRail`,
+  `Pilules`), `BoutonNouveau.tsx`, `MenuActions.tsx`, `Confirmer.tsx` (`ConfirmerProvider` posé dans
+  `app/layout.tsx`, `useConfirmer`) ; `DeuxVolets.tsx` en liste-carte (`raised rounded-2xl`, collante 20 px sous
+  la barre, `gap-[var(--ecart-volets)]`, `px-[var(--marge-page)]`) ; `HaloParDefaut.tsx` (bleu gris sous
+  `/back-office`) ; `globals.css` : `--marge-page`, `--ecart-volets`, `--halo-back-office` (clair `#e4e7f6`, sombre
+  `#262b45`), `.titre-page` ; `components/harmonie/Pilules.tsx` n'est plus qu'un relais vers `Onglets.tsx` (la
+  tranche Z le retire) ; `app/back-office/EspaceBackOffice.tsx` enveloppe le contenu dans un `relative` (sans lui,
+  le halo fixe, à 80 % d'opacité, voilait le titre et les premières cartes du tableau de bord).
+- **Tests** : `tests/agencement-v18-fondations.spec.ts` (15 tests × 5 projets, vus rouges sur le CSS, `DeuxVolets` et
+  `HaloParDefaut` d'avant, puis verts) sur la page d'essai `/essai-agencement` (404 en production, servie par `next dev` seulement) ;
+  `tests/helpers/agencement.ts` ; `agencement-v18-*.spec.ts` dans `SPECS_GRAND_ECRAN`.
+- **Écart à la spec** : la page d'essai est **commitée** (la spec la disait « non commitée ») : le test F1 en
+  dépend et doit rester vert dans la suite complète de l'intégration ; elle répond 404 en production.
+- **Suites voisines** (06/10/2026, cinq projets) : `pages-en-grand-*`, `agencement-barre-reduite`, `look-halo*`,
+  `back-office-espace`, `deux-volets-finitions`, `setlist-deux-volets`, `chants-deux-volets`, `harmonie-catalogue`,
+  `back-office-coupe` : 1 065 verts, **4 rouges attendus**, causés par la liste-carte (vérifié : verts avec le
+  `DeuxVolets` d'avant). Le volet de droite perd la marge et l'écart, et les fiches gardent leur propre marge
+  intérieure (`px-6 xl:px-9`), donc leurs requêtes de conteneur repassent sur une colonne à 1 280 px et sur iPad
+  paysage :
+  - `pages-en-grand-evenements.spec.ts:79` (« inscription à droite de la bannière », `ordinateur`,
+    `tablette-paysage`) → **T7** : A10 met justement la fiche sur une colonne sous 760 px de volet ; le test se
+    réécrit avec la règle.
+  - `pages-en-grand-mes-services.spec.ts:120` (« setlist et équipe côte à côte », `ordinateur`, `tablette-paysage`)
+    → **T9** : retirer la marge intérieure de `DetailService` en deux volets (`px-6 xl:px-9`, R10 : la fiche ne
+    pose plus de marge), ce qui rend la place à `.service-detail`.
+  Chaque tranche de pages retire de même la marge intérieure de ses fiches en deux volets.
+- **Reste** : rien pour F1. F2 (les dix `window.confirm`) est la tranche suivante.
+- **Timothée** : rien à publier (aucune règle, aucune donnée).
+
+**Exemples d'usage, pour les tranches de pages** (les commentaires en tête de chaque composant en disent plus) :
+
+```tsx
+// En-tête d'une page de liste du Back-Office, avec rail de sous-parties en liens.
+<EnTetePage
+  titre={t("backOffice.entrees.taches")}
+  sousTitre={t("taches.sousTitre")}
+  action={<BoutonNouveau label={t("taches.nouvelle")} href={`/back-office/taches/${pole}/nouvelle`} />}
+  onglets={<OngletsRail etiquette={t("taches.poles")} onglets={poles.map((p) => ({ id: p.cle, label: p.nom, href: `/back-office/taches/${p.cle}`, compte: p.n }))} />}
+/>
+<DeuxVolets racine="/back-office/taches" liste={<ListeDuPole />} premier={<FicheTache … />}>{children}</DeuxVolets>
+
+// Une fiche ouverte en pleine page (téléphone) : le seul retour.
+<EnTetePage retour={{ href: "/moi", label: t("nav.moi") }} titre={t("profil.titre")} sousTitre={email}
+            outils={<MenuActions actions={[{ label: t("common.supprimer"), destructif: true, onSelect: supprimer,
+                      confirmer: { titre: t("…"), action: t("common.supprimer") } }]} />} />
+
+// Vues dans la page (boutons) et filtres (pilules), dans l'en-tête.
+<EnTetePage titre="Statistiques"
+  onglets={<OngletsRail etiquette="Vue" onglets={[{ id: "joues", label: "Les plus joués" }, { id: "jamais", label: "Jamais joués" }]} actif={vue} choisir={setVue} />}
+  apres={<Pilules etiquette="Période" options={periodes} valeur={periode} choisir={setPeriode} obligatoire />} />
+
+// Une confirmation dans le site, ligne pour ligne à la place de window.confirm.
+const confirmer = useConfirmer();
+if (!(await confirmer({ titre: t("…"), texte: t("…"), action: t("common.supprimer"), destructif: true }))) return;
+
+// Tests d'une tranche : les vérifications communes.
+interdireDialoguesNatifs(page);
+await ouvrirAvecBarre(page, "reduite");      // facultatif
+await signInAs(page, ADMIN, DOCS, "/back-office/taches/da");
+await verifierAgencement(page);               // en-tête, x et taille du h1, débordement, halo
+```
+
+Mesures : le h1 (`.titre-page`) fait 24 px sur téléphone et 30 px dès 768 px ; `EnTetePage` porte `--marge-page`
+et les 20 px sous l'en-tête : la page pose ensuite son contenu à `px-[var(--marge-page)]` (pleine zone) ou dans
+`DeuxVolets`, qui pose déjà la marge. Sur téléphone, `BoutonNouveau` sort de l'en-tête en rond fixe au-dessus de
+la barre d'onglets : une page sans barre du bas (rare) le verra plus haut que nécessaire.

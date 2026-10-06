@@ -13,6 +13,11 @@ import { disposerVolets, estSurLaListe } from "@/lib/deuxVolets";
 // volet : la liste, puis la page, comme aujourd'hui. La règle elle-même : `disposerVolets`.
 // Les deux volets prennent toute la zone de contenu, sans borne (retours du 06/10/2026 : bornés à
 // `--largeur-lecture` et centrés, ils laissaient une bande vide à côté de la barre réduite).
+// Agencement v18 (R10 de docs/spec-agencement-v18.md) : en grand, la liste est une CARTE en relief
+// (rayon 16 px, sans filet), à `--marge-page` des bords, collante 20 px sous la barre du haut et qui
+// défile seule ; la fiche prend le reste jusqu'à la marge de droite, sans fond, à `--ecart-volets`
+// de la carte. Le titre de la page est au-dessus, dans `EnTetePage` (qui porte les 20 px d'écart) ;
+// la fiche se titre en h2 de 24 px et ne pose plus de marge à gauche ni à droite.
 
 export function DeuxVolets({
   racine,
@@ -43,7 +48,7 @@ export function DeuxVolets({
   return (
     <div
       data-deux-volets={deuxVolets ? "" : undefined}
-      className={deuxVolets ? "flex items-start" : undefined}
+      className={deuxVolets ? "flex items-start gap-[var(--ecart-volets)] px-[var(--marge-page)] pb-6" : undefined}
       style={deuxVolets ? ({ "--largeur-liste": `${largeurListe}px` } as CSSProperties) : undefined}
     >
       {volets.liste && (
@@ -51,7 +56,7 @@ export function DeuxVolets({
           data-volet="liste"
           className={
             deuxVolets
-              ? "page-fade sticky top-[var(--nav-h)] h-[calc(100dvh-var(--nav-h))] w-[var(--largeur-liste)] shrink-0 overflow-y-auto overscroll-contain border-r border-border bg-card"
+              ? "page-fade sticky top-[calc(var(--nav-h)+20px)] max-h-[calc(100dvh-var(--nav-h)-44px)] w-[var(--largeur-liste)] shrink-0 overflow-y-auto overscroll-contain raised rounded-2xl"
               : "page-fade"
           }
         >

@@ -38,5 +38,7 @@ export function EspaceBackOffice({ children }: { children: React.ReactNode }) {
       </div>
     );
   }
-  return <>{children}</>;
+  // `relative` : le contenu se peint au-dessus du halo fixe (globals.css, `.halo`) ; sans lui, le
+  // bleu gris du Back-Office (agencement v18, R12) voilait le titre et les premières cartes.
+  return <div className="relative">{children}</div>;
 }

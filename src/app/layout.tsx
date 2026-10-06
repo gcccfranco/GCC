@@ -9,6 +9,7 @@ import { Accueil } from "@/components/onboarding/Accueil";
 import { PageTransition } from "@/components/layout/PageTransition";
 import { LyricsCopyListener } from "@/components/song/LyricsCopyListener";
 import { NotificationsProvider } from "@/components/layout/NotificationsPartagees";
+import { ConfirmerProvider } from "@/components/layout/Confirmer";
 import { SCRIPT_BARRE_REDUITE } from "@/lib/barreLateralePref";
 import "./globals.css";
 
@@ -68,6 +69,8 @@ export default function RootLayout({
       <body className="font-sans antialiased min-h-screen bg-background">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <I18nProvider>
+            {/* Une seule fenêtre de confirmation pour tout le site (agencement v18, R9) : `useConfirmer`. */}
+            <ConfirmerProvider>
             {/* Une seule cloche pour toutes les barres (lot U4, Q7). */}
             <NotificationsProvider>
               <Navbar />
@@ -85,6 +88,7 @@ export default function RootLayout({
             </NotificationsProvider>
             <LyricsCopyListener />
             <Accueil />
+            </ConfirmerProvider>
           </I18nProvider>
         </ThemeProvider>
       </body>
