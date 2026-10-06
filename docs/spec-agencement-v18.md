@@ -529,3 +529,46 @@ la barre d'onglets : une page sans barre du bas (rare) le verra plus haut que n�
   empilés sur téléphone, au-dessus de la feuille du formulaire de tâche).
 - **Reste** : rien pour F2. Les tranches de pages (T1 à T11) peuvent partir.
 - **Timothée** : rien à publier (aucune règle, aucune donnée) ; relire les six libellés 中文 ci-dessus.
+
+### V18T2 — L'entrée Réunions (T2a)
+
+- 06/10/2026 : **T2a faite** (branche `lot/v18-t2`, commit `feat(V18T2): T2a — l'entrée Réunions`), après la
+  fusion de `lot/v18-fondations` (F1, F2). Aucune mise en page nouvelle : les adresses `/back-office/reunions/*`
+  montent les composants d'aujourd'hui (T2b les mettra en deux volets).
+- **Menu à neuf entrées** : `ENTREES` gagne `reunions` après `evenements` (`types/backOffice.ts`) ;
+  `ENTREES_BACK_OFFICE.reunions` (`/back-office/reunions`, icône `Users`, `lib/navigation.ts`) ; libellés
+  `backOffice.entrees.reunions` (« Réunions » / 会议) et `backOffice.plus.contenu.reunions` (« sujets, comptes
+  rendus » / 议题、会议记录). **Droits d'affichage** (`entreesBackOffice`) : Évènements = admin, coordination ou
+  droit d'annonces ; Réunions = admin, un pôle (Louange compris), membre ou référent d'une équipe
+  (`ProfilResponsable` lit `dansEquipes`). `sousPartiesEvenements` ne rend plus que `evenements` et `scene`.
+  Widget « Prochains évènements » permis avec l'une ou l'autre entrée ; raccourci « Nouvel évènement » inchangé
+  (il suivait déjà Évènements seul). « Plus » : Réunions après Évènements ; barre du bas et sa feuille : rien à
+  écrire (elles lisent `ENTREES`).
+- **Adresses** : `app/back-office/reunions/{layout,page}.tsx` (titre « Réunions » sans rail, `EnTeteEntree` que
+  T2b remplacera), `[id]/page.tsx`, `[id]/modifier/page.tsx`, `nouvelle/page.tsx` (`NouveauClient reunion`).
+  Nouvelle aide `baseBackOffice(pour)` (`lib/navigation.ts`) : `/back-office/reunions` pour une réunion,
+  `/back-office/evenements` sinon ; elle sert aux liens de `ListeGestion`, `ReunionsPrecedentes`, au retour et à
+  la suppression d'`EvenementClient`, à « Gérer dans le Back-Office » de l'App, à la création (`NouveauClient`)
+  et à `ModifierClient`, ainsi qu'aux lignes du widget « Prochains évènements » (une réunion y mène sous Réunions
+  sans passer par la redirection). `EnTeteReunion` mène à `/back-office/reunions/<id>/modifier` et
+  `/back-office/reunions/nouvelle?from=<id>`.
+- **Redirections** (`router.replace`) : `/back-office/evenements/reunions` → `/back-office/reunions` ; une
+  réunion ouverte sous `/back-office/evenements/<id>` → `/back-office/reunions/<id>` (et, au-delà de la spec,
+  l'inverse pour un évènement ouvert sous Réunions, et de même pour `…/modifier`, pour que l'entrée active
+  soit toujours la bonne) ; `/back-office/evenements/nouveau?reunion=1` → `/back-office/reunions/nouvelle`
+  (`from` et `date` gardés). La redirection « qui n'a que des réunions » d'Évènements est retirée.
+- **Tests** : `tests/agencement-v18-t2a.spec.ts` (23 tests, vus rouges puis verts sur les cinq projets :
+  101 verts, 14 sautés car propres au grand écran ou au téléphone et à la tablette portrait).
+  Réécrits avec la règle : `back-office-espace` (8 → 9 entrées, DA et référent ont Réunions),
+  `barre-back-office` (feuille à 9 cases, « Plus » à 5 cartes, poignées « sur 9 », la coordination a Réunions dans
+  « Plus »), `back-office-admin` (B3 : rail Évènements ·
+  Scène, réunions sous `/back-office/reunions`), `halo-partout`, `evenements-2027` (adresse de la liste des
+  réunions) ; `back-office-coupe` : `/back-office/reunions{,/foot,/nouvelle,/foot/modifier}` en 404.
+- **Vérifié le 07/10/2026** (reprise après la coupure du 06/10) : `tsc` vert, lint sans erreur ; voisins
+  (`back-office-espace`, `barre-back-office`, `back-office-admin`, `halo-partout`, `evenements-2027`, `reunions`,
+  `tableau-de-bord`, `calendrier-widget`, `agencement-v18-confirmations`, `taches-evenements`) : 1 385 verts ;
+  `back-office-coupe` : 184 verts.
+- **Reste** : rien pour T2a. T2b (deux volets d'Évènements et de Réunions, `EnTetePage`) suit dans la même voie.
+- **Timothée** : rien à publier (ni `firestore.rules` ni données : seul l'affichage du menu change) ; relire les
+  deux libellés 中文 (会议, 议题、会议记录). Un membre d'un pôle sans droit d'annonces ne voit plus l'entrée
+  Évènements (il n'y gérait rien) : c'est la règle B15.

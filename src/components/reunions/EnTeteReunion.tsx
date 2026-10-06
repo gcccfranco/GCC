@@ -40,10 +40,10 @@ export function EnTeteReunion({ e, gestion, onSupprimer }: { e: Evenement; gesti
       {gestion && (
         <div className="sm:ml-auto flex flex-wrap items-center gap-2">
           <Button asChild size="sm" variant="secondary">
-            <Link href={`/back-office/evenements/${e.id}/modifier`}><Pencil aria-hidden /> {t("evenements.modifier")}</Link>
+            <Link href={`/back-office/reunions/${e.id}/modifier`}><Pencil aria-hidden /> {t("evenements.modifier")}</Link>
           </Button>
           <Button asChild size="sm" variant="secondary">
-            <Link href={`/back-office/evenements/nouveau?from=${e.id}`}><Copy aria-hidden /> {t("backOffice.dupliquerProchaine")}</Link>
+            <Link href={`/back-office/reunions/nouvelle?from=${e.id}`}><Copy aria-hidden /> {t("backOffice.dupliquerProchaine")}</Link>
           </Button>
           <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={onSupprimer}>
             {t("evenements.supprimer")}

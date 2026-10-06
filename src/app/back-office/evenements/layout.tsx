@@ -1,9 +1,9 @@
 "use client";
 
-// Back-Office › Évènements (lot U6, B3, table Q2) : Évènements (ceux qu'on gère) ·
-// Réunions (ses pôles et équipes) · Scène (coordination, écran de U1). Le titre et les
-// sous-parties coiffent les trois listes ; une fiche, « nouveau » et « modifier » prennent
-// la page. Le menu règle l'affichage seulement : evenements/{id} et programmes gardent
+// Back-Office › Évènements (lot U6, B3, table Q2) : Évènements (ceux qu'on gère) · Scène
+// (coordination, écran de U1) ; les réunions ont leur entrée depuis l'agencement v18 (B15).
+// Le titre et les sous-parties coiffent les listes ; une fiche, « nouveau » et « modifier »
+// prennent la page. Le menu règle l'affichage seulement : evenements/{id} et programmes gardent
 // leurs règles.
 import { usePathname } from "next/navigation";
 import { useTranslation } from "react-i18next";
@@ -12,7 +12,7 @@ import { sousPartiesEvenements } from "@/lib/access";
 import { EnTeteEntree, type SousPartie } from "@/components/backOffice/EnTeteEntree";
 
 const BASE = "/back-office/evenements";
-const ADRESSES = { evenements: BASE, reunions: `${BASE}/reunions`, scene: `${BASE}/scene` } as const;
+const ADRESSES = { evenements: BASE, scene: `${BASE}/scene` } as const;
 
 export default function EvenementsLayout({ children }: { children: React.ReactNode }) {
   const { t } = useTranslation();

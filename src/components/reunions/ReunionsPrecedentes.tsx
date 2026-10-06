@@ -26,7 +26,7 @@ export function ReunionsPrecedentes({ courante, reunions, espace = "app" }: {
       <ul className="mt-1 divide-y divide-border">
         {precedentes.map((r) => (
           <li key={r.id} className="flex min-h-11 items-center gap-3 py-1">
-            <Link href={`${espace === "back-office" ? "/back-office" : ""}/evenements/${r.id}`} className="font-semibold text-foreground underline-offset-2 hover:underline">
+            <Link href={`${espace === "back-office" ? "/back-office/reunions" : "/evenements"}/${r.id}`} className="font-semibold text-foreground underline-offset-2 hover:underline">
               {jourDuMois(r.date, i18n.language, { court: true, annee: r.date.slice(0, 4) !== annee })}
             </Link>
             {r.compteRendu?.url

@@ -2634,6 +2634,7 @@
       "planning": "Planning",
       "taches": "Tâches",
       "evenements": "Évènements",
+      "reunions": "Réunions",
       "equipes": "Équipes",
       "messages": "Messages",
       "statistiques": "Statistiques"
@@ -2703,6 +2704,7 @@
         "tesPoles": "tâches de tes pôles",
         "tousLesPoles": "tâches de tous les pôles",
         "fiches": "fiches, inscrits, période",
+        "reunions": "sujets, comptes rendus",
         "scene": "programmes de scène",
         "organigramme": "organigramme, pôles",
         "personnes": "personnes et droits",

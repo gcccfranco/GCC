@@ -1,20 +1,20 @@
 "use client"
 
 // Modification d'un évènement (lot 6) : organisateur + coordination. Le
-// compteur d'inscrits n'est jamais envoyé. Lot U6, B3 : au Back-Office.
+// compteur d'inscrits n'est jamais envoyé. Lot U6, B3 : au Back-Office ; une réunion sous
+// Réunions, un évènement sous Évènements (agencement v18, B15), l'autre adresse redirige.
 
 import { useEffect, useState } from "react"
-import { useParams, useRouter } from "next/navigation"
+import { useParams, usePathname, useRouter } from "next/navigation"
 import { useTranslation } from "react-i18next"
 import { useAuth } from "@/lib/firebase/auth"
 import { useProfile } from "@/lib/firebase/users"
 import { canEditEvenement, creatableEvenementPours } from "@/lib/access"
+import { baseBackOffice } from "@/lib/navigation"
 import { getEvenement, updateEvenement } from "@/lib/firebase/evenements"
 import { ANNONCE_SECTIONS } from "@/types/annonce"
 import type { Evenement } from "@/types/evenement"
 import { EvenementForm } from "@/components/evenements/EvenementForm"
-
-const base = "/back-office/evenements"
 
 export function ModifierClient() {
   const { t } = useTranslation()
@@ -25,6 +25,13 @@ export function ModifierClient() {
   const [evenement, setEvenement] = useState<Evenement | null | undefined>(undefined)
 
   useEffect(() => { getEvenement(id).then(setEvenement) }, [id])
+
+  const chemin = usePathname() || ""
+  const base = evenement ? baseBackOffice(evenement.pour) : null
+  const ailleurs = !!base && !chemin.startsWith(`${base}/`)
+  useEffect(() => { if (ailleurs && base) router.replace(`${base}/${id}/modifier`) }, [ailleurs, base, id, router])
+
+  if (ailleurs) return null
 
   if (profileLoading || !user || evenement === undefined) return <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
   if (!evenement) return <p className="text-sm text-muted-foreground">{t("evenements.notFound")}</p>

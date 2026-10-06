@@ -18,7 +18,8 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
-import { useParams, useRouter } from "next/navigation"
+import { useParams, usePathname, useRouter } from "next/navigation"
+import { baseBackOffice } from "@/lib/navigation"
 import { useTranslation } from "react-i18next"
 import { useConfirmer } from "@/components/layout/Confirmer"
 import { ArrowRight, ChevronLeft } from "lucide-react"
@@ -87,9 +88,17 @@ export function EvenementClient({ espace = "app", id: idDonne }: { espace?: "app
     listReunionsDu(pourReunion).then(setMemePublic).catch(() => setMemePublic([]))
   }, [pourReunion])
 
+  // Agencement v18 (B15) : au Back-Office, une réunion se gère sous Réunions et un évènement
+  // sous Évènements ; ouverte sous l'autre entrée, la fiche y repart.
+  const chemin = usePathname() || ""
+  const baseBO = espace === "back-office" && evenement ? baseBackOffice(evenement.pour) : null
+  const ailleurs = !!baseBO && !chemin.startsWith(`${baseBO}/`)
+  useEffect(() => { if (ailleurs && baseBO) router.replace(`${baseBO}/${id}`) }, [ailleurs, baseBO, id, router])
+
   if (authLoading || (user && profileLoading) || evenement === undefined) {
     return <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
   }
+  if (ailleurs) return null
   if (!evenement || !canSeeEvenement(user, profile, evenement)) {
     return <p className="text-sm text-muted-foreground">{t("evenements.notFound")}</p>
   }
@@ -105,7 +114,7 @@ export function EvenementClient({ espace = "app", id: idDonne }: { espace?: "app
   if (backOffice && !gestionnaire && !deLaReunion) {
     return <p className="text-sm text-muted-foreground max-w-2xl">{t("evenements.reserved")}</p>
   }
-  const liste = backOffice ? (reunion ? "/back-office/evenements/reunions" : "/back-office/evenements") : "/evenements"
+  const liste = backOffice ? baseBackOffice(e.pour) : "/evenements"
 
   async function supprimer() {
     if (!(await confirmer({ titre: t("evenements.confirmDelete", { titre: e.titre }), texte: t("evenements.confirmDeleteTexte"),
@@ -225,7 +234,7 @@ export function EvenementClient({ espace = "app", id: idDonne }: { espace?: "app
           {/* En deux volets, le titre de la page est celui de droite (h1), l'agenda a un h2. */}
           <div className="min-w-0"><TitreEvenement e={e} niveau="h1" /></div>
           {gestionnaire && estResponsable(user, profile) && (
-            <Link href={`/back-office/evenements/${e.id}`} className="inline-flex h-9 items-center gap-1.5 rounded-full bg-secondary px-4 text-sm font-semibold text-foreground transition-transform duration-150 active:scale-[.97]">
+            <Link href={`${baseBackOffice(e.pour)}/${e.id}`} className="inline-flex h-9 items-center gap-1.5 rounded-full bg-secondary px-4 text-sm font-semibold text-foreground transition-transform duration-150 active:scale-[.97]">
               <ArrowRight className="h-4 w-4" aria-hidden />
               {t("backOffice.gerer")}
             </Link>
@@ -263,7 +272,7 @@ export function EvenementClient({ espace = "app", id: idDonne }: { espace?: "app
             {t("evenements.title")}
           </Link>
           {gestionnaire && estResponsable(user, profile) && (
-            <Link href={`/back-office/evenements/${e.id}`} className="raised inline-flex h-10 shrink-0 items-center gap-1.5 rounded-full px-4 text-sm font-semibold text-foreground transition-transform duration-150 active:scale-[.97]">
+            <Link href={`${baseBackOffice(e.pour)}/${e.id}`} className="raised inline-flex h-10 shrink-0 items-center gap-1.5 rounded-full px-4 text-sm font-semibold text-foreground transition-transform duration-150 active:scale-[.97]">
               <ArrowRight className="h-4 w-4" aria-hidden />
               {t("backOffice.gerer")}
             </Link>
@@ -312,7 +321,7 @@ export function EvenementClient({ espace = "app", id: idDonne }: { espace?: "app
             </>
           ) : estResponsable(user, profile) && (
             <Button asChild variant="outline" className="w-full">
-              <Link href={`/back-office/evenements/${e.id}`}>{t("backOffice.gerer")}</Link>
+              <Link href={`${baseBackOffice(e.pour)}/${e.id}`}>{t("backOffice.gerer")}</Link>
             </Button>
           )}
           {avecInscriptions && (

@@ -1,8 +1,8 @@
 "use client";
 
-// Listes de Back-Office › Évènements (lot U6, B3) : « Évènements », ceux qu'on gère
-// (organisateur, coordination), réunions à part ; « Réunions », celles de ses pôles et
-// équipes (toutes pour un admin). Lignes compactes du calendrier, vers la fiche de gestion ;
+// Listes du Back-Office (lot U6, B3) : « Évènements », ceux qu'on gère (organisateur,
+// coordination), réunions à part ; « Réunions » (entrée à part depuis l'agencement v18, B15),
+// celles de ses pôles et équipes (toutes pour un admin). Lignes compactes du calendrier, vers la fiche de gestion ;
 // à venir (et infos) d'abord, passés derrière un bouton.
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
@@ -10,6 +10,7 @@ import { useTranslation } from "react-i18next";
 import { useProfile } from "@/lib/firebase/users";
 import { canEditEvenement, creatableEvenementPours, estDeLaReunion, estReunion } from "@/lib/access";
 import { listEvenements } from "@/lib/firebase/evenements";
+import { baseBackOffice } from "@/lib/navigation";
 import { byDate, isInfo, isPast } from "@/lib/evenements/agenda";
 import { todayIso } from "@/lib/scene/dimanches";
 import { ANNONCE_SECTIONS } from "@/types/annonce";
@@ -42,7 +43,7 @@ export function ListeGestion({ reunions }: { reunions: boolean }) {
   const passes = miens.filter((e) => !isInfo(e) && isPast(e, today)).sort((a, b) => b.date.localeCompare(a.date));
   const peutCreer = creatableEvenementPours(user, profile, ANNONCE_SECTIONS).some((p) => estReunion(p) === reunions);
   const ligne = (e: Evenement, passe = false) => (
-    <EvenementCard key={e.id} evenement={e} past={passe} href={`/back-office/evenements/${e.id}`} />
+    <EvenementCard key={e.id} evenement={e} past={passe} href={`${baseBackOffice(e.pour)}/${e.id}`} />
   );
 
   return (
@@ -51,7 +52,7 @@ export function ListeGestion({ reunions }: { reunions: boolean }) {
       {!reunions && <AnnonceBascule />}
       {peutCreer && (
         <Button asChild>
-          <Link href={reunions ? "/back-office/evenements/nouveau?reunion=1" : "/back-office/evenements/nouveau"}>
+          <Link href={reunions ? "/back-office/reunions/nouvelle" : "/back-office/evenements/nouveau"}>
             {t(reunions ? "backOffice.nouvelleReunion" : "evenements.nouveau")}
           </Link>
         </Button>

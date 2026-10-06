@@ -2623,6 +2623,7 @@
       "planning": "排班表",
       "taches": "任务",
       "evenements": "活动",
+      "reunions": "会议",
       "equipes": "团队",
       "messages": "消息",
       "statistiques": "统计"
@@ -2692,6 +2693,7 @@
         "tesPoles": "你所在部门的任务",
         "tousLesPoles": "所有部门的任务",
         "fiches": "活动、报名、报名时间",
+        "reunions": "议题、会议记录",
         "scene": "舞台节目",
         "organigramme": "组织架构、部门",
         "personnes": "人员与权限",
