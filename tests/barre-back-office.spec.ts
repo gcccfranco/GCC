@@ -140,6 +140,22 @@ test.describe("Barre du bas (B6) : la barre", () => {
     await expect(onglets(page)).toHaveText(["Planning", "Accueil", "Plus"]);
   });
 
+  // Relecture du lot U6 : sur un réseau qui accroche, la barre n'attend pas indéfiniment.
+  test("la barre enregistrée ne répond pas : la barre par défaut s'affiche au bout de quelques secondes", async ({ page }) => {
+    await sansSheet(page);
+    await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
+    await signInAs(page, ADMIN, { "backOffice/uid-admin": { barreDuBas: ["tableau", "equipes"], majLe: "2026-09-30T10:00:00Z" } }, "/songs");
+    // Posée après la base simulée, cette route passe avant elle : la lecture reste sans réponse.
+    await page.route(/\/documents\/backOffice\/uid-admin$/, async (route) => {
+      if (route.request().method() !== "GET") return route.fallback();
+      await new Promise((r) => setTimeout(r, 30_000));
+      await route.fallback().catch(() => {});
+    });
+    await page.goto("/back-office");
+    await expect(onglets(page)).toHaveText(["Accueil", "Tâches", "Planning", "Évènements", "Plus"], { timeout: 10_000 });
+    await page.unrouteAll({ behavior: "ignoreErrors" });
+  });
+
   test("une page hors de la barre marque « Plus »", async ({ page }) => {
     await ouvrir(page, ADMIN, {}, "/back-office/equipes");
     await expect(barre(page).getByRole("link", { name: "Plus" })).toHaveAttribute("aria-current", "page");
