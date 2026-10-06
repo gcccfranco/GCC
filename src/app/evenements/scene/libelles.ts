@@ -43,3 +43,13 @@ export function semaineCourte(jours: string[], lang: string): string {
   if (jours.length === 1) return `${num(a)} ${mois(a)}`
   return memeMois ? `${num(a)} – ${num(b)} ${mois(b)}` : `${num(a)} ${mois(a)} – ${num(b)} ${mois(b)}`
 }
+
+/** Les jours de la semaine d'une saison (0 = dimanche), du lundi au dimanche (P4) :
+ *  « le samedi et le dimanche » / « 周六和周日 ». */
+export function joursDeLaSemaine(jours: number[], lang: string, et: string): string {
+  const noms = [...jours].sort((a, b) => ((a + 6) % 7) - ((b + 6) % 7)).map((j) => {
+    const d = new Date(2026, 9, 4 + j) // 4 octobre 2026 : un dimanche
+    return lang === "zh-CN" ? d.toLocaleDateString("zh-CN", { weekday: "short" }).replace("星期", "周") : `le ${d.toLocaleDateString("fr-FR", { weekday: "long" })}`
+  })
+  return noms.length < 2 ? noms.join("") : `${noms.slice(0, -1).join(lang === "zh-CN" ? "、" : ", ")}${et}${noms.at(-1)}`
+}

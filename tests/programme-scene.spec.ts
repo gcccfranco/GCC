@@ -62,12 +62,14 @@ test("section Évènements : entrée dans le menu principal, onglet nommé comme
   await expect(entree.first()).toBeVisible();
 });
 
-test("section Évènements : sans programme affiché, un membre n'a ni onglet ni programme", async ({ page }) => {
+test("section Évènements : un brouillon garde l'onglet Noël, qui annonce l'ouverture sans grille", async ({ page }) => {
   await page.clock.setFixedTime(AVANT_OUVERTURE);
-  // Pâques · Noël (P3, Q10) : une édition lancée s'affiche avant son ouverture ; un brouillon, jamais.
+  // Pâques · Noël (P4, Q17) : les onglets Pâques et Noël sont fixes ; un brouillon n'a pas de
+  // grille, seule sa date d'ouverture prévue s'annonce.
   await signInAs(page, JO, { "programmes/noel": { ...NOEL, visible: false, ouvert: false } }, "/evenements/scene");
-  await expect(page.getByText("Aucun programme en cours.")).toBeVisible();
-  await expect(page.getByRole("link", { name: "Noël", exact: true })).toHaveCount(0);
+  await expect(page.getByText("Les réservations ouvriront le jeudi 1er octobre")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Noël", exact: true })).toHaveAttribute("aria-current", "page");
+  await expect(page.getByRole("button", { name: /^Réserver/ })).toHaveCount(0);
   await expect(page.getByRole("link", { name: "Scène", exact: true })).toHaveCount(0);
 });
 
@@ -113,10 +115,10 @@ test("membre : ni gestion du programme ni onglet Scène vide", async ({ page }) 
   await expect(page.getByRole("button", { name: "Masquer" })).toHaveCount(0);
 });
 
-test("la page du programme montre son nom et son jour J", async ({ page }) => {
+test("la page du programme montre son titre (calculé, Q11) et son jour J", async ({ page }) => {
   await signInAs(page, JO, { "programmes/noel": NOEL }, "/evenements/scene");
-  await expect(page.getByRole("heading", { name: "Noël" })).toBeVisible();
-  await expect(page.getByText("24 décembre")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Noël 2026", exact: true })).toBeVisible();
+  await expect(page.getByText(/^Jour J : jeudi 24 décembre/)).toBeVisible();
 });
 
 // ─── Tranche 2 : volet Entraînements ────────────────────────────────────────
@@ -219,7 +221,7 @@ test("après le dernier dimanche réservable, le volet Entraînements disparaît
   await expect(page.getByRole("button", { name: /^Réserver/ })).toHaveCount(0);
 });
 
-// ─── Tranche 3 : volet « Programme Noël » (ordre de passage) ────────────────
+// ─── Tranche 3 : l'ordre de passage (Pâques · Noël, Q16 : une entrée en bas de la fête) ──
 
 const PASSAGES = [
   { quoi: "Séance louange", qui: ["敬拜团"], titre: "Ouverture" },
@@ -228,7 +230,7 @@ const PASSAGES = [
 
 test("programme : liste numérotée dans l'ordre de la brochure, sans horaire", async ({ page }) => {
   await openNoel(page, JO, "2026-10-01", { "programmes/noel": { ...NOEL, passages: PASSAGES } });
-  await page.getByRole("button", { name: "Programme Noël" }).click();
+  await page.getByRole("button", { name: /Ordre de passage du jour J/ }).click();
   const liste = page.getByRole("list", { name: "Ordre de Passage jour J" });
   await expect(liste.getByRole("listitem")).toHaveCount(2);
   await expect(liste.getByRole("listitem").nth(0)).toContainText("Ouverture");
@@ -396,31 +398,32 @@ test("archivage sept jours après le jour J", () => {
 // bascule et le brouillon se testent dans tests/scene-paques-noel.spec.ts
 // (`editionCourante`, `editionsAffichees`, `editionProche`).
 
-test("après le jour J : l'onglet garde son nom et remercie, sans réservation ni ordre de passage", async ({ page }) => {
+test("après le jour J : l'onglet Noël remercie et garde l'ordre de passage, sans réservation (Q17)", async ({ page }) => {
   const db = await ouvrirScene(page, JO, "2026-12-25", DEUX);
-  const carte = page.getByRole("region", { name: "Noël, c'est passé — merci à tous !" });
+  const carte = page.getByRole("region", { name: "Noël 2026, c'est passé — merci à tous !" });
   await expect(carte).toBeVisible();
   await expect(carte).toContainText("Les réservations de la scène et le programme sont fermés.");
-  await expect(carte).toContainText("Prochain programme : Pâques, réservations à partir du 4 janvier.");
-  await expect(page.getByRole("link", { name: "Noël", exact: true })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Noël", exact: true })).toHaveAttribute("aria-current", "page");
   await expect(page.getByRole("button", { name: /^Réserver/ })).toHaveCount(0);
-  await expect(page.getByRole("heading", { name: "Ordre de Passage jour J" })).toHaveCount(0);
+  await expect(page.getByRole("list", { name: "Ordre de Passage jour J" }).getByRole("listitem")).toHaveCount(2);
   await expect(page.getByRole("button", { name: "Entraînements" })).toHaveCount(0);
   expect(ecritures(db)).toHaveLength(0);
 });
 
 test("le septième jour, le message est encore là", async ({ page }) => {
   await ouvrirScene(page, JO, "2026-12-31", DEUX);
-  await expect(page.getByRole("region", { name: "Noël, c'est passé — merci à tous !" })).toBeVisible();
+  await expect(page.getByRole("region", { name: "Noël 2026, c'est passé — merci à tous !" })).toBeVisible();
 });
 
 /** Noël archivé le 01/01/2027 ; Pâques en brouillon (P3, Q10 : lancé, il s'afficherait avant son ouverture). */
 const ARCHIVE = { ...DEUX, "programmes/paques": { ...PAQUES, ouvert: false } };
 
-test("une fois archivé : plus aucun onglet de scène pour un membre", async ({ page }) => {
+test("une fois archivé : `/evenements/scene` mène à la fête la plus proche (Pâques), Noël annonce Noël 2027", async ({ page }) => {
   await ouvrirScene(page, JO, "2027-01-01", ARCHIVE);
-  await expect(page.getByText("Aucun programme en cours.")).toBeVisible();
-  await expect(page.getByRole("link", { name: "Noël", exact: true })).toHaveCount(0);
+  await expect(page).toHaveURL(/\/evenements\/scene\/paques\/?$/);
+  await expect(page.getByText("Les réservations ouvriront le lundi 4 janvier")).toBeVisible();
+  await page.getByRole("link", { name: "Noël", exact: true }).click();
+  await expect(page.getByText("Les réservations de Noël 2027 ne sont pas encore ouvertes.")).toBeVisible();
   await expect(page.getByRole("link", { name: "Scène", exact: true })).toHaveCount(0);
 });
 
@@ -434,7 +437,7 @@ test("bascule sur Pâques à l'ouverture de ses réservations, sans aucune écri
 test("après le jour J en 中文 : le message est traduit", async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
   await ouvrirScene(page, JO, "2026-12-25", DEUX);
-  await expect(page.getByText("「Noël」已经过去了——感谢大家！")).toBeVisible();
+  await expect(page.getByText("「圣诞节 2026」已经过去了——感谢大家！")).toBeVisible();
 });
 
 test("coordination pendant les sept jours : gestion, date d'archivage et ordre de passage en lecture seule", async ({ page }) => {

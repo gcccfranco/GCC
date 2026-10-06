@@ -1,50 +1,36 @@
 "use client"
 
-// Onglets de la section Évènements : « Calendrier » (lot 6, public) et le
-// programme de scène affiché (« Noël », lot 3 bis) pour les connectés ; sans
-// programme affiché, seule la coordination voit ce second onglet (« Scène »)
-// pour en créer un. Rechargé après chaque écriture (PROGRAMMES_CHANGED).
-// Pâques · Noël (P3) : le programme affiché est l'édition affichée au jour J le plus
-// proche (`editionsAffichees`, `editionProche`), comme la page — le nom de l'onglet et la
-// page ne peuvent pas diverger. P4 en fait les onglets des deux fêtes.
+// Onglets de la section Évènements : « Calendrier » (lot 6, public) puis, pour tout connecté,
+// les deux fêtes de la scène, « Pâques » et « Noël » (docs/spec-scene-paques-noel.md, P4) :
+// deux onglets fixes, qu'un programme existe ou non. `useOngletsEvenements` en donne la liste,
+// rendue ici (agenda) et par l'en-tête de la section sous `/evenements/scene` (rail).
 
-import { useEffect, useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useTranslation } from "react-i18next"
 import { useAuth } from "@/lib/firebase/auth"
-import { useProfile } from "@/lib/firebase/users"
-import { isCoordination } from "@/lib/access"
-import { listProgrammes, PROGRAMMES_CHANGED } from "@/lib/firebase/programmes"
-import { todayIso } from "@/lib/scene/dimanches"
-import { editionProche, editionsAffichees } from "@/lib/scene/fetes"
+import { FETES } from "@/lib/scene/fetes"
 import { PLANNING_COLORS } from "@/lib/serviceColors"
 import { SectionTabs, type SectionTab } from "@/components/layout/SectionTabs"
-import type { Programme } from "@/types/programme"
+
+/** Les onglets de la section, dans l'ordre : Calendrier, puis Pâques et Noël pour un connecté. */
+export function useOngletsEvenements(): SectionTab[] {
+  const { t } = useTranslation()
+  const { user } = useAuth()
+  const tabs: SectionTab[] = [{ href: "/evenements", label: t("evenements.tabs.calendrier") }]
+  if (user) {
+    for (const fete of FETES) {
+      tabs.push({ href: `/evenements/scene/${fete}`, label: t(`evenements.tabs.${fete}`), color: PLANNING_COLORS.scene })
+    }
+  }
+  return tabs
+}
 
 /** `enLigne` (lot U4 bis, B2, planche `evenements-ordinateur`) : en deux volets, les onglets
  *  sont des pilules sous le titre de l'agenda, au lieu de la barre collante de la section. */
 export function EvenementsTabs({ enLigne = false }: { enLigne?: boolean }) {
-  const { t } = useTranslation()
-  const { user } = useAuth()
-  const { profile } = useProfile()
   const pathname = usePathname() || ""
-  const [programmes, setProgrammes] = useState<Programme[]>([])
-
-  useEffect(() => {
-    if (!user) return
-    const load = () => { listProgrammes().then(setProgrammes).catch(() => {}) }
-    load()
-    window.addEventListener(PROGRAMMES_CHANGED, load)
-    return () => window.removeEventListener(PROGRAMMES_CHANGED, load)
-  }, [user])
-
-  const today = todayIso()
-  const current = editionProche(editionsAffichees(programmes, today), today)?.programme ?? null
-  const tabs: SectionTab[] = [{ href: "/evenements", label: t("evenements.tabs.calendrier") }]
-  if (user && (current || isCoordination(user, profile))) {
-    tabs.push({ href: "/evenements/scene", label: current?.nom ?? t("planning.tabs.scene"), color: PLANNING_COLORS.scene })
-  }
+  const tabs = useOngletsEvenements()
   if (enLigne) {
     const actif = (href: string) => href === "/evenements" ? !pathname.startsWith("/evenements/scene") : pathname.startsWith(href)
     return (

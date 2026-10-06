@@ -450,3 +450,38 @@ npm run lint
   - Reste : P4 à P9 ; `creerEdition` n'a pas encore d'écran (P7, Q6), et le Firestore simulé des tests
     (`fakeSession.ts`) ne connaît pas encore `documentId` ni le 409.
   - À faire par Timothée : rien pour P3 (aucune règle à publier, droits inchangés).
+- 07/10/2026 — **P4 — App : onglets, en-tête, états sans grille : faite** (branche `lot/v18-scene`, commit
+  « feat(SCENE): P4 », après la fusion de `lot/v18-fondations`, F1 et F2). Sans attendre T7 (accélération voulue
+  par Timothée) : `SectionEvenements.tsx` pose, sous `/evenements/scene`, l'en-tête de la section avec les
+  composants de F1 (`EnTetePage` titre « Évènements », sous-titre de A10, `OngletsRail` Calendrier · Pâques ·
+  Noël) et le halo de la scène, sans barre collante ni `max-w-[1080px]` ; l'agenda (`CalendrierClient`) n'est pas
+  touché. `EvenementsTabs.tsx` : `useOngletsEvenements()` rend la liste des trois onglets pour tout connecté
+  (lue par le rail et par les pilules de l'agenda), plus de lecture des programmes. `/evenements/scene/[fete]`
+  (`paques`, `noel`, sinon 404) monte `FeteClient.tsx` : en-tête de l'édition (titre calculé, jour J, fin des
+  réservations), cartes des états `aucune`, `brouillon`, `bientot`, `fermees`, `passee`, « Les années passées »
+  (`?annee=`), « Comment réserver ? », ordre de passage en lecture (`OrdrePassage` sans `canEdit`, `?vue=ordre`,
+  en page avec `Retour` sur téléphone ; entrée en bas de la colonne en deux volets, carte tout en bas en une
+  colonne) ; deux volets par `DeuxVolets` (liste-carte de 400 px). `/evenements/scene` → `VersLaFete.tsx`
+  (la fête au jour J le plus proche, `router.replace`). `/evenements/scene` avant `/evenements` dans
+  `SECTIONS_EN_DEUX_VOLETS`. Libellés `planning.fete.*`, `evenements.tabs.{paques,noel}`, `evenements.sousTitre`
+  (FR et 中文). `SceneClient` n'est plus monté côté membres (le Back-Office le garde en mode `gestion` jusqu'à P7).
+  - Tests : 14 tests P4 dans `tests/scene-paques-noel.spec.ts` (dont un propre au téléphone et un propre au
+    téléphone et à la tablette debout, plus une capture sous `PW_CAPTURES`), vus rouges sur le code de P3
+    (11 rouges sur `ordinateur`, puis 2 rouges pour l'ordre en bas sur téléphone et tablette), verts sur les
+    cinq projets ; `/evenements/scene/noel` ajouté à `tests/back-office-coupe.spec.ts` ; réécrits là où ils
+    parlaient du nom en onglet, de « Aucun programme en cours. », du volet « Programme Noël » ou de « Réservations :
+    du … au … » : 7 tests de `programme-scene.spec.ts`, 8 de `scene-saison.spec.ts`. `evenements.spec.ts`,
+    `pages-en-grand-evenements.spec.ts`, `calendrier.spec.ts`, `calendrier-deplacer.spec.ts`,
+    `back-office-admin.spec.ts` verts, sauf `pages-en-grand-evenements.spec.ts:79` (`ordinateur`,
+    `tablette-paysage`), rouge attendu de F1 que T7 réécrit (voir `spec-agencement-v18.md`). `tsc` et `lint` propres.
+  - Choix faits faute de réponse : sur téléphone, l'année passée se choisit dans la même liste « Les années
+    passées » que sur ordinateur (la planche montre « L'an dernier » et un lien vers l'année d'avant) ; le
+    remerciement garde `planning.scene.passed` avec le titre calculé (« Noël 2026, c'est passé — merci à tous ! ») ;
+    plus de ligne « Prochain programme » (chaque fête a son onglet) ; un brouillon dont l'ouverture prévue est déjà
+    passée annonce quand même « ouvriront le … » (cas que la spec ne tranche pas) ; « Gérer dans le Back-Office »
+    mène encore à `/back-office/evenements/scene` (l'onglet de la fête au Back-Office vient avec P7).
+  - Fusion avec T7 : T7 posera aussi l'en-tête de l'agenda ; garder la branche `SectionScene` de
+    `SectionEvenements.tsx` (ou la fondre dans l'en-tête commun de T7) et `useOngletsEvenements`.
+  - Reste : P5 à P9 (la grille reste celle de U1 en jours, jusqu'à P5).
+  - À faire par Timothée : rien pour P4 (aucune règle à publier, droits inchangés) ; relire le 中文 des clés
+    `planning.fete.*` et `evenements.sousTitre`.

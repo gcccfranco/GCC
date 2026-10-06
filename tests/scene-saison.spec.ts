@@ -253,9 +253,10 @@ async function capture(page: Page, name: string) {
 const carte = (page: Page) => page.getByRole("region", { name: "Mettre en place la saison" });
 const apercu = (page: Page) => page.getByRole("region", { name: "Aperçu de ce que verront les groupes" });
 
-test("brouillon : un membre n'a ni onglet ni programme", async ({ page }) => {
+test("brouillon : un membre a l'onglet Noël (fixe, P4) mais ni grille ni réservation", async ({ page }) => {
   await ouvrir(page, NOE, { "programmes/noel": NOEL26 });
-  await expect(page.getByText("Aucun programme en cours.")).toBeVisible();
+  await expect(page.getByText(/^Les réservations ouvriront le/)).toBeVisible();
+  await expect(page.getByRole("button", { name: /^Réserver/ })).toHaveCount(0);
   await expect(page.getByRole("link", { name: "Noël 2026", exact: true })).toHaveCount(0);
 });
 
@@ -287,7 +288,7 @@ test("brouillon : la coordination l'ouvre depuis sa ligne et voit la saison et l
   await expect(apercu(page).getByRole("listitem")).toHaveText([/14:00\s*Libre/, /15:00\s*Libre/, /16:00\s*Libre/, /17:00\s*Libre/, /18:00\s*Libre/]);
 });
 
-test("« Ouvrir les réservations » écrit `ouvert: true` en un seul PATCH, et l'onglet prend le nom du programme", async ({ page }) => {
+test("« Ouvrir les réservations » écrit `ouvert: true` en un seul PATCH, et l'onglet Noël de l'App montre la grille", async ({ page }) => {
   const db = await ouvrir(page, ALICE, { "programmes/noel": NOEL26 });
   await page.getByRole("button", { name: "Préparer la saison" }).click();
   await page.getByRole("button", { name: "Ouvrir les réservations" }).click();
@@ -295,12 +296,14 @@ test("« Ouvrir les réservations » écrit `ouvert: true` en un seul PATCH, et 
   expect(patches(db)).toHaveLength(1);
   expect(patches(db)[0].data).toMatchObject({ ouvert: true });
   expect(Object.keys(patches(db)[0].data).sort()).toEqual(["ouvert", "updatedAt"]);
-  await expect(await ongletApp(page, "Noël 2026")).toBeVisible();
+  await (await ongletApp(page, "Noël")).click();
+  await expect(page.getByRole("heading", { name: "Noël 2026", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: /^Réserver \d/ }).first()).toBeVisible();
 });
 
 test("une fois ouvert, un membre voit l'onglet, le samedi et le dimanche", async ({ page }) => {
   await ouvrir(page, NOE, { "programmes/noel": { ...NOEL26, ouvert: true } });
-  await expect(page.getByRole("link", { name: "Noël 2026", exact: true })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Noël", exact: true })).toHaveAttribute("aria-current", "page");
   await expect(page.getByRole("region", { name: "Samedi 10 octobre" })).toBeVisible();
   await expect(page.getByRole("region", { name: "Dimanche 11 octobre" })).toBeVisible();
 });
@@ -501,8 +504,10 @@ test("créer un programme : brouillon ouvert au jour de sa création, l'écran s
   await expect(page.getByRole("button", { name: "Ouvrir les réservations" })).toBeVisible();
   const cree = db.writes.find((w) => w.method === "POST" && w.path.startsWith("programmes/"));
   expect(cree?.data).toMatchObject({ nom: "Noël 2026", jourJ: "2026-12-24", debut: "2026-10-05", ouvert: false, visible: false });
-  // Un brouillon ne prend pas l'onglet de l'App.
-  await expect(await ongletApp(page, "Scène")).toBeVisible();
+  // Pâques · Noël (P4) : l'onglet Noël de l'App est fixe ; le brouillon n'y montre pas de grille.
+  await (await ongletApp(page, "Noël")).click();
+  await expect(page.getByText(/^Les réservations ouvriront le/)).toBeVisible();
+  await expect(page.getByRole("button", { name: /^Réserver/ })).toHaveCount(0);
 });
 
 test("créneaux libres : la grille à venir moins les créneaux pris ou commencés ; la réservation qu'on déplace ne se bloque pas elle-même", () => {
@@ -540,7 +545,7 @@ const feuille = (page: Page) => page.getByRole("dialog");
 
 test("membres : un bloc par jour réservable à venir, en toutes lettres, chaque créneau « Libre · Réserver » ; les jours passés derrière un lien", async ({ page }) => {
   await ouvrir(page, NOE, { "programmes/noel": OUVERT });
-  await expect(page.getByText("Réservations : du 3 octobre au 20 décembre", { exact: true })).toBeVisible();
+  await expect(page.getByText("Jour J : jeudi 24 décembre · réservations jusqu'au dimanche 20 décembre", { exact: true })).toBeVisible();
   await expect(bloc(page, "Samedi 10 octobre").getByRole("listitem")).toHaveText([/10:00\s*Libre\s*Réserver/, /11:00\s*Libre\s*Réserver/]);
   const dimanche = bloc(page, "Dimanche 11 octobre");
   await expect(dimanche.getByRole("listitem")).toHaveText([/14:00\s*Libre/, /15:00\s*Libre/, /16:00\s*Libre/, /17:00\s*Libre/, /18:00\s*Libre/]);
@@ -671,14 +676,14 @@ test("membres : après la fermeture de la saison, le volet Entraînements dispar
 test("membres : la veille de la fermeture, le dernier jour se réserve encore", async ({ page }) => {
   await ouvrir(page, NOE, { "programmes/noel": { ...OUVERT, fin: "2026-11-29" } }, "2026-11-29T10:00:00");
   await expect(bloc(page, "Dimanche 29 novembre").getByRole("button", { name: "Réserver 14:00 – 15:00" })).toBeVisible();
-  await expect(page.getByText("Réservations : du 3 octobre au 29 novembre", { exact: true })).toBeVisible();
+  await expect(page.getByText("Jour J : jeudi 24 décembre · réservations jusqu'au dimanche 29 novembre", { exact: true })).toBeVisible();
 });
 
 test("membres en 中文 : jours, lignes et feuille traduits", async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
   await ouvrir(page, NOE, { "programmes/noel": OUVERT, "programmes/noel/creneaux/s": SKETCH });
   await expect(page.getByRole("button", { name: "查看过去的日子（2）" })).toBeVisible();
-  await expect(page.getByText("预约：10月3日 至 12月20日", { exact: true })).toBeVisible();
+  await expect(page.getByText(/预约截至12月20日/)).toBeVisible();
   const samedi = page.getByRole("region", { name: "10月10日星期六" });
   await expect(samedi.getByRole("listitem")).toHaveText([/10:00\s*空闲\s*预约/, /11:00\s*空闲\s*预约/]);
   await expect(page.getByRole("region", { name: "10月11日星期日" }).getByRole("button", { name: "修改" })).toBeVisible();
@@ -720,7 +725,8 @@ test("passé : le programme suivant annoncé n'est jamais un brouillon (Q3)", as
   await ouvrir(page, NOE, { "programmes/noel": OUVERT, "programmes/paques": { ...PAQUES, debut: "2026-12-26" } }, "2026-12-26T10:00:00");
   await expect(page.getByText("Noël 2026, c'est passé — merci à tous !")).toBeVisible();
   await expect(page.getByText(/Prochain programme/)).toHaveCount(0);
-  await expect(page.getByText(/Pâques/)).toHaveCount(0);
+  // Pâques · Noël (P4) : l'onglet « Pâques » reste dans le rail ; le brouillon ne s'annonce pas ici.
+  await expect(page.getByText(/Pâques 2027/)).toHaveCount(0);
 });
 
 test("créer un programme pendant que le programme affiché a des réservations aux mêmes dates : l'aperçu du brouillon reste vide", async ({ page }) => {

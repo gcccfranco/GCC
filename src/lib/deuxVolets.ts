@@ -28,7 +28,10 @@ export const SECTIONS_EN_DEUX_VOLETS: readonly string[] = [
   "/harmonie/cours",
   "/harmonie/rd2000",
   "/harmonie",
-  // B2 : l'agenda des évènements (le programme de scène, sous `/evenements/scene`, n'a pas de liste).
+  // Pâques · Noël (P4) : les onglets de la scène posent leurs deux volets à eux, avant l'agenda
+  // qui les contient ; passer d'une fête à l'autre ne remonte pas la section.
+  "/evenements/scene",
+  // B2 : l'agenda des évènements.
   "/evenements",
   // B4 : Mes services (`/mes-services/[date]`) et Mes tâches (`/taches/[pole]/[id]`).
   "/mes-services",

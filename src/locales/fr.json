@@ -1247,6 +1247,24 @@
       "confirmRemovePassage": "Retirer ce passage ?",
       "move": "Déplacer"
     },
+    "fete": {
+      "jusquau": "réservations jusqu'au {{date}}",
+      "pasOuvertes": "Les réservations de {{edition}} ne sont pas encore ouvertes.",
+      "ouvriront": "Les réservations ouvriront le {{date}}",
+      "ouvrirontDetail": "Les entraînements pour {{fete}} auront lieu {{jours}}, jusqu'au {{fin}}. Cet onglet montrera alors les créneaux libres.",
+      "fermees": "Les réservations sont fermées.",
+      "fermeesDetail": "Rendez-vous le jour J, dans l'ordre de passage.",
+      "anneesPassees": "Les années passées",
+      "numeros_one": "{{count}} numéro",
+      "numeros_other": "{{count}} numéros",
+      "aucunNumero": "aucun numéro pour l'instant",
+      "ordreEntree": "Ordre de passage du jour J",
+      "ordreTitre": "{{edition}} · ordre de passage",
+      "anDernier": "le programme d'une année passée, pour se donner des idées",
+      "commentReserver": "Comment réserver ?",
+      "commentReserverTexte": "Un créneau = {{duree}} de scène. On choisit quoi (chant, danse, sketch…) et pour quel groupe.",
+      "et": " et "
+    },
     "scene": {
       "noCurrent": "Aucun programme en cours.",
       "others": "Programmes masqués",
@@ -1790,8 +1808,11 @@
   "evenements": {
     "title": "Évènements",
     "tabs": {
-      "calendrier": "Calendrier"
+      "calendrier": "Calendrier",
+      "paques": "Pâques",
+      "noel": "Noël"
     },
+    "sousTitre": "Les rendez-vous de l'église et les inscriptions",
     "types": {
       "sport": "Sport",
       "loisir": "Loisir",

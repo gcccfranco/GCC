@@ -1243,6 +1243,24 @@
       "confirmRemovePassage": "删除此节目？",
       "move": "移动"
     },
+    "fete": {
+      "jusquau": "预约截至{{date}}",
+      "pasOuvertes": "{{edition}}的预约尚未开放。",
+      "ouvriront": "预约将于{{date}}开放",
+      "ouvrirontDetail": "{{fete}}的排练安排在{{jours}}，截至{{fin}}。届时此页将显示空闲时段。",
+      "fermees": "预约已截止。",
+      "fermeesDetail": "当天请按上场顺序准备。",
+      "anneesPassees": "往年",
+      "numeros_one": "{{count}} 个节目",
+      "numeros_other": "{{count}} 个节目",
+      "aucunNumero": "暂无节目",
+      "ordreEntree": "当天上场顺序",
+      "ordreTitre": "{{edition}} · 上场顺序",
+      "anDernier": "往年的节目，可作参考",
+      "commentReserver": "如何预约？",
+      "commentReserverTexte": "一个时段 = {{duree}}舞台时间。选择内容（唱歌、舞蹈、短剧……）和组别。",
+      "et": "和"
+    },
     "scene": {
       "noCurrent": "暂无进行中的节目。",
       "others": "已隐藏的节目",
@@ -1786,8 +1804,11 @@
   "evenements": {
     "title": "活动",
     "tabs": {
-      "calendrier": "日历"
+      "calendrier": "日历",
+      "paques": "复活节",
+      "noel": "圣诞节"
     },
+    "sousTitre": "教会的活动与报名",
     "types": {
       "sport": "运动",
       "loisir": "休闲",

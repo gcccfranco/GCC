@@ -13,6 +13,7 @@ import { entreesCalendrier, type DonneesCalendrier, type EntreeCalendrier, type 
 import { compteCreneaux, erreursSaison, FAMILLES, lignesDuJour, saisonDe, semainesDe } from "../src/lib/scene/saison";
 import { semaineCourte } from "../src/app/evenements/scene/libelles";
 import { creerEdition } from "../src/lib/firebase/programmes";
+import { enTete, estGrandEcran, estTelephone, interdireDialoguesNatifs, ongletsRail, verifierAgencement } from "./helpers/agencement";
 import type { Creneau, Programme } from "../src/types/programme";
 
 // Réservation de la scène — Pâques · Noël (docs/spec-scene-paques-noel.md).
@@ -447,4 +448,190 @@ test("widget Scène : un brouillon seul n'est pas montré", async ({ page }) => 
   });
   await expect(w.getByText("Aucun programme affiché.")).toBeVisible();
   await expect(w.getByRole("heading", { name: /Noël 2026/ })).toHaveCount(0);
+});
+
+// ─── P4 : App — onglets de fête, en-tête, états sans grille ─────────────────
+// Horloge au vendredi 09/10/2026 (la « Réussite » de la spec) sauf mention.
+
+const PASSAGES_NOEL = [
+  { quoi: "Séance louange", qui: ["敬拜团"], titre: "Ouverture" },
+  { quoi: "Chant", qui: ["EDD 小班"], titre: "Jésus est né" },
+  { quoi: "Sketch", qui: ["Gp Paix"], titre: "La nuit de Bethléem" },
+];
+/** L'ancien Noël, sans `fete` ni `annee` ni `ouvert` : lu comme Noël 2026, lancé (Q2). */
+const DOC_NOEL_ANCIEN = {
+  nom: "Noël", jourJ: "2026-12-24", debut: "2026-10-01", visible: false, passages: PASSAGES_NOEL,
+  plages: [{ jour: 6, debut: "10:00", fin: "12:00" }, { jour: 0, debut: "14:00", fin: "19:00" }], duree: 60,
+  createdBy: "uid-alice", updatedAt: "2026-09-14T20:00:00Z",
+};
+const DOC_PAQUES_2026 = {
+  nom: "Pâques 2026", fete: "paques", annee: 2026, jourJ: "2026-04-05", debut: "2026-02-09", ouvert: true,
+  passages: ["Ouverture", "Le tombeau vide", "Il est vivant", "Au matin", "Louange de clôture"].map((titre) => ({ quoi: "Chant", qui: ["Franco"], titre })),
+  createdBy: "uid-alice", updatedAt: "2026-04-01T10:00:00Z",
+};
+/** Une Pâques d'avant ce lot (identifiant au hasard, ni `fete` ni `annee`). */
+const DOC_PAQUES_2025 = {
+  nom: "Pâques", jourJ: "2025-04-20", debut: "2025-02-24", visible: false,
+  passages: Array.from({ length: 7 }, (_, i) => ({ quoi: "Chant", qui: ["Franco"], titre: `Numéro ${i + 1} de 2025` })),
+  createdBy: "uid-alice", updatedAt: "2025-04-01T10:00:00Z",
+};
+const DOC_PAQUES_2027_BROUILLON = {
+  nom: "Pâques 2027", fete: "paques", annee: 2027, jourJ: "2027-03-28", debut: "2027-02-01", ouvert: false, passages: [],
+  plages: [{ jour: 6, debut: "10:00", fin: "12:00" }, { jour: 0, debut: "14:00", fin: "19:00" }], duree: 60,
+  createdBy: "uid-alice", updatedAt: "2026-10-05T10:00:00Z",
+};
+const JO_MEMBRE: FakeProfile = { uid: "uid-jo", email: "jo@example.com", firstName: "Jo", lastName: "L." };
+
+async function ouvrirFete(page: Page, chemin: string, docs: Record<string, Record<string, unknown>> = {}, jour = "2026-10-09", qui: FakeProfile = JO_MEMBRE) {
+  interdireDialoguesNatifs(page);
+  await page.clock.setFixedTime(new Date(`${jour}T10:00:00`));
+  return signInAs(page, qui, docs, chemin);
+}
+const enTeteFete = (page: Page) => page.getByRole("heading", { level: 2 }).first();
+const historique = (page: Page) => page.evaluate(() => history.length);
+
+test("P4 — rail « Calendrier · Pâques · Noël » pour un membre sans aucun programme", async ({ page }) => {
+  await ouvrirFete(page, "/evenements/scene/paques");
+  await expect(ongletsRail(page).getByRole("link")).toHaveText(["Calendrier", "Pâques", "Noël"]);
+  await expect(ongletsRail(page).getByRole("link", { name: "Pâques" })).toHaveAttribute("aria-current", "page");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Évènements");
+  await expect(enTete(page)).toContainText("Les rendez-vous de l'église et les inscriptions");
+  await verifierAgencement(page);
+});
+
+test("P4 — en chinois : 复活节 et 圣诞节 dans le rail, le titre de l'édition aussi", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
+  await ouvrirFete(page, "/evenements/scene/noel", { "programmes/x7Kq2": DOC_NOEL_ANCIEN });
+  await expect(ongletsRail(page).getByRole("link")).toHaveText(["日历", "复活节", "圣诞节"]);
+  await expect(enTeteFete(page)).toHaveText("圣诞节 2026");
+});
+
+test("P4 — `/evenements/scene` mène à Noël le 09/10/2026 ; `/evenements/scene/ete` n'existe pas", async ({ page }) => {
+  await ouvrirFete(page, "/evenements/scene", { "programmes/x7Kq2": DOC_NOEL_ANCIEN });
+  await expect(page).toHaveURL(/\/evenements\/scene\/noel\/?$/);
+  await expect(enTeteFete(page)).toHaveText("Noël 2026");
+  const reponse = await page.goto("/evenements/scene/ete");
+  expect(reponse?.status()).toBe(404);
+});
+
+test("P4 — Pâques sans document : « … ne sont pas encore ouvertes », jour J calculé, aucune grille, rien d'écrit", async ({ page }) => {
+  const db = await ouvrirFete(page, "/evenements/scene/paques");
+  await expect(enTeteFete(page)).toHaveText("Pâques 2027");
+  await expect(page.getByText("Jour J : dimanche 28 mars 2027")).toBeVisible();
+  await expect(page.getByText("Les réservations de Pâques 2027 ne sont pas encore ouvertes.")).toBeVisible();
+  await expect(page.getByRole("button", { name: /^Réserver/ })).toHaveCount(0);
+  await expect(page.getByText("Comment réserver ?")).toBeVisible();
+  expect(db.writes.filter((w) => w.path.startsWith("programmes"))).toHaveLength(0);
+});
+
+test("P4 — brouillon ouvert au 01/02 : « Les réservations ouvriront le lundi 1er février », sans grille", async ({ page }) => {
+  await ouvrirFete(page, "/evenements/scene/paques", { "programmes/paques-2027": DOC_PAQUES_2027_BROUILLON });
+  await expect(page.getByText("Les réservations ouvriront le lundi 1er février")).toBeVisible();
+  await expect(page.getByText("Les entraînements pour Pâques auront lieu le samedi et le dimanche, jusqu'au dimanche 21 mars. Cet onglet montrera alors les créneaux libres.")).toBeVisible();
+  await expect(page.getByRole("button", { name: /^Réserver/ })).toHaveCount(0);
+});
+
+test("P4 — années passées : titre, jour J, nombre de numéros ; l'ordre de la dernière année à lire, une autre par `?annee=`", async ({ page }) => {
+  await ouvrirFete(page, "/evenements/scene/paques", { "programmes/paques-2026": DOC_PAQUES_2026, "programmes/a1b2": DOC_PAQUES_2025 });
+  const annees = page.getByRole("region", { name: "Les années passées" });
+  await expect(annees.getByRole("button")).toHaveText([/Pâques 2026\s*dimanche 5 avril · 5 numéros/, /Pâques 2025\s*dimanche 20 avril · 7 numéros/]);
+  await expect(page.getByRole("heading", { name: "Pâques 2026 · ordre de passage" })).toBeVisible();
+  await expect(page.getByRole("list", { name: "Ordre de Passage jour J" }).getByRole("listitem")).toHaveCount(5);
+  const avant = await historique(page);
+  await annees.getByRole("button", { name: /Pâques 2025/ }).click();
+  await expect(page).toHaveURL(/[?&]annee=2025/);
+  await expect(page.getByRole("heading", { name: "Pâques 2025 · ordre de passage" })).toBeVisible();
+  await expect(page.getByRole("list", { name: "Ordre de Passage jour J" }).getByRole("listitem")).toHaveCount(7);
+  expect(await historique(page)).toBe(avant);
+});
+
+test("P4 — Noël 2026, ancien document : titre calculé, jour J, fin des réservations ; plus de volet « Programme Noël »", async ({ page }) => {
+  await ouvrirFete(page, "/evenements/scene/noel", { "programmes/x7Kq2": DOC_NOEL_ANCIEN });
+  await expect(enTeteFete(page)).toHaveText("Noël 2026");
+  await expect(page.getByText("Jour J : jeudi 24 décembre · réservations jusqu'au dimanche 20 décembre")).toBeVisible();
+  await expect(page.getByRole("button", { name: /^Réserver \d/ }).first()).toBeVisible();
+  await expect(page.getByRole("button", { name: "Programme Noël" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Entraînements", exact: true })).toHaveCount(0);
+  await verifierAgencement(page);
+});
+
+test("P4 — ordre de passage : une seule entrée, en bas, en lecture même pour la coordination ; `?vue=ordre` sans entrée d'historique", async ({ page }) => {
+  await ouvrirFete(page, "/evenements/scene/noel", { "programmes/x7Kq2": DOC_NOEL_ANCIEN }, "2026-10-09", ALICE_EVT);
+  const entree = page.getByRole("button", { name: /Ordre de passage du jour J/ });
+  await expect(entree).toHaveCount(1);
+  await expect(entree).toContainText("jeudi 24 décembre · 3 numéros");
+  expect((await entree.boundingBox())!.y).toBeGreaterThan((await enTeteFete(page).boundingBox())!.y);
+  await expect(page.getByRole("link", { name: "Gérer dans le Back-Office" })).toBeVisible();
+  const avant = await historique(page);
+  await entree.click();
+  await expect(page).toHaveURL(/[?&]vue=ordre/);
+  const liste = page.getByRole("list", { name: "Ordre de Passage jour J" });
+  await expect(liste.getByRole("listitem")).toHaveCount(3);
+  await expect(liste.getByRole("button", { name: "Déplacer" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Ajouter un passage" })).toHaveCount(0);
+  expect(await historique(page)).toBe(avant);
+  for (const libelle of ["Nouveau programme", "Masquer", "Afficher", "Modifier le programme", "Fermer"]) {
+    await expect(page.getByRole("button", { name: libelle, exact: true })).toHaveCount(0);
+  }
+});
+
+test("P4 — ordre de passage sur téléphone : en page, avec un retour vers la fête", async ({ page }) => {
+  test.skip(!estTelephone(test.info()), "propre au téléphone");
+  await ouvrirFete(page, "/evenements/scene/noel?vue=ordre", { "programmes/x7Kq2": DOC_NOEL_ANCIEN });
+  await expect(page.getByRole("list", { name: "Ordre de Passage jour J" }).getByRole("listitem")).toHaveCount(3);
+  await expect(page.getByRole("button", { name: /^Réserver/ })).toHaveCount(0);
+  await page.getByRole("link", { name: "Noël 2026", exact: true }).click();
+  await expect(page).not.toHaveURL(/vue=ordre/);
+  await expect(page.getByRole("button", { name: /^Réserver \d/ }).first()).toBeVisible();
+});
+
+test("P4 — une colonne (téléphone, tablette) : l'ordre de passage en carte tout en bas, sous les entraînements", async ({ page }) => {
+  test.skip(estGrandEcran(test.info()), "propre au téléphone et à la tablette debout");
+  await ouvrirFete(page, "/evenements/scene/noel", { "programmes/x7Kq2": DOC_NOEL_ANCIEN });
+  const entree = page.getByRole("button", { name: /Ordre de passage du jour J/ });
+  const dernier = page.getByRole("button", { name: /^Réserver \d/ }).last();
+  await expect(dernier).toBeAttached();
+  const yDernier = await dernier.evaluate((e) => e.getBoundingClientRect().bottom + window.scrollY);
+  const yEntree = await entree.evaluate((e) => e.getBoundingClientRect().top + window.scrollY);
+  expect(yEntree).toBeGreaterThan(yDernier);
+});
+
+test("P4 — réservations fermées (21/12/2026) : l'ordre de passage, plus d'entraînements", async ({ page }) => {
+  await ouvrirFete(page, "/evenements/scene/noel", { "programmes/x7Kq2": DOC_NOEL_ANCIEN }, "2026-12-21");
+  await expect(page.getByText("Les réservations sont fermées.")).toBeVisible();
+  await expect(page.getByRole("list", { name: "Ordre de Passage jour J" }).getByRole("listitem")).toHaveCount(3);
+  await expect(page.getByRole("button", { name: /^Réserver/ })).toHaveCount(0);
+});
+
+test("P4 — 28/12/2026 : le remerciement et l'ordre de passage ; 01/01/2027 : Noël 2027 pas encore ouvert, Noël 2026 dans les années passées", async ({ page }) => {
+  await ouvrirFete(page, "/evenements/scene/noel", { "programmes/x7Kq2": DOC_NOEL_ANCIEN }, "2026-12-28");
+  await expect(page.getByRole("region", { name: "Noël 2026, c'est passé — merci à tous !" })).toBeVisible();
+  await expect(page.getByRole("list", { name: "Ordre de Passage jour J" }).getByRole("listitem")).toHaveCount(3);
+  await expect(page.getByRole("button", { name: /^Réserver/ })).toHaveCount(0);
+
+  await page.clock.setFixedTime(new Date("2027-01-01T10:00:00"));
+  await page.reload();
+  await expect(enTeteFete(page)).toHaveText("Noël 2027");
+  await expect(page.getByText("Les réservations de Noël 2027 ne sont pas encore ouvertes.")).toBeVisible();
+  await expect(page.getByRole("region", { name: "Les années passées" }).getByRole("button")).toHaveText([/Noël 2026\s*jeudi 24 décembre · 3 numéros/]);
+});
+
+test("P4 — deux volets sur ordinateur, ordinateur-1440 et tablette couchée ; une colonne sur téléphone et tablette ; rien ne déborde", async ({ page }) => {
+  await ouvrirFete(page, "/evenements/scene/paques", { "programmes/paques-2026": DOC_PAQUES_2026 });
+  await expect(page.getByText("Les réservations de Pâques 2027 ne sont pas encore ouvertes.")).toBeVisible();
+  await expect(page.locator("[data-deux-volets]")).toHaveCount(estGrandEcran(test.info()) ? 1 : 0);
+  await verifierAgencement(page);
+});
+
+test("P4 — captures à regarder (planches v18-scene-a-sans-saison-* et v18-scene-a-membres-*), PW_CAPTURES=<dossier>", async ({ page }) => {
+  const dir = process.env.PW_CAPTURES;
+  test.skip(!dir, "captures seulement avec PW_CAPTURES");
+  await ouvrirFete(page, "/evenements/scene/paques", { "programmes/paques-2026": DOC_PAQUES_2026, "programmes/a1b2": DOC_PAQUES_2025, "programmes/paques-2027": DOC_PAQUES_2027_BROUILLON, "programmes/x7Kq2": DOC_NOEL_ANCIEN });
+  await expect(page.getByText("Les réservations ouvriront le lundi 1er février")).toBeVisible();
+  await page.waitForTimeout(400);
+  await page.screenshot({ path: `${dir}/p4-paques-${test.info().project.name}.png`, fullPage: true });
+  await page.goto("/evenements/scene/noel");
+  await expect(page.getByRole("button", { name: /^Réserver \d/ }).first()).toBeVisible();
+  await page.waitForTimeout(400);
+  await page.screenshot({ path: `${dir}/p4-noel-${test.info().project.name}.png` });
 });
