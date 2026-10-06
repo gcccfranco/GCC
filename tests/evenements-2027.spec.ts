@@ -377,7 +377,8 @@ test.describe("B2 : l'agenda ne dit pas « rien » tant que le Sheet n'a pas ré
     await page.waitForTimeout(300);
     await expect(page.getByText(AUCUN)).toHaveCount(0);
     repondre();
-    await expect(page.getByText("Chants de Noël")).toBeVisible();
+    // En grand (U4 bis, Q3), la première entrée est aussi à droite, faute d'évènement de l'app.
+    await expect(page.getByText("Chants de Noël").first()).toBeVisible();
     await expect(page.getByText(AUCUN)).toHaveCount(0);
   });
 
@@ -387,7 +388,8 @@ test.describe("B2 : l'agenda ne dit pas « rien » tant que le Sheet n'a pas ré
     await fakeFirestore(page, {});
     await page.goto("/evenements");
     await charge(page);
-    await expect(page.getByText(INJOIGNABLE)).toBeVisible();
+    // En grand (U4 bis, Q3), le volet de droite d'un agenda vide dit la même chose : la première suffit.
+    await expect(page.getByText(INJOIGNABLE).first()).toBeVisible();
     await expect(page.getByText(AUCUN)).toHaveCount(0);
   });
 
@@ -397,8 +399,21 @@ test.describe("B2 : l'agenda ne dit pas « rien » tant que le Sheet n'a pas ré
     await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 500, body: "" }));
     await fakeFirestore(page, {});
     await page.goto("/evenements");
-    await expect(page.getByText("暂时无法读取活动表，请稍后再试。")).toBeVisible();
+    await expect(page.getByText("暂时无法读取活动表，请稍后再试。").first()).toBeVisible();
     await expect(page.getByText("暂无即将举行的活动。")).toHaveCount(0);
+  });
+
+  test("en grand (U4 bis), rien dans l'app : à droite, la première entrée du Sheet, faute de fiche (ordinateur et tablette couchée)", async ({ page }, info) => {
+    test.skip(info.project.name === "telephone" || info.project.name === "tablette", "deux volets : ordinateur et tablette couchée");
+    await page.clock.setFixedTime(new Date("2026-12-15T10:00:00"));
+    await sheets(page);
+    await fakeFirestore(page, {});
+    await page.goto("/evenements");
+    await expect(page.locator('[data-volet="liste"] [data-source="sheet"]').first()).toBeVisible();
+    const droite = page.locator('[data-volet="detail"]');
+    await expect(droite.locator('[data-source="sheet"]')).toHaveCount(1);
+    await expect(droite.getByText("Tableau des évènements")).toBeVisible();
+    await expect(page.getByText(AUCUN)).toHaveCount(0);
   });
 
   test("02/01/2027, rien dans l'app : « Aucun évènement à venir. » tout de suite (le Sheet n'est plus lu)", async ({ page }) => {
@@ -406,7 +421,7 @@ test.describe("B2 : l'agenda ne dit pas « rien » tant que le Sheet n'a pas ré
     const lus = await sheets(page);
     await fakeFirestore(page, {});
     await page.goto("/evenements");
-    await expect(page.getByText(AUCUN)).toBeVisible();
+    await expect(page.getByText(AUCUN).first()).toBeVisible();
     expect(lus).toEqual([]);
   });
 });

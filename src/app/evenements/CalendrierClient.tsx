@@ -93,6 +93,8 @@ export function CalendrierClient({ children }: { children: React.ReactNode }) {
   // Une entrée du Sheet (U9) n'a pas de fiche : le prochain évènement de l'app.
   const prochain = upcoming.flatMap((g) => g.elements).find((x) => x.source === "app")
   const premier = (prochain?.source === "app" ? prochain.evenement : null) ?? infos[0] ?? null
+  // Ni évènement de l'app ni info : la première entrée du Sheet (sa carte, faute de fiche).
+  const premiereEntree = premier ? undefined : upcoming.flatMap((g) => g.elements).find((x) => x.source === "sheet")
   const surLaListe = estSurLaListe(pathname, "/evenements")
   const idActif = surLaListe ? premier?.id : decodeURIComponent(pathname.replace(/\/+$/, "").split("/")[2] ?? "")
 
@@ -104,6 +106,19 @@ export function CalendrierClient({ children }: { children: React.ReactNode }) {
       <Plus className="h-4 w-4" aria-hidden />
       {!grand && t("evenements.nouveau")}
     </Link>
+  )
+
+  // Rien de prévu : on ne l'affirme qu'une fois le Sheet lu (U9), et pas s'il n'a pu l'être. En grand,
+  // c'est aussi le volet de droite d'un agenda vide (Q3).
+  const vide = (
+    <p className="text-sm text-muted-foreground">
+      {sheetEnLecture ? t("common.loading") : sheet?.injoignable ? t("evenements.sheetInjoignable") : (
+        <>
+          {t("evenements.none")}
+          {peutCreer && ` ${t("evenements.noneHint")}`}
+        </>
+      )}
+    </p>
   )
 
   const agenda = chargement ? (
@@ -120,17 +135,7 @@ export function CalendrierClient({ children }: { children: React.ReactNode }) {
         </section>
       )}
 
-      {/* Rien de prévu : on ne l'affirme qu'une fois le Sheet lu (U9), et pas s'il n'a pu l'être. */}
-      {upcoming.length === 0 && (
-        <p className="text-sm text-muted-foreground">
-          {sheetEnLecture ? t("common.loading") : sheet?.injoignable ? t("evenements.sheetInjoignable") : (
-            <>
-              {t("evenements.none")}
-              {peutCreer && ` ${t("evenements.noneHint")}`}
-            </>
-          )}
-        </p>
-      )}
+      {upcoming.length === 0 && vide}
       {upcoming.map((g) => (
         <section key={g.key} className={grand ? "space-y-1" : "space-y-3"}>
           <h2 className="text-sm font-semibold text-muted-foreground px-1 capitalize">{g.label}</h2>
@@ -176,7 +181,10 @@ export function CalendrierClient({ children }: { children: React.ReactNode }) {
         liste={<div className="px-5 pb-10 pt-6">{agenda}</div>}
         premier={
           <div className="px-6 pb-16 pt-6">
-            {chargement ? null : premier ? <EvenementClient id={premier.id} /> : <p className="text-sm text-muted-foreground">{t("evenements.none")}</p>}
+            {chargement ? null
+              : premier ? <EvenementClient id={premier.id} />
+              : premiereEntree?.source === "sheet" ? <EntreeSheetCarte entree={premiereEntree.entree} />
+              : vide}
           </div>
         }
       >
