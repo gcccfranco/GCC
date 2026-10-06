@@ -9,6 +9,7 @@
 
 import { useState, type FormEvent } from "react"
 import { useTranslation } from "react-i18next"
+import { useConfirmer } from "@/components/layout/Confirmer"
 import { Check, FileText, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { majCompteRendu } from "@/lib/firebase/evenements"
@@ -28,6 +29,7 @@ export function CompteRenduCarte({ evenement: e, user, profile, onChange }: {
   onChange: (compteRendu: CompteRendu | null) => void
 }) {
   const { t, i18n } = useTranslation()
+  const confirmer = useConfirmer()
   const [saisie, setSaisie] = useState("")
   const [erreur, setErreur] = useState("")
   const [busy, setBusy] = useState(false)
@@ -55,8 +57,8 @@ export function CompteRenduCarte({ evenement: e, user, profile, onChange }: {
     void ecrire({ url, parUid: user.uid, parNom: nom, le: new Date().toISOString() })
   }
 
-  function retirer() {
-    if (window.confirm(t("evenements.compteRendu.confirmRetirer"))) void ecrire(null)
+  async function retirer() {
+    if (await confirmer({ titre: t("evenements.compteRendu.confirmRetirer"), action: t("common.buttons.remove"), destructif: true })) void ecrire(null)
   }
 
   const alerte = erreur && <p role="alert" className="text-sm text-destructive">{erreur}</p>

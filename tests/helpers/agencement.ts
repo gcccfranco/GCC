@@ -138,6 +138,17 @@ export function interdireDialoguesNatifs(page: Page) {
   });
 }
 
+/** La fenêtre de confirmation du site (`useConfirmer`, R9). */
+export const fenetreDuSite = (page: Page) => page.getByRole("alertdialog");
+
+/** Répond à la fenêtre du site par l'un de ses deux boutons (« Annuler » ou l'action), puis attend qu'elle se ferme. */
+export async function repondreDansLeSite(page: Page, bouton: string) {
+  const fenetre = fenetreDuSite(page);
+  await expect(fenetre).toBeVisible();
+  await fenetre.getByRole("button", { name: bouton, exact: true }).click();
+  await expect(fenetre).toBeHidden();
+}
+
 /** Les vérifications communes en un appel : en-tête, débordement, halo. */
 export async function verifierAgencement(page: Page, options: { premierBloc?: Locator } = {}) {
   await verifierEnTete(page, options);

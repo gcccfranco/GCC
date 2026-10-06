@@ -28,6 +28,7 @@
       "cancel": "Annuler",
       "confirm": "Confirmer",
       "delete": "Supprimer",
+      "remove": "Retirer",
       "save": "Enregistrer",
       "edit": "Modifier",
       "add": "Ajouter",
@@ -1268,14 +1269,16 @@
       "ajouterSeance": "Ajouter une séance",
       "retirer": "Retirer ce dimanche",
       "retirerSeance": "Retirer cette séance",
-      "confirmerRetrait": "Retirer le {{date}} ? Ses cases s'effacent.",
+      "confirmerRetrait": "Retirer le {{date}} ?",
+      "confirmerRetraitTexte": "Ses cases s'effacent.",
       "choisirDate": "Dimanche à ajouter",
       "dateSeance": "Date de la séance",
       "moment": "Moment"
     },
     "publier": "Publier le {{tri}}",
     "masquer": "Masquer le {{tri}}",
-    "publierConfirm": "Publier le {{tri}} {{annee}} de {{planning}} ? Tous ses membres le verront et recevront une notification.",
+    "publierConfirm": "Publier le {{tri}} {{annee}} de {{planning}} ?",
+    "publierConfirmTexte": "Tous ses membres le verront et recevront une notification.",
     "publierEchec": "La publication a échoué. Réessaie.",
     "export": {
       "bouton": "Exporter (modèle du Sheet)",
@@ -1816,7 +1819,8 @@
     "modifier": "Modifier",
     "dupliquer": "Dupliquer",
     "supprimer": "Supprimer",
-    "confirmDelete": "Supprimer « {{titre}} » ? Les inscriptions seront perdues.",
+    "confirmDelete": "Supprimer « {{titre}} » ?",
+    "confirmDeleteTexte": "Les inscriptions seront perdues.",
     "erreurSuppression": "Suppression impossible. Réessaie.",
     "reserved": "Cette page est réservée à la coordination et aux responsables de section.",
     "form": {
@@ -1989,7 +1993,8 @@
       "sansCompteRendu": "pas de compte rendu"
     },
     "copierTaches_one": "Copier aussi sa tâche, au même délai ?",
-    "copierTaches_other": "Copier aussi ses {{count}} tâches, aux mêmes délais ?"
+    "copierTaches_other": "Copier aussi ses {{count}} tâches, aux mêmes délais ?",
+    "copierTachesOui": "Copier les tâches"
   },
   "moi": {
     "title": "Moi",
@@ -2573,7 +2578,9 @@
       "personnaliser": "Personnaliser",
       "termine": "Terminé",
       "parDefaut": "Disposition par défaut",
-      "confirmParDefaut": "Remettre la disposition par défaut de ton rôle ? Tes widgets, leurs tailles et leurs réglages seront remplacés.",
+      "confirmParDefaut": "Remettre la disposition par défaut de ton rôle ?",
+      "confirmParDefautTexte": "Tes widgets, leurs tailles et leurs réglages seront remplacés.",
+      "remettre": "Remettre par défaut",
       "ajouter": "Ajouter un widget",
       "tousAffiches": "Tous les widgets sont déjà affichés.",
       "outils": "Outils de « {{nom}} »",

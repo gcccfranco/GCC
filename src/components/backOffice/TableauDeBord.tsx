@@ -7,6 +7,7 @@
 // réglages, « Disposition par défaut » ; chaque geste est écrit aussitôt (Q12).
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useConfirmer } from "@/components/layout/Confirmer";
 import { DndContext, closestCenter, type Announcements, type DragEndEvent, type UniqueIdentifier } from "@dnd-kit/core";
 import { SortableContext, rectSortingStrategy, useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
@@ -52,6 +53,7 @@ const COMPOSANTS: Record<WidgetId, ((p: { widget: Widget }) => React.ReactNode) 
 
 export function TableauDeBord({ titre, sousTitre }: { titre: string; sousTitre: string }) {
   const { t } = useTranslation();
+  const confirmer = useConfirmer();
   const { user, profile } = useProfile();
   const sensors = useSensorsAvecClavier();
   const uid = user?.uid ?? "";
@@ -77,8 +79,9 @@ export function TableauDeBord({ titre, sousTitre }: { titre: string; sousTitre: 
     setTouchee(d);
     enregistrer(d);
   }
-  function parDefaut() {
-    if (!window.confirm(t("tableauDeBord.perso.confirmParDefaut"))) return;
+  async function parDefaut() {
+    if (!(await confirmer({ titre: t("tableauDeBord.perso.confirmParDefaut"), texte: t("tableauDeBord.perso.confirmParDefautTexte"),
+      action: t("tableauDeBord.perso.remettre"), destructif: true }))) return;
     setTouchee(dispositionParDefaut(user, profile));
     setReglagesDe(null);
     enregistrer(null);

@@ -1,5 +1,6 @@
 import { expect, test, type Page, type TestInfo } from "@playwright/test";
 import { fakeFirestore, signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { fenetreDuSite, repondreDansLeSite } from "./helpers/agencement";
 import { groupByMonth, isPast, modeInscriptions, placesRestantes, refusInscription } from "../src/lib/evenements/agenda";
 import type { Evenement } from "../src/types/evenement";
 import { avecLignes, evenementReminder, ligneOuverture, ouvertureDuJour, ouverturesTitre } from "../src/lib/evenements/rappel";
@@ -267,12 +268,14 @@ const DOCS_TACHES = {
 
 async function dupliquerLeCulte(page: Page, copier: boolean) {
   const questions: string[] = [];
-  page.on("dialog", (d) => { questions.push(d.message()); return copier ? d.accept() : d.dismiss(); });
   await page.route("**/api/push/notify-evenement", (route) => route.fulfill({ json: { ok: true } }));
   const db = await member(page, ALICE, "/back-office/evenements/culte-noel", DOCS_TACHES);
   await page.getByRole("link", { name: "Dupliquer" }).click();
   await page.getByLabel("Date", { exact: true }).fill("2027-12-24");
   await page.getByRole("button", { name: "Créer l'évènement" }).click();
+  // La question passe par la fenêtre du site (agencement v18, F2).
+  questions.push(await fenetreDuSite(page).getByRole("heading").innerText());
+  await repondreDansLeSite(page, copier ? "Copier les tâches" : "Annuler");
   await expect(page).toHaveURL(/\/evenements\/fake-\d+\/?$/);
   return { db, questions };
 }
@@ -303,8 +306,8 @@ test("dupliquer : Copier aussi ses 2 tâches écrit deux tâches liées au nouve
 
 test("supprimer : l'organisateur confirme, la fiche disparaît", async ({ page }) => {
   const db = await member(page, STEPH, "/back-office/evenements/foot");
-  page.on("dialog", (d) => d.accept());
   await page.getByRole("button", { name: "Supprimer" }).click();
+  await repondreDansLeSite(page, "Supprimer");
   await expect(page).toHaveURL(/\/evenements\/?$/);
   expect(db.writes.find((w) => w.method === "DELETE")?.path).toBe("evenements/foot");
 });
@@ -473,8 +476,8 @@ test("organisateur : liste des inscrits avec invités, retrait, fermeture des in
   await expect(liste.getByRole("listitem")).toHaveCount(2);
   await expect(liste).toContainText("Jo L.");
   await expect(liste).toContainText("Marie");
-  page.on("dialog", (d) => d.accept());
   await liste.getByRole("listitem").filter({ hasText: "Marie" }).getByRole("button", { name: "Retirer" }).click();
+  await repondreDansLeSite(page, "Retirer");
   await expect(liste.getByRole("listitem")).toHaveCount(1);
   expect(sent).toEqual({ evenementId: "foot", inscriptionId: "x1" });
   await page.getByRole("region", { name: "Inscriptions", exact: true }).getByRole("radio", { name: "Fermées" }).click();

@@ -28,6 +28,7 @@
       "cancel": "取消",
       "confirm": "确认",
       "delete": "删除",
+      "remove": "移除",
       "save": "保存",
       "edit": "编辑",
       "add": "添加",
@@ -1264,14 +1265,16 @@
       "ajouterSeance": "添加聚会",
       "retirer": "移除此主日",
       "retirerSeance": "移除此聚会",
-      "confirmerRetrait": "移除 {{date}}？该日所填内容将被清除。",
+      "confirmerRetrait": "移除 {{date}}？",
+      "confirmerRetraitTexte": "该日所填内容将被清除。",
       "choisirDate": "要添加的主日",
       "dateSeance": "聚会日期",
       "moment": "时段"
     },
     "publier": "发布 {{tri}}",
     "masquer": "隐藏 {{tri}}",
-    "publierConfirm": "发布{{planning}} {{annee}} 年 {{tri}}？所有成员都将看到并收到通知。",
+    "publierConfirm": "发布{{planning}} {{annee}} 年 {{tri}}？",
+    "publierConfirmTexte": "所有成员都将看到并收到通知。",
     "publierEchec": "发布失败，请重试。",
     "export": {
       "bouton": "导出（表格样式）",
@@ -1812,7 +1815,8 @@
     "modifier": "修改",
     "dupliquer": "复制",
     "supprimer": "删除",
-    "confirmDelete": "删除「{{titre}}」？报名信息将丢失。",
+    "confirmDelete": "删除「{{titre}}」？",
+    "confirmDeleteTexte": "报名信息将丢失。",
     "erreurSuppression": "删除失败，请重试。",
     "reserved": "此页面仅限协调组和各小组负责人。",
     "form": {
@@ -1985,7 +1989,8 @@
       "sansCompteRendu": "无会议记录"
     },
     "copierTaches_one": "是否同时复制它的 {{count}} 个任务（保持相同提前天数）？",
-    "copierTaches_other": "是否同时复制它的 {{count}} 个任务（保持相同提前天数）？"
+    "copierTaches_other": "是否同时复制它的 {{count}} 个任务（保持相同提前天数）？",
+    "copierTachesOui": "复制任务"
   },
   "moi": {
     "title": "我",
@@ -2565,7 +2570,9 @@
       "personnaliser": "自定义",
       "termine": "完成",
       "parDefaut": "恢复默认布局",
-      "confirmParDefaut": "恢复你角色的默认布局？你的小组件、大小和设置都将被替换。",
+      "confirmParDefaut": "恢复你角色的默认布局？",
+      "confirmParDefautTexte": "你的小组件、大小和设置都将被替换。",
+      "remettre": "恢复默认",
       "ajouter": "添加小组件",
       "tousAffiches": "所有小组件都已显示。",
       "outils": "“{{nom}}”工具",

@@ -13,6 +13,7 @@
 
 import { useCallback, useEffect, useState, type FormEvent } from "react"
 import { useTranslation } from "react-i18next"
+import { useConfirmer } from "@/components/layout/Confirmer"
 import { DndContext, closestCenter, type Announcements, type DragEndEvent, type UniqueIdentifier } from "@dnd-kit/core"
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
@@ -89,6 +90,7 @@ export function SujetsAborder({ evenement: e, user, profile, reunions = [] }: {
   reunions?: Pick<Evenement, "id" | "date">[]
 }) {
   const { t, i18n } = useTranslation()
+  const confirmer = useConfirmer()
   const sensors = useSensorsAvecClavier()
   const [sujets, setSujets] = useState<Sujet[] | null>(null)
   const [texte, setTexte] = useState("")
@@ -162,7 +164,7 @@ export function SujetsAborder({ evenement: e, user, profile, reunions = [] }: {
   }
 
   async function retirer(s: Sujet) {
-    if (!window.confirm(t("evenements.sujets.confirmRetirer", { texte: s.texte }))) return
+    if (!(await confirmer({ titre: t("evenements.sujets.confirmRetirer", { texte: s.texte }), action: t("common.buttons.remove"), destructif: true }))) return
     setErreur("")
     try {
       await retirerSujet(e.id, s.id)

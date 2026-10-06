@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { fenetreDuSite, repondreDansLeSite } from "./helpers/agencement";
 import { lirePdf } from "./helpers/pdf";
 import {
   GRILLES, GRILLES_EDD, GRILLE_BONTE, GRILLE_CAMPUS_MATIN, GRILLE_CULTE, GRILLE_FIDELITE, GRILLE_FIDELITE_MUSICIENS,
@@ -186,9 +187,9 @@ test("Paix 2027 : « Publier le T1 » appelle la route avec l'année, puis propo
     db.set("planningReleases/paix_2027", { published });
     await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: true, published, notified: body.publish, sent: 0 }) });
   });
-  page.on("dialog", (d) => void d.accept());
   await page.getByRole("button", { name: "2027", exact: true }).click();
   await page.getByRole("button", { name: "Publier le T1" }).click();
+  await repondreDansLeSite(page, "Publier le T1");
   await expect(page.getByRole("button", { name: "Masquer le T1" })).toBeVisible();
   expect(corps).toEqual([{ key: "paix", tri: "T1", publish: true, year: 2027 }]);
   await expect(page.locator("[data-non-publie='2027-01-10']").filter({ visible: true })).toHaveCount(0);
@@ -796,15 +797,13 @@ test("Interfranco 2027 : « Retirer ce dimanche » demande confirmation, efface 
   await expect(retirer).toHaveCount(1);
   await capture(page, "interfranco-2027-modifier");
 
-  const messages: string[] = [];
-  page.once("dialog", (d) => { messages.push(d.message()); void d.dismiss(); });
   await retirer.click();
-  await expect.poll(() => messages.length).toBe(1);
-  expect(messages[0]).toContain("Ses cases s'effacent");
+  await expect(fenetreDuSite(page)).toContainText("Ses cases s'effacent");
+  await repondreDansLeSite(page, "Annuler");
   expect(db.doc("plannings/interfranco/dimanches/2027-01-17"), "refusé : rien ne bouge").toBeDefined();
 
-  page.once("dialog", (d) => void d.accept());
   await retirer.click();
+  await repondreDansLeSite(page, "Retirer");
   await expect.poll(() => db.doc("plannings/interfranco/dimanches/2027-01-17")).toBeUndefined();
   await expect(page.getByText("Aucun dimanche posé pour 2027.").filter({ visible: true })).toHaveCount(1);
   await expect.poll(() => db.list("plannings/interfranco/history").length).toBe(1);

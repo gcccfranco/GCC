@@ -3,6 +3,7 @@
 import { Fragment, useEffect, useRef, useState, type MouseEvent, type ReactNode } from "react"
 import { ChevronDown, History, Lock, Trash2, User, X } from "lucide-react"
 import { useTranslation } from "react-i18next"
+import { useConfirmer } from "@/components/layout/Confirmer"
 import { currentSundayStr, fdFullL, fdLongL, fdShort, getAnnee, getMois, moisName } from "@/lib/planning/utils"
 import { PREMIERE_ANNEE_APP, type ColonneGrille, type DefinitionGrille, type LigneGrille } from "@/lib/planning/grilles"
 import { phraseDuChangement } from "@/lib/planning/historique"
@@ -75,6 +76,7 @@ export function PlanningGrille({
   retrait,
 }: PlanningGrilleProps) {
   const { t, i18n } = useTranslation()
+  const confirmer = useConfirmer()
   const { user, profile } = useProfile()
   const couleur = definition.couleur
   const sun = currentSundayStr()
@@ -214,7 +216,8 @@ export function PlanningGrille({
     !!retrait && mode === "edition" && getAnnee(date) >= PREMIERE_ANNEE_APP && canRetirerDate(user, profile, definition.key)
 
   async function retirer(date: string) {
-    if (!retrait || !window.confirm(t("planning.annee.confirmerRetrait", { date: fdFullL(date, i18n.language) }))) return
+    if (!retrait || !(await confirmer({ titre: t("planning.annee.confirmerRetrait", { date: fdFullL(date, i18n.language) }),
+      texte: t("planning.annee.confirmerRetraitTexte"), action: t("common.buttons.remove"), destructif: true }))) return
     setRefus("")
     try {
       await retirerDate(definition, date)

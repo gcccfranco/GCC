@@ -11,6 +11,7 @@
 
 import { useEffect, useId, useRef, useState, type ReactNode } from "react"
 import { useTranslation } from "react-i18next"
+import { useConfirmer } from "@/components/layout/Confirmer"
 import { Coffee, Pencil, Plus } from "lucide-react"
 import { canEditPetitDej, canGererPetitDej } from "@/lib/access"
 import { RefusDesRegles, ajouterLigne, inscrire, renommerLigne, retirerLigne } from "@/lib/firebase/petitDej"
@@ -49,6 +50,7 @@ export function PetitDejCarte({ annee, tri, nomsDesComptes, onLignes }: {
   onLignes?: (lignes: LignePetitDej[]) => void
 }) {
   const { t, i18n } = useTranslation()
+  const confirmer = useConfirmer()
   const { user, profile } = useProfile()
   const titreId = useId()
   const listeId = useId()
@@ -114,8 +116,8 @@ export function PetitDejCarte({ annee, tri, nomsDesComptes, onLignes }: {
     })
   }
 
-  function retirer(l: LignePetitDej) {
-    if (!window.confirm(t("planning.petitDej.confirmerRetrait"))) return
+  async function retirer(l: LignePetitDej) {
+    if (!(await confirmer({ titre: t("planning.petitDej.confirmerRetrait"), action: t("common.buttons.remove"), destructif: true }))) return
     void ecrire(l.dimanche, () => retirerLigne(l.id))
   }
 

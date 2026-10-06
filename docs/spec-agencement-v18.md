@@ -505,3 +505,27 @@ Mesures : le h1 (`.titre-page`) fait 24 px sur téléphone et 30 px dès 768 px 
 et les 20 px sous l'en-tête : la page pose ensuite son contenu à `px-[var(--marge-page)]` (pleine zone) ou dans
 `DeuxVolets`, qui pose déjà la marge. Sur téléphone, `BoutonNouveau` sort de l'en-tête en rond fixe au-dessus de
 la barre d'onglets : une page sans barre du bas (rare) le verra plus haut que nécessaire.
+
+### V18F — Fondations (F2)
+
+- 06/10/2026 : **F2 faite** (branche `lot/v18-fondations`, commit `feat(V18F): F2 — les dix confirmations dans le site`).
+  Plus aucun `window.confirm` hors de la scène (`grep window.confirm src` ne trouve plus que les quatre de
+  `app/evenements/scene/`, que réécrit `spec-scene-paques-noel.md`). Les dix appels deviennent
+  `await confirmer({ titre, texte?, action, destructif? })` sur place, logique inchangée : `EvenementClient`,
+  `Inscriptions` (`PanneauInscriptions`), `NouveauClient` (copie des tâches : « Annuler » crée l'évènement sans
+  elles), `TacheForm` (`Champs`), `PlanningGrille`, `PetitDejCarte`, `BoutonPublication`, `CompteRenduCarte`,
+  `SujetsAborder`, `TableauDeBord`.
+- **Libellés** (FR et 中文, à relire) : les quatre messages à deux phrases sont coupés en question (titre) et
+  phrase d'explication (`…Texte`) : `evenements.confirmDelete`, `planning.annee.confirmerRetrait`,
+  `planning.publierConfirm`, `tableauDeBord.perso.confirmParDefaut`. Nouveaux boutons : `common.buttons.remove`
+  (« Retirer » / 移除), `evenements.copierTachesOui` (« Copier les tâches » / 复制任务),
+  `tableauDeBord.perso.remettre` (« Remettre par défaut » / 恢复默认). Publier garde son libellé (« Publier le T1 »),
+  sans rouge ; les retraits et suppressions (et la disposition par défaut, qui efface les réglages) sont en rouge.
+- **Tests** : `tests/agencement-v18-confirmations.spec.ts` (10 tests × 5 projets, vus rouges : chacun tombait
+  sur la fenêtre grise, puis verts) ; `tests/helpers/agencement.ts` gagne `fenetreDuSite` et
+  `repondreDansLeSite`. Les tests existants qui acceptaient la fenêtre grise répondent maintenant dans le site
+  (`back-office-admin`, `evenements`, `planning-2027`, `planning-petit-dej`, `reunions`, `tableau-de-bord`,
+  `taches-evenements`) : verts sur leurs projets. Captures regardées aux cinq tailles (fenêtre centrée, boutons
+  empilés sur téléphone, au-dessus de la feuille du formulaire de tâche).
+- **Reste** : rien pour F2. Les tranches de pages (T1 à T11) peuvent partir.
+- **Timothée** : rien à publier (aucune règle, aucune donnée) ; relire les six libellés 中文 ci-dessus.

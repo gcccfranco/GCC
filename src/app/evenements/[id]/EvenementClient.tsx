@@ -20,6 +20,7 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import { useParams, useRouter } from "next/navigation"
 import { useTranslation } from "react-i18next"
+import { useConfirmer } from "@/components/layout/Confirmer"
 import { ArrowRight, ChevronLeft } from "lucide-react"
 import { useAuth } from "@/lib/firebase/auth"
 import { useProfile } from "@/lib/firebase/users"
@@ -58,6 +59,7 @@ function Linkified({ text }: { text: string }) {
 
 export function EvenementClient({ espace = "app", id: idDonne }: { espace?: "app" | "back-office"; id?: string }) {
   const { t } = useTranslation()
+  const confirmer = useConfirmer()
   const params = useParams<{ id?: string }>()
   const id = idDonne ?? params.id ?? ""
   const grand = useDisposition() === "grand"
@@ -106,7 +108,8 @@ export function EvenementClient({ espace = "app", id: idDonne }: { espace?: "app
   const liste = backOffice ? (reunion ? "/back-office/evenements/reunions" : "/back-office/evenements") : "/evenements"
 
   async function supprimer() {
-    if (!window.confirm(t("evenements.confirmDelete", { titre: e.titre }))) return
+    if (!(await confirmer({ titre: t("evenements.confirmDelete", { titre: e.titre }), texte: t("evenements.confirmDeleteTexte"),
+      action: t("common.buttons.delete"), destructif: true }))) return
     setErreurSuppression(false)
     try {
       // Les sujets d'une réunion partent avec elle : orphelins, leurs règles (qui lisent la

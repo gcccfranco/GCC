@@ -13,6 +13,7 @@
 import { useEffect, useRef, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useTranslation } from "react-i18next"
+import { useConfirmer } from "@/components/layout/Confirmer"
 import { useAuth } from "@/lib/firebase/auth"
 import { useProfile } from "@/lib/firebase/users"
 import { creatableEvenementPours, estReunion, isAdminUser, polesDe } from "@/lib/access"
@@ -33,6 +34,7 @@ const base = "/back-office/evenements"
 
 export function NouveauClient() {
   const { t } = useTranslation()
+  const confirmer = useConfirmer()
   const router = useRouter()
   const params = useSearchParams()
   const from = params.get("from")
@@ -84,7 +86,8 @@ export function NouveauClient() {
           if (prevenir) await notifyEvenement(id)
           if (reprendre) await reprendreSujets(laisses, id, user.uid)
           const liees = items.map((x) => x.tache).filter((tache) => tache.evenement?.id === from)
-          if (sourceDate && values.date && liees.length > 0 && window.confirm(t("evenements.copierTaches", { count: liees.length }))) {
+          if (sourceDate && values.date && liees.length > 0
+            && await confirmer({ titre: t("evenements.copierTaches", { count: liees.length }), action: t("evenements.copierTachesOui") })) {
             try {
               for (const c of tachesDupliquees(liees, sourceDate, values.date, { id, titre: values.titre })) {
                 await createTache(c.pole, c.values, user.uid)
