@@ -1,6 +1,7 @@
 "use client";
 
 import { GuideLien } from "@/components/guide/GuideLien";
+import { OngletsRail } from "@/components/layout/Onglets";
 import { LienHarmonie } from "@/components/harmonie/LienHarmonie";
 import { useState, useMemo, useEffect, useLayoutEffect, useRef } from "react";
 import { useFonduLateral } from "@/hooks/useFonduLateral";
@@ -274,22 +275,17 @@ export function SongListClient({ songs, themes, actif = null, erreur = false, on
 
       {/* Filtres */}
       <div className="flex flex-wrap gap-2 mb-4 items-center">
-        {/* Langue — segmented control */}
-        <div className="inline-flex bg-secondary rounded-sm p-[3px] gap-0.5">
-          {(["all", "fr", "zh"] as const).map((lang) => (
-            <button
-              key={lang}
-              onClick={() => setLangFilter(lang)}
-              className={`px-3 py-1.5 rounded-sm text-sm font-semibold transition-all duration-150 cursor-pointer ${
-                langFilter === lang
-                  ? "bg-card text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {lang === "all" ? t("songs.list.allLanguages") : lang === "fr" ? "FR" : "中文"}
-            </button>
-          ))}
-        </div>
+        {/* Langue : une vue de la liste, dans le rail gris (R4 de docs/spec-agencement-v18.md) */}
+        <OngletsRail
+          etiquette={t("songs.list.filterLanguage")}
+          actif={langFilter}
+          choisir={(lang) => setLangFilter(lang as "all" | "fr" | "zh")}
+          onglets={[
+            { id: "all", label: t("songs.list.allLanguages") },
+            { id: "fr", label: "FR" },
+            { id: "zh", label: "中文" },
+          ]}
+        />
 
         {/* Thème */}
         <select

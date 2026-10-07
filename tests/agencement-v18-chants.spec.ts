@@ -79,7 +79,8 @@ test.describe("en-tête et liste (A5, R1 à R3, R7, R10)", () => {
     await expect(h1).toBeVisible();
     const nombre = (await page.request.get("/songs-index.json").then((r) => r.json())).songs.length;
     await expect(enTete(page).getByText(`${nombre} chants, en français et en chinois`, { exact: true })).toBeVisible();
-    await verifierAgencement(page, { premierBloc: liste(page) });
+    // Le bloc des volets prend toute la zone ; un rail (Tous · FR · 中文), aucune pilule.
+    await verifierAgencement(page, { premierBloc: liste(page), contenu: page.locator(".chants-volets"), onglets: { rail: 1, pilules: 0 } });
     // La liste n'a plus de titre : elle commence par la recherche, sous l'en-tête.
     await expect(liste(page).getByRole("heading")).toHaveCount(0);
     expect((await h1.boundingBox())!.y).toBeLessThan((await liste(page).getByRole("searchbox").boundingBox())!.y);
@@ -105,6 +106,20 @@ test.describe("en-tête et liste (A5, R1 à R3, R7, R10)", () => {
     const largeurFenetre = await page.evaluate(() => document.documentElement.clientWidth);
     const finDuContenu = await droite(page).locator("[data-choisis-un-chant]").evaluate((el) => el.getBoundingClientRect().right - parseFloat(getComputedStyle(el).paddingRight));
     expect(Math.abs(finDuContenu - (largeurFenetre - marge))).toBeLessThanOrEqual(1);
+  });
+
+  test("Tous · FR · 中文 : une vue de la liste, dans le rail gris (R4)", async ({ page }) => {
+    await page.goto("/songs");
+    await listePrete(page);
+    const rail = liste(page).locator('[data-onglets="rail"]');
+    await expect(rail).toHaveAttribute("role", "tablist");
+    await expect(rail).toHaveAttribute("aria-label", "Langue");
+    await expect(rail.getByRole("tab")).toHaveText(["Tous", "FR", "中文"]);
+    await expect(rail.getByRole("tab", { name: "Tous" })).toHaveAttribute("aria-selected", "true");
+    await rail.getByRole("tab", { name: "中文" }).click();
+    await expect(rail.getByRole("tab", { name: "中文" })).toHaveAttribute("aria-selected", "true");
+    await expect(liste(page).locator('[id="song-li-一生爱你"]')).toBeVisible();
+    await expect(liste(page).locator('[id="song-li-abba-pere"]')).toHaveCount(0);
   });
 
   test("« Proposer un chant » : pilule dans l'en-tête dès 768 px, en bas de la liste sur téléphone", async ({ page }, info) => {

@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page, type TestInfo } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { enTete, estGrandEcran, estTelephone, interdireDialoguesNatifs, ongletsRail, verifierAgencement } from "./helpers/agencement";
 
@@ -51,6 +51,10 @@ async function ouvrir(page: Page, adresse: string) {
 
 const liste = (page: Page) => page.locator('[data-volet="liste"]');
 const detail = (page: Page) => page.locator('[data-volet="detail"]');
+/** Le bloc des deux volets (ou de la liste seule) : il prend toute la zone. */
+const volets = (page: Page) => liste(page).locator("..");
+/** Setlists n'a deux volets qu'en grand ; sinon la liste est posée à la marge, son rail en tête. */
+const blocSetlists = (page: Page, info: TestInfo) => (estGrandEcran(info) ? volets(page) : ongletsRail(page).locator(".."));
 const ligneSetlist = (page: Page, titre: string) => page.getByRole("link", { name: new RegExp(titre) }).first();
 
 async function capture(page: Page, nom: string) {
@@ -77,12 +81,12 @@ async function verifierDeuxVolets(page: Page) {
 }
 
 test.describe("Setlists (A9)", () => {
-  test("l'en-tête « Setlists » : h1 à la marge, sous-titre, au-dessus de la liste qui n'a plus de titre", async ({ page }) => {
+  test("l'en-tête « Setlists » : h1 à la marge, sous-titre, au-dessus de la liste qui n'a plus de titre", async ({ page }, info) => {
     await ouvrir(page, "/setlists");
     await expect(ligneSetlist(page, "Culte du 4 octobre")).toBeVisible();
     await expect(enTete(page).getByRole("heading", { level: 1, name: "Setlists", exact: true })).toBeVisible();
     await expect(enTete(page).getByText("Les chants prévus pour chaque service", { exact: true })).toBeVisible();
-    await verifierAgencement(page);
+    await verifierAgencement(page, { contenu: blocSetlists(page, info), onglets: { rail: 1, pilules: 0 } });
     // Plus de titre dans la liste ; les vues dans le rail.
     await expect(page.getByRole("heading", { name: "Setlists" })).toHaveCount(1);
     const rail = ongletsRail(page).filter({ visible: true });
@@ -142,7 +146,7 @@ test.describe("Mes services (A11)", () => {
     await expect(page.getByRole("link", { name: /Culte Franco.*4 oct/ })).toBeVisible();
     await expect(enTete(page).getByRole("heading", { level: 1, name: "Mes services", exact: true })).toBeVisible();
     await expect(enTete(page).getByText("Les dates où Ruth K. apparaît dans les plannings · 2 à venir", { exact: true })).toBeVisible();
-    await verifierAgencement(page);
+    await verifierAgencement(page, { contenu: volets(page), onglets: { rail: 1, pilules: 0 } });
     await expect(page.getByRole("heading", { name: "Mes services" })).toHaveCount(1);
     // Aucune action principale ici.
     await expect(page.getByRole("link", { name: /^Nouvel/ })).toHaveCount(0);
@@ -164,7 +168,7 @@ test.describe("Mes services (A11)", () => {
     await expect(detail(page).getByRole("heading", { level: 2, name: "Dimanche 18 octobre" })).toBeVisible();
     const apres = (await enTete(page).locator("h1").boundingBox())!;
     expect(Math.abs(apres.x - avant.x) + Math.abs(apres.y - avant.y), "le titre ne bouge pas").toBeLessThanOrEqual(1);
-    await verifierAgencement(page);
+    await verifierAgencement(page, { contenu: volets(page), onglets: { rail: 1, pilules: 0 } });
     await capture(page, "v18-mes-services");
   });
 

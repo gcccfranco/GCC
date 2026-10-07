@@ -634,3 +634,23 @@ la barre d'onglets : une page sans barre du bas (rare) le verra plus haut que n�
   ordinateur-1440, tablette, tablette-paysage, téléphone).
 - **Reste** : rien pour T9.
 - **Timothée** : rien à publier (aucune règle, aucune donnée). Relire le 中文 : 每次服事预备的诗歌.
+
+### V18T89 — Fusion de la relecture des fondations (T8, T9)
+
+- 07/10/2026 : `lot/v18-fondations` (relecture `fix(V18F): relecture — …`) fusionné dans `lot/v18-t89` ; seul
+  conflit, cette section « Avancement » (les deux textes gardés). `tsc --noEmit` et `npm run lint` sans erreur.
+- **Correctif** (`fix(V18T89): fusion — …`) : les tests de T8 et T9 donnent maintenant à `verifierAgencement` le
+  bloc de contenu et le compte des onglets, comme la relecture le demande à chaque tranche (Chants : `.chants-volets`,
+  un rail ; Setlists : les deux volets en grand, sinon le bloc de la liste, un rail ; Mes services : les deux volets,
+  un rail ; aucune pilule). Cela a montré un écart à R4 : **Tous · FR · 中文** de la liste des chants était un
+  contrôle à part, pas le rail. Il passe par `OngletsRail` (boutons, `role="tab"`, étiquette « Langue » / 语言,
+  libellés inchangés) ; vu rouge (aucun rail) sur les cinq projets, puis vert. `chants-deux-volets` clique
+  l'onglet « FR » (`tab` au lieu de `button`), sans changer ce qu'il vérifie.
+- **Suites vertes** : sur les cinq projets `agencement-v18-chants`, `agencement-v18-setlists`, `chants-deux-volets`,
+  `pages-en-grand-mes-services`, `setlist-suppression-groupee`, `nouveaux-membres`, `navigation-grand-ecran`,
+  `songs-index` ; sur ordinateur (voisins allégés du 07/10/2026) `agencement-v18-fondations` et
+  `pages-en-grand-setlists` ; `back-office-coupe` (second serveur, 59 verts). Captures regardées (ordinateur-1440, tablette, téléphone) : le rail de la langue est
+  celui de la planche `v18-app-chants-a`.
+- **Reste** : rien pour le lot. Hors spec, non fait : la liste déroulante des thèmes (Chants) et celle des
+  catégories (Setlists) gardent leurs coins arrondis, là où la planche les dessine en pilule (`choix`).
+- **Timothée** : rien à publier (aucune règle, aucune donnée, aucun libellé nouveau).

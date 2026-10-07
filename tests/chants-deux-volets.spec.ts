@@ -240,7 +240,7 @@ test.describe("Chants en deux volets (ordinateur, tablette couchée)", () => {
     const l = ligne(page, "tout-puissant");
     await expect(l).toHaveAttribute("aria-current", "page");
     await expect(l).toBeInViewport();
-    await liste(page).getByRole("button", { name: "FR", exact: true }).click();
+    await liste(page).getByRole("tab", { name: "FR", exact: true }).click();
     await page.waitForTimeout(200);
     expect(new URL(page.url()).searchParams.get("key")).toBe('"F"');
     await expect(page.getByTestId("tonalite-courante")).toHaveText(/^F/);
