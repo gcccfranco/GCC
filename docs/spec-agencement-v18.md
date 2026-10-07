@@ -599,6 +599,15 @@ la barre d'onglets : une page sans barre du bas (rare) le verra plus haut que n�
 - **Écarts** : les pilules des périodes gardent la taille du composant commun (`Pilules`, 40 px, 15 px), plus
   grandes que sur la planche ; la ligne « Jamais joués » garde l'artiste et la dernière fois (tests de U7), que la
   planche n'écrit pas.
+- **Fusion** (07/10/2026) : `lot/v18-fondations` final (relecture `5d4e94c`) fusionné dans `lot/v18-t6`
+  (conflit dans cette spec seulement, les deux sections d'avancement gardées). Correctif `fix(V18T6): fusion — …` :
+  les deux tests d'agencement de T6 donnent désormais `contenu` et `onglets` à `verifierAgencement` (Statistiques :
+  le bloc « Les plus joués » sur toute la zone, un rail, une rangée de pilules ; Tableau de bord : la grille des
+  widgets sur toute la zone, ni rail ni pilules). `tsc --noEmit` et `npm run lint` sans erreur ;
+  `agencement-v18-t6`, `statistiques`, `tableau-de-bord` (5 projets : 539 verts, 16 sautés ; 8 délais dépassés au
+  premier passage sous la charge du Mac, verts à la relance), `agencement-v18-fondations` et
+  `agencement-v18-confirmations` (130 verts), `back-office-coupe` (second serveur, 175 verts). Captures regardées
+  (ordinateur 1 440, tablette, téléphone) : inchangées, conformes aux planches.
 - **Reste** : rien pour T6.
 - **Timothée** : rien à publier (aucune règle, aucune donnée, aucun libellé 中文 : Statistiques en français seul,
   Tableau de bord sans libellé nouveau).

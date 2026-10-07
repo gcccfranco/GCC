@@ -71,7 +71,12 @@ test.describe("T6 — Statistiques (B13)", () => {
 
   test("le h1 est « Statistiques » sur les trois vues ; le sous-titre compte les setlists ; l'agencement commun", async ({ page }) => {
     await ouvrirStatistiques(page);
-    await verifierAgencement(page);
+    // Le contenu de « Les plus joués » (chiffres et classement) sur toute la zone ; un rail (les vues)
+    // et une rangée de pilules (les périodes).
+    await verifierAgencement(page, {
+      contenu: page.getByTestId("dix-premiers").locator("../.."),
+      onglets: { rail: 1, pilules: 1 },
+    });
     await expect(enTete(page).locator("p").first()).toHaveText(
       "Visible par les admins seulement · 2 setlists comptées, du 31 mai 2026 au 20 septembre 2026");
     for (const nom of ["Jamais joués", "À redécouvrir", "Les plus joués"]) {
@@ -200,7 +205,8 @@ const nombreDeColonnes = (info: TestInfo, barre: "depliee" | "reduite") =>
 test.describe("T6 — Tableau de bord (B14)", () => {
   test("l'agencement commun ; « Personnaliser » en contour dans l'en-tête", async ({ page }) => {
     await ouvrirTableau(page);
-    await verifierAgencement(page);
+    // Les widgets sur toute la zone ; ni rail ni pilules.
+    await verifierAgencement(page, { contenu: page.getByTestId("grille-widgets"), onglets: { rail: 0, pilules: 0 } });
     await expect(enTete(page).getByRole("heading", { level: 1 })).toHaveText("Tableau de bord");
     await expect(enTete(page).getByRole("button", { name: "Personnaliser" })).toHaveCSS("border-top-width", "1px"); // en contour
   });
