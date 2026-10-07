@@ -581,7 +581,7 @@ la barre d'onglets : une page sans barre du bas (rare) le verra plus haut que n�
 
 ### V18T4 — Planning (T4b)
 
-- 06/10/2026 (fini le 07/10) : **T4b faite** (branche `lot/v18-t4`, commit dans `git log --grep "V18T4): T4b"`) : A1, A4.
+- 06/10/2026 (fini le 07/10) : **T4b faite** (branche `lot/v18-t4`, commit `3eae319`) : A1, A4.
   - **Accueil (A1)** : l'en-tête et les plannings sous le titre viennent de T4a ; « Pour moi » (prochain service,
     setlist du service) ne change pas. En grand, « Ce dimanche » est un conteneur (R15) : à partir de 720 px
     (ordinateur-1440 barre réduite), le Culte passe en trois colonnes et Groupes · EDD · Table tiennent sur une
