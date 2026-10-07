@@ -244,8 +244,9 @@ export function SongListClient({ songs, themes, actif = null, erreur = false, on
   }
 
   const showIndex = letterIndex.length > 1 && filtered.length > 30;
-  // 24 px par lettre (cible de l'ancien h-6) + py-1 ; rétréci si l'écran est court.
-  const indexHeight = `min(78svh, ${letterIndex.length * 24 + 8}px)`;
+  // 24 px par lettre (cible de l'ancien h-6) + py-1 ; rétréci si l'écran est court, ou si la part
+  // de la carte toujours à l'écran l'est (deux volets), à 12 px au moins de ses bords.
+  const indexHeight = `min(78svh, ${letterIndex.length * 24 + 8}px, var(--cadre-index, 100svh) - 24px)`;
 
   return (
     // pr-7 : gouttière fixe de l'index A–Z. Elle ne dépend pas de la recherche,
@@ -433,10 +434,12 @@ export function SongListClient({ songs, themes, actif = null, erreur = false, on
             className="pointer-events-auto sticky z-30 mr-0.5 flex flex-col items-center px-0.5 py-1 rounded-full bg-background/70 backdrop-blur-sm touch-none select-none"
             // Centré par `top` et non par une translation : en bas de liste,
             // le collant bute sur la fin de la colonne et une translation
-            // ferait sortir le haut de l'index de l'écran.
+            // ferait sortir le haut de l'index de l'écran. Centré dans
+            // `--cadre-index` : la fenêtre en un volet, la part de la carte
+            // toujours à l'écran en deux volets (globals.css, `.chants-volets`).
             style={{
               height: indexHeight,
-              top: `calc((100svh - ${indexHeight}) / 2)`,
+              top: `calc((var(--cadre-index, 100svh) - ${indexHeight}) / 2)`,
             }}
           >
             {activeIndex !== null && (

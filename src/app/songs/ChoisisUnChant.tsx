@@ -50,7 +50,9 @@ function prochainesLues(uid: string, today: string): Promise<FSSetlist[]> {
   return lecture.promesse;
 }
 
-/** Setlists des 92 derniers jours (« Les plus chantés », A8), gardées une minute comme les prochaines. */
+/** Setlists des 92 derniers jours (« Les plus chantés », A8), gardées une minute comme les prochaines.
+ *  Pas le cache du tableau de bord (`lireSetlists`, back-office) : il lit depuis aujourd'hui, celui-ci
+ *  depuis 92 jours ; une clé commune ne servirait jamais deux fois la même lecture. */
 let lecturePassees: { cle: string; quand: number; promesse: Promise<FSSetlist[]> } | null = null;
 
 function passeesLues(uid: string, today: string): Promise<FSSetlist[]> {

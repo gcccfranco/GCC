@@ -654,3 +654,47 @@ la barre d'onglets : une page sans barre du bas (rare) le verra plus haut que n�
 - **Reste** : rien pour le lot. Hors spec, non fait : la liste déroulante des thèmes (Chants) et celle des
   catégories (Setlists) gardent leurs coins arrondis, là où la planche les dessine en pilule (`choix`).
 - **Timothée** : rien à publier (aucune règle, aucune donnée, aucun libellé nouveau).
+
+### V18T89 — Relecture (T8, T9)
+
+- 07/10/2026 : **lot fini et relu** (deux relectures, huit constats ; commit `fix(V18T89): relecture — …`).
+  Chaque correction de comportement a son test, vu rouge sur les cinq projets avant le code, puis vert.
+- **Index A–Z de Chants** (constat « important ») : le calcul de la relecture supposait `--nav-h` = 58 px ;
+  en deux volets il vaut la zone sûre (0 px en test), et la carte tient l'index une fois collée. Le défaut
+  réel était ailleurs : **page en haut**, la carte part sous l'en-tête (104 px) et finit sous le bas de la
+  fenêtre, et la molette sur la liste ne défile que la liste. Y et Z restaient alors sous le bord de la
+  fenêtre (vu à 720 px, 810 px et 640 px de haut). L'index se centre maintenant dans `--cadre-index`, la part
+  de la carte toujours à l'écran (`100svh − --nav-h − 104px`, posé par `.chants-volets`), avec 12 px au moins
+  de chaque bord. Le téléphone ne change pas (la fenêtre, comme avant). Test : « l'index A–Z tient entier dans
+  la carte, page en haut comme défilée » (projet, puis 640 px de haut ; page en haut, liste au bout, carte collée).
+- **Setlists, état vide** : plus de seconde « Nouvelle setlist » dans « Aucun culte à venir » : l'action est
+  celle de l'en-tête (R7). Test « rien à venir : une seule « Nouvelle setlist » ».
+- **Mes services, sous-titre** : le texte de A11 est gardé (« … · n à venir »), mais la phrase se coupe par
+  « … » avant le compte, qui reste entier (`SectionMesServices` ; `EnTetePage` inchangé). Test à 360 px sur
+  les cinq projets.
+- **Les plus chantés** : `plusChantes` écarte les chants absents du recueil avant de prendre les six, et
+  reclasse de 1 à 6. Test de calcul « un chant absent du recueil ne prend ni place ni rang ».
+- **`navigation-grand-ecran`** (« fenêtre trop basse ») : la page est remise en haut avant la mesure, et le
+  test exige de nouveau `scrollY` = 0, comme avant T8.
+- **Constats laissés, avec la raison** :
+  - Cache des setlists passées (`ChoisisUnChant`) : il ne double aucune lecture. Le tableau de bord lit depuis
+    aujourd'hui (`lireSetlists(today)`), Chants depuis 92 jours ; une clé commune ne servirait jamais deux fois.
+    C'est écrit en commentaire.
+  - « Tout voir › » sur « Nouveaux au répertoire » : la planche le dessine, mais A5 ne le cite pas et aucune
+    page de destination n'existe. Rien n'est fait sans décision de Timothée.
+  - `look-barres` (en-tête retiré pour mesurer le fond des barres) : un cas avec l'en-tête réel est **à reprendre
+    à l'intégration** (mesure au pixel, hors de ce lot).
+  - Contre-épreuve de `agencement-v18-setlists` (tests de T9 jamais vus rouges en exécution) : **à faire à
+    l'intégration**, sur un worktree au commit d'avant T9. Les deux tests ajoutés ici ont été vus rouges.
+- **Vu en passant, pas corrigé** : la carte des deux volets (Chants et `DeuxVolets` de F1) finit sous le bas
+  de la fenêtre tant que la page n'a pas défilé, et la molette sur la liste ne défile pas la page : les
+  dernières lignes de la liste restent cachées tant qu'on ne défile pas à côté de la carte. C'est la forme de
+  R10 dans F1, à trancher à l'intégration. Et `navigation-grand-ecran` « captures de la barre » (seulement avec
+  `PW_CAPTURES`) attend `barre-outils` sur une setlist en grand, où la barre est `[data-en-tete]` : il échoue
+  sans rapport avec ce lot.
+- **Suites vertes** : `agencement-v18-chants`, `agencement-v18-setlists`, `navigation-grand-ecran`,
+  `chants-deux-volets`, `pages-en-grand-mes-services` (cinq projets), `planning-petit-dej` (Mes services),
+  `back-office-coupe` (second serveur) ; `tsc --noEmit` et `npm run lint` sans erreur. Captures regardées :
+  Chants à 720 px et iPad couché (index entier), Mes services à 360 px, Setlists vide (ordinateur, téléphone).
+- **Timothée** : rien à publier (aucune règle, aucune donnée, aucun libellé nouveau). À trancher : « Tout voir › »
+  des nouveaux chants (et sa page), et la carte qui finit sous le bas de la fenêtre avant tout défilement.

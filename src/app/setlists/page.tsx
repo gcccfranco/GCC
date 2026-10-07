@@ -13,7 +13,7 @@ import {
   type PlanningData,
 } from "@/lib/planning/names";
 import { useTranslation } from "react-i18next";
-import { Search, X, Plus, Lock, LogIn, UserPen } from "lucide-react";
+import { Search, X, Lock, LogIn, UserPen } from "lucide-react";
 import Link from "next/link";
 import { EnTetePage } from "@/components/layout/EnTetePage";
 import { BoutonNouveau } from "@/components/layout/BoutonNouveau";
@@ -440,17 +440,9 @@ export default function SetlistsPage() {
         ) : displayed.length === 0 ? (
           <div className="text-center py-16 border border-dashed border-border rounded-xl space-y-3">
             <p className="text-sm text-muted-foreground">{emptyMessage}</p>
+            {/* Qui peut créer a « + Nouvelle setlist » dans l'en-tête : pas de seconde action ici (R7). */}
             {tab === "upcoming" && !query && !canCreate && (
               <p className="text-sm text-muted-foreground">{t("setlists.list.emptyUpcomingHint")}</p>
-            )}
-            {tab === "upcoming" && !query && canCreate && (
-              <Link
-                href="/setlists/new"
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-[background-color,transform] duration-150 active:scale-[.97]"
-              >
-                <Plus className="h-4 w-4" />
-                {t("setlists.list.newButton")}
-              </Link>
             )}
           </div>
         ) : (

@@ -108,6 +108,41 @@ test.describe("en-tête et liste (A5, R1 à R3, R7, R10)", () => {
     expect(Math.abs(finDuContenu - (largeurFenetre - marge))).toBeLessThanOrEqual(1);
   });
 
+  test("deux volets : l'index A–Z tient entier dans la carte, page en haut comme défilée (grands écrans)", async ({ page }, info) => {
+    test.skip(!estGrandEcran(info), "deux volets : ordinateur et tablette couchée");
+    // La première et la dernière lettre, entières dans la part de la carte qui est à l'écran :
+    // page en haut, la carte part sous l'en-tête et finit sous le bas de la fenêtre ; page défilée,
+    // elle colle 20 px sous le haut. Le défilement de la liste ne déplace pas la page (`overscroll`).
+    const indexDansLaCarte = async (moment: string) => {
+      const r = await liste(page).evaluate((carte) => {
+        const lettres = carte.querySelectorAll('nav[aria-label="Index alphabétique"] button');
+        const c = carte.getBoundingClientRect();
+        return {
+          n: lettres.length,
+          haut: Math.max(c.top, 0),
+          bas: Math.min(c.bottom, window.innerHeight),
+          a: lettres[0]?.getBoundingClientRect().top ?? 0,
+          z: lettres[lettres.length - 1]?.getBoundingClientRect().bottom ?? 0,
+        };
+      });
+      expect(r.n, `${moment} : l'index est là`).toBeGreaterThan(20);
+      expect(r.a, `${moment} : la première lettre dans la carte`).toBeGreaterThanOrEqual(r.haut - 0.5);
+      expect(r.z, `${moment} : la dernière lettre dans la carte, à l'écran`).toBeLessThanOrEqual(r.bas + 0.5);
+    };
+    const largeur = page.viewportSize()!.width;
+    for (const hauteur of [page.viewportSize()!.height, 640]) {
+      await page.setViewportSize({ width: largeur, height: hauteur });
+      await page.goto("/songs");
+      await listePrete(page);
+      await indexDansLaCarte(`${hauteur} px, page en haut`);
+      await liste(page).evaluate((el) => { el.scrollTop = el.scrollHeight; });
+      await indexDansLaCarte(`${hauteur} px, liste au bout`);
+      await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+      await expect.poll(() => liste(page).evaluate((el) => Math.round(el.getBoundingClientRect().top)), "la carte collée").toBe(20);
+      await indexDansLaCarte(`${hauteur} px, carte collée`);
+    }
+  });
+
   test("Tous · FR · 中文 : une vue de la liste, dans le rail gris (R4)", async ({ page }) => {
     await page.goto("/songs");
     await listePrete(page);
@@ -298,6 +333,19 @@ test.describe("calculs (A7, A8)", () => {
     // Six au plus.
     const beaucoup = Array.from({ length: 9 }, (_, i) => ({ slug: `x${i}`, title: `X${i}`, language: "fr", artist: "", originalKey: "C" })) as Parameters<typeof plusChantes>[1];
     expect(plusChantes([s("2026-10-01", beaucoup.map((c) => c.slug))], beaucoup, aujourdhui)).toHaveLength(6);
+  });
+
+  test("les plus chantés : un chant absent du recueil ne prend ni place ni rang", () => {
+    const aujourdhui = "2026-10-03";
+    const s = (date: string, slugs: string[]) => setlist(date, slugs) as unknown as Parameters<typeof plusChantes>[0][number];
+    const index = ["a", "b", "c", "d", "e", "f", "g"].map((slug) => ({ slug, title: slug.toUpperCase(), language: "fr", artist: "", originalKey: "C" })) as Parameters<typeof plusChantes>[1];
+    const lignes = plusChantes([
+      s("2026-09-27", ["a", "retire", "b"]),
+      s("2026-09-20", ["a", "retire"]),
+      s("2026-09-13", ["retire", "c", "d", "e", "f", "g"]),
+    ], index, aujourdhui);
+    // « retire » (3 setlists) n'est plus au recueil : six lignes quand même, rangées de 1 à 6.
+    expect(lignes.map((l) => [l.slug, l.rang])).toEqual([["a", 1], ["b", 2], ["c", 3], ["d", 4], ["e", 5], ["f", 6]]);
   });
 
   test("dates d'ajout : le journal de git lu en une passe, la plus récente addition d'un fichier gagne", () => {

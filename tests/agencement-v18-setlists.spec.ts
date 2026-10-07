@@ -39,14 +39,14 @@ const DOCS = {
 };
 
 /** Jeudi 1er octobre 2026. */
-async function ouvrir(page: Page, adresse: string) {
+async function ouvrir(page: Page, adresse: string, docs: Record<string, Record<string, unknown>> = DOCS) {
   interdireDialoguesNatifs(page);
   await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
   await page.route(/docs\.google\.com\/spreadsheets/, (route) => {
     const feuille = new URL(route.request().url()).searchParams.get("sheet") ?? "";
     return route.fulfill({ status: 200, contentType: "text/csv", body: FEUILLES[feuille] ?? "" });
   });
-  await signInAs(page, RUTH, DOCS, adresse);
+  await signInAs(page, RUTH, docs, adresse);
 }
 
 const liste = (page: Page) => page.locator('[data-volet="liste"]');
@@ -132,6 +132,15 @@ test.describe("Setlists (A9)", () => {
     }
   });
 
+  test("rien à venir : une seule « Nouvelle setlist », celle de l'en-tête (R7)", async ({ page }) => {
+    await ouvrir(page, "/setlists", {});
+    await expect(page.getByText("Aucun culte à venir.", { exact: true })).toBeVisible();
+    const bouton = page.getByRole("link", { name: "Nouvelle setlist" });
+    await expect(bouton).toHaveCount(1);
+    await expect(bouton).toBeVisible();
+    await capture(page, "v18-setlists-vide");
+  });
+
   test("en 中文 : l'en-tête traduit", async ({ page }) => {
     await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
     await ouvrir(page, "/setlists");
@@ -154,6 +163,31 @@ test.describe("Mes services (A11)", () => {
     await expect(rail.getByRole("tab", { name: "À venir" })).toHaveAttribute("aria-selected", "true");
     await rail.getByRole("tab", { name: "Passés" }).click();
     await expect(page.getByRole("link", { name: /Culte Franco.*27 sept/ })).toBeVisible();
+  });
+
+  test("« n à venir » se lit en entier quand le sous-titre est coupé (fenêtre de 360 px, tous appareils)", async ({ page }) => {
+    await page.setViewportSize({ width: 360, height: 780 });
+    await ouvrir(page, "/mes-services");
+    await expect(page.getByRole("link", { name: /Culte Franco.*4 oct/ })).toBeVisible();
+    const sousTitre = enTete(page).locator("p").first();
+    await expect(sousTitre).toHaveText("Les dates où Ruth K. apparaît dans les plannings · 2 à venir");
+    const mesure = await sousTitre.evaluate((p) => {
+      const coupe = [p, ...p.querySelectorAll("*")].some((el) => el.scrollWidth > el.clientWidth + 1);
+      const marcheur = document.createTreeWalker(p, NodeFilter.SHOW_TEXT);
+      for (let n = marcheur.nextNode(); n; n = marcheur.nextNode()) {
+        const i = n.textContent!.indexOf("2 à venir");
+        if (i < 0) continue;
+        const r = document.createRange();
+        r.setStart(n, i);
+        r.setEnd(n, i + "2 à venir".length);
+        return { coupe, fin: r.getBoundingClientRect().right, bord: p.getBoundingClientRect().right };
+      }
+      return null;
+    });
+    expect(mesure, "le compte est dans le sous-titre").not.toBeNull();
+    expect(mesure!.coupe, "le sous-titre est trop long pour la ligne (sinon ce test ne prouve rien)").toBe(true);
+    expect(mesure!.fin, "« 2 à venir » n'est pas coupé").toBeLessThanOrEqual(mesure!.bord + 0.5);
+    await capture(page, "v18-mes-services-360");
   });
 
   test("deux volets : la liste en carte, l'en-tête au-dessus des deux, le service en h2 de 24 px (grands écrans)", async ({ page }, info) => {

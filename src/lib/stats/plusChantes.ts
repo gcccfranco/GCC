@@ -13,8 +13,14 @@ export function debutPlusChantes(aujourdhui: string): string {
   return new Date(Date.parse(`${aujourdhui}T00:00:00Z`) - JOURS_PLUS_CHANTES * 86_400_000).toISOString().slice(0, 10);
 }
 
-/** Les `n` chants les plus présents dans les setlists publiées du 92e jour avant aujourd'hui à hier. */
+/** Les `n` chants les plus présents dans les setlists publiées du 92e jour avant aujourd'hui à hier.
+ *  Seulement ceux du recueil : un chant retiré, encore dans une setlist, ne prend ni place ni rang
+ *  (l'écran ne saurait pas l'afficher), et les rangs suivent, de 1 à `n`. */
 export function plusChantes(setlists: Args[0], index: Args[1], aujourdhui: string, n = 6): LigneChant[] {
   const periode = { du: debutPlusChantes(aujourdhui), au: veille(aujourdhui) };
-  return statsChants(setlists, index, { periode, service: null, langue: null, presidence: null }, aujourdhui).plusJoues.slice(0, n);
+  const auRecueil = new Set(index.map((c) => c.slug));
+  return statsChants(setlists, index, { periode, service: null, langue: null, presidence: null }, aujourdhui).plusJoues
+    .filter((ligne) => auRecueil.has(ligne.slug))
+    .slice(0, n)
+    .map((ligne, i) => ({ ...ligne, rang: i + 1 }));
 }

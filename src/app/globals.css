@@ -620,11 +620,15 @@
    la liste est une carte en relief (rayon 16 px, sans filet) à `--marge-page` du bord, collante
    20 px sous la barre du haut ; la page à `--ecart-volets` de la carte (« Choisis un chant » pose
    lui-même la marge de droite : la page d'un chant garde ses marges, hors du lot). Le chant
-   s'étire sur toute la rangée : un chant court sous une liste plus haute garde sa barre collée. */
+   s'étire sur toute la rangée : un chant court sous une liste plus haute garde sa barre collée.
+   L'index A–Z se centre dans `--cadre-index`, la part de la carte toujours à l'écran : page en haut,
+   la carte part sous l'en-tête (104 px : 24 + titre 36 + 4 + sous-titre 20 + 20) et finit sous le
+   bas de la fenêtre ; page défilée, elle colle 20 px sous la barre. La molette sur la liste ne
+   défile que la liste : sans cela, Y et Z restaient sous le bord de la fenêtre (relecture T89). */
 @media screen and (pointer: coarse) and (orientation: landscape) and (min-width: 1024px) {
   .chants-volets { display: grid; grid-template-columns: clamp(320px, 37%, 400px) minmax(0, 1fr); column-gap: var(--ecart-volets); align-items: start; padding-left: var(--marge-page); --halo-chants: var(--sec-verse); }
   .chants-volets > .chants-entete { display: block; grid-column: 1 / -1; margin-left: calc(-1 * var(--marge-page)); }
-  .chants-volets > .chants-liste { display: block; position: sticky; top: calc(var(--nav-h) + 20px); z-index: 1; max-height: calc(100svh - var(--nav-h) - 44px); margin-bottom: 24px; overflow-y: auto; overscroll-behavior: contain; border-radius: 16px; background-color: hsl(var(--raised)); box-shadow: var(--shadow-raised); }
+  .chants-volets > .chants-liste { --cadre-index: calc(100svh - var(--nav-h) - 104px); display: block; position: sticky; top: calc(var(--nav-h) + 20px); z-index: 1; max-height: calc(100svh - var(--nav-h) - 44px); margin-bottom: 24px; overflow-y: auto; overscroll-behavior: contain; border-radius: 16px; background-color: hsl(var(--raised)); box-shadow: var(--shadow-raised); }
   .chants-liste .chants-liste-fond { min-height: 0; }
   .chants-liste .chants-liste-corps { padding: 14px 16px 8px; }
   .chants-volets > .chants-chant { display: block; min-width: 0; align-self: stretch; }
@@ -636,7 +640,7 @@
 @media screen and (pointer: fine) and (min-width: 1024px) {
   :root[data-barre="reduite"] .chants-volets { display: grid; grid-template-columns: clamp(320px, 37%, 400px) minmax(0, 1fr); column-gap: var(--ecart-volets); align-items: start; padding-left: var(--marge-page); --halo-chants: var(--sec-verse); }
   :root[data-barre="reduite"] .chants-volets > .chants-entete { display: block; grid-column: 1 / -1; margin-left: calc(-1 * var(--marge-page)); }
-  :root[data-barre="reduite"] .chants-volets > .chants-liste { display: block; position: sticky; top: calc(var(--nav-h) + 20px); z-index: 1; max-height: calc(100svh - var(--nav-h) - 44px); margin-bottom: 24px; overflow-y: auto; overscroll-behavior: contain; border-radius: 16px; background-color: hsl(var(--raised)); box-shadow: var(--shadow-raised); }
+  :root[data-barre="reduite"] .chants-volets > .chants-liste { --cadre-index: calc(100svh - var(--nav-h) - 104px); display: block; position: sticky; top: calc(var(--nav-h) + 20px); z-index: 1; max-height: calc(100svh - var(--nav-h) - 44px); margin-bottom: 24px; overflow-y: auto; overscroll-behavior: contain; border-radius: 16px; background-color: hsl(var(--raised)); box-shadow: var(--shadow-raised); }
   :root[data-barre="reduite"] .chants-liste .chants-liste-fond { min-height: 0; }
   :root[data-barre="reduite"] .chants-liste .chants-liste-corps { padding: 14px 16px 8px; }
   :root[data-barre="reduite"] .chants-volets > .chants-chant { display: block; min-width: 0; align-self: stretch; }
@@ -648,7 +652,7 @@
 @media screen and (pointer: fine) and (min-width: 1148px) {
   .chants-volets { display: grid; grid-template-columns: clamp(320px, 37%, 400px) minmax(0, 1fr); column-gap: var(--ecart-volets); align-items: start; padding-left: var(--marge-page); --halo-chants: var(--sec-verse); }
   .chants-volets > .chants-entete { display: block; grid-column: 1 / -1; margin-left: calc(-1 * var(--marge-page)); }
-  .chants-volets > .chants-liste { display: block; position: sticky; top: calc(var(--nav-h) + 20px); z-index: 1; max-height: calc(100svh - var(--nav-h) - 44px); margin-bottom: 24px; overflow-y: auto; overscroll-behavior: contain; border-radius: 16px; background-color: hsl(var(--raised)); box-shadow: var(--shadow-raised); }
+  .chants-volets > .chants-liste { --cadre-index: calc(100svh - var(--nav-h) - 104px); display: block; position: sticky; top: calc(var(--nav-h) + 20px); z-index: 1; max-height: calc(100svh - var(--nav-h) - 44px); margin-bottom: 24px; overflow-y: auto; overscroll-behavior: contain; border-radius: 16px; background-color: hsl(var(--raised)); box-shadow: var(--shadow-raised); }
   .chants-liste .chants-liste-fond { min-height: 0; }
   .chants-liste .chants-liste-corps { padding: 14px 16px 8px; }
   .chants-volets > .chants-chant { display: block; min-width: 0; align-self: stretch; }

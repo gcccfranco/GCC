@@ -252,11 +252,13 @@ test.describe("navigation sur grand écran (U4) : barre dépliée, ordinateur", 
     const pied = barre.getByTestId("pied-barre");
     // La page peut déjà être un peu défilée : la connexion (signInAs) passe par /login, dont le bouton
     // pris par le focus est sous les 300 px, et Chants ne remet pas la fenêtre en haut quand son volet
-    // de droite est déjà dans la vue (agencement v18 : l'en-tête de page est au-dessus).
-    const avant = await page.evaluate(() => window.scrollY);
+    // de droite est déjà dans la vue (agencement v18 : l'en-tête de page est au-dessus). On la remet
+    // en haut : la page ne doit pas bouger d'un pixel.
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
     await pied.scrollIntoViewIfNeeded();
     await expect(pied).toBeInViewport();
-    expect(await page.evaluate(() => window.scrollY), "c'est la barre qui a défilé, pas la page").toBe(avant);
+    expect(await page.evaluate(() => window.scrollY), "c'est la barre qui a défilé, pas la page").toBe(0);
   });
 });
 

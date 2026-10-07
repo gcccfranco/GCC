@@ -180,9 +180,13 @@ export function SectionMesServices({ children }: { children: React.ReactNode }) 
       {avecEnTete && (
         <EnTetePage
           titre={t("mesServices.title")}
-          sousTitre={[t("mesServices.subtitle", { name: nom }), aVenir > 0 && t("mesServices.upcomingCount", { count: aVenir })]
-            .filter(Boolean)
-            .join(" · ")}
+          // Une ligne : la phrase se coupe par « … », jamais « n à venir » qui la suit (A11).
+          sousTitre={
+            <span className="flex min-w-0">
+              <span className="truncate">{t("mesServices.subtitle", { name: nom })}</span>
+              {aVenir > 0 && <span className="shrink-0 whitespace-pre">{` · ${t("mesServices.upcomingCount", { count: aVenir })}`}</span>}
+            </span>
+          }
         />
       )}
       <Contexte.Provider value={valeur}>
