@@ -48,7 +48,8 @@ test.describe("BO Planning, piste A", () => {
   test("l'agencement commun ; le titre « Planning », le planning et ses cases vides en sous-titre, « Exporter » dans l'en-tête", async ({ page }) => {
     await ouvrir(page, ADMIN, "/back-office/planning/culte");
     await expect(page.locator('[data-grille="culte"]')).toBeVisible();
-    await verifierAgencement(page, { premierBloc: barre(page) });
+    // La grille pleine zone ; les sous-parties, l'année et le trimestre en rail, les plannings en pilules.
+    await verifierAgencement(page, { premierBloc: barre(page), contenu: page.locator('[data-grille="culte"]'), onglets: { rail: 3, pilules: 1 } });
     await expect(enTete(page).getByRole("heading", { level: 1 })).toHaveText("Planning");
     const sousTitre = enTete(page).locator("p").first();
     await expect(sousTitre).toContainText("Culte Franco");
@@ -113,10 +114,15 @@ test.describe("BO Planning, piste A", () => {
 // ─── App (A2, A3, R6) ─────────────────────────────────────────────────────────
 
 test.describe("App Planning : le titre « Planning », le service en h2", () => {
-  test("Culte : l'agencement commun, h1 « Planning », h2 du service avec son horaire et sa période", async ({ page }) => {
+  test("Culte : l'agencement commun, h1 « Planning », h2 du service avec son horaire et sa période", async ({ page }, info) => {
     await ouvrir(page, MEMBRE, "/planning/culte");
     await expect(page.locator('[data-grille="culte"]')).toBeVisible();
-    await verifierAgencement(page, { premierBloc: barre(page) });
+    // Le trimestre en rail (une seule année pour un membre) ; les plannings en pilules en grand
+    // seulement (ailleurs, la barre collante de V7).
+    await verifierAgencement(page, {
+      premierBloc: barre(page), contenu: page.locator('[data-grille="culte"]'),
+      onglets: { rail: 1, pilules: estGrandEcran(info) ? 1 : 0 },
+    });
     await expect(enTete(page).getByRole("heading", { level: 1 })).toHaveText("Planning");
     await expect(enTete(page)).toContainText("Qui sert quand, dans tous les plannings de l'église");
     await expect(barre(page).getByRole("heading", { level: 2 })).toHaveText("Culte Franco");
@@ -260,7 +266,8 @@ test.describe("T4b — Planning, accueil (A1)", () => {
     await expect(pourMoi.getByText("Présidence : Président A.")).toBeVisible();
     await expect(pourMoi.getByRole("link", { name: "Ouvrir" })).toHaveAttribute("href", /^\/setlists\/sl-1\/?$/);
     // Le premier bloc : le contenu de la section (`main`, à la marge de la zone).
-    await verifierAgencement(page, { premierBloc: page.locator("main").filter({ has: ceDimanche(page) }).last() });
+    const contenu = page.locator("main").filter({ has: ceDimanche(page) }).last();
+    await verifierAgencement(page, { premierBloc: contenu, contenu, onglets: { rail: 0, pilules: estGrandEcran(info) ? 1 : 0 } });
     await expect(enTete(page).getByRole("heading", { level: 1 })).toHaveText("Planning");
     if (estGrandEcran(info)) {
       const plannings = enTete(page).getByRole("navigation", { name: "Plannings" });
@@ -325,7 +332,7 @@ test.describe("T4b — Prépa. Table (A4)", () => {
     await expect(cartePetitDej(page).locator('[data-dimanche="2026-10-04"]')).toBeVisible();
     await expect(carteTableDuSeigneur(page)).toBeVisible();
     await expect(carteTonPetitDej(page)).toBeVisible();
-    await verifierAgencement(page, { premierBloc: barre(page) });
+    await verifierAgencement(page, { premierBloc: barre(page), contenu: barre(page), onglets: { rail: 1, pilules: estGrandEcran(info) ? 1 : 0 } });
     const pd = await boite(cartePetitDej(page));
     const table = await boite(carteTableDuSeigneur(page));
     const ton = await boite(carteTonPetitDej(page));

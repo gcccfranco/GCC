@@ -656,3 +656,25 @@ la barre d'onglets : une page sans barre du bas (rare) le verra plus haut que n�
   (« 13 个主日中 n 个空闲 »), `ton` (你的早餐), `aucunAVenir` (你还没有报名之后的早餐。), `accueil.carteTable`
   (圣餐桌), `table.unDimancheParMois` (每月一个主日), `table.dimancheSainteCene` (圣餐主日). Vérifier aussi que la
   Prépa. Table du Seigneur tombe bien « un dimanche par mois », comme sur la planche.
+
+### V18T4 — Planning (fusion des fondations relues)
+
+- 07/10/2026 : **`lot/v18-fondations` fusionnée** dans `lot/v18-t4` (commit `93efff8`, relecture `5d4e94c`). Deux
+  conflits, les deux intentions gardées : `MenuActions` garde `ouvreUnChamp` (T4b, l'action attend la fermeture du
+  menu) et la clé par position (fondations) ; ici, l'avancement « V18F — Relecture » avant les sous-sections V18T4.
+  Rien d'autre à reprendre dans le Planning : les actions du « ⋯ » du petit déj montrent déjà leurs erreurs
+  (`ecrire`), les rails du Planning (année, trimestre, classe, vue, groupes) prennent le clavier des fondations
+  sans changer de rôles.
+- **Vérifications communes données** (contrat de la relecture : `contenu` et `onglets` à chaque tranche) dans
+  `tests/agencement-v18-planning.spec.ts` : BO Culte (grille pleine zone ; trois rails, sous-parties, année,
+  trimestre ; une rangée de pilules), App Culte (grille pleine zone ; le trimestre en rail ; les plannings en pilules
+  en grand seulement), accueil (contenu pleine zone ; pilules en grand) et Prépa. Table (rangée pleine zone ; un
+  rail ; pilules en grand).
+- **Tests** (07/10/2026) : `tsc --noEmit` et `npm run lint` sans erreur ; `agencement-v18-planning`,
+  `agencement-v18-fondations`, `agencement-v18-confirmations`, `planning-petit-dej`, `back-office-admin`,
+  `planning-2027` : 682 verts ; `planning-grille`, `planning-campus`, `planning-edd`, `planning-groupes-grille`,
+  `planning-table`, `planning-export-modele`, `look-planning-feuille`, `look-barres`, `look-navigation`,
+  `agencement-barre-reduite` : 303 verts ; `back-office-coupe` (second serveur) : 59 verts. Captures
+  regardées après la fusion (BO Culte à 1 440 px, accueil barre réduite, Prépa. Table sur téléphone) : inchangées.
+- **Reste** : rien pour T4. Le lot est prêt pour l'intégration.
+- **Timothée** : rien à publier (aucune règle, aucune donnée) ; le 中文 à relire reste celui de T4a et T4b.
