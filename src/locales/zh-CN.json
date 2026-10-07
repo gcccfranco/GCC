@@ -2787,6 +2787,7 @@
     "nouvelleTache": "新建{{date}}截止的任务",
     "tout": "全部",
     "sourcesFeuille": "来源",
+    "filtreAria": "显示的条目",
     "ouvrir": "打开",
     "agendaVide": "到{{mois}}底都没有安排。",
     "afficherMois": "显示{{mois}}",

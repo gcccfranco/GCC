@@ -77,10 +77,34 @@ test("l'agencement commun : titre « Calendrier », rail Mois · Agenda, le mois
   await expect(entete.getByTestId("mois-affiche")).toHaveText(estTelephone(test.info()) ? "Octobre" : "Octobre 2026");
   await expect(entete.getByRole("button", { name: "Mois suivant" })).toBeVisible();
   await expect(entete.getByRole("button", { name: "Aujourd'hui" })).toBeVisible();
-  await verifierAgencement(page);
+  // Sous l'en-tête, le calendrier (et le volet du jour) prend toute la zone ; un rail (Mois · Agenda)
+  // et une rangée de pilules (les sources ; sur téléphone, « Tout · Seulement moi »).
+  const communes = {
+    contenu: page.locator('[data-testid="calendrier"] > header[data-entete-page] + div'),
+    onglets: { rail: 1, pilules: 1 },
+  };
+  await verifierAgencement(page, communes);
   await vue(page, "Agenda");
   await expect(entete.getByTestId("mois-affiche")).toHaveText(estTelephone(test.info()) ? "Octobre" : "Octobre 2026");
-  await verifierAgencement(page);
+  await verifierAgencement(page, communes);
+});
+
+test("téléphone : « Tout · Seulement moi » en pilules ; retoucher « Seulement moi » revient à « Tout »", async ({ page }) => {
+  test.skip(!estTelephone(test.info()), "téléphone seulement");
+  await ouvrir(page);
+  const groupe = page.getByRole("group", { name: "Entrées affichées" });
+  await expect(groupe).toHaveAttribute("data-onglets", "pilules");
+  const tout = groupe.getByRole("button", { name: "Tout" });
+  const moi = groupe.getByRole("button", { name: "Seulement moi" });
+  await expect(tout).toHaveAttribute("aria-pressed", "true");
+  await moi.click();
+  await expect(moi).toHaveAttribute("aria-pressed", "true");
+  await expect(tout).toHaveAttribute("aria-pressed", "false");
+  await moi.click();
+  await expect(tout).toHaveAttribute("aria-pressed", "true");
+  // « Sources » suit les pilules, à leur hauteur.
+  const sources = page.getByRole("button", { name: "Sources" });
+  expect(Math.round((await sources.boundingBox())!.height)).toBe(Math.round((await tout.boundingBox())!.height));
 });
 
 test("« + Nouvel évènement » dans l'en-tête dès 768 px ; sur téléphone, le rond « Créer » propose le jour affiché", async ({ page }) => {

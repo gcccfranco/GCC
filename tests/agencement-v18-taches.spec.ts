@@ -56,6 +56,8 @@ async function ouvrir(page: Page, adresse: string) {
 const liste = (page: Page) => page.locator('[data-volet="liste"]');
 const detail = (page: Page) => page.locator('[data-volet="detail"]');
 const ligne = (page: Page, titre: string) => liste(page).getByRole("button", { name: new RegExp(`^${titre}`) });
+/** Le bloc des volets (ou la liste seule) : toute la zone ; un rail (les pôles), aucune rangée de pilules. */
+const surLaListe = (page: Page) => ({ contenu: liste(page).locator(".."), onglets: { rail: 1, pilules: 0 } });
 const nouvelleTache = (page: Page) => page.getByRole(estGrandEcran(test.info()) ? "link" : "button", { name: "Nouvelle tâche" });
 
 /** Capture à regarder à l'œil (PW_CAPTURES=<dossier>), une par appareil. */
@@ -74,7 +76,7 @@ test("l'agencement commun : en-tête « Tâches », rail des pôles avec le comp
   const rail = ongletsRail(page).filter({ visible: true });
   await expect(rail.getByRole("link")).toHaveText([/^DA\s*·\s*3$/, /^Média\s*·\s*1$/]);
   await expect(rail.getByRole("link", { name: /^DA/ })).toHaveAttribute("aria-current", "page");
-  await verifierAgencement(page);
+  await verifierAgencement(page, surLaListe(page));
   await capture(page, "v18-bo-taches");
 });
 
@@ -125,7 +127,7 @@ test.describe("en grand (deux volets)", () => {
     await expect(ligne(page, "Affiche de Noël")).toBeVisible();
     await expect(detail(page).getByRole("heading", { level: 2, name: "Fond PPT du culte" })).toBeVisible();
     await expect(liste(page).getByRole("button", { name: /^Fond PPT du culte.*8 oct/ })).toHaveAttribute("aria-current", "page");
-    await verifierAgencement(page);
+    await verifierAgencement(page, surLaListe(page));
   });
 
   test("« + Nouvelle tâche » ouvre le formulaire dans le volet ; créer l'ajoute et ouvre sa fiche", async ({ page }) => {
@@ -207,12 +209,14 @@ test.describe("un volet (téléphone, tablette portrait)", () => {
 
   test("la liste, puis la fiche en page avec « ‹ Tâches »", async ({ page }) => {
     await ouvrir(page, "/back-office/taches/da");
-    await verifierAgencement(page);
+    await expect(ligne(page, "Livret de l'Avent")).toBeVisible();
+    await verifierAgencement(page, surLaListe(page));
     await ligne(page, "Livret de l'Avent").click();
     await expect(page).toHaveURL(/\/back-office\/taches\/da\/t3\/?$/);
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Livret de l'Avent");
     await expect(liste(page)).toHaveCount(0);
-    await verifierAgencement(page);
+    // La fiche en page : toute la zone, ni rail ni pilules (« ‹ Tâches » ramène à la liste).
+    await verifierAgencement(page, { contenu: detail(page), onglets: { rail: 0, pilules: 0 } });
     await capture(page, "v18-bo-tache-fiche");
     await page.locator("header[data-entete-page]").getByRole("link", { name: "Tâches", exact: true }).click();
     await expect(page).toHaveURL(/\/back-office\/taches\/da\/?$/);

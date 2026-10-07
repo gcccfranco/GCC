@@ -2800,6 +2800,7 @@
     "nouvelleTache": "Nouvelle tâche pour le {{date}}",
     "tout": "Tout",
     "sourcesFeuille": "Sources",
+    "filtreAria": "Entrées affichées",
     "ouvrir": "Ouvrir",
     "agendaVide": "Rien de prévu jusqu'à fin {{mois}}.",
     "afficherMois": "Afficher {{mois}}",

@@ -642,3 +642,26 @@ la barre d'onglets : une page sans barre du bas (rare) le verra plus haut que n�
 - **Reste** : rien pour T3.
 - **Timothée** : rien à publier (aucune règle, aucune donnée) ; relire le 中文 de `calendrier.ajouterCeJour`
   (在这天添加), `calendrier.nouvelleReunion` (新建{{date}}的会议), `calendrier.semaineDu` ({{date}}那一周).
+
+### V18T13 — Fusion des fondations relues
+
+- 07/10/2026 : **`lot/v18-fondations` fusionné** dans `lot/v18-t13` (commit de fusion ; seul conflit, cette section
+  Avancement : les deux textes gardés). `tsc --noEmit` et `npm run lint` sans erreur.
+- **Ce que la relecture demandait aux tranches** : `verifierAgencement` reçoit maintenant `contenu` et `onglets`.
+  Tâches : les volets (ou la liste seule) sur toute la zone, un rail (les pôles), aucune pilule ; la fiche en page
+  sur un volet : toute la zone, ni rail ni pilule. Calendrier : le bloc sous l'en-tête sur toute la zone, un rail
+  (Mois · Agenda), une rangée de pilules.
+- **Corrigé** (`fix(V18T13): fusion — …`) : sur téléphone, « Tout · Seulement moi » n'était pas une rangée de
+  pilules (boutons faits main, sans `data-onglets`) ; c'est maintenant `Pilules` (R5), retoucher « Seulement moi »
+  revient à « Tout » comme avant ; « Sources » prend la taille des pilules qu'il suit (40 px). La feuille des
+  sources porte `data-onglets="pilules"` comme la rangée des sources en grand. Vu rouge (téléphone : 0 pilule) puis
+  vert ; un test du téléphone le garde (`agencement-v18-calendrier`, « Tout · Seulement moi » en pilules) ;
+  captures regardées (téléphone, tablette debout).
+- **Suites** (07/10/2026) : les specs du lot sur les cinq projets et leurs voisins sur `ordinateur`
+  (`agencement-v18-{calendrier,taches,confirmations,fondations}`, `back-office-admin`, `back-office-espace`,
+  `calendrier`, `calendrier-deplacer`, `calendrier-widget`, `evenements-2027`, `nouveaux-membres`,
+  `taches-evenements`, `taches`) : 1 626 verts, 141 passés exprès (propres à un appareil), aucun échec ; les specs
+  du calendrier sur `telephone` : 104 verts ; `back-office-coupe` (second serveur) et `halo-partout` : 62 verts.
+- **Reste** : rien pour le lot V18T13.
+- **Timothée** : rien à publier (aucune règle, aucune donnée) ; relire le 中文 de `calendrier.filtreAria`
+  (显示的条目, nom du groupe « Tout · Seulement moi », lu par les lecteurs d'écran).

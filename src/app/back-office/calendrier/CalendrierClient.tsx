@@ -61,7 +61,7 @@ import { ICONES } from "@/components/calendrier/apparence";
 import { AnnonceBascule } from "@/components/evenements/AnnonceBascule";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { EnTetePage } from "@/components/layout/EnTetePage";
-import { OngletsRail } from "@/components/layout/Onglets";
+import { OngletsRail, Pilules } from "@/components/layout/Onglets";
 import { BoutonNouveau } from "@/components/layout/BoutonNouveau";
 
 // Les dispositions de U4 (bloc « Lot U4 » de globals.css) : le panneau du jour se pose à
@@ -93,9 +93,9 @@ const BOUTON_ROND =
   "raised inline-flex h-8 min-w-8 items-center justify-center rounded-full px-2 text-[13px] font-bold text-foreground transition-opacity duration-150 hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground";
 const PASTILLE =
   "inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-[13px] font-semibold transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground";
-/** Pastille du téléphone (planche : pleine en encre si choisie, grise sinon). */
-const PASTILLE_TEL = (on: boolean) =>
-  cn(PASTILLE, "shrink-0", on ? "bg-foreground text-background" : "bg-secondary text-foreground/85");
+/** « Sources » sur téléphone : à la taille des pilules qu'il suit (`Pilules`, grise). */
+const BOUTON_SOURCES_TEL =
+  "inline-flex h-10 shrink-0 items-center gap-1.5 rounded-full bg-secondary px-3.5 text-[15px] text-foreground/80 transition-colors duration-150 active:bg-secondary/70 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground";
 
 export function CalendrierClient() {
   const { t, i18n } = useTranslation();
@@ -285,29 +285,26 @@ export function CalendrierClient() {
       type="button"
       aria-pressed={prefs.seulementMoi}
       onClick={() => changer({ ...prefs, seulementMoi: !prefs.seulementMoi })}
-      className={telephone ? PASTILLE_TEL(prefs.seulementMoi) : cn(PASTILLE, prefs.seulementMoi ? "bg-foreground text-background" : "raised text-foreground")}
+      className={cn(PASTILLE, prefs.seulementMoi ? "bg-foreground text-background" : "raised text-foreground")}
     >
-      {!telephone && <UserRound aria-hidden className="h-3.5 w-3.5 shrink-0" />}
+      <UserRound aria-hidden className="h-3.5 w-3.5 shrink-0" />
       {t("calendrier.seulementMoi")}
     </button>
   );
 
   // La rangée sous le rail : la période, puis les filtres (sur téléphone, « Tout » · « Seulement moi »
-  // · « Sources », la feuille des sources).
+  // en pilules (R5), retoucher « Seulement moi » revient à « Tout » ; puis « Sources », la feuille des sources).
   const rangee = telephone ? (
     <div className="flex flex-col gap-3">
       {navigation}
       <div className="flex items-center gap-1.5">
-        <button
-          type="button"
-          aria-pressed={!prefs.seulementMoi}
-          onClick={() => changer({ ...prefs, seulementMoi: false })}
-          className={PASTILLE_TEL(!prefs.seulementMoi)}
-        >
-          {t("calendrier.tout")}
-        </button>
-        {seulementMoi}
-        <button type="button" onClick={() => setFeuilleSources(true)} className={PASTILLE_TEL(false)}>
+        <Pilules
+          etiquette={t("calendrier.filtreAria")}
+          options={[{ cle: "tout", nom: t("calendrier.tout") }, { cle: "moi", nom: t("calendrier.seulementMoi") }]}
+          valeur={prefs.seulementMoi ? "moi" : "tout"}
+          choisir={(v) => changer({ ...prefs, seulementMoi: v === "moi" })}
+        />
+        <button type="button" onClick={() => setFeuilleSources(true)} className={BOUTON_SOURCES_TEL}>
           <SlidersHorizontal aria-hidden className="h-3.5 w-3.5 shrink-0" />
           {t("calendrier.sourcesFeuille")}
         </button>
@@ -442,7 +439,7 @@ export function CalendrierClient() {
             <DrawerHeader className="pb-2 text-left">
               <DrawerTitle>{t("calendrier.sourcesFeuille")}</DrawerTitle>
             </DrawerHeader>
-            <div role="group" aria-label={t("calendrier.sourcesAria")} className="flex flex-wrap gap-2 px-4 pb-8">
+            <div role="group" aria-label={t("calendrier.sourcesAria")} data-onglets="pilules" className="flex flex-wrap gap-2 px-4 pb-8">
               {boutonsSources}
             </div>
           </DrawerContent>
