@@ -517,3 +517,36 @@ npm run lint
   - À faire par Timothée : rien pour P5 (aucune règle à publier, droits inchangés) ; relire le 中文 de
     `planning.semaines.*` (« 我的预约 », « 周次 », « 过去的周（n） », « 剩余 n 个名额 », « 已满 », « 每个时段 … »,
     « …至…这一周 », « 上一周 », « 下一周 »).
+- 07/10/2026 — **P6 — App : réserver, déplacer, modifier, retirer : faite** (branche `lot/v18-scene`, commit
+  « feat(SCENE): P6 »). `CreneauForm.tsx` : feuille « Réserver » sans rien de coché (Q15), bouton plein gris et
+  inactif « Choisis quoi et qui » tant que Quoi ou Qui manque, puis « Réserver » ; « Note · facultatif » ; neuf
+  groupes puis « + N » qui déplie le reste (déplié d'emblée si un groupe déjà choisi est au-delà) ; « Déplacer »
+  ne propose que les créneaux libres, en pastilles groupées par jour (le sien compris s'il est dans la grille),
+  plus aucune liste déroulante, et ne touche ni quoi ni qui ; « Modifier » rappelle le créneau en tête et ne
+  change que Quoi, Qui, Note. `Entrainements.tsx` : « ⋯ » (`MenuActions` de F1) sur chaque réservation que je
+  peux changer (`canEditCreneau`, inchangé), dans la semaine et dans « Mes réservations » : Déplacer, Modifier,
+  Retirer ; Retirer passe par `useConfirmer` (« Retirer ce créneau ? » — « Sketch · Jeunes, dimanche 11
+  octobre · 16:00 – 17:00 : le créneau redevient libre. »), plus de `window.confirm` côté membres ; les deux
+  boutons sous la réservation disparaissent ; « à moi » (pastille à l'encre) remplace mon nom. Libellés FR et
+  中文 : `planning.saison.{choisisQuoiQui,autresGroupes,facultatif}`, `planning.semaines.{aMoi,retirerTexte}` ;
+  `planning.programme.noteHint` devient « Sono, matériel, précision… » ; `planning.saison.creneau`, orpheline, retirée.
+  - Tests : 9 tests P6 dans `tests/scene-paques-noel.spec.ts` (plus une capture sous `PW_CAPTURES`), vus rouges
+    sur le code de P5 (9 rouges sur `ordinateur`), verts ensuite ; réécrits pour « ⋯ », « à moi », « + N » et
+    les pastilles : 10 tests de `scene-saison.spec.ts` (dont les deux « Déplacer » hors grille de l'aperçu, qui
+    partagent la feuille), 3 de `programme-scene.spec.ts`, 1 de P5 (`Mes réservations` lue par ligne). `tsc` et
+    `lint` propres.
+  - Repris après une coupure : le travail non commité a été relu, gardé, revu rouge (contre-épreuve sur le code
+    de P5 : les 9 tests P6 rouges) puis vert sur les cinq projets (P5 et P6 : 85 verts ; `scene-saison` et
+    `programme-scene` : 309 verts). Corrigé en passant : deux « ‹ » touchés vite ne reculaient que d'une
+    semaine (la semaine se lisait dans l'adresse, que `router.replace` met à jour plus tard ; le test P5
+    « changer de semaine » tombait sur `ordinateur`) : la semaine demandée gagne désormais jusqu'à ce que
+    l'adresse la rattrape (`Entrainements.tsx`).
+  - Choix faits faute de réponse : le menu « ⋯ » n'a que les libellés (la planche ajoute une ligne d'aide sous
+    chacun ; `MenuActions` de F1 n'en a pas, et la scène n'en écrit pas d'autre) ; son nom accessible est
+    « Plus d'actions · {quoi} · {qui} » ; une réservation hors grille qu'on déplace n'a aucune pastille choisie
+    au départ (bouton inactif jusqu'au choix) ; le bouton plein de « Déplacer » dit « Déplacer » ; l'aperçu du
+    Back-Office (`Apercu.tsx`) reçoit les mêmes pastilles pour son « Déplacer », son `window.confirm` reste
+    jusqu'à P7 comme prévu.
+  - Reste : P7 à P9.
+  - À faire par Timothée : rien pour P6 (aucune règle à publier, droits inchangés) ; relire le 中文 « 请选择内容和参与者 »,
+    « 其他团体 », « 可选 », « 我的 », « {{resa}}，{{jour}} · {{debut}} – {{fin}}：该时段将重新空出。 ».

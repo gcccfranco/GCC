@@ -172,7 +172,8 @@ test("réserver : la feuille reprend le créneau choisi dans la grille (lot U1),
   await feuille.getByRole("button", { name: "Réserver", exact: true }).click();
   const ligne = dimanche.getByRole("listitem").filter({ hasText: "Danse · Gp Joie" });
   await expect(ligne).toContainText("17:00");
-  await expect(ligne).toContainText("Jo L.");
+  // Pâques · Noël, P6 : sur sa propre réservation, « à moi » remplace son nom.
+  await expect(ligne).toContainText("à moi");
   await expect(dimanche.getByRole("button", { name: "Réserver 17:00 – 18:00" })).toHaveCount(0);
   const created = db.writes.find((w) => w.method === "POST" && w.path.startsWith("programmes/noel/creneaux/"));
   expect(created?.data).toMatchObject({
@@ -199,15 +200,18 @@ test("droits : l'auteur et la coordination modifient ou retirent un créneau, pa
   const bloc = page.getByRole("region", { name: "Dimanche 4 octobre" });
   await expect(bloc.getByText("Alice Q.")).toBeVisible();
   await expect(bloc.getByRole("button", { name: "Retirer" })).toHaveCount(0);
+  await expect(bloc.getByRole("button", { name: /^Plus d'actions/ })).toHaveCount(0);
 });
 
 test("droits : la coordination retire le créneau d'un autre membre", async ({ page }) => {
   const db = await openNoel(page, ALICE, "2026-10-01", {
     "programmes/noel/creneaux/c1": { ...C_ALICE, auteurUid: "uid-jo", auteurNom: "Jo L." },
   });
-  page.on("dialog", (d) => d.accept());
   const bloc = page.getByRole("region", { name: "Dimanche 4 octobre" });
-  await bloc.getByRole("button", { name: "Retirer" }).click();
+  // Pâques · Noël, P6 : « ⋯ » › Retirer, puis la confirmation du site (plus de fenêtre du navigateur).
+  await bloc.getByRole("button", { name: /^Plus d'actions/ }).click();
+  await page.getByRole("menuitem", { name: "Retirer" }).click();
+  await page.getByRole("alertdialog").getByRole("button", { name: "Retirer", exact: true }).click();
   await expect(bloc.getByText("Chant · EDD 中班")).toHaveCount(0);
   await expect(bloc.getByRole("button", { name: "Réserver 17:00 – 18:00" })).toBeVisible();
   expect(db.writes.find((w) => w.method === "DELETE")?.path).toBe("programmes/noel/creneaux/c1");

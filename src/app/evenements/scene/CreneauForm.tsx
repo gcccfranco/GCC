@@ -1,11 +1,15 @@
 "use client"
 
 // Feuille d'un créneau sur scène. Lot U1 (docs/spec-scene-saison.md, planche
-// scene-reserver-feuille-telephone) : plus d'heure à taper. « Réserver »
-// rappelle le jour et le créneau pris dans la grille (« Dimanche 11 octobre ·
-// 15:00 – 16:00 ») ; « Modifier » ou « Déplacer » proposent les créneaux libres
-// de la saison, jour par jour (le créneau actuel compris). Puis quoi (un), qui
-// (un ou plusieurs, limité aux groupes permis), note.
+// scene-reserver-feuille-telephone) : plus d'heure à taper. « Réserver » et
+// « Modifier » rappellent le jour et le créneau (« Dimanche 11 octobre ·
+// 15:00 – 16:00 »), puis quoi (un), qui (un ou plusieurs, limité aux groupes
+// permis), note. Pâques · Noël, P6 (docs/spec-scene-paques-noel.md, Q14, Q15 ;
+// planche v18-scene-a-feuille-telephone) : rien n'est coché d'avance, le bouton
+// plein dit « Choisis quoi et qui » tant qu'il manque l'un ou l'autre ; au-delà
+// de neuf groupes, « + N » déplie le reste. « Déplacer » ne propose que les
+// créneaux libres, en pastilles jour par jour (le créneau actuel compris), sans
+// liste déroulante, et ne touche ni quoi ni qui.
 
 import { useState, type CSSProperties, type FormEvent, type ReactNode } from "react"
 import { useTranslation } from "react-i18next"
@@ -90,9 +94,9 @@ type Props = {
   title: string
   /** Libellé du bouton plein : « Réserver », ou « Enregistrer » pour modifier. */
   submitLabel: string
-  /** Nouvelle réservation : le créneau choisi dans la grille, rappelé en tête. */
+  /** Réserver ou modifier : le créneau, rappelé en tête. */
   place?: Place
-  /** Modifier ou déplacer : les créneaux proposés, jour par jour. */
+  /** Déplacer : les créneaux proposés, jour par jour (seul choix de la feuille). */
   places?: Place[]
   initial: CreneauValues
   quiOptions: readonly string[]
@@ -118,32 +122,29 @@ export function CreneauForm({ open, title, onCancel, ...champs }: Props) {
   )
 }
 
+/** Groupes montrés avant « + N » (planche : neuf, puis « + 3 »). */
+const QUI_VISIBLES = 9
+
 function Champs({ submitLabel, place, places, initial, quiOptions, quiLimite, onSubmit, onCancel }: Omit<Props, "open" | "title">) {
   const { t, i18n } = useTranslation()
   const [v, setV] = useState<CreneauValues>(initial)
   const [error, setError] = useState("")
   const [busy, setBusy] = useState(false)
-  const select = "w-full h-11 rounded-xl bg-secondary px-3 text-base md:text-sm"
+  // Un groupe déjà choisi au-delà des neuf premiers déplie la liste d'emblée.
+  const [tousQui, setTousQui] = useState(() => quiOptions.slice(QUI_VISIBLES).some((q) => initial.qui.includes(q)))
   const jours = places ? [...new Set(places.map((p) => p.jour))] : []
-  const duJour = places?.filter((p) => p.jour === v.dimanche) ?? []
+  const choisie = (p: Place) => p.jour === v.dimanche && cle(p) === cle(v)
+  const pret = places ? places.some(choisie) : v.quoi !== "" && v.qui.length > 0
+  const quiMontres = tousQui ? quiOptions : quiOptions.slice(0, QUI_VISIBLES)
+  const caches = quiOptions.length - quiMontres.length
 
   async function submit(e: FormEvent) {
     e.preventDefault()
-    if (v.qui.length === 0) { setError(t("planning.programme.needQui")); return }
+    if (!pret) return
     setBusy(true); setError("")
     const err = await onSubmit({ ...v, note: v.note.trim() })
     setBusy(false)
     if (err) setError(err)
-  }
-
-  function choisirJour(jour: string) {
-    const premier = places?.find((p) => p.jour === jour)
-    if (premier) setV({ ...v, dimanche: jour, debut: premier.debut, fin: premier.fin })
-  }
-
-  function choisirCreneau(valeur: string) {
-    const p = duJour.find((x) => cle(x) === valeur)
-    if (p) setV({ ...v, debut: p.debut, fin: p.fin })
   }
 
   return (
@@ -155,49 +156,57 @@ function Champs({ submitLabel, place, places, initial, quiOptions, quiLimite, on
           {t("planning.saison.place", { jour: titreDuJour(place.jour, i18n.language), debut: place.debut, fin: place.fin })}
         </p>
       )}
-      {places && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div className="space-y-1">
-            <label htmlFor="creneau-jour" className="text-[13px] font-semibold text-muted-foreground">{t("planning.saison.jour")}</label>
-            <select id="creneau-jour" className={select} value={v.dimanche} onChange={(e) => choisirJour(e.target.value)}>
-              {jours.map((d) => <option key={d} value={d}>{titreDuJour(d, i18n.language)}</option>)}
-            </select>
-          </div>
-          <div className="space-y-1">
-            <label htmlFor="creneau-place" className="text-[13px] font-semibold text-muted-foreground">{t("planning.saison.creneau")}</label>
-            <select id="creneau-place" className={select} value={cle(v)} onChange={(e) => choisirCreneau(e.target.value)}>
-              {duJour.map((p) => <option key={cle(p)} value={cle(p)}>{p.debut} – {p.fin}</option>)}
-            </select>
-          </div>
-        </div>
-      )}
-      <Groupe legende={t("planning.programme.quoi")}>
-        {QUOI.map((q) => (
-          <Pastille key={q} type="radio" name="creneau-quoi" label={q} checked={v.quoi === q} onChange={() => setV({ ...v, quoi: q })} />
-        ))}
-      </Groupe>
-      <Groupe legende={
+      {places ? jours.map((d) => (
+        <Groupe key={d} legende={titreDuJour(d, i18n.language)}>
+          {places.filter((p) => p.jour === d).map((p) => (
+            <Pastille key={cle(p)} type="radio" name="creneau-place" label={`${p.debut} – ${p.fin}`} checked={choisie(p)}
+              onChange={() => setV({ ...v, dimanche: p.jour, debut: p.debut, fin: p.fin })} />
+          ))}
+        </Groupe>
+      )) : (
         <>
-          {t("planning.programme.qui")}
-          {quiLimite && <span className="font-normal"> · {t("planning.saison.quiPermisTitre")}</span>}
+          <Groupe legende={t("planning.programme.quoi")}>
+            {QUOI.map((q) => (
+              <Pastille key={q} type="radio" name="creneau-quoi" label={q} checked={v.quoi === q} onChange={() => setV({ ...v, quoi: q })} />
+            ))}
+          </Groupe>
+          <Groupe legende={
+            <>
+              {t("planning.programme.qui")}
+              {quiLimite && <span className="font-normal"> · {t("planning.saison.quiPermisTitre")}</span>}
+            </>
+          }>
+            {quiMontres.map((q) => {
+              const checked = v.qui.includes(q)
+              return (
+                <Pastille key={q} type="checkbox" name="creneau-qui" label={q} checked={checked}
+                  onChange={() => setV({ ...v, qui: checked ? v.qui.filter((x) => x !== q) : [...v.qui, q] })} />
+              )
+            })}
+            {caches > 0 && (
+              <button type="button" onClick={() => setTousQui(true)}
+                className="inline-flex h-11 items-center rounded-xl px-3 text-sm font-semibold text-muted-foreground hover:bg-secondary">
+                + {caches}<span className="sr-only"> {t("planning.saison.autresGroupes", { count: caches })}</span>
+              </button>
+            )}
+          </Groupe>
+          <div className="space-y-2">
+            <label htmlFor="creneau-note" className="text-[13px] font-semibold text-muted-foreground">
+              {t("planning.programme.note")}<span className="font-normal"> · {t("planning.saison.facultatif")}</span>
+            </label>
+            <Input id="creneau-note" className="h-11 rounded-xl" value={v.note} maxLength={120} placeholder={t("planning.programme.noteHint")} onChange={(e) => setV({ ...v, note: e.target.value })} />
+          </div>
         </>
-      }>
-        {quiOptions.map((q) => {
-          const checked = v.qui.includes(q)
-          return (
-            <Pastille key={q} type="checkbox" name="creneau-qui" label={q} checked={checked}
-              onChange={() => setV({ ...v, qui: checked ? v.qui.filter((x) => x !== q) : [...v.qui, q] })} />
-          )
-        })}
-      </Groupe>
-      <div className="space-y-2">
-        <label htmlFor="creneau-note" className="text-[13px] font-semibold text-muted-foreground">{t("planning.programme.note")}</label>
-        <Input id="creneau-note" className="h-11 rounded-xl" value={v.note} maxLength={120} placeholder={t("planning.programme.noteHint")} onChange={(e) => setV({ ...v, note: e.target.value })} />
-      </div>
+      )}
       {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
       <div className="flex gap-2 pt-1">
         <Button type="button" variant="secondary" className="h-11" onClick={onCancel}>{t("planning.programme.cancel")}</Button>
-        <Button type="submit" disabled={busy} className="h-11 flex-1 text-white hover:opacity-90" style={{ background: COLOR }}>{submitLabel}</Button>
+        {/* Inactif : gris, comme la planche ; prêt : plein, de la couleur de la scène. */}
+        <Button type="submit" disabled={busy || !pret}
+          className={`h-11 flex-1 ${pret ? "text-white hover:opacity-90" : "bg-secondary text-muted-foreground disabled:opacity-100"}`}
+          style={pret ? { background: COLOR } : undefined}>
+          {pret || places ? submitLabel : t("planning.saison.choisisQuoiQui")}
+        </Button>
       </div>
     </form>
   )
