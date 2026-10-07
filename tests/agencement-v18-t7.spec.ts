@@ -61,7 +61,7 @@ test.describe("T7 : l'en-tête de la section Évènements", () => {
     const titre = enTete(page).getByRole("heading", { level: 1, name: "Évènements" });
     await expect(titre).toBeVisible();
     await expect(enTete(page)).toContainText("Les rendez-vous de l'église et les inscriptions");
-    await expect(ongletsRail(page).getByRole("link")).toHaveText(["Calendrier", "Noël"]);
+    await expect(ongletsRail(page).getByRole("link")).toHaveText(["Calendrier", "Pâques", "Noël"]);
     await expect(ongletsRail(page).getByRole("link", { name: "Calendrier" })).toHaveAttribute("aria-current", "page");
     const [h1, rail] = [(await titre.boundingBox())!, (await ongletsRail(page).boundingBox())!];
     expect(rail.y, "le rail sous le titre").toBeGreaterThan(h1.y + h1.height - 1);
@@ -121,7 +121,7 @@ test.describe("T7 : l'en-tête de la section Évènements", () => {
     await expect(nouvel(page)).toHaveCount(1);
     const avant = (await h1.boundingBox())!;
     await ongletsRail(page).getByRole("link", { name: "Noël" }).click();
-    await expect(page).toHaveURL(/\/evenements\/scene\/?$/);
+    await expect(page).toHaveURL(/\/evenements\/scene\/noel\/?$/);
     await expect(ongletsRail(page).getByRole("link", { name: "Noël" })).toHaveAttribute("aria-current", "page");
     await expect(enTete(page)).toHaveCount(1);
     await expect(enTete(page)).toContainText("Les rendez-vous de l'église et les inscriptions");

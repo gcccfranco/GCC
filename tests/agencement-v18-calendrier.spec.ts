@@ -167,6 +167,16 @@ test("grand écran : en agenda, le volet du jour à droite (300 px), « Ajouter 
   await expect(form.getByLabel("Échéance")).toHaveValue("2026-10-01");
 });
 
+test("« Nouvelle réunion le … » ouvre Réunions › Nouvelle avec la date du jour (T3 et T2a fusionnées)", async ({ page }) => {
+  test.skip(!estGrandEcran(test.info()), "le menu du volet du jour : ordinateur et tablette couchée");
+  await ouvrir(page);
+  await vue(page, "Agenda");
+  await voletDuJour(page, "Jeudi 1er octobre").getByRole("button", { name: "Ajouter ce jour-là" }).click();
+  await page.getByRole("menu").getByRole("menuitem", { name: "Nouvelle réunion le 01/10" }).click();
+  await expect(page).toHaveURL(/\/back-office\/reunions\/nouvelle\/?\?date=2026-10-01$/);
+  await expect(page.getByLabel("Date", { exact: true })).toHaveValue("2026-10-01");
+});
+
 test("en agenda, toucher un jour le choisit (volet à droite en grand, feuille du jour sur tablette debout)", async ({ page }) => {
   test.skip(estTelephone(test.info()), "le téléphone garde son agenda à cartes : une carte ouvre sa feuille");
   await ouvrir(page);
