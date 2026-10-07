@@ -1078,15 +1078,13 @@ persistant (5 instables passés à la relance : `navigation-grand-ecran` ×3, `s
    au Back-Office (lancer les réservations, une semaine à la fois, Mes réservations).
 3. **Relire le 中文** listé par chaque voie dans l'« Avancement » des deux specs (dont 会议, 卡片, `planning.gestion.*`,
    `planning.semaines.*`, `planning.barre.*`, `moi.apercus.*`, `taches.*`, `equipes.*`, les six confirmations de F2).
-4. **Choix à trancher** (pris faute de réponse, détaillés dans l'« Avancement ») : « Partager » et la grille
-   Date · Heure · Lieu de la fiche d'évènement (T7) ; la liste-carte des deux volets qui finit sous le bas de la
-   fenêtre (R10) ; l'agenda du Back-Office sur iPad debout et « Ajouter ce jour-là » en un seul bouton (T3) ; taille
-   des pilules de période, « En chinois » sur une ou deux colonnes, « Les plus joués » entre 1 024 et 1 100 px (T6) ;
-   badge « n nouveaux comptes » ou « n en attente » dans Personnes (T5) ; heures de l'accueil, « Prénom ✕ » et
-   « Mes dates » dans la Prépa. Table, « un dimanche par mois » (T4) ; « Ajouter » un inscrit (B3, demanderait une
-   écriture nouvelle) et publics de réunion dans « Nouvel évènement » (T2) ; lien « Tout voir » de « Nouveaux au
-   répertoire », « 推荐诗歌 » ou « 推荐新诗歌 » (T8–T9) ; ordre de passage de la scène écrit en entier (deux
-   responsables en même temps s'écrasent sans message).
+4. **Choix tranchés le 08/10/2026** (22 questions) → `docs/spec-retouches-v18.md`, trois lots en attente du go :
+   **R** retouches (Partager et Date · Heure · Lieu sur la fiche d'évènement, liste-carte qui tient dans la
+   fenêtre, agenda du Calendrier, pilules compactes en grand, « Les plus joués », heures de l'accueil, 推荐新诗歌,
+   ordre de passage protégé) ; **E** évènements réservés à un pôle, qui ne sont plus forcément des réunions
+   (visibles des membres du pôle, notification à la publication) ; **F** Fidélité en un seul planning (Guitariste
+   et Batterie dans le planning du groupe, le planning des musiciens disparaît, ses noms sont repris, le Sheet
+   reste tel quel).
 5. **À la mise en ligne, sur ordre** : poser `VERCEL_DEEP_CLONE=true` dans les variables du projet Vercel (sans
    historique git, « Nouveaux au répertoire » n'apparaît pas). En ligne, les trimestres du Planning passent en rail
    gris et Prépa. Table et Campus sont calés à gauche sous le titre.
