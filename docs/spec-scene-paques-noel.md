@@ -550,6 +550,24 @@ npm run lint
   - Reste : P7 à P9.
   - À faire par Timothée : rien pour P6 (aucune règle à publier, droits inchangés) ; relire le 中文 « 请选择内容和参与者 »,
     « 其他团体 », « 可选 », « 我的 », « {{resa}}，{{jour}} · {{debut}} – {{fin}}：该时段将重新空出。 ».
+- 07/10/2026 — **Fusion du lot : faite** (branche `lot/v18-scene`, rien de poussé). `lot/v18-fondations` (relecture
+  V18F : fenêtre fermée quand la page change, rail au clavier, `/essai-agencement` coupé comme en ligne) puis
+  `lot/v18-scene-bo` (T2a, T2b, P7, P8, P9) fusionnés. Conflits : `tests/back-office-coupe.spec.ts` (les adresses 404
+  des deux voies gardées, `/essai-agencement` compris) et `docs/spec-agencement-v18.md` (avancements V18F et V18T2
+  gardés l'un après l'autre). `tsc` vert, `lint` sans erreur. Passes : `scene-paques-noel`, `scene-saison`,
+  `programme-scene`, `agencement-v18-t2a`, `agencement-v18-t2b`, `back-office-admin`, `evenements-2027`,
+  `tableau-de-bord`, `calendrier`, `calendrier-deplacer` sur tous leurs projets ; `agencement-v18-fondations`,
+  `agencement-v18-confirmations`, `evenements`, `reunions`, `taches-evenements`, `halo-partout`,
+  `back-office-espace`, `barre-back-office` sur `ordinateur` (2 455 verts, 1 rouge, 206 sautés) ;
+  `back-office-coupe` (193 verts).
+  - Le rouge : `evenements.spec.ts` « modifier : l'organisateur change le lieu » tombait une fois sur deux (strict
+    mode : depuis T2b, la liste relue après l'enregistrement redit le lieu à côté de la fiche). Le test lit
+    désormais le lieu dans la fiche de gestion (`infos-gestion`) : 15 verts sur 15 (ordinateur, téléphone,
+    tablette, cinq fois chacun). Aucun code du site touché.
+  - Pas fusionné ici : la relecture de `lot/v18-t2` (`2243fb1`, après `3badace`), qui viendra à l'intégration.
+  - Reste : les tranches P1 à P9 sont faites ; la relecture de la scène entière reste à faire (voir P9), puis
+    l'intégration, qui repassera toute la suite sur les cinq tailles.
+  - À faire par Timothée : rien à publier (droits inchangés, aucune règle) ; relire le 中文 listé sous P1 à P9.
 
 ### SCENEBO
 
