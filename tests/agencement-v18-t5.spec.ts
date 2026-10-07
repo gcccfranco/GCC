@@ -56,6 +56,8 @@ async function ouvrir(
 }
 
 const titre = (page: Page) => enTete(page).locator("h1");
+/** Le bloc de contenu de la page : celui qui suit l'en-tête (pleine zone, R10). */
+const sousEnTete = (page: Page) => enTete(page).locator("xpath=following-sibling::*[1]");
 
 // ─── Équipes › Organigramme ──────────────────────────────────────────────────
 
@@ -67,7 +69,8 @@ test.describe("T5 : Équipes › Organigramme", () => {
     await expect(titre(page)).toHaveText("Équipes");
     await expect(enTete(page)).toContainText("il donne les pôles de chacun");
     await expect(page.getByTestId("bandeau-equipes")).toBeVisible();
-    await verifierAgencement(page, { premierBloc: page.getByTestId("bandeau-equipes") });
+    const bandeau = page.getByTestId("bandeau-equipes");
+    await verifierAgencement(page, { premierBloc: bandeau, contenu: bandeau, onglets: { rail: 1, pilules: 1 } });
     // Rail : Organigramme · Personnes ; sous-onglets Équipes · Musiciens en pilules.
     await expect(ongletsRail(page).getByRole("link")).toHaveText(["Organigramme", "Personnes"]);
     await expect(pilules(page).filter({ hasText: "Musiciens" }).getByRole("button")).toHaveText(["Équipes", "Musiciens"]);
@@ -148,7 +151,7 @@ test.describe("T5 : Équipes › Personnes", () => {
     await expect(inscriptions.getByRole("switch")).toBeChecked();
     await expect(inscriptions, "aucun compte de la semaine").not.toContainText("nouveau compte");
     await expect(page.getByRole("button", { name: /Bérénice A\./ })).toBeVisible();
-    await verifierAgencement(page);
+    await verifierAgencement(page, { contenu: sousEnTete(page), onglets: { rail: 1, pilules: 1 } });
     await expect(ongletsRail(page).getByRole("link", { name: "Personnes" })).toHaveAttribute("aria-current", "page");
   });
 
@@ -236,11 +239,13 @@ const MESSAGES_DOCS: Record<string, Record<string, unknown>> = {
 };
 
 test.describe("T5 : Messages", () => {
-  test("le h1 a le même x et le même y sur les trois onglets", async ({ page }) => {
+  test("le h1 a le même x et le même y sur les trois onglets", async ({ page }, info) => {
     interdireDialoguesNatifs(page);
     await ouvrir(page, "/back-office/messages", MESSAGES_DOCS);
     await expect(page.getByRole("heading", { name: "Signalements" }).first()).toBeVisible();
-    await verifierAgencement(page);
+    // Réception : les filtres en pilules, sauf sur tablette portrait (les deux cartes côte à côte, sans filtres).
+    const filtres = info.project.name === "tablette" ? 0 : 1;
+    await verifierAgencement(page, { contenu: sousEnTete(page), onglets: { rail: 1, pilules: filtres } });
     const ici = async () => (await titre(page).boundingBox())!;
     const a = await ici();
     await expect(enTete(page)).toContainText("Ce que les membres signalent et proposent");
@@ -248,12 +253,13 @@ test.describe("T5 : Messages", () => {
     await ongletsRail(page).getByRole("link", { name: "Notifier" }).click();
     await expect(page).toHaveURL(/\/back-office\/messages\/notifier\/?$/);
     await expect(page.getByText("Aperçu", { exact: true })).toBeVisible();
-    await verifierAgencement(page);
+    await verifierAgencement(page, { contenu: sousEnTete(page), onglets: { rail: 1, pilules: 1 } });
     const b = await ici();
 
     await ongletsRail(page).getByRole("link", { name: "Questionnaire" }).click();
     await expect(page).toHaveURL(/\/back-office\/messages\/questionnaire\/?$/);
-    await verifierAgencement(page);
+    await expect(page.getByText("Aucune réponse pour l'instant.").filter({ visible: true }).first()).toBeVisible();
+    await verifierAgencement(page, { contenu: sousEnTete(page), onglets: { rail: 1, pilules: 0 } });
     const c = await ici();
     for (const r of [b, c]) {
       expect(Math.abs(r.x - a.x)).toBeLessThan(1);

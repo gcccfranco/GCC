@@ -605,3 +605,14 @@ la barre d'onglets : une page sans barre du bas (rare) le verra plus haut que n�
   (« ⋯ › Supprimer »), `evenements` (carte des inscriptions). Captures regardées aux cinq tailles.
 - **Reste** : rien pour T5. Hors périmètre (spec) : « Joué n fois », « Setlist citée », « Pôles calculés le … ».
 - **Timothée** : rien à publier (ni règle ni donnée) ; relire les libellés 中文 ci-dessus.
+- 07/10/2026 : **fusion de `lot/v18-fondations`** (relecture V18F comprise) dans `lot/v18-t5` : un seul conflit, dans
+  ce fichier (les deux sections d'avancement gardées). Correctif `fix(V18T5): fusion — …` : les appels de
+  `verifierAgencement` de `agencement-v18-t5.spec.ts` donnent `contenu` (le bandeau sur Organigramme ; le bloc sous
+  l'en-tête sur Personnes, Réception, Notifier, Questionnaire) et `onglets` (un rail partout ; une rangée de
+  pilules sur Organigramme, Personnes, Réception et Notifier, aucune sur Questionnaire). Sur tablette portrait,
+  Réception n'a pas de filtres (les deux cartes côte à côte, choix de U4 bis gardé) : zéro pilule attendue là.
+  Aucun code du site changé par la fusion.
+- **Suites après la fusion** : `agencement-v18-t5`, `back-office-admin`, `equipes`, `pages-en-grand-reception`
+  (cinq projets) et le test « annonces retirées » d'`evenements` : 404 verts, 31 sautés (propres à un appareil) ;
+  `back-office-coupe` (second serveur) vert ; `tsc --noEmit` et `npm run lint` sans erreur.
+- **Reste** : rien pour T5. **Timothée** : rien à publier ; relire les libellés 中文 ci-dessus.
