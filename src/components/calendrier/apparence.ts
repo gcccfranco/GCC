@@ -44,3 +44,19 @@ export function couleurSource(e: EntreeCalendrier): string | undefined {
   if (e.source === "petitDej") return PETIT_DEJ.texte;
   return e.couleur;
 }
+
+/** Couleur du trait d'une ligne de l'agenda et de son étiquette (planche v18-bo-calendrier-agenda-a) :
+ *  le point de la source (évènements, tâches, réunions), le brun du petit déj, sinon la couleur de
+ *  l'entrée (service, scène, setlist). */
+export function couleurTrait(e: EntreeCalendrier): string {
+  switch (e.source) {
+    case "evenements":
+    case "taches":
+    case "reunions":
+      return COULEURS_CALENDRIER[e.source].point;
+    case "petitDej":
+      return PETIT_DEJ.texte;
+    default:
+      return e.couleur;
+  }
+}

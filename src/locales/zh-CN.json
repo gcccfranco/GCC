@@ -2790,6 +2790,9 @@
     "ouvrir": "打开",
     "agendaVide": "到{{mois}}底都没有安排。",
     "afficherMois": "显示{{mois}}",
+    "ajouterCeJour": "在这天添加",
+    "nouvelleReunion": "新建{{date}}的会议",
+    "semaineDu": "{{date}}那一周",
     "deplacer": {
       "bouton": "改期…",
       "titre": "改期「{{titre}}」",

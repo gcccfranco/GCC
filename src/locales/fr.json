@@ -2803,6 +2803,9 @@
     "ouvrir": "Ouvrir",
     "agendaVide": "Rien de prévu jusqu'à fin {{mois}}.",
     "afficherMois": "Afficher {{mois}}",
+    "ajouterCeJour": "Ajouter ce jour-là",
+    "nouvelleReunion": "Nouvelle réunion le {{date}}",
+    "semaineDu": "Semaine du {{date}}",
     "deplacer": {
       "bouton": "Déplacer…",
       "titre": "Déplacer « {{titre}} »",

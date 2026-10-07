@@ -179,16 +179,16 @@ async function fermer(page: Page, info: TestInfo) {
   await expect(page.getByRole("dialog", { name: "Sources" })).toHaveCount(0);
 }
 async function enMois(page: Page) {
-  const bouton = page.getByRole("group", { name: "Affichage" }).getByRole("button", { name: "Mois" });
-  if ((await bouton.getAttribute("aria-pressed")) !== "true") await bouton.click();
-  await expect(bouton).toHaveAttribute("aria-pressed", "true");
+  const bouton = page.getByRole("tablist", { name: "Affichage" }).getByRole("tab", { name: "Mois" });
+  if ((await bouton.getAttribute("aria-selected")) !== "true") await bouton.click();
+  await expect(bouton).toHaveAttribute("aria-selected", "true");
 }
 const pret = (page: Page) => expect(page.getByTestId("calendrier")).not.toHaveAttribute("aria-busy", "true");
 
 test.describe("B1 : la pastille du calendrier selon l'horloge", () => {
   test("le 15/12/2026 : « Évènements (Sheet) », et décembre lit le Sheet", async ({ page }, info) => {
     const { lus } = await ouvrir(page, ADMIN, "/back-office/calendrier", "2026-12-15T10:00:00");
-    await expect(page.getByRole("heading", { level: 1, name: /^Décembre( 2026)?$/ })).toBeVisible();
+    await expect(page.getByTestId("mois-affiche")).toHaveText(/^Décembre( 2026)?$/);
     await enMois(page);
     await pret(page);
     const groupe = await pastilles(page, info);
@@ -199,10 +199,10 @@ test.describe("B1 : la pastille du calendrier selon l'horloge", () => {
 
   test("le 15/12/2026, janvier affiché : la pastille suit l'horloge, elle dit encore « Évènements (Sheet) »", async ({ page }, info) => {
     await ouvrir(page, ADMIN, "/back-office/calendrier", "2026-12-15T10:00:00");
-    await expect(page.getByRole("heading", { level: 1, name: /^Décembre( 2026)?$/ })).toBeVisible();
+    await expect(page.getByTestId("mois-affiche")).toHaveText(/^Décembre( 2026)?$/);
     await enMois(page);
     await page.getByRole("button", { name: "Mois suivant" }).click();
-    await expect(page.getByRole("heading", { level: 1, name: /^Janvier( 2027)?$/ })).toBeVisible();
+    await expect(page.getByTestId("mois-affiche")).toHaveText(/^Janvier( 2027)?$/);
     await pret(page);
     const groupe = await pastilles(page, info);
     await expect(groupe.getByRole("button", { name: "Évènements (Sheet)" })).toBeVisible();
@@ -211,7 +211,7 @@ test.describe("B1 : la pastille du calendrier selon l'horloge", () => {
 
   test("le 02/01/2027 : « Évènements », janvier sans requête au Sheet, décembre le lit encore", async ({ page }, info) => {
     const { lus } = await ouvrir(page, ADMIN, "/back-office/calendrier", "2027-01-02T10:00:00");
-    await expect(page.getByRole("heading", { level: 1, name: /^Janvier( 2027)?$/ })).toBeVisible();
+    await expect(page.getByTestId("mois-affiche")).toHaveText(/^Janvier( 2027)?$/);
     await pret(page);
     await enMois(page);
     await pret(page);
@@ -224,7 +224,7 @@ test.describe("B1 : la pastille du calendrier selon l'horloge", () => {
     expect(lus).toEqual([]);
 
     await page.getByRole("button", { name: "Mois précédent" }).click();
-    await expect(page.getByRole("heading", { level: 1, name: /^Décembre( 2026)?$/ })).toBeVisible();
+    await expect(page.getByTestId("mois-affiche")).toHaveText(/^Décembre( 2026)?$/);
     await pret(page);
     await expect.poll(() => lus.includes(GID_DECEMBRE)).toBe(true);
     if (info.project.name !== "telephone") {
@@ -461,25 +461,25 @@ test.describe("B3 : annonceBascule (pur)", () => {
 test.describe("B3 : la ligne d'annonce en tête du Back-Office", () => {
   test("calendrier : le texte d'avant le 15/12/2026", async ({ page }) => {
     await ouvrir(page, ADMIN, "/back-office/calendrier", "2026-12-15T10:00:00");
-    await expect(page.getByRole("heading", { level: 1, name: /^Décembre( 2026)?$/ })).toBeVisible();
+    await expect(page.getByTestId("mois-affiche")).toHaveText(/^Décembre( 2026)?$/);
     await expect(annonce(page)).toHaveText(ANNONCE_AVANT);
     await expect(page.getByText(ANNONCE_APRES)).toHaveCount(0);
   });
 
   test("calendrier : le texte d'après le 02/01/2027, encore le 31/01/2027, disparu le 01/02/2027", async ({ page }) => {
     await ouvrir(page, ADMIN, "/back-office/calendrier", "2027-01-02T10:00:00");
-    await expect(page.getByRole("heading", { level: 1, name: /^Janvier( 2027)?$/ })).toBeVisible();
+    await expect(page.getByTestId("mois-affiche")).toHaveText(/^Janvier( 2027)?$/);
     await expect(annonce(page)).toHaveText(ANNONCE_APRES);
     await expect(page.getByText(ANNONCE_AVANT)).toHaveCount(0);
 
     await page.clock.setFixedTime(new Date("2027-01-31T20:00:00"));
     await page.reload();
-    await expect(page.getByRole("heading", { level: 1, name: /^Janvier( 2027)?$/ })).toBeVisible();
+    await expect(page.getByTestId("mois-affiche")).toHaveText(/^Janvier( 2027)?$/);
     await expect(annonce(page)).toHaveText(ANNONCE_APRES);
 
     await page.clock.setFixedTime(new Date("2027-02-01T08:00:00"));
     await page.reload();
-    await expect(page.getByRole("heading", { level: 1, name: /^Février( 2027)?$/ })).toBeVisible();
+    await expect(page.getByTestId("mois-affiche")).toHaveText(/^Février( 2027)?$/);
     await expect(annonce(page)).toHaveCount(0);
     await expect(page.getByText(ANNONCE_APRES)).toHaveCount(0);
   });

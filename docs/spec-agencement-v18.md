@@ -563,3 +563,42 @@ la barre d'onglets : une page sans barre du bas (rare) le verra plus haut que n�
 - **Timothée** : rien à publier (aucune règle, aucune donnée) ; relire le 中文 de `taches.sousTitreBackOffice`,
   `taches.poles`, `taches.terminees`, `taches.creer`, `taches.rythmeCourt.*`, `taches.fiche.{enRetard,historique,
   creeePar,unMembre}`.
+
+### V18T13 — Back-Office › Calendrier (T3)
+
+- 06/10/2026 : **T3 faite** (branche `lot/v18-t13`, commit `feat(V18T13): T3 — BO Calendrier…`), B5 piste A.
+  En-tête commun « Calendrier » (`EnTetePage`), « + Nouvel évènement » (`BoutonNouveau`, vers
+  `/back-office/evenements/nouveau`), rail Mois · Agenda (`OngletsRail`, boutons) ; dans la rangée `apres` :
+  « ‹ Octobre 2026 › » (le mois n'est plus le h1), « Aujourd'hui », filet, sources en pilules (`data-onglets="pilules"`),
+  « Seulement moi ». **Agenda dès 768 px** (`AgendaSemaines`, `components/calendrier/Agenda.tsx`) : « Semaine du
+  28 septembre », une ligne par jour (jour de la semaine et numéro, le jour choisi en encre), une ligne par entrée
+  (trait de couleur, heure et fin, titre, détail sans l'heure, étiquette du type), sur toute la largeur moins le
+  volet ; toucher un jour ou une ligne choisit le jour. **Volet du jour à droite (300 px) en agenda comme en Mois**
+  (ordinateur, tablette couchée) : titre du jour, « Ajouter ce jour-là » et son menu (`AjouterCeJour` : évènement,
+  tâche, réunion), une carte par entrée. Tablette debout : le jour touché (grille ou agenda) s'ouvre en feuille.
+  L'agenda suit désormais le mois de la rangée (d'aujourd'hui pour le mois en cours, du 1er sinon) ; « Afficher
+  novembre » reste et ‹ › le remet à zéro.
+- **Fichiers** : `app/back-office/calendrier/CalendrierClient.tsx`, `components/calendrier/{Agenda,PanneauJour}.tsx`,
+  `components/calendrier/apparence.ts`, `lib/calendrier/grille.ts` (`jourEtMois`, `jourDeLaSemaine`, `lundiDe`), libellés
+  `calendrier.{ajouterCeJour,nouvelleReunion,semaineDu}` FR et 中文.
+- **Tests** : `tests/agencement-v18-calendrier.spec.ts` (11 tests, cinq projets, vus rouges sans le code sur
+  `ordinateur`, `telephone` et `tablette` : 21 échecs, puis verts). Réécrits pour la nouvelle disposition : `calendrier.spec.ts` (mois lu dans la rangée,
+  `data-testid="mois-affiche"` ; rail en onglets `tab`/`aria-selected` ; agenda en grand : heure dans sa colonne,
+  volet du jour présent, une ligne choisit son jour, la carte du Sheet dans le volet ; créations par le menu du
+  volet ; un membre de pôle sans section a « Nouvelle réunion » et non plus « Nouvel évènement »),
+  `calendrier-deplacer.spec.ts` (le chip glissé est d'abord centré à l'écran : l'en-tête descend la grille sous
+  720 px), `calendrier-widget.spec.ts`, `evenements-2027.spec.ts`. Captures regardées aux cinq tailles, conformes
+  à `v18-bo-calendrier-agenda-a`. Reprise du 07/10/2026 (le travail n'était pas commité) : les cinq fichiers sur
+  les cinq projets, 935 verts, 80 sautés (tests propres à un appareil), 5 lenteurs sur `ordinateur-1440` en fin de
+  passe, vertes à la relance ; `halo-partout.spec.ts` et `back-office-coupe.spec.ts` verts ; `tsc` et ESLint propres.
+- **Choix faute de réponse** : « Ajouter ce jour-là » est un seul bouton qui ouvre le menu (la planche dessine un
+  bouton et une flèche à côté, sans dire ce que fait le bouton seul) ; la réunion se crée par l'adresse
+  d'aujourd'hui `/back-office/evenements/nouveau?reunion=1&date=…` (T2a, sur une autre voie, la redirige vers
+  `/back-office/reunions/nouvelle` : **à l'intégration, vérifier que la redirection garde `date`**) ; « Nouvel
+  évènement » (en-tête et menu) seulement pour qui a un public hors réunions, la réunion à part ; sur téléphone,
+  l'action principale est le rond « Créer » (sa feuille propose évènement, tâche, réunion du jour choisi) et
+  l'agenda garde ses cartes de la planche `bo-telephone-calendrier` ; les filtres passent à la ligne à droite de
+  la période ; pas de surlignage de la ligne d'entrée choisie (le jour en encre suffit).
+- **Reste** : rien pour T3.
+- **Timothée** : rien à publier (aucune règle, aucune donnée) ; relire le 中文 de `calendrier.ajouterCeJour`
+  (在这天添加), `calendrier.nouvelleReunion` (新建{{date}}的会议), `calendrier.semaineDu` ({{date}}那一周).

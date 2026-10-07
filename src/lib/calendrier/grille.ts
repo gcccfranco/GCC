@@ -78,3 +78,20 @@ export function jourCourt(date: string, lang: NotifLang): string {
 export function joursDeLaSemaine(lang: NotifLang): string[] {
   return joursDeLaGrille("2026-06").slice(0, 7).map((d) => utc(d).toLocaleDateString(locale(lang), { weekday: "short", timeZone: "UTC" }));
 }
+
+/** « 28 septembre », « 1er octobre » ; « 9月28日 » (« Semaine du 28 septembre », agenda v18). */
+export function jourEtMois(date: string, lang: NotifLang): string {
+  if (lang === "zh-CN") return jourCourt(date, lang);
+  const texte = utc(date).toLocaleDateString("fr-FR", { day: "numeric", month: "long", timeZone: "UTC" });
+  return texte.replace(/^1 /, "1er ");
+}
+
+/** « jeu. » ; « 周四 » (la colonne des jours de l'agenda v18). */
+export function jourDeLaSemaine(date: string, lang: NotifLang): string {
+  return utc(date).toLocaleDateString(locale(lang), { weekday: "short", timeZone: "UTC" });
+}
+
+/** Le lundi de la semaine de `date` (« AAAA-MM-JJ »). */
+export function lundiDe(date: string): string {
+  return addDays(date, -((utc(date).getUTCDay() + 6) % 7));
+}

@@ -410,7 +410,7 @@ async function ouvrir(page: Page, profil: FakeProfile = P_ADMIN) {
   await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
   await sheets(page);
   const db = await signInAs(page, profil, DOCS, "/back-office/calendrier");
-  await expect(page.getByRole("heading", { level: 1, name: /^Octobre( 2026)?$/ })).toBeVisible();
+  await expect(page.getByTestId("mois-affiche")).toHaveText(/^Octobre( 2026)?$/);
   await expect(page.getByTestId("calendrier")).not.toHaveAttribute("aria-busy", "true");
   return db;
 }
@@ -425,6 +425,9 @@ const ecritures = (db: Awaited<ReturnType<typeof ouvrir>>) =>
 
 /** Soulève `source` et l'amène au-dessus de `cible`, sans lâcher. */
 async function soulever(page: Page, source: Locator, cible: Locator) {
+  // L'en-tête v18 (titre, rail, rangée) descend la grille : la fin du mois sort d'un écran de 720 px.
+  // Au milieu de l'écran, loin des bords où le glisser fait défiler la page.
+  await source.evaluate((el) => el.scrollIntoView({ block: "center" }));
   const a = (await source.boundingBox())!;
   const b = (await cible.boundingBox())!;
   await page.mouse.move(a.x + a.width / 2, a.y + a.height / 2);
@@ -710,7 +713,7 @@ test.describe("C6 : « Déplacer… »", () => {
     await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
     await sheets(page);
     await signInAs(page, P_ADMIN, DOCS, "/back-office/calendrier");
-    await expect(page.getByRole("heading", { level: 1, name: "2026年10月" })).toBeVisible();
+    await expect(page.getByTestId("mois-affiche")).toHaveText("2026年10月");
     await expect(page.getByTestId("calendrier")).not.toHaveAttribute("aria-busy", "true");
     await jour(page, "2026-10-15").click();
     await page.getByRole("button", { name: "改期…" }).filter({ visible: true }).click();

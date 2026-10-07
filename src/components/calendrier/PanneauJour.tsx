@@ -5,6 +5,9 @@
 // est en lecture seule : elle le dit et ouvre l'onglet du mois. Le même contenu
 // sert le panneau de droite (ordinateur, tablette couchée) et la feuille (ailleurs).
 // C5 : en bas, les deux boutons de création (`BoutonsCreation`), selon les droits.
+// Agencement v18 (B5) : dans le volet du jour à droite, « Ajouter ce jour-là » et son menu
+// (`AjouterCeJour` : évènement, tâche, réunion) en tête ; la feuille du jour et la feuille
+// « Créer » du téléphone gardent les boutons, réunion comprise.
 // C6 : « Déplacer… » sous une carte déplaçable.
 // Un service dit sa setlist publiée (« Setlist « Culte du 11 octobre » · 4 chants », planche
 // bo-calendrier, pastille Setlists éteinte ou non) ; à venir, ses cases vides en orange
@@ -13,13 +16,14 @@
 
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
-import { Plus } from "lucide-react";
+import { ChevronDown, Plus } from "lucide-react";
 import { jourCourt } from "@/lib/calendrier/grille";
 import { cn } from "@/lib/utils";
 import type { NotifLang } from "@/types/user";
 import type { EntreeCalendrier } from "@/lib/calendrier/entrees";
 import { COULEURS_CALENDRIER } from "@/lib/calendrier/entrees";
 import { couleurSource } from "./apparence";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 const POINT: Partial<Record<EntreeCalendrier["source"], string>> = {
   evenements: COULEURS_CALENDRIER.evenements.point,
@@ -104,33 +108,82 @@ export function ListeDuJour({ entrees, onDeplacer }: { entrees: EntreeCalendrier
 const BOUTON =
   "inline-flex h-10 w-full items-center justify-center gap-2 rounded-full px-4 text-sm font-semibold transition-opacity duration-150 hover:opacity-85 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground";
 
-/** « Nouvel évènement le 11/10 » (plein, encre) et « Nouvelle tâche pour le 11/10 » (planche
- *  bo-calendrier, Q4) : chacun seulement pour qui a le droit. Le premier ouvre le formulaire
- *  du Back-Office à cette date ; le second, le formulaire de tâche (`onNouvelleTache`). */
-export function BoutonsCreation({ date, lang, evenement, tache, onNouvelleTache }: {
+/** Qui peut créer quoi depuis un jour : un évènement (un public hors réunions lui est ouvert), une
+ *  réunion (un pôle ou une équipe), une tâche (un de ses pôles). */
+export type DroitsCreation = { evenement: boolean; reunion: boolean; tache: boolean };
+
+const lienEvenement = (date: string) => `/back-office/evenements/nouveau?date=${date}`;
+const lienReunion = (date: string) => `/back-office/evenements/nouveau?reunion=1&date=${date}`;
+
+/** « Nouvel évènement le 11/10 » (plein, encre), « Nouvelle tâche pour le 11/10 » et « Nouvelle
+ *  réunion le 11/10 » (planche bo-calendrier, Q4) : chacun seulement pour qui a le droit. Les liens
+ *  ouvrent le formulaire du Back-Office à cette date ; la tâche, son formulaire (`onNouvelleTache`). */
+export function BoutonsCreation({ date, lang, droits, onNouvelleTache }: {
   date: string;
   lang: NotifLang;
-  evenement: boolean;
-  tache: boolean;
+  droits: DroitsCreation;
   onNouvelleTache: () => void;
 }) {
   const { t } = useTranslation();
-  if (!evenement && !tache) return null;
+  if (!droits.evenement && !droits.reunion && !droits.tache) return null;
   const jour = jourCourt(date, lang);
   return (
     <div className="flex flex-col gap-2">
-      {evenement && (
-        <Link href={`/back-office/evenements/nouveau?date=${date}`} className={cn(BOUTON, "bg-foreground text-background")}>
+      {droits.evenement && (
+        <Link href={lienEvenement(date)} className={cn(BOUTON, "bg-foreground text-background")}>
           <Plus aria-hidden className="h-4 w-4 shrink-0" />
           {t("calendrier.nouvelEvenement", { date: jour })}
         </Link>
       )}
-      {tache && (
+      {droits.tache && (
         <button type="button" onClick={onNouvelleTache} className={cn(BOUTON, "bg-secondary text-foreground")}>
           <Plus aria-hidden className="h-4 w-4 shrink-0" />
           {t("calendrier.nouvelleTache", { date: jour })}
         </button>
       )}
+      {droits.reunion && (
+        <Link href={lienReunion(date)} className={cn(BOUTON, "bg-secondary text-foreground")}>
+          <Plus aria-hidden className="h-4 w-4 shrink-0" />
+          {t("calendrier.nouvelleReunion", { date: jour })}
+        </Link>
+      )}
     </div>
+  );
+}
+
+/** « Ajouter ce jour-là » et son menu (agencement v18, B5, planche v18-bo-calendrier-agenda-a) : les
+ *  mêmes trois créations que `BoutonsCreation`, en un bouton, en tête du volet du jour. */
+export function AjouterCeJour({ date, lang, droits, onNouvelleTache }: {
+  date: string;
+  lang: NotifLang;
+  droits: DroitsCreation;
+  onNouvelleTache: () => void;
+}) {
+  const { t } = useTranslation();
+  if (!droits.evenement && !droits.reunion && !droits.tache) return null;
+  const jour = jourCourt(date, lang);
+  return (
+    <DropdownMenu modal={false}>
+      <DropdownMenuTrigger className="inline-flex h-9 items-center gap-1.5 self-start rounded-full bg-foreground pl-3 pr-2.5 text-[13.5px] font-semibold text-background transition-opacity duration-150 hover:opacity-85 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground">
+        <Plus aria-hidden className="h-4 w-4 shrink-0" strokeWidth={2.4} />
+        {t("calendrier.ajouterCeJour")}
+        <ChevronDown aria-hidden className="h-4 w-4 shrink-0 opacity-80" />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="min-w-56">
+        {droits.evenement && (
+          <DropdownMenuItem asChild>
+            <Link href={lienEvenement(date)}>{t("calendrier.nouvelEvenement", { date: jour })}</Link>
+          </DropdownMenuItem>
+        )}
+        {droits.tache && (
+          <DropdownMenuItem onSelect={onNouvelleTache}>{t("calendrier.nouvelleTache", { date: jour })}</DropdownMenuItem>
+        )}
+        {droits.reunion && (
+          <DropdownMenuItem asChild>
+            <Link href={lienReunion(date)}>{t("calendrier.nouvelleReunion", { date: jour })}</Link>
+          </DropdownMenuItem>
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
