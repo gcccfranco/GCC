@@ -2,72 +2,143 @@
 
 // Listes du Back-Office (lot U6, B3) : « Évènements », ceux qu'on gère (organisateur,
 // coordination), réunions à part ; « Réunions » (entrée à part depuis l'agencement v18, B15),
-// celles de ses pôles et équipes (toutes pour un admin). Lignes compactes du calendrier, vers la fiche de gestion ;
-// à venir (et infos) d'abord, passés derrière un bouton.
+// celles de ses pôles et équipes (toutes pour un admin). Lignes compactes du calendrier, vers la fiche de gestion.
+// Agencement v18 (B3, B4, docs/spec-agencement-v18.md ; planches `v18-bo-evenements-a`, `v18-bo-reunions`) :
+// la liste vit dans le layout de l'entrée (`VoletsGestion`), sous l'en-tête commun, et reste montée
+// d'une fiche à l'autre ; en grand, à droite, la fiche de l'adresse ou, sur la liste, la prochaine (R11).
+// Évènements : infos épinglées, puis les mois, « Évènements passés (n) » repliés ; Réunions : « À venir »
+// puis « Passées ». L'action « Nouvel évènement » / « Nouvelle réunion » est dans l'en-tête (R7).
 import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useTranslation } from "react-i18next";
+import type { User } from "firebase/auth";
 import { useProfile } from "@/lib/firebase/users";
 import { canEditEvenement, creatableEvenementPours, estDeLaReunion, estReunion } from "@/lib/access";
-import { listEvenements } from "@/lib/firebase/evenements";
+import { EVENEMENTS_CHANGED, listEvenements } from "@/lib/firebase/evenements";
 import { baseBackOffice } from "@/lib/navigation";
-import { byDate, isInfo, isPast } from "@/lib/evenements/agenda";
+import { byDate, groupByMonth, isInfo, isPast } from "@/lib/evenements/agenda";
+import { estSurLaListe } from "@/lib/deuxVolets";
 import { todayIso } from "@/lib/scene/dimanches";
+import { useDeuxVolets } from "@/hooks/useDeuxVolets";
 import { ANNONCE_SECTIONS } from "@/types/annonce";
 import type { Evenement } from "@/types/evenement";
+import type { UserProfile } from "@/types/user";
 import { EvenementCard } from "@/app/evenements/EvenementCard";
-import { Button } from "@/components/ui/button";
+import { EvenementClient } from "@/app/evenements/[id]/EvenementClient";
 import { AnnonceBascule } from "@/components/evenements/AnnonceBascule";
+import { DeuxVolets } from "@/components/layout/DeuxVolets";
+import { cn } from "@/lib/utils";
 
-export function ListeGestion({ reunions }: { reunions: boolean }) {
-  const { t } = useTranslation();
+/** Qui peut créer dans l'entrée : un évènement (Évènements) ou une réunion (Réunions). */
+export function peutCreerDans(user: User | null, profile: UserProfile | null, reunions: boolean): boolean {
+  return creatableEvenementPours(user, profile, ANNONCE_SECTIONS).some((p) => estReunion(p) === reunions);
+}
+
+type Gestion = { chargement: boolean; aVenir: Evenement[]; passes: Evenement[] };
+
+/** Les évènements (ou les réunions) de la personne, à venir (infos comprises) et passés ; relus
+ *  à chaque création, modification ou suppression (`EVENEMENTS_CHANGED`). */
+function useGestion(reunions: boolean): Gestion {
   const { user, profile, loading } = useProfile();
   const [evenements, setEvenements] = useState<Evenement[] | null>(null);
-  const [passesVus, setPassesVus] = useState(false);
 
   useEffect(() => {
     if (!user) return;
-    listEvenements(false).then(setEvenements).catch(() => setEvenements([]));
+    const lire = () => { listEvenements(false).then(setEvenements).catch(() => setEvenements([])); };
+    lire();
+    window.addEventListener(EVENEMENTS_CHANGED, lire);
+    return () => window.removeEventListener(EVENEMENTS_CHANGED, lire);
   }, [user]);
 
-  const miens = useMemo(
-    () => (evenements ?? []).filter((e) =>
-      reunions ? estReunion(e.pour) && estDeLaReunion(user, profile, e) : !estReunion(e.pour) && canEditEvenement(user, profile, e)),
-    [evenements, reunions, user, profile],
-  );
+  return useMemo(() => {
+    const miens = (evenements ?? []).filter((e) =>
+      reunions ? estReunion(e.pour) && estDeLaReunion(user, profile, e) : !estReunion(e.pour) && canEditEvenement(user, profile, e));
+    const today = todayIso();
+    return {
+      chargement: loading || evenements === null,
+      aVenir: miens.filter((e) => isInfo(e) || !isPast(e, today)).sort(byDate),
+      passes: miens.filter((e) => !isInfo(e) && isPast(e, today)).sort((a, b) => b.date.localeCompare(a.date)),
+    };
+  }, [evenements, reunions, user, profile, loading]);
+}
 
-  if (loading || evenements === null) return <p className="text-sm text-muted-foreground">{t("common.loading")}</p>;
+/** La fiche ouverte d'office (R11) : le prochain évènement (une info faute d'évènement daté) ;
+ *  pour les réunions, la prochaine, sinon la dernière tenue. */
+function premierDe({ aVenir, passes }: Gestion, reunions: boolean): Evenement | null {
+  if (reunions) return aVenir[0] ?? passes[0] ?? null;
+  return aVenir.find((e) => !isInfo(e)) ?? aVenir[0] ?? null;
+}
 
-  const today = todayIso();
-  const aVenir = miens.filter((e) => isInfo(e) || !isPast(e, today)).sort(byDate);
-  const passes = miens.filter((e) => !isInfo(e) && isPast(e, today)).sort((a, b) => b.date.localeCompare(a.date));
-  const peutCreer = creatableEvenementPours(user, profile, ANNONCE_SECTIONS).some((p) => estReunion(p) === reunions);
-  const ligne = (e: Evenement, passe = false) => (
-    <EvenementCard key={e.id} evenement={e} past={passe} href={`${baseBackOffice(e.pour)}/${e.id}`} />
-  );
+/**
+ * L'entrée Évènements ou Réunions sous son en-tête : en grand, la liste en carte à gauche et la fiche
+ * à droite (celle de l'adresse, ou la prochaine) ; en un volet, la liste sous l'en-tête, puis la fiche
+ * en page, qui pose alors son propre en-tête (« ‹ Évènements »).
+ */
+export function VoletsGestion({ reunions, enTete, children }: { reunions: boolean; enTete: React.ReactNode; children: React.ReactNode }) {
+  const { t } = useTranslation();
+  const chemin = usePathname() ?? "";
+  const deuxVolets = useDeuxVolets();
+  const racine = reunions ? "/back-office/reunions" : "/back-office/evenements";
+  const surLaListe = estSurLaListe(chemin, racine);
+  const gestion = useGestion(reunions);
+  const premier = premierDe(gestion, reunions);
+  const segment = decodeURIComponent(chemin.replace(/\/+$/, "").split("/")[3] ?? "");
+  const idActif = surLaListe ? premier?.id : segment === "nouveau" || segment === "nouvelle" ? undefined : segment;
+  const vide = t(reunions ? "backOffice.aucuneReunion" : "backOffice.aucunEvenement");
 
   return (
-    <div className="max-w-2xl space-y-5">
+    <div className="pb-16">
+      {(deuxVolets || surLaListe) && enTete}
+      <DeuxVolets
+        racine={racine}
+        largeurListe={reunions ? 360 : 380}
+        liste={<ListeGestion reunions={reunions} gestion={gestion} idActif={deuxVolets ? idActif : undefined} />}
+        premier={gestion.chargement ? null
+          : premier ? <EvenementClient espace="back-office" id={premier.id} />
+          : <p className="raised rounded-2xl px-5 py-4 text-sm text-muted-foreground">{vide}</p>}
+      >
+        {children}
+      </DeuxVolets>
+    </div>
+  );
+}
+
+function ListeGestion({ reunions, gestion, idActif }: { reunions: boolean; gestion: Gestion; idActif?: string }) {
+  const { t, i18n } = useTranslation();
+  const deuxVolets = useDeuxVolets();
+  const [passesVus, setPassesVus] = useState(false);
+  const { chargement, aVenir, passes } = gestion;
+  const cadre = cn("space-y-5", deuxVolets ? "px-3 py-4" : "px-[var(--marge-page)]");
+
+  if (chargement) return <p className={cn(cadre, "text-sm text-muted-foreground")}>{t("common.loading")}</p>;
+
+  const ligne = (e: Evenement, passe = false) => (
+    <EvenementCard key={e.id} evenement={e} past={passe} actif={e.id === idActif} href={`${baseBackOffice(e.pour)}/${e.id}`} />
+  );
+  const titre = (texte: string) => <h2 className="px-1 text-sm font-semibold text-muted-foreground first-letter:uppercase">{texte}</h2>;
+
+  if (reunions) {
+    return (
+      <div className={cadre}>
+        {aVenir.length === 0 && passes.length === 0 && <p className="px-1 text-sm text-muted-foreground">{t("backOffice.aucuneReunion")}</p>}
+        {aVenir.length > 0 && <section className="space-y-1">{titre(t("backOffice.aVenir"))}{aVenir.map((e) => ligne(e))}</section>}
+        {passes.length > 0 && <section className="space-y-1">{titre(t("backOffice.passees"))}{passes.map((e) => ligne(e, true))}</section>}
+      </div>
+    );
+  }
+
+  const infos = aVenir.filter(isInfo);
+  const mois = groupByMonth(aVenir, i18n.language);
+  return (
+    <div className={cadre}>
       {/* U9 (Q7 b) : où se créent les évènements, jusqu'au 31/01/2027 ; pas pour les réunions. */}
-      {!reunions && <AnnonceBascule />}
-      {peutCreer && (
-        <Button asChild>
-          <Link href={reunions ? "/back-office/reunions/nouvelle" : "/back-office/evenements/nouveau"}>
-            {t(reunions ? "backOffice.nouvelleReunion" : "evenements.nouveau")}
-          </Link>
-        </Button>
-      )}
-      {aVenir.length === 0 ? (
-        <p className="text-sm text-muted-foreground">{t(reunions ? "backOffice.aucuneReunion" : "backOffice.aucunEvenement")}</p>
-      ) : (
-        <section className="space-y-2">
-          <h2 className="px-1 text-sm font-semibold text-muted-foreground">{t("backOffice.aVenir")}</h2>
-          {aVenir.map((e) => ligne(e))}
-        </section>
-      )}
+      <AnnonceBascule />
+      {aVenir.length === 0 && <p className="px-1 text-sm text-muted-foreground">{t("backOffice.aucunEvenement")}</p>}
+      {infos.length > 0 && <section className="space-y-1" aria-label={t("evenements.infos")}>{infos.map((e) => ligne(e))}</section>}
+      {mois.map((g) => <section key={g.key} className="space-y-1">{titre(g.label)}{g.evenements.map((e) => ligne(e))}</section>)}
       {passes.length > 0 && (
-        <section className="space-y-2">
-          <button type="button" className="text-xs font-semibold text-muted-foreground hover:text-foreground" onClick={() => setPassesVus(!passesVus)}>
+        <section className="space-y-1 border-t border-border/70 pt-3">
+          <button type="button" className="px-1 text-sm font-semibold text-muted-foreground hover:text-foreground" onClick={() => setPassesVus(!passesVus)}>
             {passesVus ? t("evenements.hidePast") : t("evenements.past")} ({passes.length})
           </button>
           {passesVus && passes.map((e) => ligne(e, true))}

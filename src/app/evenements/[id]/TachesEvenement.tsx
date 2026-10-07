@@ -74,7 +74,7 @@ export function TachesEvenement({ evenement, user, profile }: {
   }
 
   return (
-    <section data-testid="taches-carte" className="space-y-3 rounded-2xl bg-card p-4">
+    <section data-testid="taches-carte" className="space-y-3 raised rounded-2xl p-4">
       <div className="flex items-center justify-between gap-2">
         <h3 className="text-base font-semibold text-foreground">{t("evenements.taches.titre")}</h3>
         <Button size="sm" variant="outline" onClick={() => setCreation(true)}>{t("taches.nouvelle")}</Button>

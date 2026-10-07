@@ -10,11 +10,15 @@
 // Agencement v18 (B15) : « Nouvelle réunion » est `/back-office/reunions/nouvelle` (`reunion`),
 // qui ne propose que les réunions ; l'ancienne `…/evenements/nouveau?reunion=1` y redirige.
 // Lot U8, C5 : `?date=AAAA-MM-JJ` (un jour du calendrier) pré-remplit la date.
+// Agencement v18 (B3, B4) : en grand, le formulaire s'ouvre dans le volet de droite, sous l'en-tête de
+// l'entrée et à côté de la liste ; en un volet, c'est une page, avec « ‹ Évènements » (ou « ‹ Réunions »).
 
 import { useEffect, useRef, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useTranslation } from "react-i18next"
 import { useConfirmer } from "@/components/layout/Confirmer"
+import { EnTetePage } from "@/components/layout/EnTetePage"
+import { useDeuxVolets } from "@/hooks/useDeuxVolets"
 import { baseBackOffice } from "@/lib/navigation"
 import { useAuth } from "@/lib/firebase/auth"
 import { useProfile } from "@/lib/firebase/users"
@@ -36,6 +40,7 @@ export function NouveauClient({ reunion = false }: { reunion?: boolean }) {
   const { t } = useTranslation()
   const confirmer = useConfirmer()
   const router = useRouter()
+  const deuxVolets = useDeuxVolets()
   const params = useSearchParams()
   const from = params.get("from")
   const base = reunion ? "/back-office/reunions" : "/back-office/evenements"
@@ -77,16 +82,24 @@ export function NouveauClient({ reunion = false }: { reunion?: boolean }) {
 
   const pours = creatableEvenementPours(user, profile, ANNONCE_SECTIONS).filter((p) => !reunion || estReunion(p))
   if (ancienneAdresse) return null
-  if (profileLoading || !user || !initial) return <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
-  if (pours.length === 0) return <p className="text-sm text-muted-foreground max-w-2xl mx-auto">{t("evenements.reserved")}</p>
+  const titre = t(reunion ? "backOffice.nouvelleReunion" : "evenements.nouveau")
+  const page = (contenu: React.ReactNode) => deuxVolets ? <div className="max-w-[720px]">{contenu}</div> : (
+    <>
+      <EnTetePage retour={{ href: base, label: t(reunion ? "backOffice.parties.reunions" : "backOffice.parties.evenements") }} titre={titre} />
+      <div className="px-[var(--marge-page)]">{contenu}</div>
+    </>
+  )
+  if (profileLoading || !user || !initial) return page(<p className="text-sm text-muted-foreground">{t("common.loading")}</p>)
+  if (pours.length === 0) return page(<p className="text-sm text-muted-foreground">{t("evenements.reserved")}</p>)
 
   const nom = profile ? `${profile.firstName} ${profile.lastName}`.trim() || profile.email : user.email ?? ""
 
-  return (
-    <div className="max-w-2xl mx-auto">
+  return page(
+    <>
       <EvenementForm
         initial={{ ...initial, contact: initial.contact || nom }}
         pours={pours}
+        titreCache={!deuxVolets}
         creation
         onSubmit={async (values, prevenir) => {
           // Réponse avant d'écrire quoi que ce soit : sans réunion créée, rien n'est repris.
@@ -112,6 +125,6 @@ export function NouveauClient({ reunion = false }: { reunion?: boolean }) {
         onCancel={() => router.push(from ? `${base}/${from}` : base)}
       />
       <RepriseSujets aReprendre={aReprendre} onChoix={(reprendre) => { setAReprendre(null); repondre.current(reprendre) }} />
-    </div>
+    </>
   )
 }

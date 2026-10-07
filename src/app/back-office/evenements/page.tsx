@@ -1,9 +1,5 @@
-"use client";
-
-// Back-Office › Évènements › Évènements : ceux qu'on gère. Les réunions ont leur entrée
-// (agencement v18, B15).
-import { ListeGestion } from "./ListeGestion";
-
+// Back-Office › Évènements › Évènements : ceux qu'on gère. La liste vit dans le layout
+// (agencement v18, B3) : en grand, le volet de droite montre le prochain ; sinon, la liste seule.
 export default function EvenementsPage() {
-  return <ListeGestion reunions={false} />;
+  return null;
 }

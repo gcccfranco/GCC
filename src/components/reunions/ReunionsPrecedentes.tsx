@@ -21,7 +21,7 @@ export function ReunionsPrecedentes({ courante, reunions, espace = "app" }: {
   const annee = courante.date.slice(0, 4)
 
   return (
-    <section aria-labelledby="precedentes-titre" data-testid="precedentes-carte" className="rounded-2xl bg-card px-4 pb-2 pt-4">
+    <section aria-labelledby="precedentes-titre" data-testid="precedentes-carte" className="raised rounded-2xl px-4 pb-2 pt-4">
       <h3 id="precedentes-titre" className="text-base font-semibold text-foreground">{t("evenements.precedentes.titre")}</h3>
       <ul className="mt-1 divide-y divide-border">
         {precedentes.map((r) => (

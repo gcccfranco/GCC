@@ -65,7 +65,7 @@ export function CompteRenduCarte({ evenement: e, user, profile, onChange }: {
 
   if (cr) {
     return (
-      <section aria-labelledby="compte-rendu-titre" data-testid="compte-rendu-carte" className="space-y-2 rounded-2xl bg-card px-4 py-3.5">
+      <section aria-labelledby="compte-rendu-titre" data-testid="compte-rendu-carte" className="space-y-2 raised rounded-2xl px-4 py-3.5">
         <div className="flex items-center gap-3">
           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-[var(--chord-color)]"
             style={{ background: "color-mix(in srgb, var(--chord-color) 14%, transparent)" }}>
@@ -91,7 +91,7 @@ export function CompteRenduCarte({ evenement: e, user, profile, onChange }: {
   }
 
   return (
-    <section aria-labelledby="compte-rendu-titre" data-testid="compte-rendu-carte" className="space-y-3 rounded-2xl bg-card p-4">
+    <section aria-labelledby="compte-rendu-titre" data-testid="compte-rendu-carte" className="space-y-3 raised rounded-2xl p-4">
       <div className="space-y-1">
         <h3 id="compte-rendu-titre" className="text-base font-semibold text-foreground">{t("evenements.compteRendu.titre")}</h3>
         <p className="text-sm text-muted-foreground">{t("evenements.compteRendu.aide")}</p>

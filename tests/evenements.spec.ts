@@ -142,6 +142,12 @@ const ALICE: FakeProfile = { uid: "uid-alice", email: "alice@example.com", first
 const STEPH: FakeProfile = { uid: "uid-steph", email: "steph@example.com", firstName: "Steph", lastName: "R.", annonces: ["Groupe Bonté"] };
 const RESP_PAIX: FakeProfile = { uid: "uid-resp", email: "resp@example.com", firstName: "Ruth", lastName: "K.", serviceRoles: { "Groupe Paix": ["presidence"] }, annonces: ["Groupe Paix"] };
 
+/** Agencement v18 (B3) : au Back-Office, Dupliquer et Supprimer sont dans le menu « ⋯ » de la fiche de gestion. */
+async function dansLeMenu(page: Page, action: string) {
+  await page.getByTestId("fiche-gestion").getByRole("button", { name: "Plus d'actions" }).click();
+  await page.getByRole("menuitem", { name: action }).click();
+}
+
 async function member(page: Page, who: FakeProfile, to: string, docs: Record<string, Record<string, unknown>> = DOCS) {
   await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
   return signInAs(page, who, docs, to);
@@ -237,7 +243,7 @@ test("modifier : l'organisateur change le lieu, sans toucher au compteur", async
 test("dupliquer : formulaire pré-rempli sans date, nouvel évènement écrit avec un compteur à zéro", async ({ page }) => {
   const db = await member(page, ALICE, "/back-office/evenements/culte-noel");
   await page.route("**/api/push/notify-evenement", (route) => route.fulfill({ json: { ok: true } }));
-  await page.getByRole("link", { name: "Dupliquer" }).click();
+  await dansLeMenu(page, "Dupliquer");
   await expect(page.getByLabel("Nom de l'évènement")).toHaveValue("Culte de Noël");
   await expect(page.getByLabel("Date", { exact: true })).toHaveValue("");
   await page.getByLabel("Date", { exact: true }).fill("2027-12-24");
@@ -270,7 +276,7 @@ async function dupliquerLeCulte(page: Page, copier: boolean) {
   const questions: string[] = [];
   await page.route("**/api/push/notify-evenement", (route) => route.fulfill({ json: { ok: true } }));
   const db = await member(page, ALICE, "/back-office/evenements/culte-noel", DOCS_TACHES);
-  await page.getByRole("link", { name: "Dupliquer" }).click();
+  await dansLeMenu(page, "Dupliquer");
   await page.getByLabel("Date", { exact: true }).fill("2027-12-24");
   await page.getByRole("button", { name: "Créer l'évènement" }).click();
   // La question passe par la fenêtre du site (agencement v18, F2).
@@ -306,7 +312,7 @@ test("dupliquer : Copier aussi ses 2 tâches écrit deux tâches liées au nouve
 
 test("supprimer : l'organisateur confirme, la fiche disparaît", async ({ page }) => {
   const db = await member(page, STEPH, "/back-office/evenements/foot");
-  await page.getByRole("button", { name: "Supprimer" }).click();
+  await dansLeMenu(page, "Supprimer");
   await repondreDansLeSite(page, "Supprimer");
   await expect(page).toHaveURL(/\/evenements\/?$/);
   expect(db.writes.find((w) => w.method === "DELETE")?.path).toBe("evenements/foot");
@@ -624,26 +630,26 @@ test("L2 fiche : bannière, lignes date · horaire · lieu, « Pour plus d'infos
   await expect(page.getByLabel("Invités")).toHaveCount(0);
 });
 
-test("L3 organisateur : panneau des inscriptions avec compteur et état, lien de la fiche avec QR visible, inscrits repliés", async ({ page }) => {
+test("L3 organisateur : au Back-Office, Inscrits (compteur, liste) et Période d'inscription (état, réglage, lien avec QR)", async ({ page }) => {
+  // Agencement v18 (B3, planche `v18-bo-evenements-a`) : la liste des inscrits n'est plus repliée.
   await member(page, STEPH, "/back-office/evenements/foot", {
     ...DOCS,
     "evenements/foot/inscriptions/uid-jo": MA_PLACE,
     "evenements/foot/inscriptions/x1": { uid: null, nom: "Marie", invites: 0, createdAt: "2026-09-22T10:00:00Z" },
   });
   await expect(page.getByRole("link", { name: "Modifier" })).toBeVisible();
-  const panneau = page.getByRole("region", { name: "Inscriptions", exact: true });
-  await expect(panneau.getByTestId("etat-inscriptions")).toHaveText("Ouvertes");
-  await expect(panneau.getByText("4", { exact: true })).toBeVisible();
-  const qr = page.getByRole("img", { name: /QR code/ });
+  const inscrits = page.getByRole("region", { name: "Inscrits", exact: true });
+  await expect(inscrits.getByText("4", { exact: true })).toBeVisible();
+  await expect(inscrits.getByRole("list", { name: "Inscrits" }).getByRole("listitem")).toHaveCount(2);
+  const periode = page.getByRole("region", { name: "Période d'inscription" });
+  await expect(periode.getByTestId("etat-inscriptions")).toHaveText("Ouvertes");
+  const qr = periode.getByRole("img", { name: /QR code/ });
   await expect(qr).toBeVisible();
   await expect(qr).toHaveAttribute("src", /^data:image\/png/);
-  await expect(page.getByText("Lien d'inscription")).toBeVisible();
-  await expect(page.getByText(/\/evenements\/foot/)).toBeVisible();
-  await expect(page.getByRole("list", { name: "Inscrits" })).toHaveCount(0);
-  await page.getByRole("button", { name: "Voir les inscrits (2)" }).click();
-  await expect(page.getByRole("list", { name: "Inscrits" })).toBeVisible();
-  await panneau.getByRole("radio", { name: "Fermées" }).click();
-  await expect(panneau.getByTestId("etat-inscriptions")).toHaveText("Fermées");
+  await expect(periode.getByText("Lien d'inscription")).toBeVisible();
+  await expect(periode.getByText(/\/evenements\/foot/)).toBeVisible();
+  await periode.getByRole("radio", { name: "Fermées" }).click();
+  await expect(periode.getByTestId("etat-inscriptions")).toHaveText("Fermées");
 });
 
 test("L4 formulaire : champs courants dans l'ordre de la maquette, responsable pré-rempli, bannière, champs rares sous « Plus d'options »", async ({ page }) => {
@@ -707,32 +713,32 @@ test("L6 organisateur : le compteur n'est écrit qu'une fois", async ({ page }) 
 // pilules, panneau des inscriptions, lien d'inscription), puis la fiche des
 // membres sans répéter titre ni badges, avec « S'inscrire » (choix du 17/09/2026).
 
-test("organisateur : carte de gestion en haut (titre, pilules, panneau, lien), puis la fiche avec « S'inscrire »", async ({ page }) => {
+// Agencement v18 (B3, piste A) : au Back-Office, la fiche de gestion remplace la carte du 17/09/2026 ;
+// la fiche des membres (avec « S'inscrire ») est dans l'App, par « Voir comme un membre ».
+test("organisateur : fiche de gestion au Back-Office (titre, badges, Voir comme un membre, Modifier, « ⋯ », inscriptions, lien)", async ({ page }) => {
   await member(page, STEPH, "/back-office/evenements/foot");
-  const gestion = page.getByTestId("gestion-carte");
-  const fiche = page.getByTestId("fiche-carte");
+  const gestion = page.getByTestId("fiche-gestion");
   await expect(gestion.getByRole("heading", { name: "Foot au parc" })).toBeVisible();
   await expect(gestion.getByText("Sport")).toBeVisible();
-  for (const action of ["Modifier", "Dupliquer", "Supprimer"]) {
-    await expect(gestion.getByRole(action === "Supprimer" ? "button" : "link", { name: action })).toBeVisible();
-  }
-  await expect(gestion.getByRole("region", { name: "Inscriptions", exact: true })).toContainText("Ouvertes");
+  await expect(gestion.getByRole("link", { name: "Voir comme un membre" })).toHaveAttribute("href", /^\/evenements\/foot\/?$/);
+  await expect(gestion.getByRole("link", { name: "Modifier" })).toBeVisible();
+  await gestion.getByRole("button", { name: "Plus d'actions" }).click();
+  await expect(page.getByRole("menuitem")).toHaveText(["Dupliquer", "Supprimer"]);
+  await page.keyboard.press("Escape");
+  await expect(gestion.getByRole("region", { name: "Période d'inscription" })).toContainText("Ouvertes");
   await expect(gestion.getByText("Lien d'inscription")).toBeVisible();
   await expect(gestion.getByRole("img", { name: /QR code/ })).toBeVisible();
-
-  await expect(fiche.getByRole("button", { name: "S'inscrire" })).toBeVisible();
-  await expect(fiche.getByTestId("banniere")).toBeVisible();
-  await expect(fiche.getByRole("heading")).toHaveCount(0);
-  const [g, f] = [(await gestion.boundingBox())!, (await fiche.boundingBox())!];
-  expect(g.y + g.height, "la gestion est au-dessus de la fiche").toBeLessThanOrEqual(f.y);
+  await expect(gestion.getByRole("button", { name: "S'inscrire" })).toHaveCount(0);
 });
 
-test("organisateur : « Supprimer » est une pilule à bord, comme « Modifier » et « Dupliquer »", async ({ page }) => {
+test("organisateur : « Modifier » et « Voir comme un membre » sont des pilules à bord ; « Supprimer » est en rouge dans « ⋯ »", async ({ page }) => {
   await member(page, STEPH, "/back-office/evenements/foot");
-  const bord = (name: string, role: "link" | "button") =>
-    page.getByTestId("gestion-carte").getByRole(role, { name }).evaluate((el) => getComputedStyle(el).borderTopWidth);
-  expect(await bord("Modifier", "link")).toBe("1px");
-  expect(await bord("Supprimer", "button")).toBe("1px");
+  const bord = (name: string) =>
+    page.getByTestId("fiche-gestion").getByRole("link", { name }).evaluate((el) => getComputedStyle(el).borderTopWidth);
+  expect(await bord("Modifier")).toBe("1px");
+  expect(await bord("Voir comme un membre")).toBe("1px");
+  await page.getByTestId("fiche-gestion").getByRole("button", { name: "Plus d'actions" }).click();
+  await expect(page.getByRole("menuitem", { name: "Supprimer" })).toHaveClass(/text-destructive/);
 });
 
 test("le créateur s'inscrit à son propre évènement", async ({ page }) => {

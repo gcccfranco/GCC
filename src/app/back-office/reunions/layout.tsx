@@ -1,23 +1,26 @@
 "use client";
 
-// Back-Office › Réunions (agencement v18, B15) : une entrée à part, les réunions de ses pôles
-// et de ses équipes (toutes pour un admin). Pas de sous-parties, donc pas de rail. La liste,
-// la fiche, « nouvelle » et « modifier » montent les composants d'Évènements, disposition
-// inchangée (T2b les met en deux volets). Affichage seulement : evenements/{id} garde ses règles.
-import { usePathname } from "next/navigation";
+// Back-Office › Réunions (agencement v18, B4 et B15 ; planche `v18-bo-reunions`) : une entrée à part,
+// les réunions de ses pôles et de ses équipes (toutes pour un admin). En-tête « Réunions », sans rail
+// (pas de sous-parties), « + Nouvelle réunion » ; dessous, deux volets : « À venir » puis « Passées »,
+// la prochaine ouverte d'office ; la fiche, « nouvelle » et « modifier » dans le volet de droite.
+// Affichage seulement : evenements/{id} garde ses règles.
 import { useTranslation } from "react-i18next";
-import { EnTeteEntree } from "@/components/backOffice/EnTeteEntree";
-
-const BASE = "/back-office/reunions";
+import { useProfile } from "@/lib/firebase/users";
+import { BoutonNouveau } from "@/components/layout/BoutonNouveau";
+import { EnTetePage } from "@/components/layout/EnTetePage";
+import { peutCreerDans, VoletsGestion } from "../evenements/ListeGestion";
 
 export default function ReunionsLayout({ children }: { children: React.ReactNode }) {
   const { t } = useTranslation();
-  const chemin = (usePathname() || "").replace(/\/$/, "");
+  const { user, profile } = useProfile();
 
-  return (
-    <div className="px-4 pt-6 pb-16 sm:px-6 lg:px-8">
-      {chemin === BASE && <EnTeteEntree titre={t("backOffice.entrees.reunions")} />}
-      {children}
-    </div>
+  const enTete = (
+    <EnTetePage
+      titre={t("backOffice.entrees.reunions")}
+      sousTitre={t("backOffice.gestion.sousTitreReunions")}
+      action={peutCreerDans(user, profile, true) && <BoutonNouveau label={t("backOffice.nouvelleReunion")} href="/back-office/reunions/nouvelle" />}
+    />
   );
+  return <VoletsGestion reunions enTete={enTete}>{children}</VoletsGestion>;
 }

@@ -117,7 +117,7 @@ test.describe("T2a : le menu", () => {
   test("un admin : neuf entrées, Réunions après Évènements, active sur /back-office/reunions/*", async ({ page }, info) => {
     test.skip(!estGrandEcran(info), "la barre latérale : grand écran");
     await ouvrir(page, ADMIN, "/back-office/reunions/reu-da");
-    await expect(page.getByRole("heading", { level: 1, name: "Réunion DA" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Réunion DA", exact: true })).toBeVisible();
     const menu = await menuLateral(page, info);
     await expect(menu.getByRole("link")).toHaveText(
       ["Tableau de bord", "Calendrier", "Planning", "Tâches", "Évènements", "Réunions", "Équipes", "Messages", "Statistiques"]);
@@ -194,19 +194,23 @@ test.describe("T2a : les adresses /back-office/reunions/*", () => {
     await expect(sousParties(page).getByRole("link")).toHaveText(["Évènements", "Scène"]);
   });
 
-  test("la fiche : Modifier, Dupliquer pour la prochaine et les réunions précédentes restent sous Réunions", async ({ page }) => {
+  test("la fiche : Modifier, Dupliquer pour la prochaine et les réunions précédentes restent sous Réunions", async ({ page }, info) => {
     await ouvrir(page, DA, "/back-office/reunions/reu-da");
-    await expect(page.getByRole("heading", { level: 1, name: "Réunion DA" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Réunion DA", exact: true })).toBeVisible();
     await expect(page.getByRole("link", { name: "Modifier" })).toHaveAttribute("href", /^\/back-office\/reunions\/reu-da\/modifier\/?$/);
     await expect(page.getByRole("link", { name: "Dupliquer pour la prochaine" })).toHaveAttribute("href", /^\/back-office\/reunions\/nouvelle\/?\?from=reu-da$/);
     await expect(page.getByRole("region", { name: "Réunions précédentes" }).getByRole("link", { name: "5 sept.", exact: true }))
       .toHaveAttribute("href", /^\/back-office\/reunions\/reu-da-sept\/?$/);
-    await expect(page.getByRole("link", { name: /Réunions/ }).filter({ hasText: "←" })).toHaveAttribute("href", /^\/back-office\/reunions\/?$/);
+    // En un volet, la fiche est une page : « ‹ Réunions » pour seul retour (agencement v18, T2b) ; en grand, la liste est à côté.
+    if (!estGrandEcran(info)) {
+      await expect(page.locator("header[data-entete-page]").getByRole("link", { name: "Réunions" })).toHaveAttribute("href", /^\/back-office\/reunions\/?$/);
+    }
   });
 
   test("supprimer une réunion ramène à la liste des réunions", async ({ page }) => {
     await ouvrir(page, DA, "/back-office/reunions/reu-da");
-    await page.getByRole("button", { name: "Supprimer" }).click();
+    await page.getByRole("button", { name: "Plus d'actions" }).click();
+    await page.getByRole("menuitem", { name: "Supprimer" }).click();
     await repondreDansLeSite(page, "Supprimer");
     await expect(page).toHaveURL(/\/back-office\/reunions\/?$/);
   });
@@ -222,7 +226,7 @@ test.describe("T2a : les adresses /back-office/reunions/*", () => {
     await page.getByLabel("Date", { exact: true }).fill("2026-10-20");
     await page.getByRole("button", { name: "Créer l'évènement" }).click();
     await expect(page).toHaveURL(/\/back-office\/reunions\/fake-\d+\/?$/);
-    await expect(page.getByRole("heading", { level: 1, name: "Réunion de rentrée" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Réunion de rentrée", exact: true })).toBeVisible();
   });
 
   test("« Annuler » dans « Nouvelle réunion » ramène à la liste des réunions", async ({ page }) => {
@@ -245,7 +249,7 @@ test.describe("T2a : les adresses /back-office/reunions/*", () => {
     await expect(page.getByRole("heading", { level: 1, name: "Réunions" })).toBeVisible();
     await page.goto("/back-office/evenements/reu-da");
     await expect(page).toHaveURL(/\/back-office\/reunions\/reu-da\/?$/);
-    await expect(page.getByRole("heading", { level: 1, name: "Réunion DA" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Réunion DA", exact: true })).toBeVisible();
     await page.goto("/back-office/evenements/nouveau?reunion=1");
     await expect(page).toHaveURL(/\/back-office\/reunions\/nouvelle\/?$/);
     await page.goto("/back-office/evenements/nouveau?reunion=1&from=reu-da");
