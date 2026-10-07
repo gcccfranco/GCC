@@ -232,6 +232,16 @@ test.describe("Statistiques (S3) : les plus joués", () => {
     await expect(page.locator('[data-testid="ligne-chant"]:visible').nth(1).getByTestId("langue")).toHaveText("中文");
   });
 
+  // Relecture de T6 (agencement v18) : la carte comptait l'absent du recueil et pouvait dire « 6 sur 5 ».
+  test("en grand, « Chants différents » : les chants du recueil joués, sur le répertoire ; l'absent du recueil n'y compte pas", async ({ page }, info) => {
+    test.skip(estTelephone(info) || info.project.name === "tablette", "la carte des chiffres est celle du grand écran");
+    await ouvrirStatistiques(page);
+    const carte = page.locator("section").filter({ has: page.getByRole("heading", { name: "Chants différents" }) });
+    // Sur 12 mois : À jamais Tu es saint, 爱的约定, Abba Père, Abrite-moi (et ancien-chant, hors recueil).
+    await expect(carte.locator("p").first()).toHaveText("4");
+    await expect(carte).toContainText("sur 5 au répertoire");
+  });
+
   test("« Les 10 premiers » : un chant par ligne, son nombre et sa part, barres décoratives", async ({ page }) => {
     await ouvrirStatistiques(page);
     const carte = page.getByTestId("dix-premiers");

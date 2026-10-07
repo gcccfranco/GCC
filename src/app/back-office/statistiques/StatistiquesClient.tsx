@@ -267,7 +267,8 @@ export function StatistiquesClient() {
               {carteComptees}
               <section className="raised hidden rounded-2xl px-5 py-4 lg:block">
                 <h2 className="text-sm font-semibold text-muted-foreground">Chants différents</h2>
-                <p className="mt-1 text-3xl font-bold tabular-nums">{stats.plusJoues.length}</p>
+                {/* Les chants du recueil seuls : un absent du recueil ferait dire « 6 sur 5 ». */}
+                <p className="mt-1 text-3xl font-bold tabular-nums">{stats.plusJoues.filter((l) => l.langue).length}</p>
                 <p className="text-sm text-muted-foreground">sur {auRepertoire} au répertoire</p>
               </section>
               <button type="button" onClick={() => changer({ vue: "jamais" })}
@@ -295,7 +296,9 @@ export function StatistiquesClient() {
           <>
             {/* En grand, le sous-titre compte les setlists : les deux cartes viennent sous les filtres (planche). */}
             <div className="lg:hidden">{carteComptees}</div>
-            <JamaisJoues chants={stats.jamaisJoues} tonalites={tonalites} aujourdhui={aujourdhui} />
+            {/* Un filtre changé repart des cartes repliées (« Tout afficher » ne survit pas). */}
+            <JamaisJoues key={[etat.periode, etat.du, etat.au, etat.service, etat.langue, etat.presidence].join("|")}
+              chants={stats.jamaisJoues} tonalites={tonalites} aujourdhui={aujourdhui} />
           </>
         ) : (
           <>
@@ -502,8 +505,10 @@ function Tableau({ lignes, aujourdhui, tri, sens, trier }: {
       </th>
     );
   };
+  // Défile dans sa carte quand la place manque (fenêtre de 1 024 à 1 100 px, barre dépliée : à côté
+  // des chiffres, il reste environ 420 px au tableau).
   return (
-    <div className="hidden raised rounded-2xl px-2 sm:block">
+    <div className="hidden raised overflow-x-auto rounded-2xl px-2 sm:block">
       <table className="w-full text-sm">
         <thead className="text-left text-xs text-muted-foreground">
           <tr className="border-b border-border">

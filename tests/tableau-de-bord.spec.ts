@@ -421,10 +421,21 @@ test.describe("Tableau de bord (B4) : écrans", () => {
 
     const n = colonnes(info);
     if (n === 4) {
-      // Agencement v18 (B14) : en grand, hors personnalisation, des colonnes ; le « Grand » prend la large.
+      // Agencement v18 (B14) : en grand, hors personnalisation, des colonnes (deux ici : barre dépliée,
+      // ou tablette couchée). Le « Grand » (L) prend la colonne large ; le premier des autres (S) va
+      // dans l'étroite, vide jusque-là. Un widget prend la largeur de sa colonne : L ≈ 1,55 × S ;
+      // M (« Ce dimanche »), celle de la colonne où le place sa hauteur.
       await expect(grille(page)).toHaveAttribute("data-disposition", "colonnes");
-      await expect(widget(page, "Prochains évènements")).toHaveAttribute("data-colonne", "0");
-      await expect(widget(page, "Cases vides du planning")).not.toHaveAttribute("data-colonne", "0");
+      const L = widget(page, "Prochains évènements");
+      const S = widget(page, "Cases vides du planning");
+      const M = widget(page, "Ce dimanche");
+      await expect(L).toHaveAttribute("data-colonne", "0");
+      await expect(S).toHaveAttribute("data-colonne", "1");
+      const large = (await L.boundingBox())!.width;
+      const etroite = (await S.boundingBox())!.width;
+      expect(large / etroite, "la colonne large").toBeCloseTo(1.55, 1);
+      const m = (await M.boundingBox())!.width;
+      expect(Math.min(Math.abs(m - large), Math.abs(m - etroite)), "M a la largeur d'une des deux colonnes").toBeLessThanOrEqual(1);
       return;
     }
     const L = await part(grille(page), widget(page, "Prochains évènements"));

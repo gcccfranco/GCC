@@ -1,9 +1,11 @@
 import { expect, test, type Page, type TestInfo } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import {
-  enTete, estGrandEcran, estTelephone, interdireDialoguesNatifs, ouvrirAvecBarre, verifierAgencement,
+  enTete, estGrandEcran, estTelephone, interdireDialoguesNatifs, ouvrirAvecBarre, verifierAgencement, verifierSansDebordement,
 } from "./helpers/agencement";
-import { COLONNES_DEUX, COLONNES_TROIS, repartirWidgets } from "../src/lib/tableauDeBord/colonnes";
+import {
+  COLONNES_DEUX, COLONNES_TROIS, fractionsPour, repartirWidgets, repartitionSuivante,
+} from "../src/lib/tableauDeBord/colonnes";
 import type { Taille } from "../src/types/backOffice";
 
 // Agencement v18, tranche T6 (docs/spec-agencement-v18.md, B13, B14) : Back-Office › Statistiques
@@ -151,6 +153,39 @@ test.describe("T6 — Statistiques (B13)", () => {
     await expect(carteFr(page)).toBeVisible();
     await expect(carteZh(page)).toHaveCount(0);
   });
+
+  // Relecture de T6 : « Tout afficher » restait ouvert après un changement de filtre, sans bouton
+  // pour replier (sur téléphone, des centaines de lignes).
+  test("« Jamais joués » : un filtre changé replie la carte dépliée par « Tout afficher »", async ({ page }, info) => {
+    await ouvrirStatistiques(page, "/back-office/statistiques?vue=jamais-joues");
+    await carteFr(page).getByRole("button", { name: "Tout afficher" }).click();
+    await expect(lignesVisibles(carteFr(page))).toHaveCount(119);
+    await enTete(page).locator('[data-onglets="pilules"]').getByRole("button", { name: "3 mois" }).click();
+    await expect(carteFr(page).getByRole("heading", { name: "En français · 120" })).toBeVisible();
+    await expect(lignesVisibles(carteFr(page))).toHaveCount(estTelephone(info) ? 10 : 40);
+    await expect(carteFr(page).getByRole("button", { name: "Tout afficher" })).toBeVisible();
+  });
+
+  // Relecture de T6 : en deux colonnes dès 1 024 px, la colonne des chiffres (260 px) ne laissait
+  // qu'environ 420 px au tableau de sept colonnes, qui sortait de sa carte et de la fenêtre.
+  test("« Les plus joués » sur un ordinateur de 1 040 px, barre dépliée : le tableau ne sort pas de sa carte (ordinateur)", async ({ page }, info) => {
+    test.skip(!info.project.name.startsWith("ordinateur"), "ordinateur seulement : la fenêtre passe à 1 040 px");
+    await page.setViewportSize({ width: 1040, height: 800 });
+    await ouvrirAvecBarre(page, "depliee");
+    await ouvrirStatistiques(page);
+    const tableau = page.locator("table");
+    await expect(tableau).toBeVisible();
+    await verifierSansDebordement(page);
+    // Juste à droite de la carte, à la hauteur de la première ligne : plus rien du tableau.
+    const carte = (await tableau.locator("..").boundingBox())!;
+    const ligne = (await tableau.locator("tbody tr").first().boundingBox())!;
+    const dehors = await page.evaluate(({ x, y }) => {
+      const e = document.elementFromPoint(x, y);
+      return e ? e.closest("table") !== null : false;
+    }, { x: carte.x + carte.width + 6, y: ligne.y + ligne.height / 2 });
+    expect(dehors, "le tableau ne dépasse pas à droite de sa carte").toBe(false);
+    await capture(page, "t6-statistiques-1040");
+  });
 });
 
 // ─── Tableau de bord (B14) ──────────────────────────────────────────────────
@@ -232,6 +267,16 @@ test.describe("T6 — Tableau de bord (B14)", () => {
     await verifierColonnes(page, 2);
   });
 
+  // Relecture de T6 : trois colonnes dès 1 200 px de zone, c'était trois colonnes barre dépliée dès
+  // une fenêtre de 1 528 px. B14 : deux colonnes barre dépliée, trois barre réduite dès 1 440 px.
+  test("barre dépliée sur un écran de 1 600 px : toujours deux colonnes (ordinateur)", async ({ page }, info) => {
+    test.skip(!info.project.name.startsWith("ordinateur"), "ordinateur seulement : la fenêtre passe à 1 600 px");
+    await page.setViewportSize({ width: 1600, height: 900 });
+    await ouvrirTableau(page, "depliee");
+    await verifierColonnes(page, 2);
+    await capture(page, "t6-tableau-1600-depliee");
+  });
+
   test("téléphone et tablette en portrait : la grille d'aujourd'hui", async ({ page }, info) => {
     test.skip(estGrandEcran(info), "téléphone et tablette en portrait seulement");
     await ouvrirTableau(page);
@@ -266,5 +311,57 @@ test.describe("T6 — repartirWidgets (pur)", () => {
   test("à hauteur égale, la colonne la plus à gauche ; rien à répartir, des colonnes vides", () => {
     expect(ids(repartirWidgets([w("a"), w("b"), w("c")], { a: 155, b: 100, c: 100 }, COLONNES_DEUX))).toEqual([["a", "c"], ["b"]]);
     expect(repartirWidgets([], {}, COLONNES_TROIS)).toEqual([[], [], []]);
+  });
+
+  // Relecture de T6 (constat écarté) : « chaque suivant va dans la moins haute », colonne large
+  // comprise (plan de test de T6), et non « dans la colonne étroite » seule. Les planches le
+  // tranchent : barre dépliée, « Prochains évènements », de taille M par défaut comme tous les
+  // widgets d'un admin (aucun « Grand »), est sous « Ce dimanche » dans la colonne large. Les
+  // seules colonnes étroites mettraient dix widgets sur onze dans l'étroite, sous un « Ce dimanche »
+  // seul : le blanc que B14 retire.
+  test("les deux planches : « Prochains évènements » (M) sous « Ce dimanche » barre dépliée, dans une étroite barre réduite", () => {
+    // Hauteurs relevées sur la planche v18-bo-tableau-de-bord (1 440 px), ramenées à une colonne de
+    // 1 fr (432 px) : × 670 / 432 pour les cartes de la colonne large.
+    const h = { dimanche: 757, calendrier: 252, afaire: 263, evenements: 360 };
+    const tableau = [w("dimanche"), w("calendrier"), w("afaire"), w("evenements")];
+    expect(ids(repartirWidgets(tableau, h, COLONNES_DEUX))).toEqual([["dimanche", "evenements"], ["calendrier", "afaire"]]);
+    expect(ids(repartirWidgets(tableau, h, COLONNES_TROIS))).toEqual([["dimanche"], ["calendrier", "evenements"], ["afaire"]]);
+  });
+});
+
+/** La largeur du contenu de la zone (R2) : la fenêtre moins la barre (248 ou 68 px) et ses deux marges (40 ou 28 px). */
+const contenuDeLaZone = (fenetre: number, barre: "depliee" | "reduite") => fenetre - (barre === "depliee" ? 248 + 2 * 40 : 68 + 2 * 28);
+
+test.describe("T6 — deux ou trois colonnes (pur)", () => {
+  test("trois colonnes barre réduite dès 1 440 px, même avec une barre de défilement ; deux en dessous ; deux barre dépliée jusqu'à 1 600 px", () => {
+    expect(fractionsPour(contenuDeLaZone(1440, "reduite"))).toEqual(COLONNES_TROIS);
+    expect(fractionsPour(contenuDeLaZone(1440, "reduite") - 17), "une barre de défilement de 17 px").toEqual(COLONNES_TROIS);
+    expect(fractionsPour(contenuDeLaZone(1366, "reduite")), "un portable de 1 366 px, barre réduite").toEqual(COLONNES_DEUX);
+    expect(fractionsPour(contenuDeLaZone(1280, "reduite"))).toEqual(COLONNES_DEUX);
+    expect(fractionsPour(contenuDeLaZone(1440, "depliee"))).toEqual(COLONNES_DEUX);
+    expect(fractionsPour(contenuDeLaZone(1600, "depliee")), "un écran de 1 600 px, barre dépliée").toEqual(COLONNES_DEUX);
+  });
+});
+
+// Relecture de T6 : une carte qui change de colonne change de hauteur ; deux répartitions pouvaient
+// se relayer sans fin (chacune plus courte de 24 px avec les mesures prises dans l'autre).
+test.describe("T6 — repartitionSuivante (pur)", () => {
+  const A = [["a"], ["b"]];
+  const B = [["a", "b"], []];
+  /** Les mesures du moment font paraître `courte` plus courte de 30 px que toute autre répartition. */
+  const avantage = (courte: string[][]) => (cols: string[][]) => (JSON.stringify(cols) === JSON.stringify(courte) ? 100 : 130);
+
+  test("une autre répartition est prise si elle raccourcit la page de 24 px ; jamais une déjà quittée pour la même clé", () => {
+    let r = repartitionSuivante(null, "k", A, () => 0);
+    expect(r.colonnes).toEqual(A);
+    r = repartitionSuivante(r, "k", B, avantage(B));
+    expect(r.colonnes, "B raccourcit la page de 30 px : prise").toEqual(B);
+    r = repartitionSuivante(r, "k", A, avantage(A));
+    expect(r.colonnes, "A, déjà quittée : B reste").toEqual(B);
+    const C = [["b"], ["a"]];
+    expect(repartitionSuivante(r, "k", C, (cols) => (JSON.stringify(cols) === JSON.stringify(C) ? 110 : 130)).colonnes,
+      "un gain de 20 px ne suffit pas").toEqual(B);
+    expect(repartitionSuivante(r, "k", C, avantage(C)).colonnes, "C, jamais quittée : prise").toEqual(C);
+    expect(repartitionSuivante(r, "autre", A, () => 0).colonnes, "une autre clé repart de zéro").toEqual(A);
   });
 });

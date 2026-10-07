@@ -22,7 +22,7 @@ import { useProfile } from "@/lib/firebase/users";
 import {
   ajouterWidget, catalogue, changerReglages, changerTaille, deplacerWidget, dispositionAffichee, dispositionParDefaut, retirerWidget,
 } from "@/lib/tableauDeBord/disposition";
-import { fractionsPour, hauteurMax, repartirWidgets } from "@/lib/tableauDeBord/colonnes";
+import { fractionsPour, hauteurMax, repartirWidgets, repartitionSuivante, type Repartition } from "@/lib/tableauDeBord/colonnes";
 import { useLecture } from "@/lib/tableauDeBord/lecture";
 import type { Widget, WidgetId } from "@/types/backOffice";
 import { OutilsWidget, Poignee } from "./OutilsWidget";
@@ -191,8 +191,6 @@ const ECART = 16;
 const UNITE = 4;
 /** Hauteur supposée d'un widget pas encore mesuré, dans une colonne de 1 fr. */
 const HAUTEUR_SUPPOSEE = 240;
-/** Une autre répartition n'est prise que si elle raccourcit la page d'au moins autant : pas de va-et-vient. */
-const GAIN_MINIMAL = 24;
 
 /** Les colonnes de la zone : `null` (la grille) sans barre latérale (téléphone, tablette en portrait),
  *  deux ou trois selon la largeur de la zone (barre dépliée ou réduite, R15). */
@@ -220,12 +218,13 @@ type Placement = { fractions: number[]; places: Record<string, { colonne: number
  * Place chaque widget dans sa colonne sans changer l'ordre du DOM (un widget déplacé n'est pas
  * remonté, donc ne relit pas ses données) : une grille aux rangées de 4 px, où chaque carte prend
  * sa colonne et autant de rangées que sa hauteur mesurée. La répartition (`repartirWidgets`) suit
- * les hauteurs mesurées, ramenées à une colonne de 1 fr ; elle ne change que pour un vrai gain.
+ * les hauteurs mesurées, ramenées à une colonne de 1 fr ; elle ne change que pour un vrai gain, et ne
+ * revient jamais à une répartition quittée (`repartitionSuivante`).
  */
 function usePlacement(grille: React.RefObject<HTMLDivElement | null>, fractions: number[] | null, widgets: Widget[]): Placement | null {
   /** Hauteur réelle (px) et hauteur ramenée à une colonne de 1 fr, par widget. */
   const [mesures, setMesures] = useState<Record<string, { h: number; norm: number }>>({});
-  const [repartition, setRepartition] = useState<{ cle: string; colonnes: string[][] } | null>(null);
+  const [repartition, setRepartition] = useState<Repartition | null>(null);
   const cle = fractions ? `${fractions.join("/")}|${widgets.map((w) => `${w.id}:${w.taille}`).join(",")}` : "";
   const norm = Object.fromEntries(widgets.map((w) => [w.id, mesures[w.id]?.norm ?? HAUTEUR_SUPPOSEE]));
 
@@ -243,8 +242,7 @@ function usePlacement(grille: React.RefObject<HTMLDivElement | null>, fractions:
       const lu = Object.fromEntries(widgets.map((w) => [w.id, lues[w.id]?.norm ?? HAUTEUR_SUPPOSEE]));
       const candidat = repartirWidgets(widgets, lu, fractions).map((col) => col.map((w) => w.id));
       const long = (cols: string[][]) => hauteurMax(cols.map((col) => col.map((id) => ({ id }))), lu, fractions);
-      setRepartition((avant) =>
-        avant && avant.cle === cle && long(avant.colonnes) <= long(candidat) + GAIN_MINIMAL ? avant : { cle, colonnes: candidat });
+      setRepartition((avant) => repartitionSuivante(avant, cle, candidat, long));
     };
     mesurer();
     const ro = new ResizeObserver(mesurer);

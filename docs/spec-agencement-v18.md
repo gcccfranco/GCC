@@ -583,12 +583,16 @@ la barre d'onglets : une page sans barre du bas (rare) le verra plus haut que n�
   dernière fois, tonalité (`KeyPill`). En grand, la carte « Setlists comptées » ne s'y montre plus (le sous-titre
   la donne, planche). Français seul (R18).
 - **Tableau de bord (B14)** : `EnTetePage`, « Personnaliser » en contour ; en grand (barre latérale présente) et
-  hors personnalisation, colonnes 1,55 fr + 1 fr, et 1,6 + 1 + 1 dès 1 200 px de zone (barre réduite à 1 440 px ;
-  la largeur de la zone, mesurée, pas `data-barre`, R15). `lib/tableauDeBord/colonnes.ts` : `repartirWidgets`
+  hors personnalisation, colonnes 1,55 fr + 1 fr, et 1,6 + 1 + 1 dès 1 280 px de zone (1 200 avant la relecture) :
+  barre réduite, trois colonnes dès un écran de 1 404 px (1 421 avec une barre de défilement), donc à 1 440 ;
+  barre dépliée, deux jusqu'à 1 607 px (la largeur de la zone, mesurée, pas `data-barre`, R15).
+  `lib/tableauDeBord/colonnes.ts` : `repartirWidgets` (pur ; le « Grand », sinon le premier, dans la large, puis
+  chaque widget dans la colonne la moins haute, large comprise, comme sur les deux planches), `repartitionSuivante`
   (pur) et `hauteurMax`. Les cartes restent dans l'ordre du DOM (rien n'est remonté, aucune donnée relue) et se
   placent dans une grille aux rangées de 4 px selon leur hauteur mesurée ; la répartition ne change que si elle
-  raccourcit la page de 24 px au moins (pas de va-et-vient). Personnalisation, tablette portrait, téléphone : la
-  grille d'avant (`GRILLE_WIDGETS`).
+  raccourcit la page de 24 px au moins, et ne revient jamais à une répartition quittée pour les mêmes colonnes et
+  les mêmes widgets (pas de va-et-vient). Personnalisation, tablette portrait, téléphone : la grille d'avant
+  (`GRILLE_WIDGETS`).
 - **Tests** : `tests/agencement-v18-t6.spec.ts` (13 tests, 5 projets : 54 verts, 11 sautés par appareil), vus
   rouges sur l'ancien code (15 rouges sur ordinateur et téléphone, seuls les tests purs passaient), puis verts.
   Suites réécrites avec la règle : `statistiques.spec.ts` (titre « Statistiques », rail en `tab`/`aria-selected`,
@@ -608,6 +612,38 @@ la barre d'onglets : une page sans barre du bas (rare) le verra plus haut que n�
   premier passage sous la charge du Mac, verts à la relance), `agencement-v18-fondations` et
   `agencement-v18-confirmations` (130 verts), `back-office-coupe` (second serveur, 175 verts). Captures regardées
   (ordinateur 1 440, tablette, téléphone) : inchangées, conformes aux planches.
+- **Relecture** (07/10/2026, deux relectures, dix constats ; commit `fix(V18T6): relecture — seuil des trois
+  colonnes, répartition sans va-et-vient, Statistiques`). **Lot fini et relu.**
+  - Corrigés, chacun avec un test vu rouge sur le code d'avant puis vert : seuil des trois colonnes à 1 280 px
+    de zone (barre dépliée, trois colonnes dès un écran de 1 528 px avant ; test à 1 600 px et test pur des
+    seuils) ; `repartitionSuivante` : une répartition quittée ne revient jamais pour la même clé (test pur) ;
+    « Chants différents » ne compte que les chants du recueil (un absent du recueil faisait dire 5 au lieu de 4) ;
+    « Tout afficher » de « Jamais joués » se replie quand un filtre change (clé sur les filtres) ; le tableau
+    « Les plus joués » défile dans sa carte (à 1 040 px barre dépliée, la page débordait de 6 px). Test S/M/L de
+    `tableau-de-bord.spec.ts` renforcé (colonne et largeur de chaque taille, plus de `return` sans contrôle).
+  - Écarté : « les widgets non Grand dans les seules colonnes étroites ». B14 l'écrit, mais les deux planches
+    validées disent autre chose : barre dépliée, « Prochains évènements » (M ; aucun widget n'est « Grand » par
+    défaut) est sous « Ce dimanche » dans la large ; barre réduite, il est dans une étroite. Seule « la colonne
+    la moins haute, large comprise » donne les deux (test pur avec les hauteurs des planches). Les seules
+    étroites mettraient dix widgets d'admin sur onze dans l'étroite barre dépliée, sous un « Ce dimanche » seul :
+    le blanc que B14 veut retirer. Le code suit les planches ; la phrase de B14 est à corriger.
+  - Écarté : trois colonnes « barre réduite » seulement. R15 lit la largeur de la zone, pas la barre : au-delà
+    d'un écran de 1 608 px, la barre dépliée laisse plus de place que la barre réduite à 1 440 et prend trois
+    colonnes. Aucun seuil de largeur ne donne à la fois trois colonnes barre réduite à 1 440 et deux barre
+    dépliée sur tous les écrans.
+  - Laissés tels quels (composants communs F1 ou choix à faire) : sous-titre coupé par « … » sur téléphone (R1 :
+    une ligne ; la carte « Setlists comptées » redit juste dessous le nombre et les dates) ; pilules des périodes
+    à 40 px (`Pilules`, la planche en dessine ≈ 28 ; la rangée défile sur téléphone, comme toutes les pilules) ;
+    « En chinois » sur deux colonnes sous 1 024 px, où les deux cartes sont l'une sous l'autre en pleine largeur
+    (une colonne quand elles sont côte à côte, comme sur la planche).
+  - Suites : `agencement-v18-t6`, `statistiques`, `tableau-de-bord` (5 projets : 566 verts, 24 sautés),
+    `back-office-coupe` (second serveur, ordinateur : 59 verts) ; `tsc --noEmit` et `npm run lint` sans erreur.
+    Captures regardées : Statistiques à 1 040 px (le tableau défile dans sa carte), tableau de bord à 1 600 px
+    barre dépliée (deux colonnes) et à 1 440 px barre réduite (trois), téléphone.
 - **Reste** : rien pour T6.
 - **Timothée** : rien à publier (aucune règle, aucune donnée, aucun libellé 中文 : Statistiques en français seul,
-  Tableau de bord sans libellé nouveau).
+  Tableau de bord sans libellé nouveau). À trancher : (1) confirmer la répartition des planches (colonne la
+  moins haute, large comprise) pour qu'on corrige la phrase de B14 ; (2) les pilules des périodes à 40 px ou une
+  variante compacte de `Pilules` pour tout le site ; (3) « En chinois » sur une colonne même quand la carte
+  prend toute la largeur (tablette portrait) ; (4) sur une fenêtre de 1 024 à environ 1 100 px barre dépliée, le
+  tableau « Les plus joués » défile dans sa carte : le garder, ou empiler les chiffres au-dessus du tableau.
