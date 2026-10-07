@@ -1,7 +1,8 @@
 "use client"
 
 // `/evenements/scene` → `/evenements/scene/{fete}` (Q9) : la fête dont l'édition courante a le
-// jour J le plus proche d'aujourd'hui (le jour J du document, sinon celui par défaut, Q3).
+// jour J le plus proche d'aujourd'hui (le jour J du document, sinon celui par défaut, Q3). Même
+// chose au Back-Office (P7) : `base` = `/back-office/evenements/scene`.
 
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
@@ -20,15 +21,15 @@ function feteLaPlusProche(programmes: Programme[], today: string): Fete {
   return FETES.reduce((m, f) => (ecart(f) < ecart(m) ? f : m))
 }
 
-export function VersLaFete() {
+export function VersLaFete({ base = "/evenements/scene" }: { base?: string }) {
   const { t } = useTranslation()
   const router = useRouter()
   useEffect(() => {
     let fini = false
     listProgrammes()
       .catch(() => [] as Programme[])
-      .then((programmes) => { if (!fini) router.replace(`/evenements/scene/${feteLaPlusProche(programmes, todayIso())}`) })
+      .then((programmes) => { if (!fini) router.replace(`${base}/${feteLaPlusProche(programmes, todayIso())}`) })
     return () => { fini = true }
-  }, [router])
+  }, [router, base])
   return <p className="px-[var(--marge-page)] text-sm text-muted-foreground">{t("common.loading")}</p>
 }

@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeDb, type FakeProfile } from "./helpers/fakeSession";
+import { interdireDialoguesNatifs, repondreDansLeSite } from "./helpers/agencement";
 import { canReserverPour } from "../src/lib/access";
 import {
   commence, creneauxLibres, erreursSaison, FAMILLES, famillesDe, grilleDuJour, horsGrille, joursReservables,
@@ -230,10 +231,13 @@ const NOEL26 = {
 };
 
 /** Lundi 5 octobre 2026 à 10:00, horloge posée avant la connexion. Lot U6, B3 (Q12) : la
- *  coordination gère au Back-Office › Évènements › Scène, les membres réservent dans l'App. */
-async function ouvrir(page: Page, who: FakeProfile, docs: Record<string, Record<string, unknown>>, jour = "2026-10-05T10:00:00") {
+ *  coordination gère au Back-Office, les membres réservent dans l'App. Pâques · Noël, P7 : au
+ *  Back-Office, l'onglet de la fête (`/back-office/evenements/scene` mène à Noël) ouvre la saison.
+ *  `chemin` force l'adresse (la coordination qui réserve dans l'App). */
+async function ouvrir(page: Page, who: FakeProfile, docs: Record<string, Record<string, unknown>>, jour = "2026-10-05T10:00:00", chemin?: string) {
+  interdireDialoguesNatifs(page);
   await page.clock.setFixedTime(new Date(jour));
-  return signInAs(page, who, docs, who.poles?.includes("evenement") ? "/back-office/evenements/scene" : "/evenements/scene");
+  return signInAs(page, who, docs, chemin ?? (who.poles?.includes("evenement") ? "/back-office/evenements/scene" : "/evenements/scene"));
 }
 /** L'onglet de la section Évènements, dans l'App. */
 async function ongletApp(page: Page, nom: string) {
@@ -251,7 +255,8 @@ async function capture(page: Page, name: string) {
 }
 
 const carte = (page: Page) => page.getByRole("region", { name: "Mettre en place la saison" });
-const apercu = (page: Page) => page.getByRole("region", { name: "Aperçu de ce que verront les groupes" });
+const apercu = (page: Page) => page.getByRole("region", { name: "Aperçu des membres" });
+const lancer = (page: Page) => page.getByRole("button", { name: "Lancer les réservations", exact: true });
 
 test("brouillon : un membre a l'onglet Noël (fixe, P4) mais ni grille ni réservation", async ({ page }) => {
   await ouvrir(page, NOE, { "programmes/noel": NOEL26 });
@@ -260,13 +265,9 @@ test("brouillon : un membre a l'onglet Noël (fixe, P4) mais ni grille ni réser
   await expect(page.getByRole("link", { name: "Noël 2026", exact: true })).toHaveCount(0);
 });
 
-test("brouillon : la coordination l'ouvre depuis sa ligne et voit la saison et l'aperçu", async ({ page }) => {
+test("brouillon : la coordination voit la saison et l'aperçu dans l'onglet Noël du Back-Office", async ({ page }) => {
   await ouvrir(page, ALICE, { "programmes/noel": NOEL26 });
-  await expect(page.getByRole("heading", { name: "Scène", exact: true })).toBeVisible();
-  const ligne = page.getByRole("region", { name: "Programmes masqués" }).getByRole("listitem").filter({ hasText: "Noël 2026" });
-  await expect(ligne).toContainText("Brouillon");
-  await ligne.getByRole("button", { name: "Préparer la saison" }).click();
-  await expect(page.getByRole("heading", { name: "Noël 2026 · réservations" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Saison de Noël 2026" })).toBeVisible();
   await expect(page.getByText("Jour J : jeudi 24 décembre", { exact: true })).toBeVisible();
   // Les dates en toutes lettres, comme la planche (le sélecteur natif reste dessous).
   await expect(carte(page).getByText("du jeudi 1er octobre", { exact: true })).toBeVisible();
@@ -282,17 +283,18 @@ test("brouillon : la coordination l'ouvre depuis sa ligne et voit la saison et l
   await expect(carte(page).getByRole("button", { name: "Chorale", pressed: false })).toBeVisible();
   await expect(carte(page).getByRole("button", { name: "Tout membre connecté", pressed: false })).toBeVisible();
   await expect(carte(page)).toContainText("Deux créneaux qui se chevauchent restent refusés ; la coordination et les admins peuvent tout déplacer.");
-  await expect(apercu(page).getByRole("heading", { name: "Samedi 10 octobre" })).toBeVisible();
-  await apercu(page).getByRole("button", { name: "Jour suivant" }).click();
-  await expect(apercu(page).getByRole("heading", { name: "Dimanche 11 octobre" })).toBeVisible();
-  await expect(apercu(page).getByRole("listitem")).toHaveText([/14:00\s*Libre/, /15:00\s*Libre/, /16:00\s*Libre/, /17:00\s*Libre/, /18:00\s*Libre/]);
+  // Pâques · Noël, P7 (Q19) : l'aperçu montre une semaine, son premier jour en lignes.
+  await expect(apercu(page).getByText("Semaine du 10 au 11 octobre")).toBeVisible();
+  await expect(apercu(page).getByRole("region", { name: "Samedi 10 octobre" }).getByRole("listitem")).toHaveText([/10:00\s*Libre/, /11:00\s*Libre/]);
+  await expect(apercu(page)).toContainText("Dimanche 11 octobre : 5 créneaux, de 14:00 à 19:00.");
+  await apercu(page).getByRole("button", { name: "Semaine suivante" }).click();
+  await expect(apercu(page).getByRole("region", { name: "Samedi 17 octobre" })).toBeVisible();
 });
 
-test("« Ouvrir les réservations » écrit `ouvert: true` en un seul PATCH, et l'onglet Noël de l'App montre la grille", async ({ page }) => {
+test("« Lancer les réservations » écrit `ouvert: true` en un seul PATCH, et l'onglet Noël de l'App montre la grille", async ({ page }) => {
   const db = await ouvrir(page, ALICE, { "programmes/noel": NOEL26 });
-  await page.getByRole("button", { name: "Préparer la saison" }).click();
-  await page.getByRole("button", { name: "Ouvrir les réservations" }).click();
-  await expect(page.getByText("Réservations ouvertes du 1er octobre au 20 décembre")).toBeVisible();
+  await lancer(page).click();
+  await expect(page.getByText("Réservations lancées")).toBeVisible();
   expect(patches(db)).toHaveLength(1);
   expect(patches(db)[0].data).toMatchObject({ ouvert: true });
   expect(Object.keys(patches(db)[0].data).sort()).toEqual(["ouvert", "updatedAt"]);
@@ -308,42 +310,37 @@ test("une fois ouvert, un membre voit l'onglet, le samedi et le dimanche", async
   await expect(page.getByRole("region", { name: "Dimanche 11 octobre" })).toBeVisible();
 });
 
-test("saison ouverte : repliée en une ligne au-dessus des volets ; cocher « sam. » ajoute une plage, le samedi entre dans l'aperçu", async ({ page }) => {
+test("saison lancée : résumée dans la colonne de la fête ; cocher « sam. » ajoute une plage, le samedi entre dans l'aperçu", async ({ page }) => {
   const db = await ouvrir(page, ALICE, { "programmes/noel": NOEL });
-  await expect(page.getByText("Saison : 1er octobre → 20 décembre · dim. · 1 h · Tout membre connecté")).toBeVisible();
-  await page.getByRole("button", { name: "Modifier la saison" }).click();
-  await expect(apercu(page).getByRole("heading", { name: "Dimanche 11 octobre" })).toBeVisible();
+  await expect(page.getByRole("button", { name: /^Saison/ })).toContainText("dim. 14–19 · 1 h · tout membre");
+  await expect(apercu(page).getByRole("region", { name: "Dimanche 11 octobre" })).toBeVisible();
   await carte(page).getByRole("button", { name: "sam.", exact: true }).click();
   await expect(carte(page).getByRole("button", { name: "sam. 14:00 – 19:00" })).toBeVisible();
   await expect.poll(() => patches(db).at(-1)?.data.plages).toEqual([
     { jour: 6, debut: "14:00", fin: "19:00" }, { jour: 0, debut: "14:00", fin: "19:00" },
   ]);
-  await apercu(page).getByRole("button", { name: "Jour précédent" }).click();
-  await expect(apercu(page).getByRole("heading", { name: "Samedi 10 octobre" })).toBeVisible();
-  await expect(apercu(page).getByRole("listitem")).toHaveCount(5);
+  await expect(apercu(page).getByRole("region", { name: "Samedi 10 octobre" }).getByRole("listitem")).toHaveCount(5);
 });
 
 test("changer la durée met l'aperçu à jour", async ({ page }) => {
   const db = await ouvrir(page, ALICE, { "programmes/noel": NOEL26 });
-  await page.getByRole("button", { name: "Préparer la saison" }).click();
-  await apercu(page).getByRole("button", { name: "Jour suivant" }).click();
   await carte(page).getByRole("button", { name: "1 h 30", exact: true }).click();
-  await expect(apercu(page).getByRole("listitem")).toHaveText([/14:00\s*Libre/, /15:30\s*Libre/, /17:00\s*Libre/]);
+  await expect(apercu(page).getByRole("region", { name: "Samedi 10 octobre" }).getByRole("listitem")).toHaveText([/10:00\s*Libre/]);
+  await expect(apercu(page)).toContainText("Dimanche 11 octobre : 3 créneaux, de 14:00 à 19:00.");
   expect(patches(db).at(-1)?.data).toMatchObject({ duree: 90 });
 });
 
 test("une fermeture le jour J ou après affiche l'erreur et n'écrit rien", async ({ page }) => {
   const db = await ouvrir(page, ALICE, { "programmes/noel": NOEL26 });
-  await page.getByRole("button", { name: "Préparer la saison" }).click();
   await carte(page).getByLabel("Fermeture des réservations").fill("2026-12-24");
   await expect(carte(page).getByText("La fermeture doit être avant le jour J.")).toBeVisible();
+  await expect(lancer(page)).toBeDisabled();
   expect(patches(db)).toHaveLength(0);
 });
 
 test("hors grille : passer à 1 h 30 avec une réservation à 15:00 la signale, elle reste en base, « Déplacer » la pose sur un créneau libre", async ({ page }) => {
   const c1 = { ...resa("2026-10-11", "15:00", "16:00"), quoi: "Sketch", qui: ["Jeunes"], auteurUid: "uid-noe", auteurNom: "Noé L." };
   const db = await ouvrir(page, ALICE, { "programmes/noel": { ...NOEL26, ouvert: true }, "programmes/noel/creneaux/c1": c1 });
-  await page.getByRole("button", { name: "Modifier la saison" }).click();
   await carte(page).getByRole("button", { name: "1 h 30", exact: true }).click();
   const hors = page.getByRole("region", { name: "1 réservation hors grille" });
   await expect(hors).toContainText("Sketch · Jeunes");
@@ -359,42 +356,15 @@ test("hors grille : passer à 1 h 30 avec une réservation à 15:00 la signale, 
   expect(db.doc("programmes/noel/creneaux/c1")).toMatchObject({ dimanche: "2026-10-11", debut: "15:30", fin: "17:00", quoi: "Sketch" });
 });
 
-test("« Programme du jour J » ouvre l'ordre de passage depuis l'écran de la saison", async ({ page }) => {
+test("l'ordre de passage s'ouvre depuis la colonne de la fête, modifiable par la coordination", async ({ page }) => {
   await ouvrir(page, ALICE, { "programmes/noel": { ...NOEL26, passages: [{ quoi: "Chant", qui: ["Chorale"], titre: "Douce nuit" }] } });
-  await page.getByRole("button", { name: "Préparer la saison" }).click();
-  await page.getByRole("button", { name: "Programme du jour J" }).click();
+  await page.getByRole("button", { name: /Ordre de passage du jour J/ }).click();
   await expect(page.getByRole("list", { name: "Ordre de Passage jour J" }).getByRole("listitem")).toContainText(["Douce nuit"]);
-});
-
-test("« Programme du jour J » s'ouvre sous l'en-tête, au-dessus de la saison (pas au bas d'une longue page)", async ({ page }) => {
-  await ouvrir(page, ALICE, { "programmes/noel": { ...NOEL26, passages: [{ quoi: "Chant", qui: ["Chorale"], titre: "Douce nuit" }] } });
-  await page.getByRole("button", { name: "Préparer la saison" }).click();
-  await page.getByRole("button", { name: "Programme du jour J" }).click();
-  const ordre = page.getByRole("list", { name: "Ordre de Passage jour J" });
-  await expect(ordre).toBeVisible();
-  const yOrdre = (await ordre.boundingBox())?.y ?? Infinity;
-  const yCarte = (await carte(page).boundingBox())?.y ?? -Infinity;
-  expect(yOrdre).toBeLessThan(yCarte);
-});
-
-test("« Modifier le programme » depuis l'écran de la saison : nom et jour J, en un PATCH de ces deux champs", async ({ page }) => {
-  const db = await ouvrir(page, ALICE, { "programmes/noel": NOEL26 });
-  await page.getByRole("button", { name: "Préparer la saison" }).click();
-  await page.getByRole("button", { name: "Modifier le programme" }).click();
-  await expect(page.getByLabel("Début des réservations")).toHaveCount(0);
-  await page.getByLabel("Nom").fill("Noël 26");
-  await page.getByLabel("Jour J").fill("2026-12-25");
-  await page.getByRole("button", { name: "Enregistrer", exact: true }).click();
-  await expect(page.getByRole("heading", { name: "Noël 26 · réservations" })).toBeVisible();
-  await expect(page.getByText("Jour J : vendredi 25 décembre", { exact: true })).toBeVisible();
-  expect(patches(db)).toHaveLength(1);
-  expect(Object.keys(patches(db)[0].data).sort()).toEqual(["jourJ", "nom", "updatedAt"]);
-  expect(patches(db)[0].data).toMatchObject({ nom: "Noël 26", jourJ: "2026-12-25" });
+  await expect(page.getByRole("button", { name: "Ajouter un passage" })).toBeVisible();
 });
 
 test("dates : changer l'ouverture écrit `debut` seul, et la pastille se relit en toutes lettres", async ({ page }) => {
   const db = await ouvrir(page, ALICE, { "programmes/noel": NOEL26 });
-  await page.getByRole("button", { name: "Préparer la saison" }).click();
   await carte(page).getByLabel("Ouverture des réservations").fill("2026-10-08");
   await expect(carte(page).getByText("du jeudi 8 octobre", { exact: true })).toBeVisible();
   await expect.poll(() => patches(db).length).toBe(1);
@@ -404,7 +374,6 @@ test("dates : changer l'ouverture écrit `debut` seul, et la pastille se relit e
 
 test("plages : la pastille s'ouvre pour changer la plage ; retirer la seule plage d'un jour coché n'écrit rien ; décocher le jour retire ses plages", async ({ page }) => {
   const db = await ouvrir(page, ALICE, { "programmes/noel": NOEL26 });
-  await page.getByRole("button", { name: "Préparer la saison" }).click();
   await carte(page).getByRole("button", { name: "sam. 10:00 – 12:00" }).click();
   await carte(page).getByLabel("Fin de la plage").fill("13:00");
   await carte(page).getByRole("button", { name: "OK", exact: true }).click();
@@ -425,7 +394,6 @@ test("plages : la pastille s'ouvre pour changer la plage ; retirer la seule plag
 
 test("plages : « + Plage » ajoute une seconde plage au dimanche, rangée par heure", async ({ page }) => {
   const db = await ouvrir(page, ALICE, { "programmes/noel": NOEL26 });
-  await page.getByRole("button", { name: "Préparer la saison" }).click();
   await carte(page).getByRole("button", { name: "Ajouter une plage" }).click();
   await carte(page).getByLabel("Jour de la plage").selectOption({ label: "dim." });
   await carte(page).getByLabel("Début de la plage").fill("10:00");
@@ -441,7 +409,6 @@ test("plages : « + Plage » ajoute une seconde plage au dimanche, rangée par h
 
 test("qui peut réserver : « Tout membre connecté » vide la liste ; une famille cochée écrit ses groupes ; l'un exclut l'autre", async ({ page }) => {
   const db = await ouvrir(page, ALICE, { "programmes/noel": NOEL26 });
-  await page.getByRole("button", { name: "Préparer la saison" }).click();
   await carte(page).getByRole("button", { name: "Tout membre connecté" }).click();
   await expect(carte(page).getByRole("button", { name: "Tout membre connecté", pressed: true })).toBeVisible();
   await expect(carte(page).getByRole("button", { name: "Groupes", pressed: false })).toBeVisible();
@@ -451,64 +418,41 @@ test("qui peut réserver : « Tout membre connecté » vide la liste ; une famil
   await expect.poll(() => patches(db).at(-1)?.data.quiAutorises).toEqual(["Chorale"]);
 });
 
-test("hors grille : « Retirer » supprime la réservation après confirmation", async ({ page }) => {
+test("hors grille : « Retirer » supprime la réservation après la confirmation du site", async ({ page }) => {
   const c1 = { ...resa("2026-10-11", "17:00", "18:30"), auteurUid: "uid-noe", auteurNom: "Noé L." };
   const db = await ouvrir(page, ALICE, { "programmes/noel": { ...NOEL26, ouvert: true }, "programmes/noel/creneaux/c1": c1 });
-  await page.getByRole("button", { name: "Modifier la saison" }).click();
-  page.on("dialog", (d) => d.accept());
   const hors = page.getByRole("region", { name: "1 réservation hors grille" });
   await expect(hors).toContainText("17:00 – 18:30");
   await hors.getByRole("button", { name: "Retirer" }).click();
+  await repondreDansLeSite(page, "Retirer");
   await expect(page.getByRole("region", { name: /hors grille/ })).toHaveCount(0);
   expect(db.writes.find((w) => w.method === "DELETE")?.path).toBe("programmes/noel/creneaux/c1");
 });
 
-test("中文 : l'écran de la saison est traduit, dates comprises", async ({ page }) => {
+test("中文 : la saison est traduite, dates comprises", async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
   await ouvrir(page, ALICE, { "programmes/noel": NOEL26 });
-  await page.getByRole("button", { name: "准备预约季" }).click();
-  await expect(page.getByRole("heading", { name: "Noël 2026 · 预约" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "圣诞节 2026 预约季" })).toBeVisible();
   const carteZh = page.getByRole("region", { name: "设置预约季" });
   await expect(carteZh.getByText("从 10月1日星期四", { exact: true })).toBeVisible();
   await expect(carteZh.getByRole("button", { name: "周六 10:00 – 12:00" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "开放预约" })).toBeVisible();
-  await expect(page.getByRole("region", { name: "各小组将看到的预览" }).getByRole("heading", { name: "10月10日星期六" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "启动预约", exact: true })).toBeVisible();
+  await expect(page.getByRole("region", { name: "成员看到的预览" }).getByRole("heading", { name: "10月10日星期六" })).toBeVisible();
 });
 
-test("captures : l'écran de la saison, brouillon avec deux réservations, puis ouvert (à regarder)", async ({ page }) => {
-  const sketch = { ...resa("2026-10-11", "15:00", "16:00"), quoi: "Sketch", qui: ["Jeunes"] };
+test("captures : la saison, brouillon avec deux réservations, puis lancée (à regarder)", async ({ page }) => {
+  const sketch = { ...resa("2026-10-10", "10:00", "11:00"), quoi: "Sketch", qui: ["Jeunes"] };
   const chant = resa("2026-10-11", "17:00", "18:00");
   await ouvrir(page, ALICE, {
     "programmes/noel": NOEL26, "programmes/noel/creneaux/a": sketch, "programmes/noel/creneaux/b": chant,
   });
-  await page.getByRole("button", { name: "Préparer la saison" }).click();
-  await apercu(page).getByRole("button", { name: "Jour suivant" }).click();
   await expect(apercu(page).getByText("Sketch · Jeunes")).toBeVisible();
   await capture(page, "u1-saison-brouillon");
-  await page.getByRole("button", { name: "Ouvrir les réservations" }).click();
-  await expect(page.getByText("Réservations ouvertes du 1er octobre au 20 décembre")).toBeVisible();
+  await lancer(page).click();
+  await expect(page.getByText("Réservations lancées")).toBeVisible();
   await carte(page).getByRole("button", { name: "1 h 30", exact: true }).click();
   await expect(page.getByRole("region", { name: "2 réservations hors grille" })).toBeVisible();
-  await capture(page, "u1-saison-ouverte-hors-grille");
-  await page.getByRole("button", { name: "Fermer", exact: true }).click();
-  await expect(page.getByRole("button", { name: "Modifier la saison" })).toBeVisible();
-  await capture(page, "u1-saison-repliee");
-});
-
-test("créer un programme : brouillon ouvert au jour de sa création, l'écran s'ouvre directement sur sa saison", async ({ page }) => {
-  const db = await ouvrir(page, ALICE, {});
-  await page.getByLabel("Nom").fill("Noël 2026");
-  await page.getByLabel("Jour J").fill("2026-12-24");
-  await expect(page.getByLabel("Début des réservations")).toHaveCount(0);
-  await page.getByRole("button", { name: "Créer le programme" }).click();
-  await expect(page.getByRole("heading", { name: "Noël 2026 · réservations" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Ouvrir les réservations" })).toBeVisible();
-  const cree = db.writes.find((w) => w.method === "POST" && w.path.startsWith("programmes/"));
-  expect(cree?.data).toMatchObject({ nom: "Noël 2026", jourJ: "2026-12-24", debut: "2026-10-05", ouvert: false, visible: false });
-  // Pâques · Noël (P4) : l'onglet Noël de l'App est fixe ; le brouillon n'y montre pas de grille.
-  await (await ongletApp(page, "Noël")).click();
-  await expect(page.getByText(/^Les réservations ouvriront le/)).toBeVisible();
-  await expect(page.getByRole("button", { name: /^Réserver/ })).toHaveCount(0);
+  await capture(page, "u1-saison-lancee-hors-grille");
 });
 
 test("créneaux libres : la grille à venir moins les créneaux pris ou commencés ; la réservation qu'on déplace ne se bloque pas elle-même", () => {
@@ -606,7 +550,7 @@ test("membres : la feuille ne propose que les groupes permis (pas « Chorale »)
 });
 
 test("membres : sans limite, la feuille propose tous les groupes ; la coordination n'est jamais limitée", async ({ page }) => {
-  await ouvrir(page, ALICE, { "programmes/noel": OUVERT });
+  await ouvrir(page, ALICE, { "programmes/noel": OUVERT }, undefined, "/evenements/scene");
   await bloc(page, "Samedi 10 octobre").getByRole("button", { name: "Réserver 10:00 – 11:00" }).click();
   await feuille(page).getByRole("button", { name: /^\+ 4/ }).click();
   await expect(feuille(page).getByRole("checkbox", { name: "Chorale" })).toBeVisible();
@@ -670,7 +614,7 @@ test("membres : « ⋯ » › Retirer sa réservation après la confirmation du 
 
 test("membres : la coordination modifie ou retire toute réservation et la voit « hors grille »", async ({ page }) => {
   const long = { ...resa("2026-10-11", "17:00", "18:30", "l"), auteurUid: "uid-noe", auteurNom: "Noé L." };
-  await ouvrir(page, ALICE, { "programmes/noel": OUVERT, "programmes/noel/creneaux/s": SKETCH, "programmes/noel/creneaux/l": long });
+  await ouvrir(page, ALICE, { "programmes/noel": OUVERT, "programmes/noel/creneaux/s": SKETCH, "programmes/noel/creneaux/l": long }, undefined, "/evenements/scene");
   const dimanche = bloc(page, "Dimanche 11 octobre");
   const sketch = dimanche.getByRole("listitem").filter({ hasText: "Sketch · Jeunes" });
   await sketch.getByRole("button", { name: /^Plus d'actions/ }).click();
@@ -743,56 +687,49 @@ test("passé : le programme suivant annoncé n'est jamais un brouillon (Q3)", as
   await expect(page.getByText(/Pâques 2027/)).toHaveCount(0);
 });
 
-test("créer un programme pendant que le programme affiché a des réservations aux mêmes dates : l'aperçu du brouillon reste vide", async ({ page }) => {
+test("passer de Noël à Pâques au Back-Office pendant que les créneaux de Noël répondent en retard : l'aperçu de Pâques reste vide", async ({ page }) => {
   const sketch = { ...resa("2026-12-06", "15:00", "16:00", "s"), quoi: "Sketch", qui: ["Jeunes"] };
-  await ouvrir(page, ALICE, { "programmes/noel": OUVERT, "programmes/noel/creneaux/s": sketch }, "2026-12-06T10:00:00");
-  await expect(bloc(page, "Dimanche 6 décembre").getByText("Sketch · Jeunes")).toBeVisible();
+  await ouvrir(page, ALICE, { "programmes/noel": OUVERT, "programmes/noel/creneaux/s": sketch }, "2026-12-05T10:00:00");
+  await expect(apercu(page).getByText("Semaine du 5 au 6 décembre")).toBeVisible();
   // Désormais, les créneaux de Noël répondent en retard : une lecture périmée
-  // arriverait après celle du brouillon et la remplacerait.
+  // arriverait après celle de Pâques et la remplacerait.
   await page.route(/documents\/programmes\/noel:runQuery/, async (route) => {
     await attendre(1000);
     await route.fallback().catch(() => undefined);
   });
-  await page.getByRole("button", { name: "Nouveau programme" }).click();
-  await page.getByLabel("Nom").fill("Pâques 2027");
-  await page.getByLabel("Jour J").fill("2027-03-28");
-  await page.getByRole("button", { name: "Créer le programme" }).click();
-  await expect(page.getByRole("heading", { name: "Pâques 2027 · réservations" })).toBeVisible();
-  await expect(apercu(page).getByRole("heading", { name: "Dimanche 6 décembre" })).toBeVisible();
+  await page.getByRole("link", { name: "Pâques", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Saison de Pâques 2027" })).toBeVisible();
   await page.waitForTimeout(1500); // la réponse en retard, s'il y en a une, est arrivée
-  await expect(apercu(page).getByRole("listitem")).toHaveText([/14:00\s*Libre/, /15:00\s*Libre/, /16:00\s*Libre/, /17:00\s*Libre/, /18:00\s*Libre/]);
+  await expect(apercu(page).getByText("Sketch · Jeunes")).toHaveCount(0);
   await expect(page.getByRole("region", { name: /hors grille/ })).toHaveCount(0);
 });
 
-test("« Préparer la saison » d'un brouillon : même pendant le chargement, l'aperçu ne montre rien du programme affiché", async ({ page }) => {
+test("Pâques en brouillon : même pendant le chargement, l'aperçu ne montre rien de Noël", async ({ page }) => {
   const sketch = { ...resa("2026-10-11", "15:00", "16:00", "s"), quoi: "Sketch", qui: ["Jeunes"] };
   const long = resa("2026-10-11", "17:00", "18:30", "l");
   await ouvrir(page, ALICE, {
-    "programmes/noel": OUVERT, "programmes/noel/creneaux/s": sketch, "programmes/noel/creneaux/l": long, "programmes/paques": PAQUES,
+    "programmes/noel": OUVERT, "programmes/noel/creneaux/s": sketch, "programmes/noel/creneaux/l": long, "programmes/paques": { ...PAQUES, debut: "2027-02-01" },
   });
-  await expect(bloc(page, "Dimanche 11 octobre").getByText("Sketch · Jeunes")).toBeVisible();
+  await expect(page.getByRole("region", { name: "1 réservation hors grille" })).toBeVisible();
   await page.route(/documents\/programmes\/paques:runQuery/, async (route) => {
     await attendre(1000);
     await route.fallback().catch(() => undefined);
   });
-  await page.getByRole("region", { name: "Programmes masqués" }).getByRole("button", { name: "Préparer la saison" }).click();
-  await expect(page.getByRole("heading", { name: "Pâques 2027 · réservations" })).toBeVisible();
+  await page.getByRole("link", { name: "Pâques", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Saison de Pâques 2027" })).toBeVisible();
   // Relevé immédiat, sans nouvel essai : rien de Noël ne doit passer, même un instant.
   expect(await apercu(page).getByText("Sketch · Jeunes").count()).toBe(0);
   expect(await page.getByRole("region", { name: /hors grille/ }).count()).toBe(0);
-  await expect(apercu(page).getByRole("heading", { name: "Dimanche 11 octobre" })).toBeVisible();
-  await expect(apercu(page).getByRole("listitem")).toHaveCount(5);
+  await expect(apercu(page).getByRole("region", { name: "Dimanche 7 février" }).getByRole("listitem")).toHaveCount(5);
 });
 
-test("la saison suit le programme : jour J reporté, la fermeture par défaut suit, et un clic sur la durée n'écrit que `duree`", async ({ page }) => {
+test("la saison suit le jour J : reporté, la fermeture par défaut suit, et un clic sur la durée n'écrit que `duree`", async ({ page }) => {
   // Programme sans `fin` en base : fermeture au dernier dimanche avant le jour J.
   const sansFin = { ...NOEL, nom: "Noël 2026", plages: NOEL26.plages, duree: 60, quiAutorises: SAISON.quiAutorises, ouvert: false };
   const db = await ouvrir(page, ALICE, { "programmes/noel": sansFin });
-  await page.getByRole("button", { name: "Préparer la saison" }).click();
   await expect(carte(page).getByText("au dimanche 20 décembre", { exact: true })).toBeVisible();
-  await page.getByRole("button", { name: "Modifier le programme" }).click();
-  await page.getByLabel("Jour J").fill("2026-12-31");
-  await page.getByRole("button", { name: "Enregistrer", exact: true }).click();
+  // Pâques · Noël, P7 (Q19) : le jour J se règle dans la carte de la saison.
+  await carte(page).getByLabel("Choisir le jour J").fill("2026-12-31");
   await expect(page.getByText("Jour J : jeudi 31 décembre", { exact: true })).toBeVisible();
   await expect(carte(page).getByText("au dimanche 27 décembre", { exact: true })).toBeVisible();
   await carte(page).getByRole("button", { name: "1 h 30", exact: true }).click();
@@ -804,7 +741,6 @@ test("la saison suit le programme : jour J reporté, la fermeture par défaut su
 
 test("deux coordinateurs : un réglage écrit par l'autre (la durée) s'affiche et n'est pas écrasé au réglage suivant", async ({ page }) => {
   const db = await ouvrir(page, ALICE, { "programmes/noel": NOEL26 });
-  await page.getByRole("button", { name: "Préparer la saison" }).click();
   await expect(carte(page).getByRole("button", { name: "1 h", exact: true, pressed: true })).toBeVisible();
   // L'autre coordinateur passe la durée à 1 h 30.
   db.set("programmes/noel", { ...NOEL26, duree: 90, updatedAt: "2026-10-05T10:01:00Z" });
@@ -821,7 +757,6 @@ test("hors grille : une réservation d'un jour passé n'est plus signalée ; cel
   const passee = { ...resa("2026-10-04", "17:00", "18:30", "p"), auteurUid: "uid-noe", auteurNom: "Noé L." };
   const aVenir = { ...resa("2026-10-18", "17:00", "18:30", "v"), auteurUid: "uid-noe", auteurNom: "Noé L." };
   await ouvrir(page, ALICE, { "programmes/noel": NOEL, "programmes/noel/creneaux/p": passee, "programmes/noel/creneaux/v": aVenir }, "2026-10-15T10:00:00");
-  await page.getByRole("button", { name: "Modifier la saison" }).click();
   await expect(apercu(page)).toBeVisible();
   const hors = page.getByRole("region", { name: "1 réservation hors grille" });
   await expect(hors).toContainText("Dimanche 18 octobre");
@@ -844,7 +779,6 @@ test("membres : un créneau qui commence pendant que la feuille est ouverte est 
 test("hors grille : « Déplacer » vers un créneau qui a commencé entre-temps est refusé (horloge simulée)", async ({ page }) => {
   const c1 = { ...resa("2026-10-11", "17:00", "18:30", "c1"), auteurUid: "uid-noe", auteurNom: "Noé L." };
   const db = await ouvrir(page, ALICE, { "programmes/noel": OUVERT, "programmes/noel/creneaux/c1": c1 }, "2026-10-11T14:50:00");
-  await page.getByRole("button", { name: "Modifier la saison" }).click();
   await page.getByRole("region", { name: "1 réservation hors grille" }).getByRole("button", { name: "Déplacer" }).click();
   const f = feuille(page);
   await expect(f.getByRole("group", { name: "Dimanche 11 octobre" }).getByRole("radio", { name: "15:00 – 16:00" })).toBeChecked();
@@ -860,10 +794,9 @@ test("hors grille : « Retirer » qui échoue le dit sous la liste", async ({ pa
   await page.route(/creneaux\/c1/, (route) => route.request().method() === "DELETE"
     ? route.fulfill({ status: 403, contentType: "application/json", body: JSON.stringify({ error: { code: 403, message: "denied" } }) })
     : route.fallback());
-  page.on("dialog", (d) => d.accept());
-  await page.getByRole("button", { name: "Modifier la saison" }).click();
   const hors = page.getByRole("region", { name: "1 réservation hors grille" });
   await hors.getByRole("button", { name: "Retirer" }).click();
+  await repondreDansLeSite(page, "Retirer");
   await expect(hors.getByRole("alert")).toHaveText("Enregistrement impossible. Vérifie ta connexion et réessaie.");
   await expect(hors).toContainText("17:00 – 18:30");
 });

@@ -417,7 +417,7 @@ export function Entrainements({ programme, creneaux, user, profile, onChanged, o
 }
 
 /** La tuile de date (planche : « 11 » sur « oct. »). */
-function TuileDate({ iso, lang }: { iso: string; lang: string }) {
+export function TuileDate({ iso, lang }: { iso: string; lang: string }) {
   const { jour, mois } = tuileDate(iso, lang)
   return (
     <span className="flex h-10 w-10 shrink-0 flex-col items-center justify-center rounded-xl leading-none svc-ink"
@@ -443,7 +443,7 @@ function Cases({ cases, actif }: { cases: boolean[]; actif: boolean }) {
 }
 
 /** ‹ et › de la semaine (deux volets). */
-function Fleche({ label, disabled, onClick, children }: { label: string; disabled: boolean; onClick: () => void; children: ReactNode }) {
+export function Fleche({ label, disabled, onClick, children }: { label: string; disabled: boolean; onClick: () => void; children: ReactNode }) {
   return (
     <button type="button" aria-label={label} disabled={disabled} onClick={onClick}
       className="raised flex h-9 w-9 items-center justify-center rounded-full text-foreground transition-opacity disabled:opacity-40">

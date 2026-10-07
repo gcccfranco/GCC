@@ -550,3 +550,58 @@ npm run lint
   - Reste : P7 à P9.
   - À faire par Timothée : rien pour P6 (aucune règle à publier, droits inchangés) ; relire le 中文 « 请选择内容和参与者 »,
     « 其他团体 », « 可选 », « 我的 », « {{resa}}，{{jour}} · {{debut}} – {{fin}}：该时段将重新空出。 ».
+
+### SCENEBO
+
+- 07/10/2026 — **P7 — Back-Office : l'onglet de la fête et la saison : faite** (branche `lot/v18-scene-bo`, partie de
+  `ui/apple-design` après la fusion de `lot/v18-scene` (P1-P6) et de `lot/v18-t2` (T2a, T2b) ; commit « feat(SCENE): P7 »).
+  Rail du Back-Office « Évènements · Pâques · Noël » (`back-office/evenements/layout.tsx` : la sous-partie `scene` donne
+  les deux onglets, halo de la scène) ; `/back-office/evenements/scene` → la fête au jour J le plus proche (`VersLaFete`
+  prend `base`) ; `/back-office/evenements/scene/[fete]` (`paques`, `noel`, sinon 404 : `dynamicParams = false`) monte
+  `FeteGestion.tsx` : colonne « Cette fête » (titre de l'édition avec le menu des années, pastille d'état, entrée
+  Saison avec son résumé, phrase de ce que voient les membres et « Les années passées » avant le lancement, ordre de
+  passage en bas) ; à droite la vue Saison (« Saison de Pâques 2027 », « Enregistré à chaque changement … »,
+  « Lancer les réservations » en un `PATCH` de `ouvert`, inactif tant qu'une erreur s'affiche, puis « Réservations
+  lancées ») ou l'ordre de passage (`?vue=ordre`, modifiable jusqu'au jour J compris). Une édition sans document se
+  montre avec `reglagesRepris` et naît à la première action (`creerEdition`, `POST ?documentId=`, 409 → `PATCH`) ;
+  ouvrir l'onglet n'écrit rien. `SaisonForm` : Jour J en tête (« Calculé pour Pâques ; modifiable. », écrit seul),
+  aides (premier jour réservable, fin, créneaux par jour), erreur `autreFete` sous « Réservations » ; libellés de la
+  planche (Réservations, Jours, Plages, Un créneau dure). `Apercu` : « Aperçu des membres » sur une semaine (‹ ›), le
+  premier jour en lignes, les autres jours et le total en une phrase ; « Retirer » hors grille par `useConfirmer`.
+  `OrdrePassage` : retirer un numéro par `useConfirmer` — plus de `window.confirm` dans la scène. Retirés :
+  `SceneClient.tsx` (mode `gestion`, « Nouveau programme », « Masquer », liste des programmes), `SaisonEcran.tsx`,
+  `ProgrammeForm.tsx`, et `createProgramme`, `deleteProgramme` (`programmes.ts`) restés sans appelant. « Gérer dans le
+  Back-Office » (App) mène à l'onglet de la même fête. Libellés `planning.gestion.*`,
+  `planning.saison.erreurs.autreFete` (FR et 中文). Firestore simulé des tests : `?documentId=` et 409
+  (`tests/helpers/fakeSession.ts`).
+  - Tests : 15 tests P7 dans `tests/scene-paques-noel.spec.ts` (plus une capture sous `PW_CAPTURES`), vus rouges
+    (15 sur `ordinateur`), verts sur les cinq projets. Réécrits pour l'onglet de la fête : la partie « écran de la
+    coordination » de `scene-saison.spec.ts` (plus de « Préparer la saison », « Modifier la saison », « Ouvrir les
+    réservations », « Programme du jour J », « Modifier le programme », « Créer le programme » ; aperçu en semaines ;
+    confirmation du site) ; dans `programme-scene.spec.ts`, la création (premier réglage puis « Lancer »), l'ordre de
+    passage au Back-Office, les sept jours et l'archivage ; supprimés : « modifie le programme en place », « choisi
+    automatiquement », « créer un programme ne vole plus l'onglet ». Rail « Évènements · Pâques · Noël » dans
+    `agencement-v18-t2a.spec.ts`, `agencement-v18-t2b.spec.ts`, `back-office-admin.spec.ts` ;
+    `/back-office/evenements/scene/paques` dans `back-office-coupe.spec.ts`. `tsc` propre, `lint` sans nouvel avertissement.
+    Passes : `scene-paques-noel`, `scene-saison`, `programme-scene` sur tous leurs projets (714 verts ; le glissé de
+    l'ordre de passage sur téléphone amène d'abord la ligne au milieu de l'écran, loin de la barre du bas) ;
+    `agencement-v18-t2a`, `agencement-v18-t2b`, `back-office-admin` sur `ordinateur` (186 verts) ; `back-office-coupe`
+    (64 verts). Captures regardées aux cinq tailles (sous 1 440 px, l'aperçu passe sous la carte de la saison).
+  - Choix faits faute de réponse : « Entraînements » (les semaines) et « Toutes les réservations » ne sont pas dans la
+    colonne du Back-Office à P7 : ils viennent avec P8 (vue Toutes les réservations), comme la vue par défaut
+    « Toutes les réservations » des états lancés ; d'ici là, la vue Saison est montrée par défaut sauf après le jour J
+    (l'ordre de passage) et la coordination gère toute réservation depuis l'App (« ⋯ » partout) et la liste hors grille
+    de l'aperçu. « Les années passées » disent jour J et nombre de numéros, sans le nombre de réservations de la
+    planche (il faudrait lire les créneaux de chaque année). Une fête sans document porte la pastille « Brouillon ».
+    L'autre fête comparée par `autreFete` est son édition courante (brouillon compris). Le menu des années liste
+    l'édition courante et toutes les éditions de la fête, la plus récente d'abord ; choisir l'année courante retire
+    `?annee=`. Sur une colonne (téléphone, tablette debout), la colonne puis la vue choisie, en entier (le résumé et
+    les feuilles du téléphone sont P9).
+  - Reste : P8 (Toutes les réservations, Entraînements dans la colonne, après le jour J et « Préparer … », « Imprimer »)
+    et P9 (téléphone). Clés devenues orphelines, laissées pour éviter des conflits de fusion :
+    `planning.saison.{label,titre,programmeJourJ,ouvrir,ouvertes,fermer,apercu,precedent,suivant,resume,modifierSaison,preparerSaison}`,
+    `planning.programmes.*` (sauf `jourJLabel`, `error`), `planning.scene.{noCurrent,others,editProgramme,newProgramme,nextSoon,willArchive,autoChosen,viewOrdre,hideOrdre}`,
+    `backOffice.parties.scene`.
+  - À faire par Timothée : rien à publier (droits inchangés) ; relire le 中文 de `planning.gestion.*` (« 预约季 »,
+    « 启动预约 », « 预约已启动 », « 本次节日 », « 按{{fete}}日期计算；可修改。 », « 成员看到的预览 »…) et
+    `planning.saison.erreurs.autreFete`, `planning.saison.periode` (« 预约时间 »).

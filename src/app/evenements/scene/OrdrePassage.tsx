@@ -2,7 +2,8 @@
 
 // Volet « Programme {nom} » : l'ordre de passage du jour J, numéroté, sans
 // horaire ni durée (la brochure, digitalisée). La coordination ajoute,
-// modifie, retire et réordonne (glisser-déposer, comme les setlists).
+// modifie, retire et réordonne (glisser-déposer, comme les setlists). Retirer passe par la
+// confirmation du site (Pâques · Noël, P7 : plus de fenêtre du navigateur dans la scène).
 
 import { useState, type FormEvent } from "react"
 import { useTranslation } from "react-i18next"
@@ -15,6 +16,7 @@ import { PLANNING_COLORS } from "@/lib/serviceColors"
 import { QUOI, type Passage } from "@/types/programme"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { useConfirmer } from "@/components/layout/Confirmer"
 import { QuiChecklist } from "./CreneauForm"
 
 const COLOR = PLANNING_COLORS.scene
@@ -97,6 +99,7 @@ export function OrdrePassage({ passages, canEdit, onSave }: {
 }) {
   const { t } = useTranslation()
   const sensors = useDefaultSensors()
+  const confirmer = useConfirmer()
   const [editing, setEditing] = useState<number | "new" | null>(null)
   const ids = passages.map((_, i) => `passage-${i}`)
 
@@ -113,7 +116,13 @@ export function OrdrePassage({ passages, canEdit, onSave }: {
   }
 
   async function remove(i: number) {
-    if (!window.confirm(t("planning.programme.confirmRemovePassage"))) return
+    const oui = await confirmer({
+      titre: t("planning.programme.confirmRemovePassage"),
+      texte: passages[i].titre,
+      action: t("planning.programme.remove"),
+      destructif: true,
+    })
+    if (!oui) return
     await onSave(passages.filter((_, j) => j !== i))
   }
 

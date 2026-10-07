@@ -207,8 +207,8 @@ export function FeteClient({ fete }: { fete: Fete }) {
 
   const gerer = isCoordination(user, profile) && (
     <Button asChild size="sm" variant="outline">
-      {/* P7 : vers l'onglet de la même fête au Back-Office (`/back-office/evenements/scene/{fete}`). */}
-      <Link href="/back-office/evenements/scene">{t("backOffice.gerer")}</Link>
+      {/* P7 : vers l'onglet de la même fête au Back-Office. */}
+      <Link href={`/back-office/evenements/scene/${fete}`}>{t("backOffice.gerer")}</Link>
     </Button>
   )
 

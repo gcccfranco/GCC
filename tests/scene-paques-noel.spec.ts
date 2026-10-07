@@ -13,7 +13,7 @@ import { entreesCalendrier, type DonneesCalendrier, type EntreeCalendrier, type 
 import { compteCreneaux, erreursSaison, FAMILLES, lignesDuJour, saisonDe, semainesDe } from "../src/lib/scene/saison";
 import { semaineCourte } from "../src/app/evenements/scene/libelles";
 import { creerEdition } from "../src/lib/firebase/programmes";
-import { enTete, estGrandEcran, estTelephone, interdireDialoguesNatifs, ongletsRail, verifierAgencement, verifierSansDebordement } from "./helpers/agencement";
+import { enTete, estGrandEcran, estTelephone, interdireDialoguesNatifs, ongletsRail, repondreDansLeSite, verifierAgencement, verifierSansDebordement } from "./helpers/agencement";
 import type { Creneau, Programme } from "../src/types/programme";
 
 // Réservation de la scène — Pâques · Noël (docs/spec-scene-paques-noel.md).
@@ -971,4 +971,240 @@ test("P6 — captures à regarder (planches v18-scene-a-membres-* et v18-scene-a
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await page.waitForTimeout(400);
   await page.screenshot({ path: `${dir}/p6-semaine-${test.info().project.name}.png`, fullPage: true });
+});
+
+// ─── P7 : Back-Office — l'onglet de la fête et la saison ────────────────────
+// Alice (coordination) au Back-Office › Évènements › Pâques ou Noël ; horloge au 09/10/2026 sauf mention.
+
+const BO = "/back-office/evenements/scene";
+const MO_ANNONCES: FakeProfile = { uid: "uid-mo", email: "mo@example.com", firstName: "Mo", lastName: "R.", annonces: ["Culte Francophone"] };
+const carteSaison = (page: Page) => page.getByRole("region", { name: "Mettre en place la saison" });
+const apercuMembres = (page: Page) => page.getByRole("region", { name: "Aperçu des membres" });
+const colonneFete = (page: Page) => page.getByRole("region", { name: "Cette fête" });
+const ecrituresProgrammes = (db: { writes: { method: string; path: string; data: Record<string, unknown> }[] }) =>
+  db.writes.filter((w) => w.path.startsWith("programmes"));
+
+test("P7 — coordination : rail « Évènements · Pâques · Noël » au Back-Office, sans « Scène » ni Réunions", async ({ page }) => {
+  await ouvrirFete(page, `${BO}/paques`, {}, "2026-10-09", ALICE_EVT);
+  await expect(ongletsRail(page).getByRole("link")).toHaveText(["Évènements", "Pâques", "Noël"]);
+  await expect(ongletsRail(page).getByRole("link", { name: "Pâques" })).toHaveAttribute("aria-current", "page");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Évènements");
+  await expect(page.getByRole("link", { name: /Nouvel évènement/ })).toHaveCount(0);
+  await verifierAgencement(page);
+});
+
+test("P7 — un membre qui publie des annonces, hors coordination, n'a ni Pâques ni Noël au Back-Office", async ({ page }) => {
+  await ouvrirFete(page, "/back-office/evenements", {}, "2026-10-09", MO_ANNONCES);
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Évènements");
+  await expect(page.getByRole("link", { name: "Pâques", exact: true })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "Noël", exact: true })).toHaveCount(0);
+  await page.goto(`${BO}/noel`);
+  await expect(page.getByText("Réservé à la coordination.")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Lancer les réservations", exact: true })).toHaveCount(0);
+});
+
+test("P7 — `/back-office/evenements/scene` mène à Noël le 09/10/2026 ; une autre fête n'existe pas", async ({ page }) => {
+  await ouvrirFete(page, BO, { "programmes/x7Kq2": DOC_NOEL_ANCIEN }, "2026-10-09", ALICE_EVT);
+  await expect(page).toHaveURL(/\/back-office\/evenements\/scene\/noel\/?$/);
+  await expect(colonneFete(page).getByRole("heading", { level: 2 })).toHaveText("Noël 2026");
+  const reponse = await page.goto(`${BO}/ete`);
+  expect(reponse?.status()).toBe(404);
+});
+
+test("P7 — Pâques sans document : vue Saison en brouillon, jour J 28/03/2027, ouverture 01/02/2027 ; ouvrir l'onglet n'écrit rien", async ({ page }) => {
+  const db = await ouvrirFete(page, `${BO}/paques`, {}, "2026-10-09", ALICE_EVT);
+  const colonne = colonneFete(page);
+  await expect(colonne.getByRole("heading", { level: 2 })).toHaveText("Pâques 2027");
+  await expect(colonne.getByTestId("etat-edition")).toHaveText("Brouillon");
+  await expect(colonne.getByText("Jour J : dimanche 28 mars 2027")).toBeVisible();
+  await expect(colonne.getByRole("button", { name: /^Saison/ })).toHaveAttribute("aria-current", "true");
+  await expect(page.getByRole("heading", { name: "Saison de Pâques 2027" })).toBeVisible();
+  await expect(page.getByText("Enregistré à chaque changement · seuls la coordination et les admins le voient")).toBeVisible();
+  const carte = carteSaison(page);
+  await expect(carte.getByLabel("Choisir le jour J")).toHaveValue("2027-03-28");
+  await expect(carte.getByText("dimanche 28 mars 2027", { exact: true })).toBeVisible();
+  await expect(carte.getByText("Calculé pour Pâques ; modifiable.")).toBeVisible();
+  await expect(carte.getByLabel("Ouverture des réservations")).toHaveValue("2027-02-01");
+  await expect(carte.getByText("Premier jour réservable : dimanche 7 février. Fin : le dernier dimanche avant le jour J.")).toBeVisible();
+  await expect(carte.getByText("Dimanche : 5 créneaux.")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Lancer les réservations", exact: true })).toBeEnabled();
+  await page.waitForTimeout(500);
+  expect(ecrituresProgrammes(db)).toHaveLength(0);
+});
+
+test("P7 — premier réglage : changer la durée crée `programmes/paques-2027` (POST, documentId), en brouillon ; Jo voit « ouvriront le lundi 1er février »", async ({ page }) => {
+  const db = await ouvrirFete(page, `${BO}/paques`, {}, "2026-10-09", ALICE_EVT);
+  await carteSaison(page).getByRole("button", { name: "1 h 30", exact: true }).click();
+  await expect.poll(() => ecrituresProgrammes(db).length).toBe(1);
+  const cree = ecrituresProgrammes(db)[0];
+  expect(cree.method).toBe("POST");
+  expect(cree.path).toBe("programmes/paques-2027");
+  expect(cree.data).toMatchObject({ fete: "paques", annee: 2027, ouvert: false, duree: 90, jourJ: "2027-03-28", debut: "2027-02-01", createdBy: "uid-alice" });
+  await expect(carteSaison(page).getByRole("button", { name: "1 h 30", exact: true, pressed: true })).toBeVisible();
+  // Ce que voit l'App (la coordination y voit ce que voient les membres).
+  await page.goto("/evenements/scene/paques");
+  await expect(page.getByText("Les réservations ouvriront le lundi 1er février")).toBeVisible();
+});
+
+test("P7 — un autre coordinateur a créé l'édition entre-temps (409) : on relit et le changement s'écrit en PATCH", async ({ page }) => {
+  const db = await ouvrirFete(page, `${BO}/paques`, {}, "2026-10-09", ALICE_EVT);
+  await expect(page.getByRole("heading", { name: "Saison de Pâques 2027" })).toBeVisible();
+  db.set("programmes/paques-2027", DOC_PAQUES_2027_BROUILLON);
+  await carteSaison(page).getByRole("button", { name: "1 h 30", exact: true }).click();
+  await expect.poll(() => ecrituresProgrammes(db).length).toBe(1);
+  expect(ecrituresProgrammes(db)[0].method).toBe("PATCH");
+  expect(Object.keys(ecrituresProgrammes(db)[0].data).sort()).toEqual(["duree", "updatedAt"]);
+  expect(db.doc("programmes/paques-2027")).toMatchObject({ duree: 90, plages: DOC_PAQUES_2027_BROUILLON.plages });
+  // Relu : la saison de l'autre coordinateur s'affiche.
+  await expect(carteSaison(page).getByRole("button", { name: "sam. 10:00 – 12:00" })).toBeVisible();
+});
+
+test("P7 — Pâques ouvert le 01/12/2026 croise Noël 2026 (jusqu'au 20/12) : l'erreur sous « Réservations », rien n'est écrit, « Lancer » inactif", async ({ page }) => {
+  const db = await ouvrirFete(page, `${BO}/paques`, { "programmes/x7Kq2": DOC_NOEL_ANCIEN, "programmes/paques-2027": DOC_PAQUES_2027_BROUILLON }, "2026-10-09", ALICE_EVT);
+  const carte = carteSaison(page);
+  await carte.getByLabel("Ouverture des réservations").fill("2026-12-01");
+  const reservations = carte.getByRole("group", { name: "Réservations" });
+  await expect(reservations.getByRole("alert")).toHaveText("Les réservations de Noël 2026 courent jusqu'au dimanche 20 décembre : commence après.");
+  await expect(page.getByRole("button", { name: "Lancer les réservations", exact: true })).toBeDisabled();
+  await page.waitForTimeout(500);
+  expect(ecrituresProgrammes(db)).toHaveLength(0);
+  await carte.getByLabel("Ouverture des réservations").fill("2027-02-01");
+  await expect(reservations.getByRole("alert")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Lancer les réservations", exact: true })).toBeEnabled();
+});
+
+test("P7 — « Lancer les réservations » : un PATCH de `ouvert` seul ; « Réservations lancées » ; la grille dans l'App après l'ouverture", async ({ page }) => {
+  const db = await ouvrirFete(page, `${BO}/paques`, { "programmes/paques-2027": DOC_PAQUES_2027_BROUILLON }, "2026-10-09", ALICE_EVT);
+  await page.getByRole("button", { name: "Lancer les réservations", exact: true }).click();
+  await expect(page.getByText("Réservations lancées")).toBeVisible();
+  await expect(colonneFete(page).getByTestId("etat-edition")).toHaveText("Lancée");
+  const ecrites = ecrituresProgrammes(db);
+  expect(ecrites).toHaveLength(1);
+  expect(ecrites[0]).toMatchObject({ method: "PATCH", path: "programmes/paques-2027" });
+  expect(Object.keys(ecrites[0].data).sort()).toEqual(["ouvert", "updatedAt"]);
+  expect(ecrites[0].data.ouvert).toBe(true);
+  // Lancée, la saison reste réglable.
+  await expect(carteSaison(page).getByRole("button", { name: "1 h 30", exact: true })).toBeEnabled();
+  await page.clock.setFixedTime(new Date("2027-02-08T10:00:00"));
+  await page.goto("/evenements/scene/paques");
+  await expect(page.getByRole("button", { name: /^Réserver \d/ }).first()).toBeVisible();
+});
+
+test("P7 — aperçu des membres sur une semaine : « Semaine du 6 au 7 février », ‹ ›, le samedi en lignes, le dimanche et le total en une phrase", async ({ page }) => {
+  await ouvrirFete(page, `${BO}/paques`, { "programmes/paques-2027": DOC_PAQUES_2027_BROUILLON }, "2026-10-09", ALICE_EVT);
+  const apercu = apercuMembres(page);
+  await expect(apercu.getByText("Semaine du 6 au 7 février")).toBeVisible();
+  await expect(apercu.getByRole("region", { name: "Samedi 6 février" }).getByRole("listitem")).toHaveText([/10:00\s*Libre/, /11:00\s*Libre/]);
+  await expect(apercu.getByText("Dimanche 7 février : 5 créneaux, de 14:00 à 19:00. 7 semaines, 49 créneaux en tout.")).toBeVisible();
+  await expect(apercu.getByRole("button", { name: "Semaine précédente" })).toBeDisabled();
+  await apercu.getByRole("button", { name: "Semaine suivante" }).click();
+  await expect(apercu.getByText("Semaine du 13 au 14 février")).toBeVisible();
+  await expect(carteSaison(page).getByText("Premier jour réservable : samedi 6 février. Fin : le dernier dimanche avant le jour J.")).toBeVisible();
+  await expect(carteSaison(page).getByText("Samedi : 2 créneaux. Dimanche : 5 créneaux.")).toBeVisible();
+});
+
+test("P7 — jour J dans la saison : le changer écrit `jourJ` seul ; la fermeture par défaut suit", async ({ page }) => {
+  const db = await ouvrirFete(page, `${BO}/paques`, { "programmes/paques-2027": DOC_PAQUES_2027_BROUILLON }, "2026-10-09", ALICE_EVT);
+  const carte = carteSaison(page);
+  await expect(carte.getByText("au dimanche 21 mars", { exact: true })).toBeVisible();
+  await carte.getByLabel("Choisir le jour J").fill("2027-04-04");
+  await expect(carte.getByText("dimanche 4 avril 2027", { exact: true })).toBeVisible();
+  await expect(carte.getByText("au dimanche 28 mars", { exact: true })).toBeVisible();
+  await expect(carte.getByText("Calculé pour Pâques ; modifiable.")).toHaveCount(0);
+  await expect.poll(() => ecrituresProgrammes(db).length).toBe(1);
+  expect(Object.keys(ecrituresProgrammes(db)[0].data).sort()).toEqual(["jourJ", "updatedAt"]);
+  expect(ecrituresProgrammes(db)[0].data.jourJ).toBe("2027-04-04");
+});
+
+test("P7 — colonne de la fête : menu des années, état, « Cette fête », années passées en brouillon, ordre de passage en bas", async ({ page }) => {
+  await ouvrirFete(page, `${BO}/paques`, { "programmes/paques-2026": DOC_PAQUES_2026, "programmes/a1b2": DOC_PAQUES_2025 }, "2026-10-09", ALICE_EVT);
+  const colonne = colonneFete(page);
+  await expect(colonne.getByText("Rien n'est visible des membres tant que la saison est en brouillon. Ils voient « Les réservations de Pâques 2027 ne sont pas encore ouvertes. ».")).toBeVisible();
+  const annees = colonne.getByRole("region", { name: "Les années passées" });
+  await expect(annees.getByRole("button")).toHaveText([/Pâques 2026\s*dimanche 5 avril · 5 numéros/, /Pâques 2025\s*dimanche 20 avril · 7 numéros/]);
+  const ordre = colonne.getByRole("button", { name: /Ordre de passage du jour J/ });
+  await expect(ordre).toContainText("dimanche 28 mars · aucun numéro pour l'instant");
+  expect((await ordre.boundingBox())!.y).toBeGreaterThan((await annees.boundingBox())!.y);
+  // Le menu des années : toutes les éditions de la fête, la plus récente d'abord.
+  const avant = await historique(page);
+  await colonne.getByRole("button", { name: "Pâques 2027" }).click();
+  await expect(page.getByRole("menuitem")).toHaveText(["Pâques 2027", "Pâques 2026", "Pâques 2025"]);
+  await page.getByRole("menuitem", { name: "Pâques 2026" }).click();
+  await expect(page).toHaveURL(/[?&]annee=2026/);
+  expect(await historique(page)).toBe(avant);
+  await expect(colonne.getByRole("heading", { level: 2 })).toHaveText("Pâques 2026");
+  await expect(colonne.getByTestId("etat-edition")).toHaveText("Terminé");
+  // Après le jour J : l'ordre de passage à droite, en lecture.
+  await expect(page.getByRole("heading", { name: "Pâques 2026 · ordre de passage" })).toBeVisible();
+  await expect(page.getByRole("list", { name: "Ordre de Passage jour J" }).getByRole("listitem")).toHaveCount(5);
+  await expect(page.getByRole("button", { name: "Ajouter un passage" })).toHaveCount(0);
+});
+
+test("P7 — Noël 2026 ancien document, ouvert : « Ouvertes », la saison en résumé, la vue Saison ; plus rien de l'ancien écran", async ({ page }) => {
+  await ouvrirFete(page, `${BO}/noel`, { "programmes/x7Kq2": DOC_NOEL_ANCIEN }, "2026-10-09", ALICE_EVT);
+  const colonne = colonneFete(page);
+  await expect(colonne.getByTestId("etat-edition")).toHaveText("Ouvertes");
+  await expect(colonne.getByText("Jour J : jeudi 24 décembre · réservations jusqu'au dimanche 20 décembre")).toBeVisible();
+  await expect(colonne.getByRole("button", { name: /^Saison/ })).toContainText("sam. 10–12, dim. 14–19 · 1 h · tout membre");
+  await expect(page.getByRole("heading", { name: "Saison de Noël 2026" })).toBeVisible();
+  await expect(page.getByText("Réservations lancées")).toBeVisible();
+  for (const libelle of ["Nouveau programme", "Masquer", "Afficher", "Modifier le programme", "Fermer", "Préparer la saison", "Modifier la saison"]) {
+    await expect(page.getByRole("button", { name: libelle, exact: true })).toHaveCount(0);
+  }
+  await expect(page.getByRole("region", { name: "Programmes masqués" })).toHaveCount(0);
+  await expect(page.locator("[data-deux-volets]")).toHaveCount(estGrandEcran(test.info()) ? 1 : 0);
+  await verifierAgencement(page);
+});
+
+test("P7 — ordre de passage au Back-Office : modifiable jusqu'au jour J ; retirer passe par la confirmation du site", async ({ page }) => {
+  const db = await ouvrirFete(page, `${BO}/noel?vue=ordre`, { "programmes/x7Kq2": DOC_NOEL_ANCIEN }, "2026-10-09", ALICE_EVT);
+  const liste = page.getByRole("list", { name: "Ordre de Passage jour J" });
+  await expect(liste.getByRole("listitem")).toHaveCount(3);
+  await expect(colonneFete(page).getByRole("button", { name: /Ordre de passage du jour J/ })).toHaveAttribute("aria-current", "true");
+  await page.getByRole("button", { name: "Ajouter un passage" }).click();
+  await page.getByLabel("Titre").fill("Douce nuit");
+  await page.getByLabel("Gp Paix").check();
+  await page.getByRole("button", { name: "Enregistrer" }).click();
+  await expect(liste.getByRole("listitem")).toHaveCount(4);
+  expect(ecrituresProgrammes(db).at(-1)).toMatchObject({ method: "PATCH", path: "programmes/x7Kq2" });
+  await liste.getByRole("listitem").nth(0).getByRole("button", { name: "Retirer" }).click();
+  await repondreDansLeSite(page, "Annuler");
+  await expect(liste.getByRole("listitem")).toHaveCount(4);
+  await liste.getByRole("listitem").nth(0).getByRole("button", { name: "Retirer" }).click();
+  await repondreDansLeSite(page, "Retirer");
+  await expect(liste.getByRole("listitem")).toHaveCount(3);
+  expect((ecrituresProgrammes(db).at(-1)!.data.passages as unknown[]).length).toBe(3);
+});
+
+test("P7 — l'ordre de passage d'une fête sans document : ajouter un numéro crée l'édition en brouillon", async ({ page }) => {
+  const db = await ouvrirFete(page, `${BO}/paques?vue=ordre`, {}, "2026-10-09", ALICE_EVT);
+  await page.getByRole("button", { name: "Ajouter un passage" }).click();
+  await page.getByLabel("Titre").fill("Il est vivant");
+  await page.getByLabel("Franco").check();
+  await page.getByRole("button", { name: "Enregistrer" }).click();
+  await expect(page.getByRole("list", { name: "Ordre de Passage jour J" }).getByRole("listitem")).toHaveCount(1);
+  const cree = ecrituresProgrammes(db)[0];
+  expect(cree).toMatchObject({ method: "POST", path: "programmes/paques-2027" });
+  expect(cree.data).toMatchObject({ fete: "paques", annee: 2027, ouvert: false, passages: [{ quoi: "Chant", qui: ["Franco"], titre: "Il est vivant" }] });
+});
+
+test("P7 — Back-Office en chinois : 复活节 et 圣诞节 dans le rail, « 启动预约 »", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
+  await ouvrirFete(page, `${BO}/paques`, {}, "2026-10-09", ALICE_EVT);
+  await expect(ongletsRail(page).getByRole("link")).toHaveText(["活动", "复活节", "圣诞节"]);
+  await expect(page.getByRole("region", { name: "本次节日" }).getByRole("heading", { level: 2 })).toHaveText("复活节 2027");
+  await expect(page.getByRole("button", { name: "启动预约", exact: true })).toBeVisible();
+});
+
+test("P7 — captures à regarder (planches v18-scene-a-coord-avant-*), PW_CAPTURES=<dossier>", async ({ page }) => {
+  const dir = process.env.PW_CAPTURES;
+  test.skip(!dir, "captures seulement avec PW_CAPTURES");
+  await ouvrirFete(page, `${BO}/paques`, { "programmes/paques-2026": DOC_PAQUES_2026, "programmes/a1b2": DOC_PAQUES_2025, "programmes/paques-2027": DOC_PAQUES_2027_BROUILLON, "programmes/x7Kq2": DOC_NOEL_ANCIEN }, "2026-10-09", ALICE_EVT);
+  await expect(page.getByRole("heading", { name: "Saison de Pâques 2027" })).toBeVisible();
+  await page.waitForTimeout(400);
+  await page.screenshot({ path: `${dir}/p7-paques-${test.info().project.name}.png`, fullPage: true });
+  await page.goto(`${BO}/noel?vue=ordre`);
+  await expect(page.getByRole("list", { name: "Ordre de Passage jour J" })).toBeVisible();
+  await page.waitForTimeout(400);
+  await page.screenshot({ path: `${dir}/p7-noel-ordre-${test.info().project.name}.png` });
 });
