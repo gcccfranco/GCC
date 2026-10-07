@@ -2022,6 +2022,7 @@
       "mesEquipes": "我的团队",
       "organigramme": "组织架构",
       "aucuneEquipe": "你还不在任何团队中。",
+      "illisible": "暂时无法读取，请稍后再试。",
       "membre": "成员",
       "membres_other": "{{count}} 名成员",
       "guideSous": "一步步了解整个网站",

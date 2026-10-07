@@ -2027,6 +2027,7 @@
       "mesEquipes": "Mes équipes",
       "organigramme": "Organigramme",
       "aucuneEquipe": "Tu n'es dans aucune équipe.",
+      "illisible": "Lecture impossible pour l'instant. Réessaie plus tard.",
       "membre": "Membre",
       "membres_one": "{{count}} membre",
       "membres_other": "{{count}} membres",

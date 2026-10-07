@@ -114,7 +114,7 @@ function MoiClient() {
     <div key="apercus" className="grid items-start gap-4 md:grid-cols-2">
       <ApercuServices />
       {BACK_OFFICE && poles.length > 0 && user && <ApercuTaches poles={poles} uid={user.uid} />}
-      {!harmonie.chargement && harmonie.peut && <ApercuHarmonie />}
+      {!harmonie.chargement && harmonie.peut && <ApercuHarmonie piano={harmonie.piano} />}
       {BACK_OFFICE && user && <ApercuEquipes uid={user.uid} />}
     </div>
   );
@@ -128,25 +128,21 @@ function MoiClient() {
 
   // A12 : en grand, le compte, les réglages et la déconnexion à gauche (340 px), les aperçus en deux
   // colonnes à droite puis l'aide ; tablette portrait, compte et réglages côte à côte, puis les
-  // aperçus en deux colonnes ; téléphone, une colonne.
-  const contenu =
-    disposition === "grand" ? (
-      <div className="grid grid-cols-[340px_minmax(0,1fr)] items-start gap-5">
-        <div className="space-y-4">{compte}{reglages}{notifierAdmin}{deconnexion}</div>
-        <div className="min-w-0 space-y-4">{apercus}{aide}</div>
+  // aperçus en deux colonnes ; téléphone, une colonne (les réglages après l'aide).
+  // Un seul arbre pour les trois : seules les classes changent, et les aperçus restent au même endroit.
+  // Une rotation ou la barre pliée ne les démonte donc pas (sinon toutes leurs lectures repartiraient).
+  const grand = disposition === "grand";
+  const telephone = disposition === "telephone";
+  const contenu = (
+    <div className={grand ? "grid grid-cols-[340px_minmax(0,1fr)] items-start gap-5" : "space-y-4"}>
+      <div className={grand ? "space-y-4" : telephone ? undefined : "grid grid-cols-2 items-start gap-4"}>
+        {compte}
+        {!telephone && <div className="space-y-4">{reglages}{notifierAdmin}{deconnexion}</div>}
       </div>
-    ) : disposition === "tablette" ? (
-      <div className="space-y-4">
-        <div className="grid grid-cols-2 items-start gap-4">
-          {compte}
-          <div className="space-y-4">{reglages}{notifierAdmin}{deconnexion}</div>
-        </div>
-        {apercus}
-        {aide}
-      </div>
-    ) : (
-      <div className="space-y-4">{compte}{apercus}{aide}{notifierAdmin}{reglages}{deconnexion}</div>
-    );
+      <div className="min-w-0 space-y-4">{apercus}{aide}</div>
+      {telephone && <div className="space-y-4">{notifierAdmin}{reglages}{deconnexion}</div>}
+    </div>
+  );
 
   return (
     <div className="relative">

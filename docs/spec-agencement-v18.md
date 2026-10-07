@@ -658,3 +658,38 @@ la barre d'onglets : une page sans barre du bas (rare) le verra plus haut que n�
   voie sauf le test Moi), les 8 relancés une fois : verts.
 - **Reste** : rien pour la voie ⑦.
 - **Timothée** : rien à publier ; relire les libellés 中文 de T10 et T11 (ci-dessus).
+
+### V18T1011 — Relecture (T10 et T11)
+
+- 07/10/2026 : **voie ⑦ finie et relue** (branche `lot/v18-t1011`, commit `fix(V18T1011): relecture — …`). Sept
+  constats de deux relectures (dont deux doublons) ; tous corrigés, aucun écarté.
+- **Sons du RD-2000 dans Moi** (important) : l'aperçu Harmonie ne montre « Sons du RD-2000 » qu'aux pianistes
+  (`ApercuHarmonie piano={…}`), comme la page et l'onglet ; un guitariste n'a plus de lien vers « Pas d'accès ».
+- **Aperçus en lecture** : tant qu'une lecture n'est pas finie, l'aperçu le dit (`aria-busy`, une ligne grisée,
+  « Ouvrir » à la place du compte) au lieu d'affirmer « Aucun service à venir », « Rien à faire pour toi »,
+  « 0 / N chapitres » ou « Tu n'es dans aucune équipe ». Une lecture en échec (plannings, équipes) affiche
+  « Lecture impossible pour l'instant. Réessaie plus tard. » (`moi.apercus.illisible`, 中文 à relire :
+  暂时无法读取，请稍后再试。). `listEquipes({ strict: true })` lève sur une réponse en erreur ; sans l'option,
+  rien ne change pour Équipes et Personnes.
+- **Moi ne relit plus tout à chaque changement de disposition** : un seul arbre pour grand, tablette et
+  téléphone (seules les classes changent) ; une rotation, la barre pliée ou un redimensionnement ne démontent
+  plus les aperçus (ni plannings, ni tâches, ni équipes, ni cours relus). Même rendu qu'avant aux trois tailles.
+- **En-tête Harmonie** : pendant la lecture des plannings, le rail est déjà posé (Fiches · Cours), « Sons du
+  RD-2000 » s'ajoute une fois le piano lu : l'en-tête ne change plus de hauteur. Sans accès (ni piano ni
+  guitare), plus d'en-tête « Harmonie » au-dessus de « Cette page est réservée aux musiciens de l'équipe. ».
+- **Tests ajoutés** (vus rouges sur le code d'avant, sauf les deux gardes de libellés, puis verts) :
+  `agencement-v18-moi` — un guitariste (fiches sans sons), les aperçus pendant la lecture des plannings, des
+  tâches et du cours, une lecture des équipes en échec, un changement de disposition qui ne relit rien (même
+  aperçu, aucune requête de plus), un membre (sous-titre sans « Admin », « Mon profil » dans la carte du compte),
+  les libellés 中文 de Moi (R18) ; `agencement-v18-harmonie` — le rail pendant la lecture des plannings (même
+  hauteur d'en-tête), pas d'en-tête sans accès.
+- **Passages** : `agencement-v18-moi` (16 × 5 projets, dont le test « back-office coupé » sur le second serveur),
+  `agencement-v18-harmonie` (13 × 5) et `back-office-coupe` (59, ordinateur) : 204 verts. Voisines :
+  `pages-en-grand-moi`, `pages-en-grand-harmonie`, `rd2000`, `harmonie-cours` (toutes leurs tailles),
+  `harmonie-catalogue`, `equipes`, `taches`, `planning-petit-dej`, `nouveaux-membres`, `halo-partout`, `coherence`
+  (ordinateur) : 303 verts, 40 sautés par conception (tests propres à un appareil). `tsc --noEmit` et `npm run lint`
+  sans erreur. Captures de Moi (ordinateur, tablette, téléphone ; aussi pendant la lecture) : même agencement
+  qu'à T10, lignes grisées à la place des aperçus en lecture.
+- **Reste** : rien pour la voie ⑦.
+- **Timothée** : rien à publier (aucune règle, aucune donnée) ; relire 暂时无法读取，请稍后再试。 et les libellés
+  中文 de T10 et T11 (ci-dessus).

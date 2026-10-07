@@ -32,6 +32,8 @@ const ADMIN: FakeProfile = {
 };
 /** Un membre sans service ni pôle : ni tâches ni Harmonie. */
 const MEMBRE: FakeProfile = { uid: "uid-membre", email: "lea@example.com", firstName: "Léa", lastName: "M.", planningName: "", serviceRoles: {} };
+/** À la guitare dans le planning (colonne « Guitariste »), jamais au piano : Harmonie sans les sons du RD-2000. */
+const GUITARISTE: FakeProfile = { uid: "uid-samuel", email: "samuel@example.com", firstName: "Samuel", lastName: "K.", planningName: "Samuel K.", serviceRoles: {} };
 
 const tache = (pole: string, titre: string, echeance: string, responsableUid: string | null = null) => ({
   pole, titre, responsableUid, responsableNom: responsableUid ? "Autre P." : "", echeance, repetition: null, lien: "", note: "",
@@ -53,15 +55,35 @@ const DOCS = {
   "equipes/orga": equipe("orga", [membre("Autre P.", "uid-autre")]),
 };
 
-/** Jeudi 1er octobre 2026. */
-async function ouvrir(page: Page, qui: FakeProfile, to: string, docs: Record<string, Record<string, unknown>> = DOCS) {
+/** Jeudi 1er octobre 2026. Les plannings répondent quand `feuilles` est résolue (tout de suite par défaut). */
+async function ouvrir(page: Page, qui: FakeProfile, to: string, docs: Record<string, Record<string, unknown>> = DOCS, feuilles: Promise<void> = Promise.resolve()) {
   interdireDialoguesNatifs(page);
   await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
-  await page.route(/docs\.google\.com\/spreadsheets/, (route) => {
+  await page.route(/docs\.google\.com\/spreadsheets/, async (route) => {
+    await feuilles;
     const feuille = new URL(route.request().url()).searchParams.get("sheet") ?? "";
     return route.fulfill({ status: 200, contentType: "text/csv", body: FEUILLES[feuille] ?? "" });
   });
   return signInAs(page, qui, docs, to);
+}
+
+/** Une promesse à résoudre plus tard (`lacher()`) : de quoi retenir une réponse. */
+function retenue() {
+  let lacher!: () => void;
+  const tenue = new Promise<void>((r) => (lacher = r));
+  return { tenue, lacher };
+}
+
+/** Retient les lectures Firestore choisies jusqu'à `lacher()`. Posée après la connexion, cette route passe
+ *  avant la base simulée de `signInAs` (Playwright essaie les routes de la dernière à la première). */
+async function retenirFirestore(page: Page, choisie: (url: string, corps: string) => boolean) {
+  const { tenue, lacher } = retenue();
+  await page.route(/firestore\.googleapis\.com/, async (route) => {
+    const r = route.request();
+    if (choisie(r.url(), r.postData() ?? "")) await tenue;
+    return route.fallback();
+  });
+  return lacher;
 }
 
 /** Capture à regarder à l'œil (PW_CAPTURES=<dossier>), une par appareil. */
@@ -139,10 +161,116 @@ test.describe("Moi (A12)", () => {
   test("un membre sans pôle ni instrument : ni Mes tâches ni Harmonie ; services et équipes vides le disent", async ({ page }) => {
     await ouvrir(page, MEMBRE, "/moi");
     await expect(enTete(page).getByText("Léa M.", { exact: true })).toBeVisible();
+    await expect(enTete(page), "pas « · Admin » pour un membre").not.toContainText("Admin");
+    // La ligne « Mon profil » d'avant est devenue le bouton de la carte du compte (A12) : rien ne disparaît.
+    await expect(page.getByRole("region", { name: "Mon compte" }).getByRole("link", { name: "Mon profil" })).toHaveAttribute("href", /^\/profil\/?$/);
     await expect(apercu(page, "Mes services")).toBeVisible();
     await expect(apercu(page, "Mes équipes")).toContainText("Tu n'es dans aucune équipe");
     await expect(apercu(page, "Mes tâches")).toHaveCount(0);
     await expect(apercu(page, "Harmonie")).toHaveCount(0);
+  });
+
+  test("un guitariste : l'aperçu Harmonie mène aux fiches, pas aux sons du RD-2000 (réservés aux pianistes)", async ({ page }) => {
+    await ouvrir(page, GUITARISTE, "/moi");
+    const h = apercu(page, "Harmonie");
+    await expect(h.getByRole("link", { name: "Les fiches de réharmonisation" })).toHaveAttribute("href", /^\/harmonie\/?$/);
+    await expect(h.getByRole("link", { name: "Sons du RD-2000" })).toHaveCount(0);
+  });
+
+  test("en 中文 : le titre, le sous-titre, les aperçus et l'aide sont traduits (R18)", async ({ page }) => {
+    await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
+    await ouvrir(page, ADMIN, "/moi");
+    await expect(enTete(page).getByRole("heading", { level: 1, name: "我", exact: true })).toBeVisible();
+    await expect(enTete(page).getByText("Noé T. · 管理员", { exact: true })).toBeVisible();
+    await expect(apercu(page, "我的服事").getByRole("link", { name: /4 个即将到来/ })).toBeVisible();
+    await expect(apercu(page, "我的任务").getByRole("link", { name: /4 项待办/ })).toBeVisible();
+    const h = apercu(page, "和声");
+    await expect(h.getByText("乐理课程")).toBeVisible();
+    await expect(h.getByText("2 / 23 章")).toBeVisible();
+    await expect(h.getByRole("link", { name: "和声重配卡片" })).toBeVisible();
+    await expect(h.getByRole("link", { name: "RD-2000 音色" })).toBeVisible();
+    await expect(apercu(page, "我的团队").getByRole("link", { name: /组织架构/ })).toBeVisible();
+    await expect(page.getByRole("link", { name: /使用指南/ })).toContainText("一步步了解整个网站");
+    await expect(page.getByRole("link", { name: /你对网站的意见/ })).toContainText("问卷");
+    await expect(page.getByRole("button", { name: /报告问题/ })).toContainText("错误或故障");
+    await expect(page.getByRole("main"), "aucune clé brute").not.toContainText("moi.apercus");
+  });
+
+  test("pendant la lecture des plannings, Mes services se dit en lecture et non « Aucun service à venir »", async ({ page }) => {
+    const { tenue, lacher } = retenue();
+    await ouvrir(page, ADMIN, "/moi", DOCS, tenue);
+    const s = apercu(page, "Mes services");
+    await expect(s).toHaveAttribute("aria-busy", "true");
+    await expect(s.getByText(/Aucun service à venir/)).toHaveCount(0);
+    await expect(s.getByRole("link", { name: /0 à venir/ })).toHaveCount(0);
+    lacher();
+    await expect(lignes(page, "Mes services")).toHaveCount(3);
+    await expect(s).not.toHaveAttribute("aria-busy", "true");
+  });
+
+  test("pendant la lecture des tâches et du cours : ni « Rien à faire » ni « 0 / 23 chapitres »", async ({ page }) => {
+    await ouvrir(page, ADMIN, "/guide");
+    const lacher = await retenirFirestore(page, (url, corps) => corps.includes('"taches"') || url.includes("/coursProgres/"));
+    await page.goto("/moi");
+    const taches = apercu(page, "Mes tâches");
+    const h = apercu(page, "Harmonie");
+    await expect(taches).toHaveAttribute("aria-busy", "true");
+    await expect(h).toHaveAttribute("aria-busy", "true");
+    await expect(taches.getByText("Rien à faire pour toi.")).toHaveCount(0);
+    await expect(h.getByText(/^0 \/ 23 chapitres$/)).toHaveCount(0);
+    await expect(h.getByRole("link", { name: /Prochain chapitre : 1\./ })).toHaveCount(0);
+    await capture(page, "t10-moi-lecture");
+    lacher();
+    await expect(lignes(page, "Mes tâches")).toHaveCount(3);
+    await expect(h.getByText("2 / 23 chapitres")).toBeVisible();
+    await expect(taches).not.toHaveAttribute("aria-busy", "true");
+    await expect(h).not.toHaveAttribute("aria-busy", "true");
+  });
+
+  test("une lecture des équipes en échec ne se dit pas « Tu n'es dans aucune équipe »", async ({ page }) => {
+    await ouvrir(page, ADMIN, "/guide");
+    await page.route(/firestore\.googleapis\.com/, (route) =>
+      (route.request().postData() ?? "").includes('"equipes"')
+        ? route.fulfill({ status: 500, contentType: "application/json", body: "{}" })
+        : route.fallback(),
+    );
+    await page.goto("/moi");
+    const e = apercu(page, "Mes équipes");
+    await expect(e).toContainText("Lecture impossible pour l'instant. Réessaie plus tard.");
+    await expect(e.getByText("Tu n'es dans aucune équipe.")).toHaveCount(0);
+  });
+
+  test("changer de disposition (rotation, barre, fenêtre) garde les aperçus montés : rien n'est relu", async ({ page }) => {
+    let lecturesEquipes = 0;
+    page.on("request", (r) => {
+      if (r.url().includes(":runQuery") && (r.postData() ?? "").includes('"equipes"')) lecturesEquipes++;
+    });
+    await ouvrir(page, ADMIN, "/moi");
+    await expect(lignes(page, "Mes équipes")).toHaveCount(2);
+    // À l'ouverture : une lecture (deux sous `next dev`, dont le mode strict joue chaque effet deux fois).
+    const aLOuverture = lecturesEquipes;
+    expect(aLOuverture).toBeGreaterThan(0);
+    await apercu(page, "Mes équipes").evaluate((el) => { (el as HTMLElement).dataset.marque = "avant"; });
+
+    // La carte du compte dit la disposition : 340 px en grand (deux volets), plus large sinon.
+    const largeurCompte = async () => Math.round((await page.getByRole("region", { name: "Mon compte" }).boundingBox())?.width ?? -1);
+    const depart = page.viewportSize()!;
+    const avant = await largeurCompte();
+    if (avant === 340) {
+      // En grand : vers la tablette portrait, puis retour.
+      await page.setViewportSize({ width: 820, height: 1180 });
+      await expect.poll(largeurCompte, { message: "en tablette portrait" }).toBeGreaterThan(340);
+    } else {
+      // Téléphone, tablette portrait : vers un écran couché de 1 280 px (deux volets), puis retour.
+      await page.setViewportSize({ width: 1280, height: 900 });
+      await expect.poll(largeurCompte, { message: "en grand" }).toBe(340);
+    }
+    await page.setViewportSize(depart);
+    await expect.poll(largeurCompte, { message: "et revient" }).toBe(avant);
+
+    await expect(apercu(page, "Mes équipes"), "le même aperçu, pas un nouveau").toHaveAttribute("data-marque", "avant");
+    await expect(lignes(page, "Mes équipes")).toHaveCount(2);
+    expect(lecturesEquipes, "aucune relecture").toBe(aLOuverture);
   });
 
   test("disposition : compte à gauche et aperçus sur deux colonnes en grand ; compte et réglages côte à côte sur tablette ; une colonne sur téléphone", async ({ page }, info) => {

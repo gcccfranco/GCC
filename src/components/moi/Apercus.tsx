@@ -4,6 +4,8 @@
 // Mes services, Mes tâches, Harmonie, Mes équipes. Chacun reprend une ligne de liens d'avant (U4 bis,
 // B5) et la remplit de ce qui sert : son « Tout voir » mène à la page. Rien n'est écrit ; les données
 // sont celles des pages (plannings, tâches, progression du cours, organigramme), lues comme elles.
+// Tant qu'une lecture n'est pas finie, l'aperçu le dit (`aria-busy`, une ligne grisée) : jamais « rien »
+// ni « aucun » avant d'avoir lu ; une lecture en échec le dit aussi.
 
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
@@ -33,10 +35,11 @@ import type { TachePole } from "@/types/tache";
 const LIGNE = "flex items-center gap-3 py-2.5";
 const SOUS = "block truncate text-[13px] text-muted-foreground";
 
-/** Le cadre d'un aperçu : titre, « Tout voir » à droite (son libellé dit combien), puis les lignes. */
-function Apercu({ titre, lien, children }: { titre: string; lien: { href: string; label: string }; children: ReactNode }) {
+/** Le cadre d'un aperçu : titre, « Tout voir » à droite (son libellé dit combien), puis les lignes.
+ *  `chargement` : une lecture est en cours (`aria-busy`). */
+function Apercu({ titre, lien, chargement = false, children }: { titre: string; lien: { href: string; label: string }; chargement?: boolean; children: ReactNode }) {
   return (
-    <section aria-label={titre} className="raised min-w-0 rounded-2xl px-4 pb-1.5 pt-3.5">
+    <section aria-label={titre} aria-busy={chargement || undefined} className="raised min-w-0 rounded-2xl px-4 pb-1.5 pt-3.5">
       <div className="flex items-center gap-2 pb-2.5">
         <h2 className="min-w-0 flex-1 truncate text-[16px] font-bold text-foreground">{titre}</h2>
         <Link
@@ -53,38 +56,53 @@ function Apercu({ titre, lien, children }: { titre: string; lien: { href: string
   );
 }
 
-/** Une ligne vide : ce que l'aperçu n'a pas (rien à faire, aucune équipe). */
+/** Une ligne vide : ce que l'aperçu n'a pas (rien à faire, aucune équipe), ou une lecture en échec. */
 const Vide = ({ children }: { children: ReactNode }) => <p className="py-3 text-[14px] text-muted-foreground">{children}</p>;
+
+/** Une ligne grisée tant que la lecture n'est pas finie. */
+const Squelette = ({ className = "h-9" }: { className?: string }) => (
+  <div aria-hidden className={`my-2.5 rounded-lg bg-secondary motion-safe:animate-pulse ${className}`} />
+);
 
 const locale = (lang: string) => (lang === "zh-CN" ? "zh-CN" : "fr-FR");
 
 // ── Mes services ────────────────────────────────────────────────────────────────────────────
 
 /** Les services à venir de la personne, comme Mes services les lit (plannings, petits déj par le compte). */
-function useServicesAVenir(): { aVenir: ServiceDuJour[]; tous: ServiceDuJour[]; aujourdhui: string } {
-  const { user, profile } = useProfile();
+function useServicesAVenir(): { aVenir: ServiceDuJour[]; tous: ServiceDuJour[]; aujourdhui: string; chargement: boolean; erreur: boolean } {
+  const { user, profile, loading } = useProfile();
   const [data, setData] = useState<PlanningData | null>(null);
-  const [petitDej, setPetitDej] = useState<LignePetitDej[]>([]);
+  const [erreur, setErreur] = useState(false);
+  // Les petits déj (back-office) : lus avec le reste ; illisibles, ils ne cachent pas les cultes.
+  const [petitDej, setPetitDej] = useState<LignePetitDej[] | null>(BACK_OFFICE ? null : []);
   const aujourdhui = todayIso();
   useEffect(() => {
     let vivant = true;
-    loadPlanningData().then((d) => { if (vivant) setData(d); }, () => {});
-    if (BACK_OFFICE) lirePetitDej().then((l) => { if (vivant) setPetitDej(l); }, () => {});
+    loadPlanningData().then((d) => { if (vivant) setData(d); }, () => { if (vivant) setErreur(true); });
+    if (BACK_OFFICE) lirePetitDej().then((l) => { if (vivant) setPetitDej(l); }, () => { if (vivant) setPetitDej([]); });
     return () => { vivant = false; };
   }, []);
   const tous = useMemo(
-    () => (data && user && profile ? reunirServices(servicesDuCompte(data, petitDej, user.uid, profile.planningName ?? "")) : []),
+    () => (data && petitDej && user && profile ? reunirServices(servicesDuCompte(data, petitDej, user.uid, profile.planningName ?? "")) : []),
     [data, user, profile, petitDej],
   );
-  return { aVenir: tous.filter((s) => s.date >= aujourdhui), tous, aujourdhui };
+  const chargement = !erreur && (!data || !petitDej || loading);
+  return { aVenir: tous.filter((s) => s.date >= aujourdhui), tous, aujourdhui, chargement, erreur };
 }
 
 export function ApercuServices() {
   const { t, i18n } = useTranslation();
-  const { aVenir, tous, aujourdhui } = useServicesAVenir();
+  const { aVenir, tous, aujourdhui, chargement, erreur } = useServicesAVenir();
+  const lu = !chargement && !erreur;
   return (
-    <Apercu titre={t("common.header.myServices")} lien={{ href: "/mes-services", label: t("mesServices.upcomingCount", { count: aVenir.length }) }}>
-      {aVenir.length === 0 && <Vide>{t("mesServices.emptyUpcoming")}</Vide>}
+    <Apercu
+      titre={t("common.header.myServices")}
+      lien={{ href: "/mes-services", label: lu ? t("mesServices.upcomingCount", { count: aVenir.length }) : t("moi.apercus.ouvrir") }}
+      chargement={chargement}
+    >
+      {chargement && <Squelette />}
+      {erreur && <Vide>{t("moi.apercus.illisible")}</Vide>}
+      {lu && aVenir.length === 0 && <Vide>{t("mesServices.emptyUpcoming")}</Vide>}
       {aVenir.slice(0, 3).map((s) => {
         const jour = new Date(`${s.date}T12:00:00`);
         const couleur = serviceColor(s.service);
@@ -120,15 +138,20 @@ export function ApercuServices() {
 
 export function ApercuTaches({ poles, uid }: { poles: TachePole[]; uid: string }) {
   const { t, i18n } = useTranslation();
-  const { items } = useTaches(poles);
+  const { items, loading: chargement } = useTaches(poles);
   const aujourdhui = todayIso();
   const aFaire = useMemo(
     () => aFairePour(items.flatMap(({ tache, fois }) => lignesDeTache(tache, fois, aujourdhui)), uid).sort((a, b) => a.date.localeCompare(b.date)),
     [items, aujourdhui, uid],
   );
   return (
-    <Apercu titre={t("taches.mesTaches")} lien={{ href: "/taches", label: t("moi.apercus.aFaire", { count: aFaire.length }) }}>
-      {aFaire.length === 0 && <Vide>{t("moi.apercus.rienAFaire")}</Vide>}
+    <Apercu
+      titre={t("taches.mesTaches")}
+      lien={{ href: "/taches", label: chargement ? t("moi.apercus.ouvrir") : t("moi.apercus.aFaire", { count: aFaire.length }) }}
+      chargement={chargement}
+    >
+      {chargement && <Squelette />}
+      {!chargement && aFaire.length === 0 && <Vide>{t("moi.apercus.rienAFaire")}</Vide>}
       {aFaire.slice(0, 3).map((l) => {
         const enCours = l.fois?.etat === "encours";
         const details = [enCours ? t("taches.etat.encours") : null, dateCourte(l.date, i18n.language), t(`taches.pole.${l.tache.pole}`)]
@@ -156,10 +179,12 @@ export function ApercuTaches({ poles, uid }: { poles: TachePole[]; uid: string }
 
 // ── Harmonie ────────────────────────────────────────────────────────────────────────────────
 
-export function ApercuHarmonie() {
+/** `piano` : les sons du RD-2000 sont réservés aux pianistes, comme leur page et leur onglet. */
+export function ApercuHarmonie({ piano }: { piano: boolean }) {
   const { t } = useTranslation();
-  const { chapitres } = useCoursIndex();
-  const { fini } = useCoursProgres();
+  const { chapitres, chargement: indexEnLecture } = useCoursIndex();
+  const { fini, chargement: progresEnLecture } = useCoursProgres();
+  const chargement = indexEnLecture || progresEnLecture;
   const lecons = leconsDansLOrdre(chapitres);
   const faits = lecons.filter((c) => fini[c.id]).length;
   const prochain = lecons.find((c) => !fini[c.id]);
@@ -171,8 +196,9 @@ export function ApercuHarmonie() {
     </Link>
   );
   return (
-    <Apercu titre={t("harmonie.titre")} lien={{ href: "/harmonie", label: t("moi.apercus.ouvrir") }}>
-      {lecons.length > 0 && (
+    <Apercu titre={t("harmonie.titre")} lien={{ href: "/harmonie", label: t("moi.apercus.ouvrir") }} chargement={chargement}>
+      {chargement && <Squelette className="h-16" />}
+      {!chargement && lecons.length > 0 && (
         <Link href={prochain ? `/harmonie/cours/${prochain.id}` : "/harmonie/cours"} className="block py-2.5">
           <span className="flex items-baseline gap-2">
             <span className="min-w-0 flex-1 truncate text-[15px] font-semibold text-foreground">{t("moi.apercus.cours")}</span>
@@ -189,7 +215,7 @@ export function ApercuHarmonie() {
         </Link>
       )}
       {lien("/harmonie", <Sparkles />, t("moi.apercus.fiches"))}
-      {lien("/harmonie/rd2000", <Piano />, t("moi.apercus.sons"))}
+      {piano && lien("/harmonie/rd2000", <Piano />, t("moi.apercus.sons"))}
     </Apercu>
   );
 }
@@ -199,11 +225,14 @@ export function ApercuHarmonie() {
 export function ApercuEquipes({ uid }: { uid: string }) {
   const { t } = useTranslation();
   const [equipes, setEquipes] = useState<Equipe[] | null>(null);
+  const [erreur, setErreur] = useState(false);
   useEffect(() => {
     let vivant = true;
-    listEquipes().then((e) => { if (vivant) setEquipes(e); }, () => { if (vivant) setEquipes([]); });
+    // `strict` : une lecture en échec n'est pas « aucune équipe ».
+    listEquipes({ strict: true }).then((e) => { if (vivant) setEquipes(e); }, () => { if (vivant) setErreur(true); });
     return () => { vivant = false; };
   }, []);
+  const chargement = !equipes && !erreur;
   // Dans l'ordre de l'organigramme ; une équipe hors de la table n'existe pas (EQUIPES).
   const miennes = EQUIPES.flatMap((def) => {
     const e = equipes?.find((x) => x.id === def.id);
@@ -211,7 +240,9 @@ export function ApercuEquipes({ uid }: { uid: string }) {
     return e && moi ? [{ id: def.id, moi, nombre: e.membres.length }] : [];
   });
   return (
-    <Apercu titre={t("moi.apercus.mesEquipes")} lien={{ href: "/equipes", label: t("moi.apercus.organigramme") }}>
+    <Apercu titre={t("moi.apercus.mesEquipes")} lien={{ href: "/equipes", label: t("moi.apercus.organigramme") }} chargement={chargement}>
+      {chargement && <Squelette />}
+      {erreur && <Vide>{t("moi.apercus.illisible")}</Vide>}
       {equipes && miennes.length === 0 && <Vide>{t("moi.apercus.aucuneEquipe")}</Vide>}
       {miennes.slice(0, 3).map(({ id, moi, nombre }) => {
         const nom = t(`equipes.court.${id}`);

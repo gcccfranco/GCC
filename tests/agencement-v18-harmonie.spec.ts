@@ -24,9 +24,11 @@ const COURS = JSON.parse(readFileSync("public/harmonie-cours/index.json", "utf8"
 const FICHE = CATALOGUE.fiches.filter((f) => !f.instrument || f.instrument === "piano")[4];
 const CADENCES = COURS.chapitres.find((c) => c.numero === 9)!;
 
-async function entrer(page: Page, to: string, qui: FakeProfile = PIANISTE) {
+/** Les plannings répondent quand `feuilles` est résolue (tout de suite par défaut). */
+async function entrer(page: Page, to: string, qui: FakeProfile = PIANISTE, feuilles: Promise<void> = Promise.resolve()) {
   interdireDialoguesNatifs(page);
-  await page.route(/docs\.google\.com\/spreadsheets/, (route) => {
+  await page.route(/docs\.google\.com\/spreadsheets/, async (route) => {
+    await feuilles;
     const sheet = new URL(route.request().url()).searchParams.get("sheet");
     return route.fulfill({ status: 200, contentType: "text/csv", body: sheet === "Franco_Louange" ? CULTE : "" });
   });
@@ -100,6 +102,29 @@ test.describe("Harmonie en onglets (T11)", () => {
     await entrer(page, "/harmonie", GUITARISTE);
     await expect(page.locator("[data-harmonie]")).toBeVisible();
     await expect(rail(page).getByRole("link")).toHaveText(["Fiches", "Cours"]);
+  });
+
+  test("pendant la lecture des plannings, le rail est déjà là (Fiches · Cours) : l'en-tête ne bouge pas quand l'accès arrive", async ({ page }) => {
+    let lacher!: () => void;
+    const tenue = new Promise<void>((r) => (lacher = r));
+    await entrer(page, "/harmonie", PIANISTE, tenue);
+    const entete = enTete(page);
+    await expect(entete.getByRole("heading", { level: 1, name: "Harmonie", exact: true })).toBeVisible();
+    await expect(rail(page).getByRole("link"), "Fiches et Cours, ouverts à tout l'accès").toHaveText(["Fiches", "Cours"]);
+    const avant = (await entete.boundingBox())!.height;
+    lacher();
+    await expect(rail(page).getByRole("link"), "les sons, une fois le piano lu").toHaveText(["Fiches", "Cours", "Sons du RD-2000"]);
+    await expect(page.locator("[data-harmonie]")).toBeVisible();
+    expect(Math.abs((await entete.boundingBox())!.height - avant), "même hauteur d'en-tête").toBeLessThanOrEqual(1);
+  });
+
+  test("sans accès à Harmonie (ni piano ni guitare) : pas d'en-tête de section, seulement « réservée aux musiciens »", async ({ page }) => {
+    // Au planning, mais à la présidence : ni pianiste ni guitariste.
+    const PRESIDENTE: FakeProfile = { uid: "uid-lea", email: "lea@example.com", firstName: "Léa", lastName: "M.", planningName: "Léa M." };
+    await entrer(page, "/harmonie", PRESIDENTE);
+    await expect(page.getByText("Cette page est réservée aux musiciens de l'équipe.")).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "Harmonie", exact: true })).toHaveCount(0);
+    await expect(page.getByText("Des idées pour réharmoniser, au piano et à la guitare.")).toHaveCount(0);
   });
 
   test("les cartes Cours et Sons du catalogue : sur téléphone seulement", async ({ page }, info) => {

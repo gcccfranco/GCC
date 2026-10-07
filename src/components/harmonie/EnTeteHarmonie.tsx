@@ -6,6 +6,9 @@
 // L'onglet se lit dans l'adresse. Sons du RD-2000 : pour les pianistes seulement, comme la page.
 // Une fiche, une leçon ou un son ouvert seul (un volet : téléphone, tablette portrait) a son propre
 // titre et son « ‹ » : l'en-tête de la section s'efface alors.
+// Pendant la lecture des plannings (qui disent l'instrument), le rail est déjà posé avec Fiches · Cours :
+// l'en-tête ne bouge pas quand l'accès arrive, seul l'onglet des sons s'ajoute. Sans accès (ni piano ni
+// guitare), pas d'en-tête : la page dit seulement qu'elle est réservée aux musiciens.
 
 import { usePathname } from "next/navigation";
 import { useTranslation } from "react-i18next";
@@ -23,6 +26,7 @@ export function EnTeteHarmonie() {
   const chemin = (usePathname() ?? "/harmonie").replace(/\/+$/, "");
 
   if (!deuxVolets && !LISTES.includes(chemin)) return null;
+  if (!acces.chargement && !acces.peut) return null;
 
   const onglets: OngletRail[] = [
     { id: "fiches", label: t("harmonie.fiches"), href: "/harmonie" },
@@ -34,7 +38,7 @@ export function EnTeteHarmonie() {
     <EnTetePage
       titre={t("harmonie.titre")}
       sousTitre={t("harmonie.sousTitre")}
-      onglets={acces.peut && <OngletsRail etiquette={t("harmonie.titre")} onglets={onglets} />}
+      onglets={<OngletsRail etiquette={t("harmonie.titre")} onglets={onglets} />}
     />
   );
 }
