@@ -216,7 +216,12 @@ export async function fakeFirestore(
     const body = (request.postDataJSON() ?? {}) as { fields?: FsFields };
     const fields = body.fields ?? {};
     if (method === "POST") {
-      const path = `${tail}/fake-${nextId++}`;
+      // Identifiant choisi (`?documentId=`, Pâques · Noël Q6) : déjà pris → 409, rien n'est écrit.
+      const choisi = url.searchParams.get("documentId");
+      if (choisi && store.has(`${tail}/${choisi}`)) {
+        return json(route, { error: { code: 409, message: "Document already exists", status: "ALREADY_EXISTS" } }, 409);
+      }
+      const path = `${tail}/${choisi ?? `fake-${nextId++}`}`;
       store.set(path, fields);
       writes.push({ method, path, data: jsFields(fields) });
       return json(route, docJson(path));

@@ -294,7 +294,7 @@ test("captures : Planning, Équipes, Messages au Back-Office ; la Table dans l'A
 
 // ═══ B3 — Tâches et Évènements ═══════════════════════════════════════════════
 // `/back-office/taches[/pôle]` ; `/taches` = « À faire pour moi » ; Évènements ·
-// Réunions · Scène (écran de U1), nouveau, fiche de gestion, modifier ;
+// Scène (écran de U1) ; Réunions, entrée à part depuis l'agencement v18 (B15) ; nouveau, fiche de gestion, modifier ;
 // redirections ; « Gérer dans le Back-Office » sur la fiche de l'App (Q14).
 
 const COORD: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", poles: ["evenement"] };
@@ -335,13 +335,14 @@ async function ouvrirB3(page: Page, qui: FakeProfile, to: string, docs: Record<s
   return db;
 }
 
-test("sousPartiesEvenements : Évènements, Réunions, Scène selon les droits (table Q2)", () => {
+// Agencement v18 (B15) : les réunions ont leur entrée ; Évènements garde Évènements · Scène.
+test("sousPartiesEvenements : Évènements, Scène selon les droits (table Q2)", () => {
   const u = (p: FakeProfile) => ({ uid: p.uid, email: p.email });
-  expect(sousPartiesEvenements(u(ADMIN), null)).toEqual(["evenements", "reunions", "scene"]);
-  expect(sousPartiesEvenements(u(COORD), COORD)).toEqual(["evenements", "reunions", "scene"]);
+  expect(sousPartiesEvenements(u(ADMIN), null)).toEqual(["evenements", "scene"]);
+  expect(sousPartiesEvenements(u(COORD), COORD)).toEqual(["evenements", "scene"]);
   expect(sousPartiesEvenements(u(ANNONCEUR), ANNONCEUR)).toEqual(["evenements"]);
-  expect(sousPartiesEvenements(u(DA_ORG), DA_ORG)).toEqual(["reunions"]);
-  expect(sousPartiesEvenements(u(REFERENTE), REFERENTE)).toEqual(["reunions"]);
+  expect(sousPartiesEvenements(u(DA_ORG), DA_ORG)).toEqual([]);
+  expect(sousPartiesEvenements(u(REFERENTE), REFERENTE)).toEqual([]);
   expect(sousPartiesEvenements(null, null)).toEqual([]);
 });
 
@@ -396,10 +397,10 @@ test.describe("B3 : Tâches", () => {
 });
 
 test.describe("B3 : Évènements", () => {
-  test("coordination : Évènements · Réunions · Scène ; ses évènements, sans les réunions", async ({ page }) => {
+  test("coordination : Évènements · Pâques · Noël ; ses évènements, sans les réunions", async ({ page }) => {
     await ouvrirB3(page, COORD, "/back-office/evenements");
     await expect(page.getByRole("heading", { level: 1, name: "Évènements" })).toBeVisible();
-    await expect(sousParties(page).getByRole("link")).toHaveText(["Évènements", "Réunions", "Scène"]);
+    await expect(sousParties(page).getByRole("link")).toHaveText(["Évènements", "Pâques", "Noël"]);
     await expect(sousParties(page).getByRole("link", { name: "Évènements" })).toHaveAttribute("aria-current", "page");
     await expect(page.getByRole("link", { name: /Fête de rentrée/ })).toHaveAttribute("href", /^\/back-office\/evenements\/fete\/?$/);
     await expect(page.getByRole("link", { name: /Repas du culte/ })).toBeVisible();
@@ -414,22 +415,21 @@ test.describe("B3 : Évènements", () => {
     await expect(sousParties(page)).toHaveCount(0);
   });
 
-  test("membre du pôle DA : Évènements mène aux réunions de son pôle", async ({ page }) => {
-    await ouvrirB3(page, DA_ORG, "/back-office/evenements");
-    await expect(page).toHaveURL(/\/back-office\/evenements\/reunions\/?$/);
-    await expect(page.getByRole("link", { name: /Réunion DA/ }).first()).toHaveAttribute("href", /^\/back-office\/evenements\/reu-da\/?$/);
+  test("membre du pôle DA : Réunions montre les réunions de son pôle", async ({ page }) => {
+    await ouvrirB3(page, DA_ORG, "/back-office/reunions");
+    await expect(page.getByRole("link", { name: /Réunion DA/ }).first()).toHaveAttribute("href", /^\/back-office\/reunions\/reu-da\/?$/);
     await expect(page.getByRole("link", { name: /Réunion Média/ })).toHaveCount(0);
     await expect(page.getByRole("link", { name: /Fête de rentrée/ })).toHaveCount(0);
-    await expect(page.getByRole("link", { name: "Nouvelle réunion" })).toHaveAttribute("href", /^\/back-office\/evenements\/nouveau\/?\?reunion=1$/);
+    await expect(page.getByRole("link", { name: "Nouvelle réunion" })).toHaveAttribute("href", /^\/back-office\/reunions\/nouvelle\/?$/);
   });
 
   test("fiche d'une réunion au Back-Office : en-tête de la planche, Modifier, Dupliquer pour la prochaine, cartes", async ({ page }) => {
-    await ouvrirB3(page, DA_ORG, "/back-office/evenements/reu-da");
+    await ouvrirB3(page, DA_ORG, "/back-office/reunions/reu-da");
     await expect(page.getByText("Réunion de pôle · DA")).toBeVisible();
-    await expect(page.getByRole("heading", { level: 1, name: "Réunion DA" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Réunion DA", exact: true })).toBeVisible();
     await expect(page.getByText(/organisée par Bruno M\./)).toBeVisible();
-    await expect(page.getByRole("link", { name: "Modifier" })).toHaveAttribute("href", /^\/back-office\/evenements\/reu-da\/modifier\/?$/);
-    await expect(page.getByRole("link", { name: "Dupliquer pour la prochaine" })).toHaveAttribute("href", /^\/back-office\/evenements\/nouveau\/?\?from=reu-da$/);
+    await expect(page.getByRole("link", { name: "Modifier" })).toHaveAttribute("href", /^\/back-office\/reunions\/reu-da\/modifier\/?$/);
+    await expect(page.getByRole("link", { name: "Dupliquer pour la prochaine" })).toHaveAttribute("href", /^\/back-office\/reunions\/nouvelle\/?\?from=reu-da$/);
     await expect(page.getByRole("region", { name: "Compte rendu", exact: true })).toBeVisible();
     await expect(page.getByRole("region", { name: /^Sujets/ })).toBeVisible();
     await expect(page.getByRole("region", { name: "Réunions précédentes" })).toBeVisible();
@@ -437,20 +437,20 @@ test.describe("B3 : Évènements", () => {
 
   // Relecture du lot U6 : on reste dans l'espace où l'on est.
   test("fiche d'une réunion au Back-Office : une date des « Réunions précédentes » ouvre sa fiche au Back-Office", async ({ page }) => {
-    await ouvrirB3(page, DA_ORG, "/back-office/evenements/reu-da");
+    await ouvrirB3(page, DA_ORG, "/back-office/reunions/reu-da");
     const precedente = page.getByRole("region", { name: "Réunions précédentes" }).getByRole("link", { name: "5 sept.", exact: true });
-    await expect(precedente).toHaveAttribute("href", /^\/back-office\/evenements\/reu-da-sept\/?$/);
+    await expect(precedente).toHaveAttribute("href", /^\/back-office\/reunions\/reu-da-sept\/?$/);
     await precedente.click();
-    await expect(page).toHaveURL(/\/back-office\/evenements\/reu-da-sept\/?$/);
+    await expect(page).toHaveURL(/\/back-office\/reunions\/reu-da-sept\/?$/);
     await expect(page.getByRole("link", { name: "Dupliquer pour la prochaine" })).toBeVisible();
   });
 
   test("fiche d'une réunion d'équipe au Back-Office : « Réunion d'équipe · Régie » (nom court de l'équipe)", async ({ page }) => {
-    await ouvrirB3(page, REFERENTE, "/back-office/evenements/reu-regie", {
+    await ouvrirB3(page, REFERENTE, "/back-office/reunions/reu-regie", {
       ...DOCS_EV,
       "evenements/reu-regie": { ...REU, titre: "Réunion Régie", pour: "equipe:regie", organisateurUid: "uid-ref", organisateurNom: "Rose T." },
     });
-    await expect(page.getByRole("heading", { level: 1, name: "Réunion Régie" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Réunion Régie", exact: true })).toBeVisible();
     await expect(page.getByText("Réunion d'équipe · Régie", { exact: true })).toBeVisible();
   });
 
@@ -458,28 +458,31 @@ test.describe("B3 : Évènements", () => {
     const sujet = (texte: string, ordre: number) => ({
       texte, auteurUid: "uid-dora", auteurNom: "Dora P.", creeLe: "2026-10-01T09:00:00Z", ordre, traite: false, reprisDans: null, repriseDe: null,
     });
-    const db = await ouvrirB3(page, DA_ORG, "/back-office/evenements/reu-da", {
+    const db = await ouvrirB3(page, DA_ORG, "/back-office/reunions/reu-da", {
       ...DOCS_EV, "evenements/reu-da/sujets/s1": sujet("Affiche", 0), "evenements/reu-da/sujets/s2": sujet("Budget", 1),
     });
     await expect(page.getByRole("region", { name: /^Sujets/ }).getByText("Budget")).toBeVisible();
-    await page.getByRole("button", { name: "Supprimer" }).click();
+    // Agencement v18 (B4) : Supprimer est dans « ⋯ ».
+    await page.getByRole("button", { name: "Plus d'actions" }).click();
+    await page.getByRole("menuitem", { name: "Supprimer" }).click();
     await repondreDansLeSite(page, "Supprimer");
-    await expect(page).toHaveURL(/\/back-office\/evenements\/reunions\/?$/);
+    await expect(page).toHaveURL(/\/back-office\/reunions\/?$/);
     expect(db.writes.filter((w) => w.method === "DELETE").map((w) => w.path).sort())
       .toEqual(["evenements/reu-da", "evenements/reu-da/sujets/s1", "evenements/reu-da/sujets/s2"]);
   });
 
   test("supprimer : un refus le dit, et la fiche reste", async ({ page }) => {
-    await ouvrirB3(page, DA_ORG, "/back-office/evenements/reu-da");
-    await expect(page.getByRole("heading", { level: 1, name: "Réunion DA" })).toBeVisible();
+    await ouvrirB3(page, DA_ORG, "/back-office/reunions/reu-da");
+    await expect(page.getByRole("heading", { name: "Réunion DA", exact: true })).toBeVisible();
     // Posée après la base simulée, cette route passe avant elle.
     await page.route(/\/documents\/evenements\/reu-da$/, (route) => route.request().method() === "DELETE"
       ? route.fulfill({ status: 403, contentType: "application/json", body: JSON.stringify({ error: { code: 403, message: "refusé" } }) })
       : route.fallback());
-    await page.getByRole("button", { name: "Supprimer" }).click();
+    await page.getByRole("button", { name: "Plus d'actions" }).click();
+    await page.getByRole("menuitem", { name: "Supprimer" }).click();
     await repondreDansLeSite(page, "Supprimer");
     await expect(page.getByRole("alert").filter({ hasText: "Suppression impossible. Réessaie." })).toBeVisible();
-    await expect(page).toHaveURL(/\/back-office\/evenements\/reu-da\/?$/);
+    await expect(page).toHaveURL(/\/back-office\/reunions\/reu-da\/?$/);
   });
 
   test("une réunion n'est jamais une « Info » : pas de catégorie Info, la date reste demandée", async ({ page }) => {
@@ -493,14 +496,14 @@ test.describe("B3 : Évènements", () => {
     await expect(categorie.locator('option[value="info"]')).toHaveCount(0);
     await expect(page.getByLabel("Date", { exact: true })).toBeVisible();
     // « Nouvelle réunion » : pas d'Info non plus.
-    await page.goto("/back-office/evenements/nouveau?reunion=1");
+    await page.goto("/back-office/reunions/nouvelle");
     await expect(page.getByLabel("Catégorie").locator('option[value="loisir"]')).toHaveCount(1);
     await expect(page.getByLabel("Catégorie").locator('option[value="info"]')).toHaveCount(0);
   });
 
   test("fiche d'une réunion au Back-Office : un autre membre du pôle a les cartes, sans Modifier", async ({ page }) => {
-    await ouvrirB3(page, DA_MEMBRE, "/back-office/evenements/reu-da");
-    await expect(page.getByRole("heading", { level: 1, name: "Réunion DA" })).toBeVisible();
+    await ouvrirB3(page, DA_MEMBRE, "/back-office/reunions/reu-da");
+    await expect(page.getByRole("heading", { name: "Réunion DA", exact: true })).toBeVisible();
     await expect(page.getByRole("region", { name: /^Sujets/ })).toBeVisible();
     await expect(page.getByRole("link", { name: "Modifier" })).toHaveCount(0);
     await expect(page.getByRole("link", { name: "Dupliquer pour la prochaine" })).toHaveCount(0);
@@ -508,10 +511,12 @@ test.describe("B3 : Évènements", () => {
 
   test("fiche d'un évènement au Back-Office : Modifier, Dupliquer, Supprimer ramène à la liste", async ({ page }) => {
     const db = await ouvrirB3(page, COORD, "/back-office/evenements/fete");
-    const gestion = page.getByTestId("gestion-carte");
+    // Agencement v18 (B3) : « Modifier » à côté du titre, Dupliquer et Supprimer dans « ⋯ ».
+    const gestion = page.getByTestId("fiche-gestion");
     await expect(gestion.getByRole("link", { name: "Modifier" })).toHaveAttribute("href", /^\/back-office\/evenements\/fete\/modifier\/?$/);
-    await expect(gestion.getByRole("link", { name: "Dupliquer" })).toHaveAttribute("href", /^\/back-office\/evenements\/nouveau\/?\?from=fete$/);
-    await gestion.getByRole("button", { name: "Supprimer" }).click();
+    await gestion.getByRole("button", { name: "Plus d'actions" }).click();
+    await expect(page.getByRole("menuitem", { name: "Dupliquer" })).toBeVisible();
+    await page.getByRole("menuitem", { name: "Supprimer" }).click();
     await repondreDansLeSite(page, "Supprimer");
     await expect(page).toHaveURL(/\/back-office\/evenements\/?$/);
     expect(db.writes.some((w) => w.method === "DELETE" && w.path === "evenements/fete")).toBe(true);
@@ -525,12 +530,12 @@ test.describe("B3 : Évènements", () => {
     await page.getByLabel("Date", { exact: true }).fill("2027-01-30");
     await page.getByRole("button", { name: "Créer l'évènement" }).click();
     await expect(page).toHaveURL(/\/back-office\/evenements\/fake-\d+\/?$/);
-    await expect(page.getByTestId("gestion-carte")).toContainText("Pique-nique");
+    await expect(page.getByTestId("fiche-gestion")).toContainText("Pique-nique");
     expect(db.writes.find((w) => w.method === "POST" && w.path.startsWith("evenements/"))?.data).toMatchObject({ titre: "Pique-nique" });
   });
 
   test("« Nouvelle réunion » propose seulement les réunions", async ({ page }) => {
-    await ouvrirB3(page, COORD, "/back-office/evenements/nouveau?reunion=1");
+    await ouvrirB3(page, COORD, "/back-office/reunions/nouvelle");
     await expect(page.getByLabel("Public")).toBeVisible();
     const publics = await page.getByLabel("Public").locator("option").allTextContents();
     expect(publics.length).toBeGreaterThan(0);
@@ -573,18 +578,20 @@ test.describe("B3 : Évènements", () => {
     await expect(page.getByRole("link", { name: "Nouvel évènement" })).toHaveAttribute("href", /^\/back-office\/evenements\/nouveau\/?$/);
   });
 
-  test("Scène : la gestion des programmes est au Back-Office ; l'App garde les réservations", async ({ page }) => {
+  // Pâques · Noël, P7 (docs/spec-scene-paques-noel.md) : l'onglet de la fête, sa saison et son ordre de passage.
+  test("Scène : la saison de la fête est au Back-Office ; l'App garde les réservations", async ({ page }) => {
     const NOEL = { nom: "Noël 2026", jourJ: "2026-12-24", debut: "2026-10-01", fin: "2026-12-20", ouvert: true, visible: false, passages: [], createdBy: "uid-alice", updatedAt: "2026-10-01T10:00:00Z",
       jours: [6, 0], plages: [{ jour: 6, debut: "10:00", fin: "12:00" }, { jour: 0, debut: "14:00", fin: "19:00" }], duree: 60, quiAutorises: [] };
     await ouvrirB3(page, COORD, "/back-office/evenements/scene", { "programmes/noel": NOEL });
-    await expect(sousParties(page).getByRole("link", { name: "Scène" })).toHaveAttribute("aria-current", "page");
-    await expect(page.getByRole("button", { name: "Nouveau programme" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Modifier la saison" })).toBeVisible();
+    await expect(sousParties(page).getByRole("link", { name: "Noël" })).toHaveAttribute("aria-current", "page");
+    // P8-P9 : une saison lancée s'ouvre sur ses réservations ; la saison est à un toucher.
+    await page.getByRole("region", { name: "Cette fête" }).getByRole("button", { name: /^Saison/ }).click();
+    await expect(page.getByRole("heading", { name: "Saison de Noël 2026" })).toBeVisible();
+    await expect(page.getByText("Réservations lancées")).toBeVisible();
     await page.goto("/evenements/scene");
     await expect(page.getByRole("heading", { name: "Noël 2026" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Nouveau programme" })).toHaveCount(0);
-    await expect(page.getByRole("button", { name: "Modifier la saison" })).toHaveCount(0);
-    await expect(page.getByRole("link", { name: "Gérer dans le Back-Office" })).toHaveAttribute("href", /^\/back-office\/evenements\/scene\/?$/);
+    await expect(page.getByRole("heading", { name: "Saison de Noël 2026" })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "Gérer dans le Back-Office" })).toHaveAttribute("href", /^\/back-office\/evenements\/scene\/noel\/?$/);
   });
 
   test("Scène : réservée à la coordination", async ({ page }) => {
@@ -595,7 +602,7 @@ test.describe("B3 : Évènements", () => {
 
   test("en 中文 : la fiche d'une réunion au Back-Office", async ({ page }) => {
     await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
-    await ouvrirB3(page, DA_ORG, "/back-office/evenements/reu-da");
+    await ouvrirB3(page, DA_ORG, "/back-office/reunions/reu-da");
     await expect(page.getByText("部门会议 · 美工")).toBeVisible();
     await expect(page.getByRole("link", { name: "复制为下一次" })).toBeVisible();
   });
@@ -610,10 +617,10 @@ test("captures B3 : Tâches, Évènements, Réunions, fiche d'une réunion, Scè
   await page.goto("/back-office/evenements");
   await expect(page.getByRole("link", { name: /Fête de rentrée/ })).toBeVisible();
   await capture("evenements");
-  await page.goto("/back-office/evenements/reunions");
+  await page.goto("/back-office/reunions");
   await expect(page.getByRole("link", { name: /Réunion Média/ })).toBeVisible();
   await capture("reunions");
-  await page.goto("/back-office/evenements/reu-da");
+  await page.goto("/back-office/reunions/reu-da");
   await expect(page.getByRole("region", { name: "Réunions précédentes" })).toBeVisible();
   await capture("reunion");
   await page.goto("/taches");

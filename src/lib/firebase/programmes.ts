@@ -127,12 +127,6 @@ export async function getProgramme(id: string): Promise<Programme | null> {
   return fromFsProgramme((await res.json()) as RawDoc);
 }
 
-export async function createProgramme(data: Omit<Programme, "id">): Promise<string> {
-  const id = await post("programmes", data as unknown as Record<string, unknown>);
-  changed();
-  return id;
-}
-
 /** Crée l'édition `{fete}-{annee}` (Q6) à la première action de la coordination : `data`
  *  (ses réglages, `reglagesRepris`, sans `visible` : Q11) plus `changement` (ce que la
  *  coordination vient de faire).
@@ -162,13 +156,6 @@ export async function creerEdition(
 
 export async function updateProgramme(id: string, data: Partial<Omit<Programme, "id">>): Promise<void> {
   await patch(`programmes/${id}`, { ...data, updatedAt: new Date().toISOString() });
-  changed();
-}
-
-/** Supprime le programme et ses créneaux (Firestore ne supprime pas les sous-collections). */
-export async function deleteProgramme(id: string): Promise<void> {
-  for (const c of await listCreneaux(id)) await remove(`programmes/${id}/creneaux/${c.id}`);
-  await remove(`programmes/${id}`);
   changed();
 }
 

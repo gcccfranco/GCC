@@ -53,8 +53,12 @@ const tacheLiee = (over: Record<string, unknown>) => ({
 
 test("supprimer un évènement : la fenêtre du site ; Annuler ne fait rien ; Supprimer le retire", async ({ page }) => {
   const db = await ouvrir(page, STEPH, "/back-office/evenements/foot", { "evenements/foot": FOOT });
-  const supprimer = page.getByTestId("gestion-carte").getByRole("button", { name: "Supprimer" });
-  await supprimer.click();
+  // Agencement v18 (B3) : Supprimer est dans le menu « ⋯ » de la fiche de gestion.
+  const supprimer = async () => {
+    await page.getByTestId("fiche-gestion").getByRole("button", { name: "Plus d'actions" }).click();
+    await page.getByRole("menuitem", { name: "Supprimer" }).click();
+  };
+  await supprimer();
   await expect(fenetreDuSite(page).getByRole("heading", { name: "Supprimer « Foot au parc » ?" })).toBeVisible();
   await expect(fenetreDuSite(page)).toContainText("Les inscriptions seront perdues.");
   await capture(page, "confirmer-supprimer-evenement");
@@ -62,7 +66,7 @@ test("supprimer un évènement : la fenêtre du site ; Annuler ne fait rien ; Su
   await expect(page).toHaveURL(/\/back-office\/evenements\/foot\/?$/);
   expect(ecritures(db, "DELETE", "evenements/")).toEqual([]);
 
-  await supprimer.click();
+  await supprimer();
   await repondreDansLeSite(page, "Supprimer");
   await expect(page).toHaveURL(/\/back-office\/evenements\/?$/);
   expect(ecritures(db, "DELETE", "evenements/").map((w) => w.path)).toEqual(["evenements/foot"]);
@@ -103,7 +107,8 @@ test("dupliquer un évènement qui a des tâches : la fenêtre du site demande ;
   async function dupliquer(p: Page, reponse: "Annuler" | "Copier les tâches") {
     await p.route("**/api/push/notify-evenement", (route) => route.fulfill({ json: { ok: true } }));
     const db = await ouvrir(p, ALICE, "/back-office/evenements/culte", docs);
-    await p.getByRole("link", { name: "Dupliquer" }).click();
+    await p.getByTestId("fiche-gestion").getByRole("button", { name: "Plus d'actions" }).click();
+    await p.getByRole("menuitem", { name: "Dupliquer" }).click();
     await p.getByLabel("Date", { exact: true }).fill("2027-12-24");
     await p.getByRole("button", { name: "Créer l'évènement" }).click();
     await expect(fenetreDuSite(p).getByRole("heading", { name: "Copier aussi ses 2 tâches, aux mêmes délais ?" })).toBeVisible();

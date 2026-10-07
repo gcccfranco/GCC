@@ -13,7 +13,8 @@
 // libres en pastilles, « Modifier » quoi, qui et note, « Retirer » la supprime après la
 // confirmation du site ; « à moi » remplace mon nom. Les chevauchements restent refusés à
 // l'enregistrement et marqués en rouge s'ils existent malgré tout. L'appelant pose les trois
-// morceaux où il veut (`children`).
+// morceaux où il veut (`children`). Le Back-Office (P8) pose aussi « ⋯ » et « Déplacer » dans son
+// tableau de toutes les réservations : la même feuille, le même menu.
 
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
@@ -42,8 +43,16 @@ const COLOR = PLANNING_COLORS.scene
 type Action = { type: "nouveau"; place: Place } | { type: "modifier" | "deplacer"; creneau: Creneau }
 
 /** Les trois morceaux que l'appelant pose (P5) : « Mes réservations » (rien sans réservation à
- *  moi), la liste des semaines, la semaine choisie. */
-export type MorceauxEntrainements = { mes: ReactNode; semaines: ReactNode; semaine: ReactNode }
+ *  moi), la liste des semaines, la semaine choisie. Pour le tableau du Back-Office (P8) : le
+ *  menu « ⋯ » d'une réservation, la feuille « Déplacer », et l'erreur d'un retrait manqué. */
+export type MorceauxEntrainements = {
+  mes: ReactNode
+  semaines: ReactNode
+  semaine: ReactNode
+  menu: (c: Creneau) => ReactNode
+  deplacer: (c: Creneau) => void
+  erreur: ReactNode
+}
 
 /** Lundi d'une date ISO (minuit UTC, comme `saison.ts`). */
 function lundiDe(iso: string): string {
@@ -66,7 +75,7 @@ function semainesAvecHorsGrille(semaines: Semaine[], jours: string[]): Semaine[]
   return out.sort((a, b) => a.lundi.localeCompare(b.lundi))
 }
 
-export function Entrainements({ programme, creneaux, user, profile, onChanged, onConflict, children }: {
+export function Entrainements({ programme, creneaux, user, profile, onChanged, onConflict, semaineActive = true, children }: {
   programme: Programme
   creneaux: Creneau[]
   user: User
@@ -74,6 +83,9 @@ export function Entrainements({ programme, creneaux, user, profile, onChanged, o
   onChanged: () => Promise<void>
   /** Appelé quand un créneau qu'on vient d'enregistrer en chevauche un autre (course perdue). */
   onConflict?: (a: Creneau, b: Creneau) => void
+  /** Faux quand la semaine n'est pas ce qui se lit à droite (Back-Office, P8) : aucune
+   *  semaine n'est alors marquée choisie dans la liste. */
+  semaineActive?: boolean
   /** Pose les morceaux (deux volets de l'onglet de la fête) ; sinon l'un sous l'autre. */
   children?: (m: MorceauxEntrainements) => ReactNode
 }) {
@@ -107,6 +119,7 @@ export function Entrainements({ programme, creneaux, user, profile, onChanged, o
   const [action, setAction] = useState<Action | null>(null)
   const [ouverte, setOuverte] = useState(false)
   const [fois, setFois] = useState(0)
+  const [erreurRetrait, setErreurRetrait] = useState("")
 
   const conflicts = new Set(creneaux.filter((c) => creneaux.some((o) => o.id !== c.id && overlaps(c, o))).map((c) => c.id))
   const slotLabel = (c: Creneau) => `${c.debut} – ${c.fin} · ${c.quoi} · ${c.qui.join(", ")} (${c.auteurNom})`
@@ -154,8 +167,13 @@ export function Entrainements({ programme, creneaux, user, profile, onChanged, o
   }
 
   async function remove(c: Creneau) {
-    await deleteCreneau(programme.id, c.id)
-    await onChanged()
+    setErreurRetrait("")
+    try {
+      await deleteCreneau(programme.id, c.id)
+      await onChanged()
+    } catch {
+      setErreurRetrait(t("planning.programme.error"))
+    }
   }
 
   /** « ⋯ » d'une réservation que je peux changer (Q14) ; Retirer passe par la confirmation du site. */
@@ -175,11 +193,13 @@ export function Entrainements({ programme, creneaux, user, profile, onChanged, o
     <MenuActions actions={actionsDe(c)} label={`${t("common.moreActions")} · ${c.quoi} · ${c.qui.join(", ")}`} />
   )
 
-  /** Choisit une semaine : l'adresse change, sans entrée d'historique (Q9). */
+  /** Choisit une semaine : l'adresse change, sans entrée d'historique (Q9). La semaine prend
+   *  la place de ce qui se lisait à droite (`?vue=`). */
   function choisir(lundi: string) {
     setDemandee(lundi)
     const q = new URLSearchParams(params.toString())
     q.set("semaine", lundi)
+    q.delete("vue")
     router.replace(`${pathname}?${q.toString()}`, { scroll: false })
   }
 
@@ -264,7 +284,7 @@ export function Entrainements({ programme, creneaux, user, profile, onChanged, o
           : "relative -mx-[var(--marge-page)] flex gap-2 overflow-x-auto overscroll-x-contain px-[var(--marge-page)] py-1 [scrollbar-width:none]"}
       >
         {visibles.map((s) => {
-          const actif = s === choisie
+          const actif = semaineActive && s === choisie
           const detail = [joursCourts(s.jours, lang, t("planning.fete.et")), places(s.libres, s.cases.length)].filter(Boolean).join(" · ")
           return (
             <li key={s.lundi} className={deuxVolets ? "py-0.5" : "shrink-0"}>
@@ -292,9 +312,11 @@ export function Entrainements({ programme, creneaux, user, profile, onChanged, o
 
   // ─── La semaine choisie, en cartes par jour ──────────────────────────────
 
+  const erreur = erreurRetrait && <p role="alert" className="text-sm text-destructive">{erreurRetrait}</p>
   const bornes = choisie && bornesSemaine(choisie.jours, lang)
   const semaine = choisie && (
     <div className="space-y-3">
+      {erreur}
       {deuxVolets && (
         <div className="flex items-start justify-between gap-3">
           <div>
@@ -407,7 +429,10 @@ export function Entrainements({ programme, creneaux, user, profile, onChanged, o
     />
   )
 
-  const morceaux = { mes, semaines: listeSemaines, semaine }
+  const morceaux: MorceauxEntrainements = {
+    mes, semaines: listeSemaines, semaine, menu, erreur,
+    deplacer: (c) => ouvrir({ type: "deplacer", creneau: c }),
+  }
   return (
     <>
       {children ? children(morceaux) : <div className="space-y-5">{mes}{listeSemaines}{semaine}</div>}
@@ -417,7 +442,7 @@ export function Entrainements({ programme, creneaux, user, profile, onChanged, o
 }
 
 /** La tuile de date (planche : « 11 » sur « oct. »). */
-function TuileDate({ iso, lang }: { iso: string; lang: string }) {
+export function TuileDate({ iso, lang }: { iso: string; lang: string }) {
   const { jour, mois } = tuileDate(iso, lang)
   return (
     <span className="flex h-10 w-10 shrink-0 flex-col items-center justify-center rounded-xl leading-none svc-ink"
@@ -443,7 +468,7 @@ function Cases({ cases, actif }: { cases: boolean[]; actif: boolean }) {
 }
 
 /** ‹ et › de la semaine (deux volets). */
-function Fleche({ label, disabled, onClick, children }: { label: string; disabled: boolean; onClick: () => void; children: ReactNode }) {
+export function Fleche({ label, disabled, onClick, children }: { label: string; disabled: boolean; onClick: () => void; children: ReactNode }) {
   return (
     <button type="button" aria-label={label} disabled={disabled} onClick={onClick}
       className="raised flex h-9 w-9 items-center justify-center rounded-full text-foreground transition-opacity disabled:opacity-40">

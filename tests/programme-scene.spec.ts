@@ -1,5 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { signInAs, type FakeDb, type FakeProfile } from "./helpers/fakeSession";
+import { interdireDialoguesNatifs, repondreDansLeSite } from "./helpers/agencement";
+import { fermerFeuille, reglageSaison } from "./helpers/saisonScene";
 import {
   archiveDate, programmeState, reservationsClosed, sundaysBetween,
 } from "../src/lib/scene/dimanches";
@@ -29,11 +31,11 @@ const ALICE: FakeProfile = {
   uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", poles: ["evenement"],
 };
 
-// Lot U6, B3 (U1 Q12) : la gestion des programmes est à Back-Office › Évènements › Scène ;
-// l'App garde les réservations. Le titre du programme en cours (h2) y suit la même
-// règle que l'onglet de l'App (`editionsAffichees`, `editionProche`) ; l'onglet se vérifie dans l'App.
+// Lot U6, B3 (U1 Q12) : la gestion est au Back-Office ; l'App garde les réservations, celles de
+// la coordination comprises. Pâques · Noël, P7 : au Back-Office, un onglet par fête (la saison,
+// l'ordre de passage) ; les réservations s'y testent dans l'App, pour tous.
 const SCENE_GESTION = "/back-office/evenements/scene";
-const sceneDe = (who: FakeProfile) => (who.poles?.includes("evenement") ? SCENE_GESTION : "/evenements/scene");
+const sceneDe = (_who: FakeProfile) => "/evenements/scene";
 async function ongletApp(page: import("@playwright/test").Page, nom: string) {
   await page.goto("/evenements");
   return page.getByRole("link", { name: nom, exact: true });
@@ -73,39 +75,29 @@ test("section Évènements : un brouillon garde l'onglet Noël, qui annonce l'ou
   await expect(page.getByRole("link", { name: "Scène", exact: true })).toHaveCount(0);
 });
 
-test("coordination : onglet « Scène » sans programme, formulaire direct, l'onglet prend le nom du programme à l'ouverture de ses réservations", async ({ page }) => {
-  // Lot 12 : le programme créé n'est plus épinglé (`visible: false`). Lot U1
-  // (docs/spec-scene-saison.md) : il part en brouillon, ouvert au jour de sa
-  // création, et ne prend l'onglet qu'une fois « Ouvrir les réservations » pressé.
+test("coordination : sans aucun programme, l'onglet Noël du Back-Office crée l'édition au premier réglage, puis « Lancer » l'annonce dans l'App", async ({ page }) => {
+  // Pâques · Noël, P7 (Q6) : plus de nom ni de formulaire ; l'édition `noel-2026` naît en
+  // brouillon à la première action, « Lancer les réservations » la montre aux membres.
+  interdireDialoguesNatifs(page);
   await page.clock.setFixedTime(new Date("2026-10-05T10:00:00"));
   const db = await signInAs(page, ALICE, {}, SCENE_GESTION);
-  await expect(page.getByRole("heading", { name: "Scène", exact: true })).toBeVisible();
-  await page.getByLabel("Nom").fill("Noël");
-  await page.getByLabel("Jour J").fill("2026-12-24");
-  await page.getByRole("button", { name: "Créer le programme" }).click();
-  await expect(page.getByRole("heading", { name: "Noël · réservations" })).toBeVisible();
-  await page.getByRole("button", { name: "Ouvrir les réservations" }).click();
-  await expect(page.getByText(/^Réservations ouvertes du/)).toBeVisible();
-  await page.getByRole("button", { name: "Fermer", exact: true }).click();
-  await expect(page.getByRole("button", { name: "Entraînements" })).toBeVisible();
-  // Le programme ouvert est le programme en cours : son nom en titre, et l'onglet de l'App le prend.
-  await expect(page.getByRole("heading", { name: "Noël", exact: true })).toBeVisible();
-  const created = db.writes.find((w) => w.method === "POST" && w.path.startsWith("programmes/"));
-  expect(created?.data).toMatchObject({ nom: "Noël", jourJ: "2026-12-24", debut: "2026-10-05", ouvert: false, visible: false, createdBy: "uid-alice" });
-  await expect(await ongletApp(page, "Noël")).toBeVisible();
+  await expect(page).toHaveURL(/\/back-office\/evenements\/scene\/noel\/?$/);
+  await expect(page.getByRole("heading", { name: "Saison de Noël 2026" })).toBeVisible();
+  expect(ecritures(db)).toHaveLength(0);
+  await (await reglageSaison(page, "Un créneau dure")).getByRole("button", { name: "1 h 30", exact: true }).click();
+  await expect.poll(() => ecritures(db).length).toBe(1);
+  await fermerFeuille(page);
+  expect(ecritures(db)[0]).toMatchObject({ method: "POST", path: "programmes/noel-2026" });
+  expect(ecritures(db)[0].data).toMatchObject({ fete: "noel", annee: 2026, jourJ: "2026-12-24", ouvert: false, duree: 90, createdBy: "uid-alice" });
+  await page.getByRole("button", { name: "Lancer les réservations", exact: true }).click();
+  await expect(page.getByText("Réservations lancées")).toBeVisible();
+  expect(ecritures(db, "PATCH").at(-1)?.data).toMatchObject({ ouvert: true });
+  await (await ongletApp(page, "Noël")).click();
+  await expect(page.getByText("Les réservations ouvriront le lundi 2 novembre")).toBeVisible();
 });
 
 // Pâques · Noël (P3, Q11) : l'épinglage (`visible`, « Masquer », « Afficher ») n'est plus lu ;
-// ses boutons partent avec P7.
-
-test("coordination : modifie le programme en place", async ({ page }) => {
-  const db = await signInAs(page, ALICE, { "programmes/noel": NOEL }, SCENE_GESTION);
-  await page.getByRole("button", { name: "Modifier le programme" }).click();
-  await page.getByLabel("Nom").fill("Noël 2026");
-  await page.getByRole("button", { name: "Enregistrer" }).click();
-  await expect(page.getByRole("heading", { name: "Noël 2026", exact: true })).toBeVisible();
-  expect(db.doc("programmes/noel")?.nom).toBe("Noël 2026");
-});
+// P7 : plus de nom à modifier, de programme à créer, masquer ou supprimer.
 
 test("membre : ni gestion du programme ni onglet Scène vide", async ({ page }) => {
   await signInAs(page, JO, { "programmes/noel": NOEL }, "/evenements/scene");
@@ -252,7 +244,7 @@ test("programme : liste numérotée dans l'ordre de la brochure, sans horaire", 
 
 test("programme : la coordination ajoute un passage, écrit dans le document du programme", async ({ page }) => {
   const db = await openNoel(page, ALICE, "2026-10-01", { "programmes/noel": { ...NOEL, passages: PASSAGES } });
-  await page.getByRole("button", { name: "Programme Noël" }).click();
+  await page.goto(`${SCENE_GESTION}/noel?vue=ordre`);
   await page.getByRole("button", { name: "Ajouter un passage" }).click();
   await page.getByLabel("Titre").fill("La nuit de Bethléem");
   await page.getByLabel("Quoi").selectOption("Sketch");
@@ -266,14 +258,14 @@ test("programme : la coordination ajoute un passage, écrit dans le document du 
 
 test("programme : la coordination modifie puis retire un passage", async ({ page }) => {
   const db = await openNoel(page, ALICE, "2026-10-01", { "programmes/noel": { ...NOEL, passages: PASSAGES } });
-  page.on("dialog", (d) => d.accept());
-  await page.getByRole("button", { name: "Programme Noël" }).click();
+  await page.goto(`${SCENE_GESTION}/noel?vue=ordre`);
   const liste = page.getByRole("list", { name: "Ordre de Passage jour J" });
   await liste.getByRole("listitem").nth(1).getByRole("button", { name: "Modifier" }).click();
   await page.getByLabel("Titre").fill("Il est né le divin enfant");
   await page.getByRole("button", { name: "Enregistrer" }).click();
   await expect(liste.getByRole("listitem").nth(1)).toContainText("Il est né le divin enfant");
   await liste.getByRole("listitem").nth(0).getByRole("button", { name: "Retirer" }).click();
+  await repondreDansLeSite(page, "Retirer");
   await expect(liste.getByRole("listitem")).toHaveCount(1);
   await expect(liste.getByRole("listitem").nth(0)).toContainText("Il est né le divin enfant");
   const write = db.writes.filter((w) => w.method === "PATCH" && w.path === "programmes/noel").pop();
@@ -282,9 +274,11 @@ test("programme : la coordination modifie puis retire un passage", async ({ page
 
 test("programme : la coordination réordonne en glissant un passage", async ({ page }) => {
   const db = await openNoel(page, ALICE, "2026-10-01", { "programmes/noel": { ...NOEL, passages: PASSAGES } });
-  await page.getByRole("button", { name: "Programme Noël" }).click();
+  await page.goto(`${SCENE_GESTION}/noel?vue=ordre`);
   const liste = page.getByRole("list", { name: "Ordre de Passage jour J" });
   const poignee = liste.getByRole("listitem").nth(1).getByRole("button", { name: "Déplacer" });
+  // Sur une colonne, l'ordre est sous la colonne de la fête : on l'amène au milieu, loin de la barre du bas.
+  await liste.getByRole("listitem").nth(1).evaluate((e) => e.scrollIntoView({ block: "center" }));
   const cible = liste.getByRole("listitem").nth(0);
   const from = (await poignee.boundingBox())!;
   const to = (await cible.boundingBox())!;
@@ -389,9 +383,10 @@ async function ouvrirScene(
   who: FakeProfile,
   today: string,
   docs: Record<string, Record<string, unknown>>,
+  chemin = sceneDe(who),
 ) {
   await page.clock.setFixedTime(new Date(`${today}T10:00:00`));
-  return signInAs(page, who, docs, sceneDe(who));
+  return signInAs(page, who, docs, chemin);
 }
 
 test("état d'un programme : à venir, ouvert, passé, archivé", () => {
@@ -453,50 +448,25 @@ test("après le jour J en 中文 : le message est traduit", async ({ page }) => 
   await expect(page.getByText("「圣诞节 2026」已经过去了——感谢大家！")).toBeVisible();
 });
 
-test("coordination pendant les sept jours : gestion, date d'archivage et ordre de passage en lecture seule", async ({ page }) => {
-  await ouvrirScene(page, ALICE, "2026-12-25", DEUX);
-  const carte = page.getByRole("region", { name: "Noël, c'est passé — merci à tous !" });
-  await expect(page.getByRole("button", { name: "Modifier le programme" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Nouveau programme" })).toBeVisible();
-  await expect(carte).toContainText("Ce programme s'archivera le 31 décembre.");
-  await carte.getByRole("button", { name: "Voir l'ordre de passage" }).click();
+test("coordination pendant les sept jours : au Back-Office, « Terminé » et l'ordre de passage en lecture", async ({ page }) => {
+  await ouvrirScene(page, ALICE, "2026-12-25", DEUX, `${SCENE_GESTION}/noel`);
+  const colonne = page.getByRole("region", { name: "Cette fête" });
+  await expect(colonne.getByTestId("etat-edition")).toHaveText("Terminé");
+  await expect(page.getByRole("heading", { name: "Noël 2026 · ordre de passage" })).toBeVisible();
   const liste = page.getByRole("list", { name: "Ordre de Passage jour J" });
   await expect(liste.getByRole("listitem")).toHaveCount(2);
   await expect(page.getByRole("button", { name: "Ajouter un passage" })).toHaveCount(0);
+  for (const libelle of ["Modifier le programme", "Nouveau programme", "Masquer"]) {
+    await expect(page.getByRole("button", { name: libelle, exact: true })).toHaveCount(0);
+  }
 });
 
-test("coordination après l'archivage : onglet « Scène », badge « Archivé » et ordre de passage relisible", async ({ page }) => {
-  await ouvrirScene(page, ALICE, "2027-01-01", ARCHIVE);
-  await expect(page.getByRole("heading", { name: "Scène", exact: true })).toBeVisible();
-  const ligne = page.getByRole("region", { name: "Programmes masqués" }).getByRole("listitem").filter({ hasText: "Noël" });
-  await expect(ligne).toContainText("Archivé");
-  await ligne.getByRole("button", { name: "Voir l'ordre de passage" }).click();
+test("coordination après l'archivage : l'onglet Noël prépare Noël 2027 ; Noël 2026 se relit dans les années passées", async ({ page }) => {
+  await ouvrirScene(page, ALICE, "2027-01-01", ARCHIVE, `${SCENE_GESTION}/noel`);
+  const colonne = page.getByRole("region", { name: "Cette fête" });
+  await expect(colonne.getByRole("heading", { level: 2 })).toHaveText("Noël 2027");
+  // Sur une colonne (P9), les années passées sont sous la saison, hors de la colonne.
+  await page.getByRole("region", { name: "Les années passées" }).getByRole("button", { name: /Noël 2026/ }).click();
+  await expect(colonne.getByRole("heading", { level: 2 })).toHaveText("Noël 2026");
   await expect(page.getByRole("list", { name: "Ordre de Passage jour J" }).getByRole("listitem")).toHaveCount(2);
-});
-
-test("coordination : un programme choisi automatiquement se désigne, sans bouton « Masquer », l'autre attend", async ({ page }) => {
-  await ouvrirScene(page, ALICE, "2026-12-06", {
-    "programmes/noel": { ...NOEL, visible: false },
-    "programmes/paques": { ...PAQUES, debut: "2026-12-01" },
-  });
-  await expect(page.getByRole("heading", { name: "Noël", exact: true })).toBeVisible();
-  await expect(page.getByText("Choisi automatiquement : réservations ouvertes depuis le 1 octobre.")).toBeVisible();
-  await expect(page.getByRole("button", { name: "Masquer" })).toHaveCount(0);
-  await expect(page.getByRole("region", { name: "Programmes masqués" })).toContainText("En attente");
-});
-
-test("coordination : créer un programme ne vole plus l'onglet au programme en cours (lot U1 : il part en brouillon)", async ({ page }) => {
-  const db = await ouvrirScene(page, ALICE, "2026-12-06", { "programmes/noel": { ...NOEL, visible: false } });
-  await page.getByRole("button", { name: "Nouveau programme" }).click();
-  await page.getByLabel("Nom").fill("Pâques");
-  await page.getByLabel("Jour J").fill("2027-04-05");
-  await page.getByRole("button", { name: "Créer le programme" }).click();
-  await expect(page.getByRole("heading", { name: "Pâques · réservations" })).toBeVisible();
-  await page.getByRole("button", { name: "Fermer", exact: true }).click();
-  const masques = page.getByRole("region", { name: "Programmes masqués" });
-  await expect(masques).toContainText("Pâques");
-  await expect(masques).toContainText("Brouillon");
-  await expect(page.getByRole("heading", { name: "Noël", exact: true })).toBeVisible();
-  expect(ecritures(db, "POST")[0]?.data).toMatchObject({ nom: "Pâques", visible: false, ouvert: false });
-  expect(ecritures(db, "PATCH")).toHaveLength(0);
 });

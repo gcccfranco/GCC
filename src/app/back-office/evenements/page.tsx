@@ -1,21 +1,5 @@
-"use client";
-
-// Back-Office › Évènements › Évènements. Qui n'a que des réunions arrive sur Réunions.
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { useProfile } from "@/lib/firebase/users";
-import { sousPartiesEvenements } from "@/lib/access";
-import { ListeGestion } from "./ListeGestion";
-
+// Back-Office › Évènements › Évènements : ceux qu'on gère. La liste vit dans le layout
+// (agencement v18, B3) : en grand, le volet de droite montre le prochain ; sinon, la liste seule.
 export default function EvenementsPage() {
-  const router = useRouter();
-  const { user, profile } = useProfile();
-  const parties = sousPartiesEvenements(user, profile);
-  const ailleurs = !parties.includes("evenements") && parties.includes("reunions");
-
-  useEffect(() => {
-    if (ailleurs) router.replace("/back-office/evenements/reunions");
-  }, [ailleurs, router]);
-
-  return ailleurs ? null : <ListeGestion reunions={false} />;
+  return null;
 }

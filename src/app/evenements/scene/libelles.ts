@@ -87,3 +87,15 @@ export function bornesSemaine(jours: string[], lang: string): { du: string; au: 
   if (lang === "zh-CN") return { du: dateCourte(jours[0], lang), au: memeMois ? `${b.getDate()}日` : au }
   return { du: memeMois ? (a.getDate() === 1 ? "1er" : String(a.getDate())) : dateCourte(jours[0], lang), au }
 }
+
+/** Un jour de la semaine (0 = dimanche), en tête de phrase (P7, aides de la saison) :
+ *  « Samedi » / « 周六 ». */
+export function nomDuJour(j: number, lang: string): string {
+  const d = new Date(2026, 9, 4 + j) // 4 octobre 2026 : un dimanche
+  if (lang === "zh-CN") return d.toLocaleDateString("zh-CN", { weekday: "short" }).replace("星期", "周")
+  const s = d.toLocaleDateString("fr-FR", { weekday: "long" })
+  return s.charAt(0).toUpperCase() + s.slice(1)
+}
+
+/** Une heure de plage en court (P7, P9) : « 10 », « 10:30 » — « sam. 10–12 ». */
+export const heureCourte = (h: string) => (h.endsWith(":00") ? String(Number(h.slice(0, 2))) : h)

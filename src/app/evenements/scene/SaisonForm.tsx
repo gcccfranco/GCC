@@ -4,21 +4,31 @@
 // ouverture et fermeture, jours réservables, plages horaires, durée d'un
 // créneau, qui peut réserver. Enregistrement à chaque changement, comme
 // l'éditeur de setlist ; une erreur s'affiche sous le champ et rien n'est écrit.
+// Pâques · Noël, P7 (Q8, Q19) : le jour J en tête (calculé pour la fête, modifiable), les aides
+// (premier jour réservable, fin, créneaux par jour) et le refus d'une période qui croise celle
+// de l'autre fête (`autre`) ; `onErreur` dit à l'écran si une erreur bloque « Lancer ».
+// P9 (Q22) : `seul` ne montre qu'un réglage, pour la feuille ouverte depuis le résumé du téléphone.
 
-import { useId, useRef, useState, type ReactNode } from "react"
+import { useEffect, useId, useRef, useState, type ReactNode } from "react"
 import { useTranslation } from "react-i18next"
 import { Plus } from "lucide-react"
 import {
-  DATE, DUREES, erreursSaison, FAMILLES, famillesDe, joursDes, ORDRE_JOURS, PLAGES_DEFAUT, quiDesFamilles, saisonDe, triPlages,
-  type Famille, type Saison,
+  compteCreneaux, DATE, DUREES, erreursSaison, FAMILLES, famillesDe, joursDes, joursReservables, ORDRE_JOURS, PLAGES_DEFAUT,
+  quiDesFamilles, saisonDe, triPlages, type Famille, type Saison,
 } from "@/lib/scene/saison"
 import type { Plage, Programme } from "@/types/programme"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { jourEnLettres } from "./libelles"
+import { jourEnLettres, nomDuJour } from "./libelles"
 
-type Champ = "dates" | "jours" | "plages" | "duree" | "qui"
-export type SaisonPatch = Partial<Pick<Programme, "debut" | "fin" | "plages" | "duree" | "quiAutorises">>
+type Champ = "jourJ" | "dates" | "jours" | "plages" | "duree" | "qui"
+export type SaisonPatch = Partial<Pick<Programme, "jourJ" | "debut" | "fin" | "plages" | "duree" | "quiAutorises">>
+
+/** Un réglage seul (P9, une feuille du téléphone) ; les jours et les plages vont ensemble. */
+export type ReglageSeul = "jourJ" | "dates" | "joursPlages" | "duree" | "qui"
+
+/** La période de réservation de l'édition de l'autre fête (Q8), et son titre pour l'erreur. */
+export type AutreFete = { debut: string; fin: string; titre: string }
 
 /** Les champs de la saison qui ont changé par rapport à ce qui est en base. */
 function difference(avant: Saison, apres: Saison): SaisonPatch {
@@ -47,13 +57,14 @@ function Pilule({ actif, onClick, children }: { actif: boolean; onClick: () => v
   )
 }
 
-/** Un réglage : son titre, ses commandes, l'erreur dessous. */
-function Reglage({ titre, erreurs, children }: { titre: string; erreurs?: string[]; children: ReactNode }) {
+/** Un réglage : son titre, ses commandes, l'aide et l'erreur dessous. */
+function Reglage({ titre, aide, erreurs, children }: { titre: string; aide?: string; erreurs?: string[]; children: ReactNode }) {
   const id = useId()
   return (
     <div role="group" aria-labelledby={id} className="space-y-1.5">
       <p id={id} className="text-[13px] font-semibold text-muted-foreground">{titre}</p>
       <div className="flex flex-wrap gap-1.5">{children}</div>
+      {aide && <p className="text-[12.5px] text-muted-foreground">{aide}</p>}
       {erreurs?.map((e) => <p key={e} role="alert" className="text-sm text-destructive">{e}</p>)}
     </div>
   )
@@ -63,18 +74,24 @@ const pastille = "h-9 inline-flex items-center gap-1.5 rounded-full bg-secondary
 
 /** « du jeudi 1er octobre » en toutes lettres, comme la planche ; le champ date
  *  natif, transparent, couvre la pastille : un clic ouvre le sélecteur du système. */
-function DatePastille({ prefixe, label, value, max, onChange }: {
-  prefixe: string
+function DatePastille({ prefixe, label, value, max, avecAnnee = false, onChange }: {
+  prefixe?: string
   label: string
   value: string
   max?: string
+  /** « dimanche 28 mars 2027 » (le jour J) plutôt que « dimanche 28 mars ». */
+  avecAnnee?: boolean
   onChange: (value: string) => void
 }) {
   const { i18n } = useTranslation()
   const ref = useRef<HTMLInputElement>(null)
+  const date = DATE.test(value) ? jourEnLettres(value, i18n.language) : "…"
+  const texte = avecAnnee && DATE.test(value)
+    ? (i18n.language === "zh-CN" ? `${value.slice(0, 4)}年${date}` : `${date} ${value.slice(0, 4)}`)
+    : date
   return (
     <label className={`${pastille} relative cursor-pointer focus-within:ring-2 focus-within:ring-ring`}>
-      <span aria-hidden>{prefixe} {DATE.test(value) ? jourEnLettres(value, i18n.language) : "…"}</span>
+      <span aria-hidden>{prefixe ? `${prefixe} ${texte}` : texte}</span>
       <input
         ref={ref} type="date" aria-label={label} value={value} max={max}
         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
@@ -86,14 +103,21 @@ function DatePastille({ prefixe, label, value, max, onChange }: {
   )
 }
 
-export function SaisonForm({ programme, onSave }: {
+export function SaisonForm({ programme, onSave, jourJCalcule, autre, onErreur, seul }: {
   programme: Programme
   /** Écrit les champs changés (updateMask), puis recharge la page ; ne rejette
    *  jamais (un échec d'écriture s'affiche en haut de l'écran de la saison). */
   onSave: (patch: SaisonPatch) => Promise<void>
+  /** Le jour J calculé pour la fête (Q3) et son nom : l'aide « Calculé pour Pâques ; modifiable. ». */
+  jourJCalcule?: { date: string; fete: string }
+  autre?: AutreFete
+  /** Vrai tant qu'une erreur s'affiche (rien n'est écrit) : « Lancer » attend. */
+  onErreur?: (erreur: boolean) => void
+  /** Ce réglage seul, sans la carte autour (P9). */
+  seul?: ReglageSeul
 }) {
-  const { t } = useTranslation()
-  const titreId = useId()
+  const { t, i18n } = useTranslation()
+  const lang = i18n.language
   // La saison montrée est celle du programme, sauf le temps d'une erreur (rien
   // n'est écrit) ou d'une écriture : une copie gardée plus longtemps resterait
   // périmée quand le programme change ailleurs (jour J, autre coordinateur) et
@@ -102,10 +126,27 @@ export function SaisonForm({ programme, onSave }: {
   const s = local ?? saisonDe(programme)
   const [erreur, setErreur] = useState<{ champ: Champ; textes: string[] } | null>(null)
   const [editeur, setEditeur] = useState<{ index: number | null; plage: Plage } | null>(null)
+  // Le jour J montré : celui du programme, sauf le temps d'une erreur ou d'une écriture.
+  const [jourJLocal, setJourJLocal] = useState<string | null>(null)
+  const jourJ = jourJLocal ?? programme.jourJ
+
+  useEffect(() => { onErreur?.(erreur !== null) }, [erreur, onErreur])
 
   const jourCourt = (j: number) => t(`planning.saison.jourCourt.${j}`)
+  const montrer = (r: ReglageSeul) => !seul || seul === r
   const erreursDe = (champ: Champ) => (erreur?.champ === champ ? erreur.textes : undefined)
-  const verifier = (next: Saison) => erreursSaison(next, programme.jourJ).map((c) => t(`planning.saison.erreurs.${c}`))
+  const verifier = (next: Saison, jj = jourJ) => erreursSaison(next, jj, autre).map((c) =>
+    t(`planning.saison.erreurs.${c}`, autre ? { edition: autre.titre, date: jourEnLettres(autre.fin, lang) } : {}))
+
+  /** Le jour J : vérifié avec la saison qu'il donne (la fermeture par défaut le suit), écrit seul. */
+  function changerJourJ(v: string) {
+    setJourJLocal(v)
+    if (!DATE.test(v)) return
+    const textes = verifier(saisonDe({ ...programme, jourJ: v }), v)
+    setErreur(textes.length > 0 ? { champ: "jourJ", textes } : null)
+    if (textes.length > 0 || v === programme.jourJ) { if (v === programme.jourJ) setJourJLocal(null); return }
+    onSave({ jourJ: v }).then(() => setJourJLocal((l) => (l === v ? null : l)))
+  }
 
   /** Affiche `next` ; s'il est valable, écrit ce qui a changé, sinon montre l'erreur sous le champ. */
   function appliquer(next: Saison, champ: Champ) {
@@ -158,24 +199,42 @@ export function SaisonForm({ programme, onSave }: {
     appliquer({ ...s, quiAutorises: quiDesFamilles(next) }, "qui")
   }
 
-  return (
-    <section aria-labelledby={titreId} className="bg-card shadow-soft rounded-2xl p-5 space-y-4">
-      <h3 id={titreId} className="text-[17px] font-semibold">{t("planning.saison.carte")}</h3>
+  // Les aides (Q19) : premier jour réservable et fin ; créneaux par jour de la semaine.
+  const jours = joursReservables(s, jourJ)
+  const finParDefaut = programme.fin === undefined && s.fin === saisonDe(programme).fin
+  const aideDates = jours.length === 0 ? undefined : [
+    t("planning.gestion.premierJour", { date: jourEnLettres(jours[0], lang) }),
+    finParDefaut ? t("planning.gestion.finParDefaut") : t("planning.gestion.dernierJour", { date: jourEnLettres(jours.at(-1)!, lang) }),
+  ].join(" ")
+  const aideDuree = compteCreneaux(s, jourJ).parJour
+    .map(({ jour, creneaux }) => t("planning.gestion.creneauxDuJour", { jour: nomDuJour(jour, lang), count: creneaux }))
+    .join(" ") || undefined
 
-      <Reglage titre={t("planning.saison.periode")} erreurs={erreursDe("dates")}>
-        <DatePastille prefixe={t("planning.saison.du")} label={t("planning.saison.ouverture")} value={s.debut} max={programme.jourJ}
+  return (
+    <section aria-label={t("planning.saison.carte")} className={seul ? "space-y-4" : "bg-card shadow-soft rounded-2xl p-5 space-y-4"}>
+
+      {montrer("jourJ") && <Reglage
+        titre={t("planning.gestion.jourJ")}
+        aide={jourJCalcule && jourJ === jourJCalcule.date ? t("planning.gestion.jourJCalcule", { fete: jourJCalcule.fete }) : undefined}
+        erreurs={erreursDe("jourJ")}
+      >
+        <DatePastille label={t("planning.gestion.choisirJourJ")} value={jourJ} avecAnnee onChange={changerJourJ} />
+      </Reglage>}
+
+      {montrer("dates") && <Reglage titre={t("planning.saison.periode")} aide={aideDates} erreurs={erreursDe("dates")}>
+        <DatePastille prefixe={t("planning.saison.du")} label={t("planning.saison.ouverture")} value={s.debut} max={jourJ}
           onChange={(debut) => appliquer({ ...s, debut }, "dates")} />
         <DatePastille prefixe={t("planning.saison.au")} label={t("planning.saison.fermeture")} value={s.fin}
           onChange={(fin) => appliquer({ ...s, fin }, "dates")} />
-      </Reglage>
+      </Reglage>}
 
-      <Reglage titre={t("planning.saison.jours")} erreurs={erreursDe("jours")}>
+      {montrer("joursPlages") && <Reglage titre={t("planning.saison.jours")} erreurs={erreursDe("jours")}>
         {ORDRE_JOURS.map((j) => (
           <Pilule key={j} actif={s.jours.includes(j)} onClick={() => basculerJour(j)}>{jourCourt(j)}</Pilule>
         ))}
-      </Reglage>
+      </Reglage>}
 
-      <Reglage titre={t("planning.saison.plages")} erreurs={erreursDe("plages")}>
+      {montrer("joursPlages") && <Reglage titre={t("planning.saison.plages")} erreurs={erreursDe("plages")}>
         {s.plages.map((p, i) => (
           <button key={`${p.jour}-${p.debut}-${i}`} type="button" className={pastille} aria-expanded={editeur?.index === i}
             onClick={() => setEditeur(editeur?.index === i ? null : { index: i, plage: p })}>
@@ -216,22 +275,22 @@ export function SaisonForm({ programme, onSave }: {
             </div>
           </div>
         )}
-      </Reglage>
+      </Reglage>}
 
-      <Reglage titre={t("planning.saison.duree")} erreurs={erreursDe("duree")}>
+      {montrer("duree") && <Reglage titre={t("planning.saison.duree")} aide={aideDuree} erreurs={erreursDe("duree")}>
         {DUREES.map((d) => (
           <Pilule key={d} actif={s.duree === d} onClick={() => appliquer({ ...s, duree: d }, "duree")}>{t(`planning.saison.dureeCourte.${d}`)}</Pilule>
         ))}
-      </Reglage>
+      </Reglage>}
 
-      <Reglage titre={t("planning.saison.qui")} erreurs={erreursDe("qui")}>
+      {montrer("qui") && <Reglage titre={t("planning.saison.qui")} erreurs={erreursDe("qui")}>
         <Pilule actif={s.quiAutorises.length === 0} onClick={() => appliquer({ ...s, quiAutorises: [] }, "qui")}>{t("planning.saison.tous")}</Pilule>
         {FAMILLES.map((f) => (
           <Pilule key={f.cle} actif={familles.includes(f.cle)} onClick={() => basculerFamille(f.cle)}>{t(`planning.saison.familles.${f.cle}`)}</Pilule>
         ))}
-      </Reglage>
+      </Reglage>}
 
-      <p className="text-[13px] text-muted-foreground">{t("planning.saison.regle")}</p>
+      {!seul && <p className="text-[13px] text-muted-foreground">{t("planning.saison.regle")}</p>}
     </section>
   )
 }

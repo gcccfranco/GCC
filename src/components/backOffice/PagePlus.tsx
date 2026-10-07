@@ -19,9 +19,10 @@ import { enregistrerBarreDuBas, useBarreDuBas } from "@/lib/tableauDeBord/useBar
 import { usePastilles } from "@/lib/tableauDeBord/usePastilles";
 import type { Entree } from "@/types/backOffice";
 
-/** Cartes de la planche : la gestion, puis Messages, puis Statistiques, chacune à part. */
+/** Cartes de la planche : la gestion (Réunions après Évènements, v18 B15), puis Messages,
+ *  puis Statistiques, chacune à part. */
 const CARTES: readonly (readonly Entree[])[] = [
-  ["tableau", "calendrier", "planning", "taches", "evenements", "equipes"],
+  ["tableau", "calendrier", "planning", "taches", "evenements", "reunions", "equipes"],
   ["messages"],
   ["statistiques"],
 ];
