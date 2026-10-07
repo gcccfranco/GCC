@@ -44,10 +44,20 @@ function useGestion(reunions: boolean): Gestion {
 
   useEffect(() => {
     if (!user) return;
-    const lire = () => { listEvenements(false).then(setEvenements).catch(() => setEvenements([])); };
+    // Les relectures se croisent : seule la dernière demandée s'affiche. Un échec (hors ligne)
+    // garde la liste déjà là plutôt que de la vider.
+    let derniere = 0;
+    let vivant = true;
+    const lire = () => {
+      const n = ++derniere;
+      const aJour = () => vivant && n === derniere;
+      listEvenements(false)
+        .then((l) => { if (aJour()) setEvenements(l); })
+        .catch(() => { if (aJour()) setEvenements((l) => l ?? []); });
+    };
     lire();
     window.addEventListener(EVENEMENTS_CHANGED, lire);
-    return () => window.removeEventListener(EVENEMENTS_CHANGED, lire);
+    return () => { vivant = false; window.removeEventListener(EVENEMENTS_CHANGED, lire); };
   }, [user]);
 
   return useMemo(() => {
@@ -94,7 +104,9 @@ export function VoletsGestion({ reunions, enTete, children }: { reunions: boolea
         largeurListe={reunions ? 360 : 380}
         liste={<ListeGestion reunions={reunions} gestion={gestion} idActif={deuxVolets ? idActif : undefined} />}
         premier={gestion.chargement ? null
-          : premier ? <EvenementClient espace="back-office" id={premier.id} />
+          // `key` : une autre fiche d'office (suppression, date changée) repart de zéro, sans
+          // garder l'ancienne à l'écran ni laisser sa lecture tardive l'écraser.
+          : premier ? <EvenementClient key={premier.id} espace="back-office" id={premier.id} />
           : <p className="raised rounded-2xl px-5 py-4 text-sm text-muted-foreground">{vide}</p>}
       >
         {children}

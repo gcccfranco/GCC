@@ -39,9 +39,11 @@ import styles from "./gestion.module.css"
 const BASE = "/back-office/evenements"
 const carte = "raised rounded-2xl p-4"
 
-/** Une cellule CSV : entre guillemets si besoin (`;`, guillemet, retour à la ligne). */
+/** Une cellule CSV : entre guillemets si besoin (`;`, guillemet, retour à la ligne). Un texte qui
+ *  commence comme une formule (`=`, `+`, `-`, `@`, tabulation, retour chariot) prend une apostrophe :
+ *  le nom d'un inscrit sans compte est libre, Excel ou Sheets l'évalueraient (injection CSV). */
 const cellule = (v: string | number) => {
-  const s = String(v)
+  const s = typeof v === "string" && /^[=+\-@\t\r]/.test(v) ? `'${v}` : String(v)
   return /[";\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
 }
 
@@ -158,7 +160,8 @@ function CarteInscrits({ e, onChange }: { e: Evenement; onChange: (e: Evenement)
   function exporter() {
     const lignes = [
       [t("backOffice.gestion.csv.nom"), t("evenements.invitesLabel"), t("evenements.sansCompteTag"), t("backOffice.gestion.csv.le")],
-      ...(liste ?? []).map((i) => [i.nom, i.invites, i.uid ? "" : "✓", i.createdAt.slice(0, 10)]),
+      // `createdAt` est en UTC : la date de Paris (une inscription à 00:30 est du jour même).
+      ...(liste ?? []).map((i) => [i.nom, i.invites, i.uid ? "" : "✓", i.createdAt ? nowIsoParis(new Date(i.createdAt)).slice(0, 10) : ""]),
     ]
     // BOM : Excel lit l'UTF-8 (accents, chinois).
     const blob = new Blob(["﻿" + lignes.map((l) => l.map(cellule).join(";")).join("\n")], { type: "text/csv;charset=utf-8" })

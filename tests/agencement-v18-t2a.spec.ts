@@ -266,3 +266,38 @@ test.describe("T2a : les adresses /back-office/reunions/*", () => {
     await expect(page.getByRole("link", { name: "Gérer dans le Back-Office" })).toHaveAttribute("href", /^\/back-office\/reunions\/reu-da\/?$/);
   });
 });
+
+// ─── Relecture du lot (07/10/2026) ───────────────────────────────────────────────
+
+test.describe("T2a, relecture : là où mènent le widget et le guide", () => {
+  /** Le widget « Prochains évènements » seul au tableau de bord. */
+  const avecLeWidget = (p: FakeProfile) => ({
+    ...DOCS,
+    [`backOffice/${p.uid}`]: { tableauDeBord: [{ id: "evenements", taille: "m", reglages: {} }], majLe: "2026-10-01T09:00:00Z" },
+  });
+  const widget = (page: Page) => page.getByTestId("grille-widgets").getByRole("region", { name: "Prochains évènements", exact: true });
+
+  test("pôle DA (Réunions sans Évènements) : « Tout voir » du widget mène à ses réunions", async ({ page }) => {
+    await ouvrir(page, DA, "/back-office", avecLeWidget(DA));
+    await expect(widget(page).getByRole("link", { name: "Tout voir" })).toHaveAttribute("href", /^\/back-office\/reunions\/?$/);
+  });
+
+  test("droit d'annonces (Évènements) : « Tout voir » du widget mène aux Évènements", async ({ page }) => {
+    await ouvrir(page, ANNONCEUR, "/back-office", avecLeWidget(ANNONCEUR));
+    await expect(widget(page).getByRole("link", { name: "Tout voir" })).toHaveAttribute("href", /^\/back-office\/evenements\/?$/);
+  });
+
+  test("le guide dit que les réunions de pôle se créent dans Réunions", async ({ page }) => {
+    await ouvrir(page, DA, "/guide");
+    await expect(page.locator("section#taches")).toContainText("Les réunions de pôle se créent dans Back-Office › Réunions.");
+    await expect(page.locator("section#evenements")).toContainText("Les réunions de pôle se créent dans Back-Office › Réunions › « Nouvelle réunion ».");
+    await expect(page.locator("section#evenements")).not.toContainText("comme les sorties de section et les réunions de pôle");
+  });
+
+  test("en 中文 : le guide dit que les réunions de pôle se créent dans 会议", async ({ page }) => {
+    await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
+    await ouvrir(page, DA, "/guide");
+    await expect(page.locator("section#taches")).toContainText("部门会议请在 后台 › 会议中创建。");
+    await expect(page.locator("section#evenements")).toContainText("部门会议请在 后台 › 会议 ›「新建会议」中创建。");
+  });
+});

@@ -1,10 +1,12 @@
 "use client";
 
 // Widget 3 « Prochains évènements » (lot U6, B4) : 3, 5 ou 10 évènements à venir, avec leurs
-// inscriptions ; « Tout voir » mène aux Évènements du Back-Office. Lot U8, C8 : les entrées du
+// inscriptions ; « Tout voir » mène aux Évènements du Back-Office (à Réunions pour qui n'a que cette
+// entrée, agencement v18, B15). Lot U8, C8 : les entrées du
 // Sheet des évènements (toute l'église, jusqu'au 31/12/2026) s'y mêlent ; elles ouvrent
 // l'onglet de leur mois, dans un nouvel onglet.
 import { useTranslation } from "react-i18next";
+import { entreesBackOffice } from "@/lib/access";
 import { Ticket } from "lucide-react";
 import { nowIsoParis } from "@/lib/evenements/agenda";
 import { lienOngletSheet, lireSheetEvenements } from "@/lib/evenements/sheet";
@@ -33,6 +35,8 @@ export function WidgetEvenements({ widget }: { widget: Widget }) {
     evenementsAVenir(evenements, user, profile, today, { ...widget.reglages, nombre: 10 }), sheet?.entrees ?? [], today, widget.reglages,
   );
   const maintenant = nowIsoParis();
+  // Le widget est permis avec Évènements ou Réunions (B15) : « Tout voir » mène à l'entrée qu'on a.
+  const toutVoir = entreesBackOffice(user, profile).includes("evenements") ? "/back-office/evenements" : "/back-office/reunions";
   const etat = (e: EtatInscriptions) =>
     e.cas === "places" ? t("tableauDeBord.evenements.places", { inscrits: e.inscrits, max: e.max })
       : e.cas === "sansLimite" ? t("tableauDeBord.evenements.sansLimite")
@@ -41,7 +45,7 @@ export function WidgetEvenements({ widget }: { widget: Widget }) {
   return (
     <CadreWidget
       id="evenements" taille={widget.taille} Icone={Ticket} nom={t("tableauDeBord.widgets.evenements")}
-      complement={<LienTete href="/back-office/evenements">{t("tableauDeBord.toutVoir")}</LienTete>}
+      complement={<LienTete href={toutVoir}>{t("tableauDeBord.toutVoir")}</LienTete>}
     >
       {erreur ? <Message erreur>{t("tableauDeBord.lectureImpossible")}</Message>
         : !lignes ? <Message>{t("common.loading")}</Message>

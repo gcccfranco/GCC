@@ -1,5 +1,5 @@
-import { expect, test, type Page } from "@playwright/test";
-import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { expect, test, type Download, type Page, type Route } from "@playwright/test";
+import { fsDoc, signInAs, type FakeProfile } from "./helpers/fakeSession";
 import {
   enTete, estGrandEcran, estTelephone, interdireDialoguesNatifs, ongletsRail, repondreDansLeSite, verifierAgencement,
 } from "./helpers/agencement";
@@ -332,5 +332,92 @@ test.describe("T2b : Back-Office › Réunions", () => {
     await expect(page).toHaveURL(/\/back-office\/reunions\/?$/);
     await expect.poll(() => db.doc("evenements/reu-da-nov")).toBeUndefined();
     await expect(page.getByRole("link", { name: /Réunion DA de novembre/ })).toHaveCount(0);
+  });
+});
+
+// ─── Relecture du lot (07/10/2026) ───────────────────────────────────────────────
+
+/** Lire un fichier téléchargé. */
+const lireTelechargement = async (fichier: Download) =>
+  (await (await fichier.createReadStream()).toArray().then((b) => Buffer.concat(b).toString("utf8")));
+/** La lecture de la liste des évènements (`listEvenements`), pas une autre requête sur la collection. */
+function estLaListe(route: Route): boolean {
+  const r = route.request();
+  if (r.method() !== "POST" || !new URL(r.url()).pathname.endsWith("/documents:runQuery")) return false;
+  const q = (r.postDataJSON() as { structuredQuery: { from: { collectionId: string }[]; where?: unknown; orderBy?: { field: { fieldPath: string } }[] } }).structuredQuery;
+  return q.from[0]?.collectionId === "evenements" && !q.where && q.orderBy?.[0]?.field.fieldPath === "date";
+}
+/** Ce que la page fait après une création, une modification ou une suppression. */
+const relire = (page: Page) => page.evaluate(() => window.dispatchEvent(new Event("evenements-changed")));
+
+test.describe("T2b, relecture : l'export et la liste", () => {
+  test("« Exporter » : un nom en formule reste du texte, la date d'inscription est celle de Paris", async ({ page }) => {
+    await ouvrir(page, COORD, "/back-office/evenements/foot", {
+      ...DOCS,
+      // Sans compte, le 4 octobre à 00:30 à Paris (22:30 UTC la veille), sous un nom qui est une formule.
+      "evenements/foot/inscriptions/x2": { uid: null, nom: "=1+1", invites: 0, createdAt: "2026-10-03T22:30:00Z" },
+    });
+    const inscrits = page.getByRole("region", { name: "Inscrits" });
+    await expect(inscrits.getByRole("listitem")).toHaveCount(3);
+    const [fichier] = await Promise.all([page.waitForEvent("download"), inscrits.getByRole("button", { name: "Exporter" }).click()]);
+    const lignes = (await lireTelechargement(fichier)).split("\n");
+    expect(lignes).toContain("'=1+1;0;✓;2026-10-04");
+    expect(lignes).toContain("Paul D.;0;✓;2026-10-03");
+  });
+
+  test("hors ligne, une relecture qui échoue garde la liste affichée", async ({ page }) => {
+    await ouvrir(page, COORD, "/back-office/evenements");
+    await expect(page.getByRole("link", { name: /Foot au parc/ })).toBeVisible();
+    let echecs = 0;
+    await page.route(/firestore\.googleapis\.com/, (route) => {
+      if (!estLaListe(route)) return route.fallback();
+      echecs++;
+      return route.abort("internetdisconnected");
+    });
+    await relire(page);
+    await expect.poll(() => echecs).toBe(1);
+    await page.waitForTimeout(500);
+    await expect(page.getByRole("link", { name: /Foot au parc/ })).toBeVisible();
+    await expect(page.getByText("Aucun évènement à gérer.")).toHaveCount(0);
+  });
+
+  test("une relecture plus ancienne, arrivée après la dernière, ne l'écrase pas", async ({ page }) => {
+    const db = await ouvrir(page, COORD, "/back-office/evenements");
+    await expect(page.getByRole("link", { name: /Foot au parc/ })).toBeVisible();
+    // La première relecture est retenue ; elle répondra la liste d'avant la création.
+    const avant = Object.entries(DOCS).filter(([p]) => /^evenements\/[^/]+$/.test(p)).map(([p, d]) => ({ document: fsDoc(p, d) }));
+    const retenues: Route[] = [];
+    await page.route(/firestore\.googleapis\.com/, (route) => {
+      if (retenues.length === 0 && estLaListe(route)) { retenues.push(route); return; }
+      return route.fallback();
+    });
+    await relire(page);
+    await expect.poll(() => retenues.length).toBe(1);
+    db.set("evenements/jeux", { ...EV, titre: "Soirée jeux", date: "2026-11-14" });
+    await relire(page);
+    await expect(page.getByRole("link", { name: /Soirée jeux/ })).toBeVisible();
+    await retenues[0].fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(avant) });
+    await page.waitForTimeout(500);
+    await expect(page.getByRole("link", { name: /Soirée jeux/ })).toBeVisible();
+  });
+
+  test("en grand : supprimer la fiche ouverte d'office ne la laisse pas à l'écran sous la suivante", async ({ page }, info) => {
+    test.skip(!estGrandEcran(info), "deux volets : grand écran");
+    await ouvrir(page, COORD, "/back-office/evenements");
+    await expect(titreFiche(page, "Foot au parc")).toBeVisible();
+    // La fiche suivante tarde à se lire.
+    const retenues: Route[] = [];
+    await page.route(/firestore\.googleapis\.com/, (route) => {
+      const r = route.request();
+      if (r.method() === "GET" && new URL(r.url()).pathname.endsWith("/documents/evenements/fete")) { retenues.push(route); return; }
+      return route.fallback();
+    });
+    await volet(page).getByRole("button", { name: "Plus d'actions" }).click();
+    await page.getByRole("menuitem", { name: "Supprimer" }).click();
+    await repondreDansLeSite(page, "Supprimer");
+    await expect.poll(() => retenues.length).toBeGreaterThan(0);
+    await expect(titreFiche(page, "Foot au parc")).toHaveCount(0);
+    for (const r of retenues) await r.fallback();
+    await expect(titreFiche(page, "Fête de rentrée")).toBeVisible();
   });
 });

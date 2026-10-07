@@ -678,3 +678,48 @@ la barre d'onglets : une page sans barre du bas (rare) le verra plus haut que n�
 - **Reste** : rien pour le lot V18T2 (T2a, T2b, fusion). Après lui : T7 (App Évènements, même fichier
   `EvenementClient.tsx`) et P7 de la scène (onglets Pâques · Noël dans `back-office/evenements/layout.tsx`).
 - **Timothée** : rien à publier (ni règle ni donnée).
+
+### V18T2 — Relecture (T2a, T2b)
+
+- 07/10/2026 : deux relectures du lot ; corrections dans `fix(V18T2): relecture — …`. **Le lot V18T2 est fini et
+  relu.**
+- **Corrigé** (chaque correction a son test, vu rouge puis vert) :
+  - **Guide** (FR et 中文, à relire) : « Où créer un évènement » finit par « Les réunions de pôle se créent dans
+    **Back-Office › Réunions › « Nouvelle réunion »** » (部门会议请在 后台 › 会议 ›「新建会议」中创建) ; dans Tâches,
+    « Les réunions de pôle se créent dans **Back-Office › Réunions** » (部门会议请在 后台 › 会议中创建). Ils disaient
+    Évènements, une entrée qu'un pôle sans droit d'annonces n'a plus (B15).
+  - **« Exporter »** (CSV des inscrits) : un nom qui commence par `=`, `+`, `-`, `@`, une tabulation ou un retour
+    chariot prend une apostrophe (le nom d'un inscrit sans compte est libre : Excel ou Sheets l'évalueraient,
+    injection CSV) ; « Inscrit le » est la date de Paris (`nowIsoParis`), plus celle d'UTC (une inscription à
+    00:30 tombait la veille).
+  - **Widget « Prochains évènements »** : « Tout voir » mène à `/back-office/reunions` pour qui a Réunions sans
+    Évènements (le widget reste permis avec l'une ou l'autre entrée, B15) ; aux Évènements sinon.
+  - **Liste d'Évènements et de Réunions** (`useGestion`) : seule la dernière relecture demandée s'affiche (une
+    réponse plus ancienne arrivée après n'écrase plus la liste) ; un échec réseau (hors ligne) garde la liste déjà
+    là au lieu de la vider.
+  - **Fiche ouverte d'office** (en grand, sur la liste) : `key={premier.id}` ; quand la prochaine change
+    (suppression, date modifiée), la fiche repart de zéro (« Chargement… ») au lieu de garder l'ancienne, avec ses
+    boutons, sous le nouvel `id`, et une lecture tardive de l'ancienne ne l'écrase plus.
+- **Tests** : `agencement-v18-t2b` (« T2b, relecture » : l'export, la relecture hors ligne, la relecture périmée,
+  la fiche d'office supprimée), `agencement-v18-t2a` (« T2a, relecture » : « Tout voir » du widget, le guide en FR
+  et 中文), `evenements-2027` (le texte du guide, B3). Suites du 07/10/2026 après
+  les corrections, sur les cinq projets : `agencement-v18-t2a`, `t2b`, `evenements-2027`, `tableau-de-bord`,
+  `back-office-admin`, `evenements`, `reunions`, `taches-evenements`, `agencement-v18-confirmations` : 1 501 verts,
+  54 sautés (tests propres à un appareil), aucun rouge ; `back-office-coupe` (second serveur) : 187 verts, 2 sautés ;
+  `tsc --noEmit` et `npm run lint` sans erreur.
+- **Laissés, à trancher par Timothée** :
+  - **« Ajouter » un inscrit** (carte Inscrits, B3) : toujours pas construit. Les inscriptions ne s'écrivent que
+    par le serveur (`firestore.rules` : `allow write: if false` sous `inscriptions`), et `/api/evenements/inscription`
+    n'inscrit que soi-même, ou un nom sans compte sur un évènement qui l'accepte : inscrire quelqu'un à sa place est
+    une écriture nouvelle, contraire à R16. À trancher : s'en passer (à écrire alors dans « Hors périmètre ») ou
+    l'ouvrir dans un lot à part.
+  - **« Nouvel évènement » propose encore les publics de réunion** (pôle, équipe) à qui en a
+    (`NouveauClient.tsx:83`, comportement d'avant v18) : la fiche créée s'ouvre alors sous Réunions. Les filtrer
+    (`!estReunion(p)`) toucherait la création, y compris par le raccourci du tableau de bord et le calendrier : pas
+    fait sans son accord.
+- **Notés, non corrigés** (hors du lot) : une réponse HTTP en erreur (5xx, 403) se lit encore comme une liste vide,
+  car `runQuery` de `lib/firebase/evenements.ts` rend `[]` sur `!res.ok` (partagé par toute l'app) ; seule une
+  coupure réseau garde maintenant la liste. Après une suppression, la fiche supprimée reste à l'écran le temps de
+  relire la liste (une lecture), puis laisse place à la suivante.
+- **Timothée** : rien à publier (ni règle ni donnée) ; relire le 中文 des deux lignes du guide ; trancher les deux
+  points ci-dessus.

@@ -522,7 +522,7 @@ test.describe("B3 : le guide dit où créer un évènement", () => {
     await ouvrir(page, COORD, "/guide", "2026-12-15T10:00:00");
     const section = page.locator("section#evenements");
     await expect(section).toContainText(
-      "Où créer un évènement : ceux de toute l'église datés jusqu'au 31/12/2026 s'écrivent dans le Sheet des évènements ; à partir de 2027, ils se créent dans le Back-Office › Évènements › « Nouvel évènement », comme les sorties de section et les réunions de pôle.",
+      "Où créer un évènement : ceux de toute l'église datés jusqu'au 31/12/2026 s'écrivent dans le Sheet des évènements ; à partir de 2027, ils se créent dans le Back-Office › Évènements › « Nouvel évènement », comme les sorties de section. Les réunions de pôle se créent dans Back-Office › Réunions › « Nouvelle réunion ».",
     );
   });
 
@@ -530,7 +530,7 @@ test.describe("B3 : le guide dit où créer un évènement", () => {
     await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
     await ouvrir(page, COORD, "/guide", "2026-12-15T10:00:00");
     await expect(page.locator("section#evenements")).toContainText(
-      "在哪里创建活动：日期在 31/12/2026 之前（含）的全教会活动写在活动表（Sheet）中；从 2027 年起，请在 后台 › 活动 ›「新建活动」中创建，小组外出和部门会议也一样。",
+      "在哪里创建活动：日期在 31/12/2026 之前（含）的全教会活动写在活动表（Sheet）中；从 2027 年起，请在 后台 › 活动 ›「新建活动」中创建，小组外出也一样。部门会议请在 后台 › 会议 ›「新建会议」中创建。",
     );
   });
 });

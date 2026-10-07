@@ -839,7 +839,7 @@
           "Les **infos** épinglées restent en tête du calendrier : elles remplacent les anciennes annonces.",
           "Avec le droit d'annonces d'une section, ou dans un pôle, tu peux **créer** un évènement pour ta section ou une **réunion de pôle**.",
           "Tu reçois un rappel la veille des évènements auxquels tu es inscrit.",
-          "**Où créer un évènement** : ceux de toute l'église datés jusqu'au {{jour}} s'écrivent dans le Sheet des évènements ; à partir de 2027, ils se créent dans le **Back-Office › Évènements › « Nouvel évènement »**, comme les sorties de section et les réunions de pôle."
+          "**Où créer un évènement** : ceux de toute l'église datés jusqu'au {{jour}} s'écrivent dans le Sheet des évènements ; à partir de 2027, ils se créent dans le **Back-Office › Évènements › « Nouvel évènement »**, comme les sorties de section. Les réunions de pôle se créent dans **Back-Office › Réunions › « Nouvelle réunion »**."
         ],
         "tip": "L'organisateur retrouve la liste des inscrits et un **QR code** sur la fiche de l'évènement."
       },
@@ -898,7 +898,7 @@
           "Coche une tâche quand elle est faite ; si la tâche le prévoit, le pôle suivant ou la régie du dimanche est prévenu.",
           "Une tâche peut revenir **chaque semaine**, **toutes les deux semaines** ou **chaque mois**.",
           "Tu reçois un rappel 3 jours et 1 jour avant l'échéance, et le lendemain si elle n'est pas faite.",
-          "Les **réunions de pôle** se créent dans Évènements."
+          "Les **réunions de pôle** se créent dans **Back-Office › Réunions**."
         ],
         "tip": "« Mes tâches », dans Moi, montre ce qui reste à faire pour toi."
       },
