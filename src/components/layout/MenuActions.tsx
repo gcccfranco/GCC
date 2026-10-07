@@ -16,6 +16,7 @@
 // `evenements/[id]/Inscriptions.tsx`) : le menu, déjà fermé, n'a rien pour les montrer, et une
 // erreur qui en sort n'est rattrapée par personne.
 
+import { useId } from "react";
 import type { LucideIcon } from "lucide-react";
 import { MoreHorizontal } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -30,6 +31,9 @@ export type ActionDuMenu = {
   /** L'action ; elle attrape et montre ses propres erreurs (voir plus haut). */
   onSelect: () => void | Promise<void>;
   icone?: LucideIcon;
+  /** Une ligne d'aide sous le libellé (« Choisir un autre créneau libre ») ; elle décrit
+   *  l'action sans entrer dans son nom. */
+  aide?: string;
   /** Retire ou supprime : en rouge. */
   destructif?: boolean;
   /** Demande d'abord confirmation dans le site (bouton rouge si `destructif`). */
@@ -39,6 +43,7 @@ export type ActionDuMenu = {
 export function MenuActions({ actions, label }: { actions: ActionDuMenu[]; label?: string }) {
   const { t } = useTranslation();
   const confirmer = useConfirmer();
+  const id = useId();
 
   const choisir = async (a: ActionDuMenu) => {
     if (a.confirmer && !(await confirmer({ ...a.confirmer, destructif: a.destructif }))) return;
@@ -62,10 +67,16 @@ export function MenuActions({ actions, label }: { actions: ActionDuMenu[]; label
               key={i}
               // Le menu se ferme d'abord : la fenêtre de confirmation prend alors le focus.
               onSelect={() => { void choisir(a); }}
-              className={cn(a.destructif && "text-destructive focus:text-destructive")}
+              aria-describedby={a.aide ? `${id}-${i}` : undefined}
+              className={cn(a.destructif && "text-destructive focus:text-destructive", a.aide && "items-start")}
             >
-              {Icone && <Icone className="h-4 w-4" aria-hidden />}
-              {a.label}
+              {Icone && <Icone className={cn("h-4 w-4", a.aide && "mt-0.5")} aria-hidden />}
+              {a.aide ? (
+                <span>
+                  <span className="block font-semibold">{a.label}</span>
+                  <span id={`${id}-${i}`} aria-hidden className="block text-xs text-muted-foreground">{a.aide}</span>
+                </span>
+              ) : a.label}
             </DropdownMenuItem>
           );
         })}

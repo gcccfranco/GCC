@@ -664,7 +664,7 @@ test("membres : la coordination modifie ou retire toute réservation et la voit 
   const dimanche = bloc(page, "Dimanche 11 octobre");
   const sketch = dimanche.getByRole("listitem").filter({ hasText: "Sketch · Jeunes" });
   await sketch.getByRole("button", { name: /^Plus d'actions/ }).click();
-  await expect(page.getByRole("menuitem")).toHaveText(["Déplacer", "Modifier", "Retirer"]);
+  await expect(page.getByRole("menuitem")).toHaveText([/^Déplacer/, /^Modifier/, /^Retirer/]);
   await page.keyboard.press("Escape");
   await expect(dimanche.getByRole("listitem").filter({ hasText: "Chant · EDD 中班" })).toContainText("Hors grille");
 });

@@ -1,6 +1,6 @@
 import "./helpers/cleFirebase";
 import { readFileSync } from "node:fs";
-import { expect, test, type Locator, type Page } from "@playwright/test";
+import { expect, test, type Locator, type Page, type Route } from "@playwright/test";
 import { fsDoc, signInAs, type FakeProfile } from "./helpers/fakeSession";
 import {
   editionCourante, editionProche, editionsAffichees, editionsDe, etatEdition, FETES, feteDe, anneeDe, idEdition,
@@ -22,7 +22,7 @@ import type { Creneau, Programme } from "../src/types/programme";
 
 /** Un programme d'avant ce lot : ni `fete` ni `annee`, identifiant quelconque. */
 const prog = (over: Partial<Programme> = {}): Programme => ({
-  id: "x7Kq2", nom: "Noël", jourJ: "2026-12-24", debut: "2026-10-01", visible: false, passages: [],
+  id: "x7Kq2", nom: "Noël", jourJ: "2026-12-24", debut: "2026-10-01", passages: [],
   createdBy: "uid-alice", updatedAt: "2026-09-14T20:00:00Z", ...over,
 });
 
@@ -844,7 +844,7 @@ test("P6 — ma réservation : « à moi » à la place de mon nom et « ⋯ » 
   await expect(sketch.getByRole("button", { name: "Modifier" })).toHaveCount(0);
   await expect(sketch.getByRole("button", { name: "Retirer" })).toHaveCount(0);
   await plus(sketch).click();
-  await expect(page.getByRole("menuitem")).toHaveText(["Déplacer", "Modifier", "Retirer"]);
+  await expect(page.getByRole("menuitem")).toHaveText([/^Déplacer/, /^Modifier/, /^Retirer/]);
   await page.keyboard.press("Escape");
   await expect(plus(mesReservations(page))).toHaveCount(2);
   // La réservation d'un autre : son auteur, sans « ⋯ ».
@@ -944,7 +944,7 @@ test("P6 — en chinois : « 我的 », le menu et la feuille", async ({ page })
   const sketch = page.getByRole("region", { name: "10月11日星期日", exact: true }).getByRole("listitem").filter({ hasText: "Sketch · Jeunes" });
   await expect(sketch).toContainText("我的");
   await sketch.getByRole("button", { name: /^更多操作/ }).click();
-  await expect(page.getByRole("menuitem")).toHaveText(["调整", "修改", "删除"]);
+  await expect(page.getByRole("menuitem")).toHaveText([/^调整/, /^修改/, /^删除/]);
   await page.keyboard.press("Escape");
   await page.getByRole("button", { name: "预约 14:00 – 15:00" }).click();
   await expect(page.getByRole("dialog").getByRole("button", { name: "请选择内容和参与者" })).toBeDisabled();
@@ -1284,7 +1284,7 @@ test("P8 — « ⋯ » d'une ligne : Déplacer, Modifier, Retirer ; Retirer pass
   await versToutesLesReservations(page);
   const sketch = lignesTableau(page).filter({ hasText: "Sketch" });
   await plus(sketch).click();
-  await expect(page.getByRole("menuitem")).toHaveText(["Déplacer", "Modifier", "Retirer"]);
+  await expect(page.getByRole("menuitem")).toHaveText([/^Déplacer/, /^Modifier/, /^Retirer/]);
   await page.getByRole("menuitem", { name: "Retirer" }).click();
   await repondreDansLeSite(page, "Retirer");
   await expect(lignesTableau(page)).toHaveCount(3);
@@ -1572,7 +1572,7 @@ test("P9 — une colonne (téléphone, tablette portrait) : « ⋯ » › Retire
   const db = await ouvrirFete(page, `${BO}/noel`, DOCS_P8, "2026-10-09", ALICE_EVT);
   const samedi = cetteSemaine(page).getByRole("region", { name: "Samedi 10 octobre", exact: true });
   await plus(samedi).click();
-  await expect(page.getByRole("menuitem")).toHaveText(["Déplacer", "Modifier", "Retirer"]);
+  await expect(page.getByRole("menuitem")).toHaveText([/^Déplacer/, /^Modifier/, /^Retirer/]);
   await page.getByRole("menuitem", { name: "Retirer" }).click();
   await repondreDansLeSite(page, "Retirer");
   await expect(samedi.getByRole("listitem")).toHaveText(["Aucune réservation ici."]);
@@ -1607,4 +1607,108 @@ test("P9 — captures à regarder (planches v18-scene-a-coord-avant/pendant-tele
   await expect(page.getByRole("heading", { name: /Toutes les réservations|Cette semaine/ }).first()).toBeVisible();
   await page.waitForTimeout(400);
   await page.screenshot({ path: `${dir}/p9-pendant-${nom}.png`, fullPage: true });
+});
+
+// ─── Relecture du lot (07/10/2026) ──────────────────────────────────────────
+
+test("relecture — Noël au jour J reporté au 27/12/2026 : Noël 2026 reste l'édition courante jusqu'au 03/01/2027 (remerciement), Noël 2027 le 04/01", () => {
+  const noel26 = prog({ id: "noel-2026", fete: "noel", annee: 2026, jourJ: "2026-12-27", ouvert: true });
+  expect(editionCourante("noel", [noel26], "2027-01-02")).toEqual({ fete: "noel", annee: 2026, programme: noel26 });
+  expect(editionCourante("noel", [noel26], "2027-01-03").annee).toBe(2026);
+  expect(editionCourante("noel", [noel26], "2027-01-04")).toEqual({ fete: "noel", annee: 2027, programme: null });
+  // Le widget, le calendrier et le cron (éditions affichées) la gardent aussi jusqu'au 03/01.
+  expect(editionsAffichees([noel26], "2027-01-02").map((e) => e.annee)).toEqual([2026]);
+  expect(editionsAffichees([noel26], "2027-01-04")).toEqual([]);
+  // Noël 2027 déjà préparé (brouillon) n'y change rien avant le 04/01.
+  const noel27 = prog({ id: "noel-2027", fete: "noel", annee: 2027, jourJ: "2027-12-24", ouvert: false });
+  expect(editionCourante("noel", [noel26, noel27], "2027-01-02").programme?.id).toBe("noel-2026");
+  expect(editionCourante("noel", [noel26, noel27], "2027-01-04").programme?.id).toBe("noel-2027");
+});
+
+/** Le réseau tombe pour la lecture des programmes (les autres lectures passent). */
+const coupeLesProgrammes = (route: Route) => {
+  const q = route.request().postDataJSON() as { structuredQuery?: { from?: { collectionId: string }[] } } | null;
+  return q?.structuredQuery?.from?.[0]?.collectionId === "programmes" ? route.abort() : route.fallback();
+};
+
+test("relecture — App : la lecture de la scène échoue (réseau coupé) → un message et « Réessayer », plus de « Chargement… » sans fin", async ({ page }) => {
+  await ouvrirFete(page, "/evenements/scene/noel", { "programmes/x7Kq2": DOC_NOEL_ANCIEN });
+  await expect(enTeteFete(page)).toHaveText("Noël 2026");
+  const lectures = /firestore\.googleapis\.com.*:runQuery/;
+  await page.route(lectures, coupeLesProgrammes);
+  await page.reload();
+  const alerte = page.getByRole("alert").filter({ hasText: "Impossible de charger la scène" });
+  await expect(alerte).toHaveText(/Impossible de charger la scène\. Vérifie ta connexion\./);
+  await page.unroute(lectures);
+  await alerte.getByRole("button", { name: "Réessayer" }).click();
+  await expect(enTeteFete(page)).toHaveText("Noël 2026");
+  await expect(alerte).toHaveCount(0);
+});
+
+test("relecture — Back-Office : la lecture de la scène échoue (réseau coupé) → un message et « Réessayer »", async ({ page }) => {
+  await ouvrirFete(page, `${BO}/noel`, { "programmes/x7Kq2": DOC_NOEL_ANCIEN }, "2026-10-09", ALICE_EVT);
+  await expect(colonneFete(page).getByRole("heading", { level: 2 })).toHaveText("Noël 2026");
+  const lectures = /firestore\.googleapis\.com.*:runQuery/;
+  await page.route(lectures, coupeLesProgrammes);
+  await page.reload();
+  const alerte = page.getByRole("alert").filter({ hasText: "Impossible de charger la scène" });
+  await expect(alerte).toBeVisible();
+  await page.unroute(lectures);
+  await alerte.getByRole("button", { name: "Réessayer" }).click();
+  await expect(colonneFete(page).getByRole("heading", { level: 2 })).toHaveText("Noël 2026");
+});
+
+test("relecture — « ⋯ » d'une réservation : une ligne d'aide sous chaque action (planche v18-scene-a-membres-ordinateur)", async ({ page }) => {
+  await ouvrirFete(page, "/evenements/scene/noel", DOCS_P5);
+  await plus(ligneDe(page, "Dimanche 11 octobre", "Sketch · Jeunes")).click();
+  const action = (nom: string) => page.getByRole("menuitem", { name: nom, exact: true });
+  await expect(action("Déplacer")).toHaveAccessibleDescription("Choisir un autre créneau libre");
+  await expect(action("Modifier")).toHaveAccessibleDescription("Quoi, qui, note");
+  await expect(action("Retirer")).toHaveAccessibleDescription("Libère le créneau");
+  await expect(action("Déplacer").getByText("Choisir un autre créneau libre")).toBeVisible();
+});
+
+test("relecture — en chinois, l'aide sous chaque action du « ⋯ »", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
+  await ouvrirFete(page, "/evenements/scene/noel", DOCS_P5);
+  const sketch = page.getByRole("region", { name: "10月11日星期日", exact: true }).getByRole("listitem").filter({ hasText: "Sketch · Jeunes" });
+  await sketch.getByRole("button", { name: /^更多操作/ }).click();
+  await expect(page.getByRole("menuitem", { name: "调整", exact: true })).toHaveAccessibleDescription("选择另一个空闲时段");
+  await expect(page.getByRole("menuitem", { name: "修改", exact: true })).toHaveAccessibleDescription("内容、参与者、备注");
+  await expect(page.getByRole("menuitem", { name: "删除", exact: true })).toHaveAccessibleDescription("空出该时段");
+});
+
+test("relecture — Back-Office : un réglage de la saison s'écrit puis se relit une seule fois (plus de seconde lecture)", async ({ page }) => {
+  const db = await ouvrirFete(page, `${BO}/paques`, { "programmes/paques-2027": DOC_PAQUES_2027_BROUILLON }, "2026-10-09", ALICE_EVT);
+  await expect(page.getByRole("heading", { name: "Saison de Pâques 2027" })).toBeVisible();
+  const duree = await reglageSaison(page, "Un créneau dure");
+  const lectures: string[] = [];
+  page.on("request", (r) => {
+    if (!r.url().endsWith(":runQuery")) return;
+    const q = r.postDataJSON() as { structuredQuery?: { from?: { collectionId: string }[] } } | null;
+    if (q?.structuredQuery?.from?.[0]?.collectionId === "programmes") lectures.push(r.url());
+  });
+  await duree.getByRole("button", { name: "1 h 30", exact: true }).click();
+  await expect.poll(() => ecrituresProgrammes(db).length).toBe(1);
+  expect(ecrituresProgrammes(db)[0].method).toBe("PATCH");
+  await expect(duree.getByRole("button", { name: "1 h 30", exact: true, pressed: true })).toBeVisible();
+  await expect.poll(() => lectures.length).toBeGreaterThanOrEqual(1);
+  await page.waitForTimeout(600);
+  expect(lectures).toHaveLength(1);
+});
+
+test("relecture — captures à regarder (menu « ⋯ » avec ses aides, lecture échouée), PW_CAPTURES=<dossier>", async ({ page }) => {
+  const dir = process.env.PW_CAPTURES;
+  test.skip(!dir, "captures seulement avec PW_CAPTURES");
+  const nom = test.info().project.name;
+  await ouvrirFete(page, "/evenements/scene/noel", DOCS_P5);
+  await plus(ligneDe(page, "Dimanche 11 octobre", "Sketch · Jeunes")).click();
+  await expect(page.getByRole("menuitem")).toHaveCount(3);
+  await page.waitForTimeout(400);
+  await page.screenshot({ path: `${dir}/relecture-menu-${nom}.png` });
+  await page.keyboard.press("Escape");
+  await page.route(/firestore\.googleapis\.com.*:runQuery/, coupeLesProgrammes);
+  await page.reload();
+  await expect(page.getByRole("alert").filter({ hasText: "Impossible de charger la scène" })).toBeVisible();
+  await page.screenshot({ path: `${dir}/relecture-echec-${nom}.png` });
 });
