@@ -665,3 +665,45 @@ la barre d'onglets : une page sans barre du bas (rare) le verra plus haut que n�
 - **Reste** : rien pour le lot V18T13.
 - **Timothée** : rien à publier (aucune règle, aucune donnée) ; relire le 中文 de `calendrier.filtreAria`
   (显示的条目, nom du groupe « Tout · Seulement moi », lu par les lecteurs d'écran).
+
+### V18T13 — Relecture (Tâches et Calendrier)
+
+- 07/10/2026 : **lot fini et relu** (deux relectures ; commit `fix(V18T13): relecture — …` sur `lot/v18-t13`).
+- **Corrigé** :
+  - *Important* — « ⋯ › Supprimer » d'une tâche (BO) : un refus de la base (hors ligne, droit perdu) se dit
+    dans la fiche (« L'enregistrement a échoué. Réessaie. », `role="status"`), la fiche reste, plus de promesse
+    rejetée non rattrapée ; on ne quitte la fiche qu'une fois la tâche supprimée et la liste relue. Dans l'App,
+    l'erreur remonte toujours au formulaire (`onDelete`).
+  - Pendant la lecture (profil puis tâches) : ni « Aucune tâche » dans les deux volets, ni « Tu ne fais pas partie de
+    ce pôle », ni compte à zéro dans le rail (le compte n'apparaît qu'une fois les tâches lues).
+  - Une écriture ne relit que son pôle : `useTaches().reload(pôle)` (une requête « fois » par tâche, les autres
+    pôles ne sont plus relus) — changer d'état, cocher, modifier, créer, supprimer.
+  - « Modifier » : le responsable de la tâche reste affiché pendant la lecture des membres (et s'il a quitté le
+    pôle) ; les profils se lisent à la première ouverture du formulaire, plus à chaque ouverture (`useMembres`).
+  - Calendrier sur téléphone, en Agenda : « Créer » propose aujourd'hui, même après ‹ › (spec-calendrier, C5 ;
+    le jour du 1er du mois venait de `allerA`). Le calendrier crée ses tâches par `creerTache` et lit les membres
+    par `useMembres` (`components/taches/creerTache.ts`), plus de copie locale.
+- **Tests** (`agencement-v18-{taches,calendrier}.spec.ts`) : 4 nouveaux tests de comportement (lecture lente
+  simulée, relecture d'un seul pôle, responsable pendant la lecture des membres, suppression refusée) et
+  « Créer » en Agenda sur téléphone, vus rouges (21 échecs sur les cinq projets), puis verts. Ajoutés aussi :
+  `verifierAgencement` sur `/back-office/taches/<pôle>/nouvelle` (un rail de plus, la répétition, et le pôle en
+  pilules : B2) avec « Annuler · Créer la tâche » en bas à droite (R13), et la barre réduite (marge de 28 px,
+  toute la zone) sur la liste et la fiche des tâches, l'agenda et le Mois. Suites : les specs du lot avec
+  `taches`, `taches-evenements`, `pages-en-grand-taches`, `calendrier`, `agencement-v18-confirmations` sur les
+  cinq projets (704 verts, 98 passés exprès) ; `calendrier-deplacer`, `calendrier-widget`, `back-office-admin`,
+  `nouveaux-membres`, `back-office-espace` sur ordinateur et téléphone (307 verts) ; `back-office-coupe`
+  (second serveur) : 59 verts. `tsc --noEmit` et ESLint sans erreur.
+- **Laissé, avec la raison** :
+  - Les sources du calendrier en grand restent des bascules faites main (`data-onglets="pilules"`) : `Pilules`
+    ne fait que le choix unique, les sources se cumulent. À reprendre si `Pilules` gagne un mode multiple.
+  - « Nouvelle réunion » du volet du jour garde `/back-office/evenements/nouveau?reunion=1&date=…` : la
+    redirection de T2a (`NouveauClient`, `lot/v18-t2`) garde tous les paramètres sauf `reunion`, donc `date`.
+    **À l'intégration** : un test du lien après la fusion de T2a (« Nouvelle réunion le … » ouvre
+    `/back-office/reunions/nouvelle?date=…` avec la date), ou pointer le lien directement vers cette adresse.
+  - Écarts à la planche `v18-bo-calendrier-agenda-a`, conformes au texte de B5 : « Ajouter ce jour-là » est un
+    seul bouton avec chevron (la planche : un bouton et une flèche ronde) ; la ligne d'entrée choisie n'est pas
+    surlignée ; sur ordinateur et iPad debout, les filtres de sources passent sur deux ou trois rangées (la planche :
+    une seule).
+- **Reste** : rien pour le lot V18T13.
+- **Timothée** : rien à publier (aucune règle, aucune donnée, aucun libellé nouveau). À regarder : l'agenda sur
+  iPad debout (filtres sur trois rangées) et « Ajouter ce jour-là » en un seul bouton, et dire si ça te va.

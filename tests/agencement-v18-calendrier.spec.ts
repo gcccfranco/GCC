@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import {
-  estGrandEcran, estTelephone, interdireDialoguesNatifs, margeAttendue, ongletsRail, verifierAgencement,
+  estGrandEcran, estTelephone, interdireDialoguesNatifs, margeAttendue, ongletsRail, ouvrirAvecBarre, verifierAgencement,
   verifierPleineLargeur, zoneDeContenu,
 } from "./helpers/agencement";
 import { ADMIN_EMAILS } from "../src/lib/access";
@@ -120,6 +120,33 @@ test("« + Nouvel évènement » dans l'en-tête dès 768 px ; sur téléphone, 
   const action = page.locator("header[data-entete-page]").getByRole("link", { name: "Nouvel évènement" });
   await expect(action).toBeVisible();
   await expect(action).toHaveAttribute("href", /^\/back-office\/evenements\/nouveau\/?$/);
+});
+
+test("téléphone : en Agenda, « Créer » propose aujourd'hui, même après ‹ › (spec-calendrier, C5)", async ({ page }) => {
+  test.skip(!estTelephone(test.info()), "téléphone seulement");
+  await ouvrir(page);
+  await expect(agenda(page)).toBeVisible();
+  await page.getByRole("button", { name: "Mois suivant" }).click();
+  await expect(moisAffiche(page)).toHaveText("Novembre");
+  await page.getByRole("button", { name: "Créer", exact: true }).click();
+  const feuille = page.getByRole("dialog", { name: "Créer" });
+  await expect(feuille.getByRole("link", { name: "Nouvel évènement le 01/10" })).toHaveAttribute("href", /\?date=2026-10-01$/);
+  await expect(feuille.getByRole("button", { name: "Nouvelle tâche pour le 01/10" })).toBeVisible();
+});
+
+test("barre réduite : l'agenda et le Mois prennent la zone (marge de 28 px)", async ({ page }, info) => {
+  test.skip(!info.project.name.startsWith("ordinateur"), "la barre se réduit sur ordinateur ; l'iPad couché l'a toujours réduite");
+  await ouvrirAvecBarre(page, "reduite");
+  await ouvrir(page);
+  expect(await margeAttendue(page), "la barre est bien réduite").toBe(28);
+  const communes = {
+    contenu: page.locator('[data-testid="calendrier"] > header[data-entete-page] + div'),
+    onglets: { rail: 1, pilules: 1 },
+  };
+  await verifierAgencement(page, communes);
+  await vue(page, "Agenda");
+  await expect(agenda(page)).toBeVisible();
+  await verifierAgencement(page, communes);
 });
 
 test("grand écran : en agenda, le volet du jour à droite (300 px), « Ajouter ce jour-là » et son menu", async ({ page }) => {

@@ -29,9 +29,8 @@ import { useSearchParams } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import { Check, ChevronLeft, ChevronRight, CloudOff, SlidersHorizontal, UserRound } from "lucide-react";
 import { creatableEvenementPours, estReunion, isAdminUser, polesDe } from "@/lib/access";
-import { createTache, type TacheValues } from "@/lib/firebase/taches";
-import { listProfiles, useProfile } from "@/lib/firebase/users";
-import { prevenirResponsable } from "@/lib/taches/prevenir";
+import type { TacheValues } from "@/lib/firebase/taches";
+import { useProfile } from "@/lib/firebase/users";
 import { chargerCalendrier, chargerPeriode, enOrdre, type LectureCalendrier } from "@/lib/calendrier/charger";
 import {
   entreesCalendrier,
@@ -50,13 +49,14 @@ import { todayIso } from "@/lib/scene/dimanches";
 import { cn } from "@/lib/utils";
 import { ANNONCE_SECTIONS } from "@/types/annonce";
 import { TACHE_POLES, type TachePole } from "@/types/tache";
-import type { NotifLang, UserProfile } from "@/types/user";
+import type { NotifLang } from "@/types/user";
 import { AgendaSemaines, CartesDuJour, FeuilleEntree, ListeAgenda, useTitreDuJour } from "@/components/calendrier/Agenda";
 import { DialogueDeplacer, type DemandeDeplacement } from "@/components/calendrier/Deplacer";
 import { GrilleMois } from "@/components/calendrier/GrilleMois";
 import { GrillePoints } from "@/components/calendrier/GrillePoints";
 import { AjouterCeJour, BoutonsCreation, ListeDuJour, type DroitsCreation } from "@/components/calendrier/PanneauJour";
 import { TacheForm } from "@/components/taches/TacheForm";
+import { creerTache, useMembres } from "@/components/taches/creerTache";
 import { ICONES } from "@/components/calendrier/apparence";
 import { AnnonceBascule } from "@/components/evenements/AnnonceBascule";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
@@ -139,7 +139,8 @@ export function CalendrierClient() {
   // possibles, et un compteur qui fait relire les sources après une création.
   const [feuilleCreer, setFeuilleCreer] = useState(false);
   const [tacheLe, setTacheLe] = useState<string | null>(null);
-  const [membres, setMembres] = useState<UserProfile[]>([]);
+  // Les responsables possibles ne servent qu'au formulaire de tâche : lus à sa première ouverture.
+  const membres = useMembres(tacheLe !== null);
   const [lecture, setLecture] = useState(0);
   // C6 : le déplacement demandé (dépôt dans la grille, ou « Déplacer… »).
   const [demande, setDemande] = useState<DemandeDeplacement | null>(null);
@@ -174,11 +175,6 @@ export function CalendrierClient() {
   }, [user, lu, debut, fin, seulementMoiActif]);
   const base = periode?.donnees ?? null;
   const echecs = enOrdre([...(lu?.echecs ?? []), ...(periode?.echecs ?? [])]);
-
-  // Les responsables possibles ne servent qu'au formulaire de tâche : lus à son ouverture.
-  useEffect(() => {
-    if (tacheLe) listProfiles().then(setMembres).catch(() => {});
-  }, [tacheLe]);
 
   // Lot U9 (Q6) : un mois affiché à partir de la bascule ne lit plus le Sheet, pas même les
   // derniers jours de décembre en tête de sa grille ; l'agenda, à partir d'aujourd'hui.
@@ -230,17 +226,19 @@ export function CalendrierClient() {
     tache: mesPoles.length > 0,
   };
   const peutCreer = droits.evenement || droits.reunion || droits.tache;
+  // La feuille « Créer » du téléphone : le jour touché du Mois à points ; en Agenda, où aucun jour ne
+  // se choisit, aujourd'hui (spec-calendrier, C5), même après ‹ ›.
+  const jourCreer = vue === "agenda" ? aujourdhui : choisi;
   const nouvelleTache = (date: string) => () => { setFeuille(false); setFeuilleCreer(false); setTacheLe(date); };
   const boutonsCreation = (date: string) => (
     <BoutonsCreation date={date} lang={lang} droits={droits} onNouvelleTache={nouvelleTache(date)} />
   );
-  async function creerTache(values: TacheValues, pole: TachePole) {
+  // Comme sur la page du pôle (`creerTache`) : nommé par quelqu'un d'autre, le responsable est prévenu.
+  async function enregistrerTache(values: TacheValues, pole: TachePole) {
     if (!user) return;
-    const id = await createTache(pole, values, user.uid);
+    await creerTache(pole, values, user.uid);
     setTacheLe(null);
     setLecture((n) => n + 1);
-    // Nommé par quelqu'un d'autre : le responsable est prévenu, comme sur la page du pôle.
-    if (values.responsableUid && values.responsableUid !== user.uid) prevenirResponsable(pole, id);
   }
 
   // « ‹ Octobre 2026 › » et « Aujourd'hui » : dans la rangée de l'en-tête, en Mois comme en Agenda
@@ -451,7 +449,7 @@ export function CalendrierClient() {
             <DrawerHeader className="pb-2 text-left">
               <DrawerTitle>{t("calendrier.creer")}</DrawerTitle>
             </DrawerHeader>
-            <div className="px-4 pb-8">{boutonsCreation(choisi)}</div>
+            <div className="px-4 pb-8">{boutonsCreation(jourCreer)}</div>
           </DrawerContent>
         </Drawer>
       )}
@@ -463,7 +461,7 @@ export function CalendrierClient() {
           echeance={tacheLe ?? undefined}
           initial={null}
           membres={membres}
-          onSubmit={creerTache}
+          onSubmit={enregistrerTache}
           onClose={() => setTacheLe(null)}
         />
       )}

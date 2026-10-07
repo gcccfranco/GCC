@@ -25,7 +25,7 @@ export default function NouvelleTachePage() {
   async function creer(values: TacheValues, p: TachePole) {
     if (!user) return;
     const id = await creerTache(p, values, user.uid);
-    await reload();
+    await reload(p);
     router.push(`${racine}/${p}/${id}`);
   }
 

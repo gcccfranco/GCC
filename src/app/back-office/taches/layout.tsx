@@ -18,8 +18,10 @@ import { FournirTaches } from "@/components/taches/SectionTaches";
 function Taches({ children }: { children: React.ReactNode }) {
   const { user, profile, loading } = useProfile();
   const poles = useMemo(() => tachesDuBackOffice(user, profile), [user, profile]);
-  const { items, loading: chargement, reload } = useTaches(loading ? [] : poles);
+  const { items, loading: lecture, reload } = useTaches(loading ? [] : poles);
   const parNom = profile ? `${profile.firstName} ${profile.lastName}`.trim() || profile.email : user?.email ?? "";
+  // Le profil puis les tâches : tant que l'un se lit, ni « Aucune tâche » ni compte à zéro.
+  const chargement = loading || lecture;
   const valeur = { poles, items, chargement, reload, aujourdhui: todayIso(), parNom, racine: "/back-office/taches", backOffice: true };
   return <FournirTaches value={valeur}>{children}</FournirTaches>;
 }

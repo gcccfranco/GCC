@@ -19,18 +19,17 @@ import { Bell, CalendarDays, Check, ChevronLeft, Link2, Minus, Pencil, Repeat, T
 import { EnTetePage } from "@/components/layout/EnTetePage";
 import { MenuActions } from "@/components/layout/MenuActions";
 import { TacheForm } from "@/components/taches/TacheForm";
+import { useMembres } from "@/components/taches/creerTache";
 import { depuisQuand } from "@/components/taches/TacheLigne";
 import { texteRetour } from "@/components/taches/retour";
 import { useMesTaches } from "@/components/taches/SectionTaches";
 import { useDeuxVolets } from "@/hooks/useDeuxVolets";
-import { getProfile, listProfiles, useProfile } from "@/lib/firebase/users";
-import { polesDe } from "@/lib/access";
+import { getProfile, useProfile } from "@/lib/firebase/users";
 import { choisirEtat, deleteTache, updateTache, type TacheValues } from "@/lib/firebase/taches";
 import { lignesDeTache, type Ligne } from "@/lib/taches/echeances";
 import { prevenirFait, prevenirResponsable } from "@/lib/taches/prevenir";
 import { cn } from "@/lib/utils";
 import type { EtatFois, Fois, Tache, TachePole } from "@/types/tache";
-import type { UserProfile } from "@/types/user";
 
 const locale = (lang: string) => (lang === "zh-CN" ? "zh-CN" : "fr-FR");
 const majuscule = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
@@ -84,7 +83,8 @@ function Fiche({ ligne, toutesLesFois }: { ligne: Ligne; toutesLesFois: Fois[] }
   const { reload, parNom, racine, backOffice, aujourdhui } = useMesTaches();
   const { tache, date, fois } = ligne;
   const [modifier, setModifier] = useState(false);
-  const [membres, setMembres] = useState<UserProfile[]>([]);
+  // Lus à la première ouverture du formulaire ; le formulaire garde ceux du pôle.
+  const membres = useMembres(modifier);
   const [retour, setRetour] = useState("");
   // Historique (B1) : le nom de l'auteur se lit dans son profil (une lecture, profils lisibles par tout connecté).
   const [auteur, setAuteur] = useState<string | null>();
@@ -100,16 +100,11 @@ function Fiche({ ligne, toutesLesFois }: { ligne: Ligne; toutesLesFois: Fois[] }
     return () => { vivant = false; };
   }, [backOffice, tache.auteurUid]);
 
-  useEffect(() => {
-    if (!modifier) return;
-    listProfiles().then((all) => setMembres(all.filter((p) => polesDe(p).includes(tache.pole)))).catch(() => {});
-  }, [modifier, tache.pole]);
-
   async function choisir(nouvel: Etat) {
     if (!user || nouvel === etat) return;
     setRetour("");
     await choisirEtat(tache.pole, tache.id, date, fois, nouvel === "afaire" ? null : (nouvel as EtatFois), { uid: user.uid, nom: parNom });
-    await reload();
+    await reload(tache.pole);
     if (nouvel === "terminee" && tache.prevenir) {
       setRetour(texteRetour(t, await prevenirFait(tache.pole, tache.id, date), tache));
     }
@@ -119,18 +114,28 @@ function Fiche({ ligne, toutesLesFois }: { ligne: Ligne; toutesLesFois: Fois[] }
     if (!user) return;
     await updateTache(tache.pole, tache.id, values);
     setModifier(false);
-    await reload();
+    await reload(tache.pole);
     // Nommé par quelqu'un d'autre : le nouveau responsable est prévenu.
     if (values.responsableUid && values.responsableUid !== user.uid && values.responsableUid !== tache.responsableUid) {
       prevenirResponsable(tache.pole, tache.id);
     }
   }
 
+  // On ne quitte la fiche qu'une fois la tâche supprimée et la liste relue. L'erreur remonte au
+  // formulaire de l'App (`onDelete`) ; « ⋯ › Supprimer » la dit dans la fiche (le menu est fermé).
   async function supprimer() {
     await deleteTache(tache.pole, tache.id, toutesLesFois);
     setModifier(false);
-    await reload();
+    await reload(tache.pole);
     router.push(backOffice ? `${racine}/${tache.pole}` : "/taches");
+  }
+  async function supprimerDepuisLeMenu() {
+    setRetour("");
+    try {
+      await supprimer();
+    } catch {
+      setRetour(t("taches.erreur"));
+    }
   }
 
   const jour = majuscule(new Date(`${date}T12:00:00`).toLocaleDateString(locale(i18n.language), { weekday: "long", day: "numeric", month: "long" }));
@@ -187,7 +192,7 @@ function Fiche({ ligne, toutesLesFois }: { ligne: Ligne; toutesLesFois: Fois[] }
   );
   const menu = backOffice && (
     <MenuActions actions={[{
-      label: t("taches.supprimer"), icone: Trash2, destructif: true, onSelect: supprimer,
+      label: t("taches.supprimer"), icone: Trash2, destructif: true, onSelect: supprimerDepuisLeMenu,
       confirmer: { titre: t("taches.confirmerSuppression"), action: t("common.buttons.delete") },
     }]} />
   );

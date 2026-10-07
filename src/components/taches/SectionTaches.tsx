@@ -33,7 +33,8 @@ type Valeur = {
   poles: TachePole[];
   items: TacheAvecFois[];
   chargement: boolean;
-  reload: () => Promise<void>;
+  /** Sans pôle, relit tout ; avec, seulement ce pôle (après une écriture dans ce pôle). */
+  reload: (pole?: TachePole) => Promise<void>;
   aujourdhui: string;
   /** Nom écrit sur une fois commencée ou terminée. */
   parNom: string;

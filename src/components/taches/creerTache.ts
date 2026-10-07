@@ -10,13 +10,18 @@ import { prevenirResponsable } from "@/lib/taches/prevenir";
 import type { TachePole } from "@/types/tache";
 import type { UserProfile } from "@/types/user";
 
-/** Les profils proposés comme responsables (le formulaire garde ceux du pôle choisi). */
+const AUCUN: UserProfile[] = [];
+
+/** Les profils proposés comme responsables (le formulaire garde ceux du pôle choisi) : lus à la
+ *  première ouverture du formulaire (`actif`), puis gardés ; une lecture vide (refusée) se refait
+ *  à l'ouverture suivante. */
 export function useMembres(actif: boolean): UserProfile[] {
-  const [membres, setMembres] = useState<UserProfile[]>([]);
+  const [membres, setMembres] = useState<UserProfile[] | null>(null);
+  const lus = !!membres?.length;
   useEffect(() => {
-    if (actif) listProfiles().then(setMembres).catch(() => {});
-  }, [actif]);
-  return membres;
+    if (actif && !lus) listProfiles().then(setMembres).catch(() => {});
+  }, [actif, lus]);
+  return membres ?? AUCUN;
 }
 
 /** Crée une tâche ; nommé par quelqu'un d'autre, le responsable est prévenu. Rend son id. */

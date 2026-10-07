@@ -97,6 +97,7 @@ function Champs({ enLigne, pole: poleDepart, poles, evenement, echeance, initial
   const [busy, setBusy] = useState(false);
   const set = (patch: Partial<TacheValues>) => setV((x) => ({ ...x, ...patch }));
   const rythme = v.repetition?.rythme ?? "";
+  const proposes = membres.filter((m) => polesDe(m).includes(pole));
 
   function changerPole(p: TachePole) {
     setPole(p);
@@ -180,7 +181,9 @@ function Champs({ enLigne, pole: poleDepart, poles, evenement, echeance, initial
               set({ responsableUid: m?.uid ?? null, responsableNom: m ? `${m.firstName} ${m.lastName}`.trim() : "" });
             }}>
             <option value="">{t("taches.pourTous")}</option>
-            {membres.filter((m) => polesDe(m).includes(pole)).map((m) => <option key={m.uid} value={m.uid}>{`${m.firstName} ${m.lastName}`.trim() || m.email}</option>)}
+            {proposes.map((m) => <option key={m.uid} value={m.uid}>{`${m.firstName} ${m.lastName}`.trim() || m.email}</option>)}
+            {/* Le responsable de la tâche reste affiché, membres pas encore lus ou parti du pôle. */}
+            {v.responsableUid && !proposes.some((m) => m.uid === v.responsableUid) && <option value={v.responsableUid}>{v.responsableNom}</option>}
           </select>
         </div>
       </div>

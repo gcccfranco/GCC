@@ -39,7 +39,7 @@ export default function PoleLayout({ children }: { children: React.ReactNode }) 
   const chemin = usePathname() ?? "";
   const deuxVolets = useDeuxVolets();
   const { user } = useProfile();
-  const { poles, items, reload, aujourdhui, racine } = useMesTaches();
+  const { poles, items, chargement, reload, aujourdhui, racine } = useMesTaches();
   const [feuille, setFeuille] = useState(false);
   const membres = useMembres(feuille);
   const pole = (TACHE_POLES as readonly string[]).includes(brut) && poles.includes(brut as TachePole) ? (brut as TachePole) : null;
@@ -56,7 +56,7 @@ export default function PoleLayout({ children }: { children: React.ReactNode }) 
     if (!user) return;
     await creerTache(p, values, user.uid);
     setFeuille(false);
-    await reload();
+    await reload(p);
   }
 
   // En un volet, la fiche est une page qui pose son propre en-tête (« ‹ Tâches »).
@@ -70,7 +70,7 @@ export default function PoleLayout({ children }: { children: React.ReactNode }) 
       onglets={poles.length > 0 && (
         <OngletsRail
           etiquette={t("taches.poles")}
-          onglets={poles.map((p) => ({ id: p, label: t(`taches.pole.${p}`), href: `${racine}/${p}`, compte: compte(p) }))}
+          onglets={poles.map((p) => ({ id: p, label: t(`taches.pole.${p}`), href: `${racine}/${p}`, compte: chargement ? undefined : compte(p) }))}
         />
       )}
     />
@@ -80,7 +80,7 @@ export default function PoleLayout({ children }: { children: React.ReactNode }) 
     return (
       <>
         {enTete}
-        <p className="px-[var(--marge-page)] text-sm text-muted-foreground">{t("taches.pasMembre")}</p>
+        {!chargement && <p className="px-[var(--marge-page)] text-sm text-muted-foreground">{t("taches.pasMembre")}</p>}
       </>
     );
   }
@@ -96,7 +96,7 @@ export default function PoleLayout({ children }: { children: React.ReactNode }) 
         racine={racinePole}
         largeurListe={380}
         liste={<ListeDuPole pole={pole} lignes={lignes} premiere={premiere} />}
-        premier={premiere
+        premier={chargement ? null : premiere
           ? <FicheTache pole={pole} id={premiere.tache.id} date={premiere.date} />
           : <p className="raised rounded-2xl px-5 py-4 text-sm text-muted-foreground">{t("taches.vide")}</p>}
       >
@@ -114,7 +114,7 @@ function ListeDuPole({ pole, lignes, premiere }: { pole: TachePole; lignes: Lign
   const dateVoulue = useSearchParams().get("date");
   const deuxVolets = useDeuxVolets();
   const { user } = useProfile();
-  const { reload, aujourdhui, parNom, racine } = useMesTaches();
+  const { chargement, reload, aujourdhui, parNom, racine } = useMesTaches();
   const [retour, setRetour] = useState("");
   const [terminees, setTerminees] = useState(false);
   const g = grouperLignes(lignes, aujourdhui);
@@ -130,7 +130,7 @@ function ListeDuPole({ pole, lignes, premiere }: { pole: TachePole; lignes: Lign
     if (!user) return;
     setRetour("");
     const etat = await cyclerEtat(pole, l.tache.id, l.date, l.fois, { uid: user.uid, nom: parNom });
-    await reload();
+    await reload(pole);
     if (etat === "terminee" && l.tache.prevenir) {
       setRetour(texteRetour(t, await prevenirFait(pole, l.tache.id, l.date), l.tache));
     }
@@ -154,7 +154,7 @@ function ListeDuPole({ pole, lignes, premiere }: { pole: TachePole; lignes: Lign
   return (
     <div className={cn("space-y-5", deuxVolets ? "px-3 py-4" : "px-[var(--marge-page)] pb-10")}>
       {retour && <p role="status" className="px-1 text-sm text-muted-foreground">{retour}</p>}
-      {lignes.length === 0 && <p className="px-1 text-sm text-muted-foreground">{t("taches.vide")}</p>}
+      {!chargement && lignes.length === 0 && <p className="px-1 text-sm text-muted-foreground">{t("taches.vide")}</p>}
       {groupes.filter(([, ls]) => ls.length > 0).map(([titre, ls, rouge]) => (
         <section key={titre}>
           <h2 className={cn("mb-1 px-1 text-sm font-semibold", rouge ? "text-destructive" : "text-muted-foreground")}>{titre}</h2>

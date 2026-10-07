@@ -1,7 +1,8 @@
-import { expect, test, type Page, type TestInfo } from "@playwright/test";
+import { expect, test, type Page, type Request, type Route, type TestInfo } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import {
-  estGrandEcran, estTelephone, fenetreDuSite, interdireDialoguesNatifs, ongletsRail, repondreDansLeSite, verifierAgencement,
+  estGrandEcran, estTelephone, fenetreDuSite, interdireDialoguesNatifs, margeAttendue, ongletsRail, ouvrirAvecBarre,
+  repondreDansLeSite, verifierAgencement,
 } from "./helpers/agencement";
 
 // Agencement v18, tranche T1 (docs/spec-agencement-v18.md, B1 et B2 ; planches `v18-bo-taches`,
@@ -60,6 +61,24 @@ const ligne = (page: Page, titre: string) => liste(page).getByRole("button", { n
 const surLaListe = (page: Page) => ({ contenu: liste(page).locator(".."), onglets: { rail: 1, pilules: 0 } });
 const nouvelleTache = (page: Page) => page.getByRole(estGrandEcran(test.info()) ? "link" : "button", { name: "Nouvelle tâche" });
 
+/** Chemin Firestore d'une requête (`poles/da:runQuery`, `poles/da/taches/t3`), sans le préfixe du projet. */
+const cheminFirestore = (url: string) => decodeURIComponent(new URL(url).pathname.split("/documents")[1] ?? "").replace(/^\//, "");
+
+/** Retient les réponses aux requêtes choisies jusqu'à `relacher()` (lecture lente simulée). À poser
+ *  après `signInAs` : la dernière route posée passe d'abord, puis la base simulée répond. */
+async function retenir(page: Page, choisir: (r: Request) => boolean) {
+  let relacher!: () => void;
+  const porte = new Promise<void>((r) => { relacher = r; });
+  let vues = 0;
+  await page.route(/firestore\.googleapis\.com/, async (route: Route) => {
+    if (!choisir(route.request())) return route.fallback();
+    vues++;
+    await porte;
+    await route.fallback();
+  });
+  return { relacher, vues: () => vues };
+}
+
 /** Capture à regarder à l'œil (PW_CAPTURES=<dossier>), une par appareil. */
 async function capture(page: Page, nom: string) {
   const dir = process.env.PW_CAPTURES;
@@ -78,6 +97,49 @@ test("l'agencement commun : en-tête « Tâches », rail des pôles avec le comp
   await expect(rail.getByRole("link", { name: /^DA/ })).toHaveAttribute("aria-current", "page");
   await verifierAgencement(page, surLaListe(page));
   await capture(page, "v18-bo-taches");
+});
+
+test("pendant la lecture des tâches : ni « Aucune tâche », ni compte à zéro dans le rail", async ({ page }) => {
+  interdireDialoguesNatifs(page);
+  await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
+  await signInAs(page, RUTH, DOCS, "/back-office");
+  // Les tâches du pôle DA tardent à venir (réseau lent).
+  const lecture = await retenir(page, (r) => cheminFirestore(r.url()) === "poles/da:runQuery");
+  await page.goto("/back-office/taches/da");
+  await expect.poll(lecture.vues).toBeGreaterThan(0);
+  const rail = ongletsRail(page).filter({ visible: true });
+  await expect(rail.getByRole("link", { name: /^DA/ })).toBeVisible();
+  await expect(page.getByText(/^Aucune tâche pour l'instant/)).toHaveCount(0);
+  await expect(rail.getByRole("link", { name: /^DA/ })).toHaveText(/^DA$/);
+  lecture.relacher();
+  await expect(ligne(page, "Affiche de Noël")).toBeVisible();
+  await expect(rail.getByRole("link")).toHaveText([/^DA\s*·\s*3$/, /^Média\s*·\s*1$/]);
+});
+
+test("changer l'état d'une tâche ne relit que son pôle", async ({ page }) => {
+  const db = await ouvrir(page, "/back-office/taches/da/t3");
+  const etat = page.getByRole("radiogroup", { name: "État" }).filter({ visible: true });
+  await expect(etat.getByRole("radio", { name: "À faire" })).toHaveAttribute("aria-checked", "true");
+  const relues: string[] = [];
+  page.on("request", (r) => { if (r.url().includes("firestore.googleapis.com") && r.method() !== "PATCH") relues.push(cheminFirestore(r.url())); });
+  await etat.getByRole("radio", { name: "Terminée" }).click();
+  // L'état affiché vient de la relecture : quand il change, elle est finie.
+  await expect(etat.getByRole("radio", { name: "Terminée" })).toHaveAttribute("aria-checked", "true");
+  expect(db.writes.some((w) => w.path === "poles/da/taches/t3/fois/2026-11-16")).toBe(true);
+  expect(relues).toContain("poles/da:runQuery");
+  expect(relues.filter((c) => c.startsWith("poles/media")), "le pôle Média n'est pas relu").toEqual([]);
+});
+
+test("« Modifier » : le responsable est déjà choisi pendant la lecture des membres", async ({ page }) => {
+  await ouvrir(page, "/back-office/taches/da/t1");
+  const membres = await retenir(page, (r) => cheminFirestore(r.url()) === ":runQuery" && (r.postData() ?? "").includes("\"users\""));
+  await page.getByRole("button", { name: "Modifier" }).click();
+  await expect.poll(membres.vues).toBeGreaterThan(0);
+  const responsable = page.getByLabel("Responsable");
+  await expect(responsable).toHaveValue("uid-ruth");
+  await expect(responsable.locator("option:checked")).toHaveText("Ruth K.");
+  membres.relacher();
+  await expect(responsable).toHaveValue("uid-ruth");
 });
 
 test("la liste : En retard, Cette semaine, Plus tard ; « Terminées (1) » repliées puis dépliées", async ({ page }) => {
@@ -154,6 +216,32 @@ test.describe("en grand (deux volets)", () => {
     await expect(ligne(page, "Affiche de la retraite")).toBeVisible();
   });
 
+  test("la page « Nouvelle tâche » : l'agencement commun ; « Annuler · Créer la tâche » en bas à droite (R13)", async ({ page }) => {
+    await ouvrir(page, "/back-office/taches/da/nouvelle");
+    const form = detail(page).getByRole("form", { name: "Nouvelle tâche" });
+    await expect(form).toBeVisible();
+    // Le formulaire ajoute au rail des pôles le pôle en pilules et la répétition en rail (B2, planche `v18-bo-tache-nouvelle`).
+    await verifierAgencement(page, { contenu: liste(page).locator(".."), onglets: { rail: 2, pilules: 1 } });
+    const carte = (await form.boundingBox())!;
+    const annuler = (await form.getByRole("button", { name: "Annuler" }).boundingBox())!;
+    const creer = (await form.getByRole("button", { name: "Créer la tâche" }).boundingBox())!;
+    expect(annuler.x + annuler.width, "Annuler à gauche du bouton plein").toBeLessThanOrEqual(creer.x);
+    expect(creer.x, "les deux boutons à droite de la carte").toBeGreaterThan(carte.x + carte.width / 2);
+    expect(carte.x + carte.width - (creer.x + creer.width), "le bouton plein au bord droit (marge de la carte)").toBeLessThanOrEqual(21);
+  });
+
+  test("barre réduite : l'en-tête et les volets suivent (marge de 28 px, toute la zone)", async ({ page }, info) => {
+    test.skip(!info.project.name.startsWith("ordinateur"), "la barre se réduit sur ordinateur ; l'iPad couché l'a toujours réduite");
+    await ouvrirAvecBarre(page, "reduite");
+    await ouvrir(page, "/back-office/taches/da");
+    await expect(ligne(page, "Affiche de Noël")).toBeVisible();
+    expect(await margeAttendue(page), "la barre est bien réduite").toBe(28);
+    await verifierAgencement(page, surLaListe(page));
+    await ligne(page, "Livret de l'Avent").click();
+    await expect(detail(page).getByRole("heading", { level: 2, name: "Livret de l'Avent" })).toBeVisible();
+    await verifierAgencement(page, surLaListe(page));
+  });
+
   test("le pôle d'une nouvelle tâche se choisit en pilules", async ({ page }) => {
     const db = await ouvrir(page, "/back-office/taches/da/nouvelle");
     const form = detail(page).getByRole("form", { name: "Nouvelle tâche" });
@@ -202,6 +290,24 @@ test("« ⋯ › Supprimer » : la fenêtre du site ; Annuler garde la tâche, S
   await expect(page).toHaveURL(/\/back-office\/taches\/da\/?$/);
   await expect.poll(() => db.doc("poles/da/taches/t3")).toBeUndefined();
   await expect(ligne(page, "Livret de l'Avent")).toHaveCount(0);
+});
+
+test("« ⋯ › Supprimer » refusé par la base : un message, la fiche reste, aucune erreur non rattrapée", async ({ page }) => {
+  const erreurs: string[] = [];
+  page.on("pageerror", (e) => erreurs.push(e.message));
+  const db = await ouvrir(page, "/back-office/taches/da/t3");
+  // Hors ligne ou droit perdu : Firestore refuse la suppression.
+  await page.route(/firestore\.googleapis\.com/, (route) => (route.request().method() === "DELETE"
+    ? route.fulfill({ status: 403, contentType: "application/json", body: JSON.stringify({ error: { code: 403, message: "Missing or insufficient permissions.", status: "PERMISSION_DENIED" } }) })
+    : route.fallback()));
+  await page.getByRole("button", { name: "Plus d'actions" }).click();
+  await page.getByRole("menuitem", { name: "Supprimer" }).click();
+  await repondreDansLeSite(page, "Supprimer");
+  await expect(page.getByRole("status").filter({ hasText: "L'enregistrement a échoué. Réessaie." })).toBeVisible();
+  await expect(page).toHaveURL(/\/back-office\/taches\/da\/t3\/?$/);
+  await expect(page.getByRole("heading", { name: "Livret de l'Avent" })).toBeVisible();
+  expect(db.doc("poles/da/taches/t3")).toBeDefined();
+  expect(erreurs).toEqual([]);
 });
 
 test.describe("un volet (téléphone, tablette portrait)", () => {
