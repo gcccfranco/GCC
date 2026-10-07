@@ -10,15 +10,16 @@
 // l'adresse de l'agenda, celle du prochain évènement. Un volet : les cartes à bannière
 // d'aujourd'hui (deux colonnes sur tablette portrait), puis la fiche seule sur son adresse.
 // Lot U9, B2 : jusqu'au 31/12/2026, les entrées du Sheet des évènements s'y mêlent.
+// Agencement v18 (A10, docs/spec-agencement-v18.md) : l'en-tête de la section (`enTete`, posé par
+// `SectionEvenements` : titre, « + Nouvel évènement », onglets) est au-dessus des deux volets ; la
+// liste n'a plus de titre, c'est une carte (R10) ; la fiche du volet ne pose pas de marge. En un
+// volet, l'en-tête est sur l'agenda ; la fiche en page n'a que son retour « ‹ Évènements ».
 
 import { GuideLien } from "@/components/guide/GuideLien"
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Plus } from "lucide-react"
-import { PageTitle } from "@/components/layout/PageTitle"
 import { DeuxVolets } from "@/components/layout/DeuxVolets"
-import { EvenementsTabs } from "@/components/evenements/EvenementsTabs"
 import { useTranslation } from "react-i18next"
 import { useAuth } from "@/lib/firebase/auth"
 import { useProfile } from "@/lib/firebase/users"
@@ -34,7 +35,7 @@ import type { Evenement } from "@/types/evenement"
 import { EntreeSheetCarte, EvenementCard, EvenementCarte } from "./EvenementCard"
 import { EvenementClient } from "./[id]/EvenementClient"
 
-export function CalendrierClient({ children }: { children: React.ReactNode }) {
+export function CalendrierClient({ enTete, children }: { enTete: React.ReactNode; children: React.ReactNode }) {
   const { t, i18n } = useTranslation()
   const { user, loading: authLoading } = useAuth()
   const { profile, loading: profileLoading } = useProfile()
@@ -98,16 +99,6 @@ export function CalendrierClient({ children }: { children: React.ReactNode }) {
   const surLaListe = estSurLaListe(pathname, "/evenements")
   const idActif = surLaListe ? premier?.id : decodeURIComponent(pathname.replace(/\/+$/, "").split("/")[2] ?? "")
 
-  // « Nouvel évènement » en encre (Q5) ; en grand, un rond « + » à côté du titre (planche
-  // `evenements-ipad-paysage`) : le libellé ne tient pas dans la liste.
-  const nouvel = peutCreer && (
-    <Link href="/back-office/evenements/nouveau" aria-label={t("evenements.nouveau")} title={grand ? t("evenements.nouveau") : undefined}
-      className={`inline-flex h-9 items-center justify-center gap-1.5 rounded-full bg-foreground text-sm font-semibold text-background transition-transform duration-150 active:scale-[.97] ${grand ? "w-9" : "px-4"}`}>
-      <Plus className="h-4 w-4" aria-hidden />
-      {!grand && t("evenements.nouveau")}
-    </Link>
-  )
-
   // Rien de prévu : on ne l'affirme qu'une fois le Sheet lu (U9), et pas s'il n'a pu l'être. En grand,
   // c'est aussi le volet de droite d'un agenda vide (Q3).
   const vide = (
@@ -125,10 +116,6 @@ export function CalendrierClient({ children }: { children: React.ReactNode }) {
     <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
   ) : (
     <div className={grand ? "space-y-5" : "max-w-2xl mx-auto space-y-6 md:max-w-none"}>
-      {/* En grand, le titre de la page (h1) est celui de la fiche à droite ; sans fiche (agenda vide), celui-ci. */}
-      <PageTitle title={t("evenements.title")} niveau={grand && (premier || !surLaListe) ? 2 : 1} action={nouvel || undefined} />
-      {grand && <EvenementsTabs enLigne />}
-
       {infos.length > 0 && (
         <section className="space-y-2" aria-label={t("evenements.infos")}>
           {infos.map((e) => <EvenementCard key={e.id} evenement={e} actif={grand && e.id === idActif} />)}
@@ -176,26 +163,27 @@ export function CalendrierClient({ children }: { children: React.ReactNode }) {
 
   if (grand) {
     return (
-      <DeuxVolets
-        racine="/evenements"
-        liste={<div className="px-5 pb-10 pt-6">{agenda}</div>}
-        premier={
-          <div className="px-6 pb-16 pt-6">
-            {chargement ? null
+      <div className="pb-16">
+        {enTete}
+        <DeuxVolets
+          racine="/evenements"
+          liste={<div className="px-3 py-4">{agenda}</div>}
+          premier={
+            chargement ? null
               : premier ? <EvenementClient id={premier.id} />
               : premiereEntree?.source === "sheet" ? <EntreeSheetCarte entree={premiereEntree.entree} />
-              : vide}
-          </div>
-        }
-      >
-        <div className="px-6 pb-16 pt-6">{children}</div>
-      </DeuxVolets>
+              : vide
+          }
+        >
+          {children}
+        </DeuxVolets>
+      </div>
     )
   }
   return (
     <>
-      <EvenementsTabs />
-      <main className="max-w-[1080px] mx-auto px-4 py-6 pb-16">
+      {surLaListe && enTete}
+      <main className={`px-[var(--marge-page)] pb-16 ${surLaListe ? "" : "pt-6"}`}>
         <DeuxVolets racine="/evenements" liste={agenda}>{children}</DeuxVolets>
       </main>
     </>

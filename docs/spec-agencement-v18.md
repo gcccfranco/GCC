@@ -659,3 +659,51 @@ la barre d'onglets : une page sans barre du bas (rare) le verra plus haut que n�
 - **Reste** : rien pour T2b. `pages-en-grand-evenements.spec.ts:79` reste rouge (attendu, F1 → T7). P7 de la scène
   ajoute ses onglets Pâques · Noël dans `back-office/evenements/layout.tsx` (l'en-tête et la branche « scène » sont prêts).
 - **Timothée** : rien à publier (ni règle ni donnée) ; relire les libellés 中文 ci-dessus.
+
+### V18T7 — App › Évènements (T7)
+
+- 07/10/2026 : **T7 faite** (branche `lot/v18-t7`, commit `feat(V18T7): T7 — App Évènements …`), après la fusion de
+  `lot/v18-fondations` (F1, F2, relecture) et de `lot/v18-t2` (T2a, T2b). A10 : l'en-tête de **toute la section**
+  (`EnTetePage` dans `SectionEvenements`, sur l'agenda et sur `/evenements/scene`) : « Évènements », « Les rendez-vous
+  de l'église et les inscriptions », « + Nouvel évènement » (`BoutonNouveau` : pilule à libellé dès 768 px, rond sur
+  téléphone ; responsables seulement, vers `/back-office/evenements/nouveau`), le rail des onglets sous le titre
+  (`OngletsRail`) ; sur l'onglet de la scène, le même en-tête sans action, le h1 ne bouge pas. Plus de barre collante
+  `SectionTabs` ni de pilules dans la liste.
+- **Fichiers** : `components/evenements/EvenementsTabs.tsx` ne rend plus rien et donne la liste des onglets
+  (`useOngletsEvenements`, même règle qu'avant : Calendrier, puis le programme affiché ou « Scène » pour la
+  coordination) — **P4** n'a qu'à y changer la liste ; `app/evenements/SectionEvenements.tsx` (en-tête ; branche
+  scène : l'en-tête puis le `main` de 1 080 px d'aujourd'hui, que P4 retire) ; `CalendrierClient.tsx` (reçoit
+  `enTete` ; en grand, l'en-tête au-dessus de `DeuxVolets`, la liste sans titre ni onglets, `px-3 py-4` dans la
+  carte, la fiche sans marge (R10) ; en un volet, l'en-tête sur l'agenda seulement, la fiche en page garde sa barre
+  « ‹ Évènements · Gérer dans le Back-Office ») ; `EvenementClient.tsx` (**branche App en grand seulement**) : titre
+  en h2 de 24 px (`TitreEvenement grand`), « Gérer dans le Back-Office » en contour (`Button outline`) à côté du
+  titre, bannière seulement avec une image ; `EvenementCard.tsx` (`TitreEvenement grand`) ; `globals.css` (bloc
+  `.fiche-grand` : une colonne sous 760 px de volet — les colonnes en `display: contents`, l'ordre bannière, infos et
+  inscription, texte, gestion, tâches par `order-*` —, deux au-delà, la seconde de 300 px).
+- **Libellés** (FR et 中文, à relire) : `evenements.sousTitre` (教会的活动与报名), `evenements.onglets` (nom du rail
+  pour les lecteurs d'écran : « Onglets des évènements » / 活动选项卡).
+- **Choix faute de réponse dans la spec** : « sans image, plus de cadre gris » appliqué à la **fiche dans le volet**
+  (A10 le range sous « Fiche dans le volet ») ; les cartes de l'agenda et la fiche en page sur téléphone et tablette
+  debout gardent la zone d'attente de L6 (planches v17, tests `evenements.spec.ts` L6). Un seul onglet (visiteur sans
+  compte, membre sans programme affiché) : **pas de rail** (comme le rail du Back-Office, `parties.length > 1`) ;
+  avec P4, tout connecté aura trois onglets. Le rail n'a pas de pastille de couleur devant la scène (planche, R4).
+  Disposition des infos de la planche dépliée (date, heure, lieu sur une rangée ; « S'inscrire » à gauche de la
+  carte) non reprise : la carte d'aujourd'hui (infos puis inscription) est gardée, seules la colonne et l'ordre
+  changent.
+- **Tests** : `tests/agencement-v18-t7.spec.ts` (11 tests, vus rouges — 37 en échec sur les cinq projets —, puis verts :
+  40 passés, 15 sautés car propres au grand écran ou à un volet). Réécrits avec la règle :
+  `pages-en-grand-evenements` (titre de la section en h1 dans l'en-tête, fiche en h2, onglets et « Nouvel évènement »
+  dans l'en-tête ; **l'ancien test rouge « inscription à droite de la bannière » devient « une colonne sous 760 px de
+  volet, deux au-delà »**, vert sur `ordinateur`, `tablette-paysage`, `ordinateur-1440`) ; `evenements` (sans compte :
+  pas de rail). Voisins (`evenements`, `programme-scene`, `evenements-2027`, `halo-partout`, `taches-evenements`,
+  `agencement-v18-t2b`, `reunions`, `nouveaux-membres`, `coherence`, `scene-saison` sur `ordinateur` ; `evenements`,
+  `programme-scene`, `evenements-2027` sur `telephone` et `tablette`) verts, sauf **un rouge étranger à T7** :
+  `programme-scene.spec.ts:290` (« réordonne en glissant », `telephone`), sur `/back-office/evenements/scene` : depuis
+  l'en-tête de T2b, la poignée du premier passage tombe sous la barre du bas du téléphone et le glisser n'aboutit pas
+  (vu trois fois sur trois ; T7 ne touche pas cette page). À reprendre par P7 (ou en déroulant la page dans le test).
+  Captures regardées aux cinq tailles (agenda, « Nouvel évènement », scène, fiche dépliée et réduite) : conformes aux
+  planches `v18-app-evenements*`, rail au lieu des pilules (Question ouverte 1). `back-office-coupe` (second serveur) :
+  63 verts. `tsc` et `eslint` sans erreur.
+- **Reste** : rien pour T7. **P4** (scène) peut partir : la liste des trois onglets dans `useOngletsEvenements`, la
+  branche scène de `SectionEvenements` sans `max-w-[1080px]`.
+- **Timothée** : rien à publier (ni règle ni donnée) ; relire les deux libellés 中文 ci-dessus.

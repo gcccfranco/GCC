@@ -1784,6 +1784,8 @@
   },
   "evenements": {
     "title": "活动",
+    "sousTitre": "教会的活动与报名",
+    "onglets": "活动选项卡",
     "tabs": {
       "calendrier": "日历"
     },

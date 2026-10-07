@@ -7,6 +7,9 @@ import type { Evenement } from "../src/types/evenement";
 // droite (sur l'adresse de l'agenda, le prochain évènement, Q3) ; « Nouvel évènement » en encre.
 // Tablette portrait : cartes sur deux colonnes. Téléphone : l'agenda garde ses cartes à bannière,
 // la fiche fait remonter l'inscription sous les infos. Firestore et date simulés ; personnes fictives.
+// Agencement v18 (A10, T7) : le titre « Évènements » (h1), les onglets et « + Nouvel évènement » sont
+// dans l'en-tête de la section, au-dessus des deux volets ; la fiche se titre en h2 ; une colonne sous
+// 760 px de volet, deux au-delà (agencement-v18-t7.spec.ts).
 
 const base: Omit<Evenement, "id" | "titre"> = {
   type: "sport", pour: "eglise", date: "2026-10-10", heure: "19:00", heureFin: "21:00", dateFin: "", lieu: "Parc de Bercy",
@@ -19,6 +22,7 @@ const LOUANGE: Omit<Evenement, "id"> = { ...base, titre: "Soirée louange", type
 const FOOT: Omit<Evenement, "id"> = { ...base, titre: "Foot au parc" };
 const PAIX: Omit<Evenement, "id"> = { ...base, titre: "Repas Groupe Paix", type: "loisir", pour: "Groupe Paix", date: "2026-10-17", heure: "12:30", lieu: "Salle du bas", placesMax: null };
 const INFO: Omit<Evenement, "id"> = { ...base, titre: "Nouveau parking", type: "info", date: "", heure: "", epingle: true, placesMax: null, inscriptionOuverte: false, liens: [] };
+const PIXEL = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==";
 const DOCS = { "evenements/louange": LOUANGE, "evenements/foot": FOOT, "evenements/paix": PAIX, "evenements/parking": INFO };
 
 const SACHA: FakeProfile = { uid: "uid-sacha", email: "sacha@example.com", firstName: "Sacha", lastName: "L.", serviceRoles: { "Groupe Paix": ["chanteur"] } };
@@ -52,12 +56,14 @@ test.describe("Évènements en grand", () => {
   test.beforeEach(({}, info) => { test.skip(disposition(info) !== "grand", "deux volets : ordinateur et iPad paysage"); });
 
   test("l'agenda à gauche, le prochain évènement à droite, l'adresse inchangée", async ({ page }) => {
-    await membre(page, SACHA, "/evenements");
-    await expect(liste(page).getByRole("heading", { name: "Évènements" })).toBeVisible();
-    await expect(liste(page).getByRole("link", { name: "Calendrier", exact: true }), "les onglets sont dans la liste").toBeVisible();
+    // Avec un programme de scène affiché : deux onglets, donc le rail (un seul onglet n'en a pas).
+    await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
+    await signInAs(page, SACHA, { ...DOCS, "programmes/noel": { nom: "Noël", jourJ: "2026-12-24", debut: "2026-10-01", visible: true, passages: [], createdBy: "uid-alice", updatedAt: "2026-09-14T20:00:00Z" } }, "/evenements");
+    await expect(page.locator("header[data-entete-page]").getByRole("heading", { name: "Évènements", level: 1 })).toBeVisible();
+    await expect(page.locator("header[data-entete-page]").getByRole("link", { name: "Calendrier", exact: true }), "les onglets sont dans l'en-tête").toBeVisible();
     await expect(liste(page).getByRole("link", { name: /Repas Groupe Paix/ })).toBeVisible();
     await expect(liste(page).getByRole("region", { name: "À la une" }).getByRole("link", { name: /Nouveau parking/ })).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Soirée louange", level: 1 })).toBeVisible();
+    await expect(detail(page).getByRole("heading", { name: "Soirée louange", level: 2 })).toBeVisible();
     await expect(liste(page).getByRole("link", { name: /Soirée louange/ })).toHaveAttribute("aria-current", "page");
     expect(new URL(page.url()).pathname).toMatch(/^\/evenements\/?$/);
     expect(await sansDefilementLateral(page)).toBe(true);
@@ -76,12 +82,18 @@ test.describe("Évènements en grand", () => {
     await expect(detail(page).getByRole("heading", { name: "Repas Groupe Paix" })).toBeVisible();
   });
 
-  test("la fiche : bannière et description à gauche, infos et inscription à droite ; badge « Inscrit » dans l'agenda", async ({ page }) => {
+  // Agencement v18 (A10) : une colonne sous 760 px de volet (1 280 px barre dépliée, iPad couché),
+  // deux au-delà (1 440 px). La bannière n'est là qu'avec une image.
+  test("la fiche : une colonne sous 760 px de volet, deux au-delà ; badge « Inscrit » dans l'agenda", async ({ page }) => {
     await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
-    await signInAs(page, SACHA, { ...DOCS, "evenements/louange/inscriptions/uid-sacha": { uid: "uid-sacha", nom: "Sacha L.", invites: 0, createdAt: "2026-09-21T10:00:00Z" } }, "/evenements/foot");
+    await signInAs(page, SACHA, { ...DOCS, "evenements/foot": { ...FOOT, images: [PIXEL] }, "evenements/louange/inscriptions/uid-sacha": { uid: "uid-sacha", nom: "Sacha L.", invites: 0, createdAt: "2026-09-21T10:00:00Z" } }, "/evenements/foot");
     const banniere = (await page.getByTestId("banniere").boundingBox())!;
     const sinscrire = (await page.getByRole("button", { name: "S'inscrire" }).boundingBox())!;
-    expect(sinscrire.x, "l'inscription à droite de la bannière").toBeGreaterThan(banniere.x + banniere.width - 1);
+    if ((await detail(page).boundingBox())!.width < 760) {
+      expect(sinscrire.y, "une colonne : l'inscription sous la bannière").toBeGreaterThan(banniere.y + banniere.height - 1);
+    } else {
+      expect(sinscrire.x, "deux colonnes : l'inscription à droite de la bannière").toBeGreaterThan(banniere.x + banniere.width - 1);
+    }
     const description = (await page.getByText("Match amical, venez nombreux.").boundingBox())!;
     expect(description.y, "la description sous la bannière").toBeGreaterThan(banniere.y + banniere.height - 1);
     await expect(page.getByRole("link", { name: "Plan d'accès" })).toBeVisible();
@@ -90,7 +102,7 @@ test.describe("Évènements en grand", () => {
 
   test("responsable : « Nouvel évènement » en encre et « Gérer dans le Back-Office » sur la fiche", async ({ page }) => {
     await membre(page, ALICE, "/evenements/foot");
-    const nouvel = liste(page).getByRole("link", { name: "Nouvel évènement" });
+    const nouvel = page.locator("header[data-entete-page]").getByRole("link", { name: "Nouvel évènement" });
     await expect(nouvel).toHaveAttribute("href", /^\/back-office\/evenements\/nouveau\/?$/);
     const [fond, encre] = await nouvel.evaluate((el) => [getComputedStyle(el).backgroundColor, getComputedStyle(document.body).color]);
     expect(fond, "en encre : la couleur du texte de la page").toBe(encre);
@@ -101,7 +113,7 @@ test.describe("Évènements en grand", () => {
     await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
     await fakeFirestore(page, DOCS);
     await page.goto("/evenements");
-    await expect(page.getByRole("heading", { name: "Soirée louange", level: 1 })).toBeVisible();
+    await expect(detail(page).getByRole("heading", { name: "Soirée louange", level: 2 })).toBeVisible();
     await expect(liste(page).getByText("Repas Groupe Paix")).toHaveCount(0);
   });
 });

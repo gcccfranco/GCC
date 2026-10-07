@@ -63,13 +63,14 @@ export function Banniere({ e }: { e: Evenement }) {
   )
 }
 
-/** Badges (type, public) et titre. */
-export function TitreEvenement({ e, niveau = "h2" }: { e: Evenement; niveau?: "h1" | "h2" | "h3" }) {
+/** Badges (type, public) et titre ; `grand` : le titre d'une fiche dans le volet de droite, 24 px
+ *  (agencement v18, R3). */
+export function TitreEvenement({ e, niveau = "h2", grand = false }: { e: Evenement; niveau?: "h1" | "h2" | "h3"; grand?: boolean }) {
   const Titre = niveau
   return (
     <div>
       <div className="flex flex-wrap gap-1"><TypePour e={e} /></div>
-      <Titre className="mt-2 text-xl font-bold text-foreground text-balance">{e.titre}</Titre>
+      <Titre className={`mt-2 font-bold text-foreground text-balance ${grand ? "text-[24px] leading-[29px] tracking-tight" : "text-xl"}`}>{e.titre}</Titre>
     </div>
   )
 }
