@@ -1,12 +1,13 @@
 // Navigation de l'app (lot U4, docs/spec-navigation-grand-ecran.md) : une seule liste
 // d'entrées pour la barre du bas (téléphone, tablette en portrait) et la barre latérale
 // (ordinateur, tablette en paysage), pour que les deux ne divergent jamais.
-// U6 ajoute l'espace « back-office » (sélecteur App ↔ Back-Office, menu à 8 entrées).
+// U6 ajoute l'espace « back-office » (sélecteur App ↔ Back-Office, menu à 9 entrées depuis v18).
 import {
-  CalendarDays, CalendarRange, ChartColumn, Ellipsis, Inbox, LayoutGrid, ListChecks, ListMusic, Music, Network, Ticket, UserRound,
+  CalendarDays, CalendarRange, ChartColumn, Ellipsis, Inbox, LayoutGrid, ListChecks, ListMusic, Music, Network, Ticket, UserRound, Users,
   type LucideIcon,
 } from "lucide-react";
 import type { Entree } from "@/types/backOffice";
+import { estReunion } from "@/lib/access";
 
 /** Vocabulaire commun du chantier U ; choisie par le CSS (globals.css, bloc « Lot U4 »),
  *  jamais par l'agent utilisateur. */
@@ -44,13 +45,15 @@ const ENTREES_VISITEUR: EntreeBarre[] = [
   { href: "/evenements", cle: "common.header.evenements", Icone: Ticket, actifSur: ["/evenements"] },
 ];
 
-// Back-Office (U6, spec-back-office.md Q2-Q4) : le menu à 8 entrées, aux adresses `/back-office/…`.
+// Back-Office (U6, spec-back-office.md Q2-Q4) : le menu, aux adresses `/back-office/…` ; neuf
+// entrées depuis l'agencement v18 (B15 : Réunions à part, icône des réunions du calendrier).
 const ENTREES_BACK_OFFICE: Record<Entree, EntreeBarre> = {
   tableau: { href: "/back-office", cle: "backOffice.entrees.tableau", Icone: LayoutGrid, actifSur: ["/back-office"], exact: true },
   calendrier: { href: "/back-office/calendrier", cle: "backOffice.entrees.calendrier", Icone: CalendarRange, actifSur: ["/back-office/calendrier"] },
   planning: { href: "/back-office/planning", cle: "backOffice.entrees.planning", Icone: CalendarDays, actifSur: ["/back-office/planning"] },
   taches: { href: "/back-office/taches", cle: "backOffice.entrees.taches", Icone: ListChecks, actifSur: ["/back-office/taches"] },
   evenements: { href: "/back-office/evenements", cle: "backOffice.entrees.evenements", Icone: Ticket, actifSur: ["/back-office/evenements"] },
+  reunions: { href: "/back-office/reunions", cle: "backOffice.entrees.reunions", Icone: Users, actifSur: ["/back-office/reunions"] },
   equipes: { href: "/back-office/equipes", cle: "backOffice.entrees.equipes", Icone: Network, actifSur: ["/back-office/equipes"] },
   messages: { href: "/back-office/messages", cle: "backOffice.entrees.messages", Icone: Inbox, actifSur: ["/back-office/messages"] },
   statistiques: { href: "/back-office/statistiques", cle: "backOffice.entrees.statistiques", Icone: ChartColumn, actifSur: ["/back-office/statistiques"] },
@@ -59,6 +62,12 @@ const ENTREES_BACK_OFFICE: Record<Entree, EntreeBarre> = {
 /** Une entrée du Back-Office (son libellé du menu, son icône, son adresse). */
 export function entreeBackOffice(e: Entree): EntreeBarre {
   return ENTREES_BACK_OFFICE[e];
+}
+
+/** Où se gère un évènement au Back-Office (agencement v18, B15) : une réunion sous l'entrée
+ *  Réunions, un évènement sous Évènements. Sa fiche est `${base}/<id>`. */
+export function baseBackOffice(pour: string): "/back-office/reunions" | "/back-office/evenements" {
+  return estReunion(pour) ? "/back-office/reunions" : "/back-office/evenements";
 }
 
 /** « Plus » (B6) : toujours à droite de la barre du bas du Back-Office. */

@@ -33,6 +33,10 @@ export const SECTIONS_EN_DEUX_VOLETS: readonly string[] = [
   // B4 : Mes services (`/mes-services/[date]`) et Mes tâches (`/taches/[pole]/[id]`).
   "/mes-services",
   "/taches",
+  // Agencement v18 (T2b, B3, B4) : Back-Office › Évènements (la scène, sous `/scene`, n'a pas de liste,
+  // mais garde l'en-tête de la section) et Back-Office › Réunions.
+  "/back-office/evenements",
+  "/back-office/reunions",
   // Lot U5 (Q15) : Chants, dont `songs/ChantsVolets` porte la liste et règle son fondu.
   "/songs",
 ];

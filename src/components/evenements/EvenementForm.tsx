@@ -60,7 +60,7 @@ function Periode({ id, label, heureLabel, aide, value, onChange }: {
   )
 }
 
-export function EvenementForm({ initial, pours, creation, inscrits = 0, onSubmit, onCancel }: {
+export function EvenementForm({ initial, pours, creation, inscrits = 0, titreCache = false, onSubmit, onCancel }: {
   initial: EvenementValues
   /** Publics que la personne peut viser (« eglise » et/ou des sections). */
   pours: string[]
@@ -68,6 +68,8 @@ export function EvenementForm({ initial, pours, creation, inscrits = 0, onSubmit
   creation: boolean
   /** Inscrits déjà comptés par l'app : ils interdisent le lien externe (lot 11). */
   inscrits?: number
+  /** Le titre de la page le dit déjà (agencement v18 : en-tête commun d'une page de formulaire). */
+  titreCache?: boolean
   onSubmit: (values: EvenementValues, prevenir: boolean) => Promise<void>
   onCancel: () => void
 }) {
@@ -162,7 +164,7 @@ export function EvenementForm({ initial, pours, creation, inscrits = 0, onSubmit
 
   return (
     <form onSubmit={submit} className="space-y-4" aria-labelledby="evenement-form-title">
-      <h2 id="evenement-form-title" className="text-base font-bold">{creation ? t("evenements.nouveau") : t("evenements.modifier")}</h2>
+      <h2 id="evenement-form-title" className={titreCache ? "sr-only" : "text-base font-bold"}>{creation ? t("evenements.nouveau") : t("evenements.modifier")}</h2>
       {error && <p className="text-sm text-destructive">{error}</p>}
 
       <div data-testid="form-carte" className="divide-y divide-border rounded-2xl bg-card">

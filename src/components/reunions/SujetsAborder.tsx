@@ -195,7 +195,7 @@ export function SujetsAborder({ evenement: e, user, profile, reunions = [] }: {
   }
 
   return (
-    <section aria-labelledby="sujets-titre" data-testid="sujets-carte" className="space-y-3 rounded-2xl bg-card p-4">
+    <section aria-labelledby="sujets-titre" data-testid="sujets-carte" className="space-y-3 raised rounded-2xl p-4">
       <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
         {/* « Sujets à aborder » avant le début, « Sujets » et le bilan après (planches). */}
         <h3 id="sujets-titre" className="text-base font-semibold text-foreground">{t(commencee ? "evenements.sujets.titreApres" : "evenements.sujets.titre")}</h3>

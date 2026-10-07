@@ -30,7 +30,7 @@ const PAGES = [
   "/mes-services", "/evenements", "/evenements/fete", "/taches", "/taches/da", "/harmonie", "/harmonie/cours",
   "/harmonie/rd2000", "/profil", "/setlists/new",
   "/back-office", "/back-office/calendrier", "/back-office/taches", "/back-office/taches/da", "/back-office/evenements",
-  "/back-office/evenements/fete", "/back-office/evenements/reunions", "/back-office/equipes", "/back-office/equipes/personnes",
+  "/back-office/evenements/fete", "/back-office/reunions", "/back-office/equipes", "/back-office/equipes/personnes",
   "/back-office/messages", "/back-office/messages/notifier", "/back-office/statistiques", "/back-office/planning",
   "/back-office/planning/culte", "/back-office/plus",
 ];

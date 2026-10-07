@@ -471,7 +471,7 @@ export const canDeleteSetlist = canEditSetlist;
 
 type ProfilResponsable = {
   serviceRoles?: Record<string, unknown>; poles?: string[]; plannings?: string[]; notify?: string[];
-  annonces?: string[]; equipes?: boolean; referentDe?: string[];
+  annonces?: string[]; equipes?: boolean; referentDe?: string[]; dansEquipes?: string[];
 };
 const nonVide = (l: string[] | undefined) => (l?.length ?? 0) > 0;
 
@@ -510,7 +510,10 @@ export function entreesBackOffice(user: AuthUser | null, profile: ProfilResponsa
     planning: admin || nonVide(profile?.plannings)
       || PUBLISHABLE_PLANNINGS.some((p) => canPublishPlanning(p, admin, profile?.notify ?? [])),
     taches: admin || pole,
-    evenements: admin || isCoordination(user, profile) || nonVide(profile?.annonces) || pole || nonVide(profile?.referentDe),
+    // Agencement v18 (B15) : Évènements = ceux qu'on gère ; Réunions = ses pôles (Louange
+    // compris) et ses équipes. Affichage seulement : evenements/{id} garde ses règles.
+    evenements: admin || isCoordination(user, profile) || nonVide(profile?.annonces),
+    reunions: admin || pole || nonVide(profile?.dansEquipes) || nonVide(profile?.referentDe),
     equipes: canEditerEquipes(user, profile),
     messages: admin || nonVide(profile?.notify),
     statistiques: canVoirStatistiques(user),
@@ -555,7 +558,8 @@ export function widgetsPermis(user: AuthUser | null, profile: UserProfile | null
     afaire: entrees.includes("taches"),
     setlists: canCreateSetlist(user, profile),
     planning: entrees.includes("planning"),
-    evenements: entrees.includes("evenements"),
+    // Une seule entrée couvrait les deux avant v18 : le widget reste permis avec l'une ou l'autre.
+    evenements: entrees.includes("evenements") || entrees.includes("reunions"),
     chants: canVoirStatistiques(user),
     petitdej: true,
     scene: true,
@@ -578,19 +582,18 @@ export function tachesDuBackOffice(
 }
 
 /** Sous-parties de Back-Office › Évènements (lot U6, B3, table Q2) : Évènements (ceux qu'on
- *  gère : admin, coordination, droit d'annonces) · Réunions (ses pôles, Louange compris, et
- *  ses équipes ; toutes pour un admin) · Scène (coordination, U1). Affichage seulement. */
-export type SousPartieEvenements = "evenements" | "reunions" | "scene";
+ *  gère : admin, coordination, droit d'annonces) · Scène (coordination, U1). Les réunions ont
+ *  leur entrée depuis l'agencement v18 (B15). Affichage seulement. */
+export type SousPartieEvenements = "evenements" | "scene";
 export function sousPartiesEvenements(
   user: AuthUser | null,
-  profile: (ProfilResponsable & { dansEquipes?: string[] }) | null
+  profile: ProfilResponsable | null
 ): SousPartieEvenements[] {
   if (!user) return [];
   const admin = isAdminUser(user);
   const coordination = isCoordination(user, profile);
   const parties: SousPartieEvenements[] = [];
   if (admin || coordination || nonVide(profile?.annonces)) parties.push("evenements");
-  if (admin || polesDe(profile).length > 0 || nonVide(profile?.dansEquipes) || nonVide(profile?.referentDe)) parties.push("reunions");
   if (coordination) parties.push("scene");
   return parties;
 }

@@ -569,3 +569,93 @@ la barre d'onglets : une page sans barre du bas (rare) le verra plus haut que n�
 - **Reste** : rien pour les fondations.
 - **Timothée** : rien à publier (aucune règle, aucune donnée) ; relire les six libellés 中文 de F2 ; ne pas mettre
   en ligne `lot/v18-fondations` avant T7 et T9.
+
+### V18T2 — L'entrée Réunions (T2a)
+
+- 06/10/2026 : **T2a faite** (branche `lot/v18-t2`, commit `feat(V18T2): T2a — l'entrée Réunions`), après la
+  fusion de `lot/v18-fondations` (F1, F2). Aucune mise en page nouvelle : les adresses `/back-office/reunions/*`
+  montent les composants d'aujourd'hui (T2b les mettra en deux volets).
+- **Menu à neuf entrées** : `ENTREES` gagne `reunions` après `evenements` (`types/backOffice.ts`) ;
+  `ENTREES_BACK_OFFICE.reunions` (`/back-office/reunions`, icône `Users`, `lib/navigation.ts`) ; libellés
+  `backOffice.entrees.reunions` (« Réunions » / 会议) et `backOffice.plus.contenu.reunions` (« sujets, comptes
+  rendus » / 议题、会议记录). **Droits d'affichage** (`entreesBackOffice`) : Évènements = admin, coordination ou
+  droit d'annonces ; Réunions = admin, un pôle (Louange compris), membre ou référent d'une équipe
+  (`ProfilResponsable` lit `dansEquipes`). `sousPartiesEvenements` ne rend plus que `evenements` et `scene`.
+  Widget « Prochains évènements » permis avec l'une ou l'autre entrée ; raccourci « Nouvel évènement » inchangé
+  (il suivait déjà Évènements seul). « Plus » : Réunions après Évènements ; barre du bas et sa feuille : rien à
+  écrire (elles lisent `ENTREES`).
+- **Adresses** : `app/back-office/reunions/{layout,page}.tsx` (titre « Réunions » sans rail, `EnTeteEntree` que
+  T2b remplacera), `[id]/page.tsx`, `[id]/modifier/page.tsx`, `nouvelle/page.tsx` (`NouveauClient reunion`).
+  Nouvelle aide `baseBackOffice(pour)` (`lib/navigation.ts`) : `/back-office/reunions` pour une réunion,
+  `/back-office/evenements` sinon ; elle sert aux liens de `ListeGestion`, `ReunionsPrecedentes`, au retour et à
+  la suppression d'`EvenementClient`, à « Gérer dans le Back-Office » de l'App, à la création (`NouveauClient`)
+  et à `ModifierClient`, ainsi qu'aux lignes du widget « Prochains évènements » (une réunion y mène sous Réunions
+  sans passer par la redirection). `EnTeteReunion` mène à `/back-office/reunions/<id>/modifier` et
+  `/back-office/reunions/nouvelle?from=<id>`.
+- **Redirections** (`router.replace`) : `/back-office/evenements/reunions` → `/back-office/reunions` ; une
+  réunion ouverte sous `/back-office/evenements/<id>` → `/back-office/reunions/<id>` (et, au-delà de la spec,
+  l'inverse pour un évènement ouvert sous Réunions, et de même pour `…/modifier`, pour que l'entrée active
+  soit toujours la bonne) ; `/back-office/evenements/nouveau?reunion=1` → `/back-office/reunions/nouvelle`
+  (`from` et `date` gardés). La redirection « qui n'a que des réunions » d'Évènements est retirée.
+- **Tests** : `tests/agencement-v18-t2a.spec.ts` (23 tests, vus rouges puis verts sur les cinq projets :
+  101 verts, 14 sautés car propres au grand écran ou au téléphone et à la tablette portrait).
+  Réécrits avec la règle : `back-office-espace` (8 → 9 entrées, DA et référent ont Réunions),
+  `barre-back-office` (feuille à 9 cases, « Plus » à 5 cartes, poignées « sur 9 », la coordination a Réunions dans
+  « Plus »), `back-office-admin` (B3 : rail Évènements ·
+  Scène, réunions sous `/back-office/reunions`), `halo-partout`, `evenements-2027` (adresse de la liste des
+  réunions) ; `back-office-coupe` : `/back-office/reunions{,/foot,/nouvelle,/foot/modifier}` en 404.
+- **Vérifié le 07/10/2026** (reprise après la coupure du 06/10) : `tsc` vert, lint sans erreur ; voisins
+  (`back-office-espace`, `barre-back-office`, `back-office-admin`, `halo-partout`, `evenements-2027`, `reunions`,
+  `tableau-de-bord`, `calendrier-widget`, `agencement-v18-confirmations`, `taches-evenements`) : 1 385 verts ;
+  `back-office-coupe` : 184 verts.
+- **Reste** : rien pour T2a. T2b (deux volets d'Évènements et de Réunions, `EnTetePage`) suit dans la même voie.
+- **Timothée** : rien à publier (ni `firestore.rules` ni données : seul l'affichage du menu change) ; relire les
+  deux libellés 中文 (会议, 议题、会议记录). Un membre d'un pôle sans droit d'annonces ne voit plus l'entrée
+  Évènements (il n'y gérait rien) : c'est la règle B15.
+
+### V18T2 — Évènements et Réunions en deux volets (T2b)
+
+- 06–07/10/2026 : **T2b faite** (branche `lot/v18-t2`, commit `feat(V18T2): T2b — Évènements et Réunions en deux volets`),
+  après T2a. B3 (piste A) et B4 : l'en-tête commun au-dessus de deux volets, la liste dans le layout de chaque entrée,
+  la fiche dans le volet de droite (la prochaine d'office en grand, R11), « Nouvel évènement », « Nouvelle réunion »
+  et « Modifier » dans le volet ; en un volet, la liste sous l'en-tête puis la fiche en page avec « ‹ Évènements » /
+  « ‹ Réunions » pour seul retour (R8).
+- **Fichiers** : `back-office/evenements/ListeGestion.tsx` (`VoletsGestion` : en-tête, `DeuxVolets`, la liste relue à
+  chaque `EVENEMENTS_CHANGED`, la fiche ouverte d'office ; `peutCreerDans`) ; `back-office/evenements/layout.tsx`
+  (en-tête de toute la section, rail Évènements · Scène, pas d'action ni de liste sur la scène) ;
+  `back-office/reunions/layout.tsx` (en-tête sans rail, « + Nouvelle réunion ») ; les deux `page.tsx` ne rendent plus
+  rien (la liste est dans le layout) ; `back-office/evenements/FicheGestion.tsx` (nouveau : vignette si image, badges,
+  titre h2, « Voir comme un membre », « Modifier », « ⋯ » Dupliquer · Supprimer ; bandeau date, heure, lieu, public,
+  contact, puis la description ; « Inscrits » : jauge, liste, Retirer, Exporter ; « Tâches » ; « Période d'inscription » :
+  état, raison, réglage, QR code) ; `gestion.module.css` (nouveau : deux colonnes par requête de conteneur dès 640 px
+  de volet, R15 — module CSS plutôt que `globals.css`, réservé à T7 et T8) ; `EvenementClient.tsx` (**branches
+  Back-Office seulement** : la réunion en deux colonnes — sujets à gauche ; compte rendu, réunions précédentes et
+  tâches à droite —, l'évènement délègue à `FicheGestion`) ; `EnTeteReunion.tsx` (h2 dans le volet, « Dupliquer pour la
+  prochaine », « Modifier », « ⋯ › Supprimer » ; `EnTetePage` en un volet) ; `NouveauClient`, `ModifierClient` (720 px
+  dans le volet, page avec en-tête en un volet) ; `EvenementForm` (`titreCache`, son h2 en `sr-only` quand l'en-tête de
+  la page porte déjà « Nouvel évènement ») ; `Inscriptions.tsx` (`ListeInscrits` exportée) ; `lib/deuxVolets.ts`
+  (`/back-office/evenements`, `/back-office/reunions`) ; cartes des réunions et des tâches d'un évènement en relief
+  (`raised` au lieu de `bg-card` : `SujetsAborder`, `CompteRenduCarte`, `ReunionsPrecedentes`, `TachesEvenement`, R10).
+- **Libellés** (FR et 中文, à relire) : `backOffice.passees` (« Passées » / 已结束), `backOffice.gestion.*` :
+  sous-titres (会众看到的活动，以及它们的管理 ; 你所在事工组和团队的会议), « Voir comme un membre » (以成员身份查看),
+  « Contact : … » (联系人：…), « Exporter » (导出), « sur n places » (共 n 个名额), « n inscrits » (n 人报名),
+  « Période d'inscription » (报名时间), colonnes du CSV (姓名, 报名日期).
+- **Choix faute de réponse dans la spec** : « Ajouter » (un inscrit, dessiné dans la carte Inscrits) **n'est pas
+  construit** : ce serait une écriture nouvelle, contraire à R16 ; « Exporter » l'est, en CSV (`;`, UTF-8 avec BOM)
+  de la liste déjà lue, sans dépendance. La liste des réunions montre « Passées » dépliées (planche) ; celle des
+  évènements garde « Évènements passés (n) » repliés. Le détail « 4 sujets » des lignes de réunion n'est pas
+  construit (une lecture par réunion). La fiche de gestion n'a plus la carte « membre » avec « S'inscrire » : c'est
+  « Voir comme un membre ». Sans rien à venir, le volet de droite dit « Aucun évènement à gérer. » / « Aucune réunion. »
+  dans une carte ; les réunions ouvrent d'office la prochaine, sinon la dernière tenue.
+- **Tests** : `tests/agencement-v18-t2b.spec.ts` (23 tests, vus rouges puis verts sur les cinq projets). Réécrits avec
+  la règle : `agencement-v18-t2a` (titre de la fiche en h2 dans le volet, « ‹ Réunions » en un volet, Supprimer dans
+  « ⋯ »), `back-office-admin` (B3), `evenements` (Dupliquer et Supprimer dans « ⋯ », L3 et la carte de l'organisateur
+  devenus la fiche de gestion), `agencement-v18-confirmations`, `taches-evenements`. Relance du 07/10/2026 (reprise
+  après coupure) : `agencement-v18-t2b` 85 verts (25 passés : tests propres à un appareil) ; voisins (`t2a`,
+  `confirmations`, `back-office-admin`, `evenements`, `taches-evenements`, `pages-en-grand-evenements`,
+  `back-office-espace`, `reunions`, `evenements-2027`) 1 249 verts, 2 rouges attendus (ci-dessous) ;
+  `back-office-coupe` vert ; `tsc` et `lint` sans erreur. La capture jetable (`agencement-v18-capture-t2b`) n'est pas
+  commitée.
+- **Reste** : rien pour T2b. `pages-en-grand-evenements.spec.ts:79` reste rouge (attendu, F1 → T7). P7 de la scène
+  ajoute ses onglets Pâques · Noël dans `back-office/evenements/layout.tsx` (l'en-tête et la branche « scène » sont prêts).
+- **Timothée** : rien à publier (ni règle ni donnée) ; relire les libellés 中文 ci-dessus.

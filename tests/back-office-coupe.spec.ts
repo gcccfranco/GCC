@@ -63,7 +63,7 @@ test.describe("back-office coupé : les entrées disparaissent", () => {
 });
 
 test.describe("back-office coupé : une adresse tapée à la main tombe dans le vide", () => {
-  for (const chemin of ["/taches", "/taches/da", "/equipes", "/evenements", "/evenements/foot", "/evenements/foot/modifier", "/evenements/nouveau", "/evenements/scene", "/annonces", "/back-office", "/back-office/taches", "/back-office/taches/da", "/back-office/evenements", "/back-office/evenements/reunions", "/back-office/evenements/scene", "/back-office/evenements/nouveau", "/back-office/evenements/foot", "/back-office/evenements/foot/modifier", "/back-office/statistiques", "/back-office/calendrier", "/essai-agencement"]) {
+  for (const chemin of ["/taches", "/taches/da", "/equipes", "/evenements", "/evenements/foot", "/evenements/foot/modifier", "/evenements/nouveau", "/evenements/scene", "/annonces", "/back-office", "/back-office/taches", "/back-office/taches/da", "/back-office/evenements", "/back-office/evenements/reunions", "/back-office/evenements/scene", "/back-office/evenements/nouveau", "/back-office/evenements/foot", "/back-office/evenements/foot/modifier", "/back-office/statistiques", "/back-office/calendrier", "/back-office/reunions", "/back-office/reunions/foot", "/back-office/reunions/nouvelle", "/back-office/reunions/foot/modifier", "/essai-agencement"]) {
     test(`${chemin} répond 404`, async ({ page }) => {
       const reponse = await page.goto(chemin);
       expect(reponse?.status()).toBe(404);
