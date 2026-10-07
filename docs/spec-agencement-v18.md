@@ -638,3 +638,23 @@ la barre d'onglets : une page sans barre du bas (rare) le verra plus haut que n�
   regardées aux cinq tailles, conformes à `v18-app-harmonie` (en grand) et aux planches v17 (téléphone, tablette).
 - **Reste** : rien pour T11. Voie ⑦ finie.
 - **Timothée** : rien à publier (aucune règle, aucune donnée, R16) ; relire 卡片 (« Fiches »).
+
+### V18T1011 — Fusion des fondations relues
+
+- 07/10/2026 : `lot/v18-fondations` (relecture `5d4e94c`) fusionnée dans `lot/v18-t1011` (commit de fusion
+  `f265522`), sans conflit de code ; `tsc --noEmit` et `npm run lint` sans erreur.
+- **Correctif de fusion** (`fix(V18T1011): fusion — …`, tests seulement) : les tests de T10 et T11 donnent
+  maintenant à `verifierAgencement` les deux vérifications que la relecture demande à chaque tranche :
+  `contenu` (Moi : le bloc sous l'en-tête ; Profil : le formulaire ; Harmonie : les deux volets en grand, la
+  liste sinon ; Guide et Questionnaire : `lecture: true`, ce qui remplace leurs contrôles « 720 px au plus »
+  écrits à la main) et `onglets` (Moi, Profil, Guide, Questionnaire : ni rail ni pilules ; Fiches : un rail,
+  trois rangées de pilules pour les filtres ; Cours : un rail ; Sons du RD-2000 : deux rails, celui de la section
+  et celui des vues). Aucun code du site changé : les pages étaient déjà conformes.
+- **Tests** (cinq projets) : `agencement-v18-moi`, `agencement-v18-harmonie`, `agencement-v18-fondations` verts ;
+  voisines touchées par le rail au clavier (`OngletsRail` en boutons dans Harmonie) vertes : `rd2000`,
+  `pages-en-grand-harmonie`, `harmonie-cours`, `harmonie-catalogue`, `pages-en-grand-moi`,
+  `pages-en-grand-guide-equipes` ; `back-office-coupe` et le test Moi « back-office coupé » sur le second serveur :
+  172 verts (2 sautés) au premier passage, 8 délais dépassés (Mac chargé, 27 minutes pour 182 tests ; pages hors de cette
+  voie sauf le test Moi), les 8 relancés une fois : verts.
+- **Reste** : rien pour la voie ⑦.
+- **Timothée** : rien à publier ; relire les libellés 中文 de T10 et T11 (ci-dessus).

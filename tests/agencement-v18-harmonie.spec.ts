@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page, type TestInfo } from "@playwright/test";
 import { readFileSync } from "fs";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { enTete, estGrandEcran, estTelephone, interdireDialoguesNatifs, verifierAgencement } from "./helpers/agencement";
@@ -43,10 +43,16 @@ async function capture(page: Page, name: string) {
 const liste = (page: Page) => page.locator('[data-volet="liste"]');
 const detail = (page: Page) => page.locator('[data-volet="detail"]');
 const rail = (page: Page) => enTete(page).locator('[data-onglets="rail"]');
+/** Le bloc de contenu (toute la zone moins deux marges) : les deux volets en grand, la liste seule sinon. */
+const contenu = (page: Page, info: TestInfo, attendu: string) =>
+  estGrandEcran(info) ? page.locator("[data-deux-volets]") : page.locator(attendu).first();
+// Les onglets visibles (R4) : le rail de la section, plus celui des vues (Par moment · Tous les sons ·
+// Paramètres) ; en pilules, les trois filtres du catalogue (sensation, moment, niveau), rien ailleurs.
+// Le pianiste ne joue pas de la guitare : pas de rail Piano · Guitare.
 const ONGLETS = [
-  { adresse: "/harmonie", nom: "Fiches", attendu: "[data-harmonie]" },
-  { adresse: "/harmonie/cours", nom: "Cours", attendu: "[data-cours]" },
-  { adresse: "/harmonie/rd2000", nom: "Sons du RD-2000", attendu: "[data-rd2000]" },
+  { adresse: "/harmonie", nom: "Fiches", attendu: "[data-harmonie]", onglets: { rail: 1, pilules: 3 } },
+  { adresse: "/harmonie/cours", nom: "Cours", attendu: "[data-cours]", onglets: { rail: 1, pilules: 0 } },
+  { adresse: "/harmonie/rd2000", nom: "Sons du RD-2000", attendu: "[data-rd2000]", onglets: { rail: 2, pilules: 0 } },
 ] as const;
 
 test.describe("Harmonie en onglets (T11)", () => {
@@ -65,7 +71,11 @@ test.describe("Harmonie en onglets (T11)", () => {
       await expect(page.locator("main h2").filter({ hasText: /^(Harmonie|Cours|Sons du RD-2000)$/ }).filter({ visible: true }))
         .toHaveCount(0);
       // Le premier bloc sous l'en-tête : la carte de la liste en grand, la liste elle-même sinon.
-      await verifierAgencement(page, { premierBloc: estGrandEcran(info) ? liste(page) : page.locator(o.attendu).first() });
+      await verifierAgencement(page, {
+        premierBloc: estGrandEcran(info) ? liste(page) : page.locator(o.attendu).first(),
+        contenu: contenu(page, info, o.attendu),
+        onglets: o.onglets,
+      });
       await capture(page, `t11-${o.nom.split(" ")[0].toLowerCase()}`);
     });
   }
@@ -134,9 +144,9 @@ test.describe("Harmonie en onglets (T11)", () => {
   });
 
   const DIRECTS = [
-    { nom: "une fiche", adresse: `/harmonie/${FICHE.id}`, onglet: "Fiches", fiche: `[data-fiche="${FICHE.id}"]`, retour: "Harmonie" },
-    { nom: "une leçon", adresse: `/harmonie/cours/${CADENCES.id}`, onglet: "Cours", fiche: `[data-chapitre="${CADENCES.id}"]`, retour: "Cours" },
-    { nom: "un son", adresse: "/harmonie/rd2000/S01", onglet: "Sons du RD-2000", fiche: '[data-son-page="S01"]', retour: "Sons du RD-2000" },
+    { nom: "une fiche", adresse: `/harmonie/${FICHE.id}`, onglet: "Fiches", fiche: `[data-fiche="${FICHE.id}"]`, retour: "Harmonie", onglets: ONGLETS[0].onglets },
+    { nom: "une leçon", adresse: `/harmonie/cours/${CADENCES.id}`, onglet: "Cours", fiche: `[data-chapitre="${CADENCES.id}"]`, retour: "Cours", onglets: ONGLETS[1].onglets },
+    { nom: "un son", adresse: "/harmonie/rd2000/S01", onglet: "Sons du RD-2000", fiche: '[data-son-page="S01"]', retour: "Sons du RD-2000", onglets: ONGLETS[2].onglets },
   ] as const;
   for (const d of DIRECTS) {
     test(`un lien direct vers ${d.nom} garde ses deux volets en grand ; seul avec son retour sinon`, async ({ page }, info) => {
@@ -152,7 +162,7 @@ test.describe("Harmonie en onglets (T11)", () => {
         const [volet, boiteFiche] = [(await detail(page).boundingBox())!, (await fiche.boundingBox())!];
         expect(Math.abs(boiteFiche.x - volet.x), "la fiche part du bord du volet").toBeLessThanOrEqual(1);
         expect(await fiche.evaluate((el) => parseFloat(getComputedStyle(el).paddingLeft)), "la fiche ne pose plus de marge").toBe(0);
-        await verifierAgencement(page, { premierBloc: liste(page) });
+        await verifierAgencement(page, { premierBloc: liste(page), contenu: page.locator("[data-deux-volets]"), onglets: d.onglets });
       } else {
         await expect(page.locator(d.fiche)).toBeVisible();
         await expect(liste(page)).toHaveCount(0);

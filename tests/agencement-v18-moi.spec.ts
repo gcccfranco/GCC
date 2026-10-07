@@ -73,6 +73,10 @@ async function capture(page: Page, name: string) {
 const apercu = (page: Page, nom: string) => page.getByRole("region", { name: nom, exact: true });
 const lignes = (page: Page, nom: string) => apercu(page, nom).getByTestId("apercu-ligne");
 const boite = async (l: ReturnType<Page["locator"]>) => (await l.boundingBox())!;
+/** Le bloc de contenu sous l'en-tête (dans l'enveloppe qui pose la marge) : toute la zone moins deux marges. */
+const contenuSousEnTete = (page: Page) => enTete(page).locator("xpath=following-sibling::div[1]/*[1]");
+/** Ces pages n'ont ni rail ni pilules (R4) : un onglet qui apparaîtrait passerait par l'un des deux. */
+const SANS_ONGLETS = { rail: 0, pilules: 0 };
 
 /** Largeur de la colonne de lecture (R14) : 720 px, ou ce qui reste à côté du sommaire (260 px + 40 px)
  *  quand la zone est plus étroite (1 280 px barre dépliée, iPad paysage). */
@@ -88,7 +92,7 @@ test.describe("Moi (A12)", () => {
     await ouvrir(page, ADMIN, "/moi");
     await expect(enTete(page).getByRole("heading", { level: 1, name: "Moi" })).toBeVisible();
     await expect(enTete(page).getByText("Noé T. · Admin", { exact: true })).toBeVisible();
-    await verifierAgencement(page);
+    await verifierAgencement(page, { contenu: contenuSousEnTete(page), onglets: SANS_ONGLETS });
   });
 
   test("les aperçus d'un admin : services, tâches, Harmonie, équipes, puis l'aide", async ({ page }) => {
@@ -195,7 +199,7 @@ test.describe("Profil (A13)", () => {
     await expect(entete.getByRole("link", { name: "Moi" })).toHaveAttribute("href", /^\/moi\/?$/);
     await expect(entete.getByRole("heading", { level: 1, name: "Mon profil" })).toBeVisible();
     await expect(entete.getByText(ADMIN_EMAIL, { exact: true })).toBeVisible();
-    await verifierAgencement(page);
+    await verifierAgencement(page, { contenu: page.locator("form#formulaire-profil"), onglets: SANS_ONGLETS });
   });
 
   test("« Enregistrer » dans l'en-tête dès 768 px, en bas sur téléphone ; il enregistre", async ({ page }, info) => {
@@ -262,9 +266,8 @@ test.describe("Guide (A14)", () => {
     await expect(h1).toBeVisible();
     await expect(entete.getByText("Tout ce qu'il faut savoir pour utiliser le site GCC Louange.")).toBeVisible();
     await expect(h1.locator("xpath=..").locator("svg"), "plus d'icône devant le titre").toHaveCount(0);
-    await verifierAgencement(page);
+    await verifierAgencement(page, { contenu: page.locator("section#songs"), lecture: true, onglets: SANS_ONGLETS });
     const lecture = await boite(page.locator("section#songs"));
-    expect(lecture.width, "une lecture : 720 px au plus").toBeLessThanOrEqual(721);
     if (estGrandEcran(info)) {
       const nav = await boite(page.getByRole("navigation", { name: "Sur cette page" }));
       expect(Math.round(nav.width), "sommaire de 260 px").toBe(260);
@@ -283,11 +286,10 @@ test.describe("Questionnaire (A15)", () => {
     await expect(entete.getByRole("link", { name: "Moi" })).toHaveAttribute("href", /^\/moi\/?$/);
     const h1 = entete.getByRole("heading", { level: 1, name: "Ton avis sur le site" });
     await expect(h1).toBeVisible();
-    await verifierAgencement(page);
+    await verifierAgencement(page, { contenu: page.getByTestId("questions"), lecture: true, onglets: SANS_ONGLETS });
 
     await expect(page.getByText("Les questions qui ne te concernent pas sont sautées.", { exact: false })).toBeVisible();
     const questions = await boite(page.getByTestId("questions"));
-    expect(questions.width).toBeLessThanOrEqual(721);
     if (estGrandEcran(info)) {
       // La lecture : les étapes en sommaire, l'étape en cours en encre.
       const etapes = page.getByRole("navigation", { name: "Étapes" });
