@@ -63,6 +63,7 @@ import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/u
 import { EnTetePage } from "@/components/layout/EnTetePage";
 import { OngletsRail, Pilules } from "@/components/layout/Onglets";
 import { BoutonNouveau } from "@/components/layout/BoutonNouveau";
+import { useFonduLateral } from "@/hooks/useFonduLateral";
 
 // Les dispositions de U4 (bloc « Lot U4 » de globals.css) : le panneau du jour se pose à
 // droite sur ordinateur et sur la tablette couchée ; ailleurs il s'ouvre en feuille.
@@ -92,7 +93,7 @@ type Vue = "mois" | "agenda";
 const BOUTON_ROND =
   "raised inline-flex h-8 min-w-8 items-center justify-center rounded-full px-2 text-[13px] font-bold text-foreground transition-opacity duration-150 hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground";
 const PASTILLE =
-  "inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-[13px] font-semibold transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground";
+  "inline-flex h-8 shrink-0 items-center whitespace-nowrap gap-1.5 rounded-full px-3 text-[13px] font-semibold transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground";
 /** « Sources » sur téléphone : à la taille des pilules qu'il suit (`Pilules`, grise). */
 const BOUTON_SOURCES_TEL =
   "inline-flex h-10 shrink-0 items-center gap-1.5 rounded-full bg-secondary px-3.5 text-[15px] text-foreground/80 transition-colors duration-150 active:bg-secondary/70 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground";
@@ -144,6 +145,9 @@ export function CalendrierClient() {
   const [lecture, setLecture] = useState(0);
   // C6 : le déplacement demandé (dépôt dans la grille, ou « Déplacer… »).
   const [demande, setDemande] = useState<DemandeDeplacement | null>(null);
+  // Retouches v18 (R4, D7) : la ligne de l'agenda dont l'entrée est ouverte (sa clé), surlignée ;
+  // toucher un jour ou changer de mois la retire.
+  const [ligneOuverte, setLigneOuverte] = useState<string | null>(null);
 
   const jours = useMemo(() => joursDeLaGrille(mois), [mois]);
   const dernierMoisAgenda = moisVoisin(mois, moisEnPlus);
@@ -203,9 +207,13 @@ export function CalendrierClient() {
   const changer = (p: PreferencesCalendrier) => { setPrefs(p); ecrirePreferences(p); };
   const basculer = (s: SourceCalendrier) =>
     changer({ ...prefs, sources: prefs.sources.includes(s) ? prefs.sources.filter((x) => x !== s) : [...prefs.sources, s] });
-  const allerA = (m: string) => { setMois(m); setMoisEnPlus(0); setChoisi(m === aujourdhui.slice(0, 7) ? aujourdhui : `${m}-01`); };
+  const allerA = (m: string) => { setMois(m); setMoisEnPlus(0); setLigneOuverte(null); setChoisi(m === aujourdhui.slice(0, 7) ? aujourdhui : `${m}-01`); };
   // Sur téléphone, le jour touché s'affiche sous le Mois à points, sans feuille (question 3).
-  const choisir = (date: string) => { setChoisi(date); if (!aDroite && !telephone) setFeuille(true); };
+  const choisir = (date: string, cle: string | null = null) => {
+    setChoisi(date);
+    setLigneOuverte(cle);
+    if (!aDroite && !telephone) setFeuille(true);
+  };
   const duJour = parJour.get(choisi) ?? [];
   const ouvrirEntree = (e: EntreeCalendrier) => setEntree({ e, ouverte: true });
   // La feuille du jour ou de l'entrée se ferme : la confirmation prend la place.
@@ -278,6 +286,9 @@ export function CalendrierClient() {
       </button>
     );
   });
+  // Retouches v18 (R4, D6) : en grand, les filtres restent sur une ligne et défilent de côté, avec un
+  // bord fondu du côté où il en reste (comme les plannings) ; l'iPad debout les passait sur trois rangées.
+  const rangeeFiltres = useFonduLateral<HTMLDivElement>(permises.length);
   const seulementMoi = (
     <button
       type="button"
@@ -309,12 +320,18 @@ export function CalendrierClient() {
       </div>
     </div>
   ) : (
-    // Les filtres passent à la ligne à droite de la période, jamais dessous (le filet reste devant eux) ;
-    // le groupe des sources s'efface de la mise en page (`contents`) pour que « Seulement moi » les suive.
-    <div className="flex items-start gap-1.5">
+    // Les filtres restent sur une ligne à droite de la période et défilent de côté (R4, D6 ; le filet reste
+    // devant eux) ; le groupe des sources s'efface de la mise en page (`contents`) pour que « Seulement moi »
+    // les suive. `py-2 -my-2` : ni le contour du focus ni l'ombre des pastilles ne sont rognés par le défilement.
+    <div className="flex items-center gap-1.5">
       <div className="shrink-0">{navigation}</div>
-      <span aria-hidden className="mx-2 mt-1 h-6 w-px shrink-0 bg-border" />
-      <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
+      <span aria-hidden className="mx-2 h-6 w-px shrink-0 bg-border" />
+      <div
+        ref={rangeeFiltres}
+        data-testid="filtres-calendrier"
+        className="fondu-lateral -my-2 flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto px-0.5 py-2"
+        style={{ scrollbarWidth: "none" }}
+      >
         <div role="group" aria-label={t("calendrier.sourcesAria")} data-onglets="pilules" className="contents">
           {boutonsSources}
         </div>
@@ -375,6 +392,7 @@ export function CalendrierClient() {
                 <AgendaSemaines
                   parJour={parJour}
                   choisi={choisi}
+                  ligneOuverte={ligneOuverte}
                   lang={lang}
                   titreDuJour={titreDuJour}
                   vide={t("calendrier.agendaVide", { mois: nomMois(dernierMoisAgenda, lang) })}

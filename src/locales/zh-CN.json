@@ -3007,6 +3007,7 @@
     "agendaVide": "到{{mois}}底都没有安排。",
     "afficherMois": "显示{{mois}}",
     "ajouterCeJour": "在这天添加",
+    "ajouterCeJourMenu": "活动、任务或会议",
     "nouvelleReunion": "新建{{date}}的会议",
     "semaineDu": "{{date}}那一周",
     "deplacer": {

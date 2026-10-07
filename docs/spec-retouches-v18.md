@@ -104,3 +104,21 @@ dans Notifier (D21) ; toute écriture dans le Google Sheet.
 ## Avancement
 
 Rien de codé (spec écrite le 08/10/2026, en attente du go).
+
+### V18RB
+
+- **08/10/2026 — R4 codée** (Agenda du Calendrier, D6 et D7) :
+  - D6 : en grand (dès 768 px), la rangée des filtres (sources, « Seulement moi ») reste sur une ligne à droite
+    de la période et défile de côté, bord fondu du côté où il reste des filtres (`useFonduLateral` +
+    `.fondu-lateral`, comme les plannings et les récents) ; la même rangée sert le Mois. Le téléphone garde
+    « Tout · Seulement moi » et la feuille des sources.
+  - D7 : « Ajouter ce jour-là » puis une flèche ronde (« Évènement, tâche ou réunion » / 活动、任务或会议) ;
+    l'un et l'autre ouvrent le même menu du jour. La ligne de l'agenda touchée est surlignée (`aria-current`,
+    fond `bg-secondary`) ; toucher la colonne d'un jour ou changer de mois retire le surlignage.
+  - Fichiers : `src/app/back-office/calendrier/CalendrierClient.tsx`, `src/components/calendrier/Agenda.tsx`,
+    `src/components/calendrier/PanneauJour.tsx` (`AjouterCeJour`), `src/locales/{fr,zh-CN}.json`
+    (`calendrier.ajouterCeJourMenu`).
+  - Tests : `tests/retouches-v18-agenda.spec.ts`, cinq projets (`/retouches-v18(-.*)?\.spec\.ts/` ajouté à
+    `SPECS_GRAND_ECRAN`), vus rouges puis verts ; `agencement-v18-calendrier`, `calendrier`, `calendrier-deplacer`,
+    `calendrier-widget` verts sur les cinq projets.
+  - Reste : rien pour R4. Timothée : relire le 中文 `活动、任务或会议` ; aucune règle Firestore touchée.

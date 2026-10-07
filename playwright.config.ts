@@ -56,6 +56,8 @@ const SPECS_GRAND_ECRAN = [
   /scene-paques-noel\.spec\.ts/,
   // Agencement v18 (docs/spec-agencement-v18.md) : chaque tranche, F1 comprise, sur les cinq projets.
   /agencement-v18-.*\.spec\.ts/,
+  // Retouches v18 (docs/spec-retouches-v18.md) : le lot R sur les cinq projets.
+  /retouches-v18(-.*)?\.spec\.ts/,
 ];
 
 export default defineConfig({
