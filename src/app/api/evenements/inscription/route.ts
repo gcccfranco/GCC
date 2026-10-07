@@ -4,6 +4,7 @@ import { nowIsoParis, refusInscription, type RefusInscription } from "@/lib/even
 import { HttpError, ID, errorResponse, optionalUser } from "@/lib/evenements/serveur";
 import type { Evenement } from "@/types/evenement";
 import { BACK_OFFICE } from "@/lib/backOffice"
+import { canInscrireEvenement } from "@/lib/access"
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -40,9 +41,11 @@ export async function POST(req: NextRequest) {
     const db = adminDb();
     const ref = db.collection("evenements").doc(evenementId);
     let nom = nomLibre;
+    let profil: Parameters<typeof canInscrireEvenement>[1] = null;
     if (user) {
-      const p = (await db.collection("users").doc(user.uid).get()).data() as { firstName?: string; lastName?: string; email?: string } | undefined;
+      const p = (await db.collection("users").doc(user.uid).get()).data() as { firstName?: string; lastName?: string; email?: string; poles?: string[]; serviceRoles?: Record<string, unknown>; dansEquipes?: string[] } | undefined;
       nom = [p?.firstName, p?.lastName].filter(Boolean).join(" ").trim() || p?.email || user.email;
+      profil = p ?? null;
     }
 
     const result = await db.runTransaction(async (tx) => {
@@ -50,6 +53,8 @@ export async function POST(req: NextRequest) {
       if (!snap.exists) throw new HttpError(404, "Évènement introuvable");
       const e = snap.data() as Evenement;
       if (!user && !e.sansCompte) throw new HttpError(403, "Inscription réservée aux membres connectés.");
+      // Évènement de pôle ou d'équipe (retouches v18, E6) : ceux qui le voient seulement.
+      if (!canInscrireEvenement(user, profil, e)) throw new HttpError(403, "Évènement réservé aux membres du pôle.");
       const iid = user ? user.uid : ref.collection("inscriptions").doc().id;
       const iref = ref.collection("inscriptions").doc(iid);
       const existing = user ? await tx.get(iref) : null;

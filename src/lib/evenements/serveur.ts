@@ -3,8 +3,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { verifyIdToken } from "@/lib/push/admin";
 import { uidsForCategory } from "@/lib/push/recipients";
-import { equipeDuPour, poleDuPour } from "@/lib/access";
-import { membresDuPole } from "@/lib/taches/serveur";
+import { equipeDuPour, poleDuPour, polesDe } from "@/lib/access";
 import type { Evenement } from "@/types/evenement";
 
 export class HttpError extends Error {
@@ -44,5 +43,11 @@ export async function destinatairesEvenement(db: FirebaseFirestore.Firestore, e:
       .filter((d) => ((d.data().dansEquipes as string[] | undefined) ?? []).includes(equipe))
       .map((d) => d.id);
   }
-  return pole ? membresDuPole(pole) : uidsForCategory(e.pour);
+  // Pôle : ses membres seuls (lot 7 ; évènement de pôle, retouches v18 D23), lus dans la même base.
+  if (pole) {
+    return (await db.collection("users").get()).docs
+      .filter((d) => (polesDe(d.data()) as string[]).includes(pole))
+      .map((d) => d.id);
+  }
+  return uidsForCategory(e.pour);
 }

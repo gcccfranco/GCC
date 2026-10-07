@@ -123,3 +123,20 @@ Go de code le 08/10/2026.
     changement, rien à publier pour cette tranche.
   - Reste au lot E : E3 (inscriptions de bout en bout, `/api/evenements/inscription`), E4 (coordination et badge
     du pôle), E5 (notification aux seuls membres), E6 (vérification des droits).
+- **08/10/2026 — tranche E3-E6 codée** (branche `lot/v18r-pole`, commit de la tranche) :
+  - E3 : l'évènement de pôle s'inscrit, se désinscrit, montre ses inscrits (carte « Inscrits » de la fiche de
+    gestion) et reçoit le rappel aux inscrits — chemins déjà ouverts par E1-E2, vérifiés par les tests.
+  - E4 (D22) : `canSeeEvenement` laisse aussi passer la **coordination** sur un évènement de pôle ou d'équipe
+    qui n'est pas une réunion (une réunion reste à ses membres, l'organisateur et les admins). Le badge du pôle
+    (« Pôle DA ») était déjà sur la grande carte et la fiche ; en deux volets, la ligne de l'agenda n'en porte
+    pas, la fiche de droite si.
+  - E5 (D23) : la route `/api/push/notify-evenement` envoyait déjà aux seuls membres du pôle ;
+    `destinatairesEvenement` lit désormais les membres du pôle dans la base qu'on lui passe (testable), même
+    règle que `membresDuPole`.
+  - E6 : nouveau `canInscrireEvenement` (`src/lib/access.ts`) — un évènement de pôle ou d'équipe : ceux qui le
+    voient ; les autres publics, comme avant. `/api/evenements/inscription` refuse les autres (403).
+    `firestore.rules` : **aucun changement** — `evenements` n'a pas de liste de champs (le champ `reunion`
+    s'écrit), la lecture est ouverte aux connectés (filtrage côté client, choix assumé), les inscriptions ne
+    s'écrivent que par le serveur. **Rien à publier** pour le lot E.
+  - Tests : `tests/evenements-pole.spec.ts` (E3-E6, vus rouges puis verts, trois appareils).
+  - Reste au lot E : rien.

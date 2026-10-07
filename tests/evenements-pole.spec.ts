@@ -1,7 +1,8 @@
 import { expect, test, type Page, type TestInfo } from "@playwright/test";
 import path from "node:path";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
-import { estReunion, publicDeReunion } from "../src/lib/access";
+import { canInscrireEvenement, canSeeEvenement, estReunion, publicDeReunion } from "../src/lib/access";
+import { destinatairesEvenement } from "../src/lib/evenements/serveur";
 import { baseBackOffice } from "../src/lib/navigation";
 import { ouvertureDuJour } from "../src/lib/evenements/rappel";
 import { evenementsAVenir } from "../src/lib/tableauDeBord/donnees";
@@ -139,4 +140,127 @@ test("fiche de l'App : un membre du pôle voit l'évènement de pôle avec « S'
   await expect(page.getByRole("button", { name: "S'inscrire" })).toBeVisible();
   await expect(page.getByRole("region", { name: /^Sujets/ })).toHaveCount(0);
   await capture(page, info, "fiche-app");
+});
+
+// ─── Tranche E3-E6 ──────────────────────────────────────────────────────────
+// Un évènement de pôle (`reunion: false`) se vit comme un évènement de l'assemblée
+// (inscriptions, inscrits, rappel), mais ne se voit que des membres du pôle, des admins
+// et de la coordination, avec le badge du pôle (D22) ; la notification de publication
+// ne part qu'aux membres du pôle (D23) ; la route d'inscription refuse les autres (E6).
+
+// Clara : pôle Média (pas DA). Chloé : coordination (pôle « evenement »).
+const CLARA: FakeProfile = { uid: "uid-clara", email: "clara@example.com", firstName: "Clara", lastName: "V.", poles: ["media"] };
+const CHLOE: FakeProfile = { uid: "uid-chloe", email: "chloe@example.com", firstName: "Chloé", lastName: "R.", poles: ["evenement"] };
+const ADMIN = { uid: "uid-admin", email: "tc328829@gmail.com" };
+const qui = (p: FakeProfile) => ({ uid: p.uid, email: p.email });
+
+test("E4 : l'évènement de pôle se voit des membres du pôle, des admins et de la coordination, pas des autres", () => {
+  const soiree = { ...SOIREE, organisateurUid: "uid-autre" };
+  expect(canSeeEvenement(qui(BRUNO), BRUNO, soiree)).toBe(true);
+  expect(canSeeEvenement(ADMIN, null, soiree)).toBe(true);
+  expect(canSeeEvenement(qui(CHLOE), CHLOE, soiree)).toBe(true);
+  expect(canSeeEvenement(qui(CLARA), CLARA, soiree)).toBe(false);
+  expect(canSeeEvenement(null, null, soiree)).toBe(false);
+  // Même règle pour une équipe.
+  const equipe = { ...soiree, pour: "equipe:regie" };
+  expect(canSeeEvenement(qui(CLARA), { dansEquipes: ["regie"] }, equipe)).toBe(true);
+  expect(canSeeEvenement(qui(CHLOE), CHLOE, equipe)).toBe(true);
+  expect(canSeeEvenement(qui(CLARA), CLARA, equipe)).toBe(false);
+  // Une réunion reste celle de ses membres : la coordination n'y entre pas.
+  expect(canSeeEvenement(qui(CHLOE), CHLOE, { ...ANCIENNE, organisateurUid: "uid-autre" })).toBe(false);
+  expect(canSeeEvenement(qui(CHLOE), CHLOE, { ...ANCIENNE, pour: "equipe:regie", organisateurUid: "uid-autre" })).toBe(false);
+});
+
+test("E6 : s'inscrire à un évènement de pôle — ceux qui le voient ; les autres publics comme avant", () => {
+  const soiree = { ...SOIREE, organisateurUid: "uid-autre" };
+  expect(canInscrireEvenement(qui(BRUNO), BRUNO, soiree)).toBe(true);
+  expect(canInscrireEvenement(qui(CHLOE), CHLOE, soiree)).toBe(true);
+  expect(canInscrireEvenement(qui(CLARA), CLARA, soiree)).toBe(false);
+  // Sans compte, même ouvert aux inscriptions sans compte : non.
+  const sansCompte = { ...soiree, sansCompte: true };
+  expect(canInscrireEvenement(null, null, sansCompte)).toBe(false);
+  expect(canInscrireEvenement(qui(CLARA), CLARA, { ...soiree, pour: "equipe:regie" })).toBe(false);
+  // L'église et les sections : la route ne filtrait pas, elle ne filtre toujours pas.
+  expect(canInscrireEvenement(null, null, { ...soiree, pour: "eglise" })).toBe(true);
+  expect(canInscrireEvenement(qui(CLARA), CLARA, { ...soiree, pour: "Groupe Paix" })).toBe(true);
+});
+
+test("E5 : la notification d'un évènement de pôle part aux seuls membres du pôle", async () => {
+  const users: Record<string, Record<string, unknown>> = {
+    "uid-bruno": { poles: ["da"] }, "uid-alice": { poles: ["da", "media"] },
+    "uid-clara": { poles: ["media"] }, "uid-chloe": { poles: ["evenement"] }, "uid-noe": {},
+  };
+  const db = {
+    collection: () => ({ get: async () => ({ docs: Object.entries(users).map(([id, d]) => ({ id, data: () => d })) }) }),
+  } as unknown as Parameters<typeof destinatairesEvenement>[0];
+  expect((await destinatairesEvenement(db, { pour: "pole:da" })).sort()).toEqual(["uid-alice", "uid-bruno"]);
+});
+
+test("E4 : dans l'App, un non-membre ne voit ni la carte ni la fiche de l'évènement de pôle", async ({ page }) => {
+  await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
+  await signInAs(page, CLARA, { "evenements/soiree": SOIREE }, "/evenements");
+  await expect(page.getByRole("heading", { name: "Évènements" }).first()).toBeVisible();
+  await expect(page.getByText("Soirée DA")).toHaveCount(0);
+  await page.goto("/evenements/soiree");
+  await expect(page.getByText("Évènement introuvable.")).toBeVisible();
+});
+
+test("E4 : la coordination voit l'évènement de pôle, avec le badge du pôle sur la carte et la fiche", async ({ page }, info) => {
+  await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
+  await signInAs(page, CHLOE, { "evenements/soiree": SOIREE }, "/evenements");
+  // Téléphone et tablette : la grande carte porte le badge. Grand écran (deux volets) : la ligne
+  // de l'agenda, et la fiche montrée à droite porte le badge.
+  await expect(page.getByRole("link", { name: /Soirée DA/ }).first()).toBeVisible();
+  if (await page.getByTestId("carte-evenement").count()) {
+    await expect(page.getByTestId("carte-evenement").filter({ hasText: "Soirée DA" }).getByText("Pôle DA", { exact: true })).toBeVisible();
+  } else {
+    await expect(page.getByText("Pôle DA", { exact: true }).first()).toBeVisible();
+  }
+  await capture(page, info, "carte-coordination");
+  await page.goto("/evenements/soiree");
+  await expect(page.getByRole("heading", { name: "Soirée DA" }).first()).toBeVisible();
+  await expect(page.getByText("Pôle DA", { exact: true }).first()).toBeVisible();
+});
+
+test("E3 : un membre du pôle s'inscrit à l'évènement de pôle, la fiche le dit inscrit", async ({ page }, info) => {
+  await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
+  await signInAs(page, BRUNO, { "evenements/soiree": SOIREE }, "/evenements/soiree");
+  let sent: { evenementId: string; invites: number } | null = null;
+  await page.route("**/api/evenements/inscription", (route) => {
+    sent = route.request().postDataJSON();
+    return route.fulfill({ json: { ok: true, inscrits: 1, mine: { id: "uid-bruno", nom: "Bruno M.", invites: 0 } } });
+  });
+  await page.getByRole("button", { name: "S'inscrire" }).click();
+  await page.getByRole("button", { name: "Confirmer" }).click();
+  await expect(page.getByTestId("fiche-carte").getByText("Inscrit", { exact: true })).toBeVisible();
+  expect(sent).toEqual({ evenementId: "soiree", invites: 0 });
+  await capture(page, info, "inscrit");
+});
+
+test("E3 : au Back-Office, la fiche de gestion de l'évènement de pôle porte la carte des inscrits", async ({ page }) => {
+  await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
+  await signInAs(page, ALICE, {
+    "evenements/soiree": { ...SOIREE, inscrits: 1 },
+    "evenements/soiree/inscriptions/uid-bruno": { uid: "uid-bruno", nom: "Bruno M.", invites: 0, createdAt: "2026-10-01T09:00:00Z" },
+  }, "/back-office/evenements/soiree");
+  await expect(page.getByText("Bruno M.").first()).toBeVisible();
+  await expect(page.getByRole("region", { name: /^Sujets/ })).toHaveCount(0);
+});
+
+test("E5 : « Nouvel évènement » pour un pôle, « Prévenir les membres » coché, demande la notification de publication", async ({ page }) => {
+  await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
+  const db = await signInAs(page, ALICE, {}, "/back-office/evenements/nouveau");
+  let notifie: { evenementId: string } | null = null;
+  await page.route("**/api/push/notify-evenement", (route) => {
+    notifie = route.request().postDataJSON();
+    return route.fulfill({ json: { ok: true } });
+  });
+  await page.getByLabel("Public").selectOption({ label: "Pôle DA" });
+  await expect(page.getByRole("switch", { name: "Prévenir les membres" })).toBeChecked();
+  await page.getByLabel("Nom de l'évènement").fill("Soirée DA");
+  await page.getByLabel("Date", { exact: true }).fill("2026-10-10");
+  await page.getByRole("button", { name: "Créer l'évènement" }).click();
+  await page.waitForURL(/\/back-office\/evenements\/fake-\d+\/?$/);
+  const id = creee(db).path.split("/")[1];
+  await expect.poll(() => notifie).toEqual({ evenementId: id });
 });
