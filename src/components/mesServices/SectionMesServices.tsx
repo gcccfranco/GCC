@@ -12,6 +12,8 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import { Lock, UserPen } from "lucide-react";
 import { DeuxVolets } from "@/components/layout/DeuxVolets";
+import { EnTetePage } from "@/components/layout/EnTetePage";
+import { useDeuxVolets } from "@/hooks/useDeuxVolets";
 import { useProfile } from "@/lib/firebase/users";
 import { getSetlists, type FSSetlist } from "@/lib/firebase/setlists";
 import { loadPlanningData, type PlanningData } from "@/lib/planning/names";
@@ -63,6 +65,7 @@ export function SectionMesServices({ children }: { children: React.ReactNode }) 
   const { user, profile, loading: authLoading } = useProfile();
   const chemin = usePathname() ?? "/mes-services";
   const requete = useSearchParams();
+  const deuxVolets = useDeuxVolets();
   const [data, setData] = useState<PlanningData | null>(null);
   const [setlists, setSetlists] = useState<FSSetlist[]>([]);
   const [songs, setSongs] = useState<Record<string, SongIndexEntry>>({});
@@ -152,6 +155,8 @@ export function SectionMesServices({ children }: { children: React.ReactNode }) 
 
   // Le service choisi : celui de l'adresse, ou en grand le premier de la liste (Q3).
   const date = dateDeLAdresse(chemin);
+  const nom = profile.planningName || `${profile.firstName} ${profile.lastName}`.trim();
+  const aVenir = services.filter((e) => e.date >= aujourdhui).length;
   const choisi = date ? serviceDeLAdresse(services, date, requete.get("service"), requete.get("moment"), requete.get("seance")) : affiches[0];
   const liste = (
     <ListeMesServices
@@ -160,16 +165,26 @@ export function SectionMesServices({ children }: { children: React.ReactNode }) 
       charge={!!data}
       onglet={onglet}
       setOnglet={setOnglet}
-      nom={profile.planningName || `${profile.firstName} ${profile.lastName}`.trim()}
       aujourdhui={aujourdhui}
       actif={choisi ? cleDuService(choisi) : undefined}
       setlistDe={valeur?.setlistDe}
-      aDroite={!!choisi}
     />
   );
 
+  // Agencement v18 (A11, R1 à R3) : l'en-tête au-dessus des deux volets, partout où la liste
+  // paraît ; en un volet, un service en page n'a que son retour « ‹ Mes services » (R8).
+  const avecEnTete = deuxVolets || !date;
+
   return (
     <div className="min-h-screen bg-background">
+      {avecEnTete && (
+        <EnTetePage
+          titre={t("mesServices.title")}
+          sousTitre={[t("mesServices.subtitle", { name: nom }), aVenir > 0 && t("mesServices.upcomingCount", { count: aVenir })]
+            .filter(Boolean)
+            .join(" · ")}
+        />
+      )}
       <Contexte.Provider value={valeur}>
         <DeuxVolets
           racine="/mes-services"

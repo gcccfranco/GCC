@@ -1,7 +1,8 @@
 "use client";
 
-// La liste de Mes services (lot U4 bis, B4, Q7 ; planches `mes-services-*`) : titre, « N à
-// venir », À venir · Passés, puis les services par mois. Toucher une ligne ouvre le service
+// La liste de Mes services (lot U4 bis, B4, Q7 ; planches `mes-services-*`) : À venir · Passés
+// (le rail, agencement v18, A11 ; le titre et « N à venir » sont dans l'en-tête de la section),
+// puis les services par mois. Toucher une ligne ouvre le service
 // (`/mes-services/[date]`) ; le lien « Setlist » mène toujours à la setlist. En grand : des
 // lignes, celle du service ouvert en encre. Tablette portrait : une carte par service, sur
 // deux colonnes. Téléphone : les lignes d'un mois dans une carte, avec un chevron.
@@ -9,7 +10,7 @@
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
 import { ChevronRight, Clock, ListMusic, MapPin } from "lucide-react";
-import { PageTitle } from "@/components/layout/PageTitle";
+import { OngletsRail } from "@/components/layout/Onglets";
 import { PushPrompt } from "@/components/push/PushPrompt";
 import { Tile } from "@/components/ui/tile";
 import { useDisposition } from "@/hooks/useDisposition";
@@ -45,55 +46,37 @@ function parMois(entries: ServiceGroupe[], lang: string): { label: string; items
 }
 
 export function ListeMesServices({
-  services, affiches, charge, onglet, setOnglet, nom, aujourdhui, actif, setlistDe, aDroite,
+  services, affiches, charge, onglet, setOnglet, aujourdhui, actif, setlistDe,
 }: {
   services: ServiceGroupe[];
   affiches: ServiceGroupe[];
   charge: boolean;
   onglet: Onglet;
   setOnglet: (o: Onglet) => void;
-  nom: string;
   aujourdhui: string;
   /** Clé du service ouvert à droite (en grand). */
   actif?: string;
   setlistDe?: (s: ServiceGroupe) => FSSetlist | undefined;
-  /** Un service est ouvert à droite (il porte le h1) ; sinon le titre de la liste le porte. */
-  aDroite: boolean;
 }) {
   const { t, i18n } = useTranslation();
   const disposition = useDisposition();
-  const aVenir = services.filter((e) => e.date >= aujourdhui).length;
   const mois = parMois(affiches, i18n.language);
 
   return (
-    <div className={cn("space-y-4 pb-10", disposition === "grand" ? "px-5 pt-6" : "mx-auto max-w-2xl px-4 pt-6 md:max-w-3xl md:px-6")}>
-      <PageTitle
-        niveau={disposition === "grand" && aDroite ? 2 : 1}
-        title={t("mesServices.title")}
-        subtitle={t("mesServices.subtitle", { name: nom })}
-        action={aVenir > 0 && (
-          <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-secondary text-foreground">
-            {t("mesServices.upcomingCount", { count: aVenir })}
-          </span>
-        )}
-      />
-
+    <div className={cn("space-y-4", disposition === "grand" ? "px-4 pb-4 pt-4" : "px-[var(--marge-page)] pb-10")}>
       <PushPrompt />
 
-      {/* Onglets À venir / Passés */}
-      <div className={cn("flex rounded-lg bg-secondary p-0.5 gap-0.5 text-sm", disposition === "tablette" && "max-w-sm")}>
-        {(["upcoming", "past"] as Onglet[]).map((o) => (
-          <button
-            key={o}
-            onClick={() => setOnglet(o)}
-            className={`flex-1 px-3 py-2 rounded-md font-semibold transition-colors ${
-              onglet === o ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            {o === "upcoming" ? t("mesServices.tabUpcoming") : t("mesServices.tabPast")}
-          </button>
-        ))}
-      </div>
+      {/* Vues : le rail (R4). */}
+      <OngletsRail
+        etiquette={t("mesServices.title")}
+        className={cn("flex w-full [&>button]:flex-1", disposition === "tablette" && "max-w-sm")}
+        actif={onglet}
+        choisir={(o) => setOnglet(o as Onglet)}
+        onglets={[
+          { id: "upcoming", label: t("mesServices.tabUpcoming") },
+          { id: "past", label: t("mesServices.tabPast") },
+        ]}
+      />
 
       {!charge ? (
         <p className="text-sm text-muted-foreground text-center py-16">{t("mesServices.loading")}</p>

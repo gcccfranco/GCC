@@ -193,7 +193,8 @@ test("en 中文, la fenêtre de signalement n'a plus de français", async ({ pag
 test("en 中文, la proposition de chant n'a plus de français", async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
   await signInAs(page, MEMBRE, {}, "/songs");
-  await page.getByRole("button", { name: "推荐新诗歌" }).click();
+  // Agencement v18 (A5) : dès 768 px, l'action de l'en-tête « 推荐诗歌 » ; sur téléphone, le lien en bas de liste.
+  await page.getByRole("button", { name: /^推荐新?诗歌$/ }).click();
   await expect(page.getByRole("heading", { name: "推荐新诗歌" })).toBeVisible();
   expect(await francaisAffiche(page, textesFrancais())).toEqual([]);
 });

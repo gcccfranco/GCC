@@ -565,3 +565,32 @@ la barre d'onglets : une page sans barre du bas (rare) le verra plus haut que n�
   在列表中选择，或从上次停下的地方继续。· 暂无你的待用歌单 · 你所服事的歌单准备好后，其中的诗歌会优先显示在这里。·
   查看歌单 · 最近打开 · 本设备 · 新加入的诗歌 · {{date}}加入 · GCC 最常唱的诗歌 · 最近 3 个月 ·
   {{count}} 次出现在歌单中.
+
+### V18T89 — App Setlists et Mes services (T9)
+
+- 07/10/2026 : **T9 faite** (branche `lot/v18-t89`, commit `feat(V18T89): T9 — App Setlists et Mes services`).
+- **Setlists** (A9, `setlists/page.tsx`) : `EnTetePage` « Setlists », sous-titre « Les chants prévus pour chaque
+  service », action `BoutonNouveau` « + Nouvelle setlist » (pilule dès 768 px, rond sur téléphone ; plus de
+  « Nouvelle » dans la rangée des filtres du téléphone), au-dessus des deux volets et sur toute la largeur.
+  La liste perd son `PageTitle` ; À venir · Archives · Mes setlists passent dans `OngletsRail` (boutons,
+  `role="tab"`), dans la carte. Hors deux volets, le contenu est à `--marge-page` sur toute la zone (plus de
+  `max-w-4xl` centré). Aperçu (`ApercuSetlist`) : contenu inchangé, titre en h2 de 24 px, sans marge propre (R3, R10).
+- **Mes services** (A11) : l'en-tête est posé par `SectionMesServices` (layout), au-dessus des deux volets, avec
+  « Les dates où <nom> apparaît dans les plannings · n à venir » (la pastille « n à venir » de la liste disparaît) ;
+  en un volet, un service en page n'a pas l'en-tête de la liste mais `Retour` « ‹ Mes services » et son h1.
+  `ListeMesServices` : plus de titre, À venir · Passés en `OngletsRail`. `DetailService` : en deux volets, h2 de
+  24 px et plus de marge intérieure (`px-6 xl:px-9` retiré) ; le seuil de `.service-colonnes` (`globals.css`)
+  passe de 560 à **520 px** : la liste en carte à la marge ne laisse que ~530 px au volet à 1 280 px et sur iPad
+  couché, où la setlist et l'équipe restent côte à côte (planche).
+- **Libellés** : `setlists.list.newButton` « Nouvelle » → « Nouvelle setlist » (中文 inchangé, 新建歌单) ;
+  `setlists.list.sousTitre` (nouveau, 每次服事预备的诗歌) ; `mesServices.subtitle` perd son point final (中文 : son 。).
+- **Tests** : `tests/agencement-v18-setlists.spec.ts` (8 tests, cinq projets ; écrit avant le code par la voie coupée, mais son premier lancement, en file d’attente, a tourné après le code : **pas vu rouge en exécution**, seulement vu rouge sur la taille des h2, 30 px, avant correction). Suites voisines adaptées sans changer
+  ce qu'elles vérifient : `pages-en-grand-mes-services` (titre h1 dans l'en-tête, service en h2, rail en `tab`),
+  `setlist-suppression-groupee` (onglets en `tab`, `header.barre-haut`), `planning-petit-dej` (sous-titre sans
+  point), `nouveaux-membres` (le bouton « 推荐诗歌 » de l'en-tête de Chants, régression de T8 en 中文 dès 768 px).
+  Vertes sur les cinq projets : `agencement-v18-setlists`, `pages-en-grand-setlists`, `pages-en-grand-mes-services`,
+  `setlist-suppression-groupee`, `nouveaux-membres`, `look-halo`, `halo-partout`, `agencement-barre-reduite`,
+  `coherence`, `planning-petit-dej` ; `back-office-coupe` (second serveur). Captures regardées (ordinateur,
+  ordinateur-1440, tablette, tablette-paysage, téléphone).
+- **Reste** : rien pour T9.
+- **Timothée** : rien à publier (aucune règle, aucune donnée). Relire le 中文 : 每次服事预备的诗歌.

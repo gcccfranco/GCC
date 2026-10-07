@@ -160,7 +160,8 @@
   "setlists": {
     "list": {
       "title": "GCC Louange",
-      "newButton": "Nouvelle",
+      "newButton": "Nouvelle setlist",
+      "sousTitre": "Les chants prévus pour chaque service",
       "draft": "Brouillon",
       "private": "Privée",
       "allCategories": "Toutes",
@@ -716,7 +717,7 @@
     "chooseName": "Choisis ton nom de planning dans ton profil pour voir tes services ici.",
     "myProfile": "Mon profil",
     "upcomingCount": "{{count}} à venir",
-    "subtitle": "Les dates où {{name}} apparaît dans les plannings.",
+    "subtitle": "Les dates où {{name}} apparaît dans les plannings",
     "tabUpcoming": "À venir",
     "tabPast": "Passés",
     "today": "Aujourd'hui",

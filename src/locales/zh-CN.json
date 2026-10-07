@@ -161,6 +161,7 @@
     "list": {
       "title": "GCC 敬拜诗歌",
       "newButton": "新建歌单",
+      "sousTitre": "每次服事预备的诗歌",
       "draft": "草稿",
       "private": "私密",
       "allCategories": "全部类型",
@@ -713,7 +714,7 @@
     "chooseName": "在个人资料中选择你在排班表中的名字，以在此查看你的服事。",
     "myProfile": "我的资料",
     "upcomingCount": "{{count}} 个即将到来",
-    "subtitle": "{{name}} 出现在排班表中的日期。",
+    "subtitle": "{{name}} 出现在排班表中的日期",
     "tabUpcoming": "即将到来",
     "tabPast": "已过去",
     "today": "今天",

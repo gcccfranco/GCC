@@ -46,7 +46,7 @@ export function ApercuSetlist({
   const lien = `/setlists/${setlist.id}`;
 
   return (
-    <section aria-label={t("setlists.apercu.region")} className="apercu-setlist space-y-5 px-6 pb-10 pt-6">
+    <section aria-label={t("setlists.apercu.region")} className="apercu-setlist space-y-5 pb-10">
       <div className="flex flex-wrap items-start gap-x-6 gap-y-3">
         <div className="min-w-0 flex-1 basis-72">
           <p className="flex items-center gap-2 text-[13px] font-semibold">
@@ -56,7 +56,7 @@ export function ApercuSetlist({
               {" · "}{formatDate(setlist.date, i18n.language)}
             </span>
           </p>
-          <h2 className="mt-1 text-[28px] font-bold leading-tight tracking-tight text-foreground text-balance">{setlist.title}</h2>
+          <h2 className="mt-1 text-[24px] font-bold leading-tight tracking-tight text-foreground text-balance">{setlist.title}</h2>
           {(setlist.leader || presentation) && (
             <p className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-sm text-muted-foreground">
               {setlist.leader && <span>{t("planning.accueil.presidence", { nom: setlist.leader })}</span>}

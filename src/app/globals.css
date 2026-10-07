@@ -570,9 +570,10 @@
 }
 
 /* Un service de Mes services (lot U4 bis, B4, Q7) : la setlist et l'équipe côte à côte quand le
-   volet en a la place, l'une sous l'autre sinon. */
+   volet en a la place, l'une sous l'autre sinon. Agencement v18 (T9) : la liste en carte à la
+   marge laisse au volet ~530 px à 1 280 px et sur iPad couché, d'où le seuil à 520 px. */
 .service-detail { container-type: inline-size; }
-@container (min-width: 560px) {
+@container (min-width: 520px) {
   .service-colonnes { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); }
 }
 
