@@ -262,9 +262,9 @@ que dans l'objet de sa section).
 | **T4 — Planning, BO et App** | B6, B7, A1 à A4. Deux étapes dans la même voie : T4a en-tête et rangée de grille communes (BO, grilles, Groupes) ; T4b accueil et Prépa. Table. | `app/back-office/planning/{layout,page}.tsx`, `[cle]/PlanningDuBackOffice.tsx`, `app/planning/layout.tsx`, `page.tsx`, `{culte,table,groupes,edd,campus,intergroupe,interfranco}/page.tsx`, `components/planning/{PlanningTabs,FilterButtons,AnneeSelecteur,PetitDejCarte,PlanningGrille}.tsx`, `BarreDeGrille.tsx` (nouveau), `components/layout/SectionTabs.tsx` | Aucun avec les autres voies ; `PlanningGrille.tsx` a été touché par F2 (déjà versé). |
 | **T5 — BO Équipes et Messages** | B8, B9, B10, B11, B12. | `app/back-office/equipes/*`, `app/equipes/EquipesClient.tsx` (branche `gestion`), `components/equipes/BandeauEquipes.tsx` (crayon), `components/admin/{Personnes,InscriptionsComptes}.tsx`, `app/back-office/messages/*`, `components/messages/{Notifier,ReceptionVolets}.tsx`, `components/admin/SurveyResults.tsx`, `ApercuNotification.tsx` (nouveau) | `EquipesClient.tsx` sert l'App Équipes (bandeau, déjà conforme) : ne toucher qu'à la branche `gestion` et au panneau d'édition. |
 | **T6 — BO Statistiques et Tableau de bord** | B13, B14 (avec la variante barre réduite). | `app/back-office/statistiques/*`, `app/back-office/page.tsx`, `components/backOffice/TableauDeBord.tsx`, `widgets/Cadre.tsx`, `lib/tableauDeBord/colonnes.ts` (nouveau, `repartirWidgets`) | `TableauDeBord.tsx` touché par F2 (déjà versé). |
-| **T7 — App Évènements** | A10. | `app/evenements/{CalendrierClient,SectionEvenements,EvenementCard}.tsx`, `EvenementClient.tsx` (**branches App seulement**), `components/evenements/EvenementsTabs.tsx`, `globals.css` (bloc `.fiche-grand` seulement) | Après T2b (même fichier). **T7 pose l'en-tête de toute la section** (`EnTetePage` + `OngletsRail` dans `SectionEvenements`, pour l'agenda **et** pour la branche `/evenements/scene`) ; la scène (P4 de `spec-scene-paques-noel.md`) ne change que la liste d'`EvenementsTabs` et ce qui est sous l'en-tête : **T7 avant P4**. |
+| **T7 — App Évènements** | A10. **Rend vert** `pages-en-grand-evenements.spec.ts:79` (« inscription à droite de la bannière », `ordinateur` et `tablette-paysage`), rouge depuis F1 (liste-carte de `DeuxVolets`) : le réécrire avec la règle A10 (une colonne sous 760 px de volet, deux au-delà) et retirer la marge intérieure de la fiche en deux volets (R10). | `app/evenements/{CalendrierClient,SectionEvenements,EvenementCard}.tsx`, `EvenementClient.tsx` (**branches App seulement**), `components/evenements/EvenementsTabs.tsx`, `globals.css` (bloc `.fiche-grand` seulement) | Après T2b (même fichier). **T7 pose l'en-tête de toute la section** (`EnTetePage` + `OngletsRail` dans `SectionEvenements`, pour l'agenda **et** pour la branche `/evenements/scene`) ; la scène (P4 de `spec-scene-paques-noel.md`) ne change que la liste d'`EvenementsTabs` et ce qui est sous l'en-tête : **T7 avant P4**. |
 | **T8 — App Chants** | A5 à A8. | `app/songs/{ChantsVolets,ChoisisUnChant,SongListClient}.tsx`, `scripts/build-index.ts`, `types/song.ts`, `globals.css` (bloc `.chants-volets` seulement) | `build-index.ts` et l'index : aucune autre tranche. |
-| **T9 — App Setlists et Mes services** | A9, A11. | `app/setlists/page.tsx`, `app/mes-services/layout.tsx`, `components/mesServices/ListeMesServices.tsx` | Aucun. |
+| **T9 — App Setlists et Mes services** | A9, A11. **Rend vert** `pages-en-grand-mes-services.spec.ts:120` (« setlist et équipe côte à côte », `ordinateur` et `tablette-paysage`), rouge depuis F1 : retirer la marge intérieure de `DetailService` en deux volets (`px-6 xl:px-9`, R10), ce qui rend la place à `.service-detail`. | `app/setlists/page.tsx`, `app/mes-services/layout.tsx`, `components/mesServices/ListeMesServices.tsx` | Aucun. |
 | **T10 — App Moi, Profil, Guide, Questionnaire** | A12 à A15. | `app/moi/page.tsx`, `components/moi/*` (aperçus nouveaux), `app/(auth)/profil/page.tsx`, `app/guide/page.tsx`, `app/questionnaire/page.tsx` | Lit `lib/planning/accueil.ts`, `useTaches`, `coursProgres` sans les changer. |
 | **T11 — App Harmonie** | A16. | `app/harmonie/layout.tsx` (nouveau), `components/harmonie/{Catalogue,cours/SommaireCours,rd2000/Rd2000Harmonie}.tsx` | Aucun. |
 
@@ -273,11 +273,18 @@ que dans l'objet de sa section).
 **Avec la scène** (`spec-scene-paques-noel.md`) : ses tranches pures P1 à P3 se codent à tout moment ; ses tranches
 d'écran demandent F1 et F2 (en-tête, rail, pilules, « ⋯ », `useConfirmer`, `DeuxVolets`), puis **P4 après T7** et
 **P7 après T2a et T2b** (mêmes fichiers : `SectionEvenements.tsx`, `EvenementsTabs.tsx`, `back-office/evenements/layout.tsx`).
+**Ordre d'intégration** : F1 et F2, puis T7 et T9, avant toute fusion sur `main` ; **jamais F1 seule en ligne**. La
+liste-carte de `DeuxVolets` (R10) change tout de suite les pages qui l'utilisent déjà (Setlists, Évènements, Mes
+services, Harmonie, Réception, Tâches de l'App) et laisse quatre tests rouges jusqu'à T7 et T9 (lignes du tableau).
+Chaque tranche de pages retire la marge intérieure de ses fiches en deux volets : `DeuxVolets` pose déjà la marge,
+la fiche n'en pose plus.
 
 ### Fin (séquentielle)
 
 **Z — Nettoyage et passage complet.** Supprimer `EnTeteEntree.tsx`, `PageTitle.tsx` et `FilterButtons.tsx` s'ils
-n'ont plus d'appel, les styles orphelins ; `tests/agencement-v18-regles.spec.ts` passe toutes les pages des deux
+n'ont plus d'appel, les styles orphelins, le relais `components/harmonie/Pilules.tsx` ; retirer la page d'essai
+`app/essai-agencement/` (commitée par F1, voir Avancement) après avoir porté ce que teste
+`agencement-v18-fondations.spec.ts` sur des pages réelles ; `tests/agencement-v18-regles.spec.ts` passe toutes les pages des deux
 espaces (liste ci-dessous) ; captures aux cinq tailles, comparées aux planches v18.
 
 ## Tests (Playwright, écrits avant le code)
@@ -498,7 +505,10 @@ if (!(await confirmer({ titre: t("…"), texte: t("…"), action: t("common.supp
 interdireDialoguesNatifs(page);
 await ouvrirAvecBarre(page, "reduite");      // facultatif
 await signInAs(page, ADMIN, DOCS, "/back-office/taches/da");
-await verifierAgencement(page);               // en-tête, x et taille du h1, débordement, halo
+await verifierAgencement(page, {              // en-tête, x et taille du h1, débordement, halo, et :
+  contenu: page.locator("[data-deux-volets]"),  // à donner : le bloc prend toute la zone (une lecture : `lecture: true`)
+  onglets: { rail: 1, pilules: 0 },          // à donner : les onglets passent par OngletsRail et Pilules
+});
 ```
 
 Mesures : le h1 (`.titre-page`) fait 24 px sur téléphone et 30 px dès 768 px ; `EnTetePage` porte `--marge-page`
@@ -529,6 +539,36 @@ la barre d'onglets : une page sans barre du bas (rare) le verra plus haut que n�
   empilés sur téléphone, au-dessus de la feuille du formulaire de tâche).
 - **Reste** : rien pour F2. Les tranches de pages (T1 à T11) peuvent partir.
 - **Timothée** : rien à publier (aucune règle, aucune donnée) ; relire les six libellés 中文 ci-dessus.
+
+### V18F — Relecture (F1 et F2)
+
+- 07/10/2026 : **lot fini et relu** (deux relectures, onze constats ; commit `fix(V18F): relecture — …` sur
+  `lot/v18-fondations`). **Comportements corrigés**, chacun avec un test vu rouge puis vert :
+  - `ConfirmerProvider` : la fenêtre se ferme et répond `false` quand la page change sous elle (Précédent,
+    Suivant) ; avant, elle restait par-dessus la page suivante et « Supprimer » agissait pour la page quittée.
+    Une demande faite par une page au montage n'est pas annulée (on garde le chemin de la demande).
+  - `OngletsRail` en boutons : le motif ARIA des onglets à activation manuelle (un seul arrêt de tabulation,
+    ← → en boucle, Début, Fin ; Entrée ou Espace choisit). Rôles inchangés (`tablist`, `tab`, `aria-selected`) :
+    les tests des tranches qui cliquent un onglet restent bons.
+  - La page d'essai `/essai-agencement` répond aussi 404 interrupteur coupé (second serveur, « comme en ligne ») ;
+    `back-office-coupe.spec.ts` le vérifie.
+- **Tests ajoutés** : halo du Back-Office en sombre (`#262b45`, vu rouge en cassant exprès la valeur, puis remise) ;
+  `verifierAgencement(page, { contenu, lecture, onglets })` : pleine largeur du bloc de contenu et compte des
+  rails et des pilules (`verifierOnglets`), facultatifs pour ne pas casser les appels déjà écrits, **à donner par
+  chaque tranche** (exemple ci-dessus), avec un test qui prouve que la vérification de pleine largeur mord ;
+  captures F1 dans le dépôt, `PW_CAPTURES=<dossier>` (essai, barre réduite, fenêtre, menu, halo du BO clair et
+  sombre), regardées aux cinq tailles.
+- Documentation seulement : commentaire de `Confirmer` (un clic à côté ne ferme pas une `AlertDialog`) ;
+  `MenuActions` (`onSelect` gère ses erreurs, clé par position : deux libellés peuvent se répéter) ;
+  `OngletsRail` (liens qui ne diffèrent que par la query : `actif` obligatoire, testé ; chaque lien a son `href`).
+- **Les quatre tests rouges** laissés par la liste-carte de `DeuxVolets` restent voulus (R10) : leur correction
+  est écrite dans les lignes **T7** et **T9** du tableau des tranches, avec l'**ordre d'intégration** (F1 et F2,
+  puis T7 et T9, jamais F1 seule en ligne). La page d'essai reste commitée ; **Z** la retire (paragraphe Z).
+- **Suites** (07/10/2026) : `agencement-v18-fondations` (cinq projets), `agencement-v18-confirmations` (cinq
+  projets) et `back-office-coupe` (second serveur) verts ; `tsc --noEmit` et `npm run lint` sans erreur.
+- **Reste** : rien pour les fondations.
+- **Timothée** : rien à publier (aucune règle, aucune donnée) ; relire les six libellés 中文 de F2 ; ne pas mettre
+  en ligne `lot/v18-fondations` avant T7 et T9.
 
 ### V18T4 — Planning (T4a)
 

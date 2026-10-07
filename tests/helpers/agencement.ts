@@ -9,8 +9,15 @@ import { expect, type Locator, type Page, type TestInfo } from "@playwright/test
 //     interdireDialoguesNatifs(page);            // avant toute action : aucune fenêtre grise
 //     await ouvrirAvecBarre(page, "reduite");     // facultatif : barre réduite sur ordinateur
 //     await signInAs(page, ADMIN, DOCS, "/back-office/taches/da");
-//     await verifierAgencement(page);             // en-tête, x du titre, débordement, halo
+//     await verifierAgencement(page, {            // en-tête, x du titre, débordement, halo, et :
+//       contenu: page.locator("[data-deux-volets]"),  // le bloc de contenu prend toute la zone (une lecture : `lecture: true`)
+//       onglets: { rail: 1, pilules: 0 },         // les onglets de la page passent par OngletsRail et Pilules
+//     });
 //   });
+//
+// `contenu` et `onglets` sont facultatifs pour ne pas casser les appels déjà écrits, mais chaque
+// tranche de pages les donne : la spec range la pleine largeur et les deux sortes d'onglets parmi
+// les vérifications communes.
 //
 // Les mesures attendues sont écrites ici en dur, d'après la spec (R2), et non lues dans le CSS :
 // ces tests vérifient le CSS, ils ne le recopient pas.
@@ -104,8 +111,9 @@ export async function verifierSansDebordement(page: Page) {
   expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth), "aucun défilement horizontal").toBeLessThanOrEqual(0);
 }
 
-/** Le bleu gris du halo du Back-Office (R12), clair. */
+/** Le bleu gris du halo du Back-Office (R12), clair et sombre. */
 export const HALO_BACK_OFFICE = "#e4e7f6";
+export const HALO_BACK_OFFICE_SOMBRE = "#262b45";
 
 /** Un halo visible ; sous `/back-office`, sans halo propre à la page, `--halo` vaut le bleu gris. */
 export async function verifierHalo(page: Page) {
@@ -130,6 +138,14 @@ export async function verifierPleineLargeur(page: Page, bloc: Locator, options: 
   else expect(largeur, "toute la zone moins deux marges").toBeGreaterThanOrEqual(zone.droite - zone.gauche - 2 * marge - 1);
 }
 
+/** Les onglets visibles de la page (R4, R5) : `rail` rails gris (sections, vues), `pilules` rangées de
+ *  pilules (sous-onglets, filtres, plannings). Un onglet qui ne passe ni par `OngletsRail` ni par
+ *  `Pilules` n'a pas de `data-onglets` : le compte le montre. */
+export async function verifierOnglets(page: Page, attendus: { rail?: number; pilules?: number }) {
+  if (attendus.rail !== undefined) await expect(ongletsRail(page).filter({ visible: true }), "rails gris (sections, vues)").toHaveCount(attendus.rail);
+  if (attendus.pilules !== undefined) await expect(pilules(page).filter({ visible: true }), "rangées de pilules (sous-onglets, filtres, plannings)").toHaveCount(attendus.pilules);
+}
+
 /** Aucune fenêtre native (`window.confirm`, `alert`) : chacune fait échouer le test (R9). À appeler avant d'agir. */
 export function interdireDialoguesNatifs(page: Page) {
   page.on("dialog", async (dialogue) => {
@@ -149,9 +165,18 @@ export async function repondreDansLeSite(page: Page, bouton: string) {
   await expect(fenetre).toBeHidden();
 }
 
-/** Les vérifications communes en un appel : en-tête, débordement, halo. */
-export async function verifierAgencement(page: Page, options: { premierBloc?: Locator } = {}) {
+/**
+ * Les vérifications communes en un appel : en-tête, débordement, halo ; avec `contenu`, ce bloc prend
+ * toute la zone moins deux marges (`lecture` : 720 px au plus) ; avec `onglets`, le compte des rails
+ * et des rangées de pilules visibles.
+ */
+export async function verifierAgencement(
+  page: Page,
+  options: { premierBloc?: Locator; contenu?: Locator; lecture?: boolean; onglets?: { rail?: number; pilules?: number } } = {},
+) {
   await verifierEnTete(page, options);
   await verifierSansDebordement(page);
   await verifierHalo(page);
+  if (options.contenu) await verifierPleineLargeur(page, options.contenu, { lecture: options.lecture });
+  if (options.onglets) await verifierOnglets(page, options.onglets);
 }
