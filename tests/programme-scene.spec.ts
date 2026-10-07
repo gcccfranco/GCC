@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { signInAs, type FakeDb, type FakeProfile } from "./helpers/fakeSession";
 import { interdireDialoguesNatifs, repondreDansLeSite } from "./helpers/agencement";
+import { fermerFeuille, reglageSaison } from "./helpers/saisonScene";
 import {
   archiveDate, programmeState, reservationsClosed, sundaysBetween,
 } from "../src/lib/scene/dimanches";
@@ -83,8 +84,9 @@ test("coordination : sans aucun programme, l'onglet Noël du Back-Office crée l
   await expect(page).toHaveURL(/\/back-office\/evenements\/scene\/noel\/?$/);
   await expect(page.getByRole("heading", { name: "Saison de Noël 2026" })).toBeVisible();
   expect(ecritures(db)).toHaveLength(0);
-  await page.getByRole("region", { name: "Mettre en place la saison" }).getByRole("button", { name: "1 h 30", exact: true }).click();
+  await (await reglageSaison(page, "Un créneau dure")).getByRole("button", { name: "1 h 30", exact: true }).click();
   await expect.poll(() => ecritures(db).length).toBe(1);
+  await fermerFeuille(page);
   expect(ecritures(db)[0]).toMatchObject({ method: "POST", path: "programmes/noel-2026" });
   expect(ecritures(db)[0].data).toMatchObject({ fete: "noel", annee: 2026, jourJ: "2026-12-24", ouvert: false, duree: 90, createdBy: "uid-alice" });
   await page.getByRole("button", { name: "Lancer les réservations", exact: true }).click();
@@ -463,7 +465,8 @@ test("coordination après l'archivage : l'onglet Noël prépare Noël 2027 ; No�
   await ouvrirScene(page, ALICE, "2027-01-01", ARCHIVE, `${SCENE_GESTION}/noel`);
   const colonne = page.getByRole("region", { name: "Cette fête" });
   await expect(colonne.getByRole("heading", { level: 2 })).toHaveText("Noël 2027");
-  await colonne.getByRole("region", { name: "Les années passées" }).getByRole("button", { name: /Noël 2026/ }).click();
+  // Sur une colonne (P9), les années passées sont sous la saison, hors de la colonne.
+  await page.getByRole("region", { name: "Les années passées" }).getByRole("button", { name: /Noël 2026/ }).click();
   await expect(colonne.getByRole("heading", { level: 2 })).toHaveText("Noël 2026");
   await expect(page.getByRole("list", { name: "Ordre de Passage jour J" }).getByRole("listitem")).toHaveCount(2);
 });

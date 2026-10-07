@@ -1478,6 +1478,10 @@
       "totalSemaines_other": "{{count}} semaines",
       "totalCreneaux_one": "{{count}} créneau en tout",
       "totalCreneaux_other": "{{count}} créneaux en tout",
+      "reglagesSaison": "Réglages de la saison",
+      "joursEtPlages": "Jours et plages",
+      "termine": "Terminé",
+      "cetteSemaine": "Cette semaine",
       "etats": {
         "aucune": "Brouillon",
         "brouillon": "Brouillon",

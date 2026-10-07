@@ -642,3 +642,41 @@ npm run lint
   - À faire par Timothée : rien à publier (droits inchangés) ; relire le 中文 de `planning.gestion.*` ajouté (« 全部预约 »,
     « {{edition}} · 每天谁预约了什么 », « 筛选预约 », « 即将到来 n », « 已过 n », « 不在时段表内 n », « 预约人 », « 启动后可用 »,
     « {{edition}} 已结束 », « 成员在{{date}}之前会看到感谢语，之后此标签将显示{{suivante}}。… », « 为{{annee}}年{{fete}}做准备 », « 打印 »).
+- 07/10/2026 — **P9 — Back-Office sur téléphone et tablette portrait : faite** (branche `lot/v18-scene-bo`, commit
+  « feat(SCENE): P9 »). `FeteGestion.tsx` lit la disposition (`useDisposition`) : en deux volets, rien ne change. Sur une
+  colonne, la fête (titre, menu des années, état ; la phrase du brouillon juste dessous ; une fois lancée, « Saison » et
+  « Toutes les réservations » en carte), puis la vue par défaut, puis « Les années passées » (brouillon) et l'ordre de
+  passage en carte tout en bas ; toute autre vue (`?vue=`, `?semaine=`) s'ouvre en page, avec « ‹ Noël 2026 » (`Retour`)
+  vers la fête. Vue par défaut sur une colonne : la saison avant le lancement, « Cette semaine » réservations ouvertes,
+  le tableau lancée mais pas encore ouverte ou fermée, l'ordre de passage après le jour J. Vue Saison sur une colonne :
+  le titre, puis — téléphone — le résumé (nouveau `ResumeSaison.tsx` : Jour J, Réservations, Jours et plages, Un créneau
+  dure, Qui peut réserver, chaque ligne ouvre une feuille `Drawer` avec ce réglage seul, `SaisonForm seul=…`, et
+  « Terminé ») ou — tablette portrait — la carte entière, puis « Lancer les réservations » pleine largeur (48 px), puis
+  l'aperçu. Dans une feuille, une erreur s'affiche sous le champ et rien n'est écrit ; refermer la feuille oublie le
+  réglage refusé (le résumé dit ce qui est en base, « Lancer » se relit). Nouveau `CetteSemaine.tsx` : la semaine à venir
+  (Q12) en cartes par jour, « 10:00 – 11:00 », « Quoi · Qui · Réservé par », pastille « Hors grille », « ⋯ » des membres
+  (Déplacer, Modifier, Retirer) ; un jour sans réservation dit « Aucune réservation ici. ». `heureCourte` passe dans
+  `libelles.ts`. Libellés `planning.gestion.{reglagesSaison,joursEtPlages,termine,cetteSemaine}` (FR et 中文).
+  - Tests : 10 tests P9 dans `tests/scene-paques-noel.spec.ts` (dont une capture sous `PW_CAPTURES`), vus rouges
+    (13 échecs sur `telephone` et `tablette`), verts ensuite. Aide commune `tests/helpers/saisonScene.ts`
+    (`reglageSaison` : la carte, ou sur téléphone la feuille du réglage ; `fermerFeuille` ; `versToutesLesReservations`).
+    Réécrits pour une colonne : P7 et P8 (saison par feuille sur téléphone ; tableau à un toucher ; « Entraînements » et
+    « Réservations · après le lancement » en deux volets seulement), `scene-saison.spec.ts` (la saison par feuille,
+    « Cette semaine » au lieu de la liste des semaines), `programme-scene.spec.ts` (années passées hors de la colonne),
+    `back-office-admin.spec.ts` « Scène » (cassé depuis P8 sur toutes les tailles : la saison lancée s'ouvre sur ses
+    réservations ; on touche « Saison »). `tsc` propre, `lint` sans avertissement sur les fichiers touchés. Passes :
+    `scene-paques-noel`, `scene-saison`, `programme-scene` sur les cinq projets (téléphone et tablette 393 verts,
+    grands écrans 379 verts) ; `back-office-admin` « Scène » sur ordinateur, téléphone, tablette ; `back-office-coupe`
+    (64 verts). Captures regardées aux cinq tailles (brouillon, feuille « Jours et plages », saison ouverte).
+  - Choix faits faute de réponse : la planche du téléphone met « Saison » en petit titre ; la page garde « Saison de
+    Pâques 2027 » et sa pastille (même titre qu'en grand). Le sous-titre de la fête reste « Jour J : … » (la planche y écrit
+    « Seules la coordination et les admins voient ce brouillon. ») ; la phrase du brouillon vient juste dessous. « Les
+    années passées » restent sur une colonne, sous l'aperçu (la planche du téléphone ne les montre pas ; sans elles, le
+    menu des années seul y mène). « Cette semaine » ne se montre que réservations ouvertes ; c'est la première semaine
+    qui a un jour réservable à partir d'aujourd'hui, avec tous ses jours (un jour vide le dit), sans liste des semaines
+    ni ‹ › (planche) : les autres semaines sont dans « Toutes les réservations ». La feuille d'un réglage se ferme par
+    « Terminé » (bouton plein, seul dans la feuille), le glissé ou Échap.
+  - Reste : rien pour P9 ; la scène entière (P1-P9) est à relire, captures aux cinq tailles en FR et 中文. Clé devenue
+    orpheline, laissée : aucune.
+  - À faire par Timothée : rien à publier (droits inchangés) ; relire le 中文 « 预约季设置 », « 日子和时间段 », « 完成 »,
+    « 本周 ».

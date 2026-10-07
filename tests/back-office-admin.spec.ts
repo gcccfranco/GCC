@@ -584,6 +584,8 @@ test.describe("B3 : Évènements", () => {
       jours: [6, 0], plages: [{ jour: 6, debut: "10:00", fin: "12:00" }, { jour: 0, debut: "14:00", fin: "19:00" }], duree: 60, quiAutorises: [] };
     await ouvrirB3(page, COORD, "/back-office/evenements/scene", { "programmes/noel": NOEL });
     await expect(sousParties(page).getByRole("link", { name: "Noël" })).toHaveAttribute("aria-current", "page");
+    // P8-P9 : une saison lancée s'ouvre sur ses réservations ; la saison est à un toucher.
+    await page.getByRole("region", { name: "Cette fête" }).getByRole("button", { name: /^Saison/ }).click();
     await expect(page.getByRole("heading", { name: "Saison de Noël 2026" })).toBeVisible();
     await expect(page.getByText("Réservations lancées")).toBeVisible();
     await page.goto("/evenements/scene");

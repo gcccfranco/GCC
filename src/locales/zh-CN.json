@@ -1474,6 +1474,10 @@
       "totalSemaines_other": "{{count}} 周",
       "totalCreneaux_one": "共 {{count}} 个时段",
       "totalCreneaux_other": "共 {{count}} 个时段",
+      "reglagesSaison": "预约季设置",
+      "joursEtPlages": "日子和时间段",
+      "termine": "完成",
+      "cetteSemaine": "本周",
       "etats": {
         "aucune": "草稿",
         "brouillon": "草稿",

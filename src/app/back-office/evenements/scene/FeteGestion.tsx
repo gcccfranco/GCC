@@ -13,6 +13,12 @@
 // « Toutes les réservations » (vue par défaut jusqu'au jour J) et les semaines des membres dans la
 // colonne, avec « ⋯ » sur toutes les réservations ; après le jour J, la carte « … est passé »,
 // « Préparer {fête} {année + 1} » et l'ordre de passage en lecture, à imprimer.
+// P9 (Q22 ; planches `v18-scene-a-coord-avant/pendant-telephone`) : sur une colonne (téléphone,
+// tablette debout), la fête puis ce qui se lit par défaut — avant le lancement la saison (en
+// résumé sur téléphone, une feuille par réglage ; la carte entière sur tablette), « Lancer » en
+// pleine largeur, l'aperçu ; pendant la saison « Cette fête » et « Cette semaine » en cartes par
+// jour ; après le jour J l'ordre de passage — et l'ordre de passage en carte tout en bas. Une autre
+// vue (`?vue=`, `?semaine=`) s'ouvre en page, avec un retour vers la fête.
 
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
@@ -30,19 +36,23 @@ import {
 } from "@/lib/scene/fetes"
 import { erreursSaison, famillesDe, joursReservables, saisonDe } from "@/lib/scene/saison"
 import { fdFullL } from "@/lib/planning/utils"
-import { useDeuxVolets } from "@/hooks/useDeuxVolets"
+import { useDisposition } from "@/hooks/useDisposition"
 import type { Creneau, Passage, Plage, Programme } from "@/types/programme"
 import { Button } from "@/components/ui/button"
 import { DeuxVolets } from "@/components/layout/DeuxVolets"
+import { Retour } from "@/components/layout/EnTetePage"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Apercu } from "@/app/evenements/scene/Apercu"
 import { Entrainements, type MorceauxEntrainements } from "@/app/evenements/scene/Entrainements"
 import { OrdrePassage } from "@/app/evenements/scene/OrdrePassage"
-import { SaisonForm, type AutreFete } from "@/app/evenements/scene/SaisonForm"
-import { jourEnLettres } from "@/app/evenements/scene/libelles"
+import { SaisonForm, type AutreFete, type SaisonPatch } from "@/app/evenements/scene/SaisonForm"
+import { heureCourte, jourEnLettres } from "@/app/evenements/scene/libelles"
 import { rangerReservations, ToutesReservations } from "./ToutesReservations"
+import { CetteSemaine } from "./CetteSemaine"
+import { ResumeSaison } from "./ResumeSaison"
 
-type Vue = "saison" | "reservations" | "ordre" | "semaine"
+/** « cetteSemaine » : la vue par défaut d'une saison ouverte, sur une colonne (P9). */
+type Vue = "saison" | "reservations" | "ordre" | "semaine" | "cetteSemaine"
 
 /** L'édition montrée : celle de `?annee=` si elle existe, sinon l'édition courante (Q4). */
 function editionMontree(fete: Fete, programmes: Programme[], today: string, annee: number | null): Edition {
@@ -52,8 +62,6 @@ function editionMontree(fete: Fete, programmes: Programme[], today: string, anne
   return p ? { fete, annee, programme: p } : courante
 }
 
-/** « 10 », « 10:30 » : une heure de plage en court (« sam. 10–12 »). */
-const heureCourte = (h: string) => (h.endsWith(":00") ? String(Number(h.slice(0, 2))) : h)
 const majuscule = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 
 export function FeteGestion({ fete }: { fete: Fete }) {
@@ -65,7 +73,8 @@ export function FeteGestion({ fete }: { fete: Fete }) {
   const router = useRouter()
   const pathname = usePathname() ?? `/back-office/evenements/scene/${fete}`
   const params = useSearchParams()
-  const deuxVolets = useDeuxVolets()
+  const disposition = useDisposition()
+  const deuxVolets = disposition === "grand"
   const [programmes, setProgrammes] = useState<Programme[] | null>(null)
   const [charge, setCharge] = useState<{ pour: string; creneaux: Creneau[] } | null>(null)
   const [erreurSaison, setErreurSaison] = useState(false)
@@ -116,10 +125,11 @@ export function FeteGestion({ fete }: { fete: Fete }) {
   const avecSemaines = lance && etat !== "passee"
   const vueParam = params.get("vue")
   const vueDemandee = vueParam === "ordre" || vueParam === "saison" || (vueParam === "reservations" && lance) ? vueParam : null
-  const vue: Vue = vueDemandee
-    ?? (avecSemaines && params.get("semaine") ? "semaine"
-      : etat === "passee" ? "ordre"
-        : lance ? "reservations" : "saison")
+  // Sur une colonne, une saison ouverte se lit d'abord par « Cette semaine » (P9).
+  const vueParDefaut: Vue = etat === "passee" ? "ordre"
+    : !lance ? "saison"
+      : !deuxVolets && etat === "ouvertes" ? "cetteSemaine" : "reservations"
+  const vue: Vue = vueDemandee ?? (avecSemaines && params.get("semaine") ? "semaine" : vueParDefaut)
   const { aVenir, hors } = rangerReservations(programme, creneaux)
 
   // Q8 : la période de l'édition de l'autre fête (non archivée), que celle-ci ne croise pas.
@@ -224,13 +234,10 @@ export function FeteGestion({ fete }: { fete: Fete }) {
     : etat === "passee" ? t("planning.gestion.bilan", { reservations: t("planning.gestion.nReservations", { count: creneaux.length }), hors: hors.length })
       : t("planning.gestion.resume", { aVenir: aVenir.length, hors: hors.length })
 
-  const colonne = (m: MorceauxEntrainements | null) => (
-    <section aria-label={t("planning.gestion.cetteFete")} className={deuxVolets ? "space-y-5 p-5" : "space-y-5"}>
-      {enTeteEdition}
-      {erreur && <p role="alert" className="text-sm text-destructive">{erreur}</p>}
-      <div className="space-y-1">
-        <p className="px-1 text-[13px] font-semibold text-muted-foreground">{t("planning.gestion.cetteFete")}</p>
-        <Entree
+  const erreurEcriture = erreur && <p role="alert" className="text-sm text-destructive">{erreur}</p>
+  const entrees = (
+    <>
+      <Entree
           icone={SlidersHorizontal}
           titre={t("planning.gestion.saison")}
           sous={avantLancement ? t("planning.gestion.saisonARegler") : resumeSaison()}
@@ -245,10 +252,14 @@ export function FeteGestion({ fete }: { fete: Fete }) {
           disabled={!lance}
           onClick={() => changer({ vue: "reservations" })}
         />
-      </div>
-      {m?.semaines}
-      {avantLancement && <p className="px-1 text-[13px] text-muted-foreground">{t("planning.gestion.brouillonTexte", { phrase: phraseMembres })}</p>}
-      {avantLancement && passees.length > 0 && (
+    </>
+  )
+  const texteBrouillon = avantLancement && (
+    <p className="px-1 text-[13px] text-muted-foreground">{t("planning.gestion.brouillonTexte", { phrase: phraseMembres })}</p>
+  )
+  const anneesPassees = avantLancement && (
+    <>
+      {passees.length > 0 && (
         <section aria-labelledby="scene-gestion-annees" className="space-y-1">
           <h3 id="scene-gestion-annees" className="px-1 text-[13px] font-semibold text-muted-foreground">{t("planning.fete.anneesPassees")}</h3>
           {passees.map((p) => (
@@ -263,20 +274,54 @@ export function FeteGestion({ fete }: { fete: Fete }) {
           ))}
         </section>
       )}
-      <div className={deuxVolets ? "border-t border-border pt-3" : ""}>
-        <Entree
-          icone={ListOrdered}
-          titre={t("planning.fete.ordreEntree")}
-          sous={`${jourEnLettres(programme.jourJ, lang)} · ${numeros(programme)}`}
-          actif={vue === "ordre"}
-          onClick={() => changer({ vue: "ordre" })}
-        />
+    </>
+  )
+  const entreeOrdre = (
+    <Entree
+      icone={ListOrdered}
+      titre={t("planning.fete.ordreEntree")}
+      sous={`${jourEnLettres(programme.jourJ, lang)} · ${numeros(programme)}`}
+      actif={vue === "ordre"}
+      onClick={() => changer({ vue: "ordre" })}
+    />
+  )
+
+  /** La colonne de gauche, en deux volets. */
+  const colonne = (m: MorceauxEntrainements | null) => (
+    <section aria-label={t("planning.gestion.cetteFete")} className="space-y-5 p-5">
+      {enTeteEdition}
+      {erreurEcriture}
+      <div className="space-y-1">
+        <p className="px-1 text-[13px] font-semibold text-muted-foreground">{t("planning.gestion.cetteFete")}</p>
+        {entrees}
       </div>
+      {m?.semaines}
+      {texteBrouillon}
+      {anneesPassees}
+      <div className="border-t border-border pt-3">{entreeOrdre}</div>
     </section>
   )
 
   // ─── Ce qui se lit à droite (dessous sur une colonne) ────────────────────
 
+  const proprietesSaison = {
+    programme,
+    onSave: (patch: SaisonPatch) => ecrire(patch),
+    jourJCalcule: { date: jourJParDefaut(fete, edition.annee), fete: t(`evenements.tabs.${fete}`) },
+    autre,
+    onErreur: setErreurSaison,
+  }
+  // P9 (Q22) : sur téléphone, la saison en résumé, une feuille par réglage ; ailleurs, la carte entière.
+  const reglagesSaison = disposition === "telephone"
+    ? <ResumeSaison key={`saison-${programme.id}`} {...proprietesSaison} />
+    : <SaisonForm key={`saison-${programme.id}`} {...proprietesSaison} />
+  const apercu = <Apercu key={`apercu-${programme.id}`} programme={programme} creneaux={creneaux} />
+  // Sur une colonne, pleine largeur sous la saison (planche `v18-scene-a-coord-avant-telephone`).
+  const boutonLancer = (
+    <Button className={deuxVolets ? "rounded-full" : "h-12 w-full rounded-full text-[15px]"} disabled={bloque} onClick={lancer}>
+      <Send aria-hidden /> {t("planning.gestion.lancer")}
+    </Button>
+  )
   const vueSaison = (
     <div className="space-y-4">
       <header className="flex flex-wrap items-start gap-3">
@@ -289,27 +334,20 @@ export function FeteGestion({ fete }: { fete: Fete }) {
         </div>
         {lance ? (
           <p className="shrink-0 py-2 text-sm font-semibold text-foreground">{t("planning.gestion.lancees")}</p>
-        ) : (
-          <Button className="w-full rounded-full sm:w-auto" disabled={bloque} onClick={lancer}>
-            <Send aria-hidden /> {t("planning.gestion.lancer")}
-          </Button>
-        )}
+        ) : deuxVolets && boutonLancer}
       </header>
-      <div className="flex flex-wrap items-start gap-5">
-        <div className="min-w-0 flex-[1_1_380px]">
-          <SaisonForm
-            key={programme.id}
-            programme={programme}
-            onSave={(patch) => ecrire(patch)}
-            jourJCalcule={{ date: jourJParDefaut(fete, edition.annee), fete: t(`evenements.tabs.${fete}`) }}
-            autre={autre}
-            onErreur={setErreurSaison}
-          />
+      {deuxVolets ? (
+        <div className="flex flex-wrap items-start gap-5">
+          <div className="min-w-0 flex-[1_1_380px]">{reglagesSaison}</div>
+          <div className="min-w-0 flex-[1_1_260px]">{apercu}</div>
         </div>
-        <div className="min-w-0 flex-[1_1_260px]">
-          <Apercu key={programme.id} programme={programme} creneaux={creneaux} />
-        </div>
-      </div>
+      ) : (
+        <>
+          {reglagesSaison}
+          {!lance && boutonLancer}
+          {apercu}
+        </>
+      )}
     </div>
   )
 
@@ -381,6 +419,7 @@ export function FeteGestion({ fete }: { fete: Fete }) {
     if (vue === "saison") return vueSaison
     if (!m) return <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
     if (vue === "semaine") return m.semaine
+    if (vue === "cetteSemaine") return <CetteSemaine programme={programme} creneaux={creneaux} menu={m.menu} erreur={m.erreur} />
     return (
       <ToutesReservations
         programme={programme}
@@ -394,16 +433,40 @@ export function FeteGestion({ fete }: { fete: Fete }) {
     )
   }
 
-  const disposer = (m: MorceauxEntrainements | null) => deuxVolets ? (
-    <DeuxVolets racine={pathname} liste={colonne(m)} premier={droite(m)} largeurListe={400}>
-      {null}
-    </DeuxVolets>
-  ) : (
-    <div className="space-y-6 px-[var(--marge-page)]">
-      {colonne(m)}
-      {droite(m)}
-    </div>
-  )
+  const retourFete = edition.annee === courante.annee ? pathname : `${pathname}?annee=${edition.annee}`
+  const disposer = (m: MorceauxEntrainements | null) => {
+    if (deuxVolets) {
+      return (
+        <DeuxVolets racine={pathname} liste={colonne(m)} premier={droite(m)} largeurListe={400}>
+          {null}
+        </DeuxVolets>
+      )
+    }
+    // Une colonne (P9) : une vue autre que celle par défaut s'ouvre en page, avec un retour.
+    if (vue !== vueParDefaut) {
+      return (
+        <div className="space-y-3 px-[var(--marge-page)]">
+          <Retour href={retourFete}>{titre}</Retour>
+          {erreurEcriture}
+          {droite(m)}
+        </div>
+      )
+    }
+    // Sinon la fête, ce qui se lit par défaut, puis l'ordre de passage en carte tout en bas.
+    return (
+      <div className="space-y-6 px-[var(--marge-page)]">
+        <section aria-label={t("planning.gestion.cetteFete")} className="space-y-4">
+          {enTeteEdition}
+          {texteBrouillon}
+          {erreurEcriture}
+          {lance && <div className="raised space-y-1 rounded-2xl p-1.5">{entrees}</div>}
+        </section>
+        {droite(m)}
+        {anneesPassees}
+        {vue !== "ordre" && <div className="raised rounded-2xl p-1.5">{entreeOrdre}</div>}
+      </div>
+    )
+  }
 
   // Lancée : les morceaux des membres (semaines, menu « ⋯ », feuille Déplacer), comme dans l'App.
   if (lance && edition.programme && charge?.pour === edition.programme.id) {

@@ -96,3 +96,6 @@ export function nomDuJour(j: number, lang: string): string {
   const s = d.toLocaleDateString("fr-FR", { weekday: "long" })
   return s.charAt(0).toUpperCase() + s.slice(1)
 }
+
+/** Une heure de plage en court (P7, P9) : « 10 », « 10:30 » — « sam. 10–12 ». */
+export const heureCourte = (h: string) => (h.endsWith(":00") ? String(Number(h.slice(0, 2))) : h)
