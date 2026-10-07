@@ -79,6 +79,11 @@ export function FeteGestion({ fete }: { fete: Fete }) {
   const [charge, setCharge] = useState<{ pour: string; creneaux: Creneau[] } | null>(null)
   const [erreurSaison, setErreurSaison] = useState(false)
   const [erreur, setErreur] = useState("")
+  // La lecture a échoué (réseau coupé) : un message et « Réessayer » plutôt qu'un chargement sans fin.
+  const [echec, setEchec] = useState(false)
+  // Nos écritures (`ecrire`) relisent elles-mêmes, après coup : l'événement qu'elles émettent ne
+  // relance pas une seconde lecture de tous les programmes et créneaux.
+  const ecritures = useRef(0)
   const anneeVoulue = Number(params.get("annee")) || null
   // Seule la dernière demande pose l'état : une réponse plus lente, partie avant, mettrait
   // sinon les créneaux d'une autre édition sous l'écran.
@@ -94,17 +99,27 @@ export function FeteGestion({ fete }: { fete: Fete }) {
     setCharge(p ? { pour: p.id, creneaux } : null)
   }, [fete, anneeVoulue])
 
+  const charger = useCallback(() => { reload().then(() => setEchec(false), () => setEchec(true)) }, [reload])
+
   useEffect(() => {
     if (!user) return
-    const load = () => { reload().catch(() => {}) }
-    load()
-    window.addEventListener(PROGRAMMES_CHANGED, load)
-    return () => window.removeEventListener(PROGRAMMES_CHANGED, load)
-  }, [user, reload])
+    charger()
+    const surChangement = () => { if (!ecritures.current) charger() }
+    window.addEventListener(PROGRAMMES_CHANGED, surChangement)
+    return () => window.removeEventListener(PROGRAMMES_CHANGED, surChangement)
+  }, [user, charger])
 
   const chargement = <p className="px-[var(--marge-page)] text-sm text-muted-foreground">{t("common.loading")}</p>
   if (profileLoading || !user) return chargement
   if (!isCoordination(user, profile)) return <p className="px-[var(--marge-page)] text-sm text-muted-foreground">{t("backOffice.sceneReserve")}</p>
+  if (!programmes && echec) {
+    return (
+      <div role="alert" className="flex flex-col items-start gap-3 px-[var(--marge-page)]">
+        <p className="text-sm text-muted-foreground">{t("planning.fete.erreurChargement")}</p>
+        <Button variant="outline" onClick={charger}>{t("common.retry")}</Button>
+      </div>
+    )
+  }
   if (!programmes) return chargement
 
   const today = todayIso()
@@ -116,7 +131,7 @@ export function FeteGestion({ fete }: { fete: Fete }) {
   const precedent = editions.find((p) => anneeDe(p)! < edition.annee) ?? null
   const reglages = reglagesRepris(precedent, fete, edition.annee)
   // L'édition telle qu'elle est, ou telle qu'elle naîtra à la première action (Q6, Q7).
-  const programme: Programme = edition.programme ?? { id: idEdition(fete, edition.annee), ...reglages, visible: false, createdBy: "", updatedAt: "" }
+  const programme: Programme = edition.programme ?? { id: idEdition(fete, edition.annee), ...reglages, createdBy: "", updatedAt: "" }
   const saison = saisonDe(programme)
   const jours = joursReservables(saison, programme.jourJ)
   const lance = !!edition.programme && edition.programme.ouvert !== false
@@ -154,11 +169,16 @@ export function FeteGestion({ fete }: { fete: Fete }) {
   }
 
   /** Écrit sur l'édition, ou la crée en brouillon avec ce changement (Q6), puis relit. */
-  async function ecrire(changement: Partial<Omit<Programme, "id" | "visible">>) {
+  async function ecrire(changement: Partial<Omit<Programme, "id">>) {
     setErreur("")
     try {
-      if (edition.programme) await updateProgramme(edition.programme.id, changement)
-      else await creerEdition(fete, edition.annee, { ...reglages, createdBy: user!.uid, updatedAt: new Date().toISOString() }, changement)
+      ecritures.current++
+      try {
+        if (edition.programme) await updateProgramme(edition.programme.id, changement)
+        else await creerEdition(fete, edition.annee, { ...reglages, createdBy: user!.uid, updatedAt: new Date().toISOString() }, changement)
+      } finally {
+        ecritures.current--
+      }
       await reload()
     } catch {
       setErreur(t("planning.programmes.error"))

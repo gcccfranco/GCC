@@ -30,7 +30,6 @@ function fromFsProgramme(raw: RawDoc): Programme {
     nom: (data.nom as string) ?? "",
     jourJ: (data.jourJ as string) ?? "",
     debut: (data.debut as string) ?? "",
-    visible: (data.visible as boolean) ?? false,
     passages: (data.passages as Passage[]) ?? [],
     createdBy: (data.createdBy as string) ?? "",
     updatedAt: (data.updatedAt as string) ?? "",
@@ -128,15 +127,15 @@ export async function getProgramme(id: string): Promise<Programme | null> {
 }
 
 /** Crée l'édition `{fete}-{annee}` (Q6) à la première action de la coordination : `data`
- *  (ses réglages, `reglagesRepris`, sans `visible` : Q11) plus `changement` (ce que la
+ *  (ses réglages, `reglagesRepris`) plus `changement` (ce que la
  *  coordination vient de faire).
  *  Une autre coordination l'a créée entre-temps (409) : seul `changement` s'écrit sur le
  *  document existant. Rend l'identifiant. */
 export async function creerEdition(
   fete: Fete,
   annee: number,
-  data: Omit<Programme, "id" | "visible">,
-  changement: Partial<Omit<Programme, "id" | "visible">> = {},
+  data: Omit<Programme, "id">,
+  changement: Partial<Omit<Programme, "id">> = {},
 ): Promise<string> {
   const id = idEdition(fete, annee);
   const headers = await authHeader();

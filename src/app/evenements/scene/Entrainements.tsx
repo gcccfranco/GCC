@@ -178,10 +178,10 @@ export function Entrainements({ programme, creneaux, user, profile, onChanged, o
 
   /** « ⋯ » d'une réservation que je peux changer (Q14) ; Retirer passe par la confirmation du site. */
   const actionsDe = (c: Creneau): ActionDuMenu[] => [
-    { label: t("planning.saison.deplacer"), icone: ArrowLeftRight, onSelect: () => ouvrir({ type: "deplacer", creneau: c }) },
-    { label: t("planning.programme.edit"), icone: Pencil, onSelect: () => ouvrir({ type: "modifier", creneau: c }) },
+    { label: t("planning.saison.deplacer"), aide: t("planning.semaines.aideDeplacer"), icone: ArrowLeftRight, onSelect: () => ouvrir({ type: "deplacer", creneau: c }) },
+    { label: t("planning.programme.edit"), aide: t("planning.semaines.aideModifier"), icone: Pencil, onSelect: () => ouvrir({ type: "modifier", creneau: c }) },
     {
-      label: t("planning.programme.remove"), icone: Trash2, destructif: true, onSelect: () => remove(c),
+      label: t("planning.programme.remove"), aide: t("planning.semaines.aideRetirer"), icone: Trash2, destructif: true, onSelect: () => remove(c),
       confirmer: {
         titre: t("planning.programme.confirmRemove"),
         texte: t("planning.semaines.retirerTexte", { resa: `${c.quoi} · ${c.qui.join(", ")}`, jour: jourEnLettres(c.dimanche, lang), debut: c.debut, fin: c.fin }),

@@ -1300,7 +1300,8 @@
       "anDernier": "le programme d'une année passée, pour se donner des idées",
       "commentReserver": "Comment réserver ?",
       "commentReserverTexte": "Un créneau = {{duree}} de scène. On choisit quoi (chant, danse, sketch…) et pour quel groupe.",
-      "et": " et "
+      "et": " et ",
+      "erreurChargement": "Impossible de charger la scène. Vérifie ta connexion."
     },
     "semaines": {
       "mes": "Mes réservations",
@@ -1310,6 +1311,9 @@
       "placesLibres_other": "{{count}} places libres",
       "aMoi": "à moi",
       "retirerTexte": "{{resa}}, {{jour}} · {{debut}} – {{fin}} : le créneau redevient libre.",
+      "aideDeplacer": "Choisir un autre créneau libre",
+      "aideModifier": "Quoi, qui, note",
+      "aideRetirer": "Libère le créneau",
       "complet": "complet",
       "unCreneau": "un créneau = {{duree}}",
       "titre": "Semaine du {{du}} au {{au}}",

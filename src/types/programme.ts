@@ -42,8 +42,8 @@ export interface Programme {
   jourJ: string;
   /** Premier jour réservable, et jour où l'onglet apparaît (lot 12). */
   debut: string;
-  /** Onglet affiché à tous les connectés ; masqué = programme invisible. */
-  visible: boolean;
+  // `visible` (l'ancien épinglage) n'est plus lu ni écrit (Pâques · Noël, Q11) : il reste,
+  // sans effet, dans les anciens documents.
   passages: Passage[];
   createdBy: string;
   updatedAt: string;

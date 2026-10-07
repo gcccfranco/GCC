@@ -94,7 +94,6 @@ const programme = (p: Partial<Programme> = {}): Programme => ({
   nom: "Noël",
   jourJ: "2026-12-20",
   debut: "2026-09-27",
-  visible: true,
   passages: [],
   createdBy: "u-orga",
   updatedAt: "2026-09-01T10:00:00Z",

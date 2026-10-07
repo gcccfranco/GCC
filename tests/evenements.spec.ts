@@ -234,7 +234,8 @@ test("modifier : l'organisateur change le lieu, sans toucher au compteur", async
   await expect(page.getByLabel("Nom de l'évènement")).toHaveValue("Foot au parc");
   await page.getByLabel("Lieu").fill("Stade Charléty");
   await page.getByRole("button", { name: "Enregistrer" }).click();
-  await expect(page.getByText("Stade Charléty")).toBeVisible();
+  // La fiche de gestion le dit ; la liste (T2b) le redit dès sa relecture, d'où la fiche seule.
+  await expect(page.getByTestId("infos-gestion").getByText("Stade Charléty")).toBeVisible();
   const write = db.writes.find((w) => w.method === "PATCH" && w.path === "evenements/foot");
   expect(write?.data.lieu).toBe("Stade Charléty");
   expect(write?.data).not.toHaveProperty("inscrits");

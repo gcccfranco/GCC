@@ -54,6 +54,8 @@ export function FeteClient({ fete }: { fete: Fete }) {
   const deuxVolets = useDeuxVolets()
   const [programmes, setProgrammes] = useState<Programme[] | null>(null)
   const [charge, setCharge] = useState<Charge | null>(null)
+  // La lecture a échoué (réseau coupé) : un message et « Réessayer » plutôt qu'un chargement sans fin.
+  const [echec, setEchec] = useState(false)
   // Seule la dernière demande pose l'état : une réponse plus lente, partie avant, mettrait
   // sinon les créneaux d'une autre édition sous l'écran.
   const demandes = useRef(0)
@@ -69,14 +71,23 @@ export function FeteClient({ fete }: { fete: Fete }) {
     setCharge(edition.programme ? { pour: edition.programme.id, creneaux } : null)
   }, [fete])
 
+  const charger = useCallback(() => { reload().then(() => setEchec(false), () => setEchec(true)) }, [reload])
+
   useEffect(() => {
     if (!user) return
-    const load = () => { reload().catch(() => {}) }
-    load()
-    window.addEventListener(PROGRAMMES_CHANGED, load)
-    return () => window.removeEventListener(PROGRAMMES_CHANGED, load)
-  }, [user, reload])
+    charger()
+    window.addEventListener(PROGRAMMES_CHANGED, charger)
+    return () => window.removeEventListener(PROGRAMMES_CHANGED, charger)
+  }, [user, charger])
 
+  if (!programmes && echec) {
+    return (
+      <div role="alert" className="flex flex-col items-start gap-3 px-[var(--marge-page)]">
+        <p className="text-sm text-muted-foreground">{t("planning.fete.erreurChargement")}</p>
+        <Button variant="outline" onClick={charger}>{t("common.retry")}</Button>
+      </div>
+    )
+  }
   if (profileLoading || !programmes || !user) {
     return <p className="px-[var(--marge-page)] text-sm text-muted-foreground">{t("common.loading")}</p>
   }

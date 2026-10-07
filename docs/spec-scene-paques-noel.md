@@ -550,6 +550,63 @@ npm run lint
   - Reste : P7 à P9.
   - À faire par Timothée : rien pour P6 (aucune règle à publier, droits inchangés) ; relire le 中文 « 请选择内容和参与者 »,
     « 其他团体 », « 可选 », « 我的 », « {{resa}}，{{jour}} · {{debut}} – {{fin}}：该时段将重新空出。 ».
+- 07/10/2026 — **Fusion du lot : faite** (branche `lot/v18-scene`, rien de poussé). `lot/v18-fondations` (relecture
+  V18F : fenêtre fermée quand la page change, rail au clavier, `/essai-agencement` coupé comme en ligne) puis
+  `lot/v18-scene-bo` (T2a, T2b, P7, P8, P9) fusionnés. Conflits : `tests/back-office-coupe.spec.ts` (les adresses 404
+  des deux voies gardées, `/essai-agencement` compris) et `docs/spec-agencement-v18.md` (avancements V18F et V18T2
+  gardés l'un après l'autre). `tsc` vert, `lint` sans erreur. Passes : `scene-paques-noel`, `scene-saison`,
+  `programme-scene`, `agencement-v18-t2a`, `agencement-v18-t2b`, `back-office-admin`, `evenements-2027`,
+  `tableau-de-bord`, `calendrier`, `calendrier-deplacer` sur tous leurs projets ; `agencement-v18-fondations`,
+  `agencement-v18-confirmations`, `evenements`, `reunions`, `taches-evenements`, `halo-partout`,
+  `back-office-espace`, `barre-back-office` sur `ordinateur` (2 455 verts, 1 rouge, 206 sautés) ;
+  `back-office-coupe` (193 verts).
+  - Le rouge : `evenements.spec.ts` « modifier : l'organisateur change le lieu » tombait une fois sur deux (strict
+    mode : depuis T2b, la liste relue après l'enregistrement redit le lieu à côté de la fiche). Le test lit
+    désormais le lieu dans la fiche de gestion (`infos-gestion`) : 15 verts sur 15 (ordinateur, téléphone,
+    tablette, cinq fois chacun). Aucun code du site touché.
+  - Pas fusionné ici : la relecture de `lot/v18-t2` (`2243fb1`, après `3badace`), qui viendra à l'intégration.
+  - Reste : les tranches P1 à P9 sont faites ; la relecture de la scène entière reste à faire (voir P9), puis
+    l'intégration, qui repassera toute la suite sur les cinq tailles.
+  - À faire par Timothée : rien à publier (droits inchangés, aucune règle) ; relire le 中文 listé sous P1 à P9.
+- 07/10/2026 — **Relecture du lot (P1-P9) : faite, le lot est fini et relu** (branche `lot/v18-scene`, commit
+  « fix(SCENE): relecture — … », rien de poussé). Six constats mineurs, deux relectures :
+  - `visible` sort du type `Programme` (Q11) et de `fromFsProgramme` ; les `Omit<…, "visible">` de `creerEdition`
+    et de `FeteGestion.ecrire` disparaissent (`ReglagesEdition`, un `Pick`, ne l'a jamais porté). Le champ reste,
+    sans effet, dans les anciens documents. Les fixtures typées des tests suivent (`scene-paques-noel`,
+    `calendrier`, `calendrier-deplacer`).
+  - Menu « ⋯ » : `MenuActions` (F1, `src/components/layout/MenuActions.tsx`) prend un champ facultatif `aide`, une
+    ligne sous le libellé, lue comme description (`aria-describedby`) et non dans le nom ; aucun autre appelant ne
+    change. Déplacer « Choisir un autre créneau libre », Modifier « Quoi, qui, note », Retirer « Libère le
+    créneau » (la suite de la planche, « sans fenêtre du navigateur », est une note de conception : la confirmation
+    du site s'ouvre bien). Libellés `planning.semaines.aide{Deplacer,Modifier,Retirer}` (FR et 中文).
+  - Lecture échouée : `FeteClient` (App) et `FeteGestion` (Back-Office) ne restent plus sur « Chargement… » ;
+    « Impossible de charger la scène. Vérifie ta connexion. » (`planning.fete.erreurChargement`, pas
+    `planning.programme.error`, qui dit « Enregistrement impossible ») et « Réessayer ». Constat en partie
+    inexact : un 403 ne bloquait pas l'écran — `runQuery` rend une liste vide sur une erreur HTTP, comme toutes
+    les lectures REST du site, et l'onglet dit alors « pas encore ouvertes » ; seul le réseau coupé bloquait.
+  - `editionCourante` regarde d'abord l'édition de l'année d'avant : tant que son jour J + 7 n'est pas passé, elle
+    reste l'édition courante (un Noël au jour J reporté au 27/12 garde son remerciement jusqu'au 03/01, le
+    widget, le calendrier et le cron aussi). Sans effet avec le jour J par défaut.
+  - Double lecture : vraie au Back-Office (l'événement `PROGRAMMES_CHANGED` et `ecrire` relisaient chacun tout),
+    fausse dans l'App (une écriture de créneau n'émet pas l'événement : une seule relecture, par `onChanged`). La
+    correction proposée (retirer l'`await reload()` d'`ecrire`) n'est pas prise : `SaisonForm` et `OrdrePassage`
+    effacent leur valeur locale quand l'enregistrement rend la main, et montreraient un instant l'ancienne
+    valeur. À la place, `FeteGestion` ignore l'événement pendant sa propre écriture (`ecritures`) et garde sa
+    relecture : une seule lecture par réglage.
+  - Ordre de passage écrit en entier (le dernier `PATCH` gagne, sans relecture avant) : **accepté** pour un outil
+    interne, comme avant ce lot. Deux responsables qui le modifient au même moment peuvent s'écraser sans message.
+  - Tests : 6 nouveaux dans `tests/scene-paques-noel.spec.ts` (« relecture — … », plus une capture sous
+    `PW_CAPTURES`), vus rouges (6 sur `ordinateur`), verts sur les cinq projets ; les cinq lectures du menu
+    `toHaveText(["Déplacer", …])` passent en début de libellé (`scene-paques-noel`, `scene-saison`). Passes :
+    `scene-paques-noel`, `scene-saison`, `programme-scene`, `calendrier`, `calendrier-deplacer` sur leurs projets,
+    `agencement-v18-fondations` et `agencement-v18-confirmations` sur `ordinateur` (1 370 verts, 1 rouge : un
+    glissé de `calendrier-deplacer` (C6), étranger à la scène, vert en relance 3 fois sur 3) ;
+    `back-office-coupe` (193 verts). `tsc` propre, `lint` sans erreur ni avertissement sur les fichiers touchés.
+    Captures regardées aux cinq tailles (menu avec ses aides, lecture échouée).
+  - Reste : rien pour la scène ; l'intégration repassera toute la suite sur les cinq tailles. À l'intégration :
+    `MenuActions` a un champ de plus (`aide`), à garder si une autre voie touche ce fichier.
+  - À faire par Timothée : rien à publier (droits et `firestore.rules` inchangés) ; relire le 中文 « 选择另一个空闲时段 »,
+    « 内容、参与者、备注 », « 空出该时段 », « 无法加载舞台预约，请检查网络连接。 ».
 
 ### SCENEBO
 

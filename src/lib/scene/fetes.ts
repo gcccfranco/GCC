@@ -89,11 +89,14 @@ export interface Edition {
 }
 
 /** L'édition montrée par l'onglet le jour `today` (Q4) : l'année du jour, sauf
- *  si son jour J + 7 jours est passé (le remerciement est fini), alors la suivante. */
+ *  si son jour J + 7 jours est passé (le remerciement est fini), alors la suivante.
+ *  Un Noël au jour J reporté après le 24/12 garde son remerciement en janvier. */
 export function editionCourante(fete: Fete, programmes: Programme[], today: string): Edition {
   const editions = editionsDe(fete, programmes);
   const de = (annee: number) => editions.find((p) => anneeDe(p) === annee) ?? null;
   const y = Number(today.slice(0, 4));
+  const avant = de(y - 1);
+  if (avant && today <= archiveDate(avant.jourJ)) return { fete, annee: y - 1, programme: avant };
   const cette = de(y);
   if (today <= archiveDate(cette?.jourJ ?? jourJParDefaut(fete, y))) return { fete, annee: y, programme: cette };
   return { fete, annee: y + 1, programme: de(y + 1) };

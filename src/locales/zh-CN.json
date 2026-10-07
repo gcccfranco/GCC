@@ -1292,7 +1292,8 @@
       "anDernier": "往年的节目，可作参考",
       "commentReserver": "如何预约？",
       "commentReserverTexte": "一个时段 = {{duree}}舞台时间。选择内容（唱歌、舞蹈、短剧……）和组别。",
-      "et": "和"
+      "et": "和",
+      "erreurChargement": "无法加载舞台预约，请检查网络连接。"
     },
     "semaines": {
       "mes": "我的预约",
@@ -1302,6 +1303,9 @@
       "placesLibres_other": "剩余 {{count}} 个名额",
       "aMoi": "我的",
       "retirerTexte": "{{resa}}，{{jour}} · {{debut}} – {{fin}}：该时段将重新空出。",
+      "aideDeplacer": "选择另一个空闲时段",
+      "aideModifier": "内容、参与者、备注",
+      "aideRetirer": "空出该时段",
       "complet": "已满",
       "unCreneau": "每个时段 {{duree}}",
       "titre": "{{du}}至{{au}}这一周",
