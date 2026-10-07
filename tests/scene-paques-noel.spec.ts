@@ -1146,6 +1146,8 @@ test("P7 — Noël 2026 ancien document, ouvert : « Ouvertes », la saison en r
   await expect(colonne.getByTestId("etat-edition")).toHaveText("Ouvertes");
   await expect(colonne.getByText("Jour J : jeudi 24 décembre · réservations jusqu'au dimanche 20 décembre")).toBeVisible();
   await expect(colonne.getByRole("button", { name: /^Saison/ })).toContainText("sam. 10–12, dim. 14–19 · 1 h · tout membre");
+  // P8 : lancée, la fête s'ouvre sur « Toutes les réservations » ; la saison est à un toucher.
+  await colonne.getByRole("button", { name: /^Saison/ }).click();
   await expect(page.getByRole("heading", { name: "Saison de Noël 2026" })).toBeVisible();
   await expect(page.getByText("Réservations lancées")).toBeVisible();
   for (const libelle of ["Nouveau programme", "Masquer", "Afficher", "Modifier le programme", "Fermer", "Préparer la saison", "Modifier la saison"]) {
@@ -1207,4 +1209,208 @@ test("P7 — captures à regarder (planches v18-scene-a-coord-avant-*), PW_CAPTU
   await expect(page.getByRole("list", { name: "Ordre de Passage jour J" })).toBeVisible();
   await page.waitForTimeout(400);
   await page.screenshot({ path: `${dir}/p7-noel-ordre-${test.info().project.name}.png` });
+});
+
+// ─── P8 : Back-Office — toutes les réservations, après le jour J ─────────────
+// Alice (coordination) ; Noël 2026 (l'ancien document) avec les réservations de P5, plus une passée.
+
+const DOCS_P8 = {
+  ...DOCS_P5,
+  "programmes/x7Kq2/creneaux/p": { ...resaDe("p", "2026-10-03", "10:00", "11:00"), quoi: "Danse", qui: ["Gp Joie"], auteurUid: "uid-lea", auteurNom: "Léa M." },
+};
+const tableau = (page: Page) => page.getByRole("table", { name: "Toutes les réservations" });
+const lignesTableau = (page: Page) => tableau(page).locator("tbody tr");
+const filtres = (page: Page) => page.getByRole("group", { name: "Filtrer les réservations" });
+/** Noël 2026 comme l'a laissé la saison : quatre familles, samedi et dimanche, 1 h. */
+const DOC_NOEL_2026 = {
+  ...DOC_NOEL_ANCIEN, fete: "noel", annee: 2026, ouvert: true,
+  quiAutorises: ["Gp Bonté", "Gp Fidélité", "Gp Paix", "Gp Amour", "Gp Joie", "EDD 小班", "EDD 中班", "EDD 大班", "EDD 高班", "Jeunes", "Franco", "敬拜团"],
+};
+
+test("P8 — réservations ouvertes : « Toutes les réservations » par défaut, le tableau Jour · Créneau · Quoi · Qui · Réservé par, un jour par groupe de lignes", async ({ page }) => {
+  await ouvrirFete(page, `${BO}/noel`, DOCS_P8, "2026-10-09", ALICE_EVT);
+  const entree = colonneFete(page).getByRole("button", { name: /^Toutes les réservations/ });
+  await expect(entree).toHaveAttribute("aria-current", "true");
+  await expect(entree).toContainText("4 à venir · 1 hors grille");
+  await expect(page.getByRole("heading", { name: "Toutes les réservations", level: 2 })).toBeVisible();
+  await expect(page.getByText("Noël 2026 · qui a réservé quoi, jour par jour")).toBeVisible();
+  await expect(tableau(page).getByRole("columnheader")).toHaveText(["Jour", "Créneau", "Quoi", "Qui", "Réservé par", ""]);
+  const lignes = lignesTableau(page);
+  await expect(lignes).toHaveCount(4);
+  await expect(lignes.nth(0)).toContainText(/sam\. 10 oct\.\s*10:00 – 11:00\s*Séance louange\s*Franco\s*Léa M\./);
+  await expect(lignes.nth(1)).toContainText(/dim\. 11 oct\.\s*16:00 – 17:00\s*Sketch\s*Jeunes\s*Jo L\./);
+  // Le second créneau du dimanche : le jour n'est pas répété.
+  await expect(lignes.nth(2).locator("td").first()).toHaveText("");
+  await expect(lignes.nth(2)).toContainText("17:00 – 18:30");
+  await verifierAgencement(page);
+});
+
+test("P8 — filtres en pilules : « À venir 4 · Passées 1 · Hors grille 1 » ; la ligne hors grille surlignée, « Déplacer » à la place de « ⋯ »", async ({ page }) => {
+  await ouvrirFete(page, `${BO}/noel`, DOCS_P8, "2026-10-09", ALICE_EVT);
+  await expect(filtres(page).getByRole("button")).toHaveText(["À venir 4", "Passées 1", "Hors grille 1"]);
+  await expect(filtres(page).getByRole("button", { name: "À venir 4" })).toHaveAttribute("aria-pressed", "true");
+  const hors = lignesTableau(page).filter({ hasText: "17:00 – 18:30" });
+  await expect(hors).toHaveAttribute("data-hors-grille", "true");
+  await expect(hors).toContainText("Hors grille");
+  await expect(hors.getByRole("button", { name: "Déplacer" })).toBeVisible();
+  await expect(plus(hors)).toHaveCount(0);
+  await expect(plus(lignesTableau(page).filter({ hasText: "Sketch" }))).toHaveCount(1);
+  await filtres(page).getByRole("button", { name: "Passées 1" }).click();
+  await expect(lignesTableau(page)).toHaveCount(1);
+  await expect(lignesTableau(page)).toContainText(/sam\. 3 oct\.\s*10:00 – 11:00\s*Danse\s*Gp Joie\s*Léa M\./);
+  await filtres(page).getByRole("button", { name: "Hors grille 1" }).click();
+  await expect(lignesTableau(page)).toHaveCount(1);
+  await expect(lignesTableau(page)).toContainText("Chant");
+});
+
+test("P8 — « ⋯ » d'une ligne : Déplacer, Modifier, Retirer ; Retirer passe par la confirmation du site et envoie le DELETE", async ({ page }) => {
+  const db = await ouvrirFete(page, `${BO}/noel`, DOCS_P8, "2026-10-09", ALICE_EVT);
+  const sketch = lignesTableau(page).filter({ hasText: "Sketch" });
+  await plus(sketch).click();
+  await expect(page.getByRole("menuitem")).toHaveText(["Déplacer", "Modifier", "Retirer"]);
+  await page.getByRole("menuitem", { name: "Retirer" }).click();
+  await repondreDansLeSite(page, "Retirer");
+  await expect(lignesTableau(page)).toHaveCount(3);
+  expect(db.writes.filter((w) => w.method === "DELETE").map((w) => w.path)).toEqual(["programmes/x7Kq2/creneaux/s"]);
+  await expect(filtres(page).getByRole("button", { name: "À venir 3" })).toBeVisible();
+});
+
+test("P8 — « Déplacer » une ligne hors grille : la feuille de l'App, en pastilles ; le créneau s'écrit et la ligne rentre dans la grille", async ({ page }) => {
+  const db = await ouvrirFete(page, `${BO}/noel`, DOCS_P8, "2026-10-09", ALICE_EVT);
+  await lignesTableau(page).filter({ hasText: "17:00 – 18:30" }).getByRole("button", { name: "Déplacer" }).click();
+  const f = page.getByRole("dialog");
+  await expect(f.getByRole("heading", { name: "Déplacer la réservation" })).toBeVisible();
+  await expect(f.locator("select")).toHaveCount(0);
+  await f.getByRole("group", { name: "Dimanche 11 octobre" }).getByRole("radio", { name: "17:00 – 18:00" }).check();
+  await f.getByRole("button", { name: "Déplacer", exact: true }).click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  expect(db.doc("programmes/x7Kq2/creneaux/l")).toMatchObject({ dimanche: "2026-10-11", debut: "17:00", fin: "18:00", quoi: "Chant" });
+  await expect(filtres(page).getByRole("button", { name: "Hors grille 0" })).toBeVisible();
+  await expect(lignesTableau(page).filter({ hasText: "17:00 – 18:00" })).not.toHaveAttribute("data-hors-grille", "true");
+});
+
+test("P8 — « Voir comme un membre » mène à l'onglet de la fête dans l'App", async ({ page }) => {
+  await ouvrirFete(page, `${BO}/noel`, DOCS_P8, "2026-10-09", ALICE_EVT);
+  await page.getByRole("link", { name: "Voir comme un membre" }).click();
+  await expect(page).toHaveURL(/\/evenements\/scene\/noel\/?$/);
+  await expect(page.getByRole("heading", { name: "Noël 2026", exact: true })).toBeVisible();
+});
+
+test("P8 — Entraînements dans la colonne : aucune semaine choisie sous « Toutes les réservations » ; toucher une semaine l'ouvre, « ⋯ » sur toutes les réservations", async ({ page }) => {
+  await ouvrirFete(page, `${BO}/noel`, DOCS_P8, "2026-10-09", ALICE_EVT);
+  const colonne = colonneFete(page);
+  await expect(colonne.getByRole("heading", { name: "Entraînements" })).toBeVisible();
+  await expect(listeSemaines(page).locator('[aria-current="true"]')).toHaveCount(0);
+  await listeSemaines(page).getByRole("button", { name: /^10 – 11 oct\./ }).click();
+  await expect(page).toHaveURL(/[?&]semaine=2026-10-05/);
+  await expect(page).not.toHaveURL(/[?&]vue=/);
+  await expect(semaineChoisie(page)).toContainText("10 – 11 oct.");
+  await expect(colonne.getByRole("button", { name: /^Toutes les réservations/ })).not.toHaveAttribute("aria-current", "true");
+  await expect(tableau(page)).toHaveCount(0);
+  await expect(plus(jour(page, "Samedi 10 octobre"))).toHaveCount(1);
+  await expect(plus(jour(page, "Dimanche 11 octobre"))).toHaveCount(2);
+  // Revenir au tableau.
+  await colonne.getByRole("button", { name: /^Toutes les réservations/ }).click();
+  await expect(tableau(page)).toBeVisible();
+  await expect(listeSemaines(page).locator('[aria-current="true"]')).toHaveCount(0);
+});
+
+test("P8 — brouillon : « Réservations · après le lancement » inactif, pas d'Entraînements", async ({ page }) => {
+  await ouvrirFete(page, `${BO}/paques`, { "programmes/paques-2027": DOC_PAQUES_2027_BROUILLON }, "2026-10-09", ALICE_EVT);
+  const entree = colonneFete(page).getByRole("button", { name: /^Réservations/ });
+  await expect(entree).toBeDisabled();
+  await expect(entree).toContainText("après le lancement");
+  await expect(colonneFete(page).getByRole("heading", { name: "Entraînements" })).toHaveCount(0);
+});
+
+test("P8 — la saison n'a plus sa liste « N réservations hors grille » : elle est dans Toutes les réservations", async ({ page }) => {
+  await ouvrirFete(page, `${BO}/noel?vue=saison`, DOCS_P8, "2026-10-09", ALICE_EVT);
+  await expect(page.getByRole("heading", { name: "Saison de Noël 2026" })).toBeVisible();
+  await expect(apercuMembres(page)).toBeVisible();
+  await expect(page.getByRole("region", { name: /réservations? hors grille/ })).toHaveCount(0);
+});
+
+test("P8 — 28/12/2026 : « Noël 2026 est passé », « Préparer Noël 2027 » → POST de `noel-2027` aux réglages repris, puis sa saison ; le menu du titre liste Noël 2027 et Noël 2026", async ({ page }) => {
+  const db = await ouvrirFete(page, `${BO}/noel`, { "programmes/noel-2026": DOC_NOEL_2026 }, "2026-12-28", ALICE_EVT);
+  await expect(colonneFete(page).getByTestId("etat-edition")).toHaveText("Terminé");
+  // Vue par défaut après le jour J : l'ordre de passage, en lecture.
+  await expect(page.getByRole("heading", { name: "Noël 2026 · ordre de passage" })).toBeVisible();
+  const carte = page.getByRole("region", { name: "Noël 2026 est passé" });
+  await expect(carte).toContainText("Les membres voient le remerciement jusqu'au jeudi 31 décembre, puis l'onglet annonce Noël 2027. L'ordre de passage reste ici, en lecture.");
+  await carte.getByRole("button", { name: "Préparer Noël 2027" }).click();
+  await expect.poll(() => ecrituresProgrammes(db).length).toBe(1);
+  const cree = ecrituresProgrammes(db)[0];
+  expect(cree).toMatchObject({ method: "POST", path: "programmes/noel-2027" });
+  expect(cree.data).toMatchObject({
+    fete: "noel", annee: 2027, jourJ: "2027-12-24", debut: "2027-10-01", ouvert: false, passages: [],
+    plages: DOC_NOEL_2026.plages, duree: 60, quiAutorises: DOC_NOEL_2026.quiAutorises, createdBy: "uid-alice",
+  });
+  await expect(page).toHaveURL(/[?&]annee=2027/);
+  await expect(page.getByRole("heading", { name: "Saison de Noël 2027" })).toBeVisible();
+  await expect(colonneFete(page).getByTestId("etat-edition")).toHaveText("Brouillon");
+  await colonneFete(page).getByRole("button", { name: "Noël 2027" }).click();
+  await expect(page.getByRole("menuitem")).toHaveText(["Noël 2027", "Noël 2026"]);
+  await page.getByRole("menuitem", { name: "Noël 2026" }).click();
+  await expect(page).not.toHaveURL(/[?&]annee=/);
+  // Noël 2027 existe : le bouton disparaît.
+  await expect(page.getByRole("region", { name: "Noël 2026 est passé" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Préparer Noël 2027" })).toHaveCount(0);
+});
+
+test("P8 — après le jour J, « Toutes les réservations » compte la saison entière (« 4 réservations, 0 hors grille »)", async ({ page }) => {
+  await ouvrirFete(page, `${BO}/noel`, DOCS_P5, "2026-12-28", ALICE_EVT);
+  await expect(colonneFete(page).getByRole("button", { name: /^Toutes les réservations/ })).toContainText("4 réservations, 0 hors grille");
+  await expect(colonneFete(page).getByRole("heading", { name: "Entraînements" })).toHaveCount(0);
+});
+
+test("P8 — ordre de passage : modifiable le 24/12 ; le 25/12 en lecture, avec « Imprimer »", async ({ page }) => {
+  await page.addInitScript(() => { (window as unknown as { impressions: number }).impressions = 0; window.print = () => { (window as unknown as { impressions: number }).impressions++; }; });
+  await ouvrirFete(page, `${BO}/noel?vue=ordre`, { "programmes/x7Kq2": DOC_NOEL_ANCIEN }, "2026-12-24", ALICE_EVT);
+  await expect(page.getByRole("button", { name: "Ajouter un passage" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Imprimer" })).toHaveCount(0);
+  await page.clock.setFixedTime(new Date("2026-12-25T10:00:00"));
+  await page.reload();
+  await expect(page.getByRole("list", { name: "Ordre de Passage jour J" }).getByRole("listitem")).toHaveCount(3);
+  await expect(page.getByRole("button", { name: "Ajouter un passage" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Retirer" })).toHaveCount(0);
+  await page.getByRole("button", { name: "Imprimer" }).click();
+  expect(await page.evaluate(() => (window as unknown as { impressions: number }).impressions)).toBe(1);
+  // À l'impression, la liste seule.
+  await page.emulateMedia({ media: "print" });
+  await expect(page.getByRole("list", { name: "Ordre de Passage jour J" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Imprimer" })).toBeHidden();
+  await expect(colonneFete(page)).toBeHidden();
+});
+
+test("P8 — une année passée par `?annee=` : son ordre en lecture, sans « Préparer »", async ({ page }) => {
+  const NOEL_2025 = { ...DOC_NOEL_ANCIEN, jourJ: "2025-12-24", debut: "2025-10-01", passages: PASSAGES_NOEL.slice(0, 2) };
+  await ouvrirFete(page, `${BO}/noel?annee=2025`, { "programmes/x7Kq2": DOC_NOEL_ANCIEN, "programmes/a9": NOEL_2025 }, "2026-10-09", ALICE_EVT);
+  await expect(colonneFete(page).getByRole("heading", { level: 2 })).toHaveText("Noël 2025");
+  await expect(page.getByRole("list", { name: "Ordre de Passage jour J" }).getByRole("listitem")).toHaveCount(2);
+  await expect(page.getByRole("button", { name: "Imprimer" })).toBeVisible();
+  await expect(page.getByRole("button", { name: /^Préparer/ })).toHaveCount(0);
+});
+
+test("P8 — en chinois : 全部预约, les filtres, « 为2027年圣诞节做准备 »", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
+  await ouvrirFete(page, `${BO}/noel`, DOCS_P8, "2026-10-09", ALICE_EVT);
+  await expect(page.getByRole("heading", { name: "全部预约", level: 2 })).toBeVisible();
+  await expect(page.getByRole("group", { name: "筛选预约" }).getByRole("button")).toHaveText(["即将到来 4", "已过 1", "不在时段表内 1"]);
+  await page.clock.setFixedTime(new Date("2026-12-28T10:00:00"));
+  await page.reload();
+  await expect(page.getByRole("button", { name: "为2027年圣诞节做准备" })).toBeVisible();
+});
+
+test("P8 — captures à regarder (planches v18-scene-a-coord-pendant-* et -apres-*), PW_CAPTURES=<dossier>", async ({ page }) => {
+  const dir = process.env.PW_CAPTURES;
+  test.skip(!dir, "captures seulement avec PW_CAPTURES");
+  await ouvrirFete(page, `${BO}/noel`, DOCS_P8, "2026-10-09", ALICE_EVT);
+  await expect(tableau(page)).toBeVisible();
+  await page.waitForTimeout(400);
+  await page.screenshot({ path: `${dir}/p8-pendant-${test.info().project.name}.png`, fullPage: true });
+  await page.clock.setFixedTime(new Date("2026-12-28T10:00:00"));
+  await page.reload();
+  await expect(page.getByRole("region", { name: "Noël 2026 est passé" })).toBeVisible();
+  await page.waitForTimeout(400);
+  await page.screenshot({ path: `${dir}/p8-apres-${test.info().project.name}.png`, fullPage: true });
 });

@@ -4,25 +4,19 @@
 // `v18-scene-a-coord-avant-ordinateur`) : la semaine choisie (‹ ›), son premier jour en lignes
 // comme le verront les membres, les autres jours et le total de la saison en une phrase
 // (« Dimanche 7 février : 5 créneaux, de 14:00 à 19:00. 7 semaines, 49 créneaux en tout. »).
-// Dessous, pour la coordination seule, les réservations hors grille (Q8), à déplacer ou retirer
-// (confirmation du site, plus de fenêtre du navigateur).
+// Les réservations hors grille (Q8) se déplacent depuis « Toutes les réservations » (P8, Q20).
 
 import { useId, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { ChevronLeft, ChevronRight } from "lucide-react"
-import { deleteCreneau, listCreneaux, updateCreneau } from "@/lib/firebase/programmes"
-import { overlaps, todayIso } from "@/lib/scene/dimanches"
+import { todayIso } from "@/lib/scene/dimanches"
 import {
-  commence, compteCreneaux, creneauxLibres, grilleDuJour, heureLocale, horsGrille, jourDeSemaine, lignesDuJour, quiPermis,
-  saisonDe, semainesDe,
+  commence, compteCreneaux, grilleDuJour, heureLocale, jourDeSemaine, lignesDuJour, saisonDe, semainesDe,
 } from "@/lib/scene/saison"
 import type { Creneau, Programme } from "@/types/programme"
-import { Button } from "@/components/ui/button"
-import { useConfirmer } from "@/components/layout/Confirmer"
-import { CreneauForm, type CreneauValues } from "./CreneauForm"
 import { Fleche, TuileDate } from "./Entrainements"
 import { LigneJour } from "./LigneJour"
-import { bornesSemaine, jourEnLettres, titreDuJour } from "./libelles"
+import { bornesSemaine, titreDuJour } from "./libelles"
 
 /** Pastille « Hors grille » : réservation hors des jours ou des créneaux de la saison. */
 export function BadgeHorsGrille() {
@@ -30,16 +24,13 @@ export function BadgeHorsGrille() {
   return <span className="inline-block text-xs px-2 py-0.5 rounded-full font-semibold border border-foreground/30 text-foreground">{t("planning.saison.horsGrille")}</span>
 }
 
-export function Apercu({ programme, creneaux, onChanged }: {
+export function Apercu({ programme, creneaux }: {
   programme: Programme
   creneaux: Creneau[]
-  onChanged: () => Promise<void>
 }) {
   const { t, i18n } = useTranslation()
   const lang = i18n.language
-  const confirmer = useConfirmer()
   const titreId = useId()
-  const horsId = useId()
   const saison = saisonDe(programme)
   const today = todayIso()
   const maintenant = heureLocale()
@@ -50,49 +41,6 @@ export function Apercu({ programme, creneaux, onChanged }: {
   const [choisie, setChoisie] = useState<string | null>(prochaine?.lundi ?? null)
   const semaine = semaines.find((s) => s.lundi === choisie) ?? prochaine
   const i = semaine ? semaines.indexOf(semaine) : -1
-  // La feuille « Déplacer » garde son contenu pendant qu'elle se referme ;
-  // `fois` la remonte à neuf à chaque ouverture.
-  const [deplace, setDeplace] = useState<Creneau | null>(null)
-  const [ouverte, setOuverte] = useState(false)
-  const [fois, setFois] = useState(0)
-  const [erreurRetrait, setErreurRetrait] = useState("")
-  // Les jours passés ne se déplacent plus : seule l'alerte à venir compte.
-  const hors = horsGrille(saison, creneaux).filter((c) => c.dimanche >= today)
-
-  async function deplacer(c: Creneau, values: CreneauValues): Promise<string | null> {
-    // Q11, revu à l'enregistrement : le créneau a pu commencer feuille ouverte.
-    if (commence(values.dimanche, values.debut, todayIso(), heureLocale())) return t("planning.saison.dejaCommence")
-    try {
-      // Relecture juste avant d'écrire : la scène est unique, un chevauchement est refusé.
-      const fresh = await listCreneaux(programme.id)
-      const clash = fresh.find((o) => o.id !== c.id && overlaps(o, values))
-      if (clash) return t("planning.programme.overlap", { slot: `${clash.debut} – ${clash.fin} · ${clash.quoi} · ${clash.qui.join(", ")} (${clash.auteurNom})` })
-      await updateCreneau(programme.id, c.id, values)
-      setOuverte(false)
-      await onChanged()
-      return null
-    } catch {
-      return t("planning.programme.error")
-    }
-  }
-
-  async function retirer(c: Creneau) {
-    const oui = await confirmer({
-      titre: t("planning.programme.confirmRemove"),
-      texte: t("planning.semaines.retirerTexte", { resa: `${c.quoi} · ${c.qui.join(", ")}`, jour: jourEnLettres(c.dimanche, lang), debut: c.debut, fin: c.fin }),
-      action: t("planning.programme.remove"),
-      destructif: true,
-    })
-    if (!oui) return
-    setErreurRetrait("")
-    try {
-      await deleteCreneau(programme.id, c.id)
-      await onChanged()
-    } catch {
-      setErreurRetrait(t("planning.programme.error"))
-    }
-  }
-
   const premier = semaine?.jours[0] ?? null
   const bornes = semaine ? bornesSemaine(semaine.jours, lang) : null
   /** « Dimanche 7 février : 5 créneaux, de 14:00 à 19:00. » */
@@ -156,53 +104,6 @@ export function Apercu({ programme, creneaux, onChanged }: {
           </p>
         )}
       </section>
-
-      {hors.length > 0 && (
-        <section aria-labelledby={horsId} className="bg-card shadow-soft rounded-2xl p-5 space-y-2">
-          <h3 id={horsId} className="text-sm font-bold">{t("planning.saison.horsGrilleN", { count: hors.length })}</h3>
-          <ul className="divide-y divide-border">
-            {hors.map((c) => {
-              const places = creneauxLibres(saison, programme.jourJ, creneaux, { sauf: c.id, today, maintenant })
-              const depart = places.find((p) => p.jour === c.dimanche) ?? places[0]
-              return (
-                <li key={c.id} className="py-2 text-sm">
-                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                    <span>
-                      <b className="tabular-nums">{titreDuJour(c.dimanche, lang)} · {c.debut} – {c.fin}</b>
-                      {" · "}{c.quoi} · {c.qui.join(", ")} <span className="text-muted-foreground">({c.auteurNom})</span>
-                    </span>
-                    <span className="ml-auto flex gap-1">
-                      {depart && (
-                        <Button size="sm" variant="ghost" onClick={() => { setDeplace(c); setOuverte(true); setFois((n) => n + 1) }}>{t("planning.saison.deplacer")}</Button>
-                      )}
-                      <Button size="sm" variant="ghost" className="text-destructive" onClick={() => retirer(c)}>{t("planning.programme.remove")}</Button>
-                    </span>
-                  </div>
-                </li>
-              )
-            })}
-          </ul>
-          {erreurRetrait && <p role="alert" className="text-sm text-destructive">{erreurRetrait}</p>}
-        </section>
-      )}
-
-      {deplace && (() => {
-        const places = creneauxLibres(saison, programme.jourJ, creneaux, { sauf: deplace.id, today, maintenant })
-        const depart = places.find((p) => p.jour === deplace.dimanche) ?? places[0]
-        return depart && (
-          <CreneauForm
-            key={fois}
-            open={ouverte}
-            title={t("planning.saison.deplacerTitre")}
-            submitLabel={t("planning.programme.save")}
-            places={places}
-            initial={{ dimanche: depart.jour, debut: depart.debut, fin: depart.fin, quoi: deplace.quoi, qui: deplace.qui, note: deplace.note }}
-            quiOptions={quiPermis({})}
-            onSubmit={(values) => deplacer(deplace, values)}
-            onCancel={() => setOuverte(false)}
-          />
-        )
-      })()}
     </div>
   )
 }

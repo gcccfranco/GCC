@@ -1417,6 +1417,33 @@
       }
     },
     "gestion": {
+      "reservations": "预约",
+      "apresLancement": "启动后可用",
+      "toutes": "全部预约",
+      "toutesSousTitre": "{{edition}} · 每天谁预约了什么",
+      "voirCommeMembre": "以成员身份查看",
+      "filtrer": "筛选预约",
+      "filtres": {
+        "avenir": "即将到来 {{n}}",
+        "passees": "已过 {{n}}",
+        "hors": "不在时段表内 {{n}}"
+      },
+      "colonnes": {
+        "jour": "日期",
+        "creneau": "时段",
+        "quoi": "内容",
+        "qui": "参与者",
+        "par": "预约人"
+      },
+      "aucuneReservation": "这里没有预约。",
+      "resume": "{{aVenir}} 个即将到来 · {{hors}} 个不在时段表内",
+      "nReservations_one": "{{count}} 个预约",
+      "nReservations_other": "{{count}} 个预约",
+      "bilan": "{{reservations}}，{{hors}} 个不在时段表内",
+      "passeeTitre": "{{edition}} 已结束",
+      "passeeTexte": "成员在{{date}}之前会看到感谢语，之后此标签将显示{{suivante}}。上场顺序保留在这里，仅供查看。",
+      "preparer": "为{{annee}}年{{fete}}做准备",
+      "imprimer": "打印",
       "titreSaison": "{{edition}} 预约季",
       "sousTitreSaison": "每次更改都会自动保存 · 仅协调组和管理员可见",
       "lancer": "启动预约",

@@ -605,3 +605,40 @@ npm run lint
   - À faire par Timothée : rien à publier (droits inchangés) ; relire le 中文 de `planning.gestion.*` (« 预约季 »,
     « 启动预约 », « 预约已启动 », « 本次节日 », « 按{{fete}}日期计算；可修改。 », « 成员看到的预览 »…) et
     `planning.saison.erreurs.autreFete`, `planning.saison.periode` (« 预约时间 »).
+- 07/10/2026 — **P8 — Back-Office : réservations et après le jour J : faite** (branche `lot/v18-scene-bo`, commit
+  « feat(SCENE): P8 »). `FeteGestion.tsx` : une fois lancée, la colonne porte « Toutes les réservations » (« 4 à venir · 1 hors
+  grille » ; « Réservations · après le lancement », inactif, avant le lancement ; « 38 réservations, 0 hors grille » après le
+  jour J) et, jusqu'au jour J, « Entraînements » (les semaines des membres, montées par `Entrainements`) ; vue par défaut :
+  Toutes les réservations (`bientot`, `ouvertes`, `fermees`), la saison avant le lancement, l'ordre de passage après le
+  jour J ; toucher une semaine l'ouvre à droite (`?semaine=`, qui retire `?vue=`), avec « ⋯ » sur toutes les réservations.
+  Nouveau `ToutesReservations.tsx` : tableau Jour · Créneau · Quoi · Qui · Réservé par · « ⋯ », un jour par groupe de lignes,
+  pilules `Pilules` « À venir n · Passées n · Hors grille n », ligne hors grille surlignée (`data-hors-grille`) avec
+  « Déplacer » à la place de « ⋯ », « Voir comme un membre » vers `/evenements/scene/{fete}` (`?annee=` pour une autre
+  année). Le menu « ⋯ », la feuille Déplacer et la confirmation sont ceux de P6 : `Entrainements` les passe dans ses
+  morceaux (`menu`, `deplacer`, `erreur`) ; un retrait manqué s'y dit (« Enregistrement impossible… ») ; prop
+  `semaineActive` (aucune semaine marquée tant que la semaine n'est pas ce qui se lit). `Apercu.tsx` perd sa liste
+  « N réservations hors grille » et sa feuille (Q20). Après le jour J (Q21) : carte « Noël 2026 est passé » (remerciement
+  jusqu'à J + 7, puis l'année suivante) et « Préparer Noël 2027 » (`creerEdition` avec `reglagesRepris`, puis
+  `?annee=2027&vue=saison` ; plus de bouton si l'édition suivante existe) ; ordre de passage en lecture dès le lendemain du
+  jour J, avec « Imprimer » (`window.print()` ; `globals.css` : à l'impression, `.scene-imprimer` seule). Libellés
+  `planning.gestion.{reservations,apresLancement,toutes,toutesSousTitre,voirCommeMembre,filtrer,filtres.*,colonnes.*,
+  aucuneReservation,resume,nReservations,bilan,passeeTitre,passeeTexte,preparer,imprimer}` (FR et 中文).
+  - Tests : 13 tests P8 dans `tests/scene-paques-noel.spec.ts` (plus une capture sous `PW_CAPTURES`), vus rouges (13 sur
+    `ordinateur`), verts ensuite. Réécrits : P7 « Noël 2026 ancien document » (la saison est à un toucher) ; dans
+    `scene-saison.spec.ts`, les tests hors grille passent par « Toutes les réservations » (filtre, « Déplacer ») ou par
+    « ⋯ » de la semaine (Retirer), ceux de la saison lancée ouvrent `?vue=saison`, « Retirer qui échoue » se lit au-dessus
+    du tableau. `tsc` et `lint` propres. Passe : `scene-paques-noel`, `scene-saison`, `programme-scene` sur les cinq projets (784 verts).
+  - Choix faits faute de réponse : « Hors grille » compte les réservations hors grille **à venir** (les seules qu'on puisse
+    déplacer ; une passée reste dans « Passées », sans surlignage) ; une ligne hors grille n'a que « Déplacer » (planche),
+    on la retire par « ⋯ » dans sa semaine ; les passées se lisent dans l'ordre chronologique ; « Lancer les réservations »
+    garde la vue Saison (« Réservations lancées ») au lieu de basculer sur le tableau ; la carte « … est passé » ne
+    s'affiche que pour l'édition courante (une année plus ancienne choisie par `?annee=` montre son ordre en lecture et
+    « Imprimer », sans « Préparer ») ; après le jour J, plus d'« Entraînements » dans la colonne (planche « après ») ; pas de
+    « Mes réservations » au Back-Office ; la ligne hors grille est surlignée en gris (`bg-secondary`), pas en orange :
+    aucune couleur nouvelle ; « Imprimer » imprime aussi le titre et la date de l'ordre de passage.
+  - Reste : P9 (téléphone : saison en résumé, une feuille par réglage, « Lancer » pleine largeur, « Cette semaine » en cartes
+    par jour). Sur téléphone, le tableau défile seul en largeur dans sa carte (la page non) en attendant P9. Clé devenue
+    orpheline, laissée pour éviter des conflits de fusion : `planning.saison.horsGrilleN`.
+  - À faire par Timothée : rien à publier (droits inchangés) ; relire le 中文 de `planning.gestion.*` ajouté (« 全部预约 »,
+    « {{edition}} · 每天谁预约了什么 », « 筛选预约 », « 即将到来 n », « 已过 n », « 不在时段表内 n », « 预约人 », « 启动后可用 »,
+    « {{edition}} 已结束 », « 成员在{{date}}之前会看到感谢语，之后此标签将显示{{suivante}}。… », « 为{{annee}}年{{fete}}做准备 », « 打印 »).

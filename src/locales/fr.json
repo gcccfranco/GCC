@@ -1421,6 +1421,33 @@
       }
     },
     "gestion": {
+      "reservations": "Réservations",
+      "apresLancement": "après le lancement",
+      "toutes": "Toutes les réservations",
+      "toutesSousTitre": "{{edition}} · qui a réservé quoi, jour par jour",
+      "voirCommeMembre": "Voir comme un membre",
+      "filtrer": "Filtrer les réservations",
+      "filtres": {
+        "avenir": "À venir {{n}}",
+        "passees": "Passées {{n}}",
+        "hors": "Hors grille {{n}}"
+      },
+      "colonnes": {
+        "jour": "Jour",
+        "creneau": "Créneau",
+        "quoi": "Quoi",
+        "qui": "Qui",
+        "par": "Réservé par"
+      },
+      "aucuneReservation": "Aucune réservation ici.",
+      "resume": "{{aVenir}} à venir · {{hors}} hors grille",
+      "nReservations_one": "{{count}} réservation",
+      "nReservations_other": "{{count}} réservations",
+      "bilan": "{{reservations}}, {{hors}} hors grille",
+      "passeeTitre": "{{edition}} est passé",
+      "passeeTexte": "Les membres voient le remerciement jusqu'au {{date}}, puis l'onglet annonce {{suivante}}. L'ordre de passage reste ici, en lecture.",
+      "preparer": "Préparer {{edition}}",
+      "imprimer": "Imprimer",
       "titreSaison": "Saison de {{edition}}",
       "sousTitreSaison": "Enregistré à chaque changement · seuls la coordination et les admins le voient",
       "lancer": "Lancer les réservations",
