@@ -108,7 +108,7 @@ const entree = (source: EntreeCalendrier["source"], id: string, date: string, ti
 const donnees = (d: Partial<Pick<DonneesCalendrier, "evenements" | "taches" | "scene">> = {}) => ({
   evenements: [],
   taches: [],
-  scene: null,
+  scene: [],
   ...d,
 });
 
@@ -206,7 +206,7 @@ test.describe("déplacer (pur)", () => {
   test("créneau : les créneaux libres du jour visé (grille de U1), la même heure d'office si elle est libre", () => {
     const c25 = creneau({ id: "c25" });
     const c11 = creneau({ id: "c11", dimanche: "2026-10-11", debut: "14:00", fin: "15:30" });
-    const scene = { programme: programme(), creneaux: [c25, c11] };
+    const scene = [{ programme: programme(), creneaux: [c25, c11] }];
     const plan = planDeplacement(entree("scene", "c25", "2026-10-25"), "2026-10-11", donnees({ scene }), horloge);
     expect(plan).toMatchObject({
       type: "creneau",
@@ -220,18 +220,18 @@ test.describe("déplacer (pur)", () => {
     });
     // 16:00 prise : rien d'office, la personne choisit.
     const c11b = creneau({ id: "c11b", dimanche: "2026-10-11", debut: "17:00", fin: "18:00" });
-    const plein = planDeplacement(entree("scene", "c25", "2026-10-25"), "2026-10-11", donnees({ scene: { ...scene, creneaux: [c25, c11, c11b] } }), horloge);
+    const plein = planDeplacement(entree("scene", "c25", "2026-10-25"), "2026-10-11", donnees({ scene: [{ ...scene[0], creneaux: [c25, c11, c11b] }] }), horloge);
     expect(plein).toMatchObject({ type: "creneau", parDefaut: null });
   });
 
   test("créneau : jour fermé (sans plage, hors saison, jour J) ou sans place libre = refus nommé", () => {
     const c25 = creneau({ id: "c25" });
-    const scene = { programme: programme(), creneaux: [c25] };
+    const scene = [{ programme: programme(), creneaux: [c25] }];
     const vers = (jour: string, s = scene) => planDeplacement(entree("scene", "c25", "2026-10-25"), jour, donnees({ scene: s }), horloge);
     expect(vers("2026-10-24")).toEqual({ type: "refus", refus: "sceneFermee" }); // un samedi, sans plage
     expect(vers("2026-12-20")).toEqual({ type: "refus", refus: "sceneFermee" }); // le jour J
     const plein = creneau({ id: "plein", dimanche: "2026-10-18", debut: "14:00", fin: "19:00" });
-    expect(vers("2026-10-18", { ...scene, creneaux: [c25, plein] })).toEqual({ type: "refus", refus: "aucunCreneau" });
+    expect(vers("2026-10-18", [{ ...scene[0], creneaux: [c25, plein] }])).toEqual({ type: "refus", refus: "aucunCreneau" });
   });
 
   test("la question : FR et 中文", () => {

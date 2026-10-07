@@ -370,7 +370,7 @@ test.describe("Tableau de bord (B4) : écrans", () => {
     await expect(evts.getByRole("link", { name: "Tout voir" })).toHaveAttribute("href", /\/back-office\/evenements\/?$/);
 
     const scene = widget(page, "Scène");
-    await expect(scene.getByRole("heading", { name: "Scène · Noël" })).toBeVisible();
+    await expect(scene.getByRole("heading", { name: "Scène · Noël 2026" })).toBeVisible();
     await expect(scene.getByTestId("ligne-creneau")).toHaveText([/4 oct\. 17:00.*Chant · EDD 中班/, /11 oct\. 14:00.*Sketch · Franco/]);
   });
 

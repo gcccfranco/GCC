@@ -133,7 +133,7 @@ const vide = (): DonneesCalendrier => ({
   evenements: [],
   mesInscriptions: [],
   taches: [],
-  scene: null,
+  scene: [],
   petitDej: [],
   setlists: [],
 });
@@ -380,7 +380,7 @@ test.describe("sources du calendrier (pur)", () => {
 
   test("scène : les créneaux du programme affiché, « Scène · Chant EDD 中班 », jamais ceux d'un brouillon", () => {
     const d = vide();
-    d.scene = { programme: programme(), creneaux: [creneau({ id: "c1", note: "Costumes" })] };
+    d.scene = [{ programme: programme(), creneaux: [creneau({ id: "c1", note: "Costumes" })] }];
     const e = de(entreesCalendrier(...OCT, d, ctx()), "scene");
     expect(e).toHaveLength(1);
     expect(e[0]).toMatchObject({
@@ -391,22 +391,22 @@ test.describe("sources du calendrier (pur)", () => {
       detail: "17:00 – 18:30 · Costumes",
       couleur: "#3f51a3",
       moi: false,
-      lien: "/evenements/scene",
+      lien: "/evenements/scene/noel",
     });
-    d.scene = { programme: programme({ ouvert: false }), creneaux: [creneau({ id: "c1" })] };
+    d.scene = [{ programme: programme({ ouvert: false }), creneaux: [creneau({ id: "c1" })] }];
     expect(de(entreesCalendrier(...OCT, d, ctx()), "scene")).toEqual([]);
   });
 
   test("scène : « moi » = j'en suis l'auteur, ou son « qui » est une de mes catégories", () => {
     const d = vide();
-    d.scene = {
+    d.scene = [{
       programme: programme(),
       creneaux: [
         creneau({ id: "a", auteurUid: "u-moi", qui: ["Jeunes"] }),
         creneau({ id: "b", qui: ["Gp Paix"], debut: "14:00", fin: "15:00" }),
         creneau({ id: "c", qui: ["Gp Joie"], debut: "15:00", fin: "16:00" }),
       ],
-    };
+    }];
     const e = de(entreesCalendrier(...OCT, d, ctx(MOI, profil({ serviceRoles: { "Groupe Paix": ["musicien"] } }))), "scene");
     expect(e.map((x) => [x.cle, x.moi])).toEqual([
       ["scene:b:2026-10-04", true],
@@ -498,7 +498,7 @@ test.describe("sources du calendrier (pur)", () => {
     d.setlists = [setlist({ id: "s", title: "Setlist", date: J })];
     d.petitDej = [];
     d.taches = [{ tache: tache({ id: "t", titre: "Tâche", echeance: J }), fois: [] }];
-    d.scene = { programme: programme(), creneaux: [creneau({ id: "c2", dimanche: J, debut: "16:00", fin: "17:00" }), creneau({ id: "c1", dimanche: J, debut: "14:00", fin: "15:00" })] };
+    d.scene = [{ programme: programme(), creneaux: [creneau({ id: "c2", dimanche: J, debut: "16:00", fin: "17:00" }), creneau({ id: "c1", dimanche: J, debut: "14:00", fin: "15:00" })] }];
     d.evenements = [evenement({ id: "r", titre: "Réunion", pour: "pole:da", date: J, heure: "08:00" }), evenement({ id: "e", titre: "Évènement", date: J, heure: "20:00" })];
     d.sheet = [{ date: J, titre: "Sheet", heure: "10:00", heureFin: "", horaire: "10h", lieu: "", responsable: "" }];
     d.seances = [{ category: "Culte Francophone", date: J, leader: "", label: "" }];
@@ -532,7 +532,7 @@ test.describe("sources du calendrier (pur)", () => {
     d.seances = [{ category: "Culte Francophone", date: "2026-10-04", leader: "Alix P.", label: "" }];
     d.evenements = [evenement({ id: "foot", titre: "Foot au parc", inscrits: 4, placesMax: 10 })];
     d.taches = [{ tache: tache({ id: "ppt", titre: "Fond PPT", echeance: "2026-10-05" }), fois: [] }];
-    d.scene = { programme: programme(), creneaux: [creneau({ id: "c1" })] };
+    d.scene = [{ programme: programme(), creneaux: [creneau({ id: "c1" })] }];
     d.petitDej = [];
     d.setlists = [setlist({ id: "s1", title: "Culte", items: [{} as never] })];
     const e = entreesCalendrier("2026-10-04", "2026-10-11", d, ctx(ADMIN, null, "zh-CN"));
@@ -666,7 +666,7 @@ test.describe("peutDeplacer (pur)", () => {
     const d = vide();
     d.evenements = [ev, evenement({ id: "autre", titre: "Autre", date: "2026-10-12" })];
     d.taches = [{ tache: tache({ id: "u", titre: "Unique" }), fois: [] }, { tache: tache({ id: "r", titre: "Répétée", repetition: { rythme: "mois", rang: 3 } }), fois: [] }];
-    d.scene = { programme: programme(), creneaux: [creneau({ id: "c", auteurUid: "u-moi", qui: ["Jeunes"] })] };
+    d.scene = [{ programme: programme(), creneaux: [creneau({ id: "c", auteurUid: "u-moi", qui: ["Jeunes"] })] }];
     const e = entreesCalendrier(...OCT, d, ctx(MOI, profil({ poles: ["da"] })));
     const dep = Object.fromEntries(e.map((x) => [x.cle, x.deplacable]));
     expect(dep["evenements:e:2026-10-10"]).toBe(true);

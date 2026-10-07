@@ -23,6 +23,7 @@ import { casesVides } from "@/lib/planning/casesVides";
 import { GRILLE_CAMPUS_MATIN, GRILLE_CAMPUS_SOIR } from "@/lib/planning/grilles";
 import type { ServiceEntry, SetlistSeance } from "@/lib/planning/names";
 import { EDD_CLASSES } from "@/lib/planning/utils";
+import { feteDe } from "@/lib/scene/fetes";
 import { quiCategories } from "@/lib/scene/rappels";
 import { PLANNING_COLORS, categoryColor, categoryLabel, serviceColor } from "@/lib/serviceColors";
 import { GRILLES_DU_SERVICE } from "@/lib/tableauDeBord/donnees";
@@ -105,8 +106,8 @@ export interface DonneesCalendrier {
   mesInscriptions: string[];
   /** Tâches de mes pôles, avec leurs fois. */
   taches: { tache: Tache; fois: Fois[] }[];
-  /** Programme de scène affiché (`currentProgramme`) et ses créneaux. */
-  scene: { programme: Programme; creneaux: Creneau[] } | null;
+  /** Éditions de la scène affichées (`editionsAffichees` : Pâques et Noël), chacune avec ses créneaux. */
+  scene: { programme: Programme; creneaux: Creneau[] }[];
   /** Lignes du petit déj (`lirePetitDej`, U3 ; `uid` = l'inscrit par « Je m'inscris », "" pour
    *  une ligne posée pour quelqu'un) ; null = lecture en échec (rien, jamais « Libre »). */
   petitDej: Pick<LignePetitDej, "id" | "dimanche" | "nom" | "uid">[] | null;
@@ -386,11 +387,10 @@ function evenements(d: DonneesCalendrier, c: ContexteCalendrier, debut: string, 
 }
 
 function scene(d: DonneesCalendrier, c: ContexteCalendrier, debut: string, fin: string): EntreeCalendrier[] {
-  if (!d.scene || d.scene.programme.ouvert === false) return []; // un brouillon n'est jamais affiché (U1)
-  const { programme, creneaux } = d.scene;
   const m = MOTS[c.lang];
   const mesCategories = Object.keys(c.profile?.serviceRoles ?? {});
-  return creneaux
+  // Un brouillon n'est jamais affiché (U1) ; chaque créneau mène à l'onglet de sa fête.
+  return d.scene.filter(({ programme }) => programme.ouvert !== false).flatMap(({ programme, creneaux }) => creneaux
     .filter((x) => dans(x.dimanche, debut, fin))
     .map((x) => ({
       source: "scene" as const,
@@ -404,8 +404,8 @@ function scene(d: DonneesCalendrier, c: ContexteCalendrier, debut: string, fin: 
       duSheet: false,
       moi: x.auteurUid === c.user.uid || quiCategories(x.qui).some((q) => mesCategories.includes(q)),
       deplacable: peutDeplacer(c.user, c.profile, { source: "scene", creneau: x, programme }, c.today),
-      lien: "/evenements/scene",
-    }));
+      lien: `/evenements/scene/${feteDe(programme) ?? ""}`,
+    })));
 }
 
 function taches(d: DonneesCalendrier, c: ContexteCalendrier, debut: string, fin: string): EntreeCalendrier[] {

@@ -58,7 +58,7 @@ test.describe("T2b : Back-Office › Évènements", () => {
     await ouvrir(page, COORD, "/back-office/evenements");
     await expect(enTete(page).getByRole("heading", { level: 1, name: "Évènements" })).toBeVisible();
     await expect(enTete(page)).toContainText("Ce que voit l'assemblée, et sa gestion");
-    await expect(ongletsRail(page).getByRole("link")).toHaveText(["Évènements", "Scène"]);
+    await expect(ongletsRail(page).getByRole("link")).toHaveText(["Évènements", "Pâques", "Noël"]);
     await expect(liste(page).getByRole("link", { name: /Foot au parc/ })).toBeVisible();
     await verifierAgencement(page, { contenu: contenu(page), onglets: { rail: 1, pilules: 0 } });
   });
@@ -194,17 +194,18 @@ test.describe("T2b : Back-Office › Évènements", () => {
     await expect(page.getByRole("link", { name: /Pique-nique de juin/ })).toBeVisible();
   });
 
-  test("l'onglet Scène : pas la liste des évènements, et le h1 « Évènements » garde son x et son y", async ({ page }) => {
+  // Pâques · Noël, P7 (docs/spec-scene-paques-noel.md) : un onglet par fête à la place de « Scène ».
+  test("l'onglet Noël : pas la liste des évènements, et le h1 « Évènements » garde son x et son y", async ({ page }) => {
     await ouvrir(page, COORD, "/back-office/evenements");
     const h1 = enTete(page).getByRole("heading", { level: 1, name: "Évènements" });
     await expect(h1).toBeVisible();
     await expect(page.getByRole("link", { name: /Foot au parc/ }).first()).toBeVisible();
     const avant = (await h1.boundingBox())!;
-    await ongletsRail(page).getByRole("link", { name: "Scène" }).click();
-    await expect(page).toHaveURL(/\/back-office\/evenements\/scene\/?$/);
-    await expect(ongletsRail(page).getByRole("link", { name: "Scène" })).toHaveAttribute("aria-current", "page");
+    await ongletsRail(page).getByRole("link", { name: "Noël" }).click();
+    await expect(page).toHaveURL(/\/back-office\/evenements\/scene\/noel\/?$/);
+    await expect(ongletsRail(page).getByRole("link", { name: "Noël" })).toHaveAttribute("aria-current", "page");
     await expect(page.getByRole("link", { name: /Foot au parc/ })).toHaveCount(0);
-    await expect(liste(page)).toHaveCount(0);
+    await expect(page.getByRole("region", { name: "Cette fête" })).toBeVisible();
     // Sur la scène, pas d'action principale (planche R17).
     await expect(page.getByRole("link", { name: "Nouvel évènement" })).toHaveCount(0);
     const apres = (await h1.boundingBox())!;

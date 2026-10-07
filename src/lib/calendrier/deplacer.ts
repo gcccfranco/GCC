@@ -103,7 +103,8 @@ export function planDeplacement(
       return { type: "tache", tache: t.tache, de: entree.date, vers, fois: t.fois.find((f) => f.date === entree.date) ?? null };
     }
     case "scene": {
-      const scene = donnees.scene;
+      // L'édition qui porte le créneau : il reste dans sa fête, sa grille et son programme.
+      const scene = donnees.scene.find((e) => e.creneaux.some((x) => x.id === id));
       const creneau = scene?.creneaux.find((x) => x.id === id);
       if (!scene || !creneau) return null;
       const saison = saisonDe(scene.programme);

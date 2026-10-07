@@ -6,6 +6,8 @@
 import { useTranslation } from "react-i18next";
 import { ArrowDown, ArrowUp, GripVertical, SlidersHorizontal, X } from "lucide-react";
 import { listProgrammes } from "@/lib/firebase/programmes";
+import { todayIso } from "@/lib/scene/dimanches";
+import { editionsAffichees, libelleEdition } from "@/lib/scene/fetes";
 import { useProfile } from "@/lib/firebase/users";
 import { useLecture } from "@/lib/tableauDeBord/lecture";
 import { choisirReglage, groupesDeReglages } from "@/lib/tableauDeBord/reglages";
@@ -85,11 +87,16 @@ export function OutilsWidget({
 
 /** Les réglages d'un widget en pastilles (planche `.rgl`), un groupe par réglage. */
 function ReglagesWidget({ widget, onChanger }: { widget: Widget; onChanger: (r: Reglages) => void }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { user, profile } = useProfile();
-  // La Scène se règle sur un programme : il faut les lire. Une lecture en échec laisse « celui qui est affiché ».
+  // La Scène se règle sur une des éditions affichées (Pâques · Noël, Q10) : il faut les lire.
+  // Une lecture en échec laisse « celui qui est affiché ».
+  const langue = i18n.language.startsWith("zh") ? "zh" : "fr";
   const { valeur: programmes } = useLecture(
-    async () => (widget.id === "scene" ? (await listProgrammes()).map((p) => ({ id: p.id, nom: p.nom })) : []), widget.id,
+    async () => (widget.id === "scene"
+      ? editionsAffichees(await listProgrammes(), todayIso()).map((e) => ({ id: e.programme!.id, nom: libelleEdition(e.fete, e.annee, langue) }))
+      : []),
+    `${widget.id}|${langue}`,
   );
   const groupes = groupesDeReglages(widget.id, widget.reglages, user, profile, programmes ?? []);
 

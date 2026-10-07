@@ -406,6 +406,22 @@
   .song-zoom {
     zoom: 1 !important;
   }
+
+  /* Scène, ordre de passage au Back-Office (Pâques · Noël, P8) : la page imprimée ne garde que
+     la liste. */
+  body:has(.scene-imprimer) * {
+    visibility: hidden;
+  }
+  body:has(.scene-imprimer) .scene-imprimer,
+  body:has(.scene-imprimer) .scene-imprimer * {
+    visibility: visible;
+  }
+  body:has(.scene-imprimer) .scene-imprimer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+  }
 }
 
 /* Accueil de première connexion (lot 8) : l'écran suivant arrive d'un léger

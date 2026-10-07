@@ -17,7 +17,7 @@ import { getSetlists } from "@/lib/firebase/setlists";
 import { listFois, listTachesSeules } from "@/lib/firebase/taches";
 import { lirePetitDej } from "@/lib/petitdej/lignes";
 import { findMyServices, loadPlanningData, setlistSeances } from "@/lib/planning/names";
-import { currentProgramme } from "@/lib/scene/dimanches";
+import { editionsAffichees } from "@/lib/scene/fetes";
 import { planningsCasesVides } from "@/lib/tableauDeBord/donnees";
 import { lireGrilles } from "@/lib/tableauDeBord/lecture";
 import { echeancesDe } from "@/lib/taches/echeances";
@@ -41,9 +41,10 @@ export const enOrdre = (echecs: Iterable<SourceCalendrier>): SourceCalendrier[] 
   return ORDRE_PASTILLES.filter((s) => vues.has(s));
 };
 
+/** Les éditions affichées des deux fêtes (Q10), chacune avec ses créneaux. */
 async function lireScene(today: string): Promise<DonneesCalendrier["scene"]> {
-  const programme = currentProgramme(await listProgrammes(), today);
-  return programme ? { programme, creneaux: await listCreneaux(programme.id) } : null;
+  const editions = editionsAffichees(await listProgrammes(), today);
+  return Promise.all(editions.map(async ({ programme }) => ({ programme: programme!, creneaux: await listCreneaux(programme!.id) })));
 }
 
 /** Toutes les sources de Firestore et du planning, sauf le Sheet des évènements ; les tâches sans leurs fois. */
@@ -66,7 +67,7 @@ export async function chargerCalendrier(
     loadPlanningData().catch(sinon(null, "services")),
     listEvenements(false).catch(sinon<Evenement[]>([], "evenements", "reunions")),
     Promise.all(poles.map((p) => listTachesSeules(p).catch(sinon<Tache[]>([], "taches")))).then((l) => l.flat()),
-    lireScene(today).catch(sinon(null, "scene")),
+    lireScene(today).catch(sinon([], "scene")),
     // Lecteur de U3 : une lecture en échec donne null (rien, jamais « Libre »).
     lirePetitDej().catch(sinon(null, "petitDej")),
     pourLeWidget ? [] : getSetlists().catch(sinon([], "setlists")),

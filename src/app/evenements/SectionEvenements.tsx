@@ -9,17 +9,20 @@ import { ANNONCE_SECTIONS } from "@/types/annonce"
 import { useOngletsEvenements } from "@/components/evenements/EvenementsTabs"
 import { BoutonNouveau } from "@/components/layout/BoutonNouveau"
 import { EnTetePage } from "@/components/layout/EnTetePage"
+import { Halo } from "@/components/layout/Halo"
 import { OngletsRail } from "@/components/layout/Onglets"
+import { PLANNING_COLORS } from "@/lib/serviceColors"
 import { CalendrierClient } from "./CalendrierClient"
 
 // La section Évènements (lot U4 bis, B2) : l'agenda et ses fiches passent par le calendrier
-// (deux volets en grand, `CalendrierClient`) ; le programme de scène garde sa page, sous ses onglets.
+// (deux volets en grand, `CalendrierClient`). Les onglets Pâques et Noël de la scène
+// (docs/spec-scene-paques-noel.md, P4) prennent toute la zone, au halo de la scène.
 // Agencement v18 (A10, docs/spec-agencement-v18.md ; planches `v18-app-evenements*`) : l'en-tête est
 // celui de toute la section, agenda et scène — « Évènements », son sous-titre, le rail des onglets sous
 // le titre ; « + Nouvel évènement » (U6, B3 : le formulaire est au Back-Office, ouvert aux responsables)
-// sauf sur la scène, pour que le rail ne bouge pas d'un onglet à l'autre. Le contenu de la scène part
-// de la marge de la zone, comme le titre (R2 : rien n'est centré dans une borne). `peutCreer` est
-// calculé ici seulement et passé à l'agenda (son indice « rien de prévu »).
+// sauf sur une fête, pour que le rail ne bouge pas d'un onglet à l'autre. Le contenu d'une fête pose
+// lui-même la marge de la zone (`FeteClient`, `DeuxVolets`) : rien n'est centré dans une borne (R2).
+// `peutCreer` est calculé ici seulement et passé à l'agenda (son indice « rien de prévu »).
 export function SectionEvenements({ children }: { children: React.ReactNode }) {
   const { t } = useTranslation()
   const pathname = usePathname() || ""
@@ -41,8 +44,11 @@ export function SectionEvenements({ children }: { children: React.ReactNode }) {
   if (scene) {
     return (
       <>
-        {enTete}
-        <main className="px-[var(--marge-page)] pb-16">{children}</main>
+        <Halo color={PLANNING_COLORS.scene} />
+        <div className="relative pb-16">
+          {enTete}
+          {children}
+        </div>
       </>
     )
   }

@@ -390,3 +390,293 @@ npm run lint
 - 06/10/2026, plus tard : relecture croisée avec `spec-agencement-v18.md` (en-tête et composants communs repris
   de F1, F2, T2 et T7 ; ordre P4 après T7, P7 après T2a et T2b) ; Réunions sort du rail du Back-Office (entrée à
   part, T2a de l'agencement). Attend toujours le go.
+
+### SCENE
+
+- 06/10/2026 — **P1 — La règle des fêtes : faite** (branche `lot/v18-scene`, commit « feat(SCENE): P1 »).
+  `src/lib/scene/fetes.ts` (`FETES`, `Fete`, `paques`, `jourJParDefaut`, `idEdition`, `feteDe`, `anneeDe`,
+  `editionsDe`, `editionCourante`, `etatEdition`, `editionsAffichees`, `reglagesRepris`, `libelleEdition`) ;
+  `fete` et `annee` dans `Programme` (`src/types/programme.ts`) et lus par `fromFsProgramme`
+  (`src/lib/firebase/programmes.ts`) ; `tests/scene-paques-noel.spec.ts` (20 tests de la règle) ajouté à
+  `SPECS_GRAND_ECRAN` : vu rouge (module absent, puis contre-épreuve : 9 tests rouges sur une règle
+  sabotée), vert sur les cinq projets (100) ; `tsc` et `lint` propres. Aucun écran ne change.
+  - Choix faits faute de réponse : `nom` d'une édition nouvelle = son titre français (« Noël 2027 ») ;
+    `visible` reste dans le type tant que `currentProgramme` (P3) et `SceneClient` (P7) le lisent ;
+    `etatEdition` rend `passee` pour toute date après le jour J (une année passée aussi) ; deux documents
+    non canoniques pour la même édition : le premier lu (ordre de `listProgrammes`, jour J croissant) gagne.
+  - Reste : P2 à P9.
+  - À faire par Timothée : rien pour P1 (aucune règle à publier, droits inchangés).
+- 06/10/2026 — **P2 — La grille : faite** (branche `lot/v18-scene`, commit « feat(SCENE): P2 »).
+  `src/lib/scene/saison.ts` : `lignesDuJour` sans type `pris` (une réservation absorbe les créneaux qu'elle
+  chevauche et porte `couvre` et `aussi`, les heures des créneaux pris en plus), `semainesDe` (semaines du
+  lundi au dimanche, une case par créneau, `libres`), `compteCreneaux` (créneaux par jour de la semaine,
+  semaines, total), erreur `autreFete` dans `erreursSaison(saison, jourJ, autre?)` ;
+  `src/app/evenements/scene/LigneJour.tsx` rend une réservation hors grille sur une ligne de la hauteur des
+  créneaux couverts (« 17:00 → 18:30 », « 17:00 – 18:30 · prend aussi le créneau de 18:00 ») ;
+  `semaineCourte` (« 3 – 4 oct. », « 10月3日 – 4日 ») dans `libelles.ts` ; libellé `planning.saison.pris`
+  remplacé par `prendAussi` (FR et 中文). Tests : 8 nouveaux dans `tests/scene-paques-noel.spec.ts`, 2
+  repris dans `tests/scene-saison.spec.ts` (plus de « Pris » sur la page actuelle) : vus rouges sur le code
+  de P1 (10 rouges), verts ensuite ; `tsc` et `lint` propres.
+  - Choix faits faute de réponse : une réservation un jour sans grille (mardi) a `couvre` = 0 et ne compte
+    dans aucune semaine ; `compteCreneaux` compte les créneaux de la grille, hors jour J ; `semaineCourte`
+    écrit « 1er » le premier du mois.
+  - Reste : P3 à P9.
+  - À faire par Timothée : rien pour P2 (aucune règle à publier, droits inchangés) ; relire le 中文
+    « 同时占用 {{heures}} 的时段 ».
+- 06/10/2026 — **P3 — Les lecteurs : faite** (branche `lot/v18-scene`, commit « feat(SCENE): P3 »).
+  `editionProche(editions, today)` dans `fetes.ts` (le jour J le plus près, avant ou après) ;
+  `creerEdition(fete, annee, data, changement)` dans `src/lib/firebase/programmes.ts` (`POST
+  programmes?documentId={fete}-{annee}`, sans `visible` ; sur 409, seul `changement` s'écrit en `PATCH`
+  sur le document existant) ; cron des rappels (`sceneCreneaux` : les créneaux de chaque édition
+  affichée), calendrier (`DonneesCalendrier.scene` = tableau d'éditions, `charger.ts` ; `entrees.ts` :
+  un brouillon écarté, lien `/evenements/scene/{fete}` ; `deplacer.ts` : l'édition qui porte le créneau,
+  sa grille et son programme), widget Scène (choisi parmi les éditions affichées, sinon `editionProche` ;
+  titre « Scène · Noël 2026 ») et ses réglages (les éditions affichées, titre calculé) passent à
+  `editionsAffichees`. `currentProgramme` retiré de `dimanches.ts` avec ses tests (`programme-scene.spec.ts`,
+  `scene-saison.spec.ts`). Dans `programme-scene.spec.ts`, les trois tests de l'épinglage (« Masquer »,
+  « Afficher ») sont retirés (Q11) ; trois autres, qui comptaient sur un programme lancé caché avant son
+  ouverture, posent désormais un brouillon. Tests : 9 nouveaux dans `tests/scene-paques-noel.spec.ts` (vus rouges, verts),
+  `tests/helpers/cleFirebase.ts` (clé factice pour importer les modules REST dans un test Node) ;
+  `calendrier.spec.ts`, `calendrier-deplacer.spec.ts`, `evenements-2027.spec.ts`, `tableau-de-bord.spec.ts`
+  suivent la nouvelle forme ; `tsc` et `lint` propres.
+  - Choix faits faute de réponse : la page (`SceneClient`) et l'onglet (`EvenementsTabs`), autres
+    appelants de `currentProgramme`, montrent en attendant P4 l'édition affichée au jour J le plus proche
+    (`editionsAffichees` puis `editionProche`) : l'épinglage (`visible`, « Afficher ») n'a plus d'effet
+    (Q11) et une édition lancée avant son ouverture (`bientot`) s'affiche ; `creerEdition` prend un
+    quatrième argument `changement` (ce qui s'applique sur 409) ; le réglage par défaut du widget garde
+    son libellé « Celui qui est affiché » ; les clés des entrées du calendrier restent
+    `scene:{créneau}:{date}` (l'édition se retrouve par l'identifiant du créneau).
+  - Entre P3 et P4, le lien du calendrier `/evenements/scene/noel` répond 404 (la route vient avec P4).
+  - Reste : P4 à P9 ; `creerEdition` n'a pas encore d'écran (P7, Q6), et le Firestore simulé des tests
+    (`fakeSession.ts`) ne connaît pas encore `documentId` ni le 409.
+  - À faire par Timothée : rien pour P3 (aucune règle à publier, droits inchangés).
+- 07/10/2026 — **P4 — App : onglets, en-tête, états sans grille : faite** (branche `lot/v18-scene`, commit
+  « feat(SCENE): P4 », après la fusion de `lot/v18-fondations`, F1 et F2). Sans attendre T7 (accélération voulue
+  par Timothée) : `SectionEvenements.tsx` pose, sous `/evenements/scene`, l'en-tête de la section avec les
+  composants de F1 (`EnTetePage` titre « Évènements », sous-titre de A10, `OngletsRail` Calendrier · Pâques ·
+  Noël) et le halo de la scène, sans barre collante ni `max-w-[1080px]` ; l'agenda (`CalendrierClient`) n'est pas
+  touché. `EvenementsTabs.tsx` : `useOngletsEvenements()` rend la liste des trois onglets pour tout connecté
+  (lue par le rail et par les pilules de l'agenda), plus de lecture des programmes. `/evenements/scene/[fete]`
+  (`paques`, `noel`, sinon 404) monte `FeteClient.tsx` : en-tête de l'édition (titre calculé, jour J, fin des
+  réservations), cartes des états `aucune`, `brouillon`, `bientot`, `fermees`, `passee`, « Les années passées »
+  (`?annee=`), « Comment réserver ? », ordre de passage en lecture (`OrdrePassage` sans `canEdit`, `?vue=ordre`,
+  en page avec `Retour` sur téléphone ; entrée en bas de la colonne en deux volets, carte tout en bas en une
+  colonne) ; deux volets par `DeuxVolets` (liste-carte de 400 px). `/evenements/scene` → `VersLaFete.tsx`
+  (la fête au jour J le plus proche, `router.replace`). `/evenements/scene` avant `/evenements` dans
+  `SECTIONS_EN_DEUX_VOLETS`. Libellés `planning.fete.*`, `evenements.tabs.{paques,noel}`, `evenements.sousTitre`
+  (FR et 中文). `SceneClient` n'est plus monté côté membres (le Back-Office le garde en mode `gestion` jusqu'à P7).
+  - Tests : 14 tests P4 dans `tests/scene-paques-noel.spec.ts` (dont un propre au téléphone et un propre au
+    téléphone et à la tablette debout, plus une capture sous `PW_CAPTURES`), vus rouges sur le code de P3
+    (11 rouges sur `ordinateur`, puis 2 rouges pour l'ordre en bas sur téléphone et tablette), verts sur les
+    cinq projets ; `/evenements/scene/noel` ajouté à `tests/back-office-coupe.spec.ts` ; réécrits là où ils
+    parlaient du nom en onglet, de « Aucun programme en cours. », du volet « Programme Noël » ou de « Réservations :
+    du … au … » : 7 tests de `programme-scene.spec.ts`, 8 de `scene-saison.spec.ts`. `evenements.spec.ts`,
+    `pages-en-grand-evenements.spec.ts`, `calendrier.spec.ts`, `calendrier-deplacer.spec.ts`,
+    `back-office-admin.spec.ts` verts, sauf `pages-en-grand-evenements.spec.ts:79` (`ordinateur`,
+    `tablette-paysage`), rouge attendu de F1 que T7 réécrit (voir `spec-agencement-v18.md`). `tsc` et `lint` propres.
+  - Choix faits faute de réponse : sur téléphone, l'année passée se choisit dans la même liste « Les années
+    passées » que sur ordinateur (la planche montre « L'an dernier » et un lien vers l'année d'avant) ; le
+    remerciement garde `planning.scene.passed` avec le titre calculé (« Noël 2026, c'est passé — merci à tous ! ») ;
+    plus de ligne « Prochain programme » (chaque fête a son onglet) ; un brouillon dont l'ouverture prévue est déjà
+    passée annonce quand même « ouvriront le … » (cas que la spec ne tranche pas) ; « Gérer dans le Back-Office »
+    mène encore à `/back-office/evenements/scene` (l'onglet de la fête au Back-Office vient avec P7).
+  - Fusion avec T7 : T7 posera aussi l'en-tête de l'agenda ; garder la branche `SectionScene` de
+    `SectionEvenements.tsx` (ou la fondre dans l'en-tête commun de T7) et `useOngletsEvenements`.
+  - Reste : P5 à P9 (la grille reste celle de U1 en jours, jusqu'à P5).
+  - À faire par Timothée : rien pour P4 (aucune règle à publier, droits inchangés) ; relire le 中文 des clés
+    `planning.fete.*` et `evenements.sousTitre`.
+- 07/10/2026 — **P5 — App : une semaine à la fois : faite** (branche `lot/v18-scene`, commit « feat(SCENE): P5 »).
+  `Entrainements.tsx` rangé en semaines (Q12, Q14) : « Mes réservations » (mes réservations à venir, compte,
+  tuile de date ; toucher une ligne choisit sa semaine et descend à son jour ; masqué sans réservation), la liste
+  « Entraînements » des semaines (`semainesDe` : jours, « N places libres » ou « complet », une case par créneau,
+  pleine = pris), « Semaines passées (n) » qui déplie les passées, et la semaine choisie en cartes par jour (tuile,
+  « Samedi 10 octobre », places libres du jour, lignes de `LigneJour`). Deux volets (`useDeuxVolets`) : la liste à
+  gauche dans la colonne de la fête, à droite « Semaine du 10 au 11 octobre », « 3 places libres · un créneau = 1 h »,
+  ‹ › ; une colonne : les semaines en pastilles dans une bande qui défile seule en largeur (la pastille choisie s'y
+  montre), les jours dessous, l'ordre de passage en carte tout en bas. `?semaine=` (le lundi) remplace l'adresse
+  sans entrée d'historique ; par défaut la première semaine qui a un jour réservable à partir d'aujourd'hui.
+  `Entrainements` rend trois morceaux (`children`), posés par `FeteClient` ; `SceneClient` (Back-Office jusqu'à P7)
+  les empile. Libellés `planning.semaines.*` (FR et 中文) ; `libelles.ts` : `jourCourt`, `tuileDate`,
+  `joursCourts`, `bornesSemaine`.
+  - Tests : 10 tests P5 dans `tests/scene-paques-noel.spec.ts` (dont un propre aux grands écrans, un propre au
+    téléphone et à la tablette debout, une capture sous `PW_CAPTURES`), vus rouges (16 sur `ordinateur` et
+    `telephone`), verts sur les cinq projets ; téléphone : la page mesure moins de 3 000 px (7 458 à l'audit).
+    Réécrits pour la semaine choisie : 4 tests de `scene-saison.spec.ts` (jours lointains, « Semaines passées (1) »,
+    中文 « 过去的周（1） »), 4 de `programme-scene.spec.ts`. `tsc` et `lint` propres.
+  - Choix faits faute de réponse : sur une colonne, ni titre de semaine ni ‹ › (les pastilles en tiennent lieu,
+    planche téléphone) ; le bouton « Semaines passées (n) » garde son libellé déplié (`aria-expanded`) ; une semaine
+    passée choisie par l'adresse déplie les passées ; un jour qui n'a qu'une réservation hors des jours de la saison
+    entre dans sa semaine (créée sans case s'il le faut : rien ne disparaît) ; « places libres » d'un jour ne compte
+    pas les créneaux déjà commencés, et ne s'affiche pas pour un jour passé ; « Mes réservations » = mes
+    réservations à venir (aujourd'hui compris tant qu'elles ne sont pas finies), y compris pour la coordination.
+    Restent pour P6, comme le dit la spec : « ⋯ » (les boutons Modifier et Retirer sont encore sous la
+    réservation), la pastille « à moi », la feuille sans rien de coché, Déplacer en pastilles, `useConfirmer`.
+  - Captures : prises en pleine page, la tablette couchée y passe en une colonne (Chromium agrandit la fenêtre
+    pour la pleine page et la fenêtre devient « portrait ») ; le test des deux volets le vérifie sans capture.
+  - Reste : P6 à P9.
+  - À faire par Timothée : rien pour P5 (aucune règle à publier, droits inchangés) ; relire le 中文 de
+    `planning.semaines.*` (« 我的预约 », « 周次 », « 过去的周（n） », « 剩余 n 个名额 », « 已满 », « 每个时段 … »,
+    « …至…这一周 », « 上一周 », « 下一周 »).
+- 07/10/2026 — **P6 — App : réserver, déplacer, modifier, retirer : faite** (branche `lot/v18-scene`, commit
+  « feat(SCENE): P6 »). `CreneauForm.tsx` : feuille « Réserver » sans rien de coché (Q15), bouton plein gris et
+  inactif « Choisis quoi et qui » tant que Quoi ou Qui manque, puis « Réserver » ; « Note · facultatif » ; neuf
+  groupes puis « + N » qui déplie le reste (déplié d'emblée si un groupe déjà choisi est au-delà) ; « Déplacer »
+  ne propose que les créneaux libres, en pastilles groupées par jour (le sien compris s'il est dans la grille),
+  plus aucune liste déroulante, et ne touche ni quoi ni qui ; « Modifier » rappelle le créneau en tête et ne
+  change que Quoi, Qui, Note. `Entrainements.tsx` : « ⋯ » (`MenuActions` de F1) sur chaque réservation que je
+  peux changer (`canEditCreneau`, inchangé), dans la semaine et dans « Mes réservations » : Déplacer, Modifier,
+  Retirer ; Retirer passe par `useConfirmer` (« Retirer ce créneau ? » — « Sketch · Jeunes, dimanche 11
+  octobre · 16:00 – 17:00 : le créneau redevient libre. »), plus de `window.confirm` côté membres ; les deux
+  boutons sous la réservation disparaissent ; « à moi » (pastille à l'encre) remplace mon nom. Libellés FR et
+  中文 : `planning.saison.{choisisQuoiQui,autresGroupes,facultatif}`, `planning.semaines.{aMoi,retirerTexte}` ;
+  `planning.programme.noteHint` devient « Sono, matériel, précision… » ; `planning.saison.creneau`, orpheline, retirée.
+  - Tests : 9 tests P6 dans `tests/scene-paques-noel.spec.ts` (plus une capture sous `PW_CAPTURES`), vus rouges
+    sur le code de P5 (9 rouges sur `ordinateur`), verts ensuite ; réécrits pour « ⋯ », « à moi », « + N » et
+    les pastilles : 10 tests de `scene-saison.spec.ts` (dont les deux « Déplacer » hors grille de l'aperçu, qui
+    partagent la feuille), 3 de `programme-scene.spec.ts`, 1 de P5 (`Mes réservations` lue par ligne). `tsc` et
+    `lint` propres.
+  - Repris après une coupure : le travail non commité a été relu, gardé, revu rouge (contre-épreuve sur le code
+    de P5 : les 9 tests P6 rouges) puis vert sur les cinq projets (P5 et P6 : 85 verts ; `scene-saison` et
+    `programme-scene` : 309 verts). Corrigé en passant : deux « ‹ » touchés vite ne reculaient que d'une
+    semaine (la semaine se lisait dans l'adresse, que `router.replace` met à jour plus tard ; le test P5
+    « changer de semaine » tombait sur `ordinateur`) : la semaine demandée gagne désormais jusqu'à ce que
+    l'adresse la rattrape (`Entrainements.tsx`).
+  - Choix faits faute de réponse : le menu « ⋯ » n'a que les libellés (la planche ajoute une ligne d'aide sous
+    chacun ; `MenuActions` de F1 n'en a pas, et la scène n'en écrit pas d'autre) ; son nom accessible est
+    « Plus d'actions · {quoi} · {qui} » ; une réservation hors grille qu'on déplace n'a aucune pastille choisie
+    au départ (bouton inactif jusqu'au choix) ; le bouton plein de « Déplacer » dit « Déplacer » ; l'aperçu du
+    Back-Office (`Apercu.tsx`) reçoit les mêmes pastilles pour son « Déplacer », son `window.confirm` reste
+    jusqu'à P7 comme prévu.
+  - Reste : P7 à P9.
+  - À faire par Timothée : rien pour P6 (aucune règle à publier, droits inchangés) ; relire le 中文 « 请选择内容和参与者 »,
+    « 其他团体 », « 可选 », « 我的 », « {{resa}}，{{jour}} · {{debut}} – {{fin}}：该时段将重新空出。 ».
+
+### SCENEBO
+
+- 07/10/2026 — **P7 — Back-Office : l'onglet de la fête et la saison : faite** (branche `lot/v18-scene-bo`, partie de
+  `ui/apple-design` après la fusion de `lot/v18-scene` (P1-P6) et de `lot/v18-t2` (T2a, T2b) ; commit « feat(SCENE): P7 »).
+  Rail du Back-Office « Évènements · Pâques · Noël » (`back-office/evenements/layout.tsx` : la sous-partie `scene` donne
+  les deux onglets, halo de la scène) ; `/back-office/evenements/scene` → la fête au jour J le plus proche (`VersLaFete`
+  prend `base`) ; `/back-office/evenements/scene/[fete]` (`paques`, `noel`, sinon 404 : `dynamicParams = false`) monte
+  `FeteGestion.tsx` : colonne « Cette fête » (titre de l'édition avec le menu des années, pastille d'état, entrée
+  Saison avec son résumé, phrase de ce que voient les membres et « Les années passées » avant le lancement, ordre de
+  passage en bas) ; à droite la vue Saison (« Saison de Pâques 2027 », « Enregistré à chaque changement … »,
+  « Lancer les réservations » en un `PATCH` de `ouvert`, inactif tant qu'une erreur s'affiche, puis « Réservations
+  lancées ») ou l'ordre de passage (`?vue=ordre`, modifiable jusqu'au jour J compris). Une édition sans document se
+  montre avec `reglagesRepris` et naît à la première action (`creerEdition`, `POST ?documentId=`, 409 → `PATCH`) ;
+  ouvrir l'onglet n'écrit rien. `SaisonForm` : Jour J en tête (« Calculé pour Pâques ; modifiable. », écrit seul),
+  aides (premier jour réservable, fin, créneaux par jour), erreur `autreFete` sous « Réservations » ; libellés de la
+  planche (Réservations, Jours, Plages, Un créneau dure). `Apercu` : « Aperçu des membres » sur une semaine (‹ ›), le
+  premier jour en lignes, les autres jours et le total en une phrase ; « Retirer » hors grille par `useConfirmer`.
+  `OrdrePassage` : retirer un numéro par `useConfirmer` — plus de `window.confirm` dans la scène. Retirés :
+  `SceneClient.tsx` (mode `gestion`, « Nouveau programme », « Masquer », liste des programmes), `SaisonEcran.tsx`,
+  `ProgrammeForm.tsx`, et `createProgramme`, `deleteProgramme` (`programmes.ts`) restés sans appelant. « Gérer dans le
+  Back-Office » (App) mène à l'onglet de la même fête. Libellés `planning.gestion.*`,
+  `planning.saison.erreurs.autreFete` (FR et 中文). Firestore simulé des tests : `?documentId=` et 409
+  (`tests/helpers/fakeSession.ts`).
+  - Tests : 15 tests P7 dans `tests/scene-paques-noel.spec.ts` (plus une capture sous `PW_CAPTURES`), vus rouges
+    (15 sur `ordinateur`), verts sur les cinq projets. Réécrits pour l'onglet de la fête : la partie « écran de la
+    coordination » de `scene-saison.spec.ts` (plus de « Préparer la saison », « Modifier la saison », « Ouvrir les
+    réservations », « Programme du jour J », « Modifier le programme », « Créer le programme » ; aperçu en semaines ;
+    confirmation du site) ; dans `programme-scene.spec.ts`, la création (premier réglage puis « Lancer »), l'ordre de
+    passage au Back-Office, les sept jours et l'archivage ; supprimés : « modifie le programme en place », « choisi
+    automatiquement », « créer un programme ne vole plus l'onglet ». Rail « Évènements · Pâques · Noël » dans
+    `agencement-v18-t2a.spec.ts`, `agencement-v18-t2b.spec.ts`, `back-office-admin.spec.ts` ;
+    `/back-office/evenements/scene/paques` dans `back-office-coupe.spec.ts`. `tsc` propre, `lint` sans nouvel avertissement.
+    Passes : `scene-paques-noel`, `scene-saison`, `programme-scene` sur tous leurs projets (714 verts ; le glissé de
+    l'ordre de passage sur téléphone amène d'abord la ligne au milieu de l'écran, loin de la barre du bas) ;
+    `agencement-v18-t2a`, `agencement-v18-t2b`, `back-office-admin` sur `ordinateur` (186 verts) ; `back-office-coupe`
+    (64 verts). Captures regardées aux cinq tailles (sous 1 440 px, l'aperçu passe sous la carte de la saison).
+  - Choix faits faute de réponse : « Entraînements » (les semaines) et « Toutes les réservations » ne sont pas dans la
+    colonne du Back-Office à P7 : ils viennent avec P8 (vue Toutes les réservations), comme la vue par défaut
+    « Toutes les réservations » des états lancés ; d'ici là, la vue Saison est montrée par défaut sauf après le jour J
+    (l'ordre de passage) et la coordination gère toute réservation depuis l'App (« ⋯ » partout) et la liste hors grille
+    de l'aperçu. « Les années passées » disent jour J et nombre de numéros, sans le nombre de réservations de la
+    planche (il faudrait lire les créneaux de chaque année). Une fête sans document porte la pastille « Brouillon ».
+    L'autre fête comparée par `autreFete` est son édition courante (brouillon compris). Le menu des années liste
+    l'édition courante et toutes les éditions de la fête, la plus récente d'abord ; choisir l'année courante retire
+    `?annee=`. Sur une colonne (téléphone, tablette debout), la colonne puis la vue choisie, en entier (le résumé et
+    les feuilles du téléphone sont P9).
+  - Reste : P8 (Toutes les réservations, Entraînements dans la colonne, après le jour J et « Préparer … », « Imprimer »)
+    et P9 (téléphone). Clés devenues orphelines, laissées pour éviter des conflits de fusion :
+    `planning.saison.{label,titre,programmeJourJ,ouvrir,ouvertes,fermer,apercu,precedent,suivant,resume,modifierSaison,preparerSaison}`,
+    `planning.programmes.*` (sauf `jourJLabel`, `error`), `planning.scene.{noCurrent,others,editProgramme,newProgramme,nextSoon,willArchive,autoChosen,viewOrdre,hideOrdre}`,
+    `backOffice.parties.scene`.
+  - À faire par Timothée : rien à publier (droits inchangés) ; relire le 中文 de `planning.gestion.*` (« 预约季 »,
+    « 启动预约 », « 预约已启动 », « 本次节日 », « 按{{fete}}日期计算；可修改。 », « 成员看到的预览 »…) et
+    `planning.saison.erreurs.autreFete`, `planning.saison.periode` (« 预约时间 »).
+- 07/10/2026 — **P8 — Back-Office : réservations et après le jour J : faite** (branche `lot/v18-scene-bo`, commit
+  « feat(SCENE): P8 »). `FeteGestion.tsx` : une fois lancée, la colonne porte « Toutes les réservations » (« 4 à venir · 1 hors
+  grille » ; « Réservations · après le lancement », inactif, avant le lancement ; « 38 réservations, 0 hors grille » après le
+  jour J) et, jusqu'au jour J, « Entraînements » (les semaines des membres, montées par `Entrainements`) ; vue par défaut :
+  Toutes les réservations (`bientot`, `ouvertes`, `fermees`), la saison avant le lancement, l'ordre de passage après le
+  jour J ; toucher une semaine l'ouvre à droite (`?semaine=`, qui retire `?vue=`), avec « ⋯ » sur toutes les réservations.
+  Nouveau `ToutesReservations.tsx` : tableau Jour · Créneau · Quoi · Qui · Réservé par · « ⋯ », un jour par groupe de lignes,
+  pilules `Pilules` « À venir n · Passées n · Hors grille n », ligne hors grille surlignée (`data-hors-grille`) avec
+  « Déplacer » à la place de « ⋯ », « Voir comme un membre » vers `/evenements/scene/{fete}` (`?annee=` pour une autre
+  année). Le menu « ⋯ », la feuille Déplacer et la confirmation sont ceux de P6 : `Entrainements` les passe dans ses
+  morceaux (`menu`, `deplacer`, `erreur`) ; un retrait manqué s'y dit (« Enregistrement impossible… ») ; prop
+  `semaineActive` (aucune semaine marquée tant que la semaine n'est pas ce qui se lit). `Apercu.tsx` perd sa liste
+  « N réservations hors grille » et sa feuille (Q20). Après le jour J (Q21) : carte « Noël 2026 est passé » (remerciement
+  jusqu'à J + 7, puis l'année suivante) et « Préparer Noël 2027 » (`creerEdition` avec `reglagesRepris`, puis
+  `?annee=2027&vue=saison` ; plus de bouton si l'édition suivante existe) ; ordre de passage en lecture dès le lendemain du
+  jour J, avec « Imprimer » (`window.print()` ; `globals.css` : à l'impression, `.scene-imprimer` seule). Libellés
+  `planning.gestion.{reservations,apresLancement,toutes,toutesSousTitre,voirCommeMembre,filtrer,filtres.*,colonnes.*,
+  aucuneReservation,resume,nReservations,bilan,passeeTitre,passeeTexte,preparer,imprimer}` (FR et 中文).
+  - Tests : 13 tests P8 dans `tests/scene-paques-noel.spec.ts` (plus une capture sous `PW_CAPTURES`), vus rouges (13 sur
+    `ordinateur`), verts ensuite. Réécrits : P7 « Noël 2026 ancien document » (la saison est à un toucher) ; dans
+    `scene-saison.spec.ts`, les tests hors grille passent par « Toutes les réservations » (filtre, « Déplacer ») ou par
+    « ⋯ » de la semaine (Retirer), ceux de la saison lancée ouvrent `?vue=saison`, « Retirer qui échoue » se lit au-dessus
+    du tableau. `tsc` et `lint` propres. Passe : `scene-paques-noel`, `scene-saison`, `programme-scene` sur les cinq projets (784 verts).
+  - Choix faits faute de réponse : « Hors grille » compte les réservations hors grille **à venir** (les seules qu'on puisse
+    déplacer ; une passée reste dans « Passées », sans surlignage) ; une ligne hors grille n'a que « Déplacer » (planche),
+    on la retire par « ⋯ » dans sa semaine ; les passées se lisent dans l'ordre chronologique ; « Lancer les réservations »
+    garde la vue Saison (« Réservations lancées ») au lieu de basculer sur le tableau ; la carte « … est passé » ne
+    s'affiche que pour l'édition courante (une année plus ancienne choisie par `?annee=` montre son ordre en lecture et
+    « Imprimer », sans « Préparer ») ; après le jour J, plus d'« Entraînements » dans la colonne (planche « après ») ; pas de
+    « Mes réservations » au Back-Office ; la ligne hors grille est surlignée en gris (`bg-secondary`), pas en orange :
+    aucune couleur nouvelle ; « Imprimer » imprime aussi le titre et la date de l'ordre de passage.
+  - Reste : P9 (téléphone : saison en résumé, une feuille par réglage, « Lancer » pleine largeur, « Cette semaine » en cartes
+    par jour). Sur téléphone, le tableau défile seul en largeur dans sa carte (la page non) en attendant P9. Clé devenue
+    orpheline, laissée pour éviter des conflits de fusion : `planning.saison.horsGrilleN`.
+  - À faire par Timothée : rien à publier (droits inchangés) ; relire le 中文 de `planning.gestion.*` ajouté (« 全部预约 »,
+    « {{edition}} · 每天谁预约了什么 », « 筛选预约 », « 即将到来 n », « 已过 n », « 不在时段表内 n », « 预约人 », « 启动后可用 »,
+    « {{edition}} 已结束 », « 成员在{{date}}之前会看到感谢语，之后此标签将显示{{suivante}}。… », « 为{{annee}}年{{fete}}做准备 », « 打印 »).
+- 07/10/2026 — **P9 — Back-Office sur téléphone et tablette portrait : faite** (branche `lot/v18-scene-bo`, commit
+  « feat(SCENE): P9 »). `FeteGestion.tsx` lit la disposition (`useDisposition`) : en deux volets, rien ne change. Sur une
+  colonne, la fête (titre, menu des années, état ; la phrase du brouillon juste dessous ; une fois lancée, « Saison » et
+  « Toutes les réservations » en carte), puis la vue par défaut, puis « Les années passées » (brouillon) et l'ordre de
+  passage en carte tout en bas ; toute autre vue (`?vue=`, `?semaine=`) s'ouvre en page, avec « ‹ Noël 2026 » (`Retour`)
+  vers la fête. Vue par défaut sur une colonne : la saison avant le lancement, « Cette semaine » réservations ouvertes,
+  le tableau lancée mais pas encore ouverte ou fermée, l'ordre de passage après le jour J. Vue Saison sur une colonne :
+  le titre, puis — téléphone — le résumé (nouveau `ResumeSaison.tsx` : Jour J, Réservations, Jours et plages, Un créneau
+  dure, Qui peut réserver, chaque ligne ouvre une feuille `Drawer` avec ce réglage seul, `SaisonForm seul=…`, et
+  « Terminé ») ou — tablette portrait — la carte entière, puis « Lancer les réservations » pleine largeur (48 px), puis
+  l'aperçu. Dans une feuille, une erreur s'affiche sous le champ et rien n'est écrit ; refermer la feuille oublie le
+  réglage refusé (le résumé dit ce qui est en base, « Lancer » se relit). Nouveau `CetteSemaine.tsx` : la semaine à venir
+  (Q12) en cartes par jour, « 10:00 – 11:00 », « Quoi · Qui · Réservé par », pastille « Hors grille », « ⋯ » des membres
+  (Déplacer, Modifier, Retirer) ; un jour sans réservation dit « Aucune réservation ici. ». `heureCourte` passe dans
+  `libelles.ts`. Libellés `planning.gestion.{reglagesSaison,joursEtPlages,termine,cetteSemaine}` (FR et 中文).
+  - Tests : 10 tests P9 dans `tests/scene-paques-noel.spec.ts` (dont une capture sous `PW_CAPTURES`), vus rouges
+    (13 échecs sur `telephone` et `tablette`), verts ensuite. Aide commune `tests/helpers/saisonScene.ts`
+    (`reglageSaison` : la carte, ou sur téléphone la feuille du réglage ; `fermerFeuille` ; `versToutesLesReservations`).
+    Réécrits pour une colonne : P7 et P8 (saison par feuille sur téléphone ; tableau à un toucher ; « Entraînements » et
+    « Réservations · après le lancement » en deux volets seulement), `scene-saison.spec.ts` (la saison par feuille,
+    « Cette semaine » au lieu de la liste des semaines), `programme-scene.spec.ts` (années passées hors de la colonne),
+    `back-office-admin.spec.ts` « Scène » (cassé depuis P8 sur toutes les tailles : la saison lancée s'ouvre sur ses
+    réservations ; on touche « Saison »). `tsc` propre, `lint` sans avertissement sur les fichiers touchés. Passes :
+    `scene-paques-noel`, `scene-saison`, `programme-scene` sur les cinq projets (téléphone et tablette 393 verts,
+    grands écrans 379 verts) ; `back-office-admin` « Scène » sur ordinateur, téléphone, tablette ; `back-office-coupe`
+    (64 verts). Captures regardées aux cinq tailles (brouillon, feuille « Jours et plages », saison ouverte).
+  - Choix faits faute de réponse : la planche du téléphone met « Saison » en petit titre ; la page garde « Saison de
+    Pâques 2027 » et sa pastille (même titre qu'en grand). Le sous-titre de la fête reste « Jour J : … » (la planche y écrit
+    « Seules la coordination et les admins voient ce brouillon. ») ; la phrase du brouillon vient juste dessous. « Les
+    années passées » restent sur une colonne, sous l'aperçu (la planche du téléphone ne les montre pas ; sans elles, le
+    menu des années seul y mène). « Cette semaine » ne se montre que réservations ouvertes ; c'est la première semaine
+    qui a un jour réservable à partir d'aujourd'hui, avec tous ses jours (un jour vide le dit), sans liste des semaines
+    ni ‹ › (planche) : les autres semaines sont dans « Toutes les réservations ». La feuille d'un réglage se ferme par
+    « Terminé » (bouton plein, seul dans la feuille), le glissé ou Échap.
+  - Reste : rien pour P9 ; la scène entière (P1-P9) est à relire, captures aux cinq tailles en FR et 中文. Clé devenue
+    orpheline, laissée : aucune.
+  - À faire par Timothée : rien à publier (droits inchangés) ; relire le 中文 « 预约季设置 », « 日子和时间段 », « 完成 »,
+    « 本周 ».

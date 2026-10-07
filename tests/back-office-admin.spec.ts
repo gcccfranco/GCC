@@ -402,10 +402,10 @@ test.describe("B3 : Tâches", () => {
 });
 
 test.describe("B3 : Évènements", () => {
-  test("coordination : Évènements · Scène ; ses évènements, sans les réunions", async ({ page }) => {
+  test("coordination : Évènements · Pâques · Noël ; ses évènements, sans les réunions", async ({ page }) => {
     await ouvrirB3(page, COORD, "/back-office/evenements");
     await expect(page.getByRole("heading", { level: 1, name: "Évènements" })).toBeVisible();
-    await expect(sousParties(page).getByRole("link")).toHaveText(["Évènements", "Scène"]);
+    await expect(sousParties(page).getByRole("link")).toHaveText(["Évènements", "Pâques", "Noël"]);
     await expect(sousParties(page).getByRole("link", { name: "Évènements" })).toHaveAttribute("aria-current", "page");
     await expect(page.getByRole("link", { name: /Fête de rentrée/ })).toHaveAttribute("href", /^\/back-office\/evenements\/fete\/?$/);
     await expect(page.getByRole("link", { name: /Repas du culte/ })).toBeVisible();
@@ -583,18 +583,20 @@ test.describe("B3 : Évènements", () => {
     await expect(page.getByRole("link", { name: "Nouvel évènement" })).toHaveAttribute("href", /^\/back-office\/evenements\/nouveau\/?$/);
   });
 
-  test("Scène : la gestion des programmes est au Back-Office ; l'App garde les réservations", async ({ page }) => {
+  // Pâques · Noël, P7 (docs/spec-scene-paques-noel.md) : l'onglet de la fête, sa saison et son ordre de passage.
+  test("Scène : la saison de la fête est au Back-Office ; l'App garde les réservations", async ({ page }) => {
     const NOEL = { nom: "Noël 2026", jourJ: "2026-12-24", debut: "2026-10-01", fin: "2026-12-20", ouvert: true, visible: false, passages: [], createdBy: "uid-alice", updatedAt: "2026-10-01T10:00:00Z",
       jours: [6, 0], plages: [{ jour: 6, debut: "10:00", fin: "12:00" }, { jour: 0, debut: "14:00", fin: "19:00" }], duree: 60, quiAutorises: [] };
     await ouvrirB3(page, COORD, "/back-office/evenements/scene", { "programmes/noel": NOEL });
-    await expect(sousParties(page).getByRole("link", { name: "Scène" })).toHaveAttribute("aria-current", "page");
-    await expect(page.getByRole("button", { name: "Nouveau programme" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Modifier la saison" })).toBeVisible();
+    await expect(sousParties(page).getByRole("link", { name: "Noël" })).toHaveAttribute("aria-current", "page");
+    // P8-P9 : une saison lancée s'ouvre sur ses réservations ; la saison est à un toucher.
+    await page.getByRole("region", { name: "Cette fête" }).getByRole("button", { name: /^Saison/ }).click();
+    await expect(page.getByRole("heading", { name: "Saison de Noël 2026" })).toBeVisible();
+    await expect(page.getByText("Réservations lancées")).toBeVisible();
     await page.goto("/evenements/scene");
     await expect(page.getByRole("heading", { name: "Noël 2026" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Nouveau programme" })).toHaveCount(0);
-    await expect(page.getByRole("button", { name: "Modifier la saison" })).toHaveCount(0);
-    await expect(page.getByRole("link", { name: "Gérer dans le Back-Office" })).toHaveAttribute("href", /^\/back-office\/evenements\/scene\/?$/);
+    await expect(page.getByRole("heading", { name: "Saison de Noël 2026" })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "Gérer dans le Back-Office" })).toHaveAttribute("href", /^\/back-office\/evenements\/scene\/noel\/?$/);
   });
 
   test("Scène : réservée à la coordination", async ({ page }) => {

@@ -191,7 +191,7 @@ test.describe("T2a : les adresses /back-office/reunions/*", () => {
   test("le rail d'Évènements n'a plus « Réunions »", async ({ page }) => {
     await ouvrir(page, COORD, "/back-office/evenements");
     await expect(page.getByRole("heading", { level: 1, name: "Évènements" })).toBeVisible();
-    await expect(sousParties(page).getByRole("link")).toHaveText(["Évènements", "Scène"]);
+    await expect(sousParties(page).getByRole("link")).toHaveText(["Évènements", "Pâques", "Noël"]);
   });
 
   test("la fiche : Modifier, Dupliquer pour la prochaine et les réunions précédentes restent sous Réunions", async ({ page }, info) => {

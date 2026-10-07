@@ -58,6 +58,12 @@ export interface Programme {
   quiAutorises?: string[];
   /** `false` = brouillon, jamais affiché ; absent = ouvert (programme d'avant U1). */
   ouvert?: boolean;
+  // Pâques · Noël (docs/spec-scene-paques-noel.md, Q1-Q2) : absents dans un
+  // programme d'avant ce lot = déduits du mois et de l'année du jour J
+  // (feteDe, anneeDe, src/lib/scene/fetes.ts).
+  fete?: "paques" | "noel";
+  /** Année du jour J ; l'identifiant d'une édition est `{fete}-{annee}`. */
+  annee?: number;
 }
 
 /** Document programmes/{id}/creneaux/{cid} : la scène un jour réservable. */

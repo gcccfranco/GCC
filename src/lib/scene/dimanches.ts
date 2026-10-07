@@ -69,21 +69,3 @@ export function programmeState(p: { debut: string; jourJ: string }, today: strin
   if (today <= archiveDate(p.jourJ)) return "passed";
   return "archived";
 }
-
-/** Le programme affiché le jour `today`, ou `null` (pas d'onglet pour les
- *  membres). `programmes` est trié par jour J croissant (`listProgrammes`),
- *  donc le premier retenu est l'échéance la plus proche. Les archivés sont
- *  écartés ; un programme épinglé par la coordination (`visible`) gagne ; sinon
- *  la bascule prend le premier programme ouvert — ou passé, dont le message de
- *  remerciement a la priorité sur sa semaine. Lot U1 : un brouillon
- *  (`ouvert === false`) n'est jamais affiché, même épinglé — la page, l'onglet
- *  et le cron des rappels suivent ensemble. */
-export function currentProgramme<T extends { debut: string; jourJ: string; visible: boolean; ouvert?: boolean }>(
-  programmes: T[],
-  today: string,
-): T | null {
-  const vivants = programmes.filter((p) => p.ouvert !== false && programmeState(p, today) !== "archived");
-  return vivants.find((p) => p.visible)
-    ?? vivants.find((p) => programmeState(p, today) !== "soon")
-    ?? null;
-}

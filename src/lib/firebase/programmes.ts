@@ -6,6 +6,7 @@ import {
   fromFsValue,
   type RawDoc,
 } from "./setlists";
+import { idEdition, type Fete } from "@/lib/scene/fetes";
 import type { Creneau, Duree, Passage, Plage, Programme } from "@/types/programme";
 
 // Programmes de scène (lot 3 bis) : programmes/{id} et programmes/{id}/creneaux/{cid},
@@ -39,6 +40,9 @@ function fromFsProgramme(raw: RawDoc): Programme {
     ...(data.duree != null && { duree: data.duree as Duree }),
     ...(data.quiAutorises != null && { quiAutorises: data.quiAutorises as string[] }),
     ...(data.ouvert != null && { ouvert: data.ouvert as boolean }),
+    // Pâques · Noël : seulement si le champ existe — absent = déduit du jour J (feteDe).
+    ...(data.fete != null && { fete: data.fete as Programme["fete"] }),
+    ...(data.annee != null && { annee: data.annee as number }),
   };
 }
 
@@ -123,21 +127,35 @@ export async function getProgramme(id: string): Promise<Programme | null> {
   return fromFsProgramme((await res.json()) as RawDoc);
 }
 
-export async function createProgramme(data: Omit<Programme, "id">): Promise<string> {
-  const id = await post("programmes", data as unknown as Record<string, unknown>);
+/** Crée l'édition `{fete}-{annee}` (Q6) à la première action de la coordination : `data`
+ *  (ses réglages, `reglagesRepris`, sans `visible` : Q11) plus `changement` (ce que la
+ *  coordination vient de faire).
+ *  Une autre coordination l'a créée entre-temps (409) : seul `changement` s'écrit sur le
+ *  document existant. Rend l'identifiant. */
+export async function creerEdition(
+  fete: Fete,
+  annee: number,
+  data: Omit<Programme, "id" | "visible">,
+  changement: Partial<Omit<Programme, "id" | "visible">> = {},
+): Promise<string> {
+  const id = idEdition(fete, annee);
+  const headers = await authHeader();
+  const res = await fetch(`${FS_BASE}/programmes?documentId=${id}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...headers },
+    body: JSON.stringify({ fields: toFsFields({ ...data, ...changement } as unknown as Record<string, unknown>) }),
+  });
+  if (res.status === 409) {
+    if (Object.keys(changement).length) await updateProgramme(id, changement);
+    return id;
+  }
+  await checkRest(res);
   changed();
   return id;
 }
 
 export async function updateProgramme(id: string, data: Partial<Omit<Programme, "id">>): Promise<void> {
   await patch(`programmes/${id}`, { ...data, updatedAt: new Date().toISOString() });
-  changed();
-}
-
-/** Supprime le programme et ses créneaux (Firestore ne supprime pas les sous-collections). */
-export async function deleteProgramme(id: string): Promise<void> {
-  for (const c of await listCreneaux(id)) await remove(`programmes/${id}/creneaux/${c.id}`);
-  await remove(`programmes/${id}`);
   changed();
 }
 
