@@ -75,35 +75,43 @@ export function TitreEvenement({ e, niveau = "h2", grand = false }: { e: Eveneme
   )
 }
 
-/** Date · horaire · lieu, chacun avec son icône (rien pour une info). */
-export function InfosEvenement({ e }: { e: Evenement }) {
+/** Date · horaire · lieu, chacun avec son icône (rien pour une info). `titrees` (la fiche en grand,
+ *  retouches v18, R2, D2) : chaque info sous son libellé Date · Heure · Lieu, en trois colonnes quand la
+ *  carte a la place (requête de conteneur `.infos-fiche`, globals.css), l'une sous l'autre sinon.
+ *  La valeur reste sous 600 (« la date n'est pas en gras », evenements.spec.ts). */
+export function InfosEvenement({ e, titrees = false }: { e: Evenement; titrees?: boolean }) {
   const { i18n, t } = useTranslation()
   if (isInfo(e)) return null
-  return (
-    <ul className="space-y-1.5 text-sm text-foreground">
-      <li className="flex items-start gap-2.5">
-        <CalendarDays className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
-        {/* Majuscule à l'écran seulement (« Dimanche 27 septembre ») : le texte reste celui du planning. */}
-        <span className="inline-block first-letter:uppercase">
-          {e.dateFin
-            ? t("evenements.du", { from: fdFullL(e.date, i18n.language), to: fdFullL(e.dateFin, i18n.language) })
-            : fdFullL(e.date, i18n.language)}
-        </span>
-      </li>
-      {e.heure && (
-        <li className="flex items-start gap-2.5">
-          <Clock className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
-          <span>{e.heure}{e.heureFin ? ` – ${e.heureFin}` : ""}</span>
+  const infos = [
+    {
+      Icone: CalendarDays, libelle: t("evenements.libelleDate"),
+      // Majuscule à l'écran seulement (« Dimanche 27 septembre ») : le texte reste celui du planning.
+      valeur: e.dateFin
+        ? t("evenements.du", { from: fdFullL(e.date, i18n.language), to: fdFullL(e.dateFin, i18n.language) })
+        : fdFullL(e.date, i18n.language),
+      classe: "inline-block first-letter:uppercase",
+    },
+    e.heure && { Icone: Clock, libelle: t("evenements.libelleHeure"), valeur: `${e.heure}${e.heureFin ? ` – ${e.heureFin}` : ""}`, classe: "" },
+    e.lieu && { Icone: MapPin, libelle: t("evenements.libelleLieu"), valeur: e.lieu, classe: "" },
+  ].filter((x) => !!x)
+  const liste = (
+    <ul className={`text-sm text-foreground ${titrees ? "infos-fiche-liste" : "space-y-1.5"}`}>
+      {infos.map(({ Icone, libelle, valeur, classe }) => (
+        <li key={libelle} className="flex min-w-0 items-start gap-2.5">
+          <Icone className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+          {titrees ? (
+            <span className="min-w-0">
+              <span className="block text-xs text-muted-foreground">{libelle}</span>
+              <span className={`${classe || "block"} font-medium break-words`}>{valeur}</span>
+            </span>
+          ) : (
+            <span className={classe}>{valeur}</span>
+          )}
         </li>
-      )}
-      {e.lieu && (
-        <li className="flex items-start gap-2.5">
-          <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
-          <span>{e.lieu}</span>
-        </li>
-      )}
+      ))}
     </ul>
   )
+  return titrees ? <div className="infos-fiche">{liste}</div> : liste
 }
 
 /** Haut de la maquette, commun à la carte et à la fiche : bannière (image ou

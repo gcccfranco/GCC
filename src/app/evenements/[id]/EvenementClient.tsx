@@ -20,6 +20,9 @@
 // Agencement v18 (B3, B4, docs/spec-agencement-v18.md) : au Back-Office, la fiche de gestion d'un
 // évènement (`FicheGestion`) et celle d'une réunion sont dans le volet de droite en grand (titre en h2,
 // sous l'en-tête de l'entrée), en page sinon (en-tête commun, « ‹ Évènements » / « ‹ Réunions »).
+// Retouches v18 (docs/spec-retouches-v18.md, R1, D1) : « Partager » sur la fiche de l'App, à droite du
+// titre en grand, dans la barre de la fiche sinon ; pas au Back-Office (la planche ne l'y montre pas).
+// R2 (D2) : en grand, Date · Heure · Lieu titrées, en trois colonnes quand la carte a la place.
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
@@ -27,8 +30,8 @@ import { useParams, usePathname, useRouter } from "next/navigation"
 import { baseBackOffice } from "@/lib/navigation"
 import { useTranslation } from "react-i18next"
 import { useConfirmer } from "@/components/layout/Confirmer"
-import { Button } from "@/components/ui/button"
-import { ArrowRight } from "lucide-react"
+import { Button, buttonVariants } from "@/components/ui/button"
+import { ArrowRight, Check, Share2 } from "lucide-react"
 import { Retour } from "@/components/layout/EnTetePage"
 import { useAuth } from "@/lib/firebase/auth"
 import { useProfile } from "@/lib/firebase/users"
@@ -64,6 +67,40 @@ function Linkified({ text }: { text: string }) {
           : <span key={i}>{part}</span>,
       )}
     </p>
+  )
+}
+
+/** « Partager » (R1, D1) : au doigt, la feuille de partage du système quand elle existe ; à la souris
+ *  (ou sans feuille), le lien copié et « Lien copié » à la place du libellé. `compact` : rond sous
+ *  640 px, le libellé pour les lecteurs d'écran (la barre de la fiche y garde « Gérer » à côté). */
+function Partager({ e, className, compact = false }: { e: Evenement; className: string; compact?: boolean }) {
+  const { t } = useTranslation()
+  const [copie, setCopie] = useState(false)
+  useEffect(() => {
+    if (!copie) return
+    const minuteur = window.setTimeout(() => setCopie(false), 2500)
+    return () => window.clearTimeout(minuteur)
+  }, [copie])
+
+  async function partager() {
+    const url = `${window.location.origin}/evenements/${e.id}`
+    if (navigator.share && window.matchMedia("(pointer: coarse)").matches) {
+      try { await navigator.share({ title: e.titre, url }) } catch { /* partage annulé */ }
+      return
+    }
+    try {
+      await navigator.clipboard.writeText(url)
+      setCopie(true)
+    } catch { /* presse-papiers indisponible */ }
+  }
+
+  return (
+    <button type="button" onClick={partager} aria-label={t("evenements.partager")} className={className}>
+      {copie ? <Check className="h-4 w-4" aria-hidden /> : <Share2 className="h-4 w-4" aria-hidden />}
+      <span role="status" className={copie || !compact ? "" : "max-sm:sr-only"}>
+        {copie ? t("evenements.lienCopie") : t("evenements.partager")}
+      </span>
+    </button>
   )
 }
 
@@ -247,6 +284,7 @@ export function EvenementClient({ espace = "app", id: idDonne }: { espace?: "app
               </Link>
             </Button>
           )}
+          <Partager e={e} className={buttonVariants({ variant: "outline", size: "sm", className: "shrink-0" })} />
         </div>
         <div className="fiche-colonnes">
           <div>
@@ -257,7 +295,7 @@ export function EvenementClient({ espace = "app", id: idDonne }: { espace?: "app
           </div>
           <div>
             <div data-testid="fiche-carte" className="raised order-2 space-y-4 rounded-2xl p-4">
-              <InfosEvenement e={e} />
+              <InfosEvenement e={e} titrees />
               <PlusInfos e={e} />
               {inscriptions}
             </div>
@@ -277,12 +315,15 @@ export function EvenementClient({ espace = "app", id: idDonne }: { espace?: "app
         <div data-testid="barre-fiche" className="flex min-h-10 items-center justify-between gap-3">
           {/* Le seul retour du site (R8, tranche Z). */}
           <Retour href={liste}>{t("evenements.title")}</Retour>
-          {gestionnaire && estResponsable(user, profile) && (
-            <Link href={`${baseBackOffice(e.pour)}/${e.id}`} className="raised inline-flex h-10 shrink-0 items-center gap-1.5 rounded-full px-4 text-sm font-semibold text-foreground transition-transform duration-150 active:scale-[.97]">
-              <ArrowRight className="h-4 w-4" aria-hidden />
-              {t("backOffice.gerer")}
-            </Link>
-          )}
+          <div className="flex min-w-0 items-center gap-2">
+            {gestionnaire && estResponsable(user, profile) && (
+              <Link href={`${baseBackOffice(e.pour)}/${e.id}`} className="raised inline-flex h-10 shrink-0 items-center gap-1.5 rounded-full px-4 text-sm font-semibold text-foreground transition-transform duration-150 active:scale-[.97]">
+                <ArrowRight className="h-4 w-4" aria-hidden />
+                {t("backOffice.gerer")}
+              </Link>
+            )}
+            <Partager e={e} compact className="raised inline-flex h-10 min-w-10 shrink-0 items-center justify-center gap-1.5 rounded-full px-3 text-sm font-semibold text-foreground transition-transform duration-150 active:scale-[.97] sm:px-4" />
+          </div>
         </div>
         {gestionnaire && (
           <div data-testid="gestion-carte" className="space-y-4 rounded-2xl bg-card p-4">

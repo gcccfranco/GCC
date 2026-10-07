@@ -104,3 +104,16 @@ dans Notifier (D21) ; toute écriture dans le Google Sheet.
 ## Avancement
 
 Rien de codé (spec écrite le 08/10/2026, en attente du go).
+
+### V18RA (lot R, voie A) — 08/10/2026
+
+- **R1-R2 codées** (fiche d'un évènement de l'App) :
+  - **R1** : « Partager » / 分享. En grand, à droite du titre, à côté de « Gérer dans le Back-Office ». Sur téléphone et tablette debout, dans la barre de la fiche : rond sous 640 px, avec son libellé au-delà. Au doigt (`pointer: coarse`), la feuille de partage du système quand elle existe. À la souris, ou sans feuille de partage, le lien est copié et le bouton affiche « Lien copié » / 链接已复制 pendant 2,5 s (`role="status"`). Pas de bouton sur la fiche de gestion du Back-Office : la planche `v18-bo-evenement-fiche-b` ne l'y montre pas.
+  - **R2** : en grand, Date · Heure · Lieu, chacune sous son libellé. Elles passent en trois colonnes dès que la carte des infos fait au moins 440 px (requête de conteneur `.infos-fiche`, `globals.css`). Sinon elles restent l'une sous l'autre. Sur téléphone et tablette debout, la carte ne change pas. La valeur est en graisse moyenne : la règle « la date n'est pas en gras » d'`evenements.spec.ts` est gardée.
+- **Choix faits faute de réponse dans la spec** :
+  - **Le seuil n'est pas celui du texte de R2.** R2 demande trois colonnes « dès que le volet dépasse 760 px ». Au-delà de 760 px, pourtant, la fiche est sur deux colonnes (A10, R15) et les infos sont dans la colonne de 300 px. La planche `-reduite` les y montre l'une sous l'autre. Les trois colonnes de la planche `v18-app-evenements` sont dessinées sur un volet de 728 px. D2 les demande sur ordinateur et sur iPad couché, dont les volets font moins de 760 px. J'ai donc suivi D2 et les planches : trois colonnes quand la carte a la place, donc quand la fiche est sur une colonne.
+  - **Feuille de partage au doigt seulement**, pour respecter D1 (« Lien copié » sur ordinateur). Safari et Chrome sur Mac ont aussi `navigator.share`.
+  - **Fichier de test `tests/retouches-v18-ra.spec.ts`** et non `retouches-v18.spec.ts`, pour ne pas entrer en conflit avec les autres voies du lot R. Il est ajouté à `SPECS_GRAND_ECRAN` par le motif `retouches-v18(-[a-z]+)?`.
+- **Tests** : `tests/retouches-v18-ra.spec.ts`, sur les cinq projets, vus rouges puis verts (26 réussis, 19 sautés selon l'appareil). Les specs voisines (`agencement-v18-t7`, `pages-en-grand-evenements`, `evenements`, `evenements-2027`, `taches-evenements`, `reunions`) sont vertes sur ordinateur.
+- **Reste à la voie A** : R3 et R7 (et R9 si elle revient à cette voie).
+- **À faire par Timothée** : relire le 中文 : 分享, 链接已复制, 日期 · 时间 · 地点. Aucune règle Firestore n'est touchée.
