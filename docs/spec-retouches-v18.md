@@ -103,4 +103,23 @@ dans Notifier (D21) ; toute écriture dans le Google Sheet.
 
 ## Avancement
 
-Rien de codé (spec écrite le 08/10/2026, en attente du go).
+Go de code le 08/10/2026.
+
+### V18POLE
+
+- **08/10/2026 — tranche E1-E2 codée** (branche `lot/v18r-pole`, commit de la tranche) :
+  - `Evenement.reunion?: boolean` (`src/types/evenement.ts`, lu par `fromFsEvenement`) ; « + Nouvelle réunion »
+    écrit `true`, « Nouvel évènement » écrit `false` quel que soit le public, duplication comprise
+    (`NouveauClient.tsx`) ; le formulaire montre les inscriptions d'un évènement de pôle.
+  - `estReunion(e)` prend l'évènement : public de pôle ou d'équipe **et** `reunion !== false` (absent = réunion,
+    comme avant). Le public seul passe par `publicDeReunion(pour)` (choix des publics de « Nouvelle réunion »,
+    boutons de création des listes et du calendrier, inchangés). Appelants suivis : cartes, fiche, listes et
+    widget du BO, `baseBackOffice(e)`, modification, création, cron (veille, déplacements), ouverture des
+    inscriptions, tableau de bord, calendrier, « Réunions précédentes » (`listReunionsDu` écarte les évènements
+    de pôle).
+  - Tests : `tests/evenements-pole.spec.ts` (vus rouges puis verts, trois appareils) ; `reunions.spec.ts` et
+    `taches.spec.ts` créent désormais leurs réunions par « + Nouvelle réunion ».
+  - Règles : aucune liste de champs dans `firestore.rules` pour `evenements` : `reunion` s'écrit sans
+    changement, rien à publier pour cette tranche.
+  - Reste au lot E : E3 (inscriptions de bout en bout, `/api/evenements/inscription`), E4 (coordination et badge
+    du pôle), E5 (notification aux seuls membres), E6 (vérification des droits).

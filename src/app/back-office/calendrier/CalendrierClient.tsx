@@ -28,7 +28,7 @@ import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { useSearchParams } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import { Check, ChevronLeft, ChevronRight, CloudOff, SlidersHorizontal, UserRound } from "lucide-react";
-import { creatableEvenementPours, estReunion, isAdminUser, polesDe } from "@/lib/access";
+import { creatableEvenementPours, isAdminUser, polesDe, publicDeReunion } from "@/lib/access";
 import type { TacheValues } from "@/lib/firebase/taches";
 import { useProfile } from "@/lib/firebase/users";
 import { chargerCalendrier, chargerPeriode, enOrdre, type LectureCalendrier } from "@/lib/calendrier/charger";
@@ -221,8 +221,8 @@ export function CalendrierClient() {
   const pours = creatableEvenementPours(user, profile, ANNONCE_SECTIONS);
   const mesPoles: TachePole[] = !user ? [] : isAdminUser(user) ? [...TACHE_POLES] : polesDe(profile);
   const droits: DroitsCreation = {
-    evenement: pours.some((p) => !estReunion(p)),
-    reunion: pours.some(estReunion),
+    evenement: pours.some((p) => !publicDeReunion(p)),
+    reunion: pours.some(publicDeReunion),
     tache: mesPoles.length > 0,
   };
   const peutCreer = droits.evenement || droits.reunion || droits.tache;

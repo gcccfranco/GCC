@@ -149,9 +149,17 @@ export function equipeDuPour(pour: string): string | null {
   return m ? m[1] : null;
 }
 
-/** Réunion = de pôle ou d'équipe : sans inscriptions, avec sujets et compte rendu. */
-export function estReunion(pour: string): boolean {
+/** Public qui peut être celui d'une réunion : un pôle ou une équipe. */
+export function publicDeReunion(pour: string): boolean {
   return poleDuPour(pour) !== null || equipeDuPour(pour) !== null;
+}
+
+/** Réunion : sans inscriptions, avec sujets et compte rendu. Son public est un pôle ou une
+ *  équipe, et son champ `reunion` n'est pas `false` (retouches v18, lot E1) : absent, comme
+ *  avant le lot E, tout évènement de pôle ou d'équipe est une réunion ; « Nouvel évènement »
+ *  écrit `false`, « + Nouvelle réunion » `true`. */
+export function estReunion(e: { pour: string; reunion?: boolean | null }): boolean {
+  return publicDeReunion(e.pour) && e.reunion !== false;
 }
 
 /** Membre d'une équipe de l'organigramme, d'après son profil (`dansEquipes`). */

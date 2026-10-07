@@ -349,7 +349,7 @@ function evenements(d: DonneesCalendrier, c: ContexteCalendrier, debut: string, 
   const out: EntreeCalendrier[] = [];
   for (const e of d.evenements) {
     if (!ISO.test(e.date)) continue; // une info sans date n'est pas au calendrier ; une date mal formée non plus
-    const reunion = estReunion(e.pour);
+    const reunion = estReunion(e);
     const equipe = equipeDuPour(e.pour);
     const visible = canSeeEvenement(c.user, c.profile, e) || (equipe !== null && mesEquipes.includes(equipe));
     if (!visible) continue;

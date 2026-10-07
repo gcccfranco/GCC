@@ -116,7 +116,7 @@ export async function chargerPeriode(
         : await listFois(tache).catch(() => { echecs.push("taches"); return []; }),
     }))),
     Promise.all((seulementMoi ? base.evenements : [])
-      .filter((e) => !estReunion(e.pour) && !e.lienExterne && touche(e, debut, fin))
+      .filter((e) => !estReunion(e) && !e.lienExterne && touche(e, debut, fin))
       .map((e) => getInscription(e.id, uid)
         .then((i) => (i ? e.id : null))
         .catch(() => { echecs.push("evenements"); return null; }))),

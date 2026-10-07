@@ -76,15 +76,16 @@ export function EvenementForm({ initial, pours, creation, inscrits = 0, titreCac
   const { t } = useTranslation()
   const [v, setV] = useState<EvenementValues>(() => {
     const pour = pours.includes(initial.pour) ? initial.pour : (pours[0] as EvenementValues["pour"])
-    return { ...initial, pour, ...(estReunion(pour) && initial.type === "info" ? { type: TYPE_REUNION } : {}) }
+    return { ...initial, pour, ...(estReunion({ ...initial, pour }) && initial.type === "info" ? { type: TYPE_REUNION } : {}) }
   })
   const [prevenir, setPrevenir] = useState(initial.type !== "eglise")
   const [error, setError] = useState("")
   const [busy, setBusy] = useState(false)
   const [compressing, setCompressing] = useState(false)
   const info = v.type === "info"
-  // Réunion de pôle (lot 7) ou d'équipe (lot U6, R4) : pas d'inscriptions.
-  const reunion = estReunion(v.pour)
+  // Réunion de pôle (lot 7) ou d'équipe (lot U6, R4) : pas d'inscriptions. Un évènement de pôle
+  // (`reunion: false`, « Nouvel évènement », lot E) en a, comme un évènement de l'assemblée.
+  const reunion = estReunion(v)
   const sansInscription = { inscriptions: "fermees" as const, inscriptionDebut: "", inscriptionFin: "", sansCompte: false, placesMax: null, lienExterne: "" }
   const mode = modeInscriptions(v)
   // Lien externe (lot 11) : l'inscription se passe ailleurs, le reste du bloc
@@ -186,7 +187,7 @@ export function EvenementForm({ initial, pours, creation, inscrits = 0, titreCac
             <select id="ev-pour" className={field} value={v.pour}
               onChange={(e) => set({
                 pour: e.target.value as EvenementValues["pour"],
-                ...(estReunion(e.target.value) ? { ...sansInscription, ...(info ? { type: TYPE_REUNION } : {}) } : {}),
+                ...(estReunion({ ...v, pour: e.target.value }) ? { ...sansInscription, ...(info ? { type: TYPE_REUNION } : {}) } : {}),
               })}>
               {pours.map((p) => {
                 const pole = poleDuPour(p)

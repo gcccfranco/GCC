@@ -451,9 +451,10 @@ const question = (page: Page) => page.getByRole("alertdialog", { name: "Reprendr
 const precedentes = (page: Page) => page.getByRole("region", { name: "Réunions précédentes" });
 const sansPush = (page: Page) => page.route("**/api/push/notify-evenement", (route) => route.fulfill({ json: { ok: true } }));
 
-/** Nouvelle réunion du pôle DA par « Créer » (le seul public d'Alice). */
+/** Nouvelle réunion du pôle DA par « Créer » (le seul public d'Alice). Retouches v18, lot E :
+ *  « Nouvel évènement » crée un évènement de pôle ; une réunion se crée par « + Nouvelle réunion ». */
 async function creerReunion(page: Page, date: string) {
-  await page.goto("/back-office/evenements/nouveau");
+  await page.goto("/back-office/reunions/nouvelle");
   await page.getByLabel("Nom de l'évènement").fill("Réunion DA");
   await expect(page.getByLabel("Public")).toHaveValue("pole:da");
   await page.getByLabel("Date", { exact: true }).fill(date);
@@ -818,9 +819,9 @@ test("équipe d'une réunion : « equipe:<id> » ; une réunion = un pôle ou un
   expect(equipeDuPour("equipe:")).toBeNull();
   expect(equipeDuPour("pole:da")).toBeNull();
   expect(equipeDuPour("Culte Francophone")).toBeNull();
-  expect(estReunion("equipe:regie")).toBe(true);
-  expect(estReunion("pole:da")).toBe(true);
-  expect(estReunion("eglise")).toBe(false);
+  expect(estReunion({ pour: "equipe:regie" })).toBe(true);
+  expect(estReunion({ pour: "pole:da" })).toBe(true);
+  expect(estReunion({ pour: "eglise" })).toBe(false);
 });
 
 test("rattachement : pôles, équipes et équipes dont on est référent, dans l'ordre de l'organigramme", () => {
@@ -932,7 +933,7 @@ test("règles : réunions de pôle et d'équipe créées par leurs seuls ayants 
 
 test("le cron : la veille d'une réunion d'équipe va à ses membres, comme celle d'une réunion de pôle", () => {
   const route = lire("src/app/api/cron/reminders/route.ts");
-  expect(route).toMatch(/if \(estReunion\(e\.pour\)\) \{[\s\S]*?destinatairesEvenement\(db, e\)/);
+  expect(route).toMatch(/if \(estReunion\(e\)\) \{[\s\S]*?destinatairesEvenement\(db, e\)/);
 });
 
 /** La veille de la réunion de la Régie, 18:00, sur sa fiche. */
@@ -945,7 +946,7 @@ async function ouvrirRegie(page: Page, qui: FakeProfile, vers = "/evenements/reu
 }
 
 test("référente : elle crée la réunion de son équipe, sans inscriptions, et y retrouve les sujets", async ({ page }) => {
-  const db = await ouvrirRegie(page, ROSE, "/back-office/evenements/nouveau");
+  const db = await ouvrirRegie(page, ROSE, "/back-office/reunions/nouvelle");
   await sansPush(page);
   await expect(page.getByLabel("Public")).toHaveValue("equipe:regie");
   await expect(page.getByLabel("Public").locator("option")).toHaveText(["TEAM RÉGIE"]);

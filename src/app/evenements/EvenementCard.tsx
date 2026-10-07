@@ -136,7 +136,7 @@ export function PlusInfos({ e }: { e: Evenement }) {
 function PiedCarte({ e, inscrit }: { e: Evenement; inscrit: boolean }) {
   const { t } = useTranslation()
   const raison = useRaisonInscription()
-  if (isInfo(e) || estReunion(e.pour)) return null
+  if (isInfo(e) || estReunion(e)) return null
   const places = placesRestantes(e)
   const refus = refusInscription(e, 0, nowIsoParis())
   // Lot 11 : inscription sur un formulaire externe — la pilule, et rien d'autre.
@@ -192,7 +192,7 @@ export function EvenementCard({ evenement: e, past, href, actif = false, inscrit
 }) {
   const { i18n, t } = useTranslation()
   let badge: React.ReactNode = null
-  if (inscrit !== undefined && !past && !isInfo(e) && !estReunion(e.pour)) {
+  if (inscrit !== undefined && !past && !isInfo(e) && !estReunion(e)) {
     const refus = refusInscription(e, 0, nowIsoParis())
     if (inscrit) {
       badge = (

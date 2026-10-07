@@ -13,7 +13,7 @@ import { usePathname } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import type { User } from "firebase/auth";
 import { useProfile } from "@/lib/firebase/users";
-import { canEditEvenement, creatableEvenementPours, estDeLaReunion, estReunion } from "@/lib/access";
+import { canEditEvenement, creatableEvenementPours, estDeLaReunion, estReunion, publicDeReunion } from "@/lib/access";
 import { EVENEMENTS_CHANGED, listEvenements } from "@/lib/firebase/evenements";
 import { baseBackOffice } from "@/lib/navigation";
 import { byDate, groupByMonth, isInfo, isPast } from "@/lib/evenements/agenda";
@@ -29,9 +29,11 @@ import { AnnonceBascule } from "@/components/evenements/AnnonceBascule";
 import { DeuxVolets } from "@/components/layout/DeuxVolets";
 import { cn } from "@/lib/utils";
 
-/** Qui peut créer dans l'entrée : un évènement (Évènements) ou une réunion (Réunions). */
+/** Qui peut créer dans l'entrée : un évènement (Évènements, un public hors pôle et équipe) ou une
+ *  réunion (Réunions, un pôle ou une équipe). Le formulaire « Nouvel évènement » propose aussi les
+ *  pôles et équipes (lot E) : le bouton, lui, garde sa règle. */
 export function peutCreerDans(user: User | null, profile: UserProfile | null, reunions: boolean): boolean {
-  return creatableEvenementPours(user, profile, ANNONCE_SECTIONS).some((p) => estReunion(p) === reunions);
+  return creatableEvenementPours(user, profile, ANNONCE_SECTIONS).some((p) => publicDeReunion(p) === reunions);
 }
 
 type Gestion = { chargement: boolean; aVenir: Evenement[]; passes: Evenement[] };
@@ -62,7 +64,7 @@ function useGestion(reunions: boolean): Gestion {
 
   return useMemo(() => {
     const miens = (evenements ?? []).filter((e) =>
-      reunions ? estReunion(e.pour) && estDeLaReunion(user, profile, e) : !estReunion(e.pour) && canEditEvenement(user, profile, e));
+      reunions ? estReunion(e) && estDeLaReunion(user, profile, e) : !estReunion(e) && canEditEvenement(user, profile, e));
     const today = todayIso();
     return {
       chargement: loading || evenements === null,
@@ -125,7 +127,7 @@ function ListeGestion({ reunions, gestion, idActif }: { reunions: boolean; gesti
   if (chargement) return <p className={cn(cadre, "text-sm text-muted-foreground")}>{t("common.loading")}</p>;
 
   const ligne = (e: Evenement, passe = false) => (
-    <EvenementCard key={e.id} evenement={e} past={passe} actif={e.id === idActif} href={`${baseBackOffice(e.pour)}/${e.id}`} />
+    <EvenementCard key={e.id} evenement={e} past={passe} actif={e.id === idActif} href={`${baseBackOffice(e)}/${e.id}`} />
   );
   const titre = (texte: string) => <h2 className="px-1 text-sm font-semibold text-muted-foreground first-letter:uppercase">{texte}</h2>;
 
