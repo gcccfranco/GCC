@@ -47,7 +47,8 @@ function CarteService({ titre, couleur, roles, colonnes, monNom, testId, vide: m
   titre: string
   couleur: string
   roles: [string, string][]
-  colonnes: 1 | 2
+  /** « large » : deux colonnes, trois quand « Ce dimanche » dépasse 720 px (requête de conteneur, en grand). */
+  colonnes: 1 | 2 | "large"
   monNom: string
   testId?: string
   vide?: string
@@ -60,7 +61,7 @@ function CarteService({ titre, couleur, roles, colonnes, monNom, testId, vide: m
         <span className="svc-ink text-base font-bold" style={svc(couleur)}>{titre}</span>
       </h3>
       {remplis.length ? (
-        <dl className={colonnes === 2 ? "grid grid-cols-2 gap-x-6" : ""}>
+        <dl className={colonnes === "large" ? "grid grid-cols-2 gap-x-6 [@container(min-width:720px)]:grid-cols-3" : colonnes === 2 ? "grid grid-cols-2 gap-x-6" : ""}>
           {remplis.map(([label, valeur]) => (
             <div key={label} className="flex min-w-0 gap-2.5 border-t border-border/70 py-1.5 text-sm">
               <dt className="w-24 shrink-0 text-muted-foreground">{label}</dt>
@@ -106,7 +107,7 @@ export function CeDimanche({
   evenements: Evenement[] | null
 }) {
   const { t, i18n } = useTranslation()
-  const colonnes = disposition === "telephone" ? 1 : 2
+  const colonnes = disposition === "telephone" ? 1 : disposition === "grand" ? "large" : 2
   const r = (cle: string) => t(`planning.roles.${cle}`)
   const locale = i18n.language === "zh-CN" ? "zh-CN" : "fr-FR"
 
@@ -138,7 +139,7 @@ export function CeDimanche({
       testId="carte-inter"
       titre={t(`planning.tabs.${inter.key}`)}
       couleur={PLANNING_COLORS[inter.key]}
-      colonnes={colonnes}
+      colonnes={colonnes === "large" ? 2 : colonnes}
       monNom={monNom}
       roles={[
         [r("presidence"), inter.pres],
@@ -191,17 +192,39 @@ export function CeDimanche({
   )
 
   const libre = vide(petitDej) && inscriptionPetitDej
+  // Agencement v18 (A1) : barre réduite, la Table rejoint Groupes et EDD sur une rangée ; à un
+  // tiers de largeur, chaque ligne passe sur deux étages (le libellé au-dessus). Requête de
+  // conteneur sur « Ce dimanche » (R15), en grand seulement : la tablette garde sa disposition.
+  const etages = disposition === "grand" && !inter
+  const ligneTable = etages
+    ? "flex min-h-10 flex-wrap items-center gap-2.5 py-1 text-sm [@container(min-width:720px)]:gap-x-2 [@container(min-width:720px)]:gap-y-0.5 [@container(min-width:720px)]:py-2"
+    : "flex min-h-10 items-center gap-2.5 py-1 text-sm"
+  const pointTable = etages ? "[@container(min-width:720px)]:hidden" : ""
+  const libelleTable = etages
+    ? "w-28 shrink-0 font-semibold [@container(min-width:720px)]:w-full [@container(min-width:720px)]:text-[13px] [@container(min-width:720px)]:text-muted-foreground"
+    : "w-28 shrink-0 font-semibold"
   const carteTable = (
-    <article className="raised rounded-2xl px-4 py-2">
-      <div className="flex min-h-10 items-center gap-2.5 py-1 text-sm">
-        <Point couleur={PLANNING_COLORS.table} />
-        <b className="w-28 shrink-0 font-semibold">{t("planning.tabs.table")}</b>
+    <article
+      data-testid="carte-table"
+      className={etages
+        ? "raised col-span-2 rounded-2xl px-4 py-2 [@container(min-width:720px)]:col-span-1 [@container(min-width:720px)]:py-3"
+        : "raised rounded-2xl px-4 py-2"}
+    >
+      {/* Sur deux étages, un en-tête comme Groupes et EDD (planche : `table_empilee`). */}
+      {etages && (
+        <h3 className="svc-ink mb-1 hidden text-[13px] font-semibold [@container(min-width:720px)]:block" style={svc(PLANNING_COLORS.table)}>
+          {t("planning.accueil.carteTable")}
+        </h3>
+      )}
+      <div className={etages ? `${ligneTable} [@container(min-width:720px)]:border-t [@container(min-width:720px)]:border-border/70` : ligneTable}>
+        <Point couleur={PLANNING_COLORS.table} className={pointTable} />
+        <b className={libelleTable}>{t("planning.tabs.table")}</b>
         <span className="min-w-0">{vide(table) ? "—" : <Noms valeur={table} monNom={monNom} />}</span>
       </div>
       {(!vide(petitDej) || libre) && (
-        <div className="flex min-h-10 items-center gap-2.5 border-t border-border/70 py-1 text-sm">
-          <Point couleur={PLANNING_COLORS.table} />
-          <b className="w-28 shrink-0 font-semibold">{t("planning.tabs.petitDej")}</b>
+        <div className={`${ligneTable} border-t border-border/70`}>
+          <Point couleur={PLANNING_COLORS.table} className={pointTable} />
+          <b className={libelleTable}>{t("planning.tabs.petitDej")}</b>
           {libre ? (
             <>
               <span className="font-semibold text-amber-700 dark:text-amber-400">{t("planning.accueil.libre")}</span>
@@ -249,12 +272,19 @@ export function CeDimanche({
   ) : null
 
   return (
-    <section aria-labelledby="ce-dimanche" className="min-w-0">
+    <section aria-labelledby="ce-dimanche" className={disposition === "grand" ? "min-w-0 [container-type:inline-size]" : "min-w-0"}>
       <h2 id="ce-dimanche" className="mb-3 text-[17px] font-bold">{titre}</h2>
       <div className="flex flex-col gap-3.5">
         {carteCulte}
         {disposition === "telephone" ? (
           <>{carteGroupes}{carteEdd}{carteTable}{carteEvenements}</>
+        ) : etages ? (
+          <>
+            <div className="grid grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] gap-3.5 [@container(min-width:720px)]:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_minmax(0,1fr)]">
+              {carteGroupes}{carteEdd}{carteTable}
+            </div>
+            {carteEvenements}
+          </>
         ) : (
           <>
             <div className={inter ? "flex flex-col gap-3.5" : "grid grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] gap-3.5"}>

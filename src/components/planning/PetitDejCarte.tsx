@@ -8,17 +8,25 @@
 // d'autres (T10). Rien ne bouge un dimanche passé (Q2). Une lecture en échec
 // n'est pas « personne » : la carte le dit, sans « Libre » ni bouton (Q10).
 // Droits : canEditPetitDej / canGererPetitDej (access.ts), firestore.rules.
+// Agencement v18 (A4, docs/spec-agencement-v18.md) : une ligne qu'on peut toucher (la sienne,
+// en encre ; toutes pour qui gère) porte un « ⋯ » (Modifier, Retirer) au lieu de deux boutons ;
+// « Ton petit déj » (`TonPetitDej`) reprend son prochain dimanche à côté de la carte. Les deux
+// cartes partagent un même état (`usePetitDej`) : « ⋯ › Modifier » ouvre le champ dans la rangée.
 
 import { useEffect, useId, useRef, useState, type ReactNode } from "react"
 import { useTranslation } from "react-i18next"
 import { useConfirmer } from "@/components/layout/Confirmer"
-import { Coffee, Pencil, Plus } from "lucide-react"
+import { Coffee, Pencil, Plus, Trash2 } from "lucide-react"
+import { MenuActions } from "@/components/layout/MenuActions"
+import { Tile } from "@/components/ui/tile"
 import { canEditPetitDej, canGererPetitDej } from "@/lib/access"
 import { RefusDesRegles, ajouterLigne, inscrire, renommerLigne, retirerLigne } from "@/lib/firebase/petitDej"
 import { historyAuthor } from "@/lib/firebase/setlistHistory"
 import { useProfile } from "@/lib/firebase/users"
 import { lirePetitDej } from "@/lib/petitdej/lignes"
 import { dimanchesDe } from "@/lib/planning/grilles"
+import { joursAvant } from "@/lib/planning/accueil"
+import { todayIso } from "@/lib/scene/dimanches"
 import { currentSundayStr, getTri } from "@/lib/planning/utils"
 import { serviceButtonFill } from "@/lib/serviceButton"
 import { PLANNING_COLORS } from "@/lib/serviceColors"
@@ -40,20 +48,12 @@ export function dateCourte(iso: string, lang: string): string {
  *  `inscription` : son propre nom, quand le profil n'en donne aucun. */
 type Saisie = { dimanche: string; id: string | null; valeur: string; inscription?: boolean }
 
-export function PetitDejCarte({ annee, tri, nomsDesComptes, onLignes }: {
-  annee: number
-  /** « T1 » … « T4 », le trimestre choisi par la page. */
-  tri: string
-  /** Noms de planning des comptes, suggérés à qui pose une ligne pour quelqu'un. */
-  nomsDesComptes: readonly string[]
-  /** Les lignes lues, après chaque lecture : la case de la grille les suit. */
-  onLignes?: (lignes: LignePetitDej[]) => void
-}) {
-  const { t, i18n } = useTranslation()
+/** L'état partagé de la carte « Petit déj » et de « Ton petit déj » : les lignes lues, la saisie
+ *  en cours, les écritures. `onLignes` : les lignes lues, après chaque lecture (la grille les suit). */
+export function usePetitDej(onLignes?: (lignes: LignePetitDej[]) => void) {
+  const { t } = useTranslation()
   const confirmer = useConfirmer()
   const { user, profile } = useProfile()
-  const titreId = useId()
-  const listeId = useId()
   const [lignes, setLignes] = useState<LignePetitDej[] | "illisible" | null>(null)
   const [saisie, setSaisie] = useState<Saisie | null>(null)
   // Un message sous un dimanche : « X vient de s'inscrire. », ou un refus.
@@ -64,7 +64,6 @@ export function PetitDejCarte({ annee, tri, nomsDesComptes, onLignes }: {
 
   const sun = currentSundayStr()
   const peutGerer = canGererPetitDej(user, profile)
-  const dimanches = dimanchesDe(annee).filter((d) => getTri(d) === tri)
 
   function lire() {
     return lirePetitDej().then(
@@ -145,6 +144,35 @@ export function PetitDejCarte({ annee, tri, nomsDesComptes, onLignes }: {
     }
   }
 
+  return { user, profile, lignes, saisie, setSaisie, annonce, enCours, sun, peutGerer, sInscrire, retirer, commencer, terminer }
+}
+
+export type EtatPetitDej = ReturnType<typeof usePetitDej>
+
+/** Le « ⋯ » d'une ligne qu'on peut toucher : Modifier (le champ dans la rangée), Retirer (confirmé). */
+function actionsDeLaLigne(etat: EtatPetitDej, l: LignePetitDej, t: (cle: string) => string) {
+  return [
+    { label: t("planning.petitDej.modifier"), icone: Pencil, ouvreUnChamp: true, onSelect: () => etat.commencer({ dimanche: l.dimanche, id: l.id, valeur: l.nom }) },
+    { label: t("planning.petitDej.retirer"), icone: Trash2, destructif: true, onSelect: () => etat.retirer(l) },
+  ]
+}
+
+export function PetitDejCarte({ etat, annee, tri, nomsDesComptes }: {
+  etat: EtatPetitDej
+  annee: number
+  /** « T1 » … « T4 », le trimestre choisi par la page. */
+  tri: string
+  /** Noms de planning des comptes, suggérés à qui pose une ligne pour quelqu'un. */
+  nomsDesComptes: readonly string[]
+}) {
+  const { t, i18n } = useTranslation()
+  const { user, profile, lignes, saisie, setSaisie, annonce, enCours, sun, peutGerer, sInscrire, commencer, terminer } = etat
+  const titreId = useId()
+  const listeId = useId()
+  const dimanches = dimanchesDe(annee).filter((d) => getTri(d) === tri)
+  // « n libres sur N » : les dimanches à venir du trimestre sans aucune ligne.
+  const libres = Array.isArray(lignes) ? dimanches.filter((d) => d >= sun && !lignes.some((l) => l.dimanche === d)).length : null
+
   // Fonction, pas composant : un composant défini ici serait remonté à chaque
   // frappe et le champ perdrait le focus (même raison que PlanningGrille).
   const champ = (label: string, suggestions: boolean) => (
@@ -174,23 +202,12 @@ export function PetitDejCarte({ annee, tri, nomsDesComptes, onLignes }: {
     if (saisie?.id === l.id) return <div key={l.id} className="flex min-h-9 items-center">{champ(t("planning.petitDej.modifier"), false)}</div>
     return (
       <div key={l.id} className="flex min-h-9 items-center gap-2">
-        <span className="min-w-0 flex-1 break-words font-semibold text-foreground">{l.nom}</span>
-        {canEditPetitDej(user, profile, l, sun) && (
-          <>
-            <button
-              type="button"
-              aria-label={t("planning.petitDej.modifier")}
-              disabled={enCours}
-              onClick={() => commencer({ dimanche: l.dimanche, id: l.id, valeur: l.nom })}
-              className={`${boutonGris} grid w-9 place-items-center px-0`}
-            >
-              <Pencil className="h-4 w-4" aria-hidden />
-            </button>
-            <button type="button" disabled={enCours} onClick={() => retirer(l)} className={boutonGris}>
-              {t("planning.petitDej.retirer")}
-            </button>
-          </>
-        )}
+        <span className="min-w-0 flex-1 break-words font-semibold text-foreground">
+          {user && l.uid === user.uid
+            ? <b data-testid="moi" className="inline-block rounded-md bg-foreground px-1.5 py-px font-semibold text-background">{l.nom}</b>
+            : l.nom}
+        </span>
+        {canEditPetitDej(user, profile, l, sun) && <MenuActions actions={actionsDeLaLigne(etat, l, t)} />}
       </div>
     )
   }
@@ -244,29 +261,72 @@ export function PetitDejCarte({ annee, tri, nomsDesComptes, onLignes }: {
   }
 
   return (
-    <section aria-labelledby={titreId} className="rounded-xl bg-card px-4 pt-3 pb-3.5 shadow-soft lg:max-w-lg">
+    <section aria-labelledby={titreId} className="raised min-w-0 rounded-2xl px-4 pt-3 pb-2">
       <div className="flex items-center gap-2 pb-2">
         <span className="grid h-7 w-7 place-items-center rounded-lg" style={{ background: `${COULEUR}24`, color: FOND }} aria-hidden>
           <Coffee className="h-4 w-4" />
         </span>
         <h3 id={titreId} className="text-[17px] font-bold text-foreground">{t("planning.tabs.petitDej")}</h3>
-        <span className="ml-auto text-[13px] text-muted-foreground">{t("planning.petitDej.trimestre", { n: tri.slice(1) })}</span>
+        {libres !== null && (
+          <span className="ml-auto text-[13px] text-muted-foreground">{t("planning.petitDej.libresSur", { libres, total: dimanches.length })}</span>
+        )}
       </div>
       {lignes === "illisible" ? (
-        <p className="border-t border-border pt-3 text-sm text-muted-foreground">{t("planning.petitDej.illisible")}</p>
+        <p className="border-t border-border pt-3 pb-1.5 text-sm text-muted-foreground">{t("planning.petitDej.illisible")}</p>
       ) : lignes === null ? (
-        <p className="border-t border-border pt-3 text-sm text-muted-foreground">{t("common.loading")}</p>
+        <p className="border-t border-border pt-3 pb-1.5 text-sm text-muted-foreground">{t("common.loading")}</p>
       ) : (
-        <>
-          <ul>{dimanches.map(laRangee)}</ul>
-          <p className="mt-1 text-[13px] text-muted-foreground">{t("planning.petitDej.astuce")}</p>
-        </>
+        <ul>{dimanches.map(laRangee)}</ul>
       )}
       {peutGerer && (
         <datalist id={listeId}>
           {nomsDesComptes.map((n) => <option key={n} value={n} />)}
         </datalist>
       )}
+    </section>
+  )
+}
+
+const majuscule = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
+
+/** « Ton petit déj » (A4) : son prochain dimanche inscrit, avec le même « ⋯ » que sa rangée ;
+ *  sans inscription à venir, une phrase. L'astuce du nom (« Famille … ») est ici. */
+export function TonPetitDej({ etat }: { etat: EtatPetitDej }) {
+  const { t, i18n } = useTranslation()
+  const { user, profile, lignes, sun } = etat
+  const titreId = useId()
+  const prochaine = Array.isArray(lignes) && user
+    ? lignes.filter((l) => l.uid === user.uid && l.dimanche >= sun).sort((a, b) => (a.dimanche < b.dimanche ? -1 : 1))[0]
+    : undefined
+  const langue = i18n.language === "zh-CN" ? "zh-CN" : "fr-FR"
+
+  let corps: ReactNode
+  if (lignes === "illisible") corps = <p className="text-sm text-muted-foreground">{t("planning.petitDej.illisible")}</p>
+  else if (lignes === null) corps = <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
+  else if (!prochaine) corps = <p className="text-sm text-muted-foreground">{t("planning.petitDej.aucunAVenir")}</p>
+  else {
+    const jour = new Date(`${prochaine.dimanche}T12:00:00`)
+    const n = joursAvant(prochaine.dimanche, todayIso())
+    const quand = n === 0 ? t("planning.accueil.aujourdhui") : n === 1 ? t("planning.accueil.demain") : t("planning.accueil.dansJours", { count: n })
+    corps = (
+      <div className="flex items-center gap-3">
+        <Tile color={COULEUR} big={jour.getDate()} small={new Intl.DateTimeFormat(langue, { month: "short" }).format(jour)} size="lg" />
+        <div className="min-w-0 flex-1">
+          <p className="text-base font-bold text-foreground">
+            {majuscule(new Intl.DateTimeFormat(langue, { weekday: "long", day: "numeric", month: "long" }).format(jour))}
+          </p>
+          <p className="text-[13px] text-muted-foreground">{quand}</p>
+        </div>
+        {canEditPetitDej(user, profile, prochaine, sun) && <MenuActions actions={actionsDeLaLigne(etat, prochaine, t)} />}
+      </div>
+    )
+  }
+
+  return (
+    <section aria-labelledby={titreId} className="raised min-w-0 rounded-2xl px-4 pt-3 pb-3.5">
+      <h3 id={titreId} className="pb-2 text-[17px] font-bold text-foreground">{t("planning.petitDej.ton")}</h3>
+      {corps}
+      <p className="mt-3 border-t border-border pt-2.5 text-[13px] text-muted-foreground">{t("planning.petitDej.astuce")}</p>
     </section>
   )
 }

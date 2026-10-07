@@ -226,10 +226,10 @@ test.describe("B2 : Planning (plannings, Sans compte)", () => {
 
   test("dans l'App, l'onglet Table : la carte Petit déj et la carte compacte de la Table, sans grille", async ({ page }) => {
     await ouvrir(page, ADMIN, "/planning/table");
-    await expect(page.getByRole("region", { name: "Petit déj" })).toBeVisible();
+    await expect(page.getByRole("region", { name: "Petit déj", exact: true })).toBeVisible();
     const table = page.getByRole("region", { name: "Prépa. Table du Seigneur" });
     await expect(table).toContainText("Membre A., Membre B.");
-    await expect(table, "le prochain dimanche seulement").not.toContainText("Membre C.");
+    await expect(table, "les équipes du trimestre (agencement v18, A4), plus seulement le prochain dimanche").toContainText("Membre C., Membre D.");
     await expect(page.locator("[data-grille]")).toHaveCount(0);
     await expect(page.getByRole("button", { name: /Exporter/ })).toHaveCount(0);
   });

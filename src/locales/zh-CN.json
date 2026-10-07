@@ -1047,7 +1047,8 @@
       "dansJours_other": "{{count}} 天后",
       "evenements": "近期活动",
       "libre": "空闲",
-      "inscrire": "我来报名"
+      "inscrire": "我来报名",
+      "carteTable": "圣餐桌"
     },
     "dataPending": "数据待更新",
     "staleData": "无法获取在线安排——当前为本地数据，可能已过期。",
@@ -1105,7 +1106,9 @@
       "myDates": "我的日期",
       "noData": "暂无数据",
       "thisWeek": "本周",
-      "clear": "清除"
+      "clear": "清除",
+      "unDimancheParMois": "每月一个主日",
+      "dimancheSainteCene": "圣餐主日"
     },
     "grille": {
       "enregistre": "已保存",
@@ -1129,7 +1132,9 @@
       "periodeAnnee": "{{annee}} 年"
     },
     "petitDej": {
-      "trimestre": "第{{n}}季度",
+      "libresSur": "{{total}} 个主日中 {{libres}} 个空闲",
+      "ton": "你的早餐",
+      "aucunAVenir": "你还没有报名之后的早餐。",
       "libre": "空闲",
       "inscrire": "我来报名",
       "modifier": "修改",

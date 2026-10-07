@@ -1,9 +1,9 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { ADMIN_EMAIL, signInAs, type FakeProfile } from "./helpers/fakeSession";
-import { enTete, estGrandEcran, estTelephone, interdireDialoguesNatifs, verifierAgencement } from "./helpers/agencement";
+import { enTete, estGrandEcran, estTelephone, fenetreDuSite, interdireDialoguesNatifs, margeAttendue, ouvrirAvecBarre, repondreDansLeSite, verifierAgencement, zoneDeContenu } from "./helpers/agencement";
 import { PLANNING_COLORS } from "../src/lib/serviceColors";
 
-// Agencement v18, tranche T4a (docs/spec-agencement-v18.md, B6, B7, A2, A3) : l'en-tête et la
+// Agencement v18, tranches T4a et T4b (docs/spec-agencement-v18.md, B6, B7, A1 à A4) : l'en-tête et la
 // rangée de grille communes du Planning, la période unique (année et T1–T4 en rail), les groupes
 // au rail ; le Planning du Back-Office en piste A (deux rangées de commandes au lieu de cinq).
 // Cinq projets. Noms fictifs seulement.
@@ -200,6 +200,219 @@ test.describe("App Planning : le titre « Planning », le service en h2", () => 
   });
 });
 
+// ─── T4b : accueil (A1) ───────────────────────────────────────────────────────
+
+// Jeudi 1er octobre 2026 : « Ce dimanche » est le 4 octobre (T4). Noms fictifs.
+const ACCUEIL_CULTE = csv([
+  ["2026 DATE", "Présidence", "Choristes", "", "Pianiste", "Guitariste", "Batterie", "Sono + Live", "PPT", "Orateur", "Traducteur", "Sainte cène", "Notes"],
+  ["04/10", "Président A.", "Choriste B.", "Choriste C.", "Pianiste D.", "Guitariste N.", "Batteur F.", "Sono G.", "Projection H.", "Orateur I.", "Traducteur J.", "Servant K.", ""],
+  ["18/10", "Président J.", "Choriste K.", "Choriste L.", "Pianiste D.", "", "Batteur O.", "Sono P.", "Projection Q.", "Orateur R.", "", "", ""],
+]);
+const groupeCsv = (pres: string, musiciens: string) => csv([["DATE", "Présidence", "Musiciens", "Orateur"], ["04/10", pres, musiciens, "Orateur Z."]]);
+const ACCUEIL_EDD = csv([
+  ["DATE", "Présidence", "Suppléant", "Piano", "Cajon", "Guitare", "", "Classe"],
+  ["04/10", "Moniteur S.", "", "", "", "", "", "中班"],
+  ["04/10", "Moniteur T.", "", "", "", "", "", "大班"],
+  ["04/10", "Moniteur U.", "", "", "", "", "", "高班"],
+]);
+/** Franco_Table_PtD : la Prépa. Table à gauche (date en colonne 1, noms en 2 à 5). */
+const tableCsv = (lignes: [string, string][]) =>
+  csv(lignes.map(([d, n]) => Array.from({ length: 21 }, (_, i) => (i === 1 ? d : i === 2 ? n : ""))));
+const ACCUEIL_TABLE = tableCsv([["27/09", "Famille Z."], ["04/10", "Famille Test"], ["11/10", "Famille Y."], ["06/12", "Famille X."]]);
+const FEUILLES_ACCUEIL: Record<string, string> = {
+  Franco_Louange: ACCUEIL_CULTE,
+  Paix_T4: groupeCsv("Président P.", "Musicien Q."),
+  "Fidélité_T4": groupeCsv("Président R.", ""),
+  "Bonté_T4": groupeCsv("Président S.", "Musicien T."),
+  EDD: ACCUEIL_EDD,
+  Franco_Table_PtD: ACCUEIL_TABLE,
+};
+const MUSICIEN: FakeProfile = { uid: "uid-musicien", email: "musicien@example.com", firstName: "Pianiste", lastName: "D.", planningName: "Pianiste D.", serviceRoles: { "Culte Francophone": ["musicien"] } };
+const accueilItem = (songSlug: string, position: number) => ({
+  songSlug, position, keyOverride: null, showChords: true, showPinyin: true, useJianpu: false, structureOverride: null, sectionNotes: {}, notes: "",
+});
+const SETLIST_ACCUEIL = {
+  title: "Culte du 4 octobre", leader: "Président A.", category: "Culte Francophone", date: "2026-10-04",
+  language: "mixed", notes: "", ownerId: "uid-owner", isPrivate: false,
+  items: [accueilItem("hosanna", 1), accueilItem("abba-pere", 2)],
+};
+
+async function ouvrirAccueilOuTable(page: Page, vers: string, docs: Record<string, Record<string, unknown>> = {}) {
+  interdireDialoguesNatifs(page);
+  await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
+  await page.route(/docs\.google\.com\/spreadsheets/, (route) => {
+    const feuille = new URL(route.request().url()).searchParams.get("sheet") ?? "";
+    return route.fulfill({ status: 200, contentType: "text/csv", body: FEUILLES_ACCUEIL[feuille] ?? "" });
+  });
+  return signInAs(page, MUSICIEN, { "setlists/sl-1": SETLIST_ACCUEIL, ...docs }, vers);
+}
+
+const ceDimanche = (page: Page) => page.getByRole("region", { name: /Ce dimanche/ });
+const carteDeLaTable = (page: Page) => ceDimanche(page).getByTestId("carte-table");
+const carteDesGroupes = (page: Page) => ceDimanche(page).getByTestId("ligne-groupe").first().locator("xpath=ancestor::article[1]");
+const carteEdd = (page: Page) => ceDimanche(page).getByTestId("ligne-edd").first().locator("xpath=ancestor::article[1]");
+const boite = async (l: Locator) => (await l.boundingBox())!;
+
+test.describe("T4b — Planning, accueil (A1)", () => {
+  test("l'agencement commun ; les plannings sous le titre ; « Pour moi » avec la setlist du service", async ({ page }, info) => {
+    await ouvrirAccueilOuTable(page, "/planning");
+    const pourMoi = page.getByRole("region", { name: "Pour moi" });
+    await expect(pourMoi.getByText("Présidence : Président A.")).toBeVisible();
+    await expect(pourMoi.getByRole("link", { name: "Ouvrir" })).toHaveAttribute("href", /^\/setlists\/sl-1\/?$/);
+    // Le premier bloc : le contenu de la section (`main`, à la marge de la zone).
+    await verifierAgencement(page, { premierBloc: page.locator("main").filter({ has: ceDimanche(page) }).last() });
+    await expect(enTete(page).getByRole("heading", { level: 1 })).toHaveText("Planning");
+    if (estGrandEcran(info)) {
+      const plannings = enTete(page).getByRole("navigation", { name: "Plannings" });
+      await expect(plannings.getByRole("link", { name: "Accueil" })).toHaveAttribute("aria-current", "page");
+      expect((await boite(plannings)).y, "les plannings sous le titre").toBeGreaterThan((await boite(enTete(page).locator("h1"))).y);
+      // « Pour moi » à droite de « Ce dimanche ».
+      expect((await boite(pourMoi)).x).toBeGreaterThan((await boite(ceDimanche(page))).x + 100);
+    }
+  });
+
+  test("barre dépliée : la Table sous Groupes et EDD, sur une ligne", async ({ page }, info) => {
+    test.skip(!estGrandEcran(info) || info.project.name === "tablette-paysage", "ordinateur, barre dépliée");
+    await ouvrirAvecBarre(page, "depliee");
+    await ouvrirAccueilOuTable(page, "/planning");
+    await expect(carteDeLaTable(page)).toContainText("Famille Test");
+    const groupes = await boite(carteDesGroupes(page));
+    const table = await boite(carteDeLaTable(page));
+    expect(table.y, "la Table sous les groupes").toBeGreaterThan(groupes.y + groupes.height - 1);
+    // Une ligne : le libellé et le nom côte à côte.
+    const libelle = await boite(carteDeLaTable(page).getByText("Prépa. Table", { exact: true }));
+    const nom = await boite(carteDeLaTable(page).getByText("Famille Test", { exact: true }));
+    expect(Math.abs(libelle.y - nom.y)).toBeLessThan(4);
+    await expect(carteDeLaTable(page).getByRole("heading", { name: "Table" }), "l'en-tête « Table » : sur deux étages seulement").toBeHidden();
+  });
+
+  test("ordinateur-1440, barre réduite : Groupes, EDD et Table sur une rangée, la Table sur deux étages ; le Culte en trois colonnes", async ({ page }, info) => {
+    test.skip(info.project.name !== "ordinateur-1440", "1 440 px, barre réduite : la colonne « Ce dimanche » dépasse 720 px");
+    await ouvrirAvecBarre(page, "reduite");
+    await ouvrirAccueilOuTable(page, "/planning");
+    await expect(carteDeLaTable(page)).toContainText("Famille Test");
+    const [g, e, t] = [await boite(carteDesGroupes(page)), await boite(carteEdd(page)), await boite(carteDeLaTable(page))];
+    expect(Math.abs(g.y - e.y), "Groupes et EDD à la même hauteur").toBeLessThan(2);
+    expect(Math.abs(g.y - t.y), "la Table sur la même rangée").toBeLessThan(2);
+    expect(e.x).toBeGreaterThan(g.x + g.width - 1);
+    expect(t.x).toBeGreaterThan(e.x + e.width - 1);
+    // Deux étages : le libellé au-dessus du nom.
+    const libelle = await boite(carteDeLaTable(page).getByText("Prépa. Table", { exact: true }));
+    const nom = await boite(carteDeLaTable(page).getByText("Famille Test", { exact: true }));
+    expect(nom.y, "le nom sous son libellé").toBeGreaterThan(libelle.y + libelle.height - 1);
+    // Comme Groupes et EDD, un en-tête (planche : « Table · 10:00 », table_empilee).
+    const entete = await boite(carteDeLaTable(page).getByRole("heading", { name: "Table" }));
+    expect(libelle.y, "l'en-tête au-dessus du libellé").toBeGreaterThan(entete.y + entete.height - 1);
+    await expect(carteDeLaTable(page).getByRole("link", { name: "Je m'inscris" })).toBeVisible();
+    // Le Culte : trois colonnes de rôles.
+    const xs = await ceDimanche(page).getByTestId("carte-culte").locator("dt").evaluateAll((dts) => [...new Set(dts.map((d) => Math.round(d.getBoundingClientRect().x)))]);
+    expect(xs, "trois colonnes de rôles").toHaveLength(3);
+  });
+});
+
+// ─── T4b : Prépa. Table (A4) ──────────────────────────────────────────────────
+
+const petitDejDoc = (dimanche: string, nom: string, uid: string) => ({
+  dimanche, nom, uid, auteurUid: uid, creeLe: "2026-09-01T10:00:00.000Z", modifieLe: "2026-09-01T10:00:00.000Z",
+});
+const cartePetitDej = (page: Page) => page.getByRole("region", { name: "Petit déj", exact: true });
+const carteTableDuSeigneur = (page: Page) => page.getByRole("region", { name: "Prépa. Table du Seigneur", exact: true });
+const carteTonPetitDej = (page: Page) => page.getByRole("region", { name: "Ton petit déj", exact: true });
+
+test.describe("T4b — Prépa. Table (A4)", () => {
+  test("petit déj et Table du Seigneur côte à côte en grand, l'un sous l'autre sur téléphone ; plus de colonne de 512 px", async ({ page }, info) => {
+    await ouvrirAccueilOuTable(page, "/planning/table");
+    await expect(cartePetitDej(page).locator('[data-dimanche="2026-10-04"]')).toBeVisible();
+    await expect(carteTableDuSeigneur(page)).toBeVisible();
+    await expect(carteTonPetitDej(page)).toBeVisible();
+    await verifierAgencement(page, { premierBloc: barre(page) });
+    const pd = await boite(cartePetitDej(page));
+    const table = await boite(carteTableDuSeigneur(page));
+    const ton = await boite(carteTonPetitDej(page));
+    if (estGrandEcran(info)) {
+      expect(Math.abs(pd.y - table.y), "les deux colonnes partent ensemble").toBeLessThan(2);
+      expect(table.x, "la Table à droite").toBeGreaterThan(pd.x + pd.width - 1);
+      expect(ton.y, "« Ton petit déj » sous la Table").toBeGreaterThan(table.y + table.height - 1);
+      // Plus de colonne de 512 px : les deux colonnes prennent toute la zone, moins ses marges.
+      const { droite } = await zoneDeContenu(page);
+      expect(Math.abs(table.x + table.width - (droite - (await margeAttendue(page)))), "jusqu'à la marge de droite").toBeLessThan(2);
+    } else if (estTelephone(info)) {
+      expect(table.y, "la Table sous le petit déj").toBeGreaterThan(pd.y + pd.height - 1);
+      expect(ton.y).toBeGreaterThan(table.y + table.height - 1);
+    }
+  });
+
+  test("Prépa. Table du Seigneur : les équipes du trimestre choisi, rien des autres", async ({ page }) => {
+    await ouvrirAccueilOuTable(page, "/planning/table");
+    const table = carteTableDuSeigneur(page);
+    await expect(table.getByText("Famille Test", { exact: true })).toBeVisible();
+    await expect(table.getByText("Famille Y.", { exact: true })).toBeVisible();
+    await expect(table.getByText("Famille X.", { exact: true })).toBeVisible();
+    await expect(table.getByText("Famille Z.", { exact: true }), "le 27/09 est au T3").toHaveCount(0);
+    // Planche v18-app-planning-table-a : une tuile de date et « Dimanche de sainte cène » par équipe.
+    await expect(table.getByText("un dimanche par mois")).toBeVisible();
+    await expect(table.locator('[data-dimanche="2026-10-04"]').getByTestId("tuile")).toContainText("4");
+    await expect(table.getByText("Dimanche de sainte cène")).toHaveCount(3);
+    await barre(page).getByRole("tablist", { name: "Trimestre" }).getByRole("tab", { name: /^T3/ }).click();
+    await expect(table.getByText("Famille Z.", { exact: true })).toBeVisible();
+    await expect(table.getByText("Famille Test", { exact: true })).toHaveCount(0);
+  });
+
+  test("le petit déj : « n libres sur N » ; ma ligne en encre avec « ⋯ » (Modifier, Retirer), sans boutons dans la rangée", async ({ page }) => {
+    const db = await ouvrirAccueilOuTable(page, "/planning/table", {
+      "petitDej/m": petitDejDoc("2026-10-11", "Pianiste D.", MUSICIEN.uid),
+      "petitDej/a": petitDejDoc("2026-10-18", "Famille Autre", "uid-autre"),
+    });
+    const carte = cartePetitDej(page);
+    // T4 2026 : 13 dimanches, deux pris.
+    await expect(carte.getByText("11 libres sur 13")).toBeVisible();
+    const le11 = carte.locator('[data-dimanche="2026-10-11"]');
+    await expect(le11.getByTestId("moi")).toHaveText("Pianiste D.");
+    await expect(le11.getByRole("button", { name: "Retirer" })).toHaveCount(0);
+    await expect(le11.getByRole("button", { name: "Modifier" })).toHaveCount(0);
+    await expect(carte.locator('[data-dimanche="2026-10-18"]').getByRole("button"), "la ligne d'un autre : le texte seul").toHaveCount(0);
+
+    await le11.getByRole("button", { name: "Plus d'actions" }).click();
+    await page.getByRole("menuitem", { name: "Modifier" }).click();
+    const champ = le11.getByRole("textbox", { name: "Modifier" });
+    await expect(champ).toBeFocused();
+    await champ.fill("Famille Test D.");
+    await champ.press("Enter");
+    await expect(le11.getByText("Famille Test D.", { exact: true })).toBeVisible();
+    expect(db.doc("petitDej/m")).toMatchObject({ nom: "Famille Test D." });
+
+    await le11.getByRole("button", { name: "Plus d'actions" }).click();
+    await page.getByRole("menuitem", { name: "Retirer" }).click();
+    await expect(fenetreDuSite(page).getByRole("heading", { name: "Retirer cette ligne ?" })).toBeVisible();
+    await repondreDansLeSite(page, "Retirer");
+    await expect(le11.getByText("Libre", { exact: true })).toBeVisible();
+    expect(db.doc("petitDej/m")).toBeUndefined();
+  });
+
+  test("« Ton petit déj » : mon prochain dimanche, « ⋯ › Modifier » écrit dans la rangée ; sans inscription, il le dit", async ({ page }) => {
+    const db = await ouvrirAccueilOuTable(page, "/planning/table", {
+      "petitDej/m": petitDejDoc("2026-12-06", "Pianiste D.", MUSICIEN.uid),
+    });
+    const ton = carteTonPetitDej(page);
+    await expect(ton.getByText("Dimanche 6 décembre")).toBeVisible();
+    await expect(ton.getByText("dans 66 jours")).toBeVisible();
+    await expect(ton.getByText("Tu peux écrire « Famille … » à la place de ton nom.")).toBeVisible();
+    await ton.getByRole("button", { name: "Plus d'actions" }).click();
+    await page.getByRole("menuitem", { name: "Modifier" }).click();
+    const champ = cartePetitDej(page).locator('[data-dimanche="2026-12-06"]').getByRole("textbox", { name: "Modifier" });
+    await expect(champ).toBeFocused();
+    await champ.fill("Famille Test D.");
+    await champ.press("Enter");
+    await expect.poll(() => (db.doc("petitDej/m") as { nom?: string } | undefined)?.nom).toBe("Famille Test D.");
+
+    await ton.getByRole("button", { name: "Plus d'actions" }).click();
+    await page.getByRole("menuitem", { name: "Retirer" }).click();
+    await repondreDansLeSite(page, "Retirer");
+    await expect(ton.getByText("Aucun petit déj à venir à ton nom.")).toBeVisible();
+    await expect(ton.getByRole("button", { name: "Plus d'actions" })).toHaveCount(0);
+  });
+});
+
 // ─── Captures, à regarder (cinq tailles) ──────────────────────────────────────
 
 test("captures : BO Planning, Culte et Groupes de l'App", async ({ page }, info) => {
@@ -219,4 +432,18 @@ test("captures : BO Planning, Culte et Groupes de l'App", async ({ page }, info)
   await expect(page.locator('[data-grille="paix"]')).toBeVisible();
   await barre(page).getByRole("tablist", { name: "Groupes" }).getByRole("tab", { name: "Fidélité" }).click();
   await capture("app-groupes");
+});
+
+test("captures T4b : accueil et Prépa. Table", async ({ page }, info) => {
+  const capture = async (nom: string) => {
+    await page.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished.catch(() => {}))));
+    await page.screenshot({ path: `test-results/agencement-v18-planning/${nom}-${info.project.name}.png`, fullPage: true });
+  };
+  if (info.project.name === "ordinateur-1440") await ouvrirAvecBarre(page, "reduite");
+  await ouvrirAccueilOuTable(page, "/planning", { "petitDej/m": petitDejDoc("2026-12-06", "Pianiste D.", MUSICIEN.uid) });
+  await expect(page.getByRole("region", { name: "Pour moi" }).getByText("Présidence : Président A.")).toBeVisible();
+  await capture("app-accueil");
+  await page.goto("/planning/table");
+  await expect(carteTonPetitDej(page).getByText("Dimanche 6 décembre")).toBeVisible();
+  await capture("app-table");
 });

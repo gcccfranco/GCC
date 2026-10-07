@@ -578,3 +578,41 @@ la barre d'onglets : une page sans barre du bas (rare) le verra plus haut que n�
   `FilterButtons` n'a plus d'appel que dans les `AncienTableau` (tranche Z).
 - **Timothée** : rien à publier (aucune règle, aucune donnée) ; relire le 中文 de `planning.barre.*`
   (教会所有服侍表：谁在何时服侍, 季度, 时段, 班级, 视图, « 2026年第四季度 », « 本季度 n 个空缺 »…).
+
+### V18T4 — Planning (T4b)
+
+- 06/10/2026 (fini le 07/10) : **T4b faite** (branche `lot/v18-t4`, commit dans `git log --grep "V18T4): T4b"`) : A1, A4.
+  - **Accueil (A1)** : l'en-tête et les plannings sous le titre viennent de T4a ; « Pour moi » (prochain service,
+    setlist du service) ne change pas. En grand, « Ce dimanche » est un conteneur (R15) : à partir de 720 px
+    (ordinateur-1440 barre réduite), le Culte passe en trois colonnes et Groupes · EDD · Table tiennent sur une
+    rangée. La Table y est sur deux étages (libellé au-dessus du nom), avec un en-tête « Table » à sa couleur,
+    comme Groupes et EDD (planche `table_empilee`). Barre dépliée : la Table reste sous Groupes et EDD, sur une
+    ligne. La tablette et le téléphone ne changent pas.
+  - **Prépa. Table (A4, piste A)** : sous la rangée de la grille, deux colonnes en grand (`1.25fr | 1fr`). À gauche,
+    la carte **Petit déj** du trimestre : « n libres sur N », une ligne par dimanche (« Libre » + « Je m'inscris », le
+    nom, ou le sien en encre). Une ligne qu'on peut toucher porte un « ⋯ » (`MenuActions` : Modifier, Retirer
+    confirmé) au lieu de deux boutons. À droite, **Prépa. Table du Seigneur** (les équipes du trimestre choisi :
+    tuile de date, noms, « Dimanche de sainte cène », « un dimanche par mois » ; les dimanches passés estompés),
+    puis **Ton petit déj** (son prochain dimanche, le même « ⋯ », l'astuce « Famille … »). Ailleurs, l'un sous
+    l'autre. Plus de `max-w-lg`. Les deux cartes du petit déj partagent un état (`usePetitDej`).
+    `MenuActions` gagne `ouvreUnChamp` : l'action attend la fermeture du menu (sinon le focus rendu au « ⋯ »
+    refermait aussitôt le champ « Modifier »).
+- **Tests** : 9 tests T4b dans `tests/agencement-v18-planning.spec.ts`, × 5 projets (accueil, barre dépliée / réduite,
+  deux colonnes, Table du trimestre, « ⋯ » du petit déj, « Ton petit déj », captures). Ils ont été vus rouges avant
+  le code (33 échecs), puis les ajouts « tuile + sainte cène » et « en-tête Table » ont été vus rouges à leur
+  tour, puis tout est passé au vert. Réécrits pour le « ⋯ » et « n libres sur N » : `planning-petit-dej`,
+  `agencement-v18-confirmations` et `back-office-admin` (la Table montre le trimestre, plus seulement le prochain
+  dimanche). Ces quatre fichiers × 5 projets donnent 524 verts. Voisines : `planning-accueil`,
+  `pages-en-grand-accueil`, `agencement-barre-reduite`, `planning-table`, `look-planning`, `planning-sainte-cene`,
+  `planning-2027`, `back-office-coupe` (second serveur) donnent 475 verts. Captures regardées (accueil à 1 440 px barre réduite ; Prépa. Table sur
+  ordinateur, à 1 440 px et sur téléphone).
+- **Écarts à la planche** : « Groupes » et « Table » sans l'heure (« · 13:00 », « · 10:00 ») : l'accueil d'avant ne
+  la montrait pas (A1 : « le reste ne change pas ») ; la rangée de la grille garde le titre « Prépa. Table du
+  Seigneur » de T4a (la planche dit « Prépa. Table »). L'astuce « ⋯ › Ajouter une ligne » de la planche n'est pas
+  dans « Ton petit déj » : « Ajouter une ligne » est un bouton réservé à qui gère le petit déj, que la carte
+  montre déjà.
+- **Reste** : rien pour T4. `FilterButtons` n'a plus d'appel que dans les `AncienTableau` (tranche Z).
+- **Timothée** : rien à publier (aucune règle, aucune donnée). Relire le 中文 : `planning.petitDej.libresSur`
+  (« 13 个主日中 n 个空闲 »), `ton` (你的早餐), `aucunAVenir` (你还没有报名之后的早餐。), `accueil.carteTable`
+  (圣餐桌), `table.unDimancheParMois` (每月一个主日), `table.dimancheSainteCene` (圣餐主日). Vérifier aussi que la
+  Prépa. Table du Seigneur tombe bien « un dimanche par mois », comme sur la planche.

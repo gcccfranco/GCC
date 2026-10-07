@@ -178,14 +178,19 @@ test("retirer un petit déj : la fenêtre du site ; Annuler le garde ; Retirer r
       creeLe: "2026-09-01T10:00:00.000Z", modifieLe: "2026-09-01T10:00:00.000Z",
     },
   }, "2026-09-18T10:00:00");
-  const le27 = page.getByRole("region", { name: "Petit déj" }).locator('[data-dimanche="2026-09-27"]');
-  await le27.getByRole("button", { name: "Retirer" }).click();
+  const le27 = page.getByRole("region", { name: "Petit déj", exact: true }).locator('[data-dimanche="2026-09-27"]');
+  // Agencement v18 (A4) : « Retirer » est dans le « ⋯ » de la ligne.
+  const retirer = async () => {
+    await le27.getByRole("button", { name: "Plus d'actions" }).click();
+    await page.getByRole("menuitem", { name: "Retirer" }).click();
+  };
+  await retirer();
   await expect(fenetreDuSite(page).getByRole("heading", { name: "Retirer cette ligne ?" })).toBeVisible();
   await repondreDansLeSite(page, "Annuler");
   await expect(le27.getByText("Famille Martin", { exact: true })).toBeVisible();
   expect(db.doc("petitDej/m")).toBeDefined();
 
-  await le27.getByRole("button", { name: "Retirer" }).click();
+  await retirer();
   await repondreDansLeSite(page, "Retirer");
   await expect(le27.getByText("Libre", { exact: true })).toBeVisible();
   expect(db.doc("petitDej/m")).toBeUndefined();
