@@ -1107,6 +1107,7 @@
       "cajonBatt": "箱鼓/鼓",
       "theme": "主题",
       "pianiste": "钢琴",
+      "guitariste": "吉他",
       "equipe": "团队",
       "petitDej": "早餐",
       "chant1": "诗歌 1",
@@ -1193,7 +1194,6 @@
       "paix": "和平",
       "fidelite": "信实",
       "bonte": "良善",
-      "planningGroupe": "团契安排",
       "planningMusiciens": "乐手安排 🎵"
     },
     "edd": {

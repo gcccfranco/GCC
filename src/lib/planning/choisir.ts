@@ -29,7 +29,6 @@ const CATEGORIES: Record<string, string> = {
   paix: "Groupe Paix",
   bonte: "Groupe Bonté",
   fidelite: "Groupe Fidélité",
-  fideliteMusiciens: "Groupe Fidélité",
   eddZhongban: "中班",
   eddDaban: "大班",
   eddGaoban: "高班",
@@ -42,7 +41,7 @@ const CATEGORIES: Record<string, string> = {
 const ROLES: Record<string, ServiceRole> = {
   presidence: "presidence",
   choriste1: "chanteur", choriste2: "chanteur", choriste3: "chanteur",
-  piano: "musicien", pianiste: "musicien", guitare: "musicien", batterie: "musicien",
+  piano: "musicien", pianiste: "musicien", guitare: "musicien", guitariste: "musicien", batterie: "musicien",
   cajon: "musicien", cajonBatterie: "musicien", musiciens: "musicien", percussion: "musicien",
   sono: "regie", sonoLive: "regie", ppt: "regie",
 }

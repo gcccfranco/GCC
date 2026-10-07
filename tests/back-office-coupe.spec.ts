@@ -396,3 +396,40 @@ test.describe("back-office coupé : le petit déj vient encore du Sheet", () => 
     await expect(page.getByRole("switch", { name: "Petit déj" })).toHaveCount(0);
   });
 });
+
+// Lot F, tranche F1-F2 (docs/spec-retouches-v18.md, D24 et D27) : en ligne, l'ancien tableau de
+// Fidélité n'a plus d'onglet « Musiciens » ; Guitariste et Batterie sont lus dans l'onglet
+// `Fidélité_Musicien` du Sheet, auquel on ne touche pas.
+test.describe("back-office coupé : Fidélité en un seul tableau", () => {
+  const csv = (rows: string[][]) => rows.map((r) => r.map((c) => `"${c}"`).join(",")).join("\n");
+  const SHEETS: Record<string, string> = {
+    "Fidélité_T3": csv([
+      ["DATE", "Présidence", "Orateur", "Thème", "Pianiste"],
+      ["20/09", "Ancien A.", "Orateur O.", "Actes", "Pianiste P."],
+    ]),
+    "Fidélité_Musicien": csv([
+      ["", "DATE", "Présidence", "Piano", "Guitare", "Batterie"],
+      ["", "20/09", "Ancien A.", "Autre Piano", "Guitare G.", "Batteur B."],
+    ]),
+  };
+  const MEMBRE: FakeProfile = { uid: "uid-membre", email: "membre@example.com", planningName: "Membre M." };
+
+  test("l'ancien tableau de Fidélité : sept colonnes, guitare et percussion lues dans Fidélité_Musicien", async ({ page }) => {
+    await page.clock.setFixedTime(new Date("2026-09-18T10:00:00"));
+    await page.route(/docs\.google\.com\/spreadsheets/, (route) => {
+      const sheet = new URL(route.request().url()).searchParams.get("sheet") ?? "";
+      return route.fulfill({ status: 200, contentType: "text/csv", body: SHEETS[sheet] ?? "" });
+    });
+    await signInAs(page, MEMBRE, {}, "/planning/groupes");
+    await page.getByRole("button", { name: "Fidélité", exact: true }).click();
+    await expect(page.locator("[data-grille]"), "c'est bien l'ancien tableau").toHaveCount(0);
+    await expect(page.getByRole("button", { name: /Planning musiciens|Planning groupe/ }), "plus d'onglet « Musiciens »").toHaveCount(0);
+    // Une table en grand, une carte par dimanche sur téléphone : les libellés dans l'ordre, puis les noms.
+    const contenu = page.locator("main").filter({ hasText: "Pianiste P." }).last();
+    const libelles = await contenu.getByText(/^(Présidence|Orateur|Thème|Pianiste|Guitariste|Batterie)$/).filter({ visible: true }).allTextContents();
+    expect(libelles).toEqual(["Présidence", "Orateur", "Thème", "Pianiste", "Guitariste", "Batterie"]);
+    await expect(contenu.getByText("Guitare G.", { exact: true }).filter({ visible: true })).toHaveCount(1);
+    await expect(contenu.getByText("Batteur B.", { exact: true }).filter({ visible: true })).toHaveCount(1);
+    await expect(page.getByText("Autre Piano"), "le pianiste est celui du groupe").toHaveCount(0);
+  });
+});

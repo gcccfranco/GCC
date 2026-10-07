@@ -5,17 +5,18 @@
 import { useEffect, useState } from "react";
 import { fusionnerLignes } from "@/lib/planning/grilles";
 import { fetchGrille } from "@/lib/planning/grille";
-import { lireSheetDe } from "@/lib/planning/sheets";
+import { fetchFidelite, lireSheetDe } from "@/lib/planning/sheets";
 import { getSetlistsDepuis, type FSSetlist } from "@/lib/firebase/setlists";
 
 /**
  * Les lignes de plannings par clé : la grille de l'app et le Google Sheet réunis dimanche
  * par dimanche, comme l'export (`exporter.tsx`). Sans données de secours : un planning
- * illisible n'invente aucun nom.
+ * illisible n'invente aucun nom. Fidélité : ses guitares et batteries reprises du planning des
+ * musiciens (lot F, D25), comme la page.
  */
 export async function lireGrilles(cles: string[]): Promise<Record<string, string[][]>> {
   return Object.fromEntries(await Promise.all(
-    [...new Set(cles)].map(async (k) => [k, fusionnerLignes(await fetchGrille(k), await lireSheetDe(k))] as const),
+    [...new Set(cles)].map(async (k) => [k, k === "fidelite" ? await fetchFidelite() : fusionnerLignes(await fetchGrille(k), await lireSheetDe(k))] as const),
   ));
 }
 

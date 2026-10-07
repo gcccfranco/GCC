@@ -103,4 +103,31 @@ dans Notifier (D21) ; toute écriture dans le Google Sheet.
 
 ## Avancement
 
-Rien de codé (spec écrite le 08/10/2026, en attente du go).
+Go de code donné le 08/10/2026.
+
+### V18FIDELITE
+
+**08/10/2026 — tranche F1-F2, codée** (commit de la tranche : voir `git log --grep V18FIDELITE`).
+
+- F1 : `GRILLE_FIDELITE` = Présidence · Orateur · Thème · Pianiste · Guitariste (`guitariste`, index 5) ·
+  Batterie (`batterie`, index 6, facultative comme la percussion : cachée en lecture si la période n'en a pas,
+  pas comptée dans les cases vides). `GRILLE_FIDELITE_MUSICIENS` sort de `GRILLES` : plus de pilules
+  Groupe · Musiciens (App et Back-Office), plus d'onglet « Musiciens » dans l'ancien tableau, plus de case
+  « Groupe Fidélité musiciens » parmi les droits d'écriture (Personnes), plus de catégorie dans « Choisir »,
+  plus de second bloc Fidélité au tableau de bord. Sa définition reste connue de `grilleDe`, pour être lue.
+- F2 : `completerMusiciensFidelite` (`grilles.ts`, pur) — une case Guitariste ou Batterie vide du planning
+  Fidélité prend celle du planning des musiciens (grille de l'app `fideliteMusiciens`, puis onglet
+  `Fidélité_Musicien` du Sheet, seul lu back-office coupé). Appliqué par `fetchFidelite` (pages, ancien
+  tableau, « Mes services »…), par les widgets (`lecture.ts`) et par l'export (`exporter.tsx`). Aucune
+  migration : une modification écrit dans `plannings/fidelite` ; la première, avant 2027, recopie la ligne
+  affichée, guitare et batterie reprises comprises.
+- Tests : `tests/planning-fidelite.spec.ts` (nouveau), `back-office-coupe.spec.ts` (ancien tableau, Sheet
+  seul), mises à jour de `planning-groupes-grille`, `agencement-v18-planning`, `back-office-admin`.
+- Reste au lot F : F3 (relevé des pianistes qui diffèrent ; « Ce dimanche » et l'équipe d'une setlist
+  lisent encore le piano et la guitare du planning des musiciens), F4 (`names.ts` : Mes services, rappels,
+  recherche par nom lisent encore `fideliteMusic`), F5 (modèle d'export Fidélité à sept colonnes, retrait
+  du modèle `Fidélité_Musicien`, encore exporté par « Tous les plannings »).
+- Pour Timothée : rien à publier dans `firestore.rules` (les champs d'un dimanche ne sont pas listés). Un
+  profil qui avait le droit `fideliteMusiciens` ne peut plus rien écrire : cocher « Groupe Fidélité » pour
+  lui dans Équipes › Personnes. 中文 du nouveau libellé à relire : `planning.roles.guitariste` = 吉他.
+  Limite connue : vider dans l'app une guitare reprise la fait revenir (elle est relue chez les musiciens).

@@ -177,10 +177,17 @@ export const GRILLE_FIDELITE: DefinitionGrille = {
   label: "Groupe Fidélité",
   i18nTitre: "planning.groupes.fidelite",
   couleur: PLANNING_COLORS.fidelite,
-  colonnes: [col("presidence", "presidence", 1), col("orateur", "orateur", 2), col("theme", "theme", 3), col("pianiste", "pianiste", 4)],
+  // Lot F (spec-retouches-v18.md, D24) : Guitariste et Batterie après Pianiste ; la batterie,
+  // facultative comme la percussion de Paix et Bonté, se cache quand la période n'en a pas.
+  colonnes: [
+    col("presidence", "presidence", 1), col("orateur", "orateur", 2), col("theme", "theme", 3), col("pianiste", "pianiste", 4),
+    col("guitariste", "guitariste", 5), col("batterie", "batterie", 6, true),
+  ],
   dates: "dimanches",
 }
 
+/** Le planning des musiciens de Fidélité, RETIRÉ des pages (lot F, D24) : plus dans `GRILLES`,
+ *  seulement lu pour reprendre ses guitares et batteries (`completerMusiciensFidelite`). */
 export const GRILLE_FIDELITE_MUSICIENS: DefinitionGrille = {
   key: "fideliteMusiciens",
   label: "Groupe Fidélité musiciens",
@@ -269,11 +276,32 @@ export function anneeRemplie(rows: string[][], annee: number): boolean {
 /** Toutes les grilles, dans l'ordre des onglets du planning. */
 export const GRILLES: DefinitionGrille[] = [
   GRILLE_CULTE, GRILLE_TABLE, ...GRILLES_EDD, GRILLE_CAMPUS_MATIN, GRILLE_CAMPUS_SOIR,
-  GRILLE_INTERGROUPE, GRILLE_INTERFRANCO, GRILLE_PAIX, GRILLE_FIDELITE, GRILLE_FIDELITE_MUSICIENS, GRILLE_BONTE,
+  GRILLE_INTERGROUPE, GRILLE_INTERFRANCO, GRILLE_PAIX, GRILLE_FIDELITE, GRILLE_BONTE,
 ]
 
+/** Une grille par sa clé — celle des musiciens de Fidélité comprise : on la lit encore. */
 export function grilleDe(key: string): DefinitionGrille | undefined {
-  return GRILLES.find((g) => g.key === key)
+  return [...GRILLES, GRILLE_FIDELITE_MUSICIENS].find((g) => g.key === key)
+}
+
+/**
+ * Lot F (spec-retouches-v18.md, D25 à D27) : Guitariste et Batterie de Fidélité, dimanche par
+ * dimanche, sont ceux du planning Fidélité s'ils y sont remplis, sinon ceux du planning des
+ * musiciens (`[date, présidence, piano, guitare, batterie]`). Rien n'est écrit : les anciennes
+ * données restent où elles sont. Le piano des musiciens n'est jamais repris (D26) ; un dimanche
+ * des seuls musiciens donne une ligne, s'il porte une guitare ou une batterie.
+ */
+export function completerMusiciensFidelite(fidelite: string[][], musiciens: string[][]): string[][] {
+  const parDate = new Map(fidelite.map((r) => [r[0], Array.from({ length: 7 }, (_, i) => r[i] ?? "")]))
+  for (const m of musiciens) {
+    const [guitare, batterie] = [(m[3] ?? "").trim(), (m[4] ?? "").trim()]
+    if (!guitare && !batterie) continue
+    const r = parDate.get(m[0]) ?? [m[0], "", "", "", "", "", ""]
+    if (!r[5].trim()) r[5] = guitare
+    if (!r[6].trim()) r[6] = batterie
+    parDate.set(m[0], r)
+  }
+  return [...parDate.values()].sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0))
 }
 
 /**

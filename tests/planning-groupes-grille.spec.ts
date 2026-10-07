@@ -6,8 +6,8 @@ import { GRILLES, grilleDe } from "../src/lib/planning/grilles";
 import { PLANNINGS_APP } from "../src/lib/planning/grille";
 
 // Lot 17, tranche G6 (Timothée, 19/09/2026 : « pouvoir modifier tous les
-// plannings sur le site ») : les grilles simples — les trois groupes, les
-// musiciens de Fidélité, Intergroupe et Interfranco — se remplissent dans
+// plannings sur le site ») : les grilles simples — les trois groupes,
+// Intergroupe et Interfranco — se remplissent dans
 // l'app comme le Culte, chacune avec son droit (`plannings` du profil).
 
 const csv = (rows: string[][]) => rows.map((r) => r.map((c) => `"${c}"`).join(",")).join("\n");
@@ -54,7 +54,7 @@ test("toutes les grilles sont définies, à clés uniques, et toutes ont l'app p
   expect(new Set(cles).size).toBe(cles.length);
   expect(cles).toEqual(expect.arrayContaining([
     "culte", "table", "eddZhongban", "eddDaban", "eddGaoban", "campusMatin", "campusSoir",
-    "intergroupe", "interfranco", "paix", "fidelite", "fideliteMusiciens", "bonte",
+    "intergroupe", "interfranco", "paix", "fidelite", "bonte",
   ]));
   expect(PLANNINGS_APP).toEqual(cles);
   for (const g of GRILLES) {
@@ -90,21 +90,8 @@ test("groupes : avec le droit « paix », une case s'écrit ; Fidélité reste e
   await expect(laCase(page, "2026-09-20", "pianiste").getByRole("button"), "Fidélité : en lecture").toHaveCount(0);
 });
 
-test("groupes : les musiciens de Fidélité ont leur propre grille et leur propre droit", async ({ page }) => {
-  const db = await open(page, profil(["fideliteMusiciens"]), "/back-office/planning/groupes");
-  await page.getByRole("tab", { name: "Fidélité", exact: true }).click();
-  await expect(laCase(page, "2026-09-20", "theme").getByRole("button"), "le planning du groupe n'est pas le sien").toHaveCount(0);
-  await page.getByRole("button", { name: /Planning musiciens/ }).click();
-  await laCase(page, "2026-09-20", "guitare").getByRole("button").click();
-  // P9 (lot U2) : « Choisir », puis un nom écrit à la main.
-  await page.getByRole("button", { name: "Écrire un nom sans compte…" }).click();
-  const champ = page.getByRole("textbox", { name: "Guitare", exact: true });
-  await champ.fill("Éloïse M.");
-  await champ.press("Enter");
-  await expect(laCase(page, "2026-09-20", "guitare")).toContainText("Éloïse M.");
-  expect(db.doc("plannings/fideliteMusiciens/dimanches/2026-09-20")?.guitare).toBe("Éloïse M.");
-  expect(db.doc("plannings/fidelite/dimanches/2026-09-20")).toBeUndefined();
-});
+// Lot F (spec-retouches-v18.md, D24) : le planning des musiciens de Fidélité a disparu ; Guitariste
+// et Batterie s'écrivent dans le planning du groupe (tests/planning-fidelite.spec.ts).
 
 test("Intergroupe : se remplit dans l'app et s'exporte au modèle du Sheet", async ({ page }) => {
   const db = await open(page, profil(["intergroupe"]), "/back-office/planning/intergroupe");

@@ -213,7 +213,8 @@ test.describe("App Planning : le titre « Planning », le service en h2", () => 
     await expect(page).toHaveURL(/\/planning\/groupes\/?$/);
   });
 
-  test("Groupes : Paix · Fidélité · Bonté en rail, Fidélité › Groupe · Musiciens en pilules", async ({ page }) => {
+  // Lot F (spec-retouches-v18.md, D24) : Fidélité n'a plus qu'un planning, plus de pilules Groupe · Musiciens.
+  test("Groupes : Paix · Fidélité · Bonté en rail, Fidélité en un seul planning", async ({ page }) => {
     await ouvrir(page, MEMBRE, "/planning/groupes");
     await expect(barre(page).getByRole("heading", { level: 2 })).toHaveText("Groupes");
     const groupes = barre(page).getByRole("tablist", { name: "Groupes" });
@@ -224,11 +225,8 @@ test.describe("App Planning : le titre « Planning », le service en h2", () => 
     await expect(barre(page).locator('[data-onglets="pilules"]')).toHaveCount(0);
 
     await groupes.getByRole("tab", { name: "Fidélité" }).click();
-    const sous = barre(page).locator('[data-onglets="pilules"]');
-    await expect(sous.getByRole("button")).toHaveText(["Planning groupe", /Planning musiciens/]);
     await expect(page.locator('[data-grille="fidelite"]')).toBeVisible();
-    await sous.getByRole("button", { name: /Planning musiciens/ }).click();
-    await expect(page.locator('[data-grille="fideliteMusiciens"]')).toBeVisible();
+    await expect(barre(page).locator('[data-onglets="pilules"]'), "plus de pilules Groupe · Musiciens").toHaveCount(0);
     await groupes.getByRole("tab", { name: "Bonté" }).click();
     await expect(page.locator('[data-grille="bonte"]')).toBeVisible();
     await expect(barre(page).locator('[data-onglets="pilules"]')).toHaveCount(0);
