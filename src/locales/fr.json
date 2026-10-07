@@ -1136,7 +1136,8 @@
       "periodeAnnee": "Année {{annee}}"
     },
     "petitDej": {
-      "libresSur": "{{libres}} libres sur {{total}}",
+      "libresSur_one": "{{count}} libre sur {{total}}",
+      "libresSur_other": "{{count}} libres sur {{total}}",
       "ton": "Ton petit déj",
       "aucunAVenir": "Aucun petit déj à venir à ton nom.",
       "libre": "Libre",

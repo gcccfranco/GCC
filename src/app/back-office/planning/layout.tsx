@@ -31,7 +31,8 @@ export default function PlanningLayout({ children }: { children: React.ReactNode
       <PlanningHalo />
       <EnTetePage
         titre={t("backOffice.entrees.planning")}
-        sousTitre={<span ref={setSousTitre} />}
+        // Le sous-titre passe à la ligne plutôt que d'être coupé (téléphone) : le nombre de cases vides reste lisible.
+        sousTitre={<span ref={setSousTitre} className="whitespace-normal" />}
         outils={<span ref={setOutils} className="flex items-center gap-2" />}
         onglets={
           isAdminUser(user) ? (

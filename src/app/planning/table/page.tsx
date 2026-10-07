@@ -121,7 +121,7 @@ function PetitDejEtTable({ rows, annee, tri, nomsDesComptes, onLignes }: {
       <PetitDejCarte etat={etat} annee={annee} tri={tri} nomsDesComptes={nomsDesComptes} />
       <div className="flex min-w-0 flex-col gap-4">
         <TableDuSeigneur rows={rows} annee={annee} tri={tri} />
-        <TonPetitDej etat={etat} />
+        <TonPetitDej etat={etat} annee={annee} tri={tri} />
       </div>
     </div>
   )

@@ -28,7 +28,8 @@ const teinte = (color?: string) =>
  *  la rangée part alors du même bord que la page, au lieu d'être centrée sur 1 080 px. */
 /** `className` : posé sur la barre collante (le Planning la masque en grand, où ses plannings
  *  sont dans l'en-tête, agencement v18 R6). */
-export function SectionTabs({ tabs, rootHref, menuLabel, pleineLargeur = false, className = "" }: { tabs: SectionTab[]; rootHref: string; menuLabel?: string; pleineLargeur?: boolean; className?: string }) {
+/** `sousLeTitre` : la barre repose sous un titre et ne colle qu'une fois défilée (le Planning, R6). */
+export function SectionTabs({ tabs, rootHref, menuLabel, pleineLargeur = false, className = "", sousLeTitre = false }: { tabs: SectionTab[]; rootHref: string; menuLabel?: string; pleineLargeur?: boolean; className?: string; sousLeTitre?: boolean }) {
   const pathname = usePathname() || ""
   const scrollVisible = useScrollDirection()
   const tabRefs = useRef<(HTMLAnchorElement | null)[]>([])
@@ -56,33 +57,38 @@ export function SectionTabs({ tabs, rootHref, menuLabel, pleineLargeur = false, 
   // le titre passé. La copie du halo de son fond (`.barre-halo`) remonte de la hauteur où la
   // barre se trouve vraiment (`--barre-top`, mesurée hors translation), sinon son fond, au repos
   // sous le titre, faisait une bande sur le halo ; et elle ne s'efface au défilement qu'une fois
-  // collée, sinon elle remontait par-dessus le titre.
+  // collée, sinon elle remontait par-dessus le titre. Seulement sous un titre (`sousLeTitre`) :
+  // ailleurs (Évènements), la barre est collée d'office et rien n'est mesuré au défilement.
   const barreRef = useRef<HTMLDivElement>(null)
   const [colle, setColle] = useState(true)
   useEffect(() => {
     const el = barreRef.current
-    if (!el) return
+    if (!el || !sousLeTitre) return
     let raf = 0
+    let dernier = NaN
     const poser = () => {
       raf = 0
       const transform = getComputedStyle(el).transform
       const decalage = transform === "none" ? 0 : new DOMMatrixReadOnly(transform).m42
       const haut = el.getBoundingClientRect().top - decalage
-      el.style.setProperty("--barre-top", `${haut}px`)
+      // N'écrire que ce qui change : une fois collée, plus aucune écriture au défilement.
+      if (haut !== dernier) { dernier = haut; el.style.setProperty("--barre-top", `${haut}px`) }
       setColle(haut <= parseFloat(getComputedStyle(el).top) + 1)
     }
     const demander = () => { if (!raf) raf = requestAnimationFrame(poser) }
+    // La translation de la barre seule : les transitions de couleur des onglets remontent jusqu'ici.
+    const finDeTransition = (e: TransitionEvent) => { if (e.target === el) demander() }
     demander()
     window.addEventListener("scroll", demander, { passive: true })
     window.addEventListener("resize", demander)
-    el.addEventListener("transitionend", demander)
+    el.addEventListener("transitionend", finDeTransition)
     return () => {
       cancelAnimationFrame(raf)
       window.removeEventListener("scroll", demander)
       window.removeEventListener("resize", demander)
-      el.removeEventListener("transitionend", demander)
+      el.removeEventListener("transitionend", finDeTransition)
     }
-  }, [])
+  }, [sousLeTitre])
 
   const courant = tabs.find((tab) => isTabActive(tab.href)) ?? tabs[0]
 

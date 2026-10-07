@@ -436,13 +436,13 @@ export function PlanningGrille({
                       className="sticky left-0 z-10 w-[112px] px-3 py-2 font-semibold whitespace-nowrap bg-card"
                       style={{ color: couleur, backgroundImage: fond ? `linear-gradient(${fond}, ${fond})` : undefined }}
                     >
-                      <div>
-                        {cetteSemaine ? (
-                          <span className={`inline-block text-xs font-bold px-1.5 py-0.5 rounded ${app ? "bg-foreground text-background" : "text-white"}`} style={app ? undefined : { background: couleur }}>
-                            {t("planning.table.thisWeek")}
-                          </span>
-                        ) : fdShort(date)}
-                      </div>
+                      {/* La date, puis « Cette semaine » dessous (planches `v18-app-planning-grille-a`, `v18-bo-planning-a`). */}
+                      <div>{fdShort(date)}</div>
+                      {cetteSemaine && (
+                        <span className={`mt-0.5 mr-1 inline-block text-xs font-bold px-1.5 py-0.5 rounded ${app ? "bg-foreground text-background" : "text-white"}`} style={app ? undefined : { background: couleur }}>
+                          {t("planning.table.thisWeek")}
+                        </span>
+                      )}
                       {l.nonPublie && (
                         <span
                           data-non-publie={date}

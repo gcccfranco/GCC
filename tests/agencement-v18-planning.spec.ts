@@ -109,6 +109,52 @@ test.describe("BO Planning, piste A", () => {
     await expect(enTete(page).locator('[data-onglets="rail"]').getByRole("link", { name: "Sans compte" })).toHaveAttribute("aria-current", "page");
     await expect(page.getByTestId("barre-grille")).toHaveCount(0);
   });
+
+  // Relecture : sur téléphone, le sous-titre était coupé (« … · 4 cas… ») ; il passe à la ligne.
+  test("téléphone : le sous-titre tient en entier, cases vides comprises", async ({ page }, info) => {
+    test.skip(!estTelephone(info), "la largeur du téléphone");
+    await ouvrir(page, ADMIN, "/back-office/planning/culte");
+    const sousTitre = enTete(page).locator("p").first();
+    await expect(sousTitre).toContainText(/\d+ cases? vides? ce trimestre/);
+    expect(await sousTitre.evaluate((p) => p.scrollWidth - p.clientWidth), "rien de coupé en largeur").toBeLessThanOrEqual(0);
+  });
+});
+
+// ─── Relecture : chaque planning, App et Back-Office ─────────────────────────
+
+// Spec, « Tests », T4 : « App : le h1 est Planning sur chaque planning, le service est un h2 » ; au
+// Back-Office, chaque page écrit son sous-titre (planning, cases vides) et garde sa rangée de pilules.
+// Intergroupe et Interfranco passent par `PageDatesChoisies`, les autres par leur page.
+const CHAQUE_PLANNING: { cle: string; onglet: string; service: string; sousTitreBO: RegExp }[] = [
+  { cle: "culte", onglet: "Culte Franco", service: "Culte Franco", sousTitreBO: /^Culte Franco · .*\d+ cases? vides? ce trimestre$/ },
+  { cle: "table", onglet: "Prépa. Table", service: "Prépa. Table du Seigneur", sousTitreBO: /^Prépa\. Table du Seigneur · \d+ cases? vides? ce trimestre$/ },
+  { cle: "groupes", onglet: "Groupes", service: "Groupes", sousTitreBO: /^Paix · .*\d+ cases? vides? ce trimestre$/ },
+  { cle: "edd", onglet: "EDD", service: "EDD — École du Dimanche", sousTitreBO: /^EDD — École du Dimanche · .*\d+ cases? vides? sur la période$/ },
+  { cle: "campus", onglet: "Campus", service: "Campus", sousTitreBO: /^Campus · \d+ cases? vides? cette année$/ },
+  { cle: "intergroupe", onglet: "Intergroupe", service: "Intergroupe", sousTitreBO: /^Intergroupe · \d+ cases? vides? cette année$/ },
+  { cle: "interfranco", onglet: "Interfranco", service: "Interfranco", sousTitreBO: /^Interfranco · \d+ cases? vides? cette année$/ },
+];
+
+test.describe("Relecture : chaque planning a l'en-tête « Planning » et sa rangée", () => {
+  for (const { cle, onglet, service, sousTitreBO } of CHAQUE_PLANNING) {
+    test(`App, ${service} : h1 « Planning », le service en h2 dans la rangée`, async ({ page }, info) => {
+      await ouvrir(page, MEMBRE, `/planning/${cle}`);
+      await expect(barre(page).getByRole("heading", { level: 2 })).toHaveText(service);
+      await expect(enTete(page).getByRole("heading", { level: 1 })).toHaveText("Planning");
+      // Les plannings en pilules dans l'en-tête en grand seulement ; aucune autre rangée de pilules.
+      await verifierAgencement(page, { premierBloc: barre(page), contenu: barre(page), onglets: { pilules: estGrandEcran(info) ? 1 : 0 } });
+    });
+
+    test(`Back-Office, ${service} : h1 « Planning », le planning et ses cases vides en sous-titre, les plannings en pilules`, async ({ page }) => {
+      await ouvrir(page, ADMIN, `/back-office/planning/${cle}`);
+      const plannings = barre(page).getByRole("navigation", { name: "Plannings" });
+      await expect(plannings.getByRole("link", { name: onglet, exact: true })).toHaveAttribute("aria-current", "page");
+      await expect(enTete(page).getByRole("heading", { level: 1 })).toHaveText("Planning");
+      await expect(enTete(page).locator("p").first()).toHaveText(sousTitreBO);
+      await expect(barre(page).getByRole("heading", { level: 2 }), "le service n'est pas répété en h2").toHaveCount(0);
+      await verifierAgencement(page, { premierBloc: barre(page), contenu: barre(page), onglets: { pilules: 1 } });
+    });
+  }
 });
 
 // ─── App (A2, A3, R6) ─────────────────────────────────────────────────────────
@@ -199,6 +245,34 @@ test.describe("App Planning : le titre « Planning », le service en h2", () => 
     await expect(vues.getByRole("tab")).toHaveText(["Louange", "Répétition", "Grille"]);
   });
 
+  // Relecture : planches `v18-app-planning-grille-a` et `v18-bo-planning-a`, « 4/10 » puis « Cette
+  // semaine » dessous ; le badge remplaçait la date. Le téléphone (cartes) montrait déjà les deux.
+  for (const [espace, qui, vers] of [["App", MEMBRE, "/planning/culte"], ["Back-Office", ADMIN, "/back-office/planning/culte"]] as const) {
+    test(`${espace} : la ligne de cette semaine garde sa date, le badge dessous`, async ({ page }) => {
+      await ouvrir(page, qui, vers);
+      const ligne = page.locator('[data-date-cell="2026-11-15"], [data-date-carte="2026-11-15"]').filter({ visible: true });
+      await expect(ligne).toContainText("15/11");
+      await expect(ligne).toContainText("Cette semaine");
+    });
+  }
+
+  // Relecture : un prénom effacé (enregistré vide sur l'appareil) était remis par le profil.
+  test("un prénom effacé le reste après un rechargement : le profil ne le remet pas", async ({ page }) => {
+    await ouvrir(page, MEMBRE, "/planning/culte");
+    const champ = barre(page).getByPlaceholder("Mon prénom…");
+    await expect(champ, "prérempli depuis le profil").toHaveValue("Pianiste D.");
+    await barre(page).getByRole("button", { name: "Effacer" }).click();
+    await expect(champ).toHaveValue("");
+    const profilLu = page.waitForResponse((r) => r.url().includes("/documents/users/uid-membre"));
+    await page.reload();
+    await profilLu;
+    await expect(page.locator('[data-case="2026-11-15|presidence"]').filter({ visible: true })).toContainText("Président J.");
+    // Le profil est lu : laisser à React le temps d'en tirer le prénom, s'il le faisait.
+    await page.waitForTimeout(500);
+    await expect(champ).toHaveValue("");
+    await expect(barre(page).getByRole("button", { name: "Mes dates" })).toHaveCount(0);
+  });
+
   test("accueil : un seul h1, « Planning », dans l'en-tête commun", async ({ page }) => {
     await ouvrir(page, MEMBRE, "/planning");
     await expect(page.locator("h1").filter({ visible: true })).toHaveCount(1);
@@ -243,12 +317,14 @@ const SETLIST_ACCUEIL = {
   items: [accueilItem("hosanna", 1), accueilItem("abba-pere", 2)],
 };
 
-async function ouvrirAccueilOuTable(page: Page, vers: string, docs: Record<string, Record<string, unknown>> = {}) {
+/** `quand` : l'heure simulée (par défaut le jeudi 1er octobre 2026) ; `feuilles` : des feuilles en plus. */
+async function ouvrirAccueilOuTable(page: Page, vers: string, docs: Record<string, Record<string, unknown>> = {},
+  { quand = "2026-10-01T10:00:00", feuilles = {} }: { quand?: string; feuilles?: Record<string, string> } = {}) {
   interdireDialoguesNatifs(page);
-  await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
+  await page.clock.setFixedTime(new Date(quand));
   await page.route(/docs\.google\.com\/spreadsheets/, (route) => {
     const feuille = new URL(route.request().url()).searchParams.get("sheet") ?? "";
-    return route.fulfill({ status: 200, contentType: "text/csv", body: FEUILLES_ACCUEIL[feuille] ?? "" });
+    return route.fulfill({ status: 200, contentType: "text/csv", body: { ...FEUILLES_ACCUEIL, ...feuilles }[feuille] ?? "" });
   });
   return signInAs(page, MUSICIEN, { "setlists/sl-1": SETLIST_ACCUEIL, ...docs }, vers);
 }
@@ -314,6 +390,46 @@ test.describe("T4b — Planning, accueil (A1)", () => {
     // Le Culte : trois colonnes de rôles.
     const xs = await ceDimanche(page).getByTestId("carte-culte").locator("dt").evaluateAll((dts) => [...new Set(dts.map((d) => Math.round(d.getBoundingClientRect().x)))]);
     expect(xs, "trois colonnes de rôles").toHaveLength(3);
+  });
+
+  // Relecture : la barre est réduite sur l'iPad couché aussi (R15), mais le seuil est celui du
+  // conteneur : à 1 080 px, « Ce dimanche » (à côté de « Pour moi ») reste sous 720 px.
+  test("tablette couchée, barre réduite : « Ce dimanche » sous 720 px, la Table sous Groupes et EDD, sur une ligne", async ({ page }, info) => {
+    test.skip(info.project.name !== "tablette-paysage", "iPad couché");
+    await ouvrirAccueilOuTable(page, "/planning");
+    await expect(carteDeLaTable(page)).toContainText("Famille Test");
+    expect((await boite(ceDimanche(page))).width, "la colonne « Ce dimanche »").toBeLessThan(720);
+    const [g, e, t] = [await boite(carteDesGroupes(page)), await boite(carteEdd(page)), await boite(carteDeLaTable(page))];
+    expect(Math.abs(g.y - e.y), "Groupes et EDD côte à côte").toBeLessThan(2);
+    expect(t.y, "la Table dessous").toBeGreaterThan(Math.max(g.y + g.height, e.y + e.height) - 1);
+    const libelle = await boite(carteDeLaTable(page).getByText("Prépa. Table", { exact: true }));
+    const nom = await boite(carteDeLaTable(page).getByText("Famille Test", { exact: true }));
+    expect(Math.abs(libelle.y - nom.y), "une ligne").toBeLessThan(4);
+    await expect(carteDeLaTable(page).getByRole("heading", { name: "Table" })).toBeHidden();
+  });
+
+  // Relecture : un dimanche d'Interfranco, la carte du service remplace Groupes ; la Table reste
+  // sous elle et sous EDD, sur une ligne, même barre réduite (pas de rangée à trois).
+  test("ordinateur-1440, barre réduite, dimanche d'Interfranco : la Table reste dessous, sur une ligne", async ({ page }, info) => {
+    test.skip(info.project.name !== "ordinateur-1440", "1 440 px, barre réduite");
+    await ouvrirAvecBarre(page, "reduite");
+    await ouvrirAccueilOuTable(page, "/planning", {}, {
+      feuilles: {
+        Interfranco: csv([
+          ["INTERFRANCO Année 2026 DATE", "Présidence", "Choristes", "", "Pianiste", "Guitariste", "Cajon/Batterie", "Sono + Live", "PPT", "Orateur", "Traducteur"],
+          ["04/10", "Président V.", "Choriste W.", "Choriste X.", "Pianiste Y.", "", "", "", "", "", ""],
+        ]),
+      },
+    });
+    const inter = ceDimanche(page).getByTestId("carte-inter");
+    await expect(inter).toContainText("Président V.");
+    await expect(carteDeLaTable(page)).toContainText("Famille Test");
+    const [i, e, t] = [await boite(inter), await boite(carteEdd(page)), await boite(carteDeLaTable(page))];
+    expect(t.y, "la Table sous Interfranco et EDD").toBeGreaterThan(Math.max(i.y + i.height, e.y + e.height) - 1);
+    const libelle = await boite(carteDeLaTable(page).getByText("Prépa. Table", { exact: true }));
+    const nom = await boite(carteDeLaTable(page).getByText("Famille Test", { exact: true }));
+    expect(Math.abs(libelle.y - nom.y), "une ligne").toBeLessThan(4);
+    await expect(carteDeLaTable(page).getByRole("heading", { name: "Table" })).toHaveCount(0);
   });
 });
 
@@ -418,6 +534,40 @@ test.describe("T4b — Prépa. Table (A4)", () => {
     await expect(ton.getByText("Aucun petit déj à venir à ton nom.")).toBeVisible();
     await expect(ton.getByRole("button", { name: "Plus d'actions" })).toHaveCount(0);
   });
+
+  // Relecture : le champ n'existait que dans la carte du trimestre affiché ; un prochain petit déj
+  // d'un autre trimestre ne s'ouvrait nulle part, sans un mot.
+  test("« Ton petit déj » : « ⋯ › Modifier » ouvre le champ sur place quand son dimanche n'est pas dans le trimestre affiché", async ({ page }) => {
+    const db = await ouvrirAccueilOuTable(page, "/planning/table", {
+      "petitDej/m": petitDejDoc("2026-12-06", "Pianiste D.", MUSICIEN.uid),
+    });
+    const ton = carteTonPetitDej(page);
+    await expect(ton.getByText("Dimanche 6 décembre")).toBeVisible();
+    await barre(page).getByRole("tablist", { name: "Trimestre" }).getByRole("tab", { name: /^T3/ }).click();
+    await expect(cartePetitDej(page).locator('[data-dimanche="2026-12-06"]')).toHaveCount(0);
+    await ton.getByRole("button", { name: "Plus d'actions" }).click();
+    await page.getByRole("menuitem", { name: "Modifier" }).click();
+    const champ = ton.getByRole("textbox", { name: "Modifier" });
+    await expect(champ).toBeFocused();
+    await expect(champ).toHaveValue("Pianiste D.");
+    await champ.fill("Famille Test D.");
+    await champ.press("Enter");
+    await expect.poll(() => (db.doc("petitDej/m") as { nom?: string } | undefined)?.nom).toBe("Famille Test D.");
+    await expect(ton.getByRole("textbox")).toHaveCount(0);
+    // Dans le trimestre affiché, le champ reste celui de la rangée (un seul champ).
+    await barre(page).getByRole("tablist", { name: "Trimestre" }).getByRole("tab", { name: /^T4/ }).click();
+    await ton.getByRole("button", { name: "Plus d'actions" }).click();
+    await page.getByRole("menuitem", { name: "Modifier" }).click();
+    await expect(cartePetitDej(page).locator('[data-dimanche="2026-12-06"]').getByRole("textbox", { name: "Modifier" })).toBeFocused();
+    await expect(page.getByRole("textbox", { name: "Modifier" })).toHaveCount(1);
+  });
+
+  // Relecture : « 1 libres sur 13 ».
+  test("le petit déj : « 1 libre sur 13 » au singulier", async ({ page }) => {
+    // Jeudi 24 décembre : du T4, seul le 27 décembre reste à venir.
+    await ouvrirAccueilOuTable(page, "/planning/table", {}, { quand: "2026-12-24T10:00:00" });
+    await expect(cartePetitDej(page).getByText("1 libre sur 13", { exact: true })).toBeVisible();
+  });
 });
 
 // ─── Captures, à regarder (cinq tailles) ──────────────────────────────────────
@@ -453,4 +603,10 @@ test("captures T4b : accueil et Prépa. Table", async ({ page }, info) => {
   await page.goto("/planning/table");
   await expect(carteTonPetitDej(page).getByText("Dimanche 6 décembre")).toBeVisible();
   await capture("app-table");
+  // Relecture : « Ton petit déj › ⋯ › Modifier » quand la carte montre un autre trimestre.
+  await barre(page).getByRole("tablist", { name: "Trimestre" }).getByRole("tab", { name: /^T3/ }).click();
+  await carteTonPetitDej(page).getByRole("button", { name: "Plus d'actions" }).click();
+  await page.getByRole("menuitem", { name: "Modifier" }).click();
+  await expect(carteTonPetitDej(page).getByRole("textbox", { name: "Modifier" })).toBeFocused();
+  await capture("app-table-ton-petit-dej-modifier");
 });

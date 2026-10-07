@@ -11,7 +11,8 @@
 // Agencement v18 (A4, docs/spec-agencement-v18.md) : une ligne qu'on peut toucher (la sienne,
 // en encre ; toutes pour qui gère) porte un « ⋯ » (Modifier, Retirer) au lieu de deux boutons ;
 // « Ton petit déj » (`TonPetitDej`) reprend son prochain dimanche à côté de la carte. Les deux
-// cartes partagent un même état (`usePetitDej`) : « ⋯ › Modifier » ouvre le champ dans la rangée.
+// cartes partagent un même état (`usePetitDej`) : « ⋯ › Modifier » ouvre le champ dans la rangée,
+// ou dans « Ton petit déj » quand la carte ne montre pas ce dimanche (un autre trimestre, une autre année).
 
 import { useEffect, useId, useRef, useState, type ReactNode } from "react"
 import { useTranslation } from "react-i18next"
@@ -157,31 +158,18 @@ function actionsDeLaLigne(etat: EtatPetitDej, l: LignePetitDej, t: (cle: string)
   ]
 }
 
-export function PetitDejCarte({ etat, annee, tri, nomsDesComptes }: {
-  etat: EtatPetitDej
-  annee: number
-  /** « T1 » … « T4 », le trimestre choisi par la page. */
-  tri: string
-  /** Noms de planning des comptes, suggérés à qui pose une ligne pour quelqu'un. */
-  nomsDesComptes: readonly string[]
-}) {
-  const { t, i18n } = useTranslation()
-  const { user, profile, lignes, saisie, setSaisie, annonce, enCours, sun, peutGerer, sInscrire, commencer, terminer } = etat
-  const titreId = useId()
-  const listeId = useId()
-  const dimanches = dimanchesDe(annee).filter((d) => getTri(d) === tri)
-  // « n libres sur N » : les dimanches à venir du trimestre sans aucune ligne.
-  const libres = Array.isArray(lignes) ? dimanches.filter((d) => d >= sun && !lignes.some((l) => l.dimanche === d)).length : null
-
-  // Fonction, pas composant : un composant défini ici serait remonté à chaque
-  // frappe et le champ perdrait le focus (même raison que PlanningGrille).
-  const champ = (label: string, suggestions: boolean) => (
+/** Le champ d'une saisie (réécrire une ligne, en ajouter une, son nom) : Entrée ou sortie du champ
+ *  enregistre, Échap annule. Composant du module, pas d'un rendu : défini dans la carte, il serait
+ *  remonté à chaque frappe et le champ perdrait le focus (même raison que PlanningGrille). */
+function ChampDeSaisie({ etat, label, liste }: { etat: EtatPetitDej; label: string; liste?: string }) {
+  const { saisie, setSaisie, terminer } = etat
+  return (
     <input
       autoFocus
       type="text"
       maxLength={NOM_MAX}
       aria-label={label}
-      list={suggestions ? listeId : undefined}
+      list={liste}
       placeholder={saisie?.inscription ? label : undefined}
       value={saisie?.valeur ?? ""}
       onChange={(e) => setSaisie((s) => (s ? { ...s, valeur: e.target.value } : s))}
@@ -194,6 +182,28 @@ export function PetitDejCarte({ etat, annee, tri, nomsDesComptes }: {
       style={{ borderColor: COULEUR }}
     />
   )
+}
+
+/** La carte « Petit déj » montre-t-elle ce dimanche (l'année et le trimestre choisis) ? */
+const dansLaPeriode = (dimanche: string, annee: number, tri: string) => dimanche.startsWith(`${annee}-`) && getTri(dimanche) === tri
+
+export function PetitDejCarte({ etat, annee, tri, nomsDesComptes }: {
+  etat: EtatPetitDej
+  annee: number
+  /** « T1 » … « T4 », le trimestre choisi par la page. */
+  tri: string
+  /** Noms de planning des comptes, suggérés à qui pose une ligne pour quelqu'un. */
+  nomsDesComptes: readonly string[]
+}) {
+  const { t, i18n } = useTranslation()
+  const { user, profile, lignes, saisie, annonce, enCours, sun, peutGerer, sInscrire, commencer } = etat
+  const titreId = useId()
+  const listeId = useId()
+  const dimanches = dimanchesDe(annee).filter((d) => dansLaPeriode(d, annee, tri))
+  // « n libres sur N » : les dimanches à venir du trimestre sans aucune ligne.
+  const libres = Array.isArray(lignes) ? dimanches.filter((d) => d >= sun && !lignes.some((l) => l.dimanche === d)).length : null
+
+  const champ = (label: string, suggestions: boolean) => <ChampDeSaisie etat={etat} label={label} liste={suggestions ? listeId : undefined} />
 
   const bouton = "h-9 shrink-0 rounded-full px-3.5 text-sm font-semibold transition-[background-color,color,transform] duration-150 active:scale-[.96] disabled:opacity-60"
   const boutonGris = `${bouton} bg-secondary text-foreground hover:bg-secondary/70`
@@ -268,7 +278,7 @@ export function PetitDejCarte({ etat, annee, tri, nomsDesComptes }: {
         </span>
         <h3 id={titreId} className="text-[17px] font-bold text-foreground">{t("planning.tabs.petitDej")}</h3>
         {libres !== null && (
-          <span className="ml-auto text-[13px] text-muted-foreground">{t("planning.petitDej.libresSur", { libres, total: dimanches.length })}</span>
+          <span className="ml-auto text-[13px] text-muted-foreground">{t("planning.petitDej.libresSur", { count: libres, total: dimanches.length })}</span>
         )}
       </div>
       {lignes === "illisible" ? (
@@ -290,10 +300,12 @@ export function PetitDejCarte({ etat, annee, tri, nomsDesComptes }: {
 const majuscule = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 
 /** « Ton petit déj » (A4) : son prochain dimanche inscrit, avec le même « ⋯ » que sa rangée ;
- *  sans inscription à venir, une phrase. L'astuce du nom (« Famille … ») est ici. */
-export function TonPetitDej({ etat }: { etat: EtatPetitDej }) {
+ *  sans inscription à venir, une phrase. L'astuce du nom (« Famille … ») est ici. « Modifier » ouvre
+ *  le champ dans la rangée de la carte ; ici, à la place de la date, quand la carte montre une autre
+ *  période (`annee`, `tri` : ceux de la page). */
+export function TonPetitDej({ etat, annee, tri }: { etat: EtatPetitDej; annee: number; tri: string }) {
   const { t, i18n } = useTranslation()
-  const { user, profile, lignes, sun } = etat
+  const { user, profile, lignes, saisie, sun } = etat
   const titreId = useId()
   const prochaine = Array.isArray(lignes) && user
     ? lignes.filter((l) => l.uid === user.uid && l.dimanche >= sun).sort((a, b) => (a.dimanche < b.dimanche ? -1 : 1))[0]
@@ -311,13 +323,19 @@ export function TonPetitDej({ etat }: { etat: EtatPetitDej }) {
     corps = (
       <div className="flex items-center gap-3">
         <Tile color={COULEUR} big={jour.getDate()} small={new Intl.DateTimeFormat(langue, { month: "short" }).format(jour)} size="lg" />
-        <div className="min-w-0 flex-1">
-          <p className="text-base font-bold text-foreground">
-            {majuscule(new Intl.DateTimeFormat(langue, { weekday: "long", day: "numeric", month: "long" }).format(jour))}
-          </p>
-          <p className="text-[13px] text-muted-foreground">{quand}</p>
-        </div>
-        {canEditPetitDej(user, profile, prochaine, sun) && <MenuActions actions={actionsDeLaLigne(etat, prochaine, t)} />}
+        {saisie?.id === prochaine.id && !dansLaPeriode(prochaine.dimanche, annee, tri) ? (
+          <div className="min-w-0 flex-1"><ChampDeSaisie etat={etat} label={t("planning.petitDej.modifier")} /></div>
+        ) : (
+          <>
+            <div className="min-w-0 flex-1">
+              <p className="text-base font-bold text-foreground">
+                {majuscule(new Intl.DateTimeFormat(langue, { weekday: "long", day: "numeric", month: "long" }).format(jour))}
+              </p>
+              <p className="text-[13px] text-muted-foreground">{quand}</p>
+            </div>
+            {canEditPetitDej(user, profile, prochaine, sun) && <MenuActions actions={actionsDeLaLigne(etat, prochaine, t)} />}
+          </>
+        )}
       </div>
     )
   }

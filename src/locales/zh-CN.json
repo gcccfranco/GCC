@@ -1132,7 +1132,7 @@
       "periodeAnnee": "{{annee}} 年"
     },
     "petitDej": {
-      "libresSur": "{{total}} 个主日中 {{libres}} 个空闲",
+      "libresSur_other": "{{total}} 个主日中 {{count}} 个空闲",
       "ton": "你的早餐",
       "aucunAVenir": "你还没有报名之后的早餐。",
       "libre": "空闲",

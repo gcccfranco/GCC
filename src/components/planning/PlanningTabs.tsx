@@ -52,6 +52,7 @@ export function PlanningTabs() {
         }
       />
       <SectionTabs
+        sousLeTitre
         className={`mb-4 ${HORS_GRAND}`}
         rootHref="/planning"
         pleineLargeur

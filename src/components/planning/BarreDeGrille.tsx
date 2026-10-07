@@ -51,16 +51,18 @@ export type FiltreNom = {
   estMoi: (cell: string) => boolean
 }
 
-/** Le prénom mémorisé sur l'appareil, prérempli depuis le profil (comme `PlanningTable`), et
- *  « Mes dates ». Tenu par la page : la rangée l'affiche, la grille (ou les deux de Campus) le suit. */
+/** Le prénom mémorisé sur l'appareil, prérempli depuis le profil, et « Mes dates ». Tenu par la page :
+ *  la rangée l'affiche, la grille (ou les deux de Campus) le suit ; l'ancien tableau (`PlanningTable`)
+ *  s'en sert aussi. */
 export function useFiltreNom(): FiltreNom {
   const { profile } = useProfile()
   const [nom, setNom] = useState("")
   const [mesDates, setMesDates] = useState(false)
   useEffect(() => {
     try {
+      // Un nom effacé (enregistré vide) le reste : seul un appareil qui n'a rien noté prend celui du profil.
       const saved = localStorage.getItem("planningName")
-      if (saved) { setNom(saved); return }
+      if (saved !== null) { setNom(saved); return }
     } catch { /* stockage indisponible */ }
     if (profile?.planningName) setNom(profile.planningName)
   }, [profile])
