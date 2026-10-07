@@ -2,20 +2,27 @@
 
 // « Recalculer depuis l'organigramme » (lot U6, R4) : pose équipes et référents
 // (`dansEquipes`, `referentDe`) de tous les membres des équipes — les pôles ne
-// bougent pas. Idempotent : rien à confirmer. Admins seuls (`{ tous: true }` de
-// /api/equipes/poles). Retours du 06/10/2026 : l'onglet Import qui le portait est
-// retiré ; le bouton passe au bas de Équipes › Organigramme, discret.
+// bougent pas. Admins seuls (`{ tous: true }` de /api/equipes/poles). Retours du
+// 06/10/2026 : l'onglet Import qui le portait est retiré. Agencement v18 (B8 de
+// docs/spec-agencement-v18.md) : le bouton passe dans l'en-tête d'Équipes (outil en
+// contour), son résultat s'affiche sous l'en-tête : le hook rend les deux morceaux, que
+// la page pose chacun à sa place. Relecture de T5 : sur téléphone le bouton n'est qu'une
+// icône et l'infobulle n'existe pas au toucher ; l'aide (ce que le calcul écrit sur les
+// profils) se lit dans la fenêtre du site, avant de lancer.
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { RefreshCw } from "lucide-react";
 import { authHeader } from "@/lib/firebase/setlists";
-import { Button } from "@/components/ui/button";
+import { useConfirmer } from "@/components/layout/Confirmer";
 
-export function RecalculerOrganigramme() {
+export function useRecalculOrganigramme() {
   const { t } = useTranslation();
+  const confirmer = useConfirmer();
   const [etat, setEtat] = useState<"busy" | number | null>(null);
   const [erreur, setErreur] = useState("");
 
   async function recalculer() {
+    if (!(await confirmer({ titre: t("equipes.recalcul.question"), texte: t("equipes.recalcul.aide"), action: t("equipes.recalcul.action") }))) return;
     setEtat("busy");
     setErreur("");
     try {
@@ -33,18 +40,27 @@ export function RecalculerOrganigramme() {
     }
   }
 
-  return (
-    <div className="mt-8 border-t border-border pt-4 space-y-2">
-      <div className="flex flex-wrap items-center gap-3">
-        <Button onClick={() => void recalculer()} disabled={etat === "busy"} variant="outline" size="sm">
-          {etat === "busy" ? "…" : t("equipes.recalcul.bouton")}
-        </Button>
-        {typeof etat === "number" && (
-          <p className="text-sm text-foreground" aria-live="polite">{t("equipes.recalcul.fait", { count: etat })}</p>
-        )}
-        {erreur && <p className="text-sm text-destructive" aria-live="polite">{erreur}</p>}
-      </div>
-      <p className="text-xs text-muted-foreground max-w-prose">{t("equipes.recalcul.aide")}</p>
-    </div>
+  const libelle = t("equipes.recalcul.bouton");
+  const bouton = (
+    <button
+      type="button"
+      onClick={() => void recalculer()}
+      disabled={etat === "busy"}
+      aria-label={libelle}
+      title={t("equipes.recalcul.aide")}
+      className="inline-flex h-10 shrink-0 items-center gap-2 rounded-full bg-background px-3 text-[14px] font-semibold text-foreground shadow-[inset_0_0_0_1px_hsl(var(--border))] transition-colors hover:bg-secondary disabled:opacity-60 sm:px-4"
+    >
+      <RefreshCw className={`h-4 w-4 shrink-0 ${etat === "busy" ? "animate-spin" : ""}`} aria-hidden />
+      <span className="hidden sm:inline">{libelle}</span>
+    </button>
   );
+
+  const resultat =
+    typeof etat === "number" ? (
+      <p className="mt-2 text-sm text-foreground" aria-live="polite">{t("equipes.recalcul.fait", { count: etat })}</p>
+    ) : erreur ? (
+      <p className="mt-2 text-sm text-destructive" aria-live="polite">{erreur}</p>
+    ) : null;
+
+  return { bouton, resultat };
 }

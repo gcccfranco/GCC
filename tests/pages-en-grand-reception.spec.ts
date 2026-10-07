@@ -1,5 +1,6 @@
 import { expect, test, type Page, type TestInfo } from "@playwright/test";
 import { signInAs, ADMIN_EMAIL, type FakeProfile } from "./helpers/fakeSession";
+import { repondreDansLeSite } from "./helpers/agencement";
 
 // Lot U4 bis, tranche B7 — la Réception en grand (docs/spec-pages-en-grand.md, Q15 ; planches
 // `bo-reception-*`). Back-Office › Messages › Réception. En grand (ordinateur, iPad paysage) : la
@@ -84,7 +85,8 @@ test.describe("Réception en grand (ordinateur, iPad paysage)", () => {
     await expect(m.getByRole("link", { name: "Hosanna" })).toHaveAttribute("href", /\/songs\/hosanna/);
     await expect(m.getByRole("link", { name: "Page" })).toBeVisible();
     await expect(m.getByRole("button", { name: "Marquer traité" })).toBeVisible();
-    await expect(m.getByRole("button", { name: "Supprimer le signalement" })).toBeVisible();
+    // Agencement v18 (B10) : « Supprimer » est dans « ⋯ ».
+    await expect(m.getByRole("button", { name: "Plus d'actions" })).toBeVisible();
     await expect(ligne(page, "Problème avec : Hosanna")).toHaveAttribute("aria-current", "true");
 
     // Liste et message côte à côte.
@@ -143,7 +145,9 @@ test.describe("Réception en grand (ordinateur, iPad paysage)", () => {
     await expect(message(page).getByRole("heading", { level: 2 })).toHaveText("Lien mort sur le guide");
     await expect(message(page).getByRole("button", { name: "Rouvrir" })).toBeVisible();
 
-    await message(page).getByRole("button", { name: "Supprimer le signalement" }).click();
+    await message(page).getByRole("button", { name: "Plus d'actions" }).click();
+    await page.getByRole("menuitem", { name: "Supprimer" }).click();
+    await repondreDansLeSite(page, "Supprimer");
     await expect.poll(() => db.doc("reports/r3")).toBeUndefined();
     await expect(ligne(page, "Lien mort sur le guide")).toHaveCount(0);
     await expect(message(page).getByRole("heading", { level: 2 })).toHaveText("Problème avec : Hosanna");

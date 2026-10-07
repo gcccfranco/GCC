@@ -11,6 +11,9 @@ import type { UserProfile } from "@/types/user";
 import { NOTIFY_ALL, NOTIFY_GROUPS, audienceLabel } from "@/lib/push/audiences";
 import { PUBLISHABLE_PLANNINGS, canPublishPlanning } from "@/lib/planning/releases";
 import { PublishPlanningPanel } from "@/components/planning/PublishPlanningPanel";
+import { Pilules } from "@/components/layout/Onglets";
+import { categoryColor } from "@/lib/serviceColors";
+import { ApercuNotification, DerniersEnvois } from "./ApercuNotification";
 
 // Au-delà de ce nombre de destinataires (ou « tout le monde »), on demande confirmation.
 const CONFIRM_THRESHOLD = 20;
@@ -30,7 +33,10 @@ const DESTINATIONS: { value: string; label: string }[] = [
  *  Lot U6, B2 : sorti de `/notifier` pour Messages › Notifier (`backOffice`). Là, ni
  *  « Publier un planning » (passé à Planning, « Publier le T… » de U2) ni la destination
  *  « Annonces » (404 en ligne, question 13) ; l'ancienne page les garde tant que
- *  l'interrupteur est coupé. `titre` : l'en-tête de l'ancienne page. */
+ *  l'interrupteur est coupé. `titre` : l'en-tête de l'ancienne page.
+ *  Agencement v18 (B11 de docs/spec-agencement-v18.md ; planche `v18-bo-messages-notifier`) : au
+ *  Back-Office, le formulaire en carte à gauche (audience en pilules, pied « Annuler · Envoyer à
+ *  n personnes »), à droite l'aperçu de la notification puis les derniers envois. */
 export function Notifier({ backOffice = false, titre }: { backOffice?: boolean; titre?: ReactNode }) {
   const { user, profile, loading } = useProfile();
   const admin = isAdminUser(user);
@@ -63,6 +69,10 @@ export function Notifier({ backOffice = false, titre }: { backOffice?: boolean; 
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [feedback, setFeedback] = useState("");
+  /** Back-Office : le groupe d'audiences choisi dans la première rangée de pilules. */
+  const [groupe, setGroupe] = useState<string | null>(null);
+  /** Relit « Derniers envois » après un envoi. */
+  const [envois, setEnvois] = useState(0);
 
   // Personnes de l'audience choisie (tout le monde = tous les profils).
   const pool = useMemo(() => {
@@ -142,6 +152,7 @@ export function Notifier({ backOffice = false, titre }: { backOffice?: boolean; 
         setFeedback(`Envoyé (${data.sent ?? 0} notification(s)).`);
         setTitle("");
         setBody("");
+        setEnvois((n) => n + 1);
       } else {
         setFeedback(data.error || "Échec de l'envoi.");
       }
@@ -176,16 +187,296 @@ export function Notifier({ backOffice = false, titre }: { backOffice?: boolean; 
     );
   }
 
+  const selectAudience = (
+    <>
+      <div className="space-y-1.5">
+        <label className="text-sm font-medium text-foreground">
+          Audience
+        </label>
+        <select
+          value={audience}
+          onChange={(e) => setAudience(e.target.value)}
+          className="w-full h-11 px-3 rounded-lg border border-transparent bg-secondary text-foreground text-[16px] sm:text-sm focus:outline-none focus:ring-2 focus:ring-ring/30"
+        >
+          <option value="">Choisir…</option>
+          {canAll && <option value={NOTIFY_ALL}>{audienceLabel(NOTIFY_ALL)}</option>}
+          {groups.map((g) => (
+            <optgroup key={g.label} label={g.label}>
+              {g.audiences.map((a) => (
+                <option key={a} value={a}>
+                  {audienceLabel(a)}
+                </option>
+              ))}
+            </optgroup>
+          ))}
+        </select>
+      </div>
+    </>
+  );
+  const destinataires = (
+    <>
+      {/* Personnes de l'audience — toutes cochées par défaut, décochables */}
+      {audience && (
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <label className="text-sm font-medium text-foreground">
+              Destinataires
+            </label>
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-muted-foreground">
+                {selected.size} / {pool.length}
+              </span>
+              <button
+                type="button"
+                onClick={() =>
+                  setSelected(allSelected ? new Set() : new Set(pool.map((p) => p.uid)))
+                }
+                className="text-xs font-semibold text-foreground underline underline-offset-2 hover:text-muted-foreground"
+              >
+                {allSelected ? "Tout décocher" : "Tout cocher"}
+              </button>
+            </div>
+          </div>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+            <input
+              type="search"
+              value={peopleQuery}
+              onChange={(e) => setPeopleQuery(e.target.value)}
+              placeholder="Filtrer la liste…"
+              className="w-full h-10 pl-9 pr-9 rounded-lg border border-transparent bg-secondary text-foreground placeholder:text-muted-foreground text-[16px] sm:text-sm focus:outline-none focus:ring-2 focus:ring-ring/30 [&::-webkit-search-cancel-button]:hidden"
+            />
+            {peopleQuery && (
+              <button
+                onClick={() => setPeopleQuery("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+          <div className="max-h-64 overflow-y-auto rounded-xl bg-card divide-y divide-border">
+            {profiles === null ? (
+              <p className="text-sm text-muted-foreground text-center py-6">Chargement…</p>
+            ) : shownPool.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-6">Aucun membre.</p>
+            ) : (
+              shownPool.map((p) => {
+                const checked = selected.has(p.uid);
+                return (
+                  <button
+                    key={p.uid}
+                    type="button"
+                    onClick={() => toggle(p.uid)}
+                    className="w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-muted/40"
+                  >
+                    <span
+                      className={`h-4 w-4 rounded border flex items-center justify-center shrink-0 text-xs ${
+                        checked ? "bg-foreground border-foreground text-background" : "border-border"
+                      }`}
+                    >
+                      {checked && "✓"}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="text-sm text-foreground truncate block">
+                        {p.firstName} {p.lastName}
+                      </span>
+                      {p.planningName && (
+                        <span className="text-xs text-muted-foreground truncate block">
+                          planning : {p.planningName}
+                        </span>
+                      )}
+                    </span>
+                  </button>
+                );
+              })
+            )}
+          </div>
+        </div>
+      )}
+    </>
+  );
+  const champs = (
+    <>
+      <div className="space-y-1.5">
+        <label htmlFor="notif-titre" className="text-sm font-medium text-foreground">
+          Titre
+        </label>
+        <input
+          id="notif-titre"
+          type="text"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          maxLength={80}
+          placeholder="Ex. Changement de planning"
+          className="w-full h-11 px-3 rounded-lg border border-transparent bg-secondary text-foreground placeholder:text-muted-foreground text-[16px] sm:text-sm focus:outline-none focus:ring-2 focus:ring-ring/30"
+        />
+      </div>
+
+      <div className="space-y-1.5">
+        <label htmlFor="notif-message" className="text-sm font-medium text-foreground">
+          Message
+        </label>
+        <textarea
+          id="notif-message"
+          value={body}
+          onChange={(e) => setBody(e.target.value)}
+          maxLength={300}
+          rows={3}
+          placeholder="Ex. Le planning du Culte a été mis à jour, vérifie tes dates."
+          className="w-full px-3 py-2.5 rounded-lg border border-transparent bg-secondary text-foreground placeholder:text-muted-foreground text-[16px] sm:text-sm focus:outline-none focus:ring-2 focus:ring-ring/30 resize-none"
+        />
+      </div>
+
+      <div className="space-y-1.5">
+        <label htmlFor="notif-destination" className="text-sm font-medium text-foreground">
+          Ouvre au clic
+        </label>
+        <select
+          id="notif-destination"
+          value={dest}
+          onChange={(e) => setDest(e.target.value)}
+          className="w-full h-11 px-3 rounded-lg border border-transparent bg-secondary text-foreground text-[16px] sm:text-sm focus:outline-none focus:ring-2 focus:ring-ring/30"
+        >
+          {DESTINATIONS.filter((d) => !backOffice || d.value !== "/annonces").map((d) => (
+            <option key={d.value} value={d.value}>
+              {d.label}
+            </option>
+          ))}
+        </select>
+      </div>
+    </>
+  );
+  const envoi = (
+    <>
+
+      {confirmOpen ? (
+        <div className="rounded-xl bg-card p-3 space-y-3">
+          <p className="text-sm text-foreground">
+            Envoyer cette notification à <span className="font-semibold">{recipLabel}</span> ?
+          </p>
+          <div className="flex justify-end gap-2">
+            <button
+              onClick={() => setConfirmOpen(false)}
+              className="h-9 px-4 rounded-full bg-secondary text-sm font-semibold text-muted-foreground hover:text-foreground"
+            >
+              Annuler
+            </button>
+            <button
+              onClick={doSend}
+              disabled={busy}
+              className="inline-flex items-center gap-1.5 h-9 px-4 rounded-full bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 disabled:opacity-50"
+            >
+              <Send className="h-4 w-4" />
+              {busy ? "Envoi…" : "Confirmer"}
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="flex justify-end">
+          <button
+            onClick={attemptSend}
+            disabled={!canSend}
+            className="inline-flex items-center gap-1.5 h-11 px-5 rounded-full bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50"
+          >
+            <Send className="h-4 w-4" />
+            {busy ? "Envoi…" : "Envoyer"}
+          </button>
+        </div>
+      )}
+    </>
+  );
+
+  if (backOffice) {
+    // Agencement v18 (B11) : audience en pilules (tout le monde, puis un groupe et l'une de ses
+    // audiences), pied « Annuler · Envoyer à n personnes », aperçu et derniers envois à droite.
+    const groupeChoisi = groups.find((g) => g.label === groupe) ?? null;
+    const annuler = () => {
+      setTitle("");
+      setBody("");
+      setAudience("");
+      setGroupe(null);
+      setDest("/mes-services");
+      setFeedback("");
+    };
+    return (
+      <div className="grid items-start gap-4 px-[var(--marge-page)] pb-10 lg:grid-cols-[minmax(0,1fr)_minmax(300px,0.72fr)]">
+        <div className="raised rounded-2xl p-5 space-y-4 sm:p-6">
+          <div>
+            <h2 className="text-[18px] font-bold text-foreground">Prévenir des membres</h2>
+            <p className="text-sm text-muted-foreground">
+              Une notification sur leur téléphone, et le message dans « Notifications ».
+            </p>
+          </div>
+          <div className="space-y-2">
+            <p className="text-sm font-medium text-foreground">À qui</p>
+            <Pilules
+              etiquette="Audience"
+              options={[
+                ...(canAll ? [{ cle: NOTIFY_ALL, nom: audienceLabel(NOTIFY_ALL) }] : []),
+                ...groups.map((g) => ({ cle: g.label, nom: g.label })),
+              ]}
+              valeur={audience === NOTIFY_ALL ? NOTIFY_ALL : groupe}
+              choisir={(v) => {
+                setGroupe(v === NOTIFY_ALL ? null : v);
+                setAudience(v === NOTIFY_ALL ? NOTIFY_ALL : "");
+              }}
+            />
+            {groupeChoisi && (
+              <Pilules
+                etiquette={groupeChoisi.label}
+                options={groupeChoisi.audiences.map((a) => ({ cle: a, nom: audienceLabel(a), couleur: categoryColor(a) }))}
+                valeur={audience || null}
+                choisir={(v) => setAudience(v ?? "")}
+              />
+            )}
+          </div>
+          {destinataires}
+          {champs}
+          {feedback && <p className="text-xs text-muted-foreground">{feedback}</p>}
+          {confirmOpen ? (
+            envoi
+          ) : (
+            <div className="flex justify-end gap-2 border-t border-border pt-4">
+              <button
+                type="button"
+                onClick={annuler}
+                className="h-10 rounded-full bg-background px-4 text-sm font-semibold text-foreground shadow-[inset_0_0_0_1px_hsl(var(--border))] hover:bg-secondary"
+              >
+                Annuler
+              </button>
+              <button
+                type="button"
+                onClick={attemptSend}
+                disabled={!canSend}
+                className="inline-flex h-10 items-center gap-1.5 rounded-full bg-primary px-5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
+              >
+                <Send className="h-4 w-4" aria-hidden />
+                {busy
+                  ? "Envoi…"
+                  : selected.size === 0
+                  ? "Envoyer"
+                  : `Envoyer à ${selected.size} personne${selected.size > 1 ? "s" : ""}`}
+              </button>
+            </div>
+          )}
+        </div>
+        <div className="space-y-4">
+          <ApercuNotification titre={title} message={body} />
+          <DerniersEnvois cle={envois} />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-5">
       {titre}
       <p className="text-sm text-muted-foreground">
-        {backOffice
-          ? "Prévenir une audience d'un changement de planning."
-          : "Prévenir une audience d'un changement de planning, ou de la mise en ligne du planning du trimestre."}
+        Prévenir une audience d&apos;un changement de planning, ou de la mise en ligne du planning du trimestre.
       </p>
 
-      {!backOffice && canPublishAny && (
+      {canPublishAny && (
         <div className="flex gap-2">
           {(
             [
@@ -212,190 +503,11 @@ export function Notifier({ backOffice = false, titre }: { backOffice?: boolean; 
         <PublishPlanningPanel isAdmin={admin} notifyRights={rights} />
       ) : (
       <div className="rounded-xl bg-card shadow-soft p-5 space-y-4">
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium text-foreground">
-            Audience
-          </label>
-          <select
-            value={audience}
-            onChange={(e) => setAudience(e.target.value)}
-            className="w-full h-11 px-3 rounded-lg border border-transparent bg-secondary text-foreground text-[16px] sm:text-sm focus:outline-none focus:ring-2 focus:ring-ring/30"
-          >
-            <option value="">Choisir…</option>
-            {canAll && <option value={NOTIFY_ALL}>{audienceLabel(NOTIFY_ALL)}</option>}
-            {groups.map((g) => (
-              <optgroup key={g.label} label={g.label}>
-                {g.audiences.map((a) => (
-                  <option key={a} value={a}>
-                    {audienceLabel(a)}
-                  </option>
-                ))}
-              </optgroup>
-            ))}
-          </select>
-        </div>
-
-        {/* Personnes de l'audience — toutes cochées par défaut, décochables */}
-        {audience && (
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <label className="text-sm font-medium text-foreground">
-                Destinataires
-              </label>
-              <div className="flex items-center gap-3">
-                <span className="text-xs text-muted-foreground">
-                  {selected.size} / {pool.length}
-                </span>
-                <button
-                  type="button"
-                  onClick={() =>
-                    setSelected(allSelected ? new Set() : new Set(pool.map((p) => p.uid)))
-                  }
-                  className="text-xs font-semibold text-foreground underline underline-offset-2 hover:text-muted-foreground"
-                >
-                  {allSelected ? "Tout décocher" : "Tout cocher"}
-                </button>
-              </div>
-            </div>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-              <input
-                type="search"
-                value={peopleQuery}
-                onChange={(e) => setPeopleQuery(e.target.value)}
-                placeholder="Filtrer la liste…"
-                className="w-full h-10 pl-9 pr-9 rounded-lg border border-transparent bg-secondary text-foreground placeholder:text-muted-foreground text-[16px] sm:text-sm focus:outline-none focus:ring-2 focus:ring-ring/30 [&::-webkit-search-cancel-button]:hidden"
-              />
-              {peopleQuery && (
-                <button
-                  onClick={() => setPeopleQuery("")}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              )}
-            </div>
-            <div className="max-h-64 overflow-y-auto rounded-xl bg-card divide-y divide-border">
-              {profiles === null ? (
-                <p className="text-sm text-muted-foreground text-center py-6">Chargement…</p>
-              ) : shownPool.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-6">Aucun membre.</p>
-              ) : (
-                shownPool.map((p) => {
-                  const checked = selected.has(p.uid);
-                  return (
-                    <button
-                      key={p.uid}
-                      type="button"
-                      onClick={() => toggle(p.uid)}
-                      className="w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-muted/40"
-                    >
-                      <span
-                        className={`h-4 w-4 rounded border flex items-center justify-center shrink-0 text-xs ${
-                          checked ? "bg-foreground border-foreground text-background" : "border-border"
-                        }`}
-                      >
-                        {checked && "✓"}
-                      </span>
-                      <span className="min-w-0 flex-1">
-                        <span className="text-sm text-foreground truncate block">
-                          {p.firstName} {p.lastName}
-                        </span>
-                        {p.planningName && (
-                          <span className="text-xs text-muted-foreground truncate block">
-                            planning : {p.planningName}
-                          </span>
-                        )}
-                      </span>
-                    </button>
-                  );
-                })
-              )}
-            </div>
-          </div>
-        )}
-
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium text-foreground">
-            Titre
-          </label>
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            maxLength={80}
-            placeholder="Ex. Changement de planning"
-            className="w-full h-11 px-3 rounded-lg border border-transparent bg-secondary text-foreground placeholder:text-muted-foreground text-[16px] sm:text-sm focus:outline-none focus:ring-2 focus:ring-ring/30"
-          />
-        </div>
-
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium text-foreground">
-            Message
-          </label>
-          <textarea
-            value={body}
-            onChange={(e) => setBody(e.target.value)}
-            maxLength={300}
-            rows={3}
-            placeholder="Ex. Le planning du Culte a été mis à jour, vérifie tes dates."
-            className="w-full px-3 py-2.5 rounded-lg border border-transparent bg-secondary text-foreground placeholder:text-muted-foreground text-[16px] sm:text-sm focus:outline-none focus:ring-2 focus:ring-ring/30 resize-none"
-          />
-        </div>
-
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium text-foreground">
-            Ouvre au clic
-          </label>
-          <select
-            value={dest}
-            onChange={(e) => setDest(e.target.value)}
-            className="w-full h-11 px-3 rounded-lg border border-transparent bg-secondary text-foreground text-[16px] sm:text-sm focus:outline-none focus:ring-2 focus:ring-ring/30"
-          >
-            {DESTINATIONS.filter((d) => !backOffice || d.value !== "/annonces").map((d) => (
-              <option key={d.value} value={d.value}>
-                {d.label}
-              </option>
-            ))}
-          </select>
-        </div>
-
+        {selectAudience}
+        {destinataires}
+        {champs}
         {feedback && <p className="text-xs text-muted-foreground">{feedback}</p>}
-
-        {confirmOpen ? (
-          <div className="rounded-xl bg-card p-3 space-y-3">
-            <p className="text-sm text-foreground">
-              Envoyer cette notification à <span className="font-semibold">{recipLabel}</span> ?
-            </p>
-            <div className="flex justify-end gap-2">
-              <button
-                onClick={() => setConfirmOpen(false)}
-                className="h-9 px-4 rounded-full bg-secondary text-sm font-semibold text-muted-foreground hover:text-foreground"
-              >
-                Annuler
-              </button>
-              <button
-                onClick={doSend}
-                disabled={busy}
-                className="inline-flex items-center gap-1.5 h-9 px-4 rounded-full bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 disabled:opacity-50"
-              >
-                <Send className="h-4 w-4" />
-                {busy ? "Envoi…" : "Confirmer"}
-              </button>
-            </div>
-          </div>
-        ) : (
-          <div className="flex justify-end">
-            <button
-              onClick={attemptSend}
-              disabled={!canSend}
-              className="inline-flex items-center gap-1.5 h-11 px-5 rounded-full bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50"
-            >
-              <Send className="h-4 w-4" />
-              {busy ? "Envoi…" : "Envoyer"}
-            </button>
-          </div>
-        )}
+        {envoi}
       </div>
       )}
     </div>

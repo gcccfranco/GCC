@@ -6,6 +6,8 @@
 // dépasse du bord, sous un fondu ; flèches ‹ › avec un pointeur fin ; accroche aux colonnes sur
 // écran tactile. Au-dessus, l'index : une pilule par équipe, toucher une pilule amène sa colonne,
 // la pilule de la première colonne visible s'allume.
+// Agencement v18 (B8) : le Back-Office le pose aussi, à la marge de la zone (`margePage`,
+// `--marge-page`), sous l'en-tête commun.
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
@@ -31,7 +33,7 @@ const memes = (a: number[], b: number[]) => a.length === b.length && a.every((x,
 const comportement = (): ScrollBehavior =>
   window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
 
-export function BandeauEquipes({ cartes }: { cartes: CarteDuBandeau[] }) {
+export function BandeauEquipes({ cartes, margePage = false }: { cartes: CarteDuBandeau[]; margePage?: boolean }) {
   const { t } = useTranslation();
   const bandeau = useRef<HTMLDivElement>(null);
   const rangee = useRef<HTMLDivElement>(null);
@@ -153,13 +155,18 @@ export function BandeauEquipes({ cartes }: { cartes: CarteDuBandeau[] }) {
   };
 
   const pret = mesures !== null && mesures.hauteurs.every((h) => h > 0);
+  // La marge des côtés : celle de la zone au Back-Office, celle de la page de l'App sinon.
+  const px = margePage ? "px-[var(--marge-page)]" : "px-4 md:px-6 xl:px-10";
+  const scrollMl = margePage ? "scroll-ml-[var(--marge-page)]" : "scroll-ml-4 md:scroll-ml-6 xl:scroll-ml-10";
+  const gaucheFleche = margePage ? "left-[var(--marge-page)]" : "left-4";
+  const droiteFleche = margePage ? "right-[var(--marge-page)]" : "right-4";
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3">
       <nav aria-label={t("equipes.index")}>
         <div
           ref={index}
-          className="relative flex gap-1.5 overflow-x-auto px-4 py-1 [scrollbar-width:none] md:px-6 xl:px-10 [&::-webkit-scrollbar]:hidden"
+          className={`relative flex gap-1.5 overflow-x-auto py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${px}`}
         >
           {cartes.map(({ id }) => (
             <button
@@ -185,13 +192,13 @@ export function BandeauEquipes({ cartes }: { cartes: CarteDuBandeau[] }) {
           data-range={pret ? "1" : "0"}
           className="relative h-full overflow-x-auto overflow-y-hidden pb-3 pt-1 [container-type:inline-size] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [@media(pointer:coarse)]:snap-x [@media(pointer:coarse)]:snap-mandatory"
         >
-          <div ref={rangee} className="flex h-full w-max items-start gap-4 px-4 md:px-6 xl:px-10">
+          <div ref={rangee} className={`flex h-full w-max items-start gap-4 ${px}`}>
             {colonnes.map((col) => (
               <div
                 key={ids[col.cartes[0]]}
                 data-colonne=""
                 data-large={col.large ? "1" : undefined}
-                className={`flex max-h-full shrink-0 snap-start flex-col gap-3 scroll-ml-4 md:scroll-ml-6 xl:scroll-ml-10 ${
+                className={`flex max-h-full shrink-0 snap-start flex-col gap-3 ${scrollMl} ${
                   col.large
                     ? "w-[340px] md:w-[560px] lg:w-[calc((100cqw-64px)/2)] xl:w-[calc((100cqw-96px)/2)]"
                     : "w-[300px] lg:w-[290px]"
@@ -223,7 +230,7 @@ export function BandeauEquipes({ cartes }: { cartes: CarteDuBandeau[] }) {
             type="button"
             aria-label={t("equipes.precedentes")}
             onClick={() => fleche(-1)}
-            className="raised absolute left-4 top-1/2 z-10 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full text-foreground [@media(pointer:fine)]:flex"
+            className={`raised absolute ${gaucheFleche} top-1/2 z-10 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full text-foreground [@media(pointer:fine)]:flex`}
           >
             <ChevronLeft className="h-5 w-5" />
           </button>
@@ -233,7 +240,7 @@ export function BandeauEquipes({ cartes }: { cartes: CarteDuBandeau[] }) {
             type="button"
             aria-label={t("equipes.suivantes")}
             onClick={() => fleche(1)}
-            className="raised absolute right-4 top-1/2 z-10 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full text-foreground [@media(pointer:fine)]:flex"
+            className={`raised absolute ${droiteFleche} top-1/2 z-10 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full text-foreground [@media(pointer:fine)]:flex`}
           >
             <ChevronRight className="h-5 w-5" />
           </button>

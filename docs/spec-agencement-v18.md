@@ -861,3 +861,88 @@ la barre d'onglets : une page sans barre du bas (rare) le verra plus haut que n�
 - **Reste** : rien pour le lot V18T13.
 - **Timothée** : rien à publier (aucune règle, aucune donnée, aucun libellé nouveau). À regarder : l'agenda sur
   iPad debout (filtres sur trois rangées) et « Ajouter ce jour-là » en un seul bouton, et dire si ça te va.
+
+### V18T5 — Back-Office : Équipes et Messages (T5)
+
+- 06/10/2026 : **T5 faite** (branche `lot/v18-t5`, commit `feat(V18T5): T5 — Équipes et Messages`). B8 à B12.
+- **Équipes › Organigramme** (B8) : `back-office/equipes/layout.tsx` retiré ; chaque page pose `EnTetePage`
+  (« Équipes », sous-titre `equipes.sousTitreGestion`, rail `RailEquipes.tsx`, caché quand il n'y a qu'Organigramme).
+  « Recalculer depuis l'organigramme » devient `useRecalculOrganigramme()` (`RecalculerOrganigramme.tsx`) : le
+  bouton en contour dans les outils (admins ; libellé caché sur téléphone, son aide en infobulle), le résultat sous
+  les pilules. `EquipesClient gestion` : le bandeau de l'App (`BandeauEquipes margePage`, à `--marge-page`),
+  Équipes · Musiciens en `Pilules`, un crayon par carte (`Modifier TEAM DA`) qui ouvre `PanneauEquipe` (vaul :
+  420 px à droite en grand, feuille sinon) ; l'édition ne vit plus dans la carte. La branche App ne change pas.
+- **Équipes › Personnes** (B9) : `components/admin/PersonnesVolets.tsx` ; `Personnes.tsx` exporte ses morceaux
+  (`useDonneesPersonnes`, `useFiltresPersonnes`, `FiltresPersonnes` en `Pilules`, `LignePersonne`,
+  `FormulairePersonne`, `ListePersonnes`) et l'ancienne administration les assemble comme avant.
+  `InscriptionsComptes court` : interrupteur, état, « n nouveaux comptes », « Voir les n ». `?uid=` (remplacé sans
+  historique) choisit la personne ; un volet : elle se déplie sur place.
+- **Messages** (B10 à B12) : `messages/layout.tsx` pose un seul `EnTetePage` pour les trois onglets.
+  `ReceptionVolets` dans `DeuxVolets` ; « Supprimer » dans `MenuActions` (confirmation dans le site) ; « Le chant
+  signalé » (index des chants) et « Du même membre ». `Notifier backOffice` : carte du formulaire, audience en
+  deux rangées de pilules (Tout le monde, Cultes, Groupes, EDD, puis l'audience), pied « Annuler · Envoyer à n
+  personnes » ; `ApercuNotification.tsx` (aperçu, `DerniersEnvois`). `SurveyResults backOffice` : deux volets
+  (sommaire avec moyennes, « Par personne », lien vers la page) ; un volet : l'accordéon, la première partie ouverte.
+- **Décisions prises faute de réponse** : « n en attente » de la planche = comptes créés ces sept jours (aucune
+  validation de compte n'existe) ; « Voir les n » trie par récents et ouvre le plus récent. Les blocs
+  d'administration restent en français seul (Q16 de U6) : Personnes, Notifier, Questionnaire ; libellés nouveaux
+  en FR et 中文 pour Équipes et Réception (`equipes.sousTitreGestion`, `vue`, `modifierEquipe`, `compte.*`,
+  `backOffice.reception.{sousTitreSection, chantSignale, ouvrirPartition, tonalite, sections, memeMembre,
+  proposition, enAttenteCourt, traiteCourt, refuseCourt}`). Les audiences de Notifier restent celles de l'API
+  (pas d'« Une équipe » ni d'« Un pôle », que la planche dessine). Pas de « ⋯ » sur la fiche d'une personne
+  (aucune action à y mettre).
+- **Tests** : `tests/agencement-v18-t5.spec.ts` (17 tests × 5 projets, 85 verts ; les six de Messages vus rouges sur le code
+  d'avant, les autres écrits avant le code d'Équipes) ; réécrits : `back-office-admin` (rail, audience en pilules,
+  carte des inscriptions), `equipes` (panneau d'édition, aide en infobulle), `pages-en-grand-reception`
+  (« ⋯ › Supprimer »), `evenements` (carte des inscriptions). Captures regardées aux cinq tailles.
+- **Reste** : rien pour T5. Hors périmètre (spec) : « Joué n fois », « Setlist citée », « Pôles calculés le … ».
+- **Timothée** : rien à publier (ni règle ni donnée) ; relire les libellés 中文 ci-dessus.
+- 07/10/2026 : **fusion de `lot/v18-fondations`** (relecture V18F comprise) dans `lot/v18-t5` : un seul conflit, dans
+  ce fichier (les deux sections d'avancement gardées). Correctif `fix(V18T5): fusion — …` : les appels de
+  `verifierAgencement` de `agencement-v18-t5.spec.ts` donnent `contenu` (le bandeau sur Organigramme ; le bloc sous
+  l'en-tête sur Personnes, Réception, Notifier, Questionnaire) et `onglets` (un rail partout ; une rangée de
+  pilules sur Organigramme, Personnes, Réception et Notifier, aucune sur Questionnaire). Sur tablette portrait,
+  Réception n'a pas de filtres (les deux cartes côte à côte, choix de U4 bis gardé) : zéro pilule attendue là.
+  Aucun code du site changé par la fusion.
+- **Suites après la fusion** : `agencement-v18-t5`, `back-office-admin`, `equipes`, `pages-en-grand-reception`
+  (cinq projets) et le test « annonces retirées » d'`evenements` : 404 verts, 31 sautés (propres à un appareil) ;
+  `back-office-coupe` (second serveur) vert ; `tsc --noEmit` et `npm run lint` sans erreur.
+- **Reste** : rien pour T5. **Timothée** : rien à publier ; relire les libellés 中文 ci-dessus.
+- 07/10/2026 : **relecture de T5** (deux relectures, quinze constats), commit `fix(V18T5): relecture — …`.
+  **Lot fini et relu.** Corrigé, chaque fois avec un test vu rouge puis vert :
+  - **Personnes en deux volets** : « Modifier » fixe la personne dans l'adresse (`?uid=`). Sans elle, la
+    personne choisie était la première de la liste filtrée : chercher ou trier remontait le formulaire, et ses
+    droits, sur une autre personne. Les lignes sont courtes (`LignePersonne compact` : avatar, nom, services,
+    sans e-mail ni date) et les filtres se replient sur plusieurs lignes dans la colonne de 400 px.
+  - **Derniers envois** (Notifier) : `getEnvoisManuels` ne demande à Firestore que les envois manuels
+    (`kind == "manual"`, une égalité sans tri, donc sans index composite), triés dans le navigateur. Avant,
+    on lisait les 50 dernières notifications et on gardait les manuelles : cinquante rappels cachaient un
+    envoi plus ancien, et chaque ouverture coûtait 50 lectures. Une lecture refusée affiche « Impossible de
+    lire les derniers envois » au lieu de « aucune ».
+  - **Confirmations dans le site** : supprimer une réponse au questionnaire (« Par personne »), et
+    « Recalculer depuis l'organigramme », dont la fenêtre porte l'aide (sur téléphone, le bouton n'est
+    qu'une icône et l'infobulle n'existe pas au toucher).
+  - **En-têtes** : le sous-titre d'Organigramme porte l'année en cours (`{{annee}}`, FR et 中文). Le rail
+    d'Équipes n'est posé que pour un admin, sans bloc vide pour les autres. Le sous-titre de Messages n'est
+    posé que si Réception l'est (un compte qui peut seulement notifier n'a pas de sous-titre).
+  - **Accessibilité** : le panneau d'édition d'une équipe est décrit par son sous-titre (`DrawerDescription`),
+    sans l'avertissement de Radix. L'interrupteur des inscriptions a un nom fixe, « Inscriptions ouvertes » :
+    il annonce lui-même son état.
+  - **Libellés et imports** : le pied de Notifier dit « Envoyer à n personnes » aussi pour « Tout le monde ».
+    `ReceptionVolets` importe `Pilules` de `layout/Onglets` (le relais `harmonie/Pilules` peut partir à Z).
+  - **Captures** : le Questionnaire est aussi capturé avec trois réponses et « Impression générale » ouverte
+    (moyenne, barres), aux cinq tailles. Vu en les comparant à la planche : la moyenne d'une question
+    s'écrivait « 4.0 » à côté du « 3,9 » de la partie ; elle s'écrit « 4,0 » (aussi dans l'ancienne
+    administration, qui partage la carte).
+  - **Suites** : `agencement-v18-t5`, `back-office-admin`, `equipes`, `pages-en-grand-reception`, `evenements`
+    (cinq tailles), `halo-partout`, `barre-back-office`, `tableau-de-bord` (ordinateur) : 743 verts, 61 sautés
+    (propres à un appareil) ; `back-office-coupe` (second serveur) : 59 verts ; `tsc --noEmit` et
+    `npm run lint` sans erreur (51 avertissements, les mêmes qu'avant).
+  - **Laissé** : le badge des inscriptions dit « n nouveaux comptes » et « Voir les n » (ou « Voir le
+    compte ») ; la planche dit « n comptes à valider », la spec « n en attente ». Aucune validation de compte
+    n'existe : ce sont les comptes créés ces sept jours. Le libellé reste tel quel, à confirmer par Timothée.
+- **Reste** : rien pour T5.
+- **Timothée** : rien à publier (ni règle Firestore ni index : la requête des derniers envois n'en demande
+  pas). Relire les libellés 中文 : `equipes.recalcul.question` (按组织架构重新计算？), `equipes.recalcul.action`
+  (重新计算), `equipes.sousTitreGestion` (avec l'année). Choisir le libellé du badge des inscriptions :
+  « n nouveaux comptes » (actuel) ou « n en attente » (spec).

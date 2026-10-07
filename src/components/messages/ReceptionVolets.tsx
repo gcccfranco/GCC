@@ -6,14 +6,21 @@
 // attente de la liste filtrée (Q3). Tablette portrait : les deux cartes côte à côte, un message se
 // déplie dans sa carte. Téléphone : les filtres, une carte, le message qui se déplie. Données et
 // actions : `useReception` (mêmes lectures et écritures que l'ancien bloc).
+// Agencement v18 (B10 de docs/spec-agencement-v18.md ; planche `v18-bo-messages-reception`) : en
+// grand, `DeuxVolets` (la liste en carte) sous l'en-tête commun de Messages ; « Supprimer » passe
+// dans « ⋯ » (confirmé dans le site) ; sous le message, « Le chant signalé » (titre, tonalité,
+// sections, lus dans l'index) et « Du même membre » (lus dans la liste déjà chargée).
 import { Fragment, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
 import { Check, ChevronDown, ChevronRight, ChevronUp, ExternalLink, FileText, Link2, Music, Play, Trash2 } from "lucide-react";
+import { MenuActions } from "@/components/layout/MenuActions";
+import { DeuxVolets } from "@/components/layout/DeuxVolets";
+import { useSongsIndex } from "@/hooks/useSongsIndex";
 import type { Report } from "@/types/report";
 import type { SongProposal } from "@/types/songProposal";
 import { useReception } from "@/components/admin/Reception";
-import { Pilules } from "@/components/harmonie/Pilules";
+import { Pilules } from "@/components/layout/Onglets";
 import { useDisposition } from "@/hooks/useDisposition";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
@@ -36,6 +43,8 @@ export function ReceptionVolets() {
   const [choix, setChoix] = useState<string | null>(null);
   const [ouvert, setOuvert] = useState<string | null>(null);
   const [traitesVus, setTraitesVus] = useState({ s: false, p: false });
+  // L'index des chants, pour « Le chant signalé » (en grand seulement).
+  const { songs } = useSongsIndex(disposition === "grand");
 
   // Tablette portrait : les deux cartes, sans filtres.
   const voirS = disposition === "tablette" || filtre !== "propositions";
@@ -115,12 +124,19 @@ export function ReceptionVolets() {
             {t("backOffice.reception.refuser")}
           </button>
         )}
-        <button type="button" disabled={occupe}
-          aria-label={t(m.r ? "backOffice.reception.supprimerSignalement" : "backOffice.reception.supprimerProposition")}
-          onClick={() => (m.r ? rec.handleReportDelete(m.r) : rec.handleProposalDelete(m.p))}
-          className="flex h-9 w-9 items-center justify-center rounded-full bg-card text-destructive ring-1 ring-inset ring-border disabled:opacity-50">
-          <Trash2 className="h-4 w-4" aria-hidden />
-        </button>
+        <MenuActions
+          actions={[{
+            label: t("common.buttons.delete"),
+            icone: Trash2,
+            destructif: true,
+            onSelect: () => (m.r ? rec.handleReportDelete(m.r) : rec.handleProposalDelete(m.p)),
+            confirmer: {
+              titre: `${t(m.r ? "backOffice.reception.supprimerSignalement" : "backOffice.reception.supprimerProposition")} ?`,
+              texte: (m.r ?? m.p).title,
+              action: t("common.buttons.delete"),
+            },
+          }]}
+        />
       </div>
     );
     if (grand)
@@ -128,6 +144,10 @@ export function ReceptionVolets() {
         <>
           {(texte || liens.some(Boolean)) && <div className="raised rounded-2xl px-5 py-[18px]">{contenu}</div>}
           <div className="mt-4">{actions}</div>
+          <div className="mt-5 grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] items-start gap-4">
+            {chantSignale(m)}
+            {memeMembre(m)}
+          </div>
         </>
       );
     return (
@@ -135,6 +155,63 @@ export function ReceptionVolets() {
         {contenu}
         {actions}
       </div>
+    );
+  }
+
+  /** « Le chant signalé » : titre, tonalité et sections lus dans l'index, lien vers la partition. */
+  function chantSignale(m: Message) {
+    if (!m.r || m.r.kind !== "song" || !m.r.songSlug) return null;
+    const chant = songs?.find((c) => c.slug === m.r!.songSlug);
+    const id = `chant-${m.r.id}`;
+    return (
+      <section aria-labelledby={id} className="raised rounded-2xl px-5 py-4">
+        <div className="flex items-center justify-between gap-3">
+          <h3 id={id} className="text-[15px] font-bold text-foreground">{t("backOffice.reception.chantSignale")}</h3>
+          <Link href={`/songs/${m.r.songSlug}`} className={BOUTON}>
+            <FileText className="h-4 w-4" aria-hidden />{t("backOffice.reception.ouvrirPartition")}
+          </Link>
+        </div>
+        <p className="mt-3 flex items-center gap-2 border-t border-border pt-3 text-sm">
+          <Music className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+          <span className="font-semibold text-foreground">{chant?.title ?? m.r.songTitle}</span>
+          {chant && (
+            <span className="text-muted-foreground">
+              · {t("backOffice.reception.tonalite", { cle: chant.recommendedKey ?? chant.originalKey })}
+              {chant.sections?.length ? ` · ${t("backOffice.reception.sections", { count: chant.sections.length })}` : ""}
+            </span>
+          )}
+        </p>
+      </section>
+    );
+  }
+
+  /** « Du même membre » : ses autres signalements et propositions, déjà chargés. */
+  function memeMembre(m: Message) {
+    const auteurId = (m.r ?? m.p).authorId;
+    if (!auteurId) return null;
+    const autres = [...signalements, ...propositions].filter((x) => x.cle !== m.cle && (x.r ?? x.p).authorId === auteurId);
+    if (autres.length === 0) return null;
+    const id = `meme-${m.cle}`;
+    const statut = (x: Message) => {
+      const st = (x.r ?? x.p).status;
+      return t(st === "pending" ? "backOffice.reception.enAttenteCourt" : st === "rejected" ? "backOffice.reception.refuseCourt" : "backOffice.reception.traiteCourt");
+    };
+    return (
+      <section aria-labelledby={id} className="raised rounded-2xl px-5 py-4">
+        <h3 id={id} className="text-[15px] font-bold text-foreground">{t("backOffice.reception.memeMembre")}</h3>
+        <ul className="mt-2">
+          {autres.map((x) => (
+            <li key={x.cle} className="border-t border-border first:border-t-0">
+              <button type="button" onClick={() => { setFiltre("tout"); setChoix(x.cle); }} className="block w-full py-2 text-left">
+                <span className="block text-sm font-semibold text-foreground hover:underline">
+                  {x.r ? x.r.title : t("backOffice.reception.proposition", { titre: x.p.title })}
+                </span>
+                <span className="block text-[12px] text-muted-foreground">{statut(x)}{date((x.r ?? x.p).createdAt)}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      </section>
     );
   }
 
@@ -238,9 +315,9 @@ export function ReceptionVolets() {
 
   function detail(m: Message) {
     return (
-      <div className="max-w-[760px]">
+      <div>
         <div className="flex gap-1.5">{badges(m)}</div>
-        <h2 className="mt-2 text-[26px] font-bold leading-[30px] tracking-tight text-foreground text-balance">{(m.r ?? m.p).title}</h2>
+        <h2 className="mt-2 text-[24px] font-bold leading-[30px] tracking-tight text-foreground text-balance">{(m.r ?? m.p).title}</h2>
         <p className="mb-4 mt-0.5 text-sm text-muted-foreground">{auteur(m)}</p>
         {corps(m, true)}
       </div>
@@ -249,20 +326,28 @@ export function ReceptionVolets() {
 
   if (disposition === "grand")
     return (
-      <div className="flex min-h-0 flex-1">
-        <div data-volet="liste" className="w-[340px] shrink-0 border-r border-border bg-card px-2.5 pb-6 pt-4 xl:w-[420px]">
-          <div className="px-2.5 pb-1">{pilules}</div>
-          {sections}
-        </div>
-        <section aria-label={t("backOffice.reception.message")} className="min-w-0 flex-1 px-7 py-6 xl:px-9 xl:py-7">
-          {erreur}
-          {choisi ? detail(choisi) : <p className="text-sm text-muted-foreground">{t("backOffice.reception.aucunEnAttente")}</p>}
-        </section>
-      </div>
+      <DeuxVolets
+        racine="/back-office/messages"
+        largeurListe={380}
+        liste={
+          <div className="px-2.5 pb-4 pt-3">
+            <div className="px-2.5 pb-1">{pilules}</div>
+            {sections}
+          </div>
+        }
+        premier={
+          <section aria-label={t("backOffice.reception.message")} className="min-w-0">
+            {erreur}
+            {choisi ? detail(choisi) : <p className="text-sm text-muted-foreground">{t("backOffice.reception.aucunEnAttente")}</p>}
+          </section>
+        }
+      >
+        {null}
+      </DeuxVolets>
     );
 
   return (
-    <div>
+    <div className="px-[var(--marge-page)] pb-10">
       {erreur}
       {disposition === "tablette" ? (
         <div className="grid grid-cols-2 items-start gap-3.5">{sections}</div>

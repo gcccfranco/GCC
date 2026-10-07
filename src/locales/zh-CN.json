@@ -2403,6 +2403,8 @@
     },
     "recalcul": {
       "bouton": "按组织架构重新计算",
+      "question": "按组织架构重新计算？",
+      "action": "重新计算",
       "aide": "为每个团队成员重新设定其所属团队和负责人身份（所在部门不变）：团队成员由此可以参加团队会议，负责人可以创建会议。",
       "fait_one": "已更新 {{count}} 份资料。",
       "fait_other": "已更新 {{count}} 份资料。",
@@ -2504,7 +2506,18 @@
       "regie": "音控"
     },
     "matriceVide": "目前没有人在排班中。",
-    "nom": "姓名"
+    "nom": "姓名",
+    "sousTitreGestion": "GCC 法语堂 {{annee}} 组织架构：它决定每个人所属的部门",
+    "vue": "视图",
+    "modifierEquipe": "修改{{nom}}",
+    "compte": {
+      "inscrits_one": "{{count}} 人注册",
+      "inscrits_other": "{{count}} 人注册",
+      "musiciens_one": "{{count}} 位乐手",
+      "musiciens_other": "{{count}} 位乐手",
+      "presidences_one": "{{count}} 位主领",
+      "presidences_other": "{{count}} 位主领"
+    }
   },
   "tableauDeBord": {
     "widgets": {
@@ -2764,7 +2777,18 @@
       "aucuneProposition": "暂无诗歌推荐。",
       "aucunEnAttente": "暂无待处理消息。",
       "message": "消息",
-      "erreur": "未能保存。请检查网络后重试。"
+      "erreur": "未能保存。请检查网络后重试。",
+      "sousTitreSection": "成员反馈的问题和推荐",
+      "chantSignale": "被反馈的诗歌",
+      "ouvrirPartition": "打开乐谱",
+      "tonalite": "{{cle}} 调",
+      "sections_one": "{{count}} 个段落",
+      "sections_other": "{{count}} 个段落",
+      "memeMembre": "同一成员的其他消息",
+      "proposition": "推荐：{{titre}}",
+      "enAttenteCourt": "待处理",
+      "traiteCourt": "已处理",
+      "refuseCourt": "已拒绝"
     }
   },
   "calendrier": {

@@ -2410,6 +2410,8 @@
     },
     "recalcul": {
       "bouton": "Recalculer depuis l'organigramme",
+      "question": "Recalculer depuis l'organigramme ?",
+      "action": "Recalculer",
       "aide": "Repose, pour chaque membre d'une équipe, ses équipes et ses référents (ses pôles ne changent pas) : c'est ce qui ouvre les réunions d'équipe à leurs membres et leur création aux référents.",
       "fait_one": "{{count}} profil mis à jour.",
       "fait_other": "{{count}} profils mis à jour.",
@@ -2511,7 +2513,18 @@
       "regie": "Régie"
     },
     "matriceVide": "Personne ne sert au planning pour l'instant.",
-    "nom": "Nom"
+    "nom": "Nom",
+    "sousTitreGestion": "Organigramme GCC Franco {{annee}} : il donne les pôles de chacun",
+    "vue": "Vue",
+    "modifierEquipe": "Modifier {{nom}}",
+    "compte": {
+      "inscrits_one": "{{count}} inscrit",
+      "inscrits_other": "{{count}} inscrits",
+      "musiciens_one": "{{count}} musicien",
+      "musiciens_other": "{{count}} musiciens",
+      "presidences_one": "{{count}} présidence",
+      "presidences_other": "{{count}} présidences"
+    }
   },
   "tableauDeBord": {
     "widgets": {
@@ -2775,7 +2788,18 @@
       "aucuneProposition": "Aucune proposition pour l'instant.",
       "aucunEnAttente": "Aucun message en attente.",
       "message": "Message",
-      "erreur": "Changement non enregistré. Vérifie ta connexion, puis recommence."
+      "erreur": "Changement non enregistré. Vérifie ta connexion, puis recommence.",
+      "sousTitreSection": "Ce que les membres signalent et proposent",
+      "chantSignale": "Le chant signalé",
+      "ouvrirPartition": "Ouvrir la partition",
+      "tonalite": "tonalité {{cle}}",
+      "sections_one": "{{count}} section",
+      "sections_other": "{{count}} sections",
+      "memeMembre": "Du même membre",
+      "proposition": "Proposition : {{titre}}",
+      "enAttenteCourt": "en attente",
+      "traiteCourt": "traité",
+      "refuseCourt": "refusé"
     }
   },
   "calendrier": {

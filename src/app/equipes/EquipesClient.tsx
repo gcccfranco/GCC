@@ -6,16 +6,22 @@
 // qu'à qui a le droit (admins + droit « Équipes » du profil, D4).
 // Lot U6, B2 (question 4) : l'édition passe au Back-Office (Équipes ›
 // Organigramme, `gestion`) ; dans l'App, l'organigramme se lit, même un admin.
+// Agencement v18 (B8 de docs/spec-agencement-v18.md) : au Back-Office aussi, le bandeau,
+// sous l'en-tête commun (`enTete`) ; une carte s'édite dans un panneau (420 px à droite en
+// grand, feuille sinon), pour garder des cartes de hauteur fixe.
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ComponentProps, type ReactNode } from "react";
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
 import { Pencil, X } from "lucide-react";
 import { PageTitle } from "@/components/layout/PageTitle";
+import { EnTetePage } from "@/components/layout/EnTetePage";
+import { Pilules } from "@/components/layout/Onglets";
+import { useDisposition } from "@/hooks/useDisposition";
 import { Halo } from "@/components/layout/Halo";
 import { BandeauEquipes } from "@/components/equipes/BandeauEquipes";
 import { FilterButtons } from "@/components/planning/FilterButtons";
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
+import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useProfile, listProfiles } from "@/lib/firebase/users";
@@ -36,7 +42,15 @@ const nomComplet = (p: UserProfile) =>
 const referentsDabord = (a: MembreEquipe, b: MembreEquipe) =>
   Number(b.referent) - Number(a.referent);
 
-export function EquipesClient({ gestion = false }: { gestion?: boolean }) {
+export function EquipesClient({
+  gestion = false,
+  enTete,
+}: {
+  gestion?: boolean;
+  /** Au Back-Office : l'en-tête commun (titre, sous-titre, outils, rail) ; `sousEnTete` se pose
+   *  sous les pilules Équipes · Musiciens (le résultat de « Recalculer »). */
+  enTete?: Omit<ComponentProps<typeof EnTetePage>, "apres"> & { sousEnTete?: ReactNode };
+}) {
   const { t } = useTranslation();
   const { user, profile } = useProfile();
   const [equipes, setEquipes] = useState<Equipe[]>([]);
@@ -44,6 +58,7 @@ export function EquipesClient({ gestion = false }: { gestion?: boolean }) {
   const [planning, setPlanning] = useState<PlanningData | null>(null);
   const [fiche, setFiche] = useState<string | null>(null);
   const [onglet, setOnglet] = useState<"equipes" | "musiciens">("equipes");
+  const [editee, setEditee] = useState<string | null>(null);
 
   useEffect(() => {
     listEquipes().then(setEquipes);
@@ -53,23 +68,22 @@ export function EquipesClient({ gestion = false }: { gestion?: boolean }) {
 
   const peutEditer = gestion && canEditerEquipes(user, profile);
   const onglets = [t("equipes.onglet.equipes"), t("equipes.onglet.musiciens")];
-  // Lot U4 bis, B6 (Q12) : dans l'App, l'organigramme est un bandeau qui défile de gauche à
-  // droite et la page tient dans la hauteur de l'écran. Au Back-Office (édition), les colonnes
-  // d'aujourd'hui : une carte qui s'ouvre en formulaire n'a pas de hauteur fixe.
-  const bandeau = !gestion && onglet === "equipes";
+  // Lot U4 bis, B6 (Q12) : l'organigramme est un bandeau qui défile de gauche à droite et la
+  // page tient dans la hauteur de l'écran. Au Back-Office aussi depuis la v18 (B8) : l'édition
+  // n'est plus dans la carte mais dans un panneau.
+  const bandeau = onglet === "equipes";
+  const equipeDe = (id: string) => equipes.find((e) => e.id === id) ?? null;
+  const enregistre = (maj: Equipe) => setEquipes((prev) => [...prev.filter((e) => e.id !== maj.id), maj]);
 
   const carte = (def: (typeof EQUIPES)[number]) => (
     <CarteEquipe
       key={def.id}
       def={def}
-      equipe={equipes.find((e) => e.id === def.id) ?? null}
-      profils={profils}
+      equipe={equipeDe(def.id)}
       peutEditer={peutEditer}
       enBandeau={bandeau}
       onFiche={setFiche}
-      onEnregistre={(maj) =>
-        setEquipes((prev) => [...prev.filter((e) => e.id !== maj.id), maj])
-      }
+      onModifier={() => setEditee(def.id)}
     />
   );
 
@@ -92,6 +106,63 @@ export function EquipesClient({ gestion = false }: { gestion?: boolean }) {
     />
   );
 
+  if (gestion) {
+    // Back-Office (agencement v18, B8) : l'en-tête commun, Équipes · Musiciens en pilules
+    // (un sous-onglet, R4) ; le bandeau sous l'en-tête, ou la matrice des musiciens.
+    const defEditee = EQUIPES.find((d) => d.id === editee) ?? null;
+    const entete = (
+      <EnTetePage
+        {...enTete}
+        titre={enTete?.titre ?? t("equipes.title")}
+        apres={
+          <>
+            <Pilules
+              etiquette={t("equipes.vue")}
+              options={[
+                { cle: "equipes" as const, nom: onglets[0] },
+                { cle: "musiciens" as const, nom: onglets[1] },
+              ]}
+              valeur={onglet}
+              choisir={(v) => v && setOnglet(v)}
+              obligatoire
+            />
+            {enTete?.sousEnTete}
+          </>
+        }
+      />
+    );
+    return (
+      <>
+        {bandeau ? (
+          <div className="equipes-ecran flex flex-col">
+            {entete}
+            <BandeauEquipes
+              margePage
+              cartes={EQUIPES.map((def) => ({ id: def.id, large: !!def.sousColonnes, carte: carte(def) }))}
+            />
+          </div>
+        ) : (
+          <>
+            {entete}
+            <div className="px-[var(--marge-page)] pb-10">
+              <Matrice profils={profils} planning={planning} onFiche={setFiche} />
+            </div>
+          </>
+        )}
+        {fichePersonne}
+        {peutEditer && (
+          <PanneauEquipe
+            def={defEditee}
+            equipe={defEditee ? equipeDe(defEditee.id) : null}
+            profils={profils}
+            onClose={() => setEditee(null)}
+            onEnregistre={(e) => { enregistre(e); setEditee(null); }}
+          />
+        )}
+      </>
+    );
+  }
+
   if (bandeau) {
     return (
       <div className="relative">
@@ -109,54 +180,90 @@ export function EquipesClient({ gestion = false }: { gestion?: boolean }) {
     );
   }
 
-  const contenu = (
-    <div className={gestion ? "space-y-5" : "relative max-w-5xl mx-auto px-4 pt-6 pb-10 space-y-5"}>
-      {/* Au Back-Office, le titre est celui de l'entrée (EnTeteEntree). */}
-      {!gestion && <PageTitle title={t("equipes.title")} subtitle={t("equipes.sousTitre")} action={filtres} />}
-      {gestion && filtres}
-
-      {onglet === "equipes" ? (
-        <div className="columns-1 md:columns-2 lg:columns-3 gap-3">
-          {EQUIPES.map(carte)}
-        </div>
-      ) : (
-        <Matrice profils={profils} planning={planning} onFiche={setFiche} />
-      )}
-
-      {fichePersonne}
-    </div>
-  );
-  if (gestion) return contenu;
+  // App, vue des musiciens.
   return (
     <div className="relative">
       <Halo variant="moi" color="hsl(var(--foreground))" />
-      {contenu}
+      <div className="relative max-w-5xl mx-auto px-4 pt-6 pb-10 space-y-5">
+        <PageTitle title={t("equipes.title")} subtitle={t("equipes.sousTitre")} action={filtres} />
+        <Matrice profils={profils} planning={planning} onFiche={setFiche} />
+        {fichePersonne}
+      </div>
     </div>
+  );
+}
+
+// ── Panneau d'édition (Back-Office, droit « Équipes ») ─────────────────────
+
+/** Agencement v18 (B8) : l'édition d'une équipe s'ouvre à côté du bandeau, 420 px à droite
+ *  en grand, en feuille sur tablette debout et téléphone ; la carte garde sa hauteur. */
+function PanneauEquipe({
+  def, equipe, profils, onClose, onEnregistre,
+}: {
+  def: EquipeDef | null;
+  equipe: Equipe | null;
+  profils: UserProfile[];
+  onClose: () => void;
+  onEnregistre: (e: Equipe) => void;
+}) {
+  const { t } = useTranslation();
+  const aDroite = useDisposition() === "grand";
+  const sousTitre = def ? t(`equipes.soustitre.${def.id}`) : "";
+  return (
+    <Drawer open={def !== null} onOpenChange={(o) => !o && onClose()} direction={aDroite ? "right" : "bottom"}>
+      <DrawerContent
+        // Le sous-titre de l'équipe décrit le panneau ; sans lui, pas de description (Radix).
+        {...(sousTitre ? {} : { "aria-describedby": undefined })}
+        className={aDroite
+          ? "left-auto top-0 bottom-0 mt-0 h-full w-[420px] rounded-none rounded-l-2xl border-y-0 border-r-0 [&>div:first-child]:hidden"
+          : "max-h-[90dvh]"}
+      >
+        {def && (
+          <>
+            <DrawerHeader className="pb-1 text-left">
+              <DrawerTitle>{t(`equipes.team.${def.id}`)}</DrawerTitle>
+              {sousTitre && <DrawerDescription>{sousTitre}</DrawerDescription>}
+            </DrawerHeader>
+            <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-6">
+              <EditionEquipe
+                key={def.id}
+                def={def}
+                pole={equipe?.pole ?? def.pole}
+                membres={equipe?.membres ?? []}
+                profils={profils}
+                onClose={onClose}
+                onEnregistre={onEnregistre}
+              />
+            </div>
+          </>
+        )}
+      </DrawerContent>
+    </Drawer>
   );
 }
 
 // ── Une équipe ──────────────────────────────────────────────────────────────
 
 function CarteEquipe({
-  def, equipe, profils, peutEditer, enBandeau, onFiche, onEnregistre,
+  def, equipe, peutEditer, enBandeau, onFiche, onModifier,
 }: {
   def: EquipeDef;
   equipe: Equipe | null;
-  profils: UserProfile[];
   peutEditer: boolean;
-  /** Dans le bandeau de l'App (U4 bis, B6) : carte en relief ; Louange et EDD rangent leurs
-   *  sous-groupes sur trois colonnes, sous le référent. */
+  /** Dans le bandeau (U4 bis, B6 ; Back-Office depuis la v18) : carte en relief ; Louange et
+   *  EDD rangent leurs sous-groupes sur trois colonnes, sous le référent. */
   enBandeau: boolean;
   onFiche: (uid: string) => void;
-  onEnregistre: (e: Equipe) => void;
+  /** Crayon : ouvre le panneau d'édition (B8). */
+  onModifier: () => void;
 }) {
   const { t } = useTranslation();
-  const [edition, setEdition] = useState(false);
   const pole = equipe?.pole ?? def.pole;
   const membres = equipe?.membres ?? [];
   const soustitre = t(`equipes.soustitre.${def.id}`);
   const groupes = [...new Set(membres.map((m) => m.groupe))];
   const enColonnes = enBandeau && !!def.sousColonnes;
+  const nom = t(`equipes.team.${def.id}`);
 
   const groupe = (g: string) => (
     <div key={g} className="break-inside-avoid space-y-0.5">
@@ -178,15 +285,16 @@ function CarteEquipe({
     >
       <header className="space-y-1">
         <div className="flex items-start justify-between gap-2">
-          <h2 className="text-base font-bold text-foreground">{t(`equipes.team.${def.id}`)}</h2>
-          {peutEditer && !edition && (
+          <h2 className="text-base font-bold text-foreground">{nom}</h2>
+          {peutEditer && (
             <button
               type="button"
-              onClick={() => setEdition(true)}
-              className="inline-flex items-center gap-1 shrink-0 rounded-full bg-secondary px-2.5 py-1 text-xs font-semibold text-muted-foreground hover:text-foreground"
+              onClick={onModifier}
+              aria-label={t("equipes.modifierEquipe", { nom })}
+              title={t("equipes.modifier")}
+              className="-mr-1 -mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-background text-foreground shadow-[inset_0_0_0_1px_hsl(var(--border))] transition-colors hover:bg-secondary"
             >
-              <Pencil className="h-3 w-3" />
-              {t("equipes.modifier")}
+              <Pencil className="h-3.5 w-3.5" aria-hidden />
             </button>
           )}
         </div>
@@ -208,16 +316,7 @@ function CarteEquipe({
         </div>
       </header>
 
-      {edition ? (
-        <EditionEquipe
-          def={def}
-          pole={pole}
-          membres={membres}
-          profils={profils}
-          onClose={() => setEdition(false)}
-          onEnregistre={(e) => { onEnregistre(e); setEdition(false); }}
-        />
-      ) : membres.length === 0 ? (
+      {membres.length === 0 ? (
         <p className="text-sm text-muted-foreground">{t("equipes.aucunMembre")}</p>
       ) : enColonnes ? (
         <div>
@@ -538,7 +637,7 @@ function FichePersonne({
             <p className="text-sm text-muted-foreground">{t("equipes.fiche.rien")}</p>
           )}
           {admin && p && (
-            <Link href="/back-office/equipes/personnes" className="block text-sm font-semibold text-foreground underline underline-offset-2">
+            <Link href={`/back-office/equipes/personnes?uid=${encodeURIComponent(p.uid)}`} className="block text-sm font-semibold text-foreground underline underline-offset-2">
               {t("equipes.fiche.admin")}
             </Link>
           )}

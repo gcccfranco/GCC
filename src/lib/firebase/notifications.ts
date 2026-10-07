@@ -1,4 +1,4 @@
-import { FS_BASE, authHeader, fromFsValue, type RawDoc } from "./setlists";
+import { FS_BASE, authHeader, checkRest, fromFsValue, type RawDoc } from "./setlists";
 
 // Lecture des notifications « cloche » (collection écrite côté serveur, cf.
 // src/lib/push/notifications.ts). Même chemin léger et incrémental que
@@ -58,4 +58,29 @@ export async function getNotifsSince(sinceMs: number, max: number): Promise<Push
   if (!res.ok) return [];
   const rows = (await res.json()) as Array<{ document?: RawDoc }>;
   return rows.filter((r) => r.document).map((r) => fromFsNotif(r.document!));
+}
+
+/** Les `max` derniers envois de Notifier (`kind: "manual"`, « Derniers envois », B11). Une égalité
+ *  seule, sans tri ni limite : pas d'index composite (un tri `createdAt` en demanderait un, à créer
+ *  dans la console) ; Firestore ne renvoie que les envois manuels (un document par envoi), triés
+ *  ici. Le filtre est rejoué ici, comme `listReunionsDu`. Une lecture refusée lève une erreur. */
+export async function getEnvoisManuels(max: number): Promise<PushNotif[]> {
+  const res = await fetch(`${FS_BASE}:runQuery`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...(await authHeader()) },
+    body: JSON.stringify({
+      structuredQuery: {
+        from: [{ collectionId: "notifications" }],
+        where: { fieldFilter: { field: { fieldPath: "kind" }, op: "EQUAL", value: { stringValue: "manual" } } },
+      },
+    }),
+  });
+  await checkRest(res);
+  const rows = (await res.json()) as Array<{ document?: RawDoc }>;
+  return rows
+    .filter((r) => r.document)
+    .map((r) => fromFsNotif(r.document!))
+    .filter((n) => n.kind === "manual")
+    .sort((a, b) => (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0))
+    .slice(0, max);
 }
