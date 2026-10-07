@@ -1,6 +1,6 @@
 "use client";
 
-import type { CSSProperties, ReactNode } from "react";
+import { useEffect, useRef, type CSSProperties, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import { useDeuxVolets } from "@/hooks/useDeuxVolets";
 import { disposerVolets, estSurLaListe } from "@/lib/deuxVolets";
@@ -18,6 +18,10 @@ import { disposerVolets, estSurLaListe } from "@/lib/deuxVolets";
 // défile seule ; la fiche prend le reste jusqu'à la marge de droite, sans fond, à `--ecart-volets`
 // de la carte. Le titre de la page est au-dessus, dans `EnTetePage` (qui porte les 20 px d'écart) ;
 // la fiche se titre en h2 de 24 px et ne pose plus de marge à gauche ni à droite.
+// Retouches v18 (R3, D3, docs/spec-retouches-v18.md) : la carte tient dans la fenêtre. Son bas reste
+// à 24 px du bas de la fenêtre : sous l'en-tête avant tout défilement, elle est plus courte, puis,
+// collée sous la barre du haut, elle a la hauteur de la fenêtre moins cette barre. Sa hauteur suit
+// son haut dans la fenêtre (`--haut-liste`), relu au défilement et quand la page change de taille.
 
 export function DeuxVolets({
   racine,
@@ -41,6 +45,30 @@ export function DeuxVolets({
   const deuxVolets = useDeuxVolets();
   const chemin = usePathname() ?? racine;
   const volets = disposerVolets(deuxVolets, estSurLaListe(chemin, racine));
+  const carte = useRef<HTMLDivElement>(null);
+  const avecListe = Boolean(volets.liste);
+
+  useEffect(() => {
+    const el = carte.current;
+    if (!deuxVolets || !avecListe || !el) return;
+    let image = 0;
+    const relire = () => {
+      cancelAnimationFrame(image);
+      image = requestAnimationFrame(() => el.style.setProperty("--haut-liste", `${el.getBoundingClientRect().top}px`));
+    };
+    relire();
+    window.addEventListener("scroll", relire, { passive: true });
+    window.addEventListener("resize", relire);
+    const taille = new ResizeObserver(relire);
+    taille.observe(document.documentElement);
+    return () => {
+      cancelAnimationFrame(image);
+      window.removeEventListener("scroll", relire);
+      window.removeEventListener("resize", relire);
+      taille.disconnect();
+      el.style.removeProperty("--haut-liste");
+    };
+  }, [deuxVolets, avecListe]);
   // Les deux emplacements restent à la même place quel que soit le cas : la page n'est pas
   // remontée quand la fenêtre passe d'un volet à deux (rien n'est relu ni refait). La section
   // n'est pas remontée d'une adresse à l'autre (`SECTIONS_EN_DEUX_VOLETS`, PageTransition) :
@@ -53,10 +81,11 @@ export function DeuxVolets({
     >
       {volets.liste && (
         <div
+          ref={carte}
           data-volet="liste"
           className={
             deuxVolets
-              ? "page-fade sticky top-[calc(var(--nav-h)+20px)] max-h-[calc(100dvh-var(--nav-h)-44px)] w-[var(--largeur-liste)] shrink-0 overflow-y-auto overscroll-contain raised rounded-2xl"
+              ? "page-fade sticky top-[calc(var(--nav-h)+20px)] max-h-[calc(100dvh-var(--haut-liste,calc(var(--nav-h)+20px))-24px)] w-[var(--largeur-liste)] shrink-0 overflow-y-auto overscroll-contain raised rounded-2xl"
               : "page-fade"
           }
         >

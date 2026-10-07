@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { ADMIN_EMAIL, signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { estGrandEcran, interdireDialoguesNatifs, ouvrirAvecBarre } from "./helpers/agencement";
 
 // Retouches après le chantier v18 (docs/spec-retouches-v18.md), lot R, voie A.
@@ -192,5 +192,135 @@ test.describe("R2 : Date · Heure · Lieu", () => {
     expect(h.y, "Heure sous Date").toBeGreaterThanOrEqual(d.y + d.height - 1);
     expect(l.y, "Lieu sous Heure").toBeGreaterThanOrEqual(h.y + h.height - 1);
     await capture(page, "infos-page");
+  });
+});
+
+// R3 (D3) : en deux volets, la liste-carte tient dans la fenêtre. Son bas est à 24 px du bas de la
+// fenêtre quel que soit le défilement : sous l'en-tête avant tout défilement, puis collante sous la
+// barre du haut, à la hauteur de la fenêtre moins cette barre. Elle défile seule. Une vingtaine de
+// lignes par page pour qu'elle déborde. Personnes fictives.
+
+const R3_ADMIN: FakeProfile = {
+  uid: "uid-admin", email: ADMIN_EMAIL, firstName: "Alix", lastName: "D.", planningName: "Alix D.",
+  poles: ["da"], plannings: ["culte"], serviceRoles: { "Culte Francophone": ["musicien"] },
+};
+/** Le n-ième jour après le 3 octobre 2026, en AAAA-MM-JJ. */
+const r3Jour = (n: number) => new Date(Date.UTC(2026, 9, 3 + n)).toISOString().slice(0, 10);
+const R3_N = Array.from({ length: 24 }, (_, i) => i);
+const r3Item = (songSlug: string, position: number) => ({
+  songSlug, position, keyOverride: null, showChords: true, showPinyin: true, useJianpu: false,
+  structureOverride: null, sectionNotes: {}, notes: "",
+});
+const R3_EV = {
+  type: "loisir", pour: "eglise", heure: "14:00", heureFin: "16:00", dateFin: "", lieu: "Jardin", description: "",
+  liens: [], images: [], placesMax: 10, inscriptions: "auto", inscriptionOuverte: true, sansCompte: false, lienExterne: "",
+  contact: "", organisateurUid: "uid-admin", organisateurNom: "Alix D.", epingle: false, expiresAt: null, inscrits: 0,
+  createdAt: "2026-09-20T10:00:00Z", updatedAt: "2026-09-20T10:00:00Z",
+};
+const R3_DOCS: Record<string, Record<string, unknown>> = Object.fromEntries(R3_N.flatMap((i) => [
+  [`setlists/s${i}`, {
+    title: `Culte d'essai ${i + 1}`, leader: "Alix D.", category: "Culte Francophone", date: r3Jour(i * 3), language: "mixed",
+    notes: "", ownerId: "uid-admin", isPrivate: false, items: [r3Item("hosanna", 1), r3Item("abba-pere", 2)],
+  }],
+  [`poles/da/taches/t${i}`, {
+    pole: "da", titre: `Tâche d'essai ${i + 1}`, responsableUid: null, responsableNom: "", echeance: r3Jour(i * 2), repetition: null,
+    lien: "", note: "", prevenir: null, evenement: null, auteurUid: "uid-admin", createdAt: "2026-09-01T10:00:00Z", updatedAt: "2026-09-01T10:00:00Z",
+  }],
+  [`evenements/e${i}`, { ...R3_EV, titre: `Sortie d'essai ${i + 1}`, date: r3Jour(i * 2) }],
+  [`evenements/r${i}`, { ...R3_EV, titre: `Réunion d'essai ${i + 1}`, pour: "pole:da", date: r3Jour(i * 2 + 1), placesMax: null, inscriptions: "fermees" }],
+  [`users/u${i}`, {
+    email: `essai${i}@example.com`, firstName: `Essai${i + 1}`, lastName: "T.", planningName: `Essai${i + 1} T.`,
+    serviceRoles: {}, annonces: [], notify: [], poles: [], equipes: false, plannings: [],
+  }],
+  [`reports/m${i}`, {
+    kind: "site", title: `Signalement d'essai ${i + 1}`, status: "pending", createdAt: new Date(Date.UTC(2026, 8, 30 - i, 10)),
+    description: "Une page qui ne s'affiche pas.", songSlug: "", songTitle: "", pageUrl: "", authorName: "Essai T.", authorId: "uid-essai", authorEmail: "",
+  }],
+]));
+/** Le Culte Franco et le groupe Paix, chaque dimanche jusqu'à Noël : Alix D. y joue. */
+const r3Csv = (rows: string[][]) => rows.map((r) => r.map((c) => `"${c}"`).join(",")).join("\n");
+const R3_DIMANCHES = Array.from({ length: 13 }, (_, i) => new Date(Date.UTC(2026, 9, 4 + i * 7)))
+  .map((d) => `${String(d.getUTCDate()).padStart(2, "0")}/${String(d.getUTCMonth() + 1).padStart(2, "0")}`);
+const R3_FEUILLES: Record<string, string> = {
+  Franco_Louange: r3Csv([
+    ["2026 DATE", "Présidence", "Choristes", "", "Pianiste", "Guitariste", "Batterie", "Sono + Live", "PPT", "Orateur", "Traducteur", "Sainte cène", "Notes"],
+    ...R3_DIMANCHES.map((d) => [d, "Essai1 T.", "", "", "Alix D.", "", "", "", "", "", "", "", ""]),
+  ]),
+  Paix_T4: r3Csv([["DATE", "Présidence", "Musiciens", "Orateur"], ...R3_DIMANCHES.map((d) => [d, "Essai2 T.", "Alix D.", "Essai3 T."])]),
+};
+
+async function ouvrirR3(page: Page, to: string) {
+  interdireDialoguesNatifs(page);
+  await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
+  await page.route(/docs\.google\.com\/spreadsheets/, (route) => {
+    const feuille = new URL(route.request().url()).searchParams.get("sheet") ?? "";
+    return route.fulfill({ status: 200, contentType: "text/csv", body: R3_FEUILLES[feuille] ?? "" });
+  });
+  await signInAs(page, R3_ADMIN, R3_DOCS, to);
+}
+
+/** La carte de la liste dans la fenêtre : haut, bas, hauteur de la fenêtre, haut collant (`top` calculé). */
+const mesurerListe = (page: Page) => page.evaluate(() => {
+  const el = document.querySelector('[data-volet="liste"]')!;
+  const r = el.getBoundingClientRect();
+  return { haut: r.top, bas: r.bottom, fenetre: window.innerHeight, collant: parseFloat(getComputedStyle(el).top), defilement: window.scrollY };
+});
+
+const PAGES_R3 = [
+  { nom: "Setlists", adresse: "/setlists" },
+  { nom: "Mes services", adresse: "/mes-services" },
+  { nom: "Tâches", adresse: "/taches" },
+  { nom: "Back-Office › Tâches", adresse: "/back-office/taches/da" },
+  { nom: "Réunions", adresse: "/back-office/reunions" },
+  { nom: "Évènements", adresse: "/evenements" },
+  { nom: "Back-Office › Évènements", adresse: "/back-office/evenements" },
+  { nom: "Personnes", adresse: "/back-office/equipes/personnes" },
+  { nom: "Réception", adresse: "/back-office/messages" },
+  { nom: "Harmonie", adresse: "/harmonie" },
+];
+
+test.describe("R3 : la liste-carte des deux volets tient dans la fenêtre", () => {
+  for (const { nom, adresse } of PAGES_R3) {
+    test(`${nom} : bas à 24 px du bas de la fenêtre avant et après défilement, la liste défile seule (grands écrans)`, async ({ page }, info) => {
+      test.skip(!estGrandEcran(info), "deux volets : grands écrans");
+      await ouvrirR3(page, adresse);
+      const liste = page.locator('[data-volet="liste"]');
+      await expect(liste).toBeVisible();
+      await expect.poll(() => liste.evaluate((el) => el.scrollHeight - el.clientHeight), { message: "assez de lignes pour déborder de la carte" })
+        .toBeGreaterThan(40);
+      await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
+
+      // Avant tout défilement : sous l'en-tête, le bas de la carte à 24 px du bas de la fenêtre.
+      const avant = await mesurerListe(page);
+      expect(avant.defilement).toBe(0);
+      expect(avant.haut, "sous l'en-tête").toBeGreaterThanOrEqual(avant.collant - 1);
+      expect(Math.abs(avant.bas - (avant.fenetre - 24)), `bas de la carte (${Math.round(avant.bas)}) à 24 px du bas de la fenêtre (${avant.fenetre})`).toBeLessThanOrEqual(2);
+      await capture(page, `r3-${adresse.replaceAll("/", "-").slice(1)}`);
+
+      // La molette sur la liste la fait défiler, elle seule : la page ne bouge pas.
+      const b = (await liste.boundingBox())!;
+      await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2);
+      await page.mouse.wheel(0, 300);
+      await expect.poll(() => liste.evaluate((el) => el.scrollTop), { message: "la liste défile" }).toBeGreaterThan(0);
+      expect(await page.evaluate(() => window.scrollY), "la page ne défile pas").toBe(0);
+
+      // Page défilée jusqu'en bas : la carte reste dans la fenêtre ; collée sous la barre du haut, elle
+      // a la hauteur de la fenêtre moins cette barre.
+      await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+      await expect.poll(async () => {
+        const m = await mesurerListe(page);
+        return Math.abs(m.bas - (m.fenetre - 24)) <= 2;
+      }, { message: "après défilement, le bas de la carte reste à 24 px du bas de la fenêtre" }).toBe(true);
+      const apres = await mesurerListe(page);
+      if (Math.abs(apres.haut - apres.collant) <= 1) expect(apres.bas - apres.haut).toBeGreaterThanOrEqual(apres.fenetre - apres.collant - 24 - 2);
+    });
+  }
+
+  test("un volet (téléphone, tablette debout), Back-Office › Tâches : la liste suit la page, sans défilement propre", async ({ page }, info) => {
+    test.skip(estGrandEcran(info), "un volet : petits écrans");
+    await ouvrirR3(page, "/back-office/taches/da");
+    const liste = page.locator('[data-volet="liste"]');
+    await expect(liste.getByText("Tâche d'essai 1", { exact: true }).first()).toBeVisible();
+    expect(await liste.evaluate((el) => [getComputedStyle(el).overflowY, getComputedStyle(el).position])).toEqual(["visible", "static"]);
   });
 });
