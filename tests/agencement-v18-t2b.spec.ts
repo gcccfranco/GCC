@@ -47,6 +47,9 @@ async function ouvrir(page: Page, qui: FakeProfile, to: string, docs: Record<str
 const liste = (page: Page) => page.locator('[data-volet="liste"]');
 const volet = (page: Page) => page.locator('[data-volet="detail"]');
 const titreFiche = (page: Page, nom: string) => volet(page).getByRole("heading", { level: 2, name: nom, exact: true });
+/** Le bloc de contenu sous l'en-tête (`verifierAgencement`, pleine zone) : les deux volets, ou la liste
+ *  seule, ou la fiche en page. */
+const contenu = (page: Page) => page.locator('[data-volet="liste"], [data-volet="detail"]').first().locator("..");
 
 // ─── Évènements (B3) ─────────────────────────────────────────────────────────────
 
@@ -57,7 +60,7 @@ test.describe("T2b : Back-Office › Évènements", () => {
     await expect(enTete(page)).toContainText("Ce que voit l'assemblée, et sa gestion");
     await expect(ongletsRail(page).getByRole("link")).toHaveText(["Évènements", "Scène"]);
     await expect(liste(page).getByRole("link", { name: /Foot au parc/ })).toBeVisible();
-    await verifierAgencement(page);
+    await verifierAgencement(page, { contenu: contenu(page), onglets: { rail: 1, pilules: 0 } });
   });
 
   test("en grand : la liste et le prochain évènement en fiche de gestion", async ({ page }, info) => {
@@ -207,7 +210,7 @@ test.describe("T2b : Back-Office › Évènements", () => {
     const apres = (await h1.boundingBox())!;
     expect(Math.round(apres.x)).toBe(Math.round(avant.x));
     expect(Math.round(apres.y)).toBe(Math.round(avant.y));
-    await verifierAgencement(page);
+    await verifierAgencement(page, { contenu: enTete(page).locator("xpath=following-sibling::*[1]"), onglets: { rail: 1, pilules: 0 } });
   });
 
   test("un volet : la fiche en page, avec « ‹ Évènements » pour seul retour", async ({ page }, info) => {
@@ -220,7 +223,7 @@ test.describe("T2b : Back-Office › Évènements", () => {
     await expect(retour).toHaveAttribute("href", /^\/back-office\/evenements\/?$/);
     await expect(page.getByText("←")).toHaveCount(0);
     await expect(page.getByRole("link", { name: "Voir comme un membre" })).toBeVisible();
-    await verifierAgencement(page);
+    await verifierAgencement(page, { contenu: contenu(page), onglets: { rail: 0, pilules: 0 } });
   });
 
   test("en 中文 : le sous-titre de l'en-tête", async ({ page }) => {
@@ -239,7 +242,7 @@ test.describe("T2b : Back-Office › Réunions", () => {
     await expect(enTete(page)).toContainText("Les réunions de tes pôles et de tes équipes");
     await expect(ongletsRail(page)).toHaveCount(0);
     await expect(enTete(page).getByRole("link", { name: "Nouvelle réunion" })).toHaveAttribute("href", /^\/back-office\/reunions\/nouvelle\/?$/);
-    await verifierAgencement(page);
+    await verifierAgencement(page, { contenu: contenu(page), onglets: { rail: 0, pilules: 0 } });
   });
 
   test("la liste : « À venir » puis « Passées », sans évènement", async ({ page }) => {
@@ -307,7 +310,7 @@ test.describe("T2b : Back-Office › Réunions", () => {
     } else {
       await expect(page.getByRole("heading", { level: 1, name: "Réunion DA de septembre" })).toBeVisible();
       await expect(enTete(page).getByRole("link", { name: "Réunions" })).toHaveAttribute("href", /^\/back-office\/reunions\/?$/);
-      await verifierAgencement(page);
+      await verifierAgencement(page, { contenu: contenu(page), onglets: { rail: 0, pilules: 0 } });
     }
   });
 

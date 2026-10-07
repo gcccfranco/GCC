@@ -659,3 +659,22 @@ la barre d'onglets : une page sans barre du bas (rare) le verra plus haut que n�
 - **Reste** : rien pour T2b. `pages-en-grand-evenements.spec.ts:79` reste rouge (attendu, F1 → T7). P7 de la scène
   ajoute ses onglets Pâques · Noël dans `back-office/evenements/layout.tsx` (l'en-tête et la branche « scène » sont prêts).
 - **Timothée** : rien à publier (ni règle ni donnée) ; relire les libellés 中文 ci-dessus.
+
+### V18T2 — Fusion de la relecture des fondations
+
+- 07/10/2026 : `lot/v18-fondations` relu (`fix(V18F): relecture — …`) fusionné dans `lot/v18-t2` (commit de fusion,
+  puis `fix(V18T2): fusion — …`). Deux conflits, les deux intentions gardées : `back-office-coupe.spec.ts` (les
+  adresses de Réunions de T2a **et** `/essai-agencement` en 404 interrupteur coupé) ; cette section « Avancement »
+  (la relecture des fondations, puis T2a et T2b).
+- **Correctif** : les cinq appels de `verifierAgencement` de `agencement-v18-t2b.spec.ts` donnent maintenant
+  `contenu` (les deux volets, la liste seule ou la fiche en page ; sur la scène, le bloc sous l'en-tête) et `onglets`
+  (Évènements et la scène : un rail, aucune pilule ; Réunions et les fiches en un volet : ni rail ni pilule), comme la
+  relecture le demande à chaque tranche de pages. Aucun code du site à changer : la fenêtre qui se ferme quand la page
+  change, le rail au clavier et la page d'essai coupée ne touchent pas Évènements ni Réunions.
+- **Suites** (07/10/2026, après la fusion) : `agencement-v18-t2b`, `t2a`, `confirmations`, `back-office-admin`,
+  `evenements`, `reunions`, `taches-evenements` sur les cinq projets et `agencement-v18-fondations` sur « ordinateur » :
+  992 verts, 52 sautés (tests propres à un appareil), aucun rouge ; `back-office-coupe` (second serveur) : 187 verts,
+  2 sautés ; `tsc --noEmit` et `npm run lint` sans erreur.
+- **Reste** : rien pour le lot V18T2 (T2a, T2b, fusion). Après lui : T7 (App Évènements, même fichier
+  `EvenementClient.tsx`) et P7 de la scène (onglets Pâques · Noël dans `back-office/evenements/layout.tsx`).
+- **Timothée** : rien à publier (ni règle ni donnée).
