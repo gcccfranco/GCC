@@ -11,9 +11,11 @@
 // « Gérer dans le Back-Office ». Une réunion, au Back-Office : l'en-tête et les
 // deux colonnes de la planche bo-reunion-avant.
 // Lot U4 bis, B2 (docs/spec-pages-en-grand.md, Q5) : dans l'App, en grand, la fiche se lit à
-// droite de l'agenda (agencement v18, A10 : sur deux colonnes dès 760 px de volet, une sinon) (planche `evenements-ordinateur`) — titre et « Gérer dans
-// le Back-Office » en tête, bannière et description à gauche, infos et inscription à droite ;
-// en un volet, l'inscription remonte sous les infos (planche `evenement-fiche-telephone`).
+// droite de l'agenda (planche `evenements-ordinateur`), titre et « Gérer dans le Back-Office » en
+// tête. Agencement v18 (A10) : sous 760 px de volet, une seule colonne (bannière, infos et
+// inscription, texte, gestion, tâches) ; au-delà, deux (bannière, texte et gestion à gauche ; infos,
+// inscription et tâches à droite). En un volet, l'inscription remonte sous les infos (planche
+// `evenement-fiche-telephone`).
 // `id` : la fiche montrée sans être l'adresse (le prochain évènement de l'agenda, Q3).
 // Agencement v18 (B3, B4, docs/spec-agencement-v18.md) : au Back-Office, la fiche de gestion d'un
 // évènement (`FicheGestion`) et celle d'une réunion sont dans le volet de droite en grand (titre en h2,
@@ -248,7 +250,7 @@ export function EvenementClient({ espace = "app", id: idDonne }: { espace?: "app
         <div className="fiche-colonnes">
           <div>
             {e.images[0] && <div className="order-1"><Banniere e={e} /></div>}
-            <div className="order-3 space-y-4">{contenu}</div>
+            <div className="order-3 space-y-4 empty:hidden">{contenu}</div>
             {/* La gestion des inscriptions (organisateur) : la colonne large, ses trois choix y tiennent. */}
             {panneau && <div data-testid="gestion-carte" className="raised order-4 space-y-4 rounded-2xl p-4">{panneau}</div>}
           </div>

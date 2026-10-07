@@ -17,7 +17,9 @@ import { CalendrierClient } from "./CalendrierClient"
 // Agencement v18 (A10, docs/spec-agencement-v18.md ; planches `v18-app-evenements*`) : l'en-tête est
 // celui de toute la section, agenda et scène — « Évènements », son sous-titre, le rail des onglets sous
 // le titre ; « + Nouvel évènement » (U6, B3 : le formulaire est au Back-Office, ouvert aux responsables)
-// sauf sur la scène, pour que le rail ne bouge pas d'un onglet à l'autre.
+// sauf sur la scène, pour que le rail ne bouge pas d'un onglet à l'autre. Le contenu de la scène part
+// de la marge de la zone, comme le titre (R2 : rien n'est centré dans une borne). `peutCreer` est
+// calculé ici seulement et passé à l'agenda (son indice « rien de prévu »).
 export function SectionEvenements({ children }: { children: React.ReactNode }) {
   const { t } = useTranslation()
   const pathname = usePathname() || ""
@@ -40,9 +42,9 @@ export function SectionEvenements({ children }: { children: React.ReactNode }) {
     return (
       <>
         {enTete}
-        <main className="max-w-[1080px] mx-auto px-4 pb-16">{children}</main>
+        <main className="px-[var(--marge-page)] pb-16">{children}</main>
       </>
     )
   }
-  return <CalendrierClient enTete={enTete}>{children}</CalendrierClient>
+  return <CalendrierClient enTete={enTete} peutCreer={peutCreer}>{children}</CalendrierClient>
 }

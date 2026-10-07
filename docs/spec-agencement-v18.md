@@ -707,3 +707,61 @@ la barre d'onglets : une page sans barre du bas (rare) le verra plus haut que n�
 - **Reste** : rien pour T7. **P4** (scène) peut partir : la liste des trois onglets dans `useOngletsEvenements`, la
   branche scène de `SectionEvenements` sans `max-w-[1080px]`.
 - **Timothée** : rien à publier (ni règle ni donnée) ; relire les deux libellés 中文 ci-dessus.
+
+### V18T7 — Relecture (T7)
+
+- 07/10/2026 : **T7 relue deux fois et corrigée** (branche `lot/v18-t7`, commit `fix(V18T7): relecture — …`).
+  **Lot fini.**
+- **Corrigé** :
+  - **Scène sans borne** : la branche scène de `SectionEvenements` passe de `max-w-[1080px] mx-auto px-4` à
+    `px-[var(--marge-page)]`. Le contenu part du bord du titre (R2, R10), et la grille des créneaux ne déborde plus.
+    Test : « onglet de la scène » appelle désormais `verifierAgencement`. Il a été vu rouge : contenu à 264, 16, 84 et
+    320 px au lieu de 288, 24, 96 et 288 (ordinateur, tablette, tablette couchée, 1 440 px).
+  - **Fiche en grand** : le bloc du texte (`order-3`) prend `empty:hidden`, comme celui des tâches. Un évènement avec
+    une image, mais sans description ni lien, n'a plus un double écart de 32 px au-dessus de la carte de gestion. Test
+    « sans texte … un seul écart » : rouge à 32 px, puis vert à 16 px, sur les trois tailles de grand écran.
+  - **`peutCreer`** n'est plus calculé qu'une fois, dans `SectionEvenements`, puis passé à `CalendrierClient` pour
+    l'indice « rien de prévu ». La règle n'est plus dupliquée.
+  - **Commentaires** : l'en-tête d'`EvenementClient` dit maintenant « une colonne sous 760 px de volet, deux au-delà ».
+    Celui d'`EvenementsTabs.tsx` dit que le fichier n'exporte qu'un hook, `useOngletsEvenements`. Le fichier n'est pas
+    renommé : `lot/v18-scene` le garde sous ce nom, et un renommage compliquerait la fusion.
+  - **Tests** : les captures `PW_CAPTURES` sont prises après la fin des animations d'entrée, et sont donc nettes.
+    Les prénoms de l'équipe sont remplacés par des personnes fictives neutres (« Membre Essai »,
+    « Coordination Essai », « Organisatrice Essai »).
+- **Laissé, avec la raison** :
+  - **Saut du rail** : le rail apparaît après la lecture des programmes, ce qui fait descendre la page d'environ
+    44 px quand un programme est affiché. Ce n'est pas corrigé dans T7 : P4 (`lot/v18-scene`) donne à tout connecté des
+    onglets fixes, sans lecture, et le saut disparaît à la fusion. Il reste un saut au moment où la connexion se
+    résout, mais l'agenda affiche encore « Chargement » à ce moment-là : il est accepté.
+  - **Écarts voulus à la planche `v18-app-evenements*`** (non écrits dans A10, à trancher par Timothée) :
+    - La planche met un bouton « Partager » à droite du titre de la fiche, à la place de « Gérer dans le Back-Office »
+      pour un membre. C'est une fonction nouvelle, non codée.
+    - La planche range les infos en trois colonnes Date · Heure · Lieu. La carte d'infos en lignes avec icônes est
+      gardée.
+  - **Tablette portrait** : sur l'onglet de la scène, l'ancienne page `scene/SceneClient.tsx` garde sa colonne
+    centrée (`max-w-2xl lg:max-w-none mx-auto`). C'est la page que P4 remplace (`FeteClient`), hors des fichiers de T7.
+- **À l'intégration (important)** : `lot/v18-scene` (P4) a été codée sur F2, **sans T7**. Elle réécrit autrement
+  `SectionEvenements.tsx` et `EvenementsTabs.tsx` : un **conflit est attendu**.
+  - **Garder de T7** :
+    - l'en-tête posé par `SectionEvenements` et passé à `CalendrierClient` (`enTete`, `peutCreer`) ;
+    - « + Nouvel évènement » ;
+    - l'`OngletsRail` de l'agenda.
+  - **Garder de P4** :
+    - la branche scène (`SectionScene`, halo de la scène, sans borne) ;
+    - la liste des onglets (Calendrier · Pâques · Noël, fixes pour un connecté), au format `OngletRail`
+      (`id`, `href`, `label`).
+  - **Retirer de P4** : la version P4 d'`EvenementsTabs` rend encore `SectionTabs` et des pilules. N'en garder que le
+    hook.
+  - **Ensuite** : adapter dans `agencement-v18-t7.spec.ts` les tests de la scène, qui attendent « Noël » seul et
+    `/evenements/scene`, aux onglets Pâques · Noël et à `/evenements/scene/<fête>`.
+- **Tests** :
+  - `agencement-v18-t7.spec.ts` (12 tests) : 43 passés, 17 sautés car propres au grand écran ou à un volet.
+  - Voisins `pages-en-grand-evenements`, `evenements`, `programme-scene`, `scene-saison` et `taches-evenements` :
+    379 passés, 31 sautés.
+  - `back-office-coupe` (second serveur) : 63 passés.
+  - `tsc` et `eslint` : 0 erreur.
+  - Captures regardées aux cinq tailles : agenda, « Nouvel évènement », scène, fiche dépliée et réduite.
+- **Timothée** :
+  - rien à publier (ni règle ni donnée) ;
+  - trancher « Partager » et la grille Date · Heure · Lieu de la planche (les ajouter, ou garder l'écart) ;
+  - relire les deux libellés 中文 de T7 (`evenements.sousTitre`, `evenements.onglets`).

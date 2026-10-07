@@ -17,21 +17,23 @@ const PIXEL = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcS
 const EV = {
   type: "sport", pour: "eglise", date: "2026-10-10", heure: "19:00", heureFin: "21:00", dateFin: "", lieu: "Parc de Bercy",
   description: "Match amical, venez nombreux.", liens: [], images: [] as string[], placesMax: 10, inscriptionOuverte: true,
-  sansCompte: true, lienExterne: "", contact: "", organisateurUid: "uid-steph", organisateurNom: "Steph", epingle: false,
+  sansCompte: true, lienExterne: "", contact: "", organisateurUid: "uid-organisatrice", organisateurNom: "Organisatrice Essai", epingle: false,
   expiresAt: null, inscrits: 4, createdAt: "2026-09-20T10:00:00Z", updatedAt: "2026-09-20T10:00:00Z",
 };
-const NOEL = { nom: "Noël", jourJ: "2026-12-24", debut: "2026-10-01", visible: true, passages: [], createdBy: "uid-alice", updatedAt: "2026-09-14T20:00:00Z" };
+const NOEL = { nom: "Noël", jourJ: "2026-12-24", debut: "2026-10-01", visible: true, passages: [], createdBy: "uid-coordination", updatedAt: "2026-09-14T20:00:00Z" };
 const DOCS: Record<string, Record<string, unknown>> = {
   "evenements/louange": { ...EV, titre: "Soirée louange", type: "musique", date: "2026-10-09", heure: "20:00", lieu: "Grande salle", placesMax: null },
   "evenements/foot": { ...EV, titre: "Foot au parc", images: [PIXEL] },
   "evenements/repas": { ...EV, titre: "Repas de rentrée", type: "loisir", date: "2026-10-17", heure: "12:30", lieu: "Salle du bas" },
+  // Une image, ni description, ni lien, ni seconde image : le bloc du texte est vide.
+  "evenements/photo": { ...EV, titre: "Photo de groupe", date: "2026-10-24", description: "", images: [PIXEL] },
   "programmes/noel": NOEL,
 };
 
 /** Membre d'un groupe, sans droit de création. */
-const JO: FakeProfile = { uid: "uid-jo", email: "jo@example.com", firstName: "Jo", lastName: "L.", serviceRoles: { "Groupe Paix": ["chanteur"] } };
+const MEMBRE: FakeProfile = { uid: "uid-membre", email: "membre@example.com", firstName: "Membre", lastName: "Essai", serviceRoles: { "Groupe Paix": ["chanteur"] } };
 /** Pôle Événement : la coordination, qui crée des évènements. */
-const ALICE: FakeProfile = { uid: "uid-alice", email: "alice@example.com", firstName: "Alice", lastName: "Q.", poles: ["evenement"] };
+const COORDINATION: FakeProfile = { uid: "uid-coordination", email: "coordination@example.com", firstName: "Coordination", lastName: "Essai", poles: ["evenement"] };
 
 async function ouvrir(page: Page, qui: FakeProfile, to: string) {
   interdireDialoguesNatifs(page);
@@ -44,15 +46,18 @@ const liste = (page: Page) => page.locator('[data-volet="liste"]');
 const volet = (page: Page) => page.locator('[data-volet="detail"]');
 const nouvel = (page: Page) => page.getByRole("link", { name: "Nouvel évènement" });
 
-/** Capture à regarder à l'œil (PW_CAPTURES=<dossier>), une par appareil. */
+/** Capture à regarder à l'œil (PW_CAPTURES=<dossier>), une par appareil : prise une fois les
+ *  animations d'entrée finies (sinon la page est encore à moitié transparente). */
 async function capture(page: Page, nom: string) {
   const dir = process.env.PW_CAPTURES;
-  if (dir) await page.screenshot({ path: `${dir}/t7-${nom}-${test.info().project.name}.png` });
+  if (!dir) return;
+  await page.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished.catch(() => {}))));
+  await page.screenshot({ path: `${dir}/t7-${nom}-${test.info().project.name}.png`, animations: "disabled" });
 }
 
 test.describe("T7 : l'en-tête de la section Évènements", () => {
   test("l'agencement commun : « Évènements », sous-titre, onglets en rail sous le titre", async ({ page }, info) => {
-    await ouvrir(page, JO, "/evenements");
+    await ouvrir(page, MEMBRE, "/evenements");
     const titre = enTete(page).getByRole("heading", { level: 1, name: "Évènements" });
     await expect(titre).toBeVisible();
     await expect(enTete(page)).toContainText("Les rendez-vous de l'église et les inscriptions");
@@ -70,7 +75,7 @@ test.describe("T7 : l'en-tête de la section Évènements", () => {
 
   test("en grand : la liste n'a plus de titre, la fiche se titre en h2 de 24 px", async ({ page }, info) => {
     test.skip(!estGrandEcran(info), "deux volets : grand écran");
-    await ouvrir(page, JO, "/evenements");
+    await ouvrir(page, MEMBRE, "/evenements");
     await expect(liste(page).getByRole("heading", { name: "Évènements" })).toHaveCount(0);
     const titre = volet(page).getByRole("heading", { level: 2, name: "Soirée louange" });
     await expect(titre).toBeVisible();
@@ -83,7 +88,7 @@ test.describe("T7 : l'en-tête de la section Évènements", () => {
   });
 
   test("responsable : « + Nouvel évènement » à libellé en grand et sur tablette, rond sur téléphone", async ({ page }, info) => {
-    await ouvrir(page, ALICE, "/evenements");
+    await ouvrir(page, COORDINATION, "/evenements");
     const bouton = nouvel(page);
     await expect(bouton).toHaveCount(1);
     await expect(bouton).toHaveAttribute("href", /^\/back-office\/evenements\/nouveau\/?$/);
@@ -104,13 +109,13 @@ test.describe("T7 : l'en-tête de la section Évènements", () => {
   });
 
   test("membre : pas de « Nouvel évènement »", async ({ page }) => {
-    await ouvrir(page, JO, "/evenements");
+    await ouvrir(page, MEMBRE, "/evenements");
     await expect(enTete(page).getByRole("heading", { level: 1, name: "Évènements" })).toBeVisible();
     await expect(nouvel(page)).toHaveCount(0);
   });
 
   test("onglet de la scène : le même en-tête, sans action principale, le titre ne bouge pas", async ({ page }) => {
-    await ouvrir(page, ALICE, "/evenements");
+    await ouvrir(page, COORDINATION, "/evenements");
     const h1 = enTete(page).getByRole("heading", { level: 1, name: "Évènements" });
     await expect(h1).toBeVisible();
     await expect(nouvel(page)).toHaveCount(1);
@@ -125,6 +130,8 @@ test.describe("T7 : l'en-tête de la section Évènements", () => {
     expect(Math.round(apres.x)).toBe(Math.round(avant.x));
     expect(Math.round(apres.y)).toBe(Math.round(avant.y));
     await expect(page.getByTestId("barre-section"), "plus de barre d'onglets collante").toHaveCount(0);
+    // Le contenu de la scène part du même bord que le titre : plus de borne de 1 080 px centrée (R2, R10).
+    await verifierAgencement(page);
     await capture(page, "scene");
   });
 
@@ -139,7 +146,7 @@ test.describe("T7 : l'en-tête de la section Évènements", () => {
 
   test("un volet : la fiche en page n'a que son retour « ‹ Évènements », sans l'en-tête de la section", async ({ page }, info) => {
     test.skip(estGrandEcran(info), "un volet : téléphone et tablette portrait");
-    await ouvrir(page, JO, "/evenements/foot");
+    await ouvrir(page, MEMBRE, "/evenements/foot");
     await expect(page.getByTestId("fiche-carte").getByRole("heading", { name: "Foot au parc" })).toBeVisible();
     await expect(enTete(page)).toHaveCount(0);
     await expect(page.getByTestId("barre-fiche").getByRole("link", { name: "Évènements" })).toHaveAttribute("href", /^\/evenements\/?$/);
@@ -150,7 +157,7 @@ test.describe("T7 : la fiche dans le volet", () => {
   test.beforeEach(({}, info) => { test.skip(!estGrandEcran(info), "deux volets : grand écran"); });
 
   test("barre dépliée : une colonne quand le volet fait moins de 760 px, deux au-delà", async ({ page }, info) => {
-    await ouvrir(page, JO, "/evenements/foot");
+    await ouvrir(page, MEMBRE, "/evenements/foot");
     const banniere = page.getByTestId("banniere");
     await expect(banniere.getByRole("img", { name: "Foot au parc" })).toBeVisible();
     const largeur = (await volet(page).boundingBox())!.width;
@@ -168,7 +175,7 @@ test.describe("T7 : la fiche dans le volet", () => {
   test("barre réduite, 1 440 px : deux colonnes", async ({ page }, info) => {
     test.skip(info.project.name !== "ordinateur-1440", "ordinateur-1440, barre réduite");
     await ouvrirAvecBarre(page, "reduite");
-    await ouvrir(page, JO, "/evenements/foot");
+    await ouvrir(page, MEMBRE, "/evenements/foot");
     const banniere = page.getByTestId("banniere");
     await expect(banniere).toBeVisible();
     expect((await volet(page).boundingBox())!.width).toBeGreaterThanOrEqual(760);
@@ -180,7 +187,7 @@ test.describe("T7 : la fiche dans le volet", () => {
   });
 
   test("un évènement sans image commence par son titre : pas de cadre gris", async ({ page }) => {
-    await ouvrir(page, JO, "/evenements/repas");
+    await ouvrir(page, MEMBRE, "/evenements/repas");
     const titre = volet(page).getByRole("heading", { level: 2, name: "Repas de rentrée" });
     await expect(titre).toBeVisible();
     await expect(volet(page).getByTestId("banniere")).toHaveCount(0);
@@ -188,8 +195,23 @@ test.describe("T7 : la fiche dans le volet", () => {
     expect(infos.y, "les infos après le titre").toBeGreaterThan(t.y);
   });
 
+  test("sans texte (ni description, ni lien), la carte de gestion reste à un seul écart du bloc au-dessus", async ({ page }) => {
+    await ouvrir(page, COORDINATION, "/evenements/photo");
+    const gestion = volet(page).getByTestId("gestion-carte");
+    await expect(gestion).toBeVisible();
+    await expect(volet(page).getByTestId("banniere")).toBeVisible();
+    const g = (await gestion.boundingBox())!;
+    // Le bloc juste au-dessus, dans la même colonne : la bannière (deux colonnes) ou la carte des infos (une).
+    let bas = -Infinity;
+    for (const bloc of [volet(page).getByTestId("banniere"), volet(page).getByTestId("fiche-carte")]) {
+      const r = (await bloc.boundingBox())!;
+      if (r.x < g.x + g.width && g.x < r.x + r.width && r.y + r.height <= g.y + 1) bas = Math.max(bas, r.y + r.height);
+    }
+    expect(Math.round(g.y - bas), "un seul écart de 16 px, pas deux").toBe(16);
+  });
+
   test("« Gérer dans le Back-Office » en contour, à côté du titre", async ({ page }) => {
-    await ouvrir(page, ALICE, "/evenements/foot");
+    await ouvrir(page, COORDINATION, "/evenements/foot");
     const titre = volet(page).getByRole("heading", { level: 2, name: "Foot au parc" });
     const gerer = volet(page).getByRole("link", { name: "Gérer dans le Back-Office" });
     await expect(gerer).toHaveAttribute("href", /^\/back-office\/evenements\/foot\/?$/);

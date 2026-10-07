@@ -23,8 +23,7 @@ import { DeuxVolets } from "@/components/layout/DeuxVolets"
 import { useTranslation } from "react-i18next"
 import { useAuth } from "@/lib/firebase/auth"
 import { useProfile } from "@/lib/firebase/users"
-import { canSeeEvenement, creatableEvenementPours, estResponsable } from "@/lib/access"
-import { ANNONCE_SECTIONS } from "@/types/annonce"
+import { canSeeEvenement } from "@/lib/access"
 import { EVENEMENTS_CHANGED, getInscription, listEvenements } from "@/lib/firebase/evenements"
 import { agendaPublic, daysAgo, isExpired, isInfo } from "@/lib/evenements/agenda"
 import { avantBascule, BASCULE_EVENEMENTS, jourDeParis } from "@/lib/evenements/bascule"
@@ -35,7 +34,12 @@ import type { Evenement } from "@/types/evenement"
 import { EntreeSheetCarte, EvenementCard, EvenementCarte } from "./EvenementCard"
 import { EvenementClient } from "./[id]/EvenementClient"
 
-export function CalendrierClient({ enTete, children }: { enTete: React.ReactNode; children: React.ReactNode }) {
+export function CalendrierClient({ enTete, peutCreer, children }: {
+  enTete: React.ReactNode
+  /** Responsable qui peut créer un évènement (calculé par `SectionEvenements`, une seule source). */
+  peutCreer: boolean
+  children: React.ReactNode
+}) {
   const { t, i18n } = useTranslation()
   const { user, loading: authLoading } = useAuth()
   const { profile, loading: profileLoading } = useProfile()
@@ -86,9 +90,6 @@ export function CalendrierClient({ enTete, children }: { enTete: React.ReactNode
   const chargement = authLoading || (user && profileLoading) || evenements === null
   const infos = visible.filter(isInfo).sort((a, b) => Number(b.epingle) - Number(a.epingle) || b.createdAt.localeCompare(a.createdAt))
   const { aVenir: upcoming, passes: past } = agendaPublic(visible, sheet?.entrees ?? [], !!user, today, i18n.language)
-
-  // Lot U6, B3 : le formulaire est au Back-Office, ouvert aux responsables.
-  const peutCreer = estResponsable(user, profile) && creatableEvenementPours(user, profile, ANNONCE_SECTIONS).length > 0
 
   // En grand, sans fiche choisie : le prochain évènement de l'agenda, sinon la première info (Q3).
   // Une entrée du Sheet (U9) n'a pas de fiche : le prochain évènement de l'app.

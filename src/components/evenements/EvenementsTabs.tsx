@@ -1,16 +1,13 @@
 "use client"
 
-// Onglets de la section Évènements : « Calendrier » (lot 6, public) et le
-// programme de scène affiché (« Noël », lot 3 bis) pour les connectés ; sans
-// programme affiché, seule la coordination voit ce second onglet (« Scène »)
-// pour en créer un. Rechargé après chaque écriture (PROGRAMMES_CHANGED).
-// Lot 12 : le programme affiché est calculé par `currentProgramme`, la même
-// fonction que la page — le nom de l'onglet et la page ne peuvent pas diverger.
-
-// Agencement v18 (A10, R4, docs/spec-agencement-v18.md) : les onglets sont le rail gris de l'en-tête
-// de la section (`EnTetePage`, posé par `SectionEvenements`), sous le titre, sur l'agenda comme sur la
-// scène ; plus de barre collante au-dessus du titre (R6). Ce fichier n'en donne que la liste
-// (`useOngletsEvenements`) ; un seul onglet (sans compte) : la section ne pose pas de rail.
+// Les onglets de la section Évènements, en liste : ce fichier n'exporte qu'un hook,
+// `useOngletsEvenements`, et ne rend rien. L'en-tête de la section (`SectionEvenements`,
+// agencement v18, A10, R4) les pose dans son rail gris (`OngletsRail`), sous le titre, sur
+// l'agenda comme sur la scène ; un seul onglet (sans compte) : pas de rail.
+// La liste : « Calendrier » (lot 6, public) puis, pour les connectés, le programme de scène
+// affiché (« Noël », lot 3 bis) ; sans programme affiché, seule la coordination voit ce second
+// onglet (« Scène ») pour en créer un. Le programme affiché est calculé par `currentProgramme`
+// (lot 12), la même fonction que la page. Rechargée après chaque écriture (PROGRAMMES_CHANGED).
 
 import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
