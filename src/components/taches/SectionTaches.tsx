@@ -12,7 +12,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ListChecks } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { DeuxVolets } from "@/components/layout/DeuxVolets";
-import { PageTitle } from "@/components/layout/PageTitle";
+import { EnTetePage } from "@/components/layout/EnTetePage";
 import { Group, GroupRow } from "@/components/ui/group";
 import { TacheLigne } from "@/components/taches/TacheLigne";
 import { FicheTache } from "@/components/taches/FicheTache";
@@ -20,6 +20,7 @@ import { texteRetour } from "@/components/taches/retour";
 import { useDisposition } from "@/hooks/useDisposition";
 import { useProfile } from "@/lib/firebase/users";
 import { entreesBackOffice, isAdminUser, polesDe } from "@/lib/access";
+import { estSurLaListe } from "@/lib/deuxVolets";
 import { aFairePour, lignesDeTache, type Ligne } from "@/lib/taches/echeances";
 import { useTaches } from "@/lib/taches/useTaches";
 import { todayIso } from "@/lib/scene/dimanches";
@@ -106,9 +107,7 @@ export function SectionTaches({ children }: { children: React.ReactNode }) {
 
   const versBackOffice = entreesBackOffice(user, profile).includes("taches");
   const liste = (
-    <div className={cn("space-y-6 pb-10", disposition === "grand" ? "px-5 pt-6" : "mx-auto max-w-2xl px-4 pt-6 md:max-w-3xl md:px-6")}>
-      {/* Une tâche ouverte à droite porte le h1 ; sans elle, le titre de la liste le porte. */}
-      <PageTitle niveau={disposition === "grand" && ouverte ? 2 : 1} title={t("taches.title")} />
+    <div className={cn("space-y-6", disposition === "grand" ? "px-4 py-4" : "px-[var(--marge-page)] pb-10")}>
       {retour && <p role="status" className="text-sm text-muted-foreground">{retour}</p>}
       {poles.length === 0 ? (
         <p className="text-sm text-muted-foreground">{t("taches.aucunPole")}</p>
@@ -142,9 +141,13 @@ export function SectionTaches({ children }: { children: React.ReactNode }) {
     </div>
   );
 
+  // Agencement v18 (R1, R3, tranche Z) : l'en-tête commun « Tâches » au-dessus des deux volets
+  // (et de la liste seule) ; en un volet, la fiche est une page qui pose le sien (« ‹ Tâches »).
+  const surLaListe = estSurLaListe(chemin, "/taches");
   return (
     <div className="min-h-screen bg-background">
       <Contexte.Provider value={valeur}>
+        {(disposition === "grand" || surLaListe) && <EnTetePage titre={t("taches.title")} />}
         <DeuxVolets
           racine="/taches"
           largeurListe={400}

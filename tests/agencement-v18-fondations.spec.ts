@@ -1,16 +1,54 @@
 import { expect, test, type Page } from "@playwright/test";
 import { ADMIN_EMAIL, signInAs, type FakeProfile } from "./helpers/fakeSession";
 import {
-  HALO_BACK_OFFICE, HALO_BACK_OFFICE_SOMBRE, enTete, estGrandEcran, estTelephone, interdireDialoguesNatifs, margeAttendue,
-  ongletsRail, ouvrirAvecBarre, pilules, verifierAgencement, verifierPleineLargeur, zoneDeContenu,
+  HALO_BACK_OFFICE, HALO_BACK_OFFICE_SOMBRE, enTete, estGrandEcran, estTelephone, fenetreDuSite, interdireDialoguesNatifs,
+  margeAttendue, ongletsRail, ouvrirAvecBarre, pilules, verifierAgencement, verifierPleineLargeur, zoneDeContenu,
 } from "./helpers/agencement";
 
-// Agencement v18, tranche F1 (docs/spec-agencement-v18.md) : les composants et règles communes,
-// essayés sur la page d'essai `/essai-agencement` (servie en développement seulement : 404 en
-// production), plus le halo bleu gris du Back-Office sur sa vraie page.
-// Cinq projets (`agencement-v18-*` est dans SPECS_GRAND_ECRAN).
+// Agencement v18, tranche F1 (docs/spec-agencement-v18.md) : les composants et règles communes.
+// Essayés d'abord sur une page d'essai, portés par la tranche Z sur des pages réelles (la page
+// d'essai est retirée) : Mon profil, Setlists, Statistiques, Équipes, Planning, les fiches d'une
+// tâche et d'un évènement au Back-Office. Les règles de chaque page sont dans
+// `agencement-v18-regles.spec.ts` ; ici, le comportement des composants eux-mêmes.
+// Cinq projets (`agencement-v18-*` est dans SPECS_GRAND_ECRAN). Données fictives.
 
-const ESSAI = "/essai-agencement";
+const ADMIN: FakeProfile = {
+  uid: "uid-admin", email: ADMIN_EMAIL, firstName: "Alix", lastName: "D.", planningName: "Alix D.",
+  poles: ["da"], plannings: ["culte"],
+};
+
+const tache = (titre: string, echeance: string) => ({
+  pole: "da", titre, responsableUid: null, responsableNom: "", echeance, repetition: null, lien: "", note: "",
+  prevenir: null, evenement: null, auteurUid: "uid-admin", createdAt: "2026-09-01T10:00:00Z", updatedAt: "2026-09-01T10:00:00Z",
+});
+const EV = {
+  titre: "Foot au parc", type: "loisir", pour: "eglise", date: "2026-10-17", heure: "14:00", heureFin: "16:00", dateFin: "",
+  lieu: "Jardin", description: "", liens: [], images: [], placesMax: 10, inscriptions: "auto", inscriptionOuverte: true,
+  sansCompte: false, contact: "Alix D.", organisateurUid: "uid-admin", organisateurNom: "Alix D.", epingle: false, expiresAt: null,
+  inscrits: 0, createdAt: "2026-09-20T10:00:00Z", updatedAt: "2026-09-20T10:00:00Z",
+};
+const item = (songSlug: string, position: number) => ({
+  songSlug, position, keyOverride: null, showChords: true, showPinyin: true, useJianpu: false,
+  structureOverride: null, sectionNotes: {}, notes: "",
+});
+
+const DOCS: Record<string, Record<string, unknown>> = {
+  "poles/da/taches/t1": tache("Préparer les affiches", "2026-10-08"),
+  "poles/da/taches/t2": tache("Fond PPT du culte", "2026-10-12"),
+  "evenements/foot": EV,
+  "setlists/s1": {
+    title: "Culte du 11 octobre", leader: "Alix D.", category: "Culte Francophone", date: "2026-10-11", language: "mixed",
+    notes: "", ownerId: "uid-admin", isPrivate: false, items: [item("hosanna", 1), item("abba-pere", 2)],
+  },
+};
+
+async function ouvrir(page: Page, chemin: string) {
+  interdireDialoguesNatifs(page);
+  await page.clock.setFixedTime(new Date("2026-10-06T10:00:00"));
+  await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
+  await signInAs(page, ADMIN, DOCS, chemin);
+  await expect(enTete(page).locator("h1").filter({ visible: true }).first()).toBeVisible();
+}
 
 /** Capture à regarder à l'œil et à comparer aux planches v18 (PW_CAPTURES=<dossier>), une par appareil. */
 async function capture(page: Page, nom: string) {
@@ -20,35 +58,24 @@ async function capture(page: Page, nom: string) {
   await page.screenshot({ path: `${dir}/${nom}-${test.info().project.name}.png` });
 }
 
-async function ouvrirEssai(page: Page) {
-  interdireDialoguesNatifs(page);
-  await page.goto(ESSAI);
-  await expect(enTete(page).getByRole("heading", { level: 1, name: "Essai d'agencement" })).toBeVisible();
-}
-
 test.describe("EnTetePage (R1, R2, R3, R8)", () => {
-  test("retour, titre, sous-titre, action, rail puis rangée, dans cet ordre", async ({ page }, info) => {
-    await ouvrirEssai(page);
+  test("Mon profil : « ‹ Moi », titre, sous-titre, puis l'action à droite du titre", async ({ page }, info) => {
+    await ouvrir(page, "/profil");
     const entete = enTete(page);
     const retour = entete.getByRole("link", { name: "Moi" });
     const h1 = entete.getByRole("heading", { level: 1 });
-    const sous = entete.getByText("Les composants communs de la v18");
-    const rail = entete.locator('[data-onglets="rail"]');
-    const rangee = entete.locator('[data-onglets="pilules"]');
-    for (const l of [retour, h1, sous, rail, rangee]) await expect(l).toBeVisible();
+    const sous = entete.getByText(ADMIN_EMAIL);
+    for (const l of [retour, h1, sous]) await expect(l).toBeVisible();
     const y = async (l: typeof h1) => (await l.boundingBox())!.y;
     expect(await y(retour)).toBeLessThan(await y(h1));
     expect(await y(h1)).toBeLessThan(await y(sous));
-    expect(await y(sous)).toBeLessThan(await y(rail));
-    expect(await y(rail)).toBeLessThan(await y(rangee));
     // Le seul retour : « ‹ Section », 14 px gras gris, vers la section.
     await expect(retour).toHaveAttribute("href", /^\/moi\/?$/); // trailingSlash de next.config
     expect(await retour.evaluate((el) => [getComputedStyle(el).fontSize, getComputedStyle(el).fontWeight])).toEqual(["14px", "600"]);
-    // Sous-titre 14 px.
     expect(await sous.evaluate((el) => getComputedStyle(el).fontSize)).toBe("14px");
     if (!estTelephone(info)) {
       // L'action principale est à droite du titre, sur sa ligne.
-      const action = entete.getByRole("button", { name: "Nouvel essai" });
+      const action = entete.getByRole("button", { name: "Enregistrer" });
       const bA = (await action.boundingBox())!;
       const bT = (await h1.boundingBox())!;
       expect(bA.x).toBeGreaterThan(bT.x + bT.width);
@@ -56,217 +83,147 @@ test.describe("EnTetePage (R1, R2, R3, R8)", () => {
     }
   });
 
-  test("vérifications communes : un h1 à la marge, 30 px dès 768 px (24 sur téléphone), rien ne déborde, un halo, contenu pleine zone, onglets", async ({ page }) => {
-    await ouvrirEssai(page);
-    // Le contenu : les deux volets (ou la liste seule), sur toute la zone ; trois rails (en-tête,
-    // adresses, vues par adresse) et une rangée de pilules.
-    const volets = page.locator('[data-volet="liste"]').locator("..");
-    await verifierAgencement(page, { contenu: volets, onglets: { rail: 3, pilules: 1 } });
-    // La vérification de pleine largeur mord : un bouton n'occupe pas la zone.
-    await expect(verifierPleineLargeur(page, page.getByRole("button", { name: "Demander" }))).rejects.toThrow();
-    await capture(page, "f1-essai");
+  test("Statistiques : le titre, puis le rail, puis la rangée (filtres en pilules)", async ({ page }) => {
+    await ouvrir(page, "/back-office/statistiques");
+    const entete = enTete(page);
+    const h1 = entete.getByRole("heading", { level: 1, name: "Statistiques" });
+    const rail = entete.locator('[data-onglets="rail"]');
+    const rangee = entete.locator('[data-onglets="pilules"]').first();
+    for (const l of [h1, rail, rangee]) await expect(l).toBeVisible();
+    const y = async (l: typeof h1) => (await l.boundingBox())!.y;
+    expect(await y(h1)).toBeLessThan(await y(rail));
+    expect(await y(rail)).toBeLessThan(await y(rangee));
   });
 
-  test("barre réduite : le titre passe à barre + 28 px (grands écrans)", async ({ page }, info) => {
-    test.skip(!estGrandEcran(info), "la barre latérale n'existe qu'en grand");
-    await ouvrirAvecBarre(page, "reduite");
-    await ouvrirEssai(page);
-    expect(await margeAttendue(page)).toBe(28);
-    await verifierAgencement(page);
-    await capture(page, "f1-essai-reduite");
-  });
-
-  test("la marge de la page est un jeton CSS (--marge-page) qui suit la barre", async ({ page }) => {
-    await ouvrirEssai(page);
+  test("la marge de la page est un jeton CSS (--marge-page) qui suit la barre ; la pleine largeur mord", async ({ page }, info) => {
+    await ouvrir(page, "/setlists");
     const jeton = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--marge-page").trim());
     expect(jeton).toBe(`${await margeAttendue(page)}px`);
-  });
-});
-
-test.describe("BoutonNouveau (R7)", () => {
-  test("dès 768 px : pilule noire à libellé dans l'en-tête", async ({ page }, info) => {
-    test.skip(estTelephone(info), "le téléphone a le rond");
-    await ouvrirEssai(page);
-    const bouton = enTete(page).getByRole("button", { name: "Nouvel essai" });
-    await expect(bouton).toBeVisible();
-    await expect(bouton.getByText("Nouvel essai")).toBeVisible();
-    const b = (await bouton.boundingBox())!;
-    expect(b.width).toBeGreaterThan(b.height * 2);
-    expect(await bouton.evaluate((el) => getComputedStyle(el).position)).not.toBe("fixed");
-    await bouton.click();
-    await expect(page.getByTestId("resultat")).toHaveText("nouveau");
+    // En grand, les deux volets prennent toute la zone (un volet : la liste de la page elle-même).
+    await verifierAgencement(page, { contenu: estGrandEcran(info) ? page.locator("[data-deux-volets]") : undefined });
+    // La vérification de pleine largeur mord : le titre n'occupe pas la zone.
+    await expect(verifierPleineLargeur(page, enTete(page).locator("h1"))).rejects.toThrow();
   });
 
-  test("téléphone : rond de 52 px en bas à droite, au-dessus de la barre d'onglets, sans pilule à libellé", async ({ page }, info) => {
-    test.skip(!estTelephone(info), "propre au téléphone");
-    await ouvrirEssai(page);
-    const rond = page.getByRole("button", { name: "Nouvel essai" });
-    await expect(rond).toBeVisible();
-    // Le libellé n'est lu que par les lecteurs d'écran : aucune pilule à libellé à l'écran.
-    expect(await rond.locator("span").evaluate((el) => el.getBoundingClientRect().width)).toBeLessThanOrEqual(1);
-    const b = (await rond.boundingBox())!;
-    expect([Math.round(b.width), Math.round(b.height)]).toEqual([52, 52]);
-    const largeur = await page.evaluate(() => document.documentElement.clientWidth);
-    expect(Math.round(largeur - (b.x + b.width))).toBe(16);
-    const barre = (await page.getByTestId("barre-du-bas").boundingBox())!;
-    expect(b.y + b.height).toBeLessThanOrEqual(barre.y - 8);
-    await rond.click();
-    await expect(page.getByTestId("resultat")).toHaveText("nouveau");
+  test("barre réduite : la marge passe à 28 px (grands écrans)", async ({ page }, info) => {
+    test.skip(!estGrandEcran(info), "la barre latérale n'existe qu'en grand");
+    await ouvrirAvecBarre(page, "reduite");
+    await ouvrir(page, "/setlists");
+    expect(await margeAttendue(page)).toBe(28);
+    await verifierAgencement(page);
   });
 });
 
 test.describe("ConfirmerProvider, useConfirmer (R9)", () => {
-  test("une fenêtre du site : « Annuler » et Échap rendent false, l'action rend true", async ({ page }) => {
-    await ouvrirEssai(page);
-    const demander = page.getByRole("button", { name: "Demander" });
-    const reponse = page.getByTestId("reponse");
-    const fenetre = page.getByRole("alertdialog");
-
-    await demander.click();
+  test("« ⋯ › Supprimer » d'une tâche : Échap répond non, la tâche reste", async ({ page }) => {
+    await ouvrir(page, "/back-office/taches/da/t1");
+    await page.getByRole("button", { name: "Plus d'actions" }).filter({ visible: true }).click();
+    await page.getByRole("menuitem", { name: "Supprimer" }).click();
+    const fenetre = fenetreDuSite(page);
     await expect(fenetre).toBeVisible();
-    await expect(fenetre.getByRole("heading", { name: "Retirer l'essai ?" })).toBeVisible();
-    await expect(fenetre.getByText("Il ne sera plus dans la liste.")).toBeVisible();
     await capture(page, "f1-confirmer");
-    await fenetre.getByRole("button", { name: "Annuler" }).click();
-    await expect(fenetre).toBeHidden();
-    await expect(reponse).toHaveText("false");
-
-    await demander.click();
-    await expect(fenetre).toBeVisible();
     await page.keyboard.press("Escape");
     await expect(fenetre).toBeHidden();
-    await expect(reponse).toHaveText("false");
-
-    await demander.click();
-    await fenetre.getByRole("button", { name: "Retirer" }).click();
-    await expect(fenetre).toBeHidden();
-    await expect(reponse).toHaveText("true");
+    await expect(page.getByRole("heading", { name: "Préparer les affiches" }).filter({ visible: true })).toBeVisible();
   });
 
-  test("la page change pendant que la fenêtre est ouverte (Précédent, Suivant) : la fenêtre se ferme", async ({ page }) => {
-    await ouvrirEssai(page);
-    // Une navigation dans le site puis Précédent : l'historique a une page après l'essai. « Ailleurs »
-    // mène aux Chants, publics (Moi renverrait un visiteur à la connexion, et Précédent avec lui).
-    await page.getByRole("link", { name: "Ailleurs" }).click();
-    await page.waitForURL(/\/songs\/?$/);
-    await page.goBack();
-    await expect(enTete(page).getByRole("heading", { level: 1, name: "Essai d'agencement" })).toBeVisible();
-    const fenetre = page.getByRole("alertdialog");
-    await page.getByRole("button", { name: "Demander" }).click();
+  test("la page change pendant que la fenêtre est ouverte (Précédent) : la fenêtre se ferme", async ({ page }) => {
+    await ouvrir(page, "/back-office/taches/da");
+    // Une navigation dans le site (un clic dans la liste), puis la fenêtre sur la fiche ouverte.
+    await page.locator('[data-volet="liste"], main').getByText("Fond PPT du culte").first().click();
+    await page.waitForURL(/\/back-office\/taches\/da\/t2/);
+    await page.getByRole("button", { name: "Plus d'actions" }).filter({ visible: true }).click();
+    await page.getByRole("menuitem", { name: "Supprimer" }).click();
+    const fenetre = fenetreDuSite(page);
     await expect(fenetre).toBeVisible();
-    // Suivant, fenêtre ouverte : la page de l'essai est quittée, sa demande ne doit pas survivre
-    // par-dessus la page suivante (un clic sur « Retirer » agirait pour une page démontée).
-    await page.goForward();
-    await page.waitForURL(/\/songs\/?$/);
+    // Précédent, fenêtre ouverte : sa demande ne doit pas survivre sur la page d'avant (un clic sur
+    // « Supprimer » agirait pour une fiche quittée).
+    await page.goBack();
+    await page.waitForURL(/\/back-office\/taches\/da\/?$/);
     await expect(fenetre).toBeHidden();
   });
 });
 
 test.describe("MenuActions (R9)", () => {
-  test("« ⋯ » s'ouvre au clavier ; « Supprimer » passe par la fenêtre du site", async ({ page }) => {
-    await ouvrirEssai(page);
-    const declencheur = enTete(page).getByRole("button", { name: "Plus d'actions" });
+  test("« ⋯ » d'un évènement s'ouvre au clavier ; Début et Fin ; « Supprimer » passe par la fenêtre du site", async ({ page }) => {
+    await ouvrir(page, "/back-office/evenements/foot");
+    const declencheur = page.getByRole("button", { name: "Plus d'actions" }).filter({ visible: true });
     await declencheur.focus();
     await page.keyboard.press("Enter");
     const menu = page.getByRole("menu");
     await expect(menu).toBeVisible();
-    await expect(menu.getByRole("menuitem", { name: "Dupliquer" })).toBeVisible();
     await capture(page, "f1-menu");
-    // Au clavier : Début et Fin vont à la première et à la dernière action. (Pas de « la première a le
-    // focus à l'ouverture » : vu manquer 2 fois sur 20 sous charge, le menu ayant alors le focus
-    // lui-même ; Début et Fin marchent dans les deux cas.)
+    // Au clavier : Début et Fin vont à la première et à la dernière action.
     await page.keyboard.press("Home");
     await expect(menu.getByRole("menuitem", { name: "Dupliquer" })).toBeFocused();
     await page.keyboard.press("End");
     await expect(menu.getByRole("menuitem", { name: "Supprimer" })).toBeFocused();
     await page.keyboard.press("Enter");
-    const fenetre = page.getByRole("alertdialog");
-    await expect(fenetre.getByRole("heading", { name: "Supprimer l'essai ?" })).toBeVisible();
-    // Annuler : rien n'est fait.
+    const fenetre = fenetreDuSite(page);
+    await expect(fenetre.getByRole("heading", { name: "Supprimer « Foot au parc » ?" })).toBeVisible();
     await fenetre.getByRole("button", { name: "Annuler" }).click();
-    await expect(page.getByTestId("resultat")).toHaveText("");
-    // De nouveau, et cette fois l'action.
-    await declencheur.focus();
-    await page.keyboard.press("Enter");
-    await page.getByRole("menuitem", { name: "Supprimer" }).click();
-    await page.getByRole("alertdialog").getByRole("button", { name: "Supprimer" }).click();
-    await expect(page.getByTestId("resultat")).toHaveText("supprimé");
+    await expect(fenetre).toBeHidden();
+    await expect(page).toHaveURL(/\/back-office\/evenements\/foot\/?$/);
   });
 });
 
 test.describe("OngletsRail et Pilules (R4, R5)", () => {
-  test("rail en boutons : un tablist, l'onglet choisi marqué ; pilules : le choix actif à sa couleur", async ({ page }) => {
-    await ouvrirEssai(page);
+  test("rail en boutons (Statistiques) : un tablist, un seul arrêt de tabulation, les flèches, Entrée choisit", async ({ page }) => {
+    await ouvrir(page, "/back-office/statistiques");
     const rail = enTete(page).locator('[data-onglets="rail"]');
     await expect(rail).toHaveAttribute("role", "tablist");
-    await expect(rail.getByRole("tab", { name: "À venir" })).toHaveAttribute("aria-selected", "true");
-    await rail.getByRole("tab", { name: "Passés" }).click();
-    await expect(rail.getByRole("tab", { name: "Passés" })).toHaveAttribute("aria-selected", "true");
-    await expect(rail.getByRole("tab", { name: "À venir" })).toHaveAttribute("aria-selected", "false");
-    await expect(page.getByTestId("vue")).toHaveText("passes");
-
-    const rangee = pilules(page).first();
-    await expect(rangee).toHaveAttribute("role", "group");
-    const culte = rangee.getByRole("button", { name: "Culte" });
-    await culte.click();
-    await expect(culte).toHaveAttribute("aria-pressed", "true");
-    // La couleur du service (#2d5a65) sur la pilule active.
-    // (après le fondu de 150 ms)
-    await expect.poll(() => culte.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe("rgb(45, 90, 101)");
-  });
-
-  test("rail en boutons au clavier : un seul arrêt de tabulation, les flèches vont d'un onglet à l'autre, Entrée choisit", async ({ page }) => {
-    await ouvrirEssai(page);
-    const rail = enTete(page).locator('[data-onglets="rail"]');
-    const avenir = rail.getByRole("tab", { name: "À venir" });
-    const passes = rail.getByRole("tab", { name: "Passés" });
-    // Un seul onglet dans l'ordre de tabulation : le choisi.
+    const premier = rail.getByRole("tab", { name: "Les plus joués" });
+    const second = rail.getByRole("tab", { name: "Jamais joués" });
+    const dernier = rail.getByRole("tab", { name: "À redécouvrir" });
+    await expect(premier).toHaveAttribute("aria-selected", "true");
     await expect(rail.locator('[role="tab"][tabindex="0"]')).toHaveCount(1);
-    await expect(avenir).toHaveAttribute("tabindex", "0");
-    await avenir.focus();
+    await premier.focus();
     await page.keyboard.press("ArrowRight");
-    await expect(passes).toBeFocused();
+    await expect(second).toBeFocused();
     // Activation manuelle : la flèche déplace le focus, elle ne change pas la vue.
-    await expect(page.getByTestId("vue")).toHaveText("avenir");
-    await page.keyboard.press("ArrowRight"); // le rail boucle
-    await expect(avenir).toBeFocused();
-    await page.keyboard.press("ArrowLeft");
-    await expect(passes).toBeFocused();
-    await page.keyboard.press("Home");
-    await expect(avenir).toBeFocused();
+    await expect(premier).toHaveAttribute("aria-selected", "true");
     await page.keyboard.press("End");
-    await expect(passes).toBeFocused();
+    await expect(dernier).toBeFocused();
+    await page.keyboard.press("ArrowRight"); // le rail boucle
+    await expect(premier).toBeFocused();
+    await page.keyboard.press("ArrowLeft");
+    await expect(dernier).toBeFocused();
+    await page.keyboard.press("Home");
+    await expect(premier).toBeFocused();
+    await page.keyboard.press("ArrowRight");
     await page.keyboard.press("Enter");
-    await expect(page.getByTestId("vue")).toHaveText("passes");
-    await expect(passes).toHaveAttribute("tabindex", "0");
-    await expect(avenir).toHaveAttribute("tabindex", "-1");
+    await expect(second).toHaveAttribute("aria-selected", "true");
+    await expect(second).toHaveAttribute("tabindex", "0");
+    await expect(premier).toHaveAttribute("tabindex", "-1");
   });
 
-  test("rail en liens qui ne diffèrent que par la query : `actif` désigne l'onglet", async ({ page }) => {
-    await ouvrirEssai(page);
-    const rail = ongletsRail(page).filter({ has: page.getByRole("link", { name: "Vue A" }) });
-    await expect(rail.getByRole("link", { name: "Vue B" })).toHaveAttribute("aria-current", "page");
-    await expect(rail.getByRole("link", { name: "Vue A" })).not.toHaveAttribute("aria-current", "page");
+  test("rail en liens (Équipes) : l'adresse courante porte aria-current=page", async ({ page }) => {
+    await ouvrir(page, "/back-office/equipes/personnes");
+    const rail = ongletsRail(page).filter({ has: page.getByRole("link", { name: "Organigramme" }) });
+    await expect(rail.getByRole("link", { name: "Personnes" })).toHaveAttribute("aria-current", "page");
+    await expect(rail.getByRole("link", { name: "Organigramme" })).not.toHaveAttribute("aria-current", "page");
   });
 
-  test("rail en liens : l'adresse courante porte aria-current=page", async ({ page }) => {
-    await ouvrirEssai(page);
-    const rail = ongletsRail(page).filter({ has: page.getByRole("link", { name: "Ici" }) });
-    await expect(rail.getByRole("link", { name: "Ici" })).toHaveAttribute("aria-current", "page");
-    await expect(rail.getByRole("link", { name: "Ailleurs" })).not.toHaveAttribute("aria-current", "page");
+  test("pilules des plannings (en grand) : l'actif à la couleur de son service", async ({ page }, info) => {
+    test.skip(!estGrandEcran(info), "en grand, les plannings sont des pilules dans l'en-tête (R6)");
+    await ouvrir(page, "/planning/culte");
+    const culte = pilules(page).filter({ visible: true }).first().getByRole("link", { name: "Culte" });
+    await expect(culte).toHaveAttribute("aria-current", "page");
+    // La couleur du service (#2d5a65), après le fondu de 150 ms.
+    await expect.poll(() => culte.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe("rgb(45, 90, 101)");
   });
 });
 
 test.describe("DeuxVolets en liste-carte (R10)", () => {
   for (const etat of ["depliee", "reduite"] as const) {
-    test(`barre ${etat === "depliee" ? "dépliée" : "réduite"} : liste en carte à la marge, fiche jusqu'à la marge, sans filet (grands écrans)`, async ({ page }, info) => {
+    test(`Setlists, barre ${etat === "depliee" ? "dépliée" : "réduite"} : liste en carte à la marge, fiche jusqu'à la marge, sans filet (grands écrans)`, async ({ page }, info) => {
       test.skip(!estGrandEcran(info), "deux volets : grands écrans");
       test.skip(etat === "depliee" && info.project.name === "tablette-paysage", "la tablette couchée a toujours la barre réduite");
       await ouvrirAvecBarre(page, etat);
-      await ouvrirEssai(page);
+      await ouvrir(page, "/setlists");
       const liste = page.locator('[data-volet="liste"]');
       const detail = page.locator('[data-volet="detail"]');
-      await expect(detail.getByRole("heading", { level: 2, name: "Premier essai" })).toBeVisible();
+      await expect(detail.getByRole("heading", { level: 2, name: "Culte du 11 octobre" })).toBeVisible();
       const zone = await zoneDeContenu(page);
       const marge = await margeAttendue(page);
       const bL = (await liste.boundingBox())!;
@@ -289,21 +246,17 @@ test.describe("DeuxVolets en liste-carte (R10)", () => {
     });
   }
 
-  test("un volet (téléphone, tablette portrait) : la liste seule, sans carte", async ({ page }, info) => {
+  test("un volet (téléphone, tablette portrait), Back-Office › Tâches : la liste seule", async ({ page }, info) => {
     test.skip(estGrandEcran(info), "un volet : petits écrans");
-    await ouvrirEssai(page);
-    await expect(page.locator('[data-volet="liste"]').getByText("Deuxième essai")).toBeVisible();
+    await ouvrir(page, "/back-office/taches/da");
+    await expect(page.locator('[data-volet="liste"]').getByText("Fond PPT du culte")).toBeVisible();
     await expect(page.locator('[data-volet="detail"]')).toHaveCount(0);
   });
 });
 
 test.describe("Halo du Back-Office (R12)", () => {
-  const ADMIN: FakeProfile = { uid: "uid-admin", email: ADMIN_EMAIL, firstName: "Admin", lastName: "T." };
-
   test("sous /back-office, sans halo à elle, la page prend le bleu gris", async ({ page }) => {
-    await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
-    await signInAs(page, ADMIN, {}, "/back-office");
-    await page.locator("main h1, main h2").first().waitFor();
+    await ouvrir(page, "/back-office");
     const halo = page.getByTestId("halo-defaut");
     await expect(halo).toBeVisible();
     const [variable, bleuGris] = await page.evaluate(() => {
@@ -317,10 +270,8 @@ test.describe("Halo du Back-Office (R12)", () => {
   });
 
   test("en sombre, le halo du Back-Office prend la valeur sombre du bleu gris", async ({ page }) => {
-    await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
     await page.emulateMedia({ colorScheme: "dark" });
-    await signInAs(page, ADMIN, {}, "/back-office");
-    await page.locator("main h1, main h2").first().waitFor();
+    await ouvrir(page, "/back-office");
     await expect(page.locator("html")).toHaveClass(/\bdark\b/);
     const halo = page.getByTestId("halo-defaut");
     await expect(halo).toBeVisible();
@@ -333,8 +284,8 @@ test.describe("Halo du Back-Office (R12)", () => {
     await capture(page, "f1-halo-back-office-sombre");
   });
 
-  test("hors du Back-Office, le halo par défaut reste l'encre", async ({ page }) => {
-    await ouvrirEssai(page);
+  test("hors du Back-Office (Mon profil), le halo par défaut reste l'encre", async ({ page }) => {
+    await ouvrir(page, "/profil");
     const halo = page.getByTestId("halo-defaut");
     await expect(halo).toBeVisible();
     expect(await halo.evaluate((el) => getComputedStyle(el, "::before").backgroundColor)).toBe("rgb(28, 28, 30)");

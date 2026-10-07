@@ -8,7 +8,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
 import { ArrowLeftRight, ChevronRight, SlidersHorizontal } from "lucide-react";
-import { PageTitle } from "@/components/layout/PageTitle";
+import { EnTetePage } from "@/components/layout/EnTetePage";
 import { useDernierePage } from "@/components/layout/SelecteurEspace";
 import { FeuilleBarreDuBas } from "@/components/backOffice/FeuilleBarreDuBas";
 import { useProfile } from "@/lib/firebase/users";
@@ -73,8 +73,9 @@ export function PagePlus() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto px-4 pt-6 pb-10">
-      <PageTitle title={t("backOffice.barre.plus")} />
+    <>
+      <EnTetePage titre={t("backOffice.barre.plus")} />
+      <div className="px-[var(--marge-page)] pb-10">
       {erreur && <p role="alert" className="mb-3 text-sm text-destructive">{t("backOffice.barre.erreur")}</p>}
       <div className="space-y-3.5">
         {CARTES.map((carte) => carte.filter((e) => horsBarre.includes(e))).filter((c) => c.length > 0).map((carte) => (
@@ -132,7 +133,8 @@ export function PagePlus() {
           onEnregistrer={enregistrer}
         />
       )}
-    </div>
+      </div>
+    </>
   );
 }
 

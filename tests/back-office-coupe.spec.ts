@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { BASE_URL_COUPE } from "../playwright.config";
 import { abonneAuxNotifications, signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { interdireDialoguesNatifs, ongletsRail, verifierAgencement } from "./helpers/agencement";
 
 // Lot 18 (docs/spec-mise-en-ligne.md) : ce que voit le site en ligne tant que le
 // back-office n'est pas ouvert. Ce serveur tourne SANS `NEXT_PUBLIC_BACK_OFFICE` ;
@@ -63,7 +64,7 @@ test.describe("back-office coupé : les entrées disparaissent", () => {
 });
 
 test.describe("back-office coupé : une adresse tapée à la main tombe dans le vide", () => {
-  for (const chemin of ["/taches", "/taches/da", "/equipes", "/evenements", "/evenements/foot", "/evenements/foot/modifier", "/evenements/nouveau", "/evenements/scene", "/evenements/scene/noel", "/annonces", "/back-office", "/back-office/taches", "/back-office/taches/da", "/back-office/evenements", "/back-office/evenements/reunions", "/back-office/evenements/scene", "/back-office/evenements/scene/paques", "/back-office/evenements/nouveau", "/back-office/evenements/foot", "/back-office/evenements/foot/modifier", "/back-office/statistiques", "/back-office/calendrier", "/back-office/reunions", "/back-office/reunions/foot", "/back-office/reunions/nouvelle", "/back-office/reunions/foot/modifier", "/essai-agencement"]) {
+  for (const chemin of ["/taches", "/taches/da", "/equipes", "/evenements", "/evenements/foot", "/evenements/foot/modifier", "/evenements/nouveau", "/evenements/scene", "/evenements/scene/noel", "/annonces", "/back-office", "/back-office/taches", "/back-office/taches/da", "/back-office/evenements", "/back-office/evenements/reunions", "/back-office/evenements/scene", "/back-office/evenements/scene/paques", "/back-office/evenements/nouveau", "/back-office/evenements/foot", "/back-office/evenements/foot/modifier", "/back-office/statistiques", "/back-office/calendrier", "/back-office/reunions", "/back-office/reunions/foot", "/back-office/reunions/nouvelle", "/back-office/reunions/foot/modifier"]) {
     test(`${chemin} répond 404`, async ({ page }) => {
       const reponse = await page.goto(chemin);
       expect(reponse?.status()).toBe(404);
@@ -121,6 +122,24 @@ test.describe("back-office coupé : le planning reste le tableau d'aujourd'hui",
     await expect(page.getByRole("button", { name: /Exporter/ })).toHaveCount(0);
     expect(lectureDeLApp, "aucune lecture de plannings/* dans Firestore").toBe(false);
   });
+});
+
+// Agencement v18, tranche Z : en ligne aussi, les pages du Planning (l'ancien tableau) suivent les
+// règles communes — l'en-tête « Planning » à la marge, et les trimestres T1 à T4 dans le rail gris (R4),
+// plus en pilules pleines.
+test.describe("back-office coupé : l'ancien tableau suit les règles communes", () => {
+  for (const chemin of ["/planning/culte", "/planning/groupes", "/planning/table"]) {
+    test(`${chemin} : l'en-tête commun, les trimestres dans le rail`, async ({ page }) => {
+      interdireDialoguesNatifs(page);
+      await page.clock.setFixedTime(new Date("2026-10-06T10:00:00"));
+      await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
+      await signInAs(page, ADMIN, {}, chemin);
+      await verifierAgencement(page, { premierBloc: page.locator("header[data-entete-page] ~ main") });
+      const rail = ongletsRail(page).filter({ visible: true }).filter({ has: page.getByRole("tab", { name: /^T4/ }) });
+      await expect(rail).toHaveCount(1);
+      await expect(rail.getByRole("tab", { name: /^T4/ })).toHaveAttribute("aria-selected", "true");
+    });
+  }
 });
 
 // Lot 1a, vu « comme en ligne » : la page du Culte sert l'ancien tableau, et la colonne

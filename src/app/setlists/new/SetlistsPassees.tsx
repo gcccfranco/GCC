@@ -1,11 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "react-i18next";
-import { ChevronLeft, Search, X } from "lucide-react";
-import { PageTitle } from "@/components/layout/PageTitle";
+import { Search, X } from "lucide-react";
+import { EnTetePage } from "@/components/layout/EnTetePage";
 import { SetlistCard } from "@/components/setlists/SetlistCard";
 import { duplicateSetlist, getMySetlists, getSetlists, type FSSetlist } from "@/lib/firebase/setlists";
 import { useProfile } from "@/lib/firebase/users";
@@ -73,15 +72,13 @@ export function SetlistsPassees() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="mx-auto max-w-3xl px-4 pt-3 pb-28 lg:px-8 lg:pt-6">
-        <Link
-          href="/setlists/new"
-          className="mb-2 inline-flex min-h-11 items-center gap-1 text-[15px] text-muted-foreground hover:text-foreground active:text-foreground"
-        >
-          <ChevronLeft className="h-4 w-4" aria-hidden />
-          {t("setlists.form.titleNew")}
-        </Link>
-        <PageTitle title={t("setlists.entree.passee")} subtitle={t("setlists.entree.passeeHint")} />
+      {/* Agencement v18 (R1, R8, tranche Z) : l'en-tête commun et son seul retour. */}
+      <EnTetePage
+        retour={{ href: "/setlists/new", label: t("setlists.form.titleNew") }}
+        titre={t("setlists.entree.passee")}
+        sousTitre={t("setlists.entree.passeeHint")}
+      />
+      <div className="px-[var(--marge-page)] pb-28">
 
         <div className="relative mb-4">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />

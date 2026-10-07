@@ -28,7 +28,8 @@ import { baseBackOffice } from "@/lib/navigation"
 import { useTranslation } from "react-i18next"
 import { useConfirmer } from "@/components/layout/Confirmer"
 import { Button } from "@/components/ui/button"
-import { ArrowRight, ChevronLeft } from "lucide-react"
+import { ArrowRight } from "lucide-react"
+import { Retour } from "@/components/layout/EnTetePage"
 import { useAuth } from "@/lib/firebase/auth"
 import { useProfile } from "@/lib/firebase/users"
 import { canEditEvenement, canSeeEvenement, estDeLaReunion, estResponsable, estReunion } from "@/lib/access"
@@ -274,10 +275,8 @@ export function EvenementClient({ espace = "app", id: idDonne }: { espace?: "app
     return (
       <div className="max-w-2xl mx-auto space-y-3">
         <div data-testid="barre-fiche" className="flex min-h-10 items-center justify-between gap-3">
-          <Link href={liste} className="inline-flex items-center gap-1 text-[15px] text-muted-foreground active:text-foreground">
-            <ChevronLeft className="h-4 w-4" aria-hidden />
-            {t("evenements.title")}
-          </Link>
+          {/* Le seul retour du site (R8, tranche Z). */}
+          <Retour href={liste}>{t("evenements.title")}</Retour>
           {gestionnaire && estResponsable(user, profile) && (
             <Link href={`${baseBackOffice(e.pour)}/${e.id}`} className="raised inline-flex h-10 shrink-0 items-center gap-1.5 rounded-full px-4 text-sm font-semibold text-foreground transition-transform duration-150 active:scale-[.97]">
               <ArrowRight className="h-4 w-4" aria-hidden />

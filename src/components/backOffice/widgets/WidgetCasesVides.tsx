@@ -35,7 +35,7 @@ export function WidgetCasesVides({ widget }: { widget: Widget }) {
         : (
           <div>
             {valeur.map((c) => (
-              <Rangee key={`${c.planning}-${c.date}`} testId="ligne-case-vide" detail={c.colonnes.map((col) => t(col.i18n)).join(", ")}>
+              <Rangee key={`${c.planning}-${c.date}`} testId="ligne-case-vide" detailLong detail={c.colonnes.map((col) => t(col.i18n)).join(", ")}>
                 <b className="font-semibold">
                   {plannings.length > 1 ? `${c.planning} · ` : ""}{jourCourt(c.date, i18n.language)}
                 </b>

@@ -737,3 +737,10 @@ npm run lint
     orpheline, laissée : aucune.
   - À faire par Timothée : rien à publier (droits inchangés) ; relire le 中文 « 预约季设置 », « 日子和时间段 », « 完成 »,
     « 本周 ».
+
+### Intégration (V18I, tranche Z de `spec-agencement-v18.md`)
+
+- 07/10/2026 : `/evenements/scene/noel` et `/back-office/evenements/scene/noel` passent les vérifications communes de
+  `tests/agencement-v18-regles.spec.ts` (en-tête « Évènements » à la marge, h1 de 30 px, halo, rien qui déborde,
+  aucune fenêtre native ; barre dépliée puis réduite, cinq projets) : verts, sans changement de code de la scène.
+  Captures regardées (ordinateur, tablette, téléphone) : conformes aux planches R17. Rien à publier.

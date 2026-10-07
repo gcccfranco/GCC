@@ -1544,3 +1544,54 @@ la barre d'onglets : une page sans barre du bas (rare) le verra plus haut que n�
 - **Reste** : rien pour la voie ⑦.
 - **Timothée** : rien à publier (aucune règle, aucune donnée) ; relire 暂时无法读取，请稍后再试。 et les libellés
   中文 de T10 et T11 (ci-dessus).
+
+### V18I — Intégration : tranche Z (nettoyage et passage complet)
+
+- 07/10/2026 : **Z faite** dans la copie d'intégration (branche `lot/v18-integration`, après la fusion des dix
+  voies), commit `feat(V18I): Z — …`. Rien n'est poussé, rien n'est versé dans `ui/apple-design`.
+- **Retiré** : `components/layout/PageTitle.tsx`, `components/backOffice/EnTeteEntree.tsx`,
+  `components/planning/FilterButtons.tsx`, le relais `components/harmonie/Pilules.tsx` (Catalogue et RD-2000
+  importent `Onglets.tsx`), la page d'essai `app/essai-agencement/` (et sa ligne dans `back-office-coupe`).
+  `SectionTabs` reste : c'est la barre collante des plannings sur téléphone et tablette (R6).
+- **Les cinq derniers `PageTitle` passent à `EnTetePage`** : Mes tâches de l'App (`SectionTaches` : « Tâches » au-dessus
+  des deux volets, la fiche en h2 dans le volet, en un volet sa page avec « ‹ Tâches » — même règle qu'au Back-Office),
+  Équipes de l'App (Équipes · Musiciens en pilules, le bandeau et la matrice à la marge ; `BandeauEquipes` perd
+  `margePage`, devenu toujours vrai), « Nouvelle setlist » et « Repartir d'une setlist passée » (`EnTetePage` avec
+  « ‹ Setlists » / « ‹ Nouvelle setlist », contenu à la marge, plus de colonne centrée), « Plus » du Back-Office.
+- **En ligne aussi** (interrupteur coupé), l'ancien tableau du Planning : T1 à T4 dans le rail (`OngletsRail` +
+  `ongletsDePeriode`, le cadenas des trimestres non publiés gardé) à la place des pilules pleines ; Prépa. Table et
+  Campus ne sont plus centrés dans leur borne (calés sur le titre). Le reste de l'ancien tableau (boutons
+  Groupe · Musiciens de Fidélité, largeurs) n'est pas touché : la grille de T4 est derrière l'interrupteur.
+- **Le seul retour (R8)** : les « ‹ » maison des fiches en un volet (fiche, leçon et son d'Harmonie, fiche d'évènement
+  de l'App) prennent `Retour` (14 px gras gris).
+- **Trouvé par le passage complet, corrigé** (tests rouges puis verts) : le widget « Cases vides » du tableau de
+  bord débordait de sa carte (la liste des colonnes ne passait pas à la ligne ; 49 px de défilement sur téléphone,
+  61 px à 1 440 barre réduite) → `Rangee detailLong` ; Messages › Notifier débordait de 3 px sur téléphone (colonne de
+  grille sans `minmax(0, 1fr)`).
+- **Tests** : `tests/agencement-v18-regles.spec.ts` (nouveau) passe les vérifications communes sur les 25 adresses de
+  la spec (scène comprise, App et Back-Office) et sur les pages qui portaient encore l'ancien titre (`/taches`,
+  `/equipes`, `/setlists/new`, `/setlists/new?depuis=passee`, `/back-office/plus`, `/planning/groupes`,
+  `/planning/table`), barre dépliée puis réduite, cinq projets ; en grand, deux volets sur toute la zone et volet de
+  droite jamais vide (R11). `agencement-v18-fondations.spec.ts` porté sur des pages réelles (Mon profil,
+  Statistiques, Setlists, Équipes, Planning, fiches d'une tâche et d'un évènement au Back-Office) ; seul le cas « rail
+  de liens qui ne diffèrent que par la query » n'a pas d'usage réel et n'est plus testé (le commentaire
+  d'`OngletsRail` le garde). `back-office-coupe` : l'ancien tableau suit les règles communes (`/planning/culte`,
+  `groupes`, `table`, trimestres dans le rail). `helpers/agencement.ts` : le premier bloc par défaut est le premier
+  frère **visible** de l'en-tête. `pages-en-grand-taches` réécrit pour R3 (h1 dans l'en-tête, fiche en h2).
+- **Passages** (07/10/2026) : `agencement-v18-regles` + `fondations` (400 tests, cinq projets) verts ; voisines
+  `agencement-v18-{taches,t5,t6,harmonie,t7}`, `taches`, `pages-en-grand-{taches,guide-equipes,harmonie,evenements}`,
+  `equipes`, `setlist-pour-quel-service`, `barre-back-office`, `back-office-espace`, `tableau-de-bord`,
+  `harmonie-{catalogue,cours}`, `rd2000`, `evenements`, `halo-partout`, `back-office-coupe` : 1 805 verts, les 6 rouges
+  (`pages-en-grand-taches`, h1 attendu sur la fiche) réécrits puis verts. `tsc --noEmit` et `npm run lint` sans
+  erreur. **La suite complète n'a pas tourné** dans cette tranche.
+- **Captures** regardées aux cinq tailles (`scratchpad/journaux/V18I-captures/`, `PW_CAPTURES`) et comparées aux
+  planches v18 : Tâches, Évènements, Calendrier, Équipes › Personnes, Tableau de bord (deux puis trois colonnes),
+  Chants, Moi, Setlists, Planning (Prépa. Table côte à côte), Noël : conformes. Écart vu, laissé : la fiche d'une
+  réunion dans l'App commence sa carte « Lien de la fiche » par un filet vide (pas d'inscriptions pour une réunion).
+- **Laissé, signalé** : classes CSS déjà orphelines avant la v18 (`font-jianpu`, `font-section`, `no-scrollbar`,
+  `sec-feature`, `sec-rail`, `svc-line`) ; `/admin` et `/notifier` (pages d'avant, servies seulement interrupteur
+  coupé) gardent leur ancien titre ; les fiches d'Harmonie en un volet gardent leur propre titre (sans `EnTetePage`).
+- **Reste** : la suite complète de l'intégration (`pw` sans fichier, deux temps), puis le versement dans
+  `ui/apple-design` sur ordre.
+- **Timothée** : rien à publier (aucune règle, aucune donnée) ; aucun libellé nouveau (les clés reprises existaient,
+  FR et 中文).

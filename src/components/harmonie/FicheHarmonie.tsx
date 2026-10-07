@@ -11,8 +11,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { Retour } from "@/components/layout/EnTetePage";
 import { useTranslation } from "react-i18next";
-import { ChevronLeft } from "lucide-react";
 import { Group, GroupRow } from "@/components/ui/group";
 import { OngletsRail } from "@/components/layout/Onglets";
 import { Clavier, DiagrammeGuitare, doigtesDe, notesDe } from "@/components/harmonie/Diagrammes";
@@ -96,13 +96,7 @@ export function FicheHarmonie({ id }: { id: string }) {
       data-fiche={fiche.id}
     >
       {!deuxVolets && (
-        <Link
-          href="/harmonie"
-          className="inline-flex items-center gap-1 text-[15px] text-muted-foreground active:text-foreground"
-        >
-          <ChevronLeft className="h-4 w-4" aria-hidden />
-          {t("harmonie.retour")}
-        </Link>
+        <Retour href="/harmonie">{t("harmonie.retour")}</Retour>
       )}
 
       <header className="space-y-3">

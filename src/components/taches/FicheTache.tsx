@@ -15,7 +15,7 @@ import { useEffect, useId, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "react-i18next";
-import { Bell, CalendarDays, Check, ChevronLeft, Link2, Minus, Pencil, Repeat, Ticket, Trash2, UserRound } from "lucide-react";
+import { Bell, CalendarDays, Check, Link2, Minus, Pencil, Repeat, Ticket, Trash2, UserRound } from "lucide-react";
 import { EnTetePage } from "@/components/layout/EnTetePage";
 import { MenuActions } from "@/components/layout/MenuActions";
 import { TacheForm } from "@/components/taches/TacheForm";
@@ -59,16 +59,9 @@ export function FicheTache({ pole, id, date }: { pole: string; id: string; date:
   else contenu = <Fiche key={`${pole}/${id}/${date ?? ""}`} ligne={laLigne(item.tache, lignesDeTache(item.tache, item.fois, aujourdhui), date)} toutesLesFois={item.fois} />;
 
   return (
-    <div className={cn("space-y-4 pb-10", backOffice
-      // Back-Office (R10) : la fiche ne pose plus de marge en grand ; en un volet, son en-tête la porte.
-      ? (deuxVolets ? "" : "[&>p]:mx-[var(--marge-page)] [&>p]:mt-6")
-      : deuxVolets ? "px-6 pt-6 xl:px-9" : "mx-auto max-w-2xl px-4 pt-3 md:max-w-3xl md:px-6")}>
-      {!deuxVolets && !backOffice && (
-        <Link href="/taches" className="inline-flex items-center gap-1 text-[15px] text-muted-foreground active:text-foreground">
-          <ChevronLeft className="h-4 w-4" aria-hidden />
-          {t("taches.title")}
-        </Link>
-      )}
+    // R10 : la fiche ne pose plus de marge en grand ; en un volet, son en-tête la porte (App et
+    // Back-Office, tranche Z).
+    <div className={cn("space-y-4 pb-10", !deuxVolets && "[&>p]:mx-[var(--marge-page)] [&>p]:mt-6")}>
       {contenu}
     </div>
   );
@@ -175,7 +168,7 @@ function Fiche({ ligne, toutesLesFois }: { ligne: Ligne; toutesLesFois: Fois[] }
   if (fois?.etat === "encours") historique.push(`${t("taches.commenceePar", { nom: fois.parNom })} · ${jourCourt(fois.debutLe || fois.le, i18n.language)}`);
   if (fois?.etat === "terminee") historique.push(`${t("taches.faitePar", { nom: fois.parNom })} · ${jourCourt(fois.le, i18n.language)}`);
   if (auteur !== undefined) historique.push(`${t("taches.fiche.creeePar", { nom: auteur ?? t("taches.fiche.unMembre") })} · ${jourCourt(tache.createdAt, i18n.language)}`);
-  const SousTitre = dansLeVolet ? "h3" : "h2";
+  const SousTitre = deuxVolets ? "h3" : "h2";
 
   const boutonModifier = (
     <button
@@ -208,11 +201,11 @@ function Fiche({ ligne, toutesLesFois }: { ligne: Ligne; toutesLesFois: Fois[] }
   }
 
   return (
-    <article aria-labelledby={titreId} className={cn("space-y-4", backOffice && !deuxVolets && "[&>*:not(header)]:mx-[var(--marge-page)]")}>
-      {backOffice && !deuxVolets ? (
+    <article aria-labelledby={titreId} className={cn("space-y-4", !deuxVolets && "[&>*:not(header)]:mx-[var(--marge-page)]")}>
+      {!deuxVolets ? (
         // Un volet : la fiche est une page, avec le seul retour (R8) et son titre en h1.
         <EnTetePage
-          retour={{ href: `${racine}/${tache.pole}`, label: t("taches.title") }}
+          retour={{ href: backOffice ? `${racine}/${tache.pole}` : racine, label: t("taches.title") }}
           titre={<span id={titreId}>{tache.titre}</span>}
           sousTitre={t("taches.prevenirPole", { pole: t(`taches.pole.${tache.pole}`) })}
           outils={<>{boutonModifier}{menu}</>}
@@ -221,9 +214,8 @@ function Fiche({ ligne, toutesLesFois }: { ligne: Ligne; toutesLesFois: Fois[] }
         <header className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             {badgePole}
-            {dansLeVolet
-              ? <h2 id={titreId} className="mt-2 text-2xl font-bold leading-tight tracking-tight text-balance">{tache.titre}</h2>
-              : <h1 id={titreId} className="mt-2 text-2xl font-bold leading-tight tracking-tight text-balance lg:text-[28px]">{tache.titre}</h1>}
+            {/* En grand, sous l'en-tête « Tâches » : un h2 de 24 px (R3). */}
+            <h2 id={titreId} className="mt-2 text-2xl font-bold leading-tight tracking-tight text-balance">{tache.titre}</h2>
           </div>
           <div className="flex shrink-0 items-center gap-2">
             {boutonModifier}
@@ -297,7 +289,7 @@ function Fiche({ ligne, toutesLesFois }: { ligne: Ligne; toutesLesFois: Fois[] }
         </div>
       ) : tache.note && (
         <section className="raised rounded-2xl px-4 py-3">
-          <h2 className="text-[13px] font-semibold text-muted-foreground">{t("taches.champs.note")}</h2>
+          <SousTitre className="text-[13px] font-semibold text-muted-foreground">{t("taches.champs.note")}</SousTitre>
           <p className="mt-0.5 whitespace-pre-wrap text-[15px]">{tache.note}</p>
         </section>
       )}

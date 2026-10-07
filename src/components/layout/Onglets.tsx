@@ -7,7 +7,8 @@
 //   les vues d'une page (À venir · Passés, T1 à T4, Paix · Fidélité · Bonté…). Sous le titre.
 // - `Pilules` : sous-onglets (Équipes · Musiciens), filtres (catégories, périodes, audiences…) et
 //   les plannings, l'actif à la couleur de son service.
-// Remplacent à mesure `EnTeteEntree`, `SectionTabs` (en grand), `FilterButtons` et les boutons de groupes.
+// Ont remplacé `EnTeteEntree`, `FilterButtons`, `SectionTabs` en grand (il reste la barre collante des
+// plannings sur téléphone et tablette, R6) et les boutons de groupes (tranche Z).
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";

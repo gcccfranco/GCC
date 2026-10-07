@@ -7,8 +7,7 @@
 // Lot U4 bis, B3 (Q6, planches `harmonie-rd2000-*`) : des cartes ; en grand, à droite de la
 // liste, sans « Retour », le N° à côté du nom et les réglages sur deux colonnes.
 
-import Link from "next/link";
-import { ChevronLeft } from "lucide-react";
+import { Retour } from "@/components/layout/EnTetePage";
 import { useTranslation } from "react-i18next";
 import { Group, GroupRow } from "@/components/ui/group";
 import { useRd2000Charge } from "@/components/harmonie/rd2000/contexte";
@@ -97,10 +96,7 @@ export function SonRd2000({ n }: { n: string }) {
       data-son-page={n}
     >
       {!deuxVolets && (
-        <Link href="/harmonie/rd2000" className="inline-flex items-center gap-1 text-[15px] text-muted-foreground active:text-foreground">
-          <ChevronLeft className="h-4 w-4" aria-hidden />
-          {t("harmonie.rd2000.retour")}
-        </Link>
+        <Retour href="/harmonie/rd2000">{t("harmonie.rd2000.retour")}</Retour>
       )}
 
       {!son && !recette ? (

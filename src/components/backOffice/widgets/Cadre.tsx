@@ -72,7 +72,7 @@ export function CadreWidget({
 
 /** Une rangée : texte à gauche, détail en petit à droite. */
 export function Rangee({
-  testId, href, externe, detail, ton, children,
+  testId, href, externe, detail, detailLong, ton, children,
 }: {
   testId?: string;
   href?: string;
@@ -81,14 +81,17 @@ export function Rangee({
   detail?: React.ReactNode;
   /** Couleur du détail : à surveiller (orange) ou en retard (rouge). */
   ton?: "warn" | "bad";
+  /** Un détail qui peut être long (les colonnes vides d'un dimanche) : il passe à la ligne, et
+   *  c'est le libellé qui garde sa largeur ; sinon il débordait de la carte (tranche Z). */
+  detailLong?: boolean;
   children: React.ReactNode;
 }) {
   const classes = "flex min-w-0 items-center gap-2.5 border-t border-border/60 py-[7px] text-sm text-foreground first:border-t-0";
   const contenu = (
     <>
-      <span className="min-w-0 flex-1 break-words">{children}</span>
+      <span className={detailLong ? "shrink-0" : "min-w-0 flex-1 break-words"}>{children}</span>
       {detail !== undefined && (
-        <span className={cn("shrink-0 whitespace-nowrap text-xs text-muted-foreground", ton && TON[ton])}>{detail}</span>
+        <span className={cn(detailLong ? "min-w-0 flex-1 text-right" : "shrink-0 whitespace-nowrap", "text-xs text-muted-foreground", ton && TON[ton])}>{detail}</span>
       )}
     </>
   );

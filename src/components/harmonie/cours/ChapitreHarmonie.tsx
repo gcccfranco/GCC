@@ -9,8 +9,8 @@
 // « Sommaire » ouvre la liste du cours par-dessus la leçon ; téléphone : comme avant.
 
 import { useState } from "react";
-import Link from "next/link";
-import { Check, ChevronLeft, List } from "lucide-react";
+import { Check, List } from "lucide-react";
+import { Retour } from "@/components/layout/EnTetePage";
 import { useTranslation } from "react-i18next";
 import { Group, GroupRow } from "@/components/ui/group";
 import { Button } from "@/components/ui/button";
@@ -41,10 +41,7 @@ export function ChapitreHarmonie({ id }: { id: string }) {
     >
       {!deuxVolets && (
         <div className="space-y-4">
-          <Link href="/harmonie/cours" className="inline-flex items-center gap-1 text-[15px] text-muted-foreground active:text-foreground">
-            <ChevronLeft className="h-4 w-4" aria-hidden />
-            {t("harmonie.cours.retour")}
-          </Link>
+          <Retour href="/harmonie/cours">{t("harmonie.cours.retour")}</Retour>
           {/* Tablette debout : la liste du cours par-dessus la leçon (planche `harmonie-cours-tablette`). */}
           <div className="hidden md:block">
             <button

@@ -54,14 +54,16 @@ test.describe("Mes tâches en grand", () => {
 
   test("la liste à gauche, la première tâche à faire à droite, en fiche à lire", async ({ page }) => {
     await ouvrir(page, "/taches");
-    await expect(liste(page).getByRole("heading", { name: "Tâches", level: 2 })).toBeVisible();
+    // Agencement v18 (R3, tranche Z) : le titre de la page est le h1 de l'en-tête commun, au-dessus
+    // des deux volets ; la liste n'a plus de titre, la fiche se titre en h2.
+    await expect(page.locator("header[data-entete-page]").getByRole("heading", { name: "Tâches", level: 1 })).toBeVisible();
     await expect(liste(page).getByRole("heading", { name: "À faire pour moi" })).toBeVisible();
     // Dans l'ordre des échéances : l'affiche (28 sept.) d'abord ; la tâche de chaque semaine
     // montre aussi sa fois suivante (8 oct.), visible 7 jours avant.
     await expect(liste(page).getByRole("checkbox")).toHaveCount(4);
     await expect(liste(page).getByRole("checkbox").first()).toHaveAccessibleName(/Affiche de Noël/);
     const d = detail(page);
-    await expect(d.getByRole("heading", { name: "Affiche de Noël", level: 1 })).toBeVisible();
+    await expect(d.getByRole("heading", { name: "Affiche de Noël", level: 2 })).toBeVisible();
     await expect(ligne(page, "Affiche de Noël")).toHaveAttribute("aria-current", "page");
     await expect(d.getByText("Pôle DA")).toBeVisible();
     await expect(d.getByText("Lundi 28 septembre")).toBeVisible();
@@ -80,10 +82,10 @@ test.describe("Mes tâches en grand", () => {
 
   test("toucher une tâche ouvre sa fiche, pas le formulaire ; « Modifier » l'ouvre ; retour arrière", async ({ page }) => {
     await ouvrir(page, "/taches/da/t3");
-    await expect(detail(page).getByRole("heading", { name: "Planning du trimestre", level: 1 })).toBeVisible();
+    await expect(detail(page).getByRole("heading", { name: "Planning du trimestre", level: 2 })).toBeVisible();
     await ligne(page, "Fond PPT du culte jeu\\. 1 oct").click();
     await expect(page).toHaveURL(/\/taches\/da\/t2\/?\?date=2026-10-01$/);
-    await expect(detail(page).getByRole("heading", { name: "Fond PPT du culte", level: 1 })).toBeVisible();
+    await expect(detail(page).getByRole("heading", { name: "Fond PPT du culte", level: 2 })).toBeVisible();
     await expect(detail(page).getByText("Chaque semaine")).toBeVisible();
     await expect(detail(page).getByText("Tout le pôle")).toBeVisible();
     await expect(page.getByRole("dialog"), "le toucher n'ouvre plus le formulaire").toHaveCount(0);
@@ -94,7 +96,7 @@ test.describe("Mes tâches en grand", () => {
     await expect(form).toHaveCount(0);
     await page.goBack();
     await expect(page).toHaveURL(/\/taches\/da\/t3\/?$/);
-    await expect(detail(page).getByRole("heading", { name: "Planning du trimestre", level: 1 })).toBeVisible();
+    await expect(detail(page).getByRole("heading", { name: "Planning du trimestre", level: 2 })).toBeVisible();
   });
 });
 

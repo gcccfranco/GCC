@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
-import { ChevronLeft, ChevronRight, CopyPlus, Plus } from "lucide-react";
-import { PageTitle } from "@/components/layout/PageTitle";
+import { ChevronRight, CopyPlus, Plus } from "lucide-react";
+import { EnTetePage } from "@/components/layout/EnTetePage";
 import { getSetlistsFrom } from "@/lib/firebase/setlists";
 import { loadPlanningData, setlistSeances, type SetlistSeance } from "@/lib/planning/names";
 import { lienPreparer, prochainsServicesSansSetlist } from "@/lib/setlist/prochainsServices";
@@ -59,17 +59,10 @@ export function PourQuelService({ categories }: { categories: string[] }) {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="mx-auto max-w-5xl px-4 pt-3 pb-28 lg:px-8 lg:pt-6">
-        <Link
-          href="/setlists"
-          className="mb-2 inline-flex min-h-11 items-center gap-1 text-[15px] text-muted-foreground hover:text-foreground active:text-foreground"
-        >
-          <ChevronLeft className="h-4 w-4" aria-hidden />
-          {t("common.header.setlists")}
-        </Link>
-        <PageTitle title={t("setlists.form.titleNew")} />
-
-        <section aria-labelledby="pour-quel-service" className="mt-5">
+      {/* Agencement v18 (R1, R8, tranche Z) : l'en-tête commun et son seul retour. */}
+      <EnTetePage retour={{ href: "/setlists", label: t("common.header.setlists") }} titre={t("setlists.form.titleNew")} />
+      <div className="px-[var(--marge-page)] pb-28">
+        <section aria-labelledby="pour-quel-service">
           <h2 id="pour-quel-service" className="text-[17px] font-bold text-foreground lg:text-xl">
             {t("setlists.entree.pourQuelService")}
           </h2>

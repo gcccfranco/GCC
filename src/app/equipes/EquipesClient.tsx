@@ -14,13 +14,11 @@ import { useEffect, useMemo, useState, type ComponentProps, type ReactNode } fro
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
 import { Pencil, X } from "lucide-react";
-import { PageTitle } from "@/components/layout/PageTitle";
 import { EnTetePage } from "@/components/layout/EnTetePage";
 import { Pilules } from "@/components/layout/Onglets";
 import { useDisposition } from "@/hooks/useDisposition";
 import { Halo } from "@/components/layout/Halo";
 import { BandeauEquipes } from "@/components/equipes/BandeauEquipes";
-import { FilterButtons } from "@/components/planning/FilterButtons";
 import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -87,11 +85,17 @@ export function EquipesClient({
     />
   );
 
-  const filtres = (
-    <FilterButtons
-      options={onglets}
-      active={onglets[onglet === "equipes" ? 0 : 1]}
-      onChange={(v) => setOnglet(v === onglets[0] ? "equipes" : "musiciens")}
+  // Équipes · Musiciens : un sous-onglet, en pilules (agencement v18, R4), App et Back-Office.
+  const vues = (
+    <Pilules
+      etiquette={t("equipes.vue")}
+      options={[
+        { cle: "equipes" as const, nom: onglets[0] },
+        { cle: "musiciens" as const, nom: onglets[1] },
+      ]}
+      valeur={onglet}
+      choisir={(v) => v && setOnglet(v)}
+      obligatoire
     />
   );
 
@@ -116,16 +120,7 @@ export function EquipesClient({
         titre={enTete?.titre ?? t("equipes.title")}
         apres={
           <>
-            <Pilules
-              etiquette={t("equipes.vue")}
-              options={[
-                { cle: "equipes" as const, nom: onglets[0] },
-                { cle: "musiciens" as const, nom: onglets[1] },
-              ]}
-              valeur={onglet}
-              choisir={(v) => v && setOnglet(v)}
-              obligatoire
-            />
+            {vues}
             {enTete?.sousEnTete}
           </>
         }
@@ -137,7 +132,6 @@ export function EquipesClient({
           <div className="equipes-ecran flex flex-col">
             {entete}
             <BandeauEquipes
-              margePage
               cartes={EQUIPES.map((def) => ({ id: def.id, large: !!def.sousColonnes, carte: carte(def) }))}
             />
           </div>
@@ -163,14 +157,14 @@ export function EquipesClient({
     );
   }
 
+  // App (agencement v18, tranche Z) : l'en-tête commun, Équipes · Musiciens dessous.
+  const enTeteApp = <EnTetePage titre={t("equipes.title")} sousTitre={t("equipes.sousTitre")} apres={vues} />;
   if (bandeau) {
     return (
       <div className="relative">
         <Halo variant="moi" color="hsl(var(--foreground))" />
-        <div className="equipes-ecran relative flex flex-col pt-4 md:pt-6">
-          <div className="px-4 md:px-6 xl:px-10">
-            <PageTitle title={t("equipes.title")} subtitle={t("equipes.sousTitre")} action={filtres} />
-          </div>
+        <div className="equipes-ecran relative flex flex-col">
+          {enTeteApp}
           <BandeauEquipes
             cartes={EQUIPES.map((def) => ({ id: def.id, large: !!def.sousColonnes, carte: carte(def) }))}
           />
@@ -184,9 +178,11 @@ export function EquipesClient({
   return (
     <div className="relative">
       <Halo variant="moi" color="hsl(var(--foreground))" />
-      <div className="relative max-w-5xl mx-auto px-4 pt-6 pb-10 space-y-5">
-        <PageTitle title={t("equipes.title")} subtitle={t("equipes.sousTitre")} action={filtres} />
-        <Matrice profils={profils} planning={planning} onFiche={setFiche} />
+      <div className="relative">
+        {enTeteApp}
+        <div className="px-[var(--marge-page)] pb-10">
+          <Matrice profils={profils} planning={planning} onFiche={setFiche} />
+        </div>
         {fichePersonne}
       </div>
     </div>

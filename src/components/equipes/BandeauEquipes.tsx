@@ -6,8 +6,8 @@
 // dépasse du bord, sous un fondu ; flèches ‹ › avec un pointeur fin ; accroche aux colonnes sur
 // écran tactile. Au-dessus, l'index : une pilule par équipe, toucher une pilule amène sa colonne,
 // la pilule de la première colonne visible s'allume.
-// Agencement v18 (B8) : le Back-Office le pose aussi, à la marge de la zone (`margePage`,
-// `--marge-page`), sous l'en-tête commun.
+// Agencement v18 (B8, tranche Z) : App et Back-Office le posent à la marge de la zone
+// (`--marge-page`), sous l'en-tête commun.
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
@@ -33,7 +33,7 @@ const memes = (a: number[], b: number[]) => a.length === b.length && a.every((x,
 const comportement = (): ScrollBehavior =>
   window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
 
-export function BandeauEquipes({ cartes, margePage = false }: { cartes: CarteDuBandeau[]; margePage?: boolean }) {
+export function BandeauEquipes({ cartes }: { cartes: CarteDuBandeau[] }) {
   const { t } = useTranslation();
   const bandeau = useRef<HTMLDivElement>(null);
   const rangee = useRef<HTMLDivElement>(null);
@@ -156,10 +156,10 @@ export function BandeauEquipes({ cartes, margePage = false }: { cartes: CarteDuB
 
   const pret = mesures !== null && mesures.hauteurs.every((h) => h > 0);
   // La marge des côtés : celle de la zone au Back-Office, celle de la page de l'App sinon.
-  const px = margePage ? "px-[var(--marge-page)]" : "px-4 md:px-6 xl:px-10";
-  const scrollMl = margePage ? "scroll-ml-[var(--marge-page)]" : "scroll-ml-4 md:scroll-ml-6 xl:scroll-ml-10";
-  const gaucheFleche = margePage ? "left-[var(--marge-page)]" : "left-4";
-  const droiteFleche = margePage ? "right-[var(--marge-page)]" : "right-4";
+  const px = "px-[var(--marge-page)]";
+  const scrollMl = "scroll-ml-[var(--marge-page)]";
+  const gaucheFleche = "left-[var(--marge-page)]";
+  const droiteFleche = "right-[var(--marge-page)]";
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3">

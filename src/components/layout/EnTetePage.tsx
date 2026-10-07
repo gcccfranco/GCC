@@ -1,6 +1,6 @@
 // L'en-tête de toutes les pages, App et Back-Office (agencement v18, R1, R2, R3, R8 de
 // docs/spec-agencement-v18.md ; planches `entete`, agencement_bo.py, et `tete`, agencement_app.py).
-// Remplace `PageTitle` et `EnTeteEntree` (retirés à la tranche Z). Dans l'ordre :
+// A remplacé `PageTitle` et `EnTeteEntree` (retirés à la tranche Z). Dans l'ordre :
 //   « ‹ Section » (retour), le titre (le seul h1 de la page) et son sous-titre d'une ligne, à
 //   droite les outils puis l'action principale, dessous les onglets (rail), puis une rangée libre
 //   (`apres` : filtres, période, interrupteur).

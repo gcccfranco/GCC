@@ -85,7 +85,9 @@ export async function verifierEnTete(page: Page, options: { premierBloc?: Locato
     .poll(async () => Math.round((await h1.boundingBox())!.x - zone.gauche), { message: "bord gauche du titre = zone + marge" })
     .toBe(marge);
 
-  const bloc = options.premierBloc ?? entete.locator("xpath=following-sibling::*[1]");
+  // Par défaut, le premier frère VISIBLE de l'en-tête : un bloc masqué à cette taille (la barre
+  // collante des plannings, cachée en grand, R6) ne compte pas.
+  const bloc = options.premierBloc ?? entete.locator("xpath=following-sibling::*").filter({ visible: true }).first();
   if (await bloc.count()) {
     // Le bloc peut porter la marge en dedans (pleine zone, `px-[var(--marge-page)]`) ou en dehors
     // (carte à la marge). Un enveloppant collé au bord, sans marge (deux volets sur téléphone), ne
