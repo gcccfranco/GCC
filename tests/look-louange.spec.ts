@@ -75,7 +75,9 @@ test.describe("louange (T3) : page du chant", () => {
       // Pendant l'animation d'entrée de la page, un ancêtre transformé fait
       // office de repère pour la barre fixée : mesurer une fois l'animation finie.
       await page.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished.catch(() => {}))));
-      const [b, h] = await Promise.all([barre.boundingBox(), page.locator("header").boundingBox()]);
+      // La navbar : l'en-tête commun « Chants » (`EnTetePage`, agencement v18 R1 et A5) est aussi un <header>,
+      // monté sur la page d'un chant (masqué en un volet).
+      const [b, h] = await Promise.all([barre.boundingBox(), page.locator("header.barre-haut").boundingBox()]);
       expect(Math.round(b!.y), "la barre reste collée sous la navbar").toBe(Math.round(h!.y + h!.height));
       const pilule = page.getByTestId("pilule-tonalite");
       // 5C1 : ce qui se touche est en relief — surface blanche et ombre, plus un aplat gris.

@@ -8,7 +8,9 @@ test.use({ permissions: ["clipboard-read", "clipboard-write"] });
 
 async function copyFromPageTopToSongEnd(page: Page, slug: string) {
   await page.goto(`/songs/${encodeURIComponent(slug)}`);
-  await page.locator("h1").first().waitFor();
+  // Le premier h1 visible : en un volet, la page d'un chant garde l'en-tête « Chants » de la liste, masqué
+  // (agencement v18, A5 et R3 de docs/spec-agencement-v18.md).
+  await page.locator("h1").filter({ visible: true }).first().waitFor();
   await page.locator("[data-copy-line]").first().waitFor();
   // Le copieur de paroles s'abonne à « copy » au montage : copier avant que
   // React ait hydraté la page donnerait la copie brute du navigateur.
