@@ -1,32 +1,29 @@
 "use client"
 
-// Onglets de la section Évènements : « Calendrier » (lot 6, public) et le
-// programme de scène affiché (« Noël », lot 3 bis) pour les connectés ; sans
-// programme affiché, seule la coordination voit ce second onglet (« Scène »)
-// pour en créer un. Rechargé après chaque écriture (PROGRAMMES_CHANGED).
-// Lot 12 : le programme affiché est calculé par `currentProgramme`, la même
-// fonction que la page — le nom de l'onglet et la page ne peuvent pas diverger.
+// Les onglets de la section Évènements, en liste : ce fichier n'exporte qu'un hook,
+// `useOngletsEvenements`, et ne rend rien. L'en-tête de la section (`SectionEvenements`,
+// agencement v18, A10, R4) les pose dans son rail gris (`OngletsRail`), sous le titre, sur
+// l'agenda comme sur la scène ; un seul onglet (sans compte) : pas de rail.
+// La liste : « Calendrier » (lot 6, public) puis, pour les connectés, le programme de scène
+// affiché (« Noël », lot 3 bis) ; sans programme affiché, seule la coordination voit ce second
+// onglet (« Scène ») pour en créer un. Le programme affiché est calculé par `currentProgramme`
+// (lot 12), la même fonction que la page. Rechargée après chaque écriture (PROGRAMMES_CHANGED).
 
 import { useEffect, useState } from "react"
-import Link from "next/link"
-import { usePathname } from "next/navigation"
 import { useTranslation } from "react-i18next"
 import { useAuth } from "@/lib/firebase/auth"
 import { useProfile } from "@/lib/firebase/users"
 import { isCoordination } from "@/lib/access"
 import { listProgrammes, PROGRAMMES_CHANGED } from "@/lib/firebase/programmes"
 import { currentProgramme, todayIso } from "@/lib/scene/dimanches"
-import { PLANNING_COLORS } from "@/lib/serviceColors"
-import { SectionTabs, type SectionTab } from "@/components/layout/SectionTabs"
+import type { OngletRail } from "@/components/layout/Onglets"
 import type { Programme } from "@/types/programme"
 
-/** `enLigne` (lot U4 bis, B2, planche `evenements-ordinateur`) : en deux volets, les onglets
- *  sont des pilules sous le titre de l'agenda, au lieu de la barre collante de la section. */
-export function EvenementsTabs({ enLigne = false }: { enLigne?: boolean }) {
+/** Les onglets de la section, pour `OngletsRail` : « Calendrier », puis la scène. */
+export function useOngletsEvenements(): OngletRail[] {
   const { t } = useTranslation()
   const { user } = useAuth()
   const { profile } = useProfile()
-  const pathname = usePathname() || ""
   const [programmes, setProgrammes] = useState<Programme[]>([])
 
   useEffect(() => {
@@ -38,22 +35,9 @@ export function EvenementsTabs({ enLigne = false }: { enLigne?: boolean }) {
   }, [user])
 
   const current = currentProgramme(programmes, todayIso())
-  const tabs: SectionTab[] = [{ href: "/evenements", label: t("evenements.tabs.calendrier") }]
+  const onglets: OngletRail[] = [{ id: "calendrier", href: "/evenements", label: t("evenements.tabs.calendrier") }]
   if (user && (current || isCoordination(user, profile))) {
-    tabs.push({ href: "/evenements/scene", label: current?.nom ?? t("planning.tabs.scene"), color: PLANNING_COLORS.scene })
+    onglets.push({ id: "scene", href: "/evenements/scene", label: current?.nom ?? t("planning.tabs.scene") })
   }
-  if (enLigne) {
-    const actif = (href: string) => href === "/evenements" ? !pathname.startsWith("/evenements/scene") : pathname.startsWith(href)
-    return (
-      <nav className="mb-4 flex flex-wrap gap-1.5">
-        {tabs.map((tab) => (
-          <Link key={tab.href} href={tab.href} aria-current={actif(tab.href) ? "page" : undefined}
-            className={`inline-flex h-8 items-center rounded-full px-3 text-sm font-semibold transition-colors ${actif(tab.href) ? "bg-foreground text-background" : "bg-secondary text-foreground hover:bg-muted"}`}>
-            {tab.label}
-          </Link>
-        ))}
-      </nav>
-    )
-  }
-  return <SectionTabs rootHref="/evenements" tabs={tabs} />
+  return onglets
 }

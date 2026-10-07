@@ -65,7 +65,8 @@ test("sans compte : le calendrier montre les évènements de toute l'église, in
   await expect(page.getByRole("link", { name: /Nouveau parking/ })).toBeVisible();
   await expect(page.getByRole("region", { name: "À la une" }).getByRole("link").first()).toContainText("Nouveau parking");
   await expect(page.getByRole("link", { name: "Noël", exact: true })).toHaveCount(0);
-  await expect(page.getByRole("link", { name: "Calendrier", exact: true })).toBeVisible();
+  // Agencement v18 (A10, T7) : un seul onglet (Calendrier), donc pas de rail sous le titre.
+  await expect(page.locator('[data-onglets="rail"]')).toHaveCount(0);
 });
 
 test("membre du Groupe Paix : voit en plus le repas de son groupe ; un membre d'un autre groupe non", async ({ page }) => {

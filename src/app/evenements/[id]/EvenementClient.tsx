@@ -11,9 +11,11 @@
 // « Gérer dans le Back-Office ». Une réunion, au Back-Office : l'en-tête et les
 // deux colonnes de la planche bo-reunion-avant.
 // Lot U4 bis, B2 (docs/spec-pages-en-grand.md, Q5) : dans l'App, en grand, la fiche se lit à
-// droite de l'agenda en deux colonnes (planche `evenements-ordinateur`) — titre et « Gérer dans
-// le Back-Office » en tête, bannière et description à gauche, infos et inscription à droite ;
-// en un volet, l'inscription remonte sous les infos (planche `evenement-fiche-telephone`).
+// droite de l'agenda (planche `evenements-ordinateur`), titre et « Gérer dans le Back-Office » en
+// tête. Agencement v18 (A10) : sous 760 px de volet, une seule colonne (bannière, infos et
+// inscription, texte, gestion, tâches) ; au-delà, deux (bannière, texte et gestion à gauche ; infos,
+// inscription et tâches à droite). En un volet, l'inscription remonte sous les infos (planche
+// `evenement-fiche-telephone`).
 // `id` : la fiche montrée sans être l'adresse (le prochain évènement de l'agenda, Q3).
 // Agencement v18 (B3, B4, docs/spec-agencement-v18.md) : au Back-Office, la fiche de gestion d'un
 // évènement (`FicheGestion`) et celle d'une réunion sont dans le volet de droite en grand (titre en h2,
@@ -25,6 +27,7 @@ import { useParams, usePathname, useRouter } from "next/navigation"
 import { baseBackOffice } from "@/lib/navigation"
 import { useTranslation } from "react-i18next"
 import { useConfirmer } from "@/components/layout/Confirmer"
+import { Button } from "@/components/ui/button"
 import { ArrowRight, ChevronLeft } from "lucide-react"
 import { useAuth } from "@/lib/firebase/auth"
 import { useProfile } from "@/lib/firebase/users"
@@ -226,34 +229,38 @@ export function EvenementClient({ espace = "app", id: idDonne }: { espace?: "app
     </>
   )
 
-  // App, en grand : titre en tête, bannière et texte à gauche, infos et inscription à droite.
+  // App, en grand (agencement v18, A10 ; planches `v18-app-evenements*`) : le titre en h2 de 24 px
+  // (le h1 est celui de la section, au-dessus des deux volets) et « Gérer dans le Back-Office » en
+  // contour à côté ; une colonne sous 760 px de volet, deux au-delà (`.fiche-colonnes`). Sans image,
+  // la fiche commence par son titre : plus de cadre gris. La fiche ne pose pas de marge (R10).
   if (!backOffice && grand) {
     return (
       <div className="fiche-grand space-y-4">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          {/* En deux volets, le titre de la page est celui de droite (h1), l'agenda a un h2. */}
-          <div className="min-w-0"><TitreEvenement e={e} niveau="h1" /></div>
+        <div className="flex items-end gap-3">
+          <div className="min-w-0 flex-1"><TitreEvenement e={e} niveau="h2" grand /></div>
           {gestionnaire && estResponsable(user, profile) && (
-            <Link href={`${baseBackOffice(e.pour)}/${e.id}`} className="inline-flex h-9 items-center gap-1.5 rounded-full bg-secondary px-4 text-sm font-semibold text-foreground transition-transform duration-150 active:scale-[.97]">
-              <ArrowRight className="h-4 w-4" aria-hidden />
-              {t("backOffice.gerer")}
-            </Link>
+            <Button asChild variant="outline" size="sm" className="shrink-0">
+              <Link href={`${baseBackOffice(e.pour)}/${e.id}`}>
+                <ArrowRight aria-hidden />
+                {t("backOffice.gerer")}
+              </Link>
+            </Button>
           )}
         </div>
-        <div className="fiche-colonnes grid items-start gap-6">
-          <div className="min-w-0 space-y-4">
-            <Banniere e={e} />
-            {contenu}
+        <div className="fiche-colonnes">
+          <div>
+            {e.images[0] && <div className="order-1"><Banniere e={e} /></div>}
+            <div className="order-3 space-y-4 empty:hidden">{contenu}</div>
             {/* La gestion des inscriptions (organisateur) : la colonne large, ses trois choix y tiennent. */}
-            {panneau && <div data-testid="gestion-carte" className="raised space-y-4 rounded-2xl p-4">{panneau}</div>}
+            {panneau && <div data-testid="gestion-carte" className="raised order-4 space-y-4 rounded-2xl p-4">{panneau}</div>}
           </div>
-          <div className="min-w-0 space-y-3">
-            <div data-testid="fiche-carte" className="raised space-y-4 rounded-2xl p-4">
+          <div>
+            <div data-testid="fiche-carte" className="raised order-2 space-y-4 rounded-2xl p-4">
               <InfosEvenement e={e} />
               <PlusInfos e={e} />
               {inscriptions}
             </div>
-            {reunionEtTaches}
+            <div className="order-5 space-y-3 empty:hidden">{reunionEtTaches}</div>
           </div>
         </div>
       </div>

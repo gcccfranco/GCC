@@ -1808,6 +1808,8 @@
   },
   "evenements": {
     "title": "Évènements",
+    "sousTitre": "Les rendez-vous de l'église et les inscriptions",
+    "onglets": "Onglets des évènements",
     "tabs": {
       "calendrier": "Calendrier"
     },
