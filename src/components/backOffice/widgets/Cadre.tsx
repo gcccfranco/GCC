@@ -18,17 +18,21 @@ const CLASSE_TAILLE: Record<Taille, string> = {
   l: "col-span-full",
 };
 
-/** La grille : 1 colonne, 2 dès 640 px, 4 sur grand écran (les mêmes requêtes que la barre latérale de U4). */
+/** La grille : 1 colonne, 2 dès 640 px, 4 sur grand écran (les mêmes requêtes que la barre latérale de U4).
+ *  Agencement v18 (B14) : en grand, hors personnalisation, les colonnes de `TableauDeBord` la remplacent ;
+ *  elle reste en personnalisation (le glisser-déposer la demande), sur tablette et sur téléphone. */
 export const GRILLE_WIDGETS =
   "grid grid-cols-1 items-start gap-4 [grid-auto-flow:row_dense] sm:grid-cols-2 [@media(pointer:fine)_and_(min-width:1024px)]:grid-cols-4 [@media(pointer:coarse)_and_(orientation:landscape)_and_(min-width:1024px)]:grid-cols-4";
 
 /** Personnalisation (B5) : la carte se glisse (`setNodeRef`, `style`) et porte, en tête, la
- *  barre d'outils et les réglages (`outils`, absent hors personnalisation). */
+ *  barre d'outils et les réglages (`outils`, absent hors personnalisation). En colonnes (v18, B14) :
+ *  `style` place la carte dans sa colonne et `colonne` la nomme (`data-colonne`, 0 = la large). */
 export type EditionWidget = {
   setNodeRef: (el: HTMLElement | null) => void;
   style?: React.CSSProperties;
   enMouvement: boolean;
   outils: React.ReactNode | null;
+  colonne?: number;
 };
 export const EditionWidgetContext = createContext<EditionWidget | null>(null);
 
@@ -47,7 +51,7 @@ export function CadreWidget({
   const edition = useContext(EditionWidgetContext);
   return (
     <section
-      ref={edition?.setNodeRef} style={edition?.style} aria-label={nom} data-widget={id}
+      ref={edition?.setNodeRef} style={edition?.style} aria-label={nom} data-widget={id} data-colonne={edition?.colonne}
       className={cn(
         "raised min-h-[120px] min-w-0 rounded-[18px] px-[18px] py-4", CLASSE_TAILLE[taille],
         // Planche : contour pointillé en personnalisation ; la carte saisie passe devant.

@@ -421,12 +421,30 @@ test.describe("Tableau de bord (B4) : écrans", () => {
     await expect(widget(page, "Cases vides du planning").getByTestId("ligne-case-vide")).toHaveCount(2);
 
     const n = colonnes(info);
+    if (n === 4) {
+      // Agencement v18 (B14) : en grand, hors personnalisation, des colonnes (deux ici : barre dépliée,
+      // ou tablette couchée). Le « Grand » (L) prend la colonne large ; le premier des autres (S) va
+      // dans l'étroite, vide jusque-là. Un widget prend la largeur de sa colonne : L ≈ 1,55 × S ;
+      // M (« Ce dimanche »), celle de la colonne où le place sa hauteur.
+      await expect(grille(page)).toHaveAttribute("data-disposition", "colonnes");
+      const L = widget(page, "Prochains évènements");
+      const S = widget(page, "Cases vides du planning");
+      const M = widget(page, "Ce dimanche");
+      await expect(L).toHaveAttribute("data-colonne", "0");
+      await expect(S).toHaveAttribute("data-colonne", "1");
+      const large = (await L.boundingBox())!.width;
+      const etroite = (await S.boundingBox())!.width;
+      expect(large / etroite, "la colonne large").toBeCloseTo(1.55, 1);
+      const m = (await M.boundingBox())!.width;
+      expect(Math.min(Math.abs(m - large), Math.abs(m - etroite)), "M a la largeur d'une des deux colonnes").toBeLessThanOrEqual(1);
+      return;
+    }
     const L = await part(grille(page), widget(page, "Prochains évènements"));
     const S = await part(grille(page), widget(page, "Cases vides du planning"));
     const M = await part(grille(page), widget(page, "Ce dimanche"));
     expect(L).toBeCloseTo(1, 1);
-    expect(M).toBeCloseTo(n === 4 ? 0.5 : n === 2 ? 0.5 : 1, 1);
-    expect(S).toBeCloseTo(n === 4 ? 0.25 : n === 2 ? 0.5 : 1, 1);
+    expect(M).toBeCloseTo(n === 2 ? 0.5 : 1, 1);
+    expect(S).toBeCloseTo(n === 2 ? 0.5 : 1, 1);
   });
 
   // Relecture du lot U6 : les deux widgets partagent une lecture des setlists, bornée aux
@@ -700,7 +718,9 @@ test.describe("Personnaliser (B5) : écrans", () => {
       await ouvrir(page2, ALICE, { "backOffice/uid-alice": db.doc("backOffice/uid-alice")! });
       await expect(widget(page2, "Petit déj")).toBeVisible();
       expect(await widgetsAffiches(page2)).toEqual(voulu);
-      expect(await part(grille(page2), widget(page2, "Prochains évènements"))).toBeCloseTo(1, 1);
+      // Agencement v18 (B14) : en grand, hors personnalisation, le « Grand » va dans la colonne large.
+      if (colonnes(info) === 4) await expect(widget(page2, "Prochains évènements")).toHaveAttribute("data-colonne", "0");
+      else expect(await part(grille(page2), widget(page2, "Prochains évènements"))).toBeCloseTo(1, 1);
     } finally {
       await autre.close();
     }
