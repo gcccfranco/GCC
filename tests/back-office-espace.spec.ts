@@ -45,7 +45,8 @@ const sansSheet = (page: Page) =>
   page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
 
 /** Le label contextuel de la barre du haut (dans le lien du logo). */
-const labelDuHaut = (page: Page) => page.locator("header").getByRole("link").first().getByText("Louange", { exact: true });
+// `header.barre-haut` : la navbar ; l'en-tête de page (EnTetePage, agencement v18) est aussi un <header>.
+const labelDuHaut = (page: Page) => page.locator("header.barre-haut").getByRole("link").first().getByText("Louange", { exact: true });
 /** Le sélecteur visible dans la disposition courante (barre du haut, ou barre latérale dépliée). */
 const selecteur = (page: Page) => page.getByRole("group", { name: "Choisir l'espace" }).filter({ visible: true });
 
@@ -249,7 +250,7 @@ test.describe("Back-Office (B1) : le sélecteur et le menu", () => {
     test.skip(!estTelephone(info), "propre au téléphone");
     await signInAs(page, ADMIN, {}, "/songs");
     await page.getByRole("searchbox").waitFor();
-    const enTete = page.locator("header");
+    const enTete = page.locator("header.barre-haut");
     await expect(selecteur(page)).toBeVisible();
     await expect(labelDuHaut(page)).toBeHidden();
     await expect(enTete.getByRole("button", { name: "切换为中文" })).toBeHidden();
@@ -262,7 +263,7 @@ test.describe("Back-Office (B1) : le sélecteur et le menu", () => {
     test.skip(info.project.name !== "tablette", "propre à la tablette en portrait");
     await signInAs(page, ADMIN, {}, "/songs");
     await page.getByRole("searchbox").waitFor();
-    const enTete = page.locator("header");
+    const enTete = page.locator("header.barre-haut");
     const label = labelDuHaut(page);
     await expect(label).toBeVisible();
     await expect(selecteur(page)).toBeVisible();

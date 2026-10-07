@@ -115,6 +115,19 @@ const MASQUE_CONTENU = ".material-chrome:not(.material-steady) > :not(.barre-fon
  *  quelques pixels s'écartent de 4 ou 5 niveaux sur 255, invisibles. */
 const TOLERANCE = 6;
 
+/** Agencement v18 (A5) : en deux volets, l'en-tête « Chants » est au-dessus du chant, et la barre
+ *  du chant (collante dans son volet) ne colle en haut de la fenêtre qu'une fois l'en-tête passé :
+ *  la zone mesurée en haut de page ne serait plus la sienne une fois la page défilée. Ce qui est
+ *  vérifié ici, c'est le fond des barres : on retire l'en-tête de la page, la barre part du haut. */
+async function sansEnTeteDeChants(page: Page) {
+  if (!(await page.locator(".chants-volets > .chants-entete").isVisible())) return;
+  await page.addStyleTag({ content: ".chants-volets > .chants-entete { display: none !important }" });
+  // La page a pu bouger avec l'en-tête retiré : on la remet en haut, barres affichées.
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await expect.poll(() => page.locator(".material-chrome:not(.material-steady)").evaluateAll((els) =>
+    els.filter((el) => el.getClientRects().length > 0).every((el) => getComputedStyle(el).transform === "matrix(1, 0, 0, 1, 0, 0)"))).toBe(true);
+}
+
 /**
  * Les deux promesses de la barre, vérifiées au pixel :
  * 1. en haut de page, son fond repeint exactement la page qu'il cache (fond + halo) ;
@@ -125,6 +138,7 @@ const TOLERANCE = 6;
  */
 async function barresOpaquesEtInvisibles(page: Page, combien: number, nom: string, { sousLeTitre = false } = {}) {
   await expect.poll(async () => (await barres(page)).length).toBe(combien);
+  await sansEnTeteDeChants(page);
   for (const b of await barres(page)) {
     expect(b.couvre, "le fond couvre la barre").toBe(true);
     expect(b.fond, "le fond est opaque").toMatch(/^rgb\(/);

@@ -148,7 +148,7 @@ async function ouvrirMesSetlists(
 ) {
   await planningVide(page);
   const db = await signInAs(page, profil, docs, "/setlists");
-  await page.getByRole("button", { name: /Mes setlists/ }).click();
+  await page.getByRole("tab", { name: /Mes setlists/ }).click();
   await expect(lignes(page)).toHaveCount(attendues);
   return db;
 }
@@ -241,11 +241,11 @@ test("la sélection ne contient que ce qui est à l'écran : changer d'onglet la
   await cocher(page, "Répétition du 10 janvier", "Répétition du 17 janvier", "Culte du 24 janvier");
   await expect(boutonSupprimer(page)).toHaveText("Supprimer (3)");
 
-  await page.getByRole("button", { name: "À venir" }).click();
+  await page.getByRole("tab", { name: "À venir" }).click();
   await expect(boutonSupprimer(page)).toHaveText("Supprimer (0)");
   await expect(boutonSupprimer(page)).toBeDisabled();
 
-  await page.getByRole("button", { name: /Mes setlists/ }).click();
+  await page.getByRole("tab", { name: /Mes setlists/ }).click();
   await expect(cases(page)).toHaveCount(5);
   await expect(page.getByRole("checkbox", { checked: true })).toHaveCount(0);
 });
@@ -298,7 +298,7 @@ test("la barre d'action est en tête de liste et reste à portée quand la liste
   await expect(boutonSupprimer(page)).toBeInViewport();
   const apres = (await boutonSupprimer(page).boundingBox())!;
   // Lot U4 : pas de navbar sur ordinateur (barre latérale), la page commence en haut.
-  const navbar = (await page.locator("header").boundingBox()) ?? { y: 0, height: 0 };
+  const navbar = (await page.locator("header.barre-haut").boundingBox()) ?? { y: 0, height: 0 };
   expect(apres.y, "la barre n'est pas cachée derrière la navbar").toBeGreaterThanOrEqual(navbar.y + navbar.height - 1);
   const onglets = page.getByTestId("barre-du-bas");
   if (await onglets.isVisible()) {
@@ -426,7 +426,7 @@ test("en 中文, la confirmation et le résultat sont traduits", async ({ page }
   await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
   await planningVide(page);
   const db = await signInAs(page, LEA, MES_CINQ, "/setlists");
-  await page.getByRole("button", { name: /我的歌单/ }).click();
+  await page.getByRole("tab", { name: /我的歌单/ }).click();
   await expect(lignes(page)).toHaveCount(5);
 
   await page.getByRole("button", { name: "选择" }).click();

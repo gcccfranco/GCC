@@ -1291,3 +1291,132 @@ la barre d'onglets : une page sans barre du bas (rare) le verra plus haut que n�
   - rien à publier (ni règle ni donnée) ;
   - trancher « Partager » et la grille Date · Heure · Lieu de la planche (les ajouter, ou garder l'écart) ;
   - relire les deux libellés 中文 de T7 (`evenements.sousTitre`, `evenements.onglets`).
+
+### V18T89 — App Chants (T8)
+
+- 06/10/2026 (fini le 07/10/2026 après minuit) : **T8 faite** (branche `lot/v18-t89`, commit
+  `feat(V18T89): T8 — App Chants, piste A`), commencée par une voie coupée puis reprise.
+- **Écran** (A5) : `ChantsVolets` pose l'en-tête commun (`EnTetePage`) « Chants », sous-titre « n chants, en
+  français et en chinois » (compté au serveur, `songs/layout.tsx`), action « + Proposer un chant »
+  (`SongProposalDrawer enTete`, pilule `BoutonNouveau` dès 768 px ; le téléphone garde le lien en bas de liste,
+  R7). La liste perd son `PageTitle`. En deux volets, l'en-tête est au-dessus des deux volets, y compris sur la
+  page d'un chant (la liste ne bouge pas d'un chant à l'autre) ; la liste est une carte en relief collante
+  (bloc `.chants-volets`, `globals.css`), le chant s'étire sur toute la rangée (sa barre reste collée).
+- **Volet sans chant** (A5 à A8, `ChoisisUnChant.tsx`) : prochaines setlists, sinon la carte « Pas de setlist à
+  venir pour toi » + « Voir les setlists » ; « Récemment ouverts » (cinq premiers de `recentSongs`, même clé et
+  même évènement que la rangée de la liste, lecture sous `try/catch`) et « Nouveaux au répertoire » (six plus
+  récents par `ajouteLe`) côte à côte ; « Les plus chantés à GCC » (`lib/stats/plusChantes.ts` : `statsChants`
+  sur les 92 jours avant aujourd'hui, six, deux colonnes, rang et nombre de setlists ; setlists lues une fois,
+  gardées une minute comme les prochaines). Une carte sans donnée ne paraît pas ; sans compte, rien n'est lu.
+- **Index** (A7) : `scripts/dates-ajout.ts`, lu par `build-index.ts` : une passe `git log --diff-filter=A
+  --name-only --format=%cs -- content/songs` → `ajouteLe` (AAAA-MM-JJ) ; clone superficiel ou hors git →
+  `null` partout, sans erreur. `public/songs-index.json` régénéré (377 dates sur 378 : `Ta-parole-écriture`
+  vient d'un renommage, que git ne compte pas comme un ajout → `null`, il ne paraît jamais « nouveau »).
+- **Tests** : `tests/agencement-v18-chants.spec.ts` (15 tests, cinq projets ; volet de droite vu rouge sur le
+  `ChoisisUnChant` d'avant, puis vert) ; captures regardées aux cinq tailles. Suites voisines adaptées, sans
+  changer ce qu'elles vérifient : `chants-deux-volets` (la barre du chant colle sous l'en-tête),
+  `navigation-grand-ecran` (le titre suit la zone de contenu de 180 px + l'écart de `--marge-page` ; la page
+  peut arriver un peu défilée de /login), `look-barres` (l'en-tête retiré pour mesurer le fond des barres), et
+  `header` → `header.barre-haut` dans `navigation-grand-ecran`, `look-navigation`, `songs-index`,
+  `back-office-espace` (`EnTetePage` est aussi un `<header>` : **à reprendre par les autres voies** qui posent
+  l'en-tête sur une page où un test lit `locator("header")`).
+- **Reste** : rien pour T8. Hors spec, non fait : le lien « Tout voir › » de la planche sur « Nouveaux au
+  répertoire » (A5 ne le cite pas).
+- **Timothée** : rien à publier dans Firestore. À la mise en ligne : `VERCEL_DEEP_CLONE=true` sur Vercel, sinon
+  « Nouveaux au répertoire » ne paraît pas. Relire le 中文 : 共 {{count}} 首诗歌，法语和中文 · 推荐诗歌 ·
+  在列表中选择，或从上次停下的地方继续。· 暂无你的待用歌单 · 你所服事的歌单准备好后，其中的诗歌会优先显示在这里。·
+  查看歌单 · 最近打开 · 本设备 · 新加入的诗歌 · {{date}}加入 · GCC 最常唱的诗歌 · 最近 3 个月 ·
+  {{count}} 次出现在歌单中.
+
+### V18T89 — App Setlists et Mes services (T9)
+
+- 07/10/2026 : **T9 faite** (branche `lot/v18-t89`, commit `feat(V18T89): T9 — App Setlists et Mes services`).
+- **Setlists** (A9, `setlists/page.tsx`) : `EnTetePage` « Setlists », sous-titre « Les chants prévus pour chaque
+  service », action `BoutonNouveau` « + Nouvelle setlist » (pilule dès 768 px, rond sur téléphone ; plus de
+  « Nouvelle » dans la rangée des filtres du téléphone), au-dessus des deux volets et sur toute la largeur.
+  La liste perd son `PageTitle` ; À venir · Archives · Mes setlists passent dans `OngletsRail` (boutons,
+  `role="tab"`), dans la carte. Hors deux volets, le contenu est à `--marge-page` sur toute la zone (plus de
+  `max-w-4xl` centré). Aperçu (`ApercuSetlist`) : contenu inchangé, titre en h2 de 24 px, sans marge propre (R3, R10).
+- **Mes services** (A11) : l'en-tête est posé par `SectionMesServices` (layout), au-dessus des deux volets, avec
+  « Les dates où <nom> apparaît dans les plannings · n à venir » (la pastille « n à venir » de la liste disparaît) ;
+  en un volet, un service en page n'a pas l'en-tête de la liste mais `Retour` « ‹ Mes services » et son h1.
+  `ListeMesServices` : plus de titre, À venir · Passés en `OngletsRail`. `DetailService` : en deux volets, h2 de
+  24 px et plus de marge intérieure (`px-6 xl:px-9` retiré) ; le seuil de `.service-colonnes` (`globals.css`)
+  passe de 560 à **520 px** : la liste en carte à la marge ne laisse que ~530 px au volet à 1 280 px et sur iPad
+  couché, où la setlist et l'équipe restent côte à côte (planche).
+- **Libellés** : `setlists.list.newButton` « Nouvelle » → « Nouvelle setlist » (中文 inchangé, 新建歌单) ;
+  `setlists.list.sousTitre` (nouveau, 每次服事预备的诗歌) ; `mesServices.subtitle` perd son point final (中文 : son 。).
+- **Tests** : `tests/agencement-v18-setlists.spec.ts` (8 tests, cinq projets ; écrit avant le code par la voie coupée, mais son premier lancement, en file d’attente, a tourné après le code : **pas vu rouge en exécution**, seulement vu rouge sur la taille des h2, 30 px, avant correction). Suites voisines adaptées sans changer
+  ce qu'elles vérifient : `pages-en-grand-mes-services` (titre h1 dans l'en-tête, service en h2, rail en `tab`),
+  `setlist-suppression-groupee` (onglets en `tab`, `header.barre-haut`), `planning-petit-dej` (sous-titre sans
+  point), `nouveaux-membres` (le bouton « 推荐诗歌 » de l'en-tête de Chants, régression de T8 en 中文 dès 768 px).
+  Vertes sur les cinq projets : `agencement-v18-setlists`, `pages-en-grand-setlists`, `pages-en-grand-mes-services`,
+  `setlist-suppression-groupee`, `nouveaux-membres`, `look-halo`, `halo-partout`, `agencement-barre-reduite`,
+  `coherence`, `planning-petit-dej` ; `back-office-coupe` (second serveur). Captures regardées (ordinateur,
+  ordinateur-1440, tablette, tablette-paysage, téléphone).
+- **Reste** : rien pour T9.
+- **Timothée** : rien à publier (aucune règle, aucune donnée). Relire le 中文 : 每次服事预备的诗歌.
+
+### V18T89 — Fusion de la relecture des fondations (T8, T9)
+
+- 07/10/2026 : `lot/v18-fondations` (relecture `fix(V18F): relecture — …`) fusionné dans `lot/v18-t89` ; seul
+  conflit, cette section « Avancement » (les deux textes gardés). `tsc --noEmit` et `npm run lint` sans erreur.
+- **Correctif** (`fix(V18T89): fusion — …`) : les tests de T8 et T9 donnent maintenant à `verifierAgencement` le
+  bloc de contenu et le compte des onglets, comme la relecture le demande à chaque tranche (Chants : `.chants-volets`,
+  un rail ; Setlists : les deux volets en grand, sinon le bloc de la liste, un rail ; Mes services : les deux volets,
+  un rail ; aucune pilule). Cela a montré un écart à R4 : **Tous · FR · 中文** de la liste des chants était un
+  contrôle à part, pas le rail. Il passe par `OngletsRail` (boutons, `role="tab"`, étiquette « Langue » / 语言,
+  libellés inchangés) ; vu rouge (aucun rail) sur les cinq projets, puis vert. `chants-deux-volets` clique
+  l'onglet « FR » (`tab` au lieu de `button`), sans changer ce qu'il vérifie.
+- **Suites vertes** : sur les cinq projets `agencement-v18-chants`, `agencement-v18-setlists`, `chants-deux-volets`,
+  `pages-en-grand-mes-services`, `setlist-suppression-groupee`, `nouveaux-membres`, `navigation-grand-ecran`,
+  `songs-index` ; sur ordinateur (voisins allégés du 07/10/2026) `agencement-v18-fondations` et
+  `pages-en-grand-setlists` ; `back-office-coupe` (second serveur, 59 verts). Captures regardées (ordinateur-1440, tablette, téléphone) : le rail de la langue est
+  celui de la planche `v18-app-chants-a`.
+- **Reste** : rien pour le lot. Hors spec, non fait : la liste déroulante des thèmes (Chants) et celle des
+  catégories (Setlists) gardent leurs coins arrondis, là où la planche les dessine en pilule (`choix`).
+- **Timothée** : rien à publier (aucune règle, aucune donnée, aucun libellé nouveau).
+
+### V18T89 — Relecture (T8, T9)
+
+- 07/10/2026 : **lot fini et relu** (deux relectures, huit constats ; commit `fix(V18T89): relecture — …`).
+  Chaque correction de comportement a son test, vu rouge sur les cinq projets avant le code, puis vert.
+- **Index A–Z de Chants** (constat « important ») : le calcul de la relecture supposait `--nav-h` = 58 px ;
+  en deux volets il vaut la zone sûre (0 px en test), et la carte tient l'index une fois collée. Le défaut
+  réel était ailleurs : **page en haut**, la carte part sous l'en-tête (104 px) et finit sous le bas de la
+  fenêtre, et la molette sur la liste ne défile que la liste. Y et Z restaient alors sous le bord de la
+  fenêtre (vu à 720 px, 810 px et 640 px de haut). L'index se centre maintenant dans `--cadre-index`, la part
+  de la carte toujours à l'écran (`100svh − --nav-h − 104px`, posé par `.chants-volets`), avec 12 px au moins
+  de chaque bord. Le téléphone ne change pas (la fenêtre, comme avant). Test : « l'index A–Z tient entier dans
+  la carte, page en haut comme défilée » (projet, puis 640 px de haut ; page en haut, liste au bout, carte collée).
+- **Setlists, état vide** : plus de seconde « Nouvelle setlist » dans « Aucun culte à venir » : l'action est
+  celle de l'en-tête (R7). Test « rien à venir : une seule « Nouvelle setlist » ».
+- **Mes services, sous-titre** : le texte de A11 est gardé (« … · n à venir »), mais la phrase se coupe par
+  « … » avant le compte, qui reste entier (`SectionMesServices` ; `EnTetePage` inchangé). Test à 360 px sur
+  les cinq projets.
+- **Les plus chantés** : `plusChantes` écarte les chants absents du recueil avant de prendre les six, et
+  reclasse de 1 à 6. Test de calcul « un chant absent du recueil ne prend ni place ni rang ».
+- **`navigation-grand-ecran`** (« fenêtre trop basse ») : la page est remise en haut avant la mesure, et le
+  test exige de nouveau `scrollY` = 0, comme avant T8.
+- **Constats laissés, avec la raison** :
+  - Cache des setlists passées (`ChoisisUnChant`) : il ne double aucune lecture. Le tableau de bord lit depuis
+    aujourd'hui (`lireSetlists(today)`), Chants depuis 92 jours ; une clé commune ne servirait jamais deux fois.
+    C'est écrit en commentaire.
+  - « Tout voir › » sur « Nouveaux au répertoire » : la planche le dessine, mais A5 ne le cite pas et aucune
+    page de destination n'existe. Rien n'est fait sans décision de Timothée.
+  - `look-barres` (en-tête retiré pour mesurer le fond des barres) : un cas avec l'en-tête réel est **à reprendre
+    à l'intégration** (mesure au pixel, hors de ce lot).
+  - Contre-épreuve de `agencement-v18-setlists` (tests de T9 jamais vus rouges en exécution) : **à faire à
+    l'intégration**, sur un worktree au commit d'avant T9. Les deux tests ajoutés ici ont été vus rouges.
+- **Vu en passant, pas corrigé** : la carte des deux volets (Chants et `DeuxVolets` de F1) finit sous le bas
+  de la fenêtre tant que la page n'a pas défilé, et la molette sur la liste ne défile pas la page : les
+  dernières lignes de la liste restent cachées tant qu'on ne défile pas à côté de la carte. C'est la forme de
+  R10 dans F1, à trancher à l'intégration. Et `navigation-grand-ecran` « captures de la barre » (seulement avec
+  `PW_CAPTURES`) attend `barre-outils` sur une setlist en grand, où la barre est `[data-en-tete]` : il échoue
+  sans rapport avec ce lot.
+- **Suites vertes** : `agencement-v18-chants`, `agencement-v18-setlists`, `navigation-grand-ecran`,
+  `chants-deux-volets`, `pages-en-grand-mes-services` (cinq projets), `planning-petit-dej` (Mes services),
+  `back-office-coupe` (second serveur) ; `tsc --noEmit` et `npm run lint` sans erreur. Captures regardées :
+  Chants à 720 px et iPad couché (index entier), Mes services à 360 px, Setlists vide (ordinateur, téléphone).
+- **Timothée** : rien à publier (aucune règle, aucune donnée, aucun libellé nouveau). À trancher : « Tout voir › »
+  des nouveaux chants (et sa page), et la carte qui finit sous le bas de la fenêtre avant tout défilement.

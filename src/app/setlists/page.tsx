@@ -13,9 +13,11 @@ import {
   type PlanningData,
 } from "@/lib/planning/names";
 import { useTranslation } from "react-i18next";
-import { Search, X, Plus, Lock, LogIn, UserPen } from "lucide-react";
+import { Search, X, Lock, LogIn, UserPen } from "lucide-react";
 import Link from "next/link";
-import { PageTitle } from "@/components/layout/PageTitle";
+import { EnTetePage } from "@/components/layout/EnTetePage";
+import { BoutonNouveau } from "@/components/layout/BoutonNouveau";
+import { OngletsRail } from "@/components/layout/Onglets";
 import { SetlistCard, SetlistCarteChants } from "@/components/setlists/SetlistCard";
 import { ApercuSetlist } from "@/components/setlists/ApercuSetlist";
 import { DeuxVolets } from "@/components/layout/DeuxVolets";
@@ -225,13 +227,6 @@ export default function SetlistsPage() {
     ? t("setlists.list.emptyUpcoming")
     : t("setlists.list.emptyArchived");
 
-  const tabBtnClass = (active: boolean) =>
-    `flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-md font-semibold transition-colors text-sm ${grand ? "whitespace-nowrap " : ""}${
-      active
-        ? "bg-card text-foreground shadow-sm"
-        : "text-muted-foreground hover:text-foreground"
-    }`;
-
   if (authLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -285,14 +280,15 @@ export default function SetlistsPage() {
     );
   }
 
-  const nouvelle = (
-    <Link aria-label={t("setlists.list.newButton")}
-      href="/setlists/new"
-      className="shrink-0 flex items-center gap-1.5 h-9 px-4 rounded-full bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-[background-color,transform] duration-150 active:scale-[.97]"
-    >
-      <Plus className="h-4 w-4" />
-      <span className={disposition === "telephone" ? "hidden sm:inline" : undefined}>{t("setlists.list.newButton")}</span>
-    </Link>
+  // Agencement v18 (A9, R1 à R3, R7 de docs/spec-agencement-v18.md) : l'en-tête sur toute la
+  // largeur, au-dessus des deux volets ; « + Nouvelle setlist » y est l'action principale
+  // (pilule dès 768 px, rond fixe sur téléphone). La liste n'a plus de titre.
+  const enTete = (
+    <EnTetePage
+      titre={t("common.header.setlists")}
+      sousTitre={t("setlists.list.sousTitre")}
+      action={canCreate ? <BoutonNouveau label={t("setlists.list.newButton")} href="/setlists/new" /> : undefined}
+    />
   );
 
   // « Mes services » : seul sur sa ligne au téléphone (inchangé) ; en tête de la rangée des
@@ -314,35 +310,31 @@ export default function SetlistsPage() {
 
   const contenuListe = (
       <>
-        {/* Grand et tablette (planches `setlists-*`) : « Nouvelle » à côté du titre. */}
-        <PageTitle title={t("common.header.setlists")} action={disposition !== "telephone" && canCreate ? nouvelle : undefined} />
-
-        {/* ── Onglets ── */}
-        <div className="flex rounded-lg bg-secondary p-0.5 gap-0.5 text-sm mb-4">
-          <button onClick={() => changerOnglet("upcoming")} className={tabBtnClass(tab === "upcoming")}>
-            {t("setlists.list.upcoming", { defaultValue: "À venir" })}
-          </button>
-          <button
-            onClick={() => changerOnglet("archived")}
-            className={tabBtnClass(tab === "archived")}
-          >
-            {t("setlists.list.archived", { defaultValue: "Archives" })}
-          </button>
-          {!authLoading && user && (
-            <button
-              onClick={() => changerOnglet("mine")}
-              className={tabBtnClass(tab === "mine")}
-            >
-              <Lock className="hidden sm:block h-3.5 w-3.5" />
-              {t("setlists.list.mySetlists")}
-              {mySetlists.length > 0 && (
-                <span className="text-xs px-1.5 py-0.5 rounded-full font-medium bg-secondary text-muted-foreground">
-                  {mySetlists.length}
-                </span>
-              )}
-            </button>
-          )}
-        </div>
+        {/* ── Vues : le rail (R4) ── */}
+        <OngletsRail
+          etiquette={t("common.header.setlists")}
+          className="mb-4 flex w-full [&>button]:flex-1"
+          actif={tab}
+          choisir={(o) => changerOnglet(o as Tab)}
+          onglets={[
+            { id: "upcoming", label: t("setlists.list.upcoming", { defaultValue: "À venir" }) },
+            { id: "archived", label: t("setlists.list.archived", { defaultValue: "Archives" }) },
+            {
+              id: "mine",
+              label: (
+                <>
+                  <Lock className="hidden sm:block h-3.5 w-3.5" aria-hidden />
+                  {t("setlists.list.mySetlists")}
+                  {mySetlists.length > 0 && (
+                    <span className="text-xs px-1.5 py-0.5 rounded-full font-medium bg-secondary text-muted-foreground">
+                      {mySetlists.length}
+                    </span>
+                  )}
+                </>
+              ),
+            },
+          ]}
+        />
 
         {/* ── Barre de filtres partagée ── */}
         <div className="space-y-3 mb-5">
@@ -401,7 +393,6 @@ export default function SetlistsPage() {
                 ))}
               </optgroup>
             </select>
-            {disposition === "telephone" && canCreate && nouvelle}
           </div>
         </div>
 
@@ -420,7 +411,7 @@ export default function SetlistsPage() {
              PageTransition, donc sur le bas du **document** et non de l'écran
              (docs/spec-suppression-groupee.md, R3). */}
         {selectionMode && (
-          <div className={`sticky z-10 mb-4 flex items-center gap-2 material-chrome py-2.5 ${grand ? "top-0 -mx-5 px-5" : "top-[var(--nav-h)] -mx-4 px-4"}`}>
+          <div className={`sticky z-10 mb-4 flex items-center gap-2 material-chrome py-2.5 ${grand ? "top-0 -mx-4 px-4" : "top-[var(--nav-h)] -mx-[var(--marge-page)] px-[var(--marge-page)]"}`}>
             <FondDeBarre sousNavbar />
             <button
               type="button"
@@ -449,17 +440,9 @@ export default function SetlistsPage() {
         ) : displayed.length === 0 ? (
           <div className="text-center py-16 border border-dashed border-border rounded-xl space-y-3">
             <p className="text-sm text-muted-foreground">{emptyMessage}</p>
+            {/* Qui peut créer a « + Nouvelle setlist » dans l'en-tête : pas de seconde action ici (R7). */}
             {tab === "upcoming" && !query && !canCreate && (
               <p className="text-sm text-muted-foreground">{t("setlists.list.emptyUpcomingHint")}</p>
-            )}
-            {tab === "upcoming" && !query && canCreate && (
-              <Link
-                href="/setlists/new"
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-[background-color,transform] duration-150 active:scale-[.97]"
-              >
-                <Plus className="h-4 w-4" />
-                {t("setlists.list.newButton")}
-              </Link>
             )}
           </div>
         ) : (
@@ -502,11 +485,12 @@ export default function SetlistsPage() {
     <div className="relative min-h-screen bg-background">
       <PullToRefresh />
       <Halo color="var(--chord-color)" />
+      {enTete}
       {grand ? (
         <DeuxVolets
           racine="/setlists"
           largeurListe={400}
-          liste={<div className="relative px-5 pb-10 pt-6">{contenuListe}</div>}
+          liste={<div className="relative px-4 pb-4 pt-4">{contenuListe}</div>}
           premier={choisie && (
             <ApercuSetlist setlist={choisie} songsMap={songsMap} planning={planning} monNom={profile?.planningName ?? ""} />
           )}
@@ -514,7 +498,7 @@ export default function SetlistsPage() {
           {null}
         </DeuxVolets>
       ) : (
-        <div className="relative max-w-4xl mx-auto px-4 pt-6 pb-10">{contenuListe}</div>
+        <div className="relative px-[var(--marge-page)] pb-10">{contenuListe}</div>
       )}
         {/* ── Confirmation : elle NOMME ce qui va disparaître (D3) ── */}
         <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>

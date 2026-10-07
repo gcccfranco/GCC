@@ -119,8 +119,9 @@ test.describe("Mes services en grand", () => {
 
   test("la liste à gauche, le prochain service à droite, l'adresse inchangée", async ({ page }) => {
     await ouvrir(page, "/mes-services");
-    await expect(liste(page).getByRole("heading", { name: "Mes services", level: 2 })).toBeVisible();
-    await expect(detail(page).getByRole("heading", { name: "Dimanche 4 octobre", level: 1 })).toBeVisible();
+    // Agencement v18 (A11) : le titre dans l'en-tête, au-dessus des deux volets ; le service en h2.
+    await expect(page.locator("header[data-entete-page]").getByRole("heading", { name: "Mes services", level: 1 })).toBeVisible();
+    await expect(detail(page).getByRole("heading", { name: "Dimanche 4 octobre", level: 2 })).toBeVisible();
     await expect(ligne(page, /Culte Franco.*4 oct/)).toHaveAttribute("aria-current", "page");
     expect(new URL(page.url()).pathname).toMatch(/^\/mes-services\/?$/);
     // L'équipe d'après le planning, la personne en pastille d'encre ; la setlist liée.
@@ -137,16 +138,16 @@ test.describe("Mes services en grand", () => {
 
   test("un lien direct vers un service : la liste à gauche, le service à droite ; retour arrière rend le précédent", async ({ page }) => {
     await ouvrir(page, "/mes-services/2026-10-18");
-    await expect(detail(page).getByRole("heading", { name: "Dimanche 18 octobre", level: 1 })).toBeVisible();
+    await expect(detail(page).getByRole("heading", { name: "Dimanche 18 octobre", level: 2 })).toBeVisible();
     await expect(ligne(page, /Culte Franco.*18 oct/)).toHaveAttribute("aria-current", "page");
     await expect(equipe(page).getByText("Hugo L.")).toBeVisible();
     await ligne(page, /Culte Franco.*25 oct/).click();
     await expect(page).toHaveURL(/\/mes-services\/2026-10-25\/?$/);
-    await expect(detail(page).getByRole("heading", { name: "Dimanche 25 octobre", level: 1 })).toBeVisible();
+    await expect(detail(page).getByRole("heading", { name: "Dimanche 25 octobre", level: 2 })).toBeVisible();
     await expect(ligne(page, /Culte Franco.*18 oct/), "la liste reste montée").toBeVisible();
     await page.goBack();
     await expect(page).toHaveURL(/\/mes-services\/2026-10-18\/?$/);
-    await expect(detail(page).getByRole("heading", { name: "Dimanche 18 octobre", level: 1 })).toBeVisible();
+    await expect(detail(page).getByRole("heading", { name: "Dimanche 18 octobre", level: 2 })).toBeVisible();
   });
 
   test("deux services le même jour : chacun son adresse", async ({ page }) => {
@@ -160,8 +161,8 @@ test.describe("Mes services en grand", () => {
 
   test("Passés : à droite, le dernier service passé", async ({ page }) => {
     await ouvrir(page, "/mes-services");
-    await liste(page).getByRole("button", { name: "Passés" }).click();
-    await expect(detail(page).getByRole("heading", { name: "Dimanche 27 septembre", level: 1 })).toBeVisible();
+    await liste(page).getByRole("tab", { name: "Passés" }).click();
+    await expect(detail(page).getByRole("heading", { name: "Dimanche 27 septembre", level: 2 })).toBeVisible();
   });
 });
 

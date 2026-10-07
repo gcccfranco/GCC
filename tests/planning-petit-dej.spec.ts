@@ -739,7 +739,7 @@ test("Mes services : un compte sans nom de planning voit ses petits déj, sous s
     ligne({ id: "b", dimanche: "2026-10-04", nom: "Famille Durand", uid: "uid-autre", auteurUid: "uid-autre" }),
   ]), SANS_NOM);
   await expect(page.getByRole("heading", { name: "Mes services" })).toBeVisible();
-  await expect(page.getByText("Les dates où Camille Exemple apparaît dans les plannings.")).toBeVisible();
+  await expect(page.getByText("Les dates où Camille Exemple apparaît dans les plannings")).toBeVisible();
   await expect(page.getByText(/Choisis ton nom de planning/)).toHaveCount(0);
   const petitDej = page.getByRole("listitem").filter({ hasText: "Petit déj" });
   await expect(petitDej, "le sien, pas celui d'un autre").toHaveCount(1);

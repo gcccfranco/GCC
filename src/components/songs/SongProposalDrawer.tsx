@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { BoutonNouveau } from "@/components/layout/BoutonNouveau";
 import { useStandaloneScrollLock } from "@/hooks/useStandaloneScrollLock";
 
 function isHttpUrl(s: string): boolean {
@@ -22,8 +23,10 @@ function isHttpUrl(s: string): boolean {
 
 /** Bouton « Proposer un nouveau chant » + tiroir de saisie.
  *  Visible uniquement pour les utilisateurs connectés. La proposition est
- *  envoyée aux admins (inbox in-app), aucun fichier n'est stocké. */
-export function SongProposalDrawer() {
+ *  envoyée aux admins (inbox in-app), aucun fichier n'est stocké.
+ *  `enTete` (agencement v18, A5, R7) : l'action de l'en-tête de Chants, la pilule noire
+ *  « + Proposer un chant », dès 768 px seulement ; le téléphone garde le lien de la liste. */
+export function SongProposalDrawer({ enTete = false }: { enTete?: boolean } = {}) {
   const { t } = useTranslation();
   const { user, profile, loading } = useProfile();
   const [open, setOpen] = useState(false);
@@ -93,14 +96,20 @@ export function SongProposalDrawer() {
         if (!o) reset();
       }}
     >
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className="inline-flex items-center gap-1.5 text-sm font-semibold text-foreground underline-offset-2 hover:underline"
-      >
-        <Music4 className="h-4 w-4" />
-        {t("proposition.titre")}
-      </button>
+      {enTete ? (
+        <span className="max-md:hidden">
+          <BoutonNouveau label={t("songs.list.proposer")} onClick={() => setOpen(true)} />
+        </span>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="inline-flex items-center gap-1.5 text-sm font-semibold text-foreground underline-offset-2 hover:underline"
+        >
+          <Music4 className="h-4 w-4" />
+          {t("proposition.titre")}
+        </button>
+      )}
 
       <DrawerContent className="max-h-[90vh]">
         <DrawerHeader>

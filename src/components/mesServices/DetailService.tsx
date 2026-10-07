@@ -5,11 +5,15 @@
 // répétition (Campus), la setlist liée (« Ouvrir », « Mode louange ») et l'équipe du service
 // d'après le planning. En grand, la setlist et l'équipe côte à côte, sans « Retour » ; en un
 // volet, « ‹ Mes services », puis l'équipe avant la setlist.
+// Agencement v18 (A11, R3, R8, R10) : en deux volets, le titre est un h2 de 24 px (le h1 est celui
+// de l'en-tête de la section) et la fiche ne pose plus de marge ; en un volet, le service en page
+// garde son h1 et le seul retour du site, `Retour`.
 
 import { useId, useMemo } from "react";
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
-import { ChevronLeft, Clock, ListMusic, MapPin, Play } from "lucide-react";
+import { Clock, ListMusic, MapPin, Play } from "lucide-react";
+import { Retour } from "@/components/layout/EnTetePage";
 import { Tile } from "@/components/ui/tile";
 import { KeyPill } from "@/components/ui/key-pill";
 import { CarteEquipe } from "@/components/setlists/CarteEquipe";
@@ -70,23 +74,19 @@ export function DetailService({ s }: { s: ServiceGroupe }) {
     return categorie ? equipeDuService(planning, { category: categorie, date: s.setlistDate ?? s.date, moment: s.moment }) : [];
   }, [planning, s]);
 
+  const Titre = deuxVolets ? "h2" : "h1";
   const carteEquipe = equipe.length > 0 && <CarteEquipe equipe={equipe} monNom={monNom} niveau={2} />;
   const carteSetlist = setlist && <CarteSetlist setlist={setlist} songs={songs} couleur={couleur} boutonsEnTete={!deuxVolets} />;
 
   return (
-    <div className={cn("service-detail space-y-4 pb-10", deuxVolets ? "px-6 pt-6 xl:px-9" : "mx-auto max-w-2xl px-4 pt-3 md:max-w-3xl md:px-6")}>
-      {!deuxVolets && (
-        <Link href="/mes-services" className="inline-flex items-center gap-1 text-[15px] text-muted-foreground active:text-foreground">
-          <ChevronLeft className="h-4 w-4" aria-hidden />
-          {t("mesServices.title")}
-        </Link>
-      )}
+    <div className={cn("service-detail space-y-4 pb-10", !deuxVolets && "mx-auto max-w-2xl px-4 pt-3 md:max-w-3xl md:px-6")}>
+      {!deuxVolets && <Retour href="/mes-services">{t("mesServices.title")}</Retour>}
 
       <header className="flex items-start gap-4">
         <Tile color={couleur} big={jour.getDate()} small={mois} size="lg" className="h-14 w-14 rounded-xl [&>span:first-child]:text-2xl" />
         <div className="min-w-0 flex-1">
           <p className="svc-ink text-[13px] font-semibold" style={{ "--svc": couleur } as React.CSSProperties}>{s.service}</p>
-          <h1 className="text-2xl font-bold leading-tight tracking-tight lg:text-[28px]">{dateLongue(s.date, i18n.language)}</h1>
+          <Titre className={cn("font-bold leading-tight tracking-tight", deuxVolets ? "text-[24px]" : "text-2xl lg:text-[28px]")}>{dateLongue(s.date, i18n.language)}</Titre>
           <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1">
             {quand && <span className="text-sm text-muted-foreground">{quand}</span>}
             {!deuxVolets && <Roles s={s} />}

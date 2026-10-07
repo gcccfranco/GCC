@@ -2,17 +2,21 @@ import * as fs from "fs";
 import * as path from "path";
 import { getSongSlugs, loadSong } from "../src/lib/content/loadSongs";
 import { parseChordPro } from "../src/lib/chordpro/parser";
+import { datesAjout } from "./dates-ajout";
 
 const OUTPUT_FILE = path.join(process.cwd(), "public", "songs-index.json");
 
 function main() {
   const slugs = getSongSlugs();
+  // « Nouveaux au répertoire » (agencement v18, A7) : la date d'ajout lue dans git, `null` sans historique.
+  const ajouts = datesAjout(process.cwd());
   const songs = slugs.map((slug) => {
     const song = loadSong(slug);
     const ast = parseChordPro(song.chordProSource);
     const { chordProSource: _, ...entry } = song;
     return {
       ...entry,
+      ajouteLe: ajouts.get(slug.normalize("NFC")) ?? null,
       sections: ast.sections.map((s) => ({
         id: s.id,
         name: s.name || s.type,
@@ -39,6 +43,7 @@ function main() {
   fs.mkdirSync(path.dirname(OUTPUT_FILE), { recursive: true });
   fs.writeFileSync(OUTPUT_FILE, JSON.stringify(output, null, 2), "utf-8");
   console.log(`✓ ${songs.length} chant(s) indexé(s) → ${OUTPUT_FILE}`);
+  if (ajouts.size === 0) console.log("  (sans historique git : aucune date d'ajout, « Nouveaux au répertoire » ne paraîtra pas)");
 }
 
 main();
