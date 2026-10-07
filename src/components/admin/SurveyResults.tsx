@@ -12,6 +12,7 @@ import Link from "next/link";
 import { useTranslation } from "react-i18next";
 import { ChevronDown, ChevronRight, ChevronUp, Star, Trash2 } from "lucide-react";
 import { DeuxVolets } from "@/components/layout/DeuxVolets";
+import { useConfirmer } from "@/components/layout/Confirmer";
 import { useDisposition } from "@/hooks/useDisposition";
 import { getSurveyResponses, deleteSurveyResponse } from "@/lib/firebase/survey";
 import {
@@ -61,7 +62,7 @@ function QuestionBlock({
         <div className="flex items-baseline justify-between gap-2">
           <p className="text-xs font-semibold text-foreground">{label}</p>
           <span className="text-sm font-bold text-foreground shrink-0 tabular-nums">
-            {values.length ? avg.toFixed(1) : "—"}
+            {values.length ? virgule(avg) : "—"}
             <span className="text-xs font-normal text-muted-foreground">
               /{RATING_MAX} ({values.length})
             </span>
@@ -175,6 +176,7 @@ const virgule = (n: number) => n.toFixed(1).replace(".", ",");
 /** Dépouillement du questionnaire de satisfaction (onglet /admin ; Back-Office si `backOffice`). */
 export function SurveyResults({ backOffice = false }: { backOffice?: boolean }) {
   const { t } = useTranslation();
+  const confirmer = useConfirmer();
   const grand = useDisposition() === "grand" && backOffice;
   /** Back-Office en grand : la partie ouverte à droite, ou « personnes » (détail par personne). */
   const [partie, setPartie] = useState<string>(SURVEY_SECTIONS[0].id);
@@ -205,6 +207,13 @@ export function SurveyResults({ backOffice = false }: { backOffice?: boolean }) 
   );
 
   async function handleDelete(r: SurveyResponse) {
+    // Irréversible : la fenêtre du site d'abord (R9).
+    if (!(await confirmer({
+      titre: `Supprimer la réponse de ${r.authorName} ?`,
+      texte: "Elle disparaît des résultats, définitivement.",
+      action: "Supprimer",
+      destructif: true,
+    }))) return;
     setBusy(r.uid);
     try {
       await deleteSurveyResponse(r.uid);

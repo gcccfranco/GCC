@@ -456,8 +456,6 @@ export function Notifier({ backOffice = false, titre }: { backOffice?: boolean; 
                   ? "Envoi…"
                   : selected.size === 0
                   ? "Envoyer"
-                  : broadcast
-                  ? "Envoyer à tout le monde"
                   : `Envoyer à ${selected.size} personne${selected.size > 1 ? "s" : ""}`}
               </button>
             </div>

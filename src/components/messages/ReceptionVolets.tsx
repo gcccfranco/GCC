@@ -20,7 +20,7 @@ import { useSongsIndex } from "@/hooks/useSongsIndex";
 import type { Report } from "@/types/report";
 import type { SongProposal } from "@/types/songProposal";
 import { useReception } from "@/components/admin/Reception";
-import { Pilules } from "@/components/harmonie/Pilules";
+import { Pilules } from "@/components/layout/Onglets";
 import { useDisposition } from "@/hooks/useDisposition";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";

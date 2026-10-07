@@ -85,8 +85,10 @@ export function PersonnesVolets() {
       </>
     );
 
+  // Dans la colonne de 400 px, les filtres se replient sur plusieurs lignes (planche) au lieu de
+  // défiler en largeur comme la rangée de `Pilules` le fait ailleurs.
   const liste = (
-    <div className="p-3 space-y-3">
+    <div className="p-3 space-y-3 [&_[data-onglets=pilules]]:mx-0 [&_[data-onglets=pilules]]:flex-wrap [&_[data-onglets=pilules]]:overflow-visible [&_[data-onglets=pilules]]:px-0">
       <FiltresPersonnes f={f} />
       {d.loadingProfiles ? (
         <p className="py-6 text-center text-sm text-muted-foreground">Chargement…</p>
@@ -102,6 +104,7 @@ export function PersonnesVolets() {
               <div key={p.uid} className={`rounded-xl transition-colors ${actif ? "bg-secondary" : "hover:bg-secondary/60"}`}>
                 <LignePersonne
                   p={p}
+                  compact
                   actif={actif}
                   onClick={() => choisir(p.uid)}
                   fin={<ChevronRight className="mt-2 h-4 w-4 shrink-0 text-muted-foreground/60" aria-hidden />}
@@ -142,7 +145,9 @@ export function PersonnesVolets() {
       p={choisi}
       equipes={d.equipes}
       planning={d.planningData}
-      onModifier={() => setModif(true)}
+      // La personne passe dans l'adresse dès « Modifier » : sans `?uid=`, la choisie est la
+      // première de la liste filtrée, et chercher ou trier remonterait le formulaire sur une autre.
+      onModifier={() => { choisir(choisi.uid); setModif(true); }}
       onPoles={(poles) => maj({ ...choisi, poles })}
     />
   );

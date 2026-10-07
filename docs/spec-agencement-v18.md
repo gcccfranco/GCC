@@ -616,3 +616,41 @@ la barre d'onglets : une page sans barre du bas (rare) le verra plus haut que n�
   (cinq projets) et le test « annonces retirées » d'`evenements` : 404 verts, 31 sautés (propres à un appareil) ;
   `back-office-coupe` (second serveur) vert ; `tsc --noEmit` et `npm run lint` sans erreur.
 - **Reste** : rien pour T5. **Timothée** : rien à publier ; relire les libellés 中文 ci-dessus.
+- 07/10/2026 : **relecture de T5** (deux relectures, quinze constats), commit `fix(V18T5): relecture — …`.
+  **Lot fini et relu.** Corrigé, chaque fois avec un test vu rouge puis vert :
+  - **Personnes en deux volets** : « Modifier » fixe la personne dans l'adresse (`?uid=`). Sans elle, la
+    personne choisie était la première de la liste filtrée : chercher ou trier remontait le formulaire, et ses
+    droits, sur une autre personne. Les lignes sont courtes (`LignePersonne compact` : avatar, nom, services,
+    sans e-mail ni date) et les filtres se replient sur plusieurs lignes dans la colonne de 400 px.
+  - **Derniers envois** (Notifier) : `getEnvoisManuels` ne demande à Firestore que les envois manuels
+    (`kind == "manual"`, une égalité sans tri, donc sans index composite), triés dans le navigateur. Avant,
+    on lisait les 50 dernières notifications et on gardait les manuelles : cinquante rappels cachaient un
+    envoi plus ancien, et chaque ouverture coûtait 50 lectures. Une lecture refusée affiche « Impossible de
+    lire les derniers envois » au lieu de « aucune ».
+  - **Confirmations dans le site** : supprimer une réponse au questionnaire (« Par personne »), et
+    « Recalculer depuis l'organigramme », dont la fenêtre porte l'aide (sur téléphone, le bouton n'est
+    qu'une icône et l'infobulle n'existe pas au toucher).
+  - **En-têtes** : le sous-titre d'Organigramme porte l'année en cours (`{{annee}}`, FR et 中文). Le rail
+    d'Équipes n'est posé que pour un admin, sans bloc vide pour les autres. Le sous-titre de Messages n'est
+    posé que si Réception l'est (un compte qui peut seulement notifier n'a pas de sous-titre).
+  - **Accessibilité** : le panneau d'édition d'une équipe est décrit par son sous-titre (`DrawerDescription`),
+    sans l'avertissement de Radix. L'interrupteur des inscriptions a un nom fixe, « Inscriptions ouvertes » :
+    il annonce lui-même son état.
+  - **Libellés et imports** : le pied de Notifier dit « Envoyer à n personnes » aussi pour « Tout le monde ».
+    `ReceptionVolets` importe `Pilules` de `layout/Onglets` (le relais `harmonie/Pilules` peut partir à Z).
+  - **Captures** : le Questionnaire est aussi capturé avec trois réponses et « Impression générale » ouverte
+    (moyenne, barres), aux cinq tailles. Vu en les comparant à la planche : la moyenne d'une question
+    s'écrivait « 4.0 » à côté du « 3,9 » de la partie ; elle s'écrit « 4,0 » (aussi dans l'ancienne
+    administration, qui partage la carte).
+  - **Suites** : `agencement-v18-t5`, `back-office-admin`, `equipes`, `pages-en-grand-reception`, `evenements`
+    (cinq tailles), `halo-partout`, `barre-back-office`, `tableau-de-bord` (ordinateur) : 743 verts, 61 sautés
+    (propres à un appareil) ; `back-office-coupe` (second serveur) : 59 verts ; `tsc --noEmit` et
+    `npm run lint` sans erreur (51 avertissements, les mêmes qu'avant).
+  - **Laissé** : le badge des inscriptions dit « n nouveaux comptes » et « Voir les n » (ou « Voir le
+    compte ») ; la planche dit « n comptes à valider », la spec « n en attente ». Aucune validation de compte
+    n'existe : ce sont les comptes créés ces sept jours. Le libellé reste tel quel, à confirmer par Timothée.
+- **Reste** : rien pour T5.
+- **Timothée** : rien à publier (ni règle Firestore ni index : la requête des derniers envois n'en demande
+  pas). Relire les libellés 中文 : `equipes.recalcul.question` (按组织架构重新计算？), `equipes.recalcul.action`
+  (重新计算), `equipes.sousTitreGestion` (avec l'année). Choisir le libellé du badge des inscriptions :
+  « n nouveaux comptes » (actuel) ou « n en attente » (spec).

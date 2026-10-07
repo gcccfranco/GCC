@@ -249,10 +249,12 @@ export function ServicesDuMembre({ p }: { p: UserProfile }) {
 
 /** Une ligne de la liste : avatar, nom, e-mail, services. `fin` : chevron ou autre. */
 export function LignePersonne({
-  p, onClick, actif, deplie, fin,
+  p, onClick, compact, actif, deplie, fin,
 }: {
   p: UserProfile;
   onClick: () => void;
+  /** Deux volets (B9) : avatar, nom, services ; l'e-mail et la date sont dans la fiche. */
+  compact?: boolean;
   /** Choisie dans les deux volets (`aria-current`). */
   actif?: boolean;
   /** Dépliée sur place (un volet, `aria-expanded`). */
@@ -274,11 +276,13 @@ export function LignePersonne({
             <span className="ml-2 text-xs font-semibold text-muted-foreground">admin</span>
           )}
         </p>
-        <p className="text-xs text-muted-foreground truncate">
-          {p.email}
-          {p.planningName ? ` · planning : ${p.planningName}` : ""}
-          {p.createdAt ? ` · inscrit le ${p.createdAt.toLocaleDateString("fr-FR")}` : ""}
-        </p>
+        {!compact && (
+          <p className="text-xs text-muted-foreground truncate">
+            {p.email}
+            {p.planningName ? ` · planning : ${p.planningName}` : ""}
+            {p.createdAt ? ` · inscrit le ${p.createdAt.toLocaleDateString("fr-FR")}` : ""}
+          </p>
+        )}
         <ServicesDuMembre p={p} />
       </div>
       {fin}

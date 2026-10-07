@@ -21,7 +21,7 @@ import { useDisposition } from "@/hooks/useDisposition";
 import { Halo } from "@/components/layout/Halo";
 import { BandeauEquipes } from "@/components/equipes/BandeauEquipes";
 import { FilterButtons } from "@/components/planning/FilterButtons";
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
+import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useProfile, listProfiles } from "@/lib/firebase/users";
@@ -208,9 +208,12 @@ function PanneauEquipe({
 }) {
   const { t } = useTranslation();
   const aDroite = useDisposition() === "grand";
+  const sousTitre = def ? t(`equipes.soustitre.${def.id}`) : "";
   return (
     <Drawer open={def !== null} onOpenChange={(o) => !o && onClose()} direction={aDroite ? "right" : "bottom"}>
       <DrawerContent
+        // Le sous-titre de l'équipe décrit le panneau ; sans lui, pas de description (Radix).
+        {...(sousTitre ? {} : { "aria-describedby": undefined })}
         className={aDroite
           ? "left-auto top-0 bottom-0 mt-0 h-full w-[420px] rounded-none rounded-l-2xl border-y-0 border-r-0 [&>div:first-child]:hidden"
           : "max-h-[90dvh]"}
@@ -219,9 +222,7 @@ function PanneauEquipe({
           <>
             <DrawerHeader className="pb-1 text-left">
               <DrawerTitle>{t(`equipes.team.${def.id}`)}</DrawerTitle>
-              {t(`equipes.soustitre.${def.id}`) && (
-                <p className="text-sm text-muted-foreground">{t(`equipes.soustitre.${def.id}`)}</p>
-              )}
+              {sousTitre && <DrawerDescription>{sousTitre}</DrawerDescription>}
             </DrawerHeader>
             <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-6">
               <EditionEquipe

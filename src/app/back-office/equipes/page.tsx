@@ -22,9 +22,9 @@ export default function OrganigrammePage() {
       gestion
       enTete={{
         titre: t("backOffice.entrees.equipes"),
-        sousTitre: t("equipes.sousTitreGestion"),
+        sousTitre: t("equipes.sousTitreGestion", { annee: new Date().getFullYear() }),
         outils: admin ? recalcul.bouton : undefined,
-        onglets: <RailEquipes />,
+        onglets: admin ? <RailEquipes /> : undefined,
         sousEnTete: admin ? recalcul.resultat : undefined,
       }}
     />

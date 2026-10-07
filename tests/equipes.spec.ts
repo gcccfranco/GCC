@@ -288,10 +288,14 @@ test("admin : « Recalculer depuis l'organigramme » repose équipes et référe
   });
   await signInAs(page, { uid: "admin1", email: "tc328829@gmail.com", firstName: "Timothée", lastName: "C." }, DOCS, "/back-office/equipes");
   await expect(page.getByTestId("equipe-da")).toBeVisible();
-  // Agencement v18 (B8) : dans l'en-tête ; son aide passe dans l'infobulle du bouton.
+  // Agencement v18 (B8) : dans l'en-tête ; son aide dans l'infobulle du bouton et, relecture de
+  // T5, dans la fenêtre du site qui le confirme (au toucher, l'infobulle n'existe pas).
   const bouton = page.getByRole("button", { name: "Recalculer depuis l'organigramme" });
   await expect(bouton).toHaveAttribute("title", /réunions d.équipe/);
   await bouton.click();
+  const fenetre = page.getByRole("alertdialog");
+  await expect(fenetre).toContainText(/réunions d.équipe/);
+  await fenetre.getByRole("button", { name: "Recalculer", exact: true }).click();
   await expect(page.getByText("12 profils mis à jour.")).toBeVisible();
   expect(envois).toEqual([{ tous: true }]);
 });

@@ -2395,6 +2395,8 @@
     },
     "recalcul": {
       "bouton": "Recalculer depuis l'organigramme",
+      "question": "Recalculer depuis l'organigramme ?",
+      "action": "Recalculer",
       "aide": "Repose, pour chaque membre d'une équipe, ses équipes et ses référents (ses pôles ne changent pas) : c'est ce qui ouvre les réunions d'équipe à leurs membres et leur création aux référents.",
       "fait_one": "{{count}} profil mis à jour.",
       "fait_other": "{{count}} profils mis à jour.",
@@ -2497,7 +2499,7 @@
     },
     "matriceVide": "Personne ne sert au planning pour l'instant.",
     "nom": "Nom",
-    "sousTitreGestion": "Organigramme GCC Franco 2026 : il donne les pôles de chacun",
+    "sousTitreGestion": "Organigramme GCC Franco {{annee}} : il donne les pôles de chacun",
     "vue": "Vue",
     "modifierEquipe": "Modifier {{nom}}",
     "compte": {

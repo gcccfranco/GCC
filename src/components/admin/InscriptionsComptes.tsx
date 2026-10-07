@@ -52,7 +52,8 @@ export function InscriptionsComptes({
             checked={!!regOpen}
             disabled={regOpen === null || togglingReg}
             onCheckedChange={() => void toggleRegistration()}
-            aria-label={regOpen ? "Fermer les inscriptions" : "Ouvrir les inscriptions"}
+            // Un nom fixe : l'interrupteur annonce lui-même son état (activé, désactivé).
+            aria-label="Inscriptions ouvertes"
           />
           <div className="min-w-0 flex-1">
             <p className="text-[15px] font-semibold text-foreground">

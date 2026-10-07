@@ -2,22 +2,27 @@
 
 // « Recalculer depuis l'organigramme » (lot U6, R4) : pose équipes et référents
 // (`dansEquipes`, `referentDe`) de tous les membres des équipes — les pôles ne
-// bougent pas. Idempotent : rien à confirmer. Admins seuls (`{ tous: true }` de
-// /api/equipes/poles). Retours du 06/10/2026 : l'onglet Import qui le portait est
-// retiré. Agencement v18 (B8 de docs/spec-agencement-v18.md) : le bouton passe dans
-// l'en-tête d'Équipes (outil en contour), son résultat s'affiche sous l'en-tête :
-// le hook rend les deux morceaux, que la page pose chacun à sa place.
+// bougent pas. Admins seuls (`{ tous: true }` de /api/equipes/poles). Retours du
+// 06/10/2026 : l'onglet Import qui le portait est retiré. Agencement v18 (B8 de
+// docs/spec-agencement-v18.md) : le bouton passe dans l'en-tête d'Équipes (outil en
+// contour), son résultat s'affiche sous l'en-tête : le hook rend les deux morceaux, que
+// la page pose chacun à sa place. Relecture de T5 : sur téléphone le bouton n'est qu'une
+// icône et l'infobulle n'existe pas au toucher ; l'aide (ce que le calcul écrit sur les
+// profils) se lit dans la fenêtre du site, avant de lancer.
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { RefreshCw } from "lucide-react";
 import { authHeader } from "@/lib/firebase/setlists";
+import { useConfirmer } from "@/components/layout/Confirmer";
 
 export function useRecalculOrganigramme() {
   const { t } = useTranslation();
+  const confirmer = useConfirmer();
   const [etat, setEtat] = useState<"busy" | number | null>(null);
   const [erreur, setErreur] = useState("");
 
   async function recalculer() {
+    if (!(await confirmer({ titre: t("equipes.recalcul.question"), texte: t("equipes.recalcul.aide"), action: t("equipes.recalcul.action") }))) return;
     setEtat("busy");
     setErreur("");
     try {

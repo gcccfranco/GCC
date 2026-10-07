@@ -133,7 +133,7 @@ test.describe("B2 : Équipes (Organigramme, Personnes)", () => {
     // Agencement v18 (B9) : la carte des inscriptions, dans l'en-tête, avant la liste des membres.
     const inscriptions = page.getByRole("region", { name: "Inscriptions" });
     await expect(inscriptions).toBeVisible();
-    await expect(inscriptions.getByRole("switch", { name: /(Fermer|Ouvrir) les inscriptions/ })).toBeVisible();
+    await expect(inscriptions.getByRole("switch", { name: "Inscriptions ouvertes", exact: true })).toBeVisible();
     const yInscriptions = (await inscriptions.boundingBox())!.y;
     const yMembres = (await recherche.boundingBox())!.y;
     expect(yInscriptions).toBeLessThan(yMembres);

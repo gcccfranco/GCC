@@ -5,11 +5,12 @@
 // téléphone la montre (logo, « GCC Louange », le titre et le message tapés), puis « Derniers
 // envois » : les cinq dernières notifications manuelles (`kind: "manual"`, celles qu'écrit
 // Notifier, api/push/notify-audience), lues dans `notifications` (lecture permise à tout connecté).
-// `getNotifsSince` ne filtre pas le type : le tri se fait après la lecture. Bloc d'administration :
-// en français seulement (Q16 de U6).
+// Relecture de T5 : la requête ne lit que les envois manuels (`getEnvoisManuels`), et non plus les
+// 50 dernières notifications triées après coup, où cinquante rappels cachaient un envoi plus
+// ancien ; une lecture refusée se dit à part. Bloc d'administration : en français seulement (Q16 de U6).
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { getNotifsSince, type PushNotif } from "@/lib/firebase/notifications";
+import { getEnvoisManuels, type PushNotif } from "@/lib/firebase/notifications";
 
 /** Une notification de téléphone, avec le titre et le message tapés. */
 export function ApercuNotification({ titre, message }: { titre: string; message: string }) {
@@ -44,13 +45,13 @@ export function ApercuNotification({ titre, message }: { titre: string; message:
 
 /** Les cinq derniers envois de Notifier. `cle` : relu quand elle change (après un envoi). */
 export function DerniersEnvois({ cle = 0 }: { cle?: number }) {
-  const [envois, setEnvois] = useState<PushNotif[] | null>(null);
+  const [envois, setEnvois] = useState<PushNotif[] | "erreur" | null>(null);
 
   useEffect(() => {
     let vivant = true;
-    getNotifsSince(0, 50)
-      .then((n) => { if (vivant) setEnvois(n.filter((x) => x.kind === "manual").slice(0, 5)); })
-      .catch(() => { if (vivant) setEnvois([]); });
+    getEnvoisManuels(5)
+      .then((n) => { if (vivant) setEnvois(n); })
+      .catch(() => { if (vivant) setEnvois("erreur"); });
     return () => { vivant = false; };
   }, [cle]);
 
@@ -59,6 +60,8 @@ export function DerniersEnvois({ cle = 0 }: { cle?: number }) {
       <h2 className="text-[16px] font-bold text-foreground">Derniers envois</h2>
       {envois === null ? (
         <p className="mt-2 text-sm text-muted-foreground">Chargement…</p>
+      ) : envois === "erreur" ? (
+        <p className="mt-2 text-sm text-muted-foreground">Impossible de lire les derniers envois.</p>
       ) : envois.length === 0 ? (
         <p className="mt-2 text-sm text-muted-foreground">Aucune notification envoyée pour l&apos;instant.</p>
       ) : (

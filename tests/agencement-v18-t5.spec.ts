@@ -78,16 +78,53 @@ test.describe("T5 : Équipes › Organigramme", () => {
     await expect(page.getByRole("button", { name: /Nouvelle équipe/ }), "les treize équipes sont fixes").toHaveCount(0);
   });
 
-  test("« Recalculer » : le résultat sous l'en-tête", async ({ page }) => {
+  test("« Recalculer » : son aide dans la fenêtre du site, puis le résultat sous l'en-tête", async ({ page }) => {
+    // Relecture : sur téléphone le bouton n'est qu'une icône et l'infobulle n'existe pas au
+    // toucher ; l'aide (ce que le calcul écrit sur les profils) se lit avant de lancer.
+    interdireDialoguesNatifs(page);
     const envois: unknown[] = [];
     await page.route("**/api/equipes/poles", (route) => {
       envois.push(route.request().postDataJSON());
       return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: true, maj: 4 }) });
     });
     await ouvrir(page, "/back-office/equipes");
-    await enTete(page).getByRole("button", { name: "Recalculer depuis l'organigramme" }).click();
+    const bouton = enTete(page).getByRole("button", { name: "Recalculer depuis l'organigramme" });
+    await bouton.click();
+    await expect(fenetreDuSite(page)).toContainText("ouvre les réunions d'équipe à leurs membres");
+    await repondreDansLeSite(page, "Annuler");
+    expect(envois).toEqual([]);
+    await bouton.click();
+    await repondreDansLeSite(page, "Recalculer");
     await expect(enTete(page).getByText("4 profils mis à jour.")).toBeVisible();
     expect(envois).toEqual([{ tous: true }]);
+  });
+
+  test("le sous-titre porte l'année en cours", async ({ page }) => {
+    await ouvrir(page, "/back-office/equipes", DOCS, ADMIN, new Date("2027-02-01T10:00:00"));
+    await expect(enTete(page)).toContainText("Organigramme GCC Franco 2027 : il donne les pôles de chacun");
+  });
+
+  test("droit Équipes sans être admin : ni rail ni sa marge dans l'en-tête", async ({ page }) => {
+    const equipier: FakeProfile = { uid: "u-equipier", email: "equipier@example.com", firstName: "Elsa", lastName: "N.", equipes: true };
+    await ouvrir(page, "/back-office/equipes", DOCS, equipier);
+    await expect(page.getByTestId("equipe-da").getByRole("button", { name: "Modifier TEAM DA" })).toBeVisible();
+    await expect(ongletsRail(page)).toHaveCount(0);
+    await expect(enTete(page).locator(":scope > div:empty"), "aucun bloc vide (la place du rail)").toHaveCount(0);
+  });
+
+  test("le panneau d'édition est décrit, sans avertissement de Radix", async ({ page }) => {
+    const avertissements: string[] = [];
+    page.on("console", (m) => { if (/Missing `Description`/.test(m.text())) avertissements.push(m.text()); });
+    await ouvrir(page, "/back-office/equipes");
+    await page.getByTestId("equipe-da").getByRole("button", { name: "Modifier TEAM DA" }).click();
+    await expect(page.getByRole("dialog", { name: "TEAM DA" })).toHaveAccessibleDescription("Direction Artistique");
+    await page.keyboard.press("Escape");
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+    // Une équipe sans sous-titre.
+    await page.getByTestId("equipe-traduction").getByRole("button", { name: "Modifier TEAM TRADUCTION" }).click();
+    await expect(page.getByRole("dialog", { name: "TEAM TRADUCTION" })).toBeVisible();
+    await page.waitForTimeout(300);
+    expect(avertissements).toEqual([]);
   });
 
   test("crayon → panneau d'édition ; enregistrer met à jour la carte", async ({ page }, info) => {
@@ -155,11 +192,16 @@ test.describe("T5 : Équipes › Personnes", () => {
     await expect(ongletsRail(page).getByRole("link", { name: "Personnes" })).toHaveAttribute("aria-current", "page");
   });
 
-  test("l'interrupteur ferme les inscriptions", async ({ page }) => {
+  test("l'interrupteur ferme les inscriptions ; son nom ne change pas, son état dit ouvert ou fermé", async ({ page }) => {
     const db = await ouvrir(page, "/back-office/equipes/personnes");
     const inscriptions = enTete(page).getByRole("region", { name: "Inscriptions" });
-    await inscriptions.getByRole("switch").click();
+    // Relecture : un `role=switch` annonce déjà son état ; un nom qui disait l'action
+    // (« Fermer les inscriptions, activé ») se lisait comme l'inverse de l'état.
+    const interrupteur = inscriptions.getByRole("switch", { name: "Inscriptions ouvertes", exact: true });
+    await expect(interrupteur).toBeChecked();
+    await interrupteur.click();
     await expect(inscriptions).toContainText("Inscriptions fermées");
+    await expect(interrupteur).not.toBeChecked();
     await expect.poll(() => db.doc("config/app")?.registrationOpen).toBe(false);
   });
 
@@ -218,6 +260,55 @@ test.describe("T5 : Équipes › Personnes", () => {
     await expect(fiche.getByRole("button", { name: "Modifier" })).toBeVisible();
     await expect.poll(() => db.doc("users/u-ysee")?.equipes).toBe(true);
   });
+
+  test("en grand : « Modifier » garde la personne quand la liste change (recherche, tri)", async ({ page }, info) => {
+    test.skip(!estGrandEcran(info), "propre aux grands écrans");
+    // Relecture : sans `?uid=`, la personne choisie était la première de la liste filtrée ;
+    // chercher un autre nom remontait le formulaire, et ses droits, sur une autre personne.
+    await ouvrir(page, "/back-office/equipes/personnes");
+    const fiche = page.locator('[data-volet="detail"]');
+    const liste = page.locator('[data-volet="liste"]');
+    await expect(fiche.getByRole("heading", { level: 2 })).toHaveText("Bérénice A.");
+    await fiche.getByRole("button", { name: "Modifier" }).click();
+    await expect(fiche.getByRole("button", { name: "Enregistrer" })).toBeVisible();
+    await liste.getByPlaceholder(/Rechercher un membre/).fill("Gaspard");
+    await expect(liste.getByRole("button", { name: /Gaspard O\./ })).toBeVisible();
+    await expect(liste.getByRole("button", { name: /Bérénice A\./ })).toHaveCount(0);
+    await expect(fiche.getByRole("heading", { level: 2 })).toHaveText("Bérénice A.");
+    await expect(fiche.getByRole("button", { name: "Enregistrer" })).toBeVisible();
+    await liste.getByRole("button", { name: "A–Z" }).click();
+    await expect(fiche.getByRole("heading", { level: 2 })).toHaveText("Bérénice A.");
+    await expect(page).toHaveURL(/[?&]uid=u-berenice/);
+  });
+
+  test("en grand : une ligne de la liste = avatar, nom, services (ni e-mail ni date)", async ({ page }, info) => {
+    test.skip(!estGrandEcran(info), "propre aux grands écrans");
+    await ouvrir(page, "/back-office/equipes/personnes");
+    const ligne = page.locator('[data-volet="liste"]').getByRole("button", { name: /Gaspard O\./ });
+    await expect(ligne).toContainText("Présidence");
+    await expect(ligne).not.toContainText("gaspard@example.com");
+    await expect(ligne).not.toContainText("planning :");
+    await expect(ligne).not.toContainText("inscrit le");
+  });
+
+  test("en grand : les filtres se replient dans la colonne de la liste, sans défiler en largeur", async ({ page }, info) => {
+    test.skip(!estGrandEcran(info), "propre aux grands écrans");
+    // Relecture : dans la colonne de 400 px, la rangée de pilules défilait et coupait la dernière ;
+    // la planche les replie sur plusieurs lignes.
+    await ouvrir(page, "/back-office/equipes/personnes");
+    const liste = page.locator('[data-volet="liste"]');
+    const filtres = liste.getByRole("group", { name: "Filtrer les membres" });
+    await expect(filtres.getByRole("button", { name: "Ne sert pas" })).toBeVisible();
+    const { defile, lignes } = await filtres.evaluate((e) => ({
+      defile: e.scrollWidth > e.clientWidth + 1,
+      lignes: new Set([...e.children].map((b) => Math.round(b.getBoundingClientRect().top))).size,
+    }));
+    expect(defile, "aucun défilement en largeur").toBe(false);
+    expect(lignes, "plusieurs lignes de pilules").toBeGreaterThan(1);
+    const boite = (await liste.boundingBox())!;
+    const derniere = (await filtres.getByRole("button", { name: "Ne sert pas" }).boundingBox())!;
+    expect(derniere.x + derniere.width, "la dernière pilule entière dans la colonne").toBeLessThanOrEqual(boite.x + boite.width);
+  });
 });
 
 // ─── Messages ────────────────────────────────────────────────────────────────
@@ -235,6 +326,25 @@ const MESSAGES_DOCS: Record<string, Record<string, unknown>> = {
   "songProposals/p1": {
     title: "Un chant proposé", youtubeUrl: "https://example.com/video", pdfUrl: "",
     status: "pending", createdAt: new Date("2026-09-29T10:00:00Z"), authorName: "Léonie P.", authorId: "uid-leonie",
+  },
+};
+
+/** Trois réponses au questionnaire (personnes fictives), « Impression générale » notée. */
+const SONDAGE: Record<string, Record<string, unknown>> = {
+  "surveyResponses/u-a": {
+    authorName: "Anouk T.", authorEmail: "", submitted: true, createdAt: new Date("2026-10-01T10:00:00Z"),
+    updatedAt: new Date("2026-10-01T10:00:00Z"),
+    answers: { frequency: "weekly", overall: 4, ease: 3, speed: 4, readability: 5, reliability: "rare", mobile: "great", recommend: "yes" },
+  },
+  "surveyResponses/u-b": {
+    authorName: "Basile V.", authorEmail: "", submitted: true, createdAt: new Date("2026-10-03T10:00:00Z"),
+    updatedAt: new Date("2026-10-03T10:00:00Z"),
+    answers: { frequency: "daily", overall: 5, ease: 4, speed: 3, readability: 4, reliability: "never", mobile: "ok", recommend: "yes" },
+  },
+  "surveyResponses/u-c": {
+    authorName: "Capucine L.", authorEmail: "", submitted: false, createdAt: new Date("2026-10-04T10:00:00Z"),
+    updatedAt: new Date("2026-10-04T10:00:00Z"),
+    answers: { frequency: "weekly", overall: 3, ease: 4, mobile: "problems", recommend: "maybe" },
   },
 };
 
@@ -343,26 +453,101 @@ test.describe("T5 : Messages", () => {
     await expect(envois).not.toContainText("Envoi 2");
   });
 
-  test("Questionnaire : la première partie ouverte d'office", async ({ page }, info) => {
-    const docs = {
-      "surveyResponses/u-a": {
-        authorName: "Anouk T.", authorEmail: "", submitted: true, createdAt: new Date("2026-10-01T10:00:00Z"),
-        updatedAt: new Date("2026-10-01T10:00:00Z"), answers: { frequency: "weekly", overall: 4, ease: 3 },
-      },
-      "surveyResponses/u-b": {
-        authorName: "Basile V.", authorEmail: "", submitted: true, createdAt: new Date("2026-10-03T10:00:00Z"),
-        updatedAt: new Date("2026-10-03T10:00:00Z"), answers: { frequency: "daily", overall: 5, ease: 4 },
+  test("Notifier seul (le droit de notifier, sans être admin) : pas le sous-titre de Réception", async ({ page }) => {
+    const notifieur: FakeProfile = { uid: "u-notifieur", email: "notifieur@example.com", firstName: "Noé", lastName: "T.", notify: ["Groupe Paix"] };
+    await ouvrir(page, "/back-office/messages/notifier", DOCS, notifieur);
+    await expect(page.getByRole("region", { name: "Aperçu" })).toBeVisible();
+    await expect(titre(page)).toHaveText("Messages");
+    await expect(ongletsRail(page), "Notifier seul : pas de rail").toHaveCount(0);
+    await expect(enTete(page)).not.toContainText("Ce que les membres signalent et proposent");
+  });
+
+  test("Notifier : « Tout le monde » compte aussi les personnes au pied", async ({ page }) => {
+    await ouvrir(page, "/back-office/messages/notifier", DOCS);
+    await page.getByRole("group", { name: "Audience" }).getByRole("button", { name: "Tout le monde" }).click();
+    await expect(page.getByRole("button", { name: /^Envoyer à \d+ personnes$/ })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Envoyer à tout le monde" })).toHaveCount(0);
+  });
+
+  test("Notifier : « Derniers envois » trouve les envois manuels derrière cinquante rappels, et ne lit qu'eux", async ({ page }) => {
+    // Relecture : lire les 50 dernières notifications puis garder les `manual` ne voyait pas un
+    // envoi plus ancien que cinquante rappels (« aucune » à tort), et coûtait 50 lectures.
+    const docs: Record<string, Record<string, unknown>> = {
+      ...DOCS,
+      "notifications/ancien": {
+        title: "Envoi ancien", body: "…", url: "/", kind: "manual", recipients: ["u-a"], everyone: false,
+        createdAt: new Date("2026-08-01T10:00:00Z"),
       },
     };
-    await ouvrir(page, "/back-office/messages/questionnaire", docs);
+    for (let i = 0; i < 50; i++) {
+      docs[`notifications/rappel-${i}`] = {
+        title: `Rappel ${i}`, body: "…", url: "/", kind: "reminder", recipients: ["u-a"], everyone: false,
+        createdAt: new Date(Date.UTC(2026, 8, 1, 6, i)),
+      };
+    }
+    const requetes: string[] = [];
+    page.on("request", (r) => {
+      const corps = r.postData() ?? "";
+      if (/documents:runQuery/.test(r.url()) && /"collectionId":"notifications"/.test(corps)) requetes.push(corps);
+    });
+    await ouvrir(page, "/back-office/messages/notifier", docs);
+    const envois = page.getByRole("region", { name: "Derniers envois" });
+    await expect(envois.getByRole("listitem")).toHaveCount(1);
+    await expect(envois).toContainText("Envoi ancien");
+    await expect(envois).not.toContainText("Rappel");
+    // Le filtre est dans la requête (Firestore ne renvoie que les envois manuels), sans tri : une
+    // égalité seule ne demande pas d'index composite. (La cloche lit aussi `notifications`.)
+    const requete = requetes.map((c) => JSON.parse(c).structuredQuery)
+      .find((q) => q.where?.fieldFilter?.field?.fieldPath === "kind");
+    expect(requete?.where).toEqual({
+      fieldFilter: { field: { fieldPath: "kind" }, op: "EQUAL", value: { stringValue: "manual" } },
+    });
+    expect(requete?.orderBy).toBeUndefined();
+  });
+
+  test("Notifier : une lecture refusée se dit, au lieu de « aucun envoi »", async ({ page }) => {
+    await ouvrir(page, "/back-office/messages/notifier", DOCS);
+    await expect(page.getByRole("region", { name: "Derniers envois" })).toContainText("Aucune notification envoyée pour l'instant.");
+    // Après la session simulée : cette route passe avant la sienne.
+    await page.route(/documents:runQuery/, (route) =>
+      /"collectionId":"notifications"/.test(route.request().postData() ?? "")
+        ? route.fulfill({ status: 500, contentType: "application/json", body: "{}" })
+        : route.fallback());
+    await page.goto("/back-office/messages/notifier");
+    const envois = page.getByRole("region", { name: "Derniers envois" });
+    await expect(envois).toContainText("Impossible de lire les derniers envois.");
+    await expect(envois).not.toContainText("Aucune notification");
+  });
+
+  test("Questionnaire : supprimer une réponse demande confirmation dans le site", async ({ page }, info) => {
+    interdireDialoguesNatifs(page);
+    const db = await ouvrir(page, "/back-office/messages/questionnaire", SONDAGE);
+    if (estGrandEcran(info)) await page.locator('[data-volet="liste"]').getByRole("button", { name: /Par personne/ }).click();
+    else await page.getByRole("button", { name: "Détail par personne" }).click();
+    await page.getByRole("button", { name: /Anouk T\./ }).click();
+    await page.getByRole("button", { name: "Supprimer la réponse" }).click();
+    await expect(fenetreDuSite(page)).toContainText("Anouk T.");
+    await repondreDansLeSite(page, "Annuler");
+    expect(db.doc("surveyResponses/u-a")).toBeDefined();
+    await page.getByRole("button", { name: "Supprimer la réponse" }).click();
+    await repondreDansLeSite(page, "Supprimer");
+    await expect.poll(() => db.doc("surveyResponses/u-a")).toBeUndefined();
+    await expect(page.getByRole("button", { name: /Anouk T\./ })).toHaveCount(0);
+  });
+
+  test("Questionnaire : la première partie ouverte d'office", async ({ page }, info) => {
+    await ouvrir(page, "/back-office/messages/questionnaire", SONDAGE);
     if (estGrandEcran(info)) {
       const partie = page.locator('[data-volet="detail"]');
       await expect(partie.getByRole("heading", { level: 2 })).toHaveText("Toi et ton usage");
       const sommaire = page.locator('[data-volet="liste"]');
-      await expect(sommaire).toContainText("2 réponses");
+      await expect(sommaire).toContainText("3 réponses");
       await sommaire.getByRole("button", { name: /Impression générale/ }).click();
       await expect(partie.getByRole("heading", { level: 2 })).toHaveText("Impression générale");
-      await expect(partie).toContainText("moyenne");
+      await expect(partie).toContainText("moyenne 3,9 sur 5");
+      // La moyenne d'une question s'écrit comme celle de la partie (planche : « 4,0 »).
+      await expect(partie).toContainText("4,0/5 (3)");
+      await expect(partie).not.toContainText("4.0/5");
       await expect(sommaire.getByRole("link", { name: "Voir la page du questionnaire" })).toHaveAttribute("href", /\/questionnaire/);
     } else {
       // Un volet : les parties dépliables, la première ouverte.
@@ -374,7 +559,7 @@ test.describe("T5 : Messages", () => {
 // ─── Captures, regardées à l'œil ─────────────────────────────────────────────
 
 test("captures : Équipes et Messages", async ({ page }, info) => {
-  const docs = { ...DOCS, ...MESSAGES_DOCS };
+  const docs = { ...DOCS, ...MESSAGES_DOCS, ...SONDAGE };
   await ouvrir(page, "/back-office/equipes", docs);
   await expect(page.getByTestId("equipe-da")).toBeVisible();
   const dossier = "test-results/agencement-v18-t5";
@@ -394,4 +579,14 @@ test("captures : Équipes et Messages", async ({ page }, info) => {
     await page.waitForTimeout(700);
     await page.screenshot({ path: `${dossier}/${nom}-${info.project.name}.png` });
   }
+  // Relecture : le Questionnaire avec des réponses, une partie notée choisie (moyenne, barres).
+  if (estGrandEcran(info)) {
+    await page.locator('[data-volet="liste"]').getByRole("button", { name: /Impression générale/ }).click();
+    await expect(page.locator('[data-volet="detail"]')).toContainText("moyenne");
+  } else {
+    await page.getByRole("button", { name: "Impression générale" }).click();
+    await expect(page.getByRole("button", { name: "Impression générale" })).toHaveAttribute("aria-expanded", "true");
+  }
+  await page.waitForTimeout(700);
+  await page.screenshot({ path: `${dossier}/questionnaire-reponses-${info.project.name}.png`, fullPage: !estGrandEcran(info) });
 });

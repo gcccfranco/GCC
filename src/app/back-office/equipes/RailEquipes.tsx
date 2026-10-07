@@ -6,17 +6,13 @@
 // equipes/{id} (isEquipier), users/{uid} et config/app (admins) gardent leurs règles.
 // Agencement v18 (B8, B9 de docs/spec-agencement-v18.md) : chaque page pose l'en-tête commun
 // (`EnTetePage`, même titre, même rail) avec son sous-titre et sa rangée ; ce rail en est la
-// part commune.
+// part commune. Admins seuls : la page ne le pose pas sinon (une seule sous-partie, pas de rail,
+// et pas sa place vide dans l'en-tête).
 import { useTranslation } from "react-i18next";
-import { useProfile } from "@/lib/firebase/users";
-import { isAdminUser } from "@/lib/access";
 import { OngletsRail } from "@/components/layout/Onglets";
 
 export function RailEquipes() {
   const { t } = useTranslation();
-  const { user } = useProfile();
-  // Une seule sous-partie (droit Équipes sans être admin) : pas de rail, comme avant.
-  if (!isAdminUser(user)) return null;
   return (
     <OngletsRail
       etiquette={t("backOffice.entrees.equipes")}
