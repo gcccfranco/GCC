@@ -37,6 +37,8 @@ export const SECTIONS_EN_DEUX_VOLETS: readonly string[] = [
   // mais garde l'en-tête de la section) et Back-Office › Réunions.
   "/back-office/evenements",
   "/back-office/reunions",
+  // Agencement v18 (T1, B1) : Back-Office › Tâches (`/back-office/taches/[pole]/[id]`).
+  "/back-office/taches",
   // Lot U5 (Q15) : Chants, dont `songs/ChantsVolets` porte la liste et règle son fondu.
   "/songs",
 ];

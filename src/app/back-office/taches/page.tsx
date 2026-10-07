@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import { useProfile } from "@/lib/firebase/users";
 import { tachesDuBackOffice } from "@/lib/access";
+import { EnTetePage } from "@/components/layout/EnTetePage";
 
 export default function TachesPage() {
   const { t } = useTranslation();
@@ -17,5 +18,11 @@ export default function TachesPage() {
     if (premier) router.replace(`/back-office/taches/${premier}`);
   }, [premier, router]);
 
-  return premier ? null : <p className="text-sm text-muted-foreground">{t("taches.aucunPole")}</p>;
+  if (premier) return null;
+  return (
+    <>
+      <EnTetePage titre={t("backOffice.entrees.taches")} />
+      <p className="px-[var(--marge-page)] text-sm text-muted-foreground">{t("taches.aucunPole")}</p>
+    </>
+  );
 }

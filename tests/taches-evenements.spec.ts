@@ -1,6 +1,6 @@
 import { expect, test, type Browser, type Page } from "@playwright/test";
 import { fakeFirestore, signInAs, type FakeProfile } from "./helpers/fakeSession";
-import { fenetreDuSite, repondreDansLeSite } from "./helpers/agencement";
+import { estGrandEcran, fenetreDuSite, repondreDansLeSite } from "./helpers/agencement";
 import { tachesDupliquees } from "../src/lib/taches/echeances";
 import type { Tache } from "../src/types/tache";
 
@@ -96,15 +96,23 @@ async function autrePage(browser: Browser): Promise<Page> {
 
 const carte = (page: Page) => page.getByTestId("taches-carte");
 
+/** Back-Office › Tâches (agencement v18, T1) : la ligne ouvre la fiche, « Modifier » le formulaire,
+ *  dans le volet en grand, en feuille sur un volet. */
+async function modifier(page: Page, ligne: RegExp) {
+  await page.locator('[data-volet="liste"]').getByRole("button", { name: ligne }).click();
+  await expect(page).toHaveURL(/\/back-office\/taches\/da\/t\d/);
+  await page.getByRole("button", { name: "Modifier", exact: true }).click();
+  return page.getByRole(estGrandEcran(test.info()) ? "form" : "dialog", { name: "Modifier la tâche" });
+}
+
 test("une tâche sans champ evenement se lit non liée", async ({ page }) => {
   // Document d'avant le lot 14 : aucun champ `evenement`, aucune migration.
   const { evenement, ...avant } = tacheDoc({ titre: "Fond PPT" });
   void evenement;
   const db = await signInAs(page, RUTH_DA, { "poles/da/taches/t1": avant }, "/back-office/taches/da");
-  await expect(page.getByText("Fond PPT")).toBeVisible();
+  await expect(page.locator(".group-row", { hasText: "Fond PPT" })).toBeVisible();
   await expect(page.getByText(/^pour /)).toHaveCount(0);
-  await page.getByRole("button", { name: /^Fond PPT/ }).click();
-  const form = page.getByRole("dialog", { name: "Modifier la tâche" });
+  const form = await modifier(page, /^Fond PPT/);
   await expect(form.getByLabel("Répétition")).toBeVisible();
   await expect(form.getByRole("button", { name: "Détacher de l'évènement" })).toHaveCount(0);
   await form.getByRole("button", { name: "Enregistrer" }).click();
@@ -249,8 +257,7 @@ test("ligne : une tâche liée dit “pour Noël 2026” sur la page du pôle et
 
 test("formulaire : Détacher écrit evenement: null ; une tâche liée ne propose pas de répétition", async ({ page }) => {
   const db = await signInAs(page, RUTH_DA, DOCS, "/back-office/taches/da");
-  await page.getByRole("button", { name: /^Fond PPT de Noël/ }).click();
-  const form = page.getByRole("dialog", { name: "Modifier la tâche" });
+  const form = await modifier(page, /^Fond PPT de Noël/);
   await expect(form).toContainText("Noël 2026");
   await expect(form.getByLabel("Répétition")).toHaveCount(0);
   await capture(page, "tache-liee-formulaire");
@@ -263,6 +270,8 @@ test("formulaire : Détacher écrit evenement: null ; une tâche liée ne propos
   const ecrit = db.writes.find((w) => w.method === "PATCH" && w.path === "poles/da/taches/t1");
   expect(ecrit?.data).toHaveProperty("evenement", null);
   expect(db.doc("poles/da/taches/t1")?.evenement).toBeNull();
+  // Sur un volet, la fiche est une page : la ligne se relit sur la liste.
+  await page.goto("/back-office/taches/da");
   await expect(page.locator(".group-row", { hasText: "Fond PPT de Noël" })).not.toContainText("pour Noël 2026");
 });
 

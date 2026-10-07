@@ -33,13 +33,23 @@ type Valeur = {
   poles: TachePole[];
   items: TacheAvecFois[];
   chargement: boolean;
-  reload: () => Promise<void>;
+  /** Sans pôle, relit tout ; avec, seulement ce pôle (après une écriture dans ce pôle). */
+  reload: (pole?: TachePole) => Promise<void>;
   aujourdhui: string;
   /** Nom écrit sur une fois commencée ou terminée. */
   parNom: string;
+  /** Adresse des fiches : `/taches` (App) ou `/back-office/taches` (agencement v18, B1). */
+  racine: string;
+  /** Back-Office › Tâches (B1, B2) : la fiche porte « ⋯ », l'historique, et « Modifier » ouvre le
+   *  formulaire dans le volet en grand ; dans l'App, la fiche d'aujourd'hui. */
+  backOffice: boolean;
 };
 
 const Contexte = createContext<Valeur | null>(null);
+
+/** Donne les tâches d'une section à ses pages (`SectionTaches` dans l'App ; le layout de
+ *  Back-Office › Tâches, agencement v18, B1). */
+export const FournirTaches = Contexte.Provider;
 
 export function useMesTaches(): Valeur {
   const v = useContext(Contexte);
@@ -48,8 +58,8 @@ export function useMesTaches(): Valeur {
 }
 
 /** Adresse de la fiche d'une ligne ; une tâche répétée dit laquelle de ses fois. */
-export function adresseDeLaLigne(l: Ligne): string {
-  const base = `/taches/${l.tache.pole}/${l.tache.id}`;
+export function adresseDeLaLigne(l: Ligne, racine = "/taches"): string {
+  const base = `${racine}/${l.tache.pole}/${l.tache.id}`;
   return l.tache.repetition ? `${base}?date=${l.date}` : base;
 }
 
@@ -71,7 +81,7 @@ export function SectionTaches({ children }: { children: React.ReactNode }) {
   const lignes = items.flatMap(({ tache, fois }) => lignesDeTache(tache, fois, aujourdhui));
   // Dans l'ordre des échéances, tous pôles mêlés.
   const miennes = user ? aFairePour(lignes, user.uid).sort((a, b) => a.date.localeCompare(b.date)) : [];
-  const valeur: Valeur = { poles, items, chargement, reload, aujourdhui, parNom };
+  const valeur: Valeur = { poles, items, chargement, reload, aujourdhui, parNom, racine: "/taches", backOffice: false };
 
   // Même cycle que la page d'un pôle : À faire → En cours → Terminé → À faire.
   async function cocher(l: Ligne) {

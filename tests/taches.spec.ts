@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { estGrandEcran, ongletsRail } from "./helpers/agencement";
 import { echeancesDe, lignesDeTache, grouperLignes, dimancheApres, aFairePour } from "../src/lib/taches/echeances";
 import { polesDe, isPoleMember, canSeeEvenement, canCreateEvenement, creatableEvenementPours } from "../src/lib/access";
 import type { Tache, Fois } from "../src/types/tache";
@@ -151,12 +152,32 @@ function tacheDoc(over: Record<string, unknown> = {}) {
 const groupe = (page: Page, titre: string) =>
   page.locator("section", { has: page.getByRole("heading", { name: titre, exact: true }) });
 
+// Agencement v18 (T1, B1) : les tâches terminées sont repliées sous « Terminées (n) », qu'on déplie.
+async function terminees(page: Page) {
+  const nom = /^Terminées \(\d+\)$/;
+  const bouton = page.locator('[data-volet="liste"]').getByRole("button", { name: nom });
+  if ((await bouton.getAttribute("aria-expanded")) === "false") await bouton.click();
+  return page.locator('[data-volet="liste"] section', { has: page.getByRole("button", { name: nom }) });
+}
+
+// Agencement v18 (T1, B2) : en grand, « + Nouvelle tâche » (lien) ouvre le formulaire dans le volet
+// de droite (« Créer la tâche ») ; sur un volet, le rond ouvre la feuille d'aujourd'hui (« Enregistrer »).
+async function nouvelleTache(page: Page) {
+  if (estGrandEcran(test.info())) {
+    await page.getByRole("link", { name: "Nouvelle tâche" }).click();
+    return { form: page.getByRole("form", { name: "Nouvelle tâche" }), creer: "Créer la tâche" };
+  }
+  await page.getByRole("button", { name: "Nouvelle tâche" }).click();
+  return { form: page.getByRole("dialog", { name: "Nouvelle tâche" }), creer: "Enregistrer" };
+}
+const laListe = (page: Page) => page.locator('[data-volet="liste"]');
+
 test("un membre du pôle voit ses tâches rangées et en coche une, qui passe dans « Faites »", async ({ page }) => {
   const db = await signInAs(page, MEMBRE_DA, {
     "poles/da/taches/t1": tacheDoc(),
     "poles/da/taches/t2": tacheDoc({ titre: "Affiche Noël", echeance: jour(-3) }),
   }, "/back-office/taches/da");
-  await expect(page.getByRole("heading", { name: "DA", level: 2 })).toBeVisible();
+  await expect(ongletsRail(page).getByRole("link", { name: /^DA/ })).toHaveAttribute("aria-current", "page");
   await expect(groupe(page, "En retard").getByText("Affiche Noël")).toBeVisible();
   await expect(groupe(page, "Cette semaine").getByText("Fond PPT")).toBeVisible();
 
@@ -165,22 +186,21 @@ test("un membre du pôle voit ses tâches rangées et en coche une, qui passe da
   await cercle.click();
   await expect(cercle).toHaveAttribute("aria-checked", "mixed");
   await cercle.click();
-  await expect(groupe(page, "Faites").getByText("Fond PPT")).toBeVisible();
+  await expect((await terminees(page)).getByText("Fond PPT")).toBeVisible();
   expect(db.doc(`poles/da/taches/t1/fois/${jour(0)}`))
     .toMatchObject({ date: jour(0), parUid: "uid-da", parNom: "Ruth Kouassi", etat: "terminee" });
 });
 
 test("créer une tâche pour tout le pôle", async ({ page }) => {
   const db = await signInAs(page, MEMBRE_DA, {}, "/back-office/taches/da");
-  await page.getByRole("button", { name: "Nouvelle tâche" }).click();
-  const form = page.getByRole("dialog", { name: "Nouvelle tâche" });
+  const { form, creer } = await nouvelleTache(page);
   await form.getByLabel("Titre").fill("Vidéo d'annonce");
   await form.getByLabel("Échéance").fill(jour(1));
-  await form.getByRole("button", { name: "Enregistrer" }).click();
+  await form.getByRole("button", { name: creer }).click();
   await expect(form).toHaveCount(0);
   const cree = db.writes.find((w) => w.method === "POST" && w.path.startsWith("poles/da/taches/"));
   expect(cree?.data).toMatchObject({ titre: "Vidéo d'annonce", pole: "da", echeance: jour(1), responsableUid: null, repetition: null, auteurUid: "uid-da" });
-  await expect(page.getByText("Vidéo d'annonce")).toBeVisible();
+  await expect(laListe(page).getByText("Vidéo d'annonce")).toBeVisible();
 });
 
 test("une tâche répétée chaque semaine : cochée, la fois suivante apparaît", async ({ page }) => {
@@ -193,7 +213,8 @@ test("une tâche répétée chaque semaine : cochée, la fois suivante apparaît
   await cercle.click();
   await expect(cercle).toHaveAttribute("aria-checked", "mixed");
   await cercle.click();
-  await expect(groupe(page, "Faites").getByText("Fond PPT")).toBeVisible();
+  // Les deux fois terminées (la semaine passée et celle-ci) sont sous « Terminées (2) ».
+  await expect((await terminees(page)).getByText("Fond PPT")).toHaveCount(2);
   await expect(groupe(page, "Plus tard").getByText("Fond PPT")).toBeVisible();
 });
 
@@ -205,8 +226,8 @@ test("un membre d'un autre pôle ne voit pas les tâches du pôle", async ({ pag
 
 test("Tâches : chacun voit ses pôles (Back-Office › Tâches, lot U6), et rien hors pôle", async ({ page }) => {
   await signInAs(page, { ...MEMBRE_DA, serviceRoles: { "Culte Francophone": ["musicien"] } }, {}, "/back-office/taches/da");
-  const poles = page.getByRole("navigation", { name: "Sous-parties" });
-  await expect(poles.getByRole("link")).toHaveText(["DA", "Louange"]);
+  // Agencement v18 (T1, B1) : le rail des pôles, chacun avec son compte.
+  await expect(ongletsRail(page).getByRole("link")).toHaveText([/^DA/, /^Louange/]);
 });
 
 test("Moi : « Mes tâches » compte mes tâches et celles de mon pôle sans responsable", async ({ page }) => {
@@ -306,12 +327,11 @@ test("nommer quelqu'un d'autre responsable le prévient", async ({ page }) => {
   const db = await signInAs(page, MEMBRE_DA, {
     "users/uid-paul": { email: "paul@example.com", firstName: "Paul", lastName: "Dupont", planningName: "", serviceRoles: {}, annonces: [], notify: [], poles: ["da"] },
   }, "/back-office/taches/da");
-  await page.getByRole("button", { name: "Nouvelle tâche" }).click();
-  const form = page.getByRole("dialog", { name: "Nouvelle tâche" });
+  const { form, creer } = await nouvelleTache(page);
   await form.getByLabel("Titre").fill("Affiche");
   await form.getByLabel("Échéance").fill(jour(2));
   await form.getByLabel("Responsable").selectOption({ label: "Paul Dupont" });
-  await form.getByRole("button", { name: "Enregistrer" }).click();
+  await form.getByRole("button", { name: creer }).click();
   await expect(form).toHaveCount(0);
   const cree = db.writes.find((w) => w.method === "POST" && w.path.startsWith("poles/da/taches/"));
   expect(cree?.data).toMatchObject({ responsableUid: "uid-paul", responsableNom: "Paul Dupont" });
@@ -472,6 +492,8 @@ test("le cercle cycle À faire → En cours → Terminé → À faire", async ({
   expect(appels, "on ne prévient personne sur une tâche seulement commencée").toBe(0);
 
   await cercle.click();
+  // Terminée, la ligne passe sous « Terminées (1) », repliées (agencement v18, B1).
+  await terminees(page);
   await expect(cercle).toHaveAttribute("aria-checked", "true");
   await expect(page.getByRole("status")).toHaveText("Régie prévenue.");
   expect(db.doc(chemin)).toMatchObject({ etat: "terminee" });
@@ -494,21 +516,22 @@ test("la ligne d'une fois en cours dit depuis quand et par qui", async ({ page }
   const retard = groupe(page, "En retard");
   await expect(retard.getByText("En cours depuis 2 jours")).toBeVisible();
   await expect(retard.getByText("Commencée par Ruth Kouassi")).toBeVisible();
-  await expect(groupe(page, "Faites")).toHaveCount(0);
+  await expect(laListe(page).getByRole("button", { name: /^Terminées/ })).toHaveCount(0);
 });
 
 test("le formulaire propose « Chaque année », sans semaine du mois", async ({ page }) => {
   const db = await signInAs(page, MEMBRE_DA, {}, "/back-office/taches/da");
-  await page.getByRole("button", { name: "Nouvelle tâche" }).click();
-  const form = page.getByRole("dialog", { name: "Nouvelle tâche" });
+  const { form, creer } = await nouvelleTache(page);
   await form.getByLabel("Titre").fill("Fond PPT de Noël");
   await form.getByLabel("Échéance").fill(jour(2));
-  await form.getByLabel("Répétition").selectOption({ label: "Chaque année" });
+  // En grand, la répétition est un rail (B2) ; dans la feuille, une liste.
+  if (estGrandEcran(test.info())) await form.getByRole("tablist", { name: "Répétition" }).getByRole("tab", { name: "Année" }).click();
+  else await form.getByLabel("Répétition").selectOption({ label: "Chaque année" });
   await expect(form.getByText("Chaque année à la même date.")).toBeVisible();
   await expect(form.getByLabel("Quelle semaine du mois")).toHaveCount(0);
-  await form.getByRole("button", { name: "Enregistrer" }).click();
+  await form.getByRole("button", { name: creer }).click();
   await expect(form).toHaveCount(0);
-  await expect(page.getByText("Fond PPT de Noël")).toBeVisible();
+  await expect(laListe(page).getByText("Fond PPT de Noël")).toBeVisible();
   const cree = db.writes.find((w) => w.method === "POST" && w.path.startsWith("poles/da/taches/"));
   expect(cree?.data).toMatchObject({ titre: "Fond PPT de Noël", echeance: jour(2), repetition: { rythme: "an" } });
 });
@@ -534,6 +557,6 @@ test("capture : les trois états sur la page d'un pôle", async ({ page }) => {
     },
   }, "/back-office/taches/da");
   await expect(groupe(page, "En retard").getByText("En cours depuis 1 jour")).toBeVisible();
-  await expect(groupe(page, "Faites").getByText("Vidéo d'annonce")).toBeVisible();
+  await expect((await terminees(page)).getByText("Vidéo d'annonce")).toBeVisible();
   await capture(page, "taches-trois-etats");
 });

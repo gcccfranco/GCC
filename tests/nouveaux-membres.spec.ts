@@ -201,8 +201,10 @@ test("en 中文, la proposition de chant n'a plus de français", async ({ page }
 test("en 中文, le formulaire de nouvelle tâche n'a plus de français", async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
   await signInAs(page, { ...MEMBRE, poles: ["da"] }, {}, "/back-office/taches/da");
-  await page.getByRole("button", { name: "新任务" }).click();
-  await expect(page.getByRole("dialog", { name: "新任务" })).toBeVisible();
+  // Agencement v18 (T1, B2) : en grand, le formulaire dans le volet ; sur un volet, la feuille.
+  const enGrand = ["ordinateur", "ordinateur-1440", "tablette-paysage"].includes(test.info().project.name);
+  await page.getByRole(enGrand ? "link" : "button", { name: "新任务" }).click();
+  await expect(page.getByRole(enGrand ? "form" : "dialog", { name: "新任务" })).toBeVisible();
   expect(await francaisAffiche(page, textesFrancais())).toEqual([]);
 });
 

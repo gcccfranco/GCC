@@ -723,3 +723,141 @@ la barre d'onglets : une page sans barre du bas (rare) le verra plus haut que n�
   relire la liste (une lecture), puis laisse place à la suivante.
 - **Timothée** : rien à publier (ni règle ni donnée) ; relire le 中文 des deux lignes du guide ; trancher les deux
   points ci-dessus.
+
+### V18T13 — Back-Office › Tâches (T1)
+
+- 06/10/2026 : **T1 faite** (branche `lot/v18-t13`, commit `feat(V18T13): T1 — BO Tâches en deux volets…`), B1 et B2.
+  En-tête « Tâches » (`EnTetePage`, sous-titre, `BoutonNouveau`, rail des pôles avec le compte des tâches encore à
+  faire) au-dessus de `DeuxVolets` ; liste du pôle en carte (En retard en rouge · Cette semaine · Plus tard,
+  « Terminées (n) » repliées) ; à droite la fiche à lire (`FicheTache`, la même que l'App, en mode Back-Office) :
+  badge du pôle, titre h2, « Modifier », « ⋯ › Supprimer » (`MenuActions` + `useConfirmer`), carte d'état, carte
+  d'infos (« en retard » sur l'échéance), « Note » et « Historique » côte à côte (« Commencée / Faite par … » de
+  `Fois`, « Créée par … » lu par `getProfile(auteurUid)`). Adresses `/back-office/taches/[pole]/[id]` (`?date=`) et
+  `/back-office/taches/[pole]/nouvelle` ; `/back-office/taches` ajouté à `SECTIONS_EN_DEUX_VOLETS`.
+  En grand, « + Nouvelle tâche » et « Modifier » ouvrent `TacheForm enLigne` dans le volet (carte de 720 px au plus,
+  pôle en pilules, échéance et responsable côte à côte, répétition en rail, « Annuler · Créer la tâche ») ; créer
+  ouvre la fiche. Sur un volet : la liste, la fiche en page avec « ‹ Tâches », le rond « + » et la feuille.
+- **Fichiers** : `app/back-office/taches/{layout,page}.tsx`, `[pole]/{layout,page}.tsx`, `[pole]/[id]/page.tsx`,
+  `[pole]/nouvelle/page.tsx`, `components/taches/{FicheTache,TacheForm,SectionTaches}.tsx`,
+  `components/taches/creerTache.ts` (création + prévenir le responsable, partagée par la feuille et le volet),
+  `lib/taches/useTaches.ts` (`loading` suit les pôles lus : pas d'« introuvable » quand les pôles changent),
+  `lib/deuxVolets.ts`, libellés `taches.*` FR et 中文.
+- **Tests** : `tests/agencement-v18-taches.spec.ts` (15 tests, cinq projets : 43 verts, 27 passés exprès selon
+  l'appareil ; vus rouges, 17 sur 17 sur `ordinateur` et `telephone`, sans le code). Réécrits pour la nouvelle
+  disposition : `taches.spec.ts` (« Faites » → « Terminées (n) » repliées, rail au lieu du h2 du pôle, formulaire
+  dans le volet en grand), `taches-evenements.spec.ts`, `back-office-admin.spec.ts` (B3 : le rail reste avec un
+  seul pôle), `back-office-espace.spec.ts`, `nouveaux-membres.spec.ts`, `agencement-v18-confirmations.spec.ts`
+  (la confirmation de la feuille se teste dans l'App, `/taches/da/t1` : au BO, Supprimer est dans « ⋯ »).
+  Captures regardées aux cinq tailles, conformes à `v18-bo-taches` et `v18-bo-tache-nouvelle`.
+- **Choix faute de réponse** : le rail des pôles reste avec un seul pôle (il porte le nom et le compte, le h2 du
+  pôle n'existe plus) ; libellés courts de la répétition dans le rail (Une fois · Semaine · 2 semaines · Mois ·
+  Année) pour tenir dans le volet de l'iPad paysage ; un lien direct vers `nouvelle` sur un volet ouvre la feuille
+  sur une page vide (Annuler revient à la liste).
+- **Reste** : rien pour T1. T3 (Calendrier) peut partir ; `TacheForm` y reste en feuille (`enLigne` facultatif).
+- **Timothée** : rien à publier (aucune règle, aucune donnée) ; relire le 中文 de `taches.sousTitreBackOffice`,
+  `taches.poles`, `taches.terminees`, `taches.creer`, `taches.rythmeCourt.*`, `taches.fiche.{enRetard,historique,
+  creeePar,unMembre}`.
+
+### V18T13 — Back-Office › Calendrier (T3)
+
+- 06/10/2026 : **T3 faite** (branche `lot/v18-t13`, commit `feat(V18T13): T3 — BO Calendrier…`), B5 piste A.
+  En-tête commun « Calendrier » (`EnTetePage`), « + Nouvel évènement » (`BoutonNouveau`, vers
+  `/back-office/evenements/nouveau`), rail Mois · Agenda (`OngletsRail`, boutons) ; dans la rangée `apres` :
+  « ‹ Octobre 2026 › » (le mois n'est plus le h1), « Aujourd'hui », filet, sources en pilules (`data-onglets="pilules"`),
+  « Seulement moi ». **Agenda dès 768 px** (`AgendaSemaines`, `components/calendrier/Agenda.tsx`) : « Semaine du
+  28 septembre », une ligne par jour (jour de la semaine et numéro, le jour choisi en encre), une ligne par entrée
+  (trait de couleur, heure et fin, titre, détail sans l'heure, étiquette du type), sur toute la largeur moins le
+  volet ; toucher un jour ou une ligne choisit le jour. **Volet du jour à droite (300 px) en agenda comme en Mois**
+  (ordinateur, tablette couchée) : titre du jour, « Ajouter ce jour-là » et son menu (`AjouterCeJour` : évènement,
+  tâche, réunion), une carte par entrée. Tablette debout : le jour touché (grille ou agenda) s'ouvre en feuille.
+  L'agenda suit désormais le mois de la rangée (d'aujourd'hui pour le mois en cours, du 1er sinon) ; « Afficher
+  novembre » reste et ‹ › le remet à zéro.
+- **Fichiers** : `app/back-office/calendrier/CalendrierClient.tsx`, `components/calendrier/{Agenda,PanneauJour}.tsx`,
+  `components/calendrier/apparence.ts`, `lib/calendrier/grille.ts` (`jourEtMois`, `jourDeLaSemaine`, `lundiDe`), libellés
+  `calendrier.{ajouterCeJour,nouvelleReunion,semaineDu}` FR et 中文.
+- **Tests** : `tests/agencement-v18-calendrier.spec.ts` (11 tests, cinq projets, vus rouges sans le code sur
+  `ordinateur`, `telephone` et `tablette` : 21 échecs, puis verts). Réécrits pour la nouvelle disposition : `calendrier.spec.ts` (mois lu dans la rangée,
+  `data-testid="mois-affiche"` ; rail en onglets `tab`/`aria-selected` ; agenda en grand : heure dans sa colonne,
+  volet du jour présent, une ligne choisit son jour, la carte du Sheet dans le volet ; créations par le menu du
+  volet ; un membre de pôle sans section a « Nouvelle réunion » et non plus « Nouvel évènement »),
+  `calendrier-deplacer.spec.ts` (le chip glissé est d'abord centré à l'écran : l'en-tête descend la grille sous
+  720 px), `calendrier-widget.spec.ts`, `evenements-2027.spec.ts`. Captures regardées aux cinq tailles, conformes
+  à `v18-bo-calendrier-agenda-a`. Reprise du 07/10/2026 (le travail n'était pas commité) : les cinq fichiers sur
+  les cinq projets, 935 verts, 80 sautés (tests propres à un appareil), 5 lenteurs sur `ordinateur-1440` en fin de
+  passe, vertes à la relance ; `halo-partout.spec.ts` et `back-office-coupe.spec.ts` verts ; `tsc` et ESLint propres.
+- **Choix faute de réponse** : « Ajouter ce jour-là » est un seul bouton qui ouvre le menu (la planche dessine un
+  bouton et une flèche à côté, sans dire ce que fait le bouton seul) ; la réunion se crée par l'adresse
+  d'aujourd'hui `/back-office/evenements/nouveau?reunion=1&date=…` (T2a, sur une autre voie, la redirige vers
+  `/back-office/reunions/nouvelle` : **à l'intégration, vérifier que la redirection garde `date`**) ; « Nouvel
+  évènement » (en-tête et menu) seulement pour qui a un public hors réunions, la réunion à part ; sur téléphone,
+  l'action principale est le rond « Créer » (sa feuille propose évènement, tâche, réunion du jour choisi) et
+  l'agenda garde ses cartes de la planche `bo-telephone-calendrier` ; les filtres passent à la ligne à droite de
+  la période ; pas de surlignage de la ligne d'entrée choisie (le jour en encre suffit).
+- **Reste** : rien pour T3.
+- **Timothée** : rien à publier (aucune règle, aucune donnée) ; relire le 中文 de `calendrier.ajouterCeJour`
+  (在这天添加), `calendrier.nouvelleReunion` (新建{{date}}的会议), `calendrier.semaineDu` ({{date}}那一周).
+
+### V18T13 — Fusion des fondations relues
+
+- 07/10/2026 : **`lot/v18-fondations` fusionné** dans `lot/v18-t13` (commit de fusion ; seul conflit, cette section
+  Avancement : les deux textes gardés). `tsc --noEmit` et `npm run lint` sans erreur.
+- **Ce que la relecture demandait aux tranches** : `verifierAgencement` reçoit maintenant `contenu` et `onglets`.
+  Tâches : les volets (ou la liste seule) sur toute la zone, un rail (les pôles), aucune pilule ; la fiche en page
+  sur un volet : toute la zone, ni rail ni pilule. Calendrier : le bloc sous l'en-tête sur toute la zone, un rail
+  (Mois · Agenda), une rangée de pilules.
+- **Corrigé** (`fix(V18T13): fusion — …`) : sur téléphone, « Tout · Seulement moi » n'était pas une rangée de
+  pilules (boutons faits main, sans `data-onglets`) ; c'est maintenant `Pilules` (R5), retoucher « Seulement moi »
+  revient à « Tout » comme avant ; « Sources » prend la taille des pilules qu'il suit (40 px). La feuille des
+  sources porte `data-onglets="pilules"` comme la rangée des sources en grand. Vu rouge (téléphone : 0 pilule) puis
+  vert ; un test du téléphone le garde (`agencement-v18-calendrier`, « Tout · Seulement moi » en pilules) ;
+  captures regardées (téléphone, tablette debout).
+- **Suites** (07/10/2026) : les specs du lot sur les cinq projets et leurs voisins sur `ordinateur`
+  (`agencement-v18-{calendrier,taches,confirmations,fondations}`, `back-office-admin`, `back-office-espace`,
+  `calendrier`, `calendrier-deplacer`, `calendrier-widget`, `evenements-2027`, `nouveaux-membres`,
+  `taches-evenements`, `taches`) : 1 626 verts, 141 passés exprès (propres à un appareil), aucun échec ; les specs
+  du calendrier sur `telephone` : 104 verts ; `back-office-coupe` (second serveur) et `halo-partout` : 62 verts.
+- **Reste** : rien pour le lot V18T13.
+- **Timothée** : rien à publier (aucune règle, aucune donnée) ; relire le 中文 de `calendrier.filtreAria`
+  (显示的条目, nom du groupe « Tout · Seulement moi », lu par les lecteurs d'écran).
+
+### V18T13 — Relecture (Tâches et Calendrier)
+
+- 07/10/2026 : **lot fini et relu** (deux relectures ; commit `fix(V18T13): relecture — …` sur `lot/v18-t13`).
+- **Corrigé** :
+  - *Important* — « ⋯ › Supprimer » d'une tâche (BO) : un refus de la base (hors ligne, droit perdu) se dit
+    dans la fiche (« L'enregistrement a échoué. Réessaie. », `role="status"`), la fiche reste, plus de promesse
+    rejetée non rattrapée ; on ne quitte la fiche qu'une fois la tâche supprimée et la liste relue. Dans l'App,
+    l'erreur remonte toujours au formulaire (`onDelete`).
+  - Pendant la lecture (profil puis tâches) : ni « Aucune tâche » dans les deux volets, ni « Tu ne fais pas partie de
+    ce pôle », ni compte à zéro dans le rail (le compte n'apparaît qu'une fois les tâches lues).
+  - Une écriture ne relit que son pôle : `useTaches().reload(pôle)` (une requête « fois » par tâche, les autres
+    pôles ne sont plus relus) — changer d'état, cocher, modifier, créer, supprimer.
+  - « Modifier » : le responsable de la tâche reste affiché pendant la lecture des membres (et s'il a quitté le
+    pôle) ; les profils se lisent à la première ouverture du formulaire, plus à chaque ouverture (`useMembres`).
+  - Calendrier sur téléphone, en Agenda : « Créer » propose aujourd'hui, même après ‹ › (spec-calendrier, C5 ;
+    le jour du 1er du mois venait de `allerA`). Le calendrier crée ses tâches par `creerTache` et lit les membres
+    par `useMembres` (`components/taches/creerTache.ts`), plus de copie locale.
+- **Tests** (`agencement-v18-{taches,calendrier}.spec.ts`) : 4 nouveaux tests de comportement (lecture lente
+  simulée, relecture d'un seul pôle, responsable pendant la lecture des membres, suppression refusée) et
+  « Créer » en Agenda sur téléphone, vus rouges (21 échecs sur les cinq projets), puis verts. Ajoutés aussi :
+  `verifierAgencement` sur `/back-office/taches/<pôle>/nouvelle` (un rail de plus, la répétition, et le pôle en
+  pilules : B2) avec « Annuler · Créer la tâche » en bas à droite (R13), et la barre réduite (marge de 28 px,
+  toute la zone) sur la liste et la fiche des tâches, l'agenda et le Mois. Suites : les specs du lot avec
+  `taches`, `taches-evenements`, `pages-en-grand-taches`, `calendrier`, `agencement-v18-confirmations` sur les
+  cinq projets (704 verts, 98 passés exprès) ; `calendrier-deplacer`, `calendrier-widget`, `back-office-admin`,
+  `nouveaux-membres`, `back-office-espace` sur ordinateur et téléphone (307 verts) ; `back-office-coupe`
+  (second serveur) : 59 verts. `tsc --noEmit` et ESLint sans erreur.
+- **Laissé, avec la raison** :
+  - Les sources du calendrier en grand restent des bascules faites main (`data-onglets="pilules"`) : `Pilules`
+    ne fait que le choix unique, les sources se cumulent. À reprendre si `Pilules` gagne un mode multiple.
+  - « Nouvelle réunion » du volet du jour garde `/back-office/evenements/nouveau?reunion=1&date=…` : la
+    redirection de T2a (`NouveauClient`, `lot/v18-t2`) garde tous les paramètres sauf `reunion`, donc `date`.
+    **À l'intégration** : un test du lien après la fusion de T2a (« Nouvelle réunion le … » ouvre
+    `/back-office/reunions/nouvelle?date=…` avec la date), ou pointer le lien directement vers cette adresse.
+  - Écarts à la planche `v18-bo-calendrier-agenda-a`, conformes au texte de B5 : « Ajouter ce jour-là » est un
+    seul bouton avec chevron (la planche : un bouton et une flèche ronde) ; la ligne d'entrée choisie n'est pas
+    surlignée ; sur ordinateur et iPad debout, les filtres de sources passent sur deux ou trois rangées (la planche :
+    une seule).
+- **Reste** : rien pour le lot V18T13.
+- **Timothée** : rien à publier (aucune règle, aucune donnée, aucun libellé nouveau). À regarder : l'agenda sur
+  iPad debout (filtres sur trois rangées) et « Ajouter ce jour-là » en un seul bouton, et dire si ça te va.

@@ -4,23 +4,32 @@
 // compris ; tous pour un admin), la page d'un pôle dessous. Dans l'App, `/taches` garde
 // « À faire pour moi » (question 3). Le menu règle l'affichage seulement : poles/{pôle}/taches
 // garde sa règle (isTachePole).
-import { useTranslation } from "react-i18next";
+// Agencement v18 (B1, docs/spec-agencement-v18.md) : les tâches de tous les pôles de la personne
+// se lisent une fois ici, pour le compte du rail et pour la fiche (`FicheTache`, la même que dans
+// l'App) ; l'en-tête et les deux volets sont posés par `[pole]/layout.tsx`. Les pages lisent
+// `?date=` : Suspense pour le rendu statique.
+import { Suspense, useMemo } from "react";
 import { useProfile } from "@/lib/firebase/users";
 import { tachesDuBackOffice } from "@/lib/access";
-import { EnTeteEntree, type SousPartie } from "@/components/backOffice/EnTeteEntree";
+import { useTaches } from "@/lib/taches/useTaches";
+import { todayIso } from "@/lib/scene/dimanches";
+import { FournirTaches } from "@/components/taches/SectionTaches";
+
+function Taches({ children }: { children: React.ReactNode }) {
+  const { user, profile, loading } = useProfile();
+  const poles = useMemo(() => tachesDuBackOffice(user, profile), [user, profile]);
+  const { items, loading: lecture, reload } = useTaches(loading ? [] : poles);
+  const parNom = profile ? `${profile.firstName} ${profile.lastName}`.trim() || profile.email : user?.email ?? "";
+  // Le profil puis les tâches : tant que l'un se lit, ni « Aucune tâche » ni compte à zéro.
+  const chargement = loading || lecture;
+  const valeur = { poles, items, chargement, reload, aujourdhui: todayIso(), parNom, racine: "/back-office/taches", backOffice: true };
+  return <FournirTaches value={valeur}>{children}</FournirTaches>;
+}
 
 export default function TachesLayout({ children }: { children: React.ReactNode }) {
-  const { t } = useTranslation();
-  const { user, profile } = useProfile();
-  const parties: SousPartie[] = tachesDuBackOffice(user, profile).map((p) => ({
-    href: `/back-office/taches/${p}`,
-    label: t(`taches.pole.${p}`),
-  }));
-
   return (
-    <div className="max-w-2xl mx-auto px-4 pt-6 pb-10">
-      <EnTeteEntree titre={t("backOffice.entrees.taches")} sousParties={parties} />
-      {children}
-    </div>
+    <Suspense fallback={null}>
+      <Taches>{children}</Taches>
+    </Suspense>
   );
 }

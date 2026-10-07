@@ -136,11 +136,13 @@ test("dupliquer un évènement qui a des tâches : la fenêtre du site demande ;
 
 const RUTH_DA: FakeProfile = { uid: "uid-da", email: "da@example.com", firstName: "Ruth", lastName: "K.", poles: ["da"] };
 
+// La feuille du formulaire garde « Supprimer » dans l'App (`/taches`) ; au Back-Office, la suppression
+// est dans « ⋯ » de la fiche (agencement v18, T1 : tests/agencement-v18-taches.spec.ts).
 test("supprimer une tâche : la fenêtre du site ; Annuler la garde ; Supprimer la retire", async ({ page }) => {
-  const db = await ouvrir(page, RUTH_DA, "/back-office/taches/da", {
+  const db = await ouvrir(page, RUTH_DA, "/taches/da/t1", {
     "poles/da/taches/t1": { ...tacheLiee({}), pole: "da", titre: "Fond PPT", evenement: null, auteurUid: "uid-da" },
   });
-  await page.getByRole("button", { name: /^Fond PPT/ }).click();
+  await page.getByRole("button", { name: "Modifier", exact: true }).click();
   const form = page.getByRole("dialog", { name: "Modifier la tâche" });
   await form.getByRole("button", { name: "Supprimer" }).click();
   await expect(fenetreDuSite(page).getByRole("heading", { name: "Supprimer cette tâche et tout son historique ?" })).toBeVisible();

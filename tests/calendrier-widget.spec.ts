@@ -292,7 +292,7 @@ test.describe("C8 : le widget Calendrier", () => {
     await widgetCal(page).locator('[data-jour="2026-11-02"]').click();
     await expect(page).toHaveURL(/\/back-office\/calendrier\/?\?jour=2026-11-02$/);
     // Sur tablette debout, la feuille du jour, modale, cache l'en-tête aux lecteurs d'écran : il reste à l'écran.
-    await expect(page.getByRole("heading", { level: 1, name: /^Novembre( 2026)?$/, includeHidden: true })).toBeVisible();
+    await expect(page.getByTestId("mois-affiche")).toHaveText(/^Novembre( 2026)?$/);
     await expect(page.getByRole("heading", { name: "Lundi 2 novembre" }).filter({ visible: true })).toBeVisible();
   });
 
@@ -300,7 +300,7 @@ test.describe("C8 : le widget Calendrier", () => {
     test.skip(!estTelephone(info), "téléphone seulement : ailleurs, le panneau ou la feuille du jour");
     await ouvrir(page, "s");
     await lignes(page).nth(1).click();
-    await expect(page.getByRole("group", { name: "Affichage" }).getByRole("button", { name: "Mois" })).toHaveAttribute("aria-pressed", "true");
+    await expect(page.getByRole("tablist", { name: "Affichage" }).getByRole("tab", { name: "Mois" })).toHaveAttribute("aria-selected", "true");
     await expect(page.getByTestId("jour-choisi")).toContainText("Réunion DA");
   });
 

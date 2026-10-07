@@ -206,7 +206,8 @@ test.describe("Back-Office (B1) : le sélecteur et le menu", () => {
     await menu(page, info).getByRole("link", { name: "Tâches" }).click();
     await expect(page).toHaveURL(/\/back-office\/taches\/evenement\/?$/);
     await expect(page.getByRole("heading", { level: 1, name: "Tâches" })).toBeVisible();
-    await expect(page.getByRole("heading", { level: 2, name: "Événement" })).toBeVisible();
+    // Agencement v18 (T1, B1) : le pôle est l'onglet actif du rail.
+    await expect(page.locator('[data-onglets="rail"]').getByRole("link", { name: /^Événement/ })).toHaveAttribute("aria-current", "page");
     // Le sélecteur reste dans l'espace Back-Office.
     await deplierSiTablettePaysage(page, info);
     await expect(selecteur(page).getByRole("link", { name: "Back-Office" })).toHaveAttribute("aria-current", "true");
