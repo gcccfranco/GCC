@@ -136,8 +136,10 @@ export function OngletsRail({
  *   <Pilules etiquette="Plannings" valeur={cle} choisir={setCle} obligatoire
  *            options={[{ cle: "culte", nom: "Culte Franco", couleur: PLANNING_COLORS.culte }, …]} />
  * Avec un `href` par option, les pilules sont des liens (une navigation, `aria-current="page"` sur
- * l'active : les plannings, T4a) ; `compact` les resserre (13 px, 32 px de haut) dans une rangée
- * déjà chargée (la rangée de la grille du Back-Office).
+ * l'active : les plannings, T4a).
+ * Taille (D9, retouches v18 R5) : une règle pour toutes, selon l'appareil et jamais selon la page —
+ * 40 px de haut et 15 px au doigt (téléphone, tablette debout ou couchée), ≈ 28 px et 13 px en gras
+ * dès 1 024 px de large avec un pointeur fin (la planche `v18-bo-statistiques`).
  * La rangée défile horizontalement quand elle ne tient pas (douze sensations sur un téléphone).
  */
 export function Pilules<T extends string>({
@@ -146,7 +148,6 @@ export function Pilules<T extends string>({
   valeur,
   choisir,
   obligatoire,
-  compact,
 }: {
   /** Nom du groupe de filtres, lu par les lecteurs d'écran. */
   etiquette: string;
@@ -157,7 +158,6 @@ export function Pilules<T extends string>({
   choisir: (v: T | null) => void;
   /** Un choix est toujours actif (instrument) : on ne peut pas le retirer. */
   obligatoire?: boolean;
-  compact?: boolean;
 }) {
   const liens = options.some((o) => o.href);
   const Rangee = liens ? "nav" : "div";
@@ -173,7 +173,7 @@ export function Pilules<T extends string>({
         const style = actif && o.couleur ? { backgroundColor: o.couleur, color: "#fff" } : undefined;
         const classe = cn(
           "inline-flex shrink-0 items-center whitespace-nowrap rounded-full transition-colors duration-150",
-          compact ? "h-8 px-2.5 text-[13px] font-semibold" : "h-10 px-3.5 text-[15px]",
+          "h-10 px-3.5 text-[15px] [@media(pointer:fine)_and_(min-width:1024px)]:h-7 [@media(pointer:fine)_and_(min-width:1024px)]:px-3 [@media(pointer:fine)_and_(min-width:1024px)]:text-[13px] [@media(pointer:fine)_and_(min-width:1024px)]:font-semibold",
           actif ? "bg-foreground text-background font-semibold" : "bg-secondary text-foreground/80 active:bg-secondary/70",
         );
         if (o.href) {

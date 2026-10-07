@@ -166,7 +166,6 @@ function PlanningsDuBackOffice() {
   return (
     <Pilules
       etiquette={t("backOffice.plannings")}
-      compact
       valeur={actif}
       choisir={() => {}}
       obligatoire

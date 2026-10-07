@@ -122,3 +122,25 @@ Rien de codé (spec écrite le 08/10/2026, en attente du go).
     `SPECS_GRAND_ECRAN`), vus rouges puis verts ; `agencement-v18-calendrier`, `calendrier`, `calendrier-deplacer`,
     `calendrier-widget` verts sur les cinq projets.
   - Reste : rien pour R4. Timothée : relire le 中文 `活动、任务或会议` ; aucune règle Firestore touchée.
+- **08/10/2026 — R5-R6 codées** (D9 et D11) :
+  - R5 (D9) : `Pilules` (`src/components/layout/Onglets.tsx`) suit une seule règle, selon l'appareil : 40 px et
+    15 px au doigt (téléphone, tablette debout et couchée), ≈ 28 px, 13 px en gras dès 1 024 px de large avec un
+    pointeur fin (planche `v18-bo-statistiques`), par une requête `(pointer: fine) and (min-width: 1024px)` dans
+    le composant. La variante `compact` (32 px partout) disparaît : la rangée des plannings du Back-Office
+    (`BarreDeGrille.tsx`) et Fidélité › Groupe · Musiciens (`planning/groupes/page.tsx`) suivent la règle
+    commune, donc 40 px au doigt au lieu de 32.
+  - R6 (D11) : Statistiques › « Les plus joués » (`StatistiquesClient.tsx`) : le corps de la page est un
+    conteneur ; dès 1 100 px de conteneur (zone moins les marges), les chiffres à gauche comme sur la planche
+    (1 440 px barre dépliée : 1 112 px) ; en dessous, les trois chiffres (Setlists comptées, Chants
+    différents, Jamais joués) sur une rangée au-dessus des dix premiers et du tableau, qui ne défile plus de
+    côté (1 024 à 1 100 px barre dépliée, 1 280 px barre dépliée, iPad couché). Sous 1 024 px de fenêtre,
+    rien ne change (la carte des setlists comptées seule).
+  - Tests : `tests/retouches-v18-pilules-stats.spec.ts`, cinq projets, vus rouges (40 et 32 px au lieu de 28,
+    32 au lieu de 40 au doigt ; chiffres en colonne à 1 024–1 100 px) puis verts ; voisins verts sur
+    ordinateur (`agencement-v18-fondations`, `-regles`, `-t2a`, `-planning`, `-t5`, `-t6`, `-calendrier`,
+    `-harmonie`, `look-secondaires`, `statistiques`, `planning-groupes-grille`, `retouches-v18-agenda` sur
+    les cinq), et `agencement-v18-planning`, `-t6`, `planning-groupes-grille` sur téléphone et tablettes.
+  - Reste : rien pour R5-R6. Timothée : aucune règle Firestore touchée, aucun libellé nouveau. À regarder :
+    en grand, les menus déroulants de la rangée des Statistiques (Service, Langue, Présidence) gardent 40 px
+    à côté des pilules de 28 px, et les sources du Calendrier (boutons propres, pas `Pilules`) gardent 32 px ;
+    la spec ne demande que le composant commun.
