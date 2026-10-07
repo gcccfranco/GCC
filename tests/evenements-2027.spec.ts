@@ -124,7 +124,8 @@ test.describe("B1 : le formulaire refuse « Toute l'église » avant la bascule"
     await page.getByLabel("Date", { exact: true }).fill("2026-12-20");
     await expect(page.getByText(REFUS)).toHaveCount(0);
     await creer(page);
-    await expect(page).toHaveURL(/\/back-office\/evenements\/fake-\d+\/?$/);
+    // Agencement v18 (B15) : une réunion se gère sous Réunions.
+    await expect(page).toHaveURL(/\/back-office\/reunions\/fake-\d+\/?$/);
     expect(ecrit(db)?.data).toMatchObject({ pour: "pole:evenement", date: "2026-12-20" });
   });
 
@@ -501,7 +502,7 @@ test.describe("B3 : la ligne d'annonce en tête du Back-Office", () => {
   });
 
   test("les réunions de pôle n'ont pas la ligne (elles ne passent jamais par le Sheet)", async ({ page }) => {
-    await ouvrir(page, COORD, "/back-office/evenements/reunions", "2026-12-15T10:00:00");
+    await ouvrir(page, COORD, "/back-office/reunions", "2026-12-15T10:00:00");
     await expect(page.getByRole("link", { name: /Nouvelle réunion/ })).toBeVisible();
     await expect(annonce(page)).toHaveCount(0);
   });

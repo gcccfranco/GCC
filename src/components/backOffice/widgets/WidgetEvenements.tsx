@@ -10,6 +10,7 @@ import { nowIsoParis } from "@/lib/evenements/agenda";
 import { lienOngletSheet, lireSheetEvenements } from "@/lib/evenements/sheet";
 import { listEvenements } from "@/lib/firebase/evenements";
 import { useProfile } from "@/lib/firebase/users";
+import { baseBackOffice } from "@/lib/navigation";
 import { todayIso } from "@/lib/scene/dimanches";
 import { addDays } from "@/lib/taches/echeances";
 import { avecLeSheet, etatInscriptions, evenementsAVenir, type EtatInscriptions } from "@/lib/tableauDeBord/donnees";
@@ -49,7 +50,7 @@ export function WidgetEvenements({ widget }: { widget: Widget }) {
           <div>
             {lignes.map((l) => l.du === "app" ? (
               <Rangee
-                key={l.evenement.id} testId="ligne-evenement" href={`/back-office/evenements/${l.evenement.id}`}
+                key={l.evenement.id} testId="ligne-evenement" href={`${baseBackOffice(l.evenement.pour)}/${l.evenement.id}`}
                 detail={`${jourSemaine(l.date, i18n.language)} · ${etat(etatInscriptions(l.evenement, maintenant))}`}
               >
                 <b className="font-semibold">{l.evenement.titre}</b>

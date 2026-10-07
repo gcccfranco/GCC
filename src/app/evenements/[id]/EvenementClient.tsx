@@ -15,10 +15,14 @@
 // le Back-Office » en tête, bannière et description à gauche, infos et inscription à droite ;
 // en un volet, l'inscription remonte sous les infos (planche `evenement-fiche-telephone`).
 // `id` : la fiche montrée sans être l'adresse (le prochain évènement de l'agenda, Q3).
+// Agencement v18 (B3, B4, docs/spec-agencement-v18.md) : au Back-Office, la fiche de gestion d'un
+// évènement (`FicheGestion`) et celle d'une réunion sont dans le volet de droite en grand (titre en h2,
+// sous l'en-tête de l'entrée), en page sinon (en-tête commun, « ‹ Évènements » / « ‹ Réunions »).
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
-import { useParams, useRouter } from "next/navigation"
+import { useParams, usePathname, useRouter } from "next/navigation"
+import { baseBackOffice } from "@/lib/navigation"
 import { useTranslation } from "react-i18next"
 import { useConfirmer } from "@/components/layout/Confirmer"
 import { ArrowRight, ChevronLeft } from "lucide-react"
@@ -30,7 +34,6 @@ import { listSujets, retirerSujet } from "@/lib/firebase/sujets"
 import { isInfo } from "@/lib/evenements/agenda"
 import { PLANNING_COLORS } from "@/lib/serviceColors"
 import type { Evenement } from "@/types/evenement"
-import { Button } from "@/components/ui/button"
 import { Banniere, EnteteEvenement, InfosEvenement, PlusInfos, TitreEvenement, TypePour } from "../EvenementCard"
 import { useDisposition } from "@/hooks/useDisposition"
 import { Inscriptions, PanneauInscriptions } from "./Inscriptions"
@@ -40,6 +43,9 @@ import { SujetsAborder } from "@/components/reunions/SujetsAborder"
 import { ReunionsPrecedentes } from "@/components/reunions/ReunionsPrecedentes"
 import { CompteRenduCarte } from "@/components/reunions/CompteRenduCarte"
 import { EnTeteReunion } from "@/components/reunions/EnTeteReunion"
+import { useDeuxVolets } from "@/hooks/useDeuxVolets"
+import { FicheGestion } from "@/app/back-office/evenements/FicheGestion"
+import styles from "@/app/back-office/evenements/gestion.module.css"
 
 const COLOR = PLANNING_COLORS.scene
 const URL_RE = /(https?:\/\/[^\s]+)/g
@@ -63,6 +69,8 @@ export function EvenementClient({ espace = "app", id: idDonne }: { espace?: "app
   const params = useParams<{ id?: string }>()
   const id = idDonne ?? params.id ?? ""
   const grand = useDisposition() === "grand"
+  // Au Back-Office (agencement v18, B3, B4) : dans le volet de droite en grand, en page sinon.
+  const deuxVolets = useDeuxVolets()
   const router = useRouter()
   const { user, loading: authLoading } = useAuth()
   const { profile, loading: profileLoading } = useProfile()
@@ -87,9 +95,17 @@ export function EvenementClient({ espace = "app", id: idDonne }: { espace?: "app
     listReunionsDu(pourReunion).then(setMemePublic).catch(() => setMemePublic([]))
   }, [pourReunion])
 
+  // Agencement v18 (B15) : au Back-Office, une réunion se gère sous Réunions et un évènement
+  // sous Évènements ; ouverte sous l'autre entrée, la fiche y repart.
+  const chemin = usePathname() || ""
+  const baseBO = espace === "back-office" && evenement ? baseBackOffice(evenement.pour) : null
+  const ailleurs = !!baseBO && !chemin.startsWith(`${baseBO}/`)
+  useEffect(() => { if (ailleurs && baseBO) router.replace(`${baseBO}/${id}`) }, [ailleurs, baseBO, id, router])
+
   if (authLoading || (user && profileLoading) || evenement === undefined) {
     return <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
   }
+  if (ailleurs) return null
   if (!evenement || !canSeeEvenement(user, profile, evenement)) {
     return <p className="text-sm text-muted-foreground">{t("evenements.notFound")}</p>
   }
@@ -105,7 +121,7 @@ export function EvenementClient({ espace = "app", id: idDonne }: { espace?: "app
   if (backOffice && !gestionnaire && !deLaReunion) {
     return <p className="text-sm text-muted-foreground max-w-2xl">{t("evenements.reserved")}</p>
   }
-  const liste = backOffice ? (reunion ? "/back-office/evenements/reunions" : "/back-office/evenements") : "/evenements"
+  const liste = backOffice ? baseBackOffice(e.pour) : "/evenements"
 
   async function supprimer() {
     if (!(await confirmer({ titre: t("evenements.confirmDelete", { titre: e.titre }), texte: t("evenements.confirmDeleteTexte"),
@@ -129,36 +145,29 @@ export function EvenementClient({ espace = "app", id: idDonne }: { espace?: "app
     <p role="alert" className="text-sm text-destructive">{t("evenements.erreurSuppression")}</p>
   )
 
-  const retour = (
-    <Link href={liste} className="text-xs font-semibold text-muted-foreground hover:text-foreground">
-      ← {backOffice ? t(reunion ? "backOffice.parties.reunions" : "backOffice.parties.evenements") : t("evenements.title")}
-    </Link>
-  )
   const cartesReunion = user && deLaReunion ? {
     compteRendu: <CompteRenduCarte evenement={e} user={user} profile={profile} onChange={(compteRendu) => setEvenement({ ...e, compteRendu })} />,
     sujets: <SujetsAborder evenement={e} user={user} profile={profile} reunions={memePublic} />,
     precedentes: <ReunionsPrecedentes courante={e} reunions={memePublic} espace={espace} />,
   } : null
 
-  // Réunion au Back-Office (planche bo-reunion-avant) : sujets à gauche, compte rendu et
-  // réunions précédentes à droite ; sur téléphone, le compte rendu en tête.
+  // Réunion au Back-Office (planche bo-reunion-avant ; agencement v18, B4, planche `v18-bo-reunions`) :
+  // « Sujets à aborder » (large) à gauche ; compte rendu, réunions précédentes et tâches à droite ; sur
+  // une colonne (volet étroit, téléphone), le compte rendu en tête. En un volet, la fiche est une page.
   if (backOffice && reunion) {
     return (
-      <div className="max-w-5xl space-y-4">
-        {retour}
+      <div className={`${styles.cadre} space-y-4 ${deuxVolets ? "" : "[&>*:not(header)]:mx-[var(--marge-page)]"}`}>
         <EnTeteReunion e={e} gestion={gestionnaire} onSupprimer={supprimer} />
         {messageSuppression}
         {e.description && <Linkified text={e.description} />}
         {cartesReunion && (
-          <div className="grid gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:items-start">
-            <div className="space-y-4">
-              {cartesReunion.sujets}
-              {e.date && <TachesEvenement evenement={e} user={user} profile={profile} />}
-            </div>
-            <div className="order-first space-y-4 lg:order-none">
+          <div className={styles.reunion}>
+            <div data-zone="sujets">{cartesReunion.sujets}</div>
+            <div data-zone="droite" className="space-y-4">
               {cartesReunion.compteRendu}
               {cartesReunion.precedentes}
             </div>
+            {e.date && <div data-zone="taches"><TachesEvenement evenement={e} user={user} profile={profile} /></div>}
           </div>
         )}
       </div>
@@ -225,7 +234,7 @@ export function EvenementClient({ espace = "app", id: idDonne }: { espace?: "app
           {/* En deux volets, le titre de la page est celui de droite (h1), l'agenda a un h2. */}
           <div className="min-w-0"><TitreEvenement e={e} niveau="h1" /></div>
           {gestionnaire && estResponsable(user, profile) && (
-            <Link href={`/back-office/evenements/${e.id}`} className="inline-flex h-9 items-center gap-1.5 rounded-full bg-secondary px-4 text-sm font-semibold text-foreground transition-transform duration-150 active:scale-[.97]">
+            <Link href={`${baseBackOffice(e.pour)}/${e.id}`} className="inline-flex h-9 items-center gap-1.5 rounded-full bg-secondary px-4 text-sm font-semibold text-foreground transition-transform duration-150 active:scale-[.97]">
               <ArrowRight className="h-4 w-4" aria-hidden />
               {t("backOffice.gerer")}
             </Link>
@@ -263,7 +272,7 @@ export function EvenementClient({ espace = "app", id: idDonne }: { espace?: "app
             {t("evenements.title")}
           </Link>
           {gestionnaire && estResponsable(user, profile) && (
-            <Link href={`/back-office/evenements/${e.id}`} className="raised inline-flex h-10 shrink-0 items-center gap-1.5 rounded-full px-4 text-sm font-semibold text-foreground transition-transform duration-150 active:scale-[.97]">
+            <Link href={`${baseBackOffice(e.pour)}/${e.id}`} className="raised inline-flex h-10 shrink-0 items-center gap-1.5 rounded-full px-4 text-sm font-semibold text-foreground transition-transform duration-150 active:scale-[.97]">
               <ArrowRight className="h-4 w-4" aria-hidden />
               {t("backOffice.gerer")}
             </Link>
@@ -289,90 +298,9 @@ export function EvenementClient({ espace = "app", id: idDonne }: { espace?: "app
     )
   }
 
+  // Au Back-Office, un évènement : la fiche de gestion (agencement v18, B3).
   return (
-    <div className="max-w-2xl mx-auto space-y-3">
-      {retour}
-
-      {/* Organisateur (maquette du 16/09/2026, choix du 17/09/2026) : la carte
-          de gestion en haut, puis la fiche des membres, où il peut s'inscrire. */}
-      {gestionnaire && (
-        <div data-testid="gestion-carte" className="space-y-4 rounded-2xl bg-card p-4">
-          <div>
-            <h2 className="text-xl font-bold text-foreground text-balance">{e.titre}</h2>
-            <div className="mt-2 flex flex-wrap gap-1"><TypePour e={e} /></div>
-          </div>
-          {backOffice ? (
-            <>
-              <div className="grid grid-cols-3 gap-2">
-                <Button asChild variant="outline"><Link href={`/back-office/evenements/${e.id}/modifier`}>{t("evenements.modifier")}</Link></Button>
-                <Button asChild variant="outline"><Link href={`/back-office/evenements/nouveau?from=${e.id}`}>{t("evenements.dupliquer")}</Link></Button>
-                <Button variant="outline" className="text-destructive hover:text-destructive" onClick={supprimer}>{t("evenements.supprimer")}</Button>
-              </div>
-              {messageSuppression}
-            </>
-          ) : estResponsable(user, profile) && (
-            <Button asChild variant="outline" className="w-full">
-              <Link href={`/back-office/evenements/${e.id}`}>{t("backOffice.gerer")}</Link>
-            </Button>
-          )}
-          {avecInscriptions && (
-            <PanneauInscriptions evenement={e} relire={relireListe} onMode={(inscriptions) => setEvenement({ ...e, inscriptions })}
-              onInscrits={(inscrits) => setEvenement({ ...e, inscrits })}
-              onRetire={(id) => { if (id === user?.uid) setCleInscription((c) => c + 1) }} />
-          )}
-          <QrCodeLink path={`/evenements/${e.id}`} label={e.titre} avecInscriptions={avecInscriptions} />
-        </div>
-      )}
-
-      <div data-testid="fiche-carte" className="space-y-4 rounded-2xl bg-card p-4">
-      <EnteteEvenement e={e} titre={gestionnaire ? false : "h2"} />
-
-      {e.description && <Linkified text={e.description} />}
-
-      {e.liens.length > 0 && (
-        <ul className="space-y-1 text-sm">
-          {e.liens.map((l, i) => (
-            <li key={i}><a href={l.url} target="_blank" rel="noopener noreferrer" className="underline" style={{ color: COLOR }}>{l.label || l.url}</a></li>
-          ))}
-        </ul>
-      )}
-
-      {e.images.length > 1 && (
-        <div className="grid grid-cols-2 gap-2">
-          {e.images.slice(1).map((src, i) => (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img key={i} src={src} alt="" className="rounded-lg w-full object-cover" />
-          ))}
-        </div>
-      )}
-
-      <PlusInfos e={e} />
-
-      {avecInscriptions && (
-        <Inscriptions
-          key={cleInscription}
-          evenement={e}
-          user={user}
-          organisateur={gestionnaire}
-          onInscrits={(inscrits) => { setEvenement({ ...e, inscrits }); setRelireListe((n) => n + 1) }}
-        />
-      )}
-      </div>
-
-      {/* Lot U6 (R1 à R4) : le compte rendu en tête, les sujets d'une réunion
-          de pôle ou d'équipe et les réunions précédentes, pour les personnes de
-          la réunion — les mêmes cartes pour les membres et pour qui la gère. */}
-      {cartesReunion && (
-        <>
-          {cartesReunion.compteRendu}
-          {cartesReunion.sujets}
-          {cartesReunion.precedentes}
-        </>
-      )}
-
-      {/* Lot 14 : les tâches de mes pôles rattachées à l'évènement. Daté
-          seulement (réunions de pôle comprises) : une info sans date n'a pas de délai. */}
-      {e.date && <TachesEvenement evenement={e} user={user} profile={profile} />}
-    </div>
+    <FicheGestion e={e} user={user} profile={profile} onSupprimer={supprimer} erreur={messageSuppression}
+      onChange={setEvenement} />
   )
 }

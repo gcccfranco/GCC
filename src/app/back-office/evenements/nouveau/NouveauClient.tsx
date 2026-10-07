@@ -6,14 +6,20 @@
 // tâches de ses pôles rattachées à l'évènement source, aux mêmes délais (lot 14).
 // Une réunion de pôle (lot U6, R2) : si des réunions déjà tenues du même pôle
 // ont laissé des sujets, on demande s'il faut les reprendre (Créer comme Dupliquer).
-// Lot U6, B3 : le formulaire est au Back-Office (`/back-office/evenements/nouveau`) ;
-// `?reunion=1` (« Nouvelle réunion ») ne propose que les réunions.
+// Lot U6, B3 : le formulaire est au Back-Office (`/back-office/evenements/nouveau`).
+// Agencement v18 (B15) : « Nouvelle réunion » est `/back-office/reunions/nouvelle` (`reunion`),
+// qui ne propose que les réunions ; l'ancienne `…/evenements/nouveau?reunion=1` y redirige.
 // Lot U8, C5 : `?date=AAAA-MM-JJ` (un jour du calendrier) pré-remplit la date.
+// Agencement v18 (B3, B4) : en grand, le formulaire s'ouvre dans le volet de droite, sous l'en-tête de
+// l'entrée et à côté de la liste ; en un volet, c'est une page, avec « ‹ Évènements » (ou « ‹ Réunions »).
 
 import { useEffect, useRef, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useTranslation } from "react-i18next"
 import { useConfirmer } from "@/components/layout/Confirmer"
+import { EnTetePage } from "@/components/layout/EnTetePage"
+import { useDeuxVolets } from "@/hooks/useDeuxVolets"
+import { baseBackOffice } from "@/lib/navigation"
 import { useAuth } from "@/lib/firebase/auth"
 import { useProfile } from "@/lib/firebase/users"
 import { creatableEvenementPours, estReunion, isAdminUser, polesDe } from "@/lib/access"
@@ -30,15 +36,16 @@ import { ANNONCE_SECTIONS } from "@/types/annonce"
 import { TACHE_POLES } from "@/types/tache"
 import { EMPTY_EVENEMENT, EvenementForm, type EvenementValues } from "@/components/evenements/EvenementForm"
 
-const base = "/back-office/evenements"
-
-export function NouveauClient() {
+export function NouveauClient({ reunion = false }: { reunion?: boolean }) {
   const { t } = useTranslation()
   const confirmer = useConfirmer()
   const router = useRouter()
+  const deuxVolets = useDeuxVolets()
   const params = useSearchParams()
   const from = params.get("from")
-  const reunion = params.get("reunion") === "1"
+  const base = reunion ? "/back-office/reunions" : "/back-office/evenements"
+  // Ancienne adresse d'une nouvelle réunion : on garde les autres paramètres (`from`, `date`).
+  const ancienneAdresse = !reunion && params.get("reunion") === "1"
   const date = params.get("date") ?? ""
   const vide = /^\d{4}-\d{2}-\d{2}$/.test(date) ? { ...EMPTY_EVENEMENT, date } : EMPTY_EVENEMENT
   const { user } = useAuth()
@@ -55,6 +62,14 @@ export function NouveauClient() {
     new Promise<boolean>((resolve) => { repondre.current = resolve; setAReprendre(liste) })
 
   useEffect(() => {
+    if (!ancienneAdresse) return
+    const suite = new URLSearchParams(params.toString())
+    suite.delete("reunion")
+    const reste = suite.toString()
+    router.replace(`/back-office/reunions/nouvelle${reste ? `?${reste}` : ""}`)
+  }, [ancienneAdresse, params, router])
+
+  useEffect(() => {
     if (!from) return
     getEvenement(from).then((e) => {
       if (!e) { setInitial(EMPTY_EVENEMENT); return }
@@ -66,16 +81,25 @@ export function NouveauClient() {
   }, [from])
 
   const pours = creatableEvenementPours(user, profile, ANNONCE_SECTIONS).filter((p) => !reunion || estReunion(p))
-  if (profileLoading || !user || !initial) return <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
-  if (pours.length === 0) return <p className="text-sm text-muted-foreground max-w-2xl mx-auto">{t("evenements.reserved")}</p>
+  if (ancienneAdresse) return null
+  const titre = t(reunion ? "backOffice.nouvelleReunion" : "evenements.nouveau")
+  const page = (contenu: React.ReactNode) => deuxVolets ? <div className="max-w-[720px]">{contenu}</div> : (
+    <>
+      <EnTetePage retour={{ href: base, label: t(reunion ? "backOffice.parties.reunions" : "backOffice.parties.evenements") }} titre={titre} />
+      <div className="px-[var(--marge-page)]">{contenu}</div>
+    </>
+  )
+  if (profileLoading || !user || !initial) return page(<p className="text-sm text-muted-foreground">{t("common.loading")}</p>)
+  if (pours.length === 0) return page(<p className="text-sm text-muted-foreground">{t("evenements.reserved")}</p>)
 
   const nom = profile ? `${profile.firstName} ${profile.lastName}`.trim() || profile.email : user.email ?? ""
 
-  return (
-    <div className="max-w-2xl mx-auto">
+  return page(
+    <>
       <EvenementForm
         initial={{ ...initial, contact: initial.contact || nom }}
         pours={pours}
+        titreCache={!deuxVolets}
         creation
         onSubmit={async (values, prevenir) => {
           // Réponse avant d'écrire quoi que ce soit : sans réunion créée, rien n'est repris.
@@ -96,11 +120,11 @@ export function NouveauClient() {
               // L'évènement existe : on ouvre sa fiche, dont le bloc Tâches montre ce qui a été copié.
             }
           }
-          router.push(`${base}/${id}`)
+          router.push(`${baseBackOffice(values.pour)}/${id}`)
         }}
-        onCancel={() => router.push(from ? `${base}/${from}` : reunion ? `${base}/reunions` : base)}
+        onCancel={() => router.push(from ? `${base}/${from}` : base)}
       />
       <RepriseSujets aReprendre={aReprendre} onChoix={(reprendre) => { setAReprendre(null); repondre.current(reprendre) }} />
-    </div>
+    </>
   )
 }

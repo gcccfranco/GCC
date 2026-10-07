@@ -1,0 +1,25 @@
+/* Agencement v18 (B3, B4) : les deux colonnes des fiches de gestion et de réunion, au Back-Office.
+   Une requête de conteneur (R15) : deux colonnes dès que le volet en a la place (barre réduite,
+   1 440 px), une seule sinon (barre dépliée à 1 280 px, iPad en paysage, téléphone). */
+.cadre { container-type: inline-size; }
+
+/* Fiche d'un évènement : « Inscrits » à gauche ; « Tâches » et « Période d'inscription » à droite. */
+.colonnes { display: grid; gap: 1rem; align-items: start; }
+@container (min-width: 640px) {
+  .colonnes { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); }
+}
+
+/* Fiche d'une réunion : « Sujets à aborder » (large) à gauche ; compte rendu, réunions précédentes
+   et tâches à droite. Sur une colonne, l'ordre d'avant : compte rendu et réunions précédentes,
+   puis les sujets, puis les tâches. */
+.reunion { display: grid; gap: 1rem; align-items: start; grid-template-areas: "droite" "sujets" "taches"; }
+.reunion > [data-zone="droite"] { grid-area: droite; }
+.reunion > [data-zone="sujets"] { grid-area: sujets; }
+.reunion > [data-zone="taches"] { grid-area: taches; }
+@container (min-width: 640px) {
+  .reunion {
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+    grid-template-rows: auto 1fr;
+    grid-template-areas: "sujets droite" "sujets taches";
+  }
+}

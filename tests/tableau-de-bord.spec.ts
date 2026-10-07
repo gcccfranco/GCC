@@ -316,7 +316,8 @@ test.describe("Tableau de bord (B4) : données des widgets, règles pures", () =
       { id: "setlist", href: "/setlists/new" },
     ]);
     expect(raccourcisPermis(user(ALICE), profil(ALICE), {}).map((r) => r.id)).toEqual(["tache", "evenement"]);
-    expect(raccourcisPermis(user(LOUANGE), profil(LOUANGE), {}).map((r) => r.id)).toEqual(["tache", "evenement", "setlist"]);
+    // Agencement v18 (B15) : le pôle Louange donne Réunions, pas Évènements, donc pas « Nouvel évènement ».
+    expect(raccourcisPermis(user(LOUANGE), profil(LOUANGE), {}).map((r) => r.id)).toEqual(["tache", "setlist"]);
     // Réglage : seulement ceux choisis, et jamais un raccourci non permis.
     expect(raccourcisPermis(user(ALICE), profil(ALICE), { raccourcis: ["evenement", "notifier"] }).map((r) => r.id)).toEqual(["evenement"]);
   });

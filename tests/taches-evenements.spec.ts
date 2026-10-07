@@ -269,7 +269,9 @@ test("formulaire : Détacher écrit evenement: null ; une tâche liée ne propos
 test("évènement supprimé : la tâche reste, avec le titre mémorisé", async ({ page }) => {
   // Lot U6, B3 : supprimer est sur la fiche de gestion, au Back-Office.
   const db = await member(page, ALICE, "/back-office/evenements/noel");
-  await page.getByRole("button", { name: "Supprimer" }).click();
+  // Agencement v18 (B3) : dans le menu « ⋯ » de la fiche de gestion.
+  await page.getByRole("button", { name: "Plus d'actions" }).click();
+  await page.getByRole("menuitem", { name: "Supprimer" }).click();
   await repondreDansLeSite(page, "Supprimer");
   await expect(page).toHaveURL(/\/evenements\/?$/);
   expect(db.doc("evenements/noel")).toBeUndefined();
@@ -298,7 +300,8 @@ test("中文 : bloc, ligne et confirmation en chinois", async ({ page }) => {
 
   // Dupliquer Noël : la question est posée en chinois, avec le nombre de tâches.
   await page.goto("/back-office/evenements/noel");
-  await page.getByRole("link", { name: "复制" }).click();
+  await page.getByRole("button", { name: "更多操作" }).click();
+  await page.getByRole("menuitem", { name: "复制" }).click();
   await page.getByLabel("日期", { exact: true }).fill("2027-12-24");
   await page.getByRole("button", { name: "创建活动" }).click();
   await expect(fenetreDuSite(page).getByRole("heading", { name: "是否同时复制它的 1 个任务（保持相同提前天数）？" })).toBeVisible();

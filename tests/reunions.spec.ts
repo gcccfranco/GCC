@@ -470,7 +470,7 @@ test("reprise, oui : en dupliquant pour la prochaine, le sujet laissé est recop
   await sansPush(page);
   await expect(lignes(page)).toHaveCount(4);
   // Lot U6, B3 : « Dupliquer pour la prochaine » est sur la fiche de gestion, au Back-Office.
-  await page.goto("/back-office/evenements/reunion-da");
+  await page.goto("/back-office/reunions/reunion-da");
   await expect(lignes(page)).toHaveCount(4);
   await page.getByRole("link", { name: "Dupliquer pour la prochaine" }).click();
   await page.getByLabel("Date", { exact: true }).fill("2026-11-07");
@@ -484,9 +484,9 @@ test("reprise, oui : en dupliquant pour la prochaine, le sujet laissé est recop
   await page.screenshot({ path: path.join(ROOT, "test-results", "reunions-captures", `${info.project.name}-reprise.png`), animations: "disabled" });
   await question(page).getByRole("button", { name: "Oui, les reprendre" }).click();
 
-  await page.waitForURL(/\/evenements\/fake-\d+\/?$/);
+  await page.waitForURL(/\/back-office\/reunions\/fake-\d+\/?$/);
   const nouvelle = creee(db);
-  expect(page.url()).toContain(`/evenements/${nouvelle}`);
+  expect(page.url()).toContain(`/back-office/reunions/${nouvelle}`);
   // La copie, au nom d'Alice qui reprend, garde l'auteur d'origine et sa provenance.
   const copies = db.writes.filter((w) => w.method === "POST" && w.path.startsWith(`evenements/${nouvelle}/sujets/`));
   expect(copies.map((w) => w.data)).toEqual([{
@@ -520,7 +520,7 @@ test("reprise, non : rien n'est écrit, le sujet reste rouge et revient à la cr
     await creerReunion(page, date);
     await expect(question(page).getByRole("listitem")).toHaveText(["Budget impression du trimestre"]);
     await question(page).getByRole("button", { name: "Non, les laisser" }).click();
-    await page.waitForURL(/\/evenements\/fake-\d+\/?$/);
+    await page.waitForURL(/\/back-office\/reunions\/fake-\d+\/?$/);
     await expect(page.getByRole("heading", { name: "Réunion DA" }).first()).toBeVisible();
   }
   expect(db.writes.filter((w) => w.path.includes("/sujets/"))).toEqual([]);
@@ -545,7 +545,7 @@ test("reprise : les sujets laissés par plusieurs réunions du pôle, ni ceux d'
   await expect(question(page)).toContainText("Les réunions précédentes en ont laissé 2 :");
   await expect(question(page).getByRole("listitem")).toHaveText([/^Vidéo de rentrée.*5 septembre$/, /^Budget impression du trimestre.*3 octobre$/]);
   await question(page).getByRole("button", { name: "Oui, les reprendre" }).click();
-  await page.waitForURL(/\/evenements\/fake-\d+\/?$/);
+  await page.waitForURL(/\/back-office\/reunions\/fake-\d+\/?$/);
   const nouvelle = creee(db);
   const copies = db.writes.filter((w) => w.method === "POST" && w.path.startsWith(`evenements/${nouvelle}/sujets/`));
   expect(copies.map((w) => [w.data.texte, w.data.ordre, (w.data.repriseDe as { reunionId: string }).reunionId])).toEqual([
@@ -564,7 +564,7 @@ test("reprise : sans sujet laissé, pas de question, la réunion se crée direct
   await sansPush(page);
   await expect(lignes(page)).toHaveCount(4);
   await creerReunion(page, "2026-11-07");
-  await page.waitForURL(/\/evenements\/fake-\d+\/?$/);
+  await page.waitForURL(/\/back-office\/reunions\/fake-\d+\/?$/);
   await expect(question(page)).toHaveCount(0);
   expect(db.writes.filter((w) => w.path.includes("/sujets/"))).toEqual([]);
 });
@@ -953,7 +953,7 @@ test("référente : elle crée la réunion de son équipe, sans inscriptions, et
   await page.getByLabel("Date", { exact: true }).fill("2026-10-10");
   await page.getByLabel("Horaire", { exact: true }).fill("20:00");
   await page.getByRole("button", { name: "Créer l'évènement" }).click();
-  await page.waitForURL(/\/evenements\/fake-\d+\/?$/);
+  await page.waitForURL(/\/back-office\/reunions\/fake-\d+\/?$/);
   const ecrit = db.doc(`evenements/${creee(db)}`)!;
   expect(ecrit).toMatchObject({ pour: "equipe:regie", inscriptions: "fermees", organisateurUid: "uid-rose", placesMax: null });
   // La fiche du Back-Office nomme l'équipe en court (relecture du lot U6).

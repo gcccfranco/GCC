@@ -73,7 +73,7 @@ test.describe("Barre du bas (B6) : règles pures (Q13)", () => {
     expect(barreParDefaut(permises(ADMIN))).toEqual(["tableau", "calendrier", "taches", "planning"]);
     expect(barreParDefaut(["tableau", "calendrier", "planning", "taches", "evenements", "equipes", "messages", "statistiques"]))
       .toEqual(["tableau", "calendrier", "taches", "planning"]);
-    // Réussite 2 : Alice n'a que quatre entrées, toutes dans la barre.
+    // Réussite 2 : Alice (coordination) a ses quatre premières entrées dans la barre (Réunions, v18, va dans « Plus »).
     expect(barreParDefaut(permises(ALICE))).toEqual(["tableau", "calendrier", "taches", "evenements"]);
     expect(barreParDefaut(permises(PLANNINGS))).toEqual(["tableau", "calendrier", "planning"]);
     expect(barreParDefaut([])).toEqual([]);
@@ -97,7 +97,7 @@ test.describe("Barre du bas (B6) : règles pures (Q13)", () => {
   test("feuille : la barre d'abord, puis les autres entrées permises dans l'ordre du menu ; 4 cochées au plus", () => {
     const admin = permises(ADMIN);
     const liste = listeDeLaFeuille(["evenements", "tableau", "taches", "planning"], admin);
-    expect(liste).toEqual(["evenements", "tableau", "taches", "planning", "calendrier", "equipes", "messages", "statistiques"]);
+    expect(liste).toEqual(["evenements", "tableau", "taches", "planning", "calendrier", "reunions", "equipes", "messages", "statistiques"]);
     const cochees: Entree[] = ["evenements", "tableau", "taches", "planning"];
     expect(basculer(cochees, "messages"), "une cinquième : refusée").toEqual(cochees);
     const sansPlanning = basculer(cochees, "planning");
@@ -181,9 +181,9 @@ test.describe("Barre du bas (B6) : « Plus »", () => {
     await expect(page.getByRole("heading", { name: "Plus", level: 1 })).toBeVisible();
     await expect(barre(page).getByRole("link", { name: "Plus" })).toHaveAttribute("aria-current", "page");
     const cartes = page.getByTestId("plus-entree");
-    // Évènements, Équipes, Messages : les entrées hors de la barre (Calendrier y est depuis U8) ;
-    // Statistiques (U7, admins seuls) : sa carte à part, la dernière (planche bo-telephone-plus).
-    await expect(cartes).toHaveCount(4);
+    // Évènements, Réunions (v18, B15), Équipes, Messages : les entrées hors de la barre (Calendrier
+    // y est depuis U8) ; Statistiques (U7, admins seuls) : sa carte à part, la dernière (planche bo-telephone-plus).
+    await expect(cartes).toHaveCount(5);
     await expect(cartes.filter({ hasText: "Évènements" })).toHaveAttribute("href", /^\/back-office\/evenements\/?$/);
     const equipes = cartes.filter({ hasText: "Équipes" });
     await expect(equipes).toHaveAttribute("href", /^\/back-office\/equipes\/?$/);
@@ -220,13 +220,15 @@ test.describe("Barre du bas (B6) : « Plus »", () => {
     await expect(equipes).not.toContainText("personnes");
   });
 
-  test("Alice, ses quatre entrées toujours dans la barre : « Plus » n'a pas de carte d'entrée", async ({ page }) => {
-    // Barre enregistrée à deux onglets : complétée jusqu'à toutes ses entrées (Q13).
+  test("Alice, quatre de ses cinq entrées dans la barre : « Plus » n'a que la carte de Réunions", async ({ page }) => {
+    // Barre enregistrée à deux onglets : complétée dans l'ordre du menu (Q13). Depuis v18 (B15),
+    // la coordination a aussi Réunions (son pôle), la cinquième entrée, qui reste dans « Plus ».
     await ouvrir(page, ALICE, { "backOffice/uid-alice": { barreDuBas: ["tableau", "evenements"], majLe: "2026-09-30T10:00:00Z" } });
     await expect(onglets(page)).toHaveText(["Accueil", "Évènements", "Calendrier", "Tâches", "Plus"]);
     await barre(page).getByRole("link", { name: "Plus" }).click();
     await expect(page.getByRole("button", { name: "Personnaliser la barre" })).toBeVisible();
-    await expect(page.getByTestId("plus-entree")).toHaveCount(0);
+    await expect(page.getByTestId("plus-entree")).toHaveCount(1);
+    await expect(page.getByTestId("plus-entree")).toHaveAttribute("href", /^\/back-office\/reunions\/?$/);
   });
 
   test("la pastille de Tâches compte ce qui est à faire pour soi (Q15)", async ({ page }) => {
@@ -252,12 +254,12 @@ test.describe("Barre du bas (B6) : la feuille « Ta barre du bas »", () => {
     const disposition = [{ id: "scene", taille: "s", reglages: {} }];
     const db = await ouvrir(page, ADMIN, { "backOffice/uid-admin": { tableauDeBord: disposition, majLe: "2026-09-30T10:00:00Z" } });
     await ouvrirFeuille(page);
-    await expect(feuille(page).getByRole("checkbox")).toHaveCount(8);
+    await expect(feuille(page).getByRole("checkbox")).toHaveCount(9);
     for (const nom of ["Accueil", "Calendrier", "Tâches", "Planning"]) await expect(caseDe(page, nom)).toHaveAttribute("aria-checked", "true");
     // La barre d'abord, puis les autres dans l'ordre du menu ; Accueil dit ce qu'il ouvre,
     // Statistiques (U7) à qui elle est réservée.
     await expect(feuille(page).getByTestId("ligne-barre"))
-      .toHaveText([/Accueil.*tableau de bord/, /Calendrier/, /Tâches/, /Planning/, /Évènements.*\+ scène/, /Équipes/, /Messages/, /Statistiques.*admins/]);
+      .toHaveText([/Accueil.*tableau de bord/, /Calendrier/, /Tâches/, /Planning/, /Évènements.*\+ scène/, /Réunions/, /Équipes/, /Messages/, /Statistiques.*admins/]);
     // 4 cochées : la cinquième est refusée.
     await expect(caseDe(page, "Équipes")).toBeDisabled();
     await expect(apercu(page)).toHaveText(["Accueil", "Calendrier", "Tâches", "Planning", "Plus"]);
@@ -287,7 +289,7 @@ test.describe("Barre du bas (B6) : la feuille « Ta barre du bas »", () => {
     await expect(poignee).toHaveAttribute("aria-pressed", "true");
     for (const position of [3, 2, 1]) {
       await page.keyboard.press("ArrowUp");
-      await expect(page.getByText(`« Planning » en position ${position} sur 8.`)).toBeAttached();
+      await expect(page.getByText(`« Planning » en position ${position} sur 9.`)).toBeAttached();
     }
     await page.keyboard.press("Space");
     await expect(apercu(page)).toHaveText(["Planning", "Accueil", "Calendrier", "Tâches", "Plus"]);

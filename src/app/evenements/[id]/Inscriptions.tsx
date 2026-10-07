@@ -35,7 +35,7 @@ const INVITES = [0, 1, 2, 3, 4, 5]
 const pleinDe = (pour: string): React.CSSProperties | undefined =>
   pour === "eglise" ? undefined : { backgroundColor: serviceButtonFill(categoryColor(pour)), color: "#ffffff" }
 
-function ListeInscrits({ liste, busy, onRetirer }: { liste: Inscription[]; busy?: boolean; onRetirer?: (i: Inscription) => void }) {
+export function ListeInscrits({ liste, busy, onRetirer }: { liste: Inscription[]; busy?: boolean; onRetirer?: (i: Inscription) => void }) {
   const { t } = useTranslation()
   return (
     <ul className="divide-y divide-border text-left" aria-label={t("evenements.inscrits")}>

@@ -2674,6 +2674,7 @@
       "planning": "Planning",
       "taches": "Tâches",
       "evenements": "Évènements",
+      "reunions": "Réunions",
       "equipes": "Équipes",
       "messages": "Messages",
       "statistiques": "Statistiques"
@@ -2713,6 +2714,23 @@
     "reunionDEquipe": "Réunion d'équipe · {{equipe}}",
     "organiseePar": "organisée par {{nom}}",
     "dupliquerProchaine": "Dupliquer pour la prochaine",
+    "passees": "Passées",
+    "gestion": {
+      "sousTitreEvenements": "Ce que voit l'assemblée, et sa gestion",
+      "sousTitreReunions": "Les réunions de tes pôles et de tes équipes",
+      "voirCommeMembre": "Voir comme un membre",
+      "contact": "Contact : {{nom}}",
+      "exporter": "Exporter",
+      "surPlaces_one": "sur {{count}} place",
+      "surPlaces_other": "sur {{count}} places",
+      "personnes_one": "{{count}} inscrit",
+      "personnes_other": "{{count}} inscrits",
+      "periode": "Période d'inscription",
+      "csv": {
+        "nom": "Nom",
+        "le": "Inscrit le"
+      }
+    },
     "barre": {
       "accueil": "Accueil",
       "plus": "Plus",
@@ -2743,6 +2761,7 @@
         "tesPoles": "tâches de tes pôles",
         "tousLesPoles": "tâches de tous les pôles",
         "fiches": "fiches, inscrits, période",
+        "reunions": "sujets, comptes rendus",
         "scene": "programmes de scène",
         "organigramme": "organigramme, pôles",
         "personnes": "personnes et droits",

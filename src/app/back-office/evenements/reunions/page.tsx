@@ -1,8 +1,12 @@
 "use client";
 
-// Back-Office › Évènements › Réunions : celles de ses pôles et équipes.
-import { ListeGestion } from "../ListeGestion";
+// Ancienne adresse de Back-Office › Évènements › Réunions : les réunions ont leur entrée
+// depuis l'agencement v18 (B15).
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
-export default function ReunionsPage() {
-  return <ListeGestion reunions />;
+export default function AncienneListeReunions() {
+  const router = useRouter();
+  useEffect(() => { router.replace("/back-office/reunions"); }, [router]);
+  return null;
 }
