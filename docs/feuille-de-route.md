@@ -1046,6 +1046,54 @@ Tests connus pour être instables (anciens, pas du chantier) : `equipes.spec.ts`
 `reunions.spec.ts` « réordonne au clavier » sur téléphone, `setlist-g.spec.ts` « Liste ramène la ligne 1 » sous
 charge. Prénoms réels encore présents dans `tests/programme-scene.spec.ts` et `tests/evenements.spec.ts` (d'avant).
 
+### V. Retours de Timothée du 06/10/2026 soir → agencement v18, scène Pâques · Noël
+
+**Mots de Timothée** (test local du chantier U) : « Je trouve que ces pages sont super mal agencés, l'utilisation
+de l'espace est pas bonne, y'a des blancs qui ne sont pas comblés » ; « y'a des problèmes de cohérences partout » ;
+pour la scène : « il faudrait deux onglets, un pour Pâques et l'autre pour Noël, et dans ces onglets-là la
+coordination peut lancer les réservations de créneaux » ; « il faudrait que les réunions aient leurs onglets à
+eux ». Planche v18 validée (« Je suis ok pour tout »), specs `spec-agencement-v18.md` et
+`spec-scene-paques-noel.md` (`ebb4d82`), go le 06/10/2026.
+
+**Codé le 06–08/10/2026 — sur `ui/apple-design`** (`8abdf167`, en local, rien poussé). Agencement : F1–F2
+(composants communs `EnTetePage`, `OngletsRail`, `Pilules`, `BoutonNouveau`, `MenuActions`, `useConfirmer`,
+`DeuxVolets` en liste-carte, halo du Back-Office ; les dix `window.confirm` passent par la fenêtre du site), T1 à
+T11 (Tâches, Réunions en entrée à part, Évènements, Calendrier, Planning, Équipes, Messages, Statistiques, Tableau
+de bord ; dans l'App : Évènements, Chants, Setlists, Mes services, Moi, Profil, Guide, Questionnaire, Harmonie),
+puis Z (`PageTitle`, `EnTeteEntree`, `FilterButtons` supprimés ; règles communes vérifiées sur toutes les pages).
+Scène : P1 à P9 (règle des fêtes, onglets Calendrier · Pâques · Noël, une semaine à la fois, « Mes réservations »,
+réserver / déplacer / modifier / retirer ; au Back-Office, onglet de la fête, « Lancer les réservations », toutes
+les réservations, « Préparer Noël 2027 »). Onze voies relues deux fois puis corrigées, intégration sur
+`lot/v18-integration`, avance rapide. Vérifié : suite complète sur les cinq projets, 8 349 verts, aucun échec
+persistant (5 instables passés à la relance : `navigation-grand-ecran` ×3, `setlist-g`, menu 中文 de T2a) ;
+`tsc` sans erreur dans le code versionné. Pendant le codage, les tests des écrans voisins n'ont tourné que sur
+« ordinateur » (choix de Timothée du 07/10/2026 pour aller plus vite) ; l'intégration a tout repassé sur les cinq.
+
+**À faire par Timothée** :
+1. **Rien à publier dans Firestore** : `firestore.rules` inchangé ; `access.ts` ne change que les entrées de menu
+   affichées (Réunions à part, B15).
+2. **Tester en local** (`npm run dev`) : toutes les pages en grand (barre dépliée et réduite, iPad paysage) et sur
+   téléphone ; Back-Office › Tâches, Évènements, Réunions, Calendrier (agenda), Planning, Équipes, Messages,
+   Statistiques, Tableau de bord (2 colonnes barre dépliée, 3 réduite) ; Évènements › Pâques et Noël dans l'App et
+   au Back-Office (lancer les réservations, une semaine à la fois, Mes réservations).
+3. **Relire le 中文** listé par chaque voie dans l'« Avancement » des deux specs (dont 会议, 卡片, `planning.gestion.*`,
+   `planning.semaines.*`, `planning.barre.*`, `moi.apercus.*`, `taches.*`, `equipes.*`, les six confirmations de F2).
+4. **Choix à trancher** (pris faute de réponse, détaillés dans l'« Avancement ») : « Partager » et la grille
+   Date · Heure · Lieu de la fiche d'évènement (T7) ; la liste-carte des deux volets qui finit sous le bas de la
+   fenêtre (R10) ; l'agenda du Back-Office sur iPad debout et « Ajouter ce jour-là » en un seul bouton (T3) ; taille
+   des pilules de période, « En chinois » sur une ou deux colonnes, « Les plus joués » entre 1 024 et 1 100 px (T6) ;
+   badge « n nouveaux comptes » ou « n en attente » dans Personnes (T5) ; heures de l'accueil, « Prénom ✕ » et
+   « Mes dates » dans la Prépa. Table, « un dimanche par mois » (T4) ; « Ajouter » un inscrit (B3, demanderait une
+   écriture nouvelle) et publics de réunion dans « Nouvel évènement » (T2) ; lien « Tout voir » de « Nouveaux au
+   répertoire », « 推荐诗歌 » ou « 推荐新诗歌 » (T8–T9) ; ordre de passage de la scène écrit en entier (deux
+   responsables en même temps s'écrasent sans message).
+5. **À la mise en ligne, sur ordre** : poser `VERCEL_DEEP_CLONE=true` dans les variables du projet Vercel (sans
+   historique git, « Nouveaux au répertoire » n'apparaît pas). En ligne, les trimestres du Planning passent en rail
+   gris et Prépa. Table et Campus sont calés à gauche sous le titre.
+
+Hors dépôt : `scripts/figma/data.ts` (non versionné, Figma en pause) importe encore `parseOrganigramme`, retiré
+avec les importations ; à reprendre avec les prototypes.
+
 ## 4. Carte des modules de l'app « GCC »
 
 À valider par Timothée avant toute spec de module (les modules existants ne
@@ -1347,6 +1395,12 @@ porte le nom « GCC » et le menu par sections dont ces modules ont besoin.
   corrigés, intégration verte, `ui/apple-design` = `2c64fbb` (144 commits, rien poussé). Deux coupures par la
   limite d'usage, relances sans rien refaire. Reste : publier les règles, tester en local, puis la mise en ligne
   sur ordre.
+
+- 06–08/10/2026 : **agencement v18 et scène Pâques · Noël** (§ 3 V) : retours du test local, planche v18
+  validée, deux specs, puis 24 tranches + Z en onze voies, relues et corrigées, intégration verte (8 349 verts
+  sur cinq projets), `ui/apple-design` = `8abdf167` (rien poussé). Coupures par la limite d'usage et pour les
+  cours de Timothée, relances sans rien refaire ; disque du Mac saturé par les caches des copies de travail
+  (114 Go), nettoyé.
 
 ## 7. Relecture adversariale (14/09/2026)
 
