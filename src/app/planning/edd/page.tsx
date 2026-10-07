@@ -5,6 +5,8 @@ import { useTranslation } from "react-i18next"
 import { PlanningGrille } from "@/components/planning/PlanningGrille"
 import { getCurrentEddPeriode, EDD_PERIODES, EDD_CLASSES } from "@/lib/planning/utils"
 import { AnneeSelecteur } from "@/components/planning/AnneeSelecteur"
+import { OngletsRail } from "@/components/layout/Onglets"
+import { BarreDeGrille, FiltreDeNom, compterCasesVides, useFiltreNom } from "@/components/planning/BarreDeGrille"
 import { BandeauAnnee } from "@/components/planning/BandeauAnnee"
 import { EDD_FALLBACK } from "@/lib/planning/data"
 import { fetchEDD, periodeEdd } from "@/lib/planning/sheets"
@@ -39,6 +41,7 @@ function EddPage() {
 
   const definition = GRILLES_EDD.find((g) => g.sousTitre === classe) ?? GRILLES_EDD[0]
   const gestion = useGestionPlanning()
+  const filtre = useFiltreNom()
   const peutModifier = gestion && canEditPlanning(user, profile, definition.key)
   const { datesDansLApp, comptes } = useGrilleApp(definition.key, peutModifier)
   // Lot U2 : `fetchEDD` range par période sans regarder l'année ; la page
@@ -50,58 +53,42 @@ function EddPage() {
   const effAnnee = annees.includes(annee) ? annee : anneeCourante
   const rows = lignesDeLAnnee(definition, effAnnee, toutes).filter((r) => periodeEdd(r[0]) === periode)
   const suivante = effAnnee > anneeCourante && peutModifier
+  const lignes = lignesSimples(rows)
+  const libellePeriode = `${t(`planning.edd.${PERIODE_KEYS[EDD_PERIODES.indexOf(periode)]}`)} ${effAnnee}`
 
   return (
     <div className="max-w-full space-y-4 mx-auto">
-      <div className="flex flex-wrap gap-3 items-center justify-between">
-        <div className="flex items-center gap-3 flex-wrap">
-          <h2 className="text-base font-bold text-foreground">{t("planning.pages.edd")}</h2>
-          <AnneeSelecteur
-            annees={annees}
-            annee={effAnnee}
-            onChange={(a) => { setAnnee(a); setPeriode(a === anneeCourante ? getCurrentEddPeriode() : EDD_PERIODES[0]) }}
-          />
-        </div>
-        {loading && <span className="text-xs text-muted-foreground">{t("common.loading")}</span>}
-      </div>
+      {/* Agencement v18 (B7, R4) : la classe (une vue) et la période en rail, dans la rangée. */}
+      <BarreDeGrille
+        titre={t("planning.pages.edd")}
+        couleur={COLOR}
+        detail={libellePeriode}
+        sousTitreBO={[t("planning.pages.edd"), classe, t("planning.barre.casesVidesPeriode", { count: compterCasesVides(definition, lignes) })].join(" · ")}
+        chargement={loading}
+      >
+        <OngletsRail etiquette={t("planning.barre.classe")} onglets={EDD_CLASSES.map((c) => ({ id: c, label: c }))} actif={classe} choisir={(c) => setClasse(c as EddClasse)} />
+        <AnneeSelecteur
+          annees={annees}
+          annee={effAnnee}
+          onChange={(a) => { setAnnee(a); setPeriode(a === anneeCourante ? getCurrentEddPeriode() : EDD_PERIODES[0]) }}
+        />
+        <OngletsRail
+          etiquette={t("planning.barre.periode")}
+          onglets={EDD_PERIODES.map((p, i) => ({ id: p, label: t(`planning.edd.${PERIODE_KEYS[i]}`) }))}
+          actif={periode}
+          choisir={(p) => setPeriode(p as EddPeriode)}
+        />
+        <FiltreDeNom filtre={filtre} couleur={COLOR} />
+      </BarreDeGrille>
 
       <BandeauAnnee annee={effAnnee} brouillon={false} dimanches={suivante ? dimanchesDe(effAnnee).length : null} />
-
-      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
-        {EDD_PERIODES.map((p, i) => (
-          <button
-            key={p}
-            onClick={() => setPeriode(p)}
-            className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all duration-150 cursor-pointer ${
-              p === periode ? "text-white border-transparent" : "bg-card border-border text-muted-foreground hover:text-foreground"
-            }`}
-            style={p === periode ? { background: COLOR, borderColor: COLOR } : {}}
-          >
-            {t(`planning.edd.${PERIODE_KEYS[i]}`)}
-          </button>
-        ))}
-      </div>
-
-      <div className="flex gap-2">
-        {EDD_CLASSES.map(c => (
-          <button
-            key={c}
-            onClick={() => setClasse(c)}
-            className={`flex-1 py-1.5 px-3 rounded-lg border text-sm font-semibold text-center transition-all duration-150 cursor-pointer ${
-              c === classe ? "border-transparent" : "bg-card border-border text-muted-foreground hover:text-foreground"
-            }`}
-            style={c === classe ? { background: `${COLOR}15`, borderColor: COLOR, color: COLOR } : {}}
-          >
-            {c}
-          </button>
-        ))}
-      </div>
 
       <PlanningGrille
         key={definition.key}
         definition={definition}
-        periode={`${t(`planning.edd.${PERIODE_KEYS[EDD_PERIODES.indexOf(periode)]}`)} ${effAnnee}`}
-        lignes={lignesSimples(rows)}
+        periode={libellePeriode}
+        filtre={filtre}
+        lignes={lignes}
         peutModifier={peutModifier}
         datesDansLApp={datesDansLApp}
         comptes={comptes}

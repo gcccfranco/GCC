@@ -40,9 +40,9 @@ const laCase = (page: Page, key: "campusMatin" | "campusSoir", date: string, col
 
 test("le volet Grille : matin puis soir, treize colonnes, la répétition en texte", async ({ page }) => {
   await open(page, MEMBRE, "/planning/campus");
-  await page.getByRole("button", { name: "Grille", exact: true }).click();
-  await expect(grille(page, "campusMatin").getByTestId("grille-bandeau")).toContainText("Matin");
-  await expect(grille(page, "campusSoir").getByTestId("grille-bandeau")).toContainText("Soir");
+  await page.getByRole("tab", { name: "Grille", exact: true }).click();
+  await expect(grille(page, "campusMatin").getByRole("heading", { name: "Matin" })).toBeVisible();
+  await expect(grille(page, "campusSoir").getByRole("heading", { name: "Soir" })).toBeVisible();
   await expect(laCase(page, "campusMatin", "2026-09-20", "chant1")).toContainText("Béni soit Ton Nom");
   await expect(laCase(page, "campusMatin", "2026-09-20", "repetition")).toContainText("17/09/2026 19:00 Grande salle");
   await expect(laCase(page, "campusSoir", "2026-09-20", "presidence")).toContainText("Jonathan Z.");
@@ -51,7 +51,7 @@ test("le volet Grille : matin puis soir, treize colonnes, la répétition en tex
 
 test("avec le droit sur le matin : une case s'écrit, le soir reste en lecture, et les cartes suivent", async ({ page }) => {
   const db = await open(page, RESPONSABLE, "/back-office/planning/campus");
-  await page.getByRole("button", { name: "Grille", exact: true }).click();
+  await page.getByRole("tab", { name: "Grille", exact: true }).click();
   // Lot U6, B2 : au Back-Office, la grille du matin s'ouvre en modification ; le soir, en lecture.
   await expect(grille(page, "campusMatin").locator("[data-case]").getByRole("button").first()).toBeVisible();
   await expect(grille(page, "campusSoir").locator("[data-case]").getByRole("button")).toHaveCount(0);
@@ -71,7 +71,7 @@ test("avec le droit sur le matin : une case s'écrit, le soir reste en lecture, 
 
   // Les cartes de lecture reflètent la grille.
   // Sur ordinateur la navbar a aussi un bouton « Louange » : on vise le volet, voisin de « Grille ».
-  await page.getByRole("button", { name: "Grille", exact: true }).locator("..").getByRole("button", { name: "Louange", exact: true }).click();
+  await page.getByRole("tab", { name: "Grille", exact: true }).locator("..").getByRole("tab", { name: "Louange", exact: true }).click();
   await expect(page.getByText(/Piano: Esther C\./)).toBeVisible();
 });
 
@@ -79,9 +79,11 @@ test("avec le droit sur le matin : une case s'écrit, le soir reste en lecture, 
 // lot 17 (question 6) ; l'onglet Campus_Louange mêle matin et soir, dans l'ordre des dates.
 test("« Exporter (modèle du Sheet) » depuis la grille du matin : une page, matin et soir mêlés", async ({ page }) => {
   await open(page, RESPONSABLE, "/back-office/planning/campus");
-  await page.getByRole("button", { name: "Grille", exact: true }).click();
-  await expect(grille(page, "campusSoir").getByRole("button", { name: /Exporter/ }), "le soir n'est pas à elle").toHaveCount(0);
-  await grille(page, "campusMatin").getByRole("button", { name: "Exporter (modèle du Sheet)" }).click();
+  await page.getByRole("tab", { name: "Grille", exact: true }).click();
+  // Agencement v18 (B6) : « Exporter » est un outil de l'en-tête, un seul pour la page.
+  const enTete = page.locator("header[data-entete-page]");
+  await expect(enTete.getByRole("button", { name: /Exporter/ }), "un seul export, celui du matin").toHaveCount(1);
+  await enTete.getByRole("button", { name: "Exporter (modèle du Sheet)" }).click();
   const fenetre = page.getByRole("dialog", { name: "Exporter" });
   await expect(fenetre.getByRole("radio")).toHaveText(["Toute l'année · Campus matin"]);
   await fenetre.getByRole("radio", { name: "Toute l'année · Campus matin" }).click();
@@ -106,15 +108,15 @@ test("« Exporter (modèle du Sheet) » depuis la grille du matin : une page, ma
 
 test("un membre n'exporte pas le Campus", async ({ page }) => {
   await open(page, MEMBRE, "/planning/campus");
-  await page.getByRole("button", { name: "Grille", exact: true }).click();
-  await expect(grille(page, "campusMatin").getByTestId("grille-bandeau")).toContainText("Matin");
+  await page.getByRole("tab", { name: "Grille", exact: true }).click();
+  await expect(grille(page, "campusMatin").getByRole("heading", { name: "Matin" })).toBeVisible();
   await expect(page.getByRole("button", { name: /Exporter/ })).toHaveCount(0);
 });
 
 test("en 中文 : le volet et les colonnes des chants sont traduits", async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
   await open(page, MEMBRE, "/planning/campus");
-  await page.getByRole("button", { name: "表格", exact: true }).click();
+  await page.getByRole("tab", { name: "表格", exact: true }).click();
   await expect(page.getByText("诗歌 1").filter({ visible: true }).first()).toBeVisible();
   await expect(page.getByText("排练").filter({ visible: true }).first()).toBeVisible();
 });

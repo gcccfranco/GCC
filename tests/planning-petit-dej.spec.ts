@@ -386,7 +386,12 @@ async function ouvrirTable(page: Page, qui: FakeProfile, docs: Record<string, Re
   return signInAs(page, qui, docs, "/planning/table");
 }
 
-const carteDe = (page: Page, titre = "Petit déj") => page.getByRole("region", { name: titre });
+const carteDe = (page: Page, titre = "Petit déj") => page.getByRole("region", { name: titre, exact: true });
+/** Agencement v18 (A4) : une ligne qu'on peut toucher porte un « ⋯ » (Modifier, Retirer). */
+async function choisirDansLeMenu(page: Page, rangee: Locator, action: string, plus = "Plus d'actions") {
+  await rangee.getByRole("button", { name: plus }).click();
+  await page.getByRole("menuitem", { name: action }).click();
+}
 const rangee = (carte: Locator, dimanche: string) => carte.locator(`[data-dimanche="${dimanche}"]`);
 const ecrituresPetitDej = (writes: { method: string; path: string; data: Record<string, unknown> }[], method: string) =>
   writes.filter((w) => w.method === method && w.path.startsWith("petitDej/"));
@@ -410,8 +415,9 @@ test("carte : un dimanche à venir sans ligne dit « Libre » ; « Je m'inscris 
   const db = await ouvrirTable(page, CHARLIE);
   const carte = carteDe(page);
   await expect(carte.getByRole("heading", { name: "Petit déj" })).toBeVisible();
-  await expect(carte.getByText("Trimestre 3")).toBeVisible();
-  await expect(carte.getByText("Tu peux écrire « Famille … » à la place de ton nom.")).toBeVisible();
+  // Agencement v18 (A4) : « n libres sur N » ; l'astuce passe dans « Ton petit déj ».
+  await expect(carte.getByText("2 libres sur 13")).toBeVisible();
+  await expect(carteDe(page, "Ton petit déj").getByText("Tu peux écrire « Famille … » à la place de ton nom.")).toBeVisible();
 
   const le27 = rangee(carte, "2026-09-27");
   await expect(le27).toContainText("27 sept.");
@@ -426,8 +432,8 @@ test("carte : un dimanche à venir sans ligne dit « Libre » ; « Je m'inscris 
   const posees = ecrituresPetitDej(db.writes, "POST");
   expect(posees).toHaveLength(1);
   expect(posees[0].data).toMatchObject({ dimanche: "2026-09-27", nom: "Charlie B.", uid: CHARLIE.uid, auteurUid: CHARLIE.uid });
-  await expect(le27.getByRole("button", { name: "Modifier" })).toBeVisible();
-  await expect(le27.getByRole("button", { name: "Retirer" })).toBeVisible();
+  await expect(le27.getByTestId("moi"), "ma ligne, en encre").toHaveText("Charlie B.");
+  await expect(le27.getByRole("button", { name: "Plus d'actions" })).toBeVisible();
   // Lot U6, B2 : la grille de la Table n'est plus dans l'App (Back-Office seulement).
 });
 
@@ -438,18 +444,18 @@ test("carte : ✎ réécrit ma ligne « Famille Martin » (tient au rechargement
   const le27 = rangee(carteDe(page), "2026-09-27");
   const champ = le27.getByRole("textbox", { name: "Modifier" });
 
-  await le27.getByRole("button", { name: "Modifier" }).click();
+  await choisirDansLeMenu(page, le27, "Modifier");
   await champ.fill("Autre chose");
   await champ.press("Escape");
   await expect(le27.getByText("Charlie B.", { exact: true })).toBeVisible();
 
-  await le27.getByRole("button", { name: "Modifier" }).click();
+  await choisirDansLeMenu(page, le27, "Modifier");
   await champ.fill("   ");
   await champ.press("Enter");
   await expect(le27.getByText("Charlie B.", { exact: true })).toBeVisible();
   expect(ecrituresPetitDej(db.writes, "PATCH"), "rien d'écrit : Échap, puis vide").toHaveLength(0);
 
-  await le27.getByRole("button", { name: "Modifier" }).click();
+  await choisirDansLeMenu(page, le27, "Modifier");
   await champ.fill("Famille Martin");
   await champ.press("Enter");
   await expect(le27.getByText("Famille Martin", { exact: true })).toBeVisible();
@@ -464,7 +470,7 @@ test("carte : « Retirer » demande confirmation et rend le dimanche « Libre »
     ligne({ id: "m", dimanche: "2026-09-27", nom: "Famille Martin", uid: CHARLIE.uid, auteurUid: CHARLIE.uid }),
   ]));
   const le27 = rangee(carteDe(page), "2026-09-27");
-  await le27.getByRole("button", { name: "Retirer" }).click();
+  await choisirDansLeMenu(page, le27, "Retirer");
   await expect(fenetreDuSite(page).getByRole("heading", { name: "Retirer cette ligne ?" })).toBeVisible();
   await repondreDansLeSite(page, "Retirer");
   await expect(le27.getByText("Libre", { exact: true })).toBeVisible();
@@ -534,7 +540,7 @@ test("carte : un écrivain du planning Table ajoute « Les jeunes du Campus » e
 
   const le27 = rangee(carte, "2026-09-27");
   await expect(le27.getByRole("button", { name: "Ajouter une ligne" }), "sur chaque dimanche à venir, même pris").toBeVisible();
-  await le27.getByRole("button", { name: "Retirer" }).click();
+  await choisirDansLeMenu(page, le27, "Retirer");
   await repondreDansLeSite(page, "Retirer");
   await expect(le27.getByText("Libre", { exact: true })).toBeVisible();
   expect(db.doc("petitDej/a")).toBeUndefined();
@@ -563,15 +569,18 @@ test("carte en 中文 : titre, trimestre, date, « 空闲 » et « 我来报名 
   ]));
   const carte = carteDe(page, "早餐");
   await expect(carte.getByRole("heading", { name: "早餐" })).toBeVisible();
-  await expect(carte.getByText("第3季度")).toBeVisible();
+  await expect(carte.getByText("13 个主日中 1 个空闲")).toBeVisible();
   const le27 = rangee(carte, "2026-09-27");
   await expect(le27).toContainText("9月27日");
   await expect(le27.getByText("空闲", { exact: true })).toBeVisible();
   await expect(le27.getByRole("button", { name: "我来报名" })).toBeVisible();
   const le20 = rangee(carte, "2026-09-20");
-  await expect(le20.getByRole("button", { name: "修改" })).toBeVisible();
-  await expect(le20.getByRole("button", { name: "移除" })).toBeVisible();
-  await expect(carte.getByText("可以写“某某家庭”代替你的名字。")).toBeVisible();
+  await le20.getByRole("button", { name: "更多操作" }).click();
+  await expect(page.getByRole("menuitem", { name: "修改" })).toBeVisible();
+  await expect(page.getByRole("menuitem", { name: "移除" })).toBeVisible();
+  await page.keyboard.press("Escape");
+  const ton = carteDe(page, "你的早餐");
+  await expect(ton.getByText("可以写“某某家庭”代替你的名字。")).toBeVisible();
   await capture(page, "petit-dej-carte-zh");
 });
 

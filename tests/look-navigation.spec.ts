@@ -112,9 +112,13 @@ test.describe("navigation par sections (T2), onglets de section", () => {
     await signInAs(page, MEMBRE, {}, "/planning");
     // Le téléphone a la pastille qui ouvre la feuille ; dès la tablette, les huit
     // onglets tiennent sur la rangée (V7 ter).
-    const pilule = test.info().project.name === "telephone"
+    // Agencement v18 (R6) : en grand, les plannings sont des pilules dans l'en-tête de la section.
+    const projet = test.info().project.name;
+    const pilule = projet === "telephone"
       ? page.getByTestId("menu-plannings")
-      : page.getByTestId("onglets-section").getByRole("link", { name: "Culte Franco" });
+      : projet.startsWith("ordinateur") || projet === "tablette-paysage"
+        ? page.locator("header[data-entete-page]").getByRole("navigation", { name: "Plannings" }).getByRole("link", { name: "Culte Franco" })
+        : page.getByTestId("onglets-section").getByRole("link", { name: "Culte Franco" });
     await pilule.waitFor();
     await page.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished.catch(() => {}))));
     const box = await pilule.boundingBox();

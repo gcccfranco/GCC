@@ -1,9 +1,10 @@
 "use client"
 
 import { useTranslation } from "react-i18next"
+import { OngletsRail } from "@/components/layout/Onglets"
 
-// Sélecteur d'année du planning (lot U2, docs/spec-planning-2027.md) :
-// « 2026 · 2027 », segmenté comme sur la planche bo-planning-2027. Une seule
+// Sélecteur d'année du planning (lot U2, docs/spec-planning-2027.md) : « 2026 · 2027 ».
+// Agencement v18 (B7) : un rail, comme T1–T4, dans la rangée de la grille. Une seule
 // année visible : rien à choisir, rien d'affiché (un membre en 2026).
 
 export function AnneeSelecteur({ annees, annee, onChange }: {
@@ -14,20 +15,11 @@ export function AnneeSelecteur({ annees, annee, onChange }: {
   const { t } = useTranslation()
   if (annees.length < 2) return null
   return (
-    <div role="group" aria-label={t("planning.annee.label")} className="inline-flex rounded-full bg-secondary p-[3px] gap-0.5">
-      {annees.map((a) => (
-        <button
-          key={a}
-          type="button"
-          aria-pressed={a === annee}
-          onClick={() => onChange(a)}
-          className={`min-h-9 sm:min-h-8 px-3.5 rounded-full text-sm font-semibold tabular-nums transition-[background-color,color,box-shadow] duration-150 cursor-pointer ${
-            a === annee ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-          }`}
-        >
-          {a}
-        </button>
-      ))}
-    </div>
+    <OngletsRail
+      etiquette={t("planning.annee.label")}
+      onglets={annees.map((a) => ({ id: String(a), label: <span className="tabular-nums">{a}</span> }))}
+      actif={String(annee)}
+      choisir={(id) => onChange(Number(id))}
+    />
   )
 }

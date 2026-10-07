@@ -2,11 +2,14 @@
 
 import { useId, useState } from "react"
 import { useTranslation } from "react-i18next"
-import { FilterButtons } from "@/components/planning/FilterButtons"
+import { OngletsRail } from "@/components/layout/Onglets"
+import { BarreDeGrille, FiltreDeNom, compterCasesVides, ongletsDePeriode, useFiltreNom, useTrimestreEnLettres } from "@/components/planning/BarreDeGrille"
 import { PlanningGrille } from "@/components/planning/PlanningGrille"
-import { PetitDejCarte, dateCourte } from "@/components/planning/PetitDejCarte"
+import { PetitDejCarte, TonPetitDej, usePetitDej } from "@/components/planning/PetitDejCarte"
+import { Tile } from "@/components/ui/tile"
 import { StaleBanner } from "@/components/planning/StaleBanner"
-import { currentSundayStr, filterByTri, getCurrentTri } from "@/lib/planning/utils"
+import { currentSundayStr, filterByTri, getCurrentTri, getTri } from "@/lib/planning/utils"
+import { useDisposition } from "@/hooks/useDisposition"
 import { AnneeSelecteur } from "@/components/planning/AnneeSelecteur"
 import { BandeauAnnee } from "@/components/planning/BandeauAnnee"
 import { useSheet } from "@/lib/planning/useSheet"
@@ -31,6 +34,9 @@ import { AncienTableau } from "./AncienTableau"
 // Lot U6, B2 (Q14) : dans l'App, la carte Petit déj et la carte compacte de la
 // Table (le dimanche qui vient), sans grille ; au Back-Office, la grille seule —
 // la carte Petit déj reste le seul endroit où l'on écrit ses lignes.
+// Agencement v18, A4 (piste A) : dans l'App, deux colonnes en grand — la carte Petit déj du
+// trimestre à gauche, « Prépa. Table du Seigneur » (les équipes du trimestre) et « Ton petit
+// déj » à droite ; l'une sous l'autre ailleurs.
 
 const REPLI = DEJEUNER_FALLBACK.map((r) => [r[0], r[1], ""])
 
@@ -44,6 +50,8 @@ function TablePage() {
   const rows = inscriptions ? avecPetitDej(lues, rangeesPetitDej(inscriptions)) : lues
   const [tri, setTri] = useState(getCurrentTri())
   const gestion = useGestionPlanning()
+  const filtre = useFiltreNom()
+  const trimestre = useTrimestreEnLettres()
   const peutModifier = gestion && canEditPlanning(user, profile, GRILLE_TABLE.key)
   // Les comptes : « Choisir » de la grille (Back-Office), suggestions de la carte Petit
   // déj (App) — les mêmes personnes, écrivains de la Table et admins.
@@ -56,34 +64,37 @@ function TablePage() {
   const annees = anneesDuPlanning(anneeCourante, peutModifier || anneeRemplie(rows, anneeCourante + 1))
   const effAnnee = annees.includes(annee) ? annee : anneeCourante
   const suivante = effAnnee > anneeCourante && peutModifier
+  const lignes = lignesSimples(filterByTri(lignesDeLAnnee(GRILLE_TABLE, effAnnee, rows), tri))
 
   return (
     <div className="max-w-full space-y-4 mx-auto">
-      <div className="flex flex-wrap gap-3 items-center justify-between">
-        <div className="flex items-center gap-3 flex-wrap">
-          <h2 className="text-base font-bold text-foreground">{t("planning.pages.table")}</h2>
-          <AnneeSelecteur
-            annees={annees}
-            annee={effAnnee}
-            onChange={(a) => { setAnnee(a); setTri(a === anneeCourante ? getCurrentTri() : "T1") }}
-          />
-        </div>
-        {status === "loading" && <span className="text-xs text-muted-foreground">{t("common.loading")}</span>}
-      </div>
+      {/* Agencement v18 (T4a) : la rangée de la grille ; dessous, les deux colonnes de l'App (T4b). */}
+      <BarreDeGrille
+        titre={t("planning.pages.table")}
+        couleur={GRILLE_TABLE.couleur}
+        detail={trimestre(tri, effAnnee)}
+        sousTitreBO={[t("planning.pages.table"), t("planning.barre.casesVidesTrimestre", { count: compterCasesVides(GRILLE_TABLE, lignes) })].join(" · ")}
+        chargement={status === "loading"}
+      >
+        <AnneeSelecteur
+          annees={annees}
+          annee={effAnnee}
+          onChange={(a) => { setAnnee(a); setTri(a === anneeCourante ? getCurrentTri() : "T1") }}
+        />
+        <OngletsRail etiquette={t("planning.barre.trimestre")} onglets={ongletsDePeriode(["T1", "T2", "T3", "T4"])} actif={tri} choisir={setTri} />
+        {gestion && <FiltreDeNom filtre={filtre} couleur={GRILLE_TABLE.couleur} />}
+      </BarreDeGrille>
 
       <StaleBanner show={status === "stale"} />
       <BandeauAnnee annee={effAnnee} brouillon={false} dimanches={suivante ? dimanchesDe(effAnnee).length : null} />
 
-      <FilterButtons options={["T1","T2","T3","T4"]} active={tri} onChange={setTri} color={GRILLE_TABLE.couleur} />
-
-      {!gestion && <PetitDejCarte annee={effAnnee} tri={tri} nomsDesComptes={nomsDesComptes} onLignes={setInscriptions} />}
-
-      {!gestion && <TableDuDimanche rows={rows} />}
+      {!gestion && <PetitDejEtTable rows={rows} annee={effAnnee} tri={tri} nomsDesComptes={nomsDesComptes} onLignes={setInscriptions} />}
 
       {gestion && <PlanningGrille
         definition={GRILLE_TABLE}
         periode={`${tri} ${effAnnee}`}
-        lignes={lignesSimples(filterByTri(lignesDeLAnnee(GRILLE_TABLE, effAnnee, rows), tri))}
+        filtre={filtre}
+        lignes={lignes}
         peutModifier={peutModifier}
         datesDansLApp={datesDansLApp}
         comptes={comptes}
@@ -93,23 +104,63 @@ function TablePage() {
   )
 }
 
-/** « Prépa. Table du Seigneur », carte compacte de l'App (planche petit-dej-telephone) :
- *  l'équipe du dimanche qui vient. */
-function TableDuDimanche({ rows }: { rows: string[][] }) {
+/** L'App (A4) : la carte Petit déj, puis la Table du Seigneur et « Ton petit déj », côte à côte
+ *  en grand. Un seul état pour les deux cartes du petit déj (`usePetitDej`) : il n'est monté que
+ *  dans l'App, le Back-Office n'en lit rien. */
+function PetitDejEtTable({ rows, annee, tri, nomsDesComptes, onLignes }: {
+  rows: string[][]
+  annee: number
+  tri: string
+  nomsDesComptes: readonly string[]
+  onLignes: (lignes: LignePetitDej[]) => void
+}) {
+  const etat = usePetitDej(onLignes)
+  const grand = useDisposition() === "grand"
+  return (
+    <div className={grand ? "grid grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)] items-start gap-5" : "flex flex-col gap-4"}>
+      <PetitDejCarte etat={etat} annee={annee} tri={tri} nomsDesComptes={nomsDesComptes} />
+      <div className="flex min-w-0 flex-col gap-4">
+        <TableDuSeigneur rows={rows} annee={annee} tri={tri} />
+        <TonPetitDej etat={etat} annee={annee} tri={tri} />
+      </div>
+    </div>
+  )
+}
+
+/** « Prépa. Table du Seigneur » : les équipes du trimestre choisi, une par dimanche de sainte cène
+ *  qui en a une (planche v18-app-planning-table-a : tuile de date, noms, « Dimanche de sainte
+ *  cène ») ; les dimanches passés en gris. */
+function TableDuSeigneur({ rows, annee, tri }: { rows: string[][]; annee: number; tri: string }) {
   const { t, i18n } = useTranslation()
   const titreId = useId()
   const dimanche = currentSundayStr()
-  const ligne = rows.filter((r) => r[0] >= dimanche).sort((a, b) => (a[0] < b[0] ? -1 : 1))[0]
+  const langue = i18n.language === "zh-CN" ? "zh-CN" : "fr-FR"
+  const lignes = rows
+    .filter((r) => r[0].startsWith(`${annee}-`) && getTri(r[0]) === tri && r[1]?.trim())
+    .sort((a, b) => (a[0] < b[0] ? -1 : 1))
   return (
-    <section aria-labelledby={titreId} className="rounded-xl bg-card px-4 pt-3 pb-3.5 shadow-soft lg:max-w-lg">
-      <h3 id={titreId} className="pb-1.5 text-[17px] font-bold text-foreground">{t("planning.pages.table")}</h3>
-      {ligne ? (
-        <p className="flex gap-4 text-sm">
-          <span className="w-16 shrink-0 font-semibold text-foreground">{dateCourte(ligne[0], i18n.language)}</span>
-          <span className="text-foreground">{ligne[1]?.trim() || "—"}</span>
-        </p>
+    <section aria-labelledby={titreId} className="raised min-w-0 rounded-2xl px-4 pt-3 pb-1.5">
+      <div className="flex items-baseline gap-2 pb-2">
+        <h3 id={titreId} className="text-[17px] font-bold text-foreground">{t("planning.pages.table")}</h3>
+        <span className="ml-auto shrink-0 text-[13px] text-muted-foreground">{t("planning.table.unDimancheParMois")}</span>
+      </div>
+      {lignes.length ? (
+        <ul>
+          {lignes.map((r) => {
+            const jour = new Date(`${r[0]}T12:00:00`)
+            return (
+              <li key={r[0]} data-dimanche={r[0]} className={`flex items-center gap-3 border-t border-border py-2.5 ${r[0] < dimanche ? "opacity-60" : ""}`}>
+                <Tile color={GRILLE_TABLE.couleur} big={jour.getDate()} small={new Intl.DateTimeFormat(langue, { month: "short" }).format(jour)} size="lg" />
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-foreground">{r[1]}</p>
+                  <p className="text-[12.5px] text-muted-foreground">{t("planning.table.dimancheSainteCene")}</p>
+                </div>
+              </li>
+            )
+          })}
+        </ul>
       ) : (
-        <p className="text-sm text-muted-foreground">—</p>
+        <p className="border-t border-border py-2.5 text-sm text-muted-foreground">{t("planning.table.noData")}</p>
       )}
     </section>
   )

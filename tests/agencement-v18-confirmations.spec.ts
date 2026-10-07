@@ -164,7 +164,7 @@ test("retirer une date de la grille : la fenêtre du site ; Annuler la garde ; R
   const db = await ouvrir(page, qui, "/back-office/planning/interfranco", {
     "plannings/interfranco/dimanches/2027-01-17": { date: "2027-01-17", presidence: "Président I." },
   }, "2026-11-15T10:00:00");
-  await page.getByRole("button", { name: "2027", exact: true }).click();
+  await page.getByRole("tab", { name: "2027", exact: true }).click();
   const retirer = page.getByRole("button", { name: "Retirer ce dimanche" }).filter({ visible: true });
   await retirer.click();
   await expect(fenetreDuSite(page).getByRole("heading", { name: /^Retirer le .*17 janvier 2027 \?$/ })).toBeVisible();
@@ -185,14 +185,19 @@ test("retirer un petit déj : la fenêtre du site ; Annuler le garde ; Retirer r
       creeLe: "2026-09-01T10:00:00.000Z", modifieLe: "2026-09-01T10:00:00.000Z",
     },
   }, "2026-09-18T10:00:00");
-  const le27 = page.getByRole("region", { name: "Petit déj" }).locator('[data-dimanche="2026-09-27"]');
-  await le27.getByRole("button", { name: "Retirer" }).click();
+  const le27 = page.getByRole("region", { name: "Petit déj", exact: true }).locator('[data-dimanche="2026-09-27"]');
+  // Agencement v18 (A4) : « Retirer » est dans le « ⋯ » de la ligne.
+  const retirer = async () => {
+    await le27.getByRole("button", { name: "Plus d'actions" }).click();
+    await page.getByRole("menuitem", { name: "Retirer" }).click();
+  };
+  await retirer();
   await expect(fenetreDuSite(page).getByRole("heading", { name: "Retirer cette ligne ?" })).toBeVisible();
   await repondreDansLeSite(page, "Annuler");
   await expect(le27.getByText("Famille Martin", { exact: true })).toBeVisible();
   expect(db.doc("petitDej/m")).toBeDefined();
 
-  await le27.getByRole("button", { name: "Retirer" }).click();
+  await retirer();
   await repondreDansLeSite(page, "Retirer");
   await expect(le27.getByText("Libre", { exact: true })).toBeVisible();
   expect(db.doc("petitDej/m")).toBeUndefined();
@@ -212,7 +217,7 @@ test("publier un trimestre : la fenêtre du site ; Annuler n'appelle rien ; Publ
     db.set("planningReleases/paix_2027", { published });
     await route.fulfill({ json: { ok: true, published, notified: body.publish, sent: 0 } });
   });
-  await page.getByRole("button", { name: "2027", exact: true }).click();
+  await page.getByRole("tab", { name: "2027", exact: true }).click();
   const publier = page.getByRole("button", { name: "Publier le T1" });
   await publier.click();
   await expect(fenetreDuSite(page).getByRole("heading", { name: /^Publier le T1 2027 de .+ \?$/ })).toBeVisible();

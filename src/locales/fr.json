@@ -1051,7 +1051,8 @@
       "dansJours_other": "dans {{count}} jours",
       "evenements": "Prochains évènements",
       "libre": "Libre",
-      "inscrire": "Je m'inscris"
+      "inscrire": "Je m'inscris",
+      "carteTable": "Table"
     },
     "dataPending": "Données à venir",
     "staleData": "Planning en ligne inaccessible — données locales, possiblement périmées.",
@@ -1109,7 +1110,9 @@
       "myDates": "Mes dates",
       "noData": "Aucune donnée",
       "thisWeek": "Cette semaine",
-      "clear": "Effacer"
+      "clear": "Effacer",
+      "unDimancheParMois": "un dimanche par mois",
+      "dimancheSainteCene": "Dimanche de sainte cène"
     },
     "grille": {
       "enregistre": "Enregistré",
@@ -1133,7 +1136,10 @@
       "periodeAnnee": "Année {{annee}}"
     },
     "petitDej": {
-      "trimestre": "Trimestre {{n}}",
+      "libresSur_one": "{{count}} libre sur {{total}}",
+      "libresSur_other": "{{count}} libres sur {{total}}",
+      "ton": "Ton petit déj",
+      "aucunAVenir": "Aucun petit déj à venir à ton nom.",
       "libre": "Libre",
       "inscrire": "Je m'inscris",
       "modifier": "Modifier",
@@ -1145,6 +1151,20 @@
       "illisible": "Inscriptions illisibles pour l'instant.",
       "echec": "Enregistrement impossible, réessaie.",
       "tonNom": "Ton nom"
+    },
+    "barre": {
+      "sousTitre": "Qui sert quand, dans tous les plannings de l'église",
+      "trimestre": "Trimestre",
+      "periode": "Période",
+      "classe": "Classe",
+      "vue": "Vue",
+      "trimestres": { "T1": "1er trimestre {{annee}}", "T2": "2e trimestre {{annee}}", "T3": "3e trimestre {{annee}}", "T4": "4e trimestre {{annee}}" },
+      "casesVidesTrimestre_one": "{{count}} case vide ce trimestre",
+      "casesVidesTrimestre_other": "{{count}} cases vides ce trimestre",
+      "casesVidesPeriode_one": "{{count}} case vide sur la période",
+      "casesVidesPeriode_other": "{{count}} cases vides sur la période",
+      "casesVidesAnnee_one": "{{count}} case vide cette année",
+      "casesVidesAnnee_other": "{{count}} cases vides cette année"
     },
     "horaires": {
       "culte": "Dimanche 10:30",

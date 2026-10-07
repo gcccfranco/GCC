@@ -67,7 +67,7 @@ test("toutes les grilles sont définies, à clés uniques, et toutes ont l'app p
 
 test("groupes : la grille du Groupe Paix, en lecture pour un membre", async ({ page }) => {
   await open(page, MEMBRE, "/planning/groupes");
-  await expect(page.getByTestId("grille-bandeau")).toContainText("Paix");
+  await expect(page.getByRole("tab", { name: "Paix", exact: true })).toHaveAttribute("aria-selected", "true");
   await expect(laCase(page, "2026-09-20", "presidence")).toContainText("Delphine Z.");
   await expect(laCase(page, "2026-09-27", "theme")).toContainText("Nouveau Testament");
   await expect(page.getByRole("button", { name: "Modifier" })).toHaveCount(0);
@@ -85,14 +85,14 @@ test("groupes : avec le droit « paix », une case s'écrit ; Fidélité reste e
   expect(doc.theme).toBe("Psaumes");
   expect(doc.presidence, "les autres cases sont recopiées du Sheet").toBe("Delphine Z.");
 
-  await page.getByRole("button", { name: "Fidélité", exact: true }).click();
+  await page.getByRole("tab", { name: "Fidélité", exact: true }).click();
   await expect(laCase(page, "2026-09-20", "pianiste")).toContainText("Eva C.");
   await expect(laCase(page, "2026-09-20", "pianiste").getByRole("button"), "Fidélité : en lecture").toHaveCount(0);
 });
 
 test("groupes : les musiciens de Fidélité ont leur propre grille et leur propre droit", async ({ page }) => {
   const db = await open(page, profil(["fideliteMusiciens"]), "/back-office/planning/groupes");
-  await page.getByRole("button", { name: "Fidélité", exact: true }).click();
+  await page.getByRole("tab", { name: "Fidélité", exact: true }).click();
   await expect(laCase(page, "2026-09-20", "theme").getByRole("button"), "le planning du groupe n'est pas le sien").toHaveCount(0);
   await page.getByRole("button", { name: /Planning musiciens/ }).click();
   await laCase(page, "2026-09-20", "guitare").getByRole("button").click();

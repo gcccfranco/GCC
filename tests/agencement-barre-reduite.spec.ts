@@ -92,12 +92,13 @@ for (const etat of ["reduite", "depliee"] as const) {
       for (const largeur of largeurs(info)) {
         if (largeur) await page.setViewportSize({ width: largeur, height: 900 });
         const z = await zone(page);
-        // La marge intérieure de la page (16 px, 24 sur grand écran au plus), pas une bande vide.
+        // La marge de la zone (`--marge-page`, 40 px au plus barre dépliée, agencement v18 R2), pas une bande vide.
         await expect
           .poll(async () => Math.round((await region.boundingBox())!.x - z.gauche), { message: `${largeur ?? info.project.name} px : écart à la barre` })
-          .toBeLessThanOrEqual(32);
+          .toBeLessThanOrEqual(40);
         const verset = (await page.getByText("— Colossiens 3 : 23-24").boundingBox())!;
-        expect(Math.round(z.droite - (verset.x + verset.width)), `${largeur ?? info.project.name} px : écart au bord droit`).toBeLessThanOrEqual(56);
+        // La marge de la zone (40 px) et le retrait du verset dans sa carte.
+        expect(Math.round(z.droite - (verset.x + verset.width)), `${largeur ?? info.project.name} px : écart au bord droit`).toBeLessThanOrEqual(64);
       }
       const dir = process.env.PW_CAPTURES;
       if (dir) await page.screenshot({ path: `${dir}/agencement-planning-${etat}-${info.project.name}.png` });

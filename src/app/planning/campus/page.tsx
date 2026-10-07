@@ -9,6 +9,8 @@ import { fdLongL, getAnnee } from "@/lib/planning/utils"
 import { PLANNING_COLORS } from "@/lib/serviceColors"
 import { PlanningGrille } from "@/components/planning/PlanningGrille"
 import { AnneeSelecteur } from "@/components/planning/AnneeSelecteur"
+import { OngletsRail } from "@/components/layout/Onglets"
+import { BarreDeGrille, FiltreDeNom, compterCasesVides, useFiltreNom } from "@/components/planning/BarreDeGrille"
 import { AjouterDate } from "@/components/planning/AjouterDate"
 import { GRILLE_CAMPUS_MATIN, GRILLE_CAMPUS_SOIR, PREMIERE_ANNEE_APP, anneesDuPlanning, lignesDeLAnnee, lignesSimples } from "@/lib/planning/grilles"
 import { useGrilleApp } from "@/lib/planning/useGrilleApp"
@@ -58,6 +60,7 @@ function CampusPage() {
   const [loading, setLoading] = useState(true)
 
   const gestion = useGestionPlanning()
+  const filtre = useFiltreNom()
   const peutMatin = gestion && canEditPlanning(user, profile, GRILLE_CAMPUS_MATIN.key)
   const peutSoir = gestion && canEditPlanning(user, profile, GRILLE_CAMPUS_SOIR.key)
   const matinApp = useGrilleApp(GRILLE_CAMPUS_MATIN.key, peutMatin)
@@ -97,6 +100,9 @@ function CampusPage() {
   const vide = dansLApp ? t("planning.annee.aucun", { annee: effAnnee }) : undefined
   const relire = () => void fetchCampusGrilles().then(setGrilles)
   const retrait = { libelle: t("planning.annee.retirerSeance"), onRetire: relire }
+  const lignesMatin = lignesSimples(lignesDeLAnnee(GRILLE_CAMPUS_MATIN, effAnnee, grilles.matin))
+  const lignesSoir = lignesSimples(lignesDeLAnnee(GRILLE_CAMPUS_SOIR, effAnnee, grilles.soir))
+  const vides = compterCasesVides(GRILLE_CAMPUS_MATIN, lignesMatin) + compterCasesVides(GRILLE_CAMPUS_SOIR, lignesSoir)
   const moments = [
     ...(peutMatin ? [{ valeur: "matin", libelle: t("planning.campus.morning") }] : []),
     ...(peutSoir ? [{ valeur: "soir", libelle: t("planning.campus.evening") }] : []),
@@ -114,30 +120,28 @@ function CampusPage() {
   }
 
   return (
-    // Le volet Grille porte treize colonnes : toute la largeur ; les cartes gardent leur colonne étroite.
-    <div className={`${sub === "grille" ? "max-w-full" : "max-w-2xl"} space-y-4 mx-auto`}>
-      <div className="flex flex-wrap gap-3 items-center justify-between">
-        <div className="flex items-center gap-3 flex-wrap">
-          <h2 className="text-base font-bold text-foreground">{t("planning.pages.campus")}</h2>
-          <AnneeSelecteur annees={annees} annee={effAnnee} onChange={setAnnee} />
-        </div>
-        {loading && <span className="text-xs text-muted-foreground">{t("common.loading")}</span>}
-      </div>
-
-      <div className="flex gap-2">
-        {(["louange","entrainement","grille"] as CampusSub[]).map(s => (
-          <button
-            key={s}
-            onClick={() => changerVolet(s)}
-            className={`flex-1 py-2 px-4 rounded-xl border text-sm font-semibold transition-all duration-150 cursor-pointer ${
-              sub === s ? "text-white border-transparent" : "bg-card border-border text-muted-foreground hover:text-foreground"
-            }`}
-            style={sub === s ? { background: COLOR, borderColor: COLOR } : undefined}
-          >
-            {s === "louange" ? t("planning.campus.louange") : s === "entrainement" ? t("planning.campus.repetition") : t("planning.campus.grille")}
-          </button>
-        ))}
-      </div>
+    // Agencement v18 : la rangée sur toute la largeur, la vue (Louange · Répétition · Grille) en rail ;
+    // le volet Grille porte treize colonnes, toute la largeur ; les cartes gardent leur colonne.
+    <div className="max-w-full space-y-4">
+      <BarreDeGrille
+        titre={t("planning.pages.campus")}
+        couleur={COLOR}
+        detail={annee}
+        sousTitreBO={[t("planning.pages.campus"), t("planning.barre.casesVidesAnnee", { count: vides })].join(" · ")}
+        chargement={loading}
+      >
+        <OngletsRail
+          etiquette={t("planning.barre.vue")}
+          onglets={(["louange", "entrainement", "grille"] as CampusSub[]).map((v) => ({
+            id: v,
+            label: v === "louange" ? t("planning.campus.louange") : v === "entrainement" ? t("planning.campus.repetition") : t("planning.campus.grille"),
+          }))}
+          actif={sub}
+          choisir={(v) => changerVolet(v as CampusSub)}
+        />
+        <AnneeSelecteur annees={annees} annee={effAnnee} onChange={setAnnee} />
+        {sub === "grille" && <FiltreDeNom filtre={filtre} couleur={COLOR} />}
+      </BarreDeGrille>
 
       {sub === "grille" && (
         <div className="space-y-6">
@@ -145,7 +149,9 @@ function CampusPage() {
           <PlanningGrille
             definition={GRILLE_CAMPUS_MATIN}
             periode={annee}
-            lignes={lignesSimples(lignesDeLAnnee(GRILLE_CAMPUS_MATIN, effAnnee, grilles.matin))}
+            filtre={filtre}
+            legende={t("planning.campus.morning")}
+            lignes={lignesMatin}
             peutModifier={peutMatin}
             datesDansLApp={matinApp.datesDansLApp}
             comptes={matinApp.comptes}
@@ -156,11 +162,14 @@ function CampusPage() {
           <PlanningGrille
             definition={GRILLE_CAMPUS_SOIR}
             periode={annee}
-            lignes={lignesSimples(lignesDeLAnnee(GRILLE_CAMPUS_SOIR, effAnnee, grilles.soir))}
+            filtre={filtre}
+            legende={t("planning.campus.evening")}
+            lignes={lignesSoir}
             peutModifier={peutSoir}
             datesDansLApp={soirApp.datesDansLApp}
             comptes={soirApp.comptes}
-            exporter={peutSoir ? exporter : undefined}
+            // Un seul « Exporter » dans l'en-tête (v18, B6) : la page exportée mêle matin et soir.
+            exporter={peutSoir && !peutMatin ? exporter : undefined}
             vide={vide}
             retrait={retrait}
           />
@@ -168,11 +177,11 @@ function CampusPage() {
       )}
 
       {sub !== "grille" && order.length === 0 && (
-        <div className="text-center py-12 text-sm text-muted-foreground">{t("planning.campus.noSeance")}</div>
+        <div className="max-w-2xl text-center py-12 text-sm text-muted-foreground">{t("planning.campus.noSeance")}</div>
       )}
 
       {sub !== "grille" && order.map(day => (
-        <div key={day} className="bg-card shadow-soft rounded-xl overflow-hidden">
+        <div key={day} className="max-w-2xl bg-card shadow-soft rounded-xl overflow-hidden">
           <div className="px-4 py-2.5 text-sm font-semibold text-white" style={{ background: COLOR }}>{day}</div>
           {days[day].map((s, i) => {
             const isSoir = !s.d.includes("Matin")

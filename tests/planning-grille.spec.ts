@@ -121,9 +121,10 @@ test("historique : deux retouches d'une même case font une seule ligne, de l'av
 
 // ─── La grille en lecture (G1) ───────────────────────────────────────────────
 
-test("la grille du Culte : les colonnes du Sheet, un bandeau de période et d'horaire", async ({ page }) => {
+test("la grille du Culte : les colonnes du Sheet, la rangée dit le service, l'horaire et la période", async ({ page }) => {
   await open(page, PUBLIEUR, "/planning/culte");
-  const bandeau = page.getByTestId("grille-bandeau");
+  // Agencement v18 (A2) : le bandeau de couleur devient la rangée de la grille.
+  const bandeau = page.getByTestId("barre-grille");
   await expect(bandeau).toContainText("Culte Franco");
   await expect(bandeau).toContainText("Dimanche 10:30");
   await expect(bandeau).toContainText("2026");
@@ -145,15 +146,14 @@ test("ordinateur et tablette : les colonnes sont dans l'ordre du Sheet", async (
 
 test("le sélecteur de trimestre : T3 par défaut, T4 sur demande", async ({ page }) => {
   await open(page, PUBLIEUR, "/back-office/planning/culte");
-  // Le trimestre courant est choisi d'office, et le bandeau le nomme.
-  await expect(page.getByRole("button", { name: "T3" })).toBeVisible();
-  await expect(page.getByTestId("grille-bandeau")).toContainText("T3");
+  // Le trimestre courant est choisi d'office (rail de la période, agencement v18).
+  await expect(page.getByRole("tab", { name: "T3" })).toHaveAttribute("aria-selected", "true");
   await expect(laCase(page, "2026-10-11", "piano")).toHaveCount(0);
 
-  await page.getByRole("button", { name: "T4" }).click();
+  await page.getByRole("tab", { name: "T4" }).click();
   await expect(laCase(page, "2026-10-11", "piano")).toHaveText("Jo M.");
   await expect(laCase(page, "2026-09-20", "presidence"), "on ne voit qu'un trimestre à la fois").toHaveCount(0);
-  await expect(page.getByTestId("grille-bandeau")).toContainText("T4");
+  await expect(page.getByRole("tab", { name: "T4" })).toHaveAttribute("aria-selected", "true");
 });
 
 test("plus de fenêtre glissante : « Voir plus tôt » n'existe plus", async ({ page }) => {
@@ -202,7 +202,7 @@ test("trimestre non publié : invisible pour un membre, marqué « Non publié �
 test("trimestre non publié : le publieur voit les lignes, marquées", async ({ page }) => {
   await open(page, PUBLIEUR, "/back-office/planning/culte");
   // Le T4 n'est pas publié : le publieur a sa pilule, le membre ne l'a pas.
-  await page.getByRole("button", { name: "T4" }).click();
+  await page.getByRole("tab", { name: "T4" }).click();
   await expect(laCase(page, "2026-10-04", "presidence")).toHaveText("Paul W.");
   await expect(page.locator('[data-non-publie="2026-10-04"]').filter({ visible: true })).toBeVisible();
   await expect(page.locator('[data-non-publie="2026-09-20"]')).toHaveCount(0);
@@ -291,7 +291,7 @@ test("l'historique nomme l'auteur, la case et le dimanche", async ({ page }) => 
 test("en 中文 : colonnes, horaire et pied de grille traduits", async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
   await open(page, PUBLIEUR, "/planning/culte");
-  await expect(page.getByTestId("grille-bandeau")).toContainText("主日 10:30");
+  await expect(page.getByTestId("barre-grille")).toContainText("主日 10:30");
   // Ordinateur et tablette : l'en-tête de colonne ; téléphone : le libellé de la carte.
   await expect(page.getByText("钢琴").filter({ visible: true }).first()).toBeVisible();
   await expect(page.getByText("某个主日无法服事？请联系负责排表的同工。")).toBeVisible();

@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next"
 import { PlanningGrille } from "@/components/planning/PlanningGrille"
 import { AnneeSelecteur } from "@/components/planning/AnneeSelecteur"
 import { AjouterDate } from "@/components/planning/AjouterDate"
+import { BarreDeGrille, FiltreDeNom, compterCasesVides, useFiltreNom } from "@/components/planning/BarreDeGrille"
 import { PREMIERE_ANNEE_APP, anneesDuPlanning, dimanchesDe, lignesDeLAnnee, lignesSimples, type DefinitionGrille } from "@/lib/planning/grilles"
 import { useGrilleApp } from "@/lib/planning/useGrilleApp"
 import { poserDate } from "@/lib/firebase/planningGrille"
@@ -34,6 +35,7 @@ export function PageDatesChoisies({ definition, lire, lireAutre }: {
   const [loading, setLoading] = useState(true)
   // Lot U6, B2 : on remplit au Back-Office ; dans l'App, la page se lit.
   const gestion = useGestionPlanning()
+  const filtre = useFiltreNom()
   const peutModifier = gestion && canEditPlanning(user, profile, definition.key)
   const { datesDansLApp, comptes } = useGrilleApp(definition.key, peutModifier)
 
@@ -51,6 +53,7 @@ export function PageDatesChoisies({ definition, lire, lireAutre }: {
   const effAnnee = annees.includes(annee) ? annee : anneeCourante
   const lignes = lignesDeLAnnee(definition, effAnnee, rows)
   const dansLApp = effAnnee >= PREMIERE_ANNEE_APP
+  const periode = t("planning.grille.periodeAnnee", { annee: effAnnee })
 
   const pris = new Set([...lignes, ...lignesDeLAnnee(definition, effAnnee, autre)].map((r) => r[0]))
   const proposes = dimanchesDe(effAnnee).filter((d) => !pris.has(d))
@@ -64,19 +67,24 @@ export function PageDatesChoisies({ definition, lire, lireAutre }: {
 
   return (
     <div className="max-w-full space-y-4 mx-auto">
-      <div className="flex flex-wrap gap-3 items-center justify-between">
-        <div className="flex items-center gap-3 flex-wrap">
-          <h2 className="text-base font-bold text-foreground">{t(definition.i18nTitre)}</h2>
-          <AnneeSelecteur annees={annees} annee={effAnnee} onChange={setAnnee} />
-        </div>
-        {loading && <span className="text-xs text-muted-foreground">{t("common.loading")}</span>}
-      </div>
+      {/* Agencement v18 (A2, B7) : la rangée de la grille ; toute l'année, l'année seule en rail. */}
+      <BarreDeGrille
+        titre={t(definition.i18nTitre)}
+        couleur={definition.couleur}
+        detail={periode}
+        sousTitreBO={[t(definition.i18nTitre), t("planning.barre.casesVidesAnnee", { count: compterCasesVides(definition, lignesSimples(lignes)) })].join(" · ")}
+        chargement={loading}
+      >
+        <AnneeSelecteur annees={annees} annee={effAnnee} onChange={setAnnee} />
+        <FiltreDeNom filtre={filtre} couleur={definition.couleur} />
+      </BarreDeGrille>
 
       {peutModifier && dansLApp && <AjouterDate annee={effAnnee} dimanches={proposes} onAjouter={ajouter} />}
 
       <PlanningGrille
         definition={definition}
-        periode={t("planning.grille.periodeAnnee", { annee: effAnnee })}
+        periode={periode}
+        filtre={filtre}
         lignes={lignesSimples(lignes)}
         peutModifier={peutModifier}
         datesDansLApp={datesDansLApp}

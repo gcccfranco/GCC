@@ -1024,3 +1024,164 @@ la barre d'onglets : une page sans barre du bas (rare) le verra plus haut que n�
   variante compacte de `Pilules` pour tout le site ; (3) « En chinois » sur une colonne même quand la carte
   prend toute la largeur (tablette portrait) ; (4) sur une fenêtre de 1 024 à environ 1 100 px barre dépliée, le
   tableau « Les plus joués » défile dans sa carte : le garder, ou empiler les chiffres au-dessus du tableau.
+
+### V18T4 — Planning (T4a)
+
+- 06/10/2026 (fini le 07/10) : **T4a faite** (branche `lot/v18-t4`, commit `7666e03`) : B6, B7, A2, A3.
+  - **En-tête commun** : App, `PlanningTabs` pose `EnTetePage` « Planning » (sous-titre « Qui sert quand, dans tous
+    les plannings de l'église ») au-dessus de toute la section ; en grand, les huit plannings en `Pilules` (liens,
+    l'actif à la couleur de son service) dans sa rangée `apres` ; sur téléphone et tablette portrait, la barre
+    collante de V7 (`SectionTabs`, feuille en tuiles) reste, posée sous le titre (R6). L'accueil perd son
+    `PageTitle` (un seul h1). Back-Office : `EnTetePage` « Planning », rail Plannings · Sans compte (admins) ; la
+    page ouverte écrit son sous-titre (« Culte Franco · Dimanche 10:30 · n cases vides ce trimestre »,
+    `colonnesVides`) et ses outils (« Exporter » en contour, « Enregistré », « Chargement… ») dans l'en-tête par
+    un portail (`EmplacementsEnTete`, `DansLEnTete`).
+  - **Rangée de la grille** (`components/planning/BarreDeGrille.tsx`, nouveau), la même pour toutes les pages
+    (Culte, Table, Groupes, EDD, Campus, Intergroupe, Interfranco) : App = pastille + h2 22 px du service +
+    « Dimanche 10:30 · 4e trimestre 2026 » ; Back-Office = les plannings de la personne en pilules (`compact`,
+    l'actif à la couleur du service ; en grand une seule rangée, les pilules défilent et s'estompent si elles
+    ne tiennent pas) ; puis à droite vues, période et filtres. **Période unique** : `AnneeSelecteur` devient un
+    `OngletsRail`, T1–T4 aussi (cadenas sur un trimestre non publié) ; EDD : classe et période en rail ; Campus :
+    Louange · Répétition · Grille en rail. **Groupes** : Paix · Fidélité · Bonté en rail à pastille, Fidélité ›
+    Groupe · Musiciens en pilules. « Mon prénom ✕ » et « Mes dates » sortent de la grille (`useFiltreNom`,
+    `FiltreDeNom`) ; au Back-Office, « Mes dates » seul (le nom vient du profil ou de l'appareil).
+  - **Grille de l'App** (A2) : carte en relief, en-tête gris, la couleur du service sur les dates seulement, son
+    nom en encre ; au Back-Office, l'en-tête de couleur de la planche. Plus de bandeau `grille-bandeau`.
+  - **Halo** : au Back-Office, un planning ouvert prend la couleur de son service (R12) ; Sans compte garde le
+    bleu gris.
+  - `Pilules` (F1) gagne `href` (pilules-liens, `aria-current`) et `compact` ; `SectionTabs` gagne `className`,
+    et mesure où la barre est vraiment posée (`--barre-top`, hors translation) : au repos sous le titre, la copie
+    du halo de son fond faisait une bande ; elle ne s'efface au défilement qu'une fois collée (sinon elle
+    remontait sur le titre). Campus : un seul « Exporter » (celui du matin, ou du soir pour qui n'a que le soir),
+    la page exportée mêlant les deux.
+- **Tests** : `tests/agencement-v18-planning.spec.ts` (14 tests × 5 projets, captures comprises), rouges avant le code
+  (aucun `barre-grille`, aucun rail ni h1 « Planning » dans le Planning d'avant), puis verts. Réécrits pour les
+  rails (bouton → onglet, `grille-bandeau` → `barre-grille`, rangée de l'en-tête en grand) :
+  `planning-2027`, `planning-campus`, `planning-edd`, `planning-export-modele`, `planning-grille`,
+  `planning-groupes-grille`, `planning-table`, `back-office-admin`, `agencement-v18-confirmations`,
+  `look-navigation`, `look-planning-feuille` ; `look-barres` (Planning : barre posée sous le titre, comparée
+  collée ; sautée en grand, où elle n'existe plus ; vue rouge sur la bande du halo avant la mesure de
+  `--barre-top`), `agencement-barre-reduite` (accueil : 40 px de marge, R2). Voisines vertes le 07/10 :
+  27 fichiers (planning-*, look-*, back-office-*, agencement-*, halo, navigation, coherence) et
+  `back-office-coupe` + `pages-en-grand-accueil` sur le second serveur. Captures regardées aux cinq tailles
+  (BO Culte, App Culte, Groupes).
+- **Écarts à la planche** : la période est en deux rails (année, T1–T4, B7) et non « ‹ T4 2026 › » ; les pilules
+  des plannings de l'App ont l'actif à la couleur du service (R4), la planche le dessine en encre. Les pages
+  « comme en ligne » (`AncienTableau`, interrupteur coupé) ne changent pas : elles gardent leur h2 et leurs
+  boutons sous le nouvel en-tête « Planning ».
+- **Reste** : T4b (accueil A1 : rangée Groupes · EDD · Table barre réduite ; Prépa. Table A4 en deux colonnes).
+  `FilterButtons` n'a plus d'appel que dans les `AncienTableau` (tranche Z).
+- **Timothée** : rien à publier (aucune règle, aucune donnée) ; relire le 中文 de `planning.barre.*`
+  (教会所有服侍表：谁在何时服侍, 季度, 时段, 班级, 视图, « 2026年第四季度 », « 本季度 n 个空缺 »…).
+
+### V18T4 — Planning (T4b)
+
+- 06/10/2026 (fini le 07/10) : **T4b faite** (branche `lot/v18-t4`, commit `3eae319`) : A1, A4.
+  - **Accueil (A1)** : l'en-tête et les plannings sous le titre viennent de T4a ; « Pour moi » (prochain service,
+    setlist du service) ne change pas. En grand, « Ce dimanche » est un conteneur (R15) : à partir de 720 px
+    (ordinateur-1440 barre réduite), le Culte passe en trois colonnes et Groupes · EDD · Table tiennent sur une
+    rangée. La Table y est sur deux étages (libellé au-dessus du nom), avec un en-tête « Table » à sa couleur,
+    comme Groupes et EDD (planche `table_empilee`). Barre dépliée : la Table reste sous Groupes et EDD, sur une
+    ligne. La tablette et le téléphone ne changent pas.
+  - **Prépa. Table (A4, piste A)** : sous la rangée de la grille, deux colonnes en grand (`1.25fr | 1fr`). À gauche,
+    la carte **Petit déj** du trimestre : « n libres sur N », une ligne par dimanche (« Libre » + « Je m'inscris », le
+    nom, ou le sien en encre). Une ligne qu'on peut toucher porte un « ⋯ » (`MenuActions` : Modifier, Retirer
+    confirmé) au lieu de deux boutons. À droite, **Prépa. Table du Seigneur** (les équipes du trimestre choisi :
+    tuile de date, noms, « Dimanche de sainte cène », « un dimanche par mois » ; les dimanches passés estompés),
+    puis **Ton petit déj** (son prochain dimanche, le même « ⋯ », l'astuce « Famille … »). Ailleurs, l'un sous
+    l'autre. Plus de `max-w-lg`. Les deux cartes du petit déj partagent un état (`usePetitDej`).
+    `MenuActions` gagne `ouvreUnChamp` : l'action attend la fermeture du menu (sinon le focus rendu au « ⋯ »
+    refermait aussitôt le champ « Modifier »).
+- **Tests** : 9 tests T4b dans `tests/agencement-v18-planning.spec.ts`, × 5 projets (accueil, barre dépliée / réduite,
+  deux colonnes, Table du trimestre, « ⋯ » du petit déj, « Ton petit déj », captures). Ils ont été vus rouges avant
+  le code (33 échecs), puis les ajouts « tuile + sainte cène » et « en-tête Table » ont été vus rouges à leur
+  tour, puis tout est passé au vert. Réécrits pour le « ⋯ » et « n libres sur N » : `planning-petit-dej`,
+  `agencement-v18-confirmations` et `back-office-admin` (la Table montre le trimestre, plus seulement le prochain
+  dimanche). Ces quatre fichiers × 5 projets donnent 524 verts. Voisines : `planning-accueil`,
+  `pages-en-grand-accueil`, `agencement-barre-reduite`, `planning-table`, `look-planning`, `planning-sainte-cene`,
+  `planning-2027`, `back-office-coupe` (second serveur) donnent 475 verts. Captures regardées (accueil à 1 440 px barre réduite ; Prépa. Table sur
+  ordinateur, à 1 440 px et sur téléphone).
+- **Écarts à la planche** : « Groupes » et « Table » sans l'heure (« · 13:00 », « · 10:00 ») : l'accueil d'avant ne
+  la montrait pas (A1 : « le reste ne change pas ») ; la rangée de la grille garde le titre « Prépa. Table du
+  Seigneur » de T4a (la planche dit « Prépa. Table »). L'astuce « ⋯ › Ajouter une ligne » de la planche n'est pas
+  dans « Ton petit déj » : « Ajouter une ligne » est un bouton réservé à qui gère le petit déj, que la carte
+  montre déjà.
+- **Reste** : rien pour T4. `FilterButtons` n'a plus d'appel que dans les `AncienTableau` (tranche Z).
+- **Timothée** : rien à publier (aucune règle, aucune donnée). Relire le 中文 : `planning.petitDej.libresSur`
+  (« 13 个主日中 n 个空闲 »), `ton` (你的早餐), `aucunAVenir` (你还没有报名之后的早餐。), `accueil.carteTable`
+  (圣餐桌), `table.unDimancheParMois` (每月一个主日), `table.dimancheSainteCene` (圣餐主日). Vérifier aussi que la
+  Prépa. Table du Seigneur tombe bien « un dimanche par mois », comme sur la planche.
+
+### V18T4 — Planning (fusion des fondations relues)
+
+- 07/10/2026 : **`lot/v18-fondations` fusionnée** dans `lot/v18-t4` (commit `93efff8`, relecture `5d4e94c`). Deux
+  conflits, les deux intentions gardées : `MenuActions` garde `ouvreUnChamp` (T4b, l'action attend la fermeture du
+  menu) et la clé par position (fondations) ; ici, l'avancement « V18F — Relecture » avant les sous-sections V18T4.
+  Rien d'autre à reprendre dans le Planning : les actions du « ⋯ » du petit déj montrent déjà leurs erreurs
+  (`ecrire`), les rails du Planning (année, trimestre, classe, vue, groupes) prennent le clavier des fondations
+  sans changer de rôles.
+- **Vérifications communes données** (contrat de la relecture : `contenu` et `onglets` à chaque tranche) dans
+  `tests/agencement-v18-planning.spec.ts` : BO Culte (grille pleine zone ; trois rails, sous-parties, année,
+  trimestre ; une rangée de pilules), App Culte (grille pleine zone ; le trimestre en rail ; les plannings en pilules
+  en grand seulement), accueil (contenu pleine zone ; pilules en grand) et Prépa. Table (rangée pleine zone ; un
+  rail ; pilules en grand).
+- **Tests** (07/10/2026) : `tsc --noEmit` et `npm run lint` sans erreur ; `agencement-v18-planning`,
+  `agencement-v18-fondations`, `agencement-v18-confirmations`, `planning-petit-dej`, `back-office-admin`,
+  `planning-2027` : 682 verts ; `planning-grille`, `planning-campus`, `planning-edd`, `planning-groupes-grille`,
+  `planning-table`, `planning-export-modele`, `look-planning-feuille`, `look-barres`, `look-navigation`,
+  `agencement-barre-reduite` : 303 verts ; `back-office-coupe` (second serveur) : 59 verts. Captures
+  regardées après la fusion (BO Culte à 1 440 px, accueil barre réduite, Prépa. Table sur téléphone) : inchangées.
+- **Reste** : rien pour T4. Le lot est prêt pour l'intégration.
+- **Timothée** : rien à publier (aucune règle, aucune donnée) ; le 中文 à relire reste celui de T4a et T4b.
+
+### V18T4 — Planning (relecture)
+
+- 07/10/2026 : **deux relectures corrigées** (branche `lot/v18-t4`, commit « fix(V18T4): relecture — … »). Onze
+  constats : deux importants et six mineurs corrigés, deux mineurs consignés (écarts à la planche), un écarté.
+  - **Tests de chaque planning** (important) : un test par planning, dans l'App et au Back-Office (Culte, Prépa.
+    Table, Groupes, EDD, Campus, Intergroupe, Interfranco). App : un seul h1 « Planning », le service en h2 dans
+    la rangée. BO : le sous-titre exact (« <planning> · … · n cases vides ce trimestre / sur la période / cette
+    année »), la pilule du planning ouvert, pas de h2. Les deux avec `verifierAgencement`. Intergroupe et
+    Interfranco passent par `PageDatesChoisies`.
+  - **« Ton petit déj › ⋯ › Modifier »** (important) : quand la carte du trimestre affiché ne montre pas ce dimanche
+    (autre trimestre, autre année), le champ s'ouvre sur place, dans « Ton petit déj », à la place de la date.
+    Sinon il reste dans la rangée de la carte. Il n'y a jamais deux champs à la fois. Le champ est maintenant un
+    composant du module (`ChampDeSaisie`), partagé par les deux cartes.
+  - **« Cette semaine »** : la date reste affichée et le badge passe dessous, dans l'App comme au Back-Office
+    (planches `v18-app-planning-grille-a`, `v18-bo-planning-a`). Le téléphone affichait déjà les deux.
+  - **Sous-titre du Back-Office sur téléphone** : il passe à la ligne au lieu d'être coupé. Le nombre de cases
+    vides reste lisible.
+  - **« 1 libre sur 13 »** : `libresSur_one` et `libresSur_other` (fr), `libresSur_other` (中文, avec `{{count}}`).
+  - **Prénom effacé** : `useFiltreNom` distingue « effacé » (`""` enregistré) de « jamais noté » (`null`). Un nom
+    effacé n'est plus remis par le profil. L'ancien tableau (`PlanningTable`, le site en ligne) utilise maintenant
+    `useFiltreNom` au lieu de sa copie, avec le même correctif.
+  - **`SectionTabs`** : la mesure de `--barre-top` n'est plus faite que pour une barre posée sous un titre
+    (`sousLeTitre`, seul le Planning l'active). Évènements retrouve exactement la barre d'avant T4a : aucune mesure
+    au défilement. `transitionend` ne réagit plus qu'à la barre elle-même, et `--barre-top` n'est réécrite que si
+    elle change. Ce n'est pas un changement visible : `look-barres`, `look-planning-feuille`, `look-navigation` et
+    `halo-partout` le gardent.
+  - **Accueil, tests ajoutés** : sur la tablette couchée (barre réduite), « Ce dimanche » reste sous 720 px. La
+    Table est donc sous Groupes et EDD, sur une ligne (R15, seuil du conteneur). Un dimanche d'Interfranco à
+    1 440 px, barre réduite : la Table reste sous Interfranco et EDD, sur une ligne, sans en-tête « Table ».
+  - **Écarté** : « Ton petit déj » pour un visiteur sans compte. La section Planning est sous `RequireAuth`, qui ne
+    rend rien sans utilisateur, donc la carte ne peut pas s'afficher sans nom.
+- **Tests** : rouges avant le code (21 échecs sur cinq projets : « Cette semaine », prénom effacé, « Ton petit
+  déj » hors trimestre, « 1 libre sur 13 », sous-titre sur téléphone ; `back-office-coupe` : prénom effacé de
+  l'ancien tableau, 3 échecs), puis verts. Les tests de couverture (chaque planning, tablette couchée,
+  Interfranco) étaient verts dès le premier passage. Après le code : `agencement-v18-planning` (cinq projets) et
+  ses voisines (`planning-petit-dej`, `planning-table`, `planning-grille`, `planning-2027`, `planning-edd`,
+  `planning-campus`, `planning-groupes-grille`, `look-barres`, `look-planning-feuille`, `look-navigation`,
+  `agencement-v18-confirmations`, `back-office-admin`, `planning-accueil`, `pages-en-grand-accueil`, `halo-partout`,
+  `agencement-barre-reduite`) donnent 1 019 verts ; `back-office-coupe` (second serveur) en donne 178 ;
+  `tsc --noEmit` et `npm run lint` sans erreur. Captures regardées : BO Culte sur téléphone (sous-titre sur
+  deux lignes), App et BO Culte (« 15/11 » puis « Cette semaine »), « Ton petit déj » en saisie hors trimestre.
+- **Écarts à la planche, en plus de ceux de T4a et T4b** : l'accueil n'a l'heure sur aucune carte. Il manque donc
+  aussi « Culte Franco 10:30 » et « EDD · 13:00 », pas seulement Groupes et Table (A1 : « le reste ne change
+  pas »). Dans l'App, la rangée de la Prépa. Table n'a ni « Prénom ✕ » ni « Mes dates », que la planche
+  `v18-app-planning-table-a` dessine. La Table de l'App n'a pas de grille à filtrer, et la carte Petit déj montre
+  déjà son nom en encre. Au Back-Office, la grille de la Table garde « Mes dates ».
+- **Reste** : rien pour T4. Le lot est fini, relu et prêt pour l'intégration.
+- **Timothée** : rien à publier (aucune règle, aucune donnée). Relire le 中文 de `planning.petitDej.libresSur_other`
+  (« {{total}} 个主日中 {{count}} 个空闲 », texte inchangé). Dire si l'accueil doit montrer les heures de la planche
+  (Culte, Groupes, EDD, Table) et si la Table de l'App doit avoir « Prénom ✕ » et « Mes dates ».
+  Note pour l'intégration : `PlanningTable` (l'ancien tableau en ligne) change. Un prénom effacé y reste effacé.

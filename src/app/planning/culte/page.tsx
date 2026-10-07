@@ -19,7 +19,8 @@ import {
   canPublishPlanning,
   getPublishedQuarters,
 } from "@/lib/planning/releases"
-import { FilterButtons } from "@/components/planning/FilterButtons"
+import { OngletsRail } from "@/components/layout/Onglets"
+import { BarreDeGrille, FiltreDeNom, compterCasesVides, ongletsDePeriode, useFiltreNom, useTrimestreEnLettres } from "@/components/planning/BarreDeGrille"
 import { BACK_OFFICE } from "@/lib/backOffice"
 import { useGestionPlanning } from "@/lib/planning/gestion"
 import { AncienTableau } from "./AncienTableau"
@@ -49,6 +50,8 @@ function CultePage() {
   const [published, setPublished] = useState<Record<number, string[]>>({})
 
   const gestion = useGestionPlanning()
+  const filtre = useFiltreNom()
+  const trimestre = useTrimestreEnLettres()
   const peutModifier = gestion && canEditPlanning(user, profile, "culte")
   const { datesDansLApp, comptes } = useGrilleApp("culte", peutModifier)
 
@@ -75,12 +78,19 @@ function CultePage() {
 
   return (
     <div className="max-w-full space-y-4 mx-auto">
-      <div className="flex flex-wrap gap-3 items-center justify-between">
-        <div className="flex items-center gap-3 flex-wrap">
-          <h2 className="text-base font-bold text-foreground">{t("planning.pages.culte")}</h2>
-          <AnneeSelecteur annees={annees} annee={effAnnee} onChange={changerAnnee} />
-        </div>
-        {status === "loading" && <span className="text-xs text-muted-foreground">{t("common.loading")}</span>}
+      {/* Agencement v18 (A2, B6, B7) : la rangée de la grille, puis la grille. */}
+      <BarreDeGrille
+        titre={t("planning.pages.culte")}
+        couleur={GRILLE_CULTE.couleur}
+        detail={[t("planning.horaires.culte"), effTri && trimestre(effTri, effAnnee)].filter(Boolean).join(" · ")}
+        sousTitreBO={[t("planning.pages.culte"), t("planning.horaires.culte"),
+          t("planning.barre.casesVidesTrimestre", { count: compterCasesVides(GRILLE_CULTE, lignes) })].join(" · ")}
+        chargement={status === "loading"}
+      >
+        <AnneeSelecteur annees={annees} annee={effAnnee} onChange={changerAnnee} />
+        {visibleTris.length > 0 && (
+          <OngletsRail etiquette={t("planning.barre.trimestre")} onglets={ongletsDePeriode(visibleTris, unpublishedTris)} actif={effTri} choisir={setTri} />
+        )}
         {canPublish && effTri && aVenir && (
           <BoutonPublication
             planningKey={CULTE.key}
@@ -91,22 +101,16 @@ function CultePage() {
             onChange={(p) => setPublished((prev) => ({ ...prev, [effAnnee]: p }))}
           />
         )}
-      </div>
+        <FiltreDeNom filtre={filtre} couleur={GRILLE_CULTE.couleur} />
+      </BarreDeGrille>
 
       <StaleBanner show={status === "stale"} />
       <BandeauAnnee annee={effAnnee} brouillon={brouillon} dimanches={brouillon ? dimanchesDe(effAnnee).length : null} />
 
-      <FilterButtons
-        options={visibleTris}
-        active={effTri}
-        onChange={setTri}
-        color={GRILLE_CULTE.couleur}
-        unpublished={unpublishedTris}
-      />
-
       <PlanningGrille
         definition={GRILLE_CULTE}
         periode={`${effTri} ${effAnnee}`}
+        filtre={filtre}
         lignes={lignes}
         peutModifier={peutModifier}
         datesDansLApp={datesDansLApp}

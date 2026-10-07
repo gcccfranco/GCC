@@ -16,6 +16,7 @@
 // `evenements/[id]/Inscriptions.tsx`) : le menu, déjà fermé, n'a rien pour les montrer, et une
 // erreur qui en sort n'est rattrapée par personne.
 
+import { useRef } from "react";
 import type { LucideIcon } from "lucide-react";
 import { MoreHorizontal } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -34,13 +35,19 @@ export type ActionDuMenu = {
   destructif?: boolean;
   /** Demande d'abord confirmation dans le site (bouton rouge si `destructif`). */
   confirmer?: Omit<DemandeDeConfirmation, "destructif">;
+  /** Ouvre un champ ailleurs dans la page (« Modifier » en place) : l'action attend que le menu
+   *  soit fermé, et le focus ne revient pas au « ⋯ ». Sinon le menu, encore monté pendant sa
+   *  sortie, reprend le focus au champ, qui se ferme aussitôt. */
+  ouvreUnChamp?: boolean;
 };
 
 export function MenuActions({ actions, label }: { actions: ActionDuMenu[]; label?: string }) {
   const { t } = useTranslation();
   const confirmer = useConfirmer();
+  const enAttente = useRef<ActionDuMenu | null>(null);
 
   const choisir = async (a: ActionDuMenu) => {
+    if (a.ouvreUnChamp) { enAttente.current = a; return; }
     if (a.confirmer && !(await confirmer({ ...a.confirmer, destructif: a.destructif }))) return;
     await a.onSelect();
   };
@@ -53,7 +60,17 @@ export function MenuActions({ actions, label }: { actions: ActionDuMenu[]; label
       >
         <MoreHorizontal className="h-4 w-4" aria-hidden />
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="min-w-48">
+      <DropdownMenuContent
+        align="end"
+        className="min-w-48"
+        onCloseAutoFocus={(e) => {
+          const a = enAttente.current;
+          if (!a) return;
+          enAttente.current = null;
+          e.preventDefault();
+          void a.onSelect();
+        }}
+      >
         {actions.map((a, i) => {
           const Icone = a.icone;
           return (

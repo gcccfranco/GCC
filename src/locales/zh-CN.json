@@ -1047,7 +1047,8 @@
       "dansJours_other": "{{count}} 天后",
       "evenements": "近期活动",
       "libre": "空闲",
-      "inscrire": "我来报名"
+      "inscrire": "我来报名",
+      "carteTable": "圣餐桌"
     },
     "dataPending": "数据待更新",
     "staleData": "无法获取在线安排——当前为本地数据，可能已过期。",
@@ -1105,7 +1106,9 @@
       "myDates": "我的日期",
       "noData": "暂无数据",
       "thisWeek": "本周",
-      "clear": "清除"
+      "clear": "清除",
+      "unDimancheParMois": "每月一个主日",
+      "dimancheSainteCene": "圣餐主日"
     },
     "grille": {
       "enregistre": "已保存",
@@ -1129,7 +1132,9 @@
       "periodeAnnee": "{{annee}} 年"
     },
     "petitDej": {
-      "trimestre": "第{{n}}季度",
+      "libresSur_other": "{{total}} 个主日中 {{count}} 个空闲",
+      "ton": "你的早餐",
+      "aucunAVenir": "你还没有报名之后的早餐。",
       "libre": "空闲",
       "inscrire": "我来报名",
       "modifier": "修改",
@@ -1141,6 +1146,17 @@
       "illisible": "暂时无法读取报名。",
       "echec": "保存失败，请重试。",
       "tonNom": "你的名字"
+    },
+    "barre": {
+      "sousTitre": "教会所有服侍表：谁在何时服侍",
+      "trimestre": "季度",
+      "periode": "时段",
+      "classe": "班级",
+      "vue": "视图",
+      "trimestres": { "T1": "{{annee}}年第一季度", "T2": "{{annee}}年第二季度", "T3": "{{annee}}年第三季度", "T4": "{{annee}}年第四季度" },
+      "casesVidesTrimestre_other": "本季度 {{count}} 个空缺",
+      "casesVidesPeriode_other": "本时段 {{count}} 个空缺",
+      "casesVidesAnnee_other": "今年 {{count}} 个空缺"
     },
     "horaires": {
       "culte": "主日 10:30",

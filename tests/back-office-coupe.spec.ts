@@ -162,6 +162,38 @@ test.describe("back-office coupé : la Sainte cène reste un service à part ent
   });
 });
 
+// Agencement v18, relecture de T4 : l'ancien tableau et la rangée de la grille tiennent le prénom par
+// le même code (`useFiltreNom`). Un prénom effacé (enregistré vide sur l'appareil) était remis par le
+// profil au chargement suivant. Noms fictifs.
+test.describe("back-office coupé : un prénom effacé dans l'ancien tableau le reste", () => {
+  const csv = (rows: string[][]) => rows.map((r) => r.map((c) => `"${c}"`).join(",")).join("\n");
+  const CULTE = csv([
+    ["2026 DATE", "Présidence", "Choristes", "", "Pianiste", "Guitariste", "Batterie", "Sono + Live", "PPT", "Orateur", "Traducteur", "Sainte cène", "Notes"],
+    ["20/09", "Président A.", "Choriste B.", "Choriste C.", "Pianiste D.", "", "", "", "", "", "", "", ""],
+  ]);
+  const PIANISTE: FakeProfile = { uid: "uid-pianiste", email: "pianiste@example.com", planningName: "Pianiste D." };
+
+  test("le profil ne remet pas un prénom effacé, après un rechargement", async ({ page }) => {
+    await page.clock.setFixedTime(new Date("2026-09-18T10:00:00"));
+    await page.route(/docs\.google\.com\/spreadsheets/, (route) => {
+      const sheet = new URL(route.request().url()).searchParams.get("sheet");
+      return route.fulfill({ status: 200, contentType: "text/csv", body: sheet === "Franco_Louange" ? CULTE : "" });
+    });
+    await signInAs(page, PIANISTE, {}, "/planning/culte");
+    const champ = page.getByPlaceholder("Mon prénom…");
+    await expect(champ, "prérempli depuis le profil").toHaveValue("Pianiste D.");
+    await page.getByRole("button", { name: "Effacer" }).click();
+    await expect(champ).toHaveValue("");
+    const profilLu = page.waitForResponse((r) => r.url().includes("/documents/users/uid-pianiste"));
+    await page.reload();
+    await profilLu;
+    await expect(page.getByText("Président A.").filter({ visible: true }).first()).toBeVisible();
+    // Le profil est lu : laisser à React le temps d'en tirer le prénom, s'il le faisait.
+    await page.waitForTimeout(500);
+    await expect(champ).toHaveValue("");
+  });
+});
+
 // Lot U2, P4 (docs/spec-planning-2027.md, Q5 et Q14) : la présidence d'un groupe
 // un dimanche d'Interfranco ou d'Intergroupe vient de leur grille… derrière
 // l'interrupteur. En ligne, rien ne change : « Mes services » lit le Sheet tel quel.
