@@ -87,10 +87,13 @@ export function SonRd2000({ n }: { n: string }) {
   const son = donnees.sons.find((s) => s.n === n);
   const recette = donnees.recettes.find((r) => r.n === n);
   const fiche = donnees.fiches.find((f) => f.n === n);
+  // En grand, sous l'en-tête « Harmonie » : un h2 de 24 px (agencement v18, R3) ; seul, le h1.
+  const Titre = deuxVolets ? "h2" : "h1";
+  const titre = cn("font-bold leading-tight", deuxVolets ? "text-[24px]" : "text-[22px]");
 
   return (
     <div
-      className={cn("space-y-6 pb-10", deuxVolets ? "px-6 pt-6 xl:px-9" : "mx-auto max-w-2xl px-4 pt-3 md:max-w-3xl md:px-6")}
+      className={cn("space-y-6 pb-10", deuxVolets ? undefined : "mx-auto max-w-2xl px-4 pt-3 md:max-w-3xl md:px-6")}
       data-son-page={n}
     >
       {!deuxVolets && (
@@ -108,7 +111,7 @@ export function SonRd2000({ n }: { n: string }) {
             <div className="flex items-center gap-4">
               <p className="text-[34px] font-bold leading-none tabular-nums">{son.n}</p>
               <div className="min-w-0">
-                <h1 className="text-[22px] font-bold leading-tight">{son.nom}</h1>
+                <Titre className={titre}>{son.nom}</Titre>
                 <p className="text-[13px] text-muted-foreground">{son.categorie} › {son.sousCategorie}</p>
               </div>
             </div>
@@ -145,7 +148,7 @@ export function SonRd2000({ n }: { n: string }) {
           <>
             <header className="space-y-1">
               <p className="text-[34px] font-bold leading-none tabular-nums">{recette.n}</p>
-              <h1 className="text-[22px] font-bold leading-tight">{recette.nom}</h1>
+              <Titre className={titre}>{recette.nom}</Titre>
               {recette.pourquoi && <p className="text-[15px] text-muted-foreground">{recette.pourquoi}</p>}
             </header>
             {recette.exemples.length > 0 && (

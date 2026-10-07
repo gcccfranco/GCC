@@ -22,14 +22,19 @@ function fromFsEquipe(raw: RawDoc): Equipe {
   };
 }
 
-export async function listEquipes(): Promise<Equipe[]> {
+/** Toutes les équipes. Une réponse en erreur donne une liste vide, sauf avec `strict` : elle lève alors
+ *  (l'aperçu de Moi ne la prend pas pour « aucune équipe »). */
+export async function listEquipes({ strict = false }: { strict?: boolean } = {}): Promise<Equipe[]> {
   const headers = await authHeader();
   const res = await fetch(`${FS_BASE}:runQuery`, {
     method: "POST",
     headers: { "Content-Type": "application/json", ...headers },
     body: JSON.stringify({ structuredQuery: { from: [{ collectionId: "equipes" }] } }),
   });
-  if (!res.ok) return [];
+  if (!res.ok) {
+    if (strict) throw new Error(`Lecture des équipes : ${res.status}`);
+    return [];
+  }
   const rows = (await res.json()) as Array<{ document?: RawDoc }>;
   return rows.filter((r) => r.document).map((r) => fromFsEquipe(r.document!));
 }

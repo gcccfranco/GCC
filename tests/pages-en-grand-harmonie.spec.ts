@@ -82,7 +82,8 @@ test.describe("Harmonie : le catalogue", () => {
   test("en grand, le catalogue à gauche et, sans fiche choisie, la première de la liste à droite", async ({ page }, info) => {
     test.skip(!enGrand(info), "deux volets : ordinateur et tablette paysage");
     await entrer(page, "/harmonie");
-    await expect(liste(page).getByRole("heading", { name: "Harmonie" })).toBeVisible();
+    // Agencement v18 (A16) : le titre est dans l'en-tête de la section, au-dessus des deux volets.
+    await expect(page.locator("header[data-entete-page]").getByRole("heading", { level: 1, name: "Harmonie" })).toBeVisible();
     await expect(detail(page).locator(`[data-fiche="${PREMIERE.id}"]`)).toBeVisible();
     await expect(page, "l'adresse ne change qu'au premier toucher").toHaveURL(/\/harmonie\/?$/);
     const l = await boite(liste(page));
@@ -96,7 +97,7 @@ test.describe("Harmonie : le catalogue", () => {
     test.skip(!enGrand(info), "deux volets : ordinateur et tablette paysage");
     await entrer(page, `/harmonie/${AUTRE.id}`);
     await expect(detail(page).locator(`[data-fiche="${AUTRE.id}"]`)).toBeVisible();
-    await expect(liste(page).getByRole("heading", { name: "Harmonie" })).toBeVisible();
+    await expect(page.locator("header[data-entete-page]").getByRole("heading", { level: 1, name: "Harmonie" })).toBeVisible();
     await expect(liste(page).locator('a[aria-current="page"]')).toHaveAttribute("href", new RegExp(`/harmonie/${AUTRE.id}/?$`));
     await expect(detail(page).getByRole("link", { name: "Harmonie" }), "la liste est là : pas de retour").toHaveCount(0);
   });
@@ -166,14 +167,11 @@ test.describe("Harmonie : le catalogue", () => {
     expect(parcours.y).toBeGreaterThan(filtres.y);
   });
 
-  test("tablette portrait : cours et sons côte à côte, le parcours en cartes, les familles sur deux colonnes", async ({ page }, info) => {
+  // Agencement v18 (A16) : dès 768 px, le rail de l'en-tête remplace les cartes Cours et Sons.
+  test("tablette portrait : le parcours en cartes, les familles sur deux colonnes", async ({ page }, info) => {
     test.skip(info.project.name !== "tablette", "tablette portrait seulement");
     await entrer(page, "/harmonie");
     const cat = page.locator("[data-harmonie]");
-    const cours = await boite(cat.getByRole("link", { name: /Cours de théorie musicale/ }));
-    const sons = await boite(cat.getByRole("link", { name: /Sons du RD-2000/ }));
-    expect(Math.abs(cours.y - sons.y)).toBeLessThan(2);
-    expect(sons.x).toBeGreaterThan(cours.x + cours.width - 1);
     const etapes = cat.locator("[data-parcours] a");
     const [e1, e2] = [await boite(etapes.nth(0)), await boite(etapes.nth(1))];
     expect(Math.abs(e1.y - e2.y)).toBeLessThan(2);
@@ -190,7 +188,7 @@ test.describe("Harmonie : le cours", () => {
   test("en grand, le sommaire à gauche et le chapitre en cours à droite", async ({ page }, info) => {
     test.skip(!enGrand(info), "deux volets : ordinateur et tablette paysage");
     await entrer(page, "/harmonie/cours");
-    await expect(liste(page).getByRole("heading", { name: "Cours" })).toBeVisible();
+    await expect(page.locator("header[data-entete-page]").getByRole("link", { name: "Cours", exact: true })).toHaveAttribute("aria-current", "page");
     await expect(detail(page).locator(`[data-chapitre="${PREMIER_CHAPITRE.id}"]`)).toBeVisible();
     await expect(page).toHaveURL(/\/harmonie\/cours\/?$/);
   });
@@ -261,7 +259,7 @@ test.describe("Harmonie : les sons du RD-2000", () => {
   test("en grand, « Par moment » à gauche et le premier son à droite", async ({ page }, info) => {
     test.skip(!enGrand(info), "deux volets : ordinateur et tablette paysage");
     await entrer(page, "/harmonie/rd2000");
-    await expect(liste(page).getByRole("button", { name: "Par moment" })).toHaveAttribute("aria-pressed", "true");
+    await expect(liste(page).getByRole("tab", { name: "Par moment" })).toHaveAttribute("aria-selected", "true");
     await expect(detail(page).locator(`[data-son-page="${RD2000.moments[0].son}"]`)).toBeVisible();
     await expect(page).toHaveURL(/\/harmonie\/rd2000\/?$/);
   });

@@ -5,8 +5,8 @@ import { abonneAuxNotifications, signInAs, ADMIN_EMAIL, type FakeProfile } from 
 // planches `moi-*`, `notifications-telephone`, `profil-*`, `connexion-*`, `inscription-*`).
 // Moi : carte du compte ; trois colonnes en grand, deux sur tablette portrait, une sur téléphone ;
 // Réglages = Notifications · Langue · Thème, « Notifications » ouvre les réglages de PushToggle
-// (feuille sur téléphone, panneau ailleurs). Profil : deux colonnes dès la tablette portrait, plus de
-// carte Notifications. Connexion et inscription : écran partagé dès la tablette paysage, la marque en
+// (feuille sur téléphone, panneau ailleurs). Profil : deux colonnes dès la tablette portrait (la carte
+// Notifications revient avec la v18, A13). Connexion et inscription : écran partagé dès la tablette paysage, la marque en
 // haut ailleurs ; titre « Connexion » (登录). Firestore, Sheet et abonnement simulés ; personnes fictives.
 
 const ADMIN: FakeProfile = {
@@ -67,26 +67,28 @@ test.describe("Moi (Q9)", () => {
     await expect(compte(page).getByTestId("service-role")).toHaveText(["Culte Franco · Choriste"]);
   });
 
-  test("disposition : trois colonnes en grand, deux sur tablette portrait, une sur téléphone", async ({ page }, info) => {
+  // Agencement v18, A12 : les colonnes de Q9 deviennent le compte et les réglages à gauche, les aperçus
+  // à droite (détail dans agencement-v18-moi.spec.ts).
+  test("disposition (v18, A12) : compte et réglages à gauche en grand, côte à côte sur tablette portrait ; une colonne sur téléphone", async ({ page }, info) => {
     await ouvrir(page, ADMIN, "/moi");
     const c = await boite(compte(page));
-    const listes = await boite(page.getByRole("link", { name: "Mes services" }));
+    const services = await boite(page.getByRole("region", { name: "Mes services", exact: true }));
     const r = await boite(reglages(page));
     const deconnexion = await boite(page.getByRole("button", { name: "Déconnexion" }));
     const d = disposition(info);
     if (d === "grand") {
-      expect(listes.x, "les listes à droite du compte").toBeGreaterThan(c.x + c.width - 1);
-      expect(r.x, "les réglages à droite des listes").toBeGreaterThan(listes.x + listes.width - 1);
-      expect(Math.abs(r.y - c.y), "les trois colonnes partent ensemble").toBeLessThan(4);
-      expect(deconnexion.y, "la déconnexion sous les réglages").toBeGreaterThan(r.y + r.height - 1);
-    } else if (d === "tablette") {
-      expect(listes.x, "les listes à droite").toBeGreaterThan(c.x + c.width - 1);
+      expect(services.x, "les aperçus à droite du compte").toBeGreaterThan(c.x + c.width - 1);
       expect(Math.abs(r.x - c.x), "les réglages sous le compte").toBeLessThan(2);
       expect(r.y).toBeGreaterThan(c.y + c.height - 1);
+      expect(deconnexion.y, "la déconnexion sous les réglages").toBeGreaterThan(r.y + r.height - 1);
+    } else if (d === "tablette") {
+      expect(r.x, "les réglages à droite du compte").toBeGreaterThan(c.x + c.width - 1);
+      expect(Math.abs(r.y - c.y)).toBeLessThan(2);
+      expect(services.y, "les aperçus dessous").toBeGreaterThan(c.y + c.height - 1);
       expect(deconnexion.x, "la déconnexion à droite").toBeGreaterThan(c.x + c.width - 1);
     } else {
-      expect(listes.y, "une colonne : les listes sous le compte").toBeGreaterThan(c.y + c.height - 1);
-      expect(r.y, "puis les réglages").toBeGreaterThan(listes.y);
+      expect(services.y, "une colonne : les aperçus sous le compte").toBeGreaterThan(c.y + c.height - 1);
+      expect(r.y, "puis les réglages").toBeGreaterThan(services.y);
       expect(deconnexion.y, "la déconnexion en dernier").toBeGreaterThan(r.y + r.height - 1);
     }
     expect(await sansDefilementHorizontal(page), "pas de défilement horizontal").toBe(true);
@@ -133,29 +135,30 @@ test.describe("Moi (Q9)", () => {
   });
 });
 
-test.describe("Profil (Q10)", () => {
-  test("plus de carte Notifications dans le profil", async ({ page }) => {
+// Agencement v18, A13 (planche `v18-app-profil`, plus récente que Q10) : la carte Notifications revient
+// sous l'identité, « Enregistrer » passe dans l'en-tête dès 768 px (détail dans agencement-v18-moi.spec.ts).
+test.describe("Profil (Q10, revu par A13)", () => {
+  test("la carte Notifications sous l'identité (A13)", async ({ page }) => {
     await abonneAuxNotifications(page);
     await ouvrir(page, ADMIN, "/profil");
     await expect(page.getByRole("heading", { level: 1, name: "Mon profil" })).toBeVisible();
     await expect(page.getByLabel("Prénom")).toHaveValue("Noé");
-    await expect(page.getByRole("switch")).toHaveCount(0);
-    await expect(page.getByText("Rappels de service")).toHaveCount(0);
+    await expect(page.getByRole("region", { name: "Notifications" }).getByRole("switch", { name: "Rappels de service" })).toBeVisible();
   });
 
-  test("disposition : deux colonnes dès la tablette portrait (identité et « Enregistrer » · services), une sur téléphone", async ({ page }, info) => {
+  test("disposition : deux colonnes dès la tablette portrait (identité · services), « Enregistrer » dans l'en-tête ; une sur téléphone, « Enregistrer » en bas", async ({ page }, info) => {
     await ouvrir(page, ADMIN, "/profil");
     const identite = await boite(page.getByRole("group", { name: "Identité" }));
     const services = await boite(page.getByRole("group", { name: "Tes services et rôles" }));
-    const enregistrer = await boite(page.getByRole("button", { name: "Enregistrer mon profil" }));
     if (disposition(info) === "telephone") {
+      const enregistrer = await boite(page.locator("form").getByRole("button", { name: "Enregistrer mon profil" }));
       expect(services.y, "les services sous l'identité").toBeGreaterThan(identite.y + identite.height - 1);
       expect(enregistrer.y, "« Enregistrer » en bas").toBeGreaterThan(services.y + services.height - 1);
     } else {
+      const enregistrer = await boite(page.locator("header[data-entete-page]").getByRole("button", { name: "Enregistrer mon profil" }));
       expect(services.x, "les services à droite").toBeGreaterThan(identite.x + identite.width - 1);
       expect(Math.abs(services.y - identite.y)).toBeLessThan(4);
-      expect(enregistrer.y, "« Enregistrer » sous l'identité").toBeGreaterThan(identite.y + identite.height - 1);
-      expect(enregistrer.x + enregistrer.width).toBeLessThanOrEqual(services.x);
+      expect(enregistrer.y + enregistrer.height, "« Enregistrer » au-dessus des cartes").toBeLessThan(identite.y);
     }
     expect(await sansDefilementHorizontal(page)).toBe(true);
     await capture(page, "b5-profil");

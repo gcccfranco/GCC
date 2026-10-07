@@ -9,10 +9,8 @@
 // ouvert s'y allume et y déplie ses parties (le sommaire de la leçon n'est plus à droite).
 
 import { createContext, useContext, useEffect, useState } from "react";
-import Link from "next/link";
-import { Check, ChevronLeft } from "lucide-react";
+import { Check } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { PageTitle } from "@/components/layout/PageTitle";
 import { Group, GroupRow } from "@/components/ui/group";
 import { canSeeTeamCoursProgres } from "@/lib/access";
 import { useAuth } from "@/lib/firebase/auth";
@@ -158,18 +156,17 @@ function ProgresDeLEquipe({ lecons }: { lecons: ChapitreResume[] }) {
 
 /**
  * La liste du cours. `ouvert` : le chapitre affiché à côté (allumé, ses parties dépliées).
- * `enTete` : faux dans le panneau « Sommaire » de la tablette, qui a son propre titre.
+ * `enTete` : faux dans le panneau « Sommaire » de la tablette, qui a son propre titre (sans la
+ * progression de l'équipe). Le titre de la page est dans l'en-tête de la section (agencement v18, A16).
  * `surLien` : fermer ce panneau quand on touche une partie du chapitre ouvert.
  */
 export function SommaireCours({
   ouvert,
   enTete = true,
-  niveauTitre = 1,
   surLien,
 }: {
   ouvert?: string;
   enTete?: boolean;
-  niveauTitre?: 1 | 2;
   surLien?: () => void;
 }) {
   const { t } = useTranslation();
@@ -184,16 +181,6 @@ export function SommaireCours({
 
   return (
     <div className="space-y-6" data-cours>
-      {enTete && (
-        <div className="space-y-1">
-          <Link href="/harmonie" className="inline-flex items-center gap-1 text-[15px] text-muted-foreground active:text-foreground">
-            <ChevronLeft className="h-4 w-4" aria-hidden />
-            {t("harmonie.retour")}
-          </Link>
-          <PageTitle title={t("harmonie.cours.titre")} niveau={niveauTitre} />
-          <p className="-mt-3 text-[15px] text-muted-foreground">{t("harmonie.cours.sousTitre")}</p>
-        </div>
-      )}
       <div className="space-y-2">
         <p className="text-[15px] font-medium" data-cours-progres>
           {t("harmonie.cours.progres", { fait: faits, total: lecons.length })}

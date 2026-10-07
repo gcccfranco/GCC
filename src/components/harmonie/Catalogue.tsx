@@ -16,7 +16,7 @@ import { usePathname } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import { GraduationCap, Piano } from "lucide-react";
 import { DeuxVolets } from "@/components/layout/DeuxVolets";
-import { PageTitle } from "@/components/layout/PageTitle";
+import { OngletsRail } from "@/components/layout/Onglets";
 import { Group, GroupRow } from "@/components/ui/group";
 import { Pilules } from "@/components/harmonie/Pilules";
 import { FicheHarmonie } from "@/components/harmonie/FicheHarmonie";
@@ -144,17 +144,13 @@ function ListeCatalogue({
   const carte = cartes ? "md:raised md:mx-0 md:w-full md:rounded-2xl md:px-4 md:py-3 md:before:hidden" : undefined;
 
   return (
-    <div className={cn("space-y-5", deuxVolets ? "px-5 pt-6 pb-10" : "mx-auto max-w-2xl px-4 pt-6 pb-10 md:max-w-none md:px-6")} data-harmonie>
-      <div>
-        <PageTitle title={t("harmonie.titre")} niveau={deuxVolets ? 2 : 1} />
-        <p className="-mt-3 text-[15px] text-muted-foreground">{t("harmonie.sousTitre")}</p>
-      </div>
-
-      {/* Cours et sons du clavier : en tête, au-dessus des fiches. */}
+    <div className={cn("space-y-5", deuxVolets ? "px-5 pt-6 pb-10" : "mx-auto max-w-2xl px-4 pb-10 md:max-w-none md:px-6")} data-harmonie>
+      {/* Cours et sons du clavier : en tête, au-dessus des fiches, sur téléphone seulement ; dès
+          768 px, le rail de l'en-tête (agencement v18, A16) les remplace. */}
       {(lecons.length > 0 || rd2000) && (
-        <div className={cn(cartes && "md:grid md:grid-cols-2 md:gap-3")}>
+        <div className="md:hidden">
           {lecons.length > 0 && (
-            <GroupRow href="/harmonie/cours" chevron leading={<GraduationCap aria-hidden />} className={carte}>
+            <GroupRow href="/harmonie/cours" chevron leading={<GraduationCap aria-hidden />}>
               <span className="block truncate font-medium">{t("harmonie.cours.ligne")}</span>
               <span className="block truncate text-[13px] text-muted-foreground">
                 {faits > 0
@@ -164,7 +160,7 @@ function ListeCatalogue({
             </GroupRow>
           )}
           {acces.piano && rd2000 && (
-            <GroupRow href="/harmonie/rd2000" chevron leading={<Piano aria-hidden />} className={carte}>
+            <GroupRow href="/harmonie/rd2000" chevron leading={<Piano aria-hidden />}>
               <span className="block truncate font-medium">{t("harmonie.rd2000.titre")}</span>
               <span className="block truncate text-[13px] text-muted-foreground">
                 {t("harmonie.rd2000.resume", {
@@ -180,12 +176,11 @@ function ListeCatalogue({
       {/* Filtres, en rangées qui défilent (réponse 5 du 05/10), au-dessus du parcours. */}
       <div className="space-y-2">
         {acces.piano && acces.guitare && (
-          <Pilules
+          <OngletsRail
             etiquette={t("harmonie.instrument.piano")}
-            options={(["piano", "guitare"] as Instrument[]).map((i) => ({ cle: i, nom: t(`harmonie.instrument.${i}`) }))}
-            valeur={instrument}
-            choisir={(v) => setInstrument((v ?? "piano") as Instrument)}
-            obligatoire
+            onglets={(["piano", "guitare"] as Instrument[]).map((i) => ({ id: i, label: t(`harmonie.instrument.${i}`) }))}
+            actif={instrument}
+            choisir={(v) => setInstrument(v as Instrument)}
           />
         )}
         <Pilules
