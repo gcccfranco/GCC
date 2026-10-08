@@ -1078,13 +1078,19 @@ persistant (5 instables passés à la relance : `navigation-grand-ecran` ×3, `s
    au Back-Office (lancer les réservations, une semaine à la fois, Mes réservations).
 3. **Relire le 中文** listé par chaque voie dans l'« Avancement » des deux specs (dont 会议, 卡片, `planning.gestion.*`,
    `planning.semaines.*`, `planning.barre.*`, `moi.apercus.*`, `taches.*`, `equipes.*`, les six confirmations de F2).
-4. **Choix tranchés le 08/10/2026** (22 questions) → `docs/spec-retouches-v18.md`, trois lots en attente du go :
-   **R** retouches (Partager et Date · Heure · Lieu sur la fiche d'évènement, liste-carte qui tient dans la
-   fenêtre, agenda du Calendrier, pilules compactes en grand, « Les plus joués », heures de l'accueil, 推荐新诗歌,
-   ordre de passage protégé) ; **E** évènements réservés à un pôle, qui ne sont plus forcément des réunions
-   (visibles des membres du pôle, notification à la publication) ; **F** Fidélité en un seul planning (Guitariste
-   et Batterie dans le planning du groupe, le planning des musiciens disparaît, ses noms sont repris, le Sheet
-   reste tel quel).
+4. **Choix tranchés le 08/10/2026** (22 questions) → `docs/spec-retouches-v18.md`, **codés la nuit du 08/10/2026**
+   (lots R en deux voies, E, F ; relus et corrigés ; suite complète 8 433 verts sur cinq projets, aucun échec
+   persistant ; `ui/apple-design` = `f7afad39`, rien poussé) : « Partager » et Date · Heure · Lieu sur la fiche
+   d'évènement, liste-carte qui tient dans la fenêtre, agenda du Calendrier, pilules ≈ 28 px à la souris, « Les
+   plus joués », heures de l'accueil, 推荐新诗歌, ordre de passage protégé ; évènements réservés à un pôle (champ
+   `reunion`, visibles des membres du pôle, notification) ; Fidélité en un seul planning (Guitariste, Batterie,
+   reprise de repli depuis `Fidélité_Musicien`). Rien à publier dans Firestore. **Reste à Timothée** : relire le
+   中文 (分享, 链接已复制, 日期 · 时间 · 地点, 推荐新诗歌, 活动、任务或会议, 已被 {{prenom}} 修改：请重新加载, 吉他) ;
+   trancher la page Chants (même règle que R3 ?), la création d'un évènement de pôle par un simple membre du pôle
+   (codé : non, seulement des réunions), la reprise de la présidence depuis l'ancien planning des musiciens, le
+   seuil des trois colonnes de la fiche (codé : quand la fiche est sur une colonne) ; avant la mise en ligne,
+   lancer `npx tsx scripts/releve-pianistes-fidelite.ts --firestore` (le Sheet seul donne un écart, le 13/09/2026)
+   et cocher « Groupe Fidélité » aux profils qui avaient le droit `fideliteMusiciens`.
 5. **À la mise en ligne, sur ordre** : poser `VERCEL_DEEP_CLONE=true` dans les variables du projet Vercel (sans
    historique git, « Nouveaux au répertoire » n'apparaît pas). En ligne, les trimestres du Planning passent en rail
    gris et Prépa. Table et Campus sont calés à gauche sous le titre.
@@ -1399,6 +1405,9 @@ porte le nom « GCC » et le menu par sections dont ces modules ont besoin.
   sur cinq projets), `ui/apple-design` = `8abdf167` (rien poussé). Coupures par la limite d'usage et pour les
   cours de Timothée, relances sans rien refaire ; disque du Mac saturé par les caches des copies de travail
   (114 Go), nettoyé.
+
+- 08/10/2026 (nuit) : **retouches v18** (§ 3 V, point 4) : 22 choix tranchés, `spec-retouches-v18.md`, go, quatre
+  voies codées, relues et corrigées, intégration verte (8 433 verts), `ui/apple-design` = `f7afad39` (rien poussé).
 
 ## 7. Relecture adversariale (14/09/2026)
 
