@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-02T11:46:46.380Z",
+  "generatedAt": "2026-10-08T21:03:52.581Z",
   "songs": [
     {
       "slug": "abba-pere",
@@ -539,8 +539,9 @@
       "recommendedKey": null,
       "tempo": null,
       "themes": [
+        "grace",
         "adoration",
-        "grace"
+        "croix"
       ],
       "youtubeUrl": "https://www.youtube.com/watch?v=FJ3arrDOq5E",
       "spotifyUrl": null,
@@ -550,8 +551,9 @@
       "sections": [
         {
           "id": "intro-1",
-          "name": "Intro",
-          "type": "intro"
+          "name": "Intro (x2)",
+          "type": "intro",
+          "suffix": "(x2)"
         },
         {
           "id": "verse-2",
@@ -811,7 +813,7 @@
       "tempo": 95,
       "themes": [
         "foi",
-        "esperance"
+        "grace"
       ],
       "youtubeUrl": "https://www.youtube.com/watch?v=fvsMqaiCJKA",
       "spotifyUrl": null,
@@ -1503,8 +1505,8 @@
       "recommendedKey": null,
       "tempo": null,
       "themes": [
-        "croix",
-        "grace"
+        "grace",
+        "croix"
       ],
       "youtubeUrl": "https://www.youtube.com/watch?v=sOsT-aZh43A",
       "spotifyUrl": null,
