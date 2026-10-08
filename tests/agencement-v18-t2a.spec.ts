@@ -166,9 +166,11 @@ test.describe("T2a : le menu", () => {
     await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
     if (estGrandEcran(info)) {
       await ouvrir(page, ADMIN, "/back-office/reunions");
+      // Le titre avant d'ouvrir le menu : sur l'iPad en paysage, la barre dépliée par-dessus est modale
+      // et cache le reste de la page aux lecteurs d'écran (aria-hidden), h1 compris.
+      await expect(page.getByRole("heading", { level: 1, name: "会议" })).toBeVisible();
       const menu = await menuLateral(page, info);
       await expect(menu.getByRole("link", { name: "会议" })).toHaveAttribute("aria-current", "page");
-      await expect(page.getByRole("heading", { level: 1, name: "会议" })).toBeVisible();
     } else {
       await ouvrir(page, ADMIN, "/back-office/plus");
       await expect(page.getByTestId("plus-entree").filter({ hasText: "会议" })).toContainText("议题、会议记录");

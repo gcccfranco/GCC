@@ -108,7 +108,8 @@ test.describe("navigation par sections (T2), barre du bas sur téléphone et tab
 test.describe("navigation par sections (T2), onglets de section", () => {
   // Cible tactile (16/09/2026) : les pilules faisaient 30 px de haut. Depuis V7
   // (21/09/2026), sous 1024 px c'est la pastille du menu qui se touche.
-  test("une pilule de section fait au moins 40 px de haut, sur chaque appareil", async ({ page }) => {
+  // Retouches v18 (R5, D9) : compacte (≈ 28 px) en grand avec un pointeur fin, 40 px au doigt.
+  test("une pilule de section fait au moins 40 px de haut au doigt, ≈ 28 px à la souris en grand", async ({ page }) => {
     await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
     await signInAs(page, MEMBRE, {}, "/planning");
     // Le téléphone a la pastille qui ouvre la feuille ; dès la tablette, les huit
@@ -123,7 +124,8 @@ test.describe("navigation par sections (T2), onglets de section", () => {
     await pilule.waitFor();
     await page.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished.catch(() => {}))));
     const box = await pilule.boundingBox();
-    expect(box!.height).toBeGreaterThanOrEqual(40);
+    if (projet.startsWith("ordinateur")) expect(Math.abs(box!.height - 28)).toBeLessThanOrEqual(2);
+    else expect(box!.height).toBeGreaterThanOrEqual(40);
   });
 });
 
