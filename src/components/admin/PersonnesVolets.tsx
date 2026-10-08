@@ -189,7 +189,8 @@ function FicheDuMembre({
   const services = planning && p.planningName
     ? findMyServices(planning, p.planningName).filter((s) => s.date >= aujourdhui).sort((a, b) => a.date.localeCompare(b.date)).slice(0, 5)
     : [];
-  const plannings = (p.plannings ?? []).map((k) => GRILLES.find((g) => g.key === k)?.label ?? k);
+  // Un droit d'un planning retiré (« fideliteMusiciens », lot F) ne s'affiche plus.
+  const plannings = (p.plannings ?? []).flatMap((k) => GRILLES.find((g) => g.key === k)?.label ?? []);
   const ligne = "flex items-center justify-between gap-3 border-t border-border py-2 text-sm first:border-t-0";
 
   return (

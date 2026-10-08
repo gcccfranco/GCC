@@ -9,7 +9,7 @@
 
 import { fetchGrille } from "./grille"
 import { fusionnerLignes } from "./grilles"
-import { fetchTable, lireSheetDe } from "./sheets"
+import { fetchFidelite, fetchTable, lireSheetDe } from "./sheets"
 import { grillesAExporter, nomFichierExport, pagesExport, type Portee } from "./modeles"
 
 /** Côté du logo dans le fichier, en pixels (Q12 : 1 024 px, 1,16 Mo à l'origine). */
@@ -17,8 +17,10 @@ export const COTE_LOGO = 300
 
 async function lignesDe(keys: string[]): Promise<Record<string, string[][]>> {
   const paires = await Promise.all(
-    // Table : la case Petit déj porte les inscriptions, comme la page (lot U3, Q12).
-    keys.map(async (k) => [k, k === "table" ? await fetchTable() : fusionnerLignes(await fetchGrille(k), await lireSheetDe(k))] as const),
+    // Table : la case Petit déj porte les inscriptions, comme la page (lot U3, Q12) ; Fidélité,
+    // ses guitares et batteries reprises du planning des musiciens (lot F, D25).
+    keys.map(async (k) => [k, k === "table" ? await fetchTable() : k === "fidelite" ? await fetchFidelite()
+      : fusionnerLignes(await fetchGrille(k), await lireSheetDe(k))] as const),
   )
   return Object.fromEntries(paires)
 }

@@ -105,7 +105,7 @@ test("les deux blocs de dates sont lus, et « A & B » fait deux noms", () => {
 // ─── Services et rappels ─────────────────────────────────────────────────────
 
 const vide: PlanningData = {
-  culte: [], dejeuner: [], petitDej: [], paix: [], fidelite: [], fideliteMusic: [],
+  culte: [], dejeuner: [], petitDej: [], paix: [], fidelite: [],
   bonte: [], edd: {}, campus: [], intergroupe: [], interfranco: [],
 };
 

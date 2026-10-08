@@ -1,8 +1,8 @@
 import type { EddDataStructure, EddPeriode, CampusSeance } from "./utils"
 import { EDD_CLASSES, EDD_PERIODES, getMois } from "./utils"
-import { fetchGrille } from "./grille"
+import { fetchCasesEcrites, fetchGrille } from "./grille"
 import { BACK_OFFICE } from "@/lib/backOffice"
-import { CLES_EDD, fusionnerLignes } from "./grilles"
+import { CLES_EDD, completerMusiciensFidelite, fusionnerLignes } from "./grilles"
 import { avecPetitDej, lirePetitDej, rangeesPetitDej } from "@/lib/petitdej/lignes"
 
 /** Les dimanches écrits dans l'app. Back-office coupé (lot 18) : aucun — le site
@@ -210,8 +210,16 @@ export async function fetchPaix(): Promise<string[][]> {
   return fusionnerLignes(await grilleDeLApp("paix"), await lirePaixSheet())
 }
 
+/** Fidélité, sept cases (lot F, D25 et D27) : Présidence, Guitariste et Batterie vides sont repris
+ *  du planning des musiciens — sa grille de l'app, puis l'onglet `Fidélité_Musicien` du Sheet (seul
+ *  lu quand le back-office est coupé) — sauf une case vidée dans l'app, qui reste vide. */
 export async function fetchFidelite(): Promise<string[][]> {
-  return fusionnerLignes(await grilleDeLApp("fidelite"), await lireFideliteSheet())
+  const [groupe, musiciens, ecrites] = await Promise.all([
+    Promise.all([grilleDeLApp("fidelite"), lireFideliteSheet()]).then(([g, s]) => fusionnerLignes(g, s)),
+    fetchFideliteMusic(),
+    BACK_OFFICE ? fetchCasesEcrites("fidelite") : new Set<string>(),
+  ])
+  return completerMusiciensFidelite(groupe, musiciens, ecrites)
 }
 
 export async function fetchFideliteMusic(): Promise<string[][]> {

@@ -281,14 +281,13 @@ test("marquerDimanchesSpeciaux : la présidence prend le nom du service, le rest
 
 test("loadPlanningData (avecDimanchesSpeciaux) : pas de président fantôme dans « Mes services » ni dans les rappels", () => {
   const vide: PlanningData = {
-    culte: [], dejeuner: [], petitDej: [], paix: [], fidelite: [], fideliteMusic: [], bonte: [],
+    culte: [], dejeuner: [], petitDej: [], paix: [], fidelite: [], bonte: [],
     edd: {}, campus: [], intergroupe: [], interfranco: [],
   };
   const planning = avecDimanchesSpeciaux({
     ...vide,
     paix: [["2027-01-17", "Membre M.", "", "Orateur O.", ""], ["2027-01-24", "Membre M.", "", "", ""]],
     fidelite: [["2027-03-14", "Membre M.", "", "", ""]],
-    fideliteMusic: [["2027-03-14", "Membre M.", "", "", ""]],
     bonte: [["2027-01-17", "Membre M.", "", "", ""]],
     interfranco: [["2027-01-17", "Président I.", "", "", "", "", "", "", "", "", ""]],
     intergroupe: [["2027-03-14", "Président J.", "", "", "", "", "", "", "", "", "", ""]],
@@ -411,7 +410,7 @@ test("P5 · les grilles portent Percussion (Paix, Bonté) et Cours (EDD), à l'i
 
 test("P5 · Percussion et Cours : « Mes services », rappels (FR et 中文), notifications et profil", () => {
   const vide: PlanningData = {
-    culte: [], dejeuner: [], petitDej: [], paix: [], fidelite: [], fideliteMusic: [], bonte: [],
+    culte: [], dejeuner: [], petitDej: [], paix: [], fidelite: [], bonte: [],
     edd: {}, campus: [], intergroupe: [], interfranco: [],
   };
   const planning: PlanningData = {
@@ -851,25 +850,25 @@ test("Mes services : un service du brouillon 2027 n'apparaît qu'une fois son tr
 
 test("sansBrouillon : un trimestre à venir non publié reste hors de « Mes services », cette année comme la suivante", () => {
   const vide: PlanningData = {
-    culte: [], dejeuner: [], petitDej: [], paix: [], fidelite: [], fideliteMusic: [], bonte: [],
+    culte: [], dejeuner: [], petitDej: [], paix: [], fidelite: [], bonte: [],
     edd: {}, campus: [], intergroupe: [], interfranco: [],
   };
   const data: PlanningData = {
     ...vide,
     culte: [["2026-12-27", "Membre M."], ["2027-01-10", "Membre M."], ["2027-04-11", "Membre M."], ["2027-07-11", "Membre M."], ["2028-01-09", "Membre M."]],
     paix: [["2027-04-11", "Membre M."]],
-    fideliteMusic: [["2027-04-11", "Membre M."]],
+    fidelite: [["2027-04-11", "", "", "", "", "Membre M."]],
   };
-  const dates = (d: PlanningData) => ({ culte: d.culte.map((r) => r[0]), paix: d.paix.map((r) => r[0]), fideliteMusic: d.fideliteMusic.map((r) => r[0]) });
+  const dates = (d: PlanningData) => ({ culte: d.culte.map((r) => r[0]), paix: d.paix.map((r) => r[0]), fidelite: d.fidelite.map((r) => r[0]) });
 
   // Le 15/11/2026 (T4) : 2026 tel quel, de 2027 seul le T1 du Culte, publié.
   expect(dates(sansBrouillon(data, 2026, "T4", { 2026: {}, 2027: { culte: ["T1"] } }))).toEqual({
-    culte: ["2026-12-27", "2027-01-10"], paix: [], fideliteMusic: [],
+    culte: ["2026-12-27", "2027-01-10"], paix: [], fidelite: [],
   });
   // Le 14/02/2027 : le T1 en cours se lit toujours ; le T2 du Culte, brouillon, non ; celui de Paix et
-  // de Fidélité (les musiciens suivent Fidélité), publié, oui ; 2028 seulement s'il est publié.
+  // de Fidélité (sa guitare comprise, lot F), publié, oui ; 2028 seulement s'il est publié.
   expect(dates(sansBrouillon(data, 2027, "T1", { 2027: { paix: ["T2"], fidelite: ["T2"] }, 2028: {} }))).toEqual({
-    culte: ["2026-12-27", "2027-01-10"], paix: ["2027-04-11"], fideliteMusic: ["2027-04-11"],
+    culte: ["2026-12-27", "2027-01-10"], paix: ["2027-04-11"], fidelite: ["2027-04-11"],
   });
   // L'année du Sheet (2026) ne change pas : son T4 se lit dès septembre, publié ou non, comme avant U2.
   expect(dates(sansBrouillon(data, 2026, "T3", {})).culte).toEqual(["2026-12-27"]);

@@ -58,12 +58,11 @@ export function equipeDuService(
       return remplis([[r("presidence"), c[1]], [r("musiciens"), c[2]], [r("percussion"), c[5]], [r("orateur"), c[3]]]);
     }
     case "Groupe Fidélité": {
-      const f = ligne(data.fidelite, date);
-      const m = ligne(data.fideliteMusic, date);
-      if (!f && !m) return [];
+      // Lot F : un seul planning ; le pianiste est celui du groupe (D26).
+      const c = ligne(data.fidelite, date);
+      if (!c) return [];
       return remplis([
-        [r("presidence"), f?.[1] || m?.[1]], [r("piano"), m?.[2] || f?.[4]], [r("guitare"), m?.[3]],
-        [r("batterie"), m?.[4]], [r("orateur"), f?.[2]],
+        [r("presidence"), c[1]], [r("piano"), c[4]], [r("guitare"), c[5]], [r("batterie"), c[6]], [r("orateur"), c[2]],
       ]);
     }
     case "Campus": {

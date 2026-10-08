@@ -2,14 +2,14 @@
 
 import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
-import { OngletsRail, Pilules } from "@/components/layout/Onglets"
+import { OngletsRail } from "@/components/layout/Onglets"
 import { BarreDeGrille, FiltreDeNom, compterCasesVides, ongletsDePeriode, useFiltreNom, useTrimestreEnLettres } from "@/components/planning/BarreDeGrille"
 import { PlanningGrille } from "@/components/planning/PlanningGrille"
 import { StaleBanner } from "@/components/planning/StaleBanner"
 import { getCurrentTri } from "@/lib/planning/utils"
 import { PAIX_FALLBACK, FIDELITE_FALLBACK, FIDELITE_MUSIC_FALLBACK, BONTE_FALLBACK } from "@/lib/planning/data"
-import { fetchPaix, fetchFidelite, fetchFideliteMusic, fetchBonte, fetchInterfranco, fetchIntergroupe } from "@/lib/planning/sheets"
-import { GRILLE_BONTE, GRILLE_FIDELITE, GRILLE_FIDELITE_MUSICIENS, GRILLE_PAIX, dimanchesDe, dimanchesSpeciaux, vueTrimestrielle } from "@/lib/planning/grilles"
+import { fetchPaix, fetchFidelite, fetchBonte, fetchInterfranco, fetchIntergroupe } from "@/lib/planning/sheets"
+import { GRILLE_BONTE, GRILLE_FIDELITE, GRILLE_PAIX, completerMusiciensFidelite, dimanchesDe, dimanchesSpeciaux, vueTrimestrielle } from "@/lib/planning/grilles"
 import { AnneeSelecteur } from "@/components/planning/AnneeSelecteur"
 import { BandeauAnnee } from "@/components/planning/BandeauAnnee"
 import { BoutonPublication } from "@/components/planning/BoutonPublication"
@@ -27,13 +27,12 @@ import { useGestionPlanning } from "@/lib/planning/gestion"
 import { AncienTableau } from "./AncienTableau"
 
 // Les trois groupes, remplis dans l'app depuis le 19/09/2026 (lot 17, G6) :
-// une grille par groupe, plus celle des musiciens de Fidélité ; la publication
+// une grille par groupe (Fidélité porte ses musiciens depuis le lot F, D24) ; la publication
 // par trimestre (planningReleases/{groupe}) s'applique ligne par ligne comme au
 // Culte. Les données de secours de 2026 restent tant que ces onglets ne sont
 // pas importés dans l'app (D4 ne vaut que pour le Culte, pour l'instant).
 
 type Groupe = "paix" | "fidelite" | "bonte"
-type FidSub = "groupe" | "musiciens"
 
 const GRP_COLORS: Record<Groupe, string> = {
   paix:     PLANNING_COLORS.paix,
@@ -48,8 +47,7 @@ function GroupesPage() {
   const filtre = useFiltreNom()
   const trimestre = useTrimestreEnLettres()
   const [paix, setPaix] = useState(PAIX_FALLBACK)
-  const [fid, setFid] = useState(FIDELITE_FALLBACK)
-  const [fidM, setFidM] = useState(FIDELITE_MUSIC_FALLBACK)
+  const [fid, setFid] = useState(() => completerMusiciensFidelite(FIDELITE_FALLBACK, FIDELITE_MUSIC_FALLBACK))
   const [bonte, setBonte] = useState(BONTE_FALLBACK)
   // Lot U2 (Q5) : les dimanches d'Interfranco et d'Intergroupe, lus dans leur grille.
   const [interfranco, setInterfranco] = useState<string[][]>([])
@@ -57,7 +55,6 @@ function GroupesPage() {
   const [loading, setLoading] = useState(true)
   const [stale, setStale] = useState(false)
   const [grp, setGrp] = useState<Groupe>("paix")
-  const [fidSub, setFidSub] = useState<FidSub>("groupe")
   const [tri, setTri] = useState(getCurrentTri())
   // Lot U2 : l'année choisie ; publication lue pour l'année en cours et la suivante.
   const anneeCourante = new Date().getFullYear()
@@ -68,7 +65,6 @@ function GroupesPage() {
     Promise.allSettled([
       fetchPaix().then(d => { if (d.length) setPaix(d) }),
       fetchFidelite().then(d => { if (d.length) setFid(d) }),
-      fetchFideliteMusic().then(d => { if (d.length) setFidM(d) }),
       fetchBonte().then(d => { if (d.length) setBonte(d) }),
       fetchInterfranco().then(setInterfranco),
       fetchIntergroupe().then(setIntergroupe),
@@ -88,12 +84,8 @@ function GroupesPage() {
   }, [])
 
   const color = GRP_COLORS[grp]
-  const definition =
-    grp === "paix" ? GRILLE_PAIX
-    : grp === "bonte" ? GRILLE_BONTE
-    : fidSub === "musiciens" ? GRILLE_FIDELITE_MUSICIENS
-    : GRILLE_FIDELITE
-  const rows = grp === "paix" ? paix : grp === "bonte" ? bonte : fidSub === "musiciens" ? fidM : fid
+  const definition = grp === "paix" ? GRILLE_PAIX : grp === "bonte" ? GRILLE_BONTE : GRILLE_FIDELITE
+  const rows = grp === "paix" ? paix : grp === "bonte" ? bonte : fid
 
   const peutModifier = gestion && canEditPlanning(user, profile, definition.key)
   const { datesDansLApp, comptes } = useGrilleApp(definition.key, peutModifier)
@@ -120,12 +112,12 @@ function GroupesPage() {
   return (
     <div className="max-w-full space-y-4 mx-auto">
       {/* Agencement v18 (A3) : Paix · Fidélité · Bonté en rail, pastille de couleur devant chaque
-          nom ; Fidélité › Groupe · Musiciens en pilules juste après (un sous-onglet, R4). */}
+          nom. Lot F (D24) : Fidélité n'a plus qu'un planning, plus de pilules Groupe · Musiciens. */}
       <BarreDeGrille
         titre={t("planning.pages.groupes")}
         couleur={color}
         detail={[horaire, effTri && trimestre(effTri, effAnnee)].filter(Boolean).join(" · ")}
-        sousTitreBO={[t(definition.i18nTitre), definition.i18nSousTitre && t(definition.i18nSousTitre), horaire,
+        sousTitreBO={[t(definition.i18nTitre), horaire,
           t("planning.barre.casesVidesTrimestre", { count: compterCasesVides(definition, lignes) })].filter(Boolean).join(" · ")}
         chargement={loading}
       >
@@ -133,21 +125,8 @@ function GroupesPage() {
           etiquette={t("planning.pages.groupes")}
           onglets={(["paix", "fidelite", "bonte"] as Groupe[]).map((g) => ({ id: g, label: t(`planning.groupes.${g}`), couleur: GRP_COLORS[g] }))}
           actif={grp}
-          choisir={(g) => { setGrp(g as Groupe); if (g !== "fidelite") setFidSub("groupe") }}
+          choisir={(g) => setGrp(g as Groupe)}
         />
-        {grp === "fidelite" && (
-          <Pilules
-            etiquette={t("planning.groupes.fidelite")}
-            options={(["groupe", "musiciens"] as FidSub[]).map((sub) => ({
-              cle: sub,
-              nom: sub === "groupe" ? t("planning.groupes.planningGroupe") : t("planning.groupes.planningMusiciens"),
-              couleur: color,
-            }))}
-            valeur={fidSub}
-            choisir={(sub) => sub && setFidSub(sub)}
-            obligatoire
-          />
-        )}
         <AnneeSelecteur annees={annees} annee={effAnnee} onChange={changerAnnee} />
         {visibleTris.length > 0 && (
           <OngletsRail etiquette={t("planning.barre.trimestre")} onglets={ongletsDePeriode(visibleTris, unpublishedTris)} actif={effTri} choisir={setTri} />

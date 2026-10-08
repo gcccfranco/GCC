@@ -343,3 +343,93 @@ Go de code le 08/10/2026.
     `back-office-coupe` ; `tsc` et lint propres.
   - **À faire par Timothée** : confirmer le choix ci-dessus (membre de pôle seul : réunions seulement, ou bouton
     ouvert) ; relire les libellés (rien de nouveau en 中文) ; **aucune règle Firestore à publier** pour le lot E.
+
+### V18FIDELITE
+
+**08/10/2026 — tranche F1-F2, codée** (commit de la tranche : voir `git log --grep V18FIDELITE`).
+
+- F1 : `GRILLE_FIDELITE` = Présidence · Orateur · Thème · Pianiste · Guitariste (`guitariste`, index 5) ·
+  Batterie (`batterie`, index 6, facultative comme la percussion : cachée en lecture si la période n'en a pas,
+  pas comptée dans les cases vides). `GRILLE_FIDELITE_MUSICIENS` sort de `GRILLES` : plus de pilules
+  Groupe · Musiciens (App et Back-Office), plus d'onglet « Musiciens » dans l'ancien tableau, plus de case
+  « Groupe Fidélité musiciens » parmi les droits d'écriture (Personnes), plus de catégorie dans « Choisir »,
+  plus de second bloc Fidélité au tableau de bord. Sa définition reste connue de `grilleDe`, pour être lue.
+- F2 : `completerMusiciensFidelite` (`grilles.ts`, pur) — une case Guitariste ou Batterie vide du planning
+  Fidélité prend celle du planning des musiciens (grille de l'app `fideliteMusiciens`, puis onglet
+  `Fidélité_Musicien` du Sheet, seul lu back-office coupé). Appliqué par `fetchFidelite` (pages, ancien
+  tableau, « Mes services »…), par les widgets (`lecture.ts`) et par l'export (`exporter.tsx`). Aucune
+  migration : une modification écrit dans `plannings/fidelite` ; la première, avant 2027, recopie la ligne
+  affichée, guitare et batterie reprises comprises.
+- Tests : `tests/planning-fidelite.spec.ts` (nouveau), `back-office-coupe.spec.ts` (ancien tableau, Sheet
+  seul), mises à jour de `planning-groupes-grille`, `agencement-v18-planning`, `back-office-admin`.
+- Reste au lot F : F3 (relevé des pianistes qui diffèrent ; « Ce dimanche » et l'équipe d'une setlist
+  lisent encore le piano et la guitare du planning des musiciens), F4 (`names.ts` : Mes services, rappels,
+  recherche par nom lisent encore `fideliteMusic`), F5 (modèle d'export Fidélité à sept colonnes, retrait
+  du modèle `Fidélité_Musicien`, encore exporté par « Tous les plannings »).
+- Pour Timothée : rien à publier dans `firestore.rules` (les champs d'un dimanche ne sont pas listés). Un
+  profil qui avait le droit `fideliteMusiciens` ne peut plus rien écrire : cocher « Groupe Fidélité » pour
+  lui dans Équipes › Personnes. 中文 du nouveau libellé à relire : `planning.roles.guitariste` = 吉他.
+  Limite connue alors (vider dans l'app une guitare reprise la faisait revenir) : levée à la relecture, plus bas.
+
+**08/10/2026 — tranche F3-F5, codée** (commit : voir `git log --grep "V18FIDELITE): F3-F5"`). Le lot F est fini.
+
+- F3 : le pianiste de Fidélité est partout celui du planning du groupe (D26) : « Ce dimanche » (accueil :
+  Pianiste · Guitariste · Batterie du planning Fidélité) et l'équipe d'une setlist (`equipeDuService`) ne
+  lisent plus le planning des musiciens. Relevé : `pianistesQuiDifferent` (`grilles.ts`, pur) et
+  `npx tsx scripts/releve-pianistes-fidelite.ts` (lecture seule) — le Sheet public seul par défaut ;
+  `--firestore` y ajoute les grilles de l'app, à lancer par Timothée. Lancé le 08/10/2026 sur le Sheet :
+  **un dimanche diffère, le 13/09/2026** (noms montrés à Timothée, pas écrits ici).
+- F4 : `PlanningData` n'a plus de `fideliteMusic` ; Fidélité = un seul planning, Guitare (index 5) et
+  Batterie (6) dans `FIDELITE_ROLES` / `FIDELITE_ROLE_MAP` (musicien) : Mes services, rappels du matin,
+  noms du formulaire d'inscription et rôles déduits du profil les trouvent. Un pianiste écrit dans le seul
+  planning des musiciens n'a plus de service de Fidélité.
+- F5 : modèle d'export Fidélité = DATE · PRÉSIDENCE · ORATEUR · THÈME · PIANISTE · GUITARISTE · BATTERIE
+  (facultative : retirée d'une page qui n'en a pas) ; largeurs revues : sans batterie la page portrait
+  n'est pas réduite, avec, pas plus large que Paix et sa percussion. Le modèle `Fidélité_Musicien` est
+  retiré (« Tous les plannings » : 29 pages, 18 feuilles .xlsx).
+- Tests : `planning-fidelite.spec.ts` (F3 à F5 : relevé, équipe, « Ce dimanche », Mes services d'un
+  guitariste, pianiste des seuls musiciens, rappels, modèle), mises à jour de `planning-export-modele`,
+  `planning-2027`, `pages-en-grand-setlists`, `equipes`, `rappels-regroupes`, `planning-petit-dej`.
+- Code devenu sans usage, laissé en place : `GRILLE_FIDELITE_MUSICIENS` reste lu (reprise des noms) ; dans
+  l'export, la police Georgia (Gelasio), le mois en colonne (`mois: "colonne"`, fusion en tête) et la
+  ligne « dimanche spécial » ne servaient qu'au modèle retiré.
+- Pour Timothée : rien à publier dans `firestore.rules`. Avant la mise en ligne, lancer
+  `npx tsx scripts/releve-pianistes-fidelite.ts --firestore` (lit les grilles de l'app) et trancher les
+  dimanches listés : c'est la colonne « Groupe » qui sera affichée. Aucun libellé nouveau à traduire.
+
+**08/10/2026 — relecture (deux relectures), corrigée** (commit : voir `git log --grep "V18FIDELITE): relecture"`).
+Le lot F est fini et relu.
+
+- Case vidée qui revenait (important) : `fetchGrille` rend "" aussi bien pour une case vidée dans l'app
+  que pour un champ jamais écrit, et la reprise reprenait donc une guitare ou une batterie vidée — avec,
+  derrière, Mes services, « Ce dimanche » et un rappel du matin pour quelqu'un retiré du service.
+  Corrigé : `grille.ts` garde les cases présentes dans les documents (`fetchCasesEcrites`, même lecture,
+  même cache) et `completerMusiciensFidelite` ne reprend jamais une case présente, même vide. Back-office
+  coupé, rien ne change (le Sheet seul, pas de grille de l'app). Tests : « vider une guitare reprise… »
+  (page, relecture après rechargement) et « une case vidée dans l'app reste vide » (pur), rouges avant.
+- Présidence (choix de la relecture, à confirmer par Timothée) : reprise elle aussi du planning des
+  musiciens quand celle du groupe est vide, comme avant le lot dans l'équipe d'une setlist, Mes services
+  et les rappels ; celle du groupe l'emporte toujours. Sur le Sheet d'aujourd'hui, aucune présidence de
+  groupe n'est vide là où les musiciens en ont une : la reprise n'y change rien. Test : « la présidence du
+  planning des musiciens est reprise… ».
+- Relevé des pianistes : la classe des accents de `pianistesQuiDifferent` est écrite en échappements
+  (`\u0300-\u036f`) au lieu de caractères invisibles ; un cas « aux accents près » s'ajoute au test.
+- Agencement : Fidélité à sept colonnes vérifié et capturé sur les trois appareils — App, Back-Office en
+  modification (`verifierAgencement`) et ancien tableau back-office coupé (`verifierSansDebordement`) ;
+  en grand, la table ne défile pas en largeur ; sur téléphone, une carte par dimanche.
+- Clés de traduction : `planning.groupes.planningGroupe` est retirée parce que le lot l'a rendue orpheline
+  (seule la pilule Groupe · Musiciens la lisait) ; `planningMusiciens` reste, lue par la définition
+  `GRILLE_FIDELITE_MUSICIENS`, gardée pour la reprise. Pas d'incohérence : rien d'autre à changer.
+- Code devenu sans usage, signalé et laissé en place (à retirer sur accord de Timothée) : dans l'export,
+  le mois en colonne (`mois: "colonne"`), la ligne « dimanche spécial », la police Georgia (Gelasio) ;
+  `i18nSousTitre` de `GRILLE_FIDELITE_MUSICIENS` et sa clé `planningMusiciens`.
+- Pour Timothée, avant la mise en ligne :
+  1. lancer `npx tsx scripts/releve-pianistes-fidelite.ts --firestore` (lit les grilles de l'app) et
+     trancher chaque dimanche listé ; sur le Sheet seul, relancé le 08/10/2026 : un dimanche, le 13/09/2026 ;
+  2. droit `fideliteMusiciens` : un profil qui l'avait ne peut plus rien écrire, et ce droit ne s'affiche
+     plus dans Équipes › Personnes. Le retrouver dans la console Firebase (`users` dont `plannings`
+     contient `fideliteMusiciens`) et, si Timothée le veut, cocher « Groupe Fidélité » pour lui — ce qui
+     donne tout le planning Fidélité (présidence, orateur, thème compris), d'où pas d'équivalence
+     automatique ;
+  3. confirmer la reprise de la présidence (ou la retirer) ;
+  4. rien à publier dans `firestore.rules` ; aucun libellé nouveau à traduire.

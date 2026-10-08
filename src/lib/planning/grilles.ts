@@ -177,10 +177,17 @@ export const GRILLE_FIDELITE: DefinitionGrille = {
   label: "Groupe Fidélité",
   i18nTitre: "planning.groupes.fidelite",
   couleur: PLANNING_COLORS.fidelite,
-  colonnes: [col("presidence", "presidence", 1), col("orateur", "orateur", 2), col("theme", "theme", 3), col("pianiste", "pianiste", 4)],
+  // Lot F (spec-retouches-v18.md, D24) : Guitariste et Batterie après Pianiste ; la batterie,
+  // facultative comme la percussion de Paix et Bonté, se cache quand la période n'en a pas.
+  colonnes: [
+    col("presidence", "presidence", 1), col("orateur", "orateur", 2), col("theme", "theme", 3), col("pianiste", "pianiste", 4),
+    col("guitariste", "guitariste", 5), col("batterie", "batterie", 6, true),
+  ],
   dates: "dimanches",
 }
 
+/** Le planning des musiciens de Fidélité, RETIRÉ des pages (lot F, D24) : plus dans `GRILLES`,
+ *  seulement lu pour reprendre ses guitares et batteries (`completerMusiciensFidelite`). */
 export const GRILLE_FIDELITE_MUSICIENS: DefinitionGrille = {
   key: "fideliteMusiciens",
   label: "Groupe Fidélité musiciens",
@@ -269,11 +276,59 @@ export function anneeRemplie(rows: string[][], annee: number): boolean {
 /** Toutes les grilles, dans l'ordre des onglets du planning. */
 export const GRILLES: DefinitionGrille[] = [
   GRILLE_CULTE, GRILLE_TABLE, ...GRILLES_EDD, GRILLE_CAMPUS_MATIN, GRILLE_CAMPUS_SOIR,
-  GRILLE_INTERGROUPE, GRILLE_INTERFRANCO, GRILLE_PAIX, GRILLE_FIDELITE, GRILLE_FIDELITE_MUSICIENS, GRILLE_BONTE,
+  GRILLE_INTERGROUPE, GRILLE_INTERFRANCO, GRILLE_PAIX, GRILLE_FIDELITE, GRILLE_BONTE,
 ]
 
+/** Une grille par sa clé — celle des musiciens de Fidélité comprise : on la lit encore. */
 export function grilleDe(key: string): DefinitionGrille | undefined {
-  return GRILLES.find((g) => g.key === key)
+  return [...GRILLES, GRILLE_FIDELITE_MUSICIENS].find((g) => g.key === key)
+}
+
+/**
+ * Lot F (spec-retouches-v18.md, D25 à D27) : Présidence, Guitariste et Batterie de Fidélité,
+ * dimanche par dimanche, sont ceux du planning Fidélité s'ils y sont remplis, sinon ceux du planning
+ * des musiciens (`[date, présidence, piano, guitare, batterie]`) — la présidence comme avant le lot,
+ * où l'équipe d'une setlist et les rappels la prenaient là quand le groupe n'en avait pas. Rien n'est
+ * écrit : les anciennes données restent où elles sont. Le piano des musiciens n'est jamais repris
+ * (D26) ; un dimanche des seuls musiciens donne une ligne, s'il porte l'un de ces noms. Une case
+ * présente dans le document de l'app (`ecrites`, `date|clé` : `fetchCasesEcrites`) n'est jamais
+ * reprise, même vide : vidée dans l'app, elle reste vide.
+ */
+export function completerMusiciensFidelite(
+  fidelite: string[][],
+  musiciens: string[][],
+  ecrites: ReadonlySet<string> = new Set(),
+): string[][] {
+  const parDate = new Map(fidelite.map((r) => [r[0], Array.from({ length: 7 }, (_, i) => r[i] ?? "")]))
+  for (const m of musiciens) {
+    // [index dans Fidélité, clé de sa colonne, nom chez les musiciens]
+    const repris = ([[1, "presidence", m[1]], [5, "guitariste", m[3]], [6, "batterie", m[4]]] as const)
+      .map(([i, cle, nom]) => [i, cle, (nom ?? "").trim()] as const)
+      .filter(([, , nom]) => nom)
+    if (!repris.length) continue
+    const r = parDate.get(m[0]) ?? [m[0], "", "", "", "", "", ""]
+    for (const [i, cle, nom] of repris) if (!r[i].trim() && !ecrites.has(`${m[0]}|${cle}`)) r[i] = nom
+    parDate.set(m[0], r)
+  }
+  return [...parDate.values()].sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0))
+}
+
+/**
+ * Lot F (D26) : le relevé à montrer à Timothée avant la mise en ligne — les dimanches où le piano
+ * du planning des musiciens (`[date, présidence, piano, …]`) n'est pas le pianiste du groupe
+ * (`fidelite`, index 4), à la casse, aux accents et à la ponctuation près. Un dimanche sans piano
+ * chez les musiciens n'y est pas : rien n'y disparaît.
+ */
+export function pianistesQuiDifferent(
+  fidelite: string[][],
+  musiciens: string[][],
+): { date: string; groupe: string; musiciens: string }[] {
+  const plie = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[.,]/g, " ").replace(/\s+/g, " ").trim()
+  const groupe = new Map(fidelite.map((r) => [r[0], (r[4] ?? "").trim()]))
+  return musiciens
+    .map((m) => ({ date: m[0], groupe: groupe.get(m[0]) ?? "", musiciens: (m[2] ?? "").trim() }))
+    .filter((d) => d.musiciens && plie(d.musiciens) !== plie(d.groupe))
+    .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0))
 }
 
 /**

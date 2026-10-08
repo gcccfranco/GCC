@@ -1111,6 +1111,7 @@
       "cajonBatt": "Cajon/Batt.",
       "theme": "Thème",
       "pianiste": "Pianiste",
+      "guitariste": "Guitariste",
       "equipe": "Équipe",
       "petitDej": "Petit déj",
       "chant1": "Chant 1",
@@ -1200,7 +1201,6 @@
       "paix": "Paix",
       "fidelite": "Fidélité",
       "bonte": "Bonté",
-      "planningGroupe": "Planning groupe",
       "planningMusiciens": "Planning musiciens 🎵"
     },
     "edd": {

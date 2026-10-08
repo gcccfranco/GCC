@@ -59,7 +59,7 @@ test("planningsDuBackOffice : ceux qu'on remplit ou publie ; tous pour un admin"
   const u = (email: string) => ({ email });
   expect(planningsDuBackOffice(u(ADMIN.email), null)).toEqual(["culte", "table", "groupes", "edd", "campus", "intergroupe", "interfranco"]);
   expect(planningsDuBackOffice(u(ECRIVAIN.email), { plannings: ["culte"] })).toEqual(["culte"]);
-  expect(planningsDuBackOffice(u("x@example.com"), { plannings: ["fideliteMusiciens", "eddDaban", "campusSoir"] })).toEqual(["groupes", "edd", "campus"]);
+  expect(planningsDuBackOffice(u("x@example.com"), { plannings: ["fidelite", "eddDaban", "campusSoir"] })).toEqual(["groupes", "edd", "campus"]);
   // Publier un trimestre : le Culte (« Culte Francophone » ou « * ») et les groupes.
   expect(planningsDuBackOffice(u(NOTIFY.email), { notify: ["Groupe Paix"] })).toEqual(["groupes"]);
   expect(planningsDuBackOffice(u("x@example.com"), { notify: ["*"] })).toEqual(["culte", "groupes"]);

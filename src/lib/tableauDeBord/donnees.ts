@@ -10,7 +10,7 @@ import type { FSSetlist } from "@/lib/firebase/setlists";
 import { colonnesVides } from "@/lib/planning/casesVides";
 import {
   CLES_EDD, GRILLES, GRILLES_EDD, GRILLE_BONTE, GRILLE_CAMPUS_MATIN, GRILLE_CAMPUS_SOIR, GRILLE_CULTE, GRILLE_FIDELITE,
-  GRILLE_FIDELITE_MUSICIENS, GRILLE_INTERFRANCO, GRILLE_INTERGROUPE, GRILLE_PAIX, lignesDeLAnnee, type DefinitionGrille,
+  GRILLE_INTERFRANCO, GRILLE_INTERGROUPE, GRILLE_PAIX, lignesDeLAnnee, type DefinitionGrille,
 } from "@/lib/planning/grilles";
 import { normalizeName, splitNames, type SetlistSeance } from "@/lib/planning/names";
 import { PUBLISHABLE_PLANNINGS, canPublishPlanning } from "@/lib/planning/releases";
@@ -42,7 +42,8 @@ export const GRILLES_DU_SERVICE: Record<string, DefinitionGrille[]> = {
   Intergroupe: [GRILLE_INTERGROUPE],
   Interfranco: [GRILLE_INTERFRANCO],
   "Groupe Paix": [GRILLE_PAIX],
-  "Groupe Fidélité": [GRILLE_FIDELITE, GRILLE_FIDELITE_MUSICIENS],
+  // Lot F (D24) : un seul planning, ses musiciens compris.
+  "Groupe Fidélité": [GRILLE_FIDELITE],
   "Groupe Bonté": [GRILLE_BONTE],
   ...Object.fromEntries(Object.keys(CLES_EDD).map((classe, i) => [classe, [GRILLES_EDD[i]]])),
 };
@@ -128,7 +129,6 @@ export function servicesSetlists(r: Reglages, user: AuthUser | null, profile: Us
  *  une par ligne, présidence en tête ; `annees` ajoute les dimanches calculés dès 2027. */
 export function seancesDesServices(rows: Record<string, string[][]>, services: string[], annees: number[] = []): SetlistSeance[] {
   return services.flatMap((category) => (GRILLES_DU_SERVICE[category] ?? [])
-    .filter((def) => def.key !== GRILLE_FIDELITE_MUSICIENS.key)
     .flatMap((def) => {
       const lues = rows[def.key] ?? [];
       const toutes = [...new Set([...lues.map((r) => getAnnee(r[0])), ...annees])].sort();

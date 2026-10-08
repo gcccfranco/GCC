@@ -288,35 +288,13 @@ export const MODELES: ModeleOnglet[] = [
     eglise: "zh",
     titre: () => "GROUPE FIDÉLITÉ",
     horaire: fr.planning.horaires.fidelite,
+    // Lot F (D24) : Guitariste et Batterie (facultative, comme la percussion) ; largeurs revues pour
+    // tenir en portrait — sans batterie, la page n'est pas réduite ; avec, pas plus que Paix.
     colonnes: [
-      col("date", "DATE", 100), col("presidence", "PRÉSIDENCE", 132), col("orateur", "ORATEUR", 145),
-      col("theme", "THÈME", 198), col("pianiste", "PIANISTE", 149),
+      col("date", "DATE", 80), col("presidence", "PRÉSIDENCE", 112), col("orateur", "ORATEUR", 112),
+      col("theme", "THÈME", 150), col("pianiste", "PIANISTE", 100), col("guitariste", "GUITARISTE", 108),
+      col("batterie", "BATTERIE", 96, { optionnelle: true }),
     ],
-  },
-  {
-    onglet: "Fidélité_Musicien",
-    grilles: ["fideliteMusiciens"],
-    decoupage: "trimestre",
-    eglise: "zh",
-    titre: (a) => `Groupe Fidélité Planning Musiciens ${a}`,
-    periode: (a, rang) => {
-      const [debut, fin] = moisDuTrimestre(rang)
-      return `Groupe Fidélité Planning ${a} - T${rang} (${debut} - ${fin})`
-    },
-    colonnes: [
-      col("date", "Date", 100), col("presidence", "Présidence", 119), col("piano", "Piano", 116),
-      col("guitare", "Guitare", 128), col("batterie", "Percussion", 103),
-    ],
-    fusion: { entete: "", largeur: 100, position: "debut" },
-    policeTableau: "Georgia",
-    taille: 12,
-    alignement: "centre",
-    couleurs: { texteEntete: "#000000", fondEntete: "#B4A7D6", fusion: "#D9D2E9", bordure: "#000000" },
-    mois: "colonne",
-    dateGras: false,
-    formatDate: "jj/mm",
-    orientation: "portrait",
-    dimanchesSpeciaux: true,
   },
   {
     ...GROUPE,
