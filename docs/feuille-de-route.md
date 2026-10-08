@@ -1104,6 +1104,15 @@ persistant (5 instables passés à la relance : `navigation-grand-ecran` ×3, `s
 Hors dépôt : `scripts/figma/data.ts` (non versionné, Figma en pause) importe encore `parseOrganigramme`, retiré
 avec les importations ; à reprendre avec les prototypes.
 
+### W. Demandes du 08/10/2026 → chantier « équipes et groupes »
+
+Premier retour des responsables (dupliquer dans le planning, « Ajouter une ligne » du petit déj, chants des fêtes)
+et demande de Timothée (« on supprime les pôles et on garde les TEAM » ; organigrammes des groupes, comités, rôles).
+Grill en cinq rondes et planche v19 faits le 08/10/2026 : **tout est dans `docs/chantier-equipes-groupes/`**
+(`decisions.md`, `cartographie.md`, `maquettes/`). Quatre lots : 1 pôles → équipes, 2 organigrammes des groupes,
+3 gestes du planning et petit déj, 4 chants de Noël et de Pâques. Specs à écrire, puis go. Le travail se fait dans
+les sessions cloud, directement sur `ui/apple-design`.
+
 ## 4. Carte des modules de l'app « GCC »
 
 À valider par Timothée avant toute spec de module (les modules existants ne
