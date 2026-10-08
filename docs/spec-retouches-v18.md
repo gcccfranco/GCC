@@ -95,6 +95,25 @@ planning des musiciens (grille et Sheet simulés), plus d'onglet « Musiciens »
 Fidélité, export du modèle ; mise à jour des specs existantes qui citent les musiciens de Fidélité
 (`planning-groupes-grille`, `planning-export-modele`, `planning-2027`, `agencement-v18-planning`, `back-office-admin`).
 
+## Lot G — les réunions seulement au Back-Office (08/10/2026)
+
+Retour de Timothée en relisant le document des nouveautés : « normalement les réunions ne doivent pas apparaître
+dans les évènements mais dans l'onglet réunion du backoffice ». Aujourd'hui, la liste Évènements de l'App montre
+les réunions de pôle et d'équipe aux membres concernés (la spec v18 avait seulement créé l'entrée Réunions du
+Back-Office).
+
+| # | Question | Réponse de Timothée |
+|---|---|---|
+| D28 | Les réunions dans Évènements (App) | **Retirées** de la liste et du calendrier d'Évènements de l'App : elles ne sont plus que dans Back-Office › Réunions. Les évènements réservés à un pôle (lot E) restent dans Évènements. |
+| D29 | Un simple membre d'une équipe de l'organigramme (sans autre rôle), qui n'a pas le Back-Office | **On lui ouvre le Back-Office avec la seule entrée Réunions** (les réunions de son équipe : date, sujets à proposer, compte rendu). |
+
+| # | Règle |
+|---|---|
+| G1 | Évènements (App) : liste, calendrier, onglets, compteurs et aperçus (Moi, accueil, « Pour moi ») sans aucune réunion (`estReunion`). |
+| G2 | Une adresse `/evenements/<id>` qui désigne une réunion renvoie vers sa fiche de Back-Office › Réunions pour qui y a accès ; les liens des rappels et notifications de réunion visent la fiche du Back-Office. |
+| G3 | Un membre d'équipe sans autre rôle voit le sélecteur App · Back-Office et, au Back-Office, la seule entrée Réunions (ni tableau de bord, ni calendrier, ni autre entrée), avec les réunions de ses équipes. Droits en double (`access.ts` et `firestore.rules`) si une écriture le demande (par exemple ses préférences de Back-Office) ; Timothée publie les règles. |
+| G4 | Tests Playwright sur les trois appareils : aucune réunion dans Évènements (App) pour un membre de pôle ; l'adresse d'une réunion mène au Back-Office ; un membre d'équipe sans autre rôle n'a que Réunions ; un évènement de pôle reste dans Évènements ; les rappels de réunion visent le Back-Office ; `back-office-coupe` reste vert. |
+
 ## Hors périmètre
 
 « Ajouter » un inscrit à la main (D4) ; « Prénom ✕ » et « Mes dates » dans la Prépa. Table (D16) ; « Tout voir »
