@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { ADMIN_EMAIL, signInAs, type FakeProfile } from "./helpers/fakeSession";
-import { estGrandEcran, interdireDialoguesNatifs, ouvrirAvecBarre } from "./helpers/agencement";
+import { estGrandEcran, estTelephone, interdireDialoguesNatifs, ouvrirAvecBarre } from "./helpers/agencement";
 
 // Retouches après le chantier v18 (docs/spec-retouches-v18.md), lot R, voie A.
 // R1 (D1) : « Partager » sur la fiche d'un évènement de l'App — la feuille de partage du système au
@@ -26,20 +26,27 @@ const MEMBRE: FakeProfile = { uid: "uid-membre", email: "membre@example.com", fi
 /** Pôle Événement : la coordination, qui gère les évènements. */
 const COORDINATION: FakeProfile = { uid: "uid-coordination", email: "coordination@example.com", firstName: "Coordination", lastName: "Essai", poles: ["evenement"] };
 
-/** Le partage et le presse-papiers simulés : chaque appel est noté dans `window.__partage`. */
-async function simulerPartage(page: Page, avecShare: boolean) {
-  await page.addInitScript((avec) => {
+/** Le partage et le presse-papiers simulés : chaque appel est noté dans `window.__partage`.
+ *  `share` : la feuille de partage existe (`true`), est fermée sans partager (`"annule"`, AbortError)
+ *  ou n'existe pas (`false`). Sans presse-papiers : une page servie en http hors localhost. */
+async function simulerPartage(page: Page, share: boolean | "annule", pressePapiers = true) {
+  await page.addInitScript(([mode, avecCopie]) => {
     const w = window as unknown as { __partage: { share: unknown[]; copie: string[] } };
     w.__partage = { share: [], copie: [] };
     Object.defineProperty(navigator, "clipboard", {
       configurable: true,
-      value: { writeText: async (texte: string) => { w.__partage.copie.push(texte); } },
+      value: avecCopie ? { writeText: async (texte: string) => { w.__partage.copie.push(texte); } } : undefined,
     });
     Object.defineProperty(navigator, "share", {
       configurable: true,
-      value: avec ? async (donnees: unknown) => { w.__partage.share.push(donnees); } : undefined,
+      value: mode
+        ? async (donnees: unknown) => {
+          w.__partage.share.push(donnees);
+          if (mode === "annule") throw new DOMException("Partage annulé", "AbortError");
+        }
+        : undefined,
     });
-  }, avecShare);
+  }, [share, pressePapiers] as const);
 }
 const partage = (page: Page) => page.evaluate(() => (window as unknown as { __partage: { share: { url?: string; title?: string }[]; copie: string[] } }).__partage);
 
@@ -52,6 +59,16 @@ async function ouvrir(page: Page, qui: FakeProfile, to: string) {
 
 const volet = (page: Page) => page.locator('[data-volet="detail"]');
 const partager = (page: Page) => page.getByRole("button", { name: "Partager" });
+/** L'annonce de la copie : une région `status` hors du bouton (les enfants d'un bouton ne sont pas annoncés). */
+const annonceCopie = (page: Page) => page.getByRole("status").filter({ hasText: "Lien copié" });
+
+/** Le bouton reste dans la fenêtre et la page ne défile pas de côté. */
+async function sansDebordement(page: Page, bouton: ReturnType<typeof partager>) {
+  const b = (await bouton.boundingBox())!;
+  const largeur = await page.evaluate(() => document.documentElement.clientWidth);
+  expect(b.x + b.width, "dans la fenêtre").toBeLessThanOrEqual(largeur);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth), "pas de défilement de côté").toBe(true);
+}
 
 /** Capture à regarder à l'œil (PW_CAPTURES=<dossier>), une par appareil. */
 async function capture(page: Page, nom: string) {
@@ -80,21 +97,36 @@ test.describe("R1 : « Partager » sur la fiche d'un évènement", () => {
       await expect(page.getByTestId("barre-fiche").getByRole("button", { name: "Partager" })).toHaveCount(1);
       const retour = (await page.getByTestId("barre-fiche").getByRole("link", { name: "Évènements" }).boundingBox())!;
       expect(b.x, "à droite du retour").toBeGreaterThan(retour.x + retour.width);
+      if (estTelephone(info)) {
+        // Sous 640 px : un rond, le libellé pour les lecteurs d'écran seulement.
+        expect(b.width, "rond sous 640 px").toBeLessThanOrEqual(44);
+        expect((await bouton.getByText("Partager").boundingBox())!.width, "libellé réservé aux lecteurs d'écran (sr-only)").toBeLessThanOrEqual(1);
+      }
     }
     await capture(page, "partager");
   });
 
-  test("à la souris (ordinateur) : le lien est copié et « Lien copié » s'affiche", async ({ page }, info) => {
+  test("à la souris (ordinateur) : le lien est copié, « Lien copié » s'affiche 2,5 s puis « Partager » revient", async ({ page }, info) => {
     test.skip(!!info.project.use.hasTouch, "au doigt : la feuille de partage");
     // `navigator.share` existe (Safari, Chrome sur Mac) : à la souris, on copie quand même (D1).
     await simulerPartage(page, true);
     await ouvrir(page, MEMBRE, "/evenements/foot");
     await partager(page).click();
-    await expect(page.getByRole("status").filter({ hasText: "Lien copié" })).toBeVisible();
+    // Le nom du bouton suit son libellé visible (WCAG 2.5.3) ; l'annonce est dans une région voisine.
+    const copie = page.getByRole("button", { name: "Lien copié" });
+    await expect(copie.getByText("Lien copié")).toBeVisible();
+    await expect(annonceCopie(page)).toHaveCount(1);
+    await expect(page.getByRole("button").getByRole("status"), "l'annonce n'est pas dans le bouton").toHaveCount(0);
     const p = await partage(page);
     expect(p.share, "pas de feuille de partage à la souris").toHaveLength(0);
     expect(p.copie).toHaveLength(1);
     expect(p.copie[0]).toMatch(/^https?:\/\/[^/]+\/evenements\/foot$/);
+    // 2,5 s : toujours là après 1 s, parti avant 3,5 s.
+    await page.waitForTimeout(1000);
+    await expect(copie).toBeVisible();
+    await expect(annonceCopie(page)).toHaveCount(0, { timeout: 3500 });
+    await expect(partager(page)).toBeVisible();
+    await expect(copie).toHaveCount(0);
   });
 
   test("au doigt (téléphone, tablette) : la feuille de partage du système, avec le titre et le lien", async ({ page }, info) => {
@@ -114,21 +146,52 @@ test.describe("R1 : « Partager » sur la fiche d'un évènement", () => {
     await simulerPartage(page, false);
     await ouvrir(page, MEMBRE, "/evenements/foot");
     await partager(page).click();
-    await expect(page.getByRole("status").filter({ hasText: "Lien copié" })).toBeVisible();
+    await expect(annonceCopie(page)).toHaveCount(1);
     expect((await partage(page)).copie[0]).toMatch(/\/evenements\/foot$/);
+    const copie = page.getByRole("button", { name: "Lien copié" });
+    await expect(copie).toBeVisible();
+    // Sur téléphone, le bouton reste rond : « Lien copié » ne l'élargit pas.
+    if (estTelephone(info)) expect((await copie.boundingBox())!.width, "toujours rond").toBeLessThanOrEqual(44);
+    await sansDebordement(page, copie);
   });
 
-  test("coordination : « Partager » à côté de « Gérer dans le Back-Office », sans débordement", async ({ page }) => {
+  test("au doigt, feuille de partage fermée sans partager (AbortError) : rien de copié, aucune erreur", async ({ page }, info) => {
+    test.skip(!info.project.use.hasTouch, "au doigt seulement");
+    const erreurs: string[] = [];
+    page.on("pageerror", (e) => erreurs.push(e.message));
+    await simulerPartage(page, "annule");
+    await ouvrir(page, MEMBRE, "/evenements/foot");
+    await partager(page).click();
+    await expect.poll(async () => (await partage(page)).share.length).toBe(1);
+    expect((await partage(page)).copie, "rien de copié").toHaveLength(0);
+    await expect(annonceCopie(page)).toHaveCount(0);
+    await expect(partager(page)).toBeVisible();
+    expect(erreurs).toEqual([]);
+  });
+
+  test("ni feuille de partage ni presse-papiers (page en http hors localhost) : pas de bouton qui ne ferait rien", async ({ page }) => {
+    await simulerPartage(page, false, false);
+    await ouvrir(page, MEMBRE, "/evenements/foot");
+    await expect(page.getByTestId("fiche-carte").getByText("Parc de Bercy")).toBeVisible();
+    await expect(partager(page)).toHaveCount(0);
+  });
+
+  test("coordination : « Partager » à côté de « Gérer dans le Back-Office », sans débordement, avant et après la copie", async ({ page }, info) => {
     await simulerPartage(page, false);
     await ouvrir(page, COORDINATION, "/evenements/foot");
     await expect(partager(page)).toHaveCount(1);
     await expect(page.getByRole("link", { name: "Gérer dans le Back-Office" })).toBeVisible();
     const [p, g] = [(await partager(page).boundingBox())!, (await page.getByRole("link", { name: "Gérer dans le Back-Office" }).boundingBox())!];
     expect(Math.abs((p.y + p.height / 2) - (g.y + g.height / 2)), "sur la même rangée").toBeLessThan(8);
-    const largeur = await page.evaluate(() => document.documentElement.clientWidth);
-    expect(p.x + p.width, "dans la fenêtre").toBeLessThanOrEqual(largeur);
-    expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth), "pas de défilement de côté").toBe(true);
+    await sansDebordement(page, partager(page));
     await capture(page, "partager-coordination");
+    // Après la copie, « Lien copié » ne pousse pas la rangée hors de la fenêtre (téléphone de 412 px).
+    await partager(page).click();
+    const copie = page.getByRole("button", { name: "Lien copié" });
+    await expect(copie).toBeVisible();
+    if (estTelephone(info)) expect((await copie.boundingBox())!.width, "toujours rond").toBeLessThanOrEqual(44);
+    await sansDebordement(page, copie);
+    await capture(page, "partager-coordination-copie");
   });
 
   test("中文 : 分享, puis 链接已复制", async ({ page }, info) => {
@@ -139,7 +202,8 @@ test.describe("R1 : « Partager » sur la fiche d'un évènement", () => {
     const bouton = page.getByRole("button", { name: "分享" });
     await expect(bouton).toBeVisible();
     await bouton.click();
-    await expect(page.getByRole("status").filter({ hasText: "链接已复制" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "链接已复制" })).toBeVisible();
+    await expect(page.getByRole("status").filter({ hasText: "链接已复制" })).toHaveCount(1);
   });
 });
 
@@ -315,6 +379,32 @@ test.describe("R3 : la liste-carte des deux volets tient dans la fenêtre", () =
       if (Math.abs(apres.haut - apres.collant) <= 1) expect(apres.bas - apres.haut).toBeGreaterThanOrEqual(apres.fenetre - apres.collant - 24 - 2);
     });
   }
+
+  test("l'en-tête change de hauteur après le chargement, page courte : le bas de la carte suit (grands écrans)", async ({ page }, info) => {
+    test.skip(!estGrandEcran(info), "deux volets : grands écrans");
+    await ouvrirR3(page, "/setlists");
+    const liste = page.locator('[data-volet="liste"]');
+    await expect.poll(() => liste.evaluate((el) => el.scrollHeight - el.clientHeight)).toBeGreaterThan(40);
+    // Une page plus courte que la fenêtre : `html` garde la hauteur de la fenêtre quoi que fasse l'en-tête.
+    await volet(page).evaluate((el) => { (el as HTMLElement).style.maxHeight = "120px"; (el as HTMLElement).style.overflow = "hidden"; });
+    const basAttendu = async () => {
+      await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
+      const m = await mesurerListe(page);
+      return Math.abs(Math.round(m.bas - (m.fenetre - 24)));
+    };
+    await expect.poll(basAttendu, { message: "au départ, à 24 px du bas" }).toBeLessThanOrEqual(2);
+    const enTete = page.locator("[data-entete-page]");
+    // Une ligne de 60 px apparaît dans l'en-tête (sous-titre, bandeau), puis disparaît ; puis sa marge
+    // intérieure change : la carte suit à chaque fois.
+    await enTete.evaluate((el) => { const l = document.createElement("div"); l.id = "ligne-essai"; l.style.height = "60px"; el.append(l); });
+    await expect.poll(basAttendu, { message: "l'en-tête grandit : la carte ne passe pas sous le bas de la fenêtre" }).toBeLessThanOrEqual(2);
+    await page.locator("#ligne-essai").evaluate((l) => l.remove());
+    await expect.poll(basAttendu, { message: "l'en-tête rapetisse : la carte reprend sa hauteur" }).toBeLessThanOrEqual(2);
+    await enTete.evaluate((el) => { (el as HTMLElement).style.paddingBottom = "80px"; });
+    await expect.poll(basAttendu, { message: "marge de l'en-tête agrandie" }).toBeLessThanOrEqual(2);
+    await enTete.evaluate((el) => { (el as HTMLElement).style.paddingBottom = ""; });
+    await expect.poll(basAttendu, { message: "marge de l'en-tête rendue" }).toBeLessThanOrEqual(2);
+  });
 
   test("un volet (téléphone, tablette debout), Back-Office › Tâches : la liste suit la page, sans défilement propre", async ({ page }, info) => {
     test.skip(estGrandEcran(info), "un volet : petits écrans");

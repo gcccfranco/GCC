@@ -49,7 +49,7 @@ les trois appareils (et les cinq projets pour les specs `agencement-v18-*`) ; FR
 | Tranche | Ce qui change | Où |
 |---|---|---|
 | R1 | « Partager » à droite du titre de la fiche d'évènement (D1) : `navigator.share` quand il existe, sinon copie du lien et « Lien copié » ; libellés FR/中文 ; aussi sur la fiche de gestion du BO si la planche l'y montre | `src/app/evenements/[id]/EvenementClient.tsx` |
-| R2 | Date · Heure · Lieu en trois colonnes dès que le volet de la fiche dépasse 760 px (requête de conteneur, comme R15), l'une sous l'autre en dessous (D2) | même fichier |
+| R2 | Date · Heure · Lieu en grand (D2), titrées : en trois colonnes quand la carte des infos a la place, c'est-à-dire quand la fiche est sur une colonne (volet de moins de 760 px) ; l'une sous l'autre dans la colonne de 300 px quand la fiche est sur deux colonnes (planche `v18-app-evenements-reduite`) et sur téléphone (requête de conteneur, comme R15) | même fichier |
 | R3 | `DeuxVolets` : la liste-carte a la hauteur de la fenêtre moins la barre du haut, collante, et défile seule (D3) ; vérifier Setlists, Mes services, Tâches, Réunions, Évènements, Personnes, Réception, Harmonie | `src/components/layout/DeuxVolets.tsx` |
 | R4 | Agenda du Calendrier : la rangée des filtres reste sur une ligne et défile de côté avec bord fondu (D6) ; « Ajouter ce jour-là » en bouton + flèche ronde, la ligne de l'entrée ouverte surlignée (D7) | `src/components/calendrier/Agenda.tsx`, `src/app/back-office/calendrier/CalendrierClient.tsx` |
 | R5 | `Pilules` : ≈ 28 px dès 1 024 px de large avec un pointeur fin, 40 px au doigt (D9) — une règle dans le composant commun, pas de variante par page | `src/components/layout/Onglets.tsx` |
@@ -131,9 +131,39 @@ Rien de codé (spec écrite le 08/10/2026, en attente du go).
 - **Tests R7** : `tests/retouches-v18-ra.spec.ts`, describe « R7 », sur les cinq projets. Les tests ont été vus rouges sur ordinateur et téléphone : pas d'heure dans les en-têtes, « un dimanche par mois » encore là, 推荐诗歌 en grand. Ils sont ensuite verts : 21 réussis, 4 sautés selon l'appareil. Captures regardées : ordinateur, ordinateur-1440 (barre dépliée et réduite), tablette, iPad couché, téléphone.
   - Specs mises à jour : `agencement-v18-planning` (la mention est absente), `nouveaux-membres` (推荐新诗歌 exact), `planning-accueil` (en-tête « Groupes · 13:00 »).
   - Specs voisines vertes (319 réussis) : `agencement-v18-planning`, `nouveaux-membres`, `planning-accueil`, `pages-en-grand-accueil`, `planning-table`, `libelles-langues`, `tableau-de-bord`. `tsc --noEmit` et eslint sans erreur.
-- **Reste à la voie A** : rien (R1, R2, R3, R7, R9 faites).
+- **Relecture (08/10/2026), lot fini et relu** : dix constats mineurs, aucun bloquant.
+  - **R2** : la phrase du tableau est corrigée. Elle dit maintenant ce que fait le code : trois colonnes quand la fiche est sur une colonne, l'une sous l'autre dans la colonne de 300 px sinon.
+  - **« Partager »** :
+    - plus d'`aria-label` : le nom du bouton est son libellé, « Lien copié » compris (WCAG 2.5.3) ;
+    - la copie est annoncée par une région `status` voisine du bouton, réservée aux lecteurs d'écran, et non plus par un enfant du bouton, qui n'était pas annoncé ;
+    - sur téléphone, le bouton reste rond même après la copie : « Lien copié » n'élargit plus la rangée « ‹ Évènements · Gérer dans le Back-Office » ;
+    - sans feuille de partage ni presse-papiers (page en http hors localhost), le bouton n'est pas affiché ;
+    - sans presse-papiers, la feuille de partage est utilisée même à la souris.
+    - Une écriture refusée par le presse-papiers reste silencieuse. Ce cas est rare : document sans le focus, ou règle d'autorisation d'un cadre.
+  - **`DeuxVolets`** : la carte observe aussi ce qui est au-dessus d'elle (frères précédents de ses ancêtres, boîte de bordure). Le constat était à moitié juste :
+    - un en-tête qui **grandit** se rattrapait déjà, car la carte, en débordant, agrandit `html` ;
+    - un en-tête qui **rapetisse** sur une page courte laissait la carte 60 px trop courte. Vu rouge sur ordinateur, ordinateur-1440 et iPad couché.
+  - **`playwright.config.ts`** : le motif ne prend plus que le lot R (`retouches-v18(-r[a-z])?`) ; les specs des lots E et F gardent leurs trois appareils. **À l'intégration** : une seule ligne pour ce motif.
+  - **Tests ajoutés** (`retouches-v18-ra.spec.ts`) :
+    - « Lien copié » disparaît en 2,5 s ;
+    - bouton rond (44 px au plus) avec un libellé réservé aux lecteurs d'écran sur téléphone ;
+    - nom du bouton et annonce hors du bouton ;
+    - feuille de partage fermée sans partager (`AbortError`) : rien de copié, aucune erreur ;
+    - pas de bouton sans feuille de partage ni presse-papiers ;
+    - pas de débordement après la copie (coordination) ;
+    - en-tête qui grandit puis rapetisse (R3).
+  - **`planning-accueil.spec.ts`** : `/^Groupes\b/`. Interfranco et Intergroupe sans heure (D14) : la règle est maintenant figée par un test.
+  - Les nouveaux tests ont été vus rouges avant la correction, puis verts.
+  - Résultats après correction :
+    - `retouches-v18-ra` et `planning-accueil` sur les cinq projets, avec les specs voisines sur ordinateur : 319 réussis, aucun échec. Les specs voisines sont `evenements`, `pages-en-grand-{evenements,setlists,taches,reception}`, `agencement-v18-{t7,setlists}`, `taches-evenements`, `reunions` et `agencement-barre-reduite` ;
+    - `back-office-coupe` : 68 réussis ;
+    - `tsc --noEmit` et eslint : aucune erreur.
+  - Captures regardées après la copie, rangée de la coordination : bouton rond avec la coche sur téléphone, « Lien copié » sur ordinateur et sur tablette.
+  - Chants (constat 6) : rien à corriger dans ce lot, toujours à trancher.
+- **Reste à la voie A** : rien (R1, R2, R3, R7, R9 faites et relues).
 - **À faire par Timothée** :
   - relire le 中文 : 分享, 链接已复制, 日期 · 时间 · 地点, 推荐新诗歌 ;
-  - trancher Chants (ci-dessus).
+  - trancher Chants (ci-dessus) ;
+  - en local, sur téléphone, toucher « Partager » : la feuille de partage s'ouvre ; sur ordinateur, « Lien copié ».
   
   Aucune règle Firestore n'est touchée.

@@ -24,7 +24,7 @@
 // titre en grand, dans la barre de la fiche sinon ; pas au Back-Office (la planche ne l'y montre pas).
 // R2 (D2) : en grand, Date · Heure · Lieu titrées, en trois colonnes quand la carte a la place.
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useSyncExternalStore } from "react"
 import Link from "next/link"
 import { useParams, usePathname, useRouter } from "next/navigation"
 import { baseBackOffice } from "@/lib/navigation"
@@ -70,11 +70,18 @@ function Linkified({ text }: { text: string }) {
   )
 }
 
+const sansAbonnement = () => () => {}
+/** La feuille de partage ou le presse-papiers : ni l'un ni l'autre hors https (sauf localhost). */
+const peutPartager = () => typeof navigator.share === "function" || navigator.clipboard != null
+
 /** « Partager » (R1, D1) : au doigt, la feuille de partage du système quand elle existe ; à la souris
- *  (ou sans feuille), le lien copié et « Lien copié » à la place du libellé. `compact` : rond sous
- *  640 px, le libellé pour les lecteurs d'écran (la barre de la fiche y garde « Gérer » à côté). */
+ *  (ou sans feuille), le lien copié et « Lien copié » à la place du libellé pendant 2,5 s. `compact` :
+ *  rond sous 640 px, libellé réservé aux lecteurs d'écran, même copié (la barre de la fiche y garde
+ *  « Gérer » à côté). Le nom du bouton est son libellé ; la copie est annoncée par une région `status`
+ *  voisine, les enfants d'un bouton n'étant pas annoncés. Sans feuille ni presse-papiers, pas de bouton. */
 function Partager({ e, className, compact = false }: { e: Evenement; className: string; compact?: boolean }) {
   const { t } = useTranslation()
+  const possible = useSyncExternalStore(sansAbonnement, peutPartager, () => false)
   const [copie, setCopie] = useState(false)
   useEffect(() => {
     if (!copie) return
@@ -84,23 +91,27 @@ function Partager({ e, className, compact = false }: { e: Evenement; className: 
 
   async function partager() {
     const url = `${window.location.origin}/evenements/${e.id}`
-    if (navigator.share && window.matchMedia("(pointer: coarse)").matches) {
+    if (typeof navigator.share === "function" && (window.matchMedia("(pointer: coarse)").matches || !navigator.clipboard)) {
       try { await navigator.share({ title: e.titre, url }) } catch { /* partage annulé */ }
       return
     }
     try {
       await navigator.clipboard.writeText(url)
       setCopie(true)
-    } catch { /* presse-papiers indisponible */ }
+    } catch { /* écriture refusée */ }
   }
 
+  if (!possible) return null
   return (
-    <button type="button" onClick={partager} aria-label={t("evenements.partager")} className={className}>
-      {copie ? <Check className="h-4 w-4" aria-hidden /> : <Share2 className="h-4 w-4" aria-hidden />}
-      <span role="status" className={copie || !compact ? "" : "max-sm:sr-only"}>
-        {copie ? t("evenements.lienCopie") : t("evenements.partager")}
-      </span>
-    </button>
+    <>
+      <button type="button" onClick={partager} className={className}>
+        {copie ? <Check className="h-4 w-4" aria-hidden /> : <Share2 className="h-4 w-4" aria-hidden />}
+        <span className={compact ? "max-sm:sr-only" : undefined}>
+          {copie ? t("evenements.lienCopie") : t("evenements.partager")}
+        </span>
+      </button>
+      <span role="status" className="sr-only">{copie ? t("evenements.lienCopie") : ""}</span>
+    </>
   )
 }
 

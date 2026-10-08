@@ -21,7 +21,8 @@ import { disposerVolets, estSurLaListe } from "@/lib/deuxVolets";
 // Retouches v18 (R3, D3, docs/spec-retouches-v18.md) : la carte tient dans la fenêtre. Son bas reste
 // à 24 px du bas de la fenêtre : sous l'en-tête avant tout défilement, elle est plus courte, puis,
 // collée sous la barre du haut, elle a la hauteur de la fenêtre moins cette barre. Sa hauteur suit
-// son haut dans la fenêtre (`--haut-liste`), relu au défilement et quand la page change de taille.
+// son haut dans la fenêtre (`--haut-liste`), relu au défilement, quand la page change de taille et
+// quand ce qui est au-dessus d'elle change de hauteur.
 
 export function DeuxVolets({
   racine,
@@ -61,6 +62,11 @@ export function DeuxVolets({
     window.addEventListener("resize", relire);
     const taille = new ResizeObserver(relire);
     taille.observe(document.documentElement);
+    // Ce qui est au-dessus de la carte (l'en-tête et ses sous-titres, bandeaux, filtres) : sur une page
+    // plus courte que la fenêtre, `html` garde sa hauteur quand l'en-tête rapetisse.
+    for (let n: Element | null = el; n && n !== document.body; n = n.parentElement) {
+      for (let frere = n.previousElementSibling; frere; frere = frere.previousElementSibling) taille.observe(frere, { box: "border-box" });
+    }
     return () => {
       cancelAnimationFrame(image);
       window.removeEventListener("scroll", relire);
