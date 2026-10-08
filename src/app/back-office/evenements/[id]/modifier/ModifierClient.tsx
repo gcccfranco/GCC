@@ -32,13 +32,13 @@ export function ModifierClient() {
   useEffect(() => { getEvenement(id).then(setEvenement) }, [id])
 
   const chemin = usePathname() || ""
-  const base = evenement ? baseBackOffice(evenement.pour) : null
+  const base = evenement ? baseBackOffice(evenement) : null
   const ailleurs = !!base && !chemin.startsWith(`${base}/`)
   useEffect(() => { if (ailleurs && base) router.replace(`${base}/${id}/modifier`) }, [ailleurs, base, id, router])
 
   if (ailleurs) return null
 
-  const reunion = !!evenement && estReunion(evenement.pour)
+  const reunion = !!evenement && estReunion(evenement)
   const page = (contenu: React.ReactNode) => deuxVolets ? <div className="max-w-[720px]">{contenu}</div> : (
     <>
       <EnTetePage

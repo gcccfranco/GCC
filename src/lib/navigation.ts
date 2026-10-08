@@ -65,9 +65,9 @@ export function entreeBackOffice(e: Entree): EntreeBarre {
 }
 
 /** Où se gère un évènement au Back-Office (agencement v18, B15) : une réunion sous l'entrée
- *  Réunions, un évènement sous Évènements. Sa fiche est `${base}/<id>`. */
-export function baseBackOffice(pour: string): "/back-office/reunions" | "/back-office/evenements" {
-  return estReunion(pour) ? "/back-office/reunions" : "/back-office/evenements";
+ *  Réunions, un évènement sous Évènements — un évènement de pôle compris (lot E). Sa fiche est `${base}/<id>`. */
+export function baseBackOffice(e: { pour: string; reunion?: boolean }): "/back-office/reunions" | "/back-office/evenements" {
+  return estReunion(e) ? "/back-office/reunions" : "/back-office/evenements";
 }
 
 /** « Plus » (B6) : toujours à droite de la barre du bas du Back-Office. */

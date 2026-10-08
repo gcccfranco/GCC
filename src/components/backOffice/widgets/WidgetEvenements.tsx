@@ -54,7 +54,7 @@ export function WidgetEvenements({ widget }: { widget: Widget }) {
           <div>
             {lignes.map((l) => l.du === "app" ? (
               <Rangee
-                key={l.evenement.id} testId="ligne-evenement" href={`${baseBackOffice(l.evenement.pour)}/${l.evenement.id}`}
+                key={l.evenement.id} testId="ligne-evenement" href={`${baseBackOffice(l.evenement)}/${l.evenement.id}`}
                 detail={`${jourSemaine(l.date, i18n.language)} · ${etat(etatInscriptions(l.evenement, maintenant))}`}
               >
                 <b className="font-semibold">{l.evenement.titre}</b>

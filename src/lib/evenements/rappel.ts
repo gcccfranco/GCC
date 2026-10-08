@@ -44,10 +44,10 @@ export function nouvelEvenementMessage(
  *  Un formulaire externe (lot 11) n'ouvre rien : l'app n'inscrit plus personne,
  *  et la date d'ouverture restée dans la fiche n'a plus cours. */
 export function ouvertureDuJour(
-  e: Pick<Evenement, "type" | "date" | "dateFin" | "pour" | "lienExterne" | "inscriptions" | "inscriptionOuverte" | "inscriptionDebut">,
+  e: Pick<Evenement, "type" | "date" | "dateFin" | "pour" | "reunion" | "lienExterne" | "inscriptions" | "inscriptionOuverte" | "inscriptionDebut">,
   today: string,
 ): boolean {
-  return !e.lienExterne && modeInscriptions(e) === "auto" && !isInfo(e) && !estReunion(e.pour)
+  return !e.lienExterne && modeInscriptions(e) === "auto" && !isInfo(e) && !estReunion(e)
     && (e.inscriptionDebut ?? "").slice(0, 10) === today && !isPast(e, today);
 }
 

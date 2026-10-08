@@ -28,7 +28,7 @@ import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { useSearchParams } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import { Check, ChevronLeft, ChevronRight, CloudOff, SlidersHorizontal, UserRound } from "lucide-react";
-import { creatableEvenementPours, estReunion, isAdminUser, polesDe } from "@/lib/access";
+import { creatableEvenementPours, isAdminUser, polesDe, publicDeReunion } from "@/lib/access";
 import type { TacheValues } from "@/lib/firebase/taches";
 import { useProfile } from "@/lib/firebase/users";
 import { chargerCalendrier, chargerPeriode, enOrdre, type LectureCalendrier } from "@/lib/calendrier/charger";
@@ -173,10 +173,10 @@ export function CalendrierClient() {
     if (!user || !lu) return;
     let vivant = true;
     const cle = `${debut}|${fin}|${seulementMoiActif}`;
-    chargerPeriode(lu.base, user.uid, debut, fin, { seulementMoi: seulementMoiActif })
+    chargerPeriode(lu.base, user, profil, debut, fin, { seulementMoi: seulementMoiActif })
       .then((p) => vivant && setPeriode({ de: lu, cle, ...p }));
     return () => { vivant = false; };
-  }, [user, lu, debut, fin, seulementMoiActif]);
+  }, [user, profil, lu, debut, fin, seulementMoiActif]);
   const base = periode?.donnees ?? null;
   const echecs = enOrdre([...(lu?.echecs ?? []), ...(periode?.echecs ?? [])]);
 
@@ -229,8 +229,8 @@ export function CalendrierClient() {
   const pours = creatableEvenementPours(user, profile, ANNONCE_SECTIONS);
   const mesPoles: TachePole[] = !user ? [] : isAdminUser(user) ? [...TACHE_POLES] : polesDe(profile);
   const droits: DroitsCreation = {
-    evenement: pours.some((p) => !estReunion(p)),
-    reunion: pours.some(estReunion),
+    evenement: pours.some((p) => !publicDeReunion(p)),
+    reunion: pours.some(publicDeReunion),
     tache: mesPoles.length > 0,
   };
   const peutCreer = droits.evenement || droits.reunion || droits.tache;

@@ -118,7 +118,8 @@ test.describe("B1 : le formulaire refuse « Toute l'église » avant la bascule"
   });
 
   test("une réunion de pôle le 20/12/2026 passe", async ({ page }) => {
-    const { db } = await ouvrir(page, COORD, "/back-office/evenements/nouveau", "2026-12-15T10:00:00");
+    // Retouches v18, lot E : une réunion se crée par « + Nouvelle réunion ».
+    const { db } = await ouvrir(page, COORD, "/back-office/reunions/nouvelle", "2026-12-15T10:00:00");
     await page.getByLabel("Nom de l'évènement").fill("Réunion de fin d'année");
     await page.getByLabel("Public").selectOption("pole:evenement");
     await page.getByLabel("Date", { exact: true }).fill("2026-12-20");

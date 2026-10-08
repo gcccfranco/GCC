@@ -9,7 +9,7 @@
 // de la page, ligne du widget). Firestore en REST seulement. Le Sheet des évènements se lit à
 // part, par période affichée (lireSheetEvenements).
 
-import { estReunion, isAdminUser, polesDe } from "@/lib/access";
+import { canSeeEvenement, estReunion, isAdminUser, polesDe } from "@/lib/access";
 import { ORDRE_PASTILLES, type DonneesCalendrier, type ProfilCalendrier, type SourceCalendrier } from "@/lib/calendrier/entrees";
 import { getInscription, listEvenements } from "@/lib/firebase/evenements";
 import { listCreneaux, listProgrammes } from "@/lib/firebase/programmes";
@@ -98,11 +98,13 @@ const touche = (e: Evenement, debut: string, fin: string) => {
 };
 
 /** Les données de la période `debut` → `fin` : les fois des tâches qui y ont une échéance (les
- *  autres n'y ont pas d'entrée) ; mes inscriptions, aux évènements ouverts qui y tombent, pour
- *  « Seulement moi » seulement (sinon aucune lecture). */
+ *  autres n'y ont pas d'entrée) ; mes inscriptions, aux évènements ouverts qui y tombent et que je
+ *  vois (un évènement d'un autre pôle n'est pas lu, retouches v18), pour « Seulement moi »
+ *  seulement (sinon aucune lecture). */
 export async function chargerPeriode(
   base: BaseCalendrier,
-  uid: string,
+  user: Utilisateur,
+  profile: ProfilCalendrier | null,
   debut: string,
   fin: string,
   { seulementMoi }: { seulementMoi: boolean },
@@ -116,8 +118,8 @@ export async function chargerPeriode(
         : await listFois(tache).catch(() => { echecs.push("taches"); return []; }),
     }))),
     Promise.all((seulementMoi ? base.evenements : [])
-      .filter((e) => !estReunion(e.pour) && !e.lienExterne && touche(e, debut, fin))
-      .map((e) => getInscription(e.id, uid)
+      .filter((e) => !estReunion(e) && !e.lienExterne && touche(e, debut, fin) && canSeeEvenement(user, profile, e))
+      .map((e) => getInscription(e.id, user.uid)
         .then((i) => (i ? e.id : null))
         .catch(() => { echecs.push("evenements"); return null; }))),
   ]);

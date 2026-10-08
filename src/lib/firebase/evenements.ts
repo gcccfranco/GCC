@@ -8,6 +8,7 @@ import {
 } from "./setlists";
 import type { CompteRendu, Deplacement, Evenement, Inscription } from "@/types/evenement";
 import { modeInscriptions } from "@/lib/evenements/agenda";
+import { estReunion } from "@/lib/access";
 
 // Évènements (lot 6) : evenements/{id} et evenements/{id}/inscriptions/{iid},
 // en REST. Sans compte, seule la requête filtrée « pour = eglise » est
@@ -55,6 +56,7 @@ export function fromFsEvenement(raw: RawDoc): Evenement {
     epingle: (data.epingle as boolean) ?? false,
     expiresAt: (data.expiresAt as string | null) ?? null,
     inscrits: typeof data.inscrits === "number" ? data.inscrits : 0,
+    ...(typeof data.reunion === "boolean" ? { reunion: data.reunion } : {}),
     ...(data.compteRendu ? { compteRendu: data.compteRendu as CompteRendu } : {}),
     ...(data.deplacement ? { deplacement: data.deplacement as Deplacement } : {}),
     createdAt: (data.createdAt as string) ?? "",
@@ -99,13 +101,14 @@ export async function listEvenements(publicOnly: boolean): Promise<Evenement[]> 
 
 /** Réunions d'un même public (`pole:da`…), dans le désordre (lot U6, R2) : une
  *  égalité seule, sans tri, ne demande pas d'index composite. Le filtre est
- *  rejoué ici : le reste du code ne dépend pas de celui de la requête. */
+ *  rejoué ici : le reste du code ne dépend pas de celui de la requête. Les
+ *  évènements du même pôle qui ne sont pas des réunions (lot E) sont écartés. */
 export async function listReunionsDu(pour: string): Promise<Evenement[]> {
   const docs = await runQuery("", {
     from: [{ collectionId: "evenements" }],
     where: { fieldFilter: { field: { fieldPath: "pour" }, op: "EQUAL", value: { stringValue: pour } } },
   });
-  return docs.map(fromFsEvenement).filter((e) => e.pour === pour);
+  return docs.map(fromFsEvenement).filter((e) => e.pour === pour && estReunion(e));
 }
 
 /** Évènements créés après `sinceMs` (cloche), les plus récents d'abord, bornés à `max`.

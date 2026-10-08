@@ -176,7 +176,7 @@ async function lignesEvenements(
   // la veille de sa nouvelle date, même si celle de l'ancienne est déjà partie.
   for (const doc of (await db.collection("evenements").where("date", "==", isoInDays(1)).get()).docs) {
     const e = { id: doc.id, ...doc.data() } as Evenement;
-    if (estReunion(e.pour)) {
+    if (estReunion(e)) {
       const sujets = (await doc.ref.collection("sujets").get()).docs.map((s) => s.data() as Sujet);
       await ajouter(await destinatairesEvenement(db, e), { kind: "veille", evenement: e, sujets: nombreSujetsAAborder(sujets) }, cleVeille(e));
     } else {
@@ -208,7 +208,7 @@ async function lignesEvenements(
   const deplaces = (await db.collection("evenements").where("deplacement.le", ">=", isoInDays(-2)).get()).docs;
   const parId = new Map(deplaces.map((d) => [d.id, d.ref]));
   for (const e of deplacementsAPrevenir(deplaces.map((d) => ({ id: d.id, ...d.data() }) as Evenement), today)) {
-    const candidats = estReunion(e.pour) ? await destinatairesEvenement(db, e) : await inscritsDe(parId.get(e.id)!);
+    const candidats = estReunion(e) ? await destinatairesEvenement(db, e) : await inscritsDe(parId.get(e.id)!);
     await ajouter(destinatairesDeplacement(e, candidats), { kind: "deplacement", evenement: e }, cleDeplacement(e));
   }
   return out;

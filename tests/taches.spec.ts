@@ -377,7 +377,8 @@ test("créer une réunion de pôle : pas d'inscriptions", async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
   let pushed = false;
   await page.route("**/api/push/notify-evenement", (route) => { pushed = true; return route.fulfill({ json: { ok: true } }); });
-  const db = await signInAs(page, MEMBRE_DA, {}, "/back-office/evenements/nouveau");
+  // Retouches v18, lot E : une réunion se crée par « + Nouvelle réunion » (« Nouvel évènement » = évènement de pôle).
+  const db = await signInAs(page, MEMBRE_DA, {}, "/back-office/reunions/nouvelle");
   await page.getByLabel("Public").selectOption({ label: "Pôle DA" });
   await expect(page.getByRole("radiogroup", { name: "Inscriptions" })).toHaveCount(0);
   await page.getByLabel("Nom de l'évènement").fill("Réunion DA");

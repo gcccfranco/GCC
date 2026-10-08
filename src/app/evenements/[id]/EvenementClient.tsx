@@ -140,7 +140,7 @@ export function EvenementClient({ espace = "app", id: idDonne }: { espace?: "app
 
   // Lot U6 (R2) : les réunions du même pôle ou de la même équipe (R4), pour
   // « Réunions précédentes » et dater un sujet « repris le … ».
-  const pourReunion = user && evenement && estReunion(evenement.pour) ? evenement.pour : null
+  const pourReunion = user && evenement && estReunion(evenement) ? evenement.pour : null
   const [memePublic, setMemePublic] = useState<Evenement[]>([])
   useEffect(() => {
     if (!pourReunion) return
@@ -150,7 +150,7 @@ export function EvenementClient({ espace = "app", id: idDonne }: { espace?: "app
   // Agencement v18 (B15) : au Back-Office, une réunion se gère sous Réunions et un évènement
   // sous Évènements ; ouverte sous l'autre entrée, la fiche y repart.
   const chemin = usePathname() || ""
-  const baseBO = espace === "back-office" && evenement ? baseBackOffice(evenement.pour) : null
+  const baseBO = espace === "back-office" && evenement ? baseBackOffice(evenement) : null
   const ailleurs = !!baseBO && !chemin.startsWith(`${baseBO}/`)
   useEffect(() => { if (ailleurs && baseBO) router.replace(`${baseBO}/${id}`) }, [ailleurs, baseBO, id, router])
 
@@ -165,7 +165,7 @@ export function EvenementClient({ espace = "app", id: idDonne }: { espace?: "app
   const e = evenement
   // Organisateur ou coordination : ceux qui gèrent l'évènement.
   const gestionnaire = canEditEvenement(user, profile, e)
-  const reunion = estReunion(e.pour)
+  const reunion = estReunion(e)
   const avecInscriptions = !isInfo(e) && !reunion
   const backOffice = espace === "back-office"
   // Au Back-Office : qui gère, ou une personne de la réunion (sujets, compte rendu).
@@ -173,7 +173,7 @@ export function EvenementClient({ espace = "app", id: idDonne }: { espace?: "app
   if (backOffice && !gestionnaire && !deLaReunion) {
     return <p className="text-sm text-muted-foreground max-w-2xl">{t("evenements.reserved")}</p>
   }
-  const liste = backOffice ? baseBackOffice(e.pour) : "/evenements"
+  const liste = backOffice ? baseBackOffice(e) : "/evenements"
 
   async function supprimer() {
     if (!(await confirmer({ titre: t("evenements.confirmDelete", { titre: e.titre }), texte: t("evenements.confirmDeleteTexte"),
@@ -289,7 +289,7 @@ export function EvenementClient({ espace = "app", id: idDonne }: { espace?: "app
           <div className="min-w-0 flex-1"><TitreEvenement e={e} niveau="h2" grand /></div>
           {gestionnaire && estResponsable(user, profile) && (
             <Button asChild variant="outline" size="sm" className="shrink-0">
-              <Link href={`${baseBackOffice(e.pour)}/${e.id}`}>
+              <Link href={`${baseBackOffice(e)}/${e.id}`}>
                 <ArrowRight aria-hidden />
                 {t("backOffice.gerer")}
               </Link>
@@ -328,7 +328,7 @@ export function EvenementClient({ espace = "app", id: idDonne }: { espace?: "app
           <Retour href={liste}>{t("evenements.title")}</Retour>
           <div className="flex min-w-0 items-center gap-2">
             {gestionnaire && estResponsable(user, profile) && (
-              <Link href={`${baseBackOffice(e.pour)}/${e.id}`} className="raised inline-flex h-10 shrink-0 items-center gap-1.5 rounded-full px-4 text-sm font-semibold text-foreground transition-transform duration-150 active:scale-[.97]">
+              <Link href={`${baseBackOffice(e)}/${e.id}`} className="raised inline-flex h-10 shrink-0 items-center gap-1.5 rounded-full px-4 text-sm font-semibold text-foreground transition-transform duration-150 active:scale-[.97]">
                 <ArrowRight className="h-4 w-4" aria-hidden />
                 {t("backOffice.gerer")}
               </Link>

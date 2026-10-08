@@ -169,7 +169,7 @@ export function evenementsAVenir(
   evenements: Evenement[], user: AuthUser | null, profile: UserProfile | null, today: string, r: Reglages,
 ): Evenement[] {
   return evenements
-    .filter((e) => canSeeEvenement(user, profile, e) && !estReunion(e.pour) && !isInfo(e) && !isPast(e, today)
+    .filter((e) => canSeeEvenement(user, profile, e) && !estReunion(e) && !isInfo(e) && !isPast(e, today)
       && !isExpired(e, today) && (!r.section || e.pour === r.section))
     .sort(byDate)
     .slice(0, r.nombre ?? 3);

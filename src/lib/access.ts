@@ -128,7 +128,7 @@ export function canReserverPour(
 
 // ─── Évènements (lot 6, docs/spec-evenements.md) — miroir : firestore.rules ───
 
-type EvenementDroits = { pour: string; organisateurUid: string };
+type EvenementDroits = { pour: string; organisateurUid: string; reunion?: boolean | null };
 /** Profil lu par les droits des évènements : sections, pôles, et les équipes de
  *  l'organigramme recopiées par le serveur (lot U6, R4 : `recalculerPoles`). */
 type ProfilEvenement = {
@@ -149,9 +149,17 @@ export function equipeDuPour(pour: string): string | null {
   return m ? m[1] : null;
 }
 
-/** Réunion = de pôle ou d'équipe : sans inscriptions, avec sujets et compte rendu. */
-export function estReunion(pour: string): boolean {
+/** Public qui peut être celui d'une réunion : un pôle ou une équipe. */
+export function publicDeReunion(pour: string): boolean {
   return poleDuPour(pour) !== null || equipeDuPour(pour) !== null;
+}
+
+/** Réunion : sans inscriptions, avec sujets et compte rendu. Son public est un pôle ou une
+ *  équipe, et son champ `reunion` n'est pas `false` (retouches v18, lot E1) : absent, comme
+ *  avant le lot E, tout évènement de pôle ou d'équipe est une réunion ; « Nouvel évènement »
+ *  écrit `false`, « + Nouvelle réunion » `true`. */
+export function estReunion(e: { pour: string; reunion?: boolean | null }): boolean {
+  return publicDeReunion(e.pour) && e.reunion !== false;
 }
 
 /** Membre d'une équipe de l'organigramme, d'après son profil (`dansEquipes`). */
@@ -163,7 +171,9 @@ function estDansEquipe(profile: ProfilEvenement | null, equipe: string): boolean
  *  une section = ses membres connectés (clé de serviceRoles), l'organisateur,
  *  la coordination ; une réunion de pôle = les membres du pôle, l'organisateur
  *  et les admins (lot 7) ; une réunion d'équipe = les membres de l'équipe,
- *  l'organisateur et les admins (lot U6, R4). Un visiteur sans compte ne voit que « eglise ». */
+ *  l'organisateur et les admins (lot U6, R4). Un évènement de pôle ou d'équipe
+ *  qui n'est pas une réunion (retouches v18, D22) : les mêmes, plus la coordination.
+ *  Un visiteur sans compte ne voit que « eglise ». */
 export function canSeeEvenement(
   user: AuthUser | null,
   profile: ProfilEvenement | null,
@@ -172,12 +182,24 @@ export function canSeeEvenement(
   if (e.pour === "eglise") return true;
   if (!user) return false;
   if (e.organisateurUid === user.uid) return true;
+  if (publicDeReunion(e.pour) && !estReunion(e) && isCoordination(user, profile)) return true;
   const pole = poleDuPour(e.pour);
   if (pole) return isPoleMember(user, profile, pole);
   const equipe = equipeDuPour(e.pour);
   if (equipe) return isAdminUser(user) || estDansEquipe(profile, equipe);
   if (isCoordination(user, profile)) return true;
   return e.pour in (profile?.serviceRoles ?? {});
+}
+
+/** S'inscrire (route /api/evenements/inscription, retouches v18, E6) : un évènement de pôle ou
+ *  d'équipe, ceux qui le voient ; les autres publics, comme avant (la période, les places et
+ *  « sans compte » se vérifient à part, refusInscription). */
+export function canInscrireEvenement(
+  user: AuthUser | null,
+  profile: ProfilEvenement | null,
+  e: EvenementDroits
+): boolean {
+  return !publicDeReunion(e.pour) || canSeeEvenement(user, profile, e);
 }
 
 /** Qui crée pour un public donné : la coordination pour tout ; un membre dont le

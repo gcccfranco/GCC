@@ -84,6 +84,10 @@ export interface Evenement {
   /** Dernier déplacement depuis le calendrier (lot U8, C6), écrit quand « Prévenir »
    *  est cochée (`null` sinon) ; le rappel du matin l'annonce (C7). */
   deplacement?: Deplacement | null;
+  /** Réunion (sans inscriptions, avec sujets et compte rendu) ou évènement (retouches v18, lot E1) :
+   *  « + Nouvelle réunion » écrit `true`, « Nouvel évènement » `false`. Absent (avant le lot E) =
+   *  une réunion si le public est un pôle ou une équipe. Lu par `estReunion` (src/lib/access.ts). */
+  reunion?: boolean;
   /** Inscrits + invités — tenu par le serveur seulement. */
   inscrits: number;
   createdAt: string;

@@ -495,13 +495,13 @@ test.describe("B3 : Évènements", () => {
     const categorie = page.getByLabel("Catégorie");
     await categorie.selectOption("info");
     await expect(page.getByLabel("Date", { exact: true })).toHaveCount(0);
-    // Passer à une réunion de pôle : la catégorie quitte « Info », la date revient.
+    // Retouches v18, lot E : « Nouvel évènement » pour un pôle crée un évènement de pôle, pas une
+    // réunion : la catégorie « Info » reste permise.
     await page.getByLabel("Public").selectOption("pole:evenement");
-    await expect(categorie).not.toHaveValue("info");
-    await expect(categorie.locator('option[value="info"]')).toHaveCount(0);
-    await expect(page.getByLabel("Date", { exact: true })).toBeVisible();
-    // « Nouvelle réunion » : pas d'Info non plus.
+    await expect(categorie).toHaveValue("info");
+    // « Nouvelle réunion » : jamais d'Info, la date est demandée.
     await page.goto("/back-office/reunions/nouvelle");
+    await expect(page.getByLabel("Date", { exact: true })).toBeVisible();
     await expect(page.getByLabel("Catégorie").locator('option[value="loisir"]')).toHaveCount(1);
     await expect(page.getByLabel("Catégorie").locator('option[value="info"]')).toHaveCount(0);
   });
