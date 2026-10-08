@@ -60,3 +60,7 @@ Images exportées de la toile de design de Timothée (privée). Personnes fictiv
 - [`v19-pl-pdj-b-ordinateur.png`](maquettes/v19-pl-pdj-b-ordinateur.png) — Planning › Table · petit déj · B, un seul « Inscrire quelqu'un » en tête de carte, le dimanche se choisit
 - [`v19-pl-pdj-a-telephone.png`](maquettes/v19-pl-pdj-a-telephone.png) — Planning › Table · petit déj · A, téléphone
 - [`v19-pl-pdj-b-telephone.png`](maquettes/v19-pl-pdj-b-telephone.png) — Planning › Table · petit déj · B, téléphone, le formulaire ouvert
+
+## Couleurs (lots 2 et 4)
+
+- Planche v19 des couleurs, interactive : https://claude.ai/artifact/JuwDNr4VJpVLnyHgEdgBAr (privée, à partager depuis son menu). Huit candidates de la spec et trois proposées en plus, mesurées (contrastes, écart ΔE avec les couleurs du site), en situation en clair et en sombre. Choix de Timothée : décision 47 de `decisions.md`.
