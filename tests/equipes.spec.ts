@@ -50,7 +50,7 @@ test("droits : tout connecté voit l'organigramme, les admins et le droit « Éq
 // ── Matrice des musiciens ───────────────────────────────────────────────────
 
 const PLANNING_VIDE: PlanningData = {
-  culte: [], dejeuner: [], petitDej: [], paix: [], fidelite: [], fideliteMusic: [],
+  culte: [], dejeuner: [], petitDej: [], paix: [], fidelite: [],
   bonte: [], edd: {} as PlanningData["edd"], campus: [], intergroupe: [], interfranco: [],
 };
 

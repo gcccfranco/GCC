@@ -1,8 +1,14 @@
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import {
-  GRILLES, GRILLE_FIDELITE, completerMusiciensFidelite, grilleDe,
+  GRILLES, GRILLE_FIDELITE, completerMusiciensFidelite, grilleDe, pianistesQuiDifferent,
 } from "../src/lib/planning/grilles";
+import {
+  collectPlanningNames, deriveServiceRolesFromPlanning, findMyServices, servantsForDate, type PlanningData,
+} from "../src/lib/planning/names";
+import { reminderServicesFor } from "../src/lib/push/reminderMessage";
+import { equipeDuService } from "../src/lib/setlist/equipeDuService";
+import { MODELES, modeleDe, pagesExport } from "../src/lib/planning/modeles";
 import { PLANNINGS_APP } from "../src/lib/planning/grille";
 import { propositions, type CompteDuPlanning } from "../src/lib/planning/choisir";
 import { GRILLES_DU_SERVICE, ceDimanche, seancesDesServices } from "../src/lib/tableauDeBord/donnees";
@@ -10,6 +16,8 @@ import { GRILLES_DU_SERVICE, ceDimanche, seancesDesServices } from "../src/lib/t
 // Lot F (docs/spec-retouches-v18.md, D24 à D27) : Fidélité, un seul planning. Tranche F1-F2 :
 // Guitariste et Batterie rejoignent le planning du groupe ; le planning des musiciens disparaît
 // des pages, et ses noms sont repris à la lecture (grille de l'app, puis onglet `Fidélité_Musicien`).
+// Tranche F3-F5 : le pianiste du groupe seul (D26) et le relevé des dimanches qui diffèrent ;
+// Mes services, rappels et recherche par nom lisent le planning Fidélité ; le modèle d'export.
 
 // ─── F1 · les colonnes, et plus de planning des musiciens ────────────────────
 
@@ -165,4 +173,133 @@ test("F2 · une modification écrit dans le planning Fidélité, jamais dans cel
   expect(doc.pianiste, "les autres cases sont recopiées, le pianiste du groupe").toBe("Pianiste P.");
   expect(doc.batterie, "la batterie reprise est recopiée avec la ligne").toBe("Batteur B.");
   expect(db.writes.filter((w) => w.path.startsWith("plannings/fideliteMusiciens")), "aucune migration écrite").toEqual([]);
+});
+
+// ─── F3 · le pianiste du groupe fait foi (D26) ───────────────────────────────
+
+test("F3 · relevé : les dimanches où le pianiste du groupe et celui des musiciens diffèrent", () => {
+  const groupe = [
+    ["2026-09-06", "Ancien A.", "", "", "Pianiste P."],
+    ["2026-09-13", "Ancien A.", "", "", "Pianiste P."],
+    ["2026-09-20", "Ancien B.", "", "", ""],
+    ["2026-09-27", "Ancien B.", "", "", "pianiste p"],
+  ];
+  const musiciens = [
+    ["2026-09-06", "", "Pianiste P.", "", ""],
+    ["2026-09-13", "", "Autre Piano", "Guitare G.", ""],
+    ["2026-09-20", "", "Autre Piano", "", ""],
+    ["2026-09-27", "", "Pianiste P.", "", ""],
+    ["2026-10-04", "", "Autre Piano", "", ""],
+    ["2026-10-11", "", "", "Guitare G.", ""],
+  ];
+  expect(pianistesQuiDifferent(groupe, musiciens)).toEqual([
+    { date: "2026-09-13", groupe: "Pianiste P.", musiciens: "Autre Piano" },
+    // Le groupe sans pianiste : celui des musiciens ne sera plus affiché.
+    { date: "2026-09-20", groupe: "", musiciens: "Autre Piano" },
+    { date: "2026-10-04", groupe: "", musiciens: "Autre Piano" },
+  ]);
+});
+
+const VIDE: PlanningData = {
+  culte: [], dejeuner: [], petitDej: [], paix: [], fidelite: [], bonte: [],
+  edd: {} as PlanningData["edd"], campus: [], intergroupe: [], interfranco: [],
+};
+
+test("F3 · l'équipe d'une setlist de Fidélité : présidence, pianiste, guitare, batterie et orateur du planning Fidélité", () => {
+  const data = { ...VIDE, fidelite: [["2026-09-20", "Ancien A.", "Orateur O.", "Actes", "Pianiste P.", "Guitare G.", "Batteur B."]] };
+  expect(equipeDuService(data, { category: "Groupe Fidélité", date: "2026-09-20" })).toEqual([
+    ["planning.roles.presidence", "Ancien A."],
+    ["planning.roles.piano", "Pianiste P."],
+    ["planning.roles.guitare", "Guitare G."],
+    ["planning.roles.batterie", "Batteur B."],
+    ["planning.roles.orateur", "Orateur O."],
+  ]);
+  expect(equipeDuService(data, { category: "Groupe Fidélité", date: "2026-09-27" })).toEqual([]);
+});
+
+test("F3 · « Ce dimanche » : les musiciens de Fidélité sont le pianiste du groupe, la guitare et la batterie", async ({ page }) => {
+  await page.clock.setFixedTime(new Date("2026-09-18T10:00:00"));
+  await page.route(/docs\.google\.com\/spreadsheets/, (route) => {
+    const sheet = new URL(route.request().url()).searchParams.get("sheet") ?? "";
+    return route.fulfill({ status: 200, contentType: "text/csv", body: SHEETS[sheet] ?? "" });
+  });
+  await signInAs(page, MEMBRE, DOCS, "/planning");
+  const fidelite = page.getByTestId("ligne-groupe").filter({ hasText: "Fidélité" }).filter({ visible: true }).first();
+  await expect(fidelite).toContainText("Pianiste P.");
+  await expect(fidelite).toContainText("Guitare L.");
+  await expect(fidelite).toContainText("Batteur B.");
+  await expect(fidelite, "le piano du planning des musiciens n'est plus affiché").not.toContainText("Autre Piano");
+  await page.getByTestId("ligne-groupe").first().locator("..").screenshot({ path: test.info().outputPath("ce-dimanche-groupes.png") });
+});
+
+// ─── F4 · Mes services, rappels, recherche par nom ───────────────────────────
+
+test("F4 · guitaristes et batteurs de Fidélité : Mes services, rappels, noms du planning, rôles du profil", () => {
+  const data = {
+    ...VIDE,
+    fidelite: [
+      ["2026-09-20", "Ancien A.", "Orateur O.", "Actes", "Pianiste P.", "Guitare G.", "Batteur B."],
+      ["2026-09-27", "Ancien B.", "", "", "", "Guitare G.", ""],
+    ],
+  };
+  expect(findMyServices(data, "Guitare G.").map((e) => `${e.date} ${e.service} ${e.role} ${e.leader}`)).toEqual([
+    "2026-09-20 Groupe Fidélité Guitare Ancien A.",
+    "2026-09-27 Groupe Fidélité Guitare Ancien B.",
+  ]);
+  expect(findMyServices(data, "Batteur B.").map((e) => `${e.date} ${e.role}`)).toEqual(["2026-09-20 Batterie"]);
+  expect(findMyServices(data, "Pianiste P.").map((e) => `${e.date} ${e.role}`)).toEqual(["2026-09-20 Piano"]);
+  expect(reminderServicesFor(data, "Batteur B.", "2026-09-20")).toEqual([{ service: "Groupe Fidélité", roles: ["Batterie"] }]);
+  expect(servantsForDate(data, "2026-09-20").filter((s) => s.serviceRole === "musicien").map((s) => s.name)).toEqual([
+    "Pianiste P.", "Guitare G.", "Batteur B.",
+  ]);
+  expect(collectPlanningNames(data)).toEqual(expect.arrayContaining(["Guitare G.", "Batteur B."]));
+  expect(deriveServiceRolesFromPlanning(data, "Batteur B.")).toEqual({ "Groupe Fidélité": ["musicien"] });
+});
+
+async function mesServicesDe(page: Page, who: FakeProfile) {
+  await page.clock.setFixedTime(new Date("2026-09-18T10:00:00"));
+  await page.route(/docs\.google\.com\/spreadsheets/, (route) => {
+    const sheet = new URL(route.request().url()).searchParams.get("sheet") ?? "";
+    return route.fulfill({ status: 200, contentType: "text/csv", body: SHEETS[sheet] ?? "" });
+  });
+  await signInAs(page, who, DOCS, "/mes-services");
+}
+
+test("F4 · Mes services d'un guitariste écrit dans le planning Fidélité de l'app", async ({ page }) => {
+  await mesServicesDe(page, { uid: "uid-guitare", email: "guitare@example.com", planningName: "Guitare J." });
+  await expect(page.getByText("Groupe Fidélité").filter({ visible: true }).first()).toBeVisible();
+});
+
+test("F4 · le pianiste du seul planning des musiciens n'a plus de service de Fidélité (D26)", async ({ page }) => {
+  await mesServicesDe(page, { uid: "uid-piano", email: "piano@example.com", planningName: "Autre Piano" });
+  await expect(page.getByText(/Aucun service à venir/).filter({ visible: true }).first()).toBeVisible();
+  await expect(page.getByText("Groupe Fidélité")).toHaveCount(0);
+});
+
+// ─── F5 · le modèle d'export ─────────────────────────────────────────────────
+
+test("F5 · export : le modèle Fidélité à sept colonnes, Batterie facultative ; plus de modèle Fidélité_Musicien", () => {
+  expect(MODELES.map((m) => m.onglet)).not.toContain("Fidélité_Musicien");
+  expect(modeleDe("fideliteMusiciens")).toBeUndefined();
+  const m = modeleDe("fidelite")!;
+  expect(m.colonnes.map((c) => c.entete)).toEqual(["DATE", "PRÉSIDENCE", "ORATEUR", "THÈME", "PIANISTE", "GUITARISTE", "BATTERIE"]);
+  expect(m.colonnes.find((c) => c.cle === "batterie")?.optionnelle).toBe(true);
+  expect(m.orientation).toBe("portrait");
+  // Tient en portrait comme Paix avec sa percussion : pas plus large que lui.
+  const large = (cles: string) => modeleDe(cles)!.colonnes.reduce((s, c) => s + c.largeur, 0);
+  expect(large("fidelite")).toBeLessThanOrEqual(large("paix"));
+
+  const lignes = {
+    fidelite: [
+      ["2027-01-10", "Ancien A.", "Orateur O.", "", "Pianiste P.", "Guitare G.", ""],
+      ["2027-04-11", "Ancien B.", "", "", "", "Guitare G.", "Batteur B."],
+    ],
+  };
+  const page = (rang: number) => pagesExport({ portee: "affiche", annee: 2027, key: "fidelite", rang, lignes })[0];
+  const t1 = page(1);
+  expect(t1.colonnes.map((c) => c.entete), "sans batterie ce trimestre : pas de colonne").toEqual(["DATE", "PRÉSIDENCE", "ORATEUR", "THÈME", "PIANISTE", "GUITARISTE"]);
+  expect(t1.blocs[0].lignes[1].cellules).toEqual(["10/01", "Ancien A.", "Orateur O.", "", "Pianiste P.", "Guitare G."]);
+  const t2 = page(2);
+  expect(t2.colonnes.map((c) => c.entete).at(-1)).toBe("BATTERIE");
+  expect(t2.blocs[0].lignes.find((l) => l.cellules[0] === "11/04")?.cellules.slice(-2)).toEqual(["Guitare G.", "Batteur B."]);
 });

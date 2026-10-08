@@ -131,3 +131,29 @@ Go de code donné le 08/10/2026.
   profil qui avait le droit `fideliteMusiciens` ne peut plus rien écrire : cocher « Groupe Fidélité » pour
   lui dans Équipes › Personnes. 中文 du nouveau libellé à relire : `planning.roles.guitariste` = 吉他.
   Limite connue : vider dans l'app une guitare reprise la fait revenir (elle est relue chez les musiciens).
+
+**08/10/2026 — tranche F3-F5, codée** (commit : voir `git log --grep "V18FIDELITE): F3-F5"`). Le lot F est fini.
+
+- F3 : le pianiste de Fidélité est partout celui du planning du groupe (D26) : « Ce dimanche » (accueil :
+  Pianiste · Guitariste · Batterie du planning Fidélité) et l'équipe d'une setlist (`equipeDuService`) ne
+  lisent plus le planning des musiciens. Relevé : `pianistesQuiDifferent` (`grilles.ts`, pur) et
+  `npx tsx scripts/releve-pianistes-fidelite.ts` (lecture seule) — le Sheet public seul par défaut ;
+  `--firestore` y ajoute les grilles de l'app, à lancer par Timothée. Lancé le 08/10/2026 sur le Sheet :
+  **un dimanche diffère, le 13/09/2026** (noms montrés à Timothée, pas écrits ici).
+- F4 : `PlanningData` n'a plus de `fideliteMusic` ; Fidélité = un seul planning, Guitare (index 5) et
+  Batterie (6) dans `FIDELITE_ROLES` / `FIDELITE_ROLE_MAP` (musicien) : Mes services, rappels du matin,
+  noms du formulaire d'inscription et rôles déduits du profil les trouvent. Un pianiste écrit dans le seul
+  planning des musiciens n'a plus de service de Fidélité.
+- F5 : modèle d'export Fidélité = DATE · PRÉSIDENCE · ORATEUR · THÈME · PIANISTE · GUITARISTE · BATTERIE
+  (facultative : retirée d'une page qui n'en a pas) ; largeurs revues : sans batterie la page portrait
+  n'est pas réduite, avec, pas plus large que Paix et sa percussion. Le modèle `Fidélité_Musicien` est
+  retiré (« Tous les plannings » : 29 pages, 18 feuilles .xlsx).
+- Tests : `planning-fidelite.spec.ts` (F3 à F5 : relevé, équipe, « Ce dimanche », Mes services d'un
+  guitariste, pianiste des seuls musiciens, rappels, modèle), mises à jour de `planning-export-modele`,
+  `planning-2027`, `pages-en-grand-setlists`, `equipes`, `rappels-regroupes`, `planning-petit-dej`.
+- Code devenu sans usage, laissé en place : `GRILLE_FIDELITE_MUSICIENS` reste lu (reprise des noms) ; dans
+  l'export, la police Georgia (Gelasio), le mois en colonne (`mois: "colonne"`, fusion en tête) et la
+  ligne « dimanche spécial » ne servaient qu'au modèle retiré.
+- Pour Timothée : rien à publier dans `firestore.rules`. Avant la mise en ligne, lancer
+  `npx tsx scripts/releve-pianistes-fidelite.ts --firestore` (lit les grilles de l'app) et trancher les
+  dimanches listés : c'est la colonne « Groupe » qui sera affichée. Aucun libellé nouveau à traduire.

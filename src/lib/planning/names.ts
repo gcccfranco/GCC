@@ -6,10 +6,10 @@ import {
 } from "./data"
 import {
   fetchCulte, fetchDejeuner, fetchPaix, fetchFidelite,
-  fetchFideliteMusic, fetchBonte, fetchEDD, fetchCampus,
+  fetchBonte, fetchEDD, fetchCampus,
   fetchIntergroupe, fetchInterfranco, fetchPetitDej,
 } from "./sheets"
-import { PREMIERE_ANNEE_APP, marquerDimanchesSpeciaux } from "./grilles"
+import { PREMIERE_ANNEE_APP, completerMusiciensFidelite, marquerDimanchesSpeciaux } from "./grilles"
 import { PUBLISHABLE_PLANNINGS, getPublishedQuarters, triRank } from "./releases"
 import { BACK_OFFICE } from "@/lib/backOffice"
 import type { ServiceRole } from "@/types/user"
@@ -20,8 +20,8 @@ export interface PlanningData {
   /** Petit déj (lot 1b) : [date ISO, noms] ; vide tant que la case ne l'est pas. */
   petitDej: string[][]
   paix: string[][]
+  /** Fidélité, un seul planning (lot F) : guitariste (index 5) et batterie (6) compris. */
   fidelite: string[][]
-  fideliteMusic: string[][]
   bonte: string[][]
   edd: EddDataStructure
   campus: CampusSeance[]
@@ -30,10 +30,10 @@ export interface PlanningData {
 }
 
 export async function loadPlanningData(): Promise<PlanningData> {
-  const [culte, dejeuner, petitDej, paix, fidelite, fideliteMusic, bonte, edd, campus, intergroupe, interfranco] =
+  const [culte, dejeuner, petitDej, paix, fidelite, bonte, edd, campus, intergroupe, interfranco] =
     await Promise.all([
       fetchCulte(), fetchDejeuner(), fetchPetitDej(), fetchPaix(), fetchFidelite(),
-      fetchFideliteMusic(), fetchBonte(), fetchEDD(),
+      fetchBonte(), fetchEDD(),
       fetchCampus().then(c => c.louange).catch(() => [] as CampusSeance[]),
       fetchIntergroupe(), fetchInterfranco(),
     ])
@@ -44,8 +44,7 @@ export async function loadPlanningData(): Promise<PlanningData> {
     // Pas de données de secours : le petit déj n'apparaît que s'il est lu.
     petitDej,
     paix: paix.length ? paix : PAIX_FALLBACK,
-    fidelite: fidelite.length ? fidelite : FIDELITE_FALLBACK,
-    fideliteMusic: fideliteMusic.length ? fideliteMusic : FIDELITE_MUSIC_FALLBACK,
+    fidelite: fidelite.length ? fidelite : completerMusiciensFidelite(FIDELITE_FALLBACK, FIDELITE_MUSIC_FALLBACK),
     bonte: bonte.length ? bonte : BONTE_FALLBACK,
     edd: Object.values(edd).some(p => Object.values(p.classes).some(r => r.length)) ? edd : EDD_FALLBACK,
     campus: campus.length ? campus : CAMP_LOUANGE_FALLBACK,
@@ -65,7 +64,7 @@ export async function loadPlanningData(): Promise<PlanningData> {
  *  publication. Même règle que les pages pour un membre (`triVisibilitiesAnnee`) :
  *  le trimestre en cours et les passés se lisent toujours. L'année du Sheet
  *  (2026) se lit comme avant. Pur. Seuls les plannings publiés par trimestre
- *  (Culte, groupes ; les musiciens de Fidélité suivent Fidélité) ont un
+ *  (Culte, groupes) ont un
  *  brouillon. `publies` : trimestres publiés, par année puis par planning. */
 export function sansBrouillon(
   data: PlanningData,
@@ -85,7 +84,6 @@ export function sansBrouillon(
     culte: garder(data.culte, "culte"),
     paix: garder(data.paix, "paix"),
     fidelite: garder(data.fidelite, "fidelite"),
-    fideliteMusic: garder(data.fideliteMusic, "fidelite"),
     bonte: garder(data.bonte, "bonte"),
   }
 }
@@ -116,7 +114,6 @@ export function avecDimanchesSpeciaux(data: PlanningData): PlanningData {
     ...data,
     paix: marquer(data.paix),
     fidelite: marquer(data.fidelite),
-    fideliteMusic: marquer(data.fideliteMusic),
     bonte: marquer(data.bonte),
   }
 }
@@ -180,8 +177,8 @@ export const CULTE_ROLES: [number, string][] = [
 // du Sheet de 2026 que l'app ignorait. Les lecteurs ne les rendent que derrière
 // l'interrupteur (`sheets.ts`) : en ligne, ces index restent vides.
 const GROUPE_ROLES: [number, string][] = [[1, "Présidence"], [2, "Musicien"], [3, "Orateur"], [5, "Percussion"]]
-const FIDELITE_ROLES: [number, string][] = [[1, "Présidence"], [2, "Orateur"], [4, "Piano"]]
-const FIDELITE_MUSIC_ROLES: [number, string][] = [[1, "Présidence"], [2, "Piano"], [3, "Guitare"], [4, "Batterie"]]
+// Lot F (D24, D26) : un seul planning ; le pianiste est celui du groupe.
+const FIDELITE_ROLES: [number, string][] = [[1, "Présidence"], [2, "Orateur"], [4, "Piano"], [5, "Guitare"], [6, "Batterie"]]
 const EDD_ROLES_COLS: [number, string][] = [[1, "Présidence"], [2, "Suppléant"], [3, "Piano"], [4, "Cajon"], [5, "Guitare"], [6, "Cours"]]
 const INTERGROUPE_ROLES: [number, string][] = [
   [1, "Présidence"], [2, "Choriste"], [3, "Choriste"], [4, "Choriste"],
@@ -210,7 +207,6 @@ export function collectPlanningNames(data: PlanningData): string[] {
   for (const r of data.paix) for (const [i] of GROUPE_ROLES) add(r[i])
   for (const r of data.bonte) for (const [i] of GROUPE_ROLES) add(r[i])
   for (const r of data.fidelite) for (const [i] of FIDELITE_ROLES) add(r[i])
-  for (const r of data.fideliteMusic) for (const [i] of FIDELITE_MUSIC_ROLES) add(r[i])
   for (const pk of EDD_PERIODES) {
     const classes = data.edd[pk]?.classes ?? {}
     for (const cls of EDD_CLASSES) {
@@ -234,8 +230,7 @@ const CULTE_ROLE_MAP: [number, ServiceRole | null][] = [
   [5, "musicien"], [6, "musicien"], [7, "regie"], [8, "regie"],
 ]
 const GROUPE_ROLE_MAP: [number, ServiceRole | null][] = [[1, "presidence"], [2, "musicien"], [3, null], [5, "musicien"]]
-const FIDELITE_ROLE_MAP: [number, ServiceRole | null][] = [[1, "presidence"], [2, null], [4, "musicien"]]
-const FIDELITE_MUSIC_ROLE_MAP: [number, ServiceRole | null][] = [[1, "presidence"], [2, "musicien"], [3, "musicien"], [4, "musicien"]]
+const FIDELITE_ROLE_MAP: [number, ServiceRole | null][] = [[1, "presidence"], [2, null], [4, "musicien"], [5, "musicien"], [6, "musicien"]]
 // Cours (P5) : présence sans rôle de setlist, comme le suppléant.
 const EDD_ROLE_MAP: [number, ServiceRole | null][] = [[1, "presidence"], [2, null], [3, "musicien"], [4, "musicien"], [5, "musicien"], [6, null]]
 const INTERGROUPE_ROLE_MAP: [number, ServiceRole | null][] = [
@@ -270,7 +265,6 @@ export function deriveServiceRolesFromPlanning(
   scan(data.paix, "Groupe Paix", GROUPE_ROLE_MAP)
   scan(data.bonte, "Groupe Bonté", GROUPE_ROLE_MAP)
   scan(data.fidelite, "Groupe Fidélité", FIDELITE_ROLE_MAP)
-  scan(data.fideliteMusic, "Groupe Fidélité", FIDELITE_MUSIC_ROLE_MAP)
   scan(data.intergroupe, "Intergroupe", INTERGROUPE_ROLE_MAP)
   scan(data.interfranco, "Interfranco", INTERFRANCO_ROLE_MAP)
   for (const pk of EDD_PERIODES) {
@@ -332,7 +326,6 @@ export function findMyServices(data: PlanningData, name: string): ServiceEntry[]
   scan(data.paix, "Groupe Paix", GROUPE_ROLES)
   scan(data.bonte, "Groupe Bonté", GROUPE_ROLES)
   scan(data.fidelite, "Groupe Fidélité", FIDELITE_ROLES)
-  scan(data.fideliteMusic, "Groupe Fidélité", FIDELITE_MUSIC_ROLES)
   scan(data.intergroupe, "Intergroupe", INTERGROUPE_ROLES)
   scan(data.interfranco, "Interfranco", INTERFRANCO_ROLES)
   for (const pk of EDD_PERIODES) {
@@ -471,7 +464,6 @@ export function servantsForDate(data: PlanningData, dateISO: string): Servant[] 
   scan(data.paix, "Groupe Paix", GROUPE_ROLE_MAP)
   scan(data.bonte, "Groupe Bonté", GROUPE_ROLE_MAP)
   scan(data.fidelite, "Groupe Fidélité", FIDELITE_ROLE_MAP)
-  scan(data.fideliteMusic, "Groupe Fidélité", FIDELITE_MUSIC_ROLE_MAP)
   scan(data.intergroupe, "Intergroupe", INTERGROUPE_NOTIFY_MAP)
   scan(data.interfranco, "Interfranco", INTERFRANCO_NOTIFY_MAP)
   for (const pk of EDD_PERIODES) {

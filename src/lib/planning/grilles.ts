@@ -305,6 +305,24 @@ export function completerMusiciensFidelite(fidelite: string[][], musiciens: stri
 }
 
 /**
+ * Lot F (D26) : le relevé à montrer à Timothée avant la mise en ligne — les dimanches où le piano
+ * du planning des musiciens (`[date, présidence, piano, …]`) n'est pas le pianiste du groupe
+ * (`fidelite`, index 4), à la casse, aux accents et à la ponctuation près. Un dimanche sans piano
+ * chez les musiciens n'y est pas : rien n'y disparaît.
+ */
+export function pianistesQuiDifferent(
+  fidelite: string[][],
+  musiciens: string[][],
+): { date: string; groupe: string; musiciens: string }[] {
+  const plie = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[.,]/g, " ").replace(/\s+/g, " ").trim()
+  const groupe = new Map(fidelite.map((r) => [r[0], (r[4] ?? "").trim()]))
+  return musiciens
+    .map((m) => ({ date: m[0], groupe: groupe.get(m[0]) ?? "", musiciens: (m[2] ?? "").trim() }))
+    .filter((d) => d.musiciens && plie(d.musiciens) !== plie(d.groupe))
+    .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0))
+}
+
+/**
  * Lot U2 (Q5) : les dimanches d'Interfranco et d'Intergroupe, date → nom du
  * service. Une seule source, leur grille : déplacer la date dans sa grille
  * déplace la marque. Les deux ne prennent jamais le même dimanche ; si cela

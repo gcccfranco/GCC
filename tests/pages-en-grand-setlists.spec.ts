@@ -66,7 +66,7 @@ const ligne = (page: Page, titre: string) => page.locator('[data-volet="liste"]'
 
 test.describe("L'équipe du service, sans navigateur", () => {
   const vide: PlanningData = {
-    culte: [], dejeuner: [], petitDej: [], paix: [], fidelite: [], fideliteMusic: [], bonte: [],
+    culte: [], dejeuner: [], petitDej: [], paix: [], fidelite: [], bonte: [],
     edd: {} as PlanningData["edd"], campus: [], intergroupe: [], interfranco: [],
   };
 
@@ -84,11 +84,10 @@ test.describe("L'équipe du service, sans navigateur", () => {
     expect(equipeDuService(data, { category: "Culte Francophone", date: "2026-10-11" }), "pas de ligne ce jour-là").toEqual([]);
   });
 
-  test("Groupe Fidélité : la feuille du groupe et celle de ses musiciens réunies ; Paix : la percussion", () => {
+  test("Groupe Fidélité : un seul planning, guitare comprise (lot F) ; Paix : la percussion", () => {
     const data = {
       ...vide,
-      fidelite: [["2026-10-04", "Wang L.", "Orateur Z.", "", ""]],
-      fideliteMusic: [["2026-10-04", "", "Lina P.", "Joël F.", ""]],
+      fidelite: [["2026-10-04", "Wang L.", "Orateur Z.", "", "Lina P.", "Joël F.", ""]],
       paix: [["2026-10-04", "Clara B.", "Joël F.", "Orateur Y.", "", "Tom R."]],
     };
     expect(equipeDuService(data, { category: "Groupe Fidélité", date: "2026-10-04" })).toEqual([

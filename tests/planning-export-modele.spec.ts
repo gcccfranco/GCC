@@ -23,10 +23,6 @@ const LIGNES: Record<string, string[][]> = {
     ["2026-03-29", "Ancien Y.", "", "", "", ""],
   ],
   fidelite: [["2027-01-10", "测试", "Orateur O.", "", "Pianiste P."]],
-  fideliteMusiciens: [
-    ["2027-01-10", "Membre M.", "Piano P.", "", ""],
-    ["2027-01-17", "", "", "", ""],
-  ],
   interfranco: [["2027-01-17", "Président I.", "", "", "", "", "", "", "", "", ""]],
   intergroupe: [["2027-03-14", "Président J.", "", "", "", "", "", "", "", "", "", ""]],
   culte: [["2027-01-03", "Président C.", "Choriste A.", "Choriste B.", "", "", "", "", "", "", "", "Sainte C."]],
@@ -51,14 +47,14 @@ test("P6 · « Tous les plannings » : une feuille par onglet, dans l'ordre et s
     "Franco_Louange", "Franco_Table_PtD", "Intergroupe", "Interfranco", "EDD", "Campus_Louange",
     "Paix_T1", "Paix_T2", "Paix_T3", "Paix_T4",
     "Fidélité_T1", "Fidélité_T2", "Fidélité_T3", "Fidélité_T4",
-    "Fidélité_Musicien",
     "Bonté_T1", "Bonté_T2", "Bonté_T3", "Bonté_T4",
   ]);
-  // Culte, Table et Fidélité musiciens : 4 pages ; EDD : 6 ; Intergroupe, Interfranco, Campus : 1 ; groupes : 4 × 3.
-  expect(pages).toHaveLength(4 + 4 + 1 + 1 + 6 + 1 + 4 + 4 + 4 + 4);
+  // Culte et Table : 4 pages ; EDD : 6 ; Intergroupe, Interfranco, Campus : 1 ; groupes : 4 × 3.
+  // Plus de Fidélité_Musicien (lot F, D24).
+  expect(pages).toHaveLength(4 + 4 + 1 + 1 + 6 + 1 + 4 + 4 + 4);
   expect(MODELES.map((m) => m.onglet)).toEqual([
     "Franco_Louange", "Franco_Table_PtD", "Intergroupe", "Interfranco", "EDD", "Campus_Louange",
-    "Paix", "Fidélité", "Fidélité_Musicien", "Bonté",
+    "Paix", "Fidélité", "Bonté",
   ]);
 });
 
@@ -113,9 +109,10 @@ test("P6 · Paix, Bonté et Fidélité au même modèle ; Fidélité : église e
   expect(fid.titre).toBe("GROUPE FIDÉLITÉ");
   expect(fid.periode).toBe("Planning de Janvier à Mars 2027");
   expect(fid.horaire).toBe("Dimanche de 13:00 à 14:00");
-  expect(fid.colonnes.map((c) => c.entete)).toEqual(["DATE", "PRÉSIDENCE", "ORATEUR", "THÈME", "PIANISTE"]);
+  // Lot F (D24) : Guitariste, et Batterie seulement au trimestre qui en a une.
+  expect(fid.colonnes.map((c) => c.entete)).toEqual(["DATE", "PRÉSIDENCE", "ORATEUR", "THÈME", "PIANISTE", "GUITARISTE"]);
   expect(fid.blocs, "ni ligne vide ni titre entre les mois").toHaveLength(1);
-  expect(textes(fid)[1]).toEqual(["10/01", "测试", "Orateur O.", "", "Pianiste P."]);
+  expect(textes(fid)[1]).toEqual(["10/01", "测试", "Orateur O.", "", "Pianiste P.", ""]);
   const [bonte] = page("affiche", "bonte", 3);
   expect([bonte.feuille, bonte.titre, bonte.horaire]).toEqual(["Bonté_T3", "GROUPE BONTÉ", "Dimanche de 13:00 à 14:30"]);
 });
@@ -173,21 +170,6 @@ test("P6 · Campus : une page, les séances dans l'ordre des dates, matin et soi
   ]);
   expect(textes(p)[1].at(-1)).toBe("20/07/2027 19:00 Grande salle");
   expect(p.modele.alignement).toBe("gauche");
-});
-
-test("P6 · Fidélité musiciens : le mois en colonne, un dimanche spécial sur toute la ligne", () => {
-  const [p] = page("affiche", "fideliteMusiciens", 1);
-  expect(p.feuille).toBe("Fidélité_Musicien");
-  expect(p.eglise).toBe("基督教会巴黎华人恩典堂");
-  expect(p.titre).toBe("Groupe Fidélité Planning Musiciens 2027");
-  expect(p.periode).toBe("Groupe Fidélité Planning 2027 - T1 (Janvier - Mars)");
-  expect(p.horaire).toBeUndefined();
-  expect(p.colonnes.map((c) => c.entete)).toEqual(["Date", "Présidence", "Piano", "Guitare", "Percussion"]);
-  expect(p.blocs.map((b) => b.fusion)).toEqual(["Janvier", "Février", "Mars"]);
-  const janvier = p.blocs[0].lignes;
-  expect(janvier[1].cellules).toEqual(["10/01", "Membre M.", "Piano P.", "", ""]);
-  expect(janvier[2].special, "Interfranco le 17/01, sans musicien : la ligne entière").toBe("Interfranco");
-  expect(p.modele.policeTableau).toBe("Georgia");
 });
 
 test("P6 · Interfranco et Intergroupe : l'année sur une page", () => {
@@ -363,20 +345,20 @@ test("P7 · « Tous les plannings 2027 » (admin) : toutes les pages, dans l'ord
   await page.getByRole("tab", { name: "2027", exact: true }).click();
   const { nom, pdf } = await exporterPdf(page, "Tous les plannings 2027");
   expect(nom).toBe("Plannings_2027.pdf");
-  expect(pdf.pages).toHaveLength(33);
+  expect(pdf.pages).toHaveLength(29);
   const titres = pdf.pages.map((p) => p.lignes[1]); // l’église, puis le titre
   expect(titres[0]).toBe("CULTE FRANCO");
   expect(titres[4]).toBe("PRÉPARATION TABLE DÉJEUNER");
   expect(titres.slice(8, 16)).toEqual(["INTERGROUPE", "INTERFRANCO", ...Array(6).fill("EDD — Planning par classe (bimensuel) — 2027")]);
   expect(titres[16]).toBe("CAMPUS 2027");
   expect(titres.slice(17)).toEqual([
-    ...Array(4).fill("GROUPE PAIX"), ...Array(4).fill("GROUPE FIDÉLITÉ"),
-    ...Array(4).fill("Groupe Fidélité Planning Musiciens 2027"), ...Array(4).fill("GROUPE BONTÉ"),
+    ...Array(4).fill("GROUPE PAIX"), ...Array(4).fill("GROUPE FIDÉLITÉ"), ...Array(4).fill("GROUPE BONTÉ"),
   ]);
   expect(estA4(pdf.pages[0], "paysage"), "Culte en paysage").toBe(true);
   expect(estA4(pdf.pages[17], "portrait"), "Paix en portrait").toBe(true);
   expect(pdf.pages.every((p) => estA4(p, "portrait") || estA4(p, "paysage"))).toBe(true);
-  expect(pdf.polices).toEqual(expect.arrayContaining(["Gelasio-Regular"]));
+  // Georgia (Gelasio) n'était que celle de Fidélité_Musicien, retiré au lot F.
+  expect(pdf.polices).not.toContain("Gelasio-Regular");
 });
 
 // ─── P8 · Le .xlsx ──────────────────────────────────────────────────────────
@@ -387,7 +369,6 @@ test("P8 · classeur : une feuille par onglet, dans l'ordre du Sheet ; l'EDD et 
     "Franco_Louange", "Franco_Table_PtD", "Intergroupe", "Interfranco", "EDD", "Campus_Louange",
     "Paix_T1", "Paix_T2", "Paix_T3", "Paix_T4",
     "Fidélité_T1", "Fidélité_T2", "Fidélité_T3", "Fidélité_T4",
-    "Fidélité_Musicien",
     "Bonté_T1", "Bonté_T2", "Bonté_T3", "Bonté_T4",
   ]);
   // Une image par feuille : le logo, centré au-dessus du tableau ; quadrillage masqué.
@@ -430,19 +411,15 @@ test("P8 · Paix T1 : en-tête de l'onglet, rangées du Sheet, logo centré sur 
   expect(Math.abs(gauche + logo.width / 2 - total / 2)).toBeLessThan(2);
 });
 
-test("P8 · fusions : Choristes du Culte, classe de l'EDD, mois et dimanche spécial de Fidélité musiciens", () => {
+test("P8 · fusions : Choristes du Culte, classe de l'EDD", () => {
   const [culte] = classeurXlsx(page("affiche", "culte", 1), "logo");
   const entete = culte.data.find((r) => (r[0] as { value?: string })?.value === "DATE")!;
   expect((entete[2] as { value: string; columnSpan: number })).toMatchObject({ value: "Choristes", columnSpan: 2 });
   const [edd] = classeurXlsx(page("affiche", "eddZhongban", 1), "logo");
   const classe = edd.data.flat().find((c) => (c as { value?: string })?.value === "中班") as { rowSpan?: number; fontSize?: number };
   expect(classe).toMatchObject({ rowSpan: 9, fontSize: 14 });
-  const [fm] = classeurXlsx(page("affiche", "fideliteMusiciens", 1), "logo");
-  const janvier = fm.data.flat().find((c) => (c as { value?: string })?.value === "Janvier") as { rowSpan?: number };
-  expect(janvier.rowSpan).toBe(5);
-  const special = fm.data.flat().find((c) => (c as { value?: string })?.value === "Interfranco") as { columnSpan?: number };
-  expect(special.columnSpan, "Présidence → Percussion").toBe(4);
-  expect((fm.data[0][0] as { fontFamily?: string }).fontFamily).toBe("Ma Shan Zheng");
+  const [fid] = classeurXlsx(page("affiche", "fidelite", 1), "logo");
+  expect((fid.data[0][0] as { fontFamily?: string }).fontFamily).toBe("Ma Shan Zheng");
 });
 
 /** Lit une entrée de l'archive .xlsx (un zip) avec `unzip`. */
@@ -506,14 +483,13 @@ test("P8 · .xlsx « Tous les plannings 2027 » (admin) : une feuille par onglet
     "Franco_Louange", "Franco_Table_PtD", "Intergroupe", "Interfranco", "EDD", "Campus_Louange",
     "Paix_T1", "Paix_T2", "Paix_T3", "Paix_T4",
     "Fidélité_T1", "Fidélité_T2", "Fidélité_T3", "Fidélité_T4",
-    "Fidélité_Musicien",
     "Bonté_T1", "Bonté_T2", "Bonté_T3", "Bonté_T4",
   ]);
   const styles = dansXlsx(fichier, "xl/styles.xml");
-  for (const police of ["Lora", "Calibri", "Georgia", "Ma Shan Zheng"]) expect(styles).toContain(`<name val="${police}"/>`);
+  for (const police of ["Lora", "Calibri", "Ma Shan Zheng"]) expect(styles).toContain(`<name val="${police}"/>`);
   const textes = dansXlsx(fichier, "xl/sharedStrings.xml");
   expect(textes).toContain("基督教会巴黎华人恩典堂");
   expect(textes).toContain("测试");
   expect(textes, "l'admin voit le brouillon de Bonté").toContain("Brouillon B.");
-  expect(entreesXlsx(fichier).filter((e) => e.startsWith("xl/media/"))).toHaveLength(19);
+  expect(entreesXlsx(fichier).filter((e) => e.startsWith("xl/media/"))).toHaveLength(18);
 });

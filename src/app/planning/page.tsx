@@ -8,10 +8,11 @@ import {
   FIDELITE_FALLBACK, FIDELITE_MUSIC_FALLBACK,
   PAIX_FALLBACK, BONTE_FALLBACK, DEJEUNER_FALLBACK, EDD_FALLBACK, CAMP_LOUANGE_FALLBACK
 } from "@/lib/planning/data"
-import { fetchCulte, fetchDejeuner, fetchPetitDej, fetchPaix, fetchFidelite, fetchFideliteMusic, fetchBonte, fetchEDD, fetchCampus, fetchIntergroupe, fetchInterfranco } from "@/lib/planning/sheets"
+import { fetchCulte, fetchDejeuner, fetchPetitDej, fetchPaix, fetchFidelite, fetchBonte, fetchEDD, fetchCampus, fetchIntergroupe, fetchInterfranco } from "@/lib/planning/sheets"
 import { StaleBanner } from "@/components/planning/StaleBanner"
 import type { EddDataStructure, CampusSeance } from "@/lib/planning/utils"
 import { useProfile } from "@/lib/firebase/users"
+import { completerMusiciensFidelite } from "@/lib/planning/grilles"
 import { avecDimanchesSpeciaux, sansBrouillon, trimestresPublies, type PlanningData } from "@/lib/planning/names"
 import { lirePetitDej } from "@/lib/petitdej/lignes"
 import { servicesDuCompte } from "@/lib/petitdej/services"
@@ -49,8 +50,8 @@ export default function PlanningAccueil() {
   // Petit déj : aucune donnée de secours, il ne s'affiche que s'il est lu.
   const [petitDej, setPetitDej] = useState<string[][]>([])
   const [paix, setPaix] = useState(PAIX_FALLBACK)
-  const [fid, setFid] = useState(FIDELITE_FALLBACK)
-  const [fidM, setFidM] = useState(FIDELITE_MUSIC_FALLBACK)
+  // Lot F : un seul planning, guitare et batterie reprises du planning des musiciens.
+  const [fid, setFid] = useState(() => completerMusiciensFidelite(FIDELITE_FALLBACK, FIDELITE_MUSIC_FALLBACK))
   const [bonte, setBonte] = useState(BONTE_FALLBACK)
   const [edd, setEdd] = useState<EddDataStructure>(EDD_FALLBACK)
   const [campus, setCampus] = useState<CampusSeance[]>(CAMP_LOUANGE_FALLBACK)
@@ -79,7 +80,6 @@ export default function PlanningAccueil() {
       fetchPetitDej().then(d => { if (d.length) setPetitDej(d) }),
       fetchPaix().then(d => { if (d.length) setPaix(d) }),
       fetchFidelite().then(d => { if (d.length) setFid(d) }),
-      fetchFideliteMusic().then(d => { if (d.length) setFidM(d) }),
       fetchBonte().then(d => { if (d.length) setBonte(d) }),
       fetchEDD().then(d => setEdd(d)),
       fetchCampus().then(({ louange }) => { if (louange.length) setCampus(louange) }),
@@ -98,12 +98,12 @@ export default function PlanningAccueil() {
   // tablette, aucun sur téléphone.
   const mesServices = useMemo(() => {
     if (!user || !profile) return null
-    const lu: PlanningData = { culte, dejeuner: dej, petitDej, paix, fidelite: fid, fideliteMusic: fidM, bonte, edd, campus, intergroupe, interfranco }
+    const lu: PlanningData = { culte, dejeuner: dej, petitDej, paix, fidelite: fid, bonte, edd, campus, intergroupe, interfranco }
     // Lot U2 (Q4, Q5) : comme `loadPlanningData`, ni trimestre à venir non
     // publié, ni président de groupe fantôme un dimanche d'Interfranco ou d'Intergroupe.
     const data = BACK_OFFICE ? avecDimanchesSpeciaux(sansBrouillon(lu, new Date().getFullYear(), getCurrentTri(), publies)) : lu
     return pourMoi(servicesDuCompte(data, lignesPetitDej, user.uid, profile.planningName ?? ""), aujourdhui, disposition === "tablette" ? 3 : 2)
-  }, [user, profile, culte, dej, petitDej, lignesPetitDej, paix, fid, fidM, bonte, edd, campus, intergroupe, interfranco, publies, aujourdhui, disposition])
+  }, [user, profile, culte, dej, petitDej, lignesPetitDej, paix, fid, bonte, edd, campus, intergroupe, interfranco, publies, aujourdhui, disposition])
 
   // La setlist de ce service (règle de Mes services), puis les titres et tonalités de ses chants.
   // L'accueil est la page la plus visitée : jamais toute la collection, seulement les setlists
@@ -151,7 +151,6 @@ export default function PlanningAccueil() {
   const pdRow = petitDej.find(r => r[0] === sun) ?? null
   const paixRow = paix.find(r => r[0] === sun) ?? null
   const fidRow = fid.find(r => r[0] === sun) ?? null
-  const fidMRow = fidM.find(r => r[0] === sun) ?? null
   const bonteRow = bonte.find(r => r[0] === sun) ?? null
 
   // Dimanche d'Interfranco ou d'Intergroupe (jamais les deux) : ce service
@@ -182,7 +181,8 @@ export default function PlanningAccueil() {
       // Lot U2, P5 : la percussion, quand le dimanche en a une, rejoint les musiciens du groupe.
       groupes={[
         { cle: "paix", presidence: paixRow?.[1] ?? "", musiciens: [paixRow?.[2], paixRow?.[5]].filter(v => v?.trim()).join(", ") },
-        { cle: "fidelite", presidence: fidRow?.[1] ?? "", musiciens: fidMRow ? [fidMRow[2], fidMRow[3], fidMRow[4]].filter(v => v?.trim()).join(", ") : "" },
+        // Lot F : pianiste du groupe (D26), guitare et batterie, d'un seul planning.
+        { cle: "fidelite", presidence: fidRow?.[1] ?? "", musiciens: [fidRow?.[4], fidRow?.[5], fidRow?.[6]].filter(v => v?.trim()).join(", ") },
         { cle: "bonte", presidence: bonteRow?.[1] ?? "", musiciens: [bonteRow?.[2], bonteRow?.[5]].filter(v => v?.trim()).join(", ") },
       ]}
       edd={[["中班", eddZb], ["大班", eddDb], ["高班", eddGb]].map(([classe, row]) => ({ classe: classe as string, presidence: (row as string[] | null)?.[1] ?? "" }))}
