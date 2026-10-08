@@ -106,6 +106,7 @@ Back-Office).
 |---|---|---|
 | D28 | Les réunions dans Évènements (App) | **Retirées** de la liste et du calendrier d'Évènements de l'App : elles ne sont plus que dans Back-Office › Réunions. Les évènements réservés à un pôle (lot E) restent dans Évènements. |
 | D29 | Un simple membre d'une équipe de l'organigramme (sans autre rôle), qui n'a pas le Back-Office | **On lui ouvre le Back-Office avec la seule entrée Réunions** (les réunions de son équipe : date, sujets à proposer, compte rendu). |
+| D30 | Choriste ou musicien rattaché au pôle Louange par son seul rôle de service (sans pôle ni équipe écrits) : il ne trouve plus les réunions du pôle dans aucune liste (seulement par une notification ou un rappel, qui ouvrent la fiche de l'App) | **Rien pour le moment** (08/10/2026) : « peut-être on va supprimer les pôles parce qu'il y a déjà les TEAM » — piste à instruire à part. |
 
 | # | Règle |
 |---|---|

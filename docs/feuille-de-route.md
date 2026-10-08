@@ -1091,6 +1091,12 @@ persistant (5 instables passés à la relance : `navigation-grand-ecran` ×3, `s
    seuil des trois colonnes de la fiche (codé : quand la fiche est sur une colonne) ; avant la mise en ligne,
    lancer `npx tsx scripts/releve-pianistes-fidelite.ts --firestore` (le Sheet seul donne un écart, le 13/09/2026)
    et cocher « Groupe Fidélité » aux profils qui avaient le droit `fideliteMusiciens`.
+5. **Lot G (08/10/2026, go) : les réunions seulement au Back-Office** — codé, relu et fusionné (`d183ea65`) : plus
+   aucune réunion dans Évènements de l'App ni sur l'accueil ; leurs liens (cloche, rappels, calendrier) mènent à
+   Back-Office › Réunions, ouvert aussi au simple membre d'une équipe de l'organigramme (seule entrée Réunions).
+   Laissé tel quel (D30) : un choriste ou un musicien du pôle Louange implicite ne trouve plus ces réunions que par
+   une notification. **Piste de Timothée à instruire** : supprimer les pôles, puisque les équipes (TEAM) de
+   l'organigramme existent déjà.
 5. **À la mise en ligne, sur ordre** : poser `VERCEL_DEEP_CLONE=true` dans les variables du projet Vercel (sans
    historique git, « Nouveaux au répertoire » n'apparaît pas). En ligne, les trimestres du Planning passent en rail
    gris et Prépa. Table et Campus sont calés à gauche sous le titre.
