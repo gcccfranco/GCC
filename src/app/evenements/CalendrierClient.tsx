@@ -63,7 +63,7 @@ export function CalendrierClient({ enTete, peutCreer, children }: {
   const [inscrits, setInscrits] = useState<Set<string>>(() => new Set())
   useEffect(() => {
     if (!user || !evenements) return
-    const ids = evenements.filter((e) => !isInfo(e)).map((e) => e.id)
+    const ids = evenements.filter((e) => !isInfo(e) && !estReunion(e)).map((e) => e.id)
     Promise.all(ids.map((id) => getInscription(id, user.uid).then((i) => (i ? id : null)).catch(() => null)))
       .then((r) => setInscrits(new Set(r.filter((id): id is string => id !== null))))
   }, [user, evenements])

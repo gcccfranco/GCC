@@ -4,6 +4,7 @@ import { signInAs, type FakeProfile } from "./helpers/fakeSession";
 import { entreesBackOffice } from "../src/lib/access";
 import { ficheEvenement } from "../src/lib/navigation";
 import { notificationsDuMatin } from "../src/lib/reunions/rappels";
+import { pushNouvelEvenement } from "../src/lib/evenements/rappel";
 import type { Evenement } from "../src/types/evenement";
 import type { UserProfile } from "../src/types/user";
 
@@ -28,6 +29,8 @@ const REUNION_DA = { ...BASE, titre: "Réunion DA", reunion: true };
 const ANCIENNE = { ...BASE, titre: "Point DA", date: "2026-10-08" };
 /** Évènement du pôle DA (lot E) : il reste dans Évènements. */
 const SOIREE = { ...BASE, titre: "Soirée DA", reunion: false, inscriptions: "ouvertes", date: "2026-10-12" };
+/** Réunion du pôle Louange : choristes et musiciens en sont, par le pôle implicite d'un rôle de service. */
+const REUNION_LOUANGE = { ...BASE, titre: "Réunion Louange", pour: "pole:louange", reunion: true };
 /** Réunion de l'équipe Régie de l'organigramme. */
 const REUNION_REGIE = { ...BASE, titre: "Réunion Régie", pour: "equipe:regie", reunion: true, organisateurUid: "uid-rose", organisateurNom: "Rose T." };
 
@@ -95,6 +98,17 @@ test("G2 : le rappel du matin d'une réunion mène au Back-Office ; celui d'un �
   expect(notificationsDuMatin({ services: [], taches: [], lignes: [veille(reunion), { kind: "veille", evenement: soiree }] }, "fr", "2026-10-09")[0].url).toBe("/evenements");
 });
 
+test("G2 : la notification de publication d'une réunion mène au Back-Office ; d'un évènement, à l'App", () => {
+  // Relecture du lot G : la route /api/push/notify-evenement compose son envoi avec pushNouvelEvenement.
+  for (const lang of ["fr", "zh-CN"] as const) {
+    expect(pushNouvelEvenement(ev(REUNION_DA, "reunion-da"), lang)).toMatchObject({ url: "/back-office/reunions/reunion-da", tag: "evenement-reunion-da" });
+    expect(pushNouvelEvenement(ev(ANCIENNE, "ancienne"), lang).url).toBe("/back-office/reunions/ancienne");
+    expect(pushNouvelEvenement(ev(SOIREE, "soiree"), lang)).toMatchObject({ url: "/evenements/soiree", tag: "evenement-soiree" });
+  }
+  expect(pushNouvelEvenement(ev(SOIREE, "soiree"), "fr").title).toBe("Évènement — Soirée DA");
+  expect(pushNouvelEvenement(ev(SOIREE, "soiree"), "zh-CN").title).toBe("活动：Soirée DA");
+});
+
 // ─── Écrans ─────────────────────────────────────────────────────────────────
 
 test("G1 : un membre du pôle ne voit aucune réunion dans Évènements ; l'évènement de pôle y reste", async ({ page }, info) => {
@@ -105,6 +119,20 @@ test("G1 : un membre du pôle ne voit aucune réunion dans Évènements ; l'év�
   // En grand, la fiche de droite est celle du prochain évènement : la soirée, pas la réunion du 8.
   await expect(page.getByRole("region", { name: /^Sujets/ })).toHaveCount(0);
   await capture(page, info, "evenements");
+});
+
+test("G1 : Évènements ne lit aucune inscription pour une réunion", async ({ page }) => {
+  // Relecture du lot G : une lecture d'inscription par évènement affiché, aucune pour une réunion.
+  const lues: string[] = [];
+  page.on("request", (r) => {
+    const m = /\/evenements\/([\w-]+)\/inscriptions\//.exec(decodeURIComponent(r.url()));
+    if (m) lues.push(m[1]);
+  });
+  await ouvrir(page, BRUNO, "/evenements");
+  await expect(page.getByRole("link", { name: /Soirée DA/ }).first()).toBeVisible();
+  await expect.poll(() => lues).toContain("soiree");
+  expect(lues).not.toContain("reunion-da");
+  expect(lues).not.toContain("ancienne");
 });
 
 test("G1 : l'accueil ne montre pas la réunion dans « Prochains évènements »", async ({ page }) => {
@@ -133,6 +161,29 @@ test("G2 : la cloche mène la réunion à sa fiche de Back-Office", async ({ pag
   await cloche.click();
   await expect(page.getByRole("menuitem", { name: /Réunion DA/ })).toHaveAttribute("href", /\/back-office\/reunions\/reunion-da\/?$/);
   await expect(page.getByRole("menuitem", { name: /Soirée DA/ })).toHaveAttribute("href", /\/evenements\/soiree\/?$/);
+});
+
+test("G2 : sans l'entrée Réunions (choriste, pôle Louange implicite), le lien d'une réunion mène à sa fiche de l'App", async ({ page }) => {
+  // Relecture du lot G : cloche, notification et rappel donnent l'adresse du Back-Office ; qui n'a
+  // pas l'entrée Réunions est renvoyé à la fiche de l'App, où il propose ses sujets.
+  await ouvrir(page, CHORISTE, "/songs", { "evenements/reunion-louange": REUNION_LOUANGE });
+  const cloche = page.getByRole("button", { name: /notification/i });
+  await expect(cloche).toBeVisible();
+  await cloche.click();
+  const lien = page.getByRole("menuitem", { name: /Réunion Louange/ });
+  await expect(lien).toHaveAttribute("href", /\/back-office\/reunions\/reunion-louange\/?$/);
+  await lien.click();
+  await page.waitForURL(/\/evenements\/reunion-louange\/?$/);
+  await expect(page.getByRole("region", { name: /^Sujets/ })).toBeVisible();
+  await expect(page.getByText("Réservé aux responsables.")).toHaveCount(0);
+  // Le Back-Office lui reste fermé (lot U6, Réussite 1).
+  await page.goto("/back-office/reunions");
+  await expect(page.getByText("Réservé aux responsables.")).toBeVisible();
+});
+
+test("G2 : sans compte, l'adresse d'une réunion au Back-Office propose de se connecter", async ({ page }) => {
+  await page.goto("/back-office/reunions/reunion-louange");
+  await expect(page.getByRole("link", { name: "Se connecter" })).toHaveAttribute("href", /^\/login\/?\?from=%2Fback-office%2Freunions%2Freunion-louange$/);
 });
 
 test("G3 : un membre d'équipe sans autre rôle — sélecteur, la seule entrée Réunions, ses réunions", async ({ page }, info) => {

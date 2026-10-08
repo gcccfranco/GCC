@@ -318,8 +318,14 @@ test("organisatrice : elle réordonne au clavier (Espace, flèche, Espace)", asy
   // @dnd-kit n'écoute les flèches qu'une fois le sujet saisi.
   await page.keyboard.press("Space");
   await expect(poignee).toHaveAttribute("aria-pressed", "true");
-  await page.keyboard.press("ArrowUp");
-  await expect(page.getByText("Sujet « Budget impression du trimestre » en position 3 sur 4.")).toBeAttached();
+  // Sous charge, la première flèche peut partir avant que @dnd-kit ait mesuré les cibles : le sujet,
+  // saisi, reste annoncé en position 4 (vu deux fois le 08/10/2026). On renvoie la flèche tant que
+  // la nouvelle place n'est pas annoncée.
+  const arrivee = page.getByText("Sujet « Budget impression du trimestre » en position 3 sur 4.");
+  await expect(async () => {
+    if (!(await arrivee.count())) await page.keyboard.press("ArrowUp");
+    await expect(arrivee).toBeAttached({ timeout: 2000 });
+  }).toPass({ timeout: 15000 });
   await page.keyboard.press("Space");
   await attendreOrdre(page, ["Affiche de Noël", "Fond PPT du culte", "Budget impression", "Photos du culte"]);
   const patchs = () => ecritures(db, "PATCH").map((w) => [w.path.split("/").pop(), w.data]);

@@ -7,6 +7,7 @@ import { isInfo, isPast, modeInscriptions } from "@/lib/evenements/agenda";
 import { estReunion } from "@/lib/access";
 import type { NotifLang } from "@/types/user";
 import { formatReminderDate } from "@/lib/push/reminderMessage";
+import { ficheEvenement } from "@/lib/navigation";
 
 export function evenementReminder(e: Pick<Evenement, "titre" | "heure" | "lieu">, lang: NotifLang): { title: string; body: string } {
   if (lang === "zh-CN") {
@@ -37,6 +38,15 @@ export function nouvelEvenementMessage(
     title: info ? `Info — ${e.titre}` : `Évènement — ${e.titre}`,
     body: `${e.lieu || e.description.slice(0, 80)}${when}`.trim() || e.titre,
   };
+}
+
+/** L'envoi d'un nouvel évènement (route /api/push/notify-evenement) : message, lien et tag. Le
+ *  lien d'une réunion mène à sa fiche de Back-Office › Réunions (retouches v18, lot G, G2). */
+export function pushNouvelEvenement(
+  e: Pick<Evenement, "id" | "pour" | "reunion" | "titre" | "type" | "lieu" | "description" | "date" | "heure">,
+  lang: NotifLang,
+): { title: string; body: string; url: string; tag: string } {
+  return { ...nouvelEvenementMessage(e, lang), url: ficheEvenement(e), tag: `evenement-${e.id}` };
 }
 
 /** Les inscriptions s'ouvrent aujourd'hui : mode automatique, ouverture datée

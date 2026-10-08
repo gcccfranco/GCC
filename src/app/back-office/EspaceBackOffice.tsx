@@ -5,6 +5,8 @@
 // sa règle dans firestore.rules.
 // Retouches v18, lot G (G3, D29) : un membre d'équipe sans autre rôle entre, pour la seule
 // entrée Réunions (et « Plus », la page de la barre du bas) ; toute autre adresse y ramène.
+// G2 : un connecté sans l'entrée Réunions (un choriste, du pôle Louange par son rôle de service)
+// qui suit le lien d'une réunion (cloche, notification, rappel) est mené à sa fiche de l'App.
 import { useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -22,6 +24,10 @@ export function EspaceBackOffice({ children }: { children: React.ReactNode }) {
   const horsReunions = !loading && entrees.length > 0 && !estResponsable(user, profile)
     && !/^\/back-office\/(reunions|plus)(\/|$)/.test(pathname);
   useEffect(() => { if (horsReunions) router.replace("/back-office/reunions"); }, [horsReunions, router]);
+  const reunionId = !loading && user && !entrees.includes("reunions")
+    ? /^\/back-office\/reunions\/([\w-]+)\/?$/.exec(pathname)?.[1] : undefined;
+  const versApp = reunionId && reunionId !== "nouvelle" ? `/evenements/${reunionId}` : null;
+  useEffect(() => { if (versApp) router.replace(versApp); }, [versApp, router]);
 
   if (loading) {
     return (
@@ -30,6 +36,7 @@ export function EspaceBackOffice({ children }: { children: React.ReactNode }) {
       </div>
     );
   }
+  if (versApp) return null;
   if (entrees.length === 0) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center gap-3 px-4 text-center">

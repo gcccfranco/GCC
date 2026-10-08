@@ -486,12 +486,56 @@ Le lot F est fini et relu.
   1. « Membre d'une équipe » = `dansEquipes` du profil. Le pôle Louange implicite d'un rôle de service
      (choriste, musicien sans pôle écrit) n'ouvre toujours pas le Back-Office (question 2 du lot U6
      inchangée) : une telle personne ne voit plus les réunions du pôle Louange dans Évènements, mais garde
-     leur fiche par son adresse dans l'App (pas de renvoi, faute d'entrée Réunions) ; un lien de rappel ou
-     de notification l'envoie pourtant au Back-Office, où elle lit « Réservé aux responsables ». Un membre
-     d'une équipe rattachée à un pôle a déjà ce pôle écrit, donc le Back-Office.
+     leur fiche dans l'App, où mènent son adresse et, depuis la relecture, les liens des rappels et
+     notifications (voir plus bas : question ouverte). Un membre d'une équipe rattachée à un pôle a déjà
+     ce pôle écrit, donc le Back-Office.
   2. « Plus » reste ouvert à ce membre (sa barre du bas en a besoin : « Revenir à l'app »).
 - Code devenu sans usage pour qui a l'entrée Réunions : le rendu d'une réunion dans la fiche de l'App
   (`EvenementClient`, espace « app » : sujets, compte rendu, « Gérer dans le Back-Office ») ne sert plus
   qu'au cas 1 ci-dessus ; laissé.
 - Pour Timothée : rien à publier dans `firestore.rules` (lecture des évènements et des sujets déjà ouverte
   aux membres d'équipe, `backOffice/{uid}` déjà écrit par son titulaire) ; aucun libellé nouveau à traduire.
+
+**08/10/2026 — relecture du lot G** (commit : `fix(V18REUNIONS): relecture — …`).
+
+- Lien d'une réunion sans l'entrée Réunions (relevé deux fois, important) : un choriste, un musicien, une
+  régie ou une présidence (pôle Louange implicite, sans équipe écrite) qui suivait le lien d'une réunion de
+  la cloche, de la notification de publication ou du rappel du matin arrivait sur « Réservé aux
+  responsables ». `EspaceBackOffice` mène désormais un connecté sans l'entrée Réunions de
+  `/back-office/reunions/<id>` à `/evenements/<id>`, la fiche de l'App, où il lit la réunion et propose ses
+  sujets. C'est le pendant de G2 : l'adresse de l'App mène au Back-Office qui a l'entrée Réunions, celle du
+  Back-Office mène à l'App qui ne l'a pas. Aucun lien n'a besoin du profil du destinataire (la route et le
+  cron ne le connaissent pas). Sans compte : « Se connecter », qui y revient. `/back-office` et la liste
+  des réunions lui répondent toujours « Réservé aux responsables » (lot U6, Réussite 1).
+- La notification de publication compose son envoi avec `pushNouvelEvenement` (`evenements/rappel.ts`),
+  désormais testé. Le lien d'une réunion dans le calendrier du Back-Office l'était déjà (`calendrier.spec.ts` :
+  l'entrée pure et le bouton « Ouvrir » de la feuille).
+- Évènements (App) ne lit plus l'inscription d'une réunion (`CalendrierClient`) : une lecture Firestore de
+  moins par réunion visible.
+- Commentaire d'en-tête de `SelecteurEspace` recousu. Le nom `useResponsable` reste ; depuis le lot G, il
+  veut dire « a le Back-Office ». À renommer si Timothée le souhaite.
+- Test de réordonnancement au clavier (`reunions.spec.ts`, « organisatrice : elle réordonne au clavier ») :
+  il a encore échoué une fois sous charge pendant la passe de relecture, cette fois sur téléphone. Le
+  sujet était saisi, mais la première flèche ne l'avait pas déplacé. Le test renvoie maintenant la flèche
+  tant que la nouvelle place n'est pas annoncée. Il est passé 36 fois sur 36 (six répétitions sur chacun
+  des trois appareils, quatre workers). Le code du site n'est pas touché.
+- Non retenu : renvoyer de `/back-office/reunions/nouvelle` un membre d'équipe non référent. Il y lit
+  « Réservé », sans rien pouvoir écrire, et les règles sont inchangées.
+- Tests : `reunions-back-office.spec.ts` compte quatre tests de plus. Trois ont été vus rouges puis verts
+  sur ordinateur, téléphone et tablette : la notification de publication, la lecture d'inscription et le
+  lien suivi par un choriste. Le quatrième, « sans compte », est une garde : il était déjà vert avant la
+  correction. Passe de relecture : 1 204 verts et 1 rouge (le test de réordonnancement ci-dessus, repassé
+  ensuite : `reunions` vert sur les trois appareils, 213 tests). Specs du lot passés sur les trois
+  appareils : `reunions-back-office`, `reunions`, `back-office-espace`, `evenements`,
+  `agencement-v18-t2a`, `calendrier`. Sur ordinateur : `evenements-pole`, `nouveaux-membres`. Verts
+  aussi : `back-office-coupe`, tsc et lint (0 erreur).
+- **Question ouverte pour Timothée** (remplace le choix 1) : un choriste ou un musicien sans équipe écrite
+  ne trouve plus les réunions du pôle Louange dans aucune liste. D28 les retire d'Évènements, et le pôle
+  Louange implicite n'ouvre pas le Back-Office (lot U6, Réussite 1). Il n'y accède que par la cloche, une
+  notification ou un rappel. Deux réponses possibles :
+  (a) lui ouvrir la seule entrée Réunions, avec `polesDe(profile).length > 0` dans `entreesBackOffice`.
+  Toute personne qui a un rôle de service verrait alors le sélecteur App · Back-Office. Il faudrait aussi
+  réserver « + Nouvelle réunion » aux responsables : sinon, par `creatableEvenementPours`, elle pourrait
+  créer une réunion du pôle Louange.
+  (b) lui laisser, dans Évènements (l'App), les réunions de son pôle tant qu'il n'a pas l'entrée Réunions.
+- Pour Timothée : rien à publier dans `firestore.rules` ; aucun libellé nouveau.
