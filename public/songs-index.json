@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-08T21:24:55.155Z",
+  "generatedAt": "2026-10-08T21:43:18.148Z",
   "songs": [
     {
       "slug": "abba-pere",
@@ -4357,8 +4357,9 @@
       "sections": [
         {
           "id": "intro-1",
-          "name": "Intro",
-          "type": "intro"
+          "name": "Intro (x2)",
+          "type": "intro",
+          "suffix": "(x2)"
         },
         {
           "id": "verse-2",
@@ -4781,8 +4782,9 @@
         },
         {
           "id": "bridge-5",
-          "name": "Pont",
-          "type": "bridge"
+          "name": "Pont (x4)",
+          "type": "bridge",
+          "suffix": "(x4)"
         }
       ]
     },
@@ -4933,8 +4935,9 @@
         },
         {
           "id": "bridge-5",
-          "name": "Pont",
-          "type": "bridge"
+          "name": "Pont (x4)",
+          "type": "bridge",
+          "suffix": "(x4)"
         }
       ]
     },
@@ -5071,8 +5074,9 @@
       "sections": [
         {
           "id": "intro-1",
-          "name": "Intro",
-          "type": "intro"
+          "name": "Intro (une ligne au choix)",
+          "type": "intro",
+          "suffix": "(une ligne au choix)"
         },
         {
           "id": "verse-2",
@@ -5099,9 +5103,10 @@
         },
         {
           "id": "chorus-6",
-          "name": "Refrain 2",
+          "name": "Refrain 2 (x2)",
           "type": "chorus",
-          "number": "2"
+          "number": "2",
+          "suffix": "(x2)"
         },
         {
           "id": "bridge-7",

@@ -4,16 +4,17 @@
 {key: A}
 {language: fr}
 {themes: Adoration, Foi, Espérance}
+{source: Grande est Ta fidélité.pdf}
 
 {start_of_verse: Couplet 1}
 [F#m] Dès le matin, [D] Jusqu'à la fin,
-[A] Ton grand amour [E]est infaillible
+[A] Ton grand amour est i[E]nfaillible
 [F#m] Quand tout est sombre, [D] La tempête gronde
-[A] Seigneur Tu de[E]meures inchangeable
+[A] Seigneur Tu demeures [E]inchangeable
 {end_of_verse}
 
 {start_of_prechorus: Pré-Refrain}
-[D] Et à chaque heure, [E]Je [F#m]redirai :
+[D] Et à chaque h[E]eure, Je [F#m]redirai :
 [D] Mon espoir est J[E]ésus
 {end_of_prechorus}
 
@@ -21,7 +22,7 @@
 [A] Grande est Ta fi[E]délité
 [F#m] Grande est Ta fi[D]délité
 [A] Je lève les ye[E]ux
-Je redis [F#m]grande est Ta f[E]idélité
+Je redis [F#m]grande est Ta fi[E]délité
 {end_of_chorus}
 
 {start_of_verse: Couplet 2}
@@ -37,5 +38,5 @@ Je redis [F#m]grande est Ta f[E]idélité
 [F#m] En toutes choses notre [D]Dieu est fidèle
 [A] Ses bras sont ouverts
 [E] Je viens en courant
-[F#m] À jamais notre D[D]ieu est fidèle
+[F#m] À jamais notre [D]Dieu est fidèle
 {end_of_bridge}

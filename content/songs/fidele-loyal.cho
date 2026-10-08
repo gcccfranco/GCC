@@ -4,31 +4,34 @@
 {tempo: 83}
 {language: fr}
 {themes: Adoration, Foi, Espérance}
+{source: Fidèle Loyal.pdf}
 
 {start_of_verse: Couplet 1}
 [C] Je me souviens [F]dans quel état
-[Dm] Ta grâce m’a [C]trouvé
+[Dm] Ta grâce m’[C]a trouvé
 [C] J’étais si loin, [F] si loin de Toi
 [Dm] Mais Tu T’es ra[C]pproché
 {end_of_verse}
 
 {start_of_prechorus: Pré-Refrain}
 Et je sai[F]s, que Tu étais là
-Dans [Am]les heures s[C]ombres
+Dans [Am]les heures somb[C]res
 Auprès de moi, Tu [G]l’as promis
-[F]Tu ne mens pas [Dm] Oui Tu es [C]là [ ][G]
+[F]Tu ne mens pas [Dm] Oui Tu es [C]là [G]
 {end_of_prechorus}
 
 {start_of_chorus: Refrain}
-Dieu Tu es ﬁ[C]dèle
-[Bb]Le plus lo[F]yal des a[Dm]mis
-Tu es si ﬁd[C]èle
-[Bb]Et le cr[F]oire me sufﬁ[Dm]t
-Dieu Tu es ﬁ[C]dèle
+Dieu Tu es fi[C]dèle[Bb]
+Le plus lo[F]yal des a[Dm]mis
+Tu es si fi[C]dèle[Bb]
+Et le cr[F]oire me suffi[Dm]t
+Dieu Tu es fi[C]dèle
 {end_of_chorus}
 
+{needs_review: la feuille s'arrête au Pont sans renvoi : le retour du pré-refrain et du refrain après le couplet 2, et du refrain après le pont, n'est pas gravé, rien n'est ajouté}
+
 {start_of_verse: Couplet 2}
-[C] Je place en Toi [F]toute ma conﬁance
+[C] Je place en Toi [F]toute ma confiance
 [Dm] Tu es si bon [C]pour moi
 [C] J’avancerai [F]plein d’assurance
 [Dm] Car Tu ne fail[C]lis pas
@@ -38,5 +41,5 @@ Dieu Tu es ﬁ[C]dèle
 [C] Je m’accroche à Toi, Et à Tes [C/E]promesses
 [F] J’avance par la foi, Et je [G]confesse
 [Am] Ton nom Jésus en plein cœur [C/E]de la nuit
-[F] Et en Ta présence mes en[(G)]nemis s’enfuient
+[F] Et en Ta présence mes enne[(G)]mis s’enfuient
 {end_of_bridge}

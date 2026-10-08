@@ -3,9 +3,11 @@
 {key: A}
 {language: fr}
 {themes: Adoration, Foi, Action de grâce}
+{source: J'annoncerai.pdf}
 
-{start_of_intro: Intro}
-[F#m][ ][D][ ][A2]
+{start_of_intro: Intro (une ligne au choix)}
+[A2]  [E]  [A2]  [E]
+[F#m]  [D]  [A2]
 {end_of_intro}
 
 {start_of_verse: Couplet 1}
@@ -28,7 +30,7 @@ Tout au long de mes j[E]ours
 Tout au long de mes j[A2]ours
 Tu m’as [E]aim[F#m]é d’un amour infin[D]i
 Dieu de ma vie[E]
-Dieu de ma vie[F#m][ ][D][ ][A2]
+Dieu de ma vie[F#m] [D] [A2]
 {end_of_chorus}
 
 {start_of_verse: Couplet 3}
@@ -38,7 +40,7 @@ Dieu de ma vie[F#m][ ][D][ ][A2]
 [Bm7] Mon [F#m]chant s’é[E]lève
 {end_of_verse}
 
-{start_of_chorus: Refrain 2}
+{start_of_chorus: Refrain 2 (x2)}
 J’annoncer[A2]ai ta fidéli[D]té
 Tout au long de mes j[E]ours
 Tout au long de mes j[A2]ours

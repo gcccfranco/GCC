@@ -1,5 +1,5 @@
 {
-  "genereLe": "2026-10-08T21:24:55.891Z",
+  "genereLe": "2026-10-08T21:43:18.880Z",
   "fiches": [
     {
       "id": "substitutions/2m7-pour-4",
@@ -145,6 +145,7 @@
         "j-annoncerai",
         "jamais-marche-seul",
         "je-celebrerai",
+        "je-flechis-le-genou",
         "je-te-donne-tout",
         "je-veux-proclamer-le-nom-de-jesus",
         "jesus-je-te-suivrai",
@@ -344,7 +345,6 @@
         "invitation",
         "j-annoncerai",
         "je-celebrerai",
-        "je-flechis-le-genou",
         "je-loue-ton-nom-eternel",
         "je-louerai-l-eternel",
         "je-reviens-au-coeur",
@@ -1021,6 +1021,7 @@
       "regle": "Portée : Couplet, Pont · motif `4` · remplacement `4maj7` · sûreté :\n**sûre** (sur le `1` : **à écouter**).",
       "exemples": [
         "avec-nous",
+        "il-m-aime",
         "jireh",
         "为我而来",
         "主的喜乐是我力量",
@@ -1124,7 +1125,6 @@
         "echos",
         "eternel-notre-seigneur",
         "feu-du-fondeur",
-        "grace-en-grace",
         "grace-infinie",
         "heritiers",
         "hosanna",
@@ -1478,7 +1478,6 @@
         "il-m-aime",
         "inattendu",
         "j-annoncerai",
-        "je-flechis-le-genou",
         "jesus-je-te-suivrai",
         "jireh",
         "libere",
