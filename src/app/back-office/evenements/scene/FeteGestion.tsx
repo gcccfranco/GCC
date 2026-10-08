@@ -169,24 +169,28 @@ export function FeteGestion({ fete }: { fete: Fete }) {
   }
 
   /** Écrit sur l'édition, ou la crée en brouillon avec ce changement (Q6), puis relit. Chaque
-   *  écriture signe du prénom (`modifiePar`) ; avec `version` (l'ordre de passage, D20), elle est
-   *  refusée si quelqu'un a modifié l'édition depuis la lecture : « Modifié par … entre-temps ». */
-  async function ecrire(changement: Partial<Omit<Programme, "id">>, version?: string) {
+   *  écriture signe du prénom (`modifiePar`) ; `protege` (l'ordre de passage, D20) : refusée si
+   *  quelqu'un a modifié l'édition depuis la lecture, ou l'a créée entre-temps : « Modifié par …
+   *  entre-temps ». Rend `false` si rien n'a été écrit. */
+  async function ecrire(changement: Partial<Omit<Programme, "id">>, protege = false): Promise<boolean> {
     setErreur("")
     const signe = { ...changement, modifiePar: profile?.firstName ?? "" }
     try {
       ecritures.current++
       try {
-        if (edition.programme) await updateProgramme(edition.programme.id, signe, version)
-        else await creerEdition(fete, edition.annee, { ...reglages, createdBy: user!.uid, updatedAt: new Date().toISOString() }, signe)
+        if (edition.programme) await updateProgramme(edition.programme.id, signe, protege ? edition.programme.version : undefined)
+        else await creerEdition(fete, edition.annee, { ...reglages, createdBy: user!.uid, updatedAt: new Date().toISOString() }, signe, protege)
       } finally {
         ecritures.current--
       }
-      await reload()
     } catch (e) {
       if (!(e instanceof ModifieEntreTemps)) setErreur(t("planning.programmes.error"))
       else setErreur(e.prenom ? t("planning.programme.modifieEntreTemps", { prenom: e.prenom }) : t("planning.programme.modifieEntreTempsSansNom"))
+      return false
     }
+    // Écrit : une relecture qui échoue (réseau) ne le défait pas.
+    await reload().catch(() => setErreur(t("planning.programmes.error")))
+    return true
   }
 
   /** Lance les réservations ; la saison reste à l'écran (« Réservations lancées ») au lieu de
@@ -330,7 +334,7 @@ export function FeteGestion({ fete }: { fete: Fete }) {
 
   const proprietesSaison = {
     programme,
-    onSave: (patch: SaisonPatch) => ecrire(patch),
+    onSave: async (patch: SaisonPatch) => { await ecrire(patch) },
     jourJCalcule: { date: jourJParDefaut(fete, edition.annee), fete: t(`evenements.tabs.${fete}`) },
     autre,
     onErreur: setErreurSaison,
@@ -432,7 +436,7 @@ export function FeteGestion({ fete }: { fete: Fete }) {
         <OrdrePassage
           passages={programme.passages}
           canEdit={!enLecture}
-          onSave={(passages: Passage[]) => ecrire({ passages }, edition.programme?.version)}
+          onSave={(passages: Passage[]) => ecrire({ passages }, true)}
         />
       </section>
     </div>

@@ -94,6 +94,19 @@ test.describe("R5 · D9 : les pilules compactes en grand, 40 px au doigt", () =>
     await capture(page, "r5-pilules-statistiques");
   });
 
+  test("Statistiques : les menus Service, Langue, Présidence à la hauteur des pilules de la même rangée", async ({ page }, info) => {
+    await ouvrirStatistiques(page);
+    // Planche v18-bo-statistiques : les menus sont des pastilles de la même taille que les périodes.
+    const hauteur = hauteurAttendue(info.project.name);
+    for (const nom of ["Service", "Langue", "Présidence"]) {
+      const menu = page.getByRole("combobox", { name: nom });
+      const h = Math.round((await menu.boundingBox())!.height);
+      expect(Math.abs(h - hauteur), `« ${nom} » : ${h} px, attendu ≈ ${hauteur} px`).toBeLessThanOrEqual(1);
+      if (hauteur === 28) expect(await menu.evaluate((el) => parseFloat(getComputedStyle(el).fontSize)), `« ${nom} » : texte`).toBe(13);
+    }
+    await capture(page, "r5-menus-statistiques");
+  });
+
   test("Back-Office › Planning : la rangée des plannings suit la même règle (plus de taille propre)", async ({ page }, info) => {
     interdireDialoguesNatifs(page);
     await page.clock.setFixedTime(new Date("2026-11-15T10:00:00"));

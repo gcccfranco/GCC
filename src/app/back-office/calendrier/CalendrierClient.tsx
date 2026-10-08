@@ -288,7 +288,9 @@ export function CalendrierClient() {
   });
   // Retouches v18 (R4, D6) : en grand, les filtres restent sur une ligne et défilent de côté, avec un
   // bord fondu du côté où il en reste (comme les plannings) ; l'iPad debout les passait sur trois rangées.
-  const rangeeFiltres = useFonduLateral<HTMLDivElement>(permises.length);
+  // La rangée naît à chaque sortie du téléphone (fenêtre élargie, téléphone tourné) et ses libellés
+  // changent de largeur avec la langue : le fondu se repose alors.
+  const rangeeFiltres = useFonduLateral<HTMLDivElement>(`${permises.length}|${telephone}|${lang}`);
   const seulementMoi = (
     <button
       type="button"

@@ -53,6 +53,8 @@ test("R8 — deux responsables sur la même version : le second voit « Modifié
     await expect(liste(page).getByRole("listitem")).toHaveCount(4);
     expect(patchs(db)).toHaveLength(1);
     await expect(message(page)).toHaveCount(0);
+    // L'écriture signe du prénom de qui l'a faite : c'est lui que nommera un refus.
+    expect(db.doc("programmes/noel-2026")!.modifiePar).toBe("Alice");
 
     // Bruno, sur la version d'avant, retire le premier numéro : refusé, avec le prénom d'Alice.
     await liste(autre).getByRole("listitem").nth(0).getByRole("button", { name: "Retirer" }).click();
@@ -77,6 +79,7 @@ test("R8 — deux responsables sur la même version : le second voit « Modifié
     expect(patchs(db)).toHaveLength(2);
     expect((db.doc("programmes/noel-2026")!.passages as { titre: string }[]).map((p) => p.titre))
       .toEqual(["Jésus est né", "La nuit de Bethléem", "Douce nuit"]);
+    expect(db.doc("programmes/noel-2026")!.modifiePar).toBe("Bruno");
   } finally {
     await contexte.close();
   }
@@ -92,4 +95,41 @@ test("R8 — en chinois : 由 Bruno 修改, et rien n'est écrit", async ({ page
   await expect(message(page)).toHaveText("已被 Bruno 修改：请重新加载");
   expect(patchs(db)).toHaveLength(0);
   expect(db.doc("programmes/noel-2026")!.passages).toHaveLength(2);
+});
+
+test("R8 — refusé, le formulaire du passage reste ouvert avec la saisie : rien n'est perdu", async ({ page }) => {
+  const db = await ouvrirOrdre(page, BRUNO);
+  await page.getByRole("button", { name: "Ajouter un passage" }).click();
+  await page.getByLabel("Titre").fill("Minuit, chrétiens");
+  await page.getByLabel("Gp Paix").check();
+  // Une autre responsable enregistre entre-temps (base simulée).
+  db.set("programmes/noel-2026", { ...NOEL_2026, passages: PASSAGES.slice(0, 2), modifiePar: "Alice" });
+  await page.getByRole("button", { name: "Enregistrer" }).click();
+  await expect(message(page)).toHaveText("Modifié par Alice entre-temps : recharge");
+  // Le formulaire reste là, rempli : la saisie se recopie avant de recharger.
+  await expect(page.getByLabel("Titre")).toHaveValue("Minuit, chrétiens");
+  await expect(page.getByLabel("Gp Paix")).toBeChecked();
+  expect(patchs(db)).toHaveLength(0);
+  expect(db.doc("programmes/noel-2026")!.passages).toHaveLength(2);
+});
+
+test("R8 — édition pas encore créée : une autre responsable la crée entre-temps, l'ordre est refusé, rien n'est écrasé", async ({ page }) => {
+  interdireDialoguesNatifs(page);
+  await page.clock.setFixedTime(new Date("2026-10-09T10:00:00"));
+  // Aucun programme : Noël 2026 naîtra à la première action (Q6).
+  const db = await signInAs(page, BRUNO, {}, `${BO}/noel?vue=ordre`);
+  await expect(page.getByText("Aucun passage pour l'instant.")).toBeVisible();
+  await expect(liste(page).getByRole("listitem")).toHaveCount(0);
+  // Alice, sur un autre appareil, crée l'édition avec son premier numéro.
+  db.set("programmes/noel-2026", { ...NOEL_2026, passages: PASSAGES.slice(0, 1), modifiePar: "Alice" });
+  // Bruno, qui a lu un ordre vide, ajoute le sien.
+  await page.getByRole("button", { name: "Ajouter un passage" }).click();
+  await page.getByLabel("Titre").fill("Minuit, chrétiens");
+  await page.getByLabel("Gp Paix").check();
+  await page.getByRole("button", { name: "Enregistrer" }).click();
+  await expect(message(page)).toHaveText("Modifié par Alice entre-temps : recharge");
+  await expect(page.getByLabel("Titre")).toHaveValue("Minuit, chrétiens");
+  // Rien n'est écrit : le numéro d'Alice reste, celui de Bruno ne l'a pas remplacé.
+  expect(patchs(db)).toHaveLength(0);
+  expect((db.doc("programmes/noel-2026")!.passages as { titre: string }[]).map((p) => p.titre)).toEqual(["Ouverture"]);
 });

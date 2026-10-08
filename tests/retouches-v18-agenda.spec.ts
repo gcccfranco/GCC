@@ -116,6 +116,36 @@ test.describe("R4 · D6 : les filtres du calendrier sur une seule rangée qui d�
     await verifierSansDebordement(page);
   });
 
+  test("ordinateur : la fenêtre passe du téléphone à la tablette, le bord fondu suit la nouvelle rangée", async ({ page }, info) => {
+    test.skip(info.project.name !== "ordinateur", "ordinateur seulement : la fenêtre change de taille");
+    // Ouverte en largeur de téléphone (pilules « Tout · Seulement moi »), puis agrandie (un téléphone
+    // tourné, une fenêtre élargie) : la rangée des filtres apparaît, elle doit recevoir son bord fondu.
+    await page.setViewportSize({ width: 600, height: 900 });
+    await ouvrirAgenda(page);
+    await expect(filtres(page)).toHaveCount(0);
+    await page.setViewportSize({ width: 800, height: 900 });
+    await expect(filtres(page)).toBeVisible();
+    const etat = await fondu(page);
+    expect(etat.deborde, "à 800 px, les filtres ne tiennent pas").toBe(true);
+    expect(etat).toMatchObject({ gauche: "0px", droite: "24px" });
+    // Et le défilement le fait suivre.
+    await filtres(page).evaluate((el) => el.scrollTo({ left: el.scrollWidth }));
+    await expect.poll(async () => (await fondu(page)).gauche).toBe("24px");
+  });
+
+  test("passée en 中文, la rangée garde un bord fondu juste (libellés d'une autre largeur)", async ({ page }, info) => {
+    test.skip(info.project.name === "tablette-paysage", "la langue se change dans la barre latérale, réduite sur la tablette couchée");
+    await ouvrirAgenda(page);
+    const avant = await fondu(page);
+    expect(avant.droite).toBe(avant.deborde ? "24px" : "0px");
+    await page.locator('button[aria-label="切换为中文"]:visible').first().click();
+    await expect(filtres(page).getByRole("button", { name: "只看我的" })).toBeVisible();
+    await expect.poll(async () => {
+      const apres = await fondu(page);
+      return apres.droite === (apres.deborde ? "24px" : "0px");
+    }, { message: "le fondu droit dit s'il reste des filtres à voir" }).toBe(true);
+  });
+
   test("un filtre se touche toujours dans la rangée qui défile", async ({ page }) => {
     await ouvrirAgenda(page);
     const moi = filtres(page).getByRole("button", { name: "Seulement moi" });
@@ -153,6 +183,38 @@ test.describe("R4 · D7 : « Ajouter ce jour-là » et la ligne ouverte", () => 
     // Le bouton l'ouvre aussi (T3).
     await bouton.click();
     await expect(page.getByRole("menu").getByRole("menuitem")).toHaveCount(3);
+  });
+
+  test("grand écran : retoucher le bouton referme le menu ; fermé, le focus revient à qui l'a ouvert", async ({ page }) => {
+    test.skip(!estGrandEcran(test.info()), "le volet du jour à droite : ordinateur et tablette couchée");
+    await ouvrirAgenda(page);
+    const volet = page.getByRole("complementary", { name: "Jeudi 1er octobre" });
+    const bouton = volet.getByRole("button", { name: "Ajouter ce jour-là" });
+    const fleche = volet.getByRole("button", { name: "Évènement, tâche ou réunion" });
+    const menu = page.getByRole("menu");
+    // Le bouton ouvre, le bouton referme (il ne se rouvre pas aussitôt).
+    await bouton.click();
+    await expect(menu).toBeVisible();
+    await expect(bouton).toHaveAttribute("aria-expanded", "true");
+    await bouton.click();
+    await expect(menu).toHaveCount(0);
+    await page.waitForTimeout(300);
+    await expect(menu).toHaveCount(0);
+    await expect(bouton).toHaveAttribute("aria-expanded", "false");
+    // Au clavier : ouvert par le bouton, Échap le referme et rend le focus au bouton…
+    await bouton.focus();
+    await page.keyboard.press("Enter");
+    await expect(menu).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(menu).toHaveCount(0);
+    await expect(bouton).toBeFocused();
+    // … ouvert par la flèche, à la flèche.
+    await fleche.focus();
+    await page.keyboard.press("Enter");
+    await expect(menu).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(menu).toHaveCount(0);
+    await expect(fleche).toBeFocused();
   });
 
   test("中文 : la flèche ronde dit 活动、任务或会议", async ({ page }) => {

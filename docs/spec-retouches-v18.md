@@ -140,10 +140,10 @@ Rien de codé (spec écrite le 08/10/2026, en attente du go).
     ordinateur (`agencement-v18-fondations`, `-regles`, `-t2a`, `-planning`, `-t5`, `-t6`, `-calendrier`,
     `-harmonie`, `look-secondaires`, `statistiques`, `planning-groupes-grille`, `retouches-v18-agenda` sur
     les cinq), et `agencement-v18-planning`, `-t6`, `planning-groupes-grille` sur téléphone et tablettes.
-  - Reste : rien pour R5-R6. Timothée : aucune règle Firestore touchée, aucun libellé nouveau. À regarder :
-    en grand, les menus déroulants de la rangée des Statistiques (Service, Langue, Présidence) gardent 40 px
-    à côté des pilules de 28 px, et les sources du Calendrier (boutons propres, pas `Pilules`) gardent 32 px ;
-    la spec ne demande que le composant commun.
+  - Reste : rien pour R5-R6. Timothée : aucune règle Firestore touchée, aucun libellé nouveau. Les menus
+    déroulants des Statistiques suivent la même règle depuis la relecture (voir plus bas) ; les sources du
+    Calendrier (boutons propres, pas `Pilules`) gardent 32 px, à côté des boutons ronds de la période, comme
+    sur la planche `v18-bo-calendrier-agenda-a`.
 - **08/10/2026 — R8 codée** (ordre de passage protégé, D20) :
   - `updateProgramme(id, data, version)` (`src/lib/firebase/programmes.ts`) : avec `version` (l'`updateTime`
     du document lu, rangé dans `Programme.version`, jamais écrit), le PATCH porte
@@ -167,8 +167,47 @@ Rien de codé (spec écrite le 08/10/2026, en attente du go).
     (ne jamais réécrire les autres réglages). `evenements` et `setlist-history` (base simulée) verts sur
     ordinateur.
   - Choix faute de réponse : une seconde modification faite par la même personne avant que la page ait relu
-    la première est refusée aussi (avec son propre prénom) plutôt que d'écraser son premier changement ; une
-    édition qui n'existe pas encore naît comme avant (`creerEdition`, 409 si une autre coordination l'a créée).
+    la première est refusée aussi (avec son propre prénom) plutôt que d'écraser son premier changement. Une
+    édition qui n'existe pas encore naît comme avant (`creerEdition`) ; depuis la relecture, si une autre
+    coordination l'a créée entre-temps (409), l'ordre de passage est refusé de la même façon.
   - Reste : rien pour R8. Timothée : aucune règle Firestore à republier (la coordination écrit déjà tous
     les champs d'un programme, `modifiePar` compris) ; relire le 中文 `已被 {{prenom}} 修改：请重新加载` et
     `已被他人修改：请重新加载`.
+- **08/10/2026 — relecture du lot (deux relectures, onze constats mineurs)** : lot R voie B fini et relu.
+  - Corrigés, chacun avec un test vu rouge puis vert :
+    - Statistiques : les menus Service, Langue, Présidence suivent la règle de `Pilules` (40 px au doigt,
+      ≈ 28 px et 13 px dès 1 024 px avec un pointeur fin), à la hauteur des périodes comme sur la planche
+      `v18-bo-statistiques`. À 1 024 px barre dépliée, la rangée passe encore sur deux lignes : elle est trop
+      longue pour la place (environ 900 px de filtres pour 700 px), la planche est dessinée à 1 440 px.
+    - Ordre de passage : refusé (D20), le formulaire du passage reste ouvert avec la saisie, pour la recopier
+      avant de recharger (`OrdrePassage` : `onSave` rend `false` quand rien n'est écrit). Écrit mais relu
+      sans succès (réseau) : le formulaire se ferme comme avant, avec le message d'erreur.
+    - Ordre de passage sur une édition pas encore créée : si une autre coordination l'a créée entre-temps,
+      `creerEdition(…, protege)` lève `ModifieEntreTemps` au lieu d'écraser `passages` par un PATCH sans
+      précondition (le trou que D20 veut fermer).
+    - Calendrier, « Ajouter ce jour-là » : retoucher le bouton referme le menu (il se rouvrait aussitôt) ;
+      fermé, le focus revient à qui l'a ouvert, le bouton ou la flèche.
+    - Calendrier, bord fondu des filtres : reposé quand la rangée renaît en sortant du téléphone (fenêtre
+      élargie, téléphone tourné) et au changement de langue (clé `nombre de sources | téléphone | langue`).
+      Le changement de langue était déjà rattrapé en pratique, la période changeant aussi de largeur : son
+      test garde le comportement, il n'a pas pu être vu rouge.
+    - `retouches-v18-ordre` vérifie la valeur de `modifiePar` (le prénom de qui a écrit) après chaque écriture.
+  - Laissés, avec la raison :
+    - Ligne surlignée de l'agenda qui ne suivrait pas `ouvrirEntree` : `ouvrirEntree` ne sert que sur
+      téléphone (agenda à cartes, Mois à points), où l'agenda à lignes n'existe pas. En grand et sur iPad
+      debout, une entrée ne s'ouvre qu'en touchant sa ligne ; les cartes du volet du jour sont des liens qui
+      quittent la page. Le surlignage est donc celui de la ligne choisie : il reste après la fermeture de la
+      feuille du jour (iPad debout) et part au choix d'un autre jour ou d'un autre mois.
+    - Prénom du refus relu dans `modifiePar` : toute écriture d'un programme passe par `ecrire`, qui signe ;
+      « Préparer » crée l'édition suivante sans prénom (refus alors « Modifié entre-temps : recharge »). Un
+      prénom périmé supposerait un autre chemin d'écriture, qui n'existe pas.
+    - Deux déplacements de l'ordre à la suite, avant la relecture de la page : le second est refusé avec son
+      propre prénom (choix déjà consigné) ; rien n'est écrasé, il suffit de recharger.
+    - Les sept assertions élargies de `scene-paques-noel` et `scene-saison` restent (elles admettent
+      `modifiePar`) ; la valeur est vérifiée dans `retouches-v18-ordre`.
+    - Barre des plannings du Back-Office à 40 px sur téléphone (32 px avant) : c'est D9 (40 px au doigt) ;
+      capture regardée.
+    - `playwright.config.ts` : chaque voie du lot R ajoute la même entrée `retouches-v18(-.*)?` à
+      `SPECS_GRAND_ECRAN` ; à l'intégration, n'en garder qu'une.
+  - Timothée : aucune règle Firestore à republier ; relire le 中文 déjà listé (`活动、任务或会议`,
+    `已被 {{prenom}} 修改：请重新加载`, `已被他人修改：请重新加载`), aucun libellé nouveau à la relecture.

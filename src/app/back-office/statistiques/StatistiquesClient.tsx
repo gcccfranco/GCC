@@ -380,14 +380,15 @@ function Filtres({ etat, aujourdhui, services, presidences, nomService, choisirP
   );
 }
 
-/** Un `<select>` en pastille (planche : « Tous les services ▾ »). */
+/** Un `<select>` en pastille (planche : « Tous les services ▾ »), à la hauteur des pilules de la rangée
+ *  (`Pilules`, D9) : 40 px au doigt, ≈ 28 px et 13 px dès 1 024 px avec un pointeur fin. */
 function Choix({ libelle, valeur, onChange, children }: {
   libelle: string; valeur: string; onChange: (v: string) => void; children: React.ReactNode;
 }) {
   return (
     <span className="relative inline-flex">
       <select aria-label={libelle} value={valeur} onChange={(e) => onChange(e.target.value)}
-        className={cn(PASTILLE, "h-10 appearance-none border border-input bg-background pr-8 text-foreground hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring/30")}>
+        className={cn(PASTILLE, "h-10 appearance-none border border-input bg-background pr-8 text-foreground hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring/30 [@media(pointer:fine)_and_(min-width:1024px)]:h-7 [@media(pointer:fine)_and_(min-width:1024px)]:text-[13px]")}>
         {children}
       </select>
       <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2" aria-hidden />

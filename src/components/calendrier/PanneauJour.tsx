@@ -17,7 +17,7 @@
 // remplit ou publie. Une tâche répétée dit « Change la répétition dans la tâche » (Q6).
 
 import Link from "next/link";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ChevronDown, Plus } from "lucide-react";
 import { jourCourt } from "@/lib/calendrier/grille";
@@ -164,16 +164,31 @@ export function AjouterCeJour({ date, lang, droits, onNouvelleTache }: {
 }) {
   const { t } = useTranslation();
   const [ouvert, setOuvert] = useState(false);
+  // Le bouton n'est pas le déclencheur de Radix (la flèche l'est) : il bascule le menu lui-même, le
+  // toucher menu ouvert ne compte pas comme un clic dehors, et le focus lui revient à la fermeture.
+  const bouton = useRef<HTMLButtonElement>(null);
+  const parLeBouton = useRef(false);
   if (!droits.evenement && !droits.reunion && !droits.tache) return null;
   const jour = jourCourt(date, lang);
   return (
-    <DropdownMenu modal={false} open={ouvert} onOpenChange={setOuvert}>
+    <DropdownMenu
+      modal={false}
+      open={ouvert}
+      onOpenChange={(o) => {
+        if (o) parLeBouton.current = false;
+        setOuvert(o);
+      }}
+    >
       <div className="flex items-center gap-1 self-start">
         <button
+          ref={bouton}
           type="button"
           aria-haspopup="menu"
           aria-expanded={ouvert}
-          onClick={() => setOuvert(true)}
+          onClick={() => {
+            parLeBouton.current = true;
+            setOuvert((o) => !o);
+          }}
           className="inline-flex h-9 items-center gap-1.5 rounded-full bg-foreground pl-3 pr-3.5 text-[13.5px] font-semibold text-background transition-opacity duration-150 hover:opacity-85 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground"
         >
           <Plus aria-hidden className="h-4 w-4 shrink-0" strokeWidth={2.4} />
@@ -186,7 +201,18 @@ export function AjouterCeJour({ date, lang, droits, onNouvelleTache }: {
           <ChevronDown aria-hidden className="h-4 w-4 shrink-0" />
         </DropdownMenuTrigger>
       </div>
-      <DropdownMenuContent align="end" className="min-w-56">
+      <DropdownMenuContent
+        align="end"
+        className="min-w-56"
+        onInteractOutside={(e) => {
+          if (bouton.current?.contains(e.target as Node)) e.preventDefault();
+        }}
+        onCloseAutoFocus={(e) => {
+          if (!parLeBouton.current) return;
+          e.preventDefault();
+          bouton.current?.focus();
+        }}
+      >
         {droits.evenement && (
           <DropdownMenuItem asChild>
             <Link href={lienEvenement(date)}>{t("calendrier.nouvelEvenement", { date: jour })}</Link>

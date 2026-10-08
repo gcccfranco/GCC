@@ -148,12 +148,14 @@ export async function getProgramme(id: string): Promise<Programme | null> {
  *  (ses réglages, `reglagesRepris`) plus `changement` (ce que la
  *  coordination vient de faire).
  *  Une autre coordination l'a créée entre-temps (409) : seul `changement` s'écrit sur le
- *  document existant. Rend l'identifiant. */
+ *  document existant — sauf `protege` (l'ordre de passage, D20) : `ModifieEntreTemps`, rien
+ *  n'est écrit, comme sur une édition modifiée depuis la lecture. Rend l'identifiant. */
 export async function creerEdition(
   fete: Fete,
   annee: number,
   data: Omit<Programme, "id">,
   changement: Partial<Omit<Programme, "id">> = {},
+  protege = false,
 ): Promise<string> {
   const id = idEdition(fete, annee);
   const headers = await authHeader();
@@ -163,6 +165,7 @@ export async function creerEdition(
     body: JSON.stringify({ fields: toFsFields({ ...data, ...changement } as unknown as Record<string, unknown>) }),
   });
   if (res.status === 409) {
+    if (protege) throw new ModifieEntreTemps((await getProgramme(id))?.modifiePar ?? "");
     if (Object.keys(changement).length) await updateProgramme(id, changement);
     return id;
   }

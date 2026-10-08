@@ -95,7 +95,8 @@ function Row({ id, index, passage, canEdit, onEdit, onRemove }: {
 export function OrdrePassage({ passages, canEdit, onSave }: {
   passages: Passage[]
   canEdit: boolean
-  onSave: (passages: Passage[]) => Promise<void>
+  /** `false` : rien n'a été écrit (ordre modifié entre-temps, D20) ; le formulaire reste ouvert, la saisie gardée. */
+  onSave: (passages: Passage[]) => Promise<boolean | void>
 }) {
   const { t } = useTranslation()
   const sensors = useDefaultSensors()
@@ -111,7 +112,7 @@ export function OrdrePassage({ passages, canEdit, onSave }: {
 
   async function submit(p: Passage) {
     const next = editing === "new" ? [...passages, p] : passages.map((x, i) => (i === editing ? p : x))
-    await onSave(next)
+    if ((await onSave(next)) === false) return
     setEditing(null)
   }
 
