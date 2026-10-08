@@ -23,7 +23,7 @@ import { DeuxVolets } from "@/components/layout/DeuxVolets"
 import { useTranslation } from "react-i18next"
 import { useAuth } from "@/lib/firebase/auth"
 import { useProfile } from "@/lib/firebase/users"
-import { canSeeEvenement } from "@/lib/access"
+import { canSeeEvenement, estReunion } from "@/lib/access"
 import { EVENEMENTS_CHANGED, getInscription, listEvenements } from "@/lib/firebase/evenements"
 import { agendaPublic, daysAgo, isExpired, isInfo } from "@/lib/evenements/agenda"
 import { avantBascule, BASCULE_EVENEMENTS, jourDeParis } from "@/lib/evenements/bascule"
@@ -82,8 +82,9 @@ export function CalendrierClient({ enTete, peutCreer, children }: {
   }, [today, avecAgenda])
   const sheetEnLecture = avantBascule(today) && sheet === null
 
+  // Retouches v18, lot G (G1, D28) : aucune réunion ici, elles sont à Back-Office › Réunions.
   const visible = useMemo(
-    () => (evenements ?? []).filter((e) => canSeeEvenement(user, profile, e) && !isExpired(e, today)),
+    () => (evenements ?? []).filter((e) => canSeeEvenement(user, profile, e) && !estReunion(e) && !isExpired(e, today)),
     [evenements, user, profile, today],
   )
 

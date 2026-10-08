@@ -1,9 +1,9 @@
 "use client";
 
-// Sélecteur « App · Back-Office » (lot U6, docs/spec-back-office.md, Q6) : réservé aux
-// responsables (`estResponsable`), le même pour tous, posé dans les places de U4 — barre
-// latérale dépliée (sous le label), barre du haut (après le label sur tablette en portrait,
-// à sa place sur téléphone, question 5). Deux liens, l'espace courant marqué ; chacun rouvre
+// Sélecteur « App · Back-Office » (lot U6, docs/spec-back-office.md, Q6) : réservé à qui a le
+// Back-Office (`entreesBackOffice` : responsables et, lot G, membres d'équipe), le même pour
+// tous, posé dans les places de U4 — barre latérale dépliée (sous le label), barre du haut
+// (après le label sur tablette en portrait, à sa place sur téléphone, question 5). Deux liens, l'espace courant marqué ; chacun rouvre
 // la dernière page vue dans son espace pendant la session, sinon le tableau de bord, ou
 // `/planning` côté App (cible du logo).
 import { useEffect, useSyncExternalStore } from "react";
@@ -11,7 +11,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import { useProfile } from "@/lib/firebase/users";
-import { estResponsable } from "@/lib/access";
+import { entreesBackOffice } from "@/lib/access";
 import { BACK_OFFICE } from "@/lib/backOffice";
 import { espaceDe, type Espace } from "@/lib/navigation";
 
@@ -47,10 +47,11 @@ export function useDernierePage(espace: Espace): string {
   return useSyncExternalStore(suivre, () => derniere(espace), () => PAR_DEFAUT[espace]);
 }
 
-/** Vrai pour un responsable, interrupteur du back-office ouvert. */
+/** Vrai pour qui a le Back-Office (un responsable, ou un membre d'équipe pour la seule entrée
+ *  Réunions — retouches v18, lot G, D29), interrupteur du back-office ouvert. */
 export function useResponsable(): boolean {
   const { user, profile } = useProfile();
-  return BACK_OFFICE && estResponsable(user, profile);
+  return BACK_OFFICE && entreesBackOffice(user, profile).length > 0;
 }
 
 export function SelecteurEspace({ pleineLargeur = false, onChoix }: { pleineLargeur?: boolean; onChoix?: () => void }) {

@@ -263,9 +263,10 @@ test.describe("T2a : les adresses /back-office/reunions/*", () => {
     await expect(page).toHaveURL(/\/back-office\/evenements\/fete\/?$/);
   });
 
-  test("App : « Gérer dans le Back-Office » d'une réunion mène sous Réunions", async ({ page }) => {
+  test("App : l'adresse d'une réunion mène sous Réunions", async ({ page }) => {
+    // Retouches v18, lot G (G2) : plus de fiche de réunion dans l'App, son adresse y renvoie.
     await ouvrir(page, DA, "/evenements/reu-da");
-    await expect(page.getByRole("link", { name: "Gérer dans le Back-Office" })).toHaveAttribute("href", /^\/back-office\/reunions\/reu-da\/?$/);
+    await expect(page).toHaveURL(/\/back-office\/reunions\/reu-da\/?$/);
   });
 });
 

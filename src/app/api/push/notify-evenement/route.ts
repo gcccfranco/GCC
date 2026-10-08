@@ -6,6 +6,7 @@ import { filterUidsByNotifPref, loadNotifLangs } from "@/lib/push/recipients";
 import { nouvelEvenementMessage } from "@/lib/evenements/rappel";
 import { canCreateEvenement, canEditEvenement } from "@/lib/access";
 import { destinatairesEvenement } from "@/lib/evenements/serveur";
+import { ficheEvenement } from "@/lib/navigation";
 import type { Evenement } from "@/types/evenement";
 import { BACK_OFFICE } from "@/lib/backOffice"
 
@@ -55,7 +56,7 @@ export async function POST(req: NextRequest) {
   for (const lang of ["fr", "zh-CN"] as const) {
     const groupe = uids.filter((u) => (langs.get(u) ?? "fr") === lang);
     if (!groupe.length) continue;
-    const payload = { ...nouvelEvenementMessage(e, lang), url: `/evenements/${evenementId}`, tag: `evenement-${evenementId}` };
+    const payload = { ...nouvelEvenementMessage(e, lang), url: ficheEvenement(e), tag: `evenement-${evenementId}` };
     result = await sendPushToUids(groupe, payload);
     await recordNotification({ ...payload, kind: "evenement", recipients: groupe });
   }

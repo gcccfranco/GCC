@@ -108,8 +108,9 @@ test.describe("Back-Office (B1) : les entrées selon les droits (Q2)", () => {
     for (const [p, attendu] of cas) expect(entreesBackOffice(user(p), profil(p)), p.uid).toEqual(attendu);
   });
 
-  test("un non-responsable n'a aucune entrée", () => {
-    for (const p of [CHORISTE, MUSICIEN, MEMBRE_EQUIPE]) expect(entreesBackOffice(user(p), profil(p)), p.uid).toEqual([]);
+  test("un non-responsable n'a aucune entrée ; un membre d'équipe, la seule entrée Réunions (retouches v18, D29)", () => {
+    for (const p of [CHORISTE, MUSICIEN]) expect(entreesBackOffice(user(p), profil(p)), p.uid).toEqual([]);
+    expect(entreesBackOffice(user(MEMBRE_EQUIPE), profil(MEMBRE_EQUIPE))).toEqual(["reunions"]);
     expect(entreesBackOffice(null, null)).toEqual([]);
   });
 

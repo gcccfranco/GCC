@@ -520,10 +520,13 @@ export function canVoirStatistiques(user: { email?: string | null } | null): boo
 const ENTREES_A_VENIR: readonly Entree[] = [];
 const WIDGETS_A_VENIR: readonly WidgetId[] = [];
 
-/** Les entrées du Back-Office d'une personne (table Q2), dans l'ordre du menu. Vide pour qui
- *  n'est pas responsable. */
+/** Les entrées du Back-Office d'une personne (table Q2), dans l'ordre du menu. Pour qui n'est
+ *  pas responsable : la seule entrée Réunions s'il est membre d'une équipe de l'organigramme
+ *  (retouches v18, lot G, D29 : ses réunions ne sont plus dans Évènements de l'App), rien sinon.
+ *  Le pôle Louange implicite d'un rôle de service n'ouvre toujours rien (question 2). */
 export function entreesBackOffice(user: AuthUser | null, profile: ProfilResponsable | null): Entree[] {
-  if (!user || !estResponsable(user, profile)) return [];
+  if (!user) return [];
+  if (!estResponsable(user, profile)) return nonVide(profile?.dansEquipes) ? ["reunions"] : [];
   const admin = isAdminUser(user);
   const pole = polesDe(profile).length > 0;
   const visible: Record<Entree, boolean> = {

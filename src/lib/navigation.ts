@@ -70,6 +70,13 @@ export function baseBackOffice(e: { pour: string; reunion?: boolean }): "/back-o
   return estReunion(e) ? "/back-office/reunions" : "/back-office/evenements";
 }
 
+/** La fiche d'un évènement (retouches v18, lot G, G2) : une réunion à Back-Office › Réunions,
+ *  tout autre évènement (de pôle compris, lot E) dans l'App. Liens des rappels, des
+ *  notifications et de la cloche. */
+export function ficheEvenement(e: { id: string; pour: string; reunion?: boolean | null }): string {
+  return `${estReunion(e) ? "/back-office/reunions" : "/evenements"}/${e.id}`;
+}
+
 /** « Plus » (B6) : toujours à droite de la barre du bas du Back-Office. */
 export const ONGLET_PLUS: EntreeBarre = {
   href: "/back-office/plus", cle: "backOffice.barre.plus", Icone: Ellipsis, actifSur: ["/back-office/plus"],

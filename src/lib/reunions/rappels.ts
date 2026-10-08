@@ -13,6 +13,8 @@ import { reminderBody, reminderTitle, type ReminderService, type ReminderTag } f
 import { corpsAvecTaches, rappelTachesTitre, type RappelTache } from "@/lib/taches/messages";
 import { jourDuMois } from "@/lib/reunions/sujets";
 import { ligneDeplacement } from "@/lib/calendrier/prevenir";
+import { estReunion } from "@/lib/access";
+import { ficheEvenement } from "@/lib/navigation";
 
 /** Sujets encore à aborder : ni traités ni repris. */
 export function nombreSujetsAAborder(sujets: Pick<Sujet, "traite" | "reprisDans">[]): number {
@@ -97,7 +99,11 @@ export function notificationsDuMatin(
   return [{
     title,
     body: avecLignes("", textes),
-    url: ids.size === 1 ? `/evenements/${[...ids][0]}` : "/evenements",
+    // Lot G (G2) : une réunion mène à sa fiche de Back-Office › Réunions, plusieurs à la liste des
+    // réunions ; un évènement, ou un mélange, à l'App.
+    url: ids.size === 1
+      ? ficheEvenement(lignes[0].evenement)
+      : lignes.every((l) => estReunion(l.evenement)) ? "/back-office/reunions" : "/evenements",
     tag: `rappel-evenements-${today}`,
     kind: "evenement",
   }];

@@ -591,7 +591,8 @@ test("réunions précédentes : celles du pôle avant celle-ci, la plus récente
   await expect(rangs.nth(2).getByRole("link", { name: "Compte rendu" })).toHaveCount(0);
   await page.screenshot({ path: path.join(ROOT, "test-results", "reunions-captures", `${info.project.name}-precedentes.png`), fullPage: true });
   await rangs.nth(0).getByRole("link", { name: "5 sept.", exact: true }).click();
-  await page.waitForURL(/\/evenements\/reunion-sept\/?$/);
+  // Retouches v18, lot G (G2) : la fiche d'une réunion est au Back-Office.
+  await page.waitForURL(/\/back-office\/reunions\/reunion-sept\/?$/);
   await expect(page.getByRole("heading", { name: "Réunion DA du 2026-09-05" })).toBeVisible();
 });
 
@@ -694,11 +695,11 @@ test("sans service : tâche et réunion dans un seul message ; réunion seule, u
   expect(avecTache[0]).toMatchObject({ title: "Rappel de tâches", url: "/taches", body: "À faire : Fond PPT (DA), lundi 5 octobre\nRéunion DA demain, 20:00 : 1 sujet" });
 
   const seule = notificationsDuMatin({ services: [], taches: [], lignes: [VEILLE] }, "fr", "2026-10-02");
-  expect(seule).toEqual([{ title: "Rappel — Réunion DA", body: "Réunion DA demain, 20:00 : 1 sujet", url: "/evenements/reunion-da", tag: "rappel-evenements-2026-10-02", kind: "evenement" }]);
+  expect(seule).toEqual([{ title: "Rappel — Réunion DA", body: "Réunion DA demain, 20:00 : 1 sujet", url: "/back-office/reunions/reunion-da", tag: "rappel-evenements-2026-10-02", kind: "evenement" }]);
 
   const deux = notificationsDuMatin({ services: [], taches: [], lignes: [VEILLE, COMPTE_RENDU] }, "zh-CN", "2026-10-02");
   expect(deux).toHaveLength(1);
-  expect(deux[0]).toMatchObject({ title: "活动提醒", url: "/evenements", body: "明天 20:00：Réunion DA（1 个议题）\n会议记录已添加：Réunion DA（9月5日）" });
+  expect(deux[0]).toMatchObject({ title: "活动提醒", url: "/back-office/reunions", body: "明天 20:00：Réunion DA（1 个议题）\n会议记录已添加：Réunion DA（9月5日）" });
 
   const ouverture = { kind: "ouverture" as const, evenement: { ...E, titre: "Foot au parc", pour: "eglise", inscriptionDebut: "2026-10-02T10:00" } as Evenement };
   expect(notificationsDuMatin({ services: [], taches: [], lignes: [ouverture] }, "fr", "2026-10-02")[0])
@@ -964,11 +965,14 @@ test("référente : elle crée la réunion de son équipe, sans inscriptions, et
 
 test("membre de l'équipe, non référent : pas de réunion d'équipe à créer", async ({ page }) => {
   // Lot U6, B3 : créer est au Back-Office, réservé aux responsables (un référent l'est).
+  // Retouches v18, lot G (D29) : le membre a la seule entrée Réunions, sans « + Nouvelle réunion ».
   await ouvrirRegie(page, HUGO, "/back-office/evenements/nouveau");
-  await expect(page.getByText("Réservé aux responsables.")).toBeVisible();
+  await page.waitForURL(/\/back-office\/reunions\/?$/);
+  await expect(page.getByRole("link", { name: /Réunion Régie/ }).first()).toBeVisible();
+  await expect(page.getByRole("link", { name: /Nouvelle réunion/ })).toHaveCount(0);
 });
 
-test("membre de l'équipe : il voit la réunion dans l'agenda, et y ajoute un sujet à son nom", async ({ page }) => {
+test("membre de l'équipe : il retrouve la réunion au Back-Office › Réunions, et y ajoute un sujet à son nom", async ({ page }) => {
   const db = await ouvrirRegie(page, HUGO);
   await expect(lignes(page)).toHaveCount(1);
   await champ(page).fill("Retour de la console");
@@ -976,9 +980,9 @@ test("membre de l'équipe : il voit la réunion dans l'agenda, et y ajoute un su
   await expect(lignes(page)).toHaveCount(2);
   const [post] = db.writes.filter((w) => w.method === "POST" && w.path.startsWith("evenements/reunion-regie/sujets/"));
   expect(post.data).toMatchObject({ texte: "Retour de la console", auteurUid: "uid-hugo", auteurNom: "Hugo B.", ordre: 1, traite: false });
-  await page.goto("/evenements");
-  // En grand (U4 bis, B2), la fiche du prochain évènement est aussi à droite : la ligne de l'agenda.
-  await expect(page.getByRole("link", { name: /Réunion Régie/ })).toBeVisible();
+  // Retouches v18, lot G (D28, D29) : plus dans l'agenda de l'App, mais dans Réunions du Back-Office.
+  await page.goto("/back-office/reunions");
+  await expect(page.getByRole("link", { name: /Réunion Régie/ }).first()).toBeVisible();
 });
 
 for (const [qui, nom] of [[NOE, "un autre pôle"], [COORD, "la coordination"]] as const) {

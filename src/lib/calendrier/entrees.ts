@@ -23,6 +23,7 @@ import { casesVides } from "@/lib/planning/casesVides";
 import { GRILLE_CAMPUS_MATIN, GRILLE_CAMPUS_SOIR } from "@/lib/planning/grilles";
 import type { ServiceEntry, SetlistSeance } from "@/lib/planning/names";
 import { EDD_CLASSES } from "@/lib/planning/utils";
+import { ficheEvenement } from "@/lib/navigation";
 import { feteDe } from "@/lib/scene/fetes";
 import { quiCategories } from "@/lib/scene/rappels";
 import { PLANNING_COLORS, categoryColor, categoryLabel, serviceColor } from "@/lib/serviceColors";
@@ -379,7 +380,8 @@ function evenements(d: DonneesCalendrier, c: ContexteCalendrier, debut: string, 
         duSheet: false,
         moi,
         deplacable,
-        lien: `/evenements/${e.id}`,
+        // Lot G (G2) : la fiche d'une réunion est au Back-Office.
+        lien: ficheEvenement(e),
       });
     }
   }

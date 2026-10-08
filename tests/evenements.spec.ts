@@ -831,13 +831,11 @@ test("calendrier : une info épinglée et un évènement passé restent sur une 
   await expect(page.getByRole("link", { name: /Pique-nique de rentrée/ }).getByTestId("banniere")).toHaveCount(0);
 });
 
-test("calendrier : une réunion de pôle n'a ni « S'inscrire » ni compteur", async ({ page }) => {
+test("calendrier : une réunion de pôle n'y est pas, même pour un membre du pôle (retouches v18, lot G)", async ({ page }) => {
   const reunion = { ...FOOT, titre: "Réunion DA", pour: "pole:da", placesMax: null, inscriptionOuverte: false, inscrits: 0 };
   await member(page, { ...JO, poles: ["da"] }, "/evenements", { ...DOCS, "evenements/reunion": reunion });
-  const carte = page.getByRole("link", { name: /Réunion DA/ });
-  await expect(carte).toContainText("Parc de Bercy");
-  await expect(carte).not.toContainText("S'inscrire");
-  await expect(carte).not.toContainText("déjà inscrit");
+  await expect(page.getByRole("link", { name: /Foot/ }).first()).toBeVisible();
+  await expect(page.getByText("Réunion DA")).toHaveCount(0);
 });
 
 test("période P2 : le formulaire écrit l'ouverture et la fin des inscriptions (heure facultative)", async ({ page }) => {

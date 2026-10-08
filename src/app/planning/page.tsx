@@ -21,7 +21,7 @@ import { pourMoi, setlistDuService } from "@/lib/planning/accueil"
 import { getSetlistsFrom, type FSSetlist } from "@/lib/firebase/setlists"
 import { listEvenements } from "@/lib/firebase/evenements"
 import { isExpired, isInfo, isPast } from "@/lib/evenements/agenda"
-import { canSeeEvenement, canSeeSetlist } from "@/lib/access"
+import { canSeeEvenement, canSeeSetlist, estReunion } from "@/lib/access"
 import { BACK_OFFICE } from "@/lib/backOffice"
 import { useDisposition } from "@/hooks/useDisposition"
 import type { Evenement } from "@/types/evenement"
@@ -138,7 +138,8 @@ export default function PlanningAccueil() {
   }, [user])
   const prochainsEvenements = useMemo(
     () => BACK_OFFICE && evenements
-      ? evenements.filter(e => canSeeEvenement(user, profile, e) && !isInfo(e) && !isPast(e, aujourdhui) && !isExpired(e, aujourdhui)).slice(0, 2)
+      // Lot G (G1) : une réunion n'est pas un évènement de l'App.
+      ? evenements.filter(e => canSeeEvenement(user, profile, e) && !estReunion(e) && !isInfo(e) && !isPast(e, aujourdhui) && !isExpired(e, aujourdhui)).slice(0, 2)
       : null,
     [evenements, user, profile, aujourdhui],
   )

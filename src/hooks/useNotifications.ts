@@ -3,6 +3,7 @@ import { BACK_OFFICE } from "@/lib/backOffice";
 import { getEvenementsSince } from "@/lib/firebase/evenements";
 import { getSetlistsSince } from "@/lib/firebase/setlists";
 import { getNotifsSince } from "@/lib/firebase/notifications";
+import { ficheEvenement } from "@/lib/navigation";
 import { useProfile } from "@/lib/firebase/users";
 import { visibleCategories, isAdminUser, canSeeEvenement } from "@/lib/access";
 
@@ -92,7 +93,8 @@ export function useNotifications() {
           title: e.titre,
           category: e.pour === "eglise" ? "" : e.pour,
           date: ts,
-          href: `/evenements/${e.id}`,
+          // Lot G (G2) : une réunion mène à sa fiche de Back-Office › Réunions.
+          href: ficheEvenement(e),
         });
       }
 

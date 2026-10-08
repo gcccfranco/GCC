@@ -361,7 +361,7 @@ test.describe("sources du calendrier (pur)", () => {
     const membre = profil({ poles: ["da"], dansEquipes: ["accueil"] });
     const e = de(entreesCalendrier(...OCT, d, ctx(MOI, membre)), "reunions");
     expect(e.map((x) => x.titre)).toEqual(["Réunion DA", "Réunion accueil"]);
-    expect(e[0]).toMatchObject({ cle: "reunions:da:2026-10-03", detail: "20:00 · Salle 2", couleur: "#6b4a8e", moi: true, lien: "/evenements/da" });
+    expect(e[0]).toMatchObject({ cle: "reunions:da:2026-10-03", detail: "20:00 · Salle 2", couleur: "#6b4a8e", moi: true, lien: "/back-office/reunions/da" });
     expect(e[1].moi).toBe(true);
     expect(de(entreesCalendrier(...OCT, d, ctx(MOI, profil())), "reunions")).toEqual([]);
     expect(de(entreesCalendrier(...OCT, d, ctx(ADMIN, null)), "reunions").map((x) => x.moi)).toEqual([false, false, false]);
@@ -1206,7 +1206,7 @@ test.describe("C4 : Agenda, feuille « Sources », Mois à points", () => {
     const feuille = page.getByRole("dialog", { name: "Réunion DA" });
     await expect(feuille).toContainText("Samedi 3 octobre");
     await expect(feuille).toContainText("20:00 · Salle 2");
-    await expect(feuille.getByRole("link", { name: "Ouvrir" })).toHaveAttribute("href", /^\/evenements\/reu-da\/?$/);
+    await expect(feuille.getByRole("link", { name: "Ouvrir" })).toHaveAttribute("href", /^\/back-office\/reunions\/reu-da\/?$/);
   });
 
   test("Agenda : une entrée du Sheet, lecture seule, « Ouvrir » mène à l'onglet du mois, pas de « Déplacer… »", async ({ page }, info) => {

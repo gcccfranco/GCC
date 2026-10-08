@@ -452,3 +452,46 @@ Le lot F est fini et relu.
      automatique ;
   3. confirmer la reprise de la présidence (ou la retirer) ;
   4. rien à publier dans `firestore.rules` ; aucun libellé nouveau à traduire.
+
+### V18REUNIONS
+
+**08/10/2026 — lot G (G1 à G4), codé** (commit : voir `git log --grep V18REUNIONS`).
+
+- G1 : la liste et la fiche du volet de droite d'Évènements (`CalendrierClient`) et la carte « Prochains
+  évènements » de l'accueil (`planning/page.tsx`) écartent toute réunion (`estReunion`) ; un évènement de pôle
+  (`reunion: false`, lot E) y reste. Les onglets (Calendrier · Pâques · Noël), Moi, « Pour moi » et Mes services
+  ne lisaient aucun évènement : rien à y changer. Le widget du tableau de bord les écartait déjà.
+- G2 : `ficheEvenement` (`navigation.ts`) donne la fiche d'un évènement — `/back-office/reunions/<id>` pour
+  une réunion, `/evenements/<id>` sinon. Il sert à la cloche (`useNotifications`), à la notification de
+  publication (`/api/push/notify-evenement`), au rappel du matin (`notificationsDuMatin` : une réunion → sa
+  fiche ; plusieurs réunions → `/back-office/reunions` ; un mélange → `/evenements`) et aux entrées du
+  calendrier du Back-Office. L'adresse `/evenements/<id>` d'une réunion renvoie (`router.replace`) vers sa
+  fiche de Back-Office pour qui la voit et a l'entrée Réunions.
+- G3 : `entreesBackOffice` rend `["reunions"]` à qui n'est pas responsable mais est membre d'une équipe de
+  l'organigramme (`dansEquipes`). Le sélecteur App · Back-Office suit `entreesBackOffice` (et non plus
+  `estResponsable`), la garde du Back-Office aussi ; pour ce membre, toute adresse du Back-Office hors
+  `/back-office/reunions` et `/back-office/plus` (la page de la barre du bas) ramène à Réunions. Sur
+  téléphone et tablette, sa barre du bas est Réunions · Plus ; en grand, le menu n'a que Réunions.
+  `estResponsable` ne change pas (créer un évènement, cartes de gestion de la fiche).
+- Tests : `tests/reunions-back-office.spec.ts` (nouveau, vu rouge puis vert sur ordinateur, téléphone,
+  tablette) ; mises à jour de `reunions.spec.ts` (liens du rappel, réunion d'équipe retrouvée au Back-Office),
+  `evenements.spec.ts` (une réunion de pôle n'est plus dans le calendrier), `back-office-espace.spec.ts`
+  (membre d'équipe : Réunions), `calendrier.spec.ts` (lien d'une réunion), `agencement-v18-t2a.spec.ts`
+  (l'adresse d'une réunion renvoie au Back-Office). Voisins passés sur les trois appareils (et les cinq projets
+  pour `agencement-v18-*` et `back-office-espace`) : `reunions`, `evenements`, `evenements-pole`,
+  `coherence`, `calendrier*`, `rappels-regroupes`, `barre-back-office`, `taches-evenements`,
+  `pages-en-grand-evenements`, `pages-en-grand-accueil`, `planning-accueil`, `back-office-admin`,
+  `tableau-de-bord`, `halo-partout`, `agencement-v18-t7`, `back-office-coupe` : verts.
+- Choix faits faute de réponse (à confirmer par Timothée) :
+  1. « Membre d'une équipe » = `dansEquipes` du profil. Le pôle Louange implicite d'un rôle de service
+     (choriste, musicien sans pôle écrit) n'ouvre toujours pas le Back-Office (question 2 du lot U6
+     inchangée) : une telle personne ne voit plus les réunions du pôle Louange dans Évènements, mais garde
+     leur fiche par son adresse dans l'App (pas de renvoi, faute d'entrée Réunions) ; un lien de rappel ou
+     de notification l'envoie pourtant au Back-Office, où elle lit « Réservé aux responsables ». Un membre
+     d'une équipe rattachée à un pôle a déjà ce pôle écrit, donc le Back-Office.
+  2. « Plus » reste ouvert à ce membre (sa barre du bas en a besoin : « Revenir à l'app »).
+- Code devenu sans usage pour qui a l'entrée Réunions : le rendu d'une réunion dans la fiche de l'App
+  (`EvenementClient`, espace « app » : sujets, compte rendu, « Gérer dans le Back-Office ») ne sert plus
+  qu'au cas 1 ci-dessus ; laissé.
+- Pour Timothée : rien à publier dans `firestore.rules` (lecture des évènements et des sujets déjà ouverte
+  aux membres d'équipe, `backOffice/{uid}` déjà écrit par son titulaire) ; aucun libellé nouveau à traduire.
