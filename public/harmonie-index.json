@@ -1,5 +1,5 @@
 {
-  "genereLe": "2026-10-08T21:03:53.254Z",
+  "genereLe": "2026-10-08T21:24:55.891Z",
   "fiches": [
     {
       "id": "substitutions/2m7-pour-4",
@@ -125,6 +125,7 @@
         "benediction",
         "cherchez-d-abord",
         "combien-dieu-est-grand",
+        "de-l-ombre-a-la-lumiere",
         "dieu-a-tant-aime",
         "dieu-sauveur",
         "digne-est-ton-nom",
@@ -312,6 +313,7 @@
         "coeur-a-coeur",
         "combien-dieu-est-grand",
         "de-grace-en-grace",
+        "de-l-ombre-a-la-lumiere",
         "de-tout-mon-etre",
         "dieu-a-tant-aime",
         "dieu-de-l-impossible",
@@ -322,6 +324,7 @@
         "ebloui",
         "entends-mon-coeur",
         "eternel-notre-seigneur",
+        "eveille-toi-mon-ame",
         "fascine",
         "feu-du-fondeur",
         "fidele-loyal",
@@ -591,7 +594,6 @@
         "chaine-d-amour",
         "cieux-ouverts",
         "de-grace-en-grace",
-        "ebloui",
         "entends-mon-coeur",
         "grace-en-grace",
         "hosanna",
@@ -946,6 +948,7 @@
       "regle": "Portée : fin de ligne · motif `5 → 1` · remplacement\n`5sus4 – 5 → 1` · sûreté : **sûre**.",
       "exemples": [
         "au-dessus-de-tout",
+        "dieu-a-tant-aime",
         "mon-ancre-et-ma-voile",
         "rejouis-toi-mon-ame",
         "一生爱你",
@@ -1114,6 +1117,7 @@
         "christ-est-la-lumiere",
         "combien-dieu-est-grand",
         "crier-a-toi",
+        "de-l-ombre-a-la-lumiere",
         "de-tout-mon-etre",
         "dieu-de-l-impossible",
         "digne-est-l-agneau",
@@ -1462,6 +1466,7 @@
         "dieu-est-parmi-nous",
         "ebloui",
         "entends-mon-coeur",
+        "eveille-toi-mon-ame",
         "fascine",
         "fidele-loyal",
         "grace-en-grace",
@@ -2063,7 +2068,6 @@
       "regle": "Portée : fin de ligne · motif `4 → 1` · remplacement `b7 – 4 → 1`\n· sûreté : **à écouter**.",
       "exemples": [
         "au-nom-de-jesus",
-        "eveille-toi-mon-ame",
         "耶和华行了大事"
       ]
     },

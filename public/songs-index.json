@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-08T21:03:52.581Z",
+  "generatedAt": "2026-10-08T21:24:55.155Z",
   "songs": [
     {
       "slug": "abba-pere",
@@ -1964,8 +1964,9 @@
         },
         {
           "id": "instrumental-5",
-          "name": "Instrumental",
-          "type": "other"
+          "name": "Instrumental (x2)",
+          "type": "other",
+          "suffix": "(x2)"
         },
         {
           "id": "verse-6",
@@ -2641,7 +2642,7 @@
       "titlePinyin": null,
       "artist": "Hillsong",
       "language": "fr",
-      "originalKey": "C",
+      "originalKey": "A",
       "recommendedKey": null,
       "tempo": 116,
       "themes": [
@@ -3091,8 +3092,9 @@
         },
         {
           "id": "chorus-2",
-          "name": "Refrain",
-          "type": "chorus"
+          "name": "Refrain (x2)",
+          "type": "chorus",
+          "suffix": "(x2)"
         },
         {
           "id": "verse-3",
@@ -3159,8 +3161,9 @@
       "sections": [
         {
           "id": "intro-1",
-          "name": "Intro",
-          "type": "intro"
+          "name": "Intro (x2)",
+          "type": "intro",
+          "suffix": "(x2)"
         },
         {
           "id": "verse-2",
@@ -3394,8 +3397,9 @@
       "sections": [
         {
           "id": "intro-1",
-          "name": "Intro",
-          "type": "intro"
+          "name": "Intro (x2)",
+          "type": "intro",
+          "suffix": "(x2)"
         },
         {
           "id": "verse-2",
@@ -3664,7 +3668,7 @@
       "titlePinyin": null,
       "artist": "Hillsong",
       "language": "fr",
-      "originalKey": "C",
+      "originalKey": "F",
       "recommendedKey": null,
       "tempo": null,
       "themes": [
@@ -3696,8 +3700,9 @@
         },
         {
           "id": "chorus-4",
-          "name": "Refrain",
-          "type": "chorus"
+          "name": "Refrain (x2)",
+          "type": "chorus",
+          "suffix": "(x2)"
         },
         {
           "id": "verse-5",
