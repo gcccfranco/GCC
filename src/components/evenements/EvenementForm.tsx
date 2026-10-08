@@ -13,7 +13,7 @@ import { useTranslation } from "react-i18next"
 import { ImagePlus, Trash2 } from "lucide-react"
 import { compressImage } from "@/lib/utils/compressImage"
 import { categoryLabel } from "@/lib/serviceColors"
-import { equipeDuPour, estReunion, poleDuPour } from "@/lib/access"
+import { equipeDuPour, estReunion, poleDuPour, publicDeReunion } from "@/lib/access"
 import { EVENEMENT_TYPES, type Evenement, type EvenementType } from "@/types/evenement"
 import { ChoixInscriptions } from "@/components/evenements/ChoixInscriptions"
 import { borneInscription, modeInscriptions } from "@/lib/evenements/agenda"
@@ -86,6 +86,9 @@ export function EvenementForm({ initial, pours, creation, inscrits = 0, titreCac
   // Réunion de pôle (lot 7) ou d'équipe (lot U6, R4) : pas d'inscriptions. Un évènement de pôle
   // (`reunion: false`, « Nouvel évènement », lot E) en a, comme un évènement de l'assemblée.
   const reunion = estReunion(v)
+  // Un évènement de pôle ou d'équipe ne se voit que de ses membres : pas d'inscription sans compte
+  // (la route la refuse, retouches v18, E6).
+  const reserve = publicDeReunion(v.pour)
   const sansInscription = { inscriptions: "fermees" as const, inscriptionDebut: "", inscriptionFin: "", sansCompte: false, placesMax: null, lienExterne: "" }
   const mode = modeInscriptions(v)
   // Lien externe (lot 11) : l'inscription se passe ailleurs, le reste du bloc
@@ -155,6 +158,7 @@ export function EvenementForm({ initial, pours, creation, inscrits = 0, titreCac
         inscriptionDebut: mode === "auto" ? v.inscriptionDebut ?? "" : "",
         inscriptionFin: mode === "auto" ? v.inscriptionFin ?? "" : "",
         epingle: info ? v.epingle : false,
+        sansCompte: !reserve && v.sansCompte,
         ...(reunion ? sansInscription : {}),
       }, creation && prevenir)
     } catch (err) {
@@ -348,10 +352,12 @@ export function EvenementForm({ initial, pours, creation, inscrits = 0, titreCac
                 <Input id="ev-places" type="number" min={1} max={999} value={v.placesMax ?? ""} placeholder={t("evenements.form.placesHint")} disabled={externe}
                   onChange={(e) => set({ placesMax: e.target.value ? Number(e.target.value) : null })} />
               </div>
-              <label className="flex items-center gap-2 text-sm">
-                <input type="checkbox" className="h-4 w-4" checked={v.sansCompte} disabled={externe} onChange={(e) => set({ sansCompte: e.target.checked })} />
-                {t("evenements.form.sansCompte")}
-              </label>
+              {!reserve && (
+                <label className="flex items-center gap-2 text-sm">
+                  <input type="checkbox" className="h-4 w-4" checked={v.sansCompte} disabled={externe} onChange={(e) => set({ sansCompte: e.target.checked })} />
+                  {t("evenements.form.sansCompte")}
+                </label>
+              )}
             </div>
           )}
         </div>

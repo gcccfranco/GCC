@@ -39,9 +39,10 @@ export async function lireTache(pole: TachePole, id: string): Promise<Tache | nu
   return snap.exists ? ({ ...(snap.data() as Omit<Tache, "id">), id, pole }) : null;
 }
 
-/** uid des membres d'un pôle (Louange = un rôle de service). */
-export async function membresDuPole(pole: TachePole): Promise<string[]> {
-  const snap = await adminDb().collection("users").get();
+/** uid des membres d'un pôle (Louange = un rôle de service). La base se passe pour les tests
+ *  (évènement de pôle, `destinatairesEvenement`). */
+export async function membresDuPole(pole: TachePole, db: FirebaseFirestore.Firestore = adminDb()): Promise<string[]> {
+  const snap = await db.collection("users").get();
   return snap.docs.filter((d) => (polesDe(d.data()) as string[]).includes(pole)).map((d) => d.id);
 }
 

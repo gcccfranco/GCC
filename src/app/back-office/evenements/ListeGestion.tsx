@@ -31,7 +31,10 @@ import { cn } from "@/lib/utils";
 
 /** Qui peut créer dans l'entrée : un évènement (Évènements, un public hors pôle et équipe) ou une
  *  réunion (Réunions, un pôle ou une équipe). Le formulaire « Nouvel évènement » propose aussi les
- *  pôles et équipes (lot E) : le bouton, lui, garde sa règle. */
+ *  pôles et équipes (lot E) : le bouton, lui, garde sa règle — un évènement de pôle se crée par qui a
+ *  déjà le bouton (admin, coordination, droit d'annonces), pas par un membre de pôle seul, qui a
+ *  Réunions (agencement v18, B15). Choix consigné dans docs/spec-retouches-v18.md (V18POLE, relecture),
+ *  à confirmer par Timothée ; même règle pour `droits.evenement` du Calendrier. */
 export function peutCreerDans(user: User | null, profile: UserProfile | null, reunions: boolean): boolean {
   return creatableEvenementPours(user, profile, ANNONCE_SECTIONS).some((p) => publicDeReunion(p) === reunions);
 }

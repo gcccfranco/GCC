@@ -140,3 +140,36 @@ Go de code le 08/10/2026.
     s'écrivent que par le serveur. **Rien à publier** pour le lot E.
   - Tests : `tests/evenements-pole.spec.ts` (E3-E6, vus rouges puis verts, trois appareils).
   - Reste au lot E : rien.
+- **08/10/2026 — relecture du lot E (deux relectures), lot fini et relu** (branche `lot/v18r-pole`, commit
+  `fix(V18POLE): relecture — …`) :
+  - **Qui crée un évènement de pôle (choix à confirmer par Timothée).** Le bouton « Nouvel évènement »
+    (BO › Évènements, Calendrier) et l'entrée Évènements du Back-Office **gardent la règle de l'agencement
+    v18 (B15)** : admins, coordination, droit d'annonces. Ils y choisissent un pôle dont ils sont membres
+    (tous pour un admin). Un **membre de pôle seul** (sans droit d'annonces ni coordination) a Réunions et crée
+    des réunions, **pas d'évènement de pôle** depuis l'écran. Les règles et `canCreateEvenement` le lui
+    permettraient, seul l'affichage le retient. Raison : ouvrir le bouton à tout membre de pôle demande de lui
+    donner l'entrée Évènements, ce qui change sa barre du bas par défaut sur téléphone (Évènements y remplace
+    Réunions, `barreParDefaut`), son menu et ses raccourcis : une décision de navigation que D5 n'a pas prise.
+    Pour l'ouvrir : `peutCreerDans(…, false)` = `creatableEvenementPours(…).length > 0`
+    (`ListeGestion.tsx`) ; `droits.evenement` = `pours.length > 0` (`back-office/calendrier/CalendrierClient.tsx`) ;
+    `evenements` de `entreesBackOffice` + `|| pole || nonVide(profile?.referentDe)` (`access.ts`) ; tests de
+    `back-office-espace`, `agencement-v18-t2a`, `calendrier` (téléphone, « + ») et le test « relecture » de
+    `evenements-pole` à retourner. Aucune règle Firestore dans les deux cas.
+  - **Badge du pôle sur la ligne de l'agenda** (E4) : en deux volets (App et BO › Évènements), la ligne d'un
+    évènement réservé à un pôle ou une équipe porte la pastille du public (« Pôle DA »), fond clair sur la
+    ligne choisie. `PastillePublic` (`EvenementCard.tsx`) est aussi celle de la grande carte et de la fiche.
+  - **« Sans compte » retiré pour un pôle ou une équipe** : la case disparaît du formulaire et `sansCompte` s'écrit
+    `false` (la route refuse de toute façon un visiteur sur ce public). Les places restent.
+  - **Calendrier, « Seulement moi »** : l'inscription n'est lue que pour un évènement qu'on voit
+    (`chargerPeriode` prend l'utilisateur et le profil, `canSeeEvenement`). Un évènement d'un autre pôle ne
+    coûte plus de lecture.
+  - **Route d'inscription testée** : la transaction est `inscrire(db, user, …)` (`src/lib/evenements/serveur.ts`),
+    appelée par la route avec `adminDb()`. Le test passe par une base simulée : membre du pôle inscrit, autre
+    pôle refusé (403), équipe lue dans `dansEquipes`. Contre-épreuve faite : un profil réduit le fait échouer.
+  - **Une seule règle des membres d'un pôle** : `membresDuPole(pole, db = adminDb())`
+    (`src/lib/taches/serveur.ts`), réutilisée par `destinatairesEvenement` (notification et rappel).
+  - Tests : `tests/evenements-pole.spec.ts` (21 tests × trois appareils, les corrections vues rouges puis
+    vertes) ; voisins verts : calendrier, widget, évènements, réunions, tâches d'évènement,
+    `back-office-coupe` ; `tsc` et lint propres.
+  - **À faire par Timothée** : confirmer le choix ci-dessus (membre de pôle seul : réunions seulement, ou bouton
+    ouvert) ; relire les libellés (rien de nouveau en 中文) ; **aucune règle Firestore à publier** pour le lot E.

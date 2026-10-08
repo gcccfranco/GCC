@@ -169,10 +169,10 @@ export function CalendrierClient() {
     if (!user || !lu) return;
     let vivant = true;
     const cle = `${debut}|${fin}|${seulementMoiActif}`;
-    chargerPeriode(lu.base, user.uid, debut, fin, { seulementMoi: seulementMoiActif })
+    chargerPeriode(lu.base, user, profil, debut, fin, { seulementMoi: seulementMoiActif })
       .then((p) => vivant && setPeriode({ de: lu, cle, ...p }));
     return () => { vivant = false; };
-  }, [user, lu, debut, fin, seulementMoiActif]);
+  }, [user, profil, lu, debut, fin, seulementMoiActif]);
   const base = periode?.donnees ?? null;
   const echecs = enOrdre([...(lu?.echecs ?? []), ...(periode?.echecs ?? [])]);
 

@@ -49,7 +49,7 @@ export function WidgetCalendrier({ widget }: { widget: Widget }) {
     async () => {
       if (!pret) return null;
       const { base, echecs } = await chargerCalendrier(user, profil, today, { pourLeWidget: true });
-      const periode = await chargerPeriode(base, user.uid, debut, fin, { seulementMoi });
+      const periode = await chargerPeriode(base, user, profil, debut, fin, { seulementMoi });
       return { donnees: periode.donnees, echecs: enOrdre([...echecs, ...periode.echecs]) };
     },
     pret ? `${user.uid}|${today}|${debut}|${fin}|${seulementMoi}` : "",

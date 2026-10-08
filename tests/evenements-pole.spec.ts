@@ -1,8 +1,8 @@
 import { expect, test, type Page, type TestInfo } from "@playwright/test";
 import path from "node:path";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
-import { canInscrireEvenement, canSeeEvenement, estReunion, publicDeReunion } from "../src/lib/access";
-import { destinatairesEvenement } from "../src/lib/evenements/serveur";
+import { canInscrireEvenement, canSeeEvenement, entreesBackOffice, estReunion, publicDeReunion } from "../src/lib/access";
+import { destinatairesEvenement, inscrire } from "../src/lib/evenements/serveur";
 import { baseBackOffice } from "../src/lib/navigation";
 import { ouvertureDuJour } from "../src/lib/evenements/rappel";
 import { evenementsAVenir } from "../src/lib/tableauDeBord/donnees";
@@ -209,12 +209,11 @@ test("E4 : la coordination voit l'évènement de pôle, avec le badge du pôle s
   await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
   await signInAs(page, CHLOE, { "evenements/soiree": SOIREE }, "/evenements");
   // Téléphone et tablette : la grande carte porte le badge. Grand écran (deux volets) : la ligne
-  // de l'agenda, et la fiche montrée à droite porte le badge.
-  await expect(page.getByRole("link", { name: /Soirée DA/ }).first()).toBeVisible();
-  if (await page.getByTestId("carte-evenement").count()) {
-    await expect(page.getByTestId("carte-evenement").filter({ hasText: "Soirée DA" }).getByText("Pôle DA", { exact: true })).toBeVisible();
-  } else {
-    await expect(page.getByText("Pôle DA", { exact: true }).first()).toBeVisible();
+  // de l'agenda aussi (relecture), pas seulement la fiche montrée à droite.
+  const versLaFiche = page.locator('a[href^="/evenements/soiree"]');
+  await expect(versLaFiche.first()).toBeVisible();
+  for (let i = 0; i < await versLaFiche.count(); i++) {
+    await expect(versLaFiche.nth(i).getByText("Pôle DA", { exact: true })).toBeVisible();
   }
   await capture(page, info, "carte-coordination");
   await page.goto("/evenements/soiree");
@@ -263,4 +262,108 @@ test("E5 : « Nouvel évènement » pour un pôle, « Prévenir les membres » c
   await page.waitForURL(/\/back-office\/evenements\/fake-\d+\/?$/);
   const id = creee(db).path.split("/")[1];
   await expect.poll(() => notifie).toEqual({ evenementId: id });
+});
+
+// ─── Relecture du lot E ─────────────────────────────────────────────────────
+
+test("relecture : « Nouvel évènement » et l'entrée Évènements restent aux admins, à la coordination et aux droits d'annonces ; un membre de pôle seul a Réunions", () => {
+  // Choix consigné dans la spec (Avancement, V18POLE) : la règle d'affichage de l'agencement v18 (B15)
+  // ne bouge pas avec le lot E. Un membre du pôle DA sans droit d'annonces crée des réunions, pas
+  // d'évènement de pôle ; Alice, pôle DA et droit d'annonces, a le bouton et y choisit « Pôle DA ».
+  const profil = (p: FakeProfile) => p as unknown as UserProfile;
+  expect(entreesBackOffice(qui(BRUNO), profil(BRUNO))).toEqual(["tableau", "calendrier", "taches", "reunions"]);
+  expect(entreesBackOffice(qui(ALICE), profil(ALICE))).toContain("evenements");
+});
+
+test("relecture : depuis l'en-tête de BO › Évènements, « Nouvel évènement » propose le pôle de la personne", async ({ page }) => {
+  await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
+  await signInAs(page, ALICE, {}, "/back-office/evenements");
+  await page.getByRole("link", { name: "Nouvel évènement" }).click();
+  await page.waitForURL(/\/back-office\/evenements\/nouveau\/?$/);
+  await expect(page.getByLabel("Public").locator("option")).toHaveText(["Groupe Paix", "Pôle DA"]);
+});
+
+test("relecture : un évènement de pôle n'a pas « sans compte » — la case disparaît et rien n'est écrit", async ({ page }) => {
+  await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
+  const db = await signInAs(page, ALICE, {}, "/back-office/evenements/nouveau");
+  await sansPush(page);
+  await page.getByLabel("Nom de l'évènement").fill("Soirée DA");
+  await page.getByLabel("Date", { exact: true }).fill("2026-10-10");
+  // Pour une section, la case existe ; cochée, puis le public passe au pôle.
+  await expect(page.getByLabel("Public")).toHaveValue("Groupe Paix");
+  await page.getByText("Plus d'options").click();
+  const sansCompte = page.getByRole("checkbox", { name: "Les personnes sans compte peuvent s'inscrire" });
+  await sansCompte.check();
+  await page.getByLabel("Public").selectOption({ label: "Pôle DA" });
+  await expect(sansCompte).toHaveCount(0);
+  // Les places, elles, restent.
+  await expect(page.getByLabel("Places")).toBeVisible();
+  await page.getByRole("button", { name: "Créer l'évènement" }).click();
+  await page.waitForURL(/\/back-office\/evenements\/fake-\d+\/?$/);
+  expect(creee(db).data).toMatchObject({ pour: "pole:da", reunion: false, sansCompte: false });
+});
+
+test("relecture : « Seulement moi » au calendrier ne lit pas l'inscription d'un évènement de pôle qu'on ne voit pas", async ({ page }) => {
+  await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
+  // Aucun Sheet réel depuis les tests.
+  await page.route(/docs\.google\.com\/spreadsheets/, (route) => route.fulfill({ status: 200, contentType: "text/csv", body: "" }));
+  const lues: string[] = [];
+  page.on("request", (r) => {
+    const m = /\/evenements\/([^/]+)\/inscriptions\//.exec(decodeURIComponent(r.url()));
+    if (m && r.method() === "GET") lues.push(m[1]);
+  });
+  const FETE = { ...BASE, titre: "Fête de l'église", pour: "eglise", date: "2026-10-12", organisateurUid: "uid-autre" };
+  // Clara est au pôle Média : la soirée du pôle DA ne lui est pas montrée, la fête de l'église si.
+  await signInAs(page, CLARA, { "evenements/soiree": { ...SOIREE, organisateurUid: "uid-autre" }, "evenements/fete": FETE }, "/back-office/calendrier");
+  await expect(page.getByTestId("calendrier")).not.toHaveAttribute("aria-busy", "true");
+  await page.getByRole("button", { name: "Seulement moi" }).click();
+  await expect(page.getByTestId("calendrier")).not.toHaveAttribute("aria-busy", "true");
+  await expect.poll(() => lues).toContain("fete");
+  expect(lues, "la soirée du pôle DA n'est pas lue").not.toContain("soiree");
+});
+
+/** Une base Firestore simulée pour `inscrire` : documents lus, écritures de la transaction gardées. */
+function baseSimulee(docs: Record<string, Record<string, unknown>>) {
+  const ecrits: Record<string, Record<string, unknown>> = {};
+  let n = 0;
+  const lire = async (chemin: string) => ({ exists: chemin in docs, data: () => docs[chemin] });
+  type Ref = { path: string; id: string; get: () => ReturnType<typeof lire>; collection: (c: string) => { doc: (id?: string) => Ref } };
+  const ref = (chemin: string): Ref => ({
+    path: chemin,
+    id: chemin.split("/").pop()!,
+    get: () => lire(chemin),
+    collection: (c) => ({ doc: (id) => ref(`${chemin}/${c}/${id ?? `auto-${++n}`}`) }),
+  });
+  const db = {
+    collection: (c: string) => ({ doc: (id: string) => ref(`${c}/${id}`) }),
+    runTransaction: async <T,>(fn: (tx: unknown) => Promise<T>) => fn({
+      get: (r: Ref) => lire(r.path),
+      set: (r: Ref, d: Record<string, unknown>) => { ecrits[r.path] = d; },
+      update: (r: Ref, d: Record<string, unknown>) => { ecrits[r.path] = { ...docs[r.path], ...d }; },
+    }),
+  };
+  return { db: db as unknown as Parameters<typeof inscrire>[0], ecrits };
+}
+
+test("E6 : la route d'inscription lit le profil en base — un membre du pôle (ou de l'équipe) s'inscrit, un autre reçoit 403", async () => {
+  // Une date lointaine : la période d'inscription ne refuse rien, quel que soit le jour du test.
+  const soiree = { ...SOIREE, date: "2099-10-10", organisateurUid: "uid-autre" };
+  const { db, ecrits } = baseSimulee({
+    "evenements/soiree": soiree,
+    "evenements/regie": { ...soiree, pour: "equipe:regie" },
+    "users/uid-bruno": { firstName: "Bruno", lastName: "M.", poles: ["da"] },
+    "users/uid-clara": { firstName: "Clara", lastName: "V.", poles: ["media"] },
+    "users/uid-rose": { firstName: "Rose", lastName: "L.", dansEquipes: ["regie"] },
+  });
+  const res = await inscrire(db, qui(BRUNO), { evenementId: "soiree", invites: 0, nomLibre: "" });
+  expect(res.inscrits).toBe(1);
+  expect(ecrits["evenements/soiree/inscriptions/uid-bruno"]).toMatchObject({ uid: "uid-bruno", nom: "Bruno M.", invites: 0 });
+
+  await expect(inscrire(db, qui(CLARA), { evenementId: "soiree", invites: 0, nomLibre: "" })).rejects.toMatchObject({ status: 403 });
+  expect(ecrits["evenements/soiree/inscriptions/uid-clara"]).toBeUndefined();
+
+  // L'équipe se lit dans `dansEquipes` du profil.
+  await expect(inscrire(db, { uid: "uid-rose", email: "rose@example.com" }, { evenementId: "regie", invites: 0, nomLibre: "" }))
+    .resolves.toMatchObject({ inscrits: 1 });
+  await expect(inscrire(db, qui(CLARA), { evenementId: "regie", invites: 0, nomLibre: "" })).rejects.toMatchObject({ status: 403 });
 });

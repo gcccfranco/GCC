@@ -14,7 +14,7 @@ import { isInfo, nowIsoParis, placesRestantes, refusInscription, type EntreeShee
 import { useRaisonInscription } from "@/components/evenements/ChoixInscriptions"
 import { fdFullL } from "@/lib/planning/utils"
 import { categoryColor, categoryLabel, PLANNING_COLORS } from "@/lib/serviceColors"
-import { equipeDuPour, estReunion, poleDuPour } from "@/lib/access"
+import { equipeDuPour, estReunion, poleDuPour, publicDeReunion } from "@/lib/access"
 import type { Evenement } from "@/types/evenement"
 import { buttonVariants } from "@/components/ui/button"
 import { Tile } from "@/components/ui/tile"
@@ -27,6 +27,23 @@ function monthLabel(iso: string, lang: string): string {
   return new Date(y, m - 1, d).toLocaleDateString(lang === "zh-CN" ? "zh-CN" : "fr-FR", { month: "short" })
 }
 
+/** Le public en pastille : « Toute l'église », une section, « Pôle DA », une équipe. */
+function PastillePublic({ pour, className }: { pour: string; className: string }) {
+  const { t } = useTranslation()
+  return (
+    <span className={`inline-block rounded-full font-semibold bg-secondary text-foreground ${className}`}
+      style={pour === "eglise" ? undefined : { background: `${categoryColor(pour)}18`, color: categoryColor(pour) }}>
+      {pour === "eglise"
+        ? t("evenements.pourEglise")
+        : poleDuPour(pour)
+          ? t("evenements.pourPole", { pole: t(`taches.pole.${poleDuPour(pour)}`) })
+          : equipeDuPour(pour)
+            ? t(`equipes.team.${equipeDuPour(pour)}`)
+            : categoryLabel(pour)}
+    </span>
+  )
+}
+
 export function TypePour({ e }: { e: Pick<Evenement, "type" | "pour"> }) {
   const { t } = useTranslation()
   return (
@@ -34,16 +51,7 @@ export function TypePour({ e }: { e: Pick<Evenement, "type" | "pour"> }) {
       <span className="inline-block text-xs px-2 py-0.5 rounded-full font-semibold" style={{ background: `${COLOR}18`, color: COLOR }}>
         {t(`evenements.types.${e.type}`)}
       </span>
-      <span className="inline-block text-xs px-2 py-0.5 rounded-full font-semibold bg-secondary text-foreground"
-        style={e.pour === "eglise" ? undefined : { background: `${categoryColor(e.pour)}18`, color: categoryColor(e.pour) }}>
-        {e.pour === "eglise"
-          ? t("evenements.pourEglise")
-          : poleDuPour(e.pour)
-            ? t("evenements.pourPole", { pole: t(`taches.pole.${poleDuPour(e.pour)}`) })
-            : equipeDuPour(e.pour)
-              ? t(`equipes.team.${equipeDuPour(e.pour)}`)
-              : categoryLabel(e.pour)}
-      </span>
+      <PastillePublic pour={e.pour} className="text-xs px-2 py-0.5" />
     </>
   )
 }
@@ -191,6 +199,7 @@ export function EvenementCard({ evenement: e, past, href, actif = false, inscrit
   evenement: Evenement; past?: boolean; href?: string; actif?: boolean; inscrit?: boolean
 }) {
   const { i18n, t } = useTranslation()
+  const reserve = publicDeReunion(e.pour) && !estReunion(e)
   let badge: React.ReactNode = null
   if (inscrit !== undefined && !past && !isInfo(e) && !estReunion(e)) {
     const refus = refusInscription(e, 0, nowIsoParis())
@@ -215,7 +224,11 @@ export function EvenementCard({ evenement: e, past, href, actif = false, inscrit
         {!isInfo(e) && <Tile color={COLOR} big={Number(e.date.slice(8, 10))} small={monthLabel(e.date, i18n.language)} size="lg" className={actif ? "!bg-background" : undefined} />}
         <div className="min-w-0 flex-1">
           <p className="font-semibold text-foreground truncate">{e.epingle ? "📌 " : ""}{e.titre}</p>
-          <p className="text-sm text-muted-foreground truncate">{[e.heure, e.lieu].filter(Boolean).join(" · ")}</p>
+          <p className="text-sm text-muted-foreground truncate">
+            {/* Évènement réservé à un pôle ou une équipe (retouches v18, E4) : son badge, comme sur la carte. */}
+            {reserve && <PastillePublic pour={e.pour} className={`mr-1.5 px-1.5 py-px text-xs ${actif ? "!bg-background" : ""}`} />}
+            {[e.heure, e.lieu].filter(Boolean).join(" · ")}
+          </p>
         </div>
         {badge}
       </div>
