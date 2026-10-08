@@ -8,14 +8,19 @@ Le retour des responsables et la piste notée au lot G (`spec-retouches-v18.md`,
 pôle Louange implicite ne trouvait plus les réunions de son pôle dans aucune liste.
 
 - **Date** : 08/10/2026.
-- **Statut** : **spec écrite, attend le go de Timothée.** Rien n'est codé.
+- **Statut** : **spec écrite, questions tranchées le 08/10/2026 (décisions 35 à 45), attend le go de Timothée.**
+  Rien n'est codé.
 - **Base de code** : `ui/apple-design` à `5878ce1`. Le code est identique à `439e5520`, base de la cartographie :
   seuls des documents ont changé depuis. Toutes les références `fichier:ligne` ci-dessous ont été rouvertes à `5878ce1`.
+  Celles qu'ajoutent les réponses du 08/10 au soir ont été ouvertes à `ceeb9b2`, au code identique (`git diff 5878ce1
+  ceeb9b2 -- src firestore.rules tests` est vide).
 - **Sources** :
-  - `docs/chantier-equipes-groupes/decisions.md` (décisions 1 à 8, source de vérité) ;
+  - `docs/chantier-equipes-groupes/decisions.md` (décisions 1 à 8, source de vérité ; réponses aux questions de cette
+    spec : décisions 40 à 43 et 45) ;
   - `docs/chantier-equipes-groupes/cartographie.md` (§ « Supprimer les pôles et garder les équipes ») ;
   - les maquettes v19 `v19-org-eglise-ordinateur.png` et `v19-org-personne-ordinateur.png`.
-- **Ordre du chantier** : lots 1 et 3 en parallèle, puis 2, puis 4. Tout se fait sur `ui/apple-design`. Modèle pour
+- **Ordre du chantier** : lots 1 et 3 en parallèle, avec le partage d'une setlist (`docs/spec-partage-setlist.md`,
+  codé en parallèle des lots 1 et 3, avant le lot 4 : décision 45), puis 2, puis 4. Tout se fait sur `ui/apple-design`. Modèle pour
   le code de ce lot : Opus 5.5, effort très élevé (`decisions.md`, « Ordre, branche, modèles »).
 
 Règles communes, comme pour les autres specs :
@@ -72,6 +77,19 @@ Aucune piste A/B ne concerne ce lot.
   « Coordination » devient une case.
 - La barre latérale des deux planches n'a pas l'entrée Réunions, qui existe depuis l'agencement v18 (B15,
   `src/types/backOffice.ts:4`). Le code fait foi.
+
+## Réponses de Timothée (08/10/2026, soir)
+
+Écrites dans `decisions.md` (« Réponses de Timothée aux questions des specs », décisions 35 à 45). Elles sont désormais
+des décisions et l'emportent sur les recommandations. Celles qui touchent ce lot :
+
+| # | Question de la spec | Réponse |
+|---|---|---|
+| 40 | Q1 : « L'organigramme est gardé tel quel » retire aux membres de COMITÉ FRANCO, THÉOLOGIE, DÉCORATION et ACCUEIL J1 qui ne sont pas dans l'équipe cible les tâches et réunions de l'ancien pôle. | **Voulue** : le relevé les nomme, Timothée les ajoute à la main. Règle et relevé inchangés (§ Migration, listes 2 et 4). |
+| 41 | Q2 : un simple membre coche-t-il une tâche « pour toute l'équipe » (sans responsable) ? | **Non** : il ne coche que celles qui lui sont assignées (décision 3) ; les référents et les admins cochent les autres. Repris en EQ8, EQ11, EQ12, EQ14, EQ15 et dans les règles des fois. |
+| 42 | Q3 : un membre de groupe sans rôle (`serviceRoles: { "Groupe Paix": [] }`) fait-il partie du public Louange ? | **Oui** : la règle d'aujourd'hui (une clé de `serviceRoles` suffit) est confirmée (EQ4). |
+| 43 | Q4 : qui crée un évènement d'équipe qui n'est pas une réunion ? | **Les référents** de l'équipe (et les admins) : « Nouvel évènement » et l'entrée Évènements du Back-Office leur sont ouverts, pour les publics de leurs équipes (EQ18, EQ21). |
+| 45 | Les autres questions des cinq specs | **Recommandations acceptées.** Ce lot n'en avait pas d'autre. Pour lui : le partage d'une setlist se code en parallèle des lots 1 et 3, avant le lot 4, et change `firestore.rules` (champ `editeurs`, décision 39) : sa publication suit la bascule de ce lot ou se fait dans la même séance (§ « Ordre de la bascule »). |
 
 ## Ce que le code fait aujourd'hui
 
@@ -235,7 +253,8 @@ S'y ajoutent **16 fichiers** qui ne lisent les pôles qu'à travers `isCoordinat
 | `src/components/reunions/EnTeteReunion.tsx:14`, `:26-29` | « Réunion de pôle · DA » | « Réunion d'équipe · DA » : branche équipe déjà là, avec `backOffice.reunionDEquipe` et le nom court `equipes.court.<id>` (`:30`) ; EQ23 | EQ-B |
 | `src/components/evenements/EvenementForm.tsx:16`, `:196-199` | option « Pôle X » du public | retirée | EQ-B |
 | `src/lib/firebase/evenements.ts:102-110` | `listReunionsDu(pour)`, exemple `pole:da` | code inchangé ; données migrées (§ Migration) | EQ-E |
-| `src/app/back-office/evenements/ListeGestion.tsx:32-40` ; `src/hooks/useNotifications.ts:83-86` | commentaires (pôle) | réécrits ; logique inchangée | EQ-F |
+| `src/app/back-office/evenements/ListeGestion.tsx:32-40` | commentaire (pôle, choix V18POLE) | réécrit avec `peutCreerDans` (EQ21, décision 43) | EQ-B |
+| `src/hooks/useNotifications.ts:83-86` | commentaires (pôle) | réécrits ; logique inchangée | EQ-F |
 | **Organigramme et Personnes** | | | |
 | `src/lib/equipes/table.ts:5`, `:7-18`, `:22-36` | champ `pole` de `EquipeDef` | supprimé | EQ-D |
 | `src/lib/equipes/organigramme.ts:7`, `:14-44` | `polesDesEquipes` ; `rattachementDe` rend `poles` | supprimé ; `{ dansEquipes, referentDe }` | EQ-D |
@@ -257,6 +276,14 @@ S'y ajoutent **16 fichiers** qui ne lisent les pôles qu'à travers `isCoordinat
 | `src/components/layout/EnTetePage.tsx:15` ; `src/lib/deuxVolets.ts:36`, `:43` | exemples `taches.poles`, `[pole]` | mis à jour | EQ-F |
 | **Libellés** | | | |
 | `src/locales/fr.json`, `src/locales/zh-CN.json` | clés listées en EQ30 | EQ30 | EQ-C, EQ-F |
+| **Touchés par les décisions 41 et 43** (sans identifiant de pôle, ou au-delà de la ligne relevée) | | | |
+| `src/lib/taches/echeances.ts:126-130` | `aFairePour(lignes, uid)` : à moi, ou sans responsable | `aFairePour(lignes, user, profile)` : à moi, ou sans responsable dans une équipe où je coche (EQ15, décision 41) | EQ-C |
+| `src/components/taches/SectionTaches.tsx:84` ; `src/components/moi/Apercus.tsx:144` ; `src/lib/tableauDeBord/usePastilles.ts:41` ; `src/lib/calendrier/entrees.ts:430-431` | « À faire pour moi », aperçu de Moi, pastille Tâches, « Mes tâches » du Calendrier : sans responsable = à tout membre | suivent `aFairePour` (EQ14, EQ15) | EQ-C |
+| `src/app/api/taches/fait/route.ts:27-28` | l'appelant n'a qu'à être du pôle | `peutCocher` sur la tâche lue par le serveur (EQ11) | EQ-C |
+| `src/app/api/cron/reminders/route.ts:131`, `:138` | sans responsable : tout le pôle | les référents de l'équipe, `referentsDeLEquipe` (EQ12) | EQ-C |
+| `src/app/back-office/evenements/ListeGestion.tsx:38-40` | `peutCreerDans(…, false)` : un public hors équipe | `creatableEvenementPours(…).length > 0` (EQ21, décision 43) | EQ-B |
+| `src/app/back-office/calendrier/CalendrierClient.tsx:229-233` | `droits.evenement` : un public hors équipe | `pours.length > 0` (EQ21) | EQ-B |
+| `src/lib/access.ts:540`, `:621` | entrée et sous-partie Évènements : admin, coordination, annonces | ajout de `\|\| nonVide(profile?.referentDe)` (EQ18, EQ21) | EQ-B |
 | **Tests** | | | |
 | `tests/helpers/fakeSession.ts:20`, `:29-31`, `:349` | `FakeProfile.poles`, écrit dans `users/{uid}` | `coordination?: boolean` | EQ-A |
 
@@ -277,7 +304,7 @@ lecture la plus simple des décisions, comme le demande `decisions.md`.
 | # | Règle |
 |---|---|
 | EQ3 | **Membre** d'une équipe : son id est dans `dansEquipes` du profil. **Référent** : son id est dans `referentDe`. Les deux sont recopiés par le serveur depuis l'organigramme, comme aujourd'hui. « En essai » ne change aucun droit (D7 de `spec-organigramme.md`). Pour les droits (`access.ts` et règles), un admin est membre et référent de toutes les équipes ; il n'est pas pour autant destinataire des notifications d'une équipe où il ne figure pas (`membresDeLEquipe` lit les profils, comme `membresDuPole` aujourd'hui). |
-| EQ4 | (décision 5) **Louange** = le public `equipe:louange`, **élargi** : les membres de TEAM LOUANGE, plus toute personne qui a une clé dans `serviceRoles`. C'est la règle de `polesDe` et `isTachePole` d'aujourd'hui, sans changement (question 3). Ses référents sont ceux de TEAM LOUANGE. **Choix** : un seul id, pas un public à part. Les tâches, réunions et évènements de Louange réutilisent tout le code des équipes ; une seule exception, dans `estDeLEquipe` (client, serveur, règles). **Choix** : dans Tâches, Réunions et les notifications, ce public s'affiche « Louange » (敬拜), et non « TEAM LOUANGE », parce qu'il est plus large que l'équipe. L'organigramme garde « TEAM LOUANGE ». |
+| EQ4 | (décision 5) **Louange** = le public `equipe:louange`, **élargi** : les membres de TEAM LOUANGE, plus toute personne qui a une clé dans `serviceRoles`. C'est la règle de `polesDe` et `isTachePole` d'aujourd'hui, sans changement : une clé de `serviceRoles` suffit, et un membre de groupe sans rôle (`{ "Groupe Paix": [] }`) fait partie du public Louange (**décision 42**). La fin de la transition des `serviceRoles` reste suivie par la question 8 de `docs/spec-organigrammes-groupes.md` : elle devra garder les membres des groupes dans ce public. Ses référents sont ceux de TEAM LOUANGE. **Choix** : un seul id, pas un public à part. Les tâches, réunions et évènements de Louange réutilisent tout le code des équipes ; une seule exception, dans `estDeLEquipe` (client, serveur, règles). **Choix** : dans Tâches, Réunions et les notifications, ce public s'affiche « Louange » (敬拜), et non « TEAM LOUANGE », parce qu'il est plus large que l'équipe. L'organigramme garde « TEAM LOUANGE ». |
 | EQ5 | `equipesDe(profile)` : les équipes d'une personne, dans l'ordre de `EQUIPES`, avec `louange` ajouté dès qu'elle a un rôle de service. C'est la seule fonction qui calcule « mes équipes » côté client. Miroir serveur : `membresDeLEquipe` (EQ11) ; miroir des règles : `estDeLEquipe(equipe)`. |
 
 ### C. Tâches par équipe
@@ -286,14 +313,14 @@ lecture la plus simple des décisions, comme le demande `decisions.md`.
 |---|---|
 | EQ6 | (décision 2) **Chemin** : `equipes/{equipe}/taches/{id}` et `equipes/{equipe}/taches/{id}/fois/{AAAA-MM-JJ}`. **Choix** : c'est la forme de `poles/{pole}/taches` avec un autre parent. La règle lit l'équipe dans le chemin, sans lecture de plus. Les requêtes de liste restent des `runQuery` sur un parent, sans index composite. Le cron garde `collectionGroup("taches")`. Le parent `equipes/{id}` est déjà le document de l'organigramme ; ses règles ne s'étendent pas à la sous-collection, qui a les siennes. Écartée : une collection `taches/{id}` avec un champ `equipe`. Il faudrait alors filtrer chaque requête sur ce champ, ce qui demande un index composite (`equipe` puis `echeance`), et la règle lirait le document au lieu du chemin. |
 | EQ7 | **Document** : `equipe` (id) remplace `pole`. `prevenir` vaut `{ equipe }`, `{ regie: <service> }` ou `null`. Le reste ne change pas : titre, responsable, échéance, répétition (lots 7 et 13), lien, note, évènement lié (lot 14), auteur, dates. L'état d'une fois, À faire, En cours ou Terminé, ne change pas non plus (lot 13). |
-| EQ8 | (décision 3) **Qui fait quoi** : **voir** les tâches de l'équipe, ses membres (EQ3, EQ4). **Créer, modifier, supprimer, déplacer** (Calendrier), lier ou délier à un évènement : les référents et les admins (**choix** : « créer » emporte ces gestes de gestion). **Changer l'état d'une fois** (« cocher ») : le responsable de la tâche ; tout membre si la tâche n'a pas de responsable, c'est-à-dire « toute l'équipe » (**choix**, question 2) ; les référents et les admins toujours. `peutCocher(user, profile, tache)` dans `access.ts`. Sans le droit, la commande ne s'affiche pas : case de la ligne inerte (`TacheLigne`), pas de « Modifier » ni de « ⋯ › Supprimer » sur la fiche, pas de « Déplacer » au Calendrier (`peutDeplacer`, `src/lib/calendrier/entrees.ts:184-189`), pas de « + Nouvelle tâche ». **Conséquences** : un simple membre ne crée plus de tâche, ce qu'il pouvait faire dans son pôle ; l'auteur non référent d'une tâche migrée ne peut plus la modifier. |
+| EQ8 | (décision 3) **Qui fait quoi** : **voir** les tâches de l'équipe, ses membres (EQ3, EQ4). **Créer, modifier, supprimer, déplacer** (Calendrier), lier ou délier à un évènement : les référents et les admins (**choix** : « créer » emporte ces gestes de gestion). **Changer l'état d'une fois** (« cocher ») : le responsable de la tâche, s'il est de l'équipe ; une tâche sans responsable (« toute l'équipe ») : les référents et les admins seulement (**décision 41**). Les référents et les admins cochent toute tâche de l'équipe. Un simple membre ne coche donc que les tâches dont il est le responsable. `peutCocher(user, profile, tache)` dans `access.ts` : `estReferentDe(tache.equipe)`, ou `estDeLEquipe(tache.equipe)` et `responsableUid === user.uid`. Sans le droit, la commande ne s'affiche pas : case de la ligne inerte (`TacheLigne`), pas de « Modifier » ni de « ⋯ › Supprimer » sur la fiche, pas de « Déplacer » au Calendrier (`peutDeplacer`, `src/lib/calendrier/entrees.ts:184-189`), pas de « + Nouvelle tâche ». **Conséquences** : un simple membre ne crée plus de tâche, ce qu'il pouvait faire dans son pôle ; il ne coche plus une tâche « toute l'équipe », qu'il voit toujours dans la liste de l'équipe, case inerte ; l'auteur non référent d'une tâche migrée ne peut plus la modifier. |
 | EQ9 | (décision 2) **« Une liste vide ne s'affiche pas »**. **Choix** de lecture : une équipe sans tâche n'a pas d'onglet dans le rail de Back-Office › Tâches. Le rail se calcule sur les tâches déjà lues par `useTaches` (comme le compte d'aujourd'hui, `back-office/taches/[pole]/layout.tsx:48-53`) : un admin lit 13 listes, une requête par équipe, là où il en lisait 5. Exception : les équipes dont la personne est référente gardent leur onglet, pour y créer la première tâche. Un admin ne voit que les équipes qui ont des tâches, sans 13 onglets vides ; son « + Nouvelle tâche » propose les 13 équipes. **Ailleurs, rien à masquer** : le réglage du widget « À faire » (`groupesDeReglages`, module pur qui ne lit aucune tâche, `reglages.ts:51-53`) propose toutes les équipes de la personne (les 13 pour un admin) et le widget n'affiche rien pour une équipe vide ; « Plus » n'a pas de ligne par équipe, une seule phrase (`morceaux`, `PagePlus.tsx:35`). Sans aucun onglet : « Pas encore de tâche pour tes équipes. », avec « + Nouvelle tâche » si la personne peut créer quelque part. Les entrées elles-mêmes (Tâches au Back-Office, lien Tâches de la barre du haut, aperçu de Moi) gardent leur condition (EQ15, EQ17). `equipesDesTaches(user, profile)` rend ses équipes (toutes pour un admin) ; `equipesOuCreer(user, profile)` rend celles où elle crée (`referentDe` ; toutes pour un admin). |
 | EQ10 | **Formulaire** (`TacheForm`) : « Équipe » parmi `equipesOuCreer`, en pilules en grand et en liste au doigt, comme aujourd'hui. Les responsables proposés sont les membres de l'équipe choisie (EQ5, Louange élargi). « Quand c'est fait, prévenir » propose les **autres** équipes, sous leur nom, puis les régies des services (inchangé). |
-| EQ11 | **Routes** (`/api/taches/assigne`, `/api/taches/fait`, Admin SDK, 404 sans `BACK_OFFICE`) : corps `{ equipe, tacheId[, date] }`. `appelantDeLEquipe(req, equipe)` vérifie le jeton et `estDeLEquipe` sur le profil lu par le serveur. `/assigne` exige en plus `estReferentDe` (**choix** : seul qui crée ou modifie nomme un responsable). `/fait` prévient, pour `{ equipe }`, les membres de l'équipe (`membresDeLEquipe(equipe, db)`, Louange élargi) sauf qui coche ; pour `{ regie }`, la régie du dimanche, comme aujourd'hui. Réponse `{ notified, linked, cible: "equipe" \| "regie" \| null }`. Clés `notifLog` : `tache-assigne-${equipe}-${id}`, `tache-fait-${equipe}-${id}-${date}`. |
-| EQ12 | **Cron** (`rappelsTaches`, derrière `BACK_OFFICE` comme aujourd'hui) : ne prend que les tâches rangées sous `equipes/{e}/taches` (`doc.ref.parent.parent?.parent.id === "equipes"`). Une tâche restée sous `poles/` (migration pas lancée) n'est pas rappelée, et pas rappelée deux fois. Cibles : le responsable, sinon les membres de l'équipe. Clés : `rappel-tache-${quand}-${equipe}-${id}-${date}` et `rappel-tache-encours-${equipe}-${id}-${date}-${jour}`. |
+| EQ11 | **Routes** (`/api/taches/assigne`, `/api/taches/fait`, Admin SDK, 404 sans `BACK_OFFICE`) : corps `{ equipe, tacheId[, date] }`. `appelantDeLEquipe(req, equipe)` vérifie le jeton et `estDeLEquipe` sur le profil lu par le serveur. `/assigne` exige en plus `estReferentDe` (**choix** : seul qui crée ou modifie nomme un responsable). `/fait` exige en plus `peutCocher` (EQ8) sur la tâche lue par le serveur, sinon 403 « Tu ne peux pas cocher cette tâche » (**choix**, conséquence de la décision 41 : un simple membre n'annonce pas faite une tâche « toute l'équipe » cochée par un autre). `/fait` prévient, pour `{ equipe }`, les membres de l'équipe (`membresDeLEquipe(equipe, db)`, Louange élargi) sauf qui coche ; pour `{ regie }`, la régie du dimanche, comme aujourd'hui. Réponse `{ notified, linked, cible: "equipe" \| "regie" \| null }`. Clés `notifLog` : `tache-assigne-${equipe}-${id}`, `tache-fait-${equipe}-${id}-${date}`. |
+| EQ12 | **Cron** (`rappelsTaches`, derrière `BACK_OFFICE` comme aujourd'hui) : ne prend que les tâches rangées sous `equipes/{e}/taches` (`doc.ref.parent.parent?.parent.id === "equipes"`). Une tâche restée sous `poles/` (migration pas lancée) n'est pas rappelée, et pas rappelée deux fois. Cibles : le responsable ; une tâche sans responsable, **les référents de l'équipe** (`referentsDeLEquipe(equipe, db)`, `src/lib/taches/serveur.ts` : profils dont `referentDe` contient l'équipe), et non plus tous ses membres (**choix**, conséquence de la décision 41 : le rappel va à qui peut cocher). Pour Louange, les référents de TEAM LOUANGE. Une équipe sans référent n'a personne à rappeler pour ses tâches « toute l'équipe » : le relevé les compte (§ Migration, liste 4) et un admin les voit dans Tâches. Clés : `rappel-tache-${quand}-${equipe}-${id}-${date}` et `rappel-tache-encours-${equipe}-${id}-${date}-${jour}`. |
 | EQ13 | **Textes des notifications** (`src/lib/taches/messages.ts`) : le nom de l'équipe remplace « Pôle X ». Exemples : « Nouvelle tâche : Photos du culte » / « TEAM MÉDIAS · pour vendredi 16 octobre » ; « Tâche faite : … » / « Léa M. (TEAM MÉDIAS) l'a terminée. » ; ligne du matin « À faire : Photos du culte (TEAM MÉDIAS), vendredi 16 octobre ». En 中文 : 媒体组 · 截止 …, （媒体组）已完成. Louange : « Louange » / 敬拜 (EQ4). **Choix** : le serveur lit les noms dans `equipes.team.*` des deux fichiers de langue, une seule source. |
-| EQ14 | **Calendrier** (`charger.ts`, `entrees.ts`, Back-Office › Calendrier). Il lit les tâches des équipes de la personne (toutes pour un admin) ; le détail d'une entrée porte le nom de l'équipe ; le lien est `/taches/<equipe>`. La pastille de source Tâches s'affiche avec une équipe (`sourcesPermises`, `:204-209`), Réunions aussi. « Mes tâches » = à moi, ou à mon équipe sans responsable. Dans `evenements()` (`entrees.ts:348-360`), `mesPoles` et `mesEquipes` (`dansEquipes`) deviennent un seul `equipesDe` (Louange élargi) : « à moi » pour une réunion, et visibilité. « Créer une tâche » s'ouvre parmi `equipesOuCreer`. |
-| EQ15 | **Ailleurs** : widget « À faire » (réglage « Équipes », clé `equipes`) ; pastille Tâches de la barre ; « Plus » (« tâches de tes équipes », « … de toutes les équipes ») ; lien « Tâches » de la barre du haut sur ordinateur (`admin \|\| equipesDe` non vide) ; aperçu « Mes tâches » de Moi. Mêmes conditions qu'aujourd'hui : « un pôle » y devient « une équipe ». |
+| EQ14 | **Calendrier** (`charger.ts`, `entrees.ts`, Back-Office › Calendrier). Il lit les tâches des équipes de la personne (toutes pour un admin) ; le détail d'une entrée porte le nom de l'équipe ; le lien est `/taches/<equipe>`. La pastille de source Tâches s'affiche avec une équipe (`sourcesPermises`, `:204-209`), Réunions aussi. « Mes tâches » (`moi`, `:430-431`) suit `aFairePour` (EQ15) : à moi, ou sans responsable dans une équipe dont je suis référent (décision 41). Dans `evenements()` (`entrees.ts:348-360`), `mesPoles` et `mesEquipes` (`dansEquipes`) deviennent un seul `equipesDe` (Louange élargi) : « à moi » pour une réunion, et visibilité. « Créer une tâche » s'ouvre parmi `equipesOuCreer`. |
+| EQ15 | **Ailleurs** : widget « À faire » (réglage « Équipes », clé `equipes`) ; pastille Tâches de la barre ; « Plus » (« tâches de tes équipes », « … de toutes les équipes ») ; lien « Tâches » de la barre du haut sur ordinateur (`admin \|\| equipesDe` non vide) ; aperçu « Mes tâches » de Moi. Mêmes conditions qu'aujourd'hui : « un pôle » y devient « une équipe ». **« À moi »** (`aFairePour(lignes, user, profile)`, `src/lib/taches/echeances.ts:126-130`) : ce qui reste à faire et dont je suis le responsable, ou qui n'a pas de responsable dans une équipe dont je suis référent (toutes pour un admin) : exactement ce que `peutCocher` me laisse cocher (**décision 41**). Le suivent : « À faire pour moi » de Tâches (`SectionTaches.tsx:84`), l'aperçu de Moi (`Apercus.tsx:144`), la pastille Tâches (`usePastilles.ts:41`) et « Mes tâches » du Calendrier (EQ14). Pour un simple membre, une tâche sans responsable n'est plus « à lui » : elle reste visible dans la liste de l'équipe, sans compter dans sa pastille. Pour un référent, elle reste « à lui ». Le widget « À faire » ne change pas : il liste toutes les tâches à venir des équipes réglées, pas « les miennes » (`aFaireDuTableau`, `src/lib/tableauDeBord/donnees.ts:152-155`), et un simple membre n'a pas de tableau de bord (EQ17). |
 | EQ16 | **Fiche d'un évènement** (carte « Tâches », `TachesEvenement`) : les tâches liées des équipes de la personne. La carte ne s'affiche que s'il y en a, ou si la personne peut créer (EQ9). « Nouvelle tâche » ne s'affiche que pour les référents et les admins. **Duplication** d'un évènement (`NouveauClient`) : on ne copie que les tâches des équipes où l'on crée (**choix**, suite de EQ8). |
 
 ### D. Back-Office
@@ -301,7 +328,7 @@ lecture la plus simple des décisions, comme le demande `decisions.md`.
 | # | Règle |
 |---|---|
 | EQ17 | (décisions 4 et 5) **Qui n'est pas responsable** (EQ18) mais a au moins une équipe (`equipesDe` non vide : membre d'une équipe, ou public Louange) a **Tâches + Réunions**, rien d'autre, limitées à ses équipes. Il voit le sélecteur App · Back-Office (`SelecteurEspace` suit `entreesBackOffice`). Sa barre du bas est Tâches · Réunions · Plus (`barreParDefaut`, sans changement). `EspaceBackOffice` le ramène à sa première entrée depuis toute adresse hors de `/back-office/taches`, `/back-office/reunions` et `/back-office/plus`. **Conséquences** : (a) tout choriste, musicien, présidence ou régie voit désormais le sélecteur ; c'est la réponse (a) laissée ouverte au lot G (« Question ouverte pour Timothée », § V18REUNIONS de `spec-retouches-v18.md`), et D30 est réglé ; (b) un simple membre d'une équipe qui donnait un pôle (ORGA, COMITÉ FRANCO, THÉOLOGIE, DA, DÉCORATION, MÉDIAS, ÉVÉNEMENTIEL, ACCUEIL J1) avait le Back-Office complet par ce pôle (tableau de bord, calendrier, Évènements si coordination) : il n'a plus que Tâches et Réunions (décision 4). Le relevé les liste (§ Migration, liste 2). |
-| EQ18 | **Responsable** (`estResponsable`, Q1 de `spec-back-office.md`) : admin, ou `coordination`, `plannings`, `notify`, `annonces`, droit `equipes`, `referentDe`. **Choix** : la coordination compte, comme le pôle `evenement` comptait. Être membre d'une équipe ou du public Louange ne fait pas un responsable (Q1 garde son sens). Pour un responsable, `entreesBackOffice` donne Tâches si `equipesDe` n'est pas vide (toujours pour un admin), et Réunions si `equipesDe` ou `referentDe` n'est pas vide. Le reste ne change pas. Un référent reste responsable : Back-Office complet. |
+| EQ18 | **Responsable** (`estResponsable`, Q1 de `spec-back-office.md`) : admin, ou `coordination`, `plannings`, `notify`, `annonces`, droit `equipes`, `referentDe`. **Choix** : la coordination compte, comme le pôle `evenement` comptait. Être membre d'une équipe ou du public Louange ne fait pas un responsable (Q1 garde son sens). Pour un responsable, `entreesBackOffice` donne Tâches si `equipesDe` n'est pas vide (toujours pour un admin), Réunions si `equipesDe` ou `referentDe` n'est pas vide, et **Évènements aussi si `referentDe` n'est pas vide** (**décision 43**, EQ21 ; `src/lib/access.ts:540`). Le reste ne change pas. Un référent reste responsable : Back-Office complet, Évènements compris. **Conséquence sur la barre du bas par défaut** (`barreParDefaut`, `src/lib/tableauDeBord/barre.ts:9`, `:18-21`) : elle prend Accueil · Calendrier · Tâches · Planning et complète dans l'ordre du menu (`ENTREES`, `src/types/backOffice.ts:4`, où Évènements précède Réunions). Un référent **sans** droit Planning, qui n'a pas enregistré sa barre, passe donc d'Accueil · Calendrier · Tâches · Réunions à **Accueil · Calendrier · Tâches · Évènements** ; Réunions va dans Plus. Avec le droit Planning, rien ne change ; une barre enregistrée est gardée (`barreAffichee`). Le raccourci « Nouvel évènement » du widget Raccourcis suit l'entrée Évènements (`raccourcisPermis`, `src/lib/tableauDeBord/donnees.ts:254`) : un référent l'a désormais. |
 
 ### E. Réunions et évènements d'équipe
 
@@ -309,7 +336,7 @@ lecture la plus simple des décisions, comme le demande `decisions.md`.
 |---|---|
 | EQ19 | Le public `pole:<id>` disparaît : de `EvenementPour`, du choix « Pour » de « Nouvel évènement » et « Nouvelle réunion », de `creatableEvenementPours`, `canSeeEvenement`, `canCreateEvenement`, `estDeLaReunion`, `destinatairesEvenement`, et des règles. Il ne reste que `equipe:<id>`. Les évènements existants sont migrés (§ Migration). |
 | EQ20 | (décision 8) Un évènement d'équipe garde la règle du lot E (E1 à E6 de `spec-retouches-v18.md`). `reunion: false` : inscriptions, période, liste des inscrits, rappel aux inscrits ; visible des membres de l'équipe, des admins et de la coordination (D22) ; notification à la publication aux seuls membres (`destinatairesEvenement`, Louange élargi). `reunion` absent ou `true` : réunion, sans inscriptions, au seul Back-Office › Réunions (lot G). |
-| EQ21 | (décision 3) **Créer** une réunion ou un évènement d'équipe : les référents de l'équipe et les admins. C'est la branche `equipe:` d'aujourd'hui, inchangée (`src/lib/access.ts:217-218`, `firestore.rules:224-226`). Un simple membre n'en crée plus, ce qu'il pouvait faire pour un pôle (`firestore.rules:222-223`). Le bouton « Nouvel évènement » garde sa règle (admins, coordination, droit d'annonces), `ListeGestion.tsx:32-40` : choix V18POLE, à confirmer par Timothée (question 4). La garde `!pour.matches('(pole\|equipe):.*')` reste dans les règles, pour que plus personne ne crée de public `pole:`. |
+| EQ21 | (décision 3) **Créer** une réunion ou un évènement d'équipe : les référents de l'équipe et les admins. C'est la branche `equipe:` d'aujourd'hui, inchangée (`src/lib/access.ts:217-218`, `firestore.rules:224-226`). Un simple membre n'en crée plus, ce qu'il pouvait faire pour un pôle (`firestore.rules:222-223`). **Évènement d'équipe qui n'est pas une réunion** : les référents de l'équipe et les admins le créent depuis l'écran (**décision 43**). Le choix V18POLE (`spec-retouches-v18.md`, § V18POLE, « Qui crée un évènement de pôle ») est levé ; on ouvre, comme sa note le dit : `peutCreerDans(…, false)` = `creatableEvenementPours(…).length > 0` (`src/app/back-office/evenements/ListeGestion.tsx:38-40`, en-tête de BO › Évènements, `layout.tsx:41`) ; `droits.evenement` = `pours.length > 0` (`src/app/back-office/calendrier/CalendrierClient.tsx:229-233` : bouton du Calendrier, panneau du jour et « + » du téléphone) ; `evenements` de `entreesBackOffice` + `\|\| nonVide(profile?.referentDe)` (`src/lib/access.ts:540`, EQ18). **Choix**, par cohérence d'affichage : `sousPartiesEvenements` aussi (`src/lib/access.ts:621`) ; un onglet seul ne s'affiche pas (`layout.tsx:42`). Après EQ19, `creatableEvenementPours` d'un référent sans autre droit ne rend que `equipe:<ses équipes>` : le formulaire « Nouvel évènement » (`NouveauClient.tsx:85`) ne propose que ces publics, et écrit `reunion: false`. L'App (Évènements, `src/app/evenements/SectionEvenements.tsx:33`) l'ouvrait déjà à tout responsable qui a un public : rien n'y change. **Règles : rien à changer** pour la décision 43 : la branche `equipe:` de `allow create` accepte déjà un référent, réunion ou non (`firestore.rules:224-226`), comme `canCreateEvenement` (`src/lib/access.ts:217-218`). Modifier ou supprimer l'évènement garde sa règle : l'organisateur et la coordination (`canEditEvenement`) ; BO › Évènements liste ceux que la personne peut modifier (`ListeGestion.tsx:69-70`). La garde `!pour.matches('(pole\|equipe):.*')` reste dans les règles, pour que plus personne ne crée de public `pole:`. |
 | EQ22 | (décision 3) **Sujets et compte rendu** : toute personne de la réunion, c'est-à-dire les membres de l'équipe (Louange élargi), l'organisateur et les admins. Un choriste sans équipe propose donc des sujets aux réunions de Louange et les retrouve au Back-Office › Réunions. |
 | EQ23 | **Libellés**, d'après les clés qui existent déjà. La pastille d'un évènement d'équipe porte le nom long de l'équipe (`equipes.team.<id>` : « TEAM DA », comme aujourd'hui, `EvenementCard.tsx:30-45`, `FicheGestion.tsx:83`). L'en-tête d'une réunion porte « Réunion d'équipe · DA » (`backOffice.reunionDEquipe` avec le nom court `equipes.court.<id>`, `EnTeteReunion.tsx:30`). **Choix** : les écrans de tâches (rail, pilules du formulaire, ligne, fiche, widget, aperçu de Moi) prennent aussi le nom court (« DA », « Médias »), comme les noms courts de pôle d'aujourd'hui (« DA », « Média ») ; les notifications prennent le nom long (EQ13). Pour `louange`, partout `equipes.public.louange` (« Louange », 敬拜, EQ4), et non « TEAM LOUANGE » ni 敬拜组. « Pôle X » et « Réunion de pôle · X » disparaissent. |
 
@@ -370,11 +397,14 @@ la ligne « Coordination » passent par ces clés, dans les deux langues.
 1. Léa M., référente de TEAM MÉDIAS, crée « Photos du culte » pour Joël F., simple membre. Joël F. reçoit
    « Nouvelle tâche ».
 2. Joël F. ouvre le Back-Office : deux entrées, Tâches et Réunions. Il coche sa tâche ; l'équipe choisie dans
-   « Prévenir » l'apprend.
+   « Prévenir » l'apprend. La tâche « Ranger la régie » de TEAM MÉDIAS, sans responsable, est dans la liste de
+   l'équipe, case inerte pour lui ; Léa M. la coche, et c'est elle, référente, qui en reçoit les rappels.
 3. Hugo L. (TEAM DA) ne voit rien de TEAM MÉDIAS.
 4. Un choriste sans équipe voit les tâches et les réunions de Louange, y propose un sujet, et ne crée rien.
 5. Un membre de TEAM ÉVÉNEMENTIEL ne règle la scène que si un admin a coché « Coordination » pour lui.
-6. Sur la planche Église, plus aucune pastille de pôle.
+6. Léa M., sans droit d'annonces, a l'entrée Évènements ; « Nouvel évènement » ne lui propose que TEAM MÉDIAS, et
+   l'évènement publié (avec inscriptions) prévient les seuls membres de l'équipe. Joël F. n'a ni l'entrée ni le bouton.
+7. Sur la planche Église, plus aucune pastille de pôle.
 
 ## Tranches de code
 
@@ -383,12 +413,12 @@ complet qu'après EQ-C.
 
 | Tranche | Ce qui change | Fichiers touchés | Ordre / conflits |
 |---|---|---|---|
-| **EQ-A — Coordination** | EQ24 à EQ26 : `coordination` sur le profil, `isCoordination` client et règles, garde de création, case et ligne de Personnes. Les profils des tests passent de `poles: ["evenement"]` à `coordination: true`. | `src/types/user.ts`, `src/lib/access.ts`, `src/lib/firebase/users.ts`, `firestore.rules`, `src/components/admin/Personnes.tsx`, `PersonnesVolets.tsx`, `notify-evenement/route.ts`, `desinscription/route.ts`, locales, `tests/helpers/fakeSession.ts` | La première. Indépendante du reste. Lot 3 (`spec-planning-gestes.md`) codé en parallèle ; fichiers communs aux lots 1 et 3, quelle que soit la tranche qui les touche : `src/locales/fr.json`, `src/locales/zh-CN.json`, `tests/helpers/fakeSession.ts`, `tests/back-office-coupe.spec.ts` (liste des routes en 404), `tests/coherence.spec.ts`, `CLAUDE.md` (liste des routes), `tests/planning-grille.spec.ts` et `tests/planning-2027.spec.ts` (profils simulés). Consigne : `git pull --rebase`, garder les deux ajouts. |
-| **EQ-B — Accès par équipe, réunions et évènements** | EQ2 à EQ5, EQ17 à EQ23 : `equipesDe`, `estDeLEquipe`, `estReferentDe` ; `entreesBackOffice`, `estResponsable`, `EspaceBackOffice` ; retrait du public `pole:` ; `destinatairesEvenement` (Louange élargi) ; libellés des pastilles ; règles `estDeLEquipe`, `estDeLaReunion`, création des évènements. | `src/lib/access.ts`, `firestore.rules`, `src/types/evenement.ts`, `src/lib/evenements/serveur.ts`, `src/lib/taches/serveur.ts` (`membresDeLEquipe` seulement), `src/app/back-office/EspaceBackOffice.tsx`, `EvenementCard.tsx`, `FicheGestion.tsx`, `EnTeteReunion.tsx`, `EvenementForm.tsx`, `src/lib/calendrier/entrees.ts` (réunions), locales | Après EQ-A. `polesDe`, `isPoleMember` et `isTachePole` restent, pour le code des tâches, jusqu'à EQ-C. Les règles ne sont publiées qu'à la fin : les états intermédiaires ne touchent pas la base. |
-| **EQ-C — Tâches par équipe** | EQ6 à EQ16 : chemin, types, client REST, serveur, routes, cron, messages, écrans App et Back-Office (dossiers `[pole]` renommés `[equipe]`), formulaire, fiche, calendrier, widget, pastilles, Plus, barre du haut, Moi, fiche d'évènement, duplication ; règles `equipes/{equipe}/taches`. | tous les fichiers « Tâches » du relevé, `src/types/tache.ts`, `src/types/backOffice.ts`, `firestore.rules`, locales | Après EQ-B. La plus grosse : une session. |
+| **EQ-A — Coordination** | EQ24 à EQ26 : `coordination` sur le profil, `isCoordination` client et règles, garde de création, case et ligne de Personnes. Les profils des tests passent de `poles: ["evenement"]` à `coordination: true`. | `src/types/user.ts`, `src/lib/access.ts`, `src/lib/firebase/users.ts`, `firestore.rules`, `src/components/admin/Personnes.tsx`, `PersonnesVolets.tsx`, `notify-evenement/route.ts`, `desinscription/route.ts`, locales, `tests/helpers/fakeSession.ts` | La première. Indépendante du reste. Lot 3 (`spec-planning-gestes.md`) codé en parallèle ; fichiers communs aux lots 1 et 3, quelle que soit la tranche qui les touche : `src/locales/fr.json`, `src/locales/zh-CN.json`, `tests/helpers/fakeSession.ts`, `tests/back-office-coupe.spec.ts` (liste des routes en 404), `tests/coherence.spec.ts`, `CLAUDE.md` (liste des routes), `tests/planning-grille.spec.ts` et `tests/planning-2027.spec.ts` (profils simulés). Le partage d'une setlist (`docs/spec-partage-setlist.md`) est aussi codé en parallèle (décision 45) : il touche `src/lib/access.ts` (fonctions des setlists, `editeurs`), `firestore.rules` (`match /setlists`) et les locales, des fonctions et des blocs différents de ce lot. Consigne : `git pull --rebase`, garder les deux ajouts. |
+| **EQ-B — Accès par équipe, réunions et évènements** | EQ2 à EQ5, EQ17 à EQ23 : `equipesDe`, `estDeLEquipe`, `estReferentDe` ; `entreesBackOffice` (Évènements aux référents, décision 43), `sousPartiesEvenements`, `estResponsable`, `EspaceBackOffice` ; « Nouvel évènement » ouvert aux référents (`peutCreerDans`, `droits.evenement`) ; retrait du public `pole:` ; `destinatairesEvenement` (Louange élargi) ; libellés des pastilles ; règles `estDeLEquipe`, `estDeLaReunion`, création des évènements. | `src/lib/access.ts`, `firestore.rules`, `src/types/evenement.ts`, `src/lib/evenements/serveur.ts`, `src/lib/taches/serveur.ts` (`membresDeLEquipe` seulement), `src/app/back-office/EspaceBackOffice.tsx`, `src/app/back-office/evenements/ListeGestion.tsx` (`peutCreerDans` et son commentaire), `src/app/back-office/calendrier/CalendrierClient.tsx` (`droits.evenement` seulement), `EvenementCard.tsx`, `FicheGestion.tsx`, `EnTeteReunion.tsx`, `EvenementForm.tsx`, `src/lib/calendrier/entrees.ts` (réunions), locales | Après EQ-A. `polesDe`, `isPoleMember` et `isTachePole` restent, pour le code des tâches, jusqu'à EQ-C. Les règles ne sont publiées qu'à la fin : les états intermédiaires ne touchent pas la base. |
+| **EQ-C — Tâches par équipe** | EQ6 à EQ16 : chemin, types, client REST, serveur, routes (`/fait` vérifie `peutCocher`), cron (rappels « toute l'équipe » aux référents), messages, écrans App et Back-Office (dossiers `[pole]` renommés `[equipe]`), formulaire, fiche, calendrier, widget, pastilles, Plus, barre du haut, Moi, fiche d'évènement, duplication ; `peutCocher`, `aFairePour` (décision 41) ; règles `equipes/{equipe}/taches`. | tous les fichiers « Tâches » du relevé, `src/lib/taches/echeances.ts`, `src/lib/taches/serveur.ts` (`referentsDeLEquipe`), `src/types/tache.ts`, `src/types/backOffice.ts`, `firestore.rules`, locales | Après EQ-B. La plus grosse : une session. |
 | **EQ-D — Organigramme sans pôles** | EQ1, EQ27 à EQ29 : `pole` retiré de la table, des documents `equipes`, de `rattachementDe` ; `recalculerRattachement` ; route renommée ; pastille et sélecteur retirés ; `POLES` et `Pole` supprimés ; `PolesDuMembre` retiré. | `src/lib/equipes/{table,organigramme,serveur}.ts`, `src/lib/firebase/equipes.ts`, `src/app/api/equipes/rattachement/route.ts` (nouveau), `src/app/api/equipes/poles/route.ts` (supprimé), `RecalculerOrganigramme.tsx`, `EquipesClient.tsx`, `src/app/back-office/equipes/page.tsx`, `Personnes.tsx`, `PersonnesVolets.tsx`, `src/types/{user,equipe}.ts`, `src/lib/firebase/users.ts`, `CLAUDE.md` (liste des routes) | Après EQ-C : les tâches ne lisent plus `Pole`. Le lot 2 part de cette tranche (Personnes, organigramme). Note pour lui : `rattachementDe` ne garde que les ids de `EQUIPES` (`organigramme.ts:38-42`). |
 | **EQ-E — Migration** | § Migration : `src/lib/equipes/migration.ts` (nouveau, pur : correspondance, relevé, plan d'opérations) et `scripts/poles-vers-equipes.ts` (nouveau, Admin SDK, à blanc par défaut, `--ecrire`). | les deux fichiers nouveaux | Après EQ-C et EQ-D : le modèle final est connu. |
-| **EQ-F — Nettoyage et passage complet** | Clés de langue devenues orphelines, guide, commentaires (`EnTetePage.tsx:15`, `deuxVolets.ts:36`, `:43`, `ListeGestion.tsx:32-40`, `useNotifications.ts:83-86`, `profil/page.tsx:94`, tête de `firestore.rules`) ; critère EQ1 ; toutes les specs de test réécrites vertes ; `back-office-coupe` ; captures aux trois tailles, et aux cinq pour l'agencement ; `docs/feuille-de-route.md` et Avancement. | locales, commentaires, `tests/` | La dernière. Fichiers communs avec le lot 3, codé en parallèle : ceux listés en EQ-A (`src/locales/fr.json`, `src/locales/zh-CN.json`, `tests/helpers/fakeSession.ts`, `tests/back-office-coupe.spec.ts`, `tests/coherence.spec.ts`, `CLAUDE.md`, `tests/planning-grille.spec.ts`, `tests/planning-2027.spec.ts`) ; `git pull --rebase`, garder les deux ajouts. |
+| **EQ-F — Nettoyage et passage complet** | Clés de langue devenues orphelines, guide, commentaires (`EnTetePage.tsx:15`, `deuxVolets.ts:36`, `:43`, `useNotifications.ts:83-86`, `profil/page.tsx:94`, tête de `firestore.rules`) ; critère EQ1 ; toutes les specs de test réécrites vertes ; `back-office-coupe` ; captures aux trois tailles, et aux cinq pour l'agencement ; `docs/feuille-de-route.md` et Avancement. | locales, commentaires, `tests/` | La dernière. Fichiers communs avec le lot 3, codé en parallèle : ceux listés en EQ-A (`src/locales/fr.json`, `src/locales/zh-CN.json`, `tests/helpers/fakeSession.ts`, `tests/back-office-coupe.spec.ts`, `tests/coherence.spec.ts`, `CLAUDE.md`, `tests/planning-grille.spec.ts`, `tests/planning-2027.spec.ts`), et avec le partage d'une setlist (`src/lib/access.ts`, `firestore.rules`, locales) ; `git pull --rebase`, garder les deux ajouts. |
 
 ## Droits en double
 
@@ -398,9 +428,10 @@ complet qu'après EQ-C.
 | Être référent | `estReferentDe` (nouvelle) | `estReferentDe(equipe)` (nouvelle) | `/api/taches/assigne` |
 | Voir les tâches d'une équipe | `estDeLEquipe`, `equipesDesTaches` | `match /equipes/{equipe}/taches/{id}` : `read` | — |
 | Créer, modifier, supprimer, déplacer une tâche | `estReferentDe`, `equipesOuCreer` | `create` (auteur = soi, `equipe` = chemin), `update` (`equipe` inchangée), `delete` | — |
-| Changer l'état d'une fois | `peutCocher` (nouvelle) | `match …/fois/{date}` : `write` si référent, ou membre et responsable = soi ou personne (`get` de la tâche) | `/api/taches/fait` (membre) |
+| Changer l'état d'une fois (décision 41) | `peutCocher` (nouvelle) : référent ou admin ; sinon membre **et** responsable = soi. Suivie par `aFairePour` (« à moi ») | `match …/fois/{date}` : `write` si référent, ou membre et responsable = soi (`get` de la tâche) ; une tâche sans responsable : référents et admins seulement | `/api/taches/fait` : `peutCocher` sur le profil et la tâche lus par le serveur |
+| Être rappelé d'une tâche | — (`aFairePour` pour l'affichage) | — (Admin SDK) | cron : le responsable, sinon `referentsDeLEquipe` (EQ12) |
 | Être d'une réunion (sujets, compte rendu) | `estDeLaReunion` | `estDeLaReunion(e)`, sous `evenements/{id}` et `…/sujets` | `destinatairesEvenement` (cron, `notify-evenement`) |
-| Créer une réunion ou un évènement d'équipe | `canCreateEvenement`, `creatableEvenementPours` | `evenements` : `create`, branche `equipe:` (inchangée) | `/api/push/notify-evenement` |
+| Créer une réunion ou un évènement d'équipe (décisions 3 et 43) | `canCreateEvenement`, `creatableEvenementPours` (inchangées, hors retrait de `pole:`) ; affichage : `peutCreerDans`, `droits.evenement`, entrée et sous-partie Évènements (EQ21) | `evenements` : `create`, branche `equipe:` (inchangée : elle accepte déjà un référent, réunion ou non) | `/api/push/notify-evenement` |
 | Voir un évènement d'équipe, s'y inscrire | `canSeeEvenement`, `canInscrireEvenement` | lecture ouverte aux connectés (filtrage client, choix assumé de `CLAUDE.md`) | `/api/evenements/inscription` (`inscrire`, `src/lib/evenements/serveur.ts:65-86`) |
 | Coordination | `isCoordination` (`coordination === true`) | `isCoordination()` | `notify-evenement`, `desinscription` (par `canEditEvenement`) |
 | Cocher « Coordination » | admin seul (Personnes) | `users/{uid}` : `update` admin (inchangée) ; `create` : `coordination` interdit | — |
@@ -437,12 +468,14 @@ match /equipes/{equipe} {
     allow update: if signedIn() && estReferentDe(equipe) && request.resource.data.equipe == equipe;
     allow delete: if signedIn() && estReferentDe(equipe);
 
+    // Cocher (décision 41) : le responsable s'il est de l'équipe ; une tâche
+    // sans responsable (« toute l'équipe »), les référents et les admins.
     match /fois/{date} {
       allow read: if signedIn() && estDeLEquipe(equipe);
       allow write: if signedIn() && (estReferentDe(equipe)
         || (estDeLEquipe(equipe)
             && get(/databases/$(database)/documents/equipes/$(equipe)/taches/$(id)).data.get('responsableUid', null)
-               in [request.auth.uid, null]));
+               == request.auth.uid));
     }
   }
 }
@@ -460,9 +493,10 @@ function estDeLaReunion(e) {
 // Supprimés : isTachePole, match /poles/{pole}/taches/{id}.
 ```
 
-`get('responsableUid', null)` et non `.responsableUid` : une tâche sans le champ ferait échouer la règle, donc refuser la
-coche de « toute l'équipe ». `fromFsTache` lit déjà l'absence comme `null` (`src/lib/firebase/taches.ts:21`) ; les tâches
-écrites par l'app portent le champ (`null` explicite), celles de la migration le gardent.
+`get('responsableUid', null)` et non `.responsableUid` : une tâche sans le champ se lit comme « toute l'équipe », comme
+le fait `fromFsTache` (`src/lib/firebase/taches.ts:21`), et la règle refuse alors proprement la coche d'un simple membre
+au lieu d'échouer sur un champ absent ; un référent passe par la première branche, sans lecture. Les tâches écrites par
+l'app portent le champ (`null` explicite), celles de la migration le gardent.
 
 Le lot passe-t-il par une route serveur ?
 
@@ -470,6 +504,8 @@ Le lot passe-t-il par une route serveur ?
 - Les rappels, « tâche faite » et « nouvelle tâche » : oui, par les routes et le cron (Admin SDK), qui revérifient
   l'appelant.
 - `dansEquipes` et `referentDe` : oui, par `/api/equipes/rattachement`.
+- Créer un évènement d'équipe depuis « Nouvel évènement » (décision 43) : non, écriture REST directe, comme
+  aujourd'hui ; la notification passe par `/api/push/notify-evenement`, inchangée.
 
 **Les règles ne sont pas testées par Playwright** : la base est simulée, il n'y a pas d'émulateur. La relecture du lot
 confronte `access.ts` et `firestore.rules` fonction par fonction.
@@ -491,7 +527,11 @@ confronte `access.ts` et `firestore.rules` fonction par fonction.
 **L'organigramme actuel est gardé tel quel** : personne n'est ajouté ni retiré d'une équipe. La correspondance ne
 s'applique qu'aux données rangées par pôle : tâches, évènements, réglages, clés. Elle ne s'applique pas aux personnes.
 
-### Ce que cela retire à certains, à signaler à Timothée (question 1)
+### Ce que cela retire à certains (décision 40 : perte voulue)
+
+Timothée l'a confirmé : la perte est voulue. Le relevé nomme ces personnes, Timothée les ajoute à la main à
+l'équipe cible dans l'organigramme (ou réassigne leurs tâches), avant ou après la migration. Personne n'est ajouté
+automatiquement.
 
 Des pôles étaient donnés par d'autres équipes que l'équipe cible (`src/lib/equipes/table.ts:24`, `:30`, `:32`, `:33`) :
 c'est la table par défaut. Le pôle d'une équipe se règle à l'écran et se stocke dans `equipes/{id}.pole`
@@ -506,7 +546,8 @@ donc nommer d'autres équipes que celles-ci.
 | ÉVÉNEMENTIEL | Événement | la coordination, que personne n'a au départ (décision 6) |
 
 Les membres de TEAM ÉVÉNEMENTIEL gardent les tâches et réunions de leur équipe. Les comptes qui avaient un pôle coché
-« hors organigramme » (D10 du lot 16) perdent ce pôle.
+« hors organigramme » (D10 du lot 16) perdent ce pôle. Les tâches « toute l'équipe » ne se cochent plus que par les
+référents et les admins (décision 41), quel que soit le pôle d'origine.
 
 ### Le relevé, avant tout (décision 7)
 
@@ -528,8 +569,9 @@ n'écrit rien. Il imprime, dans le terminal seulement, jamais dans un fichier du
    Réunions (EQ17, b) ;
 3. **les comptes qui avaient la coordination** par le pôle Événement, pour que Timothée coche « Coordination » à
    ceux qui doivent la garder ;
-4. **les tâches dont le responsable ne sera pas membre de l'équipe cible** (question 1). Elles restent assignées,
-   mais leur responsable ne pourra plus les ouvrir ;
+4. **les tâches dont le responsable ne sera pas membre de l'équipe cible** (décision 40). Elles restent assignées,
+   mais leur responsable ne pourra plus ni les ouvrir ni les cocher. Et **les tâches sans responsable d'une équipe
+   sans référent** : seul un admin pourra les cocher, et personne n'en sera rappelé (EQ12, décision 41) ;
 5. **les chiffres** : tâches et fois par pôle ; tâches dont `prevenir` vise un pôle ; évènements `pole:*`
    (réunions, non-réunions, sujets) ; tableaux de bord dont le widget « À faire » a un réglage `poles` ; clés
    `notifLog` de tâches à recopier ; profils dont `dansEquipes` ou `referentDe` changeraient au recalcul ;
@@ -575,7 +617,8 @@ l'interrupteur. C'est le patron de présentation de `scripts/releve-pianistes-fi
 1. **Le code du lot est sur `ui/apple-design`**, toutes les tranches vertes. Le local de Timothée tourne encore
    l'ancien code.
 2. **Relevé** : le script sans `--ecrire`. Timothée lit les listes. S'il veut que quelqu'un garde un accès, il
-   l'ajoute dans l'organigramme, à la main, avant ou après (question 1).
+   l'ajoute dans l'organigramme, à la main, avant ou après (décision 40) ; il peut aussi nommer un référent dans une
+   équipe sans référent qui a des tâches « toute l'équipe » (liste 4).
 3. **Publier les règles du lot** dans la console Firebase. **Les règles d'abord** : elles ne lisent que ce que la
    migration ajoute ou déplace (`dansEquipes`, `referentDe`, `equipes/*/taches`, `evenements.pour`) et `coordination`, que
    Timothée coche au point 6. Dès la publication, plus personne n'a la coordination par un pôle. Une fois publiées,
@@ -591,7 +634,8 @@ l'interrupteur. C'est le patron de présentation de `scripts/releve-pianistes-fi
    l'avait.
 
 **`firestore.rules` est un seul fichier.** Toute publication ultérieure (lot 2, lot 3 s'il touche les règles, lot 4,
-partage de setlist en variante V1) publie aussi les règles du lot 1. Cette bascule (relevé, règles, migration
+partage d'une setlist, qui change `match /setlists` pour le champ `editeurs` : décisions 39 et 45) publie aussi les
+règles du lot 1. Cette bascule (relevé, règles, migration
 `--ecrire`, coordination cochée) se fait donc avant la première de ces publications, ou dans la même séance.
 
 ## Tests Playwright à écrire d'abord
@@ -608,12 +652,12 @@ testent sans page, comme `planning-fidelite.spec.ts`. Les noms sont fictifs.
 
 | Fichier | Vérifie |
 |---|---|
-| `tests/equipes-acces.spec.ts` | Pur : `equipesDe` (membre de TEAM DA ; choriste sans équipe → `louange` ; membre de TEAM LOUANGE sans rôle de service → `louange` ; ordre de la table) ; `estDeLEquipe`, `estReferentDe`, `peutCocher` (responsable, toute l'équipe, autre membre, référent, admin) ; `isCoordination` (booléen ; `poles: ["evenement"]` ne donne plus rien) ; `estResponsable` (coordination oui ; membre seul non ; Louange seul non) ; `entreesBackOffice` (membre simple → Tâches + Réunions ; choriste sans équipe → Tâches + Réunions ; référent → tableau, calendrier, tâches, réunions ; coordination → plus Évènements) ; plus de public `pole:` dans `creatableEvenementPours`. Écran : Joël F., simple membre de TEAM MÉDIAS, voit App · Back-Office. En grand, le menu n'a que Tâches et Réunions ; au doigt, la barre du bas est Tâches · Réunions · Plus. `/back-office` et `/back-office/calendrier` le ramènent à Tâches. Un choriste n'y voit que Louange. |
-| `tests/equipes-taches.spec.ts` | Léa M., référente de TEAM MÉDIAS, crée une tâche pour Joël F. : `POST …/equipes/medias/taches` avec `equipe: "medias"`, puis `/api/taches/assigne` avec `{ equipe, tacheId }`. Joël F. la voit et la coche (fois écrite sous `equipes/medias/…`). Il n'a ni « + Nouvelle tâche », ni « Modifier », ni « Supprimer ». La case d'une tâche d'un autre responsable est inerte ; celle d'une tâche « toute l'équipe » se coche. Hugo L. (TEAM DA) n'émet aucune lecture de `equipes/medias/taches`. Liste vide : rail des seules équipes qui ont une tâche, plus celles dont on est référent ; admin sans 13 onglets vides ; « Pas encore de tâche pour tes équipes. ». Un musicien sans équipe voit les tâches de Louange et pas les autres. « Prévenir » liste des équipes. `/api/taches/fait` répond `cible: "equipe"` et « Équipe prévenue : TEAM DA. ». Pur : cibles du cron (responsable, sinon membres de l'équipe, Louange élargi) ; clés `rappel-tache-J3-medias-…` ; une tâche restée sous `poles/` ignorée. Libellés FR et 中文 (« TEAM MÉDIAS · pour … », 媒体组 · 截止 …). Calendrier : la tâche, son lien `/taches/medias`. Widget « À faire » : réglage « Équipes ». Aperçu de Moi. Fiche d'évènement : carte masquée pour un membre sans tâche liée, « Nouvelle tâche » pour une référente. Duplication : seules les tâches des équipes où l'on crée. |
-| `tests/equipes-reunions.spec.ts` | Réunion `equipe:louange` : un choriste sans équipe la trouve au Back-Office › Réunions et propose un sujet. Il n'a pas « + Nouvelle réunion », et `/back-office/reunions/nouvelle` lui dit « Réservé ». La référente de TEAM LOUANGE la crée. Un simple membre de TEAM DA ne crée pas de réunion. « Réunions précédentes » et la reprise des sujets sur `equipe:medias`, avec un historique au `pour` migré. Notification de publication d'un évènement d'équipe aux seuls membres (`destinatairesEvenement`, base simulée, Louange élargi). Pastille « TEAM DA » et « Louange », plus de « Pôle DA ». L'adresse d'une réunion de Louange mène le choriste au Back-Office (lot G, G2). |
+| `tests/equipes-acces.spec.ts` | Pur : `equipesDe` (membre de TEAM DA ; choriste sans équipe → `louange` ; membre de TEAM LOUANGE sans rôle de service → `louange` ; ordre de la table) ; `estDeLEquipe`, `estReferentDe`, `peutCocher` (responsable oui ; autre membre non ; tâche « toute l'équipe » : simple membre **non**, référent oui, admin oui ; responsable sorti de l'équipe non ; décision 41) ; `aFairePour` (une tâche sans responsable est « à moi » pour une référente, pas pour un simple membre) ; `isCoordination` (booléen ; `poles: ["evenement"]` ne donne plus rien) ; `estResponsable` (coordination oui ; membre seul non ; Louange seul non) ; `entreesBackOffice` (membre simple → Tâches + Réunions ; choriste sans équipe → Tâches + Réunions ; référent sans autre droit → tableau, calendrier, tâches, évènements, réunions, décision 43 ; coordination → plus Évènements) ; `sousPartiesEvenements` d'un référent → `["evenements"]` ; `barreParDefaut` d'un référent sans Planning → tableau, calendrier, tâches, évènements ; avec Planning → tableau, calendrier, tâches, planning ; `raccourcisPermis` d'un référent : « Nouvel évènement » compris ; plus de public `pole:` dans `creatableEvenementPours`. Écran : Joël F., simple membre de TEAM MÉDIAS, voit App · Back-Office. En grand, le menu n'a que Tâches et Réunions ; au doigt, la barre du bas est Tâches · Réunions · Plus. `/back-office` et `/back-office/calendrier` le ramènent à Tâches. Un choriste n'y voit que Louange. |
+| `tests/equipes-taches.spec.ts` | Léa M., référente de TEAM MÉDIAS, crée une tâche pour Joël F. : `POST …/equipes/medias/taches` avec `equipe: "medias"`, puis `/api/taches/assigne` avec `{ equipe, tacheId }`. Joël F. la voit et la coche (fois écrite sous `equipes/medias/…`). Il n'a ni « + Nouvelle tâche », ni « Modifier », ni « Supprimer ». La case d'une tâche d'un autre responsable est inerte ; celle d'une tâche « toute l'équipe » aussi pour Joël F. (décision 41), et sa pastille Tâches ne la compte pas ; Léa M., référente, la coche (fois écrite) et la voit dans « À faire pour moi ». `/api/taches/fait` répond 403 à un simple membre sur une tâche « toute l'équipe » (base simulée). Hugo L. (TEAM DA) n'émet aucune lecture de `equipes/medias/taches`. Liste vide : rail des seules équipes qui ont une tâche, plus celles dont on est référent ; admin sans 13 onglets vides ; « Pas encore de tâche pour tes équipes. ». Un musicien sans équipe voit les tâches de Louange et pas les autres. « Prévenir » liste des équipes. `/api/taches/fait` répond `cible: "equipe"` et « Équipe prévenue : TEAM DA. ». Pur : cibles du cron (le responsable ; sans responsable, les référents de l'équipe et pas ses simples membres ; Louange : les référents de TEAM LOUANGE, pas un choriste ; une équipe sans référent : personne) ; clés `rappel-tache-J3-medias-…` ; une tâche restée sous `poles/` ignorée. Libellés FR et 中文 (« TEAM MÉDIAS · pour … », 媒体组 · 截止 …). Calendrier : la tâche, son lien `/taches/medias`. Widget « À faire » : réglage « Équipes ». Aperçu de Moi. Fiche d'évènement : carte masquée pour un membre sans tâche liée, « Nouvelle tâche » pour une référente. Duplication : seules les tâches des équipes où l'on crée. |
+| `tests/equipes-reunions.spec.ts` | Réunion `equipe:louange` : un choriste sans équipe la trouve au Back-Office › Réunions et propose un sujet. Il n'a pas « + Nouvelle réunion », et `/back-office/reunions/nouvelle` lui dit « Réservé ». La référente de TEAM LOUANGE la crée. Un simple membre de TEAM DA ne crée pas de réunion. « Réunions précédentes » et la reprise des sujets sur `equipe:medias`, avec un historique au `pour` migré. Notification de publication d'un évènement d'équipe aux seuls membres (`destinatairesEvenement`, base simulée, Louange élargi). Pastille « TEAM DA » et « Louange », plus de « Pôle DA ». L'adresse d'une réunion de Louange mène le choriste au Back-Office (lot G, G2). **Décision 43** : Léa M., référente de TEAM MÉDIAS sans droit d'annonces, a l'entrée Évènements et « Nouvel évènement » en tête de BO › Évènements et au Calendrier (panneau du jour en grand, « + » sur téléphone) ; le formulaire ne propose que TEAM MÉDIAS ; `POST evenements` avec `pour: "equipe:medias"`, `reunion: false`, inscriptions ; l'évènement est dans sa liste. Joël F., simple membre, n'a ni l'entrée ni le bouton, et `/back-office/evenements/nouveau` le ramène à Tâches (EQ17). |
 | `tests/equipes-coordination.spec.ts` | Un admin coche « Coordination » dans Personnes : `PATCH users/{uid}` avec `updateMask.fieldPaths=coordination` ; la fiche dit « Coordination · Oui », en FR et en 中文. Un non-admin qui a le droit Équipes ne voit pas la case. Un membre de TEAM ÉVÉNEMENTIEL ou d'ACCUEIL J1 sans la case n'a ni Pâques ni Noël au Back-Office, ni « Toute l'église » dans « Pour », ni « Modifier » sur l'évènement d'un autre. Avec la case, il a les trois. La carte « Pôles » et « Coché hors organigramme » n'existent plus. |
-| `tests/equipes-migration.spec.ts` | Pur, sur une base simulée en mémoire : la correspondance des cinq pôles ; une tâche et ses fois recopiées (`equipe`, `prevenir` traduit, même id, `debutLe` gardé), la source supprimée ; les évènements `pole:*` passés en `equipe:*`, réunions et non-réunions, sujets inchangés ; les réglages du widget ; les clés `notifLog` de Média et Événement recopiées, celles d'Orga laissées ; `equipes.pole` et `users.poles` retirés ; `dansEquipes` recalculé pour un profil hors des équipes. Relevé : coché hors organigramme, pertes d'accès (un membre de COMITÉ FRANCO hors TEAM ORGA), coordination d'avant, responsable hors équipe. À blanc : la base est inchangée. Second passage : 0 opération. |
-| `tests/equipes-agencement.spec.ts` | **Cinq projets** : ajouté à `SPECS_GRAND_ECRAN` dans `playwright.config.ts` (`/equipes-agencement\.spec\.ts/`). Organigramme « Église » sans pastille « Donne le pôle », cartes sans débordement. Fiche de Personnes : ligne « Coordination » dans Droits, plus de carte Pôles. Back-Office d'un simple membre : deux entrées en grand, barre du bas au doigt. Rail des équipes de Tâches. `verifierEnTete` et `verifierSansDebordement` (`tests/helpers/agencement.ts:72`, `:112`). Captures regardées aux cinq tailles, FR et 中文. |
+| `tests/equipes-migration.spec.ts` | Pur, sur une base simulée en mémoire : la correspondance des cinq pôles ; une tâche et ses fois recopiées (`equipe`, `prevenir` traduit, même id, `debutLe` gardé), la source supprimée ; les évènements `pole:*` passés en `equipe:*`, réunions et non-réunions, sujets inchangés ; les réglages du widget ; les clés `notifLog` de Média et Événement recopiées, celles d'Orga laissées ; `equipes.pole` et `users.poles` retirés ; `dansEquipes` recalculé pour un profil hors des équipes. Relevé : coché hors organigramme, pertes d'accès (un membre de COMITÉ FRANCO hors TEAM ORGA), coordination d'avant, responsable hors équipe, tâche sans responsable d'une équipe sans référent. À blanc : la base est inchangée. Second passage : 0 opération. |
+| `tests/equipes-agencement.spec.ts` | **Cinq projets** : ajouté à `SPECS_GRAND_ECRAN` dans `playwright.config.ts` (`/equipes-agencement\.spec\.ts/`). Organigramme « Église » sans pastille « Donne le pôle », cartes sans débordement. Fiche de Personnes : ligne « Coordination » dans Droits, plus de carte Pôles. Back-Office d'un simple membre : deux entrées en grand, barre du bas au doigt. Back-Office d'une référente sans Planning : Évènements dans le menu en grand ; au doigt, la barre par défaut Accueil · Calendrier · Tâches · Évènements, Réunions dans Plus (décision 43). Rail des équipes de Tâches. `verifierEnTete` et `verifierSansDebordement` (`tests/helpers/agencement.ts:72`, `:112`). Captures regardées aux cinq tailles, FR et 中文. |
 
 **Specs existantes à mettre à jour** : 42 fichiers (41 specs et `tests/helpers/fakeSession.ts`), relevés par
 `grep -rliE "p[ôo]le|coordination|\"evenement\"\]" tests`. Chaque spec est réécrite dans la tranche qui change ce
@@ -624,12 +668,12 @@ qu'elle vérifie ; EQ-F referme celles qui restent. On compte **473 occurrences*
 
 | Fichier | Occurrences | Changement |
 |---|---|---|
-| `taches.spec.ts` | 68 | |
+| `taches.spec.ts` | 68 | une tâche « toute l'équipe » : cochée par une référente, case inerte pour un simple membre (décision 41) |
 | `taches-evenements.spec.ts` | 52 | |
 | `reunions.spec.ts` | 41 | |
-| `calendrier.spec.ts` | 33 | |
+| `calendrier.spec.ts` | 33 | « téléphone : en Agenda, le « + » propose aujourd'hui » : le profil de pôles devient une référente, dont la feuille « Créer » propose aussi « Nouvel évènement » (décision 43) |
 | `agencement-v18-taches.spec.ts` | 28 | |
-| `evenements-pole.spec.ts` | 26 | **renommé `evenements-equipe.spec.ts`**, lot E en équipes |
+| `evenements-pole.spec.ts` | 26 | **renommé `evenements-equipe.spec.ts`**, lot E en équipes ; le test « relecture : « Nouvel évènement » et l'entrée Évènements restent aux admins, à la coordination et aux droits d'annonces » est **retourné** : un référent les a, un simple membre a Tâches et Réunions (décision 43) |
 | `tableau-de-bord.spec.ts` | 24 | |
 | `equipes.spec.ts` | 21 | placer dans TEAM DA ouvre les tâches de TEAM DA, plus de `poles` écrit |
 | `evenements.spec.ts` | 19 | |
@@ -638,11 +682,11 @@ qu'elle vérifie ; EQ-F referme celles qui restent. On compte **473 occurrences*
 | `agencement-v18-confirmations.spec.ts` | 14 | |
 | `back-office-admin.spec.ts` | 12 | |
 | `agencement-v18-moi.spec.ts` | 10 | |
-| `back-office-espace.spec.ts` | 8 | Réunions + Tâches pour un membre |
+| `back-office-espace.spec.ts` | 8 | Réunions + Tâches pour un membre ; le référent (`REFERENT`, liste des entrées) gagne Tâches et Évènements (décision 43) |
 | `barre-back-office.spec.ts` | 7 | |
 | `reunions-back-office.spec.ts` | 7 | |
 | `coherence.spec.ts` | 6 | `poles` jamais renvoyé ; `coordination` |
-| `agencement-v18-t2a.spec.ts` | 5 | |
+| `agencement-v18-t2a.spec.ts` | 5 | la référente (`REFERENTE`, entrées permises) gagne Tâches et Évènements, et sa barre par défaut (décision 43) |
 | `agencement-v18-t2b.spec.ts` | 3 | |
 | `agencement-v18-t5.spec.ts` | 5 | route `/api/equipes/rattachement` |
 | `calendrier-widget.spec.ts` | 5 | |
@@ -687,7 +731,12 @@ Un `poles: []` à retirer d'un profil simulé : `statistiques.spec.ts`, `plannin
 - **« + Nouvelle équipe »** de la planche Église : les équipes restent fixes.
 - Restreindre le droit Équipes à une équipe (« Demander avant », `spec-organigramme.md`).
 - Donner à la coordination les tâches ou les réunions d'une équipe.
-- Ouvrir « Nouvel évènement » à un référent sans droit d'annonces (choix V18POLE, question 4).
+- Ouvrir « Nouvel évènement » ou l'entrée Évènements à un **simple membre** : la décision 43 ne l'ouvre qu'aux
+  référents (et aux admins).
+- Donner à un référent la modification d'un évènement d'équipe créé par un autre, ou la Scène (Pâques, Noël) :
+  `canEditEvenement` et la coordination ne changent pas.
+- Changer la règle du public Louange pour les membres de groupe sans rôle (décision 42) : la fin de la transition des
+  `serviceRoles` est suivie par la question 8 de `docs/spec-organigrammes-groupes.md`.
 - Rediriger les anciennes adresses `/back-office/taches/media` et `…/evenement` : aucune notification ne les porte.
 - Réécrire les notifications déjà dans la cloche.
 - « Une équipe » dans Notifier (D21).
@@ -699,17 +748,23 @@ Un `poles: []` à retirer d'un profil simulé : `statistiques.spec.ts`, `plannin
 Le back-office reste coupé en ligne : ce lot ne change rien pour les membres. Ce qui suit est pour Timothée, au moment
 de la bascule (§ Migration, « Ordre de la bascule ») :
 
-1. lancer le relevé, `npx tsx --env-file=.env.local scripts/poles-vers-equipes.ts`, et lire ses listes ;
-2. **publier `firestore.rules`** dans la console Firebase ;
+1. lancer le relevé, `npx tsx --env-file=.env.local scripts/poles-vers-equipes.ts`, et lire ses listes ; ajouter à
+   la main à l'équipe cible qui doit garder un accès (décision 40), et nommer un référent là où des tâches « toute
+   l'équipe » n'en ont pas (liste 4, décision 41) ;
+2. **publier `firestore.rules`** dans la console Firebase (Timothée publie les règles) ;
 3. lancer la migration avec `--ecrire`, puis de nouveau à blanc (0 opération) ;
 4. tirer le code en local et vérifier ;
 5. cocher « Coordination » dans Équipes › Personnes pour qui doit régler la scène ;
 6. relire le 中文 des libellés d'EQ30.
 
 **Avant toute autre publication des règles.** `firestore.rules` est un seul fichier : publier les règles du lot 2, du
-lot 3 s'il les touche, du lot 4 ou du partage de setlist en variante V1 publie aussi celles du lot 1. Les points 1 à 5
-ci-dessus (relevé, règles, migration `--ecrire`, coordination cochée) doivent donc être faits avant, ou dans la même
-séance.
+lot 3 s'il les touche, du lot 4 ou du partage d'une setlist (champ `editeurs`, décisions 39 et 45 : le partage change
+`match /setlists`) publie aussi celles du lot 1. Les points 1 à 5 ci-dessus (relevé, règles, migration `--ecrire`,
+coordination cochée) doivent donc être faits avant, ou dans la même séance.
+
+Les référents découvrent l'entrée Évènements et « Nouvel évènement » (décision 43) ; ceux qui n'ont ni Planning ni
+barre enregistrée voient Évènements à la place de Réunions dans leur barre du bas (EQ18). Rien à faire : à dire aux
+référents au moment de la bascule.
 
 `CLAUDE.md`, liste des routes : `/api/equipes/{importer,poles}` devient `/api/equipes/rattachement`. Les routes
 `/api/admin/*` qu'elle cite n'existent plus, et `/api/equipes/importer` non plus ; elle annonce 18 routes, il y en a 15
@@ -720,29 +775,9 @@ faire pour ce lot.
 
 ## Questions ouvertes
 
-1. **« L'organigramme est gardé tel quel » retire des accès.** Les membres de COMITÉ FRANCO et de THÉOLOGIE (pôle
-   Orga), de DÉCORATION (pôle DA) et d'ACCUEIL J1 (pôle Événement) qui ne sont pas dans TEAM ORGA, DA ou ÉVÉNEMENTIEL
-   perdent les tâches et réunions de l'ancien pôle. Les tâches qui leur sont assignées restent à leur nom : ils
-   reçoivent encore les rappels, mais ne peuvent plus les ouvrir.
-   **Recommandation** : garder la décision 7 telle quelle. Personne n'est ajouté automatiquement. Le relevé
-   (listes 2 et 4) nomme ces personnes et ces tâches. Timothée les ajoute à l'équipe cible dans l'organigramme, ou
-   réassigne les tâches, à la main, avant ou après la migration.
-2. **Une tâche sans responsable (« toute l'équipe ») : un simple membre peut-il la cocher ?** La décision 3 dit
-   « celles qui leur sont assignées ». **Recommandation** : oui. Une tâche pour toute l'équipe est assignée à chacun.
-   C'est le sens de « Mes tâches » aujourd'hui : à moi, ou à mon pôle sans responsable (`aFairePour`,
-   `src/lib/taches/echeances.ts:128-130`).
-3. **Un membre de groupe sans rôle fait-il partie du public Louange ?** Un profil `serviceRoles: { "Groupe Paix": [] }`
-   en fait partie aujourd'hui : la règle compte les clés, pas les rôles (`src/lib/access.ts:53`,
-   `firestore.rules:150`). La décision 5 parle de « rôle de service ». **Recommandation** : garder la règle
-   d'aujourd'hui, sans changement, au lot 1 : une clé de `serviceRoles` suffit. La suite est suivie par la question 8
-   de `docs/spec-organigrammes-groupes.md` (fin de la transition des `serviceRoles`).
-4. **Qui crée un évènement d'équipe qui n'est pas une réunion ?** Les règles et `canCreateEvenement` le permettent aux
-   référents de l'équipe et aux admins (EQ21). Mais le bouton « Nouvel évènement » (Back-Office › Évènements,
-   Calendrier) n'est ouvert qu'aux admins, à la coordination et au droit d'annonces (choix V18POLE, `spec-retouches-v18.md`,
-   § V18POLE). Un référent sans ces droits ne crée donc que des réunions, pas d'évènement d'équipe. La décision 8 dit
-   « même règle » sans trancher le bouton. **Recommandation** : ne rien changer dans ce lot. Ouvrir le bouton à tout
-   référent lui donne l'entrée Évènements et change sa barre du bas par défaut (décision de navigation que le lot G n'a
-   pas prise) : à décider à part.
+Aucune : toutes tranchées le 08/10/2026 (décisions 35 à 45 de decisions.md). Les quatre questions de cette spec sont
+dans § « Réponses de Timothée (08/10/2026, soir) » : Q1 → décision 40, Q2 → décision 41, Q3 → décision 42, Q4 →
+décision 43.
 
 ## Commandes
 
@@ -752,7 +787,7 @@ npx tsc --noEmit
 npm run lint
 npm test -- tests/equipes-acces.spec.ts tests/equipes-taches.spec.ts tests/equipes-reunions.spec.ts tests/equipes-coordination.spec.ts tests/equipes-migration.spec.ts
 npm test -- tests/equipes-agencement.spec.ts   # cinq projets
-npm test -- tests/taches.spec.ts tests/taches-evenements.spec.ts tests/reunions.spec.ts tests/evenements-equipe.spec.ts tests/calendrier.spec.ts tests/equipes.spec.ts
+npm test -- tests/taches.spec.ts tests/taches-evenements.spec.ts tests/reunions.spec.ts tests/evenements-equipe.spec.ts tests/calendrier.spec.ts tests/equipes.spec.ts tests/back-office-espace.spec.ts tests/agencement-v18-t2a.spec.ts
 npm test -- tests/back-office-coupe.spec.ts   # second serveur, interrupteur coupé
 grep -rniE "\bp[ôo]les?\b|TachePole|polesDe|isPoleMember|isTachePole" src firestore.rules   # critère EQ1
 # Par Timothée seulement (vraie base) :
@@ -767,3 +802,4 @@ npx tsx --env-file=.env.local scripts/poles-vers-equipes.ts --ecrire   # migrati
   (EQ9), noms d'équipe par écran (EQ23), règle des fois (`get('responsableUid', null)`), liste des pertes d'accès (relevé,
   liste 2), question 4 ajoutée. Attend le go.
 - 08/10/2026 : relecture croisée des cinq specs, incohérences corrigées.
+- 08/10/2026 (soir) : réponses de Timothée intégrées (décisions 35 à 45).
