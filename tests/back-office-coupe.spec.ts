@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { BASE_URL_COUPE } from "../playwright.config";
 import { abonneAuxNotifications, signInAs, type FakeProfile } from "./helpers/fakeSession";
-import { interdireDialoguesNatifs, ongletsRail, verifierAgencement } from "./helpers/agencement";
+import { interdireDialoguesNatifs, ongletsRail, verifierAgencement, verifierSansDebordement } from "./helpers/agencement";
 
 // Lot 18 (docs/spec-mise-en-ligne.md) : ce que voit le site en ligne tant que le
 // back-office n'est pas ouvert. Ce serveur tourne SANS `NEXT_PUBLIC_BACK_OFFICE` ;
@@ -431,5 +431,11 @@ test.describe("back-office coupé : Fidélité en un seul tableau", () => {
     await expect(contenu.getByText("Guitare G.", { exact: true }).filter({ visible: true })).toHaveCount(1);
     await expect(contenu.getByText("Batteur B.", { exact: true }).filter({ visible: true })).toHaveCount(1);
     await expect(page.getByText("Autre Piano"), "le pianiste est celui du groupe").toHaveCount(0);
+    // Sept colonnes : rien ne déborde de la page, et la table (en grand) ne défile pas en largeur.
+    await verifierSansDebordement(page);
+    const defilement = await contenu.locator("div.overflow-x-auto:has(> table)").filter({ visible: true })
+      .evaluateAll((els) => els.map((e) => e.scrollWidth - e.clientWidth));
+    expect(defilement.every((d) => d <= 0), `la table de Fidélité ne défile pas en largeur (${defilement})`).toBe(true);
+    await page.screenshot({ path: test.info().outputPath("ancien-tableau-fidelite.png"), fullPage: true, animations: "disabled" });
   });
 });

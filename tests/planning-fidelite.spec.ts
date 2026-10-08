@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { signInAs, type FakeProfile } from "./helpers/fakeSession";
+import { estTelephone, verifierAgencement } from "./helpers/agencement";
 import {
   GRILLES, GRILLE_FIDELITE, completerMusiciensFidelite, grilleDe, pianistesQuiDifferent,
 } from "../src/lib/planning/grilles";
@@ -73,10 +74,10 @@ test("F2 · Guitariste et Batterie : ceux du planning Fidélité, sinon ceux du 
     ["2026-09-13", "", "", "Guitare K.", "Batteur C."],
     ["2026-09-20", "Ancien A.", "Autre Piano", "Guitare L.", "Batteur B."],
     ["2026-09-27", "Ancien B.", "", "Guitare H.", "Batteur D."],
-    ["2026-10-04", "Ancien C.", "Autre Piano", "", ""],
+    ["2026-10-04", "", "Autre Piano", "", ""],
   ];
   expect(completerMusiciensFidelite(fidelite, musiciens)).toEqual([
-    // Un dimanche des seuls musiciens : sa ligne, avec leurs noms seulement (ni présidence, ni piano).
+    // Un dimanche des seuls musiciens : sa ligne, avec leurs noms seulement (jamais le piano).
     ["2026-09-13", "", "", "", "", "Guitare K.", "Batteur C."],
     // Le pianiste reste celui du groupe (D26).
     ["2026-09-20", "Ancien A.", "Orateur O.", "Actes", "Pianiste P.", "Guitare L.", "Batteur B."],
@@ -88,6 +89,53 @@ test("F2 · Guitariste et Batterie : ceux du planning Fidélité, sinon ceux du 
     ["2026-09-20", "Ancien A.", "Orateur O.", "Actes", "Pianiste P.", "", ""],
     ["2026-09-27", "Ancien B.", "Orateur R.", "Romains", "Pianiste Q.", "Guitare J.", ""],
   ]);
+});
+
+test("F2 · une case vidée dans l'app reste vide : seule une case jamais écrite est reprise", () => {
+  // Les lignes telles que l'app les lit : un champ absent du document et un champ écrit à "" donnent
+  // tous deux "" ; `ecrites` (date|clé) dit lesquels sont dans le document.
+  const fidelite = [
+    ["2026-09-20", "Ancien A.", "Orateur O.", "Actes", "Pianiste P.", "", ""],
+    ["2026-09-27", "", "Orateur R.", "Romains", "Pianiste Q.", "", ""],
+  ];
+  const musiciens = [
+    ["2026-09-20", "Ancien A.", "", "Guitare L.", "Batteur B."],
+    ["2026-09-27", "Ancien B.", "", "Guitare H.", "Batteur D."],
+  ];
+  const ecrites = new Set(["2026-09-20|guitariste", "2026-09-27|presidence", "2026-09-27|batterie"]);
+  expect(completerMusiciensFidelite(fidelite, musiciens, ecrites)).toEqual([
+    // 20/09 : la guitare a été vidée, elle ne revient pas ; la batterie, jamais écrite, est reprise.
+    ["2026-09-20", "Ancien A.", "Orateur O.", "Actes", "Pianiste P.", "", "Batteur B."],
+    // 27/09 : présidence et batterie vidées ; la guitare, jamais écrite, est reprise.
+    ["2026-09-27", "", "Orateur R.", "Romains", "Pianiste Q.", "Guitare H.", ""],
+  ]);
+});
+
+test("F2 · la présidence du planning des musiciens est reprise quand celle du groupe est vide", () => {
+  const fidelite = [
+    ["2026-09-20", "", "Orateur O.", "Actes", "Pianiste P."],
+    ["2026-09-27", "Ancien B.", "Orateur R.", "Romains", "Pianiste Q."],
+  ];
+  const musiciens = [
+    ["2026-09-13", "Ancien C.", "Autre Piano", "Guitare K.", ""],
+    ["2026-09-20", "Ancien A.", "", "", ""],
+    ["2026-09-27", "Ancien D.", "", "", ""],
+    ["2026-10-04", "Ancien E.", "Autre Piano", "", ""],
+  ];
+  const lignes = completerMusiciensFidelite(fidelite, musiciens);
+  expect(lignes).toEqual([
+    // Un dimanche des seuls musiciens garde sa présidence (jamais le piano).
+    ["2026-09-13", "Ancien C.", "", "", "", "Guitare K.", ""],
+    ["2026-09-20", "Ancien A.", "Orateur O.", "Actes", "Pianiste P.", "", ""],
+    // Celle du groupe l'emporte.
+    ["2026-09-27", "Ancien B.", "Orateur R.", "Romains", "Pianiste Q.", "", ""],
+    ["2026-10-04", "Ancien E.", "", "", "", "", ""],
+  ]);
+  // Comme avant le lot : l'équipe de la setlist, Mes services et les rappels ont la présidence.
+  const data = { ...VIDE, fidelite: lignes };
+  expect(equipeDuService(data, { category: "Groupe Fidélité", date: "2026-09-13" })[0]).toEqual(["planning.roles.presidence", "Ancien C."]);
+  expect(findMyServices(data, "Ancien E.").map((e) => `${e.date} ${e.service}`)).toEqual(["2026-10-04 Groupe Fidélité"]);
+  expect(servantsForDate(data, "2026-09-20").map((s) => s.name)).toContain("Ancien A.");
 });
 
 // ─── F1-F2 · la page des groupes (Back-Office ouvert) ────────────────────────
@@ -159,6 +207,25 @@ test("F1-F2 · Fidélité : un seul planning, sept colonnes, les noms des musici
   await expect(laCase(page, "2026-09-13", "batterie")).toHaveText("Batteur C.");
 });
 
+/** La rangée de la grille (`BarreDeGrille`) et le défilement horizontal de la grille en grand. */
+const barre = (page: Page) => page.getByTestId("barre-grille").filter({ visible: true });
+const debordementDeLaGrille = (page: Page) =>
+  page.getByTestId("grille-defilement").filter({ visible: true }).evaluateAll((els) => els.map((e) => e.scrollWidth - e.clientWidth));
+
+for (const [ou, qui, vers] of [
+  ["App", MEMBRE, "/planning/groupes"],
+  ["Back-Office, en modification", RESPONSABLE, "/back-office/planning/groupes"],
+] as const) {
+  test(`F1 · ${ou} : Fidélité à sept colonnes tient dans l'agencement commun (capture)`, async ({ page }, info) => {
+    await ouvrir(page, qui, vers);
+    await expect(laCase(page, "2026-09-20", "guitariste")).toContainText("Guitare L.");
+    await verifierAgencement(page, { premierBloc: barre(page), contenu: page.locator('[data-grille="fidelite"]').filter({ visible: true }) });
+    // En grand (table), les six colonnes de noms tiennent sans défilement ; sur téléphone, une carte par dimanche.
+    if (!estTelephone(info)) expect(await debordementDeLaGrille(page), "la table de Fidélité ne défile pas en largeur").toEqual([0]);
+    await page.screenshot({ path: info.outputPath(`fidelite-${vers.startsWith("/back-office") ? "bo" : "app"}.png`), fullPage: true, animations: "disabled" });
+  });
+}
+
 test("F2 · une modification écrit dans le planning Fidélité, jamais dans celui des musiciens", async ({ page }) => {
   const db = await ouvrir(page, RESPONSABLE, "/back-office/planning/groupes");
   await laCase(page, "2026-09-20", "guitariste").getByRole("button").click();
@@ -175,6 +242,21 @@ test("F2 · une modification écrit dans le planning Fidélité, jamais dans cel
   expect(db.writes.filter((w) => w.path.startsWith("plannings/fideliteMusiciens")), "aucune migration écrite").toEqual([]);
 });
 
+test("F2 · vider une guitare reprise du planning des musiciens : elle ne revient pas à la relecture", async ({ page }) => {
+  const db = await ouvrir(page, RESPONSABLE, "/back-office/planning/groupes");
+  await expect(laCase(page, "2026-09-20", "guitariste")).toContainText("Guitare L.");
+  await laCase(page, "2026-09-20", "guitariste").getByRole("button").click();
+  await page.getByRole("button", { name: "Vider la case" }).click();
+  await expect.poll(() => db.doc("plannings/fidelite/dimanches/2026-09-20")?.guitariste, "la case vidée est écrite").toBe("");
+
+  await page.reload();
+  await page.getByRole("tab", { name: "Fidélité", exact: true }).click();
+  // La grille relue (le Sheet simulé, pas les données de secours) : le pianiste du groupe est là.
+  await expect(laCase(page, "2026-09-20", "pianiste")).toContainText("Pianiste P.");
+  await expect(laCase(page, "2026-09-20", "batterie"), "la batterie reprise, recopiée avec la ligne, reste").toContainText("Batteur B.");
+  await expect(laCase(page, "2026-09-20", "guitariste")).not.toContainText("Guitare L.");
+});
+
 // ─── F3 · le pianiste du groupe fait foi (D26) ───────────────────────────────
 
 test("F3 · relevé : les dimanches où le pianiste du groupe et celui des musiciens diffèrent", () => {
@@ -183,6 +265,7 @@ test("F3 · relevé : les dimanches où le pianiste du groupe et celui des music
     ["2026-09-13", "Ancien A.", "", "", "Pianiste P."],
     ["2026-09-20", "Ancien B.", "", "", ""],
     ["2026-09-27", "Ancien B.", "", "", "pianiste p"],
+    ["2026-10-18", "Ancien B.", "", "", "Pianiste Éloé"],
   ];
   const musiciens = [
     ["2026-09-06", "", "Pianiste P.", "", ""],
@@ -191,6 +274,8 @@ test("F3 · relevé : les dimanches où le pianiste du groupe et celui des music
     ["2026-09-27", "", "Pianiste P.", "", ""],
     ["2026-10-04", "", "Autre Piano", "", ""],
     ["2026-10-11", "", "", "Guitare G.", ""],
+    // Aux accents près : le même pianiste (la classe des accents est écrite en échappements).
+    ["2026-10-18", "", "pianiste eloe", "", ""],
   ];
   expect(pianistesQuiDifferent(groupe, musiciens)).toEqual([
     { date: "2026-09-13", groupe: "Pianiste P.", musiciens: "Autre Piano" },

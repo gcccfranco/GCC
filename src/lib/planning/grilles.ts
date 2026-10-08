@@ -285,20 +285,29 @@ export function grilleDe(key: string): DefinitionGrille | undefined {
 }
 
 /**
- * Lot F (spec-retouches-v18.md, D25 à D27) : Guitariste et Batterie de Fidélité, dimanche par
- * dimanche, sont ceux du planning Fidélité s'ils y sont remplis, sinon ceux du planning des
- * musiciens (`[date, présidence, piano, guitare, batterie]`). Rien n'est écrit : les anciennes
- * données restent où elles sont. Le piano des musiciens n'est jamais repris (D26) ; un dimanche
- * des seuls musiciens donne une ligne, s'il porte une guitare ou une batterie.
+ * Lot F (spec-retouches-v18.md, D25 à D27) : Présidence, Guitariste et Batterie de Fidélité,
+ * dimanche par dimanche, sont ceux du planning Fidélité s'ils y sont remplis, sinon ceux du planning
+ * des musiciens (`[date, présidence, piano, guitare, batterie]`) — la présidence comme avant le lot,
+ * où l'équipe d'une setlist et les rappels la prenaient là quand le groupe n'en avait pas. Rien n'est
+ * écrit : les anciennes données restent où elles sont. Le piano des musiciens n'est jamais repris
+ * (D26) ; un dimanche des seuls musiciens donne une ligne, s'il porte l'un de ces noms. Une case
+ * présente dans le document de l'app (`ecrites`, `date|clé` : `fetchCasesEcrites`) n'est jamais
+ * reprise, même vide : vidée dans l'app, elle reste vide.
  */
-export function completerMusiciensFidelite(fidelite: string[][], musiciens: string[][]): string[][] {
+export function completerMusiciensFidelite(
+  fidelite: string[][],
+  musiciens: string[][],
+  ecrites: ReadonlySet<string> = new Set(),
+): string[][] {
   const parDate = new Map(fidelite.map((r) => [r[0], Array.from({ length: 7 }, (_, i) => r[i] ?? "")]))
   for (const m of musiciens) {
-    const [guitare, batterie] = [(m[3] ?? "").trim(), (m[4] ?? "").trim()]
-    if (!guitare && !batterie) continue
+    // [index dans Fidélité, clé de sa colonne, nom chez les musiciens]
+    const repris = ([[1, "presidence", m[1]], [5, "guitariste", m[3]], [6, "batterie", m[4]]] as const)
+      .map(([i, cle, nom]) => [i, cle, (nom ?? "").trim()] as const)
+      .filter(([, , nom]) => nom)
+    if (!repris.length) continue
     const r = parDate.get(m[0]) ?? [m[0], "", "", "", "", "", ""]
-    if (!r[5].trim()) r[5] = guitare
-    if (!r[6].trim()) r[6] = batterie
+    for (const [i, cle, nom] of repris) if (!r[i].trim() && !ecrites.has(`${m[0]}|${cle}`)) r[i] = nom
     parDate.set(m[0], r)
   }
   return [...parDate.values()].sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0))
@@ -314,7 +323,7 @@ export function pianistesQuiDifferent(
   fidelite: string[][],
   musiciens: string[][],
 ): { date: string; groupe: string; musiciens: string }[] {
-  const plie = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[.,]/g, " ").replace(/\s+/g, " ").trim()
+  const plie = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[.,]/g, " ").replace(/\s+/g, " ").trim()
   const groupe = new Map(fidelite.map((r) => [r[0], (r[4] ?? "").trim()]))
   return musiciens
     .map((m) => ({ date: m[0], groupe: groupe.get(m[0]) ?? "", musiciens: (m[2] ?? "").trim() }))

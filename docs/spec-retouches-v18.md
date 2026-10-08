@@ -130,7 +130,7 @@ Go de code donné le 08/10/2026.
 - Pour Timothée : rien à publier dans `firestore.rules` (les champs d'un dimanche ne sont pas listés). Un
   profil qui avait le droit `fideliteMusiciens` ne peut plus rien écrire : cocher « Groupe Fidélité » pour
   lui dans Équipes › Personnes. 中文 du nouveau libellé à relire : `planning.roles.guitariste` = 吉他.
-  Limite connue : vider dans l'app une guitare reprise la fait revenir (elle est relue chez les musiciens).
+  Limite connue alors (vider dans l'app une guitare reprise la faisait revenir) : levée à la relecture, plus bas.
 
 **08/10/2026 — tranche F3-F5, codée** (commit : voir `git log --grep "V18FIDELITE): F3-F5"`). Le lot F est fini.
 
@@ -157,3 +157,40 @@ Go de code donné le 08/10/2026.
 - Pour Timothée : rien à publier dans `firestore.rules`. Avant la mise en ligne, lancer
   `npx tsx scripts/releve-pianistes-fidelite.ts --firestore` (lit les grilles de l'app) et trancher les
   dimanches listés : c'est la colonne « Groupe » qui sera affichée. Aucun libellé nouveau à traduire.
+
+**08/10/2026 — relecture (deux relectures), corrigée** (commit : voir `git log --grep "V18FIDELITE): relecture"`).
+Le lot F est fini et relu.
+
+- Case vidée qui revenait (important) : `fetchGrille` rend "" aussi bien pour une case vidée dans l'app
+  que pour un champ jamais écrit, et la reprise reprenait donc une guitare ou une batterie vidée — avec,
+  derrière, Mes services, « Ce dimanche » et un rappel du matin pour quelqu'un retiré du service.
+  Corrigé : `grille.ts` garde les cases présentes dans les documents (`fetchCasesEcrites`, même lecture,
+  même cache) et `completerMusiciensFidelite` ne reprend jamais une case présente, même vide. Back-office
+  coupé, rien ne change (le Sheet seul, pas de grille de l'app). Tests : « vider une guitare reprise… »
+  (page, relecture après rechargement) et « une case vidée dans l'app reste vide » (pur), rouges avant.
+- Présidence (choix de la relecture, à confirmer par Timothée) : reprise elle aussi du planning des
+  musiciens quand celle du groupe est vide, comme avant le lot dans l'équipe d'une setlist, Mes services
+  et les rappels ; celle du groupe l'emporte toujours. Sur le Sheet d'aujourd'hui, aucune présidence de
+  groupe n'est vide là où les musiciens en ont une : la reprise n'y change rien. Test : « la présidence du
+  planning des musiciens est reprise… ».
+- Relevé des pianistes : la classe des accents de `pianistesQuiDifferent` est écrite en échappements
+  (`\u0300-\u036f`) au lieu de caractères invisibles ; un cas « aux accents près » s'ajoute au test.
+- Agencement : Fidélité à sept colonnes vérifié et capturé sur les trois appareils — App, Back-Office en
+  modification (`verifierAgencement`) et ancien tableau back-office coupé (`verifierSansDebordement`) ;
+  en grand, la table ne défile pas en largeur ; sur téléphone, une carte par dimanche.
+- Clés de traduction : `planning.groupes.planningGroupe` est retirée parce que le lot l'a rendue orpheline
+  (seule la pilule Groupe · Musiciens la lisait) ; `planningMusiciens` reste, lue par la définition
+  `GRILLE_FIDELITE_MUSICIENS`, gardée pour la reprise. Pas d'incohérence : rien d'autre à changer.
+- Code devenu sans usage, signalé et laissé en place (à retirer sur accord de Timothée) : dans l'export,
+  le mois en colonne (`mois: "colonne"`), la ligne « dimanche spécial », la police Georgia (Gelasio) ;
+  `i18nSousTitre` de `GRILLE_FIDELITE_MUSICIENS` et sa clé `planningMusiciens`.
+- Pour Timothée, avant la mise en ligne :
+  1. lancer `npx tsx scripts/releve-pianistes-fidelite.ts --firestore` (lit les grilles de l'app) et
+     trancher chaque dimanche listé ; sur le Sheet seul, relancé le 08/10/2026 : un dimanche, le 13/09/2026 ;
+  2. droit `fideliteMusiciens` : un profil qui l'avait ne peut plus rien écrire, et ce droit ne s'affiche
+     plus dans Équipes › Personnes. Le retrouver dans la console Firebase (`users` dont `plannings`
+     contient `fideliteMusiciens`) et, si Timothée le veut, cocher « Groupe Fidélité » pour lui — ce qui
+     donne tout le planning Fidélité (présidence, orateur, thème compris), d'où pas d'équivalence
+     automatique ;
+  3. confirmer la reprise de la présidence (ou la retirer) ;
+  4. rien à publier dans `firestore.rules` ; aucun libellé nouveau à traduire.

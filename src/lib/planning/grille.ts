@@ -22,7 +22,9 @@ const FS_DOCS =
 // Même cache court que `fetchSheet` (sheets.ts l. 64-83) : les pages planning
 // sont des composants client, sans quoi chaque montage relit la grille.
 const TTL_MS = 5 * 60_000
-const cache = new Map<string, { at: number; rows: string[][] }>()
+/** `ecrites` : les cases présentes dans les documents, `date|clé` (voir `fetchCasesEcrites`). */
+type EnCache = { at: number; rows: string[][]; ecrites: Set<string> }
+const cache = new Map<string, EnCache>()
 // La page appelle `fetchGrille` deux fois au montage (par `fetchCulte` et pour
 // savoir quels dimanches existent déjà) : une seule requête part.
 const enVol = new Map<string, Promise<string[][]>>()
@@ -49,7 +51,7 @@ export function fetchGrille(key: string): Promise<string[][]> {
 async function lireGrille(
   key: string,
   def: DefinitionGrille,
-  hit: { at: number; rows: string[][] } | undefined
+  hit: EnCache | undefined
 ): Promise<string[][]> {
   try {
     const res = await fetch(`${FS_DOCS}/plannings/${key}:runQuery`, {
@@ -65,20 +67,35 @@ async function lireGrille(
     })
     if (!res.ok) return hit?.rows ?? []
     const largeur = Math.max(...def.colonnes.map((c) => c.index)) + 1
+    const ecrites = new Set<string>()
     const rows = ((await res.json()) as { document?: Doc }[]).flatMap(({ document }) => {
       const champs = document?.fields
       const date = champs?.date?.stringValue
       if (!date) return []
       const row = Array<string>(largeur).fill("")
       row[0] = date
-      for (const c of def.colonnes) row[c.index] = champs?.[c.cle]?.stringValue ?? ""
+      for (const c of def.colonnes) {
+        row[c.index] = champs?.[c.cle]?.stringValue ?? ""
+        if (champs?.[c.cle] !== undefined) ecrites.add(`${date}|${c.cle}`)
+      }
       return [row]
     })
-    cache.set(key, { at: Date.now(), rows })
+    cache.set(key, { at: Date.now(), rows, ecrites })
     return rows
   } catch {
     return hit?.rows ?? []
   }
+}
+
+/**
+ * Les cases présentes dans les documents de la grille, `date|clé`. `fetchGrille` rend "" aussi bien
+ * pour une case vidée dans l'app (écrite à "") que pour un champ jamais écrit : seul ce dernier peut
+ * être repris d'un autre planning (lot F, `completerMusiciensFidelite`), sans quoi une case vidée
+ * reviendrait à la relecture. Même lecture et même cache que `fetchGrille`.
+ */
+export async function fetchCasesEcrites(key: string): Promise<Set<string>> {
+  await fetchGrille(key)
+  return cache.get(key)?.ecrites ?? new Set()
 }
 
 /** Oublie le cache d'un planning — après une écriture, pour que la page relue
