@@ -144,3 +144,31 @@ Rien de codé (spec écrite le 08/10/2026, en attente du go).
     en grand, les menus déroulants de la rangée des Statistiques (Service, Langue, Présidence) gardent 40 px
     à côté des pilules de 28 px, et les sources du Calendrier (boutons propres, pas `Pilules`) gardent 32 px ;
     la spec ne demande que le composant commun.
+- **08/10/2026 — R8 codée** (ordre de passage protégé, D20) :
+  - `updateProgramme(id, data, version)` (`src/lib/firebase/programmes.ts`) : avec `version` (l'`updateTime`
+    du document lu, rangé dans `Programme.version`, jamais écrit), le PATCH porte
+    `currentDocument.updateTime` ; un refus HTTP 400 `FAILED_PRECONDITION` lève `ModifieEntreTemps`, avec le
+    prénom relu dans le document, et rien n'est écrit. Seul l'ordre de passage passe sa version
+    (`FeteGestion.tsx`, `onSave` d'`OrdrePassage`) ; la saison et « Lancer » s'écrivent comme avant.
+  - Chaque écriture de la coordination sur une édition signe du prénom (`modifiePar`, nouveau champ
+    facultatif) : « Modifié par Alice entre-temps : recharge » / 已被 Alice 修改：请重新加载 ; sans prénom connu
+    (document écrit avant ce lot), « Modifié entre-temps : recharge » / 已被他人修改：请重新加载. Le message prend
+    la place des autres erreurs d'écriture de la page (colonne de la fête en grand, au-dessus de l'ordre sur
+    une colonne) ; la liste reste celle lue, rien ne se recharge tout seul.
+  - Base simulée des tests (`tests/helpers/fakeSession.ts`) : chaque document porte un `updateTime`, nouveau
+    à chaque écriture ; un PATCH sur une autre version est refusé comme par Firestore ; `signInAs(…, partage)`
+    fait lire et écrire deux contextes de navigateur dans la même base.
+  - Tests : `tests/retouches-v18-ordre.spec.ts`, cinq projets, vus rouges (l'écriture de la seconde
+    responsable passait et écrasait la première) puis verts : deux contextes enregistrent sur la même version
+    lue, le second voit le message, le document garde la première écriture, puis rechargé il enregistre ; et
+    en chinois. `scene-paques-noel`, `scene-saison`, `programme-scene` verts sur les trois appareils, après
+    une retouche de sept assertions qui vérifiaient qu'une écriture de la saison ne porte que son champ
+    (`["jourJ", "updatedAt"]`…) : elles admettent maintenant `modifiePar`, la signature, l'intention reste
+    (ne jamais réécrire les autres réglages). `evenements` et `setlist-history` (base simulée) verts sur
+    ordinateur.
+  - Choix faute de réponse : une seconde modification faite par la même personne avant que la page ait relu
+    la première est refusée aussi (avec son propre prénom) plutôt que d'écraser son premier changement ; une
+    édition qui n'existe pas encore naît comme avant (`creerEdition`, 409 si une autre coordination l'a créée).
+  - Reste : rien pour R8. Timothée : aucune règle Firestore à republier (la coordination écrit déjà tous
+    les champs d'un programme, `modifiePar` compris) ; relire le 中文 `已被 {{prenom}} 修改：请重新加载` et
+    `已被他人修改：请重新加载`.

@@ -64,6 +64,10 @@ export interface Programme {
   fete?: "paques" | "noel";
   /** Année du jour J ; l'identifiant d'une édition est `{fete}-{annee}`. */
   annee?: number;
+  /** Prénom de qui a écrit en dernier (retouches v18, D20) : le refus d'un ordre de passage le nomme. */
+  modifiePar?: string;
+  /** `updateTime` du document lu (métadonnée REST, jamais écrite) : précondition de l'ordre de passage (D20). */
+  version?: string;
 }
 
 /** Document programmes/{id}/creneaux/{cid} : la scène un jour réservable. */

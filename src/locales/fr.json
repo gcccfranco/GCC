@@ -1257,6 +1257,8 @@
       "entrainements": "Entraînements",
       "programmeTab": "Programme {{nom}}",
       "ordreTitle": "Ordre de Passage jour J",
+      "modifieEntreTemps": "Modifié par {{prenom}} entre-temps : recharge",
+      "modifieEntreTempsSansNom": "Modifié entre-temps : recharge",
       "showPast": "Voir les jours passés ({{n}})",
       "hidePast": "Masquer les jours passés",
       "editTitle": "Modifier le créneau",

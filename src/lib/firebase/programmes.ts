@@ -16,6 +16,14 @@ import type { Creneau, Duree, Passage, Plage, Programme } from "@/types/programm
 /** Événement `window` émis après toute écriture : la barre d'onglets se recharge. */
 export const PROGRAMMES_CHANGED = "programmes-changed";
 
+/** Écriture refusée (retouches v18, D20) : le programme a changé depuis la version lue. `prenom` :
+ *  qui l'a modifié entre-temps (vide s'il n'est pas connu). Rien n'a été écrit. */
+export class ModifieEntreTemps extends Error {
+  constructor(readonly prenom: string) {
+    super("Programme modifié entre-temps");
+  }
+}
+
 function docData(raw: RawDoc): { id: string; data: Record<string, unknown> } {
   return {
     id: raw.name.split("/").pop()!,
@@ -23,7 +31,7 @@ function docData(raw: RawDoc): { id: string; data: Record<string, unknown> } {
   };
 }
 
-function fromFsProgramme(raw: RawDoc): Programme {
+function fromFsProgramme(raw: RawDoc & { updateTime?: string }): Programme {
   const { id, data } = docData(raw);
   return {
     id,
@@ -42,6 +50,8 @@ function fromFsProgramme(raw: RawDoc): Programme {
     // Pâques · Noël : seulement si le champ existe — absent = déduit du jour J (feteDe).
     ...(data.fete != null && { fete: data.fete as Programme["fete"] }),
     ...(data.annee != null && { annee: data.annee as number }),
+    ...(data.modifiePar != null && { modifiePar: data.modifiePar as string }),
+    ...(raw.updateTime && { version: raw.updateTime }),
   };
 }
 
@@ -90,16 +100,24 @@ async function post(path: string, data: Record<string, unknown>): Promise<string
   return ((await res.json()) as RawDoc).name.split("/").pop()!;
 }
 
-/** PATCH limité aux champs donnés (updateMask) : le reste du document est conservé. */
-async function patch(path: string, data: Record<string, unknown>): Promise<void> {
+/** PATCH limité aux champs donnés (updateMask) : le reste du document est conservé. `version` :
+ *  l'`updateTime` lu ; le document a changé depuis (HTTP 400 `FAILED_PRECONDITION`) → `false`,
+ *  rien n'est écrit. */
+async function patch(path: string, data: Record<string, unknown>, version?: string): Promise<boolean> {
   const headers = await authHeader();
   const mask = Object.keys(data).map((k) => `updateMask.fieldPaths=${k}`).join("&");
-  const res = await fetch(`${FS_BASE}/${path}?${mask}`, {
+  const precondition = version ? `&currentDocument.updateTime=${encodeURIComponent(version)}` : "";
+  const res = await fetch(`${FS_BASE}/${path}?${mask}${precondition}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json", ...headers },
     body: JSON.stringify({ fields: toFsFields(data) }),
   });
+  if (version && res.status === 400) {
+    const json = (await res.clone().json().catch(() => ({}))) as { error?: { status?: string } };
+    if (json.error?.status === "FAILED_PRECONDITION") return false;
+  }
   await checkRest(res);
+  return true;
 }
 
 async function remove(path: string): Promise<void> {
@@ -153,8 +171,15 @@ export async function creerEdition(
   return id;
 }
 
-export async function updateProgramme(id: string, data: Partial<Omit<Programme, "id">>): Promise<void> {
-  await patch(`programmes/${id}`, { ...data, updatedAt: new Date().toISOString() });
+/** `version` (l'`updateTime` lu, D20) : l'écriture n'a lieu que si personne n'a modifié le programme
+ *  depuis ; sinon `ModifieEntreTemps`, avec le prénom de qui l'a modifié. */
+export async function updateProgramme(
+  id: string,
+  data: Partial<Omit<Programme, "id" | "version">>,
+  version?: string,
+): Promise<void> {
+  const ecrit = await patch(`programmes/${id}`, { ...data, updatedAt: new Date().toISOString() }, version);
+  if (!ecrit) throw new ModifieEntreTemps((await getProgramme(id))?.modifiePar ?? "");
   changed();
 }
 

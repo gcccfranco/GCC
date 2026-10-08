@@ -27,7 +27,7 @@ import { CircleCheck, ChevronDown, ChevronRight, History, List, ListOrdered, Plu
 import { useAuth } from "@/lib/firebase/auth"
 import { useProfile } from "@/lib/firebase/users"
 import { isCoordination } from "@/lib/access"
-import { creerEdition, listCreneaux, listProgrammes, PROGRAMMES_CHANGED, updateProgramme } from "@/lib/firebase/programmes"
+import { creerEdition, listCreneaux, listProgrammes, ModifieEntreTemps, PROGRAMMES_CHANGED, updateProgramme } from "@/lib/firebase/programmes"
 import { archiveDate, todayIso } from "@/lib/scene/dimanches"
 import { reportConflict } from "@/lib/scene/reportConflict"
 import {
@@ -168,20 +168,24 @@ export function FeteGestion({ fete }: { fete: Fete }) {
     router.replace(s ? `${pathname}?${s}` : pathname, { scroll: false })
   }
 
-  /** Écrit sur l'édition, ou la crée en brouillon avec ce changement (Q6), puis relit. */
-  async function ecrire(changement: Partial<Omit<Programme, "id">>) {
+  /** Écrit sur l'édition, ou la crée en brouillon avec ce changement (Q6), puis relit. Chaque
+   *  écriture signe du prénom (`modifiePar`) ; avec `version` (l'ordre de passage, D20), elle est
+   *  refusée si quelqu'un a modifié l'édition depuis la lecture : « Modifié par … entre-temps ». */
+  async function ecrire(changement: Partial<Omit<Programme, "id">>, version?: string) {
     setErreur("")
+    const signe = { ...changement, modifiePar: profile?.firstName ?? "" }
     try {
       ecritures.current++
       try {
-        if (edition.programme) await updateProgramme(edition.programme.id, changement)
-        else await creerEdition(fete, edition.annee, { ...reglages, createdBy: user!.uid, updatedAt: new Date().toISOString() }, changement)
+        if (edition.programme) await updateProgramme(edition.programme.id, signe, version)
+        else await creerEdition(fete, edition.annee, { ...reglages, createdBy: user!.uid, updatedAt: new Date().toISOString() }, signe)
       } finally {
         ecritures.current--
       }
       await reload()
-    } catch {
-      setErreur(t("planning.programmes.error"))
+    } catch (e) {
+      if (!(e instanceof ModifieEntreTemps)) setErreur(t("planning.programmes.error"))
+      else setErreur(e.prenom ? t("planning.programme.modifieEntreTemps", { prenom: e.prenom }) : t("planning.programme.modifieEntreTempsSansNom"))
     }
   }
 
@@ -428,7 +432,7 @@ export function FeteGestion({ fete }: { fete: Fete }) {
         <OrdrePassage
           passages={programme.passages}
           canEdit={!enLecture}
-          onSave={(passages: Passage[]) => ecrire({ passages })}
+          onSave={(passages: Passage[]) => ecrire({ passages }, edition.programme?.version)}
         />
       </section>
     </div>
