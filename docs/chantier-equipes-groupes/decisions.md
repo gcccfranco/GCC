@@ -84,3 +84,23 @@ setlists, catégories **Noël** et **Pâques**.
   pour le code des lots 3 et 4 et la relecture bugs et sécurité ; **Sonnet 5.5** (élevé) pour la relecture de
   conformité à la spec ; **Sonnet 5.5** (moyen ou faible) pour lancer les suites et les tâches simples. **Pas de Haiku.**
 - Droits en double : `src/lib/access.ts` **et** `firestore.rules` ; Timothée publie les règles lui-même.
+
+## Réponses de Timothée aux questions des specs (08/10/2026, soir)
+
+Après les cinq specs (`docs/spec-equipes-sans-poles.md`, `spec-organigrammes-groupes.md`, `spec-planning-gestes.md`,
+`spec-chants-fetes.md`, `spec-partage-setlist.md`). Elles complètent les décisions 1 à 34 et l'emportent sur les
+recommandations des specs.
+
+| # | Question (spec) | Réponse |
+|---|---|---|
+| 35 | Une case de droit « Saisit les chants des fêtes » sur un rôle de groupe ? (lot 4, Q2) | **Oui** : le lot 2 l'ajoute aux droits d'un rôle, avec Remplir, Publier et Notifier. Saisissent les chants d'un passage de groupe : son président, ses VP, ses musiciens **et** les titulaires des rôles qui ont la case. |
+| 36 | Plafond de VP (lot 2, Q11 ; décision 11) | **Un plafond réglable par un admin** (2 par défaut). |
+| 37 | Une setlist par « Qui » ou par passage ? (lot 4, Q1) | **Par « Qui »** (décision 28) : « ce n'est pas des chants mais c'est les danses et les sketchs ». Un passage à plusieurs « Qui » est une danse ou un sketch : pas de chants, donc pas de setlist. |
+| 38 | Couleurs d'Amour, de Joie, de Noël et de Pâques (lot 2, Q9) | **D'accord** : une seule planche avec les huit candidates ; Joie et Noël ne prennent pas ensemble le jade et le vert sapin ; Timothée choisit sur la planche. |
+| 39 | Partage d'une setlist : voir seulement, ou aussi modifier ? (partage, Q1) | **Voir et modifier.** La liste des personnes ne change que par le propriétaire de la setlist et les admins (partage, Q10). |
+| 40 | Perte des tâches de l'ancien pôle pour les membres de Comité Franco, Théologie, Décoration et Accueil J1 qui ne sont pas dans l'équipe cible (lot 1, Q1) | **Voulue** : le relevé les nomme, Timothée les ajoute à la main. |
+| 41 | Un simple membre coche-t-il une tâche « pour toute l'équipe » ? (lot 1, Q2) | **Non** : il ne coche que celles qui lui sont assignées (décision 3) ; les référents et les admins cochent les autres. |
+| 42 | Un membre de groupe sans rôle fait-il partie du public Louange ? (lot 1, Q3) | **Oui.** |
+| 43 | Qui crée un évènement d'équipe qui n'est pas une réunion ? (lot 1, Q4) | **Les référents** de l'équipe (et les admins). |
+| 44 | Le droit Équipes donne-t-il les organigrammes des groupes ? (lot 2, Q1) | **Non.** |
+| 45 | Toutes les autres questions des cinq specs | **Recommandations acceptées** (« pour le reste je suis d'accord »), dont : le partage se code en parallèle des lots 1 et 3, avant le lot 4 (Opus 5.5, effort élevé). |
