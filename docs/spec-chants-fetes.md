@@ -6,14 +6,14 @@ musiciens ; les setlists de fête se rangent sous deux catégories nouvelles, **
 
 - **Origine** : premier retour des responsables après le document des nouveautés (« un endroit pour les chants,
   musiques et danses des fêtes, pour la régie et les musiciens »). Décisions 27 à 34 du grill du 08/10/2026, puis
-  réponses de Timothée aux questions de cette spec (décisions 35, 37, 38, 39 et 45, le soir du 08/10/2026).
-- **Date** : 08/10/2026. **Statut : spec écrite, questions tranchées le 08/10/2026 (décisions 35 à 45), attend le go de
+  réponses de Timothée aux questions de cette spec (décisions 35, 37, 38, 39, 45 et 46, le soir du 08/10/2026).
+- **Date** : 08/10/2026. **Statut : spec écrite, questions tranchées le 08/10/2026 (décisions 35 à 46), attend le go de
   Timothée.** Rien n'est codé.
 - **Base de code** : `ui/apple-design` à `5878ce1`. Le code n'a pas changé depuis `439e552` (base de la cartographie) :
   seuls des documents ont bougé. Toutes les lignes citées ont été relues à `5878ce1` ; le code est encore le même à
   `ceeb9b2`, où les références ajoutées avec les réponses de Timothée ont été relues.
 - **Sources** : `docs/chantier-equipes-groupes/decisions.md` (source de vérité, § « Lot 4 », décisions 27 à 34, et
-  § « Réponses de Timothée aux questions des specs », décisions 35 à 45), `cartographie.md`
+  § « Réponses de Timothée aux questions des specs », décisions 35 à 46), `cartographie.md`
   (§ « Chants, musiques et danses de la scène », références revérifiées ici), `maquettes.md` et les planches
   `maquettes/v19-fete-*.png`.
 - **Ordre du code** (décidé) : lots 1 et 3 en parallèle, avec eux le **partage d'une setlist**
@@ -104,6 +104,7 @@ Elles l'emportent sur les recommandations ; les règles ci-dessous les suivent.
 | 45 | Q11 — Résumé « Mes réservations · Entraînements » sur téléphone ? | Recommandation acceptée : **pas dans ce lot**. → CF9, écart 4 |
 | 45 | Q12 — Bascule d'une proposition | Recommandation acceptée : la directive **`{proposition: <id>}`** dans le `.cho`. → CF21 |
 | 45 | Q14 — Setlists de fête dans « Prochaines setlists » de Chants ? | Recommandation acceptée : **non**. → CF25 |
+| 46 | Q15 — Musiques et danses d'un passage à plusieurs Qui : qui les tient ? | **Lecture (a)** : les ayants droit de chacun de ses Qui, plus la coordination ; le passage est « le mien » pour eux. → CF16, CF23 |
 
 ## Ce que le code fait aujourd'hui (`5878ce1`)
 
@@ -259,7 +260,7 @@ réservations (**décision 45**, Q5).
 
 | # | Règle |
 |---|---|
-| CF16 | **`ayantsDroitDuQui(q, contexte)`** et **`droitsDeSaisie(passage, contexte, uid)`** (nouveaux, purs, `src/lib/fetes/droits.ts`). `ayantsDroitDuQui` rend, pour **un** Qui, les comptes qui le saisissent et la raison de chacun (tableau ci-dessous, sans la coordination) ; `droitsDeSaisie` rend `{ chants, musiques, mien }` pour un compte : **`chants`** (« Saisir les chants ») = le passage a **un seul** Qui **et** (le compte en est ayant droit **ou** coordination) ; un passage à plusieurs Qui n'a jamais de chants, coordination comprise (**décision 37** : danse ou sketch, pas de setlist ; il n'y a donc plus d'union d'ayants droit pour des chants) ; **`musiques`** (« + Musique ou danse ») = le compte est ayant droit d'**au moins un** Qui du passage, ou coordination (pour un passage à plusieurs Qui, **choix**, question 15) ; **`mien`** = au moins une raison autre que la coordination sur un Qui du passage. Le groupe d'un Qui se lit par **`groupeDuQui(q)`** (nouveau, pur, `src/lib/fetes/qui.ts`, tranche CF-A) : « Gp Paix » → `paix`, « Gp Fidélité » → `fidelite`, « Gp Bonté » → `bonte`, « Gp Amour » → `amour`, « Gp Joie » → `joie` (ids de `groupes/{id}` du lot 2), sinon `null`. Ayants droit d'un Qui : |
+| CF16 | **`ayantsDroitDuQui(q, contexte)`** et **`droitsDeSaisie(passage, contexte, uid)`** (nouveaux, purs, `src/lib/fetes/droits.ts`). `ayantsDroitDuQui` rend, pour **un** Qui, les comptes qui le saisissent et la raison de chacun (tableau ci-dessous, sans la coordination) ; `droitsDeSaisie` rend `{ chants, musiques, mien }` pour un compte : **`chants`** (« Saisir les chants ») = le passage a **un seul** Qui **et** (le compte en est ayant droit **ou** coordination) ; un passage à plusieurs Qui n'a jamais de chants, coordination comprise (**décision 37** : danse ou sketch, pas de setlist ; il n'y a donc plus d'union d'ayants droit pour des chants) ; **`musiques`** (« + Musique ou danse ») = le compte est ayant droit d'**au moins un** Qui du passage, ou coordination (pour un passage à plusieurs Qui : **décision 46**) ; **`mien`** = au moins une raison autre que la coordination sur un Qui du passage. Le groupe d'un Qui se lit par **`groupeDuQui(q)`** (nouveau, pur, `src/lib/fetes/qui.ts`, tranche CF-A) : « Gp Paix » → `paix`, « Gp Fidélité » → `fidelite`, « Gp Bonté » → `bonte`, « Gp Amour » → `amour`, « Gp Joie » → `joie` (ids de `groupes/{id}` du lot 2), sinon `null`. Ayants droit d'un Qui : |
 
 | Qui | Peuvent saisir | Lu dans |
 |---|---|---|
@@ -405,7 +406,7 @@ coordination non admin ne peut ni la modifier ni la supprimer.
     équipe. `Franco` → `dansEquipes` ∋ `louange`, pas un simple choriste. Coordination → `chants` et `musiques` sur tout
     passage à un seul Qui, mais `mien` faux. **Passage à deux Qui** (danse EDD 大班 + 高班, décision 37) → `chants` faux
     pour tous, coordination comprise ; `musiques` vrai pour un louangeur de 大班 comme de 高班 et pour la coordination
-    (question 15), `mien` vrai pour les louangeurs seulement.
+    (décision 46), `mien` vrai pour les louangeurs seulement.
   - `titreSetlistFete` : « Noël 2026 · Gp Paix », « Noël 2026 · EDD 大班 », « Noël 2026 · Culte Francophone » ; 中文
     « 圣诞节 2026 · Gp Paix ». Un seul Qui en entrée (décision 37).
   - `estRegieDeFete` (CF27) : vrai pour un membre de TEAM RÉGIE (`dansEquipes` ∋ `regie`) sur une setlist de fête ; faux
@@ -426,7 +427,7 @@ coordination non admin ne peut ni la modifier ni la supprimer.
   de chant », « proposition en attente », la danse avec durée, départ et note ; « Setlist » ouvre la bonne setlist. Le
   passage 6 (spectacle EDD 大班 + 高班, deux Qui) : « Pas de chant », ni « Saisir les chants » ni « Setlist », même pour
   un louangeur de 大班 ou pour la coordination (décision 37) ; ses musiques et danses sur sa ligne, et « + Musique ou
-  danse » pour un louangeur de 大班 (question 15).
+  danse » pour un louangeur de 大班 (décision 46).
 - Musicienne du Gp Paix (droits simulés) : passage 3 marqué « le mien », « Saisir les chants » appelle
   `/api/fetes/saisir` avec `{ programme: "noel-2026", passage }` et ouvre l'éditeur ; « Le mien » ne garde que le
   passage 3 ; un membre sans passage ne voit ni le filtre ni « Saisir ». Titulaire d'un rôle de Joie coché « Saisir les
@@ -527,18 +528,8 @@ couleurs sur la planche commune des huit candidates (décision 38, CF26 ; la mê
 
 ## Questions ouvertes
 
-Les quatorze questions de la première version sont tranchées (décisions 35, 37, 38, 39 et 45 de `decisions.md`) :
-voir § « Réponses de Timothée (08/10/2026, soir) », où elles gardent leurs numéros Q1 à Q14. Reste une question
-**nouvelle**, née de la décision 37, numérotée à la suite :
-
-15. **Musiques et danses d'un passage à plusieurs Qui : qui les tient ?** La décision 37 retire les chants (et la setlist)
-   de ces passages ; elle ne dit rien de leurs musiques et danses, qui restent sur leur ligne (décision 27). Deux
-   lectures : (a) **tout ayant droit d'un de ses Qui** (président, VP, musiciens et rôles cochés d'un des groupes,
-   louangeurs d'une des classes…), plus la coordination ; le passage est alors « le mien » pour eux ; (b) **la
-   coordination seule**. *Recommandation* : **(a)** (CF16, CF23, écrite ainsi en attendant) : ce sont justement les
-   danses et les sketchs qui ont des musiques à donner à la régie, et les responsables des groupes et classes qui y
-   passent les connaissent ; (b) laisserait toute la saisie à la coordination. Changer d'avis ne touche que
-   `droitsDeSaisie` (`musiques`, `mien`) et un test.
+Aucune : toutes tranchées le 08/10/2026 (décisions 35 à 46 de `decisions.md`). Les quinze questions de cette spec et
+leurs réponses sont dans § « Réponses de Timothée (08/10/2026, soir) », où elles gardent leurs numéros Q1 à Q15.
 
 ## Commandes
 
@@ -560,3 +551,4 @@ npm test -- tests/back-office-coupe.spec.ts
 - 08/10/2026 : relecture adversariale à froid (références de code, planches, décisions, sibling specs) ; corrigée en place.
 - 08/10/2026 : relecture croisée des cinq specs, incohérences corrigées.
 - 08/10/2026 (soir) : réponses de Timothée intégrées (décisions 35 à 45).
+- 08/10/2026 (soir) : question 15 tranchée (décision 46, lecture (a)) ; plus aucune question ouverte.

@@ -104,3 +104,4 @@ recommandations des specs.
 | 43 | Qui crée un évènement d'équipe qui n'est pas une réunion ? (lot 1, Q4) | **Les référents** de l'équipe (et les admins). |
 | 44 | Le droit Équipes donne-t-il les organigrammes des groupes ? (lot 2, Q1) | **Non.** |
 | 45 | Toutes les autres questions des cinq specs | **Recommandations acceptées** (« pour le reste je suis d'accord »), dont : le partage se code en parallèle des lots 1 et 3, avant le lot 4 (Opus 5.5, effort élevé). |
+| 46 | Les musiques et danses d'un passage à plusieurs « Qui » (danse, sketch) : qui les saisit ? (lot 4, question 15) | **Lecture (a)** : les ayants droit de chacun de ses « Qui » (président, VP, musiciens et rôles cochés d'un des groupes, louangeurs d'une des classes…), plus la coordination ; le passage est « le mien » pour eux. |
