@@ -8,6 +8,8 @@ import { itemAst } from "@/lib/chordpro/itemContent";
 import type { JianpuEntry, JianpuManifest } from "@/lib/jianpu/images";
 import { sheetEnabled, type JianpuPref } from "@/lib/jianpu/preference";
 import { resolveSectionOccurrences, type SectionOccurrence } from "@/lib/setlist/sectionSteps";
+import { uniqueSections } from "@/lib/setlist/uniqueSections";
+import type { PartitionLayout } from "@/lib/partitionLayoutPref";
 
 export type SongHeaderBlock = {
   kind: "song-header";
@@ -27,6 +29,9 @@ export type SongHeaderBlock = {
   setlistKey?: string;
   /** Fusion en structure mixte : titres + tonalités des chants fusionnés */
   fusionSongs?: { title: string; key: string; language: "fr" | "zh" }[];
+  /** Déroulé joué, pour le bandeau de structure en tête du chant ; une
+   *  modulation vers la tonalité jouée n'en est pas une. */
+  steps?: SectionOccurrence[];
 };
 
 export type SectionBlock = {
@@ -43,6 +48,9 @@ export type SectionBlock = {
   songTitle: string;
   songKey: string;
   songSourceLabel?: string;
+  /** Occurrences de la structure jouée que ce bloc représente (une en ordre
+   *  joué, toutes les reprises en sections uniques). */
+  occurrenceUids?: string[];
 };
 
 export type TransitionIntraBlock = {
@@ -101,6 +109,11 @@ function resolveSections(ast: ChordProAST, structureOverride: string[] | null): 
   return resolveStructureOverride(ast.sections, structureOverride);
 }
 
+/** Déroulé pour le bandeau : une modulation vers la tonalité jouée n'en est pas une. */
+function bandeau(occurrences: SectionOccurrence[], key: string): SectionOccurrence[] {
+  return occurrences.map((o) => (o.targetKey && o.targetKey !== key ? o : { ...o, targetKey: undefined }));
+}
+
 // Capo N = accords affichés N demi-tons sous la tonalité jouée (shapes).
 function applyCapo(ast: ChordProAST, playedKey: string, capo: number): ChordProAST {
   if (!capo) return ast;
@@ -116,8 +129,13 @@ export function buildPerformanceBlocks(
   jianpuPref: JianpuPref = "auto",
   /** Tonalités choisies sur cet appareil (page du chant), par slug. */
   personalKeys?: Record<string, string>,
+  /** Affichage (même préférence que la setlist, `partition-layout`) :
+   *  ordre joué ; chaque section une fois, notes et transitions laissées au
+   *  bandeau ; ou structure seule, où un chant à scan donne ses sections. */
+  { affichage = "played" }: { affichage?: PartitionLayout } = {},
 ): PerformanceBlock[] {
   const blocks: PerformanceBlock[] = [];
+  const unique = affichage === "unique";
   // Le responsable coche le 简谱 par chant ; la préférence de l'appareil peut
   // le suivre, l'imposer partout, ou ne jamais l'utiliser.
   const wantsSheet = (item: SetlistItem) => sheetEnabled(jianpuPref, item.jianpuSheet);
@@ -151,6 +169,17 @@ export function buildPerformanceBlocks(
               }]
             : [];
         });
+        const passages = item.mixedStructure.flatMap((ms) => {
+          const ast = asts[ms.songSlug];
+          const section = ast?.sections.find((s) => s.uid === ms.sectionId || s.id === ms.sectionId);
+          if (!ast || !section) return [];
+          const fs = item.fusionSongs!.find((f) => f.songSlug === ms.songSlug);
+          const fusionKey = fs?.keyOverride ?? ast.metadata.key;
+          // Modulation (升调) : section transposée dans sa tonalité cible.
+          const msTarget = ms.keyChange ?? fs?.sectionKeys?.[ms.sectionId];
+          const msKeyChange = msTarget && msTarget !== fusionKey ? msTarget : undefined;
+          return [{ ms, ast, section, fs, fusionKey, msKeyChange }];
+        });
         if (fusionMeta.length > 0) {
           blocks.push({
             kind: "song-header",
@@ -160,18 +189,22 @@ export function buildPerformanceBlocks(
             songKey: fusionMeta.map((m) => m.key).join(" / "),
             position: item.position,
             fusionSongs: fusionMeta,
+            steps: passages.map(({ ms, section, fs, msKeyChange }) => ({
+              section,
+              note: ms.note ?? fs?.sectionNotes?.[ms.sectionId] ?? "",
+              transition: ms.transition ?? "",
+              nuance: ms.nuance ?? fs?.sectionNuances?.[ms.sectionId],
+              targetKey: msKeyChange,
+            })),
           });
         }
-        for (const ms of item.mixedStructure) {
-          const ast = asts[ms.songSlug];
-          if (!ast) continue;
-          const section = ast.sections.find((s) => s.uid === ms.sectionId || s.id === ms.sectionId);
-          if (!section) continue;
-          const fs = item.fusionSongs.find((f) => f.songSlug === ms.songSlug);
-          const fusionKey = fs?.keyOverride ?? ast.metadata.key;
-          // Modulation (升调) : section transposée dans sa tonalité cible.
-          const msTarget = ms.keyChange ?? fs?.sectionKeys?.[ms.sectionId];
-          const msKeyChange = msTarget && msTarget !== fusionKey ? msTarget : undefined;
+        // Sections uniques : chaque section une fois par chant et par
+        // tonalité, comme la vue Partitions.
+        const shown = unique
+          ? passages.filter((p, i) => passages.findIndex((q) =>
+              q.ms.songSlug === p.ms.songSlug && q.section.id === p.section.id && q.msKeyChange === p.msKeyChange) === i)
+          : passages;
+        for (const { ms, ast, section, fs, fusionKey, msKeyChange } of shown) {
           blocks.push({
             kind: "section",
             uid: uid(),
@@ -181,14 +214,15 @@ export function buildPerformanceBlocks(
             language: ast.metadata.language,
             chordsEnabled: showChordsGlobal && item.showChords,
             showPinyin: ast.metadata.language === "zh",
-            note: ms.note ?? fs?.sectionNotes?.[ms.sectionId],
-            nuance: ms.nuance ?? fs?.sectionNuances?.[ms.sectionId],
+            note: unique ? undefined : ms.note ?? fs?.sectionNotes?.[ms.sectionId],
+            nuance: unique ? undefined : ms.nuance ?? fs?.sectionNuances?.[ms.sectionId],
             keyChange: msKeyChange,
             songTitle: ast.metadata.title,
             songKey: fusionKey,
             songSourceLabel: multiSong ? ast.metadata.title : undefined,
+            occurrenceUids: [section.uid],
           });
-          if (ms.transition) blocks.push({ kind: "transition-intra", uid: uid(), text: ms.transition });
+          if (ms.transition && !unique) blocks.push({ kind: "transition-intra", uid: uid(), text: ms.transition });
         }
       } else {
         for (let i = 0; i < item.fusionSongs.length; i++) {
@@ -196,21 +230,25 @@ export function buildPerformanceBlocks(
           const ast = asts[fs.songSlug];
           if (!ast) continue;
           if (i > 0) blocks.push({ kind: "transition-inter", uid: uid(), text: "" });
+          const fusionKey = fs.keyOverride ?? ast.metadata.key;
+          const occurrences = resolveSectionOccurrences(resolveSections(ast, fs.structureOverride), fs);
           blocks.push({
             kind: "song-header",
             uid: uid(),
             title: ast.metadata.title,
             titlePinyin: ast.metadata.titlePinyin,
             artist: ast.metadata.artist,
-            songKey: fs.keyOverride ?? ast.metadata.key,
+            songKey: fusionKey,
             position: item.position,
             language: ast.metadata.language,
+            steps: bandeau(occurrences, fusionKey),
           });
-          for (const sec of resolveSections(ast, fs.structureOverride)) {
-            const fusionKey = fs.keyOverride ?? ast.metadata.key;
+          const shown = unique
+            ? uniqueSections(occurrences, fusionKey)
+            : occurrences.map((step) => ({ step, uids: [step.section.uid] }));
+          for (const { step: { section: sec, note, nuance, targetKey }, uids } of shown) {
             // Modulation (升调) : section transposée dans sa tonalité cible.
-            const target = fs.sectionKeys?.[sec.uid] ?? fs.sectionKeys?.[sec.id];
-            const secKeyChange = target && target !== fusionKey ? target : undefined;
+            const secKeyChange = targetKey && targetKey !== fusionKey ? targetKey : undefined;
             blocks.push({
               kind: "section",
               uid: uid(),
@@ -220,11 +258,12 @@ export function buildPerformanceBlocks(
               language: ast.metadata.language,
               chordsEnabled: showChordsGlobal && item.showChords,
               showPinyin: ast.metadata.language === "zh",
-              note: fs.sectionNotes?.[sec.uid] ?? fs.sectionNotes?.[sec.id],
-              nuance: fs.sectionNuances?.[sec.uid] ?? fs.sectionNuances?.[sec.id],
+              note: unique ? undefined : note || undefined,
+              nuance: unique ? undefined : nuance,
               keyChange: secKeyChange,
               songTitle: ast.metadata.title,
               songKey: fusionKey,
+              occurrenceUids: uids,
             });
           }
         }
@@ -248,6 +287,10 @@ export function buildPerformanceBlocks(
     const capo = capos?.[item.songSlug] ?? 0;
     const ast = applyCapo(getTransposed(baseAst, personalKey ?? item.keyOverride), playedKey, capo);
     const sections = resolveSections(ast, item.structureOverride);
+    const occurrences = resolveSectionOccurrences(sections, item).map((o) =>
+      personalShift && o.targetKey ? { ...o, targetKey: getTransposedKey(o.targetKey, personalShift) } : o,
+    );
+    const steps = bandeau(occurrences, playedKey);
     blocks.push({
       kind: "song-header",
       uid: uid(),
@@ -260,14 +303,13 @@ export function buildPerformanceBlocks(
       songSlug: item.songSlug,
       capo: capo || undefined,
       setlistKey: personalKey ? setlistKey : undefined,
+      steps,
     });
     // ── Partition 简谱 : la page entière remplace les sections ──
     // La structure de l'item reste décrite (elle sert à la liste de la
     // setlist) mais ne découpe pas la partition, qui est un scan indivisible.
-    const occurrences = resolveSectionOccurrences(sections, item).map((o) =>
-      personalShift && o.targetKey ? { ...o, targetKey: getTransposedKey(o.targetKey, personalShift) } : o,
-    );
-    const sheet = wantsSheet(item) ? jianpuSheets?.[item.songSlug] : undefined;
+    // Structure seule : pas de scan, la structure en grand (D13).
+    const sheet = wantsSheet(item) && affichage !== "structure" ? jianpuSheets?.[item.songSlug] : undefined;
     if (sheet) {
       // Avec un capo, la tonalité jouée est passée même si elle est celle du
       // chant : le calque doit descendre les accords en positions.
@@ -287,16 +329,18 @@ export function buildPerformanceBlocks(
           capo: capo || undefined,
           setlistKey: personalKey ? setlistKey : undefined,
           position: item.position,
-          // Une modulation vers la tonalité déjà jouée n'en est pas une.
-          steps: occurrences.map((o) =>
-            o.targetKey && o.targetKey !== playedKey ? o : { ...o, targetKey: undefined },
-          ),
+          steps,
         });
       });
       continue;
     }
 
-    for (const { section: sec, note, transition, nuance, targetKey } of occurrences) {
+    // Sections uniques : une impression par section (et par tonalité de
+    // 升调) ; notes, nuances et transitions passent au bandeau.
+    const shown = unique
+      ? uniqueSections(occurrences, playedKey).map(({ step, uids }) => ({ ...step, note: "", transition: "", nuance: undefined, uids }))
+      : occurrences.map((step) => ({ ...step, uids: [step.section.uid] }));
+    for (const { section: sec, note, transition, nuance, targetKey, uids } of shown) {
       // Modulation (升调) : section transposée dans sa tonalité cible. Avec un
       // capo, les accords de l'AST sont en tonalité de shapes → même écart de
       // demi-tons, mais l'orthographe suit la tonalité cible décalée du capo.
@@ -320,6 +364,7 @@ export function buildPerformanceBlocks(
         keyChange,
         songTitle: ast.metadata.title,
         songKey: playedKey,
+        occurrenceUids: uids,
       });
       if (transition) blocks.push({ kind: "transition-intra", uid: uid(), text: transition });
     }

@@ -59,6 +59,8 @@ const SPECS_GRAND_ECRAN = [
   // Retouches après v18 (docs/spec-retouches-v18.md), lot R seulement (retouches-v18-ra, -agenda, -ordre,
   // -pilules-stats…) : cinq projets. Les specs des lots E et F (evenements-pole, planning-fidelite) gardent trois appareils.
   /retouches-v18(-.*)?\.spec\.ts/,
+  // Chantier 简谱 (docs/spec-jianpu-integration.md), lot 2 : en-tête et bandeau au-dessus des deux colonnes.
+  /louange-sections-uniques\.spec\.ts/,
 ];
 
 export default defineConfig({
