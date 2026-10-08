@@ -82,6 +82,24 @@ ils ne voient pas le composant réel. Détail du protocole dans
 - Tester sur au moins 1 chant FR + 1 chant ZH avant de valider une étape
 - Toute modif des permissions doit être faite en double : `src/lib/access.ts` (client) **et** `firestore.rules` (serveur)
 
+## Sessions cloud (claude.ai/code) — règles de Timothée (08/10/2026)
+Une session cloud n'a pas la mémoire des sessions locales : ces règles valent pour elle comme pour les autres.
+- **Branches** : `ui/apple-design` = le travail en cours. Tout s'y fait, directement : **aucune autre branche**, pas de
+  branche de lot à fusionner. `main` = le site en ligne (Vercel déploie chaque push) : n'y pousser **que sur un ordre
+  explicite de Timothée, donné au moment même** (un « oui » à une autre question n'en est pas un). Une correction faite
+  sur `main` est ensuite reportée sur `ui/apple-design` par une fusion (jamais de rebase de `main`).
+- **Pousser** : `git pull --rebase` sur la branche juste avant chaque push (d'autres sessions poussent aussi) ; jamais de
+  `push --force`, jamais de suppression de branche. Indexer **par nom** (jamais `git add -A`) ; ne jamais commiter
+  `next-env.d.ts` ni `tsconfig.json` réécrits par un serveur de test, `test-results/`, `.next*/`.
+- **Secrets** : l'environnement cloud ne contient que les variables `NEXT_PUBLIC_*` (configuration web, publique).
+  Aucune lecture de la vraie base Firestore, aucune vraie notification : tout est simulé dans les tests
+  (`tests/helpers/fakeSession.ts`). Une modification de `firestore.rules` se publie à la main par Timothée : le dire.
+- **Dépôt public** : aucun nom réel de membre dans les tests, fixtures, specs ou commits ; des noms fictifs.
+- **Tests** : `npx playwright install --with-deps chromium` au début de la session, puis les règles « Tests — Playwright »
+  ci-dessus (trois appareils toujours ; les cinq projets pour les specs d'agencement).
+- **Méthode** : specs dans `docs/`, feuille de route `docs/feuille-de-route.md` ; on ne code un lot qu'après le go de
+  Timothée ; un commit par lot ou par tranche, message en français.
+
 ## Comportement (guidelines Karpathy)
 
 ### Penser avant de coder
