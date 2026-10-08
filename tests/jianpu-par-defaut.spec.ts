@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import {
   interrupteurAllume,
   prefDepuisInterrupteur,
@@ -39,4 +39,72 @@ test("règle : l'interrupteur montre et écrit la préférence (reprise D3)", ()
   expect(interrupteurAllume("never"), "Jamais → éteint").toBe(false);
   expect(prefDepuisInterrupteur(true)).toBe("always");
   expect(prefDepuisInterrupteur(false)).toBe("never");
+});
+
+const PREF = "jianpu-sheet-pref";
+const lirePref = (page: Page) => page.evaluate((k) => localStorage.getItem(k), PREF);
+
+/** Toutes les pages de scan affichées, images chargées (1 à 2 Mo chacune). */
+async function scanCharge(page: Page) {
+  await expect(page.locator("[data-jianpu-page] img").first()).toBeVisible();
+  await page.waitForFunction(() =>
+    Array.from(document.querySelectorAll<HTMLImageElement>("[data-jianpu-page] img")).every(
+      (img) => img.complete && img.naturalWidth > 0,
+    ),
+  );
+}
+
+test.describe("page chant", () => {
+  const bouton谱 = (page: Page) => page.getByRole("button", { name: "简谱", exact: true });
+
+  test("un chant à scan s'ouvre sur son scan, sans action ; un chant FR reste en paroles", async ({ page }) => {
+    await page.goto(`/songs/${encodeURIComponent("一生爱你")}`);
+    await scanCharge(page);
+    await expect(page.locator("[data-copy-line]"), "aucune ligne de paroles").toHaveCount(0);
+    await expect(bouton谱(page)).toHaveAttribute("aria-pressed", "true");
+    expect(await lirePref(page), "rien n'est écrit au chargement").toBeNull();
+
+    await page.goto("/songs/abba-pere");
+    await expect(page.locator("[data-copy-line]").first()).toBeVisible();
+    await expect(page.locator("[data-jianpu-page]")).toHaveCount(0);
+    await expect(bouton谱(page)).toHaveCount(0);
+  });
+
+  test("le bouton 谱 règle la préférence de l'appareil : paroles, retenues au rechargement, puis scan", async ({ page }) => {
+    await page.goto(`/songs/${encodeURIComponent("一生爱你")}`);
+    await scanCharge(page);
+
+    await bouton谱(page).click();
+    await expect(page.locator("[data-copy-line]").first()).toBeVisible();
+    await expect(page.locator("[data-jianpu-page]")).toHaveCount(0);
+    await expect(bouton谱(page)).toHaveAttribute("aria-pressed", "false");
+    expect(await lirePref(page)).toBe("never");
+
+    await page.reload();
+    await expect(page.locator("[data-copy-line]").first()).toBeVisible();
+    await expect(bouton谱(page)).toHaveAttribute("aria-pressed", "false");
+    await expect(page.locator("[data-jianpu-page]")).toHaveCount(0);
+
+    await bouton谱(page).click();
+    await scanCharge(page);
+    await expect(bouton谱(page)).toHaveAttribute("aria-pressed", "true");
+    expect(await lirePref(page)).toBe("always");
+  });
+
+  test("téléphone : en fin de défilement, la fin de la feuille reste au-dessus de la barre d'onglets (K2)", async ({ page }) => {
+    test.skip(test.info().project.name !== "telephone", "la barre d'onglets du téléphone");
+    await page.goto(`/songs/${encodeURIComponent("为我而来")}`);
+    await scanCharge(page);
+    await expect(page.locator("[data-jianpu-page]")).toHaveCount(2);
+    await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+    // Un léger retour vers le haut fait revenir la barre, comme au doigt.
+    await page.waitForTimeout(300);
+    await page.evaluate(() => window.scrollBy(0, -1));
+    const barre = page.getByRole("navigation", { name: "Navigation principale" });
+    await expect(barre).toBeInViewport();
+    await page.waitForTimeout(400); // fin de la transition de la barre
+    const basDeLaFeuille = await page.locator("[data-jianpu-page]").last().evaluate((el) => el.getBoundingClientRect().bottom);
+    const hautDeLaBarre = await barre.evaluate((el) => el.getBoundingClientRect().top);
+    expect(basDeLaFeuille).toBeLessThanOrEqual(hautDeLaBarre);
+  });
 });
