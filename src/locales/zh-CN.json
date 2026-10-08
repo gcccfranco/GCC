@@ -86,7 +86,7 @@
       "loadError": "无法加载诗歌，请检查网络连接。",
       "sousTitre_one": "共 {{count}} 首诗歌，法语和中文",
       "sousTitre_other": "共 {{count}} 首诗歌，法语和中文",
-      "proposer": "推荐诗歌"
+      "proposer": "推荐新诗歌"
     },
     "choose": {
       "title": "选择一首诗歌",
@@ -1124,7 +1124,6 @@
       "noData": "暂无数据",
       "thisWeek": "本周",
       "clear": "清除",
-      "unDimancheParMois": "每月一个主日",
       "dimancheSainteCene": "圣餐主日"
     },
     "grille": {

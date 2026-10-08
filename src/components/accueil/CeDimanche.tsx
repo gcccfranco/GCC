@@ -19,6 +19,8 @@ import type { Disposition } from "./PourMoi"
 const vide = (v?: string) => !v?.trim() || v.trim() === "—"
 const majuscule = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 const svc = (couleur: string) => ({ "--svc": couleur }) as React.CSSProperties
+/** Les heures du dimanche (retouches v18, D14 ; planches v18-app-planning-accueil et -reduite). */
+const HEURES = { culte: "10:30", groupes: "13:00", edd: "13:00", table: "10:00" } as const
 
 function Point({ couleur, className = "" }: { couleur: string; className?: string }) {
   return <span aria-hidden className={`h-2 w-2 shrink-0 rounded-full ${className}`} style={{ background: couleur }} />
@@ -43,8 +45,9 @@ function Noms({ valeur, monNom }: { valeur: string; monNom: string }) {
 }
 
 /** Un service et ses rôles : deux colonnes en grand et sur tablette, une sur téléphone. */
-function CarteService({ titre, couleur, roles, colonnes, monNom, testId, vide: messageVide }: {
+function CarteService({ titre, heure, couleur, roles, colonnes, monNom, testId, vide: messageVide }: {
   titre: string
+  heure?: string
   couleur: string
   roles: [string, string][]
   /** « large » : deux colonnes, trois quand « Ce dimanche » dépasse 720 px (requête de conteneur, en grand). */
@@ -59,6 +62,7 @@ function CarteService({ titre, couleur, roles, colonnes, monNom, testId, vide: m
       <h3 className="mb-1.5 flex items-center gap-2">
         <Point couleur={couleur} />
         <span className="svc-ink text-base font-bold" style={svc(couleur)}>{titre}</span>
+        {heure && <span className="text-[13px] text-muted-foreground tabular-nums">{heure}</span>}
       </h3>
       {remplis.length ? (
         <dl className={colonnes === "large" ? "grid grid-cols-2 gap-x-6 [@container(min-width:720px)]:grid-cols-3" : colonnes === 2 ? "grid grid-cols-2 gap-x-6" : ""}>
@@ -115,6 +119,7 @@ export function CeDimanche({
     <CarteService
       testId="carte-culte"
       titre={t("planning.tabs.culte")}
+      heure={HEURES.culte}
       couleur={PLANNING_COLORS.culte}
       colonnes={colonnes}
       monNom={monNom}
@@ -155,7 +160,7 @@ export function CeDimanche({
     />
   ) : (
     <article className="raised rounded-2xl px-4 py-3.5">
-      <h3 className="mb-1 text-[13px] font-semibold text-muted-foreground">{t("planning.tabs.groupes")}</h3>
+      <h3 className="mb-1 text-[13px] font-semibold text-muted-foreground">{t("planning.tabs.groupes")} · {HEURES.groupes}</h3>
       <ul>
         {groupes.map((g) => {
           const resume = ([["presidence", g.presidence], ["musiciens", g.musiciens]] as const).filter(([, v]) => !vide(v))
@@ -179,7 +184,7 @@ export function CeDimanche({
 
   const carteEdd = (
     <article className="raised rounded-2xl px-4 py-3.5">
-      <h3 className="svc-ink mb-1 text-[13px] font-semibold" style={svc(PLANNING_COLORS.edd)}>{t("planning.tabs.edd")}</h3>
+      <h3 className="svc-ink mb-1 text-[13px] font-semibold" style={svc(PLANNING_COLORS.edd)}>{t("planning.tabs.edd")} · {HEURES.edd}</h3>
       <ul>
         {edd.map((c) => (
           <li key={c.classe} data-testid="ligne-edd" className="flex gap-2.5 border-t border-border/70 py-2 text-sm">
@@ -213,13 +218,15 @@ export function CeDimanche({
       {/* Sur deux étages, un en-tête comme Groupes et EDD (planche : `table_empilee`). */}
       {etages && (
         <h3 className="svc-ink mb-1 hidden text-[13px] font-semibold [@container(min-width:720px)]:block" style={svc(PLANNING_COLORS.table)}>
-          {t("planning.accueil.carteTable")}
+          {t("planning.accueil.carteTable")} · {HEURES.table}
         </h3>
       )}
       <div className={etages ? `${ligneTable} [@container(min-width:720px)]:border-t [@container(min-width:720px)]:border-border/70` : ligneTable}>
         <Point couleur={PLANNING_COLORS.table} className={pointTable} />
         <b className={libelleTable}>{t("planning.tabs.table")}</b>
         <span className="min-w-0">{vide(table) ? "—" : <Noms valeur={table} monNom={monNom} />}</span>
+        {/* L'heure au bout de la ligne ; sur deux étages, elle est dans l'en-tête « Table · 10:00 ». */}
+        <span className={`ml-auto shrink-0 text-[13px] text-muted-foreground tabular-nums ${pointTable}`}>{HEURES.table}</span>
       </div>
       {(!vide(petitDej) || libre) && (
         <div className={`${ligneTable} border-t border-border/70`}>

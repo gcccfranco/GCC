@@ -120,5 +120,20 @@ Rien de codé (spec écrite le 08/10/2026, en attente du go).
   - **Choix** : la page Chants n'est pas touchée. Sa liste n'est pas `DeuxVolets` (`.chants-volets`, `globals.css`), et R3 ne la cite pas. Elle a toujours le défaut de D3 : sa carte finit sous le bas de la fenêtre avant tout défilement. **À trancher par Timothée** : appliquer la même règle à Chants.
   - **Vu en passant, pas corrigé** : sur Harmonie › Fiches en grand, une bande vide d'environ 50 px en haut de la carte (marge du contenu de la liste, `Catalogue.tsx`), sans rapport avec R3.
 - **Tests R3** : `tests/retouches-v18-ra.spec.ts`, describe « R3 ». Une vingtaine de lignes simulées par page. Les dix pages ont été vues rouges sur ordinateur (bas de la carte 36 à 114 px sous le bas de la fenêtre), puis vertes sur les cinq projets. Le test « un volet » est un garde-fou sur téléphone et tablette. Specs voisines vertes sur ordinateur, ordinateur-1440 et tablette-paysage (983 réussis) : `agencement-barre-reduite`, `agencement-v18-{harmonie,setlists,t2b,fondations,taches,regles,t7,t5}`, `pages-en-grand-{reception,evenements,mes-services,taches,harmonie,setlists}`, `scene-paques-noel`. `tsc --noEmit` et eslint sans erreur.
-- **Reste à la voie A** : R7 (et R9 si elle revient à cette voie).
-- **À faire par Timothée** : relire le 中文 : 分享, 链接已复制, 日期 · 时间 · 地点. Trancher Chants (ci-dessus). Aucune règle Firestore n'est touchée.
+- **R7 codée** (accueil et libellés) :
+  - **D14** : les heures sur « Ce dimanche », comme sur les planches `v18-app-planning-accueil` et `-reduite`. « Culte Franco 10:30 » (l'heure en gris à côté du titre), « Groupes · 13:00 », « EDD · 13:00 ». Pour la Table : « Table · 10:00 » en en-tête quand elle est sur deux étages (barre réduite, en grand), sinon « 10:00 » en gris au bout de la ligne « Prépa. Table ». Les heures sont des constantes de `CeDimanche.tsx` (`HEURES`), sans traduction.
+  - **D15** : « un dimanche par mois » retiré de la carte Prépa. Table du Seigneur (`planning/table/page.tsx`). La clé `planning.table.unDimancheParMois`, devenue orpheline, est retirée des deux langues.
+  - **D18** : `songs.list.proposer` = 推荐新诗歌. C'était la seule occurrence de 推荐诗歌 ; le lien du bas de liste sur téléphone le disait déjà.
+- **R9 faite** (`spec-agencement-v18.md`) : D4, D16, D17, D19, D21 sont dans « Hors périmètre ». La phrase de B14 est corrigée (D13) : « la colonne la moins haute, large comprise ».
+- **Choix faits faute de réponse dans la spec (R7)** :
+  - **Pas d'heure sur les cartes Interfranco / Intergroupe**, qui remplacent Groupes ces dimanches-là : D14 ne les cite pas.
+  - **L'heure de la Table au bout de la ligne** quand la Table n'a pas d'en-tête (barre dépliée, tablette, téléphone). La planche barre dépliée ne la montre pas, mais D14 la demande.
+- **Tests R7** : `tests/retouches-v18-ra.spec.ts`, describe « R7 », sur les cinq projets. Les tests ont été vus rouges sur ordinateur et téléphone : pas d'heure dans les en-têtes, « un dimanche par mois » encore là, 推荐诗歌 en grand. Ils sont ensuite verts : 21 réussis, 4 sautés selon l'appareil. Captures regardées : ordinateur, ordinateur-1440 (barre dépliée et réduite), tablette, iPad couché, téléphone.
+  - Specs mises à jour : `agencement-v18-planning` (la mention est absente), `nouveaux-membres` (推荐新诗歌 exact), `planning-accueil` (en-tête « Groupes · 13:00 »).
+  - Specs voisines vertes (319 réussis) : `agencement-v18-planning`, `nouveaux-membres`, `planning-accueil`, `pages-en-grand-accueil`, `planning-table`, `libelles-langues`, `tableau-de-bord`. `tsc --noEmit` et eslint sans erreur.
+- **Reste à la voie A** : rien (R1, R2, R3, R7, R9 faites).
+- **À faire par Timothée** :
+  - relire le 中文 : 分享, 链接已复制, 日期 · 时间 · 地点, 推荐新诗歌 ;
+  - trancher Chants (ci-dessus).
+  
+  Aucune règle Firestore n'est touchée.

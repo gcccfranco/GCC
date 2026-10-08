@@ -142,7 +142,6 @@ function TableDuSeigneur({ rows, annee, tri }: { rows: string[][]; annee: number
     <section aria-labelledby={titreId} className="raised min-w-0 rounded-2xl px-4 pt-3 pb-1.5">
       <div className="flex items-baseline gap-2 pb-2">
         <h3 id={titreId} className="text-[17px] font-bold text-foreground">{t("planning.pages.table")}</h3>
-        <span className="ml-auto shrink-0 text-[13px] text-muted-foreground">{t("planning.table.unDimancheParMois")}</span>
       </div>
       {lignes.length ? (
         <ul>

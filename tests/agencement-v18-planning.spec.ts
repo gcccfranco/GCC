@@ -472,8 +472,9 @@ test.describe("T4b — Prépa. Table (A4)", () => {
     await expect(table.getByText("Famille Y.", { exact: true })).toBeVisible();
     await expect(table.getByText("Famille X.", { exact: true })).toBeVisible();
     await expect(table.getByText("Famille Z.", { exact: true }), "le 27/09 est au T3").toHaveCount(0);
-    // Planche v18-app-planning-table-a : une tuile de date et « Dimanche de sainte cène » par équipe.
-    await expect(table.getByText("un dimanche par mois")).toBeVisible();
+    // Planche v18-app-planning-table-a : une tuile de date et « Dimanche de sainte cène » par équipe ;
+    // la mention « un dimanche par mois » est retirée (retouches v18, D15).
+    await expect(table.getByText("un dimanche par mois")).toHaveCount(0);
     await expect(table.locator('[data-dimanche="2026-10-04"]').getByTestId("tuile")).toContainText("4");
     await expect(table.getByText("Dimanche de sainte cène")).toHaveCount(3);
     await barre(page).getByRole("tablist", { name: "Trimestre" }).getByRole("tab", { name: /^T3/ }).click();

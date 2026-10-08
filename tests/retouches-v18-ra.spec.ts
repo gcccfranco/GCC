@@ -324,3 +324,93 @@ test.describe("R3 : la liste-carte des deux volets tient dans la fenêtre", () =
     expect(await liste.evaluate((el) => [getComputedStyle(el).overflowY, getComputedStyle(el).position])).toEqual(["visible", "static"]);
   });
 });
+
+// R7 : les heures sur la carte « Ce dimanche » (D14 : Culte Franco 10:30, Groupes 13:00, EDD 13:00,
+// Table 10:00 ; planches v18-app-planning-accueil et -reduite) ; plus de « un dimanche par mois » sur
+// la Prépa. Table du Seigneur (D15) ; en 中文, le bouton de Chants dit 推荐新诗歌 (D18). Feuilles
+// Google simulées ; personnes fictives.
+const csvR7 = (rows: string[][]) => rows.map((r) => r.map((c) => `"${c}"`).join(",")).join("\n");
+const groupeR7 = (pres: string, musiciens: string) => csvR7([["DATE", "Présidence", "Musiciens", "Orateur"], ["04/10", pres, musiciens, "Orateur Z."]]);
+const FEUILLES_R7: Record<string, string> = {
+  Franco_Louange: csvR7([
+    ["2026 DATE", "Présidence", "Choristes", "", "Pianiste", "Guitariste", "Batterie", "Sono + Live", "PPT", "Orateur", "Traducteur", "Sainte cène", "Notes"],
+    ["04/10", "Présidente A.", "Choriste B.", "", "Pianiste C.", "Guitariste D.", "", "Sono E.", "", "Orateur F.", "", "", ""],
+  ]),
+  Paix_T4: groupeR7("Président G.", "Pianiste H."),
+  "Fidélité_T4": groupeR7("Président I.", ""),
+  "Bonté_T4": groupeR7("Président J.", "Guitariste K."),
+  EDD: csvR7([["DATE", "Présidence", "Suppléant", "Piano", "Cajon", "Guitare", "", "Classe"], ["04/10", "Monitrice L.", "", "", "", "", "", "中班"]]),
+  Franco_Table_PtD: csvR7([Array.from({ length: 21 }, (_, i) => (i === 1 ? "04/10" : i === 2 ? "Famille Essai" : ""))]),
+};
+const PIANISTE_R7: FakeProfile = { uid: "uid-pianiste", email: "pianiste@example.com", firstName: "Pianiste", lastName: "C.", planningName: "Pianiste C.", serviceRoles: { "Culte Francophone": ["musicien"] } };
+
+async function ouvrirR7(page: Page, vers: string, zh = false) {
+  interdireDialoguesNatifs(page);
+  if (zh) await page.addInitScript(() => localStorage.setItem("i18nextLng", "zh-CN"));
+  await page.clock.setFixedTime(new Date("2026-10-01T10:00:00"));
+  await page.route(/docs\.google\.com\/spreadsheets/, (route) => {
+    const feuille = new URL(route.request().url()).searchParams.get("sheet") ?? "";
+    return route.fulfill({ status: 200, contentType: "text/csv", body: FEUILLES_R7[feuille] ?? "" });
+  });
+  return signInAs(page, PIANISTE_R7, {}, vers);
+}
+
+test.describe("R7 : heures de « Ce dimanche », Prépa. Table, 推荐新诗歌", () => {
+  const ceDimanche = (page: Page) => page.locator('section[aria-labelledby="ce-dimanche"]');
+  const carte = (page: Page, testId: string) => ceDimanche(page).getByTestId(testId).first().locator("xpath=ancestor-or-self::article[1]");
+
+  test("« Ce dimanche » : Culte Franco 10:30, Groupes 13:00, EDD 13:00, Table 10:00", async ({ page }) => {
+    await ouvrirR7(page, "/planning");
+    await expect(ceDimanche(page).getByText("Présidente A.")).toBeVisible();
+    await expect(carte(page, "carte-culte").getByRole("heading", { level: 3 })).toHaveText(/^Culte Franco\s*10:30$/);
+    await expect(carte(page, "ligne-groupe").getByRole("heading", { level: 3 })).toHaveText("Groupes · 13:00");
+    await expect(carte(page, "ligne-edd").getByRole("heading", { level: 3 })).toHaveText("EDD · 13:00");
+    // La Table : « Table · 10:00 » en en-tête quand elle est sur deux étages (en grand), sinon l'heure
+    // au bout de la ligne « Prépa. Table ». Une seule heure visible.
+    const table = ceDimanche(page).getByTestId("carte-table");
+    await expect(table.getByText("10:00").filter({ visible: true })).toHaveCount(1);
+    await expect(table.getByText("Famille Essai")).toBeVisible();
+    await capture(page, "r7-ce-dimanche");
+  });
+
+  test("barre réduite, 1 440 px : la Table sur deux étages, « Table · 10:00 » en en-tête (ordinateur-1440)", async ({ page }, info) => {
+    test.skip(info.project.name !== "ordinateur-1440", "planche v18-app-planning-accueil-reduite");
+    await ouvrirAvecBarre(page, "reduite");
+    await ouvrirR7(page, "/planning");
+    const table = ceDimanche(page).getByTestId("carte-table");
+    await expect(table.getByRole("heading", { level: 3 })).toHaveText("Table · 10:00");
+    await expect(table.getByText("10:00").filter({ visible: true })).toHaveCount(1);
+    await capture(page, "r7-ce-dimanche-reduite");
+  });
+
+  test("中文 : les mêmes heures", async ({ page }) => {
+    await ouvrirR7(page, "/planning", true);
+    await expect(ceDimanche(page).getByText("Présidente A.")).toBeVisible();
+    await expect(carte(page, "carte-culte").getByRole("heading", { level: 3 })).toContainText("10:30");
+    await expect(carte(page, "ligne-groupe").getByRole("heading", { level: 3 })).toContainText("· 13:00");
+    await expect(carte(page, "ligne-edd").getByRole("heading", { level: 3 })).toContainText("· 13:00");
+    await expect(ceDimanche(page).getByTestId("carte-table").getByText("10:00").filter({ visible: true })).toHaveCount(1);
+  });
+
+  test("Prépa. Table du Seigneur : plus de « un dimanche par mois » (FR et 中文)", async ({ page }) => {
+    await ouvrirR7(page, "/planning/table");
+    const carteTable = page.getByRole("region", { name: "Prépa. Table du Seigneur" });
+    await expect(carteTable.getByText("Famille Essai")).toBeVisible();
+    await expect(carteTable.getByText("un dimanche par mois")).toHaveCount(0);
+    await capture(page, "r7-table");
+    await page.evaluate(() => localStorage.setItem("i18nextLng", "zh-CN"));
+    await page.reload();
+    await expect(page.getByText("Famille Essai")).toBeVisible();
+    await expect(page.getByText("每月一个主日")).toHaveCount(0);
+  });
+
+  test("中文 : le bouton de Chants dit 推荐新诗歌", async ({ page }) => {
+    await ouvrirR7(page, "/songs", true);
+    const bouton = page.getByRole("button", { name: "推荐新诗歌", exact: true });
+    await expect(bouton).toHaveCount(1);
+    await expect(bouton).toBeVisible();
+    await expect(page.getByRole("button", { name: "推荐诗歌", exact: true })).toHaveCount(0);
+    await bouton.click();
+    await expect(page.getByRole("heading", { name: "推荐新诗歌" })).toBeVisible();
+  });
+});
