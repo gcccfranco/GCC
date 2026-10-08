@@ -8,6 +8,7 @@
 // les semaines, une ligne par jour (jour de la semaine et numéro, le jour choisi en encre), une ligne
 // par entrée (trait de couleur, heure, titre, détail, étiquette du type) ; toucher un jour ou une de
 // ses lignes le choisit (volet du jour à droite, ou sa feuille). Le téléphone garde `ListeAgenda`.
+// Retouches v18 (R4, D7) : la ligne de l'entrée ouverte (touchée) est surlignée, comme sur la planche.
 
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
@@ -95,7 +96,7 @@ function detailSansHeure(e: EntreeCalendrier): string {
   return e.detail.startsWith(plage) ? e.detail.slice(plage.length).replace(/^ · /, "") : e.detail;
 }
 
-function LigneAgenda({ e, onChoisir }: { e: EntreeCalendrier; onChoisir: () => void }) {
+function LigneAgenda({ e, ouverte, onChoisir }: { e: EntreeCalendrier; ouverte: boolean; onChoisir: () => void }) {
   const { t } = useTranslation();
   const couleur = couleurTrait(e);
   const detail = detailSansHeure(e);
@@ -103,8 +104,12 @@ function LigneAgenda({ e, onChoisir }: { e: EntreeCalendrier; onChoisir: () => v
     <button
       type="button"
       data-source={e.source}
+      aria-current={ouverte ? "true" : undefined}
       onClick={onChoisir}
-      className="flex w-full items-center gap-3.5 rounded-xl px-3.5 py-2.5 text-left transition-colors duration-150 hover:bg-secondary/70 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground"
+      className={cn(
+        "flex w-full items-center gap-3.5 rounded-xl px-3.5 py-2.5 text-left transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground",
+        ouverte ? "bg-secondary" : "hover:bg-secondary/70",
+      )}
     >
       <span aria-hidden className="w-1 shrink-0 self-stretch rounded-full" style={{ background: couleur }} />
       <span className="w-12 shrink-0 tabular-nums">
@@ -131,6 +136,7 @@ function LigneAgenda({ e, onChoisir }: { e: EntreeCalendrier; onChoisir: () => v
 export function AgendaSemaines({
   parJour,
   choisi,
+  ligneOuverte,
   lang,
   titreDuJour,
   vide,
@@ -138,10 +144,13 @@ export function AgendaSemaines({
 }: {
   parJour: Map<string, EntreeCalendrier[]>;
   choisi: string;
+  /** La clé de l'entrée ouverte : sa ligne est surlignée (si son jour est le jour choisi). */
+  ligneOuverte: string | null;
   lang: NotifLang;
   titreDuJour: (date: string) => string;
   vide: string;
-  onChoisir: (date: string) => void;
+  /** Un jour touché (sa colonne de date) : sans clé ; une ligne touchée : la clé de son entrée. */
+  onChoisir: (date: string, cle?: string) => void;
 }) {
   const { t } = useTranslation();
   const semaines = new Map<string, [string, EntreeCalendrier[]][]>();
@@ -181,7 +190,7 @@ export function AgendaSemaines({
                 <ul className="flex min-w-0 flex-1 flex-col gap-0.5">
                   {entrees.map((e) => (
                     <li key={e.cle}>
-                      <LigneAgenda e={e} onChoisir={() => onChoisir(date)} />
+                      <LigneAgenda e={e} ouverte={on && e.cle === ligneOuverte} onChoisir={() => onChoisir(date, e.cle)} />
                     </li>
                   ))}
                 </ul>

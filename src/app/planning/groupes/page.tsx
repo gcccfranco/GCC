@@ -138,7 +138,6 @@ function GroupesPage() {
         {grp === "fidelite" && (
           <Pilules
             etiquette={t("planning.groupes.fidelite")}
-            compact
             options={(["groupe", "musiciens"] as FidSub[]).map((sub) => ({
               cle: sub,
               nom: sub === "groupe" ? t("planning.groupes.planningGroupe") : t("planning.groupes.planningMusiciens"),

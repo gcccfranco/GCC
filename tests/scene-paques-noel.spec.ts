@@ -1059,7 +1059,7 @@ test("P7 — un autre coordinateur a créé l'édition entre-temps (409) : on re
   await (await reglageSaison(page, "Un créneau dure")).getByRole("button", { name: "1 h 30", exact: true }).click();
   await expect.poll(() => ecrituresProgrammes(db).length).toBe(1);
   expect(ecrituresProgrammes(db)[0].method).toBe("PATCH");
-  expect(Object.keys(ecrituresProgrammes(db)[0].data).sort()).toEqual(["duree", "updatedAt"]);
+  expect(Object.keys(ecrituresProgrammes(db)[0].data).sort()).toEqual(["duree", "modifiePar", "updatedAt"]);
   expect(db.doc("programmes/paques-2027")).toMatchObject({ duree: 90, plages: DOC_PAQUES_2027_BROUILLON.plages });
   // Relu : la saison de l'autre coordinateur s'affiche.
   await expect((await reglageSaison(page, "Jours et plages")).getByRole("button", { name: "sam. 10:00 – 12:00" })).toBeVisible();
@@ -1088,7 +1088,7 @@ test("P7 — « Lancer les réservations » : un PATCH de `ouvert` seul ; « Ré
   const ecrites = ecrituresProgrammes(db);
   expect(ecrites).toHaveLength(1);
   expect(ecrites[0]).toMatchObject({ method: "PATCH", path: "programmes/paques-2027" });
-  expect(Object.keys(ecrites[0].data).sort()).toEqual(["ouvert", "updatedAt"]);
+  expect(Object.keys(ecrites[0].data).sort()).toEqual(["modifiePar", "ouvert", "updatedAt"]);
   expect(ecrites[0].data.ouvert).toBe(true);
   // Lancée, la saison reste réglable.
   await expect((await reglageSaison(page, "Un créneau dure")).getByRole("button", { name: "1 h 30", exact: true })).toBeEnabled();
@@ -1123,7 +1123,7 @@ test("P7 — jour J dans la saison : le changer écrit `jourJ` seul ; la fermetu
   await expect(carte.getByText("Calculé pour Pâques ; modifiable.")).toHaveCount(0);
   await expect.poll(() => ecrituresProgrammes(db).length).toBe(1);
   await expect((await reglageSaison(page, "Réservations")).getByText("au dimanche 28 mars", { exact: true })).toBeVisible();
-  expect(Object.keys(ecrituresProgrammes(db)[0].data).sort()).toEqual(["jourJ", "updatedAt"]);
+  expect(Object.keys(ecrituresProgrammes(db)[0].data).sort()).toEqual(["jourJ", "modifiePar", "updatedAt"]);
   expect(ecrituresProgrammes(db)[0].data.jourJ).toBe("2027-04-04");
 });
 

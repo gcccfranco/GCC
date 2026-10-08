@@ -255,15 +255,19 @@ export function StatistiquesClient() {
   return (
     <>
       {enTete}
-      <div className={CORPS}>
+      {/* Un conteneur : « Les plus joués » se range selon la place laissée par la barre (R6). */}
+      <div className={cn(CORPS, "[container-type:inline-size]")}>
         {nombre === 0 ? (
           <p role="status" className="raised rounded-2xl px-5 py-8 text-center text-sm text-muted-foreground">
             Aucune setlist publiée sur cette période.
           </p>
         ) : etat.vue === "plus" ? (
-          // En grand (planche v18-bo-statistiques) : les chiffres à gauche, le classement à droite.
-          <div className="grid items-start gap-4 lg:grid-cols-[260px_minmax(0,1fr)]">
-            <div className="grid gap-4">
+          // Dès 1 100 px de conteneur (planche v18-bo-statistiques) : les chiffres à gauche, le classement
+          // à droite. En dessous (D11, retouches v18 R6), les trois chiffres sur une rangée au-dessus du
+          // tableau, qui garde toute la largeur et ne défile pas ; sous 1 024 px de fenêtre, la carte des
+          // setlists comptées seule, comme avant.
+          <div className="grid items-start gap-4 [@container(min-width:1100px)]:grid-cols-[260px_minmax(0,1fr)]">
+            <div className="grid gap-4 lg:grid-cols-3 [@container(min-width:1100px)]:grid-cols-1">
               {carteComptees}
               <section className="raised hidden rounded-2xl px-5 py-4 lg:block">
                 <h2 className="text-sm font-semibold text-muted-foreground">Chants différents</h2>
@@ -376,14 +380,15 @@ function Filtres({ etat, aujourdhui, services, presidences, nomService, choisirP
   );
 }
 
-/** Un `<select>` en pastille (planche : « Tous les services ▾ »). */
+/** Un `<select>` en pastille (planche : « Tous les services ▾ »), à la hauteur des pilules de la rangée
+ *  (`Pilules`, D9) : 40 px au doigt, ≈ 28 px et 13 px dès 1 024 px avec un pointeur fin. */
 function Choix({ libelle, valeur, onChange, children }: {
   libelle: string; valeur: string; onChange: (v: string) => void; children: React.ReactNode;
 }) {
   return (
     <span className="relative inline-flex">
       <select aria-label={libelle} value={valeur} onChange={(e) => onChange(e.target.value)}
-        className={cn(PASTILLE, "h-10 appearance-none border border-input bg-background pr-8 text-foreground hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring/30")}>
+        className={cn(PASTILLE, "h-10 appearance-none border border-input bg-background pr-8 text-foreground hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring/30 [@media(pointer:fine)_and_(min-width:1024px)]:h-7 [@media(pointer:fine)_and_(min-width:1024px)]:text-[13px]")}>
         {children}
       </select>
       <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2" aria-hidden />
@@ -505,8 +510,8 @@ function Tableau({ lignes, aujourdhui, tri, sens, trier }: {
       </th>
     );
   };
-  // Défile dans sa carte quand la place manque (fenêtre de 1 024 à 1 100 px, barre dépliée : à côté
-  // des chiffres, il reste environ 420 px au tableau).
+  // Les chiffres passent au-dessus sous 1 100 px de conteneur (R6) : le tableau a la largeur et ne
+  // défile plus ; `overflow-x-auto` reste un garde-fou (texte agrandi), rien ne sort de la carte.
   return (
     <div className="hidden raised overflow-x-auto rounded-2xl px-2 sm:block">
       <table className="w-full text-sm">

@@ -8,6 +8,8 @@
 // Agencement v18 (B5) : dans le volet du jour à droite, « Ajouter ce jour-là » et son menu
 // (`AjouterCeJour` : évènement, tâche, réunion) en tête ; la feuille du jour et la feuille
 // « Créer » du téléphone gardent les boutons, réunion comprise.
+// Retouches v18 (R4, D7) : comme sur la planche, le bouton « Ajouter ce jour-là » puis une flèche ronde
+// (« Évènement, tâche ou réunion ») ; l'un et l'autre ouvrent le même menu.
 // C6 : « Déplacer… » sous une carte déplaçable.
 // Un service dit sa setlist publiée (« Setlist « Culte du 11 octobre » · 4 chants », planche
 // bo-calendrier, pastille Setlists éteinte ou non) ; à venir, ses cases vides en orange
@@ -15,6 +17,7 @@
 // remplit ou publie. Une tâche répétée dit « Change la répétition dans la tâche » (Q6).
 
 import Link from "next/link";
+import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ChevronDown, Plus } from "lucide-react";
 import { jourCourt } from "@/lib/calendrier/grille";
@@ -160,16 +163,56 @@ export function AjouterCeJour({ date, lang, droits, onNouvelleTache }: {
   onNouvelleTache: () => void;
 }) {
   const { t } = useTranslation();
+  const [ouvert, setOuvert] = useState(false);
+  // Le bouton n'est pas le déclencheur de Radix (la flèche l'est) : il bascule le menu lui-même, le
+  // toucher menu ouvert ne compte pas comme un clic dehors, et le focus lui revient à la fermeture.
+  const bouton = useRef<HTMLButtonElement>(null);
+  const parLeBouton = useRef(false);
   if (!droits.evenement && !droits.reunion && !droits.tache) return null;
   const jour = jourCourt(date, lang);
   return (
-    <DropdownMenu modal={false}>
-      <DropdownMenuTrigger className="inline-flex h-9 items-center gap-1.5 self-start rounded-full bg-foreground pl-3 pr-2.5 text-[13.5px] font-semibold text-background transition-opacity duration-150 hover:opacity-85 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground">
-        <Plus aria-hidden className="h-4 w-4 shrink-0" strokeWidth={2.4} />
-        {t("calendrier.ajouterCeJour")}
-        <ChevronDown aria-hidden className="h-4 w-4 shrink-0 opacity-80" />
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="min-w-56">
+    <DropdownMenu
+      modal={false}
+      open={ouvert}
+      onOpenChange={(o) => {
+        if (o) parLeBouton.current = false;
+        setOuvert(o);
+      }}
+    >
+      <div className="flex items-center gap-1 self-start">
+        <button
+          ref={bouton}
+          type="button"
+          aria-haspopup="menu"
+          aria-expanded={ouvert}
+          onClick={() => {
+            parLeBouton.current = true;
+            setOuvert((o) => !o);
+          }}
+          className="inline-flex h-9 items-center gap-1.5 rounded-full bg-foreground pl-3 pr-3.5 text-[13.5px] font-semibold text-background transition-opacity duration-150 hover:opacity-85 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground"
+        >
+          <Plus aria-hidden className="h-4 w-4 shrink-0" strokeWidth={2.4} />
+          {t("calendrier.ajouterCeJour")}
+        </button>
+        <DropdownMenuTrigger
+          aria-label={t("calendrier.ajouterCeJourMenu")}
+          className="raised inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-foreground transition-opacity duration-150 hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground"
+        >
+          <ChevronDown aria-hidden className="h-4 w-4 shrink-0" />
+        </DropdownMenuTrigger>
+      </div>
+      <DropdownMenuContent
+        align="end"
+        className="min-w-56"
+        onInteractOutside={(e) => {
+          if (bouton.current?.contains(e.target as Node)) e.preventDefault();
+        }}
+        onCloseAutoFocus={(e) => {
+          if (!parLeBouton.current) return;
+          e.preventDefault();
+          bouton.current?.focus();
+        }}
+      >
         {droits.evenement && (
           <DropdownMenuItem asChild>
             <Link href={lienEvenement(date)}>{t("calendrier.nouvelEvenement", { date: jour })}</Link>

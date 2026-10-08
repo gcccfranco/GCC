@@ -122,6 +122,23 @@ export type FakeDb = {
   set(path: string, data: Record<string, unknown>): void;
 };
 
+/** État d'une base simulée : partagé quand deux sessions (deux contextes) écrivent dans la même
+ *  base (`fakeFirestore(…, partage)`). Chaque document porte un `updateTime`, nouveau à chaque
+ *  écriture, comme Firestore. */
+type EtatBase = {
+  store: Map<string, FsFields>;
+  versions: Map<string, string>;
+  writes: FakeDb["writes"];
+  compteur: { id: number; version: number };
+};
+const etats = new WeakMap<FakeDb, EtatBase>();
+
+/** Un `updateTime` nouveau, croissant (microsecondes, comme Firestore). */
+function nouvelleVersion(etat: EtatBase, path: string): void {
+  const n = ++etat.compteur.version;
+  etat.versions.set(path, `2026-01-01T00:00:00.${String(n).padStart(6, "0")}Z`);
+}
+
 function b64url(o: object): string {
   return Buffer.from(JSON.stringify(o)).toString("base64url");
 }
@@ -153,22 +170,32 @@ const json = (route: Route, body: unknown, status = 200) =>
  * mémoire (jamais envoyées) et relues par la page ; une requête sur une
  * collection (`programmes`, `setlists/abc/history`) renvoie ses documents (les
  * filtres `where` sont ignorés).
+ * `partage` : la base d'une autre session (autre contexte de navigateur), que celle-ci lit et
+ * écrit aussi ; seuls les documents qu'elle n'a pas encore s'y ajoutent.
+ * Un PATCH qui porte `currentDocument.updateTime` d'une autre version que celle du document est
+ * refusé (HTTP 400 `FAILED_PRECONDITION`), rien n'est écrit — comme Firestore.
  */
 export async function fakeFirestore(
   page: Page,
   docs: Record<string, Record<string, unknown>>,
+  partage?: FakeDb,
 ): Promise<FakeDb> {
-  const store = new Map<string, FsFields>(
-    Object.entries(docs).map(([path, data]) => [path, fsDoc(path, data).fields]),
-  );
-  const writes: FakeDb["writes"] = [];
-  let nextId = 1;
+  const etat: EtatBase = (partage && etats.get(partage)) ?? {
+    store: new Map(), versions: new Map(), writes: [], compteur: { id: 1, version: 0 },
+  };
+  const { store, writes, versions } = etat;
+  for (const [path, data] of Object.entries(docs)) {
+    if (partage && store.has(path)) continue;
+    store.set(path, fsDoc(path, data).fields);
+    nouvelleVersion(etat, path);
+  }
   const children = (collection: string) =>
     [...store.keys()].filter((p) => p.startsWith(`${collection}/`) && !p.slice(collection.length + 1).includes("/"));
   const docJson = (path: string) => ({
     name: `projects/gcclouange/databases/(default)/documents/${path}`,
     fields: store.get(path),
     createTime: "2026-01-01T00:00:00Z",
+    updateTime: versions.get(path),
   });
 
   // Lot U9, B2 : l'agenda public lit le Sheet des évènements jusqu'au 31/12/2026. Par défaut, un
@@ -211,6 +238,7 @@ export async function fakeFirestore(
     if (method === "DELETE") {
       writes.push({ method, path: tail, data: {} });
       store.delete(tail);
+      versions.delete(tail);
       return json(route, {});
     }
     const body = (request.postDataJSON() ?? {}) as { fields?: FsFields };
@@ -221,14 +249,21 @@ export async function fakeFirestore(
       if (choisi && store.has(`${tail}/${choisi}`)) {
         return json(route, { error: { code: 409, message: "Document already exists", status: "ALREADY_EXISTS" } }, 409);
       }
-      const path = `${tail}/${choisi ?? `fake-${nextId++}`}`;
+      const path = `${tail}/${choisi ?? `fake-${etat.compteur.id++}`}`;
       store.set(path, fields);
+      nouvelleVersion(etat, path);
       writes.push({ method, path, data: jsFields(fields) });
       return json(route, docJson(path));
     }
     // PATCH : champs du masque remplacés (ou retirés s'ils manquent au corps).
     // Un chemin peut descendre dans une map (« fini.`tous-les-accords` ») : on
     // n'y touche qu'à ce champ, comme Firestore. Le reste du corps s'ajoute.
+    const attendue = url.searchParams.get("currentDocument.updateTime");
+    if (attendue && attendue !== versions.get(tail)) {
+      return json(route, {
+        error: { code: 400, message: `the stored version (${versions.get(tail)}) does not match the required base version (${attendue})`, status: "FAILED_PRECONDITION" },
+      }, 400);
+    }
     const mask = url.searchParams.getAll("updateMask.fieldPaths");
     const next: FsFields = mask.length ? structuredClone(store.get(tail) ?? {}) : {};
     const premiers = new Set(mask.map((f) => cheminDeChamp(f)[0]));
@@ -238,27 +273,33 @@ export async function fakeFirestore(
     }
     for (const [k, v] of Object.entries(fields)) if (!premiers.has(k)) next[k] = v;
     store.set(tail, next);
+    nouvelleVersion(etat, tail);
     writes.push({ method, path: tail, data: jsFields(fields) });
     return json(route, docJson(tail));
   });
 
-  return {
+  if (partage) return partage;
+  const db: FakeDb = {
     writes,
     doc: (path) => (store.has(path) ? jsFields(store.get(path)!) : undefined),
     list: (collection) => children(collection),
-    set: (path, data) => { store.set(path, fsDoc(path, data).fields); },
+    set: (path, data) => { store.set(path, fsDoc(path, data).fields); nouvelleVersion(etat, path); },
   };
+  etats.set(db, etat);
+  return db;
 }
 
 /**
  * Simule le compte `profile` et les documents Firestore donnés (voir
- * `fakeFirestore`), puis se connecte et ouvre `to`.
+ * `fakeFirestore`), puis se connecte et ouvre `to`. `partage` : la base d'une autre session,
+ * pour deux contextes qui lisent et écrivent les mêmes documents.
  */
 export async function signInAs(
   page: Page,
   profile: FakeProfile,
   docs: Record<string, Record<string, unknown>>,
   to: string,
+  partage?: FakeDb,
 ): Promise<FakeDb> {
   const token = idToken(profile);
   await page.route(/identitytoolkit\.googleapis\.com/, (route) => {
@@ -313,7 +354,7 @@ export async function signInAs(
     },
     ...(profile.accueil ? {} : { [`onboarding/${profile.uid}`]: { vu: true, le: "2026-09-01T10:00:00Z" } }),
     ...docs,
-  });
+  }, partage);
 
   await page.goto(`/login?from=${encodeURIComponent(to)}`);
   // Attendre que React ait hydraté le formulaire : sur un navigateur lent,

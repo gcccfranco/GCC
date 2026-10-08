@@ -1256,6 +1256,8 @@
       "entrainements": "Entraînements",
       "programmeTab": "Programme {{nom}}",
       "ordreTitle": "Ordre de Passage jour J",
+      "modifieEntreTemps": "Modifié par {{prenom}} entre-temps : recharge",
+      "modifieEntreTempsSansNom": "Modifié entre-temps : recharge",
       "showPast": "Voir les jours passés ({{n}})",
       "hidePast": "Masquer les jours passés",
       "editTitle": "Modifier le créneau",
@@ -3030,6 +3032,7 @@
     "agendaVide": "Rien de prévu jusqu'à fin {{mois}}.",
     "afficherMois": "Afficher {{mois}}",
     "ajouterCeJour": "Ajouter ce jour-là",
+    "ajouterCeJourMenu": "Évènement, tâche ou réunion",
     "nouvelleReunion": "Nouvelle réunion le {{date}}",
     "semaineDu": "Semaine du {{date}}",
     "deplacer": {

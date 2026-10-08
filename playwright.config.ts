@@ -56,8 +56,9 @@ const SPECS_GRAND_ECRAN = [
   /scene-paques-noel\.spec\.ts/,
   // Agencement v18 (docs/spec-agencement-v18.md) : chaque tranche, F1 comprise, sur les cinq projets.
   /agencement-v18-.*\.spec\.ts/,
-  // Retouches après v18 (docs/spec-retouches-v18.md), lot R seulement (voies -ra, -rb…) : cinq projets.
-  /retouches-v18(-r[a-z])?\.spec\.ts/,
+  // Retouches après v18 (docs/spec-retouches-v18.md), lot R seulement (retouches-v18-ra, -agenda, -ordre,
+  // -pilules-stats…) : cinq projets. Les specs des lots E et F (evenements-pole, planning-fidelite) gardent trois appareils.
+  /retouches-v18(-.*)?\.spec\.ts/,
 ];
 
 export default defineConfig({

@@ -313,7 +313,7 @@ test("« Lancer les réservations » écrit `ouvert: true` en un seul PATCH, et 
   await expect(page.getByText("Réservations lancées")).toBeVisible();
   expect(patches(db)).toHaveLength(1);
   expect(patches(db)[0].data).toMatchObject({ ouvert: true });
-  expect(Object.keys(patches(db)[0].data).sort()).toEqual(["ouvert", "updatedAt"]);
+  expect(Object.keys(patches(db)[0].data).sort()).toEqual(["modifiePar", "ouvert", "updatedAt"]);
   await (await ongletApp(page, "Noël")).click();
   await expect(page.getByRole("heading", { name: "Noël 2026", exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: /^Réserver \d/ }).first()).toBeVisible();
@@ -395,7 +395,7 @@ test("dates : changer l'ouverture écrit `debut` seul, et la pastille se relit e
   await c.getByLabel("Ouverture des réservations").fill("2026-10-08");
   await expect(c.getByText("du jeudi 8 octobre", { exact: true })).toBeVisible();
   await expect.poll(() => patches(db).length).toBe(1);
-  expect(Object.keys(patches(db)[0].data).sort()).toEqual(["debut", "updatedAt"]);
+  expect(Object.keys(patches(db)[0].data).sort()).toEqual(["debut", "modifiePar", "updatedAt"]);
   expect(patches(db)[0].data.debut).toBe("2026-10-08");
 });
 
@@ -783,7 +783,7 @@ test("la saison suit le jour J : reporté, la fermeture par défaut suit, et un 
   const c = await reglageSaison(page, "Un créneau dure");
   await c.getByRole("button", { name: "1 h 30", exact: true }).click();
   await expect.poll(() => patches(db).length).toBe(2);
-  expect(Object.keys(patches(db)[1].data).sort()).toEqual(["duree", "updatedAt"]);
+  expect(Object.keys(patches(db)[1].data).sort()).toEqual(["duree", "modifiePar", "updatedAt"]);
   expect(db.doc("programmes/noel")?.fin).toBeUndefined();
   await expect(c.getByRole("alert")).toHaveCount(0);
 });
@@ -798,7 +798,7 @@ test("deux coordinateurs : un réglage écrit par l'autre (la durée) s'affiche 
   await expect((await reglageSaison(page, "Un créneau dure")).getByRole("button", { name: "1 h 30", exact: true, pressed: true })).toBeVisible();
   await (await reglageSaison(page, "Qui peut réserver")).getByRole("button", { name: "Tout membre connecté" }).click();
   await expect.poll(() => patches(db).length).toBe(2);
-  expect(patches(db).map((p) => Object.keys(p.data).sort())).toEqual([["quiAutorises", "updatedAt"], ["quiAutorises", "updatedAt"]]);
+  expect(patches(db).map((p) => Object.keys(p.data).sort())).toEqual([["modifiePar", "quiAutorises", "updatedAt"], ["modifiePar", "quiAutorises", "updatedAt"]]);
   expect(db.doc("programmes/noel")?.duree).toBe(90);
 });
 
